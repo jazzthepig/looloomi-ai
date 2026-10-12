@@ -1581,6 +1581,42 @@ async def _start_cis_rebuild_loop():
     print("[CIS-REBUILD] ✅ CIS point-in-time rebuild scheduled (cis_rebuild_daily, standard v1.2)")
 
 
+async def _standard_outcomes_loop():
+    """S-540:档位历史表现(track record / edge map)只从正式序列算 —— 每个 (名字, 日) 的 30 日结果 →
+    cis_standard_outcomes,然后调两个聚合 RPC(函数名不变,Mac 侧 18:00 的调用也读同一张表)。
+    每天 UTC 07:00 一轮(正式发布截止之后)。判活:`select max(computed_at) from cis_standard_outcomes` 在 26 小时内。
+    """
+    await _asyncio.sleep(_boot_delay(1800))
+    while True:
+        try:
+            from src.data.cis.standard_outcomes import run_once as _so_run
+            from src.api.store import supabase_rpc
+            r = await _so_run()
+            if r.get("ok"):
+                r["track_record_rows"] = await supabase_rpc("refresh_signal_track_record")
+                r["edge_map_rows"] = await supabase_rpc("refresh_signal_edge_map")
+            print(f"[STD-OUTCOMES] {str(r.get('reason'))[:160]}")
+            _detail = {k: r.get(k) for k in ("written", "published", "track_record_rows", "edge_map_rows")}
+            await _beat("_standard_outcomes_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")), detail=_detail,
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_standard_outcomes_loop", "ok" if r.get("ok") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail=_detail, writer="src.api.main._standard_outcomes_loop")
+        except Exception as _e:
+            print(f"[STD-OUTCOMES] ⚠️  pass FAILED: {_e}")
+            await _beat("_standard_outcomes_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_standard_outcomes_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._standard_outcomes_loop")
+        await _sleep_until_utc(7, 0)
+
+
+@app.on_event("startup")
+async def _start_standard_outcomes_loop():
+    _asyncio.create_task(_standard_outcomes_loop())
+    print("[STD-OUTCOMES] ✅ official-series outcomes scheduled (cis_standard_outcomes → track record / edge map)")
+
+
 async def _signal_attribution_loop():
     """S-529 / T-078:每个 CIS 信号变化的归因(支柱贡献 + 7 / 30 天结果:同类、相对、BTC β)→ cis_signal_attribution。
     Jazz 10-09:信号是根据过往表现的展示,不是预测;每个信号都要归因。每 6 小时一轮,幂等。
@@ -2948,8 +2984,8 @@ async def _start_factory_recalibrate_loop():
 
 
 # ── Track-record refresh loop — self-tuning conviction ────────────────────────
-# Recomputes signal_track_record (30d benchmark-relative outcomes from our own
-# cis_scores × ohlcv_daily) daily → the Risk Meter's conviction tilt auto-recalibrates
+# Recomputes signal_track_record (30d benchmark-relative outcomes; since S-540 aggregated from
+# cis_standard_outcomes — the official daily-close series) daily → the Risk Meter's conviction tilt auto-recalibrates
 # from fresh outcomes instead of a static snapshot. All in-DB (one RPC), idempotent.
 _TRACKREC_INTERVAL_S = 24 * 3600
 

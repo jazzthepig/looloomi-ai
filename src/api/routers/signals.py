@@ -1225,7 +1225,7 @@ async def get_signal_track_record(response: Response = None):
     """
     The honest, defensible track record: 30-day BENCHMARK-RELATIVE outcomes of our
     DIRECTIONAL signals (STRONG OUTPERFORM / OUTPERFORM / UNDERPERFORM /
-    UNDERWEIGHT), computed entirely from our own data (cis_scores × ohlcv_daily),
+    UNDERWEIGHT), computed from the official daily-close series (cis_standard_outcomes, S-540),
     refreshed daily by the Supabase RPC refresh_signal_track_record (v2, 2026-07-26;
     MINIMAX_SYNC §BETA-METRIC-AGG).
 
@@ -1275,7 +1275,7 @@ async def get_signal_track_record(response: Response = None):
 
     return {
         "basis": "30d benchmark-relative alpha (BTC for crypto / SPY for TradFi), "
-                 "from own data (cis_scores × ohlcv_daily), daily snapshot.",
+                 "from the official daily-close series (published days + point-in-time reconstruction of the same standard; cis_standard_outcomes), daily snapshot.",
         "tiers": rows,
         "headline": headline,
         "tier_definitions": {
@@ -1346,7 +1346,7 @@ async def get_signal_edge_map(response: Response = None):
             "n": r.get("n"),
         }
     return {
-        "basis": "30d benchmark-relative alpha by signal tier × risk gradient (benchmark trailing 30d), from own data",
+        "basis": "30d benchmark-relative alpha by signal tier × risk gradient (benchmark trailing 30d), on the official daily-close series (published + point-in-time reconstruction of the same standard)",
         "risk_bands": {"1_deep_off": "<-15%", "2_off": "-15..-5%", "3_neutral": "-5..+5%",
                        "4_on": "+5..+15%", "5_deep_on": ">+15%"},
         "grid": grid,
