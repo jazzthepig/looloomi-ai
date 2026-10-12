@@ -60,8 +60,9 @@ Coordinate via `MINIMAX_SYNC.md` before touching anything Mac-side.
 
 **CometCloud AI** — crypto Fund-of-Funds platform + intelligence ecosystem for institutional /
 family-office / HNW across APAC; HK base. AI-curated **on-chain FoF, venue- and chain-agnostic**
-— we go where the on-chain liquidity is. OSL-stablecoin denominated. Target $500M AUM, 1% mgmt +
-performance. Built for human LPs and AI agents equally.
+— we go where the on-chain liquidity is. OSL-stablecoin denominated. AUM $30M → $500M, **engineered
+for $500M now**; strategies 0% mgmt + perf, fund wrapper mgmt + perf (`src/api/contracts/fund.py`).
+Built for human LPs and AI agents equally.
 **Looloomi** — the AI-agent / Web3 tech arm powering it.
 
 > **Chain-agnostic ≠ instrument-agnostic (Jazz, 2026-08-23).** The chain follows liquidity;
@@ -231,10 +232,8 @@ add-on and is still Micro — 256MB shared_buffers, 60 conns) · Mac Mini M4 Pro
 DeFiLlama, Alternative.me · Env vars in the Railway dashboard; fallback chains documented at
 use-site. Table/RPC inventory: `src/api/schema_manifest.py`, never a list here.
 
-**CIS spine:** Mac T1 → cis_push → Redis `cis:local_scores` → `cis_provider.py` T2 fallback →
-`/api/v1/cis/universe` → badge T1 green / T2 amber. Grades A+≥85…F<25; percentile is metadata;
-signals = compliance enum only. Spec: `CIS_METHODOLOGY.md` + cis-methodology skill.
-**CIS v5 validated, NOT deployed:** `src/data/cis/cis_v5_architecture.py`.
+**CIS:** ONE score per asset per day = `cis_official_daily` (daily close, `official.py` overlay on every
+surface); Mac T1 / T2 30-min = `intraday` preview only. Signals = compliance enum. Spec: cis-methodology skill.
 
 ## Design principles
 
