@@ -2642,7 +2642,7 @@ class GradeChangesInput(BaseModel):
 @mcp.tool()
 async def cometcloud_get_grade_changes(params: GradeChangesInput) -> str:
     """
-    Returns all CIS grade changes detected in the last N hours across the 84-asset investable universe.
+    Returns all CIS grade changes detected in the last N hours across the investable universe (official daily publication).
 
     WHEN TO CALL: Call this instead of polling cometcloud_get_cis_universe repeatedly.
     Use it to detect momentum shifts, filter for upgrade/downgrade candidates, or trigger

@@ -25,7 +25,8 @@ export default defineConfig({
         portfolio: resolve(__dirname, 'portfolio.html'),
         analytics: resolve(__dirname, 'analytics.html'),
         agent: resolve(__dirname, 'agent.html'),
-        win:   resolve(__dirname, 'win.html'),
+        // win.html unpublished 2026-10-12 (S-552): hardware / infrastructure internals, stale 84-asset / 30-min claims,
+        // 'positioning recommendation' language. Source kept; not built, so not served.
       }
     }
   },

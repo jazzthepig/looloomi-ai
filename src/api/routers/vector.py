@@ -172,7 +172,7 @@ async def get_asset_clusters(
     seed: int = Query(42, description="Random seed for reproducibility"),
 ):
     """
-    K-means++ clustering of all 84 assets by 18-dim embedding.
+    K-means++ clustering of the CIS universe by 18-dim embedding.
     Cluster 0 = highest quality centroid. Returns clusters with per-cluster metadata.
     """
     load_embeddings, load_meta, embedding_age_seconds = _load_store()
