@@ -961,7 +961,7 @@ export default function MobileApp() {
               color: T.green,
               border: "1px solid rgba(0,232,122,0.15)",
             }}>
-              CIS LIVE
+              CIS · DAILY CLOSE
             </span>
           )}
           <span style={{

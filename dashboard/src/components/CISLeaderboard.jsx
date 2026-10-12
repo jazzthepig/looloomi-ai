@@ -416,9 +416,13 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           setData(mapped);
           setSelectedAsset(mapped[0]);
           setDataSource(json.data_source || "coingecko+defillama");
-          setEngineSource(json.source || "railway");
-          // Handle both Unix seconds and milliseconds timestamps
-          if (json.timestamp) {
+          // S-546: the scores on this page are the official daily close (S-539) — label them as such, not by
+          // which intraday engine answered last ("ESTIMATED" / live push time read as if the scores were estimates)
+          const off = json.official && json.official.applied ? json.official : null;
+          setEngineSource(off ? "official" : (json.source || "railway"));
+          if (off) {
+            setUpdatedAt(`UTC close ${off.d}`);
+          } else if (json.timestamp) {
             const ts = typeof json.timestamp === "number" && json.timestamp < 1e12
               ? json.timestamp * 1000  // Unix seconds → milliseconds
               : json.timestamp;
@@ -775,11 +779,11 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
           <span style={{
             fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700,
             letterSpacing: "0.10em", padding: "3px 8px", borderRadius: 3,
-            background: engineSource === "local_engine" ? "rgba(0,217,138,0.10)" : "rgba(251,191,36,0.08)",
-            color:      engineSource === "local_engine" ? "#00D98A" : "#fbbf24",
-            border:    `1px solid ${engineSource === "local_engine" ? "rgba(0,217,138,0.22)" : "rgba(251,191,36,0.20)"}`,
+            background: engineSource === "official" || engineSource === "local_engine" ? "rgba(0,217,138,0.10)" : "rgba(251,191,36,0.08)",
+            color:      engineSource === "official" || engineSource === "local_engine" ? "#00D98A" : "#fbbf24",
+            border:    `1px solid ${engineSource === "official" || engineSource === "local_engine" ? "rgba(0,217,138,0.22)" : "rgba(251,191,36,0.20)"}`,
           }}>
-            {engineSource === "local_engine" ? "FULL MODEL" : "ESTIMATED"}
+            {engineSource === "official" ? "DAILY CLOSE" : engineSource === "local_engine" ? "FULL MODEL" : "ESTIMATED"}
           </span>
         </div>
 

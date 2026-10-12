@@ -775,13 +775,13 @@ export default function CISWidget({ refreshKey = 0, defaultLimit = 0 }) {
               background: error ? "rgba(239,68,68,0.2)" : dataSource !== "loading" ? "rgba(34,197,94,0.2)" : "rgba(251,191,36,0.2)",
               color: error ? "#ef4444" : dataSource !== "loading" ? "#22c55e" : "#fbbf24"
             }}>
-              {error ? "ERROR" : dataSource === "loading" ? "SYNCING" : "LIVE"}
+              {error ? "ERROR" : dataSource === "loading" ? "SYNCING" : data?.official?.applied ? "DAILY CLOSE" : "LIVE"}
             </span>
           </div>
           <p style={{ fontSize: 11, color: T.secondary, marginTop: 4 }}>
-            CIS v4.1 · Live · {processedData?.universe?.length || 0} assets
+            CIS v4.1 · {data?.official?.applied ? `UTC close ${data.official.d}` : "Live"} · {processedData?.universe?.length || 0} assets
             {customWeights && <span style={{ color: T.gold, marginLeft: 8 }}>Custom weights — what-if scores, not the official CIS</span>}
-            {data?.timestamp && <span style={{ marginLeft: 8 }}>Updated: {new Date(data.timestamp < 1e12 ? data.timestamp * 1000 : data.timestamp).toLocaleString()}</span>}
+            {data?.timestamp && !data?.official?.applied && <span style={{ marginLeft: 8 }}>Updated: {new Date(data.timestamp < 1e12 ? data.timestamp * 1000 : data.timestamp).toLocaleString()}</span>}
           </p>
         </div>
 

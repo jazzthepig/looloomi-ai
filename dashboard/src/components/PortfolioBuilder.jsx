@@ -168,7 +168,7 @@ export default function PortfolioBuilder() {
             </div>
             <div>
               <div style={{ ...label, marginBottom: 8 }}>EACH STRATEGY</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 60px 70px 70px", gap: 4, fontFamily: F.mono, fontSize: 9, color: T.t4 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 60px 70px 70px", gap: 4, fontFamily: F.mono, fontSize: 9, color: T.t3 }}>
                 <span>STRATEGY</span><span style={{ textAlign: "right" }}>WEIGHT</span>
                 <span style={{ textAlign: "right" }}>ADDS RETURN</span><span style={{ textAlign: "right" }}>SHARE OF RISK</span>
               </div>
@@ -183,7 +183,7 @@ export default function PortfolioBuilder() {
             </div>
           </div>
 
-          <div style={{ fontFamily: F.body, fontSize: 10, color: T.t4, marginTop: 14, lineHeight: 1.5 }}>{result.reading}</div>
+          <div style={{ fontFamily: F.body, fontSize: 11, color: T.t3, marginTop: 14, lineHeight: 1.5 }}>{result.reading}</div>
         </div>
       )}
       <style>{`@media (max-width: 800px) { .pb-grid { grid-template-columns: 1fr !important; } }`}</style>
