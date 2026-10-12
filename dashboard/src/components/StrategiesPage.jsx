@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { T, FONTS as F } from "../tokens";
+import PortfolioBuilder from "./PortfolioBuilder";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    StrategiesPage — Three autonomous strategies users can adopt in a few clicks.
@@ -628,7 +629,7 @@ const STRATEGIES = [
     rebalance: "Weekly",
     minEntry: "$5,000 USDC",
     live: false,
-    statusLabel: "Q2 2026",
+    statusLabel: "NOT YET LIVE",
     maxPositions: 5,
     regimeNote:
       "In neutral regimes, maintains 50/30/20 split. In RISK OFF or TIGHTENING, USDC buffer expands to 40%, momentum sleeve compresses to 30%. In RISK ON, yield sleeve can expand to 35% as higher-APY protocols activate.",
@@ -805,6 +806,9 @@ export default function StrategiesPage() {
           />
         ))}
       </div>
+
+      {/* ── Combine strategies: risk and return sources (S-543, Jazz 10-12) ── */}
+      <PortfolioBuilder />
 
       {/* ── Open-source strategies ── */}
       <OpenSourceStrategies />

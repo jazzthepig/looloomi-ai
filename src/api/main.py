@@ -42,6 +42,7 @@ from src.api.routers.market import router as market_router
 from src.api.routers.cis import router as cis_router
 from src.api.routers.intelligence import router as intelligence_router
 from src.api.routers.vault import router as vault_router
+from src.api.routers.portfolio_builder import router as portfolio_builder_router  # S-543 / S-544
 from src.api.routers.onchain import router as onchain_router
 from src.api.routers.macro import router as macro_router
 from src.api.routers.quant import router as quant_router
@@ -115,6 +116,7 @@ app.include_router(force_mark_router)     # 9 paper books force-mark (A-21 vault
 app.include_router(cis_router)
 app.include_router(intelligence_router)
 app.include_router(vault_router)
+app.include_router(portfolio_builder_router)   # S-543 策略拼组合 · S-544 容量
 app.include_router(onchain_router)
 app.include_router(macro_router)
 app.include_router(quant_router)

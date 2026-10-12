@@ -2178,14 +2178,19 @@ def calculate_las(
     high_24h: float,
     low_24h: float,
     confidence: float,
-    aum: float = 30_000_000,
-    max_position_pct: float = 0.05,
-    participation_rate: float = 0.10,
+    aum: Optional[float] = None,
+    max_position_pct: Optional[float] = None,
+    participation_rate: Optional[float] = None,
 ) -> Dict[str, Any]:
     """
     Liquidity-Adjusted Score — v4.1.
-    See CIS_METHODOLOGY.md §6.
+    See CIS_METHODOLOGY.md §6. Sizing assumptions come from src/api/contracts/fund.py (S-544: one place;
+    target AUM now, design AUM checked separately by the capacity report).
     """
+    from src.api.contracts.fund import PARTICIPATION_RATE, SATELLITE_POSITION_PCT, TARGET_AUM_USD
+    aum = TARGET_AUM_USD if aum is None else aum
+    max_position_pct = SATELLITE_POSITION_PCT if max_position_pct is None else max_position_pct
+    participation_rate = PARTICIPATION_RATE if participation_rate is None else participation_rate
     target_position = aum * max_position_pct
     daily_tradeable = volume_24h * participation_rate
 
