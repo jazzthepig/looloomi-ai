@@ -1,0 +1,24 @@
+{
+  "id": "T-085",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-13",
+  "verified": null,
+  "title": "可交易规模的第一步(T-082 A 部分):我们实际能下单的现货场所 × 名字覆盖表 + 订单簿 ±1% / ±2% 深度一周采样(只做测量,不建入库循环)",
+  "source": "Jazz 10-12「数据定可交易规模这个我们设成待办」→ T-082;入库是 Seth 一条线(规则 3b),所以 lane-c 先做测量与设计",
+  "allowed_paths": [
+    "docs/lane/T-085/",
+    "tasks/T-085.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "名字 = /api/v1/cis/universe 的加密部分 + core_cap / cis_tilt / beta_plus / tokenization_tilt 最新持仓(GET /api/v1/fund/capacity 里有);场所 = Binance / OKX / Coinbase / Bybit / Kraken / Hyperliquid 现货(公开接口、无 key);每个名字在哪些场所有 USDT/USDC/USD 现货对;一周内每天 UTC 00 / 08 / 16 三次取订单簿,算 ±1% / ±2% 两侧深度(美元)与场所 24h 成交;脚本与原始快照放 Mac 数据根 research/t085/,不写数据库、不常驻。",
+    "expect": "报告:每个名字的可下单场所数、深度中位数、深度 / 全市场报告成交额的比例;按 S-544 的口径(5% 仓位、10% 参与率、5 天)重算 $30M 与 $500M 下每个名字与每本账能否建满,和全市场口径并排;最后一节给 Seth:入库表结构与采样频率的建议(T-082 B 部分由 Seth 做)"
+  },
+  "prior_value": "S-544:全市场报告成交额口径下 $30M 58/58 过、$500M 50/58 过;tokenization_tilt 被 POLYX 卡在 ≈ $9M。场所深度从没量过。",
+  "notes": "2026-10-13 Seth 开卡派 C。T-036 的剩余一步是 Jazz 删 ~/.config/cometcloud/.env(key 文件只经 Jazz),已改 blocked,lane-c 不再为它定时重测。"
+}

@@ -1,0 +1,25 @@
+{
+  "id": "T-084",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-13",
+  "verified": null,
+  "title": "修 core_variants 宽宇宙臂的数据缺陷:价格只在市值 ≥ $2 亿的日子存在 ⇒ 持仓跌破后亏损被记成 0;同时把这条读改成不全表排序",
+  "source": "S-555 第 0 条(Seth 10-12 实测:生产 S2 +23.3%,完整价格史 −3.8%);S-551 第二大临时写",
+  "allowed_paths": [
+    "src/data/signals/core_variants.py",
+    "tests/test_core_variants.py",
+    "tasks/T-084.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/api/",
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "run_once 里 asset_mcap_daily 的读拆成两步:① 宇宙候选 = 窗口内曾经 mcap ≥ BROAD_MIN_MCAP 的 coin_id 集合;② 这些 coin_id 的**完整**价格与市值(不带 mcap 过滤)。broad_universe 仍只在 d−1 市值 ≥ $2 亿里排名。新测试:构造一个币在持有周中途市值跌破 $2 亿、价格再跌 50% —— 旧实现该周这个币的收益为 0(测试先在旧代码上红),新实现记入亏损。读的 order 用唯一键(d, coin_id)而不是全部选中列(S-532 的 stable_order 对这张表退化成五列排序 → 临时写)。",
+    "expect": "重跑回放后 core_variants_daily 的 broad_mom30_breadth:2023–24 ≈ +240%、2025-01 → 最新 ≈ −4%(S-555 周频复刻值,日频允许几个点的差);数字写进卡 notes。前向行(10-08 起)也会变 —— 这是改正,台账写 M- 条目说明"
+  },
+  "prior_value": "生产 broad_mom30_breadth 2023–24 +268%、2025-01 → 10-11 +23.3%(含缺陷);core_variants 每轮读 asset_mcap_daily 按五列排序分页,18 天临时写约 72 GB",
+  "notes": "2026-10-13 Seth 开卡派 B,排在 T-068 之前(它改的是一条在跑的前向记录)。T-059:合并前的必补项「n=80 iid 覆盖率测试」还没看到,先补那一条再做本卡。"
+}
