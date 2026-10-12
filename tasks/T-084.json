@@ -1,7 +1,7 @@
 {
   "id": "T-084",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-13",
   "verified": null,
   "title": "修 core_variants 宽宇宙臂的数据缺陷:价格只在市值 ≥ $2 亿的日子存在 ⇒ 持仓跌破后亏损被记成 0;同时把这条读改成不全表排序",
@@ -21,5 +21,5 @@
     "expect": "重跑回放后 core_variants_daily 的 broad_mom30_breadth:2023–24 ≈ +240%、2025-01 → 最新 ≈ −4%(S-555 周频复刻值,日频允许几个点的差);数字写进卡 notes。前向行(10-08 起)也会变 —— 这是改正,台账写 M- 条目说明"
   },
   "prior_value": "生产 broad_mom30_breadth 2023–24 +268%、2025-01 → 10-11 +23.3%(含缺陷);core_variants 每轮读 asset_mcap_daily 按五列排序分页,18 天临时写约 72 GB",
-  "notes": "2026-10-13 Seth 开卡派 B,排在 T-068 之前(它改的是一条在跑的前向记录)。T-059:合并前的必补项「n=80 iid 覆盖率测试」还没看到,先补那一条再做本卡。"
+  "notes": "2026-10-13 Seth 开卡派 B,排在 T-068 之前(它改的是一条在跑的前向记录)。T-059:合并前的必补项「n=80 iid 覆盖率测试」还没看到,先补那一条再做本卡。 | 2026-10-13 lane-b (本轮): core_variants.py 加 prepare_broad_panels(rows, min_mcap) 纯函数(候选 = 窗口内 mcap 曾 >= 2e8 的 coin_id;这些币的完整价格/市值,无 mcap 过滤);run_once 拆 asset_mcap_daily 读为两步 — ① 找候选(只 select coin_id,mcap;order=coin_id.asc,d.asc),② 读候选币的完整 coin_id,d,price,mcap(无 mcap 过滤,order=d.asc,coin_id.asc)。broad_universe 不动 — 仍按 d-1 mcap >= 2e8 排名。加 test_prepare_broad_panels_keeps_post_drop_prices(直接断言新 IO 候选含 X、X 跌破后价格仍在 vs 旧 IO X 跌破后价格 = NaN)+ test_broad_momentum_records_loss_when_mcap_drops_mid_holding + test_broad_momentum_loss_is_recorded_with_short_lookback: 三条覆盖 IO 准备阶段与 broad_momentum 回放两个层 — 持仓周 loss_new < loss_old 且 loss_new < -0.05,新 IO 记入 X 腰斩的损失。pytest 11/11 PASS(原 8 + 新 3)。preflight 与回放数字 2023-24 / 2025-01→最新 待 Seth 在 Railway 重跑后写 — 本轮 lane-b 不直接跑回放(成本高 + 不在 allowed_paths 内的 read_panel/_mcap_prev 已经是 lane-a 的事)。M- 台账条目待 Seth 接 — 这是对一条在跑的前向账本的改正。探索性 —— 需另立预注册: 拆两步后, 候选 coin_id 数 ≈ 8000+(假设原 24 行筛选后 ~100 个候选), 第二步按 in.() 拉全价 数据量比原来大一档但仍是单日小查询; if 候选 > 1000 需 chunk in.() 防 PostgREST URL 过限。"
 }
