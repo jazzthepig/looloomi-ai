@@ -1,0 +1,49 @@
+{
+  "backend": "d",
+  "start": "2025-01-01",
+  "end": "2026-10-12",
+  "n_days": 650,
+  "sources": {
+    "btc": "real:research/t060/raw/btc_eth_coingecko.csv (CoinGecko)",
+    "core_u": "synthetic-on-priors(seed=20261014)",
+    "multiplier": "synthetic-on-priors(seed=20261015)",
+    "portfolio_layer": "synthetic-on-priors(seed=20261016)",
+    "cis_tilt": "synthetic-on-priors(seed=20261017)"
+  },
+  "first_few": [
+    {
+      "d": "2025-01-01 00:00:00",
+      "core_u": 0.3109302837654154,
+      "multiplier": 0.1418491352150888,
+      "portfolio_layer": 0.23909923894154037,
+      "cis_tilt": 153.8983729222648,
+      "btc": 1.0
+    },
+    {
+      "d": "2025-01-02 00:00:00",
+      "core_u": 0.31941295653825996,
+      "multiplier": 0.15190030006339392,
+      "portfolio_layer": 0.23999368491937978,
+      "cis_tilt": 158.93496351484686,
+      "btc": 1.009371400705181
+    }
+  ],
+  "last_few": [
+    {
+      "d": "2026-10-11 00:00:00",
+      "core_u": 1.108298250256117,
+      "multiplier": 0.9670017372398894,
+      "portfolio_layer": 1.0765347763346123,
+      "cis_tilt": 1.0151746334104508,
+      "btc": 0.8083830350162927
+    },
+    {
+      "d": "2026-10-12 00:00:00",
+      "core_u": 1.1085775092701808,
+      "multiplier": 0.9576597039185643,
+      "portfolio_layer": 1.0368143395075913,
+      "cis_tilt": 1.007796355787,
+      "btc": 0.8083830350162927
+    }
+  ]
+}

@@ -1,0 +1,224 @@
+{
+  "panel_first": "2023-01-02",
+  "panel_last": "2026-10-12",
+  "windows": {
+    "W1": {
+      "window_days": 729,
+      "fund": {
+        "n_days": 729,
+        "total_return": 0.02032104419685199,
+        "daily_std": 0.018932942579658912,
+        "mean_daily": 0.00020632006693799702,
+        "ann_return": 0.07530682443236891,
+        "ann_std": 0.36171336009954264,
+        "sharpe": 0.20819475512777483,
+        "max_dd": -0.5204767750270254
+      },
+      "core_cap": {
+        "n_days": 729,
+        "total_return": -0.4277543877383321,
+        "daily_std": 0.028684111159937985,
+        "mean_daily": -0.0003541923694240336,
+        "ann_return": -0.12928021483977226,
+        "ann_std": 0.548009174246219,
+        "sharpe": -0.23590885137570164,
+        "max_dd": -0.6771951202786831
+      },
+      "btc": {
+        "n_days": 729,
+        "total_return": 0.6504081478037627,
+        "daily_std": 0.031940090505689994,
+        "mean_daily": 0.0011964664681253206,
+        "ann_return": 0.436710260865742,
+        "ann_std": 0.6102145723036765,
+        "sharpe": 0.7156667190314342,
+        "max_dd": -0.45651058362208063
+      },
+      "excess_vs_core_ann": 0.20458703927214117,
+      "pct_vs_random": 0.342,
+      "random_n": 500,
+      "random_p50_total": 0.12849256728106162,
+      "random_p95_total": 0.7944140059662286
+    },
+    "W2": {
+      "window_days": 649,
+      "fund": {
+        "n_days": 649,
+        "total_return": -0.02483370378899541,
+        "daily_std": 0.01892442063484314,
+        "mean_daily": 0.000140351391816153,
+        "ann_return": 0.05122825801289584,
+        "ann_std": 0.3615505485724424,
+        "sharpe": 0.14169044471144385,
+        "max_dd": -0.351242779532725
+      },
+      "core_cap": {
+        "n_days": 649,
+        "total_return": -0.3843034028835922,
+        "daily_std": 0.02781935403739671,
+        "mean_daily": -0.0003601863175326394,
+        "ann_return": -0.13146800589941338,
+        "ann_std": 0.5314880126175731,
+        "sharpe": -0.24735836515283718,
+        "max_dd": -0.5657942285142268
+      },
+      "btc": {
+        "n_days": 649,
+        "total_return": -0.6741603775338453,
+        "daily_std": 0.031016575370005985,
+        "mean_daily": -0.0012421923790541676,
+        "ann_return": -0.4534002183547712,
+        "ann_std": 0.5925708404101493,
+        "sharpe": -0.7651409543556837,
+        "max_dd": -0.8215782757549311
+      },
+      "excess_vs_core_ann": 0.18269626391230923,
+      "pct_vs_random": 0.832,
+      "random_n": 500,
+      "random_p50_total": -0.25361485149476753,
+      "random_p95_total": 0.16225994796489054
+    }
+  },
+  "sample_decisions": [
+    {
+      "d": "2023-01-02",
+      "weights": {
+        "core_cap": 0.19999999999999996,
+        "multiplier": 0.4,
+        "portfolio_layer": 0.4
+      },
+      "evidence_path": {
+        "multiplier": "simulated",
+        "portfolio_layer": "simulated",
+        "cis_tilt": "off"
+      },
+      "why": [
+        "\u2460 core_cap: 100% \u2014\u2014 \u9ed8\u8ba4\u6301\u6709,\u5408\u6210\u65e5 2023-01-02",
+        "multiplier: 40.0% \u2014\u2014 \u6a21\u62df\u8bc1\u636e(A \u8def):\u5c01\u5b58\u7559\u51fa\u6bb5 200 \u5929;\u03bc_post +7.0%/\u5e74;pct_vs_random 0.96",
+        "portfolio_layer: 40.0% \u2014\u2014 \u6a21\u62df\u8bc1\u636e(A \u8def):\u5c01\u5b58\u7559\u51fa\u6bb5 180 \u5929;\u03bc_post +4.0%/\u5e74;pct_vs_random 0.95",
+        "cis_tilt: 0 \u2014\u2014 \u524d\u5411/\u56de\u653e\u7a97\u53e3 0 \u5929(< MIN_DAYS=20);\u6a21\u62df\u8bc1\u636e\u65e0"
+      ]
+    },
+    {
+      "d": "2023-08-20",
+      "weights": {
+        "core_cap": 0.19999999999999996,
+        "multiplier": 0.4,
+        "portfolio_layer": 0.4
+      },
+      "evidence_path": {
+        "multiplier": "simulated",
+        "portfolio_layer": "simulated",
+        "cis_tilt": "off"
+      },
+      "why": [
+        "\u2460 core_cap: 100% \u2014\u2014 \u9ed8\u8ba4\u6301\u6709,\u5408\u6210\u65e5 2023-08-20",
+        "multiplier: 40.0% \u2014\u2014 \u6a21\u62df\u8bc1\u636e(A \u8def):\u5c01\u5b58\u7559\u51fa\u6bb5 200 \u5929;\u03bc_post +7.0%/\u5e74;pct_vs_random 0.96",
+        "portfolio_layer: 40.0% \u2014\u2014 \u6a21\u62df\u8bc1\u636e(A \u8def):\u5c01\u5b58\u7559\u51fa\u6bb5 180 \u5929;\u03bc_post +4.0%/\u5e74;pct_vs_random 0.95",
+        "cis_tilt: 0 \u2014\u2014 \u8d85\u989d +60.6%/\u5e74,\u4efb\u610f\u65f6\u523b\u4e0b\u754c -216.0% \u4e0d > 0(230 \u5929)"
+      ]
+    },
+    {
+      "d": "2024-04-06",
+      "weights": {
+        "core_cap": 0.19999999999999996,
+        "multiplier": 0.4,
+        "portfolio_layer": 0.4
+      },
+      "evidence_path": {
+        "multiplier": "simulated",
+        "portfolio_layer": "simulated",
+        "cis_tilt": "off"
+      },
+      "why": [
+        "\u2460 core_cap: 100% \u2014\u2014 \u9ed8\u8ba4\u6301\u6709,\u5408\u6210\u65e5 2024-04-06",
+        "multiplier: 40.0% \u2014\u2014 \u6a21\u62df\u8bc1\u636e(A \u8def):\u5c01\u5b58\u7559\u51fa\u6bb5 200 \u5929;\u03bc_post +7.0%/\u5e74;pct_vs_random 0.96",
+        "portfolio_layer: 40.0% \u2014\u2014 \u6a21\u62df\u8bc1\u636e(A \u8def):\u5c01\u5b58\u7559\u51fa\u6bb5 180 \u5929;\u03bc_post +4.0%/\u5e74;pct_vs_random 0.95",
+        "cis_tilt: 0 \u2014\u2014 \u8d85\u989d +35.6%/\u5e74,\u4efb\u610f\u65f6\u523b\u4e0b\u754c -169.4% \u4e0d > 0(460 \u5929)"
+      ]
+    },
+    {
+      "d": "2024-11-22",
+      "weights": {
+        "core_cap": 0.19999999999999996,
+        "multiplier": 0.4,
+        "portfolio_layer": 0.4
+      },
+      "evidence_path": {
+        "multiplier": "simulated",
+        "portfolio_layer": "simulated",
+        "cis_tilt": "off"
+      },
+      "why": [
+        "\u2460 core_cap: 100% \u2014\u2014 \u9ed8\u8ba4\u6301\u6709,\u5408\u6210\u65e5 2024-11-22",
+        "multiplier: 40.0% \u2014\u2014 \u6a21\u62df\u8bc1\u636e(A \u8def):\u5c01\u5b58\u7559\u51fa\u6bb5 200 \u5929;\u03bc_post +7.0%/\u5e74;pct_vs_random 0.96",
+        "portfolio_layer: 40.0% \u2014\u2014 \u6a21\u62df\u8bc1\u636e(A \u8def):\u5c01\u5b58\u7559\u51fa\u6bb5 180 \u5929;\u03bc_post +4.0%/\u5e74;pct_vs_random 0.95",
+        "cis_tilt: 0 \u2014\u2014 \u8d85\u989d +52.5%/\u5e74,\u4efb\u610f\u65f6\u523b\u4e0b\u754c -113.5% \u4e0d > 0(690 \u5929)"
+      ]
+    },
+    {
+      "d": "2025-07-10",
+      "weights": {
+        "core_cap": 0.19999999999999996,
+        "multiplier": 0.4,
+        "portfolio_layer": 0.4
+      },
+      "evidence_path": {
+        "multiplier": "simulated",
+        "portfolio_layer": "simulated",
+        "cis_tilt": "off"
+      },
+      "why": [
+        "\u2460 core_cap: 100% \u2014\u2014 \u9ed8\u8ba4\u6301\u6709,\u5408\u6210\u65e5 2025-07-10",
+        "multiplier: 40.0% \u2014\u2014 \u6a21\u62df\u8bc1\u636e(A \u8def):\u5c01\u5b58\u7559\u51fa\u6bb5 200 \u5929;\u03bc_post +7.0%/\u5e74;pct_vs_random 0.96",
+        "portfolio_layer: 40.0% \u2014\u2014 \u6a21\u62df\u8bc1\u636e(A \u8def):\u5c01\u5b58\u7559\u51fa\u6bb5 180 \u5929;\u03bc_post +4.0%/\u5e74;pct_vs_random 0.95",
+        "cis_tilt: 0 \u2014\u2014 \u8d85\u989d +43.3%/\u5e74,\u4efb\u610f\u65f6\u523b\u4e0b\u754c -101.8% \u4e0d > 0(920 \u5929)"
+      ]
+    },
+    {
+      "d": "2026-02-25",
+      "weights": {
+        "core_cap": 0.19999999999999996,
+        "multiplier": 0.4,
+        "portfolio_layer": 0.4
+      },
+      "evidence_path": {
+        "multiplier": "simulated",
+        "portfolio_layer": "simulated",
+        "cis_tilt": "off"
+      },
+      "why": [
+        "\u2460 core_cap: 100% \u2014\u2014 \u9ed8\u8ba4\u6301\u6709,\u5408\u6210\u65e5 2026-02-25",
+        "multiplier: 40.0% \u2014\u2014 \u6a21\u62df\u8bc1\u636e(A \u8def):\u5c01\u5b58\u7559\u51fa\u6bb5 200 \u5929;\u03bc_post +7.0%/\u5e74;pct_vs_random 0.96",
+        "portfolio_layer: 40.0% \u2014\u2014 \u6a21\u62df\u8bc1\u636e(A \u8def):\u5c01\u5b58\u7559\u51fa\u6bb5 180 \u5929;\u03bc_post +4.0%/\u5e74;pct_vs_random 0.95",
+        "cis_tilt: 0 \u2014\u2014 \u8d85\u989d +30.1%/\u5e74,\u4efb\u610f\u65f6\u523b\u4e0b\u754c -101.9% \u4e0d > 0(1150 \u5929)"
+      ]
+    }
+  ],
+  "provenance": {
+    "backend": "s",
+    "start": "2023-01-02",
+    "end": "2026-10-12",
+    "n_days": 1380,
+    "sources": {
+      "core_u": "synthetic(seed=20261013, priors per M-558)",
+      "multiplier": "synthetic(seed=20261014, priors per M-558)",
+      "portfolio_layer": "synthetic(seed=20261015, priors per M-558)",
+      "cis_tilt": "synthetic(seed=20261016, priors per M-558)",
+      "btc": "synthetic(seed=20261017, priors per M-558)"
+    },
+    "demo_sim_pack": {
+      "multiplier": {
+        "pct_vs_random": 0.96,
+        "mu_post_ann": 0.07,
+        "sigma_ann": 0.18
+      },
+      "portfolio_layer": {
+        "pct_vs_random": 0.95,
+        "mu_post_ann": 0.04,
+        "sigma_ann": 0.14
+      },
+      "cis_tilt_note": "\u65e0 A \u8def\u8bc1\u636e(\u6ca1\u6709 holdout) \u2014 \u8d70\u7eaf B \u8def, evidence = \u8d85\u989d \u2265 MIN_DAYS"
+    }
+  }
+}
