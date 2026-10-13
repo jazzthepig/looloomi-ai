@@ -88,10 +88,34 @@ _call_log_queue: queue.Queue = queue.Queue()
 _SB_URL   = os.getenv("SUPABASE_URL", "").rstrip("/")
 _SB_KEY   = os.getenv("SUPABASE_KEY", os.getenv("SUPABASE_SERVICE_KEY", ""))
 _SB_TABLE = "agent_call_log"
+#: S-562:后台写入任务。原来只在 import 时尝试启动 —— 那时没有运行中的事件循环,直接 return,
+#: 注释说「首个请求时再启动」,但没有任何地方再启动它 ⇒ agent_call_log 从上线起 0 行,队列只进不出。
+_background_task = None
+_CALL_LOG_MAX = 5000            # 写不出去时最多攒这么多,超了丢最旧的(不让内存无限涨)
+
+
+def _ensure_call_log_task() -> None:
+    """在运行中的事件循环里启动(或重启)后台写入;没配 Supabase 就不启动(本地 stdio 常见)。"""
+    global _background_task
+    if _background_task is not None and not _background_task.done():
+        return
+    if not _SB_URL or not _SB_KEY:
+        return
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return
+    _background_task = loop.create_task(_call_log_loop())
 
 
 def _enqueue_agent_call(tool_name: str, symbol: str = None, latency_ms: float = 0.0, response_size: int = 0):
     """Queue a call for async write to Supabase. Thread-safe, non-blocking."""
+    while _call_log_queue.qsize() >= _CALL_LOG_MAX:
+        try:
+            _call_log_queue.get_nowait()
+        except queue.Empty:
+            break
+    _ensure_call_log_task()
     _call_log_queue.put_nowait({
         "tool_name": tool_name,
         "symbol":    symbol,
@@ -147,12 +171,7 @@ async def _call_log_loop():
 # Deferred start — creates task only when an event loop is running.
 # Fixes: RuntimeError at import time when no loop exists (e.g., `python -m uvicorn` at startup).
 def _start_background_log():
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        return  # No loop yet — will be started lazily on first request
-    global _background_task
-    _background_task = loop.create_task(_call_log_loop())
+    _ensure_call_log_task()   # import 时通常没有运行中的循环 —— 真正的启动在第一次 _enqueue_agent_call 里
 
 _start_background_log()
 
