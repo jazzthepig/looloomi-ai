@@ -1,9 +1,13 @@
 {
   "id": "T-064",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-07",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-13T13:45Z",
+    "value": "机制已验:tests/test_allocation_l3.py 的模拟证据准入 / 拒绝 / 前向否决三条过(零信号误放 1.2%)。10-12 配置 = ① 100%,没有账本走 A 路(③ 随机分位 0.59、组合层留出段未封存)—— expect 的第二句以「有账本过门槛」为前提,今天没有,如实记。"
+  },
   "title": "L3 准入改为「模拟证据或前向证据」:过了随机对照与留出段的,当天进纸面配置,不等 60 天",
   "source": "Jazz 10-07「不需要等 30 / 60 / 90 天」;S-488 的 MIN_DAYS = 60 是 Seth 定的",
   "allowed_paths": [

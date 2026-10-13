@@ -1,9 +1,13 @@
 {
   "id": "T-081",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-12",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-13T13:45Z",
+    "value": "10-12 正式批次含 SKY、POL,无 MKR、MATIC;/cis/universe 有 SKY 无 MKR。剩 Minimax 换 T1 宇宙(Mac 侧,SYNC §Seth-1012a)不在本卡验收内。"
+  },
   "title": "代币迁移接段:MKR→SKY(1:24000)、MATIC→POL(1:1)—— 宇宙只放新币,生效日按成交交叉(CoinDesk / CF Benchmarks 做法),历史按比例接,统一标准 v1.3",
   "source": "Jazz 10-12「需要,你也要看看别的项目怎么解决这个问题的」(MKR 是否换成 SKY)",
   "allowed_paths": [

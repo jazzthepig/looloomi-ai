@@ -1,7 +1,7 @@
 {
   "id": "T-086",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-13",
   "verified": null,
   "title": "对外「Track Record」区:每本前向账本的记录 + 每天的比特币时间戳锚,LP 自己能验 —— 验证装置就是产品,现在网站上看不到它",
@@ -26,5 +26,5 @@
     "expect": "测试 tests/test_track_record_page.py(静态检查组件源码):用的三个接口都在;没有 annualized / CAGR / Sharpe 字样或 365 次方;没有 Railway / Supabase / Mac 等内部名;读失败文案存在。npm run build 后提交 dashboard/dist(preflight 有新鲜度检查)。截一张图或写清页面路径到卡 notes。"
   },
   "prior_value": "前向账本 14 本、每天锚到比特币(10-07 起 5 天),对外只有 JSON 接口;网站上 LP 看得到的只有组合器里的纸面记录,看不到「这些记录我们事后改不了」的证据。",
-  "notes": "2026-10-13 Seth 开卡派 B,排在 T-084 之后、T-068 之前。不要复用 dashboard/proof.html(旧稿,含过期与不实文案,S-552)。"
+  "notes": "2026-10-13 Seth 开卡派 B,排在 T-084 之后、T-068 之前。不要复用 dashboard/proof.html(旧稿,含过期与不实文案,S-552)。\n2026-10-13 B 完成 src 改动 + 静态测试(全部通过 17/17);Sidebar + App.jsx 路由已挂;**npm run build 在 worktree 里被权限闸挡(node_modules 不在 worktree,主仓库 node_modules 复制/symlink 失败,vite build 同样被拒),dashboard/dist 这一步需要 Seth 在主仓库跑一次 `cd /Users/sbb/Projects/looloomi-ai/dashboard && npm run build` 后把 dist 复制回 worktree 再补一次 commit**。源码已就绪、组件路径是 `app.html → 侧栏 Track Record`;static checks: tests/test_track_record_page.py 17/17 ✓。 | 10-13 Seth 合并:页面是英文站,「读不到」改成 Could not read(卡上的「读不到」说的是语义,不是要中文字);空列表与读失败分开说;dist 由 Seth 构建。"
 }

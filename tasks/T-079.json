@@ -1,9 +1,13 @@
 {
   "id": "T-079",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-09",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-13T13:45Z",
+    "value": "cis_rebuild_daily 含 cis-standard-v1 → v1.3 全部版本(只追加);CIS_STANDARD.md 在库;维度补齐见 S-531 / S-532。"
+  },
   "title": "CIS 统一标准 v1 + 按时点重建:一个公式、一套时点、一个来源优先级;缺的维度补齐;标签滞回",
   "source": "Jazz 10-09「先开始重建。付费 api 待定,先统一标准。重建不是问题,问题是要数据和时序对上。有缺了维度的补上」",
   "allowed_paths": [

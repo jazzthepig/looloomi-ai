@@ -1,9 +1,13 @@
 {
   "id": "T-075",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-08",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-13T13:45Z",
+    "value": "meta_allocator_daily 前向到 10-12;结论按 S-521 记:不会挑(留出段 −37.4%,打乱分位 0.62)。前向行此前每天被重算改写,S-560 起冻结。"
+  },
   "title": "类比元配置:按当下状态去历史找相似日,看策略库里每个策略之后表现,每周重配(机器自己选)",
   "source": "Jazz 10-08「现在还是没有做到我们设计的智能」;DECISIONS 10-07「策略 × 周期」「风格 VDB 按周期匹配」",
   "allowed_paths": [

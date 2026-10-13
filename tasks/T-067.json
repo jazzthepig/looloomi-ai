@@ -1,7 +1,11 @@
 {
   "created": "2026-10-07",
-  "verified": null,
-  "status": "in_review",
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-13T13:45Z",
+    "value": "style_index_pit_daily 38,602 行(2020-01-01 → 2026-10-12,日更)、style_pit_coverage_daily 日更到 10-12;2023-01-01 top_l1 = ADA / ATOM / AVAX / BNB / DOT / GRAM(TON)/ LTC / SOL / TRX / XRP(按当日市值,无后来者);幸存者偏差见 S-512(二线公链 / 应用 / DeFi 2024 +7.8 / +27.2 / +20.6pp)。"
+  },
+  "status": "done",
   "id": "T-067",
   "owner": "seth",
   "title": "风格矢量按时点重建:每天按当日市值决定层级成分,不用今天的成分回填历史",

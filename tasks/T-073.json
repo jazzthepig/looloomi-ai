@@ -1,9 +1,13 @@
 {
   "id": "T-073",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-08",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-13T13:45Z",
+    "value": "forward_anchor_daily 6 天(10-07 → 10-12),3 个日历都收下;/api/v1/proof/anchors 与 /{d} 公开可取。核对时发现锚后前向行被改写 → S-560 修(冻结 d ≤ 今天 − 2、锚 v2、逐行核对)。"
+  },
   "title": "前向记录锚定:每天把所有前向账本的行做哈希、挂比特币时间戳(OpenTimestamps),对外可验证",
   "source": "高维复盘 10-08 第 2 问(前向记录在设计上会被改写,外人证明不了);Jazz「怎样和合作方提」",
   "allowed_paths": [

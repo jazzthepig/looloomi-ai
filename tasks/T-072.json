@@ -1,9 +1,13 @@
 {
   "id": "T-072",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-08",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-13T13:45Z",
+    "value": "core_variants_daily 回放 + 前向到 10-12;选择已定:Jazz 10-12 解除单币上限,① = cap_a1_u(S-556)。"
+  },
   "title": "① 重新定义:拿掉单币上限、真正的动量加权,以 BTC 为基准按时点回放 + 前向",
   "source": "Jazz 10-08「解开单一资产上限限制,采用真正的动量加权」;S-516 现行 ① 两段每一项都输给单持 BTC",
   "allowed_paths": [

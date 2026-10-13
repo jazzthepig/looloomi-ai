@@ -1,7 +1,7 @@
 {
   "id": "T-057",
   "title": "三臂对比的记账有错:下一次调仓不在的币按「零收益」记、周收益平摊到每天 —— A 的 arm C Sharpe 4.90 / 回撤 10% 是这个造成的",
-  "owner": "seth",
+  "owner": "lane-c",
   "status": "open",
   "created": "2026-10-07",
   "source": "S-396 的 paper_trading/compare_three_arms.py::_build_daily_returns;A 10-07 的 T-003 回放报告",
@@ -20,5 +20,5 @@
   },
   "prior_value": "A 10-07 报告:arm C Sharpe +4.90 / MaxDD 10.3% / 累计 +456%;arm B +1.48 / 60.5% —— 记账口径下的数,不是证据",
   "verified": null,
-  "notes": "2026-10-07 开卡。两处:(1) exit 价取「下一次 ENTERED 里同一个币的 leg.price」,不在就取 entry 价 —— arm C 的宇宙随闸门变,跌出闸门的币亏损被抹成 0;(2) 一个调仓周期的收益按天数开方平摊,日波动被低估,所有臂的 Sharpe 都被抬高。这是 Seth 的代码(S-396)。"
+  "notes": "2026-10-07 开卡。两处:(1) exit 价取「下一次 ENTERED 里同一个币的 leg.price」,不在就取 entry 价 —— arm C 的宇宙随闸门变,跌出闸门的币亏损被抹成 0;(2) 一个调仓周期的收益按天数开方平摊,日波动被低估,所有臂的 Sharpe 都被抬高。这是 Seth 的代码(S-396)。 | 10-13 Seth:改派 lane-c(研究脚本的记账修正,卡上 acceptance 已写清)。"
 }

@@ -1,9 +1,13 @@
 {
   "id": "T-078",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-09",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-13T13:45Z",
+    "value": "cis_signal_attribution 13,962 行,最新 10-12;/api/v1/cis/attribution 与 MCP 在线;口径测试 tests/test_signal_disclosure.py 过。"
+  },
   "title": "每个 CIS 信号都归因(为什么出:支柱贡献;之后:同类 / 相对 / BTC β),对外口径改为「根据过往表现展示,不是预测」",
   "source": "Jazz 10-09「就按这样定,是根据过往表现展示并非预测。然后我们需要给他们每个信号都归因」",
   "allowed_paths": [
