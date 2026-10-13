@@ -16,8 +16,9 @@ from src.data.evaluation import rr_matrix as rr
 _CASES = sorted(n for n in dir(cases) if n.startswith("test_") and callable(getattr(cases, n)))
 
 
-def test_all_thirteen_cases_are_wired():
-    assert len(_CASES) == 13
+def test_all_twenty_cases_are_wired():
+    """T-045 13 + T-068 3(trend_vol 6 / 无前视 / vol 切点)+ T-069 4(零信号均匀 / 信号 outlier / 等权风格 / outlier 判定)。"""
+    assert len(_CASES) == 20
 
 
 @pytest.mark.parametrize("name", _CASES)
