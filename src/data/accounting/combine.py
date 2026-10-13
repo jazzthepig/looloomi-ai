@@ -40,7 +40,9 @@ PUBLIC = {
     "beta_plus_m": ("Momentum tilt (monthly)", "The momentum tilt, rebalanced monthly."),
     "cis_tilt": ("CIS tilt", "Overweights higher-CIS names inside the core holding."),
     "multiplier": ("Exposure timing (0.7–1.3x)", "The core holding scaled between 0.7x and 1.3x by market state; never short."),
+    "multiplier_v1": ("Exposure timing v1 (control)", "The same timing rule on the previous 40%-capped core, kept as the control."),
     "portfolio_layer": ("Portfolio layer (0–1x)", "Exposure between 0 and 1 by market-state flags; can sit in cash."),
+    "portfolio_layer_v2": ("Portfolio layer v2 (control)", "The same exposure rule on the previous 40%-capped core, kept as the control."),
     "tokenization_tilt": ("Tokenization infrastructure tilt", "A 25% tilt toward names carrying traditional assets on-chain."),
     "hl_mech": ("Four-coin rule-based sizing", "Four liquid coins held spot, position size set by rule."),
     "hl_jev": ("Four-coin discretionary sizing", "The same four coins, with discretionary size adjustments."),
@@ -54,10 +56,10 @@ PUBLIC = {
 
 #: 回放口径:账本 → (表, 臂)
 #: S-556:① 的回放 = 不设单币上限的市值加权(core_variants 的 cap_uncapped,同面板、同周一再平衡、同 10 bps);
-#: ③ / 组合层的回放仍以旧 ①(单币 ≤ 40%)为底,直到 T-087 按新 ① 重算。
+#: ③ / 组合层的回放自 T-087 起也建在新 ① 上(mult_v2_replay / pl_v3_replay)。
 REPLAY = {"core_cap": ("core_variants_daily", "cap_uncapped"),
-          "multiplier": ("multiplier_daily", "mult_v1_replay"),
-          "portfolio_layer": ("portfolio_layer_daily", "pl_v2_replay")}
+          "multiplier": ("multiplier_daily", "mult_v2_replay"),
+          "portfolio_layer": ("portfolio_layer_daily", "pl_v3_replay")}
 
 
 def parse_weights(spec: str) -> dict[str, float]:
