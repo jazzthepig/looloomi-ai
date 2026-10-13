@@ -312,8 +312,10 @@ async def _hourly_t2_snapshot_loop():
             else:
                 print(f"[SNAPSHOT] hourly T2 — nothing to write "
                       f"(suppressed={len(shadowed)})")
+            await _iteration_ok("_hourly_t2_snapshot_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[SNAPSHOT] ⚠️  hourly T2 run failed: {_e}")
+            await _iteration_error("_hourly_t2_snapshot_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(_HOURLY_SNAPSHOT_S)
 
 
@@ -340,8 +342,10 @@ async def _regime_fitness_loop():
                 dry_run=False,
             )
             print(f"[REGIME_FITNESS] daily — ok={res.get('ok')} rows={res.get('rows')}")
+            await _iteration_ok("_regime_fitness_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[REGIME_FITNESS] ⚠️  daily run failed: {_e}")
+            await _iteration_error("_regime_fitness_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(24 * 3600)
 
 
@@ -370,8 +374,10 @@ async def _ohlcv_collector_loop():
             _warn = "  ⚠️⚠️ WROTE 0 ROWS — price feed DEGRADED (EODHD+yfinance+CG all empty?)" if _rw == 0 else ""
             print(f"[OHLCV] daily — rows={_rw} syms={_ok}/{res.get('symbols_total')} "
                   f"elapsed={res.get('elapsed_s')}s{_warn}")
+            await _iteration_ok("_ohlcv_collector_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[OHLCV] ⚠️  daily run failed: {_e}")
+            await _iteration_error("_ohlcv_collector_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(24 * 3600)
 
 
@@ -760,11 +766,14 @@ async def _t2_precompute_loop():
                 # overwrite the last good copy with it (S-190).
                 print(f"[T2] ⚠️  build returned 0 assets in {took:.1f}s — "
                       f"keeping the previous cached universe")
+            await _iteration_ok("_t2_precompute_loop")   # S-564 / T-061
         except _asyncio.TimeoutError:
             print(f"[T2] ⚠️  precompute exceeded {_budget}s — previous value "
                   f"still serving. Check t2_branches in /health.")
+            await _iteration_error("_t2_precompute_loop", TimeoutError("T2 build timed out"))   # S-564 / T-061
         except Exception as _e:
             print(f"[T2] ⚠️  precompute failed: {_e}")
+            await _iteration_error("_t2_precompute_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(_interval)
 
 
@@ -796,8 +805,10 @@ async def _forward_return_backfill_loop():
                       f"{cov.get('independent_days')} (IC gate needs 20)")
             else:
                 print(f"[FWD] ⚠️  {r.get('reason')}")
+            await _iteration_ok("_forward_return_backfill_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[FWD] ⚠️  backfill failed: {_e}")
+            await _iteration_error("_forward_return_backfill_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(3600)
 
 
@@ -832,10 +843,12 @@ async def _embedding_rebuild_loop():
                 # says whether the table is actually advancing (S-188 — the alarm
                 # does not live inside the thing that breaks).
                 print(f"[VEC] ⚠️  no write: {res.reason}")
+            await _iteration_ok("_embedding_rebuild_loop")   # S-564 / T-061
         except _asyncio.TimeoutError:
             print("[VEC] ⚠️  rebuild exceeded its budget — reporting, not hanging")
         except Exception as _e:
             print(f"[VEC] ⚠️  rebuild failed: {_e}")
+            await _iteration_error("_embedding_rebuild_loop", _e)   # S-564 / T-061
         try:
             from src.data.vector.embedding_loop import INTERVAL_S as _iv
         except Exception:
@@ -1981,6 +1994,27 @@ from src.api.rpc_diagnostics import _record_loop_attempt  # S-408-2 (A-408-2) pe
 #: 25 个 print-only loop 也是同一类 follow-up(优先级低,等 _beat()-using 闭环后再批量)。
 
 
+_ITERATION_OK_EVERY_S = 3600
+_iteration_ok_last: dict[str, float] = {}
+
+
+async def _iteration_ok(name: str, refused: bool = False) -> None:
+    """S-564 / T-061:没有 _beat、也不自己写 loop_attempt 的循环(24 个),每一轮在这里留一行 ——
+    loop-watch 与判活都只看 loop_attempt,不在这张表里的循环,停了也没人知道。绝不抛(_record_loop_attempt 自己吞)。
+    5 分钟一轮的循环(sl_tp / cis_flip / metering)一小时只记一次 ok,错误每次都记 —— 判活要的是「还在转」,不是流水账。"""
+    import time as _t
+    now = _t.monotonic()
+    if not refused and now - _iteration_ok_last.get(name, -1e18) < _ITERATION_OK_EVERY_S:
+        return
+    _iteration_ok_last[name] = now
+    await _record_loop_attempt(name, "refused" if refused else "ok", writer=f"src.api.main.{name}")
+
+
+async def _iteration_error(name: str, e: BaseException) -> None:
+    await _record_loop_attempt(name, "error", reason=f"{type(e).__name__}: {str(e)[:300]}",
+                               writer=f"src.api.main.{name}")
+
+
 async def _beat(name: str, *, ok: bool, error: str | None = None,
                 refused: bool = False, detail: dict | None = None) -> None:
     """转发到 `loop_beat.beat`。**签名必须与它一致。**
@@ -2349,8 +2383,10 @@ async def _prediction_resolver_loop():
             summ = {s: (v.get("status"), v.get("rows_written"), v.get("examined"),
                         v.get("error")) for s, v in res.get("sources", {}).items()}
             print(f"[PRED] daily resolve — per-source (status, written, examined, error)={summ}")
+            await _iteration_ok("_prediction_resolver_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[PRED] ⚠️  daily resolve failed: {_e}")
+            await _iteration_error("_prediction_resolver_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(_PREDICTION_INTERVAL_S)
 
 
@@ -2630,8 +2666,10 @@ async def _metering_flush_loop():
                 print(f"[METERING] ⚠️  flush failed: {res}")
             elif res.get("status") == "ok":
                 print(f"[METERING] flushed {res.get('n')} key-days for {res.get('date')}")
+            await _iteration_ok("_metering_flush_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[METERING] ⚠️  loop error: {_e}")
+            await _iteration_error("_metering_flush_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(FLUSH_INTERVAL_S)
 
 
@@ -2784,8 +2822,10 @@ async def _fusion_paper_tracking_loop():
                   f"validated={v.get('validated')} sharpe_gap={s.get('status')} "
                   f"det_fire={d.get('status')}({d.get('fire_rate')}) cap={c.get('status')} "
                   f"events={len(events)}({[e['event_type'] for e in events]})")
+            await _iteration_ok("_fusion_paper_tracking_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[FUSION-TRACK] ⚠️  compute failed: {_e}")
+            await _iteration_error("_fusion_paper_tracking_loop", _e)   # S-564 / T-061
         await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
@@ -2814,8 +2854,10 @@ async def _r76_paper_loop():
             print(f"[R76-PAPER] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"gross={res.get('gross')} n={res.get('n')} "
                   f"n_days={res.get('n_days_marked')} validated={res.get('validated')}")
+            await _iteration_ok("_r76_paper_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[R76-PAPER] ⚠️  mark failed: {_e}")
+            await _iteration_error("_r76_paper_loop", _e)   # S-564 / T-061
         await _sleep_until_utc(*_valuation_point_utc())      # S-283 valuation point
 
 
@@ -2846,8 +2888,10 @@ async def _fusion_paper_regime_track_loop():
                 print(f"[FUSION-REGIME] {today} band={row['band']} cap={row['exposure_cap']} "
                       f"r77_ret={row['r77_daily_return']:+.4f} regime_pnl={row['regime_pnl_usd']:+.2f} "
                       f"regime_nav={row['regime_nav_usd']:.2f}")
+            await _iteration_ok("_fusion_paper_regime_track_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[FUSION-REGIME] ⚠️  compute failed: {_e}")
+            await _iteration_error("_fusion_paper_regime_track_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(24 * 3600)
 
 
@@ -2972,8 +3016,10 @@ async def _factory_recalibrate_loop():
             res = await recalibrate_and_log()
             print(f"[FACTORY] recalibrated — nucleus={res.get('nucleus')} "
                   f"combined_sharpe={res.get('combined_sharpe')} enb={res.get('enb')}")
+            await _iteration_ok("_factory_recalibrate_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[FACTORY] ⚠️  recalibrate failed: {_e}")
+            await _iteration_error("_factory_recalibrate_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(7 * 24 * 3600)   # weekly
 
 
@@ -3046,8 +3092,10 @@ async def _band_log_loop():
         try:
             from src.api.routers.signals import log_regime_band
             await log_regime_band()
+            await _iteration_ok("_band_log_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[BAND-LOG] ⚠️  snapshot failed: {_e}")
+            await _iteration_error("_band_log_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(_BAND_LOG_INTERVAL_S)
 
 
@@ -3138,8 +3186,10 @@ async def _forward_supply_loop():
                 if _n > 0:
                     _cause_persist_state["fwd"] = _today
                     print(f"[FWD-SUPPLY] 📸 daily cause snapshot persisted — {_n} rows")
+            await _iteration_ok("_forward_supply_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[FWD-SUPPLY] ⚠️  refresh failed: {_e}")
+            await _iteration_error("_forward_supply_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(_FWD_SUPPLY_INTERVAL_S)
 
 
@@ -3171,8 +3221,10 @@ async def _positioning_loop():
                 if _n > 0:
                     _cause_persist_state["pos"] = _today
                     print(f"[POSITIONING] 📸 daily cause snapshot persisted — {_n} rows")
+            await _iteration_ok("_positioning_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[POSITIONING] ⚠️  refresh failed: {_e}")
+            await _iteration_error("_positioning_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(_POSITIONING_INTERVAL_S)
 
 
@@ -3198,8 +3250,10 @@ async def _daily_snapshot_loop():
             res = await snapshot_full_universe_to_supabase()
             print(f"[SNAPSHOT] daily — ok={res.get('ok')} rows={res.get('rows')} "
                   f"T1={res.get('t1')} T2={res.get('t2')}")
+            await _iteration_ok("_daily_snapshot_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[SNAPSHOT] ⚠️  daily run failed: {_e}")
+            await _iteration_error("_daily_snapshot_loop", _e)   # S-564 / T-061
         try:
             from src.api.routers.macro import daily_macro_brief_snapshot
             mres = await daily_macro_brief_snapshot()
@@ -3264,8 +3318,10 @@ async def _trending_loop():
             from scripts.trending_collector import collect_trending
             res = await collect_trending()
             print(f"[TRENDING] daily — ok={res.get('ok')} rows={res.get('rows')}")
+            await _iteration_ok("_trending_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[TRENDING] ⚠️  daily run failed: {_e}")
+            await _iteration_error("_trending_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(24 * 3600)
 
 
@@ -3294,8 +3350,10 @@ async def _age_sweep_loop():
                 syms = ", ".join(s["symbol"] for s in res.get("swept_symbols", []))
                 print(f"[SWEEP] daily — swept={swept} ({syms}) "
                       f"skipped={res.get('skipped')} total_open={res.get('total_open')}")
+            await _iteration_ok("_age_sweep_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[SWEEP] ⚠️  daily run failed: {_e}")
+            await _iteration_error("_age_sweep_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(_AGE_SWEEP_INTERVAL_S)
 
 
@@ -3324,8 +3382,10 @@ async def _sl_tp_loop():
             if closed > 0:
                 print(f"[SL/TP] closed={closed} sl={res.get('sl')} tp={res.get('tp')} "
                       f"scanned={res.get('scanned')}")
+            await _iteration_ok("_sl_tp_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[SL/TP] ⚠️  run failed: {_e}")
+            await _iteration_error("_sl_tp_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(_SL_TP_INTERVAL_S)
 
 
@@ -3353,8 +3413,10 @@ async def _cis_flip_loop():
             if closed > 0:
                 print(f"[CIS-FLIP] closed={closed} by_signal={res.get('by_signal')} "
                       f"by_score={res.get('by_score')} scanned={res.get('scanned')}")
+            await _iteration_ok("_cis_flip_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[CIS-FLIP] ⚠️  run failed: {_e}")
+            await _iteration_error("_cis_flip_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(_CIS_FLIP_INTERVAL_S)
 
 
@@ -3389,8 +3451,10 @@ async def _paper_rebalance_loop():
             elif res.get("executed"):
                 print(f"[REBAL] {res.get('reason')} opened={res.get('opened')} "
                       f"closed={res.get('closed')} regime={res.get('regime')}")
+            await _iteration_ok("_paper_rebalance_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[REBAL] ⚠️  run failed: {_e}")
+            await _iteration_error("_paper_rebalance_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(_REBAL_INTERVAL_S)
 
 
@@ -3418,8 +3482,10 @@ async def _heartbeat_loop():
             from src.api.health import heartbeat_tick
             summary = await heartbeat_tick()
             print(f"[HEARTBEAT] status={summary.get('status')}")
+            await _iteration_ok("_heartbeat_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[HEARTBEAT] ⚠️  tick failed: {_e}")
+            await _iteration_error("_heartbeat_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(_HEARTBEAT_INTERVAL_S)
 
 
@@ -4694,8 +4760,10 @@ async def _conviction_loop():
             print(f"[CONVICTION] watchlist {wl.get('n')} cands (logged {n_logged}), "
                   f"top={wl['candidates'][0]['symbol'] if wl.get('candidates') else None}; "
                   f"track_record={tr.get('status')} resolved={tr.get('total_resolved')}")
+            await _iteration_ok("_conviction_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[CONVICTION] ⚠️  loop failed: {_e}")
+            await _iteration_error("_conviction_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(24 * 3600)
 
 
@@ -4716,8 +4784,10 @@ async def _ai_briefing_loop():
             from src.api.routers.signals import refresh_ai_briefing
             r = await refresh_ai_briefing()
             print(f"[AI-BRIEFING] {r.get('status')} — {r.get('coverage') or r.get('reason') or ''}")
+            await _iteration_ok("_ai_briefing_loop")   # S-564 / T-061
         except Exception as _e:
             print(f"[AI-BRIEFING] ⚠️  loop failed: {_e}")
+            await _iteration_error("_ai_briefing_loop", _e)   # S-564 / T-061
         await _asyncio.sleep(30 * 60)   # every 30 min
 
 
