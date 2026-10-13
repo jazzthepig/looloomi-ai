@@ -201,3 +201,17 @@ def test_strategy_page_regime_uses_the_official_spelling_map():
     from src.api.routers import strategies
     src = inspect.getsource(strategies)
     assert src.count("await _current_regime()") >= 3, "list / detail / compare must read the official state"
+
+
+def test_series_endpoint_serves_only_our_own_books() -> None:
+    """S-565:研究(含 lane)读账本序列不用数据库 key;只给我们算出来的账本,不给数据商的原始价格。"""
+    import asyncio
+    import pytest
+    from fastapi import HTTPException
+    from src.api.routers.portfolio_builder import SERIES_TABLES, portfolio_series
+    assert "ohlcv_daily" not in SERIES_TABLES and "asset_mcap_daily" not in SERIES_TABLES
+    for bad in (dict(table="ohlcv_daily"), dict(table="core_cap_daily", start="2023-13-01"),
+                dict(table="core_cap_daily", arm="x;drop")):
+        with pytest.raises(HTTPException) as e:
+            asyncio.run(portfolio_series(**{"arm": None, "start": "2023-01-01", **bad}))
+        assert e.value.status_code == 400

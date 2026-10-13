@@ -3,6 +3,7 @@
 - GET /api/v1/portfolio/books?mode=forward|replay   可选账本(层、来源、是否可用、记录区间)
 - GET /api/v1/portfolio/combine?books=a:0.6,b:0.4&mode=forward|replay   组合的风险与收益来源
 - GET /api/v1/fund/capacity   当下规模与设计规模下的容量(每个名字、每本账)
+- GET /api/v1/portfolio/series?table=…&arm=…   一个臂的日序列(S-565:研究不用数据库 key 也能读账本序列)
 """
 from __future__ import annotations
 
@@ -80,6 +81,63 @@ async def portfolio_combine(books: str = Query(..., description="book:weight,…
     if response:
         response.headers["Cache-Control"] = "public, max-age=600"
     out.update({"mode": mode, "selected": {b: info[b] for b in w}, "reading": READING})
+    return out
+
+
+#: S-565:按日的账本序列,给研究(含 lane)用,不用数据库 key。只给我们自己算出来的账本 NAV / 收益 ——
+#: 原始价格 / 市值是数据商的,不转发。起点之前的行是按时点回放(模拟),起点之后是前向记录。
+SERIES_TABLES = frozenset({"core_variants_daily", "multiplier_daily", "portfolio_layer_daily", "cis_tilt_daily",
+                           "core_cap_daily", "feature_arms_daily", "meta_allocator_daily"})
+SERIES_NOTE = ("Daily return and NAV of one book arm. Rows dated before `inception` are point-in-time replays "
+               "(simulated with the rule as written, not traded); rows from `inception` on are the forward paper "
+               "record. Not live-traded P&L, not a forecast.")
+
+
+@router.get("/api/v1/portfolio/series")
+async def portfolio_series(table: str = Query(..., description="one of SERIES_TABLES"),
+                           arm: str | None = Query(None, description="omit to list the arms"),
+                           start: str = Query("2023-01-01"), response: Response = None):
+    """One arm's daily (d, ret, nav), or — without `arm` — the arms the table holds with their inception."""
+    import re
+    from datetime import date
+    from src.data.style.header import _read_all
+    if table not in SERIES_TABLES:
+        raise HTTPException(status_code=400, detail=f"table must be one of {sorted(SERIES_TABLES)}")
+    try:
+        date.fromisoformat(start)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="start must be YYYY-MM-DD")
+    if arm is not None and not re.fullmatch(r"[a-z0-9_]{1,64}", arm):
+        raise HTTPException(status_code=400, detail="arm must be lower-case letters, digits or _")
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=600"
+    key = f"series:{table}:{arm}:{start}"
+    hit = _CACHE.get(key)
+    if hit and time.time() - hit[0] < _TTL_S:
+        return hit[1]
+    try:
+        if arm is None:
+            rows = await _read_all(table, {"select": "arm,inception,d", "order": "arm.asc,d.asc"})
+            arms: dict[str, dict] = {}
+            for r in rows:
+                a = arms.setdefault(r["arm"], {"arm": r["arm"], "inception": r.get("inception"), "first": r["d"], "last": r["d"], "n": 0})
+                a["last"] = r["d"]
+                a["n"] += 1
+            out = {"table": table, "arms": list(arms.values()), "note": SERIES_NOTE}
+        else:
+            rows = await _read_all(table, {"select": "d,ret,nav,inception", "arm": f"eq.{arm}",
+                                           "d": f"gte.{start}", "order": "d.asc"})
+            if not rows:
+                raise HTTPException(status_code=404, detail=f"no rows for {table} / {arm} from {start}")
+            out = {"table": table, "arm": arm, "inception": rows[-1].get("inception"),
+                   "columns": ["d", "ret", "nav"], "rows": [[r["d"], r.get("ret"), r.get("nav")] for r in rows],
+                   "note": SERIES_NOTE}
+    except HTTPException:
+        raise
+    except Exception:
+        _logger.exception("[PORTFOLIO] series read failed")
+        raise HTTPException(status_code=502, detail="series unreadable — not the same as no records")
+    _CACHE[key] = (time.time(), out)
     return out
 
 
