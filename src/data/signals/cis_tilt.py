@@ -280,7 +280,7 @@ async def _cis_at_rebuild(rebal_days: list[pd.Timestamp], symbols: list[str],
     rows = await _read_all("cis_rebuild_daily", {
         "select": "symbol,d,score", "code_ref": f"eq.{code_ref}",
         "symbol": "in.(" + ",".join(symbols) + ")",
-        "d": f"gte.{lo}", "d": f"lte.{hi}", "order": "d.asc"})
+        "and": f"(d.gte.{lo},d.lte.{hi})", "order": "d.asc"})   # 同一个键写两次,前一个会被静默覆盖
     by_d: dict[str, dict[str, float]] = {}
     for r in rows:
         v = r.get("score")
@@ -295,7 +295,6 @@ async def run_once() -> dict[str, Any]:
     """重算到昨天那根已收盘日线并整条 upsert。幂等。
 
     T-088:同时算 cis_a1(10-06 起)+ cis_a1_u(10-12 起)+ cis_a1_u_replay(2023 起)。"""
-    from src.api.store import supabase_upsert_table
     from src.data.cis.rebuild import CODE_REF as REBUILD_CODE_REF
     from src.data.market.panel_read import read_panel
     from src.data.signals.core_cap import _mcap_prev
@@ -335,12 +334,14 @@ async def run_once() -> dict[str, Any]:
                                      start=REPLAY_START, end=target)
 
     rows = rows_old + rows_u + rows_r
-    res = await supabase_upsert_table(TABLE, rows, on_conflict="d,arm")
-    if not res.ok:
-        return {"ok": False, "refused": False, "written": 0, "reason": f"写入失败:{res.why}"}
+    # S-560:回放 + 前向一起整条重算 ⇒ 写之前过 forward_lock(d ≤ 今天 − 2 的前向行不再改写)
+    from src.data.accounting.forward_lock import write_locked
+    w = await write_locked(TABLE, rows, key="arm", on_conflict="d,arm")
+    if not w["ok"]:
+        return {"ok": False, "refused": False, "written": w["written"], "reason": f"写入失败:{w['why']}"}
     arms = sorted({r["arm"] for r in rows})
     last_arms = {a: next((r for r in rows if r["d"] == target.date().isoformat() and r["arm"] == a), {}) for a in arms}
-    return {"ok": True, "refused": False, "written": len(rows), "reason": f"重算至 {target.date()} ({len(arms)} 臂)",
+    return {"ok": True, "refused": False, "written": w["written"], "lock": w["lock"], "reason": f"重算至 {target.date()} ({len(arms)} 臂)",
             "arms": arms,
             "nav_by_arm": {a: last_arms[a].get("nav") for a in arms},
             "n_scored_last_rebal": {a: len(cis_old.get(rebal_old[-1], {})) if a == ARM else

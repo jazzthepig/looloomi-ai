@@ -59,7 +59,8 @@ def test_allocation_days_freeze_as_a_whole_and_keys_are_independent() -> None:
 def test_every_full_path_writer_goes_through_the_lock() -> None:
     writers = ["src/data/signals/core_variants.py", "src/data/signals/meta_allocator.py",
                "src/data/signals/feature_arms.py", "src/data/signals/multiplier.py",
-               "src/data/signals/portfolio_layer.py", "src/data/allocation/allocator.py"]
+               "src/data/signals/portfolio_layer.py", "src/data/allocation/allocator.py",
+               "src/data/signals/cis_tilt.py"]          # T-088 起回放 + 前向一起写
     for w in writers:
         src = (ROOT / w).read_text(encoding="utf-8")
         tree = ast.parse(src)
