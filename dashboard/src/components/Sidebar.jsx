@@ -52,6 +52,7 @@ export const NAV_ITEMS = [
   { id: "protocol",  label: "Protocols", icon: "⬡", sub: "DeFi TVL · Selection" },
   { id: "vault",     label: "Vault",     icon: "◎", sub: "Fund of Funds" },
   { id: "quantgp",   label: "Research Desk", icon: "∿", sub: "Factor research · Paper books" },
+  { id: "trackrecord", label: "Track Record", icon: "◊", sub: "Books · Anchors · Audit" },
   { id: "portfolio", label: "Portfolio", icon: "⊡", sub: "My Holdings" },
   { id: "api-keys",  label: "API Keys",  icon: "⌘", sub: "RaaS · Free · Pro" },
 ];

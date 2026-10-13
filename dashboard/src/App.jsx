@@ -62,6 +62,7 @@ const MultiFactorStrategies = lazy(() => import("./components/MultiFactorStrateg
 const CISAssetDetail        = lazy(() => import("./components/CISAssetDetail"));
 const SignalFeed            = lazy(() => import("./components/SignalFeed"));
 const ResearchTrackRecord   = lazy(() => import("./components/ResearchTrackRecord"));
+const TrackRecord           = lazy(() => import("./components/TrackRecord"));
 
 /* ── Staging environment banner ─────────────────────────────────────────── */
 function StagingBanner() {
@@ -330,6 +331,19 @@ function DesktopApp() {
                   </Suspense>
                 </div>
                 <QuantGPContent />
+              </div>
+            </section>
+          )}
+        </div>
+
+        {/* Track Record */}
+        <div style={{ display: activeSection === "trackrecord" ? "block" : "none" }}>
+          {visited.has("trackrecord") && (
+            <section style={contentPad}>
+              <div style={{ maxWidth: 1400, margin: "0 auto" }}>
+                <Suspense fallback={<SectionLoader />}>
+                  <TrackRecord />
+                </Suspense>
               </div>
             </section>
           )}
