@@ -26,6 +26,7 @@ from src.data.evaluation.rr_matrix import (
     _dominant_regime,
     _state_panel_daily,
     _derive_regime_per_day,
+    _derive_trend_vol_per_day,
     _block_bootstrap_ci,
     _p_pos,
     _beta_calc,
@@ -51,10 +52,12 @@ def _make_synth(days: int = 200, seed: int = 0) -> tuple[pd.Series, dict[str, pd
 
 def _make_state_daily(days_idx: pd.DatetimeIndex, seed: int = 1,
                       coverage_min: int = 25, regime_per_day: list[str] | None = None) -> pd.DataFrame:
-    """构造合成 state_daily 长表(per SPEC §3.1, T-048 as-built)。
+    """构造合成 state_daily 长表(per SPEC §3.1 + T-048 as-built + T-068)。
 
-    行序与 features 对齐:6 shares + 1 coverage per day,共 7 rows/day。
+    行序与 features 对齐:6 shares + 1 coverage + dist_200 + vol_pct_3y per day,共 9 rows/day。
     coverage ∈ [coverage_min, max(coverage_min+5, 30)]; share 之和 = 1.0(用 dirichlet)。
+    dist_200: -0.05..0.05(价格相对 200d MA 的偏离,正负各半)→ 时点 UP/DOWN 都有覆盖。
+    vol_pct_3y: Uniform[0, 1](本身就是滚动 3 年的 vol 分位)→ LO/MID/HI 三档都有覆盖。
     regime_per_day 可显式指定,否则均匀循环。
     """
     rng = np.random.default_rng(seed)
@@ -65,6 +68,9 @@ def _make_state_daily(days_idx: pd.DatetimeIndex, seed: int = 1,
     share_data = rng.dirichlet(np.ones(len(classes)), size=n)
     # coverage ∈ [coverage_min, coverage_min+5]
     cov_data = rng.integers(coverage_min, coverage_min + 6, size=n)
+    # T-068 价格特征(dist_200 正负各半以覆盖 UP/DOWN;vol_pct_3y U[0,1] 覆盖 LO/MID/HI)
+    dist_data = rng.uniform(-0.05, 0.05, size=n)
+    vol_pct_data = rng.uniform(0.0, 1.0, size=n)
 
     long_rows = []
     for i, d in enumerate(days_idx):
@@ -73,6 +79,10 @@ def _make_state_daily(days_idx: pd.DatetimeIndex, seed: int = 1,
                               "value": float(share_data[i, j])})
         long_rows.append({"d": d, "entity": "panel", "feature": "regime_coverage_30d",
                           "value": int(cov_data[i])})
+        long_rows.append({"d": d, "entity": "panel", "feature": "dist_200",
+                          "value": float(dist_data[i])})
+        long_rows.append({"d": d, "entity": "panel", "feature": "vol_pct_3y",
+                          "value": float(vol_pct_data[i])})
 
     return pd.DataFrame(long_rows)
 
@@ -128,11 +138,13 @@ def test_rr_matrix_shrinkage() -> tuple[bool, str]:
     as_of_short = pd.Timestamp("2026-01-30")
     out_short = compute_rr_matrix(book_navs, bench_nav, state_daily, [date(2026, 9, 16)], as_of_short)
 
-    # 用 fomc=no cell(short window 在 FOMC 2026-09-16 之前)
+    # 用 macro= cell(T-068 之后 trend_vol 是主格子,但 shrinkage 公式对任何 cell 都生效;
+    # 这里固定选 macro= 格,与 T-068 之前 iloc[0] 行为兼容,不依赖 trend_vol 的次序)。
     sid = "beta_plus_w"
-    short_cells = out_short[out_short["strategy_id"] == sid]
+    short_cells = out_short[(out_short["strategy_id"] == sid)
+                           & out_short["cell"].str.startswith("macro=")]
     if short_cells.empty:
-        return True, "✅ (跳过:short window 全部 cell 无数据)"
+        return True, "✅ (跳过:short window macro= cell 全无数据)"
     cell_label = short_cells["cell"].iloc[0]
     full_row = out_full[(out_full["strategy_id"] == sid) & (out_full["cell"] == cell_label)]
     short_row = short_cells[short_cells["cell"] == cell_label]
@@ -148,7 +160,8 @@ def test_rr_matrix_shrinkage() -> tuple[bool, str]:
         return True, f"✅ 短样本 n_days={n_days_short} 不触发 shrinkage(em={em_short:.4f}, full={em_full:.4f})"
 
     # shrinkage 应把 short 朝 full 拉近
-    full_mean_short = float(out_short[out_short["strategy_id"] == sid]["excess_mean"].mean())
+    full_mean_short = float(out_short[(out_short["strategy_id"] == sid)
+                                       & out_short["cell"].str.startswith("macro=")]["excess_mean"].mean())
     diff_to_full = abs(em_short - full_mean_short)
     diff_unshrunk = abs(em_short - em_full)
 
@@ -301,7 +314,7 @@ def test_rr_matrix_handles_missing_state() -> tuple[bool, str]:
     out = compute_rr_matrix(book_navs, bench_nav, state_daily=None, fomc_dates=[date(2026, 9, 16)], as_of=as_of)
 
     cells = set(out["cell"].unique())
-    expected = {"regime=unknown&fomc=no"}
+    expected = {"macro=unknown&fomc=no"}
     leaks = cells - expected
     if cells == expected:
         return True, f"✅ 缺 state 时全部归 unknown&fomc=no,总行数={len(out)},每本有效 strategy 都进"
@@ -425,6 +438,84 @@ def test_rr_matrix_annualization_365() -> tuple[bool, str]:
 
 
 # ============================================================
+# Test 14 (NEW T-068): 主格子 trend_vol 6 格覆盖
+# ============================================================
+
+def test_rr_matrix_trend_vol_six_cells() -> tuple[bool, str]:
+    """Per T-068 acceptance.check:主格子 = trend (UP/DOWN) × vol (LO/MID/HI) = 6 格,
+    切点为常数 1/3, 2/3。state_daily 喂入的 dist_200 ∈ [-0.05, 0.05](UP/DOWN 各半),
+    vol_pct_3y ∈ [0, 1] uniform ⇒ 6 格都应该非空。
+    """
+    bench_nav, book_navs = _make_synth(days=400, seed=0)  # 400 天 ⇒ n_days > K=30,无收缩
+    state_daily = _make_state_daily(bench_nav.index, seed=1)  # 含 dist_200 + vol_pct_3y
+    as_of = pd.Timestamp("2026-07-31")
+
+    out = compute_rr_matrix(book_navs, bench_nav, state_daily, [date(2026, 9, 16)], as_of)
+
+    expected_labels = {
+        "trend_vol=UP_LO", "trend_vol=UP_MID", "trend_vol=UP_HI",
+        "trend_vol=DOWN_LO", "trend_vol=DOWN_MID", "trend_vol=DOWN_HI",
+    }
+    actual_tv = {c for c in out["cell"].unique() if c.startswith("trend_vol=")}
+    missing = expected_labels - actual_tv
+    if missing:
+        return False, (f"❌ 缺主格子:{sorted(missing)};实际 trend_vol 格 = {sorted(actual_tv)};"
+                       f"切点不是常数 1/3, 2/3?")
+    return True, (f"✅ 6 主格子全部命中:{sorted(actual_tv)};"
+                  f"trend_vol 总行数 = {len(out[out['cell'].str.startswith('trend_vol=')])}")
+
+
+# ============================================================
+# Test 15 (NEW T-068): 无前视 — 同日期在 2024 算与今天算落在同主格
+# ============================================================
+
+def test_rr_matrix_trend_vol_no_lookahead() -> tuple[bool, str]:
+    """Per T-068 acceptance.expect:同一日期在 2024 年算与在今天算落在同一格(无前视)。
+
+    构造:state_daily 覆盖 [2023-01-01, 2026-10-31],用 as_of 在 2024-Q4 算一次、
+    再用 as_of 在 2026-Q4 算一次,断言:对每一个有效日期 d,两次计算返回同一 trend_vol 标签。
+
+    切点是常数 1/3, 2/3 — 不依赖全样本,所以 2024 算与 2026 算对同一 d 的分配一致。
+    """
+    idx = pd.date_range("2023-01-01", periods=1400, freq="D")  # ~3.8y
+    state_daily = _make_state_daily(idx, seed=42)
+
+    as_of_early = pd.Timestamp("2024-12-31")
+    panel_early = _state_panel_daily(state_daily, as_of_early)
+    tv_early = _derive_trend_vol_per_day(panel_early)
+
+    as_of_late = pd.Timestamp("2026-10-13")
+    panel_late = _state_panel_daily(state_daily, as_of_late)
+    tv_late = _derive_trend_vol_per_day(panel_late)
+
+    common = tv_early.index.intersection(tv_late.index)
+    if len(common) < 100:
+        return False, f"❌ 两条路径重叠日期太少({len(common)});test setup 错"
+
+    diffs = sum(1 for d in common if tv_early.loc[d] != tv_late.loc[d])
+    if diffs == 0:
+        return True, (f"✅ 无前视:{len(common)} 个日期在两条路径上 trend_vol 完全一致;"
+                      f"切点是常数(>0, 1/3, 2/3),与 as_of 无关")
+    return False, (f"❌ 前视泄漏:{diffs}/{len(common)} 个日期上两条路径返回不同 trend_vol;"
+                   f"早期路径正在看未来 state")
+
+
+# ============================================================
+# Test 16 (NEW T-068): vol bucket 切点是常数 1/3, 2/3(非全样本分位)
+# ============================================================
+
+def test_rr_matrix_vol_cutoffs_are_constants() -> tuple[bool, str]:
+    """Per T-068 acceptance.check:切点是常数,不用全样本分位 — 防止通过全样本重排
+    间接引入「未来视角」。
+    """
+    from src.data.evaluation.rr_matrix import VOL_CUT_QUANTILES
+    expected = (1.0 / 3.0, 2.0 / 3.0)
+    if VOL_CUT_QUANTILES == expected:
+        return True, f"✅ vol 切点是常数 {expected};"
+    return False, f"❌ vol 切点={VOL_CUT_QUANTILES}, 期望 {expected}"
+
+
+# ============================================================
 # main
 # ============================================================
 
@@ -443,9 +534,12 @@ def main() -> int:
         ("11_unknown_coverage_v6", test_rr_matrix_unknown_coverage),
         ("12_full_ci_proper_v6", test_rr_matrix_full_ci_proper),
         ("13_annualization_365_v6", test_rr_matrix_annualization_365),
+        ("14_trend_vol_six_cells_t068", test_rr_matrix_trend_vol_six_cells),
+        ("15_trend_vol_no_lookahead_t068", test_rr_matrix_trend_vol_no_lookahead),
+        ("16_vol_cutoffs_constants_t068", test_rr_matrix_vol_cutoffs_are_constants),
     ]
     print("=" * 70)
-    print("T-045 评估层 rr_matrix v0.6 测试套件(per SPEC §9,13 个)")
+    print("T-045 + T-068 评估层 rr_matrix v0.6+ 测试套件(per SPEC §9, 13 + T-068 三条 = 16 个)")
     print("=" * 70)
     n_pass = 0
     for name, fn in tests:

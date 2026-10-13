@@ -67,6 +67,20 @@ REGIME_COVERAGE_MIN: int = 20
 # share 之和偏离 1.0 的容差
 REGIME_SHARE_SUM_TOL: float = 0.05
 
+# T-068 价格特征(state_daily 里按时点的面板列,无条件全样本)— 主格子 = trend × vol 6 格
+STATE_DIST_200_FEATURE: str = "dist_200"     # (price - 200d MA) / 200d MA;>0 = 价格在 200d MA 之上
+STATE_VOL_PCT_3Y_FEATURE: str = "vol_pct_3y" # 已为滚动 3 年的 vol 分位 ∈ [0, 1]
+
+# 主格子 bucket 标签
+TREND_BUCKETS: tuple[str, ...] = ("UP", "DOWN")  # dist_200 > 0 ⇒ UP,≤0 ⇒ DOWN
+VOL_BUCKETS: tuple[str, ...] = ("LO", "MID", "HI")
+# vol 三档切点:vol_pct_3y 本身就是滚动 3 年的分位 [0,1],切点用常数 1/3, 2/3(按时点,
+# 不用全样本分位 — 避免看未来)。见 T-068 acceptance.check。
+VOL_CUT_QUANTILES: tuple[float, ...] = (1.0 / 3.0, 2.0 / 3.0)
+
+# trend_vol 缺任一字段时(任意 NaN)归 `TREND_VOL_UNKNOWN`,不进 6 主格
+TREND_VOL_UNKNOWN: str = "UNKNOWN"
+
 # annualization(per §Seth-1006d #3)
 DEFAULT_ANNUALIZATION: int = 365
 
@@ -130,15 +144,20 @@ def _dominant_regime(row: pd.Series) -> str:
 
 
 def _state_panel_daily(state_daily: pd.DataFrame, as_of: pd.Timestamp) -> pd.DataFrame:
-    """Per SPEC §3.1 + §5.1:取 d ≤ as_of_state, entity='panel', features = 6 shares + coverage。
+    """Per SPEC §3.1 + §5.1:取 d ≤ as_of_state, entity='panel', features = 6 shares + coverage + T-068 价格特征。
     PIT 严格 — 过线直接 throw(per SPEC §1.3)。
 
     Returns: wide-form DataFrame with columns:
-        d, regime_share_30d:EASING, regime_share_30d:NEUTRAL, ..., regime_coverage_30d
+        d,
+        regime_share_30d:EASING, regime_share_30d:NEUTRAL, ..., regime_coverage_30d,
+        dist_200, vol_pct_3y
     (一行 / 日;缺分量取 None)
     """
     if state_daily is None or state_daily.empty:
-        return pd.DataFrame(columns=["d"] + list(REGIME_SHARE_FEATURES) + ["regime_coverage_30d"])
+        return pd.DataFrame(
+            columns=["d"] + list(REGIME_SHARE_FEATURES) + ["regime_coverage_30d",
+                      STATE_DIST_200_FEATURE, STATE_VOL_PCT_3Y_FEATURE]
+        )
     required = {"d", "entity", "feature", "value"}
     missing = required - set(state_daily.columns)
     if missing:
@@ -146,10 +165,14 @@ def _state_panel_daily(state_daily: pd.DataFrame, as_of: pd.Timestamp) -> pd.Dat
     sd = state_daily[state_daily["d"] <= as_of].copy()
     panel = sd[sd["entity"] == "panel"]
     if panel.empty:
-        return pd.DataFrame(columns=["d"] + list(REGIME_SHARE_FEATURES) + ["regime_coverage_30d"])
+        return pd.DataFrame(
+            columns=["d"] + list(REGIME_SHARE_FEATURES) + ["regime_coverage_30d",
+                      STATE_DIST_200_FEATURE, STATE_VOL_PCT_3Y_FEATURE]
+        )
 
-    # 只保留 regime 相关 features
-    keep = set(REGIME_SHARE_FEATURES) | {"regime_coverage_30d"}
+    # 只保留 regime + T-068 价格特征
+    keep = (set(REGIME_SHARE_FEATURES) | {"regime_coverage_30d"}
+            | {STATE_DIST_200_FEATURE, STATE_VOL_PCT_3Y_FEATURE})
     panel_filt = panel[panel["feature"].isin(keep)]
 
     pivot = panel_filt.pivot_table(
@@ -157,7 +180,8 @@ def _state_panel_daily(state_daily: pd.DataFrame, as_of: pd.Timestamp) -> pd.Dat
     )
     pivot = pivot.reset_index()
     # 确保所有列都存在(缺则 NaN)
-    for col in list(REGIME_SHARE_FEATURES) + ["regime_coverage_30d"]:
+    for col in list(REGIME_SHARE_FEATURES) + ["regime_coverage_30d",
+                                              STATE_DIST_200_FEATURE, STATE_VOL_PCT_3Y_FEATURE]:
         if col not in pivot.columns:
             pivot[col] = np.nan
     return pivot
@@ -171,6 +195,49 @@ def _derive_regime_per_day(state_panel: pd.DataFrame) -> pd.Series:
     for _, row in state_panel.iterrows():
         rows.append((row["d"], _dominant_regime(row)))
     return pd.Series([r[1] for r in rows], index=pd.DatetimeIndex([r[0] for r in rows]), name="regime")
+
+
+def _classify_vol_bucket(vol_pct_3y: float) -> str:
+    """Per T-068 acceptance:切点是常数(1/3, 2/3),不是全样本分位(避免看未来)。
+
+    vol_pct_3y ∈ [0, 1]:vol_lo ⇒ < 1/3;vol_mid ⇒ ∈ [1/3, 2/3);vol_hi ⇒ ≥ 2/3。
+    NaN/缺 ⇒ TREND_VOL_UNKNOWN。
+    """
+    if pd.isna(vol_pct_3y):
+        return TREND_VOL_UNKNOWN
+    lo_cut, hi_cut = VOL_CUT_QUANTILES
+    if vol_pct_3y < lo_cut:
+        return "LO"
+    if vol_pct_3y < hi_cut:
+        return "MID"
+    return "HI"
+
+
+def _derive_trend_vol_per_day(state_panel: pd.DataFrame) -> pd.Series:
+    """Per T-068 acceptance.check:主格子 = state_daily 面板特征按时点。
+
+    返回:Series(index=d, name='trend_vol'),值 = 'UP_LO' / 'UP_MID' / 'UP_HI' /
+    'DOWN_LO' / 'DOWN_MID' / 'DOWN_HI' / 'UNKNOWN'。
+    - dist_200 是「(price - 200d MA) / 200d MA」:>0 ⇒ UP,≤0 ⇒ DOWN。
+    - vol_pct_3y 是滚动 3 年的 vol 分位 ∈ [0,1]:<1/3=LO,∈[1/3,2/3)=MID,≥2/3=HI。
+    - 任一字段 NaN ⇒ UNKNOWN(不归主格)。
+    - 切点是常数,不用全样本分位 — 同一日期在 2024 年算与今天算落在同一格(无前视)。
+    """
+    if state_panel.empty:
+        return pd.Series(dtype=object)
+    rows = []
+    for _, row in state_panel.iterrows():
+        d = row["d"]
+        dist = row.get(STATE_DIST_200_FEATURE, np.nan)
+        vol = row.get(STATE_VOL_PCT_3Y_FEATURE, np.nan)
+        if pd.isna(dist) or pd.isna(vol):
+            label = TREND_VOL_UNKNOWN
+        else:
+            trend = "UP" if float(dist) > 0 else "DOWN"
+            vol_bucket = _classify_vol_bucket(float(vol))
+            label = f"{trend}_{vol_bucket}"
+        rows.append((d, label))
+    return pd.Series([r[1] for r in rows], index=pd.DatetimeIndex([r[0] for r in rows]), name="trend_vol")
 
 
 def _block_bootstrap_ci(ret_series: pd.Series, block_size: int = 20, n_bootstrap: int = 1000,
@@ -297,6 +364,9 @@ def compute_rr_matrix(
     # 1.1 派生 regime_per_day(per §3.2)
     regime_per_day = _derive_regime_per_day(state_panel)
 
+    # 1.2 派生 trend_vol_per_day(per T-068 acceptance.check:主格子 = 价格特征按时点)
+    trend_vol_per_day = _derive_trend_vol_per_day(state_panel)
+
     # 2. FOMC 窗口(per SPEC §3.3)
     fomc_set = _fomc_window_dates(fomc_dates, window=4)
 
@@ -356,8 +426,8 @@ def compute_rr_matrix(
         full_mean = full_sample_excess.get(sid, 0.0)
         full_ci_lo, full_ci_hi = full_sample_ci.get(sid, (None, None))
 
-        # 5.5 切片 cell — 用 regime_per_day + FOMC 维度
-        # merged = excess_all + regime_per_day + fomc yes/no
+        # 5.5 切片 cell — 用 regime_per_day + trend_vol_per_day + FOMC 维度
+        # merged = excess_all + regime + trend_vol + fomc yes/no
         df = pd.DataFrame({"ret": excess_all})
         df["d"] = df.index
         # join regime
@@ -368,16 +438,76 @@ def compute_rr_matrix(
             merged["regime"] = UNKNOWN_REGIME  # 全缺状态 → UNKNOWN(per §Seth-1006d #1)
         # 缺 regime → UNKNOWN
         merged["regime"] = merged["regime"].fillna(UNKNOWN_REGIME)
+        # join trend_vol(T-068:主格子);缺 dist_200 / vol_pct_3y ⇒ UNKNOWN
+        if not trend_vol_per_day.empty:
+            merged = merged.join(trend_vol_per_day.rename("trend_vol"), how="left")
+        else:
+            merged["trend_vol"] = TREND_VOL_UNKNOWN
+        merged["trend_vol"] = merged["trend_vol"].fillna(TREND_VOL_UNKNOWN)
         # FOMC 维度
         merged["fomc"] = merged.index.map(
             lambda d: "yes" if pd.Timestamp(d) in fomc_set else "no"
         )
 
-        # 5.6 遍历 cell — 6 类 + UNKNOWN × yes/no
+        # 5.6a trend_vol 主格子(per T-068:6 格 = 2 trend × 3 vol,不计 FOMC;切点常数 1/3, 2/3)
+        for trend in TREND_BUCKETS:
+            for volb in VOL_BUCKETS:
+                tv_label = f"{trend}_{volb}"
+                cell_label = f"trend_vol={tv_label}"
+                cell_mask = merged["trend_vol"] == tv_label
+                cell_ret = merged.loc[cell_mask, "ret"].dropna()
+
+                n_days = int(len(cell_ret))
+                if n_days < 1:
+                    continue
+
+                seed_this = seed + _stable(sid, "TV", tv_label)
+                excess_mean, ci_lo, ci_hi = _block_bootstrap_ci(
+                    cell_ret, block_size=block_size, n_bootstrap=n_bootstrap, seed=seed_this
+                )
+                p_pos = _p_pos(cell_ret, block_size=block_size, n_bootstrap=n_bootstrap, seed=seed_this)
+
+                excess_mean_ann = excess_mean * annualization
+                ci_lo_ann = ci_lo * annualization if not math.isnan(ci_lo) else float("nan")
+                ci_hi_ann = ci_hi * annualization if not math.isnan(ci_hi) else float("nan")
+
+                if n_days < shrinkage_k:
+                    shrink = n_days / (n_days + shrinkage_k)
+                    excess_mean_ann = shrink * excess_mean_ann + (1 - shrink) * full_mean * annualization
+                    if full_ci_lo is not None:
+                        ci_lo_ann = shrink * ci_lo_ann + (1 - shrink) * full_ci_lo * annualization
+                    if full_ci_hi is not None:
+                        ci_hi_ann = shrink * ci_hi_ann + (1 - shrink) * full_ci_hi * annualization
+
+                if math.isnan(ci_lo_ann):
+                    ci_lo_out: float | None = None
+                else:
+                    ci_lo_out = ci_lo_ann
+                if math.isnan(ci_hi_ann):
+                    ci_hi_out: float | None = None
+                else:
+                    ci_hi_out = ci_hi_ann
+
+                rows.append({
+                    "d": as_of,
+                    "strategy_id": sid,
+                    "cell": cell_label,
+                    "n_days": n_days,
+                    "excess_mean": excess_mean_ann,
+                    "ci_lo": ci_lo_out,
+                    "ci_hi": ci_hi_out,
+                    "p_pos": p_pos,
+                    "beta": beta,
+                    "rel_maxdd": rel_maxdd,
+                    "turnover": turnover,
+                    "n_variants_tried": nv.get(sid, 1),
+                })
+
+        # 5.6 遍历 cell — 6 类 + UNKNOWN × yes/no(per T-068:保留 macro= 前缀的描述格)
         all_regimes = list(REGIMES) + [UNKNOWN_REGIME]
         for regime in all_regimes:
             for fomc_v in FOMC_VALUES:
-                cell_label = f"regime={regime}&fomc={fomc_v}"
+                cell_label = f"macro={regime}&fomc={fomc_v}"
                 cell_mask = (merged["regime"] == regime) & (merged["fomc"] == fomc_v)
                 cell_ret = merged.loc[cell_mask, "ret"].dropna()
 
