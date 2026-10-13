@@ -16,8 +16,9 @@ from src.data.evaluation import rr_matrix as rr
 _CASES = sorted(n for n in dir(cases) if n.startswith("test_") and callable(getattr(cases, n)))
 
 
-def test_all_thirteen_cases_are_wired():
-    assert len(_CASES) == 13
+def test_all_sixteen_cases_are_wired():
+    """T-045 13 个用例 + T-068 三个(trend_vol 6 格 / 无前视 / vol 切点是常数)。"""
+    assert len(_CASES) == 16
 
 
 @pytest.mark.parametrize("name", _CASES)
