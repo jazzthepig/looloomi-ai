@@ -72,7 +72,13 @@ _log = logging.getLogger("fusion_paper")
 #
 # Not corrected, because there is nothing to correct from: the book never knew
 # what it held, so the true NAVs are unrecoverable. Voided instead.
-_INCEPTION_ID = "v2"
+_INCEPTION_ID = "v3"
+# v2 (2026-09-12 .. 2026-10-13, 51 marks) IS VOIDED TOO — same symptom, different cause (S-561 / T-026).
+# The table did exist by then, but its columns are `inception_id` (text, NOT NULL) / `last_mark` timestamptz —
+# and `_save_state` posted a column named `inception`, which the table does not have. PostgREST refused every
+# insert, `_fetch_state_from_supabase` selected the same missing column and got a 400, state came back {}, and
+# every day was recorded as −cost (51 rows, one distinct daily_return, −0.0005). The SQL files in scripts/
+# describe two other schemas; the live catalog is the truth (LIVE_STATE_COLUMNS below, test pins it).
 
 # Scoped by the inception, so a cached state from the voided segment cannot be
 # read back into the live one. beta_core learned this the hard way (its §7 note:
@@ -105,6 +111,9 @@ _NAV_TABLE = "fusion_paper_nav"
 # A comment that names the author's suspects is worse than no comment: it reads
 # like a diagnosis (S-323m).
 _STATE_TABLE = "fusion_paper_state"
+#: S-561:fusion_paper_state 在库里的真实列(2026-10-13 information_schema)。写入只能用这些名字。
+LIVE_STATE_COLUMNS = frozenset({"id", "inception_id", "last_mark", "nav", "weights", "mark_prices", "prev_prices",
+                                "n_days_marked", "cell", "detector_fired_today", "void_reason", "inserted_at"})
 
 # ── R64 frozen cell constants ────────────────────────────────────────────────
 # Match src/research/validation/r63_fusion_validation.py exactly.
@@ -434,8 +443,9 @@ async def _fetch_state_from_supabase() -> dict:
     if not (base and key):
         return {}
     url = (f"{base}/rest/v1/{_STATE_TABLE}"
-           f"?select=inception,nav,weights,mark_prices,prev_prices,last_mark,"
+           f"?select=inception_id,nav,weights,mark_prices,prev_prices,last_mark,"
            f"n_days_marked,cell,detector_fired_today"
+           f"&inception_id=eq.{_INCEPTION_ID}&void_reason=is.null"
            f"&order=last_mark.desc&limit=1")
     try:
         async with httpx.AsyncClient(timeout=8) as c:
@@ -462,6 +472,10 @@ async def _fetch_state_from_supabase() -> dict:
                 row[col] = json.loads(v)
             except Exception:
                 pass
+    # S-561:表里没有 inception 日期这一列,起点日期放在 cell 里
+    row["inception"] = (row.get("cell") or {}).get("inception_date")
+    if row.get("last_mark"):
+        row["last_mark"] = str(row["last_mark"])[:10]
     return row
 
 
@@ -531,14 +545,14 @@ async def _save_state(s: dict) -> None:
     try:
         from src.api.store import supabase_insert_table
         ok = await supabase_insert_table(_STATE_TABLE, [{
-            "inception": s.get("inception"),
+            "inception_id": _INCEPTION_ID,
             "last_mark": s.get("last_mark"),
             "nav": s.get("nav"),
             "weights": s.get("weights", {}),
             "mark_prices": s.get("mark_prices", {}),
             "prev_prices": s.get("prev_prices", {}),
             "n_days_marked": s.get("n_days_marked", 0),
-            "cell": s.get("cell", {}),
+            "cell": {**(s.get("cell") or {}), "inception_date": s.get("inception")},
             "detector_fired_today": bool(s.get("detector_fired_today", False)),
         }])
         if not ok:
