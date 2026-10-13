@@ -40,14 +40,15 @@ def render(diff: dict[str, Any]) -> str:
     # Per-arm metrics
     lines.append("## Per-arm metrics")
     lines.append("")
-    lines.append("| Arm | n_entered | n_skipped (cadence/factor/jev) | cum_return | "
-                 "Sharpe | Sortino | MaxDD |")
-    lines.append("|---|---|---|---|---|---|---|")
-    for key in ("A", "B", "C"):
+    lines.append("| Arm | n_entered | n_skipped (cadence/factor/jev) | n_missing | "
+                 "cum_return | Sharpe | Sortino | MaxDD |")
+    lines.append("|---|---|---|---|---|---|---|---|")
+    for key in ("A", "B", "C", "H_baseline"):
         a = arms[key]
         lines.append(
             f"| {a['name']} | {a['n_entered']} | "
             f"{a['n_skipped_cadence']}/{a['n_skipped_factor']}/{a['n_skipped_jev']} | "
+            f"{a.get('n_missing_days', -1)} | "
             f"{a['cum_return_pct']:+.2f}% | "
             f"{a['sharpe_annualized']:+.4f} | "
             f"{a['sortino_annualized']:+.4f} | "
@@ -65,6 +66,28 @@ def render(diff: dict[str, Any]) -> str:
                  "(negative = arm C has shallower drawdown)")
     lines.append(f"- **Factor skip days:** {summary['factor_skip_days']}  ")
     lines.append(f"  (= days where arm B entered and arm C skipped due to factor gate)")
+    lines.append("")
+
+    # Hold-the-panel baseline (T-057 acceptance #④) — pure passive hold
+    # using arm B's first ENTERED legs and panel closes. If arm C can't
+    # beat this, the factor gate is overhead, not alpha.
+    lines.append("## Hold-the-panel baseline (T-057 acceptance #④)")
+    lines.append("")
+    lines.append("Buy the first ENTERED's legs and never rebalance — "
+                 "pure passive hold, daily MTM on panel closes.")
+    lines.append("")
+    lines.append(f"- **Arm B SR − Hold SR:** "
+                 f"{summary['arm_b_sharpe_minus_hold']:+.4f}  "
+                 "(negative = arm B's rebalances destroy value vs. holding)")
+    lines.append(f"- **Arm C SR − Hold SR:** "
+                 f"{summary['arm_c_sharpe_minus_hold']:+.4f}  "
+                 "(arm C's gate, evaluated against passive hold)")
+    if not summary.get("panel_closes_attached", False):
+        lines.append("")
+        lines.append("> ⚠️ **panel_closes.json not attached** to this run dir — "
+                     "the daily MTM here falls back to the legacy period-flattening "
+                     "path (T-057: known inflated Sharpe). Re-run "
+                     "`replay_three_arms.py` to attach it.")
     lines.append("")
 
     # Arm A vs Arm B (the Jev wire sanity)

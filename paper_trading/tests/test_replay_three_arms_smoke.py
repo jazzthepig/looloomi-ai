@@ -191,7 +191,7 @@ def test_compare_produces_diff_with_expected_shape(panel_60d, tmp_path):
     diff_path = out_dir / "_diff.json"
     assert diff_path.exists()
     diff = json.loads(diff_path.read_text())
-    assert set(diff["arms"].keys()) == {"A", "B", "C"}
+    assert set(diff["arms"].keys()) == {"A", "B", "C", "H_baseline"}
     for arm_key, arm in diff["arms"].items():
         assert "n_entered" in arm
         assert "cum_return_pct" in arm
