@@ -239,7 +239,10 @@ def dual_momentum(mom_ret: pd.Series, btc_px: pd.Series, s4: Optional[pd.Series]
 def broad_momentum(cg_px: pd.DataFrame, cg_mcap: pd.DataFrame, end: pd.Timestamp,
                    lookback: int = 30) -> pd.Series:
     """纯函数。S-520 `broad_mom30_breadth`:每周一,宇宙 = d−1 市值前 50(去稳定币、类现金),其余同 mom30_breadth。
-    cg_px / cg_mcap:行 = 日,列 = coin_id;CoinGecko 日收盘与当日市值。"""
+    cg_px / cg_mcap:行 = 日,列 = coin_id;CoinGecko 日收盘与当日市值。
+    T-084/S-555 第 0 条:cg_px / cg_mcap **必须包含候选币在窗口内的全部价格与市值** ——
+    即使某个币在某天市值跌破 $2 亿,它的价格仍要在,否则跌破后的亏损会被记成 0
+    (rets NaN → fillna(0))。broad_universe 仍按 d−1 市值排名,跌破的币自动出圈。"""
     cg_px = cg_px.sort_index()
     rets = (cg_px / cg_px.shift(1) - 1)
     vol30 = rets.rolling(30, min_periods=20).std().shift(1)
@@ -253,6 +256,33 @@ def broad_momentum(cg_px: pd.DataFrame, cg_mcap: pd.DataFrame, end: pd.Timestamp
         uni = broad_universe(mprev.loc[d], vol30.loc[d] if d in vol30.index else pd.Series(dtype=float))
         tg[d] = breadth_weights(cg_px, d, uni, lookback, "breadth")
     return simulate(rets.assign(**{CASH: CASH_ANN / 365.0}), tg)
+
+
+def prepare_broad_panels(rows: list[dict], min_mcap: float) -> tuple[Optional[pd.DataFrame], Optional[pd.DataFrame]]:
+    """纯函数。T-084/S-555 第 0 条:把 asset_mcap_daily 的原始行组装成 broad_momentum 用的面板。
+
+    旧 IO 行为:读 `mcap >= min_mcap` 的行 ⇒ 跌破后该币当天的行被过滤 ⇒ 亏损被记成 0。
+    新 IO 行为(此函数实现):
+        ① 候选 coin_id 集合 = 窗口内 mcap 曾 >= min_mcap 的所有币
+        ② 这些候选币的**完整**价格与市值(无 mcap 过滤)→ cg_px / cg_mcap
+        ③ broad_universe 仍按 d−1 mcap >= min_mcap 排名(跌破的币自动出圈)
+
+    返回:(cg_px, cg_mcap);rows 为空时两个都 None。
+    """
+    if not rows:
+        return None, None
+    df = pd.DataFrame(rows)
+    df["d"] = pd.to_datetime(df["d"])
+    df["mcap"] = pd.to_numeric(df["mcap"], errors="coerce")
+    df["price"] = pd.to_numeric(df["price"], errors="coerce")
+    candidates = sorted(df.loc[df["mcap"] >= min_mcap, "coin_id"].unique().tolist())
+    if not candidates:
+        return None, None
+    cand = df[df["coin_id"].isin(candidates)]
+    days_all = pd.date_range(cand["d"].min(), cand["d"].max(), freq="D")
+    cg_px = cand.pivot_table(index="d", columns="coin_id", values="price").reindex(days_all)
+    cg_mcap = cand.pivot_table(index="d", columns="coin_id", values="mcap").reindex(days_all)
+    return cg_px, cg_mcap
 
 
 def build(px: pd.DataFrame, mcap_prev: pd.DataFrame, end: pd.Timestamp,
@@ -320,15 +350,24 @@ async def run_once() -> dict[str, Any]:
     mc = await _mcap_prev(panel, start)
     from src.data.signals.portfolio_layer import load_strategy4
     from src.data.style.header import _read_all
-    cg = await _read_all("asset_mcap_daily", {"select": "coin_id,d,price,mcap", "mcap": f"gte.{BROAD_MIN_MCAP:.0f}",
-                                              "d": f"gte.{start}", "order": "d.asc"})
+    # T-084/S-555 第 0 条:两段读 — ① 找候选 coin_id(窗口内 mcap 曾 >= $2 亿);
+    # ② 读这些候选的完整价格/市值(无 mcap 过滤)。旧 IO 一次性读带 mcap 过滤的字段
+    # ⇒ 跌破后亏损被记成 0(T-084 acceptance)。order 用唯一键 (d, coin_id)。
+    cand_rows = await _read_all(
+        "asset_mcap_daily",
+        {"select": "coin_id,mcap", "mcap": f"gte.{BROAD_MIN_MCAP:.0f}",
+         "d": f"gte.{start}", "order": "coin_id.asc,d.asc"},
+    )
+    candidates = sorted({r["coin_id"] for r in cand_rows}) if cand_rows else []
     broad = None
-    if cg:
-        g = pd.DataFrame(cg)
-        g["d"] = pd.to_datetime(g["d"])
-        days_all = pd.date_range(g["d"].min(), g["d"].max(), freq="D")
-        broad = (g.pivot_table(index="d", columns="coin_id", values="price").reindex(days_all),
-                 g.pivot_table(index="d", columns="coin_id", values="mcap").reindex(days_all))
+    if candidates:
+        cg = await _read_all(
+            "asset_mcap_daily",
+            {"select": "coin_id,d,price,mcap", "d": f"gte.{start}",
+             "coin_id": f"in.({','.join(candidates)})",
+             "order": "d.asc,coin_id.asc"},
+        )
+        broad = prepare_broad_panels(cg, BROAD_MIN_MCAP)
     rows, ev = await asyncio.to_thread(build, px, mc, target, N_RANDOM, load_strategy4(), broad)
     for i in range(0, len(rows), 2000):
         res = await supabase_upsert_table(TABLE, rows[i:i + 2000], on_conflict="d,arm")
