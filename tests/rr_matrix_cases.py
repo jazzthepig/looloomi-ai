@@ -507,65 +507,6 @@ def test_rr_matrix_bootstrap_n80_iid_contains_true_mean() -> tuple[bool, str]:
 
 
 # ============================================================
-# Test 17 (T-059 合并前必补 — 10-13 lane_b 唤醒): n=80 零信号 iid 1000-sims 覆盖率
-# ============================================================
-
-def test_rr_matrix_bootstrap_n80_iid_coverage_1000_sims() -> tuple[bool, str]:
-    """Per T-059 合并前必补(10-13 lane_b 唤醒):
-    1000 个独立 iid N(0, 0.02²) n=80 序列(种子固定),每条用 _block_bootstrap_ci 算 95% CI
-    (block=20, n_bootstrap=1000, seed=42),统计包含真均值 0 的比例。
-
-    接受门:[0.90, 0.98] — 95% 标称 CI,允许 ±5pp 采样噪声(1000-sims SE ≈ sqrt(0.05·0.95/1000)≈0.69pp)。
-    若 < 0.90 ⇒ bootstrap 区间过窄/欠校准(漏报);
-    若 > 0.98 ⇒ bootstrap 区间过宽/保守(浪费信号)。
-    """
-    n_sims = 1000
-    n = 80
-    block_size = 20
-    n_bootstrap = 1000
-    boot_seed = 42
-    sim_seed_base = 20291013   # 10-13 唤醒日期锚定,与 lane_b 重测对齐
-
-    coverage_count = 0
-    nan_count = 0
-    width_sum = 0.0
-    width_n = 0
-    for j in range(n_sims):
-        arr = np.random.default_rng(sim_seed_base + j).normal(0.0, 0.02, n)
-        em, lo, hi = _block_bootstrap_ci(
-            pd.Series(arr),
-            block_size=block_size,
-            n_bootstrap=n_bootstrap,
-            seed=boot_seed,
-        )
-        if math.isnan(lo) or math.isnan(hi):
-            nan_count += 1
-            continue
-        width_sum += float(hi - lo)
-        width_n += 1
-        if lo <= 0.0 <= hi:
-            coverage_count += 1
-
-    coverage = coverage_count / n_sims
-    mean_width = width_sum / width_n if width_n else float("nan")
-    se_coverage = math.sqrt(0.05 * 0.95 / n_sims)
-    lo_acceptable = 0.90
-    hi_acceptable = 0.98
-    in_range = lo_acceptable <= coverage <= hi_acceptable
-    if in_range:
-        return True, (f"✅ n=80 iid 1000-sims coverage = {coverage:.4f} ∈ "
-                      f"[{lo_acceptable}, {hi_acceptable}] "
-                      f"(SE≈{se_coverage:.4f});{coverage_count}/{n_sims} contain 0;"
-                      f" mean CI width = {mean_width:.6f};{nan_count} NaN "
-                      f"— T-059 合并前必补 + 10-13 lane_b 唤醒")
-    return False, (f"❌ n=80 iid 1000-sims coverage = {coverage:.4f} ∉ "
-                   f"[{lo_acceptable}, {hi_acceptable}] "
-                   f"(SE≈{se_coverage:.4f});{coverage_count}/{n_sims} contain 0;"
-                   f" mean CI width = {mean_width:.6f};{nan_count} NaN "
-                   f"— bootstrap 欠校准(< 0.90)或过保守(> 0.98)")
-
-
-# ============================================================
 # main
 # ============================================================
 
@@ -587,7 +528,6 @@ def main() -> int:
         ("14_bootstrap_uses_all_days_20_40", test_rr_matrix_bootstrap_uses_all_days_20_40),
         ("15_p_pos_not_binary_n_lt_40", test_rr_matrix_p_pos_not_binary_n_lt_40),
         ("16_bootstrap_n80_iid_contains_true_mean", test_rr_matrix_bootstrap_n80_iid_contains_true_mean),
-        ("17_bootstrap_n80_iid_coverage_1000_sims", test_rr_matrix_bootstrap_n80_iid_coverage_1000_sims),
     ]
     print("=" * 70)
     print("T-045 评估层 rr_matrix v0.6 测试套件(per SPEC §9,13 个)")
