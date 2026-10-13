@@ -9,6 +9,7 @@
 | in_review | T-006 | lane-c | Strategy 3/4 按正确问题复核 | 每格都有数字,不是只给一个总 Sharpe | 只用绝对 Sharpe 判为 REFUTED |  |
 | in_review | T-085 | lane-c | 可交易规模的第一步(T-082 A 部分):我们实际能下单的现货场所 × 名字覆盖表 + 订单簿 ±1% / ±2% 深度一周采样(只做测量,不建入库循环) | 报告:每个名字的可下单场所数、深度中位数、深度 / 全市场报告成交额的比例;按 S-544 的口径(5% 仓位、10% 参与率、5 天)重算 $30M 与 $500M 下每个名字与每本账能否建满,和全市场口径并排;最后一节给 Seth:入库表结构与采样频率的建议(T-082 B 部分由 Seth 做) | S-544:全市场报告成交额口径下 $30M 58/58 过、$500M 50/58 过;tokenization_tilt 被 POLYX 卡在 ≈ $9M。场所深度从没量过。 |  |
 | in_review | T-087 | lane-c | ③ 推力与组合层换到新 ①(不设单币上限)上:各开新臂、新起点,旧臂照旧记作对照 | multiplier_daily 出现 core_u_replay / mult_v2_replay(2023-01-02 起)/ mult_v2(10-12 起);portfolio_layer_daily 出现 pl_v3_replay / pl_v3;卡 notes 写两套的三个窗口数字(总收益 / 回撤 / 夏普 / 随机分位)并排 | mult_v1_replay 与 pl_v2_replay 都建在 ≤ 40% 的旧 ① 上;① 不设上限后(core_variants cap_uncapped)2023–24 +359% / −32%、2025-01 → +−17.0% / −57%,③ 与组合层在新底仓上的数字没算过 |  |
+| in_review | T-088 | lane-c | ② CIS 倾斜换到新 ① 上:新臂 cis_a1_u(① 不设上限的权重 × exp(0.5·z_CIS),不再压到 40%),起点 10-12 | cis_tilt_daily 出现 cis_a1_u(10-12 起)与 cis_a1_u_replay(2023 起);卡 notes 写 replay 两段(2023–24 / 2025-01→)相对 core_u 的超额与随机倾斜(打乱 z 的横截面 200 次)分位 | cis_a1 前向 10-06 起;② 至今没有过对照的倾斜(S-540:官方档位无单调超额)。CIS 倾斜在 2023 起的按时点回放从没算过 —— 统一标准重建(S-531/v1.3)之后才有一致的历史可用。 |  |
 | in_review | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
@@ -18,7 +19,6 @@
 | open | T-059 | lane-b | 评估层 ①:修 bootstrap 退化(T-059 拆成三张的第一张) | 测试先在现在的代码上红:n=23 的序列 CI = [NaN, NaN] 且 point 均值用满 23 天(旧代码:CI 宽度 0、只用前 20 天);n=10 的 p_pos = NaN 而不是只取 0 / 1;n=80 零信号 iid 序列 CI 宽度 > 0 且含真均值;改完转绿 | 只有相对 ① 的实测超额,没有随机基准;10-06 的 27 行:beta_core TIGHTENING 格 n=23 的 CI = [3.018, 3.018](单点),n < 20 的 22 行 p_pos 全是 0 或 1;所有账本的前向窗口只有一个状态格子(TIGHTENING) |  |
 | open | T-069 | lane-b | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
 | open | T-057 | lane-c | 三臂对比的记账有错:下一次调仓不在的币按「零收益」记、周收益平摊到每天 —— A 的 arm C Sharpe 4.90 / 回撤 10% 是这个造成的 | 测试钉住 ①②;重跑后 arm B 的 Sharpe 不再被平滑抬高(与 hold-the-panel 同量级);arm C 的结论按新数重判 | A 10-07 报告:arm C Sharpe +4.90 / MaxDD 10.3% / 累计 +456%;arm B +1.48 / 60.5% —— 记账口径下的数,不是证据 |  |
-| open | T-088 | lane-c | ② CIS 倾斜换到新 ① 上:新臂 cis_a1_u(① 不设上限的权重 × exp(0.5·z_CIS),不再压到 40%),起点 10-12 | cis_tilt_daily 出现 cis_a1_u(10-12 起)与 cis_a1_u_replay(2023 起);卡 notes 写 replay 两段(2023–24 / 2025-01→)相对 core_u 的超额与随机倾斜(打乱 z 的横截面 200 次)分位 | cis_a1 前向 10-06 起;② 至今没有过对照的倾斜(S-540:官方档位无单调超额)。CIS 倾斜在 2023 起的按时点回放从没算过 —— 统一标准重建(S-531/v1.3)之后才有一致的历史可用。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -92,4 +92,4 @@
 | done | T-081 | seth | 代币迁移接段:MKR→SKY(1:24000)、MATIC→POL(1:1)—— 宇宙只放新币,生效日按成交交叉(CoinDesk / CF Benchmarks 做法),历史按比例接,统一标准 v1.3 | SKY 的分不再因市值 0 被压到底;POL 迁移前用的是 MATIC | MKR 自 2025-06-05 起在标准里市值 0、基本面支柱 0,正式档 UNDERWEIGHT(实时 55.8 NEUTRAL);POL 迁移前 11 个月用的是日成交 60 万美元的薄币 | 10-12 正式批次含 SKY、POL,无 MKR、MATIC;/cis/universe 有 SKY 无 MKR。剩 Minimax 换 T1 宇宙(Mac 侧,SYNC §Seth-1012a)不在本卡验收内。 @ 2026-10-13T13:45Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 15 · claimed 2 · blocked 4 · in_review 8 · done 59 · dropped 1
+open 14 · claimed 2 · blocked 4 · in_review 9 · done 59 · dropped 1

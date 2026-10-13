@@ -1,7 +1,7 @@
 {
   "id": "T-088",
   "owner": "lane-c",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-13",
   "verified": null,
   "title": "② CIS 倾斜换到新 ① 上:新臂 cis_a1_u(① 不设上限的权重 × exp(0.5·z_CIS),不再压到 40%),起点 10-12",
@@ -23,5 +23,5 @@
     "expect": "cis_tilt_daily 出现 cis_a1_u(10-12 起)与 cis_a1_u_replay(2023 起);卡 notes 写 replay 两段(2023–24 / 2025-01→)相对 core_u 的超额与随机倾斜(打乱 z 的横截面 200 次)分位"
   },
   "prior_value": "cis_a1 前向 10-06 起;② 至今没有过对照的倾斜(S-540:官方档位无单调超额)。CIS 倾斜在 2023 起的按时点回放从没算过 —— 统一标准重建(S-531/v1.3)之后才有一致的历史可用。",
-  "notes": "2026-10-13 Seth 开卡派 C,排在 T-087 之后(同一个模式)。"
+  "notes": "2026-10-13 lane-c 交付\n\n【已交付】\n- cis_tilt.py:新臂 ARM_U='cis_a1_u' / REPLAY_ARM_U='cis_a1_u_replay',INCEPTION_U=core_cap.CORE_SINCE(2026-10-12),REPLAY_START=2023-01-02,ARM_CAP_U=1.0(随 ① 一起解除单币上限),CODE_REF_U='T-088 cis_tilt v2 (cap_a1_u 底仓,no single-name cap)'。\n  - compute_path 加参数 arm / inception / code_ref / cap;cis_a1 不传参就是原行为(同 cap=0.40);cis_a1_u / cis_a1_u_replay 传 cap=ARM_CAP_U。\n  - compute_replay_path 是 compute_path 的薄包装,钉 REPLAY_ARM_U + REPLAY_START + ARM_CAP_U + CODE_REF_U。\n  - _cis_at_rebuild 从 cis_rebuild_daily 取 d-1 的 score(z 只用 d-1 及以前;d 当天的行直接跳过)—— mock 测试里给出同日不同分数的诱饵,验证它读 d-1 不读 d。\n  - random_z_pct(纯函数):每个再平衡日的 z 横截面按 symbol 随机重排 200 次,重算 (cis_a1_u_replay − core_u) 总收益差,报实测在其中的分位。\n  - run_once 同时写 3 臂(cis_a1 原 10-06 起 / cis_a1_u 新 10-12 起 / cis_a1_u_replay 2023 起);回报 arms / nav_by_arm / n_scored_last_rebal 三个键。\n  - 旧臂 cis_a1 / 旧函数 cis_z / tilted_weights(默认 cap=0.40)一行不改照旧写。\n  - 没碰 core_cap / nav_kernel / read_panel / cis_rebuild.score_day(只 import CODE_REF 与 _read_all)。\n- tests/test_cis_tilt.py:11 个测试全过(含 5 个新增:prereg_U / u_arm 可超 40% / u_arm 起点钉 INCEPTION_U / replay z 只用 d-1 / replay_path 跑通 + 钉 arm/code_ref);旧 6 个测试一行不改。\n- tests/test_cis_tilt.py 11/11 PASS。bash scripts/preflight.sh 全绿(强制执行率 273/430)。\n\n【合成数据测得的数字 —— 探索性,需另立预注册、在真实数据上过零信号对照】\n- research/t088_measure.py:24 名面板 GBM 价格 + BTC/ETH/SOL 持续偏高的合成 CIS,跑 cis_a1_u_replay vs core_u 全段。\n- cis_a1_u_replay 2023-24(n=730):total +16.07%, MaxDD -12.88%, Sharpe 0.746\n- core_u       2023-24(n=730):total +16.18%, MaxDD -12.18%, Sharpe 0.770\n- 超额 cis_a1_u_replay - core_u = -0.11%(≈ 噪声,合成 CIS 截面信息没显著捕捉到 GBM 价差的横截面)\n- cis_a1_u_replay 2025-01->(n=651):total +4.74%, MaxDD -8.18%, Sharpe 0.303\n- core_u       2025-01->(n=651):total +5.79%, MaxDD -10.25%, Sharpe 0.361\n- 超额 cis_a1_u_replay - core_u = -1.05%\n- random_z_pct(n=200):actual_excess -1.34%, random_p50 -13.0%, random_p95 +7.65%, pct_vs_random = 0.82(> 0.5 ⇒ 略好于中位随机分位;合成 CIS 没有把超额顶过 p95)\n- 结论:管道跑通;合成数据下 cis_a1_u_replay 与 core_u 几乎重叠,没有 strong evidence CIS 横截面在 GBM 价差里能挑出 alpha。真实数据(20% 仓位、$10M 真实成交额、PANEL 上 CIS 截面变化大得多)上数字必不一样,等接 cis_rebuild_daily + binance_hist 后重测。\n\n【未交付 / 等接数据后回填】\n- cis_tilt_daily 出现 cis_a1_u(10-12 起)与 cis_a1_u_replay(2023 起)三臂的真实行:本地无 Supabase 写入路径,run_once 跑不出真实 upsert。Seth 接 _cis_tilt_loop 上线后,在 cis_tilt_daily group by arm 看到 3 个 arm;eval 数字(总收益 / 回撤 / Sharpe / 随机分位)在 loop_attempt.detail 抓回。\n- 真实三个窗口相对 core_u_replay(T-087 multiplier 的同函数)的并排数字(2023-24 / 2025-01-> / 前向):同上理由等接数据。\n- register/combine:Seth 接线;不归本卡。"
 }
