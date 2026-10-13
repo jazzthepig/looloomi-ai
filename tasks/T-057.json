@@ -8,7 +8,8 @@
   "allowed_paths": [
     "paper_trading/compare_three_arms.py",
     "paper_trading/replay_three_arms.py",
-    "paper_trading/tests/"
+    "paper_trading/tests/",
+    "paper_trading/report_three_arms.py"
   ],
   "forbidden_paths": [
     "Shadow/",

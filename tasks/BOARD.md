@@ -11,6 +11,7 @@
 | in_review | T-087 | lane-c | ③ 推力与组合层换到新 ①(不设单币上限)上:各开新臂、新起点,旧臂照旧记作对照 | multiplier_daily 出现 core_u_replay / mult_v2_replay(2023-01-02 起)/ mult_v2(10-12 起);portfolio_layer_daily 出现 pl_v3_replay / pl_v3;卡 notes 写两套的三个窗口数字(总收益 / 回撤 / 夏普 / 随机分位)并排 | mult_v1_replay 与 pl_v2_replay 都建在 ≤ 40% 的旧 ① 上;① 不设上限后(core_variants cap_uncapped)2023–24 +359% / −32%、2025-01 → +−17.0% / −57%,③ 与组合层在新底仓上的数字没算过 |  |
 | in_review | T-088 | lane-c | ② CIS 倾斜换到新 ① 上:新臂 cis_a1_u(① 不设上限的权重 × exp(0.5·z_CIS),不再压到 40%),起点 10-12 | cis_tilt_daily 出现 cis_a1_u(10-12 起)与 cis_a1_u_replay(2023 起);卡 notes 写 replay 两段(2023–24 / 2025-01→)相对 core_u 的超额与随机倾斜(打乱 z 的横截面 200 次)分位 | cis_a1 前向 10-06 起;② 至今没有过对照的倾斜(S-540:官方档位无单调超额)。CIS 倾斜在 2023 起的按时点回放从没算过 —— 统一标准重建(S-531/v1.3)之后才有一致的历史可用。 |  |
 | in_review | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
+| in_review | T-061 | seth | 22 个不写逐轮记录的后台循环补 _record_loop_attempt,判活补齐 | ≥ 50(55 个里只有周频的允许暂缺);liveness SLO 覆盖全部 55 个 | 33 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
@@ -23,7 +24,6 @@
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
 | open | T-056 | seth | 策略向量陈旧:_data/strategy_records.json 停在 07-21,按现有台账重新生成后 test_strategy_vector_smoke 14 项红 | 0 项红;sidecar 来源写进仓库或改为显式输入,不依赖仓库外的 REPORT.md | Mac 上靠 07-21 生成的旧文件通过;现生成 14 项红(R46 cost_sensitivity / sidecar 标签 / R64 记录缺失等) |  |
-| open | T-061 | seth | 22 个不写逐轮记录的后台循环补 _record_loop_attempt,判活补齐 | ≥ 50(55 个里只有周频的允许暂缺);liveness SLO 覆盖全部 55 个 | 33 |  |
 | open | T-062 | seth | 三路该定期写入却 0 行的结构化数据:regime 相关度、fusion 的 regime 跟踪、API 计量 | 前两张每天有新行;api_usage 每次 flush 都写一行(使用量为 0 也写,0 是一次观测);每一路先判成因(无调度 / 写不进 / 正确拒绝)再修 | 0 / 0 / 0 |  |
 | open | T-065 | seth | 加密度:小时线恢复并扩面(现在 10 个币、08-08 起停更);CIS 历史往前补(现在 2025-05 起) | 小时线覆盖 ① 的 24 个名字、最新一根在 2 小时内、有调度和判活;CIS 历史用重建脚本补到 2024-01(标 source=reconstructed,与实时推送分开) | 小时线 10 币、止于 2026-08-08;CIS 历史 76 币、起于 2025-05-03 |  |
 | open | T-082 | seth | 可交易规模由数据定:按我们实际能下单的场所深度(订单簿 ±1% 深度 / 场所成交)算每个名字、每本账的容量,替代全市场报告成交额 | 每个名字 / 每本账在 $30M 与 $500M 下能否在 5 天内建满,按我们真能成交的深度说,不按 CoinGecko 聚合成交额说 | S-544 容量按 30 日全市场报告成交额中位数 × 10% 参与率:$30M 下 58/58 名通过,$500M 下 50/58;tokenization_tilt 被 POLYX(日成交 $0.6M)卡在 ≈ $9M。聚合成交额含不能下单的场所与刷量,实际可成交深度更低,没量过。 |  |
@@ -92,4 +92,4 @@
 | done | T-081 | seth | 代币迁移接段:MKR→SKY(1:24000)、MATIC→POL(1:1)—— 宇宙只放新币,生效日按成交交叉(CoinDesk / CF Benchmarks 做法),历史按比例接,统一标准 v1.3 | SKY 的分不再因市值 0 被压到底;POL 迁移前用的是 MATIC | MKR 自 2025-06-05 起在标准里市值 0、基本面支柱 0,正式档 UNDERWEIGHT(实时 55.8 NEUTRAL);POL 迁移前 11 个月用的是日成交 60 万美元的薄币 | 10-12 正式批次含 SKY、POL,无 MKR、MATIC;/cis/universe 有 SKY 无 MKR。剩 Minimax 换 T1 宇宙(Mac 侧,SYNC §Seth-1012a)不在本卡验收内。 @ 2026-10-13T13:45Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 14 · claimed 2 · blocked 4 · in_review 9 · done 59 · dropped 1
+open 13 · claimed 2 · blocked 4 · in_review 10 · done 59 · dropped 1
