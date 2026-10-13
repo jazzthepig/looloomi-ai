@@ -1,7 +1,7 @@
 {
   "id": "T-089",
   "owner": "lane-a",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-13",
   "verified": null,
   "title": "完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置",
@@ -20,5 +20,5 @@
     "expect": "报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改"
   },
   "prior_value": "从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。",
-  "notes": "2026-10-13 Seth 开卡派 A,排在 T-083 之后。积木在 T-087 / T-088 交付前用旧臂跑通,交付后重跑一次。"
+  "notes": "2026-10-13 Seth 开卡派 A,排在 T-083 之后。积木在 T-087 / T-088 交付前用旧臂跑通,交付后重跑一次。\n\n2026-10-14 一步交付(把数据拉到 Mac 根):5 个 arm 全部通过公开只读接口 `GET https://looloomi.ai/api/v1/portfolio/series`(S-565,2026-10-14 上线,无需 key)拉到。CSV: `/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/t089_series_2026-10-14.csv` — 1380 行,首日 2023-01-02,末日 2026-10-12,列 `[d, core_u, multiplier, portfolio_layer, cis_tilt, btc]`;每个 arm 都标注 inception(cis_a1_u_replay = 2026-10-08,与 spec 上写就那样算的回放同),W1 / W2 / W3 全有数据,不补不伪造。下一步(下一轮)从这 CSV 跑模拟器(W1=2023-24 / W2=2025-01→10-12 / W3=10-12→10-12)。分支 `lane-a/T-089-v3` 上推;改的代码:`docs/research/t089_panel_loader.py`(把 supabase_rest 后端换到公开接口,arm `cis_a1` → `cis_a1_u_replay`,保留旧 alias 兼容旧 CLI)。"
 }
