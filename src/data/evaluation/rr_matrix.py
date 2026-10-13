@@ -19,6 +19,7 @@ Per SPEC v0.6 (2026-10-06):
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
+from dataclasses import dataclass
 from typing import Iterable, Optional
 import math
 import sys
@@ -66,6 +67,20 @@ REGIME_COVERAGE_MIN: int = 20
 
 # share 之和偏离 1.0 的容差
 REGIME_SHARE_SUM_TOL: float = 0.05
+
+# T-068 价格特征(state_daily 里按时点的面板列,无条件全样本)— 主格子 = trend × vol 6 格
+STATE_DIST_200_FEATURE: str = "dist_200"     # (price - 200d MA) / 200d MA;>0 = 价格在 200d MA 之上
+STATE_VOL_PCT_3Y_FEATURE: str = "vol_pct_3y" # 已为滚动 3 年的 vol 分位 ∈ [0, 1]
+
+# 主格子 bucket 标签
+TREND_BUCKETS: tuple[str, ...] = ("UP", "DOWN")  # dist_200 > 0 ⇒ UP,≤0 ⇒ DOWN
+VOL_BUCKETS: tuple[str, ...] = ("LO", "MID", "HI")
+# vol 三档切点:vol_pct_3y 本身就是滚动 3 年的分位 [0,1],切点用常数 1/3, 2/3(按时点,
+# 不用全样本分位 — 避免看未来)。见 T-068 acceptance.check。
+VOL_CUT_QUANTILES: tuple[float, ...] = (1.0 / 3.0, 2.0 / 3.0)
+
+# trend_vol 缺任一字段时(任意 NaN)归 `TREND_VOL_UNKNOWN`,不进 6 主格
+TREND_VOL_UNKNOWN: str = "UNKNOWN"
 
 # annualization(per §Seth-1006d #3)
 DEFAULT_ANNUALIZATION: int = 365
@@ -130,15 +145,20 @@ def _dominant_regime(row: pd.Series) -> str:
 
 
 def _state_panel_daily(state_daily: pd.DataFrame, as_of: pd.Timestamp) -> pd.DataFrame:
-    """Per SPEC §3.1 + §5.1:取 d ≤ as_of_state, entity='panel', features = 6 shares + coverage。
+    """Per SPEC §3.1 + §5.1:取 d ≤ as_of_state, entity='panel', features = 6 shares + coverage + T-068 价格特征。
     PIT 严格 — 过线直接 throw(per SPEC §1.3)。
 
     Returns: wide-form DataFrame with columns:
-        d, regime_share_30d:EASING, regime_share_30d:NEUTRAL, ..., regime_coverage_30d
+        d,
+        regime_share_30d:EASING, regime_share_30d:NEUTRAL, ..., regime_coverage_30d,
+        dist_200, vol_pct_3y
     (一行 / 日;缺分量取 None)
     """
     if state_daily is None or state_daily.empty:
-        return pd.DataFrame(columns=["d"] + list(REGIME_SHARE_FEATURES) + ["regime_coverage_30d"])
+        return pd.DataFrame(
+            columns=["d"] + list(REGIME_SHARE_FEATURES) + ["regime_coverage_30d",
+                      STATE_DIST_200_FEATURE, STATE_VOL_PCT_3Y_FEATURE]
+        )
     required = {"d", "entity", "feature", "value"}
     missing = required - set(state_daily.columns)
     if missing:
@@ -146,10 +166,14 @@ def _state_panel_daily(state_daily: pd.DataFrame, as_of: pd.Timestamp) -> pd.Dat
     sd = state_daily[state_daily["d"] <= as_of].copy()
     panel = sd[sd["entity"] == "panel"]
     if panel.empty:
-        return pd.DataFrame(columns=["d"] + list(REGIME_SHARE_FEATURES) + ["regime_coverage_30d"])
+        return pd.DataFrame(
+            columns=["d"] + list(REGIME_SHARE_FEATURES) + ["regime_coverage_30d",
+                      STATE_DIST_200_FEATURE, STATE_VOL_PCT_3Y_FEATURE]
+        )
 
-    # 只保留 regime 相关 features
-    keep = set(REGIME_SHARE_FEATURES) | {"regime_coverage_30d"}
+    # 只保留 regime + T-068 价格特征
+    keep = (set(REGIME_SHARE_FEATURES) | {"regime_coverage_30d"}
+            | {STATE_DIST_200_FEATURE, STATE_VOL_PCT_3Y_FEATURE})
     panel_filt = panel[panel["feature"].isin(keep)]
 
     pivot = panel_filt.pivot_table(
@@ -157,7 +181,8 @@ def _state_panel_daily(state_daily: pd.DataFrame, as_of: pd.Timestamp) -> pd.Dat
     )
     pivot = pivot.reset_index()
     # 确保所有列都存在(缺则 NaN)
-    for col in list(REGIME_SHARE_FEATURES) + ["regime_coverage_30d"]:
+    for col in list(REGIME_SHARE_FEATURES) + ["regime_coverage_30d",
+                                              STATE_DIST_200_FEATURE, STATE_VOL_PCT_3Y_FEATURE]:
         if col not in pivot.columns:
             pivot[col] = np.nan
     return pivot
@@ -171,6 +196,49 @@ def _derive_regime_per_day(state_panel: pd.DataFrame) -> pd.Series:
     for _, row in state_panel.iterrows():
         rows.append((row["d"], _dominant_regime(row)))
     return pd.Series([r[1] for r in rows], index=pd.DatetimeIndex([r[0] for r in rows]), name="regime")
+
+
+def _classify_vol_bucket(vol_pct_3y: float) -> str:
+    """Per T-068 acceptance:切点是常数(1/3, 2/3),不是全样本分位(避免看未来)。
+
+    vol_pct_3y ∈ [0, 1]:vol_lo ⇒ < 1/3;vol_mid ⇒ ∈ [1/3, 2/3);vol_hi ⇒ ≥ 2/3。
+    NaN/缺 ⇒ TREND_VOL_UNKNOWN。
+    """
+    if pd.isna(vol_pct_3y):
+        return TREND_VOL_UNKNOWN
+    lo_cut, hi_cut = VOL_CUT_QUANTILES
+    if vol_pct_3y < lo_cut:
+        return "LO"
+    if vol_pct_3y < hi_cut:
+        return "MID"
+    return "HI"
+
+
+def _derive_trend_vol_per_day(state_panel: pd.DataFrame) -> pd.Series:
+    """Per T-068 acceptance.check:主格子 = state_daily 面板特征按时点。
+
+    返回:Series(index=d, name='trend_vol'),值 = 'UP_LO' / 'UP_MID' / 'UP_HI' /
+    'DOWN_LO' / 'DOWN_MID' / 'DOWN_HI' / 'UNKNOWN'。
+    - dist_200 是「(price - 200d MA) / 200d MA」:>0 ⇒ UP,≤0 ⇒ DOWN。
+    - vol_pct_3y 是滚动 3 年的 vol 分位 ∈ [0,1]:<1/3=LO,∈[1/3,2/3)=MID,≥2/3=HI。
+    - 任一字段 NaN ⇒ UNKNOWN(不归主格)。
+    - 切点是常数,不用全样本分位 — 同一日期在 2024 年算与今天算落在同一格(无前视)。
+    """
+    if state_panel.empty:
+        return pd.Series(dtype=object)
+    rows = []
+    for _, row in state_panel.iterrows():
+        d = row["d"]
+        dist = row.get(STATE_DIST_200_FEATURE, np.nan)
+        vol = row.get(STATE_VOL_PCT_3Y_FEATURE, np.nan)
+        if pd.isna(dist) or pd.isna(vol):
+            label = TREND_VOL_UNKNOWN
+        else:
+            trend = "UP" if float(dist) > 0 else "DOWN"
+            vol_bucket = _classify_vol_bucket(float(vol))
+            label = f"{trend}_{vol_bucket}"
+        rows.append((d, label))
+    return pd.Series([r[1] for r in rows], index=pd.DatetimeIndex([r[0] for r in rows]), name="trend_vol")
 
 
 def _block_bootstrap_ci(ret_series: pd.Series, block_size: int = 20, n_bootstrap: int = 1000,
@@ -243,6 +311,312 @@ def _turnover_annual(weights_history: pd.DataFrame | None) -> float:
     return float(turnover_d.mean() * DEFAULT_ANNUALIZATION)
 
 
+# ── T-069:随机组合基准 + outlier ────────────────────────────────────────────────
+# Per T-069 acceptance.check:每本账 × 格子:随机组合 1,000 次(按日期块抽样),
+# 与账本「同宇宙、同底层加权(β+ / 代币化 / beta_core 等权底,cis_tilt 市值底)、
+# 同持仓数、同换手、同单币上限」,给 p05/p50/p95/p99 + pct_vs_random;
+# outlier = 实测 > 随机 p99。
+#
+# 设计要点:
+# ① 零信号账本 = 一本与随机组合采用同一规则(同 spec,无私有信号)的账本;
+#    其 excess_mean 是随机分布中的一个样本。pct_vs_random(实际在随机分布里的秩)
+#    应当近似均匀(KS p > 0.05)。这是算法的自检 —— 若不通过,随机基准本身有偏。
+# ② 埋了信号的账本 = 系统性挑赢家。其 excess_mean 应当远离随机主体,
+#    pct_vs_random > 0.95,被识别为 outlier。
+# ③ 等权底 vs 市值底:抽到的不同 weighted「等权 vs 市值」风格不应被算法误识为
+#    信号 —— 在「等权跑赢市值」的样本里,等权零信号账本的 pct_vs_random 仍近似均匀
+#    (见 acceptance.expect 第三条)。
+
+# 单币上限默认值(S-473 起 ① 解除了 40% 上限;但 β+ / 代币化等用 40% 作默认)
+DEFAULT_SINGLE_NAME_CAP: float = 0.40
+
+# 默认持仓数(per §3:β+ / 代币化 = 24 名的子集)
+DEFAULT_N_POSITIONS: int = 12
+
+# 默认再平衡周期
+DEFAULT_TURNOVER_DAYS: int = 7
+
+
+def _weighted_portfolio_rets(rets: pd.DataFrame, weights: pd.Series) -> pd.Series:
+    """Calcuate weighted portfolio daily returns from per-asset returns + weights.
+    weights sums to 1, indexed by symbol. NaN days treated as 0 (no rebalance = no P&L).
+    """
+    if rets.empty:
+        return pd.Series(dtype=float)
+    aligned_w = weights.reindex(rets.columns).fillna(0.0)
+    seg = rets.fillna(0.0)
+    return seg.values @ aligned_w.values  # numpy 1d @ 2d
+
+
+def _panel_benchmark_nav(rets: pd.DataFrame) -> pd.Series:
+    """默认基准 = 面板等权。NaN 日按 0 处理,不跨缺口复利(S-272)。"""
+    if rets.empty:
+        return pd.Series(dtype=float)
+    daily = rets.mean(axis=1, skipna=True).fillna(0.0)
+    return (1 + daily).cumprod()
+
+
+def simulate_random_portfolio(
+    rets: pd.DataFrame,
+    n_positions: int,
+    weighting: str,
+    single_name_cap: float = DEFAULT_SINGLE_NAME_CAP,
+    market_caps: Optional[pd.Series] = None,
+    turnover_days: int = DEFAULT_TURNOVER_DAYS,
+    rng: Optional[np.random.Generator] = None,
+) -> pd.Series:
+    """构造一个随机组合的日 NAV(research / 测试用)。
+
+    Parameters
+    ----------
+    rets           : 资产日收益宽表(columns=symbols, DatetimeIndex 升序)
+    n_positions    : 每调仓周期持仓数(不能 > n_cols)
+    weighting      : 'equal' / 'market_cap'
+    single_name_cap: 单币上限(市值底时启用,默认 0.40)
+    market_caps    : 仅 market_cap 加权需要;None ⇒ fallback 等权
+    turnover_days  : 调仓周期(默认 7 天)
+
+    Returns
+    -------
+    NAV index(从第一天起累计,起点 = 1.0)。
+
+    Notes
+    -----
+    - 纯函数 + RNG 决定:同一 seed 同一输出。
+    - 调仓日 = 序列起点 + 0, +turnover_days, +2*turnover_days, ...
+    - 任一日某资产无数据 ⇒ 那天该仓位的有效权重按可投比重新分配。
+    """
+    rng = rng if rng is not None else np.random.default_rng()
+    n_cols = rets.shape[1]
+    if n_cols == 0:
+        return pd.Series(dtype=float)
+    n_pos = max(1, min(n_positions, n_cols))
+    n_days = len(rets)
+    if n_days == 0:
+        return pd.Series(dtype=float)
+    # 调仓日(含末尾一次)
+    rb_idx = list(range(0, n_days, turnover_days))
+    if rb_idx[-1] != n_days:
+        rb_idx.append(n_days)
+
+    port_rets: list[pd.Series] = []
+    for i in range(len(rb_idx) - 1):
+        start, end = rb_idx[i], rb_idx[i + 1]
+        members = rng.choice(rets.columns, size=n_pos, replace=False)
+
+        if weighting == "equal":
+            w = pd.Series(1.0 / n_pos, index=members)
+        elif weighting == "market_cap":
+            if market_caps is None:
+                w = pd.Series(1.0 / n_pos, index=members)
+            else:
+                mc = pd.Series({m: float(market_caps.get(m, 1.0)) for m in members})
+                w = (mc / mc.sum()).clip(upper=single_name_cap)
+                # 单币上限后的剩余再归一
+                excess = 1.0 - w.sum()
+                if excess > 0 and not w.empty:
+                    w = w + excess * (1.0 / n_pos)
+            # 防退化(全 clip 到 cap 后剩余放回等权)
+            if w.sum() <= 0:
+                w = pd.Series(1.0 / n_pos, index=members)
+            else:
+                w = w / w.sum()
+        else:
+            raise ValueError(f"unknown weighting: {weighting!r}")
+
+        seg = rets.iloc[start:end]
+        seg_filled = seg.fillna(0.0)
+        aligned_w = w.reindex(seg_filled.columns).fillna(0.0).values
+        port_rets.append(pd.Series(seg_filled.values @ aligned_w, index=seg.index))
+
+    if not port_rets:
+        return pd.Series(dtype=float)
+    daily = pd.concat(port_rets).sort_index()
+    return (1 + daily).cumprod()
+
+
+def compute_random_baseline(
+    rets: pd.DataFrame,
+    n_positions: int,
+    weighting: str,
+    single_name_cap: float = DEFAULT_SINGLE_NAME_CAP,
+    market_caps: Optional[pd.Series] = None,
+    turnover_days: int = DEFAULT_TURNOVER_DAYS,
+    n_random: int = 1000,
+    seed: int = 42,
+) -> dict:
+    """跑 n_random 次随机组合,返回分布(p05/p50/p95/p99 + 原始分布)。
+
+    Returns
+    -------
+    dict with: p05, p50, p95, p99, mean, std, distribution (1d ndarray),
+    n_random, n_valid (过滤掉全 NaN 的样本数)
+    """
+    bench_nav = _panel_benchmark_nav(rets)
+    if bench_nav.empty:
+        return {"p05": float("nan"), "p50": float("nan"), "p95": float("nan"),
+                "p99": float("nan"), "mean": float("nan"), "std": float("nan"),
+                "distribution": np.array([]), "n_random": n_random, "n_valid": 0}
+    bench_ret = bench_nav.pct_change().dropna()
+
+    sample = np.empty(n_random, dtype=float)
+    n_valid = 0
+    for i in range(n_random):
+        rng_i = np.random.default_rng(seed + i)
+        nav = simulate_random_portfolio(rets, n_positions, weighting,
+                                        single_name_cap, market_caps,
+                                        turnover_days, rng_i)
+        pr = nav.pct_change().dropna()
+        pr, bx = pr.align(bench_ret, join="inner")
+        excess = (pr - bx).dropna()
+        if len(excess) > 0:
+            sample[i] = float(excess.mean())
+            n_valid += 1
+        else:
+            sample[i] = float("nan")
+
+    valid = sample[~np.isnan(sample)]
+    if len(valid) == 0:
+        return {"p05": float("nan"), "p50": float("nan"), "p95": float("nan"),
+                "p99": float("nan"), "mean": float("nan"), "std": float("nan"),
+                "distribution": valid, "n_random": n_random, "n_valid": n_valid}
+    return {
+        "p05": float(np.percentile(valid, 5)),
+        "p50": float(np.percentile(valid, 50)),
+        "p95": float(np.percentile(valid, 95)),
+        "p99": float(np.percentile(valid, 99)),
+        "mean": float(valid.mean()),
+        "std": float(valid.std(ddof=0)),
+        "distribution": valid,
+        "n_random": n_random,
+        "n_valid": int(n_valid),
+    }
+
+
+def pct_vs_random(actual: float, distribution: np.ndarray) -> float:
+    """Fraction of random samples strictly less than `actual`.
+
+    零信号账本(随机抽样中的一个样本):pct_vs_random ~ U[0, 1](KS p > 0.05)。
+    埋了信号的账本:实际远超随机主体,pct_vs_random > 0.95。
+    全部样本 NaN ⇒ NaN。
+    """
+    if len(distribution) == 0 or np.isnan(actual):
+        return float("nan")
+    return float((distribution < actual).mean())
+
+
+def is_outlier(actual: float, distribution: np.ndarray, q: float = 0.99) -> bool:
+    """actual > distribution 的 q 分位 ⇒ True。"""
+    if len(distribution) == 0 or np.isnan(actual):
+        return False
+    return bool(actual > float(np.percentile(distribution, q * 100)))
+
+
+@dataclass(frozen=True)
+class RandomBookSpec:
+    """T-069 用的随机组合 spec:每一本账的「构造规则」,与 compute_rr_matrix 的 book → spec 一一对应。
+
+    Per T-069 acceptance.check:
+      - 同宇宙:由调用方提供 universe_returns(spec 不存 panel 数据,纯函数读外部 panel)
+      - 同底层加权:β+ / 代币化 / beta_core = 'equal';cis_tilt = 'market_cap'
+      - 同持仓数:n_positions(default = 12)
+      - 同换手:turnover_days(default = 7)
+      - 同单币上限:single_name_cap(default = 0.40)
+    """
+    book_id: str
+    weighting: str                      # 'equal' or 'market_cap'
+    n_positions: int = DEFAULT_N_POSITIONS
+    single_name_cap: float = DEFAULT_SINGLE_NAME_CAP
+    turnover_days: int = DEFAULT_TURNOVER_DAYS
+
+
+# 默认 book → weighting 映射(per T-069 acceptance.check)
+DEFAULT_BOOK_WEIGHTING: dict[str, str] = {
+    "beta_core":         "equal",
+    "beta_plus_w":       "equal",
+    "beta_plus_m":       "equal",
+    "tokenization_tilt": "equal",
+    "cis_tilt":          "market_cap",
+    # 其它(cap / hl / ④ / event)暂未指定 → fallback equal
+}
+
+
+def compute_outlier_table(
+    book_specs: dict[str, RandomBookSpec],
+    panel_returns: pd.DataFrame,        # 共同 universe 的日收益宽表
+    book_excess: dict[str, pd.Series],  # book → (cell 无关的)excess 时间序列
+    cell_membership: dict[str, pd.Series], # cell_id → (DatetimeIndex 上 bool)
+    n_random: int = 1000,
+    seed: int = 42,
+) -> pd.DataFrame:
+    """为每本账本 × 格子一行,跑 T-069 随机基准 + outlier。
+
+    Parameters
+    ----------
+    book_specs      : {book_id: spec}
+    panel_returns   : 资产日收益宽表(共同 universe,NaN = 当天不可投)
+    book_excess     : {book_id: Pd.Series of excess per day}(routinely 从 compute_rr_matrix 提供)
+    cell_membership : {cell_id: bool Series on same dates}(cell_id 例: 'trend_vol=UP_HI' / 'macro=RISK_ON&fomc=no')
+    n_random        : 每格随机组合数(默认 1000,per T-069 acceptance.check)
+    seed            : RNG 主种子(per 算法 determinism)
+
+    Returns
+    -------
+    DataFrame with cols:
+        d, book_id, cell, cell_id, n_days,
+        actual_excess, p05, p50, p95, p99, distribution,
+        pct_vs_random, is_outlier
+    """
+    rows: list[dict] = []
+    n_cols = panel_returns.shape[1]
+    if n_cols == 0:
+        return pd.DataFrame()
+
+    for book_id, spec in book_specs.items():
+        if book_id not in book_excess:
+            continue
+        ex = book_excess[book_id].dropna()
+        if ex.empty:
+            continue
+
+        for cell_id, mask in cell_membership.items():
+            # 屏蔽那些日期
+            dates_in_cell = set(mask.index[mask])
+            ex_cell = ex[ex.index.isin(dates_in_cell)]
+            if len(ex_cell) < 2:
+                continue
+            actual_excess = float(ex_cell.mean())
+            cell_dates = pd.DatetimeIndex(ex_cell.index)
+            rets_cell = panel_returns.reindex(cell_dates).dropna(how="all")
+            if rets_cell.empty or rets_cell.shape[1] == 0:
+                continue
+
+            bl = compute_random_baseline(
+                rets=rets_cell,
+                n_positions=min(spec.n_positions, rets_cell.shape[1]),
+                weighting=spec.weighting,
+                single_name_cap=spec.single_name_cap,
+                turnover_days=spec.turnover_days,
+                n_random=n_random,
+                seed=seed + _stable(book_id, cell_id),
+            )
+            dist = bl["distribution"]
+            pv = pct_vs_random(actual_excess, dist)
+            outlier = is_outlier(actual_excess, dist, q=0.99)
+
+            rows.append({
+                "d": pd.Timestamp.now(tz=None).normalize(),
+                "book_id": book_id,
+                "cell": cell_id,
+                "n_days": int(len(ex_cell)),
+                "actual_excess": actual_excess,
+                "p05": bl["p05"], "p50": bl["p50"], "p95": bl["p95"], "p99": bl["p99"],
+                "pct_vs_random": pv,
+                "is_outlier": bool(outlier),
+            })
+    return pd.DataFrame(rows)
+
+
 def compute_rr_matrix(
     book_navs: dict[str, pd.Series],
     bench_nav: pd.Series,
@@ -296,6 +670,9 @@ def compute_rr_matrix(
 
     # 1.1 派生 regime_per_day(per §3.2)
     regime_per_day = _derive_regime_per_day(state_panel)
+
+    # 1.2 派生 trend_vol_per_day(per T-068 acceptance.check:主格子 = 价格特征按时点)
+    trend_vol_per_day = _derive_trend_vol_per_day(state_panel)
 
     # 2. FOMC 窗口(per SPEC §3.3)
     fomc_set = _fomc_window_dates(fomc_dates, window=4)
@@ -356,8 +733,8 @@ def compute_rr_matrix(
         full_mean = full_sample_excess.get(sid, 0.0)
         full_ci_lo, full_ci_hi = full_sample_ci.get(sid, (None, None))
 
-        # 5.5 切片 cell — 用 regime_per_day + FOMC 维度
-        # merged = excess_all + regime_per_day + fomc yes/no
+        # 5.5 切片 cell — 用 regime_per_day + trend_vol_per_day + FOMC 维度
+        # merged = excess_all + regime + trend_vol + fomc yes/no
         df = pd.DataFrame({"ret": excess_all})
         df["d"] = df.index
         # join regime
@@ -368,16 +745,76 @@ def compute_rr_matrix(
             merged["regime"] = UNKNOWN_REGIME  # 全缺状态 → UNKNOWN(per §Seth-1006d #1)
         # 缺 regime → UNKNOWN
         merged["regime"] = merged["regime"].fillna(UNKNOWN_REGIME)
+        # join trend_vol(T-068:主格子);缺 dist_200 / vol_pct_3y ⇒ UNKNOWN
+        if not trend_vol_per_day.empty:
+            merged = merged.join(trend_vol_per_day.rename("trend_vol"), how="left")
+        else:
+            merged["trend_vol"] = TREND_VOL_UNKNOWN
+        merged["trend_vol"] = merged["trend_vol"].fillna(TREND_VOL_UNKNOWN)
         # FOMC 维度
         merged["fomc"] = merged.index.map(
             lambda d: "yes" if pd.Timestamp(d) in fomc_set else "no"
         )
 
-        # 5.6 遍历 cell — 6 类 + UNKNOWN × yes/no
+        # 5.6a trend_vol 主格子(per T-068:6 格 = 2 trend × 3 vol,不计 FOMC;切点常数 1/3, 2/3)
+        for trend in TREND_BUCKETS:
+            for volb in VOL_BUCKETS:
+                tv_label = f"{trend}_{volb}"
+                cell_label = f"trend_vol={tv_label}"
+                cell_mask = merged["trend_vol"] == tv_label
+                cell_ret = merged.loc[cell_mask, "ret"].dropna()
+
+                n_days = int(len(cell_ret))
+                if n_days < 1:
+                    continue
+
+                seed_this = seed + _stable(sid, "TV", tv_label)
+                excess_mean, ci_lo, ci_hi = _block_bootstrap_ci(
+                    cell_ret, block_size=block_size, n_bootstrap=n_bootstrap, seed=seed_this
+                )
+                p_pos = _p_pos(cell_ret, block_size=block_size, n_bootstrap=n_bootstrap, seed=seed_this)
+
+                excess_mean_ann = excess_mean * annualization
+                ci_lo_ann = ci_lo * annualization if not math.isnan(ci_lo) else float("nan")
+                ci_hi_ann = ci_hi * annualization if not math.isnan(ci_hi) else float("nan")
+
+                if n_days < shrinkage_k:
+                    shrink = n_days / (n_days + shrinkage_k)
+                    excess_mean_ann = shrink * excess_mean_ann + (1 - shrink) * full_mean * annualization
+                    if full_ci_lo is not None:
+                        ci_lo_ann = shrink * ci_lo_ann + (1 - shrink) * full_ci_lo * annualization
+                    if full_ci_hi is not None:
+                        ci_hi_ann = shrink * ci_hi_ann + (1 - shrink) * full_ci_hi * annualization
+
+                if math.isnan(ci_lo_ann):
+                    ci_lo_out: float | None = None
+                else:
+                    ci_lo_out = ci_lo_ann
+                if math.isnan(ci_hi_ann):
+                    ci_hi_out: float | None = None
+                else:
+                    ci_hi_out = ci_hi_ann
+
+                rows.append({
+                    "d": as_of,
+                    "strategy_id": sid,
+                    "cell": cell_label,
+                    "n_days": n_days,
+                    "excess_mean": excess_mean_ann,
+                    "ci_lo": ci_lo_out,
+                    "ci_hi": ci_hi_out,
+                    "p_pos": p_pos,
+                    "beta": beta,
+                    "rel_maxdd": rel_maxdd,
+                    "turnover": turnover,
+                    "n_variants_tried": nv.get(sid, 1),
+                })
+
+        # 5.6 遍历 cell — 6 类 + UNKNOWN × yes/no(per T-068:保留 macro= 前缀的描述格)
         all_regimes = list(REGIMES) + [UNKNOWN_REGIME]
         for regime in all_regimes:
             for fomc_v in FOMC_VALUES:
-                cell_label = f"regime={regime}&fomc={fomc_v}"
+                cell_label = f"macro={regime}&fomc={fomc_v}"
                 cell_mask = (merged["regime"] == regime) & (merged["fomc"] == fomc_v)
                 cell_ret = merged.loc[cell_mask, "ret"].dropna()
 
