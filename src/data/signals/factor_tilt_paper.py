@@ -272,7 +272,9 @@ async def _load_state() -> dict[str, Any]:
                     params={"select": "*", "order": "updated_at.desc", "limit": 1},
                     headers={"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"})
                 if r.status_code == 200 and r.json():
-                    return json.loads(r.json()[0]["state_json"])
+                    st = (r.json()[0].get("cell") or {}).get("state")   # S-566
+                    if st:
+                        return st
     except Exception as ex:
         _logger.debug("state load failed: %s", ex)
     return _default_state()
@@ -293,11 +295,18 @@ async def _save_state(state: dict[str, Any]) -> None:
         import httpx
         if _SB_URL and _SB_KEY:
             async with httpx.AsyncClient(timeout=15) as client:
+                # S-566:表里的列是 inception / last_mark / weights / cell …,没有 last_mark_date / state_json ——
+                # 原来每次保存都被 PostgREST 拒(S-561 同一类)。整份状态放进 cell.state,读的时候从那里取。
+                if not state.get("last_mark_date"):
+                    return
                 payload = {
-                    "last_mark_date": state.get("last_mark_date"),
-                    "state_json": json.dumps(state),
+                    "inception": state.get("inception_date") or state.get("last_mark_date"),
+                    "last_mark": state.get("last_mark_date"),
                     "nav": state.get("nav", 1.0),
                     "n_days_marked": state.get("n_days_marked", 0),
+                    "weights": state.get("weights") or {},
+                    "factor_sharpe_attribution": state.get("factor_sharpe_attribution") or {},
+                    "cell": {"state": state},
                 }
                 r = await client.post(
                     f"{_SB_URL}/rest/v1/{STATE_TABLE}",
@@ -305,7 +314,7 @@ async def _save_state(state: dict[str, Any]) -> None:
                     headers={
                         "apikey": _SB_KEY,
                         "Authorization": f"Bearer {_SB_KEY}",
-                        "Prefer": "resolution=merge-duplicates",
+                        "Prefer": "return=minimal",
                     })
                 if r.status_code not in (200, 201):
                     _logger.warning("state save returned HTTP %d", r.status_code)
