@@ -1,8 +1,8 @@
 {
   "id": "T-057",
   "title": "三臂对比的记账有错:下一次调仓不在的币按「零收益」记、周收益平摊到每天 —— A 的 arm C Sharpe 4.90 / 回撤 10% 是这个造成的",
-  "owner": "seth",
-  "status": "open",
+  "owner": "lane-c",
+  "status": "in_review",
   "created": "2026-10-07",
   "source": "S-396 的 paper_trading/compare_three_arms.py::_build_daily_returns;A 10-07 的 T-003 回放报告",
   "allowed_paths": [
@@ -20,5 +20,5 @@
   },
   "prior_value": "A 10-07 报告:arm C Sharpe +4.90 / MaxDD 10.3% / 累计 +456%;arm B +1.48 / 60.5% —— 记账口径下的数,不是证据",
   "verified": null,
-  "notes": "2026-10-07 开卡。两处:(1) exit 价取「下一次 ENTERED 里同一个币的 leg.price」,不在就取 entry 价 —— arm C 的宇宙随闸门变,跌出闸门的币亏损被抹成 0;(2) 一个调仓周期的收益按天数开方平摊,日波动被低估,所有臂的 Sharpe 都被抬高。这是 Seth 的代码(S-396)。"
+  "notes": "2026-10-07 开卡。两处:(1) exit 价取「下一次 ENTERED 里同一个币的 leg.price」,不在就取 entry 价 —— arm C 的宇宙随闸门变,跌出闸门的币亏损被抹成 0;(2) 一个调仓周期的收益按天数开方平摊,日波动被低估,所有臂的 Sharpe 都被抬高。这是 Seth 的代码(S-396)。 | 10-13 Seth:改派 lane-c(研究脚本的记账修正,卡上 acceptance 已写清)。 | 10-13 lane-c 完成交付 —— 在 lane-c/T-057 分支。改动:replay_three_arms 增加 panel_closes.json 落盘;compare_three_arms 的 _build_daily_returns 改为接收 {sym: {iso_day: close}} 走真正逐日 MTm(①掉出币在 rebalance 日按其真实 close 实现,然后退出;②每个 d=sum weight×(close[d]/close[d-1]-1),周收益不再被开方平摊);compare 增加 _build_hold_baseline 输出 arms[H_baseline] + summary['arm_X_sharpe_minus_hold'];report_three_arms 加 'Hold-the-panel baseline' 段与 n_missing 列。panel_closes.json 缺则 loud error(去除静默回退)。测试 22/22 pass(原 11 + 7 新 acceptance + 4 e2e 更新)。一个合成 120d 面板 BTC d90 -50% 冲击:NEW arm B SR -1.33/cum -7.85% vs OLD arm B SR -3.78/cum -7.99% —— 同一 panel 下 NEW 反映真实 MTm。OLD arm C +10.46/+0.81% 这种『高于贝塔』的数是 bug ① 把 BTC 亏损静默清零造成的;NEW arm C SR +10.34/cum +1.01% 是 BTC 在 d90 按真实 close 实现 -50%×0.2 之后的诚实值。Hold baseline cum -5.61%/SR -0.91。证据 /Volumes/CometCloudAI/cometcloud-local/paper_trading/repro_t057/。 探索性 —— 需另立预注册、在新数据上过零信号对照:card 上 4.90 的崩坏程度需要拿真实 1196d 面板重跑才知道(线上 binance_hist 上游未验过);n_missing_days>0 可作为后续 CI 闸,卡上没接。"
 }
