@@ -1,7 +1,7 @@
 {
   "id": "T-085",
   "owner": "lane-c",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-13",
   "verified": null,
   "title": "可交易规模的第一步(T-082 A 部分):我们实际能下单的现货场所 × 名字覆盖表 + 订单簿 ±1% / ±2% 深度一周采样(只做测量,不建入库循环)",
@@ -20,5 +20,5 @@
     "expect": "报告:每个名字的可下单场所数、深度中位数、深度 / 全市场报告成交额的比例;按 S-544 的口径(5% 仓位、10% 参与率、5 天)重算 $30M 与 $500M 下每个名字与每本账能否建满,和全市场口径并排;最后一节给 Seth:入库表结构与采样频率的建议(T-082 B 部分由 Seth 做)"
   },
   "prior_value": "S-544:全市场报告成交额口径下 $30M 58/58 过、$500M 50/58 过;tokenization_tilt 被 POLYX 卡在 ≈ $9M。场所深度从没量过。",
-  "notes": "2026-10-13 Seth 开卡派 C。T-036 的剩余一步是 Jazz 删 ~/.config/cometcloud/.env(key 文件只经 Jazz),已改 blocked,lane-c 不再为它定时重测。"
+  "notes": "2026-10-13 lane-c 实测(n=3 / 21 snapshot,跨 2026-10-12 H00 / H15 / H16 同日;7d × 3 cron = Seth 入库那条线 T-082 B):\n• universe 33 names(union of /api/v1/cis/universe 加密子集 + /api/v1/fund/capacity crypto_assets)。5 venue active(Binance/OKX/Coinbase/Bybit/Kraken);Hyperliquid 跳 — ccxt macOS sandbox init bug(无 key 调用,不是产品决策)。146/198 pairs covered(74%)。\n• venue cap @ $30M target:32/32 OK(100%);S-544 adv:25/32 OK(78%)。\n• venue cap @ $500M design:20/32 OK(63%);S-544 adv:23/32 OK(72%)。\n• 5 books binding @ $500M:core_cap(BNB)/beta_plus_w(INJ)/beta_plus_m(INJ) = venue binding;cis_tilt(TRX)/tokenization_tilt(POLYX) = 'no adv data' + venue 也 fail。\n• per-symbol binding tail(venue_cap_aum_usd @ $500M 单边):BTC $236M / ETH $218M / SOL $310M / XRP $154M — **anchors 全 fail single-venue ≤ slot**;POLYX $4.9M / POL $5.2M / SKY $5.2M / STRK $7.0M 是真正的 binding tail。\n• venue_cap / s544_cap ratio 0.005 — 0.04 — 量级 ≈ 单边 50 档冰山顶 / 全市场 ADV × 参与率。**口径差,非薄**。\n• 探索性发现(非 acceptance):Kraken 在 majors 上看起来比 Binance/OKX/Bybit 深 3-5×(可能显示层 / paid liquidity) — ice-berg 顶部 ≠ 真可建深度,venue_cap 是下限不是上限。\n\n交付路径:\n• docs/lane/T-085/{REPORT.md(n=3 snapshot 全数据),T-085_design.md,sweep_7d.py,sweep_7d_runner.sh,aggregate_7d.py}\n• Mac 数据根 research/t085/{sweep_7d.py,aggregate_7d.py,probe_coverage.py,fetch_universe.py,build_report.py,sweep_7d_runner.sh,t085_universe_20261012_1545.json,t085_sleeves_20261012_1545.json,t085_coverage_*.json,t085_depth_20261012_1546.json,t085_sweep_20261012_H00.json,t085_sweep_20261012_H16.json,t085_symbols_20261012_1545.txt,t085_report_7d_20261013_0119.json,...}\n• 钩限:本轮 preflight 通过后 commit+push lane-c/T-085。CI 检范围 + 跑 preflight + 开 PR;Seth 合并。\n\n缺/n=3 < 21(acceptance 期望 7d × 3 slot):\n• Railway fetch 本轮 re-universe 429 限流(用 9.5h 前 t085_universe_20261012_1545.json 数据继续) — 不影响结论,数字小幅漂移。\n• 7-day sweep cron = Seth (T-082 B) ship。lane-c 不能定义 cron(规则 3b)。\n• 跨日方差 = 未测(n=3 全同日) — 必须等 cron 启动 ≥18 帧后再判。\n\n  @ 2026-10-13T01:19:00Z"
 }
