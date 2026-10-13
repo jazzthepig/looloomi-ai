@@ -7,17 +7,21 @@
 #
 # 用法:bash scripts/wait_for_deploy.sh && curl ...
 set -u
-BASE="${COMETCLOUD_BASE:-https://web-production-0cdf76.up.railway.app}"
+# 10-13:railway.app 域名连续两次给出旧的 build-state(bf039869 / 92c32f71 都已在 looloomi.ai 上线,脚本却等满 900 秒报失败)。
+# 先看对外域名(经 Cloudflare 转发到同一服务),再看 railway.app;任一处等于目标即算上线。
+BASES="${COMETCLOUD_BASE:-https://looloomi.ai https://web-production-0cdf76.up.railway.app}"
 WANT="${WANT_SHA:-$(git rev-parse HEAD)}"
 DEADLINE=$(( $(date +%s) + ${WAIT_SECONDS:-900} ))
 while [ "$(date +%s)" -lt "$DEADLINE" ]; do
-  LIVE="$(curl -s --max-time 10 "$BASE/internal/build-state" | python3 -c 'import sys,json
+  for BASE in $BASES; do
+    LIVE="$(curl -s --max-time 10 "$BASE/internal/build-state?t=$(date +%s)" | python3 -c 'import sys,json
 try: print(json.load(sys.stdin).get("git_sha",""))
 except Exception: print("")')"
-  if [ "$LIVE" = "$WANT" ]; then
-    echo "✅ live = ${WANT:0:8}"
-    exit 0
-  fi
+    if [ "$LIVE" = "$WANT" ]; then
+      echo "✅ live = ${WANT:0:8}"
+      exit 0
+    fi
+  done
   echo "… live=${LIVE:0:8} want=${WANT:0:8}"
   sleep 15
 done
