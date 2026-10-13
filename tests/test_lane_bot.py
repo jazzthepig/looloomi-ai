@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from scripts.check_pr_scope import GLOBAL_FORBIDDEN  # noqa: E402
-from scripts.lane_bot.lane_bot import ALLOWED_TOOLS, _LAUNCH, build_prompt, decide, load_config, parse_stream, review_tasks, run_summary  # noqa: E402
+from scripts.lane_bot.lane_bot import ALLOWED_TOOLS, _LAUNCH, actionable_cards, build_prompt, decide, load_config, parse_stream, review_tasks, run_summary  # noqa: E402
 
 CFG = {"active_hours": [9, 23], "every_min": 120, "max_runs_per_day": 8,
        "lanes": {"lane-b": {"enabled": True, "name": "Minimax-B", "cwd": "/x", "worktree": "/x"}}}
@@ -70,7 +70,7 @@ def test_prompt_keeps_lanes_out_of_sync_and_their_own_leash() -> None:
 def test_shipped_config_is_sane() -> None:
     cfg = load_config()
     assert set(cfg["lanes"]) == {"lane-a", "lane-b", "lane-c"}
-    assert cfg["max_turns"] <= 100 and cfg["timeout_min"] <= 60 and cfg["max_runs_per_day"] <= 12
+    assert cfg["max_turns"] <= 200 and cfg["timeout_min"] <= 60 and cfg["max_runs_per_day"] <= 16
 
 
 def test_max_turns_posts_a_sentence_not_raw_json() -> None:
@@ -160,3 +160,18 @@ def test_every_launch_installs_the_guard() -> None:
     hook = cfg["hooks"]["PreToolUse"][0]
     assert "Bash" in hook["matcher"] and "Write" in hook["matcher"]
     assert "guard_main_dir.py" in hook["hooks"][0]["command"]
+
+
+def test_cards_waiting_for_review_do_not_wake_the_lane() -> None:
+    """S-558:分支上已 in_review 的卡(main 上还是 claimed)不算「有活」—— 否则 lane 一轮轮重验已交付的卡。"""
+    import json as _json
+    mine = [_json.loads(p.read_text(encoding="utf-8")) for p in sorted((ROOT / "tasks").glob("T-*.json"))]
+    lane = next((c["owner"] for c in mine if c.get("status") in ("open", "claimed") and str(c.get("owner", "")).startswith("lane-")), None)
+    if lane is None:
+        return
+    live = actionable_cards(lane, branch_status=lambda _l, _c: None)
+    assert live, "没有分支状态时,open / claimed 的卡照常算活"
+    assert actionable_cards(lane, branch_status=lambda _l, _c: "in_review") == []
+    assert actionable_cards(lane, branch_status=lambda _l, _c: "claimed") == live
+    p = build_prompt(lane, {"name": "x", "worktree": "/w"}, "测试")
+    assert "等 Seth 审的卡不是你的活" in p

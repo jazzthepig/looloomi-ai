@@ -4,7 +4,7 @@
 没人输入就不动 —— 合并流程自动化了(S-500),派活和交付之间还卡着「Jazz 去对应 terminal 打一句话」。
 
 怎么做:launchd 每 10 分钟跑一次本脚本(另外 `.lane_bot/wake/` 里一出现文件就立刻跑)。对每个 lane:
-    醒的条件  wake 文件(Seth 派卡 / 回复时写)    或   距上次 ≥ every_min 且名下有 open / claimed 的卡
+    醒的条件  wake 文件(Seth 派卡 / 回复时写)    或   距上次 ≥ every_min 且名下有 open / claimed、还没在分支上交成 in_review 的卡
     不醒      不在 active_hours;今天已满 max_runs_per_day;该目录里已经开着一个 claude(Jazz 在用);上一轮还没完
 醒了就在 lane 平时的目录里用无界面模式跑一轮:`claude -p <prompt> --max-turns N --permission-mode acceptEdits
 --allowedTools <白名单>`,经 `zsh -lic` 启动 —— 和 Jazz 在 terminal 里打开 claude 读的是同一份配置(MiniMax 连接),
@@ -76,7 +76,32 @@ def load_state() -> dict:
         return {}
 
 
-def actionable_cards(lane: str) -> list[str]:
+WAITING = ("in_review", "done")
+
+
+def branch_card_status(lane: str, cid: str) -> str | None:
+    """卡在 lane 自己分支上的状态。lane 交付时只在分支上把卡改成 in_review,main 上那张还是 open / claimed,
+    要等 Seth 合并才变 —— 只看 main 的话,lane_bot 会一轮轮把 lane 叫醒去「重验」一张已经交了的卡。"""
+    for ref in (f"origin/{lane}/{cid}", f"{lane}/{cid}"):
+        try:
+            r = subprocess.run(["git", "--no-optional-locks", "-C", str(ROOT), "show", f"{ref}:tasks/{cid}.json"],
+                               capture_output=True, text=True, timeout=20)
+        except (OSError, subprocess.TimeoutExpired):
+            return None
+        if r.returncode == 0:
+            try:
+                return json.loads(r.stdout).get("status")
+            except ValueError:
+                return None
+    return None
+
+
+def actionable_cards(lane: str, branch_status=branch_card_status) -> list[str]:
+    """名下 open / claimed、且没有在自己分支上交成 in_review / done 的卡。
+
+    S-558(10-13 实测):过去 27 小时 32 轮里约 16 轮是「本轮无新代码,只重验」—— 全是分支上已 in_review、
+    main 上还是 claimed 的卡(lane-b T-059 九轮、lane-c T-036 / T-085 五轮、lane-a T-083 两轮)。等审的卡不再叫醒 lane;
+    Seth 退回时写 wake 文件,lane 照样会醒。"""
     out = []
     for p in sorted((ROOT / "tasks").glob("T-*.json")):
         try:
@@ -84,6 +109,8 @@ def actionable_cards(lane: str) -> list[str]:
         except ValueError:
             continue
         if c.get("owner") == lane and c.get("status") in ("open", "claimed"):
+            if branch_status(lane, c["id"]) in WAITING:
+                continue
             out.append(c["id"])
     return out
 
