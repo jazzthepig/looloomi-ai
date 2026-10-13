@@ -3450,6 +3450,9 @@ _mcp_stop = None
 try:
     # Transport settings (stateless_http, streamable path, DNS-rebinding off) are
     # configured inside cometcloud_mcp.py — see note there re: sys.path shadowing.
+    # S-557:进程内的 MCP 工具经回环地址读本进程的 REST(不绕出公网、不吃匿名 IP 额度);只在 uvicorn 有 $PORT 时设
+    if os.getenv("PORT"):
+        os.environ.setdefault("MCP_INPROCESS_BASE", f"http://127.0.0.1:{os.environ['PORT']}")
     from src.mcp.cometcloud_mcp import mcp as _cometcloud_mcp
 
     app.mount("/mcp", _cometcloud_mcp.streamable_http_app())   # modern (primary)

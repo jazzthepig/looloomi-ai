@@ -13,6 +13,7 @@ Tiers:
 Paths exempt from rate limiting:
   /health, /api/v1/health, /.well-known/*, /llms.txt, /static/*, /assets/*
   /mcp/* (SSE — long-lived connection, not per-request)
+  in-process loopback (127.0.0.1 / ::1 with no X-Forwarded-For) — the mounted MCP's own REST reads (S-557)
 
 Redis keys:
   rl:rpm:<identity>   — sliding minute window  (TTL 60s)
@@ -116,6 +117,17 @@ _key_cache: dict[str, tuple[dict, float]] = {}
 _KEY_CACHE_TTL = 30.0
 
 
+_LOOPBACK = frozenset({"127.0.0.1", "::1"})
+
+
+def _is_loopback(request: Request) -> bool:
+    """S-557:进程内自调用(挂在本应用里的 MCP 工具经 127.0.0.1:$PORT 读 REST)不限流。
+    外部请求一律经 Cloudflare / Railway 边缘代理进来,带 X-Forwarded-For、来源不是回环地址 —— 两条同时满足才放行。"""
+    if request.headers.get("X-Forwarded-For"):
+        return False
+    return bool(request.client and request.client.host in _LOOPBACK)
+
+
 def _is_exempt(path: str) -> bool:
     return any(path.startswith(p) for p in _EXEMPT_PREFIXES) or "." in path.split("/")[-1]
 
@@ -170,8 +182,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
 
-        # Skip exempt paths (static files, health, MCP SSE)
-        if _is_exempt(path):
+        # Skip exempt paths (static files, health, MCP SSE) and in-process loopback calls (S-557)
+        if _is_exempt(path) or _is_loopback(request):
             return await call_next(request)
 
         # Determine identity + limits

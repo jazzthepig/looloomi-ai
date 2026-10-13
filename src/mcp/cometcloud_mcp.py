@@ -163,7 +163,10 @@ def _start_call_log():
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
-RAILWAY_BASE = os.getenv(
+# S-557:挂在 API 进程里时(main.py 设 MCP_INPROCESS_BASE = http://127.0.0.1:$PORT)工具直接读本进程的 REST。
+# 之前经 https://looloomi.ai 绕出去再进来:所有 agent 的工具调用都从 Railway 的出口 IP 进门,共用一个匿名额度
+# (120 次 / 分、2,000 次 / 天)—— 一天用满后对所有人都是「Rate limit exceeded」,熔断器随之打开(10-13 实测)。
+RAILWAY_BASE = os.getenv("MCP_INPROCESS_BASE") or os.getenv(
     "COMETCLOUD_API_BASE",
     "https://looloomi.ai",
 )
