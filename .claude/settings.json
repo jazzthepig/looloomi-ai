@@ -1,7 +1,6 @@
 {
   "_comment": "CometCloud AI — Claude Code project settings. Committed to repo (team-wide).",
   "_see": "HARNESS_UPGRADE.md Phase B for hooks architecture; .claude/skills/ for domain knowledge.",
-
   "hooks": {
     "PreToolUse": [
       {
@@ -12,6 +11,16 @@
           {
             "type": "command",
             "command": "python3 .claude/hooks/compliance_check.py"
+          }
+        ]
+      },
+      {
+        "_comment": "S-559: no session may move HEAD or stash in the main dir (~/Projects/looloomi-ai stays on main; seth_bot commits there). Missing file = allow, so an old checkout cannot lock every Bash call.",
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$CLAUDE_PROJECT_DIR/scripts/lane_bot/guard_main_dir.py\"; [ -f \"$f\" ] || exit 0; exec python3 \"$f\" --head"
           }
         ]
       }

@@ -11,6 +11,13 @@
 2. Write / Edit 写进主目录 —— 共享的 gitignored 文档除外(SYNC、台账、策略手册)
 3. Bash 重定向 / tee 写进主目录 —— 同样的例外
 lane 自己的 worktree(~/Projects/looloomi-ai-lane-x)与私有仓库(looloomi-ai-private)不受影响。
+
+S-559(10-13 两次):① lane-a 先 `cd /Users/sbb/Projects/looloomi-ai && git status`(放行:只读),Claude Code 的 Bash
+会**记住** cwd,下一条 `git switch -c lane-a/T-089 origin/main` 里没有主目录路径 ⇒ 漏过,主目录被切走,seth_bot 停 7 小时,
+Seth 的两个提交落在 lane 的分支上。⇒ 钩子输入里的 `cwd` 是主目录时,不带路径的 git 写操作同样拦。
+② 03:18 一个 Jazz 手动开的 lane 会话(不经 lane_bot,没装这个钩子)在主目录 stash + 切分支。⇒ `--head` 模式由仓库的
+.claude/settings.json 对**所有**会话装上:主目录里只拦会移动 HEAD / 收走改动的操作(switch、checkout <分支>、stash、
+reset --hard、branch -m)—— Seth 与 Jazz 的会话照常 add / commit。
 """
 from __future__ import annotations
 
@@ -31,15 +38,41 @@ WHY = ("lane 不在主目录 ~/Projects/looloomi-ai 里做 git 写操作或写�
        "在你自己的 worktree(~/Projects/looloomi-ai-lane-x)里做;共享文档(MINIMAX_SYNC.md / 台账)可以直接写。")
 
 
+_HEAD_MOVE = re.compile(
+    r"\bgit\b[^|;&]*?\s(switch|stash|checkout(?!\s+--(?:\s|$))(?:\s+-[bB])?\s+(?!--)\S|reset\s+--hard|branch\s+-[mM])")
+_OTHER_TREE = re.compile(r"(?:/Users/sbb|~|\$HOME|\$\{HOME\})/Projects/looloomi-ai-[\w-]+")
+
+
+def _in_main(cwd: str) -> bool:
+    return bool(cwd) and bool(re.fullmatch(MAIN + r"/?", cwd.strip()))
+
+
+def _targets_main(cmd: str, cwd: str) -> bool:
+    """命令落在主目录:命令里写了主目录路径,或会话 cwd 就是主目录且命令没有显式指向别的 worktree。"""
+    if _MAIN_RE.search(cmd):
+        return True
+    return _in_main(cwd) and not _OTHER_TREE.search(cmd)
+
+
+def head_verdict(cmd: str, cwd: str = "") -> str | None:
+    """--head 模式(所有会话):主目录里不许移动 HEAD、不许 stash。纯函数。"""
+    probe = re.sub(r"\bgit\s+(?:switch|checkout)\s+main\b", "", cmd)    # 切回 main 永远放行
+    if _HEAD_MOVE.search(probe) and _targets_main(cmd, cwd):
+        return ("拦下:主目录 ~/Projects/looloomi-ai 必须一直停在 main —— seth_bot 每 5 分钟在这里提交与快进,"
+                "切分支 / stash 会让它整轮拒绝执行、把别人的未提交改动收走(10-08、10-13 两次)。"
+                "要看别的分支用 `git show <分支>:<路径>` 或 `git worktree add`;lane 在自己的 worktree 里做。")
+    return None
+
+
 def _shared(path: str) -> bool:
     return any(path.rstrip("/").endswith("/" + d) for d in SHARED_DOCS)
 
 
-def verdict(tool: str, inp: dict) -> str | None:
-    """返回拦截理由;None = 放行。纯函数,测试直接调。"""
+def verdict(tool: str, inp: dict, cwd: str = "") -> str | None:
+    """返回拦截理由;None = 放行。纯函数,测试直接调。cwd = 钩子输入里会话当前目录(S-559)。"""
     if tool == "Bash":
         cmd = str(inp.get("command") or "")
-        if _MAIN_RE.search(cmd) and _GIT_WRITE.search(cmd):
+        if _GIT_WRITE.search(cmd) and _targets_main(cmd, cwd):
             return f"拦下:主目录上的 git 写操作。{WHY}"
         for m in _REDIRECT_INTO_MAIN.finditer(cmd):
             if not _shared(m.group(1)):
@@ -58,7 +91,11 @@ def main() -> int:
     except Exception:  # noqa: BLE001 — 读不懂输入不拦(拦了 lane 就整轮动不了),但留痕
         print("guard_main_dir: unreadable hook input", file=sys.stderr)
         return 0
-    why = verdict(str(ev.get("tool_name") or ""), ev.get("tool_input") or {})
+    tool, inp, cwd = str(ev.get("tool_name") or ""), ev.get("tool_input") or {}, str(ev.get("cwd") or "")
+    if "--head" in sys.argv[1:]:
+        why = head_verdict(str(inp.get("command") or ""), cwd) if tool == "Bash" else None
+    else:
+        why = verdict(tool, inp, cwd)
     if why:
         print(why, file=sys.stderr)
         return 2

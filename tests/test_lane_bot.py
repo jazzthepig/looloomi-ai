@@ -175,3 +175,23 @@ def test_cards_waiting_for_review_do_not_wake_the_lane() -> None:
     assert actionable_cards(lane, branch_status=lambda _l, _c: "claimed") == live
     p = build_prompt(lane, {"name": "x", "worktree": "/w"}, "测试")
     assert "等 Seth 审的卡不是你的活" in p
+
+
+def test_guard_uses_session_cwd_and_head_mode_for_every_session() -> None:
+    """S-559(10-13 两次):`cd 主目录` 之后不带路径的 `git switch` 漏过;Jazz 手动开的会话没装钩子。"""
+    import json as _json
+    from scripts.lane_bot.guard_main_dir import head_verdict, verdict
+    M, L = "/Users/sbb/Projects/looloomi-ai", "/Users/sbb/Projects/looloomi-ai-lane-a"
+    assert verdict("Bash", {"command": "git fetch origin && git switch -c lane-a/T-089 origin/main"}, cwd=M)
+    assert verdict("Bash", {"command": "git switch -c lane-a/T-089 origin/main"}, cwd=L) is None
+    assert verdict("Bash", {"command": f"cd {L} && git switch -c x"}, cwd=M) is None
+    for cmd in ("git stash push -u -m x", "git checkout lane-b/T-059", "git checkout -b foo", "git reset --hard HEAD",
+                "git branch -m a b", f"git -C {M} switch lane-b/T-059"):
+        assert head_verdict(cmd, M), cmd
+    for cmd in ("git checkout -- tasks/T-089.json", "git switch main", "git checkout main", "git add a && git commit -m x",
+                "git status", f"git -C {L} switch x"):
+        assert head_verdict(cmd, M) is None, cmd
+    assert head_verdict("git checkout lane-b/T-059", L) is None
+    hooks = _json.loads((ROOT / ".claude/settings.json").read_text(encoding="utf-8"))["hooks"]["PreToolUse"]
+    cmd = next(h["hooks"][0]["command"] for h in hooks if "guard_main_dir.py" in h["hooks"][0]["command"])
+    assert "--head" in cmd and "exit 0" in cmd, "所有会话都装;文件不在时放行(旧分支上不能把所有 Bash 都锁死)"
