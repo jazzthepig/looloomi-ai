@@ -187,7 +187,6 @@ def build(arm_rets: pd.DataFrame, state: pd.DataFrame, end: pd.Timestamp,
 
 
 async def run_once() -> dict[str, Any]:
-    from src.api.store import supabase_upsert_table
     from src.data.signals.portfolio_layer import load_strategy4
     from src.data.style.header import _read_all
 
@@ -210,8 +209,10 @@ async def run_once() -> dict[str, Any]:
     state = sd.pivot_table(index="d", columns="feature", values="value").astype(float)
     import asyncio
     rows, ev = await asyncio.to_thread(build, arm_rets, state, target)
-    for i in range(0, len(rows), 2000):
-        res = await supabase_upsert_table(TABLE, rows[i:i + 2000], on_conflict="d,arm")
-        if not res.ok:
-            return {"ok": False, "refused": False, "written": i, "reason": f"写入失败:{res.why}"}
-    return {"ok": True, "refused": False, "written": len(rows), "reason": f"回放至 {target.date()}", "eval": ev}
+    # S-560:前向行 d ≤ 今天 − 2 已冻结(锚过就不再改);回放行照写
+    from src.data.accounting.forward_lock import write_locked
+    w = await write_locked(TABLE, rows, key="arm", on_conflict="d,arm")
+    if not w["ok"]:
+        return {"ok": False, "refused": False, "written": w["written"], "reason": f"写入失败:{w['why']}"}
+    return {"ok": True, "refused": False, "written": w["written"], "reason": f"回放至 {target.date()}", "eval": ev,
+            "lock": w["lock"]}

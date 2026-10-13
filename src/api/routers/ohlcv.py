@@ -677,8 +677,16 @@ async def proof_anchor_day(d: str):
     return {"status": "ok", "d": x["d"], "digest": x["digest"], "n_rows": x["n_rows"], "submitted_at": x["submitted_at"],
             "payload": x["payload"], "ots_base64": x["ots"],
             "matches_current_tables": check.get("matches_current_tables"),
-            "note": ("matches_current_tables = false means the stored rows for that day were changed after anchoring; "
-                     "the anchored payload is what existed at anchoring time.")}
+            "forward_rows_checked": check.get("forward_rows_checked"),
+            "changed": check.get("changed"), "gone": check.get("gone"),
+            "added_after_anchor": check.get("added_after_anchor"),
+            "replay_rows_excluded": check.get("replay_rows_excluded"),
+            "note": ("Each forward-record row in the anchored payload is compared with the same row today. "
+                     "matches_current_tables = false means at least one of them was changed or removed after anchoring; "
+                     "`changed` lists which rows and fields. The anchored payload is what existed at anchoring time. "
+                     "Rows written after anchoring (late arrivals) are listed separately and do not alter anchored rows. "
+                     "Anchors with schema 'T-073 anchor v1' also captured replay (simulated) rows, which are recomputed "
+                     "and are excluded from this comparison.")}
 
 
 # ── v0.2 L3 配置层(纸面)──────────────────────────────────────────────────────

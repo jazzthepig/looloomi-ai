@@ -58,6 +58,8 @@ PRIOR_EXCESS_SD_ANN = 0.10
 EXPOSURE_RANGE = (-0.3, 1.3)
 HORIZONS = {"7d": 7, "14d": 14, "1m": 30, "delegate": 0}
 CODE_REF = "l3-v3"
+#: schema_manifest 从这里读表名(写入经 forward_lock.write_locked,调用点的表名是参数,AST 看不见)。
+WRITES_TABLES = ("allocation_daily", "allocation_nav_daily")
 
 
 @dataclass(frozen=True)
@@ -274,7 +276,6 @@ async def _core_replay_nav(lo: str) -> pd.Series:
 async def run_once() -> dict[str, Any]:
     """从 INCEPTION 起逐日整条重算(无状态、幂等),写 allocation_daily 与 allocation_nav_daily。"""
     from datetime import datetime, timezone
-    from src.api.store import supabase_upsert_table
     from src.data.accounting.registry import BOOKS, load_navs
 
     navs, _bench = await load_navs()
@@ -317,14 +318,16 @@ async def run_once() -> dict[str, Any]:
         json.dumps(nav_rows, allow_nan=False)
     except ValueError as e:
         return {"ok": False, "reason": f"写入前检查:行里有非有限数({e})—— 不写"}
-    # 表名写成字面量:schema_manifest 的 AST 扫描只认得字面量,循环变量里的表名它看不见(S-166)。
-    for i in range(0, len(alloc_rows), 1000):
-        w = await supabase_upsert_table("allocation_daily", alloc_rows[i:i + 1000], on_conflict="d,book")
-        if not w.ok:
-            return {"ok": False, "reason": f"allocation_daily 写入失败:{w.why}"}
-    w = await supabase_upsert_table("allocation_nav_daily", nav_rows, on_conflict="d")
-    if not w.ok:
-        return {"ok": False, "reason": f"allocation_nav_daily 写入失败:{w.why}"}
+    # S-560:整条重算照旧(决定按时点、无状态),但 d ≤ 今天 − 2 的天已冻结 —— 不再改写当天的决定与 why
+    # (10-07 → 10-12 的 core_cap 行 why 每天被重写,锚对不上);NAV 从最后一行已存的接着乘。表名见 WRITES_TABLES。
+    from src.data.accounting.forward_lock import write_locked
+    w = await write_locked("allocation_daily", alloc_rows, key="book", on_conflict="d,book", nav=None, ret=None,
+                           day_level=True, has_inception=False, chunk=1000)
+    if not w["ok"]:
+        return {"ok": False, "reason": f"allocation_daily 写入失败:{w['why']}"}
+    w2 = await write_locked("allocation_nav_daily", nav_rows, key=None, on_conflict="d", has_inception=False)
+    if not w2["ok"]:
+        return {"ok": False, "reason": f"allocation_nav_daily 写入失败:{w2['why']}"}
     ld = decisions[days[-1]]
     return {"ok": True, "days": len(days), "last": days[-1].isoformat(), "nav": nav_rows[-1]["nav"],
             "weights": ld["weights"], "exposure": ld["exposure"], "why": ld["why"],

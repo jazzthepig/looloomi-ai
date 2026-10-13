@@ -319,7 +319,6 @@ async def run_once() -> dict[str, Any]:
     """回放 2023 起到昨天已收盘那根,并写前向行。 幂等,整条 upsert。
 
     T-087:同时算 cap_a1_u 底仓上的新臂(mult_v2 / mult_v2_replay / core_u_replay)。"""
-    from src.api.store import supabase_upsert_table
     from src.data.market.panel_read import read_panel
     from src.data.signals.core_cap import _mcap_prev
     from src.data.signals.tokenization_tilt import closing_bars_final
@@ -341,11 +340,13 @@ async def run_once() -> dict[str, Any]:
     rows_old, ev_old = await asyncio.to_thread(build_rows, core_ret, state, target)
     rows_new, ev_new = await asyncio.to_thread(build_rows_u, core_u_ret, state, target)
     rows = rows_old + rows_new
-    res = await supabase_upsert_table(TABLE, rows, on_conflict="d,arm")
-    if not res.ok:
-        return {"ok": False, "refused": False, "written": 0, "reason": f"写入失败:{res.why}"}
-    return {"ok": True, "refused": False, "written": len(rows), "reason": f"回放至 {target.date()}",
-            "eval": ev_old, "eval_u_cap_a1u": ev_new, "stale_in_source": stale}
+    # S-560:前向行 d ≤ 今天 − 2 已冻结(锚过就不再改);回放行照写
+    from src.data.accounting.forward_lock import write_locked
+    w = await write_locked(TABLE, rows, key="arm", on_conflict="d,arm")
+    if not w["ok"]:
+        return {"ok": False, "refused": False, "written": w["written"], "reason": f"写入失败:{w['why']}"}
+    return {"ok": True, "refused": False, "written": w["written"], "reason": f"回放至 {target.date()}",
+            "eval": ev_old, "eval_u_cap_a1u": ev_new, "stale_in_source": stale, "lock": w["lock"]}
 
 
 def _both_core_returns(px: pd.DataFrame, mcap_prev: pd.DataFrame, start: pd.Timestamp,

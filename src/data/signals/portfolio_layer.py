@@ -283,7 +283,6 @@ async def run_once() -> dict[str, Any]:
     """读 ① 回放(multiplier_daily core_replay / core_u_replay)与状态输入,回放 2023 起 + 前向,整条 upsert。
 
     T-087:同时算新底仓 cap_a1_u 上的 pl_v3 / pl_v3_replay 臂。"""
-    from src.api.store import supabase_upsert_table
     from src.data.style.header import _read_all
 
     start = (REPLAY_START - pd.Timedelta(days=200)).date().isoformat()
@@ -343,8 +342,10 @@ async def run_once() -> dict[str, Any]:
         rows_new, ev_new = build_rows_u(core_u_ret, state_u, target, s4)
         rows.extend(rows_new)
         ev_extra = {"eval_u_cap_a1u": ev_new}
-    res = await supabase_upsert_table(TABLE, rows, on_conflict="d,arm")
-    if not res.ok:
-        return {"ok": False, "refused": False, "written": 0, "reason": f"写入失败:{res.why}"}
-    return {"ok": True, "refused": False, "written": len(rows), "reason": f"回放至 {target.date()}",
-            "eval": ev_old, **ev_extra}
+    # S-560:前向行 d ≤ 今天 − 2 已冻结(锚过就不再改);回放行照写
+    from src.data.accounting.forward_lock import write_locked
+    w = await write_locked(TABLE, rows, key="arm", on_conflict="d,arm")
+    if not w["ok"]:
+        return {"ok": False, "refused": False, "written": w["written"], "reason": f"写入失败:{w['why']}"}
+    return {"ok": True, "refused": False, "written": w["written"], "reason": f"回放至 {target.date()}",
+            "eval": ev_old, **ev_extra, "lock": w["lock"]}

@@ -12,6 +12,10 @@
 - 锚**只追加不覆盖**:某天锚过就不再锚,即便表后来变了 —— 变了正是要暴露的东西(端点现场重算、标出不一致)。
 - payload = 固定顺序的规范 JSON(键排序、紧凑分隔);去掉 computed_at / updated_at(重算时间不是记录内容)。
 - 只锚**前向**行:各账本的起点之后;回放臂(*_replay)不锚。
+  (S-560:v1 实际没按起点过滤 —— core_variants / feature_arms 的回放行进了锚,multiplier / portfolio_layer
+  只锚了 mult_v1 / pl_v2,新臂没进。v2 起按每行 inception 过滤、所有臂都锚。)
+- **锚「今天 − 2」那一天**(S-560,v2):那一天的前向行刚被 forward_lock 冻结,之后不会再变;
+  锚昨天的话,当天收盘还可能被修订,锚到的是初值、表里留的是修订值。
 - .ots 文件 = OpenTimestamps 文件头 + SHA-256 操作 + 摘要 + 日历返回的时间戳;`ots upgrade` 补全比特币证明。
 
 ## 判活判据(规则 5b ②)
@@ -28,7 +32,7 @@ from typing import Any, Optional
 
 TABLE = "forward_anchor_daily"
 WRITES_TABLES = (TABLE,)
-CODE_REF = "T-073 anchor v1"
+CODE_REF = "T-073 anchor v2"
 CALENDARS = ("https://a.pool.opentimestamps.org", "https://b.pool.opentimestamps.org",
              "https://finney.calendar.eternitywall.com")
 OTS_MAGIC = b"\x00OpenTimestamps\x00\x00Proof\x00\xbf\x89\xe2\xe8\x84\xe8\x92\x94"
@@ -36,14 +40,15 @@ OTS_VERSION = b"\x01"
 OTS_SHA256 = b"\x08"
 DROP = {"computed_at", "updated_at", "recorded_at"}
 
-#: (表, 额外过滤, 排序键)。只锚前向:回放臂不进。
+#: (表, 额外过滤, 排序键)。只锚前向:回放行(d < inception)在 build_payload 里按行过滤掉。
+KEYS = {}  # 下面按 SOURCES 填:表 → 一天之内区分行的键
 SOURCES: tuple[tuple[str, dict, str], ...] = (
     ("core_cap_daily", {}, "arm"),
     ("cis_tilt_daily", {}, "arm"),
     ("beta_plus_daily", {}, "arm"),
     ("tokenization_tilt_daily", {}, "arm"),
-    ("multiplier_daily", {"arm": "eq.mult_v1"}, "arm"),
-    ("portfolio_layer_daily", {"arm": "eq.pl_v2"}, "arm"),
+    ("multiplier_daily", {}, "arm"),
+    ("portfolio_layer_daily", {}, "arm"),
     ("core_variants_daily", {}, "arm"),
     ("meta_allocator_daily", {}, "arm"),
     ("feature_arms_daily", {}, "arm"),
@@ -52,6 +57,9 @@ SOURCES: tuple[tuple[str, dict, str], ...] = (
     ("allocation_nav_daily", {}, "d"),
     ("exploration_ideas", {}, "id"),
 )
+
+
+KEYS.update({t: k for t, _f, k in SOURCES})
 
 
 def canonical(payload: dict) -> bytes:
@@ -79,13 +87,58 @@ def waiting_for(prev: dict, cur: dict) -> list[str]:
     return sorted(t for t, rows in prev["sources"].items() if rows and not cur["sources"].get(t))
 
 
+def forward_rows(rows: list[dict]) -> list[dict]:
+    """纯函数。只留前向行(d ≥ inception;没有 inception 的表 = 全部)。"""
+    from src.data.accounting.forward_lock import is_forward
+    return [r for r in rows if is_forward(r)]
+
+
 async def build_payload(d: date) -> dict:
     from src.data.style.header import _read_all
     sources: dict[str, list] = {}
     for table, flt, key in SOURCES:
         rows = await _read_all(table, {"select": "*", "d": f"eq.{d.isoformat()}", **flt})
-        sources[table] = clean_rows(rows, key)
+        sources[table] = clean_rows(forward_rows(rows), key)
     return {"d": d.isoformat(), "schema": CODE_REF, "sources": sources}
+
+
+def _ident(table: str, row: dict) -> str:
+    k = KEYS.get(table, "arm")
+    return str(row.get(k)) if k != "d" else "-"
+
+
+#: v1 锚只收了这两张表的这一个臂;核对 v1 锚时现表按同一范围取,否则 v1 没收的新臂会被报成「锚后补进」。
+V1_SCOPE = {"multiplier_daily": ("arm", "mult_v1"), "portfolio_layer_daily": ("arm", "pl_v2")}
+
+
+def compare(anchored: dict, current: dict) -> dict[str, Any]:
+    """纯函数。锚里存的 payload 对现表(同一天、同几张表)逐行比:改了哪几行、哪些字段;锚里有现在没了的;锚后才补进的。
+    回放行(v1 锚误收的)不计,只报个数。"""
+    changed, gone, added, replay, checked = [], [], [], 0, 0
+    v1 = anchored.get("schema") == "T-073 anchor v1"
+    for table, rows in (anchored.get("sources") or {}).items():
+        fwd = forward_rows(rows)
+        replay += len(rows) - len(fwd)
+        cur = forward_rows(current.get(table) or [])
+        if v1 and table in V1_SCOPE:
+            col, val = V1_SCOPE[table]
+            cur = [r for r in cur if r.get(col) == val]
+        now = {_ident(table, r): r for r in cur}
+        seen = set()
+        for r in fwd:
+            i = _ident(table, r)
+            seen.add(i)
+            checked += 1
+            c = now.get(i)
+            if c is None:
+                gone.append({"table": table, "key": i})
+                continue
+            fields = sorted(f for f in set(r) | set(c) if canonical({"v": r.get(f)}) != canonical({"v": c.get(f)}))
+            if fields:
+                changed.append({"table": table, "key": i, "fields": fields})
+        added += [{"table": table, "key": i} for i in sorted(set(now) - seen)]
+    return {"matches_current_tables": not changed and not gone, "forward_rows_checked": checked,
+            "changed": changed, "gone": gone, "added_after_anchor": added, "replay_rows_excluded": replay}
 
 
 async def submit(digest_hex: str) -> dict[str, str]:
@@ -113,8 +166,9 @@ async def run_once(today: Optional[date] = None) -> dict[str, Any]:
     """锚昨天(UTC)。已锚过 ⇒ 不动(只追加);前向行一行都没有 ⇒ 拒绝(不锚空集)。"""
     from src.api.store import supabase_upsert_table
     from src.data.style.header import _read_all
+    from src.data.accounting.forward_lock import FINAL_LAG_DAYS
     today = today or datetime.now(timezone.utc).date()
-    d = today - timedelta(days=1)
+    d = today - timedelta(days=FINAL_LAG_DAYS)
     have = await _read_all(TABLE, {"select": "d", "d": f"eq.{d.isoformat()}"})
     if have:
         return {"ok": True, "refused": False, "written": 0, "reason": f"{d} 已锚过 —— 只追加不覆盖"}
@@ -143,13 +197,19 @@ async def run_once(today: Optional[date] = None) -> dict[str, Any]:
 
 
 async def verify_now(d: date) -> dict[str, Any]:
-    """现场重算:当天的表与锚定时是否一致。不一致 = 那一天的前向记录后来被改过。"""
+    """现场核对:锚里存的前向行与今天的表逐行比(S-560)。不一致 = 那一天的前向记录后来被改过 —— 报出是哪几行、哪些字段。
+
+    v1 曾用「按现在的 SOURCES 重建 payload 再比摘要」:加一个臂、加一张表,旧锚就全红,分不清谁改了什么。"""
     from src.data.style.header import _read_all
-    rows = await _read_all(TABLE, {"select": "d,digest,n_rows,ots,submitted_at", "d": f"eq.{d.isoformat()}"})
+    rows = await _read_all(TABLE, {"select": "d,digest,n_rows,ots,submitted_at,payload", "d": f"eq.{d.isoformat()}"})
     if not rows:
         return {"d": d.isoformat(), "anchored": False}
     a = rows[0]
-    now_digest = digest_of(await build_payload(d))
+    payload = a.get("payload") or {}
+    current: dict[str, list] = {}
+    for table in (payload.get("sources") or {}):
+        cur = await _read_all(table, {"select": "*", "d": f"eq.{d.isoformat()}"})
+        current[table] = clean_rows(cur, KEYS.get(table, "arm"))
     return {"d": d.isoformat(), "anchored": True, "digest": a["digest"], "submitted_at": a["submitted_at"],
             "n_rows": a["n_rows"], "calendars": sorted((a.get("ots") or {}).keys()),
-            "matches_current_tables": now_digest == a["digest"], "current_digest": now_digest}
+            "schema": payload.get("schema"), **compare(payload, current)}
