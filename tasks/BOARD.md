@@ -3,6 +3,7 @@
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
 | in_review | T-060 | lane-a | 天气数据四个角度的挖掘:一致性与对未来收益的区分力 | 一张表 + 报告路径写进卡 notes:每个角度的区分力分位;哪几份高度重合;哪份有独有信息。只读、不改代码 | 四份并存,从没比较过;决策读 state_daily 是约定,不是证据 |  |
+| in_review | T-089 | lane-a | 完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改 | 从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。 |  |
 | in_review | T-068 | lane-b | 评估层 ②:状态轴换成有历史的价格特征(T-059 之后) | 测试:同一日期在 2024 年算与在今天算落在同一格(无前视);上线当天 rr_matrix_daily 出现 6 个新格子 | 见 T-059 原卡(10-07) |  |
 | in_review | T-084 | lane-b | 修 core_variants 宽宇宙臂的数据缺陷:价格只在市值 ≥ $2 亿的日子存在 ⇒ 持仓跌破后亏损被记成 0;同时把这条读改成不全表排序 | 重跑回放后 core_variants_daily 的 broad_mom30_breadth:2023–24 ≈ +240%、2025-01 → 最新 ≈ −4%(S-555 周频复刻值,日频允许几个点的差);数字写进卡 notes。前向行(10-08 起)也会变 —— 这是改正,台账写 M- 条目说明 | 生产 broad_mom30_breadth 2023–24 +268%、2025-01 → 10-11 +23.3%(含缺陷);core_variants 每轮读 asset_mcap_daily 按五列排序分页,18 天临时写约 72 GB |  |
 | in_review | T-086 | lane-b | 对外「Track Record」区:每本前向账本的记录 + 每天的比特币时间戳锚,LP 自己能验 —— 验证装置就是产品,现在网站上看不到它 | 测试 tests/test_track_record_page.py(静态检查组件源码):用的三个接口都在;没有 annualized / CAGR / Sharpe 字样或 365 次方;没有 Railway / Supabase / Mac 等内部名;读失败文案存在。npm run build 后提交 dashboard/dist(preflight 有新鲜度检查)。截一张图或写清页面路径到卡 notes。 | 前向账本 14 本、每天锚到比特币(10-07 起 5 天),对外只有 JSON 接口;网站上 LP 看得到的只有组合器里的纸面记录,看不到「这些记录我们事后改不了」的证据。 |  |
@@ -15,7 +16,6 @@
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
 | open | T-083 | lane-a | ③ 敞口旋钮:宽度定仓位(前 N 名里 L 日动量为正的比例)是不是真的会择时 —— 对照同平均仓位恒定与打乱时序的随机择时;收尾 S-555 的两项 | 报告(两半:检验 + 挖掘)写到 Mac 数据根 _reports/absorb_input/,最终路径写进卡 notes;台账 M- 条目先写预注册再写结果;过了 ⇒ Seth 开前向账本卡(③ 的第二条腿,与 multiplier 并排);不过 ⇒ 进坟场并写清死因 | S-555:市值加权 × 宽度仓位 S1 +159% / −15% / 夏普 1.75,S2 +1.7% / −28%;同宇宙市值加权满仓 S1 +374% / −29%,S2 −24% / −55%。从没和「同平均仓位恒定」「随机择时」比过 —— 回撤减半可能只是平均一半仓位。 |  |
-| open | T-089 | lane-a | 完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改 | 从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。 |  |
 | open | T-059 | lane-b | 评估层 ①:修 bootstrap 退化(T-059 拆成三张的第一张) | 测试先在现在的代码上红:n=23 的序列 CI = [NaN, NaN] 且 point 均值用满 23 天(旧代码:CI 宽度 0、只用前 20 天);n=10 的 p_pos = NaN 而不是只取 0 / 1;n=80 零信号 iid 序列 CI 宽度 > 0 且含真均值;改完转绿 | 只有相对 ① 的实测超额,没有随机基准;10-06 的 27 行:beta_core TIGHTENING 格 n=23 的 CI = [3.018, 3.018](单点),n < 20 的 22 行 p_pos 全是 0 或 1;所有账本的前向窗口只有一个状态格子(TIGHTENING) |  |
 | open | T-069 | lane-b | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
 | open | T-057 | lane-c | 三臂对比的记账有错:下一次调仓不在的币按「零收益」记、周收益平摊到每天 —— A 的 arm C Sharpe 4.90 / 回撤 10% 是这个造成的 | 测试钉住 ①②;重跑后 arm B 的 Sharpe 不再被平滑抬高(与 hold-the-panel 同量级);arm C 的结论按新数重判 | A 10-07 报告:arm C Sharpe +4.90 / MaxDD 10.3% / 累计 +456%;arm B +1.48 / 60.5% —— 记账口径下的数,不是证据 |  |
@@ -92,4 +92,4 @@
 | done | T-081 | seth | 代币迁移接段:MKR→SKY(1:24000)、MATIC→POL(1:1)—— 宇宙只放新币,生效日按成交交叉(CoinDesk / CF Benchmarks 做法),历史按比例接,统一标准 v1.3 | SKY 的分不再因市值 0 被压到底;POL 迁移前用的是 MATIC | MKR 自 2025-06-05 起在标准里市值 0、基本面支柱 0,正式档 UNDERWEIGHT(实时 55.8 NEUTRAL);POL 迁移前 11 个月用的是日成交 60 万美元的薄币 | 10-12 正式批次含 SKY、POL,无 MKR、MATIC;/cis/universe 有 SKY 无 MKR。剩 Minimax 换 T1 宇宙(Mac 侧,SYNC §Seth-1012a)不在本卡验收内。 @ 2026-10-13T13:45Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 14 · claimed 2 · blocked 4 · in_review 9 · done 59 · dropped 1
+open 13 · claimed 2 · blocked 4 · in_review 10 · done 59 · dropped 1
