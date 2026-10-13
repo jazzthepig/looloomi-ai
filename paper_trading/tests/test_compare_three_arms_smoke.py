@@ -118,7 +118,8 @@ def test_build_daily_returns_single_period():
     }}
     start = dt.date(2026, 7, 1)
     end = dt.date(2026, 7, 3)
-    daily = _build_daily_returns(decisions, start, end, panel_closes=panel_closes)
+    daily, n_missing = _build_daily_returns(decisions, start, end,
+                                            panel_closes=panel_closes)
     assert len(daily) == 3
     # Day 0 (entry day): no prev close, 0 return.
     assert daily[0] == 0.0
@@ -126,6 +127,8 @@ def test_build_daily_returns_single_period():
     assert abs(daily[1] - 0.01) < 1e-9, f"day 1 expected +1%, got {daily[1]}"
     # Day 2: BTC 102/101 - 1 ≈ 0.00990099...
     assert abs(daily[2] - (102.0 / 101.0 - 1.0)) < 1e-9
+    # T-057 v2: hole-free panel → 0 missing leg-days.
+    assert n_missing == 0
 
 
 def test_build_daily_returns_two_periods():
@@ -147,7 +150,8 @@ def test_build_daily_returns_two_periods():
     }}
     start = dt.date(2026, 7, 1)
     end = dt.date(2026, 7, 8)
-    daily = _build_daily_returns(decisions, start, end, panel_closes=panel_closes)
+    daily, n_missing = _build_daily_returns(decisions, start, end,
+                                            panel_closes=panel_closes)
     # Day 0 (entry day): no return on the entry day itself (no prev close in window)
     assert daily[0] == 0.0
     # Days 1..6: BTC flat → 0 return each.
@@ -155,6 +159,7 @@ def test_build_daily_returns_two_periods():
         assert daily[i] == 0.0, f"flat day {i}: expected 0, got {daily[i]}"
     # Day 7: BTC moves 100 → 110 with old leg at weight 1.0 → +10%
     assert abs(daily[7] - 0.10) < 1e-9, f"day 7 expected +10%, got {daily[7]}"
+    assert n_missing == 0
 
 
 def test_build_daily_returns_negative_period():
@@ -172,7 +177,7 @@ def test_build_daily_returns_negative_period():
         "2026-06-30": 100.0,
         **{f"2026-07-{1 + i:02d}": (100.0 - i * (10.0 / 7.0)) for i in range(8)},
     }}
-    daily = _build_daily_returns(
+    daily, n_missing = _build_daily_returns(
         decisions, dt.date(2026, 7, 1), dt.date(2026, 7, 8),
         panel_closes=panel_closes,
     )
@@ -183,6 +188,7 @@ def test_build_daily_returns_negative_period():
     # (geometric compounding of the actual daily moves)
     cum = math.prod(1.0 + r for r in daily[1:]) - 1.0
     assert abs(cum - (-0.10)) < 1e-6, f"cum expected -10%, got {cum:.4%}"
+    assert n_missing == 0
 
 
 # ── T-057 acceptance #①+#③ — dropped symbol realizes its loss ──
@@ -219,7 +225,7 @@ def test_build_daily_returns_dropped_symbol_realizes_loss():
         "ETH": {"2026-06-30": 100.0, **{f"2026-07-{1 + i:02d}": 100.0
                                        for i in range(8)}},
     }
-    daily = _build_daily_returns(
+    daily, n_missing = _build_daily_returns(
         decisions, dt.date(2026, 7, 1), dt.date(2026, 7, 8),
         panel_closes=panel_closes,
     )
@@ -233,6 +239,7 @@ def test_build_daily_returns_dropped_symbol_realizes_loss():
     # Equity multiple after the loss: 1 × (1 + (-0.25)) = 0.75 → cum = -25%
     cum = math.prod(1.0 + r for r in daily) - 1.0
     assert abs(cum - (-0.25)) < 1e-9, f"cum expected -25% (the -50% × 0.5), got {cum:.4%}"
+    assert n_missing == 0
 
 
 # ── T-057 acceptance #② — daily MTM does not flatten ──
@@ -257,7 +264,7 @@ def test_build_daily_returns_no_flattening_smoothing():
         "2026-06-30": 100.0,
         **{f"2026-07-{1 + i:02d}": (100.0 if i < 7 else 110.0) for i in range(8)},
     }}
-    daily = _build_daily_returns(
+    daily, n_missing = _build_daily_returns(
         decisions, dt.date(2026, 7, 1), dt.date(2026, 7, 8),
         panel_closes=panel_closes,
     )
@@ -268,6 +275,7 @@ def test_build_daily_returns_no_flattening_smoothing():
     )
     i, r = nonzero_days[0]
     assert abs(r - 0.10) < 1e-9, f"nonzero day {i} expected +10%, got {r}"
+    assert n_missing == 0
 
 
 # ── T-057 acceptance #④ — hold-the-panel baseline ──
@@ -293,17 +301,25 @@ def test_build_hold_baseline_uses_first_entered():
         "ETH": {"2026-06-30": 200.0,
                 **{f"2026-07-{1 + i:02d}": 200.0 for i in range(8)}},
     }
-    daily = _build_hold_baseline(decisions, dt.date(2026, 7, 1),
-                                 dt.date(2026, 7, 8), panel_closes=panel_closes)
+    daily, n_missing = _build_hold_baseline(decisions, dt.date(2026, 7, 1),
+                                          dt.date(2026, 7, 8),
+                                          panel_closes=panel_closes)
     # ETH should NOT contribute (not in first ENTERED).
     # Day 7: BTC +10%. Cum = +10%.
     cum = math.prod(1.0 + r for r in daily) - 1.0
     assert abs(cum - 0.10) < 1e-9, f"hold baseline cum expected +10%, got {cum:.4%}"
+    assert n_missing == 0
 
 
-def test_count_missing_days_with_hole_in_panel():
-    """Day 3 has no close for BTC in the panel → counted as missing."""
-    from paper_trading.compare_three_arms import _count_missing_days
+def test_count_missing_legs_with_hole_in_panel():
+    """T-057 v2: a panel hole is counted PER LEG, not per day.
+
+    BTC enters day 0 weight=1.0. Panel has a hole on day 3 (close absent
+    for BTC). On day 3: p_now is None → +1 to n_missing_legs. Day 4: the
+    BTC row is back (close=102), but p_prev (day 3) is still missing →
+    +1 to n_missing_legs. Total: ≥2 missing-leg entries.
+    """
+    from paper_trading.compare_three_arms import _build_daily_returns
     decisions = [
         {"date": "2026-07-01", "verdict": "ENTERED", "legs": [
             {"symbol": "BTC", "weight": 1.0, "price": 100.0},
@@ -311,15 +327,17 @@ def test_count_missing_days_with_hole_in_panel():
     ]
     panel_closes = {"BTC": {
         "2026-06-30": 100.0, "2026-07-01": 100.0, "2026-07-02": 101.0,
-        # 2026-07-03 missing
+        # 2026-07-03 missing — hole
         "2026-07-04": 102.0,
     }}
-    n = _count_missing_days(decisions, dt.date(2026, 7, 1),
-                            dt.date(2026, 7, 4), panel_closes=panel_closes)
-    # Day 0 (entry): no prev in window, used=0 → missing (no contribution since entry day)
-    # Wait: on entry day, BTC is in last_legs but has no d_prev to compare → 0 used → missing? Per our spec entry-day is "no position yet" but here we set has_active=True after day 0's calc → day 0 IS counted.
-    # Day 3: missing BTC close → counted.
-    assert n >= 1, f"expected ≥1 missing day (panel hole), got {n}"
+    _, n_missing = _build_daily_returns(
+        decisions, dt.date(2026, 7, 1), dt.date(2026, 7, 4),
+        panel_closes=panel_closes,
+    )
+    assert n_missing >= 2, (
+        f"expected ≥2 missing legs (day 3 hole + day 4 prev-missing), "
+        f"got {n_missing}"
+    )
 
 
 # ── 2. Agreement helper ─────────────────────────────────────────────────────
@@ -485,15 +503,20 @@ def test_compare_end_to_end(synthetic_run_dir):
     # Hold-the-panel baseline must be present in arms with its own metrics.
     assert "H_baseline" in diff["arms"]
     assert diff["arms"]["H_baseline"]["name"] == "H_hold_baseline"
-    # Each arm now reports n_missing_days (T-057 data-quality field).
+    # Each arm reports n_missing_legs (T-057 v2 data-quality field).
     for key in ("A", "B", "C", "H_baseline"):
-        assert "n_missing_days" in diff["arms"][key], f"arm {key} missing n_missing_days"
-    # The synthetic fixture has 14 days with no panel holes → 0 missing days.
-    for key in ("A", "B", "C", "H_baseline"):
-        assert diff["arms"][key]["n_missing_days"] == 0, (
-            f"arm {key} n_missing_days should be 0 for hole-free fixture; "
-            f"got {diff['arms'][key]['n_missing_days']}"
+        assert "n_missing_legs" in diff["arms"][key], (
+            f"arm {key} missing n_missing_legs"
         )
+    # The synthetic fixture has 14 days with no panel holes → 0 missing legs.
+    for key in ("A", "B", "C", "H_baseline"):
+        assert diff["arms"][key]["n_missing_legs"] == 0, (
+            f"arm {key} n_missing_legs should be 0 for hole-free fixture; "
+            f"got {diff['arms'][key]['n_missing_legs']}"
+        )
+    # And the summary block surfaces the panel-wide gate.
+    assert "evidence_suppressed_by_missing_legs" in diff["summary"]
+    assert diff["summary"]["evidence_suppressed_by_missing_legs"] is False
     # Hold baseline diff summary fields must exist (T-057 acceptance #④).
     assert "arm_c_sharpe_minus_hold" in diff["summary"]
     assert "arm_b_sharpe_minus_hold" in diff["summary"]
