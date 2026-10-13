@@ -170,6 +170,11 @@ RAILWAY_BASE = os.getenv("MCP_INPROCESS_BASE") or os.getenv(
     "COMETCLOUD_API_BASE",
     "https://looloomi.ai",
 )
+#: S-557:本地(stdio)跑的 MCP —— lane、Cowork、loop-watch —— 都从同一台 Mac 的 IP 出去,匿名额度 2,000 次 / 天
+#: 一起用。设了 COMETCLOUD_API_KEY 就带 X-API-Key,按那把 key 的档位计(key 只经 Jazz 的手,放进环境变量)。
+def _headers() -> dict:
+    key = os.getenv("COMETCLOUD_API_KEY", "").strip()
+    return {"X-API-Key": key} if key else {}
 API_TIMEOUT     = float(os.getenv("MCP_API_TIMEOUT", "20.0"))
 API_TIMEOUT_CIS = float(os.getenv("MCP_API_TIMEOUT_CIS", "60.0"))  # CIS universe is expensive
 MCP_PORT        = int(os.getenv("MCP_PORT", "0"))  # 0 = stdio
@@ -285,7 +290,7 @@ async def _get(
     tool_name = _derive_tool_name(path)
     symbol = (params or {}).get("symbol") or (params or {}).get("symbols", "")
     try:
-        async with httpx.AsyncClient(timeout=t) as client:
+        async with httpx.AsyncClient(timeout=t, headers=_headers()) as client:
             resp = await client.get(url, params=params or {})
             resp.raise_for_status()
             result = resp.json()
@@ -306,7 +311,7 @@ async def _get(
 async def _post(path: str, body: dict, timeout: float = 15.0) -> Any:
     """POST helper for trading execution endpoints."""
     url = f"{RAILWAY_BASE}{path}"
-    async with httpx.AsyncClient(timeout=timeout) as client:
+    async with httpx.AsyncClient(timeout=timeout, headers=_headers()) as client:
         resp = await client.post(url, json=body)
         resp.raise_for_status()
         return resp.json()
@@ -315,7 +320,7 @@ async def _post(path: str, body: dict, timeout: float = 15.0) -> Any:
 async def _delete(path: str, body: dict | None = None, timeout: float = 10.0) -> Any:
     """DELETE helper for closing positions."""
     url = f"{RAILWAY_BASE}{path}"
-    async with httpx.AsyncClient(timeout=timeout) as client:
+    async with httpx.AsyncClient(timeout=timeout, headers=_headers()) as client:
         resp = await client.request("DELETE", url, json=body or {})
         resp.raise_for_status()
         return resp.json()
@@ -1809,7 +1814,7 @@ async def cometcloud_get_portfolio_stats(params: PortfolioStatsInput) -> str:
     try:
         # Pass assets as query param (GET endpoint)
         # API returns {"data": [{asset, return_90d, volatility, sharpe, price}, ...]}
-        async with httpx.AsyncClient(timeout=API_TIMEOUT) as client:
+        async with httpx.AsyncClient(timeout=API_TIMEOUT, headers=_headers()) as client:
             resp = await client.get(
                 f"{RAILWAY_BASE}/api/v1/portfolio/stats",
                 params={"assets": params.symbols},

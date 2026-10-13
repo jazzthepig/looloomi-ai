@@ -33,3 +33,21 @@ def test_mounted_mcp_reads_the_api_over_loopback():
     assert i_set < i_imp, "MCP_INPROCESS_BASE must be set before the MCP module reads it at import"
     mcp_src = (ROOT / "src/mcp/cometcloud_mcp.py").read_text(encoding="utf-8")
     assert 'RAILWAY_BASE = os.getenv("MCP_INPROCESS_BASE") or' in mcp_src
+
+
+def test_local_mcp_sends_an_api_key_when_one_is_configured(monkeypatch):
+    """本地 stdio MCP(lane / Cowork / loop-watch 同一台 Mac 的 IP)设了 COMETCLOUD_API_KEY 就按 key 的档位计,不吃匿名额度。"""
+    import ast, json, os
+    src = (ROOT / "src/mcp/cometcloud_mcp.py").read_text(encoding="utf-8")
+    fn = next(n for n in ast.parse(src).body if isinstance(n, ast.FunctionDef) and n.name == "_headers")
+    ns = {"os": os}
+    exec(compile(ast.Module(body=[fn], type_ignores=[]), "cometcloud_mcp", "exec"), ns)   # 不导入整个 MCP(干净机器上没有 mcp 包)
+    monkeypatch.setenv("COMETCLOUD_API_KEY", "cc_test_dummy")
+    assert ns["_headers"]() == {"X-API-Key": "cc_test_dummy"}
+    monkeypatch.delenv("COMETCLOUD_API_KEY")
+    assert ns["_headers"]() == {}
+    assert src.count("httpx.AsyncClient(") - src.count("headers=_headers()") == 1, \
+        "every REST client sends the key (the one exception is the Supabase call-log writer)"
+    cfg = json.loads((ROOT / ".mcp.json").read_text(encoding="utf-8"))
+    assert cfg["mcpServers"]["cometcloud"]["env"]["COMETCLOUD_API_KEY"] == "${COMETCLOUD_API_KEY:-}", \
+        "the key is never written into this public file — only an env reference"

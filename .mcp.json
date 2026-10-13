@@ -9,7 +9,8 @@
       "env": {
         "COMETCLOUD_API_BASE": "https://looloomi.ai",
         "MCP_API_TIMEOUT": "20",
-        "MCP_API_TIMEOUT_CIS": "60"
+        "MCP_API_TIMEOUT_CIS": "60",
+        "COMETCLOUD_API_KEY": "${COMETCLOUD_API_KEY:-}"
       }
     },
     "lmstudio": {
