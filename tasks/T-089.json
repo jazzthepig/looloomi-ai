@@ -1,7 +1,7 @@
 {
   "id": "T-089",
   "owner": "lane-a",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-13",
   "verified": null,
   "title": "完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置",
@@ -20,5 +20,5 @@
     "expect": "报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改"
   },
   "prior_value": "从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。",
-  "notes": "2026-10-13 Seth 开卡派 A,排在 T-083 之后。积木在 T-087 / T-088 交付前用旧臂跑通,交付后重跑一次。"
+  "notes": "T-089-v2(2026-10-13):重交卡。 原 T-089(75a8086)叠在未合并 T-083 上会对 main 回退 25 文件 — 现迁到 lane-a/T-089-v2(基于 origin/main),只带 docs/research/{t089_fund_simulation.py, t089_panel_loader.py, t089_run_first_version.py} + 该三件的产物 JSON/MD + 一份 panel_provenance.json + tasks/T-089.json + tasks/BOARD.md。\n\n【交付状态】管线跑通,真数字未到位。 三件新增:\n  - docs/research/t089_panel_loader.py — 三个 backend(synthetic-on-priors / csv / supabase),picked by --backend。\n  - docs/research/t089_run_first_version.py — runner: 装面板 → simulate_from_panel → 写 JSON+MD。\n  - docs/research/t089_first_version_{synthetic, csv}.{json, md} + t089_panel_provenance.json — 实测产物。\n\n【数字 — 后端 S(合成 priors,锁定 seed 20261013,1380 天 2023-01-02 → 2026-10-12)】\n  W1(2023-24):\n    fund total = +2.03% / maxDD -52.05% / Sharpe +0.21 / pct_vs_random 34%\n    ①        = -42.78% / maxDD -67.72% / Sharpe -0.24\n    BTC       = +65.04% / maxDD -45.65% / Sharpe +0.72\n    random_p50/p95 = +12.85% / +79.44% (500 trials Dirichlet α=1)\n    excess_vs_①  = +20.46%(年化)\n  W2(2025-01 → 2026-10-12):\n    fund total = -2.48% / maxDD -35.12% / Sharpe +0.14 / pct_vs_random 83%\n    ①        = -38.43% / maxDD -56.58% / Sharpe -0.25\n    BTC       = -67.42% / maxDD -82.16% / Sharpe -0.77\n    random_p50/p95 = -25.36% / +16.23%\n    excess_vs_①  = +18.27%(年化)\n\n【数字 — 后端 D(真 BTC CSV,650 天 2025-01-01 → 2026-10-12;4 个 arm 仍 priors)】\n  W2: 同上(fund/① maxDD 一致是 priors 同源;BTC 改真值 -19.16% 代替 -67.42%, 与 t060 实测最近 BTC 段对得上)。\n  W1 真 BTC 数据未落地,故 W1 ERR。\n\n【这些数字还不能作为「M-558 通过 / 失败」结论】:\n  - 4 个 arm 的统计形状(年化收益/波动/BTC 相关)都是我手写的 priors,不是 Mac 那 11yr 的真协方差矩阵;\n  - 「fund 跑赢 ① 但落后 BTC」是 priors 与 40%/40% 上限同时存在的代数产物,不代表 §5b 周期的实证结论。\n  - 真数字 = M-558-a: mcp__supabase 任一端授权 + mult_v2_replay / pl_v3_replay / cap_uncapped 全在 Supabase 并跑到 2026-10-12。\n\n【M-558 预注册锁 仍生效】积木 / 合成规则 / 对照 / 窗口 / 判据四块在 v2 重交前未改;改任一条 = 新实验(M-558-b 或更高)。\n\n@seth:\n  (1) Mac 端 / Supabase 任一端的实跑授权谁来放行 — 这是把 v2 数字换成 M-558-a 真数字的唯一门;\n  (2) T-087 / T-088 交付前的 v2 已经能跑通管线。 v2 上跑的是 v1 各臂接 mult_v1_replay / pl_v2_replay / cis_a1 + cap_c40(非 cap_uncapped)。 真实提交以 Mac 端接 v2/v3/u_replay 后重跑的数字为准;\n  (3) W3(单日 forward)目前会被 _metrics 的 IndexError 触发,在 `simulate_from_panel` 改：窗口确认 ≥ 2 天即 OK, prod 把 W3 起扩到 ≥ 10-12 起 1 个月再开。"
 }
