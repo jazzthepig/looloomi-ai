@@ -349,24 +349,21 @@ async def run_once() -> dict[str, Any]:
     mc = await _mcap_prev(panel, start)
     from src.data.signals.portfolio_layer import load_strategy4
     from src.data.style.header import _read_all
-    # T-084/S-555 第 0 条:两段读 — ① 找候选 coin_id(窗口内 mcap 曾 >= $2 亿);
-    # ② 读这些候选的完整价格/市值(无 mcap 过滤)。旧 IO 一次性读带 mcap 过滤的字段
-    # ⇒ 跌破后亏损被记成 0(T-084 acceptance)。order 用唯一键 (d, coin_id)。
-    cand_rows = await _read_all(
-        "asset_mcap_daily",
-        {"select": "coin_id,mcap", "mcap": f"gte.{BROAD_MIN_MCAP:.0f}",
-         "d": f"gte.{start}", "order": "coin_id.asc,d.asc"},
-    )
-    candidates = sorted({r["coin_id"] for r in cand_rows}) if cand_rows else []
-    broad = None
-    if candidates:
-        cg = await _read_all(
-            "asset_mcap_daily",
-            {"select": "coin_id,d,price,mcap", "d": f"gte.{start}",
-             "coin_id": f"in.({','.join(candidates)})",
-             "order": "d.asc,coin_id.asc"},
-        )
-        broad = prepare_broad_panels(cg, BROAD_MIN_MCAP)
+    # T-084/S-555 第 0 条:价格不能带 mcap 过滤读(跌破后的亏损会被记成 0)—— 读完整的价格 / 市值,候选由
+    # prepare_broad_panels 自己挑(窗口内 mcap 曾 ≥ $2 亿)。
+    # S-563:按月分块 + 固定 source 读。T-084 原版两段读(候选 23 万行 + 候选全价约 45 万行)都是一次 offset 分页、
+    # 排序键没有索引(唯一键是 symbol,d,source;(source,d) 才有索引)—— 每一页都在整个结果集上重排,S-551 同类。
+    # 按月读每段只有约 1 万行、走 (source,d) 索引;总行数也更少(一遍读完,不读两遍)。
+    from src.data.style.header import SOURCE as CG_SOURCE
+    cg: list[dict] = []
+    lo = pd.Timestamp(start)
+    while lo <= target:
+        hi = lo + pd.DateOffset(months=1)
+        cg += await _read_all("asset_mcap_daily", {
+            "select": "coin_id,d,price,mcap", "source": f"eq.{CG_SOURCE}",
+            "and": f"(d.gte.{lo.date().isoformat()},d.lt.{hi.date().isoformat()})", "order": "d.asc,coin_id.asc"})
+        lo = hi
+    broad = prepare_broad_panels(cg, BROAD_MIN_MCAP) if cg else None
     rows, ev = await asyncio.to_thread(build, px, mc, target, N_RANDOM, load_strategy4(), broad)
     # S-560:前向行 d ≤ 今天 − 2 已冻结(锚过就不再改);回放行照写
     from src.data.accounting.forward_lock import write_locked
