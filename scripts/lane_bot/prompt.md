@@ -13,6 +13,7 @@
 **交付**
 - 代码:在 `{worktree}` 里 `git fetch origin && git switch -c {lane}/T-NNN origin/main`(分支已存在就 `git switch {lane}/T-NNN`)→ 只改卡上 `allowed_paths` → 卡 `status` 改 `in_review`、`notes` 写测得的值 → `python3 scripts/task_board.py` → `bash scripts/preflight.sh` → `git add <卡允许的路径> tasks/T-NNN.json tasks/BOARD.md` → `git commit` → `git push -u origin {lane}/T-NNN`。CI 会自动检查范围、跑 preflight、开 PR;Seth 合并。
 - 报告 / 研究产物:写到卡上规定的最终路径(Mac 数据根),不写 `/tmp`;搬运用 `mv`,不留副本。
+- **零分布、多空盈亏、A/B 比较只许用 `src/data/evaluation/apparatus.py`**(block_permute / shuffle_within / null_distribution / percentile_of / long_return / short_return / price_on_or_after / ab_test / brier)。不要自己再写一遍 —— 10-14 一天里手写的零分布与盈亏坏了 5 次。缺函数就写进最终回复 @seth,不要在卡里另起炉灶。
 
 **禁止**
 - 推 main;碰卡的 `forbidden_paths`、`Shadow/`、`.seth_bot/`、`.lane_bot/`、`scripts/lane_bot/`、`scripts/seth_bot/`;`git add -f`;往任何被跟踪的文件里写 key

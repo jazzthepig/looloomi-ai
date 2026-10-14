@@ -1,10 +1,10 @@
 {
   "id": "T-097",
   "owner": "seth",
-  "status": "claimed",
+  "status": "in_review",
   "created": "2026-10-14",
   "verified": null,
-  "title": "一个共用、测过的验证装置:块打乱 / 多空盈亏 / 窗口切分 / 分位 / Brier + 空操作打乱探测;此后每张研究卡必须用它",
+  "title": "一个共用、测过的验证装置 + A/B:块打乱 / 多空盈亏 / 分位 / Brier / 平稳块自助 A/B 与 MDE,空操作打乱探测;此后每张研究卡必须用它",
   "source": "Jazz 10-14「回到高维,认真看清楚」→ 今天 lane 交付的零分布与盈亏代码坏了 5 次(WEEKLY_REVIEW 10-14 夜)",
   "allowed_paths": [
     "src/data/evaluation/",
@@ -19,9 +19,9 @@
     "Shadow/"
   ],
   "acceptance": {
-    "check": "src/data/evaluation/nulls.py:block_permute(序列, 块长, rng)、shuffle_within(值, 组, rng)、long_return / short_return(入场价, 出场价;100→50 空头 = +0.5、100→200 = −1.0、缺价 = None)、percentile_of(实际, 零分布;空 = None)、windows(日期, 切点)、brier(p, y)、null_distribution(fn, n, seed) —— 零分布方差为 0 或 ≥ 99% 的抽样等于实际值时抛 NoOpNull。测试:埋信号 ⇒ 分位 > 0.95;纯噪声 ⇒ 分位落在中段;今天三个 bug 的复现(dict 打乱空操作、空头盈亏凸公式、上市前入场取最新收盘)各一条,旧写法会红。lane 的 prompt 加一句:研究卡的零分布与盈亏只许用这个模块。",
+    "check": "src/data/evaluation/apparatus.py:block_permute(序列, 块长, rng)、shuffle_within(值, 组, rng)、long_return / short_return(入场价, 出场价;100→50 空头 = +0.5、100→200 = −1.0、缺价 = None)、percentile_of(实际, 零分布;空 = None)、windows(日期, 切点)、brier(p, y)、null_distribution(fn, n, seed) —— 零分布方差为 0 或 ≥ 99% 的抽样等于实际值时抛 NoOpNull。测试:埋信号 ⇒ 分位 > 0.95;纯噪声 ⇒ 分位落在中段;今天三个 bug 的复现(dict 打乱空操作、空头盈亏凸公式、上市前入场取最新收盘)各一条,旧写法会红。lane 的 prompt 加一句:研究卡的零分布与盈亏只许用这个模块。 A/B:ab_test(两臂日收益)给 B/A、块自助 95% 区间、单侧 p、MDE/年、功效不足标记;A/A 测试里假阳性率守在名义附近。",
     "expect": "零分布与盈亏的 bug 不再按卡重复出现;T-092 R3 / T-093 R3c 用它重跑。"
   },
   "prior_value": "每张卡手写零分布:10-14 一天里打乱空操作 2 次(T-090、T-093)、空头盈亏公式错 2 张(T-092、T-093)、统计量退化 1 张(T-091)。",
-  "notes": "2026-10-14 Seth 开卡自做,排在 T-094 之前。"
+  "notes": "2026-10-14 Seth 开卡自做,排在 T-094 之前。\n\n2026-10-14 Seth 交付:src/data/evaluation/apparatus.py + tests/test_eval_apparatus.py(10 条,复现 10-14 的打乱空操作 / 空头凸公式 / 上市前入场,A/A 与埋信号校准);A/A 实测:块自助假阳性 3.5%,逐日自助 18%。A/B 回放(docs/research/t097_ab_replay.py → t097_ab_replay_results.json):8 条臂对 ① 全部「功效不足」,MDE 3%–78%/年;显著的只有 CIS 倾斜与组合层在 2023–24 跑输(S-574)。lane prompt 已加:零分布 / 盈亏 / A/B 只许用这个模块。"
 }
