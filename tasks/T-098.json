@@ -1,0 +1,28 @@
+{
+  "id": "T-098",
+  "owner": "seth",
+  "status": "claimed",
+  "created": "2026-10-14",
+  "verified": null,
+  "title": "大类资产的数据:TradFi 全收益历史(EODHD adjusted close,2015 起)+ 每类资产的链上形式映射与跟踪误差",
+  "source": "Jazz 10-14「我们的引擎是大类配置的链上资产组合,要涵盖更多主流资产」→ S-576",
+  "allowed_paths": [
+    "src/data/market/",
+    "src/data/universe/",
+    "supabase/migrations/",
+    "scripts/",
+    "tests/",
+    "docs/",
+    "tasks/T-098.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "ohlcv_daily 里 SPY、QQQ、EEM、GLD、TLT、IEF、SHY、USO、DBA、CPER、VNQ 等(现有 33 个 TradFi 代码)有 2015 起的日线,带复权收盘(全收益);与 yfinance 历史在重叠段逐日比对,复权口径一致;eodhd 日更接上。另一张映射表:每类资产 ↔ 链上形式(代币化黄金、代币化国债 / 货基、代币化美股 / 指数、商品或股指永续),每个形式的场所、日成交、能取到的价格历史起点、相对底层的跟踪误差(有价格历史的才算,没有就写「不可算」)。",
+    "expect": "大类 ① 候选可以用日频全收益回放;知道哪些资产今天在链上真的买得到、买多少。"
+  },
+  "prior_value": "eodhd 只有 2022-08 起、未复权;yfinance 2015 起但 06-18 后停更、未复权(SHY 九年价格持平,票息全丢)。链上形式从没系统量过。",
+  "notes": "2026-10-14 Seth 开卡自做,排在 T-097 之后、T-094 之前(大类比加密补深度更靠近 Jazz 定的方向)。"
+}

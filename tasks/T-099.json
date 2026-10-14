@@ -1,0 +1,25 @@
+{
+  "id": "T-099",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-10-14",
+  "verified": null,
+  "title": "大类 ① 候选的预注册回放:七类资产 × 时序动量(等权 / 逆波动),日频全收益,同风险对 BTC,杠杆 1–3 倍",
+  "source": "S-576(月度、价格收益的第一次量测:同风险下卡玛 1.1–1.4 对 BTC 0.44)",
+  "allowed_paths": [
+    "src/data/signals/",
+    "docs/research/",
+    "tests/",
+    "tasks/T-099.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "先写 S- 预注册:资产、规则(S-576 的 P3 / P4,12 个月回看,月度再平衡)、杠杆档、借款成本按当时的短期利率、现金按 T-bill;判据 = 同波动下对 BTC 的年化差与卡玛差,用 apparatus.ab_test 报区间与 MDE,另报 2018 / 2022 两个熊市段与逐年。只用 apparatus 的函数。",
+    "expect": "决定大类 ① 是否立账本、从哪天开始前向。"
+  },
+  "prior_value": "S-576:月度价格收益口径,P3 × 2 年化 32.2% / 最大回撤 −27%,满仓 BTC 32.3% / −73%。",
+  "notes": "2026-10-14 Seth 开卡,等 T-098 的全收益数据。"
+}
