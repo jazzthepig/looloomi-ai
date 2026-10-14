@@ -1,7 +1,7 @@
 {
   "id": "T-091",
   "owner": "lane-c",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-14",
   "verified": null,
   "title": "非价格状态在 BTC 转折点上是否领先价格:资金费 / 持仓量 / 稳定币供给 / 主动买入占比 vs 价格动量,对照随机日期",
@@ -20,5 +20,5 @@
     "expect": "报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:每个特征 × 14 个拐点的领先 / 滞后天数、中位数、随机分位、错误翻转率。只测量,不改任何账本或循环。"
   },
   "prior_value": "S-568:③ 在每个顶部推力 ≥ 1、组合层在 +190% / +97% 两段上涨里只有 ≈ 0.5 仓位;S-567:周频价格 / 宽度择时四种构造都分不开随机。非价格状态在转折点上的时序从没量过。",
-  "notes": "2026-10-14 Seth 开卡派 lane-c,排在 T-057 v3 之后。"
+  "notes": "M-220 / sealed 1-shot / 2026-10-14 跑完。实测转折点 18 个(卡 estimate 14,实际多),zigzag 20% BTC 收盘 (ohlcv_daily symbol=BTC source=binance_hist,3,346 行);18 个拐点全有价格确认日(peak 后跌 20% / trough 后涨 20%)。【数据可用】funding_7d_ann 35/1382 非空、oi_chg_30d 0/1382(全 NULL)→ Hyperliquid 历史回填稀疏,2 个特征不可测;stable_supply_30d / taker_buy_share_30d / stable_lend_apy_7d 全程有。【主结果 obs 中位领先@确认(d) / 零分位@确认 / err_rate/100d / 总判】funding_7d_ann —/—/—/0.00/❌ 不可测;oi_chg_30d —/—/—/0.00/❌ 不可测;stable_supply_30d 329.5 / 0.056 / 4.76 / ✅ PASS;taker_buy_share_30d 277.0 / 0.001 / 5.16 / ✅ PASS(强);stable_lend_apy_7d 237.5 / 0.000 / 1.39 / ✅ PASS(强);mom_20 370.0 / 0.000 / 14.48 / 🟡 PARTIAL(err=自己);dist_200 317.0 / 0.414 / 2.58 / 🟡 PARTIAL(分位>0.10)。零分布 1000 reps seed=22014,随机日期按真实年份分布(2023=6, 2024=6, 2025=3, 2026=3)从非近位 pool 采样。【交付】#预注册:`/Volumes/CometCloudAI/cometcloud-local/research/t091/M-220_prereg_2026-10-14.md`;# 跑:`/Volumes/CometCloudAI/cometcloud-local/research/t091/M-220_run_2026-10-14.py`;# json 报告:`/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/M-220_t091_2026-10-14.json`;# md:`/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/M-220_t091_2026-10-14.md`;# 桥接:`/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/M-220_t091_handoff_2026-10-14.md`。【只测量、不改任何账本或循环】@ 2026-10-14T16:30Z"
 }
