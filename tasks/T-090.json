@@ -1,7 +1,7 @@
 {
   "id": "T-090",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-14",
   "verified": null,
   "title": "CIS 的 F 支柱在「山寨领涨的上涨」里跑输:预注册检验 + 一个可执行的改法(该状态下 ② 倾斜不用 F)",
@@ -20,5 +20,5 @@
     "expect": "报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:A / B 两状态的 F 价差、打乱分位、两半符号;改法前后两半的超额与分位。不改任何前向账本。"
   },
   "prior_value": "S-568 探索性:A 状态 44 周 F 高 − 低 −11.0pp、命中 0.34;majors 领涨的上涨 52 周 −3.2;BTC 下行时 ≈ 0。周频 30 日窗口重叠,≈ 11 个独立观测,未经打乱对照。",
-  "notes": "2026-10-14 Seth 开卡派 lane-b,排在 T-069 之前。"
+  "notes": "M-预注册 OK;检验 + 改法 完成。报告路径:Mac 数据根 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-090_F_pillar_state_conditioning_2026-10-14_REPORT.md(+ T-090_check_results.json, T-090_modify_results.json)。脚本:docs/research/T-090_check.py + T-090_modify.py。结果:整体 FAIL — H1 (2023-24, 27 A 周) μ_A=−28.62pp / 打乱分位 0.3% / verdict PASS;H2 (2025+, 14 A 周) μ_A=+2.58pp / 打乱分位 64.1% / verdict FAIL。两半符号不同 → 整体 FAIL。改法(去 F 四支柱 z, K=0.5, A 状态 47 个再平衡日):H1 超额 −31.78→−206.80pp,随机 null 均值 −214.21±8.21 (p80.5);H2 +1.59→−19.27pp,随机 null 均值 −21.81±1.24 (p98.0)。**改法 verdict FAIL** — 在 A 状态去掉 F ≈ 把 z 换成噪声(改法几乎贴着随机 null 均值,比不改还差 21-175pp)。诊断:旧版「打乱 z 横截面」是数学空操作(`random.shuffle(list of (sym, z) tuples) + dict(items)` 永远产生相同 key→value 映射);已修(`vals=…; random.shuffle(vals); z_shuf=dict(zip(syms, vals))`)。**探索性发现(均需另立预注册、在新数据上做零信号对照)**:(1) F 价差消失的窗口可能不是全期 — H1 显著 / H2 翻转,需 OHLCV 扩展后重测;(2) F 不是可拆的『额外』信号,是 5 支柱 z 的一部分,拆掉 ≈ 把 z 换成噪声,反向支持 5 支柱整体在 A 状态有微弱信息但特殊处理不放大。**需要 @seth**:卡进 in_review 等待审;若批准,以此反驳「在 A 状态直接去掉 F」的方向。S-568 探索性的 +0.3 (H2) 翻正可能是样本量问题 — 14 周太少。"
 }

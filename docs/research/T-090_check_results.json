@@ -1,0 +1,41 @@
+{
+  "panel": {
+    "n_joined_rows": 3175,
+    "n_weeks_total": 163,
+    "weeks_H1_2023_2024": 94,
+    "weeks_H2_2025_latest": 69
+  },
+  "F_top_minus_bot_pp_by_state": {
+    "H1": {
+      "mu_A_pp": -28.62,
+      "mu_B_pp": -2.33,
+      "n_A_weeks": 27,
+      "n_B_weeks": 67,
+      "hit_rate_A_top_gt_bot": 0.136,
+      "hit_rate_B_top_gt_bot": 0.59,
+      "block_shuffle_pctile_A_pct": 0.3,
+      "shuffle_lo_pp": -31.84,
+      "shuffle_hi_pp": -9.73,
+      "verdict": "PASS"
+    },
+    "H2": {
+      "mu_A_pp": 2.58,
+      "mu_B_pp": 0.92,
+      "n_A_weeks": 14,
+      "n_B_weeks": 55,
+      "hit_rate_A_top_gt_bot": 0.571,
+      "hit_rate_B_top_gt_bot": 0.617,
+      "block_shuffle_pctile_A_pct": 64.1,
+      "shuffle_lo_pp": -4.3,
+      "shuffle_hi_pp": 8.3,
+      "verdict": "FAIL"
+    }
+  },
+  "global_verdict": "FAIL",
+  "criteria_met": {
+    "H1_pct_le_5pct": true,
+    "H1_mu_A_negative": true,
+    "H2_pct_le_5pct": false,
+    "H2_mu_A_negative": false
+  }
+}
