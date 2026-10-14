@@ -17,6 +17,7 @@
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 | claimed | T-094 | seth | 状态层往前补一个周期 + 矢量库按时点:state_daily 2019 起、FNG 2018 起;market_state_vectors 改扩张窗口 z、13 个空维补或删 | S-570 / T-093 的情景格子在 2019–2022 多一轮牛熊;S-521 类的匹配不再读到未来。 | state_daily 2023-01 起(一个周期);FNG 2021-06 起;market_state_vectors 24 维里 13 维恒空、全史一次 z(看未来)。 |  |
 | claimed | T-096 | seth | 前向判断记录:每周一按情景卡 + 当周新闻摘要请本地 Qwen 9B / 27B 判断,先锚定、后看结果 | 新闻层(历史上测不了的那一层)从今天起有可验证的前向记录;T-095 的历史结论与它对照。 | 没有任何 LLM 判断的前向记录;narrative_events 新闻 2026-09-28 起、约 150 条 / 天,没有消费者。 |  |
+| claimed | T-097 | seth | 一个共用、测过的验证装置:块打乱 / 多空盈亏 / 窗口切分 / 分位 / Brier + 空操作打乱探测;此后每张研究卡必须用它 | 零分布与盈亏的 bug 不再按卡重复出现;T-092 R3 / T-093 R3c 用它重跑。 | 每张卡手写零分布:10-14 一天里打乱空操作 2 次(T-090、T-093)、空头盈亏公式错 2 张(T-092、T-093)、统计量退化 1 张(T-091)。 |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
 | open | T-089 | lane-a | 完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改 | 从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。 |  |
 | open | T-095 | lane-a | 情景层的判断者:本地 Qwen(与 Jev)回答写死的小问题、只调 T-093 规则的力度 —— 先量模型知道多少历史,再在它没见过的窗口里按时点回放 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;两张表:污染探针按月的对错;回放窗口里四个臂的 Brier / 规则超额 / 打乱分位 / 「延续」「投降」频率。不改任何前向账本。 | S-412:Jev 匿名回放 Sharpe 1.29 < 机械 1.43,损失来自「拥挤」一问(砍赢家),投降 0/21 次;本地模型自述截止约 2024 年初(未验证)。 |  |
@@ -99,4 +100,4 @@
 | done | T-081 | seth | 代币迁移接段:MKR→SKY(1:24000)、MATIC→POL(1:1)—— 宇宙只放新币,生效日按成交交叉(CoinDesk / CF Benchmarks 做法),历史按比例接,统一标准 v1.3 | SKY 的分不再因市值 0 被压到底;POL 迁移前用的是 MATIC | MKR 自 2025-06-05 起在标准里市值 0、基本面支柱 0,正式档 UNDERWEIGHT(实时 55.8 NEUTRAL);POL 迁移前 11 个月用的是日成交 60 万美元的薄币 | 10-12 正式批次含 SKY、POL,无 MKR、MATIC;/cis/universe 有 SKY 无 MKR。剩 Minimax 换 T1 宇宙(Mac 侧,SYNC §Seth-1012a)不在本卡验收内。 @ 2026-10-13T13:45Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 15 · claimed 4 · blocked 4 · in_review 11 · done 61 · dropped 1
+open 15 · claimed 5 · blocked 4 · in_review 11 · done 61 · dropped 1
