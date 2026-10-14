@@ -60,9 +60,10 @@ from typing import Optional
 from nautilus_trader.common.enums import LogColor
 from nautilus_trader.config import PositiveInt
 from nautilus_trader.config import StrategyConfig
-from nautilus_trader.indicators.average.true_range import AverageTrueRange
-from nautilus_trader.indicators.directional_movement import DirectionalMovement
-from nautilus_trader.indicators.exponential_moving_average import ExponentialMovingAverage
+# nautilus_trader ≥ 1.229 exports indicators flat; the old submodule paths are gone (CI, 2026-10-14).
+from nautilus_trader.indicators import AverageTrueRange
+from nautilus_trader.indicators import DirectionalMovement
+from nautilus_trader.indicators import ExponentialMovingAverage
 from nautilus_trader.model.data import Bar
 from nautilus_trader.model.data import BarType
 from nautilus_trader.model.enums import OrderSide

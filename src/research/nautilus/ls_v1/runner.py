@@ -55,8 +55,13 @@ from nautilus_trader.model.identifiers import InstrumentId
 from nautilus_trader.model.objects import Currency
 from nautilus_trader.trading.config import ImportableStrategyConfig
 
-from data_adapter import CATALOG_DIR as RUNNER_CATALOG_DIR  # noqa: E402
-from strategy import LSv1Config  # noqa: E402
+# Package path first (see sleeve_a/runner.py): sibling names collide across ls_v1/ and sleeve_a/.
+try:
+    from src.research.nautilus.ls_v1.data_adapter import CATALOG_DIR as RUNNER_CATALOG_DIR  # noqa: E402
+    from src.research.nautilus.ls_v1.strategy import LSv1Config  # noqa: E402
+except ImportError:
+    from data_adapter import CATALOG_DIR as RUNNER_CATALOG_DIR  # noqa: E402
+    from strategy import LSv1Config  # noqa: E402
 
 
 logger = logging.getLogger(__name__)

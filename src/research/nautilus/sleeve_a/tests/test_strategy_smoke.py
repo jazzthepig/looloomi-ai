@@ -307,7 +307,13 @@ def test_nostop_config() -> None:
     args = typing.get_args(hs)
     assert type(None) in args, f"hard_stop_pct not Optional: {hs!r}"
     # Default preserved at freqtrade-parity 0.03
-    default = getattr(Config, "hard_stop_pct", None)
+    # nautilus ≥ 1.229 configs are msgspec Structs: the class attribute is a member descriptor,
+    # not the default — read the default from the struct's field table.
+    try:
+        import msgspec
+        default = next(f.default for f in msgspec.structs.fields(Config) if f.name == "hard_stop_pct")
+    except (ImportError, TypeError, StopIteration):
+        default = getattr(Config, "hard_stop_pct", None)
     assert default == strat.HARD_STOP_PCT == 0.03, f"default={default}"
     print("✓ NOSTOP config OK (hard_stop_pct: Optional[float], default 0.03)")
 

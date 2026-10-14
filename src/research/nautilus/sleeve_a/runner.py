@@ -57,8 +57,15 @@ from nautilus_trader.model.identifiers import InstrumentId
 from nautilus_trader.model.objects import Currency
 from nautilus_trader.trading.config import ImportableStrategyConfig
 
-from data_adapter import CATALOG_DIR as RUNNER_CATALOG_DIR  # noqa: E402
-from strategy import SleeveAConfig  # noqa: E402
+# Package path first: ls_v1/ and sleeve_a/ both have `strategy` / `data_adapter`, so a bare import
+# returns whichever sibling was imported first in the process (CI: ls_v1's strategy → ImportError,
+# and silently ls_v1's CATALOG_DIR). Bare names only when this file is run as a script.
+try:
+    from src.research.nautilus.sleeve_a.data_adapter import CATALOG_DIR as RUNNER_CATALOG_DIR  # noqa: E402
+    from src.research.nautilus.sleeve_a.strategy import SleeveAConfig  # noqa: E402
+except ImportError:
+    from data_adapter import CATALOG_DIR as RUNNER_CATALOG_DIR  # noqa: E402
+    from strategy import SleeveAConfig  # noqa: E402
 
 
 logger = logging.getLogger(__name__)
@@ -83,7 +90,8 @@ DEFAULT_STARTING_BALANCE = "10000 USD"
 # per-run overrides.
 from src.research.paths import SLEEVE_A_OUT_DIR as _DEFAULT_SLEEVE_A_OUT_DIR
 OUT_DIR = Path(os.getenv("SLEEVE_A_OUT_DIR", str(_DEFAULT_SLEEVE_A_OUT_DIR)))
-OUT_DIR.mkdir(parents=True, exist_ok=True)
+# No mkdir at import: run_parity() creates run_dir with parents=True. An import-time mkdir of the Mac
+# data root raised PermissionError on every machine without /Volumes (CI, 2026-10-14).
 
 INSTRUMENTS = [
     "BTCUSDT-PERP.BINANCE",

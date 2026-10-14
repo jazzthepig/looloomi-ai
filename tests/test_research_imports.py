@@ -35,6 +35,7 @@ import 图上,于是:
 from __future__ import annotations
 
 import importlib
+import importlib.util
 import pathlib
 import re
 import sys
@@ -112,7 +113,11 @@ def main() -> int:
             ok.append(mod)
         except ModuleNotFoundError as e:
             dep = (e.name or "").split(".")[0].lower().replace("-", "_")
-            if dep in declared:
+            if dep in declared and "." in (e.name or "") and importlib.util.find_spec(dep) is not None:
+                # 包装上了、缺的是它的子模块 —— 是我们的代码跟不上依赖的新版本,不是环境没装。
+                # (2026-10-14:nautilus_trader 1.231 把 indicators.average.* 拍平,sleeve_a 在 CI 上被当成「未装」跳过。)
+                broken.append((mod, f"'{e.name}' 在已装的 {dep} 里不存在 —— 依赖改了路径"))
+            elif dep in declared:
                 # 已声明但此环境没装 —— 生产装得上,这里不算代码缺陷。
                 missing[mod] = dep
             else:
