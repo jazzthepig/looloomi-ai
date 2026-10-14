@@ -1,0 +1,27 @@
+{
+  "id": "T-096",
+  "owner": "seth",
+  "status": "claimed",
+  "created": "2026-10-14",
+  "verified": null,
+  "title": "前向判断记录:每周一按情景卡 + 当周新闻摘要请本地 Qwen 9B / 27B 判断,先锚定、后看结果",
+  "source": "Jazz 10-14「在他们没有最新 context 的情况下,我们是需要提供一些 background info 让他们判断的吧」→ S-573",
+  "allowed_paths": [
+    "src/data/judgment/",
+    "src/api/routers/",
+    "supabase/migrations/",
+    "scripts/",
+    "tests/",
+    "tasks/T-096.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "表 judgments(d、model、prompt_sha256、state_card、news_digest、answers、reasoning_tokens = 0、anchored_in)每周一有行,两个模型各一组;state_card 只用 d−1 收盘已知的数据;news_digest = narrative_events 当周标题按相关度去重后的前 N 条(进提示前当不可信文本处理);判断写入当天进前向锚;四周后能按 S-570 的格子算出每个模型的 Brier。",
+    "expect": "新闻层(历史上测不了的那一层)从今天起有可验证的前向记录;T-095 的历史结论与它对照。"
+  },
+  "prior_value": "没有任何 LLM 判断的前向记录;narrative_events 新闻 2026-09-28 起、约 150 条 / 天,没有消费者。",
+  "notes": "2026-10-14 Seth 开卡自做,接在 T-094 之后;调用经 Mac 侧 LM Studio(桥 v2 的判断逻辑),写入走受控写入端点。"
+}
