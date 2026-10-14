@@ -87,6 +87,8 @@
     "two_layer_paper_nav",
     "vault_nav_tick",
     "wallet_profiles",
+    "world50_mcap_weekly",
+    "world50_onchain_forms",
     "write_log"
   ],
   "write_columns": {
@@ -217,6 +219,25 @@
       "nav",
       "note",
       "positions"
+    ],
+    "world50_mcap_weekly": [
+      "d",
+      "key",
+      "mcap_usd",
+      "source"
+    ],
+    "world50_onchain_forms": [
+      "as_of",
+      "category",
+      "issuer",
+      "key",
+      "match_rule",
+      "mcap_usd",
+      "name",
+      "price_usd",
+      "symbol",
+      "token_id",
+      "volume_24h_usd"
     ]
   },
   "rpc_functions": [

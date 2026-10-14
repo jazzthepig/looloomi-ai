@@ -1441,6 +1441,40 @@ async def _start_stable_lending_loop():
     print("[STABLE-LEND] ✅ stablecoin lending APY scheduled (stable_lending_daily, 4 Aave pools)")
 
 
+async def _world50_history_loop():
+    """T-098 / S-577:World50 每周一轮(`world50_data.run_week`):
+    ① 候选池(公司 + 贵金属)复权日线 2015 起整段重取 → ohlcv_daily(eodhd)(日更只重写最近 365 天,更早的复权口径不再更新);
+    ② 公司历史市值 → world50_mcap_weekly;③ 链上形式(CG `/rwas`)→ world50_onchain_forms。任何一段没成,整轮不算 ok。
+    判活:`select count(distinct symbol) from ohlcv_daily where source='eodhd' and trade_date < '2015-02-01'` ≥ 60;
+    `select count(distinct key) from world50_mcap_weekly`;`select count(*) from world50_onchain_forms where key is not null`。
+    """
+    await _asyncio.sleep(_boot_delay(4500))   # S-482 错峰:900 秒上限之后的空档
+    while True:
+        try:
+            from src.data.universe.world50_data import run_week as _w50_run
+            r = await _w50_run()
+            print(f"[WORLD50-HIST] {str(r.get('reason'))[:200]}")
+            _detail = r.get("parts")
+            await _beat("_world50_history_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")), detail=_detail,
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_world50_history_loop", "ok" if r.get("ok") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail=_detail, writer="src.api.main._world50_history_loop")
+        except Exception as _e:
+            print(f"[WORLD50-HIST] ⚠️  pass FAILED: {_e}")
+            await _beat("_world50_history_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_world50_history_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._world50_history_loop")
+        await _asyncio.sleep(7 * 24 * 3600)
+
+
+@app.on_event("startup")
+async def _start_world50_history_loop():
+    _asyncio.create_task(_world50_history_loop())
+    print("[WORLD50-HIST] ✅ World50 weekly data scheduled (adjusted prices from 2015, market caps, on-chain forms)")
+
+
 async def _chain_activity_loop():
     """S-526 / T-076:每条链的日度 TVL / 手续费 / DEX 成交量 → chain_activity_daily(DeFiLlama,约 60 条链)。
     景气轮动与预期差的基本面一侧。每天一轮。判活:`select max(d) from chain_activity_daily` = 昨天(UTC)。

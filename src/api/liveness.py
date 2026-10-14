@@ -47,6 +47,7 @@ LIVENESS_SLOS: dict[str, dict] = {
     "_anchor_loop":              {"max_age_h": 30, "kind": "marker"},   # T-073 前向记录锚定
     "_core_variants_loop":       {"max_age_h": 30, "kind": "marker"},   # T-072 ① 候选定义
     "_stable_lending_loop":      {"max_age_h": 30, "kind": "collector"},  # S-513 稳定币借贷 APY(日更)
+    "_world50_history_loop":     {"max_age_h": 7 * 24 + 6, "kind": "collector"},  # T-098 World50 周更:复权日线整段重取 + 历史市值 + 链上形式
     "_chain_activity_loop":      {"max_age_h": 30, "kind": "collector"},  # S-526 链 TVL / 手续费 / DEX 成交量(日更)
     "_feature_arms_loop":        {"max_age_h": 30, "kind": "marker"},   # S-528 CIS 特征臂
     "_signal_attribution_loop":  {"max_age_h": 14, "kind": "marker"},   # S-529 每个信号的归因(6 小时一轮)

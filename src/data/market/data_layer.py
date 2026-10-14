@@ -757,6 +757,24 @@ async def get_eodhd_eod_range(ticker: str, exchange: str, frm: str) -> list[dict
     return rows
 
 
+async def get_eodhd_historical_mcap(ticker: str, exchange: str, frm: str) -> list[dict]:
+    """EODHD `/historical-market-cap/{ticker}.{exchange}` 从 frm 起的市值序列 [{date, value}](周频、美元)(T-098)。
+    响应是以字符串序号为键的对象或列表,两种都收。没有 key / 非 200 抛错 —— 读不到 ≠ 没有市值。"""
+    if not EODHD_KEY:
+        raise RuntimeError("EODHD_API_KEY 不在进程环境里")
+    r = await _get_misc_client().get(f"{EODHD_BASE}/historical-market-cap/{ticker}.{exchange}",
+                                     params={"fmt": "json", "api_token": EODHD_KEY, "from": frm},
+                                     timeout=30)
+    if r.status_code != 200:
+        body = (r.text or "")[:80].replace(EODHD_KEY, "***")
+        raise RuntimeError(f"EODHD historical-market-cap {ticker}.{exchange} HTTP {r.status_code}: {body}")
+    j = r.json()
+    rows = list(j.values()) if isinstance(j, dict) else j
+    if not isinstance(rows, list):
+        raise RuntimeError(f"EODHD historical-market-cap {ticker}.{exchange} 返回的不是对象或列表")
+    return [x for x in rows if isinstance(x, dict)]
+
+
 async def get_eodhd_quarterly_history(ticker: str, exchange: str = "US") -> dict:
     """EODHD 基本面里的**历史**部分:每季 EPS(含公布日)与季度利润表(含报送日)。
     返回 {"Earnings": {"History": {...}}, "Financials": {"Income_Statement": {"quarterly": {...}}}} 的原样子树。
@@ -3675,6 +3693,41 @@ async def get_cg_category_markets(category_id: str, per_page: int = 40) -> list[
     if r.status_code != 200:
         raise RuntimeError(f"CoinGecko /coins/markets?category={category_id} HTTP {r.status_code}: {r.text[:160]}")
     return r.json() or []
+
+
+async def get_cg_rwa_markets(issuer: str | None = None, per_page: int = 250, max_pages: int = 20) -> list[dict]:
+    """CoinGecko Pro `/rwas/markets` —— 全部代币化 RWA(`asset_type` ∈ stock / etf / commodity),
+    市场数据在 `tokenized_market_data` 里(S-266 实测,顶层没有 market_cap)。`issuer` 只取一家发行方。
+
+    **按返回条数翻页到底,不按预设页数**(S-266):满页 = 还有;翻满 `max_pages` 仍满页就抛 —— 不静默截断。
+    读不到抛异常(T-098)。
+    """
+    client = _get_cg_client()
+    out: list[dict] = []
+    for page in range(1, max_pages + 1):
+        params = {"per_page": per_page, "page": page, "order": "market_cap_desc"}
+        if issuer:
+            params["issuer"] = issuer
+        r = await client.get(f"{CG_PRO_BASE}/rwas/markets", headers=_cg_headers(), params=params, timeout=30)
+        if r.status_code != 200:
+            raise RuntimeError(f"CoinGecko /rwas/markets page {page} HTTP {r.status_code}: {r.text[:160]}")
+        batch = r.json() or []
+        if not isinstance(batch, list):
+            raise RuntimeError(f"CoinGecko /rwas/markets 返回的不是列表:{type(batch).__name__}")
+        out.extend(x for x in batch if isinstance(x, dict))
+        if len(batch) < per_page:
+            return out
+    raise RuntimeError(f"/rwas/markets 翻到第 {max_pages} 页仍满页 —— 更可能是翻页坏了,不静默截断")
+
+
+async def get_cg_rwa_issuers() -> list[dict]:
+    """CoinGecko Pro `/rwas/issuers/list` → [{id, name}](只有 id 与名字,没有资产清单 —— S-266 实测)。读不到抛异常。"""
+    client = _get_cg_client()
+    r = await client.get(f"{CG_PRO_BASE}/rwas/issuers/list", headers=_cg_headers(), timeout=30)
+    if r.status_code != 200:
+        raise RuntimeError(f"CoinGecko /rwas/issuers/list HTTP {r.status_code}: {r.text[:160]}")
+    j = r.json() or []
+    return [x for x in j if isinstance(x, dict) and x.get("id")] if isinstance(j, list) else []
 
 
 async def get_cg_market_chart_range(coin_id: str, from_ts: int, to_ts: int, interval: str = None) -> dict:
