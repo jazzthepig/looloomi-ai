@@ -1,0 +1,27 @@
+{
+  "id": "T-094",
+  "owner": "seth",
+  "status": "claimed",
+  "created": "2026-10-14",
+  "verified": null,
+  "title": "状态层往前补一个周期 + 矢量库按时点:state_daily 2019 起、FNG 2018 起;market_state_vectors 改扩张窗口 z、13 个空维补或删",
+  "source": "Jazz 10-14「是数据库的深度和广度不足?…还是没有真正模拟当下」→ S-571",
+  "allowed_paths": [
+    "src/data/state/",
+    "src/data/market/cis_inputs.py",
+    "src/data/vector/",
+    "tests/",
+    "scripts/preflight.sh",
+    "tasks/T-094.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "select feature, min(d) from state_daily group by 1 —— 价格派生特征 ≤ 2019-06-01,stable_supply_30d ≤ 2020-03-01;select min(d) from macro_daily where series='fng' ≤ 2018-03-01;market_state_vectors 每行 measured_dims = dims(空维删掉或补上),provenance_note 写明扩张窗口 z;测试:截到 d 的数据算出的 d 行向量与全史算出的 d 行向量一致(无前视)。",
+    "expect": "S-570 / T-093 的情景格子在 2019–2022 多一轮牛熊;S-521 类的匹配不再读到未来。"
+  },
+  "prior_value": "state_daily 2023-01 起(一个周期);FNG 2021-06 起;market_state_vectors 24 维里 13 维恒空、全史一次 z(看未来)。",
+  "notes": "2026-10-14 Seth 开卡自做。"
+}
