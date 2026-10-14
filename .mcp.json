@@ -20,11 +20,11 @@
       ],
       "cwd": "${workspaceRoot}",
       "env": {
-        "LMSTUDIO_BASE": "http://localhost:1234",
-        "LMSTUDIO_MODEL": "",
+        "LMSTUDIO_BASE": "http://127.0.0.1:1234",
+        "LMSTUDIO_MODEL": "qwen/qwen3.8-27b",
         "LM_TEMPERATURE": "0.7"
       },
-      "_note": "Mac Mini only — LM Studio must be running at localhost:1234. Auto-detects loaded model (gemma4-26b)."
+      "_note": "Mac Mini only — LM Studio server at 127.0.0.1:1234. LMSTUDIO_MODEL is the default for calls that do not name a model; the bridge never guesses between loaded models (lmstudio_models lists them). Reasoning is off by default and verified per call."
     },
     "supabase": {
       "type": "http",
