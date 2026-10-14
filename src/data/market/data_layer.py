@@ -757,22 +757,25 @@ async def get_eodhd_eod_range(ticker: str, exchange: str, frm: str) -> list[dict
     return rows
 
 
-async def get_eodhd_historical_mcap(ticker: str, exchange: str, frm: str) -> list[dict]:
-    """EODHD `/historical-market-cap/{ticker}.{exchange}` 从 frm 起的市值序列 [{date, value}](周频、美元)(T-098)。
-    响应是以字符串序号为键的对象或列表,两种都收。没有 key / 非 200 抛错 —— 读不到 ≠ 没有市值。"""
+async def get_eodhd_share_history(ticker: str, exchange: str) -> dict:
+    """EODHD 基本面里算历史市值要的四样:上市币种、当前市值(校准用)、当前股本、**每季股本**(T-098)。
+    `historical-market-cap` 这条数据线我们的套餐没有(10-14 首跑 99/99 家 HTTP 403),所以市值 = 股本 × 价格自己算。
+    返回原样子树(平铺 `A::B` 或嵌套,调用方两种都收)。没有 key / 非 200 抛错。"""
     if not EODHD_KEY:
         raise RuntimeError("EODHD_API_KEY 不在进程环境里")
-    r = await _get_misc_client().get(f"{EODHD_BASE}/historical-market-cap/{ticker}.{exchange}",
-                                     params={"fmt": "json", "api_token": EODHD_KEY, "from": frm},
-                                     timeout=30)
+    r = await _get_misc_client().get(
+        f"{EODHD_BASE}/fundamentals/{ticker}.{exchange}",
+        params={"api_token": EODHD_KEY, "fmt": "json",
+                "filter": "General::CurrencyCode,Highlights::MarketCapitalization,"
+                          "SharesStats::SharesOutstanding,outstandingShares::quarterly"},
+        timeout=45)
     if r.status_code != 200:
         body = (r.text or "")[:80].replace(EODHD_KEY, "***")
-        raise RuntimeError(f"EODHD historical-market-cap {ticker}.{exchange} HTTP {r.status_code}: {body}")
+        raise RuntimeError(f"EODHD fundamentals {ticker}.{exchange} HTTP {r.status_code}: {body}")
     j = r.json()
-    rows = list(j.values()) if isinstance(j, dict) else j
-    if not isinstance(rows, list):
-        raise RuntimeError(f"EODHD historical-market-cap {ticker}.{exchange} 返回的不是对象或列表")
-    return [x for x in rows if isinstance(x, dict)]
+    if not isinstance(j, dict):
+        raise RuntimeError(f"EODHD fundamentals {ticker}.{exchange} 返回的不是对象")
+    return j
 
 
 async def get_eodhd_quarterly_history(ticker: str, exchange: str = "US") -> dict:
