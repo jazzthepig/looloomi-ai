@@ -1,7 +1,7 @@
 {
   "id": "T-093",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-14",
   "verified": null,
   "title": "逆向按情景用(Jazz 10-14):T-092 三条规则加「边际流动性 × BTC 趋势」四状态、每周重判 —— 对照无条件版与打乱的状态标签",
@@ -20,5 +20,5 @@
     "expect": "报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:三条规则 × 三个窗口 × {无条件, 条件} 的总收益 / 最大回撤 / 超额 / 打乱分位,外加每个状态的周数。不改任何前向账本。"
   },
   "prior_value": "S-570(探索性):暴涨名 30 日相对 BTC 在边际变差时 −28.9(同情景中间组 −6.6),改善时 −13.0(−5.0);暴跌名 90 日在三个窗口里都是改善好过变差;能让暴涨名继续涨的只有「弱底子回暖」约 9 周。",
-  "notes": "2026-10-14 Seth 开卡派 lane-b,接在 T-092 之后、T-069 之前;与 T-092 共用事件表。"
+  "notes": "2026-10-14 Seth 开卡派 lane-b,接在 T-092 之后、T-069 之前;与 T-092 共用事件表。\n\n2026-10-14 lane-b 交付(REFUTED 全判断):\n- R1c (移回 BTC,改善→半权,变差→零权): W1=-2.00% p33.9, W2=-1.72% p0.6, W3=+0.42% p56.1 — FAIL\n- R2c (BTC z30<=-2 杠杆,改善周生效): W1=-6.19% p10.6, W2=-7.23% p10.6, W3=+3.94% p62.8 — FAIL\n- R3c (30 名外空 z30,变差周满仓 1.5x,改善周半仓 0.5x,弱底子回暖 0x): W1=0 events, W2=-3.27% p28.1, W3=-2.51% p31.4 — FAIL\n- 探索性发现:三个窗口改善周占比≈50%(USDT/USDC + BTC MA200 对该面板事件组合信息含量≈0);W2 R1c p0.6 是结构性结论,事件密度淹没条件 gating\n- 修正 bug: 初版 shuffle dict-of-dicts 是 no-op,block key→value 绑定保留;改为 list-of-values shuffle (block_values.append([states[m] for m in keys[k:k+BLOCK_WEEKS]])) 后 60-79 周 out of 135 实际置换\n- 报告: docs/research/T-093_REPORT.md; json: docs/research/T-093_results.json; 预注册: docs/research/M-223_prereg_T-093_2026-10-14.md"
 }
