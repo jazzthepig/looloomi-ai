@@ -1,0 +1,26 @@
+{
+  "id": "T-095",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-14",
+  "verified": null,
+  "title": "情景层的判断者:本地 Qwen(与 Jev)回答写死的小问题、只调 T-093 规则的力度 —— 先量模型知道多少历史,再在它没见过的窗口里按时点回放",
+  "source": "Jazz 10-14「判断这块可以用 jev 或者用 qwen9b 的模型」→ S-572",
+  "allowed_paths": [
+    "paper_trading/jev_decision.py",
+    "paper_trading/",
+    "docs/research/",
+    "tasks/T-095.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "先写 M- 预注册再调用模型。(0) 后端:在 paper_trading/jev_decision.py 加 LocalQwenBackend,实现现有 JevDecisionBackend 协议 —— LM Studio 的 OpenAI 兼容端点(地址读环境变量 LMSTUDIO_BASE_URL,默认 http://localhost:1234),关闭思考(Qwen3 系列:请求里 chat_template_kwargs.enable_thinking=false,或消息开头 /no_think),temperature 0,要求 JSON 输出;每次调用按 (模型名, prompt 的 sha256) 缓存到磁盘,回放可复现;调用失败即中止,不补默认值。不要走 cometcloud MCP 的 lmstudio 工具(它注入合规系统提示、强制思考,实测 2,500 token 内给不出答案)。记下实际用的模型名(Jazz 说 9B,LM Studio 当前加载的是 Qwen3.5 35B)。(1) 污染探针:40 道带日期的事实题,2023-06 → 2026-06 每月至少一道(BTC 当月价位区间四选一、现货 ETF 获批、首破 10 万、重大交易所 / 稳定币事件),题目与标准答案写进预注册;按月记对错 ⇒ 经验截止月 = 最后一个答对率 ≥ 50% 的月;回放窗口 = 经验截止月 + 2 个月之后到最新。(2) 问题(匿名:无币名、无日期、无价格水平,只给收益、z30、该名自身 30 / 90 / 365 日收益、BTC 对 200 日线、边际流动性符号、FNG 档位):暴涨事件(非 BTC、z30 ≥ 3)问「之后 30 天继续跑赢 BTC 的概率」;暴跌事件(z30 ≤ −2)问「之后 90 天绝对收益为正的概率」;每周一问一次全市场「边际流动性处在哪一段」(宽松上行 / 变差 / 站稳 / 再转弱,四选一)。事件表用这条 SQL 在 Supabase 里算(只读):见卡 notes。(3) 臂:机械(S-570:边际流动性 × BTC 趋势的规则当答案)· Qwen · Jev(paper_trading/jev_decision.py 现有 Typesafe 后端,需要 Jazz 本机 JEV_API_KEY;拿不到就写「Jev 臂未跑」,不阻塞)· 打乱(把 Qwen 的概率在同一周的事件之间随机交换,1000 次)。下游同一套 T-093 规则,判断只调力度(概率 → 0 / 0.5 / 1 三档,阈值预注册)。(4) 判据(只在回放窗口里):Qwen 的 Brier 分数优于机械与打乱中位;规则超额高于机械臂且在打乱里 ≥ 90 分位。另报 Qwen 说「延续」「投降」的频率(S-412:Jev 21 次投降一次没叫)。",
+    "expect": "报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;两张表:污染探针按月的对错;回放窗口里四个臂的 Brier / 规则超额 / 打乱分位 / 「延续」「投降」频率。不改任何前向账本。"
+  },
+  "prior_value": "S-412:Jev 匿名回放 Sharpe 1.29 < 机械 1.43,损失来自「拥挤」一问(砍赢家),投降 0/21 次;本地模型自述截止约 2024 年初(未验证)。",
+  "notes": "2026-10-14 Seth 开卡派 lane-a(T-089 v3.1 在等审,先做这张)。事件表 SQL:\nwith p as (select symbol, trade_date d, ln(close) lc from ohlcv_daily where source='binance_hist' and close > 0), a as (select symbol, d, lc - lag(lc,30) over w r30 from p window w as (partition by symbol order by d)), z as (select symbol, d, (r30 - avg(r30) over w2) / nullif(stddev_samp(r30) over w2, 0) z30, count(r30) over w2 nprior from a window w2 as (partition by symbol order by d rows between 730 preceding and 31 preceding)) select symbol, d, round(z30::numeric, 3) z30 from z where extract(isodow from d) = 1 and nprior >= 600 and d >= '2019-06-01' and (z30 >= 3 or z30 <= -2) order by d, symbol;"
+}
