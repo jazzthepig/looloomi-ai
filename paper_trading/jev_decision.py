@@ -9,7 +9,7 @@ evaluated IN PARALLEL over the same state, in ONE call.
 The killer feature: 13 questions in 1 call = **12.2× cheaper + 10× faster**
 than 13 sequential calls (datacamp / flaviocopes community-validated).
 
-## T-095 / M-221 LocalQwenBackend (2026-10-14)
+## T-095 / M-221 LocalQwenBackend (2026-10-14, refined 2026-10-14)
 
 Added: `LocalQwenBackend` — implements `JevDecisionBackend` against a **local
 LM Studio OpenAI-compatible endpoint** ($LMSTUDIO_BASE_URL, default
@@ -18,14 +18,32 @@ those inject a compliance system prompt + force thinking mode, and the 9B/27B
 Qwen3 models we have loaded here have实测 issues returning content within
 the 2,500-token budget (CLAUDE.md / [[feedback-qwen3-thinking-budget]] REVISION 3).
 
-- Disables Qwen3 thinking via `chat_template_kwargs.enable_thinking=false`,
-  temperature 0, JSON output requested via prompt + response_format hint.
-- Caches every call by `(model_name, sha256(prompt))` so replay is reproducible.
-- **Fail-CLOSED**: any HTTP / parse error raises immediately — does NOT return
-  a safe-default JevDecision. T-095 explicitly forbids substituting a default
-  answer ("调用失败即中止,不补默认值"). This is a deliberate deviation from
-  the `JevDecisionBackend` Protocol's fail-OPEN guidance, gated on
-  `fail_closed=True` (the default).
+Two modes (constructor picks one):
+
+1. **Default mode** (response_schema=None) — for the older prompt-only path.
+   Disables Qwen3 thinking via `chat_template_kwargs.enable_thinking=false`,
+   temperature 0, JSON output requested via prompt + response_format hint.
+   NOTE: this mode does NOT certify the thinking-token gate. The first round
+   of T-095 shipped in this mode; reasoning_tokens was likely > 0 in many
+   calls (10-14 follow-up probe measured 9 thinking tokens on `low` knob).
+
+2. **Strict mode** (response_schema=dict, require_no_thinking_tokens=True) —
+   for T-095 batch replays. Uses `response_format: {type: json_schema, strict}`
+   PLUS `reasoning_effort: "none"`, and HARD-ABORTS if the response reports
+   `usage.completion_tokens_details.reasoning_tokens > 0`. The `none` knob
+   is the only one verified to drive that field to 0 on both qwen3.5-9b
+   and qwen3.8-27b (alternative knobs `low`, `/api/v1/chat reasoning:"off"`,
+   `/no_think` prefix all fail at least one model — see
+   `research/t095/probe_thinking_off.py` for the matrix).
+
+- Caches every call by `(model_name, schema-tag-or-"none", sha256(prompt))`
+  so replays are bit-identical. Schema is part of the key so two callers
+  using different schemas don't collide.
+- **Fail-CLOSED**: any HTTP / parse / reasoning_tokens>0 error raises
+  immediately — does NOT return a safe-default JevDecision. T-095 explicitly
+  forbids substituting a default answer ("调用失败即中止,不补默认值"). This
+  is a deliberate deviation from the `JevDecisionBackend` Protocol's fail-OPEN
+  guidance, gated on `fail_closed=True` (the default).
 - Records the **actual** model name used (Qwen3.5 9B vs Qwen3.8 27B differ a lot)
   on the `JevDecision.backend_name` so the replay can audit which one ran.
 Per-case cost ~$0.0004, $7/hr Doom @ 10Hz = latency budget 70–500ms.
@@ -74,6 +92,27 @@ from pathlib import Path
 from typing import Any, Callable, Mapping, Optional, Protocol, Sequence
 
 log = logging.getLogger(__name__)
+
+
+def _extract_reasoning_tokens(usage: dict[str, Any]) -> tuple[int, str]:
+    """Return (n, where_found) for Qwen3 thinking-mode tokens.
+
+    Tries two known shapes LM Studio emits:
+      usage.completion_tokens_details.reasoning_tokens
+      usage.stats.reasoning_output_tokens
+    Returns (-1, "unknown") if the field is absent (older LM Studio builds) — callers
+    decide how to react (T-095 acceptance: abort if rt > 0; rt == -1 is also a fail
+    because we cannot certify the gate).
+    """
+    if not isinstance(usage, dict):
+        return -1, "usage-not-dict"
+    ctd = usage.get("completion_tokens_details") or {}
+    if isinstance(ctd, dict) and "reasoning_tokens" in ctd:
+        return int(ctd["reasoning_tokens"] or 0), "completion_tokens_details"
+    stats = usage.get("stats") or {}
+    if isinstance(stats, dict) and "reasoning_output_tokens" in stats:
+        return int(stats["reasoning_output_tokens"] or 0), "stats.reasoning_output_tokens"
+    return -1, "unknown"
 
 
 # ── Output type (frozen — every batch() produces one of these) ──────────────
@@ -612,6 +651,9 @@ class LocalQwenBackend:
         cache_dir: Optional[Path] = None,
         fail_closed: bool = True,
         timeout_s: float = 60.0,
+        response_schema: Optional[dict[str, Any]] = None,
+        require_no_thinking_tokens: bool = False,
+        seed: int = 42,
         max_tokens: int = 6000,
     ) -> None:
         self._base_url = (
@@ -627,14 +669,19 @@ class LocalQwenBackend:
         self._fail_closed = bool(fail_closed)
         self._timeout_s = float(timeout_s)
         self._max_tokens = int(max_tokens)
+        self._response_schema = response_schema  # if set: use strict json_schema + reasoning_effort=none
+        self._require_no_thinking_tokens = bool(require_no_thinking_tokens)
+        self._seed = int(seed)
         if cache_dir is None:
             _root = Path(__file__).resolve().parent.parent
             cache_dir = _root / "paper_trading" / "state" / "local_qwen_t095"
         self._cache_dir = Path(cache_dir)
         self._cache_dir.mkdir(parents=True, exist_ok=True)
-        # Per-instance cache: keyed by (model, sha256(prompt_dict))
+        # Per-instance cache: keyed by (model, schema-hash-or-"none", sha256(prompt))
+        # Schema is part of the key so two callers using different schemas get distinct rows.
         self._cache: dict[str, dict[str, Any]] = {}
-        self._cache_path = self._cache_dir / f"{self._model.replace('/', '_')}.jsonl"
+        cache_filename = f"{self._model.replace('/', '_')}_{self._schema_tag()}.jsonl"
+        self._cache_path = self._cache_dir / cache_filename
         if self._cache_path.exists():
             for line in self._cache_path.read_text().splitlines():
                 if line.strip():
@@ -677,6 +724,19 @@ class LocalQwenBackend:
                 ) from exc
             return self._fail_open(bar_ts, questions, error=str(exc))
         latency_ms = (time.monotonic() - t0) * 1000.0
+
+        # Hard thinking-token guard — T-095 acceptance gate.
+        if self._require_no_thinking_tokens:
+            usage = (response_body or {}).get("usage") or {}
+            rt, where = _extract_reasoning_tokens(usage)
+            if rt != 0:
+                msg = (
+                    f"LocalQwenBackend reasoning_tokens={rt} (field={where}) > 0 "
+                    f"at {bar_ts} — abort (per T-095 acceptance)"
+                )
+                if self._fail_closed:
+                    raise RuntimeError(msg)
+                return self._fail_open(bar_ts, questions, error=msg)
 
         try:
             answers, input_tokens = self._parse_response(response_body, questions)
@@ -759,28 +819,56 @@ class LocalQwenBackend:
         h = hashlib.sha256()
         h.update(self._model.encode())
         h.update(b"|")
+        h.update(self._schema_tag().encode())
+        h.update(b"|")
         h.update(prompt.encode())
         return h.hexdigest()
+
+    def _schema_tag(self) -> str:
+        if self._response_schema is None:
+            return "none"
+        import hashlib
+        canonical = json.dumps(self._response_schema, sort_keys=True)
+        return hashlib.sha256(canonical.encode()).hexdigest()[:12]
 
     # ── HTTP ────────────────────────────────────────────────────────────────
 
     def _build_request_body(self, prompt: str) -> dict[str, Any]:
         """LM Studio OpenAI-compatible chat/completions body with Qwen3 knobs.
 
+        Two modes:
+          - default (response_schema=None): ask for JSON in prompt + parse defensively.
+            Backwards-compatible path used by the prior T-095 round.
+          - strict (response_schema=dict): use `response_format.json_schema` strict
+            + `reasoning_effort=none`. Per Seth 2026-10-14, the `none` knob is the
+            ONLY one proven to drive `completion_tokens_details.reasoning_tokens` to 0
+            on both qwen3.5-9b and qwen3.8-27b (`low` does not; `/api/v1/chat` rejects).
+
         Note: LM Studio rejects `response_format.type=json_object` — its only
-        supported values are `json_schema` and `text`. We instead ASK for JSON
-        in the prompt itself and parse defensively (strip leading ```json ... ```).
+        supported values are `json_schema` and `text`.
         """
-        return {
+        body: dict[str, Any] = {
             "model": self._model,
             "messages": [{"role": "user", "content": prompt}],
             "temperature": 0,
             "max_tokens": self._max_tokens,
             "stream": False,
-            # Qwen3-specific: disable thinking mode (saves budget, kills the
-            # 94-100% thinking-mode bleed the 9B/27B models show without it).
+            "seed": self._seed,
+            # Qwen3-specific: disable thinking at the template level (saves budget,
+            # kills the 94-100% thinking-mode bleed the 9B/27B models show without it).
             "chat_template_kwargs": {"enable_thinking": False},
         }
+        if self._response_schema is not None:
+            body["reasoning_effort"] = "none"           # verified-effective (probe 2026-10-14)
+            body["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "local_qwen_strict",
+                    "strict": True,
+                    "schema": self._response_schema,
+                },
+            }
+        return body
 
     def _request(self, body: dict[str, Any]) -> dict[str, Any]:
         """POST to LM Studio. Plain stdlib — no httpx dep needed."""
