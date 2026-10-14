@@ -20,7 +20,7 @@ from __future__ import annotations
 import math
 import os
 from dataclasses import dataclass, asdict
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Sequence
 
@@ -175,7 +175,10 @@ def clock_q_continuity(
     share a consumer contract.
     """
     if today is None:
-        today = date.today()
+        # 规则 5c(S-406 同一课):`date.today()` 吃机器时区。Mac 在 JST,15:00 UTC 之后算出的「今天」
+        # 是明天 ⇒ since 从 1 跳到 2 ⇒ 端点报 503 stalled ⇒ preflight 的匿名路由守卫把 503 当崩溃,
+        # 每天 15:00 UTC 之后的每次推送都红(job 0126,10-14 15:41 UTC)。
+        today = datetime.now(timezone.utc).date()
     if not rows:
         return ClockQState(
             configured=True, marks=0, started=False,

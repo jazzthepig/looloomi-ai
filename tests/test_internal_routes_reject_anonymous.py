@@ -172,6 +172,18 @@ FAIL_CLOSED_WHEN_UNCONFIGURED: dict[str, str] = {
 }
 
 
+#: **停摆时回 503 的健康时钟**:503 是读数(「时钟停了」),不是崩溃。
+#:
+#: 10-14 job 0126:ⓠ 时钟用机器本地日期算「距上次 mark 几天」,Mac 在 JST,15:00 UTC 之后
+#: 「今天」变成明天 ⇒ 判停摆 ⇒ 503 ⇒ 这里判 BROKEN ⇒ **每天 15:00 UTC 之后所有推送都红**,
+#: 与被推送的改动无关。日期已改 UTC;但一个真停摆的时钟也不该挡住无关的推送 ——
+#: 生产状态的告警归 liveness,不归鉴权守卫。只认**处理器跑完了**的 503:JSON 对象且带 `stalled`。
+HEALTH_503_BY_DESIGN: dict[str, str] = {
+    "/internal/beta-core-clock": "① 时钟,停摆回 503 给可用性监控",
+    "/internal/beta-core-clock-q": "ⓠ 时钟,同上",
+}
+
+
 def _probe(client, method: str, path: str) -> tuple[str, str]:
     """不带凭证打一次,返回四值裁决之一 —— **不是「2xx / 非 2xx」**。
 
@@ -189,6 +201,13 @@ def _probe(client, method: str, path: str) -> tuple[str, str]:
         return GATED, str(sc)
     if sc == 503 and path in FAIL_CLOSED_WHEN_UNCONFIGURED:
         return GATED, "503 未配置 → 拒绝(登记在 FAIL_CLOSED_WHEN_UNCONFIGURED)"
+    if sc == 503 and path in HEALTH_503_BY_DESIGN:
+        try:
+            body = r.json()
+        except ValueError:
+            body = None
+        if isinstance(body, dict) and "stalled" in body:
+            return OPEN, f"503 停摆读数(登记在 HEALTH_503_BY_DESIGN):{r.text[:60]}"
     if 200 <= sc < 300:
         return OPEN, f"{sc} ({len(r.content)}B)"
     if sc >= 500:
@@ -257,6 +276,10 @@ def test_every_internal_route_rejects_an_anonymous_caller():
             stale.append(f"{p}(已加门)")
     _check(f"PUBLIC_BY_DESIGN 里没有已收口/已消失的条目({len(stale)} 条待删)",
            not stale, "删掉这些行:" + ", ".join(stale[:5]))
+    # 停摆 503 带着读数回给匿名调用者 ⇒ 它就是公开的,必须同时登记在公开名单里说清谁在读。
+    _check("HEALTH_503_BY_DESIGN 的路由都在 PUBLIC_BY_DESIGN 里",
+           set(HEALTH_503_BY_DESIGN) <= set(PUBLIC_BY_DESIGN),
+           str(sorted(set(HEALTH_503_BY_DESIGN) - set(PUBLIC_BY_DESIGN))))
 
 
 def test_the_two_closed_routes_actually_reject():
