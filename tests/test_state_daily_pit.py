@@ -36,9 +36,11 @@ def _mutate_after(inp, d):
     for k, v in inp.items():
         v = v.copy()
         mask = v.index > d
+        # pandas 3 gives text columns dtype "str", not object — ask "numeric?", not "object?" (CI, 2026-10-14).
         if isinstance(v, pd.DataFrame):
-            v.loc[mask] = v.loc[mask].apply(lambda c: c * 100 + 7) if v.dtypes.iloc[0] != object else "RISK_ON"
-        elif v.dtype == object:
+            numeric = pd.api.types.is_numeric_dtype(v.dtypes.iloc[0])
+            v.loc[mask] = v.loc[mask].apply(lambda c: c * 100 + 7) if numeric else "RISK_ON"
+        elif not pd.api.types.is_numeric_dtype(v.dtype):
             v.loc[mask] = "RISK_ON"
         else:
             v.loc[mask] = v.loc[mask] * 100 + 7
