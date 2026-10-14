@@ -20,5 +20,5 @@
     "expect": "报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改"
   },
   "prior_value": "从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。",
-  "notes": "2026-10-13 Seth 开卡派 A,排在 T-083 之后。积木在 T-087 / T-088 交付前用旧臂跑通,交付后重跑一次。"
+  "notes": "2026-10-13 Seth 开卡派 A,排在 T-083 之后。积木在 T-087 / T-088 交付前用旧臂跑通,交付后重跑一次。\n\n2026-10-14 Seth §Seth-1014a @lane-a T-089 v3 退回:见 MINIMAX_SYNC §Seth-1014a(ffill/bfill/fillna(1.0) 把缺失当数值;合成/csv 后端含虚构先验不得留在 docs/research)。"
 }

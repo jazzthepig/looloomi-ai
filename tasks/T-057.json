@@ -21,5 +21,5 @@
   },
   "prior_value": "A 10-07 报告:arm C Sharpe +4.90 / MaxDD 10.3% / 累计 +456%;arm B +1.48 / 60.5% —— 记账口径下的数,不是证据",
   "verified": null,
-  "notes": "2026-10-07 开卡。两处:(1) exit 价取「下一次 ENTERED 里同一个币的 leg.price」,不在就取 entry 价 —— arm C 的宇宙随闸门变,跌出闸门的币亏损被抹成 0;(2) 一个调仓周期的收益按天数开方平摊,日波动被低估,所有臂的 Sharpe 都被抬高。这是 Seth 的代码(S-396)。 | 10-13 Seth:改派 lane-c(研究脚本的记账修正,卡上 acceptance 已写清)。"
+  "notes": "2026-10-07 开卡。两处:(1) exit 价取「下一次 ENTERED 里同一个币的 leg.price」,不在就取 entry 价 —— arm C 的宇宙随闸门变,跌出闸门的币亏损被抹成 0;(2) 一个调仓周期的收益按天数开方平摊,日波动被低估,所有臂的 Sharpe 都被抬高。这是 Seth 的代码(S-396)。 | 10-13 Seth:改派 lane-c(研究脚本的记账修正,卡上 acceptance 已写清)。\n\n2026-10-14 Seth §Seth-1014b @lane-c T-057 v2 退回:见 MINIMAX_SYNC §Seth-1014b(H 臂是每日回到初始权重的常数配比,不是持有;B 对 H 的 SR 差因此不可信)。"
 }
