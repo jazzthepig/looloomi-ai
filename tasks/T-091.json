@@ -1,0 +1,24 @@
+{
+  "id": "T-091",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-14",
+  "verified": null,
+  "title": "非价格状态在 BTC 转折点上是否领先价格:资金费 / 持仓量 / 稳定币供给 / 主动买入占比 vs 价格动量,对照随机日期",
+  "source": "Jazz 10-14 周期拆分 → S-568(③ 与组合层都滞后在转折点)",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-091.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "先在台账写 M- 预注册:(1) 转折点 = BTC 日收盘(ohlcv_daily source='binance_hist')zigzag 20% 的 14 个拐点,2023-01 → 最新;另记每个拐点的「价格确认日」= 价格离极值首次走完 20% 的那天(这是只看价格的基准滞后);(2) 候选 = state_daily 的 funding_7d_ann、oi_chg_30d、stable_supply_30d、taker_buy_share_30d、stable_lend_apy_7d,对照 mom_20、dist_200;每个特征的「翻转」= 越过它自己过去 365 天的中位数(只用当时已有的数据);(3) 统计量 = 每个拐点后第一次朝正确方向翻转距拐点的天数(拐点前翻转记负数 = 领先),以及每 100 天里错误翻转的次数;(4) 零假设 = 同样个数的随机日期当拐点 1000 次,报每个特征「领先天数中位数」的分位。通过 = 中位数领先价格确认日 ≥ 10 天、随机分位 ≤ 10%、错误翻转不多于 mom_20。",
+    "expect": "报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:每个特征 × 14 个拐点的领先 / 滞后天数、中位数、随机分位、错误翻转率。只测量,不改任何账本或循环。"
+  },
+  "prior_value": "S-568:③ 在每个顶部推力 ≥ 1、组合层在 +190% / +97% 两段上涨里只有 ≈ 0.5 仓位;S-567:周频价格 / 宽度择时四种构造都分不开随机。非价格状态在转折点上的时序从没量过。",
+  "notes": "2026-10-14 Seth 开卡派 lane-c,排在 T-057 v3 之后。"
+}

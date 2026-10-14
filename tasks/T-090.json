@@ -1,0 +1,24 @@
+{
+  "id": "T-090",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-14",
+  "verified": null,
+  "title": "CIS 的 F 支柱在「山寨领涨的上涨」里跑输:预注册检验 + 一个可执行的改法(该状态下 ② 倾斜不用 F)",
+  "source": "Jazz 10-14「把每个 btc 上升和下跌趋势周期拆开再检视」→ S-568",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-090.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "先在台账写 M- 预注册,写死以下定义再算:(1) 数据 = cis_standard_outcomes(grp='crypto',alpha = 30 日前向 α vs BTC)join cis_rebuild_daily(code_ref='cis-standard-v1.3')的 pillar_f / score,每周一取样,2023-01-02 起;(2) 状态 = d−1 的 state_daily:A = mom_20 > 0 且 style_rel_majors_30d ≤ 0(二线 L1/L2 跑赢 majors 的上涨),B = 其余;(3) 统计量 = 每周按 pillar_f 三分位,高 − 低 的平均 α,A 与 B 各一个均值;(4) 零假设 = 把 A/B 标签按 8 周为块打乱 1000 次,报 A 均值的分位;(5) 稳健 = 2023–24 与 2025-01 → 最新两半里 A 的符号都为负。通过 = 分位 ≤ 5% 且两半同号。再做改法:cis_a1_u_replay 的倾斜里,在 A 状态把 z_CIS 换成不含 F 的四支柱 z(权重按原比例重归一),报改前 / 改后相对 core_u_replay 的超额与随机倾斜(打乱 z 横截面 200 次)分位,两半分开。",
+    "expect": "报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:A / B 两状态的 F 价差、打乱分位、两半符号;改法前后两半的超额与分位。不改任何前向账本。"
+  },
+  "prior_value": "S-568 探索性:A 状态 44 周 F 高 − 低 −11.0pp、命中 0.34;majors 领涨的上涨 52 周 −3.2;BTC 下行时 ≈ 0。周频 30 日窗口重叠,≈ 11 个独立观测,未经打乱对照。",
+  "notes": "2026-10-14 Seth 开卡派 lane-b,排在 T-069 之前。"
+}
