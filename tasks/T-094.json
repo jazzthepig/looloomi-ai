@@ -23,5 +23,5 @@
     "expect": "S-570 / T-093 的情景格子在 2019–2022 多一轮牛熊;S-521 类的匹配不再读到未来。"
   },
   "prior_value": "state_daily 2023-01 起(一个周期);FNG 2021-06 起;market_state_vectors 24 维里 13 维恒空、全史一次 z(看未来)。",
-  "notes": "2026-10-14 Seth 开卡自做。"
+  "notes": "2026-10-14 Seth 开卡自做。\n\n2026-10-14 Seth(Jazz「从 2020 年起」,S-575):2020 起的 ① 只能用 asset_mcap_daily(CG Pro;binance_hist 2020-01 只有 14 个币)。**先补退市 / 崩盘的大币**,否则 2020–22 的 ① 有幸存者偏差:terra-luna(LUNA / LUNC)、terrausd(UST)、eos、bitcoin-cash-sv、celsius-degree-token、serum,以及 2020–22 曾进前 30、今天不在 asset_mcap_daily 的其他名字(用 CG 全局市值与前 N 名合计的缺口逐月核对)。然后各账本的回放起点改到 2020-01-06(回放行不锚,forward_lock 不受影响)。"
 }
