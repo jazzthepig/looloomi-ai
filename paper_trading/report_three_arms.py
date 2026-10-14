@@ -104,8 +104,9 @@ def render(diff: dict[str, Any]) -> str:
     # beat this, the factor gate is overhead, not alpha.
     lines.append("## Hold-the-panel baseline (T-057 acceptance #④)")
     lines.append("")
-    lines.append("Buy the first ENTERED's legs and never rebalance — "
-                 "pure passive hold, daily MTM on panel closes.")
+    lines.append("Buy the first ENTERED's legs ONCE and compound the resulting "
+                 "shares to end-of-window (T-057 v3: real compound hold, not "
+                 "constant-weight × daily-return). Daily MTM on panel closes.")
     lines.append("")
     lines.append(f"- **Arm B SR − Hold SR:** "
                  f"{summary['arm_b_sharpe_minus_hold']:+.4f}  "

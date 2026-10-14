@@ -187,39 +187,6 @@ def _build_daily_returns(
         and per-leg missing count (count of active leg-day pairs where one or
         both closes were missing in the panel).
         Raises ValueError if panel_closes is None.
-
-    Why the previous period-flattening was wrong:
-      Old code computed a single period return between ENTERED events, then
-      applied `(1+r)^(1/span) - 1` to each day in between. With a 7-day
-      cadence and a 10% period return, every day got +1.37% even if the
-      actual daily moves were volatile. That uniformly **shrinks observed
-      daily vol** → inflates annualized Sharpe by ≈ √7 in steady-state.
-
-    Bug ① fixed (dropped symbols):
-      Old code:
-          p_exit = entry_now.get(sym, (0.0, p_entry))[1]   # if sym dropped: p_exit = p_entry
-          r += w * (p_exit / p_entry - 1.0)               # → forced 0 return
-      New code: a dropped symbol stays in `last_legs` until close of d_next
-      (the rebalance that excluded it). On d_next its daily MTM is computed
-      normally against close[d_next] / close[d_next−1]. The cumulative loss
-      (or gain) is realized on d_next and reflected in the daily series.
-      From d_next+1 onwards the symbol is gone from `last_legs` → no further
-      contribution, exactly as if it were sold at close[d_next].
-
-    Bug ② fixed (period flattening): each day now carries its own
-    contribution; no smoothing across the holding period.
-
-    Args:
-        decisions:    date-sorted (or unsorted; we sort by date) list of
-                      decision payloads. Only ENTERED records participate.
-        start, end:   inclusive window.
-        panel_closes: {sym: {iso_day_str: close}} — required. Pass `None`
-                      only if you want a loud error (no silent fallback to
-                      the broken period-flattening path).
-
-    Returns:
-        list[float] of length (end - start).days + 1 — daily return series.
-        Raises ValueError if panel_closes is None.
     """
     if panel_closes is None:
         raise ValueError(
@@ -291,47 +258,85 @@ def _build_hold_baseline(
     *,
     panel_closes: dict[str, dict[str, float]],
 ) -> tuple[list[float], int]:
-    """Buy the first ENTERED's legs and never rebalance. Pure passive hold.
+    """Buy the first ENTERED's legs ONCE; hold the resulting shares. Real hold.
 
     Floor for arm C's "outperformance": if the factor gate's complexity can't
     beat just sitting on the panel from day one, the gate is overhead, not
     alpha. Acceptance #④.
 
-    Returns 0 returns for the day of entry (no prior close to compare), then
-    daily sum of `weight × (close[d][sym] / close[d-1][sym] − 1)`.
-    Per-leg missing tracking (T-057 v2): each (leg, day) where close[d] OR
-    close[d-1] is absent contributes 0 to that day's return and increments
-    `n_missing_legs` by 1. The hold baseline inherits the same data-honesty
-    contract as `_build_daily_returns`.
+    True-hold semantics (T-057 v3, lane-c @ 94cd04f → Seth §Seth-1014b):
+      At the first ENTERED day d_entry, fix shares[s] = w[s] / close[d_entry][s]
+      for every leg (normalized to portfolio cash = 1.0 at d_entry). From
+      d_entry+1 onward the portfolio value is
+          value[d] = Σ_s (shares[s] × close[d][s])
+      and the daily return is `(value[d] / value[d−1]) − 1`. Weights DRIFT
+      from initial as prices diverge — the opposite of the previous
+      "constant-weight × daily-return" implementation, which silently
+      rebalanced to initial weights every day (identical arithmetic to a
+      daily-rebalanced index, NOT a buy-and-hold). The old formula roughly
+      cancels time-varying volatility and inflates H's Sharpe whenever the
+      panel has material dispersion; real hold does not.
+
+    Returns 0 for the day of entry (no prior close to compare) and for every
+    day strictly before d_entry (no position yet).
+    Per-leg missing tracking (T-057 v2 / v3): a (leg, d_entry) pair missing
+    close[d_entry] cannot fix shares and adds 1 to n_missing_legs; subsequent
+    days with close[d] OR close[d−1] missing contribute 0 to that day's value
+    and add len(active_legs) to n_missing_legs. Inherits `_build_daily_returns`'s
+    data-honesty contract.
     """
     if end < start:
         return [], 0
     n_days = (end - start).days + 1
     daily = [0.0] * n_days
 
-    first_legs: Optional[dict[str, float]] = None
+    first_entry: Optional[tuple[dt.date, dict[str, tuple[float, float]]]] = None
     for d_rec in decisions:
         if d_rec.get("verdict") == "ENTERED":
-            first_legs = {l["symbol"]: float(l["weight"])
+            d_entry = dt.date.fromisoformat(d_rec["date"])
+            entry_legs = {l["symbol"]: (float(l["weight"]), float(l["price"]))
                           for l in d_rec.get("legs", [])}
+            first_entry = (d_entry, entry_legs)
             break
-    if first_legs is None:
+    if first_entry is None:
         return daily, 0
 
+    d_entry, entry_legs = first_entry
     n_missing_legs = 0
-    for i in range(1, n_days):
+
+    # Fix shares at d_entry. A leg with missing/bad entry close can't be
+    # held → skip (no future contribution) and count it as missing.
+    shares: dict[str, float] = {}
+    for sym, (w, p_entry) in entry_legs.items():
+        if p_entry is None or p_entry <= 0:
+            n_missing_legs += 1
+            continue
+        shares[sym] = w / p_entry
+
+    entry_idx = (d_entry - start).days
+    # Days 0..entry_idx stay 0.0 (entry day itself has no prior close).
+
+    value_prev = 1.0   # shares were normalized against entry close.
+    for i in range(entry_idx + 1, n_days):
         d = start + dt.timedelta(days=i)
         d_prev = d - dt.timedelta(days=1)
-        r = 0.0
-        for sym, w in first_legs.items():
+        value = 0.0
+        used_any = False
+        for sym, sh in shares.items():
             cs = panel_closes.get(sym, {})
             p_now = cs.get(d.isoformat())
             p_prev = cs.get(d_prev.isoformat())
             if p_now is None or p_prev is None or p_prev <= 0:
                 n_missing_legs += 1
                 continue
-            r += w * (p_now / p_prev - 1.0)
-        daily[i] = r
+            value += sh * p_now
+            used_any = True
+        if not used_any or value_prev <= 0:
+            # Day is half-blind; count as one missing pair per active leg.
+            n_missing_legs += len(shares)
+            continue
+        daily[i] = value / value_prev - 1.0
+        value_prev = value
     return daily, n_missing_legs
 
 

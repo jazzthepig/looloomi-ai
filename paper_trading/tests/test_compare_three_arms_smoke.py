@@ -311,6 +311,79 @@ def test_build_hold_baseline_uses_first_entered():
     assert n_missing == 0
 
 
+def test_build_hold_baseline_weights_drift_when_prices_diverge():
+    """T-057 v3 (real hold, lane-c @ 94cd04f → Seth §Seth-1014b): with two
+    assets entering 50/50 and one doubling while the other halves, the held
+    weights MUST drift from initial. A constant-weight × daily-return
+    implementation (the previous bug) would keep them at 50/50 forever and
+    silently under-report drawdown / over-report Sharpe. Catches the bug.
+
+    Setup:
+      Day 0 (entry): BTC=100, ETH=100, initial weights 0.5/0.5.
+        shares[BTC] = 0.005, shares[ETH] = 0.005. value[0] = 1.0.
+      Day 1:        BTC=141.4213… (+50% over 2 days geometric),
+                    ETH=70.7106… (−50% over 2 days geometric).
+        value[1] = 0.005·141.4213 + 0.005·70.7106 = 1.06066.
+        portfolio weight contribution:
+            BTC: 0.005·141.4213 / 1.06066 ≈ 0.6667
+            ETH: 0.005· 70.7106 / 1.06066 ≈ 0.3333
+        Drift from 0.5/0.5 already by day 1.
+      Day 2:        BTC=200, ETH=50. value[2] = 0.005·200 + 0.005·50 = 1.25.
+        BTC weight contribution: 1.0 / 1.25 = 0.8. ETH: 0.25 / 1.25 = 0.2.
+        Drift by ±30pp from initial.
+
+    The BUGGY constant-weight formula gives daily[1] = 0.06066 and
+    daily[2] = 0.06066 (same: smooth), cum = (1.06066)² − 1 ≈ 0.1251.
+    The REAL-HOLD formula gives daily[1] = 0.06066 and
+    daily[2] = 1.25/1.06066 − 1 ≈ 0.17855, cum = 1.25 − 1 = 0.25.
+    """
+    from paper_trading.compare_three_arms import _build_hold_baseline
+
+    decisions = [
+        {"date": "2026-07-01", "verdict": "ENTERED", "legs": [
+            {"symbol": "BTC", "weight": 0.5, "price": 100.0},
+            {"symbol": "ETH", "weight": 0.5, "price": 100.0},
+        ]},
+    ]
+    # Day 0 entry closes at 100 for both; days 1–2 diverge symmetrically.
+    panel_closes = {
+        "BTC": {"2026-06-30": 100.0, "2026-07-01": 100.0,
+                "2026-07-02": 141.4213562373095, "2026-07-03": 200.0},
+        "ETH": {"2026-06-30": 100.0, "2026-07-01": 100.0,
+                "2026-07-02":  70.71067811865476, "2026-07-03": 50.0},
+    }
+    start = dt.date(2026, 7, 1)
+    end = dt.date(2026, 7, 3)
+    daily, n_missing = _build_hold_baseline(decisions, start, end,
+                                            panel_closes=panel_closes)
+
+    # Day 0 is the entry day itself → 0 (no prior close in window).
+    assert daily[0] == 0.0
+    # Day 1 return: value[1]/value[0] − 1 = 1.06066/1.0 − 1 = 0.06066.
+    assert abs(daily[1] - (1.0606601717798212 - 1.0)) < 1e-9, (
+        f"day 1 return (real hold) expected ≈ 0.06066, got {daily[1]:.6f}")
+    # Day 2 return: value[2]/value[1] − 1 = 1.25/1.06066 − 1 = 0.17855.
+    #   The constant-weight bug would give 0.06066 here (smooth).
+    expected_day2 = (1.25 / 1.0606601717798212) - 1.0
+    assert abs(daily[2] - expected_day2) < 1e-9, (
+        f"day 2 return (real hold) expected ≈ {expected_day2:.6f}; got "
+        f"{daily[2]:.6f}. Constant-weight × daily return is ≈ 0.06066 — if "
+        f"that matches, the bug is back.")
+    # STRONG guard: daily[2] must NOT equal daily[1]. Constant-weight
+    # implementation makes the two returns equal whenever the two legs move
+    # symmetrically; real hold makes them differ as soon as weights drift.
+    assert not math.isclose(daily[1], daily[2], rel_tol=1e-9, abs_tol=1e-9), (
+        f"daily[1]={daily[1]:.6f} == daily[2]={daily[2]:.6f} → weights did "
+        f"not drift; the constant-weight bug is back in _build_hold_baseline.")
+
+    # Cumulative check: cum = (1+0.06066)·(1+0.17855) − 1 = 0.25 exactly.
+    cum = math.prod(1.0 + r for r in daily) - 1.0
+    assert abs(cum - 0.25) < 1e-9, (
+        f"hold cum over the 3-day panel expected 0.25, got {cum:.6f}. "
+        f"Constant-weight formula gives 0.125 — if 0.125, the bug is back.")
+    assert n_missing == 0
+
+
 def test_count_missing_legs_with_hole_in_panel():
     """T-057 v2: a panel hole is counted PER LEG, not per day.
 
