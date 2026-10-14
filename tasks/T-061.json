@@ -1,7 +1,11 @@
 {
   "created": "2026-10-07",
-  "verified": null,
-  "status": "in_review",
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-14T02:20:00Z",
+    "value": "count(distinct loop_name) from loop_attempt, last 2 days = 69 (>= 50)"
+  },
+  "status": "done",
   "id": "T-061",
   "owner": "seth",
   "title": "22 个不写逐轮记录的后台循环补 _record_loop_attempt,判活补齐",
