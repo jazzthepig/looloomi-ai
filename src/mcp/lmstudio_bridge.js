@@ -12,8 +12,8 @@
  * v2 rules:
  *   - **Never guess the model.** `model` argument → LMSTUDIO_MODEL → the only loaded LLM. Two loaded and no
  *     choice ⇒ error that lists them. Asking for a model that is not loaded ⇒ error (no silent JIT load).
- *   - **Reasoning is explicit and verified.** Every tool takes `reasoning` (off | low | medium | high | on,
- *     default off). The documented switch is `reasoning` on `/api/v1/chat`. After every call the bridge reads
+ *   - **Reasoning is explicit and verified.** Every tool takes `reasoning` (default off; any level the chosen
+ *     model advertises — see lmstudio_models). The documented switch is `reasoning` on `/api/v1/chat`. After every call the bridge reads
  *     the reasoning tokens back; `off` that still reasoned is reported (chat) or refused (judge).
  *   - **Structured judgments** (`lmstudio_judge`): fixed question types (probability / choice / score — the
  *     same shapes as Jev's System One: noul / choice / score), JSON schema enforced by LM Studio's
@@ -62,7 +62,9 @@ const DEFAULT_TEMP = finiteOr(parseFloat(process.env.LM_TEMPERATURE), 0.7);
 const TIMEOUT_MS = posInt(process.env.LMSTUDIO_TIMEOUT_MS, 180000);
 const JUDGE_TIMEOUT_MS = posInt(process.env.LMSTUDIO_JUDGE_TIMEOUT_MS, 90000);
 const MODELS_TTL_MS = 30000;
-const REASONING_LEVELS = ['off', 'low', 'medium', 'high', 'on'];
+// Superset of what LM Studio models advertise (capabilities.reasoning.allowed_options); each call is checked
+// against the chosen model's own list — 10-14: qwen3.8-27b offers off/low/medium/xhigh/on, no "high".
+const REASONING_LEVELS = ['off', 'minimal', 'low', 'medium', 'high', 'xhigh', 'on'];
 
 // ── HTTP ───────────────────────────────────────────────────────────────────────
 
@@ -561,7 +563,7 @@ async function handleTool(name, args) {
 // ── Tool definitions (no model names here — the model is whatever you choose) ─
 
 const MODEL_ARG = { type: 'string', description: 'LM Studio model key (see lmstudio_models). Default: LMSTUDIO_MODEL, else the only loaded LLM.' };
-const REASONING_ARG = { type: 'string', enum: REASONING_LEVELS, description: 'Reasoning setting (default "off"). The result reports the reasoning tokens actually spent.' };
+const REASONING_ARG = { type: 'string', enum: REASONING_LEVELS, description: 'Reasoning setting (default "off"); must be one the model advertises (lmstudio_models). The result reports the reasoning tokens actually spent.' };
 
 const TOOLS = [
   {

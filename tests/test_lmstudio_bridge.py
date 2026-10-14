@@ -27,7 +27,8 @@ M9 = {"type": "llm", "key": "qwen/qwen3.5-9b", "display_name": "Qwen3.5 9B", "pa
       "loaded_instances": [{"id": "qwen/qwen3.5-9b", "config": {"context_length": 262144}}],
       "capabilities": {"reasoning": {"allowed_options": ["off", "on"], "default": "on"}}}
 M27 = {**M9, "key": "qwen/qwen3.8-27b", "display_name": "Qwen3.8 27B",
-       "loaded_instances": [{"id": "qwen/qwen3.8-27b", "config": {"context_length": 119552}}]}
+       "loaded_instances": [{"id": "qwen/qwen3.8-27b", "config": {"context_length": 119552}}],
+       "capabilities": {"reasoning": {"allowed_options": ["off", "low", "medium", "xhigh", "on"], "default": "xhigh"}}}
 UNLOADED = {**M9, "key": "other/model", "loaded_instances": []}
 ON_ONLY = {**M9, "key": "think/only", "loaded_instances": [{"id": "think/only", "config": {}}],
            "capabilities": {"reasoning": {"allowed_options": ["on"], "default": "on"}}}
@@ -245,3 +246,12 @@ def test_compliance_only_where_text_can_reach_users(lm):
 def test_default_base_is_ipv4():
     src = BRIDGE.read_text(encoding="utf-8")
     assert "LMSTUDIO_BASE || 'http://127.0.0.1:1234'" in src, "localhost can resolve to ::1, which LM Studio does not serve"
+
+
+def test_reasoning_levels_come_from_the_model(lm):
+    """10-14 live: qwen3.8-27b advertises off/low/medium/xhigh/on — "xhigh" must pass, "high" must not."""
+    mock, base = lm
+    ok, bad = call(base, ("lmstudio_chat", {"prompt": "hi", "model": "qwen/qwen3.8-27b", "reasoning": "xhigh"}),
+                   ("lmstudio_chat", {"prompt": "hi", "model": "qwen/qwen3.8-27b", "reasoning": "high"}))
+    assert not ok.get("isError") and posts(mock, "/api/v1/chat")[0]["reasoning"] == "xhigh"
+    assert bad.get("isError") and "does not allow" in text(bad) and "xhigh" in text(bad)
