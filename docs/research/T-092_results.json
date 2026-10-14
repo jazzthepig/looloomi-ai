@@ -1,0 +1,193 @@
+{
+  "task": "T-092",
+  "windows": {
+    "W1_2020_2022": [
+      "2020-01-01",
+      "2022-12-31"
+    ],
+    "W2_2023_2024": [
+      "2023-01-01",
+      "2024-12-31"
+    ],
+    "W3_2025_now": [
+      "2025-01-01",
+      "2026-10-14"
+    ]
+  },
+  "n_shuffles": 1000,
+  "seed": 20261014,
+  "pre_registered": true,
+  "results_by_window": {
+    "W1_2020_2022": {
+      "n_mondays": 156,
+      "lo": "2020-01-01",
+      "hi": "2022-12-31",
+      "R1": {
+        "n_events": 288,
+        "nav_baseline": 1.689,
+        "nav_R1": 1.9799,
+        "excess_pct": 17.22,
+        "maxdd_baseline_pct": -56.2,
+        "maxdd_R1_pct": -52.77,
+        "shuffle_pct": 49.0,
+        "per_year_events": {
+          "2020": 98,
+          "2021": 124,
+          "2022": 66
+        },
+        "shuf_p10": 1.0926,
+        "shuf_p50": 2.0007,
+        "shuf_p90": 4.218
+      },
+      "R2": {
+        "n_events": 46,
+        "nav_baseline": 1.689,
+        "nav_R2": 1.5931,
+        "excess_pct": -5.68,
+        "fund_paid_R2_pct": 6.8654,
+        "maxdd_baseline_pct": -56.2,
+        "maxdd_R2_pct": -64.73,
+        "shuffle_pct": 49.4,
+        "shuf_p10": 1.5246,
+        "shuf_p50": 1.5955,
+        "shuf_p90": 1.6419
+      },
+      "R3": {
+        "n_events": 0,
+        "n_candidate": 0,
+        "mean_net_pct": 0.0,
+        "mean_short_pct": 0.0,
+        "mean_long_btc_pct": 0.0,
+        "excess_vs_btc_pct": 0.0,
+        "win_rate": 0.0,
+        "fund_data_present_frac_pct": 0,
+        "shuffle_pct": 100.0,
+        "per_year_events": {},
+        "shuf_p10": 0,
+        "shuf_p50": 0,
+        "shuf_p90": 0
+      }
+    },
+    "W2_2023_2024": {
+      "n_mondays": 105,
+      "lo": "2023-01-01",
+      "hi": "2024-12-31",
+      "R1": {
+        "n_events": 564,
+        "nav_baseline": 1.102,
+        "nav_R1": 0.9476,
+        "excess_pct": -14.01,
+        "maxdd_baseline_pct": -36.3,
+        "maxdd_R1_pct": -35.16,
+        "shuffle_pct": 9.1,
+        "per_year_events": {
+          "2023": 246,
+          "2024": 318
+        },
+        "shuf_p10": 0.9488,
+        "shuf_p50": 0.9811,
+        "shuf_p90": 1.1071
+      },
+      "R2": {
+        "n_events": 18,
+        "nav_baseline": 1.102,
+        "nav_R2": 1.0896,
+        "excess_pct": -1.12,
+        "fund_paid_R2_pct": 2.9534,
+        "maxdd_baseline_pct": -36.3,
+        "maxdd_R2_pct": -40.92,
+        "shuffle_pct": 91.6,
+        "shuf_p10": 1.009,
+        "shuf_p50": 1.0435,
+        "shuf_p90": 1.0828
+      },
+      "R3": {
+        "n_events": 1798,
+        "n_candidate": 1802,
+        "mean_net_pct": 17.52,
+        "mean_short_pct": 12.83,
+        "mean_long_btc_pct": 4.89,
+        "excess_vs_btc_pct": 12.63,
+        "win_rate": 0.777,
+        "fund_data_present_frac_pct": 64.9,
+        "shuffle_pct": 43.8,
+        "per_year_events": {
+          "2023": 606,
+          "2024": 1196
+        },
+        "shuf_p10": 4.34,
+        "shuf_p50": 19.84,
+        "shuf_p90": 38.82
+      }
+    },
+    "W3_2025_now": {
+      "n_mondays": 93,
+      "lo": "2025-01-01",
+      "hi": "2026-10-14",
+      "R1": {
+        "n_events": 375,
+        "nav_baseline": 0.7809,
+        "nav_R1": 0.7762,
+        "excess_pct": -0.6,
+        "maxdd_baseline_pct": -25.96,
+        "maxdd_R1_pct": -24.71,
+        "shuffle_pct": 37.4,
+        "per_year_events": {
+          "2025": 191,
+          "2026": 184
+        },
+        "shuf_p10": 0.769,
+        "shuf_p50": 0.779,
+        "shuf_p90": 0.7891
+      },
+      "R2": {
+        "n_events": 29,
+        "nav_baseline": 0.7809,
+        "nav_R2": 0.7248,
+        "excess_pct": -7.18,
+        "fund_paid_R2_pct": 0.9336,
+        "maxdd_baseline_pct": -25.96,
+        "maxdd_R2_pct": -33.0,
+        "shuffle_pct": 85.2,
+        "shuf_p10": 0.7094,
+        "shuf_p50": 0.7185,
+        "shuf_p90": 0.7268
+      },
+      "R3": {
+        "n_events": 1158,
+        "n_candidate": 1220,
+        "mean_net_pct": 10.11,
+        "mean_short_pct": 13.57,
+        "mean_long_btc_pct": -3.26,
+        "excess_vs_btc_pct": 13.37,
+        "win_rate": 0.72,
+        "fund_data_present_frac_pct": 99.1,
+        "shuffle_pct": 0.0,
+        "per_year_events": {
+          "2025": 604,
+          "2026": 616
+        },
+        "shuf_p10": 59.16,
+        "shuf_p50": 96.52,
+        "shuf_p90": 137.81
+      }
+    }
+  },
+  "verdicts": {
+    "W1_2020_2022": {
+      "R1_PASS": false,
+      "R2_PASS": false,
+      "R3_PASS": false
+    },
+    "W2_2023_2024": {
+      "R1_PASS": false,
+      "R2_PASS": false,
+      "R3_PASS": false
+    },
+    "W3_2025_now": {
+      "R1_PASS": false,
+      "R2_PASS": false,
+      "R3_PASS": false
+    }
+  }
+}
