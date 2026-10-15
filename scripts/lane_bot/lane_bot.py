@@ -464,6 +464,9 @@ def run_one(cfg: dict, lane: str, why: str, task: str) -> None:
         res = run_lane(lane, cfg, why, task=task)
         if quota_hit(res.get("text", "")):
             QUOTA.write_text(str(now().timestamp() + QUOTA_BACKOFF_MIN * 60))
+            w = WAKE / lane
+            if task and not w.exists():          # 这一轮没做成:任务原文放回去,额度恢复后接着做(10-15 两次丢了 Seth 的派活)
+                w.write_text(task, encoding="utf-8")
             log(f"⏸ {lane} 模型额度用完(429)—— 全部 lane 停 {QUOTA_BACKOFF_MIN} 分钟;wake 文件保留,到时再起")
         ok = res.get("exit") == 0 and not res["timed_out"]
         log(f"{'✓' if ok else '✗'} {lane} {why} → exit={res.get('exit')} {res.get('num_turns') or '?'} 步 {res['seconds']}s")

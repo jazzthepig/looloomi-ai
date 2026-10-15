@@ -243,7 +243,10 @@ def test_quota_exhaustion_pauses_every_lane() -> None:
             mock.patch.object(lb, "BOT", Path(td)), mock.patch.object(lb, "log", lambda *_: None), \
             mock.patch.object(lb, "run_lane", lambda *a, **k: {"exit": 0, "timed_out": False, "seconds": 1, "text": msg}):
         assert not lb.quota_paused(lb.now().timestamp())
-        lb.run_one({}, "lane-b", "定时", "")
+        with mock.patch.object(lb, "WAKE", Path(td) / "wake"):
+            (Path(td) / "wake").mkdir()
+            lb.run_one({}, "lane-b", "Seth 唤醒", "T-105 接着做")
+            assert (Path(td) / "wake" / "lane-b").read_text(encoding="utf-8") == "T-105 接着做", "没做成的派活要放回去"
         assert lb.quota_paused(lb.now().timestamp())
         assert not lb.quota_paused(lb.now().timestamp() + lb.QUOTA_BACKOFF_MIN * 60 + 1)
     src = (ROOT / "scripts/lane_bot/lane_bot.py").read_text(encoding="utf-8")
