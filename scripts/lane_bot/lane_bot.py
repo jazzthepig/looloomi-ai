@@ -27,7 +27,6 @@ import os
 import signal
 import subprocess
 import sys
-import threading
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -51,7 +50,7 @@ ALLOWED_TOOLS = [
 # unset INTERNAL_TOKEN:lane 不需要它;它出现在 shell 环境里时,preflight 的 schema-drift 检查会对线上 401(10-07 B 撞上)。
 _LAUNCH = ('unset INTERNAL_TOKEN; cd "$LANE_CWD" && exec "$LANE_CMD" -p "$LANE_PROMPT" --output-format stream-json --verbose '
            '--max-turns "$LANE_TURNS" --permission-mode acceptEdits --settings "$LANE_SETTINGS" '
-           '--add-dir "$LANE_WORKTREE" --add-dir "$LANE_MAIN" '
+           '--add-dir "$LANE_WORKTREE" --add-dir "$LANE_MAIN" --add-dir "$LANE_DATA" '
            '--allowedTools "${(@s:,:)LANE_TOOLS}"')
 
 
@@ -186,6 +185,16 @@ def guard_settings(lane: str = "", dirs: tuple[str, ...] = ()) -> Path:
     return f
 
 
+#: Minimax 研究产物的归宿(CLAUDE.md 规则 3a)。10-15:lane-b 的 cwd 在自己的 worktree,写不进数据根,
+#: T-101 的交付只好留在 worktree 里的 lane-b-scratch/ —— 每个 lane 都显式带上这个目录。
+DATA_ROOT = "/Volumes/CometCloudAI/cometcloud-local"
+
+
+def data_root(fallback: str) -> str:
+    """数据盘挂着就给数据根;没挂(或不在 Mac 上)给 lane 自己的 worktree,不让 --add-dir 指向不存在的路径。"""
+    return DATA_ROOT if os.path.isdir(DATA_ROOT) else fallback
+
+
 def launch_argv(cfg: dict) -> list[str]:
     """不拼 shell 字符串:所有可变内容走环境变量,zsh 只展开带引号的变量(测试钉住)。"""
     return [os.environ.get("LANE_BOT_ZSH", "/bin/zsh"), "-lic", _LAUNCH]
@@ -241,7 +250,7 @@ def run_lane(lane: str, cfg: dict, reason: str, dry: bool = False, task: str = "
     env = dict(os.environ, LANE_CWD=cwd, LANE_CMD=cfg.get("command", "claude"),
                LANE_PROMPT=build_prompt(lane, lc, reason, task), LANE_TURNS=str(cfg["max_turns"]),
                LANE_TOOLS=",".join(ALLOWED_TOOLS), LANE_WORKTREE=wt, LANE_MAIN=str(ROOT),
-               LANE_SETTINGS=str(guard_settings(lane, (wt, str(ROOT)))))
+               LANE_DATA=data_root(wt), LANE_SETTINGS=str(guard_settings(lane, (wt, str(ROOT), data_root(wt)))))
     if dry:
         return {"lane": lane, "reason": reason, "cwd": cwd, "argv": launch_argv(cfg), "tools": ALLOWED_TOOLS}
     RUNS.mkdir(parents=True, exist_ok=True)
@@ -363,10 +372,14 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--once", metavar="LANE")
     ap.add_argument("--status", action="store_true", help="每个 lane 最近几轮做了什么、用了谁的模型")
+    ap.add_argument("--run", metavar="LANE", help=argparse.SUPPRESS)      # spawn() 起的子进程:跑一轮就退出
+    ap.add_argument("--why", default="", help=argparse.SUPPRESS)
     a = ap.parse_args()
     if a.status:
         status()
         return 0
+    if a.run:
+        return child(a.run, a.why)
     cfg = load_config()
     BOT.mkdir(exist_ok=True)
     WAKE.mkdir(exist_ok=True)
@@ -392,7 +405,7 @@ def main() -> int:
         lc = cfg["lanes"][lane]
         cwd = Path(os.path.expanduser(lc["cwd"])).resolve().as_posix()
         wake, lock = WAKE / lane, BOT / f"{lane}.lock"
-        locked = lock.exists() and (at.timestamp() - lock.stat().st_mtime) < stale
+        locked = lock_held(lock, at.timestamp(), stale)
         if a.once:
             go = cwd not in busy and not locked
             why = "Jazz 手动" if go else "这个目录里已经开着一个 claude,或上一轮未完"
@@ -415,22 +428,62 @@ def main() -> int:
     if todo:
         STATE.write_text(json.dumps(st, ensure_ascii=False, indent=1), encoding="utf-8")
 
-    def one(lane: str, why: str, task: str) -> None:
-        try:
-            res = run_lane(lane, cfg, why, task=task)
-            ok = res.get("exit") == 0 and not res["timed_out"]
-            log(f"{'✓' if ok else '✗'} {lane} {why} → exit={res.get('exit')} {res.get('num_turns') or '?'} 步 {res['seconds']}s")
-        except Exception as e:  # noqa: BLE001 — 一个 lane 崩了不能挡其他 lane,但必须留痕
-            log(f"✗ {lane} {type(e).__name__}: {e}")
-        finally:
-            (BOT / f"{lane}.lock").unlink(missing_ok=True)
-
-    threads = [threading.Thread(target=one, args=t) for t in todo]   # 三个 lane 各自的目录,并行;SYNC 追加有锁
-    for t in threads:
-        t.start()
-    for t in threads:
-        t.join()
+    if a.once:                                   # Jazz 手动:前台跑完再返回,他要看结果
+        for t in todo:
+            run_one(cfg, *t)
+        return 0
+    for t in todo:                               # 定时 / 唤醒:每个 lane 一个脱离的进程,本次检查立刻返回
+        spawn(*t)
     return 0
+
+
+def run_one(cfg: dict, lane: str, why: str, task: str) -> None:
+    try:
+        res = run_lane(lane, cfg, why, task=task)
+        ok = res.get("exit") == 0 and not res["timed_out"]
+        log(f"{'✓' if ok else '✗'} {lane} {why} → exit={res.get('exit')} {res.get('num_turns') or '?'} 步 {res['seconds']}s")
+    except Exception as e:  # noqa: BLE001 — 一个 lane 崩了不能挡其他 lane,但必须留痕
+        log(f"✗ {lane} {type(e).__name__}: {e}")
+    finally:
+        (BOT / f"{lane}.lock").unlink(missing_ok=True)
+
+
+def spawn(lane: str, why: str, task: str) -> int:
+    """10-15:原来三个 lane 在本进程的线程里跑、最后 join —— launchd 的这次检查要等最慢的 lane 跑完(上限 60 分钟)
+    才返回,而 launchd 不会在上一次没返回时再起一次:B 跑长任务时,写给 A / C 的 wake 文件干等了一个小时。
+    现在每个 lane 是一个新会话里的独立进程(launchd 收尾时只清自己的进程组),本次检查立刻返回;
+    lane 之间互不等待,同一 lane 不重入靠 lock(里面写子进程 pid,进程不在了锁就不算数)。任务原文经文件传,不进 argv。"""
+    (BOT / f"task-{lane}.txt").write_text(task, encoding="utf-8")
+    with open(BOT / "child.log", "a", encoding="utf-8") as errf:
+        p = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "--run", lane, "--why", why],
+                             cwd=str(ROOT), stdin=subprocess.DEVNULL, stdout=errf, stderr=errf, start_new_session=True)
+    (BOT / f"{lane}.lock").write_text(str(p.pid))
+    return p.pid
+
+
+def child(lane: str, why: str) -> int:
+    tf = BOT / f"task-{lane}.txt"
+    task = tf.read_text(encoding="utf-8") if tf.exists() else ""
+    tf.unlink(missing_ok=True)
+    run_one(load_config(), lane, why, task)
+    return 0
+
+
+def lock_held(lock: Path, at_ts: float, stale_s: float) -> bool:
+    """锁算数 = 文件在、没过期、且里面写的进程还活着(写不出 pid 的老锁只看时间)。"""
+    if not lock.exists() or at_ts - lock.stat().st_mtime >= stale_s:
+        return False
+    try:
+        pid = int(lock.read_text().strip())
+    except (ValueError, OSError):
+        return True
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
 
 
 if __name__ == "__main__":

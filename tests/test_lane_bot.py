@@ -156,6 +156,9 @@ def test_every_launch_installs_the_guard() -> None:
     assert '--settings "$LANE_SETTINGS"' in _LAUNCH
     assert '--add-dir "$LANE_WORKTREE"' in _LAUNCH and '--add-dir "$LANE_MAIN"' in _LAUNCH, \
         "10-08:装了 --settings 之后 lane-c 只剩 cwd 可读,连自己的 worktree 都打不开"
+    assert '--add-dir "$LANE_DATA"' in _LAUNCH, "10-15:lane-b 写不进 Mac 数据根,T-101 的交付只好留在 worktree 里"
+    src = (ROOT / "scripts/lane_bot/lane_bot.py").read_text(encoding="utf-8")
+    assert "LANE_DATA=data_root(wt)" in src and "data_root(wt))))" in src
     cfg = _json.loads(guard_settings("lane-x", ("/tmp/wt", "/tmp/main")).read_text(encoding="utf-8"))
     assert cfg["permissions"]["additionalDirectories"] == ["/tmp/wt", "/tmp/main"]
     hook = cfg["hooks"]["PreToolUse"][0]
@@ -196,3 +199,34 @@ def test_guard_uses_session_cwd_and_head_mode_for_every_session() -> None:
     hooks = _json.loads((ROOT / ".claude/settings.json").read_text(encoding="utf-8"))["hooks"]["PreToolUse"]
     cmd = next(h["hooks"][0]["command"] for h in hooks if "guard_main_dir.py" in h["hooks"][0]["command"])
     assert "--head" in cmd and "exit 0" in cmd, "所有会话都装;文件不在时放行(旧分支上不能把所有 Bash 都锁死)"
+
+
+def test_a_long_lane_does_not_hold_the_others() -> None:
+    """10-15:三个 lane 在线程里跑、main 最后 join —— B 跑长任务时 launchd 不再起新一次检查,A / C 的 wake 干等一小时。
+    现在:定时检查给每个 lane 起一个新会话里的独立进程就返回;任务原文经文件传、不进 argv;锁跟着进程走。"""
+    import os as _os
+    import tempfile
+    from unittest import mock
+    import scripts.lane_bot.lane_bot as lb
+    src = (ROOT / "scripts/lane_bot/lane_bot.py").read_text(encoding="utf-8")
+    assert ".join()" not in src and "threading" not in src
+    with tempfile.TemporaryDirectory() as td, mock.patch.object(lb, "BOT", Path(td)), \
+            mock.patch.object(lb.subprocess, "Popen") as P:
+        P.return_value.pid = 4242
+        assert lb.spawn("lane-a", "Seth 唤醒", "秘密任务原文") == 4242
+        argv, kw = P.call_args[0][0], P.call_args[1]
+        assert kw["start_new_session"] is True and "--run" in argv and "lane-a" in argv
+        assert not any("秘密任务原文" in a for a in argv)
+        assert (Path(td) / "task-lane-a.txt").read_text(encoding="utf-8") == "秘密任务原文"
+        lock = Path(td) / "lane-a.lock"
+        assert lock.read_text() == "4242"
+        now_ts = lock.stat().st_mtime + 1
+        lock.write_text(str(_os.getpid()))
+        assert lb.lock_held(lock, now_ts, 4200), "进程在、没过期 ⇒ 锁算数"
+        assert not lb.lock_held(lock, now_ts + 5000, 4200), "过期 ⇒ 不算"
+        dead = 2 ** 22 + 12345
+        lock.write_text(str(dead))
+        assert not lb.lock_held(lock, now_ts, 4200), "进程不在了 ⇒ 锁不算,下一次检查就能起这个 lane"
+        lock.write_text("")
+        assert lb.lock_held(lock, now_ts, 4200), "写不出 pid 的老锁只看时间"
+        assert not lb.lock_held(Path(td) / "none.lock", now_ts, 4200)
