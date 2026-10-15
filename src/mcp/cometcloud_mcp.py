@@ -58,10 +58,32 @@ _call_log_queue: queue.Queue = queue.Queue()
 _SB_URL   = os.getenv("SUPABASE_URL", "").rstrip("/")
 _SB_KEY   = os.getenv("SUPABASE_KEY", os.getenv("SUPABASE_SERVICE_KEY", ""))
 _SB_TABLE = "agent_call_log"
+_background_task = None
+_CALL_LOG_MAX = 5000  # drop oldest when queue backs up beyond this
+
+
+def _ensure_call_log_task() -> None:
+    """Start (or restart) the flush task inside a running event loop. No-op without Supabase config."""
+    global _background_task
+    if _background_task is not None and not _background_task.done():
+        return
+    if not _SB_URL or not _SB_KEY:
+        return
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return  # no loop yet — will retry on next enqueue
+    _background_task = loop.create_task(_call_log_loop())
 
 
 def _enqueue_agent_call(tool_name: str, symbol: str = None, latency_ms: float = 0.0, response_size: int = 0):
     """Queue a call for async write to Supabase. Thread-safe, non-blocking."""
+    while _call_log_queue.qsize() >= _CALL_LOG_MAX:
+        try:
+            _call_log_queue.get_nowait()
+        except queue.Empty:
+            break
+    _ensure_call_log_task()
     _call_log_queue.put_nowait({
         "tool_name": tool_name,
         "symbol":    symbol,
@@ -114,15 +136,9 @@ async def _call_log_loop():
         await asyncio.sleep(1)
         await _flush_call_log()
 
-# Start it once at module load (non-blocking)
-_background_task = asyncio.create_task(_call_log_loop())
-
-
 def _start_call_log():
-    """Idempotent start of background log task."""
-    global _background_task
-    if _background_task.done() or _background_task.cancelled():
-        _background_task = asyncio.create_task(_call_log_loop())
+    """Idempotent start — real start happens lazily on first _enqueue_agent_call."""
+    _ensure_call_log_task()
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
