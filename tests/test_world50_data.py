@@ -88,7 +88,7 @@ def test_wavg_fallback_adr_ratio_outliers_and_jumps():
     merged = wd.build_mcap("Y", bars, {"dei": _dei(("2019-12-31", "2020-01-20", 1e9), ("2020-03-31", "2020-04-20", 2e9),
                                                     ("2020-06-30", "2020-07-20", 2e9))})
     assert merged["rows"][0]["d"] >= "2020-04-20" and any("跳" in n for n in merged["notes"]), "股数翻倍:只用之后的段"
-    assert wd.build_mcap("AZN", bars, {"dei": two})["why"].startswith("ADR 换股比例未核实")
+    assert wd.build_mcap("TCEHY", bars, {"dei": two})["why"].startswith("ADR 换股比例未核实")
     assert wd.build_mcap("Z", bars, {})["why"].startswith("SEC 里没有")
 
 
@@ -209,7 +209,8 @@ def test_refresh_mcap_reports_failures_and_writes_only_good(monkeypatch):
     assert "HTTP 500" in why["NOPE"] and why["ABSENT"] == "不在 SEC 申报公司表里"
     assert out["ok"] is False and out["latest_bn"] == {"GOOD": 0.0}
     assert {tag for cik, tag in calls if cik == 1} == {"EntityCommonStockSharesOutstanding", "CommonStockSharesOutstanding",
-                                                         "WeightedAverageNumberOfSharesOutstandingBasic"}, "三种口径都取"
+                                                         "WeightedAverageNumberOfSharesOutstandingBasic",
+                                                         "WeightedAverageShares"}, "四种口径都取"
 
 
 def test_predecessor_cik_history_is_joined(monkeypatch):
@@ -350,7 +351,7 @@ def test_sec_user_agent_comes_only_from_the_environment(monkeypatch):
 def test_manual_shares_are_current_basis_and_do_not_need_sec(monkeypatch):
     """Visa / Berkshire 的股数手工从 10-K 补(Jazz 10-15):表里的数已是今天口径 —— 2015 年一拆四之前报送的那一行不能再乘 4。"""
     for key, m in wd.MANUAL_SHARES.items():
-        assert len(m["rows"]) >= 10 and all(len(acc) == 20 and acc[10] == "-" for *_, acc in m["rows"]), key
+        assert len(m["rows"]) >= 5 and all(len(acc) == 20 and acc[10] == "-" for *_, acc in m["rows"]), key
         assert [r[1] for r in m["rows"]] == sorted(r[1] for r in m["rows"]), "按报送日排好"
     bars = _bars([100.0] * 120, start="2015-01-01", split_at="2015-03-19", k=4.0)
     out = wd.build_mcap("V", bars, {})
@@ -373,3 +374,20 @@ def test_manual_shares_are_current_basis_and_do_not_need_sec(monkeypatch):
                                                   Candidate("AAPL", "Apple", "equity", "eodhd", "AAPL.US", "US")]))
     assert {r["key"] for r in sink["world50_mcap_weekly"]} == {"V"} and res["manual"] == ["V"]
     assert "SEC_USER_AGENT" in res["why"] and res["failed"][0]["key"] == "AAPL", "SEC 读不到:手工的照写,其余报原因"
+
+
+def test_ifrs_source_sec_fix_and_adr_ratio_changes():
+    bars = _bars([10.0] * 300)
+    ifrs = _concept([{"start": "2018-01-01", "end": "2018-12-31", "filed": "2019-02-01", "val": 2.4e9},
+                     {"start": "2019-01-01", "end": "2019-12-31", "filed": "2020-02-01", "val": 2.4e9}])
+    out = wd.build_mcap("NVO", bars, {"ifrs_wavg": ifrs})
+    assert out["src"] == "ifrs_wavg" and {round(r["mcap_usd"] / 1e9) for r in out["rows"]} == {24}, "IFRS 公司(Novo A + B)"
+    # BABA:XBRL 少一位 → 按 20-F 封面更正;不更正就是「最新一期跳 ×0.10」被拒
+    baba = _dei(("2024-03-31", "2019-12-01", 1.9e10), ("2025-03-31", "2020-01-10", 1.9e10), ("2026-03-31", "2020-02-10", 1.9e9))
+    assert wd.SEC_FIX["BABA"]["2026-03-31"][0] == 18_580_374_278
+    fixed = wd.build_mcap("BABA", bars, {"dei": baba})
+    assert fixed["why"] is None and {round(r["mcap_usd"] / 1e9, 1) for r in fixed["rows"]} <= {23.8, 23.2}, "1.9e10 / 8 × 10"
+    # TM:一拆五后普通股 ×5,ADR 从 2 股改为 10 股,ADR 价不动 —— 市值连续
+    tm = _dei(("2021-03-31", "2021-06-24", 3.26e9), ("2022-03-31", "2022-06-23", 16.3e9))
+    tm_rows = wd.build_mcap("TM", _bars([10.0] * 500, start="2021-01-01"), {"dei": tm})["rows"]
+    assert len(tm_rows) > 50 and {round(r["mcap_usd"] / 1e9, 1) for r in tm_rows} == {16.3}

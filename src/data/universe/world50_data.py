@@ -4,8 +4,9 @@
 
 - 公司:**SEC EDGAR 报告的股本 × 原始收盘**(Jazz 10-14 定;EODHD 基本面与历史市值我们的套餐都没有,403)。
   只覆盖在 SEC 申报的公司(美国公司 + 美国上市的外国公司);本地上市的公司没有 —— 它们大多也没有链上形式。
-  股本有三种口径:封面股数(`dei:EntityCommonStockSharesOutstanding`)、期末股数(`us-gaap:CommonStockSharesOutstanding`)、
-  每季加权平均基本股数(`us-gaap:WeightedAverageNumberOfSharesOutstandingBasic`)。多股类公司按类别报的不在这个接口里,
+  股本有四种口径:封面股数(`dei:EntityCommonStockSharesOutstanding`)、期末股数(`us-gaap:CommonStockSharesOutstanding`)、
+  每季加权平均基本股数(`us-gaap:WeightedAverageNumberOfSharesOutstandingBasic`)、IFRS 年度加权平均(`ifrs-full:WeightedAverageShares`)。
+  结构化数据里核实是录入错误的点按原文件更正(`SEC_FIX`);接口取不到的公司手工从 10-K 补(`MANUAL_SHARES`,每行带 accession)。多股类公司按类别报的不在这个接口里,
   有的公司某种口径只报到某一年 —— 所以**选最后一次报送最晚的口径**(差 120 天内按上面的顺序),
   最后一次报送比最新价格早 500 天以上 ⇒ 股数太旧,不写。换过申报主体的接上旧 CIK(`PREDECESSOR_CIKS`)。
   **按报送日(filed)才算已知**,同一期取最早报送的那一份(当时的原始报告,不用后来的重述)。
@@ -84,14 +85,23 @@ OUTLIER_X = 100               # 离中位数这么多倍 ⇒ 录入错误(实测
 MCAP_SOURCE = "sec_shares_x_close_v2"
 SPIKE_NEIGHBORS = 1.1          # 一个点离两边都 > 1.5 倍、两边彼此在 1.1 倍内 ⇒ 单点错,丢这个点(不截断历史)
 STALE_DAYS = 500              # 选中的口径最后一次报送早于最新价格这么多天 ⇒ 股数是旧的,不写(20-F 一年一报,400 天会误拒 BHP)
-#: 三种口径,按优先级。封面股数(某天的实际股数)> 资产负债表期末股数 > 每季加权平均基本股数。
+#: 四种口径,按优先级。封面股数(某天的实际股数)> 资产负债表期末股数 > 每季加权平均基本股数 > IFRS 年度加权平均股数
+#: (用 IFRS 报的外国公司,如 Novo Nordisk 的 A + B 股合计只在这里)。
 SEC_TAGS = {"dei": ("dei", "EntityCommonStockSharesOutstanding", False),
             "cso": ("us-gaap", "CommonStockSharesOutstanding", False),
-            "wavg": ("us-gaap", "WeightedAverageNumberOfSharesOutstandingBasic", True)}
+            "wavg": ("us-gaap", "WeightedAverageNumberOfSharesOutstandingBasic", True),
+            "ifrs_wavg": ("ifrs-full", "WeightedAverageShares", True)}
+SOURCE_ORDER = ("dei", "cso", "wavg", "ifrs_wavg")
+#: SEC 结构化数据里核实是录入错误的点 → 原文件封面上的数。{key: {期末: (正确股数, 出处)}}。
+SEC_FIX: dict[str, dict[str, tuple[float, str]]] = {
+    # 2026 年 20-F 封面写 18,580,374,278 股普通股,XBRL 标成 1,858,037,427(少一位)
+    "BABA": {"2026-03-31": (18_580_374_278, "0001193125-26-231755")},
+}
 #: 换了申报主体(控股公司重组)的公司:旧 CIK 的历史接在前面。实测 2026 年 XOM 归到新的 ExxonMobil Holdings(CIK 2115436)。
 PREDECESSOR_CIKS: dict[str, list[int]] = {"XOM": [34088]}
 
-#: 手工补的股数(Jazz 10-15「手工补」)—— 免费接口里取不到的两家:分股类申报,汇总数只在附注表或封面文字里。
+#: 手工补的股数(Jazz 10-15「手工补」)—— 免费接口里取不到的:分股类申报的汇总数只在附注表或封面文字里(V / BRK-B),
+#: 或 SEC 结构化接口对这家公司返回空(KO / ABT,原因未查;10-K 封面上有)。
 #: 每行 = (截至日, 报送日 = 已知日, 股数, 出处 accession)。口径是 MANUAL_BASIS_DATE 那天的口径(之后若再拆股,照拆股系数换算)。
 #: 一年一行:10-K 封面 / 附注。改动这张表 = 改了已写的值 ⇒ 记得把 PART_VERSIONS["mcap"] 加一。
 MANUAL_BASIS_DATE = "2026-10-15"
@@ -131,18 +141,49 @@ MANUAL_SHARES: dict[str, dict[str, Any]] = {
             ("2025-09-30", "2025-11-06", 1_930, "0001403161-25-000089"),
         )],
     },
+    # 股数变化很慢(11 年 −1.5%),隔两三年取一份 10-K 封面足够
+    "KO": {
+        "what": "普通股(10-K 封面「number of shares outstanding of the Registrant's Common Stock」)",
+        "rows": [
+            ("2015-02-23", "2015-02-25", 4_366_243_616, "0000021344-15-000005"),
+            ("2018-02-16", "2018-02-23", 4_265_906_533, "0000021344-18-000008"),
+            ("2021-02-22", "2021-02-25", 4_309_311_676, "0000021344-21-000008"),
+            ("2024-02-16", "2024-02-20", 4_312_456_168, "0000021344-24-000009"),
+            ("2026-02-18", "2026-02-20", 4_300_723_069, "0001628280-26-010047"),
+        ],
+    },
+    # 2017-01 并购 St. Jude 增发约 15% —— 那一年要有一行
+    "ABT": {
+        "what": "普通股(10-K 封面「Number of common shares outstanding」)",
+        "rows": [
+            ("2015-01-31", "2015-02-27", 1_508_977_828, "0001047469-15-001377"),
+            ("2017-01-31", "2017-02-17", 1_727_997_596, "0001047469-17-000744"),
+            ("2018-01-31", "2018-02-16", 1_746_333_892, "0001047469-18-000856"),
+            ("2021-01-31", "2021-02-19", 1_771_529_358, "0001104659-21-025751"),
+            ("2024-01-31", "2024-02-16", 1_735_184_289, "0001628280-24-005348"),
+            ("2026-01-31", "2026-02-20", 1_737_682_887, "0001628280-26-010185"),
+        ],
+    },
 }
 
-#: 每份 ADR 对应几股普通股,[(生效日, 比例)],旧 → 新。只收核过的;外国公司没在表里也不在 UNVERIFIED_ADR 里 ⇒ 按 1:1。
+#: 每份 ADR(或在美国挂牌的那一单位)对应几股普通股,[(生效日, 比例)],旧 → 新。按**报送日**查表 ——
+#: 生效日只要落在「最后一份旧比例的年报」与「第一份新比例的年报」之间就不影响结果;核不到确切日期的,用第一份新比例年报的报送日。
+#: 美国挂牌单位的比例变化若被 EODHD 当成拆股处理(复权价无跳变),价格那一侧由拆股系数接住,股数这一侧由这张表接住。
+#: 只收核过的;外国公司没在表里也不在 UNVERIFIED_ADR 里 ⇒ 按 1:1。
 ADR_ORD_PER_ADS: dict[str, list[tuple[str, float]]] = {
     "TSM": [("1997-01-01", 5.0)],
-    "BABA": [("2014-01-01", 1.0), ("2019-07-30", 8.0)],   # 2019 普通股一拆八,ADR 改为 1 份 = 8 股
+    "BABA": [("2014-01-01", 1.0), ("2019-07-30", 8.0)],   # 2019-06 年报仍 1:1,2020-07 年报起 1 份 = 8 股
     "HSBC": [("1999-01-01", 5.0)],
     "BHP": [("2001-01-01", 2.0)],
     "SHEL": [("2005-01-01", 2.0)],
+    # AZN:FY2014 20-F「each representing one Ordinary Share」;FY2015–FY2024「one half of an Ordinary Share」;
+    # FY2025 20-F(2026-02-24)起普通股直接在纽交所挂牌
+    "AZN": [("1993-01-01", 1.0), ("2016-03-08", 0.5), ("2026-02-24", 1.0)],
+    # TM:FY2021 20-F(2021-06-24)「each … representing two shares」;FY2022 20-F(2022-06-23)起「ten shares」(2021 年一拆五,ADR 价不动)
+    "TM": [("1999-01-01", 2.0), ("2022-06-23", 10.0)],
 }
 #: 换股比例我没核实 / 中途改过而我不确定生效日的 —— 不写,不猜。
-UNVERIFIED_ADR = {"AZN", "TM", "TCEHY"}
+UNVERIFIED_ADR = {"TCEHY"}
 
 
 def _closes(raw: Iterable[dict]) -> list[tuple[str, float, float]]:
@@ -261,10 +302,10 @@ def _iso_week_last(cl: list[tuple[str, float, float]], start: str) -> list[tuple
 
 
 def choose_source(sources: dict[str, Any]) -> tuple[Optional[str], list[tuple[str, str, float]]]:
-    """三种口径里选**最新还在报**的那一个:最后一次报送最晚者胜;相差 120 天内按 dei > cso > wavg。
+    """几种口径里选**最新还在报**的那一个:最后一次报送最晚者胜;相差 120 天内按 SOURCE_ORDER。
     实测 MA 的封面股数只到 2010(之后按类别报),只按优先级选会用 16 年前的股数。纯函数。"""
     cand = {}
-    for name in ("dei", "cso", "wavg"):
+    for name in SOURCE_ORDER:
         pts = sec_points(sources.get(name), duration=SEC_TAGS[name][2])
         if len(pts) >= 2:
             cand[name] = pts
@@ -272,7 +313,7 @@ def choose_source(sources: dict[str, Any]) -> tuple[Optional[str], list[tuple[st
         return None, []
     latest = {n: max(f for _, f, _ in p) for n, p in cand.items()}
     top = max(latest.values())
-    for name in ("dei", "cso", "wavg"):
+    for name in SOURCE_ORDER:
         if name in cand and (datetime.strptime(top, "%Y-%m-%d") - datetime.strptime(latest[name], "%Y-%m-%d")).days <= 120:
             return name, cand[name]
     return None, []
@@ -291,8 +332,10 @@ def build_mcap(key: str, raw: list[dict], sources: dict[str, Any], start: str = 
         src, pts, basis_date = "manual", [(d, f, v) for d, f, v, _ in MANUAL_SHARES[key]["rows"]], MANUAL_BASIS_DATE
     else:
         src, pts = choose_source(sources)
+        fix = SEC_FIX.get(key, {})
+        pts = [(e, f, fix[e][0] if e in fix else v) for e, f, v in pts]
     if not pts:
-        return {"rows": [], "why": "SEC 里没有可用的股数(三种口径都没有)"}
+        return {"rows": [], "why": "SEC 里没有可用的股数(几种口径都没有)"}
     last_filed = max(f for _, f, _ in pts)
     if (datetime.strptime(cl[-1][0], "%Y-%m-%d") - datetime.strptime(last_filed, "%Y-%m-%d")).days > STALE_DAYS:
         return {"rows": [], "src": src, "why": f"股数停在 {last_filed}({src}),太旧,不写"}
@@ -361,7 +404,7 @@ async def refresh_mcap(candidates: Optional[list] = None, start: str = START, co
             "manual": sorted(k for k in MANUAL_SHARES if any(r.get("key") == k and r.get("ok") for r in res)),
             "rows": sum(int(r.get("rows") or 0) for r in ok),
             "earliest": min((r["first"] for r in ok), default=None),
-            "src": {n: sorted(r["key"] for r in ok if r.get("src") == n) for n in ("cso", "wavg")},
+            "src": {n: sorted(r["key"] for r in ok if r.get("src") == n) for n in ("cso", "wavg", "ifrs_wavg")},
             "latest_bn": {r["key"]: r["latest_bn"] for r in ok},
             "notes": {r["key"]: r["notes"] for r in res if r.get("notes")},
             "failed": [{"key": r["key"], "why": r.get("why")} for r in res if not r.get("ok")][:40]}
@@ -498,7 +541,7 @@ async def discover_onchain_forms(as_of: Optional[str] = None) -> dict[str, Any]:
 RERUN_AFTER_DAYS = 6
 LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
-PART_VERSIONS = {"prices": 1, "mcap": 4, "onchain_forms": 1}
+PART_VERSIONS = {"prices": 1, "mcap": 5, "onchain_forms": 1}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
