@@ -436,8 +436,11 @@ def _brief(name: str, r: dict) -> dict:
 
 
 def _say(name: str, r: dict) -> str:
+    label = {"prices": "日线", "mcap": "市值", "onchain_forms": "链上形式"}[name]
     if r.get("skipped"):
-        return {"prices": "日线", "mcap": "市值", "onchain_forms": "链上形式"}[name] + " 跳过(6 天内已成)"
+        return label + " 跳过(6 天内已成)"
+    if not r.get("ok") and r.get("why") and not any(k in r for k in ("symbols_ok", "companies_ok", "tokens")):
+        return f"{label} 没跑起来:{str(r['why'])[:80]}"
     if name == "prices":
         return f"日线 {r.get('symbols_ok')}/{r.get('symbols')}"
     if name == "mcap":
