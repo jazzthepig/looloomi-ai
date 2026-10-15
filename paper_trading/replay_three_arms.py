@@ -401,6 +401,12 @@ async def main() -> int:
     (out_dir / "c_simple_factor_decisions.jsonl").write_text(
         "\n".join(json.dumps(r, ensure_ascii=False) for r in arm_c) + "\n",
         encoding="utf-8")
+    # T-057 (2026-10-16, lane-c): also dump the panel rows as panel.json so
+    # compare_three_arms can do real mark-to-market (T-057 §1/§2 fix).
+    # Without this, _build_daily_returns falls back to legacy path.
+    (out_dir / "panel.json").write_text(
+        json.dumps(rows, ensure_ascii=False),
+        encoding="utf-8")
 
     # 4. _meta.json
     n_a = sum(1 for r in arm_a if r["verdict"] == "ENTERED")

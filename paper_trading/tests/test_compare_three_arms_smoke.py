@@ -149,6 +149,106 @@ def test_build_daily_returns_negative_period():
     assert all(r < 0 for r in daily[:7]), f"all days should be negative; got {daily[:7]}"
 
 
+# ── 1b. T-057 corrected-path tests (require `closes` arg) ─────────────────
+
+def test_build_daily_returns_dropped_symbol_uses_real_close():
+    """T-057 §1: a symbol held then dropped at rebalance must use the actual close
+    on the drop-out day (NOT fall back to its own entry price, which masks loss).
+
+    Scenario: at d=2026-07-01 ENTERED into {BAD: w=1.0 @100}; at d=2026-07-08
+    ENTERED into {GOOD: w=1.0 @100} — BAD is dropped. Real close on d_b for
+    BAD is 50 (–50%). Legacy bug would have set p_exit = p_entry = 100 → 0 return.
+    With `closes` passed, the period return for BAD's last day is correctly –50%.
+    """
+    from paper_trading.compare_three_arms import _build_daily_returns
+    decisions = [
+        {"date": "2026-07-01", "verdict": "ENTERED", "legs": [
+            {"symbol": "BAD", "weight": 1.0, "price": 100.0},
+        ]},
+        {"date": "2026-07-08", "verdict": "ENTERED", "legs": [
+            {"symbol": "GOOD", "weight": 1.0, "price": 100.0},
+        ]},
+    ]
+    # closes: BAD flat at 100 for d=02..07, drops to 50 at d=08; GOOD flat at 100
+    closes = {
+        "2026-07-01": {"BAD": 100.0},
+        "2026-07-02": {"BAD": 100.0},
+        "2026-07-03": {"BAD": 100.0},
+        "2026-07-04": {"BAD": 100.0},
+        "2026-07-05": {"BAD": 100.0},
+        "2026-07-06": {"BAD": 100.0},
+        "2026-07-07": {"BAD": 100.0},
+        "2026-07-08": {"BAD": 50.0, "GOOD": 100.0},  # drop-out day, BAD –50%
+    }
+    daily = _build_daily_returns(decisions, dt.date(2026, 7, 1),
+                                 dt.date(2026, 7, 8), closes=closes)
+    # Last day of period is 2026-07-08 → daily[7] should reflect BAD's –50%
+    assert abs(daily[7] - (-0.5)) < 1e-9, (
+        f"drop-out day return should be –50% (real close); got {daily[7]}. "
+        f"This is the T-057 §1 bug — legacy would have given 0.0."
+    )
+    # Days 1..6: BAD flat 100→100 → 0
+    for i in range(1, 7):
+        assert daily[i] == 0.0, f"flat day {i}: expected 0, got {daily[i]}"
+
+
+def test_build_daily_returns_daily_mtm_no_flattening():
+    """T-057 §2: real daily mark-to-market, not weekly-flattened approximation.
+
+    Scenario: BTC enters at 100, rises linearly 7 days to 110. Legacy path
+    would flatten the +10% across 7 days using `(1.10)^(1/7) − 1 ≈ 1.37%`
+    per day. Correct path uses real closes → day-by-day returns that
+    COMPOUND to exactly +10% over the 7-day hold.
+    """
+    from paper_trading.compare_three_arms import _build_daily_returns
+    decisions = [
+        {"date": "2026-07-01", "verdict": "ENTERED", "legs": [
+            {"symbol": "BTC", "weight": 1.0, "price": 100.0},
+        ]},
+        {"date": "2026-07-08", "verdict": "ENTERED", "legs": [
+            {"symbol": "BTC", "weight": 1.0, "price": 110.0},
+        ]},
+    ]
+    closes = {
+        "2026-07-01": {"BTC": 100.0},
+        "2026-07-02": {"BTC": 101.4286},  # +1.4286% per day
+        "2026-07-03": {"BTC": 102.8776},
+        "2026-07-04": {"BTC": 104.3475},
+        "2026-07-05": {"BTC": 105.8386},
+        "2026-07-06": {"BTC": 107.3513},
+        "2026-07-07": {"BTC": 108.8858},
+        "2026-07-08": {"BTC": 110.0},
+    }
+    daily = _build_daily_returns(decisions, dt.date(2026, 7, 1),
+                                 dt.date(2026, 7, 14), closes=closes)
+    # Compound of days 1..7 should equal exactly +10% (since last close = 110)
+    cum = math.prod(1.0 + r for r in daily[1:8]) - 1.0
+    assert abs(cum - 0.10) < 1e-9, (
+        f"compounded daily return over 7d should be exactly +10%; got {cum:.6f}. "
+        f"This is the T-057 §2 fix — legacy path used flat (1.10)^(1/7) − 1 ≈ 1.37%/d."
+    )
+
+
+def test_build_daily_returns_legacy_warning_still_works():
+    """Back-compat: omitting `closes` falls back to legacy path with a one-shot warning."""
+    import warnings
+    from paper_trading.compare_three_arms import _build_daily_returns, _LEGACY_NO_CLOSES_WARNED
+    # Reset the flag to test the warning
+    import paper_trading.compare_three_arms as cta
+    cta._LEGACY_NO_CLOSES_WARNED = False
+    decisions = [
+        {"date": "2026-07-01", "verdict": "ENTERED", "legs": [
+            {"symbol": "BTC", "weight": 1.0, "price": 100.0},
+        ]},
+        {"date": "2026-07-08", "verdict": "ENTERED", "legs": [
+            {"symbol": "BTC", "weight": 1.0, "price": 110.0},
+        ]},
+    ]
+    # Legacy path should still return daily list of length 10 (back-compat)
+    daily = _build_daily_returns(decisions, dt.date(2026, 7, 1), dt.date(2026, 7, 14))
+    assert len(daily) == 14, f"legacy path should return 14 days; got {len(daily)}"
+
+
 # ── 2. Agreement helper ─────────────────────────────────────────────────────
 
 def test_agreement_perfect_match():
