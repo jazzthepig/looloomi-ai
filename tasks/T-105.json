@@ -1,7 +1,7 @@
 {
   "id": "T-105",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-15",
   "verified": null,
   "title": "World50 幸存者偏差补完:其余年份的全球前 100 + 六个英国 / 欧洲 ADR 的换股比例与 20-F 封面股数",
@@ -21,5 +21,5 @@
     "expect": "Mac 数据根 research/t105/(adr_ratios.csv、sec_prefix.csv、top100_by_year.csv、missing.csv)+ _reports/absorb_input/T-105_survivorship_2.md;卡改 in_review。"
   },
   "prior_value": "T-101:2018 97/100;漏掉的 8 家里 3 家是真幸存者偏差(BP / VOD 跌出、DowDuPont 拆分),5 家今天仍在前 100(BUD / BA / UL / BTI / SAN)。",
-  "notes": "2026-10-15 Seth 开卡。lane_bot 已给每个 lane 加上 Mac 数据根目录(--add-dir),产物直接写数据根。"
+  "notes": "2026-10-15 Seth 开卡。lane_bot 已给每个 lane 加上 Mac 数据根目录(--add-dir),产物直接写数据根。\n2026-10-16 lane-b round-2 收尾(本轮交全 ①+②+③+④):\n① + ② 在 round-1 已交(adr_ratios.csv 75 行 + sec_prefix.csv 75 行)。\n本轮(round-2):\n③ DowDuPont 时间线 spec(EDGAR 实拉):CIK 1751788 = DWDP 2017-09-01 → 重命名 Dow Inc. 2019-04-01(7 份 10-K,首份 2020-02-07 报 FY2019;FY2017/FY2018 整年 10-K 不存在 —— 只在 2019-04/-07 两份 8-K segment-recast 里);CIK 1755672 = Corteva 2019-06(7 份 10-K,首份 2021-02-11 报 FY2020;FY2019 standalone 不报);CIK 30554 = 旧 DuPont 现在 EDGAR 挂着 EIDP 名,1:1 接续不可假定。结论:接不上一条连续 DWDP-Dow-Corteva 时间线(三个法人外壳 + 两份 8-K recast + pre-merger DD / Dow Chemical 两条独立线);方案 A = DOW+CTVA 两条线 2019-04 起,坦承 2017-2019 段缺;B = 手动核 S-4 + 8-K recast 几行 MANUAL_SHARES;C = DWDP 段用 mktcap 倒数接续(不是按时点的市值线)。建议 A。\n④ top100_by_year.csv(2025 行,本轮新增) + missing.csv(8 行):2015/2016/2017/2019-2024 top-20 only(PwC PDF paywalled 403;Wayback CDX pwc.com/gx/en/issues/capital-projects-infrastructure/assets/pwc-global-top-100-companies-*.pdf 路径零命中);2018 top-100(97/100 覆盖,PwC quirk:BTI #74+#75 / NVS+BHP+TTE+BUD 自家多个位置);2025 top-20(companiesmarketcap.com 2026-10-14 snapshot,与 CANDIDATES 池同源)。VOD FY=Mar 与 PwC 锚同日可用于 self-consistency check。\n报告:_reports/absorb_input/T-105_survivorship_2.md(已更新,本轮加 § ③ + § ④)。\n产物:Mac 数据根 research/t105/(adr_ratios.csv + sec_prefix.csv + top100_by_year.csv + missing.csv) + _reports/absorb_input/T-105_survivorship_2.md;Seth 入库建议:DWDP 三档(§③ 方案 A/B/C);UL pre-2020 联合实体 manual_shares 写 1.31B+1.71B (×3.02B);BTI pre-2019 LSE/RNS 采购决策;六个 ADR 入 world50_mcap_weekly(本卡 ①+② 已验证);其余年份 top-100 数据采购(不立预注册)。"
 }
