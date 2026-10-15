@@ -94,7 +94,17 @@ def shrink(m: float, s: float, n: int, prior_sd_ann: float = PRIOR_EXCESS_SD_ANN
 
 
 def _evidence_window(arm: pd.Series, bench: pd.Series, end: pd.Timestamp) -> pd.Series:
-    """[INCEPTION - 1d, end] 的窗口,两端闭合;空舍地 ⇒ 返回空。"""
+    """按时点(close-of-day PIT)取 [INCEPTION-1d, end] 窗口,端点闭合。
+
+    口径:arm/bench 的索引是 daily close(d 列已对齐 BTC 索引);
+    end 是「当天」,所以「end 当天的数据」可用,但 end 之后任何新数据不许进。
+    实操等价于:
+      - 把 arm 在 end 之后的行先丢掉
+      - 再取 [INCEPTION-1d, end] 区间内的全部样本
+      - 不 ffill/bfill —— 缺一日就是缺一日,落 dropna
+    这是与 v3.0 的关键区别(§Seth-1014a 退:旧版用 ffill/bfill/fillna(1.0) 把
+    缺失当数值,污染证据基率)。空窗口 ⇒ 返回空 Series。
+    """
     a = pd.Timestamp(INCEPTION) - pd.Timedelta(days=1)
     common = (arm.index >= a) & (arm.index <= end)
     return arm[common].dropna().sort_index()
@@ -177,21 +187,32 @@ def _arm_returns(nav: pd.Series) -> pd.Series:
 
 
 def compose_nav(panel: pd.DataFrame, rebalance_dates: list[pd.Timestamp]) -> tuple[pd.Series, list[dict]]:
-    """按时点权重合成一条 NAV;返回 (n, decisions)。"""
-    arms = {c: panel[c].dropna() for c in ("multiplier", "portfolio_layer", "cis_tilt") if c in panel}
-    core = panel["core_u"].dropna()
+    """按时点权重合成一条 NAV;返回 (n, decisions)。
+
+    接受两种 panel 形态:d 列在列里(从 CSV 读出来的原始形态)或
+    d 已是 DatetimeIndex(合成 panel 的形态)。内部统一转 d Series。
+    """
+    if "d" in panel.columns:
+        d_series = pd.Series(pd.to_datetime(panel["d"]).values).reset_index(drop=True)
+    else:
+        d_series = pd.Series(pd.to_datetime(panel.index).values).reset_index(drop=True)
+    panel = panel.assign(d=d_series.values)
+    arms = {c: pd.Series(panel[c].values, index=d_series).dropna()
+            for c in ("multiplier", "portfolio_layer", "cis_tilt") if c in panel.columns}
+    core = pd.Series(panel["core_u"].values, index=d_series).dropna()
     decisions: list[dict] = []
     rebal_set = set(pd.Timestamp(d).normalize() for d in rebalance_dates)
     cur_weights = {"core_u": 1.0}
     nav, t, rows = 1.0, None, []
-    rows.append({"d": panel["d"].iloc[0], "nav": 1.0, "ret": 0.0,
+    rows.append({"d": d_series.iloc[0], "nav": 1.0, "ret": 0.0,
                  "weights": dict(cur_weights), "rebal": False})
     for i in range(1, len(panel)):
-        prev, today = panel["d"].iloc[i - 1], panel["d"].iloc[i]
-        if pd.Timestamp(today).normalize() in rebal_set and pd.Timestamp(today) >= INCEPTION:
-            dec = decide(pd.Timestamp(today), arms, core)
+        prev, today = d_series.iloc[i - 1], d_series.iloc[i]
+        today_ts = pd.Timestamp(today)
+        if today_ts.normalize() in rebal_set and today_ts >= pd.Timestamp(INCEPTION):
+            dec = decide(today_ts, arms, core)
             cur_weights = dec["weights"]
-            decisions.append({"d": pd.Timestamp(today).date().isoformat(), "weights": cur_weights, "why": dec["why"]})
+            decisions.append({"d": today_ts.date().isoformat(), "weights": cur_weights, "why": dec["why"]})
             is_rebal = True
         else:
             is_rebal = False
@@ -213,12 +234,50 @@ def random_compose_nav(panel: pd.DataFrame, rebalance_dates: list[pd.Timestamp],
                        rng: np.random.Generator) -> pd.Series:
     """同形状的随机对照:每个 rebalance 日期抽一组权重(臂集 = 5 臂,含 btc 与 core_u),下周按这组权重合成。"""
     arm_cols = ["core_u", "multiplier", "portfolio_layer", "cis_tilt", "btc"]
+    return _random_compose_with_arms(panel, rebalance_dates, rng, arm_cols)
+
+
+def random_compose_nav_4arm(panel: pd.DataFrame, rebalance_dates: list[pd.Timestamp],
+                           rng: np.random.Generator) -> pd.Series:
+    """L3 决策集 4 臂随机对照(§Seth-1015a #1):臂集 = core_u + 3 个非 core 账本
+    (multiplier / portfolio_layer / cis_tilt),不含 btc;cash = 1 - Σw_i。
+    这是「配置层管的四个臂」的自然口径,5 臂版含 btc 偏向 BTC 行情,4 臂版
+    是 L3 实际允许动到的集合。
+    """
+    arm_cols = ["core_u", "multiplier", "portfolio_layer", "cis_tilt"]
+    return _random_compose_with_arms(panel, rebalance_dates, rng, arm_cols)
+
+
+def random_compose_nav_5arm(panel: pd.DataFrame, rebalance_dates: list[pd.Timestamp],
+                           rng: np.random.Generator) -> pd.Series:
+    """5 臂随机对照(§Seth-1015a #1):含 btc;v3.1 默认 5 臂,保留以做横比。
+    5 臂比 4 臂多一个「可以全配 btc」的自由度 ⇒ p50 / p95 总体更接近 BTC 行情,
+    对组合超额更宽容。报告里两套分位并报,便于判断「优于随机」是否依赖把 btc
+    放进臂集。
+    """
+    arm_cols = ["core_u", "multiplier", "portfolio_layer", "cis_tilt", "btc"]
+    return _random_compose_with_arms(panel, rebalance_dates, rng, arm_cols)
+
+
+def _random_compose_with_arms(panel: pd.DataFrame, rebalance_dates: list[pd.Timestamp],
+                              rng: np.random.Generator, arm_cols: list[str]) -> pd.Series:
+    """两个 random_compose_nav_* 的共用实现;arm_cols 是任意子集。
+
+    与 compose_nav 同形:接受 d 列在列里或 d 已是 DatetimeIndex。
+    """
+    if "d" in panel.columns:
+        d_series = pd.Series(pd.to_datetime(panel["d"]).values).reset_index(drop=True)
+    else:
+        d_series = pd.Series(pd.to_datetime(panel.index).values).reset_index(drop=True)
+    panel = panel.assign(d=d_series.values)
     nav, prev_w = 1.0, None
-    rows = [(panel["d"].iloc[0], 1.0)]
+    rows = [(d_series.iloc[0], 1.0)]
     rebal_set = set(pd.Timestamp(d).normalize() for d in rebalance_dates)
+    inc_ts = pd.Timestamp(INCEPTION)
     for i in range(1, len(panel)):
-        prev, today = panel["d"].iloc[i - 1], panel["d"].iloc[i]
-        if pd.Timestamp(today).normalize() in rebal_set and pd.Timestamp(today) >= INCEPTION:
+        prev, today = d_series.iloc[i - 1], d_series.iloc[i]
+        today_ts = pd.Timestamp(today)
+        if today_ts.normalize() in rebal_set and today_ts >= inc_ts:
             w = rng.dirichlet(np.ones(len(arm_cols)))
             prev_w = dict(zip(arm_cols, w))
         if prev_w is None:
@@ -275,7 +334,7 @@ def _fmt_sharpe(d):
 
 
 def render_window(win_label: str, sub: pd.DataFrame, fund: pd.Series, btc: pd.Series,
-                  core: pd.Series, rand_metrics: list[dict]) -> str:
+                  core: pd.Series, rand_metrics_4: list[dict], rand_metrics_5: list[dict]) -> str:
     lines = [f"## {win_label}  (n = {len(sub)})", ""]
     lines.append("| 臂 | total_return | max_dd | ann_return | sharpe |")
     lines.append("| --- | --- | --- | --- | --- |")
@@ -284,28 +343,35 @@ def render_window(win_label: str, sub: pd.DataFrame, fund: pd.Series, btc: pd.Se
         lines.append(f"| {label} | {_fmt_pct(m.get('total_return'))} | {_fmt_pct(m.get('max_dd'))} | "
                      f"{_fmt_pct(m.get('ann_return'))} | {_fmt_sharpe(m)} |")
     lines.append("")
-    lines.append("### 随机 500 对照(同臂集,同窗口,Dirichlet(1..1) 每周末重抽)")
-    lines.append("")
-    lines.append("| 指标 | fund 实测 | 随机 p50 | 随机 p95 | fund 相对随机的分位 |")
-    lines.append("| --- | --- | --- | --- | --- |")
     f_m = metrics(fund)
-    if rand_metrics:
-        keys = ("total_return", "max_dd")
-        rand_total = np.array([m["total_return"] for m in rand_metrics])
-        rand_maxdd = np.array([m["max_dd"] for m in rand_metrics])
-        for label, fv, rv in (
-            ("total_return", f_m.get("total_return"), rand_total),
-            ("max_dd",      f_m.get("max_dd"),      rand_maxdd),
-        ):
-            if fv is None or len(rv) == 0:
-                lines.append(f"| {label} | {_fmt_pct(fv)} | — | — | — |")
-                continue
-            pct = float((rv <= fv).mean()) if label == "total_return" else float((rv >= fv).mean())
-            lines.append(
-                f"| {label} | {_fmt_pct(fv)} | {_fmt_pct(np.percentile(rv, 50))} | "
-                f"{_fmt_pct(np.percentile(rv, 95))} | {pct:.2f} |"
-            )
-    lines.append("")
+    for arm_set_label, rand_metrics in (
+        ("4 臂随机对照(L3 决策集:core_u + 3 个非 core 账本;不含 btc;每周末重抽)",
+         rand_metrics_4),
+        ("5 臂随机对照(含 btc;v3.1 默认臂集;每周末重抽)",
+         rand_metrics_5),
+    ):
+        lines.append(f"### {arm_set_label}")
+        lines.append("")
+        lines.append("| 指标 | fund 实测 | 随机 p50 | 随机 p95 | fund 相对随机的分位 |")
+        lines.append("| --- | --- | --- | --- | --- |")
+        if rand_metrics:
+            rand_total = np.array([m["total_return"] for m in rand_metrics])
+            rand_maxdd = np.array([m["max_dd"] for m in rand_metrics])
+            for label, fv, rv in (
+                ("total_return", f_m.get("total_return"), rand_total),
+                ("max_dd",      f_m.get("max_dd"),      rand_maxdd),
+            ):
+                if fv is None or len(rv) == 0:
+                    lines.append(f"| {label} | {_fmt_pct(fv)} | — | — | — |")
+                    continue
+                pct = float((rv <= fv).mean()) if label == "total_return" else float((rv >= fv).mean())
+                lines.append(
+                    f"| {label} | {_fmt_pct(fv)} | {_fmt_pct(np.percentile(rv, 50))} | "
+                    f"{_fmt_pct(np.percentile(rv, 95))} | {pct:.2f} |"
+                )
+        else:
+            lines.append("| (no random trials) | — | — | — | — |")
+        lines.append("")
     return "\n".join(lines)
 
 
@@ -349,9 +415,11 @@ def main() -> int:
     fund_nav, decisions = compose_nav(panel, rds)
 
     rng = np.random.default_rng(RANDOM_SEED)
-    random_navs: list[pd.Series] = []
+    random_navs_4arm: list[pd.Series] = []
+    random_navs_5arm: list[pd.Series] = []
     for _ in range(args.random_trials):
-        random_navs.append(random_compose_nav(panel, rds, rng))
+        random_navs_4arm.append(random_compose_nav_4arm(panel, rds, rng))
+        random_navs_5arm.append(random_compose_nav_5arm(panel, rds, rng))
 
     reports = []
     for label, start, end in WINDOWS:
@@ -361,20 +429,27 @@ def main() -> int:
         sub_fund = fund_nav[(fund_nav.index >= s) & (fund_nav.index <= e)]
         sub_core = pd.Series(sub_panel["core_u"].values, index=pd.to_datetime(sub_panel["d"]))
         sub_btc = pd.Series(sub_panel["btc"].values, index=pd.to_datetime(sub_panel["d"]))
-        sub_rand = []
-        for rn in random_navs:
-            sub = rn[(rn.index >= s) & (rn.index <= e)]
-            if len(sub) >= 2:
-                sub_rand.append(metrics(sub))
+
+        # 4-arm(L3 决策集,不含 btc)与 5-arm(含 btc)两套分位并报
+        def _collect(navs: list[pd.Series]) -> list[dict]:
+            out_m: list[dict] = []
+            for rn in navs:
+                sub = rn[(rn.index >= s) & (rn.index <= e)]
+                if len(sub) >= 2:
+                    out_m.append(metrics(sub))
+            return out_m
+        sub_rand_4 = _collect(random_navs_4arm)
+        sub_rand_5 = _collect(random_navs_5arm)
         win_label = f"{label} ({start} → {end or panel_meta['last']})"
         reports.append({
             "label": win_label,
             "n_days": len(sub_panel),
-            "markdown": render_window(win_label, sub_panel, sub_fund, sub_btc, sub_core, sub_rand),
+            "markdown": render_window(win_label, sub_panel, sub_fund, sub_btc, sub_core, sub_rand_4, sub_rand_5),
             "fund_metrics": metrics(sub_fund),
             "core_metrics": metrics(sub_core),
             "btc_metrics": metrics(sub_btc),
-            "random_metrics": sub_rand,
+            "random_metrics_4arm": sub_rand_4,
+            "random_metrics_5arm": sub_rand_5,
         })
 
     out = Path(args.absorb_dir)
