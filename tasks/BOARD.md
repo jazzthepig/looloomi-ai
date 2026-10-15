@@ -19,6 +19,7 @@
 | claimed | T-094 | seth | 状态层往前补一个周期 + 矢量库按时点:state_daily 2019 起、FNG 2018 起;market_state_vectors 改扩张窗口 z、13 个空维补或删 | S-570 / T-093 的情景格子在 2019–2022 多一轮牛熊;S-521 类的匹配不再读到未来。 | state_daily 2023-01 起(一个周期);FNG 2021-06 起;market_state_vectors 24 维里 13 维恒空、全史一次 z(看未来)。 |  |
 | claimed | T-096 | seth | 前向判断记录:每周一按情景卡 + 当周新闻摘要请本地 Qwen 9B / 27B 判断,先锚定、后看结果 | 新闻层(历史上测不了的那一层)从今天起有可验证的前向记录;T-095 的历史结论与它对照。 | 没有任何 LLM 判断的前向记录;narrative_events 新闻 2026-09-28 起、约 150 条 / 天,没有消费者。 |  |
 | claimed | T-098 | seth | World50 的数据:候选池(全球前 ~150 大资产)的复权价格与历史流通市值 + 贵金属口径 + 每个候选的链上形式映射与跟踪误差 | 大类 ① 候选可以用日频全收益回放;知道哪些资产今天在链上真的买得到、买多少。 | eodhd 只有 2022-08 起、未复权;yfinance 2015 起但 06-18 后停更、未复权(SHY 九年价格持平,票息全丢)。链上形式从没系统量过。 |  |
+| claimed | T-099 | seth | World50 按时点回放(指数层)+ 风险层(波动目标 / 趋势)分开记账,对照 ACWI / Nasdaq-100 / 全球 60/40 | 决定大类 ① 是否立账本、从哪天开始前向。 | S-576:月度价格收益口径,P3 × 2 年化 32.2% / 最大回撤 −27%,满仓 BTC 32.3% / −73%。 |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
 | open | T-089 | lane-a | 完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改 | 从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。 |  |
 | open | T-095 | lane-a | 情景层的判断者:本地 Qwen(与 Jev)回答写死的小问题、只调 T-093 规则的力度 —— 先量模型知道多少历史,再在它没见过的窗口里按时点回放 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;两张表:污染探针按月的对错;回放窗口里四个臂的 Brier / 规则超额 / 打乱分位 / 「延续」「投降」频率。不改任何前向账本。 | S-412:Jev 匿名回放 Sharpe 1.29 < 机械 1.43,损失来自「拥挤」一问(砍赢家),投降 0/21 次;本地模型自述截止约 2024 年初(未验证)。 |  |
@@ -34,7 +35,6 @@
 | open | T-062 | seth | 三路该定期写入却 0 行的结构化数据:regime 相关度、fusion 的 regime 跟踪、API 计量 | 前两张每天有新行;api_usage 每次 flush 都写一行(使用量为 0 也写,0 是一次观测);每一路先判成因(无调度 / 写不进 / 正确拒绝)再修 | 0 / 0 / 0 |  |
 | open | T-065 | seth | 加密度:小时线恢复并扩面(现在 10 个币、08-08 起停更);CIS 历史往前补(现在 2025-05 起) | 小时线覆盖 ① 的 24 个名字、最新一根在 2 小时内、有调度和判活;CIS 历史用重建脚本补到 2024-01(标 source=reconstructed,与实时推送分开) | 小时线 10 币、止于 2026-08-08;CIS 历史 76 币、起于 2025-05-03 |  |
 | open | T-082 | seth | 可交易规模由数据定:按我们实际能下单的场所深度(订单簿 ±1% 深度 / 场所成交)算每个名字、每本账的容量,替代全市场报告成交额 | 每个名字 / 每本账在 $30M 与 $500M 下能否在 5 天内建满,按我们真能成交的深度说,不按 CoinGecko 聚合成交额说 | S-544 容量按 30 日全市场报告成交额中位数 × 10% 参与率:$30M 下 58/58 名通过,$500M 下 50/58;tokenization_tilt 被 POLYX(日成交 $0.6M)卡在 ≈ $9M。聚合成交额含不能下单的场所与刷量,实际可成交深度更低,没量过。 |  |
-| open | T-099 | seth | World50 按时点回放(指数层)+ 风险层(波动目标 / 趋势)分开记账,对照 ACWI / Nasdaq-100 / 全球 60/40 | 决定大类 ① 是否立账本、从哪天开始前向。 | S-576:月度价格收益口径,P3 × 2 年化 32.2% / 最大回撤 −27%,满仓 BTC 32.3% / −73%。 |  |
 | blocked(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | blocked(等 ['T-001']) | T-020 | lane-c | DQS 的新鲜度改用源自己的时间戳(CG last_updated / kline close / TVL date / 日线 bar date),不用抓取时刻 | 同一次 push 内的取值随各资产源时间戳变化;日线源在最近一个应有收盘之内不被衰减 | 同一次 push 只有 2 档(0.67/0.81 → 0.70/0.85),随批次时刻整体漂移 |  |
 | blocked(等 jazz: 删除 ~/.config/cometcloud/.env(key 文件只经 Jazz 的手);其余部分 lane-c 已交(cb30023)) | T-036 | lane-c | Mac 只留一份 env:canonical=/Volumes/CometCloudAI/cometcloud-local/.env(§Seth-1006g);~/.config/cometcloud/.env 孤儿由 Jazz 删;Python 日志改 UTC | 一次轮换只动 Railway + 1 个文件;轮换后 1h 内 mac_mini 简报与 T1 推送都有新行 | 三份 env(仓库 .env / cometcloud-local/.env / ~/.config/cometcloud/.env),09-28 轮换漏改第三份 |  |
@@ -102,4 +102,4 @@
 | done | T-081 | seth | 代币迁移接段:MKR→SKY(1:24000)、MATIC→POL(1:1)—— 宇宙只放新币,生效日按成交交叉(CoinDesk / CF Benchmarks 做法),历史按比例接,统一标准 v1.3 | SKY 的分不再因市值 0 被压到底;POL 迁移前用的是 MATIC | MKR 自 2025-06-05 起在标准里市值 0、基本面支柱 0,正式档 UNDERWEIGHT(实时 55.8 NEUTRAL);POL 迁移前 11 个月用的是日成交 60 万美元的薄币 | 10-12 正式批次含 SKY、POL,无 MKR、MATIC;/cis/universe 有 SKY 无 MKR。剩 Minimax 换 T1 宇宙(Mac 侧,SYNC §Seth-1012a)不在本卡验收内。 @ 2026-10-13T13:45Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 16 · claimed 5 · blocked 4 · in_review 12 · done 61 · dropped 1
+open 15 · claimed 6 · blocked 4 · in_review 12 · done 61 · dropped 1

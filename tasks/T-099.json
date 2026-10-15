@@ -1,13 +1,14 @@
 {
   "id": "T-099",
   "owner": "seth",
-  "status": "open",
+  "status": "claimed",
   "created": "2026-10-14",
   "verified": null,
   "title": "World50 按时点回放(指数层)+ 风险层(波动目标 / 趋势)分开记账,对照 ACWI / Nasdaq-100 / 全球 60/40",
   "source": "S-576(月度、价格收益的第一次量测:同风险下卡玛 1.1–1.4 对 BTC 0.44)",
   "allowed_paths": [
     "src/data/signals/",
+    "src/data/universe/",
     "docs/research/",
     "tests/",
     "tasks/T-099.json",
@@ -21,5 +22,5 @@
     "expect": "决定大类 ① 是否立账本、从哪天开始前向。"
   },
   "prior_value": "S-576:月度价格收益口径,P3 × 2 年化 32.2% / 最大回撤 −27%,满仓 BTC 32.3% / −73%。",
-  "notes": "2026-10-14 Seth 开卡,等 T-098 的全收益数据。\n\n2026-10-14 Seth:范围改为 World50(S-577);等 T-098 的数据与 Jazz 的权重方案。\n\n2026-10-14 Seth:加权方案按 S-578(Jazz:按增长 + 动量、不设上限)—— 基准等权,产品 = 等权 × 有界增长 / 动量分。"
+  "notes": "2026-10-14 Seth 开卡,等 T-098 的全收益数据。\n\n2026-10-14 Seth:范围改为 World50(S-577);等 T-098 的数据与 Jazz 的权重方案。\n\n2026-10-14 Seth:加权方案按 S-578(Jazz:按增长 + 动量、不设上限)—— 基准等权,产品 = 等权 × 有界增长 / 动量分。\n\n2026-10-15 Seth:S-581 预注册 → 回放跑完(结果在台账 S-581)。EW 17.4% / EW×Mom 18.0%,分不开(MDE 3.4%/年);InvVol 与波动目标风险层都显著差于简单持有;World50 对 ACWI 的超额因可排名池缺口与幸存者偏差不可用。剩:① 管道缺口(GOOGL / AVGO / DIS 旧 CIK、SHEL 双股、BHP / RTX 合并跳变)修完按同一预注册重跑;② EW×(Mom+Growth) 臂等营收数据;③ 2026-12-31 起 EW 与 EW×Mom 前向账本。"
 }
