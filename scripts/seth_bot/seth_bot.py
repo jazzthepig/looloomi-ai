@@ -322,7 +322,8 @@ def do_merge(job: dict) -> dict:
         code, out = git("merge", "--no-ff", "-m", msg, f"origin/{br}", cwd=wt)
         if code != 0:
             conflicted = set(git("diff", "--name-only", "--diff-filter=U", cwd=wt)[1].split())
-            if not conflicted or not conflicted <= REGENERATED:
+            # 10-15:fixup_paths 里的文件(Seth 已把两边合好的卡)冲突时以 fixup 为准 —— 下面会整份覆盖
+            if not conflicted or not conflicted <= (REGENERATED | set(fix)):
                 git("merge", "--abort", cwd=wt)
                 return {"ok": False, "stage": "merge", "detail": out[-3000:]}
             # 只有生成物冲突:看板由卡片重生;棘轮基线取 main 那份(preflight 自己会再抬)。10-07 T-006 就卡在这里。
