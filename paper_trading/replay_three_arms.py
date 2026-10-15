@@ -401,6 +401,27 @@ async def main() -> int:
     (out_dir / "c_simple_factor_decisions.jsonl").write_text(
         "\n".join(json.dumps(r, ensure_ascii=False) for r in arm_c) + "\n",
         encoding="utf-8")
+    # T-057 (2026-10-16, lane-c): also dump the panel rows as panel.json so
+    # compare_three_arms can do real mark-to-market (T-057 §1/§2 fix).
+    # Without this, _build_daily_returns falls back to legacy path.
+    (out_dir / "panel.json").write_text(
+        json.dumps(rows, ensure_ascii=False),
+        encoding="utf-8")
+
+    # 3b. T-057 (lane-c 2026-10-13): dump per-(sym, day) closes so
+    # `compare_three_arms._build_daily_returns` can do honest daily MTM
+    # instead of the period-flattening approximation that inflated Sharpe.
+    # Clipped to the requested window — keeps the dump small and removes
+    # any data we'd be tempted to read past `end`.
+    panel_closes: dict[str, dict[str, float]] = {}
+    for sym, dm in panel.closes.items():
+        clipped = {d: c for d, c in dm.items()
+                   if start_date.isoformat() <= d <= end_date.isoformat()}
+        if clipped:
+            panel_closes[sym] = clipped
+    (out_dir / "panel_closes.json").write_text(
+        json.dumps(panel_closes, ensure_ascii=False),
+        encoding="utf-8")
 
     # 4. _meta.json
     n_a = sum(1 for r in arm_a if r["verdict"] == "ENTERED")

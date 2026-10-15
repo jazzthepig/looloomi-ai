@@ -37,17 +37,37 @@ def render(diff: dict[str, Any]) -> str:
                  "won't flip conclusions).")
     lines.append("")
 
+    # T-057 v2: data-hole gate. Any leg-day pair missing close[d] OR
+    # close[d-1] flips the whole report's evidence status. The panel-wide
+    # `n_missing_legs` (sum across arms) is the single trigger — when > 0,
+    # the header reads "含孔洞,不可作证据" and the Sharpe-arm-vs-arm
+    # verdict below is suppressed. We do NOT silently substitute a
+    # same-panel hold baseline verdict in its place: if there are holes,
+    # we say so and stop.
+    n_missing_legs = int(summary.get("n_missing_legs", 0))
+    evidence_suppressed = bool(summary.get(
+        "evidence_suppressed_by_missing_legs", n_missing_legs > 0))
+    if evidence_suppressed:
+        lines.append("> ⚠️ **含孔洞,不可作证据** — panel has "
+                     f"`{n_missing_legs}` missing (leg, day) closes "
+                     "(close[d] OR close[d-1] absent). The Sharpe-arm-vs-arm "
+                     "comparison below is suppressed. Patch the panel and "
+                     "re-run, or accept the raw per-arm numbers as "
+                     "non-comparable directional evidence.")
+        lines.append("")
+
     # Per-arm metrics
     lines.append("## Per-arm metrics")
     lines.append("")
-    lines.append("| Arm | n_entered | n_skipped (cadence/factor/jev) | cum_return | "
-                 "Sharpe | Sortino | MaxDD |")
-    lines.append("|---|---|---|---|---|---|---|")
-    for key in ("A", "B", "C"):
+    lines.append("| Arm | n_entered | n_skipped (cadence/factor/jev) | n_missing_legs | "
+                 "cum_return | Sharpe | Sortino | MaxDD |")
+    lines.append("|---|---|---|---|---|---|---|---|")
+    for key in ("A", "B", "C", "H_baseline"):
         a = arms[key]
         lines.append(
             f"| {a['name']} | {a['n_entered']} | "
             f"{a['n_skipped_cadence']}/{a['n_skipped_factor']}/{a['n_skipped_jev']} | "
+            f"{a.get('n_missing_legs', -1)} | "
             f"{a['cum_return_pct']:+.2f}% | "
             f"{a['sharpe_annualized']:+.4f} | "
             f"{a['sortino_annualized']:+.4f} | "
@@ -58,13 +78,58 @@ def render(diff: dict[str, Any]) -> str:
     # Arm C vs Arm B (the comparison question)
     lines.append("## Arm C vs Arm B (the comparison question)")
     lines.append("")
-    lines.append(f"- **Δ Sharpe (C − B):** "
-                 f"{summary['arm_c_sharpe_minus_arm_b']:+.4f}")
-    lines.append(f"- **Δ MaxDD (C − B):**  "
-                 f"{summary['arm_c_maxdd_minus_arm_b']:+.2f}pp  "
-                 "(negative = arm C has shallower drawdown)")
-    lines.append(f"- **Factor skip days:** {summary['factor_skip_days']}  ")
-    lines.append(f"  (= days where arm B entered and arm C skipped due to factor gate)")
+    if evidence_suppressed:
+        lines.append("> Sharpe-arm-vs-arm verdict **suppressed** "
+                     "(see header). Per-arm numbers above are raw MTM, not "
+                     "comparable. Fix the panel and re-run.")
+        lines.append("")
+        lines.append(f"- **Δ MaxDD (C − B):**  "
+                     f"{summary['arm_c_maxdd_minus_arm_b']:+.2f}pp  "
+                     "(informational only — NOT a verdict under hole)")
+        lines.append(f"- **Factor skip days:** {summary['factor_skip_days']}  ")
+        lines.append(f"  (= days where arm B entered and arm C skipped due to factor gate)")
+        lines.append("")
+    else:
+        lines.append(f"- **Δ Sharpe (C − B):** "
+                     f"{summary['arm_c_sharpe_minus_arm_b']:+.4f}")
+        lines.append(f"- **Δ MaxDD (C − B):**  "
+                     f"{summary['arm_c_maxdd_minus_arm_b']:+.2f}pp  "
+                     "(negative = arm C has shallower drawdown)")
+        lines.append(f"- **Factor skip days:** {summary['factor_skip_days']}  ")
+        lines.append(f"  (= days where arm B entered and arm C skipped due to factor gate)")
+        lines.append("")
+
+    # Hold-the-panel baseline (T-057 acceptance #④) — pure passive hold
+    # using arm B's first ENTERED legs and panel closes. If arm C can't
+    # beat this, the factor gate is overhead, not alpha.
+    lines.append("## Hold-the-panel baseline (T-057 acceptance #④)")
+    lines.append("")
+    lines.append("Buy the first ENTERED's legs ONCE and compound the resulting "
+                 "shares to end-of-window (T-057 v3: real compound hold, not "
+                 "constant-weight × daily-return). Daily MTM on panel closes.")
+    lines.append("")
+    lines.append(f"- **Arm B SR − Hold SR:** "
+                 f"{summary['arm_b_sharpe_minus_hold']:+.4f}  "
+                 "(negative = arm B's rebalances destroy value vs. holding)")
+    lines.append(f"- **Arm C SR − Hold SR:** "
+                 f"{summary['arm_c_sharpe_minus_hold']:+.4f}  "
+                 "(arm C's gate, evaluated against passive hold)")
+    if not summary.get("panel_closes_attached", False):
+        lines.append("")
+        lines.append("> ⚠️ **panel_closes.json not attached** to this run dir — "
+                     "the daily MTM here falls back to the legacy period-flattening "
+                     "path (T-057: known inflated Sharpe). Re-run "
+                     "`replay_three_arms.py` to attach it.")
+    if evidence_suppressed:
+        # T-057 v2: under a panel hole, the SR−hold deltas are not
+        # comparable. Render the raw numbers but flag them.
+        lines.append("")
+        lines.append("> Hold-baseline SR deltas shown below are **raw only**, "
+                     "not verdicts. Under a hole they cannot be defended.")
+        lines.append(f"- **Arm B SR − Hold SR (raw):** "
+                     f"{summary['arm_b_sharpe_minus_hold']:+.4f}")
+        lines.append(f"- **Arm C SR − Hold SR (raw):** "
+                     f"{summary['arm_c_sharpe_minus_hold']:+.4f}")
     lines.append("")
 
     # Arm A vs Arm B (the Jev wire sanity)
@@ -122,6 +187,16 @@ def render(diff: dict[str, Any]) -> str:
     # Promote criteria
     lines.append("## Promote criteria (S-393 arm_c_spec.monitoring.promote_threshold)")
     lines.append("")
+    if evidence_suppressed:
+        lines.append("> Promote verdict **suppressed** (panel hole — see header). "
+                     "The Sharpe-arm-vs-arm criterion is unresolved until the "
+                     "panel is patched and the run is repeated.")
+        lines.append("")
+        lines.append("**JAZZ decides** based on this report + future weekly replays. "
+                     "S-393 arm C is comparison-only; no live deployment without "
+                     "explicit sign-off.")
+        lines.append("")
+        return "\n".join(lines)
     lines.append("Arm C is a candidate for production if:")
     lines.append("- Δ Sharpe (C − B) ≥ 0")
     lines.append("- MaxDD arm_C ≤ MaxDD arm_B + 5pp")
