@@ -277,7 +277,9 @@ def run_lane(lane: str, cfg: dict, reason: str, dry: bool = False, task: str = "
     stem.with_suffix(".json").write_text(
         json.dumps({**res, "result": text, "stderr_tail": (err or "")[-2000:]}, ensure_ascii=False, indent=1),
         encoding="utf-8")
-    append_to_sync(lane, lc, text, f"{reason};{res.get('num_turns') or '?'} 步;{res['seconds']} 秒")
+    if not quota_hit(text):                    # 额度报错不进 SYNC(同一句话每 15 分钟一段)
+        append_to_sync(lane, lc, text, f"{reason};{res.get('num_turns') or '?'} 步;{res['seconds']} 秒")
+    res["text"] = text[:2000]
     return res
 
 
@@ -398,6 +400,8 @@ def main() -> int:
                 st.setdefault(lane, {})["review_day"] = today
                 log(f"→ {lane} 今日交叉复核 {REVIEW_OF[lane]}")
         STATE.write_text(json.dumps(st, ensure_ascii=False, indent=1), encoding="utf-8")
+    if not a.once and not a.dry_run and quota_paused(at.timestamp()):
+        return 0
     lanes = [a.once] if a.once else list(cfg["lanes"])
     stale = (cfg["timeout_min"] + 10) * 60
     todo: list[tuple[str, str, str]] = []
@@ -437,9 +441,30 @@ def main() -> int:
     return 0
 
 
+QUOTA = BOT / "quota_until"
+QUOTA_BACKOFF_MIN = 60
+_QUOTA_MARKS = ("usage limit reached", "Request rejected (429)")
+
+
+def quota_hit(text: str) -> bool:
+    """纯函数。lane 的模型额度用完(MiniMax Token Plan 429)。10-15:三个 lane 撞上之后,每 15 分钟一醒、每轮 1 步就失败,
+    还往 SYNC 里追加一段同样的报错 —— 撞上一次就整体停 QUOTA_BACKOFF_MIN 分钟。"""
+    return any(m in (text or "") for m in _QUOTA_MARKS)
+
+
+def quota_paused(at_ts: float) -> bool:
+    try:
+        return at_ts < float(QUOTA.read_text().strip())
+    except (OSError, ValueError):
+        return False
+
+
 def run_one(cfg: dict, lane: str, why: str, task: str) -> None:
     try:
         res = run_lane(lane, cfg, why, task=task)
+        if quota_hit(res.get("text", "")):
+            QUOTA.write_text(str(now().timestamp() + QUOTA_BACKOFF_MIN * 60))
+            log(f"⏸ {lane} 模型额度用完(429)—— 全部 lane 停 {QUOTA_BACKOFF_MIN} 分钟;wake 文件保留,到时再起")
         ok = res.get("exit") == 0 and not res["timed_out"]
         log(f"{'✓' if ok else '✗'} {lane} {why} → exit={res.get('exit')} {res.get('num_turns') or '?'} 步 {res['seconds']}s")
     except Exception as e:  # noqa: BLE001 — 一个 lane 崩了不能挡其他 lane,但必须留痕

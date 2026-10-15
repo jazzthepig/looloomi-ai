@@ -230,3 +230,21 @@ def test_a_long_lane_does_not_hold_the_others() -> None:
         lock.write_text("")
         assert lb.lock_held(lock, now_ts, 4200), "写不出 pid 的老锁只看时间"
         assert not lb.lock_held(Path(td) / "none.lock", now_ts, 4200)
+
+
+def test_quota_exhaustion_pauses_every_lane() -> None:
+    """10-15:MiniMax Token Plan 429 之后,三个 lane 每 15 分钟一醒、1 步失败、每次往 SYNC 追加同一句报错。"""
+    import tempfile
+    from unittest import mock
+    import scripts.lane_bot.lane_bot as lb
+    msg = "API Error: Request rejected (429) · Token Plan usage limit reached: Upgrade your Token Plan"
+    assert lb.quota_hit(msg) and not lb.quota_hit("到 160 步上限,没有收尾")
+    with tempfile.TemporaryDirectory() as td, mock.patch.object(lb, "QUOTA", Path(td) / "quota_until"), \
+            mock.patch.object(lb, "BOT", Path(td)), mock.patch.object(lb, "log", lambda *_: None), \
+            mock.patch.object(lb, "run_lane", lambda *a, **k: {"exit": 0, "timed_out": False, "seconds": 1, "text": msg}):
+        assert not lb.quota_paused(lb.now().timestamp())
+        lb.run_one({}, "lane-b", "定时", "")
+        assert lb.quota_paused(lb.now().timestamp())
+        assert not lb.quota_paused(lb.now().timestamp() + lb.QUOTA_BACKOFF_MIN * 60 + 1)
+    src = (ROOT / "scripts/lane_bot/lane_bot.py").read_text(encoding="utf-8")
+    assert "if not quota_hit(text):" in src, "额度报错不进 SYNC"
