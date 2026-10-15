@@ -3,7 +3,8 @@
 ## 历史市值 → `world50_mcap_weekly`
 
 - 公司:**SEC EDGAR 报告的股本 × 原始收盘**(Jazz 10-14 定;EODHD 基本面与历史市值我们的套餐都没有,403)。
-  只覆盖在 SEC 申报的公司(美国公司 + 美国上市的外国公司);本地上市的公司没有 —— 它们大多也没有链上形式。
+  不在 SEC 申报的公司:**各自交易所 / 法定披露平台原始文件里的股本 × 本币收盘 × 汇率**(Jazz 10-15,`EXCHANGE_SHARES`,
+  每行带出处;后续由 T-100 补)。
   股本有四种口径:封面股数(`dei:EntityCommonStockSharesOutstanding`)、期末股数(`us-gaap:CommonStockSharesOutstanding`)、
   每季加权平均基本股数(`us-gaap:WeightedAverageNumberOfSharesOutstandingBasic`)、IFRS 年度加权平均(`ifrs-full:WeightedAverageShares`)。
   结构化数据里核实是录入错误的点按原文件更正(`SEC_FIX`);接口取不到的公司手工从 10-K 补(`MANUAL_SHARES`,每行带 accession)。多股类公司按类别报的不在这个接口里,
@@ -117,7 +118,10 @@ SOURCE_OVERRIDE: dict[str, str] = {"AVGO": "wavg", "SHEL": "ifrs_wavg"}
 #: 股数跳 > 1.5 倍、但前后两段都对的已知事件(按期末日落在事件两侧认):
 #: "merger" = 换股合并,公司真的变大了,两段照写;"unify" = 双重上市合并成一家,之前的段乘以跳变倍数接成合并后的口径。
 KNOWN_SHARE_EVENTS: dict[str, list[tuple[str, str, str]]] = {
-    "RTX": [("2020-04-03", "merger", "United Technologies 与 Raytheon 换股合并")],
+    # 同一天 UTC 先分出 Carrier / Otis(价格跳 ×1.58)再与 Raytheon 合并(股数跳 ×1.76):两个倍数在 15% 以内,
+    # 股数印证分不开 ⇒ 分拆写明,价格那一跳不当拆股。"spinoff" = 这一天前后 5 天内价格侧认出的拆股作废。
+    "RTX": [("2020-04-03", "spinoff", "United Technologies 分出 Carrier 与 Otis"),
+            ("2020-04-03", "merger", "United Technologies 与 Raytheon 换股合并")],
     # BHP Ltd + BHP Plc 双重上市 2022-01-31 统一:Plc 股 1:1 换 Ltd 股。之前 BHP 的 ADR 只对应 Ltd 那一半;
     # 乘上跳变倍数 = 按 Ltd 的价格算整个集团(Plc 在伦敦一般折价约一成,略高估,注明)。
     "BHP": [("2022-01-31", "unify", "BHP Ltd / BHP Plc 双重上市统一")],
@@ -200,6 +204,61 @@ MANUAL_SHARES: dict[str, dict[str, Any]] = {
             ("2026-09-30", "2026-10-07", 9_092_605_595, "hkex:/listedco/listconews/sehk/2026/1007/2026100701204.pdf"),
         ],
     },
+}
+
+#: 不在 SEC 申报的公司:股本取**各自交易所 / 法定披露平台的原始文件**(Jazz 10-15:三星 → 韩国交易所,茅台 → 上交所)。
+#: 和 SEC 一样按**当时报的口径**记(不换算),拆股 / 送股由价格侧认出、股数印证(confirm_splits)后统一到今天口径;
+#: 已知日 = 文件公开日。价格是本币 ⇒ 市值 × 当周汇率(EODHD `USD{ccy}.FOREX`)。多类股按「哪几类相加」写在 what 里;
+#: A + H 两地上市的按总股数 × 所用那条价格线(A / H 价差没有调,注明)。每行 = (期末, 公开日, 股数, 出处)。
+#: 后续的行由 T-100(lane-a)按同一格式补,Seth 合并。改这张表 = 改已写的值 ⇒ PART_VERSIONS["mcap"] 加一。
+EXCHANGE_SHARES: dict[str, dict[str, Any]] = {
+    "1398.HK": {"ccy": "HKD", "what": "H + A 股合计(港交所月报表 FF301);价格线是 H 股",
+                "rows": [("2014-12-31", "2015-01-06", 353_494_213_820, "hkex:/listedco/listconews/sehk/2015/0106/ltn20150106657.pdf"),
+                         ("2016-12-31", "2017-01-06", 356_406_257_089, "hkex:/listedco/listconews/sehk/2017/0106/ltn20170106555.pdf"),
+                         ("2026-09-30", "2026-09-30", 356_406_257_089, "hkex:/listedco/listconews/sehk/2026/0930/2026093000442.pdf")]},
+    "601939.SHG": {"ccy": "CNY", "what": "H + A 股合计(FF301);价格线是 A 股",
+                   "rows": [("2014-12-31", "2014-12-31", 250_010_977_486, "hkex:/listedco/listconews/sehk/2014/1231/ltn20141231455.pdf"),
+                            ("2025-06-30", "2025-07-03", 261_600_381_459, "hkex:/listedco/listconews/sehk/2025/0703/2025070301475.pdf"),
+                            ("2026-09-30", "2026-09-30", 261_600_381_459, "hkex:/listedco/listconews/sehk/2026/0930/2026093001192.pdf")]},
+    "601288.SHG": {"ccy": "CNY", "what": "H + A 股合计(FF301);价格线是 A 股",
+                   "rows": [("2014-12-31", "2015-01-06", 324_794_117_000, "hkex:/listedco/listconews/sehk/2015/0106/ltn20150106471.pdf"),
+                            ("2018-07-31", "2018-08-01", 349_983_033_873, "hkex:/listedco/listconews/sehk/2018/0801/ltn201808011060.pdf"),
+                            ("2026-09-30", "2026-09-30", 349_983_033_873, "hkex:/listedco/listconews/sehk/2026/0930/2026093001352.pdf")]},
+    "601988.SHG": {"ccy": "CNY", "what": "H + A 股合计(FF301);价格线是 A 股",
+                   "rows": [("2014-12-31", "2015-01-05", 288_731_148_000, "hkex:/listedco/listconews/sehk/2015/0105/ltn20150105769.pdf"),
+                            ("2016-12-31", "2017-01-03", 294_387_791_241, "hkex:/listedco/listconews/sehk/2017/0103/ltn201701031200.pdf"),
+                            ("2025-06-30", "2025-07-02", 322_212_411_814, "hkex:/listedco/listconews/sehk/2025/0702/2025070203248.pdf"),
+                            ("2026-09-30", "2026-09-30", 322_212_411_814, "hkex:/listedco/listconews/sehk/2026/0930/2026093000500.pdf")]},
+    "0857.HK": {"ccy": "HKD", "what": "H + A 股合计(FF301);价格线是 H 股",
+                "rows": [("2014-12-31", "2015-01-04", 183_020_977_818, "hkex:/listedco/listconews/sehk/2015/0104/ltn20150104021.pdf"),
+                         ("2026-09-30", "2026-10-05", 183_020_977_818, "hkex:/listedco/listconews/sehk/2026/1005/2026100500962.pdf")]},
+    "0941.HK": {"ccy": "HKD", "what": "香港股 + 2022 年起的人民币股(上交所)合计(FF301);价格线是香港股",
+                "rows": [("2014-12-31", "2015-01-07", 20_438_426_514, "hkex:/listedco/listconews/sehk/2015/0107/ltn20150107238.pdf"),
+                         ("2022-02-28", "2022-03-01", 21_362_826_764, "hkex:/listedco/listconews/sehk/2022/0301/2022030103054.pdf"),
+                         ("2026-09-30", "2026-10-07", 21_695_890_446, "hkex:/listedco/listconews/sehk/2026/1007/2026100700796.pdf")]},
+    "601318.SHG": {"ccy": "CNY", "what": "H + A 股合计(FF301);价格线是 A 股。2015-07 每 10 股转增 10 股 —— 2014 那一行是转增前口径,价格侧认拆股",
+                   "rows": [("2014-12-31", "2015-01-05", 8_892_169_892, "hkex:/listedco/listconews/sehk/2015/0105/ltn201501051505.pdf"),
+                            ("2018-12-31", "2019-01-02", 18_280_241_410, "hkex:/listedco/listconews/sehk/2019/0102/ltn201901021361.pdf"),
+                            ("2026-09-30", "2026-09-30", 18_107_641_995, "hkex:/listedco/listconews/sehk/2026/0930/2026093001040.pdf")]},
+    "600519.SHG": {"ccy": "CNY", "what": "A 股总股本(上交所法定披露,巨潮存档;注销回购按公告)。2015-07 每 10 股送 1 股(10%,价格侧认不出,"
+                                         "2015-07 → 2016-03 用送股前股数 × 送股后价格,低估约 9%,注明)",
+                   "rows": [("2014-06-30", "2014-08-29", 1_141_998_000, "cninfo:finalpage/2014-08-29/1200185637.PDF"),
+                            ("2015-12-31", "2016-03-24", 1_256_197_800, "cninfo:finalpage/2016-03-24/1202072288.PDF"),
+                            ("2025-08-29", "2025-08-30", 1_252_270_215, "sse:600519 临2025-032(中国证券报 2025-08-30 A10)注销 3,927,585"),
+                            ("2026-05-28", "2026-05-28", 1_250_081_601, "sse:600519 临2026-021 注销 2,188,614")]},
+    "005930.KO": {"ccy": "KRW", "what": "普通股发行数(含库存股;优先股另一条线,不加)。公司 IR 上市现状表(原股在韩国交易所)。"
+                                        "2018 前(拆股前、库存股分批注销)待 T-100 从 KRX / DART 补",
+                  "rows": [("2018-05-04", "2018-05-04", 6_419_324_700, "samsung.com/sec/ir/stock-information/listing-info(2018-05-04 50:1 拆股后上市)"),
+                           ("2018-12-04", "2018-12-04", 5_969_782_550, "samsung.com/sec/ir/stock-information/listing-info(库存股全部注销)"),
+                           ("2025-02-20", "2025-02-20", 5_919_637_922, "samsung.com/sec/ir/stock-information/listing-info(2025-02-18 决议注销)"),
+                           ("2026-04-02", "2026-04-02", 5_846_278_608, "samsung.com/sec/ir/stock-information/listing-info(注销 73,359,314 股)")]},
+    "ROG.SW": {"ccy": "CHF", "what": "无记名股 + 非投票权益证券(Genussscheine,价格线是它;2026-03 换成参与证 ROP,"
+                                     "ROG.SW 的价格到 2026-03-25 为止 —— 价格线接续是另一件事);公司章程 §3–§4、IR 问答「股本自 2000 年的变化」",
+               "rows": [("2011-03-01", "2011-03-01", 862_562_700, "roche:archiv-statuten-2011-en.pdf(160,000,000 + 702,562,700)"),
+                        ("2019-03-05", "2019-03-05", 862_562_700, "roche:archiv_statuten_2019_en.pdf(160,000,000 + 702,562,700)"),
+                        # 2021-11-26 临时股东会批准注销 53,309,000 无记名股(回购诺华持股);2022-02-03 入商业登记、02-08 刊登 SOGC
+                        ("2022-02-03", "2022-02-08", 809_253_700, "roche.com/investors/faq_investors(106,691,000 + 702,562,700)"),
+                        ("2026-03-11", "2026-03-11", 809_253_700, "roche.com/investors/faq_investors(参与证 702,562,700 + 无记名股 106,691,000)")]},
 }
 
 #: 每份 ADR(或在美国挂牌的那一单位)对应几股普通股,[(生效日, 比例)],旧 → 新。按**报送日**查表 ——
@@ -321,7 +380,7 @@ def clean_shares(key: str, pts: list[tuple[str, str, float]], splits: list[tuple
         r = adj[i][2] / adj[i - 1][2]
         if not (r > SHARE_JUMP or r < 1 / SHARE_JUMP):
             continue
-        ev = [x for x in KNOWN_SHARE_EVENTS.get(key, []) if adj[i - 1][1] < x[0] <= adj[i][1]]
+        ev = [x for x in KNOWN_SHARE_EVENTS.get(key, []) if x[1] in ("merger", "unify") and adj[i - 1][1] < x[0] <= adj[i][1]]
         if ev and ev[0][1] == "merger":
             notes.append(f"{adj[i][0]} 股数跳 ×{r:.2f} = {ev[0][2]},两段都留")
             continue
@@ -342,7 +401,12 @@ def confirm_splits(key: str, pts: list[tuple[str, str, float]],
     keep, notes = [], []
     tol = math.log(SPLIT_CONFIRM_TOL)
     for d, k in splits:
-        before = sorted((f, e, v / _adr_ratio(key, f)) for e, f, v in pts if f <= d)
+        spun = [x for x in KNOWN_SHARE_EVENTS.get(key, []) if x[1] == "spinoff"
+                and abs((datetime.strptime(x[0], "%Y-%m-%d") - datetime.strptime(d, "%Y-%m-%d")).days) <= 5]
+        if spun:
+            notes.append(f"{d} 价格跳 ×{k:.2f} = {spun[0][2]}(已知分拆),不当拆股")
+            continue
+        before = sorted((f, e, v / _adr_ratio(key, f)) for e, f, v in pts if f < d)    # 拆股当天报的口径说不准,不算「之前」
         after = sorted((e, f, v / _adr_ratio(key, f)) for e, f, v in pts if e > d)
         if before and after:
             r = after[0][2] / before[-1][2]
@@ -382,17 +446,36 @@ def choose_source(sources: dict[str, Any]) -> tuple[Optional[str], list[tuple[st
     return None, []
 
 
-def build_mcap(key: str, raw: list[dict], sources: dict[str, Any], start: str = START) -> dict[str, Any]:
-    """一家公司的周频美元市值(美国上市,价格本来就是美元)。sources = {dei / cso / wavg: SEC 概念(或多个 CIK 的列表)}。
+def fx_series(raw: Iterable[dict]) -> list[tuple[str, float]]:
+    """EODHD `USD{ccy}.FOREX` 日线 → [(日期, 每 1 美元多少本币)],旧 → 新。纯函数。"""
+    return [(d, c) for d, c, _ in _closes(raw)]
+
+
+def _usd_per_local(fx: list[tuple[str, float]], d: str) -> Optional[float]:
+    """d 当天或之前最近一个汇率(7 天内),换成「每 1 本币多少美元」;没有就 None。"""
+    i = bisect.bisect_right([x for x, _ in fx], d) - 1
+    if i < 0 or (datetime.strptime(d, "%Y-%m-%d") - datetime.strptime(fx[i][0], "%Y-%m-%d")).days > 7:
+        return None
+    return 1.0 / fx[i][1]
+
+
+def build_mcap(key: str, raw: list[dict], sources: dict[str, Any], start: str = START,
+               fx: Optional[list[tuple[str, float]]] = None) -> dict[str, Any]:
+    """一家公司的周频美元市值。美国上市:价格本来就是美元,sources = {dei / cso / wavg: SEC 概念(或多个 CIK 的列表)};
+    交易所股本表里的公司(EXCHANGE_SHARES):本币价格 × `fx`(fx_series 的输出)换美元。
     返回 {rows, src, notes, why}:why 非空 = 不写。纯函数。"""
     if key in UNVERIFIED_ADR:
         return {"rows": [], "why": "ADR 换股比例未核实,不写"}
     cl = _closes(raw)
     if not cl:
         return {"rows": [], "why": "没有日线"}
+    if key in EXCHANGE_SHARES and not fx:
+        return {"rows": [], "why": f"没有 USD{EXCHANGE_SHARES[key]['ccy']} 汇率,本币市值换不成美元"}
     basis_date = None
     if key in MANUAL_SHARES:
         src, pts, basis_date = "manual", [(d, f, v) for d, f, v, _ in MANUAL_SHARES[key]["rows"]], MANUAL_BASIS_DATE
+    elif key in EXCHANGE_SHARES:
+        src, pts = "exchange", [(d, f, v) for d, f, v, _ in EXCHANGE_SHARES[key]["rows"]]
     elif key in SOURCE_OVERRIDE:
         src = SOURCE_OVERRIDE[key]
         pts = sec_points(sources.get(src), duration=SEC_TAGS[src][2])
@@ -419,7 +502,11 @@ def build_mcap(key: str, raw: list[dict], sources: dict[str, Any], start: str = 
         i = bisect.bisect_right(known_dates, d) - 1
         if i < 0:
             continue
-        rows.append({"key": key, "d": d, "mcap_usd": shares[i][1] * (c / _factor_after(d, splits)), "source": MCAP_SOURCE})
+        usd = 1.0 if fx is None else _usd_per_local(fx, d)
+        if usd is None:
+            continue
+        rows.append({"key": key, "d": d, "mcap_usd": shares[i][1] * (c / _factor_after(d, splits)) * usd,
+                     "source": MCAP_SOURCE})
     if not rows:
         return {"rows": [], "src": src, "notes": notes, "why": "没有一周同时有已知股数与价格"}
     return {"rows": rows, "src": src, "notes": notes, "latest_usd": rows[-1]["mcap_usd"], "why": None}
@@ -472,17 +559,27 @@ async def refresh_mcap(candidates: Optional[list] = None, start: str = START, co
     from src.data.universe.world50 import CANDIDATES
     crypto = await backfill_crypto_mcap(start) if candidates is None else {}
     pool = candidates if candidates is not None else [c for c in CANDIDATES if c.cls == "equity"]
-    todo = [c for c in pool if c.code.endswith(".US")]
-    skipped = [c.key for c in pool if not c.code.endswith(".US")]
+    todo = [c for c in pool if c.code.endswith(".US") or c.key in EXCHANGE_SHARES]
+    skipped = [c.key for c in pool if c not in todo]
     sec_why = None
     try:
         ciks = await dl.get_sec_ticker_ciks()
     except Exception as e:  # noqa: BLE001 — 手工表里的公司不需要 SEC,照算;其余报 SEC 读不到
         ciks, sec_why = {}, f"SEC 代码表读不到:{type(e).__name__}: {str(e)[:160]}"
     sem = asyncio.Semaphore(concurrency)
+    fx_cache: dict[str, Any] = {}
+
+    async def fx_for(ccy: str):
+        """一轮里每种货币只取一次;取不到记下原因,该币种的公司都报这个原因。"""
+        if ccy not in fx_cache:
+            try:
+                fx_cache[ccy] = fx_series(await dl.get_eodhd_eod_range(f"USD{ccy}", "FOREX", start))
+            except Exception as e:  # noqa: BLE001
+                fx_cache[ccy] = f"USD{ccy} 汇率取不到:{type(e).__name__}: {str(e)[:100]}"
+        return fx_cache[ccy]
 
     async def one(c):
-        manual = c.key in MANUAL_SHARES
+        manual = c.key in MANUAL_SHARES or c.key in EXCHANGE_SHARES
         cik = ciks.get(c.key.upper())
         if cik is None and not manual:
             return {"key": c.key, "ok": False, "why": sec_why or "不在 SEC 申报公司表里"}
@@ -497,9 +594,12 @@ async def refresh_mcap(candidates: Optional[list] = None, start: str = START, co
                         if got:
                             sources.setdefault(name, []).append(got)
                 raw = await dl.get_eodhd_eod_range(t, ex, start)
+                fx = await fx_for(EXCHANGE_SHARES[c.key]["ccy"]) if c.key in EXCHANGE_SHARES else None
             except Exception as e:  # noqa: BLE001 — 一家取不到不连坐整轮,原因带回去
                 return {"key": c.key, "ok": False, "why": f"{type(e).__name__}: {str(e)[:140]}"}
-        b = build_mcap(c.key, raw, sources, start)
+        if isinstance(fx, str):
+            return {"key": c.key, "ok": False, "why": fx}
+        b = build_mcap(c.key, raw, sources, start, fx=fx)
         if b["why"]:
             return {"key": c.key, "ok": False, "why": b["why"], "notes": b.get("notes")}
         w = await supabase_upsert_table("world50_mcap_weekly", b["rows"], on_conflict="key,d,source")
@@ -514,6 +614,7 @@ async def refresh_mcap(candidates: Optional[list] = None, start: str = START, co
             "crypto_backfill": crypto,
             **({"why": sec_why} if sec_why else {}),
             "manual": sorted(k for k in MANUAL_SHARES if any(r.get("key") == k and r.get("ok") for r in res)),
+            "exchange": sorted(k for k in EXCHANGE_SHARES if any(r.get("key") == k and r.get("ok") for r in res)),
             "rows": sum(int(r.get("rows") or 0) for r in ok),
             "earliest": min((r["first"] for r in ok), default=None),
             "src": {n: sorted(r["key"] for r in ok if r.get("src") == n) for n in ("cso", "wavg", "ifrs_wavg")},
@@ -653,7 +754,7 @@ async def discover_onchain_forms(as_of: Optional[str] = None) -> dict[str, Any]:
 RERUN_AFTER_DAYS = 6
 LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
-PART_VERSIONS = {"prices": 2, "mcap": 8, "onchain_forms": 1}
+PART_VERSIONS = {"prices": 2, "mcap": 9, "onchain_forms": 1}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
@@ -682,7 +783,8 @@ async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
 
 def _brief(name: str, r: dict) -> dict:
     keep = {"prices": ("symbols", "symbols_ok", "written", "elapsed_s"),
-            "mcap": ("companies", "companies_ok", "rows", "earliest", "src", "manual", "crypto_backfill", "not_sec_listed", "notes"),
+            "mcap": ("companies", "companies_ok", "rows", "earliest", "src", "manual", "exchange", "crypto_backfill", "not_sec_listed",
+                     "notes"),
             "onchain_forms": ("tokens", "by_type", "matched", "candidates_with_form", "with_issuer")}[name]
     out = {"ok": bool(r.get("ok")), "v": PART_VERSIONS[name], **{k: r.get(k) for k in keep if k in r}}
     if r.get("skipped"):

@@ -469,3 +469,54 @@ def test_source_override_and_same_day_filings_use_the_latest_period():
     out = wd.build_mcap("SHEL", bars, {"ifrs_wavg": ifrs, "dei": fresh_dei})
     assert out["src"] == "ifrs_wavg", "SOURCE_OVERRIDE 不走自动选择"
     assert {round(r["mcap_usd"] / 1e9) for r in out["rows"]} == {41}, "8.2e9 / 2(ADR)× 10"
+
+
+def test_exchange_listed_shares_use_local_price_times_fx_and_confirmed_splits(monkeypatch):
+    """不在 SEC 的公司(Jazz 10-15:各自交易所的原始文件):当时口径的股数 × 本币价格 × 汇率;
+    转增 / 拆股由价格侧认出、股数印证后统一口径(平安 2015-07 每 10 股转增 10 股)。"""
+    bars = _bars([10.0] * 400, start="2020-01-01", split_at="2020-07-15", k=2.0)      # 转增前原始价 20 元
+    fx = wd.fx_series(_bars([7.0] * 400, start="2020-01-01"))                          # 1 美元 = 7 元
+    monkeypatch.setitem(wd.EXCHANGE_SHARES, "PA.SHG", {"ccy": "CNY", "what": "测试", "rows": [
+        ("2019-12-31", "2020-01-06", 9.0e9, "x"), ("2020-12-31", "2021-01-04", 18.0e9, "y")]})
+    out = wd.build_mcap("PA.SHG", bars, {}, fx=fx)
+    assert out["why"] is None and out["src"] == "exchange"
+    assert {round(r["mcap_usd"] / 1e9, 2) for r in out["rows"]} == {25.71}, "9e9 × 20 元 / 7 = 18e9 × 10 元 / 7,跨转增连续"
+    assert not any("分拆" in n for n in out["notes"])
+    assert wd.build_mcap("PA.SHG", bars, {})["why"].startswith("没有 USDCNY 汇率")
+
+
+def test_refresh_mcap_includes_exchange_listed_and_fetches_fx_once(monkeypatch):
+    import src.data.market.data_layer as dl
+    sink: dict = {}
+    _patch_store(monkeypatch, sink)
+    calls = []
+
+    async def ciks():
+        return {}
+
+    async def eod(ticker, ex, frm):
+        calls.append(f"{ticker}.{ex}")
+        return _bars([7.8 if ex == "FOREX" else 5.0] * 300, start="2020-01-01")
+    monkeypatch.setattr(dl, "get_sec_ticker_ciks", ciks)
+    monkeypatch.setattr(dl, "get_eodhd_eod_range", eod)
+    for k in ("AA.HK", "BB.HK"):
+        monkeypatch.setitem(wd.EXCHANGE_SHARES, k, {"ccy": "HKD", "what": "测试",
+                                                    "rows": [("2019-12-31", "2020-01-06", 7.8e9, "x"), ("2020-06-30", "2020-07-03", 7.8e9, "y")]})
+    cands = [Candidate(k, k, "equity", "eodhd", k, "HK") for k in ("AA.HK", "BB.HK", "CC.HK")]
+    out = asyncio.run(wd.refresh_mcap(candidates=cands))
+    assert out["exchange"] == ["AA.HK", "BB.HK"] and out["not_sec_listed"] == ["CC.HK"]
+    assert calls.count("USDHKD.FOREX") == 1, "同一币种一轮只取一次汇率"
+    assert {round(r["mcap_usd"] / 1e9) for r in sink["world50_mcap_weekly"]} == {5}, "7.8e9 × 5 港元 / 7.8"
+
+
+def test_known_spinoff_on_the_merger_day_is_not_a_split():
+    """RTX 2020-04-03:分拆的价格跳 ×1.58 与合并的股数跳 ×1.76 在 15% 以内,股数印证会把分拆误认成拆股 ——
+    已知分拆按事件表作废,合并照两段都留。"""
+    bars = _bars([10.0] * 500, start="2019-06-01", split_at="2020-04-03", k=1.58)
+    rtx = _dei(("2019-12-31", "2020-02-06", 0.866e9), ("2020-03-31", "2020-05-07", 0.866e9),
+               ("2020-07-21", "2020-07-29", 1.528e9), ("2020-10-20", "2020-10-27", 1.519e9))
+    out = wd.build_mcap("RTX", bars, {"dei": rtx})
+    assert any("已知分拆" in n for n in out["notes"]) and not any("只用之后的段" in n for n in out["notes"])
+    assert out["rows"][0]["d"] < "2020-03-01"
+    pre = [r for r in out["rows"] if r["d"] < "2020-04-03"]
+    assert {round(r["mcap_usd"] / 1e9, 2) for r in pre} == {13.68}, "合并前 0.866e9 股 × 原始价 15.8"
