@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 import sys
 from pathlib import Path
 
@@ -88,7 +89,12 @@ def test_wavg_fallback_adr_ratio_outliers_and_jumps():
     merged = wd.build_mcap("Y", bars, {"dei": _dei(("2019-12-31", "2020-01-20", 1e9), ("2020-03-31", "2020-04-20", 2e9),
                                                     ("2020-06-30", "2020-07-20", 2e9))})
     assert merged["rows"][0]["d"] >= "2020-04-20" and any("跳" in n for n in merged["notes"]), "股数翻倍:只用之后的段"
-    assert wd.build_mcap("TCEHY", bars, {"dei": two})["why"].startswith("ADR 换股比例未核实")
+    wd.UNVERIFIED_ADR.add("ZZZ")
+    try:
+        assert wd.build_mcap("ZZZ", bars, {"dei": two})["why"].startswith("ADR 换股比例未核实")
+    finally:
+        wd.UNVERIFIED_ADR.discard("ZZZ")
+    assert wd.build_mcap("TCEHY", bars, {})["src"] == "manual", "腾讯:港交所月报表手工补"
     assert wd.build_mcap("Z", bars, {})["why"].startswith("SEC 里没有")
 
 
@@ -351,7 +357,8 @@ def test_sec_user_agent_comes_only_from_the_environment(monkeypatch):
 def test_manual_shares_are_current_basis_and_do_not_need_sec(monkeypatch):
     """Visa / Berkshire 的股数手工从 10-K 补(Jazz 10-15):表里的数已是今天口径 —— 2015 年一拆四之前报送的那一行不能再乘 4。"""
     for key, m in wd.MANUAL_SHARES.items():
-        assert len(m["rows"]) >= 5 and all(len(acc) == 20 and acc[10] == "-" for *_, acc in m["rows"]), key
+        assert len(m["rows"]) >= 5 and all(re.fullmatch(r"\d{10}-\d{2}-\d{6}", acc) or acc.startswith("hkex:/listedco/")
+                                           for *_, acc in m["rows"]), key
         assert [r[1] for r in m["rows"]] == sorted(r[1] for r in m["rows"]), "按报送日排好"
     bars = _bars([100.0] * 120, start="2015-01-01", split_at="2015-03-19", k=4.0)
     out = wd.build_mcap("V", bars, {})

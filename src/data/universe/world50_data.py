@@ -101,7 +101,7 @@ SEC_FIX: dict[str, dict[str, tuple[float, str]]] = {
 PREDECESSOR_CIKS: dict[str, list[int]] = {"XOM": [34088]}
 
 #: 手工补的股数(Jazz 10-15「手工补」)—— 免费接口里取不到的:分股类申报的汇总数只在附注表或封面文字里(V / BRK-B),
-#: 或 SEC 结构化接口对这家公司返回空(KO / ABT,原因未查;10-K 封面上有)。
+#: 或 SEC 结构化接口对这家公司返回空(KO / ABT,原因未查;10-K 封面上有),或不在 SEC 申报(TCEHY,港交所月报表)。
 #: 每行 = (截至日, 报送日 = 已知日, 股数, 出处 accession)。口径是 MANUAL_BASIS_DATE 那天的口径(之后若再拆股,照拆股系数换算)。
 #: 一年一行:10-K 封面 / 附注。改动这张表 = 改了已写的值 ⇒ 记得把 PART_VERSIONS["mcap"] 加一。
 MANUAL_BASIS_DATE = "2026-10-15"
@@ -164,6 +164,19 @@ MANUAL_SHARES: dict[str, dict[str, Any]] = {
             ("2026-01-31", "2026-02-20", 1_737_682_887, "0001628280-26-010185"),
         ],
     },
+    # 腾讯不在 SEC,在港交所申报(Jazz 10-15):每月「股份发行人的证券变动月报表」(FF301)的月末已发行股数;
+    # 已知日 = 提交日。股数 11 年在 ±2% 内,取 6 份。TCEHY 一份 ADR = 1 股。出处是 hkexnews 上的文件路径。
+    "TCEHY": {
+        "what": "已发行普通股(港交所月报表 FF301「Balance at close of the month」)",
+        "rows": [
+            ("2014-12-31", "2015-01-07", 9_370_678_830, "hkex:/listedco/listconews/sehk/2015/0107/ltn20150107813.pdf"),
+            ("2016-12-31", "2017-01-06", 9_477_083_480, "hkex:/listedco/listconews/sehk/2017/0106/ltn20170106878.pdf"),
+            ("2019-12-31", "2020-01-07", 9_552_615_286, "hkex:/listedco/listconews/sehk/2020/0107/2020010701208.pdf"),
+            ("2021-12-31", "2022-01-06", 9_608_378_469, "hkex:/listedco/listconews/sehk/2022/0106/2022010601615.pdf"),
+            ("2024-05-31", "2024-06-06", 9_406_383_400, "hkex:/listedco/listconews/sehk/2024/0606/2024060600413.pdf"),
+            ("2026-09-30", "2026-10-07", 9_092_605_595, "hkex:/listedco/listconews/sehk/2026/1007/2026100701204.pdf"),
+        ],
+    },
 }
 
 #: 每份 ADR(或在美国挂牌的那一单位)对应几股普通股,[(生效日, 比例)],旧 → 新。按**报送日**查表 ——
@@ -182,8 +195,8 @@ ADR_ORD_PER_ADS: dict[str, list[tuple[str, float]]] = {
     # TM:FY2021 20-F(2021-06-24)「each … representing two shares」;FY2022 20-F(2022-06-23)起「ten shares」(2021 年一拆五,ADR 价不动)
     "TM": [("1999-01-01", 2.0), ("2022-06-23", 10.0)],
 }
-#: 换股比例我没核实 / 中途改过而我不确定生效日的 —— 不写,不猜。
-UNVERIFIED_ADR = {"TCEHY"}
+#: 换股比例我没核实 / 中途改过而我不确定生效日的 —— 不写,不猜。(目前没有;TCEHY 1 份 = 1 股,股数手工从港交所补)
+UNVERIFIED_ADR: set[str] = set()
 
 
 def _closes(raw: Iterable[dict]) -> list[tuple[str, float, float]]:
@@ -541,7 +554,7 @@ async def discover_onchain_forms(as_of: Optional[str] = None) -> dict[str, Any]:
 RERUN_AFTER_DAYS = 6
 LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
-PART_VERSIONS = {"prices": 1, "mcap": 5, "onchain_forms": 1}
+PART_VERSIONS = {"prices": 1, "mcap": 6, "onchain_forms": 1}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
