@@ -1,13 +1,26 @@
 """T-093 — Jazz 10-14「多重情景分析」逆向 T-092 三条规则 + 边际流动性 × BTC 趋势 四状态标签 + 8 周块打乱对照
 
 Pre-registered: M-223 (2026-10-14, sealed)
+
+§Seth-1014k 退回原 c258f81:补回撤列、删无数据支撑的因果句、台账号 M-224。
+本版本(2026-10-15 lane-b 改)两处 R3c bug 已修:
+- short_ret 改用 `src.data.evaluation.apparatus.short_return`(1 − exit/ent,有界)
+  旧 p_ent/p_ext − 1 凸、价格 → 0 记 +∞(S-097 红测)
+- 入场/出场价改用 `apparatus.price_on_or_after`,ent_d_b 早于 sym 上市日 ⇒ 整条事件 None
+  旧 `bisect_right − 1` 在 i_ent_s = −1 时 i_ext_s = 29 > −1,继续算,用 sym[−1] 当入价(假 P&L)
 """
 from __future__ import annotations
-import os, json, math, random, datetime as dt, time, pickle
+import os, json, math, random, datetime as dt, time, pickle, sys
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import urllib.request
 import numpy as np
+
+# apparatus(主仓库 src/,本 worktree 不带)
+MAIN_REPO = "/Users/sbb/Projects/looloomi-ai"
+if MAIN_REPO not in sys.path:
+    sys.path.insert(0, MAIN_REPO)
+from src.data.evaluation.apparatus import short_return as _short_return, price_on_or_after as _price_on_or_after  # noqa: E402
 
 ENV = "/Users/sbb/Projects/looloomi-ai-lane-b/.env"
 for line in open(ENV):
@@ -342,53 +355,57 @@ def main():
                     nav_arr.append(nav_v)
             return nav_v, nav_arr
 
-        # R3 unconditional pnl
+        # R3 unconditional pnl — 改法(§Seth-1014k):short_ret 用 apparatus.short_return,
+        # 入场 / 出场价用 price_on_or_after 拿「该日或之后 3 日内」第一个有效收盘,取不到 ⇒ 整事件 None。
         cs_btc = sorted_dates["BTC"]
-        def find_idx(cs, d_iso):
-            if d_iso in cs:
-                return cs.index(d_iso)
-            import bisect
-            return bisect.bisect_right(cs, d_iso) - 1
+        MAX_GAP_DAYS = 3  # 价格「该日或之后 3 日内」未找到 ⇒ 不可算
 
         def r3_pnl(week_idx, sym):
             d = ms[week_idx]
-            i0 = find_idx(cs_btc, d)
-            if i0 < 0: return None
+            # BTC 入场 / 出场:沿用旧的 (i0 + 7, +30) 索引
+            if d not in cs_btc:
+                # cs_btc 已经有序;二分找 ≥ d 的第一个
+                import bisect
+                i0 = bisect.bisect_left(cs_btc, d)
+            else:
+                i0 = cs_btc.index(d)
+            if i0 >= len(cs_btc): return None
             i_entry = min(i0 + 7, len(cs_btc) - 1)
             i_exit = min(i_entry + 30, len(cs_btc) - 1)
             if i_exit <= i_entry: return None
             ent_d_b = cs_btc[i_entry]
             ext_d_b = cs_btc[i_exit]
+            # 改法:sym 端用 price_on_or_after,ent_d_b / ext_d_b 早于 sym 上市日 ⇒ None(不假入场)
             cs_s = sorted_dates.get(sym, [])
             if not cs_s: return None
-            i_ent_s = find_idx(cs_s, ent_d_b)
-            i_ext_s = min(i_ent_s + 30, len(cs_s) - 1)
-            if i_ext_s <= i_ent_s: return None
-            ent_d_s = cs_s[i_ent_s]
-            ext_d_s = cs_s[i_ext_s]
-            p_ent_s = close_by_sym[sym][ent_d_s]
-            p_ext_s = close_by_sym[sym][ext_d_s]
-            p_ent_b = close_by_sym["BTC"][ent_d_b]
-            p_ext_b = close_by_sym["BTC"][ext_d_b]
+            sym_closes_seq = [close_by_sym[sym][dd] for dd in cs_s]
+            p_ent_s = _price_on_or_after(cs_s, sym_closes_seq, ent_d_b, max_gap_days=MAX_GAP_DAYS)
+            p_ext_s = _price_on_or_after(cs_s, sym_closes_seq, ext_d_b, max_gap_days=MAX_GAP_DAYS)
+            p_ent_b = close_by_sym["BTC"].get(ent_d_b)
+            p_ext_b = close_by_sym["BTC"].get(ext_d_b)
             if None in (p_ent_s, p_ext_s, p_ent_b, p_ext_b): return None
             if p_ent_s <= 0 or p_ent_b <= 0: return None
-            short_ret = p_ent_s / p_ext_s - 1
+            # 改法:短仓公式用 apparatus.short_return(1 − exit / entry,有界)
+            short_ret = _short_return(p_ent_s, p_ext_s)
             long_ret = p_ext_b / p_ent_b - 1
             net = short_ret + long_ret - COST_R3
             return {"net": net, "short": short_ret, "long": long_ret,
-                    "entry": ent_d_b, "exit": ext_d_s, "sym": sym}
+                    "entry": ent_d_b, "exit": ext_d_b, "sym": sym}
 
         def run_r3c(sizing_fn):
             """sizing_fn(week_idx, sym) -> size in {0, 0.5, 1.0, 1.5}. Returns sum of size * net."""
             total = 0.0
             n = 0
+            _nets = []
             for i, sym in r3_events:
                 r = r3_pnl(i, sym)
                 if r is None: continue
                 size = sizing_fn(i, sym)
                 total += size * r["net"]
                 n += 1
-            return total / n if n > 0 else 0, n
+                if size != 0.0:
+                    _nets.append(size * r["net"])
+            return total / n if n > 0 else 0, n, _nets
 
         # === unconditional baselines ===
         # R1 unconditional: zero weight for 13 weeks on event
@@ -410,7 +427,7 @@ def main():
         # R3 unconditional: full size
         def uncond_r3(i, sym):
             return 1.0
-        r3_mean_uncond, n_r3_uncond = run_r3c(uncond_r3)
+        r3_mean_uncond, n_r3_uncond, _r3_nets_uncond = run_r3c(uncond_r3)
 
         # === conditional versions ===
         def cond_r1(i, j):
@@ -439,7 +456,7 @@ def main():
             if not s["improving"]:
                 return 1.5  # max short (full + extra)
             return 0.5  # improving: half short
-        r3_mean_cond, n_r3_cond = run_r3c(cond_r3)
+        r3_mean_cond, n_r3_cond, _r3_nets_cond = run_r3c(cond_r3)
 
         # Excess
         excess_cond_r1 = nav_cond_r1 / nav_base_r1 - 1
@@ -500,7 +517,7 @@ def main():
                 if s["weak_recovery"]: return 0.0
                 if not s["improving"]: return 1.5
                 return 0.5
-            mean_s, _ = run_r3c(shuf_r3_fn)
+            mean_s, _, _ = run_r3c(shuf_r3_fn)
             shuf_r3c.append(mean_s - r3_mean_uncond)
 
         pct_r1c = sum(1 for v in shuf_r1c if v <= excess_cond_r1) / len(shuf_r1c) if shuf_r1c else 0
@@ -557,6 +574,12 @@ def main():
             },
             "maxdd_uncond_r1_pct": round(float(maxdd(run_r1c(uncond_r1)[1])) * 100, 2),
             "maxdd_cond_r1_pct": round(float(maxdd(run_r1c(cond_r1)[1])) * 100, 2),
+            "maxdd_uncond_r2_pct": round(float(maxdd(run_r2c(uncond_r2_fn)[1])) * 100, 2),
+            "maxdd_cond_r2_pct": round(float(maxdd(run_r2c(cond_r2)[1])) * 100, 2),
+            # R3c 是 per-event 损益,不是 NAV,改报:最差单笔盈亏
+            "r3_min_event_uncond_pct": round(float(min(_r3_nets_uncond, default=0.0)) * 100, 2),
+            "r3_min_event_cond_pct": round(float(min(_r3_nets_cond, default=0.0)) * 100, 2),
+            "r3_n_events_uncond": n_r3_uncond,
         }
 
     out = {

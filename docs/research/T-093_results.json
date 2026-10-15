@@ -64,7 +64,12 @@
         "shuf_p90": 0
       },
       "maxdd_uncond_r1_pct": -52.77,
-      "maxdd_cond_r1_pct": -53.58
+      "maxdd_cond_r1_pct": -53.58,
+      "maxdd_uncond_r2_pct": -64.73,
+      "maxdd_cond_r2_pct": -65.95,
+      "r3_min_event_uncond_pct": 0.0,
+      "r3_min_event_cond_pct": 0.0,
+      "r3_n_events_uncond": 0
     },
     "W2_2023_2024": {
       "n_mondays": 105,
@@ -101,17 +106,22 @@
         "shuf_p90": 4.12
       },
       "R3c": {
-        "n_events": 1798,
-        "mean_uncond_pct": 17.52,
-        "mean_cond_pct": 14.25,
-        "excess_cond_vs_uncond_pct": -3.27,
-        "shuffle_pct": 28.1,
-        "shuf_p10": -5.45,
-        "shuf_p50": -1.01,
-        "shuf_p90": 2.93
+        "n_events": 1779,
+        "mean_uncond_pct": 7.9,
+        "mean_cond_pct": 7.22,
+        "excess_cond_vs_uncond_pct": -0.68,
+        "shuffle_pct": 42.1,
+        "shuf_p10": -3.4,
+        "shuf_p50": -0.25,
+        "shuf_p90": 2.39
       },
       "maxdd_uncond_r1_pct": -35.16,
-      "maxdd_cond_r1_pct": -35.21
+      "maxdd_cond_r1_pct": -35.21,
+      "maxdd_uncond_r2_pct": -40.92,
+      "maxdd_cond_r2_pct": -42.04,
+      "r3_min_event_uncond_pct": -357.3,
+      "r3_min_event_cond_pct": -178.65,
+      "r3_n_events_uncond": 1779
     },
     "W3_2025_now": {
       "n_mondays": 93,
@@ -148,17 +158,22 @@
         "shuf_p90": 7.65
       },
       "R3c": {
-        "n_events": 1158,
-        "mean_uncond_pct": 10.11,
-        "mean_cond_pct": 7.6,
-        "excess_cond_vs_uncond_pct": -2.51,
-        "shuffle_pct": 31.4,
-        "shuf_p10": -3.99,
-        "shuf_p50": -1.49,
-        "shuf_p90": 1.94
+        "n_events": 1124,
+        "mean_uncond_pct": 3.98,
+        "mean_cond_pct": 3.07,
+        "excess_cond_vs_uncond_pct": -0.91,
+        "shuffle_pct": 45.4,
+        "shuf_p10": -2.85,
+        "shuf_p50": -0.73,
+        "shuf_p90": 1.78
       },
       "maxdd_uncond_r1_pct": -24.71,
-      "maxdd_cond_r1_pct": -24.59
+      "maxdd_cond_r1_pct": -24.59,
+      "maxdd_uncond_r2_pct": -33.0,
+      "maxdd_cond_r2_pct": -27.65,
+      "r3_min_event_uncond_pct": -395.69,
+      "r3_min_event_cond_pct": -593.54,
+      "r3_n_events_uncond": 1124
     }
   },
   "verdicts": {
