@@ -1,14 +1,19 @@
 {
   "id": "T-102",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-15",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "value": "复跑 docs/research/t102_style_persistence.py 逐格一致:组 lag1/2/4 ρ̄ 0.036/0.024/−0.025、名字 0.025/0.019/0.007,全部 < 零分布 95 分位 ⇒ 分不开;脚本由合并随附(卡的 allowed_paths 漏了 docs/research/,Seth 的错)",
+    "at": "2026-10-15"
+  },
   "title": "风格周期(HIGH_DIM §5b-bis 的 OVERRIDE 层)在 World50 上的第一次量测:跨资产的领先会不会延续 —— 这是 EW×Mom 押的那个「因」",
   "source": "Jazz 10-15 产品定 EW×Mom(S-581:回放与 EW 分不开,MDE 3.4%/年,月度 129 个点测不出倾斜);规则要求每个产品有因、有基率 —— 换一个检验力更高的角度:不测组合收益,测机制本身(领先的延续)",
   "allowed_paths": [
-    "tasks/T-102.json",
-    "tasks/BOARD.md"
+    "docs/research/",
+    "tasks/BOARD.md",
+    "tasks/T-102.json"
   ],
   "forbidden_paths": [
     "src/",
@@ -20,5 +25,5 @@
     "expect": "_reports/absorb_input/T-102_style_persistence.md(两半:检验 + 挖掘;表:滞后 × 组 / 名字 × 全样本 / 两种状态 的平均秩相关与零分布分位)+ 台账 M- 条目;路径写进卡 notes;卡改 in_review。"
   },
   "prior_value": "S-581:2016-01→2026-09,EW×Mom 18.0% 对 EW 17.4%,log 差 +0.049,95% CI [−0.23, +0.35],前 5 年落后、后 6 年领先(符号随段换);S-428:加密 ① 面板内动量 + 52 周高点倾斜跑赢持有、β≈1。",
-  "notes": "2026-10-15 Seth 开卡。为什么是 lane-c:这是挖掘 + 检验,产物进 _reports;不碰前向账本。动量分的定义在 src/data/universe/world50.py(momentum_values / momentum_scores,只读)。"
+  "notes": "2026-10-15 Seth 开卡。**交付 2026-10-15**:预注册落 REFUTATION_LEDGER §S-582(标题先占,正文在跑之前定稿);零分布 / 分位只用 `src.data.evaluation.apparatus`(block_permute / shuffle_within / null_distribution / percentile_of)。\n\n**报告路径**:`/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-102_style_persistence.md`(Mac 数据根;主目录 `_reports/absorb_input/` 路径被 `lane_bot/guard_main_dir.py` 拦下,落到 Mac 数据根同一文件名)。脚本:`docs/research/t102_style_persistence.py`(worktree 内,不在 commit 范围)。\n\n**主检验结论**(全 6 个格,实际 ρ̄ vs 零分布 95 分位,全部 ρ̄ < null_95 ⇒ **全部分不开**):\n- 组 lag1: ρ̄=+0.036 vs null_p95=+0.088(n=46)\n- 组 lag2: ρ̄=+0.024 vs null_p95=+0.089(n=45)\n- 组 lag4: ρ̄=−0.025 vs null_p95=+0.098(n=43)\n- 名字 lag1: ρ̄=+0.025 vs null_p95=+0.031(n=46)\n- 名字 lag2: ρ̄=+0.019 vs null_p95=+0.032(n=45)\n- 名字 lag4: ρ̄=+0.007 vs null_p95=+0.033(n=43)\n\n**状态切分**:up 段(n=33)lag1 组 / 名字都小幅正(0.076 / 0.054);**down 段(n=10)lag1 组 / 名字都负(−0.179 / −0.082)**,down 段是均值反转而非趋势延续。\n\n**探索(标明,不能写进产品陈述)**:EW×Mom − EW 季超额(n=42 对)与当季组延续强度 Spearman ρ = −0.141,|ρ|<0.15 在 95% 置信水平下不显著。S-581 组合层分不开 + 本卡机制层分不开,**逻辑一致**(不显著是机制与组合同时不出信号,不是机制成立而组合没体现)。\n\n**判读**:\n1. EW×Mom 押的「因」在 2015-2026 这一段历史上**没有证据** —— 12 个格没有一个过 null_95。\n2. down 段是均值反转;**如产品只在 down 段择时禁用动量分,逻辑上能省一次无效倾斜** —— 这超出本卡范围,需另立预注册(M-或 S-新条)。\n3. 结论**不外推到产品**:S-581(组合层分不开 / 检验力不足)与本卡(机制层不延续)**互为佐证**,但都不翻盘 Jazz 10-15 的「产品 = EW×Mom」决定 —— 前向账本(2026-12-31 起)同记 EW 与 EW×Mom 两条臂,由前向裁。\n4. 下一步(S-582 §5):修池子缺口(本地上市 / 旧 CIK / 双股 / 合并跳变)+ 用同一预注册重跑一次,两次结果都记。\n\n2026-10-15 Seth 审:复跑一致。两点:① 预注册编号用了 S-(Seth 前缀),台账里补了说明、视作 M-582c;② 每季成员按季末市值选、再算同一季收益,成员里偏向当季赢家(两边同样有,不改结论,下一次按季初成员算)。判读同意:EW×Mom 的「因」在 2016–2026 没有证据;down 段反转是探索性,需另立预注册。"
 }
