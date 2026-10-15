@@ -757,8 +757,9 @@ async def get_eodhd_eod_range(ticker: str, exchange: str, frm: str) -> list[dict
     return rows
 
 
-#: SEC 要求自报身份的 User-Agent(机构名 + 联系方式),不报会被 403。真值放 Railway 环境变量 SEC_USER_AGENT。
-SEC_UA_DEFAULT = "CometCloud AI research (looloomi.ai)"
+#: SEC 要求自报身份的 User-Agent(「机构名 联系邮箱」),不报会被 403(10-15 首跑实测)。
+#: Jazz 10-15 给定机构名与邮箱;环境变量 SEC_USER_AGENT 若设了则优先。
+SEC_UA_DEFAULT = "looloomi ai jazzz@looloomi.ai"
 
 
 def _sec_headers() -> dict:
