@@ -191,19 +191,30 @@ def blocking_files(out: str) -> list[str]:
     return files
 
 
-def _ff_through_local_edits(files: list[str]) -> tuple[int, str]:
+def _ff_through_local_edits(files: list[str], root: Optional[Path] = None) -> tuple[int, str]:
     """10-08:合并时 fixup 带进去的文件,主目录里的内容与合进来的版本**完全一样**,ff-only 照样拒绝。
     对每个挡路的文件做三方合并(base = HEAD,ours = 主目录,theirs = origin/main):全部无冲突 ⇒
-    先还原成 HEAD、快进、再写回合并结果 —— 谁的改动都不丢;任何一个有冲突 ⇒ 一个都不动,原样报告。"""
+    先还原成 HEAD、快进、再写回合并结果 —— 谁的改动都不丢;任何一个有冲突 ⇒ 一个都不动,原样报告。
+    root 每一处都显式传(git() 的默认 cwd 在定义时就绑死了 ROOT,补丁 ROOT 管不到它 —— 10-15 测试因此快进了真仓库)。"""
+    root = root or ROOT
     merged: dict[str, str] = {}
+    untracked_same: list[str] = []
     for f in files:
+        if subprocess.run(["git", "cat-file", "-e", f"HEAD:{f}"], cwd=root, capture_output=True).returncode != 0:
+            # 10-15:合并的 fixup 从主目录拷进来的**新**文件,主目录里是一份未跟踪的同内容副本 ⇒ 快进被拒。
+            # 内容与合进来的版本逐字节相同才让路(快进后它就是被跟踪的同一份);不同 ⇒ 一个都不动。
+            r = subprocess.run(["git", "show", f"origin/main:{f}"], cwd=root, capture_output=True)
+            if r.returncode != 0 or (root / f).read_bytes() != r.stdout:
+                return 1, f"{f}:未跟踪的本地文件与合进来的版本不同,不动"
+            untracked_same.append(f)
+            continue
         texts = []
         for rev in ("HEAD", "origin/main"):
-            r = subprocess.run(["git", "show", f"{rev}:{f}"], cwd=ROOT, capture_output=True, text=True)
+            r = subprocess.run(["git", "show", f"{rev}:{f}"], cwd=root, capture_output=True, text=True)
             if r.returncode != 0:
                 return 1, f"{f}:读不到 {rev} 的版本,不动"
             texts.append(r.stdout)
-        mine = (ROOT / f).read_text(encoding="utf-8")
+        mine = (root / f).read_text(encoding="utf-8")
         if mine.startswith(texts[1]):          # 主目录 = 合进来的版本(+ 在它末尾追加)⇒ 主目录已经包含它
             merged[f] = mine
             continue
@@ -211,16 +222,20 @@ def _ff_through_local_edits(files: list[str]) -> tuple[int, str]:
             base, theirs, ours = Path(td) / "base", Path(td) / "theirs", Path(td) / "ours"
             base.write_text(texts[0], encoding="utf-8")
             theirs.write_text(texts[1], encoding="utf-8")
-            ours.write_text((ROOT / f).read_text(encoding="utf-8"), encoding="utf-8")
+            ours.write_text((root / f).read_text(encoding="utf-8"), encoding="utf-8")
             r = subprocess.run(["git", "merge-file", "-p", str(ours), str(base), str(theirs)],
                                capture_output=True, text=True)
             if r.returncode != 0:
                 return 1, f"{f}:主目录的改动与合进来的提交有真冲突,不动"
             merged[f] = r.stdout
-    git("checkout", "HEAD", "--", *files)
-    code, out = git("merge", "--ff-only", "--quiet", "origin/main")
+    tracked = [f for f in files if f not in untracked_same]
+    if tracked:
+        git("checkout", "HEAD", "--", *tracked, cwd=root)
+    for f in untracked_same:
+        (root / f).unlink()
+    code, out = git("merge", "--ff-only", "--quiet", "origin/main", cwd=root)
     for f, text in merged.items():
-        (ROOT / f).write_text(text, encoding="utf-8")
+        (root / f).write_text(text, encoding="utf-8")
     return code, out
 
 

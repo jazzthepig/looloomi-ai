@@ -91,3 +91,41 @@ def test_stash_is_main_tells_lane_worktree_stashes_apart() -> None:
     assert not stash_is_main("WIP on lane-b/T-059: 686ff9a docs(tasks): …"), "lane 在自己 worktree 的 stash 不是主目录事故"
     assert not stash_is_main("On lane-c/T-036: pre-existing dirty state")
 
+
+
+def test_fast_forward_through_an_identical_untracked_fixup_copy() -> None:
+    """10-15:合并 T-102 时 fixup 把主目录里的新脚本带进提交;主目录那份成了未跟踪的同内容副本,下一个任务快进被拒。
+    同内容 ⇒ 让路快进;内容不同 ⇒ 一个都不动。在临时仓库里验证,不碰真仓库的索引。"""
+    import os
+    import subprocess as sp
+    import tempfile
+    from unittest import mock
+    import scripts.seth_bot.seth_bot as sb
+    clean = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}   # 钩子里跑时 GIT_DIR 会把临时仓库指回真仓库
+
+    def g(cwd, *a):
+        return sp.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *a], cwd=cwd, capture_output=True, text=True)
+
+    with tempfile.TemporaryDirectory() as td, mock.patch.dict(os.environ, clean, clear=True):
+        origin, main = Path(td) / "o.git", Path(td) / "m"
+        g(td, "init", "--bare", "-b", "main", str(origin))
+        g(td, "clone", str(origin), str(main))
+        (main / "a.txt").write_text("a\n")
+        g(main, "add", "a.txt"); g(main, "commit", "-m", "a"); g(main, "push", "origin", "main")
+        other = Path(td) / "w"
+        g(td, "clone", str(origin), str(other))
+        (other / "new.py").write_text("x = 1\n")
+        g(other, "add", "new.py"); g(other, "commit", "-m", "n"); g(other, "push", "origin", "main")
+        g(main, "fetch", "origin")
+        if True:
+            assert main.resolve() != sb.ROOT.resolve()
+            (main / "new.py").write_text("x = 2\n")
+            code, out = sb.git("merge", "--ff-only", "--quiet", "origin/main", cwd=main)
+            assert code != 0 and sb.blocking_files(out) == ["new.py"]
+            code, why = sb._ff_through_local_edits(["new.py"], root=main)
+            assert code != 0 and "不同" in why and (main / "new.py").read_text() == "x = 2\n"
+            (main / "new.py").write_text("x = 1\n")
+            code, _ = sb._ff_through_local_edits(["new.py"], root=main)
+            assert code == 0
+            assert g(main, "rev-parse", "HEAD").stdout == g(main, "rev-parse", "origin/main").stdout
+            assert g(main, "status", "--porcelain").stdout == ""
