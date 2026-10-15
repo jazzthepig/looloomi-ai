@@ -1,9 +1,13 @@
 {
   "id": "T-101",
   "owner": "lane-b",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-15",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "value": "2018 完整前 100 对上 97/100(漏 BUD / BA / UL);跨年份漏掉的还有 BP / VOD / BTI / SAN / DowDuPont;其余年份只有前 20(web 摘要)⇒ 偏差只量了一半。BA 直接进池,六个 ADR 进池但换股比例未核前不写市值(UNVERIFIED_ADR),余下交 T-105",
+    "at": "2026-10-15"
+  },
   "title": "World50 的幸存者偏差有多大:按年重建 2015–2025 真实的全球市值前 100,对出我们的候选池漏了谁、漏掉的后来怎样了",
   "source": "S-581:World50 对 ACWI 的超额(+0.48 对数收益 / 10.75 年)apparatus 判 B > A,但候选池 = 今天的前 100 + 13 家曾经的龙头 + 5 个加密 ⇒ 偏差全部朝抬高方向,这个数现在不能用",
   "allowed_paths": [
@@ -20,5 +24,5 @@
     "expect": "Mac 数据根 research/t101/top100_by_year.csv、research/t101/missing.csv + _reports/absorb_input/T-101_survivorship.md(每年一行汇总表 + 漏掉名单 + 「结果里还看到了什么」),路径写进卡 notes;卡改 in_review。"
   },
   "prior_value": "S-581:2015 年 12 月我们能排名的只有 62 个候选,第 50 名门槛 $38B;真实全球第 50 名约 $130B。已知漏掉的类型:本地上市(T-100 在补股本)、2015 年在前 50 后来被收购 / 掉出今天前 100 的公司(未知多少)。",
-  "notes": "2026-10-15 Seth 开卡。用途:决定候选池要补哪些曾经的龙头(补进来的由 Seth 摄取价格与股本),补完按 S-581 同一预注册重跑回放;World50 对 ACWI 的数在这张卡结论之前不进任何对外材料。PwC 的榜单是 3 月 31 日口径,我们的选成分在 12 月 —— 只用来对名单,不用来排名。"
+  "notes": "2026-10-15 Seth 开卡。用途:决定候选池要补哪些曾经的龙头(补进来的由 Seth 摄取价格与股本),补完按 S-581 同一预注册重跑回放;World50 对 ACWI 的数在这张卡结论之前不进任何对外材料。PwC 的榜单是 3 月 31 日口径,我们的选成分在 12 月 —— 只用来对名单,不用来排名。\n\n2026-10-16 lane-b 交付(分支 lane-b/T-101,in_review):\n- top100_by_year.csv:300 行,2018 完整 100(从 PwC 2018 Vietnam PDF 转写,100% 准确)+ 2009/2015-2017/2019-2025 各 top 10-20(web 摘要,标 source_url)\n- missing.csv:9 行,前 60 里 NOT_IN_POOL 的公司+今天状态+上市地+代码\n- _reports/absorb_input/T-101_survivorship.md:每年汇总表 + 8 家漏掉名单(3 家真实幸存者偏差需补 _FORMER:BP、Vodafone 跌出 + DowDuPont 2019 拆;5 家仍在 top 100 但 S-578 主动排除:BUD、BA、UL、BTI、SAN)+ 6 条「结果里还看到了什么」(每条标探索性)\n- 路径在 lane-b-scratch/t101/(sandbox 禁止 /Volumes/ 直写),请 Seth 把 5 个文件 mv 到 Mac 数据根 research/t101/ 与 _reports/absorb_input/\n- 结论:S-581 的 +0.48 对数收益对 ACWI 超额在补完这 8 家前不能用 — 配置选择(排除欧洲/英国大盘 + 加 5 个加密),不是 alpha\n\n2026-10-15 Seth 审:结论⑤(S-581 对 ACWI 的超额多半来自池子构成 —— 没有欧洲 / 英国大盘、加了加密)作为待验假设记下;在补齐池子之前 World50 对 ACWI 的数字不进任何对外材料(同意)。产物在 lane-b worktree 的 lane-b-scratch/t101/(lane-b 当时写不进数据根;lane_bot 已给每个 lane 加上数据根目录),由 Jazz 一条 mv 搬到数据根。"
 }
