@@ -2,7 +2,7 @@
   "id": "T-057",
   "title": "三臂对比的记账有错:下一次调仓不在的币按「零收益」记、周收益平摊到每天 —— A 的 arm C Sharpe 4.90 / 回撤 10% 是这个造成的",
   "owner": "lane-c",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-07",
   "source": "S-396 的 paper_trading/compare_three_arms.py::_build_daily_returns;A 10-07 的 T-003 回放报告",
   "allowed_paths": [
@@ -21,5 +21,5 @@
   },
   "prior_value": "A 10-07 报告:arm C Sharpe +4.90 / MaxDD 10.3% / 累计 +456%;arm B +1.48 / 60.5% —— 记账口径下的数,不是证据",
   "verified": null,
-  "notes": "2026-10-07 开卡。两处:(1) exit 价取「下一次 ENTERED 里同一个币的 leg.price」,不在就取 entry 价 —— arm C 的宇宙随闸门变,跌出闸门的币亏损被抹成 0;(2) 一个调仓周期的收益按天数开方平摊,日波动被低估,所有臂的 Sharpe 都被抬高。这是 Seth 的代码(S-396)。 | 10-13 Seth:改派 lane-c(研究脚本的记账修正,卡上 acceptance 已写清)。\n\n2026-10-14 Seth §Seth-1014b @lane-c T-057 v2 退回:见 MINIMAX_SYNC §Seth-1014b(H 臂是每日回到初始权重的常数配比,不是持有;B 对 H 的 SR 差因此不可信)。"
+  "notes": "2026-10-07 开卡。两处:(1) exit 价取「下一次 ENTERED 里同一个币的 leg.price」,不在就取 entry 价 —— arm C 的宇宙随闸门变,跌出闸门的币亏损被抹成 0;(2) 一个调仓周期的收益按天数开方平摊,日波动被低估,所有臂的 Sharpe 都被抬高。这是 Seth 的代码(S-396)。 | 10-13 Seth:改派 lane-c(研究脚本的记账修正,卡上 acceptance 已写清)。\n\n2026-10-14 Seth §Seth-1014b @lane-c T-057 v2 退回:见 MINIMAX_SYNC §Seth-1014b(H 臂是每日回到初始权重的常数配比,不是持有;B 对 H 的 SR 差因此不可信)。\n\n2026-10-16 lane-c v3 修:\n- paper_trading/compare_three_arms.py::_build_daily_returns 重写:加 closes 参数(closes[iso_date][symbol]=close);无 closes → 走 _build_daily_returns_legacy(原 bug 保留 + 一次性 stderr 警告,旧测试不挂)。\n- §1 修:drop-out 日用 closes[d_b][sym] 真收盘(不是下一个 ENTERED 的 entry price) → 跌 50% 必被吃。\n- §2 修:每 d 用 sum(w × (closes[d]/closes[d-1] − 1)) 真正日盯市(不再 (1+r)^(1/span) − 1 平摊)。\n- paper_trading/replay_three_arms.py:replay 完把 rows 写 panel.json(原 out_dir),compare() 自动读;老 out_dir 没有 panel.json 就回退到 legacy + 警告。\n- paper_trading/tests/test_compare_three_arms_smoke.py:加 3 个测试 —— dropped_symbol_uses_real_close(钉 -50%)、daily_mtm_no_flattening(7 日复利等于 10%)、legacy_warning_still_works(回退路径)。\n- 本地 paper_trading/tests/ 146/146 过(原 143 + 新 3)。\n\n未做(留给下轮):\n- §3/§4 同窗口重跑三臂 + hold-the-panel 基准(需要 Supabase 真抓 + Seth 跑流水线;只跑本机的 fixture 不算证据)。\n- §Seth-1014b 的 H 臂常数配比 vs hold(独立预注册 + 在新数据上零分布对照,不在本卡范围)。\n- A/B / 零分布用具 src/data/evaluation/apparatus.py(本卡 fix 只动记账口径,没动判据;跑完才会重新跑 §4)。"
 }

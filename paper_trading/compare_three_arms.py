@@ -91,47 +91,113 @@ def _max_dd_pct(equity: list[float]) -> float:
 def _build_daily_returns(
     decisions: list[dict[str, Any]],
     start: dt.date, end: dt.date,
+    closes: Optional[dict[str, dict[str, float]]] = None,
 ) -> list[float]:
     """For each day in [start, end], the day's mark-to-market return.
 
-    Logic:
-      - Walk decisions in date order
-      - At each ENTERED, record the legs (weight per symbol + entry date)
-      - At each non-ENTERED day, find the most recent ENTERED before that day,
-        and compute the day's return as sum(weight × (close[d][s]/close[d-1][s] − 1))
-      - Days BEFORE any ENTERED: return 0
-      - Days with no active position (post-exit SKIPPED): return 0
+    T-057 fix (2026-10-16, lane-c): pass `closes` (dict[iso_date][symbol]→close)
+    to enable real mark-to-market. Without it, falls back to `_build_daily_returns_legacy`
+    which (a) silently sets exit price = entry price when a symbol is dropped at
+    next rebalance (masking losses; T-057 §1) and (b) flattens weekly return
+    across days via `(1+r)^(1/span) − 1` (understating vol, inflating SR; §2).
 
-    close[d][s] is read from `legs[i].price` at the next ENTERED event for
-    symbol s (since entry price is set at d = bar at d for arm B/A; for arm C,
-    same shape — entry price = bar at d for the leg).
-
-    We approximate via the recorded entry prices as a "mark series":
-      - For arm A/B (panel_long_only): entry price is the close at d for each symbol
-        in spec.universe. We approximate by using the next ENTERED event's leg.price
-        for each symbol as "today's close".
-      - For arm C: same idea, but the active universe may shift per ENTERED event.
+    With `closes`:
+      - Exit price on drop-out day = real close on that day (fixes §1).
+      - Daily returns = sum(weight × (close[d] / close[d-1] − 1)) (fixes §2).
     """
     n_days = (end - start).days + 1
     daily: list[float] = [(0.0, None, None)] * n_days   # placeholder, rebuild
     daily = [0.0] * n_days
 
-    # We need a price-by-symbol time series. Build it from the ENTERED events:
-    # at each ENTERED at d, for each leg (sym, weight, price), the price is the
-    # close at d for sym. Between ENTERED events, the price evolves linearly
-    # — but we don't have intra-window prices. Approximation: hold the entry
-    # price flat until the next ENTERED event (which gives the next mark).
-    # This UNDERSTATES daily vol but is the cleanest honest approximation
-    # without fetching daily closes again.
-    #
-    # Better approach: use the consecutive ENTERED events to compute ONE period
-    # return per holding period, then flatten it across the period (avg daily).
-    # This is honest about what we actually have (mark at rebalance events,
-    # not daily MTM).
+    if closes is None:
+        # Back-compat path (T-057 §1/§2 NOT honored). One-shot warning.
+        global _LEGACY_NO_CLOSES_WARNED
+        if not _LEGACY_NO_CLOSES_WARNED:
+            import sys as _sys
+            print(
+                "[compare] WARNING: _build_daily_returns called without `closes` — "
+                "T-057 exit-price bug (§1) and weekly-flattening (§2) will be in effect. "
+                "Pass panel.json / closes dict to fix.",
+                file=_sys.stderr,
+            )
+            _LEGACY_NO_CLOSES_WARNED = True
+        return _build_daily_returns_legacy(decisions, start, end)
+
+    # ── T-057 corrected path: day-by-day mark-to-market from real closes ───
+    last_entry: Optional[dict[str, tuple[float, float]]] = None  # {sym: (weight, entry_price)}
+    last_entry_date: Optional[dt.date] = None
+    segments: list[tuple[dt.date, dt.date, dict[str, tuple[float, float]]]] = []
+    # (d_a, d_b, entry_at_d_a); d_b is the day we either rebalance out OR end-of-window
+
+    for d_rec in decisions:
+        d = dt.date.fromisoformat(d_rec["date"])
+        if d_rec["verdict"] == "ENTERED":
+            entry_now = {l["symbol"]: (float(l["weight"]), float(l["price"]))
+                         for l in d_rec.get("legs", [])}
+            if last_entry is not None and last_entry_date is not None:
+                segments.append((last_entry_date, d, last_entry))
+            last_entry = entry_now
+            last_entry_date = d
+
+    # Final segment: from last ENTERED to end-of-window (no rebalance event)
+    if last_entry is not None and last_entry_date is not None and last_entry_date < end:
+        segments.append((last_entry_date, end, last_entry))
+
+    daily = [0.0] * n_days
+    for d_a, d_b, entry_a in segments:
+        # For each day d in (d_a, d_b], compute daily_r using real closes:
+        #   daily_r = sum(weight × (closes[d][sym] / closes[d-1][sym] − 1))
+        # For symbols dropped at d_b (in entry_a but absent from d_b's ENTERED):
+        #   their last contribution uses closes[d_b] — exit price is the real close
+        #   on the drop-out day, not the next ENTERED's entry price (= entry_b bug).
+        idx_a = (d_a - start).days
+        idx_b = (d_b - start).days
+        if idx_a < 0:
+            idx_a = 0
+        if idx_b >= n_days:
+            idx_b = n_days - 1
+        d_curr = start + dt.timedelta(days=idx_a + 1) if idx_a + 1 <= idx_b else start + dt.timedelta(days=idx_a + 1)
+        while d_curr <= start + dt.timedelta(days=idx_b):
+            i = (d_curr - start).days
+            if 0 <= i < n_days:
+                d_prev = d_curr - dt.timedelta(days=1)
+                closes_today = closes.get(d_curr.isoformat(), {})
+                closes_prev = closes.get(d_prev.isoformat(), {})
+                r = 0.0
+                for sym, (w, _p_entry) in entry_a.items():
+                    p_t = closes_today.get(sym)
+                    p_p = closes_prev.get(sym)
+                    if p_t is None or p_p is None or p_p <= 0:
+                        continue  # missing → no synthetic flat
+                    r += w * (p_t / p_p - 1.0)
+                daily[i] = r
+            d_curr += dt.timedelta(days=1)
+    return daily
+
+
+_LEGACY_NO_CLOSES_WARNED = False
+
+
+def _build_daily_returns_legacy(
+    decisions: list[dict[str, Any]],
+    start: dt.date, end: dt.date,
+) -> list[float]:
+    """Legacy behavior — kept ONLY for back-compat with existing tests.
+
+    Two bugs preserved here (T-057 §1/§2):
+      ① exit price falls back to entry price when sym absent from next ENTERED
+        legs → masks the loss of any symbol dropped at rebalance.
+      ② weekly return is flattened across days via `(1+r)^(1/span) − 1`
+        → understates daily vol, inflates Sharpe (per §Seth-1007g family).
+    The T-057 fix lives in `_build_daily_returns(decisions, closes, start, end)`.
+    """
+    n_days = (end - start).days + 1
+    daily: list[float] = [(0.0, None, None)] * n_days   # placeholder, rebuild
+    daily = [0.0] * n_days
 
     periods: list[float] = []
     period_dates: list[tuple[dt.date, dt.date]] = []
-    last_entry: Optional[dict[str, tuple[float, float]]] = None   # {sym: (weight, entry_price)}
+    last_entry: Optional[dict[str, tuple[float, float]]] = None
     last_entry_date: Optional[dt.date] = None
 
     for d_rec in decisions:
@@ -140,7 +206,6 @@ def _build_daily_returns(
             entry_now = {l["symbol"]: (float(l["weight"]), float(l["price"]))
                          for l in d_rec.get("legs", [])}
             if last_entry is not None and last_entry_date is not None:
-                # period return: weights from last_entry, exit = current entry_now prices
                 r = 0.0
                 for sym, (w, p_entry) in last_entry.items():
                     p_exit = entry_now.get(sym, (0.0, p_entry))[1]
@@ -150,26 +215,11 @@ def _build_daily_returns(
             last_entry = entry_now
             last_entry_date = d
 
-    # Final period: from last_entry_date to `end`, using last_entry's own
-    # prices as both entry and exit (conservative: assume no further move
-    # by window end). If a final ENTERED event exists, this collapses to 0.
-    # If we ended on a non-ENTERED, the unrealized tail is not counted.
     if last_entry is not None and last_entry_date is not None \
             and last_entry_date < end:
-        # Mark the tail as 0 return — we don't have a closing price.
         periods.append(0.0)
         period_dates.append((last_entry_date, end))
 
-    # Flatten period returns into daily returns: divide each period's return
-    # by its day-span, so SR is on a daily-frequency series. This is the
-    # standard "compounded daily approximation" used in backtest libs when
-    # only periodic marks are available.
-    #
-    # Semantic: daily_r is applied to days [d_a, d_b) — exclusive of d_b —
-    # because d_b's close IS the exit mark (next ENTERED event), and the
-    # period return already reflects the price jump. Including d_b in the
-    # loop would double-count (the final-period "0.0 tail" branch below
-    # would also overwrite it).
     daily = [0.0] * n_days
     for r, (d_a, d_b) in zip(periods, period_dates):
         span = (d_b - d_a).days
@@ -200,9 +250,30 @@ def compare(in_dir: Path) -> dict[str, Any]:
     start = dt.date.fromisoformat(meta["start"])
     end = dt.date.fromisoformat(meta["end"])
 
-    daily_a = _build_daily_returns(arm_a, start, end)
-    daily_b = _build_daily_returns(arm_b, start, end)
-    daily_c = _build_daily_returns(arm_c, start, end)
+    # T-057: load real closes from panel.json if present (enables T-057 §1+§2 fix).
+    # Without it, _build_daily_returns falls back to legacy path with bug &
+    # emits a one-shot warning.
+    closes: Optional[dict[str, dict[str, float]]] = None
+    panel_json = in_dir / "panel.json"
+    if panel_json.exists():
+        try:
+            rows = json.loads(panel_json.read_text(encoding="utf-8"))
+            if isinstance(rows, list):
+                closes = {}
+                for r in rows:
+                    d = str(r.get("trade_date", ""))[:10]
+                    sym = r.get("symbol")
+                    px = r.get("close")
+                    if d and sym and px is not None:
+                        closes.setdefault(d, {})[sym] = float(px)
+        except Exception as e:                             # noqa: BLE001
+            print(f"[compare] WARNING: failed to load {panel_json}: {e}; "
+                  f"falling back to legacy _build_daily_returns")
+            closes = None
+
+    daily_a = _build_daily_returns(arm_a, start, end, closes=closes)
+    daily_b = _build_daily_returns(arm_b, start, end, closes=closes)
+    daily_c = _build_daily_returns(arm_c, start, end, closes=closes)
 
     def stats(name: str, decisions: list[dict], daily: list[float]) -> dict:
         n_entered = sum(1 for d in decisions if d["verdict"] == "ENTERED")
