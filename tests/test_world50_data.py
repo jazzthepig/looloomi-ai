@@ -93,7 +93,7 @@ def test_wavg_fallback_adr_ratio_outliers_and_jumps():
 
 
 def test_freshest_source_wins_and_stale_shares_are_refused():
-    """MA:封面股数只报到 2010(之后按类别报)—— 按优先级选就会用 16 年前的数。BRK:只有一种口径且停在很久以前 ⇒ 不写。"""
+    """MA:封面股数只报到 2010(之后按类别报)—— 按优先级选就会用 16 年前的数。只有一种口径且停在很久以前(当初的 BRK)⇒ 不写。"""
     bars = _bars([100.0] * 300)                                    # 2020-01 → 2021-02
     stale_dei = _dei(("2009-10-28", "2009-11-03", 1.1e8), ("2010-10-27", "2010-11-02", 1.2e8))
     fresh_cso = _dei(("2019-12-31", "2020-02-01", 9.0e8), ("2020-06-30", "2020-07-30", 9.0e8))
@@ -101,7 +101,7 @@ def test_freshest_source_wins_and_stale_shares_are_refused():
     assert out["src"] == "cso" and {round(r["mcap_usd"] / 1e9) for r in out["rows"]} == {90}
     both_fresh = wd.build_mcap("MA", bars, {"dei": fresh_cso, "cso": fresh_cso})
     assert both_fresh["src"] == "dei", "一样新时封面股数优先"
-    old = wd.build_mcap("BRK-B", bars, {"wavg": _concept([
+    old = wd.build_mcap("OLD", bars, {"wavg": _concept([
         {"start": "2014-07-01", "end": "2014-09-30", "filed": "2014-11-07", "val": 1.64e6},
         {"start": "2015-07-01", "end": "2015-09-30", "filed": "2015-11-06", "val": 1.64e6}])})
     assert old["rows"] == [] and old["why"].startswith("股数停在 2015-11-06")
@@ -345,3 +345,31 @@ def test_sec_user_agent_comes_only_from_the_environment(monkeypatch):
     src = (ROOT / "src/data/market/data_layer.py").read_text(encoding="utf-8")
     block = src[src.index("def _sec_headers"):src.index("async def get_sec_concept")]
     assert not re.search(r"[\w.+-]+@[\w-]+\.[\w.]+", block), "SEC 那段代码里不许出现邮箱"
+
+
+def test_manual_shares_are_current_basis_and_do_not_need_sec(monkeypatch):
+    """Visa / Berkshire 的股数手工从 10-K 补(Jazz 10-15):表里的数已是今天口径 —— 2015 年一拆四之前报送的那一行不能再乘 4。"""
+    for key, m in wd.MANUAL_SHARES.items():
+        assert len(m["rows"]) >= 10 and all(len(acc) == 20 and acc[10] == "-" for *_, acc in m["rows"]), key
+        assert [r[1] for r in m["rows"]] == sorted(r[1] for r in m["rows"]), "按报送日排好"
+    bars = _bars([100.0] * 120, start="2015-01-01", split_at="2015-03-19", k=4.0)
+    out = wd.build_mcap("V", bars, {})
+    assert out["src"] == "manual" and out["why"] is None
+    first = out["rows"][0]
+    assert first["d"] < "2015-03-19" and round(first["mcap_usd"] / 1e9) == 247, "2,470M × 100(今天口径),不是 × 400"
+
+    import src.data.market.data_layer as dl
+    sink: dict = {}
+    _patch_store(monkeypatch, sink)
+
+    async def no_sec():
+        raise RuntimeError("SEC_USER_AGENT 不在进程环境里")
+
+    async def eod(ticker, ex, frm):
+        return bars
+    monkeypatch.setattr(dl, "get_sec_ticker_ciks", no_sec)
+    monkeypatch.setattr(dl, "get_eodhd_eod_range", eod)
+    res = asyncio.run(wd.refresh_mcap(candidates=[Candidate("V", "Visa", "equity", "eodhd", "V.US", "US"),
+                                                  Candidate("AAPL", "Apple", "equity", "eodhd", "AAPL.US", "US")]))
+    assert {r["key"] for r in sink["world50_mcap_weekly"]} == {"V"} and res["manual"] == ["V"]
+    assert "SEC_USER_AGENT" in res["why"] and res["failed"][0]["key"] == "AAPL", "SEC 读不到:手工的照写,其余报原因"

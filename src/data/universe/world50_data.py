@@ -91,6 +91,48 @@ SEC_TAGS = {"dei": ("dei", "EntityCommonStockSharesOutstanding", False),
 #: 换了申报主体(控股公司重组)的公司:旧 CIK 的历史接在前面。实测 2026 年 XOM 归到新的 ExxonMobil Holdings(CIK 2115436)。
 PREDECESSOR_CIKS: dict[str, list[int]] = {"XOM": [34088]}
 
+#: 手工补的股数(Jazz 10-15「手工补」)—— 免费接口里取不到的两家:分股类申报,汇总数只在附注表或封面文字里。
+#: 每行 = (截至日, 报送日 = 已知日, 股数, 出处 accession)。口径是 MANUAL_BASIS_DATE 那天的口径(之后若再拆股,照拆股系数换算)。
+#: 一年一行:10-K 封面 / 附注。改动这张表 = 改了已写的值 ⇒ 记得把 PART_VERSIONS["mcap"] 加一。
+MANUAL_BASIS_DATE = "2026-10-15"
+MANUAL_SHARES: dict[str, dict[str, Any]] = {
+    "BRK-B": {
+        "what": "B 股当量 = A 股 × 1500 + B 股(10-K 封面「Number of shares outstanding」)",
+        "rows": [(d, f, a * 1500 + b, acc) for d, f, a, b, acc in (
+            ("2015-02-18", "2015-03-02", 825_522, 1_226_158_699, "0001193125-15-070966"),
+            ("2016-02-17", "2016-02-29", 807_811, 1_253_479_359, "0001193125-16-483023"),
+            ("2017-02-16", "2017-02-27", 774_680, 1_304_592_522, "0001193125-17-056969"),
+            ("2018-02-13", "2018-02-26", 748_745, 1_344_332_039, "0001193125-18-057033"),
+            ("2019-02-14", "2019-02-25", 725_807, 1_372_751_831, "0001193125-19-048926"),
+            ("2020-02-13", "2020-02-24", 700_396, 1_385_994_959, "0001564590-20-005874"),
+            ("2021-02-16", "2021-03-01", 640_586, 1_336_348_609, "0001564590-21-009611"),
+            ("2022-02-14", "2022-02-28", 615_333, 1_291_212_661, "0001564590-22-007322"),
+            ("2023-02-13", "2023-02-27", 590_835, 1_301_100_243, "0000950170-23-004451"),
+            ("2024-02-12", "2024-02-26", 566_618, 1_310_805_008, "0000950170-24-019719"),
+            ("2025-02-10", "2025-02-24", 546_189, 1_338_051_639, "0000950170-25-025210"),
+            ("2026-01-31", "2026-03-02", 511_820, 1_389_605_139, "0001193125-26-083899"),
+        )],
+    },
+    "V": {
+        "what": "as-converted class A(A + B×换股比例 + C×4 + 欧洲优先股折算;10-K 股东权益附注,单位百万、四舍五入)",
+        "rows": [(d, f, m * 1e6, acc) for d, f, m, acc in (
+            # FY2014:2015 年 10-K 里按拆股后口径重列的分项现算 —— A 1,978 + B 245×1.6483 + C 22×4(分项是四舍五入的)
+            ("2014-09-30", "2014-11-21", 2_470, "0001403161-15-000013"),
+            ("2015-09-30", "2015-11-20", 2_434, "0001403161-15-000013"),
+            ("2016-09-30", "2016-11-15", 2_422, "0001403161-16-000058"),
+            ("2017-09-30", "2017-11-17", 2_350, "0001403161-17-000044"),
+            ("2018-09-30", "2018-11-16", 2_291, "0001403161-19-000050"),   # 次年 10-K 的对比列
+            ("2019-09-30", "2019-11-14", 2_237, "0001403161-19-000050"),
+            ("2020-09-30", "2020-11-19", 2_197, "0001403161-21-000060"),   # 次年 10-K 的对比列
+            ("2021-09-30", "2021-11-18", 2_161, "0001403161-21-000060"),
+            ("2022-09-30", "2022-11-16", 2_103, "0001403161-23-000099"),   # 次年 10-K 的对比列
+            ("2023-09-30", "2023-11-15", 2_047, "0001403161-23-000099"),
+            ("2024-09-30", "2024-11-13", 1_983, "0001403161-25-000089"),   # 次年 10-K 的对比列
+            ("2025-09-30", "2025-11-06", 1_930, "0001403161-25-000089"),
+        )],
+    },
+}
+
 #: 每份 ADR 对应几股普通股,[(生效日, 比例)],旧 → 新。只收核过的;外国公司没在表里也不在 UNVERIFIED_ADR 里 ⇒ 按 1:1。
 ADR_ORD_PER_ADS: dict[str, list[tuple[str, float]]] = {
     "TSM": [("1997-01-01", 5.0)],
@@ -173,10 +215,10 @@ def _adr_ratio(key: str, d: str) -> float:
     return r
 
 
-def clean_shares(key: str, pts: list[tuple[str, str, float]], splits: list[tuple[str, float]]
-                 ) -> tuple[list[tuple[str, float]], list[str], Optional[str]]:
+def clean_shares(key: str, pts: list[tuple[str, str, float]], splits: list[tuple[str, float]],
+                 basis_date: Optional[str] = None) -> tuple[list[tuple[str, float]], list[str], Optional[str]]:
     """[(已知日 = 报送日, 今天口径的股数)]、备注、拒绝原因。纯函数。
-    今天口径 = 报告股数 ÷ 当时 ADR 比例 × 报送日之后的拆股系数。依次:去掉离中位数 100 倍以上的录入错误;
+    今天口径 = 报告股数 ÷ 当时 ADR 比例 × 报送日(或 `basis_date`:手工表记录时的口径)之后的拆股系数。依次:去掉离中位数 100 倍以上的录入错误;
     去掉单点错(离两边都 > 1.5 倍、两边彼此在 1.1 倍内);相邻跳 50% 以上 ⇒ 只留最后一跳之后的段 ——
     **但如果留下的只有最新一个点,就不写**:没法分辨是公司真变了还是最新一期换了口径(实测 BABA 2026 年报)。"""
     notes: list[str] = []
@@ -187,7 +229,7 @@ def clean_shares(key: str, pts: list[tuple[str, str, float]], splits: list[tuple
     kept = [(e, f, v) for e, f, v in pts if med / OUTLIER_X <= v <= med * OUTLIER_X]
     if len(kept) < len(pts):
         notes.append(f"丢掉 {len(pts) - len(kept)} 个录入错误点")
-    adj = sorted((f, v / _adr_ratio(key, f) * _factor_after(f, splits)) for e, f, v in kept)
+    adj = sorted((f, v / _adr_ratio(key, f) * _factor_after(basis_date or f, splits)) for e, f, v in kept)
     i = 1
     while 0 < i < len(adj) - 1:
         a, b, c = adj[i - 1][1], adj[i][1], adj[i + 1][1]
@@ -244,14 +286,18 @@ def build_mcap(key: str, raw: list[dict], sources: dict[str, Any], start: str = 
     cl = _closes(raw)
     if not cl:
         return {"rows": [], "why": "没有日线"}
-    src, pts = choose_source(sources)
+    basis_date = None
+    if key in MANUAL_SHARES:
+        src, pts, basis_date = "manual", [(d, f, v) for d, f, v, _ in MANUAL_SHARES[key]["rows"]], MANUAL_BASIS_DATE
+    else:
+        src, pts = choose_source(sources)
     if not pts:
         return {"rows": [], "why": "SEC 里没有可用的股数(三种口径都没有)"}
     last_filed = max(f for _, f, _ in pts)
     if (datetime.strptime(cl[-1][0], "%Y-%m-%d") - datetime.strptime(last_filed, "%Y-%m-%d")).days > STALE_DAYS:
         return {"rows": [], "src": src, "why": f"股数停在 {last_filed}({src}),太旧,不写"}
     splits = split_events(raw)
-    shares, notes, refuse = clean_shares(key, pts, splits)
+    shares, notes, refuse = clean_shares(key, pts, splits, basis_date)
     if refuse:
         return {"rows": [], "src": src, "notes": notes, "why": refuse}
     known_dates = [f for f, _ in shares]
@@ -274,21 +320,23 @@ async def refresh_mcap(candidates: Optional[list] = None, start: str = START, co
     pool = candidates if candidates is not None else [c for c in CANDIDATES if c.cls == "equity"]
     todo = [c for c in pool if c.code.endswith(".US")]
     skipped = [c.key for c in pool if not c.code.endswith(".US")]
+    sec_why = None
     try:
         ciks = await dl.get_sec_ticker_ciks()
-    except Exception as e:  # noqa: BLE001
-        return {"ok": False, "why": f"SEC 代码表读不到:{type(e).__name__}: {str(e)[:160]}", "companies": len(todo)}
+    except Exception as e:  # noqa: BLE001 — 手工表里的公司不需要 SEC,照算;其余报 SEC 读不到
+        ciks, sec_why = {}, f"SEC 代码表读不到:{type(e).__name__}: {str(e)[:160]}"
     sem = asyncio.Semaphore(concurrency)
 
     async def one(c):
+        manual = c.key in MANUAL_SHARES
         cik = ciks.get(c.key.upper())
-        if cik is None:
-            return {"key": c.key, "ok": False, "why": "不在 SEC 申报公司表里"}
+        if cik is None and not manual:
+            return {"key": c.key, "ok": False, "why": sec_why or "不在 SEC 申报公司表里"}
         async with sem:
             try:
                 t, ex = split_code(c.code)
                 sources: dict[str, list] = {}
-                for k_cik in PREDECESSOR_CIKS.get(c.key, []) + [cik]:
+                for k_cik in ([] if manual else PREDECESSOR_CIKS.get(c.key, []) + [cik]):
                     for name, (tax, tag, _) in SEC_TAGS.items():
                         got = await dl.get_sec_concept(k_cik, tax, tag)
                         await asyncio.sleep(0.15)   # SEC 限速 10 次 / 秒,4 路并发留足余量
@@ -309,6 +357,8 @@ async def refresh_mcap(candidates: Optional[list] = None, start: str = START, co
     ok = [r for r in res if r.get("ok")]
     enough = len(ok) >= max(1, math.ceil(MCAP_MIN_SHARE_OK * len(todo)))
     return {"ok": enough, "companies": len(todo), "companies_ok": len(ok), "not_sec_listed": skipped,
+            **({"why": sec_why} if sec_why else {}),
+            "manual": sorted(k for k in MANUAL_SHARES if any(r.get("key") == k and r.get("ok") for r in res)),
             "rows": sum(int(r.get("rows") or 0) for r in ok),
             "earliest": min((r["first"] for r in ok), default=None),
             "src": {n: sorted(r["key"] for r in ok if r.get("src") == n) for n in ("cso", "wavg")},
@@ -448,7 +498,7 @@ async def discover_onchain_forms(as_of: Optional[str] = None) -> dict[str, Any]:
 RERUN_AFTER_DAYS = 6
 LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
-PART_VERSIONS = {"prices": 1, "mcap": 3, "onchain_forms": 1}
+PART_VERSIONS = {"prices": 1, "mcap": 4, "onchain_forms": 1}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
@@ -477,7 +527,7 @@ async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
 
 def _brief(name: str, r: dict) -> dict:
     keep = {"prices": ("symbols", "symbols_ok", "written", "elapsed_s"),
-            "mcap": ("companies", "companies_ok", "rows", "earliest", "src", "not_sec_listed", "notes"),
+            "mcap": ("companies", "companies_ok", "rows", "earliest", "src", "manual", "not_sec_listed", "notes"),
             "onchain_forms": ("tokens", "by_type", "matched", "candidates_with_form", "with_issuer")}[name]
     out = {"ok": bool(r.get("ok")), "v": PART_VERSIONS[name], **{k: r.get(k) for k in keep if k in r}}
     if r.get("skipped"):
