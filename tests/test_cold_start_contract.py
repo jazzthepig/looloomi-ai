@@ -218,7 +218,9 @@ def test_project_state_header_not_older_than_newest_ledger_entry():
     headings = [l for l in ledger.splitlines() if l.startswith("## ")]
     dates = [d for h in headings for d in re.findall(r"\b(20\d{2}-\d{2}-\d{2})\b", h)]
     import datetime as _dt
-    today = _dt.date.today().isoformat()
+    # UTC, not the machine's local date (rule 5c). 10-15: preflight ran on the JST Mac at 01:30 local, a lane had
+    # headed its entry with its JST date (2026-10-16), and a header correctly written in UTC (10-15) failed every push.
+    today = _dt.datetime.now(_dt.timezone.utc).date().isoformat()
     dates = [d for d in dates if d <= today]        # never trust a future entry date
     if not dates:
         return
