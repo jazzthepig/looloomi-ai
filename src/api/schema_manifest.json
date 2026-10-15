@@ -89,6 +89,7 @@
     "wallet_profiles",
     "world50_mcap_weekly",
     "world50_onchain_forms",
+    "world50_revenue",
     "write_log"
   ],
   "write_columns": {
@@ -238,6 +239,16 @@
       "symbol",
       "token_id",
       "volume_24h_usd"
+    ],
+    "world50_revenue": [
+      "accn",
+      "filed",
+      "key",
+      "period_end",
+      "period_start",
+      "revenue",
+      "tag",
+      "unit"
     ]
   },
   "rpc_functions": [

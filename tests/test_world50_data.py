@@ -85,7 +85,7 @@ def test_wavg_fallback_adr_ratio_outliers_and_jumps():
     assert any("录入错误" in n for n in out["notes"])
     two = _dei(("2019-12-31", "2020-01-20", 25.9e9), ("2020-06-30", "2020-07-20", 25.9e9))
     tsm = wd.build_mcap("TSM", bars, {"dei": two})
-    assert {round(r["mcap_usd"] / 1e9, 1) for r in tsm["rows"]} == {259.0}, "TSM 一份 ADR = 5 股普通股"
+    assert {round(r["mcap_usd"] / 1e9, 1) for r in tsm["rows"]} <= {259.0, 259.3}, "TSM 一份 ADR = 5 股普通股(259.3 = 2015 年 20-F 封面接在前面)"
     merged = wd.build_mcap("Y", bars, {"dei": _dei(("2019-12-31", "2020-01-20", 1e9), ("2020-03-31", "2020-04-20", 2e9),
                                                     ("2020-06-30", "2020-07-20", 2e9))})
     assert merged["rows"][0]["d"] >= "2020-04-20" and any("跳" in n for n in merged["notes"]), "股数翻倍:只用之后的段"
@@ -289,6 +289,10 @@ def test_run_week_is_not_ok_when_any_part_fails(monkeypatch):
     monkeypatch.setattr(wd, "refresh_mcap", mcap)
     monkeypatch.setattr(wd, "discover_onchain_forms", forms)
     monkeypatch.setattr(wd, "_recent_ok_parts", nothing_recent)
+
+    async def revenue():
+        return {"ok": True, "companies": 81, "companies_ok": 80, "rows": 9000}
+    monkeypatch.setattr(wd, "refresh_revenue", revenue)
     out = asyncio.run(wd.run_week())
     assert out["ok"] is False and out["refused"] is False
     assert out["reason"].startswith("没成的段:mcap"), out["reason"]
@@ -333,7 +337,7 @@ def test_deploys_do_not_rerun_parts_that_already_succeeded(monkeypatch):
         return {"ok": True}
 
     async def recent():
-        return {"prices", "mcap", "onchain_forms"}
+        return {"prices", "mcap", "onchain_forms", "revenue"}
     monkeypatch.setattr(th, "run_once", prices)
     monkeypatch.setattr(wd, "_recent_ok_parts", recent)
     out = asyncio.run(wd.run_week())
@@ -520,3 +524,32 @@ def test_known_spinoff_on_the_merger_day_is_not_a_split():
     assert out["rows"][0]["d"] < "2020-03-01"
     pre = [r for r in out["rows"] if r["d"] < "2020-04-03"]
     assert {round(r["mcap_usd"] / 1e9, 2) for r in pre} == {13.68}, "合并前 0.866e9 股 × 原始价 15.8"
+
+
+def test_20f_cover_prefix_joins_before_xbrl_and_drops_restated_comparatives(monkeypatch):
+    """外国发行人 2018 年前没有 XBRL:20-F 封面的股数接在前面;首份 XBRL 年报带的往年对比数(期末早于封面最后一行)丢掉。"""
+    bars = _bars([10.0] * 900, start="2015-01-01")
+    ifrs = _concept([{"start": "2015-01-01", "end": "2015-12-31", "filed": "2018-03-15", "val": 6.3e9},
+                     {"start": "2016-01-01", "end": "2016-12-31", "filed": "2018-03-15", "val": 7.8e9},
+                     {"start": "2017-01-01", "end": "2017-12-31", "filed": "2018-03-15", "val": 8.2e9}])
+    monkeypatch.setitem(wd.SEC_PREFIX, "PFX", [("2014-12-31", "2015-03-12", 6.2e9, "a"), ("2016-12-31", "2017-03-09", 8.1e9, "b")])
+    monkeypatch.setitem(wd.SOURCE_OVERRIDE, "PFX", "ifrs_wavg")
+    out = wd.build_mcap("PFX", bars, {"ifrs_wavg": ifrs})
+    assert out["why"] is None and out["rows"][0]["d"] >= "2015-03-12" and out["rows"][0]["d"] < "2015-03-31"
+    by = {r["d"][:7]: round(r["mcap_usd"] / 1e9) for r in out["rows"]}
+    assert by["2015-06"] == 62 and by["2017-06"] == 81 and by["2018-06"] == 82, "封面 → 封面 → XBRL 最新一期"
+
+
+def test_revenue_rows_keep_quarters_and_years_and_the_original_filing():
+    """营收:只收一季 / 一年的期间,同一期间取最早报送(原始报告,不用后来的重述);外国公司按本币原样存。"""
+    c = {"units": {"USD": [
+        {"start": "2023-01-01", "end": "2023-03-31", "filed": "2023-05-01", "val": 100.0, "accn": "a"},
+        {"start": "2023-01-01", "end": "2023-03-31", "filed": "2024-05-01", "val": 101.0, "accn": "b"},   # 重述
+        {"start": "2023-01-01", "end": "2023-06-30", "filed": "2023-08-01", "val": 210.0, "accn": "c"},   # 半年累计
+        {"start": "2023-01-01", "end": "2023-12-31", "filed": "2024-02-01", "val": 420.0, "accn": "d"}]},
+         }
+    eur = {"units": {"EUR": [{"start": "2022-01-01", "end": "2022-12-31", "filed": "2023-03-01", "val": 9.0, "accn": "e"}]}}
+    rows = wd.revenue_rows("X", "us-gaap:Revenues", [c, eur])
+    assert [(r["unit"], r["period_end"], r["revenue"], r["accn"]) for r in rows] == [
+        ("EUR", "2022-12-31", 9.0, "e"), ("USD", "2023-03-31", 100.0, "a"), ("USD", "2023-12-31", 420.0, "d")]
+    assert set(rows[0]) == set(wd.WRITES_COLUMNS["world50_revenue"])

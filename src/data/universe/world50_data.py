@@ -49,9 +49,10 @@ import unicodedata
 from datetime import datetime, timezone
 from typing import Any, Iterable, Optional
 
-WRITES_TABLES = ("world50_mcap_weekly", "world50_onchain_forms", "asset_mcap_daily")
+WRITES_TABLES = ("world50_mcap_weekly", "world50_onchain_forms", "asset_mcap_daily", "world50_revenue")
 WRITES_COLUMNS = {
     "world50_mcap_weekly": ("key", "d", "mcap_usd", "source"),
+    "world50_revenue": ("key", "tag", "unit", "period_start", "period_end", "filed", "revenue", "accn"),
     "world50_onchain_forms": ("as_of", "token_id", "key", "symbol", "name", "category", "issuer", "match_rule",
                               "price_usd", "mcap_usd", "volume_24h_usd"),
 }
@@ -206,6 +207,30 @@ MANUAL_SHARES: dict[str, dict[str, Any]] = {
     },
 }
 
+#: 外国 20-F 发行人在交 XBRL 之前(约 2018 年前)结构化接口里没有股数 —— 当时就公开了的 20-F 封面
+#: 「Indicate the number of outstanding shares of each of the issuer's classes …」那一栏。按报告口径(普通股数,
+#: 不除 ADR、不换算拆股),只接在 SEC 结构化数据之前;SEC 那边期末早于最后一行封面的(首份 XBRL 年报带的往年对比数)丢掉。
+#: 口径要和接上的 SEC 口径一致:SHEL 是 A + B 两类合计;BHP / RIO 是 Ltd / plc 单边(美国挂牌的那一边,BHP 2022 统一时由
+#: KNOWN_SHARE_EVENTS 接成集团口径;RIO 现在也是 plc 单边,低估集团约两成,注明)。每行 = (期末, 报送日, 股数, accession)。
+SEC_PREFIX: dict[str, list[tuple[str, str, float, str]]] = {
+    "SHEL": [("2014-12-31", "2015-03-12", 3_867_361_824 + 2_427_675_757, "0001193125-15-088212"),
+             ("2015-12-31", "2016-03-10", 3_965_989_512 + 2_431_531_014, "0001193125-16-499117"),
+             ("2016-12-31", "2017-03-09", 4_406_063_759 + 3_739_277_889, "0001564590-17-003822")],   # 2016-02 收购 BG
+    "BHP": [("2014-06-30", "2014-09-25", 3_211_691_105, "0001193125-14-351924"),                      # BHP Billiton Limited
+            ("2019-06-30", "2019-09-17", 2_945_851_394, "0001193125-19-245975")],                     # 2018-12 场外回购注销后
+    "TSM": [("2014-12-31", "2015-04-13", 25_929_662_436, "0001193125-15-126836")],
+    "NVS": [("2014-12-31", "2015-01-27", 2_398_626_257, "0001047469-15-000433"),
+            ("2016-12-31", "2017-01-25", 2_374_059_013, "0001047469-17-000338")],
+    "HSBC": [("2014-12-31", "2015-02-26", 19_217_874_260, "0001193125-15-065289"),
+             ("2016-12-31", "2017-02-21", 20_191_586_214, "0001628280-17-001527")],
+    "TTE": [("2014-12-31", "2015-03-26", 2_385_267_525, "0001193125-15-106292"),
+            ("2016-12-31", "2017-03-17", 2_430_365_862, "0001193125-17-086269")],
+    "SAP": [("2014-12-31", "2015-03-20", 1_228_504_232, "0001193125-15-099258")],
+    "NVO": [("2014-12-31", "2015-02-05", 537_436_000 + 2_112_564_000, "0001171843-15-000625")],      # A + B 股
+    "AZN": [("2014-12-31", "2015-03-10", 1_263_143_338, "0000950103-15-001933")],
+    "RIO": [("2014-12-31", "2015-03-06", 1_425_377_388, "0001193125-15-079473")],                     # Rio Tinto plc
+}
+
 #: 不在 SEC 申报的公司:股本取**各自交易所 / 法定披露平台的原始文件**(Jazz 10-15:三星 → 韩国交易所,茅台 → 上交所)。
 #: 和 SEC 一样按**当时报的口径**记(不换算),拆股 / 送股由价格侧认出、股数印证(confirm_splits)后统一到今天口径;
 #: 已知日 = 文件公开日。价格是本币 ⇒ 市值 × 当周汇率(EODHD `USD{ccy}.FOREX`)。多类股按「哪几类相加」写在 what 里;
@@ -252,8 +277,8 @@ EXCHANGE_SHARES: dict[str, dict[str, Any]] = {
                            ("2018-12-04", "2018-12-04", 5_969_782_550, "samsung.com/sec/ir/stock-information/listing-info(库存股全部注销)"),
                            ("2025-02-20", "2025-02-20", 5_919_637_922, "samsung.com/sec/ir/stock-information/listing-info(2025-02-18 决议注销)"),
                            ("2026-04-02", "2026-04-02", 5_846_278_608, "samsung.com/sec/ir/stock-information/listing-info(注销 73,359,314 股)")]},
-    "ROG.SW": {"ccy": "CHF", "what": "无记名股 + 非投票权益证券(Genussscheine,价格线是它;2026-03 换成参与证 ROP,"
-                                     "ROG.SW 的价格到 2026-03-25 为止 —— 价格线接续是另一件事);公司章程 §3–§4、IR 问答「股本自 2000 年的变化」",
+    "ROG.SW": {"ccy": "CHF", "what": "无记名股 + 非投票权益证券(2026-03 换成参与证)合计;价格线是无记名股 RO.SW"
+                                     "(world50.LOCAL_PRICE_CODE:ROG.SW 停在 2026-03-25);公司章程 §3–§4、IR 问答「股本自 2000 年的变化」",
                "rows": [("2011-03-01", "2011-03-01", 862_562_700, "roche:archiv-statuten-2011-en.pdf(160,000,000 + 702,562,700)"),
                         ("2019-03-05", "2019-03-05", 862_562_700, "roche:archiv_statuten_2019_en.pdf(160,000,000 + 702,562,700)"),
                         # 2021-11-26 临时股东会批准注销 53,309,000 无记名股(回购诺华持股);2022-02-03 入商业登记、02-08 刊登 SOGC
@@ -481,9 +506,12 @@ def build_mcap(key: str, raw: list[dict], sources: dict[str, Any], start: str = 
         pts = sec_points(sources.get(src), duration=SEC_TAGS[src][2])
     else:
         src, pts = choose_source(sources)
-    if src != "manual":
+    if src not in ("manual", "exchange"):
         fix = SEC_FIX.get(key, {})
         pts = [(e, f, fix[e][0] if e in fix else v) for e, f, v in pts]
+        if key in SEC_PREFIX and pts:
+            first_f, last_pre_end = min(f for _, f, _ in pts), max(e for e, _, _, _ in SEC_PREFIX[key])
+            pts = [(e, f, v) for e, f, v, _ in SEC_PREFIX[key] if f < first_f] + [p for p in pts if p[0] > last_pre_end]
     if not pts:
         return {"rows": [], "why": "SEC 里没有可用的股数(几种口径都没有)"}
     last_filed = max(f for _, f, _ in pts)
@@ -623,6 +651,87 @@ async def refresh_mcap(candidates: Optional[list] = None, start: str = START, co
             "failed": [{"key": r["key"], "why": r.get("why")} for r in res if not r.get("ok")][:40]}
 
 
+# ── 营收(增长分的输入,S-578 / S-581 预注册的 EW×(Mom+Growth) 臂)─────────────────────────────
+
+#: 营收的几种标签:不同公司、不同年份用的不一样(2018 年 ASC 606 之后多数换成 RevenueFromContract…;银行用净利息后的营收;
+#: IFRS 发行人用 ifrs-full:Revenue)。原样存每个标签、每种单位(外国公司报本币;增长是同币种同比,不需要换汇)。
+REVENUE_TAGS = (("us-gaap", "Revenues"), ("us-gaap", "RevenueFromContractWithCustomerExcludingAssessedTax"),
+                ("us-gaap", "SalesRevenueNet"), ("us-gaap", "RevenuesNetOfInterestExpense"), ("ifrs-full", "Revenue"))
+
+
+def revenue_rows(key: str, tag: str, concept: Any) -> list[dict]:
+    """SEC companyconcept(可以是多个 CIK 的列表)→ world50_revenue 行。只收一季(80–100 天)与一年(350–380 天)的期间;
+    同一期间多份报送取**最早**的(当时的原始报告),已知日 = 报送日。纯函数。"""
+    concepts = concept if isinstance(concept, list) else [concept]
+    best: dict[tuple, dict] = {}
+    for c in concepts:
+        for unit, facts in (((c or {}).get("units")) or {}).items():
+            for f in facts if isinstance(facts, list) else []:
+                st, en, fi = (str(f.get(k) or "")[:10] for k in ("start", "end", "filed"))
+                v = _num(f.get("val"))
+                if len(st) != 10 or len(en) != 10 or len(fi) != 10 or v is None or v <= 0:
+                    continue
+                try:
+                    days = (datetime.strptime(en, "%Y-%m-%d") - datetime.strptime(st, "%Y-%m-%d")).days
+                except ValueError:
+                    continue
+                if not (80 <= days <= 100 or 350 <= days <= 380):
+                    continue
+                k = (unit, st, en)
+                if k not in best or fi < best[k]["filed"]:
+                    best[k] = {"key": key, "tag": tag, "unit": unit, "period_start": st, "period_end": en,
+                               "filed": fi, "revenue": v, "accn": str(f.get("accn") or "")}
+    return [best[k] for k in sorted(best)]
+
+
+async def refresh_revenue(candidates: Optional[list] = None, concurrency: int = 4) -> dict[str, Any]:
+    """在 SEC 申报的候选(含旧 CIK)的营收原始事实 → world50_revenue。增长分在研究侧按时点现算(只用报送日之前的)。"""
+    from src.api.store import supabase_upsert_table
+    from src.data.market import data_layer as dl
+    from src.data.universe.world50 import CANDIDATES
+    pool = candidates if candidates is not None else [c for c in CANDIDATES if c.cls == "equity"]
+    todo = [c for c in pool if c.code.endswith(".US")]
+    try:
+        ciks = await dl.get_sec_ticker_ciks()
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "why": f"SEC 代码表读不到:{type(e).__name__}: {str(e)[:160]}"}
+    sem = asyncio.Semaphore(concurrency)
+
+    async def one(c):
+        cik = ciks.get(c.key.upper())
+        if cik is None:
+            return {"key": c.key, "ok": False, "why": "不在 SEC 申报公司表里"}
+        rows: list[dict] = []
+        async with sem:
+            try:
+                for tax, tag in REVENUE_TAGS:
+                    got = []
+                    for k_cik in PREDECESSOR_CIKS.get(c.key, []) + [cik]:
+                        g = await dl.get_sec_concept(k_cik, tax, tag)
+                        await asyncio.sleep(0.15)
+                        if g:
+                            got.append(g)
+                    if got:
+                        rows += revenue_rows(c.key, f"{tax}:{tag}", got)
+            except Exception as e:  # noqa: BLE001
+                return {"key": c.key, "ok": False, "why": f"{type(e).__name__}: {str(e)[:140]}"}
+        if not rows:
+            return {"key": c.key, "ok": False, "why": "几种营收标签都没有"}
+        for i in range(0, len(rows), 2000):
+            w = await supabase_upsert_table("world50_revenue", rows[i:i + 2000],
+                                            on_conflict="key,tag,unit,period_start,period_end")
+            if not w.ok:
+                return {"key": c.key, "ok": False, "why": f"写入失败:{w.why[:120]}"}
+        return {"key": c.key, "ok": True, "rows": len(rows), "first": min(r["period_end"] for r in rows)}
+
+    res = await asyncio.gather(*[one(c) for c in todo])
+    ok = [r for r in res if r.get("ok")]
+    return {"ok": len(ok) >= max(1, math.ceil(MCAP_MIN_SHARE_OK * len(todo))), "companies": len(todo),
+            "companies_ok": len(ok), "rows": sum(r["rows"] for r in ok),
+            "earliest": min((r["first"] for r in ok), default=None),
+            "failed": [{"key": r["key"], "why": r.get("why")} for r in res if not r.get("ok")][:40]}
+
+
 # ── 链上形式 ────────────────────────────────────────────────────────────────
 
 METAL_WORDS = (("gold", "XAUUSD"), ("silver", "XAGUSD"), ("platinum", "XPTUSD"))
@@ -754,7 +863,7 @@ async def discover_onchain_forms(as_of: Optional[str] = None) -> dict[str, Any]:
 RERUN_AFTER_DAYS = 6
 LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
-PART_VERSIONS = {"prices": 2, "mcap": 9, "onchain_forms": 1}
+PART_VERSIONS = {"prices": 3, "mcap": 10, "onchain_forms": 1, "revenue": 1}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
@@ -785,7 +894,8 @@ def _brief(name: str, r: dict) -> dict:
     keep = {"prices": ("symbols", "symbols_ok", "written", "elapsed_s"),
             "mcap": ("companies", "companies_ok", "rows", "earliest", "src", "manual", "exchange", "crypto_backfill", "not_sec_listed",
                      "notes"),
-            "onchain_forms": ("tokens", "by_type", "matched", "candidates_with_form", "with_issuer")}[name]
+            "onchain_forms": ("tokens", "by_type", "matched", "candidates_with_form", "with_issuer"),
+            "revenue": ("companies", "companies_ok", "rows", "earliest")}[name]
     out = {"ok": bool(r.get("ok")), "v": PART_VERSIONS[name], **{k: r.get(k) for k in keep if k in r}}
     if r.get("skipped"):
         out["skipped"] = r["skipped"]
@@ -798,21 +908,22 @@ def _brief(name: str, r: dict) -> dict:
 
 
 def _say(name: str, r: dict) -> str:
-    label = {"prices": "日线", "mcap": "市值", "onchain_forms": "链上形式"}[name]
+    label = {"prices": "日线", "mcap": "市值", "onchain_forms": "链上形式", "revenue": "营收"}[name]
     if r.get("skipped"):
         return label + " 跳过(6 天内已成)"
     if not r.get("ok") and r.get("why") and not any(k in r for k in ("symbols_ok", "companies_ok", "tokens")):
         return f"{label} 没跑起来:{str(r['why'])[:80]}"
     if name == "prices":
         return f"日线 {r.get('symbols_ok')}/{r.get('symbols')}"
-    if name == "mcap":
-        return f"市值 {r.get('companies_ok')}/{r.get('companies')}"
+    if name in ("mcap", "revenue"):
+        return f"{label} {r.get('companies_ok')}/{r.get('companies')}"
     return f"链上形式 {r.get('tokens')} 条、对上 {r.get('candidates_with_form')} 个候选"
 
 
 async def run_week(force: bool = False) -> dict[str, Any]:
     from src.data.market.tradfi_history import run_once
-    steps = (("prices", run_once), ("mcap", refresh_mcap), ("onchain_forms", discover_onchain_forms))
+    steps = (("prices", run_once), ("mcap", refresh_mcap), ("onchain_forms", discover_onchain_forms),
+             ("revenue", refresh_revenue))
     done = set() if force else await _recent_ok_parts()
     parts: dict[str, dict] = {}
     for name, fn in steps:

@@ -85,6 +85,9 @@ _LOCAL = [
     ("0857.HK", "PetroChina", "CN"), ("SIE.XETRA", "Siemens", "DE"), ("OR.PA", "L'Oréal", "FR"),
     ("MC.PA", "LVMH", "FR"), ("2454.TW", "MediaTek", "TW"), ("0941.HK", "China Mobile", "CN"),
 ]
+#: 价格线与 key 不同的本地上市:罗氏的非投票权益证券(ROG)2026-03 换成参与证(新代码),ROG.SW 的价格停在 2026-03-25 ——
+#: 改用一直在交易的无记名股 RO.SW(与权益证券同等分红权,价差约几个百分点),key 不变,一条连续的价格线。
+LOCAL_PRICE_CODE = {"ROG.SW": "RO.SW"}
 # 2015–2024 曾是全球龙头、今天不在前 100 的(按时点选成分时必须在池子里,否则回放有幸存者偏差)
 _FORMER = [
     ("NVO", "Novo Nordisk", "DK", "US"), ("PFE", "Pfizer", "US", "US"), ("VZ", "Verizon", "US", "US"),
@@ -97,7 +100,7 @@ _FORMER = [
 EQUITIES = tuple(
     [_eq(t, n, f"{t}.US", "US") for t, n in _US]
     + [_eq(t, n, f"{t}.US", r, "美国上市") for t, n, r in _US_LISTED_FOREIGN]
-    + [_eq(t, n, t, r, "本地上市,无美国存托凭证") for t, n, r in _LOCAL]
+    + [_eq(t, n, LOCAL_PRICE_CODE.get(t, t), r, "本地上市,无美国存托凭证") for t, n, r in _LOCAL]
     + [_eq(t, n, f"{t}.US" if ex == "US" else t, r, "曾经的龙头(防幸存者偏差)") for t, n, r, ex in _FORMER]
 )
 
