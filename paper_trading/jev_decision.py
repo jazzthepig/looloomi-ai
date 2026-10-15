@@ -8,6 +8,44 @@ evaluated IN PARALLEL over the same state, in ONE call.
 
 The killer feature: 13 questions in 1 call = **12.2× cheaper + 10× faster**
 than 13 sequential calls (datacamp / flaviocopes community-validated).
+
+## T-095 / M-221 LocalQwenBackend (2026-10-14, refined 2026-10-14)
+
+Added: `LocalQwenBackend` — implements `JevDecisionBackend` against a **local
+LM Studio OpenAI-compatible endpoint** ($LMSTUDIO_BASE_URL, default
+http://localhost:1234). Bypasses the cometcloud MCP `lmstudio_*` tools because
+those inject a compliance system prompt + force thinking mode, and the 9B/27B
+Qwen3 models we have loaded here have实测 issues returning content within
+the 2,500-token budget (CLAUDE.md / [[feedback-qwen3-thinking-budget]] REVISION 3).
+
+Two modes (constructor picks one):
+
+1. **Default mode** (response_schema=None) — for the older prompt-only path.
+   Disables Qwen3 thinking via `chat_template_kwargs.enable_thinking=false`,
+   temperature 0, JSON output requested via prompt + response_format hint.
+   NOTE: this mode does NOT certify the thinking-token gate. The first round
+   of T-095 shipped in this mode; reasoning_tokens was likely > 0 in many
+   calls (10-14 follow-up probe measured 9 thinking tokens on `low` knob).
+
+2. **Strict mode** (response_schema=dict, require_no_thinking_tokens=True) —
+   for T-095 batch replays. Uses `response_format: {type: json_schema, strict}`
+   PLUS `reasoning_effort: "none"`, and HARD-ABORTS if the response reports
+   `usage.completion_tokens_details.reasoning_tokens > 0`. The `none` knob
+   is the only one verified to drive that field to 0 on both qwen3.5-9b
+   and qwen3.8-27b (alternative knobs `low`, `/api/v1/chat reasoning:"off"`,
+   `/no_think` prefix all fail at least one model — see
+   `research/t095/probe_thinking_off.py` for the matrix).
+
+- Caches every call by `(model_name, schema-tag-or-"none", sha256(prompt))`
+  so replays are bit-identical. Schema is part of the key so two callers
+  using different schemas don't collide.
+- **Fail-CLOSED**: any HTTP / parse / reasoning_tokens>0 error raises
+  immediately — does NOT return a safe-default JevDecision. T-095 explicitly
+  forbids substituting a default answer ("调用失败即中止,不补默认值"). This
+  is a deliberate deviation from the `JevDecisionBackend` Protocol's fail-OPEN
+  guidance, gated on `fail_closed=True` (the default).
+- Records the **actual** model name used (Qwen3.5 9B vs Qwen3.8 27B differ a lot)
+  on the `JevDecision.backend_name` so the replay can audit which one ran.
 Per-case cost ~$0.0004, $7/hr Doom @ 10Hz = latency budget 70–500ms.
 
 ## Why this module, why not just extend `jev_regime.py`?
@@ -47,10 +85,34 @@ import json
 import logging
 import os
 import time
+import urllib.error
+import urllib.request
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Callable, Mapping, Optional, Protocol, Sequence
 
 log = logging.getLogger(__name__)
+
+
+def _extract_reasoning_tokens(usage: dict[str, Any]) -> tuple[int, str]:
+    """Return (n, where_found) for Qwen3 thinking-mode tokens.
+
+    Tries two known shapes LM Studio emits:
+      usage.completion_tokens_details.reasoning_tokens
+      usage.stats.reasoning_output_tokens
+    Returns (-1, "unknown") if the field is absent (older LM Studio builds) — callers
+    decide how to react (T-095 acceptance: abort if rt > 0; rt == -1 is also a fail
+    because we cannot certify the gate).
+    """
+    if not isinstance(usage, dict):
+        return -1, "usage-not-dict"
+    ctd = usage.get("completion_tokens_details") or {}
+    if isinstance(ctd, dict) and "reasoning_tokens" in ctd:
+        return int(ctd["reasoning_tokens"] or 0), "completion_tokens_details"
+    stats = usage.get("stats") or {}
+    if isinstance(stats, dict) and "reasoning_output_tokens" in stats:
+        return int(stats["reasoning_output_tokens"] or 0), "stats.reasoning_output_tokens"
+    return -1, "unknown"
 
 
 # ── Output type (frozen — every batch() produces one of these) ──────────────
@@ -544,20 +606,405 @@ class TypesafeJevDecisionBackend:
         )
 
 
+# ── Local Qwen backend (T-095 / M-221) ──────────────────────────────────────
+
+
+class LocalQwenBackend:
+    """LM Studio OpenAI-compatible endpoint — T-095 / M-221.
+
+    Implements `JevDecisionBackend`. Talks to a local OpenAI-compatible chat
+    completions endpoint, applies Qwen3-specific knobs (disable thinking),
+    parses JSON output, and caches every call by `(model, sha256(prompt))` so
+    replays are reproducible.
+
+    **Fail-CLOSED by default.** T-095 explicitly says "调用失败即中止,不补
+    默认值" — any HTTP / parse error raises immediately. Pass
+    `fail_closed=False` to fall back to safe-defaults like `TypesafeJevDecisionBackend`
+    does (NOT recommended for T-095).
+
+    Args:
+        base_url: OpenAI-compatible base URL. Reads `$LMSTUDIO_BASE_URL`
+            first, defaults to `http://localhost:1234`.
+        model: Model name to send in the request. Reads `$LMSTUDIO_MODEL`
+            first, defaults to `qwen/qwen3.8-27b` (Qwen3.5 9B 8-bit has
+            thinking-mode bleed per [[feedback-qwen3-thinking-budget]] and
+            returns empty content on the standard chat-completions endpoint
+            — verified 2026-10-14).
+        cache_dir: Where to write per-call JSON cache. Defaults to
+            `<repo>/paper_trading/state/local_qwen_t095/`.
+        fail_closed: If True (default), raise on errors; if False, return
+            a no-signal JevDecision (same shape as `TypesafeJevDecisionBackend`).
+        timeout_s: HTTP timeout per request.
+        max_tokens: Response cap. Qwen3 27B baseline: 6000.
+    """
+
+    name = "local_qwen_lmstudio"
+
+    DEFAULT_BASE_URL = "http://localhost:1234"
+    DEFAULT_MODEL = "qwen/qwen3.8-27b"
+
+    def __init__(
+        self,
+        *,
+        base_url: Optional[str] = None,
+        model: Optional[str] = None,
+        cache_dir: Optional[Path] = None,
+        fail_closed: bool = True,
+        timeout_s: float = 60.0,
+        response_schema: Optional[dict[str, Any]] = None,
+        require_no_thinking_tokens: bool = False,
+        seed: int = 42,
+        max_tokens: int = 6000,
+    ) -> None:
+        self._base_url = (
+            base_url
+            or os.environ.get("LMSTUDIO_BASE_URL")
+            or self.DEFAULT_BASE_URL
+        ).rstrip("/")
+        self._model = (
+            model
+            or os.environ.get("LMSTUDIO_MODEL")
+            or self.DEFAULT_MODEL
+        )
+        self._fail_closed = bool(fail_closed)
+        self._timeout_s = float(timeout_s)
+        self._max_tokens = int(max_tokens)
+        self._response_schema = response_schema  # if set: use strict json_schema + reasoning_effort=none
+        self._require_no_thinking_tokens = bool(require_no_thinking_tokens)
+        self._seed = int(seed)
+        if cache_dir is None:
+            _root = Path(__file__).resolve().parent.parent
+            cache_dir = _root / "paper_trading" / "state" / "local_qwen_t095"
+        self._cache_dir = Path(cache_dir)
+        self._cache_dir.mkdir(parents=True, exist_ok=True)
+        # Per-instance cache: keyed by (model, schema-hash-or-"none", sha256(prompt))
+        # Schema is part of the key so two callers using different schemas get distinct rows.
+        self._cache: dict[str, dict[str, Any]] = {}
+        cache_filename = f"{self._model.replace('/', '_')}_{self._schema_tag()}.jsonl"
+        self._cache_path = self._cache_dir / cache_filename
+        if self._cache_path.exists():
+            for line in self._cache_path.read_text().splitlines():
+                if line.strip():
+                    row = json.loads(line)
+                    self._cache[row["k"]] = row["resp"]
+
+    # ── Public ───────────────────────────────────────────────────────────────
+
+    def evaluate_batch(
+        self,
+        state_payload: Mapping[str, Any],
+        questions: Sequence[JevQuestion],
+    ) -> JevDecision:
+        """Run one batch. Fail-closed (raises) on error unless fail_closed=False."""
+        bar_ts = str(state_payload.get("bar_ts") or "")
+        if not bar_ts:
+            raise ValueError(
+                "state_payload 必须带 bar_ts (ISO date) —— 没有它,Qwen batch 就无法对应到具体的 bar/决策日志行"
+            )
+
+        prompt = self._build_prompt(state_payload, questions)
+        cache_key = self._make_cache_key(prompt)
+        if cache_key in self._cache:
+            return self._assemble(bar_ts, questions, self._cache[cache_key])
+
+        body = self._build_request_body(prompt)
+        t0 = time.monotonic()
+        try:
+            response_body = self._request(body)
+        except Exception as exc:                              # noqa: BLE001
+            latency_ms = (time.monotonic() - t0) * 1000.0
+            log.warning(
+                "LocalQwenBackend fail-closed at %s after %.1fms: %s: %s",
+                bar_ts, latency_ms, type(exc).__name__, str(exc)[:200],
+            )
+            if self._fail_closed:
+                raise RuntimeError(
+                    f"LocalQwenBackend fail-closed at {bar_ts}: "
+                    f"{type(exc).__name__}: {str(exc)[:200]}"
+                ) from exc
+            return self._fail_open(bar_ts, questions, error=str(exc))
+        latency_ms = (time.monotonic() - t0) * 1000.0
+
+        # Hard thinking-token guard — T-095 acceptance gate.
+        if self._require_no_thinking_tokens:
+            usage = (response_body or {}).get("usage") or {}
+            rt, where = _extract_reasoning_tokens(usage)
+            if rt != 0:
+                msg = (
+                    f"LocalQwenBackend reasoning_tokens={rt} (field={where}) > 0 "
+                    f"at {bar_ts} — abort (per T-095 acceptance)"
+                )
+                if self._fail_closed:
+                    raise RuntimeError(msg)
+                return self._fail_open(bar_ts, questions, error=msg)
+
+        try:
+            answers, input_tokens = self._parse_response(response_body, questions)
+        except Exception as exc:                              # noqa: BLE001
+            log.warning(
+                "LocalQwenBackend response parse failed at %s: %s: %s",
+                bar_ts, type(exc).__name__, str(exc)[:200],
+            )
+            if self._fail_closed:
+                raise RuntimeError(
+                    f"LocalQwenBackend parse fail-closed at {bar_ts}: "
+                    f"{type(exc).__name__}: {str(exc)[:200]}"
+                ) from exc
+            return self._fail_open(bar_ts, questions, error=f"parse: {exc}")
+
+        # Persist to disk cache.
+        self._cache[cache_key] = response_body
+        with self._cache_path.open("a") as fh:
+            fh.write(json.dumps({"k": cache_key, "resp": response_body}) + "\n")
+
+        return JevDecision(
+            bar_ts=bar_ts,
+            answers=answers,
+            jev_latency_ms=round(latency_ms, 3),
+            jev_input_tokens=int(input_tokens),
+            backend_name=self.name,
+            mock=False,
+            error=None,
+            raw=response_body if isinstance(response_body, dict) else None,
+        )
+
+    # ── Prompt + key construction ──────────────────────────────────────────
+
+    def _build_prompt(
+        self,
+        state_payload: Mapping[str, Any],
+        questions: Sequence[JevQuestion],
+    ) -> str:
+        """Build a single user message asking for JSON with one key per question.
+
+        We use a single user message (no system) so the LM Studio Qwen3 base
+        model isn't biased by the cometcloud MCP compliance system prompt.
+        T-095 explicitly forbids the MCP path.
+        """
+        q_lines: list[str] = []
+        for i, q in enumerate(questions, 1):
+            if q.primitive == "Choice":
+                opts = ", ".join(q.criteria.keys()) if isinstance(q.criteria, dict) else str(q.criteria)
+                q_lines.append(
+                    f"{i}. NAME \"{q.name}\" (CHOICE): {q.instructions}\n"
+                    f"   Options: {opts}"
+                )
+            elif q.primitive == "Score":
+                q_lines.append(
+                    f"{i}. NAME \"{q.name}\" (SCORE): {q.instructions}\n"
+                    f"   Levels: {q.criteria}"
+                )
+            elif q.primitive == "Noul":
+                q_lines.append(
+                    f"{i}. NAME \"{q.name}\" (NOUL: probability 0-1): {q.instructions}"
+                )
+            else:
+                raise ValueError(f"unknown primitive {q.primitive!r}")
+
+        prompt = (
+            "You are an analyst answering bound questions about the state below. "
+            "Respond ONLY with a single JSON object mapping each NAME above to its "
+            "answer. No prose, no markdown, no commentary.\n\n"
+            "For CHOICE: {{\"choice\": \"<option_name>\", \"probabilities\": {{\"<opt>\": p, ...}}, \"confidence\": float}}\n"
+            "For SCORE: {{\"score\": float, \"legend\": {{...}}, \"probabilities\": {{...}}}}\n"
+            "For NOUL: {{\"noul\": float_between_0_and_1}}\n\n"
+            f"STATE: {json.dumps(state_payload, sort_keys=True)}\n\n"
+            "QUESTIONS:\n" + "\n".join(q_lines) + "\n\n"
+            "JSON answer:"
+        )
+        return prompt
+
+    def _make_cache_key(self, prompt: str) -> str:
+        import hashlib
+        h = hashlib.sha256()
+        h.update(self._model.encode())
+        h.update(b"|")
+        h.update(self._schema_tag().encode())
+        h.update(b"|")
+        h.update(prompt.encode())
+        return h.hexdigest()
+
+    def _schema_tag(self) -> str:
+        if self._response_schema is None:
+            return "none"
+        import hashlib
+        canonical = json.dumps(self._response_schema, sort_keys=True)
+        return hashlib.sha256(canonical.encode()).hexdigest()[:12]
+
+    # ── HTTP ────────────────────────────────────────────────────────────────
+
+    def _build_request_body(self, prompt: str) -> dict[str, Any]:
+        """LM Studio OpenAI-compatible chat/completions body with Qwen3 knobs.
+
+        Two modes:
+          - default (response_schema=None): ask for JSON in prompt + parse defensively.
+            Backwards-compatible path used by the prior T-095 round.
+          - strict (response_schema=dict): use `response_format.json_schema` strict
+            + `reasoning_effort=none`. Per Seth 2026-10-14, the `none` knob is the
+            ONLY one proven to drive `completion_tokens_details.reasoning_tokens` to 0
+            on both qwen3.5-9b and qwen3.8-27b (`low` does not; `/api/v1/chat` rejects).
+
+        Note: LM Studio rejects `response_format.type=json_object` — its only
+        supported values are `json_schema` and `text`.
+        """
+        body: dict[str, Any] = {
+            "model": self._model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0,
+            "max_tokens": self._max_tokens,
+            "stream": False,
+            "seed": self._seed,
+            # Qwen3-specific: disable thinking at the template level (saves budget,
+            # kills the 94-100% thinking-mode bleed the 9B/27B models show without it).
+            "chat_template_kwargs": {"enable_thinking": False},
+        }
+        if self._response_schema is not None:
+            body["reasoning_effort"] = "none"           # verified-effective (probe 2026-10-14)
+            body["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "local_qwen_strict",
+                    "strict": True,
+                    "schema": self._response_schema,
+                },
+            }
+        return body
+
+    def _request(self, body: dict[str, Any]) -> dict[str, Any]:
+        """POST to LM Studio. Plain stdlib — no httpx dep needed."""
+        url = f"{self._base_url}/v1/chat/completions"
+        data = json.dumps(body).encode()
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=self._timeout_s) as resp:
+            raw = resp.read()
+        return json.loads(raw)
+
+    # ── Parsing ─────────────────────────────────────────────────────────────
+
+    def _parse_response(
+        self,
+        response_body: Any,
+        questions: Sequence[JevQuestion],
+    ) -> tuple[dict[str, dict[str, Any]], int]:
+        if not isinstance(response_body, dict):
+            raise ValueError(f"response is not a dict: {type(response_body)}")
+        choices = response_body.get("choices")
+        if not isinstance(choices, list) or not choices:
+            raise ValueError("response missing 'choices'")
+        msg = choices[0].get("message") or {}
+        content = msg.get("content")
+        if not isinstance(content, str) or not content.strip():
+            raise ValueError("response 'content' empty")
+        usage = response_body.get("usage") or {}
+        input_tokens = int(usage.get("prompt_tokens") or 0)
+
+        # Strip ```json fences if model wrapped anyway.
+        s = content.strip()
+        if s.startswith("```"):
+            s = s.strip("`")
+            if s.startswith("json"):
+                s = s[4:]
+            s = s.strip()
+        parsed_obj = json.loads(s)
+
+        answers: dict[str, dict[str, Any]] = {}
+        for q in questions:
+            if q.name not in parsed_obj:
+                raise ValueError(f"model response missing answer for {q.name!r}")
+            ans = parsed_obj[q.name]
+            if not isinstance(ans, dict):
+                raise ValueError(
+                    f"answer for {q.name!r} not a dict: {type(ans)}"
+                )
+            if q.primitive == "Choice" and "choice" not in ans:
+                raise ValueError(f"Choice answer for {q.name} missing 'choice'")
+            if q.primitive == "Score" and "score" not in ans:
+                raise ValueError(f"Score answer for {q.name} missing 'score'")
+            if q.primitive == "Noul" and "noul" not in ans:
+                raise ValueError(f"Noul answer for {q.name} missing 'noul'")
+            # Coerce Noul into [0, 1].
+            if q.primitive == "Noul":
+                v = float(ans["noul"])
+                ans["noul"] = max(0.0, min(1.0, v))
+            answers[q.name] = ans
+        return answers, input_tokens
+
+    # ── Output assembly ──────────────────────────────────────────────────────
+
+    def _assemble(
+        self,
+        bar_ts: str,
+        questions: Sequence[JevQuestion],
+        response_body: Any,
+    ) -> JevDecision:
+        """Replay path — parse the cached response (already validated once)."""
+        try:
+            answers, input_tokens = self._parse_response(response_body, questions)
+        except Exception as exc:                              # noqa: BLE001
+            if self._fail_closed:
+                raise
+            return self._fail_open(bar_ts, questions, error=f"replay-parse: {exc}")
+        return JevDecision(
+            bar_ts=bar_ts,
+            answers=answers,
+            jev_latency_ms=0.0,
+            jev_input_tokens=int(input_tokens),
+            backend_name=self.name,
+            mock=False,
+            error=None,
+            raw=response_body if isinstance(response_body, dict) else None,
+        )
+
+    def _fail_open(
+        self,
+        bar_ts: str,
+        questions: Sequence[JevQuestion],
+        *,
+        error: str,
+    ) -> JevDecision:
+        """Same shape as TypesafeJevDecisionBackend._fail_open. NOT the T-095 default."""
+        answers: dict[str, dict[str, Any]] = {}
+        for q in questions:
+            if q.primitive == "Choice":
+                criteria = q.criteria or {}
+                no_edge_key = next(
+                    (k for k in criteria if "no_edge" in k.lower()),
+                    next(iter(criteria), "no_edge"),
+                )
+                answers[q.name] = {
+                    "choice": no_edge_key,
+                    "probabilities": {no_edge_key: 1.0},
+                    "confidence": 0.0,
+                }
+            elif q.primitive == "Score":
+                answers[q.name] = {
+                    "score": 0.0,
+                    "legend": {str(c): c for c in (q.criteria or [])},
+                    "probabilities": {},
+                }
+            else:  # Noul
+                answers[q.name] = {"noul": 0.5}
+        return JevDecision(
+            bar_ts=bar_ts,
+            answers=answers,
+            jev_latency_ms=0.0,
+            jev_input_tokens=0,
+            backend_name=self.name,
+            mock=False,
+            error=error,
+            raw={"error": error},
+        )
+
+
 # ── Actor (the thing runners hold) ──────────────────────────────────────────
 
 
 @dataclass
 class JevDecisionActor:
-    """Wraps a backend with a single `decide_batch()` method + lightweight stats.
-
-    Mirrors `JevRegimeActor` discipline: in-memory stats for Gate 3 (frequency)
-    + Gate 4 (cost), JSONL for durable record.
-
-    NOT a Nautilus DataActor — paper track is a CLI script. The Nautilus-side
-    analog lives in `src/research/nautilus/sleeve_a/jev_decision_actor.py`
-    (future ship, blocked on Nautilus wiring per M-121).
-    """
 
     backend: JevDecisionBackend
     name: str = "jev_decision_actor"
@@ -638,6 +1085,7 @@ __all__ = [
     "JevDecisionBackend",
     "MockJevDecisionBackend",
     "TypesafeJevDecisionBackend",
+    "LocalQwenBackend",
     "JevDecisionActor",
     "build_ls_questions",
     "build_ls_state_payload",
