@@ -758,12 +758,14 @@ async def get_eodhd_eod_range(ticker: str, exchange: str, frm: str) -> list[dict
 
 
 #: SEC 要求自报身份的 User-Agent(「机构名 联系邮箱」),不报会被 403(10-15 首跑实测)。
-#: Jazz 10-15 给定机构名与邮箱;环境变量 SEC_USER_AGENT 若设了则优先。
-SEC_UA_DEFAULT = "looloomi ai jazzz@looloomi.ai"
+#: 真值只放 Railway 环境变量 SEC_USER_AGENT —— 仓库是公开的,邮箱不进代码(Jazz 10-15)。
 
 
 def _sec_headers() -> dict:
-    return {"User-Agent": os.environ.get("SEC_USER_AGENT") or SEC_UA_DEFAULT, "Accept-Encoding": "gzip, deflate"}
+    ua = (os.environ.get("SEC_USER_AGENT") or "").strip()
+    if not ua:
+        raise RuntimeError("SEC_USER_AGENT 不在进程环境里(Railway 设「机构名 联系邮箱」,SEC 要求)")
+    return {"User-Agent": ua, "Accept-Encoding": "gzip, deflate"}
 
 
 async def get_sec_ticker_ciks() -> dict[str, int]:

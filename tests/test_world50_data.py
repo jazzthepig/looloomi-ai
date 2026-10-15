@@ -331,3 +331,17 @@ def test_deploys_do_not_rerun_parts_that_already_succeeded(monkeypatch):
     out = asyncio.run(wd.run_week())
     assert ran == [] and out["ok"] is True and out["parts"]["prices"]["skipped"]
     assert "跳过" in out["reason"]
+
+
+def test_sec_user_agent_comes_only_from_the_environment(monkeypatch):
+    """仓库是公开的:SEC 要的联系邮箱只放 Railway 环境变量,不进代码(Jazz 10-15)。"""
+    import re
+    import src.data.market.data_layer as dl
+    monkeypatch.delenv("SEC_USER_AGENT", raising=False)
+    with pytest.raises(RuntimeError, match="SEC_USER_AGENT"):
+        dl._sec_headers()
+    monkeypatch.setenv("SEC_USER_AGENT", "Example Org ops@example.com")
+    assert dl._sec_headers()["User-Agent"] == "Example Org ops@example.com"
+    src = (ROOT / "src/data/market/data_layer.py").read_text(encoding="utf-8")
+    block = src[src.index("def _sec_headers"):src.index("async def get_sec_concept")]
+    assert not re.search(r"[\w.+-]+@[\w-]+\.[\w.]+", block), "SEC 那段代码里不许出现邮箱"
