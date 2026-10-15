@@ -1,0 +1,24 @@
+{
+  "id": "T-102",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-15",
+  "verified": null,
+  "title": "风格周期(HIGH_DIM §5b-bis 的 OVERRIDE 层)在 World50 上的第一次量测:跨资产的领先会不会延续 —— 这是 EW×Mom 押的那个「因」",
+  "source": "Jazz 10-15 产品定 EW×Mom(S-581:回放与 EW 分不开,MDE 3.4%/年,月度 129 个点测不出倾斜);规则要求每个产品有因、有基率 —— 换一个检验力更高的角度:不测组合收益,测机制本身(领先的延续)",
+  "allowed_paths": [
+    "tasks/T-102.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "先在 REFUTATION_LEDGER.md 末尾写 M- 预注册(标题先占,写于看任何结果之前),再算。数据:私有面板 ~/Projects/looloomi-private/research_data/t099_panel.json(月收益 ret、季末市值 mcap、类别 cls;供应商数据,**不复制进任何 git 仓库**)。① 分组表先写进预注册:按主营业务把每个候选分进 8 组(半导体与硬件 / 软件与互联网 / 金融 / 能源与材料 / 医药 / 消费与工业 / 黄金 / 加密),只看业务描述,不看收益。② 每个季末取当季市值前 60(有市值的),季度收益按月复利;组收益 = 组内等权。③ 延续:相邻季度组收益的 Spearman 秩相关,滞后 1 / 2 / 4 季,对全样本取平均;零分布 = 同一季内打乱组标签(apparatus.shuffle_within)1,000 次;判据:平均秩相关 > 零分布 95 分位 才说「组层面的领先会延续」。④ 名字层面同样做一遍(这是动量倾斜的直接前提)。⑤ 分状态:ACWI 过去 4 季收益 > 0 / ≤ 0 两段各报一遍(状态在季初已知)。⑥ 探索(标明):每季 EW×Mom − EW 的超额(用 docs/research/t099_world50_replay.py 的 run_arm 现算)与当季组延续强度的相关。零分布、分位只许用 src/data/evaluation/apparatus.py。",
+    "expect": "_reports/absorb_input/T-102_style_persistence.md(两半:检验 + 挖掘;表:滞后 × 组 / 名字 × 全样本 / 两种状态 的平均秩相关与零分布分位)+ 台账 M- 条目;路径写进卡 notes;卡改 in_review。"
+  },
+  "prior_value": "S-581:2016-01→2026-09,EW×Mom 18.0% 对 EW 17.4%,log 差 +0.049,95% CI [−0.23, +0.35],前 5 年落后、后 6 年领先(符号随段换);S-428:加密 ① 面板内动量 + 52 周高点倾斜跑赢持有、β≈1。",
+  "notes": "2026-10-15 Seth 开卡。为什么是 lane-c:这是挖掘 + 检验,产物进 _reports;不碰前向账本。动量分的定义在 src/data/universe/world50.py(momentum_values / momentum_scores,只读)。"
+}

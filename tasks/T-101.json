@@ -1,0 +1,24 @@
+{
+  "id": "T-101",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-15",
+  "verified": null,
+  "title": "World50 的幸存者偏差有多大:按年重建 2015–2025 真实的全球市值前 100,对出我们的候选池漏了谁、漏掉的后来怎样了",
+  "source": "S-581:World50 对 ACWI 的超额(+0.48 对数收益 / 10.75 年)apparatus 判 B > A,但候选池 = 今天的前 100 + 13 家曾经的龙头 + 5 个加密 ⇒ 偏差全部朝抬高方向,这个数现在不能用",
+  "allowed_paths": [
+    "tasks/T-101.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "只做研究,不写库、不改代码。① 每年一张真实的全球前 100(按市值):2015–2023 以 PwC《Global Top 100 companies by market capitalisation》每年 3 月 31 日的榜为主(pwc.com 的 PDF),2024–2025 用任意一个带日期、可核对的公开榜单(写明来源 URL 与时点);每行:year, as_of, rank, company, country, mcap_usd_bn, source_url。② 对到我们的候选池:src/data/universe/world50.py 里的 CANDIDATES(只读),每行加 pool_key(对上的 key)或 NOT_IN_POOL。③ 漏掉的名字(NOT_IN_POOL 且在当年前 60)逐个写:今天的状态(还在上市 / 被谁收购、哪天 / 退市)、上市地与代码。④ 每年的汇总:真实前 50 里我们池子有几个、漏掉的市值占前 50 合计的比例;漏掉的名字里后来跌出前 100 的有几个(这就是幸存者偏差的来源)。不需要算收益(价格摄取是 Seth 的 lane);能从公开榜单直接读到的后续市值可以列。",
+    "expect": "Mac 数据根 research/t101/top100_by_year.csv、research/t101/missing.csv + _reports/absorb_input/T-101_survivorship.md(每年一行汇总表 + 漏掉名单 + 「结果里还看到了什么」),路径写进卡 notes;卡改 in_review。"
+  },
+  "prior_value": "S-581:2015 年 12 月我们能排名的只有 62 个候选,第 50 名门槛 $38B;真实全球第 50 名约 $130B。已知漏掉的类型:本地上市(T-100 在补股本)、2015 年在前 50 后来被收购 / 掉出今天前 100 的公司(未知多少)。",
+  "notes": "2026-10-15 Seth 开卡。用途:决定候选池要补哪些曾经的龙头(补进来的由 Seth 摄取价格与股本),补完按 S-581 同一预注册重跑回放;World50 对 ACWI 的数在这张卡结论之前不进任何对外材料。PwC 的榜单是 3 月 31 日口径,我们的选成分在 12 月 —— 只用来对名单,不用来排名。"
+}
