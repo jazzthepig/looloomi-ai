@@ -7,7 +7,7 @@
   股本有三种口径:封面股数(`dei:EntityCommonStockSharesOutstanding`)、期末股数(`us-gaap:CommonStockSharesOutstanding`)、
   每季加权平均基本股数(`us-gaap:WeightedAverageNumberOfSharesOutstandingBasic`)。多股类公司按类别报的不在这个接口里,
   有的公司某种口径只报到某一年 —— 所以**选最后一次报送最晚的口径**(差 120 天内按上面的顺序),
-  最后一次报送比最新价格早 400 天以上 ⇒ 股数太旧,不写。换过申报主体的接上旧 CIK(`PREDECESSOR_CIKS`)。
+  最后一次报送比最新价格早 500 天以上 ⇒ 股数太旧,不写。换过申报主体的接上旧 CIK(`PREDECESSOR_CIKS`)。
   **按报送日(filed)才算已知**,同一期取最早报送的那一份(当时的原始报告,不用后来的重述)。
   拆股:报告里的股数是**报送日那天的口径**(拆股后报送的会按新口径重述),所以股数 × 报送日之后的拆股系数、
   价格 ÷ 当天之后的拆股系数,统一到今天的口径;拆股从「原始价 / 复权价」单日跳 > 20% 认。
@@ -83,7 +83,7 @@ OUTLIER_X = 100               # 离中位数这么多倍 ⇒ 录入错误(实测
 #: v1 的行留着当记录(要清由 Jazz 定)。以后算法改到会改变已写的值,也照此升版本。
 MCAP_SOURCE = "sec_shares_x_close_v2"
 SPIKE_NEIGHBORS = 1.1          # 一个点离两边都 > 1.5 倍、两边彼此在 1.1 倍内 ⇒ 单点错,丢这个点(不截断历史)
-STALE_DAYS = 400              # 选中的口径最后一次报送早于最新价格这么多天 ⇒ 股数是旧的,不写
+STALE_DAYS = 500              # 选中的口径最后一次报送早于最新价格这么多天 ⇒ 股数是旧的,不写(20-F 一年一报,400 天会误拒 BHP)
 #: 三种口径,按优先级。封面股数(某天的实际股数)> 资产负债表期末股数 > 每季加权平均基本股数。
 SEC_TAGS = {"dei": ("dei", "EntityCommonStockSharesOutstanding", False),
             "cso": ("us-gaap", "CommonStockSharesOutstanding", False),
@@ -448,7 +448,7 @@ async def discover_onchain_forms(as_of: Optional[str] = None) -> dict[str, Any]:
 RERUN_AFTER_DAYS = 6
 LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
-PART_VERSIONS = {"prices": 1, "mcap": 2, "onchain_forms": 1}
+PART_VERSIONS = {"prices": 1, "mcap": 3, "onchain_forms": 1}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
