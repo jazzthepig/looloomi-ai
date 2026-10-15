@@ -295,6 +295,18 @@ EXCHANGE_SHARES: dict[str, dict[str, Any]] = {
                                                                    "Un-Issued 396,095,710 Total 2,000,000,000」As of February 28, 2026")]},
     "688825.SHG": {"ccy": "CNY", "what": "A 股总股本(科创板上市公告书:本次公开发行后、超额配售选择权行使前);2026-07-27 上市",
                    "rows": [("2026-07-24", "2026-07-24", 66_880_886_077, "sse:688825 上市公告书 2026-07-24(T-104,lane-c)")]},
+    "OR.PA": {"ccy": "EUR", "what": "股份总数(法国发行人每月「Total number of voting rights and number of shares」;含库存股)。"
+                                    "2014-07 注销 48,500,000(回购雀巢持股)、2022-02 注销 22,260,000(同上),之间都在 ±2% 内",
+              "rows": [("2014-12-31", "2015-01-15", 561_230_389, "loreal-finance:migrate-files/Summary_Disclosure voting_rights_311214.pdf"
+                                                               "「December 31, 2014 561,230,389」"),
+                       ("2022-02-28", "2022-03-09", 535_412_372, "amf:OPENDATA/AMF/MKW/2022/03/FCMKW119839_20220309.pdf"
+                                                               "「Total number of shares 535,412,372」"),
+                       ("2026-09-30", "2026-10-10", 532_649_827, "L'Oréal 月度披露 2026-09-30(转载:Taiwan News;已知日取更晚)")]},
+    "MC.PA": {"ccy": "EUR", "what": "股份总数(LVMH 每月「Information mensuelle relative au nombre total de droits de vote et d'actions」)。"
+                                    "2016 → 2026 逐年注销合计约 −2.5%,中间没有逐年的行(期末前后最多高估约 2.5%,注明)",
+              "rows": [("2013-06-30", "2013-07-15", 508_205_072, "amf:OPENDATA/AMF/CNS/2013/07/FCCNS119057_20130715.pdf"),
+                       ("2016-01-31", "2016-02-05", 507_142_695, "amf:OPENDATA/AMF/CNS/2016/02/FCCNS141777_20160205.pdf"),
+                       ("2026-09-30", "2026-10-06", 494_606_080, "LVMH 月度披露 2026-09-30(文件日 2026-10-06;转载:trivano.com)")]},
     "ROG.SW": {"ccy": "CHF", "what": "无记名股 + 非投票权益证券(2026-03 换成参与证)合计;价格线是无记名股 RO.SW"
                                      "(world50.LOCAL_PRICE_CODE:ROG.SW 停在 2026-03-25);公司章程 §3–§4、IR 问答「股本自 2000 年的变化」",
                "rows": [("2011-03-01", "2011-03-01", 862_562_700, "roche:archiv-statuten-2011-en.pdf(160,000,000 + 702,562,700)"),
@@ -881,7 +893,7 @@ async def discover_onchain_forms(as_of: Optional[str] = None) -> dict[str, Any]:
 RERUN_AFTER_DAYS = 6
 LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
-PART_VERSIONS = {"prices": 3, "mcap": 12, "onchain_forms": 1, "revenue": 1, "book": 1}
+PART_VERSIONS = {"prices": 3, "mcap": 13, "onchain_forms": 1, "revenue": 1, "book": 1}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
