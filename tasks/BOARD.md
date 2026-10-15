@@ -30,6 +30,7 @@
 | open | T-101 | lane-b | World50 的幸存者偏差有多大:按年重建 2015–2025 真实的全球市值前 100,对出我们的候选池漏了谁、漏掉的后来怎样了 | Mac 数据根 research/t101/top100_by_year.csv、research/t101/missing.csv + _reports/absorb_input/T-101_survivorship.md(每年一行汇总表 + 漏掉名单 + 「结果里还看到了什么」),路径写进卡 notes;卡改 in_review。 | S-581:2015 年 12 月我们能排名的只有 62 个候选,第 50 名门槛 $38B;真实全球第 50 名约 $130B。已知漏掉的类型:本地上市(T-100 在补股本)、2015 年在前 50 后来被收购 / 掉出今天前 100 的公司(未知多少)。 |  |
 | open | T-057 | lane-c | 三臂对比的记账有错:下一次调仓不在的币按「零收益」记、周收益平摊到每天 —— A 的 arm C Sharpe 4.90 / 回撤 10% 是这个造成的 | 测试钉住 ①②;重跑后 arm B 的 Sharpe 不再被平滑抬高(与 hold-the-panel 同量级);arm C 的结论按新数重判 | A 10-07 报告:arm C Sharpe +4.90 / MaxDD 10.3% / 累计 +456%;arm B +1.48 / 60.5% —— 记账口径下的数,不是证据 |  |
 | open | T-091 | lane-c | 非价格状态在 BTC 转折点上是否领先价格:资金费 / 持仓量 / 稳定币供给 / 主动买入占比 vs 价格动量,对照随机日期 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:每个特征 × 14 个拐点的领先 / 滞后天数、中位数、随机分位、错误翻转率。只测量,不改任何账本或循环。 | S-568:③ 在每个顶部推力 ≥ 1、组合层在 +190% / +97% 两段上涨里只有 ≈ 0.5 仓位;S-567:周频价格 / 宽度择时四种构造都分不开随机。非价格状态在转折点上的时序从没量过。 |  |
+| open | T-103 | lane-c | World50 的增长分:按时点的营收增长 → 预注册的 EW×(Mom+Growth) 臂(S-581 留着没跑的那一条) | _reports/absorb_input/T-103_growth_arm.md(两半:检验 + 挖掘;四臂 + 新臂的年化 / 波动 / 回撤 / 卡玛 / 换手 + A/B 区间与 MDE)+ 台账 M- 条目;脚本在 docs/research/;卡改 in_review。 | S-581:EW 17.4% / EW×Mom 18.0%(分不开,MDE 3.4%/年);S-582(lane-c,视作 M-582c):领先在组与名字两层都不延续。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -105,4 +106,4 @@
 | done | T-081 | seth | 代币迁移接段:MKR→SKY(1:24000)、MATIC→POL(1:1)—— 宇宙只放新币,生效日按成交交叉(CoinDesk / CF Benchmarks 做法),历史按比例接,统一标准 v1.3 | SKY 的分不再因市值 0 被压到底;POL 迁移前用的是 MATIC | MKR 自 2025-06-05 起在标准里市值 0、基本面支柱 0,正式档 UNDERWEIGHT(实时 55.8 NEUTRAL);POL 迁移前 11 个月用的是日成交 60 万美元的薄币 | 10-12 正式批次含 SKY、POL,无 MKR、MATIC;/cis/universe 有 SKY 无 MKR。剩 Minimax 换 T1 宇宙(Mac 侧,SYNC §Seth-1012a)不在本卡验收内。 @ 2026-10-13T13:45Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 17 · claimed 6 · blocked 4 · in_review 12 · done 62 · dropped 1
+open 18 · claimed 6 · blocked 4 · in_review 12 · done 62 · dropped 1
