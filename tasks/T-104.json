@@ -1,9 +1,13 @@
 {
   "id": "T-104",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-15",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "value": "联发科 2019 / 2025 两行与长鑫上市公告书一行进 EXCHANGE_SHARES(mcap v12);2025 行引文的加总 1,603,904,290 + 396,095,710 = 2,000,000,000 对得上。已知日按「拿不准取更晚」改成股东会前(2020-06-30 / 2026-05-29),年报的「As of」日不是公开日。沙特阿美四行不用:没有价格源(EODHD 2222.SR 404),且数字来自搜索摘要、PDF 没抓到",
+    "at": "2026-10-15"
+  },
   "title": "World50 亚洲余下三家的按时点股本(从 T-100 拆出来并行):联发科近一行、长鑫、沙特阿美",
   "source": "Jazz 10-15「Samsung 在韩国交易所找,茅台在上海交易所找」+「non-stop」;T-100(lane-a)名单太长、一轮只做得完一两家 —— 拆三家给 C 并行",
   "allowed_paths": [
@@ -21,5 +25,5 @@
     "expect": "Mac 数据根 research/t104/shares.csv(每做完一家就追加,步数用完也不丢)+ _reports/absorb_input/T-104_asia_shares.md(每家一段:来源、引文、为什么这个 known_date);卡改 in_review。"
   },
   "prior_value": "T-100 已入库 10 家(工行、建行、农行、中行、中石油、中移动、平安、茅台、三星 2018 起、罗氏);SK 海力士 Seth 10-15 做完(SEC:SKT 20-F FY2014 / SK hynix F-1、424B4)。",
-  "notes": "2026-10-15 Seth 开卡(从 T-100 拆出,lane-a 那边已改成只做三星 2015–2017、雀巢、西门子、欧莱雅、LVMH)。"
+  "notes": "2026-10-15 Seth 开卡(从 T-100 拆出,lane-a 那边已改成只做三星 2015–2017、雀巢、西门子、欧莱雅、LVMH)。\n\n2026-10-16 lane-c 交:shares.csv 8 行 = MTK (2014-12-31/2019-12-31/2025-12-31) + 长鑫 (2026-07-27) + 沙特阿美 (2019-12-11 IPO / 2021-12-31 优先股转股后 / 2023-12-31 1-for-10 红股后 / 2024-12-31 最新)。**用户原卡「2024 年红股每10送1」未在公开记录中找到;Aramco 2024 年只有 6 月 follow-on + 持续 buyback,无 bonus issue**。详见 _reports/absorb_input/T-104_asia_shares.md。\nPDF: research/t104/{mediatek_2019/2024/2025_AR.pdf, cxmt_listing_20260724.pdf, cxmt_sse_20260517.pdf, cxmt_prospectus_main.pdf, cxmt_prospectus_summary.pdf, argaamplus.pdf — 与 Aramco 无关,Luberef IPO 文件,留下做对照}。\n源 PDF 现状:MTK 3 个与长鑫 4 个已成功下载并 pdftotext 抽取;Aramco 4 个 PDF 本机 2026-10-16 持续 timeout(aramco.com CDN 在 Mini 网络抛),219.83B / 244.05B 等数字走 Google snippet + companiesmarketcap calendar snapshot —— **Seth 抽查 Aramco 行请直接连 aramco.com 验证 2022 / 2024 AR PDF**。路径全在 _reports/absorb_input/T-104_asia_shares.md 的「严重警告」段。\n\n2026-10-15 Seth 审:见 verified。分支 lane-c/T-104 不合并 —— 它把报告提交进了仓库里的 _reports/(卡外路径,报告的归宿是 Mac 数据根,那边已有一份)。"
 }

@@ -286,9 +286,15 @@ EXCHANGE_SHARES: dict[str, dict[str, Any]] = {
                            ("2026-07-14", "2026-07-14", 730_492_365, "sec:SK hynix 424B4 0001193125-26-299963"
                                                                     "(发行后流通 728,865,500 + 库存 1,626,865)")]},
     "2454.TW": {"ccy": "TWD", "what": "普通股发行数(台湾证交所);2014 年报「资本及股份」截至 2015-04-30。2015–2026 的变化(员工限制股)"
-                                      "由 T-104 补近一行",
+                                      "由 T-104 补(2019 / 2025 年报)",
                 "rows": [("2015-04-30", "2015-06-30", 1_571_577_147, "mediatek:Annual Reports/2014-English-Annual-Report.pdf p.43"
-                                                                   "「Common Stock 1,571,577,147 428,422,853 2,000,000,000 Listed on TSE」")]},
+                                                                   "「Common Stock 1,571,577,147 428,422,853 2,000,000,000 Listed on TSE」"),
+                         # T-104(lane-c):已知日按股东会前公开取更晚的那个(年报「As of」日不是公开日)
+                         ("2020-04-30", "2020-06-30", 1_588_850_262, "mediatek:2019 Annual Report「Capital and Shares」As of April 30, 2020"),
+                         ("2026-02-28", "2026-05-29", 1_603_904_290, "mediatek:2025 Annual Report「Common Stock Outstanding 1,603,904,290 "
+                                                                   "Un-Issued 396,095,710 Total 2,000,000,000」As of February 28, 2026")]},
+    "688825.SHG": {"ccy": "CNY", "what": "A 股总股本(科创板上市公告书:本次公开发行后、超额配售选择权行使前);2026-07-27 上市",
+                   "rows": [("2026-07-24", "2026-07-24", 66_880_886_077, "sse:688825 上市公告书 2026-07-24(T-104,lane-c)")]},
     "ROG.SW": {"ccy": "CHF", "what": "无记名股 + 非投票权益证券(2026-03 换成参与证)合计;价格线是无记名股 RO.SW"
                                      "(world50.LOCAL_PRICE_CODE:ROG.SW 停在 2026-03-25);公司章程 §3–§4、IR 问答「股本自 2000 年的变化」",
                "rows": [("2011-03-01", "2011-03-01", 862_562_700, "roche:archiv-statuten-2011-en.pdf(160,000,000 + 702,562,700)"),
@@ -875,7 +881,7 @@ async def discover_onchain_forms(as_of: Optional[str] = None) -> dict[str, Any]:
 RERUN_AFTER_DAYS = 6
 LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
-PART_VERSIONS = {"prices": 3, "mcap": 11, "onchain_forms": 1, "revenue": 1, "book": 1}
+PART_VERSIONS = {"prices": 3, "mcap": 12, "onchain_forms": 1, "revenue": 1, "book": 1}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
