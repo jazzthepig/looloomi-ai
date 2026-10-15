@@ -424,3 +424,48 @@ def test_crypto_mcap_backfill_uses_the_existing_path_and_skips_what_exists(monke
     assert calls == ["bitcoin"] and out["BTC"] == 1 and out["ETH"] == "已有"
     row = sink["asset_mcap_daily"][0]
     assert row["symbol"] == "BTC" and row["coin_id"] == "bitcoin" and row["source"] == SOURCE and row["mcap"] == 2.2e11
+
+
+def test_a_price_jump_without_a_share_jump_is_a_spin_off_not_a_split():
+    """UTC 2020-04 分出 Carrier / Otis:原始价 / 复权价跳 ×1.58,股数没变 —— 当成拆股会把之前的股数 ×1.58,
+    再触发跳变截断(RTX 2020 前整段丢过)。股数印证后:不当拆股,市值 = 股数 × 原始价。"""
+    bars = _bars([10.0] * 400, split_at="2020-04-03", k=1.58)
+    dei = _dei(("2020-01-31", "2020-02-06", 100.0), ("2020-03-31", "2020-05-07", 100.0), ("2020-06-30", "2020-07-29", 100.0))
+    out = wd.build_mcap("SPUN", bars, {"dei": dei})
+    assert out["why"] is None and any("分拆" in n for n in out["notes"]) and not any("跳" in n and "只用" in n for n in out["notes"])
+    before = [r for r in out["rows"] if r["d"] < "2020-04-03"]
+    after = [r for r in out["rows"] if r["d"] >= "2020-04-06"]
+    assert before and {round(r["mcap_usd"]) for r in before} == {1580}, "分拆前:100 股 × 原始价 15.8"
+    assert {round(r["mcap_usd"]) for r in after} == {1000}, "分拆后公司变小了,不是拆股"
+    # 真拆股:股数跟着 ×4 ⇒ 照旧当拆股,市值连续
+    split = _bars([10.0] * 400, split_at="2020-10-15", k=4.0)
+    real = _dei(("2020-07-10", "2020-08-03", 100.0), ("2020-12-31", "2021-02-03", 400.0))
+    assert wd.confirm_splits("X", wd.sec_points(real, False), wd.split_events(split))[0] == [("2020-10-15", pytest.approx(4.0))]
+
+
+def test_known_share_events_merger_keeps_both_segments_and_unify_rescales():
+    bars = _bars([10.0] * 500, start="2019-06-01")
+    rtx = _dei(("2019-12-31", "2020-02-06", 0.866e9), ("2020-03-31", "2020-05-07", 0.866e9),
+               ("2020-07-21", "2020-07-29", 1.528e9), ("2020-10-20", "2020-10-27", 1.519e9))
+    out = wd.build_mcap("RTX", bars, {"dei": rtx})
+    assert out["rows"][0]["d"] < "2020-03-01" and any("换股合并" in n for n in out["notes"]), "合并:两段都留"
+    assert min(r["mcap_usd"] for r in out["rows"]) == pytest.approx(8.66e9)
+    same = wd.build_mcap("NOTRTX", bars, {"dei": rtx})
+    assert same["rows"][0]["d"] >= "2020-07-29", "不在已知事件表里的跳变照旧只用之后的段"
+    bhp = _dei(("2020-08-31", "2020-09-10", 5.9e9), ("2021-08-31", "2021-09-09", 5.9e9),
+               ("2022-08-31", "2022-09-06", 10.12e9), ("2023-08-31", "2023-09-05", 10.12e9))
+    rows = wd.build_mcap("BHP", bars, {"dei": bhp})["rows"]
+    assert {round(r["mcap_usd"] / 1e9, 1) for r in rows} == {50.6}, "统一前的 Ltd 段 × 1.72 接成集团口径(ADR = 2 股)"
+
+
+def test_source_override_and_same_day_filings_use_the_latest_period():
+    """SHEL:首份 XBRL 20-F 同一天报了 2015 / 2016 / 2017 三年 —— 当时最新的是 2017 那一期,不是数最大的那一期。"""
+    bars = _bars([10.0] * 300, start="2018-03-01")
+    ifrs = _concept([{"start": "2015-01-01", "end": "2015-12-31", "filed": "2018-03-15", "val": 9.0e9},
+                     {"start": "2016-01-01", "end": "2016-12-31", "filed": "2018-03-15", "val": 8.6e9},
+                     {"start": "2017-01-01", "end": "2017-12-31", "filed": "2018-03-15", "val": 8.2e9},
+                     {"start": "2018-01-01", "end": "2018-12-31", "filed": "2019-03-14", "val": 8.2e9}])
+    fresh_dei = _dei(("2018-12-31", "2019-03-14", 1.0), ("2019-02-28", "2019-03-20", 1.0))
+    out = wd.build_mcap("SHEL", bars, {"ifrs_wavg": ifrs, "dei": fresh_dei})
+    assert out["src"] == "ifrs_wavg", "SOURCE_OVERRIDE 不走自动选择"
+    assert {round(r["mcap_usd"] / 1e9) for r in out["rows"]} == {41}, "8.2e9 / 2(ADR)× 10"

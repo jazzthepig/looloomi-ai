@@ -82,7 +82,14 @@ SHARE_JUMP = 1.5              # 相邻两点股数(今天口径)跳超过这个�
 OUTLIER_X = 100               # 离中位数这么多倍 ⇒ 录入错误(实测 BRK 有几期多乘了 100 万)
 #: v2(10-15):v1 首跑里 MA / BRK-B / BABA 的行是错的,而拒写不会删掉旧行 —— 换 source 名,读者只认 v2,
 #: v1 的行留着当记录(要清由 Jazz 定)。以后算法改到会改变已写的值,也照此升版本。
-MCAP_SOURCE = "sec_shares_x_close_v2"
+#: v3(10-15 晚):价格里的「拆股」要股数印证(分拆 / 特别分红不再当拆股)、合并类事件不截断、旧 CIK 补齐、
+#: 本地上市公司按交易所申报的股数 × 本币收盘 × 汇率 —— 不再只是 SEC,名字去掉 sec_。
+MCAP_SOURCE = "shares_x_close_v3"
+#: 价格里的「拆股」(原始价 / 复权价跳 > 20%)也会来自分拆与特别分红 —— UTC 2020-04 分出 Carrier / Otis(×1.58)、
+#: DELL 2021-11 派 VMware(×1.95)。那时股数不变,当成拆股就把之前的股数乘上去、再触发跳变截断(RTX 2020 前、DELL 2021 前整段丢了)。
+#: 判据:事件前最后一次**报送**的股数 a、事件后第一个**期末**的股数 b(都已按 ADR 比例换算):
+#: b / a 在 k 的 ±15% 内 ⇒ 拆股;在 1 的 ±15% 内 ⇒ 不是拆股(股数、价格两侧都不除);其余(同时有并购等)照旧当拆股。
+SPLIT_CONFIRM_TOL = 1.15
 SPIKE_NEIGHBORS = 1.1          # 一个点离两边都 > 1.5 倍、两边彼此在 1.1 倍内 ⇒ 单点错,丢这个点(不截断历史)
 STALE_DAYS = 500              # 选中的口径最后一次报送早于最新价格这么多天 ⇒ 股数是旧的,不写(20-F 一年一报,400 天会误拒 BHP)
 #: 四种口径,按优先级。封面股数(某天的实际股数)> 资产负债表期末股数 > 每季加权平均基本股数 > IFRS 年度加权平均股数
@@ -98,7 +105,23 @@ SEC_FIX: dict[str, dict[str, tuple[float, str]]] = {
     "BABA": {"2026-03-31": (18_580_374_278, "0001193125-26-231755")},
 }
 #: 换了申报主体(控股公司重组)的公司:旧 CIK 的历史接在前面。实测 2026 年 XOM 归到新的 ExxonMobil Holdings(CIK 2115436)。
-PREDECESSOR_CIKS: dict[str, list[int]] = {"XOM": [34088]}
+#: GOOGL:2015-10 前是 Google Inc.(1288776,期末股数报到 2014-03、之后按类别报;一拆二后的总股数在那一点上);
+#: DIS:2019-03 收购 Fox 时控股公司换成新 CIK,旧的 Walt Disney Co 是 1001039;
+#: AVGO:Avago Technologies(1441634)→ 2016-02 Broadcom Ltd(1649338)→ 2018-04 Broadcom Inc(今天的 CIK)。
+PREDECESSOR_CIKS: dict[str, list[int]] = {"XOM": [34088], "GOOGL": [1288776], "DIS": [1001039],
+                                          "AVGO": [1441634, 1649338]}
+#: 只有某一种口径能把旧主体与新主体接成一条的公司:不走「最新还在报」的自动选择。
+#: AVGO:封面股数 Broadcom Ltd 只报了 2016 年两期,加权平均从 Avago 到今天一直在报;
+#: SHEL:2022 年前 A / B 两类股,封面按类别报(接口里没有),IFRS 加权平均是两类合计。
+SOURCE_OVERRIDE: dict[str, str] = {"AVGO": "wavg", "SHEL": "ifrs_wavg"}
+#: 股数跳 > 1.5 倍、但前后两段都对的已知事件(按期末日落在事件两侧认):
+#: "merger" = 换股合并,公司真的变大了,两段照写;"unify" = 双重上市合并成一家,之前的段乘以跳变倍数接成合并后的口径。
+KNOWN_SHARE_EVENTS: dict[str, list[tuple[str, str, str]]] = {
+    "RTX": [("2020-04-03", "merger", "United Technologies 与 Raytheon 换股合并")],
+    # BHP Ltd + BHP Plc 双重上市 2022-01-31 统一:Plc 股 1:1 换 Ltd 股。之前 BHP 的 ADR 只对应 Ltd 那一半;
+    # 乘上跳变倍数 = 按 Ltd 的价格算整个集团(Plc 在伦敦一般折价约一成,略高估,注明)。
+    "BHP": [("2022-01-31", "unify", "BHP Ltd / BHP Plc 双重上市统一")],
+}
 
 #: 手工补的股数(Jazz 10-15「手工补」)—— 免费接口里取不到的:分股类申报的汇总数只在附注表或封面文字里(V / BRK-B),
 #: 或 SEC 结构化接口对这家公司返回空(KO / ABT,原因未查;10-K 封面上有),或不在 SEC 申报(TCEHY,港交所月报表)。
@@ -283,10 +306,11 @@ def clean_shares(key: str, pts: list[tuple[str, str, float]], splits: list[tuple
     kept = [(e, f, v) for e, f, v in pts if med / OUTLIER_X <= v <= med * OUTLIER_X]
     if len(kept) < len(pts):
         notes.append(f"丢掉 {len(pts) - len(kept)} 个录入错误点")
-    adj = sorted((f, v / _adr_ratio(key, f) * _factor_after(basis_date or f, splits)) for e, f, v in kept)
+    # (报送日, 期末, 今天口径股数);同一天报送的几期按期末排(首份 XBRL 年报会带前几年的对比数,最后一期才是当时最新)
+    adj = sorted((f, e, v / _adr_ratio(key, f) * _factor_after(basis_date or f, splits)) for e, f, v in kept)
     i = 1
     while 0 < i < len(adj) - 1:
-        a, b, c = adj[i - 1][1], adj[i][1], adj[i + 1][1]
+        a, b, c = adj[i - 1][2], adj[i][2], adj[i + 1][2]
         if max(b / a, a / b) > SHARE_JUMP and max(b / c, c / b) > SHARE_JUMP and max(a / c, c / a) <= SPIKE_NEIGHBORS:
             notes.append(f"{adj[i][0]} 单点错 ×{b / a:.2f},丢掉")
             adj.pop(i)
@@ -294,13 +318,39 @@ def clean_shares(key: str, pts: list[tuple[str, str, float]], splits: list[tuple
         i += 1
     start = 0
     for i in range(1, len(adj)):
-        r = adj[i][1] / adj[i - 1][1]
-        if r > SHARE_JUMP or r < 1 / SHARE_JUMP:
-            start = i
-            notes.append(f"{adj[i][0]} 股数跳 ×{r:.2f},只用之后的段")
+        r = adj[i][2] / adj[i - 1][2]
+        if not (r > SHARE_JUMP or r < 1 / SHARE_JUMP):
+            continue
+        ev = [x for x in KNOWN_SHARE_EVENTS.get(key, []) if adj[i - 1][1] < x[0] <= adj[i][1]]
+        if ev and ev[0][1] == "merger":
+            notes.append(f"{adj[i][0]} 股数跳 ×{r:.2f} = {ev[0][2]},两段都留")
+            continue
+        if ev and ev[0][1] == "unify":
+            adj[:i] = [(f, e, v * r) for f, e, v in adj[:i]]
+            notes.append(f"{adj[i][0]} 股数跳 ×{r:.2f} = {ev[0][2]},之前的段 × {r:.2f} 接成合并后口径")
+            continue
+        start = i
+        notes.append(f"{adj[i][0]} 股数跳 ×{r:.2f},只用之后的段")
     if start and len(adj) - start < 2:
-        return [], notes, f"最新一期股数跳 ×{adj[start][1] / adj[start - 1][1]:.2f},口径待核,不写"
-    return adj[start:], notes, None
+        return [], notes, f"最新一期股数跳 ×{adj[start][2] / adj[start - 1][2]:.2f},口径待核,不写"
+    return [(f, v) for f, _, v in adj[start:]], notes, None
+
+
+def confirm_splits(key: str, pts: list[tuple[str, str, float]],
+                   splits: list[tuple[str, float]]) -> tuple[list[tuple[str, float]], list[str]]:
+    """价格里认出的拆股,拿股数印证(见 SPLIT_CONFIRM_TOL)。返回 (留下的拆股, 备注)。纯函数。"""
+    keep, notes = [], []
+    tol = math.log(SPLIT_CONFIRM_TOL)
+    for d, k in splits:
+        before = sorted((f, e, v / _adr_ratio(key, f)) for e, f, v in pts if f <= d)
+        after = sorted((e, f, v / _adr_ratio(key, f)) for e, f, v in pts if e > d)
+        if before and after:
+            r = after[0][2] / before[-1][2]
+            if abs(math.log(r / k)) > tol and abs(math.log(r)) <= tol:
+                notes.append(f"{d} 价格跳 ×{k:.2f} 但股数没变(×{r:.2f})= 分拆 / 特别分红,不当拆股")
+                continue
+        keep.append((d, k))
+    return keep, notes
 
 
 def _iso_week_last(cl: list[tuple[str, float, float]], start: str) -> list[tuple[str, float]]:
@@ -343,8 +393,12 @@ def build_mcap(key: str, raw: list[dict], sources: dict[str, Any], start: str = 
     basis_date = None
     if key in MANUAL_SHARES:
         src, pts, basis_date = "manual", [(d, f, v) for d, f, v, _ in MANUAL_SHARES[key]["rows"]], MANUAL_BASIS_DATE
+    elif key in SOURCE_OVERRIDE:
+        src = SOURCE_OVERRIDE[key]
+        pts = sec_points(sources.get(src), duration=SEC_TAGS[src][2])
     else:
         src, pts = choose_source(sources)
+    if src != "manual":
         fix = SEC_FIX.get(key, {})
         pts = [(e, f, fix[e][0] if e in fix else v) for e, f, v in pts]
     if not pts:
@@ -352,8 +406,11 @@ def build_mcap(key: str, raw: list[dict], sources: dict[str, Any], start: str = 
     last_filed = max(f for _, f, _ in pts)
     if (datetime.strptime(cl[-1][0], "%Y-%m-%d") - datetime.strptime(last_filed, "%Y-%m-%d")).days > STALE_DAYS:
         return {"rows": [], "src": src, "why": f"股数停在 {last_filed}({src}),太旧,不写"}
-    splits = split_events(raw)
+    splits, split_notes = split_events(raw), []
+    if src != "manual":       # 手工表已是今天口径,没有「报送时的口径」可对
+        splits, split_notes = confirm_splits(key, pts, splits)
     shares, notes, refuse = clean_shares(key, pts, splits, basis_date)
+    notes = split_notes + notes
     if refuse:
         return {"rows": [], "src": src, "notes": notes, "why": refuse}
     known_dates = [f for f, _ in shares]
@@ -596,7 +653,7 @@ async def discover_onchain_forms(as_of: Optional[str] = None) -> dict[str, Any]:
 RERUN_AFTER_DAYS = 6
 LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
-PART_VERSIONS = {"prices": 2, "mcap": 7, "onchain_forms": 1}
+PART_VERSIONS = {"prices": 2, "mcap": 8, "onchain_forms": 1}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
