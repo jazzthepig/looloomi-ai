@@ -1,12 +1,12 @@
 {
-  "_doc": "S-503 lane_bot 配置。cwd = 你平时在那个 terminal 里打开 claude 的目录;worktree = 交代码用的 lane worktree。改完无需重装,下一次唤醒即生效。 10-13(Jazz「加速」):醒的间隔 120 → 60 分钟、每天 8 → 12 轮、时段 09–23 → 07–24。 10-13 二次(Jazz「小 agent 速度加快」,S-558):等审的卡不再叫醒 lane(见 actionable_cards);间隔 60 → 30 分钟、每天 12 → 16 轮、单轮步数 100 → 160、超时 40 → 60 分钟(过去 27 小时 32 轮:约 16 轮是重验已交付的卡,4 轮没收尾 —— 3 轮撞 100 步上限、1 轮上下文超长)。",
+  "_doc": "S-503 lane_bot 配置。cwd = 你平时在那个 terminal 里打开 claude 的目录;worktree = 交代码用的 lane worktree。改完无需重装,下一次唤醒即生效。 10-13(Jazz「加速」):醒的间隔 120 → 60 分钟、每天 8 → 12 轮、时段 09–23 → 07–24。 10-13 二次(Jazz「小 agent 速度加快」,S-558):等审的卡不再叫醒 lane(见 actionable_cards);间隔 60 → 30 分钟、每天 12 → 16 轮、单轮步数 100 → 160、超时 40 → 60 分钟(过去 27 小时 32 轮:约 16 轮是重验已交付的卡,4 轮没收尾 —— 3 轮撞 100 步上限、1 轮上下文超长)。 10-15(Jazz「现在就开始,non-stop」):时段 07–24 → 全天 00–24、间隔 30 → 15 分钟、每天 16 → 48 轮;单轮步数 / 超时不变。",
   "command": "claude",
   "active_hours": [
-    7,
+    0,
     24
   ],
-  "every_min": 30,
-  "max_runs_per_day": 16,
+  "every_min": 15,
+  "max_runs_per_day": 48,
   "max_turns": 160,
   "timeout_min": 60,
   "review_hour": 21,

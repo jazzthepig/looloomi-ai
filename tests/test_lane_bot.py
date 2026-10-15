@@ -70,7 +70,8 @@ def test_prompt_keeps_lanes_out_of_sync_and_their_own_leash() -> None:
 def test_shipped_config_is_sane() -> None:
     cfg = load_config()
     assert set(cfg["lanes"]) == {"lane-a", "lane-b", "lane-c"}
-    assert cfg["max_turns"] <= 200 and cfg["timeout_min"] <= 60 and cfg["max_runs_per_day"] <= 16
+    # 每天 48 轮 = Jazz 10-15「non-stop」(15 分钟一醒、全天);单轮步数与超时的上限不动
+    assert cfg["max_turns"] <= 200 and cfg["timeout_min"] <= 60 and cfg["max_runs_per_day"] <= 48
 
 
 def test_max_turns_posts_a_sentence_not_raw_json() -> None:
