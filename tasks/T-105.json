@@ -1,0 +1,25 @@
+{
+  "id": "T-105",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-15",
+  "verified": null,
+  "title": "World50 幸存者偏差补完:其余年份的全球前 100 + 六个英国 / 欧洲 ADR 的换股比例与 20-F 封面股数",
+  "source": "T-101(lane-b 10-15):2018 完整榜 97/100,其余年份只有前 20;池子漏了 BA / BP / VOD / BUD / UL / BTI / SAN / DowDuPont。Seth 已把 BA 与六个 ADR 放进池子,ADR 在换股比例核实前不写市值",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-105.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "只做研究产物,不写库、不改 src/(入库由 Seth)。① 换股比例:BP / VOD / BUD / UL / BTI / SAN 各自 20-F 封面上「each representing N ordinary shares」原句,2014–2026 每次变化各一行(生效日 + 第一份新比例 20-F 的报送日 + accession)。② 20-F 封面股数(格式照 src/data/universe/world50_data.py 的 SEC_PREFIX):六家各取 FY2014–FY2018 的封面「outstanding shares of each class」原句 + 报送日 + accession(EDGAR 全文检索 https://efts.sec.gov/LATEST/search-index?q=%22outstanding%20shares%20of%20each%22&forms=20-F&ciks=<CIK> 可用);多类股写清加了哪几类(UL 2020 统一前的 PLC / NV 两条线要写明怎么处理)。③ DowDuPont:2017-09 合并、2019 拆出 Dow 与 Corteva、同年 1 换 3 合股 —— 只写清楚能不能接成一条按时点的市值线、需要哪几份文件,不必做完。④ 其余年份的全球前 100:2015、2016、2017、2019–2025 各年 3 月 31 日(PwC Global Top 100 有的年份照 PwC;PwC 停了的年份写明用什么、口径差在哪),每年标出前 60 里不在 CANDIDATES 的,列它们的上市地 / 申报途径(美国 10-K / 20-F / 只在本地)。",
+    "expect": "Mac 数据根 research/t105/(adr_ratios.csv、sec_prefix.csv、top100_by_year.csv、missing.csv)+ _reports/absorb_input/T-105_survivorship_2.md;卡改 in_review。"
+  },
+  "prior_value": "T-101:2018 97/100;漏掉的 8 家里 3 家是真幸存者偏差(BP / VOD 跌出、DowDuPont 拆分),5 家今天仍在前 100(BUD / BA / UL / BTI / SAN)。",
+  "notes": "2026-10-15 Seth 开卡。lane_bot 已给每个 lane 加上 Mac 数据根目录(--add-dir),产物直接写数据根。"
+}

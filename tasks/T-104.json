@@ -1,0 +1,25 @@
+{
+  "id": "T-104",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-15",
+  "verified": null,
+  "title": "World50 亚洲余下三家的按时点股本(从 T-100 拆出来并行):联发科近一行、长鑫、沙特阿美",
+  "source": "Jazz 10-15「Samsung 在韩国交易所找,茅台在上海交易所找」+「non-stop」;T-100(lane-a)名单太长、一轮只做得完一两家 —— 拆三家给 C 并行",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-104.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "格式、规则与 T-100 完全相同(读 tasks/T-100.json 的 acceptance):每行 key, period_end, known_date, shares_as_reported, classes, source_url, quote;数字照文件原样不换算;known_date = 文件公开日,拿不准取更晚;quote 原样复制含数字的那一行,Seth 抽查。只做研究产物,不写库、不改 src/。三家:① 2454.TW 联发科:Seth 已有 2015 行(2014 年报「As of April 30, 2015」Common Stock 1,571,577,147,https://www.mediatek.com/hubfs/728015/MediaTek%20Assets/Pdfs/Annual%20Reports/2014-English-Annual-Report.pdf 第 43 页)—— 你补 ≥ 2026-06-01 的一行(2025 年报「Capital and Shares」第 54 页,同一路径把 2014 换成 2025;或 2026 Q2 财报附注的股本),以及 2015–2026 之间任何一次 > 2% 的变化(多半没有,写明查过哪几年)。② 688825.SHG 长鑫:上交所科创板,2026-07 上市 —— 招股书 / 上市公告书里的发行后总股本(A 股),上市日为 known_date;上市后有变化再加行。③ 2222.SR 沙特阿美:Tadawul,2019-12 上市;IPO 时总股本、2023 年与 2024 年的红股(每 10 送 1)前后各一行、最近一行;我们还没有它的价格,行先交上来,价格 Seth 另接。PDF 用 pdftotext 抽(你有,T-100 的 lane-a 也是这样做的);下载到 Mac 数据根 research/t104/,不放 /tmp(规则 3a)。",
+    "expect": "Mac 数据根 research/t104/shares.csv(每做完一家就追加,步数用完也不丢)+ _reports/absorb_input/T-104_asia_shares.md(每家一段:来源、引文、为什么这个 known_date);卡改 in_review。"
+  },
+  "prior_value": "T-100 已入库 10 家(工行、建行、农行、中行、中石油、中移动、平安、茅台、三星 2018 起、罗氏);SK 海力士 Seth 10-15 做完(SEC:SKT 20-F FY2014 / SK hynix F-1、424B4)。",
+  "notes": "2026-10-15 Seth 开卡(从 T-100 拆出,lane-a 那边已改成只做三星 2015–2017、雀巢、西门子、欧莱雅、LVMH)。"
+}
