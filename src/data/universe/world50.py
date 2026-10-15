@@ -95,6 +95,11 @@ _FORMER = [
     ("CRM", "Salesforce", "US", "US"), ("CMCSA", "Comcast", "US", "US"), ("PEP", "PepsiCo", "US", "US"),
     ("ABT", "Abbott", "US", "US"), ("RIO", "Rio Tinto", "GB", "US"), ("TTE", "TotalEnergies", "FR", "US"),
     ("601318.SHG", "Ping An", "CN", ""),
+    # T-101(lane-b,10-15):按年重建的全球前 100 对出池子漏掉的(2018 完整榜 97/100 对上;其余年份只有前 20)。
+    # 美股直接进;美国存托凭证的换股比例未核实前在 world50_data.UNVERIFIED_ADR 里(有价格、不写市值),T-105 核了再放。
+    ("BA", "Boeing", "US", "US"),
+    ("BP", "BP", "GB", "US"), ("VOD", "Vodafone", "GB", "US"), ("BUD", "AB InBev", "BE", "US"),
+    ("UL", "Unilever", "GB", "US"), ("BTI", "British American Tobacco", "GB", "US"), ("SAN", "Banco Santander", "ES", "US"),
 ]
 
 EQUITIES = tuple(
@@ -203,3 +208,60 @@ def select_members(ranked: Sequence[str], previous: Sequence[str] = (), n: int =
         if k not in members:
             members.append(k)
     return sorted(members, key=lambda k: rank[k])
+
+
+# ── 一次调仓(回放与前向账本共用的同一个核) ───────────────────────────────────────
+# S-581 / S-583 的回放(docs/research/t099_world50_replay.py)与前向账本(world50_book)都走这里;
+# tests/test_world50_book.py 逐个权重比对两边。口径照回放的代码:动量用到调仓当月月末(没有跳过最近一个月,S-583 §1)。
+
+def rank_by_mcap(mcap: dict[str, float]) -> list[str]:
+    return [k for k, v in sorted(mcap.items(), key=lambda kv: -kv[1]) if v and v > 0]
+
+
+def closes_from_returns(rets: Sequence[Optional[float]]) -> list[Optional[float]]:
+    """月收益 → 以 1 起算的价格指数;缺月处为 None,缺口之后从 1 重新起算(缺口前的价格不可比)。"""
+    out: list[Optional[float]] = []
+    level: Optional[float] = None
+    for r in rets:
+        if r is None or not math.isfinite(r) or r <= -1:
+            level = None
+            out.append(None)
+            continue
+        level = (level if level is not None else 1.0) * (1 + r)
+        out.append(level)
+    return out
+
+
+def contiguous_tail(closes: Sequence[Optional[float]]) -> list[float]:
+    """序列末尾连续可用的那一段(遇到 None 就停)。"""
+    tail: list[float] = []
+    for c in reversed(list(closes)):
+        if c is None:
+            break
+        tail.append(float(c))
+    return list(reversed(tail))
+
+
+def momentum_tilt(members: Sequence[str], closes: dict[str, Sequence[Optional[float]]]) -> tuple[dict[str, float], list[str]]:
+    """等权 × 动量分。closes[k] = 该成分到调仓当月为止的月末价格指数。动量不可算 ⇒ 分数 1(中性),一并返回名单。"""
+    vals = {}
+    for k in members:
+        tail = contiguous_tail(closes.get(k, ()))
+        vals[k] = momentum_values(tail) if len(tail) >= 7 else (None, None)
+    scores = momentum_scores(vals)
+    neutral = [k for k in members if k not in scores]
+    for k in neutral:
+        scores[k] = 1.0
+    return tilt_weights(members, scores), neutral
+
+
+def rebalance(snapshot_mcap: dict[str, float], previous: Sequence[str], closes: dict[str, Sequence[Optional[float]]],
+              reconstitute: bool, n: int = 50) -> dict:
+    """一次季末调仓。reconstitute(每年 12 月)或还没有成分 ⇒ 按市值重选(缓冲区);当季市值不可算的成分不持。
+    返回 {"members", "EW", "EWxMom", "neutral"}。"""
+    members = list(previous)
+    if reconstitute or not members:
+        members = select_members(rank_by_mcap(snapshot_mcap), previous=members, n=n)
+    members = [k for k in members if k in snapshot_mcap]
+    mom, neutral = momentum_tilt(members, closes)
+    return {"members": members, "EW": equal_weights(members), "EWxMom": mom, "neutral": neutral}

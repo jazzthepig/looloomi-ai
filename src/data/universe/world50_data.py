@@ -277,6 +277,18 @@ EXCHANGE_SHARES: dict[str, dict[str, Any]] = {
                            ("2018-12-04", "2018-12-04", 5_969_782_550, "samsung.com/sec/ir/stock-information/listing-info(库存股全部注销)"),
                            ("2025-02-20", "2025-02-20", 5_919_637_922, "samsung.com/sec/ir/stock-information/listing-info(2025-02-18 决议注销)"),
                            ("2026-04-02", "2026-04-02", 5_846_278_608, "samsung.com/sec/ir/stock-information/listing-info(注销 73,359,314 股)")]},
+    "000660.KO": {"ccy": "KRW", "what": "普通股发行数(含库存股),与三星同口径。2026-02-09 注销库存股 15,300,000;2026-07 在纽交所发 ADS"
+                                        "(1 份 = 1/10 股)新增 17,790,000 股。2026-08 起的回购(24,070,000 股、注销日未定)注销落地再加行",
+                  "rows": [("2014-12-31", "2015-04-30", 728_002_365, "sec:SK Telecom 20-F FY2014 0001193125-15-158586"
+                                                                    "(EDGAR 全文检索命中;FY2016–FY2018 同数)"),
+                           ("2026-06-24", "2026-07-06", 712_702_365, "sec:SK hynix F-1/A 0001193125-26-295501"
+                                                                    "「total issued common shares of 712,702,365 shares」"),
+                           ("2026-07-14", "2026-07-14", 730_492_365, "sec:SK hynix 424B4 0001193125-26-299963"
+                                                                    "(发行后流通 728,865,500 + 库存 1,626,865)")]},
+    "2454.TW": {"ccy": "TWD", "what": "普通股发行数(台湾证交所);2014 年报「资本及股份」截至 2015-04-30。2015–2026 的变化(员工限制股)"
+                                      "由 T-104 补近一行",
+                "rows": [("2015-04-30", "2015-06-30", 1_571_577_147, "mediatek:Annual Reports/2014-English-Annual-Report.pdf p.43"
+                                                                   "「Common Stock 1,571,577,147 428,422,853 2,000,000,000 Listed on TSE」")]},
     "ROG.SW": {"ccy": "CHF", "what": "无记名股 + 非投票权益证券(2026-03 换成参与证)合计;价格线是无记名股 RO.SW"
                                      "(world50.LOCAL_PRICE_CODE:ROG.SW 停在 2026-03-25);公司章程 §3–§4、IR 问答「股本自 2000 年的变化」",
                "rows": [("2011-03-01", "2011-03-01", 862_562_700, "roche:archiv-statuten-2011-en.pdf(160,000,000 + 702,562,700)"),
@@ -302,8 +314,8 @@ ADR_ORD_PER_ADS: dict[str, list[tuple[str, float]]] = {
     # TM:FY2021 20-F(2021-06-24)「each … representing two shares」;FY2022 20-F(2022-06-23)起「ten shares」(2021 年一拆五,ADR 价不动)
     "TM": [("1999-01-01", 2.0), ("2022-06-23", 10.0)],
 }
-#: 换股比例我没核实 / 中途改过而我不确定生效日的 —— 不写,不猜。(目前没有;TCEHY 1 份 = 1 股,股数手工从港交所补)
-UNVERIFIED_ADR: set[str] = set()
+#: 换股比例我没核实 / 中途改过而我不确定生效日的 —— 不写,不猜。(TCEHY 1 份 = 1 股,股数手工从港交所补,不在这里)
+UNVERIFIED_ADR: set[str] = {"BP", "VOD", "BUD", "UL", "BTI", "SAN"}   # T-101 补进池子的;比例由 T-105 从 20-F 封面核
 
 
 def _closes(raw: Iterable[dict]) -> list[tuple[str, float, float]]:
@@ -863,7 +875,7 @@ async def discover_onchain_forms(as_of: Optional[str] = None) -> dict[str, Any]:
 RERUN_AFTER_DAYS = 6
 LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
-PART_VERSIONS = {"prices": 3, "mcap": 10, "onchain_forms": 1, "revenue": 1}
+PART_VERSIONS = {"prices": 3, "mcap": 11, "onchain_forms": 1, "revenue": 1, "book": 1}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
@@ -895,7 +907,8 @@ def _brief(name: str, r: dict) -> dict:
             "mcap": ("companies", "companies_ok", "rows", "earliest", "src", "manual", "exchange", "crypto_backfill", "not_sec_listed",
                      "notes"),
             "onchain_forms": ("tokens", "by_type", "matched", "candidates_with_form", "with_issuer"),
-            "revenue": ("companies", "companies_ok", "rows", "earliest")}[name]
+            "revenue": ("companies", "companies_ok", "rows", "earliest"),
+            "book": ("waiting", "preview", "holdings_written", "nav_written", "last", "notes")}[name]
     out = {"ok": bool(r.get("ok")), "v": PART_VERSIONS[name], **{k: r.get(k) for k in keep if k in r}}
     if r.get("skipped"):
         out["skipped"] = r["skipped"]
@@ -908,7 +921,7 @@ def _brief(name: str, r: dict) -> dict:
 
 
 def _say(name: str, r: dict) -> str:
-    label = {"prices": "日线", "mcap": "市值", "onchain_forms": "链上形式", "revenue": "营收"}[name]
+    label = {"prices": "日线", "mcap": "市值", "onchain_forms": "链上形式", "revenue": "营收", "book": "前向账本"}[name]
     if r.get("skipped"):
         return label + " 跳过(6 天内已成)"
     if not r.get("ok") and r.get("why") and not any(k in r for k in ("symbols_ok", "companies_ok", "tokens")):
@@ -917,13 +930,19 @@ def _say(name: str, r: dict) -> str:
         return f"日线 {r.get('symbols_ok')}/{r.get('symbols')}"
     if name in ("mcap", "revenue"):
         return f"{label} {r.get('companies_ok')}/{r.get('companies')}"
+    if name == "book":
+        if r.get("waiting"):
+            pv = r.get("preview") or {}
+            return f"前向账本 {r['waiting']}(预演 {pv.get('as_of')}:{pv.get('members')} 个成分)"
+        return f"前向账本 新调仓行 {r.get('holdings_written', 0)} · 新净值行 {r.get('nav_written', 0)}"
     return f"链上形式 {r.get('tokens')} 条、对上 {r.get('candidates_with_form')} 个候选"
 
 
 async def run_week(force: bool = False) -> dict[str, Any]:
     from src.data.market.tradfi_history import run_once
+    from src.data.universe.world50_book import run_book
     steps = (("prices", run_once), ("mcap", refresh_mcap), ("onchain_forms", discover_onchain_forms),
-             ("revenue", refresh_revenue))
+             ("revenue", refresh_revenue), ("book", run_book))
     done = set() if force else await _recent_ok_parts()
     parts: dict[str, dict] = {}
     for name, fn in steps:

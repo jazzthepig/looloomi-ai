@@ -293,9 +293,16 @@ def test_run_week_is_not_ok_when_any_part_fails(monkeypatch):
     async def revenue():
         return {"ok": True, "companies": 81, "companies_ok": 80, "rows": 9000}
     monkeypatch.setattr(wd, "refresh_revenue", revenue)
+    import src.data.universe.world50_book as wb
+
+    async def book():
+        return {"ok": True, "waiting": "前向账本从 2026-12-31 起", "preview": {"as_of": "2026-09-30", "members": 50}}
+    monkeypatch.setattr(wb, "run_book", book)
     out = asyncio.run(wd.run_week())
     assert out["ok"] is False and out["refused"] is False
-    assert out["reason"].startswith("没成的段:mcap"), out["reason"]
+    assert out["reason"].startswith("没成的段:mcap —— "), out["reason"]
+    assert "前向账本 前向账本从 2026-12-31 起(预演 2026-09-30:50 个成分)" in out["reason"]
+    assert out["parts"]["book"]["preview"]["members"] == 50
     assert "HTTP 500" in out["parts"]["mcap"]["why"]
     assert out["parts"]["prices"] == {"ok": True, "v": wd.PART_VERSIONS["prices"], "symbols": 100, "symbols_ok": 98,
                                       "written": 1, "elapsed_s": 1.0}
@@ -337,7 +344,7 @@ def test_deploys_do_not_rerun_parts_that_already_succeeded(monkeypatch):
         return {"ok": True}
 
     async def recent():
-        return {"prices", "mcap", "onchain_forms", "revenue"}
+        return set(wd.PART_VERSIONS)
     monkeypatch.setattr(th, "run_once", prices)
     monkeypatch.setattr(wd, "_recent_ok_parts", recent)
     out = asyncio.run(wd.run_week())

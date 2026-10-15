@@ -87,6 +87,8 @@
     "two_layer_paper_nav",
     "vault_nav_tick",
     "wallet_profiles",
+    "world50_book_holdings",
+    "world50_book_nav",
     "world50_mcap_weekly",
     "world50_onchain_forms",
     "world50_revenue",
@@ -220,6 +222,25 @@
       "nav",
       "note",
       "positions"
+    ],
+    "world50_book_holdings": [
+      "arm",
+      "as_of",
+      "key",
+      "mcap_usd",
+      "neutral",
+      "rank",
+      "rule",
+      "weight"
+    ],
+    "world50_book_nav": [
+      "arm",
+      "as_of",
+      "d",
+      "n_priced",
+      "nav",
+      "ret",
+      "rule"
     ],
     "world50_mcap_weekly": [
       "d",
