@@ -293,7 +293,8 @@ def test_run_week_is_not_ok_when_any_part_fails(monkeypatch):
     assert out["ok"] is False and out["refused"] is False
     assert out["reason"].startswith("没成的段:mcap"), out["reason"]
     assert "HTTP 500" in out["parts"]["mcap"]["why"]
-    assert out["parts"]["prices"] == {"ok": True, "v": 1, "symbols": 100, "symbols_ok": 98, "written": 1, "elapsed_s": 1.0}
+    assert out["parts"]["prices"] == {"ok": True, "v": wd.PART_VERSIONS["prices"], "symbols": 100, "symbols_ok": 98,
+                                      "written": 1, "elapsed_s": 1.0}
 
 
 def test_deploys_do_not_rerun_parts_that_already_succeeded(monkeypatch):
@@ -304,7 +305,7 @@ def test_deploys_do_not_rerun_parts_that_already_succeeded(monkeypatch):
     rows = [
         {"at": "2026-10-19T00:00:00+00:00", "detail": {"prices": {"ok": True, "skipped": "6 天内已成"},
                                                       "mcap": {"ok": False, "why": "x"}}},
-        {"at": "2026-10-16T00:00:00+00:00", "detail": {"prices": {"ok": True, "symbols": 100},
+        {"at": "2026-10-16T00:00:00+00:00", "detail": {"prices": {"ok": True, "symbols": 100, "v": wd.PART_VERSIONS["prices"]},
                                                       "onchain_forms": {"ok": True, "skipped": "6 天内已成"}}},
         {"at": "2026-10-10T00:00:00+00:00", "detail": {"onchain_forms": {"ok": True, "tokens": 900}}},
     ]
@@ -398,3 +399,28 @@ def test_ifrs_source_sec_fix_and_adr_ratio_changes():
     tm = _dei(("2021-03-31", "2021-06-24", 3.26e9), ("2022-03-31", "2022-06-23", 16.3e9))
     tm_rows = wd.build_mcap("TM", _bars([10.0] * 500, start="2021-01-01"), {"dei": tm})["rows"]
     assert len(tm_rows) > 50 and {round(r["mcap_usd"] / 1e9, 1) for r in tm_rows} == {16.3}
+
+
+def test_crypto_mcap_backfill_uses_the_existing_path_and_skips_what_exists(monkeypatch):
+    """2015–2019 的加密市值:同一张表、同一来源标签、同一个解析函数;已有就不重取。"""
+    import src.data.market.data_layer as dl
+    import src.data.signals.hl_book_daily as hb
+    from src.data.style.header import SOURCE
+    sink: dict = {}
+    _patch_store(monkeypatch, sink)
+
+    async def have(tail):
+        return [] if "symbol=eq.BTC" in tail else [{"d": "2017-01-01"}]
+
+    calls = []
+
+    async def chart(cid, frm, to, interval=None):
+        calls.append(cid)
+        day = 1_514_764_800_000          # 2018-01-01 00:00 UTC
+        return {"available": True, "prices": [[day, 13_000.0]], "market_caps": [[day, 2.2e11]], "volumes": [[day, 1e10]]}
+    monkeypatch.setattr(hb, "_supabase_get", have)
+    monkeypatch.setattr(dl, "get_cg_market_chart_range", chart)
+    out = asyncio.run(wd.backfill_crypto_mcap())
+    assert calls == ["bitcoin"] and out["BTC"] == 1 and out["ETH"] == "已有"
+    row = sink["asset_mcap_daily"][0]
+    assert row["symbol"] == "BTC" and row["coin_id"] == "bitcoin" and row["source"] == SOURCE and row["mcap"] == 2.2e11

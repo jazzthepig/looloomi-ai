@@ -102,6 +102,12 @@ EQUITIES = tuple(
 )
 
 CANDIDATES: tuple[Candidate, ...] = METALS + CRYPTO + EQUITIES
+
+#: 对照组(T-099):不是成分,只取复权价做比较 —— 全球股票 ACWI、Nasdaq-100(QQQ)、标普 500、美国综合债(AGG,60/40 的债那一腿)。
+BENCHMARKS: tuple[Candidate, ...] = tuple(
+    Candidate(t, n, "benchmark", "eodhd", f"{t}.US", "global", None, "对照组,不是成分")
+    for t, n in (("ACWI", "iShares MSCI ACWI"), ("QQQ", "Invesco QQQ (Nasdaq-100)"),
+                 ("SPY", "SPDR S&P 500"), ("AGG", "iShares Core US Aggregate Bond")))
 SNAPSHOT = "companiesmarketcap.com Top assets by market cap, 2026-10-14(去掉 ETF);另加曾经的龙头与五个加密资产"
 
 

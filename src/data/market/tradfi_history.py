@@ -43,7 +43,7 @@ def rows_for(symbol: str, asset_class: str, adjusted: list[dict]) -> list[dict]:
     } for r in adjusted if r.get("close") and r["close"] > 0]
 
 
-_CLASS = {"equity": "Equity", "metal": "Commodity"}
+_CLASS = {"equity": "Equity", "metal": "Commodity", "benchmark": "ETF"}
 
 
 async def refresh_one(c: Any, start: str = START) -> dict[str, Any]:
@@ -64,8 +64,8 @@ async def refresh_one(c: Any, start: str = START) -> dict[str, Any]:
 
 
 async def run_once(start: str = START, candidates: Optional[list] = None) -> dict[str, Any]:
-    from src.data.universe.world50 import eodhd_candidates
-    todo = candidates if candidates is not None else eodhd_candidates()
+    from src.data.universe.world50 import BENCHMARKS, eodhd_candidates
+    todo = candidates if candidates is not None else eodhd_candidates() + list(BENCHMARKS)   # 对照组一起整段重取(T-099)
     sem = asyncio.Semaphore(CONCURRENCY)
 
     async def _guard(c):

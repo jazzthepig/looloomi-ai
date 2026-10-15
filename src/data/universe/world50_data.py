@@ -48,7 +48,7 @@ import unicodedata
 from datetime import datetime, timezone
 from typing import Any, Iterable, Optional
 
-WRITES_TABLES = ("world50_mcap_weekly", "world50_onchain_forms")
+WRITES_TABLES = ("world50_mcap_weekly", "world50_onchain_forms", "asset_mcap_daily")
 WRITES_COLUMNS = {
     "world50_mcap_weekly": ("key", "d", "mcap_usd", "source"),
     "world50_onchain_forms": ("as_of", "token_id", "key", "symbol", "name", "category", "issuer", "match_rule",
@@ -368,11 +368,52 @@ def build_mcap(key: str, raw: list[dict], sources: dict[str, Any], start: str = 
     return {"rows": rows, "src": src, "notes": notes, "latest_usd": rows[-1]["mcap_usd"], "why": None}
 
 
+CRYPTO_COIN_IDS = {"BTC": "bitcoin", "ETH": "ethereum", "XRP": "ripple", "BNB": "binancecoin", "SOL": "solana"}
+CRYPTO_BACKFILL_END = "2020-01-05"   # asset_mcap_daily 原本从 2019-12-31 起(风格表头的 HISTORY_START)
+
+
+async def backfill_crypto_mcap(start: str = START) -> dict[str, Any]:
+    """加密候选 2015–2019 的市值(T-099 按时点排名要用;2017 年底 BTC 已进全球前 50)。
+    **同一张表、同一个来源标签、同一个解析函数**(风格表头 `backfill_mcap` 那条路,规则 3b:一个量只有一条摄取路径)。
+    已有 2019-12 之前的行就跳过。"""
+    from src.api.store import supabase_upsert_table
+    from src.data.market.data_layer import get_cg_market_chart_range
+    from src.data.signals.hl_book_daily import _supabase_get
+    from src.data.style.header import SOURCE, parse_market_chart
+
+    def _ts(d: str) -> int:
+        return int(datetime.strptime(d, "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp())
+
+    out: dict[str, Any] = {}
+    for sym, cid in CRYPTO_COIN_IDS.items():
+        try:
+            have = await _supabase_get(f"asset_mcap_daily?select=d&symbol=eq.{sym}&source=eq.{SOURCE}&d=lt.2019-12-01&limit=1")
+            if have:
+                out[sym] = "已有"
+                continue
+            raw = await get_cg_market_chart_range(cid, _ts(start), _ts(CRYPTO_BACKFILL_END), interval="daily")
+            if not raw.get("available"):
+                out[sym] = f"读不到:{str(raw.get('error') or raw.get('reason'))[:80]}"
+                continue
+            pts = parse_market_chart(raw.get("prices"), raw.get("market_caps"), raw.get("volumes"))
+            rows = [{"symbol": sym, "coin_id": cid, "source": SOURCE, **p} for p in pts]
+            for i in range(0, len(rows), 2000):
+                res = await supabase_upsert_table("asset_mcap_daily", rows[i:i + 2000], on_conflict="symbol,d,source")
+                if not res.ok:
+                    raise RuntimeError(f"写入失败:{res.why[:80]}")
+            out[sym] = len(rows)
+        except Exception as e:  # noqa: BLE001 — 一个币补不上不连坐,原因带回去
+            out[sym] = f"{type(e).__name__}: {str(e)[:80]}"
+        await asyncio.sleep(0.2)
+    return out
+
+
 async def refresh_mcap(candidates: Optional[list] = None, start: str = START, concurrency: int = 4) -> dict[str, Any]:
     from src.api.store import supabase_upsert_table
     from src.data.market import data_layer as dl
     from src.data.market.tradfi_history import split_code
     from src.data.universe.world50 import CANDIDATES
+    crypto = await backfill_crypto_mcap(start) if candidates is None else {}
     pool = candidates if candidates is not None else [c for c in CANDIDATES if c.cls == "equity"]
     todo = [c for c in pool if c.code.endswith(".US")]
     skipped = [c.key for c in pool if not c.code.endswith(".US")]
@@ -413,6 +454,7 @@ async def refresh_mcap(candidates: Optional[list] = None, start: str = START, co
     ok = [r for r in res if r.get("ok")]
     enough = len(ok) >= max(1, math.ceil(MCAP_MIN_SHARE_OK * len(todo)))
     return {"ok": enough, "companies": len(todo), "companies_ok": len(ok), "not_sec_listed": skipped,
+            "crypto_backfill": crypto,
             **({"why": sec_why} if sec_why else {}),
             "manual": sorted(k for k in MANUAL_SHARES if any(r.get("key") == k and r.get("ok") for r in res)),
             "rows": sum(int(r.get("rows") or 0) for r in ok),
@@ -554,7 +596,7 @@ async def discover_onchain_forms(as_of: Optional[str] = None) -> dict[str, Any]:
 RERUN_AFTER_DAYS = 6
 LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
-PART_VERSIONS = {"prices": 1, "mcap": 6, "onchain_forms": 1}
+PART_VERSIONS = {"prices": 2, "mcap": 7, "onchain_forms": 1}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
@@ -583,7 +625,7 @@ async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
 
 def _brief(name: str, r: dict) -> dict:
     keep = {"prices": ("symbols", "symbols_ok", "written", "elapsed_s"),
-            "mcap": ("companies", "companies_ok", "rows", "earliest", "src", "manual", "not_sec_listed", "notes"),
+            "mcap": ("companies", "companies_ok", "rows", "earliest", "src", "manual", "crypto_backfill", "not_sec_listed", "notes"),
             "onchain_forms": ("tokens", "by_type", "matched", "candidates_with_form", "with_issuer")}[name]
     out = {"ok": bool(r.get("ok")), "v": PART_VERSIONS[name], **{k: r.get(k) for k in keep if k in r}}
     if r.get("skipped"):
