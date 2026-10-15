@@ -2,13 +2,16 @@
 
 ## 历史市值 → `world50_mcap_weekly`
 
-- 公司:**股本 × 原始收盘 × 汇率**,自己算。EODHD 的 `historical-market-cap` 我们的套餐没有(10-14 首跑 99/99 家 403)。
-  股本 = 基本面里的每季股本(`outstandingShares.quarterly`),**季末 60 天后才算已知**(按时点,不偷看)。
-  拆股从我们自己的数据里认:原始价 / 复权价 的比值单日跳 > 20% 就是拆股(分红只造成约 1% 的跳);
-  股本是「当时报告的数」还是「按今天口径回改过的数」,用拆股前后两季股本之比判,判不出来就不写。
-  一切换到今天的股本口径再乘:股本 × 之后拆股系数,价格 ÷ 之后拆股系数。
-  **校准**:最新一季股本 × 最新收盘,与 EODHD 当前市值差 25% 以上(ADR 换股比例、股本口径不对)⇒ 这家不写、比值报出来。
-  汇率:EODHD `USD{币种}.FOREX`,取不到 ⇒ 这家不写。周频(每周最后一个交易日),2015 起。
+- 公司:**SEC EDGAR 报告的股本 × 原始收盘**(Jazz 10-14 定;EODHD 基本面与历史市值我们的套餐都没有,403)。
+  只覆盖在 SEC 申报的公司(美国公司 + 美国上市的外国公司);本地上市的公司没有 —— 它们大多也没有链上形式。
+  股本:优先封面股本(`dei:EntityCommonStockSharesOutstanding`,某天的实际股数);没有(多股类公司按类别报,
+  不在这个接口里)就用每季加权平均基本股数(`us-gaap:WeightedAverageNumberOfSharesOutstandingBasic`)。
+  **按报送日(filed)才算已知**,同一期取最早报送的那一份(当时的原始报告,不用后来的重述)。
+  拆股:报告里的股数是**报送日那天的口径**(拆股后报送的会按新口径重述),所以股数 × 报送日之后的拆股系数、
+  价格 ÷ 当天之后的拆股系数,统一到今天的口径;拆股从「原始价 / 复权价」单日跳 > 20% 认。
+  ADR:外国公司报的是普通股数,除以每份 ADR 对应的普通股数(`ADR_ORD_PER_ADS`,有生效日);换股比例没核实的不写。
+  守卫:离中位数 100 倍以上的点当录入错误丢掉;相邻两点股数跳 50% 以上(并购、换股比例变了)⇒ 只用跳之后的段,跳点报出来。
+  周频(每周最后一个交易日),2015 起。
 - 加密:不另存 —— `asset_mcap_daily`(CoinGecko Pro)已有。
 - 贵金属:不存 —— 排名时用「价格 × 可投资存量」现算(`metal_mcap_usd`)。存量口径**待 Jazz 定**,
   这里给两档:`bars_coins_etfs`(私人投资:金条、金币、ETF)与 `bars_coins_etfs_cb`(再加央行)。
@@ -70,43 +73,23 @@ def metal_mcap_usd(key: str, price_usd_per_oz: float, basis: str = "bars_coins_e
 
 # ── 历史市值 ────────────────────────────────────────────────────────────────
 
-SHARES_LAG_DAYS = 60          # 季末之后多少天股本才算「已知」(10-Q 最晚约 40 天,海外更慢)
-CALIB_TOL = 1.25              # 与 EODHD 当前市值的容差;拆股前后股本之比的容差同一个数
 SPLIT_JUMP = 1.2              # 原始价 / 复权价 单日跳超过这个倍数 ⇒ 拆股
-MCAP_SOURCE = "eodhd_shares_x_close"
-EXCHANGE_CCY = {"US": "USD", "KO": "KRW", "SHG": "CNY", "SHE": "CNY", "HK": "HKD", "SW": "CHF", "XETRA": "EUR",
-                "PA": "EUR", "TW": "TWD", "SR": "SAR"}
+SHARE_JUMP = 1.5              # 相邻两点股数(今天口径)跳超过这个倍数 ⇒ 并购 / 换股比例变了,只用跳之后的段
+OUTLIER_X = 100               # 离中位数这么多倍 ⇒ 录入错误(实测 BRK 有几期多乘了 100 万)
+MCAP_SOURCE = "sec_shares_x_close"
+DEI_TAG = ("dei", "EntityCommonStockSharesOutstanding")
+WAVG_TAG = ("us-gaap", "WeightedAverageNumberOfSharesOutstandingBasic")
 
-
-def _pick(j: dict, path: str) -> Any:
-    """`A::B::C` —— EODHD 按过滤路径平铺或嵌套返回,两种都收(cis_inputs.fundamentals_rows 同一做法)。"""
-    if not isinstance(j, dict):
-        return None
-    if path in j:
-        return j[path]
-    cur: Any = j
-    for p in path.split("::"):
-        if not isinstance(cur, dict):
-            return None
-        cur = cur.get(p)
-    return cur
-
-
-def shares_points(j: dict) -> list[tuple[str, float]]:
-    """每季股本 [(季末, 股数)],旧 → 新。读不出数字的季不收。纯函数。"""
-    q = _pick(j, "outstandingShares::quarterly") or {}
-    items = q.values() if isinstance(q, dict) else (q if isinstance(q, list) else [])
-    out: dict[str, float] = {}
-    for x in items:
-        if not isinstance(x, dict):
-            continue
-        d = str(x.get("dateFormatted") or "")[:10]
-        v = _num(x.get("shares"))
-        if v is None and _num(x.get("sharesMln")) is not None:
-            v = _num(x.get("sharesMln")) * 1e6
-        if len(d) == 10 and v and v > 0:
-            out[d] = v
-    return sorted(out.items())
+#: 每份 ADR 对应几股普通股,[(生效日, 比例)],旧 → 新。只收核过的;外国公司没在表里也不在 UNVERIFIED_ADR 里 ⇒ 按 1:1。
+ADR_ORD_PER_ADS: dict[str, list[tuple[str, float]]] = {
+    "TSM": [("1997-01-01", 5.0)],
+    "BABA": [("2014-01-01", 1.0), ("2019-07-30", 8.0)],   # 2019 普通股一拆八,ADR 改为 1 份 = 8 股
+    "HSBC": [("1999-01-01", 5.0)],
+    "BHP": [("2001-01-01", 2.0)],
+    "SHEL": [("2005-01-01", 2.0)],
+}
+#: 换股比例我没核实 / 中途改过而我不确定生效日的 —— 不写,不猜。
+UNVERIFIED_ADR = {"AZN", "TM", "TCEHY"}
 
 
 def _closes(raw: Iterable[dict]) -> list[tuple[str, float, float]]:
@@ -139,24 +122,63 @@ def _factor_after(x: str, splits: list[tuple[str, float]]) -> float:
     return f
 
 
-def shares_basis(splits: list[tuple[str, float]], pts: list[tuple[str, float]]) -> str:
-    """股本是当时报告的数(as_reported)还是按今天口径回改过的(adjusted)。股本序列开始之后没有拆股 ⇒ none。"""
-    if not pts:
-        return "ambiguous"
-    relevant = [(d, k) for d, k in splits if d > pts[0][0]]
-    if not relevant:
-        return "none"
-    votes = set()
-    tol = math.log(CALIB_TOL)
-    for d, k in relevant:
-        before = [v for pe, v in pts if pe < d]
-        after = [v for pe, v in pts if pe >= d]
-        if not before or not after:
-            votes.add("ambiguous")
+def sec_points(concept: Optional[dict], duration: bool) -> list[tuple[str, str, float]]:
+    """SEC companyconcept → [(期末 / 封面日, 报送日, 股数)],按期末排序。纯函数。
+    同一期多份报送取**最早**的(原始报告);`duration=True`(加权平均)只收一季(80–100 天)或一年(350–380 天),
+    同一期末季度优先于年度。"""
+    facts = (((concept or {}).get("units") or {}).get("shares")) or []
+    best: dict[str, tuple[str, float, int]] = {}
+    for f in facts:
+        end, filed, v = str(f.get("end") or "")[:10], str(f.get("filed") or "")[:10], _num(f.get("val"))
+        if len(end) != 10 or len(filed) != 10 or not v or v <= 0:
             continue
-        r = after[0] / before[-1]
-        votes.add("as_reported" if abs(math.log(r / k)) < tol else "adjusted" if abs(math.log(r)) < tol else "ambiguous")
-    return votes.pop() if len(votes) == 1 else "ambiguous"
+        rank = 0
+        if duration:
+            try:
+                days = (datetime.strptime(end, "%Y-%m-%d") - datetime.strptime(str(f.get("start"))[:10], "%Y-%m-%d")).days
+            except ValueError:
+                continue
+            if 80 <= days <= 100:
+                rank = 0
+            elif 350 <= days <= 380:
+                rank = 1
+            else:
+                continue
+        cur = best.get(end)
+        if cur is None or (rank, filed) < (cur[2], cur[0]):
+            best[end] = (filed, v, rank)
+    return [(e, best[e][0], best[e][1]) for e in sorted(best)]
+
+
+def _adr_ratio(key: str, d: str) -> float:
+    r = 1.0
+    for eff, x in ADR_ORD_PER_ADS.get(key, []):
+        if eff <= d:
+            r = x
+    return r
+
+
+def clean_shares(key: str, pts: list[tuple[str, str, float]], splits: list[tuple[str, float]]
+                 ) -> tuple[list[tuple[str, float]], list[str]]:
+    """[(已知日 = 报送日, 今天口径的股数)] + 备注。纯函数。
+    今天口径 = 报告股数 ÷ 当时 ADR 比例 × 报送日之后的拆股系数;去掉离中位数 100 倍以上的录入错误;
+    相邻跳 50% 以上 ⇒ 只留最后一跳之后的段。"""
+    notes: list[str] = []
+    if not pts:
+        return [], notes
+    vals = sorted(v for _, _, v in pts)
+    med = vals[len(vals) // 2]
+    kept = [(e, f, v) for e, f, v in pts if med / OUTLIER_X <= v <= med * OUTLIER_X]
+    if len(kept) < len(pts):
+        notes.append(f"丢掉 {len(pts) - len(kept)} 个录入错误点")
+    adj = sorted((f, v / _adr_ratio(key, f) * _factor_after(f, splits)) for e, f, v in kept)
+    start = 0
+    for i in range(1, len(adj)):
+        r = adj[i][1] / adj[i - 1][1]
+        if r > SHARE_JUMP or r < 1 / SHARE_JUMP:
+            start = i
+            notes.append(f"{adj[i][0]} 股数跳 ×{r:.2f},只用之后的段")
+    return adj[start:], notes
 
 
 def _iso_week_last(cl: list[tuple[str, float, float]], start: str) -> list[tuple[str, float]]:
@@ -170,57 +192,30 @@ def _iso_week_last(cl: list[tuple[str, float, float]], start: str) -> list[tuple
     return [last[k] for k in sorted(last)]
 
 
-def _fx_at(fx_dates: list[str], fx_vals: list[float], d: str) -> Optional[float]:
-    """美元 / 1 单位本币:d 当天或之前 7 天内最近的一个(fx 是 USD{币种} 的收盘,取倒数)。"""
-    i = bisect.bisect_right(fx_dates, d) - 1
-    if i < 0 or (datetime.strptime(d, "%Y-%m-%d") - datetime.strptime(fx_dates[i], "%Y-%m-%d")).days > 7:
-        return None
-    return 1.0 / fx_vals[i] if fx_vals[i] > 0 else None
-
-
-def build_mcap(key: str, raw: list[dict], fund: dict, fx: Optional[list[tuple[str, float]]], ccy: str,
-               start: str = START) -> dict[str, Any]:
-    """一家公司的周频美元市值。返回 {rows, basis, calib, why}:why 非空 = 不写,原因在里面。纯函数。"""
-    from datetime import timedelta
-    pts = shares_points(fund)
+def build_mcap(key: str, raw: list[dict], dei: Optional[dict], wavg: Optional[dict], start: str = START) -> dict[str, Any]:
+    """一家公司的周频美元市值(美国上市,价格本来就是美元)。返回 {rows, src, notes, why}:why 非空 = 不写。纯函数。"""
+    if key in UNVERIFIED_ADR:
+        return {"rows": [], "why": "ADR 换股比例未核实,不写"}
     cl = _closes(raw)
-    if not pts:
-        return {"rows": [], "why": "基本面里没有每季股本"}
     if not cl:
         return {"rows": [], "why": "没有日线"}
-    if ccy != "USD" and not fx:
-        return {"rows": [], "why": f"{ccy} 汇率读不到"}
-    fx_dates, fx_vals = [d for d, _ in fx or []], [v for _, v in fx or []]
+    pts, src = sec_points(dei, duration=False), "dei"
+    if len(pts) < 2:
+        pts, src = sec_points(wavg, duration=True), "wavg"
+    if not pts:
+        return {"rows": [], "why": "SEC 里没有可用的股数(两种口径都没有)"}
     splits = split_events(raw)
-    basis = shares_basis(splits, pts)
-    if basis == "ambiguous":
-        return {"rows": [], "basis": basis, "splits": splits[:4], "why": "拆股前后股本之比判不出口径"}
-    adj_shares = [(pe, v * (_factor_after(pe, splits) if basis in ("as_reported", "none") else 1.0)) for pe, v in pts]
-    # 校准:最新一季股本 × 最新收盘 对 EODHD 当前市值(可能是本币,也可能是美元 —— 两个都比)
-    h = _num(_pick(fund, "Highlights::MarketCapitalization"))
-    d_last, c_last, _ = cl[-1]
-    local_now = adj_shares[-1][1] * c_last
-    calib = None
-    if h and h > 0:
-        usd_now = local_now * (1.0 if ccy == "USD" else (_fx_at(fx_dates, fx_vals, d_last) or float("nan")))
-        rs = [r for r in (local_now / h, usd_now / h) if r == r and r > 0]
-        calib = min(rs, key=lambda r: abs(math.log(r))) if rs else None
-        if calib is None or abs(math.log(calib)) > math.log(CALIB_TOL):
-            return {"rows": [], "basis": basis, "calib": calib,
-                    "why": f"与 EODHD 当前市值差 ×{calib:.2f}(换股比例或股本口径不对)" if calib else "校准算不出"}
+    shares, notes = clean_shares(key, pts, splits)
+    known_dates = [f for f, _ in shares]
     rows = []
     for d, c in _iso_week_last(cl, start):
-        known = (datetime.strptime(d, "%Y-%m-%d") - timedelta(days=SHARES_LAG_DAYS)).strftime("%Y-%m-%d")
-        sh = [v for pe, v in adj_shares if pe <= known]
-        if not sh:
+        i = bisect.bisect_right(known_dates, d) - 1
+        if i < 0:
             continue
-        fxv = 1.0 if ccy == "USD" else _fx_at(fx_dates, fx_vals, d)
-        if fxv is None:
-            continue
-        rows.append({"key": key, "d": d, "mcap_usd": sh[-1] * (c / _factor_after(d, splits)) * fxv, "source": MCAP_SOURCE})
+        rows.append({"key": key, "d": d, "mcap_usd": shares[i][1] * (c / _factor_after(d, splits)), "source": MCAP_SOURCE})
     if not rows:
-        return {"rows": [], "basis": basis, "calib": calib, "why": "没有一周同时有已知股本与价格"}
-    return {"rows": rows, "basis": basis, "calib": calib, "splits": len(splits), "why": None}
+        return {"rows": [], "src": src, "notes": notes, "why": "没有一周同时有已知股数与价格"}
+    return {"rows": rows, "src": src, "notes": notes, "latest_usd": rows[-1]["mcap_usd"], "why": None}
 
 
 async def refresh_mcap(candidates: Optional[list] = None, start: str = START, concurrency: int = 4) -> dict[str, Any]:
@@ -228,47 +223,46 @@ async def refresh_mcap(candidates: Optional[list] = None, start: str = START, co
     from src.data.market import data_layer as dl
     from src.data.market.tradfi_history import split_code
     from src.data.universe.world50 import CANDIDATES
-    todo = candidates if candidates is not None else [c for c in CANDIDATES if c.cls == "equity"]
+    pool = candidates if candidates is not None else [c for c in CANDIDATES if c.cls == "equity"]
+    todo = [c for c in pool if c.code.endswith(".US")]
+    skipped = [c.key for c in pool if not c.code.endswith(".US")]
+    try:
+        ciks = await dl.get_sec_ticker_ciks()
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "why": f"SEC 代码表读不到:{type(e).__name__}: {str(e)[:160]}", "companies": len(todo)}
     sem = asyncio.Semaphore(concurrency)
 
-    async def fetch(c):
+    async def one(c):
+        cik = ciks.get(c.key.upper())
+        if cik is None:
+            return {"key": c.key, "ok": False, "why": "不在 SEC 申报公司表里"}
         async with sem:
             try:
                 t, ex = split_code(c.code)
-                fund = await dl.get_eodhd_share_history(t, ex)
+                dei = await dl.get_sec_concept(cik, *DEI_TAG)
+                wavg = None if dei and len(sec_points(dei, False)) >= 2 else await dl.get_sec_concept(cik, *WAVG_TAG)
                 raw = await dl.get_eodhd_eod_range(t, ex, start)
             except Exception as e:  # noqa: BLE001 — 一家取不到不连坐整轮,原因带回去
-                return c, None, None, None, f"{type(e).__name__}: {str(e)[:140]}"
-            ccy = str(_pick(fund, "General::CurrencyCode") or EXCHANGE_CCY.get(ex) or "").upper()
-            return c, fund, raw, ccy, None
-
-    got = await asyncio.gather(*[fetch(c) for c in todo])
-    fx: dict[str, list[tuple[str, float]]] = {}
-    for ccy in sorted({g[3] for g in got if g[3] and g[3] != "USD"}):
-        try:
-            fx[ccy] = [(d, c) for d, c, _ in _closes(await dl.get_eodhd_eod_range(f"USD{ccy}", "FOREX", start))]
-        except Exception:  # noqa: BLE001 — 某个币种读不到:用它的公司各自报「汇率读不到」
-            fx[ccy] = []
-    res = []
-    for c, fund, raw, ccy, err in got:
-        if err:
-            res.append({"key": c.key, "ok": False, "why": err})
-            continue
-        b = build_mcap(c.key, raw, fund, fx.get(ccy), ccy or "?", start)
+                return {"key": c.key, "ok": False, "why": f"{type(e).__name__}: {str(e)[:140]}"}
+            await asyncio.sleep(0.2)   # SEC 限速 10 次 / 秒,4 路并发留足余量
+        b = build_mcap(c.key, raw, dei, wavg, start)
         if b["why"]:
-            res.append({"key": c.key, "ok": False, "why": b["why"], "basis": b.get("basis"), "calib": b.get("calib")})
-            continue
+            return {"key": c.key, "ok": False, "why": b["why"], "notes": b.get("notes")}
         w = await supabase_upsert_table("world50_mcap_weekly", b["rows"], on_conflict="key,d,source")
-        res.append({"key": c.key, "ok": w.ok, "rows": len(b["rows"]), "first": b["rows"][0]["d"], "basis": b["basis"],
-                    **({} if w.ok else {"why": w.why[:140]})})
+        return {"key": c.key, "ok": w.ok, "rows": len(b["rows"]), "first": b["rows"][0]["d"], "src": b["src"],
+                "latest_bn": round(b["latest_usd"] / 1e9, 1), "notes": b["notes"],
+                **({} if w.ok else {"why": w.why[:140]})}
+
+    res = await asyncio.gather(*[one(c) for c in todo])
     ok = [r for r in res if r.get("ok")]
     enough = len(ok) >= max(1, math.ceil(MCAP_MIN_SHARE_OK * len(todo)))
-    return {"ok": enough, "companies": len(todo), "companies_ok": len(ok),
+    return {"ok": enough, "companies": len(todo), "companies_ok": len(ok), "not_sec_listed": skipped,
             "rows": sum(int(r.get("rows") or 0) for r in ok),
             "earliest": min((r["first"] for r in ok), default=None),
-            "fx": {k: len(v) for k, v in fx.items()},
-            "failed": [{k: r.get(k) for k in ("key", "why", "basis", "calib") if r.get(k) is not None}
-                       for r in res if not r.get("ok")][:40]}
+            "from_wavg": sorted(r["key"] for r in ok if r.get("src") == "wavg"),
+            "latest_bn": {r["key"]: r["latest_bn"] for r in ok},
+            "notes": {r["key"]: r["notes"] for r in res if r.get("notes")},
+            "failed": [{"key": r["key"], "why": r.get("why")} for r in res if not r.get("ok")][:40]}
 
 
 # ── 链上形式 ────────────────────────────────────────────────────────────────
@@ -428,7 +422,7 @@ async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
 
 def _brief(name: str, r: dict) -> dict:
     keep = {"prices": ("symbols", "symbols_ok", "written", "elapsed_s"),
-            "mcap": ("companies", "companies_ok", "rows", "earliest", "fx"),
+            "mcap": ("companies", "companies_ok", "rows", "earliest", "from_wavg", "not_sec_listed", "notes"),
             "onchain_forms": ("tokens", "by_type", "matched", "candidates_with_form", "with_issuer")}[name]
     out = {"ok": bool(r.get("ok")), **{k: r.get(k) for k in keep if k in r}}
     if r.get("skipped"):

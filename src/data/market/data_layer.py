@@ -757,25 +757,37 @@ async def get_eodhd_eod_range(ticker: str, exchange: str, frm: str) -> list[dict
     return rows
 
 
-async def get_eodhd_share_history(ticker: str, exchange: str) -> dict:
-    """EODHD 基本面里算历史市值要的四样:上市币种、当前市值(校准用)、当前股本、**每季股本**(T-098)。
-    `historical-market-cap` 这条数据线我们的套餐没有(10-14 首跑 99/99 家 HTTP 403),所以市值 = 股本 × 价格自己算。
-    返回原样子树(平铺 `A::B` 或嵌套,调用方两种都收)。没有 key / 非 200 抛错。"""
-    if not EODHD_KEY:
-        raise RuntimeError("EODHD_API_KEY 不在进程环境里")
-    r = await _get_misc_client().get(
-        f"{EODHD_BASE}/fundamentals/{ticker}.{exchange}",
-        params={"api_token": EODHD_KEY, "fmt": "json",
-                "filter": "General::CurrencyCode,Highlights::MarketCapitalization,"
-                          "SharesStats::SharesOutstanding,outstandingShares::quarterly"},
-        timeout=45)
+#: SEC 要求自报身份的 User-Agent(机构名 + 联系方式),不报会被 403。真值放 Railway 环境变量 SEC_USER_AGENT。
+SEC_UA_DEFAULT = "CometCloud AI research (looloomi.ai)"
+
+
+def _sec_headers() -> dict:
+    return {"User-Agent": os.environ.get("SEC_USER_AGENT") or SEC_UA_DEFAULT, "Accept-Encoding": "gzip, deflate"}
+
+
+async def get_sec_ticker_ciks() -> dict[str, int]:
+    """SEC `company_tickers.json` → {代码: CIK}(T-098)。一次调用。读不到抛异常。
+    EODHD 的基本面我们的套餐没有(403,S-531),美国申报公司的股本走 SEC EDGAR(Jazz 10-14)。"""
+    r = await _get_misc_client().get("https://www.sec.gov/files/company_tickers.json", headers=_sec_headers(), timeout=30)
     if r.status_code != 200:
-        body = (r.text or "")[:80].replace(EODHD_KEY, "***")
-        raise RuntimeError(f"EODHD fundamentals {ticker}.{exchange} HTTP {r.status_code}: {body}")
+        raise RuntimeError(f"SEC company_tickers HTTP {r.status_code}(403 多半是 User-Agent:设 SEC_USER_AGENT)")
+    j = r.json() or {}
+    rows = j.values() if isinstance(j, dict) else j
+    return {str(x["ticker"]).upper(): int(x["cik_str"]) for x in rows if isinstance(x, dict) and x.get("ticker")}
+
+
+async def get_sec_concept(cik: int, taxonomy: str, tag: str) -> Optional[dict]:
+    """SEC XBRL `companyconcept/CIK##########/{taxonomy}/{tag}.json`。
+    **404 = 这家公司没报这个概念(多股类公司的分类别事实不在这个接口里),返回 None —— 不是错误**;其他非 200 抛异常。"""
+    r = await _get_misc_client().get(
+        f"https://data.sec.gov/api/xbrl/companyconcept/CIK{int(cik):010d}/{taxonomy}/{tag}.json",
+        headers=_sec_headers(), timeout=30)
+    if r.status_code == 404:
+        return None
+    if r.status_code != 200:
+        raise RuntimeError(f"SEC companyconcept {cik} {tag} HTTP {r.status_code}")
     j = r.json()
-    if not isinstance(j, dict):
-        raise RuntimeError(f"EODHD fundamentals {ticker}.{exchange} 返回的不是对象")
-    return j
+    return j if isinstance(j, dict) else None
 
 
 async def get_eodhd_quarterly_history(ticker: str, exchange: str = "US") -> dict:

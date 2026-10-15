@@ -32,53 +32,63 @@ def _bars(prices, start="2020-01-01", adj_ratio=1.0, split_at=None, k=1.0):
     return out
 
 
-def _fund(points, ccy="USD", mcap_now=None):
-    return {"General": {"CurrencyCode": ccy}, "Highlights": {"MarketCapitalization": mcap_now},
-            "outstandingShares": {"quarterly": {str(i): {"dateFormatted": d, "shares": v}
-                                                for i, (d, v) in enumerate(points)}}}
+def _concept(facts):
+    return {"units": {"shares": facts}}
 
 
-def test_shares_points_and_flat_or_nested_shape():
-    flat = {"outstandingShares::quarterly": {"0": {"dateFormatted": "2020-03-31", "sharesMln": "100.5"},
-                                             "1": {"dateFormatted": "bad", "shares": 5}, "2": {"dateFormatted": "2019-12-31", "shares": 0}}}
-    assert wd.shares_points(flat) == [("2020-03-31", 100.5e6)], "平铺形状也收;坏日期、0 股不收"
-    assert wd.shares_points(_fund([("2020-06-30", 2.0), ("2020-03-31", 1.0)])) == [("2020-03-31", 1.0), ("2020-06-30", 2.0)]
+def _dei(*pts):
+    """封面股数:(封面日, 报送日, 股数)。"""
+    return _concept([{"end": e, "filed": f, "val": v} for e, f, v in pts])
 
 
-def test_mcap_is_point_in_time_and_split_consistent():
-    # 400 个交易日,今天口径价格恒 10;第 200 天一拆四。股本「当时报告」:拆前 100,拆后 400。
+def test_sec_points_keep_the_original_filing_and_quarter_over_year():
+    dei = _dei(("2020-01-17", "2020-01-29", 100.0), ("2020-01-17", "2021-01-28", 999.0), ("bad", "2020-01-01", 5))
+    assert wd.sec_points(dei, duration=False) == [("2020-01-17", "2020-01-29", 100.0)], "同一期取最早报送的(原始报告)"
+    wavg = _concept([
+        {"start": "2023-01-01", "end": "2023-12-31", "filed": "2024-02-01", "val": 12.0},   # 年度
+        {"start": "2023-10-01", "end": "2023-12-31", "filed": "2024-02-01", "val": 11.0},   # 同一期末的季度
+        {"start": "2023-01-01", "end": "2023-06-30", "filed": "2023-07-25", "val": 9.0},    # 半年累计:不收
+        {"start": "2023-04-01", "end": "2023-06-30", "filed": "2023-07-25", "val": 10.0},
+    ])
+    assert wd.sec_points(wavg, duration=True) == [("2023-06-30", "2023-07-25", 10.0), ("2023-12-31", "2024-02-01", 11.0)]
+    assert wd.sec_points(None, duration=False) == []
+
+
+def test_mcap_is_known_from_filing_date_and_split_consistent():
+    # 今天口径价格恒 10;2020-10-15 一拆四。封面股数:拆前报 100,拆后报 400。
     bars = _bars([10.0] * 400, split_at="2020-10-15", k=4.0)
-    assert [k for _, k in wd.split_events(bars)] == [pytest.approx(4.0)]
-    pts = [("2019-12-31", 100.0), ("2020-03-31", 100.0), ("2020-06-30", 100.0), ("2020-12-31", 400.0), ("2021-03-31", 400.0)]
-    assert wd.shares_basis(wd.split_events(bars), pts) == "as_reported"
-    out = wd.build_mcap("X", bars, _fund(pts, mcap_now=4000.0), None, "USD")
-    assert out["why"] is None and out["basis"] == "as_reported" and out["calib"] == pytest.approx(1.0)
-    assert {round(r["mcap_usd"], 6) for r in out["rows"]} == {4000.0}, "跨拆股市值连续(今天口径:400 股 × 10)"
-    assert out["rows"][0]["d"] >= "2020-02-29", "季末 60 天后股本才算已知 —— 第一周不能早于 2019-12-31 + 60 天"
-    # 同一组数,股本按今天口径回改过(拆前也是 400)
-    adj_pts = [(d, 400.0) for d, _ in pts]
-    assert wd.shares_basis(wd.split_events(bars), adj_pts) == "adjusted"
-    assert {round(r["mcap_usd"], 6) for r in wd.build_mcap("X", bars, _fund(adj_pts, mcap_now=4000.0), None, "USD")["rows"]} == {4000.0}
+    assert [round(k, 6) for _, k in wd.split_events(bars)] == [4.0]
+    dei = _dei(("2020-01-10", "2020-02-03", 100.0), ("2020-07-10", "2020-08-03", 100.0),
+               ("2021-01-10", "2021-02-03", 400.0))
+    out = wd.build_mcap("X", bars, dei, None)
+    assert out["why"] is None and out["src"] == "dei"
+    assert {round(r["mcap_usd"], 6) for r in out["rows"]} == {4000.0}, "跨拆股市值连续(今天口径 400 股 × 10)"
+    assert out["rows"][0]["d"] >= "2020-02-03", "报送日之前不知道股数 —— 第一周不能早于第一次报送"
 
 
-def test_mcap_refuses_when_calibration_or_basis_is_off():
-    bars = _bars([10.0] * 300)
-    pts = [("2019-12-31", 100.0), ("2020-06-30", 100.0)]
-    adr = wd.build_mcap("TSM", bars, _fund(pts, mcap_now=5000.0), None, "USD")
-    assert adr["rows"] == [] and "×0.20" in adr["why"], "差 5 倍(ADR 换股比例)⇒ 不写,比值报出来"
-    split = _bars([10.0] * 300, split_at="2020-06-01", k=3.0)
-    odd = [("2019-12-31", 100.0), ("2020-06-30", 170.0)]
-    amb = wd.build_mcap("Y", split, _fund(odd, mcap_now=1700.0), None, "USD")
-    assert amb["rows"] == [] and amb["basis"] == "ambiguous", "拆股前后股本之比既不是 1 也不是 k ⇒ 不猜"
-    assert wd.build_mcap("Z", bars, _fund(pts, ccy="KRW", mcap_now=1000.0), None, "KRW")["why"] == "KRW 汇率读不到"
+def test_a_filing_after_a_split_is_already_restated():
+    """拆股后报送的季报会把拆股前的那一季按新口径重述 —— 用报送日(不是期末)决定要不要再乘拆股系数。"""
+    bars = _bars([10.0] * 400, split_at="2020-10-15", k=4.0)
+    dei = _dei(("2020-01-10", "2020-02-03", 100.0), ("2020-09-30", "2020-10-30", 400.0))   # 期末在拆股前,报送在拆股后
+    rows = wd.build_mcap("X", bars, dei, None)["rows"]
+    assert {round(r["mcap_usd"], 6) for r in rows} == {4000.0}
 
 
-def test_mcap_converts_local_currency_with_last_known_fx():
-    bars = _bars([1000.0] * 300)
-    fx = [(r["date"], 1250.0) for r in bars[::3]]            # USDKRW,隔几天才有一个点
-    out = wd.build_mcap("005930.KO", bars, _fund([("2019-12-31", 1e6)], ccy="KRW", mcap_now=1e9), fx, "KRW")
-    assert out["why"] is None and out["calib"] == pytest.approx(1.0), "当前市值按本币给也能校准"
-    assert {round(r["mcap_usd"]) for r in out["rows"]} == {800000}, "1e6 股 × 1000 韩元 ÷ 1250"
+def test_wavg_fallback_adr_ratio_outliers_and_jumps():
+    bars = _bars([50.0] * 300)
+    wavg = _concept([{"start": "2019-10-01", "end": "2019-12-31", "filed": "2020-02-01", "val": 1.0e9},
+                     {"start": "2020-01-01", "end": "2020-03-31", "filed": "2020-04-30", "val": 1.0e15},   # 录入错误
+                     {"start": "2020-04-01", "end": "2020-06-30", "filed": "2020-07-30", "val": 1.0e9}])
+    out = wd.build_mcap("META", bars, None, wavg)
+    assert out["src"] == "wavg" and {round(r["mcap_usd"]) for r in out["rows"]} == {50_000_000_000}
+    assert any("录入错误" in n for n in out["notes"])
+    tsm = wd.build_mcap("TSM", bars, _dei(("2019-12-31", "2020-01-20", 25.9e9), ("2020-06-30", "2020-07-20", 25.9e9)), None)
+    assert {round(r["mcap_usd"] / 1e9, 1) for r in tsm["rows"]} == {259.0}, "TSM 一份 ADR = 5 股普通股"
+    merged = wd.build_mcap("Y", bars, _dei(("2019-12-31", "2020-01-20", 1e9), ("2020-06-30", "2020-07-20", 2e9)), None)
+    assert merged["rows"][0]["d"] >= "2020-07-20" and any("跳" in n for n in merged["notes"]), "股数翻倍:只用之后的段"
+    assert wd.build_mcap("AZN", bars, _dei(("2019-12-31", "2020-01-20", 1e9), ("2020-06-30", "2020-07-20", 1e9)),
+                         None)["why"].startswith("ADR 换股比例未核实")
+    assert wd.build_mcap("Z", bars, None, None)["why"].startswith("SEC 里没有")
 
 
 def test_metal_mcap_is_investable_and_none_when_unknown():
@@ -143,22 +153,30 @@ def test_refresh_mcap_reports_failures_and_writes_only_good(monkeypatch):
     _patch_store(monkeypatch, sink)
     bars = _bars([10.0] * 300)
 
-    async def fund(ticker, ex):
-        if ticker == "NOPE":
-            raise RuntimeError("EODHD fundamentals NOPE.US HTTP 404")
-        return _fund([("2019-12-31", 100.0)], mcap_now=1000.0)
+    async def ciks():
+        return {"GOOD": 1, "NOPE": 2}
+
+    async def concept(cik, taxonomy, tag):
+        if cik == 2:
+            raise RuntimeError("SEC companyconcept 2 HTTP 500")
+        return _dei(("2019-12-31", "2020-01-20", 100.0), ("2020-06-30", "2020-07-20", 100.0)) if taxonomy == "dei" else None
 
     async def eod(ticker, ex, frm):
         return bars
-    monkeypatch.setattr(dl, "get_eodhd_share_history", fund)
+    monkeypatch.setattr(dl, "get_sec_ticker_ciks", ciks)
+    monkeypatch.setattr(dl, "get_sec_concept", concept)
     monkeypatch.setattr(dl, "get_eodhd_eod_range", eod)
     good = Candidate("GOOD", "Good", "equity", "eodhd", "GOOD.US", "US")
     bad = Candidate("NOPE", "Nope", "equity", "eodhd", "NOPE.US", "US")
-    out = asyncio.run(wd.refresh_mcap(candidates=[good, bad]))
+    absent = Candidate("ABSENT", "Absent", "equity", "eodhd", "ABSENT.US", "US")
+    local = Candidate("2222.SR", "Aramco", "equity", "eodhd", "2222.SR", "SA")
+    out = asyncio.run(wd.refresh_mcap(candidates=[good, bad, absent, local]))
     assert {r["key"] for r in sink["world50_mcap_weekly"]} == {"GOOD"}
     assert all(r["source"] == wd.MCAP_SOURCE for r in sink["world50_mcap_weekly"])
-    assert out["companies_ok"] == 1 and out["failed"][0]["key"] == "NOPE" and "404" in out["failed"][0]["why"]
-    assert out["ok"] is False, "两家只取到一家(< 60%)⇒ 整段不算 ok"
+    assert out["companies"] == 3 and out["not_sec_listed"] == ["2222.SR"], "本地上市不在 SEC:单列,不算失败"
+    why = {f["key"]: f["why"] for f in out["failed"]}
+    assert "HTTP 500" in why["NOPE"] and why["ABSENT"] == "不在 SEC 申报公司表里"
+    assert out["ok"] is False and out["latest_bn"] == {"GOOD": 0.0}
 
 
 def test_discover_onchain_forms_and_issuer_failure_is_reported(monkeypatch):
