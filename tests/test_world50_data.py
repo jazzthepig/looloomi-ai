@@ -60,7 +60,7 @@ def test_mcap_is_known_from_filing_date_and_split_consistent():
     assert [round(k, 6) for _, k in wd.split_events(bars)] == [4.0]
     dei = _dei(("2020-01-10", "2020-02-03", 100.0), ("2020-07-10", "2020-08-03", 100.0),
                ("2021-01-10", "2021-02-03", 400.0))
-    out = wd.build_mcap("X", bars, dei, None)
+    out = wd.build_mcap("X", bars, {"dei": dei})
     assert out["why"] is None and out["src"] == "dei"
     assert {round(r["mcap_usd"], 6) for r in out["rows"]} == {4000.0}, "跨拆股市值连续(今天口径 400 股 × 10)"
     assert out["rows"][0]["d"] >= "2020-02-03", "报送日之前不知道股数 —— 第一周不能早于第一次报送"
@@ -70,7 +70,7 @@ def test_a_filing_after_a_split_is_already_restated():
     """拆股后报送的季报会把拆股前的那一季按新口径重述 —— 用报送日(不是期末)决定要不要再乘拆股系数。"""
     bars = _bars([10.0] * 400, split_at="2020-10-15", k=4.0)
     dei = _dei(("2020-01-10", "2020-02-03", 100.0), ("2020-09-30", "2020-10-30", 400.0))   # 期末在拆股前,报送在拆股后
-    rows = wd.build_mcap("X", bars, dei, None)["rows"]
+    rows = wd.build_mcap("X", bars, {"dei": dei})["rows"]
     assert {round(r["mcap_usd"], 6) for r in rows} == {4000.0}
 
 
@@ -79,16 +79,44 @@ def test_wavg_fallback_adr_ratio_outliers_and_jumps():
     wavg = _concept([{"start": "2019-10-01", "end": "2019-12-31", "filed": "2020-02-01", "val": 1.0e9},
                      {"start": "2020-01-01", "end": "2020-03-31", "filed": "2020-04-30", "val": 1.0e15},   # 录入错误
                      {"start": "2020-04-01", "end": "2020-06-30", "filed": "2020-07-30", "val": 1.0e9}])
-    out = wd.build_mcap("META", bars, None, wavg)
+    out = wd.build_mcap("META", bars, {"wavg": wavg})
     assert out["src"] == "wavg" and {round(r["mcap_usd"]) for r in out["rows"]} == {50_000_000_000}
     assert any("录入错误" in n for n in out["notes"])
-    tsm = wd.build_mcap("TSM", bars, _dei(("2019-12-31", "2020-01-20", 25.9e9), ("2020-06-30", "2020-07-20", 25.9e9)), None)
+    two = _dei(("2019-12-31", "2020-01-20", 25.9e9), ("2020-06-30", "2020-07-20", 25.9e9))
+    tsm = wd.build_mcap("TSM", bars, {"dei": two})
     assert {round(r["mcap_usd"] / 1e9, 1) for r in tsm["rows"]} == {259.0}, "TSM 一份 ADR = 5 股普通股"
-    merged = wd.build_mcap("Y", bars, _dei(("2019-12-31", "2020-01-20", 1e9), ("2020-06-30", "2020-07-20", 2e9)), None)
-    assert merged["rows"][0]["d"] >= "2020-07-20" and any("跳" in n for n in merged["notes"]), "股数翻倍:只用之后的段"
-    assert wd.build_mcap("AZN", bars, _dei(("2019-12-31", "2020-01-20", 1e9), ("2020-06-30", "2020-07-20", 1e9)),
-                         None)["why"].startswith("ADR 换股比例未核实")
-    assert wd.build_mcap("Z", bars, None, None)["why"].startswith("SEC 里没有")
+    merged = wd.build_mcap("Y", bars, {"dei": _dei(("2019-12-31", "2020-01-20", 1e9), ("2020-03-31", "2020-04-20", 2e9),
+                                                    ("2020-06-30", "2020-07-20", 2e9))})
+    assert merged["rows"][0]["d"] >= "2020-04-20" and any("跳" in n for n in merged["notes"]), "股数翻倍:只用之后的段"
+    assert wd.build_mcap("AZN", bars, {"dei": two})["why"].startswith("ADR 换股比例未核实")
+    assert wd.build_mcap("Z", bars, {})["why"].startswith("SEC 里没有")
+
+
+def test_freshest_source_wins_and_stale_shares_are_refused():
+    """MA:封面股数只报到 2010(之后按类别报)—— 按优先级选就会用 16 年前的数。BRK:只有一种口径且停在很久以前 ⇒ 不写。"""
+    bars = _bars([100.0] * 300)                                    # 2020-01 → 2021-02
+    stale_dei = _dei(("2009-10-28", "2009-11-03", 1.1e8), ("2010-10-27", "2010-11-02", 1.2e8))
+    fresh_cso = _dei(("2019-12-31", "2020-02-01", 9.0e8), ("2020-06-30", "2020-07-30", 9.0e8))
+    out = wd.build_mcap("MA", bars, {"dei": stale_dei, "cso": fresh_cso})
+    assert out["src"] == "cso" and {round(r["mcap_usd"] / 1e9) for r in out["rows"]} == {90}
+    both_fresh = wd.build_mcap("MA", bars, {"dei": fresh_cso, "cso": fresh_cso})
+    assert both_fresh["src"] == "dei", "一样新时封面股数优先"
+    old = wd.build_mcap("BRK-B", bars, {"wavg": _concept([
+        {"start": "2014-07-01", "end": "2014-09-30", "filed": "2014-11-07", "val": 1.64e6},
+        {"start": "2015-07-01", "end": "2015-09-30", "filed": "2015-11-06", "val": 1.64e6}])})
+    assert old["rows"] == [] and old["why"].startswith("股数停在 2015-11-06")
+
+
+def test_single_bad_point_is_dropped_and_a_jump_in_the_newest_point_is_refused():
+    bars = _bars([10.0] * 400)
+    spike = _dei(("2019-12-31", "2020-01-20", 4.0e9), ("2020-03-31", "2020-04-20", 2.0e9), ("2020-06-30", "2020-07-20", 3.9e9))
+    out = wd.build_mcap("WFC", bars, {"dei": spike})
+    assert out["why"] is None and out["rows"][0]["d"] < "2020-04-20", "单点错只丢那个点,历史不截断"
+    assert any("单点错" in n for n in out["notes"])
+    assert {round(r["mcap_usd"] / 1e9) for r in out["rows"]} <= {40, 39}
+    newest = _dei(("2019-12-31", "2020-01-20", 1.8e10), ("2020-03-31", "2020-04-20", 1.8e10), ("2020-06-30", "2020-07-20", 1.8e9))
+    out = wd.build_mcap("Q", bars, {"dei": newest})
+    assert out["rows"] == [] and out["why"].startswith("最新一期股数跳"), "只剩最新一个点:分不清是公司变了还是换了口径 ⇒ 不写"
 
 
 def test_metal_mcap_is_investable_and_none_when_unknown():
@@ -156,7 +184,10 @@ def test_refresh_mcap_reports_failures_and_writes_only_good(monkeypatch):
     async def ciks():
         return {"GOOD": 1, "NOPE": 2}
 
+    calls = []
+
     async def concept(cik, taxonomy, tag):
+        calls.append((cik, tag))
         if cik == 2:
             raise RuntimeError("SEC companyconcept 2 HTTP 500")
         return _dei(("2019-12-31", "2020-01-20", 100.0), ("2020-06-30", "2020-07-20", 100.0)) if taxonomy == "dei" else None
@@ -177,6 +208,33 @@ def test_refresh_mcap_reports_failures_and_writes_only_good(monkeypatch):
     why = {f["key"]: f["why"] for f in out["failed"]}
     assert "HTTP 500" in why["NOPE"] and why["ABSENT"] == "不在 SEC 申报公司表里"
     assert out["ok"] is False and out["latest_bn"] == {"GOOD": 0.0}
+    assert {tag for cik, tag in calls if cik == 1} == {"EntityCommonStockSharesOutstanding", "CommonStockSharesOutstanding",
+                                                         "WeightedAverageNumberOfSharesOutstandingBasic"}, "三种口径都取"
+
+
+def test_predecessor_cik_history_is_joined(monkeypatch):
+    import src.data.market.data_layer as dl
+    sink: dict = {}
+    _patch_store(monkeypatch, sink)
+    bars = _bars([100.0] * 300)
+
+    async def ciks():
+        return {"XOM": 2115436}
+
+    async def concept(cik, taxonomy, tag):
+        if taxonomy != "dei":
+            return None
+        if cik == 34088:
+            return _dei(("2019-12-31", "2020-01-20", 4.2e9), ("2020-03-31", "2020-04-20", 4.2e9))
+        return _dei(("2020-06-30", "2020-07-20", 4.1e9), ("2020-09-30", "2020-10-20", 4.1e9))
+
+    async def eod(ticker, ex, frm):
+        return bars
+    monkeypatch.setattr(dl, "get_sec_ticker_ciks", ciks)
+    monkeypatch.setattr(dl, "get_sec_concept", concept)
+    monkeypatch.setattr(dl, "get_eodhd_eod_range", eod)
+    out = asyncio.run(wd.refresh_mcap(candidates=[Candidate("XOM", "Exxon Mobil", "equity", "eodhd", "XOM.US", "US")]))
+    assert out["companies_ok"] == 1 and min(r["d"] for r in sink["world50_mcap_weekly"]) < "2020-02-01", "旧 CIK 的历史接上"
 
 
 def test_discover_onchain_forms_and_issuer_failure_is_reported(monkeypatch):
@@ -228,7 +286,7 @@ def test_run_week_is_not_ok_when_any_part_fails(monkeypatch):
     assert out["ok"] is False and out["refused"] is False
     assert out["reason"].startswith("没成的段:mcap"), out["reason"]
     assert "HTTP 500" in out["parts"]["mcap"]["why"]
-    assert out["parts"]["prices"] == {"ok": True, "symbols": 100, "symbols_ok": 98, "written": 1, "elapsed_s": 1.0}
+    assert out["parts"]["prices"] == {"ok": True, "v": 1, "symbols": 100, "symbols_ok": 98, "written": 1, "elapsed_s": 1.0}
 
 
 def test_deploys_do_not_rerun_parts_that_already_succeeded(monkeypatch):
@@ -249,6 +307,10 @@ def test_deploys_do_not_rerun_parts_that_already_succeeded(monkeypatch):
         return rows
     monkeypatch.setattr(hb, "_supabase_get", get)
     assert asyncio.run(wd._recent_ok_parts(now)) == {"prices"}, "链上形式上次真跑是 10 天前 ⇒ 要重跑;市值上次失败 ⇒ 要重跑"
+    rows.insert(0, {"at": "2026-10-19T12:00:00+00:00", "detail": {"mcap": {"ok": True, "companies_ok": 75}}})
+    assert "mcap" not in asyncio.run(wd._recent_ok_parts(now)), "算法升了版本:旧版本跑成的不算已成"
+    rows.insert(0, {"at": "2026-10-19T13:00:00+00:00", "detail": {"mcap": {"ok": True, "v": wd.PART_VERSIONS["mcap"]}}})
+    assert "mcap" in asyncio.run(wd._recent_ok_parts(now))
 
     async def boom(tail):
         raise RuntimeError("HTTP 503")
