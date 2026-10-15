@@ -129,3 +129,36 @@ def test_fast_forward_through_an_identical_untracked_fixup_copy() -> None:
             assert code == 0
             assert g(main, "rev-parse", "HEAD").stdout == g(main, "rev-parse", "origin/main").stdout
             assert g(main, "status", "--porcelain").stdout == ""
+
+
+def test_fast_forward_clears_one_kind_of_blocker_at_a_time() -> None:
+    """10-15:T-093 合并之后,主目录里同时有「已跟踪、内容已等于合进来的」卡和「未跟踪、同内容」的 fixup 脚本 ——
+    git 先只报第一类,让路之后才报第二类。在临时仓库里验证,不碰真仓库。"""
+    import os
+    import subprocess as sp
+    import tempfile
+    from unittest import mock
+    import scripts.seth_bot.seth_bot as sb
+    clean = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+
+    def g(cwd, *a):
+        return sp.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *a], cwd=cwd, capture_output=True, text=True)
+
+    with tempfile.TemporaryDirectory() as td, mock.patch.dict(os.environ, clean, clear=True):
+        origin, main, other = Path(td) / "o.git", Path(td) / "m", Path(td) / "w"
+        g(td, "init", "--bare", "-b", "main", str(origin))
+        g(td, "clone", str(origin), str(main))
+        (main / "card.json").write_text("v1\n")
+        g(main, "add", "card.json"); g(main, "commit", "-m", "a"); g(main, "push", "origin", "main")
+        g(td, "clone", str(origin), str(other))
+        (other / "card.json").write_text("v2\n")
+        (other / "run.py").write_text("x = 1\n")
+        g(other, "add", "card.json", "run.py"); g(other, "commit", "-m", "merge"); g(other, "push", "origin", "main")
+        g(main, "fetch", "origin")
+        (main / "card.json").write_text("v2\n")
+        (main / "run.py").write_text("x = 1\n")
+        assert main.resolve() != sb.ROOT.resolve()
+        code, out = sb.ff_until_clear(root=main)
+        assert code == 0, out
+        assert g(main, "rev-parse", "HEAD").stdout == g(main, "rev-parse", "origin/main").stdout
+        assert g(main, "status", "--porcelain").stdout == ""

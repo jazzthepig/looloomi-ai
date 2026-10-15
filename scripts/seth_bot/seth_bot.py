@@ -168,12 +168,22 @@ def sync_main() -> Optional[str]:
         if head.returncode == 0:
             board.write_text(head.stdout, encoding="utf-8")
             regen = True
-    code, out = git("merge", "--ff-only", "--quiet", "origin/main")
-    if code != 0 and "would be overwritten" in out:
-        code, out = _ff_through_local_edits(blocking_files(out))
+    code, out = ff_until_clear()
     if regen:
         run(["python3", "scripts/task_board.py"], timeout=120)
     return None if code == 0 else f"快进失败(本地改动与合进来的提交冲突):{out[-300:]}"
+
+
+def ff_until_clear(root: Optional[Path] = None) -> tuple[int, str]:
+    """快进 main;被挡就让路再试。10-15:git 一次只报一类挡路的文件(先「已跟踪的本地改动」、让路后才报「未跟踪的副本」),
+    只让一次的话第二类照样挡住(T-093 合并后:卡是已跟踪改动、fixup 脚本是未跟踪副本)。"""
+    root = root or ROOT
+    code, out = git("merge", "--ff-only", "--quiet", "origin/main", cwd=root)
+    for _ in range(4):
+        if code == 0 or "would be overwritten" not in out:
+            break
+        code, out = _ff_through_local_edits(blocking_files(out), root=root)
+    return code, out
 
 
 def blocking_files(out: str) -> list[str]:
