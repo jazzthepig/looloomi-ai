@@ -46,7 +46,7 @@ import bisect
 import math
 import re
 import unicodedata
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable, Optional
 
 WRITES_TABLES = ("world50_mcap_weekly", "world50_onchain_forms", "asset_mcap_daily", "world50_revenue")
@@ -233,9 +233,19 @@ SEC_PREFIX: dict[str, list[tuple[str, str, float, str]]] = {
     "AZN": [("2014-12-31", "2015-03-10", 1_263_143_338, "0000950103-15-001933")],
     "RIO": [("2014-12-31", "2015-03-06", 1_425_377_388, "0001193125-15-079473")],                     # Rio Tinto plc
     # T-105(lane-b,10-16):20-F 封面「outstanding shares of each class」原样;研究数据 research/t105/sec_prefix.csv
+    # BP 的 20-F 没有 XBRL 股数(10-16 循环:几种口径都没有)⇒ 逐年封面股数全用(只用封面的路径)
     "BP": [("2014-12-31", "2015-03-12", 20_005_961_293, "0001193125-15-074381"),
+           ("2015-12-31", "2016-03-11", 20_108_770_973, "0001193125-16-492156"),
            ("2016-12-31", "2017-03-10", 21_049_696_078, "0001193125-17-112384"),
-           ("2018-12-31", "2019-03-08", 21_525_464_027, "0001628280-19-003618")],
+           ("2017-12-31", "2018-03-09", 21_288_193_071, "0001628280-18-003778"),
+           ("2018-12-31", "2019-03-08", 21_525_464_027, "0001628280-19-003618"),
+           ("2019-12-31", "2020-03-09", 21_535_839_814, "0001628280-20-003753"),
+           ("2020-12-31", "2021-03-05", 21_415_782_350, "0001628280-21-005241"),
+           ("2021-12-31", "2022-03-15", 20_778_081_819, "0000313807-22-000012"),
+           ("2022-12-31", "2023-03-15", 19_097_783_117, "0000313807-23-000009"),
+           ("2023-12-31", "2024-03-13", 17_900_800_485, "0000313807-24-000008"),
+           ("2024-12-31", "2025-03-13", 16_662_465_251, "0000313807-25-000007"),
+           ("2025-12-31", "2026-03-12", 16_486_312_994, "0000313807-26-000006")],
     "VOD": [("2015-03-31", "2015-06-30", 26_512_038_085, "0001104659-15-043811"),
             ("2017-03-31", "2017-06-29", 26_622_078_509, "0001104659-17-038355"),
             ("2019-03-31", "2019-06-28", 27_230_375_568, "0001104659-19-034465")],
@@ -580,11 +590,16 @@ def build_mcap(key: str, raw: list[dict], sources: dict[str, Any], start: str = 
         if key in SEC_PREFIX and pts:
             first_f, last_pre_end = min(f for _, f, _ in pts), max(e for e, _, _, _ in SEC_PREFIX[key])
             pts = [(e, f, v) for e, f, v, _ in SEC_PREFIX[key] if f < first_f] + [p for p in pts if p[0] > last_pre_end]
+        elif key in SEC_PREFIX:          # 10-16:BP 的 20-F 没有 XBRL 股数,封面股数逐年都有 ⇒ 只用封面
+            src, pts = "sec_prefix", [(e, f, v) for e, f, v, _ in SEC_PREFIX[key]]
     if not pts:
         return {"rows": [], "why": "SEC 里没有可用的股数(几种口径都没有)"}
     last_filed = max(f for _, f, _ in pts)
+    stale_after: Optional[str] = None
     if (datetime.strptime(cl[-1][0], "%Y-%m-%d") - datetime.strptime(last_filed, "%Y-%m-%d")).days > STALE_DAYS:
-        return {"rows": [], "src": src, "why": f"股数停在 {last_filed}({src}),太旧,不写"}
+        # 10-16:原来整家不写 —— 雀巢的股数表停在 2025-03(2025 年报的行还没补),2015–2025 的历史也跟着没了。
+        # 股数旧只说明「最近这段不知道」,不说明历史错:写到最后一次报送 + STALE_DAYS 为止,之后的周不写。
+        stale_after = (datetime.strptime(last_filed, "%Y-%m-%d") + timedelta(days=STALE_DAYS)).strftime("%Y-%m-%d")
     splits, split_notes = split_events(raw), []
     if src != "manual":       # 手工表已是今天口径,没有「报送时的口径」可对
         splits, split_notes = confirm_splits(key, pts, splits)
@@ -594,7 +609,11 @@ def build_mcap(key: str, raw: list[dict], sources: dict[str, Any], start: str = 
         return {"rows": [], "src": src, "notes": notes, "why": refuse}
     known_dates = [f for f, _ in shares]
     rows = []
+    if stale_after:
+        notes = notes + [f"股数停在 {last_filed}({src}),{stale_after} 之后不写"]
     for d, c in _iso_week_last(cl, start):
+        if stale_after and d > stale_after:
+            break
         i = bisect.bisect_right(known_dates, d) - 1
         if i < 0:
             continue
@@ -604,7 +623,8 @@ def build_mcap(key: str, raw: list[dict], sources: dict[str, Any], start: str = 
         rows.append({"key": key, "d": d, "mcap_usd": shares[i][1] * (c / _factor_after(d, splits)) * usd,
                      "source": MCAP_SOURCE})
     if not rows:
-        return {"rows": [], "src": src, "notes": notes, "why": "没有一周同时有已知股数与价格"}
+        why = f"股数停在 {last_filed}({src}),太旧,不写" if stale_after else "没有一周同时有已知股数与价格"
+        return {"rows": [], "src": src, "notes": notes, "why": why}
     return {"rows": rows, "src": src, "notes": notes, "latest_usd": rows[-1]["mcap_usd"], "why": None}
 
 
@@ -931,7 +951,7 @@ async def discover_onchain_forms(as_of: Optional[str] = None) -> dict[str, Any]:
 RERUN_AFTER_DAYS = 6
 LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
-PART_VERSIONS = {"prices": 4, "mcap": 16, "onchain_forms": 1, "revenue": 1, "book": 1}
+PART_VERSIONS = {"prices": 4, "mcap": 17, "onchain_forms": 1, "revenue": 1, "book": 1}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:

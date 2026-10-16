@@ -560,3 +560,15 @@ def test_revenue_rows_keep_quarters_and_years_and_the_original_filing():
     assert [(r["unit"], r["period_end"], r["revenue"], r["accn"]) for r in rows] == [
         ("EUR", "2022-12-31", 9.0, "e"), ("USD", "2023-03-31", 100.0, "a"), ("USD", "2023-12-31", 420.0, "d")]
     assert set(rows[0]) == set(wd.WRITES_COLUMNS["world50_revenue"])
+
+
+def test_stale_shares_stop_the_series_instead_of_erasing_its_history(monkeypatch):
+    """10-16:雀巢的股数表停在 2025-03,整家被拒 —— 2015–2025 的历史也没了。现在写到最后一次报送 + STALE_DAYS 为止。"""
+    bars = _bars([100.0] * 900)                                    # 2020-01 → 2023-06 左右
+    old = wd.build_mcap("OLD", bars, {"wavg": _concept([
+        {"start": "2019-07-01", "end": "2019-09-30", "filed": "2019-11-07", "val": 1.0e9},
+        {"start": "2019-10-01", "end": "2019-12-31", "filed": "2020-02-06", "val": 1.0e9}])})
+    assert old["rows"], old.get("why")
+    last = max(r["d"] for r in old["rows"])
+    cut = (wd.datetime.strptime("2020-02-06", "%Y-%m-%d") + wd.timedelta(days=wd.STALE_DAYS)).strftime("%Y-%m-%d")
+    assert last <= cut and any("之后不写" in n for n in old["notes"])
