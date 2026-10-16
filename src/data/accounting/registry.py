@@ -60,6 +60,11 @@ BOOKS: tuple[Book, ...] = (
     # T-087 / S-556:③ 与组合层换到新 ①(不设单币上限)上 —— 新臂 mult_v2 / pl_v3 自 10-12 收盘起;旧臂照旧记作对照
     Book("multiplier", "③", "推力(① × 0.7–1.3 倍,按状态;底仓 = 不设上限的 ①)", "③ 的岗位是择时调敞口、永不做空(§5b);规则 10-08 预注册,零拟合参数",
          "multiplier_daily", "arms", arm="mult_v2", accounting="shared_kernel", benchmark="core"),
+    # S-596(Jazz 10-16):Trader Tom 的仓位管理 —— 只看 ① 自己的价格:盈利上才加(55 日新高、每 +10% 再加 0.1)、破 20 日低撤加仓、
+    # 跌破 200 日线且破 20 日低底仓降到 0.7。BTC / ETH 2015–2026 回放:点估计都高于持有、回撤更浅;前向 10-16 起
+    Book("tom_overlay", "③", "Tom 仓位管理(① 上只在盈利时加仓、破位撤加仓、跌破长期趋势底仓 0.7;0.7–1.3)",
+         "大赢时扩大、错时少伤:加仓只加在已经赚钱的仓位上,撤的只是加上去的部分(S-596)",
+         "multiplier_daily", "arms", arm="tom_pd13", accounting="shared_kernel", benchmark="core"),
     Book("multiplier_v1", "③", "推力 v1(底仓 = 单币 ≤ 40% 的旧 ①;留作对照)", "T-087 换底仓前的同一规则",
          "multiplier_daily", "arms", arm="mult_v1", accounting="shared_kernel", benchmark="core",
          caveat="对照臂:10-12 起 ③ 建在不设上限的 ① 上(mult_v2)"),

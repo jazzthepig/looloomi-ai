@@ -40,6 +40,7 @@ PUBLIC = {
     "beta_plus_m": ("Momentum tilt (monthly)", "The momentum tilt, rebalanced monthly."),
     "cis_tilt": ("CIS tilt", "Overweights higher-CIS names inside the core holding."),
     "multiplier": ("Exposure timing (0.7–1.3x)", "The core holding scaled between 0.7x and 1.3x by market state; never short."),
+    "tom_overlay": ("Add-to-winners overlay (0.7–1.3x)", "The core scaled up only while it is already making money - one step per new high, steps removed on a 20-day low - and cut to 0.7x below its long-term trend; never short."),
     "multiplier_v1": ("Exposure timing v1 (control)", "The same timing rule on the previous 40%-capped core, kept as the control."),
     "portfolio_layer": ("Portfolio layer (0–1x)", "Exposure between 0 and 1 by market-state flags; can sit in cash."),
     "portfolio_layer_v2": ("Portfolio layer v2 (control)", "The same exposure rule on the previous 40%-capped core, kept as the control."),
@@ -59,6 +60,7 @@ PUBLIC = {
 #: ③ / 组合层的回放自 T-087 起也建在新 ① 上(mult_v2_replay / pl_v3_replay)。
 REPLAY = {"core_cap": ("core_variants_daily", "cap_uncapped"),
           "multiplier": ("multiplier_daily", "mult_v2_replay"),
+          "tom_overlay": ("multiplier_daily", "tom_pd13_replay"),
           "portfolio_layer": ("portfolio_layer_daily", "pl_v3_replay")}
 
 

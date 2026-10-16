@@ -179,6 +179,22 @@ itself a way to lose.
 - Behavioral edges still require **mechanism + base rate + OOS survival** before they enter the
   book. "It's crowd psychology" is a hypothesis, not a pass. The ledger discipline stands.
 
+## 8. First measurement (S-596, 2026-10-16)
+
+Jazz: *expand the gain when right, add only on profit, keep the damage small when wrong.* Pre-registered on BTC and ETH,
+2015–2026, real perp funding charged on everything above 1.0x: base 1.0; add 0.1 on a new 55-day high and again every +10%
+from the last add; drop all adds on a 20-day low; optionally cut the base to 0.7 below the 200-day line on a 20-day low.
+
+- Every variant beat holding on point estimate; the version with the defensive leg and a 1.3x cap (PD13) won in **both** up and
+  down legs and had a shallower drawdown. It passed all four criteria on ETH and missed on BTC by p 0.083.
+- A 1.6x cap was **worse** than 1.3x: the extra adds were given back in the falls and cost more funding. *Daring* needs a ceiling.
+- Why this is not S-568's failed ③: that one timed exposure from market state and ended up big at tops, small at the start of
+  rallies. Here the only trigger is *our own position already making money*, and only the added part is removed when it breaks.
+  That is the doctrine's "add to what is working, never to hope" made mechanical.
+
+Now running forward on the core as `tom_overlay` (③, paper). Eight variants were tried, so no single p-value is clean; the
+forward record is the test.
+
 ---
 
 *Extract the physics of crowd behavior, not the swagger of one trader. Build things that feel alive.*

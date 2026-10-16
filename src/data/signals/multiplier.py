@@ -45,6 +45,7 @@ Jazz 10-07 定调:执行只读一张表 —— ① 的推力 + ② 的倾斜。�
 
     select max(d) from multiplier_daily where arm = 'mult_v1_replay';   -- UTC 08:00 后应 = 昨天
     select max(d) from multiplier_daily where arm = 'mult_v2_replay';   -- 同上(新底仓)
+    select max(d) from multiplier_daily where arm = 'tom_pd13_replay';  -- 同上(S-596 Tom 仓位管理;前向臂 tom_pd13 10-16 起)
 """
 from __future__ import annotations
 
@@ -76,6 +77,11 @@ INCEPTION = pd.Timestamp("2026-10-08")
 N_RANDOM, BLOCK, SEED = 1000, 20, 63
 CODE_REF = "T-063 multiplier v1"
 CODE_REF_U = "T-087 multiplier v2 (cap_a1_u 底仓)"
+#: S-596(Jazz 10-16「赢时扩大、只在盈利上加仓、错时少伤」):Trader Tom 的仓位管理放在 ① cap_a1_u 的 NAV 上 ——
+#: 敞口只由 ① 自己的价格决定(55 日新高加、每 +10% 再加、破 20 日低撤加仓;跌破 200 日线且破 20 日低底仓 0.7),范围 0.7–1.3
+ARM_TOM, REPLAY_ARM_TOM = "tom_pd13", "tom_pd13_replay"
+INCEPTION_TOM = pd.Timestamp("2026-10-16")
+CODE_REF_TOM = "S-596 tom_pd13 (cap_a1_u 底仓)"
 
 
 def multiplier(dist_200: Optional[float], vol_pct: Optional[float]) -> float:
@@ -290,6 +296,29 @@ def build_rows_u(core_ret: pd.Series, state: pd.DataFrame, end: pd.Timestamp) ->
     return rows, evaluate_u(core_ret, m_prev, funding, end)
 
 
+def build_rows_tom(core_ret: pd.Series, state: pd.DataFrame, end: pd.Timestamp) -> tuple[list[dict], dict[str, Any]]:
+    """S-596:Tom 仓位管理在 ① cap_a1_u 上 —— 回放全程 + 2026-10-16 起的纯前向。敞口只看 ① 自己的 NAV,与状态层无关;
+    资金费与现金收益、切换成本与 v1 / v2 同一个 apply_multiplier。"""
+    from src.data.signals.tom import tom_gross
+    core_ret = core_ret[core_ret.index <= end]
+    core_nav = (1 + core_ret).cumprod()
+    m_prev = tom_gross(core_nav).shift(1, freq="D")
+    funding = state.get("funding_7d_ann", pd.Series(dtype=float)).astype(float)
+    replay = apply_multiplier(core_ret, m_prev, funding)
+    now = datetime.now(timezone.utc).isoformat()
+    common = {"inception": INCEPTION_TOM.date().isoformat(), "code_ref": CODE_REF_TOM, "computed_at": now,
+              "dist_200": None, "vol_pct_3y": None}
+    rows: list[dict] = [{**common, "d": d.date().isoformat(), "arm": REPLAY_ARM_TOM, "m": float(b["m"]),
+                         "ret": round(float(b["ret"]), 8), "nav": round(float(b["nav"]), 8), "cost": round(float(b["cost"]), 8)}
+                        for d, b in replay.iterrows()]
+    fwd = core_ret[core_ret.index > INCEPTION_TOM]
+    if len(fwd):
+        book = apply_multiplier(fwd, m_prev, funding)
+        rows += [{**common, "d": d.date().isoformat(), "arm": ARM_TOM, "m": float(b["m"]), "ret": round(float(b["ret"]), 8),
+                  "nav": round(float(b["nav"]), 8), "cost": round(float(b["cost"]), 8)} for d, b in book.iterrows()]
+    return rows, evaluate_u(core_ret, m_prev, funding, end)
+
+
 def _f(v: Any) -> Optional[float]:
     try:
         x = float(v)
@@ -339,14 +368,15 @@ async def run_once() -> dict[str, Any]:
     core_ret, core_u_ret = await asyncio.to_thread(_both_core_returns, px, mc, REPLAY_START, target)
     rows_old, ev_old = await asyncio.to_thread(build_rows, core_ret, state, target)
     rows_new, ev_new = await asyncio.to_thread(build_rows_u, core_u_ret, state, target)
-    rows = rows_old + rows_new
+    rows_tom, ev_tom = await asyncio.to_thread(build_rows_tom, core_u_ret, state, target)
+    rows = rows_old + rows_new + rows_tom
     # S-560:前向行 d ≤ 今天 − 2 已冻结(锚过就不再改);回放行照写
     from src.data.accounting.forward_lock import write_locked
     w = await write_locked(TABLE, rows, key="arm", on_conflict="d,arm")
     if not w["ok"]:
         return {"ok": False, "refused": False, "written": w["written"], "reason": f"写入失败:{w['why']}"}
     return {"ok": True, "refused": False, "written": w["written"], "reason": f"回放至 {target.date()}",
-            "eval": ev_old, "eval_u_cap_a1u": ev_new, "stale_in_source": stale, "lock": w["lock"]}
+            "eval": ev_old, "eval_u_cap_a1u": ev_new, "eval_tom_pd13": ev_tom, "stale_in_source": stale, "lock": w["lock"]}
 
 
 def _both_core_returns(px: pd.DataFrame, mcap_prev: pd.DataFrame, start: pd.Timestamp,
