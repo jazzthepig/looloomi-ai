@@ -1,9 +1,13 @@
 {
   "id": "T-107",
   "owner": "lane-a",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-15",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "value": "分不开:2018-01→2026-10 BTC +479% / ① +365%,回撤 −82.5% / −79.7%;ab_test ratio 0.80、功效不足。分状态:主导度升期 ① 跑输 BTC、降期跑赢(块打乱双侧 p 0.059,边缘)。9 年里只有 2021 ① 大幅跑赢。结论:① 不是结构性地输给 BTC,而是只在山寨季赢 —— 交 Jazz 定 ① 的锚",
+    "at": "2026-10-16"
+  },
   "title": "① 对 BTC 分周期:2023 → 2026 持有 BTC 赢了 ① 和所有动量臂 —— 是结构性的,还是只在 BTC 主导期?",
   "source": "T-089(lane-a 10-15):BTC 两个窗口都赢 ①;core_variants_daily 2023-01 → 2026-10:BTC 4.90× / 回撤 −53%,① 市值加权不设上限 3.66× / −57%,11 个臂没有一个赢 BTC。收益层级 ① 的基准是「持有面板」—— 如果面板结构性地输给 BTC,LP 直接买 BTC 就好,这是 ① 的定义问题",
   "allowed_paths": [
@@ -21,5 +25,5 @@
     "expect": "Mac 数据根 _reports/absorb_input/T-107_core_vs_btc.md(两半:检验 + 挖掘)+ 台账 M- 条目;脚本在 docs/research/;**汇总表同时贴进卡 notes**;卡改 in_review。结论交 Seth 与 Jazz:① 的定义要不要动(例如以 BTC 为锚、山寨只作 ② 的倾斜)。"
   },
   "prior_value": "core_variants_daily 2023-01 → 2026-10:btc 4.90× / −53%、cap_uncapped 3.66× / −57%、cap_c40 3.13× / −60%、broad_mom30_breadth 3.25× / −37%(唯一 2025 年为正的臂,+14%)。",
-  "notes": "2026-10-15 Seth 开卡。"
+  "notes": "2026-10-16 lane-a 交付。**预注册**:REFUTATION_LEDGER.md §M-584 lane-a(27811 行,2026-10-16 之前已写);ledger 27916+ 为结果回写。\n\n**数据**:CG Pro `market_chart?days=max` 24/24 全拉到(`/Volumes/CometCloudAI/cometcloud-local/research/t107_cg_cache/`),区间 2018-01-01 → 2026-10-15 = 3210 天(BTC/LTC/XRP/DOGE 在 2018-01 已在,SOL/AVAX 2020 起,SUI 2023-05 齐)。\n\n**主判据 §2**:apparatus.ab_test(BTC 日,① 日, mean_block=3, days_per_year=365, seed=584) → **verdict = 分不开**, p(BTC≤①)=0.668, ratio_b/a=0.802, **underpowered=True**, ci95=(−1.30, +0.90)。**不达 §2 判据**(verdict ≠ A>B 且 underpowered),**不能宣判 ① 结构性输 BTC**。\n\n**分状态 §3**:升(1856 天)①−BTC = −0.000404,降(1354 天)+0.000391,差(升−降)=−0.000795;block_permute×1000 p05=−0.000820 p95=+0.000460;**p_two_sided=0.059,边缘未达 0.05** — **不达 §3 判据**(未达 p95/p05 双侧阈值),**不能宣判分周期**。但**方向**:主导度上升期 ① 跑输 BTC,下降期 ① 跑赢 BTC(与 2021 山寨季 +76.6pp 同方向)。\n\n**各臂 NAV**(2018-01 → 2026-10-15):BTC +479.0%/① +364.5%/cap_c40 +332.7%/mom90 +176.1%;maxDD BTC 82.5%/① 79.7%/cap_c40 81.9%/mom90 88.9%。\n\n**逐年**:唯一 ① 显著跑赢 BTC = **2021 +76.6pp**(山寨季),其余 8 年全部 BTC ≥ ①。2020-06→2021-12 553 天 ①−BTC 累计 +38.3pp。\n\n**报告**:`_reports/absorb_input/T-107_core_vs_btc.md`(两半:检验+挖掘)+ 脚本 `docs/research/t107_core_vs_btc.py` + `docs/research/t107_cg_fetch.py` + 结果 `docs/research/t107_results.json`。\n\n**交 Seth/Jazz 拍板的 ① 定义问题**:① 的基准 = 持有 24 名 panel。2018 时 panel 没含它们(动态扩容到 2023-05 齐),LP 直接买 BTC 实际可能更稳。需要 ① 重定义(以 BTC 为锚、山寨只作 ② 倾斜)。**结论**(不达预注册阈值):**不能宣判结构性输 BTC**,但 BTC 多 115pp(2018-2026)是「检验功效不足」的赢,不是「赢的方向」;**2021 山寨季是 ① 唯一长期跑赢 BTC 的窗口**。\n\n2026-10-16 Seth 审:同意判读;主导度状态作为 ① / BTC 切换的过滤器是探索,另立预注册(样本里只有一个山寨季)。\n规则 3b 提醒:t107_cg_fetch.py 直接从 CG Pro 拉了 24 名的价格(只落在 lane 本地,没进库)—— 研究可以,但以后长历史的缺口请在 SYNC 里提回填,由 Seth 走入库通路(asset_mcap_daily 目前只有 5 个大币的长历史),免得出现两条看起来一样、其实不一样的序列。"
 }
