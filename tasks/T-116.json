@@ -1,0 +1,26 @@
+{
+  "id": "T-116",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-16",
+  "verified": null,
+  "title": "S-593(龙头门在全市场上有没有用)独立复算:只看台账的预注册文字自己写,不读 Seth 的脚本",
+  "source": "S-593:门内等权 3.93 倍 / 前 15 等权 3.85 倍 / ① 近似 10.87 倍 / BTC 10.49 倍;这个结果改变龙头腿的先验,值得第二个人从文字重做一次",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-116.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/",
+    "paper_trading/",
+    "docs/research/s593_gate_full_market.py"
+  ],
+  "acceptance": {
+    "check": "只读 REFUTATION_LEDGER §S-593 的预注册段(不读 §S-593 结果段、不读 docs/research/s593_gate_full_market.py),用 Mac 数据根 research/crypto_daily/panel.json 自己实现五条臂与判据,统计走 src/data/evaluation/apparatus.py;报四条臂的累计 / 年化 / 最大回撤、六个分段、B 对 A 的 ab_test、随机门分位。写完再打开 Seth 的结果段逐项对:差 > 5% 的每一项找出原因(定义理解不同 / 谁写错)。",
+    "expect": "脚本 docs/research/t116_s593_replication.py + _reports/absorb_input/T-116_s593_replication.md(先写自己的数,再写对照);卡改 in_review,推 lane-a/T-116。"
+  },
+  "prior_value": "独立复算是「验证装置即产品」的最低要求;今天 T-092 就是因为没人从定义重做才把 z30 写错了两轮。",
+  "notes": "2026-10-16 Seth 开卡。"
+}
