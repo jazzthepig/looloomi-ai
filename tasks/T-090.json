@@ -1,9 +1,13 @@
 {
   "id": "T-090",
   "owner": "lane-b",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-14",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-16",
+    "value": "预注册检验没过(两半符号相反),报告与改法已合并(afc3d08);不改任何前向账本。"
+  },
   "title": "CIS 的 F 支柱在「山寨领涨的上涨」里跑输:预注册检验 + 一个可执行的改法(该状态下 ② 倾斜不用 F)",
   "source": "Jazz 10-14「把每个 btc 上升和下跌趋势周期拆开再检视」→ S-568",
   "allowed_paths": [

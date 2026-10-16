@@ -1,7 +1,11 @@
 {
   "created": "2026-10-07",
-  "verified": null,
-  "status": "in_review",
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-16",
+    "value": "天气四个角度的区分力表与报告已合并(50025c2);core_cap_daily 现已 > 30 天,卡里提的长度问题不再成立。stables_30d 进 state_daily 需另立预注册,不在本卡。"
+  },
+  "status": "done",
   "id": "T-060",
   "_t060_revalidation_2026-10-09": "本轮 lane-a 重跑 `t060_four_axes_4d.py`(seed=20261008, n_null=1000):输出 `/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/t060_four_axes_4d_2026-10-08.json` 与早轮一致;数据窗口 2025-01-01→2026-07-18(panel 564 天;macro_label 1377 天;regime_daily 1206 天)。最关键边际区分力:macro_label 7d/30d p=0.69/0.16 不显著;V10_cis_dispersion 7d p=0.002、30d p=0.002(双窗口唯一);V1_cis_mean 30d p=0.001;V4_btc_dom 30d p=0.001。独有信息(OLS 控制 7 条 state):macro_label 在任何窗口 p≥0.41;V10_cis_dispersion 7d p=0.025;V1_cis_mean 30d p=0.009;V4_btc_dom 30d p=0.005。TradFi 与链上流量两组候选维度本轮未补跑(Mac 数据根无 EODHD/DeFiLlama 缓存,沿用早轮 verdict)。",
   "owner": "lane-a",

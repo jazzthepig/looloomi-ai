@@ -1,9 +1,13 @@
 {
   "id": "T-086",
   "owner": "lane-b",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-13",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-16",
+    "value": "Track Record 页已合并并构建进 dashboard/dist(TrackRecord-*.js),tests/test_track_record_page.py 7 项绿;读失败与空列表分开说。"
+  },
   "title": "对外「Track Record」区:每本前向账本的记录 + 每天的比特币时间戳锚,LP 自己能验 —— 验证装置就是产品,现在网站上看不到它",
   "source": "Seth 10-13 高维复盘:/api/v1/proof/books 与 /api/v1/proof/anchors 已上线(T-053 / T-073),但没有任何页面用它们;旧 proof.html 不在构建里且内容过期",
   "allowed_paths": [

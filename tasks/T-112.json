@@ -1,0 +1,23 @@
+{
+  "id": "T-112",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-10-16",
+  "verified": null,
+  "title": "证据面接 World50 / 龙头腿 / 灵活组合三本新前向账本(另一条产品线,基准各自的,不进 ① 的配置层)",
+  "source": "S-581 / S-589 / S-591 / S-585 的前向账本 2026-12-31 开账;/api/v1/proof/books 现在只认登记表里的加密账本,超额一律对 ①",
+  "allowed_paths": [
+    "src/data/accounting/",
+    "src/api/routers/ohlcv.py",
+    "tests/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "证据面多一段「其他产品线」:world50(EW×Mom 对 EW)、alt_leaders(TOP6 / FO6 对 GATE_EW,另报对 ETH)、flex(对 35/50/15 的两条腿各自)—— 前向天数、总收益、对各自基准的差、任意时刻下界;开账前写「2026-12-31 开账」而不是空;不进 allocation_daily(配置层只在加密账本之间分,World50 是另一条线);测试:登记了的三本在证据面出现、不在配置层候选里、开账前的文案存在。",
+    "expect": "部署后 /api/v1/proof/books 有 other_lines 三段;allocation_daily 的 book 集合不变"
+  },
+  "prior_value": "前向记录本身就是产品(ARCHITECTURE);三本账开账后若证据面看不到,等于没记。",
+  "notes": "2026-10-16 Seth 开卡:开账前做完即可;registry 的 arms 读法按 arm 透视,forward_book_nav 的臂名在两本之间不重复,能直接读。"
+}

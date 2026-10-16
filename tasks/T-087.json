@@ -1,9 +1,13 @@
 {
   "id": "T-087",
   "owner": "lane-c",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-13",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-16",
+    "value": "mult_v2 / mult_v2_replay / pl_v3 / pl_v3_replay 都在写(前向 10-13 起)。Seth SQL 并排(段内总收益 / 最大回撤):2023–24 core_u +356% / −32%、mult_v2 +421% / −36%、pl_v3 +153% / −33%;2025-01 → 10-15 core_u −20.6% / −57%、mult_v2 −22.0% / −53%、pl_v3 +13.9% / −46%。随机分位未算(证据面按前向算)。"
+  },
   "title": "③ 推力与组合层换到新 ①(不设单币上限)上:各开新臂、新起点,旧臂照旧记作对照",
   "source": "S-556(Jazz 10-12「把单币上限40%解除」):① 已切到 core_cap_daily.cap_a1_u;multiplier / portfolio_layer 仍以 ≤ 40% 的旧 ① 为底",
   "allowed_paths": [

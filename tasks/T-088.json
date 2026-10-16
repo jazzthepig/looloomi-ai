@@ -1,9 +1,13 @@
 {
   "id": "T-088",
   "owner": "lane-c",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-13",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-16",
+    "value": "cis_a1_u(10-12 起)与 cis_a1_u_replay(2023 起)在写。Seth SQL:2023–24 cis_a1_u +324% / −32% 对 core_u +356% / −32%;2025-01 → 10-15 −19.0% / −57% 对 −20.6% / −57%。随机倾斜分位未算(证据面按前向算)。"
+  },
   "title": "② CIS 倾斜换到新 ① 上:新臂 cis_a1_u(① 不设上限的权重 × exp(0.5·z_CIS),不再压到 40%),起点 10-12",
   "source": "S-556;cis_tilt 的 ① 权重与上限都来自 core_cap 的旧规则",
   "allowed_paths": [

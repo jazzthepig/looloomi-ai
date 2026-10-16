@@ -1,0 +1,25 @@
+{
+  "id": "T-111",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-16",
+  "verified": null,
+  "title": "World50 本地上市股数(第二批,与 T-110 分工):9 家 + 西门子历年 —— H + A 两地、台湾、荷兰、瑞典、西班牙",
+  "source": "T-110 拆分(C 道做 12 家修正与逐年回补);T-100 西门子未交付",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-111.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "名字:3968.HK(招商银行 H + A)、601628.SHG(中国人寿 H + A)、601088.SHG(中国神华 H + A)、0883.HK(中海油,香港股 + 2022 年起上交所人民币股)、2308.TW(台达电)、601138.SHG(工业富联,只有 A)、PRX.AS(Prosus)、INVE-B.ST(Investor AB = A + B)、IBE.MC(Iberdrola),再加 SIE.XETRA 2014–2023。每家 2014-12-31(或上市日)起每年至少一行「已发行总股数」,拆股 / 合股 / 注销 / 增发的年份多给一行;H + A 两地合计,来源首选港交所 FF301 月报表(hkexnews 的 PDF,和已入库的 1398.HK 同法)。CSV(Mac 数据根 research/t111/exchange_shares.csv)列:key,period_end,available_date,shares,source_url,note —— available_date = 这个数第一次公开的日期;source_url 一手(交易所公告 / 公司年报 PDF)。**不许写 0 或占位行**;每家写完用「最近收盘 × 股数」对一次公开市值,差 > 20% 在 note 写原因;每做完一家追加写一次 CSV。不调付费 API。",
+    "expect": "CSV + _reports/absorb_input/T-111_local_shares_2.md(每家口径、几行、市值对照);卡改 in_review,推 lane-a/T-111 分支(只放卡与 docs/research 指针)。"
+  },
+  "prior_value": "这些名字有日线没股数 ⇒ 永远进不了 World50 排名;招行、中国人寿、神华、中海油、西门子都在全球前 100–200 附近。",
+  "notes": "2026-10-16 Seth 开卡。"
+}

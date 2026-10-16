@@ -1,7 +1,11 @@
 {
   "created": "2026-10-07",
-  "verified": null,
-  "status": "in_review",
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-16",
+    "value": "rr_matrix 的 bootstrap 用满全部天数、40 天以下 CI 记 NaN —— 测试先红后绿,已合并(70d5375 / a7d0c34),preflight 在跑。"
+  },
+  "status": "done",
   "id": "T-059",
   "owner": "lane-b",
   "title": "评估层 ①:修 bootstrap 退化(T-059 拆成三张的第一张)",

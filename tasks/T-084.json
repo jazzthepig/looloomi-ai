@@ -1,9 +1,13 @@
 {
   "id": "T-084",
   "owner": "lane-b",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-13",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-16",
+    "value": "重跑后 core_variants_daily broad_mom30_breadth:2023–24 +236%(预期 ≈ +240%)、2025-01 → 2026-10-15 −8.9%(预期 ≈ −4%,日频差几个点内)—— Seth SQL 核过。"
+  },
   "title": "修 core_variants 宽宇宙臂的数据缺陷:价格只在市值 ≥ $2 亿的日子存在 ⇒ 持仓跌破后亏损被记成 0;同时把这条读改成不全表排序",
   "source": "S-555 第 0 条(Seth 10-12 实测:生产 S2 +23.3%,完整价格史 −3.8%);S-551 第二大临时写",
   "allowed_paths": [
