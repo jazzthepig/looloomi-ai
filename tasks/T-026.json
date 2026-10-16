@@ -18,5 +18,5 @@
   "prior_value": "22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性",
   "created": "2026-09-26",
   "verified": null,
-  "notes": "10-13 Seth(S-561):真因 = 状态写入用了表里不存在的列 `inception`(线上是 inception_id),每次插入被拒、读取 400 ⇒ 状态空 ⇒ 每天记 −成本(v2 51 行)。已修并开 v3;验收等 v3 记满 7 天再跑卡上的 SQL。"
+  "notes": "10-13 Seth(S-561):真因 = 状态写入用了表里不存在的列 `inception`(线上是 inception_id),每次插入被拒、读取 400 ⇒ 状态空 ⇒ 每天记 −成本(v2 51 行)。已修并开 v3;验收等 v3 记满 7 天再跑卡上的 SQL。\n10-16 Seth 复测(只读 SQL):近 7 天 5 行(10-09..10-13)distinct daily_return=1,仍全为 −0.0005;库里只有 inception v2(25 行,09-19→10-13),没有 v3 行,10-13 之后无新 mark。修复 522662b 在 main,但线上未见生效 ⇒ 验收不通过,卡留 in_review;待查部署/定时 mark 是否在跑。"
 }
