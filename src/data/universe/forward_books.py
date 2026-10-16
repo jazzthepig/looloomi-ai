@@ -4,7 +4,8 @@
    宇宙 = CIS 正式序列(cis_official_daily)里的加密名,去掉 BTC(在核心里)与稳定 / 包装币;每 28 天调仓。
    龙头门槛 = 当日市值前 15,且 13 周年化波动 ≤ 宇宙中位数 × 1.5,且 13 周流通量增幅 ≤ 10%(流通量 = 市值 / 价格)。
    打分 = 秩(F) + 秩(O) + 秩(市值) − 秩(vol13),在门槛内算;取前 6 名等权。
-   臂:TOP6(规则)· GATE_EW(门槛内全部等权,对照)· ETH(只持 ETH,对照)。随机 6 名的对照在评估时从 GATE_EW 的成员重抽,不存。
+   臂:TOP6(规则)· FO6(S-591:同一道门,只按秩 F + 秩 O 挑前 6 —— v1 的打分在门里又把最大最稳的选回来)·
+   GATE_EW(门槛内全部等权,对照)· ETH(只持 ETH,对照)。随机 6 名的对照在评估时从 GATE_EW 的成员重抽,不存。
 2. **灵活配置组合**(flex,S-585 之后的 v1;Jazz 10-16「维持」):加密腿 = ① 的前向(core_cap_daily cap_a1_u),
    World50 腿 = World50 账本 EW×Mom,现金腿收益记 0(保守,注明);每个记账日回到 35 / 50 / 15(两本账的组合,这一层不计成本)。
    引擎版(S-585)没过,不记。
@@ -27,6 +28,8 @@ EXCLUDE = {"BTC", "USDT", "USDC", "DAI", "USDE", "FDUSD", "PYUSD", "USDS", "WBTC
 FLEX_WEIGHTS = {"crypto": 0.35, "world50": 0.50, "cash": 0.15}
 COST_CRYPTO = 20 / 1e4
 RULE_ALT = "alt_leaders_v1:S-589(前 15、波动 ≤ 中位数 × 1.5、流通量 13 周增幅 ≤ 10%;秩 F + O + 市值 − vol13;前 6 等权;28 天)"
+RULE_FO6 = "alt_leaders_fo6:S-591(门同 S-589;秩 F + O,同分市值大者先;前 6 等权;28 天)"
+ALT_ARMS = ("TOP6", "FO6", "GATE_EW", "ETH")
 RULE_FLEX = "flex_v1:加密 ① cap_a1_u 35% / World50 EW×Mom 50% / 现金 15%(收益 0),每周回到目标"
 WRITES_TABLES = ("forward_book_holdings", "forward_book_nav")
 WRITES_COLUMNS = {
@@ -50,17 +53,20 @@ def alt_select(rows: list[dict]) -> dict[str, Any]:
     ok = [r for r in rows if r["sym"].upper() not in EXCLUDE
           and all(r.get(k) is not None and math.isfinite(r[k]) for k in ("f", "o", "mcap", "vol13", "sup13"))]
     if not ok:
-        return {"gate": [], "top": [], "scores": {}}
+        return {"gate": [], "top": [], "scores": {}, "fo6": [], "fo_scores": {}}
     vols = sorted(r["vol13"] for r in ok)
     med = vols[len(vols) // 2] if len(vols) % 2 else (vols[len(vols) // 2 - 1] + vols[len(vols) // 2]) / 2
     top = sorted(ok, key=lambda r: -r["mcap"])[:ALT_TOP_MCAP]
     gate = [r for r in top if r["vol13"] <= ALT_VOL_MULT * med and r["sup13"] <= ALT_SUPPLY_MAX]
     if not gate:
-        return {"gate": [], "top": [], "scores": {}}
+        return {"gate": [], "top": [], "scores": {}, "fo6": [], "fo_scores": {}}
     rf, ro, rm, rv = (_ranks([r[k] for r in gate]) for k in ("f", "o", "mcap", "vol13"))
     sc = {r["sym"]: rf[i] + ro[i] + rm[i] - rv[i] for i, r in enumerate(gate)}
     pick = sorted(gate, key=lambda r: (-sc[r["sym"]], -r["mcap"]))[:ALT_PICK]
-    return {"gate": [r["sym"] for r in gate], "top": [r["sym"] for r in pick], "scores": sc}
+    fo = {r["sym"]: rf[i] + ro[i] for i, r in enumerate(gate)}                        # S-591:门负责「龙头」,挑选只看 F 与 O
+    pick_fo = sorted(gate, key=lambda r: (-fo[r["sym"]], -r["mcap"]))[:ALT_PICK]
+    return {"gate": [r["sym"] for r in gate], "top": [r["sym"] for r in pick], "scores": sc,
+            "fo6": [r["sym"] for r in pick_fo], "fo_scores": fo}
 
 
 def vol_and_supply(series: list[tuple[str, float, float]], as_of: str) -> tuple[Optional[float], Optional[float]]:
@@ -138,7 +144,7 @@ async def run_forward_books(today: Optional[str] = None) -> dict[str, Any]:
     if cutoff < FORWARD_START:
         sel = alt_select(await alt_inputs(cutoff))
         return {"ok": True, "waiting": f"前向账本从 {FORWARD_START} 起",
-                "preview": {"as_of": cutoff, "alt_gate": sel["gate"], "alt_top6": sel["top"]}}
+                "preview": {"as_of": cutoff, "alt_gate": sel["gate"], "alt_top6": sel["top"], "alt_fo6": sel["fo6"]}}
     held = await _get_all("forward_book_holdings?select=book,arm,as_of,key,weight&order=as_of")
     navs = await _get_all("forward_book_nav?select=book,arm,d,nav&order=d")
     book: dict[tuple[str, str], dict[str, dict[str, float]]] = {}
@@ -155,6 +161,7 @@ async def run_forward_books(today: Optional[str] = None) -> dict[str, Any]:
             notes.append(f"alt {q}: 门槛内没有名字")
             break
         targets = {"TOP6": {k: 1 / len(sel["top"]) for k in sel["top"]},
+                   "FO6": {k: 1 / len(sel["fo6"]) for k in sel["fo6"]},
                    "GATE_EW": {k: 1 / len(sel["gate"]) for k in sel["gate"]}, "ETH": {"ETH": 1.0}}
         rows_h, rows_n = [], []
         for arm, new in targets.items():
@@ -169,10 +176,12 @@ async def run_forward_books(today: Optional[str] = None) -> dict[str, Any]:
                 nav_q = nav_of[("alt_leaders", arm, p)] * g * (1 - turnover_cost(drifted, new, {k: "crypto" for k in new}))
             else:
                 nav_q = 1.0
+            rule = RULE_FO6 if arm == "FO6" else RULE_ALT
+            sc_of = sel["fo_scores"] if arm == "FO6" else sel["scores"]
             rows_h += [{"book": "alt_leaders", "arm": arm, "as_of": q, "key": k, "weight": w,
-                        "note": f"score {sel['scores'].get(k, 0):.1f}" if arm != "ETH" else None, "rule": RULE_ALT}
+                        "note": f"score {sc_of.get(k, 0):.1f}" if arm != "ETH" else None, "rule": rule}
                        for k, w in new.items()]
-            rows_n.append({"book": "alt_leaders", "arm": arm, "d": q, "nav": nav_q, "ret": None, "as_of": q, "rule": RULE_ALT})
+            rows_n.append({"book": "alt_leaders", "arm": arm, "d": q, "nav": nav_q, "ret": None, "as_of": q, "rule": rule})
             book.setdefault(("alt_leaders", arm), {})[q] = new
             nav_of[("alt_leaders", arm, q)] = nav_q
         for t, rows, oc in (("forward_book_holdings", rows_h, "book,arm,as_of,key"), ("forward_book_nav", rows_n, "book,arm,d")):
@@ -180,7 +189,7 @@ async def run_forward_books(today: Optional[str] = None) -> dict[str, Any]:
             if not w.ok:
                 return {"ok": False, "why": f"写 {t} 失败:{(w.why or '')[:160]}"}
         wrote += len(rows_n)
-    for arm in ("TOP6", "GATE_EW", "ETH"):
+    for arm in ALT_ARMS:
         hist = book.get(("alt_leaders", arm))
         if not hist:
             continue
@@ -195,7 +204,8 @@ async def run_forward_books(today: Optional[str] = None) -> dict[str, Any]:
             if g is None or n < len(hist[p]) * 0.8:
                 break
             nav = nav_of[("alt_leaders", arm, p)] * g
-            rows.append({"book": "alt_leaders", "arm": arm, "d": d, "nav": nav, "ret": nav / last_nav - 1, "as_of": p, "rule": RULE_ALT})
+            rows.append({"book": "alt_leaders", "arm": arm, "d": d, "nav": nav, "ret": nav / last_nav - 1, "as_of": p,
+                         "rule": RULE_FO6 if arm == "FO6" else RULE_ALT})
             last_nav = nav
         if rows:
             w = await supabase_upsert_table("forward_book_nav", rows, on_conflict="book,arm,d")

@@ -1009,7 +1009,9 @@ def _say(name: str, r: dict) -> str:
         return f"{label} {r.get('companies_ok')}/{r.get('companies')}"
     if name == "fwd_books":
         if r.get("waiting"):
-            return f"龙头腿 / 灵活组合 {r['waiting']}(预演龙头:{', '.join((r.get('preview') or {}).get('alt_top6') or [])})"
+            pv = r.get("preview") or {}
+            return (f"龙头腿 / 灵活组合 {r['waiting']}(预演 TOP6:{', '.join(pv.get('alt_top6') or [])};"
+                    f"FO6:{', '.join(pv.get('alt_fo6') or [])})")
         return f"龙头腿 / 灵活组合 新净值行 {r.get('nav_written', 0)}"
     if name == "book":
         if r.get("waiting"):

@@ -29,6 +29,17 @@ def test_alt_select_follows_the_preregistered_gates() -> None:
     assert set(sel["top"]) <= set(sel["gate"])
     best = max(sel["scores"], key=sel["scores"].get)
     assert best in sel["top"]
+    assert set(sel["fo6"]) <= set(sel["gate"]) and len(sel["fo6"]) == fb.ALT_PICK
+
+
+def test_fo6_ignores_size_and_vol_inside_the_gate() -> None:
+    # S-591:门内最大最稳但 F / O 最差的名字,TOP6 会因为市值与波动把它选回来,FO6 不会
+    rows = [_row("BIG", 10, 10, 1e12, 0.30, 0.0)]
+    rows += [_row(f"S{i}", 60 + i, 60 + i, 1e10 / (i + 1), 0.60, 0.0) for i in range(7)]
+    sel = fb.alt_select(rows)
+    assert "BIG" in sel["gate"] and "BIG" not in sel["fo6"]
+    assert sel["fo6"][0] == "S6"                                                    # F + O 最高
+    assert sel["fo_scores"]["S6"] > sel["fo_scores"]["BIG"]
 
 
 def test_vol_and_supply_from_price_and_mcap() -> None:
@@ -89,6 +100,9 @@ def test_nothing_written_before_start_and_flex_combines_the_two_books(monkeypatc
     assert r["ok"], r
     alt = [x for x in db.tables["forward_book_holdings"] if x["arm"] == "TOP6"]
     assert {x["as_of"] for x in alt} == {"2026-12-31"} and len(alt) == 6
+    fo6 = [x for x in db.tables["forward_book_holdings"] if x["arm"] == "FO6"]
+    assert len(fo6) == 6 and all(x["rule"] == fb.RULE_FO6 for x in fo6)
+    assert {x["arm"] for x in db.tables["forward_book_nav"] if x["book"] == "alt_leaders"} == set(fb.ALT_ARMS)
     flex = [x for x in db.tables["forward_book_nav"] if x["book"] == "flex"]
     assert flex[0]["d"] == "2026-12-31" and flex[0]["nav"] == 1.0
     i0 = days.index("2026-12-31")

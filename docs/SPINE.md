@@ -50,7 +50,7 @@ similar_market_states()  ←→ regime_match.py            → 两个都对,两�
 | 7a | 倾斜·②(CIS) | `cis_tilt_daily`(T-051 预注册 / T-052:① 权重 × exp(0.5·z_CIS),单币 ≤ 40%,起点 10-06)—— CIS 的本职第一次进账本 | 登记表 → L3(前向 ≥ 60 天 + 任意时刻下界)· 证据面 | 🟡 前向起步 |
 | 7b | 组合·gross 预算 | **尚无实现** —— 相关性状态 → gross,见 §5 第 7 条 | — | 🔴 缺段 |
 | 7c | 前向账本·World50 | `world50_book_holdings` / `world50_book_nav`(`world50_book.run_book`,周更循环的 book 段;调仓只走 `world50.rebalance`,与 S-581 回放共用一个核,测试逐个权重比对)—— 公司 + 黄金 + 加密的另一条产品线,与 ① 分开记 | 尚无(证据面未接)| 🟡 2026-12-31 起前向;此前只在循环 detail 里预演 |
-| 7d | 前向账本·山寨龙头腿 / 灵活组合 | `forward_book_holdings` / `forward_book_nav`(`forward_books.run_forward_books`,周更循环 fwd_books 段)—— 龙头腿 = S-589 规则(前 15、稳、不稀释,秩 F + O + 市值 − 波动,前 6 等权);灵活组合 = ① cap_a1_u 35% + World50 EW×Mom 50% + 现金 15% | 尚无(证据面未接)| 🟡 2026-12-31 起前向;此前只预演 |
+| 7d | 前向账本·山寨龙头腿 / 灵活组合 | `forward_book_holdings` / `forward_book_nav`(`forward_books.run_forward_books`,周更循环 fwd_books 段)—— 龙头腿 = S-589 规则(前 15、稳、不稀释,秩 F + O + 市值 − 波动,前 6 等权)+ S-591 的 FO6 臂(同门只按 F + O);灵活组合 = ① cap_a1_u 35% + World50 EW×Mom 50% + 现金 15% | 尚无(证据面未接)| 🟡 2026-12-31 起前向;此前只预演 |
 | 8 | 反馈 | `signal_outcomes_unified`(视图) | `refresh_signal_edge_map()` | 🟡 **S-365 已接**,双基准并存;journal 段仍薄(91 行有 alpha) |
 | 9 | **实体/决策内核** | `entities` / `decisions`(ARCHITECTURE 的中央对象) | `entity_store.py` 写 · `match_entities()` 读 | 🟡 **C 的 W4 已 ship**:`entities` **103/103 有 vec**;**`decisions` 仍 0 行** |
 | 10 | 门外·证据面 | `/api/v1/proof/books` + MCP `cometcloud_get_proof`(T-053,与 L3 同口径、按证据等级,不下结论句);**每个信号的归因** `/api/v1/cis/attribution` + MCP `cometcloud_get_signal_attribution`(T-078 / S-529:为什么出 + 之后相对同类怎样;口径一处 `contracts/disclosure.py`:根据过往表现展示,不是预测)| 外部 agent / LP | 🟡 新上 |
