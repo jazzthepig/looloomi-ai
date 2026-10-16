@@ -195,6 +195,21 @@ from the last add; drop all adds on a 20-day low; optionally cut the base to 0.7
 Now running forward on the core as `tom_overlay` (③, paper). Eight variants were tried, so no single p-value is clean; the
 forward record is the test.
 
+## 9. Correction from Jazz (S-600, same day)
+
+*"On a breakdown go flat; in a bear phase take the profit and run, or go short."* S-596 floored the base at 0.7 because
+it borrowed the strategy layer's 0.7–1.3 range; the trading layer has no such floor. Re-run with the same long rules:
+
+- **Flat on a breakdown** (below the 200-day line and a 20-day low): BTC 551x vs 262x held, drawdown −75.8% vs −83.6%;
+  ETH 4,028x vs 862x. Against a *constant* position at the same average exposure (the S-506 trap) it is 5–6x better —
+  the timing carries value, not just the lower exposure (p 0.075–0.12, not yet hard).
+- **Bear-rally trades that take +15% and run** add a little (BTC 581x, ETH 5,385x) from a handful of wins.
+- **Shorting the breakdown does not pay** in this simple form: BTC was stopped out by rallies 24 times in 41 shorts;
+  a full −1.0 short ends below buy-and-hold. Bear-market rallies are too violent for a 20-day-high stop.
+- The cost is paid at the start of every rally (re-entry waits for the 200-day line and a 20-day high).
+
+Now recorded forward from 2026-10-16 as `tom_trader` (BTC, ETH, the core: hold / flat / rally / short side by side).
+
 ---
 
 *Extract the physics of crowd behavior, not the swagger of one trader. Build things that feel alive.*

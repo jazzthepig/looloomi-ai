@@ -29,6 +29,7 @@ class Line:
     series: str                 # navs 里的键
     benchmark: Optional[str]    # navs 里的键;None = 只报自身
     also: tuple[str, ...] = ()  # 另报的同窗口对照(只给收益,不算下界)
+    start: str = FORWARD_START  # 开账日(交易层 S-600 早于 12-31)
 
 
 LINES: tuple[Line, ...] = (
@@ -49,6 +50,13 @@ LINES: tuple[Line, ...] = (
     Line("flex_35_50_15", "flex", "Flexible mix at its constant weights: 35% core crypto / 50% World50 / 15% cash",
          "A constant mix of the two forward books; the allocation engine did not separate from it (S-585).",
          "flex:CONST_35_50_15", None, ("core", "world50:EWxMom")),
+    Line("tom_core_fb", "tom_trader", "Trend trader on the crypto core: add on profit, flat on a breakdown, quick bear-rally trades",
+         "Long and adding only while the core is making money; out entirely below its long-term trend; in a bear phase, small "
+         "rally trades that take profit at +15% (S-600).", "tom_trader:CORE_FB", "tom_trader:CORE_H", ("tom_trader:CORE_F",), "2026-10-16"),
+    Line("tom_btc_fb", "tom_trader", "Trend trader on BTC (same rules)", "The same rules on BTC alone; short and flat variants recorded beside it.",
+         "tom_trader:BTC_FB", "tom_trader:BTC_H", ("tom_trader:BTC_F", "tom_trader:BTC_S50"), "2026-10-16"),
+    Line("tom_eth_fb", "tom_trader", "Trend trader on ETH (same rules)", "The same rules on ETH alone; short and flat variants recorded beside it.",
+         "tom_trader:ETH_FB", "tom_trader:ETH_H", ("tom_trader:ETH_F", "tom_trader:ETH_S50"), "2026-10-16"),
 )
 
 
@@ -80,13 +88,14 @@ def other_line_rows(navs: Mapping[str, Optional[pd.Series]], asof: pd.Timestamp,
     """纯函数。`navs`:{'world50:EW': Series, 'alt_leaders:TOP6': Series, ..., 'core': Series}。"""
     out = []
     for ln in lines:
+        st = ln.start if ln.start != FORWARD_START else start
         row: dict[str, Any] = {"id": ln.id, "line": ln.line, "name": ln.name, "thesis": ln.thesis,
-                               "opens": start, "benchmark": ln.benchmark}
-        if asof < pd.Timestamp(start):
-            row.update({"evidence_class": "not_started", "note": f"Forward record opens on {start}; nothing is recorded before it."})
+                               "opens": st, "benchmark": ln.benchmark}
+        if asof < pd.Timestamp(st):
+            row.update({"evidence_class": "not_started", "note": f"Forward record opens on {st}; nothing is recorded before it."})
             out.append(row)
             continue
-        w = _window(navs.get(ln.series), asof, start)
+        w = _window(navs.get(ln.series), asof, st)
         if w is None or w.empty:
             row.update({"evidence_class": "no_record", "note": "NAV could not be read - this is not a zero"})
             out.append(row)

@@ -12,6 +12,8 @@ ETH 四条判据全过,BTC 差在 ab_test 的 p(0.083)与随机分位(0.947)。�
 """
 from __future__ import annotations
 
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 
@@ -43,3 +45,63 @@ def tom_gross(close: pd.Series, cap: float = CAP, defend: bool = True) -> pd.Ser
                     b = 1.0
         g[t] = min(cap, b + UNIT * k)
     return pd.Series(g, index=idx)
+
+
+# ── 交易层(S-600,Jazz 10-16「跌破就空仓,熊市赚了就跑,或者开空」)───────────────────────────────
+# ③ 的 0.7 下限是策略层的定义;交易层可以空仓、可以做空。规则与 docs/research/s600_tom_trader.py 逐日一致(测试比对)。
+COST_BPS, RALLY_SIZE, RALLY_TP, SHORT_TP, WARM = 10.0, 0.5, 1.15, 0.80, 200
+
+
+def trade_path(close: pd.Series, bear: str, short_size: float = 0.0) -> pd.Series:
+    """bear ∈ {'flat', 'rally', 'short'}。返回 g[d] = d 收盘定下、d+1 生效的净敞口(前 200 天 = 1.0)。纯函数。
+    多头:收盘 > 200 日线且 > 前 20 日高 ⇒ 多 1.0,之后照 tom_gross 加仓(上限 1.3);跌破(< 200 日线且 < 前 20 日低)⇒ 全平。
+    熊市:flat 空仓;rally 反弹(> 前 20 日高)多 0.5、+15% 止盈、破前 10 日低止损;short 跌破即开空、−20% 止盈、破前 20 日高止损。"""
+    s = close.dropna().astype(float)
+    c, n = s.to_numpy(), len(s)
+    g = np.ones(n)
+    mode, k, last_add, entry = "long", 0, None, None
+    for t in range(WARM, n):
+        x = c[t]
+        ma = c[t - MA_N + 1:t + 1].mean()
+        h20, l20, h55, l10 = c[t - 20:t].max(), c[t - 20:t].min(), c[t - 55:t].max(), c[t - 10:t].min()
+        long_entry = x > ma and x > h20
+        if mode == "long":
+            if k > 0 and x < l20:
+                k, last_add = 0, None
+            elif k == 0 and x > h55 and 1 + UNIT <= CAP + 1e-9:
+                k, last_add = 1, x
+            elif k > 0 and x >= last_add * STEP and 1 + UNIT * (k + 1) <= CAP + 1e-9:
+                k, last_add = k + 1, x
+            if x < ma and x < l20:
+                k, last_add = 0, None
+                mode, entry = ("short", x) if bear == "short" else ("flat", None)
+        elif mode == "flat":
+            if long_entry:
+                mode, k = "long", 0
+            elif bear == "rally" and x > h20:
+                mode, entry = "rally", x
+            elif bear == "short" and x < ma and x < l20:
+                mode, entry = "short", x
+        elif mode == "rally":
+            if long_entry:
+                mode, k = "long", 0
+            elif x >= entry * RALLY_TP or x < l10:
+                mode = "flat"
+        elif mode == "short":
+            if long_entry:
+                mode, k = "long", 0
+            elif x <= entry * SHORT_TP or x > h20:
+                mode = "flat"
+        g[t] = {"long": 1 + UNIT * k, "flat": 0.0, "rally": RALLY_SIZE, "short": short_size}[mode]
+    return pd.Series(g, index=s.index)
+
+
+def trade_returns(close: pd.Series, g: pd.Series, funding_ann: Optional[pd.Series] = None) -> pd.Series:
+    """g[d−1] 作用于 d 的收益:多头 > 1 的部分付资金费、空头收资金费(费率为负则付),|Δg| × 10 bp。现金 0。纯函数。"""
+    s = close.dropna().astype(float)
+    px = s.pct_change()
+    gp = g.reindex(s.index).shift(1)
+    prev = g.reindex(s.index).shift(2).fillna(1.0)
+    f = (funding_ann.reindex(s.index).ffill().fillna(0.10) if funding_ann is not None else pd.Series(0.10, index=s.index)) / 365
+    r = gp * px - (gp - 1).clip(lower=0) * f + (-gp).clip(lower=0) * f - (gp - prev).abs() * COST_BPS / 1e4
+    return r.iloc[1:].fillna(0.0)

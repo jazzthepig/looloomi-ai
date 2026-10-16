@@ -31,6 +31,13 @@ RULE_ALT = "alt_leaders_v1:S-589(前 15、波动 ≤ 中位数 × 1.5、流通�
 RULE_FO6 = "alt_leaders_fo6:S-591(门同 S-589;秩 F + O,同分市值大者先;前 6 等权;28 天)"
 ALT_ARMS = ("TOP6", "FO6", "GATE_EW", "ETH")
 RULE_FLEX = "flex_v1:加密 ① cap_a1_u 35% / World50 EW×Mom 50% / 现金 15%(收益 0),每周回到目标"
+#: S-600(Jazz 10-16「跌破就空仓,熊市赚了就跑,或者开空」):Trader Tom 交易层前向纸面账本,不等 12-31,今天开账
+TOM_START = "2026-10-16"
+TOM_WARM_FROM = "2024-01-01"     # 规则要 200 天历史;起算日固定 ⇒ 开账那天的状态可复现
+TOM_ARMS = {"BTC_H": ("BTC", None, 0.0), "BTC_F": ("BTC", "flat", 0.0), "BTC_FB": ("BTC", "rally", 0.0), "BTC_S50": ("BTC", "short", -0.5),
+            "ETH_H": ("ETH", None, 0.0), "ETH_F": ("ETH", "flat", 0.0), "ETH_FB": ("ETH", "rally", 0.0), "ETH_S50": ("ETH", "short", -0.5),
+            "CORE_H": ("CORE", None, 0.0), "CORE_F": ("CORE", "flat", 0.0), "CORE_FB": ("CORE", "rally", 0.0)}
+RULE_TOM = "tom_trader_v2:S-600(多头 >200 日线且破 20 日高,盈利加仓到 1.3;跌破即平;F 空仓 / FB 反弹 0.5 +15% 止盈 / S50 开空 −20% 止盈)"
 WRITES_TABLES = ("forward_book_holdings", "forward_book_nav")
 WRITES_COLUMNS = {
     "forward_book_holdings": ("book", "arm", "as_of", "key", "weight", "note", "rule"),
@@ -134,6 +141,71 @@ async def prices(keys: list[str], start: str, end: str) -> dict[str, list[tuple[
     return out
 
 
+async def tom_inputs(end: str) -> tuple[dict, dict]:
+    """收盘:BTC / ETH = asset_mcap_daily;CORE = ① cap_a1_u 的回放 NAV(multiplier_daily core_u_replay)。
+    资金费:funding_history 币安永续按天求和 × 365(CORE 用 BTC 的)。"""
+    import pandas as pd
+    px = await prices(["BTC", "ETH"], TOM_WARM_FROM, end)
+    closes = {k: pd.Series([v for _, v in pts], index=pd.to_datetime([d for d, _ in pts])) for k, pts in px.items() if pts}
+    core = await _get_all(f"multiplier_daily?select=d,nav&arm=eq.core_u_replay&d=gte.{TOM_WARM_FROM}&d=lte.{end}&order=d")
+    if core:
+        closes["CORE"] = pd.Series([float(r["nav"]) for r in core], index=pd.to_datetime([r["d"] for r in core]))
+    fund = {}
+    for sym in ("BTC", "ETH"):
+        rows = await _get_all(f"funding_history?select=funding_time,funding_rate&venue=eq.binance_perp&symbol=eq.{sym}"
+                              f"&funding_time=gte.{TOM_WARM_FROM}&order=funding_time")
+        if rows:
+            df = pd.DataFrame(rows)
+            df["d"] = pd.to_datetime(df["funding_time"].str[:10])
+            fund[sym] = df.groupby("d")["funding_rate"].sum().astype(float) * 365
+    fund["CORE"] = fund.get("BTC")
+    return closes, fund
+
+
+async def run_tom_trader(cutoff: str) -> dict[str, Any]:
+    """S-600 交易层前向:每次从 TOM_WARM_FROM 整段重算敞口(纯函数、可复现),只写 TOM_START 之后还没写过的天;写过的不改。"""
+    import pandas as pd
+    from src.api.store import supabase_upsert_table
+    from src.data.signals.tom import trade_path, trade_returns
+    if cutoff <= TOM_START:
+        return {"ok": True, "waiting": f"交易层前向从 {TOM_START} 收盘起"}
+    navs = await _get_all("forward_book_nav?select=arm,d,nav&book=eq.tom_trader&order=d")
+    have = {(r["arm"], r["d"]): float(r["nav"]) for r in navs}
+    closes, fund = await tom_inputs(cutoff)
+    rows_n, rows_h, notes = [], [], []
+    for arm, (key, bear, size) in TOM_ARMS.items():
+        c = closes.get(key)
+        if c is None or len(c) < 260:
+            notes.append(f"{arm}: {key} 收盘不足")
+            continue
+        g = pd.Series(1.0, index=c.index) if bear is None else trade_path(c, bear, size)
+        r = trade_returns(c, g, fund.get(key))
+        r = r[(r.index > pd.Timestamp(TOM_START)) & (r.index <= pd.Timestamp(cutoff))]
+        done = sorted(d for (a, d) in have if a == arm)
+        nav = have[(arm, done[-1])] if done else 1.0
+        if not done:
+            rows_n.append({"book": "tom_trader", "arm": arm, "d": TOM_START, "nav": 1.0, "ret": None, "as_of": TOM_START, "rule": RULE_TOM})
+            if bear is not None:
+                rows_h.append({"book": "tom_trader", "arm": arm, "as_of": TOM_START, "key": key,
+                               "weight": float(g.get(pd.Timestamp(TOM_START), float("nan"))), "note": "exposure set at close", "rule": RULE_TOM})
+        for d, x in r.items():
+            ds = d.date().isoformat()
+            if done and ds <= done[-1]:
+                continue
+            nav *= 1 + float(x)
+            rows_n.append({"book": "tom_trader", "arm": arm, "d": ds, "nav": nav, "ret": float(x), "as_of": TOM_START, "rule": RULE_TOM})
+            if bear is not None:
+                rows_h.append({"book": "tom_trader", "arm": arm, "as_of": ds, "key": key, "weight": float(g.get(d, float("nan"))),
+                               "note": "exposure set at close", "rule": RULE_TOM})
+    for t, rows, oc in (("forward_book_nav", rows_n, "book,arm,d"), ("forward_book_holdings", rows_h, "book,arm,as_of,key")):
+        if rows:
+            w = await supabase_upsert_table(t, rows, on_conflict=oc)
+            if not w.ok:
+                return {"ok": False, "why": f"写 {t} 失败:{(w.why or '')[:160]}"}
+    last = {a: g for a, g in ((h["arm"], h["weight"]) for h in rows_h)}
+    return {"ok": not notes, "nav_written": len(rows_n), "exposure_now": last, **({"notes": notes} if notes else {})}
+
+
 # ── 一轮 ────────────────────────────────────────────────────────────────────
 
 async def run_forward_books(today: Optional[str] = None) -> dict[str, Any]:
@@ -141,10 +213,11 @@ async def run_forward_books(today: Optional[str] = None) -> dict[str, Any]:
     from src.data.universe.world50_book import drift, turnover_cost, weekdays
     today = today or datetime.now(timezone.utc).date().isoformat()
     cutoff = _shift(today, -FREEZE_DAYS)
+    tom = await run_tom_trader(_shift(today, -1))
     if cutoff < FORWARD_START:
         sel = alt_select(await alt_inputs(cutoff))
-        return {"ok": True, "waiting": f"前向账本从 {FORWARD_START} 起",
-                "preview": {"as_of": cutoff, "alt_gate": sel["gate"], "alt_top6": sel["top"], "alt_fo6": sel["fo6"]}}
+        return {"ok": bool(tom.get("ok")), "waiting": f"前向账本从 {FORWARD_START} 起",
+                "preview": {"as_of": cutoff, "alt_gate": sel["gate"], "alt_top6": sel["top"], "alt_fo6": sel["fo6"]}, "tom_trader": tom}
     held = await _get_all("forward_book_holdings?select=book,arm,as_of,key,weight&order=as_of")
     navs = await _get_all("forward_book_nav?select=book,arm,d,nav&order=d")
     book: dict[tuple[str, str], dict[str, dict[str, float]]] = {}
@@ -238,4 +311,4 @@ async def run_forward_books(today: Optional[str] = None) -> dict[str, Any]:
             if not w.ok:
                 return {"ok": False, "why": f"写 flex 净值失败:{(w.why or '')[:160]}"}
             wrote += len(rows)
-    return {"ok": not notes, "nav_written": wrote, **({"notes": notes} if notes else {})}
+    return {"ok": not notes and bool(tom.get("ok")), "nav_written": wrote, "tom_trader": tom, **({"notes": notes} if notes else {})}

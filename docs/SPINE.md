@@ -51,7 +51,7 @@ similar_market_states()  ←→ regime_match.py            → 两个都对,两�
 | 7b | 组合·gross 预算 | **尚无实现** —— 相关性状态 → gross,见 §5 第 7 条 | — | 🔴 缺段 |
 | 7c | 前向账本·World50 | `world50_book_holdings` / `world50_book_nav`(`world50_book.run_book`,周更循环的 book 段;调仓只走 `world50.rebalance`,与 S-581 回放共用一个核,测试逐个权重比对)—— 公司 + 黄金 + 加密的另一条产品线,与 ① 分开记 | 证据面 `other_lines`(T-112:各自基准,不进配置层)| 🟡 2026-12-31 起前向;此前只在循环 detail 里预演 |
 | 7d | 前向账本·山寨龙头腿 / 灵活组合 | `forward_book_holdings` / `forward_book_nav`(`forward_books.run_forward_books`,周更循环 fwd_books 段)—— 龙头腿 = S-589 规则(前 15、稳、不稀释,秩 F + O + 市值 − 波动,前 6 等权)+ S-591 的 FO6 臂(同门只按 F + O);灵活组合 = ① cap_a1_u 35% + World50 EW×Mom 50% + 现金 15% | 证据面 `other_lines`(T-112:各自基准,不进配置层)| 🟡 2026-12-31 起前向;此前只预演 |
-| 7e | 敞口·③ Tom 仓位管理 | `multiplier_daily` 的 `tom_pd13_replay` / `tom_pd13`(`multiplier.build_rows_tom`,核 = `signals/tom.tom_gross`,与 S-596 研究脚本逐日一致)—— 只看 ① 自己的 NAV:盈利上才加 0.1(55 日新高、每 +10%)、破 20 日低撤加仓、跌破 200 日线且破 20 日低底仓 0.7;0.7–1.3 | 登记表 `tom_overlay`(③,paper)→ L3 · 证据面 | 🟡 10-16 起前向 |
+| 7e | 敞口·③ Tom 仓位管理 | `multiplier_daily` 的 `tom_pd13_replay` / `tom_pd13`(`multiplier.build_rows_tom`,核 = `signals/tom.tom_gross`,与 S-596 研究脚本逐日一致)—— 只看 ① 自己的 NAV:盈利上才加 0.1(55 日新高、每 +10%)、破 20 日低撤加仓、跌破 200 日线且破 20 日低底仓 0.7;0.7–1.3;**交易层**(S-600,Jazz「跌破就空仓 / 熊市赚了就跑 / 开空」)= `forward_book_nav` book `tom_trader`(`forward_books.run_tom_trader`,核 `tom.trade_path`):BTC / ETH / ① 各记持有、F 空仓、FB 反弹止盈、S50 开空,−0.5 … 1.3 | 登记表 `tom_overlay`(③,paper)→ L3 · 证据面(含 other_lines 的 tom_trader 三行)| 🟡 10-16 起前向 |
 | 8 | 反馈 | `signal_outcomes_unified`(视图) | `refresh_signal_edge_map()` | 🟡 **S-365 已接**,双基准并存;journal 段仍薄(91 行有 alpha) |
 | 9 | **实体/决策内核** | `entities` / `decisions`(ARCHITECTURE 的中央对象) | `entity_store.py` 写 · `match_entities()` 读 | 🟡 **C 的 W4 已 ship**:`entities` **103/103 有 vec**;**`decisions` 仍 0 行** |
 | 10 | 门外·证据面 | `/api/v1/proof/books` + MCP `cometcloud_get_proof`(T-053,与 L3 同口径、按证据等级,不下结论句);**每个信号的归因** `/api/v1/cis/attribution` + MCP `cometcloud_get_signal_attribution`(T-078 / S-529:为什么出 + 之后相对同类怎样;口径一处 `contracts/disclosure.py`:根据过往表现展示,不是预测)| 外部 agent / LP | 🟡 新上 |
@@ -566,7 +566,7 @@ CI 校验的是**这张表与代码一致**,不是"代码已经干净" ——
 
 15. **第 7d 段(龙头腿 / 灵活组合前向账本)** — 与 World50 账本同日开账(Jazz 10-16)。🟡 只因还没开账:此前 fwd_books 段只在循环 detail 里预演龙头腿的选择。判活(2027-01-02 之后):`select book, arm, max(d) from forward_book_nav group by 1, 2` 距今 ≤ 9 天。
 
-16. **第 7e 段(③ Tom 仓位管理)** — S-596(Jazz 10-16「赢时扩大、错时少伤」):BTC / ETH 2015–2026 回放点估计都高于持有、回撤更浅,ETH 判据全过、BTC 差一点;放到 ① 上前向记。🟡 的原因只是前向刚开始。判活:`select max(d) from multiplier_daily where arm = 'tom_pd13_replay'` = 昨天;前向臂 `tom_pd13` 10-17 起有行。
+16. **第 7e 段(③ Tom 仓位管理)** — S-596(Jazz 10-16「赢时扩大、错时少伤」):BTC / ETH 2015–2026 回放点估计都高于持有、回撤更浅,ETH 判据全过、BTC 差一点;放到 ① 上前向记。🟡 的原因只是前向刚开始。判活:`select max(d) from multiplier_daily where arm = 'tom_pd13_replay'` = 昨天;前向臂 `tom_pd13` 10-17 起有行。交易层判活:`select arm, max(d) from forward_book_nav where book = 'tom_trader' group by arm` 距今 ≤ 8 天(周更循环 fwd_books 段写)。
 
 ---
 

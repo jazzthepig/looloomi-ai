@@ -94,6 +94,10 @@ def test_nothing_written_before_start_and_flex_combines_the_two_books(monkeypatc
         return {k: [(d, 100.0) for d in days if start <= d <= end] for k in keys}
     monkeypatch.setattr(fb, "alt_inputs", inputs)
     monkeypatch.setattr(fb, "prices", px)
+
+    async def tom_stub(cutoff):
+        return {"ok": True, "nav_written": 0}
+    monkeypatch.setattr(fb, "run_tom_trader", tom_stub)
     r = asyncio.run(fb.run_forward_books(today="2026-10-16"))
     assert r["ok"] and r["preview"]["alt_top6"] and db.tables["forward_book_nav"] == []
     r = asyncio.run(fb.run_forward_books(today="2027-01-10"))
@@ -114,3 +118,38 @@ def test_nothing_written_before_start_and_flex_combines_the_two_books(monkeypatc
     asyncio.run(fb.run_forward_books(today="2027-01-12"))
     after = {(x["book"], x["arm"], x["d"]): x["nav"] for x in db.tables["forward_book_nav"]}
     assert all(after[k] == v for k, v in before.items()), "写过的不再改"
+
+
+def test_tom_trader_writes_once_from_its_start_and_never_rewrites(monkeypatch):
+    """S-600:交易层前向 10-16 起;每轮整段重算敞口,只追加没写过的天;敞口在 −0.5 … 1.3。"""
+    import pandas as pd
+    import numpy as np
+    import src.api.store as store
+    days = pd.date_range("2024-01-01", "2026-11-10", freq="D")
+    rng = np.random.default_rng(3)
+    path = 100 * np.exp(np.cumsum(rng.normal(0, 0.03, len(days))))
+    closes = {k: pd.Series(path * (1 + 0.1 * i), index=days) for i, k in enumerate(("BTC", "ETH", "CORE"))}
+    fund = {"BTC": pd.Series(0.08, index=days), "ETH": pd.Series(0.08, index=days), "CORE": pd.Series(0.08, index=days)}
+    db = _DB()
+
+    async def inputs(end):
+        e = pd.Timestamp(end)
+        return {k: v[v.index <= e] for k, v in closes.items()}, fund
+    monkeypatch.setattr(fb, "tom_inputs", inputs)
+    monkeypatch.setattr(fb, "_get_all", db.get_all)
+    monkeypatch.setattr(store, "supabase_upsert_table", db.upsert)
+    assert asyncio.run(fb.run_tom_trader("2026-10-16"))["waiting"]
+    r = asyncio.run(fb.run_tom_trader("2026-10-31"))
+    assert r["ok"], r
+    navs = [x for x in db.tables["forward_book_nav"] if x["book"] == "tom_trader"]
+    assert {x["arm"] for x in navs} == set(fb.TOM_ARMS)
+    assert min(x["d"] for x in navs) == fb.TOM_START and max(x["d"] for x in navs) == "2026-10-31"
+    assert all(x["nav"] == 1.0 for x in navs if x["d"] == fb.TOM_START)
+    w = [x["weight"] for x in db.tables["forward_book_holdings"] if x["book"] == "tom_trader"]
+    assert w and min(w) >= -0.5 - 1e-9 and max(w) <= 1.3 + 1e-9
+    before = {(x["arm"], x["d"]): x["nav"] for x in navs}
+    closes = {k: v * 1.5 for k, v in closes.items()}                      # 源数据被改:写过的天不跟着改
+    asyncio.run(fb.run_tom_trader("2026-11-05"))
+    after = {(x["arm"], x["d"]): x["nav"] for x in db.tables["forward_book_nav"] if x["book"] == "tom_trader"}
+    assert all(after[k] == v for k, v in before.items())
+    assert max(d for (_, d) in after) == "2026-11-05"

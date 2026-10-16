@@ -54,3 +54,24 @@ def test_registry_carries_the_tom_book_as_a_third_layer_paper_book():
     from src.data.accounting.registry import BOOKS
     b = {x.id: x for x in BOOKS}["tom_overlay"]
     assert b.layer == "③" and b.table == "multiplier_daily" and b.arm == mu.ARM_TOM and b.status == "paper"
+
+
+def test_trading_layer_goes_flat_or_short_on_a_breakdown_not_to_seventy_percent():
+    """S-600(Jazz 10-16「跌破就空仓,或者开空」):交易层跌破 200 日线且破 20 日低 ⇒ 全平 / 开空,不是 ③ 的 0.7。"""
+    from src.data.signals.tom import trade_path
+    vals = list(np.linspace(100, 200, 260)) + list(np.linspace(199, 110, 80))
+    s = _series(vals)
+    flat = trade_path(s, "flat")
+    short = trade_path(s, "short", -0.5)
+    assert flat.iloc[-1] == 0.0 and (flat.iloc[260:] == 0.0).any()
+    assert (short.iloc[260:] == -0.5).any()
+    assert flat.iloc[:200].eq(1.0).all(), "前 200 天持有 1.0"
+
+
+def test_bear_rally_takes_profit_at_fifteen_percent():
+    from src.data.signals.tom import trade_path
+    down = list(np.linspace(200, 100, 300))
+    pop = [101, 103, 106, 109, 113, 118, 126]                    # 109 破 20 日高 ⇒ 多 0.5;126 ≥ 109 × 1.15 ⇒ 止盈
+    g = trade_path(_series(down + pop), "rally")
+    tail = g.iloc[300:]
+    assert (tail == 0.5).any() and tail.iloc[-1] == 0.0

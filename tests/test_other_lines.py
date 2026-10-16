@@ -16,15 +16,19 @@ def _nav(days, drift, seed):
 
 def _navs(days):
     keys = ["world50:EW", "world50:EWxMom", "alt_leaders:TOP6", "alt_leaders:FO6", "alt_leaders:GATE_EW",
-            "alt_leaders:ETH", "flex:CONST_35_50_15", "core"]
+            "alt_leaders:ETH", "flex:CONST_35_50_15", "core", "tom_trader:CORE_FB", "tom_trader:CORE_H", "tom_trader:CORE_F",
+            "tom_trader:BTC_FB", "tom_trader:BTC_H", "tom_trader:BTC_F", "tom_trader:BTC_S50",
+            "tom_trader:ETH_FB", "tom_trader:ETH_H", "tom_trader:ETH_F", "tom_trader:ETH_S50"]
     return {k: _nav(days, 0.0005 * (i + 1), i) for i, k in enumerate(keys)}
 
 
 def test_before_the_start_every_line_says_when_it_opens():
     days = pd.date_range("2026-10-01", periods=40, freq="D")
-    rows = ol.other_line_rows(_navs(days), pd.Timestamp("2026-10-16"))
+    rows = ol.other_line_rows(_navs(days), pd.Timestamp("2026-10-15"))
     assert len(rows) == len(ol.LINES)
-    assert all(r["evidence_class"] == "not_started" and r["opens"] == ol.FORWARD_START for r in rows)
+    assert all(r["evidence_class"] == "not_started" for r in rows)
+    assert {r["opens"] for r in rows if r["line"] != "tom_trader"} == {ol.FORWARD_START}
+    assert {r["opens"] for r in rows if r["line"] == "tom_trader"} == {"2026-10-16"}
 
 
 def test_after_the_start_each_line_is_measured_against_its_own_benchmark():
