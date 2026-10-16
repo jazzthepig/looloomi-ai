@@ -1,9 +1,13 @@
 {
   "id": "T-112",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-16",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-16",
+    "value": "部署 b28065e 后 /api/v1/proof/books 有 other_lines 段:六行(world50_ewxmom / world50_ew / alt_top6 / alt_fo6 / alt_gate_ew / flex_35_50_15)都是 not_started、opens 2026-12-31,how_to_read 四条;allocation_daily 的账本集合不变(三本不在登记表)。"
+  },
   "title": "证据面接 World50 / 龙头腿 / 灵活组合三本新前向账本(另一条产品线,基准各自的,不进 ① 的配置层)",
   "source": "S-581 / S-589 / S-591 / S-585 的前向账本 2026-12-31 开账;/api/v1/proof/books 现在只认登记表里的加密账本,超额一律对 ①",
   "allowed_paths": [

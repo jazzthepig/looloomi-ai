@@ -42,3 +42,9 @@ def test_public_text_has_no_verdicts():
     text = json.dumps(HOW_TO_READ, ensure_ascii=False).lower()
     for w in ("outperforms", "beats", "positive edge", "buy", "sell"):
         assert w not in text
+
+
+def test_public_text_describes_the_core_as_it_is_now():
+    """S-556:10-12 收盘起 ① 不设单币上限;对外说明不能还写「单币 ≤ 40%」而不注明日期。"""
+    t = HOW_TO_READ["excess_vs_core"]
+    assert "uncapped since" in t and "2026-10-12" in t

@@ -70,7 +70,7 @@ def proof_rows(books: list, navs: Mapping[str, Optional[pd.Series]], core: Optio
 HOW_TO_READ = {
     "window": f"The allocation layer's forward window: from {INCEPTION} (or the book's first day, whichever is later). "
               "Earlier history is not shown here - some of it is after-the-fact replay, not evidence.",
-    "excess_vs_core": "Book total return minus the core's (24 names, market-cap weighted, single coin <= 40%, spot only) "
+    "excess_vs_core": "Book total return minus the core's (24 names, market-cap weighted, spot only; single coin capped at 40% until 2026-10-12, uncapped since) "
                       "over the same window. The benchmark is always holding the core, never zero.",
     "anytime_lower_bound_ann": "Anytime-valid lower bound on the mean daily excess, annualised: re-checking it daily does not "
                                f"inflate it. The allocation layer admits a book on either of two paths: forward - this bound is "
