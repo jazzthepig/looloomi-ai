@@ -26,9 +26,11 @@
 | claimed | T-099 | seth | World50 按时点回放(指数层)+ 风险层(波动目标 / 趋势)分开记账,对照 ACWI / Nasdaq-100 / 全球 60/40 | 决定大类 ① 是否立账本、从哪天开始前向。 | S-576:月度价格收益口径,P3 × 2 年化 32.2% / 最大回撤 −27%,满仓 BTC 32.3% / −73%。 |  |
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
 | open | T-089 | lane-a | 完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改 | 从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。 |  |
+| open | T-109 | lane-a | 山寨龙头腿 v1(S-589):按预注册规则做 2023–2026 的描述性回放 —— 只描述、不评判(判据留给前向) | Mac 数据根 _reports/absorb_input/T-109_alt_leaders_replay.md + 汇总表贴卡 notes;脚本在 docs/research/;卡改 in_review。 | S-589 探索:F + O + 质量 4 周 IC +0.124;F + O 在高质量一半 +0.121。 |  |
 | open | T-069 | lane-b | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
 | open | T-092 | lane-b | 慢的逆向(Jazz 10-14「甘于人后」):三条规则按时点回放 + 打乱对照 —— ② 暴涨名移回 BTC、③ 主流暴跌后加推力、探索仓做空 30 名外暴涨名 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:三条规则 × 三个窗口的总收益 / 最大回撤 / 相对基准的超额 / 对照分位 / 事件数。不改任何前向账本。 | S-569(探索性):非 BTC 名 z30 ≥ 3 之后 30 日相对 BTC −16.4%(t+7 进,基准 −5.8%,81% 跑输),90 日 −38.7%(基准 −16.3%);BTC / ETH z30 ≥ 2 之后 90 日 +12.5% / +22.3%(基准 +6.3% / +6.6%)⇒ 不对主流的暴涨做逆向;BTC z30 ≤ −2 之后 90 日 +10.3%(9 周)。 |  |
 | open | T-091 | lane-c | 非价格状态在 BTC 转折点上是否领先价格:资金费 / 持仓量 / 稳定币供给 / 主动买入占比 vs 价格动量,对照随机日期 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:每个特征 × 14 个拐点的领先 / 滞后天数、中位数、随机分位、错误翻转率。只测量,不改任何账本或循环。 | S-568:③ 在每个顶部推力 ≥ 1、组合层在 +190% / +97% 两段上涨里只有 ≈ 0.5 仓位;S-567:周频价格 / 宽度择时四种构造都分不开随机。非价格状态在转折点上的时序从没量过。 |  |
+| open | T-108 | lane-c | 加密质量因子(S-587 留出段 5/5 复现)的稳健性挖掘:哪一个在起作用、宽一点的宇宙还在不在、死掉的币补上会怎样 | Mac 数据根 _reports/absorb_input/T-108_quality_robustness.md + 汇总表贴卡 notes;脚本在 docs/research/;卡改 in_review。 | S-587:combo 4 周 IC 发现段 +0.127(t 4.3)/ 留出段 +0.128(t 3.8);vol13 13 周 −0.184 / −0.232。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -110,4 +112,4 @@
 | done | T-081 | seth | 代币迁移接段:MKR→SKY(1:24000)、MATIC→POL(1:1)—— 宇宙只放新币,生效日按成交交叉(CoinDesk / CF Benchmarks 做法),历史按比例接,统一标准 v1.3 | SKY 的分不再因市值 0 被压到底;POL 迁移前用的是 MATIC | MKR 自 2025-06-05 起在标准里市值 0、基本面支柱 0,正式档 UNDERWEIGHT(实时 55.8 NEUTRAL);POL 迁移前 11 个月用的是日成交 60 万美元的薄币 | 10-12 正式批次含 SKY、POL,无 MKR、MATIC;/cis/universe 有 SKY 无 MKR。剩 Minimax 换 T1 宇宙(Mac 侧,SYNC §Seth-1012a)不在本卡验收内。 @ 2026-10-13T13:45Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 12 · claimed 7 · blocked 4 · in_review 15 · done 68 · dropped 1
+open 14 · claimed 7 · blocked 4 · in_review 15 · done 68 · dropped 1

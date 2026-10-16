@@ -1,0 +1,25 @@
+{
+  "id": "T-109",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-16",
+  "verified": null,
+  "title": "山寨龙头腿 v1(S-589):按预注册规则做 2023–2026 的描述性回放 —— 只描述、不评判(判据留给前向)",
+  "source": "Jazz 10-16「山寨只拿基本面和资金面好的龙头」;S-587(质量因子留出段 5/5)+ S-589 探索(CIS F + O 在龙头里 IC +0.121)",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-109.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "规则一字不改照 REFUTATION_LEDGER §S-589「前向预注册」:宇宙 = cis_rebuild_daily v1.3 的加密名去 BTC / 稳定 / 包装;每 4 周(周五)调仓;龙头门槛 = 当日市值前 15 且 13 周年化波动 ≤ 宇宙中位数 × 1.5 且 13 周流通量增幅 ≤ 10%(流通量 = 市值 / 价格);打分 = 秩(F) + 秩(O) + 秩(市值) − 秩(vol13);前 6 等权,单名 ≤ 20%;对照:同门槛全部等权、只持 ETH、同门槛随机 6 名 200 条路径。价格 / 市值用 asset_mcap_daily(Mac 数据根 research/crypto_daily 也有)。成本 20 bp。报:每段(2023、2024、2025、2026 至今)总收益 / 回撤、对同门槛等权与 ETH 的差、在随机 6 名里的分位、平均名字数、换手;每次调仓选中的名字列表。**这段历史 2023–2026 已被 S-587 / S-589 的挖掘看过 —— 只描述,不写「通过 / 不通过」**。",
+    "expect": "Mac 数据根 _reports/absorb_input/T-109_alt_leaders_replay.md + 汇总表贴卡 notes;脚本在 docs/research/;卡改 in_review。"
+  },
+  "prior_value": "S-589 探索:F + O + 质量 4 周 IC +0.124;F + O 在高质量一半 +0.121。",
+  "notes": "2026-10-16 Seth 开卡。"
+}
