@@ -2,6 +2,7 @@
 
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
+| in_review | T-117 | lane-a | S-597:篮子里的 Trader Tom —— 让赢家跑(不调回等权)、砍跌 25% 的输家把钱给赢家;World50 与加密前 15 各一套 | 脚本 docs/research/t117_s597_baskets.py + _reports/absorb_input/T-117_s597.md;卡改 in_review,推 lane-a/T-117。 | Trader Tom 方向的第一批证据;预注册在台账,lane 只实现不改。 |  |
 | in_review | T-068 | lane-b | 评估层 ②:状态轴换成有历史的价格特征(T-059 之后) | 测试:同一日期在 2024 年算与在今天算落在同一格(无前视);上线当天 rr_matrix_daily 出现 6 个新格子 | 见 T-059 原卡(10-07) |  |
 | in_review | T-105 | lane-b | World50 幸存者偏差补完:其余年份的全球前 100 + 六个英国 / 欧洲 ADR 的换股比例与 20-F 封面股数 | Mac 数据根 research/t105/(adr_ratios.csv、sec_prefix.csv、top100_by_year.csv、missing.csv)+ _reports/absorb_input/T-105_survivorship_2.md;卡改 in_review。 | T-101:2018 97/100;漏掉的 8 家里 3 家是真幸存者偏差(BP / VOD 跌出、DowDuPont 拆分),5 家今天仍在前 100(BUD / BA / UL / BTI / SAN)。 |  |
 | in_review | T-057 | lane-c | 三臂对比的记账有错:下一次调仓不在的币按「零收益」记、周收益平摊到每天 —— A 的 arm C Sharpe 4.90 / 回撤 10% 是这个造成的 | 测试钉住 ①②;重跑后 arm B 的 Sharpe 不再被平滑抬高(与 hold-the-panel 同量级);arm C 的结论按新数重判 | A 10-07 报告:arm C Sharpe +4.90 / MaxDD 10.3% / 累计 +456%;arm B +1.48 / 60.5% —— 记账口径下的数,不是证据 |  |
@@ -119,4 +120,4 @@
 | done | T-081 | seth | 代币迁移接段:MKR→SKY(1:24000)、MATIC→POL(1:1)—— 宇宙只放新币,生效日按成交交叉(CoinDesk / CF Benchmarks 做法),历史按比例接,统一标准 v1.3 | SKY 的分不再因市值 0 被压到底;POL 迁移前用的是 MATIC | MKR 自 2025-06-05 起在标准里市值 0、基本面支柱 0,正式档 UNDERWEIGHT(实时 55.8 NEUTRAL);POL 迁移前 11 个月用的是日成交 60 万美元的薄币 | 10-12 正式批次含 SKY、POL,无 MKR、MATIC;/cis/universe 有 SKY 无 MKR。剩 Minimax 换 T1 宇宙(Mac 侧,SYNC §Seth-1012a)不在本卡验收内。 @ 2026-10-13T13:45Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 15 · claimed 6 · blocked 5 · in_review 6 · done 83 · dropped 1
+open 15 · claimed 6 · blocked 5 · in_review 7 · done 83 · dropped 1
