@@ -95,3 +95,16 @@ def test_github_rows_weeks_start_sunday_and_drop_current() -> None:
     from src.data.market.cis_inputs import github_rows
     rows = github_rows("BTC", "bitcoin/bitcoin", [5, 6, 7], date(2026, 10, 14))   # 周三;本周从 10-11(周日)开始
     assert [(r["week_start"], r["commits"]) for r in rows] == [("2026-09-27", 5), ("2026-10-04", 6)], "本周没走完,不收"
+
+
+def test_sentiment_history_goes_back_to_2018_and_volume_backfill_threshold() -> None:
+    """10-16(S-590):恐惧贪婪 / 全市场 / VIX 存全历史(研究要 2018–2021 的牛熊);全量加密成交额回填只在空行超过门槛时重取。"""
+    from src.data.market import cis_inputs as ci
+    data = [{"value": "30", "timestamp": str(_ts(2020, 1, 1))}, {"value": "59", "timestamp": str(_ts(2026, 10, 9))}]
+    assert [r["d"] for r in fng_rows(data, ci.MACRO_HISTORY_START)] == ["2020-01-01", "2026-10-09"]
+    assert ci.MACRO_HISTORY_START <= "2018-02-01"
+    src = (ROOT / "src/data/market/cis_inputs.py").read_text(encoding="utf-8")
+    assert "fng_rows(raw, MACRO_HISTORY_START)" in src and "global_rows(raw, MACRO_HISTORY_START)" in src
+    assert not ci.needs_volume_history(5) and ci.needs_volume_history(31)
+    from src.data.market.binance_hf_collector import FUNDING_BACKFILL_START_MS
+    assert FUNDING_BACKFILL_START_MS <= int(datetime(2020, 1, 1, tzinfo=timezone.utc).timestamp() * 1000)

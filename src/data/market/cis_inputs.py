@@ -32,6 +32,9 @@ MACRO_TABLE = "macro_daily"
 TVL_TABLE = "protocol_tvl_daily"
 WRITES_TABLES = (MACRO_TABLE, TVL_TABLE, "asset_mcap_daily", "equity_fundamentals_q", "github_commits_weekly")
 HISTORY_START = "2021-06-01"          # 2023 起的重建要 400 天回看(252 日动量、ATH 用全史另算)
+#: 10-16(Jazz:按时点模拟当时的情绪,S-590):恐惧贪婪 / 全市场市值 / VIX 存全历史(alternative.me 从 2018-02 起),
+#: 不只是 CIS 重建用的那段 —— 情绪与拥挤的研究要 2018–2021 的牛熊。
+MACRO_HISTORY_START = "2018-01-01"
 VOLUME_BACKFILL_FROM = "2022-06-01"
 TRADFI_BACKFILL_DAYS = 1500           # 约 2022-08 起
 #: DeFi 类 CIS 名字 → DeFiLlama 协议 slug。L2 用链 TVL(chain_activity_daily),不在这里。
@@ -196,7 +199,7 @@ async def _macro(today: date) -> dict[str, Any]:
     from src.data.market.data_layer import get_cg_global_market_cap_chart, get_eodhd_eod_range, get_fng_history
     out: dict[str, Any] = {}
     for name, fetch in (("fng", lambda: get_fng_history()),
-                        ("vix", lambda: get_eodhd_eod_range("VIX", "INDX", HISTORY_START)),
+                        ("vix", lambda: get_eodhd_eod_range("VIX", "INDX", MACRO_HISTORY_START)),
                         ("global", lambda: get_cg_global_market_cap_chart("max")),
                         ("global_recent", lambda: get_cg_global_market_cap_chart("1"))):
         try:
@@ -205,7 +208,8 @@ async def _macro(today: date) -> dict[str, Any]:
                 have = {(r["series"], r["d"]) for r in out.get("_global_rows", [])}
                 rows = [r for r in global_rows(raw, tolerance_ms=RECENT_TOLERANCE_MS) if (r["series"], r["d"]) not in have]
             else:
-                rows = fng_rows(raw) if name == "fng" else eod_rows("vix", raw) if name == "vix" else global_rows(raw)
+                rows = (fng_rows(raw, MACRO_HISTORY_START) if name == "fng" else eod_rows("vix", raw, MACRO_HISTORY_START)
+                        if name == "vix" else global_rows(raw, MACRO_HISTORY_START))
             if name == "global":
                 out["_global_rows"] = rows
             err = await _upsert(MACRO_TABLE, rows, "series,d") if rows else f"{name}: 0 行"
@@ -256,6 +260,55 @@ async def _volumes(today: date) -> dict[str, Any]:
         err = await _upsert("asset_mcap_daily", rows, "symbol,d,source")
         out[sym] = err or f"{len(rows)} 行"
     return out
+
+
+#: 10-16(S-590):全量加密成交额历史。风格头(style/header.py)从 2020 起落了 454 个名字的价格 / 市值,但成交额是后来才带上的 ——
+#: 2026 年之前只有 19–29 个名字有成交额,「换手 / 刷量」类检验在前 50 上算不出来。CG market_chart 一直返回 total_volumes。
+VOLUME_HISTORY_FROM = "2019-06-01"
+VOLUME_HISTORY_MAX_PER_RUN = 120      # 一轮(每天)最多重取这么多个名字(CG 额度),约 4 天补齐;补齐之后每轮只剩一次小查询 / 名字
+
+
+def needs_volume_history(null_rows: int, threshold: int = 30) -> bool:
+    """纯函数。成交额为空的行超过门槛才重取 —— CG 在上市前几天偶尔不给成交额,几行空不值得整段重取。"""
+    return null_rows > threshold
+
+
+async def _volume_history_all(today: date) -> dict[str, Any]:
+    from src.data.market.data_layer import get_cg_market_chart_range
+    from src.data.style.header import SOURCE, latest_membership, parse_market_chart
+    from src.data.vector.market_state_writer import _sb_get
+    members = await latest_membership()
+    to_ts = int(datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc).timestamp())
+    frm_ts = int(datetime.combine(date.fromisoformat(VOLUME_HISTORY_FROM) - timedelta(days=2),
+                                  datetime.min.time(), tzinfo=timezone.utc).timestamp())
+    done, failed, checked = 0, {}, 0
+    for m in members:
+        if done >= VOLUME_HISTORY_MAX_PER_RUN:
+            break
+        sym, cg = m.get("symbol"), m.get("coin_id")
+        if not sym or not cg:
+            continue
+        checked += 1
+        rd = await _sb_get("asset_mcap_daily", {"select": "d", "symbol": f"eq.{sym}", "coin_id": f"eq.{cg}",
+                                                "source": f"eq.{SOURCE}", "d": f"gte.{VOLUME_HISTORY_FROM}",
+                                                "volume": "is.null", "order": "d.asc", "limit": "31"})
+        if not rd.ok:
+            failed[sym] = f"读不到:{rd.reason}"[:80]
+            continue
+        if not needs_volume_history(len(rd.rows or [])):
+            continue
+        raw = await get_cg_market_chart_range(cg, frm_ts, to_ts, interval="daily")
+        if not raw.get("available"):
+            failed[sym] = str(raw.get("error") or raw.get("reason"))[:80]
+            continue
+        pts = parse_market_chart(raw.get("prices"), raw.get("market_caps"), raw.get("volumes"))
+        rows = [{"symbol": sym, "coin_id": cg, "source": SOURCE, **p} for p in pts if p["d"] >= VOLUME_HISTORY_FROM]
+        err = await _upsert("asset_mcap_daily", rows, "symbol,d,source")
+        if err:
+            failed[sym] = err[:80]
+        else:
+            done += 1
+    return {"checked": checked, "refetched": done, "failed": dict(list(failed.items())[:10]), "n_failed": len(failed)}
 
 
 async def _migration_history(today: date) -> dict[str, Any]:
@@ -341,6 +394,10 @@ async def run_once(today: Optional[date] = None) -> dict[str, Any]:
     protocols = await _protocols(today)
     volumes = await _volumes(today)
     volumes.update({f"migration.{k}": v for k, v in (await _migration_history(today)).items()})
+    try:
+        vol_hist = await _volume_history_all(today)
+    except Exception as e:                                  # noqa: BLE001
+        vol_hist = {"error": f"{type(e).__name__}: {str(e)[:100]}"}
     fundamentals = await _fundamentals()
     github = await _github(today)
     try:
@@ -352,8 +409,9 @@ async def run_once(today: Optional[date] = None) -> dict[str, Any]:
              [f"vol.{k}" for k, v in volumes.items() if not str(v).endswith("行")] + \
              [f"fund.{k}" for k, v in fundamentals.items() if v.get("error")] + \
              [f"gh.{k}" for k, v in github.items() if v.get("error")] + \
-             (["tradfi"] if tradfi.get("error") else [])
+             (["tradfi"] if tradfi.get("error") else []) + \
+             (["vol_history"] if vol_hist.get("error") or vol_hist.get("n_failed", 0) > 20 else [])
     return {"ok": not errors, "refused": False, "errors": errors[:20], "macro": macro, "protocols": protocols,
             "fundamentals": fundamentals, "github": {k: v for k, v in github.items() if v.get("error")},
-            "volumes": volumes, "tradfi": tradfi,
+            "volumes": volumes, "volume_history": vol_hist, "tradfi": tradfi,
             "reason": "全部写入" if not errors else f"{len(errors)} 项失败:{errors[:6]}"}

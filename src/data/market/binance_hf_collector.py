@@ -39,14 +39,16 @@ FUNDING_SYMBOLS: tuple[str, ...] = tuple(sorted(set(HF_SYMBOLS) | {
     "DOT", "NEAR", "APT", "HYPE", "ARB", "OP", "POL", "STRK", "UNI", "AAVE", "LDO", "PENDLE", "INJ", "TIA",
     "ONDO", "MKR"}))
 #: 库里一行都没有的资金费率序列从这里开始补(CIS 重建从 2023 起,30 日窗口往前留余量)。
-FUNDING_BACKFILL_START_MS = int(datetime(2022, 11, 1, tzinfo=timezone.utc).timestamp() * 1000)
+# 10-16(S-590):资金费率回填到 2020-01(原 2022-11,只够 CIS 重建)—— 拥挤 / 情绪研究要 2020–21 的牛市与 2022 的熊市;
+# 币安 USDT 永续最早 2019-09(BTC),上市晚的名字照旧回到上市日为止。
+FUNDING_BACKFILL_START_MS = int(datetime(2020, 1, 1, tzinfo=timezone.utc).timestamp() * 1000)
 HOURLY_SOURCE = "binance_hist"
 FUNDING_VENUE = "binance_perp"
 
 _HOUR_MS = 3_600_000
 PAGE = 1000
 MAX_PAGES_HOURLY = 3
-MAX_PAGES_FUNDING = 5               # 一页 1,000 期 ≈ 333 天;首次回填 2022-11 起约 4.3 页
+MAX_PAGES_FUNDING = 8               # 一页 1,000 期 ≈ 333 天;首次回填 2020-01 起约 7.2 页
 MIN_OK_FRACTION = 0.70
 _CONCURRENCY = 4
 _PAUSE_S = 0.25
