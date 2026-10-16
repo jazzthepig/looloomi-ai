@@ -1,7 +1,7 @@
 {
   "id": "T-112",
   "owner": "seth",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-16",
   "verified": null,
   "title": "证据面接 World50 / 龙头腿 / 灵活组合三本新前向账本(另一条产品线,基准各自的,不进 ① 的配置层)",
@@ -19,5 +19,5 @@
     "expect": "部署后 /api/v1/proof/books 有 other_lines 三段;allocation_daily 的 book 集合不变"
   },
   "prior_value": "前向记录本身就是产品(ARCHITECTURE);三本账开账后若证据面看不到,等于没记。",
-  "notes": "2026-10-16 Seth 开卡:开账前做完即可;registry 的 arms 读法按 arm 透视,forward_book_nav 的臂名在两本之间不重复,能直接读。"
+  "notes": "2026-10-16 Seth 开卡:开账前做完即可;registry 的 arms 读法按 arm 透视,forward_book_nav 的臂名在两本之间不重复,能直接读。\n2026-10-16 Seth 做了:src/data/accounting/other_lines.py(纯函数 + 读两张表)、证据面加 other_lines 段(读不到只影响这一段)、tests/test_other_lines.py 5 项、preflight 注册、SPINE 7c / 7d 读者列。部署后核 /api/v1/proof/books 的 other_lines 六行都是 not_started 再收卡。"
 }

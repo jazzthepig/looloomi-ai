@@ -610,8 +610,16 @@ async def proof_books():
     alloc = {r["book"]: {"weight": r["weight"], "d": r["d"]} for r in arows if r["d"] == last_d}
     asof = pd.Timestamp(core.dropna().index.max())
     rows = proof_rows(list(BOOKS), navs, core, alloc, asof)
+    # T-112:World50 / 龙头腿 / 灵活组合 —— 另一条产品线,各自的基准,不进配置层;读不到只影响这一段
+    try:
+        from src.data.accounting.other_lines import HOW_TO_READ_OTHER, load_other_navs, other_line_rows
+        other_navs = await load_other_navs()
+        other_navs["core"] = core
+        other = {"status": "ok", "rows": other_line_rows(other_navs, pd.Timestamp(now.date())), "how_to_read": HOW_TO_READ_OTHER}
+    except Exception as e:  # noqa: BLE001 —— 这一段读不到不该让整个证据面 502
+        other = {"status": "unavailable", "why": f"{type(e).__name__}: {str(e)[:160]}"}
     body = {"status": "ok", "as_of": asof.date().isoformat(), "allocation_as_of": last_d,
-            "core": CORE, "books": rows, "how_to_read": HOW_TO_READ,
+            "core": CORE, "books": rows, "other_lines": other, "how_to_read": HOW_TO_READ,
             "note": "Paper records, not live-traded P&L. Every number is labelled with its evidence class; "
                     "no book is pre-judged here.",
             "compliance": "Positioning language only; not investment advice."}
