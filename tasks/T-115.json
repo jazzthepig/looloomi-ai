@@ -1,9 +1,13 @@
 {
   "id": "T-115",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-16",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-16",
+    "value": "股数 2017–2025 每年一行(含 2022 / 2023 两次 1:10 红股、2024 二次发行不改股数),上市价 32 里亚尔核对;日线拿不到 —— 沙特交易所与阿美 IR 都没有免费的逐日下载,交易所 EOD 是付费订阅。Jazz 10-16:不开付费口子 ⇒ World50 缺阿美,对外写明。"
+  },
   "title": "沙特阿美(2222.SR)日线与股数:EODHD 404,找一手、免费的来源(沙特交易所 / 公司 IR),只做研究产物",
   "source": "World50 前 50 的门槛约 3,000 亿美元;阿美约全球前 10,没有日线 ⇒ 排名里少了一个前 10。Jazz 10-15「现阶段不买付费数据」、10-14「本地上市从本国交易所取」",
   "allowed_paths": [
@@ -21,5 +25,5 @@
     "expect": "CSV + _reports/absorb_input/T-115_aramco.md;卡改 in_review,推 lane-c/T-115(只放卡与指针)。"
   },
   "prior_value": "阿美进不进 World50 直接改变前 50 的成员与权重;缺它要在产品说明里明说。",
-  "notes": "2026-10-16 Seth 开卡。入库(新的价格来源)归 Seth(规则 3b)。"
+  "notes": "2026-10-16 Seth 开卡。入库(新的价格来源)归 Seth(规则 3b)。\n2026-10-16 lane-c 测得:① 日线 CSV 卡 — Tadawul 免费网只显示当前价+指数 K 线,per-company 历史 CSV 需付费 EOD 订阅(询 csc@saudiexchange.sa);Aramco IR 无 per-day CSV;aramco.com CDN 从这台 Mac 直连全部超时(不绕重试);**未落 aramco_daily.csv**(若强行落即聚合站或自编,破规则)。② 股数 + IPO 价 + secondary 价 全从 2024 国际发行文件(J.P. Morgan host 的同一份 Aramco 签字 offering doc,44.4 MB,已存档 research/t115/)得到,落到 research/t115/aramco_shares.csv(2017-2025 每年一行)+ aramco_offering_prices.csv。③ IPO 价 SAR 32 由 prospectus 自身披露的 SAR 3,750M ÷ 117.2M = 31.99 印证。④ 2024 secondary final SAR 27.0265。报告 _reports/absorb_input/T-115_aramco.md 已写(含入库决定路径,等 Seth 拍板 规则 3b)。入库(新价格来源)等 Seth。"
 }
