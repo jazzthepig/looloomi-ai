@@ -181,7 +181,9 @@ def load(dir_: str) -> tuple[list[str], dict, dict, dict, dict]:
     cj = json.loads((d / "close.json").read_text())
     mj = json.loads((d / "mcap.json").read_text())
     grid = fridays("2014-06-06", LAST_WEEK)
-    keys = [k for k, c in cj["cls"].items() if c != "benchmark"] + [k for k, c in cj["cls"].items() if c == "benchmark"]
+    from src.data.universe.world50 import CANDIDATES
+    pool = {c.key for c in CANDIDATES}          # 10-16:共用面板被扩成 380 个加密(含稳定币)—— 只取 World50 候选池 + 对照组
+    keys = [k for k, c in cj["cls"].items() if c != "benchmark" and k in pool] + [k for k, c in cj["cls"].items() if c == "benchmark"]
     wc = {k: weekly_closes(cj["dates"], cj["close"][k], grid) for k in keys}
     wr = {k: weekly_returns(wc[k]) for k in keys}
     snaps: dict[str, dict[str, float]] = {}
