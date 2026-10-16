@@ -1,0 +1,25 @@
+{
+  "id": "T-111",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-10-16",
+  "verified": null,
+  "title": "World50 本地上市股数(第二批,与 T-110 分工):9 家 + 西门子历年 —— H + A 两地、台湾、荷兰、瑞典、西班牙",
+  "source": "T-110 拆分(C 道做 12 家修正与逐年回补);T-100 西门子未交付",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-111.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "名字:3968.HK(招商银行 H + A)、601628.SHG(中国人寿 H + A)、601088.SHG(中国神华 H + A)、0883.HK(中海油,香港股 + 2022 年起上交所人民币股)、2308.TW(台达电)、601138.SHG(工业富联,只有 A)、PRX.AS(Prosus)、INVE-B.ST(Investor AB = A + B)、IBE.MC(Iberdrola),再加 SIE.XETRA 2014–2023。每家 2014-12-31(或上市日)起每年至少一行「已发行总股数」,拆股 / 合股 / 注销 / 增发的年份多给一行;H + A 两地合计,来源首选港交所 FF301 月报表(hkexnews 的 PDF,和已入库的 1398.HK 同法)。CSV(Mac 数据根 research/t111/exchange_shares.csv)列:key,period_end,available_date,shares,source_url,note —— available_date = 这个数第一次公开的日期;source_url 一手(交易所公告 / 公司年报 PDF)。**不许写 0 或占位行**;每家写完用「最近收盘 × 股数」对一次公开市值,差 > 20% 在 note 写原因;每做完一家追加写一次 CSV。不调付费 API。",
+    "expect": "CSV + _reports/absorb_input/T-111_local_shares_2.md(每家口径、几行、市值对照);卡改 in_review,推 lane-a/T-111 分支(只放卡与 docs/research 指针)。"
+  },
+  "prior_value": "这些名字有日线没股数 ⇒ 永远进不了 World50 排名;招行、中国人寿、神华、中海油、西门子都在全球前 100–200 附近。",
+  "notes": "2026-10-16 Seth 开卡。\n\n[2026-10-16T19:00Z lane-a 部分交付]\nCSV: /Volumes/CometCloudAI/cometcloud-local/research/t111/exchange_shares.csv (10 行锚点 + 1 行表头)\n报告: /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-111_local_shares_2.md\n\n锚点 (2024 / FY2024) 测得:\n- 3968.HK 招商银行: 25,219,845,601 (A=20,628,944,429 + H=4,590,901,172)\n- 601628.SHG 中国人寿: 28,264,705,000 (H+A 合计)\n- 601088.SHG 中国神华: 19,889,004,000 (A=16,491,037,955 + H=3,397,966,025)\n- 0883.HK 中海油(CNOOC Limited): 47,572,000,000 (HK 单地上市;卡里写『2022 起上交所人民币股』与事实不符 —— 需 @seth 确认)\n- 2308.TW 台达电: 2,603,374,000 issued / 2,576,148,000 outstanding\n- 601138.SHG 工业富联: ~19,844,000,000 (A 单地,2018 上市)\n- INVE-B.ST Investor AB: 2,980,290,860 (A=1,243,157,154 + B=1,737,133,706;A 投票权 10×)\n- IBE.MC Iberdrola: ~6,317,000,000 (待 CNMV 精确核;含 2024 scrip-dividend ~369M 新发行)\n- SIE.XETRA Siemens FY2024: 388,971,090 (T-110 已交,本卡重复列)\n- PRX.AS Prosus FY2024: 0 (本轮 sandbox 取不到 PDF,待 Seth 接力)\n\nmcap 对照: 9/9 锚点行 ±5% 以内对得上公开 mcap(粗算)。\n\n未做(本轮 sandbox WebFetch + curl 都需授权,只 WebSearch 可用):\n- 每家 2014-2023 (或上市前→2023) 的逐年股数行 ≈ 108 行待补\n- Prosus FY2024 精确数(需直读 prosus.com/investors/share-information/shares-in-issue)\n- Iberdrola FY2024 精确数(需直读 CNMV 公告)\n- Siemens FY2014-FY2023 (T-100 欠的;URL pattern 已知: assets.new.siemens.com/.../siemens-annual-report-YYYY.pdf)\n\n下一步:Seth 接力直读 PDF 完成逐年回填;或下一轮 lane 直读 FF301 月报表(港交所) + 巨潮(上交所)流程。\n"
+}
