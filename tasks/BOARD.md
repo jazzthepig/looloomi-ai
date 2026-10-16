@@ -4,6 +4,7 @@
 |---|---|---|---|---|---|---|
 | in_review | T-068 | lane-b | 评估层 ②:状态轴换成有历史的价格特征(T-059 之后) | 测试:同一日期在 2024 年算与在今天算落在同一格(无前视);上线当天 rr_matrix_daily 出现 6 个新格子 | 见 T-059 原卡(10-07) |  |
 | in_review | T-105 | lane-b | World50 幸存者偏差补完:其余年份的全球前 100 + 六个英国 / 欧洲 ADR 的换股比例与 20-F 封面股数 | Mac 数据根 research/t105/(adr_ratios.csv、sec_prefix.csv、top100_by_year.csv、missing.csv)+ _reports/absorb_input/T-105_survivorship_2.md;卡改 in_review。 | T-101:2018 97/100;漏掉的 8 家里 3 家是真幸存者偏差(BP / VOD 跌出、DowDuPont 拆分),5 家今天仍在前 100(BUD / BA / UL / BTI / SAN)。 |  |
+| in_review | T-113 | lane-b | Chubb(CB)与 Welltower(WELL)的历年总股数:SEC 结构化数据三种口径都是空的,从 10-K / 10-Q 封面原句取 | CSV + 卡 notes 汇总;卡改 in_review,推 lane-b/T-113。 | 两家都在 World50 候选池,缺股数 ⇒ 永远进不了排名。 |  |
 | in_review | T-057 | lane-c | 三臂对比的记账有错:下一次调仓不在的币按「零收益」记、周收益平摊到每天 —— A 的 arm C Sharpe 4.90 / 回撤 10% 是这个造成的 | 测试钉住 ①②;重跑后 arm B 的 Sharpe 不再被平滑抬高(与 hold-the-panel 同量级);arm C 的结论按新数重判 | A 10-07 报告:arm C Sharpe +4.90 / MaxDD 10.3% / 累计 +456%;arm B +1.48 / 60.5% —— 记账口径下的数,不是证据 |  |
 | in_review | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | in_review | T-097 | seth | 一个共用、测过的验证装置 + A/B:块打乱 / 多空盈亏 / 分位 / Brier / 平稳块自助 A/B 与 MDE,空操作打乱探测;此后每张研究卡必须用它 | 零分布与盈亏的 bug 不再按卡重复出现;T-092 R3 / T-093 R3c 用它重跑。 | 每张卡手写零分布:10-14 一天里打乱空操作 2 次(T-090、T-093)、空头盈亏公式错 2 张(T-092、T-093)、统计量退化 1 张(T-091)。 |  |
@@ -19,7 +20,6 @@
 | open | T-069 | lane-b | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
 | open | T-092 | lane-b | 慢的逆向(Jazz 10-14「甘于人后」):三条规则按时点回放 + 打乱对照 —— ② 暴涨名移回 BTC、③ 主流暴跌后加推力、探索仓做空 30 名外暴涨名 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:三条规则 × 三个窗口的总收益 / 最大回撤 / 相对基准的超额 / 对照分位 / 事件数。不改任何前向账本。 | S-569(探索性):非 BTC 名 z30 ≥ 3 之后 30 日相对 BTC −16.4%(t+7 进,基准 −5.8%,81% 跑输),90 日 −38.7%(基准 −16.3%);BTC / ETH z30 ≥ 2 之后 90 日 +12.5% / +22.3%(基准 +6.3% / +6.6%)⇒ 不对主流的暴涨做逆向;BTC z30 ≤ −2 之后 90 日 +10.3%(9 周)。 |  |
 | open | T-093 | lane-b | 逆向按情景用(Jazz 10-14):T-092 三条规则加「边际流动性 × BTC 趋势」四状态、每周重判 —— 对照无条件版与打乱的状态标签 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:三条规则 × 三个窗口 × {无条件, 条件} 的总收益 / 最大回撤 / 超额 / 打乱分位,外加每个状态的周数。不改任何前向账本。 | S-570(探索性):暴涨名 30 日相对 BTC 在边际变差时 −28.9(同情景中间组 −6.6),改善时 −13.0(−5.0);暴跌名 90 日在三个窗口里都是改善好过变差;能让暴涨名继续涨的只有「弱底子回暖」约 9 周。 |  |
-| open | T-113 | lane-b | Chubb(CB)与 Welltower(WELL)的历年总股数:SEC 结构化数据三种口径都是空的,从 10-K / 10-Q 封面原句取 | CSV + 卡 notes 汇总;卡改 in_review,推 lane-b/T-113。 | 两家都在 World50 候选池,缺股数 ⇒ 永远进不了排名。 |  |
 | open | T-091 | lane-c | 非价格状态在 BTC 转折点上是否领先价格:资金费 / 持仓量 / 稳定币供给 / 主动买入占比 vs 价格动量,对照随机日期 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:每个特征 × 14 个拐点的领先 / 滞后天数、中位数、随机分位、错误翻转率。只测量,不改任何账本或循环。 | S-568:③ 在每个顶部推力 ≥ 1、组合层在 +190% / +97% 两段上涨里只有 ≈ 0.5 仓位;S-567:周频价格 / 宽度择时四种构造都分不开随机。非价格状态在转折点上的时序从没量过。 |  |
 | open | T-118 | lane-c | S-598:周期 / 季节性机会挖掘(发现段 2014–2020,只看这一段) | 脚本 docs/research/t118_s598_seasonality.py + _reports/absorb_input/T-118_seasonality_discovery.md;卡改 in_review,推 lane-c/T-118。 | Trader Tom 方向的第一批证据;预注册在台账,lane 只实现不改。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
@@ -121,4 +121,4 @@
 | done | T-112 | seth | 证据面接 World50 / 龙头腿 / 灵活组合三本新前向账本(另一条产品线,基准各自的,不进 ① 的配置层) | 部署后 /api/v1/proof/books 有 other_lines 三段;allocation_daily 的 book 集合不变 | 前向记录本身就是产品(ARCHITECTURE);三本账开账后若证据面看不到,等于没记。 | 部署 b28065e 后 /api/v1/proof/books 有 other_lines 段:六行(world50_ewxmom / world50_ew / alt_top6 / alt_fo6 / alt_gate_ew / flex_35_50_15)都是 not_started、opens 2026-12-31,how_to_read 四条;allocation_daily 的账本集合不变(三本不在登记表)。 @ 2026-10-16 |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 16 · claimed 6 · blocked 5 · in_review 5 · done 85 · dropped 1
+open 15 · claimed 6 · blocked 5 · in_review 6 · done 85 · dropped 1
