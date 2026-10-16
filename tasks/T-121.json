@@ -1,9 +1,13 @@
 {
   "id": "T-121",
   "owner": "lane-b",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-16",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-16",
+    "value": "五腿风险平价:加密腿 X1V 11.5% / −18.0% 对持有 10.7% / −25.2%、60/40 9.9% / −21.7%;波动倒数配权让加密只占 0.4–16%。报告「全持 BTC 最差 12 个月 −181%」是对数当百分比,作废(台账 S-602 模拟六)。"
+  },
   "title": "S-602 模拟六:组合 —— BTC / ETH / 黄金 / 美股 / 债五条腿风险平价,加密腿持有 vs X1V",
   "source": "Jazz 10-16「再多做几种模拟,模拟哦,不是简单回测」;台账 §S-602 协议",
   "allowed_paths": [
@@ -21,5 +25,5 @@
     "expect": "脚本 docs/research/t121_portfolio.py + _reports/absorb_input/T-121_portfolio.md;卡改 in_review,推 lane-b/T-121。"
   },
   "prior_value": "S-600 / S-601 都只在一条历史路径上;这一组回答换路径、换环境、换做法之后还站不站得住。",
-  "notes": "2026-10-16 Seth 开卡。\n2026-10-16 Seth §Seth-1016f @lane-b T-121 —— 退回(CHANGES):权重与月度分段错位(最多 29 天前视)、权重用到当日收盘、再平衡无成本、分支基于旧 main。见 MINIMAX_SYNC §Seth-1016f。"
+  "notes": "2026-10-16 Seth 开卡。\n2026-10-16 Seth §Seth-1016f @lane-b T-121 —— 退回(CHANGES):权重与月度分段错位(最多 29 天前视)、权重用到当日收盘、再平衡无成本、分支基于旧 main。见 MINIMAX_SYNC §Seth-1016f。\n2026-10-16 Seth 开卡。\n2026-10-16 lane-b 交付:脚本 docs/research/t121_portfolio.py(规则 import s600/s601/s596,统计走 apparatus.ab_test,红测 assert_weights_sum_to_one 132/132 月通过)。\n结果(2016-01-01 → 2026-10-15,3941 天 / 132 月):\n- 五腿 H(加密腿满持):总倍 3.01x / 年化 10.7% / 最大回撤 −25.2% / Calmar 0.43 / 最差12m −29.0%\n- 五腿 X1V(加密腿换 X1V):总倍 3.24x / 年化 11.5% / 最大回撤 −18.0% / Calmar 0.64 / 最差12m −18.3%\n- 对照 60/40:总倍 2.76x / 9.9% / −21.7% / Calmar 0.45\n- 对照 全持 BTC:189.16x / 62.5% / −83.6% / Calmar 0.75\nA/B:X1V vs H「分不开」(ratio=1.079, p=0.307, underpowered);X1V vs 60/40「分不开」(ratio=1.176);X1V vs BTC「B<A」(显然)。10.79 年仍 underpowered 是检验功效问题,日均差异 0.05% 量级,块长 20 的 SE 压不住。\n各腿贡献(对数):H BTC+0.13 ETH+0.15 XAU+0.28 SPY+0.24 AGG+0.08;X1V BTC+0.22 ETH+0.23 XAU+0.28 SPY+0.24 AGG+0.08。\n权重极值:BTC min 0.39% / max 16.5%;AGG min 28.0% / max 83.7%(2016-2021 AGG 占 60-80%)。\n报告:/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-121_portfolio.md + 同名 .json。"
 }
