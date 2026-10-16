@@ -386,7 +386,10 @@ ADR_ORD_PER_ADS: dict[str, list[tuple[str, float]]] = {
     "SMFG": [("2010-01-01", 0.2), ("2025-06-27", 0.6)],
     "SONY": [("1990-01-01", 1.0)],                      # 2024 一拆五时 ADS 同步拆,比例一直 1
     "BBVA": [("1990-01-01", 1.0)],
-    "MFG": [("2000-01-01", 2.0)],                       # 2020 十合一时 ADS 同步合,比例一直 2
+    # MFG:20-F 封面「each of which represents two shares」2021–2026 年年都这么写,但那是登记类别的名称,没跟着改 ——
+    # 2020-10 普通股十合一时 ADS 没合(ADS 价没有 ×10 的跳),比例实际变成 1 份 = 0.2 股;按 2 算出的市值是 128 亿美元,
+    # 只有瑞穗真实体量的约十分之一。按 0.2 算,十合一前后的 ADS 当量都是 ≈ 12.7 亿份,接得上。生效 = 第一份报合股后股数的 20-F(2021-07-02)
+    "MFG": [("2000-01-01", 2.0), ("2021-07-02", 0.2)],
 }
 #: 换股比例我没核实 / 中途改过而我不确定生效日的 —— 不写,不猜。(TCEHY 1 份 = 1 股,股数手工从港交所补,不在这里)
 UNVERIFIED_ADR: set[str] = set()   # 10-16 前 180 扩池的五个已由 T-105 第 3 轮核过;新进的存托凭证先放这里
@@ -959,7 +962,7 @@ async def discover_onchain_forms(as_of: Optional[str] = None) -> dict[str, Any]:
 RERUN_AFTER_DAYS = 6
 LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
-PART_VERSIONS = {"prices": 4, "mcap": 18, "onchain_forms": 1, "revenue": 1, "book": 1, "fwd_books": 1}
+PART_VERSIONS = {"prices": 4, "mcap": 19, "onchain_forms": 1, "revenue": 1, "book": 1, "fwd_books": 1}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:

@@ -97,6 +97,7 @@ def test_wavg_fallback_adr_ratio_outliers_and_jumps():
     assert not ({"PBR", "SMFG", "SONY", "BBVA", "MFG"} & wd.UNVERIFIED_ADR), "T-105 第 3 轮核过"
     assert wd._adr_ratio("SMFG", "2025-06-26") == 0.2 and wd._adr_ratio("SMFG", "2025-06-27") == 0.6
     assert wd._adr_ratio("PBR", "2016-04-28") == 2.0 and wd._adr_ratio("MFG", "2015-07-23") == 2.0
+    assert wd._adr_ratio("MFG", "2021-07-02") == 0.2, "瑞穗 2020 十合一后 ADS 没合:封面的「two shares」是登记名称,不是比例"
     assert wd.build_mcap("TCEHY", bars, {})["src"] == "manual", "腾讯:港交所月报表手工补"
     assert wd.build_mcap("Z", bars, {})["why"].startswith("SEC 里没有")
 
