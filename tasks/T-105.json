@@ -1,9 +1,13 @@
 {
   "id": "T-105",
   "owner": "lane-b",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-15",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-16",
+    "value": "mcap v19 跑完(139 / 141):PBR 940 亿、SMFG 1,580 亿、SONY 1,490 亿、BBVA 1,480 亿、MFG 1,270 亿美元(改成 0.2 之后,2015 起连续);量级都对。"
+  },
   "title": "World50 幸存者偏差补完:其余年份的全球前 100 + 六个英国 / 欧洲 ADR 的换股比例与 20-F 封面股数",
   "source": "T-101(lane-b 10-15):2018 完整榜 97/100,其余年份只有前 20;池子漏了 BA / BP / VOD / BUD / UL / BTI / SAN / DowDuPont。Seth 已把 BA 与六个 ADR 放进池子,ADR 在换股比例核实前不写市值",
   "allowed_paths": [
