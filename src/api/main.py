@@ -1544,7 +1544,7 @@ async def _cis_inputs_loop():
             from src.data.market.cis_inputs import run_once as _ci_run
             r = await _ci_run()
             print(f"[CIS-INPUTS] {str(r.get('reason'))[:160]}")
-            _detail = {k: r.get(k) for k in ("errors", "macro", "protocols", "tradfi", "fundamentals", "github")}
+            _detail = {k: r.get(k) for k in ("errors", "macro", "protocols", "tradfi", "fundamentals", "github", "volume_history")}
             await _beat("_cis_inputs_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")), detail=_detail,
                         error=None if r.get("ok") else str(r.get("reason"))[:200])
             await _record_loop_attempt(

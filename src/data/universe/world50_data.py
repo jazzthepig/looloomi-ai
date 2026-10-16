@@ -951,7 +951,7 @@ async def discover_onchain_forms(as_of: Optional[str] = None) -> dict[str, Any]:
 RERUN_AFTER_DAYS = 6
 LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
-PART_VERSIONS = {"prices": 4, "mcap": 17, "onchain_forms": 1, "revenue": 1, "book": 1}
+PART_VERSIONS = {"prices": 4, "mcap": 17, "onchain_forms": 1, "revenue": 1, "book": 1, "fwd_books": 1}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
@@ -984,7 +984,8 @@ def _brief(name: str, r: dict) -> dict:
                      "notes"),
             "onchain_forms": ("tokens", "by_type", "matched", "candidates_with_form", "with_issuer"),
             "revenue": ("companies", "companies_ok", "rows", "earliest"),
-            "book": ("waiting", "preview", "holdings_written", "nav_written", "last", "notes")}[name]
+            "book": ("waiting", "preview", "holdings_written", "nav_written", "last", "notes"),
+            "fwd_books": ("waiting", "preview", "nav_written", "notes")}[name]
     out = {"ok": bool(r.get("ok")), "v": PART_VERSIONS[name], **{k: r.get(k) for k in keep if k in r}}
     if r.get("skipped"):
         out["skipped"] = r["skipped"]
@@ -997,7 +998,7 @@ def _brief(name: str, r: dict) -> dict:
 
 
 def _say(name: str, r: dict) -> str:
-    label = {"prices": "日线", "mcap": "市值", "onchain_forms": "链上形式", "revenue": "营收", "book": "前向账本"}[name]
+    label = {"prices": "日线", "mcap": "市值", "onchain_forms": "链上形式", "revenue": "营收", "book": "前向账本", "fwd_books": "龙头腿 / 灵活组合"}[name]
     if r.get("skipped"):
         return label + " 跳过(6 天内已成)"
     if not r.get("ok") and r.get("why") and not any(k in r for k in ("symbols_ok", "companies_ok", "tokens")):
@@ -1006,6 +1007,10 @@ def _say(name: str, r: dict) -> str:
         return f"日线 {r.get('symbols_ok')}/{r.get('symbols')}"
     if name in ("mcap", "revenue"):
         return f"{label} {r.get('companies_ok')}/{r.get('companies')}"
+    if name == "fwd_books":
+        if r.get("waiting"):
+            return f"龙头腿 / 灵活组合 {r['waiting']}(预演龙头:{', '.join((r.get('preview') or {}).get('alt_top6') or [])})"
+        return f"龙头腿 / 灵活组合 新净值行 {r.get('nav_written', 0)}"
     if name == "book":
         if r.get("waiting"):
             pv = r.get("preview") or {}
@@ -1016,9 +1021,10 @@ def _say(name: str, r: dict) -> str:
 
 async def run_week(force: bool = False) -> dict[str, Any]:
     from src.data.market.tradfi_history import run_once
+    from src.data.universe.forward_books import run_forward_books
     from src.data.universe.world50_book import run_book
     steps = (("prices", run_once), ("mcap", refresh_mcap), ("onchain_forms", discover_onchain_forms),
-             ("revenue", refresh_revenue), ("book", run_book))
+             ("revenue", refresh_revenue), ("book", run_book), ("fwd_books", run_forward_books))
     done = set() if force else await _recent_ok_parts()
     parts: dict[str, dict] = {}
     for name, fn in steps:

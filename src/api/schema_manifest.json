@@ -41,6 +41,8 @@
     "factor_tilt_state",
     "feature_arms_daily",
     "forward_anchor_daily",
+    "forward_book_holdings",
+    "forward_book_nav",
     "funding_history",
     "fusion_paper_lifecycle",
     "fusion_paper_nav",
@@ -159,6 +161,24 @@
       "opened_today",
       "realized_pnl",
       "unrealized_pnl"
+    ],
+    "forward_book_holdings": [
+      "arm",
+      "as_of",
+      "book",
+      "key",
+      "note",
+      "rule",
+      "weight"
+    ],
+    "forward_book_nav": [
+      "arm",
+      "as_of",
+      "book",
+      "d",
+      "nav",
+      "ret",
+      "rule"
     ],
     "macro_briefs": [
       "brief",

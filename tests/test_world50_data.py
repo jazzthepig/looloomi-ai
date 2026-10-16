@@ -298,6 +298,11 @@ def test_run_week_is_not_ok_when_any_part_fails(monkeypatch):
     async def book():
         return {"ok": True, "waiting": "前向账本从 2026-12-31 起", "preview": {"as_of": "2026-09-30", "members": 50}}
     monkeypatch.setattr(wb, "run_book", book)
+    import src.data.universe.forward_books as fb
+
+    async def fwd():
+        return {"ok": True, "waiting": "前向账本从 2026-12-31 起", "preview": {"alt_top6": ["ETH", "SOL"]}}
+    monkeypatch.setattr(fb, "run_forward_books", fwd)
     out = asyncio.run(wd.run_week())
     assert out["ok"] is False and out["refused"] is False
     assert out["reason"].startswith("没成的段:mcap —— "), out["reason"]
