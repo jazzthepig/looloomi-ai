@@ -1,7 +1,7 @@
 {
   "id": "T-120",
   "owner": "lane-c",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-16",
   "verified": null,
   "title": "S-602 模拟五:压力情景 —— 单日 −35% 闪崩、交易所宕机 3 天、长横盘磨损",
@@ -21,5 +21,5 @@
     "expect": "脚本 docs/research/t120_stress.py + _reports/absorb_input/T-120_stress.md;卡改 in_review,推 lane-c/T-120。"
   },
   "prior_value": "S-600 / S-601 都只在一条历史路径上;这一组回答换路径、换环境、换做法之后还站不站得住。",
-  "notes": "2026-10-16 Seth 开卡。"
+  "notes": "2026-10-16 Seth 开卡。交付:docs/research/t120_stress.py(规则 import 自 s596/s600/s601,未改一行;seed=120)+ _reports/absorb_input/T-120_stress.md 与 .json(7 资产 BTC/ETH/XRP/BNB/XAUUSD/SPY/AGG)。三组压力:① 闪崩 100 次插入,② 出场推迟 3 天,③ 120 天 σ=4%/日 横盘 100 次。要点(中位 / p05 / p95):闪崩日 H 全 −35%,F/FB 多数 0(已空仓)、少数跟跌 ~−45%,X1V 当日减半 ~−17.5%,PD13 多头时跟跌、空仓时 0;30 天累计:F/FB/X1V 在 BTC 上中位 −12%~−20%、p05 可跌 ~−60%。出场推迟 3 天:加密腿全面退化(BTC X1V ΔCAGR −18.8pp、BNB F −11.2pp、ETH FB −9.0pp),SPY/XAUUSD/AGG 影响小(X1V 在 SPY 上仅 −0.3pp、XAUUSD PD13 −0.4pp);X1V 的高频出场在加密上是对的方向,在股债上是不必要的磨损。120 天横盘:F/FB/X1V 在加密上手费中位 0.24-0.47% / 进出 1-3 次 / 相对持有 −16pp ~ −18pp 中位损耗(尾部分位损耗可达 −89pp ~ −205pp);PD13 不出场(0 次),损耗 −5pp ~ −9pp 中位,是横盘里成本最低的臂。XAUUSD/SPY/AGG 上 F/FB 横盘磨损中位 ~ −20pp、PD13 ~ −9pp。未跑零分布 / A/B 比较 — 只到事实层。Python 3.14.3 / darwin-arm64。"
 }
