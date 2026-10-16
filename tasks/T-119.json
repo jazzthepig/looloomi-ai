@@ -1,9 +1,13 @@
 {
   "id": "T-119",
   "owner": "lane-a",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-16",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-16",
+    "value": "走步自适应(每年用过去 3 年挑 Calmar 最好的一套)8 个资产里 7 个输给固定持有或固定 X1V,挑中的多半就是 X1V ⇒ 定一套照做比按近况换好(台账 S-602 模拟四;统计没走 ab_test,单路径描述)。"
+  },
   "title": "S-602 模拟四:走步自适应 —— 会换策略的交易员是否比死守一套好",
   "source": "Jazz 10-16「再多做几种模拟,模拟哦,不是简单回测」;台账 §S-602 协议",
   "allowed_paths": [
@@ -21,5 +25,5 @@
     "expect": "脚本 docs/research/t119_walk_forward.py + _reports/absorb_input/T-119_walk_forward.md;卡改 in_review,推 lane-a/T-119。"
   },
   "prior_value": "S-600 / S-601 都只在一条历史路径上;这一组回答换路径、换环境、换做法之后还站不站得住。",
-  "notes": "2026-10-16 Seth 开卡。\n2026-10-16 Seth §Seth-1016f @lane-a T-119 —— 退回(CHANGES,只变基 + 勘误,不改数字):分支基于旧 main,T-119.json 与 BOARD.md 会和 main 上的卡冲突、BOARD.md 会把别的卡状态倒回去。见 MINIMAX_SYNC §Seth-1016f。"
+  "notes": "2026-10-16 Seth 开卡。\n2026-10-16 Seth §Seth-1016f @lane-a T-119 —— 退回(CHANGES,只变基 + 勘误,不改数字):分支基于旧 main,T-119.json 与 BOARD.md 会和 main 上的卡冲突、BOARD.md 会把别的卡状态倒回去。见 MINIMAX_SYNC §Seth-1016f。\n2026-10-17 lane-a 交付。脚本 docs/research/t119_walk_forward.py:6 套规则一律 import s600.trade_path / s601.path + vol_scale / s596.gross_path;收益走 s596.daily_returns(10 bp 成本 + 资金费)。报告 /Volumes/CometCloudAI/cometcloud-local/research/_reports/absorb_input/T-119_walk_forward.md (+ .json)。测得全期 walk-forward total_x vs 固定 H vs 固定 X1V:BTC 19.4x vs 22.2x vs 20.6x(8 年);ETH 15.5x vs 18.5x vs 23.6x(8);XRP 1.04x vs 3.82x vs 3.11x(8);BNB 17.3x vs 53.3x vs 28.1x(7);LTC 0.42x vs 0.42x vs 0.20x(5);ADA 0.15x vs 0.17x vs 0.89x(5);LINK 0.35x vs 0.64x vs 1.06x(5);DOGE 0.72x vs 0.47x vs 1.42x(5)。**仅 DOGE WF 微弱超 H(+24%);其余 7 个资产 WF 不如固定 X1V 或 H**。选中频次 X1V 占多数(尤其 BTC/ETH 5–6/8 年)。**结论探索性:在 BTC/ETH 长周期里死守 X1V ≥ 走步挑(典型走了也是挑回 X1V);XRP/BNB/LTC/ADA/LINK 上 WF 全部输 H 或 X1V —— 走步自适应在 2019–2026 这段样本上没有统计意义优势。** 统计未走 apparatus.ab_test(单组 time-series,没有 B 与 fixed 作正式的 mean_block 对照);apparatus 里没有专为 walk-forward 步对步对照的接口,如要正式得新写 —— 见最终回复。"
 }
