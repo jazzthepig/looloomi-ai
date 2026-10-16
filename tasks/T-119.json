@@ -21,5 +21,5 @@
     "expect": "脚本 docs/research/t119_walk_forward.py + _reports/absorb_input/T-119_walk_forward.md;卡改 in_review,推 lane-a/T-119。"
   },
   "prior_value": "S-600 / S-601 都只在一条历史路径上;这一组回答换路径、换环境、换做法之后还站不站得住。",
-  "notes": "2026-10-16 Seth 开卡。"
+  "notes": "2026-10-16 Seth 开卡。\n2026-10-16 Seth §Seth-1016f @lane-a T-119 —— 退回(CHANGES,只变基 + 勘误,不改数字):分支基于旧 main,T-119.json 与 BOARD.md 会和 main 上的卡冲突、BOARD.md 会把别的卡状态倒回去。见 MINIMAX_SYNC §Seth-1016f。"
 }

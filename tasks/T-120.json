@@ -21,5 +21,5 @@
     "expect": "脚本 docs/research/t120_stress.py + _reports/absorb_input/T-120_stress.md;卡改 in_review,推 lane-c/T-120。"
   },
   "prior_value": "S-600 / S-601 都只在一条历史路径上;这一组回答换路径、换环境、换做法之后还站不站得住。",
-  "notes": "2026-10-16 Seth 开卡。"
+  "notes": "2026-10-16 Seth 开卡。\n2026-10-16 Seth §Seth-1016f @lane-c T-120 —— 退回(CHANGES):闪崩插入只改了一个收盘价、次日整段反弹抵消;出场推迟把入场也推迟了;进出次数计数口径对 PD13 恒为 0;未用 apparatus、报告写入路径与回复不符。见 MINIMAX_SYNC §Seth-1016f。"
 }
