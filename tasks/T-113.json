@@ -1,0 +1,25 @@
+{
+  "id": "T-113",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-16",
+  "verified": null,
+  "title": "Chubb(CB)与 Welltower(WELL)的历年总股数:SEC 结构化数据三种口径都是空的,从 10-K / 10-Q 封面原句取",
+  "source": "World50 周更循环 mcap v18:139 / 141,只剩 CB、WELL「SEC 里没有可用的股数」;Seth 核过 data.sec.gov companyconcept:CB 的 dei / us-gaap 股数概念 units 全空(按类别成员打的标签,API 不收)",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-113.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "两家各自 2015 → 2026 每份 10-K(加最新一份 10-Q)封面「shares outstanding」原句:CSV(Mac 数据根 research/t113/cover_shares.csv)列 key,period_end,filed,accession,shares,phrase。Welltower 若封面同时列 Welltower Inc. 与运营合伙,只取 Inc. 的普通股;Chubb 只取普通股(扣库存股按封面写的口径)。每家写完用「最近收盘 × 股数」对一次公开市值。每做完一家追加写一次。",
+    "expect": "CSV + 卡 notes 汇总;卡改 in_review,推 lane-b/T-113。"
+  },
+  "prior_value": "两家都在 World50 候选池,缺股数 ⇒ 永远进不了排名。",
+  "notes": "2026-10-16 Seth 开卡,排在 T-092 之后。和 T-105 的 SEC_PREFIX 同法(EDGAR 全文检索可以先定位每份封面)。"
+}

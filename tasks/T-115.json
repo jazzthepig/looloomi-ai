@@ -1,0 +1,25 @@
+{
+  "id": "T-115",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-16",
+  "verified": null,
+  "title": "沙特阿美(2222.SR)日线与股数:EODHD 404,找一手、免费的来源(沙特交易所 / 公司 IR),只做研究产物",
+  "source": "World50 前 50 的门槛约 3,000 亿美元;阿美约全球前 10,没有日线 ⇒ 排名里少了一个前 10。Jazz 10-15「现阶段不买付费数据」、10-14「本地上市从本国交易所取」",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-115.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "① 找来源:沙特交易所(saudiexchange.sa)或阿美 IR 能下的日收盘历史(2019-12-11 上市起),写清网址、是否需登录、使用条款里对下载 / 再使用的说法;**不用 Yahoo / Investing 之类的聚合站,不绕过任何拦截**。② 能下就落 CSV(Mac 数据根 research/t115/aramco_daily.csv:d,close_sar,source_url),并与公开的几个时点(上市价 32 里亚尔、2024 增发价等)对一次;③ 股数:上市起每年一行(含 2023 年起的红股 / 拆股、2024 二次发行),一手来源;④ 拿不到就写清卡在哪一步,不要猜。",
+    "expect": "CSV + _reports/absorb_input/T-115_aramco.md;卡改 in_review,推 lane-c/T-115(只放卡与指针)。"
+  },
+  "prior_value": "阿美进不进 World50 直接改变前 50 的成员与权重;缺它要在产品说明里明说。",
+  "notes": "2026-10-16 Seth 开卡。入库(新的价格来源)归 Seth(规则 3b)。"
+}
