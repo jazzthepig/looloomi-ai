@@ -1,0 +1,25 @@
+{
+  "id": "T-110",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-16",
+  "verified": null,
+  "title": "World50 扩池里 21 个本地上市公司的历年总股数(有价、没股数 ⇒ 现在进不了排名)",
+  "source": "Jazz 10-16「前 180 就可以」;周更循环 mcap 段 not_sec_listed 32 个,其中 21 个 ohlcv_daily(eodhd)有 2015 起日线、没有股数",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-110.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "名字(按现在市值大小先做大的):RMS.PA SIE.XETRA DTE.XETRA ALV.XETRA AIR.PA CBA.AU SU.PA SAF.PA AI.PA IBE.MC ABBN.SW RR.LSE CFR.SW PRX.AS INVE-B.ST 3968.HK 601628.SHG 601088.SHG 0883.HK 2308.TW 601138.SHG。每家 2014-12-31 起每年至少一行「已发行总股数(扣库存股)」,遇拆股 / 合股 / 回购注销 / 增发的年份多给一行;多类股要合计并写清(INVE-B = A + B;CFR = A + B 按经济权益折算写明口径;H + A 两地上市 = 两地合计,港交所 FF301 月报表最好,和已入库的 1398.HK 同法)。CSV 列:key,period_end,available_date,shares,source_url,note —— available_date = 这个数第一次公开的日期(年报 / 公告发布日),按时点用;source_url 必须是一手来源(公司年报 PDF、交易所公告),不是聚合网站。**每做完一家就追加写一次 CSV**(上一轮 B 道到 120 步上限、产物在 /tmp 全丢了)。不调任何付费 API;只用 web 抓一手文件。",
+    "expect": "Mac 数据根 research/t110/exchange_shares.csv + _reports/absorb_input/T-110_local_shares.md(每家:口径、几行、和价格乘出来的最新市值对不对得上公开市值,差多少);卡改 in_review。做不完就写清做到哪家。"
+  },
+  "prior_value": "World50 = 世界前 50 市值;这 21 家里至少 Hermès、Siemens、Deutsche Telekom、Allianz、CBA 处在前 50–100 的边界,缺股数 = 排名里永远没有它们。",
+  "notes": "2026-10-16 Seth 开卡。另 11 个(东京 6、印度 2、沙特阿美、星展、裕信)EODHD 没日线(404),不在本卡范围 —— 现阶段不买付费数据。"
+}
