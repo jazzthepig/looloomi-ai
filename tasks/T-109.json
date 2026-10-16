@@ -1,9 +1,13 @@
 {
   "id": "T-109",
   "owner": "lane-a",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-16",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "value": "交付齐(脚本 + 报告 + 逐次选名)。数据源与卡不同 —— 卡写 cis_rebuild_daily v1.3,A 道读不到 Supabase,用了 Mac 的 cis_history.db(F/O 2024-01-30 起、42 名宇宙);这是接口缺口不是纪律问题。Seth 用 v1.3 + asset_mcap_daily 在 SQL 里重做(台账 S-589 补记):全段 TOP6 +168% 对门内等权 +211%,分不开;同窗口 2024-02 → 2026-03 两套数据源 TOP6 对门内等权的符号相反 ⇒ 这一挑法没有稳定证据,前向照记,另加 FO6 臂(S-591)。",
+    "at": "2026-10-16"
+  },
   "title": "山寨龙头腿 v1(S-589):按预注册规则做 2023–2026 的描述性回放 —— 只描述、不评判(判据留给前向)",
   "source": "Jazz 10-16「山寨只拿基本面和资金面好的龙头」;S-587(质量因子留出段 5/5)+ S-589 探索(CIS F + O 在龙头里 IC +0.121)",
   "allowed_paths": [
@@ -21,5 +25,5 @@
     "expect": "Mac 数据根 _reports/absorb_input/T-109_alt_leaders_replay.md + 汇总表贴卡 notes;脚本在 docs/research/;卡改 in_review。"
   },
   "prior_value": "S-589 探索:F + O + 质量 4 周 IC +0.124;F + O 在高质量一半 +0.121。",
-  "notes": "2026-10-16 Seth 开卡。"
+  "notes": "2026-10-16 lane-a 交付(描述性,非判定)。\n\n**最终路径**:\n- 报告(md + json):`/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-109_alt_leaders_replay.{md,json}`\n- 脚本:`docs/research/T-109_alt_leaders_replay.py`(用具名 `apparatus.long_return / price_on_or_after / ab_test / percentile_of`;数据路径同 §S-589 prereg 用的 `cis_history.db` + `research/crypto_daily/panel.json`)\n\n**数据覆盖**(照实登记):F/O 评分最早 2024-01-30 ⇒ **2023 整段无调仓**(是数据缺口,不是策略判断);实际窗口 2024-02-02 → 2026-03-27 = **29 次调仓**(2024×12、2025×13、2026 YTD×4)。\n\n**汇总表**(描述性):\n\n| 段 | n | A 累计 | A 年化 | A maxDD | B 累计 | B 年化 | B maxDD | C 累计 | A−B 总差 | A−C 总差 | 平均合格 | A 换手 | A 在随机6 中位分位 |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n| 2023 | 0 | — | — | — | — | — | — | — | — | — | — | — | — |\n| 2024 | 12 | +88.40% | +98.61% | -44.56% | +109.67% | +123.01% | -38.35% | +56.28% | -21.27% | +32.12% | 10.8 | +38.89% | 66.5% |\n| 2025 | 13 | -47.50% | -47.50% | -41.42% | -39.92% | -39.92% | -38.29% | -13.06% | -7.58% | -34.44% | 9.8 | +51.28% | 26.5% |\n| 2026 YTD | 4 | -27.45% | -64.75% | -20.55% | -28.19% | -65.91% | -21.71% | -26.14% | +0.74% | -1.31% | 7.2 | +25.00% | 53.0% |\n| FULL | 29 | -28.23% | -13.82% | -69.40% | -9.53% | -4.39% | -65.05% | +0.36% | -18.70% | -28.59% | 9.9 | +42.53% | 31.5% |\n\n随机 6 名 4 周收益分布 p5=-24.35% / p50=-1.25% / p95=+41.75%。\n\n**A vs B apparatus.ab_test**(4 周节奏,mean_block=3,days_per_year=13,seed=589):FULL verdict=分不开,ratio_b/a=1.261,underpowered=True;**per card instruction「只描述,不写通过/不通过」—— 报告把 verdict 字段仅作数值登记,不作为本研究结论**。\n\n**合规**:零分布 / 盈亏 / A-B 全用具名 apparatus 函数(`long_return` / `price_on_or_after` / `ab_test` / `percentile_of`);不动 `src/`(`allowed_paths` 仅 docs/research/、tasks/);32 bp 单边换手按 §(上一调仓 − 本调仓)|∪|(本 − 上一)| / 6 名 平均。**完全没有判定语。**"
 }
