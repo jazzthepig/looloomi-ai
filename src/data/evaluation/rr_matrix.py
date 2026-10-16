@@ -637,7 +637,9 @@ async def run_once() -> dict:
     if bench is None or bench.dropna().empty:
         return {"ok": False, "refused": False, "written": 0, "reason": "① NAV 读不到 —— 不出 rr_matrix"}
     as_of = pd.Timestamp(bench.dropna().index.max())
-    feats = ["regime_coverage_30d"] + list(REGIME_SHARE_FEATURES)
+    # 10-16:T-068 的 6 个价格特征格子只在 compute_rr_matrix 里算,这里的读取漏了 dist_200 / vol_pct_3y ——
+    # 于是 trend_vol 全是 UNKNOWN、6 格一行都不写(上线后 rr_matrix_daily 只有 macro 格)。
+    feats = ["regime_coverage_30d"] + list(REGIME_SHARE_FEATURES) + [STATE_DIST_200_FEATURE, STATE_VOL_PCT_3Y_FEATURE]
     st = await _read_all("state_daily", {"select": "d,entity,feature,value", "entity": "eq.panel",
                                          "feature": "in.(" + ",".join(feats) + ")", "order": "d.asc"})
     if not st:

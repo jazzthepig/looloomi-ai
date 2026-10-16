@@ -18,6 +18,7 @@
 | open | T-111 | lane-a | World50 本地上市股数(第二批,与 T-110 分工):9 家 + 西门子历年 —— H + A 两地、台湾、荷兰、瑞典、西班牙 | CSV + _reports/absorb_input/T-111_local_shares_2.md(每家口径、几行、市值对照);卡改 in_review,推 lane-a/T-111 分支(只放卡与 docs/research 指针)。 | 这些名字有日线没股数 ⇒ 永远进不了 World50 排名;招行、中国人寿、神华、中海油、西门子都在全球前 100–200 附近。 |  |
 | open | T-069 | lane-b | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
 | open | T-092 | lane-b | 慢的逆向(Jazz 10-14「甘于人后」):三条规则按时点回放 + 打乱对照 —— ② 暴涨名移回 BTC、③ 主流暴跌后加推力、探索仓做空 30 名外暴涨名 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:三条规则 × 三个窗口的总收益 / 最大回撤 / 相对基准的超额 / 对照分位 / 事件数。不改任何前向账本。 | S-569(探索性):非 BTC 名 z30 ≥ 3 之后 30 日相对 BTC −16.4%(t+7 进,基准 −5.8%,81% 跑输),90 日 −38.7%(基准 −16.3%);BTC / ETH z30 ≥ 2 之后 90 日 +12.5% / +22.3%(基准 +6.3% / +6.6%)⇒ 不对主流的暴涨做逆向;BTC z30 ≤ −2 之后 90 日 +10.3%(9 周)。 |  |
+| open | T-113 | lane-b | Chubb(CB)与 Welltower(WELL)的历年总股数:SEC 结构化数据三种口径都是空的,从 10-K / 10-Q 封面原句取 | CSV + 卡 notes 汇总;卡改 in_review,推 lane-b/T-113。 | 两家都在 World50 候选池,缺股数 ⇒ 永远进不了排名。 |  |
 | open | T-091 | lane-c | 非价格状态在 BTC 转折点上是否领先价格:资金费 / 持仓量 / 稳定币供给 / 主动买入占比 vs 价格动量,对照随机日期 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:每个特征 × 14 个拐点的领先 / 滞后天数、中位数、随机分位、错误翻转率。只测量,不改任何账本或循环。 | S-568:③ 在每个顶部推力 ≥ 1、组合层在 +190% / +97% 两段上涨里只有 ≈ 0.5 仓位;S-567:周频价格 / 宽度择时四种构造都分不开随机。非价格状态在转折点上的时序从没量过。 |  |
 | open | T-110 | lane-c | World50 扩池里 21 个本地上市公司的历年总股数(有价、没股数 ⇒ 现在进不了排名) | Mac 数据根 research/t110/exchange_shares.csv + _reports/absorb_input/T-110_local_shares.md(每家:口径、几行、和价格乘出来的最新市值对不对得上公开市值,差多少);卡改 in_review。做不完就写清做到哪家。 | World50 = 世界前 50 市值;这 21 家里至少 Hermès、Siemens、Deutsche Telekom、Allianz、CBA 处在前 50–100 的边界,缺股数 = 排名里永远没有它们。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
@@ -115,4 +116,4 @@
 | done | T-081 | seth | 代币迁移接段:MKR→SKY(1:24000)、MATIC→POL(1:1)—— 宇宙只放新币,生效日按成交交叉(CoinDesk / CF Benchmarks 做法),历史按比例接,统一标准 v1.3 | SKY 的分不再因市值 0 被压到底;POL 迁移前用的是 MATIC | MKR 自 2025-06-05 起在标准里市值 0、基本面支柱 0,正式档 UNDERWEIGHT(实时 55.8 NEUTRAL);POL 迁移前 11 个月用的是日成交 60 万美元的薄币 | 10-12 正式批次含 SKY、POL,无 MKR、MATIC;/cis/universe 有 SKY 无 MKR。剩 Minimax 换 T1 宇宙(Mac 侧,SYNC §Seth-1012a)不在本卡验收内。 @ 2026-10-13T13:45Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 15 · claimed 6 · blocked 4 · in_review 5 · done 81 · dropped 1
+open 16 · claimed 6 · blocked 4 · in_review 5 · done 81 · dropped 1

@@ -83,3 +83,45 @@ def test_rows_for_db_are_strict_json():
     rows = rr.rows_for_db(df, idx[-1])
     json.dumps(rows, allow_nan=False)
     assert all(r["d"] == "2026-03-01" for r in rows)
+
+
+def test_run_once_reads_the_price_features_it_slices_on(monkeypatch):
+    """10-16:run_once 只读了 regime 份额,没读 dist_200 / vol_pct_3y ⇒ T-068 的 6 格上线后一行没有。"""
+    import asyncio
+    import src.data.accounting.registry as reg
+    import src.data.style.header as hdr
+    import src.api.store as store
+    idx = pd.date_range("2026-01-01", periods=120, freq="D")
+    bench = pd.Series(np.linspace(1, 1.3, 120), index=idx)
+    seen: dict = {}
+
+    async def navs():
+        return {"x": bench * np.linspace(1, 1.05, 120)}, None
+
+    async def core(start=None):
+        return bench
+
+    async def read_all(table, params):
+        seen[table] = params
+        rows = []
+        for d in idx:
+            rows += [{"d": d.date().isoformat(), "entity": "panel", "feature": "dist_200", "value": 0.1},
+                     {"d": d.date().isoformat(), "entity": "panel", "feature": "vol_pct_3y", "value": 0.5},
+                     {"d": d.date().isoformat(), "entity": "panel", "feature": "regime_coverage_30d", "value": 1.0}]
+        return rows
+
+    written: list = []
+
+    async def upsert(table, rows, on_conflict):
+        written.extend(rows)
+        from types import SimpleNamespace
+        return SimpleNamespace(ok=True, why=None)
+    monkeypatch.setattr(reg, "load_navs", navs)
+    monkeypatch.setattr(reg, "core_nav", core)
+    monkeypatch.setattr(hdr, "_read_all", read_all)
+    monkeypatch.setattr(store, "supabase_upsert_table", upsert)
+    out = asyncio.run(rr.run_once())
+    assert out["ok"], out
+    feats = seen["state_daily"]["feature"]
+    assert rr.STATE_DIST_200_FEATURE in feats and rr.STATE_VOL_PCT_3Y_FEATURE in feats
+    assert any(r["cell"] == "trend_vol=UP_MID" for r in written), sorted({r["cell"] for r in written})
