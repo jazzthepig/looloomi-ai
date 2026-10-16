@@ -1,9 +1,13 @@
 {
   "id": "T-103",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-15",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "value": "分不开:EW×(Mom+Growth) 对 EW ratio 1.174、MDE 3.12 pp/年、功效不足;EW×Mom 对 EW 1.205、MDE 4.11 pp;纯增长臂 1.064。CAGR 2016-01→2026-09:EW 15.42 / InvVol 13.28 / EW×Mom 17.44 / Cap 16.22 / EW×Growth 16.08 / EW×MomGrowth 17.15(%/年)。脚本随 Seth 的提交进 main(分支带了 PROJECT_STATE 改动,不整支合并)",
+    "at": "2026-10-16"
+  },
   "title": "World50 的增长分:按时点的营收增长 → 预注册的 EW×(Mom+Growth) 臂(S-581 留着没跑的那一条)",
   "source": "Jazz 10-14 World50 =「等权 × 有界的增长 / 动量分」(DECISIONS);S-581 预注册里 EW×(Mom+Growth) 臂「等营收数据到了再跑」;10-15 营收原始事实入库(world50_revenue,周更循环的 revenue 段)",
   "allowed_paths": [
@@ -21,5 +25,5 @@
     "expect": "_reports/absorb_input/T-103_growth_arm.md(两半:检验 + 挖掘;四臂 + 新臂的年化 / 波动 / 回撤 / 卡玛 / 换手 + A/B 区间与 MDE)+ 台账 M- 条目;脚本在 docs/research/;卡改 in_review。"
   },
   "prior_value": "S-581:EW 17.4% / EW×Mom 18.0%(分不开,MDE 3.4%/年);S-582(lane-c,视作 M-582c):领先在组与名字两层都不延续。",
-  "notes": "2026-10-15 Seth 开卡。world50_revenue 由下一轮周更循环写入(10-15 部署后约 20 分钟);先查 select count(*), count(distinct key) from world50_revenue,为 0 就先写预注册、等数据。\n面板要含新数据(交易所股本、20-F 封面、营收不在面板里,营收直接查表):在 Mac 上跑 `python3 docs/research/t099_export_panel.py /Volumes/CometCloudAI/cometcloud-local/research/t103/panel.json 2026-09`(读 Mac .env 的 SUPABASE_URL / SUPABASE_KEY,key 不打印、不写文件),再用它跑回放;面板是供应商数据,不进 git。S-581 的旧面板(research_data/t099_panel.json)只作对照。"
+  "notes": "2026-10-16 lane-c 跑完(world50_revenue 5,799 行、83 distinct key、KO/CRWD/NVS/HSBC/TCEHY 5 家无营收行记中性 1,ARM 37/47 + GEV 40/47 中性比例过高,因 IPO/分拆晚);面板 t099_export_panel.py /Volumes/CometCloudAI/cometcloud-local/research/t103/panel.json (截至 2026-09);增长分 json 同目录 growth_scores.json;报告 _reports/absorb_input/T-103_growth_arm.md。\n实测:6 臂 CAGR(129 个月,2016-01 → 2026-09)= EW 15.42% / InvVol 13.28% / EWxMom 17.44% / Cap 16.22% / EWxGrowth 16.08% / EWxMomGrowth 17.15%。apparatus.ab_test(mean_block=3, days_per_year=12):\n- B(EWxMom vs EW):ratio=1.205, p(B≤A)=0.139, MDE/year=4.11pp, **underpowered=True, verdict=分不开**\n- C(EWxMomGrowth vs EW):ratio=1.174, p(B≤A)=0.101, MDE/year=3.12pp, **underpowered=True, verdict=分不开**\n- E(EWxGrowth vs EW) — exploratory:ratio=1.064, verdict=分不开\n- C vs B (边际):ratio=0.974, verdict=分不开\n结论:EW×MomGrowth 没把 EW×Mom 从「分不开」拉到「跑赢」;纯增长分(EWxGrowth)也没跑赢 EW。所有 A/B 都在 MDE 以内、功效不足。M-583 §3 立的「若 C verdict=B>A 但 E 没跑赢,说明增长分得靠与动量配对才有用」没触发,因为两条臂都失败。\n探索性发现(非判据):6 臂 CAGR 最高 EWxMom 17.44%,最低 InvVol 13.28%;Cap 16.22% 的回撤最深 -26.10%。具体需另立预注册、新数据 + 零信号对照。\n下一步:不立新卡(本卡交付后,Seth 退回时再叫醒)。\n\n2026-10-16 Seth 审:结论同意。附带后果记在台账 S-583 更正:这次在新面板上跑出了 S-581 的四条臂,S-583 重跑不再是盲的。"
 }
