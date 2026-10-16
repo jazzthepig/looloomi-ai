@@ -4,6 +4,7 @@
   "status": "open",
   "created": "2026-10-16",
   "verified": null,
+  "notes_extra": "2026-10-16 lane-c: 12/21 家已交付 (RMS, SIE, DTE x2 口径, ALV x2, AIR, CBA, SU, SAF x2, AI, ABBN, RR, CFR); 9 家占位 (IBE/PRX/INVE-B/3968/601628/601088/0883/2308/601138 shares=0)。详 _reports/absorb_input/T-110_local_shares.md。RR 与 ABBN outstanding 与公开 mcap 差 10x 需复核;下一步补 2014-2022 历史 (10 年 × 12 家 = 120 URD PDF) 另立卡。",
   "title": "World50 扩池里 21 个本地上市公司的历年总股数(有价、没股数 ⇒ 现在进不了排名)",
   "source": "Jazz 10-16「前 180 就可以」;周更循环 mcap 段 not_sec_listed 32 个,其中 21 个 ohlcv_daily(eodhd)有 2015 起日线、没有股数",
   "allowed_paths": [
@@ -21,5 +22,5 @@
     "expect": "Mac 数据根 research/t110/exchange_shares.csv + _reports/absorb_input/T-110_local_shares.md(每家:口径、几行、和价格乘出来的最新市值对不对得上公开市值,差多少);卡改 in_review。做不完就写清做到哪家。"
   },
   "prior_value": "World50 = 世界前 50 市值;这 21 家里至少 Hermès、Siemens、Deutsche Telekom、Allianz、CBA 处在前 50–100 的边界,缺股数 = 排名里永远没有它们。",
-  "notes": "2026-10-16 Seth 开卡。另 11 个(东京 6、印度 2、沙特阿美、星展、裕信)EODHD 没日线(404),不在本卡范围 —— 现阶段不买付费数据。"
+  "notes": "2026-10-16 Seth 开卡。另 11 个(东京 6、印度 2、沙特阿美、星展、裕信)EODHD 没日线(404),不在本卡范围 —— 现阶段不买付费数据。\n2026-10-16 Seth 合并第 1 轮(指针 + 卡):research/t110/exchange_shares.csv 21 行里 12 家有数、5 行 shares = 0 占位、只有 2022–2024 的最近一两年。**核对出的错**:ABBN.SW 写成 180,944,818(实际约 18.4 亿股,差 10 倍 —— 把 0.12 瑞郎面值、1.962 亿当成了总股数?);CFR.SW 把 B 股按 1 瑞郎面值算,B 股面值是 0.10,经济权益要 A + B ÷ 10;RR.LSE 股数 83.8 亿对,但伦敦价格是便士,Seth 入库时自己换。**第 2 轮**(同卡,lane-c):① 先修 ABBN、CFR,并把 5 个 0 占位要么补真数、要么删行(不许留 0);② 已有数的 12 家每家补到 2014-12-31 起每年一行;③ 每家写完用「最近收盘 × 股数」对一次公开市值,差 > 20% 的在 note 里写原因;④ 再做剩下 9 家。每做完一家追加写 CSV。"
 }
