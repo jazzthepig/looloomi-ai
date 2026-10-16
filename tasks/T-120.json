@@ -1,0 +1,25 @@
+{
+  "id": "T-120",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-16",
+  "verified": null,
+  "title": "S-602 模拟五:压力情景 —— 单日 −35% 闪崩、交易所宕机 3 天、长横盘磨损",
+  "source": "Jazz 10-16「再多做几种模拟,模拟哦,不是简单回测」;台账 §S-602 协议",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-120.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "照台账 §S-602「模拟五」:① BTC 历史随机 100 个位置插入单日 −35%(其后接真实收益),报 H / F / FB / X1V / PD13 当天损失、之后 30 天损失与最终年化 / 回撤的分布;② 每个出场信号推迟 3 天成交(宕机),报退化;③ 随机插入 120 天日波动 4%、无趋势的震荡段(各 100 次),报手续费合计与反复进出次数、相对持有的损耗。规则一律从 docs/research/s600_tom_trader.py(F / FB)、docs/research/s601_drawdown.py(X1V / V,path() 与 vol_scale())、docs/research/s596_tom_pyramid.py(PD13,gross_path())import,**不许自己重写规则**;收益与成本用 s600_tom_trader.returns();统计走 src/data/evaluation/apparatus.py;随机种子写死;数据 Mac 数据根 research/w50_daily/close.json(BTC / ETH / XRP / BNB / XAUUSD / SPY / AGG)与 research/crypto_daily/panel.json。",
+    "expect": "脚本 docs/research/t120_stress.py + _reports/absorb_input/T-120_stress.md;卡改 in_review,推 lane-c/T-120。"
+  },
+  "prior_value": "S-600 / S-601 都只在一条历史路径上;这一组回答换路径、换环境、换做法之后还站不站得住。",
+  "notes": "2026-10-16 Seth 开卡。"
+}

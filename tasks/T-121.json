@@ -1,0 +1,25 @@
+{
+  "id": "T-121",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-16",
+  "verified": null,
+  "title": "S-602 模拟六:组合 —— BTC / ETH / 黄金 / 美股 / 债五条腿风险平价,加密腿持有 vs X1V",
+  "source": "Jazz 10-16「再多做几种模拟,模拟哦,不是简单回测」;台账 §S-602 协议",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-121.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "照台账 §S-602「模拟六」:每月月初按过去 60 天波动的倒数配权(五条腿:BTC、ETH、XAUUSD、SPY、AGG),月内不调;加密两条腿分别用持有与 X1V(敞口照 X1V 乘在该腿上,空出来的部分留现金);对照 60/40(SPY/AGG,月度再平衡)与全持 BTC;2016 起。报年化 / 最大回撤 / Calmar / 最差 12 个月 / 各腿贡献。先写一条红测:权重每月加总 = 1。规则一律从 docs/research/s600_tom_trader.py(F / FB)、docs/research/s601_drawdown.py(X1V / V,path() 与 vol_scale())、docs/research/s596_tom_pyramid.py(PD13,gross_path())import,**不许自己重写规则**;收益与成本用 s600_tom_trader.returns();统计走 src/data/evaluation/apparatus.py;随机种子写死;数据 Mac 数据根 research/w50_daily/close.json(BTC / ETH / XRP / BNB / XAUUSD / SPY / AGG)与 research/crypto_daily/panel.json。",
+    "expect": "脚本 docs/research/t121_portfolio.py + _reports/absorb_input/T-121_portfolio.md;卡改 in_review,推 lane-b/T-121。"
+  },
+  "prior_value": "S-600 / S-601 都只在一条历史路径上;这一组回答换路径、换环境、换做法之后还站不站得住。",
+  "notes": "2026-10-16 Seth 开卡。"
+}

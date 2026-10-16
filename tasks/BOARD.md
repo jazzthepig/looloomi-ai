@@ -18,9 +18,12 @@
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
 | open | T-089 | lane-a | 完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改 | 从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。 |  |
 | open | T-117 | lane-a | S-597:篮子里的 Trader Tom —— 让赢家跑(不调回等权)、砍跌 25% 的输家把钱给赢家;World50 与加密前 15 各一套 | 脚本 docs/research/t117_s597_baskets.py + _reports/absorb_input/T-117_s597.md;卡改 in_review,推 lane-a/T-117。 | Trader Tom 方向的第一批证据;预注册在台账,lane 只实现不改。 |  |
+| open | T-119 | lane-a | S-602 模拟四:走步自适应 —— 会换策略的交易员是否比死守一套好 | 脚本 docs/research/t119_walk_forward.py + _reports/absorb_input/T-119_walk_forward.md;卡改 in_review,推 lane-a/T-119。 | S-600 / S-601 都只在一条历史路径上;这一组回答换路径、换环境、换做法之后还站不站得住。 |  |
 | open | T-069 | lane-b | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
+| open | T-121 | lane-b | S-602 模拟六:组合 —— BTC / ETH / 黄金 / 美股 / 债五条腿风险平价,加密腿持有 vs X1V | 脚本 docs/research/t121_portfolio.py + _reports/absorb_input/T-121_portfolio.md;卡改 in_review,推 lane-b/T-121。 | S-600 / S-601 都只在一条历史路径上;这一组回答换路径、换环境、换做法之后还站不站得住。 |  |
 | open | T-091 | lane-c | 非价格状态在 BTC 转折点上是否领先价格:资金费 / 持仓量 / 稳定币供给 / 主动买入占比 vs 价格动量,对照随机日期 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:每个特征 × 14 个拐点的领先 / 滞后天数、中位数、随机分位、错误翻转率。只测量,不改任何账本或循环。 | S-568:③ 在每个顶部推力 ≥ 1、组合层在 +190% / +97% 两段上涨里只有 ≈ 0.5 仓位;S-567:周频价格 / 宽度择时四种构造都分不开随机。非价格状态在转折点上的时序从没量过。 |  |
 | open | T-118 | lane-c | S-598:周期 / 季节性机会挖掘(发现段 2014–2020,只看这一段) | 脚本 docs/research/t118_s598_seasonality.py + _reports/absorb_input/T-118_seasonality_discovery.md;卡改 in_review,推 lane-c/T-118。 | Trader Tom 方向的第一批证据;预注册在台账,lane 只实现不改。 |  |
+| open | T-120 | lane-c | S-602 模拟五:压力情景 —— 单日 −35% 闪崩、交易所宕机 3 天、长横盘磨损 | 脚本 docs/research/t120_stress.py + _reports/absorb_input/T-120_stress.md;卡改 in_review,推 lane-c/T-120。 | S-600 / S-601 都只在一条历史路径上;这一组回答换路径、换环境、换做法之后还站不站得住。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -121,4 +124,4 @@
 | done | T-112 | seth | 证据面接 World50 / 龙头腿 / 灵活组合三本新前向账本(另一条产品线,基准各自的,不进 ① 的配置层) | 部署后 /api/v1/proof/books 有 other_lines 三段;allocation_daily 的 book 集合不变 | 前向记录本身就是产品(ARCHITECTURE);三本账开账后若证据面看不到,等于没记。 | 部署 b28065e 后 /api/v1/proof/books 有 other_lines 段:六行(world50_ewxmom / world50_ew / alt_top6 / alt_fo6 / alt_gate_ew / flex_35_50_15)都是 not_started、opens 2026-12-31,how_to_read 四条;allocation_daily 的账本集合不变(三本不在登记表)。 @ 2026-10-16 |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 14 · claimed 6 · blocked 4 · in_review 7 · done 86 · dropped 1
+open 17 · claimed 6 · blocked 4 · in_review 7 · done 86 · dropped 1
