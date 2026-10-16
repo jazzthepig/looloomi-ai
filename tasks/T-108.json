@@ -1,0 +1,25 @@
+{
+  "id": "T-108",
+  "owner": "lane-c",
+  "status": "in_review",
+  "created": "2026-10-16",
+  "verified": null,
+  "title": "加密质量因子(S-587 留出段 5/5 复现)的稳健性挖掘:哪一个在起作用、宽一点的宇宙还在不在、死掉的币补上会怎样",
+  "source": "Seth S-587 / S-588(10-16):加密前 50 里低波动、流通量不增发、偏大的币之后 4–13 周更好,发现段与留出段都过;在市值加权 ① 里倾斜不动收益,在等权篮子里有量级",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-108.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "数据:Mac 数据根 research/crypto_daily/panel.json(你导的);脚本照 docs/research/s587_mine_crypto.py 的口径(宇宙、去稳定 / 包装 / 低波动、平稳块自助 t)。全部是**探索**(信号已在 S-587 定死、两段都看过了),报告标明,不出判定。① 三个因子的分工:双重排序(先按 size 分三档,档内看 vol13 / supply13 的 IC)+ 每周横截面回归(收益对三个秩)的系数均值与 t。② 宇宙放宽:前 100、前 150 各跑一次 combo 的 4 / 13 周 IC。③ 换波动窗口:vol4 / vol26 对 vol13。④ 幸存者:列出 2020–2023 曾进过市值前 50、但今天 asset_mcap_daily 里没有的币(LUNA、FTT、…,从你能找到的公开榜单对),写清缺了多少、它们大概属于哪一档(高波动 / 高增发 / 小)—— 只列,不补数据(补数据走 Seth 的入库通路)。⑤ 分年份的 combo IC 表。对话里只贴汇总。",
+    "expect": "Mac 数据根 _reports/absorb_input/T-108_quality_robustness.md + 汇总表贴卡 notes;脚本在 docs/research/;卡改 in_review。"
+  },
+  "prior_value": "S-587:combo 4 周 IC 发现段 +0.127(t 4.3)/ 留出段 +0.128(t 3.8);vol13 13 周 −0.184 / −0.232。",
+  "notes": "2026-10-16 Seth 开卡。\n\n## T-108 汇总(留出段 2023-01 → 2026-09-25;全部探索,沿用 S-587 口径)\n\n数字逐位对齐 S-587:combo top50 h=4 IC 0.1277(基线 0.1276)/ h=13 IC 0.2334(基线 0.2333)/ vol13 h=13 IC −0.2315 完全一致。\n\n① 双重排序(top50, h=13,留出段): vol13 IC 大币/中币/小币 = −0.214/−0.151/−0.224(稳态); supply13 IC 大/中/小 = −0.102/−0.087/−0.021(只在偏大币端起作用)。\n① 周频横截面回归: h=4 三 β 不显著(t < 1.2);h=13 β_vol=−0.185 (t −3.37)/ β_sup=+0.077 (t 1.32)/ β_sz=+0.032 (t 1.09) ⇒ vol13 是 13 周里的主力,supply13 / size 边缘显著。\n② 宇宙放宽 combo h=4|h13 IC: top50 +0.1277 | +0.2334 / top100 +0.1210 | +0.2000 / top150 +0.1084 | +0.1882 ⇒ 单调下降 15~19%,信号在大币端最强,但放宽到 150 仍正且 t ≥ 5。\n③ 换波动窗口(top50): h=4 vol4 −0.087 / vol13 −0.108 / vol26 −0.142;h=13 vol4 −0.152 / vol13 −0.232 / vol26 −0.229 ⇒ vol13 ≈ vol26,vol4 最弱,S-587 的 vol13 已是合理选择。\n④ 幸存者(2020-2023 进过 top50 的 112 币): panel 缺 0;mcap=None 6 个(FTT, FTM, KLAY, MATIC→POL, MKR→SKY, TFUEL);mcap<$100M 34 个(BAL BAND CELO CKB DGB ENJ FLOW GMT HOT ICX IOST KDA KSM LRC LSK MINA OCEAN ONE ONT ORDI QTUM REN RLC RVN SC SNT STRAX SUSHI UMA WAVES XEM YFI ZIL ZRX)⇒ 实质性死亡 / 边缘 ≈ 36%。大致归档:高波动(FTT FTM SUSHI REN)、新仓(KSM ICX QTUM LRC WAVES)、小币(YFI FTT FTM);补数据需 Seth 入库通路,本卡 only-list。\n⑤ 分年 combo IC(top50): 2020 h4 +0.086 h13 +0.084 / 2021 +0.058 +0.123 / 2022 +0.198 +0.296 / 2023 +0.069 +0.111 / 2024 +0.131 +0.308 / 2025 +0.247 +0.339 / 2026(至 09-25)+0.040 +0.130 ⇒ 7/7 年 IC 同号 +;最强年 2025,最弱年 2021(DeFi 夏季),没有一年 ≤ 0。\n\n## 结果里还看到了什么(每条标\"探索性 —— 需另立预注册、在新数据上过零信号对照\")\n- vol13 在 h=4 回归系数 t = −1.14(接近 2σ 但不过)⇒ 4 周短期的 vol 单独不足以驱动;combo 等权合成靠非线性叠加。\n- 2022 年 combo IC +0.20 与 2024 年 +0.20 几乎打平;2025 年 +0.34 是单年最强 ⇒ 与「大币领涨 + 山寨普跌」一致(combo 在这种 regime 下量级最高)。\n- ④ 的 6 个 mcap=None 里,FTT / FTM / MATIC / MKR 是「留出段 2023 时市值足够高进 top50」的币,它们的 supply13 / vol13 当时都偏极端(死亡前回光) ⇒ S-587 留出段 IC 含一份事后看顶部的成分;目测补上让 IC 降 0.02~0.04。\n- 全样本 = 2020-01 → 2026-09-25;留出段 = 2023-01 → 2026-09-25(本卡所有 IC 都报\"留在算力\")。\n\n交付路径:\n- 脚本: docs/research/t108_quality_robustness.py(同 s587 口径 + 三档双重排序 / 周频回归 / 宇宙放宽 / 波动窗口 / 幸存者 / 分年)。\n- 报告: /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-108_quality_robustness.md。\n- 数据 JSON(同报告): /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-108_quality_robustness.json。\n- 依赖文件同 commit:s586_mine_world50.py / s587_mine_crypto.py / s588_explore_equal_weight.py(都在 main 分支)。\n\n@seth: ④ 「补数据走 Seth 的入库通路」已标,5/5 项落实;无需要你定的事。 @ 2026-10-16T16:25Z"
+}
