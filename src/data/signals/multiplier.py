@@ -375,8 +375,15 @@ async def run_once() -> dict[str, Any]:
     w = await write_locked(TABLE, rows, key="arm", on_conflict="d,arm")
     if not w["ok"]:
         return {"ok": False, "refused": False, "written": w["written"], "reason": f"写入失败:{w['why']}"}
+    # S-600 / S-601:交易层前向(tom_trader)要每天记,不能等周更循环 —— 搭 ③ 的每小时循环;已写到昨天就只花一次查询
+    try:
+        from src.data.universe.forward_books import run_tom_trader
+        tom = await run_tom_trader(target.date().isoformat())
+    except Exception as e:  # noqa: BLE001 —— 交易层写不进去不该让 ③ 的回放算失败
+        tom = {"ok": False, "why": f"{type(e).__name__}: {str(e)[:160]}"}
     return {"ok": True, "refused": False, "written": w["written"], "reason": f"回放至 {target.date()}",
-            "eval": ev_old, "eval_u_cap_a1u": ev_new, "eval_tom_pd13": ev_tom, "stale_in_source": stale, "lock": w["lock"]}
+            "eval": ev_old, "eval_u_cap_a1u": ev_new, "eval_tom_pd13": ev_tom, "tom_trader": tom,
+            "stale_in_source": stale, "lock": w["lock"]}
 
 
 def _both_core_returns(px: pd.DataFrame, mcap_prev: pd.DataFrame, start: pd.Timestamp,

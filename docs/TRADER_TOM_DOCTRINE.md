@@ -210,6 +210,16 @@ it borrowed the strategy layer's 0.7–1.3 range; the trading layer has no such 
 
 Now recorded forward from 2026-10-16 as `tom_trader` (BTC, ETH, the core: hold / flat / rally / short side by side).
 
+## 10. Drawdown (S-601, Jazz: "the drawdown still needs work")
+
+The deep drawdowns did not come from holding through the fall — exposure averaged 0.24 in BTC's 2018 drawdown — but from
+**exiting late** (the 200-day line breaks after the top has already fallen 40–50%) and **false re-entries** in the bear.
+Tested on 12 coins the rules had never seen: a faster exit alone just moved the drawdown around; **scaling exposure down
+when volatility runs above its own two-year norm** made the drawdown shallower on all 12 (median 14pp), and combined with
+exiting on a 20-day low on all 12 (median 20pp, Calmar up). On BTC: −38.7% drawdown instead of −77.7%, 72.8% a year
+against 65.9% held. The price: it gives up a large part of the parabolic years (2017, 2023–24). Crashes almost always
+arrive with volatility, so being small when it is hot is the cheapest form of "small when wrong".
+
 ---
 
 *Extract the physics of crowd behavior, not the swagger of one trader. Build things that feel alive.*

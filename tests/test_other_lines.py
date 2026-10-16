@@ -18,7 +18,8 @@ def _navs(days):
     keys = ["world50:EW", "world50:EWxMom", "alt_leaders:TOP6", "alt_leaders:FO6", "alt_leaders:GATE_EW",
             "alt_leaders:ETH", "flex:CONST_35_50_15", "core", "tom_trader:CORE_FB", "tom_trader:CORE_H", "tom_trader:CORE_F",
             "tom_trader:BTC_FB", "tom_trader:BTC_H", "tom_trader:BTC_F", "tom_trader:BTC_S50",
-            "tom_trader:ETH_FB", "tom_trader:ETH_H", "tom_trader:ETH_F", "tom_trader:ETH_S50"]
+            "tom_trader:ETH_FB", "tom_trader:ETH_H", "tom_trader:ETH_F", "tom_trader:ETH_S50",
+            "tom_trader:CORE_X1V", "tom_trader:BTC_X1V", "tom_trader:ETH_X1V"]
     return {k: _nav(days, 0.0005 * (i + 1), i) for i, k in enumerate(keys)}
 
 

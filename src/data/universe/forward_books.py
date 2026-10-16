@@ -34,10 +34,14 @@ RULE_FLEX = "flex_v1:加密 ① cap_a1_u 35% / World50 EW×Mom 50% / 现金 15%(
 #: S-600(Jazz 10-16「跌破就空仓,熊市赚了就跑,或者开空」):Trader Tom 交易层前向纸面账本,不等 12-31,今天开账
 TOM_START = "2026-10-16"
 TOM_WARM_FROM = "2024-01-01"     # 规则要 200 天历史;起算日固定 ⇒ 开账那天的状态可复现
-TOM_ARMS = {"BTC_H": ("BTC", None, 0.0), "BTC_F": ("BTC", "flat", 0.0), "BTC_FB": ("BTC", "rally", 0.0), "BTC_S50": ("BTC", "short", -0.5),
-            "ETH_H": ("ETH", None, 0.0), "ETH_F": ("ETH", "flat", 0.0), "ETH_FB": ("ETH", "rally", 0.0), "ETH_S50": ("ETH", "short", -0.5),
-            "CORE_H": ("CORE", None, 0.0), "CORE_F": ("CORE", "flat", 0.0), "CORE_FB": ("CORE", "rally", 0.0)}
-RULE_TOM = "tom_trader_v2:S-600(多头 >200 日线且破 20 日高,盈利加仓到 1.3;跌破即平;F 空仓 / FB 反弹 0.5 +15% 止盈 / S50 开空 −20% 止盈)"
+#: (资产, 熊市做法, 空头仓位, 出场, 波动率缩放)。X1V = S-601 在没看过的 12 个币上回撤全部变浅的那一版(破 20 日低即平 + 波动率缩放)
+TOM_ARMS = {"BTC_H": ("BTC", None, 0.0, "ma", False), "BTC_F": ("BTC", "flat", 0.0, "ma", False), "BTC_FB": ("BTC", "rally", 0.0, "ma", False),
+            "BTC_S50": ("BTC", "short", -0.5, "ma", False), "BTC_X1V": ("BTC", "rally", 0.0, "l20", True),
+            "ETH_H": ("ETH", None, 0.0, "ma", False), "ETH_F": ("ETH", "flat", 0.0, "ma", False), "ETH_FB": ("ETH", "rally", 0.0, "ma", False),
+            "ETH_S50": ("ETH", "short", -0.5, "ma", False), "ETH_X1V": ("ETH", "rally", 0.0, "l20", True),
+            "CORE_H": ("CORE", None, 0.0, "ma", False), "CORE_F": ("CORE", "flat", 0.0, "ma", False), "CORE_FB": ("CORE", "rally", 0.0, "ma", False),
+            "CORE_X1V": ("CORE", "rally", 0.0, "l20", True)}
+RULE_TOM = "tom_trader_v2:S-600 / S-601(多头 >200 日线且破 20 日高,盈利加仓到 1.3;跌破即平;F 空仓 / FB 反弹 0.5 +15% 止盈 / S50 开空 −20% 止盈 / X1V 破 20 日低即平 + 波动率缩放)"
 WRITES_TABLES = ("forward_book_holdings", "forward_book_nav")
 WRITES_COLUMNS = {
     "forward_book_holdings": ("book", "arm", "as_of", "key", "weight", "note", "rule"),
@@ -171,14 +175,18 @@ async def run_tom_trader(cutoff: str) -> dict[str, Any]:
         return {"ok": True, "waiting": f"交易层前向从 {TOM_START} 收盘起"}
     navs = await _get_all("forward_book_nav?select=arm,d,nav&book=eq.tom_trader&order=d")
     have = {(r["arm"], r["d"]): float(r["nav"]) for r in navs}
+    # 每小时被 ③ 的循环叫一次:每条臂都已经写到 cutoff ⇒ 不再读价格(只花一次查询)
+    last_by_arm = {a: max(d for (x, d) in have if x == a) for a in {x for (x, _) in have}}
+    if set(last_by_arm) >= set(TOM_ARMS) and min(last_by_arm.values()) >= cutoff:
+        return {"ok": True, "up_to_date": cutoff}
     closes, fund = await tom_inputs(cutoff)
     rows_n, rows_h, notes = [], [], []
-    for arm, (key, bear, size) in TOM_ARMS.items():
+    for arm, (key, bear, size, exit_mode, vol) in TOM_ARMS.items():
         c = closes.get(key)
         if c is None or len(c) < 260:
             notes.append(f"{arm}: {key} 收盘不足")
             continue
-        g = pd.Series(1.0, index=c.index) if bear is None else trade_path(c, bear, size)
+        g = pd.Series(1.0, index=c.index) if bear is None else trade_path(c, bear, size, exit_mode, vol)
         r = trade_returns(c, g, fund.get(key))
         r = r[(r.index > pd.Timestamp(TOM_START)) & (r.index <= pd.Timestamp(cutoff))]
         done = sorted(d for (a, d) in have if a == arm)

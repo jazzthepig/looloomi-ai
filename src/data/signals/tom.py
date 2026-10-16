@@ -52,7 +52,25 @@ def tom_gross(close: pd.Series, cap: float = CAP, defend: bool = True) -> pd.Ser
 COST_BPS, RALLY_SIZE, RALLY_TP, SHORT_TP, WARM = 10.0, 0.5, 1.15, 0.80, 200
 
 
-def trade_path(close: pd.Series, bear: str, short_size: float = 0.0) -> pd.Series:
+def vol_scale(close: pd.Series) -> pd.Series:
+    """S-601:min(1, 过去 730 天 20 日实现波动的中位数 ÷ 当前 20 日实现波动);历史不足 ⇒ 1。只用当天及以前。纯函数。"""
+    s = close.dropna().astype(float)
+    c = s.to_numpy()
+    lr = np.zeros(len(c))
+    lr[1:] = np.log(c[1:] / c[:-1])
+    v20 = np.full(len(c), np.nan)
+    for t in range(20, len(c)):
+        v20[t] = lr[t - 19:t + 1].std(ddof=1)
+    out = np.ones(len(c))
+    for t in range(260, len(c)):
+        hist = v20[max(20, t - 730):t + 1]
+        hist = hist[np.isfinite(hist)]
+        if len(hist) >= 200 and v20[t] > 0:
+            out[t] = min(1.0, float(np.median(hist)) / v20[t])
+    return pd.Series(out, index=s.index)
+
+
+def trade_path(close: pd.Series, bear: str, short_size: float = 0.0, exit_mode: str = "ma", vol: bool = False) -> pd.Series:
     """bear ∈ {'flat', 'rally', 'short'}。返回 g[d] = d 收盘定下、d+1 生效的净敞口(前 200 天 = 1.0)。纯函数。
     多头:收盘 > 200 日线且 > 前 20 日高 ⇒ 多 1.0,之后照 tom_gross 加仓(上限 1.3);跌破(< 200 日线且 < 前 20 日低)⇒ 全平。
     熊市:flat 空仓;rally 反弹(> 前 20 日高)多 0.5、+15% 止盈、破前 10 日低止损;short 跌破即开空、−20% 止盈、破前 20 日高止损。"""
@@ -66,6 +84,10 @@ def trade_path(close: pd.Series, bear: str, short_size: float = 0.0) -> pd.Serie
         h20, l20, h55, l10 = c[t - 20:t].max(), c[t - 20:t].min(), c[t - 55:t].max(), c[t - 10:t].min()
         long_entry = x > ma and x > h20
         if mode == "long":
+            if exit_mode == "l20" and x < l20:          # S-601 X1:多头破前 20 日低即全平(不等 200 日线)
+                mode, k, last_add = "flat", 0, None
+                g[t] = 0.0
+                continue
             if k > 0 and x < l20:
                 k, last_add = 0, None
             elif k == 0 and x > h55 and 1 + UNIT <= CAP + 1e-9:
@@ -93,7 +115,11 @@ def trade_path(close: pd.Series, bear: str, short_size: float = 0.0) -> pd.Serie
             elif x <= entry * SHORT_TP or x > h20:
                 mode = "flat"
         g[t] = {"long": 1 + UNIT * k, "flat": 0.0, "rally": RALLY_SIZE, "short": short_size}[mode]
-    return pd.Series(g, index=s.index)
+    out = pd.Series(g, index=s.index)
+    if vol:                                               # S-601 V:只在波动高于自己常态时降仓,不放大
+        vs = vol_scale(s)
+        out = out.where(np.arange(n) < WARM, out * vs)
+    return out
 
 
 def trade_returns(close: pd.Series, g: pd.Series, funding_ann: Optional[pd.Series] = None) -> pd.Series:

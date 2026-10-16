@@ -75,3 +75,19 @@ def test_bear_rally_takes_profit_at_fifteen_percent():
     g = trade_path(_series(down + pop), "rally")
     tail = g.iloc[300:]
     assert (tail == 0.5).any() and tail.iloc[-1] == 0.0
+
+
+def test_x1v_exits_on_a_20_day_low_and_scales_down_in_hot_volatility():
+    """S-601:X1 破前 20 日低即全平(不等 200 日线);V 只在波动高于自己两年常态时降仓,永不放大。"""
+    from src.data.signals.tom import trade_path, vol_scale
+    rng = np.random.default_rng(7)
+    calm = 100 * np.exp(np.cumsum(rng.normal(0.002, 0.01, 700)))
+    hot = calm[-1] * np.exp(np.cumsum(rng.normal(0.0, 0.06, 60)))
+    s = _series(list(calm) + list(hot))
+    vs = vol_scale(s)
+    assert vs.max() <= 1.0 + 1e-12 and vs.iloc[-1] < 0.5
+    g_ma = trade_path(s, "rally")
+    g_x1 = trade_path(s, "rally", exit_mode="l20")
+    assert (g_x1.iloc[200:] == 0).sum() >= (g_ma.iloc[200:] == 0).sum(), "快出场不会比等 200 日线更晚离场"
+    g_x1v = trade_path(s, "rally", exit_mode="l20", vol=True)
+    assert (g_x1v <= g_x1 + 1e-12).all()

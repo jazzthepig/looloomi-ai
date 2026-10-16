@@ -1291,7 +1291,8 @@ async def _multiplier_loop():
             from src.data.signals.multiplier import run_once as _mu_run
             r = await _mu_run()
             print(f"[MULTIPLIER] written={r.get('written')} · {str(r.get('reason'))[:120]}")
-            _detail = {"written": r.get("written"), "eval": r.get("eval"), "stale_in_source": r.get("stale_in_source")}
+            _detail = {"written": r.get("written"), "eval": r.get("eval"), "stale_in_source": r.get("stale_in_source"),
+                       "tom_trader": r.get("tom_trader")}
             await _beat("_multiplier_loop", ok=bool(r.get("ok")) and not r.get("refused"),
                         refused=bool(r.get("refused")), detail=_detail,
                         error=None if r.get("ok") else str(r.get("reason"))[:200])

@@ -50,13 +50,14 @@ LINES: tuple[Line, ...] = (
     Line("flex_35_50_15", "flex", "Flexible mix at its constant weights: 35% core crypto / 50% World50 / 15% cash",
          "A constant mix of the two forward books; the allocation engine did not separate from it (S-585).",
          "flex:CONST_35_50_15", None, ("core", "world50:EWxMom")),
-    Line("tom_core_fb", "tom_trader", "Trend trader on the crypto core: add on profit, flat on a breakdown, quick bear-rally trades",
-         "Long and adding only while the core is making money; out entirely below its long-term trend; in a bear phase, small "
-         "rally trades that take profit at +15% (S-600).", "tom_trader:CORE_FB", "tom_trader:CORE_H", ("tom_trader:CORE_F",), "2026-10-16"),
-    Line("tom_btc_fb", "tom_trader", "Trend trader on BTC (same rules)", "The same rules on BTC alone; short and flat variants recorded beside it.",
-         "tom_trader:BTC_FB", "tom_trader:BTC_H", ("tom_trader:BTC_F", "tom_trader:BTC_S50"), "2026-10-16"),
-    Line("tom_eth_fb", "tom_trader", "Trend trader on ETH (same rules)", "The same rules on ETH alone; short and flat variants recorded beside it.",
-         "tom_trader:ETH_FB", "tom_trader:ETH_H", ("tom_trader:ETH_F", "tom_trader:ETH_S50"), "2026-10-16"),
+    Line("tom_core_x1v", "tom_trader", "Trend trader on the crypto core: add on profit, out on a 20-day low, smaller when volatility runs hot",
+         "Long and adding only while the core is making money; out entirely on a 20-day low; exposure scaled down when volatility is "
+         "above its own two-year norm; small bear-rally trades that take profit at +15% (S-600 / S-601).",
+         "tom_trader:CORE_X1V", "tom_trader:CORE_H", ("tom_trader:CORE_FB", "tom_trader:CORE_F"), "2026-10-16"),
+    Line("tom_btc_x1v", "tom_trader", "Trend trader on BTC (same rules)", "The same rules on BTC alone; flat, rally and short variants recorded beside it.",
+         "tom_trader:BTC_X1V", "tom_trader:BTC_H", ("tom_trader:BTC_FB", "tom_trader:BTC_F", "tom_trader:BTC_S50"), "2026-10-16"),
+    Line("tom_eth_x1v", "tom_trader", "Trend trader on ETH (same rules)", "The same rules on ETH alone; flat, rally and short variants recorded beside it.",
+         "tom_trader:ETH_X1V", "tom_trader:ETH_H", ("tom_trader:ETH_FB", "tom_trader:ETH_F", "tom_trader:ETH_S50"), "2026-10-16"),
 )
 
 

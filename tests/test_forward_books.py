@@ -153,3 +153,8 @@ def test_tom_trader_writes_once_from_its_start_and_never_rewrites(monkeypatch):
     after = {(x["arm"], x["d"]): x["nav"] for x in db.tables["forward_book_nav"] if x["book"] == "tom_trader"}
     assert all(after[k] == v for k, v in before.items())
     assert max(d for (_, d) in after) == "2026-11-05"
+
+    async def boom(end):
+        raise AssertionError("已写到 cutoff 不该再读价格")
+    monkeypatch.setattr(fb, "tom_inputs", boom)
+    assert asyncio.run(fb.run_tom_trader("2026-11-05")) == {"ok": True, "up_to_date": "2026-11-05"}
