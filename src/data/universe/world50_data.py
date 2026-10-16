@@ -271,9 +271,13 @@ EXCHANGE_SHARES: dict[str, dict[str, Any]] = {
                             ("2015-12-31", "2016-03-24", 1_256_197_800, "cninfo:finalpage/2016-03-24/1202072288.PDF"),
                             ("2025-08-29", "2025-08-30", 1_252_270_215, "sse:600519 临2025-032(中国证券报 2025-08-30 A10)注销 3,927,585"),
                             ("2026-05-28", "2026-05-28", 1_250_081_601, "sse:600519 临2026-021 注销 2,188,614")]},
-    "005930.KO": {"ccy": "KRW", "what": "普通股发行数(含库存股;优先股另一条线,不加)。公司 IR 上市现状表(原股在韩国交易所)。"
-                                        "2018 前(拆股前、库存股分批注销)待 T-100 从 KRX / DART 补",
-                  "rows": [("2018-05-04", "2018-05-04", 6_419_324_700, "samsung.com/sec/ir/stock-information/listing-info(2018-05-04 50:1 拆股后上市)"),
+    "005930.KO": {"ccy": "KRW", "what": "普通股发行数(含库存股;优先股另一条线,不加)。2018 起:公司 IR 上市现状表;"
+                                        "2014–2017:公司 IR 的사업보고서「발행주식의 총수」普通股一栏(T-100,lane-a)—— 拆股前口径,2018-05-04 的 50:1 由价格侧认出、股数印证",
+                  "rows": [("2014-12-31", "2015-03-31", 147_299_337, "samsung:kdp/ir/business-report/2014_work_quarter04.pdf「발행주식의 총수」보통주"),
+                           ("2015-12-31", "2016-03-30", 147_299_337, "samsung:kdp/ir/business-report/2015_work_quarter04.pdf"),
+                           ("2016-12-31", "2017-03-31", 140_679_337, "samsung:kdp/ir/business-report/2016_work_year.pdf"),
+                           ("2017-12-31", "2018-04-02", 129_098_494, "samsung:kdp/ir/business-report/2017_work_quarter04.pdf"),
+                           ("2018-05-04", "2018-05-04", 6_419_324_700, "samsung.com/sec/ir/stock-information/listing-info(2018-05-04 50:1 拆股后上市)"),
                            ("2018-12-04", "2018-12-04", 5_969_782_550, "samsung.com/sec/ir/stock-information/listing-info(库存股全部注销)"),
                            ("2025-02-20", "2025-02-20", 5_919_637_922, "samsung.com/sec/ir/stock-information/listing-info(2025-02-18 决议注销)"),
                            ("2026-04-02", "2026-04-02", 5_846_278_608, "samsung.com/sec/ir/stock-information/listing-info(注销 73,359,314 股)")]},
@@ -307,6 +311,16 @@ EXCHANGE_SHARES: dict[str, dict[str, Any]] = {
               "rows": [("2013-06-30", "2013-07-15", 508_205_072, "amf:OPENDATA/AMF/CNS/2013/07/FCCNS119057_20130715.pdf"),
                        ("2016-01-31", "2016-02-05", 507_142_695, "amf:OPENDATA/AMF/CNS/2016/02/FCCNS141777_20160205.pdf"),
                        ("2026-09-30", "2026-10-06", 494_606_080, "LVMH 月度披露 2026-09-30(文件日 2026-10-06;转载:trivano.com)")]},
+    "NESN.SW": {"ccy": "CHF", "what": "已发行记名股(含库存股;面值 CHF 0.10)。每年股东会注销回购股。2016 与 2018–19 的注销没有逐年行"
+                                      "(2015-12 → 2020-03 之间最多高估约 7%,注明)",
+                "rows": [("2015-04-16", "2015-12-07", 3_188_400_000, "nestle.com/media/news/nestle-completes-chf-8-billion-share-buyback-programme"
+                                                                 "「share capital of Nestlé S.A. was reduced to CHF 318,840,000」"),
+                         ("2019-12-31", "2020-03-12", 2_976_000_000, "nestle.com/sites/default/files/2020-03/2019-annual-report-en.pdf(T-100)"),
+                         ("2020-12-31", "2021-03-11", 2_881_000_000, "nestle.com/sites/default/files/2021-03/2020-annual-report-en.pdf"),
+                         ("2021-12-31", "2022-03-09", 2_815_000_000, "nestle.com/sites/default/files/2022-03/2021-annual-report-en.pdf"),
+                         ("2022-12-31", "2023-03-08", 2_750_000_000, "nestle.com/sites/default/files/2023-03/2022-annual-report-en.pdf"),
+                         ("2023-12-31", "2024-03-13", 2_670_000_000, "nestle.com/sites/default/files/2024-03/2023-annual-report-en.pdf"),
+                         ("2024-12-31", "2025-03-12", 2_620_000_000, "nestle.com/sites/default/files/2025-03/2024-annual-report-en.pdf")]},
     "ROG.SW": {"ccy": "CHF", "what": "无记名股 + 非投票权益证券(2026-03 换成参与证)合计;价格线是无记名股 RO.SW"
                                      "(world50.LOCAL_PRICE_CODE:ROG.SW 停在 2026-03-25);公司章程 §3–§4、IR 问答「股本自 2000 年的变化」",
                "rows": [("2011-03-01", "2011-03-01", 862_562_700, "roche:archiv-statuten-2011-en.pdf(160,000,000 + 702,562,700)"),
@@ -893,7 +907,7 @@ async def discover_onchain_forms(as_of: Optional[str] = None) -> dict[str, Any]:
 RERUN_AFTER_DAYS = 6
 LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
-PART_VERSIONS = {"prices": 3, "mcap": 13, "onchain_forms": 1, "revenue": 1, "book": 1}
+PART_VERSIONS = {"prices": 3, "mcap": 14, "onchain_forms": 1, "revenue": 1, "book": 1}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
