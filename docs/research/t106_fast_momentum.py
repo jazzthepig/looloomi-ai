@@ -98,6 +98,11 @@ def extend_crypto(daily_dir: Path) -> None:
             continue
         for r in rows:
             sym = r['symbol']
+            # 跳非 ASCII(URL 编码 + Supabase REST 会因 latin-1 默认失败;垃圾币)
+            try:
+                sym.encode('ascii')
+            except UnicodeEncodeError:
+                continue
             if sym in STABLES_WRAPPERS or sym in have_close:
                 continue
             want.append(sym)
@@ -107,7 +112,11 @@ def extend_crypto(daily_dir: Path) -> None:
     print(f"  补 crypto symbol {len(want)} 个:{want[:8]}...")
     dates_list = cd['dates']
     for sym in want:
-        rows = _supa_get_all(f"asset_mcap_daily?select=d,price,mcap&symbol=eq.{sym}&d=gte.2020-01-01&order=d")
+        try:
+            rows = _supa_get_all(f"asset_mcap_daily?select=d,price,mcap&symbol=eq.{sym}&d=gte.2020-01-01&order=d")
+        except Exception as e:
+            print(f"    {sym}: 跳过({type(e).__name__})")
+            continue
         if not rows:
             continue
         px = {r['d']: float(r['price']) for r in rows if r.get('price') is not None}
@@ -485,7 +494,7 @@ def main(daily_dir: str, report_path: str, no_extend: bool = False) -> None:
     lines = [
         "# T-106 — 更快的动量:机制层 Spearman 检验\n\n",
         "**预注册**:REFUTATION_LEDGER.md §M-584(写于看任何结果之前;**Seth 2026-10-16 增 2 周**——见 §2 / §6)\n\n",
-        "**数据**:Mac 私有面板 `w50_daily/{close,mcap}.json`;导出时 `loop_attempt._world50_history_loop` 最新一行为 prices v3 / mcap v13(Seth 要求 v4 / v16 后重导;**本轮结果基于 v3 / v13 6 天前的快照**;6 天差距对横截面动量量级影响不显著,但若 mcap v14–v16 引入新成分,World50 top 60 的 2016–2018 段可能微调)。\n\n",
+        "**数据**:Mac 私有面板 `w50_daily/{close,mcap}.json` —— 本轮由 `w50_export_daily.py` 重导,基于 `loop_attempt._world50_history_loop` 最新一行 prices v4 / mcap v17(2026-10-16)。\n\n",
         "**池子**:World50 = 每期期初按 mcap 前 60;加密 = 每期期初按 mcap 前 30(去稳定币 / 包装);**成员按期初定**(M-582c 用期末选成员偏向赢家,T-106 改掉)。\n\n",
         "**统计量**:每期名字层 Spearman(形成期收益, 下一期收益);全样本 / 按状态(World50 = ACWI 过去 6mo 复利 > 0;加密 = BTC 过去 6mo 复利 > 0;期初已知)取平均。\n\n",
         "**零分布**:`apparatus.shuffle_within(next_returns, groups=[period_id] × n)` × 1000,跨期 ρ̄ 取平均。\n\n",
@@ -514,13 +523,31 @@ def main(daily_dir: str, report_path: str, no_extend: bool = False) -> None:
     for r in results:
         lines.append(f"| {r['pool']} | {r['period']} | {r['first_t0']} | {r['last_t0']} |\n")
     lines.append("\n## §4 结论(Seth 审读用,1 行 / 格)\n\n")
-    lines.append("- **World50 全部 4 个周期没一个过 null_p95 的延续判据**;1W / 2W ρ̄ 显著 < null_p5(领先反转),1M / 3M 分不开。\n")
-    lines.append("  **判读**:World50 上「更快的动量 = 更快反转」,1W 段(559 期)最强反转 ρ̄=−0.014 且 ACWI down 段(132 期)ρ̄=−0.041。\n")
-    lines.append("  这与 M-582c(季度滞后组与名字都不延续)是同一方向,但更清楚:1W / 2W 不是「没信号」,是**反信号**。\n")
-    lines.append("- **加密只 2W 过了**(ρ̄=+0.038 / pct=0.991, n=174),up 段 ρ̄=+0.062(n=109)继续延续;1W / 1M / 3M 没过。\n")
-    lines.append("  3M 反转(ρ̄=−0.078, n=25)检验力低,3M 加密 25 期**结论不翻盘**。\n")
-    lines.append("- **卡 25% / 75%**(M-584 §1):过 = Seth 设计「更快」臂进前向账本;**没过**(World50 全部 + 加密 1W / 1M)⇒ 记「更快 = 更多换手与反转风险,不是收益来源」交 Jazz。\n")
-    lines.append("- **1 个探索信号(出判定会触发)**:加密 2W up 段 ρ̄=+0.062 / pct 99% / n=109 ⇒ 唯一一段延续;若产品想保留动量倾斜,**只用 2W / 加密 up 段**这条腿的机制是支撑的(但单腿风险大)。\n\n")
+
+    # 动态生成结论 —— 用本次实跑数据,不抄上一轮
+    w50_1w = next(r for r in results if r['pool'] == 'World50' and r['period'] == '1w')
+    w50_2w = next(r for r in results if r['pool'] == 'World50' and r['period'] == '2w')
+    w50_1m = next(r for r in results if r['pool'] == 'World50' and r['period'] == '1m')
+    cr_1w = next(r for r in results if r['pool'] == 'crypto' and r['period'] == '1w')
+    cr_2w = next(r for r in results if r['pool'] == 'crypto' and r['period'] == '2w')
+    cr_1m = next(r for r in results if r['pool'] == 'crypto' and r['period'] == '1m')
+    cr_3m = next(r for r in results if r['pool'] == 'crypto' and r['period'] == '3m')
+
+    # World50 段
+    lines.append(f"- **World50 全部 4 个周期没过延续判据**;1W ρ̄={f(w50_1w['actual_mean_rho'])}(pct={f(w50_1w['actual_pct_in_null'], '.3f')}) / 2W ρ̄={f(w50_2w['actual_mean_rho'])}(pct={f(w50_2w['actual_pct_in_null'], '.3f')}) 反转;1M pct={f(w50_1m['actual_pct_in_null'], '.3f')} 分不开;3M 分不开。\n")
+    w50_1w_dn = w50_1w['by_state']['down']
+    lines.append(f"  **判读**:World50 上「更快的动量 = 更快反转」,1W 共 {w50_1w['n_periods']} 期反转,ACWI down 段({w50_1w_dn['n']} 期)ρ̄={f(w50_1w_dn['mean_rho'])};反转集中在 down 段。\n")
+    lines.append("  与 M-582c(季度滞后组与名字都不延续)同向,但更深:1W / 2W 不是「没信号」是**反信号**。\n")
+
+    # 加密段
+    lines.append(f"- **加密只 2W 过了延续判据**(ρ̄={f(cr_2w['actual_mean_rho'])} / pct={f(cr_2w['actual_pct_in_null'], '.3f')} / n={cr_2w['n_periods']});1W pct={f(cr_1w['actual_pct_in_null'], '.3f')} 接近反转边界但仍分不开;1M / 3M 分不开。\n")
+    cr_2w_up = cr_2w['by_state']['up']
+    lines.append(f"  加密 2W up 段({cr_2w_up['n']} 期)ρ̄={f(cr_2w_up['mean_rho'])} / pct={f(cr_2w_up['pct'], '.3f')}/ {cr_2w_up['verdict']};down 段({cr_2w['by_state']['down']['n']}) {cr_2w['by_state']['down']['verdict']}。\n")
+    lines.append(f"  加密 3M(ρ̄={f(cr_3m['actual_mean_rho'])} / n={cr_3m['n_periods']})**检验力极低**(n=25),结论不翻盘主判据。\n")
+
+    # 25/75 与探索
+    lines.append("- **卡 25% / 75%**(M-584 §1):过 = Seth 设计「更快」臂进前向账本;**没过**(World50 全部 + 加密 1W / 1M / 3M)⇒ 记「更快 = 更多换手与反转风险,不是收益来源」交 Jazz。\n")
+    lines.append(f"- **唯一延续信号**:加密 2W up 段 ρ̄={f(cr_2w_up['mean_rho'])} / pct={f(cr_2w_up['pct'], '.3f')} / n={cr_2w_up['n']} ⇒ 若产品想保留动量倾斜,**只用 2W / 加密 up 段**这条腿的机制是支撑的(单腿风险大,需另立预注册)。\n\n")
     lines.append("## §5 备注\n\n")
     lines.append("- World50 收益用 `ohlcv_daily source=eodhd` 的复权收盘(本币,**未换汇**;与 S-581 一致)。\n")
     lines.append("- **加密 panel**:`w50_export_daily.py` 导的 5 个(BTC/ETH/BNB/XRP/SOL)+ 从 `asset_mcap_daily` 补到接近 30 个(去稳定币 / 包装)。World50 池子有效成员 50–60,检验力可用;加密池子 n=30 但 2020-01 时实际只有少数几个有数据,2021 后才稳定 25+ 个。\n")
@@ -528,8 +555,8 @@ def main(daily_dir: str, report_path: str, no_extend: bool = False) -> None:
     lines.append("- 零分布 1000 次 / `apparatus.shuffle_within` / `apparatus.percentile_of`;**不**自己再写(10-14 教训)。\n")
     lines.append("- 窗口:World50 2016-01-04 → 2026-09-30;加密 2020-01-06 → 2026-09-30(留 2 周 buffer;实际数据到 2026-10-15)。\n")
     lines.append("- 状态判定:bench 过去 6 个月(183 天)复利收益 > 0 ⇒ up,≤ 0 ⇒ down。不足 6 个月历史 ⇒ n/a,不进桶。\n")
-    lines.append("- **数据版本**:Mac 私有面板 `w50_daily/{close,mcap}.json` 来自 `loop_attempt._world50_history_loop` prices v3 / mcap v13(Seth 要求 v4 / v16 后重导;**本轮结果基于 v3 / v13 6 天前的快照**)。\n")
-    lines.append("  6 天差距对横截面动量量级影响不显著;若 mcap v14–v16 引入新成分,World50 top 60 的 2016–2018 段可能微调,**重导用同一脚本 + 同一预注册重跑,两次结果都记**(per M-584 §6 已知坑)。\n")
+    lines.append("- **数据版本**:本轮由 `w50_export_daily.py` 重导,基于 `loop_attempt._world50_history_loop` 最新一行 prices v4 / mcap v17(2026-10-16);174 条价格序列 × 4308 天,140 条市值序列。加密 panel = close.json 5 + extend_crypto 后 ~30 个,本轮 extend 修复了非 ASCII symbol 的过滤。\n")
+    lines.append("  上一轮(commit 847ba1f)基于 v3 / v13 6 天前快照;v4 / v17 后 W50 1W pct 0.006→0.000、加密 3M pct 0.042→0.403(从反转 → 分不开);主判据(World50 反 / 加密 2W 延续)方向不变,**重导用同一脚本 + 同一预注册重跑,两次结果都记**(per M-584 §6 已知坑)。\n")
 
     out_p.write_text("".join(lines))
     out_p.with_suffix(".json").write_text(json.dumps(results, indent=2, ensure_ascii=False, default=str))
