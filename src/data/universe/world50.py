@@ -102,11 +102,44 @@ _FORMER = [
     ("UL", "Unilever", "GB", "US"), ("BTI", "British American Tobacco", "GB", "US"), ("SAN", "Banco Santander", "ES", "US"),
 ]
 
+# Jazz 10-16「池子扩到前 180,退市的不管」:companiesmarketcap 2026-10-16 第 101–180 名里还不在池子的。
+# 美国上市的走 SEC 股数;存托凭证比例未核的进 world50_data.UNVERIFIED_ADR(有价格、不写市值);
+# 只在本地上市的先只有价格(研究用:动量等机制检验的横截面变宽),没有股本 ⇒ 不进市值排名,补股本另立卡。
+_NEXT_US = [
+    ("QCOM", "Qualcomm"), ("DE", "Deere"), ("BLK", "BlackRock"), ("COP", "ConocoPhillips"), ("UNP", "Union Pacific"),
+    ("SCCO", "Southern Copper"), ("TMUS", "T-Mobile US"), ("MCD", "McDonald's"), ("SCHW", "Charles Schwab"),
+    ("WELL", "Welltower"), ("NEE", "NextEra Energy"), ("STX", "Seagate"), ("ETN", "Eaton"), ("DHR", "Danaher"),
+    ("TJX", "TJX"), ("ISRG", "Intuitive Surgical"), ("NOW", "ServiceNow"), ("IBKR", "Interactive Brokers"),
+    ("MPC", "Marathon Petroleum"), ("UBER", "Uber"), ("WDC", "Western Digital"), ("CB", "Chubb"), ("FTNT", "Fortinet"),
+    ("VLO", "Valero"), ("ACN", "Accenture"), ("BX", "Blackstone"), ("PLD", "Prologis"), ("VRTX", "Vertex"),
+    ("BKNG", "Booking"), ("PGR", "Progressive"), ("MO", "Altria"),
+]
+_NEXT_US_LISTED_FOREIGN = [
+    ("PBR", "Petrobras", "BR"), ("SMFG", "Sumitomo Mitsui", "JP"), ("UBS", "UBS", "CH"), ("SONY", "Sony", "JP"),
+    ("BBVA", "BBVA", "ES"), ("MFG", "Mizuho", "JP"),
+]
+_NEXT_LOCAL = [   # (key = EODHD 代码, 名称, 地区)
+    ("ALV.XETRA", "Allianz", "DE"), ("CBA.AU", "Commonwealth Bank", "AU"), ("9984.TSE", "SoftBank Group", "JP"),
+    ("PRX.AS", "Prosus", "NL"), ("3968.HK", "China Merchants Bank", "CN"), ("RELIANCE.NSE", "Reliance Industries", "IN"),
+    ("AIR.PA", "Airbus", "FR"), ("8035.TSE", "Tokyo Electron", "JP"), ("ABBN.SW", "ABB", "CH"),
+    ("601088.SHG", "China Shenhua Energy", "CN"), ("D05.SG", "DBS", "SG"), ("IBE.MC", "Iberdrola", "ES"),
+    ("6098.TSE", "Recruit", "JP"), ("SU.PA", "Schneider Electric", "FR"), ("6501.TSE", "Hitachi", "JP"),
+    ("6857.TSE", "Advantest", "JP"), ("RMS.PA", "Hermès", "FR"), ("9983.TSE", "Fast Retailing", "JP"),
+    ("RR.LSE", "Rolls-Royce", "GB"), ("0883.HK", "CNOOC", "CN"), ("SAF.PA", "Safran", "FR"),
+    ("601628.SHG", "China Life", "CN"), ("601138.SHG", "Foxconn Industrial Internet", "CN"),
+    ("DTE.XETRA", "Deutsche Telekom", "DE"), ("2308.TW", "Delta Electronics", "TW"), ("UCG.MI", "UniCredit", "IT"),
+    ("INVE-B.ST", "Investor AB", "SE"), ("CFR.SW", "Richemont", "CH"), ("AI.PA", "Air Liquide", "FR"),
+    ("BHARTIARTL.NSE", "Bharti Airtel", "IN"),
+]
+
 EQUITIES = tuple(
     [_eq(t, n, f"{t}.US", "US") for t, n in _US]
     + [_eq(t, n, f"{t}.US", r, "美国上市") for t, n, r in _US_LISTED_FOREIGN]
     + [_eq(t, n, LOCAL_PRICE_CODE.get(t, t), r, "本地上市,无美国存托凭证") for t, n, r in _LOCAL]
     + [_eq(t, n, f"{t}.US" if ex == "US" else t, r, "曾经的龙头(防幸存者偏差)") for t, n, r, ex in _FORMER]
+    + [_eq(t, n, f"{t}.US", "US", "前 180 扩池") for t, n in _NEXT_US]
+    + [_eq(t, n, f"{t}.US", r, "前 180 扩池,美国上市") for t, n, r in _NEXT_US_LISTED_FOREIGN]
+    + [_eq(t, n, t, r, "前 180 扩池,本地上市(暂无股本,不进市值排名)") for t, n, r in _NEXT_LOCAL]
 )
 
 CANDIDATES: tuple[Candidate, ...] = METALS + CRYPTO + EQUITIES
