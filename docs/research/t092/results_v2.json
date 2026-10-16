@@ -1,0 +1,205 @@
+{
+  "task": "T-092",
+  "pre_reg": "M-559 (lane-b, 2026-10-14) \u2014 sealed before any data touch",
+  "method": "apparatus-only: long_return / short_return / price_on_or_after / percentile_of",
+  "windows": [
+    {
+      "name": "W1_2020_2022",
+      "lo": "2020-01-01",
+      "hi": "2022-12-31"
+    },
+    {
+      "name": "W2_2023_2024",
+      "lo": "2023-01-01",
+      "hi": "2024-12-31"
+    },
+    {
+      "name": "W3_2025_now",
+      "lo": "2025-01-01",
+      "hi": "2026-10-14"
+    }
+  ],
+  "n_shuffles": 1000,
+  "seed_base": 20261014,
+  "cache_path": "/Users/sbb/Projects/looloomi-ai-lane-b/docs/research/T-092_cache.pkl",
+  "results_by_window": {
+    "W1_2020_2022": {
+      "window": "W1_2020_2022",
+      "lo": "2020-01-01",
+      "hi": "2022-12-31",
+      "n_mondays": 156,
+      "funding_data_coverage_pct": 0.0,
+      "R1": {
+        "n_events": 288,
+        "nav_baseline": 11.9331,
+        "nav_R1": 29.6848,
+        "excess_pct": 148.76,
+        "maxdd_baseline_pct": -86.95,
+        "maxdd_R1_pct": -85.54,
+        "shuffle_pct": 88.0,
+        "shuf_p10": 1.3745,
+        "shuf_p50": 5.9436,
+        "shuf_p90": 34.8818,
+        "per_year_events": {
+          "2020": 98,
+          "2021": 124,
+          "2022": 66
+        }
+      },
+      "R2": {
+        "n_events": 46,
+        "nav_baseline": 11.9331,
+        "nav_R2": 3.7292,
+        "excess_pct": -68.75,
+        "fund_paid_R2_pct": 6.8654,
+        "maxdd_baseline_pct": -86.95,
+        "maxdd_R2_pct": -95.11,
+        "shuffle_pct": 0.0,
+        "shuf_p10": 7.2313,
+        "shuf_p50": 8.173,
+        "shuf_p90": 8.7255
+      },
+      "R3": {
+        "n_candidates": 0,
+        "n_pnl_computed": 0,
+        "mean_net_pct": 0.0,
+        "mean_short_pct": 0.0,
+        "mean_long_btc_pct": 0.0,
+        "excess_vs_btc_pct": 0.0,
+        "win_rate": 0.0,
+        "fund_data_present_frac_pct": 0.0,
+        "shuffle_pct": 50.0,
+        "shuf_p10": 0.0,
+        "shuf_p50": 0.0,
+        "shuf_p90": 0.0,
+        "per_year_candidates": {}
+      }
+    },
+    "W2_2023_2024": {
+      "window": "W2_2023_2024",
+      "lo": "2023-01-01",
+      "hi": "2024-12-31",
+      "n_mondays": 105,
+      "funding_data_coverage_pct": 42.9,
+      "R1": {
+        "n_events": 564,
+        "nav_baseline": 3.0584,
+        "nav_R1": 4.2788,
+        "excess_pct": 39.9,
+        "maxdd_baseline_pct": -37.65,
+        "maxdd_R1_pct": -25.54,
+        "shuffle_pct": 70.8,
+        "shuf_p10": 3.6499,
+        "shuf_p50": 4.0186,
+        "shuf_p90": 4.5292,
+        "per_year_events": {
+          "2023": 246,
+          "2024": 318
+        }
+      },
+      "R2": {
+        "n_events": 18,
+        "nav_baseline": 3.0584,
+        "nav_R2": 3.4309,
+        "excess_pct": 12.18,
+        "fund_paid_R2_pct": 2.9534,
+        "maxdd_baseline_pct": -37.65,
+        "maxdd_R2_pct": -42.2,
+        "shuffle_pct": 48.4,
+        "shuf_p10": 3.1804,
+        "shuf_p50": 3.438,
+        "shuf_p90": 3.6678
+      },
+      "R3": {
+        "n_candidates": 1802,
+        "n_pnl_computed": 1800,
+        "mean_net_pct": 10.2,
+        "mean_short_pct": 4.26,
+        "mean_long_btc_pct": 6.14,
+        "excess_vs_btc_pct": 4.06,
+        "win_rate": 0.764,
+        "fund_data_present_frac_pct": 62.1,
+        "shuffle_pct": 100.0,
+        "shuf_p10": -0.82,
+        "shuf_p50": 2.1,
+        "shuf_p90": 4.41,
+        "per_year_candidates": {
+          "2023": 606,
+          "2024": 1196
+        }
+      }
+    },
+    "W3_2025_now": {
+      "window": "W3_2025_now",
+      "lo": "2025-01-01",
+      "hi": "2026-10-14",
+      "n_mondays": 93,
+      "funding_data_coverage_pct": 100.0,
+      "R1": {
+        "n_events": 375,
+        "nav_baseline": 0.7299,
+        "nav_R1": 0.7208,
+        "excess_pct": -1.24,
+        "maxdd_baseline_pct": -55.59,
+        "maxdd_R1_pct": -53.82,
+        "shuffle_pct": 4.7,
+        "shuf_p10": 0.7285,
+        "shuf_p50": 0.7634,
+        "shuf_p90": 0.7994,
+        "per_year_events": {
+          "2025": 191,
+          "2026": 184
+        }
+      },
+      "R2": {
+        "n_events": 29,
+        "nav_baseline": 0.7299,
+        "nav_R2": 0.6407,
+        "excess_pct": -12.22,
+        "fund_paid_R2_pct": 0.9336,
+        "maxdd_baseline_pct": -55.59,
+        "maxdd_R2_pct": -66.32,
+        "shuffle_pct": 89.6,
+        "shuf_p10": 0.6134,
+        "shuf_p50": 0.6198,
+        "shuf_p90": 0.6425
+      },
+      "R3": {
+        "n_candidates": 1220,
+        "n_pnl_computed": 1158,
+        "mean_net_pct": 5.65,
+        "mean_short_pct": 8.19,
+        "mean_long_btc_pct": -2.35,
+        "excess_vs_btc_pct": 7.99,
+        "win_rate": 0.744,
+        "fund_data_present_frac_pct": 100.0,
+        "shuffle_pct": 92.8,
+        "shuf_p10": -1.71,
+        "shuf_p50": 2.27,
+        "shuf_p90": 5.22,
+        "per_year_candidates": {
+          "2025": 604,
+          "2026": 616
+        }
+      }
+    }
+  },
+  "verdicts": {
+    "W1_2020_2022": {
+      "R1_PASS": false,
+      "R2_PASS": false,
+      "R3_PASS": false
+    },
+    "W2_2023_2024": {
+      "R1_PASS": false,
+      "R2_PASS": false,
+      "R3_PASS": true
+    },
+    "W3_2025_now": {
+      "R1_PASS": false,
+      "R2_PASS": false,
+      "R3_PASS": true
+    }
+  },
+  "global_verdict": "R1: 0/3 windows pass; R2: 0/3 windows pass; R3: 2/3 windows pass. Criterion (\u22652 windows pass excess>0 + p\u226590%, third not worse than \u22122pp): PASS"
+}
