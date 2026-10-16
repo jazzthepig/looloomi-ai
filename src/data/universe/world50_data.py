@@ -379,9 +379,17 @@ ADR_ORD_PER_ADS: dict[str, list[tuple[str, float]]] = {
     "UL": [("1990-01-01", 1.0)],
     "SAN": [("1990-01-01", 1.0)],
     "BTI": [("2017-01-01", 1.0)],                       # FY2017 起(第一份 20-F);之前不在 SEC 申报
+    # T-105 第 3 轮(B 道,10-16):前 180 扩池的五个,各年 20-F 封面原句逐年核过(research/t105/adr_ratios.csv)
+    # PBR:FY2013–FY2025 都是「each representing two Common Shares」(FY2013–FY2021 由 EDGAR 全文检索补核)
+    "PBR": [("2000-01-01", 2.0)],
+    # SMFG:FY2024 20-F 及以前「0.2 share」;2024 年普通股一拆三、ADS 不拆,FY2025 20-F(2025-06-27)起「0.6 share」
+    "SMFG": [("2010-01-01", 0.2), ("2025-06-27", 0.6)],
+    "SONY": [("1990-01-01", 1.0)],                      # 2024 一拆五时 ADS 同步拆,比例一直 1
+    "BBVA": [("1990-01-01", 1.0)],
+    "MFG": [("2000-01-01", 2.0)],                       # 2020 十合一时 ADS 同步合,比例一直 2
 }
 #: 换股比例我没核实 / 中途改过而我不确定生效日的 —— 不写,不猜。(TCEHY 1 份 = 1 股,股数手工从港交所补,不在这里)
-UNVERIFIED_ADR: set[str] = {"PBR", "SMFG", "SONY", "BBVA", "MFG"}   # 10-16 前 180 扩池的存托凭证,比例待核(T-101 那六个已由 T-105 核过)
+UNVERIFIED_ADR: set[str] = set()   # 10-16 前 180 扩池的五个已由 T-105 第 3 轮核过;新进的存托凭证先放这里
 
 
 def _closes(raw: Iterable[dict]) -> list[tuple[str, float, float]]:
@@ -951,7 +959,7 @@ async def discover_onchain_forms(as_of: Optional[str] = None) -> dict[str, Any]:
 RERUN_AFTER_DAYS = 6
 LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
-PART_VERSIONS = {"prices": 4, "mcap": 17, "onchain_forms": 1, "revenue": 1, "book": 1, "fwd_books": 1}
+PART_VERSIONS = {"prices": 4, "mcap": 18, "onchain_forms": 1, "revenue": 1, "book": 1, "fwd_books": 1}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:

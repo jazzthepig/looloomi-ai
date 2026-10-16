@@ -94,6 +94,9 @@ def test_wavg_fallback_adr_ratio_outliers_and_jumps():
         assert wd.build_mcap("ZZZ", bars, {"dei": two})["why"].startswith("ADR 换股比例未核实")
     finally:
         wd.UNVERIFIED_ADR.discard("ZZZ")
+    assert not ({"PBR", "SMFG", "SONY", "BBVA", "MFG"} & wd.UNVERIFIED_ADR), "T-105 第 3 轮核过"
+    assert wd._adr_ratio("SMFG", "2025-06-26") == 0.2 and wd._adr_ratio("SMFG", "2025-06-27") == 0.6
+    assert wd._adr_ratio("PBR", "2016-04-28") == 2.0 and wd._adr_ratio("MFG", "2015-07-23") == 2.0
     assert wd.build_mcap("TCEHY", bars, {})["src"] == "manual", "腾讯:港交所月报表手工补"
     assert wd.build_mcap("Z", bars, {})["why"].startswith("SEC 里没有")
 
