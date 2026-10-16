@@ -1,0 +1,25 @@
+{
+  "id": "T-107",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-15",
+  "verified": null,
+  "title": "① 对 BTC 分周期:2023 → 2026 持有 BTC 赢了 ① 和所有动量臂 —— 是结构性的,还是只在 BTC 主导期?",
+  "source": "T-089(lane-a 10-15):BTC 两个窗口都赢 ①;core_variants_daily 2023-01 → 2026-10:BTC 4.90× / 回撤 −53%,① 市值加权不设上限 3.66× / −57%,11 个臂没有一个赢 BTC。收益层级 ① 的基准是「持有面板」—— 如果面板结构性地输给 BTC,LP 直接买 BTC 就好,这是 ① 的定义问题",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-107.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "先在 REFUTATION_LEDGER.md 末尾写 **M-** 预注册(写于看任何结果之前)。① 把 ① 按现行规则往前重建到数据允许的最早(目标 2018-01):每月初按当时 asset_mcap_daily 市值取前 24(去稳定币 / 包装币 / 交易所平台币以外的规则照 src/data/signals/core_variants.py 的 ① 臂,读代码照搬,不改 src/),市值加权不设上限,月度再平衡;对照 = 持有 BTC。② 状态(期初已知):BTC 主导度 = BTC 市值 / 这 24 名合计市值,过去 90 天是升是降。③ 主判据:全样本月收益 apparatus.ab_test(A = BTC,B = ①,mean_block = 3,days_per_year = 12)—— 只有 verdict = A > B 才说「① 结构性输给 BTC」;分状态:① − BTC 的月对数收益在「主导度降」与「主导度升」两段各报均值,并把状态标签按 6 个月块打乱 1,000 次,报两段差在打乱里的分位(≥ 95 才说「分周期」)。④ 另报(探索,标明):逐年 ① / BTC 总收益与回撤;2020–21 山寨季单列。⑤ 与 2023 → 2026 core_variants_daily 的 ① 重叠段对数:你的重建与库里那条差多少(两条应基本重合,差太多先查重建)。",
+    "expect": "Mac 数据根 _reports/absorb_input/T-107_core_vs_btc.md(两半:检验 + 挖掘)+ 台账 M- 条目;脚本在 docs/research/;**汇总表同时贴进卡 notes**;卡改 in_review。结论交 Seth 与 Jazz:① 的定义要不要动(例如以 BTC 为锚、山寨只作 ② 的倾斜)。"
+  },
+  "prior_value": "core_variants_daily 2023-01 → 2026-10:btc 4.90× / −53%、cap_uncapped 3.66× / −57%、cap_c40 3.13× / −60%、broad_mom30_breadth 3.25× / −37%(唯一 2025 年为正的臂,+14%)。",
+  "notes": "2026-10-15 Seth 开卡。"
+}

@@ -1,0 +1,25 @@
+{
+  "id": "T-106",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-15",
+  "verified": null,
+  "title": "更快的动量(Jazz 10-16「MSCI 过时,要更高更快」):领先在 1 周 / 1 月 / 3 月上会不会延续 —— World50 与加密面板各测一次「因」",
+  "source": "Jazz 10-16:动量不跳月,MSCI 标准过时,要更高更快;DECISIONS 10-08「动量周期要更短」。T-102(M-582c)只测了季度滞后:组与名字层都不延续。加密面板 2023→2026 事后看:越快的动量臂越差(mom7 1.69× / −72%,BTC 4.90× / −53%)—— 「更快」要先证",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-106.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "先在 REFUTATION_LEDGER.md 末尾写 **M-** 预注册(写于看任何结果之前)。不测组合收益,测机制(检验力比组合高):① 两个池子:World50 = 每期期初按当时可知市值(world50_mcap_weekly 期初前最后一个周点;加密 asset_mcap_daily;黄金照 world50_data.metal_mcap_usd)取前 60;加密 = 每期期初 asset_mcap_daily 市值前 30(去掉稳定币与包装币)。**成员按期初定**(T-102 用期末市值选成员,偏向当期赢家,这次改掉)。② 三个周期 L ∈ {1 周, 1 月, 3 月},不跳过最近一段(Jazz 10-16);不重叠的连续期:形成期收益 = 期内收盘之比,下一期同长度的收益为结果。③ 统计量:每期名字层 Spearman(形成期收益, 下一期收益),全样本取平均;零分布 = 同一期内打乱下一期收益(apparatus.shuffle_within)1,000 次;判据:平均秩相关 > 零分布 95 分位才说「这个周期的领先会延续」。④ 分状态各报一遍:World50 用 ACWI、加密用 BTC,期初过去 6 个月收益 > 0 / ≤ 0(期初已知)。⑤ 窗口:World50 2016-01 → 2026-09(收益用 ohlcv_daily eodhd 本币复权收盘,注明未换汇);加密 2020-01 → 2026-09。⑥ 探索(标明,不出判定):每期前 1/5 减后 1/5 的下一期收益价差;与换手的关系。零分布 / 分位只许用 src/data/evaluation/apparatus.py。省额度:脚本把结果写成 JSON / 表,对话里只贴汇总,不贴逐期数据。",
+    "expect": "Mac 数据根 _reports/absorb_input/T-106_fast_momentum.md(两半:检验 + 挖掘;表 = 池子 × 周期 × 全样本 / 两种状态 的平均秩相关与零分布 95 分位)+ 台账 M- 条目;脚本在 docs/research/;**汇总表同时贴进卡 notes**(Seth 读不到数据根);卡改 in_review。"
+  },
+  "prior_value": "M-582c(T-102):World50 季度滞后 1 / 2 / 4 名字层 ρ̄ 0.025 / 0.019 / 0.007,全在零分布 95 分位内;下行段反转(探索)。加密面板事后:mom30_breadth 3.91×、mom14 3.13×、mom7 1.69×、BTC 4.90×(2023-01 → 2026-10)。",
+  "notes": "2026-10-15 Seth 开卡。过了 → Seth 设计「更快」的臂、作为第三条臂进前向账本;没过 → 记「更快 = 更多换手与反转风险,不是收益来源」,交 Jazz。"
+}
