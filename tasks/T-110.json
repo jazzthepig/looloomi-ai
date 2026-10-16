@@ -1,10 +1,14 @@
 {
   "id": "T-110",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-16",
-  "verified": null,
-  "notes_extra": "2026-10-16 lane-c: 12/21 家已交付 (RMS, SIE, DTE x2 口径, ALV x2, AIR, CBA, SU, SAF x2, AI, ABBN, RR, CFR); 9 家占位 (IBE/PRX/INVE-B/3968/601628/601088/0883/2308/601138 shares=0)。详 _reports/absorb_input/T-110_local_shares.md。RR 与 ABBN outstanding 与公开 mcap 差 10x 需复核;下一步补 2014-2022 历史 (10 年 × 12 家 = 120 URD PDF) 另立卡。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-16",
+    "value": "C 道两轮:12 家有当年股数(ABBN 改对、0 占位删掉);CFR 仍按 A + B 合计没除 B 的 1/10、逐年回补没做。**不入库,收卡**:世界前 50 的门槛现在约 3,000 亿美元(第 50 名 3,030 亿),这 21 家没有一家接近 —— 它们在池子里只为了看有没有人冲上来;而且只有 FY2024 的数,按 500 天陈旧规则 2026 年中就会断,开账日排不上。哪家接近门槛再补 FY2025 + 历年。真正影响前 50 的缺口是沙特阿美(约全球前 10):没有日线(EODHD 404),交 Jazz 定。"
+  },
+  "notes_extra": "2026-10-16 lane-c Round 2: ABBN.SW 修正 outstanding 从 180,944,818 → 1,915,000,000 (issued 2,068,156,160 par CHF 0.0949 - treasury ~153M;第1轮错把 issued 抄为 196.2M);ABBN.SW 2022 补 outstanding 2,039,423,682 (par CHF 0.12,Feb-2022 注销 73.5M)。CFR.SW 修正 FY24 B 股从 522M → 537,582,089 (Nov-2023 资本增加 +15.58M to each class);CFR FY24 total 1,075,164,178 = A 537,582,089 + B 537,582,089;经济权益 591,340,298 (B par CHF 0.10 / 10:1 票 / ~9.1% equity 50% vote);CFR FY23 补 1,044M = 522+522。所有 5 个 shares=0 占位行删除 (SU 旧 0 行 + 601628/601088/0883/3968,卡要求'不许留 0');9 家未交付 (IBE/PRX/INVE-B/3968/601628/601088/0883/2308/601138) 交 T-111 lane A Round 2。CSV 现 17 行(全有数);mcap 验证:ABBN CHF 92.9B ✓ / CFR CHF 76.9B ✓ / RR £42.5B ✓ / 其余 11 家偏差 ≤ 25%(SIE/AIR 偏差源于股价估的不够新,outstanding 口径对)。需 @seth 复核:(a) SIE/AIR 2024 末股价;(b) ABBN par CHF 0.0949 vs AR2022 报 0.12 是否中间 reverse-split;(c) 2014-2021 历史是否下轮补(~80 个 URD PDF)。详 _reports/absorb_input/T-110_local_shares.md。",
   "title": "World50 扩池里 21 个本地上市公司的历年总股数(有价、没股数 ⇒ 现在进不了排名)",
   "source": "Jazz 10-16「前 180 就可以」;周更循环 mcap 段 not_sec_listed 32 个,其中 21 个 ohlcv_daily(eodhd)有 2015 起日线、没有股数",
   "allowed_paths": [
@@ -22,5 +26,5 @@
     "expect": "Mac 数据根 research/t110/exchange_shares.csv + _reports/absorb_input/T-110_local_shares.md(每家:口径、几行、和价格乘出来的最新市值对不对得上公开市值,差多少);卡改 in_review。做不完就写清做到哪家。"
   },
   "prior_value": "World50 = 世界前 50 市值;这 21 家里至少 Hermès、Siemens、Deutsche Telekom、Allianz、CBA 处在前 50–100 的边界,缺股数 = 排名里永远没有它们。",
-  "notes": "2026-10-16 Seth 开卡。另 11 个(东京 6、印度 2、沙特阿美、星展、裕信)EODHD 没日线(404),不在本卡范围 —— 现阶段不买付费数据。\n2026-10-16 Seth 合并第 1 轮(指针 + 卡):research/t110/exchange_shares.csv 21 行里 12 家有数、5 行 shares = 0 占位、只有 2022–2024 的最近一两年。**核对出的错**:ABBN.SW 写成 180,944,818(实际约 18.4 亿股,差 10 倍 —— 把 0.12 瑞郎面值、1.962 亿当成了总股数?);CFR.SW 把 B 股按 1 瑞郎面值算,B 股面值是 0.10,经济权益要 A + B ÷ 10;RR.LSE 股数 83.8 亿对,但伦敦价格是便士,Seth 入库时自己换。**第 2 轮**(同卡,lane-c):① 先修 ABBN、CFR,并把 5 个 0 占位要么补真数、要么删行(不许留 0);② 已有数的 12 家每家补到 2014-12-31 起每年一行;③ 每家写完用「最近收盘 × 股数」对一次公开市值,差 > 20% 的在 note 里写原因;④ 再做剩下 9 家。每做完一家追加写 CSV。"
+  "notes": "2026-10-16 Seth 开卡。另 11 个(东京 6、印度 2、沙特阿美、星展、裕信)EODHD 没日线(404),不在本卡范围 —— 现阶段不买付费数据。\n2026-10-16 Seth 合并第 1 轮(指针 + 卡):research/t110/exchange_shares.csv 21 行里 12 家有数、5 行 shares = 0 占位、只有 2022–2024 的最近一两年。**核对出的错**:ABBN.SW 写成 180,944,818(实际约 18.4 亿股,差 10 倍 —— 把 0.12 瑞郎面值、1.962 亿当成了总股数?);CFR.SW 把 B 股按 1 瑞郎面值算,B 股面值是 0.10,经济权益要 A + B ÷ 10;RR.LSE 股数 83.8 亿对,但伦敦价格是便士,Seth 入库时自己换。**第 2 轮**(同卡,lane-c):① 先修 ABBN、CFR,并把 5 个 0 占位要么补真数、要么删行(不许留 0);② 已有数的 12 家每家补到 2014-12-31 起每年一行;③ 每家写完用「最近收盘 × 股数」对一次公开市值,差 > 20% 的在 note 里写原因;④ 再做剩下 9 家。每做完一家追加写 CSV。\n2026-10-16 Seth 开卡。另 11 个(东京 6、印度 2、沙特阿美、星展、裕信)EODHD 没日线(404),不在本卡范围 —— 现阶段不买付费数据。"
 }
