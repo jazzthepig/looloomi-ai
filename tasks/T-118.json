@@ -1,0 +1,25 @@
+{
+  "id": "T-118",
+  "owner": "lane-c",
+  "status": "in_review",
+  "created": "2026-10-16",
+  "verified": null,
+  "title": "S-598:周期 / 季节性机会挖掘(发现段 2014–2020,只看这一段)",
+  "source": "Jazz 10-16「找 cyclical and seasonal 的 opportunity」",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-118.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "src/",
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "照台账 §S-598 的协议:候选 = 星期几、周末 vs 工作日、月初月末、月份、季末周、美股假日周、FOMC 决议周、每月最后一个周五所在周、减半周期阶段;资产 = BTC、ETH、加密前 15 等权、World50 等权、黄金(Mac 数据根 research/w50_daily/close.json 与 crypto_daily)。**只读 2014-01 → 2020-12**,一行都不许碰 2021 起的数据(脚本里先截断再算,写进报告)。每项:该日历段平均收益 − 其余日子,块自助 95% CI,标签块打乱 1,000 次的分位;记录总共试了多少项。统计走 apparatus.py。交前 3 名给 Seth(方向、幅度、为什么可能有因)。",
+    "expect": "脚本 docs/research/t118_s598_seasonality.py + _reports/absorb_input/T-118_seasonality_discovery.md;卡改 in_review,推 lane-c/T-118。"
+  },
+  "prior_value": "Trader Tom 方向的第一批证据;预注册在台账,lane 只实现不改。",
+  "notes": "2026-10-16 lane-c 交。窗口实际 2014-12-31→2020-12-31(w50 从这一天起;2014-01 那 11 个月在数据源里没有)。27 候选 × 4 资产 = 105 试项(World50 等权在该窗口 0 只全覆盖,跳)。Top 3 全在 ETH(diff_log, 标签打乱 pct):#1 FOMC 周 +0.0108 / 0.996;n=301/1671;#2 月份 02 +0.0106 / 0.969;n=142/1830;#3 月份 09 -0.0106 / 0.015;n=180/1792。块自助 95% CI 都含 0 — 标签打乱分位才是过阈指标。BTC + CRYPTO_TOP 的 month_03 也是 −0.0070 / −0.0067 分位 0.010/0.020 一致(Q1 弱)与 month_01 一致负号。报告 _reports/absorb_input/T-118_seasonality_discovery.md;脚本 docs/research/t118_s598_seasonality.py。@seth:1)World50 该 6 年没量,以 asset dim=4 收口,还是要补 eodhd 历史先复算?2)FOMC/02月/09月 三个全在 ETH 上,信号是不是真周期还是过拟合?(见报告「探索性」)"
+}

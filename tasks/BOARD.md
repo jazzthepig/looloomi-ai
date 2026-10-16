@@ -5,6 +5,7 @@
 | in_review | T-068 | lane-b | 评估层 ②:状态轴换成有历史的价格特征(T-059 之后) | 测试:同一日期在 2024 年算与在今天算落在同一格(无前视);上线当天 rr_matrix_daily 出现 6 个新格子 | 见 T-059 原卡(10-07) |  |
 | in_review | T-105 | lane-b | World50 幸存者偏差补完:其余年份的全球前 100 + 六个英国 / 欧洲 ADR 的换股比例与 20-F 封面股数 | Mac 数据根 research/t105/(adr_ratios.csv、sec_prefix.csv、top100_by_year.csv、missing.csv)+ _reports/absorb_input/T-105_survivorship_2.md;卡改 in_review。 | T-101:2018 97/100;漏掉的 8 家里 3 家是真幸存者偏差(BP / VOD 跌出、DowDuPont 拆分),5 家今天仍在前 100(BUD / BA / UL / BTI / SAN)。 |  |
 | in_review | T-057 | lane-c | 三臂对比的记账有错:下一次调仓不在的币按「零收益」记、周收益平摊到每天 —— A 的 arm C Sharpe 4.90 / 回撤 10% 是这个造成的 | 测试钉住 ①②;重跑后 arm B 的 Sharpe 不再被平滑抬高(与 hold-the-panel 同量级);arm C 的结论按新数重判 | A 10-07 报告:arm C Sharpe +4.90 / MaxDD 10.3% / 累计 +456%;arm B +1.48 / 60.5% —— 记账口径下的数,不是证据 |  |
+| in_review | T-118 | lane-c | S-598:周期 / 季节性机会挖掘(发现段 2014–2020,只看这一段) | 脚本 docs/research/t118_s598_seasonality.py + _reports/absorb_input/T-118_seasonality_discovery.md;卡改 in_review,推 lane-c/T-118。 | Trader Tom 方向的第一批证据;预注册在台账,lane 只实现不改。 |  |
 | in_review | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | in_review | T-097 | seth | 一个共用、测过的验证装置 + A/B:块打乱 / 多空盈亏 / 分位 / Brier / 平稳块自助 A/B 与 MDE,空操作打乱探测;此后每张研究卡必须用它 | 零分布与盈亏的 bug 不再按卡重复出现;T-092 R3 / T-093 R3c 用它重跑。 | 每张卡手写零分布:10-14 一天里打乱空操作 2 次(T-090、T-093)、空头盈亏公式错 2 张(T-092、T-093)、统计量退化 1 张(T-091)。 |  |
 | in_review | T-112 | seth | 证据面接 World50 / 龙头腿 / 灵活组合三本新前向账本(另一条产品线,基准各自的,不进 ① 的配置层) | 部署后 /api/v1/proof/books 有 other_lines 三段;allocation_daily 的 book 集合不变 | 前向记录本身就是产品(ARCHITECTURE);三本账开账后若证据面看不到,等于没记。 |  |
@@ -119,4 +120,4 @@
 | done | T-081 | seth | 代币迁移接段:MKR→SKY(1:24000)、MATIC→POL(1:1)—— 宇宙只放新币,生效日按成交交叉(CoinDesk / CF Benchmarks 做法),历史按比例接,统一标准 v1.3 | SKY 的分不再因市值 0 被压到底;POL 迁移前用的是 MATIC | MKR 自 2025-06-05 起在标准里市值 0、基本面支柱 0,正式档 UNDERWEIGHT(实时 55.8 NEUTRAL);POL 迁移前 11 个月用的是日成交 60 万美元的薄币 | 10-12 正式批次含 SKY、POL,无 MKR、MATIC;/cis/universe 有 SKY 无 MKR。剩 Minimax 换 T1 宇宙(Mac 侧,SYNC §Seth-1012a)不在本卡验收内。 @ 2026-10-13T13:45Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 15 · claimed 6 · blocked 5 · in_review 6 · done 83 · dropped 1
+open 15 · claimed 6 · blocked 5 · in_review 7 · done 83 · dropped 1
