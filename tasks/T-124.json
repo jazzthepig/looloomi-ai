@@ -1,0 +1,26 @@
+{
+  "id": "T-124",
+  "owner": "lane-b",
+  "status": "in_review",
+  "created": "2026-10-18",
+  "verified": null,
+  "title": "对账模块:实盘(或 dry-run)意图 / 成交 → 实施缺口(bps)、与纸面 tom_trader 的日跟踪误差、未成交机会成本",
+  "source": "Jazz 10-18「执行期提前的确的」;TRADE_PATH §3c(X1V,收盘后 1 小时内成交 + 灾难止损);S-602 模拟五:X1V 的降回撤靠及时出场",
+  "allowed_paths": [
+    "src/data/execution/",
+    "tests/",
+    "docs/research/",
+    "tasks/T-124.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "纯函数,输入 src/data/execution/fill_log.py 的意图 / 结果数据结构与纸面净值序列:每笔实施缺口 = 价差 + 手续费 + 未成交机会成本(相对决策时中间价);日跟踪误差;周汇总。测试用假数据,先红后绿;不读写任何表。",
+    "expect": "模块 src/data/execution/reconcile.py + tests/test_reconcile.py;卡改 in_review,推 lane-b/T-124。"
+  },
+  "prior_value": "TRADE_PATH §1 第 4 段;升档条件里的「实施缺口有数」靠它。",
+  "notes": "2026-10-18 lane-b 交付。src/data/execution/reconcile.py:纯函数(无 IO),封装 fill_log.py 的 slippage/opportunity 原语;新增 fee_bps / per_trade_gap / daily_tracking_error / weekly_summary;每笔实施缺口 = slippage_bps + fee_bps + opportunity_bps(每个 None 而非 0,缺即不可比);以 target_notional 而非 filled_notional 计价未填部分(避免 fills-only 偏差);日 TE 分母用 paper NAV 而非 live NAV(live NAV 已吸收缺口本身);日 TE 不为零填无事件的日子(无事件 = 未测);周用 ISO 校准。tests/test_reconcile.py:13 项全绿(单点 5bps fee + 10bps slip + 0opp 的 filled taker → 15bps gap / 0.15% × 5000 = $7.5 实施成本 USD;partial fill 100bps opp × 50% 未填 = 50bps 单边,三种成分并存;expired 时 slip / fee 为 None,opp 单算 = 100bps;sell side 卖出 bid 同为 COST;maker 内部成交 slip 为负 / fee 仍正;两日同 ISO 归为同一周,跨周分开;空对空 → 空字典)。fill_log_records_the_misses 不动。"
+}
