@@ -1315,6 +1315,47 @@ async def _start_multiplier_loop():
     print("[MULTIPLIER] ✅ ③ multiplier scheduled (multiplier_daily: replay since 2023 + forward)")
 
 
+async def _executor_dry_run_loop():
+    """T-122 执行器空跑(TRADE_PATH §5 第 1–2 天,不下单):UTC 收盘后按 X1V 收盘信号出订单计划,按 HL 现货真实盘口
+    取整、估滑点,意图写 `execution_intents`(sleeve = x1v_spot_dry)。00:05 起每 5 分钟试一次,收盘价落库就跑,
+    一天一轮;记下「收盘 → 计划就绪」的分钟数 —— X1V 的降回撤靠及时出场(S-602),这条时间线不需要私钥就能量。
+    判活:`loop_attempt` 里 `_executor_dry_run_loop` 每天一条 ok,detail.minutes_after_close ≤ 60。"""
+    await _asyncio.sleep(_boot_delay(540))
+    while True:
+        _sleep = 300
+        try:
+            from src.data.execution.dry_run import already_ran_today, run_dry_cycle
+            if await already_ran_today():
+                await _sleep_until_utc(0, 5)
+                continue
+            r = await run_dry_cycle()
+            _detail = {k: r.get(k) for k in ("asof", "minutes_after_close", "on_time", "targets", "prev", "mids",
+                                            "orders", "refused", "catastrophe", "intents_written")}
+            _ok = bool(r.get("ok"))
+            print(f"[EXEC-DRY] {'ok' if _ok else 'waiting'} · {str(r.get('why') or r.get('targets'))[:140]}")
+            await _beat("_executor_dry_run_loop", ok=_ok, refused=not _ok, detail=_detail,
+                        error=None if _ok else str(r.get("why"))[:200])
+            await _record_loop_attempt("_executor_dry_run_loop", "ok" if _ok else "refused",
+                                       reason=None if _ok else str(r.get("why"))[:400], detail=_detail,
+                                       writer="src.api.main._executor_dry_run_loop")
+            if _ok:
+                await _sleep_until_utc(0, 5)
+                continue
+        except Exception as _e:
+            print(f"[EXEC-DRY] ⚠️  cycle FAILED: {_e}")
+            await _beat("_executor_dry_run_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_executor_dry_run_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._executor_dry_run_loop")
+            _sleep = 900
+        await _asyncio.sleep(_sleep)
+
+
+@app.on_event("startup")
+async def _start_executor_dry_run_loop():
+    _asyncio.create_task(_executor_dry_run_loop())
+    print("[EXEC-DRY] ✅ executor dry run scheduled (execution_intents, sleeve x1v_spot_dry; no orders)")
+
+
 async def _meta_allocator_loop():
     """T-075 / S-521:类比元配置 —— 按状态找历史相似日、看策略库里各策略之后表现、每周重配;回放 2023-07 起 + 前向。
     每 6 小时一轮(排在 ① 候选之后)。判活:`select max(d) from meta_allocator_daily where arm = 'meta_knn'` = 昨天(UTC)。

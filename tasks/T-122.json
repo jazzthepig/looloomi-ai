@@ -21,5 +21,5 @@
     "expect": "dry-run 在 Railway 或云主机上跑满 2 天,每天一批意图,人工核对无误(TRADE_PATH §5 第 1–2 天)"
   },
   "prior_value": "执行是 X1V 成立的一部分;没有它,X1V 只能按悲观摩擦列算。",
-  "notes": "2026-10-18 Seth 开卡。\n2026-10-18 Seth:核心纯函数已写(src/data/execution/executor.py + tests/test_executor.py 5 项):目标与前向账本同一个核、价格过期拒单、出场优先、单笔 / 当日换手截断、一键停、灾难止损判定、dry-run 意图落表。**卡在 T-015**(Jazz:HL API 钱包 + 东京 / 新加坡云主机):dry-run 要读真实余额与盘口,地址到位后接调度。"
+  "notes": "2026-10-18 Seth 开卡。\n2026-10-18 Seth:核心纯函数已写(src/data/execution/executor.py + tests/test_executor.py 5 项):目标与前向账本同一个核、价格过期拒单、出场优先、单笔 / 当日换手截断、一键停、灾难止损判定、dry-run 意图落表。**卡在 T-015**(Jazz:HL API 钱包 + 东京 / 新加坡云主机):dry-run 要读真实余额与盘口,地址到位后接调度。\n2026-10-18 Seth:空跑已接调度,不等钱包 —— `src/data/execution/dry_run.py` + `_executor_dry_run_loop`:00:05 UTC 起每 5 分钟试,前一日收盘落库即出计划;纸面账户 3,000 USDC、HL 现货 UBTC / UETH 真实盘口(T-123 的只读适配层)、szDecimals 取整、按盘口估滑点、超出可见深度拒单;意图写 execution_intents(sleeve x1v_spot_dry),每天记「收盘 → 计划就绪」分钟数。卡上 expect 的「跑满 2 天、人工核对」要等 X1V 有订单的日子(当前 BTC / ETH 都是 0)。真下单仍等 T-015。"
 }
