@@ -1,0 +1,25 @@
+{
+  "id": "T-122",
+  "owner": "seth",
+  "status": "claimed",
+  "created": "2026-10-18",
+  "verified": null,
+  "title": "执行器核心:X1V 目标 → 订单计划 → 只算不发(dry-run)→ 写 execution_intents;收盘后 1 小时内跑、灾难止损盘中盯",
+  "source": "Jazz 10-18「执行期提前的确的」;TRADE_PATH §3c(X1V,收盘后 1 小时内成交 + 灾难止损);S-602 模拟五:X1V 的降回撤靠及时出场",
+  "allowed_paths": [
+    "src/data/execution/",
+    "src/api/",
+    "tests/",
+    "docs/TRADE_PATH.md",
+    "scripts/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "纯函数:目标敞口(BTC / ETH 各半,X1V 现货上限 1.0)、订单计划(阈值 5%、单笔上限、日换手上限、价格过期拒单、一键停);dry-run 每天一批意图落 execution_intents(fill_log);灾难止损的判定函数;测试先红后绿。真下单接口留给 Jazz 的 API 钱包到位之后。",
+    "expect": "dry-run 在 Railway 或云主机上跑满 2 天,每天一批意图,人工核对无误(TRADE_PATH §5 第 1–2 天)"
+  },
+  "prior_value": "执行是 X1V 成立的一部分;没有它,X1V 只能按悲观摩擦列算。",
+  "notes": "2026-10-18 Seth 开卡。\n2026-10-18 Seth:核心纯函数已写(src/data/execution/executor.py + tests/test_executor.py 5 项):目标与前向账本同一个核、价格过期拒单、出场优先、单笔 / 当日换手截断、一键停、灾难止损判定、dry-run 意图落表。**卡在 T-015**(Jazz:HL API 钱包 + 东京 / 新加坡云主机):dry-run 要读真实余额与盘口,地址到位后接调度。"
+}
