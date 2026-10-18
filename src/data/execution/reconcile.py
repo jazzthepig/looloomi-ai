@@ -55,6 +55,19 @@ from src.data.execution.fill_log import (
 )
 
 
+def _fill_ratio(intent: Intent, outcome: Outcome) -> float:
+    """filled_notional / target_notional, clamped to [0, 1].
+
+    slippage_bps and fee_bps are denominated in FILLED notional; opportunity_bps
+    already includes the unfilled multiplier internally.  To express the gap
+    in a single denominator (target notional) we scale the filled-denominated
+    parts by this — without it, partial fills inflate slippage + fee by the
+    target/filled ratio (e.g. a 50% fill multiplies both sides by 2×)."""
+    if intent.target_notional_usd <= 0:
+        return 0.0
+    return max(0.0, min(1.0, outcome.filled_notional_usd / intent.target_notional_usd))
+
+
 # ── per-trade component: fee in bps of filled notional ──────────────────────
 
 def fee_bps(outcome: Outcome) -> float | None:
@@ -83,12 +96,24 @@ class TradeGap:
     slippage_bps: float | None
     fee_bps: float | None
     opportunity_bps: float | None
+    _fill_ratio: float = 1.0          # internal; = filled/target, clamped [0,1]
 
     @property
     def implementation_gap_bps(self) -> float | None:
-        """Sum of the three components; None if all three are None."""
-        parts = [p for p in (self.slippage_bps, self.fee_bps, self.opportunity_bps)
-                 if p is not None]
+        """Sum of the three components expressed in a single denominator —
+        TARGET notional.  slippage_bps and fee_bps are bps of FILLED notional,
+        opportunity_bps is already bps of target notional (it bakes in the
+        unfilled ratio internally).  Mixing denominators was the original
+        bug: with a 50% partial fill, the old code multiplied both sides by
+        target, inflating the cost by 2×.  Scale the filled-denominated
+        parts by filled/target so every term is in bps-of-target."""
+        parts: list[float] = []
+        if self.slippage_bps is not None:
+            parts.append(self.slippage_bps * self._fill_ratio)
+        if self.fee_bps is not None:
+            parts.append(self.fee_bps * self._fill_ratio)
+        if self.opportunity_bps is not None:
+            parts.append(self.opportunity_bps)
         if not parts:
             return None
         return sum(parts)
@@ -119,6 +144,7 @@ def per_trade_gap(intent: Intent, outcome: Outcome) -> TradeGap:
         slippage_bps=_slippage_bps(intent, outcome),
         fee_bps=fee_bps(outcome),
         opportunity_bps=_opportunity_bps(intent, outcome),
+        _fill_ratio=_fill_ratio(intent, outcome),
     )
 
 
@@ -129,9 +155,17 @@ def per_trade_gaps(pairs: list[tuple[Intent, Outcome]]) -> list[TradeGap]:
 # ── daily tracking error ────────────────────────────────────────────────────
 
 def _resolve_date(outcome: Outcome) -> dt.date:
-    """Outcome resolution date in UTC.  Outcome.ts_resolved is ISO8601 UTC
-    (matches the discipline in §5c — date is UTC, JST only on display)."""
-    return dt.date.fromisoformat(outcome.ts_resolved[:10])
+    """Outcome resolution date in UTC.  Outcome.ts_resolved is ISO8601, which
+    may carry an explicit offset (e.g. ``+09:00`` from a Mac writing in JST)
+    or be naive.  Naive strings are treated as UTC per §5c — JST is display-
+    layer only.  Slicing ``[:10]`` on an offset-bearing string picks the LOCAL
+    date, not the UTC date — which placed events on the wrong day by up to
+    one (and TE on the wrong bucket).  Parse to datetime, anchor to UTC, take
+    the date."""
+    parsed = dt.datetime.fromisoformat(outcome.ts_resolved)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=dt.timezone.utc)
+    return parsed.astimezone(dt.timezone.utc).date()
 
 
 @dataclass

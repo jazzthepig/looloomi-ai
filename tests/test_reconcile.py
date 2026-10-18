@@ -134,9 +134,14 @@ def test_per_trade_gap_expired_order_carries_only_opp_cost() -> None:
 
 def test_per_trade_gap_partial_fill_has_all_three_components() -> None:
     """Partial fill: half filled (slippage + fee on the filled half),
-    half expired (opportunity on the unfilled half).  The TEST is that the
-    opportunity_bps is multiplied by unfilled ratio — the partial slip
-    should NOT silently cover the missed half."""
+    half expired (opportunity on the unfilled half).  Each of the three
+    components lives in a different denominator BEFORE the gap is summed —
+    slippage / fee are bps of FILLED notional, opportunity is already in
+    bps of TARGET notional (it bakes in the unfilled ratio).  The gap
+    scales the filled-denominated parts by filled/target so the sum is in
+    a single denominator (target).  Without that scaling, partial fills
+    inflated slippage + fee by target/filled, the original denominator
+    bug."""
     from src.data.execution.reconcile import per_trade_gap
     from src.data.execution.fill_log import PARTIAL
     g = per_trade_gap(
@@ -144,17 +149,40 @@ def test_per_trade_gap_partial_fill_has_all_three_components() -> None:
         _out(status=PARTIAL, px=100.1, notional=5000.0, fee=2.5,
               liq="taker", mid_resolve=101.0),
     )
-    check("slippage on filled half is ~10 bps",
+    check("slippage on filled half is ~10 bps (raw, of filled notional)",
           g.slippage_bps is not None and abs(g.slippage_bps - 10.0) < 0.01,
           f"{g.slippage_bps}")
-    check("fee on filled half (5000 notional, 2.5 fee) = 5 bps",
+    check("fee on filled half (5000 notional, 2.5 fee) = 5 bps (raw)",
           g.fee_bps is not None and abs(g.fee_bps - 5.0) < 0.01, f"{g.fee_bps}")
-    check("opportunity on unfilled half: 100 bps * 0.5 = 50 bps",
+    check("opportunity on unfilled half: 100 bps * 0.5 = 50 bps (already bps-of-target)",
           g.opportunity_bps is not None
           and abs(g.opportunity_bps - 50.0) < 0.01, f"{g.opportunity_bps}")
-    check("gap = slippage + fee + opp = 65 bps",
+    # All three components expressed in target-notional bps:
+    # slippage 10 * 0.5 = 5, fee 5 * 0.5 = 2.5, opp 50.  Total 57.5.
+    check("gap = 10*0.5 + 5*0.5 + 50 = 57.5 bps (single denominator)",
           g.implementation_gap_bps is not None
-          and abs(g.implementation_gap_bps - 65.0) < 0.01,
+          and abs(g.implementation_gap_bps - 57.5) < 0.01,
+          f"{g.implementation_gap_bps}")
+    check("realised cost = 57.5 bps of $10000 target = $57.50",
+          g.realised_cost_usd is not None
+          and abs(g.realised_cost_usd - 57.50) < 0.01,
+          f"{g.realised_cost_usd}")
+
+
+def test_per_trade_gap_partial_fill_denominator_demonstrated() -> None:
+    """Seth 10-18 spec: 50% fill, 10 bps slippage, 5 bps fee, 100 bps
+    opportunity ⇒ gap = 5 + 2.5 + 50 = 57.5 bps.  Pinning the exact number
+    so the denominator fix can never silently revert."""
+    from src.data.execution.reconcile import per_trade_gap
+    from src.data.execution.fill_log import PARTIAL
+    g = per_trade_gap(
+        _intent(side="buy", mid=100.0, notional=10000.0),
+        _out(status=PARTIAL, px=100.1, notional=5000.0, fee=2.5,
+              liq="taker", mid_resolve=101.0),
+    )
+    check("gap = 5 + 2.5 + 50 = 57.5 bps (Seth spec)",
+          g.implementation_gap_bps is not None
+          and abs(g.implementation_gap_bps - 57.5) < 0.01,
           f"{g.implementation_gap_bps}")
 
 
@@ -237,6 +265,43 @@ def test_daily_te_empty_pairs_returns_empty_dict() -> None:
     from src.data.execution.reconcile import daily_tracking_error
     te = daily_tracking_error([], {dt.date(2026, 10, 18): 1_000_000.0})
     check("empty pairs → empty daily dict", te == {}, str(te))
+
+
+def test_resolve_date_offset_bearing_iso8601_lands_on_utc_date() -> None:
+    """Seth 10-18 spec: ``2026-10-18T08:00:00+09:00`` is 23:00 UTC on
+    2026-10-17.  The old ``[:10]`` slice returned "2026-10-18" — the LOCAL
+    date — placing the event on the wrong day and one day's TE on the wrong
+    bucket.  The fix parses the offset, anchors UTC, takes the date."""
+    from src.data.execution.reconcile import _resolve_date
+    from src.data.execution.fill_log import Outcome
+    o = Outcome(intent_id="x", ts_resolved="2026-10-18T08:00:00+09:00",
+                status="filled", filled_notional_usd=1000.0)
+    check("+09:00 08:00 lands on UTC 2026-10-17",
+          _resolve_date(o) == dt.date(2026, 10, 17), str(_resolve_date(o)))
+
+
+def test_resolve_date_naive_iso8601_is_treated_as_utc() -> None:
+    """Naive timestamps get a UTC anchor before date extraction, per §5c —
+    the discipline is UTC dates everywhere, JST is display-only.  A Mac
+    writing in JST at 15:01 UTC would otherwise silently stamp tomorrow's
+    date on the row."""
+    from src.data.execution.reconcile import _resolve_date
+    from src.data.execution.fill_log import Outcome
+    o = Outcome(intent_id="x", ts_resolved="2026-10-18T03:00:00",
+                status="filled", filled_notional_usd=1000.0)
+    check("naive 2026-10-18T03:00:00 → 2026-10-18",
+          _resolve_date(o) == dt.date(2026, 10, 18), str(_resolve_date(o)))
+
+
+def test_resolve_date_explicit_utc_marker() -> None:
+    """An explicit Z suffix also routes through UTC; the parse handles both
+    ``Z`` (which fromisoformat accepts in 3.11+) and ``+00:00``."""
+    from src.data.execution.reconcile import _resolve_date
+    from src.data.execution.fill_log import Outcome
+    o = Outcome(intent_id="x", ts_resolved="2026-10-18T23:30:00+00:00",
+                status="filled", filled_notional_usd=1000.0)
+    check("+00:00 23:30 → 2026-10-18",
+          _resolve_date(o) == dt.date(2026, 10, 18), str(_resolve_date(o)))
 
 
 # ── weekly summary ───────────────────────────────────────────────────────────
