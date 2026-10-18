@@ -559,53 +559,44 @@ def _exposure_cap(regime: str | None) -> tuple[float, str]:
 
 
 async def _load_panel():
-    from src.research.strategies.causal_positioning import DEFAULT_UNIVERSE, load_binance_panel
-    # PANEL DEPTH IS THE TERCILE'S FUEL (2026-08-12, S-147). This was 120 days.
-    # `_realized_vol_series` needs a 30-day lookback before it emits anything, so
-    # 120 days yields ~91 vol observations — below `_TERCILE_MIN_OBS` (250). The
-    # rolling bounds therefore fell back to the frozen seed on EVERY live mark, and
-    # the S-142 fix that replaced the frozen thresholds was inert in production
-    # from the day it shipped. Measured on v3's first mark:
-    # `vol_state_low[seed(n=91<250)]`.
+    from src.research.strategies.causal_positioning import DEFAULT_UNIVERSE
+    from src.data.market.persisted_panel import (live_oracle_prices, load_persisted_panel,
+                                                 observed_returns)
+    # ── S-607 (2026-10-18): THE PANEL IS READ FROM THE STORE, NOT FETCHED LIVE ──
+    # This used to call `load_binance_panel`, a live request to `fapi.binance.com`
+    # on every mark. Railway's egress IP is not fixed and some deploys land in a
+    # region Binance refuses with HTTP 451; the 451 body is a JSON object, the
+    # kline loop iterated its keys, and `float(k[4])` on the string "code" raised
+    # `string index out of range`. Every mark from 10-14 died on that line; the
+    # last row in `beta_core_nav` is 10-13. It is v3's 08-21 outage again — that
+    # time `_INCEPTION_REASON` was updated to say the price reference had moved to
+    # the Hyperliquid oracle and the code was not (NAV_POLICY §3 correction). Now
+    # the code says it:
+    #   * history  = `ohlcv_daily` source=binance_hist, completed UTC days only —
+    #                the one ingestion lane (rule 3b), spot bars, ① holds spot;
+    #   * today    = Hyperliquid oracle (NAV_POLICY §4 L1), one request;
+    #   * a name without a live price is forward-filled AND MASKED, so `px`
+    #     excludes it (S-287) and the coverage floor decides, as before.
     #
-    # The depth is nearly free: load_binance_panel paginates at 1000 bars per call,
-    # so 120 days and 900 days are the SAME number of HTTP calls per symbol. The
-    # old window was not buying anything — it was just short enough to starve a
-    # statistic that had not been written yet when it was chosen.
-    s = dt.datetime.now(dt.timezone.utc).date() - dt.timedelta(days=_PANEL_DAYS)
-    _, close, fmean, fsum, _filled = load_binance_panel(
-        DEFAULT_UNIVERSE, start=(s.year, s.month, s.day), with_fill_mask=True)
-    # I1, and the sharpest instance of it in this file (2026-08-09). This line used
-    # to be `np.nan_to_num(...)`, which turns a MISSING return into 0.0 — a flat day.
-    # Flat days depress realised vol, the vol scalar rises, and the book SIZES UP.
-    # Unmeasured therefore read as calm, and calm reads as licence to lever: exactly
-    # the direction I1 exists to forbid.
-    #
-    # Note where the guard was. `test_beta_core_book` already asserted
-    # `_vol_scalar(nan) == 1.0`, and `_realized_vol` already used nanmean/nanstd —
-    # so the handling was correct at every level EXCEPT this one, which destroyed the
-    # NaN before any of it could run. An invariant enforced at a point the data
-    # cannot reach is not enforced.
-    with np.errstate(divide="ignore", invalid="ignore"):
-        ret = np.full_like(close, np.nan, dtype=float)
-        ret[1:] = (close[1:] - close[:-1]) / close[:-1]
-    # A NaN price must not enter the book either: it would propagate into weights and
-    # into the benchmark leg, where it silently drops an asset from one and not the
-    # other. Absent price ⇒ absent from the panel, which the equal-weighting then
-    # renormalises over what actually exists.
+    # PANEL DEPTH IS THE TERCILE'S FUEL (2026-08-12, S-147): `_realized_vol_series`
+    # needs a 30-day lookback, and 120 days starved the 250-observation threshold.
+    # Reading from the store, depth costs ~22 pages of 1000 rows.
+    today = dt.datetime.now(dt.timezone.utc).date()
+    s = today - dt.timedelta(days=_PANEL_DAYS)
+    live = await live_oracle_prices(DEFAULT_UNIVERSE)
+    _, close, _fmean, _fsum, _filled, observed = await load_persisted_panel(
+        DEFAULT_UNIVERSE, s, live=live, with_funding=False, today=today)
+    # I1 (2026-08-09): a MISSING return is not a flat day. `np.nan_to_num` here once
+    # turned gaps into 0.0, which depressed realised vol and sized the book UP.
+    # Returns are taken from OBSERVED closes only — a forward-filled day is NaN,
+    # never 0.0 — and nanmean/nanstd downstream skip it.
+    ret = observed_returns(observed)
     # ── A CARRIED PRICE IS NOT A PRICE (S-287) ─────────────────────────────
-    # `close[-1, i]` used to enter `px` on two conditions: not-NaN and positive.
-    # Both are satisfied by a value FORWARD-FILLED from days ago, so a symbol that
-    # stopped updating still arrived as a live quote, `mark_coverage` counted it
-    # toward the 80% floor, and the book marked it. The guard was asking "is there
-    # a number here", and the question is "was this observed today".
-    #
-    # This is the same distinction S-194 drew one layer up — it stopped the book
-    # confusing "no data" with "no movement" — and the layer under it was still
-    # confusing "stale data" with "data". A name whose last close was filled is
-    # EXCLUDED, exactly as a NaN is: equal-weighting renormalises over what is
-    # actually observable, and if too much of the book goes that way the coverage
-    # floor refuses the mark, which is what it is for.
+    # `close[-1, i]` is today's live price, or yesterday's close carried forward
+    # when the venue gave none. Both pass not-NaN and positive; only the mask
+    # tells them apart. A carried name is EXCLUDED and equal-weighting renormalises
+    # over what is actually observable today. The mask is the store's own:
+    # load_persisted_panel always returns it, there is no mode without it.
     _stale_idx = {i for i in range(close.shape[1]) if bool(_filled[-1, i])}
     px = {DEFAULT_UNIVERSE[i]: float(close[-1, i])
           for i in range(close.shape[1])
@@ -617,7 +608,7 @@ async def _load_panel():
         _log.warning("[beta_core] %d/%d panel names have no usable price and are "
                      "excluded from today's book: %s%s",
                      len(missing), close.shape[1], ",".join(missing),
-                     f" · of which STALE (last close forward-filled): {','.join(stale)}"
+                     f" · of which STALE (no live price today, close carried): {','.join(stale)}"
                      if stale else "")
     return DEFAULT_UNIVERSE, close, ret, px, sorted(DEFAULT_UNIVERSE[i] for i in _stale_idx)
 

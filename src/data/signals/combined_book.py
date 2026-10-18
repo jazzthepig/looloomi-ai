@@ -83,11 +83,19 @@ def _combined_target(close, ret, fmean, fsum, nucleus: dict) -> dict[str, float]
 
 
 async def _load_live_panel():
-    from src.research.strategies.causal_positioning import DEFAULT_UNIVERSE, load_binance_panel
-    start = (dt.date.today() - dt.timedelta(days=300))
-    days, close, fmean, fsum = load_binance_panel(DEFAULT_UNIVERSE, start=(start.year, start.month, start.day))
+    # S-607: from the store + today's Hyperliquid oracle, not a live fapi.binance.com
+    # call (HTTP 451 from Binance-restricted Railway deploys; dead from 10-14 on
+    # `string index out of range`). No live price today ⇒ carried in `close`, kept
+    # out of `last_px` (S-287).
+    from src.research.strategies.causal_positioning import DEFAULT_UNIVERSE
+    from src.data.market.persisted_panel import live_oracle_prices, load_persisted_panel
+    today = dt.datetime.now(dt.timezone.utc).date()
+    start = today - dt.timedelta(days=300)
+    live = await live_oracle_prices(DEFAULT_UNIVERSE)
+    days, close, fmean, fsum, filled, _obs = await load_persisted_panel(DEFAULT_UNIVERSE, start, live=live, today=today)
     ret = np.zeros_like(close); ret[1:] = np.nan_to_num((close[1:] - close[:-1]) / close[:-1])
-    last_px = {DEFAULT_UNIVERSE[i]: float(close[-1, i]) for i in range(close.shape[1])}
+    last_px = {DEFAULT_UNIVERSE[i]: float(close[-1, i]) for i in range(close.shape[1])
+               if close[-1, i] == close[-1, i] and close[-1, i] > 0 and not filled[-1, i]}
     last_fund = {DEFAULT_UNIVERSE[i]: float(fmean[-1, i]) for i in range(close.shape[1])}
     return close, ret, fmean, fsum, last_px, last_fund
 

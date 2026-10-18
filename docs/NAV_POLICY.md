@@ -155,6 +155,17 @@ Every position resolves to exactly one tier. The tier used is recorded on the ro
 integrity, no wash-volume signature, and a documented basis study before a source enters the
 table. Adding or reordering a source is a **code change plus a ledger entry**, never a config flip.
 
+> **S-607, 2026-10-18 — L1 is now what the code does, not only what this table says.** Until this
+> date `beta_core_paper`, `scalable_paper` and `combined_book` took every price, history and today
+> alike, from a live `fapi.binance.com` call. Railway deploys that land in a Binance-restricted
+> region get HTTP 451; the JSON error body reached the kline parser and all three books died on
+> `string index out of range` from 10-14 (last `beta_core_nav` row: 10-13). They now read
+> **history from the store** (`ohlcv_daily` source `binance_hist`, completed UTC days only — the
+> one ingestion lane) and **today from the Hyperliquid oracle** (this table's L1, one request),
+> via `src/data/market/persisted_panel.py`. A name with no live price is carried and masked, so it
+> stays out of the mark (S-287). The 10-14 → 10-18 gap is not backfilled (§3): the next mark spans
+> it and carries `interval_hours`.
+
 ### Priceable is not the same as priced today (S-287)
 
 **Rule.** A price that was **carried forward** from a previous day is not an observation and

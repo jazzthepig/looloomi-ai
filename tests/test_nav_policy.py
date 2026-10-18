@@ -522,7 +522,11 @@ def test_beta_core_excludes_stale_closes_from_its_price_dict():
                if isinstance(n, ast.AsyncFunctionDef) and n.name == "_load_panel"), None)
     assert fn is not None, "_load_panel is gone — update this guard"
     seg = ast.get_source_segment(src, fn) or ""
-    assert "with_fill_mask=True" in seg, (
+    # S-607: the panel now comes from the store via `load_persisted_panel`, which
+    # always returns the mask (no mode without it). Either source is acceptable;
+    # what is not acceptable is a loader that cannot say which cells it carried.
+    calls = {ast.unparse(n.func) for n in ast.walk(fn) if isinstance(n, ast.Call)}
+    assert "with_fill_mask=True" in seg or "load_persisted_panel" in calls, (
         "_load_panel does not request the fill mask, so it cannot tell a carried "
         "close from an observed one (S-287)."
     )

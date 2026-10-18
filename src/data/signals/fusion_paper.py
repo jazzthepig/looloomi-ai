@@ -25,8 +25,9 @@ ARCHITECTURE (frozen — no live retuning):
 DATA PATHS (live):
   · CIS pillar_O:  Redis `cis:local_scores` (2h TTL, Mac Mini push) → Supabase
                     `cis_scores` (last 30 days) → cache fallback.
-  · Close prices:  Binance fapi /klines (Railway-reachable since 2026-07-13).
-  · Funding:       Binance fapi /fundingRate (Railway-reachable since 2026-07-13).
+  · Close prices:  ohlcv_daily binance_hist (completed UTC days) + today's Hyperliquid oracle
+                   (S-607: the live fapi call got HTTP 451 from some Railway deploys from 10-14).
+  · Funding:       funding_history binance_perp, daily mean (S-607).
   · State:         Redis `fusion_paper:state`.
   · NAV curve:     Supabase `fusion_paper_nav`.
 
@@ -143,8 +144,7 @@ EXTERNAL_FEATURES = [
     "funding_net_long_frac",
 ]
 
-# ── Live data endpoints ───────────────────────────────────────────────────────
-_FAPI = "https://fapi.binance.com/fapi/v1"
+# ── Universe (the names this book can hold; prices come from the store, S-607) ──
 _BINANCE_TK_MAP = {
     "AAVE": "AAVEUSDT", "APT": "APTUSDT", "ARB": "ARBUSDT",
     "ATOM": "ATOMUSDT", "AVAX": "AVAXUSDT", "BNB": "BNBUSDT",
@@ -168,41 +168,35 @@ VALIDATION_MIN_DAYS = 60
 
 # ── Live data loaders (Railway-reachable) ────────────────────────────────────
 async def _fetch_close_funding(symbols: list) -> dict:
-    """{sym: {"close": [...daily], "funding": [...daily mean]}} from Binance fapi.
+    """{sym: {"close": [...daily], "funding": [...daily mean]}} —— 读库 + 今天的 Hyperliquid oracle(S-607)。
 
-    Graceful degradation: any asset that fails to return is omitted from the dict,
-    so downstream knows to mark flat that day if the 28-asset panel is incomplete.
+    原来每次 mark 现场调 fapi.binance.com。Railway 某些部署的出口被 Binance 以 HTTP 451 拒绝,
+    `kl` 变成 `{"code": 0, "msg": ...}`,`isinstance(kl, list)` 不过 ⇒ 28 个名字全部跳过 ⇒
+    `insufficient_live_data`。10-13 之后这本账一行没长(T-026 的验收卡在这里)。
+    现在:收盘 = `ohlcv_daily` binance_hist 已收完的日子 + 今天一格 oracle;资金费 = `funding_history`
+    binance_perp 按 UTC 日的均值。**今天没有 oracle 的名字整只略过**(不拿昨天的收盘冒充今天,S-287)。
     """
-    import httpx
+    from src.data.market.persisted_panel import build_panel, daily_closes, daily_funding, live_oracle_prices
+    today = dt.datetime.now(dt.timezone.utc).date()
+    start = today - dt.timedelta(days=249)
+    syms = [s for s in symbols if s in _BINANCE_TK_MAP]
+    live = await live_oracle_prices(syms)
+    closes = await daily_closes(syms, start, today)
+    fund = await daily_funding(syms, today - dt.timedelta(days=333))
+    days = [start + dt.timedelta(days=i) for i in range((today - start).days + 1)]
     out: dict = {}
-    headers = {"User-Agent": "cometcloud"}
-    async with httpx.AsyncClient(timeout=20, headers=headers) as c:
-        for sym in symbols:
-            tk = _BINANCE_TK_MAP.get(sym)
-            if not tk:
-                continue
-            try:
-                kl = (await c.get(f"{_FAPI}/klines",
-                                  params={"symbol": tk, "interval": "1d", "limit": 250})).json()
-                if not isinstance(kl, list) or len(kl) < 120:
-                    continue
-                close = np.array([float(k[4]) for k in kl], dtype=float)
-                funding = np.array([])
-                try:
-                    fr = (await c.get(f"{_FAPI}/fundingRate",
-                                      params={"symbol": tk, "limit": 1000})).json()
-                    if isinstance(fr, list) and fr:
-                        byday: dict = {}
-                        for x in fr:
-                            byday.setdefault(int(x["fundingTime"]) // 86400000, []).append(
-                                float(x["fundingRate"]))
-                        funding = np.array([sum(v) / len(v) for _, v in sorted(byday.items())],
-                                           dtype=float)
-                except Exception as e:
-                    _log.warning("[fusion] funding %s: %s", sym, e)
-                out[sym] = {"close": close, "funding": funding}
-            except Exception as e:
-                _log.warning("[fusion] klines %s: %s", sym, e)
+    for sym in syms:
+        if sym not in live:
+            continue
+        close, _fm, _fs, _filled, obs = build_panel([sym], days, closes, live)
+        col = close[:, 0]
+        first = int(np.argmax(~np.isnan(col))) if (~np.isnan(col)).any() else len(col)
+        col = col[first:]
+        if int((~np.isnan(obs[:, 0])).sum()) < 120:
+            continue
+        byday = fund.get(sym) or {}
+        funding = np.array([sum(v) / len(v) for _, v in sorted(byday.items()) if v], dtype=float)
+        out[sym] = {"close": col.astype(float), "funding": funding}
     return out
 
 
@@ -255,29 +249,25 @@ async def _fetch_cis_pillar_o(symbols: list, lookback_days: int = 60) -> dict:
 
 
 async def _fetch_adv_usd(symbols: list, lookback_days: int = 30) -> dict:
-    """{sym: 30d median daily notional volume in USD} from Binance fapi.
+    """{sym: 30 日日成交额中位数(USD)} —— `ohlcv_daily` binance_hist 的 close × volume(S-607)。
 
-    Computed on the daily kline close × volume, summed USD. Used by fill_attribution
-    to compute participation + slippage. Returns {} on total failure (book marks
-    flat that day on capacity unknown).
+    volume 是现货基础币成交量,close × volume = 计价币成交额。原来的现场版用 `k[4] × k[7]`,
+    而 K 线第 8 个字段已经是计价币成交额 —— 又乘了一次价格,ADV 被放大成「价格 × 成交额」。
+    读不到 ⇒ {}(调用方当天按容量未知处理)。
     """
-    import httpx
+    from src.data.market.persisted_panel import daily_closes
+    today = dt.datetime.now(dt.timezone.utc).date()
+    try:
+        rows = await daily_closes([s for s in symbols if s in _BINANCE_TK_MAP],
+                                  today - dt.timedelta(days=lookback_days), today, with_volume=True)
+    except Exception as e:                                          # noqa: BLE001
+        _log.warning("[fusion] adv: %s", e)
+        return {}
     out: dict = {}
-    headers = {"User-Agent": "cometcloud"}
-    async with httpx.AsyncClient(timeout=20, headers=headers) as c:
-        for sym in symbols:
-            tk = _BINANCE_TK_MAP.get(sym)
-            if not tk:
-                continue
-            try:
-                kl = (await c.get(f"{_FAPI}/klines",
-                                  params={"symbol": tk, "interval": "1d", "limit": lookback_days})).json()
-                if not isinstance(kl, list) or len(kl) < 10:
-                    continue
-                notionals = [float(k[4]) * float(k[7]) for k in kl]  # close × volume (USDT)
-                out[sym] = float(np.median(notionals))
-            except Exception as e:
-                _log.warning("[fusion] adv %s: %s", sym, e)
+    for sym, by_day in rows.items():
+        notionals = [c * v for c, v in by_day.values() if c > 0 and v > 0]
+        if len(notionals) >= 10:
+            out[sym] = float(np.median(notionals))
     return out
 
 

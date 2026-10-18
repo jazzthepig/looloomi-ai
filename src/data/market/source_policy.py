@@ -113,6 +113,8 @@ PURPOSE_PRIMARY: dict[str, str] = {
 #: venue='binance_perp' 10 个币 2024-02 → 2026-08-07(一次性导入,从无写入端)。用途边界:
 #: 研究与状态层的特征(S-507 / S-508 的情景扫描要它),**每天一轮、不做日内轮询**,**不进前端、不进成交** —— 成交的场馆
 #: 数据仍只走 hyperliquid。资产集 = binance_hf_collector.HF_SYMBOLS(10 个),扩面要改那里并在此注明。
+#: 资金费的资产集是 `FUNDING_SYMBOLS`(T-079 / S-531 扩到 26 个;S-607 10-18 再补 10 个到 36 个 ——
+#: ① 面板与 fusion 宇宙改为读库,库里得有它们的费率)。每天一轮、一次一个名字的分页,不是日内轮询。
 #: CoinGecko Pro 只给当前费率、没有历史,所以这一项没有付费源可走。
 PURPOSE_SECONDARY: dict[str, frozenset[str]] = {
     MARKET_DATA: frozenset({"binance_hist", "binance_perp"}),

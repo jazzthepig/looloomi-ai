@@ -35,9 +35,13 @@ _log = logging.getLogger("binance_hf")
 HF_SYMBOLS: tuple[str, ...] = ("ADA", "AVAX", "BNB", "BTC", "DOGE", "ETH", "LINK", "SOL", "SUI", "XRP")
 #: 资金费率覆盖 CIS 的全部加密名字(T-079 / S-531:CIS 统一标准的 O 支柱要用,一个场馆 —— binance_perp)。
 #: 小时线仍只有上面 10 个(研究用,量大)。
+#: S-607(10-18):paper book 改为读库之后,库里必须有它们要的资金费 —— 补上 ① 面板缺的 6 个
+#: (LTC / TRX / ATOM / FIL / ETC / BCH)与 fusion 宇宙缺的 4 个(COMP / ENA / SEI / STX)。
+#: 缺了不是 0:读库的一侧会把「这一天没有费率」当缺失,而不是当零资金费。
 FUNDING_SYMBOLS: tuple[str, ...] = tuple(sorted(set(HF_SYMBOLS) | {
     "DOT", "NEAR", "APT", "HYPE", "ARB", "OP", "POL", "STRK", "UNI", "AAVE", "LDO", "PENDLE", "INJ", "TIA",
-    "ONDO", "MKR"}))
+    "ONDO", "MKR",
+    "LTC", "TRX", "ATOM", "FIL", "ETC", "BCH", "COMP", "ENA", "SEI", "STX"}))
 #: 库里一行都没有的资金费率序列从这里开始补(CIS 重建从 2023 起,30 日窗口往前留余量)。
 # 10-16(S-590):资金费率回填到 2020-01(原 2022-11,只够 CIS 重建)—— 拥挤 / 情绪研究要 2020–21 的牛市与 2022 的熊市;
 # 币安 USDT 永续最早 2019-09(BTC),上市晚的名字照旧回到上市日为止。
