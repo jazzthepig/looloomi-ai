@@ -15,7 +15,7 @@
 - **幸存者偏差 = 25.1pp/年**(S-111),是最大效应的 8 倍;`SETTLING` 是免费死亡样本。**准入 ADV>~$15M**(S-112)。
 - **`N_eff` 必须连同「约束哪本 book」引用**(S-115),且是**窗口读数不是常数**(S-113)。
 - **分散只能来自别的资产类**(S-114):加密内 ρ̄ **0.441** vs 跨 TradFi **0.104**。**纯加密只剩 ①+③。**
-- **①层 book = `beta_core_nav`(2026-08-08 起),产品本体兼所有 book 的基准**;「超额」一律对 `benchmark_nav` 报。
+- **① 产品 = `core_cap_daily`(24 名市值加权,SPINE 第 7 段)**,所有 book 的基准;`beta_core_nav` 改作 ② 候选。
 
 ## 🧭 ONTOLOGY CORE — never evict (full `HIGH_DIM_ONTOLOGY.md` + `ARCHITECTURE.md`)
 - 市场真实状态高维;全部工作 = **保结构的降维**;VDB 是几何基底。最深对象是 **Entity/Decision**,CIS/价格是波前过后的**反射**;**edge = lag**。
@@ -32,7 +32,7 @@
 ## 环境陷阱
 - **监控分层按「频率」不按「资产数」**:日线@687=42MB/年(要宽)· **小时线@687=1,096MB/年**(要窄)。
 - FUSE sandbox:git 写命令残留 `.git/index.lock` → **所有 git 走 Mac 侧**;`git unlock` 解卡。沙箱无任意出网;yfinance 已死。
-- Supabase 在 **ap-southeast-2**;Postgres `http` 扩展可直连 Binance,Railway(US)被地理封锁。
+- Supabase 在 **ap-southeast-2**;Railway → fapi.binance.com **按部署随机 451** ⇒ 账本只读库(S-607)。
 - **RLS 开启后匿名读全封** ⇒ 回填脚本需 service_role,沙箱跑不了。**凭证只能对签发它的服务器验证,不能靠解码**(伪造 JWT 全本地检查皆过)。
 
 ## 数据法则(位置与陷阱,不记行数)
