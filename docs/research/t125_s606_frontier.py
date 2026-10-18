@@ -457,11 +457,16 @@ def world50_daily_nav(daily_dir: Path, start: str, end: str) -> tuple[list[str],
     out_ret = eq_ret[valid_idx][1:]  # returns aligned to out_days[1:]
 
     # NAV 整体评估(对世界 50 自身)
-    yrs = len(valid_ret) / 365.25
+    # 日历 CAGR = (末 NAV / 首 NAV) ^ (365.25 / 首末日历天差) − 1 —— 与 stats() per_year=252 不同,这里用真日历
+    from datetime import date as _date
+    _first_d = _date.fromisoformat(out_days[0])
+    _last_d = _date.fromisoformat(out_days[-1])
+    cal_days = max((_last_d - _first_d).days, 1)
+    yrs = cal_days / 365.25
     cagr_cal = float(nav_arr[ok][-1] ** (1 / yrs) - 1) if yrs > 0 else float("nan")
     dd = float((nav_arr[ok] / np.maximum.accumulate(nav_arr[ok]) - 1).min())
     daily_log = np.log(nav_arr[ok][1:] / nav_arr[ok][:-1])
-    vol_ann = float(daily_log.std(ddof=1) * np.sqrt(365.25)) if len(daily_log) > 1 else float("nan")
+    vol_ann = float(daily_log.std(ddof=1) * np.sqrt(252)) if len(daily_log) > 1 else float("nan")
     yrs_252 = len(valid_ret) / 252.0
     cagr_252 = float(nav_arr[ok][-1] ** (1 / yrs_252) - 1) if yrs_252 > 0 else float("nan")
 
