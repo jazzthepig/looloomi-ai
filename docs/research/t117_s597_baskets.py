@@ -5,12 +5,18 @@
   R  = 每期调回等权(当前做法)
   L  = 只换成分,老成员权重不动;新人按当前净值平均分,缺额按比例从老成员出
   LC = L + 周度检查:任何成员从**进篮子那天的价格**跌 ≥ 25% ⇒ 下周收盘卖掉,
-       钱按当前权重分给剩余成员,它到下次调仓前不回来
+       钱按当前权重分给剩余成员(单名上限 2 / N,N = 当期篮子名数;
+       超出部分留现金,直至下次调仓才回配),它到下次调仓前不回来
 成本 20 bp × 换手。两个篮子:
   W50  = 季末市值前 50 等权,从 w50_daily 取 equity 类
   C15  = 4 周调仓,加密非 BTC 市值前 15 等权,从 crypto_daily 取
 
 统计走 apparatus.py;不接受手写零分布或 A/B。
+
+本脚本对应第 2 轮(Lc 臂设计漏洞修复,Seth 10-18 退回):
+- 砍下的钱按权重分给剩下名字时,**单名上限 2 / N**(N = 当期篮子名数)
+- 超出上限的部分以"现金"形式留在簿上,等下次调仓再回配
+- R / L 两条臂 + §S-597 其它参数(L / LC 的 rebal 分配、阈值、成本等)一字不改
 """
 
 from __future__ import annotations
@@ -213,6 +219,8 @@ def run_one_arm(
     growth_peak = 1.0
     nav = 1.0  # 净值
     navs = []  # 每周净值
+    weekly_max_w = []  # 每周截面最大单名权重(三臂共用,用于分布分析)
+    weekly_cash = []  # 每周现金占比(LC 才有意义;R/L 总和到 1)
     rebal_set = set(rebal_idx)
     week_idx = 0  # which week count for periodic rebal
     for ri, idx in enumerate(week_close_idx):
@@ -311,12 +319,12 @@ def run_one_arm(
                     for s, ep, cur, ret in to_cut:
                         cuts.append((dates[idx_for_check], s, float(ep), float(cur), float(ret)))
                     freed = sum(weights[s] for s, *_ in to_cut)
-                    kept_w = {s: w for s, w in weights.items() if s not in {t[0] for t in to_cut}}
-                    tot = sum(kept_w.values()) if kept_w else 0.0
-                    if tot > 0:
-                        scale = (tot + freed) / tot
-                        for s in kept_w:
-                            weights[s] *= scale
+                    kept_syms = [s for s in weights if s not in {t[0] for t in to_cut}]
+                    if kept_syms and freed > 0:
+                        new_w2 = _redistribute_with_cap(weights, kept_syms, freed)
+                    else:
+                        new_w2 = {s: weights[s] for s in kept_syms}
+                    weights = new_w2
                     for s, *_ in to_cut:
                         skipped.add(s)
                         weights.pop(s, None)
@@ -331,7 +339,11 @@ def run_one_arm(
         navs.append(nav)
         # max single-name weight + max DD
         if weights:
-            max_weight_seen = max(max_weight_seen, max(weights.values()))
+            weekly_max_w.append(max(weights.values()))
+        else:
+            weekly_max_w.append(0.0)
+        weekly_cash.append(max(0.0, 1.0 - sum(weights.values())))
+        max_weight_seen = max(max_weight_seen, weekly_max_w[-1])
         growth_peak = max(growth_peak, nav)
         week_idx += 1
     # max drawdown
@@ -345,6 +357,8 @@ def run_one_arm(
         "cost_total_frac": cost_total,
         "lc_cuts": cuts,
         "navs": navs,
+        "weekly_max_single_weight": weekly_max_w,
+        "weekly_cash_ratio": weekly_cash,
     }
 
 
@@ -456,6 +470,54 @@ def red_test_R(weights_after_rebal: dict[str, float], n_basket: int) -> bool:
         return True
     expected = 1.0 / len(weights_after_rebal)
     return all(abs(w - expected) < 1e-9 for w in weights_after_rebal.values())
+
+
+def _redistribute_with_cap(
+    weights: dict[str, float], kept_syms: list[str], freed: float
+) -> dict[str, float]:
+    """LC 砍输家时,把 freed 按当前权重分给剩下名字;单名上限 2/N(N=len(kept_syms)),
+    超出上限的部分留作现金(本函数不直接追踪现金,未分配的份额通过返回字典总和 < 1 体现)。
+
+    分配步骤:
+      1. 初始按 current weight × (1 + freed/tot_kept) 等比例放大
+      2. 对超过 cap 的名字,把它压回 cap,溢出额 = over − cap
+      3. 把溢出额按 remaining room(=cap − current)比例再分给未到上限的名字
+      4. 如还有溢出额 ⇒ 自然形成现金(不再追写,权重总和 < 1)
+      5. 反复迭代直到稳定
+
+    cap 钳到 1.0:N=1 时 2/1=2 没意义,N=2 时 2/2=1 不允许两个名字同时 >0,
+    实际相当于「不限」;N ≥ 3 时 cap = 2/N 是一个真约束。
+    """
+    if not kept_syms or freed <= 0:
+        return {s: weights[s] for s in kept_syms}
+    N = len(kept_syms)
+    cap = min(2.0 / N, 1.0)
+    tot_kept = sum(weights[s] for s in kept_syms)
+    if tot_kept <= 0:
+        return {s: weights[s] for s in kept_syms}
+    target = tot_kept + freed
+    new_w = {s: weights[s] * target / tot_kept for s in kept_syms}
+    for _ in range(N * 2 + 2):
+        over = [s for s in kept_syms if new_w[s] > cap]
+        if not over:
+            break
+        excess = 0.0
+        for s in over:
+            excess += new_w[s] - cap
+            new_w[s] = cap
+        under = [s for s in kept_syms if new_w[s] < cap]
+        if not under or excess <= 1e-12:
+            break
+        rooms = np.array([cap - new_w[s] for s in under])
+        total_room = float(rooms.sum())
+        if total_room <= 0:
+            break
+        fill = min(excess, total_room)
+        for s, r in zip(under, rooms):
+            add = float(fill) * float(r) / total_room
+            new_w[s] += add
+        # 余下的 excess 即当作现金,不再追写 → 体现在 weekly_cash_ratio 分布
+    return new_w
 
 
 def red_test_L(old_weights: dict[str, float], new_weights: dict[str, float]) -> bool:
@@ -628,6 +690,45 @@ def main():
         f"| C15 | L | {info_L_c['max_dd']:.2%} | {info_L_c['max_single_weight']:.2%} | {info_L_c['cost_total_frac']:.4f} |",
         f"| C15 | LC | {info_LC_c['max_dd']:.2%} | {info_LC_c['max_single_weight']:.2%} | {info_LC_c['cost_total_frac']:.4f} |",
     ]
+
+    # ----- max_single_weight 截面分布(三臂各自) + LC 现金占比分布 -----
+    def pct(s: list[float], p: float) -> float:
+        if not s:
+            return 0.0
+        return float(np.percentile(np.array(s), p))
+
+    # tag info dicts with arm label (for report readability)
+    info_R_w50["arm"] = "R"
+    info_L_w50["arm"] = "L"
+    info_LC_w50["arm"] = "LC"
+    info_R_c["arm"] = "R"
+    info_L_c["arm"] = "L"
+    info_LC_c["arm"] = "LC"
+
+    report_lines += ["", "## max_single_weight 截面分布(每周末截面)", ""]
+    report_lines += ["| 篮子 | 臂 | 中位 | p90 | 最大 | 触发 cap(2/N 上限)的周数 |", "|---|---|---|---|---|---|"]
+    for label, info, n_basket in [
+        ("W50", info_R_w50, W50_N), ("W50", info_L_w50, W50_N), ("W50", info_LC_w50, W50_N),
+        ("C15", info_R_c, CRYPTO_N), ("C15", info_L_c, CRYPTO_N), ("C15", info_LC_c, CRYPTO_N),
+    ]:
+        w = info["weekly_max_single_weight"]
+        n_weeks = len(w)
+        cap_hits = int(sum(1 for x in w if x >= 2.0 / n_basket - 1e-12))
+        report_lines.append(
+            f"| {label} | {info['arm']} | {pct(w,50):.2%} | {pct(w,90):.2%} | {pct(w,100):.2%} | {cap_hits}/{n_weeks} |"
+        )
+
+    report_lines += ["", "## LC 现金占比截面分布(每周末截面)", ""]
+    report_lines += ["| 篮子 | 臂 | 中位 | p90 | 最大 | >0 的周数 |", "|---|---|---|---|---|---|"]
+    for label, info in [
+        ("W50", info_LC_w50), ("C15", info_LC_c),
+    ]:
+        c = info["weekly_cash_ratio"]
+        n_weeks = len(c)
+        pos = int(sum(1 for x in c if x > 1e-9))
+        report_lines.append(
+            f"| {label} | LC | {pct(c,50):.2%} | {pct(c,90):.2%} | {pct(c,100):.2%} | {pos}/{n_weeks} |"
+        )
     report_lines += ["", "## LC 砍掉的笔数 + 被砍名字之后 13 周的收益(只验「是不是砍在底部」)", ""]
     for label, info in [("W50", info_LC_w50), ("C15", info_LC_c)]:
         cuts = info["lc_cuts"]
@@ -659,6 +760,13 @@ def main():
         "## 备注",
         "- 数据路径:`/Volumes/CometCloudAI/cometcloud-local/research/{w50_daily,crypto_daily}`,Mac 数据根,只读。",
         "- 统计走 `apparatus.py::ab_test`,块长 4 周(预注册原文)。",
+        "",
+        "## 第 2 轮观察(Seth 10-18 退回 → 修)",
+        "- **LC 2/N cap 已落实于砍输家后的 redsi 段(详见 `_redistribute_with_cap`)**。",
+        "  - W50 没有触发 cut 的笔数(0 cuts),cap 形同虚设;LC 表现与 L 完全相同。",
+        "  - C15 早期(rebal#0-7 还在 3 名期)=>LC 把这 3 名陆续砍光、basket 坍缩到 cash 100% 一直持续到 2020-01 才因 select_top 数据补齐变为 15 名;**但** 因 L/LC rebal 段 `kept_total=0 ⇒ scale=0` 的存量设计(原 §S-597 一字不改),把老成员卡在 0 权重、新人又分不到钱,2020-01 后 basket 也救不回来 ⇒ 373/386 周 cash=100%。**这是 pre-existing 行为,不是 cap 引起的**,cap 修了「单名爆炸 >200%」的部分。",
+        "- 单名 ≤ 100% 的硬上限是 cap=1.0(N=1 时 2/1=2 自动钳到 1)。cap 真的压住 >100% 只有在 N≥3 且一次砍多个、剩余 sum_w>0 时的极端场景;C15 实际模拟里 cut 多为一次性 1 个,cap 形同虚设。",
+        "- 三臂 max_w 截面分布差异几乎全来自数据稀疏(C15 2019)/ 没有 cut(W50),**不是 §S-597 本身的胜负**。要直接看 L/LC vs R 的判据,看前面 `## ab_test 三段对照`。",
     ]
     OUT_REPORT.write_text("\n".join(report_lines))
     print(f"WROTE: {OUT_REPORT}  ({len(report_lines)} lines)")
