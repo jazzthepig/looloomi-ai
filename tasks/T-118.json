@@ -1,9 +1,13 @@
 {
   "id": "T-118",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-16",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-18T10:00Z",
+    "value": "Merged as the record of the S-598 discovery pass (2014-2020, 105 calendar items tried, label-block shuffle quantiles). Its top three (ETH FOMC week +1.08pp/day, February +1.06pp, September -1.06pp) were then read once on the 2021 to 2026-09 holdout under S-599: all three failed and two flipped sign (FOMC week -0.32pp, February -0.10pp). Calendar effects are not a usable opportunity on this data; whatever cyclicality there is lives in the market's own trend and drawdown rhythm, which S-596 / S-600 already trade."
+  },
   "title": "S-598:周期 / 季节性机会挖掘(发现段 2014–2020,只看这一段)",
   "source": "Jazz 10-16「找 cyclical and seasonal 的 opportunity」",
   "allowed_paths": [
@@ -21,5 +25,5 @@
     "expect": "脚本 docs/research/t118_s598_seasonality.py + _reports/absorb_input/T-118_seasonality_discovery.md;卡改 in_review,推 lane-c/T-118。"
   },
   "prior_value": "Trader Tom 方向的第一批证据;预注册在台账,lane 只实现不改。",
-  "notes": "2026-10-16 Seth 开卡。"
+  "notes": "2026-10-16 lane-c 交。窗口实际 2014-12-31→2020-12-31(w50 从这一天起;2014-01 那 11 个月在数据源里没有)。27 候选 × 4 资产 = 105 试项(World50 等权在该窗口 0 只全覆盖,跳)。Top 3 全在 ETH(diff_log, 标签打乱 pct):#1 FOMC 周 +0.0108 / 0.996;n=301/1671;#2 月份 02 +0.0106 / 0.969;n=142/1830;#3 月份 09 -0.0106 / 0.015;n=180/1792。块自助 95% CI 都含 0 — 标签打乱分位才是过阈指标。BTC + CRYPTO_TOP 的 month_03 也是 −0.0070 / −0.0067 分位 0.010/0.020 一致(Q1 弱)与 month_01 一致负号。报告 _reports/absorb_input/T-118_seasonality_discovery.md;脚本 docs/research/t118_s598_seasonality.py。@seth:1)World50 该 6 年没量,以 asset dim=4 收口,还是要补 eodhd 历史先复算?2)FOMC/02月/09月 三个全在 ETH 上,信号是不是真周期还是过拟合?(见报告「探索性」)\n2026-10-18 Seth 合并:发现段脚本留作记录;留出段(S-599)三项全没过、两项反号,卡关闭。第一次合并(10-16)卡在 tasks/T-118.json 的 add/add 冲突,这次以分支上的卡为底由合并方补 verified。"
 }
