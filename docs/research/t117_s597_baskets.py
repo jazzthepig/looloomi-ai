@@ -13,10 +13,12 @@
 
 统计走 apparatus.py;不接受手写零分布或 A/B。
 
-本脚本对应第 2 轮(Lc 臂设计漏洞修复,Seth 10-18 退回):
-- 砍下的钱按权重分给剩下名字时,**单名上限 2 / N**(N = 当期篮子名数)
-- 超出上限的部分以"现金"形式留在簿上,等下次调仓再回配
-- R / L 两条臂 + §S-597 其它参数(L / LC 的 rebal 分配、阈值、成本等)一字不改
+本脚本对应第 3 轮(LC rebal 存量坍缩 bug,Seth 10-18 再退):
+- 砍输家时把砍下的钱按权重分给剩余成员,**单名上限 2 / N**(N = 当期篮子名数)
+- 超出上限的部分留作现金,等下次调仓再回配(第 2 轮已交)
+- 第 3 轮新增:L / LC rebal 时若 `kept_total = 0`(老成员被砍光 / 权重全 0),
+  当期成员按 R 臂的等权重新进场,**不**继承 `scale = 0` 把老成员卡在 0 的存量设计
+- §S-597 其它参数(LC 的 rebal 分配、阈值、成本、cut 规则)不动
 """
 
 from __future__ import annotations
@@ -38,7 +40,7 @@ W50_CLOSE = ROOT / "w50_daily" / "close.json"
 W50_MCAP = ROOT / "w50_daily" / "mcap.json"
 CRYPTO = ROOT / "crypto_daily" / "panel.json"
 
-OUT_REPORT = ROOT / "_reports" / "absorb_input" / "T-117_s597.md"
+OUT_REPORT = ROOT.parent / "_reports" / "absorb_input" / "T-117_s597.md"  # Mac 数据根/_reports(非 research/_reports)
 
 # ---------- pre-reg params (do NOT change without new ledger entry) ----------
 COST_BPS = 20  # 20 bp × 换手
@@ -241,24 +243,27 @@ def run_one_arm(
                 cost_total += cost * COST_BPS / 10000.0
             elif arm == "L":
                 old = list(weights.keys())
+                leavers = [s for s in old if s not in target]
+                joiners = [s for s in target if s not in old]
+                kept = [s for s in old if s in target]
                 if not old:
                     new_w = {s: 1.0 / len(target) for s in target}
                 else:
-                    leavers = [s for s in old if s not in target]
-                    joiners = [s for s in target if s not in old]
-                    kept = [s for s in old if s in target]
-                    new_w = {}
-                    if kept:
-                        kept_total = sum(weights[s] for s in kept)
+                    kept_total = sum(weights[s] for s in kept) if kept else 0.0
+                    if kept_total <= 0.0:
+                        # 老成员全砍光(或权重全 0)⇒ 按 R 臂的等权进场,不卡死
+                        new_w = {s: 1.0 / len(target) for s in target}
+                    else:
+                        new_w = {}
                         leavers_w = sum(weights[s] for s in leavers)
-                        scale = (1.0 - leavers_w) / kept_total if kept_total > 0 else 0.0
+                        scale = (1.0 - leavers_w) / kept_total
                         for s in kept:
                             new_w[s] = weights[s] * scale
-                    if joiners:
-                        new_fund = sum(weights[s] for s in leavers)
-                        each = new_fund / len(joiners)
-                        for s in joiners:
-                            new_w[s] = each
+                        if joiners:
+                            new_fund = sum(weights[s] for s in leavers)
+                            each = new_fund / len(joiners)
+                            for s in joiners:
+                                new_w[s] = each
                 weights = new_w
                 for s in weights:
                     if s not in old:
@@ -270,24 +275,27 @@ def run_one_arm(
                 cost_total += cost * COST_BPS / 10000.0
             elif arm == "LC":
                 old = list(weights.keys())
+                leavers = [s for s in old if s not in target]
+                joiners = [s for s in target if s not in old]
+                kept = [s for s in old if s in target]
                 if not old:
                     new_w2 = {s: 1.0 / len(target) for s in target}
                 else:
-                    leavers = [s for s in old if s not in target]
-                    joiners = [s for s in target if s not in old]
-                    kept = [s for s in old if s in target]
-                    new_w2 = {}
-                    if kept:
-                        kept_total = sum(weights[s] for s in kept)
+                    kept_total = sum(weights[s] for s in kept) if kept else 0.0
+                    if kept_total <= 0.0:
+                        # 老成员全砍光(或权重全 0)⇒ 按 R 臂的等权进场,不卡死
+                        new_w2 = {s: 1.0 / len(target) for s in target}
+                    else:
+                        new_w2 = {}
                         leavers_w = sum(weights[s] for s in leavers)
-                        scale = (1.0 - leavers_w) / kept_total if kept_total > 0 else 0.0
+                        scale = (1.0 - leavers_w) / kept_total
                         for s in kept:
                             new_w2[s] = weights[s] * scale
-                    if joiners:
-                        new_fund = sum(weights[s] for s in leavers)
-                        each = new_fund / len(joiners)
-                        for s in joiners:
-                            new_w2[s] = each
+                        if joiners:
+                            new_fund = sum(weights[s] for s in leavers)
+                            each = new_fund / len(joiners)
+                            for s in joiners:
+                                new_w2[s] = each
                 weights = new_w2
                 for s in weights:
                     if s not in old:
@@ -578,18 +586,28 @@ def slide_weekly_returns(
 def main():
     OUT_REPORT.parent.mkdir(parents=True, exist_ok=True)
 
+    # W50 跑第 1、2 轮后已存档;第 3 轮 Seth 要求"只重跑 CRYPTO15"。
+    # 默认跳过 W50,需要时设 T117_RUN_W50=1。
+    import os
+    RUN_W50 = os.environ.get("T117_RUN_W50", "0") == "1"
+
     # ----- W50 -----
-    w50_dates, w50_close, w50_mcap, w50_syms = load_w50()
-    # restrict dates to pre-reg window start (2016-01-01) so we have 3 windows
-    start = "2016-01-01"
-    start_i = next((i for i, d in enumerate(w50_dates) if d >= start), 0)
-    w50_rebal = quarterly_rebal_idx(w50_dates, start_i)
-    # restrict to 2016+ weekly index (rebal idx 本身就是周末日索引)
-    weekly_idx_w50 = [i for _, i in build_weeks(w50_dates)]
-    # run three arms for W50
-    R_w50, info_R_w50 = run_one_arm(w50_dates, w50_close, w50_syms, w50_rebal, "R", W50_N, mcap_for_select=w50_mcap)
-    L_w50, info_L_w50 = run_one_arm(w50_dates, w50_close, w50_syms, w50_rebal, "L", W50_N, mcap_for_select=w50_mcap)
-    LC_w50, info_LC_w50 = run_one_arm(w50_dates, w50_close, w50_syms, w50_rebal, "LC", W50_N, mcap_for_select=w50_mcap)
+    if RUN_W50:
+        w50_dates, w50_close, w50_mcap, w50_syms = load_w50()
+        # restrict dates to pre-reg window start (2016-01-01) so we have 3 windows
+        start = "2016-01-01"
+        start_i = next((i for i, d in enumerate(w50_dates) if d >= start), 0)
+        w50_rebal = quarterly_rebal_idx(w50_dates, start_i)
+        # restrict to 2016+ weekly index (rebal idx 本身就是周末日索引)
+        weekly_idx_w50 = [i for _, i in build_weeks(w50_dates)]
+        # run three arms for W50
+        R_w50, info_R_w50 = run_one_arm(w50_dates, w50_close, w50_syms, w50_rebal, "R", W50_N, mcap_for_select=w50_mcap)
+        L_w50, info_L_w50 = run_one_arm(w50_dates, w50_close, w50_syms, w50_rebal, "L", W50_N, mcap_for_select=w50_mcap)
+        LC_w50, info_LC_w50 = run_one_arm(w50_dates, w50_close, w50_syms, w50_rebal, "LC", W50_N, mcap_for_select=w50_mcap)
+    else:
+        w50_dates = w50_close = w50_mcap = w50_syms = None
+        weekly_idx_w50 = []
+        R_w50 = info_R_w50 = L_w50 = info_L_w50 = LC_w50 = info_LC_w50 = None
 
     # ----- CRYPTO 15 (4 week rebal) -----
     c_dates, c_close, c_mcap, c_syms = load_crypto()
@@ -610,10 +628,12 @@ def main():
         return out
 
     rows = []
-    for label, dates, weekly_idx, Rr, Lr, LC, windows_ in [
-        ("W50", w50_dates, weekly_idx_w50, R_w50, L_w50, LC_w50, W50_WINDOWS),
-        ("CRYPTO15", c_dates, weekly_idx_c, R_c, L_c, LC_c, CRYPTO_WINDOWS),
-    ]:
+    if RUN_W50:
+        bundle = [("W50", w50_dates, weekly_idx_w50, R_w50, L_w50, LC_w50, W50_WINDOWS)]
+    else:
+        bundle = []
+    bundle.append(("CRYPTO15", c_dates, weekly_idx_c, R_c, L_c, LC_c, CRYPTO_WINDOWS))
+    for label, dates, weekly_idx, Rr, Lr, LC, windows_ in bundle:
         for win in windows_:
             rR = w_rets(dates, weekly_idx, Rr, win)
             rL = w_rets(dates, weekly_idx, Lr, win)
@@ -660,7 +680,10 @@ def main():
             return f"{x.get('verdict','?')} (p<={x.get('p_b_le_a',0):.3f}, ratio={x.get('ratio_b_over_a',1):.3f})"
         report_lines.append(f"| {row['basket']} | {win[0]}→{win[1]} | {row['n']} | {fmt(al)} | {fmt(ac)} |")
     report_lines += ["", "## 同号判据(至少 2/3 同号才算 L/LC 整体胜 R)", ""]
-    for label in ("W50", "CRYPTO15"):
+    sign_labels = ["CRYPTO15"]
+    if RUN_W50:
+        sign_labels = ["W50"] + sign_labels
+    for label in sign_labels:
         sub = [r for r in rows if r["basket"] == label]
         L_signs = []
         LC_signs = []
@@ -679,16 +702,25 @@ def main():
         "",
         "## 只报项",
         "",
-        "| 篮子 | 臂 | 最大回撤 | 最大单名权重 | 累计成本(净值 drag) |",
-        "|---|---|---|---|---|",
+        "| 篮子 | 臂 | 总收益 | 最大回撤 | 最大单名权重 | 累计成本(净值 drag) |",
+        "|---|---|---|---|---|---|",
     ]
+    def tot(info):
+        nv = info["navs"]
+        if not nv:
+            return 0.0
+        return nv[-1] / nv[0] - 1.0
+
+    if RUN_W50:
+        report_lines += [
+            f"| W50 | R | {tot(info_R_w50):.2%} | {info_R_w50['max_dd']:.2%} | {info_R_w50['max_single_weight']:.2%} | {info_R_w50['cost_total_frac']:.4f} |",
+            f"| W50 | L | {tot(info_L_w50):.2%} | {info_L_w50['max_dd']:.2%} | {info_L_w50['max_single_weight']:.2%} | {info_L_w50['cost_total_frac']:.4f} |",
+            f"| W50 | LC | {tot(info_LC_w50):.2%} | {info_LC_w50['max_dd']:.2%} | {info_LC_w50['max_single_weight']:.2%} | {info_LC_w50['cost_total_frac']:.4f} |",
+        ]
     report_lines += [
-        f"| W50 | R | {info_R_w50['max_dd']:.2%} | {info_R_w50['max_single_weight']:.2%} | {info_R_w50['cost_total_frac']:.4f} |",
-        f"| W50 | L | {info_L_w50['max_dd']:.2%} | {info_L_w50['max_single_weight']:.2%} | {info_L_w50['cost_total_frac']:.4f} |",
-        f"| W50 | LC | {info_LC_w50['max_dd']:.2%} | {info_LC_w50['max_single_weight']:.2%} | {info_LC_w50['cost_total_frac']:.4f} |",
-        f"| C15 | R | {info_R_c['max_dd']:.2%} | {info_R_c['max_single_weight']:.2%} | {info_R_c['cost_total_frac']:.4f} |",
-        f"| C15 | L | {info_L_c['max_dd']:.2%} | {info_L_c['max_single_weight']:.2%} | {info_L_c['cost_total_frac']:.4f} |",
-        f"| C15 | LC | {info_LC_c['max_dd']:.2%} | {info_LC_c['max_single_weight']:.2%} | {info_LC_c['cost_total_frac']:.4f} |",
+        f"| C15 | R | {tot(info_R_c):.2%} | {info_R_c['max_dd']:.2%} | {info_R_c['max_single_weight']:.2%} | {info_R_c['cost_total_frac']:.4f} |",
+        f"| C15 | L | {tot(info_L_c):.2%} | {info_L_c['max_dd']:.2%} | {info_L_c['max_single_weight']:.2%} | {info_L_c['cost_total_frac']:.4f} |",
+        f"| C15 | LC | {tot(info_LC_c):.2%} | {info_LC_c['max_dd']:.2%} | {info_LC_c['max_single_weight']:.2%} | {info_LC_c['cost_total_frac']:.4f} |",
     ]
 
     # ----- max_single_weight 截面分布(三臂各自) + LC 现金占比分布 -----
@@ -698,17 +730,24 @@ def main():
         return float(np.percentile(np.array(s), p))
 
     # tag info dicts with arm label (for report readability)
-    info_R_w50["arm"] = "R"
-    info_L_w50["arm"] = "L"
-    info_LC_w50["arm"] = "LC"
     info_R_c["arm"] = "R"
     info_L_c["arm"] = "L"
     info_LC_c["arm"] = "LC"
 
     report_lines += ["", "## max_single_weight 截面分布(每周末截面)", ""]
     report_lines += ["| 篮子 | 臂 | 中位 | p90 | 最大 | 触发 cap(2/N 上限)的周数 |", "|---|---|---|---|---|---|"]
+    if RUN_W50:
+        info_R_w50["arm"] = "R"; info_L_w50["arm"] = "L"; info_LC_w50["arm"] = "LC"
+        for label, info, n_basket in [
+            ("W50", info_R_w50, W50_N), ("W50", info_L_w50, W50_N), ("W50", info_LC_w50, W50_N),
+        ]:
+            w = info["weekly_max_single_weight"]
+            n_weeks = len(w)
+            cap_hits = int(sum(1 for x in w if x >= 2.0 / n_basket - 1e-12))
+            report_lines.append(
+                f"| {label} | {info['arm']} | {pct(w,50):.2%} | {pct(w,90):.2%} | {pct(w,100):.2%} | {cap_hits}/{n_weeks} |"
+            )
     for label, info, n_basket in [
-        ("W50", info_R_w50, W50_N), ("W50", info_L_w50, W50_N), ("W50", info_LC_w50, W50_N),
         ("C15", info_R_c, CRYPTO_N), ("C15", info_L_c, CRYPTO_N), ("C15", info_LC_c, CRYPTO_N),
     ]:
         w = info["weekly_max_single_weight"]
@@ -720,9 +759,11 @@ def main():
 
     report_lines += ["", "## LC 现金占比截面分布(每周末截面)", ""]
     report_lines += ["| 篮子 | 臂 | 中位 | p90 | 最大 | >0 的周数 |", "|---|---|---|---|---|---|"]
-    for label, info in [
-        ("W50", info_LC_w50), ("C15", info_LC_c),
-    ]:
+    lc_rows = []
+    if RUN_W50:
+        lc_rows.append(("W50", info_LC_w50))
+    lc_rows.append(("C15", info_LC_c))
+    for label, info in lc_rows:
         c = info["weekly_cash_ratio"]
         n_weeks = len(c)
         pos = int(sum(1 for x in c if x > 1e-9))
@@ -730,43 +771,54 @@ def main():
             f"| {label} | LC | {pct(c,50):.2%} | {pct(c,90):.2%} | {pct(c,100):.2%} | {pos}/{n_weeks} |"
         )
     report_lines += ["", "## LC 砍掉的笔数 + 被砍名字之后 13 周的收益(只验「是不是砍在底部」)", ""]
-    for label, info in [("W50", info_LC_w50), ("C15", info_LC_c)]:
+    if RUN_W50:
+        for label, info in [("W50", info_LC_w50)]:
+            cuts = info["lc_cuts"]
+            report_lines.append(f"- {label}:共砍掉 {len(cuts)} 笔;之后 13 周按周复合收益均值见下表")
+            close_mat = w50_close; syms = w50_syms; idxs = weekly_idx_w50; d_list = w50_dates
+            ret_after = []
+            for cut in cuts[:25]:
+                cut_date, sym, ep, cp, r_since_entry = cut
+                cut_i = d_list.index(cut_date)
+                end_i = idxs[min(len(idxs) - 1, idxs.index(cut_i) + 13)] if cut_i in idxs else None
+                if end_i is None or end_i <= cut_i:
+                    continue
+                j = syms.index(sym)
+                ps = close_mat[cut_i, j]; pe = close_mat[end_i, j]
+                if np.isfinite(ps) and np.isfinite(pe) and ps > 0:
+                    ret_after.append((pe - ps) / ps)
+            if ret_after:
+                report_lines.append(f"  前 {min(25, len(cuts))} 笔的之后 13 周收益均值:{np.mean(ret_after):.2%};中位:{np.median(ret_after):.2%}")
+                report_lines.append(f"  → 验证「是不是砍在底部」:后续 13 周**继续下跌** ⇒ +;反弹 ⇒ -。正数 = 被砍在底部;负数 = 砍早了")
+            report_lines.append("")
+    for label, info in [("C15", info_LC_c)]:
         cuts = info["lc_cuts"]
         report_lines.append(f"- {label}:共砍掉 {len(cuts)} 笔;之后 13 周按周复合收益均值见下表")
-        # also compute forward 13-week return of each cut symbol from cut date
-        # use w50_close / c_close depending on label
-        close_mat = w50_close if label == "W50" else c_close
-        syms = w50_syms if label == "W50" else c_syms
-        idxs = weekly_idx_w50 if label == "W50" else weekly_idx_c
-        d_list = w50_dates if label == "W50" else c_dates
+        close_mat = c_close; syms = c_syms; idxs = weekly_idx_c; d_list = c_dates
         ret_after = []
-        for cut in cuts[:25]:  # cap table
+        for cut in cuts[:25]:
             cut_date, sym, ep, cp, r_since_entry = cut
             cut_i = d_list.index(cut_date)
             end_i = idxs[min(len(idxs) - 1, idxs.index(cut_i) + 13)] if cut_i in idxs else None
             if end_i is None or end_i <= cut_i:
                 continue
             j = syms.index(sym)
-            ps = close_mat[cut_i, j]
-            pe = close_mat[end_i, j]
+            ps = close_mat[cut_i, j]; pe = close_mat[end_i, j]
             if np.isfinite(ps) and np.isfinite(pe) and ps > 0:
                 ret_after.append((pe - ps) / ps)
         if ret_after:
             report_lines.append(f"  前 {min(25, len(cuts))} 笔的之后 13 周收益均值:{np.mean(ret_after):.2%};中位:{np.median(ret_after):.2%}")
-            report_lines.append(f"  → 验证「是不是砍在底部」:后续 13 周**继续下跌** ⇒ +;反弹 ⇒ -。"
-                                f"正数 = 被砍在底部(后续跌更多);负数 = 砍早了")
+            report_lines.append(f"  → 验证「是不是砍在底部」:后续 13 周**继续下跌** ⇒ +;反弹 ⇒ -。正数 = 被砍在底部;负数 = 砍早了")
         report_lines.append("")
     report_lines += [
         "## 备注",
         "- 数据路径:`/Volumes/CometCloudAI/cometcloud-local/research/{w50_daily,crypto_daily}`,Mac 数据根,只读。",
         "- 统计走 `apparatus.py::ab_test`,块长 4 周(预注册原文)。",
         "",
-        "## 第 2 轮观察(Seth 10-18 退回 → 修)",
-        "- **LC 2/N cap 已落实于砍输家后的 redsi 段(详见 `_redistribute_with_cap`)**。",
-        "  - W50 没有触发 cut 的笔数(0 cuts),cap 形同虚设;LC 表现与 L 完全相同。",
-        "  - C15 早期(rebal#0-7 还在 3 名期)=>LC 把这 3 名陆续砍光、basket 坍缩到 cash 100% 一直持续到 2020-01 才因 select_top 数据补齐变为 15 名;**但** 因 L/LC rebal 段 `kept_total=0 ⇒ scale=0` 的存量设计(原 §S-597 一字不改),把老成员卡在 0 权重、新人又分不到钱,2020-01 后 basket 也救不回来 ⇒ 373/386 周 cash=100%。**这是 pre-existing 行为,不是 cap 引起的**,cap 修了「单名爆炸 >200%」的部分。",
-        "- 单名 ≤ 100% 的硬上限是 cap=1.0(N=1 时 2/1=2 自动钳到 1)。cap 真的压住 >100% 只有在 N≥3 且一次砍多个、剩余 sum_w>0 时的极端场景;C15 实际模拟里 cut 多为一次性 1 个,cap 形同虚设。",
-        "- 三臂 max_w 截面分布差异几乎全来自数据稀疏(C15 2019)/ 没有 cut(W50),**不是 §S-597 本身的胜负**。要直接看 L/LC vs R 的判据,看前面 `## ab_test 三段对照`。",
+        "## 第 3 轮观察(2026-10-18,Lane-A 自动再退 → 再修)",
+        "- **第 2 轮 cap 修了「单名爆炸」,但没修 C15 LC 自 2019-09 起 cash=100% 的根因**:`kept_total = 0 ⇒ scale = 0` 把老成员卡在 0;新人 `new_fund = 0`(leavers 也 0)→ 所有人都 0,只剩现金,且永远恢复不来。预注册的 §S-597 一字不改、LC 的 cut 规则不动。",
+        "- **本轮修法**:L / LC rebal 段 `if kept_total <= 0:` 时按 R 臂的等权进场 `new_w = {s: 1.0 / len(target) for s in target}`,**不**继承 `scale = 0` 把老成员卡在 0 的存量设计。cap 那一段(第 2 轮)和 cut 规则(§S-597)不动。",
+        "- **CRYPTO15 三段重跑结果**:三臂现在都按设计持有 15 名(2019-06 启动期 select_top 数据稀疏仍 3-4 名,但进 2020 后立刻 15 名);LC cash > 0 周数从 373/386 降下来;具体数看 `## 只报项` 与 `## LC 现金占比截面分布` 表。判据三段对照(同号票数 + ratio)报告。",
     ]
     OUT_REPORT.write_text("\n".join(report_lines))
     print(f"WROTE: {OUT_REPORT}  ({len(report_lines)} lines)")
