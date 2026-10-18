@@ -196,6 +196,48 @@ def mix_nav(legs: dict[str, "Any"], weights: dict[str, float], reb: int = FLEX_R
     return pd.Series(out)
 
 
+FLEX_TRADFI = (("ACWI", "equity"), ("XAUUSD", "gold"))
+
+
+def last_weekday(cutoff: str) -> str:
+    """纯函数。≤ cutoff 的最后一个工作日(周一至周五;不管节假日 —— 节假日那天腿上本来就没有行,共同日期会跳过它)。"""
+    import pandas as pd
+    d = pd.Timestamp(cutoff)
+    while d.weekday() >= 5:
+        d -= pd.Timedelta(days=1)
+    return d.date().isoformat()
+
+
+async def _flex_tradfi_legs(cutoff: str) -> dict[str, "Any"]:
+    """股票腿 ACWI、黄金腿 XAUUSD 的日收盘(TOM_START 起)。
+
+    10-18 实测:这两个只由 World50 的周更整段重取写入(6 天一轮),`ohlcv_daily` 停在 10-15,
+    灵活组合三条臂一行都写不出来(「腿还没有前向数据」)。腿落后于最后一个工作日时,
+    就地把**从开账前一周起**的整段重取一次 —— 走既有的 `tradfi_history.refresh_one`(EODHD,复权),
+    不新增取数入口;整段而不是只补最后几天,是为了让窗口里所有行同一个复权口径(否则分红日前后会出一道缝)。"""
+    import pandas as pd
+    want = last_weekday(cutoff)
+
+    async def read():
+        out = {}
+        for sym, leg in FLEX_TRADFI:
+            rows = await _get_all(f"ohlcv_daily?select=trade_date,close&source=eq.eodhd&symbol=eq.{sym}&trade_date=gte.{TOM_START}&order=trade_date")
+            out[leg] = pd.Series({pd.Timestamp(x["trade_date"]): float(x["close"]) for x in rows if x.get("close")})
+        return out
+    tf = await read()
+    stale = [sym for sym, leg in FLEX_TRADFI if tf[leg].empty or tf[leg].index[-1].date().isoformat() < want]
+    if stale:
+        from src.data.market.tradfi_history import refresh_one
+        from src.data.universe.world50 import BENCHMARKS, CANDIDATES
+        by_key = {c.key: c for c in (*BENCHMARKS, *CANDIDATES)}
+        start = (pd.Timestamp(TOM_START) - pd.Timedelta(days=7)).date().isoformat()
+        for sym in stale:
+            if sym in by_key:
+                await refresh_one(by_key[sym], start=start)
+        tf = await read()
+    return tf
+
+
 async def run_flex_x1v(cutoff: str) -> dict[str, Any]:
     """S-604 灵活组合前向:每次从 TOM_START 起整段重算(纯函数、可复现),只追加没写过的天。"""
     import pandas as pd
@@ -208,10 +250,7 @@ async def run_flex_x1v(cutoff: str) -> dict[str, Any]:
     tnav: dict[str, dict] = {}
     for r in tom:
         tnav.setdefault(r["arm"], {})[r["d"]] = float(r["nav"])
-    tf = {}
-    for sym, leg in (("ACWI", "equity"), ("XAUUSD", "gold")):
-        rows = await _get_all(f"ohlcv_daily?select=trade_date,close&source=eq.eodhd&symbol=eq.{sym}&trade_date=gte.{TOM_START}&order=trade_date")
-        tf[leg] = pd.Series({pd.Timestamp(x["trade_date"]): float(x["close"]) for x in rows if x.get("close")})
+    tf = await _flex_tradfi_legs(cutoff)
     rows_n, notes = [], []
     for arm, (w, crypto_arm) in FLEX_X1V_ARMS.items():
         c = tnav.get(crypto_arm)

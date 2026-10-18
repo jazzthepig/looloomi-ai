@@ -175,3 +175,29 @@ def test_mix_nav_is_a_constant_mix_with_drift_and_periodic_rebalance():
     assert set(fb.FLEX_X1V_ARMS) == {"T25", "T35", "H_T25"}
     for w, _ in fb.FLEX_X1V_ARMS.values():
         assert 0.3 <= sum(w.values()) <= 1.0 and 0.1 <= w["crypto"] <= 0.7
+
+
+def test_flex_tradfi_legs_refresh_only_when_behind_the_last_weekday(monkeypatch):
+    """10-18:ACWI / XAUUSD 只有周更,灵活组合三条臂一行都写不出来。腿落后于最后一个工作日 ⇒ 就地整段重取一次。"""
+    import src.data.market.tradfi_history as th
+    assert fb.last_weekday("2026-10-17") == "2026-10-16" and fb.last_weekday("2026-10-18") == "2026-10-16"
+    assert fb.last_weekday("2026-10-19") == "2026-10-19"
+    have = {"ACWI": ["2026-10-15"], "XAUUSD": ["2026-10-15", "2026-10-16"]}
+    calls = []
+
+    async def get_all(tail):
+        sym = tail.split("symbol=eq.")[1].split("&")[0]
+        return [{"trade_date": d, "close": 100.0} for d in have[sym]]
+
+    async def refresh(c, start):
+        calls.append((c.key, start))
+        have[c.key] = have[c.key] + ["2026-10-16"]
+        return {"ok": True}
+    monkeypatch.setattr(fb, "_get_all", get_all)
+    monkeypatch.setattr(th, "refresh_one", refresh)
+    tf = asyncio.run(fb._flex_tradfi_legs("2026-10-17"))
+    assert calls == [("ACWI", "2026-10-09")], "只重取落后的那条,从开账前一周起"
+    assert tf["equity"].index[-1].date().isoformat() == "2026-10-16"
+    calls.clear()
+    asyncio.run(fb._flex_tradfi_legs("2026-10-18"))
+    assert calls == [], "腿已到最后一个工作日 ⇒ 不再取"
