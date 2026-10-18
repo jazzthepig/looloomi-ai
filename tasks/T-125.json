@@ -1,0 +1,25 @@
+{
+  "id": "T-125",
+  "owner": "lane-c",
+  "status": "in_review",
+  "created": "2026-10-18",
+  "verified": null,
+  "title": "S-606:灵活组合地图换真身 —— 股票腿用 World50 EW×Mom 回放、黄金上限放开到 40%",
+  "source": "S-604 用 ACWI 代 World50、黄金顶在 20% 上限;Jazz 10-18 让 Seth 定档,定档依据要用真腿",
+  "allowed_paths": [
+    "docs/research/",
+    "docs/_reports/absorb_input/T-125_s606.md",
+    "tasks/T-125.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "照台账 §S-606 一字不改:其余照 docs/research/s604_frontier.py(直接 import 它的 portfolio / stats / grid 思路,股票腿换成 World50 EW×Mom 回放 NAV,黄金网格 0–40%);World50 回放 NAV 用 docs/research/t099_world50_replay.py 在 research/w50_daily 上重跑得到(写清用的哪个版本的面板)。统计走 apparatus.py。",
+    "expect": "脚本 docs/research/t125_s606_frontier.py + _reports/absorb_input/T-125_s606.md;卡改 in_review,推 lane-c/T-125。"
+  },
+  "prior_value": "S-605 的档位依据从替身换成真腿。",
+  "notes": "2026-10-18 Seth 开卡。2026-10-18 lane-c 交付:docs/research/t125_s606_frontier.py + docs/_reports/absorb_input/T-125_s606.md;W50 EW×Mom 月收益 CAGR=15.58%(129 月,2016-01→2026-09);grid 237(crypto 1..7 × equity 1..8 × gold 0..0.40 步 0.05)。Frontier 关键值:H ddp5≥-0.25 → c10/e50/g35/c5 cagr17.7%/ddp5−24.8%;X1V ddp5≥-0.35 → c60/e20/g20/c0 cagr37.5%/ddp5−34.7%;X1V_fric ddp5≥-0.45 → c60/e20/g20/c0 cagr31.5%/ddp5−42.5%。结果存 research/s606/s125_results.json(Mac 侧,不进 git)。preflight 8/9 通过,唯一失败为 cold-start 头日期落后(与他卡冲突,不在 allowed_paths)。"
+}
