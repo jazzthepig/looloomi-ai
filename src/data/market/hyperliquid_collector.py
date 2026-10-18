@@ -184,6 +184,17 @@ async def _fetch_one(client: httpx.AsyncClient, coin: str,
     return coin, rows, None
 
 
+def info_post_sync(payload: dict[str, Any], timeout: float = _TIMEOUT) -> Any:
+    """One synchronous POST to the public info endpoint. The read-only spot adapter
+    (`src/data/venues/hl_spot.py`, T-123) calls this instead of carrying its own HTTP
+    client, so Hyperliquid stays ONE network path in this repo (S-302 budget).
+    Public data only: no signing, no `exchange` endpoint."""
+    with httpx.Client(timeout=timeout) as c:
+        r = c.post(_INFO_URL, json=payload)
+        r.raise_for_status()
+        return r.json()
+
+
 async def venue_snapshot() -> dict[str, Any]:
     """Every perp's mark, oracle, funding, OI and day volume — in ONE request.
 
