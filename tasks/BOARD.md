@@ -17,6 +17,7 @@
 | open | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 |  |
 | open | T-089 | lane-a | 完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改 | 从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。 |  |
 | open | T-117 | lane-a | S-597:篮子里的 Trader Tom —— 让赢家跑(不调回等权)、砍跌 25% 的输家把钱给赢家;World50 与加密前 15 各一套 | 脚本 docs/research/t117_s597_baskets.py + _reports/absorb_input/T-117_s597.md;卡改 in_review,推 lane-a/T-117。 | Trader Tom 方向的第一批证据;预注册在台账,lane 只实现不改。 |  |
+| open | T-126 | lane-a | 出场日预演:X1V 在 BTC / ETH 上历次平仓日,用 HL 现货真实盘口估市价平仓滑点,对照「悲观摩擦」假设 | 表格齐全;只读,不改任何账本、执行器或循环;结果里还看到了什么标探索性 | 悲观摩擦假设从没被真实盘口检验过;T-123 只量了当前一刻的盘口 |  |
 | open | T-069 | lane-b | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
 | open | T-091 | lane-c | 非价格状态在 BTC 转折点上是否领先价格:资金费 / 持仓量 / 稳定币供给 / 主动买入占比 vs 价格动量,对照随机日期 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:每个特征 × 14 个拐点的领先 / 滞后天数、中位数、随机分位、错误翻转率。只测量,不改任何账本或循环。 | S-568:③ 在每个顶部推力 ≥ 1、组合层在 +190% / +97% 两段上涨里只有 ≈ 0.5 仓位;S-567:周频价格 / 宽度择时四种构造都分不开随机。非价格状态在转折点上的时序从没量过。 |  |
 | open | T-125 | lane-c | S-606:灵活组合地图换真身 —— 股票腿用 World50 EW×Mom 回放、黄金上限放开到 40% | 脚本 docs/research/t125_s606_frontier.py + _reports/absorb_input/T-125_s606.md;卡改 in_review,推 lane-c/T-125。 | S-605 的档位依据从替身换成真腿。 |  |
@@ -128,4 +129,4 @@
 | done | T-112 | seth | 证据面接 World50 / 龙头腿 / 灵活组合三本新前向账本(另一条产品线,基准各自的,不进 ① 的配置层) | 部署后 /api/v1/proof/books 有 other_lines 三段;allocation_daily 的 book 集合不变 | 前向记录本身就是产品(ARCHITECTURE);三本账开账后若证据面看不到,等于没记。 | 部署 b28065e 后 /api/v1/proof/books 有 other_lines 段:六行(world50_ewxmom / world50_ew / alt_top6 / alt_fo6 / alt_gate_ew / flex_35_50_15)都是 not_started、opens 2026-12-31,how_to_read 四条;allocation_daily 的账本集合不变(三本不在登记表)。 @ 2026-10-16 |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 14 · claimed 7 · blocked 4 · in_review 5 · done 94 · dropped 1
+open 15 · claimed 7 · blocked 4 · in_review 5 · done 94 · dropped 1

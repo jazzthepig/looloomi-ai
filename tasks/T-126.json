@@ -1,0 +1,24 @@
+{
+  "created": "2026-10-18",
+  "verified": null,
+  "status": "open",
+  "id": "T-126",
+  "owner": "lane-a",
+  "title": "出场日预演:X1V 在 BTC / ETH 上历次平仓日,用 HL 现货真实盘口估市价平仓滑点,对照「悲观摩擦」假设",
+  "source": "WEEKLY_REVIEW 2026-10-18 §5;ETH 10-17 收盘 = 近 20 日最低收盘,BTC 离它 0.7%",
+  "allowed_paths": [
+    "docs/research/",
+    "tests/"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/api/",
+    "src/data/execution/"
+  ],
+  "acceptance": {
+    "check": "报告 _reports/absorb_input/T-126_exit_day.md 存在,含 {BTC, ETH} × {$3k, $30k, $300k} × {中位, p90} 滑点 bp、平仓次数、超出深度次数",
+    "expect": "表格齐全;只读,不改任何账本、执行器或循环;结果里还看到了什么标探索性"
+  },
+  "prior_value": "悲观摩擦假设从没被真实盘口检验过;T-123 只量了当前一刻的盘口",
+  "notes": "2026-10-18 Seth 开卡。任务全文在 .lane_bot/wake/lane-a。脚本 docs/research/t126_exit_day.py;卡改 in_review,推 lane-a/T-126。"
+}
