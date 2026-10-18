@@ -1,0 +1,26 @@
+{
+  "id": "T-124",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-18",
+  "verified": null,
+  "title": "对账模块:实盘(或 dry-run)意图 / 成交 → 实施缺口(bps)、与纸面 tom_trader 的日跟踪误差、未成交机会成本",
+  "source": "Jazz 10-18「执行期提前的确的」;TRADE_PATH §3c(X1V,收盘后 1 小时内成交 + 灾难止损);S-602 模拟五:X1V 的降回撤靠及时出场",
+  "allowed_paths": [
+    "src/data/execution/",
+    "tests/",
+    "docs/research/",
+    "tasks/T-124.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "纯函数,输入 src/data/execution/fill_log.py 的意图 / 结果数据结构与纸面净值序列:每笔实施缺口 = 价差 + 手续费 + 未成交机会成本(相对决策时中间价);日跟踪误差;周汇总。测试用假数据,先红后绿;不读写任何表。",
+    "expect": "模块 src/data/execution/reconcile.py + tests/test_reconcile.py;卡改 in_review,推 lane-b/T-124。"
+  },
+  "prior_value": "TRADE_PATH §1 第 4 段;升档条件里的「实施缺口有数」靠它。",
+  "notes": "2026-10-18 Seth 开卡。"
+}

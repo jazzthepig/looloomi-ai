@@ -21,5 +21,5 @@
     "expect": "脚本 docs/research/t117_s597_baskets.py + _reports/absorb_input/T-117_s597.md;卡改 in_review,推 lane-a/T-117。"
   },
   "prior_value": "Trader Tom 方向的第一批证据;预注册在台账,lane 只实现不改。",
-  "notes": "2026-10-16 Seth 开卡。"
+  "notes": "2026-10-16 Seth 开卡。\n2026-10-18 Seth 复核(分支 lane-a/T-117 还没合):**LC 臂有设计漏洞** —— 砍掉的钱全给剩下的,结果单名权重到过 100%(回撤 −20.5% 是集中在一个赢家上碰对的,不是「砍输家」本身的功劳)。第 2 轮:LC 的钱按权重分给剩下的时,单名上限 2 / N(超出部分留现金);其余照 S-597 一字不改重跑,并报 max_single_weight 的时间分布。"
 }

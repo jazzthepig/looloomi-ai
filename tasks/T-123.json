@@ -1,0 +1,26 @@
+{
+  "id": "T-123",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-18",
+  "verified": null,
+  "title": "Hyperliquid 现货只读适配层:UBTC / UETH 的最小下单量 / 价格精度 / 盘口深度 → 下单数量取整与滑点估计(公开 info 接口,不碰私钥)",
+  "source": "Jazz 10-18「执行期提前的确的」;TRADE_PATH §3c(X1V,收盘后 1 小时内成交 + 灾难止损);S-602 模拟五:X1V 的降回撤靠及时出场",
+  "allowed_paths": [
+    "src/data/venues/",
+    "tests/",
+    "docs/research/",
+    "tasks/T-123.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "只用 HL 公开 info 接口(spotMeta / spotMetaAndAssetCtxs / l2Book / allMids),**不接任何私钥、不下单**。纯函数:按 szDecimals 取整、最小名义额检查、按盘口算 $3k / $30k / $300k / $3M 的预估滑点(bps);抓一份真实返回存成测试夹具,测试只读夹具不联网。",
+    "expect": "模块 src/data/venues/hl_spot.py + tests/test_hl_spot.py(夹具在 tests/fixtures/);卡改 in_review,推 lane-a/T-123。"
+  },
+  "prior_value": "T-122 的下单数量与滑点估计要它。",
+  "notes": "2026-10-18 Seth 开卡。"
+}
