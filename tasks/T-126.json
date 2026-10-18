@@ -1,0 +1,24 @@
+{
+  "created": "2026-10-18",
+  "verified": null,
+  "status": "in_review",
+  "id": "T-126",
+  "owner": "lane-a",
+  "title": "出场日预演:X1V 在 BTC / ETH 上历次平仓日,用 HL 现货真实盘口估市价平仓滑点,对照「悲观摩擦」假设",
+  "source": "WEEKLY_REVIEW 2026-10-18 §5;ETH 10-17 收盘 = 近 20 日最低收盘,BTC 离它 0.7%",
+  "allowed_paths": [
+    "docs/research/",
+    "tests/"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/api/",
+    "src/data/execution/"
+  ],
+  "acceptance": {
+    "check": "报告 _reports/absorb_input/T-126_exit_day.md 存在,含 {BTC, ETH} × {$3k, $30k, $300k} × {中位, p90} 滑点 bp、平仓次数、超出深度次数",
+    "expect": "表格齐全;只读,不改任何账本、执行器或循环;结果里还看到了什么标探索性"
+  },
+  "prior_value": "悲观摩擦假设从没被真实盘口检验过;T-123 只量了当前一刻的盘口",
+  "notes": "2026-10-18 Seth 开卡。任务全文在 .lane_bot/wake/lane-a。脚本 docs/research/t126_exit_day.py;卡改 in_review,推 lane-a/T-126。\n2026-10-18 lane-a T-126 交付(分支 lane-a/T-126):\n· 模块 docs/research/t126_exit_day.py(纯函数不写账本/执行器/循环):把 s601.path('l20') + s601.vol_scale 直接搬出来扫 BTC、ETH 自 2023-01-01 → 2026-10-16 日线,只调 hl_spot.HlSpotFixture + walk_book_for_qty(T-123 留下的只读层)。\n· 数据 / 夹具:`/Volumes/CometCloudAI/cometcloud-local/research/w50_daily/close.json`(BTC 自 2014-12、ETH 自 2017 末)+ tests/fixtures/hl_spot/{l2Book_UBTC, l2Book_UETH}.json(2026-10-18 抓取,UBTC @142 mid=81640.50、UETH @151 mid=2410.65)。\n· X1V 平仓日数:BTC 自 2023-01-01 共 **25** 次,ETH **26** 次。决策前日 g_eff(t-1) 中位 BTC 1.041 / ETH 0.932,p90 = 1.2(加仓堆满)。\n· 滑点表(bp,中位 / p90 / 超出深度次数):\n  BTC $3k  = 0.061 / 0.061 / 0  | $30k  = 0.061 / 0.064 / 0  | $300k  = 0.475 / 1.004 / 3\n  ETH $3k  = 0.686 / 0.880 / 0  | $30k  = 1.002 / 1.157 / 0  | $300k  = 1.807 / 2.840 / 0\n· 对照 S-602「5bp + 0.1 × v20_daily」悲观假设(单边 |Δg|=1):BTC s602 median/p90 = **23.84 / 32.35bp**,ETH = **34.37 / 46.62bp**。\n  6/6 测得均显著低于 S-602 假设(BTC 差 23-24bp、ETH 差 32-34bp,S-602 远偏悲观 1-2 个数量级)。\n· 「哪个规模开始不成立」:**所有 6 档全不成立**(S-602 公式过保护);但**结构性失败**只发生在 **$300k BTC**(25 次出场中 3 次 = 12% 跑光可见 book、SLIP = inf)—— 这是 S-602 公式根本描述不了的失败模式(它假设总能成交);实盘必须用限价 / 时间窗摊薄这 12%,不能被动市价。\n· 「10-17 真触发」未在本数据复算(w50_daily 末点 2026-10-16,缺 10-17 一格 close):要接下一步先补 10-17 close → 重跑 X1V;预判滑点 < 1bp。\n· 探索性(已标「需另立预注册 + 新数据上零信号对照」):\n  - X1V exit 日 v20_daily 显著高于整体(BTC 中位 0.035 vs 全段 0.025),这是「破 20 日低 = 高波时段」的度量,印证了 X1V exit 时点天然偏上端。\n  - UETH 真正不利因子是 micro-spread(top-1 0.18 ETH = $433 极薄 → 第一档铺价 vs 中间价 0.2bp),不是 depth(top-2 起就是 $15k+)—— 在 pilot 尺度还是小钱不值当换 venue。\n  - $300k BTC 的 3 次 inf 全在满仓 × 决策时 1.2× 加仓日(gross_to_close ≈ 1.2),不是均匀分布。\n· 报告:/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-126_exit_day.md(完整 N=51 exit 日、滑点表、S-602 对照、4 条探索性)。\n· 状态 in_review,推 lane-a/T-126。等 Seth 复核合并。"
+}
