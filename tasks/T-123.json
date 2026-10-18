@@ -1,0 +1,26 @@
+{
+  "id": "T-123",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-10-18",
+  "verified": null,
+  "title": "Hyperliquid 现货只读适配层:UBTC / UETH 的最小下单量 / 价格精度 / 盘口深度 → 下单数量取整与滑点估计(公开 info 接口,不碰私钥)",
+  "source": "Jazz 10-18「执行期提前的确的」;TRADE_PATH §3c(X1V,收盘后 1 小时内成交 + 灾难止损);S-602 模拟五:X1V 的降回撤靠及时出场",
+  "allowed_paths": [
+    "src/data/venues/",
+    "tests/",
+    "docs/research/",
+    "tasks/T-123.json",
+    "tasks/BOARD.md"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "paper_trading/"
+  ],
+  "acceptance": {
+    "check": "只用 HL 公开 info 接口(spotMeta / spotMetaAndAssetCtxs / l2Book / allMids),**不接任何私钥、不下单**。纯函数:按 szDecimals 取整、最小名义额检查、按盘口算 $3k / $30k / $300k / $3M 的预估滑点(bps);抓一份真实返回存成测试夹具,测试只读夹具不联网。",
+    "expect": "模块 src/data/venues/hl_spot.py + tests/test_hl_spot.py(夹具在 tests/fixtures/);卡改 in_review,推 lane-a/T-123。"
+  },
+  "prior_value": "T-122 的下单数量与滑点估计要它。",
+  "notes": "2026-10-18 lane-a T-123 交付(分支 lane-a/T-123):\n· 模块 src/data/venues/hl_spot.py(341 行):纯函数 round_size(Decimal 取整)/ min_notional_ok / walk_book_for_qty / estimate_slippage_bps / slippage_scan;HlSpotClient 限 ALLOWED_INFO_TYPES = {spotMeta, spotMetaAndAssetCtxs, l2Book, allMids},任何其它 type 直接 raise;HlSpotFixture 从 tests/fixtures/hl_spot/*.json 读,**不联网**;forbidden_actions() 把 order / cancel / sign / withdraw / private_key 钉死,扩展面被卡住。\n· 测试 tests/test_hl_spot.py 共 53 用例全过(0.17s),只读夹具。\n· 夹具 tests/fixtures/hl_spot/{spotMeta, spotMetaAndAssetCtxs, allMids, l2Book_UBTC, l2Book_UETH}.json —— 2026-10-18 真实抓取(spotMeta 137kB, ctx 345kB, l2Book UBTC 1.5kB / UETH 1.5kB)。l2Book spot 走 universe @N 编号,UBTC 是 @142 / UETH 是 @151。\n· 实测 UBTC(universe=@142, szDecimals=5, mid=81609.5, 日成交 $18.66M USDC):buy 滑点 $3k=0.06bp / $30k=0.17 / $300k=1.07 / $3M=inf(book 顶 5 档 ask 共 ~1.6 BTC ≈ $130k)。\n· 实测 UETH(universe=@151, szDecimals=4, mid=2409.65, 日成交 $6.44M USDC):buy 滑点 $3k=0.21bp / $30k=0.52 / $300k=5.10 / $3M=inf。UETH 在 $300k 上比 UBTC 滑 4.7×,小盘对位置维度相对不利;$3M 双双 inf,X1V 灾难止损单走 HL spot 现货大单不可行(限价 + 时间窗或 split 多日)。\n· 最小名 0.00012 BTC / 0.0041 ETH($10 USDC floor 向下取整),X1V 的常规单都远高于下界。\n· **未改** src/data/venues/registry.py 与 SYMBOL_MAP,在 allowed_paths 外,需 Seth 决定:要不要把 hyperliquid_spot + UBTC@142/UETH@151 加进 consolidator,让多场所均价复用此解析。此卡范围仅适配层与 L2 估滑点。"
+}
