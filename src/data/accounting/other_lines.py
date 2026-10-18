@@ -50,6 +50,9 @@ LINES: tuple[Line, ...] = (
     Line("flex_35_50_15", "flex", "Flexible mix at its constant weights: 35% core crypto / 50% World50 / 15% cash",
          "A constant mix of the two forward books; the allocation engine did not separate from it (S-585).",
          "flex:CONST_35_50_15", None, ("core", "world50:EWxMom")),
+    Line("flex_x1v_t25", "flex", "Flexible mix at the -25% drawdown tier: 30% crypto (core, trend rules) / 30% global equities / 20% gold / 20% cash",
+         "The mix the simulations put at a worst-5% drawdown of about -25% with the crypto leg on the trend rules (S-604); the tier used until execution is live.",
+         "flex_x1v:T25", "flex_x1v:H_T25", ("flex_x1v:T35",), "2026-10-16"),
     Line("tom_core_x1v", "tom_trader", "Trend trader on the crypto core: add on profit, out on a 20-day low, smaller when volatility runs hot",
          "Long and adding only while the core is making money; out entirely on a 20-day low; exposure scaled down when volatility is "
          "above its own two-year norm; small bear-rally trades that take profit at +15% (S-600 / S-601).",

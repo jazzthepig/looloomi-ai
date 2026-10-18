@@ -158,3 +158,20 @@ def test_tom_trader_writes_once_from_its_start_and_never_rewrites(monkeypatch):
         raise AssertionError("已写到 cutoff 不该再读价格")
     monkeypatch.setattr(fb, "tom_inputs", boom)
     assert asyncio.run(fb.run_tom_trader("2026-11-05")) == {"ok": True, "up_to_date": "2026-11-05"}
+
+
+def test_mix_nav_is_a_constant_mix_with_drift_and_periodic_rebalance():
+    """S-604 / Jazz 10-18:灵活组合前向 = 三条腿 + 现金的恒定配比,每 21 个共同日期回到目标。"""
+    import pandas as pd
+    days = pd.date_range("2026-10-16", periods=30, freq="B")
+    flat = pd.Series(1.0, index=days)
+    up = pd.Series([1.0] + [2.0] * 29, index=days)               # 第二天翻倍,之后不动
+    nav = fb.mix_nav({"crypto": up, "equity": flat, "gold": flat}, {"crypto": 0.3, "equity": 0.3, "gold": 0.2})
+    assert nav.iloc[0] == 1.0 and abs(nav.iloc[1] - 1.3) < 1e-12, "30% 的加密翻倍 ⇒ +30%"
+    drift = {"crypto": 0.6 / 1.3, "equity": 0.3 / 1.3, "gold": 0.2 / 1.3}
+    tv = sum(abs(drift[k] - w) for k, w in {"crypto": 0.3, "equity": 0.3, "gold": 0.2}.items())
+    assert abs(nav.iloc[-1] - 1.3 * (1 - tv * fb.COST_CRYPTO)) < 1e-12, "第 21 天回到目标,付一次换手成本"
+    assert abs(fb.mix_nav({"crypto": flat, "equity": flat, "gold": flat}, {"crypto": 0.3, "equity": 0.3, "gold": 0.2}).iloc[-1] - 1.0) < 1e-12
+    assert set(fb.FLEX_X1V_ARMS) == {"T25", "T35", "H_T25"}
+    for w, _ in fb.FLEX_X1V_ARMS.values():
+        assert 0.3 <= sum(w.values()) <= 1.0 and 0.1 <= w["crypto"] <= 0.7

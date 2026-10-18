@@ -41,6 +41,13 @@ TOM_ARMS = {"BTC_H": ("BTC", None, 0.0, "ma", False), "BTC_F": ("BTC", "flat", 0
             "ETH_S50": ("ETH", "short", -0.5, "ma", False), "ETH_X1V": ("ETH", "rally", 0.0, "l20", True),
             "CORE_H": ("CORE", None, 0.0, "ma", False), "CORE_F": ("CORE", "flat", 0.0, "ma", False), "CORE_FB": ("CORE", "rally", 0.0, "ma", False),
             "CORE_X1V": ("CORE", "rally", 0.0, "l20", True)}
+#: S-604 + Jazz 10-18(风险事件,「你看看怎么配」):灵活组合按回撤档位配 —— 加密腿 = tom_trader 的 ① X1V,股票 = ACWI(World50 开账前的替身),黄金 = XAUUSD,现金 0;
+#: 21 个交易日回到目标。T25 = 最差 5% 回撤 −25% 档(执行器跑稳前用这一档),T35 = −35% 档(悲观摩擦列),H_T25 = 加密持有的 −25% 档作对照
+FLEX_X1V_ARMS = {"T25": ({"crypto": 0.30, "equity": 0.30, "gold": 0.20}, "CORE_X1V"),
+                 "T35": ({"crypto": 0.40, "equity": 0.40, "gold": 0.20}, "CORE_X1V"),
+                 "H_T25": ({"crypto": 0.10, "equity": 0.30, "gold": 0.20}, "CORE_H")}
+FLEX_REB_DAYS = 21
+RULE_FLEX_X1V = "flex_x1v_v1:S-604(加密 ① X1V / ACWI / XAUUSD / 现金,21 个交易日再平衡,10bp)"
 RULE_TOM = "tom_trader_v2:S-600 / S-601(多头 >200 日线且破 20 日高,盈利加仓到 1.3;跌破即平;F 空仓 / FB 反弹 0.5 +15% 止盈 / S50 开空 −20% 止盈 / X1V 破 20 日低即平 + 波动率缩放)"
 WRITES_TABLES = ("forward_book_holdings", "forward_book_nav")
 WRITES_COLUMNS = {
@@ -164,6 +171,69 @@ async def tom_inputs(end: str) -> tuple[dict, dict]:
             fund[sym] = df.groupby("d")["funding_rate"].sum().astype(float) * 365
     fund["CORE"] = fund.get("BTC")
     return closes, fund
+
+
+def mix_nav(legs: dict[str, "Any"], weights: dict[str, float], reb: int = FLEX_REB_DAYS, cost: float = COST_CRYPTO):
+    """纯函数。legs:{腿: NAV Series},取共同日期;恒定配比,每 reb 个共同日期回到目标(换手 × cost),现金收益 0。
+    返回从第一个共同日期起 = 1 的 NAV Series。"""
+    import pandas as pd
+    df = pd.concat({k: v for k, v in legs.items()}, axis=1).dropna().sort_index()
+    if df.empty:
+        return pd.Series(dtype=float)
+    r = df.pct_change().iloc[1:]
+    tgt = pd.Series(weights, dtype=float)
+    hold = tgt.copy()
+    nav, out = 1.0, {df.index[0]: 1.0}
+    for i, (d, row) in enumerate(r.iterrows(), start=1):
+        if i % reb == 0:
+            nav *= 1 - float((hold - tgt).abs().sum()) * cost
+            hold = tgt.copy()
+        g = float((hold * row[hold.index]).sum())
+        nav *= 1 + g
+        grown = hold * (1 + row[hold.index])
+        hold = grown / (1 + g)                                  # 权重按当日涨跌漂移;现金 1 − Σ 不动
+        out[d] = nav
+    return pd.Series(out)
+
+
+async def run_flex_x1v(cutoff: str) -> dict[str, Any]:
+    """S-604 灵活组合前向:每次从 TOM_START 起整段重算(纯函数、可复现),只追加没写过的天。"""
+    import pandas as pd
+    from src.api.store import supabase_upsert_table
+    if cutoff <= TOM_START:
+        return {"ok": True, "waiting": f"从 {TOM_START} 收盘起"}
+    have_rows = await _get_all("forward_book_nav?select=arm,d,nav&book=eq.flex_x1v&order=d")
+    have = {(r["arm"], r["d"]): float(r["nav"]) for r in have_rows}
+    tom = await _get_all(f"forward_book_nav?select=arm,d,nav&book=eq.tom_trader&d=gte.{TOM_START}&order=d")
+    tnav: dict[str, dict] = {}
+    for r in tom:
+        tnav.setdefault(r["arm"], {})[r["d"]] = float(r["nav"])
+    tf = {}
+    for sym, leg in (("ACWI", "equity"), ("XAUUSD", "gold")):
+        rows = await _get_all(f"ohlcv_daily?select=trade_date,close&source=eq.eodhd&symbol=eq.{sym}&trade_date=gte.{TOM_START}&order=trade_date")
+        tf[leg] = pd.Series({pd.Timestamp(x["trade_date"]): float(x["close"]) for x in rows if x.get("close")})
+    rows_n, notes = [], []
+    for arm, (w, crypto_arm) in FLEX_X1V_ARMS.items():
+        c = tnav.get(crypto_arm)
+        if not c or tf["equity"].empty or tf["gold"].empty:
+            notes.append(f"{arm}: 腿还没有前向数据")
+            continue
+        legs = {"crypto": pd.Series({pd.Timestamp(d): v for d, v in c.items()}), "equity": tf["equity"], "gold": tf["gold"]}
+        nav = mix_nav(legs, w)
+        nav = nav[nav.index <= pd.Timestamp(cutoff)]
+        done = sorted(d for (a, d) in have if a == arm)
+        prev = None
+        for d, v in nav.items():
+            ds = d.date().isoformat()
+            if not (done and ds <= done[-1]):
+                rows_n.append({"book": "flex_x1v", "arm": arm, "d": ds, "nav": float(v),
+                               "ret": (float(v) / prev - 1) if prev else None, "as_of": TOM_START, "rule": RULE_FLEX_X1V})
+            prev = float(v)
+    if rows_n:
+        wr = await supabase_upsert_table("forward_book_nav", rows_n, on_conflict="book,arm,d")
+        if not wr.ok:
+            return {"ok": False, "why": f"写 forward_book_nav 失败:{(wr.why or '')[:160]}"}
+    return {"ok": True, "nav_written": len(rows_n), **({"notes": notes} if notes else {})}
 
 
 async def run_tom_trader(cutoff: str) -> dict[str, Any]:

@@ -566,7 +566,7 @@ CI 校验的是**这张表与代码一致**,不是"代码已经干净" ——
 
 15. **第 7d 段(龙头腿 / 灵活组合前向账本)** — 与 World50 账本同日开账(Jazz 10-16)。🟡 只因还没开账:此前 fwd_books 段只在循环 detail 里预演龙头腿的选择。判活(2027-01-02 之后):`select book, arm, max(d) from forward_book_nav group by 1, 2` 距今 ≤ 9 天。
 
-16. **第 7e 段(③ Tom 仓位管理)** — S-596(Jazz 10-16「赢时扩大、错时少伤」):BTC / ETH 2015–2026 回放点估计都高于持有、回撤更浅,ETH 判据全过、BTC 差一点;放到 ① 上前向记。🟡 的原因只是前向刚开始。判活:`select max(d) from multiplier_daily where arm = 'tom_pd13_replay'` = 昨天;前向臂 `tom_pd13` 10-17 起有行。交易层判活:`select arm, max(d) from forward_book_nav where book = 'tom_trader' group by arm` = 昨天(搭 ③ 的每小时循环写,已写到昨天就只查一次;周更循环 fwd_books 段也会补)。
+16. **第 7e 段(③ Tom 仓位管理)** — S-596(Jazz 10-16「赢时扩大、错时少伤」):BTC / ETH 2015–2026 回放点估计都高于持有、回撤更浅,ETH 判据全过、BTC 差一点;放到 ① 上前向记。🟡 的原因只是前向刚开始。判活:`select max(d) from multiplier_daily where arm = 'tom_pd13_replay'` = 昨天;前向臂 `tom_pd13` 10-17 起有行。灵活组合按回撤档位(S-604,Jazz 10-18)= book `flex_x1v`:T25(加密 ① X1V 30% / ACWI 30% / 黄金 20% / 现金 20%,执行器跑稳前用这一档)、T35、H_T25 对照,同一循环写。交易层判活:`select arm, max(d) from forward_book_nav where book = 'tom_trader' group by arm` = 昨天(搭 ③ 的每小时循环写,已写到昨天就只查一次;周更循环 fwd_books 段也会补)。
 
 ---
 

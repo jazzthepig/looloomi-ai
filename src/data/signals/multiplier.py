@@ -377,8 +377,9 @@ async def run_once() -> dict[str, Any]:
         return {"ok": False, "refused": False, "written": w["written"], "reason": f"写入失败:{w['why']}"}
     # S-600 / S-601:交易层前向(tom_trader)要每天记,不能等周更循环 —— 搭 ③ 的每小时循环;已写到昨天就只花一次查询
     try:
-        from src.data.universe.forward_books import run_tom_trader
+        from src.data.universe.forward_books import run_flex_x1v, run_tom_trader
         tom = await run_tom_trader(target.date().isoformat())
+        tom["flex_x1v"] = await run_flex_x1v(target.date().isoformat())     # S-604:灵活组合按回撤档位(Jazz 10-18)
     except Exception as e:  # noqa: BLE001 —— 交易层写不进去不该让 ③ 的回放算失败
         tom = {"ok": False, "why": f"{type(e).__name__}: {str(e)[:160]}"}
     return {"ok": True, "refused": False, "written": w["written"], "reason": f"回放至 {target.date()}",
