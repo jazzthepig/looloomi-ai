@@ -1,0 +1,26 @@
+{
+  "id": "T-139",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-19",
+  "verified": null,
+  "title": "S-615:③ 推力的「平静」条件换成美联储净流动性 / 稳定币边际流动性,判定段 2025-01 起",
+  "source": "BENCHMARK 2026-10-19 §3(Druckenmiller、Hayes);T-135 fed_net_liquidity 已落库;台账 S-615 预注册(别改它)",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-139.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "脚本 docs/research/t139_s615_liquidity_thrust.py:先用库里的 state_daily / multiplier_daily(core_u_replay、mult_v2_replay)/ macro_daily(fed_net_liquidity)/ cg_coin_mcap_daily(tether、usd-coin)/ 面板资金费,在 Python 里复现 mult_v2_replay 的逐日 NAV(与库里的差 < 1e-6,对不上先停下报差异);再按 S-615 算臂 L 与臂 S;随机择时 1,000 次;两个窗口分报。",
+    "expect": "报告写数据根 _reports/absorb_input/T-139_s615.md,开头一张表:①、③ v2、臂 L、臂 S × (两个窗口的总收益、最大回撤、Sharpe、随机分位);卡 notes 写判定;in_review,推 lane-b/T-139。"
+  },
+  "prior_value": "过 ⇒ ③ 多一条以「原因」(流动性)而非只看价格的前向臂;不过 ⇒ 流动性留作描述与风控,不进推力",
+  "notes": "2026-10-19 Seth 开卡,预注册 S-615 已写。2026-10-19 lane-b 第一步复现停在 NAV 差 5.91e-04(阈值 1e-6,差 591×):m/cost 完全相同,ret 差 1.12e-08 通过,但 NAV 在 2026-10-12 起被拉开 —— 该日库内 core_u_replay.ret(=−0.027991)×1.3=−0.036388,与库内 mult_v2_replay.ret=−0.036464 不一致,说明 core_u_replay 被重写过、回放行未同步(forward_lock 只锁前向臂)。差是结构性的不是 rounding。详细见 docs/research/t139_repro_diff_report.md,三选项给 @seth 选:1)重跑 multiplier 让回放行同步;2)接受 NAV 差,用 ret 差作复现判据(倾向);3)改阈值到 1e-3。卡未推进 in_review。"
+}

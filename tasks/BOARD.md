@@ -21,6 +21,7 @@
 | open | T-129 | lane-a | 东京主机录 Hyperliquid 盘口与成交(前 20 档、每 10 秒一张快照 + 全部成交),落本地压缩文件 | tests/test_exec_host_recorder.py 全绿;in_review,推 lane-a/T-129。install.sh 由 Seth 合并时接(别改它)。 | 有了自己的盘口与成交历史,才能量「突破那一刻的盘口失衡 / 主动买盘」能不能筛掉假突破(S-610 R 臂的下一层)。 |  |
 | open | T-137 | lane-a | 用实盘内核回放 X1V 2021→2026:执行规则(5% 门槛、单笔 / 日换手上限、取整、成本、盘中止损)让理想收益掉了多少 | 报告写数据根 _reports/absorb_input/T-137_x1v_replay.md,开头一张成本网格表;卡 notes 写关键数;in_review,推 lane-a/T-137。 | 上真钱之前知道执行规则本身让 X1V 少赚多少;拖累太大就先改门槛 / 上限,而不是让实盘去发现 |  |
 | open | T-130 | lane-b | 东京主机每 15 分钟记录 HL 头部账户的持仓(聪明钱快照) | tests/test_exec_host_whales.py 全绿;卡 notes 写 leaderboard 端点的实测结论;in_review,推 lane-b/T-130。install.sh 由 Seth 合并时接(别改它)。 | 几周之后能量:头部账户净持仓的变化是否领先价格、领先多久 —— 我们没找到同行评审的证据(跟单 / 排行榜的持续性只有平台自述),所以只能自己录、自己量。 |  |
+| open | T-139 | lane-b | S-615:③ 推力的「平静」条件换成美联储净流动性 / 稳定币边际流动性,判定段 2025-01 起 | 报告写数据根 _reports/absorb_input/T-139_s615.md,开头一张表:①、③ v2、臂 L、臂 S × (两个窗口的总收益、最大回撤、Sharpe、随机分位);卡 notes 写判定;in_review,推 lane-b/T-139。 | 过 ⇒ ③ 多一条以「原因」(流动性)而非只看价格的前向臂;不过 ⇒ 流动性留作描述与风控,不进推力 |  |
 | open | T-128 | lane-c | 周末资金费率飙升:频率、中性收费、反着做(S-611) | 报告写数据根 _reports/absorb_input/T-128_s611.md,开头一张表:Q2 三段均值 + Q3 三个持有期 × 三段均值 R + z;卡 notes 写判定与关键数;in_review,推 lane-c/T-128。 | 过 ⇒ 执行器加一条周末收费 / 周末反做的纸面臂;不过 ⇒ 周末飙升只作风控旗(拥挤),不交易。 |  |
 | open | T-131 | lane-c | R 形态的持仓管理:先收一半保本、假突破撤后收复再进、赢了收紧(S-612) | 报告写数据根 _reports/absorb_input/T-131_s612.md,开头一张表:M0–M3 × (n、均值 R、去掉最好 5 笔的均值、盈亏比、三段均值、2023 合计、最长连亏、组合年化 / 回撤);卡 notes 写判定;in_review,推 lane-c/T-131。 | 过 ⇒ R 的前向纸面账本直接用过关的管理规则;不过 ⇒ 用 S-610 原样上前向,并在报告里写清「钱集中在少数几笔」的风险。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
@@ -140,4 +141,4 @@
 | done | T-114 | seth | T-092 R3(30 名外暴涨名做空、等额多 BTC 对冲)独立复算;复算站得住就开前向纸面账本(探索仓,不进配置) | 台账 S- 条复算结果;站得住则有前向表 + 循环 + 判活判据 + 第一行。 | R3 是 10 天来唯一按字面过了预注册的规则;④ 是回报层级的最后一层,先验要严。 | Replicated and not opened (S-608). Trade table matches lane-b 156/157 and 59/59; z30 identical to the pre-registered formula. Tails: worst single trade -159% (TRB, +188% squeeze), skew -1.98, worst 5% of trades give back 21% of all winning P&L. Daily equal-weight book (>= 10 slots) 39.1%/yr, max drawdown -33.6%, correlation with BTC -0.05, and ab_test against holding BTC cannot separate them. Only 27 of the 77 shorted names have a Hyperliquid perp today; on those, the mean per trade halves to +6.3% and p5 falls to -76%. Fails steps 2 and 3 of the card, so no forward book. @ 2026-10-19T03:34Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 14 · claimed 11 · blocked 6 · in_review 4 · done 101 · dropped 1
+open 15 · claimed 11 · blocked 6 · in_review 4 · done 101 · dropped 1
