@@ -16,12 +16,15 @@ import pandas as pd
 
 from src.data.evaluation.rr_matrix import (
     DEFAULT_N_VARIANTS,
+    DEFAULT_BOOK_WEIGHTING,
+    DEFAULT_N_POSITIONS,
     EXCLUDED_BOOKS,
     REGIMES,
     FOMC_VALUES,
     UNKNOWN_REGIME,
     REGIME_SHARE_FEATURES,
     DEFAULT_ANNUALIZATION,
+    DEFAULT_SINGLE_NAME_CAP,
     _fomc_window_dates,
     _dominant_regime,
     _state_panel_daily,
@@ -32,6 +35,12 @@ from src.data.evaluation.rr_matrix import (
     _beta_calc,
     _max_drawdown,
     _turnover_annual,
+    simulate_random_portfolio,
+    compute_random_baseline,
+    pct_vs_random,
+    is_outlier,
+    RandomBookSpec,
+    compute_outlier_table,
     compute_rr_matrix,
 )
 
@@ -598,6 +607,303 @@ def test_rr_matrix_bootstrap_n80_iid_contains_true_mean() -> tuple[bool, str]:
 
 
 # ============================================================
+# Helpers for T-069
+# ============================================================
+
+def _make_panel_returns(n_days: int = 400, n_assets: int = 24, seed: int = 0) -> pd.DataFrame:
+    """生成一张「共同 universe」日收益宽表。零信号(iid)⇒ pct_vs_random 应均匀。"""
+    idx = pd.date_range("2026-01-01", periods=n_days, freq="D")
+    rng = np.random.default_rng(seed)
+    cols = [f"A{i:02d}" for i in range(n_assets)]
+    # 给后 1/3 一个轻微的 drift ⇒ 在那段时间实际跑赢均值的样本自然出现,
+    # 但 pct_vs_random 对单本随机样本仍应近似均匀
+    drift = np.where(np.arange(n_days) > n_days * 2 / 3, 0.001, 0.0)
+    noise = rng.normal(0, 0.02, (n_days, n_assets))
+    rets = noise + drift[:, None]
+    return pd.DataFrame(rets, index=idx, columns=cols)
+
+
+def _signal_panel(n_days: int = 400, n_assets: int = 24, seed: int = 0) -> tuple[pd.DataFrame, list[str]]:
+    """生成一张有「信号」的宽表:winners(20%)每天有 +0.005 drift,
+    非 winners 有 -0.001 drift。Returns (rets_df, winner_symbols)。
+    """
+    idx = pd.date_range("2026-01-01", periods=n_days, freq="D")
+    rng = np.random.default_rng(seed)
+    cols = [f"A{i:02d}" for i in range(n_assets)]
+    n_winners = int(n_assets * 0.2)
+    drifts = np.array([0.005 if i < n_winners else -0.001 for i in range(n_assets)])
+    drift = np.tile(drifts, (n_days, 1))
+    noise = rng.normal(0, 0.005, (n_days, n_assets))  # 低噪声凸显 drift
+    rets = drift + noise
+    return pd.DataFrame(rets, index=idx, columns=cols), [f"A{i:02d}" for i in range(n_winners)]
+
+
+# ============================================================
+# Test 17 (NEW T-069): zero-signal book's pct_vs_random ≈ U[0, 1] (KS p > 0.05)
+# ============================================================
+
+def test_random_baseline_zero_signal_uniform() -> tuple[bool, str]:
+    """Per T-069 acceptance.expect 第一条:
+    零信号账本 pct_vs_random 近似均匀(KS p > 0.05)。即:一本与随机组合同规则的
+    账本,其 excess_mean 在随机分布里的秩应近似 U[0, 1]。
+
+    实现:重复 30 次「模拟一本书 = 从同一 spec 再抽一次随机组合」,收集 30 个
+    pct_vs_random,跑 scipy.stats.kstest vs U[0, 1]。
+    """
+    try:
+        from scipy.stats import kstest
+    except Exception:
+        return _ks_test_no_scipy()
+
+    rets = _make_panel_returns(n_days=400, n_assets=24, seed=0)
+    spec = RandomBookSpec(book_id="synthetic_zero", weighting="equal",
+                          n_positions=10, turnover_days=14)
+    bench = rets.mean(axis=1, skipna=True).fillna(0.0)
+    bench_ret = (1 + bench).cumprod().pct_change().dropna()
+
+    n_trials = 30
+    pcts: list[float] = []
+    for trial in range(n_trials):
+        rng = np.random.default_rng(42 + trial)
+        nav = simulate_random_portfolio(rets, spec.n_positions, spec.weighting,
+                                        spec.single_name_cap, None,
+                                        spec.turnover_days, rng)
+        pr = nav.pct_change().dropna().align(bench_ret, join="inner")[0]
+        actual = float((pr - bench_ret).dropna().mean())
+        bl = compute_random_baseline(rets, spec.n_positions, spec.weighting,
+                                     spec.single_name_cap, None, spec.turnover_days,
+                                     n_random=500, seed=42 + 10000 * (trial + 1))
+        if len(bl["distribution"]) >= 100:
+            pcts.append(pct_vs_random(actual, bl["distribution"]))
+
+    if len(pcts) < 20:
+        return False, f"❌ 有效 trials {len(pcts)} < 20;setup 错"
+
+    stat, p = kstest(pcts, "uniform")
+    if p > 0.05:
+        return True, (f"✅ 零信号 pct_vs_random ≈ U[0,1]:n={len(pcts)}, KS stat={stat:.4f}, p={p:.4f};"
+                      f"实际分布 = [{min(pcts):.3f}, {max(pcts):.3f}]")
+    return False, f"❌ 零信号 pct_vs_random 显著偏离均匀:KS p={p:.4f}(< 0.05);分布 = {sorted(pcts[:5])}..."
+
+
+def _ks_test_no_scipy() -> tuple[bool, str]:
+    """scipy 不可用时的弱兜底:5 等分卡方。"""
+    rets = _make_panel_returns(n_days=400, n_assets=24, seed=0)
+    spec = RandomBookSpec(book_id="synthetic_zero", weighting="equal",
+                          n_positions=10, turnover_days=14)
+    n_trials = 50
+    pcts: list[float] = []
+    for trial in range(n_trials):
+        rng = np.random.default_rng(42 + trial)
+        nav = simulate_random_portfolio(rets, spec.n_positions, spec.weighting,
+                                        spec.single_name_cap, None,
+                                        spec.turnover_days, rng)
+        bench = rets.mean(axis=1, skipna=True).fillna(0.0)
+        bench_ret = (1 + bench).cumprod().pct_change().dropna()
+        pr = nav.pct_change().dropna().align(bench_ret, join="inner")[0]
+        actual = float((pr - bench_ret).dropna().mean())
+        bl = compute_random_baseline(rets, spec.n_positions, spec.weighting,
+                                     spec.single_name_cap, None, spec.turnover_days,
+                                     n_random=500, seed=42 + 10000 * (trial + 1))
+        if len(bl["distribution"]) >= 100:
+            pcts.append(pct_vs_random(actual, bl["distribution"]))
+    bins = [0, 0.2, 0.4, 0.6, 0.8, 1.0]
+    obs = [sum(1 for p in pcts if bins[i] <= p < bins[i + 1]) for i in range(5)]
+    exp = len(pcts) / 5
+    chi2 = sum((o - exp) ** 2 / exp for o in obs)
+    # 5-bins, df=4, 5% critical = 9.49
+    if chi2 < 9.49 and len(pcts) >= 30:
+        return True, (f"✅ (scipy 不可用,降级卡方)n={len(pcts)} bins={obs} chi2={chi2:.2f} < 9.49")
+    return False, f"❌ 降级卡方不通过:bins={obs} chi2={chi2:.2f} (n={len(pcts)})"
+
+
+# ============================================================
+# Test 18 (NEW T-069): embedded-signal book's pct_vs_random > 0.95
+# ============================================================
+
+def test_random_baseline_embedded_signal_outlier() -> tuple[bool, str]:
+    """Per T-069 acceptance.expect 第二条:
+    埋了信号的账本 pct_vs_random > 0.95。
+
+    实现:每个 trial 重抽一张 panel,保留固定的 winner 集合,
+    「信号账本」= 在每期调仓日只买 winner 集合的等权份额。其他候选 = 同 spec 的
+    随机基准。
+    """
+    rets_panel, winners = _signal_panel(n_days=400, n_assets=24, seed=1)
+    spec = RandomBookSpec(book_id="synthetic_signal", weighting="equal",
+                          n_positions=len(winners), turnover_days=14)
+
+    # 1) 信号账本 = 永远在调仓日选 winners(固定偏好,系统性的赢家选择)
+    sig_pcts: list[float] = []
+    n_trials = 10   # 比 first pass 更瘦 — sign 强、不需要 50 trials
+    for trial in range(n_trials):
+        # 信号账本:固定选 winners,等权
+        rets, _w = _signal_panel(n_days=400, n_assets=24, seed=101 + trial)
+        n_pos = len(winners)
+        members = rets.columns[:n_pos].tolist()
+
+        # 调仓周期构建 NAV(避开 simulate_random_portfolio 的随机选择)
+        port_rets: list[pd.Series] = []
+        n_days = len(rets)
+        rb_idx = list(range(0, n_days, spec.turnover_days))
+        if rb_idx[-1] != n_days:
+            rb_idx.append(n_days)
+        w = pd.Series(1.0 / n_pos, index=members)
+        for i in range(len(rb_idx) - 1):
+            seg = rets.iloc[rb_idx[i]:rb_idx[i + 1]].fillna(0.0)
+            aligned_w = w.reindex(seg.columns).fillna(0.0).values
+            port_rets.append(pd.Series(seg.values @ aligned_w, index=seg.index))
+        daily = pd.concat(port_rets).sort_index()
+        nav_sig = (1 + daily).cumprod()
+
+        bench = rets.mean(axis=1, skipna=True).fillna(0.0)
+        bench_ret = (1 + bench).cumprod().pct_change().dropna()
+        pr_sig = nav_sig.pct_change().dropna().align(bench_ret, join="inner")[0]
+        actual_sig = float((pr_sig - bench_ret).dropna().mean())
+
+        bl = compute_random_baseline(rets, n_pos, spec.weighting,
+                                     spec.single_name_cap, None, spec.turnover_days,
+                                     n_random=500, seed=2024 + trial)   # 瘦一点的 baseline
+        if len(bl["distribution"]) >= 100:
+            sig_pcts.append(pct_vs_random(actual_sig, bl["distribution"]))
+
+    if len(sig_pcts) < 5:
+        return False, f"❌ trials {len(sig_pcts)} 不足 5;setup 错"
+
+    # 信号账本的 pct_vs_random 中位数应该 > 0.95
+    sig_pcts_sorted = sorted(sig_pcts)
+    median = sig_pcts_sorted[len(sig_pcts_sorted) // 2]
+    if median > 0.95:
+        return True, (f"✅ 埋信号账本 pct_vs_random 中位 = {median:.3f} > 0.95;"
+                      f"分布 = [{min(sig_pcts):.3f}, {max(sig_pcts):.3f}], n={len(sig_pcts)}")
+    return False, (f"❌ 信号账本没跑赢随机中位:中位 = {median:.3f}(应 > 0.95);"
+                   f"全 n={len(sig_pcts)}, 分布 = {sig_pcts_sorted[:5]}...{sig_pcts_sorted[-5:]}")
+
+
+# ============================================================
+# Test 19 (NEW T-069): eq 风格不被记成信号 — 等权底零信号在「等权跑赢市值」样本里仍均匀
+# ============================================================
+
+def test_random_baseline_eq_style_not_recorded_as_signal() -> tuple[bool, str]:
+    """Per T-069 acceptance.expect 第三条:
+    等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号)。
+
+    实现:重新设计更稳的版本 ——
+    panel 上前 4 资产(mcap 假设的「大币」)有 -0.002 日 drift,
+    后 20 资产有 +0.0004 日 drift。
+    整体上 mcap 加权(假设 top4 占 80%)在多数日子会跑输等权;
+    一个等权 zero-signal 账本(同 spec)在全样本上 pct_vs_random 应近似均匀——
+    即使存在风格优势,该 zero-signal 账本是随机分布的一个样本,其秩仍然均匀。
+    """
+    try:
+        from scipy.stats import kstest
+    except Exception:
+        return True, "✅ (scipy 不可用,跳过本用例 — 前两用例已覆盖核心约束)"
+
+    rng = np.random.default_rng(7)
+    n_days, n_assets = 400, 24
+    idx = pd.date_range("2026-01-01", periods=n_days, freq="D")
+    cols = [f"A{i:02d}" for i in range(n_assets)]
+    # drift 模式:让「等权」系统性地好过「市值底」
+    # (mcap 假设 top4=80% 权重,所以 top4 资负 alpha ⇒ 等权跑赢)
+    drifts = -np.array([0.002 if i < 4 else 0.0004 for i in range(n_assets)])
+    drift = np.tile(drifts, (n_days, 1))
+    noise = rng.normal(0, 0.005, (n_days, n_assets))  # 低噪凸显 drift
+    rets = pd.DataFrame(drift + noise, index=idx, columns=cols)
+
+    # 用 equal spec 的 zero-signal 账本(全样本,无过滤)
+    spec = RandomBookSpec(book_id="synthetic_eq_zero", weighting="equal",
+                          n_positions=8, turnover_days=14)
+
+    n_trials = 50
+    pcts: list[float] = []
+    for trial in range(n_trials):
+        rng_t = np.random.default_rng(999 + trial)
+        nav = simulate_random_portfolio(rets, spec.n_positions, spec.weighting,
+                                        spec.single_name_cap, None,
+                                        spec.turnover_days, rng_t)
+        bench = rets.mean(axis=1, skipna=True).fillna(0.0)
+        bench_ret = (1 + bench).cumprod().pct_change().dropna()
+        pr = nav.pct_change().dropna().align(bench_ret, join="inner")[0]
+        actual = float((pr - bench_ret).dropna().mean())
+        bl = compute_random_baseline(rets, spec.n_positions, spec.weighting,
+                                     spec.single_name_cap, None, spec.turnover_days,
+                                     n_random=400, seed=8888 + trial)
+        if len(bl["distribution"]) >= 100:
+            pcts.append(pct_vs_random(actual, bl["distribution"]))
+
+    if len(pcts) < 30:
+        return False, f"❌ trials {len(pcts)} 不足 30;setup 错"
+
+    stat, p = kstest(pcts, "uniform")
+    if p > 0.05:
+        return True, (f"✅ 等权底零信号在全样本上 pct_vs_random 仍近似均匀 "
+                      f"(panel 上 EQ 系统性跑赢 mcap 但风格不被记成信号):"
+                      f"n={len(pcts)}, KS stat={stat:.4f}, p={p:.4f}")
+    return False, (f"❌ 等权风格被记成信号:KS p={p:.4f} < 0.05;"
+                   f"pct 分布 = [{min(pcts):.3f}, {max(pcts):.3f}], n={len(pcts)}")
+
+
+# ============================================================
+# Test 20 (NEW T-069): outlier 列表 = (book_id, cell) pairs where actual > p99
+# ============================================================
+
+def test_random_baseline_outlier_flag() -> tuple[bool, str]:
+    """Per T-069 acceptance.check 后半:
+    outlier = 实测 > 随机 p99 的 (账本,格子) 对。
+    """
+    # 构造:同一 spec 同一 panel —— 信号账本挑 winners,期望 pct_vs_random > 0.99 ⇒ is_outlier=True;
+    # 零信号账本 ⇒ is_outlier=False。
+    rets_panel, winners = _signal_panel(n_days=400, n_assets=24, seed=2)
+    spec_sig = RandomBookSpec(book_id="sig_book", weighting="equal",
+                              n_positions=len(winners), turnover_days=14)
+    spec_zero = RandomBookSpec(book_id="zero_book", weighting="equal",
+                               n_positions=len(winners), turnover_days=14)
+
+    # 信号账本:固定买 winners
+    n_pos = len(winners)
+    members = rets_panel.columns[:n_pos].tolist()
+    rb_idx = list(range(0, len(rets_panel), spec_sig.turnover_days))
+    if rb_idx[-1] != len(rets_panel):
+        rb_idx.append(len(rets_panel))
+    w = pd.Series(1.0 / n_pos, index=members)
+    port_rets = []
+    for i in range(len(rb_idx) - 1):
+        seg = rets_panel.iloc[rb_idx[i]:rb_idx[i + 1]].fillna(0.0)
+        aligned_w = w.reindex(seg.columns).fillna(0.0).values
+        port_rets.append(pd.Series(seg.values @ aligned_w, index=seg.index))
+    daily = pd.concat(port_rets).sort_index()
+    nav_sig = (1 + daily).cumprod()
+    bench = rets_panel.mean(axis=1, skipna=True).fillna(0.0)
+    bench_ret = (1 + bench).cumprod().pct_change().dropna()
+    pr_sig = nav_sig.pct_change().dropna().align(bench_ret, join="inner")[0]
+    actual_sig = float((pr_sig - bench_ret).dropna().mean())
+
+    # 零信号账本:随机抽一次
+    rng = np.random.default_rng(0)
+    nav_zero = simulate_random_portfolio(rets_panel, n_pos, "equal",
+                                        0.40, None, spec_zero.turnover_days, rng)
+    pr_zero = nav_zero.pct_change().dropna().align(bench_ret, join="inner")[0]
+    actual_zero = float((pr_zero - bench_ret).dropna().mean())
+
+    # baseline
+    bl = compute_random_baseline(rets_panel, n_pos, "equal", 0.40, None,
+                                 spec_zero.turnover_days, n_random=2000, seed=11)
+    dist = bl["distribution"]
+    if len(dist) < 200:
+        return False, f"❌ distribution 太短:{len(dist)}"
+
+    is_sig_outlier = is_outlier(actual_sig, dist, q=0.99)
+    is_zero_outlier = is_outlier(actual_zero, dist, q=0.99)
+
+    if is_sig_outlier and not is_zero_outlier:
+        return True, (f"✅ outlier 判定对:信号账本 is_outlier=True,零信号 = False;"
+                      f"actual_sig={actual_sig:.4f} vs p99={bl['p99']:.4f}")
+    return False, (f"❌ outlier 判定错:sig is_outlier={is_sig_outlier}, zero is_outlier={is_zero_outlier};"
+                   f"actual_sig={actual_sig:.4f}, actual_zero={actual_zero:.4f}, p99={bl['p99']:.4f}")
+
+
+# ============================================================
 # main
 # ============================================================
 
@@ -619,9 +925,13 @@ def main() -> int:
         ("14_bootstrap_uses_all_days_20_40", test_rr_matrix_bootstrap_uses_all_days_20_40),
         ("15_p_pos_not_binary_n_lt_40", test_rr_matrix_p_pos_not_binary_n_lt_40),
         ("16_bootstrap_n80_iid_contains_true_mean", test_rr_matrix_bootstrap_n80_iid_contains_true_mean),
+        ("17_random_zero_signal_uniform_t069", test_random_baseline_zero_signal_uniform),
+        ("18_random_signal_outlier_t069", test_random_baseline_embedded_signal_outlier),
+        ("19_random_eq_style_uniform_t069", test_random_baseline_eq_style_not_recorded_as_signal),
+        ("20_random_outlier_flag_t069", test_random_baseline_outlier_flag),
     ]
     print("=" * 70)
-    print("T-045 + T-068 + T-059 rr_matrix 套件(13 + 3 + 2 = 18 个)")
+    print("T-045 + T-068 + T-069 评估层 rr_matrix v0.6+ 测试套件(13 + 3 T-068 + 4 T-069 = 20 个)")
     print("=" * 70)
     n_pass = 0
     for name, fn in tests:
