@@ -2,7 +2,7 @@
   "id": "T-015",
   "title": "创建 HL API 钱包 + 开东京/新加坡云主机",
   "owner": "jazz",
-  "status": "open",
+  "status": "done",
   "source": "DECISIONS 09-24",
   "allowed_paths": [],
   "forbidden_paths": [],
@@ -12,5 +12,9 @@
   },
   "prior_value": "无",
   "created": "2026-09-24",
-  "verified": null
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-19T10:40Z",
+    "value": "Jazz did both halves on 10-19. Host: Vultr Tokyo vc2-1c-2gb, Ubuntu 24.04, 45.32.39.6, UTC; SSH key-only on port 443 (the VPN node drops outbound 22), password and keyboard-interactive login off, Vultr firewall to the VPN exit /32. Latency to api.hyperliquid.xyz 83 ms. API wallet 'cometcloud-exec' (the first one was entered as its address, not its key; regenerated): userRole of the address derived on the host from the key = agent, bound to master 0x958B...524D (True). Key only in /etc/cometcloud/executor.env (600 root), filled by Jazz; Seth never saw it. Railway has EXECUTOR_TOKEN and HL_ACCOUNT_ADDRESS. Spot balance at check: 868.85 USDC, no UBTC / UETH."
+  }
 }

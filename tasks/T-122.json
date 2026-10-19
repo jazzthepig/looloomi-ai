@@ -7,11 +7,14 @@
   "title": "执行器核心:X1V 目标 → 订单计划 → 只算不发(dry-run)→ 写 execution_intents;收盘后 1 小时内跑、灾难止损盘中盯",
   "source": "Jazz 10-18「执行期提前的确的」;TRADE_PATH §3c(X1V,收盘后 1 小时内成交 + 灾难止损);S-602 模拟五:X1V 的降回撤靠及时出场",
   "allowed_paths": [
-    "src/data/execution/",
-    "src/api/",
-    "tests/",
+    "deploy/executor/",
+    "docs/SPINE.md",
     "docs/TRADE_PATH.md",
-    "scripts/"
+    "scripts/",
+    "src/api/",
+    "src/data/execution/",
+    "src/exec_host/",
+    "tests/"
   ],
   "forbidden_paths": [
     "Shadow/"
@@ -21,5 +24,5 @@
     "expect": "dry-run 在 Railway 或云主机上跑满 2 天,每天一批意图,人工核对无误(TRADE_PATH §5 第 1–2 天)"
   },
   "prior_value": "执行是 X1V 成立的一部分;没有它,X1V 只能按悲观摩擦列算。",
-  "notes": "2026-10-18 Seth 开卡。\n2026-10-18 Seth:核心纯函数已写(src/data/execution/executor.py + tests/test_executor.py 5 项):目标与前向账本同一个核、价格过期拒单、出场优先、单笔 / 当日换手截断、一键停、灾难止损判定、dry-run 意图落表。**卡在 T-015**(Jazz:HL API 钱包 + 东京 / 新加坡云主机):dry-run 要读真实余额与盘口,地址到位后接调度。\n2026-10-18 Seth:空跑已接调度,不等钱包 —— `src/data/execution/dry_run.py` + `_executor_dry_run_loop`:00:05 UTC 起每 5 分钟试,前一日收盘落库即出计划;纸面账户 3,000 USDC、HL 现货 UBTC / UETH 真实盘口(T-123 的只读适配层)、szDecimals 取整、按盘口估滑点、超出可见深度拒单;意图写 execution_intents(sleeve x1v_spot_dry),每天记「收盘 → 计划就绪」分钟数。卡上 expect 的「跑满 2 天、人工核对」要等 X1V 有订单的日子(当前 BTC / ETH 都是 0)。真下单仍等 T-015。"
+  "notes": "2026-10-18 Seth 开卡。\n2026-10-18 Seth:核心纯函数已写(src/data/execution/executor.py + tests/test_executor.py 5 项):目标与前向账本同一个核、价格过期拒单、出场优先、单笔 / 当日换手截断、一键停、灾难止损判定、dry-run 意图落表。**卡在 T-015**(Jazz:HL API 钱包 + 东京 / 新加坡云主机):dry-run 要读真实余额与盘口,地址到位后接调度。\n2026-10-18 Seth:空跑已接调度,不等钱包 —— `src/data/execution/dry_run.py` + `_executor_dry_run_loop`:00:05 UTC 起每 5 分钟试,前一日收盘落库即出计划;纸面账户 3,000 USDC、HL 现货 UBTC / UETH 真实盘口(T-123 的只读适配层)、szDecimals 取整、按盘口估滑点、超出可见深度拒单;意图写 execution_intents(sleeve x1v_spot_dry),每天记「收盘 → 计划就绪」分钟数。卡上 expect 的「跑满 2 天、人工核对」要等 X1V 有订单的日子(当前 BTC / ETH 都是 0)。真下单仍等 T-015。\n2026-10-19 Seth:T-015 到位后接主机执行器 —— `src/exec_host/`(runner + core)+ `deploy/executor/`(systemd 单元、install.sh 带自检)+ Railway `/internal/executor/plan`、`/report`(EXECUTOR_TOKEN)、`/halt`(INTERNAL_TOKEN)。计划在 Railway 算(同一个核),主机读**真实**余额与盘口、自己签名;意图先落盘再下单,每个意图恰好一个结果;盘中灾难止损只用缓存的计划(不依赖 Railway);两个停(主机 HALT 文件 / Railway 一键停,读不到 ≠ 解除);对交易所只调用 `order`(AST 守着)。默认 dry_run(sleeve x1v_spot_host_dry,不读私钥)。tests/test_exec_host.py 16 项。真跑要 Jazz 把 EXECUTOR_MODE 改 live。"
 }
