@@ -108,3 +108,16 @@ def test_sentiment_history_goes_back_to_2018_and_volume_backfill_threshold() -> 
     assert not ci.needs_volume_history(5) and ci.needs_volume_history(31)
     from src.data.market.binance_hf_collector import FUNDING_BACKFILL_START_MS
     assert FUNDING_BACKFILL_START_MS <= int(datetime(2020, 1, 1, tzinfo=timezone.utc).timestamp() * 1000)
+
+
+def test_volume_history_also_covers_past_leaders_not_only_todays_members():
+    """10-19:当前分类成员之外的历史大名字(AXS / FTT / NEO …)2020–2024 的成交额全空,S-595 的前 50 覆盖只有中位 35 名。"""
+    from src.data.market import cis_inputs as ci
+    q = ci.quarter_ends("2019-06-01", "2020-06-30")
+    assert q == ["2019-06-30", "2019-09-30", "2019-12-31", "2020-03-31", "2020-06-30"]
+    rows = [{"d": "2020-03-31", "symbol": "FTT", "coin_id": "ftx-token", "mcap": 5e8},
+            {"d": "2020-03-31", "symbol": "ETH", "coin_id": "ethereum", "mcap": 1.5e10},
+            {"d": "2020-03-31", "symbol": "TINY", "coin_id": "tiny", "mcap": 1e3},
+            {"d": "2020-06-30", "symbol": "ETH", "coin_id": "ethereum", "mcap": 2.6e10},
+            {"d": "2020-06-30", "symbol": "NOMC", "coin_id": "nomc", "mcap": None}]
+    assert ci.top_pairs(rows, 2) == [{"symbol": "ETH", "coin_id": "ethereum"}, {"symbol": "FTT", "coin_id": "ftx-token"}]

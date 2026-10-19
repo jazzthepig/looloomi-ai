@@ -268,6 +268,47 @@ VOLUME_HISTORY_FROM = "2019-06-01"
 VOLUME_HISTORY_MAX_PER_RUN = 120      # 一轮(每天)最多重取这么多个名字(CG 额度),约 4 天补齐;补齐之后每轮只剩一次小查询 / 名字
 
 
+#: 10-19:只按**当前**分类成员去补,补不到历史上的大名字 —— AXS / FTT / NEO / FTM / XTZ / SAND / APE … 2020–2024 都进过非 BTC
+#: 市值前 50,今天不在成员名单里,于是 2020–2024 的 39.7 万行里 18.6 万行成交额为空,每周前 50 里有成交额的中位只有 35 名
+#: (S-595 的判据要 ≥ 45)。这些名字的价格 / 市值早已落库,缺的只是同一个 market_chart 回包里的 total_volumes。
+#: 历史名单 = 每个季度末市值前 HISTORY_TOP_N 的 (symbol, coin_id),取库里已存的那一对(与已存行同一个 coin_id)。
+HISTORY_TOP_N = 80
+
+
+def quarter_ends(start: str = VOLUME_HISTORY_FROM, end: str = "2024-12-31") -> list[str]:
+    """纯函数。start 之后到 end 的每个季度末(3/6/9/12 月最后一天)。"""
+    out = []
+    for y in range(date.fromisoformat(start).year, date.fromisoformat(end).year + 1):
+        for m, d in ((3, 31), (6, 30), (9, 30), (12, 31)):
+            x = date(y, m, d).isoformat()
+            if start <= x <= end:
+                out.append(x)
+    return out
+
+
+def top_pairs(rows: list[dict], n: int = HISTORY_TOP_N) -> list[dict]:
+    """纯函数。[{d, symbol, coin_id, mcap}] → 每个日期市值前 n 的 (symbol, coin_id) 去重,按首次出现的顺序。"""
+    by_d: dict[str, list[dict]] = {}
+    for r in rows:
+        if r.get("mcap") and r.get("symbol") and r.get("coin_id"):
+            by_d.setdefault(str(r["d"])[:10], []).append(r)
+    seen, out = set(), []
+    for d in sorted(by_d):
+        for r in sorted(by_d[d], key=lambda x: -float(x["mcap"]))[:n]:
+            k = (r["symbol"], r["coin_id"])
+            if k not in seen:
+                seen.add(k)
+                out.append({"symbol": r["symbol"], "coin_id": r["coin_id"]})
+    return out
+
+
+async def _historical_members() -> list[dict]:
+    from src.data.style.header import SOURCE, _read_all
+    rows = await _read_all("asset_mcap_daily", {"select": "d,symbol,coin_id,mcap", "source": f"eq.{SOURCE}",
+                                                "d": "in.(" + ",".join(quarter_ends()) + ")", "order": "d.asc,symbol.asc"})
+    return top_pairs(rows)
+
+
 def needs_volume_history(null_rows: int, threshold: int = 30) -> bool:
     """纯函数。成交额为空的行超过门槛才重取 —— CG 在上市前几天偶尔不给成交额,几行空不值得整段重取。"""
     return null_rows > threshold
@@ -278,6 +319,14 @@ async def _volume_history_all(today: date) -> dict[str, Any]:
     from src.data.style.header import SOURCE, latest_membership, parse_market_chart
     from src.data.vector.market_state_writer import _sb_get
     members = await latest_membership()
+    have = {(m.get("symbol"), m.get("coin_id")) for m in members}
+    try:
+        members = members + [m for m in await _historical_members() if (m["symbol"], m["coin_id"]) not in have]
+    except Exception as e:  # noqa: BLE001 — 历史名单读不到,照旧只补当前成员,原因带回去
+        members = list(members)
+        hist_err = f"{type(e).__name__}: {str(e)[:80]}"
+    else:
+        hist_err = None
     to_ts = int(datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc).timestamp())
     frm_ts = int(datetime.combine(date.fromisoformat(VOLUME_HISTORY_FROM) - timedelta(days=2),
                                   datetime.min.time(), tzinfo=timezone.utc).timestamp())
@@ -308,7 +357,8 @@ async def _volume_history_all(today: date) -> dict[str, Any]:
             failed[sym] = err[:80]
         else:
             done += 1
-    return {"checked": checked, "refetched": done, "failed": dict(list(failed.items())[:10]), "n_failed": len(failed)}
+    return {"checked": checked, "refetched": done, "failed": dict(list(failed.items())[:10]), "n_failed": len(failed),
+            "candidates": len(members), **({"history_members_error": hist_err} if hist_err else {})}
 
 
 async def _migration_history(today: date) -> dict[str, Any]:
