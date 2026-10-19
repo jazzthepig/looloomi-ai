@@ -1,0 +1,27 @@
+{
+  "id": "T-133",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-10-19",
+  "verified": null,
+  "title": "接 Binance Vision 免费历史档:永续 5 分钟持仓结构(未平仓量、大户多空比、主动买卖量比)+ 盘口深度带 → 日度特征表",
+  "source": "Jazz 10-19「先不买,在现有数据源想办法」;Seth 实测 data.binance.vision:UM metrics BTC 2020-09-01 起、ARB 自上市 2023-03-23 起,每日更新(10-15 的文件 10-16 上传);bookDepth BTC 2023-01-01 起",
+  "allowed_paths": [
+    "src/data/market/",
+    "src/api/",
+    "migrations/",
+    "tests/",
+    "docs/",
+    "scripts/preflight.sh",
+    "tasks/T-133.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "规则 3b:摄取归 Seth、只有一条路径、取数入口预算不增(走 data_layer)。先探 Railway 的美国 / 新加坡出口能不能读 data.binance.vision(egress probe 已在记出口);读不了就放东京主机或 Mac 跑、经 /internal 写。日度表每名每天一行:持仓量收盘 / 日变化、大户持仓多空比(收盘、日均)、全体多空比、主动买卖量比(日均、末 4 小时)、±1% / ±2% 深度(日均)。宇宙 = binance_hist 在册名字。",
+    "expect": "表有第一行真实数据 + 判活判据 + 调度者(规则 5b 三件齐);2020-09 起回填完成;然后预注册 S-614:R 信号日的持仓结构 / 主动买卖能不能把赢家和输家分开(交 C 道)。"
+  },
+  "prior_value": "Jazz 说的「结合资金流、跟踪聪明钱」在现有免费数据里能做到的最接近版本:大户多空比是聪明钱的代理,主动买卖量比是资金流,5 年历史可以直接回测,不用等。",
+  "notes": "2026-10-19 Seth 开卡。S-613(ETH/BTC 趋势当闸门)没分开 R 的好坏日子 ⇒ 下一步改看直接量「谁在买」的变量。"
+}

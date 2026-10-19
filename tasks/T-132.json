@@ -1,0 +1,18 @@
+{
+  "id": "T-132",
+  "owner": "jazz",
+  "status": "blocked",
+  "blocked_by": "Jazz 10-19「留在待办,先不买那个数据,在我们现有的数据源想办法」",
+  "created": "2026-10-19",
+  "verified": null,
+  "title": "(待办,暂不买)Hyperliquid 历史盘口:官方 S3 存档 / Hydromancer Reservoir,按流量付费",
+  "source": "Seth 10-19 外部调研:HL 官方 s3://hyperliquid-archive 有 L2 快照与 asset_ctxs(约一月一更,requester pays,约 $0.09/GB);Hydromancer Reservoir 2025-07-28 起 1 分钟 20 档",
+  "allowed_paths": [],
+  "forbidden_paths": [],
+  "acceptance": {
+    "check": "Jazz 决定买之前先估 GB 与费用(只取 R 信号日的币与日子)",
+    "expect": "有报价再决定"
+  },
+  "prior_value": "突破那一刻的 HL 盘口历史 —— 能直接回测「盘口失衡筛假突破」,不用等主机自录几周",
+  "notes": "2026-10-19 Jazz 暂缓。替代:Binance Vision 免费档(T-133)与主机自录(T-129)。"
+}

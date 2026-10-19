@@ -26,6 +26,11 @@
 | open | T-062 | seth | 三路该定期写入却 0 行的结构化数据:regime 相关度、fusion 的 regime 跟踪、API 计量 | 前两张每天有新行;api_usage 每次 flush 都写一行(使用量为 0 也写,0 是一次观测);每一路先判成因(无调度 / 写不进 / 正确拒绝)再修 | 0 / 0 / 0 |  |
 | open | T-065 | seth | 加密度:小时线恢复并扩面(现在 10 个币、08-08 起停更);CIS 历史往前补(现在 2025-05 起) | 小时线覆盖 ① 的 24 个名字、最新一根在 2 小时内、有调度和判活;CIS 历史用重建脚本补到 2024-01(标 source=reconstructed,与实时推送分开) | 小时线 10 币、止于 2026-08-08;CIS 历史 76 币、起于 2025-05-03 |  |
 | open | T-082 | seth | 可交易规模由数据定:按我们实际能下单的场所深度(订单簿 ±1% 深度 / 场所成交)算每个名字、每本账的容量,替代全市场报告成交额 | 每个名字 / 每本账在 $30M 与 $500M 下能否在 5 天内建满,按我们真能成交的深度说,不按 CoinGecko 聚合成交额说 | S-544 容量按 30 日全市场报告成交额中位数 × 10% 参与率:$30M 下 58/58 名通过,$500M 下 50/58;tokenization_tilt 被 POLYX(日成交 $0.6M)卡在 ≈ $9M。聚合成交额含不能下单的场所与刷量,实际可成交深度更低,没量过。 |  |
+| open | T-133 | seth | 接 Binance Vision 免费历史档:永续 5 分钟持仓结构(未平仓量、大户多空比、主动买卖量比)+ 盘口深度带 → 日度特征表 | 表有第一行真实数据 + 判活判据 + 调度者(规则 5b 三件齐);2020-09 起回填完成;然后预注册 S-614:R 信号日的持仓结构 / 主动买卖能不能把赢家和输家分开(交 C 道)。 | Jazz 说的「结合资金流、跟踪聪明钱」在现有免费数据里能做到的最接近版本:大户多空比是聪明钱的代理,主动买卖量比是资金流,5 年历史可以直接回测,不用等。 |  |
+| open | T-134 | seth | 研究 = 实盘:把主机执行器的决策函数做成历史回放器,模拟与纸面空跑都走它 | 一份内核、三处调用;对账表进台账 | 模拟出来的就是实盘会做的 —— 否则每条前向记录都要多问一句「真跑时代码是不是同一个」 |  |
+| open | T-135 | seth | 接美元净流动性(FRED,免费、免密钥):美联储资产负债表 − 财政部存款 − 逆回购 | 第一行真实数据 + 调度者 + 判活(规则 5b);然后预注册:净流动性 4 周变化当 ③ 推力闸,对照稳定币版(交 C 道) | 流动性是超级交易者共同看的「原因」;没有它,③ 的推力只能看价格与稳定币 |  |
+| open | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
+| blocked(等 Jazz 10-19「留在待办,先不买那个数据,在我们现有的数据源想办法」) | T-132 | jazz | (待办,暂不买)Hyperliquid 历史盘口:官方 S3 存档 / Hydromancer Reservoir,按流量付费 | 有报价再决定 | 突破那一刻的 HL 盘口历史 —— 能直接回测「盘口失衡筛假突破」,不用等主机自录几周 |  |
 | blocked(等 lane-a 连续三轮在 37KB 的 t117_s597_baskets.py 上超步数 / 上下文溢出;剩下的「权重漂移 + 真实旧权重换手 + 当期 N」要换成小脚本重写,等 Seth 排) | T-117 | lane-a | S-597:篮子里的 Trader Tom —— 让赢家跑(不调回等权)、砍跌 25% 的输家把钱给赢家;World50 与加密前 15 各一套 | 脚本 docs/research/t117_s597_baskets.py + _reports/absorb_input/T-117_s597.md;卡改 in_review,推 lane-a/T-117。 | Trader Tom 方向的第一批证据;预注册在台账,lane 只实现不改。 |  |
 | blocked(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | blocked(等 ['T-001']) | T-020 | lane-c | DQS 的新鲜度改用源自己的时间戳(CG last_updated / kline close / TVL date / 日线 bar date),不用抓取时刻 | 同一次 push 内的取值随各资产源时间戳变化;日线源在最近一个应有收盘之内不被衰减 | 同一次 push 只有 2 档(0.67/0.81 → 0.70/0.85),随批次时刻整体漂移 |  |
@@ -134,4 +139,4 @@
 | done | T-114 | seth | T-092 R3(30 名外暴涨名做空、等额多 BTC 对冲)独立复算;复算站得住就开前向纸面账本(探索仓,不进配置) | 台账 S- 条复算结果;站得住则有前向表 + 循环 + 判活判据 + 第一行。 | R3 是 10 天来唯一按字面过了预注册的规则;④ 是回报层级的最后一层,先验要严。 | Replicated and not opened (S-608). Trade table matches lane-b 156/157 and 59/59; z30 identical to the pre-registered formula. Tails: worst single trade -159% (TRB, +188% squeeze), skew -1.98, worst 5% of trades give back 21% of all winning P&L. Daily equal-weight book (>= 10 slots) 39.1%/yr, max drawdown -33.6%, correlation with BTC -0.05, and ab_test against holding BTC cannot separate them. Only 27 of the 77 shorted names have a Hyperliquid perp today; on those, the mean per trade halves to +6.3% and p5 falls to -76%. Fails steps 2 and 3 of the card, so no forward book. @ 2026-10-19T03:34Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 12 · claimed 8 · blocked 5 · in_review 4 · done 101 · dropped 1
+open 16 · claimed 8 · blocked 6 · in_review 4 · done 101 · dropped 1
