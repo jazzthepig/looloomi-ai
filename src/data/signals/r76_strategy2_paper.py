@@ -21,8 +21,8 @@ ARCHITECTURE (frozen — no live retuning):
   · Cost: 0bps (the optimal cell; live slippage added via fill_attribution).
 
 DATA PATHS (live):
-  · Close prices:  Binance fapi /klines (Railway-reachable).
-  · Funding:       Binance fapi /fundingRate (Railway-reachable).
+  · Close prices:  ohlcv_daily binance_hist + today's Hyperliquid oracle (S-607).
+  · Funding:       funding_history binance_perp, daily mean (S-607).
   · State:         file-based JSON at /tmp/cometcloud_data/r76_paper/state.json
                     (avoids Supabase auth/RLS complexity; the system of record
                     for the paper book is the JSON file + daily NAV csv).
@@ -81,8 +81,7 @@ DEFAULT_DECLARED_CAPACITY_USD = 1_000_000.0
 # Honesty gate: validated only after ≥60 forward days marked
 VALIDATION_MIN_DAYS = 60
 
-# Binance fapi (same as fusion_paper)
-_FAPI = "https://fapi.binance.com/fapi/v1"
+# The names this book can hold (prices come from the store, S-607)
 _BINANCE_TK_MAP = {
     "AAVE": "AAVEUSDT", "APT": "APTUSDT", "ARB": "ARBUSDT",
     "ATOM": "ATOMUSDT", "AVAX": "AVAXUSDT", "BNB": "BNBUSDT",
@@ -97,42 +96,38 @@ _BINANCE_TK_MAP = {
 }
 
 
-# ── Live data fetcher (mirrors fusion_paper._fetch_close_funding) ──────────────
+# ── Live data (S-607: the store + today's Hyperliquid oracle, same as fusion_paper) ──
 async def _fetch_close_funding(symbols: list, lookback_days: int = 60) -> dict:
-    """{sym: {"close": [...daily], "funding": [...daily mean]}} from Binance fapi."""
-    import httpx
+    """{sym: {"close": [...daily], "funding": [...daily mean], "funding_dates": [...]}} —— 读库 + 今天的 HL oracle。
+
+    原来现场调 fapi.binance.com;Railway 落在 Binance 限制地区的部署拿到 HTTP 451 时整本账没数据(S-607)。
+    收盘 = `ohlcv_daily` binance_hist 已收完的 lookback−1 天 + 今天一格 oracle;资金费 = `funding_history`
+    binance_perp 按 UTC 日的均值。今天没有 oracle 的名字整只略过(不拿昨天的价冒充今天,S-287)。
+    """
+    import datetime as _dt
+    from src.data.market.persisted_panel import build_panel, daily_closes, daily_funding, live_oracle_prices
+    today = _dt.datetime.now(_dt.timezone.utc).date()
+    start = today - _dt.timedelta(days=max(lookback_days - 1, 1))
+    syms = [s for s in symbols if s in _BINANCE_TK_MAP]
+    live = await live_oracle_prices(syms)
+    closes = await daily_closes(syms, start, today)
+    fund = await daily_funding(syms, today - _dt.timedelta(days=lookback_days))
+    days = [start + _dt.timedelta(days=i) for i in range((today - start).days + 1)]
     out: dict = {}
-    headers = {"User-Agent": "cometcloud"}
-    async with httpx.AsyncClient(timeout=20) as c:
-        for sym in symbols:
-            tk = _BINANCE_TK_MAP.get(sym)
-            if not tk:
-                continue
-            try:
-                r = await c.get(f"{_FAPI}/klines",
-                                 params={"symbol": tk, "interval": "1d", "limit": lookback_days},
-                                 headers=headers)
-                kl = r.json() if r.status_code == 200 else []
-                if not kl or len(kl) < 5:
-                    continue
-                closes = [float(x[4]) for x in kl]
-                out[sym] = {"close": closes, "funding": []}
-                # funding is 8h; aggregate to daily mean
-                rf = await c.get(f"{_FAPI}/fundingRate",
-                                 params={"symbol": tk, "limit": lookback_days * 3},
-                                 headers=headers)
-                fr = rf.json() if rf.status_code == 200 else []
-                if fr:
-                    by_day: dict = {}
-                    for x in fr:
-                        ts = pd.Timestamp(int(x["fundingTime"]), unit="ms").normalize()
-                        by_day.setdefault(ts, []).append(float(x["fundingRate"]))
-                    sorted_days = sorted(by_day.keys())
-                    out[sym]["funding"] = [float(np.mean(by_day[d])) for d in sorted_days]
-                    out[sym]["funding_dates"] = sorted_days
-            except Exception as e:
-                _log.debug(f"{sym} fetch failed: {e}")
-                continue
+    for sym in syms:
+        if sym not in live:
+            continue
+        close, _fm, _fs, _filled, obs = build_panel([sym], days, closes, live)
+        col = close[:, 0]
+        col = col[~np.isnan(col)]
+        if len(col) < 5:
+            continue
+        out[sym] = {"close": [float(x) for x in col], "funding": []}
+        byday = fund.get(sym) or {}
+        if byday:
+            sorted_days = sorted(byday)
+            out[sym]["funding"] = [float(np.mean(byday[d])) for d in sorted_days]
+            out[sym]["funding_dates"] = [pd.Timestamp(d) for d in sorted_days]
     return out
 
 
@@ -215,7 +210,7 @@ async def mark_and_rebalance(dry_run: bool = False) -> dict:
     """Daily mark of the R76 paper book. Idempotent per calendar day.
 
     Pipeline:
-      1. Fetch live close + funding from Binance fapi (28-asset universe).
+      1. Load close + funding from the store, today from the HL oracle (28-asset universe, S-607).
       2. Build funding panel [date × asset], cross-sectionally demean → R76 score.
       3. Take today's score row → target weights (long top tercile / short bottom).
       4. Mark NAV using y[t]/y[t-1]-1 returns (no look-ahead).

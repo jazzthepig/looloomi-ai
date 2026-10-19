@@ -101,3 +101,55 @@ def test_no_paper_book_fetches_binance_live_any_more():
         fn = next(n for n in ast.walk(tree) if isinstance(n, ast.AsyncFunctionDef) and n.name == fn_name)
         calls = {ast.unparse(n.func) for n in ast.walk(fn) if isinstance(n, ast.Call)}
         assert "load_binance_panel" not in calls and "load_persisted_panel" in calls, rel
+
+
+def _fake_store(monkeypatch, live, closes_days=300):
+    import src.data.market.persisted_panel as pp2
+    today = dt.datetime.now(dt.timezone.utc).date()
+
+    async def lp(assets):
+        return {a: v for a, v in live.items() if a in assets}
+
+    async def dc(assets, start, before, with_volume=False):
+        out = {}
+        for a in assets:
+            out[a] = {(before - dt.timedelta(days=i)).isoformat(): 100.0 + i for i in range(1, closes_days + 1)}
+        return out
+
+    async def df(assets, start):
+        return {a: {(today - dt.timedelta(days=i)).isoformat(): [0.0001, 0.0002] for i in range(25)} for a in assets}
+    monkeypatch.setattr(pp2, "live_oracle_prices", lp)
+    monkeypatch.setattr(pp2, "daily_closes", dc)
+    monkeypatch.setattr(pp2, "daily_funding", df)
+
+
+def test_causal_reads_funding_from_the_store_and_price_from_the_oracle(monkeypatch):
+    from src.data.signals import causal_paper as cp
+    _fake_store(monkeypatch, {"BTC": 81000.0, "ETH": 2400.0})
+    live = asyncio.run(cp._fetch_live(["BTC", "ETH", "SOL"]))
+    assert set(live) == {"BTC", "ETH"}, "今天没有 oracle 的名字整只略过"
+    assert live["BTC"]["close"] == 81000.0 and len(live["BTC"]["fmean"]) == 16
+    assert abs(live["BTC"]["fmean"][-1] - 0.00015) < 1e-12
+
+
+def test_two_layer_needs_200_observed_closes_and_ends_on_todays_oracle(monkeypatch):
+    from src.data.signals import two_layer_paper as tl
+    _fake_store(monkeypatch, {"BTC": 81000.0, "ETH": 2400.0}, closes_days=300)
+    out = asyncio.run(tl._fetch_daily(["BTC", "ETH", "SOL"]))
+    assert set(out) == {"BTC", "ETH"} and out["BTC"]["close"][-1] == 81000.0
+    assert len(out["BTC"]["close"]) == 301 and len(out["BTC"]["funding"]) == 25
+    _fake_store(monkeypatch, {"BTC": 81000.0}, closes_days=150)
+    assert asyncio.run(tl._fetch_daily(["BTC"])) == {}, "不足 200 天真实收盘 ⇒ 不给"
+
+
+def test_the_backlog_books_moved_off_the_free_venue_too():
+    for rel, fn_name in (("src/data/signals/causal_paper.py", "_fetch_live"),
+                         ("src/data/signals/two_layer_paper.py", "_fetch_daily"),
+                         ("src/data/signals/fusion_paper.py", "_fetch_close_funding"),
+                         ("src/data/signals/r76_strategy2_paper.py", "_fetch_close_funding")):
+        src = (ROOT / rel).read_text(encoding="utf-8")
+        assert "_FAPI" not in src, f"{rel} 还留着直连 fapi 的常量"
+        tree = ast.parse(src)
+        fn = next(n for n in ast.walk(tree) if isinstance(n, ast.AsyncFunctionDef) and n.name == fn_name)
+        calls = {ast.unparse(n.func) for n in ast.walk(fn) if isinstance(n, ast.Call)}
+        assert "live_oracle_prices" in calls and not any("httpx" in c for c in calls), rel

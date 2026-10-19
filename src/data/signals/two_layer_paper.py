@@ -48,7 +48,6 @@ _log = logging.getLogger("two_layer_paper")
 
 _STATE_KEY = "two_layer_paper:state"
 _CORE_KEY = "two_layer_paper:core"
-_FAPI = "https://fapi.binance.com/fapi/v1"
 
 UNIVERSE = ["BTC", "ETH", "SOL"]
 
@@ -71,34 +70,33 @@ _ENGAGEMENT_WIN = 90
 
 # ── data ──────────────────────────────────────────────────────────────────────
 async def _fetch_daily(universe: list[str]) -> dict:
-    """{coin: {"close": np.ndarray daily closes, "funding": np.ndarray daily mean funding}}."""
-    import httpx
+    """{coin: {"close": np.ndarray daily closes, "funding": np.ndarray daily mean funding}} —— 读库 + 今天的 HL oracle(S-607)。
+
+    原来现场调 fapi.binance.com(K 线 400 根 + 资金费 1000 期);Railway 落在 Binance 限制地区的部署拿到 HTTP 451
+    ⇒ `no_market_data`(10-14 … 10-18 每天如此)。现在:收盘 = `ohlcv_daily` binance_hist 已收完的 399 天 + 今天一格
+    oracle;资金费 = `funding_history` binance_perp 按 UTC 日的均值。今天没有 oracle 的币整只略过(S-287)。
+    """
+    import datetime as _dt
+    from src.data.market.persisted_panel import build_panel, daily_closes, daily_funding, live_oracle_prices
+    today = _dt.datetime.now(_dt.timezone.utc).date()
+    start = today - _dt.timedelta(days=399)
+    live = await live_oracle_prices(universe)
+    closes = await daily_closes(universe, start, today)
+    fund = await daily_funding(universe, today - _dt.timedelta(days=333))
+    days = [start + _dt.timedelta(days=i) for i in range((today - start).days + 1)]
     out: dict = {}
-    async with httpx.AsyncClient(timeout=25, headers={"User-Agent": "cometcloud"}) as c:
-        for coin in universe:
-            tk = coin + "USDT"
-            try:
-                kl = (await c.get(f"{_FAPI}/klines",
-                                  params={"symbol": tk, "interval": "1d", "limit": 400})).json()
-                if not isinstance(kl, list) or len(kl) < 200:
-                    continue
-                close = np.array([float(k[4]) for k in kl], dtype=float)
-                funding = np.array([])
-                try:
-                    fr = (await c.get(f"{_FAPI}/fundingRate",
-                                      params={"symbol": tk, "limit": 1000})).json()
-                    if isinstance(fr, list) and fr:
-                        byday: dict = {}
-                        for x in fr:
-                            byday.setdefault(int(x["fundingTime"]) // 86400000, []).append(
-                                float(x["fundingRate"]))
-                        funding = np.array([sum(v) / len(v) for _, v in sorted(byday.items())],
-                                           dtype=float)
-                except Exception as e:            # funding is optional — C degrades to 2 factors
-                    _log.warning("[two_layer] funding %s: %s", coin, e)
-                out[coin] = {"close": close, "funding": funding}
-            except Exception as e:
-                _log.warning("[two_layer] klines %s: %s", coin, e)
+    for coin in universe:
+        if coin not in live:
+            continue
+        close, _fm, _fs, _filled, obs = build_panel([coin], days, closes, live)
+        col = close[:, 0]
+        if (~np.isnan(col)).any():
+            col = col[int(np.argmax(~np.isnan(col))):]
+        if int((~np.isnan(obs[:, 0])).sum()) < 200:
+            continue
+        byday = fund.get(coin) or {}
+        funding = np.array([sum(v) / len(v) for _, v in sorted(byday.items()) if v], dtype=float)
+        out[coin] = {"close": col.astype(float), "funding": funding}
     return out
 
 

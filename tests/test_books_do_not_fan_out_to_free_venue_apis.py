@@ -80,10 +80,9 @@ VENUE_LANE = {
 MIGRATION_BACKLOG = {
     # fusion_paper.py left 2026-10-18 (S-607): reads ohlcv_daily binance_hist + funding_history from the
     # store and today's Hyperliquid oracle; the live fapi call had died on HTTP 451 from 10-14.
-    "causal_paper.py": "S-323u backlog — migrate to panel_closes",
+    # causal_paper.py and two_layer_paper.py left 2026-10-19 for the same reason (insufficient_live_data /
+    # no_market_data every day 10-14 … 10-18); r76_strategy2_paper.py with them.
     "dingge_rwa.py": "S-323u backlog — migrate to panel_closes",
-    "r76_strategy2_paper.py": "S-323u backlog — migrate to panel_closes",
-    "two_layer_paper.py": "S-323u backlog — migrate to panel_closes",
 }
 
 

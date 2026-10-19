@@ -36,32 +36,31 @@ from src.research.strategies.causal_positioning import DEFAULT_UNIVERSE, positio
 _log = logging.getLogger("causal_paper")
 
 _STATE_KEY = "causal_paper:state"
-_FAPI = "https://fapi.binance.com/fapi/v1"
 _KWIN = 10
 _REBAL_DAYS = 7
 _FEE = 0.0005                    # 5bps/side on turnover (conservative for liquid majors)
 
 
 async def _fetch_live(universe: list[str]) -> dict:
-    """{sym: {"close": float, "fmean": [daily mean funding, trailing ~16d]}} from Binance."""
-    import httpx
+    """{sym: {"close": float, "fmean": [daily mean funding, trailing ~16d]}} —— 读库 + 今天的 Hyperliquid oracle(S-607)。
+
+    原来每个名字现场调两次 fapi.binance.com;Railway 落在 Binance 限制地区的部署拿到 HTTP 451,
+    `fr` / `kl` 不是数组 ⇒ 全部跳过 ⇒ `insufficient_live_data`(10-14 … 10-18 每天如此)。
+    现在:资金费 = `funding_history` binance_perp 按 UTC 日的均值;收盘 = HL oracle(NAV_POLICY §4 L1)。
+    今天没有 oracle 的名字整只略过 —— 不拿昨天的价冒充今天(S-287)。
+    """
+    import datetime as _dt
+    from src.data.market.persisted_panel import daily_funding, live_oracle_prices
+    today = _dt.datetime.now(_dt.timezone.utc).date()
+    live = await live_oracle_prices(universe)
+    fund = await daily_funding(universe, today - _dt.timedelta(days=30))
     out: dict = {}
-    async with httpx.AsyncClient(timeout=20, headers={"User-Agent": "cometcloud"}) as c:
-        for sym in universe:
-            tk = sym + "USDT"
-            try:
-                fr = (await c.get(f"{_FAPI}/fundingRate", params={"symbol": tk, "limit": 60})).json()
-                kl = (await c.get(f"{_FAPI}/klines", params={"symbol": tk, "interval": "1d", "limit": 2})).json()
-                if not isinstance(fr, list) or not isinstance(kl, list) or not kl:
-                    continue
-                byday: dict = {}
-                for x in fr:
-                    d = int(x["fundingTime"]) // 86400000
-                    byday.setdefault(d, []).append(float(x["fundingRate"]))
-                daily = [sum(v) / len(v) for _, v in sorted(byday.items())]
-                out[sym] = {"close": float(kl[-1][4]), "fmean": daily[-16:]}
-            except Exception as e:
-                _log.warning("[causal_paper] fetch %s: %s", sym, e)
+    for sym in universe:
+        byday = fund.get(sym) or {}
+        if sym not in live or not byday:
+            continue
+        daily = [sum(v) / len(v) for _, v in sorted(byday.items()) if v]
+        out[sym] = {"close": float(live[sym]), "fmean": daily[-16:]}
     return out
 
 
