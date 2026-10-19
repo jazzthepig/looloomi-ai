@@ -1853,7 +1853,7 @@ async def _binance_hf_loop():
 
 async def _binance_vision_loop():
     """T-133:Binance 公开历史档(data.binance.vision U 本位永续 metrics)→ deriv_metrics_daily。
-    每小时一轮、每轮最多 6,000 个日档:先补各名字最近缺的日子,再轮转往回补到 max(上市日, 2020-09-01)。
+    每轮最多 6,000 个日档(回补期 10 分钟一轮,补完后每小时一轮):先补各名字最近缺的日子,再轮转往回补到 max(上市日, 2020-09-01)。
     半数以上读不到 ⇒ 整轮拒写(Railway 出口落在美国时可能读不到 —— egress probe 在记)。
     判活:`select max(d) from deriv_metrics_daily where symbol = 'BTC' and n_points > 0` ≥ 前天;
           回补进度:`select count(*) from deriv_metrics_plan where min_d is null or min_d > target_start`。"""
@@ -1877,7 +1877,13 @@ async def _binance_vision_loop():
             await _beat("_binance_vision_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _record_loop_attempt("_binance_vision_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                        writer="src.api.main._binance_vision_loop")
-        await _asyncio.sleep(3600)
+            r = {}
+        # 回补期(这一轮把预算用满 = 还有积压)10 分钟一轮,补完后每小时一轮只取新的一天(10-19 首轮:6,000 档 0 失败,美国出口也读得到)
+        try:
+            from src.data.market.binance_vision import BUDGET as _BV_BUDGET
+        except Exception:
+            _BV_BUDGET = 6000
+        await _asyncio.sleep(600 if (r or {}).get("planned", 0) >= _BV_BUDGET else 3600)
 
 
 @app.on_event("startup")
