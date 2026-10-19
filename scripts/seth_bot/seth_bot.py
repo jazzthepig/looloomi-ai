@@ -300,6 +300,113 @@ def do_commit(job: dict) -> dict:
     return {"ok": True, "stage": "pushed", "sha": sha, "verify": verify_after_deploy(job.get("verify") or [], sha)}
 
 
+def batches(jobs: list[tuple[Path, Optional[dict]]]) -> list[list[tuple[Path, Optional[dict]]]]:
+    """纯函数。按队列顺序切组:**连续的**普通提交任务(by=seth、op=commit、没有 untrack)合成一组;
+    其他任务(合并、fetch、带 untrack 的提交、读不出的 JSON)各自单独一组。顺序不变。"""
+    def batchable(j: Optional[dict]) -> bool:
+        return isinstance(j, dict) and j.get("by") == "seth" and j.get("op") == "commit" and not j.get("untrack")
+    out: list[list[tuple[Path, Optional[dict]]]] = []
+    for item in jobs:
+        if out and batchable(item[1]) and batchable(out[-1][-1][1]):
+            out[-1].append(item)
+        else:
+            out.append([item])
+    return out
+
+
+def do_commit_batch(jobs: list[dict]) -> list[dict]:
+    """几个提交共用**一次** preflight、一次推送、一次部署核对(Jazz 10-19「每次都 preflight 效率很低」)。
+
+    门没有变窄:单个提交的 preflight 本来就跑在**整个主工作目录**上(未提交的别人的改动也在里面),
+    这里跑的是同一个工作目录、同一个脚本。变的只是次数:N 个提交 = 1 次 preflight + 1 次部署,
+    而不是 N 次 —— 10-19 三个提交排队,光等就是 3 × (7 分钟 preflight + 部署),每次部署还把各循环的启动延时重置一遍。
+    每件事仍是**一个**提交(规则:一个提交一件事);check_commit_imports 看的是推送前的 HEAD,即整批。"""
+    res: list[dict] = [{} for _ in jobs]
+    live = []
+    for k, job in enumerate(jobs):
+        paths = list(job.get("paths") or [])
+        bad = path_problems(paths)
+        if bad:
+            res[k] = {"ok": False, "stage": "validate", "detail": bad}
+        elif not (job.get("message") or "").strip():
+            res[k] = {"ok": False, "stage": "validate", "detail": "message 为空"}
+        else:
+            live.append(k)
+    if not live:
+        return res
+
+    def fail_all(stage: str, detail: str, ks: list[int]) -> list[dict]:
+        for k in ks:
+            res[k] = {"ok": False, "stage": stage, "detail": detail, "batch": len(jobs)}
+        return res
+    why = sync_main()
+    if why:
+        return fail_all("sync", why, live)
+    if git("diff", "--cached", "--quiet")[0] != 0:
+        return fail_all("index", "索引里已有别人 stage 的东西;执行器不替任何人提交", live)
+    ok, out = preflight(ROOT)
+    if not ok:
+        return fail_all("preflight", failure_digest(out), live)
+    (ROOT / ".git" / "index.lock").unlink(missing_ok=True)
+    committed = []
+    for k in live:
+        job, paths = jobs[k], list(jobs[k].get("paths") or [])
+        code, out = git("add", "--", *paths)
+        if code != 0:
+            git("reset", "--quiet", "--", *paths)
+            res[k] = {"ok": False, "stage": "add", "detail": out}
+            continue
+        _, staged = git("diff", "--cached", "--name-only")
+        extra = [f for f in staged.splitlines() if not any(f == p or f.startswith(p.rstrip("/") + "/") for p in paths)]
+        if extra or not staged.strip():
+            git("reset", "--quiet", "--", *paths)
+            res[k] = {"ok": False, "stage": "add",
+                      "detail": f"stage 结果与清单不符:多出 {extra}" if extra else "没有任何改动(可能已被同批前一个提交带走)"}
+            continue
+        with tempfile.NamedTemporaryFile("w", delete=False, suffix=".txt", encoding="utf-8") as f:
+            f.write(job["message"].rstrip() + f"\n\nCommitted-by: seth_bot (job {job['id']}, batch of {len(jobs)})\n")
+        code, out = git("commit", "-q", "-F", f.name)
+        os.unlink(f.name)
+        if code != 0:
+            git("reset", "--quiet", "--", *paths)
+            res[k] = {"ok": False, "stage": "commit", "detail": out}
+            continue
+        committed.append((k, git("rev-parse", "HEAD")[1].strip()))
+    if not committed:
+        return res
+    ks = [k for k, _ in committed]
+    code, out = run(["python3", "scripts/check_commit_imports.py"], timeout=120)
+    if code != 0:
+        return fail_all("commit_imports", out + "\n(整批已提交未推送 —— 补上缺的文件后再推)", ks)
+    code, out = git("push", "origin", "main")
+    if code != 0:
+        return fail_all("push", out, ks)
+    head = git("rev-parse", "HEAD")[1].strip()
+    verify = verify_after_deploy([p for k in ks for p in (jobs[k].get("verify") or [])], head)
+    for k, sha in committed:
+        res[k] = {"ok": True, "stage": "pushed", "sha": sha, "pushed_head": head, "batch": len(jobs), "verify": verify}
+    return res
+
+
+def process_batch(items: list[tuple[Path, dict]]) -> None:
+    jobs = []
+    for jf, job in items:
+        job.setdefault("id", jf.stem)
+        jobs.append(job)
+    try:
+        results = do_commit_batch(jobs)
+    except Exception as e:  # noqa: BLE001 — 一批崩了也要每个任务出结果、出队
+        results = [{"ok": False, "stage": "exception", "detail": f"{type(e).__name__}: {e}"} for _ in jobs]
+    DONE.mkdir(parents=True, exist_ok=True)
+    for (jf, _), job, res in zip(items, jobs, results):
+        res.update({"id": job["id"], "op": "commit", "finished_at": now()})
+        (DONE / f"{job['id']}.json").write_text(json.dumps(res, ensure_ascii=False, indent=2), encoding="utf-8")
+        jf.unlink(missing_ok=True)
+        line = f"{'✓' if res['ok'] else '✗'} {job['id']} commit → {res['stage']} {res.get('sha', '')[:8]} (batch {len(jobs)})"
+        log(line)
+        notify("seth_bot", line)
+
+
 def do_merge(job: dict) -> dict:
     br = job.get("branch") or ""
     if not LANE_BRANCH.match(br):
@@ -380,6 +487,14 @@ def do_merge(job: dict) -> dict:
     res = {"ok": True, "stage": "pushed", "sha": sha, "main_worktree": ff}
     res["verify"] = verify_after_deploy(job.get("verify") or [], sha)
     return res
+
+
+def _load(job_file: Path) -> Optional[dict]:
+    try:
+        j = json.loads(job_file.read_text(encoding="utf-8"))
+        return j if isinstance(j, dict) else None
+    except Exception:  # noqa: BLE001 — 读不出的任务不进批,交给 process() 出结果
+        return None
 
 
 def process(job_file: Path) -> None:
@@ -514,8 +629,11 @@ def main() -> int:
         jobs = sorted(QUEUE.glob("*.json")) if main_dir_guard() else []
         if not jobs:
             git("fetch", "--quiet", "--prune", "origin")
-        for jf in jobs:
-            process(jf)
+        for group in batches([(jf, _load(jf)) for jf in jobs]):
+            if len(group) > 1:
+                process_batch(group)
+            else:
+                process(group[0][0])
         for step in (snapshot_private, ensure_lane_links):
             try:
                 step()

@@ -49,13 +49,6 @@ def test_no_shell_strings_in_the_executor() -> None:
             raise AssertionError("seth_bot 不许 os.system/os.popen")
 
 
-if __name__ == "__main__":
-    print("── S-500 seth_bot ──")
-    for name, fn in list(globals().items()):
-        if name.startswith("test_") and callable(fn):
-            fn()
-            print(f"  ✓ {name}")
-    print("\n✅ passed")
 
 
 def test_executor_checks_the_main_dir_before_any_job() -> None:
@@ -162,3 +155,84 @@ def test_fast_forward_clears_one_kind_of_blocker_at_a_time() -> None:
         assert code == 0, out
         assert g(main, "rev-parse", "HEAD").stdout == g(main, "rev-parse", "origin/main").stdout
         assert g(main, "status", "--porcelain").stdout == ""
+
+
+def test_consecutive_commits_share_one_batch_and_order_is_kept() -> None:
+    """10-19 Jazz「每次都 preflight 效率很低」:连续的普通提交合成一组;合并 / fetch / untrack / 坏 JSON 各自一组。"""
+    from scripts.seth_bot.seth_bot import batches
+    c = {"by": "seth", "op": "commit", "paths": ["a"], "message": "m"}
+    items = [(Path("1"), c), (Path("2"), c), (Path("3"), {"by": "seth", "op": "merge"}), (Path("4"), c),
+             (Path("5"), {**c, "untrack": ["x"]}), (Path("6"), None), (Path("7"), c), (Path("8"), c), (Path("9"), c)]
+    got = [[str(p) for p, _ in g] for g in batches(items)]
+    assert got == [["1", "2"], ["3"], ["4"], ["5"], ["6"], ["7", "8", "9"]], got
+    assert batches([(Path("1"), {**c, "by": "lane-a"}), (Path("2"), c)]) == [[(Path("1"), {**c, "by": "lane-a"})], [(Path("2"), c)]]
+
+
+def test_a_batch_runs_preflight_once_commits_each_job_and_pushes_once() -> None:
+    from unittest import mock
+    import scripts.seth_bot.seth_bot as sb
+    calls = {"preflight": 0, "push": 0, "commit": 0, "verify": []}
+    staged: list[str] = []
+
+    def fake_git(*a, cwd=None):
+        if a[:2] == ("diff", "--cached") and "--quiet" in a:
+            return 0, ""
+        if a[0] == "add":
+            staged.extend(x for x in a[2:] if x != "c/unchanged.py")
+            return 0, ""
+        if a[:3] == ("diff", "--cached", "--name-only"):
+            return 0, "\n".join(staged)
+        if a[0] == "commit":
+            calls["commit"] += 1
+            staged.clear()
+            return 0, ""
+        if a[0] == "reset":
+            staged.clear()
+            return 0, ""
+        if a[0] == "rev-parse":
+            return 0, f"sha{calls['commit']}\n"
+        if a[0] == "push":
+            calls["push"] += 1
+            return 0, ""
+        raise AssertionError(a)
+
+    def fake_preflight(cwd):
+        calls["preflight"] += 1
+        return True, "PREFLIGHT PASSED"
+
+    def fake_verify(paths, sha):
+        calls["verify"].append((paths, sha))
+        return {"deploy_ok": True}
+    jobs = [{"id": "j1", "paths": ["a/x.py"], "message": "one", "verify": ["/health"]},
+            {"id": "j2", "paths": ["b/"], "message": "two"},
+            {"id": "j3", "paths": ["c/unchanged.py"], "message": "three"},
+            {"id": "j4", "paths": [".env"], "message": "nope"}]
+    with mock.patch.object(sb, "git", fake_git), mock.patch.object(sb, "preflight", fake_preflight), \
+            mock.patch.object(sb, "sync_main", lambda: None), mock.patch.object(sb, "run", lambda *a, **k: (0, "")), \
+            mock.patch.object(sb, "verify_after_deploy", fake_verify):
+        res = sb.do_commit_batch(jobs)
+    assert calls["preflight"] == 1 and calls["push"] == 1 and calls["commit"] == 2, calls
+    assert [r["ok"] for r in res] == [True, True, False, False], res
+    assert res[0]["sha"] == "sha1" and res[1]["sha"] == "sha2" and res[0]["pushed_head"] == "sha2"
+    assert res[2]["stage"] == "add" and res[3]["stage"] == "validate"
+    assert calls["verify"] == [(["/health"], "sha2")], "一次部署核对,验证路径合并"
+
+    calls.update(preflight=0, push=0, commit=0)
+    with mock.patch.object(sb, "git", fake_git), mock.patch.object(sb, "preflight", lambda cwd: (False, "✗ x")), \
+            mock.patch.object(sb, "sync_main", lambda: None):
+        res = sb.do_commit_batch(jobs[:2])
+    assert [r["stage"] for r in res] == ["preflight", "preflight"] and calls["commit"] == 0 and calls["push"] == 0
+
+
+def test_the_queue_loop_goes_through_batches() -> None:
+    src = BOT.read_text(encoding="utf-8")
+    assert "for group in batches(" in src and "process_batch(group)" in src
+
+
+if __name__ == "__main__":
+    print("── S-500 seth_bot ──")
+    for name, fn in list(globals().items()):
+        if name.startswith("test_") and callable(fn):
+            fn()
+            print(f"  ✓ {name}")
+    print("\n✅ passed")
