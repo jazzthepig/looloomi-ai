@@ -1,9 +1,13 @@
 {
   "id": "T-114",
   "owner": "seth",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-16",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-19T03:34Z",
+    "value": "Replicated and not opened (S-608). Trade table matches lane-b 156/157 and 59/59; z30 identical to the pre-registered formula. Tails: worst single trade -159% (TRB, +188% squeeze), skew -1.98, worst 5% of trades give back 21% of all winning P&L. Daily equal-weight book (>= 10 slots) 39.1%/yr, max drawdown -33.6%, correlation with BTC -0.05, and ab_test against holding BTC cannot separate them. Only 27 of the 77 shorted names have a Hyperliquid perp today; on those, the mean per trade halves to +6.3% and p5 falls to -76%. Fails steps 2 and 3 of the card, so no forward book."
+  },
   "title": "T-092 R3(30 名外暴涨名做空、等额多 BTC 对冲)独立复算;复算站得住就开前向纸面账本(探索仓,不进配置)",
   "source": "T-092 / M-559:R3 W2 +4.06% / 笔(100 分位)、W3 +7.99%(92.8 分位),W1 无事件;lane 上一轮记账公式错过一次(T-093:旧空头公式把一半收益造出来)",
   "allowed_paths": [
@@ -20,5 +24,5 @@
     "expect": "台账 S- 条复算结果;站得住则有前向表 + 循环 + 判活判据 + 第一行。"
   },
   "prior_value": "R3 是 10 天来唯一按字面过了预注册的规则;④ 是回报层级的最后一层,先验要严。",
-  "notes": "2026-10-16 Seth 开卡。\n2026-10-16 Seth:T-092 的 z30 实现与预注册不一致(用日收益 sd 标准化 30 日收益),R3 的数先不能读 —— 等 T-092 第 3 轮重跑再说复算。\n2026-10-16 Seth:T-092 第 3 轮(z30 修对之后)R3 仍按字面过两窗:W2 每笔超额 +18.3%(157 笔,分位 1.00)、W3 +16.2%(59 笔,0.939),胜率 81–88% —— 这是典型的负偏形状(Tom 警告的高胜率),复算时**先看单笔最大亏损与连续亏损**(小币空头被轧空),再看日序列。解除 blocked。"
+  "notes": "2026-10-16 Seth 开卡。\n2026-10-16 Seth:T-092 的 z30 实现与预注册不一致(用日收益 sd 标准化 30 日收益),R3 的数先不能读 —— 等 T-092 第 3 轮重跑再说复算。\n2026-10-16 Seth:T-092 第 3 轮(z30 修对之后)R3 仍按字面过两窗:W2 每笔超额 +18.3%(157 笔,分位 1.00)、W3 +16.2%(59 笔,0.939),胜率 81–88% —— 这是典型的负偏形状(Tom 警告的高胜率),复算时**先看单笔最大亏损与连续亏损**(小币空头被轧空),再看日序列。解除 blocked。\n2026-10-19 Seth 复算完(S-608):逐笔对得上;尾部 −159%、偏度 −2;日序列对 BTC 分不开;HL 上只能空 27/77 个名字,这部分每笔减半、尾部更肥 ⇒ 不开前向账本。脚本 docs/research/t114_r3_replication.py,逐笔表 research/t114/r3_trades.json。"
 }
