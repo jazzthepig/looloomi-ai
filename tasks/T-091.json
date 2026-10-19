@@ -1,9 +1,13 @@
 {
   "id": "T-091",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-14",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-19T03:50Z",
+    "value": "Closed as not supported, on the v3 measurement (M-220c, data root _reports/absorb_input/M-220c_t091_v3_2026-10-14.md): yesterday's state of stablecoin supply, Binance funding, taker-buy share and mom_20 against BTC's next 7 / 14 / 30-day direction - no feature beats the constant-long baseline in both 2023-24 and 2025-on (hit minus baseline negative or sign-flipped everywhere); funding_7d_ann and oi_chg_30d not measurable (HL history only from 2026-09). The v1 'lead' table (M-220, leads of 200-370 days for every feature, including mom_20 which flips every few days) measured the earliest flip in a long window rather than the last one before the pivot and is not used. Branch lane-c/T-091 (v1 summary) is not merged."
+  },
   "title": "非价格状态在 BTC 转折点上是否领先价格:资金费 / 持仓量 / 稳定币供给 / 主动买入占比 vs 价格动量,对照随机日期",
   "source": "Jazz 10-14 周期拆分 → S-568(③ 与组合层都滞后在转折点)",
   "allowed_paths": [
@@ -20,5 +24,5 @@
     "expect": "报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:每个特征 × 14 个拐点的领先 / 滞后天数、中位数、随机分位、错误翻转率。只测量,不改任何账本或循环。"
   },
   "prior_value": "S-568:③ 在每个顶部推力 ≥ 1、组合层在 +190% / +97% 两段上涨里只有 ≈ 0.5 仓位;S-567:周频价格 / 宽度择时四种构造都分不开随机。非价格状态在转折点上的时序从没量过。",
-  "notes": "2026-10-14 Seth 开卡派 lane-c,排在 T-057 v3 之后。"
+  "notes": "2026-10-14 Seth 开卡派 lane-c,排在 T-057 v3 之后。\n2026-10-19 Seth 关卡:按 v3(M-220c)判 —— 没有一个非价格状态在两段里都胜过恒定满仓;v1 的「领先 200–370 天」是量错了(取了长窗口里最早的翻转),不用,分支不合。"
 }
