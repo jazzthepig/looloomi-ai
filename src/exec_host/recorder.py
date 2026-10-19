@@ -206,9 +206,27 @@ def parse_l2(raw: dict[str, Any]) -> Optional[dict[str, Any]]:
     return {
         "coin": str(coin),
         "time_ms": int(data.get("time") or 0),
-        "bids": [[_f(x[0]), _f(x[1]), int(x[2] or 0)] for x in bids_raw if len(x) >= 2],
-        "asks": [[_f(x[0]), _f(x[1]), int(x[2] or 0)] for x in asks_raw if len(x) >= 2],
+        "bids": [lv for lv in (_level(x) for x in bids_raw) if lv],
+        "asks": [lv for lv in (_level(x) for x in asks_raw) if lv],
     }
+
+
+def _level(x: Any) -> Optional[list]:
+    """一档 → [px, sz, n]。HL websocket 实际发的是对象 {"px": "82122.0", "sz": "0.5", "n": 3}
+    (10-19 上线第一分钟实测:按数组下标读,每条盘口都 KeyError,只录下了成交);数组形态也照收。"""
+    if isinstance(x, dict):
+        px, sz, n = x.get("px"), x.get("sz"), x.get("n")
+    elif isinstance(x, (list, tuple)) and len(x) >= 2:
+        px, sz, n = x[0], x[1], (x[2] if len(x) > 2 else 0)
+    else:
+        return None
+    p, q = _f(px), _f(sz)
+    if p is None or q is None:
+        return None
+    try:
+        return [p, q, int(n or 0)]
+    except (TypeError, ValueError):
+        return [p, q, 0]
 
 
 def parse_trade(raw: dict[str, Any]) -> Optional[dict[str, Any]]:
@@ -480,6 +498,7 @@ class _UrllibPoster(HttpPoster):
         self._t = timeout_s
 
     def post(self, payload: dict[str, Any]) -> Any:
+        import urllib.request   # 合并方(10-19):原来只在 _load_poster 里导入,这里用到时 NameError,名单刷新永远失败
         req = urllib.request.Request(
             self._url,
             data=json.dumps(payload).encode("utf-8"),

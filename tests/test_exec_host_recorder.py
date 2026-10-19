@@ -432,3 +432,21 @@ def test_the_production_entry_point_is_wired():
     assert body.count("refresh_roster()") >= 2, "启动时就补名单,不等 24 小时"
     assert "'method': 'ping'" in body or '"method": "ping"' in body, "定时 ping,保活"
     assert 'if __name__ == "__main__":' in src
+
+
+def test_real_hyperliquid_wire_format_is_parsed():
+    """10-19 上线实测(合并方补):HL websocket 的盘口档位是对象,不是数组 —— 原版每条盘口都 KeyError,只录下成交;
+    名单刷新又因为 urllib 只在别的函数里导入而 NameError,停在 4 个币。两条都按真实报文钉住。"""
+    msg = {"channel": "l2Book", "data": {"coin": "BTC", "time": 1760888000000,
+           "levels": [[{"px": "82122.0", "sz": "0.51", "n": 3}, {"px": "82121.0", "sz": "1.2", "n": 5}],
+                      [{"px": "82123.0", "sz": "0.40", "n": 2}]]}}
+    p = R.parse_l2(msg)
+    assert p["bids"] == [[82122.0, 0.51, 3], [82121.0, 1.2, 5]] and p["asks"] == [[82123.0, 0.40, 2]]
+    assert R.parse_l2({"channel": "l2Book", "data": {"coin": "ETH", "time": 1, "levels": [[["1", "2", 3]], [["4", "5"]]]}})["asks"] == [[4.0, 5.0, 0]]
+    import io
+    import json as _json
+    from unittest import mock
+    body = io.BytesIO(_json.dumps([{"universe": []}, []]).encode())
+    with mock.patch("urllib.request.urlopen", return_value=mock.MagicMock(__enter__=lambda s: body, __exit__=lambda *a: False)):
+        assert R._UrllibPoster("https://x", 1.0).post({"type": "metaAndAssetCtxs"}) == [{"universe": []}, []], \
+            "名单刷新那条 HTTP 路径能跑通(原来 urllib 未导入 ⇒ NameError)"
