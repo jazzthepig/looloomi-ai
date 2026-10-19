@@ -1,7 +1,7 @@
 {
   "id": "T-136",
   "owner": "seth",
-  "status": "open",
+  "status": "claimed",
   "created": "2026-10-19",
   "verified": null,
   "forbidden_paths": [
@@ -20,5 +20,5 @@
     "expect": "设计文档 + Jazz 拍板"
   },
   "prior_value": "R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看",
-  "notes": "2026-10-19 Seth 开卡。"
+  "notes": "2026-10-19 Seth 开卡。\n2026-10-19 Seth:设计稿 docs/PORTFOLIO_RISK.md —— 建在已有的 accounting/combine.py(S-543)上,只补四样:按 N(波动)统一风险单位与风险预算、跨腿相关与总波动缩放(只减不加)、硬上限(单资产跨腿合计 ≤ 35%、总名义 ≤ 1.3、单仓 ≤ 30 日成交额 1%、回撤闸)、按边际贡献评腿。待 Jazz 定:σ* / 档位、默认预算比例、回撤闸触发与恢复线。"
 }
