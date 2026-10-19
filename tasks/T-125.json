@@ -1,13 +1,18 @@
 {
   "id": "T-125",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-18",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-19T03:20Z",
+    "value": "Merged after three rounds. Round 1 spread monthly equity returns evenly over days (no intra-month volatility); round 2 used the current month-end momentum at the start of the month (look-ahead: daily-leg CAGR 52.65% vs 16.13% monthly). Round 3 uses data through month m-1 only with quarterly rebalancing: daily-leg CAGR 14.68% vs t099 monthly 15.71%, and the meta annualisation is fixed (calendar years from dates, sqrt(252) for equity vol). With the real equity leg, T25 with the crypto leg on X1V has a worst-5% drawdown of -19.7% (-23.0% with pessimistic friction) against -42.6% holding crypto, so the S-605 tier holds; the best frontier cell at the -25% cap (30/40/30/0) is a selection over 237 cells and is not used to change the running T25. Ledger S-606."
+  },
   "title": "S-606:灵活组合地图换真身 —— 股票腿用 World50 EW×Mom 回放、黄金上限放开到 40%",
   "source": "S-604 用 ACWI 代 World50、黄金顶在 20% 上限;Jazz 10-18 让 Seth 定档,定档依据要用真腿",
   "allowed_paths": [
     "docs/research/",
+    "docs/_reports/absorb_input/T-125_s606.md",
     "tasks/T-125.json",
     "tasks/BOARD.md"
   ],
@@ -20,5 +25,5 @@
     "expect": "脚本 docs/research/t125_s606_frontier.py + _reports/absorb_input/T-125_s606.md;卡改 in_review,推 lane-c/T-125。"
   },
   "prior_value": "S-605 的档位依据从替身换成真腿。",
-  "notes": "2026-10-18 Seth 开卡。"
+  "notes": "2026-10-18 Seth 开卡。2026-10-18 lane-c 交付:docs/research/t125_s606_frontier.py + docs/_reports/absorb_input/T-125_s606.md;W50 EW×Mom 月收益 CAGR=15.58%(129 月,2016-01→2026-09);grid 237(crypto 1..7 × equity 1..8 × gold 0..0.40 步 0.05)。Frontier 关键值:H ddp5≥-0.25 → c10/e50/g35/c5 cagr17.7%/ddp5−24.8%;X1V ddp5≥-0.35 → c60/e20/g20/c0 cagr37.5%/ddp5−34.7%;X1V_fric ddp5≥-0.45 → c60/e20/g20/c0 cagr31.5%/ddp5−42.5%。结果存 research/s606/s125_results.json(Mac 侧,不进 git)。preflight 8/9 通过,唯一失败为 cold-start 头日期落后(与他卡冲突,不在 allowed_paths)。\n\n2026-10-18 lane-c 第 3 轮(退回-2 后修复 look-ahead):`world50_daily_nav` 把 `months[:mi+1]` 改成 `months[:mi]` —— m 月的成分 + 动量只看 m−1(及更早)的数据;mcap 快照也取 ≤ m−1。换仓节奏改为季度换仓(04/07/10/01 季首月起算,季内 drift,1–3 月数据不足 → 1/N EW)。验证:同窗口日腿 CAGR 252 trading = 14.68% vs t099 月度版 15.71% → 差 1.03pp ≤ 2pp ✓;DD 日腿 −28.27% vs t099 月度 −23.85%(日腿偏紧 ~4pp,DD 采样更细,可接受)。报告路径由 docs/_reports/absorb_input/T-125_s606.md 迁移到数据根 _reports/absorb_input/T-125_s606.md(按 lane_bot 规则 3a);git add 不再 add 它。\n\n2026-10-18 lane-c 收尾(in_review 已设):(1) `git rm` 退回-2 版 `docs/_reports/absorb_input/T-125_s606.md`(第一版带 look-ahead,真版只在数据根 _reports/absorb_input/T-125_s606.md)。(2) `world50_daily_nav` meta 口径修复 —— `yrs = len(valid_ret) / 365.25` 改为 `(out_days[-1] - out_days[0]).days / 365.25`(日历天),股票腿年化波动 `sqrt(365.25)` → `sqrt(252)`。本窗口日历 CAGR 与变动前的 21.96% 数值相同(3937 收益点 vs 3937 日历天在本面板偶然一致);`annualized_vol` 由 17.35% → 14.41%。前沿 / 固定点 / bootstrap 三档数字不动(走 `stats(per_year=252)`)。报告里那一行表已改;exploratory note 中的双口径并存提醒保留(19.96% vs 14.68%)。\n2026-10-19 Seth 合并:第一次合并卡在 T-125.json add/add 冲突(主干上已有开卡版),由合并方以分支上的卡为底补 verified 直接合,不再让 lane-c rebase。"
 }
