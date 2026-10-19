@@ -14,6 +14,7 @@
 | claimed | T-098 | seth | World50 的数据:候选池(全球前 ~150 大资产)的复权价格与历史流通市值 + 贵金属口径 + 每个候选的链上形式映射与跟踪误差 | 大类 ① 候选可以用日频全收益回放;知道哪些资产今天在链上真的买得到、买多少。 | eodhd 只有 2022-08 起、未复权;yfinance 2015 起但 06-18 后停更、未复权(SHY 九年价格持平,票息全丢)。链上形式从没系统量过。 |  |
 | claimed | T-099 | seth | World50 按时点回放(指数层)+ 风险层(波动目标 / 趋势)分开记账,对照 ACWI / Nasdaq-100 / 全球 60/40 | 决定大类 ① 是否立账本、从哪天开始前向。 | S-576:月度价格收益口径,P3 × 2 年化 32.2% / 最大回撤 −27%,满仓 BTC 32.3% / −73%。 |  |
 | claimed | T-122 | seth | 执行器核心:X1V 目标 → 订单计划 → 只算不发(dry-run)→ 写 execution_intents;收盘后 1 小时内跑、灾难止损盘中盯 | dry-run 在 Railway 或云主机上跑满 2 天,每天一批意图,人工核对无误(TRADE_PATH §5 第 1–2 天) | 执行是 X1V 成立的一部分;没有它,X1V 只能按悲观摩擦列算。 |  |
+| claimed | T-135 | seth | 接美元净流动性(FRED,免费、免密钥):美联储资产负债表 − 财政部存款 − 逆回购 | 第一行真实数据 + 调度者 + 判活(规则 5b);然后预注册:净流动性 4 周变化当 ③ 推力闸,对照稳定币版(交 C 道) | 流动性是超级交易者共同看的「原因」;没有它,③ 的推力只能看价格与稳定币 |  |
 | open | T-089 | lane-a | 完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改 | 从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。 |  |
 | open | T-129 | lane-a | 东京主机录 Hyperliquid 盘口与成交(前 20 档、每 10 秒一张快照 + 全部成交),落本地压缩文件 | tests/test_exec_host_recorder.py 全绿;in_review,推 lane-a/T-129。install.sh 由 Seth 合并时接(别改它)。 | 有了自己的盘口与成交历史,才能量「突破那一刻的盘口失衡 / 主动买盘」能不能筛掉假突破(S-610 R 臂的下一层)。 |  |
 | open | T-130 | lane-b | 东京主机每 15 分钟记录 HL 头部账户的持仓(聪明钱快照) | tests/test_exec_host_whales.py 全绿;卡 notes 写 leaderboard 端点的实测结论;in_review,推 lane-b/T-130。install.sh 由 Seth 合并时接(别改它)。 | 几周之后能量:头部账户净持仓的变化是否领先价格、领先多久 —— 我们没找到同行评审的证据(跟单 / 排行榜的持续性只有平台自述),所以只能自己录、自己量。 |  |
@@ -28,7 +29,6 @@
 | open | T-082 | seth | 可交易规模由数据定:按我们实际能下单的场所深度(订单簿 ±1% 深度 / 场所成交)算每个名字、每本账的容量,替代全市场报告成交额 | 每个名字 / 每本账在 $30M 与 $500M 下能否在 5 天内建满,按我们真能成交的深度说,不按 CoinGecko 聚合成交额说 | S-544 容量按 30 日全市场报告成交额中位数 × 10% 参与率:$30M 下 58/58 名通过,$500M 下 50/58;tokenization_tilt 被 POLYX(日成交 $0.6M)卡在 ≈ $9M。聚合成交额含不能下单的场所与刷量,实际可成交深度更低,没量过。 |  |
 | open | T-133 | seth | 接 Binance Vision 免费历史档:永续 5 分钟持仓结构(未平仓量、大户多空比、主动买卖量比)+ 盘口深度带 → 日度特征表 | 表有第一行真实数据 + 判活判据 + 调度者(规则 5b 三件齐);2020-09 起回填完成;然后预注册 S-614:R 信号日的持仓结构 / 主动买卖能不能把赢家和输家分开(交 C 道)。 | Jazz 说的「结合资金流、跟踪聪明钱」在现有免费数据里能做到的最接近版本:大户多空比是聪明钱的代理,主动买卖量比是资金流,5 年历史可以直接回测,不用等。 |  |
 | open | T-134 | seth | 研究 = 实盘:把主机执行器的决策函数做成历史回放器,模拟与纸面空跑都走它 | 一份内核、三处调用;对账表进台账 | 模拟出来的就是实盘会做的 —— 否则每条前向记录都要多问一句「真跑时代码是不是同一个」 |  |
-| open | T-135 | seth | 接美元净流动性(FRED,免费、免密钥):美联储资产负债表 − 财政部存款 − 逆回购 | 第一行真实数据 + 调度者 + 判活(规则 5b);然后预注册:净流动性 4 周变化当 ③ 推力闸,对照稳定币版(交 C 道) | 流动性是超级交易者共同看的「原因」;没有它,③ 的推力只能看价格与稳定币 |  |
 | open | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
 | blocked(等 Jazz 10-19「留在待办,先不买那个数据,在我们现有的数据源想办法」) | T-132 | jazz | (待办,暂不买)Hyperliquid 历史盘口:官方 S3 存档 / Hydromancer Reservoir,按流量付费 | 有报价再决定 | 突破那一刻的 HL 盘口历史 —— 能直接回测「盘口失衡筛假突破」,不用等主机自录几周 |  |
 | blocked(等 lane-a 连续三轮在 37KB 的 t117_s597_baskets.py 上超步数 / 上下文溢出;剩下的「权重漂移 + 真实旧权重换手 + 当期 N」要换成小脚本重写,等 Seth 排) | T-117 | lane-a | S-597:篮子里的 Trader Tom —— 让赢家跑(不调回等权)、砍跌 25% 的输家把钱给赢家;World50 与加密前 15 各一套 | 脚本 docs/research/t117_s597_baskets.py + _reports/absorb_input/T-117_s597.md;卡改 in_review,推 lane-a/T-117。 | Trader Tom 方向的第一批证据;预注册在台账,lane 只实现不改。 |  |
@@ -139,4 +139,4 @@
 | done | T-114 | seth | T-092 R3(30 名外暴涨名做空、等额多 BTC 对冲)独立复算;复算站得住就开前向纸面账本(探索仓,不进配置) | 台账 S- 条复算结果;站得住则有前向表 + 循环 + 判活判据 + 第一行。 | R3 是 10 天来唯一按字面过了预注册的规则;④ 是回报层级的最后一层,先验要严。 | Replicated and not opened (S-608). Trade table matches lane-b 156/157 and 59/59; z30 identical to the pre-registered formula. Tails: worst single trade -159% (TRB, +188% squeeze), skew -1.98, worst 5% of trades give back 21% of all winning P&L. Daily equal-weight book (>= 10 slots) 39.1%/yr, max drawdown -33.6%, correlation with BTC -0.05, and ab_test against holding BTC cannot separate them. Only 27 of the 77 shorted names have a Hyperliquid perp today; on those, the mean per trade halves to +6.3% and p5 falls to -76%. Fails steps 2 and 3 of the card, so no forward book. @ 2026-10-19T03:34Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 16 · claimed 8 · blocked 6 · in_review 4 · done 101 · dropped 1
+open 15 · claimed 9 · blocked 6 · in_review 4 · done 101 · dropped 1

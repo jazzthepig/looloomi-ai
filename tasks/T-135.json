@@ -1,0 +1,25 @@
+{
+  "id": "T-135",
+  "owner": "seth",
+  "status": "claimed",
+  "created": "2026-10-19",
+  "verified": null,
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "title": "接美元净流动性(FRED,免费、免密钥):美联储资产负债表 − 财政部存款 − 逆回购",
+  "source": "BENCHMARK §3:Druckenmiller「美联储决定大盘 —— 流动性」;Arthur Hayes 的美元流动性指数;我们只有稳定币边际流动性(S-570)",
+  "allowed_paths": [
+    "src/data/",
+    "src/api/",
+    "tests/",
+    "docs/",
+    "scripts/preflight.sh"
+  ],
+  "acceptance": {
+    "check": "规则 3b 一条摄取路径、取数入口预算不增;FRED 的 fredgraph.csv(WALCL 周、WTREGEN 周、RRPONTSYD 日)按发布日对齐、只用已发布的值(不前视),写 macro_daily series = fed_net_liquidity 及三条分量,2018 起回填。",
+    "expect": "第一行真实数据 + 调度者 + 判活(规则 5b);然后预注册:净流动性 4 周变化当 ③ 推力闸,对照稳定币版(交 C 道)"
+  },
+  "prior_value": "流动性是超级交易者共同看的「原因」;没有它,③ 的推力只能看价格与稳定币",
+  "notes": "2026-10-19 Seth 开卡。\n2026-10-19 Seth:写好 —— data_layer.get_fred_series(fredgraph.csv,免密钥)+ cis_inputs 的 fed 段(每日跟着 _cis_inputs_loop 跑):三条分量按观测日原样入 macro_daily(fed_balance_sheet / fed_tga / fed_rrp,十亿美元),fed_net_liquidity 按**可得日**(周数据 +2 天、逆回购 +1 天)逐日给出。沙箱实测:2018-01 约 4.16 万亿,2022-01 峰值约 6.97 万亿,10-19 约 5.87 万亿。**单位坑**:WTREGEN 是百万美元不是十亿(按十亿读会得出负的净流动性),测试钉住。判活:select max(d) from macro_daily where series='fed_net_liquidity' = 今天。"
+}

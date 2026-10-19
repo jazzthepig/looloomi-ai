@@ -1,0 +1,24 @@
+{
+  "id": "T-134",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-10-19",
+  "verified": null,
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "title": "研究 = 实盘:把主机执行器的决策函数做成历史回放器,模拟与纸面空跑都走它",
+  "source": "docs/research/BENCHMARK_2026-10-19.md §2 / §4-1(NautilusTrader:一个内核跑回测与实盘);S-610 的 SQL 模拟、Railway 空跑、东京主机是三份实现",
+  "allowed_paths": [
+    "src/exec_host/",
+    "src/data/execution/",
+    "tests/",
+    "docs/"
+  ],
+  "acceptance": {
+    "check": "回放器按历史日线逐日调用 exec_host.core 的同一组函数(计划 → 订单 → 止损);用它重跑 X1V 的纸面空跑,与 Railway _executor_dry_run_loop 的历史 loop_attempt 逐日对得上;再用它跑 S-610 的 R 臂,与 docs/research/s610_breakout_sim.sql 的 1,013 笔对得上(差异逐条解释)。",
+    "expect": "一份内核、三处调用;对账表进台账"
+  },
+  "prior_value": "模拟出来的就是实盘会做的 —— 否则每条前向记录都要多问一句「真跑时代码是不是同一个」",
+  "notes": "2026-10-19 Seth 开卡。"
+}

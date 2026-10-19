@@ -1,0 +1,24 @@
+{
+  "id": "T-136",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-10-19",
+  "verified": null,
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "title": "组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿",
+  "source": "BENCHMARK §2(LEAN 组合构建 + 风控)、§1(Numerai 边际贡献、Quantopian 看波动回撤不看回测夏普、3AC 硬上限)",
+  "allowed_paths": [
+    "src/data/",
+    "src/api/",
+    "tests/",
+    "docs/"
+  ],
+  "acceptance": {
+    "check": "先出设计(docs/PORTFOLIO_RISK.md):每条腿(① / X1V / 灵活组合 / R 候选)的日收益按波动换算成统一风险单位;滚动相关矩阵;总风险预算与回撤硬上限;每条腿的边际贡献 = 加入前后整本账的风险调整收益差。设计过 Jazz 再实现。",
+    "expect": "设计文档 + Jazz 拍板"
+  },
+  "prior_value": "R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看",
+  "notes": "2026-10-19 Seth 开卡。"
+}
