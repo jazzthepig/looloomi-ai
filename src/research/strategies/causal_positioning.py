@@ -94,6 +94,23 @@ def backtest(close: np.ndarray, fmean: np.ndarray, fsum: np.ndarray,
 
 # ── Panel loader (Binance perps) ─────────────────────────────────────────────
 
+def _binance_rows(r, what: str, sym: str) -> list:
+    """The body of a fapi reply, or a loud, named failure.
+
+    Railway deploys that land in a Binance-restricted region get HTTP 451 whose body is a JSON
+    OBJECT ({"code": ..., "msg": ...}). Iterating it walks its keys, so the kline loop died with
+    `string index out of range` / a bare ValueError that named neither the venue nor the status
+    (S-607: beta_core, scalable, combined, and `_factory_recalibrate_loop` 10-19 04:13 / 04:59).
+    A non-200 or a non-list body is a refusal to read - say so, with the status.
+    """
+    if r.status_code != 200:
+        raise RuntimeError(f"binance fapi {what} {sym}: HTTP {r.status_code} (restricted region or rate limit)")
+    j = r.json()
+    if not isinstance(j, list):
+        raise RuntimeError(f"binance fapi {what} {sym}: expected a list, got {type(j).__name__} {str(j)[:80]}")
+    return j
+
+
 def load_binance_panel(assets: list[str], start=(2024, 1, 1), *, with_fill_mask: bool = False):
     """Fetch aligned (dates, close, fmean, fsum) panels from Binance USDT perps.
     fmean = daily mean funding (signal), fsum = daily summed funding (carry).
@@ -123,7 +140,7 @@ def load_binance_panel(assets: list[str], start=(2024, 1, 1), *, with_fill_mask:
         for _ in range(15):  # safety cap; 15 × 1000d = 41 years
             r = c.get(f"{base}/fapi/v1/klines",
                       params={"symbol": sym, "interval": "1d", "startTime": cur, "limit": 1000})
-            j = r.json()
+            j = _binance_rows(r, "klines", sym)
             if not j:
                 break
             for k in j:
@@ -137,7 +154,7 @@ def load_binance_panel(assets: list[str], start=(2024, 1, 1), *, with_fill_mask:
         out, cur = {}, start_ms
         for _ in range(6):
             r = c.get(f"{base}/fapi/v1/fundingRate", params={"symbol": sym, "startTime": cur, "limit": 500})
-            j = r.json()
+            j = _binance_rows(r, "fundingRate", sym)
             if not j:
                 break
             for x in j:
