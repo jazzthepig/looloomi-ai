@@ -1,0 +1,24 @@
+{
+  "id": "T-127",
+  "owner": "lane-c",
+  "status": "in_review",
+  "created": "2026-10-19",
+  "verified": null,
+  "title": "灵活组合的股票腿 / 黄金腿也用 X1V(破 20 日低即空仓 + 波动缩放):T25 / T35 的最差 5% 回撤能不能再压 3pp 而年化不掉 2pp 以上(S-609)",
+  "source": "Jazz 10-16「尽量降低错误的伤害」+ 10-18 定档;S-606 第 3 轮:T25 剩下的回撤主要来自股票腿;台账 S-609 预注册",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-127.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "paper_trading/",
+    "src/"
+  ],
+  "acceptance": {
+    "check": "照台账 S-609 预注册一字不改:在 docs/research/t125_s606_frontier.py 的框架上(可复制成 t127_s609_x1v_legs.py,别改 t125 原文件)给股票腿 / 黄金腿加 tom.trade_path(close, 'flat', 0.0, exit_mode='l20', vol=True) 变体,摩擦 = 晚一天 + 5bp;四个变体 × T25 / T35 固定点 + −25 / −35 前沿 + 历史两半。判据只看 T25「两条都 X1V」对「无」。",
+    "expect": "报告写数据根 _reports/absorb_input/T-127_s609.md(开头一张四变体 × 两固定点的表);卡 notes 写判定与关键数;in_review,推 lane-c/T-127。"
+  },
+  "prior_value": "过了 ⇒ 前向账本 flex_x1v 加一条臂(股票 / 黄金也按规则进出),T25 的回撤上限有望从 −23% 压到 −20% 以内;不过 ⇒ 股票 / 黄金腿照旧持有。",
+  "notes": "2026-10-19 Seth 开卡,预注册 S-609 已写(04:29 UTC)。\n\n2026-10-19 lane-c 交付:docs/research/t127_s609_x1v_legs.py + _reports/absorb_input/T-127_s609.md。\n**判定:不过**。四变体 × T25/T35 全跑,window=2016-01-04→2026-10-15(3231d):\n- HH T25 (30/30/20/20):cagr hist 25.81% / dd hist −31.94%(基线)\n- X1V_H T25:cagr 20.53% / dd −16.55%(Δcagr −5.28pp / Δdd −15.39pp;S-606 已采纳)\n- X1V_all T25:cagr 15.63% / dd −13.91%(Δcagr **−10.18pp** / Δdd −18.03pp;CAGR 超线 5×)\n- X1V_all T35 (40/40/20/0):cagr 20.56% / dd −18.34%(Δcagr −13.11pp / Δdd −21.98pp)\nBootstrap 前沿(1000×1512,block=60,seed=604):\n- @ −25 cap:X1V_all c30/e60/g10:cagr med 18.03% / ddp5 −24.67% vs HH c10/e50/g35:cagr 20.10% / ddp5 −24.94%(Δcagr −2.07pp / Δdd +0.27pp —— DD 没压到 3pp,CAGR 已踩破线)\n- @ −35 cap:X1V_all c50/e30/g20:cagr 23.12% / ddp5 −34.64% vs HH c20/e60/g20:cagr 26.27% / ddp5 −33.65%(Δcagr −3.15pp / Δdd −0.99pp —— DD 仅 −1pp)\n**结论**:股票/黄金腿走 X1V 不可取,扣掉的年化远超 2pp 容忍线;沿用 t125 的 H 持有。S-609 闭。\n副产品:股票腿 X1V gate flat share 0.296,黄金腿 0.428(黄金单边市里频繁停损)。结果 JSON 写 research/s609/s127_results.json(Mac 侧,不进 git)。"
+}
