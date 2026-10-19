@@ -1,0 +1,35 @@
+[Unit]
+Description=CometCloud whales snapshot (T-130) — polls Hyperliquid top accounts every 15 min
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=cometcloud
+Group=cometcloud
+# 鲸鱼快照只读公共 info 端点;不需要 executor.env 里的私钥。
+# 加固与执行器对齐:无密钥、无 Supabase、写纯本地 JSONL.gz。
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=HOME=/var/lib/cometcloud
+WorkingDirectory=/opt/cometcloud/repo
+ExecStart=/opt/cometcloud/venv/bin/python -m src.exec_host.whales --interval-s 900
+Restart=always
+RestartSec=30
+# /var/lib/cometcloud:whales_addresses.txt + rec/whales/*.jsonl.gz
+StateDirectory=cometcloud
+StateDirectoryMode=0750
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+# 公共 HTTPS 出站(info / leaderboard)
+
+[Install]
+WantedBy=multi-user.target
