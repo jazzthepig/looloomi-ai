@@ -741,6 +741,27 @@ async def get_fng_history() -> list[dict]:
     return data
 
 
+async def get_fred_series(series_id: str, start: str) -> list[tuple[str, float]]:
+    """FRED 公开 CSV(免密钥:fredgraph.csv)→ [(observation_date, value)]。缺值('.')跳过;非 200 / 空抛错(T-135)。
+    一次只取一条序列(多条 id 会返回 zip)。"""
+    r = await _get_misc_client().get("https://fred.stlouisfed.org/graph/fredgraph.csv",
+                                     params={"id": series_id, "cosd": start}, timeout=30)
+    if r.status_code != 200:
+        raise RuntimeError(f"FRED {series_id} HTTP {r.status_code}")
+    out: list[tuple[str, float]] = []
+    for line in r.text.strip().splitlines()[1:]:
+        parts = line.split(",")
+        if len(parts) != 2 or parts[1].strip() in ("", "."):
+            continue
+        try:
+            out.append((parts[0].strip(), float(parts[1])))
+        except ValueError:
+            continue
+    if not out:
+        raise RuntimeError(f"FRED {series_id} 返回空")
+    return out
+
+
 async def get_eodhd_eod_range(ticker: str, exchange: str, frm: str) -> list[dict]:
     """EODHD `/eod/{ticker}.{exchange}` 从 frm 起的日线原始行 [{date, open, high, low, close, adjusted_close, volume}]。
     没有 key / 非 200 抛错(T-079)。"""
@@ -2465,6 +2486,25 @@ async def get_binance_hourly_page(symbol: str, start_ms: int, limit: int = 1000)
     if resp.status_code != 200:
         raise RuntimeError(f"HTTP {resp.status_code} data-api.binance.vision")
     return resp.json()
+
+
+#: T-133:Binance 公开历史档(静态文件,不是 API —— 与 data-api.binance.vision 同族)。只放行下列数据集。
+BINANCE_VISION_UM_DAILY = "https://data.binance.vision/data/futures/um/daily"
+BINANCE_VISION_KINDS = frozenset({"metrics"})
+
+
+async def get_binance_vision_um_daily(kind: str, pair: str, day: str) -> Optional[bytes]:
+    """T-133:U 本位永续某一天的历史档(zip 原样字节)。404 ⇒ None(那天没有文件 —— 未上市 / 未上传);
+    其他非 200 ⇒ 抛错(读不到 ≠ 没有)。kind 只能是 BINANCE_VISION_KINDS 里的。"""
+    if kind not in BINANCE_VISION_KINDS:
+        raise ValueError(f"binance vision 数据集 {kind!r} 不在白名单 {sorted(BINANCE_VISION_KINDS)}")
+    url = f"{BINANCE_VISION_UM_DAILY}/{kind}/{pair}/{pair}-{kind}-{day}.zip"
+    resp = await _get_binance_client().get(url, timeout=30)
+    if resp.status_code == 404:
+        return None
+    if resp.status_code != 200:
+        raise RuntimeError(f"HTTP {resp.status_code} data.binance.vision {kind} {pair} {day}")
+    return resp.content
 
 
 async def get_binance_funding_page(symbol: str, start_ms: int, limit: int = 1000) -> list:

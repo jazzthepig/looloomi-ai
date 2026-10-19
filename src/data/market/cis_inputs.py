@@ -20,7 +20,8 @@ EODHD 按交易日;DeFiLlama 今天的占位点不收。HTTP 全在 data_layer�
 
 ## 判活判据(规则 5b ②)
 
-    select series, max(d) from macro_daily group by 1;      -- fng / total_mcap = 昨天或今天;vix = 最近交易日
+    select series, max(d) from macro_daily group by 1;      -- fng / total_mcap = 昨天或今天;vix = 最近交易日;
+                                                             -- fed_net_liquidity = 今天(按可得日,T-135)
     select max(d) from protocol_tvl_daily;                   -- = 昨天
 """
 from __future__ import annotations
@@ -110,6 +111,60 @@ def global_rows(gm: dict, since: str = HISTORY_START, tolerance_ms: int = 0) -> 
             if d >= since:
                 out.append({"series": series, "d": d, "value": val, "source": "coingecko_pro_global"})
     return out
+
+
+#: T-135 美元净流动性(Druckenmiller「盈利不决定大盘,美联储决定」;Arthur Hayes 的美元流动性指数)。
+#: FRED 序列 → (macro_daily 的 series 名, 换算成「十亿美元」的系数, 发布滞后天数)。
+#: WALCL / WTREGEN 是周三的值,随 H.4.1 在周四美东下午发布 ⇒ 记到「观测日 + 2」才算已知(UTC 日,保守);
+#: RRPONTSYD 当天下午发布 ⇒ 「观测日 + 1」。
+FRED_SERIES: dict[str, tuple[str, float, int]] = {
+    "WALCL": ("fed_balance_sheet", 1e-3, 2),        # 百万美元 → 十亿
+    "WTREGEN": ("fed_tga", 1e-3, 2),                # 百万美元 → 十亿(10-19 实测:883,373 = 8,834 亿;按十亿读会算出负的净流动性)
+    "RRPONTSYD": ("fed_rrp", 1.0, 1),               # 十亿美元
+}
+NET_LIQUIDITY_SERIES = "fed_net_liquidity"
+
+
+def fred_rows(fred_id: str, obs: list[tuple[str, float]], since: str = MACRO_HISTORY_START) -> list[dict]:
+    """纯函数。FRED 原始观测 → macro_daily 行;d = 观测日(原样,不是可得日),值换算成十亿美元。"""
+    series, k, _lag = FRED_SERIES[fred_id]
+    return [{"series": series, "d": d, "value": v * k, "source": "fred"} for d, v in obs if d >= since and v == v]
+
+
+def net_liquidity_rows(obs: dict[str, list[tuple[str, float]]], start: str, end: str) -> list[dict]:
+    """纯函数。按天(UTC)给出「d 日开盘前已经发布的」美元净流动性 = 资产负债表 − 财政部存款 − 逆回购(十亿美元)。
+    每个分量取「观测日 + 发布滞后 ≤ d」里最新的一个;三个分量任一还没有 ⇒ 那天不出行(不猜)。
+    **d 是可得日,不是观测日** —— 用的人不用再自己挪,也挪不错。"""
+    known: dict[str, list[tuple[date, float]]] = {}
+    for fid, rows in obs.items():
+        _s, k, lag = FRED_SERIES[fid]
+        known[fid] = sorted((date.fromisoformat(d) + timedelta(days=lag), v * k) for d, v in rows if v == v)
+    out, idx, last = [], {f: 0 for f in known}, {f: None for f in known}
+    d, stop = date.fromisoformat(start), date.fromisoformat(end)
+    while d <= stop:
+        for f, seq in known.items():
+            while idx[f] < len(seq) and seq[idx[f]][0] <= d:
+                last[f] = seq[idx[f]][1]
+                idx[f] += 1
+        if len(last) == len(FRED_SERIES) and all(v is not None for v in last.values()):
+            val = last["WALCL"] - last["WTREGEN"] - last["RRPONTSYD"]
+            out.append({"series": NET_LIQUIDITY_SERIES, "d": d.isoformat(), "value": round(val, 3), "source": "fred"})
+        d += timedelta(days=1)
+    return out
+
+
+async def _fed(today: date) -> dict[str, Any]:
+    """三条 FRED 序列原样入库(按观测日)+ 按可得日的净流动性日序列。任何一条读不到 ⇒ 整段不写净流动性。"""
+    from src.data.market.data_layer import get_fred_series
+    obs: dict[str, list[tuple[str, float]]] = {}
+    rows: list[dict] = []
+    for fid in FRED_SERIES:
+        obs[fid] = await get_fred_series(fid, MACRO_HISTORY_START)
+        rows += fred_rows(fid, obs[fid])
+    net = net_liquidity_rows(obs, MACRO_HISTORY_START, today.isoformat())
+    err = await _upsert(MACRO_TABLE, rows + net, "series,d") if net else "fed_net_liquidity: 0 行"
+    return {"rows": len(rows) + len(net), "error": err, "last": net[-1]["d"] if net else None,
+            "last_value_bn": net[-1]["value"] if net else None}
 
 
 def tvl_rows(sym: str, slug: str, gecko: str, points: list[list], today: date, since: str = HISTORY_START) -> list[dict]:
@@ -217,6 +272,10 @@ async def _macro(today: date) -> dict[str, Any]:
         except Exception as e:                              # noqa: BLE001
             out[name] = {"rows": 0, "error": f"{type(e).__name__}: {str(e)[:100]}"}
     out.pop("_global_rows", None)
+    try:
+        out["fed"] = await _fed(today)
+    except Exception as e:                                  # noqa: BLE001
+        out["fed"] = {"rows": 0, "error": f"{type(e).__name__}: {str(e)[:100]}"}
     return out
 
 
