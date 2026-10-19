@@ -112,6 +112,13 @@ EXEMPT = {
         "② writer 改成 service_role 凭证并实际写一行 → "
         "③ 测试转绿 → 注册 `python3 -m tests.test_fusion_paper_regime_track_schema` "
         "进 preflight 并**删掉这一行**。到期日 2026-09-27 一周后(JAZZ 拍)。",
+    "test_t126_exit_red":
+        "T-126 v0 修复的回归红测(Seth 退回 10-19「qty = notional / c[t-1] 把卖出名义额放大 2.7-4.8×」):"
+        "`test_notional_preserved_with_mid_divisor` + `test_buggy_shape_amplifies_spent_notional`。"
+        "**不是常驻 CI 红测**——它钉的是历史价当成交价这一个特定 bug 的形状(divisor 用 c[t-1] ⇒ spent ≠ notional),"
+        "是 doc/research/torshovledge 的契约而不是策略机制。每轮 lane-a 改 t126_exit_day.py 都应 `pytest tests/test_t126_exit_red.py`。"
+        "**preflight 写入超出 T-126 卡 allowed_paths**(docs/research/ + tests/,不含 scripts/preflight.sh),"
+        "故先放 EXEMPT;若改为常驻 CI 红测,需同步在 preflight.sh 加 `pytest tests/test_t126_exit_red.py -q` 并删本行。",
 }
 
 #: 非测试文件 —— 不参与统计。

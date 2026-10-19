@@ -43,7 +43,7 @@ def x1v_path(c: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         long_entry = (x > ma) and (x > h_ch)
         if mode == "long":
             hi = max(hi, x)
-            out = (x < ma and x < l_ch) or (x < l_ch)  # X1V:破 20 日低即平
+            out = x < l_ch  # X1V:破 20 日低即平(等价的简化)
             if out:
                 if g[t - 1] > 0:
                     close_mask[t] = True
@@ -147,12 +147,15 @@ def main() -> None:
             for t in dec_idx:
                 if t - 1 < 0:
                     continue
-                px = c[t - 1]   # 决策时中间价占位:用前一日收盘(TRADE_PATH §3c:收盘后 1h 内成交)
-                if not (px == px) or px <= 0:
-                    continue
+                # 滑点只读:夹具是 10-18 拍下的单点盘口,历史出场日按当前盘口假设。
+                # 名额名义额 = leg * g_eff[t-1] (用决策当时 X1V 实际敞口),**用 mid_fix 换算 qty**
+                # 使「走出的卖出额」与「名额名义额」一致 —— 否则 qty = notional / c[t-1]
+                # 会把 2023 低价日的 qty 放大 mid_fix/c[t-1] 倍,spent 名义额被夸大。
                 gross_to_close_today = float(g_eff[t - 1])
                 notional_per_leg_usdc = leg * gross_to_close_today
-                qty = notional_per_leg_usdc / px
+                if notional_per_leg_usdc <= 0 or mid_fix is None or mid_fix <= 0:
+                    continue
+                qty = notional_per_leg_usdc / mid_fix
                 if qty <= 0:
                     continue
                 filled, spent = walk_book_for_qty(book.bids, qty, "sell")
@@ -199,11 +202,13 @@ def main() -> None:
         "## 规则 & 数据\n",
         "- X1V (TRADE_PATH §3c):200 日线之上且破 20 日高才持有;**收盘破 20 日低 ⇒ 全平**;20 日波动 > 2 年常态中位数 ⇒ 按比例降仓。",
         "- 历史数据:`/Volumes/CometCloudAI/cometcloud-local/research/w50_daily/close.json` -- BTC 自 2014-12、ETH 自 2017 末;扫 2023-01-01 -> 2026-10-16。",
-        "- HL 现货盘口只读:**2026-10-18 抓取夹具** (`tests/fixtures/hl_spot/`),UBTC @142 szDec=5 mid=81609.5,UETH @151 szDec=4 mid=2409.65。",
+        "- HL 现货盘口只读:**2026-10-18 抓取夹具** (`tests/fixtures/hl_spot/`),UBTC @142 szDec=5 book mid=81640.5,UETH @151 szDec=4 book mid=2410.65。",
         "- 三档规模(整仓):$3k / $30k / $300k。每腿 = 一半(BTC、ETH 各占总仓 50%)。",
         "- 平仓方向:SELL(持仓 LONG);走 bid 侧。",
         "- 真实 g[t] 含波动率缩放:`g_eff[t] = g_raw[t] × vol_scale[t]`,非恒为 1.0。",
-        "- S-602 悲观摩擦(单边、|Δg|=1):`slip_bp = 5bp + 0.1 × v20_daily[t]`,v20_daily 是当日最近 20 个 log-return 的 σ(每日)。\n",
+        "- S-602 悲观摩擦(单边、|Δg|=1):`slip_bp = 5bp + 0.1 × v20_daily[t]`,v20_daily 是当日最近 20 个 log-return 的 σ(每日)。",
+        "- **(v0 修复 2026-10-19, lane-a/T-126)**:`qty = notional / mid_fix`,即用「**夹具当前中间价**」换算 qty —— 历史出场日按当前盘口假设,**名额名义额不变**(否则 qty 用 c[t-1] 时,2023 低价日的 qty 会被放大 mid_fix / c[t-1] 倍 → spent 名义额被夸大 2.7-4.8×)。",
+        "- 红测:`tests/test_t126_exit_red.py::test_notional_preserved_with_mid_divisor` —— notional=3000 ⇒ walked spent ≈ 3000。\n",
         "## 关键说明(10-18 夹具 -> 历史日外推)",
         "**夹具是单一时刻拍下的盘口**;历史日的实际深度不一定与 10-18 一致。本表把当时刻下的 book 当作当日的 book 来走 --"
         "**等价于假定书口深度不随日变化**。这一假设对 UBTC 较小规模 (< $30k) 与 UETH 中等 (< $30k) 可接受 (book 顶几档深度 $100k+ -> "
@@ -231,16 +236,16 @@ def main() -> None:
     lines.append("\n## 对照 S-602 假设的最终结论")
     lines.append(
         "- **6/6 都是「S-602 远偏悲观」,差 23-34bp。** HL 现货 UBTC/UETH 在 $3k / $30k / $300k 全档 "
-        "实测滑点 (0.06 - 2.84bp) 比 S-602 假设的「5bp + 0.1 × v20_daily」(≈ 24-47bp) 低一个数量级。"
+        "实测滑点 (0.061 - 2.396bp) 比 S-602 假设的「5bp + 0.1 × v20_daily」(≈ 24-47bp) 低一个数量级。"
     )
     lines.append(
-        "- **「哪个规模开始不成立」无差别**(6 档全不成立)。但**结构性失败**发生在 $300k BTC:25 次出场中有 **3 次 (12%)** "
-        "完全跑光可见 top-of-book、SLIP = inf —— 这是 S-602 公式根本不能描述的失败模式(它假设总可以成交)。"
-        "实盘时这 12% 必须用限价单 / 时间窗摊薄,而不是被动市价。"
+        "- **$300k BTC 「inf 失败模式」在 v0 修复后消失**:修复前(用 c[t-1] 当 qty divisor)会把 qty 放大 mid/c[t-1] ≈ 2.7×,"
+        "$300k 单子在 25 次出场里有 3 次跑光 top-of-book、SLIP = inf;**修复后(用 mid_fix 当 divisor),spent 名义额保真,"
+        "$300k BTC 全 25 场都装得下** —— 0.487bp 中位 / 0.576bp p90,无 inf。**这本身就说明「v0 的 inf」是名义额放大假象,不是真盘口浅。**"
     )
     lines.append(
         "- **结论:S-602「5bp + 0.1×v20」的悲观假设对 HL 现货是 1-2 个数量级的过保护。** "
-        "对 $3k 试点(真钱起步)滑点成本实际可忽略(0.06-0.7bp),S-602 多估了约 30bp / 每次出场。"
+        "对 $3k 试点(真钱起步)滑点成本实际可忽略(BTC 0.061bp, ETH 0.78bp),S-602 多估了约 24bp(BTC)/ 33bp(ETH) / 每次出场。"
     )
 
     lines.append("\n## 结果里还看到了什么 (探索性 —— 需另立预注册 + 新数据上零信号对照)")
@@ -251,13 +256,13 @@ def main() -> None:
     )
     lines.append(
         "- **「exit 日 gross_to_close(决策当时 g_eff)」中位 BTC 1.04 / ETH 0.93,p90 = 1.2(因加仓到 1.2 上限)。** "
-        "也就是说 X1V 出场时大半日子是「满仓」出场 —— vol-scaling 时常未及降到一半以下,所以 $300k BTC 的 inf 才集中在这些日子,"
-        "因为满仓 × $150k/leg 已经差不多打到 book 边缘。"
+        "X1V 出场时大半日子是「满仓」出场 —— vol-scaling 时常未及降到一半以下,所以 $300k BTC 名义额(单腿 $150k)在 10-18 book "
+        "中需要走 6-7 档 bid(level 1 仅 0.62 BTC ≈ $50k),现 v0 修复后 25 场全部装下(0.49bp 中位 / 0.58bp p90),无 inf。"
     )
     lines.append(
-        "- **UBTC bid top-1 0.617 BTC ~ $50k;top-4 累积 ~$155k;top-10 累积 ~$256k。** UETH bid top-1 极薄 (0.18 ETH ~ $433) "
+        "- **UBTC bid top-1 0.618 BTC ~ $50k;top-4 累积 ~$155k;top-10 累积 ~$256k。** UETH bid top-1 极薄 (0.18 ETH ~ $433) "
         "但 top-2 累积 ~$15k 后就稳定在 $10k+ 厚度。**「薄 + 厚」混搭**意味着 UETH 实际价格档间价差 < $0.5(~0.2bp) —— $3k 单子仍深嵌 level 1 不穿档,"
-        "所以 0.686bp 中位滑点主要来自第一档中间价 vs top-of-book 的 0.2bp 与向上 walk 一档的差额 —— **UETH 的真正不利因子是 micro-spread 而不是 depth。**"
+        "所以 ETH $3k 的 0.78bp 中位滑点主要来自第一档 mid-vs-top-of-book 的 0.2bp 与向上 walk 一档的差额 —— **UETH 的真正不利因子是 micro-spread 而不是 depth。**"
     )
     lines.append(
         "- **.lane_bot/wake/lane-a 报\"ETH 10-17 收盘 = 近 20 日最低收盘\"未在本数据复算**:w50_daily 末点是 2026-10-16(其后 close=None -> 数据未到 10-17)。"

@@ -2,6 +2,7 @@
 
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
+| in_review | T-126 | lane-a | 出场日预演:X1V 在 BTC / ETH 上历次平仓日,用 HL 现货真实盘口估市价平仓滑点,对照「悲观摩擦」假设 | 表格齐全;只读,不改任何账本、执行器或循环;结果里还看到了什么标探索性 | 悲观摩擦假设从没被真实盘口检验过;T-123 只量了当前一刻的盘口 |  |
 | in_review | T-092 | lane-b | 慢的逆向(Jazz 10-14「甘于人后」):三条规则按时点回放 + 打乱对照 —— ② 暴涨名移回 BTC、③ 主流暴跌后加推力、探索仓做空 30 名外暴涨名 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:三条规则 × 三个窗口的总收益 / 最大回撤 / 相对基准的超额 / 对照分位 / 事件数。不改任何前向账本。 | S-569(探索性):非 BTC 名 z30 ≥ 3 之后 30 日相对 BTC −16.4%(t+7 进,基准 −5.8%,81% 跑输),90 日 −38.7%(基准 −16.3%);BTC / ETH z30 ≥ 2 之后 90 日 +12.5% / +22.3%(基准 +6.3% / +6.6%)⇒ 不对主流的暴涨做逆向;BTC z30 ≤ −2 之后 90 日 +10.3%(9 周)。 |  |
 | in_review | T-093 | lane-b | 逆向按情景用(Jazz 10-14):T-092 三条规则加「边际流动性 × BTC 趋势」四状态、每周重判 —— 对照无条件版与打乱的状态标签 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:三条规则 × 三个窗口 × {无条件, 条件} 的总收益 / 最大回撤 / 超额 / 打乱分位,外加每个状态的周数。不改任何前向账本。 | S-570(探索性):暴涨名 30 日相对 BTC 在边际变差时 −28.9(同情景中间组 −6.6),改善时 −13.0(−5.0);暴跌名 90 日在三个窗口里都是改善好过变差;能让暴涨名继续涨的只有「弱底子回暖」约 9 周。 |  |
 | in_review | T-057 | lane-c | 三臂对比的记账有错:下一次调仓不在的币按「零收益」记、周收益平摊到每天 —— A 的 arm C Sharpe 4.90 / 回撤 10% 是这个造成的 | 测试钉住 ①②;重跑后 arm B 的 Sharpe 不再被平滑抬高(与 hold-the-panel 同量级);arm C 的结论按新数重判 | A 10-07 报告:arm C Sharpe +4.90 / MaxDD 10.3% / 累计 +456%;arm B +1.48 / 60.5% —— 记账口径下的数,不是证据 |  |
@@ -128,4 +129,4 @@
 | done | T-112 | seth | 证据面接 World50 / 龙头腿 / 灵活组合三本新前向账本(另一条产品线,基准各自的,不进 ① 的配置层) | 部署后 /api/v1/proof/books 有 other_lines 三段;allocation_daily 的 book 集合不变 | 前向记录本身就是产品(ARCHITECTURE);三本账开账后若证据面看不到,等于没记。 | 部署 b28065e 后 /api/v1/proof/books 有 other_lines 段:六行(world50_ewxmom / world50_ew / alt_top6 / alt_fo6 / alt_gate_ew / flex_35_50_15)都是 not_started、opens 2026-12-31,how_to_read 四条;allocation_daily 的账本集合不变(三本不在登记表)。 @ 2026-10-16 |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 14 · claimed 7 · blocked 4 · in_review 5 · done 94 · dropped 1
+open 14 · claimed 7 · blocked 4 · in_review 6 · done 94 · dropped 1
