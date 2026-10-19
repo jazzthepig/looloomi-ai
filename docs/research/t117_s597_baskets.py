@@ -405,8 +405,8 @@ def weekly_total_return(
     fwd_idx = np.argmax(finite, axis=0)
     fwd_first_finite_idx = np.where(any_finite, fwd_idx, -1)
     # if first or last finite is same ⇒ no return
-    p_prev_idx_local = rev_first_finite_idx
-    p_cur_idx_local = fwd_first_finite_idx
+    p_prev_idx_local = fwd_first_finite_idx
+    p_cur_idx_local = rev_first_finite_idx
     valid = (p_prev_idx_local >= 0) & (p_cur_idx_local >= 0) & (p_prev_idx_local != p_cur_idx_local)
     if not valid.any():
         return 0.0
