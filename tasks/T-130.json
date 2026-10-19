@@ -1,7 +1,7 @@
 {
   "id": "T-130",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-19",
   "verified": null,
   "title": "东京主机每 15 分钟记录 HL 头部账户的持仓(聪明钱快照)",
@@ -26,5 +26,5 @@
     "expect": "tests/test_exec_host_whales.py 全绿;卡 notes 写 leaderboard 端点的实测结论;in_review,推 lane-b/T-130。install.sh 由 Seth 合并时接(别改它)。"
   },
   "prior_value": "几周之后能量:头部账户净持仓的变化是否领先价格、领先多久 —— 我们没找到同行评审的证据(跟单 / 排行榜的持续性只有平台自述),所以只能自己录、自己量。",
-  "notes": "2026-10-19 Seth 开卡。外部:Dwellir 的鲸鱼跟踪指南用的就是 clearinghouseState 轮询 + 成交流;官方 leaderboard 端点未经我们核实。"
+  "notes": "2026-10-19 Seth 开卡。外部:Dwellir 的鲸鱼跟踪指南用的就是 clearinghouseState 轮询 + 成交流;官方 leaderboard 端点未经我们核实。\n\n2026-10-19 lane-b 交付。\n\n实测 leaderboard 端点 https://stats-data.hyperliquid.xyz/Mainnet/leaderboard:\n- HTTP 200,size=39,028,575 bytes(~37MB JSON),time≈57–60s;\n- top-level keys: {leaderboardRows:[...47,432 rows...]},无分页参数(整段 size 不可截);\n- row 字段:ethAddress(hex 0x+40)、accountValue(string)、windowPerformances=[[day|week|month|allTime, {pnl,roi,vlm}]]、prize、displayName;\n- 按 month pnl 降序 + AV≥1M USD 后:716 个地址;前 200 已自然过滤到 189 个 AV≥1M(纯 month pnl top-200 即可,无需再卡 AV);\n- clearinghouseState POST https://api.hyperliquid.xyz/info {type:clearinghouseState,user:0x...}:HTTP 200,~0.3s/req,~300 bytes,返回 {assetPositions:[{position:{coin,szi,entryPx,positionValue,unrealizedPnl,leverage:{type,value},...}]、marginSummary:{accountValue},...};\n- 错误:畸形地址 → HTTP 422(无 payload);有效但 0 仓地址 → HTTP 200 但 assetPositions=[];\n- HL info 端点实测无强限速;为避免集中,每地址间 sleep 0.05s,每轮 200 个 ≈ 60–70s。\n\n实现:\n- src/exec_host/whales.py — select_addresses / load_addresses_from_file / addresses_for_round(一天一次,带内存 cache) / fetch_one(2 次重试) / parse_clearinghouse(8 字段) / append_records(gzip JSONL) / run_round(stats: addresses/queried/ok/empty/failed/records/source/day) / main(--once / --interval-s);\n- tests/test_exec_host_whales.py — 22 项全绿:筛选/dedupe/topN/malformed、parse_clearinghouse 8 字段/空/零仓/无效、gzip JSONL 追加/空、fetch_one 重试、422、run_round happy path / 单地址失败隔离 / 限速 cap / 名单文件回退 / 一天内缓存;\n- deploy/executor/cometcloud-whales.service — User=cometcloud,StateDirectory=cometcloud,ProtectSystem=strict 等加固对齐执行器;不需要 executor.env,只读公共 info 端点;IPAddressAllow=any 让 info / leaderboard HTTPS 出站;\n- deploy/executor/cometcloud-whales.timer — OnCalendar=*:0/15:07(每 15 分钟偏移 7 秒错峰);Persistent=true;Unit=cometcloud-whales.service;\n- install.sh 未碰,等 Seth 合并时接(任务卡已声明)。\n\nlane-b/T-130 推完。"
 }

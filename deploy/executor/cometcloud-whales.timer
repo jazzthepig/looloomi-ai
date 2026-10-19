@@ -1,0 +1,13 @@
+[Unit]
+Description=CometCloud whales snapshot — schedule T-130 every 15 min
+Requires=cometcloud-whales.service
+
+[Timer]
+# 错峰:每个 15 分钟点偏移 7 分钟(避开 :00 / :15 / :30 / :45 集中抢 HL info)
+OnCalendar=*:0/15:07
+Persistent=true
+AccuracySec=30s
+Unit=cometcloud-whales.service
+
+[Install]
+WantedBy=timers.target
