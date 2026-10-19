@@ -1,9 +1,13 @@
 {
   "id": "T-127",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-19",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-19T04:50Z",
+    "value": "Not passed (S-609). Read on the pre-registered baseline (crypto leg on X1V in both arms; lane-c's report compared against all-hold): adding X1V to the equity and gold legs at T25 costs 4.9pp of CAGR (20.53% -> 15.63%) for a 2.6pp shallower drawdown (-16.55% -> -13.91%), and on the -25% frontier the same drawdown cap earns 6.5pp less. Gold sits flat 43% of days and equities 30% under the rule. X1V stays on the crypto leg only. Branch lane-c/T-127 is not merged: it carries PROJECT_STATE, PROJECT_STATE_LOG, paper_trading and copies of src modules outside the card's paths; the result lives in the ledger and the data-root report."
+  },
   "title": "灵活组合的股票腿 / 黄金腿也用 X1V(破 20 日低即空仓 + 波动缩放):T25 / T35 的最差 5% 回撤能不能再压 3pp 而年化不掉 2pp 以上(S-609)",
   "source": "Jazz 10-16「尽量降低错误的伤害」+ 10-18 定档;S-606 第 3 轮:T25 剩下的回撤主要来自股票腿;台账 S-609 预注册",
   "allowed_paths": [
@@ -20,5 +24,5 @@
     "expect": "报告写数据根 _reports/absorb_input/T-127_s609.md(开头一张四变体 × 两固定点的表);卡 notes 写判定与关键数;in_review,推 lane-c/T-127。"
   },
   "prior_value": "过了 ⇒ 前向账本 flex_x1v 加一条臂(股票 / 黄金也按规则进出),T25 的回撤上限有望从 −23% 压到 −20% 以内;不过 ⇒ 股票 / 黄金腿照旧持有。",
-  "notes": "2026-10-19 Seth 开卡,预注册 S-609 已写(04:29 UTC)。"
+  "notes": "2026-10-19 Seth 开卡,预注册 S-609 已写(04:29 UTC)。\n2026-10-19 Seth 复核:按预注册基线(两边加密腿都是 X1V)重读 —— 年化 −4.9pp、回撤只浅 2.6pp ⇒ 不过。分支越界(带了 PROJECT_STATE / paper_trading / src 模块拷贝),不合;结果记在台账 S-609 与数据根报告。"
 }
