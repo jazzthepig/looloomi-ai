@@ -9,6 +9,8 @@ set -euo pipefail
 main() {
   local REPO=/opt/cometcloud/repo VENV=/opt/cometcloud/venv ENVF=/etc/cometcloud/executor.env
   [ "$(id -u)" = 0 ] || { echo "需要 root"; exit 1; }
+  # 建 env 文件时用过 umask 077:同一个 shell 里建的 venv / 克隆的仓库会是 600,服务用户读不了
+  umask 022
   [ -f "$ENVF" ] || { echo "缺 $ENVF"; exit 1; }
   id cometcloud >/dev/null 2>&1 || useradd --system --create-home --shell /usr/sbin/nologin cometcloud
   if [ -d "$REPO/.git" ]; then
@@ -21,6 +23,7 @@ main() {
   [ -x "$VENV/bin/python" ] || python3 -m venv "$VENV"
   "$VENV/bin/pip" install -q --upgrade pip
   "$VENV/bin/pip" install -q -r "$REPO/deploy/executor/requirements.txt"
+  chmod -R go+rX "$REPO" "$VENV"
   install -m 644 "$REPO/deploy/executor/cometcloud-executor.service" /etc/systemd/system/cometcloud-executor.service
   systemctl daemon-reload
   echo "── 自检(不下单)──"
