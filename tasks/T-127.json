@@ -1,0 +1,24 @@
+{
+  "id": "T-127",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-19",
+  "verified": null,
+  "title": "灵活组合的股票腿 / 黄金腿也用 X1V(破 20 日低即空仓 + 波动缩放):T25 / T35 的最差 5% 回撤能不能再压 3pp 而年化不掉 2pp 以上(S-609)",
+  "source": "Jazz 10-16「尽量降低错误的伤害」+ 10-18 定档;S-606 第 3 轮:T25 剩下的回撤主要来自股票腿;台账 S-609 预注册",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-127.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "paper_trading/",
+    "src/"
+  ],
+  "acceptance": {
+    "check": "照台账 S-609 预注册一字不改:在 docs/research/t125_s606_frontier.py 的框架上(可复制成 t127_s609_x1v_legs.py,别改 t125 原文件)给股票腿 / 黄金腿加 tom.trade_path(close, 'flat', 0.0, exit_mode='l20', vol=True) 变体,摩擦 = 晚一天 + 5bp;四个变体 × T25 / T35 固定点 + −25 / −35 前沿 + 历史两半。判据只看 T25「两条都 X1V」对「无」。",
+    "expect": "报告写数据根 _reports/absorb_input/T-127_s609.md(开头一张四变体 × 两固定点的表);卡 notes 写判定与关键数;in_review,推 lane-c/T-127。"
+  },
+  "prior_value": "过了 ⇒ 前向账本 flex_x1v 加一条臂(股票 / 黄金也按规则进出),T25 的回撤上限有望从 −23% 压到 −20% 以内;不过 ⇒ 股票 / 黄金腿照旧持有。",
+  "notes": "2026-10-19 Seth 开卡,预注册 S-609 已写(04:29 UTC)。"
+}
