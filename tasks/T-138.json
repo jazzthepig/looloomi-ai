@@ -1,0 +1,23 @@
+{
+  "id": "T-138",
+  "owner": "seth",
+  "status": "blocked",
+  "blocked_by": "T-133 回补完成(deriv_metrics_plan 里 min_d 都到 target_start)",
+  "created": "2026-10-19",
+  "verified": null,
+  "title": "S-614:R 臂突破那天的主动买盘 / 未平仓量 / 大户持仓 / 散户拥挤,能否把赢家和输家分开",
+  "source": "Jazz 10-19「结合资金流、跟踪 smart money」;台账 S-614 预注册(数据回补完成前写)",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-138.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "按 S-614 一字不改:R-G0 交易 join deriv_metrics_daily(t 与 t−5),四条特征 × 打乱检验 × 三段 × 去掉最好 5 笔",
+    "expect": "台账 S-614 结果段;过关的特征写进 R 前向纸面账本的过滤条件"
+  },
+  "prior_value": "R 臂的软肋是钱集中在少数几笔 —— 如果「谁在买」能分开赢家与假突破,R 才值得占风险预算",
+  "notes": "2026-10-19 Seth 开卡,预注册 S-614 已写;Seth 自己跑(库内 SQL,R 交易与特征都在库里)。"
+}

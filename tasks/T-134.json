@@ -1,9 +1,13 @@
 {
   "id": "T-134",
   "owner": "seth",
-  "status": "claimed",
+  "status": "done",
   "created": "2026-10-19",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-19T15:11Z",
+    "value": "One kernel: host_plan.make_plan is the only plan function behind Railway's /internal/executor/plan and the replay; src/exec_host/replay.py calls make_plan -> core.plan_host_orders -> core.stop_hits only (AST-tested). Pushed d2127e8e. Real-data reconciliation (implementation drag on X1V, cost grid) is lane-a's T-137."
+  },
   "forbidden_paths": [
     "Shadow/"
   ],

@@ -1,9 +1,13 @@
 {
   "id": "T-135",
   "owner": "seth",
-  "status": "claimed",
+  "status": "done",
   "created": "2026-10-19",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-19T14:40Z",
+    "value": "Live. The 14:31 _cis_inputs_loop pass wrote 6,320 rows: fed_balance_sheet / fed_tga 459 weekly observations each (2018-01-03 -> 2026-10-14), fed_rrp 2,192 daily (-> 10-16), fed_net_liquidity 3,210 days dated by availability (2018-01-05 -> 2026-10-19 = 5,872.2 bn). Scheduler = _cis_inputs_loop (daily); liveness: select max(d) from macro_daily where series='fed_net_liquidity' = today. Pre-registered use: S-615 (T-139, lane-b)."
+  },
   "forbidden_paths": [
     "Shadow/"
   ],
