@@ -229,6 +229,24 @@ def test_the_queue_loop_goes_through_batches() -> None:
     assert "for group in batches(" in src and "process_batch(group)" in src
 
 
+
+def test_clearing_the_index_lock_tolerates_a_worktree() -> None:
+    """10-19:合并在临时 worktree 里跑 preflight,那里的 `.git` 是指针文件 —— 清锁不能 NotADirectoryError。"""
+    import tempfile
+    from unittest import mock
+    import scripts.seth_bot.seth_bot as sb
+    with tempfile.TemporaryDirectory() as td:
+        wt = Path(td)
+        (wt / ".git").write_text("gitdir: /elsewhere\n")
+        with mock.patch.object(sb, "ROOT", wt):
+            sb._clear_index_lock()
+        (wt / ".git").unlink()
+        (wt / ".git").mkdir()
+        (wt / ".git" / "index.lock").write_text("")
+        with mock.patch.object(sb, "ROOT", wt):
+            sb._clear_index_lock()
+        assert not (wt / ".git" / "index.lock").exists()
+
 if __name__ == "__main__":
     print("── S-500 seth_bot ──")
     for name, fn in list(globals().items()):

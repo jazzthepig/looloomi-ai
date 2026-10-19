@@ -80,6 +80,14 @@ def notify(title: str, text: str) -> None:
                        capture_output=True)
 
 
+
+def _clear_index_lock() -> None:
+    """沙箱留下的 index.lock 在 Mac 侧清掉(硬规则 4)。只在 `.git` 是目录时做:合并用的临时 worktree 里
+    `.git` 是指针文件,直接拼路径会 NotADirectoryError —— 10-19 两次合并就死在 preflight 跑 test_seth_bot 这一步。"""
+    git_dir = ROOT / ".git"
+    if git_dir.is_dir():
+        (git_dir / "index.lock").unlink(missing_ok=True)
+
 def path_problems(paths: list[str]) -> list[str]:
     """纯函数:commit 的路径清单本身合不合法。测试直接调。"""
     out = []
@@ -274,7 +282,7 @@ def do_commit(job: dict) -> dict:
         if untrack:
             git("reset", "--quiet", "--", *untrack)
         return {"ok": False, "stage": "preflight", "detail": failure_digest(out)}
-    (ROOT / ".git" / "index.lock").unlink(missing_ok=True)
+    _clear_index_lock()
     code, out = git("add", "--", *paths)
     if code != 0:
         return {"ok": False, "stage": "add", "detail": out}
@@ -347,7 +355,7 @@ def do_commit_batch(jobs: list[dict]) -> list[dict]:
     ok, out = preflight(ROOT)
     if not ok:
         return fail_all("preflight", failure_digest(out), live)
-    (ROOT / ".git" / "index.lock").unlink(missing_ok=True)
+    _clear_index_lock()
     committed = []
     for k in live:
         job, paths = jobs[k], list(jobs[k].get("paths") or [])
