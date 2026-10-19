@@ -1,4 +1,4 @@
-"""T-045 评估层 rr_matrix:B 的 13 个用例逐个断言(原来返回 (ok, msg),pytest 不会因 False 失败)+ S-496 的三处修正 + T-059 加 3 个零信号 bootstrap 用例(14/15/16 = §Seth-1010c 合并前必补)。"""
+"""T-045 评估层 rr_matrix:B 的 13 个用例逐个断言(原来返回 (ok, msg),pytest 不会因 False 失败)+ S-496 的三处修正 + T-059 加 3 个零信号 bootstrap 用例(14/15/16 = §Seth-1010c 合并前必补)+ T-069 加 4 个随机组合基准 + outlier 用例(17/18/19/20)。"""
 import json
 import os
 import subprocess
@@ -16,17 +16,21 @@ from src.data.evaluation import rr_matrix as rr
 _CASES = sorted(n for n in dir(cases) if n.startswith("test_") and callable(getattr(cases, n)))
 
 
-def test_all_nineteen_cases_are_wired():
-    """B 13 + T-068 3 + T-059 3 + n=80 iid 1 = 19。T-059 = 3 个(原 2 个 + §Seth-1010c 必补的 n=80 iid 大样本覆盖率)。"""
-    assert len(_CASES) == 19, f"期望 19 用例,实际 {len(_CASES)} = {sorted(_CASES)[-5:]}"
+def test_all_twenty_three_cases_are_wired():
+    """B 13 + T-068 3 + T-059 3 + T-069 4 = 23。T-059 = 3 个(原 2 个 + §Seth-1010c 必补的 n=80 iid 大样本覆盖率);T-069 = 4 个(零信号 KS / 埋信号 outlier / EQ 风格不记成信号 / outlier 判定)。"""
+    assert len(_CASES) == 23, f"期望 23 用例,实际 {len(_CASES)} = {sorted(_CASES)[-5:]}"
     expected_t059 = {"test_rr_matrix_bootstrap_uses_all_days_20_40",
                      "test_rr_matrix_p_pos_not_binary_n_lt_40",
                      "test_rr_matrix_bootstrap_n80_iid_contains_true_mean"}
     expected_t068 = {"test_rr_matrix_trend_vol_six_cells",
                      "test_rr_matrix_trend_vol_no_lookahead",
                      "test_rr_matrix_vol_cutoffs_are_constants"}
-    missing = (expected_t059 | expected_t068) - set(_CASES)
-    assert not missing, f"缺 T-059/T-068 用例:{missing}"
+    expected_t069 = {"test_random_baseline_zero_signal_uniform",
+                     "test_random_baseline_embedded_signal_outlier",
+                     "test_random_baseline_eq_style_not_recorded_as_signal",
+                     "test_random_baseline_outlier_flag"}
+    missing = (expected_t059 | expected_t068 | expected_t069) - set(_CASES)
+    assert not missing, f"缺 T-059/T-068/T-069 用例:{missing}"
 
 
 @pytest.mark.parametrize("name", _CASES)

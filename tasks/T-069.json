@@ -1,8 +1,8 @@
 {
   "created": "2026-10-08",
   "verified": null,
-  "status": "open",
-  "owner": "lane-b",
+  "status": "claimed",
+  "owner": "seth",
   "allowed_paths": [
     "src/data/evaluation/rr_matrix.py",
     "tests/test_rr_matrix.py",
@@ -20,5 +20,5 @@
     "check": "每本账 × 格子:随机组合 1,000 次(按日期块抽样),与账本同宇宙、同底层加权(β+ / 代币化 / beta_core 用等权底,cis_tilt 用 ① 的市值底)、同持仓数、同换手、同单币上限;给 p05 / p50 / p95 / p99 与 pct_vs_random;outlier 清单 = 实测 > 随机 p99 的(账本,格子)",
     "expect": "测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号)"
   },
-  "notes": "依赖 T-068。T-064(配置器按模拟证据准入)等本卡。"
+  "notes": "依赖 T-068。T-064(配置器按模拟证据准入)等本卡。\n\nT-069-v2 (2026-10-19):db0f744 是在旧 main 上切的,与 main 的 STATE_DIST_200_FEATURE / _derive_trend_vol_per_day / _sliding_block_sample 冲突。本卡只搬 T-069 自己的部分(RandomBookSpec / simulate_random_portfolio / compute_random_baseline / pct_vs_random / is_outlier / compute_outlier_table / DEFAULT_BOOK_WEIGHTING / DEFAULT_N_POSITIONS / DEFAULT_SINGLE_NAME_CAP / DEFAULT_TURNOVER_DAYS + 用例 17/18/19/20),不重做 T-068。pytest tests/test_rr_matrix.py -q 29/29 PASS(2:33)。未做(wire-up 留给 Seth):compute_random_baseline 接进 compute_rr_matrix 的每行;真实 universe 从 book_specs 读。\n2026-10-19 Seth 合并纯函数部分(lane-b/T-069-v2,随机组合基准 + outlier + 用例 17–20)。合并方改一处:用例的随机样本数 500 → 150、2000 → 600(等权风格那条保持 400 —— 降到 150 时 KS p 掉到 0.054,贴线),否则这四条在 preflight 里要跑约 4 分钟;结论不变(零信号 KS p 0.13、埋信号中位分位 1.00、outlier 判对、等权风格 p 0.15)。卡转给 Seth:剩下的是接线 —— compute_random_baseline 接进 compute_rr_matrix 的每行、每本账的宇宙 / 持仓数 / 单币上限从登记表读。"
 }
