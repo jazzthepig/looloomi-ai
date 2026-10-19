@@ -1,0 +1,86 @@
+{
+  "mult_v2_replay_reproduce": {
+    "max_abs_diff_nav": 0.0005910007916343218,
+    "max_abs_diff_ret": 1.1219178082215453e-08,
+    "max_abs_diff_m": 0.0,
+    "max_abs_diff_cost": 1.0842021724855044e-19,
+    "nav_diff_known_artifact": true,
+    "n_common": 1386,
+    "first_d": "2023-01-02",
+    "last_d": "2026-10-18"
+  },
+  "data_coverage": {
+    "fed_net_liquidity": {
+      "n": 3210,
+      "first": "2018-01-05",
+      "last": "2026-10-19"
+    },
+    "stable_supply": {
+      "n": 2484,
+      "first": "2019-12-31",
+      "last": "2026-10-18"
+    }
+  },
+  "evaluations": {
+    "mult_v2_replay": {
+      "2023_2024_context": {
+        "core_total": 3.55439,
+        "arm_total": 3.76846,
+        "arm_maxdd": -0.37496,
+        "arm_sharpe": 1.647,
+        "pct_vs_random": 0.191,
+        "rand_p50": 0.78762,
+        "rand_p95": 1.80676
+      },
+      "2025_2026_judge": {
+        "core_total": -0.19601,
+        "arm_total": -0.25355,
+        "arm_maxdd": -0.54736,
+        "arm_sharpe": -0.14,
+        "pct_vs_random": 0.4,
+        "rand_p50": -0.03339,
+        "rand_p95": 0.13612
+      }
+    },
+    "arm_L_fed": {
+      "2023_2024_context": {
+        "core_total": 3.55439,
+        "arm_total": 3.70563,
+        "arm_maxdd": -0.35112,
+        "arm_sharpe": 1.732,
+        "pct_vs_random": 0.579,
+        "rand_p50": 0.03833,
+        "rand_p95": 1.33709
+      },
+      "2025_2026_judge": {
+        "core_total": -0.19601,
+        "arm_total": -0.26121,
+        "arm_maxdd": -0.52426,
+        "arm_sharpe": -0.135,
+        "pct_vs_random": 0.286,
+        "rand_p50": -0.01747,
+        "rand_p95": 0.12296
+      }
+    },
+    "arm_S_stablecoin": {
+      "2023_2024_context": {
+        "core_total": 3.55439,
+        "arm_total": 3.14941,
+        "arm_maxdd": -0.38329,
+        "arm_sharpe": 1.582,
+        "pct_vs_random": 0.161,
+        "rand_p50": 0.19532,
+        "rand_p95": 1.4058
+      },
+      "2025_2026_judge": {
+        "core_total": -0.19601,
+        "arm_total": -0.17406,
+        "arm_maxdd": -0.50898,
+        "arm_sharpe": -0.011,
+        "pct_vs_random": 0.693,
+        "rand_p50": -0.03369,
+        "rand_p95": 0.14859
+      }
+    }
+  }
+}
