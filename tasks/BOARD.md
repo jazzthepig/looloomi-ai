@@ -2,6 +2,7 @@
 
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
+| in_review | T-129 | lane-a | 东京主机录 Hyperliquid 盘口与成交(前 20 档、每 10 秒一张快照 + 全部成交),落本地压缩文件 | tests/test_exec_host_recorder.py 全绿;in_review,推 lane-a/T-129。install.sh 由 Seth 合并时接(别改它)。 | 有了自己的盘口与成交历史,才能量「突破那一刻的盘口失衡 / 主动买盘」能不能筛掉假突破(S-610 R 臂的下一层)。 |  |
 | in_review | T-092 | lane-b | 慢的逆向(Jazz 10-14「甘于人后」):三条规则按时点回放 + 打乱对照 —— ② 暴涨名移回 BTC、③ 主流暴跌后加推力、探索仓做空 30 名外暴涨名 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:三条规则 × 三个窗口的总收益 / 最大回撤 / 相对基准的超额 / 对照分位 / 事件数。不改任何前向账本。 | S-569(探索性):非 BTC 名 z30 ≥ 3 之后 30 日相对 BTC −16.4%(t+7 进,基准 −5.8%,81% 跑输),90 日 −38.7%(基准 −16.3%);BTC / ETH z30 ≥ 2 之后 90 日 +12.5% / +22.3%(基准 +6.3% / +6.6%)⇒ 不对主流的暴涨做逆向;BTC z30 ≤ −2 之后 90 日 +10.3%(9 周)。 |  |
 | in_review | T-093 | lane-b | 逆向按情景用(Jazz 10-14):T-092 三条规则加「边际流动性 × BTC 趋势」四状态、每周重判 —— 对照无条件版与打乱的状态标签 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:三条规则 × 三个窗口 × {无条件, 条件} 的总收益 / 最大回撤 / 超额 / 打乱分位,外加每个状态的周数。不改任何前向账本。 | S-570(探索性):暴涨名 30 日相对 BTC 在边际变差时 −28.9(同情景中间组 −6.6),改善时 −13.0(−5.0);暴跌名 90 日在三个窗口里都是改善好过变差;能让暴涨名继续涨的只有「弱底子回暖」约 9 周。 |  |
 | in_review | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
@@ -130,4 +131,4 @@
 | done | T-114 | seth | T-092 R3(30 名外暴涨名做空、等额多 BTC 对冲)独立复算;复算站得住就开前向纸面账本(探索仓,不进配置) | 台账 S- 条复算结果;站得住则有前向表 + 循环 + 判活判据 + 第一行。 | R3 是 10 天来唯一按字面过了预注册的规则;④ 是回报层级的最后一层,先验要严。 | Replicated and not opened (S-608). Trade table matches lane-b 156/157 and 59/59; z30 identical to the pre-registered formula. Tails: worst single trade -159% (TRB, +188% squeeze), skew -1.98, worst 5% of trades give back 21% of all winning P&L. Daily equal-weight book (>= 10 slots) 39.1%/yr, max drawdown -33.6%, correlation with BTC -0.05, and ab_test against holding BTC cannot separate them. Only 27 of the 77 shorted names have a Hyperliquid perp today; on those, the mean per trade halves to +6.3% and p5 falls to -76%. Fails steps 2 and 3 of the card, so no forward book. @ 2026-10-19T03:34Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 8 · claimed 8 · blocked 5 · in_review 4 · done 101 · dropped 1
+open 8 · claimed 8 · blocked 5 · in_review 5 · done 101 · dropped 1

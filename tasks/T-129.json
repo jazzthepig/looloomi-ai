@@ -1,0 +1,29 @@
+{
+  "id": "T-129",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-10-19",
+  "verified": null,
+  "title": "东京主机录 Hyperliquid 盘口与成交(前 20 档、每 10 秒一张快照 + 全部成交),落本地压缩文件",
+  "source": "Jazz 10-19「和当时资金流和 order book 结合 …… 简单指标做机器交易很容易被做市商割走头寸」;盘口没有我们自己的历史,越早录越好",
+  "allowed_paths": [
+    "src/exec_host/recorder.py",
+    "tests/test_exec_host_recorder.py",
+    "deploy/executor/cometcloud-recorder.service",
+    "tasks/T-129.json"
+  ],
+  "forbidden_paths": [
+    "src/exec_host/runner.py",
+    "src/exec_host/core.py",
+    "deploy/executor/install.sh",
+    "src/api/",
+    "src/data/",
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "新模块 src/exec_host/recorder.py(不改 runner.py / core.py —— 那是真钱执行路径):HL websocket wss://api.hyperliquid.xyz/ws,订阅 l2Book 与 trades;币列表 = env RECORDER_COINS(默认 BTC,ETH,SOL,HYPE)+ 每天按 metaAndAssetCtxs 的 24h 成交额补到前 30 个永续;l2Book 每币每 10 秒留一张(前 20 档),trades 全留;写 /var/lib/cometcloud/rec/YYYY-MM-DD/<coin>.l2.jsonl.gz 与 <coin>.trades.jsonl.gz(UTC 日期,按天滚动);断线指数退避重连;磁盘剩余 < 5 GB 停写并在日志里报;不读私钥、不写 Supabase。依赖只用 hyperliquid SDK 已带的 websocket-client 与标准库。systemd 单元 deploy/executor/cometcloud-recorder.service(User=cometcloud,StateDirectory=cometcloud,同执行器的加固项)。测试用假消息:快照节流 10 秒、gz 行可读回、按 UTC 日滚动、磁盘护栏、重连退避上限。",
+    "expect": "tests/test_exec_host_recorder.py 全绿;in_review,推 lane-a/T-129。install.sh 由 Seth 合并时接(别改它)。"
+  },
+  "prior_value": "有了自己的盘口与成交历史,才能量「突破那一刻的盘口失衡 / 主动买盘」能不能筛掉假突破(S-610 R 臂的下一层)。",
+  "notes": "2026-10-19 lane-a 交付:① src/exec_host/recorder.py — Recorder 类(WsApp/HttpPoster 抽象层 + GzJsonlWriter 按 UTC 日滚动 + Backoff 上限 30s + 磁盘 < 5GB 停写并 ERROR 日志)。② tests/test_exec_host_recorder.py — 20 个测试全绿(0.04s),覆盖 10s 一档节流 / 跨币独立节流 / 全部成交留盘 / gz 行可读回 / UTC 日滚动 / 磁盘护栏+错误日志 / 退避 cap 30s / env 默认 + metaAndAssetCtxs top-30 增量订退订 / parse_l2 20 档 / parse_trades 扁平化 / 不写 supabase / 不读 KEY/PRIVATE_KEY / 模块顶层不引第三方。③ deploy/executor/cometcloud-recorder.service — 与 executor 同级加固(User=cometcloud,StateDirectory,ProtectSystem=strict,Private{Tmp,Devices},RestrictSUIDSGID,LockPersonality);Environment RECORDER_COINS=BTC,ETH,SOL,HYPE 可由 install.sh 覆盖;recorder 完全不读私钥。④ preflight ✅ passed(冷启动合约 9/9 + 卡契约 3/3 + 结论 2/2 + lane 范围 5/5)。⑤ 未动 forbidden_paths。⑥ 候选外部参考:Hydromancer 与 HL S3 archive 仍可用,日后补历史时用得上(留意 requester pays);本日因为没测网络所以下不了结论。"
+}

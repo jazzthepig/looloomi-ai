@@ -1,0 +1,39 @@
+[Unit]
+Description=CometCloud HL orderbook + trades recorder (T-129; wss, written only, no orders)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=cometcloud
+Group=cometcloud
+# recorder 不读私钥 —— 沿用 executor 的加固项,只是在 Unit 上不依赖私钥 env 文件。
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=HOME=/var/lib/cometcloud
+Environment=RECORDER_STATE_DIR=/var/lib/cometcloud
+# 默认名单(BTC,ETH,SOL,HYPE);需要时整行替换为更多币(逗号分隔)。
+Environment=RECORDER_COINS=BTC,ETH,SOL,HYPE
+WorkingDirectory=/opt/cometcloud/repo
+ExecStart=/opt/cometcloud/venv/bin/python -m src.exec_host.recorder
+Restart=always
+RestartSec=15
+# /var/lib/cometcloud/rec/YYYY-MM-DD/<coin>.{l2,trades}.jsonl.gz
+StateDirectory=cometcloud
+StateDirectoryMode=0750
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+# recorder 允许网络出(连 HL ws + info);不允许入站 socket。
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target
