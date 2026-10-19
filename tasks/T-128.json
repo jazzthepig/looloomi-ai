@@ -1,0 +1,26 @@
+{
+  "id": "T-128",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-19",
+  "verified": null,
+  "title": "周末资金费率飙升:频率、中性收费、反着做(S-611)",
+  "source": "Jazz 10-19「包括各种周末费率飙升的机会,都是可以抓的」;台账 S-611 预注册(别改它)",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-128.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "照台账 S-611 一字不改:funding_history(binance_perp 2020 起 36 名 8h;hyperliquid 09-05 起只描述)+ ohlcv_daily binance_hist 日线。Q1 星期几频率表(三段分报);Q2 周末飙升后 24 小时中性收费(成本 20bp,基差记 0);Q3 周末飙升当天收盘做空、止损 +1×ATR14、持有 1/3/7 天、40bp、R 口径同 S-610,对照 = 同名随机周末日。脚本 docs/research/t128_s611_weekend_funding.py。",
+    "expect": "报告写数据根 _reports/absorb_input/T-128_s611.md,开头一张表:Q2 三段均值 + Q3 三个持有期 × 三段均值 R + z;卡 notes 写判定与关键数;in_review,推 lane-c/T-128。"
+  },
+  "prior_value": "过 ⇒ 执行器加一条周末收费 / 周末反做的纸面臂;不过 ⇒ 周末飙升只作风控旗(拥挤),不交易。",
+  "notes": "2026-10-19 Seth 开卡,预注册 S-611 已写(12:59 UTC)。外部:没找到专门量周末资金费的研究(arXiv 2109.12142 只量了周末成交与波动更低),所以自己量。"
+}

@@ -1,0 +1,26 @@
+{
+  "id": "T-131",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-19",
+  "verified": null,
+  "title": "R 形态的持仓管理:先收一半保本、假突破撤后收复再进、赢了收紧(S-612)",
+  "source": "Jazz 10-19「发现假突破后保住获利头寸退出而重新开单,这些灵活操作也很重要」;台账 S-610 结果 + S-612 预注册(别改它)",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-131.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "第一步复现:按 docs/research/s610_breakout_sim.sql 的口径在 Python 里重做 R-G0,n = 1,013 ± 1%、均值 R 0.350 ± 0.01,对不上就停下报差异。第二步:M1 / M2 / M3 三个变体(定义见 S-612),同信号同进场。脚本 docs/research/t131_s612_management.py。",
+    "expect": "报告写数据根 _reports/absorb_input/T-131_s612.md,开头一张表:M0–M3 × (n、均值 R、去掉最好 5 笔的均值、盈亏比、三段均值、2023 合计、最长连亏、组合年化 / 回撤);卡 notes 写判定;in_review,推 lane-c/T-131。"
+  },
+  "prior_value": "过 ⇒ R 的前向纸面账本直接用过关的管理规则;不过 ⇒ 用 S-610 原样上前向,并在报告里写清「钱集中在少数几笔」的风险。",
+  "notes": "2026-10-19 Seth 开卡,预注册 S-612 已写(12:59 UTC);T-128 之后做。"
+}

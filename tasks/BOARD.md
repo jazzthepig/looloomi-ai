@@ -15,6 +15,10 @@
 | claimed | T-099 | seth | World50 按时点回放(指数层)+ 风险层(波动目标 / 趋势)分开记账,对照 ACWI / Nasdaq-100 / 全球 60/40 | 决定大类 ① 是否立账本、从哪天开始前向。 | S-576:月度价格收益口径,P3 × 2 年化 32.2% / 最大回撤 −27%,满仓 BTC 32.3% / −73%。 |  |
 | claimed | T-122 | seth | 执行器核心:X1V 目标 → 订单计划 → 只算不发(dry-run)→ 写 execution_intents;收盘后 1 小时内跑、灾难止损盘中盯 | dry-run 在 Railway 或云主机上跑满 2 天,每天一批意图,人工核对无误(TRADE_PATH §5 第 1–2 天) | 执行是 X1V 成立的一部分;没有它,X1V 只能按悲观摩擦列算。 |  |
 | open | T-089 | lane-a | 完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改 | 从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。 |  |
+| open | T-129 | lane-a | 东京主机录 Hyperliquid 盘口与成交(前 20 档、每 10 秒一张快照 + 全部成交),落本地压缩文件 | tests/test_exec_host_recorder.py 全绿;in_review,推 lane-a/T-129。install.sh 由 Seth 合并时接(别改它)。 | 有了自己的盘口与成交历史,才能量「突破那一刻的盘口失衡 / 主动买盘」能不能筛掉假突破(S-610 R 臂的下一层)。 |  |
+| open | T-130 | lane-b | 东京主机每 15 分钟记录 HL 头部账户的持仓(聪明钱快照) | tests/test_exec_host_whales.py 全绿;卡 notes 写 leaderboard 端点的实测结论;in_review,推 lane-b/T-130。install.sh 由 Seth 合并时接(别改它)。 | 几周之后能量:头部账户净持仓的变化是否领先价格、领先多久 —— 我们没找到同行评审的证据(跟单 / 排行榜的持续性只有平台自述),所以只能自己录、自己量。 |  |
+| open | T-128 | lane-c | 周末资金费率飙升:频率、中性收费、反着做(S-611) | 报告写数据根 _reports/absorb_input/T-128_s611.md,开头一张表:Q2 三段均值 + Q3 三个持有期 × 三段均值 R + z;卡 notes 写判定与关键数;in_review,推 lane-c/T-128。 | 过 ⇒ 执行器加一条周末收费 / 周末反做的纸面臂;不过 ⇒ 周末飙升只作风控旗(拥挤),不交易。 |  |
+| open | T-131 | lane-c | R 形态的持仓管理:先收一半保本、假突破撤后收复再进、赢了收紧(S-612) | 报告写数据根 _reports/absorb_input/T-131_s612.md,开头一张表:M0–M3 × (n、均值 R、去掉最好 5 笔的均值、盈亏比、三段均值、2023 合计、最长连亏、组合年化 / 回撤);卡 notes 写判定;in_review,推 lane-c/T-131。 | 过 ⇒ R 的前向纸面账本直接用过关的管理规则;不过 ⇒ 用 S-610 原样上前向,并在报告里写清「钱集中在少数几笔」的风险。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -130,4 +134,4 @@
 | done | T-114 | seth | T-092 R3(30 名外暴涨名做空、等额多 BTC 对冲)独立复算;复算站得住就开前向纸面账本(探索仓,不进配置) | 台账 S- 条复算结果;站得住则有前向表 + 循环 + 判活判据 + 第一行。 | R3 是 10 天来唯一按字面过了预注册的规则;④ 是回报层级的最后一层,先验要严。 | Replicated and not opened (S-608). Trade table matches lane-b 156/157 and 59/59; z30 identical to the pre-registered formula. Tails: worst single trade -159% (TRB, +188% squeeze), skew -1.98, worst 5% of trades give back 21% of all winning P&L. Daily equal-weight book (>= 10 slots) 39.1%/yr, max drawdown -33.6%, correlation with BTC -0.05, and ab_test against holding BTC cannot separate them. Only 27 of the 77 shorted names have a Hyperliquid perp today; on those, the mean per trade halves to +6.3% and p5 falls to -76%. Fails steps 2 and 3 of the card, so no forward book. @ 2026-10-19T03:34Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 8 · claimed 8 · blocked 5 · in_review 4 · done 101 · dropped 1
+open 12 · claimed 8 · blocked 5 · in_review 4 · done 101 · dropped 1

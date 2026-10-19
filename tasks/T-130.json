@@ -1,0 +1,30 @@
+{
+  "id": "T-130",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-19",
+  "verified": null,
+  "title": "东京主机每 15 分钟记录 HL 头部账户的持仓(聪明钱快照)",
+  "source": "Jazz 10-19「跟踪 smart money」;HL 链上全透明 —— 任何地址的持仓都能用 info 接口 clearinghouseState 查",
+  "allowed_paths": [
+    "src/exec_host/whales.py",
+    "tests/test_exec_host_whales.py",
+    "deploy/executor/cometcloud-whales.service",
+    "deploy/executor/cometcloud-whales.timer",
+    "tasks/T-130.json"
+  ],
+  "forbidden_paths": [
+    "src/exec_host/runner.py",
+    "src/exec_host/core.py",
+    "deploy/executor/install.sh",
+    "src/api/",
+    "src/data/",
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "新模块 src/exec_host/whales.py:① 名单 —— 先验证 GET https://stats-data.hyperliquid.xyz/Mainnet/leaderboard 是否返回排行(字段、大小、是否需要分页),能用就每天取一次:按 30 天 PnL 取前 200、账户净值 ≥ 100 万美元;不能用就读 /var/lib/cometcloud/whales_addresses.txt(一行一个地址)并在报告里写明;② 每 15 分钟对名单逐个 POST info {type: clearinghouseState, user} → 记 (ts, address, coin, szi, entryPx, positionValue, unrealizedPnl, leverage, marginUsed, accountValue),追加到 /var/lib/cometcloud/rec/whales/YYYY-MM-DD.jsonl.gz;按 HL 的权重限速节流(每轮 ≤ 200 次请求,失败重试 2 次,整轮失败写日志不崩)。不读私钥、不写 Supabase。systemd service + timer(OnCalendar 每 15 分钟,User=cometcloud,加固同执行器)。测试用假响应:名单筛选、记录字段、限速节流、单个地址失败不影响整轮。",
+    "expect": "tests/test_exec_host_whales.py 全绿;卡 notes 写 leaderboard 端点的实测结论;in_review,推 lane-b/T-130。install.sh 由 Seth 合并时接(别改它)。"
+  },
+  "prior_value": "几周之后能量:头部账户净持仓的变化是否领先价格、领先多久 —— 我们没找到同行评审的证据(跟单 / 排行榜的持续性只有平台自述),所以只能自己录、自己量。",
+  "notes": "2026-10-19 Seth 开卡。外部:Dwellir 的鲸鱼跟踪指南用的就是 clearinghouseState 轮询 + 成交流;官方 leaderboard 端点未经我们核实。"
+}

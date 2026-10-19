@@ -1,0 +1,29 @@
+{
+  "id": "T-129",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-19",
+  "verified": null,
+  "title": "东京主机录 Hyperliquid 盘口与成交(前 20 档、每 10 秒一张快照 + 全部成交),落本地压缩文件",
+  "source": "Jazz 10-19「和当时资金流和 order book 结合 …… 简单指标做机器交易很容易被做市商割走头寸」;盘口没有我们自己的历史,越早录越好",
+  "allowed_paths": [
+    "src/exec_host/recorder.py",
+    "tests/test_exec_host_recorder.py",
+    "deploy/executor/cometcloud-recorder.service",
+    "tasks/T-129.json"
+  ],
+  "forbidden_paths": [
+    "src/exec_host/runner.py",
+    "src/exec_host/core.py",
+    "deploy/executor/install.sh",
+    "src/api/",
+    "src/data/",
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "新模块 src/exec_host/recorder.py(不改 runner.py / core.py —— 那是真钱执行路径):HL websocket wss://api.hyperliquid.xyz/ws,订阅 l2Book 与 trades;币列表 = env RECORDER_COINS(默认 BTC,ETH,SOL,HYPE)+ 每天按 metaAndAssetCtxs 的 24h 成交额补到前 30 个永续;l2Book 每币每 10 秒留一张(前 20 档),trades 全留;写 /var/lib/cometcloud/rec/YYYY-MM-DD/<coin>.l2.jsonl.gz 与 <coin>.trades.jsonl.gz(UTC 日期,按天滚动);断线指数退避重连;磁盘剩余 < 5 GB 停写并在日志里报;不读私钥、不写 Supabase。依赖只用 hyperliquid SDK 已带的 websocket-client 与标准库。systemd 单元 deploy/executor/cometcloud-recorder.service(User=cometcloud,StateDirectory=cometcloud,同执行器的加固项)。测试用假消息:快照节流 10 秒、gz 行可读回、按 UTC 日滚动、磁盘护栏、重连退避上限。",
+    "expect": "tests/test_exec_host_recorder.py 全绿;in_review,推 lane-a/T-129。install.sh 由 Seth 合并时接(别改它)。"
+  },
+  "prior_value": "有了自己的盘口与成交历史,才能量「突破那一刻的盘口失衡 / 主动买盘」能不能筛掉假突破(S-610 R 臂的下一层)。",
+  "notes": "2026-10-19 Seth 开卡。外部参考:HL 官方 S3 archive(hyperliquid-archive,requester pays)有 L2 快照但约一月一更、没有成交;Hydromancer Reservoir 有 2025-07 起 1 分钟 20 档(付费流量)—— 历史回补另议(要 Jazz 的 AWS),自录照做。HL websocket 每 IP 上限 1000 个订阅,30 币 × 2 = 60 够用。"
+}
