@@ -92,6 +92,14 @@ HL 永续留给 Jev 的多空叠加层(Jazz 负责,测试中)。
 > 持仓 = 前一天收盘定下的目标;价格是 HL 现货 UBTC / UETH 的真实盘口(只读);订单按 szDecimals 取整、按盘口估滑点,
 > 超出快照可见深度的单子拒掉(深度未知,不当数值)。每天记下「收盘 → 计划就绪」的分钟数 —— 收盘价要等 CoinGecko 前一日收盘落库
 > (实测 00:06–00:54 UTC),这条时间线守不守得住 1 小时,现在就有数。T-015 到位后改读真实余额,再接签名与提交。
+>
+> **10-19 T-015 到位,主机执行器接上**(`src/exec_host/`,东京 45.32.39.6,systemd `cometcloud-executor`):
+> 计划在 Railway 算(`GET /internal/executor/plan`:目标 + 止损线 + 一键停,同一个核),主机读**主账户真实余额**与盘口、
+> 按 `EXECUTOR_MAX_NAV_USD`(默认 3,000)封顶记账、自己签名下 IOC 限价单(中间价 ±50 bp,吃不到记 expired);
+> 意图在下单之前落盘、每个意图恰好一个结果,经 `POST /internal/executor/report` 写 `execution_intents` / `execution_outcomes`
+> (主机空跑 sleeve `x1v_spot_host_dry`,真跑 `x1v_spot`)。盘中灾难止损每分钟用缓存的止损线比现价,**不依赖 Railway 在线**。
+> 停:主机 `touch /var/lib/cometcloud/HALT`,或 `POST /internal/executor/halt`(INTERNAL_TOKEN)。
+> **默认 `EXECUTOR_MODE=dry_run`,不读私钥;改 `live` 是 Jazz 的动作。** 判活:`loop_attempt` 里 `executor_host`(每小时心跳 + 每天一轮)。
 
 ## §6 分工
 

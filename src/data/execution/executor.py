@@ -55,12 +55,21 @@ def target_weights(closes: dict[str, pd.Series], sleeves: dict[str, float] = SLE
     return {sym: share * x1v_spot_target(closes[sym]) for sym, share in sleeves.items() if sym in closes}
 
 
+def stop_price(closes: pd.Series, factor: float = CATASTROPHE) -> Optional[float]:
+    """灾难止损线 = 前 20 日(不含今天)最低收盘 × factor;不足 20 个收盘 ⇒ None(不设线,不猜)。纯函数。
+    Railway 的计划把这条线发给云主机,主机盘中只拿现价比它 —— 止损不依赖 Railway 在线(TRADE_PATH §4)。"""
+    c = closes.dropna()
+    if len(c) < 20:
+        return None
+    return float(c.iloc[-20:].min()) * factor
+
+
 def catastrophe_hit(price_now: float, closes: pd.Series, factor: float = CATASTROPHE) -> bool:
     """盘中灾难止损:当前价 < 前 20 日(不含今天)最低收盘 × factor。纯函数。"""
-    c = closes.dropna()
-    if len(c) < 20 or not price_now or price_now <= 0:
+    line = stop_price(closes, factor)
+    if line is None or not price_now or price_now <= 0:
         return False
-    return bool(price_now < float(c.iloc[-20:].min()) * factor)
+    return bool(price_now < line)
 
 
 def plan_orders(targets: dict[str, float], holdings_usd: dict[str, float], cash_usd: float,

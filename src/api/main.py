@@ -74,6 +74,7 @@ from src.api.routers.ohlcv import router as ohlcv_router
 # being a CI check the writer can route around.
 from src.api.routers.strategy_intake import router as strategy_intake_router
 from src.api.routers.mac_writes import router as mac_writes_router
+from src.api.routers.executor import router as executor_router
 from src.api.middleware.rate_limit import RateLimitMiddleware
 
 # Legacy label, kept for /health and the staging banner. The AUTHORITY on
@@ -159,6 +160,8 @@ app.include_router(strategy_intake_router)
 # S-283:Mac 侧 4 个 daily writer 的代理写入 —— 这条 lane 欠了 18 天的债。
 # 只立「不许直写 Supabase」的原则而不开口子,等于把对方逼回直写。
 app.include_router(mac_writes_router)
+# T-015:东京云主机执行器的计划 / 回报口子(EXECUTOR_TOKEN,不是 INTERNAL_TOKEN)+ 一键停。
+app.include_router(executor_router)
 
 
 # ── Hourly T2-only cis_scores snapshot (data-durability complement) ─────────
@@ -3105,6 +3108,28 @@ async def _start_factory_recalibrate_loop():
         return
     _asyncio.create_task(_factory_recalibrate_loop())
     print("[FACTORY] ✅ weekly signal-factory recalibration loop scheduled")
+
+
+# ── Egress probe (S-607 follow-up) — which IP does this instance leave from, and does Binance let it in? ──
+# Railway instances get a Binance 451 or not regardless of the preferred region; one `loop_attempt` row
+# per probe (boot + every 6 h) with ip / country / org / fapi+spot status makes it a measured fact.
+async def _egress_probe_loop():
+    await _asyncio.sleep(_boot_delay(240))
+    while True:
+        try:
+            from src.data.egress_probe import probe
+            _out, _why, _det = await probe()
+            await _record_loop_attempt("_egress_probe_loop", _out, reason=_why, detail=_det,
+                                       writer="src.api.main._egress_probe_loop")
+        except Exception as _e:
+            await _iteration_error("_egress_probe_loop", _e)
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_egress_probe_loop():
+    _asyncio.create_task(_egress_probe_loop())
+    print("[EGRESS] ✅ egress probe scheduled (boot + 6 h)")
 
 
 # ── Track-record refresh loop — self-tuning conviction ────────────────────────

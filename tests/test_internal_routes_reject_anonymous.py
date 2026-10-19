@@ -152,6 +152,8 @@ VALID_BODIES: dict[str, dict] = {
     "/internal/risk-meter-history": {"p_d": "2026-08-30"},
     "/internal/strategy-records": {"rows": []},
     "/internal/telegram/webhook": {"message": {"text": "/x", "chat": {"id": 1}}},
+    "/internal/executor/report": {"mode": "dry_run", "kind": "heartbeat", "detail": {"auth_probe": True}},
+    "/internal/executor/halt": {"halted": False, "reason": "auth probe"},
 }
 
 GATED, OPEN, WRONG_SHAPE, BROKEN = "gated", "open", "wrong_shape", "broken"
@@ -169,6 +171,9 @@ FAIL_CLOSED_WHEN_UNCONFIGURED: dict[str, str] = {
     "/internal/telegram/webhook":
         "S-262:secret 未设时从 fail-open(200)改为 fail-closed(503)。"
         "生产有 secret ⇒ 403;本地无 secret ⇒ 503。两者都是拒绝。",
+    "/internal/executor/plan":
+        "T-015:云主机执行器专用的 EXECUTOR_TOKEN(不是 INTERNAL_TOKEN)。未设 ⇒ 503 关门;生产有值 ⇒ 403。",
+    "/internal/executor/report": "同上,EXECUTOR_TOKEN。",
 }
 
 

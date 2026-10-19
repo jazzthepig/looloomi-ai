@@ -1,0 +1,4 @@
+hyperliquid-python-sdk>=0.24,<0.25
+pandas>=2.1
+numpy>=1.26
+httpx>=0.27

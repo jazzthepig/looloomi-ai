@@ -1,0 +1,172 @@
+"""云主机执行器 ↔ Railway 的两个口子(T-015 / TRADE_PATH §4)+ 一键停。
+
+    GET  /internal/executor/plan     X-Executor-Token   今天的计划(目标、止损线、一键停)
+    POST /internal/executor/report   X-Executor-Token   主机回报:意图、成交结果、余额、心跳
+    POST /internal/executor/halt     X-Internal-Token   一键停 / 解除(Redis `executor:halt`)
+
+## 为什么用单独的 EXECUTOR_TOKEN
+
+主机只需要这两个口子。给它 INTERNAL_TOKEN 就等于给了它几十个 /internal 写口 —— 主机被拿下时,
+爆炸半径应该是「能读计划、能写执行记录」,不是「能改 CIS」。一键停反过来:那是 Jazz 的按钮,走 INTERNAL_TOKEN,
+主机自己不能解除自己的停。
+
+## 回报的校验(与 mac_writes 同一条纪律)
+
+未知字段**拒绝**,不丢弃;sleeve 必须与 mode 对上(空跑不能写进真跑的 sleeve);空跑不能带成交结果
+(没下单哪来的成交)。主机侧有落盘的发件箱,4xx 的那批会被挪进 rejected/ 留证,不会被无限重发。
+
+判活:`select at, outcome, detail from loop_attempt where loop_name = 'executor_host' order by at desc limit 5`
+—— 主机每小时一次心跳、每天一轮 cycle,各写一行。
+"""
+from __future__ import annotations
+
+import datetime as dt
+import hmac
+import logging
+import os
+from dataclasses import fields
+from typing import Any, Optional
+
+from fastapi import APIRouter, Body, Header, HTTPException
+
+from src.data.execution.dry_run import SPOT_TOKENS
+from src.data.execution.fill_log import _TERMINAL, Intent, Outcome
+from src.data.execution.host_plan import HALT_KEY, SLEEVE_FOR_MODE
+
+log = logging.getLogger(__name__)
+router = APIRouter()
+
+INTENT_FIELDS = frozenset(f.name for f in fields(Intent))
+OUTCOME_FIELDS = frozenset(f.name for f in fields(Outcome))
+INTENT_REQUIRED = frozenset({"intent_id", "ts_decision", "symbol", "side", "target_notional_usd", "decision_mid", "sleeve"})
+KINDS = frozenset({"cycle", "stop", "heartbeat", "error"})
+REPORT_KEYS = frozenset({"mode", "kind", "host", "asof", "intents", "outcomes", "detail", "alert"})
+MAX_ROWS = 50
+LOOP_NAME = "executor_host"
+
+
+def _token_ok(given: Optional[str], env_name: str) -> None:
+    expected = os.environ.get(env_name, "")
+    if not expected:
+        # 未配置 ⇒ 关门(S-262:空字符串比较曾经放行过)
+        raise HTTPException(503, f"{env_name} is not configured on the server")
+    if not given or not hmac.compare_digest(given.encode(), expected.encode()):
+        raise HTTPException(403, "bad or missing token")
+
+
+def vet_report(body: Any) -> tuple[Optional[dict], list[str]]:
+    """纯函数。返回 (清洗后的回报, 拒绝理由)。有任何拒绝理由 ⇒ 整批拒,不部分写入 ——
+    一批意图里混着一行坏的,部分写入会让 intent 与 outcome 对不上,而那正是 fill_log 要防的偏差。"""
+    why: list[str] = []
+    if not isinstance(body, dict):
+        return None, ["body 必须是 JSON 对象"]
+    extra = set(body) - REPORT_KEYS
+    if extra:
+        why.append(f"未知字段 {sorted(extra)} —— 拒绝而不是丢弃")
+    mode, kind = body.get("mode"), body.get("kind")
+    if mode not in SLEEVE_FOR_MODE:
+        why.append(f"mode 必须是 {sorted(SLEEVE_FOR_MODE)},收到 {mode!r}")
+    if kind not in KINDS:
+        why.append(f"kind 必须是 {sorted(KINDS)},收到 {kind!r}")
+    intents = body.get("intents") or []
+    outcomes = body.get("outcomes") or []
+    if not isinstance(intents, list) or not isinstance(outcomes, list):
+        return None, why + ["intents / outcomes 必须是列表"]
+    if len(intents) + len(outcomes) > MAX_ROWS:
+        why.append(f"一批最多 {MAX_ROWS} 行")
+    sleeve = SLEEVE_FOR_MODE.get(mode or "")
+    for k, row in enumerate(intents):
+        if not isinstance(row, dict):
+            why.append(f"intents[{k}] 不是对象")
+            continue
+        bad = set(row) - INTENT_FIELDS
+        miss = INTENT_REQUIRED - set(row)
+        if bad:
+            why.append(f"intents[{k}] 未知列 {sorted(bad)}")
+        if miss:
+            why.append(f"intents[{k}] 缺列 {sorted(miss)}")
+        if row.get("sleeve") != sleeve:
+            why.append(f"intents[{k}] sleeve {row.get('sleeve')!r} 与 mode {mode!r} 不符(应为 {sleeve!r})")
+        if row.get("side") not in ("buy", "sell"):
+            why.append(f"intents[{k}] side {row.get('side')!r}")
+        if row.get("symbol") not in SPOT_TOKENS:
+            why.append(f"intents[{k}] symbol {row.get('symbol')!r} 不在 {sorted(SPOT_TOKENS)}")
+    if mode == "dry_run" and outcomes:
+        why.append("空跑不下单,不能带成交结果")
+    for k, row in enumerate(outcomes):
+        if not isinstance(row, dict):
+            why.append(f"outcomes[{k}] 不是对象")
+            continue
+        bad = set(row) - OUTCOME_FIELDS
+        if bad:
+            why.append(f"outcomes[{k}] 未知列 {sorted(bad)}")
+        if not row.get("intent_id") or not row.get("ts_resolved"):
+            why.append(f"outcomes[{k}] 缺 intent_id / ts_resolved")
+        if row.get("status") not in _TERMINAL:
+            why.append(f"outcomes[{k}] status {row.get('status')!r} 不是终态")
+    if body.get("alert") is not None and not isinstance(body.get("alert"), str):
+        why.append("alert 必须是字符串")
+    if why:
+        return None, why
+    return {**body, "intents": intents, "outcomes": outcomes}, []
+
+
+@router.get("/internal/executor/plan")
+async def executor_plan(x_executor_token: Optional[str] = Header(None, alias="X-Executor-Token")):
+    _token_ok(x_executor_token, "EXECUTOR_TOKEN")
+    from src.data.execution.host_plan import build_host_plan
+    try:
+        return await build_host_plan()
+    except Exception as e:                                       # noqa: BLE001
+        log.warning("[EXECUTOR] plan failed: %s", e)
+        return {"ok": False, "why": f"{type(e).__name__}: {str(e)[:300]}"}
+
+
+@router.post("/internal/executor/report")
+async def executor_report(body: Any = Body(...),
+                          x_executor_token: Optional[str] = Header(None, alias="X-Executor-Token")):
+    _token_ok(x_executor_token, "EXECUTOR_TOKEN")
+    clean, why = vet_report(body)
+    if clean is None:
+        raise HTTPException(422, {"rejected": why})
+    from src.api.store import supabase_upsert_table
+    written = {"intents": 0, "outcomes": 0}
+    # 先意图后结果:execution_outcomes.intent_id 外键指向 execution_intents。同一 intent_id 重发 = 覆盖成同一行(主机发件箱可能重发)
+    if clean["intents"]:
+        r = await supabase_upsert_table("execution_intents", clean["intents"], on_conflict="intent_id")
+        if not r:
+            raise HTTPException(502, f"execution_intents write failed: {getattr(r, 'why', '')}")
+        written["intents"] = len(clean["intents"])
+    if clean["outcomes"]:
+        r = await supabase_upsert_table("execution_outcomes", clean["outcomes"], on_conflict="intent_id")
+        if not r:
+            raise HTTPException(502, f"execution_outcomes write failed: {getattr(r, 'why', '')}")
+        written["outcomes"] = len(clean["outcomes"])
+    detail = {**(clean.get("detail") or {}), "mode": clean["mode"], "kind": clean["kind"],
+              "host": clean.get("host"), "asof": clean.get("asof"), **{f"{k}_written": v for k, v in written.items()}}
+    outcome = "error" if clean["kind"] == "error" or (clean.get("detail") or {}).get("errors") else "ok"
+    from src.api.rpc_diagnostics import _record_loop_attempt
+    await _record_loop_attempt(LOOP_NAME, outcome, reason=(clean.get("alert") or None), detail=detail,
+                               writer="src.api.routers.executor.executor_report")
+    if clean.get("alert"):
+        from src.api.notify import notify_telegram
+        await notify_telegram(f"[executor {clean['mode']} · {clean['kind']}] {clean['alert'][:500]}")
+    return {"ok": True, **written}
+
+
+@router.post("/internal/executor/halt")
+async def executor_halt(body: dict = Body(...),
+                        x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
+    """一键停 / 解除。body: {"halted": true|false, "reason": "..."}。TTL 90 天(过期 = 解除,写在这里不藏)。"""
+    _token_ok(x_internal_token, "INTERNAL_TOKEN")
+    if not isinstance(body.get("halted"), bool):
+        raise HTTPException(422, "halted 必须是 true / false")
+    from src.api.store import redis_set_key
+    payload = {"halted": body["halted"], "reason": str(body.get("reason") or "")[:300],
+               "at": dt.datetime.now(dt.timezone.utc).isoformat()}
+    r = await redis_set_key(HALT_KEY, payload, ttl=90 * 86400)
+    if not r:
+        raise HTTPException(502, f"halt flag not written: {getattr(r, 'why', '')}")
+    from src.api.notify import notify_telegram
+    await notify_telegram(f"[executor] {'HALTED' if body['halted'] else 'resumed'} · {payload['reason']}")
+    return {"ok": True, **payload}
