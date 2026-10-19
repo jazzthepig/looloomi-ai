@@ -25,6 +25,14 @@ main() {
   "$VENV/bin/pip" install -q -r "$REPO/deploy/executor/requirements.txt"
   chmod -R go+rX "$REPO" "$VENV"
   install -m 644 "$REPO/deploy/executor/cometcloud-executor.service" /etc/systemd/system/cometcloud-executor.service
+  # T-129 / T-130:只读的录制器(盘口与成交、头部账户持仓)。不读私钥;文件在才装。
+  local EXTRA=()
+  for u in cometcloud-recorder cometcloud-whales; do
+    if [ -f "$REPO/deploy/executor/$u.service" ]; then
+      install -m 644 "$REPO/deploy/executor/$u.service" "/etc/systemd/system/$u.service"
+      EXTRA+=("$u")
+    fi
+  done
   systemctl daemon-reload
   echo "── 自检(不下单)──"
   systemd-run --quiet --wait --pipe --collect \
@@ -35,8 +43,12 @@ main() {
     "$VENV/bin/python" -m src.exec_host.runner --check
   systemctl enable -q cometcloud-executor
   systemctl restart cometcloud-executor
+  for u in "${EXTRA[@]}"; do
+    systemctl enable -q "$u"
+    systemctl restart "$u"
+  done
   sleep 3
-  systemctl --no-pager --lines=8 status cometcloud-executor || true
+  systemctl --no-pager --lines=8 status cometcloud-executor "${EXTRA[@]}" || true
   echo "── 完成。日志:journalctl -u cometcloud-executor -f ──"
 }
 
