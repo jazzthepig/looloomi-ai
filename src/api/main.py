@@ -1851,6 +1851,41 @@ async def _binance_hf_loop():
         await _sleep_until_utc(0, 35)
 
 
+async def _binance_vision_loop():
+    """T-133:Binance 公开历史档(data.binance.vision U 本位永续 metrics)→ deriv_metrics_daily。
+    每小时一轮、每轮最多 6,000 个日档:先补各名字最近缺的日子,再轮转往回补到 max(上市日, 2020-09-01)。
+    半数以上读不到 ⇒ 整轮拒写(Railway 出口落在美国时可能读不到 —— egress probe 在记)。
+    判活:`select max(d) from deriv_metrics_daily where symbol = 'BTC' and n_points > 0` ≥ 前天;
+          回补进度:`select count(*) from deriv_metrics_plan where min_d is null or min_d > target_start`。"""
+    await _asyncio.sleep(_boot_delay(600))
+    while True:
+        try:
+            from src.data.market.binance_vision import run_once as _bv_run
+            r = await _bv_run()
+            _detail = {k: r.get(k) for k in ("planned", "rows", "absent", "errors", "error_sample", "oldest", "newest")}
+            print(f"[BINANCE-VISION] {'ok' if r.get('ok') else 'refused' if r.get('refused') else 'error'} · "
+                  f"{str(r.get('reason'))[:160]}")
+            await _beat("_binance_vision_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")),
+                        detail=_detail, error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_binance_vision_loop",
+                "ok" if r.get("ok") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail=_detail, writer="src.api.main._binance_vision_loop")
+        except Exception as _e:
+            print(f"[BINANCE-VISION] ⚠️  pass FAILED: {_e}")
+            await _beat("_binance_vision_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_binance_vision_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._binance_vision_loop")
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_binance_vision_loop():
+    _asyncio.create_task(_binance_vision_loop())
+    print("[BINANCE-VISION] ✅ futures positioning archive backfill scheduled (deriv_metrics_daily, hourly)")
+
+
 @app.on_event("startup")
 async def _start_binance_hf_loop():
     _asyncio.create_task(_binance_hf_loop())
