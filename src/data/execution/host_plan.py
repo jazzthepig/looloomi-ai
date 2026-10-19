@@ -40,9 +40,21 @@ async def read_halt() -> tuple[bool, str]:
     return bool(payload and payload.get("halted")), status
 
 
+def make_plan(closes: dict, asof: str) -> dict[str, Any]:
+    """纯函数。截至 asof 收盘(含)的收盘序列 → 计划(目标、止损线、限额)。
+    **Railway 的 /plan 与历史回放(exec_host.replay,T-134)都只经这里** —— 回放出来的就是实盘会收到的计划。"""
+    from src.data.execution import executor as ex
+    return {"ok": True, "asof": asof,
+            "targets": {s: round(w, 6) for s, w in ex.target_weights(closes).items()},
+            "stop_px": {s: ex.stop_price(c) for s, c in closes.items()},
+            "last_close": {s: float(c.iloc[-1]) for s, c in closes.items()},
+            "spot_tokens": dict(SPOT_TOKENS), "signal_ref": ex.SIGNAL_REF,
+            "catastrophe_factor": ex.CATASTROPHE, "limits": asdict(ex.Limits()),
+            "sleeves": dict(SLEEVE_FOR_MODE)}
+
+
 async def plan_core(asof: str) -> dict[str, Any]:
     """asof 这天收盘后定下的目标与止损线。收盘没齐 ⇒ ok False。"""
-    from src.data.execution import executor as ex
     from src.data.universe.forward_books import tom_inputs
     if asof in _CORE_CACHE:
         return _CORE_CACHE[asof]
@@ -51,13 +63,7 @@ async def plan_core(asof: str) -> dict[str, Any]:
     have = {s: c.index[-1].date().isoformat() for s, c in closes.items() if len(c)}
     if set(have) != set(SPOT_TOKENS) or any(d != asof for d in have.values()):
         return {"ok": False, "asof": asof, "why": f"{asof} 的收盘还没全部落库:{have}"}
-    core = {"ok": True, "asof": asof,
-            "targets": {s: round(w, 6) for s, w in ex.target_weights(closes).items()},
-            "stop_px": {s: ex.stop_price(c) for s, c in closes.items()},
-            "last_close": {s: float(c.iloc[-1]) for s, c in closes.items()},
-            "spot_tokens": dict(SPOT_TOKENS), "signal_ref": ex.SIGNAL_REF,
-            "catastrophe_factor": ex.CATASTROPHE, "limits": asdict(ex.Limits()),
-            "sleeves": dict(SLEEVE_FOR_MODE)}
+    core = make_plan(closes, asof)
     _CORE_CACHE.clear()
     _CORE_CACHE[asof] = core
     return core

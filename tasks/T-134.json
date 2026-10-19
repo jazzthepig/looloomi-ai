@@ -1,7 +1,7 @@
 {
   "id": "T-134",
   "owner": "seth",
-  "status": "open",
+  "status": "claimed",
   "created": "2026-10-19",
   "verified": null,
   "forbidden_paths": [
@@ -20,5 +20,5 @@
     "expect": "一份内核、三处调用;对账表进台账"
   },
   "prior_value": "模拟出来的就是实盘会做的 —— 否则每条前向记录都要多问一句「真跑时代码是不是同一个」",
-  "notes": "2026-10-19 Seth 开卡。"
+  "notes": "2026-10-19 Seth 开卡。\n2026-10-19 Seth:内核收成一份 —— host_plan.make_plan(纯函数)是 Railway /plan 与回放共用的计划函数;src/exec_host/replay.py 每个交易日只调 make_plan → core.plan_host_orders → core.stop_hits(主机用的同一组函数),成交按收盘 ± 半个价差、手续费、跳空止损按开盘价;ideal_nav 给零摩擦对照。tests/test_exec_host_replay.py 4 项(含 AST:回放与 /plan 都只经这几个函数)。真实数据上的对账(实施拖累)交 A 道 T-137。"
 }

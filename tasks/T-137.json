@@ -1,0 +1,26 @@
+{
+  "id": "T-137",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-19",
+  "verified": null,
+  "title": "用实盘内核回放 X1V 2021→2026:执行规则(5% 门槛、单笔 / 日换手上限、取整、成本、盘中止损)让理想收益掉了多少",
+  "source": "T-134 回放器(src/exec_host/replay.py);BENCHMARK §2 NautilusTrader 原则:模拟出来的必须是实盘会做的",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-137.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "脚本 docs/research/t137_x1v_replay.py:收盘用 asset_mcap_daily(与实盘计划同源,forward_books.tom_inputs 的口径),开盘 / 最低用 ohlcv_daily source = binance_hist(盘中止损用;两个源不同,报告里写明);调用 replay.replay 与 replay.ideal_nav(不改它们)。区间 2021-01-01 → 2026-10-18,账户 3,000;成本网格:半价差 2 / 5 / 10 bp × 手续费 4.5 / 7 bp。报:年化、最大回撤、成交笔数、止损次数,回放对理想的年化差(实施拖累)。",
+    "expect": "报告写数据根 _reports/absorb_input/T-137_x1v_replay.md,开头一张成本网格表;卡 notes 写关键数;in_review,推 lane-a/T-137。"
+  },
+  "prior_value": "上真钱之前知道执行规则本身让 X1V 少赚多少;拖累太大就先改门槛 / 上限,而不是让实盘去发现",
+  "notes": "2026-10-19 Seth 开卡,T-129 之后做。"
+}
