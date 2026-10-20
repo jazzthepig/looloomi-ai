@@ -2317,3 +2317,8 @@ and committed but **NOT run** (OPEN RISK 1).
 
 
 **(rotated out 2026-10-20 09:17)** 2026-10-20 08:30 UTC (Seth — **叙事 A/B**(Jazz「做 A/B 测一下」):**S-625 历史代理版 ✅ 过** —— 突破时所在板块正热的票在鱼上的比例 36.2% vs 冷板块 23.7%(年内打乱 p = 0.0025),但每张票 R 不更高(热板块进得晚、拥挤),且只在 2023–24 有差别 ⇒ 叙事的价值在「比价格早」。**S-626 前向 A/B 已预注册**:J(Jazz 每周标记,写在 cometcloud-local/research/narrative_flags/,Seth 代写)vs E(新闻提及前 10)vs T(CoinGecko 热搜前 10)vs N,判据 = 60 天快鱼率,J 满 12 周后判;评分器 **T-142(C)**。等 Jazz 给 2026-W43 的标记。前一条:风格周期前沿 S-622/623/624 7 条 0 过,慢状态唯一改善生存。)
+
+
+**(rotated out 2026-10-20 12:54)** 2026-10-20 08:45 UTC (Seth — **交易层 v2 草案** docs/TRADING_LAYER_V2.md:凸性单票(S-610 进场)+ 2.5×ATR 宽止损 + 慢状态闸门 + ⏳热度上限 / 再上车 / 叙事加权;执行器要加单票计划、交易所挂止损、热度账本、资金费记账,先开纸面 sleeve。**S-627 慢状态闸门**:去掉 2022 −25R、鱼只少 5%、总 R +18R,但最深回撤在闸门开着的震荡期(−51R vs −54R)⇒ 按预注册不过,闸门保留、回撤交给热度上限(S-621)。**外部叙事源调研**:免费且不用注册、覆盖我们币池的 KOL 数据没有;Sharpe / Santiment 要 Jazz 注册拿 key。)
+
+**(rotated out 2026-10-20 12:54)** 2026-10-20 09:17 UTC (Seth — **交易层 v2 纸面前向账本开了**(SPINE 7g):内核 = Postgres 函数 `r_tickets_scan`,回放与前向同一个;回滚事务里回放 2024 年 266 张 / 267.68R 与研究 SQL 相同;Railway `_r_tickets_paper_loop` 每小时推进到最后一个已收盘 UTC 日,写 `r_tickets_paper` / `r_tickets_state`;只记 R。判活 `select last_d from r_tickets_state` ≥ 前天。)
