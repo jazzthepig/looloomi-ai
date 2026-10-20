@@ -1,0 +1,26 @@
+{
+  "id": "T-144",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-20",
+  "verified": null,
+  "title": "T-142 续:修 T 臂(W43 的 0 个名字是读权限,不是没数据)+ 加 S-629 的 Sharpe 臂 + 每周一自动跑",
+  "source": "Seth 10-20 复核:trending_log 开了 RLS 却没有 anon 的读策略 —— 用 publishable key 读是 HTTP 200 + 0 行,不报错;同期表里 14 天 3,570 行。已加 lane_read(migrations/2026-10-20_lane_read_trending_style.sql,10-20 13:4x UTC 生效,anon 读到 7 天 2,385 行)。台账 S-629 预注册 Sharpe 臂;S-631 重新打分。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-144.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "① W43 的 T 臂用 recorded_at ≤ 2026-10-19 00:00 UTC 的 trending_log 行重建(按时点,和当时能读到的数据一致)—— 0 是读失败,不是那周的决定;frozen/2026-W43.json 不覆盖,另写 frozen/2026-W43.T-fix.json 并在报告里写明原因 ② 加 S 臂(S-629 原文):每周一取 sharpe_mindshare_snap 最近一份 win = 'now' 的快照,按 delta7d 取前 10(去 BTC / ETH、去稳定币、必须在当周 binance_hist 宇宙里);delta7d 缺失时用本表自存快照算 mindshare_pct(t) / mindshare_pct(t − 7 天) − 1,两份都在才算;S 臂与 J / E / T 同一结果尺子、同一判据、同日到期 ③ 任何一臂某周读到 0 行时,先查是不是读权限(用 service 口径对比行数的办法不可用 —— 你只有 publishable key;改为:同表最近 14 天总行数为 0 才算「没数据」,否则报「疑似读不到」并停写那一周)④ 调度:lane_bot 每周一 01:30 UTC 跑一次(写进 lane_bot 的定时表),跑完写报告。",
+    "expect": "frozen/ 下 W43 的 T 修正文件 + 之后每周五臂(J / E / T / S / N);报告 _reports/absorb_input/T-142_narrative_ab.md 加 S 列;卡 notes 写每臂当周名字数;in_review,推 lane-c/T-144。"
+  },
+  "prior_value": "S-628 证明社交放量能找鱼但标得晚、且免费的 Santiment 晚 30 天不可交易;Sharpe 是唯一免费的实时注意力源 —— S 臂是「注意力能不能变成 ②」的唯一前向检验。",
+  "notes": ""
+}
