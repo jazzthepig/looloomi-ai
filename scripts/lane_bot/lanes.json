@@ -29,5 +29,14 @@
       "cwd": "/Volumes/CometCloudAI/cometcloud-local",
       "worktree": "~/Projects/looloomi-ai-lane-c"
     }
-  }
+  },
+  "weekly_scripts": [
+    {
+      "name": "t144_narrative_ab",
+      "weekday": 0,
+      "utc": "01:30",
+      "script": "docs/research/t144_narrative_ab.py",
+      "why": "S-626 / S-629:每周一冻结 J / E / T / S / N 五臂名单并给到期周打分(T-144);只给 publishable key"
+    }
+  ]
 }

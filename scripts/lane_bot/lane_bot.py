@@ -226,6 +226,54 @@ def lane_db_env(path: Path = LANE_ENV_FILE) -> dict[str, str]:
     return {"LANE_SUPABASE_URL": url, "LANE_SUPABASE_KEY": key}
 
 
+#: 10-20(T-144):每周定时跑的**研究脚本**(不是 lane 的 claude 轮次)—— lanes.json 的 weekly_scripts。
+#: 只给 publishable key(SUPABASE_URL / SUPABASE_KEY 两个名字,脚本照 T-142 的写法读),环境里其余一律不带:
+#: lane_bot 自己的进程可能带着别的 key,脚本是 lane 写、Seth 合并的代码,不该看到它们。
+WEEKLY_TIMEOUT_S = 1800
+
+
+def weekly_due(job: dict, at: dt.datetime, last: str | None) -> bool:
+    """纯函数。job = {weekday: 0 = 周一, utc: "HH:MM"}。本周的计划时刻已过、且上次跑在它之前 ⇒ 该跑。"""
+    hh, mm = (int(x) for x in str(job["utc"]).split(":"))
+    day = at.date() - dt.timedelta(days=(at.weekday() - int(job["weekday"])) % 7)
+    sched = dt.datetime(day.year, day.month, day.day, hh, mm, tzinfo=dt.timezone.utc)
+    if at < sched:
+        sched -= dt.timedelta(days=7)
+    if not last:
+        return True
+    prev = dt.datetime.fromisoformat(last)
+    return (prev if prev.tzinfo else prev.replace(tzinfo=dt.timezone.utc)) < sched
+
+
+def weekly_env(db: dict[str, str]) -> dict[str, str]:
+    """纯函数。脚本的全部环境:PATH / HOME / 语言 + 两个库变量(publishable)。"""
+    base = {k: os.environ[k] for k in ("PATH", "HOME", "LANG", "TZ") if k in os.environ}
+    return {**base, "SUPABASE_URL": db["LANE_SUPABASE_URL"], "SUPABASE_KEY": db["LANE_SUPABASE_KEY"]}
+
+
+def run_weekly(cfg: dict, st: dict, at: dt.datetime) -> None:
+    for job in cfg.get("weekly_scripts", []):
+        key = f"weekly:{job['name']}"
+        if not weekly_due(job, at, st.get(key)):
+            continue
+        script = (ROOT / job["script"]).resolve()
+        if not script.is_file() or ROOT.resolve() not in script.parents:
+            log(f"✗ weekly {job['name']}:脚本不在仓库里 —— {job['script']}")
+            st[key] = at.isoformat()
+            continue
+        db = lane_db_env()
+        if not db:
+            log(f"✗ weekly {job['name']}:没有合格的 publishable key,不跑(下一次检查再试)")
+            continue
+        try:
+            p = subprocess.run([sys.executable, "-I", str(script)], cwd=ROOT, env=weekly_env(db),
+                               capture_output=True, text=True, timeout=WEEKLY_TIMEOUT_S)
+            code, tail = p.returncode, (p.stdout + p.stderr)[-200:].replace("\n", " ")
+        except subprocess.TimeoutExpired:
+            code, tail = -1, f"超时 {WEEKLY_TIMEOUT_S}s"
+        st[key] = at.isoformat()
+        log(f"{'✓' if code == 0 else '✗'} weekly {job['name']} → exit={code} {tail}")
+
 def launch_argv(cfg: dict) -> list[str]:
     """不拼 shell 字符串:所有可变内容走环境变量,zsh 只展开带引号的变量(测试钉住)。"""
     return [os.environ.get("LANE_BOT_ZSH", "/bin/zsh"), "-lic", _LAUNCH]
@@ -431,6 +479,9 @@ def main() -> int:
                 w.write_text(task, encoding="utf-8")
                 st.setdefault(lane, {})["review_day"] = today
                 log(f"→ {lane} 今日交叉复核 {REVIEW_OF[lane]}")
+        STATE.write_text(json.dumps(st, ensure_ascii=False, indent=1), encoding="utf-8")
+    if not a.once and not a.dry_run:
+        run_weekly(cfg, st, at)                  # T-144:每周的研究脚本,与 lane 的模型额度无关
         STATE.write_text(json.dumps(st, ensure_ascii=False, indent=1), encoding="utf-8")
     if not a.once and not a.dry_run and quota_paused(at.timestamp()):
         return 0

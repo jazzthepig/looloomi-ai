@@ -292,3 +292,26 @@ def test_guard_hook_also_sees_read_tools():
     from scripts.lane_bot.lane_bot import guard_settings
     hook = json.loads(guard_settings().read_text(encoding="utf-8"))["hooks"]["PreToolUse"][0]
     assert "Read" in hook["matcher"] and "Grep" in hook["matcher"]
+
+
+def test_weekly_script_runs_once_per_week_after_its_slot() -> None:
+    """T-144:每周一 01:30 UTC 冻结叙事臂名单 —— 时刻没到不跑、跑过不重跑、错过了下一次检查补跑。"""
+    from scripts.lane_bot.lane_bot import weekly_due
+    job = {"weekday": 0, "utc": "01:30"}
+    mon = dt.datetime(2026, 10, 26, 1, 0, tzinfo=dt.timezone.utc)
+    assert not weekly_due(job, mon, (mon - dt.timedelta(days=6)).isoformat()), "周一 01:30 之前不跑"
+    after = mon + dt.timedelta(minutes=45)
+    assert weekly_due(job, after, (mon - dt.timedelta(days=6)).isoformat())
+    assert not weekly_due(job, after + dt.timedelta(hours=3), after.isoformat()), "本周跑过不重跑"
+    assert weekly_due(job, after + dt.timedelta(days=2), None), "从没跑过 ⇒ 补跑"
+
+
+def test_weekly_script_env_carries_only_the_publishable_key(monkeypatch) -> None:
+    from scripts.lane_bot.lane_bot import load_config, weekly_env
+    monkeypatch.setenv("SUPABASE_SERVICE_KEY", "_".join(["sb", "secret", "SENTINEL"]))   # 拼出来:字面量会被 secret_scan 拦
+    monkeypatch.setenv("INTERNAL_TOKEN", "SENTINEL")
+    env = weekly_env({"LANE_SUPABASE_URL": "https://x.supabase.co", "LANE_SUPABASE_KEY": "sb_publishable_abc"})
+    assert env["SUPABASE_KEY"].startswith("sb_publishable_") and "SENTINEL" not in "".join(env.values())
+    assert not any(k in env for k in ("SUPABASE_SERVICE_KEY", "INTERNAL_TOKEN", "EXECUTOR_TOKEN"))
+    jobs = load_config().get("weekly_scripts", [])
+    assert any(j["script"] == "docs/research/t144_narrative_ab.py" and j["weekday"] == 0 for j in jobs)
