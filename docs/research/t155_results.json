@@ -1,0 +1,103 @@
+{
+  "data_window": {
+    "start": "2023-01-02",
+    "end": "2026-10-19",
+    "n_rebalance": 199
+  },
+  "panel": {
+    "size": 22,
+    "names": [
+      "AAVE",
+      "ADA",
+      "APT",
+      "ATOM",
+      "AVAX",
+      "BCH",
+      "BNB",
+      "BTC",
+      "DOGE",
+      "DOT",
+      "ETC",
+      "ETH",
+      "FIL",
+      "INJ",
+      "LINK",
+      "LTC",
+      "NEAR",
+      "OP",
+      "SOL",
+      "TRX",
+      "UNI",
+      "XRP"
+    ],
+    "pinned": [
+      "BTC",
+      "ETH"
+    ]
+  },
+  "funding_coverage": {
+    "panel_with_funding": 22,
+    "panel_total": 22,
+    "no_funding_per_rebal": {
+      "min": 0,
+      "max": 0,
+      "mean": 0.0,
+      "median": 0.0
+    }
+  },
+  "v0_check": {
+    "final_nav_my": 3.66809,
+    "final_nav_reference": 3.65748,
+    "ratio": 1.0029,
+    "max_relative_diff_pct": 0.364,
+    "median_relative_diff_pct": 0.1241,
+    "n_aligned_days": 199,
+    "passes_1pct": true
+  },
+  "v3_funding": {
+    "lookback_days": 7,
+    "negate_z": true,
+    "v0_total": 2.6681,
+    "v3_total": 2.8896,
+    "diff_full": 0.2215,
+    "v0_total_holdout": -0.1895,
+    "v3_total_holdout": -0.1874,
+    "diff_2025_holdout": 0.0021,
+    "v0_max_dd": -0.5539,
+    "v3_max_dd": -0.5554,
+    "pctile_vs_shuffles_full": 0.98,
+    "pctile_vs_shuffles_holdout": 0.78,
+    "pctile_v3_minus_v0_full": 0.98,
+    "turnover_v0_total": 0.0038,
+    "turnover_v3_total": 0.0118
+  },
+  "yearly": [
+    {
+      "year": "2023",
+      "v0_ret": 1.3094297695329642,
+      "v3_ret": 1.3052809504393221,
+      "v3_minus_v0_pp": -0.004148819093642064
+    },
+    {
+      "year": "2024",
+      "v0_ret": 0.9284832137173662,
+      "v3_ret": 1.0397273175306707,
+      "v3_minus_v0_pp": 0.11124410381330452
+    },
+    {
+      "year": "2025",
+      "v0_ret": -0.19045221755961472,
+      "v3_ret": -0.14550638612214162,
+      "v3_minus_v0_pp": 0.044945831437473105
+    },
+    {
+      "year": "2026",
+      "v0_ret": -0.17140012374011215,
+      "v3_ret": -0.12137075653078477,
+      "v3_minus_v0_pp": 0.05002936720932738
+    }
+  ],
+  "judgement_pass": true,
+  "n_shuffles": 200,
+  "cost_bps": 0.001
+}
