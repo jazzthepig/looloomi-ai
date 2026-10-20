@@ -1,0 +1,30 @@
+{
+  "id": "T-154",
+  "owner": "lane-c",
+  "status": "done",
+  "created": "2026-10-20",
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-20T18:59Z",
+    "value": "收下:fish_counter.py 自检 286(与 Seth 的 SQL 逐个对上)。更正一处:T-149 的 837 不是「旧快照」—— binance_hist 没有在 S-637 后扩名字,A 道今天按字面重跑是 672,差在并鱼规则(与起点比 vs 链式);结论都不受影响(同计数器内的相对比较)。T-145 的逐票口径偏离预注册已入台账。fish_counter 留在 docs/research,不进 src。"
+  },
+  "title": "一个鱼计数器:把 S-618「大鱼」做成 docs/research 里的共用模块,三条 lane 都用它(先复现 286)",
+  "source": "T-149(A 道)自检数出 837 条鱼,Seth 用 S-618 原文 SQL 在同一个库上数是 286(原记 287)—— 差 2.9 倍是实现差,不是数据差。T-145(B 道)、T-149(A 道)、T-151 都各写了一份鱼计数;两份计数器之间的差会被当成结果。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-154.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "新建 docs/research/fish_counter.py,提供 `fish(panel, start, end)`(零分布仍走 src/data/evaluation/apparatus.py,它在 src/ 下你们不改):严格按台账 S-618 原文(binance_hist、rn ≥ 220、30 日均成交额 ≥ 500 万美元、日期窗、t 日之后 120 根内最高收盘 ≥ 3 × t 日收盘 = 命中、同名命中相隔 ≤ 30 根并成一条鱼、起点 = 第一个命中日、峰值 = 起点到最后命中日 + 120 根内最高收盘)。加一条能失败的自检:2020-03-01 → 2026-06-20 在现在的库上必须数出 286 条(±2;Seth 的 SQL 今天是 286),数不对就 abort。再用它重数 T-145 与 T-149 报告里用到的鱼,报与它们各自计数的差(只报,不改那两条台账结论)。读库只用 publishable key。",
+    "expect": "docs/research/fish_counter.py + 自检脚本 docs/research/t154_fish_counter_check.py;报告 _reports/absorb_input/T-154_fish_counter.md(脚本写);in_review,推 lane-c/T-154。"
+  },
+  "prior_value": "凸性验证族已经 7 次检验都用「鱼」当尺子;尺子不统一,每次的差都可能是尺子的差。",
+  "notes": "fish=286 (Δ=0 vs S-618);符号 147;面板行 349,576 / 家数 259;T-149 Δ=-551;T-145 trade-level 96 (口径不同),panel 重数 286。"
+}
