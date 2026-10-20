@@ -2,6 +2,7 @@
 
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
+| in_review | T-143 | lane-a | T-137 续:实施拖累 −9.46pp 里还有约 7pp 没解释 —— 先测「固定美元上限随净值复利开始卡住」与「收盘价源不同」 | 报告写数据根 _reports/absorb_input/T-143_drag_rest.md:一张表(项 × 年化 × 最大回撤 × 成交笔数 × 与基准差),外加「平均暴露差」逐年。卡 notes 写关键数;in_review,推 lane-a/T-143。 | 上真钱前要知道 X1V 每年少赚的 9pp 里哪 7pp 是规则写错了(可修)还是回放口径(不可修) |  |
 | in_review | T-092 | lane-b | 慢的逆向(Jazz 10-14「甘于人后」):三条规则按时点回放 + 打乱对照 —— ② 暴涨名移回 BTC、③ 主流暴跌后加推力、探索仓做空 30 名外暴涨名 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:三条规则 × 三个窗口的总收益 / 最大回撤 / 相对基准的超额 / 对照分位 / 事件数。不改任何前向账本。 | S-569(探索性):非 BTC 名 z30 ≥ 3 之后 30 日相对 BTC −16.4%(t+7 进,基准 −5.8%,81% 跑输),90 日 −38.7%(基准 −16.3%);BTC / ETH z30 ≥ 2 之后 90 日 +12.5% / +22.3%(基准 +6.3% / +6.6%)⇒ 不对主流的暴涨做逆向;BTC z30 ≤ −2 之后 90 日 +10.3%(9 周)。 |  |
 | in_review | T-093 | lane-b | 逆向按情景用(Jazz 10-14):T-092 三条规则加「边际流动性 × BTC 趋势」四状态、每周重判 —— 对照无条件版与打乱的状态标签 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:三条规则 × 三个窗口 × {无条件, 条件} 的总收益 / 最大回撤 / 超额 / 打乱分位,外加每个状态的周数。不改任何前向账本。 | S-570(探索性):暴涨名 30 日相对 BTC 在边际变差时 −28.9(同情景中间组 −6.6),改善时 −13.0(−5.0);暴跌名 90 日在三个窗口里都是改善好过变差;能让暴涨名继续涨的只有「弱底子回暖」约 9 周。 |  |
 | in_review | T-131 | lane-c | R 形态的持仓管理:先收一半保本、假突破撤后收复再进、赢了收紧(S-612) | 报告写数据根 _reports/absorb_input/T-131_s612.md,开头一张表:M0–M3 × (n、均值 R、去掉最好 5 笔的均值、盈亏比、三段均值、2023 合计、最长连亏、组合年化 / 回撤);卡 notes 写判定;in_review,推 lane-c/T-131。 | 过 ⇒ R 的前向纸面账本直接用过关的管理规则;不过 ⇒ 用 S-610 原样上前向,并在报告里写清「钱集中在少数几笔」的风险。 |  |
@@ -145,4 +146,4 @@
 | done | T-138 | seth | S-614:R 臂突破那天的主动买盘 / 未平仓量 / 大户持仓 / 散户拥挤,能否把赢家和输家分开 | 台账 S-614 结果段;过关的特征写进 R 前向纸面账本的过滤条件 | R 臂的软肋是钱集中在少数几笔 —— 如果「谁在买」能分开赢家与假突破,R 才值得占风险预算 | Not passed (S-614). 885 of 1,013 R trades have features (2020-22 is almost empty: those alts had no Binance metrics files yet). H1 taker-buying confirmation is the strongest: top tercile +0.906R vs bottom -0.267R (diff +1.17R, one-sided p 0.041 against the 0.0125 bar; 2025-26 +3.36R) but the favored group without its best 5 trades is still -0.07R. H2 rising open interest +0.49R diff (p 0.19). H3 top-trader long/short rising and H4 crowd not crowded point the wrong way (p 0.50 / 0.59). H1 becomes a logged field on the R forward paper book; the intraday version waits for the T-129 recordings. @ 2026-10-20T02:00Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 12 · claimed 10 · blocked 6 · in_review 5 · done 108 · dropped 1
+open 12 · claimed 10 · blocked 6 · in_review 6 · done 108 · dropped 1
