@@ -1,8 +1,8 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-10-20 14:52 UTC (Seth — **回到高维:S-632「大鱼前兆图谱」❌**。问:价格突破之前,哪个维度已经在动(持仓量 / 大户与散户多空比 / 主动买卖 / 资金费 / 量价结构,对照同日同价格状态的非鱼)。发现段(2022–23,96 条鱼)入选主动买卖比、成交额放大、区间更宽,持仓与多空比都不是前兆;**留出段(2024-01 → 2026-05)前 10% 的鱼率 1.64% vs 其余 1.74%,p 0.65 ⇒ 不复现**(发现段是少数鱼的极端值撑起来的)。**更大的读数:鱼成潮出现,多在全市场急跌见底之后**(2024-08-05 一天 14 个、2025-03-29 → 04-16 13 个)—— 挑名字几乎不可预测,时机高度集中。⇒ **S-633「鱼潮」已预注册**(全市场突破广度做单票风险开关,判据 = 在鱼比例 + 平均 R),交 B 道 T-145。)
+**Last updated:** 2026-10-20 18:16 UTC (Seth — **夜间(Jazz 睡前「分配多点任务、慢慢做长任务或升级策略」)。** **① R-v2 记成钱(S-638):** 只读内核 `r_tickets_nav`(前向与回放同一个函数;逐日盯市与独立写法差 3e-15;B 道独立 Python 实现对上:回撤 −32.6% vs −32.3%)。f★ = 1%(盯市回撤 −35% 反推)⇒ 回放 2020-03 → 2026-10 年化 +24.4%、盯市回撤 −32.3%、总名义峰值 0.99 倍(不需要杠杆)。前向钱曲线写 `r_money_daily`(前向锁)。**S-621 ✅**(B 道 T-141:宽止损 + 最多 10 张在同回撤下胜出,两种口径都过)。**② 要 Jazz 定的三件(docs/TRADING_LAYER_V2.md §4):** 探索仓给多少 —— S-639:30% 配 R-v2,① 年化不变(+41%)、回撤 −57% → −36%,tom_pd13 + 30% → +43% / −32%;**永续还是现货执行** —— S-637 已量化(切换日 08-08):永续口径 R-v2 年化 +23.6%、现货 +19.6%;粗扣资金费后永续约 +16–20%,收益打平,但配 30% 进 ① 时永续多压 8pp 回撤(−36.8% vs −45.1%);真钱开关。**③ 资金费补到整个 binance_hist 宇宙**(Binance Vision 月档,`_binance_vision_funding`)—— 已上线(Railway 16:56 → 20:40 UTC 卡了约 4 小时后自己恢复);回补积压 10,761 个月,每轮 2,000。**⑤ ② 族第一个过预注册的候选(S-640,B 道 T-155,Seth 独立 SQL 复算一致):** 在 ① 的山寨里少配资金费拥挤的名字(BTC / ETH 钉住),全程 +22.7pp、留出段 +0.8pp、随机分位 0.98;族内第 4 次、不显著 ⇒ 纸面前向臂 `fund_a1_u`(cis_tilt_daily,10-26 起)。**④ lanes:** S-634 ❌(② 仍空)· S-635 ❌ · S-636 N/A · S-612 M2 更正(仍 ❌)· T-147 合并并修了 W44 被提前冻结 · T-146 的 (i) 作废 → T-152 逐步瀑布 · 新卡 T-153(现货面板钱曲线)/ T-154(一个鱼计数器,先复现 286 —— A 道曾数出 837)· T-140 r3 在跑。判活:`select max(d), nav from r_money_daily`;`select count(*) from funding_vision_plan`(应降);`select git_sha from /internal/build-state` = origin/main。)
 
-**Previous update:** 2026-10-20 13:59 UTC (Seth — **S-631 账本重整**(Jazz「先冻结了,根据我们的研究重新给策略打分和开跑」):**④ 六本冻结**(causal / scalable / combined / dingge / fusion / two_layer;4a9fbe49 起不写新行,一处登记 `accounting/frozen.py` → 循环不起但记 refused、登记表 / 证据面 frozen、判活 not_applicable;scalable / combined 不在 Jazz 看到的四本里,同理由一并冻结,一行可恢复)。**ⓠ 改挂 ①**:`multiplier_daily` 新臂 `q_v2` / `q_slow`(只在 majors 线下许减仓),10-21 起前向;08-15 起语境回算 ① +29.3%、q_slow +29.3%(从没减)、q_v2 +28.1%。**全部策略打分**在 STRATEGY_PLAYBOOK.md 顶部(① A、③ tom A−、R-v2 / X1V B+、② CIS D、组合层 C;现在没有验证过的 ②)。另修:trending_log / style_index_pit_daily 对 lanes 是 0 行(RLS 无 anon 策略)⇒ 加 lane_read;S-626 的 T 臂 W43 因此是 0 → T-144(C 道)重建 + 加 Sharpe 臂 + 周一自动跑。判活:`select arm, max(d) from multiplier_daily where arm in ('q_v2','q_slow') group by 1`(10-22 起 = 昨天);`select loop_name, outcome from loop_attempt where reason like '冻结%' order by at desc limit 6`。)
+**Previous update:** 2026-10-20 14:52 UTC (Seth — **回到高维:S-632「大鱼前兆图谱」❌**。问:价格突破之前,哪个维度已经在动(持仓量 / 大户与散户多空比 / 主动买卖 / 资金费 / 量价结构,对照同日同价格状态的非鱼)。发现段(2022–23,96 条鱼)入选主动买卖比、成交额放大、区间更宽,持仓与多空比都不是前兆;**留出段(2024-01 → 2026-05)前 10% 的鱼率 1.64% vs 其余 1.74%,p 0.65 ⇒ 不复现**(发现段是少数鱼的极端值撑起来的)。**更大的读数:鱼成潮出现,多在全市场急跌见底之后**(2024-08-05 一天 14 个、2025-03-29 → 04-16 13 个)—— 挑名字几乎不可预测,时机高度集中。⇒ **S-633「鱼潮」已预注册**(全市场突破广度做单票风险开关,判据 = 在鱼比例 + 平均 R),交 B 道 T-145。)
 **🟢 DEPLOY VERIFIED 2026-09-23**:commit `1bb885f` pushed → Railway `build=1bb885fa`;`_cg_panel_loop` heartbeat `verdict=ok`,age=158min(well within `_CG_PANEL_INTERVAL_S=6*3600` success cadence — **not staleness**),`stale_build=false`,`late=false`,`reason=上次成功 158 分钟前`。S-410 ✅ CLOSED。
 
 **A-408-2 ✅ SHIPPED 2026-09-23 (commit `067e10f`, PR-A, A lane — `loop_attempt` per-iteration record)**: 43 async loop 中 0 个写 per-iteration row;`_beat()` 是 Redis hash 不能回答 COUNT。Ship `scripts/supabase_s408_2_loop_attempt.sql`(新表 + 3 索引 + RLS + 3 grant + `loop_attempt_health()` helper,镜像 `write_health()`)+ `_record_loop_attempt()` in `rpc_diagnostics.py`(`LoopOutcome = Literal["ok","refused","error","panel_unavailable"]` 字面冻结,writer 显式传入,`build` 字段 = inline env 查找(`RAILWAY_GIT_COMMIT_SHA`→`GIT_COMMIT_SHA`→`SOURCE_COMMIT`)[:8],**不** import `loop_beat.build_sha` 以避开 S-341c mypy strict 两文件范围)+ wire `_cg_panel_loop` 3 分支(panel_unavailable/ok|refused/error)。测试 `test_a_408_2_loop_attempt_smoke.py` **12/12 PASS**(T1 Literal vocab / T2-T3 never-raises+短路 / T4-T7 payload+truncation+build / T8 常量 / **T9 S-244 文本守卫** main.py ≥ 3 sites / T10 与 _beat 并行 / T11 幂等 / T12 4-branch replay)。preflight 注册 stage 3。判据 `select count(*) from loop_attempt where loop_name='_cg_panel_loop' and at::date = current_date` ≥ 100。**DDL 待 MCP apply** —— 表不存在时 `_record_loop_attempt` try-hard 返 False 永不抛,所以 deploy 后 24h 内补 DDL 即可,无静默错数据风险。**Push 时 preflight 🔴**(S-302 预算越界,Seth `hl_book_daily.py` 未跟踪,Jazz override)。
@@ -20,17 +20,17 @@
 ## 现在能跑的 / 不能跑的
 
 ```
-(2026-10-13 实测,Supabase 直查;旧版这一块停在 9 月,已整体替换)
-✅ 价格源       binance_hist 136 标的(① 价源)· coingecko_pro_ohlc 209 · eodhd 33 —— 日更;coingecko / yfinance 非日更
-✅ 循环         loop_attempt 3 天内 46 个:43 ok · 2 refused(_hl_book_loop 缺价、_meta_allocator_loop 策略库未到目标日)· 1 error(_cis_inputs_loop:tvl.UNI / gh.INJ 单项)
-✅ 正式 CIS     cis_official_daily 10-10 起每天一批、只追加(触发器拒改删),最新 = 昨天
-✅ 前向记录     S-560 起 d ≤ 今天 − 2 冻结;锚 v2 锚「今天 − 2」;/api/v1/proof/anchors/{d} 逐行报改写(10-07 → 10-12 的改写如实显示)
-🟡 paper book   beta_core / scalable / combined 10-19 已按读库 + HL oracle 记账(S-607);fusion 还差一步(v3 约束已放行,10-20 00:05 第一行):
-                 select max(mark_date), max(inception_id) from fusion_paper_nav;  (T-026)
-🟡 执行器       东京主机 dry_run(T-015 / T-122):install.sh 跑完后每小时一条心跳、每天一轮;改 live 是 Jazz 的动作:
+(2026-10-20 19:1x UTC 实测,Supabase 直查;上一版是 10-13)
+✅ 价格源       binance_hist 136 标的日更(① 价源;08-08 起非核心名是现货口径,见 #0e)· coingecko_pro_ohlc 210 · eodhd 193(World50 扩池后)
+✅ 循环         loop_attempt 3 天内 78 个:69 最近一次 ok · 6 本 ④ 冻结记 refused(causal / scalable / combined / dingge / fusion / two_layer,S-631)
+                · _hl_book_loop refused「当天已记录」· _meta_allocator_loop refused「策略库只到前天」· _cis_inputs_loop error(macro.global_recent 单项)
+✅ 正式 CIS     cis_official_daily 每天一批、只追加,最新 = 昨天
+✅ 前向记录     S-560 起 d ≤ 今天 − 2 冻结;① cap_a1_u / ③ tom_pd13 / R-v2 票(r_tickets_state)都到昨天;ⓠ 两臂 10-22 起出前向行
+✅ 部署        Railway 16:56 → 20:40 UTC 卡了约 4 小时(02fc20c0 的部署记录建了没动,之后的推送没有部署记录),20:40 自己恢复(89dff45b、6761340c 上线);原因未查 —— 再出现就去 Railway 看部署队列
+🟡 执行器       东京主机 dry_run,每小时心跳;改 live 是 Jazz 的动作:
                  select at, outcome, detail->>'kind', detail->>'mode' from loop_attempt where loop_name = 'executor_host' order by at desc limit 5;
-🟡 agent_call_log 写入任务从未启动过(S-562),10-13 修复上线,等第一行
-🔴 lane 数据通路 lane 读库只能用目录里软链的 service_role key(可写可删)—— 只读账号待 Jazz(10-13:先不换 key)
+⚪ agent_call_log 0 行 = 没有外部 agent 流量(写入任务 S-562 已修;watch_census 标「量随流量,不判活」)
+✅ lane 数据通路 lanes 只拿 publishable key(10-20 轮换后),读权限按表开 lane_read;写只经 seth_bot
 ```
 
 ## OPEN RISKS  (≤7 · cold-start first screen · every item ships a VERIFY command)
@@ -41,9 +41,10 @@ the lessons lived only in a 5,672-line ledger. **Don't transmit memory, transmit
 Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
 `tests/test_cold_start_contract.py`.*
 
-### #0e · 🟡 binance_hist 口径拼接:86 个名字历史是合约、08-09 起是现货(S-637, 2026-10-21)
+### #0e · 🟡 binance_hist 口径拼接:192 个名字 08-07 及以前是永续、08-08 起是现货 —— 等 Jazz 定执行口径(S-637, 2026-10-20)
 
-抽查 Binance 现货接口:SOL 的 binance_hist 与现货逐位一致;**CRV 的成交量是现货的 5.6–6.4 倍**(合约)。08-08 那次深度导入的 86 个非核心名字都是合约 K 线,而 08-09 起的日更与补洞是现货 —— 成交额口径断了约 5 倍。历史研究对每个名字自洽,但**前向(R-v2 纸面账本)跑在现货口径上、研究是混合口径**:同一个「30 日均成交额 ≥ 500 万」门槛下前向宇宙会少很多山寨。**在 Jazz 定口径(永续执行 → 合约面板;现货执行 → 现货面板)之前不改任何一行。** A 道 T-151 量化三种面板下的 R 臂差异。
+**T-151 已量化(台账 S-637 量化):** 切换日 **2026-08-08,整块切**(08-07 及以前与永续逐位一致、成交量是现货的 5.2–5.9 倍;08-08 起全部与现货一致,73 天无例外)。全程现货 40(核心)、切换前永续 192、全程永续 0。R 臂(2023-01 → 2026-06-20,k = 2.5):**现状 769 票 / +0.253R;永续面板 759 / +0.234;现货面板 492 / +0.178(票少 36%)**。研究回测窗口整段是永续口径,前向 R-v2 账本是现货口径 —— 不是同一个宇宙。
+**要 Jazz 定:** R-v2 在**永续**上执行 ⇒ 采集器改回永续口径(研究结论几乎不变);在**现货**上执行 ⇒ 历史重取现货、S-638 / S-639 按现货面板重算(票少三分之一)。**定之前不改任何一行。**
 
 VERIFY: `select symbol, trade_date, volume from ohlcv_daily where source='binance_hist' and symbol='CRV' and trade_date in ('2026-07-15','2026-09-15')` 对比 `https://data-api.binance.vision/api/v3/klines?symbol=CRVUSDT&interval=1d&startTime=1784073600000&limit=1` 的第 6 列。
 
