@@ -1,0 +1,26 @@
+{
+  "id": "T-151",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-21",
+  "verified": null,
+  "title": "S-637 数据口径:binance_hist 86 个名字历史是合约、08-09 后是现货 —— 在现货 / 合约 / 混合三种面板上重算 R 臂,给 Jazz 一张决定表",
+  "source": "台账 S-637(Seth 10-21 抽查:CRV 2024-07-15 / 2026-07-15 的 binance_hist 成交量是现货的 5.6 / 6.4 倍,SOL 与现货逐位一致;08-08 导入的 86 个名字前后成交额比中位 0.74,07-27 导入的 40 个是 3.65)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-151.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "① 逐名字分类:对 binance_hist 的每个名字,在 2023-01、2024-07、2025-07、2026-07 各取一天,与 Binance 现货(api/v3/klines)和 U 本位合约(fapi/v1/klines)的日 K 比收盘与成交量,判定那一段是哪种口径(成交量相差 < 1% 算一致);列出「全程现货 / 全程合约 / 混合 / 只有合约(无现货对)」四类与名字。② 取数只做研究用:从 Mac 端直接请求 Binance 公开接口,结果存数据根 research/t151/(不写库 —— 入库是 Seth 的通道)。③ 在 2023-01-01 → 2026-06-20 上,用 S-610 进场 + 2.5×ATR + 原出场(与 T-141 同一份代码)分别跑三种面板:现货 / 合约 / 现在的 binance_hist,报每年的票数、在鱼比例、捕到的鱼、平均 R、30 日均成交额 ≥ 500 万的宇宙大小。④ 一张决定表:如果单票在永续上做 vs 在现货上做,该用哪种面板,改动后前向会少 / 多多少票。",
+    "expect": "脚本 docs/research/t151_panel_convention.py;报告 _reports/absorb_input/T-151_panel_convention.md(决定表在最前面);卡 notes 写四类的名字数与三种面板的票数;in_review,推 lane-a/T-151。"
+  },
+  "prior_value": "前向的 R-v2 账本现在跑在现货口径上,研究是合约 / 现货混合口径 —— 不对齐的话,前向与研究不是同一个宇宙,前向的结果没法拿来验证研究。",
+  "notes": ""
+}

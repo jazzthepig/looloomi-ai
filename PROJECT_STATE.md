@@ -41,6 +41,12 @@ the lessons lived only in a 5,672-line ledger. **Don't transmit memory, transmit
 Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
 `tests/test_cold_start_contract.py`.*
 
+### #0e · 🟡 binance_hist 口径拼接:86 个名字历史是合约、08-09 起是现货(S-637, 2026-10-21)
+
+抽查 Binance 现货接口:SOL 的 binance_hist 与现货逐位一致;**CRV 的成交量是现货的 5.6–6.4 倍**(合约)。08-08 那次深度导入的 86 个非核心名字都是合约 K 线,而 08-09 起的日更与补洞是现货 —— 成交额口径断了约 5 倍。历史研究对每个名字自洽,但**前向(R-v2 纸面账本)跑在现货口径上、研究是混合口径**:同一个「30 日均成交额 ≥ 500 万」门槛下前向宇宙会少很多山寨。**在 Jazz 定口径(永续执行 → 合约面板;现货执行 → 现货面板)之前不改任何一行。** A 道 T-151 量化三种面板下的 R 臂差异。
+
+VERIFY: `select symbol, trade_date, volume from ohlcv_daily where source='binance_hist' and symbol='CRV' and trade_date in ('2026-07-15','2026-09-15')` 对比 `https://data-api.binance.vision/api/v3/klines?symbol=CRVUSDT&interval=1d&startTime=1784073600000&limit=1` 的第 6 列。
+
 ### #0d · 🟡 Supabase key 泄露 —— 轮换已完成 (2026-10-20 06:10 UTC),剩两个尾巴
 
 两处泄露:`/api/v1/auth/config` 自 03-26 返回 `SUPABASE_KEY`(Railway = service_role);lane-a 把同一把 key 推到公开分支 `lane-a/T-137`。代码侧已封(接口不返回 key;`scripts/secret_scan.py` 在 preflight 与 pre-push)。**已完成**:Railway 05:50 起用新 secret(0 错误);Mac 两份 .env 换新;publishable 换新、公开的那把已删;legacy anon + service_role 已停用(06:05 后零 legacy 请求)。06:02–06:05 那批 legacy 请求 = seth_bot 的 preflight(主仓库 .env 还没换),不是常驻进程。**尾巴**:① Mac 引擎的 secret 仍在 `cometcloud-local/.env`(只靠钩子挡 lane)→ Minimax 挪到 `~/.cometcloud/engine.env`(SYNC #31);② advisor:8 个 SECURITY DEFINER 函数 anon 可执行(panel_closes / panel_funding / public_columns / catalog_inventory 等,早于本次,只读)→ 逐个改 INVOKER 或收回。 **Jazz 10-20 裁定:lane 只拿 publishable key。** 已做:`migrations/2026-10-20_lane_read_publishable.sql`(28 张研究表 + 4 个只读 RPC 给 anon 读)—— **已暂停**(`..._suspend.sql`):现用的 publishable key 自 06-19 写在公开的 `docs/SUPABASE_SETUP.md` 里,RLS 分不出是哪把 publishable;Jazz 建新的 `lanes` publishable、删旧的之后再开;lane_bot 启动时清掉一切写权限 key,只从 `~/.cometcloud/lane.env`(Jazz 建,只放 URL + sb_publishable_)注入;钩子拦 lane 读 `.env` / 打印 key。**Mac 引擎那把 secret 不能再放 `cometcloud-local/.env`**(lane 读得到)—— 放 `~/.cometcloud/engine.env`,引擎脚本改读它(Minimax 侧,SYNC 已登记)。
