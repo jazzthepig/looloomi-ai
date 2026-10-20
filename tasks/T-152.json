@@ -1,0 +1,26 @@
+{
+  "id": "T-152",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-20",
+  "verified": null,
+  "title": "X1V 实施拖累:逐步瀑布(从理想一步一步走到回放,各步之和 = 总差,没有残差)",
+  "source": "T-137 / T-143 / T-146 都是「在基线上单独加一个开关」—— 交互项留在残差里,所以三张卡之后仍剩约 7.6pp/年解释不了。T-143 (g):全期平均 |目标 − 实际| = 0.097,这是结构性的大数,但一直没折成年化;T-146 (i) 想折,用了当日权重吃当日收益(前视),作废。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-152.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "在 t137_x1v_replay.py / t143_drag_decomposition.py 的同一读数上,定义一串净值 N0 … Nk:N0 = 理想(T-137 原定义,t−1 收盘定的目标权重吃 t 日收益,无成本、无门槛)。之后**每一步只多打开一个开关、且保留前面所有开关**,顺序写死:① 成交时点(按回放的实际成交日 / 价成交,其余仍理想)② 5% 再平衡门槛 ③ 成本(费 + 半价差)④ 下单限额 / 最小单 / nav_cap ⑤ 其余回放里有而前面没有的一切。最后一步必须与回放净值逐日相同(年化差 < 0.01pp,否则说明漏了开关,写出来)。报每一步的年化差 Δk 与分年,Σ Δk = 回放 − 理想。再按**反序**(⑤ → ①)走一遍,报两种顺序下每个开关的 Δ —— 两者之差就是交互项的大小。所有权重一律用「t−1 收盘时已知」的那一份去乘 t 日收益,写一条能失败的自检:把权重换成 t 日的,年化必须变(证明自检真的在查前视)。读库只用 SUPABASE_URL / SUPABASE_KEY(publishable)。",
+    "expect": "脚本 docs/research/t152_x1v_waterfall.py;报告写数据根 _reports/absorb_input/T-152_x1v_waterfall.md(脚本自己写,不手写);卡 notes 写两种顺序的 Δ 表;in_review,推 lane-a/T-152。"
+  },
+  "prior_value": "X1V 是执行器唯一会做的 sleeve(BTC / ETH 现货,真钱)。每年 7–9pp 的实施拖累相当于把一半收益留在桌上 —— 不知道是哪一步,就不知道该改门槛、改时点还是改限额。",
+  "notes": ""
+}
