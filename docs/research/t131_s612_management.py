@@ -10,7 +10,7 @@ Outputs (under /Volumes/CometCloudAI/cometcloud-local/_data/research/t131/):
   - trades_M{0,1,2,3}.csv        (per-mode trade list)
   - t131_stats.json              (M0–M3 stats summary)
 """
-import os, json
+import os, json, sys
 import numpy as np
 import pandas as pd
 
@@ -31,6 +31,17 @@ HOLD_MAX = 120
 M1_SCALE_OUT_R = 2.0                      # 浮盈 +2R 平一半
 M3_TIGHTEN_R   = 3.0                      # 浮盈 +3R 后切到 SMA10
 M2_REENTRY_DAYS = 10                      # 出场后 10 天内可再进
+
+# ── §Seth-1020a 修订 (2026-10-21, T-140 r2) ─────────────────────────────
+# M2 再进腿的止损必须是【进场前】已知的价;且风险过窄的再进丢弃并计数。
+RE_MIN_ATR_MULT = 0.3                      # entry − stop < 0.3×ATR ⇒ 丢弃
+RE_SAMEBAR_MAX  = 0.05                     # 自检(能失败):exit_idx==entry_idx 占比上限
+REENTRY_STOP_MODE = sys.argv[1] if len(sys.argv) > 1 else "entry_minus_atr"
+                                             # M2 再进腿止损口径:
+                                             #   "recapture_low"   = 复收日(信号收复日 j)的最低价
+                                             #   "entry_minus_atr" = re_entry − atr14[j]
+m2_re_legs      = []      # [(entry_idx, exit_idx), ...] 所有 M2 再进腿
+m2_rej_tight    = [0]     # 因风险过窄被丢弃的 M2 再进次数
 
 # ── Load ────────────────────────────────────────────────────────────────────
 print('Loading ohlcv_daily …', flush=True)
@@ -83,6 +94,7 @@ for sym, sdf in df.groupby('symbol', sort=False):
         'low':   sdf['low'].to_numpy(),
         'close': sdf['close'].to_numpy(),
         'sma20': sdf['sma20'].to_numpy(),
+        'atr14': sdf['atr14'].to_numpy(),   # §Seth-1020a: 进场前已知的 ATR
         'date':  sdf['trade_date'].to_numpy(),
     }
 for sym in sym_arr:
@@ -177,8 +189,25 @@ def simulate(sig_df, mode):
                     break
             if (re_ei is not None) and (re_ei < n):
                 re_entry = opens[re_ei]
-                re_stop  = lows[re_ei]
-                if re_entry > re_stop:
+                # ── §Seth-1020a #2/#4 修订 (2026-10-21, T-140 r2) ────────────
+                # 旧版 re_stop = lows[re_ei] = 进场当根最低价,而下面 k 从 re_ei 起
+                # 第一根就查 lows[k] <= re_stop ⇒ 必然触发 ⇒ 每条 M2 再进腿都在进场
+                # 当根按止损价出。止损必须是进场【前】已知的价:此处用复收日(信号
+                # 收复日 j)的最低价,re_ei = j + 1 故 j = re_ei − 1。
+                rec_j   = re_ei - 1
+                atr_ref = float(a['atr14'][rec_j])     # ATR14 截至复收日,进场前已知
+                if REENTRY_STOP_MODE == "recapture_low":
+                    re_stop = float(lows[rec_j])       # 复收日最低价
+                elif REENTRY_STOP_MODE == "entry_minus_atr":
+                    re_stop = float(re_entry - atr_ref)
+                else:
+                    sys.exit(f"unknown REENTRY_STOP_MODE={REENTRY_STOP_MODE!r}")
+                # §Seth-1020a #2 后半:风险过窄的再进丢弃并计数(R 分母会爆炸)
+                if np.isfinite(atr_ref) and atr_ref > 0 \
+                        and (re_entry - re_stop) < RE_MIN_ATR_MULT * atr_ref:
+                    m2_rej_tight[0] += 1
+                    re_entry = None
+                if re_entry is not None and re_entry > re_stop:
                     re_risk = re_entry - re_stop
                     re_end  = min(re_ei + HOLD_MAX, n)
                     re_active = True
@@ -203,6 +232,8 @@ def simulate(sig_df, mode):
                         px = closes[k]
                         leg_r_contribs.append((px - re_entry) / re_risk - COST * re_entry / re_risk)
                         exit_idx_final = k
+                    # §Seth-1020a #3:记下每条 M2 再进腿的 (进场根, 出场根) 供自检
+                    m2_re_legs.append((re_ei, exit_idx_final))
 
         total_R = float(sum(leg_r_contribs))
         out.append({
@@ -225,6 +256,32 @@ for mode in ['M0','M1','M2','M3']:
     results[mode] = simulate(sig, mode)
     t = results[mode]
     print(f'{mode}: n={len(t)}  meanR={t.R.mean():+.4f}  sumR={t.R.sum():+.2f}', flush=True)
+
+
+# ── §Seth-1020a #3:能失败的自检(只对 M2) ────────────────────────────────
+n_legs = len(m2_re_legs)
+n_same = sum(1 for e, x in m2_re_legs if x == e)
+same_frac = (n_same / n_legs) if n_legs else 0.0
+m2_ok = same_frac <= RE_SAMEBAR_MAX
+print(f'\n[selfcheck] M2 re-entry legs={n_legs}  exit_idx==entry_idx={n_same} '
+      f'({same_frac:.2%})  limit={RE_SAMEBAR_MAX:.0%}  dropped_tight={m2_rej_tight[0]}  '
+      f"stop_mode={REENTRY_STOP_MODE}  → {'PASS' if m2_ok else 'FAIL'}", flush=True)
+# 落盘给 T-140 报告复用(同口径重跑的结果)
+m2_selfcheck = {
+    'legs': n_legs, 'samebar': n_same, 'samebar_frac': same_frac,
+    'samebar_limit': RE_SAMEBAR_MAX, 'pass': bool(m2_ok),
+    'dropped_tight': m2_rej_tight[0], 're_min_atr_mult': RE_MIN_ATR_MULT,
+    'stop_mode': REENTRY_STOP_MODE,
+    'M0': {'n': int(len(results['M0'])), 'meanR': float(results['M0'].R.mean()),
+           'sumR': float(results['M0'].R.sum())},
+    'M2': {'n': int(len(results['M2'])),
+           'meanR': float(results['M2'].R.mean()),
+           'sumR': float(results['M2'].R.sum())},
+}
+with open('/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/'
+          f'T-131_s612_m2_r2_{REENTRY_STOP_MODE}.json', 'w') as f:
+    json.dump(m2_selfcheck, f, indent=2)
+print(f"[selfcheck] wrote T-131_s612_m2_r2_{REENTRY_STOP_MODE}.json", flush=True)
 
 
 # ── Sanity: M0 must reproduce R-G0 within ±1% / ±0.01 ──────────────────────
@@ -298,3 +355,9 @@ with open(os.path.join(OUT_DIR, 't131_stats.json'), 'w') as f:
 
 print('\n=== M0–M3 STATS ===')
 print(json.dumps(stats_all, indent=2, default=str))
+
+# ── 报告落盘后才中止:自检不过 ⇒ 数字留档供 @seth 重校阈值,退出码非 0 ─────
+if not m2_ok:
+    sys.exit(f'SELF-CHECK FAIL (§Seth-1020a #3, stop_mode={REENTRY_STOP_MODE}): '
+             f'M2 再进腿 exit_idx==entry_idx 占比 {same_frac:.2%} > {RE_SAMEBAR_MAX:.0%} '
+             f'({n_same}/{n_legs})。M2 结论不作数 —— 已落盘,阈值需 @seth 重校。')
