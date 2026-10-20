@@ -40,9 +40,19 @@ Seth 收紧的三处(相对 T-051 v0.5):① 只留主臂(α=0.5 / α=0 的倾斜
 T-088 acceptance:z **只用 d−1 及以前**。replay 把每一天的 z 钉在 d−1 那条重建的 CIS 行上 —— 重建与实盘 T2
 同函数同输入(cis_rebuild.score_day),所以分母是同一份。code_ref 在数据里固定,跟 rebuild.CODE_REF 走。
 
+## S-640:资金费拥挤倾斜(② 第 4 个候选,台账 S-640 预注册;B 道 T-155 过、Seth 独立复算)
+
+    主臂   fund_a1_u   BTC / ETH 保持 w_①;其余在剩余份额内按 w_① × exp(K · z_f) 重排(K = 0.5,不网格)
+    w_①    与 cis_a1_u 同一读法:capped_weights(市值(d−1), α=1, cap=1.0)
+    z_f    −(山寨在 d−7 … d−1 的平均资金费率的截面 z)—— 资金费 = v_funding_daily(binance_perp),按期数加权;
+           只用 d 之前的日子;没有资金费的山寨 z_f = 0;有费的不足 2 个或标准差 0 ⇒ 全部 0;BTC / ETH 不进 z
+    节奏    与 ② 同:起点收盘建仓、每周一收盘再平衡、换手 × 10bps(同一个 run_nav)
+    起点    2026-10-26 收盘(代码在 10-20 定下;第一天前向收益 = 10-27)。回放臂 fund_a1_u_replay 从 2023-01-02 起
+    证伪    同 ② 的 L3:前向 ≥ 60 天且任意时刻下界 > 0;最早 2026-12-25。族内第 4 次、族内不显著 —— 前向才是检验
+
 ## 判活判据(规则 5b ②)
 
-    select arm, max(d), count(*) from cis_tilt_daily group by 1;   -- UTC 08:00 后 max(d) 应 = 昨天(全 4 臂)
+    select arm, max(d), count(*) from cis_tilt_daily group by 1;   -- UTC 08:00 后 max(d) 应 = 昨天(fund_a1_u 10-26 起)
 """
 from __future__ import annotations
 
@@ -74,6 +84,14 @@ INCEPTION_U = CORE_SINCE
 ARM_CAP_U = ARM_CAP["cap_a1_u"]
 CODE_REF = "T-052 cis_tilt v1"
 CODE_REF_U = "T-088 cis_tilt v2 (cap_a1_u 底仓,no single-name cap)"
+# S-640:资金费拥挤倾斜(前向 + 回放)
+FUND_ARM = "fund_a1_u"
+FUND_REPLAY_ARM = "fund_a1_u_replay"
+FUND_INCEPTION = pd.Timestamp("2026-10-26")
+FUND_LOOKBACK_DAYS = 7
+FUND_PINNED = ("BTC", "ETH")
+FUND_VIEW = "v_funding_daily"
+CODE_REF_FUND = "S-640 fund_tilt v1 (cap_a1_u 底仓,BTC/ETH 钉住,z = −资金费 7 日均值截面 z)"
 
 
 def is_rebalance_day(d: pd.Timestamp, inception: pd.Timestamp = INCEPTION) -> bool:
@@ -101,11 +119,59 @@ def tilted_weights(w_core: Mapping[str, float], z: Mapping[str, float], k: float
     return capped_weights(raw, 1.0, cap)
 
 
+def funding_z(mean_rates: Mapping[str, Optional[float]], alts: list[str]) -> dict[str, float]:
+    """S-640:山寨截面上「负的」资金费 z(拥挤的 z 为负 ⇒ 少配)。缺 / 非有限 ⇒ 0;有费的不足 2 个或标准差 0 ⇒ 全部 0。
+    与 cis_z 同一个样本标准差,只是取负。"""
+    z = cis_z({s: mean_rates.get(s) for s in alts}, alts)
+    return {s: (-v if v else 0.0) for s, v in z.items()}
+
+
+def pinned_tilt(w_core: Mapping[str, float], z: Mapping[str, float], pinned: tuple[str, ...] = FUND_PINNED,
+                k: float = K) -> dict[str, float]:
+    """S-640:钉住的名字保持 w_①;其余在剩余份额(1 − 钉住之和)内按 w_① × exp(k·z) 重排。总和不变,不做单币上限(cap_a1_u)。"""
+    w = {s: float(v) for s, v in w_core.items() if v and v > 0}
+    fixed = {s: v for s, v in w.items() if s in pinned}
+    rest = {s: v * math.exp(k * float(z.get(s, 0.0))) for s, v in w.items() if s not in pinned}
+    share = sum(w.values()) - sum(fixed.values())
+    tot = sum(rest.values())
+    out = dict(fixed)
+    if tot > 0:
+        out.update({s: v / tot * share for s, v in rest.items()})
+    return out
+
+
+def fund_means(daily: list[Mapping[str, Any]], rebal_days: list[pd.Timestamp],
+               lookback: int = FUND_LOOKBACK_DAYS) -> dict[pd.Timestamp, dict[str, float]]:
+    """纯函数。v_funding_daily 的行(symbol, d, funding_rate = 当日平均, n = 当日期数)→ 每个再平衡日 d:
+    各币 [d − lookback, d − 1] 的按期数加权平均资金费率。只用 d 之前的日子;窗口里一行都没有的币不出现(= 缺)。"""
+    by_sym: dict[str, list[tuple[pd.Timestamp, float, int]]] = {}
+    for r in daily:
+        try:
+            d, rate, n = pd.Timestamp(str(r["d"])[:10]), float(r["funding_rate"]), int(r.get("n") or 0)
+        except (KeyError, TypeError, ValueError):
+            continue
+        if n > 0 and math.isfinite(rate):
+            by_sym.setdefault(str(r["symbol"]), []).append((d, rate, n))
+    out: dict[pd.Timestamp, dict[str, float]] = {}
+    for d in rebal_days:
+        lo = d - pd.Timedelta(days=lookback)
+        m: dict[str, float] = {}
+        for sym, rows in by_sym.items():
+            num = sum(rate * n for dd, rate, n in rows if lo <= dd < d)
+            den = sum(n for dd, rate, n in rows if lo <= dd < d)
+            if den > 0:
+                m[sym] = num / den
+        out[d] = m
+    return out
+
+
 def compute_path(px: pd.DataFrame, mcap_prev: pd.DataFrame, cis_at: Mapping[pd.Timestamp, Mapping[str, float]],
                  barred: list[str], source: str, end: Optional[pd.Timestamp] = None,
                  arm: str = ARM, inception: Optional[pd.Timestamp] = None,
-                 cap: Optional[float] = None, code_ref: Optional[str] = None) -> list[dict]:
+                 cap: Optional[float] = None, code_ref: Optional[str] = None,
+                 mode: str = "cis") -> list[dict]:
     """纯函数。`cis_at`:再平衡日 → {币: 当时可用的 CIS}(调用方已按时点与新鲜度筛过)。
+    S-640:mode="fund" 时 `cis_at` 是 {币: d−7…d−1 的平均资金费率},z = funding_z(只在山寨里),权重 = pinned_tilt(BTC / ETH 钉住)。
 
     T-088:加 `arm` / `inception` / `cap` / `code_ref` 参数。cis_a1_u 用 arm=ARM_U, inception=INCEPTION_U,
     cap=ARM_CAP_U(=1.0), code_ref=CODE_REF_U。cis_a1 不传参就是原行为。"""
@@ -135,10 +201,16 @@ def compute_path(px: pd.DataFrame, mcap_prev: pd.DataFrame, cis_at: Mapping[pd.T
         # T-088:cis_a1_u 传 cap=1.0 给 core_cap.capped_weights —— 不再压 40%
         w_core = capped_weights(avail, 1.0, cap)
         scores = dict(cis_at.get(d) or {})
-        z = cis_z(scores, list(w_core))
+        if mode == "fund":
+            alts = [s for s in w_core if s not in FUND_PINNED]
+            z = funding_z(scores, alts)
+            n_scored[d] = sum(1 for s in alts if scores.get(s) is not None)
+            orders[d] = pinned_tilt(w_core, z)
+        else:
+            z = cis_z(scores, list(w_core))
+            n_scored[d] = sum(1 for s in w_core if s in scores and scores[s] is not None)
+            orders[d] = tilted_weights(w_core, z, cap=cap)
         zs[d] = z
-        n_scored[d] = sum(1 for s in w_core if s in scores and scores[s] is not None)
-        orders[d] = tilted_weights(w_core, z, cap=cap)
     book = run_nav(px, orders, cost_bps=COST_BPS, min_quoted_weight=MIN_QUOTED_WEIGHT, label=arm,
                    renormalize_to_quoted=False, days=days)
     rows: list[dict] = []
@@ -291,6 +363,20 @@ async def _cis_at_rebuild(rebal_days: list[pd.Timestamp], symbols: list[str],
     return out
 
 
+async def _fund_at(rebal_days: list[pd.Timestamp], symbols: list[str]) -> dict[pd.Timestamp, dict[str, float]]:
+    """S-640:每个再平衡日 d 的 d−7 … d−1 平均资金费率(v_funding_daily,binance_perp,按期数加权)。读不到抛异常。"""
+    from src.data.style.header import _read_all
+    if not rebal_days:
+        return {}
+    lo = (rebal_days[0] - pd.Timedelta(days=FUND_LOOKBACK_DAYS)).date().isoformat()
+    hi = rebal_days[-1].date().isoformat()
+    alts = [s for s in symbols if s not in FUND_PINNED]
+    rows = await _read_all(FUND_VIEW, {
+        "select": "symbol,d,funding_rate,n", "symbol": "in.(" + ",".join(alts) + ")",
+        "and": f"(d.gte.{lo},d.lt.{hi})", "order": "d.asc"})
+    return fund_means(rows, rebal_days)
+
+
 async def run_once() -> dict[str, Any]:
     """重算到昨天那根已收盘日线并整条 upsert。幂等。
 
@@ -333,7 +419,21 @@ async def run_once() -> dict[str, Any]:
     rows_r = await asyncio.to_thread(compute_replay_path, px, mc, cis_r, list(p.barred), p.source,
                                      start=REPLAY_START, end=target)
 
-    rows = rows_old + rows_u + rows_r
+    # S-640 fund_a1_u_replay(2023 起)+ fund_a1_u(2026-10-26 起):资金费拥挤倾斜,BTC / ETH 钉住
+    fund_r = await _fund_at(rebal_r, panel)
+    rows_fr = await asyncio.to_thread(compute_path, px, mc, fund_r, list(p.barred), p.source, target,
+                                      arm=FUND_REPLAY_ARM, inception=REPLAY_START, cap=ARM_CAP_U,
+                                      code_ref=CODE_REF_FUND, mode="fund")
+    rows_f: list[dict] = []
+    if target >= FUND_INCEPTION:
+        rebal_f = [d for d in px.index if FUND_INCEPTION <= d <= target and is_rebalance_day(d, FUND_INCEPTION)]
+        fund_f = {d: fund_r[d] for d in rebal_f if d in fund_r}
+        fund_f.update(await _fund_at([d for d in rebal_f if d not in fund_f], panel))
+        rows_f = await asyncio.to_thread(compute_path, px, mc, fund_f, list(p.barred), p.source, target,
+                                         arm=FUND_ARM, inception=FUND_INCEPTION, cap=ARM_CAP_U,
+                                         code_ref=CODE_REF_FUND, mode="fund")
+
+    rows = rows_old + rows_u + rows_r + rows_fr + rows_f
     # S-560:回放 + 前向一起整条重算 ⇒ 写之前过 forward_lock(d ≤ 今天 − 2 的前向行不再改写)
     from src.data.accounting.forward_lock import write_locked
     w = await write_locked(TABLE, rows, key="arm", on_conflict="d,arm")
@@ -346,5 +446,6 @@ async def run_once() -> dict[str, Any]:
             "nav_by_arm": {a: last_arms[a].get("nav") for a in arms},
             "n_scored_last_rebal": {a: len(cis_old.get(rebal_old[-1], {})) if a == ARM else
                                     len(cis_u.get(rebal_u[-1], {})) if a == ARM_U else
+                                    len(fund_r.get(rebal_r[-1], {})) if a in (FUND_ARM, FUND_REPLAY_ARM) else
                                     len(cis_r.get(rebal_r[-1], {})) for a in arms},
             "stale_in_source": stale}

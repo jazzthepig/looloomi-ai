@@ -156,3 +156,71 @@ def test_replay_path_runs_from_2023_with_uncapped():
     assert all(r["arm"] == "cis_a1_u_replay" for r in rows)
     assert all(r["inception"] == "2023-01-02" for r in rows)
     assert all(r["code_ref"] == ct.CODE_REF_U for r in rows)
+
+
+# ── S-640:资金费拥挤倾斜(② 第 4 个候选,BTC / ETH 钉住)──────────────────────────────────────────
+
+def test_fund_arm_parameters_are_pinned():
+    """预注册的参数:改任何一项 = 新起点。"""
+    assert ct.FUND_ARM == "fund_a1_u" and ct.FUND_REPLAY_ARM == "fund_a1_u_replay"
+    assert ct.FUND_INCEPTION == pd.Timestamp("2026-10-26") and ct.FUND_INCEPTION.weekday() == 0
+    assert ct.FUND_LOOKBACK_DAYS == 7 and ct.FUND_PINNED == ("BTC", "ETH") and ct.K == 0.5
+    assert ct.CODE_REF_FUND.startswith("S-640")
+
+
+def test_funding_z_is_negative_for_crowded_and_zero_when_missing():
+    alts = ["SOL", "DOGE", "ADA", "XRP"]
+    z = ct.funding_z({"SOL": 0.0003, "DOGE": 0.0001, "ADA": 0.0001, "XRP": None, "BTC": 0.01}, alts)
+    assert set(z) == set(alts), "BTC / ETH 不进 z"
+    assert z["SOL"] < 0 < z["DOGE"] and z["XRP"] == 0.0, "资金费最高的 z 最低(少配);缺费 = 0"
+    assert ct.funding_z({"SOL": 0.0003}, alts) == {s: 0.0 for s in alts}, "有费的不足 2 个 ⇒ 全 0"
+
+
+def test_pinned_tilt_keeps_btc_eth_and_total_and_underweights_the_crowded():
+    w_core = cc.capped_weights({"BTC": 60.0, "ETH": 20.0, "SOL": 10.0, "XRP": 5.0, "ADA": 5.0}, 1.0, cap=1.0)
+    z = {"SOL": -1.5, "XRP": 1.0, "ADA": 0.5}
+    w = ct.pinned_tilt(w_core, z)
+    assert w["BTC"] == pytest.approx(w_core["BTC"]) and w["ETH"] == pytest.approx(w_core["ETH"])
+    assert sum(w.values()) == pytest.approx(1.0)
+    assert w["SOL"] < w_core["SOL"] and w["XRP"] > w_core["XRP"]
+    assert (w["XRP"] / w["ADA"]) == pytest.approx(math.exp(0.5 * 0.5) * w_core["XRP"] / w_core["ADA"])
+    assert ct.pinned_tilt(w_core, {}) == pytest.approx(w_core), "没有 z ⇒ 就是 ①"
+
+
+def test_fund_means_uses_only_the_seven_days_before_d_weighted_by_count():
+    d = pd.Timestamp("2026-10-26")
+    rows = [{"symbol": "SOL", "d": "2026-10-18", "funding_rate": 9.0, "n": 3},     # d−8:窗口外
+            {"symbol": "SOL", "d": "2026-10-19", "funding_rate": 0.0002, "n": 3},  # d−7:窗口内(含)
+            {"symbol": "SOL", "d": "2026-10-25", "funding_rate": 0.0005, "n": 1},  # d−1:窗口内
+            {"symbol": "SOL", "d": "2026-10-26", "funding_rate": 7.0, "n": 3},     # d 当天:不能用
+            {"symbol": "ADA", "d": "2026-10-20", "funding_rate": 0.0001, "n": 0}]  # 0 期 = 没有
+    m = ct.fund_means(rows, [d])[d]
+    assert m["SOL"] == pytest.approx((0.0002 * 3 + 0.0005 * 1) / 4)
+    assert "ADA" not in m, "窗口里没有一期 = 缺,不是 0"
+
+
+def test_fund_path_pins_btc_eth_and_records_z_only_for_alts():
+    days = pd.date_range(ct.FUND_INCEPTION, periods=9, freq="D")
+    syms = ["BTC", "ETH", "S2", "S3", "S4", "S5"]
+    px, mc = _panel(days, syms)
+    rebal = [d for d in days if ct.is_rebalance_day(d, ct.FUND_INCEPTION)]
+    fund = {d: {"S2": 0.0004, "S3": 0.0001, "S4": 0.0001, "S5": 0.0002, "BTC": 0.05} for d in rebal}
+    rows = ct.compute_path(px, mc, fund, [], "binance_hist", arm=ct.FUND_ARM, inception=ct.FUND_INCEPTION,
+                           cap=ct.ARM_CAP_U, code_ref=ct.CODE_REF_FUND, mode="fund")
+    core = ct.compute_path(px, mc, {}, [], "binance_hist", arm="x", inception=ct.FUND_INCEPTION, cap=ct.ARM_CAP_U)
+    first, first_core = rows[0], core[0]
+    assert first["arm"] == "fund_a1_u" and first["inception"] == "2026-10-26"
+    assert set(first["z"]) == {"S2", "S3", "S4", "S5"} and first["n_scored"] == 4
+    assert first["weights"]["BTC"] == pytest.approx(first_core["weights"]["BTC"], abs=1e-5)
+    assert first["weights"]["ETH"] == pytest.approx(first_core["weights"]["ETH"], abs=1e-5)
+    assert first["weights"]["S2"] < first_core["weights"]["S2"], "资金费最高的山寨少配"
+    assert all(abs(sum(r["weights"].values()) - 1) < 1e-4 for r in rows)
+
+
+def test_run_once_writes_the_fund_arms_and_guards_the_forward_start():
+    from pathlib import Path
+    src = (Path(__file__).resolve().parents[1] / "src/data/signals/cis_tilt.py").read_text(encoding="utf-8")
+    body = src.split("async def run_once", 1)[1]
+    assert "arm=FUND_REPLAY_ARM" in body and "arm=FUND_ARM" in body and 'mode="fund"' in body
+    assert "if target >= FUND_INCEPTION:" in body, "起点之前不写前向臂"
+    assert "rows_fr + rows_f" in body
