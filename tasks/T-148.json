@@ -1,9 +1,14 @@
 {
   "id": "T-148",
   "owner": "lane-b",
-  "status": "open",
-  "created": "2026-10-21",
-  "verified": null,
+  "status": "done",
+  "created": "2026-10-20",
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-20T18:07Z",
+    "value": "S-634 ❌(全程 +2.85pp ✓、留出段 −1.08pp ✗、随机分位 0.78 ✗)。报告已移出仓库。② 族三次都分不开随机,先不在同框架找新分数。台账已记。"
+  },
+  "notes": "",
   "title": "S-634 ② 候选:钉住 BTC / ETH,只在山寨里按 30 日动量倾斜(与 S-630 同框架同判据)",
   "source": "台账 S-634 预注册(写于对动量变体算任何收益之前)。S-630:CIS 在山寨内倾斜 ≈ 随机;现在没有验证过的 ②。cis_tilt_daily 已对 publishable key 开读(migrations/2026-10-21_lane_read_books_treasury.sql)。",
   "allowed_paths": [
@@ -21,6 +26,5 @@
     "check": "照 S-634 原文一字不改:从 cis_tilt_daily 的 cis_a1_u_replay 再平衡日(z 非空的行)反推 ① 权重 w0 ∝ w × exp(−0.5 z),V0 必须复现 multiplier_daily 的 core_u_replay NAV 到 1% 以内(复现不过就停);V3 = BTC / ETH 保持 w0,其余在剩余份额内按 w0 × exp(0.5 × z30),z30 = 到 d−1 收盘的 30 日收益在山寨横截面的 z;周一再平衡、周内买入持有、换手 × 10bp;判两条:V3 − V0 全程与 2025-01-01 起留出段都 > 0;V3 − V0 高于山寨内随机打乱 z 200 次的第 190 大;只报项全报(含 90 日动量同口径,只报)。",
     "expect": "脚本 docs/research/t148_alt_momentum_tilt.py;报告 _reports/absorb_input/T-148_alt_momentum.md,末尾写「S-634 结果」草稿;in_review,推 lane-b/T-148。"
   },
-  "prior_value": "② 是回报层级的第二层,现在空着。钉住 BTC / ETH 才能把「挑币」和「押 BTC 主导度」分开 —— S-630 用同一把尺子量过 CIS。",
-  "notes": ""
+  "prior_value": "② 是回报层级的第二层,现在空着。钉住 BTC / ETH 才能把「挑币」和「押 BTC 主导度」分开 —— S-630 用同一把尺子量过 CIS。"
 }

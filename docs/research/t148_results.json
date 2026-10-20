@@ -1,0 +1,105 @@
+{
+  "data_window": {
+    "start": "2023-01-02",
+    "end": "2026-10-19",
+    "n_rebalance": 199
+  },
+  "panel": {
+    "size": 22,
+    "names": [
+      "AAVE",
+      "ADA",
+      "APT",
+      "ATOM",
+      "AVAX",
+      "BCH",
+      "BNB",
+      "BTC",
+      "DOGE",
+      "DOT",
+      "ETC",
+      "ETH",
+      "FIL",
+      "INJ",
+      "LINK",
+      "LTC",
+      "NEAR",
+      "OP",
+      "SOL",
+      "TRX",
+      "UNI",
+      "XRP"
+    ],
+    "pinned": [
+      "BTC",
+      "ETH"
+    ]
+  },
+  "v0_check": {
+    "final_nav_my": 3.66809,
+    "final_nav_reference": 3.65748,
+    "ratio": 1.0029,
+    "max_relative_diff_pct": 0.364,
+    "median_relative_diff_pct": 0.1241,
+    "n_aligned_days": 199,
+    "passes_1pct": true
+  },
+  "v3_30d": {
+    "v0_total": 2.6681,
+    "v3_total": 2.6966,
+    "diff_full": 0.0285,
+    "diff_2025_holdout": -0.0108,
+    "v0_max_dd": -0.5539,
+    "v3_max_dd": -0.5573,
+    "pctile_vs_shuffles_full": 0.78,
+    "pctile_vs_shuffles_holdout": 0.505,
+    "pctile_v3_minus_v0_full": 0.78,
+    "turnover_v0_total": 0.0038,
+    "turnover_v3_total": 0.011
+  },
+  "v3_90d_report_only": {
+    "v3_total": 2.7855,
+    "diff_full": 0.1174,
+    "diff_2025_holdout": 0.0154,
+    "v3_max_dd": -0.5512
+  },
+  "yearly": [
+    {
+      "year": "2023",
+      "v0_ret": 1.3094297695329642,
+      "v3_30d_ret": 1.3652233841588002,
+      "v3_30d_minus_v0": 0.055793614625835986,
+      "v3_90d_ret": 1.3785638524094206,
+      "v3_90d_minus_v0": 0.06913408287645639
+    },
+    {
+      "year": "2024",
+      "v0_ret": 0.9284832137173662,
+      "v3_30d_ret": 0.9697466358833218,
+      "v3_30d_minus_v0": 0.04126342216595558,
+      "v3_90d_ret": 0.953027717089463,
+      "v3_90d_minus_v0": 0.024544503372096793
+    },
+    {
+      "year": "2025",
+      "v0_ret": -0.19045221755961472,
+      "v3_30d_ret": -0.17491110724126668,
+      "v3_30d_minus_v0": 0.01554111031834804,
+      "v3_90d_ret": -0.16764833749383712,
+      "v3_90d_minus_v0": 0.022803880065777604
+    },
+    {
+      "year": "2026",
+      "v0_ret": -0.17140012374011215,
+      "v3_30d_ret": -0.16495828661391676,
+      "v3_30d_minus_v0": 0.006441837126195393,
+      "v3_90d_ret": -0.1448728176249755,
+      "v3_90d_minus_v0": 0.02652730611513665
+    }
+  ],
+  "judgement_pass": false,
+  "n_shuffles": 200,
+  "momentum_days_primary": 30,
+  "momentum_days_secondary": 90,
+  "cost_bps": 0.001
+}
