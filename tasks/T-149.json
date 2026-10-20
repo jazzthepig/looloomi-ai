@@ -1,0 +1,26 @@
+{
+  "id": "T-149",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-21",
+  "verified": null,
+  "title": "S-635 投降篮子:全市场冲洗日第二天整个宇宙各开一张宽止损票,捕鱼数与票价是否胜过随机日",
+  "source": "台账 S-635 预注册(写于对冲洗日篮子算任何结果之前)。来源 S-632 / S-633 / S-616 —— 预注册里写明了这条是被它们启发的,同段历史只能当一致性检查。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-149.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "照 S-635 原文一字不改:冲洗日 = S-616 定义(按未平仓市值加权的合约 OI 日变化 ≤ −5% 且 BTC ≤ −4%,读 deriv_metrics_daily 的 oi_value_close 与 binance_hist);篮子 = 次日开盘宇宙内每名一张,止损 2.5×ATR14、收盘破 SMA20 次日开盘出、120 根到期、R 含 0.4% 成本、同名 30 天内只开一次;对照 = 同年随机同样多的日子 200 次;判 = 捕到的鱼 ≥ 随机第 190 大 且 每条鱼票价低于随机第 11 小;只报项全报。复用 T-141 / T-145 的票与鱼的代码(S-618 定义),先复现 S-618 的鱼数作自检。",
+    "expect": "脚本 docs/research/t149_capitulation_basket.py;报告 _reports/absorb_input/T-149_capitulation.md,末尾写「S-635 结果」草稿;in_review,推 lane-a/T-149。"
+  },
+  "prior_value": "鱼成潮且多在急跌见底后(S-632);R 臂的进场已经自带择时(S-633)。如果「投降日广撒」比随机日更会捕鱼、票更便宜,交易层 v2 多一条简单、可执行的纸面臂。",
+  "notes": ""
+}

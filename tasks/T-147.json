@@ -1,0 +1,26 @@
+{
+  "id": "T-147",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-21",
+  "verified": null,
+  "title": "S-626 补:N 臂排除 BTC / ETH(W45 起;W43 / W44 打分时同口径剔除)",
+  "source": "台账 S-626 补(写于任何一周到期打分之前);你在 T-144 报告里提的。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-147.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "t144_narrative_ab.py:N 臂宇宙在 UNIVERSE_EXCLUDE 之外再排除 BTC / ETH(只动 N,不动任何被标记的名字);已冻结的 W43 / W44 文件不改,打分函数对所有周统一先剔除 N 里的 BTC / ETH 再算;加一条能失败的自检:N 里出现 BTC 或 ETH 就 abort。另:W44 的 J 臂文件 research/narrative_flags/2026-W44.json 已由 Seth 写入(Jazz 10-20 给的 HYPE / ARB / UNI / SOL),脚本周一冻结 W44 时应读到 J = 4(不在宇宙的名字照记「不在宇宙」)。",
+    "expect": "改动 + 自检进 docs/research/;卡 notes 写 W44 冻结时各臂名字数(若本轮跑不到周一,写干跑结果);in_review,推 lane-c/T-147。"
+  },
+  "prior_value": "N 是对照组;对照组被 BTC / ETH 稀释,J / E / T / S 都会更难过线,判据会系统性偏向「没用」。",
+  "notes": ""
+}

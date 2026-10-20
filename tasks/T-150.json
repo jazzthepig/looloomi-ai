@@ -1,0 +1,26 @@
+{
+  "id": "T-150",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-21",
+  "verified": null,
+  "title": "S-636 实体 / 决策层:上市公司金库的买入决定领先它买的资产吗(发现段探索 + 留出段一次性)",
+  "source": "台账 S-636 预注册(写于对金库决定与价格做任何匹配之前)。treasury_decisions / corporate_treasury_history 已对 publishable key 开读。HIGH_DIM §1:最深的对象是 Entity / Decision。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-150.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "照 S-636 原文:周单位;决定强度 D = 该周披露净买入美元 ÷ 上周五市值(asset_mcap_daily);结果 = 下一周起 4 周对数收益(BTC 对 ① 面板等权超额;ETH / SOL 对 BTC 超额);发现段 2024-01-01 → 2025-06-30 按 D 三分位报均值、事件数、独立事件数(同公司 30 天内多次算一次);留出段 2025-07-01 → 2026-09-30 只检验发现段里「顶 > 底」且独立事件 ≥ 20 的币,判 = 顶减底 > 0,4 周一块的块自助 2,000 次单侧 p < 0.05。披露滞后:只用披露日、只看之后。",
+    "expect": "脚本 docs/research/t150_treasury_decisions.py;报告 _reports/absorb_input/T-150_treasury.md,末尾写「S-636 结果」草稿;in_review,推 lane-c/T-150。"
+  },
+  "prior_value": "内核第一次用「决定」而不是「反射」做检验:如果公司金库的买入领先价格,实体层就是 ② / ③ 的一个因果输入。",
+  "notes": ""
+}
