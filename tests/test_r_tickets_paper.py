@@ -71,3 +71,50 @@ def test_migration_is_the_kernel_and_revokes_anonymous_execute():
     assert "revoke all on function public.r_tickets_scan(date, date) from public, anon, authenticated" in sql
     assert "is not a completed UTC day" in sql
     assert "pg_try_advisory_xact_lock" in sql, "并发调用(超时重试)不能把同一天跑两遍"
+
+
+# ── S-638:记钱的内核 r_tickets_nav(只读;前向与回放喂同一个函数)────────────────────────────────
+
+def _nav_sql() -> str:
+    return (ROOT / "migrations" / "2026-10-21_r_tickets_nav.sql").read_text(encoding="utf-8")
+
+
+def test_nav_kernel_sizes_on_yesterdays_equity_and_charges_the_r_formula_cost():
+    sql = _nav_sql()
+    assert "p_f * (case when p_compound then v_eq_prev else p_equity0 end) / (r.entry_px - r.stop_px)" in sql
+    # 进出各 0.2% × 进场名义 = R 公式里的 0.4% × 进场 /(进场 − 止损);持仓期先扣进场那一半,出场扣齐
+    assert "k.exit_px - k.entry_px - 0.004 * k.entry_px" in sql
+    assert "m.c - k.entry_px - 0.002 * k.entry_px" in sql
+    # 前一天收盘的净值:已实现 + 当天(v_e − 1)还持有的盯市
+    assert "k.exit_d <= v_e - 1" in sql and "p.t = v_e - 1" in sql
+
+
+def test_nav_kernel_cap_is_first_come_first_served_and_counts_exit_day_as_occupied():
+    sql = _nav_sql()
+    assert "k.entry_d < v_e and (k.exit_d is null or k.exit_d >= v_e)" in sql, "出场当天仍占位(S-638 写死的保守口径)"
+    assert "order by k.signal_d, k.symbol" in sql
+    assert "v_occ + v_k < p_cap" in sql
+
+
+def test_nav_kernel_is_read_only_and_not_callable_anonymously():
+    sql = _nav_sql().lower()
+    for verb in ("insert into public.", "update public.", "delete from public.", "insert into r_tickets",
+                 "update r_tickets", "delete from r_tickets"):
+        assert verb not in sql, f"记钱内核只读,不该有 {verb!r}"
+    assert "create temp table _nv_tk on commit drop" in sql
+    assert "revoke all on function public.r_tickets_nav(jsonb, double precision, int, date, date, boolean, double precision) from public, anon, authenticated" in sql
+    assert "revoke all on function public.r_tickets_nav_paper(double precision, int, date) from public, anon, authenticated" in sql
+
+
+def test_replay_tickets_sql_uses_the_same_rules_as_the_forward_scan():
+    """回放的票(docs/research/r_v2_tickets.sql)与前向的 r_tickets_scan 必须同一套规则 —— 改一边就得改另一边。"""
+    scan = (ROOT / "migrations" / "2026-10-20_r_tickets_paper.sql").read_text(encoding="utf-8")
+    rep = (ROOT / "docs" / "research" / "r_v2_tickets.sql").read_text(encoding="utf-8")
+    assert "2.5 * t.atr14" in scan and "2.5*e.atr14" in rep, "止损 = 进场 − 2.5 × ATR14"
+    cond = ("mindd120 <= 0.5", "<= 0.40", "> hh40", "> sma200", "adv40p", "adv30 >= 5e6", "rn >= 220")
+    for c in cond:
+        assert c in scan and c in rep, c
+    for g in ("style = 'majors' and weighting = 'cap'", "rows between 199 preceding and current row", "n < 200 or lvl > sma"):
+        assert g in scan and g in rep, f"闸门口径不同:{g}"
+    assert "least(s.rn+120, s.n)" in rep and "t.bars_held >= 120" in scan
+    assert "'exit_d', case when r.still_open then null" in rep, "没出场的票要按持仓逐日盯市,不能当已平仓"
