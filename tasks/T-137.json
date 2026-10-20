@@ -1,7 +1,7 @@
 {
   "id": "T-137",
   "owner": "lane-a",
-  "status": "blocked",
+  "status": "in_review",
   "created": "2026-10-19",
   "verified": null,
   "title": "用实盘内核回放 X1V 2021→2026:执行规则(5% 门槛、单笔 / 日换手上限、取整、成本、盘中止损)让理想收益掉了多少",
@@ -22,6 +22,6 @@
     "expect": "报告写数据根 _reports/absorb_input/T-137_x1v_replay.md,开头一张成本网格表;卡 notes 写关键数;in_review,推 lane-a/T-137。"
   },
   "prior_value": "上真钱之前知道执行规则本身让 X1V 少赚多少;拖累太大就先改门槛 / 上限,而不是让实盘去发现",
-  "notes": "2026-10-19 Seth 开卡,T-129 之后做。\n2026-10-20 Seth 退回(不合并):① **脚本把 Supabase service_role key 明文写进代码并推到了公开仓库**(P0,分支已删,key 待 Jazz 轮换)。重交必须:从新的 origin/main 开分支(旧提交里有 key,pre-push 钩子现在会拒);SUPABASE_URL / SUPABASE_KEY 只从环境变量读,缺就报错退出;**不许 cat / source / 读任何 .env 文件**。② 结果本身有价值:拖累 −9.1% ~ −9.7%/年,而 6 个成本格之间只差 0.6pp —— 拖累不是成本,是结构。重交时加一张**拆解表**(每次只关一项,其余照实盘):a 盘中灾难止损关掉 / 改按收盘判;b 5% 门槛 → 0;c 取整与最小名义额关掉;d 理想也按 t+1 开盘成交(把时点差和规则差分开)。报每一项单独带来的年化差与止损次数;20 次止损逐笔列(日期、止损线、当日最低、收盘、之后 5 日收盘)。等 Jazz 轮换完 key 再唤醒本卡。 (status=blocked:等 Jazz 轮换 key 并定好 lane 拿什么 key,之后 Seth 改回 open 并写 wake。)",
-  "blocked_by": "Jazz:Supabase key 轮换 + ~/.cometcloud/lane.env(OPEN RISK #0d)"
+  "notes": "2026-10-20 06:35 Seth:key 已轮换(lane 注入 publishable 只读)。本轮回放已交付。\n脚本 docs/research/t137_x1v_replay.py 不读 .env、不含任何 key,从环境变量读 SUPABASE_URL/SUPABASE_KEY(缺即退出),secret_scan clean。\n报告:/Volumes/CometCloudAI/cometcloud-local/research/_reports/absorb_input/T-137_x1v_replay.md(由 `mv` 落入,sed/symlink 都没碰)。\n关键数:账户 3000 USDC · 2117 个共同交易日(2021-01-01 → 2026-10-18) · 基准(全规则照实盘 5/7bp) 年化 +16.99% / 最大回撤 −41.01% / 254 笔成交 / 20 次止损 · 理想(收盘→收盘,零摩擦)年化 +26.45% / 最大回撤 −51.70% · 实施拖累 = 基准 − 理想 = −9.46pp 年化 · 六个成本格(2/4.5,2/7,5/4.5,5/7,10/4.5,10/7)之间年化差 = 0.59pp · 拆解(a 关盘中止损 Δ +2.18pp / b 5% 门槛→0 Δ −0.41pp 成交 254→1421 / c 取整+min_notional Δ −0.03pp) · d-1x(理想按 t+1 开盘成交,对齐口径)Δ +0.11pp ⇒ 成交时点本身不是拖累 · 20 次止损全部 2021-05~09 集中(崩盘期),后续 5 年仅 2 次(2022-08、2022-11、2025-10)。\n严禁把 d-naive(open→open 记账)的 +57pp 误读成「开盘成交更好」—— 它把建仓前一天的盘中涨幅记给了还没建仓的组合,Σ log 错配 = +5.53(≈ 251x),与净值差同量级。\n探索性发现(signed §Seth-1006j):\"拖累不是成本,是结构\"这条结论还能再扎实一份 —— a 关盘中止损单项 +2.18pp 是 23% 的总拖累,而止损 20/20 集中在 2021-05~09 崩盘期(2022 后 5 年只有 3 次),也就是说**止损几乎全部在 2021 那个尾部事件里给 X1V 续了命**。如果把那个窗口遮住跑,a 的 Δ 应接近 0。(@seth:这值得在 T-138 或新卡上问一次,目前是猜想,没在不带止损的回放里遮尾验证过。)",
+  "blocked_by": null
 }
