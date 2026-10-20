@@ -1886,6 +1886,34 @@ async def _binance_vision_loop():
         await _asyncio.sleep(600 if (r or {}).get("planned", 0) >= _BV_BUDGET else 3600)
 
 
+async def _narrative_probe_loop():
+    """Sharpe AI / Santiment(key 在 Railway,Jazz 10-20):先把两家 API 的返回**形状**写进 loop_attempt.detail,
+    不落数据、不打印 key —— 看到真实结构再建入库与历史 A/B(台账 S-626 K 臂)。每天一次(Santiment 免费档每月 1,000 次)。
+    读法:`select at, outcome, reason, detail from loop_attempt where loop_name = '_narrative_probe_loop' order by at desc limit 1`。"""
+    await _asyncio.sleep(_boot_delay(75))
+    while True:
+        try:
+            from src.data.market.narrative_sources import probe as _np_probe, verdict as _np_verdict
+            p = await _np_probe()
+            status, why = _np_verdict(p)
+            print(f"[NARRATIVE-PROBE] {status} · {why[:160]}")
+            await _beat("_narrative_probe_loop", ok=status == "ok", error=None if status == "ok" else why[:200])
+            await _record_loop_attempt("_narrative_probe_loop", status, reason=why[:400], detail=p,
+                                       writer="src.api.main._narrative_probe_loop")
+        except Exception as _e:
+            print(f"[NARRATIVE-PROBE] ⚠️  pass FAILED: {_e}")
+            await _beat("_narrative_probe_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_narrative_probe_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._narrative_probe_loop")
+        await _asyncio.sleep(86400)
+
+
+@app.on_event("startup")
+async def _start_narrative_probe_loop():
+    _asyncio.create_task(_narrative_probe_loop())
+    print("[NARRATIVE-PROBE] ✅ Sharpe / Santiment shape probe scheduled (daily, writes loop_attempt only)")
+
+
 async def _r_tickets_paper_loop():
     """交易层 v2 纸面账本(docs/TRADING_LAYER_V2.md):每小时推进到最后一个已收盘的 UTC 日。
     内核 = Postgres 函数 r_tickets_scan(回放与前向同一个;2024 年与研究 SQL 逐笔一致)。数据没到 ⇒ refused,停在前一天。

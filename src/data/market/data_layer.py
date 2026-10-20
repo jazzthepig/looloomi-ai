@@ -762,6 +762,39 @@ async def get_fred_series(series_id: str, start: str) -> list[tuple[str, float]]
     return out
 
 
+SHARPE_V1_BASE = "https://www.sharpe.ai/api/v1"
+SANTIMENT_GQL = "https://api.santiment.net/graphql"
+
+
+async def get_sharpe_v1(path: str, params: dict | None = None) -> dict:
+    """Sharpe AI 认证 API(`/api/v1/{path}`,Bearer = 环境变量 SHARPE_AI_KEY,Jazz 10-20 放在 Railway)。
+    返回整个 JSON(v1 外层是 {data, meta})。没有 key / 非 200 抛错;错误里不带 key。"""
+    key = os.getenv("SHARPE_AI_KEY", "")
+    if not key:
+        raise RuntimeError("SHARPE_AI_KEY 不在进程环境里")
+    r = await _get_misc_client().get(f"{SHARPE_V1_BASE}/{path.lstrip('/')}", params=params or {},
+                                     headers={"Authorization": f"Bearer {key}"}, timeout=60)
+    if r.status_code != 200:
+        raise RuntimeError(f"Sharpe {path} HTTP {r.status_code}: {r.text[:160]}")
+    return r.json()
+
+
+async def get_santiment_gql(query: str, variables: dict | None = None) -> dict:
+    """Santiment GraphQL(POST,`Authorization: Apikey` = 环境变量 SANTIMENT_KEY)。返回 `data`;
+    GraphQL 的 errors 或非 200 抛错(错误里不带 key)。免费档:受限指标只给约 1–2 年、且不含最近 30 天。"""
+    key = os.getenv("SANTIMENT_KEY", "")
+    if not key:
+        raise RuntimeError("SANTIMENT_KEY 不在进程环境里")
+    r = await _get_misc_client().post(SANTIMENT_GQL, json={"query": query, "variables": variables or {}},
+                                      headers={"Authorization": f"Apikey {key}"}, timeout=60)
+    if r.status_code != 200:
+        raise RuntimeError(f"Santiment HTTP {r.status_code}: {r.text[:160]}")
+    body = r.json()
+    if body.get("errors"):
+        raise RuntimeError(f"Santiment errors: {str(body['errors'])[:240]}")
+    return body.get("data") or {}
+
+
 async def get_eodhd_eod_range(ticker: str, exchange: str, frm: str) -> list[dict]:
     """EODHD `/eod/{ticker}.{exchange}` 从 frm 起的日线原始行 [{date, open, high, low, close, adjusted_close, volume}]。
     没有 key / 非 200 抛错(T-079)。"""
