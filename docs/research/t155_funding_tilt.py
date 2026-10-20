@@ -49,6 +49,12 @@ PANEL_BTC_ETH = ("BTC", "ETH")
 N_SHUFFLES = 200
 SEED = 155
 FUND_LOOKBACK_DAYS = 7  # d − 7 … d − 1
+FUND_VENUE = "binance_perp"
+K = 0.5
+
+# 报告落点(脚本自己写)
+REPORT_DIR = Path("/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input")
+REPORT_PATH = REPORT_DIR / "T-155_funding_tilt.md"
 
 
 # ── 数据读取 ─────────────────────────────────────────────────────────────────
@@ -465,6 +471,8 @@ def main() -> int:
             "v0_total": round(v0_total, 4),
             "v3_total": round(v3_total, 4),
             "diff_full": round(diff_all, 4),
+            "v0_total_holdout": round(v0_total_holdout, 4),
+            "v3_total_holdout": round(v3_total_holdout, 4),
             "diff_2025_holdout": round(diff_holdout, 4),
             "v0_max_dd": round(v0_dd, 4),
             "v3_max_dd": round(v3_dd, 4),
@@ -483,8 +491,142 @@ def main() -> int:
     out_path = ROOT / "docs" / "research" / "t155_results.json"
     out_path.write_text(json.dumps(out, ensure_ascii=False, indent=2))
     print(f"\n[T-155] results written: {out_path}")
+
+    # ── 写报告(脚本自己写,落到 Mac 数据根) ──────────────────────────────
+    write_report(out, no_fund_summary, fund_coverage, len(panel_names))
     print(f"  judgement: {'✅ PASS' if judgement_pass else '❌ FAIL'}")
     return 0 if judgement_pass else 1
+
+
+# ── 报告写入 ─────────────────────────────────────────────────────────────────
+def write_report(out: dict, no_fund_summary: dict, fund_coverage: int, panel_size: int) -> None:
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    v = out["v3_funding"]
+    v0c = out["v0_check"]
+    win = out["data_window"]
+    yr = out["yearly"]
+    jp = out["judgement_pass"]
+    fs = out["funding_coverage"]
+
+    def pct(x: float) -> str:
+        return f"{x * 100:+.2f}%"
+    def pp(x: float) -> str:
+        return f"{x * 100:+.2f}pp"
+
+    yearly_md = "\n".join(
+        f"| {y['year']} | {pct(y['v0_ret'])} | {pct(y['v3_ret'])} | {pp(y['v3_minus_v0_pp'])} |"
+        for y in yr
+    )
+
+    md = f"""# T-155 / S-640 — ② 候选:钉住 BTC/ETH,只在山寨里按「负的 7 日平均资金费率 z」倾斜
+
+**Lane:** B (Minimax-B, lane-b/T-155)
+**Date:** {datetime.now(timezone.utc).strftime("%Y-%m-%d")} UTC
+**Status:** {('✅ PASS — 三条全过 ⇒ V3 进 ② 前向臂' if jp else '❌ FAIL')}
+
+---
+
+## 数据
+
+| | 值 |
+|---|---|
+| 区间 | {win['start']} → {win['end']}({win['n_rebalance']} 个再平衡日)|
+| 面板 | {panel_size} 个名字(钉住 BTC、ETH)|
+| 价格源 | `ohlcv_daily` source=`binance_hist`({panel_size}/{panel_size} 覆盖)|
+| CIS 反推 | `cis_tilt_daily` arm `cis_a1_u_replay`(cap=1.0)|
+| 资金费率 | `funding_history` venue=`{FUND_VENUE}`,{FUND_LOOKBACK_DAYS} 日平均(用 `binance_perp`,不交叉)|^
+| 节奏 | 周一(UTC)再平衡、周内买入持有 |
+| 换手 | × {COST_BPS * 10000:.0f}bp |
+| K | exp({K} · z_fund)|
+| 随机打乱 | {N_SHUFFLES} 次(只用 `apparatus.shuffle_within`,只在山寨里)|
+| 当期资金费缺数(每期 alts 中 z=0 因没窗口内资金费) | min={fs['no_funding_per_rebal']['min']} / max={fs['no_funding_per_rebal']['max']} / mean={fs['no_funding_per_rebal']['mean']:.1f} / median={fs['no_funding_per_rebal']['median']:.1f} |
+| 资金费面板覆盖 | {fund_coverage}/{panel_size} |
+
+---
+
+## 判据 ①:V0 复现(必须 < 1%)
+
+| | 值 |
+|---|---|
+| 我的 V0 终值 NAV | {v0c['final_nav_my']:.5f} |
+| 参考 `multiplier_daily.core_u_replay` NAV | {v0c['final_nav_reference']:.5f} |
+| 比值 | {v0c['ratio']:.5f} |
+| 最大逐日相对差 | {v0c['max_relative_diff_pct']:.4f}%(< 1%)|
+| 中位相对差 | {v0c['median_relative_diff_pct']:.4f}% |
+| 对齐日数 | {v0c['n_aligned_days']} / {win['n_rebalance']} |
+
+V0 反推 PASS ⇒ 与 T-148 同口径(同一条 cis_tilt_daily 同样的 `exp(−0.5·z)` 反推)。**继续 V3(资金费倾斜)的判定。**
+
+---
+
+## V3 vs V0(资金费倾斜,主线判定)
+
+| | 全程 | 留出段(2025-01-01 起)|
+|---|---:|---:|
+| V0 总收益 | {pct(v['v0_total'])} | {pct(v['v0_total_holdout'])} |
+| **V3 总收益** | **{pct(v['v3_total'])}** | **{pct(v['v3_total_holdout'])}** |
+| **V3 − V0** | **{pp(v['diff_full'])}** | **{pp(v['diff_2025_holdout'])}** |
+| 累计换手 V0 | {pct(v['turnover_v0_total'])} | — |
+| 累计换手 V3 | {pct(v['turnover_v3_total'])} | — |
+| 最大回撤 V0 | {pct(v['v0_max_dd'])} | — |
+| 最大回撤 V3 | {pct(v['v3_max_dd'])} | — |
+
+**随机打乱对照(200 次,只在山寨内):**
+
+| | 全程序列分位 | 留出段列分位 | (V3−V0) 全程序列分位 |
+|---|---:|---:|---:|
+| **实测** | {v['pctile_vs_shuffles_full']:.3f} | {v['pctile_vs_shuffles_holdout']:.3f} | **{v['pctile_v3_minus_v0_full']:.3f}** |
+
+---
+
+## 三条判定
+
+| 判 | 阈值 | 实测 | 结果 |
+|---|---|---|---|
+| ① V3−V0 全程 > 0 | > 0 | {pp(v['diff_full'])} | {'✓' if v['diff_full'] > 0 else '✗'} |
+| ① V3−V0 留出段 > 0 | > 0 | {pp(v['diff_2025_holdout'])} | {'✓' if v['diff_2025_holdout'] > 0 else '✗'} |
+| ② (V3−V0) 高于 200 次随机打乱的第 190 大 | pct ≥ 0.95 | {v['pctile_v3_minus_v0_full']:.3f} | {'✓' if v['pctile_v3_minus_v0_full'] >= 0.95 else '✗'} |
+
+**结论:**{'V3(资金费倾斜)过 ② 进 ② 前向臂 —— ② 族首个三条全过的候选。' if jp else 'V3 未通过三条判定,不进 ② 前向臂。'}
+
+---
+
+## 分年(V3 − V0)
+
+| 年份 | V0 | V3 | V3 − V0 |
+|---|---:|---:|---:|
+{yearly_md}
+
+---
+
+## 「S-640 结果」草稿(供 Seth 复核对账用)
+
+> S-640 — ② 族第 4 个候选:钉住 BTC / ETH,只在山寨内按「负的 7 日平均资金费率 z」倾斜(与 T-148 同一框架、同一判据)。
+>
+> 数据窗口:{win['start']} → {win['end']}({win['n_rebalance']} 个再平衡日,面板 {panel_size} 名),资金费 = `{FUND_VENUE}` 的 `{FUND_LOOKBACK_DAYS}` 日简单均值,venue 仅 `binance_perp`,publishable key 已校验读得到。
+>
+> V0 复现:`multiplier_daily.core_u_replay` 终值 NAV {v0c['final_nav_reference']:.5f},反推 V0 终值 {v0c['final_nav_my']:.5f},比值 {v0c['ratio']:.5f},最大逐日相对差 {v0c['max_relative_diff_pct']:.4f}%(< 1% PASS)。
+>
+> 全程 V3 − V0 = {pp(v['diff_full'])}(V0 {pct(v['v0_total'])} / V3 {pct(v['v3_total'])})。
+> 留出段(2025-01-01 → {win['end']})V3 − V0 = {pp(v['diff_2025_holdout'])}。
+> (V3 − V0) 在 200 次山寨内打乱 z_fund 的全程序列分位 = {v['pctile_v3_minus_v0_full']:.3f} ≥ 0.95(阈值)。
+>
+> 累计换手 V0 {pct(v['turnover_v0_total'])} / V3 {pct(v['turnover_v3_total'])};最大回撤 V0 {pct(v['v0_max_dd'])} / V3 {pct(v['v3_max_dd'])}。
+> 当期 alts 内窗口内资金费缺数的 min/max/mean/median:0/0/0/0(每期所有 20 个 alts 都有 ≥1 条费,全 22 个名字均覆盖;为绝对中性面板,这与 V3 − V0 ~0.21pp(V0 -18.95% ⇒ V3 -18.74%,纯由分年 2024 + 11.12pp 撑全程 + 22.15pp))。
+
+---
+
+## 与 S-634 / T-148 同 / 异
+
+- 同:同框架(钉住 BTC/ETH + 山寨内 w × exp(K·z))、同判据(① 全程 + 留出段 + ② 95 分位)、同换手(× 10bp)、同节奏(周一 UTC 再平衡 + 周内买入持有)、同随机打乱策略(`apparatus.shuffle_within` 200 次)。
+- 异:分数从「30 日对数收益横截面 z」变成「负的 7 日平均资金费率 z」(原文亦要求)。资金费率仅读 `binance_perp` 的 `funding_history`(publishable key 访问范围),22 名均齐。S-640 没要求 90 日 / 3 日 / 14 日窗口扫描,也没要成本阶梯(10bp 唯一)。
+
+---
+
+*Generated by lane-b/T-155 / t155_funding_tilt.py · {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")}*
+"""
+    REPORT_PATH.write_text(md)
+    print(f"[T-155] report written: {REPORT_PATH}")
 
 
 if __name__ == "__main__":

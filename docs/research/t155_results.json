@@ -60,6 +60,8 @@
     "v0_total": 2.6681,
     "v3_total": 2.8896,
     "diff_full": 0.2215,
+    "v0_total_holdout": -0.1895,
+    "v3_total_holdout": -0.1874,
     "diff_2025_holdout": 0.0021,
     "v0_max_dd": -0.5539,
     "v3_max_dd": -0.5554,
