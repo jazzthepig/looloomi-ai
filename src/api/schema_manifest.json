@@ -300,6 +300,7 @@
     "exec_backfill_forward_returns",
     "panel_closes",
     "panel_funding",
+    "r_tickets_scan",
     "refresh_depth_divergence",
     "refresh_regime_daily",
     "resolve_depth_divergence"

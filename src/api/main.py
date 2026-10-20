@@ -1886,6 +1886,34 @@ async def _binance_vision_loop():
         await _asyncio.sleep(600 if (r or {}).get("planned", 0) >= _BV_BUDGET else 3600)
 
 
+async def _r_tickets_paper_loop():
+    """交易层 v2 纸面账本(docs/TRADING_LAYER_V2.md):每小时推进到最后一个已收盘的 UTC 日。
+    内核 = Postgres 函数 r_tickets_scan(回放与前向同一个;2024 年与研究 SQL 逐笔一致)。数据没到 ⇒ refused,停在前一天。
+    判活:`select last_d from r_tickets_state` ≥ 前天。"""
+    await _asyncio.sleep(_boot_delay(2100))   # 部署后错开首轮(S-482:同一 30 秒窗口里最多 10 个)
+    while True:
+        try:
+            from src.data.signals.r_tickets_paper import run_once as _rt_run
+            r = await _rt_run()
+            print(f"[R-TICKETS] {r['status']} · {str(r.get('reason'))[:160]}")
+            await _beat("_r_tickets_paper_loop", ok=r["status"] == "ok", refused=r["status"] == "refused",
+                        detail=r.get("detail"), error=None if r["status"] == "ok" else str(r.get("reason"))[:200])
+            await _record_loop_attempt("_r_tickets_paper_loop", r["status"], reason=str(r.get("reason"))[:400],
+                                       detail=r.get("detail"), writer="src.api.main._r_tickets_paper_loop")
+        except Exception as _e:
+            print(f"[R-TICKETS] ⚠️  pass FAILED: {_e}")
+            await _beat("_r_tickets_paper_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_r_tickets_paper_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._r_tickets_paper_loop")
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_r_tickets_paper_loop():
+    _asyncio.create_task(_r_tickets_paper_loop())
+    print("[R-TICKETS] ✅ trading layer v2 paper book scheduled (r_tickets_scan, hourly)")
+
+
 @app.on_event("startup")
 async def _start_binance_vision_loop():
     _asyncio.create_task(_binance_vision_loop())
