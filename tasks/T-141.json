@@ -1,0 +1,26 @@
+{
+  "id": "T-141",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-20",
+  "verified": null,
+  "title": "S-621:R 臂宽止损在同回撤(−35%)下比年化 + k = 2.0 / 2.5 / 3.0 参数平滑 + 组合热度上限 10R",
+  "source": "台账 S-621 预注册(写于计算之前);S-620(a) 判据 ③ 设错(同每笔风险比总 R,没管回撤缩小 4.7 倍)",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-141.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "脚本 docs/research/t141_s621_equal_dd.py:先原样复现 docs/research/s610_breakout_sim.sql 的基线(n = 1,013、均值 R +0.350),对不上就停下报告;再按 S-621 原文:k ∈ {基线, 2.0, 2.5, 3.0} × 有无热度上限;对每个版本二分求每笔风险 f 使复利最大回撤 = −35%,报该 f 下年化。读库只用 os.environ['SUPABASE_URL'] / os.environ['SUPABASE_KEY'],不读 .env、不打印 key。",
+    "expect": "报告写数据根 _reports/absorb_input/T-141_s621.md:开头一张表(版本 × f × 年化 × 最大回撤 × 笔数 × 同时持仓峰值),按 S-621 三条判;只报项照原文。卡 notes 写关键数;in_review,推 lane-b/T-141。"
+  },
+  "prior_value": "决定实盘单票用哪个止损宽度、每笔风险放多大、要不要热度上限 —— 这是「进取又活得下来」的那把尺子",
+  "notes": "2026-10-20 Seth 开卡。S-620(a) Seth 跑过 k = 2.5(无上限、单利):回撤 −254R → −53.5R,捕获比 4.5% → 11%,总 R 346 vs 354。"
+}
