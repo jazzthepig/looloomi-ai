@@ -1,9 +1,10 @@
 {
   "id": "T-148",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-21",
   "verified": null,
+  "notes": "T-148 done 2026-10-21 UTC by lane-b/Minimax-B: V0 reproduction 0.364% max diff (PASS <1%); V3 30d vs V0: full +2.85pp (✓), holdout -1.08pp (✗), pctile 0.78 vs 200 shuffles (✗ <0.95). Both judgement lines fail. 90d variant report-only: full +11.74pp, holdout +1.54pp. Verdict: ❌ ② front arm not advanced. Script docs/research/t148_alt_momentum_tilt.py + report _reports/absorb_input/T-148_alt_momentum.md delivered; lane-b/T-148 ready for Seth review.",
   "title": "S-634 ② 候选:钉住 BTC / ETH,只在山寨里按 30 日动量倾斜(与 S-630 同框架同判据)",
   "source": "台账 S-634 预注册(写于对动量变体算任何收益之前)。S-630:CIS 在山寨内倾斜 ≈ 随机;现在没有验证过的 ②。cis_tilt_daily 已对 publishable key 开读(migrations/2026-10-21_lane_read_books_treasury.sql)。",
   "allowed_paths": [
