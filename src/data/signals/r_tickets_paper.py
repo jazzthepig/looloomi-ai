@@ -37,6 +37,8 @@ def interpret(res: Any) -> tuple[str, str, dict]:
                                     f"闸门挡下 {res.get('blocked', 0)}、平仓 {res.get('closed', 0)};"
                                     f"持仓 {res.get('open_now', 0)}")
         return "ok", str(why), detail
+    if res.get("busy"):
+        return "refused", "另一次 r_tickets_scan 正在跑(咨询锁),这一轮让过", detail
     if res.get("stopped"):
         return "refused", f"数据没到,停在 {res.get('last_done')}:{res.get('stopped')}", detail
     return "error", f"r_tickets_scan 返回 ok = {res.get('ok')!r}", detail
@@ -45,7 +47,8 @@ def interpret(res: Any) -> tuple[str, str, dict]:
 async def run_once(now: Optional[datetime] = None) -> dict[str, Any]:
     from src.api.store import supabase_rpc_write
     p_to = target_day(now)
-    r = await supabase_rpc_write("r_tickets_scan", {"p_to": p_to.isoformat()})
+    # 单日约 8 秒;共享客户端 10 秒会超时重试 —— 给足 120 秒(函数内有咨询锁,重复调用只会拿到 busy)
+    r = await supabase_rpc_write("r_tickets_scan", {"p_to": p_to.isoformat()}, timeout=120.0)
     if not r.ok:
         return {"status": "error", "reason": f"r_tickets_scan 调用失败:{r.why}"[:400], "detail": {"p_to": p_to.isoformat()}}
     status, reason, detail = interpret(r.value)

@@ -63,6 +63,10 @@ begin
   if p_to >= (now() at time zone 'utc')::date then
     raise exception 'r_tickets_scan: p_to % is not a completed UTC day', p_to;
   end if;
+  -- one scan at a time: a client that times out and retries must not run the same day twice
+  if not pg_try_advisory_xact_lock(hashtext('r_tickets_scan')) then
+    return jsonb_build_object('ok', false, 'busy', true, 'reason', 'another r_tickets_scan is running');
+  end if;
   v_from := coalesce(p_from, (select last_d + 1 from r_tickets_state where id = 1), p_to);
   if v_from > p_to then
     return jsonb_build_object('ok', true, 'reason', 'up to date', 'last_d', p_to);

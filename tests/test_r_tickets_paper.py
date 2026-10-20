@@ -29,6 +29,7 @@ def test_interpret_ok_refused_error():
     assert s == "refused" and "2026-10-18" in why
     assert rt.interpret({"ok": False})[0] == "error"
     assert rt.interpret(None)[0] == "error"
+    assert rt.interpret({"ok": False, "busy": True})[0] == "refused"
     assert rt.interpret({"ok": True, "reason": "up to date", "last_d": "2026-10-19"})[0] == "ok"
 
 
@@ -37,8 +38,9 @@ def test_run_once_asks_for_yesterday_and_surfaces_failures(monkeypatch):
     from src.api.store_result import StoreResult
     calls = []
 
-    async def fake_ok(fn, payload=None):
+    async def fake_ok(fn, payload=None, *, timeout=None):
         calls.append((fn, payload))
+        assert timeout and timeout >= 60, "单日约 8 秒,共享客户端 10 秒不够"
         return StoreResult.ok_(value={"ok": True, "last_done": payload["p_to"], "open_now": 0})
 
     monkeypatch.setattr(store, "supabase_rpc_write", fake_ok)
@@ -46,7 +48,7 @@ def test_run_once_asks_for_yesterday_and_surfaces_failures(monkeypatch):
     assert calls == [("r_tickets_scan", {"p_to": "2026-10-19"})]
     assert out["status"] == "ok"
 
-    async def fake_fail(fn, payload=None):
+    async def fake_fail(fn, payload=None, *, timeout=None):
         return StoreResult.fail("HTTP 500: boom")
 
     monkeypatch.setattr(store, "supabase_rpc_write", fake_fail)
@@ -68,3 +70,4 @@ def test_migration_is_the_kernel_and_revokes_anonymous_execute():
     assert "2.5 * t.atr14" in sql and "b.c < b.sma20" in sql and "t.bars_held >= 120" in sql
     assert "revoke all on function public.r_tickets_scan(date, date) from public, anon, authenticated" in sql
     assert "is not a completed UTC day" in sql
+    assert "pg_try_advisory_xact_lock" in sql, "并发调用(超时重试)不能把同一天跑两遍"

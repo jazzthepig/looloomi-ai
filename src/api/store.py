@@ -829,7 +829,8 @@ async def supabase_rpc_all(fn_name: str, payload: dict[str, Any] | None = None,
         offset += len(batch)
 
 
-async def supabase_rpc_write(fn_name: str, payload: dict[str, Any] | None = None) -> StoreResult[Any]:
+async def supabase_rpc_write(fn_name: str, payload: dict[str, Any] | None = None, *,
+                             timeout: float | None = None) -> StoreResult[Any]:
     """RPC that WRITES — role-gated. Returns StoreResult with `value` carrying
     the JSON result on success (S-169 + S-341b).
 
@@ -870,7 +871,10 @@ async def supabase_rpc_write(fn_name: str, payload: dict[str, Any] | None = None
     headers = {"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}",
                "Content-Type": "application/json"}
     try:
-        resp = await _supabase_request_with_retry("POST", url, json=(payload or {}), headers=headers)
+        # `timeout` overrides the shared client's 10 s for a slow function (r_tickets_scan ~8 s/day, 10-20:
+        # the 10 s client gave up and retried; the function now also holds an advisory lock)
+        extra: dict[str, Any] = {"timeout": timeout} if timeout is not None else {}
+        resp = await _supabase_request_with_retry("POST", url, json=(payload or {}), headers=headers, **extra)
         if resp is None:
             return StoreResult.fail("no response from Supabase after retries")
         if resp.status_code in (200, 201, 204):
