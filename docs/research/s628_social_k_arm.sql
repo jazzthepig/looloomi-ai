@@ -16,9 +16,10 @@ with mon as (
 ), f as (
   select symbol, d, c, rn,
     avg(dv) over w30 adv30,
-    max(c) over (partition by symbol order by d rows between 1 following and 60 following) fwdmax60,
-    lead(c, 60) over (partition by symbol order by d) c60,
-    min(c) over (partition by symbol order by d rows between 30 preceding and current row) min30
+    -- 日历日,不是行:binance_hist 有过 08-09 → 09-06 的洞,「之后 60 行」会静默伸到 10 月(S-628 第一次运行作废的原因)
+    max(c) over (partition by symbol order by d range between interval '1 day' following and interval '60 days' following) fwdmax60,
+    last_value(c) over (partition by symbol order by d range between interval '1 day' following and interval '60 days' following) c60,
+    min(c) over (partition by symbol order by d range between interval '30 days' preceding and current row) min30
   from b
   window w30 as (partition by symbol order by d rows between 29 preceding and current row)
 ), soc as (

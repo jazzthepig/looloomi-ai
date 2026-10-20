@@ -77,6 +77,52 @@ _DEFAULT_DAYS = 14   # a fortnight of overlap; upsert makes re-writes free
 _HEAL_MAX_DAYS = 180
 
 
+#: 内部缺口自愈(10-20,S-628 撞上的)。上面的自愈只看**前沿**(最新一根离今天多远),历史**内部**的洞它看不见:
+#: 2026-08-09 → 09-06 有 85 个名字整段缺 —— 采集器停了 30 天,09-07 恢复后前沿是新的,洞就永远留在中间
+#: (T-030 只手补了 ① 面板的 24 个)。研究 SQL 用「之后 N 行」当「之后 N 天」,跨洞的窗口被静默拉长。
+#: 只看最近 `_HOLE_LOOKBACK_DAYS` 天、且最近 3 天还活着的名字(下架的不追)。
+_HOLE_LOOKBACK_DAYS = 120
+_HOLE_MAX_SYMBOLS = 150
+
+
+def heal_plan(holes: list[dict], today) -> tuple[int, list[str]] | None:
+    """纯函数。`binance_hist_interior_holes()` 的行 → (回看天数, 名字),没有洞 ⇒ None。"""
+    from datetime import date as _date
+    firsts = []
+    for h in holes or []:
+        try:
+            firsts.append(_date.fromisoformat(str(h["first_missing"])[:10]))
+        except (KeyError, ValueError):
+            continue
+    syms = sorted({str(h["symbol"]).upper() for h in holes or [] if h.get("symbol")})[:_HOLE_MAX_SYMBOLS]
+    if not firsts or not syms:
+        return None
+    days = min(_HEAL_MAX_DAYS, max(_DEFAULT_DAYS, (today - min(firsts)).days + 3))
+    return days, syms
+
+
+async def heal_interior_holes(today=None) -> dict[str, Any]:
+    """找内部缺口 → 用**同一个**写入端(collect_deep_panel,同一 upsert)按够长的窗口重取那几个名字。绝不抛。"""
+    from src.api.store import supabase_rpc
+    try:
+        today = today or datetime.now(timezone.utc).date()
+        holes = await supabase_rpc("binance_hist_interior_holes", {"p_lookback": _HOLE_LOOKBACK_DAYS})
+        if not isinstance(holes, list):
+            return {"ok": False, "error": f"binance_hist_interior_holes 返回 {type(holes).__name__}"}
+        plan = heal_plan(holes, today)
+        if plan is None:
+            return {"ok": True, "holes": 0}
+        days, syms = plan
+        r = await collect_deep_panel(days=days, symbols=syms)
+        return {"ok": bool(r.get("ok")), "holes": len(holes),
+                "missing_days": sum(int(h.get("n_missing") or 0) for h in holes),
+                "days": days, "symbols": len(syms), "symbols_ok": r.get("symbols_ok"),
+                "rows_upserted": r.get("rows_upserted"), "refused": r.get("refused"),
+                "diagnosis": str(r.get("diagnosis") or r.get("error") or "")[:200] or None}
+    except Exception as e:                                   # noqa: BLE001 — 补洞失败不能拖垮日更
+        return {"ok": False, "error": f"{type(e).__name__}: {str(e)[:200]}"}
+
+
 async def deep_panel_symbols() -> list[str] | None:
     """Symbols that already have binance_hist history — i.e. the panel itself.
 

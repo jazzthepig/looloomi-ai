@@ -562,6 +562,12 @@ async def _deep_panel_loop():
             flag = "" if r.get("ok") else "  ⚠️ " + r.get("diagnosis", "")
             print(f"[DEEP] {r.get('symbols_ok')}/{r.get('symbols_total')} symbols · "
                   f"{r.get('rows_upserted')} rows · {r.get('elapsed_s')}s{flag}")
+            # 10-20:前沿之后再补**内部**缺口(08-09 → 09-06 的洞前沿自愈看不见);日更没成功就不补
+            _heal = None
+            if r.get("ok"):
+                from src.data.market.deep_panel_collector import heal_interior_holes
+                _heal = await heal_interior_holes()
+                print(f"[DEEP] interior holes: {_heal}")
             await _beat("_deep_panel_loop", ok=bool(r.get("ok")),
                         refused=bool(r.get("refused")),
                         error=r.get("diagnosis") or r.get("error"))
@@ -578,7 +584,8 @@ async def _deep_panel_loop():
                         "rows_upserted":  r.get("rows_upserted"),
                         "elapsed_s":      r.get("elapsed_s"),
                         "ok":             r.get("ok"),
-                        "refused":        r.get("refused")},
+                        "refused":        r.get("refused"),
+                        "heal":           _heal},
                 writer="src.api.main._deep_panel_loop")
         except SourcePolicyError as _e:
             # S-323i/l:**这不是故障,是策略拒绝。**
