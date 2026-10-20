@@ -1,0 +1,26 @@
+{
+  "id": "T-142",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-20",
+  "verified": null,
+  "title": "S-626 叙事标记前向 A/B 的评分器:每周按时点冻结 J / E / T / N 四臂名单,到期后算快鱼率、进场早晚、R 臂票在鱼比例",
+  "source": "台账 S-626 预注册(写于第一份标记之前);S-625 历史代理版已过(热板块突破在鱼比例 36% vs 24%,p = 0.0025)",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-142.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "脚本 docs/research/t142_narrative_ab.py:① 读 /Volumes/CometCloudAI/cometcloud-local/research/narrative_flags/*.json(J 臂;status ≠ awaiting_jazz 的才算)② 从库里按「周一之前 7 天」重建 E(narrative_events.related_assets 计数前 10,去 BTC / ETH)与 T(trending_log 计数前 10)③ N = 当周宇宙中未被任何臂标记的名字 ④ 每周把四臂名单冻结写到 narrative_flags/frozen/YYYY-Www.json(只追加,不改旧周)⑤ 对已到期(周一 + 60 天)的周算快鱼率与 S-626 只报项。读库只用 os.environ['SUPABASE_URL'] / os.environ['SUPABASE_KEY'];不读 .env、不打印 key。",
+    "expect": "报告写数据根 _reports/absorb_input/T-142_narrative_ab.md:每周一行(四臂各自名字数、已到期的快鱼数),累计表 + 达到判定条件时按 S-626 判。卡 notes 写当前进度;in_review,推 lane-c/T-142。脚本以后每周一跑一次(调度另议)。"
+  },
+  "prior_value": "验证 Jazz 的信息值多少 —— 如果 J 比 E / T / N 更早、更准,叙事层就该成为单票加权的正式输入",
+  "notes": "2026-10-20 Seth 开卡。J 臂第一周(2026-W43)等 Jazz 给;E / T 可以先冻结。"
+}
