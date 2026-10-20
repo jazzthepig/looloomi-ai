@@ -1,0 +1,26 @@
+{
+  "id": "T-157",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-20",
+  "verified": null,
+  "title": "X1V 最大的一块拖累(限额 / 最小单 / nav_cap,−6.27pp/年)拆开,并按账户规模重跑:1k / 3k / 10k / 100k USDT",
+  "source": "T-152 瀑布:正序第 ④ 档「下单限额 / 最小单 / nav_cap」一档就是 −6.27pp/年,是最大的一块;它很可能是账户规模效应(3,000 USDT 上最小单与整数化把小的权重变动吃掉)。真钱账户现在是 868 USDC,比回放还小。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-157.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "在 t152_x1v_waterfall.py 的步进器上:① 把第 ④ 档拆成四个子开关(单笔上限 max_order_usd、日换手上限 max_daily_turnover_usd、最小单、nav_cap),同样正序 + 反序各走一遍,子档之和 = T-152 的 ④(差 < 0.01pp,否则停下报差)② 账户规模 1,000 / 3,000(必须复现 T-152 的 −9.46pp)/ 10,000 / 100,000 USDT 各跑一遍完整瀑布,报每档 × 规模的年化差表 ③ 报 868 USDC(现在真钱账户的规模)那一行。只用 publishable key;src/ 不改。",
+    "expect": "脚本 docs/research/t157_x1v_limits_by_size.py;报告(脚本写)_reports/absorb_input/T-157_x1v_limits.md,开头一张「规模 × 拖累」表;in_review,推 lane-a/T-157。"
+  },
+  "prior_value": "如果拖累主要是小账户的整数化 / 最小单,那它不是策略的缺陷,是规模的 —— 真钱开关的条件里就要写最低规模;如果在 100k 上还在,就得改执行器。",
+  "notes": ""
+}
