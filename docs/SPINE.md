@@ -39,6 +39,7 @@ similar_market_states()  ←→ regime_match.py            → 两个都对,两�
 | # | 段 | 唯一活实现 | 消费者 | 状态 |
 |---|---|---|---|---|
 | 1 | 测量·价格 | `ohlcv_daily`(基表)→ `ohlcv_daily_canonical`(去重+量纲归一) | 23 处读基表 · `outcome_tracker` 读视图 | 🟢 **S-361 已修**(视图曾停 39 天) |
+| 1b | 测量·注意力(外部,研究用)| `social_daily`(Santiment 社交提及 / 情绪,日;**免费档滚动 1 年、不含最近 30 天 ⇒ 只能做历史检验,不是实时信号**)· `sharpe_mindshare_snap`(Sharpe 代币 mindshare 日快照;供应方没有代币历史 ⇒ 前向只靠我们自存)· `sharpe_narrative_mindshare`(叙事层,2026-03 起)· `santiment_slug_map`(映射规则 = 台账 S-628 预注册)| Railway `_social_ingest_loop` → `social_ingest.run_once`(6 小时一轮,同一 UTC 日不重复取;计划由 `social_ingest_plan()` 一次给出)| 🟡 10-20 起;判活 `select metric, max(d) from social_daily group by metric`(≈ 今天 − 31 天)、`select max(snap_d) from sharpe_mindshare_snap`(≈ 今天)、`loop_attempt` 里 `_social_ingest_loop`;配额剩余在 detail.quota |
 | 2 | 测量·CIS | **正式** = `cis_official_daily`(统一标准日终,每天一批、只追加,`official.py`;T-080 / S-533)叠加到响应上;**盘中预览** = `cis_scores` ← Mac T1 → `cis_push` → Redis → `cis_provider`(响应里的 `intraday` 块;`official=false` 取原样) | `/api/v1/cis/universe` · `/agent/cis` · MCP | 🟡 正式序列首日发布待验 |
 | 3 | 几何·资产 | `asset_embeddings`(27 维,72 行) | `match_asset_embeddings()` | 🟢 |
 | 4 | 几何·市场态 | `market_state_vectors.vec_full`(24 声明 / 15 实测,582 行) | `similar_market_states()` | 🟡 **S-361 写者已上日程**;剩余陈旧来自源(binance_hist 停 8 天) |
@@ -572,6 +573,7 @@ CI 校验的是**这张表与代码一致**,不是"代码已经干净" ——
 
 17. **第 7f 段(执行·X1V 现货)** — T-122 / T-015 / TRADE_PATH §5,Jazz 10-18「执行期提前」。10-19 T-015 到位(东京 Vultr 主机 + HL API 钱包,私钥只在主机 `/etc/cometcloud/executor.env`),主机执行器接上:计划在 Railway 算、主机读真实余额自己签名;意图先于订单落盘,每个意图恰好一个结果;盘中灾难止损只用缓存的止损线,Railway 掉线也能止。🟡 的原因:默认 `dry_run`(不读私钥、不下单),要空跑 2 天人工核对订单,再由 Jazz 改 `live` 上 3,000U;X1V 当前在 BTC / ETH 上都是 0,多数日子没有订单。判活:`select at, outcome, detail->>'kind', detail->>'mode' from loop_attempt where loop_name = 'executor_host' order by at desc limit 5`(每小时一条 heartbeat;每天一条 cycle);Railway 纸面空跑仍是 `_executor_dry_run_loop`。
 18. **第 7g 段(交易层 v2·凸性单票,纸面)** — Jazz 10-19 / 10-20「大赢小输、抓爆发、不用平庸思维验证」;台账 S-618 → S-627,规格 docs/TRADING_LAYER_V2.md。内核是 Postgres 函数 `r_tickets_scan`,回放与前向同一个(2024 年与研究 SQL 逐笔一致 266 张 / 267.68R)。🟡 的原因:10-20 才开始前向;热度上限与每票风险 f(S-621,B 道 T-141)、被甩下再上车(T-140)、叙事加权(S-626)都还没定;执行器还只会 X1V 现货,单票计划 / 交易所挂止损 / 热度账本 / 资金费记账见规格 §3。判活:`select last_d, last_run_at from r_tickets_state`(≥ 前天)与 `select at, outcome, reason from loop_attempt where loop_name = '_r_tickets_paper_loop' order by at desc limit 5`。
+19. **第 1b 段(测量·注意力,外部)** — Jazz 10-20「找 KOL 的,先做着」,Sharpe / Santiment 的 key 放在 Railway。🟡 的原因:10-20 才开始入库;**Santiment 免费档不含最近 30 天,所以它只能用于历史检验(台账 S-628 K 臂),不能接进任何实时决策**;Sharpe 代币快照没有历史,前向臂(S-629)要等快照攒够。两条检验出结果之前,这段数据不进 CIS、不进任何账本。判活:`select metric, max(d) from social_daily group by metric`(≈ 今天 − 31 天)、`select max(snap_d) from sharpe_mindshare_snap`(≈ 今天)、`select at, outcome, reason from loop_attempt where loop_name = '_social_ingest_loop' order by at desc limit 3`。
 
 ---
 

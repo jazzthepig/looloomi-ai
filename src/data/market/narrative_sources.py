@@ -4,6 +4,7 @@
 可取时间窗不同),而 key 只在 Railway 上,沙箱里取不到。「先探再建」(CLAUDE.md:probe before you build)——
 这一轮只把**形状**写进 loop_attempt 的 detail(键名、长度、首条样例、时间范围),不落数据、不打印 key。
 看到形状以后再写真正的入库表与历史 A/B(台账 S-626 的 K 臂)。
+**10-20 起不再排程**:形状已经拿到,入库由 `social_ingest.py` / `_social_ingest_loop` 接手;这里留作换数据源时的手动探针。
 
 注意 Sharpe 的 mindshare 不是社交帖子数:它是「CoinGecko 关注列表人数 + 看涨投票」的份额(Sharpe 文档原话的意思),
 所以它测的是**散户关注度**,不是 KOL 喊单。Santiment 的 social_volume_total 才是社交提及数。

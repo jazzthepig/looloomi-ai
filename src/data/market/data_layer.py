@@ -13,7 +13,7 @@ import time
 import httpx
 import asyncio
 import logging
-from typing import Optional
+from typing import Any, Optional
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 
@@ -765,6 +765,17 @@ async def get_fred_series(series_id: str, start: str) -> list[tuple[str, float]]
 SHARPE_V1_BASE = "https://www.sharpe.ai/api/v1"
 SANTIMENT_GQL = "https://api.santiment.net/graphql"
 
+#: 两家免费档都有月配额(Santiment 约 1,000 次 / 月,Sharpe 10,000 次 / 月);每次调用后记下响应头里的剩余量,
+#: 入库循环把它写进 loop_attempt.detail —— 配额快用完时在库里看得见,而不是等 429。
+QUOTA_SEEN: dict[str, dict[str, str]] = {"santiment": {}, "sharpe": {}}
+
+
+def _note_limits(into: dict[str, str], headers: Any, names: tuple[str, ...]) -> None:
+    for n in names:
+        v = headers.get(n) if headers is not None else None
+        if v is not None:
+            into[n] = str(v)
+
 
 async def get_sharpe_v1(path: str, params: dict | None = None) -> dict:
     """Sharpe AI 认证 API(`/api/v1/{path}`,Bearer = 环境变量 SHARPE_AI_KEY,Jazz 10-20 放在 Railway)。
@@ -774,6 +785,7 @@ async def get_sharpe_v1(path: str, params: dict | None = None) -> dict:
         raise RuntimeError("SHARPE_AI_KEY 不在进程环境里")
     r = await _get_misc_client().get(f"{SHARPE_V1_BASE}/{path.lstrip('/')}", params=params or {},
                                      headers={"Authorization": f"Bearer {key}"}, timeout=60)
+    _note_limits(QUOTA_SEEN["sharpe"], r.headers, ("x-quota-remaining", "x-quota-limit", "x-ratelimit-remaining"))
     if r.status_code != 200:
         raise RuntimeError(f"Sharpe {path} HTTP {r.status_code}: {r.text[:160]}")
     return r.json()
@@ -787,6 +799,8 @@ async def get_santiment_gql(query: str, variables: dict | None = None) -> dict:
         raise RuntimeError("SANTIMENT_KEY 不在进程环境里")
     r = await _get_misc_client().post(SANTIMENT_GQL, json={"query": query, "variables": variables or {}},
                                       headers={"Authorization": f"Apikey {key}"}, timeout=60)
+    _note_limits(QUOTA_SEEN["santiment"], r.headers,
+                 ("x-ratelimit-remaining-month", "x-ratelimit-limit-month", "x-ratelimit-remaining-minute"))
     if r.status_code != 200:
         raise RuntimeError(f"Santiment HTTP {r.status_code}: {r.text[:160]}")
     body = r.json()

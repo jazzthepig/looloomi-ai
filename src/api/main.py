@@ -1886,32 +1886,33 @@ async def _binance_vision_loop():
         await _asyncio.sleep(600 if (r or {}).get("planned", 0) >= _BV_BUDGET else 3600)
 
 
-async def _narrative_probe_loop():
-    """Sharpe AI / Santiment(key 在 Railway,Jazz 10-20):先把两家 API 的返回**形状**写进 loop_attempt.detail,
-    不落数据、不打印 key —— 看到真实结构再建入库与历史 A/B(台账 S-626 K 臂)。每天一次(Santiment 免费档每月 1,000 次)。
-    读法:`select at, outcome, reason, detail from loop_attempt where loop_name = '_narrative_probe_loop' order by at desc limit 1`。"""
+async def _social_ingest_loop():
+    """外部注意力数据入库(台账 S-628 / S-629;src/data/market/social_ingest.py):Santiment 社交提及(免费档滚动 1 年、
+    不含最近 30 天 —— 不存就从窗口里走掉)+ Sharpe mindshare 代币快照(没有代币历史 —— 不每天存就没有前向)。
+    10-20 的形状探针(_narrative_probe_loop)完成了它的事,由本循环取代。同一 UTC 日内重启不重复取(Santiment 每月约 1,000 次)。
+    判活:`select at, outcome, reason from loop_attempt where loop_name = '_social_ingest_loop' order by at desc limit 3`。"""
     await _asyncio.sleep(_boot_delay(75))
     while True:
         try:
-            from src.data.market.narrative_sources import probe as _np_probe, verdict as _np_verdict
-            p = await _np_probe()
-            status, why = _np_verdict(p)
-            print(f"[NARRATIVE-PROBE] {status} · {why[:160]}")
-            await _beat("_narrative_probe_loop", ok=status == "ok", error=None if status == "ok" else why[:200])
-            await _record_loop_attempt("_narrative_probe_loop", status, reason=why[:400], detail=p,
-                                       writer="src.api.main._narrative_probe_loop")
+            from src.data.market.social_ingest import run_once as _si_run
+            r = await _si_run()
+            status, why = r.get("status", "error"), str(r.get("reason", ""))
+            print(f"[SOCIAL-INGEST] {status} · {why[:160]}")
+            await _beat("_social_ingest_loop", ok=status == "ok", error=None if status == "ok" else why[:200])
+            await _record_loop_attempt("_social_ingest_loop", status, reason=why[:400], detail=r.get("detail"),
+                                       writer="src.api.main._social_ingest_loop")
         except Exception as _e:
-            print(f"[NARRATIVE-PROBE] ⚠️  pass FAILED: {_e}")
-            await _beat("_narrative_probe_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
-            await _record_loop_attempt("_narrative_probe_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
-                                       writer="src.api.main._narrative_probe_loop")
-        await _asyncio.sleep(86400)
+            print(f"[SOCIAL-INGEST] ⚠️  pass FAILED: {_e}")
+            await _beat("_social_ingest_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_social_ingest_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._social_ingest_loop")
+        await _asyncio.sleep(6 * 3600)
 
 
 @app.on_event("startup")
-async def _start_narrative_probe_loop():
-    _asyncio.create_task(_narrative_probe_loop())
-    print("[NARRATIVE-PROBE] ✅ Sharpe / Santiment shape probe scheduled (daily, writes loop_attempt only)")
+async def _start_social_ingest_loop():
+    _asyncio.create_task(_social_ingest_loop())
+    print("[SOCIAL-INGEST] ✅ Santiment social volume + Sharpe mindshare ingest scheduled (6h; once per UTC day)")
 
 
 async def _r_tickets_paper_loop():

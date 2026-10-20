@@ -63,8 +63,8 @@ def test_fetchers_refuse_without_keys(monkeypatch):
             assert "不在进程环境里" in str(e)
 
 
-def test_main_schedules_the_probe_and_records_attempts():
+def test_probe_is_retired_from_the_schedule():
+    """10-20 探针完成了它的事(形状写进了 loop_attempt);每天再探一次只烧 Santiment 的月配额 —— 由入库循环取代。"""
     src = (ROOT / "src" / "api" / "main.py").read_text(encoding="utf-8")
-    body = src.split("async def _narrative_probe_loop", 1)[1].split("@app.on_event", 1)[0]
-    assert body.count("_record_loop_attempt(") >= 2
-    assert "_asyncio.create_task(_narrative_probe_loop())" in src
+    assert "_narrative_probe_loop()" not in src
+    assert "_asyncio.create_task(_social_ingest_loop())" in src
