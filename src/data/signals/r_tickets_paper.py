@@ -8,7 +8,8 @@
 收盘破 SMA20 次日开盘出 / 120 根到期 / 停更 10 天按最后收盘出 · 同名不重叠。R 以止损距离为单位,含 0.4% 来回成本;
 永续资金费没算进来(交易层 v2 §2 的已知缺口)。
 
-判活:`select last_d from r_tickets_state` ≥ 前天;`loop_attempt` 里 `_r_tickets_paper_loop` 每小时一条。
+判活:`select last_d from r_tickets_state` ≥ 前天;`loop_attempt` 里 `_r_tickets_paper_loop` 每小时一条;
+      `select max(d) from r_money_daily` = last_d(钱曲线,S-638:f = 1%、最多 10 张,只读内核 r_tickets_nav_paper)。
 函数在当天的 binance_hist 根数不到前一天的 80%、或 majors 风格指数还没写到那天时**停在前一天**并写明原因
 (返回 ok = false、stopped = …)—— 数据没到就不推进,不是失败。
 """
@@ -18,6 +19,12 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Any, Optional
 
 RULE_VERSION = "r_v2_k2.5_gate200"
+
+#: S-638:钱曲线的参数(f★ = 1%,盯市回撤 −35% 反推;最多同时 10 张)与前向起点(r_tickets_scan 处理的第一天)。
+MONEY_F, MONEY_CAP, MONEY_INCEPTION = 0.01, 10, "2026-10-19"
+MONEY_TABLE = "r_money_daily"
+#: 票与状态(r_tickets_paper / r_tickets_state)由 Postgres 内核自己写;这里只写钱曲线。
+WRITES_TABLES = ("r_money_daily",)
 
 
 def target_day(now: Optional[datetime] = None) -> date:
@@ -44,6 +51,36 @@ def interpret(res: Any) -> tuple[str, str, dict]:
     return "error", f"r_tickets_scan 返回 ok = {res.get('ok')!r}", detail
 
 
+def money_rows(curve: Any) -> list[dict]:
+    """纯函数。r_tickets_nav_paper 返回的逐日行 → r_money_daily 行(nav = 权益,ret = 相邻两天之比 − 1)。"""
+    out: list[dict] = []
+    prev: Optional[float] = None
+    for r in sorted((c for c in (curve or []) if isinstance(c, dict) and c.get("d") and c.get("equity") is not None),
+                    key=lambda c: str(c["d"])):
+        eq = float(r["equity"])
+        out.append({"d": str(r["d"])[:10], "nav": round(eq, 8), "ret": round(eq / prev - 1, 10) if prev else 0.0,
+                    "realized": r.get("realized"), "unrealized": r.get("unrealized"), "open_n": r.get("open_n"),
+                    "gross": r.get("gross"), "taken": r.get("taken"), "skipped": r.get("skipped"),
+                    "closed": r.get("closed"), "f": MONEY_F, "cap": MONEY_CAP, "inception": MONEY_INCEPTION,
+                    "rule_version": RULE_VERSION})
+        prev = eq
+    return out
+
+
+async def write_money() -> dict[str, Any]:
+    """钱曲线:同一个只读内核(r_tickets_nav_paper)算出来,经前向锁写进 r_money_daily —— 前天及更早的行不再改。"""
+    from src.api.store import supabase_rpc_write
+    from src.data.accounting.forward_lock import write_locked
+    r = await supabase_rpc_write("r_tickets_nav_paper", {"p_f": MONEY_F, "p_cap": MONEY_CAP}, timeout=60.0)
+    if not r.ok:
+        return {"ok": False, "why": f"r_tickets_nav_paper 调用失败:{r.why}"[:300]}
+    rows = money_rows(r.value)
+    if not rows:
+        return {"ok": False, "why": "r_tickets_nav_paper 没有返回任何一天(r_tickets_state 读不到?)"}
+    w = await write_locked(MONEY_TABLE, rows, key=None, on_conflict="d")
+    return {**w, "last_d": rows[-1]["d"], "nav": rows[-1]["nav"], "open_n": rows[-1]["open_n"]}
+
+
 async def run_once(now: Optional[datetime] = None) -> dict[str, Any]:
     from src.api.store import supabase_rpc_write
     p_to = target_day(now)
@@ -52,4 +89,8 @@ async def run_once(now: Optional[datetime] = None) -> dict[str, Any]:
     if not r.ok:
         return {"status": "error", "reason": f"r_tickets_scan 调用失败:{r.why}"[:400], "detail": {"p_to": p_to.isoformat()}}
     status, reason, detail = interpret(r.value)
-    return {"status": status, "reason": reason, "detail": {"p_to": p_to.isoformat(), **detail}}
+    # 票推进完(或数据没到、停在前一天)都把钱曲线写到 r_tickets_state.last_d;钱曲线写不进去 = 这一轮算失败
+    money = await write_money()
+    if not money.get("ok") and status != "error":
+        status, reason = "error", f"{reason};钱曲线没写进 {MONEY_TABLE}:{money.get('why')}"
+    return {"status": status, "reason": reason, "detail": {"p_to": p_to.isoformat(), **detail, "money": money}}

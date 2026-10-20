@@ -43,10 +43,20 @@ def test_run_once_asks_for_yesterday_and_surfaces_failures(monkeypatch):
         assert timeout and timeout >= 60, "单日约 8 秒,共享客户端 10 秒不够"
         return StoreResult.ok_(value={"ok": True, "last_done": payload["p_to"], "open_now": 0})
 
+    async def money_ok():
+        return {"ok": True, "written": 2, "last_d": "2026-10-19"}
+
     monkeypatch.setattr(store, "supabase_rpc_write", fake_ok)
+    monkeypatch.setattr(rt, "write_money", money_ok)
     out = asyncio.run(rt.run_once(datetime(2026, 10, 20, 3, 0, tzinfo=timezone.utc)))
     assert calls == [("r_tickets_scan", {"p_to": "2026-10-19"})]
-    assert out["status"] == "ok"
+    assert out["status"] == "ok" and out["detail"]["money"]["ok"]
+
+    async def money_bad():
+        return {"ok": False, "why": "HTTP 500"}
+    monkeypatch.setattr(rt, "write_money", money_bad)
+    out = asyncio.run(rt.run_once(datetime(2026, 10, 20, 3, 0, tzinfo=timezone.utc)))
+    assert out["status"] == "error" and "r_money_daily" in out["reason"], "钱曲线没写进去 = 这一轮失败,不能报 ok"
 
     async def fake_fail(fn, payload=None, *, timeout=None):
         return StoreResult.fail("HTTP 500: boom")
@@ -118,3 +128,43 @@ def test_replay_tickets_sql_uses_the_same_rules_as_the_forward_scan():
         assert g in scan and g in rep, f"闸门口径不同:{g}"
     assert "least(s.rn+120, s.n)" in rep and "t.bars_held >= 120" in scan
     assert "'exit_d', case when r.still_open then null" in rep, "没出场的票要按持仓逐日盯市,不能当已平仓"
+
+
+def test_money_rows_chain_nav_and_carry_the_s638_parameters():
+    curve = [{"d": "2026-10-20", "equity": 1.02, "realized": 0.0, "unrealized": 0.02, "open_n": 1, "gross": 0.1,
+              "taken": 1, "skipped": 0, "closed": 0},
+             {"d": "2026-10-19", "equity": 1.0, "realized": 0.0, "unrealized": 0.0, "open_n": 0, "gross": 0.0,
+              "taken": 0, "skipped": 0, "closed": 0}]
+    rows = rt.money_rows(curve)
+    assert [r["d"] for r in rows] == ["2026-10-19", "2026-10-20"], "按日期排序,不信返回顺序"
+    assert rows[0]["ret"] == 0.0 and abs(rows[1]["ret"] - 0.02) < 1e-12 and rows[1]["nav"] == 1.02
+    assert all(r["f"] == 0.01 and r["cap"] == 10 and r["inception"] == "2026-10-19" for r in rows)
+    assert rt.money_rows(None) == [] and rt.money_rows([{"d": "2026-10-19", "equity": None}]) == []
+
+
+def test_write_money_goes_through_the_forward_lock(monkeypatch):
+    from src.api import store
+    from src.api.store_result import StoreResult
+    from src.data.accounting import forward_lock
+    seen = {}
+
+    async def rpc(fn, payload=None, *, timeout=None):
+        seen["rpc"] = (fn, payload)
+        return StoreResult.ok_(value=[{"d": "2026-10-19", "equity": 1.0, "open_n": 0}])
+
+    async def locked(table, rows, *, key, on_conflict, **kw):
+        seen["lock"] = (table, key, on_conflict, len(rows))
+        return {"ok": True, "written": len(rows)}
+
+    monkeypatch.setattr(store, "supabase_rpc_write", rpc)
+    monkeypatch.setattr(forward_lock, "write_locked", locked)
+    out = asyncio.run(rt.write_money())
+    assert seen["rpc"] == ("r_tickets_nav_paper", {"p_f": 0.01, "p_cap": 10})
+    assert seen["lock"] == ("r_money_daily", None, "d", 1), "前天及更早的行不再改(S-560)"
+    assert out["ok"] and out["last_d"] == "2026-10-19"
+
+
+def test_money_table_migration_exists_and_is_lane_readable():
+    sql = (ROOT / "migrations" / "2026-10-20_r_money_daily.sql").read_text(encoding="utf-8")
+    assert "create table if not exists public.r_money_daily" in sql and "inception    date not null" in sql
+    assert "create policy lane_read on public.r_money_daily for select to anon" in sql
