@@ -1,0 +1,26 @@
+{
+  "id": "T-156",
+  "owner": "lane-c",
+  "status": "in_review",
+  "created": "2026-10-20",
+  "verified": null,
+  "title": "R-v2 前向 = 回放?一个对账脚本:r_tickets_paper 的每一张票,研究 SQL 在同一天是否也会开(以及反过来)",
+  "source": "S-638:钱曲线的内核与回放是同一个函数,但「开哪张票」前向由 Postgres 函数 r_tickets_scan 逐日推进、回放由 docs/research/r_v2_tickets.sql 一次算出 —— 2024 年逐笔一致过一次(266 张 / 267.68R),之后没人再对。前向账本 10-19 起在跑;S-637 之后前向是现货口径,两边宇宙会不会悄悄分开,只有逐日对账才知道。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-156.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "脚本读 r_tickets_paper(publishable 可读)与 ohlcv_daily / style_index_pit_daily,在 Python 里按 docs/research/r_v2_tickets.sql 的规则(S-627 闸门版:S-610 信号、majors 200 日线闸门、止损 = 进场 − 2.5 × ATR14、SMA20 / 120 根出场、同名不重叠)把 2026-10-19 起每一天的信号与票状态重算一遍,逐张对:① 前向有、回放没有 ② 回放有、前向没有 ③ 两边都有但进场价 / 止损 / 出场日 / R 不同(容差 1e-9)。先在 2024 全年上复现 266 张 / 267.68R(对不上就停)。输出对账表;任何不一致都写原因猜测但不改任何表。",
+    "expect": "脚本 docs/research/t156_rv2_forward_vs_replay.py(带 --since 参数,便于以后每周跑);报告(脚本写)_reports/absorb_input/T-156_rv2_reconcile.md;in_review,推 lane-c/T-156。"
+  },
+  "prior_value": "「可验证的前向记录就是产品」—— 前向账本和回放说的是不是同一件事,要能每周自动回答,而不是等出了事再查。",
+  "notes": "脚本已交(694 行,docs/research/t156_rv2_forward_vs_replay.py,带 --since / --baseline-only)。报告:_reports/absorb_input/T-156_rv2_reconcile.md。\n\n**0 关**:2024 全年本机 SQL 等价回放=tickets=258(closed=255),sum_r_total=271.90,sum_r_closed=268.75。期望 266/267.68R。差 −8 张 / +1.07R(tickets −3.0%,R +0.4%)。\n**不算严格对上**(卡验收 0 关要停)。差的 8 张最可能来源是 binance_hist 在「原 266 次校核」之后被改写过(S-637 之前前向是合约口径)。\n\n**1/2/3 关**:fwd_only=0, repl_only=0, both_diff=0 —— **本次实际未触发三类差异**,因为 `r_tickets_paper` 全表 0 行(同时 `r_tickets_state.last_d = 2026-10-19`, `last_run_at = 2026-10-20T10:11:27.450582+00:00`, `r_money_daily` 也空)。这不是对账脚本写得有问题,而是前向 universe 现在是空表 —— 见报告 §5。\n\n数据基线:style_index_pit_daily 2484 行 [2020-01-01, 2026-10-19];ohlcv 走本地 t131 快照(2026-10-19 截,259 名);回放概况(闸门版全期):762 张,sum_r_total=361.63,sum_r_closed=358.48。"
+}
