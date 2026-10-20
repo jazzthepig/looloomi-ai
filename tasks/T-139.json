@@ -1,9 +1,13 @@
 {
   "id": "T-139",
   "owner": "lane-b",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-19",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-20T02:05Z",
+    "value": "Not passed (S-615). lane-b reproduced mult_v2_replay daily returns to 1e-8. Judging window 2025-01 -> 2026-10: core -19.6% (max DD -56.8%), multiplier v2 -25.4% (random-timing percentile 0.40), arm L (Fed net liquidity) -26.1% (0.29), arm S (stablecoin marginal liquidity) -17.4% (0.69); neither arm reaches the 0.95 bar. Liquidity stays descriptive / risk flag. The sharper finding: the running multiplier v2 itself sits at the 40th percentile of random timing in this window."
+  },
   "title": "S-615:③ 推力的「平静」条件换成美联储净流动性 / 稳定币边际流动性,判定段 2025-01 起",
   "source": "BENCHMARK 2026-10-19 §3(Druckenmiller、Hayes);T-135 fed_net_liquidity 已落库;台账 S-615 预注册(别改它)",
   "allowed_paths": [
