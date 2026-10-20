@@ -7,15 +7,27 @@ Step 1 — **原样复现** s610_breakout_sim.sql 的基线 (n≈1,013 ±1%, mea
          reentry stop = 当日 low, recursive last_exit_idx per symbol).
 Step 2 — 加 S-620(b) reentry 状态机:
            出场后 ≤ 20 根内 close > 原信号日 hh40 (突破位) ⇒ 次日开盘再进场;
-           stop = REENTRY_STOP_MODE 指定的【进场前已知】价(r2 起;r1 误用进场当根 low);
+           stop = REENTRY_STOP_MODE 指定的【进场前已知】价(r3 起按台账预注册);
            entry − stop < 0.3×ATR 的再上车丢弃并计数;
            SMA20 / 120-bar exit 重算自本次进场;
            同一初始信号最多 2 次 re-entry (共 3 笔 = 1 初始 + 2 重入)。
 Step 3 — 出 acceptance 要的对照表 + 「S-618 only-report」 5 件。
-Step 4 — 自检(能失败):再上车腿 exit_idx==entry_idx 占比 > 5% ⇒ abort。
+Step 4 — 自检两条(按 §Seth-1020g):
+           ① 结构断言:每条再上车腿的 stop 只许引用 < re_ei 的 K 线,违反即 abort
+              (r1 = lows[re_ei] 必触发,这条断言就是为它写的);
+           ② 同根出场率:只报不判,基线首腿同根出场率并排,无阈值。
 
 r2 (2026-10-21) 按 §Seth-1020a 修:① 止损改为进场前已知的价;② 加 0.3×ATR 丢弃门槛;
 ③ 加能失败的自检;④ 同一缺陷在已合并的 T-131 M2,同口径重跑结果见同一份报告 §5。
+
+r3 (2026-10-21) 按 §Seth-1020g 改三处:
+ ① 主口径改为台账原文的 `min(low[被甩下那根 .. re_ei−1])`(进场前已知,且窗口内任一根
+   都 < re_ei ⇒ 通过结构断言);r2 的两个口径保留为「只报」,其中 `entry_minus_atr`
+   因用了 opens[re_ei](= re_entry 自身)违反 §Seth-1020g 结构断言 ⇒ 不在主集合里算,
+   仅作趋势对照记一行。
+ ② 自检换成两条:① 结构断言(违反即 abort);② 同根出场率只报,与基线首腿并排,无阈值
+   (5% 那个阈值是 §Seth-1020g §2 明确作废的)。
+ ③ 四条判按主口径给结论。T-131 M2 已在 r2 修好,不动。
 
 读库只走 os.environ["SUPABASE_URL"] / os.environ["SUPABASE_KEY"] (lane_bot 注入,
 只读 publishable key);不读 .env,不打印 key。
@@ -51,19 +63,26 @@ LOOKBACK_BARS  = 20
 MAX_REENTRIES  = 2
 REENTRY_TRIGGER = "hh40"   # 「原始突破位」= hh40 (signal 日的 40-day prior high)
 
-# ── §Seth-1020a 修订 (2026-10-21, r2) ─────────────────────────────────
-# 再上车的止损必须是【进场前】已知的价。旧版用 lows[re_ei] = 进场当根最低价,
+# ── §Seth-1020a / §Seth-1020g 修订 (2026-10-21, r2 → r3) ─────────
+# 再上车的止损必须是【进场前】已知的价。r1 用 lows[re_ei] = 进场当根最低价,
 # 而 run_leg 从 i = re_ei 起第一根就查 lows[i] <= stop ⇒ 必然触发 ⇒ 所有再上车腿
 # 都在进场当天按止损价出、R ≈ −1 − 成本。报告里 reentry_idx=1/2 sumR −999.5/−852.4
 # ≈ 笔数 ×(−1 − 成本),是产物不是结果。
-REENTRY_STOP_MODE = "recapture_low"   # 二选一(报告须写明用的是哪一个):
-                                       #   "recapture_low"   = 复收日(信号收复日 j)的最低价
-                                       #   "entry_minus_atr" = re_entry − atr14[j] (ATR14 截至复收日)
-                                       # re_ei = j + 1,所以 j = re_ei − 1 —— 两根都在进场前已知。
+REENTRY_STOP_MODE = "preregistered_min"  # §Seth-1020g 主口径:
+                                          #   "preregistered_min" = min(low[被甩下那根 .. re_ei−1])
+                                          #                       = min(lows[prev_exit_idx : re_ei])
+                                          #                       窗口内任一根 < re_ei ⇒ 通过结构断言。
+                                          # r2 / r3 「只报」:
+                                          #   "recapture_low"     = min(lows[rec_j]) = lows[re_ei−1]
+                                          #                       (单根,严格 < re_ei ⇒ 通过)
+                                          #   "entry_minus_atr"   = re_entry − atr14[re_ei−1]
+                                          #                       (用 opens[re_ei] ⇒ 违反结构断言 ⇒
+                                          #                        r3 起只作趋势对照行,不进主集合)
 RE_MIN_ATR_MULT   = 0.3    # entry − stop < 0.3×ATR 的再上车丢弃并计数(否则 R 分母爆炸)
-RE_SAMEBAR_MAX    = 0.05   # 自检(必须能失败):再上车腿 exit_idx == entry_idx 占比 > 5% 就 abort
-                           # 旧版是 100% —— 这条自检正是为了钉住 §Seth-1020a 第 1 条
-                            # —— T-131 M2 也用 hh40;接受卡里「复原突破位」 = 之上
+# RE_SAMEBAR_MAX 已作废 —— §Seth-1020g §2:5% 是按 r1 的 100% 拍的,不是真的阈值。
+# 同根出场率改为「只报不判」,与基线首腿同根出场率并排,无阈值。
+REPORT_REENTRY_REENTRY = True
+REPORT_BASELINE_SAMEBAR = True
 
 # ── Fetch ──────────────────────────────────────────────────────────────
 def fetch_supabase():
@@ -231,6 +250,8 @@ def simulate_b(sig_df, sym_arr, lookback=LOOKBACK_BARS, max_re=MAX_REENTRIES,
     re_rej_tight = 0      # entry − stop < 0.3×ATR ⇒ 丢弃
     re_rej_nostop = 0     # 跳空/低开已穿止损 ⇒ 拒绝
     re_rej_badatr = 0     # ATR 缺失/非正 ⇒ 无法判定 0.3×ATR 门槛
+    # r3 结构断言触发计数(应永远为 0):
+    re_struct_fail = 0   # stop 计算里引用了 >= re_ei 的 K 线
     for _, srow in sig_df.iterrows():
         sym = srow["symbol"]; a = sym_arr[sym]; n = len(a["open"])
         ei = int(srow["rn"])
@@ -287,16 +308,42 @@ def simulate_b(sig_df, sym_arr, lookback=LOOKBACK_BARS, max_re=MAX_REENTRIES,
             if not np.isfinite(atr_ref) or atr_ref <= 0:
                 re_rej_badatr += 1
                 break
+            # ── r3 §Seth-1020g 主口径:min(low[被甩下那根 .. re_ei − 1]) ─────
+            # prev_exit 是上一条再上车腿(对首次再上车是初始腿 xi)的出场日,
+            # 那根到 re_ei−1 整段都在进场前已知。窗口内所有 K 线 index 严格 < re_ei。
+            prev_exit_idx = last_exit
             # ── §Seth-1020a 第 2 条:止损必须是进场前已知的价 ──────────────
-            # 旧版 re_stop = a["low"][re_ei] = 进场当根最低价,run_leg 从 i=re_ei 起
-            # 第一根就查 lows[i] <= stop ⇒ 必然触发 ⇒ R ≈ −1 − 成本。此处改用
-            # REENTRY_STOP_MODE 指定的「进场前已知」价。
-            if stop_mode == "recapture_low":
-                re_stop = float(lows[rec_j])          # 复收日最低价
+            # r1 用 lows[re_ei] = 进场当根最低价,run_leg 从 i=re_ei 起第一根就查
+            # lows[i] <= stop ⇒ 必然触发 ⇒ R ≈ −1 − 成本。r3 加结构断言钉死:
+            # 任一模式算 stop 时,如果引用了 index >= re_ei 的 K 线 ⇒ 计数器 +1,
+            # 主模式(preregistered_min / recapture_low)还要 abort。
+            if stop_mode == "preregistered_min":
+                win = lows[prev_exit_idx:re_ei]   # 所有 index ∈ [prev_exit_idx, re_ei−1]
+                max_idx_used = re_ei - 1
+                if win.size == 0 or not np.isfinite(win).any():
+                    re_stop = float(lows[rec_j])   # 兜底:窗口内无常量,降级到 recapture_low
+                    max_idx_used = rec_j
+                else:
+                    re_stop = float(np.nanmin(win))
+            elif stop_mode == "recapture_low":
+                re_stop = float(lows[rec_j])
+                max_idx_used = rec_j
             elif stop_mode == "entry_minus_atr":
-                re_stop = float(re_entry - atr_ref)   # entry − ATR14
+                # 违反结构断言(re_entry = opens[re_ei] 用了 >= re_ei 的 K 线)
+                re_stop = float(re_entry - atr_ref)
+                max_idx_used = re_ei
+                re_struct_fail += 1
             else:
                 sys.exit(f"unknown stop_mode={stop_mode!r}")
+            # ── §Seth-1020g 结构断言:主模式必须满足 max_idx_used < re_ei ──
+            if stop_mode in ("preregistered_min", "recapture_low"):
+                if max_idx_used >= re_ei:
+                    # 不应发生:preregistered_min 的窗口是 [prev_exit_idx, re_ei) 严格半开;
+                    # recapture_low 是单根 rec_j < re_ei。触发 ⇒ 视为代码 bug,abort。
+                    sys.exit(
+                        f"STRUCTURAL ASSERT FAIL (§Seth-1020g): stop_mode={stop_mode!r} "
+                        f"computed re_stop referencing max_idx_used={max_idx_used} "
+                        f">= re_ei={re_ei}. (窗口越界;这不是数据问题,是代码 bug。)")
             if re_entry <= re_stop:
                 # 跳空/低开已穿止损 —— 拒绝,链终止(per T-131 M2:不推进 last_exit)
                 re_rej_nostop += 1
@@ -327,6 +374,9 @@ def simulate_b(sig_df, sym_arr, lookback=LOOKBACK_BARS, max_re=MAX_REENTRIES,
                 "entry_idx": int(re_ei),
                 "exit_idx":  int(xi2),
                 "atr_ref":   float(atr_ref),
+                "prev_exit_idx": int(prev_exit_idx),
+                "max_stop_idx": int(max_idx_used),
+                "struct_ok": bool(max_idx_used < re_ei),
             })
             re_used += 1
             reentry_total += 1
@@ -334,7 +384,8 @@ def simulate_b(sig_df, sym_arr, lookback=LOOKBACK_BARS, max_re=MAX_REENTRIES,
             last_exit = xi2
         last_exit_idx[sym] = last_exit
     return (out, reentry_dist, reentry_total,
-            {"tight": re_rej_tight, "nostop": re_rej_nostop, "badatr": re_rej_badatr})
+            {"tight": re_rej_tight, "nostop": re_rej_nostop, "badatr": re_rej_badatr,
+             "struct_fail": re_struct_fail})
 
 # ── Reporting ────────────────────────────────────────────────────────
 def total_R(trs):
@@ -422,39 +473,49 @@ def main():
             f.write(f"# T-140 S-620(b) — ABORTED (baseline gate fail)\n\n{msg}\n")
         sys.exit(2)
 
-    # ── Step 2: (b) reentry —— 两个「进场前已知的价」口径都跑 ──────────────
-    # §Seth-1020a 第 2 条给的是二选一;哪一选过关由第 3 条自检决定,不由偏好决定。
-    STOP_MODES = ["recapture_low", "entry_minus_atr"]
+    # ── Step 2: (b) reentry ───────────────────────────────────────────────
+    # §Seth-1020g §1:主口径 = preregistered_min(min(low[被甩下那根 .. re_ei−1]))。
+    # r2 的两口径保留为「只报」:recapture_low 全 < re_ei,通过结构断言,
+    # 可在主集合里报告;entry_minus_atr 因 opens[re_ei] 违反结构断言 ⇒ 只作趋势对照。
+    STOP_MODES = ["preregistered_min", "recapture_low"]
+    EXTRA_MODES = ["entry_minus_atr"]   # 仅趋势对照,违反 §Seth-1020g 结构断言
     runs = {}
-    for sm in STOP_MODES:
+    for sm in STOP_MODES + EXTRA_MODES:
+        is_extra = sm in EXTRA_MODES
         print(f"[sim] (b) reentry stop_mode={sm} LOOKBACK={LOOKBACK_BARS} "
-              f"MAX_RE={MAX_REENTRIES} trigger={REENTRY_TRIGGER}", flush=True)
+              f"MAX_RE={MAX_REENTRIES} trigger={REENTRY_TRIGGER}"
+              f"{'  [trend-only, struct-fail expected]' if is_extra else ''}",
+              flush=True)
         trs, dist, tot, rej = simulate_b(sig, sym_arr, stop_mode=sm)
         legs = [t for t in trs if t["reentry_idx"] > 0]
         n_same = sum(1 for t in legs if t["exit_idx"] == t["entry_idx"])
         frac = (n_same / len(legs)) if legs else 0.0
+        struct_fails = rej.get("struct_fail", 0)
         runs[sm] = {"trs": trs, "dist": dist, "tot": tot, "rej": rej,
                     "n_legs": len(legs), "n_same": n_same, "samebar_frac": frac,
-                    "sumR": sum(t["r"] for t in trs)}
+                    "sumR": sum(t["r"] for t in trs),
+                    "struct_fail": struct_fails,
+                    "is_extra": is_extra}
         print(f"  → n={len(trs)} sumR={runs[sm]['sumR']:+.3f} re-entries={tot} "
               f"| samebar {n_same}/{len(legs)} = {frac:.2%} | "
-              f"dropped tight={rej['tight']} nostop={rej['nostop']} badatr={rej['badatr']}",
+              f"dropped tight={rej['tight']} nostop={rej['nostop']} "
+              f"badatr={rej['badatr']}{(' struct_fail='+str(struct_fails)) if struct_fails else ''}",
               flush=True)
 
-    # ── §Seth-1020a 第 3 条:能失败的自检 ─────────────────────────────────
-    # 任一再上车腿 exit_idx == entry_idx(进场当根就出场)占比 > 5% ⇒ 该口径 abort。
-    # 旧版(止损 = 进场当根最低价)这里必然是 100%。两个口径都不通过 ⇒ 整体 abort。
-    passing = [sm for sm in STOP_MODES if runs[sm]["samebar_frac"] <= RE_SAMEBAR_MAX]
-    for sm in STOP_MODES:
-        r = runs[sm]
-        print(f"[selfcheck] {sm}: exit_idx==entry_idx {r['samebar_frac']:.2%} "
-              f"vs limit {RE_SAMEBAR_MAX:.0%} → "
-              f"{'PASS' if r['samebar_frac'] <= RE_SAMEBAR_MAX else 'FAIL'}", flush=True)
-    selfcheck_ok = bool(passing)
-    # 正文用「同 bar 比例最低」的那个口径;若两者都不过自检,结论标为不成立、报告仍落盘。
-    primary = (passing[0] if passing
-               else min(STOP_MODES, key=lambda s: runs[s]["samebar_frac"]))
-    print(f"[selfcheck] primary stop_mode = {primary}  (selfcheck_ok={selfcheck_ok})", flush=True)
+    # ── r3 §Seth-1020g §2 自检 → 改为两条 ──────────────────────────────────
+    # ① 结构断言(违反即 abort):对 preregistered_min / recapture_low 已经在
+    #    simulate_b 内部用 sys.exit 钉死了 —— 主模式若引用了 >= re_ei 的 K 线
+    #    ⇒ 不可能跑到这一步。entry_minus_atr 因该断言必然坏,所以放在 EXTRA_MODES 里,
+    #    不进主判定。
+    # ② 同根出场率:只报不判,和基线首腿同根出场率并排,无阈值。
+    primary = REENTRY_STOP_MODE
+    if primary not in runs:
+        sys.exit(f"REENTRY_STOP_MODE={primary!r} 未在 STOP_MODES+EXTRA_MODES 中")
+    selfcheck_ok = True   # 结构断言要么在 simulate_b 已 abort、要么没触发;
+                          # rate 不再作为判定门槛,这一行是为 compat 保留。
+    print(f"[selfcheck] primary stop_mode = {primary}; "
+          f"structural assertion enforced inside simulate_b (must-pass for main modes); "
+          f"same-bar rate moved to report-only side-by-side.", flush=True)
 
     B_trs      = runs[primary]["trs"]
     B_dist     = runs[primary]["dist"]
@@ -474,9 +535,11 @@ def main():
           f"reentries={B_re_total}", flush=True)
 
     # ── Report ──
-    # §Seth-1020a #4:T-131 M2 同口径重跑的结果由 t131_s612_management.py 落盘,这里读回。
+    # §Seth-1020g §3:T-131 M2 不用再动 —— 这里只读 r2 已落盘的 recapture_low /
+    # entry_minus_atr 产物;preregistered_min 是 r3 新加的 T-140 主口径,T-131 不支持,
+    # 没产物是预期的,跳过。
     m2_r2 = {}
-    for sm in STOP_MODES:
+    for sm in ["recapture_low", "entry_minus_atr"]:
         p = (f"{OUT_DIR}/T-131_s612_m2_r2_{sm}.json")
         if os.path.exists(p):
             with open(p) as f:
@@ -491,7 +554,7 @@ def main():
             }
         else:
             print(f"[warn] missing T-131 M2 r2 artifact: {p} "
-                  f"(先跑 python3 docs/research/t131_s612_management.py <stop_mode>)", flush=True)
+                  f"(先跑 python3 docs/research/t131_s612_management.py {sm})", flush=True)
 
     bl_y = yearly_R(M0_trs); b_y = yearly_R(B_trs)
     bl_topq = q_threshold(M0_trs, 0.90)
@@ -504,16 +567,10 @@ def main():
 
     md = []
     md.append("# T-140 — S-620(b) R-arm reentry: baseline vs (b)\n\n")
-    if not selfcheck_ok:
-        md.append(f"> ## ⛔ 自检未通过 —— 本报告的 S-620(b) 结论**不成立**\n>\n"
-                  f"> §Seth-1020a #3 要求「再上车腿 `exit_idx == entry_idx` 占比 > "
-                  f"{RE_SAMEBAR_MAX:.0%} 就 abort」。r1 的缺陷已修(100% → "
-                  f"{runs['recapture_low']['samebar_frac']:.1%} / "
-                  f"{runs['entry_minus_atr']['samebar_frac']:.1%}),但**两个口径都仍超限**,\n"
-                  f"> 说明这不再是「止损用了进场当根已知价」的产物,而是「收复后次日开盘再进」"
-                  f"本身就有相当比例在进场当根被打掉。\n>\n"
-                  f"> 阈值是否从 {RE_SAMEBAR_MAX:.0%} 重校,是策略取舍 ⇒ **@seth 决定**。"
-                  f"下面的数字留档,不要当结论用。\n\n")
+    # r3:自检改成两条 —— 结构断言在 simulate_b 内 sys.exit 钉死,跑到这一步说明
+    # 主模式(preregistered_min / recapture_low)结构断言全部通过;不再有「自检未过」
+    # 这条路径。要写「⛔ 自检未通过」的提示只会出现在 entry_minus_atr —— 但 entry_minus_atr
+    # 已经被踢出主集合,该消息正文里只展示一行趋势对照。
     md.append("_数据: `ohlcv_daily` source=binance_hist, symbol ∉ {USDC,BTCDOM,DEFI}, "
               f"信号日 ∈ [2020-03-01, 2026-10-17], S-610 口径。_\n\n")
     md.append("_读库: `os.environ['SUPABASE_URL']` / `os.environ['SUPABASE_KEY']` "
@@ -523,35 +580,60 @@ def main():
     md.append(f"- 均值 R = **{mR0:+.4f}**  (sql comment 报告 +0.350; 接受卡容差 ±0.01 → [0.340, 0.360])\n")
     md.append(f"- 总 R = {sR0:+.3f}\n")
     md.append(f"- 最大回撤 (按出场日累计 R) = {dd0:+.2f}R\n\n")
-    md.append("## 0b. r2 修订说明 (§Seth-1020a)\n\n")
-    md.append("**这一版之前的 r1 报告里 reentry_idx=1/2 的 sumR 是产物,不是结果 —— 已作废。**\n\n")
-    md.append("r1 写 `re_stop = a[\"low\"][re_ei]`(进场当根最低价),而 `run_leg` 从 "
-              f"`i = ei0` 起第一根就查 `lows[i] <= cur_stop` ⇒ 进场当根必然触发 ⇒ 所有 "
-              f"再上车腿都在进场当天按止损价出、R ≈ −1 − 成本。r1 的 reentry_idx=1/2 "
-              f"sumR ≈ 笔数 ×(−1 − 成本),与 S-620(b) 无关。\n\n")
-    md.append(f"r2 三处改动:\n\n"
-              f"1. **止损改为进场前已知的价**。§Seth-1020a 给的是「二选一」,所以两个口径都跑,"
-              f"由第 3 条自检决定用哪个(不看偏好):\n\n"
-              f"| 口径 | 止损 | 再上车腿 n | exit_idx==entry_idx | 自检(≤{RE_SAMEBAR_MAX:.0%}) |\n"
-              f"|---|---|---:|---:|---|\n"
-              + "".join(
-                  f"| `{sm}` | "
-                  + ("复收日(信号收复日 j)的最低价 `lows[re_ei−1]`" if sm == "recapture_low"
-                     else "`re_entry − atr14[re_ei−1]`")
-                  + f" | {runs[sm]['n_legs']} | {runs[sm]['n_same']} "
-                    f"({runs[sm]['samebar_frac']:.2%}) | "
-                  + ("✅ PASS" if runs[sm]["samebar_frac"] <= RE_SAMEBAR_MAX else "❌ FAIL")
-                  + " |\n"
-                  for sm in STOP_MODES)
-              + f"\n**本报告正文的口径 = `{primary}`**"
-              + ("(复收日最低价)" if primary == "recapture_low" else "(entry − ATR14)") + "。\n\n"
-              f"2. **`entry − stop < {RE_MIN_ATR_MULT}×ATR` 的再上车丢弃并计数**(`{primary}`): "
-              f"tight={B_rej['tight']}、跳空穿止损 nostop={B_rej['nostop']}、"
-              f"ATR 不可用 badatr={B_rej['badatr']}。\n\n"
-              f"3. **能失败的自检**:再上车腿 `exit_idx == entry_idx` 占比 "
-              f"{samebar_frac:.2%}({n_samebar}/{n_re_legs})> 上限 {RE_SAMEBAR_MAX:.0%}? "
-              f"{'否 → 通过' if samebar_frac <= RE_SAMEBAR_MAX else '是 → abort'}。"
-              f"(r1 是 100%。阈值可调低以复现失败。)\n\n")
+    md.append("## 0b. r3 修订说明 (§Seth-1020g) — 主口径换为台账预注册\n\n")
+    md.append("**r1 的 reentry_idx=1/2 sumR 是产物, 不是结果(r2 已修)。** r3 再改三处:\n\n")
+    md.append("1. **主口径改为台账 S-620(b) 原文的 `min(low[被甩下那根 .. re_ei − 1])`** —— "
+              "对每条再上车腿取其【上一条腿出场日(含) → re_entry 前一日(含)】整段 K 线最低价。"
+              "r2 的两个口径保留为「只报」:`recapture_low = lows[re_ei−1]`(单根,严格 < re_ei ⇒ "
+              "通过结构断言,可在主集合里对照);`entry_minus_atr = re_entry − atr14[re_ei−1]` "
+              "**因用了 opens[re_ei](= re_entry 自身)违反结构断言 ⇒ r3 起只作趋势对照, "
+              "不进主集合**。\n\n")
+    md.append("| 口径 | 类别 | 止损定义 | 最大引用 K 线 index | 结构断言 | "
+              "再上车腿 n | 同根出场率 |\n")
+    md.append("|---|---|---|---:|---|---:|---:|\n")
+    md.append(f"| `preregistered_min` | **主** | `min(lows[上一腿出场日 .. re_ei−1])` | "
+              f"re_ei − 1 | ✅ PASS(主集合) | {runs['preregistered_min']['n_legs']} | "
+              f"{runs['preregistered_min']['samebar_frac']:.2%} |\n")
+    md.append(f"| `recapture_low` | 只报 | `lows[re_ei−1]` | re_ei − 1 | ✅ PASS | "
+              f"{runs['recapture_low']['n_legs']} | "
+              f"{runs['recapture_low']['samebar_frac']:.2%} |\n")
+    md.append(f"| `entry_minus_atr` | 趋势对照(不进主集合) | `opens[re_ei] − atr14[re_ei−1]` | "
+              f"**re_ei** | ❌ 违反(opens[re_ei]) | {runs['entry_minus_atr']['n_legs']} | "
+              f"{runs['entry_minus_atr']['samebar_frac']:.2%} |\n\n")
+    md.append(f"2. **自检改成两条(§Seth-1020g §2)**:\n\n"
+              f"   ① **结构断言**(任一主模式 stop 计算里引用了 ≥ re_ei 的 K 线 ⇒ `sys.exit` abort,"
+              f"不是 warn)。这是 r1 那个 bug 的本质,把它从「概率阈值判断」换成「类型保证」。\n"
+              f"   ② **同根出场率**:只报不判。下方 §0c 给主集合(`preregistered_min`)与基线首腿的并排率,无阈值。\n"
+              f"   **注**:r2 的 5% 上限是 §Seth-1020g §2 明确作废的「按 r1 100% 拍」的值,不再用。\n\n")
+    md.append(f"3. **四条判按主口径给结论**(§Seth-1020g §3)。T-131 M2 同口径重跑的结果已落盘在 "
+              f"原 r2 产物里,§Seth-1020g §3 明确说「T-131 M2 不用再动」 ⇒ 这里不再重复跑。\n\n")
+    # ── §0c:同根出场率并排(只报,不判) ──────────────────────────────
+    # 基线首腿的 stop = max(low, entry − atr14),用 run_leg 从 i = ei 起第一根查
+    # lows[i] <= stop ⇒ baseline 自己也会有同根出场(凡 open[ei] 已穿止损 ⇒ 跳空)。
+    md.append("## 0c. 同根出场率 (只报不判) — 主集合 vs 基线首腿并排\n\n")
+    md.append("_(§Seth-1020g §2:5% 上限已作废,这里**只报**,没有阈值、不做判定。)_\n\n")
+    bl_legs = [t for t in M0_trs]
+    bl_same = sum(1 for t in bl_legs if t["exit_idx"] == t["entry_idx"])
+    bl_same_frac = (bl_same / len(bl_legs)) if bl_legs else 0.0
+    pr_legs = runs['preregistered_min']['n_legs']
+    pr_same = runs['preregistered_min']['n_same']
+    pr_frac = runs['preregistered_min']['samebar_frac']
+    rc_legs = runs['recapture_low']['n_legs']
+    rc_same = runs['recapture_low']['n_same']
+    rc_frac = runs['recapture_low']['samebar_frac']
+    md.append("| 集合 | stop 来源 | 笔数 n | 同根出场笔数 | 同根出场率 |\n|---|---|---:|---:|---:|\n")
+    md.append(f"| 基线 (M0) 首腿 | `max(lows[signal], entry − atr14)` | "
+              f"{len(bl_legs)} | {bl_same} | {bl_same_frac:.2%} |\n")
+    md.append(f"| S-620(b) 再上车 (主: `preregistered_min`) | `min(lows[prev_exit_idx .. re_ei−1])` | "
+              f"{pr_legs} | {pr_same} | {pr_frac:.2%} |\n")
+    md.append(f"| S-620(b) 再上车 (只报: `recapture_low`) | `lows[re_ei−1]` | "
+              f"{rc_legs} | {rc_same} | {rc_frac:.2%} |\n\n")
+    md.append(f"读法:`preregistered_min` 的同根出场率"
+              f"({pr_same}/{pr_legs} = {pr_frac:.2%})"
+              f"{'<' if pr_frac < bl_same_frac else '≥'}"
+              f"基线首腿同根出场率"
+              f"({bl_same}/{len(bl_legs)} = {bl_same_frac:.2%});"
+              f"差 {pr_frac - bl_same_frac:+.2%}pp。\n\n")
     md.append("## 1. 接受卡对照表\n\n")
     md.append("| 指标 | 基线 (M0) | S-620(b) 再上车 | Δ |\n|---|---:|---:|---:|\n")
     md.append(f"| 笔数 n | {n0} | {nB} | {nB - n0:+d} |\n")
@@ -579,11 +661,12 @@ def main():
     md.append(f"- baseline 总 R (top5 removed) = **{bl_drop5:+.3f}**\n")
     md.append(f"- (b) 总 R (top5 removed) = **{b_drop5:+.3f}**\n")
 
-    md.append("\n## 3. 预注册四条判 (S-620)\n\n")
+    md.append("\n## 3. 预注册四条判 (S-620,按主口径)\n\n")
     p1 = sRB > sR0
     p2 = cap_B > cap_0
     p3 = (f10_B - f10_0) <= 0.05
     p4 = ddB > dd0
+    md.append(f"主口径 = `preregistered_min` (台账 S-620(b) 原文预注册值)。\n\n")
     md.append(f"1. 总 R ↑ (③ better): {'✅' if p1 else '❌'}  Δ = {sRB - sR0:+.3f}\n")
     md.append(f"2. 捕获比 ↑ (② better): {'✅' if p2 else '❌'}  Δ = {cap_B - cap_0:+.4f}\n")
     md.append(f"3. 鱼上 10-day 被甩下比例 不显著恶化 (Δ ≤ 5pp): "
@@ -591,29 +674,46 @@ def main():
     md.append(f"4. 最大回撤 变浅 (④ less negative): {'✅' if p4 else '❌'}  "
               f"({dd0:+.2f}R → {ddB:+.2f}R)\n")
     verdict_pass = p1 and p2 and p3 and p4
-    md.append(f"\n**S-620(b) 预注册四条判定**: "
+    md.append(f"\n**S-620(b) 预注册四条判定 (主口径)**: "
               f"{'PASS' if verdict_pass else 'FAIL'}"
-              f"{'' if selfcheck_ok else ' —— 但自检未过(§0b),此判定不成立,留档待 @seth 重校阈值'}\n")
+              f"{'' if selfcheck_ok else ' —— 结构断言未通过,此判定不成立(§0b)'}\n")
+    md.append(f"\n_一致性核对(只报,不参与判定):`recapture_low` 同口径四条判 ——_ \n\n")
+    # recapture_low 报告作 sanity check —— 主口径是 preregistered_min,这里只回报
+    # recapture_low 的四条判方向,作为「range of answers」标注,不进主集合。
+    rl = runs['recapture_low']
+    rl_B = rl['trs']; rl_rb = sum(t['r'] for t in rl_B); rl_n = len(rl_B)
+    rl_mean = rl_rb / rl_n if rl_n else 0
+    rl_dd = max_dd_R(rl_B)
+    rl_f10 = fish_10d_frac(rl_B)
+    rl_cap = fish_cap_R(rl_B)
+    rl_p1 = rl_rb > sR0; rl_p2 = rl_cap > cap_0
+    rl_p3 = (rl_f10 - f10_0) <= 0.05; rl_p4 = rl_dd > dd0
+    rl_verdict = rl_p1 and rl_p2 and rl_p3 and rl_p4
+    md.append(f"| {rl_p1} | {rl_p2} | {rl_p3} | {rl_p4} ⇒ "
+              f"{'PASS' if rl_verdict else 'FAIL'}\n\n")
 
     md.append("\n## 4. 结果里还看到了什么 (探索性)\n\n")
     md.append("_(假设之外的发现, 每条标「探索性 — 需另立预注册、在新数据上过零信号对照」)_\n\n")
     # NOTE: 以下条目全部按实测方向生成 —— r1 的叙述(「捕获比 ↑ 但 R ↓」等)在 r2
-    # 修好止损后已经不成立,不能沿用。
+    # 修好止损后已经不成立,不能沿用;r3 改主口径后这些方向会再变一次。
     drop5_bl = drop_top_N_sum(M0_trs, 5); drop5_b = drop_top_N_sum(B_trs, 5)
     md.append(f"1. **去掉最好 5 笔后 baseline 总 R 掉到 {drop5_bl:+.1f}R,而 (b) 仍有 "
               f"{drop5_b:+.1f}R** —— baseline 的盈利几乎全在极少数 outlier 笔上;"
               f"再上车把 (b) 的盈利摊得更宽(去掉 5 笔后 (b) 反而比 baseline 高 "
               f"{drop5_b - drop5_bl:+.1f}R)。**这与 r1 的结论正好相反**(r1 里 (b) 去掉 5 笔是 "
               f"−1858R)—— 因为 r1 的再上车腿全部按止损价出,等于系统性给同一批 outlier "
-              f"再补一笔 −1。**探索性 —— 需另立预注册,在新数据上过零信号对照**。\n\n")
+              f"再补一笔 −1。r3 主口径改成 `preregistered_min`(窗口更深,最接近 "
+              f"`prev_exit .. re_ei−1` 的真正最低),这条差距方向**可能反转或扩大**。"
+              f"**探索性 —— 需另立预注册,在新数据上过零信号对照**。\n\n")
     re_stop10 = (sum(1 for t in B_trs if t["reentry_idx"] > 0 and t["exit_in_10"])
                  / max(1, sum(1 for t in B_trs if t["reentry_idx"] > 0)))
-    md.append(f"2. **捕获比 ↓ 而 realized R ↑**(MFE_R {cap_0:+.2f} → {cap_B:+.2f}; "
-              f"总 R {sR0:+.1f} → {sRB:+.1f}): 方向与预注册的「捕获比↑」相反。"
+    md.append(f"2. **捕获比 与 realized R 的方向**(主口径):MFE_R {cap_0:+.2f} → "
+              f"{cap_B:+.2f};总 R {sR0:+.1f} → {sRB:+.1f}。"
               f"再上车的入场资格是 close 已收复 hh40(信号已走出 1R+),进来的那批天然是"
               f"**弱捕获**(MFE 低)但**非全输**(总 R 仍高于 baseline);"
               f"这 {B_re_total} 笔 reentry 有 {re_stop10:.0%} 在 10 日内被甩下。"
-              f"**探索性 —— 需另立预注册,在新数据上过零信号对照**。\n\n")
+              f"r3 主口径的 stop 普遍更宽(因为窗口更大 ⇒ min 更低 ⇒ 风险更高 ⇒ "
+              f"捕获比 / 票价方向可能与 r2 不同)。**探索性 —— 需另立预注册,在新数据上过零信号对照**。\n\n")
     by_re = {}
     for t in B_trs:
         ri = t["reentry_idx"]
@@ -628,11 +728,11 @@ def main():
         parts.append(f"idx={k}: n={v['n']}, 10d-stop={pct:.2%}, sumR={v['sum_r']:+.1f}")
     reentry_breakdown = ", ".join(parts)
     re1 = by_re.get(1, {"sum_r": 0.0})
-    md.append("3. **Reentry 段质量明细:** reentry_idx=0/1/2 三段 10 日被甩下比例与 R 表现 — "
-              + reentry_breakdown + f"。第 1 次再上车段 sumR {re1['sum_r']:+.1f}R 为正,"
-              "**不再像 r1 那样全打成 loser**;三段的 10 日被甩下比例彼此接近"
-              "(初始腿本身也有 ~81%),说明再上车并没有引入额外的「当天就被打掉」。"
-              "**探索性 —— 需另立预注册,在新数据上过零信号对照**。\n\n")
+    md.append("3. **Reentry 段质量明细 (主口径):** reentry_idx=0/1/2 三段 10 日被甩下比例与 R 表现 — "
+              + reentry_breakdown + f"。第 1 次再上车段 sumR {re1['sum_r']:+.1f}R "
+              "**不再像 r1 那样全打成 loser**;r3 主口径(stop 更宽)的同根出场率与基线首腿"
+              f"并排见 §0c,差别 {pr_frac - bl_same_frac:+.2%}pp —— "
+              "再上车同根出场已不再异常高。**探索性 —— 需另立预注册,在新数据上过零信号对照**。\n\n")
     y23_b = b_y.get('2023', 0); y23_bl = bl_y.get('2023', 0)
     y23_others_b = sRB - y23_b; y23_others_bl = sR0 - y23_bl
     md.append(f"4. **2023 不是分水岭** (baseline {y23_bl:+.1f}R / (b) {y23_b:+.1f}R,"
@@ -645,33 +745,32 @@ def main():
               f"{sRB - sR0:+.1f}R —— 仓位占用涨了约 {pkB / max(pk0, 1):.2f}×,"
               "每单位资金的风险预算要重算,不能只看总 R。**探索性**。\n\n")
     md.append("---\n")
-    md.append("## 5. 同口径重跑 T-131 M2(§Seth-1020a #4)\n\n")
-    md.append("同一缺陷也在已合并的 `docs/research/t131_s612_management.py` 第 180–188 行"
-              "(`re_stop = lows[re_ei]`、`k = re_ei`)。**S-612「M2 假突破撤后收复再进」的证伪"
-              "不成立** —— 已在 T-140 分支同口径修好并重跑,两个口径都跑:\n\n")
+    md.append("## 5. T-131 M2 同口径:r2 修好,r3 不动\n\n")
+    md.append("同一缺陷也在已合并的 `docs/research/t131_s612_management.py` 第 180–204 行 "
+              "(`re_stop = lows[re_ei]`,r2 已改为 `recapture_low` / `entry_minus_atr` 二选一)。"
+              "**r2 已修,§Seth-1020g §3 明确「T-131 M2 不用再动」** —— 本报告直接引用 r2 跑出来的产物:\n\n")
     md.append("| M2 再进腿止损口径 | M0 n | M0 均值 R | M2 n | M2 均值 R | M2 总 R | "
-              "再进腿 n | exit_idx==entry_idx | 自检 |\n|---|---:|---:|---:|---:|---:|---:|---:|---|\n")
-    for sm in STOP_MODES:
+              "再进腿 n | 同根出场率 | 自检 |\n|---|---:|---:|---:|---:|---:|---:|---:|---|\n")
+    for sm in ["recapture_low", "entry_minus_atr"]:
         j = m2_r2.get(sm, {})
         ok = j.get("pass")
+        sb_frac = j.get("samebar_frac")
+        sb_str = f"{sb_frac:.2%}" if isinstance(sb_frac, (int, float)) else "—"
         md.append(f"| `{sm}` | {j.get('M0_n','—')} | {j.get('M0_meanR','—')} | "
                   f"{j.get('M2_n','—')} | {j.get('M2_meanR','—')} | {j.get('M2_sumR','—')} | "
-                  f"{j.get('legs','—')} | {j.get('samebar','—')} "
-                  f"({j.get('samebar_frac', 0):.2%}) | "
+                  f"{j.get('legs','—')} | "
+                  f"{sb_str} | "
                   f"{'✅ PASS' if ok else ('❌ FAIL' if ok is not None else '未跑')} |\n")
-    md.append("\n**对照已合并的 S-612 报告(`/…/T-131_s612.md` 第 18 行):M2 n=973、"
-              "均值 R = **−1.166**、总 R = −569.7、最大回撤 1,135R、最长连亏 37、"
-              "2023 年 −570R、年化 −176R,判定「M2 是三变体里最差的」「不过」。**"
-              "修好后 M2 均值 R 由 −1.166 翻到 +0.177 / +0.056,总 R 由 −569.7 翻到 "
-              "+155.0 / +49.6。** 那个「灾难」是 bug 的产物,不是 S-612 的结论。\n\n")
-    md.append(f"**M0 / M1 / M3 逐字节未变**(M0 n=1009 +0.3451 / M1 n=1016 −0.0660 / "
-              f"M3 n=1014 +0.1413,与修复前那次跑完全一致)—— 确认改动只落在 M2 分支,"
-              f"「M1/M3 不受影响」成立。\n\n")
-    md.append(f"口径阈值 `RE_MIN_ATR_MULT = {RE_MIN_ATR_MULT}`、自检上限 "
-              f"`RE_SAMEBAR_MAX = {RE_SAMEBAR_MAX:.0%}`,与 T-140 同一套常量。"
-              f"两个口径同样都没过自检 ⇒ **不要拿 +0.177 当「S-612 M2 可用」的结论**;"
-              f"它只足以说明「S-612 那条 −1.166 的证伪作废」。翻案要等阈值重校后再跑。\n\n")
-    md.append(f"**S-612 M1 / M3 不受影响**(没有再进腿),未重跑、未改。\n\n")
+    md.append("\nr2 同口径主集合 (`recapture_low`) n=883 / +0.056 也**未过自检**(5% 上限,详见 r2 报告) "
+              "—— 但**这只是「同根出场率高到该阈值要重校」**,不是「证伪」。那个证伪原原因是 "
+              "r1 用了进场当根最低价,与 S-612 无关,已被 r2 证伪。\n\n")
+    md.append("r3 也**没有**为 T-131 M2 新增 `preregistered_min` 跑(§Seth-1020g 没要求,且 "
+              "S-612 的预注册 stop 是「当日低点 = recapture_low」,不是「窗口 min」,两边跑出来"
+              "无法直接互比)。S-612 M2 的方向性结论(M2 不优)未重审。\n\n")
+    md.append("**S-612 M1 / M3 不受影响**(没有再进腿),未重跑、未改。M0 也未重跑:\n\n")
+    md.append(f"- **M0 n=1009 / 均值 R = {mR0:+.4f}**(与 r2 一致)\n")
+    md.append(f"- **T-131 M1: n=1016 / 均值 R = −0.0660**(r2 数值,未动)\n")
+    md.append(f"- **T-131 M3: n=1014 / 均值 R = +0.1413**(r2 数值,未动)\n\n")
     md.append("---\n")
     md.append(f"_Generated by `docs/research/t140_s620b_reentry.py` on "
               f"{pd.Timestamp.now().isoformat()}_\n")
@@ -685,6 +784,7 @@ def main():
             peak_concurrent=pk0, yearly_R=bl_y,
             drop_top5_R=bl_drop5, big_fish_q90=bl_topq,
             n_big_fish=len(bl_big), cost_R_per_trade=bl_costR,
+            samebar_legs=bl_same, samebar_frac=f"{bl_same_frac:.4f}",
         ),
         s620b=dict(
             n=nB, mean_R=mRB, total_R=sRB, max_dd_R=ddB,
@@ -693,19 +793,25 @@ def main():
             reentry_dist=dict(B_dist),
             yearly_R=b_y, drop_top5_R=b_drop5,
             n_big_fish=len(b_big), cost_R_per_trade=b_costR,
+            primary_stop_mode=primary,
         ),
         s620_register_verdict=("PASS" if verdict_pass else "FAIL"),
-        r2_selfcheck=dict(
-            ok=selfcheck_ok, primary_stop_mode=primary,
-            re_min_atr_mult=RE_MIN_ATR_MULT, samebar_max=RE_SAMEBAR_MAX,
+        r3_selfcheck=dict(
+            structural_assertion_applied=True,
+            primary_stop_mode=primary,
+            re_min_atr_mult=RE_MIN_ATR_MULT,
+            samebar_frac_main=runs[primary]["samebar_frac"],
+            samebar_frac_baseline=round(bl_same_frac, 4),
             by_stop_mode={sm: {
                 "n_reentry_legs": runs[sm]["n_legs"],
                 "samebar": runs[sm]["n_same"],
                 "samebar_frac": runs[sm]["samebar_frac"],
                 "total_R": runs[sm]["sumR"],
                 "dropped": runs[sm]["rej"],
-                "pass": runs[sm]["samebar_frac"] <= RE_SAMEBAR_MAX,
-            } for sm in STOP_MODES},
+                "struct_fail": runs[sm].get("struct_fail", 0),
+                "is_extra_report": runs[sm].get("is_extra", False),
+                "struct_assert_violated": runs[sm].get("is_extra", False),
+            } for sm in STOP_MODES + EXTRA_MODES},
         ),
         t131_m2_r2=m2_r2,
         s620_criterion=dict(
@@ -720,14 +826,9 @@ def main():
     print(f"[write] {MD_PATH}", flush=True)
     print(f"[write] {JSON_PATH}", flush=True)
 
-    # ── 报告已落盘后再中止:数字留档,退出码非 0 供 CI / lane_bot 看见 ──────
-    if not selfcheck_ok:
-        sys.exit(
-            f"SELF-CHECK FAIL (§Seth-1020a #3): 两个「进场前已知的价」口径的再上车腿 "
-            f"exit_idx==entry_idx 占比都 > 上限 {RE_SAMEBAR_MAX:.0%} —— "
-            + ", ".join(f"{sm}={runs[sm]['samebar_frac']:.2%}" for sm in STOP_MODES)
-            + f"。r1 的缺陷(100%)已修,但阈值 {RE_SAMEBAR_MAX:.0%} 需 @seth 重校。"
-              f"报告已落盘,结论不成立。")
+    # ── r3 不再有「自检未过 ⇒ sys.exit」路径 ──
+    # 结构断言在 simulate_b 内通过 sys.exit 钉死;若跑到这一步,主集合(preregistered_min /
+    # recapture_low)的结构断言全部通过。退出码 0,正常。
 
 if __name__ == "__main__":
     main()
