@@ -43,7 +43,9 @@ STATE_FILE = NFLAG_DIR / "_t144_state.json"
 REPORT_PATH = Path("/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-142_narrative_ab.md")
 
 EXCLUDE_BTC_ETH = {"BTC", "ETH"}
-UNIVERSE_EXCLUDE = {"USDC", "BTCDOM", "DEFI"}
+# N 臂 = universe 减所有标记臂(S-626 补,T-147);BTC / ETH 也排除,免得 N 被两条
+# 主流稀释后 J / E / T / S 所有人都得跑过一条「所有人一起上涨」的底,J 永远过不了线。
+UNIVERSE_EXCLUDE = {"USDC", "BTCDOM", "DEFI", "BTC", "ETH"}
 # S 臂额外去稳定币(Sharpe 的 universe 比 binance_hist 宽得多,含一堆锚定美元的票)
 STABLE = {
     "USDC", "USDT", "DAI", "BUSD", "TUSD", "USDP", "FDUSD", "USDD", "PYUSD",
@@ -247,6 +249,9 @@ def _universe(mon: date) -> set:
         adv30 = sum(c * v for _, c, v in window) / len(window)
         if adv30 >= ADV30_MIN:
             members.add(sym)
+    # ── 自检(T-147 acceptance):N 臂不能含 BTC / ETH,出现即 abort。
+    leak = EXCLUDE_BTC_ETH & members
+    assert not leak, f"N 臂出现 BTC/ETH:{sorted(leak)}(UNIVERSE_EXCLUDE 漏配?)"
     return members
 
 
@@ -295,6 +300,17 @@ def _fast_fish(sym: str, mon: date, today: date) -> dict:
 def _summarize(mon: date, arms: dict, today: date) -> dict:
     out = {"week": _iso_week(mon), "monday": mon.isoformat(),
            "matured": mon + timedelta(days=LOOKAHEAD_DAYS) <= today, "arms": {}}
+    # T-147 acceptance:打分对所有周统一先剔除 N 里的 BTC / ETH 再算。
+    # _universe 已从底层排除 BTC/ETH;这里再 strip 一遍是防御(W43 等更早冻结文件
+    # 是 UNIVERSE_EXCLUDE 加 BTC/ETH 之前的产物,frozen append-only 不重写)。
+    # 不在 _summarize 里 assert:旧 frozen 文件 N 里残留的 BTC/ETH 在这里 strip 后
+    # 照样能算快鱼;_universe 是真正的自检闸口(UNIVERSE_EXCLUDE 漏配就 abort,见上)。
+    n_stripped: list = []
+    if "N" in arms:
+        leak = sorted(EXCLUDE_BTC_ETH & set(arms["N"]))
+        if leak:
+            n_stripped = leak
+            arms = {**arms, "N": [s for s in arms["N"] if s not in EXCLUDE_BTC_ETH]}
     for name, syms in arms.items():
         rows = [{"sym": s, **_fast_fish(s, mon, today)} for s in syms]
         fish = [r for r in rows if r["d"] == "fast"]
@@ -307,6 +323,8 @@ def _summarize(mon: date, arms: dict, today: date) -> dict:
             "median_peak_mult": (sorted(peaks)[len(peaks) // 2]) if peaks else None,
             "rows": rows,
         }
+    if n_stripped:
+        out["n_stripped_btc_eth"] = n_stripped
     return out
 
 
