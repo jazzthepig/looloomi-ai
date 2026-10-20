@@ -1,7 +1,7 @@
 {
   "id": "T-137",
   "owner": "lane-a",
-  "status": "open",
+  "status": "blocked",
   "created": "2026-10-19",
   "verified": null,
   "title": "用实盘内核回放 X1V 2021→2026:执行规则(5% 门槛、单笔 / 日换手上限、取整、成本、盘中止损)让理想收益掉了多少",
@@ -18,9 +18,10 @@
     "PROJECT_STATE_LOG.md"
   ],
   "acceptance": {
-    "check": "脚本 docs/research/t137_x1v_replay.py:收盘用 asset_mcap_daily(与实盘计划同源,forward_books.tom_inputs 的口径),开盘 / 最低用 ohlcv_daily source = binance_hist(盘中止损用;两个源不同,报告里写明);调用 replay.replay 与 replay.ideal_nav(不改它们)。区间 2021-01-01 → 2026-10-18,账户 3,000;成本网格:半价差 2 / 5 / 10 bp × 手续费 4.5 / 7 bp。报:年化、最大回撤、成交笔数、止损次数,回放对理想的年化差(实施拖累)。",
+    "check": "脚本 docs/research/t137_x1v_replay.py:收盘用 asset_mcap_daily(与实盘计划同源,forward_books.tom_inputs 的口径),开盘 / 最低用 ohlcv_daily source = binance_hist(盘中止损用;两个源不同,报告里写明);调用 replay.replay 与 replay.ideal_nav(不改它们)。区间 2021-01-01 → 2026-10-18,账户 3,000;成本网格:半价差 2 / 5 / 10 bp × 手续费 4.5 / 7 bp。报:年化、最大回撤、成交笔数、止损次数,回放对理想的年化差(实施拖累)。 另:拆解表 a–d + 20 次止损逐笔;脚本不含任何 key(python3 scripts/secret_scan.py 通过)。",
     "expect": "报告写数据根 _reports/absorb_input/T-137_x1v_replay.md,开头一张成本网格表;卡 notes 写关键数;in_review,推 lane-a/T-137。"
   },
   "prior_value": "上真钱之前知道执行规则本身让 X1V 少赚多少;拖累太大就先改门槛 / 上限,而不是让实盘去发现",
-  "notes": "2026-10-19 Seth 开卡,T-129 之后做。"
+  "notes": "2026-10-19 Seth 开卡,T-129 之后做。\n2026-10-20 Seth 退回(不合并):① **脚本把 Supabase service_role key 明文写进代码并推到了公开仓库**(P0,分支已删,key 待 Jazz 轮换)。重交必须:从新的 origin/main 开分支(旧提交里有 key,pre-push 钩子现在会拒);SUPABASE_URL / SUPABASE_KEY 只从环境变量读,缺就报错退出;**不许 cat / source / 读任何 .env 文件**。② 结果本身有价值:拖累 −9.1% ~ −9.7%/年,而 6 个成本格之间只差 0.6pp —— 拖累不是成本,是结构。重交时加一张**拆解表**(每次只关一项,其余照实盘):a 盘中灾难止损关掉 / 改按收盘判;b 5% 门槛 → 0;c 取整与最小名义额关掉;d 理想也按 t+1 开盘成交(把时点差和规则差分开)。报每一项单独带来的年化差与止损次数;20 次止损逐笔列(日期、止损线、当日最低、收盘、之后 5 日收盘)。等 Jazz 轮换完 key 再唤醒本卡。 (status=blocked:等 Jazz 轮换 key 并定好 lane 拿什么 key,之后 Seth 改回 open 并写 wake。)",
+  "blocked_by": "Jazz:Supabase key 轮换 + ~/.cometcloud/lane.env(OPEN RISK #0d)"
 }

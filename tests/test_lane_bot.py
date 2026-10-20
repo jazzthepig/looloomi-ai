@@ -251,3 +251,42 @@ def test_quota_exhaustion_pauses_every_lane() -> None:
         assert not lb.quota_paused(lb.now().timestamp() + lb.QUOTA_BACKOFF_MIN * 60 + 1)
     src = (ROOT / "scripts/lane_bot/lane_bot.py").read_text(encoding="utf-8")
     assert "if not quota_hit(text):" in src, "额度报错不进 SYNC"
+
+
+# ── 2026-10-20:service_role 泄露之后,lane 只拿 publishable key ─────────────────────────────────────
+
+def test_launch_scrubs_write_keys_then_exports_only_the_lane_key():
+    head = _LAUNCH.split('cd "$LANE_CWD"')[0]
+    for var in ("INTERNAL_TOKEN", "SUPABASE_SERVICE_KEY", "SUPABASE_KEY", "SUPABASE_SECRET_KEY", "HL_API_WALLET_PRIVATE_KEY"):
+        assert var in head.split(";")[0], f"{var} 必须在 rc 读完之后先 unset"
+    assert 'SUPABASE_KEY="$LANE_SUPABASE_KEY"' in head
+
+
+def test_lane_db_env_only_hands_out_a_publishable_key(tmp_path):
+    from scripts.lane_bot.lane_bot import lane_db_env
+    f = tmp_path / "lane.env"
+    f.write_text("SUPABASE_URL=https://x.supabase.co\nSUPABASE_KEY=sb_publishable_abc123\n", encoding="utf-8")
+    assert lane_db_env(f) == {"LANE_SUPABASE_URL": "https://x.supabase.co", "LANE_SUPABASE_KEY": "sb_publishable_abc123"}
+    for bad in ("sb_" + "secret_abc123", "eyJhbGciOiJIUzI1NiJ9.e30.sig", ""):
+        f.write_text(f"SUPABASE_URL=https://x.supabase.co\nSUPABASE_KEY={bad}\n", encoding="utf-8")
+        assert lane_db_env(f) == {}, bad
+    assert lane_db_env(tmp_path / "missing.env") == {}
+
+
+def test_guard_blocks_reading_env_files_and_printing_keys():
+    from scripts.lane_bot.guard_main_dir import verdict
+    for cmd in ("cat /Volumes/CometCloudAI/cometcloud-local/.env", "source ./.env; python3 x.py", "printenv | grep SUPA",
+                "echo $SUPABASE_KEY", "grep KEY .env.local"):
+        assert verdict("Bash", {"command": cmd}), cmd
+    assert verdict("Read", {"file_path": "/Volumes/CometCloudAI/cometcloud-local/.env"})
+    assert verdict("Read", {"file_path": "/Users/sbb/.cometcloud/lane.env"})
+    for cmd in ('curl -s -H "apikey: $SUPABASE_KEY" "$SUPABASE_URL/rest/v1/ohlcv_daily?limit=1"',
+                "python3 docs/research/t137.py", "env PYTHONPATH=. python3 x.py", "cat docs/research/T-137.md"):
+        assert verdict("Bash", {"command": cmd}) is None, cmd
+
+
+def test_guard_hook_also_sees_read_tools():
+    import json
+    from scripts.lane_bot.lane_bot import guard_settings
+    hook = json.loads(guard_settings().read_text(encoding="utf-8"))["hooks"]["PreToolUse"][0]
+    assert "Read" in hook["matcher"] and "Grep" in hook["matcher"]

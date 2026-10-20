@@ -68,8 +68,32 @@ def _shared(path: str) -> bool:
     return any(path.rstrip("/").endswith("/" + d) for d in SHARED_DOCS)
 
 
+#: 2026-10-20:lane 反复 `cat cometcloud-local/.env`,service_role key 进了中转上下文,随后被写进脚本推上公开仓库。
+#: lane 只拿 publishable key,而且不读任何 env 文件、不把环境变量里的 key 打印出来。启发式,不是沙箱 ——
+#: 真正的防线是 lane 手里的 key 本身只读(migrations/2026-10-20_lane_read_publishable.sql)。
+_ENV_FILE = re.compile(r"(?:^|[\s/\"'=:(<])\.env(?:\.[\w.-]+)?(?=$|[\s\"';|&)<>])|\.cometcloud/|\bsecrets?\.(?:env|json|ya?ml)\b")
+_PRINT_ENV = re.compile(r"\bprintenv\b|(?:^|[;&|]\s*)env\s*(?:$|[|;&])|\b(?:declare|export)\s+-p\b|"
+                        r"\b(?:echo|printf|cat)\b[^|;&]*\$\{?[A-Z_]*(?:KEY|TOKEN|SECRET)")
+WHY_SECRETS = ("拦下:lane 不读 env 文件、不打印密钥(2026-10-20 service_role 泄露)。脚本里用 os.environ['SUPABASE_URL'] / "
+               "os.environ['SUPABASE_KEY'] 读 —— lane_bot 已把它们放进你的环境;缺了就报错退出,别去找文件。")
+
+
+def secrets_verdict(tool: str, inp: dict) -> str | None:
+    """纯函数。读 / 打印密钥文件或密钥变量 ⇒ 理由。"""
+    if tool == "Bash":
+        cmd = str(inp.get("command") or "")
+        return WHY_SECRETS if (_ENV_FILE.search(cmd) or _PRINT_ENV.search(cmd)) else None
+    if tool in ("Read", "Grep", "Glob"):
+        target = " " + " ".join(str(inp.get(k) or "") for k in ("file_path", "path", "pattern", "glob"))
+        return WHY_SECRETS if _ENV_FILE.search(target) else None
+    return None
+
+
 def verdict(tool: str, inp: dict, cwd: str = "") -> str | None:
     """返回拦截理由;None = 放行。纯函数,测试直接调。cwd = 钩子输入里会话当前目录(S-559)。"""
+    why = secrets_verdict(tool, inp)
+    if why:
+        return why
     if tool == "Bash":
         cmd = str(inp.get("command") or "")
         if _GIT_WRITE.search(cmd) and _targets_main(cmd, cwd):

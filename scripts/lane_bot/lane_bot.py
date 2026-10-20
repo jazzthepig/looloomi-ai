@@ -48,7 +48,13 @@ ALLOWED_TOOLS = [
 ]
 # 工具白名单逐项作为独立参数传(模式里有空格):zsh 的 ${(@s:,:)…} 按逗号拆、每项保持一个词。
 # unset INTERNAL_TOKEN:lane 不需要它;它出现在 shell 环境里时,preflight 的 schema-drift 检查会对线上 401(10-07 B 撞上)。
-_LAUNCH = ('unset INTERNAL_TOKEN; cd "$LANE_CWD" && exec "$LANE_CMD" -p "$LANE_PROMPT" --output-format stream-json --verbose '
+#: 2026-10-20(service_role 泄露后 Jazz 裁定):lane 只拿 publishable key。登录 shell 读完 rc 之后先清掉一切可能带进来的
+#: 写权限 key,再只放回 lane_bot 交给它的那一把(lane_db_env 已验过是 sb_publishable_)。
+_SCRUB = ("unset INTERNAL_TOKEN EXECUTOR_TOKEN SUPABASE_SERVICE_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_SECRET_KEY "
+          "SUPABASE_KEY SUPABASE_URL HL_API_WALLET_PRIVATE_KEY; "
+          '[ -n "$LANE_SUPABASE_KEY" ] && export SUPABASE_URL="$LANE_SUPABASE_URL" SUPABASE_KEY="$LANE_SUPABASE_KEY"; '
+          "unset LANE_SUPABASE_KEY LANE_SUPABASE_URL; ")
+_LAUNCH = (_SCRUB + 'cd "$LANE_CWD" && exec "$LANE_CMD" -p "$LANE_PROMPT" --output-format stream-json --verbose '
            '--max-turns "$LANE_TURNS" --permission-mode acceptEdits --settings "$LANE_SETTINGS" '
            '--add-dir "$LANE_WORKTREE" --add-dir "$LANE_MAIN" --add-dir "$LANE_DATA" '
            '--allowedTools "${(@s:,:)LANE_TOOLS}"')
@@ -180,7 +186,7 @@ def guard_settings(lane: str = "", dirs: tuple[str, ...] = ()) -> Path:
     f = BOT / (f"guard_settings-{lane}.json" if lane else "guard_settings.json")
     guard = ROOT / "scripts" / "lane_bot" / "guard_main_dir.py"
     f.write_text(json.dumps({"permissions": {"additionalDirectories": list(dirs)}, "hooks": {"PreToolUse": [{
-        "matcher": "Bash|Write|Edit|MultiEdit|NotebookEdit",
+        "matcher": "Bash|Write|Edit|MultiEdit|NotebookEdit|Read|Grep|Glob",
         "hooks": [{"type": "command", "command": f'python3 "{guard}"'}]}]}}, ensure_ascii=False), encoding="utf-8")
     return f
 
@@ -193,6 +199,31 @@ DATA_ROOT = "/Volumes/CometCloudAI/cometcloud-local"
 def data_root(fallback: str) -> str:
     """数据盘挂着就给数据根;没挂(或不在 Mac 上)给 lane 自己的 worktree,不让 --add-dir 指向不存在的路径。"""
     return DATA_ROOT if os.path.isdir(DATA_ROOT) else fallback
+
+
+#: lane 读库用的 URL + publishable key。文件归 Jazz(chmod 600),lane 自己读不到(guard_main_dir 拦 .cometcloud/ 与 .env)。
+LANE_ENV_FILE = Path(os.environ.get("LANE_ENV_FILE", "~/.cometcloud/lane.env")).expanduser()
+
+
+def lane_db_env(path: Path = LANE_ENV_FILE) -> dict[str, str]:
+    """→ {LANE_SUPABASE_URL, LANE_SUPABASE_KEY},只在 key 是 sb_publishable_ 时给;否则 {}(lane 照跑,只是连不上库)。
+    宁可连不上,也不把一把能写库的 key 交给跑在第三方中转上的 lane。值不进日志。"""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return {}
+    kv: dict[str, str] = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.removeprefix("export ").split("=", 1)
+        kv[k.strip()] = v.strip().strip("'\"")
+    url, key = kv.get("SUPABASE_URL", ""), kv.get("SUPABASE_KEY", "")
+    if not url.startswith("https://") or not key.startswith("sb_publishable_"):
+        log(f"lane.env 不合格(要 https URL + sb_publishable_ key)—— 不给 lane 任何库凭证:{path}")
+        return {}
+    return {"LANE_SUPABASE_URL": url, "LANE_SUPABASE_KEY": key}
 
 
 def launch_argv(cfg: dict) -> list[str]:
@@ -250,7 +281,8 @@ def run_lane(lane: str, cfg: dict, reason: str, dry: bool = False, task: str = "
     env = dict(os.environ, LANE_CWD=cwd, LANE_CMD=cfg.get("command", "claude"),
                LANE_PROMPT=build_prompt(lane, lc, reason, task), LANE_TURNS=str(cfg["max_turns"]),
                LANE_TOOLS=",".join(ALLOWED_TOOLS), LANE_WORKTREE=wt, LANE_MAIN=str(ROOT),
-               LANE_DATA=data_root(wt), LANE_SETTINGS=str(guard_settings(lane, (wt, str(ROOT), data_root(wt)))))
+               LANE_DATA=data_root(wt), LANE_SETTINGS=str(guard_settings(lane, (wt, str(ROOT), data_root(wt)))),
+               **lane_db_env())
     if dry:
         return {"lane": lane, "reason": reason, "cwd": cwd, "argv": launch_argv(cfg), "tools": ALLOWED_TOOLS}
     RUNS.mkdir(parents=True, exist_ok=True)
