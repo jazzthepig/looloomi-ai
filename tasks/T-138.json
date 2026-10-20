@@ -1,10 +1,13 @@
 {
   "id": "T-138",
   "owner": "seth",
-  "status": "blocked",
-  "blocked_by": "T-133 回补完成(deriv_metrics_plan 里 min_d 都到 target_start)",
+  "status": "done",
   "created": "2026-10-19",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-20T02:00Z",
+    "value": "Not passed (S-614). 885 of 1,013 R trades have features (2020-22 is almost empty: those alts had no Binance metrics files yet). H1 taker-buying confirmation is the strongest: top tercile +0.906R vs bottom -0.267R (diff +1.17R, one-sided p 0.041 against the 0.0125 bar; 2025-26 +3.36R) but the favored group without its best 5 trades is still -0.07R. H2 rising open interest +0.49R diff (p 0.19). H3 top-trader long/short rising and H4 crowd not crowded point the wrong way (p 0.50 / 0.59). H1 becomes a logged field on the R forward paper book; the intraday version waits for the T-129 recordings."
+  },
   "title": "S-614:R 臂突破那天的主动买盘 / 未平仓量 / 大户持仓 / 散户拥挤,能否把赢家和输家分开",
   "source": "Jazz 10-19「结合资金流、跟踪 smart money」;台账 S-614 预注册(数据回补完成前写)",
   "allowed_paths": [
