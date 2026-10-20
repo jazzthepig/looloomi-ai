@@ -1,0 +1,26 @@
+{
+  "id": "T-140",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-20",
+  "verified": null,
+  "title": "S-620(b):R 臂被初始止损甩下后,20 根内收盘收复原突破位就重新上车(最多 2 次)—— 捕获比 / 票价 / 回撤,与基线配对",
+  "source": "台账 S-620 预注册(写于计算之前);S-618 / S-619 诊断:鱼上交易 71% 两天内被初始止损甩下;Jazz 10-19「假突破后退出再重新开单」",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-140.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "脚本 docs/research/t140_s620b_reentry.py:先**原样复现** docs/research/s610_breakout_sim.sql 的基线(n = 1,013、均值 R +0.350,对不上就停下报告),再加 S-620(b) 的再上车状态机。读库只用 os.environ['SUPABASE_URL'] / os.environ['SUPABASE_KEY'](lane_bot 注入的只读 key),不读任何 .env、不打印 key。大鱼定义与捕获比照台账 S-618 原文。",
+    "expect": "报告写数据根 _reports/absorb_input/T-140_s620b.md:开头一张表 = 基线 vs (b) 的 ① 鱼上 10 天内被甩下比例(按信号)② 鱼上平均捕获比 ③ 总 R ④ 最大回撤(按出场日累计 R)+ 只报项(捕到的鱼、鱼外票价、去掉最好 5 笔、分年、同时持仓峰值、再上车次数分布)。按预注册四条判。卡 notes 写关键数;in_review,推 lane-c/T-140。"
+  },
+  "prior_value": "如果「被甩下再上车」能把捕获比拉起来而不把票价抬上去,R 臂就有了 Jazz 说的灵活出入场;与 S-620(a) 宽止损互为对照,决定实盘用哪一种",
+  "notes": "2026-10-20 Seth 开卡。S-620(a) 宽止损 Seth 已跑:被甩下 71% → 30%、捕获比 4.5% → 11%、回撤 −254R → −53R,总 R 346 vs 354(判据错设,见台账)。"
+}
