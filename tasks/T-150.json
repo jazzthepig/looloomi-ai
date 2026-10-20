@@ -1,7 +1,7 @@
 {
   "id": "T-150",
   "owner": "lane-c",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-21",
   "verified": null,
   "title": "S-636 实体 / 决策层:上市公司金库的买入决定领先它买的资产吗(发现段探索 + 留出段一次性)",
@@ -22,5 +22,5 @@
     "expect": "脚本 docs/research/t150_treasury_decisions.py;报告 _reports/absorb_input/T-150_treasury.md,末尾写「S-636 结果」草稿;in_review,推 lane-c/T-150。"
   },
   "prior_value": "内核第一次用「决定」而不是「反射」做检验:如果公司金库的买入领先价格,实体层就是 ② / ③ 的一个因果输入。",
-  "notes": ""
+  "notes": "跑通,判决 N/A(0 个币进留出段,试验计数=0)。发现段 2024-01→2025-06,BTC 64 周 / 顶 37 独立事件、底 33;顶 +0.0067 < 底 +0.0122(方向与假设相反)。ETH 是唯一顶>底(+0.1303 vs +0.0510)但发现段只有 13 周 / 顶独立事件 7,门槛 20 结构性挡掉;ETH 121 条决定里 87 条在 2025 年。SOL 3 周、DOGE/LTC/XRP 0。数据:912 条决定 / 72 家公司 / 净买入 $76.58B / 2018-06→2026-10-19;ohlcv_daily 18,227 行周收盘;style_index_pit_daily tier/equal/majors 当 ① 面板代理(台账无机器可读定义,偏离已标)。口径两处修正:① sell 行 transaction_value_usd 是正数,负号必须由 decision_type 给(否则净买入高估,建议 @seth 落台账)② 留出段 D 分位点固定为发现段的,不重切。自检 C PASS(进场=披露周+1)。**N/A 意味着留出段检验代码主跑未执行**,已单独跑路径自检(副本把门槛改 0 强制 ETH 进段):ETH 顶 12 周/底 24 周,顶减底 +0.0678,零分布均值 -0.0045,单侧 p=0.099 FAIL —— 路径可算,不是未测。报告 _reports/absorb_input/T-150_treasury.md + .json。"
 }
