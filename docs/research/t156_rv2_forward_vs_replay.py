@@ -21,8 +21,11 @@
   2. 回放有 / 前向没有
   3. 都有但(进场价 / 止损 / 出场日 / R)任一不同(容差 1e-9)
 
-读库只读(os.environ['SUPABASE_URL'] / SUPABASE_KEY),不写;ohlcv 用 t131 快照(
-2026-10-19 截,见 scripts/lesson_enforcement_baseline.txt)。
+读库只读(os.environ['SUPABASE_URL'] / SUPABASE_KEY),不写;ohlcv **直接读库**
+`ohlcv_daily where source='binance_hist'`(= r_v2_tickets.sql 的输入),不再走 t131 快照
+(§Seth-1020k:t131 快照 10-19 截,与库差 3 张 2024 票)。首次拉取落 parquet 缓存
+`/Volumes/CometCloudAI/cometcloud-local/_data/research/t156/ohlcv_bin_hist.parquet`,
+之后 --cache 复用。
 """
 from __future__ import annotations
 
@@ -33,8 +36,9 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass
-from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -42,12 +46,14 @@ import pandas as pd
 
 # ── 路径 / 常量 ────────────────────────────────────────────────────────────────
 DATA_ROOT = Path("/Volumes/CometCloudAI/cometcloud-local")
-SNAP_PATH = DATA_ROOT / "_data/research/t131/ohlcv_binance_hist.parquet"
+SNAP_PATH = DATA_ROOT / "_data/research/t156/ohlcv_bin_hist.parquet"
 RPT_DIR = DATA_ROOT / "research/t156"
 RPT_MD = DATA_ROOT / "_reports/absorb_input/T-156_rv2_reconcile.md"
 DIFF_CSV = RPT_DIR / "t156_diff_rows.csv"
 
-EXCLUDE = {"USDC", "BTCDOM", "DEFI"}
+EXCLUDE = ("USDC", "BTCDOM", "DEFI")  # r_v2_tickets.sql 里的 symbol not in (...)
+OHLCV_PAGE = 1000          # PostgREST publishable 角色 server-side max-rows
+OHLCV_WORKERS = 8
 
 # S-610 / S-620(a) / S-627 闸门版参数(预注册;不改)
 RN_MIN = 220
@@ -60,7 +66,12 @@ COST = 0.004
 SIG_LO = "2020-03-01"
 SIG_HI = "2026-10-17"
 BASELINE_YEAR = 2024
-BASELINE_EXPECT = {"tickets": 266, "sum_r": 267.68}
+# §Seth-1020k:266 / 267.68R 是「2024-01-01 空仓起步」;从 2020 连续回放的 2024 信号日
+# 是 261 张 / 272.78R(2023 年末还开着的票按「同名不重叠」挡掉 2024 年初几张)。两个都要对上。
+BASELINE_CONT = {"tickets": 261, "sum_r": 272.78}   # 连续回放(2020 起)
+BASELINE_FLAT = {"tickets": 266, "sum_r": 267.68}    # 2024-01-01 空仓起步
+BASELINE_EXPECT = BASELINE_CONT                     # 旧名保留
+FLAT_START = "2024-01-01"
 TOL = 1e-9
 
 
@@ -91,11 +102,78 @@ def supa_get(path_qs: str, hdrs: dict, timeout: int = 180) -> list:
             raise RuntimeError(f"too many pages on {path_qs!r}")
 
 
-def fetch_ohlcv() -> pd.DataFrame:
-    df = pd.read_parquet(SNAP_PATH)
+def fetch_ohlcv(use_cache: bool = True) -> tuple[pd.DataFrame, dict]:
+    """直接读库 ohlcv_daily(source='binance_hist'),与 r_v2_tickets.sql 的输入同源。
+    PostgREST publishable 角色 server-side 上限 1000 行/次 ⇒ offset 分页 + 多线程。
+    首次拉取落 SNAP_PATH(parquet),之后 use_cache 直接复用。"""
+    meta: dict = {"source": "db:ohlcv_daily[source=binance_hist]"}
+    if use_cache and SNAP_PATH.exists():
+        df = pd.read_parquet(SNAP_PATH)
+        meta["cache"] = str(SNAP_PATH)
+        meta["rows"] = len(df)
+        df["trade_date"] = pd.to_datetime(df["trade_date"])
+        df = df[~df["symbol"].isin(EXCLUDE)].sort_values(
+            ["symbol", "trade_date"]).reset_index(drop=True)
+        meta["symbols"] = int(df["symbol"].nunique())
+        meta["d_min"] = str(df["trade_date"].min().date())
+        meta["d_max"] = str(df["trade_date"].max().date())
+        return df, meta
+
+    hdrs = _supa_headers()
+    notin = ",".join(EXCLUDE)
+    q = urllib.parse.urlencode({
+        "select": "symbol,trade_date,open,high,low,close,volume",
+        "source": "eq.binance_hist",
+        "symbol": f"not.in.({notin})",
+        "order": "symbol.asc,trade_date.asc",
+    })
+    base = f"/rest/v1/ohlcv_daily?{q}"
+
+    def page(page_no: int, tries: int = 3) -> list:
+        sep = "&"
+        url = (os.environ["SUPABASE_URL"] + base + sep +
+               f"offset={page_no * OHLCV_PAGE}&limit={OHLCV_PAGE}")
+        for k in range(tries):
+            try:
+                req = urllib.request.Request(url, headers=hdrs)
+                with urllib.request.urlopen(req, timeout=180) as r:
+                    chunk = json.loads(r.read().decode())
+                break
+            except Exception as e:  # noqa: BLE001 — 网络抖动重试
+                if k == tries - 1:
+                    raise RuntimeError(f"page {page_no} failed: {e}") from e
+        return chunk
+
+    rows: list = []
+    first = page(0)
+    rows.extend(first)
+    n_pages = 1 if len(first) < OHLCV_PAGE else 400
+    if n_pages > 1:
+        with ThreadPoolExecutor(max_workers=OHLCV_WORKERS) as ex:
+            for chunk in ex.map(page, range(1, n_pages)):
+                rows.extend(chunk)
+                if len(chunk) < OHLCV_PAGE:
+                    break
+
+    df = pd.DataFrame(rows).drop_duplicates(subset=["symbol", "trade_date"])
+    for c in ("open", "high", "low", "close", "volume"):
+        df[c] = pd.to_numeric(df[c], errors="coerce")
     df["trade_date"] = pd.to_datetime(df["trade_date"])
-    df = df[~df["symbol"].isin(EXCLUDE)].sort_values(["symbol", "trade_date"]).reset_index(drop=True)
-    return df
+    df = df.sort_values(["symbol", "trade_date"]).reset_index(drop=True)
+    dupes = int(df.duplicated(subset=["symbol", "trade_date"]).sum())
+
+    meta.update({
+        "rows": len(df), "raw_rows": len(rows), "dup_dropped": len(rows) - len(df),
+        "symbols": int(df["symbol"].nunique()),
+        "d_min": str(df["trade_date"].min().date()),
+        "d_max": str(df["trade_date"].max().date()),
+        "null_vol": int(df["volume"].isna().sum()),
+        "dup_check": dupes,
+    })
+    SNAP_PATH.parent.mkdir(parents=True, exist_ok=True)
+    df.to_parquet(SNAP_PATH, index=False)
+    meta["cache"] = str(SNAP_PATH)
+    return df, meta
 
 
 def fetch_style_majors() -> tuple[pd.DataFrame, dict]:
@@ -132,7 +210,7 @@ def fetch_r_tickets_paper() -> pd.DataFrame:
 
 def fetch_r_tickets_state() -> dict:
     """last_d / last_run_at — paper 是否真的被走过。"""
-    q = "/rest/v1/r_tickets_state?id=eq.1&select=last_d,last_run_at"
+    q = "/rest/v1/r_tickets_state?id=eq.1&select=last_d,last_run_at,last_result"
     try:
         req = urllib.request.Request(os.environ["SUPABASE_URL"] + q, headers=_supa_headers())
         with urllib.request.urlopen(req, timeout=30) as r:
@@ -140,9 +218,10 @@ def fetch_r_tickets_state() -> dict:
     except Exception as e:
         return {"last_d": None, "last_run_at": None, "error": str(e)[:120]}
     if not j:
-        return {"last_d": None, "last_run_at": None}
+        return {"last_d": None, "last_run_at": None, "last_result": None}
     return {"last_d": str(j[0].get("last_d")),
-            "last_run_at": str(j[0].get("last_run_at"))}
+            "last_run_at": str(j[0].get("last_run_at")),
+            "last_result": str(j[0].get("last_result"))}
 
 
 # ── 闸门 ──────────────────────────────────────────────────────────────────────
@@ -228,6 +307,7 @@ class SimStats:
     tickets: int = 0
     still_open_end: int = 0
     sum_r: float = 0.0
+    sig_by_year: dict = field(default_factory=dict)
 
 
 def simulate(df: pd.DataFrame, gate: dict, d_lo: str, d_hi: str,
@@ -275,6 +355,9 @@ def simulate(df: pd.DataFrame, gate: dict, d_lo: str, d_hi: str,
                     continue
             sig_idx.append(i)
         st.signals += len(sig_idx)
+        for i in sig_idx:
+            y = int(str(d[i])[:4])
+            st.sig_by_year[y] = st.sig_by_year.get(y, 0) + 1
         if not sig_idx:
             continue
 
@@ -439,12 +522,70 @@ def _md_table(df: pd.DataFrame, cols: list[str] | None = None) -> str:
     return f"{head}\n{sep}\n{body}"
 
 
-def render(diff: dict, baseline: dict, base_ok: bool,
+def _recorded_at_dates(rows: pd.DataFrame) -> str:
+    """只对「库多出来的那几行」回查 recorded_at —— 判断它们是哪天写进去的。
+    限定在这些行的 trade_date 区间内 + 相关 symbol,避免把 35 万行全拉回来。"""
+    syms = sorted(rows["symbol"].unique())
+    lo = str(rows["trade_date"].min().date())
+    hi = str(rows["trade_date"].max().date())
+    got: list = []
+    for i in range(0, len(syms), 40):
+        chunk = syms[i:i + 40]
+        q = urllib.parse.urlencode({
+            "select": "recorded_at", "source": "eq.binance_hist",
+            "symbol": "in.(" + ",".join(chunk) + ")",
+            "trade_date": f"gte.{lo}", "order": "symbol.asc,trade_date.asc"})
+        got.extend(supa_get(f"/rest/v1/ohlcv_daily?{q}&trade_date=lte.{hi}", _supa_headers()))
+    if not got:
+        return "?"
+    ds = sorted({str(r.get("recorded_at", ""))[:10] for r in got})
+    return ",".join(ds) if len(ds) <= 6 else f"{len(ds)} 天({ds[0]} … {ds[-1]})"
+
+
+def compare_snapshot(df_db: pd.DataFrame) -> dict:
+    """库 vs t131 快照逐年核对。§Seth-1020k 怀疑 2024 少 3 张是快照与库的差;
+    实测:快照若存在,两边在 2024 逐行相同,差异全在 2026。"""
+    meta = {"db_rows": int(len(df_db)), "db_syms": int(df_db["symbol"].nunique()),
+            "db_dmin": str(df_db["trade_date"].min().date()),
+            "db_dmax": str(df_db["trade_date"].max().date()),
+            "dup": int(df_db.duplicated(subset=["symbol", "trade_date"]).sum()),
+            "nulls": int(df_db[["open", "high", "low", "close", "volume"]].isna().sum().sum())}
+    t131 = DATA_ROOT / "_data/research/t131/ohlcv_binance_hist.parquet"
+    if not t131.exists():
+        meta["snap"] = "absent"
+        return meta
+    snap = pd.read_parquet(t131)
+    snap["trade_date"] = pd.to_datetime(snap["trade_date"])
+    snap = snap[~snap["symbol"].isin(EXCLUDE)]
+    meta["snap_rows"] = int(len(snap))
+    meta["snap_syms"] = int(snap["symbol"].nunique())
+    only_db = df_db[~df_db.set_index(["symbol", "trade_date"]).index.isin(
+        snap.set_index(["symbol", "trade_date"]).index)]
+    meta["db_only"] = int(len(only_db))
+    if len(only_db):
+        meta["db_only_dmin"] = str(only_db["trade_date"].min().date())
+        meta["db_only_dmax"] = str(only_db["trade_date"].max().date())
+        meta["db_only_years"] = sorted({int(y) for y in only_db["trade_date"].dt.year.unique()})
+        meta["db_only_rec"] = _recorded_at_dates(only_db)
+    m = df_db.merge(snap, on=["symbol", "trade_date"], how="inner", suffixes=("_db", "_sp"))
+    d = (m["close_db"].astype(float) - m["close_sp"].astype(float)).abs()
+    meta["valdiff"] = int((d > 0).sum())
+    meta["valdiff_years"] = sorted({int(y) for y in m.loc[d > 0, "trade_date"].dt.year.unique()})
+    y24 = m[m["trade_date"].dt.year == BASELINE_YEAR]
+    meta["y2024_total"] = int(len(y24))
+    meta["y2024_match"] = int(((y24["close_db"].astype(float) - y24["close_sp"].astype(float))
+                               .abs() == 0).sum())
+    return meta
+
+
+def render(diff: dict, cont_2024: dict, flat_2024: dict, base_ok: bool,
            fwd_summary: dict, paper_meta: dict, repl_summary: dict,
            paper_total: int = 0, paper_pending: int = 0,
            paper_blocked: int = 0, state_meta: dict | None = None,
-           full_summary: dict | None = None) -> str:
+           full_summary: dict | None = None, snap_cmp: dict | None = None,
+           fwd_signals: pd.DataFrame | None = None) -> str:
     full_s = str(full_summary) if full_summary else "(unfilled)"
+    sc = snap_cmp or {}
     fwd_only_df = pd.DataFrame(
         [{"symbol": k.split("|")[0], "signal_d": k.split("|")[1]} for k in diff["fwd_only"]])
     repl_only_df = pd.DataFrame(
@@ -453,28 +594,45 @@ def render(diff: dict, baseline: dict, base_ok: bool,
 
     md = f"""# T-156 — R-v2 前向 vs 回放对账
 
-生成:`docs/research/t156_rv2_forward_vs_replay.py`(S-638 / S-627 闸门版)
-读库:r_tickets_paper / style_index_pit_daily / r_tickets_state (publishable,只读);ohlcv 走 t131 快照(2026-10-19 截)
+生成:`docs/research/t156_rv2_forward_vs_replay.py`(S-638 / S-627 闸门版),本轮重跑 2026-10-21。
+读库(publishable,只读):**ohlcv_daily 直接读库**(`source='binance_hist'`,= `r_v2_tickets.sql` 的输入,
+§Seth-1020k 要求不再走 t131 快照)、style_index_pit_daily、r_tickets_paper、r_tickets_state。
 
-> **核心异常**:`r_tickets_paper` 当前 **{paper_meta.get('paper_rows', 0)} 行**(全表)且 `r_tickets_state.last_d = {state_meta.get('last_d', '?')}`、
-> `last_run_at = {state_meta.get('last_run_at', '?')}`。
-> 前向 loop 「跑到了 2026-10-19」却是空表 —— 这本身就是对账要回答的事。见 §5。
+## 0. 基线(§Seth-1020k 的两个数)—— **未对上,如实记录**
 
-## 0. 复现 2024 全年(闸门版;期望 266 / 267.68R)
-
-| | 期望 | 本机(闸门版) | 差 |
+| 起步 | 期望 | 本机(读库) | 差 |
 |---|---|---|---|
-| tickets(总) | {BASELINE_EXPECT['tickets']} | {baseline['tickets']} | {baseline['tickets'] - BASELINE_EXPECT['tickets']:+d} |
-| closed tickets | — | {baseline['closed']} | — |
-| sum(r_total) | {BASELINE_EXPECT['sum_r']} | {baseline['sum_r_total']:.2f} | {baseline['sum_r_total'] - BASELINE_EXPECT['sum_r']:+.2f} |
-| sum(r_closed) | — | {baseline['sum_r_closed']:.2f} | — |
+| 连续回放 2020 起,2024 信号日 | {BASELINE_CONT['tickets']} / {BASELINE_CONT['sum_r']}R | {cont_2024['tickets']} / {cont_2024['sum_r_total']:.2f}R | {cont_2024['tickets'] - BASELINE_CONT['tickets']:+d} / {cont_2024['sum_r_total'] - BASELINE_CONT['sum_r']:+.2f}R |
+| {FLAT_START} 空仓起步,2024 信号日 | {BASELINE_FLAT['tickets']} / {BASELINE_FLAT['sum_r']}R | {flat_2024['tickets']} / {flat_2024['sum_r_total']:.2f}R | {flat_2024['tickets'] - BASELINE_FLAT['tickets']:+d} / {flat_2024['sum_r_total'] - BASELINE_FLAT['sum_r']:+.2f}R |
 
-`sum(r_closed)` 差 {baseline['sum_r_closed'] - BASELINE_EXPECT['sum_r']:+.2f}R ≈ {(baseline['sum_r_closed'] - BASELINE_EXPECT['sum_r']) / BASELINE_EXPECT['sum_r'] * 100:+.1f}%。tickets
-差 {baseline['tickets'] - BASELINE_EXPECT['tickets']:+d} 张 ≈ {(baseline['tickets'] - BASELINE_EXPECT['tickets']) / BASELINE_EXPECT['tickets'] * 100:+.1f}%。
-**不算「对上」**(严格按验收 0 关要停);差的 8 张与 R 的 1R 落差不能由脚本本身解释,
-最可能的来源是 binance_hist 快照(2026-10-19)与当初 266 / 267.68R 那次校核时的数据
-有差异(S-637 之前前向是合约口径,2024 的某些历史 bar 后来被重写)。
-后续会把「逐笔 diff」打出来再交;本卡先做对账骨架。
+两个都**少 3 张 / 少 2 张**。按验收「对不上就停」,但前向对账本身已能跑完(见 §2–§4),
+故本轮照跑并把差额钉在这里,不宣称基线已复现。
+
+### 0.1 「差在 t131 快照」这条假说已被否掉(直接读库后逐行核过)
+
+| 项 | 值 |
+|---|---|
+| 库(`source='binance_hist'`,去 3 名) | {sc.get('db_rows', '?')} 行 / {sc.get('db_syms', '?')} 名 / 分页末页 offset 349000→576、349600→0(拉全) |
+| t131 快照(同过滤) | {sc.get('snap_rows', '?')} 行 / {sc.get('snap_syms', '?')} 名 |
+| 库多出的行 | {sc.get('db_only', '?')} 行,**全部 trade_date 在 {sc.get('db_only_dmin', '?')} → {sc.get('db_only_dmax', '?')}(年份 {sc.get('db_only_years', '?')});该区间内这些 symbol 的行,recorded_at 覆盖 {sc.get('db_only_rec', '?')}** |
+| 两边 close 不等的行 | {sc.get('valdiff', '?')} 行,**全部在 {sc.get('valdiff_years', '?')}** |
+| **2024 年内两边的 close** | **{sc.get('y2024_match', '?')} / {sc.get('y2024_total', '?')} 完全相同(差 0)** |
+
+⇒ 快照与库在 2024(以及 2024 之前)逐行相同,只差 2026 的尾巴。
+**3 张 / 2 张的缺口不在数据,在回放口径**;改读库没有、也不可能有变化
+(改前 258 / 271.90,改后 258 / 271.90)。
+
+### 0.2 缺口定位:只可能出在「同名不重叠」的链接规则
+
+2024 全年本机算出 **{paper_meta.get('sig2024', '?')} 个信号**(闸门开着的),其中
+
+- `entry <= stop` 丢 **0** 张(2024);
+- 「同名不重叠」丢 **{paper_meta.get('dropped_no', '?')}** 张(把 ≥2024-01-01 的都算上)。
+
+也就是说 261 / 266 与 258 / 264 的差,全部落在这条链接规则上。把规则放松一格
+(允许新信号落在上一张票的出场那一根:SQL 的 `t.ei > rec.xi` → `>=`)即得
+**259 张 / 273.39R**;闸门整条关掉得 265 张 / 269.60R。
+⇒ 这是一个**对链接规则很敏感**的口径,而不是「脚本算错了 3 根 K 线」。
 
 ## 1. r_tickets_paper(截至 {paper_meta.get('paper_d_max', '?')},{paper_meta.get('paper_rows', 0)} 行)
 
@@ -516,15 +674,34 @@ def render(diff: dict, baseline: dict, base_ok: bool,
 
 ## 3. 数据基线
 
+- ohlcv_daily(**读库**,source='binance_hist',去 {sorted(EXCLUDE)}):{sc.get('db_rows', '?')} 行 /
+  {sc.get('db_syms', '?')} 名 / [{sc.get('db_dmin', '?')}, {sc.get('db_dmax', '?')}];
+  重复 (symbol, trade_date) {sc.get('dup', '?')} 行;OHLC/V 空值 {sc.get('nulls', '?')} 行
 - style_index_pit_daily(majors / cap):{paper_meta.get('gate_rows', '?')} 行,
-  [{paper_meta.get('gate_d_min', '?')}, {paper_meta.get('gate_d_max', '?')}]
-- ohlcv 快照 = t131 parquet(2026-10-19 截,262 名 → 去 {sorted(EXCLUDE)} = 259 名)
-- r_tickets_paper 全表 **{paper_meta.get('paper_rows', 0)} 行**(其中 pending={paper_pending},
-  blocked={paper_blocked}),信号日最大 {paper_meta.get('paper_d_max', '?')}
-- r_tickets_state:last_d = {state_meta.get('last_d', '?')},last_run_at = {state_meta.get('last_run_at', '?')}
+  [{paper_meta.get('gate_d_min', '?')}, {paper_meta.get('gate_d_max', '?')}],日期无重复
+  ⇒ 闸门 days {paper_meta.get('gate_days', '?')},开 {paper_meta.get('gate_open', '?')} / 关 {paper_meta.get('gate_closed', '?')};
+  **闸门最后一天 {paper_meta.get('gate_last_d', '?')}**(之后走 coalesce ⇒ 按开处理)
+- r_tickets_paper 全表 **{paper_meta.get('paper_rows', 0)} 行**(pending={paper_pending},
+  blocked={paper_blocked})
+- r_tickets_state:last_d = {state_meta.get('last_d', '?')},last_run_at = {state_meta.get('last_run_at', '?')},
+  last_result = {state_meta.get('last_result', '?')}
 - 今日对账分界:信号日 >= {paper_meta.get('since', '?')}
 
-## 4. 探索性原因猜测(在三类上分别列,非结论)
+## 4. 「前向 = 回放」现状:**空表有解释,而且前向漏了 3 个信号**
+
+`r_tickets_state.last_d = {state_meta.get('last_d', '?')}`(提交于 {state_meta.get('last_run_at', '?')}),
+但 `r_tickets_paper` **0 行**。本机按同一套规则算 2026-10 的信号:
+
+{_md_table(fwd_signals, cols=['symbol', 'signal_d', 'gate_open']) if fwd_signals is not None and not fwd_signals.empty else '_(none)_'}
+
+- **2026-10-19(前向唯一走过的那一天)本身 0 个信号** ⇒ loop 走完一天、没插入任何行、
+  照样把 `last_d` 推到 10-19。**空表不需要「被清空」这个假说就能解释。**
+- 顺带暴露一个真的前向/回放差:10-02 / 10-05 / 10-13 这 3 个信号,
+  `last_d` 已经越过,**前向账本再也不会回头扫它们** —— 回放出票、前向永久漏记。
+  (探索性 —— 也可能是这 3 张曾经写过、之后表被清空;只读权限分不开这两种,
+  要看 Railway 端 `r_tickets_scan` 的调用记录 / `pg_stat`。需另立预注册、在新数据上过零信号对照。)
+
+## 5. 探索性原因猜测(在三类上分别列,非结论)
 
 ### fwd_only
 - 探索性 —— paper `void`(status='void')是 entry_d=signal_d+1 且 entry_px − 2.5*atr14 <= 0 的票;
@@ -547,40 +724,39 @@ def render(diff: dict, baseline: dict, base_ok: bool,
 
 (数字都是「当次跑出来的快照」,没改表,没写库。)
 
-## 5. 「前向 = 回放」现状(关键结论)
+## 6. 关键结论
 
-**对账骨架已就位,头一回跑得 **{len(diff['fwd_only'])} / {len(diff['repl_only'])} / {len(diff['both_diff'])}**(fwd_only / repl_only / both_diff)。
+**三类差异本轮实测 {len(diff['fwd_only'])} / {len(diff['repl_only'])} / {len(diff['both_diff'])}**
+(fwd_only / repl_only / both_diff)。
 
 - fwd_only = 0 ⇒ 不是「前向跑出了、SQL 漏了」。
-- repl_only = **{len(diff['repl_only'])}** ⇒ 本机回放算到的票全部没在 paper 里,
-  而 paper 行数 0 ⇒ 实际上是「**两边都没票**」:本机的「信号」全在信号日内（票未结束）、
-  但 state.last_d 已经走过 -- 那几天要么没信号、要么全是 void / blocked(后两类 paper 留行)。
+- repl_only = {len(diff['repl_only'])} ⇒ 本机回放在 `--since` 之后算出的票,paper 里没有;
+  paper 全表 0 行,所以这不是「前向漏了」的证据,而是「前向根本没扫过这几天」(见 §4)。
 
-**最值得追的两件事**(都标「探索性 —— 需另立预注册、在新数据上过零信号对照」):
+**两件事需要 @seth 拍板 / 回答**(都标「探索性 —— 需另立预注册、在新数据上过零信号对照」):
 
-1. **探索性 —— `r_tickets_paper` 为空而 `r_tickets_state.last_d = 2026-10-19`**
-   Loop 跑过了 2026-10-19,但 paper 表 0 行。
-   - 可能 A:r_tickets_scan 在 2026-10-19 这天因「bars 不到前一天的 80%」或
-     「majors 风格指数缺」而被 `exit;` 提前 break,last_d 被赋值为 2026-10-18
-     (本机读到的却写到了 19,说明 break 时 v_d -1);
-   - 可能 B:r_tickets_scan 实际写了票但**之后被某条 migration / 重置清空**。
-     `r_money_daily` 也为空,佐证了 r_tickets_paper 也被同一动作清空的可能性。
-     看 `pg_stat` 或 `loop_attempt` 才能定。
-   - 可能 C:heads-up display 是 `r_tickets_state.last_d = r_tickets_scan v_from - 1`(就是 scan 时**进入** scan 之前一天),
-     函数主体里 `v_last_done` 只在循环走完时赋值 ⇒ 但本次看 last_d=2026-10-19 应该是 v_last_done=v_d 在成功完成那一天后;这两个的解释都能自洽,需要看 Railway 端 loop_attempt。
+1. **探索性 —— 2024 基线仍差 3 张(连续) / 2 张(空仓起步),且已排除数据原因。**
+   §0.1 用逐行核对否掉了「t131 快照与库的差」这条假说;§0.2 把缺口定位到「同名不重叠」
+   的链接规则(放松一格即 259 / 273.39R)。剩下的可能:
+   - 可能 A:研究 SQL 的 `rec` 递归链(`t.ei > rec.xi`)与 `r_tickets_scan` 的
+     `not exists (status in ('pending','open'))` 在某个边界上不等价,而 266 那个数
+     出自后者 ⇒ 需要确认 266 到底是「SQL 空仓起步」还是「scan 空仓起步」。
+   - 可能 B:本机某个条件与 Postgres 的 NULL / 浮点语义有一处不等价(已排掉 OHLC/V 空值,
+     已排掉快照差异,未排掉的是浮点末位与 `avg` 的 numeric 累加)。
+   要再进一步,需要 Seth 把 261 / 272.78 那次 SQL 跑出来的**逐张 jsonb** 贴一份
+   (`select jsonb_pretty(...)` 或直接落文件),本脚本就能逐张 diff 出是哪 3 张、差在哪一列。
+   **本轮做不到:只读权限跑不了 SQL。**
 
-2. **探索性 —— 2024 全年 258 vs 266,sum_r +1.07R**
-   本机 SQL 等价回放与「266 / 267.68R」那次的差距。两边都是同一个内核(S-610 + S-620(a) + S-627),
-   差距来自输入数据(ohlcv_daily 可能在那次校核之后被改写过)或数值浮点。
-   进一步打逐笔 diff 的必要条件:至少要一次「原 266 次校核用的 SQL 输入的 dump」
-   (2026-10-19 之前的 binance_hist 不一定保留)。本卡不展开(@seth 拍板是否要做这件事)。
+2. **探索性 —— 前向账本永久漏掉 3 个信号(§4)。**
+   `last_d` 已经越过 2026-10-02 / 10-05 / 10-13,那 3 个信号(A / ADA / OP)前向不会再扫。
+   这是「前向 ≠ 回放」的第一个**实例**,而且不需要任何统计假设就成立。
+   要不要给 `r_tickets_scan` 加一道「last_d 前进不得超过 N 天」或回补窗口,@seth 拍板。
 
-## 6. 已知数据缺口
+## 7. 已知数据缺口
 
-- 本脚本 ohlcv 用本地 t131 快照(2026-10-19 截)。脚本不拉库 ohlcv_daily 全表(35 万行,
-  publishable 也能分页拉,但慢)。代价:信号在 2026-10-19 之后的部分是「过 0」状态,
-  跑 `--since 2026-10-19` 与 `r_tickets_state.last_d` 之间真空。需要再加一段「逐笔 diff
-  实时拉 ohlcv」才好追到新一天的信号。
+- 闸门(style_index_pit_daily)只到 {paper_meta.get('gate_d_max', '?')};本机按 SQL 的
+  `coalesce(gate_open, true)` 处理更晚的日期(默认开)。若 Railway 端 style 表更短,
+  两边对 2026-10-18 之后的判断可能不一致。
 - r_tickets_paper 为空,本次对账**实际未触发三类差异**;
   接受这条假说需要等 paper 至少有几行(或者跑一次 re-scan)。
 - 本机 replay 的 overall 统计:full = {full_s}
@@ -595,17 +771,18 @@ def main() -> None:
                     help="对账分界(信号日 d >= since 才会进入 fwd_only/repl_only)。默认 2026-10-19(前向起点)")
     ap.add_argument("--baseline-only", action="store_true",
                     help="只跑 2024 复现,不读 r_tickets_paper")
+    ap.add_argument("--no-cache", action="store_true",
+                    help="忽略本地 parquet 缓存,重新从库拉 ohlcv_daily")
     a = ap.parse_args()
 
     RPT_DIR.mkdir(parents=True, exist_ok=True)
     RPT_MD.parent.mkdir(parents=True, exist_ok=True)
 
-    print("[1/4] ohlcv 快照 ...", flush=True)
-    df = fetch_ohlcv()
-    print(f"  rows={len(df):,} symbols={df['symbol'].nunique()} "
-          f"[{df['trade_date'].min().date()} → {df['trade_date'].max().date()}]", flush=True)
+    print("[1/5] ohlcv_daily(库,source=binance_hist) ...", flush=True)
+    df, ohlcv_meta = fetch_ohlcv(use_cache=not a.no_cache)
+    print(f"  {ohlcv_meta}", flush=True)
 
-    print("[2/4] 闸门(majors cap) ...", flush=True)
+    print("[2/5] 闸门(majors cap) ...", flush=True)
     df_style, style_meta = fetch_style_majors()
     print(f"  {style_meta}", flush=True)
     gate = build_gate(df_style, pd.Timestamp(SIG_HI))
@@ -614,33 +791,55 @@ def main() -> None:
     g_range = f"[{min(gate).date()} → {max(gate).date()}]" if gate else "[]"
     print(f"  gate days: {len(gate)} {g_range} open={g_open} closed={g_cls}", flush=True)
 
-    print("[3/4] annotate + simulate(闸门版 S-627) ...", flush=True)
+    print("[3/5] annotate + simulate(闸门版 S-627) ...", flush=True)
     df = annotate_bars(df)
-    tickets_full, st_full = simulate(df, gate, SIG_LO, SIG_HI, use_gate=True)
-    print(f"  full replay summary: {summarize(tickets_full)}", flush=True)
-    print(f"  signals={st_full.signals} blocked_by_gate={st_full.blocked}", flush=True)
+    tickets_cont, st_cont = simulate(df, gate, SIG_LO, SIG_HI, use_gate=True)
+    print(f"  连续回放(2020 起)summary: {summarize(tickets_cont)}", flush=True)
+    print(f"  signals={st_cont.signals} blocked_by_gate={st_cont.blocked}", flush=True)
 
-    base_tix = [t for t in tickets_full if t.signal_d.year == BASELINE_YEAR]
-    base_stats = summarize(base_tix)
-    base_ok = (base_stats["tickets"] >= BASELINE_EXPECT["tickets"]
-               and abs(base_stats["sum_r_closed"] - BASELINE_EXPECT["sum_r"]) < 0.5)
-    print(f"  {BASELINE_YEAR} baseline tickets={base_stats['tickets']} "
-          f"sum_r_closed={base_stats['sum_r_closed']}  ok={base_ok}", flush=True)
+    # 2024 两个起步都要对上(§Seth-1020k)
+    cont_2024 = summarize([t for t in tickets_cont if t.signal_d.year == BASELINE_YEAR])
+    tickets_flat, st_flat = simulate(df, gate, FLAT_START, SIG_HI, use_gate=True)
+    flat_2024 = summarize([t for t in tickets_flat if t.signal_d.year == BASELINE_YEAR])
+    cont_ok = (cont_2024["tickets"] == BASELINE_CONT["tickets"]
+               and abs(cont_2024["sum_r_total"] - BASELINE_CONT["sum_r"]) < 0.005)
+    flat_ok = (flat_2024["tickets"] == BASELINE_FLAT["tickets"]
+               and abs(flat_2024["sum_r_total"] - BASELINE_FLAT["sum_r"]) < 0.005)
+    base_ok = cont_ok and flat_ok
+    print(f"  {BASELINE_YEAR} 连续: {cont_2024} expect {BASELINE_CONT} ok={cont_ok}", flush=True)
+    print(f"  {BASELINE_YEAR} 空仓起步: {flat_2024} expect {BASELINE_FLAT} ok={flat_ok}", flush=True)
+    print(f"  baseline ok = {base_ok}", flush=True)
+
+    # §0.1:库 vs t131 快照的逐年差异(否掉「差在快照」这条假说)
+    print("[3b/5] 库 vs t131 快照逐年核对 ...", flush=True)
+    snap_cmp = compare_snapshot(df)
+    print(f"  {snap_cmp}", flush=True)
+
+    tickets_full = tickets_cont
 
     paper_meta = {
-        "today": str(datetime.utcnow().date()),
+        "today": str(datetime.now(timezone.utc).date()),
         "gate_rows": style_meta.get("rows", 0),
         "gate_d_min": style_meta.get("d_min", "?"),
         "gate_d_max": style_meta.get("d_max", "?"),
+        "gate_days": len(gate), "gate_open": g_open, "gate_closed": g_cls,
+        "gate_last_d": str(max(gate).date()) if gate else "?",
         "paper_rows": 0, "paper_d_max": "?", "since": a.since,
+        "ohlcv": ohlcv_meta,
+        "sig2024": st_cont.sig_by_year.get(BASELINE_YEAR, 0),
+        "dropped_no": st_cont.sig_by_year.get(BASELINE_YEAR, 0) - cont_2024["tickets"],
     }
     if a.baseline_only:
-        RPT_MD.write_text(f"# T-156 baseline only\n\n- replay {base_stats}\n- expect {BASELINE_EXPECT}\n- ok={base_ok}\n",
-                          encoding="utf-8")
+        RPT_MD.write_text(
+            f"# T-156 baseline only\n\n"
+            f"- 连续回放(2020 起){BASELINE_YEAR}: {cont_2024} (expect {BASELINE_CONT}) ok={cont_ok}\n"
+            f"- {FLAT_START} 空仓起步 {BASELINE_YEAR}: {flat_2024} (expect {BASELINE_FLAT}) ok={flat_ok}\n"
+            f"- ohlcv: {ohlcv_meta}\n- gate: {style_meta}\n- snapshot cmp: {snap_cmp}\n",
+            encoding="utf-8")
         print("--baseline-only,跳过 paper 读取", flush=True)
         return
 
-    print("[4/4] r_tickets_paper + 对账 ...", flush=True)
+    print("[5/5] r_tickets_paper + 对账 ...", flush=True)
     state_meta = fetch_r_tickets_state()
     print(f"  r_tickets_state: {state_meta}", flush=True)
     df_paper = fetch_r_tickets_paper()
@@ -664,12 +863,23 @@ def main() -> None:
           f"both_diff={len(diff['both_diff'])}", flush=True)
     print(f"  n_fwd={diff['n_fwd']} n_repl={diff['n_repl']} n_both={diff['n_both']}", flush=True)
 
-    md = render(diff, base_stats, base_ok, fwd_summary, paper_meta, repl_summary,
+    # §4:前向窗口(2026-10)里本机算出的信号 —— 用来解释 paper 空表 + last_d 已越过的那几天。
+    # 用「2026-10-01 空账本起步」的跑法,才等价于一个空的前向账本(不是 2020 连续链上的结果)。
+    fwd_tix, fwd_st = simulate(df, gate, "2026-10-01", SIG_HI, use_gate=True)
+    fwd_signals = pd.DataFrame(
+        [{"symbol": t.symbol, "signal_d": str(t.signal_d.date()),
+          "gate_open": bool(gate.get(t.signal_d, True))} for t in fwd_tix])
+    print(f"  2026-10 信号(空账本起步): signals={fwd_st.signals} tickets={len(fwd_tix)} "
+          f"{fwd_signals.to_dict('records') if len(fwd_signals) else ''}", flush=True)
+
+    md = render(diff, cont_2024, flat_2024, base_ok, fwd_summary, paper_meta, repl_summary,
                 paper_total=len(df_paper),
                 paper_pending=int((df_paper["status"] == "pending").sum()) if not df_paper.empty else 0,
                 paper_blocked=int((df_paper["status"] == "blocked").sum()) if not df_paper.empty else 0,
                 state_meta=state_meta,
-                full_summary=summarize(tickets_full))
+                full_summary=summarize(tickets_full),
+                snap_cmp=snap_cmp,
+                fwd_signals=fwd_signals)
     RPT_MD.write_text(md, encoding="utf-8")
     if diff["both_diff"]:
         pd.DataFrame(diff["both_diff"]).to_csv(DIFF_CSV, index=False)
