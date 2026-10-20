@@ -1,0 +1,26 @@
+{
+  "id": "T-143",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-20",
+  "verified": null,
+  "title": "T-137 续:实施拖累 −9.46pp 里还有约 7pp 没解释 —— 先测「固定美元上限随净值复利开始卡住」与「收盘价源不同」",
+  "source": "T-137 交付(拆解 a–d 合计只解释约 2.3pp);Seth 10-20 的两个假设",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-143.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "在 docs/research/t137_x1v_replay.py 基础上(或新脚本 t143_*.py,复用同一读数):e 把 Limits.max_order_usd / max_daily_turnover_usd 改成按当时净值的比例(2,000 / 3,000 与 6,000 / 3,000 倍净值),其余照基准;f 回放与理想都用同一个收盘价源(都用 binance_hist 收盘,或都用 asset_mcap_daily);g 每天记录目标权重与实际权重之差,报全期平均暴露差与它对年化的贡献。每项单独开关,报年化差;e + f + g 之后剩多少没解释写明。读库只用环境变量;不读 .env、不打印 key。",
+    "expect": "报告写数据根 _reports/absorb_input/T-143_drag_rest.md:一张表(项 × 年化 × 最大回撤 × 成交笔数 × 与基准差),外加「平均暴露差」逐年。卡 notes 写关键数;in_review,推 lane-a/T-143。"
+  },
+  "prior_value": "上真钱前要知道 X1V 每年少赚的 9pp 里哪 7pp 是规则写错了(可修)还是回放口径(不可修)",
+  "notes": "2026-10-20 Seth 开卡。假设 e:限额是固定美元(2,000 / 单、6,000 / 日),回放净值从 3,000 涨到 7,500,后期调仓要拖好几天才到目标。"
+}
