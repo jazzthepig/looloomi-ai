@@ -46,7 +46,7 @@ similar_market_states()  ←→ regime_match.py            → 两个都对,两�
 | 4b | 状态·L1(v0.2) | `state_daily`(T-048:17 个面板特征,长表;时点由 `features_at` 先截到 ≤ d 结构保证)| 评估层 rr_matrix(T-045)→ L3 按状态分格 | 🟡 新上 |
 | 5a | 检索·**宏观**相位 | `similar_market_states()`(价格/宏观 15 实测维) | `/api/v1/regime/similar` | 🟡 **S-362 已修 z 化与排邻并接线**;底表停 42 天(见第 4 段) |
 | 5b | 检索·**微观**相位 | `regime_match`(CIS 支柱 11 维 + 78 天人工判读) | `/api/v1/regime/similar` | 🟢 **S-362 已接线**;底表每日更新 |
-| 6 | 判断·ⓠ | `beta_core_q_overlay`(乘数语义)| `beta_core_nav_q` 27 行,日更;**S-378 起 matcher 在线**(`smoothed_phase_distance` → dwell filter → hook)| 🟡 **活的**;`regime_override_enforcer` 是**语义不同的旧实现**,见「已退役」;封顶 1.3x 与设计的 −0.5…3.3x 不符(归 Jazz) |
+| 6 | 判断·ⓠ | `beta_core_q_overlay`(乘数语义)| 信号 `beta_core_nav_q.q_override`(日更;**S-378 起 matcher 在线**:`smoothed_phase_distance` → dwell filter → hook)→ **S-631 起在 ① 上单独记账**:`multiplier_daily` 的 `q_v2` / `q_slow`(同 ③ 的 `apply_multiplier`,0–1.3,10-20 收盘起前向;原表 nav 列抄的是底仓,不是 ⓠ 的 NAV)| 🟡 **活的**;`regime_override_enforcer` 是**语义不同的旧实现**,见「已退役」;封顶 1.3x 与设计的 −0.5…3.3x 不符(归 Jazz) |
 | 7 | 建仓·① | `core_cap_daily`(产品本体:24 名市值加权;**10-12 收盘起不设单币上限 = `cap_a1_u`**(S-556 / Jazz 10-12),此前单币 ≤ 40% 的 `cap_a1` 照旧记作对照);原 `beta_core_nav`(等权 + 波动率目标)改作 ② 候选,登记保留 | L3 `allocation_daily`(其余 book 的证据 = 相对 ① 的超额)· 成绩单 | 🟢 |
 | 7a | 倾斜·②(CIS) | `cis_tilt_daily`(T-051 预注册 / T-052:① 权重 × exp(0.5·z_CIS),单币 ≤ 40%,起点 10-06)—— CIS 的本职第一次进账本 | 登记表 → L3(前向 ≥ 60 天 + 任意时刻下界)· 证据面 | 🟡 前向起步 |
 | 7b | 组合·gross 预算 | **尚无实现** —— 相关性状态 → gross,见 §5 第 7 条 | — | 🔴 缺段 |

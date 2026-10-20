@@ -10,6 +10,7 @@
     forward_young    前向记录,不满 MIN_DAYS 天(只描述,不评估)
     caveat           账本有已知问题,数字不可信(写明原因)
     retired          按设计退役
+    frozen           冻结(S-631):停写新行,记录保留,可恢复
     no_record        读不到 NAV(不是 0)
 """
 from __future__ import annotations
@@ -24,6 +25,8 @@ from src.data.allocation.allocator import CORE, INCEPTION, MIN_DAYS, evidence, f
 def evidence_class(status: str, caveat: str, n_days: int) -> str:
     if status == "retired_by_design":
         return "retired"
+    if status == "frozen":
+        return "frozen"
     if caveat:
         return "caveat"
     return "forward" if n_days >= MIN_DAYS else "forward_young"
@@ -79,6 +82,7 @@ HOW_TO_READ = {
                                f"ranks at or above the 95th percentile of 1,000 random timings with a positive anytime lower bound, "
                                f"unless forward evidence then turns significantly negative. Weights are shrunk toward 0 first.",
     "evidence_class": f"forward | forward_young (< {MIN_DAYS} forward days, descriptive only) | caveat (known issue, numbers "
-                      "not reliable) | retired | no_record (could not be read - not a zero).",
+                      "not reliable) | retired | frozen (no new rows since the freeze date; the record is kept) | "
+                      "no_record (could not be read - not a zero).",
     "l3_weight": "Weight the allocation layer gave this book on its latest day; the core takes the rest.",
 }

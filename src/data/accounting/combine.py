@@ -29,7 +29,7 @@ MIN_DAYS = 20
 #: 年化只在共同记录满一年时做(GIPS:不足一年的收益不年化)。31 天 +12% 年化成 +292%、Sharpe 8.5 —— 上线当天实测,
 #: 这种数字摆在页面上就是误导。波动率可以年化(按实际观测频率),收益 / Sharpe / 年化 α 不行。
 ANNUALISE_DAYS = 365
-LAYER_SOURCE = {"①": "beta", "②": "beta_plus", "③": "multiplier", "④": "alpha", "①+③": "beta_and_multiplier",
+LAYER_SOURCE = {"①": "beta", "②": "beta_plus", "③": "multiplier", "ⓠ": "regime_override", "④": "alpha", "①+③": "beta_and_multiplier",
                 "组合层": "portfolio_layer", "事件": "event", "—": "other"}
 #: 对外的名字与一句话说明(页面是英文的;登记表里的中文名与内部编号不出站)
 PUBLIC = {
@@ -41,6 +41,8 @@ PUBLIC = {
     "cis_tilt": ("CIS tilt", "Overweights higher-CIS names inside the core holding."),
     "multiplier": ("Exposure timing (0.7–1.3x)", "The core holding scaled between 0.7x and 1.3x by market state; never short."),
     "tom_overlay": ("Add-to-winners overlay (0.7–1.3x)", "The core scaled up only while it is already making money - one step per new high, steps removed on a 20-day low - and cut to 0.7x below its long-term trend; never short."),
+    "q_overlay": ("Regime-match overlay (0–1.3x)", "The core scaled by how closely today's market resembles past phases (0, 0.5, 1 or 1.3x)."),
+    "q_slow": ("Regime-match overlay, cuts only below trend", "The same overlay, but it may only cut exposure while large caps sit below their 200-day average."),
     "multiplier_v1": ("Exposure timing v1 (control)", "The same timing rule on the previous 40%-capped core, kept as the control."),
     "portfolio_layer": ("Portfolio layer (0–1x)", "Exposure between 0 and 1 by market-state flags; can sit in cash."),
     "portfolio_layer_v2": ("Portfolio layer v2 (control)", "The same exposure rule on the previous 40%-capped core, kept as the control."),
@@ -185,13 +187,15 @@ async def load_basis(mode: str) -> tuple[dict[str, pd.Series], dict[str, str], d
     for bid in info:
         s = navs.get(bid)
         s = s.dropna() if s is not None else None
-        info[bid]["available"] = s is not None and len(s) >= 2 and info[bid]["status"] != "retired_by_design" \
-            and not info[bid]["_caveat"]
+        info[bid]["available"] = s is not None and len(s) >= 2 \
+            and info[bid]["status"] not in ("retired_by_design", "frozen") and not info[bid]["_caveat"]
         info[bid]["record"] = ([s.index[0].date().isoformat(), s.index[-1].date().isoformat()]
                                if s is not None and len(s) >= 2 else None)
         info[bid]["note"] = ("paper record" if info[bid]["available"]
-                             else ("record under review — not selectable" if info[bid]["_caveat"]
-                                   else ("retired" if info[bid]["status"] == "retired_by_design" else "no usable record")))
+                             else ("frozen — no new rows since 2026-10-20, record kept" if info[bid]["status"] == "frozen"
+                                   else ("record under review — not selectable" if info[bid]["_caveat"]
+                                         else ("retired" if info[bid]["status"] == "retired_by_design"
+                                               else "no usable record"))))
     for v in info.values():
         v.pop("_caveat", None)
     return navs, layers, info

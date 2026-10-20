@@ -26,7 +26,7 @@ class Book:
     arm: Optional[str] = None
     accounting: str = "own"    # 'shared_kernel' | 'own'
     benchmark: str = "core"   # 'arm:<名字>' | 'core'(① 本身:10-02 前 core_alpha α=1 回放,之后 core_cap 前向;S-482)
-    status: str = "paper"      # paper | dormant | retired_by_design
+    status: str = "paper"      # paper | dormant | retired_by_design | frozen(S-631,唯一来源 accounting/frozen.py)
     filters: dict = field(default_factory=dict)
     caveat: str = ""
     #: S-481:这几本账在 Redis 状态丢失时曾把 NAV 重置为 1.0(曲线被拼接)。它们的 `daily_return` 是每天按当时持仓
@@ -65,6 +65,14 @@ BOOKS: tuple[Book, ...] = (
     Book("tom_overlay", "③", "Tom 仓位管理(① 上只在盈利时加仓、破位撤加仓、跌破长期趋势底仓 0.7;0.7–1.3)",
          "大赢时扩大、错时少伤:加仓只加在已经赚钱的仓位上,撤的只是加上去的部分(S-596)",
          "multiplier_daily", "arms", arm="tom_pd13", accounting="shared_kernel", benchmark="core"),
+    # S-631(Jazz 10-20「根据我们的研究重新打分和开跑」):ⓠ 的信号(beta_core_nav_q 的 q_override)改挂 ① cap_a1_u,
+    # 在 ③ 的同一个记账函数里单独记 NAV(原表的 nav 抄了底仓、没乘 q);再加一条「只在慢状态向下时才许减仓」的对照臂
+    Book("q_overlay", "ⓠ", "ⓠ 相位覆盖(VDB 相位匹配 → 0 / 0.5 / 1 / 1.3 倍;底仓 = 不设上限的 ①)",
+         "历史相位相似时调敞口(C2);10-20 起作用在 ① 上并单独记账(S-631)",
+         "multiplier_daily", "arms", arm="q_v2", accounting="shared_kernel", benchmark="core"),
+    Book("q_slow", "ⓠ", "ⓠ 只在慢状态向下时减仓(majors 在 200 日线上方不许减)",
+         "慢状态是唯一稳定改善生存的东西(S-624 / S-627);ⓠ 在上升趋势里减半仓,前向 −3.5pp(S-631)",
+         "multiplier_daily", "arms", arm="q_slow", accounting="shared_kernel", benchmark="core"),
     Book("multiplier_v1", "③", "推力 v1(底仓 = 单币 ≤ 40% 的旧 ①;留作对照)", "T-087 换底仓前的同一规则",
          "multiplier_daily", "arms", arm="mult_v1", accounting="shared_kernel", benchmark="core",
          caveat="对照臂:10-12 起 ③ 建在不设上限的 ① 上(mult_v2)"),
@@ -97,6 +105,16 @@ BOOKS: tuple[Book, ...] = (
          "two_layer_paper_nav", "plain", status="retired_by_design", stamp="valuation_next_day"),
 )
 
+
+# S-631:冻结只在 accounting/frozen.py 登记一处 —— 这里按它改 status,不在上面逐行手改(两处登记迟早不一致)
+def _apply_frozen(books: tuple[Book, ...]) -> tuple[Book, ...]:
+    from dataclasses import replace
+
+    from src.data.accounting.frozen import FROZEN
+    return tuple(replace(b, status="frozen") if b.id in FROZEN else b for b in books)
+
+
+BOOKS = _apply_frozen(BOOKS)
 
 def _metrics(nav: pd.Series) -> dict[str, Any]:
     nav = nav.dropna().sort_index()

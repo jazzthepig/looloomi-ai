@@ -2581,6 +2581,19 @@ async def _start_prediction_resolver_loop():
         print("[PRED] ✅ daily prediction-resolver loop scheduled")
 
 
+async def _frozen_skip(book_id: str, loop_name: str, tag: str) -> bool:
+    """S-631(Jazz 10-20「先冻结了」):冻结的账本不起任务 —— 但要**说出来**:记一条心跳(refused)和一条
+    loop_attempt(refused + 原因),否则停写会被判活器读成「死了」,下一个人会去把它修好。返回 True = 已冻结。"""
+    from src.data.accounting.frozen import is_frozen, startup_note
+    if not is_frozen(book_id):
+        return False
+    note = startup_note(book_id)
+    print(f"[{tag}] ⏸ {note[:160]}")
+    await _beat(loop_name, ok=False, refused=True, error=note[:200])
+    await _record_loop_attempt(loop_name, "refused", reason=note[:400], writer=f"src.api.main.{loop_name}")
+    return True
+
+
 # ── Causal paper book — DEMOTED 2026-08-08 to RESEARCH RECORD per OVERSIGHT §3 P0 #2 ──
 # S-103 measured β-confounding; S-105 measured cost > edge. 25-day forward paper
 # retained for signal-trajectory continuity, NOT as product evidence. Loop kept
@@ -2631,6 +2644,8 @@ async def _causal_paper_loop():
 
 @app.on_event("startup")
 async def _start_causal_paper_loop():
+    if await _frozen_skip("causal_paper", "_causal_paper_loop", "CAUSAL-PAPER"):
+        return
     if os.environ.get("DISABLE_CAUSAL_PAPER", "").lower() not in ("1", "true", "yes"):
         _asyncio.create_task(_causal_paper_loop())
         print("[CAUSAL-PAPER] ✅ daily causal paper-book loop scheduled")
@@ -2679,6 +2694,8 @@ async def _dingge_paper_loop():
 
 @app.on_event("startup")
 async def _start_dingge_paper_loop():
+    if await _frozen_skip("dingge_paper", "_dingge_paper_loop", "DINGGE-PAPER"):
+        return
     if os.environ.get("DISABLE_DINGGE_PAPER", "").lower() not in ("1", "true", "yes"):
         _asyncio.create_task(_dingge_paper_loop())
         print("[DINGGE-PAPER] ✅ daily 顶格 RWA paper-sleeve loop scheduled")
@@ -2727,6 +2744,8 @@ async def _combined_book_loop():
 
 @app.on_event("startup")
 async def _start_combined_book_loop():
+    if await _frozen_skip("combined_book", "_combined_book_loop", "COMBINED-BOOK"):
+        return
     if os.environ.get("DISABLE_COMBINED_BOOK", "").lower() not in ("1", "true", "yes"):
         _asyncio.create_task(_combined_book_loop())
         print("[COMBINED-BOOK] ✅ daily combined-book NAV loop scheduled")
@@ -2775,6 +2794,8 @@ async def _scalable_book_loop():
 
 @app.on_event("startup")
 async def _start_scalable_book_loop():
+    if await _frozen_skip("scalable_book", "_scalable_book_loop", "SCALABLE-BOOK"):
+        return
     if os.environ.get("DISABLE_SCALABLE_BOOK", "").lower() not in ("1", "true", "yes"):
         _asyncio.create_task(_scalable_book_loop())
         print("[SCALABLE-BOOK] ✅ daily scalable-book NAV loop scheduled")
@@ -2924,6 +2945,8 @@ async def _two_layer_paper_loop():
 
 @app.on_event("startup")
 async def _start_two_layer_paper_loop():
+    if await _frozen_skip("two_layer_paper", "_two_layer_paper_loop", "TWO-LAYER"):
+        return
     if os.environ.get("DISABLE_TWO_LAYER_PAPER", "").lower() not in ("1", "true", "yes"):
         _asyncio.create_task(_two_layer_paper_loop())
         print("[TWO-LAYER] ✅ daily §5b two-layer paper-book loop scheduled")
@@ -2982,6 +3005,8 @@ async def _fusion_paper_loop():
 
 @app.on_event("startup")
 async def _start_fusion_paper_loop():
+    if await _frozen_skip("fusion_paper", "_fusion_paper_loop", "FUSION-PAPER"):
+        return
     if os.environ.get("DISABLE_FUSION_PAPER", "").lower() not in ("1", "true", "yes"):
         _asyncio.create_task(_fusion_paper_loop())
         print("[FUSION-PAPER] ✅ daily R64 fusion paper-book loop scheduled")

@@ -235,6 +235,14 @@ def assess(table: str, n_rows: int, write_last: Optional[str],
             f"`{table}` 不在 EXPECTED 里 —— **判 unknown 而不是 ok**。"
             f"一张没人声明过节奏的表,我们无从判断它是死是活 (S-180)")
 
+    # S-631:冻结的账本按设计停写 —— 判「不适用」并写明,不判死(否则下一个人会去把它「修好」,S-323i)
+    from src.data.accounting.frozen import frozen_tables
+    fz = frozen_tables().get(table)
+    if fz is not None:
+        na = ClockRead(None, None, None, NOT_APPLICABLE, f"冻结 {fz.since} 起")
+        return ProducerHealth(table, n_rows, na, na, NOT_APPLICABLE,
+                              f"`{table}` 已冻结({fz.since} 起停写,历史保留;S-631):{fz.why}")
+
     if n_rows == 0:
         e = ClockRead(None, None, None, EMPTY, "0 行")
         return ProducerHealth(table, 0, e, e, EMPTY,

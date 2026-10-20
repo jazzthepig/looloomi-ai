@@ -82,6 +82,14 @@ CODE_REF_U = "T-087 multiplier v2 (cap_a1_u 底仓)"
 ARM_TOM, REPLAY_ARM_TOM = "tom_pd13", "tom_pd13_replay"
 INCEPTION_TOM = pd.Timestamp("2026-10-16")
 CODE_REF_TOM = "S-596 tom_pd13 (cap_a1_u 底仓)"
+#: S-631(Jazz 10-20「根据我们的研究重新打分和开跑」):ⓠ 改挂 ① cap_a1_u。信号 = beta_core_nav_q 每天记下的 q_override
+#: (c2_q_v1,VDB 相位匹配 + 驻留过滤,规则不改);原来作用在旧 ①(等权 + 波动率目标)上,且那张表的 nav 抄了底仓。
+#: q_v2 = d 日有效的 q(mark_date ≤ d 的最近一条;mark 在 d 日 00:05 UTC 打 = d−1 收盘后决定)·
+#: q_slow = 同一个 q,但 majors 在 200 日线上方(d−1 收盘)时不许减仓:m = max(q, 1)。敞口 0–1.3,其余与 ③ 同。
+ARM_Q, REPLAY_ARM_Q, ARM_QS, REPLAY_ARM_QS = "q_v2", "q_v2_replay", "q_slow", "q_slow_replay"
+INCEPTION_Q = pd.Timestamp("2026-10-20")
+Q_LO, Q_HI = 0.0, 1.3
+CODE_REF_Q = "S-631 ⓠ on cap_a1_u (q_v2 / q_slow)"
 
 
 def multiplier(dist_200: Optional[float], vol_pct: Optional[float]) -> float:
@@ -96,9 +104,11 @@ def multiplier(dist_200: Optional[float], vol_pct: Optional[float]) -> float:
     return LEVELS[1]
 
 
-def apply_multiplier(core_ret: pd.Series, m_prev: pd.Series, funding_ann: pd.Series) -> pd.DataFrame:
-    """纯函数。m_prev(d) = d−1 收盘定下、作用于 d 的敞口。返回每天的 ret / 成本 / nav。"""
-    m = m_prev.reindex(core_ret.index).fillna(1.0).clip(LEVELS[0], LEVELS[-1])
+def apply_multiplier(core_ret: pd.Series, m_prev: pd.Series, funding_ann: pd.Series,
+                     lo: float = LEVELS[0], hi: float = LEVELS[-1]) -> pd.DataFrame:
+    """纯函数。m_prev(d) = d−1 收盘定下、作用于 d 的敞口。返回每天的 ret / 成本 / nav。
+    `lo` / `hi`:③ 的定义是 0.7–1.3(默认);ⓠ 的 q 可以到 0(S-631),同一套现金 / 资金费 / 切换成本。"""
+    m = m_prev.reindex(core_ret.index).fillna(1.0).clip(lo, hi)
     fund = funding_ann.reindex(core_ret.index).astype(float).fillna(FUNDING_FALLBACK_ANN) / 365.0
     cash = CASH_ANN / 365.0
     gross = m * core_ret + (1 - m).clip(lower=0) * cash - (m - 1).clip(lower=0) * fund
@@ -319,6 +329,72 @@ def build_rows_tom(core_ret: pd.Series, state: pd.DataFrame, end: pd.Timestamp) 
     return rows, evaluate_u(core_ret, m_prev, funding, end)
 
 
+def q_exposures(q_marks: pd.Series, gate_up: pd.Series, days: pd.DatetimeIndex) -> tuple[pd.Series, pd.Series]:
+    """纯函数。q_marks:mark_date → q_override;gate_up:d → majors 收盘在 200 日线上方(bool)。
+    返回 (q_v2 的 m, q_slow 的 m),都已对齐到「作用于 d」:q 取 mark_date ≤ d 的最近一条;闸门取 d−1 收盘的状态。
+    q 还没有任何一条的日子 ⇒ 1.0(不把「没有信号」当成信号)。"""
+    q = q_marks.sort_index().astype(float)
+    q_d = q.reindex(q.index.union(days)).ffill().reindex(days).fillna(1.0).clip(Q_LO, Q_HI)
+    up_prev = gate_up.sort_index().astype(float).shift(1, freq="D").reindex(
+        gate_up.index.union(days)).ffill().reindex(days)
+    slow = q_d.where(~(up_prev == 1.0), q_d.clip(lower=1.0))
+    return q_d, slow
+
+
+def build_rows_q(core_ret: pd.Series, state: pd.DataFrame, q_marks: pd.Series, gate_up: pd.Series,
+                 end: pd.Timestamp) -> tuple[list[dict], dict[str, Any]]:
+    """S-631:ⓠ 在 ① cap_a1_u 上的两条臂 —— 回放(只作语境:q 从 08-15 才有,且那段是对旧 ① 做的决定)+ 10-20 收盘起的前向。"""
+    core_ret = core_ret[core_ret.index <= end]
+    funding = state.get("funding_7d_ann", pd.Series(dtype=float)).astype(float)
+    if q_marks.empty:
+        return [], {"note": "beta_core_nav_q 读不到 q —— 不写 ⓠ 行(不按 1.0 顶替)"}
+    start = q_marks.index.min()
+    seg = core_ret[core_ret.index >= start]
+    m_v2, m_slow = q_exposures(q_marks, gate_up, seg.index)
+    now = datetime.now(timezone.utc).isoformat()
+    common = {"inception": INCEPTION_Q.date().isoformat(), "code_ref": CODE_REF_Q, "computed_at": now,
+              "dist_200": None, "vol_pct_3y": None}
+    rows: list[dict] = []
+    ev: dict[str, Any] = {}
+    for arm_rep, arm_fwd, m in ((REPLAY_ARM_Q, ARM_Q, m_v2), (REPLAY_ARM_QS, ARM_QS, m_slow)):
+        rep = apply_multiplier(seg, m, funding, lo=Q_LO, hi=Q_HI)
+        rows += [{**common, "d": d.date().isoformat(), "arm": arm_rep, "m": float(b["m"]),
+                  "ret": round(float(b["ret"]), 8), "nav": round(float(b["nav"]), 8), "cost": round(float(b["cost"]), 8)}
+                 for d, b in rep.iterrows()]
+        fwd = seg[seg.index > INCEPTION_Q]
+        if len(fwd):
+            book = apply_multiplier(fwd, m, funding, lo=Q_LO, hi=Q_HI)
+            rows += [{**common, "d": d.date().isoformat(), "arm": arm_fwd, "m": float(b["m"]),
+                      "ret": round(float(b["ret"]), 8), "nav": round(float(b["nav"]), 8),
+                      "cost": round(float(b["cost"]), 8)} for d, b in book.iterrows()]
+        ev[arm_rep] = {"since": start.date().isoformat(), "core": _stats(seg), "book": _stats(rep["ret"]),
+                       "avg_m": round(float(rep["m"].mean()), 3)}
+    return rows, ev
+
+
+async def _q_marks() -> pd.Series:
+    """ⓠ 的信号:beta_core_nav_q 的 q_override(c2_q_v1,作废行不算)。"""
+    from src.data.style.header import _read_all
+    rows = await _read_all("beta_core_nav_q", {"select": "mark_date,q_override", "inception_id": "eq.c2_q_v1",
+                                               "void_reason": "is.null", "order": "mark_date.asc"})
+    return pd.Series({pd.Timestamp(r["mark_date"]): float(r["q_override"]) for r in rows or []
+                      if r.get("q_override") is not None}, dtype=float)
+
+
+async def _majors_gate() -> pd.Series:
+    """慢状态:majors 市值指数(按 ret 复原水平)收盘在自己的 200 日均线上方(与 r_tickets_scan 的闸门同一读法)。"""
+    from src.data.style.header import _read_all
+    rows = await _read_all("style_index_pit_daily", {"select": "d,ret", "style": "eq.majors", "weighting": "eq.cap",
+                                                     "order": "d.asc"})
+    r = pd.Series({pd.Timestamp(x["d"]): float(x["ret"]) for x in rows or []
+                   if x.get("ret") is not None and float(x["ret"]) > -0.95}, dtype=float).sort_index()
+    if r.empty:
+        return pd.Series(dtype=bool)
+    lvl = (1 + r).cumprod()
+    sma = lvl.rolling(200, min_periods=1).mean()
+    n = lvl.rolling(200, min_periods=1).count()
+    return (n < 200) | (lvl > sma)
+
 def _f(v: Any) -> Optional[float]:
     try:
         x = float(v)
@@ -369,7 +445,12 @@ async def run_once() -> dict[str, Any]:
     rows_old, ev_old = await asyncio.to_thread(build_rows, core_ret, state, target)
     rows_new, ev_new = await asyncio.to_thread(build_rows_u, core_u_ret, state, target)
     rows_tom, ev_tom = await asyncio.to_thread(build_rows_tom, core_u_ret, state, target)
-    rows = rows_old + rows_new + rows_tom
+    try:                                   # S-631:ⓠ 读不到不该让 ③ 的回放算失败
+        rows_q, ev_q = await asyncio.to_thread(build_rows_q, core_u_ret, state, await _q_marks(),
+                                               await _majors_gate(), target)
+    except Exception as e:  # noqa: BLE001
+        rows_q, ev_q = [], {"error": f"{type(e).__name__}: {str(e)[:160]}"}
+    rows = rows_old + rows_new + rows_tom + rows_q
     # S-560:前向行 d ≤ 今天 − 2 已冻结(锚过就不再改);回放行照写
     from src.data.accounting.forward_lock import write_locked
     w = await write_locked(TABLE, rows, key="arm", on_conflict="d,arm")
@@ -383,7 +464,7 @@ async def run_once() -> dict[str, Any]:
     except Exception as e:  # noqa: BLE001 —— 交易层写不进去不该让 ③ 的回放算失败
         tom = {"ok": False, "why": f"{type(e).__name__}: {str(e)[:160]}"}
     return {"ok": True, "refused": False, "written": w["written"], "reason": f"回放至 {target.date()}",
-            "eval": ev_old, "eval_u_cap_a1u": ev_new, "eval_tom_pd13": ev_tom, "tom_trader": tom,
+            "eval": ev_old, "eval_u_cap_a1u": ev_new, "eval_tom_pd13": ev_tom, "eval_q": ev_q, "tom_trader": tom,
             "stale_in_source": stale, "lock": w["lock"]}
 
 
