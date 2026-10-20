@@ -1,7 +1,7 @@
 {
   "id": "T-146",
   "owner": "lane-a",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-21",
   "verified": null,
   "title": "X1V 实施拖累还剩约 7pp:查换手与成交时点(T-137 / T-143 之外)",
@@ -22,5 +22,5 @@
     "expect": "报告 _reports/absorb_input/T-146_drag_turnover.md:项 × 年化 × 分年 × 成交笔数;卡 notes 写关键数;in_review,推 lane-a/T-146。"
   },
   "prior_value": "上真钱前要知道 X1V 每年少赚的那 7pp 是规则可修,还是回放口径。",
-  "notes": ""
+  "notes": "(h) 254 笔成交 / 同日 29.9% / 隔日 69.3% / 未匹配 0.8%,中位延迟 1.5d(均延 20.4d 被 2021 BTC 冷启动拉长)。(i) 全期累计回报差 +126.31pp NAV(≈+25pp/年级),按 (target − actual) × 当日 r 累加,正 ——「5% 门槛主要挡掉目标上调日的潜在涨幅」。(j) 62 天空仓(2.93% 全期),累计 -3.52pp NAV(空仓反少亏 0.06pp/日)。三项合计不解释 −7pp/年缺口:累计已解释 ≈+1.85pp/年,还剩 **−7.61pp/年** 开放(怀疑在回放 vs 理想持仓权位的位错 / target_weights 在 X1V 上的小波动放大 —— 不在本卡范围,需另开卡确认方向)。"
 }
