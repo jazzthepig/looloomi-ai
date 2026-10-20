@@ -262,8 +262,10 @@ def test_launch_scrubs_write_keys_then_exports_only_the_lane_key():
     assert 'SUPABASE_KEY="$LANE_SUPABASE_KEY"' in head
 
 
-def test_lane_db_env_only_hands_out_a_publishable_key(tmp_path):
-    from scripts.lane_bot.lane_bot import lane_db_env
+def test_lane_db_env_only_hands_out_a_publishable_key(tmp_path, monkeypatch):
+    from scripts.lane_bot import lane_bot as lb
+    monkeypatch.setattr(lb, "log", lambda msg: None)        # 不往真的 .lane_bot/log.txt 里写测试噪音
+    lane_db_env = lb.lane_db_env
     f = tmp_path / "lane.env"
     f.write_text("SUPABASE_URL=https://x.supabase.co\nSUPABASE_KEY=sb_publishable_abc123\n", encoding="utf-8")
     assert lane_db_env(f) == {"LANE_SUPABASE_URL": "https://x.supabase.co", "LANE_SUPABASE_KEY": "sb_publishable_abc123"}
