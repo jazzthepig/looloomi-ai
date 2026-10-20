@@ -1,9 +1,13 @@
 {
   "id": "T-140",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-20",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-20T18:31Z",
+    "value": "S-620(b) ❌(① 鱼上 10 天内被甩下只降 3.4pp、② 捕获比反降 0.9pp;③ 总 R +420 ✓、④ 回撤 ✓)。r3 用预注册止损(被甩下以来最低低点)+ 结构断言,r1 的 bug 与 r2 的口径(Seth 给错)都已作废。S-612 M2 更正已入台账(仍不过)。再上车这条线到此为止;修法在初始止损(S-620(a) / S-621)。"
+  },
   "title": "S-620(b):R 臂被初始止损甩下后,20 根内收盘收复原突破位就重新上车(最多 2 次)—— 捕获比 / 票价 / 回撤,与基线配对",
   "source": "台账 S-620 预注册(写于计算之前);S-618 / S-619 诊断:鱼上交易 71% 两天内被初始止损甩下;Jazz 10-19「假突破后退出再重新开单」",
   "allowed_paths": [
@@ -22,5 +26,5 @@
     "expect": "报告写数据根 _reports/absorb_input/T-140_s620b.md:开头一张表 = 基线 vs (b) 的 ① 鱼上 10 天内被甩下比例(按信号)② 鱼上平均捕获比 ③ 总 R ④ 最大回撤(按出场日累计 R)+ 只报项(捕到的鱼、鱼外票价、去掉最好 5 笔、分年、同时持仓峰值、再上车次数分布)。按预注册四条判。卡 notes 写关键数;in_review,推 lane-c/T-140。"
   },
   "prior_value": "如果「被甩下再上车」能把捕获比拉起来而不把票价抬上去,R 臂就有了 Jazz 说的灵活出入场;与 S-620(a) 宽止损互为对照,决定实盘用哪一种",
-  "notes": "2026-10-20 Seth 开卡。S-620(a) 宽止损 Seth 已跑:被甩下 71% → 30%、捕获比 4.5% → 11%、回撤 −254R → −53R,总 R 346 vs 354(判据错设,见台账)。"
+  "notes": "2026-10-20 Seth 开卡。S-620(a) 宽止损 Seth 已跑:被甩下 71% → 30%、捕获比 4.5% → 11%、回撤 −254R → −53R,总 R 346 vs 354(判据错设,见台账)。\n\n## r1 → r2 → r3 进度\n\n**r1 (2026-10-20)** —— 已被 §Seth-1020a 退回。re_stop = lows[re_ei](进场当根最低价),run_leg 从 i=re_ei 起第一根就查 lows[i]<=stop ⇒ 必然触发 ⇒ 再上车腿 R≈-1-成本。reentry_idx=1/2 的 sumR 是笔数×(-1-成本),不是结果。\n\n**r2 (2026-10-21, §Seth-1020a)** —— 止损改为进场前已知(`recapture_low`/`entry_minus_atr` 二选一);加 0.3×ATR 丢弃门槛;加能失败的自检(>5% 同根出场率 ⇒ abort);T-131 M2 同口径重跑,证伪不成立。两口径 samebar 率 23%/12% 都 >5% 上限,需重校。\n\n**r3 (2026-10-21, §Seth-1020g) —— 本次。** 三处:(1) **主口径改为台账预注册** `preregistered_min = min(lows[prev_exit_idx .. re_ei−1])`(窗口任一根 < re_ei ⇒ 通过结构断言);r2 两口径保留为只报,`entry_minus_atr` 因 opens[re_ei] 违反结构断言只作趋势对照;`recapture_low` 通过结构断言可在主集合里对照。(2) **自检换成两条** — 结构断言(`simulate_b` 内 `sys.exit` 钉死,不是 warn)、同根出场率只报不判并排基线首腿(无阈值,5% 上限已作废)。(3) **四条判按主口径给结论**。T-131 M2 引用 r2 产物,§Seth-1020g §3 明确不动。\n\n## r3 测得(Supabase 实时拉,2026-10-21)\n\n基线 M0: n=1010 / meanR=+0.3506 / sumR=+354.07 / dd=−67.96R(容差内)。\n主口径 preregistered_min: n=1905(再上车 1106)/ sumR=**+420.12** / meanR=+0.2205 / dd=−73.46R / tight=125 / nostop=0 / badatr=0。\n只报 recapture_low: n=1832(1001)/ sumR=+337.60 / tight=236 / samebar 23.08%。\n趋势对照 entry_minus_atr(struct 违反): n=2121(1304)/ sumR=+459.66 / tight=0 / struct_fail=1304。\n\n**四条判(主口径)**: ①总R↑ Δ=+66.04 ✅ ②捕获比↑ Δ=−0.9002 ❌ ③10d-stop 不恶化 Δ=−3.40pp ✅ ④DD 变浅 Δ=−5.50R ❌ ⇒ **FAIL**(捕获比降 + 回撤更深)。\n\n**同根出场率(只报,§0c)**: 基线首腿 364/1010 = **36.04%** vs 主集合 142/1106 = **12.84%**(差 −23.20pp)vs recapture_low 231/1001 = **23.08%** — 主口径同根出场明显低于基线首腿(更宽 stop 的自然结果)。\n\n**T-131 M2(引用 r2 产物,未重跑)**: recapture_low n=883 +0.0562 / 25.86% samebar;entry_minus_atr n=875 +0.1771 / 14.83% samebar。**S-612「M2 最差」是 bug 产物作废,但两口径 samebar 都高于 5% ⇒ 不够宣布 M2 可用**。\n\n**交付物**:报告+json `/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-140_s620b.{md,json}`;T-140 脚本 `docs/research/t140_s620b_reentry.py`(只动 r3 三处,T-131 M2 未碰)。分支 `lane-c/T-140`,待 Seth 合并。"
 }

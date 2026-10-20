@@ -20,8 +20,6 @@
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
 | open | T-089 | lane-a | 完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改 | 从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。 |  |
 | open | T-152 | lane-a | X1V 实施拖累:逐步瀑布(从理想一步一步走到回放,各步之和 = 总差,没有残差) | 脚本 docs/research/t152_x1v_waterfall.py;报告写数据根 _reports/absorb_input/T-152_x1v_waterfall.md(脚本自己写,不手写);卡 notes 写两种顺序的 Δ 表;in_review,推 lane-a/T-152。 | X1V 是执行器唯一会做的 sleeve(BTC / ETH 现货,真钱)。每年 7–9pp 的实施拖累相当于把一半收益留在桌上 —— 不知道是哪一步,就不知道该改门槛、改时点还是改限额。 |  |
-| open | T-155 | lane-b | S-640:② 第 4 个候选 —— ① 的山寨里少配资金费拥挤的名字(BTC / ETH 钉住,与 T-148 同一框架) | 脚本 docs/research/t155_funding_tilt.py;报告(脚本写)_reports/absorb_input/T-155_funding_tilt.md,末尾「S-640 结果」草稿;in_review,推 lane-b/T-155。 | ② 现在是空的;前三个分数都是反射。拥挤是原因类变量,若过了就是第一个有原因的 ②。 |  |
-| open | T-156 | lane-c | R-v2 前向 = 回放?一个对账脚本:r_tickets_paper 的每一张票,研究 SQL 在同一天是否也会开(以及反过来) | 脚本 docs/research/t156_rv2_forward_vs_replay.py(带 --since 参数,便于以后每周跑);报告(脚本写)_reports/absorb_input/T-156_rv2_reconcile.md;in_review,推 lane-c/T-156。 | 「可验证的前向记录就是产品」—— 前向账本和回放说的是不是同一件事,要能每周自动回答,而不是等出了事再查。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -159,4 +157,4 @@
 | done | T-138 | seth | S-614:R 臂突破那天的主动买盘 / 未平仓量 / 大户持仓 / 散户拥挤,能否把赢家和输家分开 | 台账 S-614 结果段;过关的特征写进 R 前向纸面账本的过滤条件 | R 臂的软肋是钱集中在少数几笔 —— 如果「谁在买」能分开赢家与假突破,R 才值得占风险预算 | Not passed (S-614). 885 of 1,013 R trades have features (2020-22 is almost empty: those alts had no Binance metrics files yet). H1 taker-buying confirmation is the strongest: top tercile +0.906R vs bottom -0.267R (diff +1.17R, one-sided p 0.041 against the 0.0125 bar; 2025-26 +3.36R) but the favored group without its best 5 trades is still -0.07R. H2 rising open interest +0.49R diff (p 0.19). H3 top-trader long/short rising and H4 crowd not crowded point the wrong way (p 0.50 / 0.59). H1 becomes a logged field on the R forward paper book; the intraday version waits for the T-129 recordings. @ 2026-10-20T02:00Z |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 
-open 11 · claimed 10 · blocked 6 · in_review 6 · done 122 · dropped 1
+open 9 · claimed 10 · blocked 6 · in_review 6 · done 122 · dropped 1
