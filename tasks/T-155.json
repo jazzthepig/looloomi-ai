@@ -1,0 +1,26 @@
+{
+  "id": "T-155",
+  "owner": "lane-b",
+  "status": "in_review",
+  "created": "2026-10-20",
+  "verified": null,
+  "title": "S-640:② 第 4 个候选 —— ① 的山寨里少配资金费拥挤的名字(BTC / ETH 钉住,与 T-148 同一框架)",
+  "source": "台账 S-640 预注册(写于计算之前)。框架、判据、随机对照与 S-634 / T-148 一字相同,只把分数从 30 日动量换成「负的 7 日平均资金费率 z 分数」。你 T-148 的脚本直接复用。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-155.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "照 S-640 原文:V0 复现 core_u_replay(< 1%,对不上就停);V4 = BTC / ETH 保持 w0,其余按 w0 × exp(0.5 × z),z = −(d−7 … d−1 平均资金费率的山寨横截面 z);资金费只读 funding_history venue = binance_perp(publishable key 可读),当天没有资金费的名字 z = 0 并计数;周一再平衡、换手 × 10bp。判 ① 全程与 2025-01-01 起留出段都 > 0 ② 高于 200 次山寨内打乱 z 的第 190 大。只报项全报(分年、按慢状态、换手、最大回撤、每期有资金费的山寨个数)。",
+    "expect": "脚本 docs/research/t155_funding_tilt.py;报告(脚本写)_reports/absorb_input/T-155_funding_tilt.md,末尾「S-640 结果」草稿;in_review,推 lane-b/T-155。"
+  },
+  "prior_value": "② 现在是空的;前三个分数都是反射。拥挤是原因类变量,若过了就是第一个有原因的 ②。",
+  "notes": "T-155 run 2026-10-21 / S-640 PASS。V0 复现:max_rel_diff 0.364%(< 1%)。三条判定全过:① 全程 V3-V0 = +22.15pp(V0 +266.81% / V3 +288.96%)、① 留出段 V3-V0 = +0.21pp、② (V3-V0) 200 次打乱分位 0.980(≥ 0.95)。最大回撤 V0 −55.39% / V3 −55.54%;累计换手 V0 0.38% / V3 1.18%。每期 z=0 因资金费缺数的山寨数 min/max/mean/median = 0/0/0/0。资金费仅读 binance_perp(publishable key 可读)。脚本:docs/research/t155_funding_tilt.py;报告:_reports/absorb_input/T-155_funding_tilt.md(已在 Mac 数据根)。② 族(S-630 / S-634 / T-148)三个候选都不过 95 分位;此为第 4 个候选、第 1 个过线。@ 2026-10-21T03:55Z"
+}
