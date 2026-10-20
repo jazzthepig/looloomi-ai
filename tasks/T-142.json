@@ -1,7 +1,7 @@
 {
   "id": "T-142",
   "owner": "lane-c",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-20",
   "verified": null,
   "title": "S-626 叙事标记前向 A/B 的评分器:每周按时点冻结 J / E / T / N 四臂名单,到期后算快鱼率、进场早晚、R 臂票在鱼比例",
@@ -22,5 +22,5 @@
     "expect": "报告写数据根 _reports/absorb_input/T-142_narrative_ab.md:每周一行(四臂各自名字数、已到期的快鱼数),累计表 + 达到判定条件时按 S-626 判。卡 notes 写当前进度;in_review,推 lane-c/T-142。脚本以后每周一跑一次(调度另议)。"
   },
   "prior_value": "验证 Jazz 的信息值多少 —— 如果 J 比 E / T / N 更早、更准,叙事层就该成为单票加权的正式输入",
-  "notes": "2026-10-20 Seth 开卡。J 臂第一周(2026-W43)等 Jazz 给;E / T 可以先冻结。"
+  "notes": "2026-10-20 lane-c 首跑:脚本 docs/research/t142_narrative_ab.py 已落地,本周(W43)四臂冻结已写 research/narrative_flags/frozen/2026-W43.json(append-only):J=0 / E=10 / T=0 / N=29;universe=39。T 臂=0 因为 trending_log 表 2026-10-12..18 该窗口无 CoinGecko 抓取(已知 PRJ-008「D4 accumulates post-deploy」)。最早 Mon+60d = 2026-12-18,目前 0 周到期、S-626 判据未到(需 J ≥ 12 周 + 末周到期)。报告:/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-142_narrative_ab.md。读库只用 os.environ['SUPABASE_URL'] / os.environ['SUPABASE_KEY'];未打印 key。第 1 次跑出的 buggy 版(related_assets 未拆逗号)已 mv 到 narrative_flags/2026-W43.json.bad-r1(留作审计),frozen/ 里只有规范版。"
 }
