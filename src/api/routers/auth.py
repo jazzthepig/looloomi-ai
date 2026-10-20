@@ -126,13 +126,14 @@ def _verify_solana_signature(address: str, message: str, signature: str) -> bool
 
 @router.get("/config")
 async def get_auth_config():
-    """
-    Returns public Supabase config for frontend initialization.
-    The anon key is intentionally public (row-level security enforced server-side).
+    """Public sign-in config. **Returns no Supabase key of any kind.**
+
+    Until 2026-10-20 this returned `SUPABASE_KEY` labelled as the anon key — but on Railway that
+    variable holds the service_role key (it bypasses RLS), so a public GET handed out full database
+    access. Nothing in the frontend read it; the browser never talks to Supabase directly.
+    Guarded by tests/test_no_secrets_in_tree.py.
     """
     return {
-        "supabase_url": _SB_URL,
-        "supabase_anon_key": _SB_KEY,
         "wallet_sign_message_template": "CometCloud AI\nSign in with wallet: {address}\nNonce: {nonce}",
     }
 

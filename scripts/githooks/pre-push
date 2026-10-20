@@ -18,6 +18,12 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     exit 1
   fi
   [[ "$local_sha" == "$zero" ]] && continue
+  # 2026-10-20:lane 把 service_role key 写进脚本推上了公开仓库。推送的那棵树里有密钥 ⇒ 拒绝,不分分支。
+  # 用主工作目录那份扫描器(lane 的旧分支里可能还没有这个文件);对象库是共享的,SHA 在哪都能解析。
+  if ! python3 "$main_wt/scripts/secret_scan.py" --rev "$local_sha"; then
+    echo "✗ $local_ref 里有密钥。改成从环境变量读,重写这个提交;如果它曾经推上去过,必须轮换那把 key。"
+    exit 1
+  fi
   leak="$(git log --format=%h -1 "$local_sha" --not --remotes=origin -- "${private[@]}" 2>/dev/null || true)"
   if [[ -n "$leak" ]]; then
     echo "✗ $local_ref 带着改写前的旧历史(例如 $leak 碰过私有文件)—— 推上去会把它们重新公开。"
