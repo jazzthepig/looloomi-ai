@@ -41,6 +41,8 @@ def test_catches_service_role_jwt_whole_and_split_across_literals():
 def test_catches_new_style_secret_and_personal_tokens():
     assert ss.scan_text("SUPABASE_KEY=" + "sb_" + "secret_" + "a1B2c3D4e5F6g7H8")
     assert ss.scan_text("token " + "sb" + "p_" + "0123456789abcdef" * 2 + "01234567")
+    assert ss.scan_text("Publishable key: " + "sb_" + "publishable_" + "Ab3dEf6hIj9kLm2nOp5qRs8t")
+    assert ss.scan_text("SUPABASE_KEY=" + "sb_" + "publishable_abc123") == [], "测试里的短假值不算"
 
 
 def test_anon_jwt_and_ordinary_text_pass():

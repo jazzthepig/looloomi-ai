@@ -3,7 +3,7 @@ _Last updated: 2026-03-28_
 
 ## Project
 - URL: `https://soupjamxlfsmgmmtoeok.supabase.co`
-- Publishable key: `sb_publishable_wdExIZf7M5AXW6ss12vBBA_RPPwm8KF`
+- Publishable key: **不写在这里**(2026-10-20:anon 能读研究表之后,publishable 也按密钥对待;值在 Supabase → Settings → API Keys,lane 用的那把在 `~/.cometcloud/lane.env`)
 
 ---
 

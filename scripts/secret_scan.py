@@ -8,7 +8,8 @@ Patterns are built at runtime so this file never contains a match for itself:
   - the base64 / base64url encodings of `service_role` at all three byte alignments. They sit inside any
     service_role JWT payload, and they survive the key being split across string literals unless a split
     falls inside those ~14 characters;
-  - `sb_secret_…` (new-style secret keys) and `sbp_…` (Supabase personal access tokens);
+  - `sb_secret_…` (new-style secret keys), `sbp_…` (Supabase personal access tokens), and real-length
+    `sb_publishable_…` keys (anon reads research tables, so the publishable key is not public for us);
   - any whole JWT whose payload role is not `anon` (working-tree mode only; needs decoding).
 
 Usage:
@@ -44,7 +45,10 @@ def b64_alignments(word: str) -> list[str]:
 
 
 ROLE_FRAGMENTS = b64_alignments("service_role") + b64_alignments("supabase_admin")
-TOKEN_RES = [re.compile(r"sb_" + r"secret_[A-Za-z0-9_\-]{8,}"), re.compile(r"\bsb" + r"p_[0-9a-f]{40}\b")]
+#: publishable 也算:anon 能读研究表(2026-10-20),而那把 key 自 06-19 起写在公开的 docs/SUPABASE_SETUP.md 里。
+#: 只认长度像真 key 的(前缀后 ≥ 20 位),测试里的 sb_publishable_abc123 这类假值不算。
+TOKEN_RES = [re.compile(r"sb_" + r"secret_[A-Za-z0-9_\-]{8,}"), re.compile(r"\bsb" + r"p_[0-9a-f]{40}\b"),
+             re.compile(r"sb_" + r"publishable_[A-Za-z0-9_\-]{20,}")]
 JWT_RE = re.compile(r"eyJ[A-Za-z0-9_\-]{8,}\.(eyJ[A-Za-z0-9_\-]{8,})\.[A-Za-z0-9_\-]{8,}")
 
 
