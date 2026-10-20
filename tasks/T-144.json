@@ -1,9 +1,13 @@
 {
   "id": "T-144",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-20",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-20T14:59Z",
+    "value": "2026-10-20 Seth 合并:T 臂 0 → 10 按时点重建、旧冻结文件不覆盖、读权限守卫都对;S 臂 W43 填不出是数据(10-20 才有快照、delta7d 全空),最早 W45;每周一 01:30 UTC 由 lane_bot weekly_scripts 自动跑(只给 publishable key)。"
+  },
   "title": "T-142 续:修 T 臂(W43 的 0 个名字是读权限,不是没数据)+ 加 S-629 的 Sharpe 臂 + 每周一自动跑",
   "source": "Seth 10-20 复核:trending_log 开了 RLS 却没有 anon 的读策略 —— 用 publishable key 读是 HTTP 200 + 0 行,不报错;同期表里 14 天 3,570 行。已加 lane_read(migrations/2026-10-20_lane_read_trending_style.sql,10-20 13:4x UTC 生效,anon 读到 7 天 2,385 行)。台账 S-629 预注册 Sharpe 臂;S-631 重新打分。",
   "allowed_paths": [
@@ -22,5 +26,5 @@
     "expect": "frozen/ 下 W43 的 T 修正文件 + 之后每周五臂(J / E / T / S / N);报告 _reports/absorb_input/T-142_narrative_ab.md 加 S 列;卡 notes 写每臂当周名字数;in_review,推 lane-c/T-144。"
   },
   "prior_value": "S-628 证明社交放量能找鱼但标得晚、且免费的 Santiment 晚 30 天不可交易;Sharpe 是唯一免费的实时注意力源 —— S 臂是「注意力能不能变成 ②」的唯一前向检验。",
-  "notes": ""
+  "notes": "W43 五臂名字数:J 0(awaiting_jazz)/ E 10 / T 10 / S 0 / N 35(宇宙 48)。\n① T 臂 0 → 10:trending_log 到 10-19 为止近 14 天 3030 行,窗口 [10-12, 10-19) 读到 2025 行 / 101 个 symbol,计数前 10 = PRL NEAR QTC STRK PENGU SUI INJ AERO PONS SOL。规则一字未改;原 frozen/2026-W43.json 不覆盖,修正写在 frozen/2026-W43.T-fix.json(append-only,已存在就不重写)。③ 读权限探针已进代码:trending_log / narrative_events / sharpe_mindshare_snap 三张表各查「到该周周一为止最近 14 天总行数」,> 0 而某臂读到 0 ⇒ 报「疑似读不到」并停写那一周(全部用 publishable key,未用 service 口径)。\n② S 臂(S-629)本周填不出,是数据本身不是读权限:库里唯一一份 win='now' 快照是 2026-10-20(356 行),晚于 W43 周一 10-19 ⇒ 按时点不可用;该快照 delta7d 列 356/356 行全 null ⇒ 只能走 fallback(自存 t / t−7 − 1)。自存快照从 2026-10-20 起,最早可算周 = 2026-W45(11-02 用 10-26 + 11-02 两份),W43 / W44 按预注册不填。fallback 排序 / 去 BTC·稳定币 / 宇宙过滤 / delta7d 列优先 / 按时点守卫用假数据冒烟测过(Mac 数据根 research/t144_smoke.py,6/6 通过)。N 臂已同步减 S(否则 S 与 N 重叠,判定无意义)。\n④ 调度未做:本卡 allowed_paths 只有 docs/research/ + tasks/,scripts/lane_bot/ 在 forbidden_paths。方案写进脚本 docstring —— cron `30 1 * * 1`,shell 先导出 SUPABASE_URL / SUPABASE_KEY 再 `python3 docs/research/t144_narrative_ab.py`(脚本按周几自判冻结哪一周:周一跑 = 冻结刚结束的那周)。请 Seth 加这一行。\n产物:docs/research/t144_narrative_ab.py(仓库)· research/narrative_flags/frozen/2026-W43.T-fix.json + research/t144_smoke.py(Mac 数据根)· _reports/absorb_input/T-142_narrative_ab.md(五臂周报)。尚无到期周(最早 W43 到期 2026-12-18),当前不判,只冻结名单。"
 }
