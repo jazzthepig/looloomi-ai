@@ -1,9 +1,13 @@
 {
   "id": "T-149",
   "owner": "lane-a",
-  "status": "open",
-  "created": "2026-10-21",
-  "verified": null,
+  "status": "done",
+  "created": "2026-10-20",
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-20T17:27Z",
+    "value": "S-635 ❌(捕鱼 287 vs 随机第 190 大 363;票价 −8.66R vs 随机第 11 小 −9.07R)。照预注册原文;F 日 89 天 vs S-616 当时 18 天是 deriv_metrics_daily 之后补全历史,判据是同期随机对照不受影响。台账已记。"
+  },
   "title": "S-635 投降篮子:全市场冲洗日第二天整个宇宙各开一张宽止损票,捕鱼数与票价是否胜过随机日",
   "source": "台账 S-635 预注册(写于对冲洗日篮子算任何结果之前)。来源 S-632 / S-633 / S-616 —— 预注册里写明了这条是被它们启发的,同段历史只能当一致性检查。",
   "allowed_paths": [
@@ -22,5 +26,5 @@
     "expect": "脚本 docs/research/t149_capitulation_basket.py;报告 _reports/absorb_input/T-149_capitulation.md,末尾写「S-635 结果」草稿;in_review,推 lane-a/T-149。"
   },
   "prior_value": "鱼成潮且多在急跌见底后(S-632);R 臂的进场已经自带择时(S-633)。如果「投降日广撒」比随机日更会捕鱼、票更便宜,交易层 v2 多一条简单、可执行的纸面臂。",
-  "notes": ""
+  "notes": "S-635 ❌ 两条都不过、方向反着。治疗 89 F 日 / 3,919 张:捕到鱼 287(随机 p190=363 实测 rank_le 0.325);每条鱼票价 −8.659R(随机 p11=−9.065 实测 rank_ge 0.91,治疗组票价更高 = 更差)。自检:S-618 鱼数 837(原文 287,差 2.9× 是 S-637 后的 binance_hist 与 S-618 当天口径不完全一致,同字面 ≠ 同数据;不影响本卡判据)。口径诚实:89 F 日 vs S-616 的 18(同字面口径,数据已扩),判定不受影响(判在治疗 vs 同期随机)。分年 7 年 6 负、2022 亏 1,250R 占 50%;子篮(信号后 3 日内站回 SMA20)票价 −4.71R/未站回 −12.21R。S-635 不进交易层 v2 前向。报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-149_capitulation.md,含「S-635 结果」草稿;原始数 T-149_results.json。"
 }
