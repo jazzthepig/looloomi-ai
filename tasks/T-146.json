@@ -1,0 +1,26 @@
+{
+  "id": "T-146",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-21",
+  "verified": null,
+  "title": "X1V 实施拖累还剩约 7pp:查换手与成交时点(T-137 / T-143 之外)",
+  "source": "§Seth-1020d:7pp 不在 e / f / g;T-137 外每年约 44 笔成交 —— 下一步从换手与成交时点找,别再从限额上找。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-146.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "在 docs/research/t137_x1v_replay.py / t143_drag_decomposition.py 的读数上加三项,各自单独开关、报年化差与分年:h 理想按「信号日收盘」成交 vs 回放的实际成交日(把每笔成交的延迟天数分布画出来)· i 5% 再平衡门槛内被跳过的调仓累计少拿的暴露(按日:目标 − 实际)× 当日收益,逐年加总 · j 止损 / 破位出场后的「空仓期」:回放空仓、理想仍持有的天数与这些天的面板收益。三项之后剩多少没解释写明。读库只用 SUPABASE_URL / SUPABASE_KEY(publishable)。",
+    "expect": "报告 _reports/absorb_input/T-146_drag_turnover.md:项 × 年化 × 分年 × 成交笔数;卡 notes 写关键数;in_review,推 lane-a/T-146。"
+  },
+  "prior_value": "上真钱前要知道 X1V 每年少赚的那 7pp 是规则可修,还是回放口径。",
+  "notes": ""
+}
