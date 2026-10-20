@@ -1859,7 +1859,8 @@ async def _binance_hf_loop():
 
 
 async def _binance_vision_loop():
-    """T-133:Binance 公开历史档(data.binance.vision U 本位永续 metrics)→ deriv_metrics_daily。
+    """T-133:Binance 公开历史档(data.binance.vision U 本位永续 metrics)→ deriv_metrics_daily;
+    同一轮再取资金费率月档 → funding_history(binance_perp,补到整个 binance_hist 宇宙;loop_attempt 名 `_binance_vision_funding`)。
     每轮最多 6,000 个日档(回补期 10 分钟一轮,补完后每小时一轮):先补各名字最近缺的日子,再轮转往回补到 max(上市日, 2020-09-01)。
     半数以上读不到 ⇒ 整轮拒写(Railway 出口落在美国时可能读不到 —— egress probe 在记)。
     判活:`select max(d) from deriv_metrics_daily where symbol = 'BTC' and n_points > 0` ≥ 前天;
@@ -1885,12 +1886,34 @@ async def _binance_vision_loop():
             await _record_loop_attempt("_binance_vision_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                        writer="src.api.main._binance_vision_loop")
             r = {}
+        # S-638 后续:同一族的月档 —— 资金费率补到整个 binance_hist 宇宙(binance_vision_funding.py)。
+        # 单独记一个 loop_attempt 名字,metrics 和资金费各自判活,一边坏了不遮另一边。
+        # 判活:`select count(*) from funding_vision_plan`(积压,应降到个位数)
+        rf: dict = {}
+        try:
+            from src.data.market.binance_vision_funding import run_once as _bvf_run
+            rf = await _bvf_run()
+            _fdetail = {k: rf.get(k) for k in ("planned", "backlog", "rows", "absent", "errors", "error_sample",
+                                               "oldest", "newest")}
+            print(f"[BINANCE-VISION-FUNDING] {'ok' if rf.get('ok') else 'refused' if rf.get('refused') else 'error'} · "
+                  f"{str(rf.get('reason'))[:160]}")
+            await _record_loop_attempt(
+                "_binance_vision_funding",
+                "ok" if rf.get("ok") else "refused" if rf.get("refused") else "error",
+                reason=str(rf.get("reason"))[:400] if rf.get("reason") else None,
+                detail=_fdetail, writer="src.api.main._binance_vision_loop")
+        except Exception as _e:
+            print(f"[BINANCE-VISION-FUNDING] ⚠️  pass FAILED: {_e}")
+            await _record_loop_attempt("_binance_vision_funding", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._binance_vision_loop")
         # 回补期(这一轮把预算用满 = 还有积压)10 分钟一轮,补完后每小时一轮只取新的一天(10-19 首轮:6,000 档 0 失败,美国出口也读得到)
         try:
             from src.data.market.binance_vision import BUDGET as _BV_BUDGET
+            from src.data.market.binance_vision_funding import BUDGET as _BVF_BUDGET
         except Exception:
-            _BV_BUDGET = 6000
-        await _asyncio.sleep(600 if (r or {}).get("planned", 0) >= _BV_BUDGET else 3600)
+            _BV_BUDGET, _BVF_BUDGET = 6000, 2000
+        _backlog = (r or {}).get("planned", 0) >= _BV_BUDGET or (rf or {}).get("planned", 0) >= _BVF_BUDGET
+        await _asyncio.sleep(600 if _backlog else 3600)
 
 
 async def _social_ingest_loop():

@@ -2537,15 +2537,25 @@ async def get_binance_hourly_page(symbol: str, start_ms: int, limit: int = 1000)
 
 #: T-133:Binance 公开历史档(静态文件,不是 API —— 与 data-api.binance.vision 同族)。只放行下列数据集。
 BINANCE_VISION_UM_DAILY = "https://data.binance.vision/data/futures/um/daily"
+BINANCE_VISION_UM_MONTHLY = "https://data.binance.vision/data/futures/um/monthly"
 BINANCE_VISION_KINDS = frozenset({"metrics"})
+#: S-638 后续:资金费率只有月档(没有日档)。
+BINANCE_VISION_MONTHLY_KINDS = frozenset({"fundingRate"})
 
 
-async def get_binance_vision_um_daily(kind: str, pair: str, day: str) -> Optional[bytes]:
+async def get_binance_vision_um_daily(kind: str, pair: str, day: str, *, monthly: bool = False) -> Optional[bytes]:
     """T-133:U 本位永续某一天的历史档(zip 原样字节)。404 ⇒ None(那天没有文件 —— 未上市 / 未上传);
-    其他非 200 ⇒ 抛错(读不到 ≠ 没有)。kind 只能是 BINANCE_VISION_KINDS 里的。"""
-    if kind not in BINANCE_VISION_KINDS:
+    其他非 200 ⇒ 抛错(读不到 ≠ 没有)。kind 只能是 BINANCE_VISION_KINDS 里的。
+    monthly=True 时 day 是 'YYYY-MM',取月档(kind 只能是 BINANCE_VISION_MONTHLY_KINDS 里的)——
+    同一个入口加一个参数,不新开取数函数(取数入口只减不增)。"""
+    if monthly:
+        if kind not in BINANCE_VISION_MONTHLY_KINDS:
+            raise ValueError(f"binance vision 月档 {kind!r} 不在白名单 {sorted(BINANCE_VISION_MONTHLY_KINDS)}")
+        url = f"{BINANCE_VISION_UM_MONTHLY}/{kind}/{pair}/{pair}-{kind}-{day}.zip"
+    elif kind not in BINANCE_VISION_KINDS:
         raise ValueError(f"binance vision 数据集 {kind!r} 不在白名单 {sorted(BINANCE_VISION_KINDS)}")
-    url = f"{BINANCE_VISION_UM_DAILY}/{kind}/{pair}/{pair}-{kind}-{day}.zip"
+    else:
+        url = f"{BINANCE_VISION_UM_DAILY}/{kind}/{pair}/{pair}-{kind}-{day}.zip"
     resp = await _get_binance_client().get(url, timeout=30)
     if resp.status_code == 404:
         return None
