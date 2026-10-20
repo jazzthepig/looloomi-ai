@@ -43,7 +43,9 @@ STATE_FILE = NFLAG_DIR / "_t144_state.json"
 REPORT_PATH = Path("/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-142_narrative_ab.md")
 
 EXCLUDE_BTC_ETH = {"BTC", "ETH"}
-UNIVERSE_EXCLUDE = {"USDC", "BTCDOM", "DEFI"}
+# N 臂 = universe 减所有标记臂(S-626 补,T-147);BTC / ETH 也排除,免得 N 被两条
+# 主流稀释后 J / E / T / S 所有人都得跑过一条「所有人一起上涨」的底,J 永远过不了线。
+UNIVERSE_EXCLUDE = {"USDC", "BTCDOM", "DEFI", "BTC", "ETH"}
 # S 臂额外去稳定币(Sharpe 的 universe 比 binance_hist 宽得多,含一堆锚定美元的票)
 STABLE = {
     "USDC", "USDT", "DAI", "BUSD", "TUSD", "USDP", "FDUSD", "USDD", "PYUSD",
@@ -247,6 +249,9 @@ def _universe(mon: date) -> set:
         adv30 = sum(c * v for _, c, v in window) / len(window)
         if adv30 >= ADV30_MIN:
             members.add(sym)
+    # ── 自检(T-147 acceptance):N 臂不能含 BTC / ETH,出现即 abort。
+    leak = EXCLUDE_BTC_ETH & members
+    assert not leak, f"N 臂出现 BTC/ETH:{sorted(leak)}(UNIVERSE_EXCLUDE 漏配?)"
     return members
 
 
@@ -295,6 +300,17 @@ def _fast_fish(sym: str, mon: date, today: date) -> dict:
 def _summarize(mon: date, arms: dict, today: date) -> dict:
     out = {"week": _iso_week(mon), "monday": mon.isoformat(),
            "matured": mon + timedelta(days=LOOKAHEAD_DAYS) <= today, "arms": {}}
+    # T-147 acceptance:打分对所有周统一先剔除 N 里的 BTC / ETH 再算。
+    # _universe 已从底层排除 BTC/ETH;这里再 strip 一遍是防御(W43 等更早冻结文件
+    # 是 UNIVERSE_EXCLUDE 加 BTC/ETH 之前的产物,frozen append-only 不重写)。
+    # 不在 _summarize 里 assert:旧 frozen 文件 N 里残留的 BTC/ETH 在这里 strip 后
+    # 照样能算快鱼;_universe 是真正的自检闸口(UNIVERSE_EXCLUDE 漏配就 abort,见上)。
+    n_stripped: list = []
+    if "N" in arms:
+        leak = sorted(EXCLUDE_BTC_ETH & set(arms["N"]))
+        if leak:
+            n_stripped = leak
+            arms = {**arms, "N": [s for s in arms["N"] if s not in EXCLUDE_BTC_ETH]}
     for name, syms in arms.items():
         rows = [{"sym": s, **_fast_fish(s, mon, today)} for s in syms]
         fish = [r for r in rows if r["d"] == "fast"]
@@ -307,6 +323,8 @@ def _summarize(mon: date, arms: dict, today: date) -> dict:
             "median_peak_mult": (sorted(peaks)[len(peaks) // 2]) if peaks else None,
             "rows": rows,
         }
+    if n_stripped:
+        out["n_stripped_btc_eth"] = n_stripped
     return out
 
 
@@ -315,14 +333,19 @@ def main():
     today = datetime.now(timezone.utc).date()
     # 目标周 = 刚走完的那一周(周一 01:30 跑时,刚结束的是上周一开头的那周;
     # 周二~周日补跑时,刚结束的是本周一开头的那周)
+    # 一周 = 以周一 M 标记,所有臂只用 [M − 7 天, M) 的数据(S-626)。所以周一 M 的 00:00 UTC 之后就能冻结 M,
+    # 之前一律不能 —— 窗口还没走完,冻出来的名单是半周的,且 append-only 之后再也改不回来。
+    # (Seth 10-20:原来周一跑时目标是 this_mon − 7(上周,早已可冻),而把 J 标记文件里**未来**的周也一并冻了 ——
+    #   W44(周一 10-26)在 10-20 15:59 UTC 被冻成只有一天半数据的名单,已作废改名 .void-premature。)
     this_mon = _monday_of(today)
-    target = this_mon - timedelta(days=7) if today.weekday() == 0 else this_mon
+    target = this_mon
     week_keys = [_iso_week(target)]
-    # 目录里已存在的周也一并保证有 T-fix(首次跑只有一周)
+    # 目录里已存在的 J 标记周也一并保证有冻结文件 —— 但只限周一已到的周
     for fp in sorted(NFLAG_DIR.glob("2026-W*.json")):
         wk = fp.stem
-        if wk.startswith("20") and wk not in week_keys:
+        if wk.startswith("20") and wk not in week_keys and _monday_from_key(wk) <= today:
             week_keys.append(wk)
+    assert all(_monday_from_key(w) <= today for w in week_keys), f"不能冻结周一未到的周:{week_keys}"
 
     FROZEN_DIR.mkdir(parents=True, exist_ok=True)
     NFLAG_DIR.mkdir(parents=True, exist_ok=True)
@@ -358,10 +381,11 @@ def main():
         payload = {
             "week": wk, "monday": mon.isoformat(),
             "frozen_at_utc": datetime.now(timezone.utc).isoformat(),
-            "fix_of": f"{wk}.json",
-            "fix_reason": "T 臂 0 是 trending_log 读权限(RLS 无 anon select 策略,"
-                          "publishable key 读到 HTTP 200 + 0 行),不是那周没有数据;"
-                          "2026-10-20 13:4x UTC 后重跑。原文件不覆盖。",
+            "fix_of": f"{wk}.json" if (FROZEN_DIR / f"{wk}.json").exists() else None,
+            "fix_reason": ("T 臂 0 是 trending_log 读权限(RLS 无 anon select 策略,"
+                           "publishable key 读到 HTTP 200 + 0 行),不是那周没有数据;"
+                           "2026-10-20 13:4x UTC 后重跑。原文件不覆盖。")
+                          if (FROZEN_DIR / f"{wk}.json").exists() else None,
             "read_probes": probes,
             "j": {"status": j_status, "size": len(j_syms), "symbols": j_syms},
             "e": {"size": len(e_syms), "symbols": e_syms},

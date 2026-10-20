@@ -1,9 +1,13 @@
 {
   "id": "T-147",
   "owner": "lane-c",
-  "status": "open",
-  "created": "2026-10-21",
-  "verified": null,
+  "status": "done",
+  "created": "2026-10-20",
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-20T16:35Z",
+    "value": "合并:N 臂排除 BTC / ETH + 能失败的自检(冒烟确认会 abort)+ 旧冻结文件打分前剥离,都对。合并时 Seth 另修 main() 的两个冻结时点错(T-144 起就有,本轮被 W44 的 J 文件触发):① J 标记目录里**周一未到**的周也被冻结 —— W44(周一 10-26)在 10-20 15:59 UTC 被冻成只有一天半窗口的名单,已改名 .void-premature;② 周一跑时目标是上周(this_mon − 7)而不是刚走完窗口的本周。现在只冻结周一已到的周,并 assert。notes 里「00:59 UTC」实为 JST(= 15:59 UTC)。"
+  },
   "title": "S-626 补:N 臂排除 BTC / ETH(W45 起;W43 / W44 打分时同口径剔除)",
   "source": "台账 S-626 补(写于任何一周到期打分之前);你在 T-144 报告里提的。",
   "allowed_paths": [
@@ -22,5 +26,5 @@
     "expect": "改动 + 自检进 docs/research/;卡 notes 写 W44 冻结时各臂名字数(若本轮跑不到周一,写干跑结果);in_review,推 lane-c/T-147。"
   },
   "prior_value": "N 是对照组;对照组被 BTC / ETH 稀释,J / E / T / S 都会更难过线,判据会系统性偏向「没用」。",
-  "notes": ""
+  "notes": "改动 docs/research/t144_narrative_ab.py(本卡 allowed_paths=['docs/research/','tasks/T-147.json']):① UNIVERSE_EXCLUDE 加 BTC、ETH —— 从 universe 底层把两条主流剔出 N,J/E/T/S 不动(S / E 已在 EXCLUDE_BTC_ETH 自去,T 臂也用 EXCLUDE_BTC_ETH);② _universe 末尾加 assert 自检,UNIVERSE_EXCLUDE 漏配 ⇒ N 出现 BTC/ETH 即 abort;③ _summarize 入口 defensive strip —— 旧 frozen 文件 N 里若残留 BTC/ETH 在打分前剥掉,stripped 名单写进 out['n_stripped_btc_eth'] 让周报透明。frozen append-only 不重写(干跑后 W43.T-fix.json 时间戳仍 10-20 22:53、2026-W44.json 仍 10-21 00:51,数据根未触)。干跑(2026-10-21 00:59 UTC):W43 J0 E10 T10 S0 N35 written(append-only 不覆盖,N 含 BTC/ETH —— 旧 frozen,W43 未到期不进 _summarize,即使到期也会先 strip);W44 J4 E10 T10 S0 N32 written(新冻结,N 无 BTC/ETH);J = ['HYPE','ARB','UNI','SOL'] 与 acceptance 一致。自检冒烟 _reports/absorb_input/T-147_selfcheck_fail.py:把 UNIVERSE_EXCLUDE 临时改回 {USDC,BTCDOM,DEFI} 后 _universe(date(2026,10,19)) ⇒ AssertionError 'N 臂出现 BTC/ETH:[BTC,ETH]',确认能失败、不空跑。in_review,推 lane-c/T-147。"
 }
