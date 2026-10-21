@@ -1,0 +1,26 @@
+{
+  "id": "T-162",
+  "owner": "lane-b",
+  "status": "in_review",
+  "created": "2026-10-21",
+  "verified": null,
+  "title": "风格分类 v2 与取数规格:从 4 层级 + 4 板块扩到能分清大币周期 / L2 / 永续 DEX / RWA / AI agent 等的分类,并给出每个数据源的按时点可得性与回补请求",
+  "source": "Jazz 10-21「矢量数据库也有问题,让 abc 协助获取和调整升级」。现分类见 src/data/style/taxonomy.py(层级 × 板块两维,板块只有 ai / meme / defi / infra_tokenization)。规则 3b:取数入库归 Seth 的写入端 —— 本卡只出**规格、探测和回补请求**,不写库。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-162.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "① 板块 v2 草案 ≥ 12 个(至少覆盖:L2、永续 DEX、借贷、DEX、RWA、AI agent、AI 基础设施、meme、游戏、LSD / 再质押、预言机 / 基础设施、交易所币、HL 生态),每个给 CoinGecko 分类 id(用公开接口逐个核实存在)与当前成员数;层级维是否要加档位写理由。② 数据源表:CoinGecko 分类成员与历史(能否按时点)、DeFiLlama 协议分类与 TVL 历史、HL 永续名单与日 K(binance_hist 里没有的 HL 原生币,如 HYPE)—— 每个写:给什么、免费 / 付费、历史深度、能否按时点、限频、与我们符号的映射规则。③ 回补请求清单(交 Seth 的写入端):表名建议、字段、回补起点、预估请求数。④ 描述性(只报):2024-12-08 → 2025-09-25 与 2025-09 两段,草案里哪些板块领涨 / 领跌。只读探测,不写库;只用 publishable key 与公开接口。",
+    "expect": "规格 docs/research/t162_style_taxonomy_v2.md;探测脚本 docs/research/t162_source_probe.py;in_review,推 lane-b/T-162。新分支一律 `git switch -c lane-b/T-162 origin/main`。"
+  },
+  "prior_value": "风格只有 8 个桶,分不清「大币行情 / 二线公链 / L2 / 永续 DEX / RWA」这些 Jazz 实际在看的周期;HL 原生币(HYPE)根本不在价格面板里。",
+  "notes": "lane-b/T-162 in_review 实测数据(2026-10-21):CG /coins/categories/list=1050,CG /coins/categories(mcap)=774。CG /coins/markets?category=ID per_page=250 实测 6/17 个区块成功:layer-1=250(含 BTC/ETH/SOL/HYPE),layer-2=128(ARB/OP/MNT/POL/STX/STRK),decentralized-perpetuals=111(头部 HYPE/ASTER/JUP/LIT),decentralized-exchange=250,decentralized-derivatives=121,real-world-assets-rwa=250,artificial-intelligence=250;其余 11 个区块(ai-agents/depin/meme-token/gaming/oracle/zk/infrastructure/stablecoins/lending-borrowing/exchange-based-tokens/defi-pulse 通用)因公开 0-key 频段 ~30/min 被 429,补救办法是改走 Pro key(§4.3 阻塞项)。DeFiLlama /protocols=8784(全带 category 字段),/categories 当前聚合 402(无 API key)。HL /info meta=234 永续;HL 原生币(HYPE/PURR/JEFF/HFUN/MOTHER/RNT/UWU/RIZZ/AZTEC/JELLY)在 Mac binance_hist 全 0 行 —— HYPE 优先级最高,需新建 hl_perp_ohlcv_daily 表用 candleSnapshot 回补(最早 ~2024-11-29)。Mac binance_hist=2017-08-17 → 2026-10-19 共 262 USDT spot 对(APT=1462、SUI=1266、TON=845)。草案 17 个区块(超额满足 ≥12),infrastructure 拆分子 oracle/zk/depin/cross-chain/storage 在 §2a。多标签策略沿用 v1,不动 src。"
+}
