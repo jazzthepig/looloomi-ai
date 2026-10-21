@@ -530,7 +530,17 @@ class YieldsInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     min_apy: float = Field(default=0.0, description="Minimum APY filter (e.g. 5.0 for 5%+).", ge=0)
     limit: int = Field(default=20, description="Number of pools to return (1–50).", ge=1, le=50)
+    min_tvl_usd: float = Field(default=10_000_000, description="Minimum pool size in USD (default $10M; "
+                               "small pools with triple-digit APY are mostly incentives that disappear).", ge=0)
+    stablecoin_only: bool = Field(default=False, description="Only single-asset stablecoin pools "
+                                  "(USDC, USDT, DAI, USDS, ...): where idle cash can be parked.")
     response_format: Fmt = Field(default=Fmt.MARKDOWN)
+
+
+try:  # 进程内(Railway 挂载)走包路径;stdio(`python3 src/mcp/cometcloud_mcp.py`)时脚本目录在 sys.path[0]
+    from src.mcp.yield_filters import _pool_tvl, filter_yield_pools  # noqa: E402
+except ImportError:  # pragma: no cover
+    from yield_filters import _pool_tvl, filter_yield_pools  # type: ignore  # noqa: E402
 
 
 class VcFundingInput(BaseModel):
@@ -1692,23 +1702,22 @@ async def cometcloud_get_defi_yields(params: YieldsInput) -> str:
         - "Show high-yield DeFi pools above 10% APY" → min_apy=10
     """
     try:
-        data = await _get("/api/v1/defi/yields")
+        data = await _get("/api/v1/defi/yields", params={"min_tvl": int(params.min_tvl_usd), "limit": 500})
         pools = data.get("data", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
-        pools = [p for p in pools if p.get("apy", 0) >= params.min_apy]
-        pools = sorted(pools, key=lambda p: p.get("apy", 0), reverse=True)
-        pools = pools[: params.limit]
+        pools = filter_yield_pools(pools, params.min_apy, params.min_tvl_usd, params.stablecoin_only, params.limit)
 
         if params.response_format == Fmt.JSON:
             return json.dumps({"count": len(pools), "pools": pools}, indent=2)
 
         lines = [
-            f"# Top DeFi Yields (min APY: {params.min_apy}%)",
+            f"# Top DeFi Yields (min APY: {params.min_apy}%, pool ≥ ${params.min_tvl_usd/1e6:.0f}M"
+            f"{', single-asset stablecoins' if params.stablecoin_only else ''})",
             "",
             "| Protocol | Asset | Chain | APY | TVL |",
             "|----------|-------|-------|-----|-----|",
         ]
         for p in pools:
-            tvl = p.get("tvlUsd", 0)
+            tvl = _pool_tvl(p)
             tvl_str = f"${tvl/1e6:.0f}M" if tvl >= 1e6 else f"${tvl:,.0f}"
             lines.append(
                 f"| {p.get('project', '—')} | {p.get('symbol', '—')} | "
