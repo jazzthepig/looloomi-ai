@@ -220,6 +220,39 @@ exiting on a 20-day low on all 12 (median 20pp, Calmar up). On BTC: −38.7% dra
 against 65.9% held. The price: it gives up a large part of the parabolic years (2017, 2023–24). Crashes almost always
 arrive with volatility, so being small when it is hot is the cheapest form of "small when wrong".
 
+## 11. Re-study on the trading layer (2026-10-21, Jazz: "study Trader Tom deeply, then research and apply")
+
+**What the book actually prescribes** (Best Loser Wins, re-read): add to winners and never to losers, each add with its
+own stop; no partial profits, no profit targets; buy high, sell higher; a trade should work from the start; size so
+that a loss cannot move your mind; and keep a **Book of Truth** — every trade written down against the plan, judged on
+process, not outcome.
+
+**What our data says when each one is put on R-v2 (770 tickets, paired, in units of one ticket's risk):**
+
+| Tom's move | Test | Result |
+|---|---|---|
+| Add when right: half size, +0.5 at +1R and +2R, own stops | S-654 | ❌ total 372 → 273; drawdown −56 → −45. Adds earn ~+0.33R per unit vs +0.48R for a fresh ticket — the edge is in the breakout entry, adds buy worse and get shaken out first |
+| No partial profits / don't tighten | S-612 | ✅ already the rule — taking half (−0.07R/ticket) and tightening both cut the right tail |
+| Let winners run under a trailing stop | S-651 | ❌ the chandelier rarely binds; SMA20 already does the job |
+| Smaller after a drawdown | S-652, S-647 brake | ❌ as a separate rule (= lower leverage); the brake is kept as the leverage policy |
+| Avoid late-cycle styles / alts in a majors market | S-641, S-649 | ❌ both the opposite way: late-cycle styles were *better* |
+| Cut losers fast (not working in a week ⇒ out) | S-655 → T-164 | pre-registered, lane A |
+| Add only when the flow confirms | S-656 → T-165 | pre-registered, lane B |
+
+**Reading.** The system already embodies the half of Tom that fights human nature on the *winning* side — it never
+takes partial profits and holds mechanically to the SMA20. Re-adding his mechanics on daily bars has not paid. Where
+Tom still applies is the layer the backtest cannot see: **whether what we planned is what happened**, and **how much
+size we have earned the right to carry**.
+
+**Applied (code, 10-21):**
+- **Book of Truth for R-v2** (`src/data/execution/book_of_truth.py`): every ticket on the venue reconciled against the
+  paper ticket — entry and exit fills vs the planned open, the stop's real fill vs the stop line, tickets the plan
+  wanted but the venue never took, orders the venue holds that no ticket asked for. Process is scored separately from
+  P&L. Exchange stop fills are now recorded from the venue's own fills, not assumed to be the stop price.
+- **Earned leverage ladder** (advisory, in the same report): 1x until 20 venue tickets with clean process, ≤2x after
+  20, ≤3x after 50, up to 5x after 100 — and back down a rung on a process breach. Tom's "size so a loss cannot move
+  your mind", turned into a rule about evidence rather than mood. `R_V2_PORTFOLIO_LEVERAGE` stays Jazz's switch.
+
 ---
 
 *Extract the physics of crowd behavior, not the swagger of one trader. Build things that feel alive.*

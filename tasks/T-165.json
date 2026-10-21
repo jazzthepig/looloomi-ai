@@ -1,0 +1,26 @@
+{
+  "id": "T-165",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-21",
+  "verified": null,
+  "title": "S-656 Trader Tom「对了才加」+ 主动买盘确认:R-v2 满仓不变,+1R 那天 taker_ratio_mean ≥ 1.123 才加半个单位",
+  "source": "台账 S-656 预注册(写于对任何加仓按资金流分组之前,2026-10-21 11:31 UTC)。S-654 ❌:无条件加仓单位每个约 +0.33R < 新票 +0.48R;S-614 H1 主动买盘是 R 确认层唯一方向很强的特征。被检验的是「加在有人跟的时候」这个条件本身。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-165.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "照 S-656 原文一字不改。票与日线 = C 道 T-159 缓存(/Volumes/CometCloudAI/cometcloud-local/research/t159/),装载复用 docs/research/s647_sim_r_v2.py 的 load(),加仓机制复用 docs/research/s654_tom_pyramid_rv2.py 的 atr14 / unit_r / 单位止损写法(只改:底仓 1 B、只加第一档 0.5 B、加不加由 taker 条件决定)。先复现 S-654 原规则总盈亏 372.2 B。资金流 = deriv_metrics_daily(source binance_vision_metrics;symbol 与票的 symbol 对齐时写明映射;只用 publishable key),切点 1.123 冻结不重估。判 ①(条件加仓单位平均 R > +0.48R,按信号月份分块自助 2,000 次单侧 p < 0.05)②(条件 − 不满足条件的加仓平均 R 差,按年分块标签打乱 2,000 次单侧 p < 0.05)③(两段 < 2023 / ≥ 2023 条件都高于不满足条件)全报;只报项全报(全书总盈亏与最大回撤 vs 原规则、触发 / 有 metrics / 满足条件次数、最好 10 张)。",
+    "expect": "脚本 docs/research/t165_flow_confirmed_add.py;报告(脚本写)/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-165_s656_flow_add.md,末尾「S-656 结果」草稿;in_review,推 lane-b/T-165。新分支一律 `git switch -c lane-b/T-165 origin/main`(s654 脚本若还不在 origin/main 上,先等 Seth 的提交落地再开分支,别自己复制一份)。"
+  },
+  "prior_value": "过了 ⇒ 执行器加一个「条件加仓」动作(主机读当日 metrics,0.5 B,自带止损),先前向纸面并跑;不过 ⇒ 加仓这条路在日线上关掉,Tom 的「加」只留在组合层(权益新高才放大杠杆的阶梯)。",
+  "notes": ""
+}
