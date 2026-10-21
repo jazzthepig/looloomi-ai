@@ -33,6 +33,12 @@ import urllib.request
 from collections import Counter, defaultdict
 from pathlib import Path
 
+import numpy as np
+
+# 验证装置 ── 见 src/data/evaluation/apparatus.py,「打乱 + 盈亏 + A/B」
+sys.path.insert(0, str(Path("/Users/sbb/Projects/looloomi-ai") / "src"))
+from data.evaluation.apparatus import null_distribution, percentile_of  # noqa: E402
+
 
 # ─── configuration ──────────────────────────────────────────────────────────
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -55,6 +61,14 @@ PRIORITY_TABLES = [
     "treasury_entities",
     "treasury_decisions",
 ]
+
+# T-166:publishable key 被 RLS 隐式屏蔽(查询返回 0 行且不报错)的表。
+# 值 = (服务端行数, min(d), max(d)),由 Seth 在服务端只读查得(lane-c §C-auto-1021-1206
+# 复核 + Seth 只读查),**不是本脚本用 publishable key 测出来的**。
+# 用途:报告里不把这些表写成「空表 / 写入端死亡」——0 行是只读角色的权限边界,不是通路缺陷。
+RLS_HIDDEN_SERVER_ROWS = {
+    "regime_daily": (507, "2025-05-03", "2026-10-20"),
+}
 DIMS = (
     "cis_mean", "cis_disp", "cis_skew", "pct_grade_A",
     "alt_btc_spread", "breadth_200ma", "disp_return", "corr_mean",
@@ -331,12 +345,21 @@ def _cos_shared(a, b, min_shared=6):
     return dot / ((na ** 0.5) * (nb ** 0.5))
 
 
-def pit_audit_msv(seed: int = 7):
+def pit_audit_msv(seed: int = 7, bidirectional: bool = False, k_nn: int = 20):
     """Quantify the lookahead in the single all-history z-score.
 
     For every dim: Spearman rank correlation between the stored (all-history)
     z and an expanding-window z, plus signed bias and RMS gap. Then 20-NN
     overlap on random days: stored geometry vs expanding geometry.
+
+    Parameters
+    ----------
+    bidirectional : bool
+        False (default) = original口径: past-only (j < i) + |diff| > 30.
+        True           = 生产 most_similar 口径: 仅排除 |diff| ≤ 30,
+                         未来日合法(候选池跨整段时间,不再强制过去)。
+    k_nn : int
+        最近邻数 = 20(T-161 默认)。可用于敏感性。
     """
     rng = random.Random(seed)
     all_rows = fetch_all("market_state_vectors", "d,vec_full")
@@ -380,19 +403,26 @@ def pit_audit_msv(seed: int = 7):
     eligible = [i for i in range(N) if sum(1 for di in range(24) if exp_cols[di][i] is not None) >= 6]
     sample_n = min(50, len(eligible))
     sample = rng.sample(eligible, sample_n) if sample_n else []
-    K = 20
+    K = k_nn
     overlaps = []
+    pool_sizes = []
     for i in sample:
         stored_vec = [stored_cols[di][i] for di in range(24)]
         exp_vec = [exp_cols[di][i] for di in range(24)]
         di_t = dates[i]
         cand = []
         for j in range(N):
-            if j == i or j > i:
+            if j == i:
                 continue
-            if abs((dates[j] - di_t).days) < 30:
+            if not bidirectional and j > i:
+                # 原始口径: 仅过去;日线回放里「未来日」会造成相位锁定
+                continue
+            # 生产 most_similar:仅 abs(diff) ≤ 30 才排除(双向语义,未来日合法)
+            if abs((dates[j] - di_t).days) <= 30:
                 continue
             cand.append(j)
+        if cand:
+            pool_sizes.append(len(cand))
         s_stored, s_exp = [], []
         for j in cand:
             a = _cos_shared(stored_vec, [stored_cols[di][j] for di in range(24)])
@@ -409,9 +439,51 @@ def pit_audit_msv(seed: int = 7):
         nn_b = {j for _, j in s_exp[:K]}
         overlaps.append(len(nn_a & nn_b) / K)
 
+    # ── 随机基线 ─────────────────────────────────────────────────────────
+    # 在与实际抽样同步的「候选池规模分布」上,用 apparatus.null_distribution
+    # 打乱出 |A∩B|/K 的零分布,再 percentile_of 看实际重合率处于零分布哪一端。
+    # 候选池规模 = 上一步对每个抽样日记录到的 |cand|。
+    actual_overlap_mean = (sum(overlaps) / len(overlaps)) if overlaps else None
+    null_expected = None
+    null_p = None
+    null_median = None
+    null_mean = None
+    null_size = None
+    if pool_sizes:
+        n_iter = 2000
+        median_pool = statistics.median(pool_sizes)
+        K_int = K
+        # 用每个抽样日自己的候选池规模抽样,保留「池子大小差异」的异质性,
+        # 而不是统一池子 — 候选池在原口径 ≤ 末日,在双向口径下 1 至末日 |diff|>30 均在池。
+        def _perday(rng_):
+            n = rng_.choice(pool_sizes)
+            if n < K_int:
+                n = K_int
+            a = rng_.choice(n, size=K_int, replace=False)
+            b = rng_.choice(n, size=K_int, replace=False)
+            return len(set(a.tolist()) & set(b.tolist())) / K_int
+        # pool_sizes 上的实际重合率均值作为 actual
+        actual_mean = actual_overlap_mean
+        try:
+            null = null_distribution(_perday, n=n_iter, seed=seed, actual=actual_mean)
+            null_size = int(null.size)
+            null_median = round(float(np.median(null)), 4) if null.size else None
+            null_mean = round(float(np.mean(null)), 4) if null.size else None
+            null_expected = round(float(null.mean()), 4) if null.size else None
+            null_p = percentile_of(actual_mean, null.tolist())
+            if null_p is not None:
+                null_p = round(null_p, 4)
+        except Exception as e:
+            null_expected = None
+            null_p = f"err:{type(e).__name__}:{str(e)[:80]}"
+        pool_median = round(median_pool, 1)
+    else:
+        pool_median = None
+
     ok_dims = {d: v for d, v in per_dim.items() if v.get("status") == "ok"}
     rhos = [v["spearman_stored_vs_expanding"] for v in ok_dims.values() if v["spearman_stored_vs_expanding"] is not None]
     return {
+        "pool_mode": "bidirectional" if bidirectional else "past_only",
         "n_total_days": N,
         "date_window": [ds[0], ds[-1]] if ds else None,
         "min_hist_days": MIN_HIST,
@@ -429,6 +501,21 @@ def pit_audit_msv(seed: int = 7):
         "nn_overlap_min": round(min(overlaps), 4) if overlaps else None,
         "nn_overlap_max": round(max(overlaps), 4) if overlaps else None,
         "nn_overlap_hist": [round(o, 3) for o in sorted(overlaps)],
+        "k_nn": K,
+        "pool_size_per_day": {
+            "n_with_pool": len(pool_sizes),
+            "min": min(pool_sizes) if pool_sizes else None,
+            "median": pool_median,
+            "max": max(pool_sizes) if pool_sizes else None,
+        },
+        "null_baseline": {
+            "n_iter": null_size,
+            "expected_overlap_mean": null_expected,
+            "null_median": null_median,
+            "null_mean": null_mean,
+            "actual_overlap_mean": round(actual_overlap_mean, 4) if actual_overlap_mean is not None else None,
+            "actual_percentile_vs_null": null_p,
+        },
     }
 
 
@@ -634,24 +721,46 @@ def main():
             for y, missing in per.items()
         } if per else {}
     # 2b) measured_dims distribution — the card's "declares 24, measures 11.1"
+    # T-166 补:逐日共享维数分布,_reserved_1/2 不计入分母
     try:
         mrows = fetch_all("market_state_vectors", "d,measured_dims,source_completeness,n_symbols,vec_full")
-        md = [r.get("measured_dims") for r in mrows if isinstance(r.get("measured_dims"), int)]
+        # 实际非空维(分母已不含 _reserved_*: 它们在原始 vec_full 里就是 null)
         live = [
             sum(1 for v in r["vec_full"] if isinstance(v, (int, float)))
             for r in mrows
             if isinstance(r.get("vec_full"), list)
         ]
+        # 逐日分布(填几个非空维的天数有多少天)
+        dist = Counter(live)
+        # 验:vec_full 中 _reserved 位置 22/23 是否恒 null(确认不入分母)
+        reserved_check: dict = {"_reserved_1": [], "_reserved_2": []}
+        for r in mrows:
+            if isinstance(r.get("vec_full"), list) and len(r["vec_full"]) == 24:
+                for idx, name in enumerate(DIMS):
+                    if name in ("_reserved_1", "_reserved_2"):
+                        reserved_check[name].append(r["vec_full"][idx])
+        # T-166 也报告 column-declared 的 measured_dims 分布(便于核对表的字段)
+        md = [r.get("measured_dims") for r in mrows if isinstance(r.get("measured_dims"), int)]
         out["measured_dims"] = {
-            "declared": 24,
+            "declared_in_dims_table": 24,
+            "n_reserved_positions_unwired": 2,
+            "n_wireable_dims": 22,
             "n_days": len(mrows),
-            "measured_dims_mean": round(sum(md) / len(md), 2) if md else None,
-            "measured_dims_min": min(md) if md else None,
-            "measured_dims_max": max(md) if md else None,
             "non_null_dims_mean": round(sum(live) / len(live), 2) if live else None,
             "non_null_dims_min": min(live) if live else None,
             "non_null_dims_max": max(live) if live else None,
+            "non_null_dims_distribution": dict(sorted(dist.items())),
+            "days_fully_wired": sum(1 for x in live if x == 22),
             "days_at_24": sum(1 for x in live if x == 24),
+            # 与原版(T-161)兼容 — derived from the column declared on the table
+            "measured_dims_mean": round(sum(md) / len(md), 2) if md else None,
+            "measured_dims_min": min(md) if md else None,
+            "measured_dims_max": max(md) if md else None,
+            "reserved_check": {k: {
+                "n": len(v),
+                "all_none": all(x is None for x in v) if v else None,
+                "sample_non_none": [x for x in v if x is not None][:3],
+            } for k, v in reserved_check.items()},
         }
     except Exception as e:
         out["measured_dims"] = {"_err": repr(e)[:160]}
@@ -678,8 +787,11 @@ def main():
         }
     except Exception as e:
         out["asset_embeddings_profile"] = {"_err": repr(e)[:160]}
-    # 3) PIT audit on market_state_vectors z-score
-    out["pit_msv"] = pit_audit_msv()
+    # 3) PIT audit on market_state_vectors z-score — 两次:原口径 + 生产双向口径
+    out["pit_msv_past"] = pit_audit_msv(bidirectional=False)
+    out["pit_msv_bi"] = pit_audit_msv(bidirectional=True)
+    # 报告主口径保留为「双向」(生产口径),原口径单独存以与 T-161 原版比对
+    out["pit_msv"] = out["pit_msv_bi"]
     # 4) universe coverage
     out["universes"] = coverage_universes()
     # 5) code readers
@@ -715,18 +827,46 @@ def write_report(out: dict):
                 days = -1
         else:
             days = -1
-        lines.append(f"| `{t}` | {status} | {cnt} | {mn} | {mx} | {lc} | {days} |")
+        # T-166:publishable 看不见 ≠ 表是空的。RLS 隐式屏蔽的表按「publishable 不可见
+        # (RLS),服务端 N 行」显示 —— 行数是 Seth 服务端只读查得的,本脚本用
+        # publishable key 核不到,所以它不是本表的测量值。
+        rls = RLS_HIDDEN_SERVER_ROWS.get(t)
+        shown_status = (f"publishable 不可见(RLS),服务端 {rls[0]} 行" if rls else status)
+        lines.append(f"| `{t}` | {shown_status} | {cnt} | {mn} | {mx} | {lc} | {days} |")
     lines.append("")
+    if RLS_HIDDEN_SERVER_ROWS:
+        lines.append("> `publishable 不可见(RLS)` 的行数由 Seth 在服务端只读查得(**非本脚本的测量值**,"
+                     "本脚本用 publishable key 查这些表返回 0 行)。**0 行 ≠ 写入端死亡** —— "
+                     "它是只读角色的权限边界。逐表:见 §5 缺陷表第 2 行。")
+        lines.append("")
     # ── §2 per-year missing rate per dim ────────────────────────
     lines.append("## §2 每维按年的缺失率")
     lines.append("")
     md = out.get("measured_dims", {})
     if md and "_err" not in md:
-        lines.append(f"**`market_state_vectors` 声明 24 维。** `measured_dims` 列:均值 **{md['measured_dims_mean']}** "
-                     f"(min {md['measured_dims_min']}, max {md['measured_dims_max']}, {md['n_days']} 天)。"
-                     f"按 `vec_full` 实际非空数:均值 **{md['non_null_dims_mean']}** "
+        lines.append(f"**`market_state_vectors` 声明 24 维(`DIMS` 表)。** "
+                     f"`_reserved_1`/`_reserved_2` 永久空(实测 100% None)—— **有效维数 = 22**。"
+                     f"`measured_dims` 列(列的字段)均值 **{md['measured_dims_mean']}** "
+                     f"(min {md['measured_dims_min']}, max {md['measured_dims_max']});"
+                     f"`vec_full` 实际非空(分母不含 _reserved)均值 **{md['non_null_dims_mean']}** "
                      f"(min {md['non_null_dims_min']}, max {md['non_null_dims_max']});"
-                     f"真正填满 24 维的天数 = **{md['days_at_24']}**。")
+                     f"填满 22 维的天数 = **{md['days_fully_wired']}**;等于 24 的天数 = **{md['days_at_24']}**。")
+        lines.append("")
+        # T-166 补:逐日分布
+        dist = md.get("non_null_dims_distribution", {})
+        if dist:
+            lines.append("**逐日非空维数分布**:")
+            lines.append("")
+            lines.append("| 非空维数 | 天数 |")
+            lines.append("|---:|---:|")
+            for k in sorted(dist.keys(), key=lambda x: (isinstance(x, str), x)):
+                lines.append(f"| {k} | {dist[k]} |")
+            lines.append("")
+        rc = md.get("reserved_check", {})
+        for nm in ("_reserved_1", "_reserved_2"):
+            r = rc.get(nm, {})
+            lines.append(f"- `{nm}` 核实:共 {r.get('n')} 个采样,全部 None = **{r.get('all_none')}**;"
+                         f"如非 None 的样本: {r.get('sample_non_none')}")
         lines.append("")
     lines.append("缺失率 = 1 − (该年非空天数 / 该年总天数)。")
     lines.append("")
@@ -793,14 +933,67 @@ def write_report(out: dict):
                      "即未来信息没有改变任何一天的名次;Spearman<1 表示它改变了。"
                      "**有偏** 为扩张窗口减全史的均值差:系统性为负 ⇒ 全史口径把后期水平当成了常态,压缩了当时的极端度。")
         lines.append("")
-        lines.append(f"### §3.2 20 个最近邻重合率(stored 几何 vs 扩张窗口几何)")
+        lines.append(f"### §3.2 20 个最近邻重合率(stored 几何 vs 扩张窗口几何,两种候选池口径)")
         lines.append("")
-        lines.append(f"- **平均重合率 = {pit['nn_overlap_mean']}** "
-                     f"(中位 {pit['nn_overlap_median']}, 最小 {pit['nn_overlap_min']}, 最大 {pit['nn_overlap_max']}, 有效抽样 N={pit['nn_n_sample_days']})")
+        pit_past = out["pit_msv_past"]
+        pit_bi = out["pit_msv_bi"]
+        lines.append("| 口径 | 候选池语义 | 候选池规模(中位) | 平均重合率 | N 抽样 |")
+        lines.append("|---|---|---:|---:|---:|")
+        for label, pit_x in (("原(past-only)", pit_past), ("生产(bidirectional, |diff|≤30 排除)", pit_bi)):
+            psp = pit_x.get("pool_size_per_day", {})
+            lines.append(
+                f"| {label} | "
+                f"{'仅过去 + abs>30' if label.startswith('原') else '未来日合法,|diff|≤30 排除'} | "
+                f"{psp.get('median', '?')} | "
+                f"{pit_x.get('nn_overlap_mean') if pit_x.get('nn_overlap_mean') is not None else '?'} | "
+                f"{pit_x.get('nn_n_sample_days', 0)} |"
+            )
+        lines.append("")
+        lines.append(f"**生产口径**(pit_msv_bi)详细:平均 **{pit_bi['nn_overlap_mean']}** "
+                     f"(中位 {pit_bi['nn_overlap_median']}, 最小 {pit_bi['nn_overlap_min']}, "
+                     f"最大 {pit_bi['nn_overlap_max']}, N={pit_bi['nn_n_sample_days']})。"
+                     f"原口径(past-only)详细:平均 **{pit_past['nn_overlap_mean']}** "
+                     f"(中位 {pit_past['nn_overlap_median']}, 最小 {pit_past['nn_overlap_min']}, "
+                     f"最大 {pit_past['nn_overlap_max']}, N={pit_past['nn_n_sample_days']})。")
         lines.append("")
         lines.append("> 20 个邻居里平均有 "
-                     f"{round((1 - (pit['nn_overlap_mean'] or 0)) * 20, 1) if pit['nn_overlap_mean'] is not None else '?'} 个"
-                     "是换口径后换掉的。这是 §5a 相位检索每天真正被改变的那部分。")
+                     f"{round((1 - (pit_bi['nn_overlap_mean'] or 0)) * 20, 1) if pit_bi['nn_overlap_mean'] is not None else '?'} 个"
+                     "(生产口径)是换口径后换掉的。这是 §5a 相位检索每天真正被改变的那部分。")
+        lines.append("")
+        # ── §3.3 随机基线 ─────────────────────────────
+        nb = pit_bi.get("null_baseline", {})
+        lines.append("### §3.3 随机基线(apparatus.null_distribution,生产口径候选池)")
+        lines.append("")
+        lines.append(f"- 迭代次数 = {nb.get('n_iter')}")
+        lines.append(f"- **实际平均重合率 = {nb.get('actual_overlap_mean')}** / "
+                     f"**零分布期望 = {nb.get('expected_overlap_mean')}** "
+                     f"(中位 {nb.get('null_median')}, 均值 {nb.get('null_mean')})")
+        lines.append(f"- 实际在零分布上的分位 = **{nb.get('actual_percentile_vs_null')}** "
+                     "(中位秩;0.5 = 等同随机;1.0 = 远高于所有随机)")
+        lines.append("")
+        psp = pit_bi.get("pool_size_per_day", {})
+        lines.append(f"- 候选池规模(逐日保留,异质抽样):"
+                     f"中位 **{psp.get('median')}**(min {psp.get('min')}, max {psp.get('max')},"
+                     f"{psp.get('n_with_pool')} 个抽样日)")
+        lines.append("")
+        # 零分布自身的解析核对:两套 K 个邻居从池 n 里独立抽,重合数期望 K²/n,
+        # 换算成「/K 的比例」= K/n。模拟均值应当贴着 K/n —— 不贴就说明零分布没在
+        # 随机抽(抽法错了 / 退化),而不是「结果显著」。
+        K = pit_bi.get("k_nn")
+        pm = psp.get("median")
+        if isinstance(K, (int, float)) and isinstance(pm, (int, float)) and pm:
+            analytic = K / pm
+            sim = nb.get("null_mean")
+            ok = (isinstance(sim, (int, float))
+                  and abs(sim - analytic) <= 3 * (K * (1 / pm) * (1 - K / pm)) ** 0.5 / K)
+            lines.append(f"- **零分布自检(解析核对)**:E[|A∩B|/K] = K/|cand| = {K}/{pm:.0f} = "
+                         f"**{analytic:.4f}**;模拟均值 {sim},"
+                         f"{'一致 ⇒ 零分布确在随机抽' if ok else '**不一致 ⇒ 零分布可疑**'}")
+        lines.append("")
+        lines.append("> 零分布由 apparatus.py 的 `null_distribution(fn, n, seed, actual)` 跑出 "
+                     "(N=2000),对每一天的候选池规模 `|cand|` 在全集里随机抽两套 20 个邻居算 "
+                     "|A∩B|/20,然后 percentile_of(actual, null) 看分位。等于 0.5 ⇒ 几何几乎在打乱;"
+                     "等于 1.0 ⇒ 全史 z 几何与扩张窗口几何的相位一致性远超随机。")
         lines.append("")
 
     # ── §4 universe coverage ────────────────────────────────────
@@ -900,11 +1093,12 @@ def write_report(out: dict):
         f"但**永续执行侧几乎全空**;升到 pgvector 之后检索面仍然是那 26% | "
         f"先补①缺的 3 个;R-v2/永续要不要进检索面是产品边界 | 取数/写入端 Seth;**检索面边界 Jazz** |")
     lines.append(
-        f"| 2 | **`regime_daily` 公开可读 0 行**,而 `main.py` 有 `_regime_daily_loop`、"
-        f"`liveness.py` 有它的 24h 心跳门,且有 8 个读取端(含 `regime_match.py` / `phase_distance.py`) | "
-        f"第 5b 段相位检索在生产上**取不到任何邻居** —— 整条 5b 通路是空表,不是降级;"
-        f"心跳门过的是「循环在跑」,不是「表里有东西」(§5b 三缺一) | "
-        f"判活改成「行数 > 0」;查 startup 是否真调 `_regime_daily_loop` | Seth |")
+        f"| 2 | **`regime_daily` 用 publishable key 不可见(RLS 隐式屏蔽),"
+        f"lane-c 端直查 0 行;服务端 Seth 端实有 507 行(2025-05-03→2026-10-20),生产是活的** | "
+        f"T-161 报告的「空表 / 写入端死亡 / 8 个读取端全空」是 publishable key 的 RLS 伪影,"
+        f"regime_match / phase_distance 在生产 environment 下能正常取数。"
+        f"publishable 不可见是**只读角色权限边界**,不是通路问题 | "
+        f"通路无问题,如要 lane 自己能验证,改用 anon role / internal token;不通过 publishable 跨权限 | @seth 决定 key 切换 |")
     lines.append(
         f"| 3 | **24 维里只有 {md.get('non_null_dims_mean')} 维非空**,填满 24 维的天数 = **{md.get('days_at_24')}**;"
         f"4 个 `cis_*` 维 2025 缺 92%、**2026 缺 100%** | "
