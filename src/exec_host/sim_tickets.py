@@ -67,6 +67,7 @@ class SimResult:
     stops: int = 0
     peak_gross_frac: float = 0.0
     peak_margin_frac: float = 0.0
+    cuts: int = 0                                     # S-652:组合层减半触发次数
 
 
 def sz_decimals_for(price: float) -> int:
@@ -110,7 +111,8 @@ def simulate(tickets_: list[SimTicket], equity0: float, lev: float, *, policy: s
              risk_frac: float = 0.005, cap: int = 10, executable: Optional[Callable[[SimTicket], bool]] = None,
              apy_for_day: Optional[Callable[[int], float]] = None, venue: Venue = Venue(),
              start_day: Optional[int] = None, end_day: Optional[int] = None,
-             collateral_mult: Optional[float] = None, collateral_gross: Optional[float] = None) -> SimResult:
+             collateral_mult: Optional[float] = None, collateral_gross: Optional[float] = None,
+             cut_dd: float = 0.15, cut_frac: float = 0.5, cut_risk_mult: float = 0.5) -> SimResult:
     """逐日模拟一个 HL 永续账户。`executable(t)` = 这张票的币在 HL 上有没有(没有 ⇒ 执行器记不可执行)。
 
     `collateral_mult` —— 钱放在哪(决定强平时能用来扛的是多少):
@@ -118,7 +120,11 @@ def simulate(tickets_: list[SimTicket], equity0: float, lev: float, *, policy: s
       inf   = 全部现金留在 HL 上,不放贷(缓冲最厚,没有利息);
       k     = HL 上只留 k × 初始保证金(每天收盘调拨一次,开盘前补足),其余放贷 —— 强平只能用 HL 上那一份扛,
               HL 上的钱亏光为止(超出部分由 HL 的强平机制承担,不追到放贷的钱)。
-    `collateral_gross` = g(给了就覆盖 collateral_mult):HL 上留 g × 持仓名义,其余放贷(S-647 补 2 的 C')。"""
+    `collateral_gross` = g(给了就覆盖 collateral_mult):HL 上留 g × 持仓名义,其余放贷(S-647 补 2 的 C')。
+
+    `policy`:const = 恒定 L;brake = 回撤刹车(只作用于新票,L 随回撤线性降);
+    cut = S-652 组合层回吐止损 —— 收盘权益 ≤ (1 − cut_dd) × 峰值且本轮没减过 ⇒ 次日开盘每个持仓减 cut_frac,
+    新票风险 × cut_risk_mult,直到权益重新创新高(恢复并重置)。"""
     v = venue
     taken = taken_set(tickets_, cap)
     by_entry: dict[int, list[SimTicket]] = {}
@@ -141,6 +147,7 @@ def simulate(tickets_: list[SimTicket], equity0: float, lev: float, *, policy: s
     peak = float(equity0)
     pos: dict[str, dict] = {}                          # tid → {coin, qty, entry, stop, szd, lev}
     done: set[str] = set()
+    cut_pending, cut_done, risk_mult = False, False, 1.0
 
     def bar(tid: str, day: int) -> tuple:
         t = tmap[tid]
@@ -164,6 +171,17 @@ def simulate(tickets_: list[SimTicket], equity0: float, lev: float, *, policy: s
 
     for day in range(d0, d1 + 1):
         opens = {tid: bar(tid, day)[0] for tid in pos}
+        if cut_pending:                                # S-652:开盘把每个持仓减掉 cut_frac(减仓 IOC)
+            for tid, p in pos.items():
+                q = p["qty"] * cut_frac
+                s_ = (v.slip_bps_major if tmap[tid].major else v.slip_bps) / 1e4
+                fill = opens[tid] * (1 - s_)
+                fee = q * fill * v.fee_bps / 1e4
+                on += q * (fill - p["entry"]) - fee
+                res.fees += fee
+                p["qty"] -= q
+            cut_pending = False
+            res.cuts += 1
         eq_open = on + off + sum(p["qty"] * (opens[tid] - p["entry"]) for tid, p in pos.items())
         lev_t = brake(lev, eq_open, peak) if policy == "brake" else lev
         enter = by_entry.get(day, [])
@@ -182,7 +200,7 @@ def simulate(tickets_: list[SimTicket], equity0: float, lev: float, *, policy: s
                     mids[t.symbol] = t.path[0][0]
             book = {tid: {"coin": p["coin"], "qty": p["qty"], "entry_px": p["entry"], "stop_px": p["stop"]}
                     for tid, p in pos.items()}
-            plan = {"ready": True, "risk_frac": risk_frac, "cap": cap, "portfolio_leverage": lev_t,
+            plan = {"ready": True, "risk_frac": risk_frac * risk_mult, "cap": cap, "portfolio_leverage": lev_t,
                     "enter": ent, "hold": hold, "exit": []}
             act = tk.ticket_actions(plan, book, {p["coin"]: p["qty"] for p in pos.values()}, mids, szd, eq_open, done)
             for x in act["exits"]:
@@ -265,6 +283,11 @@ def simulate(tickets_: list[SimTicket], equity0: float, lev: float, *, policy: s
         if eq > 0:
             res.peak_gross_frac = max(res.peak_gross_frac, gross / eq)
             res.peak_margin_frac = max(res.peak_margin_frac, margin / eq)
+        if policy == "cut":
+            if eq >= peak:
+                cut_done, risk_mult = False, 1.0
+            elif not cut_done and eq <= (1 - cut_dd) * peak and pos:
+                cut_pending, cut_done, risk_mult = True, True, cut_risk_mult
         peak = max(peak, eq)
         res.equity.append(eq)
     return res

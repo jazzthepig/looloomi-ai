@@ -95,3 +95,20 @@ def test_all_cash_on_hl_earns_nothing():
     r = st.simulate([_t(path=path, exit_off=None)], 10_000.0, 1.0, venue=NOFRIC, start_day=10, end_day=12,
                     apy_for_day=lambda d: 0.0365, collateral_mult=2.0)
     assert r.lending == pytest.approx(3 * (10_000 - 200) * 0.0001, rel=1e-3), "HL 上留 2 × $100 保证金,其余放贷"
+
+
+def test_cut_policy_halves_open_positions_once_per_drawdown_and_resets_on_a_new_high():
+    path = [(10.0, 10.0, 10.0, 10.0, 0.0), (10.0, 10.0, 10.0, 7.0, 0.0), (7.0, 7.0, 7.0, 7.0, 0.0),
+            (7.0, 7.0, 7.0, 7.0, 0.0), (7.0, 7.0, 7.0, 7.0, 0.0)]
+    tks = [_t(tid="A", sym="UNI", stop=0.5, exit_off=None, path=path)]
+    # 风险 20% × 1 万 ÷ 50% = $4,000 名义 = 400 张;第 2 天收盘 7 ⇒ 权益 $8,800(−12%)不触发
+    r = st.simulate(tks, 10_000.0, 1.0, risk_frac=0.2, policy="cut", cut_dd=0.15, venue=NOFRIC, start_day=10,
+                    end_day=14)
+    assert r.cuts == 0
+    # 收盘 6 ⇒ 权益 $8,400(−16%)⇒ 次日开盘减半(200 张按 6 成交),之后不再减
+    deep = [(10.0, 10.0, 10.0, 10.0, 0.0), (10.0, 10.0, 10.0, 6.0, 0.0), (6.0, 6.0, 6.0, 5.0, 0.0),
+            (5.0, 5.0, 5.0, 4.0, 0.0), (4.0, 4.0, 4.0, 4.0, 0.0)]
+    r = st.simulate([_t(tid="A", sym="UNI", stop=0.5, exit_off=None, path=deep)], 10_000.0, 1.0, risk_frac=0.2,
+                    policy="cut", cut_dd=0.15, venue=NOFRIC, start_day=10, end_day=14)
+    assert r.cuts == 1
+    assert r.equity[-1] == pytest.approx(10_000 - 200 * 4 - 200 * 5), "一半在开盘 6 减掉,另一半之后在止损线 5 出"
