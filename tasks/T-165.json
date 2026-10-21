@@ -1,7 +1,7 @@
 {
   "id": "T-165",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-21",
   "verified": null,
   "title": "S-656 Trader Tom「对了才加」+ 主动买盘确认:R-v2 满仓不变,+1R 那天 taker_ratio_mean ≥ 1.123 才加半个单位",
@@ -22,5 +22,5 @@
     "expect": "脚本 docs/research/t165_flow_confirmed_add.py;报告(脚本写)/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-165_s656_flow_add.md,末尾「S-656 结果」草稿;in_review,推 lane-b/T-165。新分支一律 `git switch -c lane-b/T-165 origin/main`(s654 脚本若还不在 origin/main 上,先等 Seth 的提交落地再开分支,别自己复制一份)。"
   },
   "prior_value": "过了 ⇒ 执行器加一个「条件加仓」动作(主机读当日 metrics,0.5 B,自带止损),先前向纸面并跑;不过 ⇒ 加仓这条路在日线上关掉,Tom 的「加」只留在组合层(权益新高才放大杠杆的阶梯)。",
-  "notes": ""
+  "notes": "S-656 ❌(①③不过,②过)。基线复现:原规则总盈亏 372.16 B / 回撤 −55.93 B(S-654 记 372.2 / −55.9);+1R 触发 312 张 = S-654「312 张加过第一档」,机制写法一致。触发 312 / 有可用 metrics 277 / 满足 taker≥1.123 68。184 个票 symbol 与 deriv_metrics_daily 精确对齐,无需 1000 前缀映射。规则 F 全书 416.14 B(+43.98 B),回撤 −56.68 B(略深)。① 条件加仓 68 单位平均 +1.293R > 门槛 +0.48,但月块自助单侧 p=0.166 > 0.05 不过;95% 下界 +0.29R;尾:中位数 +0.25R,最大 +57.05R,去最大 3 个后均值塌到 +0.31R(低于门槛)。ZEC:2025-09-06 一张占 +44 B 改善里的 +28.5 B。② 条件−不满足 = +1.237R(+1.293 vs +0.057),按年分块标签打乱 2,000 次单侧 p=0.023 < 0.05 过;去极值后 +0.31 vs −0.07,方向不是极值扛的。③ 不过:<2023 半段 n=0 —— deriv_metrics_daily 2022 年前几乎无数据(2020 全年 119 行可用、2021 年 3,672 行,2020-09~2021-12 全是 n_points=0 空壳),2020/2021 的 24 个触发全部落在无行/空壳行;且票本身无 2022 年信号(0 张)。结论按卡 prior_value:加仓在日线上关掉,Tom 的「加」只留在组合层。脚本 docs/research/t165_flow_confirmed_add.py;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-165_s656_flow_add.md(末尾含「S-656 结果」草稿,未写入 REFUTATION_LEDGER)。零分布只走 src/data/evaluation/apparatus.py。过程说明:开分支时 s654 脚本尚未进 origin/main,已自包含重实现并以复现 372.16 B / 312 触发自证;随后 ff 到 origin/main 时Seth 的 s654 脚本已落地(0766049→f694e7f),两者机制一致。"
 }
