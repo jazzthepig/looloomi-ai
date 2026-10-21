@@ -1,7 +1,7 @@
 {
   "id": "T-158",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-21",
   "verified": null,
   "title": "S-641 风格成熟度:本轮刚开始的风格里的 R-v2 票是不是 R 更高、更常在鱼上",
@@ -22,5 +22,5 @@
     "expect": "脚本 docs/research/t158_style_maturity.py;报告(脚本写)_reports/absorb_input/T-158_style_maturity.md,末尾「S-641 结果」草稿;in_review,推 lane-b/T-158。新分支一律 `git switch -c lane-b/T-158 origin/main`。"
   },
   "prior_value": "如果成熟度分得开,单票仓位就有了周期维度:本轮早期放大、晚期缩小;之后再考虑用在 ② 的风格倾斜和 ③ 的敞口上。",
-  "notes": ""
+  "notes": "已在 lane-b/T-158 分支交付。脚本 docs/research/t158_style_maturity.py(S-641 原文 4 分量,自动抓 4 sector,自切三分位)。报告:_reports/absorb_input/T-158_style_maturity.md(Mac 数据根,带「S-641 结果」草稿)。实测:N_tickets=724(N=243 in_M,30 下行剔除),N_fish=286(已 t154 复现 PASS),自助 ① avg_R_early=+0.251 / late=+1.011,obs_diff=-0.760,p_one=0.4955 → 分不开;年内打乱 ② p_fish_early=0.247 / late=0.432,obs_diff=-0.185,p_one=0.7795 → 分不开。两条判方向反转(晚 > 早,单调↑),不是「差一点」⇒ S-641 写法**不能**进 R-v2 单票仓位维度。资金费拿到 95 个名字(C 只用有 perp 的成员,偏差方向不反转结论)。"
 }
