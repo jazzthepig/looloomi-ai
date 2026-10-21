@@ -1968,6 +1968,13 @@ async def _r_tickets_paper_loop():
         try:
             from src.data.signals.r_tickets_paper import run_once as _rt_run
             r = await _rt_run()
+            # S-665 前向:每张新票打上开票当时的 90 日流通量增长(稀释);打不上不挡 R-v2 本身,写进 detail
+            r["detail"] = r.get("detail") if isinstance(r.get("detail"), dict) else {}
+            try:
+                from src.data.signals.ticket_tags import tag_new_tickets as _tag
+                r["detail"]["tags"] = await _tag()
+            except Exception as _te:
+                r["detail"]["tags"] = {"status": "error", "reason": f"{type(_te).__name__}: {str(_te)[:200]}"}
             print(f"[R-TICKETS] {r['status']} · {str(r.get('reason'))[:160]}")
             await _beat("_r_tickets_paper_loop", ok=r["status"] == "ok", refused=r["status"] == "refused",
                         detail=r.get("detail"), error=None if r["status"] == "ok" else str(r.get("reason"))[:200])
