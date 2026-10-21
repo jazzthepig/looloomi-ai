@@ -265,13 +265,20 @@ async def _fetch_one(symbol: str, days: int) -> tuple[str, list[dict], str | Non
         return symbol, [], "empty (delisted or unlisted pair?)"
 
     rows = []
+    today = datetime.now(timezone.utc).date()
     for k in kl[-days:]:
         try:
+            # 语义一处定义(T-049):Binance 日 K 的时间戳是开盘时刻 ⇒ 覆盖日 = 当天
+            day = covered_day("binance_klines", k["time"])
+            # S-644(2026-10-21):Binance 的最后一根是**还没收盘**的今天。以前照写,于是 22:59 UTC 的一次运行把
+            # 10-20 写成少最后一小时的日线,要等下一轮(24 小时后)才被覆盖 —— 这期间读它的 R-v2 / ① 都在半根 K 线上
+            # 做决定。这张表的约定是「只放已收盘的 UTC 日」,今天这根一律不写。
+            if day >= today:
+                continue
             rows.append({
                 "symbol": symbol.upper(),
                 "asset_class": "Crypto",
-                # 语义一处定义(T-049):Binance 日 K 的时间戳是开盘时刻 ⇒ 覆盖日 = 当天
-                "trade_date": covered_day("binance_klines", k["time"]).isoformat(),
+                "trade_date": day.isoformat(),
                 "open": float(k["open"]), "high": float(k["high"]),
                 "low": float(k["low"]), "close": float(k["close"]),
                 "volume": float(k["volume"]),

@@ -613,7 +613,9 @@ async def _deep_panel_loop():
                 "_deep_panel_loop", "error",
                 reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                 writer="src.api.main._deep_panel_loop")
-        await _asyncio.sleep(24 * 3600)
+        # S-644:定点,不是「上一轮 + 24 小时」—— 后者随每次部署漂移,22:59 那一轮写出过半根日线。
+        # 00:10 UTC:前一天刚收盘,一轮(约 1 分钟)跑完后 R-v2 / ① 读到的是整根。
+        await _sleep_until_utc(0, 10)
 
 
 @app.on_event("startup")
@@ -1782,7 +1784,8 @@ async def _style_pit_loop():
             await _beat("_style_pit_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _record_loop_attempt("_style_pit_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                        writer="src.api.main._style_pit_loop")
-        await _asyncio.sleep(24 * 3600)
+        # S-644:定点 00:30 UTC(深盘 00:10 之后);R-v2 的闸门要等 majors 指数写到昨天才开票。
+        await _sleep_until_utc(0, 30)
 
 
 @app.on_event("startup")
@@ -1964,7 +1967,9 @@ async def _r_tickets_paper_loop():
             await _beat("_r_tickets_paper_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _record_loop_attempt("_r_tickets_paper_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                        writer="src.api.main._r_tickets_paper_loop")
-        await _asyncio.sleep(3600)
+        # S-644:每小时的第 45 分 —— 第一次在 00:45 UTC(深盘 00:10、风格指数 00:30 之后),执行器取计划不再随部署漂移
+        _now = _dt.datetime.now(_dt.timezone.utc)
+        await _sleep_until_utc(_now.hour if _now.minute < 45 else (_now.hour + 1) % 24, 45)
 
 
 @app.on_event("startup")
