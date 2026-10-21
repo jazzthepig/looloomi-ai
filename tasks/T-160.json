@@ -1,0 +1,26 @@
+{
+  "id": "T-160",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-21",
+  "verified": null,
+  "title": "S-645 ③ 的熊市下限:闸门关时敞口上限 0.5 倍,在 tom_pd13 与 7 个没看过的风格指数上检验",
+  "source": "台账 S-645 预注册(写于套规则之前)。Jazz 10-21:熊市怎样把伤害减到最小。S-643(只报)已看过 ① 与 majors 指数的结果,本条只用没看过的对象。 10-21 修订:Jazz 把 ③ 统一改成 0–1 ⇒ 原敞口先封顶 1(见台账 S-645 修订)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-160.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "照 S-645 原文一字不改。先复现:tom_pd13_replay 的 ret 由 m 与 ① 日收益(core_variants_daily arm cap_uncapped)按它自己的口径重算,差 < 1e-6 再往下。闸门 = majors cap 指数(style_index_pit_daily,按 ret 复原水平,ret > −0.95)t 日收盘 ≤ 200 日均值 ⇒ t+1 起关;不足 200 天的段不计入。现金 3.4%/年按 365 天日化;成本 0.2% × |Δ敞口|。原敞口先封顶 1(min(m, 1),Jazz 10-21),闸门关时再取 min(·, 0.5);另报 tom_pd13 原版 0.7–1.3 vs 封顶 1 的差。判 ①②③ 全报,只报项全报。只用 publishable key(三张表都有 lane_read)。",
+    "expect": "脚本 docs/research/t160_bear_floor.py;报告(脚本写)_reports/absorb_input/T-160_bear_floor.md,末尾「S-645 结果」草稿;in_review,推 lane-a/T-160。新分支一律 `git switch -c lane-a/T-160 origin/main`。"
+  },
+  "prior_value": "过了 ⇒ ③(已统一 0–1)的熊市下限定 0.5 交 Jazz 拍板;真钱里就是闸门关时卖掉一半现货、现金去放贷(不开对冲空单:HL 同币单向持仓)。不过 ⇒ 下限另议,熊市减伤先靠 R-v2 配比。",
+  "notes": ""
+}

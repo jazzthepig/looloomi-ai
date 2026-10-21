@@ -261,10 +261,10 @@ def test_report_vetting_keeps_the_two_books_apart():
 def test_gross_notional_is_capped_across_tickets():
     szd = {"UNI": 1, "SOL": 2}
     mids = {"UNI": 8.0, "SOL": 150.0}
-    book = {"H": {"coin": "SOL", "qty": 6.0, "entry_px": 150.0}}            # $900 名义,净值 700 ⇒ 已 1.29 倍
+    book = {"H": {"coin": "SOL", "qty": 4.0, "entry_px": 150.0}}            # $600 名义,净值 700 ⇒ 已 0.86 倍
     act = tickets.ticket_actions(_tplan(enter=[_e("N1", "UNI", 0.02)], hold=[{"ticket_id": "H"}]),
-                                 book, {"SOL": 6.0}, mids, szd, 700.0, set())
-    assert not act["entries"] and "1.5 倍" in act["not_executable"][0]["why"]
+                                 book, {"SOL": 4.0}, mids, szd, 700.0, set())
+    assert not act["entries"] and "1.0 倍" in act["not_executable"][0]["why"], "Jazz 10-21:各层 0–1 倍,不加杠杆"
 
 
 def test_a_failed_trigger_is_retried_at_most_every_15_minutes(tmp_path):

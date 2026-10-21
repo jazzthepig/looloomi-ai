@@ -22,5 +22,5 @@
     "expect": "SQL docs/research/s642_bear_short.sql + 脚本 docs/research/t159_bear_short.py;报告(脚本写)_reports/absorb_input/T-159_bear_short.md,末尾「S-642 结果」草稿;in_review,推 lane-c/T-159。新分支一律 `git switch -c lane-c/T-159 origin/main`。"
   },
   "prior_value": "过了 ⇒ 熊市有一条可执行的空头臂(HL 永续),交 Jazz 决定是否改「③ 不做空」;不过 ⇒ 熊市默认 = 现金放贷 + R-v2 自动停,不再讨论做空。",
-  "notes": ""
+  "notes": "10-21 Jazz:HL 上同一个币不能同时多空(单向持仓)。若 S-642 过了,空头票与 R-v2 多头票同名时要放 HL 子账户分开持仓 —— 报告里列出「信号日同名已有 R-v2 多头在持」的空头票张数。"
 }
