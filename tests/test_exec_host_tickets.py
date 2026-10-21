@@ -306,3 +306,29 @@ def test_loader_reads_the_book_state_and_signal_day_closes(monkeypatch):
     monkeypatch.setenv("R_V2_RISK_FRAC", "0.05")
     with pytest.raises(ValueError):
         asyncio.run(tpm.load_ticket_plan(ASOF))
+
+
+def test_portfolio_leverage_scales_the_allocation_and_is_capped_at_five():
+    szd, mids = {"UNI": 1}, {"UNI": 8.0}
+    one = tickets.ticket_actions(_tplan(enter=[_e("N1", "UNI", 0.1)]), {}, {}, mids, szd, 700.0, set())
+    two = tickets.ticket_actions({**_tplan(enter=[_e("N1", "UNI", 0.1)]), "portfolio_leverage": 2.0}, {}, {}, mids, szd,
+                                 700.0, set())
+    assert one["entries"][0]["notional"] == pytest.approx(34.4) and two["entries"][0]["notional"] == pytest.approx(69.6)
+    wild = tickets.ticket_actions({**_tplan(enter=[_e("N1", "UNI", 0.1)]), "portfolio_leverage": 50}, {}, {}, mids, szd,
+                                  700.0, set())
+    assert wild["portfolio_leverage"] == 5.0 and wild["alloc"] == 3500.0, "主机这一侧再守一次 5 倍上限"
+
+
+def test_railway_refuses_a_leverage_outside_one_to_five(monkeypatch):
+    import asyncio
+
+    import src.data.style.header as hdr
+
+    async def fake(table, params):
+        return [{"last_d": ASOF}] if table == "r_tickets_state" else []
+    monkeypatch.setattr(hdr, "_read_all", fake)
+    monkeypatch.setenv("R_V2_PORTFOLIO_LEVERAGE", "2")
+    assert asyncio.run(tpm.load_ticket_plan(ASOF))["portfolio_leverage"] == 2.0
+    monkeypatch.setenv("R_V2_PORTFOLIO_LEVERAGE", "6")
+    with pytest.raises(ValueError):
+        asyncio.run(tpm.load_ticket_plan(ASOF))

@@ -23,7 +23,8 @@ from typing import Any, Optional
 PERP_MAX_DECIMALS = 6
 MIN_NOTIONAL_USD = 10.0
 MAX_TICKET_NOTIONAL_FRAC = 0.5      # 单票名义不超过净值的一半(止损很窄时风险预算会算出很大的名义)
-MAX_GROSS_FRAC = 1.0                # 全部票的名义合计不超过净值(Jazz 10-21:各层统一 0–1 倍,不加杠杆;S-638 f = 1% 回放峰值 0.99 倍)
+MAX_GROSS_FRAC = 1.0                # 策略层:名义合计 ≤ 分到的资金(Jazz 10-21:策略 0–1 倍;S-638 f = 1% 回放峰值 0.99 倍)
+MAX_PORTFOLIO_LEVERAGE = 5.0        # 组合层杠杆 L 的硬上限(Jazz 10-21);分到的资金 = 账户净值 × L
 TRIGGER_LIMIT_SLIP = 0.10           # 止损触发后按市价成交;HL 仍要一个限价 = 触发价再让 10%
 
 
@@ -121,6 +122,9 @@ def ticket_actions(tplan: dict, book: dict[str, dict], positions: dict[str, floa
     open_after = len(book) - len(closed_on_venue) - len(exits)
     held_coins = {b["coin"] for t, b in book.items() if t not in {x["ticket_id"] for x in exits + closed_on_venue}}
     cap = int(tplan.get("cap") or 10)
+    # 组合层杠杆:策略按「分到的资金」= 净值 × L 记账;L 读不到按 1,超过 5 按 5(主机这一侧再守一次上限)
+    lev = min(max(float(tplan.get("portfolio_leverage") or 1.0), 1.0), MAX_PORTFOLIO_LEVERAGE)
+    alloc = equity * lev
     gone = {x["ticket_id"] for x in exits + closed_on_venue}
     gross = sum(b["qty"] * (mids.get(b["coin"]) or b.get("entry_px") or 0.0) for t, b in book.items() if t not in gone)
     entries, not_exec = [], []
@@ -139,19 +143,21 @@ def ticket_actions(tplan: dict, book: dict[str, dict], positions: dict[str, floa
             not_exec.append({**e, "coin": coin, "why": "同一个币已有一张票的仓位"})
             continue
         mid = mids.get(coin)
-        s = size_entry(equity, float(tplan.get("risk_frac") or 0), e.get("stop_frac"), mid, szd[coin])
+        s = size_entry(alloc, float(tplan.get("risk_frac") or 0), e.get("stop_frac"), mid, szd[coin])
         if not s["qty"]:
             not_exec.append({**e, "coin": coin, "why": s["why"], "mid": mid})
             continue
-        if gross + s["notional"] > equity * MAX_GROSS_FRAC:
+        if gross + s["notional"] > alloc * MAX_GROSS_FRAC:
             not_exec.append({**e, "coin": coin, "mid": mid,
-                             "why": f"名义合计会到 ${gross + s['notional']:.0f},超过净值的 {MAX_GROSS_FRAC} 倍"})
+                             "why": f"名义合计会到 ${gross + s['notional']:.0f},超过分到的资金 ${alloc:.0f}"
+                                    f"(净值 × 组合杠杆 {lev:g})的 {MAX_GROSS_FRAC} 倍"})
             continue
         entries.append({**e, "coin": coin, "mid": mid, "sz_decimals": szd[coin], **s})
         gross += s["notional"]
         open_after += 1
         held_coins.add(coin)
-    return {"closed_on_venue": closed_on_venue, "exits": exits, "entries": entries, "not_executable": not_exec}
+    return {"closed_on_venue": closed_on_venue, "exits": exits, "entries": entries, "not_executable": not_exec,
+            "portfolio_leverage": lev, "alloc": alloc}
 
 
 def stop_breaches(book: dict[str, dict], mids: dict[str, float]) -> list[str]:

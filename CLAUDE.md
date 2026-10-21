@@ -80,7 +80,7 @@ forward track record — the validation apparatus IS the product.** Ambition rai
 **⚠️ RETURN HIERARCHY (Jazz — priority order, not a menu; full text `docs/HIGH_DIM_ONTOLOGY.md` §5b):**
 ① **capture beta** (long-only hold of the panel — the FoF core; every sleeve's benchmark is
 "hold the panel", NEVER 0) → ② **beta+** (overweight better assets INSIDE the book — CIS's job,
-tilt not L/S) → ③ **beta multiplier** (time exposure **0–1x**, never short, never levered — Jazz 10-21; was 0.7–1.3) → ④ **pure alpha**
+tilt not L/S) → ③ **beta multiplier** (**0–1x**, never short; leverage only at portfolio layer, **≤5x**, Jazz 10-21) → ④ **pure alpha**
 (neutral/hedged — hardest, LAST). **We built it upside-down:** R76–R94 were all ④ (cross-sectional
 demean discards beta by construction) while ① was never built — **that specification error, not
 luck, is the 15-attempt graveyard.** Default long-only: tilt, don't neutralize. β-adjustment is for

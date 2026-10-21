@@ -32,6 +32,9 @@ RULE_VERSION = "r_v2_k2.5_gate200"
 STOP_ATR = 2.5
 DEFAULT_RISK_FRAC = 0.005          # Jazz 10-21 真钱:每票风险 0.5% 净值(f★ = 1% 的一半,S-638)
 DEFAULT_CAP = 10
+#: Jazz 10-21:策略是 0–1 倍的底层参考,杠杆只在组合 / 选择层选,最多 5 倍。R-v2 这一腿的组合杠杆 L:
+#: 每票风险 = 净值 × L × risk_frac,名义合计 ≤ 净值 × L。默认 1(不加);改它是 Jazz 的决定(Railway 环境变量)。
+MAX_PORTFOLIO_LEVERAGE = 5.0
 TICKET_SLEEVE_FOR_MODE = {"dry_run": "r_v2_host_dry", "live": "r_v2_live"}
 _CLOSED_LOOKBACK_DAYS = 5          # 最近几天关掉的票都列进 exit(主机可能晚几天才看到)
 
@@ -67,10 +70,12 @@ def taken_ids(rows: Iterable[dict], cap: int, pending_entry: dt.date) -> set[str
 
 
 def make_ticket_plan(rows: list[dict], last_d: Optional[str], asof: str, closes: dict[tuple[str, str], float],
-                     risk_frac: float = DEFAULT_RISK_FRAC, cap: int = DEFAULT_CAP) -> dict[str, Any]:
+                     risk_frac: float = DEFAULT_RISK_FRAC, cap: int = DEFAULT_CAP,
+                     portfolio_leverage: float = 1.0) -> dict[str, Any]:
     """纯函数。账本行 + 账本推进到哪天 + 信号日收盘价 → 主机计划。"""
     a = _d(asof)
     base = {"asof": asof, "last_d": str(last_d)[:10] if last_d else None, "risk_frac": risk_frac, "cap": cap,
+            "portfolio_leverage": portfolio_leverage,
             "stop_atr": STOP_ATR, "rule_version": RULE_VERSION, "sleeves": dict(TICKET_SLEEVE_FOR_MODE)}
     if not last_d or _d(last_d) < a:
         return {**base, "ready": False, "why": f"r_tickets_scan 还没推进到 {asof}(last_d = {last_d})",
@@ -106,6 +111,9 @@ async def load_ticket_plan(asof: str, risk_frac: Optional[float] = None) -> dict
     rf = risk_frac if risk_frac is not None else float(os.environ.get("R_V2_RISK_FRAC", DEFAULT_RISK_FRAC))
     if not (0 < rf <= 0.02):
         raise ValueError(f"R_V2_RISK_FRAC = {rf} 不在 (0, 2%] —— 拒绝出计划")
+    lev = float(os.environ.get("R_V2_PORTFOLIO_LEVERAGE", "1"))
+    if not (1.0 <= lev <= MAX_PORTFOLIO_LEVERAGE):
+        raise ValueError(f"R_V2_PORTFOLIO_LEVERAGE = {lev} 不在 [1, {MAX_PORTFOLIO_LEVERAGE:g}] —— 拒绝出计划")
     rows = await _read_all("r_tickets_paper", {
         "select": "ticket_id,symbol,signal_d,atr14,status,entry_d,entry_px,stop_px,bars_held,exit_flag,exit_d,exit_px,"
                   "exit_reason", "status": "in.(pending,open,closed)", "order": "ticket_id.asc"})
@@ -117,4 +125,4 @@ async def load_ticket_plan(asof: str, risk_frac: Optional[float] = None) -> dict
         bars = await _read_all("ohlcv_daily", {"select": "symbol,trade_date,close", "source": "eq.binance_hist",
                                                "trade_date": f"eq.{asof}", "symbol": f"in.({','.join(syms)})"})
         closes = {(b["symbol"], str(b["trade_date"])[:10]): float(b["close"]) for b in bars if b.get("close")}
-    return make_ticket_plan(rows, last_d, asof, closes, rf, DEFAULT_CAP)
+    return make_ticket_plan(rows, last_d, asof, closes, rf, DEFAULT_CAP, lev)

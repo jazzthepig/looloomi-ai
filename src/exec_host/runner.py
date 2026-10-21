@@ -530,6 +530,7 @@ class Executor:
         mins = core.minutes_after_close(now)
         detail = {"phase": "intents", "book_name": "r_v2", "asof": tp.get("asof"), "minutes_after_close": round(mins, 1),
                   "equity": round(equity, 2), "equity_source": eq_src, "risk_frac": tp.get("risk_frac"),
+                  "portfolio_leverage": act.get("portfolio_leverage"), "alloc": round(act.get("alloc") or 0.0, 2),
                   "closed_on_venue": act["closed_on_venue"],
                   "exits": [{k: x[k] for k in ("ticket_id", "coin", "qty", "why")} for x in act["exits"]],
                   "entries": [{k: e.get(k) for k in ("ticket_id", "symbol", "coin", "qty", "notional", "risk_usd",
@@ -736,7 +737,8 @@ def check(ex: Executor) -> dict[str, Any]:
     if ex.cfg.tickets_mode != "off":
         tp = plan.get("tickets") if isinstance(plan, dict) else None
         t: dict[str, Any] = {"mode": ex.cfg.tickets_mode, "equity_cap": ex.cfg.tickets_equity_cap,
-                             "plan": {k: (tp or {}).get(k) for k in ("asof", "ready", "why", "last_d", "risk_frac", "cap")}}
+                             "plan": {k: (tp or {}).get(k) for k in ("asof", "ready", "why", "last_d", "risk_frac", "cap",
+                                                                      "portfolio_leverage")}}
         try:
             st = ex.venue.perp_state()
             szd, mids = ex.venue.perp_meta(), ex.venue.perp_mids()
