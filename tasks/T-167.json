@@ -1,0 +1,27 @@
+{
+ "id": "T-167",
+ "owner": "lane-c",
+ "status": "in_review",
+ "created": "2026-10-21",
+ "verified": null,
+ "title": "S-660「谁在买」的全市场状态:山寨 OI 20 日流入 + 主动买盘广度 > 0.5 ⇒ R-v2 满仓,否则 0.25 仓",
+ "source": "台账 S-660 预注册(写于对这条状态算任何结果之前,2026-10-21 13:36 UTC)。S-658 / S-659:R-v2 的钱在山寨走趋势的月份,进场形态与系统自身战绩都分不开好坏月份。",
+ "allowed_paths": [
+  "docs/research/",
+  "tasks/T-167.json"
+ ],
+ "forbidden_paths": [
+  "Shadow/",
+  "src/",
+  "paper_trading/",
+  "PROJECT_STATE.md",
+  "PROJECT_STATE_LOG.md",
+  "scripts/"
+ ],
+ "acceptance": {
+  "check": "照 S-660 原文一字不改。票 = docs/research/s659_equity_state.py 同一套:用 s657_s658_breadth_second_leg.py 装载(它复用 t159_bear_short.run_long,数据根 /Volumes/CometCloudAI/cometcloud-local/research/t156 + t159 —— **必须同时读 t156 的早期日线**,只读 t159 的 _bars.jsonl 会从 2025-04 开始,T-164 就是这样错的),先断言 770 张、总 R 369.008(仍持有的盯市后 372.156),对不上就停。状态的计算与判据直接复用 s659_equity_state.py 的 book() / 循环平移(把 states() 换成 S-660 的状态)。deriv_metrics_daily 只用 publishable key 读,按 (symbol, d) 存一份本地缓存到 /Volumes/CometCloudAI/cometcloud-local/research/t167/。判 ① ② ③ 全报;只报项全报。",
+  "expect": "脚本 docs/research/t167_flow_state.py;结果 docs/research/t167_results.json;报告(脚本写)/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-167_s660_flow_state.md,末尾「S-660 结果」草稿;in_review,推 lane-c/T-167。新分支一律 `git switch -c lane-c/T-167 origin/main`(s657 / s659 脚本若还不在 origin/main 上,先等 Seth 的提交落地)。"
+ },
+ "prior_value": "过了 ⇒ 组合层给 R-v2 加仓位乘数(先前向纸面);不过 ⇒「何时在场」在免费数据上暂停。",
+ "notes": "S-660 判「不过」。票:770 张 ✓,总 R 盯市前 369.008 ✓ / 盯市后 372.156 ✓;S-660 只取信号日 >= 2020-10-01 = 758 张(基线全 1 B = 359.956 B)。组合状态 E_total 299.234 vs 等敞口恒定 336.806(不过);循环平移(全部 758 个不同平移)q95 = 374.048,E 落在平移分布第 7.9 百分位(不过);回撤 -52.237 vs 恒定 -50.448(更深,不过);两段 <2023:42.833 vs 40.078(好) / >=2023:256.401 vs 296.728(差,不过)。只报:在场的日历天占比 49.4%(1,785 天,19 天按配对集合 <30 默认在场),在场的票占比 93.6%;只 OI 流入与组合逐张相同;只主动买盘广度 in_share = 1.0 —— 758 张票的每个信号日都成立,该分量本样本零分辨力;S-658 第二段臂 x 同一状态(n=584)357.577 vs 恒定 328.371,两段都好、回撤 -45.717 比恒定 -50.869 浅(同口径数「过」,但票上在场比例 94.1% ≈ 几乎常数仓位,只报不足立规则)。数据实况偏差(判据一字未改):deriv_metrics_daily 的 oi_value_close 非空数据实际从 2021-12-02 起(表本身从 2020-10-01),故 68 张票落在无状态区,按预注册「配对集合 <30 ⇒ 默认在场」处理;该 68 张 = lt2023 全段。295,367 行 / 258 币(排 BTC、ETH),缓存 research/t167/deriv_metrics_daily.json。分支纪律:origin/main 上当时没有 s657 / s659 脚本(Seth 工作区里是未跟踪文件),本分支按 docs/research/ 逐字带上,便于 CI 自足;若 Seth 之后以同样内容提交,合并应无冲突。试验计数:状态族第 2 次,1 条,不过。"
+}
