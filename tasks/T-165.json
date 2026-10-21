@@ -22,5 +22,5 @@
     "expect": "脚本 docs/research/t165_flow_confirmed_add.py;报告(脚本写)/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-165_s656_flow_add.md,末尾「S-656 结果」草稿;in_review,推 lane-b/T-165。新分支一律 `git switch -c lane-b/T-165 origin/main`(s654 脚本若还不在 origin/main 上,先等 Seth 的提交落地再开分支,别自己复制一份)。"
   },
   "prior_value": "过了 ⇒ 执行器加一个「条件加仓」动作(主机读当日 metrics,0.5 B,自带止损),先前向纸面并跑;不过 ⇒ 加仓这条路在日线上关掉,Tom 的「加」只留在组合层(权益新高才放大杠杆的阶梯)。",
-  "notes": ""
+  "notes": "\n§Seth-1021d 10-21 CHANGES:判①不过收下(日线加仓关闭);补 leave-one-year-out、判②③同一比较、§3 表头 35=16+19;推 lane-b/T-165-v2。"
 }

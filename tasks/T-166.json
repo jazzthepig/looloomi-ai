@@ -1,0 +1,26 @@
+{
+  "id": "T-166",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-21",
+  "verified": null,
+  "title": "T-161 补做:随机基线 + 生产口径候选池 + regime_daily 更正",
+  "source": "lane-c 复核 §C-auto-1021-1206;Seth 只读查 regime_daily = 507 行(2025-05-03→2026-10-20),T-161 报告的「空表」是 RLS 伪影。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-166.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "在 t161_vdb_audit.py 基础上:(1) 20 邻重合率加随机基线(用 src/data/evaluation/apparatus.py 的 null_distribution 复算,候选池中位数约 676 ⇒ 期望约 0.059);(2) 候选池改成生产 regime_match.most_similar 的 exclude_days=30 双向语义(未来日合法)再报一次,与原口径并列;(3) 缺陷表里 regime_daily 一行改成「publishable 不可见(RLS),服务端 507 行」,删去「写入端死亡 / 8 个读取端全空」的推论;(4) measured_dims 的 11.09 按逐日共享维数报分布,_reserved_1/2 不计入分母。只用 publishable key。",
+    "expect": "报告 _reports/absorb_input/T-161_vdb_audit.md 更新;in_review,推 lane-a/T-166。新分支 `git switch -c lane-a/T-166 origin/main`。"
+  },
+  "prior_value": "定下向量库缺陷的真实排序,决定 market_state_vectors 是否改扩张窗口。",
+  "notes": ""
+}

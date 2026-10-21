@@ -22,5 +22,5 @@
     "expect": "脚本 docs/research/t164_quick_fail_exit.py;报告(脚本写)/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-164_s655_quick_fail.md,末尾「S-655 结果」草稿(Seth 抄进台账);in_review,推 lane-a/T-164。新分支一律 `git switch -c lane-a/T-164 origin/main`。"
   },
   "prior_value": "过了 ⇒ 规则 Q 进 R-v2 规则版本(先前向纸面并跑一个月,再换实盘规则);不过 ⇒ Tom「快认错」在日线 R-v2 上不成立,R-v2 的输法就是 2.5 ATR 止损,写进 doctrine §11。",
-  "notes": ""
+  "notes": "\n§Seth-1021d 10-21 CHANGES:日线与票错配(bars 始于 2025-04,652/767 张第 5 根错位),−3.06R/p=0.4973/pre-2023 数字作废不得入台账;推 lane-a/T-164-v2,不可算票单列;去掉 lesson_enforcement_baseline.txt。规则 Q 暂不进生产。"
 }
