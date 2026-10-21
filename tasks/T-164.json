@@ -1,0 +1,26 @@
+{
+  "id": "T-164",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-10-21",
+  "verified": null,
+  "title": "S-655 Trader Tom「最好的输家」:R-v2 票进场后第 5 根日线收盘仍低于进场价 ⇒ 次日开盘走(快认错),对比等 2.5 ATR 止损",
+  "source": "台账 S-655 预注册(写于对任何票算这条规则之前,2026-10-21 11:31 UTC)。Jazz 10-21「深度学习 Trader Tom 再研究开发应用」。Tom 的加仓一半已测(S-654 ❌),输得好的一半从没测过。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-164.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "照 S-655 原文一字不改。票与日线 = C 道 T-159 缓存(/Volumes/CometCloudAI/cometcloud-local/research/t159/_tickets_2020-03-01_2026-06-20.json + _bars.jsonl),装载直接复用 docs/research/s647_sim_r_v2.py 的 load()(与 S-647 / S-654 同一批 770 张票;先复现 S-654 的原规则总盈亏 372.2 B,对不上先停下报差)。规则 Q:进场日算第 1 根,第 5 根日线收盘 < 进场价 ⇒ 次日开盘出;此前已被止损 / SMA20 / 到期出掉的不变;成本 0.2% / 边。判 ①(总 R 差 > 0,按信号月份分块自助 2,000 次单侧 p < 0.05)②(两段 < 2023-01-01 / ≥ 2023-01-01 差都 > 0)③(按出场日累计最大回撤不更深)全报;只报项全报(提前出掉几张、其中原规则 ≥ +3R 的几张与少拿的 R、第 3 / 10 根版本)。",
+    "expect": "脚本 docs/research/t164_quick_fail_exit.py;报告(脚本写)/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-164_s655_quick_fail.md,末尾「S-655 结果」草稿(Seth 抄进台账);in_review,推 lane-a/T-164。新分支一律 `git switch -c lane-a/T-164 origin/main`。"
+  },
+  "prior_value": "过了 ⇒ 规则 Q 进 R-v2 规则版本(先前向纸面并跑一个月,再换实盘规则);不过 ⇒ Tom「快认错」在日线 R-v2 上不成立,R-v2 的输法就是 2.5 ATR 止损,写进 doctrine §11。",
+  "notes": "**实测 verdict:规则 Q 不成立。** baseline after cost = 369.008 R vs ref 372.20(差 -0.86%,在 2% tol 内;实测 `t[\"r\"]` 字段已扣 0.2%/边 cost,pre-cost 388.236 比 after-cost 多 19.228 drag);规则 Q 总 R after cost = 365.948 ⇒ Δ R = -3.06 R(pre-cost ≈ after-cost 同一个数);月分块自助 2,000 次(seed=164)单侧 p = 0.4973(无法拒绝 Δ=0);<2023-01-01 子段 Δ = -4.11 R(负), ≥2023-01-01 Δ = +1.05 R(微正);按出场日累计最大回撤 base = -55.93 R, q = -49.58 R(q 浅 +6.36,drawdown 改善但总 R 水平恶化)。触发 225 / 770 = 29.2%;173 张提前出场均早 8.83 天(Q 在第 6 根日线开盘出);原规则 ≥ +3R 且被 Q 改写 = 5 张,-20.57 R 合计(LINK 2020-06-24 -4.094 / SUSHI 2024-02-16 -3.483 / UNI 2024-11-07 -3.492 / LINK 2024-11-09 -5.101 单笔最痛 / ZEC 2026-08-23 -4.397)。变体:第 3 根 Δ -57.32 R(更激进更差),第 10 根 Δ +8.13 R(已退化为原 R-v2 尾部覆盖)。**三条 acceptance 判定:① FAIL(Δ<0, p ≫ 0.05);② FAIL(pre<0);③ PASS(q drawdown 更浅)。走 prior_value 第二个分支:R-v2 的输法是 2.5 ATR 止损,Tom「快认错」不适配 — 不进生产规则,不进 forward paper。** 建议同步把这一结论写进 `docs/TRADER_TOM_DOCTRINE.md` §11 sleeve R-v2 段(本卡未改 doctrine,改 doctrine 不在 allowed_paths;若同意请 Seth/Jazz 在该文件另批一次)。脚本 `docs/research/t164_quick_fail_exit.py`;报告 `/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-164_s655_quick_fail.md`;helper 同 _reports/absorb_input/T-164_helper.json + _rows.json。S-655 草稿附在报告末尾,等 Seth 抄进台账。 @ 2026-10-21T11:50Z"
+}
