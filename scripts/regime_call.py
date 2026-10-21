@@ -43,6 +43,16 @@ def _call(method: str, path: str, api: str, body: dict | None = None):
     try:
         return json.loads(urllib.request.urlopen(req, timeout=60).read())
     except urllib.error.HTTPError as e:
+        if e.code in (404, 405):
+            # 未知路径会落到前端的 GET 兜底路由上 ⇒ POST 得到 405:说明线上还是没有这个接口的旧版本
+            sha = "?"
+            try:
+                sha = json.loads(urllib.request.urlopen(api.rstrip("/") + "/internal/build-state", timeout=20).read()
+                                 ).get("git_sha_short", "?")
+            except Exception:                                           # noqa: BLE001
+                pass
+            sys.exit(f"HTTP {e.code}:线上还没有 {path}(在跑的版本 {sha})—— 等 Railway 部署到含 regime_call 的提交"
+                     f"(e30ac900 或更新)再试。判断没有提交,不用重发别的。")
         sys.exit(f"HTTP {e.code}: {e.read().decode()[:600]}")
 
 
