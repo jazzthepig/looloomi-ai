@@ -1,0 +1,26 @@
+{
+  "id": "T-158",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-21",
+  "verified": null,
+  "title": "S-641 风格成熟度:本轮刚开始的风格里的 R-v2 票是不是 R 更高、更常在鱼上",
+  "source": "台账 S-641 预注册(写于计算之前)。Jazz 10-21:分析与策略没有给风格的周期阶段打分。四个分量:200 日线上行周期的年龄、离 365 日低点的涨幅、成员 40 日新高参与度、成员资金费拥挤;各取风格自己历史的分位,平均成 M。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-158.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "照 S-641 原文一字不改:风格 = style_index_pit_daily sector 维度(ai / defi / meme / infra_tokenization,cap 加权,members 按时点);M 的四个分量与分位口径照原文(只用 ≤ t,分位用 t−1 之前且 ≥ 365 天的自身历史);票 = docs/research/r_v2_tickets.sql 全部票、信号日 ≤ 2026-06-20;鱼用 docs/research/fish_counter.py 且先跑 t154_fish_counter_check.py 复现 286。判 ① 平均 R 早 > 晚(自助 2,000,单侧 p < 0.05)② 在鱼上比例 早 > 晚(年内打乱 2,000,单侧 p < 0.05)。只报项全报。资金费读 funding_history venue = binance_perp(已补全 259 个名字)。只用 publishable key。",
+    "expect": "脚本 docs/research/t158_style_maturity.py;报告(脚本写)_reports/absorb_input/T-158_style_maturity.md,末尾「S-641 结果」草稿;in_review,推 lane-b/T-158。新分支一律 `git switch -c lane-b/T-158 origin/main`。"
+  },
+  "prior_value": "如果成熟度分得开,单票仓位就有了周期维度:本轮早期放大、晚期缩小;之后再考虑用在 ② 的风格倾斜和 ③ 的敞口上。",
+  "notes": ""
+}

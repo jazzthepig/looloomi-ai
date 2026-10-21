@@ -1,0 +1,26 @@
+{
+  "id": "T-159",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-21",
+  "verified": null,
+  "title": "S-642 熊市空头臂:R-v2 镜像(闸门关时 40 日新低破位 + 放量,永续空单,扣真实资金费)能否胜过躺放贷",
+  "source": "台账 S-642 预注册(写于对任何空头票算 R 之前)。Jazz 10-21:熊市转套利 / 躺 lending,抓晚了考虑做空。描述性前提:熊市山寨资金费等权 −6.9%/年 ⇒ 空头付费。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-159.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "照 S-642 原文一字不改。从 docs/research/r_v2_tickets.sql 复制出空头版(闸门取反、c < ll40、c < sma200、止损 = 进场 + 2.5×ATR14、收盘 > SMA20 次日开盘出、120 根到期、同名不重叠),先用多头原版复现 2024 年 261 张(T-156 的数)证明骨架没改坏。资金费读 funding_history venue = binance_perp,持有期 [entry_d, exit_d) 内求和,空头费率为正收钱。钱曲线:r_tickets_nav 只收 entry_px > stop_px 的票(空头会被它静默丢掉),所以在脚本里用同一套公式自写一版(units = f × 前一日收盘净值 / |entry − stop|、空头盯市 = −units × (收盘 − entry)、进出各 0.2%、同时最多 10 张、先到先得)—— **先用这版跑 R-v2 多头票,与 r_tickets_nav(0.005, 10) 的结果逐日对上(差 < 1e-9)再跑空头**;资金费按票加到 R 上并在报告里分开列。判 ①②③ 全报,只报项全报。只用 publishable key。",
+    "expect": "SQL docs/research/s642_bear_short.sql + 脚本 docs/research/t159_bear_short.py;报告(脚本写)_reports/absorb_input/T-159_bear_short.md,末尾「S-642 结果」草稿;in_review,推 lane-c/T-159。新分支一律 `git switch -c lane-c/T-159 origin/main`。"
+  },
+  "prior_value": "过了 ⇒ 熊市有一条可执行的空头臂(HL 永续),交 Jazz 决定是否改「③ 不做空」;不过 ⇒ 熊市默认 = 现金放贷 + R-v2 自动停,不再讨论做空。",
+  "notes": ""
+}

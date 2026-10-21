@@ -1,7 +1,7 @@
 {
   "id": "T-157",
   "owner": "lane-a",
-  "status": "open",
+  "status": "blocked",
   "created": "2026-10-20",
   "verified": null,
   "title": "X1V 最大的一块拖累(限额 / 最小单 / nav_cap,−6.27pp/年)拆开,并按账户规模重跑:1k / 3k / 10k / 100k USDT",
@@ -22,5 +22,6 @@
     "expect": "脚本 docs/research/t157_x1v_limits_by_size.py;报告(脚本写)_reports/absorb_input/T-157_x1v_limits.md,开头一张「规模 × 拖累」表;in_review,推 lane-a/T-157。"
   },
   "prior_value": "如果拖累主要是小账户的整数化 / 最小单,那它不是策略的缺陷,是规模的 —— 真钱开关的条件里就要写最低规模;如果在 100k 上还在,就得改执行器。",
-  "notes": ""
+  "notes": "\n10-21 Seth:Jazz「迟些先」⇒ 暂停。10-20 22:14 → 10-21 02:45 连续 5 轮跑满 60 分钟被终止(全量四个规模 × 正反序太重)。恢复时先只跑 868 / 3,000 / 100,000 三个规模,中间结果落盘、分段跑。",
+  "blocked_by": "Jazz 10-21「迟些先」:账户规模研究延后,等 Jazz 重新排期"
 }
