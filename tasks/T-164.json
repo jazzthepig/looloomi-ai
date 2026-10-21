@@ -1,7 +1,7 @@
 {
   "id": "T-164",
   "owner": "lane-a",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-21",
   "verified": null,
   "title": "S-655 Trader Tom「最好的输家」:R-v2 票进场后第 5 根日线收盘仍低于进场价 ⇒ 次日开盘走(快认错),对比等 2.5 ATR 止损",
@@ -22,5 +22,5 @@
     "expect": "脚本 docs/research/t164_quick_fail_exit.py;报告(脚本写)/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-164_s655_quick_fail.md,末尾「S-655 结果」草稿(Seth 抄进台账);in_review,推 lane-a/T-164。新分支一律 `git switch -c lane-a/T-164 origin/main`。"
   },
   "prior_value": "过了 ⇒ 规则 Q 进 R-v2 规则版本(先前向纸面并跑一个月,再换实盘规则);不过 ⇒ Tom「快认错」在日线 R-v2 上不成立,R-v2 的输法就是 2.5 ATR 止损,写进 doctrine §11。",
-  "notes": "\n§Seth-1021d 10-21 CHANGES:日线与票错配(bars 始于 2025-04,652/767 张第 5 根错位),−3.06R/p=0.4973/pre-2023 数字作废不得入台账;推 lane-a/T-164-v2,不可算票单列;去掉 lesson_enforcement_baseline.txt。规则 Q 暂不进生产。"
+  "notes": "v2(branch lane-a/T-164-v2)。Seth §1021d 三条 CHANGES 全部落实,但**结论仍是不出结论 —— 基线复现失败**。(1) 加了 _bar_window() 连续性闸(首根 ≤ 进场+6 天、相邻 ≤6 天),不满足即判不可算、两臂都不收;(2) 不可算票单列(实测 0 张);(3) ΔR 改同票集。**基线对不上(卡要求停下报差)**:全部 767 张有 R 的票 pre-cost = 388.236 R vs 卡引用的 372.2,Δ=+16.036 R(+4.31%),超 2% 容差。v1 的基线核对是拿 after-cost 369.008 去比 pre-cost 372.2 得出的「−0.86% 在容差内」—— 两个口径相减不算复现,它掩盖了这 4.3% 的真漂移。**错配前提不成立**:`_bars.jsonl` 单文件确实始于 2025-04-01(已核),但 s647_sim_r_v2.load() 读的是 t156/_bars_early.jsonl + t156/_bars.jsonl + t159/_bars.jsonl 三个文件的并集,覆盖全部票期;连续性闸 767/767 通过、0 张不可算 ⇒ v1 报的「652/767 张第 5 根错位」在实际装载的数据上不成立。规则 Q(同票集,卡口径「进场日算第 1 根」,v1 编号差一根):ΔR = −24.025 R,触发 281 张,提前出场 234 张,原 ≥+3R 被改写 7 张;第 3 根变体 ΔR = −70.130,第 10 根 = +1.478;分段 <2023 +0.389 / ≥2023 −24.414(②不成立);最大回撤 baseline −55.93 → Q −50.09(③成立)。**因基线未复现,以上数一律不进台账 / doctrine §11。** 需 @seth 说明 372.2 的口径(哪一票集、pre/post cost、含不含 funding)。"
 }
