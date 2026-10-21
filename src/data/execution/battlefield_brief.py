@@ -7,6 +7,8 @@ Jazz ⓪ 开关(regime_call)的输入是人的判断;这张表把 HL 上成交�
 **价值捕获比**(持币人收入 ÷ 协议收入,60 天;S-661 留出段 IC +0.086、t 3.45 —— 但 S-664:控制规模 / 波动 / 稀释后
 留出段只剩 +0.018,**是描述不是信号**,它说明的是「这个币为什么不稀释」)来自 `protocol_revenue_daily`,
 HL 币名经 `asset_mcap_daily` 的 symbol → CoinGecko id 接上;接不上或没有收入的币是空(不是 0)。
+**90 日稀释**(流通量增长 = 市值 ÷ 价格,CoinGecko)是留出段最强的单变量(S-664 IC +0.119、t 4.05),
+R-v2 的票开在一季度稀释 > 2.2% 的币上平均只有 +0.28R、其余 +0.57 / +0.76R(S-665);> 2.2% 标 `diluting`。
 
 **它是筛子,不是信号。** S-658:第二段形态那一天进场,只比同币同月随便哪天进多 +0.09R,不显著 ——
 钱在「哪个月、哪个币」,也就是人要判断的那部分。这里只把候选摆出来;选不选、什么时候选,是 ⓪ 开关里那条判断。
@@ -16,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import datetime as dt
+import math
 from typing import Any, Optional
 
 from src.data.execution.regime_call import HL_INFO, STOP_ATR
@@ -108,9 +111,14 @@ def summarize(rows: list[dict]) -> dict[str, Any]:
             "median_ret_30d": med("ret_30d"), "funding_apr_median": med("funding_apr")}
 
 
-def attach_value(rows: list[dict], sym_to_gecko: dict[str, str], vc: dict[str, dict]) -> int:
-    """纯函数。给每行补价值捕获比(HL 名 kPEPE → PEPE);返回接上的个数。"""
+DILUTING = 0.022            # S-665:R-v2 历史最高三分位的下界(一个季度流通量涨 2.2%)
+
+
+def attach_value(rows: list[dict], sym_to_gecko: dict[str, str], vc: dict[str, dict],
+                 dil: Optional[dict[str, float]] = None) -> int:
+    """纯函数。给每行补价值捕获比与 90 日稀释(HL 名 kPEPE → PEPE);返回接上价值捕获比的个数。"""
     n = 0
+    dil = dil or {}
     for r in rows:
         c = r["coin"]
         sym = c[1:] if c.startswith("k") and c[1:2].isupper() else c
@@ -119,31 +127,52 @@ def attach_value(rows: list[dict], sym_to_gecko: dict[str, str], vc: dict[str, d
         r["gecko_id"] = g
         r["value_capture"] = v["value_capture"] if v else None
         r["holders_rev_30d"] = v["holders_rev_30d"] if v else None
+        r["dil90"] = dil.get(g) if g else None
+        r["diluting"] = (r["dil90"] > DILUTING) if r["dil90"] is not None else None
         n += 1 if (v and v["value_capture"] is not None) else 0
     return n
 
 
-async def _value_inputs() -> tuple[dict[str, str], dict[str, dict], Optional[str]]:
-    """(symbol → gecko_id, gecko_id → 价值捕获, 读不到的原因)。读不到不挡简报,写明。"""
+def dilution(now_rows: list[dict], old_rows: list[dict]) -> dict[str, float]:
+    """纯函数。两个时点的 asset_mcap_daily 行 → {coin_id: ln(供给 / 90 天前供给)};每个 coin_id 取各自时点最近的一天。"""
+    def supply(rows):
+        best: dict[str, tuple[str, float]] = {}
+        for x in rows:
+            cid, p, m = x.get("coin_id"), float(x.get("price") or 0.0), float(x.get("mcap") or 0.0)
+            if cid and p > 0 and m > 0 and (cid not in best or str(x["d"]) > best[cid][0]):
+                best[cid] = (str(x["d"]), m / p)
+        return {k: v[1] for k, v in best.items()}
+    a, b = supply(now_rows), supply(old_rows)
+    return {k: math.log(a[k] / b[k]) for k in a if k in b and a[k] > 0 and b[k] > 0}
+
+
+async def _value_inputs() -> tuple[dict[str, str], dict[str, dict], dict[str, float], Optional[str]]:
+    """(symbol → gecko_id, gecko_id → 价值捕获, gecko_id → 90 日稀释, 读不到的原因)。读不到不挡简报,写明。"""
     try:
+        from src.data.style.header import _read_all
         from src.data.market.protocol_revenue import latest_value_capture
         from src.data.vector.market_state_writer import _sb_get
         vc = await latest_value_capture()
         last = await _sb_get("asset_mcap_daily", {"select": "d", "order": "d.desc", "limit": "1"})
         if not last.ok or not last.rows:
-            return {}, vc, f"asset_mcap_daily 读不到:{last.reason}"
-        m = await _sb_get("asset_mcap_daily", {"select": "symbol,coin_id,mcap", "d": f"eq.{last.rows[0]['d']}",
+            return {}, vc, {}, f"asset_mcap_daily 读不到:{last.reason}"
+        d1 = dt.date.fromisoformat(str(last.rows[0]["d"])[:10])
+        m = await _sb_get("asset_mcap_daily", {"select": "symbol,coin_id,mcap,price,d", "d": f"eq.{d1.isoformat()}",
                                                 "limit": "2000"})
         if not m.ok:
-            return {}, vc, f"asset_mcap_daily 读不到:{m.reason}"
+            return {}, vc, {}, f"asset_mcap_daily 读不到:{m.reason}"
+        old = await _read_all("asset_mcap_daily", {
+            "select": "coin_id,d,price,mcap", "d": f"gte.{(d1 - dt.timedelta(days=97)).isoformat()}",
+            "and": f"(d.lte.{(d1 - dt.timedelta(days=90)).isoformat()})", "order": "coin_id.asc,d.asc"})
+        dil = dilution(m.rows or [], old)
         best: dict[str, tuple[float, str]] = {}
         for x in m.rows or []:
             sym, cid, mc = str(x.get("symbol") or "").upper(), x.get("coin_id"), float(x.get("mcap") or 0.0)
             if sym and cid and (sym not in best or mc > best[sym][0]):
                 best[sym] = (mc, cid)                            # 同名取市值最大的那个
-        return {k: v[1] for k, v in best.items()}, vc, None if vc else "protocol_revenue_daily 还没有数据"
+        return {k: v[1] for k, v in best.items()}, vc, dil, None if vc else "protocol_revenue_daily 还没有数据"
     except Exception as e:                                       # noqa: BLE001
-        return {}, {}, f"{type(e).__name__}: {str(e)[:160]}"
+        return {}, {}, {}, f"{type(e).__name__}: {str(e)[:160]}"
 
 
 async def build_brief(top_n: int = TOP_N, now: Optional[dt.datetime] = None) -> dict[str, Any]:
@@ -178,8 +207,8 @@ async def build_brief(top_n: int = TOP_N, now: Optional[dt.datetime] = None) -> 
 
         rows = [x for x in await asyncio.gather(*(one(n, c) for n, c in pick)) if x]
     rows.sort(key=lambda r: -(r.get("ret_30d") if r.get("ret_30d") is not None else -9))
-    s2g, vc, why = await _value_inputs()
-    n_vc = attach_value(rows, s2g, vc)
+    s2g, vc, dil, why = await _value_inputs()
+    n_vc = attach_value(rows, s2g, vc, dil)
     return {"at": now.isoformat(), "source": "hyperliquid metaAndAssetCtxs + candleSnapshot 1d(已收盘)",
             "breadth": summarize(rows), "rows": rows, "errors": errors,
             "value_capture": {"matched": n_vc, "why_missing": why, "source": "protocol_revenue_daily(DeFiLlama,S-661)"},

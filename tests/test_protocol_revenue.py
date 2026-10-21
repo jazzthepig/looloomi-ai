@@ -56,10 +56,21 @@ def test_a_half_answered_overview_is_refused_not_written(monkeypatch):
     assert out["status"] == "refused" and "不写" in out["reason"]
 
 
-def test_brief_attaches_value_capture_by_hl_name():
+def test_brief_attaches_value_capture_and_dilution_by_hl_name():
     rows = [{"coin": "HYPE"}, {"coin": "kPEPE"}, {"coin": "UNI"}]
     n = bb.attach_value(rows, {"HYPE": "hyperliquid", "PEPE": "pepe", "UNI": "uniswap"},
                         {"hyperliquid": {"value_capture": 0.95, "holders_rev_30d": 290.0},
-                         "uniswap": {"value_capture": None, "holders_rev_30d": 0.0}})
+                         "uniswap": {"value_capture": None, "holders_rev_30d": 0.0}},
+                        {"hyperliquid": -0.01, "pepe": 0.05})
     assert n == 1 and rows[0]["value_capture"] == 0.95 and rows[1]["gecko_id"] == "pepe"
     assert rows[1]["value_capture"] is None and rows[2]["value_capture"] is None
+    assert rows[0]["diluting"] is False and rows[1]["diluting"] is True and rows[2]["dil90"] is None
+
+
+def test_dilution_is_log_supply_change_with_latest_row_per_coin():
+    now = [{"coin_id": "a", "d": "2026-10-20", "price": 2.0, "mcap": 220.0}]
+    old = [{"coin_id": "a", "d": "2026-07-14", "price": 1.0, "mcap": 90.0},
+           {"coin_id": "a", "d": "2026-07-21", "price": 1.0, "mcap": 100.0},
+           {"coin_id": "b", "d": "2026-07-21", "price": 1.0, "mcap": 100.0}]
+    import math
+    assert bb.dilution(now, old) == {"a": pytest.approx(math.log(110 / 100))}

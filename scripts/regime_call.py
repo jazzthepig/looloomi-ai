@@ -76,18 +76,21 @@ def main() -> None:
               f" · 破 20 日高 {pct(b['breakout_20d'])} · 第二段形态 {b['second_leg_setups']} 个"
               f" · 30 日中位 {pct(b['median_ret_30d'])} · 资金费中位 {pct(b['funding_apr_median'])}/年")
         print(f"{'币':8s} {'位置':8s} {'7日':>6s} {'30日':>6s} {'90日':>6s} {'离120日高':>8s} {'第一段':>6s} {'回撤':>6s}"
-              f" {'止损宽':>6s} {'资金费':>6s} {'未平仓':>8s} {'价值捕获':>8s}")
+              f" {'止损宽':>6s} {'资金费':>6s} {'未平仓':>8s} {'价值捕获':>8s} {'90日稀释':>8s}")
         for x in r["rows"]:
             leg = f"{x['first_leg_x']:.1f}x" if x.get("first_leg_x") else "—"
             sw, vc = x.get("stop_width"), x.get("value_capture")
             stop = "—" if sw is None else f"{sw * 100:.0f}%"
             vcs = "—" if vc is None else f"{vc * 100:.0f}%"
+            dl = x.get("dil90")
+            dls = "—" if dl is None else f"{dl * 100:+.1f}%" + (" ⚠" if x.get("diluting") else "")
             print(f"{x['coin']:8s} {x['tag']:8s} {pct(x.get('ret_7d')):>6s} {pct(x.get('ret_30d')):>6s} "
                   f"{pct(x.get('ret_90d')):>6s} {pct(x.get('dd_from_120d_high')):>8s} {leg:>6s} {pct(x.get('pullback')):>6s} "
-                  f"{stop:>6s} {pct(x.get('funding_apr')):>6s} {(x.get('oi_usd') or 0) / 1e6:>7.0f}M {vcs:>8s}")
+                  f"{stop:>6s} {pct(x.get('funding_apr')):>6s} {(x.get('oi_usd') or 0) / 1e6:>7.0f}M {vcs:>8s} {dls:>8s}")
         v = r.get("value_capture") or {}
         print(f"价值捕获比(持币人收入 ÷ 协议收入,60 天;描述不是信号 —— S-664:控制规模 / 波动 / 稀释后几乎不剩):接上 {v.get('matched', 0)} 个"
               f"{'' if not v.get('why_missing') else ' · ' + str(v['why_missing'])}")
+        print("90 日稀释 = 流通量增长;⚠ = 一个季度 > 2.2%(S-665:R-v2 的票开在这类币上平均 +0.28R,其余 +0.57 / +0.76R)")
         print(r.get("note", ""))
         return
     if a.state == "status":
