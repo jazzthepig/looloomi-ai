@@ -1,7 +1,7 @@
 {
   "id": "T-089",
   "owner": "lane-a",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-13",
   "verified": null,
   "title": "完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置",
@@ -20,5 +20,5 @@
     "expect": "报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改"
   },
   "prior_value": "从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。",
-  "notes": "2026-10-13 Seth 开卡派 A,排在 T-083 之后。积木在 T-087 / T-088 交付前用旧臂跑通,交付后重跑一次。\n\n2026-10-14 Seth §Seth-1014a @lane-a T-089 v3 退回:见 MINIMAX_SYNC §Seth-1014a(ffill/bfill/fillna(1.0) 把缺失当数值;合成/csv 后端含虚构先验不得留在 docs/research)。"
+  "notes": "2026-10-21 lane-a 第 1 段(卡未完成,阻塞在读权限)。\n脚本 docs/research/t089_fund_sim_pit.py;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-089_fund_sim_pit.md;中间结果 research/t089/t089_pit_results.json。\n实测(1387 天 2023-01-02→2026-10-19,三块积木按日期内连接,零 NaN 被丢弃):\n  W1 2023-01→2025-01: ① +359.38% / BTC +462.58% / 等权堆叠 +367.88% / 随机 p50 +365.66% / 分位 0.530\n  W2 2025-01→2026-10-12: ① -17.05% / BTC -10.48% / 等权堆叠 -16.63% / 随机 p50 -16.68% / 分位 0.554\n  W3 2026-10-12→:     ①  -3.11% / BTC   -2.19% / 等权堆叠   -3.45% / 随机 p50   -3.41% / 分位 0.452\n阻塞:portfolio_layer_daily(pl_v3_replay)与 allocation_daily 读不到 —— publishable 角色 42501 permission denied(不是空表)。组合层缺席 ⇒ 卡上 ②③④ 与配置层准入判决本轮做不了。\n等权堆叠标 DIAGNOSTIC,不是配置层规则;本轮故意不写 M- 预注册(缺组合层时预注册=先看结果再定判据)。\n另:① 在三个窗口全部跑输 BTC,与 T-107 同向。"
 }
