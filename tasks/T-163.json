@@ -1,0 +1,26 @@
+{
+  "id": "T-163",
+  "owner": "lane-c",
+  "status": "in_review",
+  "created": "2026-10-21",
+  "verified": null,
+  "title": "S-650 风格状态向量 v2(按时点)+ 历史类比检验:最像的历史日子能不能预测接下来 30 天哪个风格跑赢 majors",
+  "source": "台账 S-650 预注册(写于构造任何 v2 向量之前)。Jazz 10-21「矢量数据库也有问题,让 abc 协助获取和调整升级」。现 market_state_vectors 跨全史 z-score(含未来信息)—— v2 一律滚动 / 扩张窗口。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-163.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "照 S-650 原文一字不改:8 个风格 × 7 个分量 = 56 维,分位只用到 t 为止且 ≥ 365 天的自身历史;每 7 天一个 t(2021-07-01 → 2026-08-31),余弦取 ≤ t − 30 的最近 20 天;IC = 各风格预测与实际 30 日相对 majors 收益的秩相关;对照 = 朴素 30 日动量 IC。判 ①(4 周块自助 2,000 次单侧 p < 0.05)②(两段都高于朴素动量)全报;只报项全报。**先写一个按时点自检**:随机抽 20 个 t,把 t 之后的数据全删掉重算向量,必须与全量算出的 t 日向量逐位相同。数据:style_index_pit_daily(members 字段按时点)、ohlcv_daily binance_hist、funding_history binance_perp;只用 publishable key。",
+    "expect": "脚本 docs/research/t163_style_vectors_v2.py;报告(脚本写)_reports/absorb_input/T-163_style_vectors_v2.md,末尾「S-650 结果」草稿;向量本身存 /Volumes/CometCloudAI/cometcloud-local/research/t163/(不入库;过了再由 Seth 建写入端);in_review,推 lane-c/T-163。新分支一律 `git switch -c lane-c/T-163 origin/main`。"
+  },
+  "prior_value": "过了 ⇒ 风格向量 v2 有资格成为 VDB 的风格层(Seth 建按时点写入端,替换全史 z-score 的旧向量),再拿它去做 R-v2 / ② / ③ 的条件检验;不过 ⇒ 向量这条路先停,换成 T-162 的更细分类做简单的风格动量。",
+  "notes": "S-650 原文照做,结论:不过。脚本 docs/research/t163_style_vectors_v2.py(+ 抓数 t163_fetch.py / t163_fetch_funding.py),报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-163_style_vectors_v2.md,向量 research/t163/style_vectors_v2.json。自检:随机 20 个 t 删掉 t 之后的数据重算 56 维向量,逐位相同 20/20。日历 2485 天(2020-01-01→2026-10-20),向量 1348 个,第一个完整 56 维向量 2023-01-22(meme 起点 2021-05-16 + 365 观测 + 分量③的 200 日均线,全部 meme 分量都晚),故 2021-07-01→2023-01-22 的 t 无向量不入检验;检验 t 共 181 个(2023-01-22→2026-08-31 每周一个)。全期平均 IC -0.0530(朴素 30 日动量 -0.0192),4 周块自助 2,000 次单侧 p = 0.8715,95% CI [-0.1473, 0.0345]⇒ 判①(IC>0 且 p<0.05)不过;前半 2021-07→2023-12 向量 -0.0901 vs 动量 +0.0845(n=42)、后半 2024-01→2026-08 向量 -0.0418 vs 动量 -0.0505(n=139)⇒ 判②不过。只报:七个单分量向量 IC 全期平均见报告 §;R-v2 票 616 张落 92 个最近邻簇、最大簇 61 张平均 R +0.097、最差簇 29 张 -0.182(探索,不判)。覆盖偏差(写明):430 个历史成员里 211 个有 binance_hist 收盘、210 个有 binance_perp 资金费,分量⑤⑥⑦ 只在有的成员上算(S-650 原文「有的才算」)。按卡 prior_value:不过 ⇒ 向量这条路先停,可转 T-162 的更细分类做简单的风格动量。"
+}
