@@ -1983,6 +1983,34 @@ async def _r_tickets_paper_loop():
         await _sleep_until_utc(_now.hour if _now.minute < 45 else (_now.hour + 1) % 24, 45)
 
 
+async def _protocol_revenue_loop():
+    """协议收入 / 持币人收入的每日快照(S-661 的价值捕获比的前向数据;src/data/market/protocol_revenue.py)。
+    DeFiLlama 概览两次请求覆盖全部协议;每天 01:20 UTC(前一天的 24h / 30d 已结)。
+    判活:`select max(d) from protocol_revenue_daily` = 昨天;`loop_attempt` 里 `_protocol_revenue_loop`。"""
+    await _asyncio.sleep(_boot_delay(2400))
+    while True:
+        try:
+            from src.data.market.protocol_revenue import run_once as _pr_run
+            r = await _pr_run()
+            print(f"[PROTOCOL-REV] {r['status']} · {str(r.get('reason'))[:160]}")
+            await _beat("_protocol_revenue_loop", ok=r["status"] == "ok", refused=r["status"] == "refused",
+                        detail=r.get("detail"), error=None if r["status"] == "ok" else str(r.get("reason"))[:200])
+            await _record_loop_attempt("_protocol_revenue_loop", r["status"], reason=str(r.get("reason"))[:400],
+                                       detail=r.get("detail"), writer="src.api.main._protocol_revenue_loop")
+        except Exception as _e:
+            print(f"[PROTOCOL-REV] ⚠️  pass FAILED: {_e}")
+            await _beat("_protocol_revenue_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_protocol_revenue_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._protocol_revenue_loop")
+        await _sleep_until_utc(1, 20)
+
+
+@app.on_event("startup")
+async def _start_protocol_revenue_loop():
+    _asyncio.create_task(_protocol_revenue_loop())
+    print("[PROTOCOL-REV] ✅ DeFiLlama revenue / holders-revenue daily snapshot scheduled (01:20 UTC)")
+
+
 @app.on_event("startup")
 async def _start_r_tickets_paper_loop():
     _asyncio.create_task(_r_tickets_paper_loop())

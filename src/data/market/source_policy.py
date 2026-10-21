@@ -224,6 +224,11 @@ BULK_ENDPOINTS = {
         "/global/market_cap_chart": "💼 历史全局市值 + 成交量(Analyst 档已含)",
         "/exchanges/{id}/volume_chart": "场所成交量历史 — 检验「场所 infra 被买」的直接读数",
     },
+    "defillama": {
+        "/overview/fees?dataType=dailyRevenue|dailyHoldersRevenue": (
+            "ALL protocols' 24h / 30d / 前 30 天收入,一次调用(~2,000 个母协议)。S-661 价值捕获比的前向数据 "
+            "(protocol_revenue_daily)走这里,不对 /summary/fees/{slug} 扇出。"),
+    },
     "hyperliquid": {
         "/info metaAndAssetCtxs": (
             "ALL perps in one call: markPx, oraclePx, funding, openInterest, "

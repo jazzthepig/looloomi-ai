@@ -73,6 +73,7 @@
     "pod_aggregator_state",
     "portfolio_layer_daily",
     "price_source_agreement_daily",
+    "protocol_revenue_daily",
     "protocol_tvl_daily",
     "r_money_daily",
     "regime_band_log",
