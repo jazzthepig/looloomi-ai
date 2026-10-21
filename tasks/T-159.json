@@ -1,7 +1,7 @@
 {
   "id": "T-159",
   "owner": "lane-c",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-21",
   "verified": null,
   "title": "S-642 熊市空头臂:R-v2 镜像(闸门关时 40 日新低破位 + 放量,永续空单,扣真实资金费)能否胜过躺放贷",
@@ -22,5 +22,10 @@
     "expect": "SQL docs/research/s642_bear_short.sql + 脚本 docs/research/t159_bear_short.py;报告(脚本写)_reports/absorb_input/T-159_bear_short.md,末尾「S-642 结果」草稿;in_review,推 lane-c/T-159。新分支一律 `git switch -c lane-c/T-159 origin/main`。"
   },
   "prior_value": "过了 ⇒ 熊市有一条可执行的空头臂(HL 永续),交 Jazz 决定是否改「③ 不做空」;不过 ⇒ 熊市默认 = 现金放贷 + R-v2 自动停,不再讨论做空。",
-  "notes": "10-21 Jazz:HL 上同一个币不能同时多空(单向持仓)。若 S-642 过了,空头票与 R-v2 多头票同名时要放 HL 子账户分开持仓 —— 报告里列出「信号日同名已有 R-v2 多头在持」的空头票张数。"
+  "notes": "10-21 Jazz:HL 上同一个币不能同时多空(单向持仓)。若 S-642 过了,空头票与 R-v2 多头票同名时要放 HL 子账户分开持仓 —— 报告里列出「信号日同名已有 R-v2 多头在持」的空头票张数。",
+"result": "**不过 —— ①②③ 全败。** 241 张空头票(2020-03-01 → 2026-06-20,118 个币),止损 12.9% / SMA20 出场 87.1% / 到期 0%。① 每票平均 R(净 0.4% 成本 + 净资金费)**-0.1332**,自助 2000 次单侧 p = 0.0105(方向是显著为负)→ 不过。② <2023 -0.0847(n=85)、≥2023 -0.1597(n=156),两半都为负 → 不过。③ 钱曲线 f=0.5%/cap=10 在 853 个闸门关的日子上年化 **+2.61%**(放贷基准 4%)→ 不过。资金费单列:Σfunding_rate = -0.3771,折 **Σ -1.650R**(占 Σ净R 的 5.1%),236 张有数据 / 5 张缺(TRX×2、ALPHA、MASK、HBAR,按 0 记账)。最大逆向单票 MAE -6.00R(BCH),最好 MFE +6.43R。合并回撤:多头 -18.66%、空头 -10.37%、两臂合并 -22.40%。同名冲突(Jazz 点名要报的那项)= **0 张**(0.0%)。**按 prior_value:熊市默认 = 现金放贷 + R-v2 自动停,不再讨论做空。**",
+"skeleton_check": "多头原版逐票复现:2024 年 **261 张 / ΣR 269.8157**(T-156 V1 一致),全区间 770 张,发现段(→2026-06-20)729 张 —— 骨架没改坏。",
+"nav_parity": "**做不到卡上写的「逐日差 < 1e-9」,原因要 @seth 拍板。** r_tickets_nav 的 execute 已对 anon/authenticated 撤权(migrations/2026-10-21_r_tickets_nav.sql:139-140),实测调用返回 HTTP 401 `permission denied for function r_tickets_nav`,publishable key 拿不到。改用 S-638(2026-10-20)从真内核跑出、已进台账的数当标尺:f=1%/cap=10/复利 期末 4.12 vs **4.1549**、盯市最大回撤 −32.3% vs **−32.29%**、年化 +24.4% vs **+24.63%**、接/挡 304/425 vs **303/426**、实施检验①期末已实现 3.692028 vs **3.689779**。**接/挡差 1 张**连带 ΣR 差约 0.23R,推测是 S-638 那次跑在 08-09→09-06 数据洞回补之前。判 ③ 用的是 +2.61% vs 4%,与门槛差 1.4pp,远大于这 0.23R 的残差 ⇒ 结论不因这点差异翻转。脚本留了 `--nav-from <json>`,Seth 给一份真内核的逐日 dump 就能直接逐日 diff。",
+"artifacts": "SQL docs/research/s642_bear_short.sql(与 r_v2_tickets.sql 一字不差的镜像,唯一无镜像项:mindd120 ≤ 0.5 在空头侧不设对应条件);脚本 docs/research/t159_bear_short.py;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-159_bear_short.md(含末尾「S-642 结果」草稿);数据 /Volumes/CometCloudAI/cometcloud-local/research/t159/。",
+"self_fix": "接手时脚本 nav() 的 open_n 记的是当天全部 path 行(把 skipped 的票也算进去),内核 `coalesce(op.n,0)` 只算 state='taken' —— 已改。不影响任何判据(stats() 不用 open_n),但与内核的偏离已消除。"
 }
