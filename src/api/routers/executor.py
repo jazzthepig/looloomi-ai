@@ -24,6 +24,7 @@ import datetime as dt
 import hmac
 import logging
 import os
+import re
 from dataclasses import fields
 from typing import Any, Optional
 
@@ -32,6 +33,7 @@ from fastapi import APIRouter, Body, Header, HTTPException
 from src.data.execution.dry_run import SPOT_TOKENS
 from src.data.execution.fill_log import _TERMINAL, Intent, Outcome
 from src.data.execution.host_plan import HALT_KEY, SLEEVE_FOR_MODE
+from src.data.execution.ticket_plan import TICKET_SLEEVE_FOR_MODE
 
 log = logging.getLogger(__name__)
 router = APIRouter()
@@ -40,7 +42,10 @@ INTENT_FIELDS = frozenset(f.name for f in fields(Intent))
 OUTCOME_FIELDS = frozenset(f.name for f in fields(Outcome))
 INTENT_REQUIRED = frozenset({"intent_id", "ts_decision", "symbol", "side", "target_notional_usd", "decision_mid", "sleeve"})
 KINDS = frozenset({"cycle", "stop", "heartbeat", "error"})
-REPORT_KEYS = frozenset({"mode", "kind", "host", "asof", "intents", "outcomes", "detail", "alert"})
+REPORT_KEYS = frozenset({"mode", "kind", "host", "asof", "intents", "outcomes", "detail", "alert", "book"})
+#: 两本账:X1V 现货(没有 book 字段 = x1v,向后兼容)与 R-v2 单票(HL 永续)。sleeve 按 (book, mode) 定,互不串
+SLEEVES = {"x1v": SLEEVE_FOR_MODE, "r_v2": TICKET_SLEEVE_FOR_MODE}
+_PERP_COIN = re.compile(r"^[A-Za-z0-9]{1,20}$")
 MAX_ROWS = 50
 LOOP_NAME = "executor_host"
 
@@ -63,9 +68,12 @@ def vet_report(body: Any) -> tuple[Optional[dict], list[str]]:
     extra = set(body) - REPORT_KEYS
     if extra:
         why.append(f"未知字段 {sorted(extra)} —— 拒绝而不是丢弃")
-    mode, kind = body.get("mode"), body.get("kind")
-    if mode not in SLEEVE_FOR_MODE:
-        why.append(f"mode 必须是 {sorted(SLEEVE_FOR_MODE)},收到 {mode!r}")
+    mode, kind, book = body.get("mode"), body.get("kind"), body.get("book") or "x1v"
+    if book not in SLEEVES:
+        why.append(f"book 必须是 {sorted(SLEEVES)},收到 {book!r}")
+    modes = SLEEVES.get(book) or SLEEVE_FOR_MODE
+    if mode not in modes:
+        why.append(f"mode 必须是 {sorted(modes)},收到 {mode!r}")
     if kind not in KINDS:
         why.append(f"kind 必须是 {sorted(KINDS)},收到 {kind!r}")
     intents = body.get("intents") or []
@@ -74,7 +82,7 @@ def vet_report(body: Any) -> tuple[Optional[dict], list[str]]:
         return None, why + ["intents / outcomes 必须是列表"]
     if len(intents) + len(outcomes) > MAX_ROWS:
         why.append(f"一批最多 {MAX_ROWS} 行")
-    sleeve = SLEEVE_FOR_MODE.get(mode or "")
+    sleeve = modes.get(mode or "")
     for k, row in enumerate(intents):
         if not isinstance(row, dict):
             why.append(f"intents[{k}] 不是对象")
@@ -89,8 +97,10 @@ def vet_report(body: Any) -> tuple[Optional[dict], list[str]]:
             why.append(f"intents[{k}] sleeve {row.get('sleeve')!r} 与 mode {mode!r} 不符(应为 {sleeve!r})")
         if row.get("side") not in ("buy", "sell"):
             why.append(f"intents[{k}] side {row.get('side')!r}")
-        if row.get("symbol") not in SPOT_TOKENS:
+        if book == "x1v" and row.get("symbol") not in SPOT_TOKENS:
             why.append(f"intents[{k}] symbol {row.get('symbol')!r} 不在 {sorted(SPOT_TOKENS)}")
+        if book == "r_v2" and not _PERP_COIN.match(str(row.get("symbol") or "")):
+            why.append(f"intents[{k}] symbol {row.get('symbol')!r} 不是 HL 永续币名")
     if mode == "dry_run" and outcomes:
         why.append("空跑不下单,不能带成交结果")
     for k, row in enumerate(outcomes):
@@ -142,7 +152,7 @@ async def executor_report(body: Any = Body(...),
         if not r:
             raise HTTPException(502, f"execution_outcomes write failed: {getattr(r, 'why', '')}")
         written["outcomes"] = len(clean["outcomes"])
-    detail = {**(clean.get("detail") or {}), "mode": clean["mode"], "kind": clean["kind"],
+    detail = {**(clean.get("detail") or {}), "mode": clean["mode"], "kind": clean["kind"], "book": clean.get("book") or "x1v",
               "host": clean.get("host"), "asof": clean.get("asof"), **{f"{k}_written": v for k, v in written.items()}}
     outcome = "error" if clean["kind"] == "error" or (clean.get("detail") or {}).get("errors") else "ok"
     from src.api.rpc_diagnostics import _record_loop_attempt
@@ -150,7 +160,7 @@ async def executor_report(body: Any = Body(...),
                                writer="src.api.routers.executor.executor_report")
     if clean.get("alert"):
         from src.api.notify import notify_telegram
-        await notify_telegram(f"[executor {clean['mode']} · {clean['kind']}] {clean['alert'][:500]}")
+        await notify_telegram(f"[executor {clean.get('book') or 'x1v'} {clean['mode']} · {clean['kind']}] {clean['alert'][:500]}")
     return {"ok": True, **written}
 
 

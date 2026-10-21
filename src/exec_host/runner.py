@@ -23,7 +23,14 @@ HL API 钱包的私钥只放在这台主机的 `/etc/cometcloud/executor.env`(Ja
 
 ## 只调用一种写操作
 
-本包对交易所只调用 `order`(IOC 限价)。不划转、不提币、不改杠杆 —— `tests/test_exec_host.py` 按 AST 守着这一条。
+本包对交易所只调用 `order`(IOC 限价;R-v2 单票还有减仓止损触发单)和 `cancel`(出场前撤掉那张触发单)。
+不划转、不提币、不改杠杆 —— `tests/test_exec_host.py` 按 AST 守着这一条。
+
+## R-v2 单票(`EXECUTOR_TICKETS_MODE` = off / dry_run / live,与 X1V 的 `EXECUTOR_MODE` 各管各的)
+
+计划里的 `tickets` 段(Railway `ticket_plan`)→ `tickets.ticket_actions` → HL 永续:IOC 进场、按成交价挂减仓止损触发单、
+不在持有单里的票减仓出场。净值 = 永续账户净值,封顶 `EXECUTOR_TICKETS_MAX_EQUITY_USD`。
+**USDC 要在永续账户里**(现货 → 永续的划转是 Jazz 在 HL 上手动做的,本包不划转)。
 """
 from __future__ import annotations
 
@@ -35,13 +42,14 @@ import os
 import socket
 import time
 import urllib.error
+import uuid
 import urllib.request
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Optional
 
 from src.data.execution.fill_log import BUY, SELL
-from src.exec_host import core
+from src.exec_host import core, tickets
 
 log = logging.getLogger("exec_host")
 DEFAULT_API = "https://web-production-0cdf76.up.railway.app"
@@ -51,6 +59,7 @@ HEARTBEAT_EVERY_S = 3600
 PLAN_WAIT_EVERY_S = 300
 PLAN_REFRESH_EVERY_S = 900
 PLAN_FROM_UTC = (0, 5)
+TRIGGER_RETRY_S = 900          # 止损触发单没挂上:每 15 分钟重挂一次(后备 IOC 每分钟都在看)
 
 
 def utcnow() -> dt.datetime:
@@ -79,6 +88,11 @@ class Config:
         self.stop_slip_bps = float(env.get("EXECUTOR_STOP_SLIP_BPS", "150"))
         self.state_dir = Path(env.get("EXECUTOR_STATE_DIR", "/var/lib/cometcloud"))
         self.host = env.get("EXECUTOR_HOST_NAME") or socket.gethostname()
+        self.tickets_mode = env.get("EXECUTOR_TICKETS_MODE", "dry_run").strip()
+        if self.tickets_mode not in ("off", "dry_run", "live"):
+            raise SystemExit(f"EXECUTOR_TICKETS_MODE 必须是 off / dry_run / live,收到 {self.tickets_mode!r}")
+        self.tickets_equity_cap = float(env.get("EXECUTOR_TICKETS_MAX_EQUITY_USD", "1000"))
+        self.tickets_slip_bps = float(env.get("EXECUTOR_TICKETS_SLIP_BPS", "100"))
         # 私钥不进 Config:只在 live 模式建交易客户端的那一刻从环境变量里读一次(Venue.exchange)
 
     @property
@@ -200,7 +214,7 @@ class Venue:
         return self.info.user_fills_by_time(self.cfg.account, t_ms) or []
 
     def exchange(self) -> Any:
-        if self.cfg.mode != "live":
+        if self.cfg.mode != "live" and self.cfg.tickets_mode != "live":
             raise RuntimeError("dry_run 不建交易客户端,也不读私钥")
         if self._exchange is None:
             from eth_account import Account
@@ -213,6 +227,28 @@ class Venue:
     def order(self, pair: str, side: str, qty: float, limit_px: float, cloid: str) -> Any:
         from hyperliquid.utils.types import Cloid
         return self.exchange().order(pair, side == BUY, qty, limit_px, {"limit": {"tif": "Ioc"}}, cloid=Cloid(cloid))
+
+    # 永续(R-v2 单票)
+    def perp_meta(self) -> dict[str, int]:
+        return tickets.perp_meta(self.info.meta())
+
+    def perp_mids(self) -> dict[str, float]:
+        return {k: float(v) for k, v in (self.info.all_mids() or {}).items() if not str(k).startswith("@")}
+
+    def perp_state(self) -> dict[str, Any]:
+        return tickets.parse_perp_state(self.info.user_state(self.cfg.account))
+
+    def order_perp(self, coin: str, side: str, qty: float, limit_px: float, cloid: str, reduce_only: bool) -> Any:
+        from hyperliquid.utils.types import Cloid
+        return self.exchange().order(coin, side == BUY, qty, limit_px, {"limit": {"tif": "Ioc"}},
+                                     reduce_only=reduce_only, cloid=Cloid(cloid))
+
+    def stop_trigger(self, coin: str, qty: float, limit_px: float, order_type: dict, cloid: str) -> Any:
+        from hyperliquid.utils.types import Cloid
+        return self.exchange().order(coin, False, qty, limit_px, order_type, reduce_only=True, cloid=Cloid(cloid))
+
+    def cancel(self, coin: str, oid: int) -> Any:
+        return self.exchange().cancel(coin, oid)
 
 
 # ── 执行器 ──────────────────────────────────────────────────────────────────
@@ -240,7 +276,9 @@ class Executor:
     def refresh_plan(self, now: dt.datetime) -> None:
         plan = self.state.get("plan") or {}
         want = asof_for(now)
-        have_today = plan.get("asof") == want
+        tp = self.state.get("ticket_plan") or {}
+        tickets_waiting = self.cfg.tickets_mode != "off" and not (tp.get("asof") == want and tp.get("ready"))
+        have_today = plan.get("asof") == want and not tickets_waiting
         after_open = (now.hour, now.minute) >= PLAN_FROM_UTC
         every = PLAN_REFRESH_EVERY_S if (have_today or not after_open) and plan else PLAN_WAIT_EVERY_S
         if time.time() - self._last.get("plan", 0) < every:
@@ -254,6 +292,8 @@ class Executor:
             if bool(resp.get("halted")) != bool(self.state.get("railway_halted")):
                 log.warning("Railway halt flag → %s", resp.get("halted"))
             self.state.set(railway_halted=bool(resp.get("halted")))
+        if isinstance(resp.get("tickets"), dict):
+            self.state.set(ticket_plan=resp["tickets"], ticket_plan_fetched_at=now.isoformat())
         if resp.get("ok"):
             self.state.set(plan=resp, plan_fetched_at=now.isoformat())
         else:
@@ -383,6 +423,250 @@ class Executor:
         self.state.set(stopped={today: stopped + hits})
         return hits
 
+    # ── R-v2 单票(HL 永续)────────────────────────────────────────────────
+    def _report_t(self, kind: str, **kw: Any) -> None:
+        self.outbox.put({"mode": self.cfg.tickets_mode, "book": "r_v2", "kind": kind, "host": self.cfg.host, **kw})
+
+    def _ticket_equity(self) -> tuple[float, dict, str]:
+        """(记账净值, 交易所仓位, 净值来源)。live:永续账户净值封顶;空跑:账上虚拟仓位,净值同样读真实账户,
+        账户为空时拿上限当净值(写明来源,不假装)。"""
+        live = self.cfg.tickets_mode == "live"
+        try:
+            st = self.venue.perp_state()
+        except Exception as e:                                           # noqa: BLE001
+            if live:
+                raise
+            st = {"ok": False, "equity": 0.0, "positions": {}, "error": f"{type(e).__name__}: {str(e)[:120]}"}
+        raw = float(st.get("equity") or 0.0)
+        cap = self.cfg.tickets_equity_cap
+        if live:
+            # 读不到账户 ≠ 账户里没有仓位:当成「全平了」会把账上的票全部记成已平,真仓位就没人管了
+            if not st.get("ok"):
+                raise RuntimeError("永续账户状态读不到(没有 marginSummary)—— 这一轮不动")
+            return min(raw, cap), st.get("positions") or {}, f"永续账户 {raw:.2f}(上限 {cap:.0f})"
+        book = self.state.get("ticket_book") or {}
+        virt = {b["coin"]: b["qty"] for b in book.values()}
+        if raw >= tickets.MIN_NOTIONAL_USD:
+            return min(raw, cap), virt, f"空跑 · 永续账户 {raw:.2f}(上限 {cap:.0f})"
+        return cap, virt, f"空跑 · 永续账户为空({raw:.2f}),按上限 {cap:.0f} 记账"
+
+    def _ticket_intent(self, coin: str, side: str, qty: float, mid: float, sleeve: str, ref: str, now: dt.datetime,
+                       limit_px: float):
+        return core.make_intent({"symbol": coin, "side": side, "qty_base": qty, "price": mid}, sleeve, ref, now, limit_px)
+
+    def _send_ticket_orders(self, staged: list) -> list:
+        """live:逐个下减仓 / 开仓 IOC;每个意图恰好一个结果。staged = [(intent, coin, qty, reduce_only, sz_decimals)]。"""
+        t0_ms = int(time.time() * 1000) - 2000
+        sent = []
+        for intent, coin, qty, reduce_only, _szd in staged:
+            t_sent = time.time()
+            try:
+                parsed = core.parse_order_response(self.venue.order_perp(
+                    coin, intent.side, qty, intent.limit_price, core.cloid_for(intent.intent_id), reduce_only))
+            except Exception as e:                                       # noqa: BLE001
+                parsed = {"kind": "error", "error": f"{type(e).__name__}: {str(e)[:200]}"}
+            sent.append((intent, qty, parsed, t_sent, time.time()))
+        time.sleep(self.settle_s)
+        try:
+            fills = self.venue.fills_since(t0_ms)
+        except Exception:                                                # noqa: BLE001
+            fills = []
+        try:
+            mids = self.venue.perp_mids()
+        except Exception:                                                # noqa: BLE001
+            mids = {}
+        now = self.clock()
+        return [core.outcome_for(i, qty, parsed, fills, mids.get(i.symbol), ts, td, now) for i, qty, parsed, ts, td in sent]
+
+    def _place_trigger(self, b: dict, now: dt.datetime) -> dict:
+        """按账上的止损线挂减仓止损触发单;返回更新后的账行(trigger_oid / trigger_error)。只在 live。"""
+        lim, otype = tickets.trigger_order(b["stop_px"], b["sz_decimals"])
+        try:
+            parsed = core.parse_order_response(self.venue.stop_trigger(b["coin"], b["qty"], lim, otype,
+                                                                       core.cloid_for(str(uuid.uuid4()))))
+        except Exception as e:                                           # noqa: BLE001
+            parsed = {"kind": "error", "error": f"{type(e).__name__}: {str(e)[:200]}"}
+        if parsed["kind"] == "resting" and parsed.get("oid") is not None:
+            return {**b, "trigger_oid": parsed["oid"], "trigger_error": None, "trigger_at": now.isoformat()}
+        return {**b, "trigger_oid": None, "trigger_error": str(parsed.get("error") or parsed)[:200]}
+
+    def _close_book(self, tids: list[str], why: str, px: dict[str, Optional[float]], now: dt.datetime) -> None:
+        book = dict(self.state.get("ticket_book") or {})
+        done = dict(self.state.get("ticket_done") or {})
+        for tid in tids:
+            b = book.pop(tid, None)
+            if b:
+                done[tid] = {**b, "closed_at": now.isoformat(), "close_why": why, "close_px": px.get(tid)}
+        done = dict(sorted(done.items(), key=lambda kv: kv[1].get("closed_at", ""))[-300:])
+        self.state.set(ticket_book=book, ticket_done=done)
+
+    def run_ticket_cycle(self, now: dt.datetime) -> dict[str, Any]:
+        tp = self.state.get("ticket_plan") or {}
+        live = self.cfg.tickets_mode == "live"
+        sleeve = (tp.get("sleeves") or {}).get(self.cfg.tickets_mode) or f"r_v2_{self.cfg.tickets_mode}"
+        halted, why_halt = self.halted()
+        szd, mids = self.venue.perp_meta(), self.venue.perp_mids()
+        equity, positions, eq_src = self._ticket_equity()
+        book = dict(self.state.get("ticket_book") or {})
+        done = set((self.state.get("ticket_done") or {}).keys())
+        act = tickets.ticket_actions(tp, book, positions, mids, szd, equity, done)
+        if act["closed_on_venue"]:
+            self._close_book([c["ticket_id"] for c in act["closed_on_venue"]], "交易所上已平(止损触发单成交或手动平仓)",
+                             {c["ticket_id"]: c.get("stop_px") for c in act["closed_on_venue"]}, now)
+            book = dict(self.state.get("ticket_book") or {})
+        staged = []
+        for x in act["exits"]:
+            b = book[x["ticket_id"]]
+            mid = mids.get(x["coin"]) or b["entry_px"]
+            lim = tickets.ioc_px_perp(mid, False, self.cfg.tickets_slip_bps, b["sz_decimals"])
+            staged.append((self._ticket_intent(x["coin"], SELL, x["qty"], mid, sleeve,
+                                               f"r_v2:{x['ticket_id']}:exit:{x['why']}", now, lim),
+                           x["coin"], x["qty"], True, b["sz_decimals"]))
+        for e in act["entries"]:
+            lim = tickets.ioc_px_perp(e["mid"], True, self.cfg.tickets_slip_bps, e["sz_decimals"])
+            staged.append((self._ticket_intent(e["coin"], BUY, e["qty"], e["mid"], sleeve,
+                                               f"r_v2:{e['ticket_id']}:enter", now, lim),
+                           e["coin"], e["qty"], False, e["sz_decimals"]))
+        mins = core.minutes_after_close(now)
+        detail = {"phase": "intents", "book_name": "r_v2", "asof": tp.get("asof"), "minutes_after_close": round(mins, 1),
+                  "equity": round(equity, 2), "equity_source": eq_src, "risk_frac": tp.get("risk_frac"),
+                  "closed_on_venue": act["closed_on_venue"],
+                  "exits": [{k: x[k] for k in ("ticket_id", "coin", "qty", "why")} for x in act["exits"]],
+                  "entries": [{k: e.get(k) for k in ("ticket_id", "symbol", "coin", "qty", "notional", "risk_usd",
+                                                     "stop_frac", "mid", "capped")} for e in act["entries"]],
+                  "not_executable": [{k: n.get(k) for k in ("ticket_id", "symbol", "coin", "why")}
+                                     for n in act["not_executable"]],
+                  "skipped_cap_paper": [s["ticket_id"] for s in tp.get("skipped_cap") or []],
+                  "open_before": len(book), "halted": halted, "halt_why": why_halt}
+        lines = [f"出 {x['coin']} {x['qty']}({x['why']})" for x in act["exits"]] + \
+                [f"进 {e['coin']} {e['qty']}(~${e['notional']},止损 −{e['stop_frac']:.1%})" for e in act["entries"]] + \
+                [f"不可执行 {n['symbol']}:{n['why']}" for n in act["not_executable"]]
+        alert = (f"R-v2 {tp.get('asof')} · {self.cfg.tickets_mode}{' · 已停,不提交' if halted else ''}: " + "; ".join(lines)
+                 ) if lines else None
+        self._report_t("cycle", asof=tp.get("asof"), intents=[asdict(i) for i, *_ in staged], detail=detail,
+                       alert=alert if (not live or halted) else None)
+        outcomes: list = []
+        if live and staged and halted:
+            outcomes = self._not_submitted([(i, None, None) for i, *_ in staged], f"一键停({why_halt}):未提交")
+        elif live and staged:
+            for x in act["exits"]:
+                oid = book[x["ticket_id"]].get("trigger_oid")
+                if oid is not None:
+                    try:
+                        self.venue.cancel(x["coin"], oid)
+                    except Exception as e:                               # noqa: BLE001
+                        log.warning("cancel trigger %s failed: %s", oid, e)
+            outcomes = self._send_ticket_orders(staged)
+        # 账本:live 按成交结果,空跑按中间价虚拟成交
+        by_ref = {i.signal_ref: (i, o) for (i, *_), o in zip(staged, outcomes or [None] * len(staged))}
+        exit_px: dict[str, Optional[float]] = {}
+        for x in act["exits"]:
+            i, o = by_ref[next(r for r in by_ref if r.startswith(f"r_v2:{x['ticket_id']}:exit"))]
+            if not live:
+                exit_px[x["ticket_id"]] = i.decision_mid
+            elif o is not None and o.status in ("filled", "partial") and o.avg_fill_price:
+                exit_px[x["ticket_id"]] = o.avg_fill_price
+        closed = list(exit_px)
+        if closed:
+            self._close_book(closed, "出场", exit_px, now)
+        book = dict(self.state.get("ticket_book") or {})
+        for e in act["entries"]:
+            i, o = by_ref[f"r_v2:{e['ticket_id']}:enter"]
+            if live and halted:
+                continue
+            if live:
+                if o is None or o.status not in ("filled", "partial") or not o.avg_fill_price:
+                    continue
+                fill_px, qty = o.avg_fill_price, round(o.filled_notional_usd / o.avg_fill_price, e["sz_decimals"])
+            else:
+                fill_px, qty = e["mid"], e["qty"]
+            b = {"ticket_id": e["ticket_id"], "symbol": e["symbol"], "coin": e["coin"], "qty": qty,
+                 "entry_px": fill_px, "stop_frac": e["stop_frac"], "sz_decimals": e["sz_decimals"],
+                 "stop_px": tickets.stop_px_for(fill_px, e["stop_frac"], e["sz_decimals"]),
+                 "signal_d": e.get("signal_d"), "entered_at": now.isoformat(), "trigger_oid": None}
+            if live and qty > 0:
+                b = self._place_trigger(b, now)
+            if qty > 0:
+                book[e["ticket_id"]] = b
+        self.state.set(ticket_book=book, ticket_done_asof=tp.get("asof"), ticket_cycle_at=now.isoformat())
+        if live and staged:
+            bad = [b for b in book.values() if b.get("trigger_error")]
+            self._report_t("cycle", asof=tp.get("asof"), outcomes=[asdict(x) for x in outcomes],
+                           detail={"phase": "outcomes", "statuses": [x.status for x in outcomes],
+                                   "book": self._book_brief(book)},
+                           alert=f"R-v2 {tp.get('asof')} 真单: " + "; ".join(
+                               f"{i.symbol} {i.side} → {x.status} {x.avg_fill_price or ''}"
+                               for (i, *_), x in zip(staged, outcomes))
+                           + ("" if not bad else " · ⚠️ 止损触发单没挂上:" + ", ".join(b["coin"] for b in bad)))
+        return {**detail, "intents": [asdict(i) for i, *_ in staged], "outcomes": [asdict(x) for x in outcomes]}
+
+    @staticmethod
+    def _book_brief(book: dict) -> list[dict]:
+        return [{k: b.get(k) for k in ("ticket_id", "coin", "qty", "entry_px", "stop_px", "trigger_oid")}
+                for b in book.values()]
+
+    def check_ticket_stops(self, now: dt.datetime) -> list[str]:
+        """每分钟:空跑 = 现价 ≤ 止损线就按止损线虚拟平仓;live = 交易所上仓位没了就记平仓,
+        仓位还在但现价已破止损线 ⇒ 补一张减仓 IOC(触发单的后备),触发单没挂上的再挂一次。"""
+        book = dict(self.state.get("ticket_book") or {})
+        if not book or self.cfg.tickets_mode == "off":
+            return []
+        mids = self.venue.perp_mids()
+        hits = tickets.stop_breaches(book, mids)
+        tp = self.state.get("ticket_plan") or {}
+        sleeve = (tp.get("sleeves") or {}).get(self.cfg.tickets_mode) or f"r_v2_{self.cfg.tickets_mode}"
+        if self.cfg.tickets_mode != "live":
+            if hits:
+                self._close_book(hits, "止损(空跑:现价 ≤ 止损线)", {t: book[t]["stop_px"] for t in hits}, now)
+                self._report_t("stop", asof=tp.get("asof"), detail={"hits": hits, "mids": {t: mids.get(book[t]["coin"]) for t in hits}},
+                               alert="R-v2 空跑止损: " + "; ".join(f"{book[t]['coin']} {mids.get(book[t]['coin'])} ≤ {book[t]['stop_px']}" for t in hits))
+            return hits
+        st = self.venue.perp_state()
+        if not st.get("ok"):
+            raise RuntimeError("永续账户状态读不到 —— 不据此记平仓")
+        positions = st.get("positions") or {}
+        gone = [t for t, b in book.items() if positions.get(b["coin"], 0.0) <= 0]
+        if gone:
+            self._close_book(gone, "交易所上已平(止损触发单成交或手动平仓)", {t: book[t]["stop_px"] for t in gone}, now)
+            self._report_t("stop", asof=tp.get("asof"), detail={"closed_on_venue": gone},
+                           alert="R-v2 止损(交易所触发单): " + ", ".join(book[t]["coin"] for t in gone))
+        book = dict(self.state.get("ticket_book") or {})
+        halted, why_halt = self.halted()
+        backup = [t for t in hits if t in book]
+        if backup and not halted:
+            staged = []
+            for t in backup:
+                b = book[t]
+                qty = min(b["qty"], positions.get(b["coin"], 0.0))
+                lim = tickets.ioc_px_perp(mids[b["coin"]], False, self.cfg.stop_slip_bps, b["sz_decimals"])
+                staged.append((self._ticket_intent(b["coin"], SELL, qty, mids[b["coin"]], sleeve,
+                                                   f"r_v2:{t}:stop_backup", now, lim), b["coin"], qty, True, b["sz_decimals"]))
+            self._report_t("stop", asof=tp.get("asof"), intents=[asdict(i) for i, *_ in staged],
+                           detail={"backup_stop": backup})
+            outs = self._send_ticket_orders(staged)
+            filled = [t for t, o in zip(backup, outs) if o.status in ("filled", "partial")]
+            self._close_book(filled, "止损(主机后备 IOC)", {t: o.avg_fill_price for t, o in zip(backup, outs)}, now)
+            self._report_t("stop", asof=tp.get("asof"), outcomes=[asdict(o) for o in outs],
+                           detail={"phase": "outcomes", "statuses": [o.status for o in outs]},
+                           alert="R-v2 后备止损: " + "; ".join(f"{i.symbol} → {o.status}" for (i, *_), o in zip(staged, outs)))
+        for t, b in (self.state.get("ticket_book") or {}).items():
+            last = b.get("trigger_retry_at")
+            if b.get("trigger_oid") is None and not halted and (
+                    not last or (now - dt.datetime.fromisoformat(last)).total_seconds() >= TRIGGER_RETRY_S):
+                nb = {**self._place_trigger(b, now), "trigger_retry_at": now.isoformat()}
+                book2 = dict(self.state.get("ticket_book") or {})
+                book2[t] = nb
+                self.state.set(ticket_book=book2)
+        return hits
+
+    def _maybe_ticket_cycle(self, now: dt.datetime) -> None:
+        tp = self.state.get("ticket_plan") or {}
+        if (self.cfg.tickets_mode != "off" and tp.get("ready") and tp.get("asof") == asof_for(now)
+                and self.state.get("ticket_done_asof") != tp["asof"]):
+            r = self.run_ticket_cycle(now)
+            log.info("ticket cycle %s: %d entries, %d exits, %d not executable", tp["asof"], len(r["entries"]),
+                     len(r["exits"]), len(r["not_executable"]))
+
     def heartbeat(self, now: dt.datetime) -> None:
         try:
             b = self.venue.balances()
@@ -394,6 +678,9 @@ class Executor:
         self._report("heartbeat", asof=plan.get("asof"), detail={
             "balances": bal, "plan_asof": plan.get("asof"), "done_asof": self.state.get("done_asof"),
             "stop_px": plan.get("stop_px"), "halted": halted, "halt_why": why,
+            "tickets_mode": self.cfg.tickets_mode, "ticket_book": self._book_brief(self.state.get("ticket_book") or {}),
+            "ticket_plan_asof": (self.state.get("ticket_plan") or {}).get("asof"),
+            "ticket_done_asof": self.state.get("ticket_done_asof"),
             "outbox_pending": len(self.outbox.pending()), "at": now.isoformat()})
 
     def tick(self) -> None:
@@ -401,7 +688,10 @@ class Executor:
         for name, fn in (("flush", lambda: self.outbox.flush(self.railway)),
                          ("plan", lambda: self.refresh_plan(now)),
                          ("cycle", lambda: self._maybe_cycle(now)),
+                         ("tickets", lambda: self._maybe_ticket_cycle(now)),
                          ("stop", lambda: self._every("stop", STOP_EVERY_S, lambda: self.check_stops(now))),
+                         ("ticket_stop", lambda: self._every("ticket_stop", STOP_EVERY_S,
+                                                             lambda: self.check_ticket_stops(now))),
                          ("heartbeat", lambda: self._every("heartbeat", HEARTBEAT_EVERY_S, lambda: self.heartbeat(now)))):
             try:
                 fn()
@@ -443,6 +733,28 @@ def check(ex: Executor) -> dict[str, Any]:
         out["would_trade"] = [{k: o.get(k) for k in ("symbol", "side", "qty_base", "notional_rounded")} for o in r["orders"]]
         out["refused"] = r["refused"]
         out["nav_book"] = round(r["nav_book"], 2)
+    if ex.cfg.tickets_mode != "off":
+        tp = plan.get("tickets") if isinstance(plan, dict) else None
+        t: dict[str, Any] = {"mode": ex.cfg.tickets_mode, "equity_cap": ex.cfg.tickets_equity_cap,
+                             "plan": {k: (tp or {}).get(k) for k in ("asof", "ready", "why", "last_d", "risk_frac", "cap")}}
+        try:
+            st = ex.venue.perp_state()
+            szd, mids = ex.venue.perp_meta(), ex.venue.perp_mids()
+            t["perp_account"] = {"ok": st.get("ok"), "equity": st.get("equity"), "positions": st.get("positions")}
+            t["hl_perps_listed"] = len(szd)
+            if not st.get("ok") or (st.get("equity") or 0) < tickets.MIN_NOTIONAL_USD:
+                t["warning"] = "永续账户里没有可用的 USDC —— 真跑前要在 HL 上把 USDC 从现货划到永续(Jazz 手动)"
+            if tp and tp.get("ready"):
+                eq = min(st.get("equity") or 0.0, ex.cfg.tickets_equity_cap) or ex.cfg.tickets_equity_cap
+                act = tickets.ticket_actions(tp, ex.state.get("ticket_book") or {}, st.get("positions") or {}, mids, szd,
+                                             eq, set((ex.state.get("ticket_done") or {}).keys()))
+                t["would"] = {"enter": [{k: e.get(k) for k in ("symbol", "coin", "qty", "notional", "stop_frac")}
+                                        for e in act["entries"]],
+                              "exit": act["exits"], "not_executable": [{k: n.get(k) for k in ("symbol", "why")}
+                                                                       for n in act["not_executable"]]}
+        except Exception as e:                                           # noqa: BLE001
+            t["error"] = f"{type(e).__name__}: {str(e)[:200]}"
+        out["tickets"] = t
     ex.heartbeat(utcnow())
     out["report"] = ex.outbox.flush(ex.railway)
     return out

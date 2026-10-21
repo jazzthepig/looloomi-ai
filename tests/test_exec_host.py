@@ -1,5 +1,5 @@
 """T-015 云主机执行器:空跑不碰私钥、意图先于订单落盘、每个意图恰好一个结果、两个停、盘中止损不依赖 Railway、
-对交易所只有 `order` 一种写操作;Railway 侧的计划与回报校验。"""
+对交易所只有 `order` / `cancel` 两种写操作;Railway 侧的计划与回报校验。"""
 import ast
 import asyncio
 import datetime as dt
@@ -246,7 +246,8 @@ def test_the_host_package_calls_only_order_on_the_exchange():
         tree = ast.parse(p.read_text(encoding="utf-8"))
         calls = {n.func.attr for n in ast.walk(tree) if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
                  and isinstance(n.func.value, ast.Call) and ast.unparse(n.func.value.func).endswith("exchange")}
-        assert calls <= {"order"}, f"{p.name}: {calls}"
+        # `cancel`:R-v2 单票出场前撤掉自己挂的减仓止损触发单(撤单动不了钱);其余写操作一律不许
+        assert calls <= {"order", "cancel"}, f"{p.name}: {calls}"
         names = {n.attr for n in ast.walk(tree) if isinstance(n, ast.Attribute)} | \
                 {n.id for n in ast.walk(tree) if isinstance(n, ast.Name)}
         assert not names & set(_FORBIDDEN), f"{p.name}: {names & set(_FORBIDDEN)}"

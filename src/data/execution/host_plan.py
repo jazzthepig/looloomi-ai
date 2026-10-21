@@ -69,9 +69,23 @@ async def plan_core(asof: str) -> dict[str, Any]:
     return core
 
 
+async def ticket_section(asof: str) -> dict[str, Any]:
+    """R-v2 单票计划(`ticket_plan`)。与 X1V 的 `ok` 互不牵连:X1V 收盘没齐不挡单票,单票读不到也不挡 X1V。"""
+    from src.data.execution.ticket_plan import load_ticket_plan
+    try:
+        return await load_ticket_plan(asof)
+    except Exception as e:                                       # noqa: BLE001
+        return {"asof": asof, "ready": False, "why": f"{type(e).__name__}: {str(e)[:300]}",
+                "enter": [], "hold": [], "exit": [], "skipped_cap": []}
+
+
 async def build_host_plan(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     now = now or dt.datetime.now(dt.timezone.utc)
     asof = (now.astimezone(dt.timezone.utc).date() - dt.timedelta(days=1)).isoformat()
-    core = await plan_core(asof)
+    try:
+        core = await plan_core(asof)
+    except Exception as e:                                       # noqa: BLE001 — X1V 读不到不挡单票
+        core = {"ok": False, "asof": asof, "why": f"X1V 计划读不到:{type(e).__name__}: {str(e)[:200]}"}
     halted, halt_status = await read_halt()
-    return {**core, "halted": halted, "halt_status": halt_status, "generated_at": now.isoformat()}
+    return {**core, "halted": halted, "halt_status": halt_status, "generated_at": now.isoformat(),
+            "tickets": await ticket_section(asof)}
