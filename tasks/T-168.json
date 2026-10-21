@@ -1,9 +1,13 @@
 {
   "id": "T-168",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-21",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-21T17:20Z",
+    "value": "S-663 ❌:没有信号过发现段(C2 覆盖 3m IC 0.086 t 2.14 但 2023 半段不为正;发现段 2021 年截面 < 8 的 14 个月跳过),按预注册不碰留出段。链级稳定币流入不进战场简报。复核:脚本照抄 s661 结构、机械选信号、只读 publishable key。"
+  },
   "title": "S-663 价值挖掘第二份:链上稳定币流入能否在 L1 / L2 代币横截面上挑出之后更好的链(发现段 + 留出段一次性,机械规则)",
   "source": "台账 S-663 预注册(写于抓取任何链级数据之前,2026-10-21 16:31 UTC)。Jazz 10-21 夜「做点长任务做价值挖掘」。S-661 刚在留出段证实:持币人拿到的收入占比(价值捕获比)能挑出之后更好的币 —— 本卡问链级的资金面。",
   "allowed_paths": [
@@ -23,5 +27,5 @@
     "expect": "脚本 docs/research/t168_chain_flows.py(+ t168_fetch_chains.py);结果 docs/research/t168_results.json;报告(脚本写)/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-168_s663_chain_flows.md,末尾「S-663 结果」草稿;in_review,推 lane-c/T-168。新分支一律 `git switch -c lane-c/T-168 origin/main`(s661 脚本若还不在 origin/main 上,先等 Seth 的提交落地)。"
   },
   "prior_value": "过了 ⇒ 链级资金面进 ⓪ 战场简报、作为 ② 在链代币里的倾斜候选另立前向;不过 ⇒ 记档。",
-  "notes": ""
+  "notes": "results: discovery 2021-01-31→2023-12-31, 138 gecko_ids_with_stables × 104 gecko_ids_with_mcap, MIN_MCAP=1e8, MIN_HIST_DAYS=120, MIN_XS=8 (skipped 14/36 months in discovery, 0/30 in holdout). 0/8 信号过发现段(平均 IC>0、t≥2、两半 IC>0;C2:3m t=2.14 但 h2_IC=-0.009 ≤ 0 -> fail; C3:1m 两半>0 但 t=1.32 < 2 -> fail). 留出段按 S-663 原文「没有信号过发现段 ⇒ 不算留出段」不跑。结论:链级稳定币流入(及加速)在 L1/L2 代币横截面上挑不出之后更好的链 —— 记档,链级资金面不进战场简报,不立前向。试验计数:价值族第 3 次;发现段 4 信号 × 2 期限为探索,留出段 0 条。TVL 30 日增长只报不判(留出段 1m IC=+0.007 / t=0.17、3m IC=-0.032 / t=-0.79);探索性发现:C2:3m 是唯一 t≥2 的信号(2021-22 h1 IC=+0.20 但 2023 h2 IC=-0.009),新数据上重跑前要立预注册。"
 }
