@@ -6,6 +6,7 @@
     python3 scripts/regime_call.py flat --note "全平"
     python3 scripts/regime_call.py on   --close HYPE --note "HYPE 先走"
     python3 scripts/regime_call.py status
+    python3 scripts/regime_call.py brief [--top 40]     # 战场简报:HL 前 N 永续的趋势 / 第二段形态 / 资金费(筛子,不是信号)
 
 每次提交都是一条**完整**的判断(不是增量),最新一条生效;默认 14 天到期,到期回到系统默认(on、1 档、无战场)。
 提交当天的判断管第二天 00:45 UTC 那一轮。要立刻停,用一键停(POST /internal/executor/halt)。
@@ -58,7 +59,8 @@ def _call(method: str, path: str, api: str, body: dict | None = None):
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Jazz ⓪ 开关")
-    ap.add_argument("state", choices=["on", "off", "flat", "status"])
+    ap.add_argument("state", choices=["on", "off", "flat", "status", "brief"])
+    ap.add_argument("--top", type=int, default=40)
     ap.add_argument("--conviction", type=int, default=1, choices=[1, 2, 3])
     ap.add_argument("--battlefield", default="", help="逗号分隔的 HL 永续币名,如 HYPE,UNI")
     ap.add_argument("--close", default="", help="这些币的 J 票下一轮出场")
@@ -66,6 +68,24 @@ def main() -> None:
     ap.add_argument("--days", type=int, default=14)
     ap.add_argument("--api", default=os.environ.get("COMETCLOUD_API", API))
     a = ap.parse_args()
+    if a.state == "brief":
+        r = _call("GET", f"/internal/regime-call/brief?top={a.top}", a.api)
+        b = r["breadth"]
+        pct = lambda x: "—" if x is None else f"{x * 100:+.0f}%"            # noqa: E731
+        print(f"{r['at'][:16]}Z · 前 {b['n']} · SMA50 之上 {pct(b['above_sma50'])} · SMA200 之上 {pct(b['above_sma200'])}"
+              f" · 破 20 日高 {pct(b['breakout_20d'])} · 第二段形态 {b['second_leg_setups']} 个"
+              f" · 30 日中位 {pct(b['median_ret_30d'])} · 资金费中位 {pct(b['funding_apr_median'])}/年")
+        print(f"{'币':8s} {'位置':8s} {'7日':>6s} {'30日':>6s} {'90日':>6s} {'离120日高':>8s} {'第一段':>6s} {'回撤':>6s}"
+              f" {'止损宽':>6s} {'资金费':>6s} {'未平仓':>8s}")
+        for x in r["rows"]:
+            leg = f"{x['first_leg_x']:.1f}x" if x.get("first_leg_x") else "—"
+            sw = x.get("stop_width")
+            stop = "—" if sw is None else f"{sw * 100:.0f}%"
+            print(f"{x['coin']:8s} {x['tag']:8s} {pct(x.get('ret_7d')):>6s} {pct(x.get('ret_30d')):>6s} "
+                  f"{pct(x.get('ret_90d')):>6s} {pct(x.get('dd_from_120d_high')):>8s} {leg:>6s} {pct(x.get('pullback')):>6s} "
+                  f"{stop:>6s} {pct(x.get('funding_apr')):>6s} {(x.get('oi_usd') or 0) / 1e6:>7.0f}M")
+        print(r.get("note", ""))
+        return
     if a.state == "status":
         r = _call("GET", "/internal/regime-call", a.api)
         nxt, last = r["next_cycle"], r["last_cycle"]

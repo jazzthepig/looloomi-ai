@@ -6,6 +6,7 @@
     GET  /internal/executor/book-of-truth  X-Internal-Token   R-v2 真相之书:纸面 vs 交易所逐票对账(只读)
     POST /internal/regime-call       X-Internal-Token   Jazz ⓪ 开关:提交一条判断(on / off / flat、信心、战场)
     GET  /internal/regime-call       X-Internal-Token   生效的判断、最近 20 条、在持 J 票、记分卡
+    GET  /internal/regime-call/brief X-Internal-Token   ⓪ 战场简报(HL 前 N 永续的趋势 / 第二段形态 / 资金费,只读)
 
 ## 为什么用单独的 EXECUTOR_TOKEN
 
@@ -222,6 +223,17 @@ async def regime_call_get(x_internal_token: Optional[str] = Header(None, alias="
             "recent_calls": [call_view(c) for c in calls[-20:]][::-1],
             "j_live": [j for j in js if j.get("status") in ("pending", "open")],
             "scorecard": card}
+
+
+@router.get("/internal/regime-call/brief")
+async def regime_call_brief(top: int = 40, x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
+    """⓪ 战场简报:HL 成交额前 N 的永续,趋势位置 / 第一段 / 回撤 / 第二段形态 / 资金费 / 未平仓 / 止损宽度。只读;筛子不是信号。"""
+    _token_ok(x_internal_token, "INTERNAL_TOKEN")
+    from src.data.execution.battlefield_brief import build_brief
+    try:
+        return {"ok": True, **await build_brief(max(5, min(int(top), 80)))}
+    except Exception as e:                                       # noqa: BLE001
+        raise HTTPException(502, f"HL 读不到:{type(e).__name__}: {str(e)[:200]}")
 
 
 @router.post("/internal/executor/halt")
