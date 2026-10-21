@@ -25,6 +25,7 @@ MIN_NOTIONAL_USD = 10.0
 MAX_TICKET_NOTIONAL_FRAC = 0.5      # 单票名义不超过净值的一半(止损很窄时风险预算会算出很大的名义)
 MAX_GROSS_FRAC = 1.0                # 策略层:名义合计 ≤ 分到的资金(Jazz 10-21:策略 0–1 倍;S-638 f = 1% 回放峰值 0.99 倍)
 MAX_PORTFOLIO_LEVERAGE = 5.0        # 组合层杠杆 L 的硬上限(Jazz 10-21);分到的资金 = 账户净值 × L
+MAX_RISK_MULT = 2.0                 # Jazz ⓪ 信心档位放大每票风险的硬上限(Railway 给 1 / 1.5 / 2,主机再守一次)
 TRIGGER_LIMIT_SLIP = 0.10           # 止损触发后按市价成交;HL 仍要一个限价 = 触发价再让 10%
 
 
@@ -143,7 +144,8 @@ def ticket_actions(tplan: dict, book: dict[str, dict], positions: dict[str, floa
             not_exec.append({**e, "coin": coin, "why": "同一个币已有一张票的仓位"})
             continue
         mid = mids.get(coin)
-        s = size_entry(alloc, float(tplan.get("risk_frac") or 0), e.get("stop_frac"), mid, szd[coin])
+        mult = min(max(float(e.get("risk_mult") or 1.0), 0.0), MAX_RISK_MULT)
+        s = size_entry(alloc, float(tplan.get("risk_frac") or 0) * mult, e.get("stop_frac"), mid, szd[coin])
         if not s["qty"]:
             not_exec.append({**e, "coin": coin, "why": s["why"], "mid": mid})
             continue

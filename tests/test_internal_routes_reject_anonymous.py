@@ -154,6 +154,7 @@ VALID_BODIES: dict[str, dict] = {
     "/internal/telegram/webhook": {"message": {"text": "/x", "chat": {"id": 1}}},
     "/internal/executor/report": {"mode": "dry_run", "kind": "heartbeat", "detail": {"auth_probe": True}},
     "/internal/executor/halt": {"halted": False, "reason": "auth probe"},
+    "/internal/regime-call": {"state": "off", "note": "auth probe"},
 }
 
 GATED, OPEN, WRONG_SHAPE, BROKEN = "gated", "open", "wrong_shape", "broken"

@@ -125,4 +125,13 @@ async def load_ticket_plan(asof: str, risk_frac: Optional[float] = None) -> dict
         bars = await _read_all("ohlcv_daily", {"select": "symbol,trade_date,close", "source": "eq.binance_hist",
                                                "trade_date": f"eq.{asof}", "symbol": f"in.({','.join(syms)})"})
         closes = {(b["symbol"], str(b["trade_date"])[:10]): float(b["close"]) for b in bars if b.get("close")}
-    return make_ticket_plan(rows, last_d, asof, closes, rf, DEFAULT_CAP, lev)
+    plan = make_ticket_plan(rows, last_d, asof, closes, rf, DEFAULT_CAP, lev)
+    # Jazz ⓪(regime_call):off / flat 挡新票、flat 平所有、信心档位放大每票风险、战场上的 J 票。
+    # **读不到判断 ⇒ 不开不平(fail closed)**:一条「off」被当成「没有判断」,就会在 Jazz 说别进的时候进场。
+    from src.data.execution.regime_call import governing_call, overlay, read_calls, read_j_tickets
+    try:
+        calls, j_rows = await read_calls(), await read_j_tickets()
+    except Exception as e:                                       # noqa: BLE001
+        return {**plan, "ready": False, "enter": [], "exit": [], "hold": plan.get("hold") or [],
+                "why": f"Jazz ⓪(regime_calls / j_tickets)读不到 —— 这一轮不开不平:{type(e).__name__}: {str(e)[:200]}"}
+    return overlay(plan, governing_call(calls, asof), j_rows)

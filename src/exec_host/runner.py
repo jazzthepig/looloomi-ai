@@ -624,7 +624,10 @@ class Executor:
                   "closed_on_venue": act["closed_on_venue"],
                   "exits": [{k: x[k] for k in ("ticket_id", "coin", "qty", "why")} for x in act["exits"]],
                   "entries": [{k: e.get(k) for k in ("ticket_id", "symbol", "coin", "qty", "notional", "risk_usd",
-                                                     "stop_frac", "mid", "capped")} for e in act["entries"]],
+                                                     "stop_frac", "mid", "capped", "risk_mult", "book")}
+                              for e in act["entries"]],
+                  "regime_call": {k: (tp.get("regime_call") or {}).get(k) for k in ("id", "state", "conviction", "source")},
+                  "blocked_by_call": [b.get("ticket_id") for b in tp.get("blocked_by_call") or []],
                   "not_executable": [{k: n.get(k) for k in ("ticket_id", "symbol", "coin", "why")}
                                      for n in act["not_executable"]],
                   "skipped_cap_paper": [s["ticket_id"] for s in tp.get("skipped_cap") or []],

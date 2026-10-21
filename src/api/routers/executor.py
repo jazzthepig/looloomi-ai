@@ -4,6 +4,8 @@
     POST /internal/executor/report   X-Executor-Token   主机回报:意图、成交结果、余额、心跳
     POST /internal/executor/halt     X-Internal-Token   一键停 / 解除(Redis `executor:halt`)
     GET  /internal/executor/book-of-truth  X-Internal-Token   R-v2 真相之书:纸面 vs 交易所逐票对账(只读)
+    POST /internal/regime-call       X-Internal-Token   Jazz ⓪ 开关:提交一条判断(on / off / flat、信心、战场)
+    GET  /internal/regime-call       X-Internal-Token   生效的判断、最近 20 条、在持 J 票、记分卡
 
 ## 为什么用单独的 EXECUTOR_TOKEN
 
@@ -182,6 +184,44 @@ async def executor_book_of_truth(mode: str = "live", detail: bool = False,
     if not detail:
         r = {**r, "tickets": [t for t in r["tickets"] if t["breaches"]]}
     return {"ok": True, **r}
+
+
+@router.post("/internal/regime-call")
+async def regime_call_post(body: Any = Body(...),
+                           x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
+    """Jazz ⓪ 开关:提交一条完整的判断(state on / off / flat、conviction 1–3、battlefield、close、note、days)。
+    只追加;最新一条生效。说明见 src/data/execution/regime_call.py。"""
+    _token_ok(x_internal_token, "INTERNAL_TOKEN")
+    from src.data.execution.regime_call import post_call
+    r = await post_call(body)
+    if not r.get("ok"):
+        raise HTTPException(422, {"rejected": r.get("rejected")})
+    c = r["call"]
+    from src.api.notify import notify_telegram
+    await notify_telegram(f"[⓪ Jazz] {c.get('state')} · 信心 {c.get('conviction')} · 战场 {','.join(c.get('battlefield') or []) or '—'}"
+                          f"{' · 离场 ' + ','.join(c.get('close_coins') or []) if c.get('close_coins') else ''}"
+                          f" · 到 {str(c.get('expires_at'))[:10]} · {str(c.get('note') or '')[:200]}")
+    return r
+
+
+@router.get("/internal/regime-call")
+async def regime_call_get(x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
+    """现在生效的判断(下一轮计划用哪条)、最近 20 条、在持的 J 票、记分卡。"""
+    _token_ok(x_internal_token, "INTERNAL_TOKEN")
+    from src.data.execution.regime_call import call_view, governing_call, load_scorecard, read_calls, read_j_tickets
+    try:
+        calls, js = await read_calls(), await read_j_tickets()
+        card = await load_scorecard()
+    except Exception as e:                                       # noqa: BLE001
+        raise HTTPException(502, f"{type(e).__name__}: {str(e)[:300]}")
+    today = dt.datetime.now(dt.timezone.utc).date()
+    return {"ok": True,
+            "next_cycle": {"asof": today.isoformat(), "call": call_view(governing_call(calls, today))},
+            "last_cycle": {"asof": (today - dt.timedelta(days=1)).isoformat(),
+                           "call": call_view(governing_call(calls, today - dt.timedelta(days=1)))},
+            "recent_calls": [call_view(c) for c in calls[-20:]][::-1],
+            "j_live": [j for j in js if j.get("status") in ("pending", "open")],
+            "scorecard": card}
 
 
 @router.post("/internal/executor/halt")

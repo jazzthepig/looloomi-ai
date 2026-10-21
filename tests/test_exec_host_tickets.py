@@ -303,6 +303,8 @@ def test_loader_reads_the_book_state_and_signal_day_closes(monkeypatch):
         if table == "ohlcv_daily":
             assert params["source"] == "eq.binance_hist" and params["trade_date"] == f"eq.{ASOF}"
             return [{"symbol": "UNI", "trade_date": ASOF, "close": 8.0}]
+        if table in ("regime_calls", "j_tickets"):
+            return []                                              # 没有 Jazz ⓪ 判断 ⇒ 系统默认
         raise AssertionError(table)
     monkeypatch.setattr(hdr, "_read_all", fake)
     monkeypatch.delenv("R_V2_RISK_FRAC", raising=False)

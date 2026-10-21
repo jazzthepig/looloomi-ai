@@ -1954,6 +1954,17 @@ async def _r_tickets_paper_loop():
     判活:`select last_d from r_tickets_state` ≥ 前天。"""
     await _asyncio.sleep(_boot_delay(2100))   # 部署后错开首轮(S-482:同一 30 秒窗口里最多 10 个)
     while True:
+        # Jazz ⓪ 的 J 票先推进(在 R-v2 扫描把计划标成 ready 之前,否则主机可能在 J 票建好之前就跑完这一天)
+        try:
+            from src.data.execution.regime_call import run_j_scan as _j_run
+            _j = await _j_run()
+            print(f"[J-TICKETS] {_j['status']} · {str(_j.get('reason'))[:160]}")
+            await _record_loop_attempt("_j_tickets_scan", _j["status"], reason=str(_j.get("reason"))[:400],
+                                       detail=_j.get("detail"), writer="src.api.main._r_tickets_paper_loop")
+        except Exception as _je:
+            print(f"[J-TICKETS] ⚠️  scan FAILED: {_je}")
+            await _record_loop_attempt("_j_tickets_scan", "error", reason=f"{type(_je).__name__}: {str(_je)[:300]}",
+                                       writer="src.api.main._r_tickets_paper_loop")
         try:
             from src.data.signals.r_tickets_paper import run_once as _rt_run
             r = await _rt_run()

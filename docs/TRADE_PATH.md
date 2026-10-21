@@ -83,6 +83,23 @@ HL 永续留给 Jev 的多空叠加层(Jazz 负责,测试中)。
   封顶 `EXECUTOR_TICKETS_MAX_EQUITY_USD`(默认 1,000)。**USDC 要先在 HL 上从现货划到永续(Jazz 手动;执行器不划转)。**
   空跑按中间价虚拟成交、按止损线虚拟止损 —— 第一张票空跑与回放对上之后,由 Jazz 把 `EXECUTOR_TICKETS_MODE` 改成 `live`。
 
+## §3e Jazz ⓪ 开关(2026-10-21,「高维选战场,低维集中火力」)
+
+S-658 / S-659:R-v2 的钱在「山寨走趋势的月份拿着走趋势的币」,进场形态不重要;⓪ 层(何时在场 + 在哪)决定输赢,系统化的
+⓪ 还没建成(T-167 在测)。所以先把 Jazz 的判断接进执行器 —— **人给判断,规则管票,每一次判断都记分**。
+
+- **在 Mac 上:** `python3 scripts/regime_call.py on --conviction 2 --battlefield HYPE,UNI --note "…"`;
+  `off`(不开新票)/ `flat`(下一轮全平)/ `on --close HYPE`(这张 J 票先走)/ `status`(生效的判断 + 记分卡)。
+  每条是完整判断,最新一条生效,默认 14 天到期回到系统默认。提交当天的判断管**第二天 00:45 UTC 那一轮**(主机一天执行一次);
+  要立刻停仍用一键停。
+- **执行:** on 时战场上的币各开一张 **J 票**(HL 日线,信号日 = 生效的 asof,次日开盘进;止损 2.5 × ATR14;SMA20 离场在第一次收盘
+  站上 SMA20 之后才生效 —— 人可能在回调里进;120 根到期)。信心 1 / 2 / 3 ⇒ 每票风险 × 1 / 1.5 / 2(R-v2 与 J 票都放大;主机守 2 倍)。
+  off / flat 挡下的 R-v2 票在真相之书里记「人的决定」,不算违规。读不到判断 ⇒ 这一轮不开不平(fail closed)。
+- **记分:** `GET /internal/regime-call` 的 scorecard(纸面 R,单位 = 一张票的风险):J 票、信心档位多拿的、被挡下的 R-v2
+  (机会成本)、flat 躲过的;交易所口径看 `/internal/executor/book-of-truth`。与系统化的 ⓪ 并排,决定哪一边拿更多资本。
+- 表:`regime_calls`(只追加)、`j_tickets`、`j_tickets_state`(`migrations/2026-10-21_regime_calls.sql`);
+  推进 = `_r_tickets_paper_loop` 每小时在 R-v2 扫描**之前**跑 `run_j_scan`(判活:`loop_attempt` 里 `_j_tickets_scan`)。
+
 ## §4 执行器的硬约束
 
 - **Key = HL API 钱包(agent wallet)**:Jazz 在 HL 里自己创建并授权给主账户;

@@ -54,6 +54,8 @@
     "hl_book_daily",
     "holder_concentration_history",
     "interpretation_validation_runs",
+    "j_tickets",
+    "j_tickets_state",
     "loop_attempt",
     "macro_briefs",
     "macro_daily",
@@ -74,6 +76,7 @@
     "protocol_tvl_daily",
     "r_money_daily",
     "regime_band_log",
+    "regime_calls",
     "risk_meter_history",
     "rr_matrix_daily",
     "santiment_slug_map",
@@ -186,6 +189,12 @@
       "nav",
       "ret",
       "rule"
+    ],
+    "j_tickets_state": [
+      "id",
+      "last_d",
+      "last_result",
+      "last_run_at"
     ],
     "macro_briefs": [
       "brief",

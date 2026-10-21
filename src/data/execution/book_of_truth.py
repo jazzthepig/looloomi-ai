@@ -37,7 +37,7 @@ from typing import Any, Iterable, Optional
 
 from src.data.execution.ticket_plan import DEFAULT_CAP, TICKET_SLEEVE_FOR_MODE, taken_ids
 
-REF = re.compile(r"^r_v2:(?P<tid>[^:]+:\d{4}-\d{2}-\d{2}):(?P<act>[a-z_]+)(?::(?P<why>.*))?$")
+REF = re.compile(r"^r_v2:(?P<tid>(?:J:)?[^:]+:\d{4}-\d{2}-\d{2}):(?P<act>[a-z_]+)(?::(?P<why>.*))?$")
 EXIT_ACTS = ("exit", "stop_backup", "stop_trigger", "stop_virtual")
 SERIOUS = ("no_stop", "orphan", "no_record", "late_exit", "off_plan")
 LADDER = ((100, 5.0), (50, 3.0), (20, 2.0), (0, 1.0))
@@ -107,7 +107,9 @@ def reconcile(paper: Iterable[dict], intents: Iterable[dict], outcomes: Iterable
     a = _d(asof)
     rows = [r for r in paper if r.get("status") in ("pending", "open", "closed")]
     by_id = {r["ticket_id"]: r for r in rows}
-    taken = taken_ids(rows, cap, a + dt.timedelta(days=1)) if a else set()
+    # J 票(Jazz ⓪ 的战场票,ticket_id 以 J: 开头)不走 R-v2 的满额先到先得:人选了就是要进
+    jazz = {r["ticket_id"] for r in rows if str(r["ticket_id"]).startswith("J:")}
+    taken = (taken_ids([r for r in rows if r["ticket_id"] not in jazz], cap, a + dt.timedelta(days=1)) if a else set()) | jazz
     outs = {o["intent_id"]: o for o in outcomes if o.get("intent_id")}
     acts: dict[str, dict[str, list]] = {}
     orphans: list[dict] = []
@@ -274,4 +276,15 @@ async def load_book_of_truth(mode: str = "live", asof: Optional[str] = None) -> 
                                            "detail->>book": "eq.r_v2", "detail->>mode": f"eq.{mode}",
                                            "detail->>phase": "eq.intents", "order": "id.asc"})
     skips = host_skips_from(a.get("detail") or {} for a in att)
+    # Jazz ⓪:J 票并进纸面;off / flat 期间被挡下的 R-v2 票不是「主机没记录」,是人的决定(记分在 /internal/regime-call)
+    from src.data.execution.regime_call import governing_call, read_calls, read_j_tickets
+    calls, j_rows = await read_calls(), await read_j_tickets()
+    paper += [{"ticket_id": j["ticket_id"], "symbol": j["coin"], "signal_d": j["signal_d"], "status": j["status"],
+               "entry_d": j.get("entry_d"), "entry_px": j.get("entry_px"), "stop_px": j.get("stop_px"),
+               "exit_d": j.get("exit_d"), "exit_px": j.get("exit_px"), "exit_reason": j.get("exit_reason"),
+               "r_mult": j.get("r_mult")} for j in j_rows if j.get("status") in ("pending", "open", "closed")]
+    for r in paper:
+        c = governing_call(calls, r["signal_d"]) if r.get("signal_d") else None
+        if c and c.get("state") in ("off", "flat") and not str(r["ticket_id"]).startswith("J:"):
+            skips.setdefault(r["ticket_id"], f"Jazz ⓪ = {c['state']}(判断 #{c.get('id')})")
     return reconcile(paper, intents, outcomes, mode=mode, asof=asof, host_skips=skips)
