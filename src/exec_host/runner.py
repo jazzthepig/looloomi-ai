@@ -44,11 +44,11 @@ import time
 import urllib.error
 import uuid
 import urllib.request
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any, Optional
 
-from src.data.execution.fill_log import BUY, SELL
+from src.data.execution.fill_log import BUY, CANCELLED, FILLED, PARTIAL, SELL
 from src.exec_host import core, tickets
 
 log = logging.getLogger("exec_host")
@@ -60,6 +60,15 @@ PLAN_WAIT_EVERY_S = 300
 PLAN_REFRESH_EVERY_S = 900
 PLAN_FROM_UTC = (0, 5)
 TRIGGER_RETRY_S = 900          # 止损触发单没挂上:每 15 分钟重挂一次(后备 IOC 每分钟都在看)
+TRUTH_GIVE_UP_S = 86400        # 交易所上已平、成交一直找不到:24 小时后按「找不到」结案(Book of Truth)
+
+
+def _ms(iso: Any) -> int:
+    """ISO 时间 → 毫秒;缺 ⇒ 0(从头查)。"""
+    try:
+        return int(dt.datetime.fromisoformat(str(iso)).timestamp() * 1000)
+    except (TypeError, ValueError):
+        return 0
 
 
 def utcnow() -> dt.datetime:
@@ -487,8 +496,90 @@ class Executor:
         except Exception as e:                                           # noqa: BLE001
             parsed = {"kind": "error", "error": f"{type(e).__name__}: {str(e)[:200]}"}
         if parsed["kind"] == "resting" and parsed.get("oid") is not None:
-            return {**b, "trigger_oid": parsed["oid"], "trigger_error": None, "trigger_at": now.isoformat()}
+            # Book of Truth:交易所上的每一张单子都有意图 —— 止损触发单也是;成交 / 撤销时补结果
+            intent = replace(self._ticket_intent(b["coin"], SELL, b["qty"], b["stop_px"], self._t_sleeve(),
+                                                 f"r_v2:{b['ticket_id']}:stop_trigger", now, lim), order_type="trigger")
+            self._report_t("stop", asof=(self.state.get("ticket_plan") or {}).get("asof"), intents=[asdict(intent)],
+                           detail={"phase": "trigger", "ticket_id": b["ticket_id"], "oid": parsed["oid"]})
+            return {**b, "trigger_oid": parsed["oid"], "trigger_error": None, "trigger_at": now.isoformat(),
+                    "trigger_intent_id": intent.intent_id}
         return {**b, "trigger_oid": None, "trigger_error": str(parsed.get("error") or parsed)[:200]}
+
+    def _t_sleeve(self) -> str:
+        tp = self.state.get("ticket_plan") or {}
+        return (tp.get("sleeves") or {}).get(self.cfg.tickets_mode) or f"r_v2_{self.cfg.tickets_mode}"
+
+    def _resolve_trigger(self, b: dict, now: dt.datetime, fill: Optional[dict], note: str) -> None:
+        """止损触发单的意图补一个结果:成交(按交易所的真实成交)或撤销。没有触发单意图的票不动。"""
+        iid = b.get("trigger_intent_id")
+        if not iid:
+            return
+        if fill:
+            o = core.Outcome(intent_id=iid, ts_resolved=now.isoformat(),
+                             status=FILLED if fill["sz"] >= b["qty"] * (1 - 1e-9) else PARTIAL,
+                             filled_notional_usd=round(fill["sz"] * fill["px"], 6), avg_fill_price=fill["px"],
+                             fee_usd=round(fill["fee"], 6), liquidity="taker", note=note)
+        else:
+            o = core.Outcome(intent_id=iid, ts_resolved=now.isoformat(), status=CANCELLED, note=note)
+        self._report_t("stop", asof=(self.state.get("ticket_plan") or {}).get("asof"), outcomes=[asdict(o)],
+                       detail={"phase": "trigger_outcome", "ticket_id": b["ticket_id"], "status": o.status})
+
+    def _venue_closed(self, tids: list[str], now: dt.datetime) -> None:
+        """交易所上已平(触发单成交 / 手动平 / 强平):先按止损线临时记平仓,真实成交进待查,马上查一次。"""
+        book = self.state.get("ticket_book") or {}
+        pend = dict(self.state.get("truth_pending") or {})
+        for t in tids:
+            if t in book:
+                pend[t] = {**book[t], "closed_seen_at": now.isoformat()}
+        self._close_book(tids, "交易所上已平(止损触发单成交或手动平仓)", {t: book[t].get("stop_px") for t in tids
+                                                                    if t in book}, now)
+        self.state.set(truth_pending=pend)
+        self.settle_truth(now)
+
+    def settle_truth(self, now: dt.datetime) -> list[str]:
+        """待查的平仓去交易所找真实成交:找到 ⇒ 改平仓价、给触发单意图补结果(没有触发单意图的补记一条 venue_close);
+        24 小时还找不到 ⇒ 按找不到结案。成交读不到 = 下一分钟再查,不当「没成交」。"""
+        pend = dict(self.state.get("truth_pending") or {})
+        if not pend:
+            return []
+        since = min(_ms(b.get("entered_at")) for b in pend.values())
+        try:
+            fills = self.venue.fills_since(max(0, since - 1000))
+        except Exception as e:                                           # noqa: BLE001
+            log.warning("fills unreadable, truth stays pending: %s", e)
+            return []
+        done_ids = []
+        for t, b in list(pend.items()):
+            f = tickets.close_fills(fills, b["coin"], _ms(b.get("entered_at")), b.get("trigger_oid"))
+            age = (now - dt.datetime.fromisoformat(b["closed_seen_at"])).total_seconds()
+            if not f and age < TRUTH_GIVE_UP_S:
+                continue
+            note = (f"交易所成交 {int(f['n'])} 笔,均价 {f['px']:.6g}(止损线 {b.get('stop_px')})" if f
+                    else "仓位没了,24 小时内找不到平仓成交")
+            if b.get("trigger_intent_id"):
+                self._resolve_trigger(b, now, f, note)
+            else:
+                # 没挂过(或旧版本挂的)触发单:是手动平仓或强平 —— 也要进真相之书
+                ref = b.get("stop_px") or b.get("entry_px") or 0.0
+                i = replace(self._ticket_intent(b["coin"], SELL, b["qty"], ref, self._t_sleeve(),
+                                                f"r_v2:{t}:venue_close", now, ref), order_type="unknown")
+                o = (core.Outcome(intent_id=i.intent_id, ts_resolved=now.isoformat(),
+                                  status=FILLED if f["sz"] >= b["qty"] * (1 - 1e-9) else PARTIAL,
+                                  filled_notional_usd=round(f["sz"] * f["px"], 6), avg_fill_price=f["px"],
+                                  fee_usd=round(f["fee"], 6), liquidity="taker", note=note) if f else
+                     core.Outcome(intent_id=i.intent_id, ts_resolved=now.isoformat(), status=CANCELLED, note=note))
+                self._report_t("stop", asof=(self.state.get("ticket_plan") or {}).get("asof"), intents=[asdict(i)],
+                               outcomes=[asdict(o)], detail={"phase": "venue_close", "ticket_id": t},
+                               alert=f"R-v2 {b['coin']} 交易所上被平,但不是我们的止损触发单(手动 / 强平?):{note}")
+            if f:
+                done = dict(self.state.get("ticket_done") or {})
+                if t in done:
+                    done[t] = {**done[t], "close_px": f["px"], "close_px_source": "venue_fills"}
+                    self.state.set(ticket_done=done)
+            del pend[t]
+            done_ids.append(t)
+        self.state.set(truth_pending=pend)
+        return done_ids
 
     def _close_book(self, tids: list[str], why: str, px: dict[str, Optional[float]], now: dt.datetime) -> None:
         book = dict(self.state.get("ticket_book") or {})
@@ -511,8 +602,7 @@ class Executor:
         done = set((self.state.get("ticket_done") or {}).keys())
         act = tickets.ticket_actions(tp, book, positions, mids, szd, equity, done)
         if act["closed_on_venue"]:
-            self._close_book([c["ticket_id"] for c in act["closed_on_venue"]], "交易所上已平(止损触发单成交或手动平仓)",
-                             {c["ticket_id"]: c.get("stop_px") for c in act["closed_on_venue"]}, now)
+            self._venue_closed([c["ticket_id"] for c in act["closed_on_venue"]], now)
             book = dict(self.state.get("ticket_book") or {})
         staged = []
         for x in act["exits"]:
@@ -557,6 +647,9 @@ class Executor:
                         self.venue.cancel(x["coin"], oid)
                     except Exception as e:                               # noqa: BLE001
                         log.warning("cancel trigger %s failed: %s", oid, e)
+                    self._resolve_trigger(book[x["ticket_id"]], now, None, f"出场({x['why']})前撤掉")
+                    book[x["ticket_id"]] = {**book[x["ticket_id"]], "trigger_oid": None, "trigger_intent_id": None}
+            self.state.set(ticket_book=book)
             outcomes = self._send_ticket_orders(staged)
         # 账本:live 按成交结果,空跑按中间价虚拟成交
         by_ref = {i.signal_ref: (i, o) for (i, *_), o in zip(staged, outcomes or [None] * len(staged))}
@@ -571,6 +664,12 @@ class Executor:
         if closed:
             self._close_book(closed, "出场", exit_px, now)
         book = dict(self.state.get("ticket_book") or {})
+        if live and not halted:
+            # 出场单没成交:触发单已经撤了 ⇒ 记下来,止损循环 15 分钟内重挂;明天的 cycle 再出
+            for x in act["exits"]:
+                if x["ticket_id"] in book and x["ticket_id"] not in exit_px:
+                    book[x["ticket_id"]] = {**book[x["ticket_id"]], "trigger_oid": None,
+                                            "trigger_error": "出场单没成交,止损触发单已撤 —— 待重挂"}
         for e in act["entries"]:
             i, o = by_ref[f"r_v2:{e['ticket_id']}:enter"]
             if live and halted:
@@ -618,8 +717,12 @@ class Executor:
         sleeve = (tp.get("sleeves") or {}).get(self.cfg.tickets_mode) or f"r_v2_{self.cfg.tickets_mode}"
         if self.cfg.tickets_mode != "live":
             if hits:
+                virt = [replace(self._ticket_intent(book[t]["coin"], SELL, book[t]["qty"], book[t]["stop_px"], sleeve,
+                                                    f"r_v2:{t}:stop_virtual", now, book[t]["stop_px"]),
+                                order_type="trigger") for t in hits]
                 self._close_book(hits, "止损(空跑:现价 ≤ 止损线)", {t: book[t]["stop_px"] for t in hits}, now)
-                self._report_t("stop", asof=tp.get("asof"), detail={"hits": hits, "mids": {t: mids.get(book[t]["coin"]) for t in hits}},
+                self._report_t("stop", asof=tp.get("asof"), intents=[asdict(i) for i in virt],
+                               detail={"hits": hits, "mids": {t: mids.get(book[t]["coin"]) for t in hits}},
                                alert="R-v2 空跑止损: " + "; ".join(f"{book[t]['coin']} {mids.get(book[t]['coin'])} ≤ {book[t]['stop_px']}" for t in hits))
             return hits
         st = self.venue.perp_state()
@@ -628,7 +731,7 @@ class Executor:
         positions = st.get("positions") or {}
         gone = [t for t, b in book.items() if positions.get(b["coin"], 0.0) <= 0]
         if gone:
-            self._close_book(gone, "交易所上已平(止损触发单成交或手动平仓)", {t: book[t]["stop_px"] for t in gone}, now)
+            self._venue_closed(gone, now)
             self._report_t("stop", asof=tp.get("asof"), detail={"closed_on_venue": gone},
                            alert="R-v2 止损(交易所触发单): " + ", ".join(book[t]["coin"] for t in gone))
         book = dict(self.state.get("ticket_book") or {})
@@ -646,6 +749,13 @@ class Executor:
                            detail={"backup_stop": backup})
             outs = self._send_ticket_orders(staged)
             filled = [t for t, o in zip(backup, outs) if o.status in ("filled", "partial")]
+            for t in filled:
+                if book[t].get("trigger_oid") is not None:
+                    try:
+                        self.venue.cancel(book[t]["coin"], book[t]["trigger_oid"])
+                    except Exception as e:                               # noqa: BLE001
+                        log.warning("cancel trigger %s failed: %s", book[t]["trigger_oid"], e)
+                self._resolve_trigger(book[t], now, None, "后备 IOC 先平了,触发单撤掉")
             self._close_book(filled, "止损(主机后备 IOC)", {t: o.avg_fill_price for t, o in zip(backup, outs)}, now)
             self._report_t("stop", asof=tp.get("asof"), outcomes=[asdict(o) for o in outs],
                            detail={"phase": "outcomes", "statuses": [o.status for o in outs]},
@@ -682,6 +792,7 @@ class Executor:
             "tickets_mode": self.cfg.tickets_mode, "ticket_book": self._book_brief(self.state.get("ticket_book") or {}),
             "ticket_plan_asof": (self.state.get("ticket_plan") or {}).get("asof"),
             "ticket_done_asof": self.state.get("ticket_done_asof"),
+            "truth_pending": sorted((self.state.get("truth_pending") or {}).keys()),
             "outbox_pending": len(self.outbox.pending()), "at": now.isoformat()})
 
     def tick(self) -> None:
@@ -693,6 +804,8 @@ class Executor:
                          ("stop", lambda: self._every("stop", STOP_EVERY_S, lambda: self.check_stops(now))),
                          ("ticket_stop", lambda: self._every("ticket_stop", STOP_EVERY_S,
                                                              lambda: self.check_ticket_stops(now))),
+                         ("ticket_truth", lambda: self._every("ticket_truth", STOP_EVERY_S,
+                                                              lambda: self.settle_truth(now))),
                          ("heartbeat", lambda: self._every("heartbeat", HEARTBEAT_EVERY_S, lambda: self.heartbeat(now)))):
             try:
                 fn()

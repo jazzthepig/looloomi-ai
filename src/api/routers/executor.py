@@ -3,6 +3,7 @@
     GET  /internal/executor/plan     X-Executor-Token   今天的计划(目标、止损线、一键停)
     POST /internal/executor/report   X-Executor-Token   主机回报:意图、成交结果、余额、心跳
     POST /internal/executor/halt     X-Internal-Token   一键停 / 解除(Redis `executor:halt`)
+    GET  /internal/executor/book-of-truth  X-Internal-Token   R-v2 真相之书:纸面 vs 交易所逐票对账(只读)
 
 ## 为什么用单独的 EXECUTOR_TOKEN
 
@@ -162,6 +163,25 @@ async def executor_report(body: Any = Body(...),
         from src.api.notify import notify_telegram
         await notify_telegram(f"[executor {clean.get('book') or 'x1v'} {clean['mode']} · {clean['kind']}] {clean['alert'][:500]}")
     return {"ok": True, **written}
+
+
+@router.get("/internal/executor/book-of-truth")
+async def executor_book_of_truth(mode: str = "live", detail: bool = False,
+                                 x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
+    """R-v2 的真相之书(docs/TRADER_TOM_DOCTRINE.md §11):纸面票 vs 交易所上实际发生的,逐票对账 + 违规 + 挣来的杠杆上限。
+    `mode` = live / dry_run;`detail=true` 带逐票明细。只读;走 Jazz 的 INTERNAL_TOKEN(这是真钱的账)。"""
+    _token_ok(x_internal_token, "INTERNAL_TOKEN")
+    from src.data.execution.book_of_truth import load_book_of_truth
+    if mode not in TICKET_SLEEVE_FOR_MODE:
+        raise HTTPException(422, f"mode 必须是 {sorted(TICKET_SLEEVE_FOR_MODE)}")
+    try:
+        r = await load_book_of_truth(mode)
+    except Exception as e:                                       # noqa: BLE001
+        log.warning("[EXECUTOR] book of truth failed: %s", e)
+        raise HTTPException(502, f"{type(e).__name__}: {str(e)[:300]}")
+    if not detail:
+        r = {**r, "tickets": [t for t in r["tickets"] if t["breaches"]]}
+    return {"ok": True, **r}
 
 
 @router.post("/internal/executor/halt")

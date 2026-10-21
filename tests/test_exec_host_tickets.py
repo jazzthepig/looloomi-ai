@@ -205,8 +205,11 @@ def test_live_enters_ioc_then_hangs_a_reduce_only_stop_and_cancels_it_before_exi
     assert trg["type"]["trigger"]["triggerPx"] == pytest.approx(7.2) and trg["qty"] == buy["qty"]
     b = e.state.get("ticket_book")["N1"]
     assert b["trigger_oid"] == 4242
-    first, second = _ob(e)
+    first, trig_rep, second = _ob(e)
     assert first["intents"] and not first.get("outcomes"), "意图先落盘"
+    (ti,) = trig_rep["intents"]
+    assert ti["signal_ref"] == "r_v2:N1:stop_trigger" and ti["order_type"] == "trigger" and ti["side"] == "sell"
+    assert ti["decision_mid"] == pytest.approx(7.2) and b["trigger_intent_id"] == ti["intent_id"], "止损触发单也有意图"
     assert second["outcomes"][0]["status"] == "filled" and not second.get("intents")
     nxt = NOW + dt.timedelta(days=1)
     e.state.set(ticket_plan=_tplan(asof="2026-10-22", exit_=[{"ticket_id": "N1", "why": "time"}]))
@@ -215,6 +218,8 @@ def test_live_enters_ioc_then_hangs_a_reduce_only_stop_and_cancels_it_before_exi
     sell = v.sent[-1]
     assert sell["side"] == "sell" and sell["reduce_only"] and sell["qty"] == buy["qty"]
     assert not e.state.get("ticket_book")
+    cancelled = [o for r in _ob(e) for o in r.get("outcomes") or [] if o["intent_id"] == ti["intent_id"]]
+    assert [o["status"] for o in cancelled] == ["cancelled"], "撤掉的触发单补一个 cancelled 结果"
 
 
 def test_live_does_not_declare_positions_closed_when_the_account_cannot_be_read(tmp_path):
@@ -332,3 +337,115 @@ def test_railway_refuses_a_leverage_outside_one_to_five(monkeypatch):
     monkeypatch.setenv("R_V2_PORTFOLIO_LEVERAGE", "6")
     with pytest.raises(ValueError):
         asyncio.run(tpm.load_ticket_plan(ASOF))
+
+
+# ── Book of Truth:交易所上发生的,按交易所记(doctrine §11)──────────────────
+def test_close_fills_prefers_the_trigger_oid_then_close_long_fills_since_entry():
+    fills = [{"coin": "UNI", "px": "7.0", "sz": "1", "time": 2000, "oid": 4242, "dir": "Close Long", "fee": "0.01"},
+             {"coin": "UNI", "px": "6.0", "sz": "1", "time": 2000, "oid": 4242, "dir": "Close Long", "fee": "0.01"},
+             {"coin": "UNI", "px": "9.0", "sz": "5", "time": 2000, "oid": 7, "dir": "Close Long", "fee": "0.1"},
+             {"coin": "UNI", "px": "1.0", "sz": "9", "time": 10, "oid": 4242, "dir": "Close Long"},
+             {"coin": "SOL", "px": "1.0", "sz": "9", "time": 2000, "oid": 4242, "dir": "Close Long"}]
+    f = tickets.close_fills(fills, "UNI", 1000, 4242)
+    assert f["px"] == pytest.approx(6.5) and f["sz"] == 2 and f["fee"] == pytest.approx(0.02) and f["n"] == 2
+    g = tickets.close_fills(fills, "UNI", 1000, None)
+    assert g["sz"] == 7 and g["px"] == pytest.approx((7 + 6 + 45) / 7), "没有 oid ⇒ 进场以来所有 Close Long"
+    assert tickets.close_fills(fills, "ETH", 0, None) is None
+
+
+def test_live_stop_fill_is_recorded_at_the_venue_price_not_assumed_at_the_stop_line(tmp_path):
+    v = PerpVenue(equity=704.0)
+    e = _exe(tmp_path, "live", v, _tplan(enter=[_e("N1", "UNI", 0.1)]))
+    e._maybe_ticket_cycle(NOW)
+    b = e.state.get("ticket_book")["N1"]
+    v.pos["UNI"] = 0.0                                             # 触发单在交易所上成交了,滑到 7.0(止损线 7.2)
+    v.fills_since = lambda t_ms: [{"coin": "UNI", "px": "7.0", "sz": str(b["qty"]), "time": _ms_now() + 5,
+                                   "oid": 4242, "dir": "Close Long", "fee": "0.02"}]
+    e.check_ticket_stops(NOW)
+    done = e.state.get("ticket_done")["N1"]
+    assert done["close_px"] == pytest.approx(7.0) and done["close_px_source"] == "venue_fills"
+    outs = [o for r in _ob(e) for o in r.get("outcomes") or [] if o["intent_id"] == b["trigger_intent_id"]]
+    assert outs[0]["status"] == "filled" and outs[0]["avg_fill_price"] == pytest.approx(7.0)
+    assert not e.state.get("truth_pending")
+
+
+def test_fills_not_yet_visible_stay_pending_and_settle_on_a_later_minute(tmp_path):
+    v = PerpVenue(equity=704.0)
+    e = _exe(tmp_path, "live", v, _tplan(enter=[_e("N1", "UNI", 0.1)]))
+    e._maybe_ticket_cycle(NOW)
+    b = e.state.get("ticket_book")["N1"]
+    v.pos["UNI"] = 0.0
+    v.fills_since = lambda t_ms: []
+    e.check_ticket_stops(NOW)
+    assert list(e.state.get("truth_pending")) == ["N1"], "成交还没出来 ⇒ 待查,不当没成交"
+    v.fills_since = lambda t_ms: [{"coin": "UNI", "px": "7.1", "sz": str(b["qty"]), "time": _ms_now() + 5,
+                                   "oid": 4242, "dir": "Close Long", "fee": "0"}]
+    assert e.settle_truth(NOW + dt.timedelta(minutes=1)) == ["N1"]
+    assert e.state.get("ticket_done")["N1"]["close_px"] == pytest.approx(7.1)
+
+
+def test_a_close_we_did_not_send_is_written_down_as_a_venue_close(tmp_path):
+    v = PerpVenue(equity=704.0)
+    v.trigger_fail = True                                          # 没挂上触发单,然后仓位被手动平了
+    e = _exe(tmp_path, "live", v, _tplan(enter=[_e("N1", "UNI", 0.1)]))
+    e._maybe_ticket_cycle(NOW)
+    b = e.state.get("ticket_book")["N1"]
+    assert not b.get("trigger_intent_id")
+    v.pos["UNI"] = 0.0
+    v.fills_since = lambda t_ms: [{"coin": "UNI", "px": "8.4", "sz": str(b["qty"]), "time": _ms_now() + 5,
+                                   "oid": 55, "dir": "Close Long", "fee": "0"}]
+    e.check_ticket_stops(NOW)
+    rep = [r for r in _ob(e) if (r.get("detail") or {}).get("phase") == "venue_close"]
+    assert rep and rep[0]["intents"][0]["signal_ref"] == "r_v2:N1:venue_close"
+    assert rep[0]["outcomes"][0]["avg_fill_price"] == pytest.approx(8.4) and "手动" in rep[0]["alert"]
+
+
+def test_a_failed_exit_clears_the_cancelled_trigger_so_it_is_hung_again(tmp_path):
+    v = PerpVenue(equity=704.0)
+    e = _exe(tmp_path, "live", v, _tplan(enter=[_e("N1", "UNI", 0.1)]))
+    e._maybe_ticket_cycle(NOW)
+    v.fill = False
+    nxt = NOW + dt.timedelta(days=1)
+    e.state.set(ticket_plan=_tplan(asof="2026-10-22", exit_=[{"ticket_id": "N1", "why": "sma20"}]))
+    e.run_ticket_cycle(nxt)
+    b = e.state.get("ticket_book")["N1"]
+    assert b["trigger_oid"] is None and "待重挂" in b["trigger_error"], "撤了触发单、出场又没成交 ⇒ 不能裸着"
+    v.fill = True
+    e.check_ticket_stops(nxt)
+    assert e.state.get("ticket_book")["N1"]["trigger_oid"] == 4242
+
+
+def test_dry_run_virtual_stop_is_written_as_an_intent(tmp_path):
+    v = PerpVenue(equity=0.0)
+    e = _exe(tmp_path, "dry_run", v, _tplan(enter=[_e("N1", "UNI", 0.1)]))
+    e._maybe_ticket_cycle(NOW)
+    v.m["UNI"] = 7.1
+    e.check_ticket_stops(NOW)
+    (rep,) = [r for r in _ob(e) if r["kind"] == "stop"]
+    (i,) = rep["intents"]
+    assert i["signal_ref"] == "r_v2:N1:stop_virtual" and i["decision_mid"] == pytest.approx(7.2)
+    from src.api.routers.executor import vet_report
+    ok, why = vet_report({k: rep[k] for k in rep if k in ("mode", "kind", "book", "host", "asof", "intents", "outcomes",
+                                                           "detail", "alert")})
+    assert ok and not why, why
+
+
+def test_every_report_the_live_host_writes_passes_railway_vetting(tmp_path):
+    """触发单意图、撤销结果、venue_close(意图 + 结果同一批)都要过 Railway 的校验,否则发件箱会卡在 rejected/。"""
+    from src.api.routers.executor import vet_report
+    v = PerpVenue(equity=704.0)
+    e = _exe(tmp_path, "live", v, _tplan(enter=[_e("N1", "UNI", 0.1), _e("N2", "SOL", 0.1)]))
+    e._maybe_ticket_cycle(NOW)
+    v.pos["UNI"] = 0.0
+    v.fills_since = lambda t_ms: [{"coin": "UNI", "px": "7.0", "sz": "100", "time": _ms_now() + 5, "oid": 4242,
+                                   "dir": "Close Long", "fee": "0"}]
+    e.check_ticket_stops(NOW)
+    e.state.set(ticket_plan=_tplan(asof="2026-10-22", exit_=[{"ticket_id": "N2", "why": "time"}]))
+    e.run_ticket_cycle(NOW + dt.timedelta(days=1))
+    for r in _ob(e):
+        ok, why = vet_report(r)
+        assert ok, (r.get("detail"), why)
+
+
+def _ms_now():
+    return int(NOW.timestamp() * 1000)

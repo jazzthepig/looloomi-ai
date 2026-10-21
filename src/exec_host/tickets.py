@@ -164,3 +164,20 @@ def stop_breaches(book: dict[str, dict], mids: dict[str, float]) -> list[str]:
     """现价 ≤ 止损线的票(后备止损 / 空跑的虚拟止损)。"""
     return [tid for tid, b in sorted(book.items())
             if b.get("stop_px") and mids.get(b["coin"]) and mids[b["coin"]] <= b["stop_px"]]
+
+
+def close_fills(fills: list[dict], coin: str, since_ms: int, oid: Any = None) -> Optional[dict[str, float]]:
+    """交易所上「我们没发的那次平仓」的真实成交(Book of Truth:止损按实际成交价记,不按止损线假设)。
+
+    先找同一订单号(触发单触发后沿用原 oid);没有就取该币自进场以来所有 `Close Long` 成交。返回成交量加权均价、
+    数量、手续费(USDC;以币计价的按成交价折算)、笔数;一笔都没有 ⇒ None。"""
+    rows = [f for f in fills or [] if f.get("coin") == coin and (_f(f.get("time")) or 0) >= since_ms]
+    mine = [f for f in rows if oid is not None and f.get("oid") == oid]
+    use = mine or [f for f in rows if str(f.get("dir") or "").lower() == "close long"]
+    sz = sum(_f(f.get("sz")) or 0.0 for f in use)
+    if not use or sz <= 0:
+        return None
+    px = sum((_f(f.get("px")) or 0.0) * (_f(f.get("sz")) or 0.0) for f in use) / sz
+    fee = sum((_f(f.get("fee")) or 0.0) * (1.0 if (f.get("feeToken") or "USDC") == "USDC" else (_f(f.get("px")) or 0.0))
+              for f in use)
+    return {"px": px, "sz": sz, "fee": fee, "n": float(len(use))}
