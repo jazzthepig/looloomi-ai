@@ -1,0 +1,68 @@
+{
+ "discovery": {
+  "resid": {
+   "months": 32,
+   "mean_ic": 0.0642,
+   "t": 1.73
+  },
+  "lnmcap": {
+   "months": 32,
+   "mean_ic": 0.0547,
+   "t": 1.55
+  },
+  "vol": {
+   "months": 32,
+   "mean_ic": 0.0393,
+   "t": 0.73
+  },
+  "supply": {
+   "months": 32,
+   "mean_ic": 0.0659,
+   "t": 1.57
+  },
+  "quality": {
+   "months": 32,
+   "mean_ic": 0.0355,
+   "t": 0.8
+  },
+  "v4": {
+   "months": 32,
+   "mean_ic": 0.059,
+   "t": 1.69
+  }
+ },
+ "holdout": {
+  "resid": {
+   "months": 30,
+   "mean_ic": 0.0179,
+   "t": 0.61,
+   "p_block_boot": 0.2735
+  },
+  "lnmcap": {
+   "months": 30,
+   "mean_ic": 0.0932,
+   "t": 2.4
+  },
+  "vol": {
+   "months": 30,
+   "mean_ic": 0.1217,
+   "t": 2.44
+  },
+  "supply": {
+   "months": 30,
+   "mean_ic": 0.119,
+   "t": 4.05
+  },
+  "quality": {
+   "months": 30,
+   "mean_ic": 0.1163,
+   "t": 2.55
+  },
+  "v4": {
+   "months": 30,
+   "mean_ic": 0.0781,
+   "t": 2.93
+  }
+ },
+ "verdict": "\u4e0d\u8fc7"
+}
