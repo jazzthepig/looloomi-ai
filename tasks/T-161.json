@@ -1,0 +1,26 @@
+{
+  "id": "T-161",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-10-21",
+  "verified": null,
+  "title": "向量库体检:每个向量空间的覆盖、按时点与否、谁在读、跟真钱宇宙对不对得上 —— 排出缺陷清单",
+  "source": "Jazz 10-21「矢量数据库也有问题,让 abc 协助获取和调整升级」。Seth 实测:market_state_vectors 声明 24 维、平均只测到 11.1 维,跨全史一次 z-score(含未来信息,见 src/data/vector/market_state_writer.py:59/592/639);regime_daily 只有 2025-05 起 507 天;风格 4 层级 + 4 板块。体检先于升级(docs/VDB_UPGRADE_S360.md、docs/SPINE.md 先读)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-161.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "对 market_state_vectors、regime_daily、style_index_pit_daily(+ style_pit_coverage_daily)、asset_embeddings、treasury_entities / treasury_decisions、src/research/vector/regime_fingerprints.py 各给:行数 / 日期范围 / 是否还在更新;每一维按年的缺失率;**按时点核查**(哪些统计量用了未来信息 —— market_state_vectors 的全史 z-score 必须量化:改成扩张窗口(≥ 365 天)重算后,每维与现值的秩相关,以及随机 50 天的 20 个最近邻重合率);宇宙覆盖对照三张名单(R-v2 前向宇宙 = binance_hist 近 30 天有 K 线的名字;HL 永续名单 = funding_history venue = hyperliquid;① 的 24 名);代码里谁在读每一个空间(活 / 死)。只读,不改 src。只用 publishable key。",
+    "expect": "脚本 docs/research/t161_vdb_audit.py;报告(脚本写)_reports/absorb_input/T-161_vdb_audit.md,末尾一张「缺陷 × 影响 × 修法 × 谁做」排序表(修 src 的归 Seth,取数的归 Seth 的写入端、由 B 道出规格);in_review,推 lane-a/T-161。新分支一律 `git switch -c lane-a/T-161 origin/main`。"
+  },
+  "prior_value": "升级前先知道向量库哪里坏、坏多少:全史 z-score 的未来信息有多大、哪些维长期空着、真钱能交易的币有多少不在向量里。",
+  "notes": "只读体检(publishable key,未改 src)。脚本 docs/research/t161_vdb_audit.py,报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-161_vdb_audit.md。【PIT 量化】market_state_vectors 1755 天(2022-01-01..2026-10-21),全史一次 z-score(S-232)改成扩张窗口(>=365 天)后:每维 Spearman(stored vs 扩张)最低 0.9061 trend_strength / 中位 0.9887 / 最高 0.9997 alt_btc_spread;RMS 差中位 0.2125 z。20 邻重合率平均 0.653(中位 0.7,最小 0.0,最大 1.0,N=50)⇒ 每天 20 个最像的过去时刻里约 6.9 个会被换掉,最差的一天整组 20 个全换。方法注:全史 z 是单一仿射变换,直接对存储列重标准化即可等价复现扩张窗口,不必回取原始值。【维度】声明 24 维,实测非空均值 11.09(min 11/max 16),填满 24 维的天数 = 0;6 维从未测到过(fng/oi_mcap/stable_supply_chg/stability_OS/_reserved_1/_reserved_2),4 个 cis_* 维 2025 缺 92%、2026 缺 100%,funding_mean/funding_disp 2022 缺 99% 后 100% ⇒ 只有 11 维真的有 >=365 天历史,扩张窗口对这 13 维无解。【宇宙覆盖】① cap_a1 24 名:向量库 21/24(缺 BCH/ETC/TRX);R-v2 前向宇宙(ohlcv_daily source=binance_hist 近 30 天)137 名 -> 36 有向量(26%);HL 永续(funding_history venue=hyperliquid)234 名 -> 38 有向量(16%);asset_embeddings 73 行里 34 个是 TradFi。【空表/权限】regime_daily 公开可读 0 行(有 loop + 心跳门 + 8 个读取端);treasury_entities 与 style_pit_coverage_daily 用 publishable key 42501;style_index_pit_daily 38730 行但查不到写入端;asset_embeddings_history 有 6 写入引用 0 读取端。【口径坑,给后来者】binance_hist 在 public schema 404,行情在 ohlcv_daily 靠 source 区分;asset_class='Crypto' 近 30 天 211 名 vs source='binance_hist' 137 名,两个口径差 74 个名。PostgREST 只读 key 每页上限 1000 行且无 DISTINCT —— limit=2000+order=symbol.asc 会只回字母序最前的名字,上一版脚本据此把 HL 永续报成 3 名(实为 234)、把逐年缺失率截到 2022-2024。已改为游标翻页。【10 条缺陷表】见报告 §7(缺陷×影响×修法×谁做,按影响排序)。"
+}
