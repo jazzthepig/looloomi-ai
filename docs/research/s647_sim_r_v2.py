@@ -170,6 +170,22 @@ def mc_path(tickets_by_month, months, rng):
     return out, apys, S0, base - 1
 
 
+COUPONS = (0.0, 0.05, 0.08)
+
+
+def coverage(equity, equity0):
+    """S-648:每个优先级收益 c 的最小覆盖比(全程)与期末覆盖比 —— 净值 /(本金 × (1 + c)^(t/365))。"""
+    out = {}
+    for c in COUPONS:
+        rmin, rend = float("inf"), None
+        for t, e in enumerate(equity, start=1):
+            r = e / equity0 / (1 + c) ** (t / 365.0)
+            rmin = min(rmin, r)
+            rend = r
+        out[f"rmin_{c}"], out[f"rend_{c}"] = rmin, rend
+    return out
+
+
 def _mc_worker(args):
     seed0, n_paths, tickets_by_month, months, configs = args
     res = []
@@ -186,7 +202,7 @@ def _mc_worker(args):
                          start_day=s0, end_day=s1, collateral_mult=_coll(variant)[0],
                          collateral_gross=_coll(variant)[1])
             s = stats(r.equity, size)
-            res.append(((variant, size, policy, lev), {**s, "liq": r.liquidations}))
+            res.append(((variant, size, policy, lev), {**s, "liq": r.liquidations, **coverage(r.equity, size)}))
     return res
 
 
