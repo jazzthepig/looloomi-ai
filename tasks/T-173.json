@@ -1,0 +1,28 @@
+{
+  "id": "T-173",
+  "owner": "lane-b",
+  "status": "in_review",
+  "created": "2026-10-22",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "title": "S-634 复核:T-148 的翻页没带 order(T-170 发现漏两成行),补 order 后照原文重跑 T-148,看 S-634 的判定变不变",
+  "source": "T-170(B 道)顺带发现:t148 的 fetch_all / fetch_ohlcv 不带 order=,PostgREST 翻页边界漂移。Seth 已在 main 的 t148 里给 fetch_ohlcv 补了 order。S-634 的结论可能受影响。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-173.json"
+  ],
+  "acceptance": {
+    "check": "用 main 上已补 order 的 docs/research/t148_alt_momentum_tilt.py 原样重跑(不改判据),另检查 fetch_all 的其它调用都带 order(cis_tilt_daily、multiplier_daily 已带);报新旧两版 V3 − V0、分位、留出段。若与 S-634 原判定不同,写清是哪一步的行数差造成的。",
+    "expect": "结果 docs/research/t173_s634_recheck.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-173_s634_recheck.md(末尾「S-634 复核」草稿);in_review,推 lane-b/T-173。新分支 `git switch -c lane-b/T-173 origin/main`。"
+  },
+  "prior_value": "判定不变 ⇒ S-634 记「复核过」;变了 ⇒ 台账更正,② 动量倾斜重新评估。",
+  "notes": "S-634 复核完成,判定不变。用 origin/main @f1814761 上已补 order= 的 t148_alt_momentum_tilt.py 原样重跑(SEED=148/200 次打乱/30d+90d/10bp/V0 对 1%,判据一字未改),与补 order 前那次逐字段比:v3_30d / v3_90d_report_only / yearly 三个块完全相同(diff 为空)。V3−V0 全程 +0.0285(旧 +0.0285);留出段 2025-01-01 起 −0.0108(旧 −0.0108);(V3−V0) 对 200 次打乱分位 0.780(旧 0.780);留出分位 0.505;maxDD V0 −0.5539 / V3 −0.5573;judgement_pass false→false。V0 核对仍过(对齐 199 天,max 相对偏差 0.364% <1%,中位 0.124%);唯一变的是参考 NAV 时点(multiplier_daily 最新从 3.65748 长到 3.75382@2026-10-21,ratio 1.0029→0.97716),判据只看对齐日偏差故不影响。order 机制确认且是间歇:同一无 order 查询取 3 次,原始行数三次都=30,558,但去重后 (symbol,date) 一次只有 24,020(缺 6,538=21.40%),另两次完好;缺的是 7 个字母序最前符号(AAVE/ADA/APT/ATOM/AVAX/BCH/BNB)各整段 934 天,共有键价格零分歧 ⇒ 行被翻页重复 serve,不是少取行、也不是取错价。fetch_all 三个调用点现均带 order=(ohlcv_daily / cis_tilt_daily d.asc / multiplier_daily d.asc)。结论:S-634 原判有效,台账只需加「复核过」一行,② 动量倾斜维持不进 ② 前向。产物 docs/research/t173_s634_recheck.json + t173_recheck_order.py + t173_s634_prior_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-173_s634_recheck.md(末尾含 S-634 复核草稿)。另:tasks/BOARD.md 不在本卡 allowed_paths,未重新生成(Seth 合并时跑 task_board.py)。",
+  "verified": null
+}

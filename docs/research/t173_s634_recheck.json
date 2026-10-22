@@ -1,0 +1,476 @@
+{
+  "ticket": "T-173",
+  "question": "S-634 复核:t148 fetch_ohlcv 补 order= 后原样重跑,判定变不变?",
+  "script_ran": "docs/research/t148_alt_momentum_tilt.py (origin/main @ f1814761, 判据未改)",
+  "data_window": {
+    "start": "2023-01-02",
+    "end": "2026-10-19",
+    "n_rebalance": 199
+  },
+  "panel_size": 22,
+  "ohlcv_order_diff": {
+    "n_unordered_repeats": 3,
+    "repeats": [
+      {
+        "n_raw_rows_ordered": 30558,
+        "n_raw_rows_unordered": 30558,
+        "n_keys_ordered": 30558,
+        "n_keys_unordered": 24020,
+        "n_missing_vs_ordered": 6538,
+        "missing_pct": 21.395,
+        "n_extra_vs_ordered": 0,
+        "n_price_disagreements_on_shared_keys": 0,
+        "n_symbols_ordered": 22,
+        "n_symbols_unordered": 22,
+        "worst_symbols_by_missing": [
+          [
+            "BCH",
+            934
+          ],
+          [
+            "ADA",
+            934
+          ],
+          [
+            "ATOM",
+            934
+          ],
+          [
+            "AVAX",
+            934
+          ],
+          [
+            "APT",
+            934
+          ],
+          [
+            "BNB",
+            934
+          ],
+          [
+            "AAVE",
+            934
+          ]
+        ],
+        "per_symbol_ordered_count": {
+          "AAVE": 1389,
+          "ADA": 1389,
+          "APT": 1389,
+          "ATOM": 1389,
+          "AVAX": 1389,
+          "BCH": 1389,
+          "BNB": 1389,
+          "BTC": 1389,
+          "DOGE": 1389,
+          "DOT": 1389,
+          "ETC": 1389,
+          "ETH": 1389,
+          "FIL": 1389,
+          "INJ": 1389,
+          "LINK": 1389,
+          "LTC": 1389,
+          "NEAR": 1389,
+          "OP": 1389,
+          "SOL": 1389,
+          "TRX": 1389,
+          "UNI": 1389,
+          "XRP": 1389
+        },
+        "per_symbol_unordered_count": {
+          "AAVE": 455,
+          "ADA": 455,
+          "APT": 455,
+          "ATOM": 455,
+          "AVAX": 455,
+          "BCH": 455,
+          "BNB": 455,
+          "BTC": 1389,
+          "DOGE": 1389,
+          "DOT": 1389,
+          "ETC": 1389,
+          "ETH": 1389,
+          "FIL": 1389,
+          "INJ": 1389,
+          "LINK": 1389,
+          "LTC": 1389,
+          "NEAR": 1389,
+          "OP": 1389,
+          "SOL": 1389,
+          "TRX": 1389,
+          "UNI": 1389,
+          "XRP": 1389
+        },
+        "date_range_ordered": [
+          "2023-01-02",
+          "2026-10-21"
+        ],
+        "date_range_unordered": [
+          "2023-01-02",
+          "2026-10-21"
+        ],
+        "sample_missing": [
+          [
+            "AAVE",
+            "2024-04-01"
+          ],
+          [
+            "AAVE",
+            "2024-04-02"
+          ],
+          [
+            "AAVE",
+            "2024-04-03"
+          ],
+          [
+            "AAVE",
+            "2024-04-04"
+          ],
+          [
+            "AAVE",
+            "2024-04-05"
+          ],
+          [
+            "AAVE",
+            "2024-04-06"
+          ],
+          [
+            "AAVE",
+            "2024-04-07"
+          ],
+          [
+            "AAVE",
+            "2024-04-08"
+          ],
+          [
+            "AAVE",
+            "2024-04-09"
+          ],
+          [
+            "AAVE",
+            "2024-04-10"
+          ]
+        ]
+      },
+      {
+        "n_raw_rows_ordered": 30558,
+        "n_raw_rows_unordered": 30558,
+        "n_keys_ordered": 30558,
+        "n_keys_unordered": 30558,
+        "n_missing_vs_ordered": 0,
+        "missing_pct": 0.0,
+        "n_extra_vs_ordered": 0,
+        "n_price_disagreements_on_shared_keys": 0,
+        "n_symbols_ordered": 22,
+        "n_symbols_unordered": 22,
+        "worst_symbols_by_missing": [],
+        "per_symbol_ordered_count": {
+          "AAVE": 1389,
+          "ADA": 1389,
+          "APT": 1389,
+          "ATOM": 1389,
+          "AVAX": 1389,
+          "BCH": 1389,
+          "BNB": 1389,
+          "BTC": 1389,
+          "DOGE": 1389,
+          "DOT": 1389,
+          "ETC": 1389,
+          "ETH": 1389,
+          "FIL": 1389,
+          "INJ": 1389,
+          "LINK": 1389,
+          "LTC": 1389,
+          "NEAR": 1389,
+          "OP": 1389,
+          "SOL": 1389,
+          "TRX": 1389,
+          "UNI": 1389,
+          "XRP": 1389
+        },
+        "per_symbol_unordered_count": {
+          "AAVE": 1389,
+          "ADA": 1389,
+          "APT": 1389,
+          "ATOM": 1389,
+          "AVAX": 1389,
+          "BCH": 1389,
+          "BNB": 1389,
+          "BTC": 1389,
+          "DOGE": 1389,
+          "DOT": 1389,
+          "ETC": 1389,
+          "ETH": 1389,
+          "FIL": 1389,
+          "INJ": 1389,
+          "LINK": 1389,
+          "LTC": 1389,
+          "NEAR": 1389,
+          "OP": 1389,
+          "SOL": 1389,
+          "TRX": 1389,
+          "UNI": 1389,
+          "XRP": 1389
+        },
+        "date_range_ordered": [
+          "2023-01-02",
+          "2026-10-21"
+        ],
+        "date_range_unordered": [
+          "2023-01-02",
+          "2026-10-21"
+        ],
+        "sample_missing": []
+      },
+      {
+        "n_raw_rows_ordered": 30558,
+        "n_raw_rows_unordered": 30558,
+        "n_keys_ordered": 30558,
+        "n_keys_unordered": 30558,
+        "n_missing_vs_ordered": 0,
+        "missing_pct": 0.0,
+        "n_extra_vs_ordered": 0,
+        "n_price_disagreements_on_shared_keys": 0,
+        "n_symbols_ordered": 22,
+        "n_symbols_unordered": 22,
+        "worst_symbols_by_missing": [],
+        "per_symbol_ordered_count": {
+          "AAVE": 1389,
+          "ADA": 1389,
+          "APT": 1389,
+          "ATOM": 1389,
+          "AVAX": 1389,
+          "BCH": 1389,
+          "BNB": 1389,
+          "BTC": 1389,
+          "DOGE": 1389,
+          "DOT": 1389,
+          "ETC": 1389,
+          "ETH": 1389,
+          "FIL": 1389,
+          "INJ": 1389,
+          "LINK": 1389,
+          "LTC": 1389,
+          "NEAR": 1389,
+          "OP": 1389,
+          "SOL": 1389,
+          "TRX": 1389,
+          "UNI": 1389,
+          "XRP": 1389
+        },
+        "per_symbol_unordered_count": {
+          "AAVE": 1389,
+          "ADA": 1389,
+          "APT": 1389,
+          "ATOM": 1389,
+          "AVAX": 1389,
+          "BCH": 1389,
+          "BNB": 1389,
+          "BTC": 1389,
+          "DOGE": 1389,
+          "DOT": 1389,
+          "ETC": 1389,
+          "ETH": 1389,
+          "FIL": 1389,
+          "INJ": 1389,
+          "LINK": 1389,
+          "LTC": 1389,
+          "NEAR": 1389,
+          "OP": 1389,
+          "SOL": 1389,
+          "TRX": 1389,
+          "UNI": 1389,
+          "XRP": 1389
+        },
+        "date_range_ordered": [
+          "2023-01-02",
+          "2026-10-21"
+        ],
+        "date_range_unordered": [
+          "2023-01-02",
+          "2026-10-21"
+        ],
+        "sample_missing": []
+      }
+    ],
+    "repeats_identical_rowcounts": false,
+    "all_repeats_match_ordered": false,
+    "raw_row_count_stable": true,
+    "n_repeats_with_drift": 1
+  },
+  "exploratory_degraded_price_run": {
+    "n_price_symbols": 22,
+    "n_price_pairs": 24020,
+    "v0_total": 2.8066,
+    "v3_total": 2.9602,
+    "diff_full": 0.1536,
+    "diff_2025_holdout": 0.0002,
+    "pctile_v3_minus_v0_full": 0.94,
+    "judgement_pass": false
+  },
+  "fetch_all_call_sites": [
+    {
+      "line": 78,
+      "query": "rows = fetch_all(         f\"ohlcv_daily?select=symbol,trade_date,close&source=eq.binance_hist\"         f\"&symbol=in.({sym_list})&trade_date=gte.{REBAL_INCEPTION",
+      "has_order": true
+    },
+    {
+      "line": 250,
+      "query": "ct_rows = fetch_all(\"cis_tilt_daily?select=d,arm,nav,ret,weights,z,rebalanced,turnover\"                         \"&arm=eq.cis_a1_u_replay&order=d.asc\")     rebal",
+      "has_order": true
+    },
+    {
+      "line": 284,
+      "query": "md_rows = fetch_all(\"multiplier_daily?select=d,nav&arm=eq.core_u_replay&order=d.asc\")     md_nav = {r[\"d\"]: r[\"nav\"] for r in md_rows}     final_v0_date = rebal",
+      "has_order": true
+    }
+  ],
+  "all_call_sites_have_order": true,
+  "v0_check": {
+    "prior": {
+      "final_nav_my": 3.66809,
+      "final_nav_reference": 3.65748,
+      "ratio": 1.0029,
+      "max_relative_diff_pct": 0.364,
+      "median_relative_diff_pct": 0.1241,
+      "n_aligned_days": 199,
+      "passes_1pct": true
+    },
+    "new": {
+      "final_nav_my": 3.66809,
+      "final_nav_reference": 3.75382,
+      "ratio": 0.97716,
+      "max_relative_diff_pct": 0.364,
+      "median_relative_diff_pct": 0.1241,
+      "n_aligned_days": 199,
+      "passes_1pct": true
+    }
+  },
+  "v3_30d": {
+    "prior": {
+      "v0_total": 2.6681,
+      "v3_total": 2.6966,
+      "diff_full": 0.0285,
+      "diff_2025_holdout": -0.0108,
+      "v0_max_dd": -0.5539,
+      "v3_max_dd": -0.5573,
+      "pctile_vs_shuffles_full": 0.78,
+      "pctile_vs_shuffles_holdout": 0.505,
+      "pctile_v3_minus_v0_full": 0.78,
+      "turnover_v0_total": 0.0038,
+      "turnover_v3_total": 0.011
+    },
+    "new": {
+      "v0_total": 2.6681,
+      "v3_total": 2.6966,
+      "diff_full": 0.0285,
+      "diff_2025_holdout": -0.0108,
+      "v0_max_dd": -0.5539,
+      "v3_max_dd": -0.5573,
+      "pctile_vs_shuffles_full": 0.78,
+      "pctile_vs_shuffles_holdout": 0.505,
+      "pctile_v3_minus_v0_full": 0.78,
+      "turnover_v0_total": 0.0038,
+      "turnover_v3_total": 0.011
+    },
+    "identical": true,
+    "changed_fields": {}
+  },
+  "v3_90d_report_only": {
+    "prior": {
+      "v3_total": 2.7855,
+      "diff_full": 0.1174,
+      "diff_2025_holdout": 0.0154,
+      "v3_max_dd": -0.5512
+    },
+    "new": {
+      "v3_total": 2.7855,
+      "diff_full": 0.1174,
+      "diff_2025_holdout": 0.0154,
+      "v3_max_dd": -0.5512
+    },
+    "identical": true,
+    "changed_fields": {}
+  },
+  "yearly": {
+    "prior": [
+      {
+        "year": "2023",
+        "v0_ret": 1.3094297695329642,
+        "v3_30d_ret": 1.3652233841588002,
+        "v3_30d_minus_v0": 0.055793614625835986,
+        "v3_90d_ret": 1.3785638524094206,
+        "v3_90d_minus_v0": 0.06913408287645639
+      },
+      {
+        "year": "2024",
+        "v0_ret": 0.9284832137173662,
+        "v3_30d_ret": 0.9697466358833218,
+        "v3_30d_minus_v0": 0.04126342216595558,
+        "v3_90d_ret": 0.953027717089463,
+        "v3_90d_minus_v0": 0.024544503372096793
+      },
+      {
+        "year": "2025",
+        "v0_ret": -0.19045221755961472,
+        "v3_30d_ret": -0.17491110724126668,
+        "v3_30d_minus_v0": 0.01554111031834804,
+        "v3_90d_ret": -0.16764833749383712,
+        "v3_90d_minus_v0": 0.022803880065777604
+      },
+      {
+        "year": "2026",
+        "v0_ret": -0.17140012374011215,
+        "v3_30d_ret": -0.16495828661391676,
+        "v3_30d_minus_v0": 0.006441837126195393,
+        "v3_90d_ret": -0.1448728176249755,
+        "v3_90d_minus_v0": 0.02652730611513665
+      }
+    ],
+    "new": [
+      {
+        "year": "2023",
+        "v0_ret": 1.3094297695329642,
+        "v3_30d_ret": 1.3652233841588002,
+        "v3_30d_minus_v0": 0.055793614625835986,
+        "v3_90d_ret": 1.3785638524094206,
+        "v3_90d_minus_v0": 0.06913408287645639
+      },
+      {
+        "year": "2024",
+        "v0_ret": 0.9284832137173662,
+        "v3_30d_ret": 0.9697466358833218,
+        "v3_30d_minus_v0": 0.04126342216595558,
+        "v3_90d_ret": 0.953027717089463,
+        "v3_90d_minus_v0": 0.024544503372096793
+      },
+      {
+        "year": "2025",
+        "v0_ret": -0.19045221755961472,
+        "v3_30d_ret": -0.17491110724126668,
+        "v3_30d_minus_v0": 0.01554111031834804,
+        "v3_90d_ret": -0.16764833749383712,
+        "v3_90d_minus_v0": 0.022803880065777604
+      },
+      {
+        "year": "2026",
+        "v0_ret": -0.17140012374011215,
+        "v3_30d_ret": -0.16495828661391676,
+        "v3_30d_minus_v0": 0.006441837126195393,
+        "v3_90d_ret": -0.1448728176249755,
+        "v3_90d_minus_v0": 0.02652730611513665
+      }
+    ],
+    "identical": true
+  },
+  "judgement": {
+    "prior_pass": false,
+    "new_pass": false,
+    "unchanged": true
+  },
+  "run_config_unchanged": {
+    "n_shuffles": 200,
+    "momentum_days_primary": 30,
+    "momentum_days_secondary": 90,
+    "cost_bps": 0.001
+  }
+}
