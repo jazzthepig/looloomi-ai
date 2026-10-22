@@ -621,11 +621,18 @@ def _draft(out: dict) -> str:
     i4n = B["results"]["ISSUE_NEW_4"]["discovery"]
     i13o = B["results"]["ISSUE_OLD_13"]["discovery"]
     i13n = B["results"]["ISSUE_NEW_13"]["discovery"]
-    verdict = ("H1 的供给纪律**翻过来**(新实现的发现段 IC 由 %s 变 %s),⇒ 按 S-668 §切换规则,"
-               "个股 v2 合成重新进切换判断" % (_f(o_d["mean_ic"]), _f(n_d["mean_ic"]))
-               ) if (n_d["mean_ic"] or 0) > (o_d["mean_ic"] or 0) else (
-        "H1 的结论照旧(新实现的发现段 IC %s vs 旧 %s),但台账要写清楚这回检的是**净增发**而不是股东收益率"
-        % (_f(n_d["mean_ic"]), _f(o_d["mean_ic"])))
+    # 「翻过来」= 净增发少的公司之后更好 = 发现段 IC 由 ≤0 变成 >0。
+    # 只是从 -0.075 走到 -0.061(两边都还是负的)**不算**翻过来。
+    flipped = (n_d["mean_ic"] or 0) > 0 and (o_d["mean_ic"] or 0) <= 0
+    shrink = (abs(o_d["mean_ic"]) / abs(n_d["mean_ic"])) if n_d["mean_ic"] else float("nan")
+    if flipped:
+        verdict = ("H1 的供给纪律**翻过来**(新实现的发现段 IC 由 %s 变 %s),⇒ 按 S-668 §切换规则,"
+                   "个股 v2 合成重新进切换判断。" % (_f(o_d["mean_ic"]), _f(n_d["mean_ic"])))
+    else:
+        verdict = ("**不翻** —— 两边的发现段 IC 都还是负的(%s → %s),只是强度掉了约 %.1f 倍。"
+                   "H1 结论照旧(发现段未过 ⇒ FAIL),S-670 的 ISSUE 也仍是发现段未过。"
+                   "台账里写清楚这回检的是**净增发**而不是股东收益率"
+                   % (_f(o_d["mean_ic"]), _f(n_d["mean_ic"]), shrink))
     lines = [
         "**测得的原始数字(S-668 H1,合成 IC / t)**",
         "",
