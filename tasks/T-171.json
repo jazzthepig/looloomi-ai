@@ -1,7 +1,7 @@
 {
   "id": "T-171",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-22",
   "forbidden_paths": [
     "Shadow/",
@@ -22,5 +22,11 @@
     "check": "照 S-669 原文一字不改(标签定义、两段、判法)。宇宙 = CIS 现有加密 25 + 传统 33 + World50 美股挂牌(world50_mcap_weekly 里不带 . 后缀的 key);价格 asset_mcap_daily(加密)/ ohlcv_daily source = eodhd(传统);资金费 funding_history 按日平均;FNG / VIX 从 macro_daily 取(先列出 macro_daily 里实际的列名再用,不猜)。只读 publishable key,本地缓存到 /Volumes/CometCloudAI/cometcloud-local/research/t171/。",
     "expect": "脚本 docs/research/t171_state_layer.py;结果 docs/research/t171_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-171_s669_state.md,末尾「S-669 结果」草稿 + 「挖掘」;in_review,推 lane-c/T-171。新分支 `git switch -c lane-c/T-171 origin/main`。"
   },
-  "prior_value": "给 v2 状态层定稿:哪些标签能展示(稳)、对外怎么写(描述);候选标签另立预注册。"
+  "prior_value": "给 v2 状态层定稿:哪些标签能展示(稳)、对外怎么写(描述);候选标签另立预注册。",
+  "notes": "S-669 照原文执行。宇宙:加密25+传统33+World50美股挂牌42(满编快照2026-09-18,140key取mcap前50留无.后缀);价格 asset_mcap_daily(coingecko_pro_market_chart)/ohlcv_daily(source=eodhd);资金费 funding_history(binance_perp)按日平均;FNG/VIX 取 macro_daily 的 series=fng/series=vix。窗口2023-01-01→2026-09-30,两段2023-01→2024-06 / 2024-07→2026-09。①稳定:趋势每30天换标签次数中位数 加密2.0(均值2.17,p90=5,3天内变回33.6%)、传统1.0(均值2.15,p90=5,变回36.0%) => 按S-669的\"≤2次=能展示\"两组都过,但均值都压在2以上、p90=5,卡在边界。同口径 动量中位数3.0(超线)、拥挤中位数1.0但3天内变回仅26.2%(三类里最不稳)。②预测:15个名字级标签×两段。严格读法(两段同号+两段各自|t|>=2)候选3个=加密/拥挤/冷清(-3.22%/-1.65%,t=-5.54/-5.03)、传统/动量/强(+0.80%/+0.86%,t=6.40/5.99)、传统/动量/中(-0.44%/-0.34%,t=-9.18/-7.19);宽松读法(max|t|>=2)6个。块置换对照(apparatus.block_permute+null_distribution,块=20观测≈重叠期,序列按名字优先排列)下p值全在0.13~0.999,过0.05的0个;传统/动量/弱段一p=0.9992比观测值还极端。naive t被重叠窗口+每名数百观测撑爆(最高t=-9.18而p=0.67)。候选按S-669只记录不采用,其余写\"描述,不是预测\"。③情绪是组级标签,\"相对组等权的组内超额\"对它恒等于0(Σ(r_i-r_bar)=0的恒等式),改报\"该标签下组等权4周收益 vs 无条件\";6个情绪标签无一过置换(紧张+3.86%仅41个观测,p=0.90)。窗口口径敏感性:改按行数取严格候选由3减到2(掉传统/动量/强),置换结论两种口径下都是0个存活。数据缺口:SKY在funding_history全空(拥挤只覆盖24/25);DELL/MS无eodhd价(World50美股挂牌42个可用40)。结论:趋势能展示(带p90=5的尾巴一起说)、动量不配叫状态、拥挤展示前先修稳定性;对外一律按\"描述\"写。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-22T05:30Z",
+    "value": "S-669 收(台账已记):趋势标签能展示(中位 2.0 / 1.0 次 / 30 天,边界);动量 / 拥挤不稳 ⇒ 只给数值不给标签;严格读法 3 个候选,块置换下全部不存活 ⇒ 状态层写「描述,不是预测」。|t| 口径按严格(两段都 ≥ 2)。数据缺口 SKY 资金费 / DELL、MS eodhd 价归 Seth 入库道。"
+  }
 }
