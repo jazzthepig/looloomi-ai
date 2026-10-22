@@ -1,7 +1,7 @@
 {
   "id": "T-181",
   "owner": "lane-a",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-22",
   "forbidden_paths": [
     "Shadow/",
@@ -23,5 +23,11 @@
     "check": "新写一份 ≤ 300 行的脚本,**不读、不 import t117_s597_baskets.py**。照台账 §S-597 预注册原文,只做加密篮子(非 BTC 市值前 15,去稳定币 / 包装币,4 周调仓,数据 = Mac 数据根 research/crypto_daily/panel.json),三条臂 R / L / LC,成本 20 bp × 换手,统计只走 src/data/evaluation/apparatus.py(ab_test 周收益、mean_block 4、days_per_year 52;三段 2019-06–2021 / 2022–2023 / 2024 →)。**先写两条红测再写实现**(放 docs/research/t181_test.py,python3 -m pytest 能跑):① 权重漂移 —— 一周后 w_i' = w_i(1 + r_i) / Σ w_j(1 + r_j),L 臂老成员在调仓日不回等权;② LC 的砍 —— 某成员从进篮子那天的价格跌 ≥ 25% ⇒ 下周收盘卖出、钱按当前权重分给还在篮子里的,到下次调仓前不回来。判据只对**预注册原文的 LC**(不设单名上限);10-18 加的「单名上限 2 / N」是看过结果才加的,只作为 LC-cap 臂**只报**,写明。只报:最大回撤、最大单名权重的时间分布、LC 砍掉的笔数与被砍名字之后 13 周的收益。",
     "expect": "脚本 docs/research/t181_s597_crypto15.py + docs/research/t181_test.py;结果 docs/research/t181_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-181_s597_crypto15.md(末尾「S-597 结果(加密)」草稿);in_review,推 lane-a/T-181。新分支 `git switch -c lane-a/T-181 origin/main`。"
   },
-  "prior_value": "L 胜 R ⇒ ① 的等权变体不该每期调回等权(卖赢家);LC 胜 R ⇒ Tom 的「砍输家」在篮子层成立,进 ① 的覆盖层候选。都不胜 ⇒ 等权调仓照旧,台账记一笔。World50 那一半等 S-583 的本币偏差修完再派。"
+  "prior_value": "L 胜 R ⇒ ① 的等权变体不该每期调回等权(卖赢家);LC 胜 R ⇒ Tom 的「砍输家」在篮子层成立,进 ① 的覆盖层候选。都不胜 ⇒ 等权调仓照旧,台账记一笔。World50 那一半等 S-583 的本币偏差修完再派。",
+  "notes": "299 行脚本 docs/research/t181_s597_crypto15.py(不读不 import t117),红测 docs/research/t181_test.py 13 条全过(权重漂移 + LC 砍各一组)。数据 Mac 数据根 crypto_daily/panel.json,386 周 2019-06-02→2026-10-15,非 BTC 市值前 15,4 周调仓,20bp×换手,统计全走 apparatus.ab_test(周收益 mean_block 4 days_per_year 52)。R 累计 +210%(年化 +16.5%、回撤 -82.8%、换手 25.4%、最大单名权重 最大37.1%/p90 13.2%)。L 累计 +167%(年化 +14.1%、回撤 -81.0%、换手 15.6%、最大单名 p90 26.3%),ab_test 对 R:分不开,B/A 0.861,CI[-0.87,+0.47],三段 1.018/0.905/0.935(≥2 段同号 ✓ 但全样本未判胜出)。LC 累计 -9%(年化 -1.3%、回撤 -84.9%、换手 34.3%、最大单名权重冲到 100%、持仓最少掉到 1 名),ab_test 对 R:分不开,B/A 0.294,CI[-6.20,+2.92](se 2.34,周频检验力不足),三段 0.188/3.652/0.428 符号不稳。只报:LC 砍 82 笔,可算 13 周前瞻的 80 笔平均 +20.5%、中位 +4.6%、56% 上涨,同期 R 篮中位 +3.7%(逐笔高 7.5pp) => 砍确实砍在底部。LC-cap(只报)累计同为 -9%,最大单名 p90 29.7%->21.3%、中位 18.9%->13.3%,上限只在调仓日施加、两次调仓之间照漂,管不住 100% 的尾部。结论:三个臂的预注册判据一条都没过 => 等权调仓照旧,§S-597 加密这一半关掉;卡上 prior_value 的『LC 胜 R => 进 ① 覆盖层候选』没有发生,不要挪。报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-181_s597_crypto15.md。限制(已写进报告):面板幸存者偏差使 R 的 +210% 是上界(对四臂同方向);2019 年底前篮子只有 3 名;13 周前瞻只覆盖 80/82 笔。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-22T17:48Z",
+    "value": "(另一个 Seth 会话复核,合并因 add/add 冲突重排)S-597 加密前 15:R +210% / L +167%(B/A 0.861,CI [−0.87, +0.47])/ LC −9%(B/A 0.294),三条都不过预注册判据 ⇒ 等权调仓照旧;LC-cap 只报。新脚本 ≤ 300 行、不读 t117,13 条红测先写(漂移、LC 砍)全过,统计只走 apparatus.ab_test。面板有幸存者偏差,R 是上界(报告已写)。"
+  }
 }
