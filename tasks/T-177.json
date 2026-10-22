@@ -1,7 +1,7 @@
 {
   "id": "T-177",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-22",
   "forbidden_paths": [
     "Shadow/",
@@ -22,5 +22,6 @@
     "check": "照 S-672 原文一字不改。票的复现照 docs/research/s665_dilution_rv2.py 的做法(import s657_s658_breadth_second_leg 拿 770 张票,不复制);asset_mcap_daily 用 publishable key、翻页带 order=symbol.asc,coin_id.asc,d.asc,抓完断言每个 symbol 的 (coin_id, d) 无重复。三维与合成 import src.data.cis.v2 的 crypto_inputs / score_group(读 src/ 可以,改不行)。打乱只走 src/data/evaluation/apparatus.py。四条判据逐条给数,外加「只报」的几项;④ 的「只用供给维」= 同一批有合成分的票上用 raw['supply'] 一维按同一切法。 **补充(10-22 17:22 UTC,台账「S-672 预注册补充」):⑤ 三维在「信号日」与「信号日前一天」各算一遍(crypto_inputs 的 asof 分别给 t 与 t − 1 天),①–④ 两种测量日下都满足才算过,两种都报 —— S-665 只在信号日当天成立、挪一天就没了(T-178 + Seth 复跑)。**",
     "expect": "脚本 docs/research/t177_s672_v2_tickets.py;结果 docs/research/t177_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-177_s672_v2_tickets.md(末尾「S-672 结果」草稿 + 挖掘);in_review,推 lane-b/T-177。新分支 `git switch -c lane-b/T-177 origin/main`。"
   },
-  "prior_value": "过 ⇒ 前向票标签加 v2 合成分(交易层与 CIS v2 一个内核);不过 ⇒ 交易层只记稀释,v2 合成不进交易层。实盘用不用都等前向、Jazz 定。"
+  "prior_value": "过 ⇒ 前向票标签加 v2 合成分(交易层与 CIS v2 一个内核);不过 ⇒ 交易层只记稀释,v2 合成不进交易层。实盘用不用都等前向、Jazz 定。",
+  "notes": "判:不过(4 条过 2 条:①③ 过,②④ 不过)。有合成分 703 张(宇宙 165 symbol × 319 信号日),无分 67 张平均 R −0.118。① +0.7873R,p=0/2000(零分布 μ −0.0067 σ 0.2782 max 0.7351,z=2.85)✅;② −0.1105(2023 前,负)/ +0.8996 ❌;③ 高分一半总 R 占 86.6%(阈值 50%)✅;④ 整段 +0.7873 > +0.5375 ✅ 但 2023 前 −0.4699(合成更差)/ 2023 后 +0.3395 ⇒ 两段都要,❌。只报:规模维单独 +0.0566 p=0.433(几乎无判别力);稳定维单独 +0.5424 p=0.015(两段 −1.0240/+0.7381);供给维两段 +0.3594/+0.5600 都正。合成三分位非单调:低 0.131/中 0.8995/高 0.591(中档最好)。复现对照:④ 对照臂逐位对上 S-665(+0.5375/p0.027/n702 vs +0.5357/p0.022/n709,n 差 7 张来自 v2 更严的新鲜度门槛) ⇒ v2 的 supply 与 S-665 的 −dil90 是同一个量。键完整性硬断言:rows 359447 = keys 359447、dup_keys 0。机制:规模与稳定两维在 2023 前反向(−1.60/−1.02),供给维两段都正 ⇒ 等权合成在熊市段把净效应搅负。结论:交易层票标签只记稀释,不进 v2 合成分;v2 分留在打分侧。试验计数 R 确认层族第 4 次,1 条,0 过。报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-177_s672_v2_tickets.md;脚本 docs/research/t177_s672_v2_tickets.py;结果 docs/research/t177_results.json。 | Seth 10-22 审:不过成立 —— ⑤(信号日与前一天都要过)是在 ①–④ 之上再加的合取条件,①–④ 已有 ②④ 不过,⑤ 只会更严,所以没跑 ⑤ 不改判。不过的结论是在信号日当天测的(S-665 教训:只在当天成立的不算),这里反向恰好不会被它翻成『过』。合并为存档,v2 合成不进交易层。"
 }
