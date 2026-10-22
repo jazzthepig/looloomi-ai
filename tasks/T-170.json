@@ -1,0 +1,26 @@
+{
+  "id": "T-170",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-22",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "title": "S-668 H2:加密 25 个名字上 v2 合成(F + O + 规模 + 稳定 + 不稀释)vs v1 —— 周 IC 只报 + S-630 框架的山寨内倾斜回放对 200 次随机打乱(一致性检查)",
+  "source": "台账 S-668 预注册(2026-10-22)。S-630:v1 CIS 在山寨里挑币与随机分不开。v2 的维度是在 2023–26 这批数据上看出来的,所以这张卡只是一致性检查,不是证据 —— 判据照原文。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-170.json"
+  ],
+  "acceptance": {
+    "check": "照 S-668 原文 H2 一字不改。回放框架直接复用 docs/research/t148_alt_momentum_tilt.py(import 它的函数,不重写):把 z30 换成 v2 合成在山寨里的 z(每周一用 d − 1 收盘前已知的值),BTC / ETH 钉住,200 次随机打乱用 src/data/evaluation/apparatus.py 的 shuffle_within,报 V − V0 在打乱分布里的分位。**v2 合成一律 import `src.data.cis.v2`(`crypto_inputs` 吃 asset_mcap_daily 的 (d, price, mcap);`score_group('crypto', …)` 再加 cis_rebuild_daily 当天的 pillar_f / pillar_o 作为 f / o),不自己写一版** —— 影子写入端用的是同一个函数。① 宇宙里不在 CIS 25 个里的名字没有 F / O,用其余三维。另报:2023-01 → 2026-09 每周五 v2 合成与 v1 cis_score 对之后 28 天收益的 IC(每 4 周取一个不重叠样本),以及两者的档位换档频率(按 CIS_STANDARD §6 的分位档与滞回)。只读 publishable key。",
+    "expect": "脚本 docs/research/t170_cis_v2_crypto.py;结果 docs/research/t170_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-170_s668_h2.md,末尾「S-668 H2 结果」草稿 + 「挖掘」;in_review,推 lane-b/T-170。新分支 `git switch -c lane-b/T-170 origin/main`。先复现 T-148 的 V0(multiplier_daily.core_u_replay 1% 以内),对不上先停下报差。"
+  },
+  "prior_value": "回放分位 ≥ 80 ⇒ 加密组满足切换条件 ③;否则加密继续 v1、v2 影子累计前向。"
+}
