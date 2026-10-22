@@ -104,8 +104,9 @@ def null_distribution(fn: Callable[[np.random.Generator], float], n: int, seed: 
     finite = null[np.isfinite(null)]
     if finite.size == 0:
         raise NoOpNull("零分布全是 NaN / inf")
-    if np.ptp(finite) == 0.0:
-        raise NoOpNull(f"零分布没有方差(全部 = {finite[0]!r})—— 打乱没有改变任何东西")
+    # 浮点噪声也算没有方差(T-171:块置换不改变均值,零分布跨度 5e-19 就过了 `== 0` 这道检查,p 值成了求和顺序的噪声)
+    if np.ptp(finite) <= 1e-12 * max(1.0, float(np.abs(finite).max())):
+        raise NoOpNull(f"零分布没有方差(全部 ≈ {finite[0]!r},跨度 {np.ptp(finite):.1e})—— 打乱没有改变任何东西")
     if actual is not None and math.isfinite(actual):
         same = np.isclose(finite, actual, rtol=0.0, atol=1e-12).mean()
         if same >= 0.99:

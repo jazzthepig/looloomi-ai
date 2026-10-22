@@ -143,3 +143,15 @@ def test_ab_drops_uncomputable_days_and_refuses_short_samples():
     assert ab_test([0.01] * 10, [0.02] * 10)["verdict"] == "不可算"
     idx = stationary_bootstrap_index(50, 1, 10, np.random.default_rng(0))
     assert idx.shape == (10, 50) and idx.min() >= 0 and idx.max() < 50
+
+
+def test_float_noise_null_is_still_a_noop():
+    """T-171:块置换不改变均值 —— 零分布只剩求和顺序的浮点噪声(跨度 ~1e-19),以前过得了 `ptp == 0`。"""
+    import numpy as np
+    xs = np.random.default_rng(1).normal(size=500) * 0.01
+
+    def mean_after_block_permute(rng):
+        return float(np.mean(block_permute(xs, 20, rng)))
+
+    with pytest.raises(NoOpNull):
+        null_distribution(mean_after_block_permute, 200, seed=7)

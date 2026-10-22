@@ -438,7 +438,7 @@ def main() -> None:
         off = 0
         while True:
             r = c.get("/rest/v1/funding_history",
-                      params={"select": "symbol", "venue": "eq.binance_perp",
+                      params={"select": "symbol", "venue": "eq.binance_perp", "order": "symbol.asc,funding_time.asc",
                               "limit": 1000, "offset": off})
             rows = r.json()
             if not rows:
