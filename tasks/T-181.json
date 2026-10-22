@@ -1,0 +1,27 @@
+{
+  "id": "T-181",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-22",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/",
+    "docs/research/t117_s597_baskets.py"
+  ],
+  "title": "S-597 重写(取代 T-117):加密非 BTC 前 15 篮子 —— 调回等权(R)/ 只换成分让赢家跑(L)/ 再砍跌 25% 的输家(LC),一份小脚本、权重在两次调仓之间按价格漂移",
+  "source": "T-117 三轮都死在 37KB 的老脚本上(步数 / 上下文),而且 L / LC 两次调仓之间不漂移 —— 那几轮的数一律不引用(T-117 notes 10-19)。① 是「持有面板」,篮子该不该每期调回等权(= 卖赢家买输家)是 ① 自己的设计问题。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-181.json"
+  ],
+  "acceptance": {
+    "check": "新写一份 ≤ 300 行的脚本,**不读、不 import t117_s597_baskets.py**。照台账 §S-597 预注册原文,只做加密篮子(非 BTC 市值前 15,去稳定币 / 包装币,4 周调仓,数据 = Mac 数据根 research/crypto_daily/panel.json),三条臂 R / L / LC,成本 20 bp × 换手,统计只走 src/data/evaluation/apparatus.py(ab_test 周收益、mean_block 4、days_per_year 52;三段 2019-06–2021 / 2022–2023 / 2024 →)。**先写两条红测再写实现**(放 docs/research/t181_test.py,python3 -m pytest 能跑):① 权重漂移 —— 一周后 w_i' = w_i(1 + r_i) / Σ w_j(1 + r_j),L 臂老成员在调仓日不回等权;② LC 的砍 —— 某成员从进篮子那天的价格跌 ≥ 25% ⇒ 下周收盘卖出、钱按当前权重分给还在篮子里的,到下次调仓前不回来。判据只对**预注册原文的 LC**(不设单名上限);10-18 加的「单名上限 2 / N」是看过结果才加的,只作为 LC-cap 臂**只报**,写明。只报:最大回撤、最大单名权重的时间分布、LC 砍掉的笔数与被砍名字之后 13 周的收益。",
+    "expect": "脚本 docs/research/t181_s597_crypto15.py + docs/research/t181_test.py;结果 docs/research/t181_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-181_s597_crypto15.md(末尾「S-597 结果(加密)」草稿);in_review,推 lane-a/T-181。新分支 `git switch -c lane-a/T-181 origin/main`。"
+  },
+  "prior_value": "L 胜 R ⇒ ① 的等权变体不该每期调回等权(卖赢家);LC 胜 R ⇒ Tom 的「砍输家」在篮子层成立,进 ① 的覆盖层候选。都不胜 ⇒ 等权调仓照旧,台账记一笔。World50 那一半等 S-583 的本币偏差修完再派。"
+}
