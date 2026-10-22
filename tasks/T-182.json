@@ -1,0 +1,26 @@
+{
+  "id": "T-182",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-22",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "title": "S-625(热板块里的突破更常是大鱼,叙事族唯一的 ✅)独立复现 + 挪一天:板块热度改用信号日前一天还过不过",
+  "source": "台账「S-625 稳健性复核 —— 计划」(10-22 18:07 UTC)。S-665 今晚复算时发现:只在信号日当天成立、挪一天就没了(T-178)。S-625 的板块热度在信号日当天算,而这张票自己的突破收益就在板块指数里 —— 有机械通道。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-182.json"
+  ],
+  "acceptance": {
+    "check": "只读台账 §S-625 的预注册段(到「### S-625 结果」为止)写自己的脚本;写完自己的数再读 S-625 结果段逐项对。票 = S-610 的 R 臂进场(信号日 ≤ 2026-06-20,预注册写 960 张;票生成器照用 docs/research 里已有的 S-610 / t159 实现,import 不复制);「在鱼上」按 S-618 定义;板块 = style_index_pit_daily 的 sector 维度(按时点成分,ai / defi / meme / infra_tokenization),majors 同表。三档:① t 当天(复现原判);② t − 1 当天(30 日窗口整体前移一天);③ t 当天但把这张票自己从它所属板块指数里剔除(成分权重重归一)。每档:A / B / C 张数、找鱼率、年内打乱 A / B 2,000 次的单侧 p(只走 src/data/evaluation/apparatus.py)、分年。翻页一律带 order=。",
+    "expect": "脚本 docs/research/t182_s625_shift.py;结果 docs/research/t182_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-182_s625_shift.md(先写自己三档的数,再对 S-625 结果段;末尾「S-625 稳健性结果」草稿);in_review,推 lane-b/T-182。新分支 `git switch -c lane-b/T-182 origin/main`。"
+  },
+  "prior_value": "② 过 ⇒ 叙事族的历史证据站得住;② 不过 ⇒ S-625 记「只在当天成立」,叙事族只剩 S-626 的前向。"
+}

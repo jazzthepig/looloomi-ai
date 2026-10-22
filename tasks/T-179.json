@@ -1,7 +1,7 @@
 {
   "id": "T-179",
   "owner": "lane-a",
-  "status": "blocked",
+  "status": "open",
   "created": "2026-10-22",
   "forbidden_paths": [
     "Shadow/",
@@ -22,6 +22,5 @@
     "check": "开工前先查数据到没到:`world50_mcap_weekly?select=key&source=eq.shares_x_close_v3&shares=not.is.null&limit=1`(publishable key)。返回空 ⇒ 本轮不做,回复「@seth T-179 等 shares 列」即收工 —— 不许退回用 市值 ÷ 收盘 推股数(ohlcv_daily 的收盘是总回报复权的,推出来的是股数 × 原始价 / 复权价,见台账「S-668 H1 / S-670 ISSUE 更正」)。 名单 = CIS v2 个股宇宙(cis_v2_daily 最新一天 grp = equity 的 symbol)里,按 shares 列算的 52 周变化(最新一周 ÷ 52 周前当周或之前最后一周 − 1)|变化| > 5% 的公司。每家:shares 的周序列、52 周内的台阶(单周 > 2%)与日期;同一家旧推法(市值 ÷ ohlcv_daily 收盘)的 52 周变化并排列出(量化股息 / 分拆的影响,作为修复的验收)。外部证据只许 SEC EDGAR companyfacts / 申报封面股数(请求带 SEC 要求的 User-Agent,每秒 ≤ 5 次),**只进报告、不进任何研究脚本的输入、不入库** —— 入库是 Seth 的道(规则 3b)。每家分一类:A 真的公司行为(写明事件与申报号)/ B 我们的口径错(ADR 比例、多类股合计、汇率、单位、申报口径切换 —— 写明哪一种、哪一周)/ C 说不清。",
     "expect": "脚本 docs/research/t179_share_change_audit.py;表 /Volumes/CometCloudAI/cometcloud-local/research/t179/share_change_audit.csv(key, 新 52 周变化, 旧推法 52 周变化, 台阶日期, 类别, 证据);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-179_share_change_audit.md(开头一张按类别的计数表,B 类每家写怎么修);in_review,推 lane-a/T-179。新分支 `git switch -c lane-a/T-179 origin/main`。"
   },
-  "prior_value": "B 类交 Seth 改入库口径;修好之前,页面上 B 类公司的股数变化不展示。",
-  "blocked_by": "world50_mcap_weekly.shares 还没有数 —— 10-22 部署后 world50 周更整段重写时填;Seth 看到有数就改回 open 并写 wake"
+  "prior_value": "B 类交 Seth 改入库口径;修好之前,页面上 B 类公司的股数变化不展示。"
 }

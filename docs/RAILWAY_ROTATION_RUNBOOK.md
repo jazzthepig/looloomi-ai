@@ -9,8 +9,11 @@
 
 **谁做:** 每一步都是 Jazz 的(密钥只经过 Jazz 的手);Seth 在每一步之后给验证命令并核对 Supabase 日志。
 
-## 0 · 构建恢复、积压的代码先上线(旧密钥)
+**进度(10-22 17:20 UTC):** 第 0 步 ✅;`GITHUB_TOKEN` ✅(Jazz 已在 Railway 换成新的一把)。**剩第 1–4 步,一次改完再部署,然后第 5 步。**
 
+## 0 · 构建恢复、积压的代码先上线(旧密钥)—— ✅ 10-22
+
+- ✅ 构建 ~06:14 UTC 恢复,积压全部上线;此后每次推送都正常部署(17:14 线上 0bb57d60;16:38 有一次构建失败,下一推 44 秒上线 —— 平台偶发)。
 - 看 <https://status.railway.com> 写明我们所在的套餐已恢复构建。
 - Railway 自己会部署最新提交;没动就在 Railway 里对最新部署点 Redeploy。
 - 验:`curl -s https://web-production-0cdf76.up.railway.app/internal/build-state` 的 `git_sha_short` = `origin/main` 最新;
@@ -45,9 +48,9 @@
 | `TELEGRAM_BOT_TOKEN`(+ `TELEGRAM_WEBHOOK_SECRET`) | BotFather `/revoke` | 别人能用我们的机器人给你发「告警」 |
 | `RESEND_API_KEY` | Resend 控制台 | 别人能用我们的域名发邮件 |
 | `LLM_API_KEY` / `NARRATIVE_LLM_API_KEY` | 对应推理服务 | 攻击者点名要的就是这类(推理费用) |
-| `GITHUB_TOKEN` | ✅ **10-22 已作废**(与 Mac 的 `gh` 共用的那份 OAuth 授权已撤销;Mac 改用只限本仓库的 fine-grained token) | 恢复后另建一把**只读、只给公开仓库**的给 Railway,或干脆不设。**一个用途一把,不再与 Mac 共用** |
+| `GITHUB_TOKEN` | ✅ **10-22 全部做完**:与 Mac 的 `gh` 共用的那份 OAuth 授权已撤销;Mac 改用只限本仓库的 fine-grained token;Railway 已由 Jazz 换成新的一把 | —— 一个用途一把,不再与 Mac 共用 |
 
-**`GITHUB_TOKEN`、推理 key、`RESEND_API_KEY` 不必等构建恢复 —— 现在就在各家作废**(线上只是暂时少这几个功能)。
+表里的变量 Railway 上没有的(Jazz 10-22:LLM 相关的 key 不多)直接跳过 —— 以 Railway → Variables 里实际有的为准,一行一行对。
 
 ## 5 · 收尾验证(Seth)
 
