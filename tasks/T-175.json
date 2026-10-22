@@ -1,0 +1,26 @@
+{
+  "id": "T-175",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-22",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "title": "S-671:按时点的公司池(每年初当时的前 50 名)上重测 SMALL,并量出「今天的名单」带来的幸存者偏差有多大",
+  "source": "台账 S-671 预注册(2026-10-22)。S-670 的 SMALL 机械地过了,但池子是今天的名单(§Seth-1022e)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-175.json"
+  ],
+  "acceptance": {
+    "check": "照 S-671 原文一字不改。数据:world50_mcap_weekly 只取 source = shares_x_close_v3、不带 . 后缀;ohlcv_daily(source = eodhd)按 order=symbol.asc,trade_date.asc 翻页。按时点池子 = 每年第一个周五当时有市值、且当时已有 ≥ 26 周价格的公司里市值前 50,这一年固定。SMALL 与截面 / IC 构造 import docs/research/t172_equity_signals.py 的函数(不复制);零分布只走 apparatus。先报偏差量:按时点池子里之后跌出前 50 的占比、今天名单里当年不在前 50 的占比。",
+    "expect": "脚本 docs/research/t175_pit_small.py;结果 docs/research/t175_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-175_s671_pit_small.md(末尾「S-671 结果」草稿 + 挖掘);in_review,推 lane-a/T-175。新分支 `git switch -c lane-a/T-175 origin/main`。"
+  },
+  "prior_value": "过了 ⇒ SMALL 另立 26 周前向影子;不过 ⇒ S-670 的 SMALL 记为幸存者偏差,个股继续只给状态与事实。"
+}

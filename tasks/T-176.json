@@ -1,0 +1,26 @@
+{
+  "id": "T-176",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-22",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "title": "t155 / t142 / t144 补 order= 后原样重跑 —— t155 是前向臂 fund_a1_u 的依据;结果里加「去重后 (symbol, date) 数 = 天数 × 面板数」硬断言",
+  "source": "A 道 10-22 12:18 交叉复核 + §Seth-1022f:三个脚本翻页不带 order;A 道实测 t155 同一查询 4 次里 1 次缺 8.9% 的键,行数照样对。preflight 已加静态检查(这三个在 ALLOW 里,改好一个删一个)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-176.json"
+  ],
+  "acceptance": {
+    "check": "三个脚本各补 order=(按主键)后原样重跑,判据一字不改;每个 results.json 加 completeness 块:去重后 (symbol, date) 数、天数 × 面板数、两者相等的断言(不等就报错退出,可复用 t154_fish_counter_check.py 的 Prefer: count=exact)。逐字段与旧结果比,写清变化。t155 三条判定若有任何一条翻转,第一行写出来。",
+    "expect": "三个脚本改动 + 结果;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-176_order_rerun.md(末尾台账草稿);in_review,推 lane-b/T-176。新分支 `git switch -c lane-b/T-176 origin/main`。改好后把 tests/test_research_paged_reads_have_order.py 的 ALLOW 删掉对应三行 —— 那个文件在 tests/,不在你的 allowed_paths,写进回复由 Seth 删。"
+  },
+  "prior_value": "t155 判定不变 ⇒ fund_a1_u 前向臂依据恢复;翻转 ⇒ 停臂、台账更正。"
+}

@@ -1,0 +1,26 @@
+{
+  "id": "T-174",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-22",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "title": "T-171 返工(S-669):置换对照改成打乱「标签 ↔ 收益」的配对再判候选 —— 原来的块置换零化的是均值,空转",
+  "source": "B 道 10-22 12:14 交叉复核 + §Seth-1022f:t171_state_layer.py 用 block_permute 后取均值,块置换不改变均值,零分布只剩浮点噪声;台账 S-669 已追加更正(「0 存活」作废)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-174.json"
+  ],
+  "acceptance": {
+    "check": "在 docs/research/t171_state_layer.py 上改(新文件 t174 可以 import 它):每个标签 × 段 的零分布 = 每个日期内用 apparatus.shuffle_within(excess, groups=date) 打乱「名字 ↔ 之后 4 周组内超额」的配对,再重算该标签的桶均值;400 次;用 apparatus.null_distribution(会对空转零分布报 NoOpNull)+ percentile_of。候选判法照 S-669 原文(两段同号且两段 |t| ≥ 2),再报每个候选的置换分位。**只报**动量 / 拥挤的换标签次数,不对它们下「稳 / 不稳」的结论(S-669 只给趋势定了门槛)。另报:宇宙是今天的名单回填(幸存者偏差),组等权基准的 4 周无条件收益。",
+    "expect": "脚本 docs/research/t174_state_permutation.py;结果 docs/research/t174_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-174_s669_rework.md(末尾「S-669 返工结果」草稿);in_review,推 lane-c/T-174。新分支 `git switch -c lane-c/T-174 origin/main`。翻页读一律带 order=。"
+  },
+  "prior_value": "给 S-669 的候选一个有意义的死活;决定状态层对外文案里「没有预测力」能不能说。"
+}
