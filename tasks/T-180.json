@@ -1,0 +1,26 @@
+{
+  "id": "T-180",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-22",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "title": "S-668 H1 的「供给纪律」与 S-670 的 ISSUE 按申报股数重跑 —— 原来量的是股东收益率(净回购 + 股息),不是净增发",
+  "source": "台账「S-668 H1 / S-670 ISSUE 更正」(2026-10-22 16:17 UTC)。预注册不改(写的就是股数),错的是实现。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-180.json"
+  ],
+  "acceptance": {
+    "check": "开工前先查数据到没到:`world50_mcap_weekly?select=key&source=eq.shares_x_close_v3&shares=not.is.null&limit=1`(publishable key)。返回空 ⇒ 本轮不做,回复「@seth T-180 等 shares 列」即收工 —— 不许退回用 市值 ÷ 收盘 推股数(ohlcv_daily 的收盘是总回报复权的,推出来的是股数 × 原始价 / 复权价,见台账「S-668 H1 / S-670 ISSUE 更正」)。 新脚本 import t169_equity_quality.py 与 t172_equity_signals.py 的取数 / 截面 / IC 函数(不复制),只把股数换成 world50_mcap_weekly.shares(取数加 shares 列,翻页带 order=key.asc,d.asc;个股三维照样 import src.data.cis.v2.equity_inputs,传四元组 (d, mcap, close, shares))。两件:① S-668 H1 原判据一字不改重跑(发现段 + 留出段、v2 合成与之后 4 周收益);② S-670 的 ISSUE 4 周 / 13 周照 S-670 原判法重跑。每条给「旧实现 → 新实现」并排;另报(只报)旧 ISSUE 与新 ISSUE 的截面相关、以及旧 − 新 ≈ 股息率这件事在几家高股息公司上对不对得上。零分布只走 apparatus。",
+    "expect": "脚本 docs/research/t180_shares_rerun.py;结果 docs/research/t180_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-180_shares_rerun.md(末尾「S-668 H1 / S-670 ISSUE 重跑结果」草稿);in_review,推 lane-c/T-180。新分支 `git switch -c lane-c/T-180 origin/main`。"
+  },
+  "prior_value": "H1 翻过来(净增发少的公司之后更好)⇒ 个股 v2 合成重新进 S-668 的切换判断;不翻 ⇒ 结论照旧,但台账里写清楚这回检的是净增发。"
+}

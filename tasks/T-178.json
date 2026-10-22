@@ -1,0 +1,28 @@
+{
+  "id": "T-178",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-22",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/",
+    "docs/research/s665_dilution_rv2.py",
+    "docs/research/s665_results.json"
+  ],
+  "title": "S-665(开在稀释币上的 R-v2 票少赚一半)独立复算:只看台账的预注册文字自己写,不读 Seth 的脚本和结果",
+  "source": "S-665 是 R-v2 上第一个过关的过滤条件,已经在每张前向票上打标签(r_ticket_tags)、进了 ⓪ 战场简报;只有 Seth 一个人算过。碰真钱之前要第二个人从文字重做一次(T-116 的先例)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-178.json"
+  ],
+  "acceptance": {
+    "check": "只读 REFUTATION_LEDGER 里 §S-665 的预注册段(到「### S-665 结果」那一行为止;不读结果段、不读 docs/research/s665_dilution_rv2.py / s665_results.json、不读 src/data/signals/ticket_tags.py 与 battlefield_brief.py 里的 S-665 数字)。票:import docs/research/s657_s658_breadth_second_leg.py 拿 t159 的 770 张(这是票的生成器,不是 S-665 的分析)。流通量 = asset_mcap_daily 的市值 ÷ 价格,自己抓(publishable key,翻页带 order=,抓完断言无重复键)。打乱走 apparatus 或自写的年内打乱(写清楚)。先把自己的数全部写完 —— 有数据票数、无数据票数与平均 R、① 差与 p、② 两段、③ 占比、三分位边界与各档平均 R —— 再打开 Seth 的结果段逐项对:差 > 5% 的每一项找出原因(定义理解不同 / 谁写错)。",
+    "expect": "脚本 docs/research/t178_s665_replication.py;结果 docs/research/t178_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-178_s665_replication.md(先写自己的数,再写对照);in_review,推 lane-c/T-178。新分支 `git switch -c lane-c/T-178 origin/main`。"
+  },
+  "prior_value": "复现 ⇒ S-665 有两个人从文字算出同一结论,前向标签与简报里的 2.2% 门槛可以引用;复现不了 ⇒ 先停简报里的 diluting 标、台账更正。"
+}
