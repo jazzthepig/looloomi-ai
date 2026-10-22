@@ -9,6 +9,8 @@ Jazz ⓪ 开关(regime_call)的输入是人的判断;这张表把 HL 上成交�
 HL 币名经 `asset_mcap_daily` 的 symbol → CoinGecko id 接上;接不上或没有收入的币是空(不是 0)。
 **90 日稀释**(流通量增长 = 市值 ÷ 价格,CoinGecko)是留出段最强的单变量(S-664 IC +0.119、t 4.05),
 R-v2 的票开在一季度稀释 > 2.2% 的币上平均只有 +0.28R、其余 +0.57 / +0.76R(S-665);> 2.2% 标 `diluting`。
+**这是描述,不是已验证的规则**(10-22 稳健性:S-665 的中位数切半测量日挪一天就不成立;> 2.2% 那一档每个挪法下都差,
+但门槛是看过结果才定的 ⇒ 前向假设)。
 
 **它是筛子,不是信号。** S-658:第二段形态那一天进场,只比同币同月随便哪天进多 +0.09R,不显著 ——
 钱在「哪个月、哪个币」,也就是人要判断的那部分。这里只把候选摆出来;选不选、什么时候选,是 ⓪ 开关里那条判断。
@@ -111,7 +113,7 @@ def summarize(rows: list[dict]) -> dict[str, Any]:
             "median_ret_30d": med("ret_30d"), "funding_apr_median": med("funding_apr")}
 
 
-DILUTING = 0.022            # S-665:R-v2 历史最高三分位的下界(一个季度流通量涨 2.2%)
+DILUTING = 0.022            # S-665:R-v2 历史最高三分位的下界(一个季度流通量涨 2.2%;看过结果才定 ⇒ 前向假设)
 
 
 def attach_value(rows: list[dict], sym_to_gecko: dict[str, str], vc: dict[str, dict],

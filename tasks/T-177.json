@@ -19,7 +19,7 @@
     "tasks/T-177.json"
   ],
   "acceptance": {
-    "check": "照 S-672 原文一字不改。票的复现照 docs/research/s665_dilution_rv2.py 的做法(import s657_s658_breadth_second_leg 拿 770 张票,不复制);asset_mcap_daily 用 publishable key、翻页带 order=symbol.asc,coin_id.asc,d.asc,抓完断言每个 symbol 的 (coin_id, d) 无重复。三维与合成 import src.data.cis.v2 的 crypto_inputs / score_group(读 src/ 可以,改不行)。打乱只走 src/data/evaluation/apparatus.py。四条判据逐条给数,外加「只报」的几项;④ 的「只用供给维」= 同一批有合成分的票上用 raw['supply'] 一维按同一切法。",
+    "check": "照 S-672 原文一字不改。票的复现照 docs/research/s665_dilution_rv2.py 的做法(import s657_s658_breadth_second_leg 拿 770 张票,不复制);asset_mcap_daily 用 publishable key、翻页带 order=symbol.asc,coin_id.asc,d.asc,抓完断言每个 symbol 的 (coin_id, d) 无重复。三维与合成 import src.data.cis.v2 的 crypto_inputs / score_group(读 src/ 可以,改不行)。打乱只走 src/data/evaluation/apparatus.py。四条判据逐条给数,外加「只报」的几项;④ 的「只用供给维」= 同一批有合成分的票上用 raw['supply'] 一维按同一切法。 **补充(10-22 17:22 UTC,台账「S-672 预注册补充」):⑤ 三维在「信号日」与「信号日前一天」各算一遍(crypto_inputs 的 asof 分别给 t 与 t − 1 天),①–④ 两种测量日下都满足才算过,两种都报 —— S-665 只在信号日当天成立、挪一天就没了(T-178 + Seth 复跑)。**",
     "expect": "脚本 docs/research/t177_s672_v2_tickets.py;结果 docs/research/t177_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-177_s672_v2_tickets.md(末尾「S-672 结果」草稿 + 挖掘);in_review,推 lane-b/T-177。新分支 `git switch -c lane-b/T-177 origin/main`。"
   },
   "prior_value": "过 ⇒ 前向票标签加 v2 合成分(交易层与 CIS v2 一个内核);不过 ⇒ 交易层只记稀释,v2 合成不进交易层。实盘用不用都等前向、Jazz 定。"

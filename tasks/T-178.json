@@ -1,7 +1,7 @@
 {
   "id": "T-178",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-22",
   "forbidden_paths": [
     "Shadow/",
@@ -24,5 +24,11 @@
     "check": "只读 REFUTATION_LEDGER 里 §S-665 的预注册段(到「### S-665 结果」那一行为止;不读结果段、不读 docs/research/s665_dilution_rv2.py / s665_results.json、不读 src/data/signals/ticket_tags.py 与 battlefield_brief.py 里的 S-665 数字)。票:import docs/research/s657_s658_breadth_second_leg.py 拿 t159 的 770 张(这是票的生成器,不是 S-665 的分析)。流通量 = asset_mcap_daily 的市值 ÷ 价格,自己抓(publishable key,翻页带 order=,抓完断言无重复键)。打乱走 apparatus 或自写的年内打乱(写清楚)。先把自己的数全部写完 —— 有数据票数、无数据票数与平均 R、① 差与 p、② 两段、③ 占比、三分位边界与各档平均 R —— 再打开 Seth 的结果段逐项对:差 > 5% 的每一项找出原因(定义理解不同 / 谁写错)。",
     "expect": "脚本 docs/research/t178_s665_replication.py;结果 docs/research/t178_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-178_s665_replication.md(先写自己的数,再写对照);in_review,推 lane-c/T-178。新分支 `git switch -c lane-c/T-178 origin/main`。"
   },
-  "prior_value": "复现 ⇒ S-665 有两个人从文字算出同一结论,前向标签与简报里的 2.2% 门槛可以引用;复现不了 ⇒ 先停简报里的 diluting 标、台账更正。"
+  "prior_value": "复现 ⇒ S-665 有两个人从文字算出同一结论,前向标签与简报里的 2.2% 门槛可以引用;复现不了 ⇒ 先停简报里的 diluting 标、台账更正。",
+  "notes": "复现成立(alias_on_or_after 档 = Seth 的口径)。我的数(先写完再开结果段):770 张里 708 有流通量数据、62 无(均 R −0.1086,胜 33.9%);① 低一半 353 张 +0.8016R − 高一半 355 张 +0.2702R = +0.5315R,年内打乱 2,000 次单侧 p 0.0165;② <2023 +0.3594R / ≥2023 +0.5527R;③ 282.98/378.89 = 74.7%;三分位 236/236/236,dil 边界 0.22% 与 2.26%,平均 R +0.5687/+0.7639/+0.2729(胜 39.0/40.3/35.6%);最好 10 张 低5/中4/高1。逐项对 Seth:① +0.5315 vs +0.54、② +0.3594/+0.5527 vs +0.36/+0.56、③ 74.7% vs 75%、三档与胜率全在 ±0.01R / ±1pp 内、最好 10 张分布一致、③ 的总 R 283.0 vs 283 与 378.9 vs 378 几乎逐个相等。差 >5% 只有两项,都不是定义分歧:① p 0.0165 vs 0.022(2,000 次置换的 MC 分辨率,SE≈0.0028)、无数据票平均 R −0.1086 vs −0.10(62 vs 61 张,差 1 张边界票)。有数据票 708 vs 709:窗口从 ±3 放宽到 ±30 天只到 704/705,不是窗口;20 个空 symbol 里只有 1000SHIB 在表里有别名 SHIB(+6 张),剩 1 张是锚点边界。**要 @seth 拍板的一条:预注册的「前后 7 天」有歧义 —— 按字面(nearest,前后都找)① 只有 +0.1367R、p 0.3385 不过;只往后找(on_or_after,apparatus price_on_or_after 口径)才 +0.5474R、p 0.0185 过。Seth 的结果对应后者,台账该把这一句钉死,r_ticket_tags 也必须钉同一种读法。** 另:symbol 别名表要在前向侧冻结(184 个票 symbol 里 20 个 / 55 张票查不到流通量)。脚本 docs/research/t178_s665_replication.py(三档读法都跑、抓完断言无重复键、种子 20261023 写死),结果 docs/research/t178_results.json,报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-178_s665_replication.md。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-22T17:23Z",
+    "value": "复算 ✅:只看预注册文字,用信号日当天的观测时与 Seth 逐项对上(708 vs 709 票、① +0.53 vs +0.54、两段、③ 75%、三分位、最好 10 张)。稳健性 ❌(lane 的「前后最近」档实为先取前一天 → ① +0.14、p 0.34):Seth 原脚本只挪测量日 1 / 2 / 3 / 7 天,① p 都 ≥ 0.31 —— 中位数切半只在信号日当天成立;稳的只有 > 2.2% 那一档(每个挪法平均 R 0.24–0.31 vs 0.64–0.69),但门槛是事后定的 ⇒ 前向假设。台账「S-665 独立复算 + 稳健性」;S-672 加 ⑤ 两种测量日都要过。"
+  }
 }
