@@ -1651,6 +1651,36 @@ async def _start_cis_official_loop():
     print("[CIS-OFFICIAL] ✅ official daily CIS scheduled (cis_official_daily, append-only)")
 
 
+async def _cis_v2_shadow_loop():
+    """S-668:CIS v2 影子 —— v1 正式发布之后,同一个 d 算一遍 v2(只追加 → cis_v2_daily;对外仍是 v1)。
+    每小时看一次:已算就跳过;v1 还没发布就等。判活:`select max(d) from cis_v2_daily` = 昨天。"""
+    await _asyncio.sleep(_boot_delay(3300))   # 开机挤在 900 那一档的循环已经很多(test_boot_does_not_stampede)
+    while True:
+        try:
+            from src.data.cis.v2_shadow import run_once as _v2_run
+            r = await _v2_run()
+            print(f"[CIS-V2] {str(r.get('reason'))[:160]}")
+            _detail = {k: r.get(k) for k in ("written", "d", "coverage")}
+            await _beat("_cis_v2_shadow_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")), detail=_detail,
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_cis_v2_shadow_loop", "ok" if r.get("ok") else "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail=_detail, writer="src.api.main._cis_v2_shadow_loop")
+        except Exception as _e:
+            print(f"[CIS-V2] ⚠️  pass FAILED: {_e}")
+            await _beat("_cis_v2_shadow_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_cis_v2_shadow_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._cis_v2_shadow_loop")
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_cis_v2_shadow_loop():
+    _asyncio.create_task(_cis_v2_shadow_loop())
+    print("[CIS-V2] ✅ CIS v2 shadow scheduled (cis_v2_daily, append-only; public stays v1)")
+
+
 async def _cis_rebuild_loop():
     """S-531 / T-079:CIS 按时点重建(统一标准 v1)→ cis_rebuild_daily。与实盘 T2 同一个函数,只喂 d 收盘时已知的输入;
     滞回标签另列。每天一轮(UTC 01:00 后数据齐);输入补齐前算的行在下一轮整条重算。
