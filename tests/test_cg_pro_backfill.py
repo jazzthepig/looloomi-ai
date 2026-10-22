@@ -248,6 +248,18 @@ def test_no_pairs_refuses_instead_of_guessing_coin_ids():
            r.as_payload()["status"])
 
 
+def test_a_ticker_collision_cannot_label_a_coin_as_a_stock():
+    """T-179(10-22):类别按 symbol 从 assets 查,T = AT&T 也 = Threshold ⇒ 69 行币价被标成 Equity,
+    按 asset_class 过滤再按 symbol 接价的读者会拿 0.0049 当 AT&T 的收盘。CoinGecko 的 OHLC 只有币。"""
+    c = [{"trade_date": "2026-10-21", "open": 0.005, "high": 0.005, "low": 0.0049, "close": 0.0049}]
+    for bad in ("Equity", "ETF", "US Equity"):
+        rows = to_rows("T", c, asset_class=bad)
+        _check(f"{bad} 进来写成 Crypto", rows[0]["asset_class"] == "Crypto", str(rows[0].get("asset_class")))
+    _check("加密的细类原样保留", to_rows("UNI", c, asset_class="DeFi")[0]["asset_class"] == "DeFi")
+    _check("没给类别就不写这一列", "asset_class" not in to_rows("X", c)[0])
+    assert not [f for f in _FAILURES if "Crypto" in f or "细类" in f or "这一列" in f]
+
+
 if __name__ == "__main__":
     print("── CG Pro 回填:可信源 · 不覆盖旧数据 · 不伪造成交量 (S-258) ──")
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:

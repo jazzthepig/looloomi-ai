@@ -1,7 +1,7 @@
 {
   "id": "T-179",
   "owner": "lane-a",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-22",
   "forbidden_paths": [
     "Shadow/",
@@ -22,5 +22,11 @@
     "check": "开工前先查数据到没到:`world50_mcap_weekly?select=key&source=eq.shares_x_close_v3&shares=not.is.null&limit=1`(publishable key)。返回空 ⇒ 本轮不做,回复「@seth T-179 等 shares 列」即收工 —— 不许退回用 市值 ÷ 收盘 推股数(ohlcv_daily 的收盘是总回报复权的,推出来的是股数 × 原始价 / 复权价,见台账「S-668 H1 / S-670 ISSUE 更正」)。 名单 = CIS v2 个股宇宙(cis_v2_daily 最新一天 grp = equity 的 symbol)里,按 shares 列算的 52 周变化(最新一周 ÷ 52 周前当周或之前最后一周 − 1)|变化| > 5% 的公司。每家:shares 的周序列、52 周内的台阶(单周 > 2%)与日期;同一家旧推法(市值 ÷ ohlcv_daily 收盘)的 52 周变化并排列出(量化股息 / 分拆的影响,作为修复的验收)。外部证据只许 SEC EDGAR companyfacts / 申报封面股数(请求带 SEC 要求的 User-Agent,每秒 ≤ 5 次),**只进报告、不进任何研究脚本的输入、不入库** —— 入库是 Seth 的道(规则 3b)。每家分一类:A 真的公司行为(写明事件与申报号)/ B 我们的口径错(ADR 比例、多类股合计、汇率、单位、申报口径切换 —— 写明哪一种、哪一周)/ C 说不清。",
     "expect": "脚本 docs/research/t179_share_change_audit.py;表 /Volumes/CometCloudAI/cometcloud-local/research/t179/share_change_audit.csv(key, 新 52 周变化, 旧推法 52 周变化, 台阶日期, 类别, 证据);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-179_share_change_audit.md(开头一张按类别的计数表,B 类每家写怎么修);in_review,推 lane-a/T-179。新分支 `git switch -c lane-a/T-179 origin/main`。"
   },
-  "prior_value": "B 类交 Seth 改入库口径;修好之前,页面上 B 类公司的股数变化不展示。"
+  "prior_value": "B 类交 Seth 改入库口径;修好之前,页面上 B 类公司的股数变化不展示。",
+  "notes": "闸门已过(shares_x_close_v3 141 家 / 80,898 行,2026-10-23 实测)。125 家 CIS v2 equity 宇宙全部有 shares。|52w|>5% 从 10-21 说的 40/125 降到 18/125。\n\n【卡上点名的 6 家全部逐位复现,全部 A 类真公司行为】CRM -13.55(卡 -13.6)、TTE -7.97(卡 -8.0)、TSLA +22.45(卡 +22.4)、PANW +22.29(卡 +22.3)、INTC +15.24(卡 +15.2)、CVX +14.34(卡 +14.3)。低变化三家:VZ -1.46(卡 -1.5)、MO -0.60(卡 -0.6)、CMCSA -4.19(卡 -4.2)。\n\n【类别】18 家 = A 16 + B 2 + C 0。A 16:TSLA PANW INTC CVX UL CRM TTE MPC VLO BKNG ADBE STX ORCL T WFC BAC DELL。全部与 EDGAR dei:EntityCommonStockSharesOutstanding 申报封面股数逐位相同(申报号见报告 §2)。\n\n【B 类只有 2 家】B-1 WELL:起点股数陈旧 —— 库里 2025-10-17 是 641,308,062,而 EDGAR 封面 0000766704-25-000040(end 2025-09-30)已是 684,240,531,低 6.3%,+12.39% 虚高;真实约 +3~+5%。修:起点周改用该周之前最近一次 dei 封面股数。B-2 CMCSA:库里 3,564,000,000 全整数百万,且隐含比值 ratio_base=1.1241(市值比 shares×收盘高 12.4%),像只记了主类股数;EDGAR companyfacts 里 CMCSA 没有 dei/us-gaap 的 shares 概念,封面股数不按标准概念报,自动核不了。修:人工核各注册类(不入库,交 Seth)。展示前 CMCSA / WELL 的股数变化不展示。\n\n【另有 3 个系统级 B(不在 18 家名单里,但比 B-1/B-2 更该先修)】B-3 ohlcv_daily 里 coingecko_pro_ohlc 的加密行带 asset_class='Equity'(仅 T 就有 69 条);2026-10-21 拉 T 只拿到币价 0.00494 而没有 eodhd 行,STX 同理(0.60 vs Seagate 255)。按 asset_class 过滤再 join symbol 会把币价当收盘 —— 我第一版脚本里 T 的旧推法算出 +398,681%。修:价格取数按 source in (eodhd,yfinance) 白名单,别信 asset_class。B-4 shares_x_close_v3 正常是周五一行,2026-10-21(周三)多出一行且 124/125 家都有,那一行 (mcap/shares)/close 偏离 1 有 2~5.3%(28 家超 2%,区间 0.935-1.053)。shares 是阶梯函数不受影响,但那一行的 mcap_usd 不要和周五序列混用。修:加 is_partial_week 标记或固定周界。B-5 46/125 家隐含比值 52 周漂移 >3%(最大 CMCSA 11.65pp、T 10.09pp、VZ 8.18pp、MO 7.31pp);抽查 VZ/T 是 2026-10-09 之前比值恒为 1.0155/1.0113、之后恒为 1.0000 ⇒ 约 10-09 之前 mcap 与 close 两侧口径没对齐。shares 列不受影响,但报告里那整列「旧推法」只能当量级参考(我重算的与 Seth 给的差 1-2pp 就来自这里)。\n\n【台阶阈值的盲区 —— 展示口径要 @seth 定】T/BAC/VZ/MO/WFC 的 52 周变化全部来自 5 次上下、每次都 <2% 的连续回购,2% 单周台阶检测一个都看不见(台阶数为 0 但 52w 变化 5~6%)。台阶表只能当线索,52 周总量才是判据。若页面拿台阶着色,这几家会被画成「无变化」。\n\n【方法边界】窗口 2025-10-17 → 2026-10-21(364 天),起点取「当天或之前最后一周」。旧推法的 close 用 close_asof(市值日当天或之前最近一个收盘,最多回看 7 天,只取 eodhd/yfinance)—— 向后取会大面积落空,因为 world50 的 d 可以比 ohlcv_daily 最后一个收盘还新 1-2 天(周更跑在收盘之后)。非美 ADR/汇率:UL 2,181,005,247 与 20-F 0000217410-26-000007 逐位相同、TTE 2,206,585,543 与 20-F 0001104659-26-035876 逐位相同,都是登记股本口径,与 1:1 ADS 不冲突;其余非美名本轮未取申报,ratio_base 偏离 2~4% 与股息因子同源,没看到 ADR 比例或汇率切换迹象(这是「没看到」不是「查过了」)。shares_x_close_v3 里另有 16 个非美后缀代码(.SHG/.HK/.TW/.SW/.PA/.KO)不在 CIS v2 equity 宇宙内,未审。\n\n交付:脚本 docs/research/t179_share_change_audit.py(+ t179_edgar_evidence.py / t179_reconcile.py / t179_recheck.py 三个证据脚本);表 /Volumes/CometCloudAI/cometcloud-local/research/t179/share_change_audit.csv(125 行);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-179_share_change_audit.md;EDGAR 原始档 edgar_entity_shares.json / edgar_facts_recheck.json(只进报告,未入库)。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-22T19:06Z",
+    "value": "改按申报股数后 > 5% 的 18 家全是真的公司行为(16 家 lane 逐位对上 SEC 封面;CMCSA 是 wavg 口径 + 分拆复权系数、WELL 逐报送日 12 个月就是 +12.4%,两家 B 改判 A)。lane 的 B-3(T 撞代码,69 行币价标成 Equity)是真的:已改数据 + 写入端守卫。页面照常展示按申报股数的变化。"
+  }
 }

@@ -1,0 +1,26 @@
+{
+  "id": "T-183",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-22",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "title": "加密流通量序列(asset_mcap_daily 的 市值 ÷ 价格)噪声体检:端点噪声会不会改 CIS v2 的供给维排序与 S-665 的稀释标签 —— 量三种写法的差",
+  "source": "10-22 夜(Seth 18:54 UTC):S-665 的 ① 挪一天就没了;信号日当天的流通量日变动比前一天吵(|变动| 0.40% vs 0.26%,跌超 1% 的 3.1% vs 1.1%)。CIS v2 加密的「供给纪律」= −(90 日流通量增长),用的是同一个 市值 ÷ 价格 的两个端点,影子在跑、约 20 天后切换 —— 这一维要先知道有多吵。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-183.json"
+  ],
+  "acceptance": {
+    "check": "纯测量,不算任何收益、不立任何假设(所以不用预注册)。数据:asset_mcap_daily(publishable key,翻页带 order=symbol.asc,coin_id.asc,d.asc;同 symbol 取当日市值最大的 coin_id),宇宙两份:CIS 加密 25 个(cis_v2_daily 最新一天 grp = crypto 的 symbol)+ S-665 的 R-v2 票里出现过的 symbol。量:① 每个名字的日流通量变动分布(中位、p95、|变动| > 3% 的天数),「尖刺」= 单日 |变动| > 3% 且 3 天内回到原值 ±1% 的次数;② 三种 90 日增长写法 —— A 端点单日(现在 src/data/cis/v2.py crypto_inputs 的写法)、B 两端各取 7 日中位数、C 90 天对数流通量的回归斜率 × 90 —— 在 2024-01 → 2026-10 每周一个截面上,CIS 25 个名字的供给维**排名**两两 Spearman 相关(分周报中位与 p10),以及 R-v2 票上「> 2.2% 那一档」三种写法下的归属有几张不同;③ 哪几个名字最吵(列前 10,写原因猜测:迁移 / 重新计价 / CoinGecko 口径换过)。只读 src/data/cis/v2.py 学写法 A,不改它。",
+    "expect": "脚本 docs/research/t183_supply_noise.py;结果 docs/research/t183_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-183_supply_noise.md(开头一张「三种写法的排名相关 / 标签翻转数」表,末尾给 Seth 的建议:v2 用哪种写法、理由是数不是感觉);in_review,推 lane-b/T-183。新分支 `git switch -c lane-b/T-183 origin/main`。"
+  },
+  "prior_value": "A 与 B / C 排名相关 ≥ 0.95 ⇒ v2 照旧;明显更低 ⇒ Seth 在切换前改 v2 的供给维写法(影子期内改,版本号升),S-665 的前向标签同步换写法。"
+}

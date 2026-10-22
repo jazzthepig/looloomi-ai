@@ -184,6 +184,12 @@ def chunk_windows(start: date, end: date, *, days: int = CHUNK_DAYS
     return out
 
 
+#: CoinGecko 的 OHLC 只有币。类别是按 **symbol** 从 assets 表查来的,而股票代码与币的代码会撞
+#: (T = AT&T / Threshold,STX = Seagate / Stacks):2026-08-14 → 10-21 有 69 行 Threshold 的价被标成 Equity
+#: (T-179 发现,10-22)。这几个类在这里一律改回 Crypto —— 错的标签比缺的标签更难发现。
+NON_CRYPTO_CLASSES = frozenset({"Equity", "US Equity", "ETF", "Bond", "Commodity", "FX", "Index", "TradFi"})
+
+
 def to_rows(symbol: str, candles: Iterable[dict], *,
             asset_class: Optional[str] = None) -> list[dict]:
     """把 `get_cg_ohlc_range` 的输出变成 `ohlcv_daily` 的行。
@@ -196,6 +202,8 @@ def to_rows(symbol: str, candles: Iterable[dict], *,
     `volume` 留空:`/ohlc/range` 不返回成交量,而**从别的端点拼一个成交量
     进来就是跨源** (S-230)。缺的量是 NULL,不是 0。
     """
+    if asset_class in NON_CRYPTO_CLASSES:
+        asset_class = "Crypto"
     rows: list[dict] = []
     seen: set[str] = set()
     for c in candles:
