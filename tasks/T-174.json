@@ -1,7 +1,7 @@
 {
   "id": "T-174",
   "owner": "lane-c",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-22",
   "forbidden_paths": [
     "Shadow/",
@@ -22,5 +22,6 @@
     "check": "在 docs/research/t171_state_layer.py 上改(新文件 t174 可以 import 它):每个标签 × 段 的零分布 = 每个日期内用 apparatus.shuffle_within(excess, groups=date) 打乱「名字 ↔ 之后 4 周组内超额」的配对,再重算该标签的桶均值;400 次;用 apparatus.null_distribution(会对空转零分布报 NoOpNull)+ percentile_of。候选判法照 S-669 原文(两段同号且两段 |t| ≥ 2),再报每个候选的置换分位。**只报**动量 / 拥挤的换标签次数,不对它们下「稳 / 不稳」的结论(S-669 只给趋势定了门槛)。另报:宇宙是今天的名单回填(幸存者偏差),组等权基准的 4 周无条件收益。",
     "expect": "脚本 docs/research/t174_state_permutation.py;结果 docs/research/t174_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-174_s669_rework.md(末尾「S-669 返工结果」草稿);in_review,推 lane-c/T-174。新分支 `git switch -c lane-c/T-174 origin/main`。翻页读一律带 order=。"
   },
-  "prior_value": "给 S-669 的候选一个有意义的死活;决定状态层对外文案里「没有预测力」能不能说。"
+  "prior_value": "给 S-669 的候选一个有意义的死活;决定状态层对外文案里「没有预测力」能不能说。",
+  "notes": "空转已坐实并换成配对置换。T-171 的 perm_p 走 block_permute 后取均值:块置换只改顺序不改多重集合,均值恒等,零分布只剩浮点噪声(实测出现过 p=0.9992 比观测还极端);apparatus.null_distribution 的 NoOpNull 没触发,因为 T-171 调用点没传 actual=。返工:每个「标签×段」把该段全部(日期,名字)的 4 周组内超额摆成 date×name 大表,400 次抽样里每次在每个日期内部 shuffle_within(excess, groups=date) 打乱「名字↔超额」配对再重算桶均值,用 null_distribution(带 actual=)+percentile_of;同一(组,段)所有标签共用同一批打乱(打乱只与日期有关),省 8 倍算力。观测值与 T-171 30 个单元格逐格重算对读零差异(mean_excess/t/n 全等),换标签次数 5 组也零差异 ⇒ 只换了零分布。候选(照 S-669:两段同号+两段|t|≥2)仍 3 个,与 T-171 一致:加密/crowd/冷清、传统/mom/强、传统/mom/中(宽松读法 6 个)。3 个的配对置换双尾 p 全部 0.0000(两段,400 次抽样一次没到,分辨率 1/400=0.0025):冷清 段一 −0.03224(t−5.54)/段二 −0.01650(t−5.03);强 +0.00797(t+6.40)/+0.00860(t+5.99);中 −0.00438(t−9.18)/−0.00340(t−7.19)。但只有加密/crowd/冷清算数 —— mom 标签就是组内 30 日收益前/后 20%,而超额减的正是同一横截面的组等权均值,极端分位是定义自带的恒等式(零分布 sd 仅 0.088%/0.096%,观测是 9 个 sd),不能读成状态层有预测力;拥挤标签来自 7 日资金费组内 z,与 4 周后收益无定义关系。换标签次数(动量/拥挤只报数,不下稳不稳结论,S-669 只给趋势定了门槛):加密动量中位数 3.0/均值 3.809/p90 8.0/3天变回 44.24%(切换 3820);传统动量中位数 3.0/均值 3.787/p90 8.0/变回 40.04%(7749);加密拥挤中位数 1.0/均值 1.744/p90 4.0/变回 26.24%(1707)。宇宙=今天的名单回填(幸存者偏差):加密25=CRYPTO_ASSETS今天键、传统33=同文件六dict今天键、World50 美股挂牌 42 只取 2026-09-18 满编快照(共140key)前50无.后缀部分,全部回填到 2023-01,退市/崩盘/后上架的一个都不在,World50 也非逐周 point-in-time ⇒ 段一数字尤不可外推。组等权基准 4 周无条件收益:加密 段一 +0.079143(t8.761,n547)/段二 +0.009805(t1.316,n799)/全窗 +0.037983(t6.526,n1346);传统 段一 +0.020088(t13.805,n374)/段二 +0.018287(t13.001,n548)/全窗 +0.019018(t18.585,n922)。段一加密年化≈+170%,拥挤桶段一 +0.10344 的超额里有多少是牛市 beta 分不开。组级情绪(FNG/VIX)是日期级标签、当日只有一条收益 ⇒ shuffle_within(groups=date) 退化为不打乱,本卡不给它分位(perm_pct=null),数字照 T-171 带过;日期级序列要有意义的零分布需要装置里另有一个设备,已 @seth,没有另起炉灶手写。脚本 docs/research/t174_state_permutation.py;结果 docs/research/t174_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-174_s669_rework.md。改动 docs/research/t171_state_layer.py:把读数+建面板那段提成 build_panels() 给 T-174 复用(判法主体一字未动)。结论:给 v2 落笔不变(状态层按描述写);唯一值得另立预注册去追的是加密资金费拥挤度(冷清⇒之后4周跑输组等权),追之前先解决点时宇宙。"
 }

@@ -277,7 +277,10 @@ def _days(d: str) -> int:
 
 
 # ---------------------------------------------------------------- 主流程
-def main() -> dict:
+def build_panels() -> dict:
+    """读数据 + 建 date × name 面板 + 组内横截面(动量分位 / 组等权 / 超额 / 拥挤 z)。
+
+    T-174 复用这一段:返工只换零分布的构造方式,观测值必须与 T-171 一模一样才有可比性。"""
     res: dict = {"prereg": "S-669 (REFUTATION_LEDGER.md, 2026-10-22 04:26 UTC)",
                  "window": [WIN_START, WIN_END], "segments": [SEG_A, SEG_B]}
 
@@ -401,6 +404,14 @@ def main() -> dict:
                     continue
                 for s, v in xs:
                     P["crowd"][s][i] = crowding_label((v - mu) / sd)
+
+    return {"res": res, "panels": panels, "funding": funding, "fng": fng, "vix": vix}
+
+
+def main() -> dict:
+    """S-669 原文判法(块置换零分布那一版)。留作基线;返工版在 t174_state_permutation.py。"""
+    built = build_panels()
+    res, panels, fng, vix = built["res"], built["panels"], built["fng"], built["vix"]
 
     # ================= 判 ① 稳定 =================
     stab = {}
