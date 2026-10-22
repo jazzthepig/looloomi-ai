@@ -173,6 +173,64 @@ def load_metrics(root: str) -> tuple[dict, dict]:
                  "usable_by_year": {y: v for y, v in sorted(by_year.items())}}
 
 
+# ── 两个判的口径。③ 与 ② 跑的是同一个函数、同一口径(Seth 10-21:判②③同一比较)──────
+def judge_hurdle(sat_adds: list, seed: int) -> dict:
+    """① 条件加仓单位平均 R > +0.48。H0(均值 = 0.48)中心化后按信号月份块 P-R 平稳块自助,单侧 p。"""
+    o = {"hurdle_R": HURDLE_R, "observed_mean_R": None, "n": len(sat_adds),
+         "p_one_sided": None, "boot_p05": None, "note": None}
+    if len(sat_adds) < 2:
+        o["note"] = "样本不足 2,测不了"
+        return o
+    order = np.argsort([a["month"] for a in sat_adds])
+    v = np.array([sat_adds[i]["r"] for i in order], dtype=float)   # 按信号月份排序,块 = 连续月份
+    obs = float(v.mean())
+    idx = stationary_bootstrap_index(v.size, mean_block=3.0, n_boot=N_BOOT,
+                                     rng=np.random.default_rng(seed))
+    null_v = v - v.mean() + HURDLE_R
+    boot_null = null_v[idx].mean(axis=1)
+    boot_obs = v[idx].mean(axis=1)
+    o.update(observed_mean_R=obs,
+             p_one_sided=float((boot_null >= obs).mean()),
+             boot_mean=float(boot_obs.mean()),
+             boot_p05=float(np.percentile(boot_obs, 5)),
+             note="H0 中心化到 0.48 后按月块(P-R 平稳块自助,mean_block=3 月)重抽;单侧 p = P(boot≥观测均值)")
+    return o
+
+
+def judge_diff(pairs: list, seed: int) -> dict:
+    """条件 − 不满足条件的平均 R 差,按信号年份分块标签打乱,单侧 p。
+    ②(全书)与 ③(分两段)以及留一年回放都走这里 —— 同一个统计量、同一套零分布。"""
+    o = {"actual_diff_R": None, "p_one_sided": None, "null_pctile_of_actual": None,
+         "n_satisfied": 0, "n_unsatisfied": 0, "mean_R_satisfied": None,
+         "mean_R_unsatisfied": None, "ok": False, "ok_sign_only": False, "note": None}
+    ps = [a for a in pairs if a["sat"]]
+    pu = [a for a in pairs if a["sat"] is False]
+    o["n_satisfied"], o["n_unsatisfied"] = len(ps), len(pu)
+    if not ps or not pu:
+        o["note"] = "两组有一组是空的,测不了(报告里显示为 —)"
+        return o
+    vals = np.array([a["r"] for a in pairs], dtype=float)
+    yrs = np.array([a["year"] for a in pairs], dtype=object)
+    lab = np.array([bool(a["sat"]) for a in pairs])
+    actual = float(vals[lab].mean() - vals[~lab].mean())
+    o.update(actual_diff_R=actual, mean_R_satisfied=float(vals[lab].mean()),
+             mean_R_unsatisfied=float(vals[~lab].mean()))
+
+    def stat(rng):
+        sv = np.asarray(shuffle_within(vals, yrs, rng), dtype=float)
+        return float(sv[lab].mean() - sv[~lab].mean())
+
+    null = np.asarray(null_distribution(stat, N_BOOT, seed, actual=actual), dtype=float)
+    # 单侧 p = 零分布落在实际值之上的比例(alternative 是「条件更高」,右尾)
+    o["p_one_sided"] = float(((null >= actual).sum() + 0.5 * (null == actual).sum()) / null.size)
+    o["null_pctile_of_actual"] = percentile_of(actual, null)
+    o["ok"] = bool(actual > 0 and o["p_one_sided"] is not None and o["p_one_sided"] < 0.05)
+    o["ok_sign_only"] = bool(actual > 0)                     # 预注册 ③ 原文只写「条件都高于不满足条件」
+    o["note"] = ("按信号年份分块标签打乱(apparatus.shuffle_within 换值归属,组间不混);"
+                 "单侧 p = P(零分布 ≥ 实际差)")
+    return o
+
+
 def main():
     root = sys.argv[sys.argv.index("--root") + 1] if "--root" in sys.argv else \
         "/Volumes/CometCloudAI/cometcloud-local"
@@ -231,7 +289,9 @@ def main():
             "losers_ruleF_B": sum(r["F"] for r in rows if r["base"] < 0),
         },
         "counts": {"plus1R_triggers": n_trig, "with_metrics": n_has_met, "satisfied_taker": n_sat,
-                   "no_metrics_row": n_no_row, "unusable_row": n_unusable,
+                   # 「用不上的」拆两段:表里根本没这一行 vs 有行但不可用(n_points=0 或值为空)
+                   "no_metrics_row_total": n_no_row,
+                   "no_row_absent": n_no_row - n_unusable, "unusable_row": n_unusable,
                    "metrics_n_points_zero": mstat["n_points_zero"],
                    "add_units_built": len(adds)},
         "metrics_rows": mstat["rows"], "metrics_usable_rows": mstat["n_usable"],
@@ -244,60 +304,40 @@ def main():
         },
     }
 
-    # ① 条件加仓单位平均 R > +0.48 —— 按信号月份分块自助,单侧 p
-    #    H0: 均值 = 0.48。零分布 = 把序列中心化到 0.48 后按月块重抽(S-656 写的「分块自助」口径)。
-    obs = float(np.mean([a["r"] for a in sat_adds])) if sat_adds else None
-    out["judge_1"] = {"hurdle_R": HURDLE_R, "observed_mean_R": obs, "n": len(sat_adds),
-                      "p_one_sided": None, "boot_p05": None, "note": None}
-    if sat_adds:
-        order = np.argsort([a["month"] for a in sat_adds])
-        v = np.array([sat_adds[i]["r"] for i in order], dtype=float)   # 按信号月份排序,块 = 连续月份
-        idx = stationary_bootstrap_index(v.size, mean_block=3.0, n_boot=N_BOOT,
-                                         rng=np.random.default_rng(1652026))
-        null_v = v - v.mean() + HURDLE_R
-        boot_null = null_v[idx].mean(axis=1)
-        boot_obs = v[idx].mean(axis=1)
-        out["judge_1"].update(
-            p_one_sided=float((boot_null >= obs).mean()),
-            boot_mean=float(boot_obs.mean()),
-            boot_p05=float(np.percentile(boot_obs, 5)),
-            note="H0 中心化到 0.48 后按月块(P-R 平稳块自助,mean_block=3 月)重抽;单侧 p = P(boot≥观测均值)")
+    # ① 条件加仓单位平均 R > +0.48 —— 按信号月份分块自助,单侧 p(H0 中心化到 0.48)
+    out["judge_1"] = judge_hurdle(sat_adds, 1652026)
 
     # ② 条件 − 不满足条件 的平均 R 差 —— 按年分块标签打乱,单侧 p
     pairs = [a for a in adds if a["sat"] is not None]
-    if len({bool(a["sat"]) for a in pairs}) == 2:
-        vals = np.array([a["r"] for a in pairs], dtype=float)
-        yrs = np.array([a["year"] for a in pairs], dtype=object)
-        lab = np.array([bool(a["sat"]) for a in pairs])
-        actual = float(vals[lab].mean() - vals[~lab].mean())
-
-        def stat(rng):
-            sv = np.asarray(shuffle_within(vals, yrs, rng), dtype=float)
-            return float(sv[lab].mean() - sv[~lab].mean())
-
-        null = np.asarray(null_distribution(stat, N_BOOT, 1652026, actual=actual), dtype=float)
-        # 单侧 p = 零分布落在实际值之上的比例(alternative 是「条件更高」,右尾)
-        p2 = float(((null >= actual).sum() + 0.5 * (null == actual).sum()) / null.size)
-        out["judge_2"] = {"actual_diff_R": actual, "p_one_sided": p2,
-                          "null_pctile_of_actual": percentile_of(actual, null),
-                          "n_satisfied": int(lab.sum()), "n_unsatisfied": int((~lab).sum()),
-                          "note": "按信号年份分块标签打乱(apparatus.shuffle_within 换值归属,组间不混);"
-                                  "单侧 p = P(零分布 ≥ 实际差)"}
-    else:
-        out["judge_2"] = {"actual_diff_R": None, "p_one_sided": None, "note": "两组不全,测不了"}
+    out["judge_2"] = judge_diff(pairs, 1652026)
 
     # ③ 两段(< 2023 / ≥ 2023)条件加仓平均 R 都高于同段不满足条件
+    #    同一个 judge_diff、同一口径(Seth 10-21:判②③同一比较),只是把样本切成两段
     out["judge_3"] = {}
-    for lab3, lo, hi in (("lt2023", "0000", "2023-01-01"), ("ge2023", "2023-01-01", "9999")):
-        sel = [a for a in adds if lo <= a["signal_d"] < hi]
-        s_ = [a["r"] for a in sel if a["sat"]]
-        u_ = [a["r"] for a in sel if a["sat"] is False]
-        out["judge_3"][lab3] = {
-            "n_satisfied": len(s_), "n_unsatisfied": len(u_),
-            "mean_R_satisfied": float(np.mean(s_)) if s_ else None,
-            "mean_R_unsatisfied": float(np.mean(u_)) if u_ else None,
-            "ok": bool(s_ and u_ and float(np.mean(s_)) > float(np.mean(u_))),
-        }
+    for k, (lab3, lo, hi) in enumerate((("lt2023", "0000", "2023-01-01"),
+                                        ("ge2023", "2023-01-01", "9999"))):
+        sel = [a for a in pairs if lo <= a["signal_d"] < hi]
+        out["judge_3"][lab3] = judge_diff(sel, 1652026 + 3 + k)
+
+    # 留一年(leave-one-year-out):把某个信号年整年拿掉,①② 各按同一口径重算一遍
+    out["loyo"] = []
+    for y in sorted({a["year"] for a in adds}):
+        keep = [a for a in adds if a["year"] != y]
+        h = judge_hurdle([a for a in keep if a["sat"]], 1652026 + int(y))
+        d = judge_diff([a for a in keep if a["sat"] is not None], 1652026 + int(y))
+        out["loyo"].append({
+            "held_out_year": y, "n_units_kept": len(keep), "n_satisfied_kept": h["n"],
+            "j1_mean_R": h["observed_mean_R"], "j1_p": h["p_one_sided"],
+            "j1_boot_p05": h["boot_p05"],
+            "j1_over": bool(h["observed_mean_R"] is not None and h["observed_mean_R"] > HURDLE_R
+                            and h["p_one_sided"] is not None and h["p_one_sided"] < 0.05),
+            "j2_diff_R": d["actual_diff_R"], "j2_p": d["p_one_sided"],
+            "j2_over": bool(d["actual_diff_R"] is not None and d["actual_diff_R"] > 0
+                            and d["p_one_sided"] is not None and d["p_one_sided"] < 0.05)})
+    out["loyo_summary"] = {
+        "folds": len(out["loyo"]),
+        "j1_pass_folds": sum(r["j1_over"] for r in out["loyo"]),
+        "j2_pass_folds": sum(r["j2_over"] for r in out["loyo"])}
 
     # 每年的触发 / 有 metrics / 满足条件 —— 解释 ③ 的 < 2023 半段为什么是空的
     out["by_year"] = []
@@ -348,7 +388,7 @@ def verdict(o: dict) -> dict:
               and j1.get("p_one_sided") is not None and j1["p_one_sided"] < 0.05)
     c2 = bool(j2.get("actual_diff_R") is not None and j2["actual_diff_R"] > 0
               and j2.get("p_one_sided") is not None and j2["p_one_sided"] < 0.05)
-    c3 = bool(j3["lt2023"]["ok"] and j3["ge2023"]["ok"])
+    c3 = bool(j3["lt2023"]["ok"] and j3["ge2023"]["ok"])       # 与 ② 同一比较:差 > 0 且 p < 0.05
     return {"c1": c1, "c2": c2, "c3": c3, "all_three": bool(c1 and c2 and c3)}
 
 
@@ -363,6 +403,11 @@ def render(o: dict) -> str:
     L.append("预注册:REFUTATION_LEDGER §S-656(2026-10-21 11:31 UTC,写于对任何加仓按资金流分组之前),实现未改规则;"
              "加仓的 atr14 / unit_r / 单位止损写法同 S-654。"
              "资金流 = Supabase `deriv_metrics_daily`(source=binance_vision_metrics,只读 publishable key)。\n")
+    L.append("**v2(Seth 10-21 CHANGES 三条,数据与规则一字未动,只改报告口径与补测):** ① 不过收下;"
+             "② 补留一年回放(§7);③ 判 ③ 改成与 ② **同一个比较**(同一个 `judge_diff`、同一套年块标签打乱零分布,"
+             "分两段各报差与 p);④ §3 表头拆开:用不上的 "
+             + str(c["no_metrics_row_total"]) + " = " + str(c["no_row_absent"]) + "(表里没行) + "
+             + str(c["unusable_row"]) + "(有行但不可用)。基线、票数、触发数、满足数与 v1 完全一致。\n")
     L.append("## 1. 基线复现(S-654 原规则)\n")
     L.append("| 原规则总盈亏 | **" + f(b["original_total_B"]) + " B**(S-654 记 372.2 B)|")
     L.append("| 原规则按出场日累计最大回撤 | " + f(b["original_mdd_B"]) + " B(S-654 记 −55.9 B)|")
@@ -378,11 +423,17 @@ def render(o: dict) -> str:
         L.append("- " + lab + ":原规则 " + f(h["original_B"]) + " B → 规则 F " + f(h["ruleF_B"])
                  + " B(" + str(h["n"]) + " 张)\n")
     L.append("## 3. 只报项:触发 / 有 metrics / 满足条件\n")
-    L.append("| +1R 触发 | 有可用 metrics | 满足 taker ≥ 1.123 | 完全无行 | 有行但不可用(n_points=0 或值为空) | 虚拟加仓单位 |")
-    L.append("|---|---|---|---|---|---|")
+    L.append("| +1R 触发 | 有可用 metrics | 满足 taker ≥ 1.123 | 表里根本没这一行 | 有行但不可用(n_points=0 或值为空) | 用不上合计 | 虚拟加仓单位 |")
+    L.append("|---|---|---|---|---|---|---|")
     L.append("| " + str(c["plus1R_triggers"]) + " | " + str(c["with_metrics"]) + " | "
-             + str(c["satisfied_taker"]) + " | " + str(c["no_metrics_row"]) + " | "
-             + str(c["unusable_row"]) + " | " + str(c["add_units_built"]) + " |\n")
+             + str(c["satisfied_taker"]) + " | " + str(c["no_row_absent"]) + " | "
+             + str(c["unusable_row"]) + " | **"
+             + str(c["no_metrics_row_total"]) + "** | " + str(c["add_units_built"]) + " |\n")
+    L.append("「用不上合计」= 触发 − 有可用 metrics = "
+             + str(c["no_metrics_row_total"]) + " = " + str(c["no_row_absent"]) + " + "
+             + str(c["unusable_row"]) + "(第一项 + 第二项)。上一版把这两段并成一列「完全无行 = "
+             + str(c["no_metrics_row_total"]) + "」,其中 " + str(c["unusable_row"])
+             + " 张其实是**有行但不可用**,这一版拆开。\n")
     L.append("资金流表读到 " + str(o["metrics_rows"]) + " 行,其中可用 "
              + str(o["metrics_usable_rows"]) + " 行;最早可用日 " + str(o["metrics_first_usable"])
              + "。票的 symbol 与该表 symbol **184/184 精确对齐**,无需 1000 前缀映射,无 symbol 覆盖缺口。\n")
@@ -402,15 +453,22 @@ def render(o: dict) -> str:
              + f(j2["p_one_sided"], 4) + " | " + ("✓" if o["verdict"]["c2"] else "✗") + " |")
     for lab in ("lt2023", "ge2023"):
         q = o["judge_3"][lab]
-        L.append("| ③ " + lab + " | 条件 > 不满足条件 | " + f(q["mean_R_satisfied"], 3) + " vs "
-                 + f(q["mean_R_unsatisfied"], 3) + "(n=" + str(q["n_satisfied"]) + "/"
-                 + str(q["n_unsatisfied"]) + ")| — | " + ("✓" if q["ok"] else "✗") + " |")
+        L.append("| ③ " + lab + " | 条件 > 不满足条件(与 ② 同一比较) | " + f(q["mean_R_satisfied"], 3)
+                 + " vs " + f(q["mean_R_unsatisfied"], 3) + "(n=" + str(q["n_satisfied"]) + "/"
+                 + str(q["n_unsatisfied"]) + ")| " + f(q["p_one_sided"], 4) + " | "
+                 + ("✓" if q["ok"] else "✗") + " |")
     L.append("")
     L.append("**判结论:" + ("三条全过 ✅" if o["verdict"]["all_three"] else "不过 ❌")
              + "(①" + ("过" if o["verdict"]["c1"] else "不过") + " / "
              + "②" + ("过" if o["verdict"]["c2"] else "不过") + " / "
              + ("③过" if o["verdict"]["c3"] else "③不过") + ")**\n")
-    L.append("零分布口径:① 为 H0(均值 = 0.48)中心化后的按月块 P-R 平稳块自助;② 为按信号年份分块标签打乱"
+    L.append("③ 两段各自重跑 ② 的比较:统计量、零分布、判定都是同一个 `judge_diff`(按信号年份分块标签打乱 "
+             + str(2000) + " 次、单侧 p)。预注册 ③ 原文只写「条件都高于不满足条件」(只看符号),"
+             "表里过没过按与 ② 相同的口径(差 > 0 且 p < 0.05);只按符号读的:"
+             + "lt2023 " + ("✓" if o["judge_3"]["lt2023"]["ok_sign_only"] else "✗") + " / ge2023 "
+             + ("✓" if o["judge_3"]["ge2023"]["ok_sign_only"] else "✗")
+             + " —— 两段都要过,所以 ③ 的结论两种读法一致:**不过**。\n")
+    L.append("零分布口径:① 为 H0(均值 = 0.48)中心化后的按月块 P-R 平稳块自助;② 与 ③ 为按信号年份分块标签打乱"
              "(apparatus.shuffle_within 换值归属,组间不混)。两者都只用 `src/data/evaluation/apparatus.py`"
              "(`stationary_bootstrap_index` / `shuffle_within` / `null_distribution` / `percentile_of`)。\n")
     L.append("## 5. 每年:触发 / 有 metrics / 满足条件(解释 ③ 的 < 2023 半段)\n")
@@ -434,14 +492,29 @@ def render(o: dict) -> str:
                  + f(v["trimmed_mean_drop_top3"], 3) + " | "
                  + f(t["taker_sat_mean"] if key == "satisfied" else t["taker_unsat_mean"], 3) + " |")
     L.append("")
-    L.append("## 7. 最好 10 张(按加仓带来的变化排序)\n")
+    L.append("## 7. 留一年(leave-one-year-out):每个信号年整年拿掉,①② 各按同一口径重算\n")
+    L.append("加仓单位只落在 2023–2026 四年上,而 2025 年 4 张就平均 +13.6R —— ① / ② 是不是被某一年扛起来的,"
+             "把这一年整个拿掉再看一次(其余样本、年份、门槛、零分布口径全部不动)。\n")
+    L.append("| 拿掉的信号年 | 剩 n 个单位(其中满足条件) | ① 平均 R | ① p | ① 95% 自助下界 | ① 过 | ② 差 R | ② p | ② 过 |")
+    L.append("|---|---|---|---|---|---|---|---|---|")
+    for r in o["loyo"]:
+        L.append("| " + r["held_out_year"] + " | " + str(r["n_units_kept"]) + "("
+                 + str(r["n_satisfied_kept"]) + ")| " + f(r["j1_mean_R"], 3) + " | "
+                 + f(r["j1_p"], 4) + " | " + f(r["j1_boot_p05"], 3) + " | "
+                 + ("✓" if r["j1_over"] else "✗") + " | " + f(r["j2_diff_R"], 3) + " | "
+                 + f(r["j2_p"], 4) + " | " + ("✓" if r["j2_over"] else "✗") + " |")
+    L.append("")
+    s = o["loyo_summary"]
+    L.append("全样本对照片:**" + str(s["folds"]) + " 折里 ① 过 " + str(s["j1_pass_folds"])
+             + " 折、② 过 " + str(s["j2_pass_folds"]) + " 折**(全样本本身 ① ✗ / ② ✓)。\n")
+    L.append("## 8. 最好 10 张(按加仓带来的变化排序)\n")
     L.append("| 票 | 原规则 B | 规则 F B | 变化 | 触发日 t | taker_ratio_mean[t] |")
     L.append("|---|---|---|---|---|---|")
     for tid, bb, ff, dd, tg, tk in o["top10_by_add_delta"]:
         L.append("| " + tid + " | " + str(bb) + " | " + str(ff) + " | " + ("%+.2f" % dd) + " | "
                  + str(tg) + " | " + f(tk, 3) + " |")
     L.append("")
-    L.append("## 8. S-656 结果草稿(待审,未写入 REFUTATION_LEDGER)\n")
+    L.append("## 9. S-656 结果草稿(待审,未写入 REFUTATION_LEDGER)\n")
     L.append("### S-656 结果(lane-b,2026-10-21)—— ❌(① ③ 不过,② 过):条件把**方向**挑对了,"
              "但挑出来的**幅度**扛不住检验\n")
     L.append("以 B 为单位、770 张票配对(底仓 1 B 满仓不动 + 条件加仓 0.5 B):原规则总盈亏 "
@@ -462,7 +535,11 @@ def render(o: dict) -> str:
              "`deriv_metrics_daily` 在 2022 年之前几乎没数据(2020 全年只有 119 行可用、2021 年 3,672 行,"
              "2020-09 ~ 2021-12 的行全是 n_points = 0 的空壳),而 2020/2021 的 24 个 +1R 触发**全部**"
              "落在无行或空壳行上;再加上这批票**本身就没有 2022 年的信号**(2022 = 0 张)。"
-             "预注册的「两段都要过」在这批数据上结构性地无法检验。")
+             "预注册的「两段都要过」在这批数据上结构性地无法检验。"
+             "v2 补测(与 ② 同一比较):ge2023 半段差 "
+             + f(o["judge_3"]["ge2023"]["actual_diff_R"], 3) + "R(68 vs 209)、单侧 p = "
+             + f(o["judge_3"]["ge2023"]["p_one_sided"], 4) + ",**与全书 ② 的读数一致**;"
+             "lt2023 半段两组都空,给不出数。")
     L.append("**读法:** S-654 关掉的是**无条件**加仓(单位平均 +0.33R < 新票 +0.48R);"
              "S-656 说明**加仓的价值确实存在于「谁被加」这个维度上** —— 加上 taker 确认后,"
              "被加单位的平均 R 从 +0.06R(不满足)变成 +1.29R(满足),这是 S-654 里完全没有的信息。"
@@ -473,6 +550,36 @@ def render(o: dict) -> str:
              "差额全在尾上。可测的下一个形状是**对条件加仓做尾部截断**(如剔除单笔 > +10R 或改用中位数口径),"
              "但那是对本批 68 个样本的**事后**挑选,必须另立预注册、换新数据、过零信号对照后才算数。\n")
     L.append("**试验计数:R 确认层族第 2 次,1 条,不过。**")
+    L.append("")
+    L.append("### v2 补测(Seth 10-21 CHANGES)—— 结论不变,但**被尾扛着的是 ② 不是 ①**\n")
+    worst1 = min(o["loyo"], key=lambda r: r["j1_mean_R"] if r["j1_mean_R"] is not None else 9e9)
+    fail2 = [r for r in o["loyo"] if not r["j2_over"]]
+    L.append("- **留一年(§7),①**:" + str(o["loyo_summary"]["folds"]) + " 折里过 "
+             + str(o["loyo_summary"]["j1_pass_folds"]) + " 折。平均 R 最低的一折是拿掉 "
+             + worst1["held_out_year"] + " 年(**" + f(worst1["j1_mean_R"], 3) + "R**,p = "
+             + f(worst1["j1_p"], 3) + ")。**任何一年拿掉 ① 都过不了** —— ① 的失败不是「某一年顶上去又塌下来」,"
+             "是整批 68 个单位的幅度本来就够不到 +0.48R 的稳定下界。")
+    L.append("- **留一年(§7),②**:" + str(o["loyo_summary"]["folds"]) + " 折里过 "
+             + str(o["loyo_summary"]["j2_pass_folds"]) + " 折"
+             + (";**过不了的一折是拿掉 " + fail2[0]["held_out_year"] + " 年**(差 "
+                + f(fail2[0]["j2_diff_R"], 3) + "R,p = " + f(fail2[0]["j2_p"], 3) + " > 0.05)。"
+                if fail2 else "。")
+             + " " + fail2[0]["held_out_year"] + " 年只有 "
+             + str(next((y["satisfied"] for y in o["by_year"] if y["year"] == fail2[0]["held_out_year"]), 0))
+             + " 个满足条件的单位、却平均 +"
+             + f(next((y["mean_R_sat"] for y in o["by_year"] if y["year"] == fail2[0]["held_out_year"]), None), 2)
+             + "R —— **② 这一版的通过靠的就是这一年的几张大鱼**;v1 §6 那句「② 的方向不靠极值」指的是"
+             "「去掉各组最大 3 个单位后条件组仍高于不满足组」,与这里是两回事,两件都要留着。" if fail2 else "")
+    L.append("- **对 prior_value 的影响**:两条都不过,「日线加仓关掉」的结论不变;补测只是把"
+             "「① 不过 = 幅度不够」精确成「幅度在任何子样本上都够不到」,并给 ② 加了一条它此前没有的脆弱性。")
+    L.append("- **判 ③ 改成与 ② 同一比较**:ge2023 半段的差与 p 与全书一致,"
+             "lt2023 半段两组皆空 —— **③ 的失败是数据覆盖问题,不是条件本身**;这与 v1 的读法一致,现在有 p 佐证。")
+    L.append("- **§3 表头**:用不上 " + str(c["no_metrics_row_total"]) + " 张 = 表里根本没这一行 "
+             + str(c["no_row_absent"]) + " + 有行但不可用 " + str(c["unusable_row"])
+             + "(v1 把这两段并成「完全无行 " + str(c["no_metrics_row_total"]) + "」,其中 "
+             + str(c["unusable_row"]) + " 张的错在源表是空壳,不是缺行)。")
+    L.append("")
+    L.append("**试验计数不变:R 确认层族第 2 次,1 条,不过**(补测不新增试验)。")
     L.append("")
     return "\n".join(L) + "\n"
 
