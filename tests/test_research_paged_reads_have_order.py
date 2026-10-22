@@ -17,8 +17,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ALLOW = {
     "docs/research/T-090_check.py", "docs/research/T-090_modify.py", "docs/research/T-093_run.py",  # 已归档的旧卡
-    "docs/research/t155_funding_tilt.py", "docs/research/t142_narrative_ab.py",                     # 返工中(B 道)
-    "docs/research/t144_narrative_ab.py",
 }
 URL_RE = re.compile(r"""["']([a-z_0-9]+)\?select=""")
 

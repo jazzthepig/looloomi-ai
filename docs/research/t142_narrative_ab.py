@@ -49,6 +49,12 @@ HEAD = {"apikey": KEY, "Authorization": f"Bearer {KEY}", "Content-Type": "applic
 
 
 # ── Supabase REST 帮手 ───────────────────────────────────────────────────
+# T-176:分页 params 必须自带 "order"。没有 order= 时 PostgREST 每页行序不稳定,
+# offset 边界会漂 —— 实测同一查询 4 次里 2 次静默丢掉 11%~18% 的 (symbol, date) 键,
+# 而 rows 计数一次不差。下面的 COMPLETENITY 断言就是抓这个的。
+COMPLETENITY: dict = {}
+
+
 def _get(path: str, params: dict, page: int = 1000) -> list:
     q = "&".join(f"{k}={urllib.parse.quote(str(v), safe='(),.')}" for k, v in params.items())
     out, off = [], 0
@@ -61,6 +67,93 @@ def _get(path: str, params: dict, page: int = 1000) -> list:
         if len(rows) < page:
             return out
         off += page
+
+
+def _keyset(path: str, params: dict, cursor_cols: tuple, select: str,
+            page: int = 1000) -> list:
+    """keyset(游标)分页 —— 靠键值推进,不依赖行序,所以没有 offset 漂移。
+
+    `params["order"]` 若给了就用它(调用方看得见的排序),没给才按 cursor_cols 兜底。
+    """
+    q0 = "&".join(f"{k}={urllib.parse.quote(str(v), safe='(),.')}"
+                  for k, v in params.items() if k != "order")
+    ord_ = params.get("order") or ",".join(f"{c}.asc" for c in cursor_cols)
+    out, cur = [], None
+    while True:
+        url = (f"{SB}/rest/v1/{path}?select={select}&{q0}&order={ord_}&limit={page}")
+        if cur is not None:
+            c0 = urllib.parse.quote(cur[0], safe="")
+            rest = ",".join(f"{c}.gt.{urllib.parse.quote(v, safe='')}"
+                            for c, v in zip(cursor_cols[1:], cur[1:]))
+            # 第一支必须是 gt(T-176 实测:写成 eq 翻页只走 X 一个符号)
+            url += "&or=" + urllib.parse.quote(
+                f"({cursor_cols[0]}.gt.{c0},and({cursor_cols[0]}.eq.{c0}"
+                + ("," + rest if rest else "") + "))", safe="(),.")
+        req = urllib.request.Request(url, headers=HEAD)
+        with urllib.request.urlopen(req, timeout=120) as r:
+            rows = json.loads(r.read()) or []
+        if not rows:
+            return out
+        out += rows
+        if len(rows) < page:
+            return out
+        cur = tuple(_norm(rows[-1].get(c)) for c in cursor_cols)
+
+
+def _norm(v) -> str:
+    s = "" if v is None else str(v)
+    return s[:19].replace(" ", "T") if len(s) > 10 else s
+
+
+def _completeness(path: str, offset_rows: list, keyset_rows: list,
+                  key_cols: tuple, order: str) -> dict:
+    """完整性 = offset+order 分页读到的键集合 vs keyset 游标读到的键集合。
+
+    为什么不用「日历连续」或「笛卡尔积」:面板里新币上市前的日子本来就没数据,
+    而 binance_hist 里确有币自身断档(T-176 实测 AI 在 141 天窗口里只有 43 天,
+    单次不分页读也一样)—— 两种朴素判据都会把数据缺口误报成分页漂移。
+    只有拿两种分页互相比,才能把「漂移」和「数据洞」分开。
+    """
+    k_off = set(tuple(_norm(r.get(c)) for c in key_cols) for r in offset_rows)
+    k_ks = set(tuple(_norm(r.get(c)) for c in key_cols) for r in keyset_rows)
+    syms = sorted({k[0] for k in k_ks})
+    dates = sorted({k[1] for k in k_ks})
+    comp = {
+        "source": path,
+        "paging": "offset+order (对照 keyset 游标)",
+        "offset_rows": len(offset_rows),
+        "keyset_rows": len(keyset_rows),
+        "offset_uniq_keys": len(k_off),
+        "keyset_uniq_keys": len(k_ks),
+        "n_symbols": len(syms),
+        "n_dates": len(dates),
+        "symbol_x_date": len(syms) * len(dates),
+        "missing_in_offset": len(k_ks - k_off),
+        "extra_in_offset": len(k_off - k_ks),
+        "order_param": order,
+        "assert_equal": k_off == k_ks,
+    }
+    # 稳定性只在**同一个窗口**内比:t142 一次跑会为多个周各调一次 _universe,
+    # 窗口不同键数当然不同,拿它当「跨次不稳定」是误报(T-176 实测)。
+    sig = (comp["n_symbols"], dates[0] if dates else "", dates[-1] if dates else "")
+    prev = COMPLETENITY.get(path)
+    if prev is not None and prev.get("_sig") == list(sig) and \
+            prev.get("keyset_uniq_keys") != comp["keyset_uniq_keys"]:
+        comp["unstable_across_runs"] = True
+    comp["_sig"] = list(sig)
+    COMPLETENITY[path] = comp
+    return comp
+
+
+def _assert_complete(paths: list) -> None:
+    """硬断言:offset 分页与 keyset 真值不一致 ⇒ 报错退出。"""
+    for p in paths:
+        c = COMPLETENITY.get(p)
+        if c and not c["assert_equal"]:
+            print(f"[T-142] ❌ COMPLETENITY FAIL {p}: offset 分页缺 "
+                  f"{c['missing_in_offset']} / 多 {c['extra_in_offset']} 个 "
+                  f"(symbol,date);分页漂了,停。", file=sys.stderr)
+            raise SystemExit(3)
 
 
 def _iso_week(mon: date) -> str:
@@ -78,6 +171,7 @@ def _arm_e(mon: date) -> tuple[list, Counter]:
     rows = _get("narrative_events", {
         "select": "related_assets",
         "and": f"(date.gte.{lo.isoformat()},date.lt.{hi.isoformat()})",
+        "order": "event_id.asc",  # T-176:主键
     })
     cnt = Counter()
     for r in rows:
@@ -113,6 +207,7 @@ def _arm_t(mon: date) -> tuple[list, Counter]:
     rows = _get("trending_log", {
         "select": "symbol",
         "and": f"(recorded_at.gte.{lo.isoformat()},recorded_at.lt.{hi.isoformat()})",
+        "order": "id.asc",  # T-176:主键
     })
     cnt = Counter()
     for r in rows:
@@ -136,7 +231,16 @@ def _universe(mon: date) -> set:
         "select": "symbol,trade_date,close,volume",
         "source": "eq.binance_hist",
         "and": f"(trade_date.gte.{lo.isoformat()},trade_date.lte.{hi.isoformat()})",
+        "order": "symbol.asc,trade_date.asc",  # T-176:(symbol, trade_date) 语义主键
     })
+    ks_rows = _keyset("ohlcv_daily", {
+        "select": "symbol,trade_date",
+        "source": "eq.binance_hist",
+        "and": f"(trade_date.gte.{lo.isoformat()},trade_date.lte.{hi.isoformat()})",
+        "order": "symbol.asc,trade_date.asc",  # T-176:(symbol, trade_date) 语义主键
+    }, ("symbol", "trade_date"), "symbol,trade_date")
+    _completeness("ohlcv_daily", rows, ks_rows, ("symbol", "trade_date"),
+                  "symbol.asc,trade_date.asc")
     by = {}
     for r in rows:
         if r["symbol"] in UNIVERSE_EXCLUDE:
@@ -272,7 +376,10 @@ def main():
             week_keys.append(wk)
 
     # 2. 冻结周(append-only)
-    state = {"last_run_utc": datetime.now(timezone.utc).isoformat(), "frozen": []}
+    # T-176:先断言 ohlcv_daily 分页完整(每次 _universe 都重登记,数字必须跨周一致)
+    _assert_complete(["ohlcv_daily"])
+    state = {"last_run_utc": datetime.now(timezone.utc).isoformat(), "frozen": [],
+             "completeness": COMPLETENITY}
     for wk in week_keys:
         # Monday
         year, w = wk.split("-W")
@@ -366,6 +473,24 @@ def main():
             "## 已到期周快鱼率",
             "",
             "_本周尚无已到期周(最早 Mon + 60d = 2026-12-18)。每臂名单已冻结,_待 W43 等到 60 天后自动开算。_",
+        ])
+
+    c = COMPLETENITY.get("ohlcv_daily")
+    if c:
+        lines.extend([
+            "",
+            "## 分页完整性(T-176)",
+            "",
+            "| 源 | offset rows | keyset rows | 去重键 | 币数 | 天数 | offset 缺 | order |",
+            "|----|-------------|-------------|--------|------|------|-----------|-------|",
+            f"| `ohlcv_daily` | {c['offset_rows']} | {c['keyset_rows']} | "
+            f"{c['keyset_uniq_keys']} | {c['n_symbols']} | {c['n_dates']} | "
+            f"{c['missing_in_offset']} | `{c['order_param']}` |",
+            "",
+            "断言:offset+order 分页读到的键集合 == keyset 游标读到的键集合(不等就退出)。",
+            "T-176 实测:不带 order= 时同一查询 4 次里 2 次静默丢 11%~18% 的键,"
+            "而 rows 计数一次不差;binance_hist 里也有币自身断档(AI 在 141 天窗口里只有 43 天),"
+            "所以「日历连续」不能当判据,只能两种分页互校。",
         ])
 
     lines.extend([

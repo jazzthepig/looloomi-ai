@@ -26,6 +26,7 @@ import json
 import math
 import os
 import sys
+import urllib.parse
 import urllib.request
 from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
@@ -59,7 +60,12 @@ REPORT_PATH = REPORT_DIR / "T-155_funding_tilt.md"
 
 # ── 数据读取 ─────────────────────────────────────────────────────────────────
 def fetch_all(path: str) -> list[dict]:
-    """按 limit/offset 分页直到取完(path 必须允许排序稳定;否则去重见用)。"""
+    """按 limit/offset 分页直到取完。
+
+    T-176:path 必须自带 `order=`(按主键)。没有 order= 时 PostgREST 每页的行序
+    不保证一致,offset 分页边界会漂 —— 实测同一查询 4 次里 2 次静默丢掉 11%~18%
+    的 (symbol, date) 键,而 rows 计数一次不差。
+    """
     out: list[dict] = []
     offset = 0
     page = 1000
@@ -79,31 +85,143 @@ def fetch_all(path: str) -> list[dict]:
     return out
 
 
-def fetch_ohlcv(symbols: list[str]) -> dict[str, dict[str, float]]:
-    """{symbol: {YYYY-MM-DD: close_price}}。"""
+def fetch_keyset(path: str, base: str, cursor_col: str,
+                 select: str, page: int = 1000) -> list[dict]:
+    """keyset(单列游标)分页 —— 靠键值推进,不依赖行序,所以没有 offset 漂移。
+
+    调用方负责把查询**按分片键切小**(本脚本按 symbol 切),于是游标只剩一列
+    (trade_date / funding_time),能用上索引;跨列的复合游标 `or=(a.eq.x,and(a.gt.x,
+    b.gt.y))` 在 PostgREST 上走不了索引,3 万行要跑好几分钟(T-176 实测)。
+    """
+    out: list[dict] = []
+    cursor: str | None = None
+    while True:
+        url = (f"{URL}/rest/v1/{path}?select={select}&{base}"
+               f"&order={cursor_col}.asc&limit={page}")
+        if cursor is not None:
+            url += f"&{cursor_col}=gt.{urllib.parse.quote(cursor, safe='')}"
+        req = urllib.request.Request(url, headers=HEADERS)
+        resp = json.loads(urllib.request.urlopen(req, timeout=120).read())
+        if not resp:
+            break
+        out.extend(resp)
+        if len(resp) < page:
+            break
+        cursor = _ts(resp[-1].get(cursor_col))
+    return out
+
+
+def fetch_sharded(path: str, shard_col: str, shards: list[str], extra: str,
+                  cursor_col: str, select: str, page: int = 1000) -> list[dict]:
+    """按 shard_col 切分逐片 keyset 读。"""
+    out: list[dict] = []
+    for s in shards:
+        base = f"{shard_col}=eq.{urllib.parse.quote(s, safe='')}{extra}"
+        out.extend(fetch_keyset(path, base, cursor_col, select, page))
+    return out
+
+
+def _ts(v) -> str:
+    s = "" if v is None else str(v)
+    return s[:19].replace(" ", "T") if len(s) > 10 else s
+
+
+def fetch_ohlcv(symbols: list[str]) -> tuple[dict[str, dict[str, float]], dict]:
+    """{symbol: {YYYY-MM-DD: close_price}} + 完整性块。
+
+    T-176:生产路径走 keyset 游标分页(靠键值推进,不依赖行序,深 offset 又慢又漂)。
+    去重后 (symbol, date) 数必须等于 天数 × 面板数,不等直接报错退出 ——
+    分页漂移时 rows 计数照样对,只有键数会露馅。
+    """
     quoted = ",".join(f'"{s}"' for s in symbols)
-    rows = fetch_all(
-        f"ohlcv_daily?select=symbol,trade_date,close&source=eq.binance_hist"
-        f"&symbol=in.({quoted})&trade_date=gte.{REBAL_INCEPTION}"
-    )
+    extra = f"&source=eq.binance_hist&trade_date=gte.{REBAL_INCEPTION}"
+    rows = fetch_sharded("ohlcv_daily", "symbol", symbols, extra,
+                         "trade_date", "symbol,trade_date,close")
     out: dict[str, dict[str, float]] = defaultdict(dict)
     for r in rows:
         d = str(r["trade_date"])[:10]
         c = r.get("close")
         if c is not None:
             out[r["symbol"]][d] = float(c)
-    return dict(out)
+    comp = completeness_ohlcv(rows, out)
+    assert_complete(comp)
+    return dict(out), comp
 
 
-def fetch_funding(symbols: list[str]) -> dict[str, list[tuple[str, float]]]:
-    """{symbol: [(YYYY-MM-DD, funding_rate), ...]},按 funding_time 升序。"""
+def completeness_ohlcv(rows: list[dict], px: dict[str, dict[str, float]]) -> dict:
+    """去重键数 vs 天数 × 面板数。"""
+    keys = {(r["symbol"], str(r["trade_date"])[:10]) for r in rows}
+    dates = sorted({d for _, d in keys})
+    syms = sorted({s for s, _ in keys})
+    expected = len(dates) * len(syms)
+    per_sym = {s: sum(1 for k in keys if k[0] == s) for s in syms}
+    return {
+        "source": "ohlcv_daily(binance_hist)",
+        "rows_fetched": len(rows),
+        "uniq_symbol_date_keys": len(keys),
+        "n_symbols": len(syms),
+        "n_dates": len(dates),
+        "expected_symbols_x_dates": expected,
+        "missing_keys": expected - len(keys),
+        "date_min": dates[0] if dates else None,
+        "date_max": dates[-1] if dates else None,
+        "per_symbol_days_min": min(per_sym.values()) if per_sym else 0,
+        "per_symbol_days_max": max(per_sym.values()) if per_sym else 0,
+        "closes_loaded": sum(len(v) for v in px.values()),
+        "order_param": "symbol.asc,trade_date.asc",
+        "assert_equal": len(keys) == expected,
+    }
+
+
+def assert_complete(comp: dict) -> None:
+    """硬断言:不等就报错退出。"""
+    if not comp["assert_equal"]:
+        print(f"[T-155] ❌ COMPLETENESS FAIL {comp['source']}: 去重键 "
+              f"{comp['uniq_symbol_date_keys']} ≠ 天数×面板数 {comp['expected_symbols_x_dates']} "
+              f"(缺 {comp['missing_keys']} 个 (symbol,date));分页还是漂了,停。",
+              file=sys.stderr)
+        raise SystemExit(3)
+
+
+def offset_vs_keyset(symbols: list[str], date_from: str) -> dict:
+    """同一查询读两遍(offset 分页 vs keyset 游标),比键集合 —— 直接量漂移。
+
+    只在最近 date_from 之后的窗口做:全窗口 3 万多行的深 offset 分页本身要好几分钟,
+    而漂移与深度无关(无 order= 时每页行序不定)。
+    """
     quoted = ",".join(f'"{s}"' for s in symbols)
-    rows = fetch_all(
-        f"funding_history?select=symbol,funding_time,funding_rate"
-        f"&venue=eq.binance_perp&symbol=in.({quoted})"
-        f"&order=funding_time.asc"
-    )
+    extra = f"&source=eq.binance_hist&trade_date=gte.{date_from}"
+    off = fetch_all(f"ohlcv_daily?select=symbol,trade_date&symbol=in.({quoted})"
+                    f"{extra}&order=symbol.asc,trade_date.asc")
+    ks = fetch_sharded("ohlcv_daily", "symbol", symbols, extra,
+                       "trade_date", "symbol,trade_date")
+    k_off = {(r["symbol"], str(r["trade_date"])[:10]) for r in off}
+    k_ks = {(r["symbol"], str(r["trade_date"])[:10]) for r in ks}
+    comp = {
+        "window_from": date_from,
+        "offset_rows": len(off),
+        "keyset_rows": len(ks),
+        "offset_uniq_keys": len(k_off),
+        "keyset_uniq_keys": len(k_ks),
+        "missing_in_offset": len(k_ks - k_off),
+        "extra_in_offset": len(k_off - k_ks),
+        "identical": k_off == k_ks,
+    }
+    comp["assert_equal"] = comp["identical"]
+    return comp
+
+
+def fetch_funding(symbols: list[str]) -> tuple[dict[str, list[tuple[str, float]]], dict]:
+    """{symbol: [(YYYY-MM-DD, funding_rate), ...]},按 funding_time 升序。
+
+    T-176:改用 keyset 游标分页。offset 分页这个查询(~86k 行)会被服务端 reset,
+    而且即使加上 order= 也仍依赖行序;游标分页两样都不依赖。
+    """
+    extra = "&venue=eq.binance_perp"
+    rows = fetch_sharded("funding_history", "symbol", symbols, extra,
+                         "funding_time", "symbol,funding_time,funding_rate")
     out: dict[str, list[tuple[str, float]]] = defaultdict(list)
+    keys = set()
     for r in rows:
         t = r.get("funding_time") or ""
         d = t[:10]
@@ -111,7 +229,35 @@ def fetch_funding(symbols: list[str]) -> dict[str, list[tuple[str, float]]]:
         if fr is None or not d:
             continue
         out[r["symbol"]].append((d, float(fr)))
-    return dict(out)
+        keys.add((r["symbol"], d))
+    dates = {d for _, d in keys}
+    syms = {s for s, _ in keys}
+    comp = {
+        "source": "funding_history(binance_perp)",
+        "paging": "keyset(symbol,funding_time)",
+        "rows_fetched": len(rows),
+        "uniq_symbol_date_keys": len(keys),
+        "n_symbols": len(syms),
+        "n_dates": len(dates),
+        "expected_symbols_x_dates": len(syms) * len(dates),
+        "missing_keys": len(syms) * len(dates) - len(keys),
+        "order_param": "symbol.asc,funding_time.asc",
+    }
+    comp["assert_equal"] = comp["missing_keys"] == 0
+    # funding 按 8h 结算、面板内每币起止日不同 ⇒ 笛卡尔积天然不齐,拿笛卡尔积当硬断言
+    # 必然误报。改成**每币自己的跨度内不许有洞** —— 那才是翻页漂移真会留下的痕迹。
+    span_bad = []
+    for s in sorted(syms):
+        ds = sorted({d for k, d in keys if k == s})
+        span = (date.fromisoformat(ds[-1]) - date.fromisoformat(ds[0])).days + 1
+        if len(ds) != span:
+            span_bad.append({"symbol": s, "days": len(ds), "span_days": span,
+                             "hole_days": span - len(ds), "from": ds[0], "to": ds[-1]})
+    comp["per_symbol_span"] = {"checked": len(syms), "no_holes": not span_bad,
+                               "symbols_with_holes": span_bad}
+    comp["assert_equal"] = not span_bad
+    comp["assert_basis"] = "每币自身跨度内无洞(非笛卡尔积 —— funding 起止日逐币不同)"
+    return dict(out), comp
 
 
 # ── 工具函数 ─────────────────────────────────────────────────────────────────
@@ -305,13 +451,20 @@ def main() -> int:
 
     # ── 价格 ──────────────────────────────────────────────────────────────────
     print("[T-155] Fetching ohlcv_daily (binance_hist) for panel...", flush=True)
-    px = fetch_ohlcv(panel_names)
+    px, px_comp = fetch_ohlcv(panel_names)
     coverage = sum(1 for s in panel_names if len(px.get(s, {})) > 0)
     print(f"  panel price coverage: {coverage}/{len(panel_names)}")
+    print(f"  completeness: uniq(symbol,date)={px_comp['uniq_symbol_date_keys']} "
+          f"= {px_comp['n_dates']}d × {px_comp['n_symbols']}sym "
+          f"(missing {px_comp['missing_keys']}) → assert_equal={px_comp['assert_equal']}")
+    win_lo = (date.fromisoformat(rebal_dates_all[-1]) - timedelta(days=120)).isoformat()
+    drift = offset_vs_keyset(panel_names, win_lo)
+    print(f"  offset-vs-keyset ({win_lo}→): identical={drift['identical']} "
+          f"missing_in_offset={drift['missing_in_offset']} extra={drift['extra_in_offset']}")
 
     # ── 资金费率 ──────────────────────────────────────────────────────────────
     print("[T-155] Fetching funding_history (binance_perp) for panel...", flush=True)
-    funding = fetch_funding(panel_names)
+    funding, fund_comp = fetch_funding(panel_names)
     fund_coverage = sum(1 for s in panel_names if len(funding.get(s, [])) > 0)
     print(f"  panel funding coverage: {fund_coverage}/{len(panel_names)}  "
           f"(total rows: {sum(len(v) for v in funding.values())})")
@@ -483,6 +636,12 @@ def main() -> int:
             "turnover_v3_total": round(v3_turnover, 4),
         },
         "yearly": yearly_summaries,
+        "completeness": {
+            "note": "T-176:分页补 order= 后的键完整性;去重 (symbol,date) 必须 = 天数×面板数",
+            "ohlcv": px_comp,
+            "ohlcv_offset_vs_keyset": drift,
+            "funding": fund_comp,
+        },
         "judgement_pass": bool(judgement_pass),
         "n_shuffles": N_SHUFFLES,
         "cost_bps": COST_BPS,

@@ -47,8 +47,8 @@
   },
   "v0_check": {
     "final_nav_my": 3.66809,
-    "final_nav_reference": 3.65748,
-    "ratio": 1.0029,
+    "final_nav_reference": 3.75382,
+    "ratio": 0.97716,
     "max_relative_diff_pct": 0.364,
     "median_relative_diff_pct": 0.1241,
     "n_aligned_days": 199,
@@ -81,22 +81,70 @@
     {
       "year": "2024",
       "v0_ret": 0.9284832137173662,
-      "v3_ret": 1.0397273175306707,
-      "v3_minus_v0_pp": 0.11124410381330452
+      "v3_ret": 1.039738980098741,
+      "v3_minus_v0_pp": 0.11125576638137491
     },
     {
       "year": "2025",
       "v0_ret": -0.19045221755961472,
-      "v3_ret": -0.14550638612214162,
-      "v3_minus_v0_pp": 0.044945831437473105
+      "v3_ret": -0.14548047451650614,
+      "v3_minus_v0_pp": 0.04497174304310858
     },
     {
       "year": "2026",
       "v0_ret": -0.17140012374011215,
-      "v3_ret": -0.12137075653078477,
-      "v3_minus_v0_pp": 0.05002936720932738
+      "v3_ret": -0.12135521450237918,
+      "v3_minus_v0_pp": 0.05004490923773297
     }
   ],
+  "completeness": {
+    "note": "T-176:分页补 order= 后的键完整性;去重 (symbol,date) 必须 = 天数×面板数",
+    "ohlcv": {
+      "source": "ohlcv_daily(binance_hist)",
+      "rows_fetched": 30558,
+      "uniq_symbol_date_keys": 30558,
+      "n_symbols": 22,
+      "n_dates": 1389,
+      "expected_symbols_x_dates": 30558,
+      "missing_keys": 0,
+      "date_min": "2023-01-02",
+      "date_max": "2026-10-21",
+      "per_symbol_days_min": 1389,
+      "per_symbol_days_max": 1389,
+      "closes_loaded": 30558,
+      "order_param": "symbol.asc,trade_date.asc",
+      "assert_equal": true
+    },
+    "ohlcv_offset_vs_keyset": {
+      "window_from": "2026-06-21",
+      "offset_rows": 2706,
+      "keyset_rows": 2706,
+      "offset_uniq_keys": 2706,
+      "keyset_uniq_keys": 2706,
+      "missing_in_offset": 0,
+      "extra_in_offset": 0,
+      "identical": true,
+      "assert_equal": true
+    },
+    "funding": {
+      "source": "funding_history(binance_perp)",
+      "paging": "keyset(symbol,funding_time)",
+      "rows_fetched": 148956,
+      "uniq_symbol_date_keys": 49632,
+      "n_symbols": 22,
+      "n_dates": 2487,
+      "expected_symbols_x_dates": 54714,
+      "missing_keys": 5082,
+      "order_param": "symbol.asc,funding_time.asc",
+      "assert_equal": true,
+      "per_symbol_span": {
+        "checked": 22,
+        "no_holes": true,
+        "symbols_with_holes": []
+      },
+      "assert_basis": "每币自身跨度内无洞(非笛卡尔积 —— funding 起止日逐币不同)"
+    }
+  },
   "judgement_pass": true,
   "n_shuffles": 200,
   "cost_bps": 0.001
