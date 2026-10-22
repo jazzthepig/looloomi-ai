@@ -1,0 +1,258 @@
+{
+ "tickets": 770,
+ "unresolved_on_hl": 400,
+ "unresolved_symbols": [
+  "1000LUNC",
+  "1000SHIB",
+  "1000XEC",
+  "1INCH",
+  "ACH",
+  "AGIX",
+  "ALICE",
+  "ALPHA",
+  "AMB",
+  "ANKR",
+  "API3",
+  "ARPA",
+  "ASTR",
+  "ATA",
+  "BAKE",
+  "BAL",
+  "BAND",
+  "BAT",
+  "BEL",
+  "BNX",
+  "C98",
+  "CELR",
+  "CHR",
+  "CHZ",
+  "CKB",
+  "COMBO",
+  "COTI",
+  "CTSI",
+  "DAR",
+  "DENT",
+  "DGB",
+  "DUSK",
+  "EGLD",
+  "ENJ",
+  "FIO",
+  "FLM",
+  "FLOW",
+  "GRT",
+  "GTC",
+  "HFT",
+  "HIFI",
+  "HIGH",
+  "HOOK",
+  "HOT",
+  "ICX",
+  "ID",
+  "IDEX",
+  "IOST",
+  "IOTX",
+  "JASMY",
+  "JOE",
+  "KAVA",
+  "KEY",
+  "KLAY",
+  "KNC",
+  "KSM",
+  "LEVER",
+  "LINA",
+  "LPT",
+  "LQTY",
+  "LRC",
+  "LUNA2",
+  "MANA",
+  "MASK",
+  "MDT",
+  "MTL",
+  "NKN",
+  "OCEAN",
+  "OMG",
+  "ONE",
+  "ONT",
+  "OXT",
+  "PERP",
+  "PHB",
+  "QNT",
+  "QTUM",
+  "RAD",
+  "REEF",
+  "REN",
+  "RLC",
+  "ROSE",
+  "RVN",
+  "SC",
+  "SFP",
+  "SKL",
+  "SPELL",
+  "SSV",
+  "STMX",
+  "STORJ",
+  "T",
+  "THETA",
+  "TLM",
+  "TRU",
+  "UNFI",
+  "VET",
+  "VOXEL",
+  "WAVES",
+  "WOO",
+  "XEM",
+  "XTZ",
+  "XVS",
+  "YFI",
+  "ZIL",
+  "ZRX"
+ ],
+ "no_binance_close": 0,
+ "resolved": 370,
+ "hl_has_signal_bar": 345,
+ "legit_ge_2023": {
+  "n": 318,
+  "passed": 248,
+  "rate": 0.7799
+ },
+ "legit_lt_2023": {
+  "n": 27,
+  "passed": 23,
+  "rate": 0.8519
+ },
+ "legit_all": {
+  "n": 345,
+  "passed": 271,
+  "rate": 0.7855
+ },
+ "fake_all": {
+  "n": 345,
+  "passed": 21,
+  "rate": 0.0609
+ },
+ "fake_ge_2023": {
+  "n": 318,
+  "passed": 20,
+  "rate": 0.0629
+ },
+ "verdict": {
+  "1_legit_ge_2023_ge_90pct": false,
+  "2_fake_le_15pct": true,
+  "3_legit_lt_2023_ge_80pct": true
+ },
+ "report_only": {
+  "legit_fail_reasons": {
+   "V2": 4,
+   "V3": 3,
+   "V7": 67,
+   "V6": 1
+  },
+  "fake_fail_reasons": {
+   "V2": 14,
+   "V3": 284,
+   "V4": 100,
+   "V7": 126
+  },
+  "legit_passed_mean_r": 0.8023,
+  "legit_rejected_mean_r": 0.599,
+  "legit_rejected_sum_r": 44.324,
+  "legit_rejected_examples": [
+   {
+    "ticket": "BNB:2020-09-12",
+    "coin": "BNB",
+    "r": -0.7862545592153374,
+    "fails": [
+     "V2 HL 只有 25 根(要 ≥ 41)"
+    ]
+   },
+   {
+    "ticket": "BCH:2020-10-14",
+    "coin": "BCH",
+    "r": -0.09727605322947042,
+    "fails": [
+     "V2 HL 只有 11 根(要 ≥ 41)"
+    ]
+   },
+   {
+    "ticket": "HBAR:2021-08-14",
+    "coin": "HBAR",
+    "r": -1.0231387514723205,
+    "fails": [
+     "V2 HL 只有 16 根(要 ≥ 41)"
+    ]
+   },
+   {
+    "ticket": "HBAR:2021-09-04",
+    "coin": "HBAR",
+    "r": -1.0194426399541447,
+    "fails": [
+     "V2 HL 只有 37 根(要 ≥ 41)"
+    ]
+   },
+   {
+    "ticket": "AAVE:2023-07-04",
+    "coin": "AAVE",
+    "r": -0.3134829920601754,
+    "fails": [
+     "V3 收盘 77.03 没有突破前 40 根最高 78"
+    ]
+   },
+   {
+    "ticket": "LINK:2023-07-13",
+    "coin": "LINK",
+    "r": 0.2388020833333329,
+    "fails": [
+     "V7 HL 30 日成交额均值 $485,820 < $1,000,000"
+    ]
+   },
+   {
+    "ticket": "DOGE:2023-07-25",
+    "coin": "DOGE",
+    "r": -0.6338262243285943,
+    "fails": [
+     "V7 HL 30 日成交额均值 $533,418 < $1,000,000"
+    ]
+   },
+   {
+    "ticket": "STX:2023-10-20",
+    "coin": "STX",
+    "r": 0.0777497310332036,
+    "fails": [
+     "V7 HL 30 日成交额均值 $297,534 < $1,000,000"
+    ]
+   },
+   {
+    "ticket": "AAVE:2023-10-22",
+    "coin": "AAVE",
+    "r": 1.1915383736431162,
+    "fails": [
+     "V7 HL 30 日成交额均值 $307,539 < $1,000,000"
+    ]
+   },
+   {
+    "ticket": "SNX:2023-10-24",
+    "coin": "SNX",
+    "r": 6.265903260045492,
+    "fails": [
+     "V7 HL 30 日成交额均值 $526,134 < $1,000,000"
+    ]
+   },
+   {
+    "ticket": "DOGE:2023-10-26",
+    "coin": "DOGE",
+    "r": -0.050135610913405446,
+    "fails": [
+     "V7 HL 30 日成交额均值 $486,867 < $1,000,000"
+    ]
+   },
+   {
+    "ticket": "LDO:2023-11-04",
+    "coin": "LDO",
+    "r": 0.7794002812939526,
+    "fails": [
+     "V7 HL 30 日成交额均值 $639,059 < $1,000,000"
+    ]
+   }
+  ]
+ }
+}

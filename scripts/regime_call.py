@@ -11,18 +11,70 @@
 每次提交都是一条**完整**的判断(不是增量),最新一条生效;默认 14 天到期,到期回到系统默认(on、1 档、无战场)。
 提交当天的判断管第二天 00:45 UTC 那一轮。要立刻停,用一键停(POST /internal/executor/halt)。
 INTERNAL_TOKEN 先读环境变量,没有再读仓库根目录 .env 里那一行;不打印。
+
+## 签名(S-666:主机不信上游)
+
+    python3 scripts/regime_call.py keygen            # 第一次:在本机生成 ~/.cometcloud/regime_call.key(600),打印指纹
+    python3 scripts/regime_call.py keygen --show     # 打印密钥本身 —— 只为抄进东京主机的 /etc/cometcloud/executor.env:
+                                                     #   JAZZ_CALL_KEY=<那一串>,然后 systemctl restart cometcloud-executor
+
+有密钥时每条判断都在本机签名(HMAC-SHA256),Railway 和库里只存签名、没有密钥;主机自己验。
+**没签名的判断照收、照记分,但主机不会为它开 J 票,也不放大 R-v2 票的风险。** 两边指纹一致才算配好(主机日志与发件箱里有指纹)。
 """
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import json
 import os
+import secrets
 import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.exec_host import verify  # noqa: E402  只用标准库,Mac 上不用装别的
+
 API = "https://web-production-0cdf76.up.railway.app"
+KEY_FILE = Path(os.environ.get("REGIME_CALL_KEY_FILE", str(Path.home() / ".cometcloud" / "regime_call.key")))
+
+
+def _key() -> str | None:
+    try:
+        k = KEY_FILE.read_text().strip()
+        bytes.fromhex(k)
+        return k or None
+    except (OSError, ValueError):
+        return None
+
+
+def keygen(show: bool) -> None:
+    k = _key()
+    if k is None:
+        KEY_FILE.parent.mkdir(parents=True, exist_ok=True)
+        KEY_FILE.write_text(verify.new_key() + "\n")
+        os.chmod(KEY_FILE, 0o600)
+        k = _key()
+        print(f"已生成 {KEY_FILE}(600)")
+    print(f"指纹 {verify.key_fingerprint(k)} —— 主机发件箱里 verify.key_fingerprint 应该是同一个")
+    if show:
+        print(f"JAZZ_CALL_KEY={k}")
+    else:
+        print("抄到主机:python3 scripts/regime_call.py keygen --show(只在你自己的终端里看)")
+
+
+def sign_body(body: dict) -> dict:
+    k = _key()
+    if k is None:
+        print(f"⚠️  没有签名密钥({KEY_FILE})—— 这条判断会被记录,但主机不会为它开 J 票、也不放大风险。"
+              f"先跑 keygen。", file=sys.stderr)
+        return body
+    p = {**{f: body.get(f) for f in ("state", "conviction", "battlefield", "close", "days", "note")},
+         "signed_at": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(),
+         "nonce": secrets.token_hex(8)}
+    signed, sig = verify.sign(p, k)
+    return {**body, "signed": signed, "sig": sig}
 
 
 def _token() -> str:
@@ -59,7 +111,8 @@ def _call(method: str, path: str, api: str, body: dict | None = None):
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Jazz ⓪ 开关")
-    ap.add_argument("state", choices=["on", "off", "flat", "status", "brief"])
+    ap.add_argument("state", choices=["on", "off", "flat", "status", "brief", "keygen"])
+    ap.add_argument("--show", action="store_true", help="keygen:打印密钥本身(抄进主机用)")
     ap.add_argument("--top", type=int, default=40)
     ap.add_argument("--conviction", type=int, default=1, choices=[1, 2, 3])
     ap.add_argument("--battlefield", default="", help="逗号分隔的 HL 永续币名,如 HYPE,UNI")
@@ -68,6 +121,9 @@ def main() -> None:
     ap.add_argument("--days", type=int, default=14)
     ap.add_argument("--api", default=os.environ.get("COMETCLOUD_API", API))
     a = ap.parse_args()
+    if a.state == "keygen":
+        keygen(a.show)
+        return
     if a.state == "brief":
         r = _call("GET", f"/internal/regime-call/brief?top={a.top}", a.api)
         b = r["breadth"]
@@ -96,6 +152,10 @@ def main() -> None:
     if a.state == "status":
         r = _call("GET", "/internal/regime-call", a.api)
         nxt, last = r["next_cycle"], r["last_cycle"]
+        c = nxt.get("call") or {}
+        p, why = verify.open_signed(c.get("signed"), c.get("sig"), _key())
+        print("签名:" + ("✓ 本机验过 —— 主机会认" if p else f"✗ {why} —— 主机不开 J 票、风险按 1 倍"))
+        nxt = {**nxt, "call": {k: v for k, v in c.items() if k not in ("signed", "sig")}}
         print(f"下一轮(asof {nxt['asof']}):{json.dumps(nxt['call'], ensure_ascii=False)}")
         print(f"上一轮(asof {last['asof']}):{json.dumps(last['call'], ensure_ascii=False)}")
         print(f"在持 J 票:{[(j['ticket_id'], j['status']) for j in r['j_live']]}")
@@ -104,7 +164,11 @@ def main() -> None:
     body = {"state": a.state, "conviction": a.conviction, "note": a.note, "days": a.days,
             "battlefield": [c.strip() for c in a.battlefield.split(",") if c.strip()],
             "close": [c.strip() for c in a.close.split(",") if c.strip()]}
-    print(json.dumps(_call("POST", "/internal/regime-call", a.api, body), ensure_ascii=False, indent=1))
+    r = _call("POST", "/internal/regime-call", a.api, sign_body(body))
+    if isinstance(r.get("call"), dict):
+        r["call"] = {k: v for k, v in r["call"].items() if k not in ("signed", "sig")} | \
+                    {"signed": bool(r["call"].get("sig"))}
+    print(json.dumps(r, ensure_ascii=False, indent=1))
 
 
 if __name__ == "__main__":

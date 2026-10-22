@@ -79,9 +79,10 @@ def validate_call(body: Any, hl_names: Optional[Iterable[str]], now: dt.datetime
     why: list[str] = []
     if not isinstance(body, dict):
         return None, ["body 必须是 JSON 对象"]
-    extra = set(body) - {"state", "conviction", "battlefield", "close", "note", "days"}
+    extra = set(body) - {"state", "conviction", "battlefield", "close", "note", "days", "signed", "sig"}
     if extra:
         why.append(f"未知字段 {sorted(extra)}")
+    signed_p, signed_at = _signed_payload(body, now, why)
     state = str(body.get("state") or "").strip().lower()
     if state not in STATES:
         why.append(f"state 必须是 {list(STATES)}")
@@ -124,10 +125,44 @@ def validate_call(body: Any, hl_names: Optional[Iterable[str]], now: dt.datetime
         why.append(f"{both} 同时在战场和离场名单里")
     if why:
         return None, why
-    now = now.astimezone(dt.timezone.utc)
+    # 签了名的判断:时间用签名里的(主机按签名里的时间算有效期,两边必须是同一个时刻)
+    now = (signed_at or now).astimezone(dt.timezone.utc)
     return {"at": now.isoformat(), "state": state, "conviction": conviction if state == "on" else 1,
             "battlefield": bf, "close_coins": close, "note": note, "effective_d": now.date().isoformat(),
-            "expires_at": (now + dt.timedelta(days=days)).isoformat(), "source": "jazz"}, []
+            "expires_at": (now + dt.timedelta(days=days)).isoformat(), "source": "jazz",
+            "signed": body.get("signed") if signed_p else None, "sig": body.get("sig") if signed_p else None}, []
+
+
+SIGNED_FIELDS = ("state", "conviction", "battlefield", "close", "days", "note", "signed_at", "nonce")
+MAX_SIGN_SKEW_S = 300
+
+
+def _signed_payload(body: dict, now: dt.datetime, why: list[str]) -> tuple[Optional[dict], Optional[dt.datetime]]:
+    """Jazz 在 Mac 上签的判断(scripts/regime_call.py):Railway 没有密钥,验不了签名 —— 只核两件事:
+    签名内容与 body 说的是同一条判断、签名时间离现在 ≤ 5 分钟。签名原样存库、原样交给主机,由主机验(src/exec_host/verify.py)。
+    没签名的判断照收(记分照记),但主机不会为它开 J 票,也不会放大 R-v2 票的风险。"""
+    s, sig = body.get("signed"), body.get("sig")
+    if not s and not sig:
+        return None, None
+    if not (isinstance(s, str) and isinstance(sig, str) and len(sig) == 64):
+        why.append("signed / sig 要成对给,sig 是 64 位十六进制")
+        return None, None
+    try:
+        p = json.loads(s)
+    except ValueError:
+        why.append("signed 不是 JSON")
+        return None, None
+    if not isinstance(p, dict) or set(p) != set(SIGNED_FIELDS):
+        why.append(f"signed 的字段必须正好是 {list(SIGNED_FIELDS)}")
+        return None, None
+    for k in ("state", "conviction", "battlefield", "close", "days", "note"):
+        if p.get(k) != body.get(k):
+            why.append(f"signed 里的 {k} 与 body 不一致")
+    at = _ts(p.get("signed_at")) if p.get("signed_at") else None
+    if at is None or abs((at - now).total_seconds()) > MAX_SIGN_SKEW_S:
+        why.append(f"签名时间离现在超过 {MAX_SIGN_SKEW_S} 秒(或缺失)—— 重签一次再发")
+        return None, None
+    return p, at
 
 
 def governing_call(calls: Iterable[dict], asof: Any) -> Optional[dict]:
@@ -142,8 +177,9 @@ def call_view(call: Optional[dict]) -> dict:
     if not call:
         return {"state": "on", "conviction": 1, "battlefield": [], "source": "system_default",
                 "why": "没有生效的 Jazz 判断(或已到期)⇒ 系统默认"}
+    # signed / sig 原样带给主机:主机只认签名里的内容(src/exec_host/verify.py),不认这里的转述
     return {k: call.get(k) for k in ("id", "at", "state", "conviction", "battlefield", "close_coins", "note",
-                                       "effective_d", "expires_at")} | {"source": "jazz"}
+                                       "effective_d", "expires_at", "signed", "sig")} | {"source": "jazz"}
 
 
 # ── 计划叠加(Railway 出计划时)───────────────────────────────────────────────────────────────────────────

@@ -49,7 +49,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from src.data.execution.fill_log import BUY, CANCELLED, FILLED, PARTIAL, SELL
-from src.exec_host import core, tickets
+from src.exec_host import core, tickets, verify
 
 log = logging.getLogger("exec_host")
 DEFAULT_API = "https://web-production-0cdf76.up.railway.app"
@@ -102,7 +102,12 @@ class Config:
             raise SystemExit(f"EXECUTOR_TICKETS_MODE 必须是 off / dry_run / live,收到 {self.tickets_mode!r}")
         self.tickets_equity_cap = float(env.get("EXECUTOR_TICKETS_MAX_EQUITY_USD", "1000"))
         self.tickets_slip_bps = float(env.get("EXECUTOR_TICKETS_SLIP_BPS", "100"))
-        # 私钥不进 Config:只在 live 模式建交易客户端的那一刻从环境变量里读一次(Venue.exchange)
+        # 主机复核(S-666 / S-667):规则 V′ 的开关;签名校验不受它管,始终强制
+        self.verify_mode = env.get("EXECUTOR_VERIFY", verify.DEFAULT_MODE).strip()
+        if self.verify_mode not in verify.MODES:
+            raise SystemExit(f"EXECUTOR_VERIFY 必须是 {' / '.join(verify.MODES)},收到 {self.verify_mode!r}")
+        # 私钥不进 Config:只在 live 模式建交易客户端的那一刻从环境变量里读一次(Venue.exchange)。
+        # JAZZ_CALL_KEY(⓪ 签名密钥)同理,每轮复核时从环境变量读,不进 Config、不进日志(只记指纹)
 
     @property
     def halt_file(self) -> Path:
@@ -258,6 +263,13 @@ class Venue:
 
     def cancel(self, coin: str, oid: int) -> Any:
         return self.exchange().cancel(coin, oid)
+
+    def daily_bars(self, coin: str, through: dt.date) -> list[dict]:
+        """HL 公开日线(到 through 为止,含),给主机复核用 —— 不经过 Railway、不经过我们的库。"""
+        end = dt.datetime.combine(through + dt.timedelta(days=1), dt.time(0), tzinfo=dt.timezone.utc)
+        start = end - dt.timedelta(days=verify.BARS_NEEDED + 5)
+        return verify.hl_bars(self.info.candles_snapshot(coin, "1d", int(start.timestamp() * 1000),
+                                                         int(end.timestamp() * 1000) - 1))
 
 
 # ── 执行器 ──────────────────────────────────────────────────────────────────
@@ -591,6 +603,35 @@ class Executor:
         done = dict(sorted(done.items(), key=lambda kv: kv[1].get("closed_at", ""))[-300:])
         self.state.set(ticket_book=book, ticket_done=done)
 
+    def _verify_plan(self, tp: dict, szd: dict, book: dict, done: set) -> tuple[dict, dict]:
+        """主机复核(verify.py):今天要进场的票 → HL 公开日线 / Jazz 签名 → 主机真正执行的计划 + 判定。
+        日线读不到 ⇒ 当成没有那根(V1 不过):report 下只记,enforce 下不进 —— 读不到不等于没问题。"""
+        enter = [e for e in tp.get("enter") or [] if e.get("ticket_id") not in book and e.get("ticket_id") not in done]
+        coin_of = {e["ticket_id"]: tickets.resolve_coin(e.get("symbol") or "", szd) for e in enter}
+        bars: dict[str, list[dict]] = {}
+        if self.cfg.verify_mode != "off":
+            for e in enter:
+                c = coin_of.get(e["ticket_id"])
+                sd = verify._d(e.get("signal_d"))
+                if c and sd and c not in bars and not verify.is_j(e):
+                    try:
+                        bars[c] = self.venue.daily_bars(c, sd)
+                    except Exception as ex:                              # noqa: BLE001
+                        log.warning("HL daily bars for %s unreadable: %s", c, ex)
+                        bars[c] = []
+        key = os.environ.get("JAZZ_CALL_KEY", "").strip() or None
+        tp_v, vsum = verify.review({**tp, "enter": enter}, bars, coin_of, key, self.cfg.verify_mode)
+        vsum["key_fingerprint"] = verify.key_fingerprint(key) if key else None
+        # 每票风险占比:计划是上游给的,主机再守一次 2% 的硬上限
+        try:
+            rf = float(tp_v.get("risk_frac") or 0.0)
+        except (TypeError, ValueError):
+            rf = 0.0
+        if not (0.0 <= rf <= tickets.MAX_RISK_FRAC):
+            vsum["risk_frac_capped"] = {"plan": tp_v.get("risk_frac"), "host": tickets.MAX_RISK_FRAC}
+            tp_v["risk_frac"] = min(max(rf, 0.0), tickets.MAX_RISK_FRAC)
+        return tp_v, vsum
+
     def run_ticket_cycle(self, now: dt.datetime) -> dict[str, Any]:
         tp = self.state.get("ticket_plan") or {}
         live = self.cfg.tickets_mode == "live"
@@ -600,7 +641,9 @@ class Executor:
         equity, positions, eq_src = self._ticket_equity()
         book = dict(self.state.get("ticket_book") or {})
         done = set((self.state.get("ticket_done") or {}).keys())
-        act = tickets.ticket_actions(tp, book, positions, mids, szd, equity, done)
+        tp_v, vsum = self._verify_plan(tp, szd, book, done)
+        act = tickets.ticket_actions(tp_v, book, positions, mids, szd, equity, done)
+        act["not_executable"] = list(act["not_executable"]) + list(tp_v.get("host_rejected") or [])
         if act["closed_on_venue"]:
             self._venue_closed([c["ticket_id"] for c in act["closed_on_venue"]], now)
             book = dict(self.state.get("ticket_book") or {})
@@ -631,6 +674,7 @@ class Executor:
                   "not_executable": [{k: n.get(k) for k in ("ticket_id", "symbol", "coin", "why")}
                                      for n in act["not_executable"]],
                   "skipped_cap_paper": [s["ticket_id"] for s in tp.get("skipped_cap") or []],
+                  "verify": vsum,
                   "open_before": len(book), "halted": halted, "halt_why": why_halt}
         lines = [f"出 {x['coin']} {x['qty']}({x['why']})" for x in act["exits"]] + \
                 [f"进 {e['coin']} {e['qty']}(~${e['notional']},止损 −{e['stop_frac']:.1%})" for e in act["entries"]] + \
@@ -852,7 +896,11 @@ def check(ex: Executor) -> dict[str, Any]:
         out["nav_book"] = round(r["nav_book"], 2)
     if ex.cfg.tickets_mode != "off":
         tp = plan.get("tickets") if isinstance(plan, dict) else None
+        key = os.environ.get("JAZZ_CALL_KEY", "").strip()
         t: dict[str, Any] = {"mode": ex.cfg.tickets_mode, "equity_cap": ex.cfg.tickets_equity_cap,
+                             "verify": {"mode": ex.cfg.verify_mode,
+                                        "jazz_call_key": verify.key_fingerprint(key) if key else
+                                        "没有 —— J 票一律不开、风险倍数按 1(Mac 上 regime_call.py keygen --show 抄过来)"},
                              "plan": {k: (tp or {}).get(k) for k in ("asof", "ready", "why", "last_d", "risk_frac", "cap",
                                                                       "portfolio_leverage")}}
         try:
@@ -864,8 +912,12 @@ def check(ex: Executor) -> dict[str, Any]:
                 t["warning"] = "永续账户里没有可用的 USDC —— 真跑前要在 HL 上把 USDC 从现货划到永续(Jazz 手动)"
             if tp and tp.get("ready"):
                 eq = min(st.get("equity") or 0.0, ex.cfg.tickets_equity_cap) or ex.cfg.tickets_equity_cap
-                act = tickets.ticket_actions(tp, ex.state.get("ticket_book") or {}, st.get("positions") or {}, mids, szd,
-                                             eq, set((ex.state.get("ticket_done") or {}).keys()))
+                book, done = ex.state.get("ticket_book") or {}, set((ex.state.get("ticket_done") or {}).keys())
+                tp_v, vsum = ex._verify_plan(tp, szd, book, done)
+                t["verify"]["today"] = {k: vsum.get(k) for k in ("call_signed", "call_why", "call_mult", "n", "passed",
+                                                                 "blocked")}
+                act = tickets.ticket_actions(tp_v, book, st.get("positions") or {}, mids, szd, eq, done)
+                act["not_executable"] = list(act["not_executable"]) + list(tp_v.get("host_rejected") or [])
                 t["would"] = {"enter": [{k: e.get(k) for k in ("symbol", "coin", "qty", "notional", "stop_frac")}
                                         for e in act["entries"]],
                               "exit": act["exits"], "not_executable": [{k: n.get(k) for k in ("symbol", "why")}

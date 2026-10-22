@@ -100,6 +100,23 @@ S-658 / S-659:R-v2 的钱在「山寨走趋势的月份拿着走趋势的币」,
 - 表:`regime_calls`(只追加)、`j_tickets`、`j_tickets_state`(`migrations/2026-10-21_regime_calls.sql`);
   推进 = `_r_tickets_paper_loop` 每小时在 R-v2 扫描**之前**跑 `run_j_scan`(判活:`loop_attempt` 里 `_j_tickets_scan`)。
 
+## §3f 主机不信上游(2026-10-22,S-666 / S-667;起因:Railway 10-21 公告存放环境变量的系统被入侵)
+
+计划由 Railway + Supabase 产出 —— **能写库的人就能让主机下真单**。东京主机在下单前自己把每张进场票重新成立一遍
+(`src/exec_host/verify.py`),让「能写库」最多只能让主机做一张本来就像我们信号的交易:
+
+- **R-v2 票 → HL 公开日线重算**(规则 V′ = 突破前 40 根最高、SMA200 之上、HL 收盘与计划 ref_close 一致、止损宽度与 HL 的
+  2.5 × ATR14 相符;主机直接问 HL,不经过 Railway 和我们的库)。S-666 在 770 张历史票上:伪造票只过 6%,但真票只过 78%
+  —— 几乎全栽在「HL 成交额 ≥ $1M」这条(2023 年 HL 太薄),按预注册 **`EXECUTOR_VERIFY` 默认 `report`**(只记判定不拦);
+  S-667 用前向 30 张票判 V′,过了才改 `enforce`。
+- **J 票与信心倍数 → Jazz 的签名**(始终强制,不受上面的开关管)。Jazz 在 Mac 上 `python3 scripts/regime_call.py keygen`
+  生成密钥(`~/.cometcloud/regime_call.key`,600),`keygen --show` 抄进主机 `/etc/cometcloud/executor.env` 的
+  `JAZZ_CALL_KEY=`,两边指纹一致(主机 `--check` 与发件箱 `verify.key_fingerprint`)。之后每条判断都在 Mac 上签名
+  (HMAC-SHA256);Railway 只核「签名内容与 body 一致、签名时间 ≤ 5 分钟」,原样存 `regime_calls.signed / sig`;
+  主机只认签名里的内容。**没签名 ⇒ 判断照记分,但主机不开 J 票、R-v2 风险按 1 倍。**
+- **每票风险**:计划给的 `risk_frac` 主机再守 2%(与 Railway 出计划时的上限相同,防的是上游被改)。
+- 伪造的 off / flat / 离场 / 一键停只会让我们少做或早走 —— 方向安全,不验。
+
 ## §4 执行器的硬约束
 
 - **Key = HL API 钱包(agent wallet)**:Jazz 在 HL 里自己创建并授权给主账户;

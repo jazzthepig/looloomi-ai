@@ -26,6 +26,8 @@ MAX_TICKET_NOTIONAL_FRAC = 0.5      # 单票名义不超过净值的一半(止�
 MAX_GROSS_FRAC = 1.0                # 策略层:名义合计 ≤ 分到的资金(Jazz 10-21:策略 0–1 倍;S-638 f = 1% 回放峰值 0.99 倍)
 MAX_PORTFOLIO_LEVERAGE = 5.0        # 组合层杠杆 L 的硬上限(Jazz 10-21);分到的资金 = 账户净值 × L
 MAX_RISK_MULT = 2.0                 # Jazz ⓪ 信心档位放大每票风险的硬上限(Railway 给 1 / 1.5 / 2,主机再守一次)
+MAX_RISK_FRAC = 0.02                # 每票风险占比的硬上限:Railway 出计划时拒绝 > 2%,主机再守一次(runner 在复核时压;
+                                    # ticket_actions 本身不压 —— 模拟器 sim_tickets 用它跑更高风险的压力情形)
 TRIGGER_LIMIT_SLIP = 0.10           # 止损触发后按市价成交;HL 仍要一个限价 = 触发价再让 10%
 
 
@@ -61,11 +63,14 @@ def perp_meta(meta: Any) -> dict[str, int]:
 
 
 def resolve_coin(symbol: str, names: dict[str, int] | set[str]) -> Optional[str]:
-    """账本里的名字 → HL 永续的币名。HL 把小面值币做成 1000 倍面值(PEPE → kPEPE);止损按比例给,所以不用换算价格。"""
+    """账本里的名字 → HL 永续的币名。HL 把小面值币做成 1000 倍面值(PEPE → kPEPE);止损按比例给,所以不用换算价格。
+    币安永续也有 1000 倍面值的名字(1000SHIB / 1000LUNC / 1000XEC)⇒ 同样对到 HL 的 kSHIB / kLUNC / kXEC,面值一致。"""
     if symbol in names:
         return symbol
     if f"k{symbol}" in names:
         return f"k{symbol}"
+    if symbol.startswith("1000") and len(symbol) > 4 and f"k{symbol[4:]}" in names:
+        return f"k{symbol[4:]}"
     return None
 
 
