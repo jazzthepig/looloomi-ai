@@ -45,7 +45,7 @@
 | `TELEGRAM_BOT_TOKEN`(+ `TELEGRAM_WEBHOOK_SECRET`) | BotFather `/revoke` | 别人能用我们的机器人给你发「告警」 |
 | `RESEND_API_KEY` | Resend 控制台 | 别人能用我们的域名发邮件 |
 | `LLM_API_KEY` / `NARRATIVE_LLM_API_KEY` | 对应推理服务 | 攻击者点名要的就是这类(推理费用) |
-| `GITHUB_TOKEN` | GitHub → Settings → Developer settings | 有写权限就是供应链风险,优先级最高。新的只给公开仓库只读,或干脆不设 |
+| `GITHUB_TOKEN` | ✅ **10-22 已作废**(与 Mac 的 `gh` 共用的那份 OAuth 授权已撤销;Mac 改用只限本仓库的 fine-grained token) | 恢复后另建一把**只读、只给公开仓库**的给 Railway,或干脆不设。**一个用途一把,不再与 Mac 共用** |
 
 **`GITHUB_TOKEN`、推理 key、`RESEND_API_KEY` 不必等构建恢复 —— 现在就在各家作废**(线上只是暂时少这几个功能)。
 
