@@ -15,6 +15,7 @@ import { EarningsCalendarWidget } from "./EarningsCalendarWidget";
 
 const CISLeaderboard = lazy(() => import("./CISLeaderboard"));
 const AssetRadar     = lazy(() => import("./AssetRadar"));
+const CISV2Panel     = lazy(() => import("./CISV2Panel"));   // S-668 / S-669: v2 shadow + companies (facts, no levels)
 
 export function CISContent({ onUniverseLoad, onNavigate }) {
   const [cisUniverse, setCisUniverse] = useState([]);
@@ -50,6 +51,11 @@ export function CISContent({ onUniverseLoad, onNavigate }) {
           />
         </Suspense>
       </div>
+
+      {/* CIS v2 (shadow): slow-dimension score for tokens; companies with facts + state, no levels */}
+      <Suspense fallback={<SectionLoader label="LOADING CIS V2…" />}>
+        <CISV2Panel />
+      </Suspense>
 
       {/* Cross-Asset Overview — zero additional fetches */}
       <CrossAssetView universe={cisUniverse} />
