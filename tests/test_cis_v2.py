@@ -67,6 +67,17 @@ def test_a_dividend_payer_with_flat_shares_is_not_a_buyback():
     assert old_way > 0.06, "旧推法在这里会给出 ≈ 7% 的「回购」—— 这个测试钉的就是它"
 
 
+def test_partial_week_rows_collapse_to_one_row_per_week():
+    """world50 每轮写本周目前为止的最后一天,同一周的旧行留着(10-14 / 10-15 / 10-16 三行)。
+    不并成一行的话,「26 周周收益」里混进日收益,稳定被压低。"""
+    base = _equity(n=40)
+    last = dt.date.fromisoformat(base[-1][0])
+    extra = [((last - dt.timedelta(days=k)).isoformat(), base[-1][1] * (1 + 0.02 * k), base[-1][2] * (1 + 0.02 * k), base[-1][3])
+             for k in (1, 2)]                                     # 同一周、更早的两天,价格不同
+    with_extra = sorted(base + extra, key=lambda r: r[0])
+    assert v2.equity_inputs(with_extra, last) == v2.equity_inputs(base, last), "同一周只认最后一行"
+
+
 def test_without_filed_shares_there_is_no_supply_dimension():
     three = [(d, m, c) for d, m, c, _ in _equity(share_growth=0.05)]
     out = v2.equity_inputs(three, dt.date(2025, 1, 3) + dt.timedelta(weeks=59))

@@ -108,6 +108,12 @@ def equity_inputs(rows: Iterable[tuple], asof: Any) -> dict[str, Optional[float]
     a = _d(asof)
     rs = sorted(((_d(r[0]), _f(r[1]), _f(r[2]), _f(r[3]) if len(r) > 3 else None) for r in rows if _d(r[0]) <= a),
                 key=lambda r: r[0])
+    # 一周只留最后一行(10-23,T-179 的 B-4):world50 每轮写「本周到目前为止的最后一个交易日」,upsert 不会删掉
+    # 同一周更早的那几行 ⇒ 最近两周每家有 2–3 行,26 周的「周收益」里混进了日收益,稳定这一维被压低。
+    by_week: dict[tuple[int, int], tuple] = {}
+    for r in rs:
+        by_week[r[0].isocalendar()[:2]] = r
+    rs = sorted(by_week.values(), key=lambda r: r[0])
     out: dict[str, Optional[float]] = {"size": None, "stability": None, "supply": None, "shares": None}
     if not rs or rs[-1][0] < a - dt.timedelta(days=10):
         return out
