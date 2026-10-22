@@ -77,8 +77,8 @@ def fetch_ohlcv(symbols: list[str]) -> dict[str, dict[str, float]]:
     sym_list = ",".join(f'"{s}"' for s in symbols)
     rows = fetch_all(
         f"ohlcv_daily?select=symbol,trade_date,close&source=eq.binance_hist"
-        f"&symbol=in.({sym_list})&trade_date=gte.{REBAL_INCEPTION}"
-    )
+        f"&symbol=in.({sym_list})&trade_date=gte.{REBAL_INCEPTION}&order=symbol.asc,trade_date.asc"
+    )   # order 必须给:不给时 PostgREST 翻页边界会漂,同一查询行数对、不同 (symbol, date) 却少两成(T-170 实测)
     out: dict[str, dict[str, float]] = defaultdict(dict)
     for r in rows:
         d = str(r["trade_date"])[:10]
