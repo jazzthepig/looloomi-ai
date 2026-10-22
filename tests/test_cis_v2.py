@@ -36,14 +36,42 @@ def test_crypto_dimensions_point_the_right_way_and_ignore_the_future():
     assert v2.crypto_inputs(_crypto(n=60, start=dt.date(2026, 1, 1)), asof)["size"] is None, "最近没有价 ⇒ 不打分"
 
 
-def test_equity_net_issuance_is_shares_not_market_cap():
-    weeks = [dt.date(2025, 1, 3) + dt.timedelta(weeks=i) for i in range(60)]
-    buyback = [(w.isoformat(), 1000.0 * (1 + 0.01 * i) * (1 - 0.001 * i), 1 + 0.01 * i) for i, w in enumerate(weeks)]
-    issuer = [(w.isoformat(), 1000.0 * (1 + 0.01 * i) * (1 + 0.002 * i), 1 + 0.01 * i) for i, w in enumerate(weeks)]
-    asof = weeks[-1]
-    b, s = v2.equity_inputs(buyback, asof), v2.equity_inputs(issuer, asof)
+def _equity(n=60, shares0=1000.0, share_growth=0.0, div_yield=0.0):
+    """周频 (周日期, 市值, 总回报复权收盘, 股数)。市值 = 股数 × 原始收盘(world50 的做法);
+    复权收盘 = 原始收盘 × 之后的分红折扣 —— 越早的周被往下改得越多(ohlcv_daily 的 eodhd 收盘就是这样)。"""
+    weeks = [dt.date(2025, 1, 3) + dt.timedelta(weeks=i) for i in range(n)]
+    rows = []
+    for i, w in enumerate(weeks):
+        raw_px = 10.0 * (1 + 0.005 * i)
+        sh = shares0 * (1 + share_growth) ** (i / 52)
+        adj = raw_px * (1 - div_yield) ** ((n - 1 - i) / 52)
+        rows.append((w.isoformat(), sh * raw_px, adj, sh))
+    return rows
+
+
+def test_equity_net_issuance_comes_from_filed_shares():
+    asof = dt.date(2025, 1, 3) + dt.timedelta(weeks=59)
+    b, s = v2.equity_inputs(_equity(share_growth=-0.03), asof), v2.equity_inputs(_equity(share_growth=0.05), asof)
     assert b["supply"] > 0 > s["supply"], "回购的股数在减 ⇒ 正;增发 ⇒ 负"
-    assert b["stability"] is not None and b["size"] == pytest.approx(math.log(buyback[-1][1]))
+    assert b["supply"] == pytest.approx(0.03, abs=1e-9) and b["shares"] == pytest.approx(1000.0 * 0.97 ** (59 / 52))
+    assert b["stability"] is not None and b["size"] == pytest.approx(math.log(_equity(share_growth=-0.03)[-1][1]))
+
+
+def test_a_dividend_payer_with_flat_shares_is_not_a_buyback():
+    """10-23 的错:市值 ÷ 复权收盘 = 股数 × 原始价 / 复权价,一个 7% 股息、股数不变的公司被算成一年回购约 7%
+    (实测 VZ −7.6%、MO −6.9%;CMCSA 再加上一次分拆的台阶 −14.8%)。股数直接读,这个差就没有了。"""
+    rows = _equity(div_yield=0.07)
+    asof = dt.date(2025, 1, 3) + dt.timedelta(weeks=59)
+    assert v2.equity_inputs(rows, asof)["supply"] == pytest.approx(0.0, abs=1e-12)
+    old_way = -((rows[-1][1] / rows[-1][2]) / (rows[-53][1] / rows[-53][2]) - 1)
+    assert old_way > 0.06, "旧推法在这里会给出 ≈ 7% 的「回购」—— 这个测试钉的就是它"
+
+
+def test_without_filed_shares_there_is_no_supply_dimension():
+    three = [(d, m, c) for d, m, c, _ in _equity(share_growth=0.05)]
+    out = v2.equity_inputs(three, dt.date(2025, 1, 3) + dt.timedelta(weeks=59))
+    assert out["supply"] is None and out["shares"] is None, "没有股数就不推 —— 宁可缺,不给错的"
+    assert out["size"] is not None and out["stability"] is not None
 
 
 def test_percentile_ranks_and_ties():

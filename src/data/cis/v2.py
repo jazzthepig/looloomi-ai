@@ -97,11 +97,18 @@ def crypto_inputs(rows: Iterable[tuple], asof: Any) -> dict[str, Optional[float]
 
 
 def equity_inputs(rows: Iterable[tuple], asof: Any) -> dict[str, Optional[float]]:
-    """rows = [(week_d, mcap_usd, close)](周频,升序,只用 ≤ asof 的;close 与 mcap 同一周)。
-    规模 = log 市值;稳定 = −σ(过去 26 周周对数收益);供给纪律 = −(股数 52 周增长),股数 = 市值 ÷ 收盘。"""
+    """rows = [(week_d, mcap_usd, close, shares)](周频,升序,只用 ≤ asof 的;close 与 mcap 同一周)。
+    规模 = log 市值;稳定 = −σ(过去 26 周周对数收益,close 是总回报复权的 —— 波动本该按总回报算);
+    供给纪律 = −(股数 52 周增长),**股数直接读 world50_mcap_weekly.shares**。
+
+    10-23 改:原来股数 = 市值 ÷ 收盘。市值是股数 × **原始**收盘,而 ohlcv_daily 的收盘是**总回报复权**的,
+    相除得 股数 × 原始价 / 复权价 —— 52 周变化 ≈ 真实股数变化 − 股息率 − 分拆价值(CMCSA −14.8%、VZ −7.6% 那一批)。
+    没有 shares(老的三元组、或那一周还没写股数)⇒ 供给纪律 None,不再推。
+    输出另带 `shares` = 最近一周的股数:不进打分(不在 DIMS 里),读的人凭它知道 supply 是按股数算的。"""
     a = _d(asof)
-    rs = sorted(((_d(d), _f(m), _f(c)) for d, m, c in rows if _d(d) <= a), key=lambda r: r[0])
-    out: dict[str, Optional[float]] = {"size": None, "stability": None, "supply": None}
+    rs = sorted(((_d(r[0]), _f(r[1]), _f(r[2]), _f(r[3]) if len(r) > 3 else None) for r in rows if _d(r[0]) <= a),
+                key=lambda r: r[0])
+    out: dict[str, Optional[float]] = {"size": None, "stability": None, "supply": None, "shares": None}
     if not rs or rs[-1][0] < a - dt.timedelta(days=10):
         return out
     last = rs[-1]
@@ -111,11 +118,11 @@ def equity_inputs(rows: Iterable[tuple], asof: Any) -> dict[str, Optional[float]
     if len(closes) >= EQUITY_VOL_WEEKS * 0.8:
         s = stdev(log_returns(closes))
         out["stability"] = -s if s is not None else None
+    if last[3] and last[3] > 0:
+        out["shares"] = last[3]
     then = _at_or_before(rs, a - dt.timedelta(weeks=EQUITY_SUPPLY_WEEKS))
-    if then and then[0] >= a - dt.timedelta(weeks=EQUITY_SUPPLY_WEEKS + 2) and then[1] and then[2] and last[1] and last[2]:
-        s0, s1 = then[1] / then[2], last[1] / last[2]
-        if s0 > 0:
-            out["supply"] = -(s1 / s0 - 1.0)
+    if then and then[0] >= a - dt.timedelta(weeks=EQUITY_SUPPLY_WEEKS + 2) and then[3] and then[3] > 0 and out["shares"]:
+        out["supply"] = -(out["shares"] / then[3] - 1.0)
     return out
 
 

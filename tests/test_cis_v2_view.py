@@ -9,8 +9,17 @@ def _rows():
         {"symbol": "BTC", "d": "2026-10-22", "grp": "crypto", "score": 86.7, "signal": "STRONG OUTPERFORM", "watch": None,
          "pct": 1.0, "ranks": {"size": 1.0}, "missing": [], "state": {"trend": {"label": "up"}}},
         {"symbol": "AAPL", "d": "2026-10-22", "grp": "equity", "score": 79.0, "signal": None,
-         "raw": {"size": math.log(4.0e12), "stability": -0.03, "supply": 0.012}, "state": {"trend": {"label": "up"}}},
+         "raw": {"size": math.log(4.0e12), "stability": -0.03, "supply": 0.012, "shares": 1.5e10},
+         "state": {"trend": {"label": "up"}}},
     ]
+
+
+def test_share_change_is_only_shown_when_it_came_from_filed_shares():
+    """10-21 及之前的行:supply 是 市值 ÷ 复权收盘 推出来的(股息、分拆算成了回购),行里没有 shares —— 不再对外当事实。"""
+    old = vw.company_facts({"size": math.log(1e11), "stability": -0.03, "supply": 0.148})
+    assert old["share_count_change_52w"] is None and old["market_cap_usd"] == 100_000_000_000
+    new = vw.company_facts({"size": math.log(1e11), "stability": -0.03, "supply": 0.02, "shares": 3.6e9})
+    assert new["share_count_change_52w"] == -0.02
 
 
 def test_companies_get_facts_and_state_but_no_score_or_signal():

@@ -51,7 +51,7 @@ from typing import Any, Iterable, Optional
 
 WRITES_TABLES = ("world50_mcap_weekly", "world50_onchain_forms", "asset_mcap_daily", "world50_revenue")
 WRITES_COLUMNS = {
-    "world50_mcap_weekly": ("key", "d", "mcap_usd", "source"),
+    "world50_mcap_weekly": ("key", "d", "mcap_usd", "shares", "source"),
     "world50_revenue": ("key", "tag", "unit", "period_start", "period_end", "filed", "revenue", "accn"),
     "world50_onchain_forms": ("as_of", "token_id", "key", "symbol", "name", "category", "issuer", "match_rule",
                               "price_usd", "mcap_usd", "volume_24h_usd"),
@@ -668,8 +668,10 @@ def build_mcap(key: str, raw: list[dict], sources: dict[str, Any], start: str = 
         usd = 1.0 if fx is None else _usd_per_local(fx, d)
         if usd is None:
             continue
+        # shares 一并写:研究与 CIS v2 要的「股数变化」只能从这里读。ohlcv_daily 的收盘是总回报复权的,
+        # 拿 mcap_usd ÷ 它推股数,会把股息与分拆算成回购(10-23,CMCSA / VZ / MO 那一批)。
         rows.append({"key": key, "d": d, "mcap_usd": shares[i][1] * (c / _factor_after(d, splits)) * usd,
-                     "source": MCAP_SOURCE})
+                     "shares": float(shares[i][1]), "source": MCAP_SOURCE})
     if not rows:
         why = f"股数停在 {last_filed}({src}),太旧,不写" if stale_after else "没有一周同时有已知股数与价格"
         return {"rows": [], "src": src, "notes": notes, "why": why}
@@ -999,7 +1001,8 @@ async def discover_onchain_forms(as_of: Optional[str] = None) -> dict[str, Any]:
 RERUN_AFTER_DAYS = 6
 LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
-PART_VERSIONS = {"prices": 4, "mcap": 20, "onchain_forms": 1, "revenue": 1, "book": 1, "fwd_books": 2}
+#: mcap 21(10-23):行里加 shares 列 —— 下一次部署整段重写一遍,把历史行的股数填上(市值本身不变)。
+PART_VERSIONS = {"prices": 4, "mcap": 21, "onchain_forms": 1, "revenue": 1, "book": 1, "fwd_books": 2}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:

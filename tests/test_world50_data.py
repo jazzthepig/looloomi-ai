@@ -64,6 +64,7 @@ def test_mcap_is_known_from_filing_date_and_split_consistent():
     out = wd.build_mcap("X", bars, {"dei": dei})
     assert out["why"] is None and out["src"] == "dei"
     assert {round(r["mcap_usd"], 6) for r in out["rows"]} == {4000.0}, "跨拆股市值连续(今天口径 400 股 × 10)"
+    assert {r["shares"] for r in out["rows"]} == {400.0}, "股数一并写(今天口径)—— 读的人不用再拿市值 ÷ 复权收盘去推"
     assert out["rows"][0]["d"] >= "2020-02-03", "报送日之前不知道股数 —— 第一周不能早于第一次报送"
 
 

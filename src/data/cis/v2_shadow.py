@@ -39,7 +39,8 @@ def equity_universe(world50_keys: list[str]) -> list[str]:
 
 
 def weekly_closes(mcap_rows: list[dict], closes: dict[str, list[tuple[str, float]]]) -> dict[str, list[tuple]]:
-    """world50 周市值 + eodhd 日收盘 → {公司: [(周日期, mcap_usd, 该周日期当天或之前最后一个收盘)]}。纯函数。"""
+    """world50 周市值 + eodhd 日收盘 → {公司: [(周日期, mcap_usd, 该周日期当天或之前最后一个收盘, shares)]}。纯函数。
+    shares 原样从 world50_mcap_weekly 带过来(没有 ⇒ None);**不要**用 mcap ÷ 这个收盘推股数 —— 收盘是总回报复权的。"""
     out: dict[str, list[tuple]] = {}
     for r in sorted(mcap_rows, key=lambda r: (r["key"], str(r["d"]))):
         cs = closes.get(r["key"]) or []
@@ -49,7 +50,7 @@ def weekly_closes(mcap_rows: list[dict], closes: dict[str, list[tuple[str, float
                 px = c
             else:
                 break
-        out.setdefault(r["key"], []).append((str(r["d"])[:10], r.get("mcap_usd"), px))
+        out.setdefault(r["key"], []).append((str(r["d"])[:10], r.get("mcap_usd"), px, r.get("shares")))
     return out
 
 
@@ -150,7 +151,7 @@ async def run_once(now: Optional[datetime] = None) -> dict[str, Any]:
     keys = sorted({r["key"] for r in await _read_all("world50_mcap_weekly", {"select": "key", "d": f"gte.{wlo}",
                                                                              "source": f"eq.{MCAP_SOURCE}"})})
     eu = equity_universe(keys)
-    w50 = await _read_all("world50_mcap_weekly", {"select": "key,d,mcap_usd", "key": f"in.({','.join(eu)})",
+    w50 = await _read_all("world50_mcap_weekly", {"select": "key,d,mcap_usd,shares", "key": f"in.({','.join(eu)})",
                                                   "source": f"eq.{MCAP_SOURCE}", "d": f"gte.{wlo}",
                                                   "order": "key.asc,d.asc"})
     px = await _read_all("ohlcv_daily", {"select": "symbol,trade_date,close", "source": "eq.eodhd",

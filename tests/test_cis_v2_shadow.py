@@ -14,9 +14,10 @@ def test_equity_universe_is_companies_only():
 
 
 def test_weekly_close_is_the_last_close_on_or_before_the_week_date():
-    rows = [{"key": "A", "d": "2026-10-09", "mcap_usd": 100.0}, {"key": "A", "d": "2026-10-16", "mcap_usd": 110.0}]
+    rows = [{"key": "A", "d": "2026-10-09", "mcap_usd": 100.0, "shares": 10.0}, {"key": "A", "d": "2026-10-16", "mcap_usd": 110.0}]
     closes = {"A": [("2026-10-08", 9.0), ("2026-10-09", 10.0), ("2026-10-15", 11.0), ("2026-10-19", 99.0)]}
-    assert sh.weekly_closes(rows, closes)["A"] == [("2026-10-09", 100.0, 10.0), ("2026-10-16", 110.0, 11.0)]
+    assert sh.weekly_closes(rows, closes)["A"] == [("2026-10-09", 100.0, 10.0, 10.0), ("2026-10-16", 110.0, 11.0, None)], \
+        "股数原样带过来(没写的周是 None),不从市值 ÷ 收盘推"
 
 
 def test_rows_carry_group_version_and_coverage():

@@ -24,10 +24,12 @@ def _num(x: Any) -> Optional[float]:
 
 
 def company_facts(raw: dict) -> dict[str, Optional[float]]:
-    size, stab, sup = (_num((raw or {}).get(k)) for k in ("size", "stability", "supply"))
+    """股数变化只在行里带了 `shares`(按申报股数算的)时才给。10-21 及之前的行是 市值 ÷ 复权收盘 推出来的,
+    把股息与分拆算成了回购(CMCSA −14.8%、VZ −7.6%)—— 那些行留在表里(只追加),但不再对外当事实。"""
+    size, stab, sup, shares = (_num((raw or {}).get(k)) for k in ("size", "stability", "supply", "shares"))
     return {"market_cap_usd": round(math.exp(size)) if size is not None else None,
             "volatility_26w_weekly": round(-stab, 4) if stab is not None else None,
-            "share_count_change_52w": round(-sup, 4) if sup is not None else None}
+            "share_count_change_52w": round(-sup, 4) if sup is not None and shares is not None else None}
 
 
 def shadow_streak(days: Iterable[tuple[str, int]], universe_n: int) -> int:
