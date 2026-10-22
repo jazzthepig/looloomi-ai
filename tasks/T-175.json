@@ -1,0 +1,27 @@
+{
+  "id": "T-175",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-10-22",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "title": "S-671:按时点的公司池(每年初当时的前 50 名)上重测 SMALL,并量出「今天的名单」带来的幸存者偏差有多大",
+  "source": "台账 S-671 预注册(2026-10-22)。S-670 的 SMALL 机械地过了,但池子是今天的名单(§Seth-1022e)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-175.json"
+  ],
+  "acceptance": {
+    "check": "照 S-671 原文一字不改。数据:world50_mcap_weekly 只取 source = shares_x_close_v3、不带 . 后缀;ohlcv_daily(source = eodhd)按 order=symbol.asc,trade_date.asc 翻页。按时点池子 = 每年第一个周五当时有市值、且当时已有 ≥ 26 周价格的公司里市值前 50,这一年固定。SMALL 与截面 / IC 构造 import docs/research/t172_equity_signals.py 的函数(不复制);零分布只走 apparatus。先报偏差量:按时点池子里之后跌出前 50 的占比、今天名单里当年不在前 50 的占比。",
+    "expect": "脚本 docs/research/t175_pit_small.py;结果 docs/research/t175_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-175_s671_pit_small.md(末尾「S-671 结果」草稿 + 挖掘);in_review,推 lane-a/T-175。新分支 `git switch -c lane-a/T-175 origin/main`。"
+  },
+  "prior_value": "过了 ⇒ SMALL 另立 26 周前向影子;不过 ⇒ S-670 的 SMALL 记为幸存者偏差,个股继续只给状态与事实。",
+  "notes": "S-671 判定:**不过**(S-670 的 SMALL = 幸存者偏差造成,不另立 26 周影子)。按时点池子(每年第一个周五、当时有市值且当时已有 >=26 周 eodhd 价格者中市值前 50、全年固定;2016-2026 共 11 年、每年恰好 50 家),source=shares_x_close_v3 无点 key 125 个,561 个截面周、<15 家跳过 0。先报偏差量:① 池内之后跌出前 50 = 5260/28050 个名字-周 = 18.75%(按年末口径平均 19.64%);② 今天名单里当年不在前 50 的 = 735/1285 个公司-年 = 57.20%(S-670 用的就是这整批)。SMALL(-log 市值):4 周发现段 IC -0.0149 t -0.64、两半 +0.0226/-0.0525、零分布分位 0.205 => 发现段未过;13 周 +0.0171 t +0.46、分位 0.6825 => 同样未过。门槛外只报:留出段 4 周 -0.0170 t -0.72、13 周 -0.0279 t -0.61。同一次运行内的对照臂(S-670 的池子=今天的名单):发现段 4 周 IC +0.0542 t +4.66、13 周 +0.1045 t +8.45(与 S-670 报的 +0.061 一致);按时点池子同期 -0.0178 / -0.0067。配对块自助 apparatus.ab_test 的 p(今天>=按时点)=1.0000 / 1.0000。只报三条(同一池):v2 合成 4 周发现段 -0.0560 t -2.06 分位 0.000、留出段 +0.0053 => 与 S-668 H1 负号同向、量级相当,发现段「质量反向」不是幸存者偏差造出来的;LOWVOL 4 周 -0.0436 / 留出 -0.0256;ISSUE 4 周 -0.0566 t -1.97 分位 0.0075 / 留出 +0.0187。口径说明(写进脚本与报告):① 假日周五无快照 -> 用 <=10 天内最近一次快照;2020-12-25 只有 6 个 key、2020-12-30 只有 4 个(残缺的节假日行)-> 加「家数 >= 全样本中位数 90%」完整性门槛,否则往前回退;② 进/出场价格 7 日陈旧度上限,与不设上限逐位相同(0 个名字-周被丢)= eodhd 序列无价格空洞,已作为探索性发现写进报告。产物:docs/research/t175_pit_small.py、docs/research/t175_results.json、/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-175_s671_pit_small.md(末尾含「S-671 结果」台账草稿,未落)。局限(预注册已写明):world50 候选池本身是今天建的,本检验只去掉「池内」偏差,去不掉「候选池」偏差。"
+}
