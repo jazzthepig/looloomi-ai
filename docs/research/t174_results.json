@@ -1,0 +1,970 @@
+{
+  "prereg": "S-669 (REFUTATION_LEDGER.md, 2026-10-22 04:26 UTC)",
+  "window": [
+    "2023-01-01",
+    "2026-09-30"
+  ],
+  "segments": [
+    [
+      "2023-01-01",
+      "2024-06-30"
+    ],
+    [
+      "2024-07-01",
+      "2026-09-30"
+    ]
+  ],
+  "universe": {
+    "crypto25": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "BNB",
+      "XRP",
+      "ADA",
+      "AVAX",
+      "DOT",
+      "NEAR",
+      "SUI",
+      "APT",
+      "HYPE",
+      "ARB",
+      "OP",
+      "POL",
+      "STRK",
+      "UNI",
+      "AAVE",
+      "LDO",
+      "PENDLE",
+      "LINK",
+      "INJ",
+      "TIA",
+      "ONDO",
+      "SKY"
+    ],
+    "trad33": [
+      "SPY",
+      "QQQ",
+      "AAPL",
+      "MSFT",
+      "NVDA",
+      "GOOGL",
+      "AMZN",
+      "META",
+      "TSLA",
+      "XLF",
+      "TLT",
+      "IEF",
+      "SHY",
+      "TIP",
+      "HYG",
+      "LQD",
+      "GLD",
+      "SLV",
+      "USO",
+      "UNG",
+      "CPER",
+      "DBA",
+      "UUP",
+      "FXE",
+      "FXY",
+      "FXI",
+      "VNQ",
+      "IYR",
+      "VNQI",
+      "EEM",
+      "VWO",
+      "INDA",
+      "EWZ"
+    ],
+    "world50_us_listed": [
+      "AAPL",
+      "ABBV",
+      "AMAT",
+      "AMD",
+      "AMZN",
+      "ASML",
+      "AVGO",
+      "BAC",
+      "BRK-B",
+      "CAT",
+      "COST",
+      "CSCO",
+      "CVX",
+      "DELL",
+      "GE",
+      "GOOGL",
+      "HD",
+      "HSBC",
+      "INTC",
+      "JNJ",
+      "JPM",
+      "KO",
+      "LLY",
+      "LRCX",
+      "MA",
+      "META",
+      "MRK",
+      "MS",
+      "MSFT",
+      "MU",
+      "NFLX",
+      "NVDA",
+      "ORCL",
+      "PG",
+      "PLTR",
+      "TCEHY",
+      "TSLA",
+      "TSM",
+      "UNH",
+      "V",
+      "WMT",
+      "XOM"
+    ],
+    "world50_snapshot": "2026-09-18",
+    "world50_snapshot_full_keys": 140,
+    "world50_top50_total": 50
+  },
+  "data_coverage": {
+    "crypto_prices": {
+      "BTC": [
+        "2022-01-01",
+        "2026-10-21",
+        1755
+      ],
+      "ETH": [
+        "2022-01-01",
+        "2026-10-21",
+        1755
+      ],
+      "SOL": [
+        "2022-01-01",
+        "2026-10-21",
+        1755
+      ],
+      "BNB": [
+        "2022-01-01",
+        "2026-10-21",
+        1755
+      ],
+      "XRP": [
+        "2022-01-01",
+        "2026-10-21",
+        1755
+      ],
+      "ADA": [
+        "2022-01-01",
+        "2026-10-21",
+        1755
+      ],
+      "AVAX": [
+        "2022-01-01",
+        "2026-10-21",
+        1755
+      ],
+      "DOT": [
+        "2022-01-01",
+        "2026-10-21",
+        1755
+      ],
+      "NEAR": [
+        "2022-01-01",
+        "2026-10-21",
+        1755
+      ],
+      "SUI": [
+        "2023-05-02",
+        "2026-10-21",
+        1269
+      ],
+      "APT": [
+        "2022-10-18",
+        "2026-10-21",
+        1465
+      ],
+      "HYPE": [
+        "2024-11-28",
+        "2026-10-21",
+        693
+      ],
+      "ARB": [
+        "2023-03-22",
+        "2026-10-21",
+        1310
+      ],
+      "OP": [
+        "2022-05-30",
+        "2026-10-21",
+        1606
+      ],
+      "POL": [
+        "2023-10-24",
+        "2026-10-21",
+        1094
+      ],
+      "STRK": [
+        "2024-02-19",
+        "2026-10-21",
+        976
+      ],
+      "UNI": [
+        "2022-01-01",
+        "2026-10-21",
+        1755
+      ],
+      "AAVE": [
+        "2022-01-01",
+        "2026-10-21",
+        1755
+      ],
+      "LDO": [
+        "2022-01-01",
+        "2026-10-21",
+        1755
+      ],
+      "PENDLE": [
+        "2022-01-01",
+        "2026-10-21",
+        1755
+      ],
+      "LINK": [
+        "2022-01-01",
+        "2026-10-21",
+        1755
+      ],
+      "INJ": [
+        "2022-01-01",
+        "2026-10-21",
+        1755
+      ],
+      "TIA": [
+        "2023-10-30",
+        "2026-10-21",
+        1088
+      ],
+      "ONDO": [
+        "2024-01-17",
+        "2026-10-21",
+        1009
+      ],
+      "SKY": [
+        "2024-09-23",
+        "2026-10-21",
+        757
+      ]
+    },
+    "trad_prices_missing": [
+      "DELL",
+      "MS"
+    ],
+    "funding_coverage": {
+      "BTC": [
+        "2022-01-01",
+        "2026-10-22",
+        1756
+      ],
+      "ETH": [
+        "2022-01-01",
+        "2026-10-22",
+        1756
+      ],
+      "SOL": [
+        "2022-01-01",
+        "2026-10-22",
+        1756
+      ],
+      "BNB": [
+        "2022-01-01",
+        "2026-10-22",
+        1756
+      ],
+      "XRP": [
+        "2022-01-01",
+        "2026-10-22",
+        1756
+      ],
+      "ADA": [
+        "2022-01-01",
+        "2026-10-22",
+        1756
+      ],
+      "AVAX": [
+        "2022-01-01",
+        "2026-10-22",
+        1756
+      ],
+      "DOT": [
+        "2022-01-01",
+        "2026-10-22",
+        1756
+      ],
+      "NEAR": [
+        "2022-01-01",
+        "2026-10-22",
+        1756
+      ],
+      "SUI": [
+        "2023-05-03",
+        "2026-10-22",
+        1269
+      ],
+      "APT": [
+        "2022-10-18",
+        "2026-10-22",
+        1466
+      ],
+      "HYPE": [
+        "2025-05-30",
+        "2026-10-22",
+        511
+      ],
+      "ARB": [
+        "2023-03-23",
+        "2026-10-22",
+        1310
+      ],
+      "OP": [
+        "2022-06-01",
+        "2026-10-22",
+        1605
+      ],
+      "POL": [
+        "2024-09-13",
+        "2026-10-22",
+        770
+      ],
+      "STRK": [
+        "2024-02-20",
+        "2026-10-22",
+        976
+      ],
+      "UNI": [
+        "2022-01-01",
+        "2026-10-22",
+        1756
+      ],
+      "AAVE": [
+        "2022-01-01",
+        "2026-10-22",
+        1756
+      ],
+      "LDO": [
+        "2022-09-22",
+        "2026-10-22",
+        1492
+      ],
+      "PENDLE": [
+        "2023-07-25",
+        "2026-10-22",
+        1186
+      ],
+      "LINK": [
+        "2022-01-01",
+        "2026-10-22",
+        1756
+      ],
+      "INJ": [
+        "2022-08-16",
+        "2026-10-22",
+        1529
+      ],
+      "TIA": [
+        "2023-10-31",
+        "2026-10-22",
+        1088
+      ],
+      "ONDO": [
+        "2024-01-20",
+        "2026-10-22",
+        1007
+      ],
+      "SKY": null
+    },
+    "fng": [
+      "2022-01-01",
+      "2026-10-22",
+      1755
+    ],
+    "vix": [
+      "2022-01-03",
+      "2026-10-21",
+      1241
+    ]
+  },
+  "t174": {
+    "prereg": "T-174 (tasks/T-174.json, 2026-10-22),S-669 台账更正",
+    "nboot": 400,
+    "seed": 20261023,
+    "null": "shuffle_within(excess, groups=date) —— 打乱「名字 ↔ 之后 4 周组内超额」的配对后重算标签桶均值;块置换那版保留多重集合、均值不变,是空转"
+  },
+  "benchmark_group_equal_weight_fwd28": {
+    "加密": {
+      "A": {
+        "mean_ew_fwd_28d": 0.079143,
+        "t": 8.761,
+        "n": 547,
+        "ann_from_mean": 1.699
+      },
+      "B": {
+        "mean_ew_fwd_28d": 0.009805,
+        "t": 1.316,
+        "n": 799,
+        "ann_from_mean": 0.1356
+      },
+      "ALL": {
+        "mean_ew_fwd_28d": 0.037983,
+        "t": 6.526,
+        "n": 1346,
+        "ann_from_mean": 0.6257
+      }
+    },
+    "传统": {
+      "A": {
+        "mean_ew_fwd_28d": 0.020088,
+        "t": 13.805,
+        "n": 374,
+        "ann_from_mean": 0.296
+      },
+      "B": {
+        "mean_ew_fwd_28d": 0.018287,
+        "t": 13.001,
+        "n": 548,
+        "ann_from_mean": 0.2665
+      },
+      "ALL": {
+        "mean_ew_fwd_28d": 0.019018,
+        "t": 18.585,
+        "n": 922,
+        "ann_from_mean": 0.2784
+      }
+    }
+  },
+  "label_switches_per_30d": {
+    "加密/trend": {
+      "n_name_blocks": 964,
+      "mean_changes_per_30d": 2.166,
+      "median_changes_per_30d": 2.0,
+      "p90_changes_per_30d": 5.0,
+      "revert_within_3d": 0.3357,
+      "n_switches": 2088
+    },
+    "加密/mom": {
+      "n_name_blocks": 1003,
+      "mean_changes_per_30d": 3.809,
+      "median_changes_per_30d": 3.0,
+      "p90_changes_per_30d": 8.0,
+      "revert_within_3d": 0.4424,
+      "n_switches": 3820
+    },
+    "加密/crowd": {
+      "n_name_blocks": 979,
+      "mean_changes_per_30d": 1.744,
+      "median_changes_per_30d": 1.0,
+      "p90_changes_per_30d": 4.0,
+      "revert_within_3d": 0.2624,
+      "n_switches": 1707
+    },
+    "传统/trend": {
+      "n_name_blocks": 1980,
+      "mean_changes_per_30d": 2.147,
+      "median_changes_per_30d": 1.0,
+      "p90_changes_per_30d": 5.0,
+      "revert_within_3d": 0.3603,
+      "n_switches": 4252
+    },
+    "传统/mom": {
+      "n_name_blocks": 2046,
+      "mean_changes_per_30d": 3.787,
+      "median_changes_per_30d": 3.0,
+      "p90_changes_per_30d": 8.0,
+      "revert_within_3d": 0.4004,
+      "n_switches": 7749
+    }
+  },
+  "label_switches_note": "T-171 只对 trend 定了门槛(中位数 ≤2 次 / 30 天 = 能展示);动量与拥挤 S-669 没给门槛,这里只报次数,不给稳 / 不稳的结论。",
+  "prediction": {
+    "加密/trend/上升": {
+      "A": {
+        "mean_excess": 0.007803,
+        "t": 1.751,
+        "n": 3620,
+        "n_shuffled_rows": 10987,
+        "perm_pct": 0.995,
+        "null_n": 400,
+        "null_mean": -3.3e-05,
+        "null_sd": 0.002842
+      },
+      "B": {
+        "mean_excess": 0.001491,
+        "t": 0.308,
+        "n": 2735,
+        "n_shuffled_rows": 19739,
+        "perm_pct": 0.655,
+        "null_n": 400,
+        "null_mean": 9.4e-05,
+        "null_sd": 0.003713
+      },
+      "same_sign": true,
+      "candidate": false,
+      "candidate_loose": false,
+      "verdict": "描述,不是预测"
+    },
+    "加密/trend/下降": {
+      "A": {
+        "mean_excess": -0.01807,
+        "t": -7.039,
+        "n": 2983,
+        "n_shuffled_rows": 10987,
+        "perm_pct": 0.0,
+        "null_n": 400,
+        "null_mean": -7.5e-05,
+        "null_sd": 0.002082
+      },
+      "B": {
+        "mean_excess": 0.000975,
+        "t": 0.567,
+        "n": 8458,
+        "n_shuffled_rows": 19739,
+        "perm_pct": 0.77,
+        "null_n": 400,
+        "null_mean": -1e-06,
+        "null_sd": 0.001213
+      },
+      "same_sign": false,
+      "candidate": false,
+      "candidate_loose": false,
+      "verdict": "描述,不是预测"
+    },
+    "加密/trend/震荡": {
+      "A": {
+        "mean_excess": 0.007004,
+        "t": 1.753,
+        "n": 2555,
+        "n_shuffled_rows": 10987,
+        "perm_pct": 0.97,
+        "null_n": 400,
+        "null_mean": 0.000265,
+        "null_sd": 0.003666
+      },
+      "B": {
+        "mean_excess": -0.007875,
+        "t": -3.783,
+        "n": 8048,
+        "n_shuffled_rows": 19739,
+        "perm_pct": 0.0,
+        "null_n": 400,
+        "null_mean": -5.9e-05,
+        "null_sd": 0.001552
+      },
+      "same_sign": false,
+      "candidate": false,
+      "candidate_loose": false,
+      "verdict": "描述,不是预测"
+    },
+    "加密/mom/强": {
+      "A": {
+        "mean_excess": 0.037499,
+        "t": 6.364,
+        "n": 2106,
+        "n_shuffled_rows": 10987,
+        "perm_pct": 1.0,
+        "null_n": 400,
+        "null_mean": -0.000219,
+        "null_sd": 0.004733
+      },
+      "B": {
+        "mean_excess": -0.004926,
+        "t": -1.488,
+        "n": 3995,
+        "n_shuffled_rows": 19739,
+        "perm_pct": 0.03,
+        "null_n": 400,
+        "null_mean": 0.000122,
+        "null_sd": 0.002899
+      },
+      "same_sign": false,
+      "candidate": false,
+      "candidate_loose": false,
+      "verdict": "描述,不是预测"
+    },
+    "加密/mom/弱": {
+      "A": {
+        "mean_excess": -0.036346,
+        "t": -8.789,
+        "n": 2106,
+        "n_shuffled_rows": 10987,
+        "perm_pct": 0.0,
+        "null_n": 400,
+        "null_mean": -1.3e-05,
+        "null_sd": 0.004713
+      },
+      "B": {
+        "mean_excess": -0.000801,
+        "t": -0.283,
+        "n": 3995,
+        "n_shuffled_rows": 19739,
+        "perm_pct": 0.3725,
+        "null_n": 400,
+        "null_mean": -4.2e-05,
+        "null_sd": 0.002874
+      },
+      "same_sign": true,
+      "candidate": false,
+      "candidate_loose": true,
+      "verdict": "描述,不是预测"
+    },
+    "加密/mom/中": {
+      "A": {
+        "mean_excess": -0.007371,
+        "t": -2.699,
+        "n": 6170,
+        "n_shuffled_rows": 10987,
+        "perm_pct": 0.0,
+        "null_n": 400,
+        "null_mean": 2.9e-05,
+        "null_sd": 0.001998
+      },
+      "B": {
+        "mean_excess": 0.000291,
+        "t": 0.17,
+        "n": 11689,
+        "n_shuffled_rows": 19739,
+        "perm_pct": 0.5875,
+        "null_n": 400,
+        "null_mean": -2.1e-05,
+        "null_sd": 0.001211
+      },
+      "same_sign": false,
+      "candidate": false,
+      "candidate_loose": false,
+      "verdict": "描述,不是预测"
+    },
+    "加密/crowd/拥挤": {
+      "A": {
+        "mean_excess": 0.10344,
+        "t": 6.673,
+        "n": 645,
+        "n_shuffled_rows": 10987,
+        "perm_pct": 1.0,
+        "null_n": 400,
+        "null_mean": -0.000407,
+        "null_sd": 0.010198
+      },
+      "B": {
+        "mean_excess": -0.006562,
+        "t": -1.25,
+        "n": 1498,
+        "n_shuffled_rows": 19739,
+        "perm_pct": 0.0875,
+        "null_n": 400,
+        "null_mean": -7.9e-05,
+        "null_sd": 0.004797
+      },
+      "same_sign": false,
+      "candidate": false,
+      "candidate_loose": false,
+      "verdict": "描述,不是预测"
+    },
+    "加密/crowd/冷清": {
+      "A": {
+        "mean_excess": -0.032238,
+        "t": -5.538,
+        "n": 1256,
+        "n_shuffled_rows": 10987,
+        "perm_pct": 0.0,
+        "null_n": 400,
+        "null_mean": 0.00027,
+        "null_sd": 0.006385
+      },
+      "B": {
+        "mean_excess": -0.016505,
+        "t": -5.027,
+        "n": 2409,
+        "n_shuffled_rows": 19739,
+        "perm_pct": 0.0,
+        "null_n": 400,
+        "null_mean": -0.000242,
+        "null_sd": 0.003863
+      },
+      "same_sign": true,
+      "candidate": true,
+      "candidate_loose": true,
+      "verdict": "候选(另立预注册,不采用)"
+    },
+    "加密/crowd/正常": {
+      "A": {
+        "mean_excess": -0.00988,
+        "t": -3.989,
+        "n": 8579,
+        "n_shuffled_rows": 10987,
+        "perm_pct": 0.0,
+        "null_n": 400,
+        "null_mean": 7e-06,
+        "null_sd": 0.001288
+      },
+      "B": {
+        "mean_excess": -0.000795,
+        "t": -0.515,
+        "n": 14858,
+        "n_shuffled_rows": 19739,
+        "perm_pct": 0.1525,
+        "null_n": 400,
+        "null_mean": 4.1e-05,
+        "null_sd": 0.000806
+      },
+      "same_sign": true,
+      "candidate": false,
+      "candidate_loose": true,
+      "verdict": "描述,不是预测"
+    },
+    "传统/trend/上升": {
+      "A": {
+        "mean_excess": -0.000469,
+        "t": -0.784,
+        "n": 12243,
+        "n_shuffled_rows": 24684,
+        "perm_pct": 0.1225,
+        "null_n": 400,
+        "null_mean": -2.6e-05,
+        "null_sd": 0.00039
+      },
+      "B": {
+        "mean_excess": 0.00111,
+        "t": 1.686,
+        "n": 17792,
+        "n_shuffled_rows": 36168,
+        "perm_pct": 0.995,
+        "null_n": 400,
+        "null_mean": -2e-06,
+        "null_sd": 0.000443
+      },
+      "same_sign": false,
+      "candidate": false,
+      "candidate_loose": false,
+      "verdict": "描述,不是预测"
+    },
+    "传统/trend/下降": {
+      "A": {
+        "mean_excess": 0.00056,
+        "t": 0.564,
+        "n": 5270,
+        "n_shuffled_rows": 24684,
+        "perm_pct": 0.805,
+        "null_n": 400,
+        "null_mean": 1e-05,
+        "null_sd": 0.000714
+      },
+      "B": {
+        "mean_excess": -0.0002,
+        "t": -0.151,
+        "n": 4682,
+        "n_shuffled_rows": 36168,
+        "perm_pct": 0.4375,
+        "null_n": 400,
+        "null_mean": 3.5e-05,
+        "null_sd": 0.001196
+      },
+      "same_sign": false,
+      "candidate": false,
+      "candidate_loose": false,
+      "verdict": "描述,不是预测"
+    },
+    "传统/trend/震荡": {
+      "A": {
+        "mean_excess": 0.00071,
+        "t": 0.599,
+        "n": 3937,
+        "n_shuffled_rows": 24684,
+        "perm_pct": 0.7725,
+        "null_n": 400,
+        "null_mean": 6.6e-05,
+        "null_sd": 0.000937
+      },
+      "B": {
+        "mean_excess": -0.001374,
+        "t": -1.882,
+        "n": 13694,
+        "n_shuffled_rows": 36168,
+        "perm_pct": 0.0,
+        "null_n": 400,
+        "null_mean": -9e-06,
+        "null_sd": 0.000549
+      },
+      "same_sign": false,
+      "candidate": false,
+      "candidate_loose": false,
+      "verdict": "描述,不是预测"
+    },
+    "传统/mom/强": {
+      "A": {
+        "mean_excess": 0.00797,
+        "t": 6.402,
+        "n": 4628,
+        "n_shuffled_rows": 24684,
+        "perm_pct": 1.0,
+        "null_n": 400,
+        "null_mean": -7.8e-05,
+        "null_sd": 0.000879
+      },
+      "B": {
+        "mean_excess": 0.008597,
+        "t": 5.992,
+        "n": 7124,
+        "n_shuffled_rows": 36168,
+        "perm_pct": 1.0,
+        "null_n": 400,
+        "null_mean": -1.8e-05,
+        "null_sd": 0.000961
+      },
+      "same_sign": true,
+      "candidate": true,
+      "candidate_loose": true,
+      "verdict": "候选(另立预注册,不采用)"
+    },
+    "传统/mom/弱": {
+      "A": {
+        "mean_excess": 0.005517,
+        "t": 4.514,
+        "n": 4628,
+        "n_shuffled_rows": 24684,
+        "perm_pct": 1.0,
+        "null_n": 400,
+        "null_mean": 3.9e-05,
+        "null_sd": 0.000948
+      },
+      "B": {
+        "mean_excess": 0.001873,
+        "t": 1.685,
+        "n": 7124,
+        "n_shuffled_rows": 36168,
+        "perm_pct": 0.98,
+        "null_n": 400,
+        "null_mean": -1.9e-05,
+        "null_sd": 0.000919
+      },
+      "same_sign": true,
+      "candidate": false,
+      "candidate_loose": true,
+      "verdict": "描述,不是预测"
+    },
+    "传统/mom/中": {
+      "A": {
+        "mean_excess": -0.004383,
+        "t": -9.18,
+        "n": 14240,
+        "n_shuffled_rows": 24684,
+        "perm_pct": 0.0,
+        "null_n": 400,
+        "null_mean": 1.3e-05,
+        "null_sd": 0.000378
+      },
+      "B": {
+        "mean_excess": -0.003403,
+        "t": -7.187,
+        "n": 21920,
+        "n_shuffled_rows": 36168,
+        "perm_pct": 0.0,
+        "null_n": 400,
+        "null_mean": 1.2e-05,
+        "null_sd": 0.00036
+      },
+      "same_sign": true,
+      "candidate": true,
+      "candidate_loose": true,
+      "verdict": "候选(另立预注册,不采用)"
+    }
+  },
+  "candidates": [
+    "加密/crowd/冷清",
+    "传统/mom/强",
+    "传统/mom/中"
+  ],
+  "candidates_loose_reading": [
+    "加密/mom/弱",
+    "加密/crowd/冷清",
+    "加密/crowd/正常",
+    "传统/mom/强",
+    "传统/mom/弱",
+    "传统/mom/中"
+  ],
+  "candidate_tail_p": {
+    "加密/crowd/冷清": {
+      "A": 0.0,
+      "B": 0.0
+    },
+    "传统/mom/强": {
+      "A": 0.0,
+      "B": 0.0
+    },
+    "传统/mom/中": {
+      "A": 0.0,
+      "B": 0.0
+    }
+  },
+  "candidates_surviving_paired_permutation": [
+    "加密/crowd/冷清",
+    "传统/mom/强",
+    "传统/mom/中"
+  ],
+  "sentiment_group_level": {
+    "加密": {
+      "uncond_mean_ew_fwd": 0.037983,
+      "uncond_t": 6.526,
+      "n": 1346,
+      "macro_fill_forward_days": 1,
+      "labels": {
+        "贪婪": {
+          "mean_ew_fwd": 0.013863,
+          "t": 0.536,
+          "n": 120,
+          "excess_vs_uncond": -0.024121,
+          "perm_pct": null
+        },
+        "恐惧": {
+          "mean_ew_fwd": -0.005812,
+          "t": -0.571,
+          "n": 214,
+          "excess_vs_uncond": -0.043795,
+          "perm_pct": null
+        },
+        "中性": {
+          "mean_ew_fwd": 0.050105,
+          "t": 7.44,
+          "n": 1012,
+          "excess_vs_uncond": 0.012121,
+          "perm_pct": null
+        }
+      }
+    },
+    "传统": {
+      "uncond_mean_ew_fwd": 0.019018,
+      "uncond_t": 18.585,
+      "n": 922,
+      "macro_fill_forward_days": 0,
+      "labels": {
+        "紧张": {
+          "mean_ew_fwd": 0.057607,
+          "t": 7.962,
+          "n": 41,
+          "excess_vs_uncond": 0.038589,
+          "perm_pct": null
+        },
+        "平静": {
+          "mean_ew_fwd": 0.014144,
+          "t": 8.61,
+          "n": 272,
+          "excess_vs_uncond": -0.004874,
+          "perm_pct": null
+        },
+        "VIX 中性": {
+          "mean_ew_fwd": 0.018597,
+          "t": 15.446,
+          "n": 609,
+          "excess_vs_uncond": -0.000421,
+          "perm_pct": null
+        }
+      }
+    }
+  },
+  "sentiment_note": "情绪是日期级标签、当日只有一条组等权收益,没有同日横截面 ⇒ shuffle_within(groups=date) 退化成不打乱(每组 1 个元素),本卡不给它配对分位;T-171 的块置换同样空转(perm_p=None)。日期级序列要有意义的零分布,需要装置里另有一个设备(例如带符号翻转的平稳自助法),已写进最终回复 @seth,没有另起炉灶。"
+}
