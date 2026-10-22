@@ -39,12 +39,12 @@
 - **`signal_outcomes` 与 `signal_journal` 是同一测量的两个世代** ⇒ 读 `signal_outcomes_unified`,单读任一表静默丢一半历史。
 - 决策链:`market_state_vectors`→`similar_market_states()`→`strategy_response`(`sample_grade='none'` = 一等信息)。
 - pillar_O 是**异常探测器**;持续性 L/S 是误用。`cis_scores` 无市场数据列。
+- **`ohlcv_daily`(eodhd)close 是总回报复权的**;公司股数读 `world50_mcap_weekly.shares`,**绝不**用市值 ÷ close 推(股息 / 分拆会变成「回购」,S-668 更正)。
 
 ## 已验证(引台账,不重推)
 - S-77/S-80:v5 双分数成立,**O 是离散度支柱、F 是收益锚**;**F_IC +0.197 且 12/12 年为正**。
 - 风控:**事前波动率目标 > 事后止损**;收紧止损因高水位重置**加大**累计回撤;杠杆**乘** Sharpe 不造。
 - 指标极性:**先定先行/同步/滞后,再定正反**(F&G 同步 ⇒ 确认不反向,用反了差 1,889bp)。
-- **§STRATEGY-3 = R77 单策略**(R102, 2026-08-11):crypto micro-structure orthogonal 11/11 REFUTED ⇒ Lesson #54 path B locked.
 
 ## 协作(常设)
 - 台账 `S-`/`M-` 从 76 起,R1–75 冻结;**EOF 追加,先占标题再写正文**。S-号与 Lesson 号都会撞车 —— **先到先得,后写者让号**。
