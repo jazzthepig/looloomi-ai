@@ -1,7 +1,7 @@
 {
   "id": "T-172",
   "owner": "lane-c",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-22",
   "forbidden_paths": [
     "Shadow/",
@@ -23,5 +23,10 @@
     "expect": "脚本 docs/research/t172_equity_signals.py;结果 docs/research/t172_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-172_s670_equity_signals.md,末尾「S-670 结果」草稿 + 「挖掘」;in_review,推 lane-c/T-172。新分支 `git switch -c lane-c/T-172 origin/main`(T-169 v2 若还没合并,先等它进 main 再 import)。"
   },
   "prior_value": "过了 ⇒ 个股 CIS 有候选分数,另立 26 周前向;不过 ⇒ 个股继续只给状态与事实,写进 CIS_V2_SPEC。",
-  "notes": "过了 2/14:SMALL(−log 市值)。4 周:发现段 IC +0.061 t+2.50(前半 +0.085 / 后半 +0.038,零分布分位 1.000)→ 留出段 IC +0.071 t+4.10(分位 1.000)=过;13 周:发现段 IC +0.115 t+2.88(+0.145 / +0.085,分位 1.000)→ 留出段 IC +0.131 t+4.74(分位 1.000)=过。其余 12 条发现段未过。方向被反向且显著(零分布分位 0.000):LOWVOL 4w −0.062(t−2.02) / 13w −0.106(t−2.17);ISSUE 4w −0.051(t−2.23) / 13w −0.069(t−1.95);REV 13w −0.066(t−1.79)。没过的:M12、M6 微弱为正但 t 远不到 2;RGROW 前半 +0.046 后半 −0.011。宇宙 = world50_mcap_weekly(source=shares_x_close_v3)无点 key 125 家(与 S-668 的 125 一致);542 周成截面,19 周因 <15 家跳过;不重叠样本(4 周→发现 64 / 留出 72 个,13 周→20 / 22 个)。零分布全部走 src/data/evaluation/apparatus 的 shuffle_within + null_distribution + percentile_of(400 次)。⚠️ T-169(lane-a)的 docs/research/t169_equity_quality.py 本次运行还没进 main,无法 import,本脚本自带等价实现并已记在报告抬头。脚本 docs/research/t172_equity_signals.py;结果 docs/research/t172_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-172_s670_equity_signals.md。按 prior_value:个股 CIS 有候选分数(SMALL)。但**建议先另立预注册拆开「小盘」与「便宜」再上影子 26 周** —— 每周截面上 SMALL 与 −log 收盘 的 Spearman 相关 +0.415;−log 收盘单算在留出段 13 周 IC +0.102(t+2.8)≈ SMALL 的 +0.131,但发现段只有 +0.031(t+0.7)≈ SMALL +0.115 的一半。现有表只有 mcap/close 现推的股数,拆不开。"
+  "notes": "过了 2/14:SMALL(−log 市值)。4 周:发现段 IC +0.061 t+2.50(前半 +0.085 / 后半 +0.038,零分布分位 1.000)→ 留出段 IC +0.071 t+4.10(分位 1.000)=过;13 周:发现段 IC +0.115 t+2.88(+0.145 / +0.085,分位 1.000)→ 留出段 IC +0.131 t+4.74(分位 1.000)=过。其余 12 条发现段未过。方向被反向且显著(零分布分位 0.000):LOWVOL 4w −0.062(t−2.02) / 13w −0.106(t−2.17);ISSUE 4w −0.051(t−2.23) / 13w −0.069(t−1.95);REV 13w −0.066(t−1.79)。没过的:M12、M6 微弱为正但 t 远不到 2;RGROW 前半 +0.046 后半 −0.011。宇宙 = world50_mcap_weekly(source=shares_x_close_v3)无点 key 125 家(与 S-668 的 125 一致);542 周成截面,19 周因 <15 家跳过;不重叠样本(4 周→发现 64 / 留出 72 个,13 周→20 / 22 个)。零分布全部走 src/data/evaluation/apparatus 的 shuffle_within + null_distribution + percentile_of(400 次)。⚠️ T-169(lane-a)的 docs/research/t169_equity_quality.py 本次运行还没进 main,无法 import,本脚本自带等价实现并已记在报告抬头。脚本 docs/research/t172_equity_signals.py;结果 docs/research/t172_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-172_s670_equity_signals.md。按 prior_value:个股 CIS 有候选分数(SMALL)。但**建议先另立预注册拆开「小盘」与「便宜」再上影子 26 周** —— 每周截面上 SMALL 与 −log 收盘 的 Spearman 相关 +0.415;−log 收盘单算在留出段 13 周 IC +0.102(t+2.8)≈ SMALL 的 +0.131,但发现段只有 +0.031(t+0.7)≈ SMALL +0.115 的一半。现有表只有 mcap/close 现推的股数,拆不开。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-22T11:10Z",
+    "value": "S-670 收(台账已记):按机械规则 SMALL 4 周 / 13 周都过(留出段 IC +0.071 / +0.131),但**不放行影子** —— 池子是今天的大公司名单,当年小、后来长大的才留在池里,小盘溢价在构造上被抬高;另与低股价相关 +0.42。要先建按时点的池子(当年的前 N 名,含后来掉出去的)再另立预注册。LOWVOL / ISSUE / REV 显著反向,与 S-668 H1 一致。"
+  }
 }
