@@ -1,0 +1,28 @@
+{
+  "id": "T-170",
+  "owner": "lane-b",
+  "status": "in_review",
+  "created": "2026-10-22",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "title": "S-668 H2:加密 25 个名字上 v2 合成(F + O + 规模 + 稳定 + 不稀释)vs v1 —— 周 IC 只报 + S-630 框架的山寨内倾斜回放对 200 次随机打乱(一致性检查)",
+  "source": "台账 S-668 预注册(2026-10-22)。S-630:v1 CIS 在山寨里挑币与随机分不开。v2 的维度是在 2023–26 这批数据上看出来的,所以这张卡只是一致性检查,不是证据 —— 判据照原文。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-170.json"
+  ],
+  "acceptance": {
+    "check": "照 S-668 原文 H2 一字不改。回放框架直接复用 docs/research/t148_alt_momentum_tilt.py(import 它的函数,不重写):把 z30 换成 v2 合成在山寨里的 z(每周一用 d − 1 收盘前已知的值),BTC / ETH 钉住,200 次随机打乱用 src/data/evaluation/apparatus.py 的 shuffle_within,报 V − V0 在打乱分布里的分位。**v2 合成一律 import `src.data.cis.v2`(`crypto_inputs` 吃 asset_mcap_daily 的 (d, price, mcap);`score_group('crypto', …)` 再加 cis_rebuild_daily 当天的 pillar_f / pillar_o 作为 f / o),不自己写一版** —— 影子写入端用的是同一个函数。① 宇宙里不在 CIS 25 个里的名字没有 F / O,用其余三维。另报:2023-01 → 2026-09 每周五 v2 合成与 v1 cis_score 对之后 28 天收益的 IC(每 4 周取一个不重叠样本),以及两者的档位换档频率(按 CIS_STANDARD §6 的分位档与滞回)。只读 publishable key。",
+    "expect": "脚本 docs/research/t170_cis_v2_crypto.py;结果 docs/research/t170_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-170_s668_h2.md,末尾「S-668 H2 结果」草稿 + 「挖掘」;in_review,推 lane-b/T-170。新分支 `git switch -c lane-b/T-170 origin/main`。先复现 T-148 的 V0(multiplier_daily.core_u_replay 1% 以内),对不上先停下报差。"
+  },
+  "prior_value": "回放分位 ≥ 80 ⇒ 加密组满足切换条件 ③;否则加密继续 v1、v2 影子累计前向。",
+  "branch": "lane-b/T-170",
+  "notes": "V0 复现过:终值 3.66809 @2026-10-19 vs multiplier_daily.core_u_replay 3.65748,末日差 0.290%、全程最大差 0.364% @2026-08-17(199 个对齐日,与 T-148 存档逐位相同)。回放(S-630 框架,BTC/ETH 钉住,山寨内 v2 z 倾斜 k=0.5,对 200 次打乱,2023-01-02→2026-10-19 共 199 个周一):V0 +266.81% → v2 +266.70%,V−V0 = −0.0011(2025 留出段 +0.0126);零分布均值 −0.0471、标准差 0.1034;分位 0.69 < 80 ⇒ 不满足切换条件 ③,加密继续 v1、v2 影子累计前向。周 IC(只报,2023-01→2026-09 每周五每 4 周一个不重叠样本,49 个样本、截面 ≥16):v2 平均 0.1563(t=2.85,正 67.3%)vs v1 cis_score 0.1102(t=2.88,正 63.3%)。换档频率(§6 分位档 + 滞回,1369 天):v2 0.448 次/名字/30 天 vs v1 2.554(共同 25 个名字 0.485 vs 2.554) ⇒ 条件 ② 满足。HYPE/SKY 无 binance_hist 价格,不在 IC 与回放收益里。两个交付外发现:① T-148 的 fetch_all/fetch_ohlcv 不带 order=,PostgREST 翻页边界漂移,实测同一查询 23427 行只回 18622 个不同 (symbol,date),V0 一度假失败到 61%;本卡所有查询已加 order。② src/data/cis/v2.py 尚未上 origin/main(仅 Mac 主目录未跟踪),合并前需先推。"
+}
