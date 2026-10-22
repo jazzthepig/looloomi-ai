@@ -1,7 +1,7 @@
 {
   "id": "T-176",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-22",
   "forbidden_paths": [
     "Shadow/",
@@ -22,5 +22,6 @@
     "check": "三个脚本各补 order=(按主键)后原样重跑,判据一字不改;每个 results.json 加 completeness 块:去重后 (symbol, date) 数、天数 × 面板数、两者相等的断言(不等就报错退出,可复用 t154_fish_counter_check.py 的 Prefer: count=exact)。逐字段与旧结果比,写清变化。t155 三条判定若有任何一条翻转,第一行写出来。",
     "expect": "三个脚本改动 + 结果;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-176_order_rerun.md(末尾台账草稿);in_review,推 lane-b/T-176。新分支 `git switch -c lane-b/T-176 origin/main`。改好后把 tests/test_research_paged_reads_have_order.py 的 ALLOW 删掉对应三行 —— 那个文件在 tests/,不在你的 allowed_paths,写进回复由 Seth 删。"
   },
-  "prior_value": "t155 判定不变 ⇒ fund_a1_u 前向臂依据恢复;翻转 ⇒ 停臂、台账更正。"
+  "prior_value": "t155 判定不变 ⇒ fund_a1_u 前向臂依据恢复;翻转 ⇒ 停臂、台账更正。",
+  "notes": "三个脚本补 order=(语义主键)后原样重跑,判据一字未改。t155 三条判定逐位不变:V3-V0 全程 +0.2215 / 留出段 +0.0021 / 200 次打乱分位 0.980,judgement_pass 仍 true => fund_a1_u 前向臂依据恢复,不停臂。键完整性硬断言:t155 价格面板 uniq(symbol,date)=30558 = 1389 天 x 22 名,缺 0(rows 30558,零重复);funding 22/22 币各自跨度内无洞(笛卡尔积天然缺 5082,不能拿它当断言);t142 ohlcv 36534 键 / t144 37508 键,offset+order 与 keyset 游标键集合完全相同,差 0。另测:带 order= 后 offset 与 keyset 浅窗口对照 identical=true(2706/2706) => 漂的是无 order= 的 offset,不是 offset 本身。两处字段变化不翻转判定:分年各格动 1e-5 量级(funding 表新增结算点);v0_check.ratio 1.0029->0.9772(参考序列 multiplier_daily.core_u_replay 已长到 10-21,分母变了;对齐 199 天的 max_relative_diff_pct 仍 0.364%,判定项未动)。修掉上一轮自己写坏的两处:复合游标 or= 第一支误用 .eq.(t144 静默少读 97%:37508->1251 行/7 符号);unstable_across_runs 标记跨窗口误报(改为只在同窗口内比)。t142/t144 W43 五臂名单与 10-20 逐个相同(0/10/10/0/35)。副产物:t142 缺『周一未到不许冻结』守卫(t144 有),本轮又把周一在 3 天后的 2026-W44 冻掉了,已按 10-20 既有约定 mv 成 .void-premature-frozen-20261022T1622Z(未删除);10-26 周一当天要重跑 t142。报告:/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-176_order_rerun.md(末尾含台账草稿)。@seth:请把 tests/test_research_paged_reads_have_order.py 的 ALLOW 里这三行删掉(docs/research/t155_funding_tilt.py / t142_narrative_ab.py / t144_narrative_ab.py)——该文件在 tests/,不在本卡 allowed_paths,preflight 会因 test_allow_list_only_holds_files_that_still_violate 报红。"
 }
