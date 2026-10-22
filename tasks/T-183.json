@@ -1,7 +1,7 @@
 {
   "id": "T-183",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-22",
   "forbidden_paths": [
     "Shadow/",
@@ -22,5 +22,6 @@
     "check": "纯测量,不算任何收益、不立任何假设(所以不用预注册)。数据:asset_mcap_daily(publishable key,翻页带 order=symbol.asc,coin_id.asc,d.asc;同 symbol 取当日市值最大的 coin_id),宇宙两份:CIS 加密 25 个(cis_v2_daily 最新一天 grp = crypto 的 symbol)+ S-665 的 R-v2 票里出现过的 symbol。量:① 每个名字的日流通量变动分布(中位、p95、|变动| > 3% 的天数),「尖刺」= 单日 |变动| > 3% 且 3 天内回到原值 ±1% 的次数;② 三种 90 日增长写法 —— A 端点单日(现在 src/data/cis/v2.py crypto_inputs 的写法)、B 两端各取 7 日中位数、C 90 天对数流通量的回归斜率 × 90 —— 在 2024-01 → 2026-10 每周一个截面上,CIS 25 个名字的供给维**排名**两两 Spearman 相关(分周报中位与 p10),以及 R-v2 票上「> 2.2% 那一档」三种写法下的归属有几张不同;③ 哪几个名字最吵(列前 10,写原因猜测:迁移 / 重新计价 / CoinGecko 口径换过)。只读 src/data/cis/v2.py 学写法 A,不改它。",
     "expect": "脚本 docs/research/t183_supply_noise.py;结果 docs/research/t183_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-183_supply_noise.md(开头一张「三种写法的排名相关 / 标签翻转数」表,末尾给 Seth 的建议:v2 用哪种写法、理由是数不是感觉);in_review,推 lane-b/T-183。新分支 `git switch -c lane-b/T-183 origin/main`。"
   },
-  "prior_value": "A 与 B / C 排名相关 ≥ 0.95 ⇒ v2 照旧;明显更低 ⇒ Seth 在切换前改 v2 的供给维写法(影子期内改,版本号升),S-665 的前向标签同步换写法。"
+  "prior_value": "A 与 B / C 排名相关 ≥ 0.95 ⇒ v2 照旧;明显更低 ⇒ Seth 在切换前改 v2 的供给维写法(影子期内改,版本号升),S-665 的前向标签同步换写法。",
+  "notes": "宇宙:cis_v2_daily 2026-10-21 grp=crypto 的 25 个 symbol ∪ R-v2 票 188 个 symbol ⇒ 并集 190、169 个有数据;25 个 CIS 名字覆盖全(每周 24/25)。source 全部 coingecko_pro_market_chart(1 个),跨源不是噪声来源。①日变动(CIS 25 中位):|变动| 中位 0.089%、p95 0.769%、p99 2.49%,|变动|>3% 的天数占比 0.74%;最吵 LDO(p95 1.61%,10 次尖刺)、PENDLE(1.35%,10)、POL(1.30%,2.75% 天数但尖刺 0 —— 台阶式换合约不是噪声)。②147 个周截面(2024-01→2026-10)Spearman:A~B 中位 0.9842 / p10 0.9516 / 最小 0.680(2026-02-09);A~C 中位 0.9692 / p10 0.8885;B~C 中位 0.9740 / p10 0.8969。票上「>2.2%」:long A 242/705(34.33%)、B 239(33.90%)、C 234/703(33.29%);short A 78/229、B 76、C 76。翻面 long A~B 27/705=3.83%、A~C 34/703=4.84%、B~C 19/703=2.70%;short 6 / 10 / 4。|A−B| 中位仅 0.192pp、p90 1.076pp、p99 5.70pp ⇒ 翻面绝大多数是 2.2% 边界抖动;离阈值两侧都 >1pp 还翻面的 A~B 只有 3 张(CHZ 2023-12-07 10.05%/0.06%、XEM 2024-11-17 4.10%/0.11%、OP 2026-10-13 0.78%/6.49%)。③整段测量挪一天(long):A 自己翻 31/705=4.40%(short 7/229),B 4/705=0.57%(0),C 3/703=0.43%(0)—— A 挪一天的翻面比换成 B 还多。④成因:22 个最吵名字 coin_id 换过 0 天(不是迁移);>85% 的尖刺当天价格动 >2%,是同一张表里 mcap 与 price 对同一天取点错位,不是流通量重订;0%–27% 是当天价格不动而流通量跳的供给侧口径修订。结论:v2 供给维(写法 A)照旧(中位 ρ 两条都过 0.95 的线);要改的是 S-665 前向标签 —— 建议换 B(两端 7 日中位数)+ 取数日从 d 改 d−1,并写明换算起点(与现口径 27/705 = 3.8% 不一样,不能无缝拼接)。口径备注:本卡按简单收益 c1/c0−1,S-665 台账是 ln,2.2% 线上两者只差 3 张票。产物:docs/research/t183_supply_noise.py + docs/research/t183_results.json + /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-183_supply_noise.md(补充诊断 research/t183/_diag.py → diag.json)。"
 }
