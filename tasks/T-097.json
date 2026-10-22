@@ -1,9 +1,13 @@
 {
   "id": "T-097",
   "owner": "seth",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-14",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-22T05:00Z",
+    "value": "apparatus 已在 main(src/data/evaluation/apparatus.py + 测试),lane prompt 已要求零分布 / 盈亏 / A/B 只用它;T-092 / T-093 / T-148 / T-170 都在用。"
+  },
   "title": "一个共用、测过的验证装置 + A/B:块打乱 / 多空盈亏 / 分位 / Brier / 平稳块自助 A/B 与 MDE,空操作打乱探测;此后每张研究卡必须用它",
   "source": "Jazz 10-14「回到高维,认真看清楚」→ 今天 lane 交付的零分布与盈亏代码坏了 5 次(WEEKLY_REVIEW 10-14 夜)",
   "allowed_paths": [

@@ -1,9 +1,13 @@
 {
   "id": "T-161",
   "owner": "lane-a",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-21",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-22T05:00Z",
+    "value": "体检已在 main;补做 T-166 一并收。缺陷表进 VDB 升级清单(docs/VDB_UPGRADE_S360.md 的后续),修 src 的归 Seth。"
+  },
   "title": "向量库体检:每个向量空间的覆盖、按时点与否、谁在读、跟真钱宇宙对不对得上 —— 排出缺陷清单",
   "source": "Jazz 10-21「矢量数据库也有问题,让 abc 协助获取和调整升级」。Seth 实测:market_state_vectors 声明 24 维、平均只测到 11.1 维,跨全史一次 z-score(含未来信息,见 src/data/vector/market_state_writer.py:59/592/639);regime_daily 只有 2025-05 起 507 天;风格 4 层级 + 4 板块。体检先于升级(docs/VDB_UPGRADE_S360.md、docs/SPINE.md 先读)。",
   "allowed_paths": [

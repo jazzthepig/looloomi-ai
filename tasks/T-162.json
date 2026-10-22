@@ -1,9 +1,13 @@
 {
   "id": "T-162",
   "owner": "lane-b",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-21",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-22T05:00Z",
+    "value": "规格已在 main:CG 1050 个类别 / DeFiLlama 8784 协议 / HL 234 永续;11 个 CG 区块被公开档 429,要走 Pro key(Seth 的入库道)。作为风格分类 v2 的取数规格收下。"
+  },
   "title": "风格分类 v2 与取数规格:从 4 层级 + 4 板块扩到能分清大币周期 / L2 / 永续 DEX / RWA / AI agent 等的分类,并给出每个数据源的按时点可得性与回补请求",
   "source": "Jazz 10-21「矢量数据库也有问题,让 abc 协助获取和调整升级」。现分类见 src/data/style/taxonomy.py(层级 × 板块两维,板块只有 ai / meme / defi / infra_tokenization)。规则 3b:取数入库归 Seth 的写入端 —— 本卡只出**规格、探测和回补请求**,不写库。",
   "allowed_paths": [

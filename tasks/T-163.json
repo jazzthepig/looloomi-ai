@@ -1,9 +1,13 @@
 {
   "id": "T-163",
   "owner": "lane-c",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-21",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-22T05:00Z",
+    "value": "S-650 ❌ 已记台账(29798 行):按时点风格向量 v2 的历史类比不预测风格轮动(IC −0.053,p 0.87);向量不入库。内容已在 main。"
+  },
   "title": "S-650 风格状态向量 v2(按时点)+ 历史类比检验:最像的历史日子能不能预测接下来 30 天哪个风格跑赢 majors",
   "source": "台账 S-650 预注册(写于构造任何 v2 向量之前)。Jazz 10-21「矢量数据库也有问题,让 abc 协助获取和调整升级」。现 market_state_vectors 跨全史 z-score(含未来信息)—— v2 一律滚动 / 扩张窗口。",
   "allowed_paths": [

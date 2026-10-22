@@ -1,9 +1,13 @@
 {
   "id": "T-142",
   "owner": "lane-c",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-10-20",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-22T05:00Z",
+    "value": "评分器已在 main;W43 四臂冻结已写(J 0 / E 10 / T 0 / N 29)。S-626 最早 2026-12-18 可判;每周一跑一次的调度另立卡(Seth)。"
+  },
   "title": "S-626 叙事标记前向 A/B 的评分器:每周按时点冻结 J / E / T / N 四臂名单,到期后算快鱼率、进场早晚、R 臂票在鱼比例",
   "source": "台账 S-626 预注册(写于第一份标记之前);S-625 历史代理版已过(热板块突破在鱼比例 36% vs 24%,p = 0.0025)",
   "allowed_paths": [
