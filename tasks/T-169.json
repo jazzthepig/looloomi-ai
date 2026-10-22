@@ -1,0 +1,35 @@
+{
+  "id": "T-169",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-10-22",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "title": "S-668 H1:个股的「规模 + 稳定 + 供给纪律(股数 52 周不增)」能不能挑出之后 4 周更好的公司(World50 候选池,发现段 + 留出段一次走完)",
+  "source": "台账 S-668 预注册(2026-10-22,写于对 v2 任何组合算 IC 之前)。Jazz 10-22:CIS 拆两层,分数只留慢维度;只扩传统资产不加币。个股对 CIS 是新数据 —— 这一张卡是 v2 在个股上的证据。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-169.json"
+  ],
+  "acceptance": {
+    "check": "照 S-668 原文 H1 一字不改。数据只用 publishable key 读:world50_mcap_weekly(key, d, mcap_usd)、ohlcv_daily(source = eodhd,复权收盘 close)—— 两表 key / symbol 一一对应(141 个,已核)。**只取不带 . 后缀的 key**(美股挂牌与美元 ADR)。**维度与合成一律 import `src.data.cis.v2`(`equity_inputs` / `score_group('equity', …)`),不自己写一版** —— 影子写入端用的是同一个函数。输入行 = (周日期, mcap_usd, 当周最后一个交易日的 eodhd 收盘)。每周五截面;之后 20 个交易日收益。发现段 / 留出段同一次运行机械走完(发现段过门槛才算留出段,门槛照原文);截面 < 15 家的周跳过并计数。三个单维度只报。本地缓存到 /Volumes/CometCloudAI/cometcloud-local/research/t169/。",
+    "expect": "脚本 docs/research/t169_equity_quality.py;结果 docs/research/t169_results.json;报告(脚本写)/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-169_s668_h1.md,末尾「S-668 H1 结果」草稿 + 「挖掘」一节(探索性);in_review,推 lane-a/T-169。新分支一律 `git switch -c lane-a/T-169 origin/main`。"
+  },
+  "prior_value": "过了 ⇒ CIS v2 在个股上按规则可切成对外正式(还要影子 20 天);不过 ⇒ 个股继续用 v1,v2 只影子跑。",
+  "notes": "H1 FAIL(反面,而且很干净)。维度与合成 import src.data.cis.v2 的 equity_inputs / score_group('equity'),没有另写一版。\n宇宙 = world50_mcap_weekly 里不带 . 后缀的 key,125 个(今天的候选池 ⇒ 幸存者偏差,报告里标注)。有效周 592 / 因截面<15 家跳过 3 / 因前瞻不足跳过 27。\n发现段 2016-01→2020-12,每 4 周一个不重叠样本,n=65:平均 IC **-0.0756**,t **-2.92** ⇒ 门槛(IC>0 且 t≥1.5)不过 ⇒ 按预注册机械不算留出段。\n留出段(门槛外,不算证据)n=74:平均 IC **-0.0712**,t **-2.61**;全周口径 -0.0602 / t -4.49。发现段全周口径 -0.0808 / t -5.82。\n三个单维度:发现段 size -0.0559(t-2.58)、stability -0.0590(t-1.93)、supply -0.0454(t-2.12);留出段 size -0.0766(t-4.13)、stability -0.0733(t-2.29)、supply +0.0130(t+0.49,不显著)。\n零信号对照(走 apparatus 的 null_distribution/percentile_of,打乱每周前瞻收益、保留截面分布,n_null=400):全样本实际平均 IC -0.0733 落在零分布的 **分位 0.000** ⇒ 负号不是流程假象。\n额外核过:ohlcv_daily.close 确为拆股调整价(NVDA 2024-06-10 十合一当日 +0.75%,无 −90% 断层);分红调整未核(表里无独立 adj_close 列)。\n按 S-668 §切换规则:个股这一组**继续用 v1**,v2 只影子跑。\n依赖未满足(需 Seth 处理):src/data/cis/v2.py 目前只在主目录未跟踪,**不在 origin/main**;src/ 在本卡 forbidden_paths 内,我不能提交它。脚本用 file-loader 从有这个文件的 checkout 导入(CIS_V2_CHECKOUT 可覆盖,默认 ~/Projects/looloomi-ai);它进 main 之后 shim 自动失效。请把 v2.py 提交进 main。",
+  "delivered": {
+    "branch": "lane-a/T-169",
+    "script": "docs/research/t169_equity_quality.py",
+    "results": "docs/research/t169_results.json",
+    "report": "/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-169_s668_h1.md",
+    "cache": "/Volumes/CometCloudAI/cometcloud-local/research/t169/",
+    "kernel_used": "src/data/cis/v2.py (cis-v2.0) — equity_inputs / score_group / pct_rank,import 而非重写"
+  }
+}
