@@ -1,9 +1,13 @@
 {
   "id": "T-166",
   "owner": "lane-a",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-21",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-22T05:00Z",
+    "value": "四项照卡做完:随机基线(apparatus.null_distribution,N 2000)下 20 邻重合率 0.633 在分位 1.0 —— 两套几何远非随机,但扩张窗口每 20 个邻居换掉约 7 个;卡上「期望约 0.059」是我把池子大小估错了(生产双向口径池中位 1694 ⇒ 0.0118),lane 的更正对。regime_daily 一行已改成 RLS 不可见。"
+  },
   "title": "T-161 补做:随机基线 + 生产口径候选池 + regime_daily 更正",
   "source": "lane-c 复核 §C-auto-1021-1206;Seth 只读查 regime_daily = 507 行(2025-05-03→2026-10-20),T-161 报告的「空表」是 RLS 伪影。",
   "allowed_paths": [
@@ -22,5 +26,5 @@
     "expect": "报告 _reports/absorb_input/T-161_vdb_audit.md 更新;in_review,推 lane-a/T-166。新分支 `git switch -c lane-a/T-166 origin/main`。"
   },
   "prior_value": "定下向量库缺陷的真实排序,决定 market_state_vectors 是否改扩张窗口。",
-  "notes": ""
+  "notes": "四项全部做完。随机基线(apparatus.null_distribution,N=2000,生产口径候选池):实际平均重合率 0.633 / 零分布期望 0.0122 / 分位 1.0。零分布自检:解析 E[|A∩B|/K]=K/|cand|=20/1694=0.0118,与模拟均值 0.0122 一致 ⇒ 零分布确在随机抽。卡上写的「候选池中位数约 676 ⇒ 期望约 0.059」与实测不符,差在池大小不在随机性:0.059 需要 K≈40,而实测生产(bidirectional)口径池中位 1694(原 past-only 口径 947),K=20 ⇒ 0.0118。候选池两口径并列:生产 0.633(中位 0.75,min 0.0,max 0.95)/ 原 0.652(中位 0.7,min 0.0,max 1.0),均 N=50。regime_daily:§1 状态列改成「publishable 不可见(RLS),服务端 507 行」+ 脚注标明 507 非本脚本测量值,缺陷表第 2 行的「写入端死亡 / 8 个读取端全空」推论已删。measured_dims 按逐日共享维数报分布:11 维 1722 天、12 维 1 天、13 维 2 天、15 维 1 天、16 维 29 天;均值 11.09(min 11,max 16),填满 22 维 0 天;_reserved_1/2 在 1755 个采样里 100% None,不入分母。结论:0.633 落在随机基线的分位 1.0 —— 两套几何远非随机一致,但也远非完全一致;「换扩张窗口会改变相位检索」成立,量级 = 每 20 个邻居改 7.3 个。"
 }
