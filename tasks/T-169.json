@@ -1,7 +1,7 @@
 {
   "id": "T-169",
   "owner": "lane-a",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-22",
   "forbidden_paths": [
     "Shadow/",
@@ -22,5 +22,6 @@
     "check": "照 S-668 原文 H1 一字不改。数据只用 publishable key 读:world50_mcap_weekly(key, d, mcap_usd;**只取 source = shares_x_close_v3** —— 表里三个历史口径并存,混用会把口径差当成股数变化,实测 CMCSA 在 4.6B / 4.2B 股之间来回跳)、ohlcv_daily(source = eodhd,复权收盘 close)—— 两表 key / symbol 一一对应(141 个,已核)。**只取不带 . 后缀的 key**(美股挂牌与美元 ADR)。**维度与合成一律 import `src.data.cis.v2`(`equity_inputs` / `score_group('equity', …)`),不自己写一版** —— 影子写入端用的是同一个函数。输入行 = (周日期, mcap_usd, 当周最后一个交易日的 eodhd 收盘)。每周五截面;之后 20 个交易日收益。发现段 / 留出段同一次运行机械走完(发现段过门槛才算留出段,门槛照原文);截面 < 15 家的周跳过并计数。三个单维度只报。本地缓存到 /Volumes/CometCloudAI/cometcloud-local/research/t169/。 **另报(挖掘)**:每年股数增长最高 / 最低各 10 家,逐家对一下公司行为(拆股、并购发股、分拆、ADR 比例变更)—— 2026-10-21 实测前排有 PANW +22%(收购 CyberArk 发股)、INTC +15%、CVX +10%(收购 Hess)这类真的,也有 CMCSA −15%、TTE −14% 这类可疑的;可疑的列出来,不改数据(数据是 Seth 的入库道)。",
     "expect": "脚本 docs/research/t169_equity_quality.py;结果 docs/research/t169_results.json;报告(脚本写)/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-169_s668_h1.md,末尾「S-668 H1 结果」草稿 + 「挖掘」一节(探索性);in_review,推 lane-a/T-169。新分支一律 `git switch -c lane-a/T-169 origin/main`。"
   },
-  "prior_value": "过了 ⇒ CIS v2 在个股上按规则可切成对外正式(还要影子 20 天);不过 ⇒ 个股继续用 v1,v2 只影子跑。"
+  "prior_value": "过了 ⇒ CIS v2 在个股上按规则可切成对外正式(还要影子 20 天);不过 ⇒ 个股继续用 v1,v2 只影子跑。",
+  "notes": " §Seth-1022 CHANGES(唯一一条,数据正确性,不是改规则):world50_mcap_weekly 只取 source = shares_x_close_v3 再跑一遍(v1 读的是三个口径混在一起、按日期去重时随机留一个,供给纪律维度被口径差污染,实测 CMCSA 在 4.6B / 4.2B 股间跳)。src/data/cis/v2.py 已在 origin/main(ffef8946),去掉 file-loader shim,直接 import。其余一字不改;报告里新旧两版并列,判定按新版。推 lane-a/T-169-v2。\n\n[M-lane-a 2026-10-22 v2 交付 | 分支 lane-a/T-169-v2]\n改动只有卡上那两条,其余一字未改:(a) mcap 查询加 `&source=eq.shares_x_close_v3`,(b) 删掉 file-loader shim,直接 `from src.data.cis.v2 import ...`(v2.py 已在 origin/main)。\n判定按新版。实测(v3 单口径 vs v1 混取,日期/样本/内核/门槛全同):\n  发现段 2016-01→2020-12,n=65:v1 IC=-0.0756 t=-2.92 → v2 IC=-0.0753 t=-2.91\n  留出段 2021-01→2026-09,n=74:v1 IC=-0.0712 t=-2.61 → v2 IC=-0.0712 t=-2.61\n  单维度 IC 发现段:size -0.0559→-0.0559 / stability -0.0590→-0.0590 / supply -0.0454→-0.0449\n  单维度 IC 留出段:size -0.0766→-0.0766 / stability -0.0733→-0.0732 / supply +0.0130→+0.0130\n  有效周 592(截面<15 跳 3、前瞻不足跳 27)两版相同;零信号对照全样本平均 IC 分位 = 0.000(n_null=400)。\n  **总判定不变:发现段就没过(IC<0)⇒ H1 FAIL。**\n口径污染实测(逐 (key,d) 比对 v1 缓存 vs v3 缓存):v1 共 72,049 行,能对上 v3 的 72,039 行里\n**数值不同的 0 行**,只在旧口径里的 10 行(BRK-B 2015-01-02→02-27 十周 + TSM 2023-04-05 一周)。\n即 v1 那次每次都留下了 v3 行 ⇒ 污染量≈0,两版几乎一样;但那是 PostgREST 返回次序的巧合不是数据保证的,\n改成单口径是把「靠运气」换成「按规矩」。\n挖掘(探索性,未预注册):`sec_shares_x_close` 的 BRK-B 2015 年头十周 mcap≈$0.140B,2015-03-06 起 $358B;\n同一 eodhd 收盘(≈$149)反推股数 0.9M vs 2,464.4M,差约 2,700 倍,像单位写错。v3 无这十周故本卡不受影响,\n但仍读 sec_shares_x_close 的下游会吃到 —— 已列给 @seth,本卡未改数据。\n产物:docs/research/t169_equity_quality.py · docs/research/t169_results.json(新版)·\ndocs/research/t169_results_v1.json(旧版留档并列)· 报告 _reports/absorb_input/T-169_s668_h1.md(已含新旧并列表)。\n未改动 src/、scripts/、任何数据表。"
 }
