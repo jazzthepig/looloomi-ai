@@ -15,7 +15,7 @@
 - 报告 / 研究产物:写到卡上规定的最终路径(Mac 数据根),不写 `/tmp`;搬运用 `mv`,不留副本。
 - **零分布、多空盈亏、A/B 比较只许用 `src/data/evaluation/apparatus.py`**(block_permute / shuffle_within / null_distribution / percentile_of / long_return / short_return / price_on_or_after / ab_test / brier)。不要自己再写一遍 —— 10-14 一天里手写的零分布与盈亏坏了 5 次。缺函数就写进最终回复 @seth,不要在卡里另起炉灶。
 
-**读库**:环境里已经有 `SUPABASE_URL` 与 `SUPABASE_KEY`(publishable,**只读**,研究表都能读)。代码里只用 `os.environ["SUPABASE_URL"]` / `os.environ["SUPABASE_KEY"]`,请求头 `apikey` 与 `Authorization: Bearer` 都放这同一个值;缺了就报错退出。要写库 ⇒ 写进最终回复 @seth。
+**读库**:环境里已经有 `SUPABASE_URL` 与 `SUPABASE_KEY`(publishable,**只读**,研究表都能读)。代码里只用 `os.environ["SUPABASE_URL"]` / `os.environ["SUPABASE_KEY"]`,请求头 `apikey` 与 `Authorization: Bearer` 都放这同一个值;缺了就报错退出。要写库 ⇒ 写进最终回复 @seth。**翻页读一律带 `order=`**(按主键排,如 `order=symbol.asc,trade_date.asc`)—— 不带时 PostgREST 翻页边界会漂,同一查询有时缺两成键(T-170 / T-173 实测)。
 
 **禁止**
 - **读任何 `.env` 文件、打印任何 key / token**(`cat .env`、`source .env`、`printenv`、`echo $…KEY`)—— 钩子会拦。2026-10-20 一个 lane 把 service_role key 写进脚本推上了公开仓库;pre-push 也会拒任何带 key 的提交
