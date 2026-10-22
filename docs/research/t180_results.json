@@ -1,0 +1,902 @@
+{
+  "meta": {
+    "task": "T-180",
+    "prereg": "S-668 H1 + S-670(预注册不改,错的是实现)",
+    "apparatus": "src.data.evaluation.apparatus",
+    "code_ref": "cis-v2.0",
+    "universe": "world50_mcap_weekly source=shares_x_close_v3,无点 key",
+    "shares_source": "world50_mcap_weekly.shares(申报口径)",
+    "old_implementation": "股数 = mcap_usd ÷ ohlcv_daily.close(复权收盘)",
+    "lag_rule": "挪一天 = 派生量三个输入整体退到上一个可用周戳;截面日与前瞻锚点不动",
+    "reused": {
+      "t169": [
+        "spearman",
+        "mean_t"
+      ],
+      "t172": [
+        "Sym",
+        "_page_all",
+        "at_or_before",
+        "fetch_px",
+        "fridays",
+        "null_pct",
+        "rankdata",
+        "spearman_ic",
+        "summarize",
+        "tstat",
+        "window"
+      ]
+    },
+    "discovery": [
+      "2016-01-01",
+      "2020-12-31"
+    ],
+    "holdout": [
+      "2021-01-01",
+      "2026-09-30"
+    ]
+  },
+  "s668_h1": {
+    "weeks_used": 592,
+    "skipped_small": 3,
+    "skipped_no_forward": 112,
+    "discovery_window": [
+      "2016-01-01",
+      "2020-12-31"
+    ],
+    "holdout_window": [
+      "2021-01-01",
+      "2026-09-30"
+    ],
+    "horizon_days": 20,
+    "modes": {
+      "OLD": {
+        "what": "OLD",
+        "shares_source": "mcap_usd ÷ 复权收盘(T-169/T-172 原实现)",
+        "lag_stamps": 0,
+        "discovery": {
+          "n": 65,
+          "mean_ic": -0.0753908361415987,
+          "t": -2.9158549234288063,
+          "gate": "mean_ic > 0 and t >= 1.5",
+          "pass": false,
+          "all_weeks": {
+            "n": 261,
+            "mean_ic": -0.08069154016277907,
+            "t": -5.816849379818558
+          },
+          "single_dims": {
+            "size": [
+              -0.055975702014869656,
+              -2.5814113353511474,
+              65
+            ],
+            "stability": [
+              -0.05897343834158294,
+              -1.9257619178590146,
+              65
+            ],
+            "supply": [
+              -0.044942013525846015,
+              -2.0896395617590535,
+              65
+            ]
+          }
+        },
+        "holdout": {
+          "n": 74,
+          "mean_ic": -0.07203007074762117,
+          "t": -2.648333708750585,
+          "gate": "mean_ic > 0 and t >= 2",
+          "in_gate": false,
+          "pass": false,
+          "all_weeks": {
+            "n": 298,
+            "mean_ic": -0.061026201395728716,
+            "t": -4.5716613664187085
+          },
+          "single_dims": {
+            "size": [
+              -0.07664221075670624,
+              -4.130559168906654,
+              74
+            ],
+            "stability": [
+              -0.07323653273702233,
+              -2.2916857575335525,
+              74
+            ],
+            "supply": [
+              0.01162632884176121,
+              0.4405655681669308,
+              74
+            ]
+          }
+        },
+        "verdict": "发现段未过 ⇒ H1 FAIL"
+      },
+      "NEW": {
+        "what": "NEW",
+        "shares_source": "world50_mcap_weekly.shares(申报口径)",
+        "lag_stamps": 0,
+        "discovery": {
+          "n": 65,
+          "mean_ic": -0.06098977929031865,
+          "t": -2.4811662300430437,
+          "gate": "mean_ic > 0 and t >= 1.5",
+          "pass": false,
+          "all_weeks": {
+            "n": 261,
+            "mean_ic": -0.0646312055129524,
+            "t": -4.939739334327168
+          },
+          "single_dims": {
+            "size": [
+              -0.055975702014869656,
+              -2.5814113353511474,
+              65
+            ],
+            "stability": [
+              -0.05897343834158294,
+              -1.9257619178590146,
+              65
+            ],
+            "supply": [
+              -0.013093235007809888,
+              -0.80395672155892,
+              65
+            ]
+          }
+        },
+        "holdout": {
+          "n": 74,
+          "mean_ic": -0.07185483664683519,
+          "t": -3.104962686639375,
+          "gate": "mean_ic > 0 and t >= 2",
+          "in_gate": false,
+          "pass": false,
+          "all_weeks": {
+            "n": 298,
+            "mean_ic": -0.06389009427833603,
+            "t": -5.603959773191875
+          },
+          "single_dims": {
+            "size": [
+              -0.07664221075670624,
+              -4.130559168906654,
+              74
+            ],
+            "stability": [
+              -0.07323653273702233,
+              -2.2916857575335525,
+              74
+            ],
+            "supply": [
+              0.004569544131307129,
+              0.2959049362573765,
+              74
+            ]
+          }
+        },
+        "verdict": "发现段未过 ⇒ H1 FAIL"
+      },
+      "OLD_L1": {
+        "what": "OLD_L1",
+        "shares_source": "mcap_usd ÷ 复权收盘(T-169/T-172 原实现)",
+        "lag_stamps": 1,
+        "discovery": {
+          "n": 65,
+          "mean_ic": -0.0755057604634755,
+          "t": -2.921689269389553,
+          "gate": "mean_ic > 0 and t >= 1.5",
+          "pass": false,
+          "all_weeks": {
+            "n": 261,
+            "mean_ic": -0.08077124748213921,
+            "t": -5.8514646786103555
+          },
+          "single_dims": {
+            "size": [
+              -0.055975702014869656,
+              -2.5814113353511474,
+              65
+            ],
+            "stability": [
+              -0.05897343834158294,
+              -1.9257619178590146,
+              65
+            ],
+            "supply": [
+              -0.04577199838153625,
+              -2.137102769281385,
+              65
+            ]
+          }
+        },
+        "holdout": {
+          "n": 74,
+          "mean_ic": -0.07168386628154465,
+          "t": -2.633115910222839,
+          "gate": "mean_ic > 0 and t >= 2",
+          "in_gate": false,
+          "pass": false,
+          "all_weeks": {
+            "n": 298,
+            "mean_ic": -0.06097575385831204,
+            "t": -4.5680865818888465
+          },
+          "single_dims": {
+            "size": [
+              -0.07664221075670624,
+              -4.130559168906654,
+              74
+            ],
+            "stability": [
+              -0.07323653273702233,
+              -2.2916857575335525,
+              74
+            ],
+            "supply": [
+              0.013328594957856169,
+              0.5002957291707112,
+              74
+            ]
+          }
+        },
+        "verdict": "发现段未过 ⇒ H1 FAIL"
+      },
+      "NEW_L1": {
+        "what": "NEW_L1",
+        "shares_source": "world50_mcap_weekly.shares(申报口径)",
+        "lag_stamps": 1,
+        "discovery": {
+          "n": 65,
+          "mean_ic": -0.06194952927189346,
+          "t": -2.522634043245804,
+          "gate": "mean_ic > 0 and t >= 1.5",
+          "pass": false,
+          "all_weeks": {
+            "n": 261,
+            "mean_ic": -0.06475628949461462,
+            "t": -4.962233398236866
+          },
+          "single_dims": {
+            "size": [
+              -0.055975702014869656,
+              -2.5814113353511474,
+              65
+            ],
+            "stability": [
+              -0.05897343834158294,
+              -1.9257619178590146,
+              65
+            ],
+            "supply": [
+              -0.01488674908262323,
+              -0.911621424097835,
+              65
+            ]
+          }
+        },
+        "holdout": {
+          "n": 74,
+          "mean_ic": -0.07146870441392646,
+          "t": -3.087333954842152,
+          "gate": "mean_ic > 0 and t >= 2",
+          "in_gate": false,
+          "pass": false,
+          "all_weeks": {
+            "n": 298,
+            "mean_ic": -0.06376996831958891,
+            "t": -5.577719761398939
+          },
+          "single_dims": {
+            "size": [
+              -0.07664221075670624,
+              -4.130559168906654,
+              74
+            ],
+            "stability": [
+              -0.07323653273702233,
+              -2.2916857575335525,
+              74
+            ],
+            "supply": [
+              0.0064841492320838875,
+              0.4194731338710735,
+              74
+            ]
+          }
+        },
+        "verdict": "发现段未过 ⇒ H1 FAIL"
+      }
+    },
+    "code_ref": "cis-v2.0",
+    "dms_equity": [
+      "size",
+      "stability",
+      "supply"
+    ]
+  },
+  "s670_issue": {
+    "cross_weeks": 542,
+    "skipped_small": 19,
+    "n_keys": 125,
+    "results": {
+      "M12_4": {
+        "signal": "M12",
+        "horizon_wk": 4,
+        "discovery": {
+          "n_weeks": 64,
+          "n_raw_weeks": 253,
+          "mean_ic": 0.00961165118706302,
+          "t": 0.34420042490397784,
+          "half1": 0.0022098316261018464,
+          "half2": 0.017013470748024194
+        },
+        "gates": {
+          "mean_ic>0": true,
+          "t>=2": false,
+          "half1>0": true,
+          "half2>0": true
+        },
+        "enter_holdout": false,
+        "holdout": {
+          "n_weeks": 72,
+          "n_raw_weeks": 289,
+          "mean_ic": 0.034679498739022624,
+          "t": 1.1796922065817983,
+          "half1": 0.03463947622127857,
+          "half2": 0.03471952125676668
+        },
+        "holdout_pass": null,
+        "verdict": "发现段未过",
+        "null_discovery": {
+          "n_null": 400,
+          "actual": 0.00961165118706302,
+          "pct": 0.8075,
+          "null_mean": -0.0007467614773376083,
+          "null_sd": 0.011790564599632456
+        },
+        "null_holdout": null
+      },
+      "M12_13": {
+        "signal": "M12",
+        "horizon_wk": 13,
+        "discovery": {
+          "n_weeks": 20,
+          "n_raw_weeks": 253,
+          "mean_ic": -0.018376165190541614,
+          "t": -0.40243724507253803,
+          "half1": -0.05132172850105628,
+          "half2": 0.01456939811997306
+        },
+        "gates": {
+          "mean_ic>0": false,
+          "t>=2": false,
+          "half1>0": false,
+          "half2>0": true
+        },
+        "enter_holdout": false,
+        "holdout": {
+          "n_weeks": 22,
+          "n_raw_weeks": 289,
+          "mean_ic": 0.03777936587928788,
+          "t": 0.7148627723075551,
+          "half1": 0.009605176019871741,
+          "half2": 0.06595355573870401
+        },
+        "holdout_pass": null,
+        "verdict": "发现段未过",
+        "null_discovery": {
+          "n_null": 400,
+          "actual": -0.018376165190541614,
+          "pct": 0.225,
+          "null_mean": -0.001150252840867279,
+          "null_sd": 0.021737757134176635
+        },
+        "null_holdout": null
+      },
+      "ISSUE_OLD_4": {
+        "signal": "ISSUE_OLD",
+        "horizon_wk": 4,
+        "discovery": {
+          "n_weeks": 62,
+          "n_raw_weeks": 253,
+          "mean_ic": -0.050906242412842764,
+          "t": -2.2256337209779344,
+          "half1": -0.056709113551287174,
+          "half2": -0.04510337127439835
+        },
+        "gates": {
+          "mean_ic>0": false,
+          "t>=2": false,
+          "half1>0": false,
+          "half2>0": false
+        },
+        "enter_holdout": false,
+        "holdout": {
+          "n_weeks": 70,
+          "n_raw_weeks": 289,
+          "mean_ic": 0.004737331432841195,
+          "t": 0.18460004895572388,
+          "half1": 0.011098614118917955,
+          "half2": -0.0016239512532355575
+        },
+        "holdout_pass": null,
+        "verdict": "发现段未过",
+        "null_discovery": {
+          "n_null": 400,
+          "actual": -0.050906242412842764,
+          "pct": 0.0,
+          "null_mean": -0.0007816817029910205,
+          "null_sd": 0.011830174299598335
+        },
+        "null_holdout": null
+      },
+      "ISSUE_OLD_13": {
+        "signal": "ISSUE_OLD",
+        "horizon_wk": 13,
+        "discovery": {
+          "n_weeks": 19,
+          "n_raw_weeks": 253,
+          "mean_ic": -0.06946641330080729,
+          "t": -1.9540981736339977,
+          "half1": -0.09054308233082659,
+          "half2": -0.05049741117378992
+        },
+        "gates": {
+          "mean_ic>0": false,
+          "t>=2": false,
+          "half1>0": false,
+          "half2>0": false
+        },
+        "enter_holdout": false,
+        "holdout": {
+          "n_weeks": 21,
+          "n_raw_weeks": 289,
+          "mean_ic": 0.0318760577859127,
+          "t": 0.6179308851900034,
+          "half1": 0.08019677152421549,
+          "half2": -0.01205186379436255
+        },
+        "holdout_pass": null,
+        "verdict": "发现段未过",
+        "null_discovery": {
+          "n_null": 400,
+          "actual": -0.06946641330080729,
+          "pct": 0.0,
+          "null_mean": 0.0003122150108886675,
+          "null_sd": 0.021695819116388168
+        },
+        "null_holdout": null
+      },
+      "ISSUE_NEW_4": {
+        "signal": "ISSUE_NEW",
+        "horizon_wk": 4,
+        "discovery": {
+          "n_weeks": 62,
+          "n_raw_weeks": 253,
+          "mean_ic": -0.019272337122154013,
+          "t": -1.130477535903353,
+          "half1": -0.024123382459334528,
+          "half2": -0.014421291784973495
+        },
+        "gates": {
+          "mean_ic>0": false,
+          "t>=2": false,
+          "half1>0": false,
+          "half2>0": false
+        },
+        "enter_holdout": false,
+        "holdout": {
+          "n_weeks": 70,
+          "n_raw_weeks": 289,
+          "mean_ic": 0.0016124941562483568,
+          "t": 0.10784172776729734,
+          "half1": 0.009733251942462204,
+          "half2": -0.006508263629965491
+        },
+        "holdout_pass": null,
+        "verdict": "发现段未过",
+        "null_discovery": {
+          "n_null": 400,
+          "actual": -0.019272337122154013,
+          "pct": 0.0575,
+          "null_mean": -3.616665935490567e-05,
+          "null_sd": 0.012033993991458509
+        },
+        "null_holdout": null
+      },
+      "ISSUE_NEW_13": {
+        "signal": "ISSUE_NEW",
+        "horizon_wk": 13,
+        "discovery": {
+          "n_weeks": 19,
+          "n_raw_weeks": 253,
+          "mean_ic": -0.0055244605700744236,
+          "t": -0.21698973871771113,
+          "half1": -0.025960234112929734,
+          "half2": 0.01286773561849536
+        },
+        "gates": {
+          "mean_ic>0": false,
+          "t>=2": false,
+          "half1>0": false,
+          "half2>0": true
+        },
+        "enter_holdout": false,
+        "holdout": {
+          "n_weeks": 21,
+          "n_raw_weeks": 289,
+          "mean_ic": 0.01125878790199654,
+          "t": 0.3859333616704146,
+          "half1": 0.047469885401990694,
+          "half2": -0.021660391643452705
+        },
+        "holdout_pass": null,
+        "verdict": "发现段未过",
+        "null_discovery": {
+          "n_null": 400,
+          "actual": -0.0055244605700744236,
+          "pct": 0.435,
+          "null_mean": -0.0012411579589616372,
+          "null_sd": 0.022912039796719182
+        },
+        "null_holdout": null
+      },
+      "ISSUE_OLD_L1_4": {
+        "signal": "ISSUE_OLD_L1",
+        "horizon_wk": 4,
+        "discovery": {
+          "n_weeks": 60,
+          "n_raw_weeks": 253,
+          "mean_ic": -0.04812607839340816,
+          "t": -1.845843144635067,
+          "half1": -0.05206305450093654,
+          "half2": -0.04418910228587975
+        },
+        "gates": {
+          "mean_ic>0": false,
+          "t>=2": false,
+          "half1>0": false,
+          "half2>0": false
+        },
+        "enter_holdout": false,
+        "holdout": {
+          "n_weeks": 67,
+          "n_raw_weeks": 289,
+          "mean_ic": -0.0024766537947644002,
+          "t": -0.09147408703174983,
+          "half1": 0.019486547405767798,
+          "half2": -0.023793878489398592
+        },
+        "holdout_pass": null,
+        "verdict": "发现段未过",
+        "null_discovery": {
+          "n_null": 400,
+          "actual": -0.04812607839340816,
+          "pct": 0.0,
+          "null_mean": -0.0006203075047119669,
+          "null_sd": 0.012067845294659431
+        },
+        "null_holdout": null
+      },
+      "ISSUE_OLD_L1_13": {
+        "signal": "ISSUE_OLD_L1",
+        "horizon_wk": 13,
+        "discovery": {
+          "n_weeks": 19,
+          "n_raw_weeks": 253,
+          "mean_ic": -0.05555312581923183,
+          "t": -1.3148575642074165,
+          "half1": -0.07659238714955109,
+          "half2": -0.03661779062194449
+        },
+        "gates": {
+          "mean_ic>0": false,
+          "t>=2": false,
+          "half1>0": false,
+          "half2>0": false
+        },
+        "enter_holdout": false,
+        "holdout": {
+          "n_weeks": 20,
+          "n_raw_weeks": 289,
+          "mean_ic": 0.02019403457574854,
+          "t": 0.36443640982450987,
+          "half1": 0.05743382383815883,
+          "half2": -0.017045754686661745
+        },
+        "holdout_pass": null,
+        "verdict": "发现段未过",
+        "null_discovery": {
+          "n_null": 400,
+          "actual": -0.05555312581923183,
+          "pct": 0.015,
+          "null_mean": -0.0014924663836640014,
+          "null_sd": 0.02279236241822332
+        },
+        "null_holdout": null
+      },
+      "ISSUE_NEW_L1_4": {
+        "signal": "ISSUE_NEW_L1",
+        "horizon_wk": 4,
+        "discovery": {
+          "n_weeks": 60,
+          "n_raw_weeks": 253,
+          "mean_ic": -0.008450694770295648,
+          "t": -0.46945267453899026,
+          "half1": -0.009047330155623309,
+          "half2": -0.007854059384967985
+        },
+        "gates": {
+          "mean_ic>0": false,
+          "t>=2": false,
+          "half1>0": false,
+          "half2>0": false
+        },
+        "enter_holdout": false,
+        "holdout": {
+          "n_weeks": 67,
+          "n_raw_weeks": 289,
+          "mean_ic": -0.004459984877354661,
+          "t": -0.27339278057344246,
+          "half1": 0.01218345363046829,
+          "half2": -0.020613910487888704
+        },
+        "holdout_pass": null,
+        "verdict": "发现段未过",
+        "null_discovery": {
+          "n_null": 400,
+          "actual": -0.008450694770295648,
+          "pct": 0.2175,
+          "null_mean": 0.001033420855167254,
+          "null_sd": 0.012471314035217607
+        },
+        "null_holdout": null
+      },
+      "ISSUE_NEW_L1_13": {
+        "signal": "ISSUE_NEW_L1",
+        "horizon_wk": 13,
+        "discovery": {
+          "n_weeks": 19,
+          "n_raw_weeks": 253,
+          "mean_ic": -0.007947022084551437,
+          "t": -0.24345681412149334,
+          "half1": -0.021650158004035493,
+          "half2": 0.004385800242984203
+        },
+        "gates": {
+          "mean_ic>0": false,
+          "t>=2": false,
+          "half1>0": false,
+          "half2>0": true
+        },
+        "enter_holdout": false,
+        "holdout": {
+          "n_weeks": 20,
+          "n_raw_weeks": 289,
+          "mean_ic": 0.006193029594144016,
+          "t": 0.20780812735467033,
+          "half1": 0.04107310908334173,
+          "half2": -0.028687049895053707
+        },
+        "holdout_pass": null,
+        "verdict": "发现段未过",
+        "null_discovery": {
+          "n_null": 400,
+          "actual": -0.007947022084551437,
+          "pct": 0.3575,
+          "null_mean": 0.00038000690321690953,
+          "null_sd": 0.02337352165978899
+        },
+        "null_holdout": null
+      }
+    },
+    "old_vs_new_cross_section_corr": {
+      "all": {
+        "n_weeks": 525,
+        "mean_spearman": 0.7545296182910174,
+        "t": 240.05036550058844
+      },
+      "discovery": {
+        "n_weeks": 245,
+        "mean_spearman": 0.8060716432564351,
+        "t": 253.3527545453591
+      },
+      "holdout": {
+        "n_weeks": 280,
+        "mean_spearman": 0.7094303464462767,
+        "t": 209.8958354542482
+      }
+    },
+    "supply_gap": {
+      "what": "gap = 申报增长 − 隐含增长 = 旧 ISSUE − 新 ISSUE;正值 ≈ 股东收益率",
+      "window": [
+        "2024-01-01",
+        "2026-09-30"
+      ],
+      "n_names": 125,
+      "top": [
+        {
+          "key": "PBR",
+          "weeks": 134,
+          "implied_52w_share_change": -0.13663,
+          "reported_52w_share_change": 0.0,
+          "gap_old_minus_new": 0.13663
+        },
+        {
+          "key": "WDC",
+          "weeks": 134,
+          "implied_52w_share_change": -0.06509,
+          "reported_52w_share_change": 0.0279,
+          "gap_old_minus_new": 0.093
+        },
+        {
+          "key": "GE",
+          "weeks": 134,
+          "implied_52w_share_change": -0.09388,
+          "reported_52w_share_change": -0.0139,
+          "gap_old_minus_new": 0.07998
+        },
+        {
+          "key": "BTI",
+          "weeks": 134,
+          "implied_52w_share_change": -0.09264,
+          "reported_52w_share_change": -0.01959,
+          "gap_old_minus_new": 0.07305
+        },
+        {
+          "key": "MO",
+          "weeks": 134,
+          "implied_52w_share_change": -0.09508,
+          "reported_52w_share_change": -0.02239,
+          "gap_old_minus_new": 0.07269
+        },
+        {
+          "key": "VOD",
+          "weeks": 134,
+          "implied_52w_share_change": -0.09484,
+          "reported_52w_share_change": -0.02819,
+          "gap_old_minus_new": 0.06665
+        },
+        {
+          "key": "TTE",
+          "weeks": 134,
+          "implied_52w_share_change": -0.11134,
+          "reported_52w_share_change": -0.04607,
+          "gap_old_minus_new": 0.06527
+        },
+        {
+          "key": "VZ",
+          "weeks": 134,
+          "implied_52w_share_change": -0.06526,
+          "reported_52w_share_change": -0.00057,
+          "gap_old_minus_new": 0.06469
+        },
+        {
+          "key": "PFE",
+          "weeks": 134,
+          "implied_52w_share_change": -0.05678,
+          "reported_52w_share_change": 0.00358,
+          "gap_old_minus_new": 0.06036
+        },
+        {
+          "key": "RIO",
+          "weeks": 134,
+          "implied_52w_share_change": -0.06008,
+          "reported_52w_share_change": 4e-05,
+          "gap_old_minus_new": 0.06012
+        },
+        {
+          "key": "HSBC",
+          "weeks": 134,
+          "implied_52w_share_change": -0.11141,
+          "reported_52w_share_change": -0.05345,
+          "gap_old_minus_new": 0.05796
+        },
+        {
+          "key": "BBVA",
+          "weeks": 134,
+          "implied_52w_share_change": -0.08233,
+          "reported_52w_share_change": -0.02494,
+          "gap_old_minus_new": 0.0574
+        },
+        {
+          "key": "T",
+          "weeks": 134,
+          "implied_52w_share_change": -0.05902,
+          "reported_52w_share_change": -0.0071,
+          "gap_old_minus_new": 0.05191
+        },
+        {
+          "key": "BP",
+          "weeks": 134,
+          "implied_52w_share_change": -0.10581,
+          "reported_52w_share_change": -0.05669,
+          "gap_old_minus_new": 0.04912
+        },
+        {
+          "key": "BHP",
+          "weeks": 134,
+          "implied_52w_share_change": -0.04589,
+          "reported_52w_share_change": 0.00073,
+          "gap_old_minus_new": 0.04661
+        }
+      ],
+      "bottom": [
+        {
+          "key": "NOW",
+          "weeks": 134,
+          "implied_52w_share_change": 0.00666,
+          "reported_52w_share_change": 0.00666,
+          "gap_old_minus_new": 0.0
+        },
+        {
+          "key": "PANW",
+          "weeks": 134,
+          "implied_52w_share_change": 0.08325,
+          "reported_52w_share_change": 0.08325,
+          "gap_old_minus_new": -0.0
+        },
+        {
+          "key": "PLTR",
+          "weeks": 134,
+          "implied_52w_share_change": 0.04395,
+          "reported_52w_share_change": 0.04395,
+          "gap_old_minus_new": 0.0
+        },
+        {
+          "key": "SHOP",
+          "weeks": 134,
+          "implied_52w_share_change": 0.01031,
+          "reported_52w_share_change": 0.01031,
+          "gap_old_minus_new": 0.0
+        },
+        {
+          "key": "TSLA",
+          "weeks": 134,
+          "implied_52w_share_change": 0.0521,
+          "reported_52w_share_change": 0.0521,
+          "gap_old_minus_new": 0.0
+        },
+        {
+          "key": "UBER",
+          "weeks": 134,
+          "implied_52w_share_change": 0.00604,
+          "reported_52w_share_change": 0.00604,
+          "gap_old_minus_new": -0.0
+        },
+        {
+          "key": "VRTX",
+          "weeks": 134,
+          "implied_52w_share_change": -0.00489,
+          "reported_52w_share_change": -0.00489,
+          "gap_old_minus_new": 0.0
+        },
+        {
+          "key": "ARM",
+          "weeks": 65,
+          "implied_52w_share_change": 0.01348,
+          "reported_52w_share_change": 0.01348,
+          "gap_old_minus_new": 0.0
+        },
+        {
+          "key": "CRWD",
+          "weeks": 15,
+          "implied_52w_share_change": 0.0209,
+          "reported_52w_share_change": 0.0209,
+          "gap_old_minus_new": 0.0
+        },
+        {
+          "key": "UL",
+          "weeks": 134,
+          "implied_52w_share_change": -0.0394,
+          "reported_52w_share_change": -0.0402,
+          "gap_old_minus_new": -0.0008
+        }
+      ]
+    }
+  }
+}

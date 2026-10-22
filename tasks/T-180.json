@@ -1,7 +1,7 @@
 {
   "id": "T-180",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-22",
   "forbidden_paths": [
     "Shadow/",
@@ -22,5 +22,11 @@
     "check": "开工前先查数据到没到:`world50_mcap_weekly?select=key&source=eq.shares_x_close_v3&shares=not.is.null&limit=1`(publishable key)。返回空 ⇒ 本轮不做,回复「@seth T-180 等 shares 列」即收工 —— 不许退回用 市值 ÷ 收盘 推股数(ohlcv_daily 的收盘是总回报复权的,推出来的是股数 × 原始价 / 复权价,见台账「S-668 H1 / S-670 ISSUE 更正」)。 新脚本 import t169_equity_quality.py 与 t172_equity_signals.py 的取数 / 截面 / IC 函数(不复制),只把股数换成 world50_mcap_weekly.shares(取数加 shares 列,翻页带 order=key.asc,d.asc;个股三维照样 import src.data.cis.v2.equity_inputs,传四元组 (d, mcap, close, shares))。两件:① S-668 H1 原判据一字不改重跑(发现段 + 留出段、v2 合成与之后 4 周收益);② S-670 的 ISSUE 4 周 / 13 周照 S-670 原判法重跑。每条给「旧实现 → 新实现」并排;另报(只报)旧 ISSUE 与新 ISSUE 的截面相关、以及旧 − 新 ≈ 股息率这件事在几家高股息公司上对不对得上。零分布只走 apparatus。",
     "expect": "脚本 docs/research/t180_shares_rerun.py;结果 docs/research/t180_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-180_shares_rerun.md(末尾「S-668 H1 / S-670 ISSUE 重跑结果」草稿);in_review,推 lane-c/T-180。新分支 `git switch -c lane-c/T-180 origin/main`。"
   },
-  "prior_value": "H1 翻过来(净增发少的公司之后更好)⇒ 个股 v2 合成重新进 S-668 的切换判断;不翻 ⇒ 结论照旧,但台账里写清楚这回检的是净增发。"
+  "prior_value": "H1 翻过来(净增发少的公司之后更好)⇒ 个股 v2 合成重新进 S-668 的切换判断;不翻 ⇒ 结论照旧,但台账里写清楚这回检的是净增发。",
+  "notes": "结论:**不翻**。S-668 H1 与 S-670 ISSUE 的判定都没变 —— 两边都仍然是「发现段未过 ⇒ H1 FAIL / 发现段未过」。换申报股数之后信号强度掉了,但没过门槛这件事没变。台账照旧写「这回检的是净增发」。\nS-668 H1 合成 IC(t) 旧→新:发现段 -0.0754(-2.92)→ -0.0610(-2.48),n=65;留出段 -0.0720(-2.65)→ -0.0719(-3.10),n=74。供给纪律单维 发现段 -0.0449→ -0.0131,留出段 +0.0116→ +0.0046。\nS-670 ISSUE 发现段 IC(t) 旧→新:4 周 -0.0509(-2.23)→ -0.0193(-1.13),n=62;13 周 -0.0695(-1.95)→ -0.0055(-0.22),n=19。\n挪一天(派生量三输入退到上一个周戳,截面日与前瞻锚点不动,无未来函数)后基本不动:ISSUE_NEW 4 周发现段 -0.0085(-0.47) n=60、13 周 -0.0079(-0.24);S-668 NEW 发现段 -0.0619(-2.52)。⇒ 结果不是当天口径的偶然。\n旧 ISSUE 与新 ISSUE 的截面 Spearman:发现段 0.8061(n=245 周)、留出段 0.7094(n=280)、全样本 0.7545(n=525)——高相关但离 1 很远,是两个东西。\n旧−新 ≈ 股息率:缺口最大的全是分红股(PBR +13.66%、WDC +9.30%、GE +8.00%、MO +7.27%、VZ +6.47%、PFE +6.04%),零分红股缺口精确为 0.00%(TSLA / UBER / VRTX / PLTR / SHOP / PANW / NOW)。形状对得上。\n复现校验(证明重跑忠实于原实现):ISSUE_OLD 4 周发现段 -0.0509/-2.23 vs t172_results.json 的 -0.0511/-2.23;S-668 OLD 发现段 -0.0754/-2.92 vs t169_results.json 的 -0.0753/-2.91(供给单维 -0.0449 精确一致)。\n没做的部分:库里没有股息表(world50_dividends / dividends / corporate_actions 都不存在),所以缺口只量了本身,没对着独立股息率点对点对账 —— 要对账需要 @seth 指一个股息数据源。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-22T19:11Z",
+    "value": "按申报股数重跑:H1 发现段 −0.061(t −2.48)仍不过;供给维单独从 −0.045 变 −0.013(≈ 0),合成的负号来自规模与稳定。ISSUE 4 周 −0.051 → −0.019(t −1.1)⇒ 旧版的反向是股东收益率。缺口在零分红股上精确为 0、高股息股 5–14% —— 机制对上。台账「S-668 H1 / S-670 ISSUE 按申报股数重跑结果」。"
+  }
 }
