@@ -143,8 +143,12 @@ RPC=$(curl -sm 15 -o /dev/null -w '%{http_code}' -X POST -H "apikey: $ANON" \
   "$SB/rest/v1/rpc/backfill_binance_ohlcv" 2>/dev/null)
 case "$RPC" in 401|403) ;; *) FAILS+=("CRITICAL:anon-rpc=http:$RPC"); CRIT=1;; esac
 
-ROWS=$(curl -sm 15 -H "apikey: $ANON" "$SB/rest/v1/cis_scores?select=id&limit=1" 2>/dev/null)
-[ "$ROWS" = "[]" ] || { FAILS+=("CRITICAL:anon-read-cis_scores"); CRIT=1; }
+# 2026-10-22:anon 读 cis_scores 必须是 0 行(RLS 开、没有 anon 策略 ⇒ [])或被拒(401 / 403 —— 旧版 JWT 密钥停用之后
+# 就是这个)。只有「拿到了行」才是回退。10-21 实测回退过一次:10-20 的 lane_read 把 cis_scores 放进了 anon 可读名单,
+# 而这里用的旧版 anon JWT 还活着(migrations/2026-10-22_restore_s94_cis_scores.sql)。
+ROWS_CODE=$(curl -sm 15 -o /tmp/.probe_cis_rows -w '%{http_code}' -H "apikey: $ANON" "$SB/rest/v1/cis_scores?select=id&limit=1" 2>/dev/null)
+ROWS=$(cat /tmp/.probe_cis_rows 2>/dev/null); rm -f /tmp/.probe_cis_rows
+case "$ROWS_CODE:$ROWS" in 200:"[]"|401:*|403:*) ;; *) FAILS+=("CRITICAL:anon-read-cis_scores(http:$ROWS_CODE)"); CRIT=1;; esac
 
 # ── 6. the ① book's clock (2026-08-08) ───────────────────────────────────────
 # The beta-core book's only product is elapsed calendar time toward the 60-day
