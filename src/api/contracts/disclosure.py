@@ -40,3 +40,18 @@ OFFICIAL_BASIS_ZH = (
     "信号档位按当天同组(加密 / 传统资产)排名确定,换档前有缓冲(10 个百分位;前 10% 与后 10% 两道门槛为 5);等级按绝对分。"
     "盘中数值是预览,不改变已发布的信号。"
 )
+
+#: CIS v2 影子(S-668 / S-669;Jazz 10-22)。`/api/v1/cis/v2` 引用这两句。
+V2_BASIS = (
+    "CIS v2 (shadow) scores only slow, hard-to-fake dimensions: size, stability and supply discipline (circulating "
+    "supply growth for tokens, net share issuance for companies), plus the v1 fundamental and on-chain pillars for "
+    "tokens. Momentum, sentiment and crowding are shown separately as state - a description of now, not a forecast. "
+    "Companies are shown with state and quality facts only, without signal levels. The official CIS remains v1 "
+    "until the crypto group completes its shadow period."
+)
+
+V2_BASIS_ZH = (
+    "CIS v2(影子)的分数只用慢、难伪造的维度:规模、稳定、供给纪律(代币看流通量增长,公司看净增发),代币另加 v1 的基本面与链上支柱。"
+    "动量、情绪、拥挤单独作为「状态」展示 —— 描述当下,不是预测。公司只展示状态与质量事实,不给信号档位。"
+    "加密组完成影子期之前,正式 CIS 仍是 v1。"
+)

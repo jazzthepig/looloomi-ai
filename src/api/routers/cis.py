@@ -541,6 +541,14 @@ def _universe_stale(max_age_s: float = _UNIVERSE_STALE_MAX_S) -> dict | None:
     return out
 
 
+@router.get("/api/v1/cis/v2")
+async def cis_v2_shadow():
+    """CIS v2 影子(S-668 / S-669;Jazz 10-22)。加密:分数 + 档位(影子)+ 状态;公司:只给状态与质量事实,不给档位。
+    正式 CIS 仍是 v1(`/api/v1/cis/universe`),直到加密组影子满 20 天。"""
+    from src.data.cis.v2_view import latest_view
+    return await latest_view()
+
+
 @router.get("/api/v1/cis/universe")
 async def get_cis_universe(force_source: str = None, response: Response = None, official: bool = True):
     """

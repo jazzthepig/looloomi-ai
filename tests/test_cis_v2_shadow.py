@@ -46,6 +46,11 @@ class _Fake:
             base = dt.date(2025, 9, 5)
             return [{"key": "AAPL", "d": (base + dt.timedelta(weeks=i)).isoformat(), "mcap_usd": 3e12 + i * 1e9}
                     for i in range(60)]
+        if table == "macro_daily":
+            return [{"series": "fng", "d": "2026-10-21", "value": 80}, {"series": "vix", "d": "2026-10-21", "value": 14}]
+        if table == "funding_history":
+            return [{"symbol": "BTC", "funding_time": "2026-10-20T08:00:00+00:00", "funding_rate": 0.0001,
+                     "venue": "binance_perp"}]
         if table == "ohlcv_daily":
             base = dt.date(2025, 9, 1)
             return [{"symbol": "AAPL", "trade_date": (base + dt.timedelta(days=i)).isoformat(), "close": 200 + (i % 7)}
@@ -78,5 +83,24 @@ def test_waits_for_v1_and_writes_once(monkeypatch):
     assert r["ok"] and f.written[0] == "cis_v2_daily" and r["d"] == "2026-10-21"
     btc = next(x for x in f.written[1] if x["symbol"] == "BTC")
     assert btc["grp"] == "crypto" and btc["n_dims"] == 5 and btc["raw"]["f"] == 80
-    assert any(x["symbol"] == "AAPL" and x["grp"] == "equity" for x in f.written[1])
+    aapl = next(x for x in f.written[1] if x["symbol"] == "AAPL")
+    assert aapl["grp"] == "equity" and aapl["signal"] is None and aapl["state"]["market"]["label"] == "calm"
+    assert btc["state"]["market"]["label"] == "greed" and btc["state"]["funding_7d"]["venue"] == "binance_perp"
+    assert btc["state"]["is_forecast"] is False
     assert set(r["coverage"]) == {"crypto", "equity"}
+
+
+def test_crypto_bands_use_v1_hysteresis_and_companies_get_none():
+    """分位 = 平均名次 ÷ 人数(与 v1 group_pct 同式):20 个名字时最低 0.05、最高 1.0。"""
+    d = dt.date(2026, 10, 21)
+    crypto = {f"C{i:02d}": {"size": float(i), "stability": float(i), "supply": 0.0} for i in range(20)}
+    equity = {"AAPL": {"size": 28, "stability": -0.02, "supply": 0.01}, "MSFT": {"size": 29, "stability": -0.01, "supply": 0.0}}
+    rows = sh.shadow_rows(d, crypto, equity, "t", {}, {"C19": "NEUTRAL"})
+    by = {r["symbol"]: r for r in rows}
+    assert by["C00"]["pct"] == 0.05 and by["C00"]["signal"] == "UNDERWEIGHT"
+    assert by["C19"]["signal"] == "STRONG OUTPERFORM", "前一天 NEUTRAL、今天分位 1.0 ⇒ 越过缓冲,升到最高档"
+    assert by["AAPL"]["signal"] is None and by["MSFT"]["pct"] is None, "个股不给档位"
+    rows2 = sh.shadow_rows(d, crypto, equity, "t", {}, {"C16": "STRONG OUTPERFORM"})
+    c16 = next(r for r in rows2 if r["symbol"] == "C16")
+    assert c16["pct"] == 0.85 and c16["signal"] == "STRONG OUTPERFORM" and c16["watch"], \
+        "分位 0.85 = 90 分位门槛 − 外侧缓冲 0.05 ⇒ 还在缓冲带里,保持原档并标观察"
