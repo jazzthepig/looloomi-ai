@@ -1,0 +1,575 @@
+{
+ "readings": {
+  "nearest": {
+   "prereg": "S-665 预注册段(REFUTATION_LEDGER.md L30078-30083,2026-10-21 16:51 UTC)",
+   "independence": "只读预注册段;未读结果段 / s665 脚本 / s665_results.json / ticket_tags / brief",
+   "nboot": 2000,
+   "seed": 20261023,
+   "obs_window_days": 7,
+   "obs_window_rule": "nearest",
+   "tickets": {
+    "n": 770,
+    "span": [
+     "2020-04-29",
+     "2026-10-13"
+    ],
+    "path": "research/t159/_tickets_2020-03-01_2026-06-20.json [long]"
+   },
+   "still_open_marked_to_market": {
+    "n": 3,
+    "r": [
+     2.8873,
+     0.3828,
+     -0.1214
+    ]
+   },
+   "supply_coverage": {
+    "n_symbols": 184,
+    "source_pick": {
+     "coingecko_pro_market_chart": 164
+    },
+    "symbols_empty": [
+     "1000LUNC",
+     "1000SHIB",
+     "1000XEC",
+     "ALPHA",
+     "AMB",
+     "ATA",
+     "BADGER",
+     "BEL",
+     "FXS",
+     "HIGH",
+     "KEY",
+     "LEVER",
+     "LINA",
+     "LOOM",
+     "LUNA2",
+     "NEIROETH",
+     "OMG",
+     "PERP",
+     "TRU",
+     "VOXEL"
+    ]
+   },
+   "by_year": {
+    "n_with_data": {
+     "2020": 24,
+     "2021": 54,
+     "2023": 281,
+     "2024": 231,
+     "2025": 72,
+     "2026": 41
+    },
+    "year_median_dil": {
+     "2020": 0.0082,
+     "2021": 0.0063,
+     "2023": 0.0079,
+     "2024": 0.0101,
+     "2025": 0.0091,
+     "2026": 0.0087
+    }
+   },
+   "judge1": {
+    "n_low": 350,
+    "low_mean_R": 0.6096,
+    "n_high": 353,
+    "high_mean_R": 0.4729,
+    "diff_low_minus_high": 0.1367,
+    "null_mean": 0.001496,
+    "null_sd": 0.281053,
+    "perm_p_upper_one_sided": 0.3385,
+    "perm_percentile": 0.6615,
+    "pass": false
+   },
+   "judge2": {
+    "segments": {
+     "lt_2023": {
+      "n_low": 39,
+      "n_high": 39,
+      "low_mean_R": 0.7862,
+      "high_mean_R": 0.6654,
+      "diff": 0.1209,
+      "pass": true
+     },
+     "ge_2023": {
+      "n_low": 311,
+      "n_high": 314,
+      "low_mean_R": 0.5874,
+      "high_mean_R": 0.4489,
+      "diff": 0.1385,
+      "pass": true
+     }
+    },
+    "pass": true
+   },
+   "judge3": {
+    "total_R_low": 213.3563,
+    "total_R_all_with_data": 380.276,
+    "share": 0.5611,
+    "pass": true
+   },
+   "terciles": {
+    "boundaries": {
+     "q1": 0.0019,
+     "q2": 0.0229
+    },
+    "buckets": {
+     "低": {
+      "n": 235,
+      "dil_lo": -0.49,
+      "dil_hi": 0.0019,
+      "mean_R": 0.5214,
+      "win_rate": 0.4043
+     },
+     "中": {
+      "n": 234,
+      "dil_lo": 0.0019,
+      "dil_hi": 0.0229,
+      "mean_R": 0.8668,
+      "win_rate": 0.3932
+     },
+     "高": {
+      "n": 234,
+      "dil_lo": 0.023,
+      "dil_hi": 2.3032,
+      "mean_R": 0.2347,
+      "win_rate": 0.3504
+     }
+    },
+    "top10_in_bucket": {
+     "低": 5,
+     "中": 4,
+     "高": 1
+    }
+   },
+   "no_data_tickets": {
+    "n": 67,
+    "mean_R": -0.1212,
+    "win_rate": 0.3433,
+    "symbols": [
+     "1000LUNC",
+     "1000SHIB",
+     "1000XEC",
+     "AI",
+     "ALPHA",
+     "AMB",
+     "ATA",
+     "BADGER",
+     "BEL",
+     "BNX",
+     "DAR",
+     "FLM",
+     "FXS",
+     "HIGH",
+     "KEY",
+     "LEVER",
+     "LINA",
+     "LOOM",
+     "LUNA2",
+     "NEIROETH",
+     "OMG",
+     "PERP",
+     "T",
+     "TRU",
+     "VOXEL"
+    ]
+   },
+   "verdict_all_three": false
+  },
+  "on_or_after": {
+   "prereg": "S-665 预注册段(REFUTATION_LEDGER.md L30078-30083,2026-10-21 16:51 UTC)",
+   "independence": "只读预注册段;未读结果段 / s665 脚本 / s665_results.json / ticket_tags / brief",
+   "nboot": 2000,
+   "seed": 20261023,
+   "obs_window_days": 7,
+   "obs_window_rule": "on_or_after",
+   "tickets": {
+    "n": 770,
+    "span": [
+     "2020-04-29",
+     "2026-10-13"
+    ],
+    "path": "research/t159/_tickets_2020-03-01_2026-06-20.json [long]"
+   },
+   "still_open_marked_to_market": {
+    "n": 3,
+    "r": [
+     2.8873,
+     0.3828,
+     -0.1214
+    ]
+   },
+   "supply_coverage": {
+    "n_symbols": 184,
+    "source_pick": {
+     "coingecko_pro_market_chart": 164
+    },
+    "symbols_empty": [
+     "1000LUNC",
+     "1000SHIB",
+     "1000XEC",
+     "ALPHA",
+     "AMB",
+     "ATA",
+     "BADGER",
+     "BEL",
+     "FXS",
+     "HIGH",
+     "KEY",
+     "LEVER",
+     "LINA",
+     "LOOM",
+     "LUNA2",
+     "NEIROETH",
+     "OMG",
+     "PERP",
+     "TRU",
+     "VOXEL"
+    ]
+   },
+   "by_year": {
+    "n_with_data": {
+     "2020": 24,
+     "2021": 54,
+     "2023": 281,
+     "2024": 231,
+     "2025": 71,
+     "2026": 41
+    },
+    "year_median_dil": {
+     "2020": 0.0077,
+     "2021": 0.0085,
+     "2023": 0.0076,
+     "2024": 0.0097,
+     "2025": 0.0091,
+     "2026": 0.0082
+    }
+   },
+   "judge1": {
+    "n_low": 349,
+    "low_mean_R": 0.8181,
+    "n_high": 353,
+    "high_mean_R": 0.2708,
+    "diff_low_minus_high": 0.5474,
+    "null_mean": 0.002202,
+    "null_sd": 0.278869,
+    "perm_p_upper_one_sided": 0.0185,
+    "perm_percentile": 0.9815,
+    "pass": true
+   },
+   "judge2": {
+    "segments": {
+     "lt_2023": {
+      "n_low": 39,
+      "n_high": 39,
+      "low_mean_R": 0.9055,
+      "high_mean_R": 0.5461,
+      "diff": 0.3594,
+      "pass": true
+     },
+     "ge_2023": {
+      "n_low": 310,
+      "n_high": 314,
+      "low_mean_R": 0.8071,
+      "high_mean_R": 0.2366,
+      "diff": 0.5706,
+      "pass": true
+     }
+    },
+    "pass": true
+   },
+   "judge3": {
+    "total_R_low": 285.5309,
+    "total_R_all_with_data": 381.1073,
+    "share": 0.7492,
+    "pass": true
+   },
+   "terciles": {
+    "boundaries": {
+     "q1": 0.0022,
+     "q2": 0.0229
+    },
+    "buckets": {
+     "低": {
+      "n": 234,
+      "dil_lo": -0.2303,
+      "dil_hi": 0.0022,
+      "mean_R": 0.5948,
+      "win_rate": 0.3974
+     },
+     "中": {
+      "n": 234,
+      "dil_lo": 0.0022,
+      "dil_hi": 0.0229,
+      "mean_R": 0.7737,
+      "win_rate": 0.4017
+     },
+     "高": {
+      "n": 234,
+      "dil_lo": 0.023,
+      "dil_hi": 2.299,
+      "mean_R": 0.2602,
+      "win_rate": 0.3504
+     }
+    },
+    "top10_in_bucket": {
+     "低": 5,
+     "中": 4,
+     "高": 1
+    }
+   },
+   "no_data_tickets": {
+    "n": 68,
+    "mean_R": -0.1316,
+    "win_rate": 0.3382,
+    "symbols": [
+     "1000LUNC",
+     "1000SHIB",
+     "1000XEC",
+     "AI",
+     "ALPHA",
+     "AMB",
+     "ATA",
+     "BADGER",
+     "BEL",
+     "BNX",
+     "DAR",
+     "FLM",
+     "FXS",
+     "HIGH",
+     "KEY",
+     "LEVER",
+     "LINA",
+     "LOOM",
+     "LUNA2",
+     "MKR",
+     "NEIROETH",
+     "OMG",
+     "PERP",
+     "T",
+     "TRU",
+     "VOXEL"
+    ]
+   },
+   "verdict_all_three": true
+  },
+  "alias_on_or_after": {
+   "prereg": "S-665 预注册段(REFUTATION_LEDGER.md L30078-30083,2026-10-21 16:51 UTC)",
+   "independence": "只读预注册段;未读结果段 / s665 脚本 / s665_results.json / ticket_tags / brief",
+   "nboot": 2000,
+   "seed": 20261023,
+   "obs_window_days": 7,
+   "obs_window_rule": "alias_on_or_after",
+   "tickets": {
+    "n": 770,
+    "span": [
+     "2020-04-29",
+     "2026-10-13"
+    ],
+    "path": "research/t159/_tickets_2020-03-01_2026-06-20.json [long]"
+   },
+   "still_open_marked_to_market": {
+    "n": 3,
+    "r": [
+     2.8873,
+     0.3828,
+     -0.1214
+    ]
+   },
+   "supply_coverage": {
+    "n_symbols": 184,
+    "source_pick": {
+     "coingecko_pro_market_chart": 164
+    },
+    "symbols_empty": [
+     "1000LUNC",
+     "1000XEC",
+     "ALPHA",
+     "AMB",
+     "ATA",
+     "BADGER",
+     "BEL",
+     "FXS",
+     "HIGH",
+     "KEY",
+     "LEVER",
+     "LINA",
+     "LOOM",
+     "LUNA2",
+     "NEIROETH",
+     "OMG",
+     "PERP",
+     "TRU",
+     "VOXEL"
+    ]
+   },
+   "by_year": {
+    "n_with_data": {
+     "2020": 24,
+     "2021": 54,
+     "2023": 285,
+     "2024": 232,
+     "2025": 72,
+     "2026": 41
+    },
+    "year_median_dil": {
+     "2020": 0.0077,
+     "2021": 0.0085,
+     "2023": 0.0074,
+     "2024": 0.0096,
+     "2025": 0.0088,
+     "2026": 0.0082
+    }
+   },
+   "judge1": {
+    "n_low": 353,
+    "low_mean_R": 0.8016,
+    "n_high": 355,
+    "high_mean_R": 0.2702,
+    "diff_low_minus_high": 0.5315,
+    "null_mean": -0.006852,
+    "null_sd": 0.271908,
+    "perm_p_upper_one_sided": 0.0165,
+    "perm_percentile": 0.9835,
+    "pass": true
+   },
+   "judge2": {
+    "segments": {
+     "lt_2023": {
+      "n_low": 39,
+      "n_high": 39,
+      "low_mean_R": 0.9055,
+      "high_mean_R": 0.5461,
+      "diff": 0.3594,
+      "pass": true
+     },
+     "ge_2023": {
+      "n_low": 314,
+      "n_high": 316,
+      "low_mean_R": 0.7887,
+      "high_mean_R": 0.2361,
+      "diff": 0.5527,
+      "pass": true
+     }
+    },
+    "pass": true
+   },
+   "judge3": {
+    "total_R_low": 282.982,
+    "total_R_all_with_data": 378.888,
+    "share": 0.7469,
+    "pass": true
+   },
+   "terciles": {
+    "boundaries": {
+     "q1": 0.0022,
+     "q2": 0.0226
+    },
+    "buckets": {
+     "低": {
+      "n": 236,
+      "dil_lo": -0.2303,
+      "dil_hi": 0.0022,
+      "mean_R": 0.5687,
+      "win_rate": 0.3898
+     },
+     "中": {
+      "n": 236,
+      "dil_lo": 0.0022,
+      "dil_hi": 0.0225,
+      "mean_R": 0.7639,
+      "win_rate": 0.4025
+     },
+     "高": {
+      "n": 236,
+      "dil_lo": 0.0228,
+      "dil_hi": 2.299,
+      "mean_R": 0.2729,
+      "win_rate": 0.3559
+     }
+    },
+    "top10_in_bucket": {
+     "低": 5,
+     "中": 4,
+     "高": 1
+    }
+   },
+   "no_data_tickets": {
+    "n": 62,
+    "mean_R": -0.1086,
+    "win_rate": 0.3387,
+    "symbols": [
+     "1000LUNC",
+     "1000XEC",
+     "AI",
+     "ALPHA",
+     "AMB",
+     "ATA",
+     "BADGER",
+     "BEL",
+     "BNX",
+     "DAR",
+     "FLM",
+     "FXS",
+     "HIGH",
+     "KEY",
+     "LEVER",
+     "LINA",
+     "LOOM",
+     "LUNA2",
+     "MKR",
+     "NEIROETH",
+     "OMG",
+     "PERP",
+     "T",
+     "TRU",
+     "VOXEL"
+    ]
+   },
+   "verdict_all_three": true
+  }
+ },
+ "judge1": {
+  "n_low": 350,
+  "low_mean_R": 0.6096,
+  "n_high": 353,
+  "high_mean_R": 0.4729,
+  "diff_low_minus_high": 0.1367,
+  "null_mean": 0.001496,
+  "null_sd": 0.281053,
+  "perm_p_upper_one_sided": 0.3385,
+  "perm_percentile": 0.6615,
+  "pass": false
+ },
+ "judge2": {
+  "segments": {
+   "lt_2023": {
+    "n_low": 39,
+    "n_high": 39,
+    "low_mean_R": 0.7862,
+    "high_mean_R": 0.6654,
+    "diff": 0.1209,
+    "pass": true
+   },
+   "ge_2023": {
+    "n_low": 311,
+    "n_high": 314,
+    "low_mean_R": 0.5874,
+    "high_mean_R": 0.4489,
+    "diff": 0.1385,
+    "pass": true
+   }
+  },
+  "pass": true
+ },
+ "judge3": {
+  "total_R_low": 213.3563,
+  "total_R_all_with_data": 380.276,
+  "share": 0.5611,
+  "pass": true
+ },
+ "verdict_all_three": false,
+ "verdict_on_or_after": true,
+ "verdict_alias_on_or_after": true,
+ "note": "结论依赖「前后 7 天内」怎么读:nearest(字面)不过 ①,on_or_after(装置默认口径)三条全过;alias 档 = on_or_after + 1000SHIB→SHIB 别名(偏离预注册字面的敏感检查)。"
+}
