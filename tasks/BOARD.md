@@ -3,6 +3,7 @@
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
 | in_review | T-177 | lane-b | S-672:CIS v2 的慢维度合成(规模 + 稳定 + 供给)在开票当时,是不是比「只看稀释」更能分开 R-v2 的好票与坏票 | 脚本 docs/research/t177_s672_v2_tickets.py;结果 docs/research/t177_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-177_s672_v2_tickets.md(末尾「S-672 结果」草稿 + 挖掘);in_review,推 lane-b/T-177。新分支 `git switch -c lane-b/T-177 origin/main`。 | 过 ⇒ 前向票标签加 v2 合成分(交易层与 CIS v2 一个内核);不过 ⇒ 交易层只记稀释,v2 合成不进交易层。实盘用不用都等前向、Jazz 定。 |  |
+| in_review | T-186 | lane-b | 崩盘图谱 · 新兴市场(S-675):EEM 熊市 / 急跌 + 1981 年起的 EM 货币危机,崩前迹象(对基准率)、事件、情绪与分阶段风格 | 脚本 docs/research/t186_crash_atlas_em.py;结果 docs/research/t186_results.json(每个锚点、每个迹象的原始命中都在里面,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-186_crash_atlas_em.md:崩盘目录 → 迹象排名表(带基准率与零分布分位)→ 事件表(带来源)→ 情绪画像 → 风格分阶段表 → 线索候选(标「探索性」)→ 协议问题 → 未做。in_review,推 lane-b/T-186。 | 没有。崩前迹象此前只碰过 S-570(稳定币代理,探索性)和 S-673 / S-674(边际流动性定时,都不过)。这一轮是挖掘,不计试验数。 |  |
 | in_review | T-174 | lane-c | T-171 返工(S-669):置换对照改成打乱「标签 ↔ 收益」的配对再判候选 —— 原来的块置换零化的是均值,空转 | 脚本 docs/research/t174_state_permutation.py;结果 docs/research/t174_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-174_s669_rework.md(末尾「S-669 返工结果」草稿);in_review,推 lane-c/T-174。新分支 `git switch -c lane-c/T-174 origin/main`。翻页读一律带 order=。 | 给 S-669 的候选一个有意义的死活;决定状态层对外文案里「没有预测力」能不能说。 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-069 | seth | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
@@ -16,7 +17,6 @@
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
 | open | T-184 | lane-a | T-179 的 18 家股数缺口名单:端点固定到整周五重跑,并核对其余 14 家的起点申报 | 名单家数随端点变动被量出来;14 家起点各有 A/B 分类和申报出处;不引入新的探索性信号。 | 当前名单 18 家(周三端点)。 |  |
 | open | T-185 | lane-a | 崩盘图谱 · 主流市场(S-675):NASDAQ 1971 起每次熊市 / 急跌之前的迹象(对基准率)、事件、情绪,和各阶段里什么风格扛得住 | 脚本 docs/research/t185_crash_atlas_developed.py;结果 docs/research/t185_results.json(每个锚点、每个迹象的原始命中都在里面,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-185_crash_atlas_developed.md:崩盘目录 → 迹象排名表(带基准率与零分布分位)→ 事件表(带来源)→ 情绪画像 → 风格分阶段表 → 线索候选(标「探索性」)→ 协议问题 → 未做。in_review,推 lane-a/T-185。 | 没有。崩前迹象此前只碰过 S-570(稳定币代理,探索性)和 S-673 / S-674(边际流动性定时,都不过)。这一轮是挖掘,不计试验数。 |  |
-| open | T-186 | lane-b | 崩盘图谱 · 新兴市场(S-675):EEM 熊市 / 急跌 + 1981 年起的 EM 货币危机,崩前迹象(对基准率)、事件、情绪与分阶段风格 | 脚本 docs/research/t186_crash_atlas_em.py;结果 docs/research/t186_results.json(每个锚点、每个迹象的原始命中都在里面,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-186_crash_atlas_em.md:崩盘目录 → 迹象排名表(带基准率与零分布分位)→ 事件表(带来源)→ 情绪画像 → 风格分阶段表 → 线索候选(标「探索性」)→ 协议问题 → 未做。in_review,推 lane-b/T-186。 | 没有。崩前迹象此前只碰过 S-570(稳定币代理,探索性)和 S-673 / S-674(边际流动性定时,都不过)。这一轮是挖掘,不计试验数。 |  |
 | open | T-187 | lane-c | 崩盘图谱 · 加密(S-675):BTC 2014 起每次 −50% 熊市与 14 天 −30% 急跌之前的迹象(对基准率)、事件、情绪,和各阶段里什么风格扛得住 | 脚本 docs/research/t187_crash_atlas_crypto.py;结果 docs/research/t187_results.json(每个锚点、每个迹象的原始命中都在里面,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-187_crash_atlas_crypto.md:崩盘目录 → 迹象排名表(带基准率与零分布分位)→ 事件表(带来源)→ 情绪画像 → 风格分阶段表 → 线索候选(标「探索性」)→ 协议问题 → 未做。in_review,推 lane-c/T-187。 | 没有。崩前迹象此前只碰过 S-570(稳定币代理,探索性)和 S-673 / S-674(边际流动性定时,都不过)。这一轮是挖掘,不计试验数。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
@@ -190,4 +190,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 11 · claimed 10 · blocked 7 · in_review 2 · done 154 · dropped 3
+open 10 · claimed 10 · blocked 7 · in_review 3 · done 154 · dropped 3
