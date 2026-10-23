@@ -145,6 +145,8 @@ def sign_lift(on: pd.Series, anchors: Iterable[pd.Timestamp], lookback_days: int
         return {"n_anchors": 0, "n_skipped": len(anc), "hit_rate": None, "base_rate": None, "lift": None,
                 "null_p50": None, "pctile": None}
     pos = on.index.get_indexer(usable)
+    if (pos < 0).any():  # 锚点不在序列索引上:get_indexer 给 −1,win.values[-1] 会静默读最后一格(T-185 发现)
+        raise ValueError('sign_lift: 锚点不在迹象序列的索引上,先用 to_calendar 铺成日历日')
     hits = win.values[pos]
     hit_rate = float(hits.mean())
     base = win[win.index >= first_ok]

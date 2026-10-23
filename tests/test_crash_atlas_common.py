@@ -103,3 +103,12 @@ def test_phase_returns_and_trend_reference():
     nav = ca.trend_200_nav(p)
     assert abs(nav.iloc[199] - 1.0) < 1e-12, "前 200 天没有均线 ⇒ 不持有"
     assert nav.loc[ep["trough_d"]] > p.loc[ep["trough_d"]] / p.loc[ep["peak_d"]], "趋势规则在这段下跌里少亏"
+
+
+def test_sign_lift_refuses_anchors_off_the_index():
+    """周频序列(没铺成日历日)上的锚点对不上索引时,不许静默读最后一格(T-185 发现的 −1 索引陷阱)。"""
+    import pytest
+    idx = pd.date_range("2020-01-03", periods=200, freq="7D")
+    on = pd.Series(np.arange(200) % 5 == 0, index=idx)
+    with pytest.raises(ValueError):
+        ca.sign_lift(on, [idx[100] + pd.Timedelta(days=2)], lookback_days=14, n_shift=20)
