@@ -1,0 +1,27 @@
+{
+  "id": "T-184",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-23",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "title": "T-179 的 18 家股数缺口名单:端点固定到整周五重跑,并核对其余 14 家的起点申报",
+  "source": "§C-auto-1023-1205 对 T-179 的交叉复核(Seth 10-23 核认):名单对端点敏感(周三行 7/125 家股数与上周五不同;周三 T −5.79% 入名单、10-16 周五 −4.17% 出名单 ⇒ 18↔17 家);19 家里只有 5 家的 base_date 对过申报。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-184.json"
+  ],
+  "acceptance": {
+    "check": "在 T-179 脚本上改(import,不复制):① 端点取最后一个整周五(或给周三行加 is_partial_week 后剔除),重出名单与 CSV,写明和旧 18 家的差;② 其余 14 家的 base_date(2025-10-17)逐家对一次申报股数,陈旧基点按 WELL 的做法分类;③ 同一判据再跑 13/26/52 周,报每个窗口的家数与 WDC 是否在列;④ 名单内外各自「基点后 35 天内 >1.5% 台阶」比率(6/17 vs 4/108)用同一口径复算一次。CSV 的 steps 要含 TSLA 2025-10-24 +3.11% 那一步。只读 + 研究脚本,不改 v2.py / 表。",
+    "expect": "名单家数随端点变动被量出来;14 家起点各有 A/B 分类和申报出处;不引入新的探索性信号。"
+  },
+  "prior_value": "当前名单 18 家(周三端点)。",
+  "notes": ""
+}

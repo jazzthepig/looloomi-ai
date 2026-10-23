@@ -14,6 +14,7 @@
 | claimed | T-122 | seth | 执行器核心:X1V 目标 → 订单计划 → 只算不发(dry-run)→ 写 execution_intents;收盘后 1 小时内跑、灾难止损盘中盯 | dry-run 在 Railway 或云主机上跑满 2 天,每天一批意图,人工核对无误(TRADE_PATH §5 第 1–2 天) | 执行是 X1V 成立的一部分;没有它,X1V 只能按悲观摩擦列算。 |  |
 | claimed | T-133 | seth | 接 Binance Vision 免费历史档:永续 5 分钟持仓结构(未平仓量、大户多空比、主动买卖量比)+ 盘口深度带 → 日度特征表 | 表有第一行真实数据 + 判活判据 + 调度者(规则 5b 三件齐);2020-09 起回填完成;然后预注册 S-614:R 信号日的持仓结构 / 主动买卖能不能把赢家和输家分开(交 C 道)。 | Jazz 说的「结合资金流、跟踪聪明钱」在现有免费数据里能做到的最接近版本:大户多空比是聪明钱的代理,主动买卖量比是资金流,5 年历史可以直接回测,不用等。 |  |
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
+| open | T-184 | lane-a | T-179 的 18 家股数缺口名单:端点固定到整周五重跑,并核对其余 14 家的起点申报 | 名单家数随端点变动被量出来;14 家起点各有 A/B 分类和申报出处;不引入新的探索性信号。 | 当前名单 18 家(周三端点)。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -186,4 +187,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 7 · claimed 10 · blocked 7 · in_review 2 · done 154 · dropped 3
+open 8 · claimed 10 · blocked 7 · in_review 2 · done 154 · dropped 3
