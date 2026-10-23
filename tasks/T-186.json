@@ -1,0 +1,29 @@
+{
+  "id": "T-186",
+  "owner": "lane-b",
+  "status": "blocked",
+  "created": "2026-10-23",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/",
+    "docs/research/crash_atlas_common.py"
+  ],
+  "title": "崩盘图谱 · 新兴市场(S-675):EEM 熊市 / 急跌 + 1981 年起的 EM 货币危机,崩前迹象(对基准率)、事件、情绪与分阶段风格",
+  "source": "Jazz 10-23:「我们给每个市场崩盘(主流市场,em market,crypto)前的事件,迹象和情绪,还有对应的策略风格,做个挖掘」。协议 = 台账 S-675(12:39 UTC)+ 补记(12:44 UTC,卡号与取数地址);内核 docs/research/crash_atlas_common.py(9 个测试,在 preflight 里)。三道同一个内核、同一套迹象定义,Seth 汇总成跨市场图谱。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-186.json"
+  ],
+  "acceptance": {
+    "check": "**B 道 = EM。** 两类崩盘分开报:① EEM(库,yfinance 2015-07 → 拼 eodhd)bear_episodes(0.20) + fast_crashes(14, 0.10, 60);**EEM 2015 年才有数,熊市锚点预计只有 3–4 个 < 6,只报不判,写明**;② **EM 货币危机** = 美元兑 KRW / BRL / MXN / INR(FRED DEXKOUS / DEXBZUS / DEXMXUS / DEXINUS)任一 63 个日历日升值 ≥ 15%:对每个币种用 fast_crashes(1 / DEX, 63, 1 − 1/1.15, 180)(本币跌 13.04% ⇔ 美元涨 15%,完全等价),四个币种的命中合并按日期排序、跨币种 180 天内只算一次;锚点 = 起点(start_d)回看 30 天,另报命中日(hit_d)回看 30 天。目录表列币种、起点、命中日、63 天幅度。迹象:P1–P5(在 EEM 上,仅 EEM 锚点)+ M1–M13 + E1–E4(E1 在货币危机锚点上标「同源」;E2 用 DEXCHUS;E3 VXEEMCLS 2011 起;E4 EEM 相对 SPY)。情绪:VIX、VXEEM(2011 起)、UMCSENT。风格:EEM、国家 ETF(库里只有 **EWZ / FXI / INDA / VWO**)、美元(DTWEXBGS 与 UUP)、EEM 的 trend_200_nav(空仓拿 DFF)、GLD;货币危机锚点上加「持有该国货币 vs 持美元」(用 DEX 序列)。**另交一段数据缺口说明**:EM 股票 2015 年前没有,若要把 1997 / 1998 / 2008 的 EM 股市崩盘纳进来需要多长的哪些序列(给 Seth 的抓取请求写进 MINIMAX_SYNC,规则 3b:抓取归 Seth)。 **照台账 S-675 一字不改**(门槛、窗口、锚点、种子 675、零分布 2,000 次;协议有问题写进报告「协议问题」一节,不自己改)。**import `docs/research/crash_atlas_common.py`,不复制它的函数**(bear_episodes / fast_crashes / expanding_pct / sign_lift / phase_returns / trend_200_nav / load_fred / available / to_calendar);需要的新函数写在自己脚本里,报告列出。FRED 只读数据根 `research/crash_atlas/fred/`(25 条 + manifest.json,Seth 抓的,不要自己再抓,缺什么在 MINIMAX_SYNC 说);经济数据一律先过 `available()`(内核里写死的发布滞后),市场价格滞后 0。库只读 publishable key,翻页必带 order=;取数地址见台账「S-675 补记」(12:44 UTC)。每个迹象报:锚点数 / 跳过数、命中率、基准率、提升倍数、零分布分位、null_p50、锚点按时间前半 / 后半各自的命中率;**「线索」= 分位 ≥ 0.95 且 提升 ≥ 1.5 且 锚点 ≥ 6 且 前后两半命中率都 > 基准率**,只进候选,报告写明「每道约 20 个迹象,纯偶然约冒 1 个」。**与崩盘定义同源的迹象**(破位 / 急跌锚点上的 P4 动荡、P5 初裂,EM 货币危机锚点上的 E1)照报,但标「同源,不算线索」。事件:2010 年以来每个新一轮顶(first_leg)与每次急跌之前 90 天,按协议八类分;**每条带日期和来源链接(央行 / 监管 / 交易所公告,或 Reuters / Bloomberg / FT / WSJ / CoinDesk 等报道;维基百科只能当索引,要附它引的原始来源),查不到来源的不写**;只计数不算提升。情绪画像:顶前 90 天、30 天、顶、谷底的水平,跨崩盘取中位。风格分阶段(顶前 60 天 / 顶 → 谷底 / 谷底 → +120 天)用 phase_returns,**只报不判**。ETF 拼接:2022-08-31 前 yfinance、之后 eodhd(SPY / QQQ 全段 eodhd),拼前报重叠段日收益相关与水平比。一轮做不完按这个次序交、没做的在报告里写「未做」:崩盘目录 → 迹象表 → 风格表 → 情绪画像 → 事件表。报告用合规词(不写买 / 卖类字眼),不产生任何可交易规则 —— 线索要用,Seth 另立预注册、按前向判。新分支 `git switch -c lane-b/T-186 origin/main`。",
+    "expect": "脚本 docs/research/t186_crash_atlas_em.py;结果 docs/research/t186_results.json(每个锚点、每个迹象的原始命中都在里面,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-186_crash_atlas_em.md:崩盘目录 → 迹象排名表(带基准率与零分布分位)→ 事件表(带来源)→ 情绪画像 → 风格分阶段表 → 线索候选(标「探索性」)→ 协议问题 → 未做。in_review,推 lane-b/T-186。"
+  },
+  "prior_value": "没有。崩前迹象此前只碰过 S-570(稳定币代理,探索性)和 S-673 / S-674(边际流动性定时,都不过)。这一轮是挖掘,不计试验数。",
+  "notes": "",
+  "blocked_by": "Seth:内核 docs/research/crash_atlas_common.py 还没进 origin/main —— 推上去后改 open 并写 wake"
+}
