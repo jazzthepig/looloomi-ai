@@ -1,0 +1,29 @@
+{
+  "id": "T-189",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-23",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/",
+    "docs/research/s677_rv2_oos.py",
+    "docs/research/s677_results.json"
+  ],
+  "title": "S-677 独立复现:R-v2 在 2018-01 → 2020-02(Binance 全部 USDT 现货对、含已下架)的票 —— 从规则原文自己实现,不看 Seth 的脚本,逐张对票",
+  "source": "台账 S-677(2026-10-23 15:42 UTC)只报项「独立复现(交 A 道,不看我的脚本,逐张对票)」。R-v2 要上真钱,它的样本外是组合杠杆 > 1 的前提之一;两份独立实现对上,才排除实现层的错。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-189.json"
+  ],
+  "acceptance": {
+    "check": "**不读** docs/research/s677_rv2_oos.py、docs/research/s677_results.json、docs/research/t159_bear_short.py、docs/research/s657_s658_breadth_second_leg.py(这几个是 Seth 那一份)。规则只从 docs/research/r_v2_tickets.sql 与台账 S-677 原文读:rn ≥ 220、adv30(含当天 30 根)≥ $5M、mindd120(dd = 收盘 / 前 365 根含当天最高收盘,取 120 根含当天的最小值)≤ 0.5、(前 40 根最高 high − 前 40 根最低 low)/ 前 40 根最高 ≤ 0.40、收盘 > 前 40 根最高 high、收盘 > SMA200、当天 dv ≥ 2 × 前 40 根 dv 均值、ATR14 > 0;次日开盘进,止损 = 进场 − 2.5 × ATR14(信号日的),第 j 根 low ≤ 止损 ⇒ 止损出(跳空在止损下方按开盘)、否则收盘 < SMA20 ⇒ 次日开盘出,120 根到期按收盘;R = (出 − 进)/(进 − 止损)− 0.004 × 进 /(进 − 止损);同币上一张出场之前不开新票。闸门 = 数据根 research/s677/_gate_proxy.json 的 runs(open = false 的日子不出信号)。数据只读数据根 research/s677/_bv_daily.jsonl(145 个对;bars = [d, o, h, l, c, dv])。信号窗口 2018-01-01 → 2020-02-29;2020-08-31 之后没数据,仍持有的票按最后一根收盘盯市并标 still。",
+    "expect": "脚本 docs/research/t189_s677_replicate.py;票表 docs/research/t189_tickets.csv(symbol, signal_d, entry_d, exit_d, entry_px, stop_px, exit_px, r, still);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-189_s677_replicate.md:票数、平均 R、合计 R、按年 —— 不做任何判定,判定是 Seth 对完两份之后的事。in_review,推 lane-a/T-189。新分支 `git switch -c lane-a/T-189 origin/main`。"
+  },
+  "prior_value": "Seth 另有一份实现(交付前不给你看);两份逐张对票,差异逐张解释 —— 这是这张卡的全部价值,所以不看对方的代码。",
+  "notes": ""
+}
