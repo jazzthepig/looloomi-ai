@@ -3,6 +3,7 @@
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
 | in_review | T-184 | lane-a | T-179 的 18 家股数缺口名单:端点固定到整周五重跑,并核对其余 14 家的起点申报 | 名单家数随端点变动被量出来;14 家起点各有 A/B 分类和申报出处;不引入新的探索性信号。 | 当前名单 18 家(周三端点)。 |  |
+| in_review | T-185 | lane-a | 崩盘图谱 · 主流市场(S-675):NASDAQ 1971 起每次熊市 / 急跌之前的迹象(对基准率)、事件、情绪,和各阶段里什么风格扛得住 | 脚本 docs/research/t185_crash_atlas_developed.py;结果 docs/research/t185_results.json(每个锚点、每个迹象的原始命中都在里面,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-185_crash_atlas_developed.md:崩盘目录 → 迹象排名表(带基准率与零分布分位)→ 事件表(带来源)→ 情绪画像 → 风格分阶段表 → 线索候选(标「探索性」)→ 协议问题 → 未做。in_review,推 lane-a/T-185。 | 没有。崩前迹象此前只碰过 S-570(稳定币代理,探索性)和 S-673 / S-674(边际流动性定时,都不过)。这一轮是挖掘,不计试验数。 |  |
 | in_review | T-177 | lane-b | S-672:CIS v2 的慢维度合成(规模 + 稳定 + 供给)在开票当时,是不是比「只看稀释」更能分开 R-v2 的好票与坏票 | 脚本 docs/research/t177_s672_v2_tickets.py;结果 docs/research/t177_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-177_s672_v2_tickets.md(末尾「S-672 结果」草稿 + 挖掘);in_review,推 lane-b/T-177。新分支 `git switch -c lane-b/T-177 origin/main`。 | 过 ⇒ 前向票标签加 v2 合成分(交易层与 CIS v2 一个内核);不过 ⇒ 交易层只记稀释,v2 合成不进交易层。实盘用不用都等前向、Jazz 定。 |  |
 | in_review | T-186 | lane-b | 崩盘图谱 · 新兴市场(S-675):EEM 熊市 / 急跌 + 1981 年起的 EM 货币危机,崩前迹象(对基准率)、事件、情绪与分阶段风格 | 脚本 docs/research/t186_crash_atlas_em.py;结果 docs/research/t186_results.json(每个锚点、每个迹象的原始命中都在里面,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-186_crash_atlas_em.md:崩盘目录 → 迹象排名表(带基准率与零分布分位)→ 事件表(带来源)→ 情绪画像 → 风格分阶段表 → 线索候选(标「探索性」)→ 协议问题 → 未做。in_review,推 lane-b/T-186。 | 没有。崩前迹象此前只碰过 S-570(稳定币代理,探索性)和 S-673 / S-674(边际流动性定时,都不过)。这一轮是挖掘,不计试验数。 |  |
 | in_review | T-174 | lane-c | T-171 返工(S-669):置换对照改成打乱「标签 ↔ 收益」的配对再判候选 —— 原来的块置换零化的是均值,空转 | 脚本 docs/research/t174_state_permutation.py;结果 docs/research/t174_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-174_s669_rework.md(末尾「S-669 返工结果」草稿);in_review,推 lane-c/T-174。新分支 `git switch -c lane-c/T-174 origin/main`。翻页读一律带 order=。 | 给 S-669 的候选一个有意义的死活;决定状态层对外文案里「没有预测力」能不能说。 |  |
@@ -16,7 +17,6 @@
 | claimed | T-122 | seth | 执行器核心:X1V 目标 → 订单计划 → 只算不发(dry-run)→ 写 execution_intents;收盘后 1 小时内跑、灾难止损盘中盯 | dry-run 在 Railway 或云主机上跑满 2 天,每天一批意图,人工核对无误(TRADE_PATH §5 第 1–2 天) | 执行是 X1V 成立的一部分;没有它,X1V 只能按悲观摩擦列算。 |  |
 | claimed | T-133 | seth | 接 Binance Vision 免费历史档:永续 5 分钟持仓结构(未平仓量、大户多空比、主动买卖量比)+ 盘口深度带 → 日度特征表 | 表有第一行真实数据 + 判活判据 + 调度者(规则 5b 三件齐);2020-09 起回填完成;然后预注册 S-614:R 信号日的持仓结构 / 主动买卖能不能把赢家和输家分开(交 C 道)。 | Jazz 说的「结合资金流、跟踪聪明钱」在现有免费数据里能做到的最接近版本:大户多空比是聪明钱的代理,主动买卖量比是资金流,5 年历史可以直接回测,不用等。 |  |
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
-| open | T-185 | lane-a | 崩盘图谱 · 主流市场(S-675):NASDAQ 1971 起每次熊市 / 急跌之前的迹象(对基准率)、事件、情绪,和各阶段里什么风格扛得住 | 脚本 docs/research/t185_crash_atlas_developed.py;结果 docs/research/t185_results.json(每个锚点、每个迹象的原始命中都在里面,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-185_crash_atlas_developed.md:崩盘目录 → 迹象排名表(带基准率与零分布分位)→ 事件表(带来源)→ 情绪画像 → 风格分阶段表 → 线索候选(标「探索性」)→ 协议问题 → 未做。in_review,推 lane-a/T-185。 | 没有。崩前迹象此前只碰过 S-570(稳定币代理,探索性)和 S-673 / S-674(边际流动性定时,都不过)。这一轮是挖掘,不计试验数。 |  |
 | open | T-187 | lane-c | 崩盘图谱 · 加密(S-675):BTC 2014 起每次 −50% 熊市与 14 天 −30% 急跌之前的迹象(对基准率)、事件、情绪,和各阶段里什么风格扛得住 | 脚本 docs/research/t187_crash_atlas_crypto.py;结果 docs/research/t187_results.json(每个锚点、每个迹象的原始命中都在里面,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-187_crash_atlas_crypto.md:崩盘目录 → 迹象排名表(带基准率与零分布分位)→ 事件表(带来源)→ 情绪画像 → 风格分阶段表 → 线索候选(标「探索性」)→ 协议问题 → 未做。in_review,推 lane-c/T-187。 | 没有。崩前迹象此前只碰过 S-570(稳定币代理,探索性)和 S-673 / S-674(边际流动性定时,都不过)。这一轮是挖掘,不计试验数。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
@@ -190,4 +190,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 9 · claimed 10 · blocked 7 · in_review 4 · done 154 · dropped 3
+open 8 · claimed 10 · blocked 7 · in_review 5 · done 154 · dropped 3

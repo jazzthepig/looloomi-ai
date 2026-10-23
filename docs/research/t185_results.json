@@ -1,0 +1,3843 @@
+{
+ "task": "T-185",
+ "protocol": "S-675",
+ "seed": 675,
+ "n_shift": 2000,
+ "definitions": {
+  "bear": 0.2,
+  "fast": [
+   14,
+   0.1,
+   60
+  ],
+  "main_lookback": 90,
+  "aux_lookback": 30,
+  "splice_date": "2022-08-31"
+ },
+ "catalog": {
+  "NASDAQCOM": {
+   "first": "1971-02-05",
+   "last": "2026-10-22",
+   "n_obs": 14047,
+   "bears": [
+    {
+     "peak_d": "1973-01-11",
+     "break_d": "1973-04-25",
+     "trough_d": "1974-10-03",
+     "depth": -0.599,
+     "recover_d": "1978-09-07",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "1978-09-13",
+     "break_d": "1978-10-31",
+     "trough_d": "1978-11-14",
+     "depth": -0.2037,
+     "recover_d": "1979-07-26",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "1980-02-08",
+     "break_d": "1980-03-27",
+     "trough_d": "1980-03-27",
+     "depth": -0.2491,
+     "recover_d": "1980-07-14",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "1981-05-29",
+     "break_d": "1981-09-25",
+     "trough_d": "1982-08-13",
+     "depth": -0.2879,
+     "recover_d": "1982-11-04",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "1983-06-24",
+     "break_d": "1984-02-06",
+     "trough_d": "1984-07-25",
+     "depth": -0.315,
+     "recover_d": "1986-01-07",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "1987-08-26",
+     "break_d": "1987-10-19",
+     "trough_d": "1987-10-28",
+     "depth": -0.3589,
+     "recover_d": "1989-08-03",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "1989-10-09",
+     "break_d": "1990-08-21",
+     "trough_d": "1990-10-16",
+     "depth": -0.33,
+     "recover_d": "1991-04-02",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "1998-07-20",
+     "break_d": "1998-08-31",
+     "trough_d": "1998-10-08",
+     "depth": -0.2955,
+     "recover_d": "1998-11-27",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "2000-03-10",
+     "break_d": "2000-04-12",
+     "trough_d": "2000-05-23",
+     "depth": -0.3732,
+     "recover_d": "2015-04-23",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "2000-07-17",
+     "break_d": "2000-10-06",
+     "trough_d": "2001-01-02",
+     "depth": -0.4639,
+     "recover_d": "2014-02-24",
+     "open": false,
+     "first_leg": false
+    },
+    {
+     "peak_d": "2001-01-24",
+     "break_d": "2001-02-21",
+     "trough_d": "2001-04-04",
+     "depth": -0.4268,
+     "recover_d": "2011-04-27",
+     "open": false,
+     "first_leg": false
+    },
+    {
+     "peak_d": "2001-05-22",
+     "break_d": "2001-08-21",
+     "trough_d": "2001-09-21",
+     "depth": -0.3849,
+     "recover_d": "2006-01-09",
+     "open": false,
+     "first_leg": false
+    },
+    {
+     "peak_d": "2002-01-04",
+     "break_d": "2002-05-02",
+     "trough_d": "2002-10-09",
+     "depth": -0.459,
+     "recover_d": "2004-01-06",
+     "open": false,
+     "first_leg": false
+    },
+    {
+     "peak_d": "2007-10-31",
+     "break_d": "2008-02-06",
+     "trough_d": "2008-11-20",
+     "depth": -0.5397,
+     "recover_d": "2011-04-27",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "2009-01-06",
+     "break_d": "2009-03-03",
+     "trough_d": "2009-03-09",
+     "depth": -0.2322,
+     "recover_d": "2009-04-09",
+     "open": false,
+     "first_leg": false
+    },
+    {
+     "peak_d": "2018-08-29",
+     "break_d": "2018-12-21",
+     "trough_d": "2018-12-24",
+     "depth": -0.2364,
+     "recover_d": "2019-04-23",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "2020-02-19",
+     "break_d": "2020-03-12",
+     "trough_d": "2020-03-23",
+     "depth": -0.3012,
+     "recover_d": "2020-06-08",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "2021-11-19",
+     "break_d": "2022-03-07",
+     "trough_d": "2022-06-16",
+     "depth": -0.337,
+     "recover_d": "2024-02-29",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "2022-08-15",
+     "break_d": "2022-10-11",
+     "trough_d": "2022-12-28",
+     "depth": -0.222,
+     "recover_d": "2023-06-02",
+     "open": false,
+     "first_leg": false
+    },
+    {
+     "peak_d": "2024-12-16",
+     "break_d": "2025-04-04",
+     "trough_d": "2025-04-08",
+     "depth": -0.2432,
+     "recover_d": "2025-06-27",
+     "open": false,
+     "first_leg": true
+    }
+   ],
+   "fast_crashes": [
+    {
+     "start_d": "1973-11-12",
+     "hit_d": "1973-11-26",
+     "ret": -0.1042
+    },
+    {
+     "start_d": "1974-06-24",
+     "hit_d": "1974-07-08",
+     "ret": -0.1004
+    },
+    {
+     "start_d": "1978-10-10",
+     "hit_d": "1978-10-24",
+     "ret": -0.1022
+    },
+    {
+     "start_d": "1979-10-05",
+     "hit_d": "1979-10-19",
+     "ret": -0.1031
+    },
+    {
+     "start_d": "1980-03-03",
+     "hit_d": "1980-03-17",
+     "ret": -0.1095
+    },
+    {
+     "start_d": "1987-10-02",
+     "hit_d": "1987-10-16",
+     "ret": -0.1003
+    },
+    {
+     "start_d": "1990-07-23",
+     "hit_d": "1990-08-06",
+     "ret": -0.1003
+    },
+    {
+     "start_d": "1996-07-01",
+     "hit_d": "1996-07-15",
+     "ret": -0.1146
+    },
+    {
+     "start_d": "1997-10-13",
+     "hit_d": "1997-10-27",
+     "ret": -0.1188
+    },
+    {
+     "start_d": "1998-08-17",
+     "hit_d": "1998-08-31",
+     "ret": -0.1753
+    },
+    {
+     "start_d": "2000-03-21",
+     "hit_d": "2000-04-04",
+     "ret": -0.1194
+    },
+    {
+     "start_d": "2000-07-14",
+     "hit_d": "2000-07-28",
+     "ret": -0.1373
+    },
+    {
+     "start_d": "2000-09-19",
+     "hit_d": "2000-10-03",
+     "ret": -0.106
+    },
+    {
+     "start_d": "2000-11-19",
+     "hit_d": "2000-12-03",
+     "ret": -0.1262
+    },
+    {
+     "start_d": "2001-01-26",
+     "hit_d": "2001-02-09",
+     "ret": -0.1116
+    },
+    {
+     "start_d": "2001-06-05",
+     "hit_d": "2001-06-19",
+     "ret": -0.1079
+    },
+    {
+     "start_d": "2001-08-24",
+     "hit_d": "2001-09-07",
+     "ret": -0.1195
+    },
+    {
+     "start_d": "2002-04-19",
+     "hit_d": "2002-05-03",
+     "ret": -0.1023
+    },
+    {
+     "start_d": "2002-07-09",
+     "hit_d": "2002-07-23",
+     "ret": -0.1101
+    },
+    {
+     "start_d": "2002-09-10",
+     "hit_d": "2002-09-24",
+     "ret": -0.1045
+    },
+    {
+     "start_d": "2007-12-25",
+     "hit_d": "2008-01-08",
+     "ret": -0.1006
+    },
+    {
+     "start_d": "2008-09-03",
+     "hit_d": "2008-09-17",
+     "ret": -0.1006
+    },
+    {
+     "start_d": "2008-11-03",
+     "hit_d": "2008-11-17",
+     "ret": -0.1415
+    },
+    {
+     "start_d": "2009-01-06",
+     "hit_d": "2009-01-20",
+     "ret": -0.128
+    },
+    {
+     "start_d": "2010-04-23",
+     "hit_d": "2010-05-07",
+     "ret": -0.1045
+    },
+    {
+     "start_d": "2011-07-22",
+     "hit_d": "2011-08-05",
+     "ret": -0.1142
+    },
+    {
+     "start_d": "2015-08-10",
+     "hit_d": "2015-08-24",
+     "ret": -0.1128
+    },
+    {
+     "start_d": "2015-12-30",
+     "hit_d": "2016-01-13",
+     "ret": -0.1066
+    },
+    {
+     "start_d": "2018-12-10",
+     "hit_d": "2018-12-24",
+     "ret": -0.1179
+    },
+    {
+     "start_d": "2020-02-13",
+     "hit_d": "2020-02-27",
+     "ret": -0.1179
+    },
+    {
+     "start_d": "2022-01-11",
+     "hit_d": "2022-01-25",
+     "ret": -0.1065
+    },
+    {
+     "start_d": "2022-04-25",
+     "hit_d": "2022-05-09",
+     "ret": -0.1062
+    },
+    {
+     "start_d": "2022-09-09",
+     "hit_d": "2022-09-23",
+     "ret": -0.1027
+    },
+    {
+     "start_d": "2024-07-22",
+     "hit_d": "2024-08-05",
+     "ret": -0.1004
+    },
+    {
+     "start_d": "2025-03-21",
+     "hit_d": "2025-04-04",
+     "ret": -0.1235
+    }
+   ]
+  },
+  "SPY": {
+   "first": "2015-01-02",
+   "last": "2026-10-22",
+   "n_obs": 2969,
+   "bears": [
+    {
+     "peak_d": "2020-02-19",
+     "break_d": "2020-03-12",
+     "trough_d": "2020-03-23",
+     "depth": -0.3372,
+     "recover_d": "2020-08-10",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "2022-01-03",
+     "break_d": "2022-06-13",
+     "trough_d": "2022-10-12",
+     "depth": -0.245,
+     "recover_d": "2023-12-13",
+     "open": false,
+     "first_leg": true
+    }
+   ],
+   "fast_crashes": [
+    {
+     "start_d": "2015-08-11",
+     "hit_d": "2015-08-25",
+     "ret": -0.1026
+    },
+    {
+     "start_d": "2018-12-10",
+     "hit_d": "2018-12-24",
+     "ret": -0.1074
+    },
+    {
+     "start_d": "2020-02-13",
+     "hit_d": "2020-02-27",
+     "ret": -0.1173
+    },
+    {
+     "start_d": "2022-06-02",
+     "hit_d": "2022-06-16",
+     "ret": -0.1216
+    },
+    {
+     "start_d": "2022-09-12",
+     "hit_d": "2022-09-26",
+     "ret": -0.1099
+    },
+    {
+     "start_d": "2025-03-21",
+     "hit_d": "2025-04-04",
+     "ret": -0.1041
+    }
+   ]
+  }
+ },
+ "anchors": {
+  "main": [
+   "1973-01-11",
+   "1978-09-13",
+   "1980-02-08",
+   "1981-05-29",
+   "1983-06-24",
+   "1987-08-26",
+   "1989-10-09",
+   "1998-07-20",
+   "2000-03-10",
+   "2007-10-31",
+   "2018-08-29",
+   "2020-02-19",
+   "2021-11-19",
+   "2024-12-16"
+  ],
+  "aux_break": [
+   "1973-04-25",
+   "1978-10-31",
+   "1980-03-27",
+   "1981-09-25",
+   "1984-02-06",
+   "1987-10-19",
+   "1990-08-21",
+   "1998-08-31",
+   "2000-04-12",
+   "2000-10-06",
+   "2001-02-21",
+   "2001-08-21",
+   "2002-05-02",
+   "2008-02-06",
+   "2009-03-03",
+   "2018-12-21",
+   "2020-03-12",
+   "2022-03-07",
+   "2022-10-11",
+   "2025-04-04"
+  ],
+  "aux_fast": [
+   "1973-11-12",
+   "1974-06-24",
+   "1978-10-10",
+   "1979-10-05",
+   "1980-03-03",
+   "1987-10-02",
+   "1990-07-23",
+   "1996-07-01",
+   "1997-10-13",
+   "1998-08-17",
+   "2000-03-21",
+   "2000-07-14",
+   "2000-09-19",
+   "2000-11-19",
+   "2001-01-26",
+   "2001-06-05",
+   "2001-08-24",
+   "2002-04-19",
+   "2002-07-09",
+   "2002-09-10",
+   "2007-12-25",
+   "2008-09-03",
+   "2008-11-03",
+   "2009-01-06",
+   "2010-04-23",
+   "2011-07-22",
+   "2015-08-10",
+   "2015-12-30",
+   "2018-12-10",
+   "2020-02-13",
+   "2022-01-11",
+   "2022-04-25",
+   "2022-09-09",
+   "2024-07-22",
+   "2025-03-21"
+  ]
+ },
+ "signals": [
+  {
+   "n_anchors": 14,
+   "n_skipped": 0,
+   "hit_rate": 0.42857142857142855,
+   "base_rate": 0.25384693257744484,
+   "lift": 1.6883065090442955,
+   "null_p50": 0.21428571428571427,
+   "pctile": 0.92275,
+   "signal": "P1",
+   "anchor_set": "main",
+   "lookback": 90,
+   "label": "过去 252 天收益分位 ≥ 0.9(亢奋)",
+   "same_source": false,
+   "first_data": "1972-06-22",
+   "hit_first": 0.5,
+   "n_first": 8,
+   "hit_second": 0.3333333333333333,
+   "n_second": 6,
+   "both_halves_above_base": true,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 20,
+   "n_skipped": 0,
+   "hit_rate": 0.1,
+   "base_rate": 0.1772809850625757,
+   "lift": 0.5640762880728722,
+   "null_p50": 0.15,
+   "pctile": 0.1895,
+   "signal": "P1",
+   "anchor_set": "aux_break",
+   "lookback": 30,
+   "label": "过去 252 天收益分位 ≥ 0.9(亢奋)",
+   "same_source": false,
+   "first_data": "1972-06-22",
+   "hit_first": 0.18181818181818182,
+   "n_first": 11,
+   "hit_second": 0.0,
+   "n_second": 9,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 35,
+   "n_skipped": 0,
+   "hit_rate": 0.2,
+   "base_rate": 0.1772809850625757,
+   "lift": 1.1281525761457445,
+   "null_p50": 0.17142857142857143,
+   "pctile": 0.6255,
+   "signal": "P1",
+   "anchor_set": "aux_fast",
+   "lookback": 30,
+   "label": "过去 252 天收益分位 ≥ 0.9(亢奋)",
+   "same_source": false,
+   "first_data": "1972-06-22",
+   "hit_first": 0.2777777777777778,
+   "n_first": 18,
+   "hit_second": 0.11764705882352941,
+   "n_second": 17,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 14,
+   "n_skipped": 0,
+   "hit_rate": 0.2857142857142857,
+   "base_rate": 0.2233328285122924,
+   "lift": 1.2793205889950916,
+   "null_p50": 0.21428571428571427,
+   "pctile": 0.69875,
+   "signal": "P2",
+   "anchor_set": "main",
+   "lookback": 90,
+   "label": "价格/200 日均线−1 分位 ≥ 0.9(过度延伸)",
+   "same_source": false,
+   "first_data": "1972-04-30",
+   "hit_first": 0.25,
+   "n_first": 8,
+   "hit_second": 0.3333333333333333,
+   "n_second": 6,
+   "both_halves_above_base": true,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 20,
+   "n_skipped": 0,
+   "hit_rate": 0.1,
+   "base_rate": 0.14786853892999144,
+   "lift": 0.676276378488768,
+   "null_p50": 0.15,
+   "pctile": 0.291,
+   "signal": "P2",
+   "anchor_set": "aux_break",
+   "lookback": 30,
+   "label": "价格/200 日均线−1 分位 ≥ 0.9(过度延伸)",
+   "same_source": false,
+   "first_data": "1972-04-30",
+   "hit_first": 0.09090909090909091,
+   "n_first": 11,
+   "hit_second": 0.1111111111111111,
+   "n_second": 9,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 35,
+   "n_skipped": 0,
+   "hit_rate": 0.14285714285714285,
+   "base_rate": 0.14786853892999144,
+   "lift": 0.9661091121268113,
+   "null_p50": 0.14285714285714285,
+   "pctile": 0.49075,
+   "signal": "P2",
+   "anchor_set": "aux_fast",
+   "lookback": 30,
+   "label": "价格/200 日均线−1 分位 ≥ 0.9(过度延伸)",
+   "same_source": false,
+   "first_data": "1972-04-30",
+   "hit_first": 0.16666666666666666,
+   "n_first": 18,
+   "hit_second": 0.11764705882352941,
+   "n_second": 17,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 14,
+   "n_skipped": 0,
+   "hit_rate": 0.35714285714285715,
+   "base_rate": 0.2555033019811887,
+   "lift": 1.3978013371003386,
+   "null_p50": 0.2857142857142857,
+   "pctile": 0.8175,
+   "signal": "P3",
+   "anchor_set": "main",
+   "lookback": 90,
+   "label": "20 日实现波动分位 ≤ 0.1(风平浪静)",
+   "same_source": false,
+   "first_data": "1971-11-03",
+   "hit_first": 0.5,
+   "n_first": 8,
+   "hit_second": 0.16666666666666666,
+   "n_second": 6,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 20,
+   "n_skipped": 0,
+   "hit_rate": 0.0,
+   "base_rate": 0.14869313647246607,
+   "lift": 0.0,
+   "null_p50": 0.15,
+   "pctile": 0.01025,
+   "signal": "P3",
+   "anchor_set": "aux_break",
+   "lookback": 30,
+   "label": "20 日实现波动分位 ≤ 0.1(风平浪静)",
+   "same_source": false,
+   "first_data": "1971-11-03",
+   "hit_first": 0.0,
+   "n_first": 11,
+   "hit_second": 0.0,
+   "n_second": 9,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 35,
+   "n_skipped": 0,
+   "hit_rate": 0.02857142857142857,
+   "base_rate": 0.14869313647246607,
+   "lift": 0.19215028513921503,
+   "null_p50": 0.14285714285714285,
+   "pctile": 0.02975,
+   "signal": "P3",
+   "anchor_set": "aux_fast",
+   "lookback": 30,
+   "label": "20 日实现波动分位 ≤ 0.1(风平浪静)",
+   "same_source": false,
+   "first_data": "1971-11-03",
+   "hit_first": 0.0,
+   "n_first": 18,
+   "hit_second": 0.058823529411764705,
+   "n_second": 17,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 14,
+   "n_skipped": 0,
+   "hit_rate": 0.14285714285714285,
+   "base_rate": 0.46147688613167903,
+   "lift": 0.30956510965183986,
+   "null_p50": 0.42857142857142855,
+   "pctile": 0.0085,
+   "signal": "P4",
+   "anchor_set": "main",
+   "lookback": 90,
+   "label": "20 日实现波动分位 ≥ 0.9(动荡)",
+   "same_source": false,
+   "first_data": "1971-11-03",
+   "hit_first": 0.125,
+   "n_first": 8,
+   "hit_second": 0.16666666666666666,
+   "n_second": 6,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 20,
+   "n_skipped": 0,
+   "hit_rate": 0.9,
+   "base_rate": 0.3138467677573823,
+   "lift": 2.867641449459631,
+   "null_p50": 0.3,
+   "pctile": 1.0,
+   "signal": "P4",
+   "anchor_set": "aux_break",
+   "lookback": 30,
+   "label": "20 日实现波动分位 ≥ 0.9(动荡)",
+   "same_source": true,
+   "first_data": "1971-11-03",
+   "hit_first": 0.9090909090909091,
+   "n_first": 11,
+   "hit_second": 0.8888888888888888,
+   "n_second": 9,
+   "both_halves_above_base": true,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 35,
+   "n_skipped": 0,
+   "hit_rate": 0.4857142857142857,
+   "base_rate": 0.3138467677573823,
+   "lift": 1.547616020343293,
+   "null_p50": 0.3142857142857143,
+   "pctile": 0.96775,
+   "signal": "P4",
+   "anchor_set": "aux_fast",
+   "lookback": 30,
+   "label": "20 日实现波动分位 ≥ 0.9(动荡)",
+   "same_source": true,
+   "first_data": "1971-11-03",
+   "hit_first": 0.5,
+   "n_first": 18,
+   "hit_second": 0.47058823529411764,
+   "n_second": 17,
+   "both_halves_above_base": true,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 14,
+   "n_skipped": 0,
+   "hit_rate": 0.5,
+   "base_rate": 0.6316473410635746,
+   "lift": 0.7915809463522709,
+   "null_p50": 0.6428571428571429,
+   "pctile": 0.14,
+   "signal": "P5",
+   "anchor_set": "main",
+   "lookback": 90,
+   "label": "离 52 周高点 ≥ 5% 但仍在 200 日线上(初裂)",
+   "same_source": false,
+   "first_data": "1971-10-14",
+   "hit_first": 0.375,
+   "n_first": 8,
+   "hit_second": 0.6666666666666666,
+   "n_second": 6,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 20,
+   "n_skipped": 0,
+   "hit_rate": 0.35,
+   "base_rate": 0.3778652581223839,
+   "lift": 0.9262560991691942,
+   "null_p50": 0.4,
+   "pctile": 0.39725,
+   "signal": "P5",
+   "anchor_set": "aux_break",
+   "lookback": 30,
+   "label": "离 52 周高点 ≥ 5% 但仍在 200 日线上(初裂)",
+   "same_source": true,
+   "first_data": "1971-10-14",
+   "hit_first": 0.5454545454545454,
+   "n_first": 11,
+   "hit_second": 0.1111111111111111,
+   "n_second": 9,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 35,
+   "n_skipped": 0,
+   "hit_rate": 0.42857142857142855,
+   "base_rate": 0.3778652581223839,
+   "lift": 1.1341911418398296,
+   "null_p50": 0.37142857142857144,
+   "pctile": 0.7529999999999999,
+   "signal": "P5",
+   "anchor_set": "aux_fast",
+   "lookback": 30,
+   "label": "离 52 周高点 ≥ 5% 但仍在 200 日线上(初裂)",
+   "same_source": true,
+   "first_data": "1971-10-14",
+   "hit_first": 0.5555555555555556,
+   "n_first": 18,
+   "hit_second": 0.29411764705882354,
+   "n_second": 17,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 14,
+   "n_skipped": 0,
+   "hit_rate": 0.5,
+   "base_rate": 0.48347202958853447,
+   "lift": 1.0341859909156108,
+   "null_p50": 0.5,
+   "pctile": 0.5325,
+   "signal": "M1",
+   "anchor_set": "main",
+   "lookback": 90,
+   "label": "联邦基金利率 12 个月升 ≥ 1pp",
+   "same_source": false,
+   "first_data": "1955-07-01",
+   "hit_first": 0.75,
+   "n_first": 8,
+   "hit_second": 0.16666666666666666,
+   "n_second": 6,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 20,
+   "n_skipped": 0,
+   "hit_rate": 0.5,
+   "base_rate": 0.38510916359163594,
+   "lift": 1.2983331669827327,
+   "null_p50": 0.4,
+   "pctile": 0.847,
+   "signal": "M1",
+   "anchor_set": "aux_break",
+   "lookback": 30,
+   "label": "联邦基金利率 12 个月升 ≥ 1pp",
+   "same_source": false,
+   "first_data": "1955-07-01",
+   "hit_first": 0.7272727272727273,
+   "n_first": 11,
+   "hit_second": 0.2222222222222222,
+   "n_second": 9,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 35,
+   "n_skipped": 0,
+   "hit_rate": 0.4,
+   "base_rate": 0.38510916359163594,
+   "lift": 1.0386665335861862,
+   "null_p50": 0.37142857142857144,
+   "pctile": 0.55575,
+   "signal": "M1",
+   "anchor_set": "aux_fast",
+   "lookback": 30,
+   "label": "联邦基金利率 12 个月升 ≥ 1pp",
+   "same_source": false,
+   "first_data": "1955-07-01",
+   "hit_first": 0.6666666666666666,
+   "n_first": 18,
+   "hit_second": 0.11764705882352941,
+   "n_second": 17,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 13,
+   "n_skipped": 1,
+   "hit_rate": 0.46153846153846156,
+   "base_rate": 0.2330749071849749,
+   "lift": 1.98021514676469,
+   "null_p50": 0.23076923076923078,
+   "pctile": 0.9774999999999999,
+   "signal": "M2",
+   "anchor_set": "main",
+   "lookback": 90,
+   "label": "10Y−2Y < 0(倒挂)",
+   "same_source": false,
+   "first_data": "1976-06-01",
+   "hit_first": 0.7142857142857143,
+   "n_first": 7,
+   "hit_second": 0.16666666666666666,
+   "n_second": 6,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 19,
+   "n_skipped": 1,
+   "hit_rate": 0.3157894736842105,
+   "base_rate": 0.19492816717457553,
+   "lift": 1.6200299744335713,
+   "null_p50": 0.15789473684210525,
+   "pctile": 0.8687499999999999,
+   "signal": "M2",
+   "anchor_set": "aux_break",
+   "lookback": 30,
+   "label": "10Y−2Y < 0(倒挂)",
+   "same_source": false,
+   "first_data": "1976-06-01",
+   "hit_first": 0.5,
+   "n_first": 10,
+   "hit_second": 0.1111111111111111,
+   "n_second": 9,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 33,
+   "n_skipped": 2,
+   "hit_rate": 0.36363636363636365,
+   "base_rate": 0.19492816717457553,
+   "lift": 1.865489061468961,
+   "null_p50": 0.18181818181818182,
+   "pctile": 0.9425,
+   "signal": "M2",
+   "anchor_set": "aux_fast",
+   "lookback": 30,
+   "label": "10Y−2Y < 0(倒挂)",
+   "same_source": false,
+   "first_data": "1976-06-01",
+   "hit_first": 0.5294117647058824,
+   "n_first": 17,
+   "hit_second": 0.1875,
+   "n_second": 16,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 13,
+   "n_skipped": 1,
+   "hit_rate": 0.5384615384615384,
+   "base_rate": 0.31955667176239355,
+   "lift": 1.6850267449959915,
+   "null_p50": 0.3076923076923077,
+   "pctile": 0.96425,
+   "signal": "M3",
+   "anchor_set": "main",
+   "lookback": 90,
+   "label": "10Y−2Y > 0 且过去 365 天倒挂过(解除倒挂)",
+   "same_source": false,
+   "first_data": "1976-06-01",
+   "hit_first": 0.42857142857142855,
+   "n_first": 7,
+   "hit_second": 0.6666666666666666,
+   "n_second": 6,
+   "both_halves_above_base": true,
+   "is_clue": true
+  },
+  {
+   "n_anchors": 19,
+   "n_skipped": 1,
+   "hit_rate": 0.42105263157894735,
+   "base_rate": 0.2779712668698302,
+   "lift": 1.514734369204138,
+   "null_p50": 0.2631578947368421,
+   "pctile": 0.914,
+   "signal": "M3",
+   "anchor_set": "aux_break",
+   "lookback": 30,
+   "label": "10Y−2Y > 0 且过去 365 天倒挂过(解除倒挂)",
+   "same_source": false,
+   "first_data": "1976-06-01",
+   "hit_first": 0.3,
+   "n_first": 10,
+   "hit_second": 0.5555555555555556,
+   "n_second": 9,
+   "both_halves_above_base": true,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 33,
+   "n_skipped": 2,
+   "hit_rate": 0.3939393939393939,
+   "base_rate": 0.2779712668698302,
+   "lift": 1.4171946560356896,
+   "null_p50": 0.2727272727272727,
+   "pctile": 0.86975,
+   "signal": "M3",
+   "anchor_set": "aux_fast",
+   "lookback": 30,
+   "label": "10Y−2Y > 0 且过去 365 天倒挂过(解除倒挂)",
+   "same_source": false,
+   "first_data": "1976-06-01",
+   "hit_first": 0.4117647058823529,
+   "n_first": 17,
+   "hit_second": 0.375,
+   "n_second": 16,
+   "both_halves_above_base": true,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 14,
+   "n_skipped": 0,
+   "hit_rate": 0.5,
+   "base_rate": 0.3440165672304127,
+   "lift": 1.453418374659596,
+   "null_p50": 0.35714285714285715,
+   "pctile": 0.8857499999999999,
+   "signal": "M4",
+   "anchor_set": "main",
+   "lookback": 90,
+   "label": "NFCI > 0(金融条件紧)",
+   "same_source": false,
+   "first_data": "1971-01-13",
+   "hit_first": 0.75,
+   "n_first": 8,
+   "hit_second": 0.16666666666666666,
+   "n_second": 6,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 20,
+   "n_skipped": 0,
+   "hit_rate": 0.45,
+   "base_rate": 0.31148911066319257,
+   "lift": 1.4446732954545454,
+   "null_p50": 0.3,
+   "pctile": 0.875,
+   "signal": "M4",
+   "anchor_set": "aux_break",
+   "lookback": 30,
+   "label": "NFCI > 0(金融条件紧)",
+   "same_source": false,
+   "first_data": "1971-01-13",
+   "hit_first": 0.6363636363636364,
+   "n_first": 11,
+   "hit_second": 0.2222222222222222,
+   "n_second": 9,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 35,
+   "n_skipped": 0,
+   "hit_rate": 0.3142857142857143,
+   "base_rate": 0.31148911066319257,
+   "lift": 1.0089781746031745,
+   "null_p50": 0.2857142857142857,
+   "pctile": 0.57225,
+   "signal": "M4",
+   "anchor_set": "aux_fast",
+   "lookback": 30,
+   "label": "NFCI > 0(金融条件紧)",
+   "same_source": false,
+   "first_data": "1971-01-13",
+   "hit_first": 0.3888888888888889,
+   "n_first": 18,
+   "hit_second": 0.23529411764705882,
+   "n_second": 17,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 9,
+   "n_skipped": 5,
+   "hit_rate": 0.3333333333333333,
+   "base_rate": 0.20501324638271856,
+   "lift": 1.6259111994698474,
+   "null_p50": 0.2222222222222222,
+   "pctile": 0.7942499999999999,
+   "signal": "M5",
+   "anchor_set": "main",
+   "lookback": 90,
+   "label": "Baa−10Y 利差 63 天升 ≥ 0.5pp",
+   "same_source": false,
+   "first_data": "1986-04-04",
+   "hit_first": 0.6,
+   "n_first": 5,
+   "hit_second": 0.0,
+   "n_second": 4,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 15,
+   "n_skipped": 5,
+   "hit_rate": 0.3333333333333333,
+   "base_rate": 0.12042486976523915,
+   "lift": 2.7679775280898875,
+   "null_p50": 0.13333333333333333,
+   "pctile": 0.98,
+   "signal": "M5",
+   "anchor_set": "aux_break",
+   "lookback": 30,
+   "label": "Baa−10Y 利差 63 天升 ≥ 0.5pp",
+   "same_source": false,
+   "first_data": "1986-04-04",
+   "hit_first": 0.125,
+   "n_first": 8,
+   "hit_second": 0.5714285714285714,
+   "n_second": 7,
+   "both_halves_above_base": true,
+   "is_clue": true
+  },
+  {
+   "n_anchors": 30,
+   "n_skipped": 5,
+   "hit_rate": 0.13333333333333333,
+   "base_rate": 0.12042486976523915,
+   "lift": 1.107191011235955,
+   "null_p50": 0.13333333333333333,
+   "pctile": 0.5922499999999999,
+   "signal": "M5",
+   "anchor_set": "aux_fast",
+   "lookback": 30,
+   "label": "Baa−10Y 利差 63 天升 ≥ 0.5pp",
+   "same_source": false,
+   "first_data": "1986-04-04",
+   "hit_first": 0.125,
+   "n_first": 16,
+   "hit_second": 0.14285714285714285,
+   "n_second": 14,
+   "both_halves_above_base": true,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 7,
+   "n_skipped": 7,
+   "hit_rate": 0.42857142857142855,
+   "base_rate": 0.3983672857998802,
+   "lift": 1.075819837241157,
+   "null_p50": 0.42857142857142855,
+   "pctile": 0.5625,
+   "signal": "M6",
+   "anchor_set": "main",
+   "lookback": 90,
+   "label": "VIX < 13",
+   "same_source": false,
+   "first_data": "1990-01-02",
+   "hit_first": 0.25,
+   "n_first": 4,
+   "hit_second": 0.6666666666666666,
+   "n_second": 3,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 14,
+   "n_skipped": 6,
+   "hit_rate": 0.0,
+   "base_rate": 0.31106471816283926,
+   "lift": 0.0,
+   "null_p50": 0.2857142857142857,
+   "pctile": 0.00225,
+   "signal": "M6",
+   "anchor_set": "aux_break",
+   "lookback": 30,
+   "label": "VIX < 13",
+   "same_source": false,
+   "first_data": "1990-01-02",
+   "hit_first": 0.0,
+   "n_first": 8,
+   "hit_second": 0.0,
+   "n_second": 6,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 29,
+   "n_skipped": 6,
+   "hit_rate": 0.10344827586206896,
+   "base_rate": 0.31106471816283926,
+   "lift": 0.3325619069659801,
+   "null_p50": 0.3103448275862069,
+   "pctile": 0.042,
+   "signal": "M6",
+   "anchor_set": "aux_fast",
+   "lookback": 30,
+   "label": "VIX < 13",
+   "same_source": false,
+   "first_data": "1990-01-02",
+   "hit_first": 0.0,
+   "n_first": 15,
+   "hit_second": 0.21428571428571427,
+   "n_second": 14,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 7,
+   "n_skipped": 7,
+   "hit_rate": 0.14285714285714285,
+   "base_rate": 0.31073996405032955,
+   "lift": 0.4597321213373274,
+   "null_p50": 0.2857142857142857,
+   "pctile": 0.17775000000000002,
+   "signal": "M7",
+   "anchor_set": "main",
+   "lookback": 90,
+   "label": "VIX > 30",
+   "same_source": false,
+   "first_data": "1990-01-02",
+   "hit_first": 0.25,
+   "n_first": 4,
+   "hit_second": 0.0,
+   "n_second": 3,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 14,
+   "n_skipped": 6,
+   "hit_rate": 0.6428571428571429,
+   "base_rate": 0.18654935878317924,
+   "lift": 3.4460431654676262,
+   "null_p50": 0.14285714285714285,
+   "pctile": 1.0,
+   "signal": "M7",
+   "anchor_set": "aux_break",
+   "lookback": 30,
+   "label": "VIX > 30",
+   "same_source": false,
+   "first_data": "1990-01-02",
+   "hit_first": 0.375,
+   "n_first": 8,
+   "hit_second": 1.0,
+   "n_second": 6,
+   "both_halves_above_base": true,
+   "is_clue": true
+  },
+  {
+   "n_anchors": 29,
+   "n_skipped": 6,
+   "hit_rate": 0.1724137931034483,
+   "base_rate": 0.18654935878317924,
+   "lift": 0.9242261363323135,
+   "null_p50": 0.1724137931034483,
+   "pctile": 0.475,
+   "signal": "M7",
+   "anchor_set": "aux_fast",
+   "lookback": 30,
+   "label": "VIX > 30",
+   "same_source": false,
+   "first_data": "1990-01-02",
+   "hit_first": 0.2,
+   "n_first": 15,
+   "hit_second": 0.14285714285714285,
+   "n_second": 14,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 4,
+   "n_skipped": 10,
+   "hit_rate": 0.5,
+   "base_rate": 0.672249155281328,
+   "lift": 0.7437718531468532,
+   "null_p50": 0.75,
+   "pctile": 0.2485,
+   "signal": "M8",
+   "anchor_set": "main",
+   "lookback": 90,
+   "label": "VIX / VXV > 1(期限结构倒挂)",
+   "same_source": false,
+   "first_data": "2007-12-04",
+   "hit_first": 0.3333333333333333,
+   "n_first": 3,
+   "hit_second": 1.0,
+   "n_second": 1,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 7,
+   "n_skipped": 13,
+   "hit_rate": 1.0,
+   "base_rate": 0.37920489296636084,
+   "lift": 2.6370967741935485,
+   "null_p50": 0.42857142857142855,
+   "pctile": 1.0,
+   "signal": "M8",
+   "anchor_set": "aux_break",
+   "lookback": 30,
+   "label": "VIX / VXV > 1(期限结构倒挂)",
+   "same_source": false,
+   "first_data": "2007-12-04",
+   "hit_first": 1.0,
+   "n_first": 4,
+   "hit_second": 1.0,
+   "n_second": 3,
+   "both_halves_above_base": true,
+   "is_clue": true
+  },
+  {
+   "n_anchors": 14,
+   "n_skipped": 21,
+   "hit_rate": 0.5,
+   "base_rate": 0.37920489296636084,
+   "lift": 1.3185483870967742,
+   "null_p50": 0.35714285714285715,
+   "pctile": 0.8205,
+   "signal": "M8",
+   "anchor_set": "aux_fast",
+   "lookback": 30,
+   "label": "VIX / VXV > 1(期限结构倒挂)",
+   "same_source": false,
+   "first_data": "2007-12-04",
+   "hit_first": 0.625,
+   "n_first": 8,
+   "hit_second": 0.3333333333333333,
+   "n_second": 6,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 5,
+   "n_skipped": 9,
+   "hit_rate": 0.4,
+   "base_rate": 0.38711920990402005,
+   "lift": 1.0332734459216673,
+   "null_p50": 0.4,
+   "pctile": 0.53825,
+   "signal": "M9",
+   "anchor_set": "main",
+   "lookback": 90,
+   "label": "美元广义指数 63 天变化分位 ≥ 0.9",
+   "same_source": false,
+   "first_data": "2006-11-12",
+   "hit_first": 0.3333333333333333,
+   "n_first": 3,
+   "hit_second": 0.5,
+   "n_second": 2,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 7,
+   "n_skipped": 13,
+   "hit_rate": 0.5714285714285714,
+   "base_rate": 0.2331356049110222,
+   "lift": 2.4510566356720203,
+   "null_p50": 0.14285714285714285,
+   "pctile": 0.981,
+   "signal": "M9",
+   "anchor_set": "aux_break",
+   "lookback": 30,
+   "label": "美元广义指数 63 天变化分位 ≥ 0.9",
+   "same_source": false,
+   "first_data": "2006-11-12",
+   "hit_first": 0.75,
+   "n_first": 4,
+   "hit_second": 0.3333333333333333,
+   "n_second": 3,
+   "both_halves_above_base": true,
+   "is_clue": true
+  },
+  {
+   "n_anchors": 15,
+   "n_skipped": 20,
+   "hit_rate": 0.4,
+   "base_rate": 0.2331356049110222,
+   "lift": 1.7157396449704143,
+   "null_p50": 0.2,
+   "pctile": 0.9177500000000001,
+   "signal": "M9",
+   "anchor_set": "aux_fast",
+   "lookback": 30,
+   "label": "美元广义指数 63 天变化分位 ≥ 0.9",
+   "same_source": false,
+   "first_data": "2006-11-12",
+   "hit_first": 0.625,
+   "n_first": 8,
+   "hit_second": 0.14285714285714285,
+   "n_second": 7,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 9,
+   "n_skipped": 5,
+   "hit_rate": 0.1111111111111111,
+   "base_rate": 0.18568691844553914,
+   "lift": 0.5983787767133382,
+   "null_p50": 0.1111111111111111,
+   "pctile": 0.3285,
+   "signal": "M10",
+   "anchor_set": "main",
+   "lookback": 90,
+   "label": "WTI 126 天涨 ≥ 50%",
+   "same_source": false,
+   "first_data": "1986-07-17",
+   "hit_first": 0.2,
+   "n_first": 5,
+   "hit_second": 0.0,
+   "n_second": 4,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 15,
+   "n_skipped": 5,
+   "hit_rate": 0.13333333333333333,
+   "base_rate": 0.1169255928045789,
+   "lift": 1.1403263403263404,
+   "null_p50": 0.13333333333333333,
+   "pctile": 0.58975,
+   "signal": "M10",
+   "anchor_set": "aux_break",
+   "lookback": 30,
+   "label": "WTI 126 天涨 ≥ 50%",
+   "same_source": false,
+   "first_data": "1986-07-17",
+   "hit_first": 0.125,
+   "n_first": 8,
+   "hit_second": 0.14285714285714285,
+   "n_second": 7,
+   "both_halves_above_base": true,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 30,
+   "n_skipped": 5,
+   "hit_rate": 0.13333333333333333,
+   "base_rate": 0.1169255928045789,
+   "lift": 1.1403263403263404,
+   "null_p50": 0.1,
+   "pctile": 0.639,
+   "signal": "M10",
+   "anchor_set": "aux_fast",
+   "lookback": 30,
+   "label": "WTI 126 天涨 ≥ 50%",
+   "same_source": false,
+   "first_data": "1986-07-17",
+   "hit_first": 0.1875,
+   "n_first": 16,
+   "hit_second": 0.07142857142857142,
+   "n_second": 14,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 5,
+   "n_skipped": 9,
+   "hit_rate": 0.6,
+   "base_rate": 0.33324981207717363,
+   "lift": 1.8004511278195487,
+   "null_p50": 0.4,
+   "pctile": 0.9015000000000001,
+   "signal": "M11",
+   "anchor_set": "main",
+   "lookback": 90,
+   "label": "美联储资产负债表 91 天缩",
+   "same_source": false,
+   "first_data": "2004-09-16",
+   "hit_first": 0.6666666666666666,
+   "n_first": 3,
+   "hit_second": 0.5,
+   "n_second": 2,
+   "both_halves_above_base": true,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 7,
+   "n_skipped": 13,
+   "hit_rate": 0.42857142857142855,
+   "base_rate": 0.32330266102959465,
+   "lift": 1.3256043956043955,
+   "null_p50": 0.2857142857142857,
+   "pctile": 0.74025,
+   "signal": "M11",
+   "anchor_set": "aux_break",
+   "lookback": 30,
+   "label": "美联储资产负债表 91 天缩",
+   "same_source": false,
+   "first_data": "2004-09-16",
+   "hit_first": 0.5,
+   "n_first": 4,
+   "hit_second": 0.3333333333333333,
+   "n_second": 3,
+   "both_halves_above_base": true,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 15,
+   "n_skipped": 20,
+   "hit_rate": 0.26666666666666666,
+   "base_rate": 0.32330266102959465,
+   "lift": 0.8248205128205127,
+   "null_p50": 0.3333333333333333,
+   "pctile": 0.36975,
+   "signal": "M11",
+   "anchor_set": "aux_fast",
+   "lookback": 30,
+   "label": "美联储资产负债表 91 天缩",
+   "same_source": false,
+   "first_data": "2004-09-16",
+   "hit_first": 0.0,
+   "n_first": 8,
+   "hit_second": 0.5714285714285714,
+   "n_second": 7,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 7,
+   "n_skipped": 7,
+   "hit_rate": 0.5714285714285714,
+   "base_rate": 0.30771631427011004,
+   "lift": 1.8569979716024339,
+   "null_p50": 0.2857142857142857,
+   "pctile": 0.91075,
+   "signal": "M12",
+   "anchor_set": "main",
+   "lookback": 90,
+   "label": "密歇根消费者信心分位 ≥ 0.8",
+   "same_source": false,
+   "first_data": "1991-05-02",
+   "hit_first": 0.75,
+   "n_first": 4,
+   "hit_second": 0.3333333333333333,
+   "n_second": 3,
+   "both_halves_above_base": true,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 13,
+   "n_skipped": 7,
+   "hit_rate": 0.46153846153846156,
+   "base_rate": 0.2572804224586472,
+   "lift": 1.7939120945459612,
+   "null_p50": 0.23076923076923078,
+   "pctile": 0.8615,
+   "signal": "M12",
+   "anchor_set": "aux_break",
+   "lookback": 30,
+   "label": "密歇根消费者信心分位 ≥ 0.8",
+   "same_source": false,
+   "first_data": "1991-05-02",
+   "hit_first": 0.5714285714285714,
+   "n_first": 7,
+   "hit_second": 0.3333333333333333,
+   "n_second": 6,
+   "both_halves_above_base": true,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 28,
+   "n_skipped": 7,
+   "hit_rate": 0.35714285714285715,
+   "base_rate": 0.2572804224586472,
+   "lift": 1.3881462636367559,
+   "null_p50": 0.21428571428571427,
+   "pctile": 0.8067500000000001,
+   "signal": "M12",
+   "anchor_set": "aux_fast",
+   "lookback": 30,
+   "label": "密歇根消费者信心分位 ≥ 0.8",
+   "same_source": false,
+   "first_data": "1991-05-02",
+   "hit_first": 0.4666666666666667,
+   "n_first": 15,
+   "hit_second": 0.23076923076923078,
+   "n_second": 13,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 14,
+   "n_skipped": 0,
+   "hit_rate": 0.14285714285714285,
+   "base_rate": 0.22940951652971528,
+   "lift": 0.6227167251740345,
+   "null_p50": 0.21428571428571427,
+   "pctile": 0.23375,
+   "signal": "M13",
+   "anchor_set": "main",
+   "lookback": 90,
+   "label": "初请 4 周均值 13 周升 ≥ 15%",
+   "same_source": false,
+   "first_data": "1969-04-03",
+   "hit_first": 0.125,
+   "n_first": 8,
+   "hit_second": 0.16666666666666666,
+   "n_second": 6,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 20,
+   "n_skipped": 0,
+   "hit_rate": 0.2,
+   "base_rate": 0.20874618902439024,
+   "lift": 0.9581013235965313,
+   "null_p50": 0.2,
+   "pctile": 0.511,
+   "signal": "M13",
+   "anchor_set": "aux_break",
+   "lookback": 30,
+   "label": "初请 4 周均值 13 周升 ≥ 15%",
+   "same_source": false,
+   "first_data": "1969-04-03",
+   "hit_first": 0.09090909090909091,
+   "n_first": 11,
+   "hit_second": 0.3333333333333333,
+   "n_second": 9,
+   "both_halves_above_base": false,
+   "is_clue": false
+  },
+  {
+   "n_anchors": 35,
+   "n_skipped": 0,
+   "hit_rate": 0.17142857142857143,
+   "base_rate": 0.20874618902439024,
+   "lift": 0.821229705939884,
+   "null_p50": 0.2,
+   "pctile": 0.369,
+   "signal": "M13",
+   "anchor_set": "aux_fast",
+   "lookback": 30,
+   "label": "初请 4 周均值 13 周升 ≥ 15%",
+   "same_source": false,
+   "first_data": "1969-04-03",
+   "hit_first": 0.05555555555555555,
+   "n_first": 18,
+   "hit_second": 0.29411764705882354,
+   "n_second": 17,
+   "both_halves_above_base": false,
+   "is_clue": false
+  }
+ ],
+ "sentiment": {
+  "per_episode": [
+   {
+    "peak_d": "1973-01-11",
+    "trough_d": "1974-10-03",
+    "first_leg": true,
+    "vix_peak-90": null,
+    "vix_peak-30": null,
+    "vix_peak": null,
+    "vix_trough": null,
+    "sent_peak": 90.7,
+    "sent_trough": 64.4,
+    "fng_peak-90": null,
+    "fng_peak-30": null,
+    "fng_peak": null,
+    "fng_trough": null
+   },
+   {
+    "peak_d": "1978-09-13",
+    "trough_d": "1978-11-14",
+    "first_leg": true,
+    "vix_peak-90": null,
+    "vix_peak-30": null,
+    "vix_peak": null,
+    "vix_trough": null,
+    "sent_peak": 78.4,
+    "sent_trough": 79.3,
+    "fng_peak-90": null,
+    "fng_peak-30": null,
+    "fng_peak": null,
+    "fng_trough": null
+   },
+   {
+    "peak_d": "1980-02-08",
+    "trough_d": "1980-03-27",
+    "first_leg": true,
+    "vix_peak-90": null,
+    "vix_peak-30": null,
+    "vix_peak": null,
+    "vix_trough": null,
+    "sent_peak": 67.0,
+    "sent_trough": 66.9,
+    "fng_peak-90": null,
+    "fng_peak-30": null,
+    "fng_peak": null,
+    "fng_trough": null
+   },
+   {
+    "peak_d": "1981-05-29",
+    "trough_d": "1982-08-13",
+    "first_leg": true,
+    "vix_peak-90": null,
+    "vix_peak-30": null,
+    "vix_peak": null,
+    "vix_trough": null,
+    "sent_peak": 72.4,
+    "sent_trough": 65.4,
+    "fng_peak-90": null,
+    "fng_peak-30": null,
+    "fng_peak": null,
+    "fng_trough": null
+   },
+   {
+    "peak_d": "1983-06-24",
+    "trough_d": "1984-07-25",
+    "first_leg": true,
+    "vix_peak-90": null,
+    "vix_peak-30": null,
+    "vix_peak": null,
+    "vix_trough": null,
+    "sent_peak": 93.3,
+    "sent_trough": 95.5,
+    "fng_peak-90": null,
+    "fng_peak-30": null,
+    "fng_peak": null,
+    "fng_trough": null
+   },
+   {
+    "peak_d": "1987-08-26",
+    "trough_d": "1987-10-28",
+    "first_leg": true,
+    "vix_peak-90": null,
+    "vix_peak-30": null,
+    "vix_peak": null,
+    "vix_trough": null,
+    "sent_peak": 93.7,
+    "sent_trough": 93.6,
+    "fng_peak-90": null,
+    "fng_peak-30": null,
+    "fng_peak": null,
+    "fng_trough": null
+   },
+   {
+    "peak_d": "1989-10-09",
+    "trough_d": "1990-10-16",
+    "first_leg": true,
+    "vix_peak-90": null,
+    "vix_peak-30": null,
+    "vix_peak": null,
+    "vix_trough": 31.45,
+    "sent_peak": 95.8,
+    "sent_trough": 72.8,
+    "fng_peak-90": null,
+    "fng_peak-30": null,
+    "fng_peak": null,
+    "fng_trough": null
+   },
+   {
+    "peak_d": "1998-07-20",
+    "trough_d": "1998-10-08",
+    "first_leg": true,
+    "vix_peak-90": 19.91,
+    "vix_peak-30": 21.92,
+    "vix_peak": 17.34,
+    "vix_trough": 45.74,
+    "sent_peak": 105.6,
+    "sent_trough": 100.9,
+    "fng_peak-90": null,
+    "fng_peak-30": null,
+    "fng_peak": null,
+    "fng_trough": null
+   },
+   {
+    "peak_d": "2000-03-10",
+    "trough_d": "2000-05-23",
+    "first_leg": true,
+    "vix_peak-90": 21.48,
+    "vix_peak-30": 22.9,
+    "vix_peak": 21.24,
+    "vix_trough": 25.87,
+    "sent_peak": 111.3,
+    "sent_trough": 109.2,
+    "fng_peak-90": null,
+    "fng_peak-30": null,
+    "fng_peak": null,
+    "fng_trough": null
+   },
+   {
+    "peak_d": "2000-07-17",
+    "trough_d": "2001-01-02",
+    "first_leg": false,
+    "vix_peak-90": 26.12,
+    "vix_peak-30": 20.5,
+    "vix_peak": 19.45,
+    "vix_trough": 29.99,
+    "sent_peak": 106.4,
+    "sent_trough": 98.4,
+    "fng_peak-90": null,
+    "fng_peak-30": null,
+    "fng_peak": null,
+    "fng_trough": null
+   },
+   {
+    "peak_d": "2001-01-24",
+    "trough_d": "2001-04-04",
+    "first_leg": false,
+    "vix_peak-90": 28.62,
+    "vix_peak-30": 27.55,
+    "vix_peak": 22.03,
+    "vix_trough": 34.07,
+    "sent_peak": 98.4,
+    "sent_trough": 91.5,
+    "fng_peak-90": null,
+    "fng_peak-30": null,
+    "fng_peak": null,
+    "fng_trough": null
+   },
+   {
+    "peak_d": "2001-05-22",
+    "trough_d": "2001-09-21",
+    "first_leg": false,
+    "vix_peak-90": 25.75,
+    "vix_peak-30": 25.38,
+    "vix_peak": 21.35,
+    "vix_trough": 42.66,
+    "sent_peak": 88.4,
+    "sent_trough": 91.5,
+    "fng_peak-90": null,
+    "fng_peak-30": null,
+    "fng_peak": null,
+    "fng_trough": null
+   },
+   {
+    "peak_d": "2002-01-04",
+    "trough_d": "2002-10-09",
+    "first_leg": false,
+    "vix_peak-90": 33.39,
+    "vix_peak-30": 23.02,
+    "vix_peak": 20.45,
+    "vix_trough": 42.13,
+    "sent_peak": 88.8,
+    "sent_trough": 86.1,
+    "fng_peak-90": null,
+    "fng_peak-30": null,
+    "fng_peak": null,
+    "fng_trough": null
+   },
+   {
+    "peak_d": "2007-10-31",
+    "trough_d": "2008-11-20",
+    "first_leg": true,
+    "vix_peak-90": 21.22,
+    "vix_peak-30": 17.84,
+    "vix_peak": 18.53,
+    "vix_trough": 80.86,
+    "sent_peak": 83.4,
+    "sent_trough": 57.6,
+    "fng_peak-90": null,
+    "fng_peak-30": null,
+    "fng_peak": null,
+    "fng_trough": null
+   },
+   {
+    "peak_d": "2009-01-06",
+    "trough_d": "2009-03-09",
+    "first_leg": false,
+    "vix_peak-90": 57.53,
+    "vix_peak-30": 59.93,
+    "vix_peak": 38.56,
+    "vix_trough": 49.68,
+    "sent_peak": 60.1,
+    "sent_trough": 56.3,
+    "fng_peak-90": null,
+    "fng_peak-30": null,
+    "fng_peak": null,
+    "fng_trough": null
+   },
+   {
+    "peak_d": "2018-08-29",
+    "trough_d": "2018-12-24",
+    "first_leg": true,
+    "vix_peak-90": 15.43,
+    "vix_peak-30": 14.26,
+    "vix_peak": 12.25,
+    "vix_trough": 36.07,
+    "sent_peak": 97.9,
+    "sent_trough": 97.5,
+    "fng_peak-90": 25.0,
+    "fng_peak-30": 53.0,
+    "fng_peak": 19.0,
+    "fng_trough": 25.0
+   },
+   {
+    "peak_d": "2020-02-19",
+    "trough_d": "2020-03-23",
+    "first_leg": true,
+    "vix_peak-90": 13.13,
+    "vix_peak-30": 12.1,
+    "vix_peak": 14.38,
+    "vix_trough": 61.59,
+    "sent_peak": 99.8,
+    "sent_trough": 101.0,
+    "fng_peak-90": 30.0,
+    "fng_peak-30": 48.0,
+    "fng_peak": 50.0,
+    "fng_trough": 10.0
+   },
+   {
+    "peak_d": "2021-11-19",
+    "trough_d": "2022-06-16",
+    "first_leg": true,
+    "vix_peak-90": 18.56,
+    "vix_peak-30": 15.49,
+    "vix_peak": 17.91,
+    "vix_trough": 32.95,
+    "sent_peak": 71.7,
+    "sent_trough": 58.4,
+    "fng_peak-90": 78.0,
+    "fng_peak-30": 82.0,
+    "fng_peak": 34.0,
+    "fng_trough": 7.0
+   },
+   {
+    "peak_d": "2022-08-15",
+    "trough_d": "2022-12-28",
+    "first_leg": false,
+    "vix_peak-90": 26.1,
+    "vix_peak-30": 24.23,
+    "vix_peak": 19.95,
+    "vix_trough": 22.14,
+    "sent_peak": 51.5,
+    "sent_trough": 56.7,
+    "fng_peak-90": 8.0,
+    "fng_peak-30": 21.0,
+    "fng_peak": 45.0,
+    "fng_trough": 28.0
+   },
+   {
+    "peak_d": "2024-12-16",
+    "trough_d": "2025-04-08",
+    "first_leg": true,
+    "vix_peak-90": 17.61,
+    "vix_peak-30": 16.14,
+    "vix_peak": 14.69,
+    "vix_trough": 52.33,
+    "sent_peak": 71.8,
+    "sent_trough": 57.0,
+    "fng_peak-90": 33.0,
+    "fng_peak-30": 86.0,
+    "fng_peak": 83.0,
+    "fng_trough": 24.0
+   }
+  ],
+  "fng_first": "2018-02-01",
+  "median_vix_peak-90": 21.48,
+  "median_vix_peak-30": 21.92,
+  "median_vix_peak": 19.45,
+  "median_vix_trough": 39.1,
+  "median_sent_peak": 89.75,
+  "median_sent_trough": 82.7,
+  "median_fng_peak-90": 30.0,
+  "median_fng_peak-30": 53.0,
+  "median_fng_peak": 45.0,
+  "median_fng_trough": 24.0
+ },
+ "etf_splice": {
+  "SPY": {
+   "symbol": "SPY",
+   "mode": "eodhd_only",
+   "n_days": 2969
+  },
+  "QQQ": {
+   "symbol": "QQQ",
+   "mode": "eodhd_only",
+   "n_days": 2969
+  },
+  "TLT": {
+   "symbol": "TLT",
+   "mode": "spliced",
+   "splice_date": "2022-08-31",
+   "n_yf": 2829,
+   "n_eodhd": 1040,
+   "overlap": {
+    "n_days": 1030,
+    "first": "2022-09-01",
+    "last": "2026-10-09",
+    "ret_corr": 0.9971343541783089,
+    "level_ratio_median": 0.9122823576664324,
+    "level_ratio_p5": 0.8546166998315425,
+    "level_ratio_p95": 0.9882101099771659
+   },
+   "n_days": 2838,
+   "first": "2015-07-13",
+   "last": "2026-10-22"
+  },
+  "IEF": {
+   "symbol": "IEF",
+   "mode": "spliced",
+   "splice_date": "2022-08-31",
+   "n_yf": 2829,
+   "n_eodhd": 1040,
+   "overlap": {
+    "n_days": 1030,
+    "first": "2022-09-01",
+    "last": "2026-10-09",
+    "ret_corr": 0.991265134258544,
+    "level_ratio_median": 0.9229608938547486,
+    "level_ratio_p5": 0.872391292588929,
+    "level_ratio_p95": 0.9896034039588166
+   },
+   "n_days": 2838,
+   "first": "2015-07-13",
+   "last": "2026-10-22"
+  },
+  "GLD": {
+   "symbol": "GLD",
+   "mode": "spliced",
+   "splice_date": "2022-08-31",
+   "n_yf": 2751,
+   "n_eodhd": 1040,
+   "overlap": {
+    "n_days": 952,
+    "first": "2022-09-01",
+    "last": "2026-06-18",
+    "ret_corr": 0.9999999999999999,
+    "level_ratio_median": 1.0,
+    "level_ratio_p5": 1.0,
+    "level_ratio_p95": 1.0
+   },
+   "n_days": 2838,
+   "first": "2015-07-13",
+   "last": "2026-10-22"
+  },
+  "UUP": {
+   "symbol": "UUP",
+   "mode": "spliced",
+   "splice_date": "2022-08-31",
+   "n_yf": 2750,
+   "n_eodhd": 1040,
+   "overlap": {
+    "n_days": 951,
+    "first": "2022-09-01",
+    "last": "2026-06-18",
+    "ret_corr": 0.8697578433386549,
+    "level_ratio_median": 0.9252214492543213,
+    "level_ratio_p5": 0.8621015385937154,
+    "level_ratio_p95": 1.0
+   },
+   "n_days": 2838,
+   "first": "2015-07-13",
+   "last": "2026-10-22"
+  },
+  "HYG": {
+   "symbol": "HYG",
+   "mode": "spliced",
+   "splice_date": "2022-08-31",
+   "n_yf": 2751,
+   "n_eodhd": 1040,
+   "overlap": {
+    "n_days": 952,
+    "first": "2022-09-01",
+    "last": "2026-06-18",
+    "ret_corr": 0.9714154817593172,
+    "level_ratio_median": 0.8767067246228585,
+    "level_ratio_p5": 0.7934051406004564,
+    "level_ratio_p95": 0.9707390059281511
+   },
+   "n_days": 2838,
+   "first": "2015-07-13",
+   "last": "2026-10-22"
+  }
+ },
+ "styles": {
+  "NASDAQCOM 持有": [
+   {
+    "peak_d": "1973-01-11",
+    "first_leg": true,
+    "pre": 0.0279,
+    "crash": -0.599,
+    "recovery": 0.2717
+   },
+   {
+    "peak_d": "1978-09-13",
+    "first_leg": true,
+    "pre": 0.1453,
+    "crash": -0.2037,
+    "recovery": 0.1507
+   },
+   {
+    "peak_d": "1980-02-08",
+    "first_leg": true,
+    "pre": 0.1168,
+    "crash": -0.2491,
+    "recovery": 0.367
+   },
+   {
+    "peak_d": "1981-05-29",
+    "first_leg": true,
+    "pre": 0.068,
+    "crash": -0.2879,
+    "recovery": 0.4695
+   },
+   {
+    "peak_d": "1983-06-24",
+    "first_leg": true,
+    "pre": 0.1477,
+    "crash": -0.315,
+    "recovery": 0.0786
+   },
+   {
+    "peak_d": "1987-08-26",
+    "first_leg": true,
+    "pre": 0.067,
+    "crash": -0.3589,
+    "recovery": 0.2458
+   },
+   {
+    "peak_d": "1989-10-09",
+    "first_leg": true,
+    "pre": 0.0478,
+    "crash": -0.33,
+    "recovery": 0.3765
+   },
+   {
+    "peak_d": "1998-07-20",
+    "first_leg": true,
+    "pre": 0.1061,
+    "crash": -0.2955,
+    "recovery": 0.6726
+   },
+   {
+    "peak_d": "2000-03-10",
+    "first_leg": true,
+    "pre": 0.2467,
+    "crash": -0.3732,
+    "recovery": 0.2316
+   },
+   {
+    "peak_d": "2000-07-17",
+    "first_leg": false,
+    "pre": 0.208,
+    "crash": -0.4639,
+    "recovery": -0.0311
+   },
+   {
+    "peak_d": "2001-01-24",
+    "first_leg": false,
+    "pre": -0.0156,
+    "crash": -0.4268,
+    "recovery": 0.2737
+   },
+   {
+    "peak_d": "2001-05-22",
+    "first_leg": false,
+    "pre": 0.1997,
+    "crash": -0.3849,
+    "recovery": 0.3563
+   },
+   {
+    "peak_d": "2002-01-04",
+    "first_leg": false,
+    "pre": 0.1482,
+    "crash": -0.459,
+    "recovery": 0.1592
+   },
+   {
+    "peak_d": "2007-10-31",
+    "first_leg": true,
+    "pre": 0.1012,
+    "crash": -0.5397,
+    "recovery": 0.1072
+   },
+   {
+    "peak_d": "2009-01-06",
+    "first_leg": false,
+    "pre": 0.003,
+    "crash": -0.2322,
+    "recovery": 0.3764
+   },
+   {
+    "peak_d": "2018-08-29",
+    "first_leg": true,
+    "pre": 0.0798,
+    "crash": -0.2364,
+    "recovery": 0.3113
+   },
+   {
+    "peak_d": "2020-02-19",
+    "first_leg": true,
+    "pre": 0.1,
+    "crash": -0.3012,
+    "recovery": 0.5568
+   },
+   {
+    "peak_d": "2021-11-19",
+    "first_leg": true,
+    "pre": 0.0913,
+    "crash": -0.337,
+    "recovery": -0.0305
+   },
+   {
+    "peak_d": "2022-08-15",
+    "first_leg": false,
+    "pre": 0.2331,
+    "crash": -0.222,
+    "recovery": 0.1889
+   },
+   {
+    "peak_d": "2024-12-16",
+    "first_leg": true,
+    "pre": 0.098,
+    "crash": -0.2432,
+    "recovery": 0.3865
+   }
+  ],
+  "NASDAQCOM 200 日趋势": [
+   {
+    "peak_d": "1973-01-11",
+    "first_leg": true,
+    "pre": 0.0279,
+    "crash": 0.0884,
+    "recovery": 0.0393
+   },
+   {
+    "peak_d": "1978-09-13",
+    "first_leg": true,
+    "pre": 0.1453,
+    "crash": -0.1483,
+    "recovery": 0.0295
+   },
+   {
+    "peak_d": "1980-02-08",
+    "first_leg": true,
+    "pre": 0.1168,
+    "crash": -0.1232,
+    "recovery": 0.1818
+   },
+   {
+    "peak_d": "1981-05-29",
+    "first_leg": true,
+    "pre": 0.068,
+    "crash": 0.062,
+    "recovery": 0.2918
+   },
+   {
+    "peak_d": "1983-06-24",
+    "first_leg": true,
+    "pre": 0.1477,
+    "crash": -0.0682,
+    "recovery": -0.0169
+   },
+   {
+    "peak_d": "1987-08-26",
+    "first_leg": true,
+    "pre": 0.067,
+    "crash": -0.0696,
+    "recovery": 0.0225
+   },
+   {
+    "peak_d": "1989-10-09",
+    "first_leg": true,
+    "pre": 0.0478,
+    "crash": -0.0467,
+    "recovery": 0.1531
+   },
+   {
+    "peak_d": "1998-07-20",
+    "first_leg": true,
+    "pre": 0.1061,
+    "crash": -0.1767,
+    "recovery": 0.344
+   },
+   {
+    "peak_d": "2000-03-10",
+    "first_leg": true,
+    "pre": 0.2467,
+    "crash": -0.4195,
+    "recovery": 0.0082
+   },
+   {
+    "peak_d": "2000-07-17",
+    "first_leg": false,
+    "pre": 0.124,
+    "crash": -0.0854,
+    "recovery": 0.0179
+   },
+   {
+    "peak_d": "2001-01-24",
+    "first_leg": false,
+    "pre": 0.0106,
+    "crash": 0.0105,
+    "recovery": 0.0138
+   },
+   {
+    "peak_d": "2001-05-22",
+    "first_leg": false,
+    "pre": 0.0077,
+    "crash": 0.0123,
+    "recovery": -0.0257
+   },
+   {
+    "peak_d": "2002-01-04",
+    "first_leg": false,
+    "pre": 0.036,
+    "crash": -0.0909,
+    "recovery": -0.006
+   },
+   {
+    "peak_d": "2007-10-31",
+    "first_leg": true,
+    "pre": 0.1012,
+    "crash": -0.2025,
+    "recovery": 0.0007
+   },
+   {
+    "peak_d": "2009-01-06",
+    "first_leg": false,
+    "pre": 0.0004,
+    "crash": 0.0003,
+    "recovery": -0.0497
+   },
+   {
+    "peak_d": "2018-08-29",
+    "first_leg": true,
+    "pre": 0.0798,
+    "crash": -0.1196,
+    "recovery": 0.0616
+   },
+   {
+    "peak_d": "2020-02-19",
+    "first_leg": true,
+    "pre": 0.1,
+    "crash": -0.19,
+    "recovery": 0.2001
+   },
+   {
+    "peak_d": "2021-11-19",
+    "first_leg": true,
+    "pre": 0.0913,
+    "crash": -0.0951,
+    "recovery": 0.0073
+   },
+   {
+    "peak_d": "2022-08-15",
+    "first_leg": false,
+    "pre": 0.003,
+    "crash": 0.012,
+    "recovery": 0.0106
+   },
+   {
+    "peak_d": "2024-12-16",
+    "first_leg": true,
+    "pre": 0.098,
+    "crash": -0.1104,
+    "recovery": 0.1361
+   }
+  ],
+  "10 年美债(近似总收益)": [
+   {
+    "peak_d": "1973-01-11",
+    "first_leg": true,
+    "pre": -0.0033,
+    "crash": -0.0445,
+    "recovery": 0.0586
+   },
+   {
+    "peak_d": "1978-09-13",
+    "first_leg": true,
+    "pre": 0.0407,
+    "crash": -0.0317,
+    "recovery": -0.0043
+   },
+   {
+    "peak_d": "1980-02-08",
+    "first_leg": true,
+    "pre": -0.1056,
+    "crash": -0.0846,
+    "recovery": 0.2543
+   },
+   {
+    "peak_d": "1981-05-29",
+    "first_leg": true,
+    "pre": -0.0098,
+    "crash": 0.127,
+    "recovery": 0.2489
+   },
+   {
+    "peak_d": "1983-06-24",
+    "first_leg": true,
+    "pre": -0.0371,
+    "crash": -0.0762,
+    "recovery": 0.1723
+   },
+   {
+    "peak_d": "1987-08-26",
+    "first_leg": true,
+    "pre": -0.0239,
+    "crash": -0.0097,
+    "recovery": 0.0832
+   },
+   {
+    "peak_d": "1989-10-09",
+    "first_leg": true,
+    "pre": 0.0079,
+    "crash": -0.0044,
+    "recovery": 0.1031
+   },
+   {
+    "peak_d": "1998-07-20",
+    "first_leg": true,
+    "pre": 0.0197,
+    "crash": 0.084,
+    "recovery": -0.0209
+   },
+   {
+    "peak_d": "2000-03-10",
+    "first_leg": true,
+    "pre": 0.0217,
+    "crash": 0.0032,
+    "recovery": 0.0578
+   },
+   {
+    "peak_d": "2000-07-17",
+    "first_leg": false,
+    "pre": 0.0383,
+    "crash": 0.1245,
+    "recovery": -0.0207
+   },
+   {
+    "peak_d": "2001-01-24",
+    "first_leg": false,
+    "pre": 0.0294,
+    "crash": 0.0381,
+    "recovery": -0.0074
+   },
+   {
+    "peak_d": "2001-05-22",
+    "first_leg": false,
+    "pre": -0.0435,
+    "crash": 0.0706,
+    "recovery": -0.0103
+   },
+   {
+    "peak_d": "2002-01-04",
+    "first_leg": false,
+    "pre": -0.0633,
+    "crash": 0.1597,
+    "recovery": -0.0212
+   },
+   {
+    "peak_d": "2007-10-31",
+    "first_leg": true,
+    "pre": 0.0095,
+    "crash": 0.1412,
+    "recovery": 0.0394
+   },
+   {
+    "peak_d": "2009-01-06",
+    "first_leg": false,
+    "pre": 0.1128,
+    "crash": -0.0281,
+    "recovery": -0.0409
+   },
+   {
+    "peak_d": "2018-08-29",
+    "first_leg": true,
+    "pre": 0.0,
+    "crash": 0.0184,
+    "recovery": 0.0193
+   },
+   {
+    "peak_d": "2020-02-19",
+    "first_leg": true,
+    "pre": 0.0309,
+    "crash": 0.0654,
+    "recovery": 0.0131
+   },
+   {
+    "peak_d": "2021-11-19",
+    "first_leg": true,
+    "pre": -0.0167,
+    "crash": -0.1244,
+    "recovery": -0.0508
+   },
+   {
+    "peak_d": "2022-08-15",
+    "first_leg": false,
+    "pre": 0.0425,
+    "crash": -0.0769,
+    "recovery": 0.0352
+   },
+   {
+    "peak_d": "2024-12-16",
+    "first_leg": true,
+    "pre": -0.0195,
+    "crash": 0.0191,
+    "recovery": 0.0124
+   }
+  ],
+  "美元(DTWEXBGS)": [
+   {
+    "peak_d": "1973-01-11",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1978-09-13",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1980-02-08",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1981-05-29",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1983-06-24",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1987-08-26",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1989-10-09",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1998-07-20",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2000-03-10",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2000-07-17",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2001-01-24",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2001-05-22",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2002-01-04",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2007-10-31",
+    "first_leg": true,
+    "pre": -0.0483,
+    "crash": 0.1586,
+    "recovery": -0.0215
+   },
+   {
+    "peak_d": "2009-01-06",
+    "first_leg": false,
+    "pre": -0.0061,
+    "crash": 0.0732,
+    "recovery": -0.0885
+   },
+   {
+    "peak_d": "2018-08-29",
+    "first_leg": true,
+    "pre": 0.0034,
+    "crash": 0.0226,
+    "recovery": -0.0091
+   },
+   {
+    "peak_d": "2020-02-19",
+    "first_leg": true,
+    "pre": 0.0088,
+    "crash": 0.08,
+    "recovery": -0.0612
+   },
+   {
+    "peak_d": "2021-11-19",
+    "first_leg": true,
+    "pre": 0.0112,
+    "crash": 0.0473,
+    "recovery": 0.0635
+   },
+   {
+    "peak_d": "2022-08-15",
+    "first_leg": false,
+    "pre": 0.0063,
+    "crash": 0.0047,
+    "recovery": -0.0211
+   },
+   {
+    "peak_d": "2024-12-16",
+    "first_leg": true,
+    "pre": 0.0254,
+    "crash": -0.0032,
+    "recovery": -0.0501
+   }
+  ],
+  "现金(DFF)": [
+   {
+    "peak_d": "1973-01-11",
+    "first_leg": true,
+    "pre": 0.0087,
+    "crash": 0.1831,
+    "recovery": 0.0291
+   },
+   {
+    "peak_d": "1978-09-13",
+    "first_leg": true,
+    "pre": 0.0133,
+    "crash": 0.0154,
+    "recovery": 0.0335
+   },
+   {
+    "peak_d": "1980-02-08",
+    "first_leg": true,
+    "pre": 0.0227,
+    "crash": 0.0211,
+    "recovery": 0.0407
+   },
+   {
+    "peak_d": "1981-05-29",
+    "first_leg": true,
+    "pre": 0.0285,
+    "crash": 0.1984,
+    "recovery": 0.0322
+   },
+   {
+    "peak_d": "1983-06-24",
+    "first_leg": true,
+    "pre": 0.0145,
+    "crash": 0.1132,
+    "recovery": 0.036
+   },
+   {
+    "peak_d": "1987-08-26",
+    "first_leg": true,
+    "pre": 0.011,
+    "crash": 0.0126,
+    "recovery": 0.0224
+   },
+   {
+    "peak_d": "1989-10-09",
+    "first_leg": true,
+    "pre": 0.0149,
+    "crash": 0.0882,
+    "recovery": 0.0243
+   },
+   {
+    "peak_d": "1998-07-20",
+    "first_leg": true,
+    "pre": 0.0092,
+    "crash": 0.0121,
+    "recovery": 0.0158
+   },
+   {
+    "peak_d": "2000-03-10",
+    "first_leg": true,
+    "pre": 0.0094,
+    "crash": 0.0123,
+    "recovery": 0.0217
+   },
+   {
+    "peak_d": "2000-07-17",
+    "first_leg": false,
+    "pre": 0.0108,
+    "crash": 0.0305,
+    "recovery": 0.0178
+   },
+   {
+    "peak_d": "2001-01-24",
+    "first_leg": false,
+    "pre": 0.0103,
+    "crash": 0.0105,
+    "recovery": 0.0137
+   },
+   {
+    "peak_d": "2001-05-22",
+    "first_leg": false,
+    "pre": 0.0077,
+    "crash": 0.0124,
+    "recovery": 0.007
+   },
+   {
+    "peak_d": "2002-01-04",
+    "first_leg": false,
+    "pre": 0.0031,
+    "crash": 0.0134,
+    "recovery": 0.0045
+   },
+   {
+    "peak_d": "2007-10-31",
+    "first_leg": true,
+    "pre": 0.008,
+    "crash": 0.0267,
+    "recovery": 0.0007
+   },
+   {
+    "peak_d": "2009-01-06",
+    "first_leg": false,
+    "pre": 0.0004,
+    "crash": 0.0003,
+    "recovery": 0.0006
+   },
+   {
+    "peak_d": "2018-08-29",
+    "first_leg": true,
+    "pre": 0.0031,
+    "crash": 0.0069,
+    "recovery": 0.0079
+   },
+   {
+    "peak_d": "2020-02-19",
+    "first_leg": true,
+    "pre": 0.0026,
+    "crash": 0.001,
+    "recovery": 0.0002
+   },
+   {
+    "peak_d": "2021-11-19",
+    "first_leg": true,
+    "pre": 0.0001,
+    "crash": 0.0017,
+    "recovery": 0.0073
+   },
+   {
+    "peak_d": "2022-08-15",
+    "first_leg": false,
+    "pre": 0.003,
+    "crash": 0.012,
+    "recovery": 0.0152
+   },
+   {
+    "peak_d": "2024-12-16",
+    "first_leg": true,
+    "pre": 0.0077,
+    "crash": 0.0135,
+    "recovery": 0.0143
+   }
+  ],
+  "SPY(eodhd)": [
+   {
+    "peak_d": "1973-01-11",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1978-09-13",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1980-02-08",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1981-05-29",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1983-06-24",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1987-08-26",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1989-10-09",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1998-07-20",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2000-03-10",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2000-07-17",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2001-01-24",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2001-05-22",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2002-01-04",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2007-10-31",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2009-01-06",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2018-08-29",
+    "first_leg": true,
+    "pre": 0.0745,
+    "crash": -0.1877,
+    "recovery": 0.2553
+   },
+   {
+    "peak_d": "2020-02-19",
+    "first_leg": true,
+    "pre": 0.0549,
+    "crash": -0.3372,
+    "recovery": 0.4642
+   },
+   {
+    "peak_d": "2021-11-19",
+    "first_leg": true,
+    "pre": 0.0803,
+    "crash": -0.2129,
+    "recovery": -0.0164
+   },
+   {
+    "peak_d": "2022-08-15",
+    "first_leg": false,
+    "pre": 0.1747,
+    "crash": -0.1141,
+    "recovery": 0.0991
+   },
+   {
+    "peak_d": "2024-12-16",
+    "first_leg": true,
+    "pre": 0.042,
+    "crash": -0.1766,
+    "recovery": 0.2783
+   }
+  ],
+  "QQQ(eodhd)": [
+   {
+    "peak_d": "1973-01-11",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1978-09-13",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1980-02-08",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1981-05-29",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1983-06-24",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1987-08-26",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1989-10-09",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1998-07-20",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2000-03-10",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2000-07-17",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2001-01-24",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2001-05-22",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2002-01-04",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2007-10-31",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2009-01-06",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2018-08-29",
+    "first_leg": true,
+    "pre": 0.0879,
+    "crash": -0.228,
+    "recovery": 0.3286
+   },
+   {
+    "peak_d": "2020-02-19",
+    "first_leg": true,
+    "pre": 0.1218,
+    "crash": -0.2792,
+    "recovery": 0.5515
+   },
+   {
+    "peak_d": "2021-11-19",
+    "first_leg": true,
+    "pre": 0.1047,
+    "crash": -0.3265,
+    "recovery": -0.0357
+   },
+   {
+    "peak_d": "2022-08-15",
+    "first_leg": false,
+    "pre": 0.2295,
+    "crash": -0.2158,
+    "recovery": 0.2336
+   },
+   {
+    "peak_d": "2024-12-16",
+    "first_leg": true,
+    "pre": 0.0955,
+    "crash": -0.2245,
+    "recovery": 0.3651
+   }
+  ],
+  "TLT(拼接)": [
+   {
+    "peak_d": "1973-01-11",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1978-09-13",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1980-02-08",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1981-05-29",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1983-06-24",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1987-08-26",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1989-10-09",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1998-07-20",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2000-03-10",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2000-07-17",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2001-01-24",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2001-05-22",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2002-01-04",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2007-10-31",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2009-01-06",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2018-08-29",
+    "first_leg": true,
+    "pre": -0.0058,
+    "crash": 0.0025,
+    "recovery": 0.0103
+   },
+   {
+    "peak_d": "2020-02-19",
+    "first_leg": true,
+    "pre": 0.065,
+    "crash": 0.1407,
+    "recovery": 0.0078
+   },
+   {
+    "peak_d": "2021-11-19",
+    "first_leg": true,
+    "pre": -0.0176,
+    "crash": -0.247,
+    "recovery": -0.2478
+   },
+   {
+    "peak_d": "2022-08-15",
+    "first_leg": false,
+    "pre": 0.0334,
+    "crash": -0.2595,
+    "recovery": 0.0604
+   },
+   {
+    "peak_d": "2024-12-16",
+    "first_leg": true,
+    "pre": -0.0294,
+    "crash": -0.009,
+    "recovery": 0.009
+   }
+  ],
+  "IEF(拼接)": [
+   {
+    "peak_d": "1973-01-11",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1978-09-13",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1980-02-08",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1981-05-29",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1983-06-24",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1987-08-26",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1989-10-09",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1998-07-20",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2000-03-10",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2000-07-17",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2001-01-24",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2001-05-22",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2002-01-04",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2007-10-31",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2009-01-06",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2018-08-29",
+    "first_leg": true,
+    "pre": -0.0011,
+    "crash": 0.0105,
+    "recovery": 0.0182
+   },
+   {
+    "peak_d": "2020-02-19",
+    "first_leg": true,
+    "pre": 0.0288,
+    "crash": 0.0625,
+    "recovery": 0.014
+   },
+   {
+    "peak_d": "2021-11-19",
+    "first_leg": true,
+    "pre": -0.019,
+    "crash": -0.1279,
+    "recovery": -0.1807
+   },
+   {
+    "peak_d": "2022-08-15",
+    "first_leg": false,
+    "pre": 0.0381,
+    "crash": -0.1939,
+    "recovery": 0.0407
+   },
+   {
+    "peak_d": "2024-12-16",
+    "first_leg": true,
+    "pre": -0.016,
+    "crash": 0.0257,
+    "recovery": 0.021
+   }
+  ],
+  "GLD(拼接)": [
+   {
+    "peak_d": "1973-01-11",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1978-09-13",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1980-02-08",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1981-05-29",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1983-06-24",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1987-08-26",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1989-10-09",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1998-07-20",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2000-03-10",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2000-07-17",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2001-01-24",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2001-05-22",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2002-01-04",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2007-10-31",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2009-01-06",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2018-08-29",
+    "first_leg": true,
+    "pre": -0.0375,
+    "crash": 0.051,
+    "recovery": 0.0008
+   },
+   {
+    "peak_d": "2020-02-19",
+    "first_leg": true,
+    "pre": 0.0879,
+    "crash": -0.0362,
+    "recovery": 0.1825
+   },
+   {
+    "peak_d": "2021-11-19",
+    "first_leg": true,
+    "pre": 0.0465,
+    "crash": 0.0005,
+    "recovery": -0.1141
+   },
+   {
+    "peak_d": "2022-08-15",
+    "first_leg": false,
+    "pre": -0.0404,
+    "crash": 0.0133,
+    "recovery": 0.1003
+   },
+   {
+    "peak_d": "2024-12-16",
+    "first_leg": true,
+    "pre": -0.0151,
+    "crash": 0.1238,
+    "recovery": 0.1283
+   }
+  ],
+  "UUP(拼接)": [
+   {
+    "peak_d": "1973-01-11",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1978-09-13",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1980-02-08",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1981-05-29",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1983-06-24",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1987-08-26",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1989-10-09",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1998-07-20",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2000-03-10",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2000-07-17",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2001-01-24",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2001-05-22",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2002-01-04",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2007-10-31",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2009-01-06",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2018-08-29",
+    "first_leg": true,
+    "pre": 0.0048,
+    "crash": 0.0196,
+    "recovery": 0.0239
+   },
+   {
+    "peak_d": "2020-02-19",
+    "first_leg": true,
+    "pre": 0.0041,
+    "crash": 0.0394,
+    "recovery": -0.0801
+   },
+   {
+    "peak_d": "2021-11-19",
+    "first_leg": true,
+    "pre": 0.0288,
+    "crash": 0.0746,
+    "recovery": -0.051
+   },
+   {
+    "peak_d": "2022-08-15",
+    "first_leg": false,
+    "pre": 0.03,
+    "crash": -0.1434,
+    "recovery": -0.0128
+   },
+   {
+    "peak_d": "2024-12-16",
+    "first_leg": true,
+    "pre": 0.0378,
+    "crash": -0.0227,
+    "recovery": -0.0301
+   }
+  ],
+  "HYG(拼接)": [
+   {
+    "peak_d": "1973-01-11",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1978-09-13",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1980-02-08",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1981-05-29",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1983-06-24",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1987-08-26",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1989-10-09",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "1998-07-20",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2000-03-10",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2000-07-17",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2001-01-24",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2001-05-22",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2002-01-04",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2007-10-31",
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2009-01-06",
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2018-08-29",
+    "first_leg": true,
+    "pre": 0.0146,
+    "crash": -0.0775,
+    "recovery": 0.0904
+   },
+   {
+    "peak_d": "2020-02-19",
+    "first_leg": true,
+    "pre": 0.0062,
+    "crash": -0.2224,
+    "recovery": 0.2299
+   },
+   {
+    "peak_d": "2021-11-19",
+    "first_leg": true,
+    "pre": -0.0129,
+    "crash": -0.1472,
+    "recovery": -0.2344
+   },
+   {
+    "peak_d": "2022-08-15",
+    "first_leg": false,
+    "pre": 0.0675,
+    "crash": -0.2618,
+    "recovery": 0.0492
+   },
+   {
+    "peak_d": "2024-12-16",
+    "first_leg": true,
+    "pre": 0.0089,
+    "crash": -0.0294,
+    "recovery": 0.0809
+   }
+  ]
+ },
+ "styles_median": {
+  "NASDAQCOM 持有": {
+   "pre": 0.1006,
+   "crash": -0.3225,
+   "recovery": 0.2727
+  },
+  "NASDAQCOM 200 日趋势": {
+   "pre": 0.0856,
+   "crash": -0.0882,
+   "recovery": 0.0202
+  },
+  "10 年美债(近似总收益)": {
+   "pre": 0.004,
+   "crash": 0.0108,
+   "recovery": 0.0162
+  },
+  "美元(DTWEXBGS)": {
+   "pre": 0.0063,
+   "crash": 0.0473,
+   "recovery": -0.0215
+  },
+  "现金(DFF)": {
+   "pre": 0.0089,
+   "crash": 0.013,
+   "recovery": 0.0155
+  },
+  "SPY(eodhd)": {
+   "pre": 0.0745,
+   "crash": -0.1877,
+   "recovery": 0.2553
+  },
+  "QQQ(eodhd)": {
+   "pre": 0.1047,
+   "crash": -0.228,
+   "recovery": 0.3286
+  },
+  "TLT(拼接)": {
+   "pre": -0.0058,
+   "crash": -0.009,
+   "recovery": 0.009
+  },
+  "IEF(拼接)": {
+   "pre": -0.0011,
+   "crash": 0.0105,
+   "recovery": 0.0182
+  },
+  "GLD(拼接)": {
+   "pre": -0.0151,
+   "crash": 0.0133,
+   "recovery": 0.1003
+  },
+  "UUP(拼接)": {
+   "pre": 0.0288,
+   "crash": 0.0196,
+   "recovery": -0.0301
+  },
+  "HYG(拼接)": {
+   "pre": 0.0089,
+   "crash": -0.1472,
+   "recovery": 0.0809
+  }
+ }
+}
