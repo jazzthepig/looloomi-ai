@@ -179,3 +179,26 @@ if __name__ == "__main__":
             fn()
             print(f"  ✓ {name}")
     print("\n✅ passed")
+
+
+def test_c1_arms_never_exceed_one_and_start_forward_after_10_23() -> None:
+    """Jazz 10-21「策略层 0–1」:mult_v2_c1 / tom_pd10 是 mult_v2 / tom_pd13 封顶 1.0 的并行臂 —— 敞口在 0.7–1.0 之间,
+    前向第一行在 2026-10-23 收盘之后;旧臂的名字不混进来(时钟政策:只并行、不替换)。"""
+    from src.data.signals.multiplier import (ARM_C1, ARM_TOM10, INCEPTION_C1, REPLAY_ARM_C1, REPLAY_ARM_TOM10,
+                                             build_rows_c1)
+    days = pd.date_range("2025-01-01", INCEPTION_C1 + pd.Timedelta(days=3))
+    rng = np.random.default_rng(7)
+    state = pd.DataFrame({"dist_200": np.where(np.arange(len(days)) % 90 < 45, 0.1, -0.1),
+                          "vol_pct_3y": np.where(np.arange(len(days)) % 60 < 30, 0.2, 0.8),
+                          "funding_7d_ann": 0.05}, index=days)
+    cr = pd.Series(rng.normal(0.001, 0.03, len(days)), index=days)
+    rows, ev = build_rows_c1(cr, state, days[-1])
+    arms = {r["arm"] for r in rows}
+    assert arms == {ARM_C1, REPLAY_ARM_C1, ARM_TOM10, REPLAY_ARM_TOM10}
+    assert all(r["m"] <= 1.0 + 1e-12 for r in rows), "策略层 0–1:上限 1.0"
+    assert {round(r["m"], 6) for r in rows if r["arm"] == REPLAY_ARM_C1} <= {0.7, 1.0}
+    tom_m = {round(r["m"], 6) for r in rows if r["arm"] == REPLAY_ARM_TOM10}
+    assert tom_m <= {0.7, 0.8, 0.9, 1.0} and 1.0 in tom_m, "封顶 1.0:底仓满时不再加仓;防守腿 0.7 时仍可按盈利加回到 1.0"
+    fwd = [r for r in rows if r["arm"] in (ARM_C1, ARM_TOM10)]
+    assert fwd and min(r["d"] for r in fwd) > INCEPTION_C1.date().isoformat()
+    assert set(ev) == {ARM_C1, ARM_TOM10}

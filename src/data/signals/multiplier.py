@@ -46,6 +46,7 @@ Jazz 10-07 定调:执行只读一张表 —— ① 的推力 + ② 的倾斜。�
     select max(d) from multiplier_daily where arm = 'mult_v1_replay';   -- UTC 08:00 后应 = 昨天
     select max(d) from multiplier_daily where arm = 'mult_v2_replay';   -- 同上(新底仓)
     select max(d) from multiplier_daily where arm = 'tom_pd13_replay';  -- 同上(S-596 Tom 仓位管理;前向臂 tom_pd13 10-16 起)
+    select max(d) from multiplier_daily where arm = 'mult_v2_c1_replay';  -- 同上(③ 0–1 并行臂;前向 mult_v2_c1 / tom_pd10 10-24 起)
 """
 from __future__ import annotations
 
@@ -90,6 +91,16 @@ ARM_Q, REPLAY_ARM_Q, ARM_QS, REPLAY_ARM_QS = "q_v2", "q_v2_replay", "q_slow", "q
 INCEPTION_Q = pd.Timestamp("2026-10-20")
 Q_LO, Q_HI = 0.0, 1.3
 CODE_REF_Q = "S-631 ⓠ on cap_a1_u (q_v2 / q_slow)"
+#: Jazz 10-21「策略层 0–1 倍,杠杆只在组合层」:③ 两条现行臂(mult_v2、tom_pd13)的上限是 1.3,不合这条。
+#: 按时钟政策(WEEKLY_REVIEW 10-23 §4:只并行、不替换)各开一条封顶 1.0 的并行臂,规则一字不改、只把上限 1.3 → 1.0:
+#:   mult_v2_c1 = min(m, 1)(只剩 0.7 / 1.0);tom_pd10 = tom_gross(① NAV, cap = 1.0)(底仓 1.0 时加仓腿被封顶关掉;
+#:   防守腿 0.7 时仍可按盈利加回到 0.8 / 0.9 / 1.0 —— 范围 0.7–1.0)。
+#: 旧臂照跑。前向起点 = 2026-10-23 收盘(第一行 10-24)。
+ARM_C1, REPLAY_ARM_C1 = "mult_v2_c1", "mult_v2_c1_replay"
+ARM_TOM10, REPLAY_ARM_TOM10 = "tom_pd10", "tom_pd10_replay"
+INCEPTION_C1 = pd.Timestamp("2026-10-23")
+CAP_C1 = 1.0
+CODE_REF_C1 = "③ 0–1 并行臂(Jazz 10-21;mult_v2_c1 / tom_pd10,底仓 cap_a1_u)"
 
 
 def multiplier(dist_200: Optional[float], vol_pct: Optional[float]) -> float:
@@ -329,6 +340,37 @@ def build_rows_tom(core_ret: pd.Series, state: pd.DataFrame, end: pd.Timestamp) 
     return rows, evaluate_u(core_ret, m_prev, funding, end)
 
 
+def build_rows_c1(core_ret: pd.Series, state: pd.DataFrame, end: pd.Timestamp) -> tuple[list[dict], dict[str, Any]]:
+    """③ 的 0–1 并行臂:mult_v2 与 tom_pd13 的同一规则,上限 1.0。回放全程 + 2026-10-23 收盘起的纯前向。
+    资金费 / 现金 / 切换成本与其余臂同一个 apply_multiplier(上限 1.0 ⇒ 永远不付资金费)。"""
+    from src.data.signals.tom import tom_gross
+    core_ret = core_ret[core_ret.index <= end]
+    funding = state.get("funding_7d_ann", pd.Series(dtype=float)).astype(float)
+    m_at = pd.Series({d: min(CAP_C1, multiplier(_f(row.get("dist_200")), _f(row.get("vol_pct_3y"))))
+                      for d, row in state.iterrows()}, dtype=float)
+    core_nav = (1 + core_ret).cumprod()
+    exposures = {ARM_C1: (REPLAY_ARM_C1, m_at.shift(1, freq="D")),
+                 ARM_TOM10: (REPLAY_ARM_TOM10, tom_gross(core_nav, cap=CAP_C1).shift(1, freq="D"))}
+    now = datetime.now(timezone.utc).isoformat()
+    common = {"inception": INCEPTION_C1.date().isoformat(), "code_ref": CODE_REF_C1, "computed_at": now,
+              "dist_200": None, "vol_pct_3y": None}
+    rows: list[dict] = []
+    ev: dict[str, Any] = {}
+    fwd = core_ret[core_ret.index > INCEPTION_C1]
+    for arm, (replay_arm, m_prev) in exposures.items():
+        replay = apply_multiplier(core_ret, m_prev, funding, hi=CAP_C1)
+        rows += [{**common, "d": d.date().isoformat(), "arm": replay_arm, "m": float(b["m"]),
+                  "ret": round(float(b["ret"]), 8), "nav": round(float(b["nav"]), 8), "cost": round(float(b["cost"]), 8)}
+                 for d, b in replay.iterrows()]
+        if len(fwd):
+            book = apply_multiplier(fwd, m_prev, funding, hi=CAP_C1)
+            rows += [{**common, "d": d.date().isoformat(), "arm": arm, "m": float(b["m"]),
+                      "ret": round(float(b["ret"]), 8), "nav": round(float(b["nav"]), 8), "cost": round(float(b["cost"]), 8)}
+                     for d, b in book.iterrows()]
+        ev[arm] = {"replay": _stats(replay["ret"]), "core": _stats(core_ret)}
+    return rows, ev
+
+
 def q_exposures(q_marks: pd.Series, gate_up: pd.Series, days: pd.DatetimeIndex) -> tuple[pd.Series, pd.Series]:
     """纯函数。q_marks:mark_date → q_override;gate_up:d → majors 收盘在 200 日线上方(bool)。
     返回 (q_v2 的 m, q_slow 的 m),都已对齐到「作用于 d」:q 取 mark_date ≤ d 的最近一条;闸门取 d−1 收盘的状态。
@@ -445,12 +487,13 @@ async def run_once() -> dict[str, Any]:
     rows_old, ev_old = await asyncio.to_thread(build_rows, core_ret, state, target)
     rows_new, ev_new = await asyncio.to_thread(build_rows_u, core_u_ret, state, target)
     rows_tom, ev_tom = await asyncio.to_thread(build_rows_tom, core_u_ret, state, target)
+    rows_c1, ev_c1 = await asyncio.to_thread(build_rows_c1, core_u_ret, state, target)
     try:                                   # S-631:ⓠ 读不到不该让 ③ 的回放算失败
         rows_q, ev_q = await asyncio.to_thread(build_rows_q, core_u_ret, state, await _q_marks(),
                                                await _majors_gate(), target)
     except Exception as e:  # noqa: BLE001
         rows_q, ev_q = [], {"error": f"{type(e).__name__}: {str(e)[:160]}"}
-    rows = rows_old + rows_new + rows_tom + rows_q
+    rows = rows_old + rows_new + rows_tom + rows_c1 + rows_q
     # S-560:前向行 d ≤ 今天 − 2 已冻结(锚过就不再改);回放行照写
     from src.data.accounting.forward_lock import write_locked
     w = await write_locked(TABLE, rows, key="arm", on_conflict="d,arm")
@@ -464,7 +507,8 @@ async def run_once() -> dict[str, Any]:
     except Exception as e:  # noqa: BLE001 —— 交易层写不进去不该让 ③ 的回放算失败
         tom = {"ok": False, "why": f"{type(e).__name__}: {str(e)[:160]}"}
     return {"ok": True, "refused": False, "written": w["written"], "reason": f"回放至 {target.date()}",
-            "eval": ev_old, "eval_u_cap_a1u": ev_new, "eval_tom_pd13": ev_tom, "eval_q": ev_q, "tom_trader": tom,
+            "eval": ev_old, "eval_u_cap_a1u": ev_new, "eval_tom_pd13": ev_tom, "eval_c1": ev_c1, "eval_q": ev_q,
+            "tom_trader": tom,
             "stale_in_source": stale, "lock": w["lock"]}
 
 

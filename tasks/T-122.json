@@ -1,9 +1,13 @@
 {
   "id": "T-122",
   "owner": "seth",
-  "status": "claimed",
+  "status": "done",
   "created": "2026-10-18",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-23T17:18Z",
+    "value": "核心纯函数 + 测试在 src/data/execution/executor.py;Railway 空跑循环 _executor_dry_run_loop 自 10-18 每天一轮(收盘未落库时 refused 等下一次),东京主机空跑自 10-19 每小时心跳 + 每天一轮。execution_intents 0 行是对的:X1V 自 10-18 起 BTC / ETH 都是空仓目标、没有订单(BTC 10-22 收在前 20 日最低之下)。真跑由 Jazz 切(TRADE_PATH §3g:先隔开手动交易的账户)。"
+  },
   "title": "执行器核心:X1V 目标 → 订单计划 → 只算不发(dry-run)→ 写 execution_intents;收盘后 1 小时内跑、灾难止损盘中盯",
   "source": "Jazz 10-18「执行期提前的确的」;TRADE_PATH §3c(X1V,收盘后 1 小时内成交 + 灾难止损);S-602 模拟五:X1V 的降回撤靠及时出场",
   "allowed_paths": [
