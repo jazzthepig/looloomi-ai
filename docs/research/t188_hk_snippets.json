@@ -1,0 +1,303 @@
+{
+ "paxos_paxg_tc": {
+  "url": "https://www.paxos.com/terms-and-conditions/pax-gold-terms-conditions",
+  "final_url": "https://www.paxos.com/terms-and-conditions/pax-gold-terms-conditions",
+  "status": 200,
+  "n_chars": 28654,
+  "head": "Paxos | Terms and Conditions - PAX Gold Terms and Conditions \r\n Products Assets Company Transparency Developers Contact Us Sign In Products Assets Company Transparency Developers Contact Us Sign I",
+  "snippets": [
+   {
+    "kw": "jurisdiction",
+    "frag": "ted and returned immediately. US dollar deposits sent before 3:00 p.m. EST will typically be credited to your Account on the same day or next business day. US dollar deposits may not be credited outside of normal banking hours. Transfer times are subject to bank holidays, the internal processes and jurisdiction of your bank, and the internal processes of our banks. 6.2. You represent and warrant that all funds that you transfer to us do not represent the proceeds of any criminal, sanctioned, unlawful or fraudulent activity. You are not allowed to receive funds in your Account from a sender other than your"
+   },
+   {
+    "kw": "jurisdiction",
+    "frag": "s to their PAXG or the Allocated Gold backing your PAXG with or without advance notice. Paxos will only freeze such assets (1) if required to do so by law, specifically when Paxos receives a formal legal directive from a regulator, judicial body, law enforcement agency, or other legal entity having jurisdiction over Paxos, (2) pursuant to a formal notification by a Paxos partner according to previously agreed contractual terms, or (3) as deemed necessary by Paxos in its sole discretion. Legal directive formats include court-ordered subpoenas, national security letters, and formal written directives from a"
+   },
+   {
+    "kw": "jurisdiction",
+    "frag": "letters, and formal written directives from a regulator with oversight over Paxos. 14.3. Your PAXG and the Allocated Gold backing your PAXG may be subject to seizure or forfeiture by formal written legal directive from a regulator, judicial body, law enforcement agency, or other legal entity having jurisdiction over Paxos, and we will comply with the legal process in respect thereof. Seizure may not occur under any circumstances absent such a binding legal directive. If tokens are seized, the Paxos transaction generation will ensure that the seized funds are sent to a segregated wallet address held by Pax"
+   },
+   {
+    "kw": "minimum",
+    "frag": "ing periods of extreme volatility and at Paxos’s sole discretion, the Streaming Price Quote may update faster than every five (5) seconds. Once an issuance of PAXG has been executed and the appropriate assets have been credited and debited, the transaction may not be reversible. Paxos may require a minimum amount for conversion, which may be updated from time to time. Once a purchase request has passed Paxos’s compliance checks, it will be processed according to the conversion schedule as set forth in the Paxos User Guide, available at https://help.paxos.com . Provided a purchase request was made by"
+   },
+   {
+    "kw": "minimum",
+    "frag": "lity and at Paxos’s sole discretion, the Streaming Price Quote may require you to request a new quote faster than every five (5) seconds. Once a conversion of PAXG has been executed and the appropriate assets have been credited and debited, the transaction may not be reversible. Paxos may require a minimum amount for conversion, which may be updated from time to time. All conversions will be rounded down to the nearest US cent. 11.3. After your Account has been funded with PAXG, you will be given the option to convert the PAXG tokens into Unallocated Gold, as follows: You must enter the quantity of P"
+   },
+   {
+    "kw": "minimum",
+    "frag": "st has been submitted and processed, Paxos will send via wire withdrawal the corresponding Unallocated Gold ounces to your disclosed account. 11.4. After your Account has been funded with PAXG, you will be given the option to redeem the PAXG tokens into Allocated Gold, as follows: You must redeem a minimum of 430 PAXG tokens plus the fee set forth in the Paxos User Guide, per London Good Delivery gold bar. You may be subject to additional due diligence if you choose to redeem your PAXG tokens into Allocated Gold. You will receive further instructions via the email you provided with your Account as to"
+   }
+  ]
+ },
+ "paxos_general_tc": {
+  "url": "https://www.paxos.com/terms-and-conditions/general-terms-and-conditions",
+  "final_url": "https://www.paxos.com/terms-and-conditions/general-terms-and-conditions",
+  "status": 200,
+  "n_chars": 81166,
+  "head": "Paxos | Terms and Conditions - General Terms and Conditions \r\n Products Assets Company Transparency Developers Contact Us Sign In Products Assets Company Transparency Developers Contact Us Sign In",
+  "snippets": [
+   {
+    "kw": "Restricted",
+    "frag": "ge); (k) circumvent any encryption or other security tools used anywhere on the Site or in conjunction with the Products or the Services (including the theft of usernames, passwords or API keys, passkeys or using another person’s username, password or API key or passkey in order to gain access to a restricted area of the Site); (l) use any data mining, bots, scrapers or similar data gathering and extraction tools on the Site or in conjunction with the Products, the Services or the Materials; (m) sell, rent, lease, license, sublicense, transfer, distribute, re-transmit, time-share, use as a service burea"
+   },
+   {
+    "kw": "jurisdiction",
+    "frag": "ties experienced by Paxos may prevent access to, or use of, your crypto assets; (m) any bond or trust account we may hold for the benefit of Customers may not be sufficient to cover all losses incurred by Customers; and (n) Paxos may not be regulated as a financial institution or equivalent in your jurisdiction. 5.4 You understand that this Agreement does not disclose all of the risks associated with trading in crypto assets. You acknowledge and agree that you are solely responsible for determining the nature, potential value, suitability, and appropriateness of those risks for you in light of your circum"
+   },
+   {
+    "kw": "jurisdiction",
+    "frag": "our access to any part of the Paxos Platform in accordance with this Agreement. 12.3 User tokens may be subject to seizure or forfeiture if Paxos is instructed to seize such funds by formal written legal directive from a regulator, judicial body, law enforcement agency, or other legal entity having jurisdiction over Paxos. Seizure may not occur under any circumstances absent such a legal directive. If tokens are seized, the Paxos transaction generation will ensure that the seized funds are sent to a segregated wallet address held by Paxos for the purposes of seizure/forfeiture, until such time as they may"
+   },
+   {
+    "kw": "jurisdiction",
+    "frag": "abandoned property and escheat laws. If this occurs, we will use reasonable efforts to provide written notice to you. If you fail to respond to any such notice within seven (7) business days of receipt, or as otherwise required by law, we may be required to deliver any such funds to the applicable jurisdiction as unclaimed property. Due to the cost of maintaining and supporting your Account, and subject to applicable law, we reserve the right to deduct a dormancy fee or other administrative charges from such unclaimed funds (in addition to any fees charged as set forth in this Agreement or a Pricing Supp"
+   },
+   {
+    "kw": "jurisdiction",
+    "frag": "interfere or attempt to disrupt or damage the Paxos Platform; and (z) do anything that may adversely affect proper operation of the Paxos Platform and the reputation and goodwill of Paxos. 16.3 By your use of any of the Paxos Platform, you represent and covenant that such use is legal in your local jurisdiction, and you agree that you will not use the Paxos Platform if such use is prohibited or otherwise violates the laws of the country, state, province, or other jurisdiction in which you reside or of which you are a citizen. 17. Liquidated Damages 17.1 In various provisions in this Agreement, we have out"
+   },
+   {
+    "kw": "jurisdiction",
+    "frag": "d goodwill of Paxos. 16.3 By your use of any of the Paxos Platform, you represent and covenant that such use is legal in your local jurisdiction, and you agree that you will not use the Paxos Platform if such use is prohibited or otherwise violates the laws of the country, state, province, or other jurisdiction in which you reside or of which you are a citizen. 17. Liquidated Damages 17.1 In various provisions in this Agreement, we have outlined liquidated damages amounts to be applied against you if you violate these specific provisions. You specifically agree to pay these amounts. In agreeing to pay liq"
+   }
+  ]
+ },
+ "paxos_paxg_page": {
+  "url": "https://www.paxos.com/pax-gold",
+  "final_url": "https://www.paxos.com/pax-gold",
+  "status": 200,
+  "n_chars": 8148,
+  "head": "Paxos | Pax Gold (PAXG) \r\n Products Assets Company Transparency Developers Contact Us Sign In Products Assets Company Transparency Developers Contact Us Sign In Pax Gold Pax Gold Pax Gold The safe",
+  "snippets": [
+   {
+    "kw": "gold",
+    "frag": "Paxos | Pax Gold (PAXG) Products Assets Company Transparency Developers Contact Us Sign In Products Assets Company Transparency Developers Contact Us Sign In Pax Gold Pax Gold Pax Gold The safest way to own investment-grade gold The safest way to own investment grade gold Seamlessly offer PAXG, now with zero on-"
+   },
+   {
+    "kw": "gold",
+    "frag": "nvestment-grade gold The safest way to own investment grade gold Seamlessly offer PAXG, now with zero on-chain transfer fees Seamlessly offer PAXG, now with zero on-chain transfer fees Seamlessly offer PAXG, now with zero on-chain transfer fees NOW ON NOW ON ')\"> A digital token, backed by physical gold PAXG offers investors a cost-effective way to own investment-grade physical gold with all the benefits of the blockchain. Each Pax Gold (PAXG) token is backed by one fine troy ounce of gold, stored in LBMA vaults in London. If you own PAXG, you own the underlying physical gold, held in custody by P"
+   },
+   {
+    "kw": "gold",
+    "frag": "PAXG, now with zero on-chain transfer fees Seamlessly offer PAXG, now with zero on-chain transfer fees Seamlessly offer PAXG, now with zero on-chain transfer fees NOW ON NOW ON ')\"> A digital token, backed by physical gold PAXG offers investors a cost-effective way to own investment-grade physical gold with all the benefits of the blockchain. Each Pax Gold (PAXG) token is backed by one fine troy ounce of gold, stored in LBMA vaults in London. If you own PAXG, you own the underlying physical gold, held in custody by Paxos Trust Company. Cost-efficient Paxos offers PAXG at a lower cost structure th"
+   },
+   {
+    "kw": "gold",
+    "frag": "offer PAXG, now with zero on-chain transfer fees Seamlessly offer PAXG, now with zero on-chain transfer fees NOW ON NOW ON ')\"> A digital token, backed by physical gold PAXG offers investors a cost-effective way to own investment-grade physical gold with all the benefits of the blockchain. Each Pax Gold (PAXG) token is backed by one fine troy ounce of gold, stored in LBMA vaults in London. If you own PAXG, you own the underlying physical gold, held in custody by Paxos Trust Company. Cost-efficient Paxos offers PAXG at a lower cost structure than that of other gold tokens, gold ETFs and LBMA 400 t"
+   },
+   {
+    "kw": "gold",
+    "frag": "essly offer PAXG, now with zero on-chain transfer fees NOW ON NOW ON ')\"> A digital token, backed by physical gold PAXG offers investors a cost-effective way to own investment-grade physical gold with all the benefits of the blockchain. Each Pax Gold (PAXG) token is backed by one fine troy ounce of gold, stored in LBMA vaults in London. If you own PAXG, you own the underlying physical gold, held in custody by Paxos Trust Company. Cost-efficient Paxos offers PAXG at a lower cost structure than that of other gold tokens, gold ETFs and LBMA 400 t oz bars, with a low minimum purchase amount and zero s"
+   },
+   {
+    "kw": "gold",
+    "frag": "n, backed by physical gold PAXG offers investors a cost-effective way to own investment-grade physical gold with all the benefits of the blockchain. Each Pax Gold (PAXG) token is backed by one fine troy ounce of gold, stored in LBMA vaults in London. If you own PAXG, you own the underlying physical gold, held in custody by Paxos Trust Company. Cost-efficient Paxos offers PAXG at a lower cost structure than that of other gold tokens, gold ETFs and LBMA 400 t oz bars, with a low minimum purchase amount and zero storage fees. Secure and regulated The allocated gold that backs PAXG is custodied in LBM"
+   }
+  ]
+ },
+ "tether_gold_tos": {
+  "url": "https://gold.tether.to/legal/termsofservice",
+  "final_url": "https://gold.tether.to/legal/termsofservice",
+  "status": 200,
+  "n_chars": 253,
+  "head": "Tether Gold (XAUt) - digital token backed by physical gold \n You need to enable JavaScript to run this app. \n tag.\n To begin the development, run `npm start` or `yarn start`.\n To create a productio",
+  "snippets": [
+   {
+    "kw": "gold",
+    "frag": "Tether Gold (XAUt) - digital token backed by physical gold You need to enable JavaScript to run this app. tag. To begin the development, run `npm start` or `yarn start`. To create a production bundle, use `npm run build` or `yarn build`. -->"
+   }
+  ]
+ },
+ "tether_gold_faq": {
+  "url": "https://gold.tether.to/faq",
+  "final_url": "https://gold.tether.to/faq",
+  "status": 200,
+  "n_chars": 253,
+  "head": "Tether Gold (XAUt) - digital token backed by physical gold \n You need to enable JavaScript to run this app. \n tag.\n To begin the development, run `npm start` or `yarn start`.\n To create a productio",
+  "snippets": []
+ },
+ "ondo_stocks_faq": {
+  "url": "https://ondo.finance/ondo-stocks",
+  "final_url": "https://ondo.finance/ondo-stocks",
+  "status": 200,
+  "n_chars": 23684,
+  "head": "Ondo Stocks | Ondo Finance Skip to main content Products Resources Ecosystem About Launch App Products Resources Ecosystem About Ondo Stocks Not Available in US The Global Standard for Tokenized S t",
+  "snippets": [
+   {
+    "kw": "eligible",
+    "frag": "e updates, insights and news from us. This site is protected by reCAPTCHA and the Google Privacy Policy and Terms of Service apply. FAQ What is Ondo Stocks (previously known as Ondo Global Markets)? Ondo Stocks is a tokenization platform that supports onchain exposure to publicly traded securities. Eligible investors outside the U.S. can gain exposure to hundreds of U.S. publicly traded securities, including stocks and ETFs, including certain ETFs based on commodities. By providing tokenized exposure to these assets, Ondo Stocks brings the transparency, efficiency, and accessibility enabled by blockch"
+   },
+   {
+    "kw": "eligible",
+    "frag": "acle (ORCLon) Growth stocks: Tesla (TSLAon), Circle Internet Group (CRCLon), and Micron (MUon) Value stocks: AT&T (Ton), Verizon (VZon), and American Airlines (AALon) New assets are added regularly. Browse the full list at app.ondo.finance. How do I buy tokenized stocks on the Ondo Stocks platform? Eligible investors outside the U.S. can buy tokenized stocks directly on the Ondo Stocks platform, previously known as Ondo Global Markets. Buying tokenized stocks on Ondo Stocks takes three steps: Connect your wallet at app.ondo.finance Complete the onboarding process Buy Ondo Stocks directly from your wal"
+   },
+   {
+    "kw": "eligible",
+    "frag": "Buy Ondo Stocks directly from your wallet Ondo tokenized stocks can also be acquired 24/7 through various third-party exchanges, wallets, and DeFi protocols on BNB Chain, Solana and Ethereum. Where can I trade Ondo Stocks? In addition to buying tokenized stocks directly on the Ondo Stocks platform, eligible investors outside the U.S. can trade Ondo Stocks across a global network of third-party wallets, centralized exchanges (CEXs), decentralized exchanges (DEXs), DEX aggregators, and more. Ondo Stocks are available across platforms including: 1inch Fusion UniswapX Ledger MyEtherWallet MetaMask Pancake"
+   },
+   {
+    "kw": "eligible",
+    "frag": "y wallets, centralized exchanges (CEXs), decentralized exchanges (DEXs), DEX aggregators, and more. Ondo Stocks are available across platforms including: 1inch Fusion UniswapX Ledger MyEtherWallet MetaMask PancakeSwapX Gate Trust Wallet Binance Wallet Bitget Wallet Blockchain.com KuCoin MEXC Who is eligible to mint and redeem Ondo Stocks? Only eligible users who have successfully completed onboarding can mint or redeem Ondo Stocks directly on the Ondo Stocks platform. Ondo Stocks are offered only outside the United States and only to eligible non-U.S. persons. Before you can mint or redeem directly on"
+   },
+   {
+    "kw": "eligible",
+    "frag": "tralized exchanges (DEXs), DEX aggregators, and more. Ondo Stocks are available across platforms including: 1inch Fusion UniswapX Ledger MyEtherWallet MetaMask PancakeSwapX Gate Trust Wallet Binance Wallet Bitget Wallet Blockchain.com KuCoin MEXC Who is eligible to mint and redeem Ondo Stocks? Only eligible users who have successfully completed onboarding can mint or redeem Ondo Stocks directly on the Ondo Stocks platform. Ondo Stocks are offered only outside the United States and only to eligible non-U.S. persons. Before you can mint or redeem directly on the platform, you must complete our onboardin"
+   },
+   {
+    "kw": "eligible",
+    "frag": "ance Wallet Bitget Wallet Blockchain.com KuCoin MEXC Who is eligible to mint and redeem Ondo Stocks? Only eligible users who have successfully completed onboarding can mint or redeem Ondo Stocks directly on the Ondo Stocks platform. Ondo Stocks are offered only outside the United States and only to eligible non-U.S. persons. Before you can mint or redeem directly on the platform, you must complete our onboarding process. Onboarding confirms that you are eligible, including that you are not a U.S. person, that you are not located in or a resident of a restricted jurisdiction, and that you are not a san"
+   }
+  ]
+ },
+ "ondo_eligibility": {
+  "url": "https://docs.ondo.finance/ondo-stocks/eligibility",
+  "final_url": "https://docs.ondo.finance/ondo-stocks/eligibility",
+  "status": 200,
+  "n_chars": 10921,
+  "head": "Eligibility - Ondo Finance Documentation Index Fetch the complete documentation index at: /llms.txt Use this file to discover all available pages before exploring further. Skip to main content Ondo F",
+  "snippets": [
+   {
+    "kw": "Hong Kong",
+    "frag": "quarters; or 1 year of financial sector experience Certain regulated financial institutions, or large undertakings that meet two of the following three size requirements: balance sheet total of at least EUR 20 million; net turnover of at least EUR 40 million; or own funds of at least EUR 2 million Hong Kong ”Professional Investor” (Individual) under the Securities and Futures (Professional Investor) Rules (PI Rules) HK$8 million portfolio value (alone or with associates) Not applicable ”Professional Investor” (Corporate/Trust) under the Securities and Futures (Professional Investor) Rules (PI Rules) N"
+   },
+   {
+    "kw": "eligible",
+    "frag": "cable jurisdiction’s law, rules and regulations for definitions of the defined terms used in the table below. To onboard with the token issuer, Restricted Persons generally will be required to produce evidence that they satisfy the applicable eligibility requirements and to certify or declare their eligible status. Jurisdiction Eligibility Requirements Summary of Key Financial Thresholds (Individuals) Summary of Key Financial Thresholds (Entities) Brazil ”Qualified Investor” under CVM Resolution No. 30, of May 11th, 2021 (Article 12) R$1 million in financial investments; or approved technical qualif"
+   },
+   {
+    "kw": "accredited",
+    "frag": "igh Net Worth Entity”) under the Capital Markets and Services Act 2007 Not applicable Trust companies or public company trustees with RM 10 million assets under management; corporations or partnerships with RM 10 million total net assets; statutory bodies; or pension funds ”Sophisticated Investor” (Accredited Investor) under the Capital Markets and Services Act 2007 Not applicable Unit trust schemes; Capital Markets Services Licence (CMSL) holders; licensed banks; closed-end funds; or similar regulated entities Singapore ”Accredited Investor” under Securities and Futures Act (SFA) (Section 4A(1)) S$2 mi"
+   },
+   {
+    "kw": "accredited",
+    "frag": "et assets; statutory bodies; or pension funds ”Sophisticated Investor” (Accredited Investor) under the Capital Markets and Services Act 2007 Not applicable Unit trust schemes; Capital Markets Services Licence (CMSL) holders; licensed banks; closed-end funds; or similar regulated entities Singapore ”Accredited Investor” under Securities and Futures Act (SFA) (Section 4A(1)) S$2 million net personal assets (max S$1 million from primary residence); S$1 million financial assets (net of liabilities); or S$300,000 annual income S$10 million net assets ”Institutional Investor” under the Securities and Futures"
+   },
+   {
+    "kw": "KYC",
+    "frag": "do Stocks & Portfolios API Reference Ondo Finance Website Getting Started Welcome to Ondo Trust & Security Official Domains Ondo Stocks Overview Comparison to Other Tokenized Stocks Eligibility Investing & Redeeming Market Hours & Trading Availability Off-Hours Trading Available Assets Onboarding & KYC Transferability Token & Quote Pricing Corporate Actions Fees & Taxes Technical Private Client Trust & Transparency Legal & Regulatory Partners & Media Troubleshooting Important Notes Secondary Market Restrictions Ondo Intelligent Portfolios Overview Eligibility Comparison to ETFs & Tokenized Assets"
+   },
+   {
+    "kw": "KYC",
+    "frag": "bleshooting Important Notes Secondary Market Restrictions Ondo Intelligent Portfolios Overview Eligibility Comparison to ETFs & Tokenized Assets Available Assets Model Providers Investing & Redeeming Token Quote & Pricing Rebalancing & Reconstitution Market Hours & Trading Availability Onboarding & KYC Transferability Corporate Actions Fees & Taxes Technical Trust & Transparency Legal & Regulatory Partners & Media Troubleshooting Secondary Market Restrictions Important Notes Ondo Private Markets Overview Why Invest Key Product Terms Eligibility Important Things to Know FAQs Legal USDY USDY Basics"
+   }
+  ]
+ },
+ "xstocks_tos_pdf": {
+  "url": "https://xstocks.fi/documents/xstocks-terms-of-service.pdf",
+  "final_url": "https://xstocks.fi/documents/xstocks-terms-of-service.pdf",
+  "status": 200,
+  "n_chars": 12596,
+  "head": "Terms of Service\nBacked Finance AG, a company incorporated under the laws of Switzerland\n(\"Backed Finance\", \"us\", \"we\", or \"our\") owns and maintains this website\n(\"Site\"). These Terms of Service (\"Te",
+  "snippets": [
+   {
+    "kw": "jurisdiction",
+    "frag": "ion you may have to a third party; and (b) you shall comply with applicable laws, regulations, guidelines, and these Terms throughout your use of the Services. 1.3. xStocks are not registered under the U.S. Securities Act of 1933 or with any securities regulatory authority of any State or other jurisdiction of the US and (i) may not be offered, sold or delivered within the US to, or for the account or benefit of U.S. Persons, and (ii) may be offered, sold or otherwise delivered at any time only to transferees that are Non-U.S Persons. 2. User Content. The Site is provided for informational purpose"
+   },
+   {
+    "kw": "jurisdiction",
+    "frag": "SEFULNESS OF ANY CONTENT OR INFORMATION PROVIDED. 7.4. No advice or information, whether oral or written, obtained by you from us, shall create any warranty that is not expressly stated in these Terms. If you choose to rely on such information, you do so solely at your own risk. Some states or jurisdictions do not allow the exclusion of certain warranties. Accordingly, some of the above exclusions may not apply to you. Check your local laws for any restrictions or limitations regarding the exclusion of implied warranties. 8. Limitation of Liability 8.1. Without derogating from any of the foregoin"
+   },
+   {
+    "kw": "jurisdiction",
+    "frag": "OF THE INFORMATION PROVIDED AS PART OF OR THROUGH THE SERVICES, WHETHER THE DAMAGES ARE FORESEEABLE AND WHETHER OR NOT BACKED FINANCE HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. THE FOREGOING LIMITATION OF LIABILITY SHALL APPLY TO THE FULLEST EXTENT PERMITTED BY LAW IN THE APPLICABLE JURISDICTION AND IN NO EVENT SHALL OUR MAXIMUM CUMULATIVE LIABILITY TO YOU EXCEED US$50. 7. Indemnification. You agree to indemnify, defend, and hold harmless Backed Finance, and its employees, directors, officers, subcontractors and agents, against any and all claims, damages, or costs, losses, liabilities"
+   },
+   {
+    "kw": "jurisdiction",
+    "frag": "cellaneous. These Terms shall be governed solely by the substantive laws of Switzerland, excluding its conflict of laws provisions and without regard to the United Nations Convention on the International Sales of Goods. The ordinary courts in the Canton of Zug, Switzerland, shall have exclusive jurisdiction to hear any disputes arising hereunder, subject to mandatory venues under applicable law. In the event that any provision of these Terms is held to be unenforceable, such provision shall be replaced with an enforceable provision which most closely achieves the effect of the original provision,"
+   },
+   {
+    "kw": "backed",
+    "frag": "Terms of Service Backed Finance AG, a company incorporated under the laws of Switzerland (\"Backed Finance\", \"us\", \"we\", or \"our\") owns and maintains this website (\"Site\"). These Terms of Service (\"Terms\") govern your access and use of the Site, including the ability to contact us regarding our business and access to infor"
+   },
+   {
+    "kw": "backed",
+    "frag": ". We reserve the right to modify these Terms at any time. We will notify you of any material changes by posting the amended Terms on the Site. Your continued use of the Site following such notification shall be deemed acceptance of the amended terms. 1. Use of Services 1.1. Subject to these Terms, Backed Finance allows you to access and use the Services on a non-exclusive basis for informational purposes. 1.2. Use of and access to the Services is void where prohibited by law. You represent and warrant that (a) your use of the Services does not violate any applicable law, regulation, or obligati"
+   }
+  ]
+ },
+ "xstocks_legal_overview": {
+  "url": "https://docs.xstocks.fi/docs/product-legal-overview",
+  "final_url": "https://docs.xstocks.fi/docs/product-legal-overview",
+  "status": 200,
+  "n_chars": 5787,
+  "head": "Product Legal Overview | xStocks Docs \n Skip to content Docs Developer Guide API Reference Changelog DeFi Dashboard xStocks Search Introduction How xStocks Work Frequently Asked Questions Overview",
+  "snippets": [
+   {
+    "kw": "jurisdiction",
+    "frag": "an Economic Area, enabling licensed third-party distributors to offer xStocks to retail clients. Each individual product is governed by its own Final Terms published alongside the base prospectus. Although xStocks are issued as securities under the frameworks of Jersey and the European Union, other jurisdictions may classify them differently, including as crypto assets. Licensing requirements for distribution vary accordingly. Product documentation, including the prospectus and Final Terms, is available at: assets.backed.fi/legal-documentation Collateral & Segregation Every xStock is fully collateralized"
+   },
+   {
+    "kw": "jurisdiction",
+    "frag": "ncial instruments, providing legal certainty for this form of registration. The token is the certificate. Holding the token constitutes holding the instrument. Distribution Restrictions xStocks are not marketed, offered, or solicited in the United States, to U.S. Persons, or in any other prohibited jurisdiction. Distributors are responsible for complying with applicable regulatory requirements in the jurisdictions where they operate. Common Questions Who issues xStocks and are they regulated? Backed Assets (JE) Limited is registered with the Jersey Financial Services Commission (JFSC) and holds the requir"
+   },
+   {
+    "kw": "jurisdiction",
+    "frag": ". Holding the token constitutes holding the instrument. Distribution Restrictions xStocks are not marketed, offered, or solicited in the United States, to U.S. Persons, or in any other prohibited jurisdiction. Distributors are responsible for complying with applicable regulatory requirements in the jurisdictions where they operate. Common Questions Who issues xStocks and are they regulated? Backed Assets (JE) Limited is registered with the Jersey Financial Services Commission (JFSC) and holds the required COBO and CGPO consents to issue security tokens. Each xStock is a bearer debt instrument classified a"
+   },
+   {
+    "kw": "United States",
+    "frag": "that DLT-based records are valid evidence of title to financial instruments, providing legal certainty for this form of registration. The token is the certificate. Holding the token constitutes holding the instrument. Distribution Restrictions xStocks are not marketed, offered, or solicited in the United States, to U.S. Persons, or in any other prohibited jurisdiction. Distributors are responsible for complying with applicable regulatory requirements in the jurisdictions where they operate. Common Questions Who issues xStocks and are they regulated? Backed Assets (JE) Limited is registered with the Jersey"
+   },
+   {
+    "kw": "backed",
+    "frag": "ch Introduction How xStocks Work Frequently Asked Questions Overview Product Legal Overview Issuance And Redemption Exchange Integration Dividends and Stock Splits Reference Media & Brand Kit Last updated 1 month ago Product Legal Overview Copy xStocks are structured financial instruments issued by Backed Assets (JE) Limited, a Jersey company registered with the Jersey Financial Services Commission (JFSC). Each xStock is a tracker certificate, fully collateralized 1:1 by the underlying equity held with regulated custodians in segregated accounts with no commingling. A base prospectus approved by the"
+   },
+   {
+    "kw": "backed",
+    "frag": "ices Commission (JFSC). Each xStock is a tracker certificate, fully collateralized 1:1 by the underlying equity held with regulated custodians in segregated accounts with no commingling. A base prospectus approved by the Liechtenstein FMA is passportable across the EEA. Issuer xStocks are issued by Backed Assets (JE) Limited, a Jersey-based special purpose vehicle dedicated solely to the issuance and redemption of xStocks. The SPV maintains its own bank and collateral accounts and conducts KYC and AML procedures in accordance with Jersey law. Backed Assets (JE) Limited is registered with the Jersey"
+   }
+  ]
+ },
+ "backed_assets_docs": {
+  "url": "https://assets.backed.fi/legal-documentation",
+  "final_url": "https://assets.backed.fi/legal-documentation",
+  "status": 200,
+  "n_chars": 9028,
+  "head": "Product Documentation - Backed Assets \n Products Legal Documentation Onboarding Contact Backed Finance Platform Login Products Legal Documentation Onboarding Contact Backed Finance Platform Login Leg",
+  "snippets": [
+   {
+    "kw": "prospectus",
+    "frag": "er restrictions (please see the products page for the specific token contracts addresses) Supported Blockchains xStocks Ethereum, Solana, Arbitrum, Mantle, Ink, BNB Smart Chain, TRON, TON, X Layer, Optimism, Monad bTokens Ethereum, Gnosis, Polygon, Arbitrum, Fantom, Avalanche, BNB Smart Chain, Base Prospectus Type Base Prospectus Legal Category Certificate (tracker of an underlying) Applicable Law for the Products Swiss law Prospectus Base Prospectus ( 2026 / 05 / 08 ) Base Prospectus First Supplement ( 2026 / 07 / 27 ) Base Prospectus Second Supplement ( 2026 / 09 / 29 ) The Base Prospectus is valid un"
+   },
+   {
+    "kw": "prospectus",
+    "frag": "se see the products page for the specific token contracts addresses) Supported Blockchains xStocks Ethereum, Solana, Arbitrum, Mantle, Ink, BNB Smart Chain, TRON, TON, X Layer, Optimism, Monad bTokens Ethereum, Gnosis, Polygon, Arbitrum, Fantom, Avalanche, BNB Smart Chain, Base Prospectus Type Base Prospectus Legal Category Certificate (tracker of an underlying) Applicable Law for the Products Swiss law Prospectus Base Prospectus ( 2026 / 05 / 08 ) Base Prospectus First Supplement ( 2026 / 07 / 27 ) Base Prospectus Second Supplement ( 2026 / 09 / 29 ) The Base Prospectus is valid until its expiry on 7 M"
+   },
+   {
+    "kw": "prospectus",
+    "frag": ", Solana, Arbitrum, Mantle, Ink, BNB Smart Chain, TRON, TON, X Layer, Optimism, Monad bTokens Ethereum, Gnosis, Polygon, Arbitrum, Fantom, Avalanche, BNB Smart Chain, Base Prospectus Type Base Prospectus Legal Category Certificate (tracker of an underlying) Applicable Law for the Products Swiss law Prospectus Base Prospectus ( 2026 / 05 / 08 ) Base Prospectus First Supplement ( 2026 / 07 / 27 ) Base Prospectus Second Supplement ( 2026 / 09 / 29 ) The Base Prospectus is valid until its expiry on 7 May 2027, provided that all necessary supplement are drawn up in accordance with Article 23 of the Prospectu"
+   },
+   {
+    "kw": "prospectus",
+    "frag": "um, Mantle, Ink, BNB Smart Chain, TRON, TON, X Layer, Optimism, Monad bTokens Ethereum, Gnosis, Polygon, Arbitrum, Fantom, Avalanche, BNB Smart Chain, Base Prospectus Type Base Prospectus Legal Category Certificate (tracker of an underlying) Applicable Law for the Products Swiss law Prospectus Base Prospectus ( 2026 / 05 / 08 ) Base Prospectus First Supplement ( 2026 / 07 / 27 ) Base Prospectus Second Supplement ( 2026 / 09 / 29 ) The Base Prospectus is valid until its expiry on 7 May 2027, provided that all necessary supplement are drawn up in accordance with Article 23 of the Prospectus Regulation (“S"
+   },
+   {
+    "kw": "prospectus",
+    "frag": "RON, TON, X Layer, Optimism, Monad bTokens Ethereum, Gnosis, Polygon, Arbitrum, Fantom, Avalanche, BNB Smart Chain, Base Prospectus Type Base Prospectus Legal Category Certificate (tracker of an underlying) Applicable Law for the Products Swiss law Prospectus Base Prospectus ( 2026 / 05 / 08 ) Base Prospectus First Supplement ( 2026 / 07 / 27 ) Base Prospectus Second Supplement ( 2026 / 09 / 29 ) The Base Prospectus is valid until its expiry on 7 May 2027, provided that all necessary supplement are drawn up in accordance with Article 23 of the Prospectus Regulation (“Supplement”). If the Base Prospectus"
+   },
+   {
+    "kw": "prospectus",
+    "frag": "Gnosis, Polygon, Arbitrum, Fantom, Avalanche, BNB Smart Chain, Base Prospectus Type Base Prospectus Legal Category Certificate (tracker of an underlying) Applicable Law for the Products Swiss law Prospectus Base Prospectus ( 2026 / 05 / 08 ) Base Prospectus First Supplement ( 2026 / 07 / 27 ) Base Prospectus Second Supplement ( 2026 / 09 / 29 ) The Base Prospectus is valid until its expiry on 7 May 2027, provided that all necessary supplement are drawn up in accordance with Article 23 of the Prospectus Regulation (“Supplement”). If the Base Prospectus has become invalid, the obligation to prepare a Sup"
+   }
+  ]
+ },
+ "hl_terms": {
+  "url": "https://app.hyperliquid.xyz/terms",
+  "final_url": "https://app.hyperliquid.xyz/terms",
+  "status": 200,
+  "n_chars": 595,
+  "head": "Hyperliquid \n -1 ? setImmediate : nextTick\n so it throws \"process is not defined\" during import, before React mounts.\n webpack provided a process shim for CRA; vite does not.\n `define` cannot cover",
+  "snippets": []
+ },
+ "hl_hip3": {
+  "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/hip-3",
+  "final_url": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/hip-3",
+  "status": 404,
+  "n_chars": 0,
+  "head": "",
+  "snippets": []
+ }
+}
