@@ -1,7 +1,7 @@
 {
   "id": "T-188",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-23",
   "forbidden_paths": [
     "Shadow/",
@@ -23,5 +23,5 @@
     "expect": "脚本(若有测量)docs/research/t188_venues.py;结果 docs/research/t188_venues.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-188_offcrypto_venues.md:开头一张总表(工具 × 深度 / 成本 / 香港可得性 / 跟踪误差 / 是否现货持有),然后每条腿给「按 $10k / $100k / $1M 一次买入的预计总成本」;末尾写「哪些现在就能用、哪些要先开户 / 签协议」—— 只陈述事实,不写推荐买卖的话,选哪个是 Jazz 的事。in_review,推 lane-b/T-188。新分支 `git switch -c lane-b/T-188 origin/main`。"
   },
   "prior_value": "没有。S-606 / S-609 用 World50 回放与黄金序列算过这两条腿的收益与回撤,但从没问过「在链上买得到吗、要花多少、香港能不能持有」。",
-  "notes": ""
+  "notes": "小改(Seth 10-23 16:45 UTC「内容收」):第三方条款整段原文不进公开仓库,已移到私有数据根 /Volumes/CometCloudAI/cometcloud-local/research/t188/(hk_text/ 28 个来源文件 + t188_hk_snippets.json)。仓库只留 docs/research/t188_notes.md(每条结论+链接+日期+不超过一句的原文引用)与数字 JSON(t188_venues.json / t188_costs.json);抓取脚本(t188_hk_fetch*.py / t188_hk_print.py)留在仓库可复跑,读写路径改到 T188_TEXT_ROOT(默认同上)。本轮未重跑测量,数字与上轮一致。\n\n【顺带修一处】asof 日期:JST 2026-10-24 → 取数日 2026-10-23(UTC)(实测时刻 2026-10-23T15:46:45Z);t188_venues.py 的 ASOF 改为 datetime.now(timezone.utc).strftime('%Y-%m-%d'),报告与 notes 同步重出(报告同路径重生成)。\n\n【交付】脚本 docs/research/t188_venues.py + t188_venues2.py + t188_costs.py + t188_hk_fetch*.py / t188_hk_print.py;结果 docs/research/t188_venues.json + t188_costs.json;笔记 docs/research/t188_notes.md;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-188_offcrypto_venues.md。\n\n【实测要点(未变)】PAXG $4,008.65｜30日均成交 $129.5M｜Binance 点差 0.02bp｜±1% 深度 $6.0M｜对 GLD 相关 0.959、TE 8.18%。XAUT $3,995.97｜$190.9M｜0.02bp｜±1% $3.9M｜0.963、TE 7.75%。GLDX $366.26｜$6.4M｜Gate 45.21bp｜±1% $62K｜0.978、TE 6.08%。SPYX $767.62｜$10.3M｜1.44bp｜±1% $169K｜对 SPY 0.945、TE 4.48%。QQQX $708.17｜$1.28M｜2.54bp｜±1% $230K｜对 QQQ 0.928、TE 8.64%。AAPLX $348.82｜$3.8M｜2.01bp｜±1% $340K｜对 AAPL 0.729、TE 21.74%。\n$1M 一次买入纯盘口冲击:PAXG 5.0bp($501,Binance 盘口覆盖)、XAUT 10.0bp($1,001);GLDX 343.8bp、SPYX 103.0bp、QQQX 84.8bp、AAPLX 63.1bp 为盘口外推(低置信)。手续费本轮未实测=查不到。\nHL 永续(合成多头,非持有):10 条 HIP-3 dex,仅 xyz / para 有非零可见深度;xyz:GOLD 30日均成交 $47.9M、点差 0.25bp、±1% $2.67M、资金费年化 6.42%(多头付);$1M 持 xyz:GOLD 一年仅资金费 $64,243 —— 比 PAXG 一次性冲击 $501 高约两个数量级。HL 现货 337 个交易对里金/股现货对 0 个。\n香港可得性:PAXG 条款未把香港列为禁止辖区,但一级申赎仅限 Verified Customer;Tether Gold 发行实体与保管结构查不到(JS 渲染页);GLDX 香港属 Jurisdiction-Based Restrictions,个人须 SFO Professional Investor(HK$8m 门槛);SPYX/QQQX/AAPLX 官方 Restricted Countries 页禁国与不可服务国均不含香港,一级申购仅 Professional/Qualified Investor(其他人只能开赎回账户),开户需 KYC + 实时视频核验;HL 官方条款正文查不到,次级来源两站称香港在支持名单、另 HIP-3 部署方可自设钱包 allowlist。\n【查不到(未估算)】各交易所 maker/taker 费率与 AMM 费率;Paxos/Tether/Ondo/Backed 赎回最小额与时效;Tether Gold 发行实体与实物金保管结构;HL 官方条款正文受限名单;AMM 池盘口深度(仅池子规模,最大 Uniswap XAUt 池 $5.48M)。\n【探索性 —— 需另立预注册、在新数据上过零信号对照】1) AAPLX 对 AAPL 年化 TE 21.74% 比指数类大一个量级 —— 单一个股代币化与指数代币化不是同一流动性/跟踪等级。2) GLDX 点差是 PAXG/XAUT 的两千倍而 TE 最低 —— 黄金腿的「跟踪质量」与「交易成本」反向。3) 10 条 HIP-3 dex 中 8 条实测零可见深度却仍有报价 —— 部署方上架 ≠ 有流动性。4) 时点错一天相关性即消失,跟踪误差类指标必须带对齐自检。\n原文已移到数据根 research/t188/。"
 }

@@ -1,0 +1,1198 @@
+{
+ "sizes_usd": [
+  10000,
+  100000,
+  1000000
+ ],
+ "venues": {
+  "PAXG": {
+   "kind": "token_spot",
+   "price_usd": 4008.65,
+   "market_cap_usd": 1775175595,
+   "vol30d_avg_usd": 129543091.8015091,
+   "leg": "gold",
+   "benchmark": "GLD",
+   "tracking_error_90d": {
+    "n_common_days": 63,
+    "window_start": "2026-07-24",
+    "window_end": "2026-10-22",
+    "alignment": "token t(d+1) vs benchmark close(d); CoinGecko 逐日快照 = 该日 00:00 UTC(在美股前一日收盘后约 3 小时)",
+    "corr_daily_returns": 0.9590398248892871,
+    "tracking_error_annualised_pct": 8.178542802055427,
+    "tracking_error_daily_bp": 42.80844954523809,
+    "token_ann_return_pct": -5.780373099227654,
+    "bench_ann_return_pct": -4.434161352291833,
+    "mean_daily_diff_bp": -0.4800132848127603,
+    "token_cum_pct": -1.0224427322920726,
+    "bench_cum_pct": -0.7797795106212368,
+    "corr_alt_alignment_shift0": -0.0962486983240009,
+    "_note_alt": "shift0 = token t(d) vs benchmark close(d),仅作时间戳口径的敏感性对照,不是另一个候选口径",
+    "benchmark_symbol": "GLD",
+    "token_price_first": 4008.6220828165556,
+    "token_price_last": 4009.194171243624
+   },
+   "amm_pools": [],
+   "books": [
+    {
+     "venue": "Binance:PAXGUSDT",
+     "mid": 4015.115,
+     "spread_bps": 0.024905886879363435,
+     "depth_5bp_usd": 3526142.1351969996,
+     "depth_10bp_usd": 6011038.850744,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 4017.127557499999,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 5.012452943438171
+      },
+      "100000": {
+       "est_buy_px": 4017.127557499999,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 50.12452943438171
+      },
+      "1000000": {
+       "est_buy_px": 4017.127557499999,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 501.2452943438171
+      }
+     }
+    },
+    {
+     "venue": "Kraken:PAXGUSD",
+     "mid": 4009.785,
+     "spread_bps": 0.9726207265473652,
+     "depth_5bp_usd": 1604968.813,
+     "depth_10bp_usd": 2293236.6788,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 4011.9848925,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 5.48631036327449
+      },
+      "100000": {
+       "est_buy_px": 4011.9848925,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 54.8631036327449
+      },
+      "1000000": {
+       "est_buy_px": 4013.9897849999998,
+       "slippage_bps": 10.0,
+       "band": "±1%",
+       "notional_cost_usd": 1048.6310363273597
+      }
+     }
+    },
+    {
+     "venue": "Coinbase:PAXG-USD",
+     "mid": 4009.355,
+     "spread_bps": 0.07482500302354204,
+     "depth_5bp_usd": 1450914.771708,
+     "depth_10bp_usd": 2174971.4453872,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 4011.3746775,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 5.037412501511947
+      },
+      "100000": {
+       "est_buy_px": 4011.3746775,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 50.374125015119475
+      },
+      "1000000": {
+       "est_buy_px": 4016.1222822011373,
+       "slippage_bps": 16.841317870671926,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 1687.8730372185246
+      }
+     }
+    },
+    {
+     "venue": "OKX:PAXG-USDT",
+     "mid": 4014.85,
+     "spread_bps": 0.7472259237585014,
+     "depth_5bp_usd": 559182.3947421999,
+     "depth_10bp_usd": 559361.4038871999,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 4017.007425,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 5.373612961878714
+      },
+      "100000": {
+       "est_buy_px": 4017.007425,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 53.73612961878714
+      },
+      "1000000": {
+       "est_buy_px": 4031.5022641849287,
+       "slippage_bps": 41.103065332274554,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 4147.6678294154835
+      }
+     }
+    },
+    {
+     "venue": "Binance:PAXGUSDC",
+     "mid": 4010.745,
+     "spread_bps": 0.024933023665723645,
+     "depth_5bp_usd": 164532.38108199998,
+     "depth_10bp_usd": 194111.961396,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 4012.7553725000002,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 5.012466511833482
+      },
+      "100000": {
+       "est_buy_px": 4017.602967868607,
+       "slippage_bps": 17.08652100446684,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 170.98987516301634
+      },
+      "1000000": {
+       "est_buy_px": 4079.279678686061,
+       "slippage_bps": 170.8652100446684,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 17087.767655650245
+      }
+     }
+    },
+    {
+     "venue": "Binance:PAXGUSD1",
+     "mid": 4015.14,
+     "spread_bps": 12.253620048118055,
+     "depth_5bp_usd": 27188.256956999998,
+     "depth_10bp_usd": 58428.75835800001,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 4019.6075699999997,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 11.126810024058429
+      },
+      "100000": {
+       "est_buy_px": 4031.4692722180484,
+       "slippage_bps": 34.54243741948936,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 406.6924744354761
+      },
+      "1000000": {
+       "est_buy_px": 4156.292722180488,
+       "slippage_bps": 345.4243741948936,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 35155.11842189528
+      }
+     }
+    }
+   ]
+  },
+  "XAUT": {
+   "kind": "token_spot",
+   "price_usd": 3995.97,
+   "market_cap_usd": 3233220534,
+   "vol30d_avg_usd": 190925631.59292057,
+   "leg": "gold",
+   "benchmark": "GLD",
+   "tracking_error_90d": {
+    "n_common_days": 63,
+    "window_start": "2026-07-24",
+    "window_end": "2026-10-22",
+    "alignment": "token t(d+1) vs benchmark close(d); CoinGecko 逐日快照 = 该日 00:00 UTC(在美股前一日收盘后约 3 小时)",
+    "corr_daily_returns": 0.9632987026165398,
+    "tracking_error_annualised_pct": 7.752949189109909,
+    "tracking_error_daily_bp": 40.580790762065256,
+    "token_ann_return_pct": -7.489186899091904,
+    "bench_ann_return_pct": -4.434161352291833,
+    "mean_daily_diff_bp": -0.9585513581214555,
+    "token_cum_pct": -1.334633703672261,
+    "bench_cum_pct": -0.7797795106212368,
+    "corr_alt_alignment_shift0": -0.11045064999579284,
+    "_note_alt": "shift0 = token t(d) vs benchmark close(d),仅作时间戳口径的敏感性对照,不是另一个候选口径",
+    "benchmark_symbol": "GLD",
+    "token_price_first": 4004.4179521663555,
+    "token_price_last": 3997.099817604192
+   },
+   "amm_pools": [
+    {
+     "dex": "uniswap",
+     "pair": "XAUt/PAXG",
+     "liquidity_usd": 5481024.18,
+     "note": "AMM：仅池子规模，未实测盘口深度/费率 → 深度查不到"
+    },
+    {
+     "dex": "uniswap",
+     "pair": "XAUt/WETH",
+     "liquidity_usd": 4517507.16,
+     "note": "AMM：仅池子规模，未实测盘口深度/费率 → 深度查不到"
+    },
+    {
+     "dex": "uniswap",
+     "pair": "XAUt/USDT",
+     "liquidity_usd": 3752831.85,
+     "note": "AMM：仅池子规模，未实测盘口深度/费率 → 深度查不到"
+    },
+    {
+     "dex": "uniswap",
+     "pair": "XAUt/PAXG",
+     "liquidity_usd": 3071643.82,
+     "note": "AMM：仅池子规模，未实测盘口深度/费率 → 深度查不到"
+    }
+   ],
+   "books": [
+    {
+     "venue": "Binance:XAUTUSDT",
+     "mid": 4001.875,
+     "spread_bps": 0.024988286741135787,
+     "depth_5bp_usd": 1902405.227122,
+     "depth_10bp_usd": 3894979.265639,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 4003.8809375,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 5.012494143370477
+      },
+      "100000": {
+       "est_buy_px": 4003.8809375,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 50.12494143370477
+      },
+      "1000000": {
+       "est_buy_px": 4005.881875,
+       "slippage_bps": 10.0,
+       "band": "±1%",
+       "notional_cost_usd": 1001.2494143370386
+      }
+     }
+    },
+    {
+     "venue": "OKX:XAUT-USDT",
+     "mid": 4002.75,
+     "spread_bps": 0.2498282430837894,
+     "depth_5bp_usd": 1499486.0663533001,
+     "depth_10bp_usd": 1499486.0663533001,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 4004.801375,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 5.124914121541458
+      },
+      "100000": {
+       "est_buy_px": 4004.801375,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 51.24914121541458
+      },
+      "1000000": {
+       "est_buy_px": 4009.720498469518,
+       "slippage_bps": 17.289359738974866,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 1741.4273860516228
+      }
+     }
+    },
+    {
+     "venue": "Kraken:XAUTUSD",
+     "mid": 3998.25,
+     "spread_bps": 0.25010942287341664,
+     "depth_5bp_usd": 788753.9421,
+     "depth_10bp_usd": 871962.5947,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 4000.299125,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 5.125054711436262
+      },
+      "100000": {
+       "est_buy_px": 4000.299125,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 51.25054711436262
+      },
+      "1000000": {
+       "est_buy_px": 4007.3251105900817,
+       "slippage_bps": 22.572652010457404,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 2269.77067218952
+      }
+     }
+    },
+    {
+     "venue": "Kraken:XAUTUSDT",
+     "mid": 4002.75,
+     "spread_bps": 0.2498282430837894,
+     "depth_5bp_usd": 697852.842,
+     "depth_10bp_usd": 844026.7372000001,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 4004.801375,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 5.124914121541458
+      },
+      "100000": {
+       "est_buy_px": 4004.801375,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 51.24914121541458
+      },
+      "1000000": {
+       "est_buy_px": 4012.3658964593196,
+       "slippage_bps": 23.898311059445042,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 2402.322518098714
+      }
+     }
+    },
+    {
+     "venue": "Binance:XAUTUSDC",
+     "mid": 3998.285,
+     "spread_bps": 0.025010723347043875,
+     "depth_5bp_usd": 264893.029675,
+     "depth_10bp_usd": 299032.918597,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 4000.2891424999993,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 5.012505361672539
+      },
+      "100000": {
+       "est_buy_px": 4000.2891424999993,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 50.125053616725395
+      },
+      "1000000": {
+       "est_buy_px": 4029.470896035719,
+       "slippage_bps": 77.985676448075,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 7799.818180974842
+      }
+     }
+    },
+    {
+     "venue": "Binance:XAUTUSD1",
+     "mid": 4002.91,
+     "spread_bps": 16.038332113387693,
+     "depth_5bp_usd": 19289.600095,
+     "depth_10bp_usd": 35311.520248,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 4010.1229099999996,
+       "slippage_bps": 10.0,
+       "band": "±1%",
+       "notional_cost_usd": 18.019166056693102
+      },
+      "100000": {
+       "est_buy_px": 4030.927430318088,
+       "slippage_bps": 61.9734900811862,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 699.9265613788062
+      },
+      "1000000": {
+       "est_buy_px": 4254.1943031808805,
+       "slippage_bps": 619.734900811862,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 62775.40668685548
+      }
+     }
+    }
+   ]
+  },
+  "GLDX": {
+   "kind": "token_spot",
+   "price_usd": 366.26,
+   "market_cap_usd": 11315191,
+   "vol30d_avg_usd": 6448357.108824234,
+   "leg": "gold",
+   "benchmark": "GLD",
+   "tracking_error_90d": {
+    "n_common_days": 63,
+    "window_start": "2026-07-24",
+    "window_end": "2026-10-22",
+    "alignment": "token t(d+1) vs benchmark close(d); CoinGecko 逐日快照 = 该日 00:00 UTC(在美股前一日收盘后约 3 小时)",
+    "corr_daily_returns": 0.9782134040846892,
+    "tracking_error_annualised_pct": 6.08239236615514,
+    "tracking_error_daily_bp": 31.83669671025695,
+    "token_ann_return_pct": -7.610668335264991,
+    "bench_ann_return_pct": -4.434161352291833,
+    "mean_daily_diff_bp": -0.8981075605719537,
+    "token_cum_pct": -1.3570088504646693,
+    "bench_cum_pct": -0.7797795106212368,
+    "corr_alt_alignment_shift0": -0.11767598194588261,
+    "_note_alt": "shift0 = token t(d) vs benchmark close(d),仅作时间戳口径的敏感性对照,不是另一个候选口径",
+    "benchmark_symbol": "GLD",
+    "token_price_first": 368.56953951868564,
+    "token_price_last": 366.3238371807487
+   },
+   "amm_pools": [],
+   "books": [
+    {
+     "venue": "Gate:GLDX_USDT",
+     "mid": 367.14,
+     "spread_bps": 45.21435964482282,
+     "depth_5bp_usd": 27595.641300000003,
+     "depth_10bp_usd": 62095.10759000001,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 368.15357,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 27.6071798224115
+      },
+      "100000": {
+       "est_buy_px": 369.2323162330298,
+       "slippage_bps": 34.382421774521944,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 569.8960159693321
+      },
+      "1000000": {
+       "est_buy_px": 380.59316233029796,
+       "slippage_bps": 343.82421774521936,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 36643.13975676301
+      }
+     }
+    }
+   ]
+  },
+  "SPYX": {
+   "kind": "token_spot",
+   "price_usd": 767.62,
+   "market_cap_usd": 68282714,
+   "vol30d_avg_usd": 10268737.517543491,
+   "leg": "equity",
+   "benchmark": "SPY",
+   "tracking_error_90d": {
+    "n_common_days": 63,
+    "window_start": "2026-07-24",
+    "window_end": "2026-10-22",
+    "alignment": "token t(d+1) vs benchmark close(d); CoinGecko 逐日快照 = 该日 00:00 UTC(在美股前一日收盘后约 3 小时)",
+    "corr_daily_returns": 0.9448080347862157,
+    "tracking_error_annualised_pct": 4.482618364976468,
+    "tracking_error_daily_bp": 23.463096880709134,
+    "token_ann_return_pct": 21.17080279195349,
+    "bench_ann_return_pct": 23.043228496986146,
+    "mean_daily_diff_bp": -0.40791866311083175,
+    "token_cum_pct": 3.370048666232628,
+    "bench_cum_pct": 3.6440103106769595,
+    "corr_alt_alignment_shift0": -0.003519785914214787,
+    "_note_alt": "shift0 = token t(d) vs benchmark close(d),仅作时间戳口径的敏感性对照,不是另一个候选口径",
+    "benchmark_symbol": "SPY",
+    "token_price_first": 736.3118261420327,
+    "token_price_last": 767.6081063653343
+   },
+   "amm_pools": [],
+   "books": [
+    {
+     "venue": "Gate:SPYX_USDT",
+     "mid": 762.565,
+     "spread_bps": 1.4424999836081336,
+     "depth_5bp_usd": 91439.05677,
+     "depth_10bp_usd": 168556.58723,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 763.0012825,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 5.721249991803289
+      },
+      "100000": {
+       "est_buy_px": 763.4050621143449,
+       "slippage_bps": 10.29501897339619,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 110.16268965200946
+      },
+      "1000000": {
+       "est_buy_px": 770.4706211434479,
+       "slippage_bps": 102.95018973396189,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 10367.143972576616
+      }
+     }
+    }
+   ]
+  },
+  "QQQX": {
+   "kind": "token_spot",
+   "price_usd": 708.17,
+   "market_cap_usd": 46781995,
+   "vol30d_avg_usd": 1278382.3775296346,
+   "leg": "equity",
+   "benchmark": "QQQ",
+   "tracking_error_90d": {
+    "n_common_days": 63,
+    "window_start": "2026-07-24",
+    "window_end": "2026-10-22",
+    "alignment": "token t(d+1) vs benchmark close(d); CoinGecko 逐日快照 = 该日 00:00 UTC(在美股前一日收盘后约 3 小时)",
+    "corr_daily_returns": 0.9277796027003435,
+    "tracking_error_annualised_pct": 8.636130232363518,
+    "tracking_error_daily_bp": 45.20357162223646,
+    "token_ann_return_pct": 20.72008629972295,
+    "bench_ann_return_pct": 19.116850468107582,
+    "mean_daily_diff_bp": 0.3440160917991687,
+    "token_cum_pct": 3.3035799675783517,
+    "bench_cum_pct": 3.065468744742317,
+    "corr_alt_alignment_shift0": 0.07116595539373717,
+    "_note_alt": "shift0 = token t(d) vs benchmark close(d),仅作时间戳口径的敏感性对照,不是另一个候选口径",
+    "benchmark_symbol": "QQQ",
+    "token_price_first": 717.0874970572041,
+    "token_price_last": 708.1629971728386
+   },
+   "amm_pools": [],
+   "books": [
+    {
+     "venue": "Gate:QQQX_USDT",
+     "mid": 707.54,
+     "spread_bps": 2.544025779460525,
+     "depth_5bp_usd": 114800.87254000001,
+     "depth_10bp_usd": 229825.25751999998,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 707.9837699999999,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 6.272012889730224
+      },
+      "100000": {
+       "est_buy_px": 708.3375399999999,
+       "slippage_bps": 10.0,
+       "band": "±1%",
+       "notional_cost_usd": 112.72012889729382
+      },
+      "1000000": {
+       "est_buy_px": 713.6275366304591,
+       "slippage_bps": 84.76604333972803,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 8603.805622945858
+      }
+     }
+    }
+   ]
+  },
+  "AAPLX": {
+   "kind": "token_spot",
+   "price_usd": 348.82,
+   "market_cap_usd": 12449935,
+   "vol30d_avg_usd": 3799294.753434646,
+   "leg": "equity",
+   "benchmark": "AAPL",
+   "tracking_error_90d": {
+    "n_common_days": 63,
+    "window_start": "2026-07-24",
+    "window_end": "2026-10-22",
+    "alignment": "token t(d+1) vs benchmark close(d); CoinGecko 逐日快照 = 该日 00:00 UTC(在美股前一日收盘后约 3 小时)",
+    "corr_daily_returns": 0.7294579057239223,
+    "tracking_error_annualised_pct": 21.743030002749865,
+    "tracking_error_daily_bp": 113.80822053036042,
+    "token_ann_return_pct": 28.023174192663358,
+    "bench_ann_return_pct": 30.157739978553487,
+    "mean_daily_diff_bp": -0.3876420922678911,
+    "token_cum_pct": 4.356211604303439,
+    "bench_cum_pct": 4.654482723384756,
+    "corr_alt_alignment_shift0": 0.39330508754696,
+    "_note_alt": "shift0 = token t(d) vs benchmark close(d),仅作时间戳口径的敏感性对照,不是另一个候选口径",
+    "benchmark_symbol": "AAPL",
+    "token_price_first": 277.23555471545507,
+    "token_price_last": 348.78188845248343
+   },
+   "amm_pools": [],
+   "books": [
+    {
+     "venue": "Bybit:AAPLXUSDT",
+     "mid": 348.46500000000003,
+     "spread_bps": 2.0088100670079685,
+     "depth_5bp_usd": 293944.29963,
+     "depth_10bp_usd": 339794.18840999994,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 348.6742325,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 6.00440503350364
+      },
+      "100000": {
+       "est_buy_px": 348.6742325,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 60.0440503350364
+      },
+      "1000000": {
+       "est_buy_px": 350.6978666766508,
+       "slippage_bps": 63.072810085683585,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 6407.721511918723
+      }
+     }
+    },
+    {
+     "venue": "Gate:AAPLX_USDT",
+     "mid": 347.28499999999997,
+     "spread_bps": 4.3192190851903804,
+     "depth_5bp_usd": 74806.52542,
+     "depth_10bp_usd": 163604.16609,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 347.5336425,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 7.159609542595182
+      },
+      "100000": {
+       "est_buy_px": 347.715140150115,
+       "slippage_bps": 10.226187428624709,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 123.85796971221068
+      },
+      "1000000": {
+       "est_buy_px": 350.91140150114995,
+       "slippage_bps": 102.26187428624708,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 10442.148382884332
+      }
+     }
+    }
+   ]
+  },
+  "hl_perp_gold:xyz:GOLD": {
+   "kind": "hl_perp",
+   "dex": "xyz",
+   "vol30d_avg_usd": 47920116.55971467,
+   "funding_ann_pct_long": 6.424287051977553,
+   "books": [
+    {
+     "venue": "HL:xyz:GOLD",
+     "mid": 4001.95,
+     "spread_bps": 0.249878184384885,
+     "depth_5bp_usd": 2671722.56312,
+     "depth_10bp_usd": 2671722.56312,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 4004.0009749999995,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 5.124939092191689
+      },
+      "100000": {
+       "est_buy_px": 4004.0009749999995,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 51.2493909219169
+      },
+      "1000000": {
+       "est_buy_px": 4004.0009749999995,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 512.4939092191689
+      }
+     }
+    }
+   ]
+  },
+  "hl_perp_gold:para:GDX": {
+   "kind": "hl_perp",
+   "dex": "para",
+   "vol30d_avg_usd": 21959.64297818182,
+   "funding_ann_pct_long": 20.465464096916943,
+   "books": [
+    {
+     "venue": "HL:para:GDX",
+     "mid": 80.77850000000001,
+     "spread_bps": 9.779830029029199,
+     "depth_5bp_usd": 125195.0246,
+     "depth_10bp_usd": 125195.0246,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 80.85838925,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 9.88991501451422
+      },
+      "100000": {
+       "est_buy_px": 80.94704290042371,
+       "slippage_bps": 15.974906741733353,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 208.64821756247295
+      },
+      "1000000": {
+       "est_buy_px": 82.10842900423711,
+       "slippage_bps": 159.74906741733352,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 16463.898243184773
+      }
+     }
+    }
+   ]
+  },
+  "hl_perp_index:xyz:SP500": {
+   "kind": "hl_perp",
+   "dex": "xyz",
+   "vol30d_avg_usd": 210985669.46219,
+   "funding_ann_pct_long": 2.860758762370201,
+   "books": [
+    {
+     "venue": "HL:xyz:SP500",
+     "mid": 7643.65,
+     "spread_bps": 0.13082754966469462,
+     "depth_5bp_usd": 2687640.7676999997,
+     "depth_10bp_usd": 2687640.7676999997,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 7647.521824999999,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 5.06541377483174
+      },
+      "100000": {
+       "est_buy_px": 7647.521824999999,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 50.65413774831739
+      },
+      "1000000": {
+       "est_buy_px": 7647.521824999999,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 506.54137748317396
+      }
+     }
+    }
+   ]
+  },
+  "hl_perp_index:xyz:XYZ100": {
+   "kind": "hl_perp",
+   "dex": "xyz",
+   "vol30d_avg_usd": 228111801.54499334,
+   "funding_ann_pct_long": 4.15523083586374,
+   "books": [
+    {
+     "venue": "HL:xyz:XYZ100",
+     "mid": 29074.5,
+     "spread_bps": 0.3439440059158369,
+     "depth_5bp_usd": 9493493.6933,
+     "depth_10bp_usd": 9493493.6933,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 29089.537249999998,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 5.171972002957087
+      },
+      "100000": {
+       "est_buy_px": 29089.537249999998,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 51.71972002957087
+      },
+      "1000000": {
+       "est_buy_px": 29089.537249999998,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 517.1972002957087
+      }
+     }
+    }
+   ]
+  },
+  "hl_perp_index:mkts:US500": {
+   "kind": "hl_perp",
+   "dex": "mkts",
+   "vol30d_avg_usd": 3283444.041099333,
+   "funding_ann_pct_long": 4.225438249408799,
+   "books": [
+    {
+     "venue": "HL:mkts:US500",
+     "mid": 762.25,
+     "spread_bps": 3.4109544112822685,
+     "depth_5bp_usd": 82384.27767,
+     "depth_10bp_usd": 82384.27767,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 762.7611249999999,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 6.705477205639607
+      },
+      "100000": {
+       "est_buy_px": 766.4694522092631,
+       "slippage_bps": 53.64975020351725,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 553.5522740915799
+      },
+      "1000000": {
+       "est_buy_px": 803.2745220926308,
+       "slippage_bps": 536.4975020351725,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 53820.29792408112
+      }
+     }
+    }
+   ]
+  },
+  "hl_perp_index:para:IGV": {
+   "kind": "hl_perp",
+   "dex": "para",
+   "vol30d_avg_usd": 39723.92461,
+   "funding_ann_pct_long": 3.021957376479945,
+   "books": [
+    {
+     "venue": "HL:para:IGV",
+     "mid": 110.175,
+     "spread_bps": 37.21352393918735,
+     "depth_5bp_usd": 110195.1066,
+     "depth_10bp_usd": 115194.19679999999,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 110.43508749999998,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 23.606761969592302
+      },
+      "100000": {
+       "est_buy_px": 110.57127949466003,
+       "slippage_bps": 17.361424520993353,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 359.6818649058638
+      },
+      "1000000": {
+       "est_buy_px": 112.29279494660044,
+       "slippage_bps": 173.61424520993353,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 19222.100717952715
+      }
+     }
+    }
+   ]
+  },
+  "hl_perp_index:xyz:SOXL": {
+   "kind": "hl_perp",
+   "dex": "xyz",
+   "vol30d_avg_usd": 64858790.561309665,
+   "funding_ann_pct_long": 7.164340722062758,
+   "books": [
+    {
+     "venue": "HL:xyz:SOXL",
+     "mid": 85.107,
+     "spread_bps": 1.6449880738376401,
+     "depth_5bp_usd": 437630.65181,
+     "depth_10bp_usd": 437630.65181,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 85.1565535,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 5.822494036918444
+      },
+      "100000": {
+       "est_buy_px": 85.1565535,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 58.224940369184445
+      },
+      "1000000": {
+       "est_buy_px": 85.54818863417415,
+       "slippage_bps": 51.016794643700685,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 5183.928868062011
+      }
+     }
+    }
+   ]
+  },
+  "hl_perp_index:xyz:MAGS": {
+   "kind": "hl_perp",
+   "dex": "xyz",
+   "vol30d_avg_usd": 220564.68852466668,
+   "funding_ann_pct_long": 18.524934964016868,
+   "books": [
+    {
+     "venue": "HL:xyz:MAGS",
+     "mid": 70.42,
+     "spread_bps": 31.52513490485777,
+     "depth_5bp_usd": 67079.27755,
+     "depth_10bp_usd": 95428.53393,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 70.56621,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 20.762567452427774
+      },
+      "100000": {
+       "est_buy_px": 70.68274358347544,
+       "slippage_bps": 21.548364594637277,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 373.10932047066285
+      },
+      "1000000": {
+       "est_buy_px": 72.04843583475436,
+       "slippage_bps": 215.48364594637275,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 23124.62133988009
+      }
+     }
+    }
+   ]
+  },
+  "hl_perp_index:xyz:XBI": {
+   "kind": "hl_perp",
+   "dex": "xyz",
+   "vol30d_avg_usd": 28958.57664333333,
+   "funding_ann_pct_long": 10.16353606293097,
+   "books": [
+    {
+     "venue": "HL:xyz:XBI",
+     "mid": 149.555,
+     "spread_bps": 8.692454281033429,
+     "depth_5bp_usd": 42858.297099999996,
+     "depth_10bp_usd": 60992.4103,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 149.69477750000001,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 9.346227140517408
+      },
+      "100000": {
+       "est_buy_px": 150.07483134410958,
+       "slippage_bps": 30.41231280195055,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 347.5853994246774
+      },
+      "1000000": {
+       "est_buy_px": 154.1683134410957,
+       "slippage_bps": 304.1231280195055,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 30846.93551600213
+      }
+     }
+    }
+   ]
+  },
+  "hl_perp_index:xyz:XLE": {
+   "kind": "hl_perp",
+   "dex": "xyz",
+   "vol30d_avg_usd": 388488.43082633335,
+   "funding_ann_pct_long": 2.1398969594828277,
+   "books": [
+    {
+     "venue": "HL:xyz:XLE",
+     "mid": 69.54599999999999,
+     "spread_bps": 5.751588876428013,
+     "depth_5bp_usd": 251608.73663,
+     "depth_10bp_usd": 251608.73663,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 69.60077299999999,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 7.875794438213169
+      },
+      "100000": {
+       "est_buy_px": 69.60077299999999,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 78.7579443821317
+      },
+      "1000000": {
+       "est_buy_px": 70.1766584079336,
+       "slippage_bps": 87.80640265919092,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 9068.219709740448
+      }
+     }
+    }
+   ]
+  },
+  "hl_perp_index:para:GDX": {
+   "kind": "hl_perp",
+   "dex": "para",
+   "vol30d_avg_usd": 21959.64297818182,
+   "funding_ann_pct_long": 20.465464096916943,
+   "books": [
+    {
+     "venue": "HL:para:GDX",
+     "mid": 80.8115,
+     "spread_bps": 9.77583635992322,
+     "depth_5bp_usd": 125195.31799000001,
+     "depth_10bp_usd": 125195.31799000001,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 80.89140574999999,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 9.887918179961352
+      },
+      "100000": {
+       "est_buy_px": 80.98009566958568,
+       "slippage_bps": 15.974913172716606,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 208.6283135267685
+      },
+      "1000000": {
+       "est_buy_px": 82.14195669585699,
+       "slippage_bps": 159.74913172716606,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 16463.704990712893
+      }
+     }
+    }
+   ]
+  },
+  "hl_perp_index:para:SMH": {
+   "kind": "hl_perp",
+   "dex": "para",
+   "vol30d_avg_usd": 41915.407556470585,
+   "funding_ann_pct_long": 109.57688763333013,
+   "books": [
+    {
+     "venue": "HL:para:SMH",
+     "mid": 529.9949999999999,
+     "spread_bps": 11.886904593439477,
+     "depth_5bp_usd": 121547.10998,
+     "depth_10bp_usd": 121547.10998,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 530.5749974999999,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 10.9434522967196
+      },
+      "100000": {
+       "est_buy_px": 531.2090677367576,
+       "slippage_bps": 16.963702237902236,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 229.07154534621463
+      },
+      "1000000": {
+       "est_buy_px": 539.3006773675769,
+       "slippage_bps": 169.63702237902237,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 17558.047467574237
+      }
+     }
+    }
+   ]
+  },
+  "hl_perp_stock:xyz:AAPL": {
+   "kind": "hl_perp",
+   "dex": "xyz",
+   "vol30d_avg_usd": 17000185.979832,
+   "funding_ann_pct_long": 4.749518017956706,
+   "books": [
+    {
+     "venue": "HL:xyz:AAPL",
+     "mid": 347.575,
+     "spread_bps": 0.28770768898772653,
+     "depth_5bp_usd": 1070211.07007,
+     "depth_10bp_usd": 1070211.07007,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 347.7537875,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 5.143853844493952
+      },
+      "100000": {
+       "est_buy_px": 347.7537875,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 51.438538444939525
+      },
+      "1000000": {
+       "est_buy_px": 348.46292277249813,
+       "slippage_bps": 25.402367043030495,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 2554.6220887524805
+      }
+     }
+    }
+   ]
+  },
+  "hl_perp_stock:xyz:NVDA": {
+   "kind": "hl_perp",
+   "dex": "xyz",
+   "vol30d_avg_usd": 84216724.75814667,
+   "funding_ann_pct_long": 5.892458807299464,
+   "books": [
+    {
+     "venue": "HL:xyz:NVDA",
+     "mid": 212.45999999999998,
+     "spread_bps": 0.941353666573013,
+     "depth_5bp_usd": 2469240.37963,
+     "depth_10bp_usd": 2469240.37963,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 212.57622999999998,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 5.470676833286342
+      },
+      "100000": {
+       "est_buy_px": 212.57622999999998,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 54.70676833286341
+      },
+      "1000000": {
+       "est_buy_px": 212.57622999999998,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 547.0676833286342
+      }
+     }
+    }
+   ]
+  },
+  "hl_perp_stock:xyz:TSLA": {
+   "kind": "hl_perp",
+   "dex": "xyz",
+   "vol30d_avg_usd": 41540926.54011867,
+   "funding_ann_pct_long": 7.342275343790532,
+   "books": [
+    {
+     "venue": "HL:xyz:TSLA",
+     "mid": 373.475,
+     "spread_bps": 1.3387776959638897,
+     "depth_5bp_usd": 348080.37082,
+     "depth_10bp_usd": 348080.37082,
+     "sizes": {
+      "10000": {
+       "est_buy_px": 373.68673750000005,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 5.669388847982503
+      },
+      "100000": {
+       "est_buy_px": 373.68673750000005,
+       "slippage_bps": 5.0,
+       "band": "±0.5%",
+       "notional_cost_usd": 56.693888479825034
+      },
+      "1000000": {
+       "est_buy_px": 376.4343301265646,
+       "slippage_bps": 78.56831452077216,
+       "band": "外推(低置信)",
+       "notional_cost_usd": 7923.77033687547
+      }
+     }
+    }
+   ]
+  }
+ }
+}
