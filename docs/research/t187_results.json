@@ -1,0 +1,1273 @@
+{
+ "task": "T-187",
+ "ledger": "S-675",
+ "seed": 675,
+ "n_shift": 2000,
+ "catalog": {
+  "BTC": {
+   "bear_episodes": [
+    {
+     "peak_d": "2017-12-15",
+     "break_d": "2018-02-01",
+     "trough_d": "2018-02-05",
+     "depth": -0.6478565026907815,
+     "recover_d": "2020-12-16",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "2018-03-05",
+     "break_d": "2018-11-15",
+     "trough_d": "2018-12-15",
+     "depth": -0.7171078854922341,
+     "recover_d": "2019-06-25",
+     "open": false,
+     "first_leg": false
+    },
+    {
+     "peak_d": "2019-06-26",
+     "break_d": "2020-03-12",
+     "trough_d": "2020-03-16",
+     "depth": -0.6122360158768159,
+     "recover_d": "2020-10-24",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "2021-04-13",
+     "break_d": "2021-06-21",
+     "trough_d": "2021-07-20",
+     "depth": -0.5299354429178096,
+     "recover_d": "2021-10-19",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "2021-11-08",
+     "break_d": "2022-05-09",
+     "trough_d": "2022-11-21",
+     "depth": -0.7661446524320938,
+     "recover_d": "2024-03-04",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "2025-10-06",
+     "break_d": "2026-06-05",
+     "trough_d": "2026-06-30",
+     "depth": -0.5304939812328693,
+     "recover_d": null,
+     "open": true,
+     "first_leg": true
+    }
+   ],
+   "fast_crashes": [
+    {
+     "start_d": "2014-12-31",
+     "hit_d": "2015-01-14",
+     "ret": -0.3294227241458382
+    },
+    {
+     "start_d": "2017-08-30",
+     "hit_d": "2017-09-13",
+     "ret": -0.3406955296494113
+    },
+    {
+     "start_d": "2017-12-15",
+     "hit_d": "2017-12-29",
+     "ret": -0.30739443959610413
+    },
+    {
+     "start_d": "2018-03-03",
+     "hit_d": "2018-03-17",
+     "ret": -0.3023572154121741
+    },
+    {
+     "start_d": "2018-11-06",
+     "hit_d": "2018-11-20",
+     "ret": -0.3049652688268206
+    },
+    {
+     "start_d": "2020-02-27",
+     "hit_d": "2020-03-12",
+     "ret": -0.41538507405509995
+    },
+    {
+     "start_d": "2021-05-05",
+     "hit_d": "2021-05-19",
+     "ret": -0.35406078553824316
+    },
+    {
+     "start_d": "2022-05-31",
+     "hit_d": "2022-06-14",
+     "ret": -0.30146254977176745
+    }
+   ],
+   "price_span": [
+    "2014-12-31",
+    "2026-10-22"
+   ]
+  },
+  "ETH": {
+   "bear_episodes": [
+    {
+     "peak_d": "2015-08-06",
+     "break_d": "2015-08-07",
+     "trough_d": "2015-08-09",
+     "depth": -0.7571758537219637,
+     "recover_d": "2016-02-06",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "2015-08-13",
+     "break_d": "2015-09-13",
+     "trough_d": "2015-10-19",
+     "depth": -0.7628781200217944,
+     "recover_d": "2016-01-23",
+     "open": false,
+     "first_leg": false
+    },
+    {
+     "peak_d": "2016-03-12",
+     "break_d": "2016-04-25",
+     "trough_d": "2016-04-27",
+     "depth": -0.5131992191214126,
+     "recover_d": "2016-06-11",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "2016-06-15",
+     "break_d": "2016-07-06",
+     "trough_d": "2016-08-01",
+     "depth": -0.5927432016864248,
+     "recover_d": "2017-03-10",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "2016-09-19",
+     "break_d": "2016-12-04",
+     "trough_d": "2016-12-04",
+     "depth": -0.5236520105530258,
+     "recover_d": "2017-02-25",
+     "open": false,
+     "first_leg": false
+    },
+    {
+     "peak_d": "2017-06-11",
+     "break_d": "2017-07-10",
+     "trough_d": "2017-07-15",
+     "depth": -0.6072868927641537,
+     "recover_d": "2017-11-22",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "2018-01-12",
+     "break_d": "2018-02-05",
+     "trough_d": "2018-04-06",
+     "depth": -0.744345500052302,
+     "recover_d": "2021-02-02",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "2018-05-05",
+     "break_d": "2018-08-07",
+     "trough_d": "2018-12-14",
+     "depth": -0.8962276481558438,
+     "recover_d": "2021-01-03",
+     "open": false,
+     "first_leg": false
+    },
+    {
+     "peak_d": "2019-06-26",
+     "break_d": "2019-08-29",
+     "trough_d": "2019-12-17",
+     "depth": -0.6396328865557153,
+     "recover_d": "2020-07-31",
+     "open": false,
+     "first_leg": false
+    },
+    {
+     "peak_d": "2020-02-14",
+     "break_d": "2020-03-12",
+     "trough_d": "2020-03-12",
+     "depth": -0.6130973781467448,
+     "recover_d": "2020-07-25",
+     "open": false,
+     "first_leg": false
+    },
+    {
+     "peak_d": "2021-05-11",
+     "break_d": "2021-06-21",
+     "trough_d": "2021-07-20",
+     "depth": -0.5699979655262803,
+     "recover_d": "2021-10-25",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "2021-11-08",
+     "break_d": "2022-05-09",
+     "trough_d": "2022-06-18",
+     "depth": -0.79317249126795,
+     "recover_d": "2025-08-22",
+     "open": false,
+     "first_leg": true
+    },
+    {
+     "peak_d": "2024-03-11",
+     "break_d": "2025-03-09",
+     "trough_d": "2025-04-08",
+     "depth": -0.6380715542722752,
+     "recover_d": "2025-08-09",
+     "open": false,
+     "first_leg": false
+    },
+    {
+     "peak_d": "2025-08-22",
+     "break_d": "2026-02-01",
+     "trough_d": "2026-06-25",
+     "depth": -0.6749511442793579,
+     "recover_d": null,
+     "open": false,
+     "first_leg": true
+    }
+   ],
+   "fast_crashes": [
+    {
+     "start_d": "2015-08-06",
+     "hit_d": "2015-08-20",
+     "ret": -0.5033532840573524
+    },
+    {
+     "start_d": "2016-03-12",
+     "hit_d": "2016-03-26",
+     "ret": -0.3032230643831839
+    },
+    {
+     "start_d": "2016-06-13",
+     "hit_d": "2016-06-27",
+     "ret": -0.34494324338078686
+    },
+    {
+     "start_d": "2017-06-11",
+     "hit_d": "2017-06-25",
+     "ret": -0.3501519650908197
+    },
+    {
+     "start_d": "2017-08-30",
+     "hit_d": "2017-09-13",
+     "ret": -0.4403436065593044
+    },
+    {
+     "start_d": "2018-01-27",
+     "hit_d": "2018-02-10",
+     "ret": -0.3210435986343274
+    },
+    {
+     "start_d": "2018-07-28",
+     "hit_d": "2018-08-11",
+     "ret": -0.3175451428666961
+    },
+    {
+     "start_d": "2018-11-06",
+     "hit_d": "2018-11-20",
+     "ret": -0.39557680000271234
+    },
+    {
+     "start_d": "2019-07-02",
+     "hit_d": "2019-07-16",
+     "ret": -0.31611809479974085
+    },
+    {
+     "start_d": "2020-02-27",
+     "hit_d": "2020-03-12",
+     "ret": -0.5145594501645293
+    },
+    {
+     "start_d": "2021-05-07",
+     "hit_d": "2021-05-21",
+     "ret": -0.3014001745730903
+    },
+    {
+     "start_d": "2022-04-28",
+     "hit_d": "2022-05-12",
+     "ret": -0.3408069009603375
+    },
+    {
+     "start_d": "2026-01-18",
+     "hit_d": "2026-02-01",
+     "ret": -0.3065564559231384
+    }
+   ],
+   "price_span": [
+    "2015-08-06",
+    "2026-10-22"
+   ]
+  }
+ },
+ "anchors": {
+  "primary_first_leg_peaks": [
+   "2017-12-15",
+   "2019-06-26",
+   "2021-04-13",
+   "2021-11-08",
+   "2025-10-06"
+  ],
+  "aux_breaks": [
+   "2018-02-01",
+   "2018-11-15",
+   "2020-03-12",
+   "2021-06-21",
+   "2022-05-09",
+   "2026-06-05"
+  ],
+  "aux_fast_crash_starts": [
+   "2014-12-31",
+   "2017-08-30",
+   "2017-12-15",
+   "2018-03-03",
+   "2018-11-06",
+   "2020-02-27",
+   "2021-05-05",
+   "2022-05-31"
+  ]
+ },
+ "signs": {
+  "C1_fng_ge75_7d": {
+   "data_span": [
+    "2018-02-01",
+    "2026-10-23"
+   ],
+   "n_valid_days": 3187,
+   "n_on_days": 170,
+   "primary_90d": {
+    "n_anchors": 4,
+    "n_skipped": 1,
+    "hit_rate": 0.75,
+    "base_rate": 0.25282531482079434,
+    "lift": 2.9664750957854404,
+    "null_p50": 0.25,
+    "pctile": 0.97575,
+    "half1_hit_rate": 1.0,
+    "half2_hit_rate": 0.5,
+    "half1_n": 3,
+    "half2_n": 2
+   },
+   "aux_break_30d": {
+    "n_anchors": 5,
+    "n_skipped": 1,
+    "hit_rate": 0.0,
+    "base_rate": 0.13747228381374724,
+    "lift": 0.0,
+    "null_p50": 0.2,
+    "pctile": 0.19425,
+    "half1_hit_rate": 0.0,
+    "half2_hit_rate": 0.0,
+    "half1_n": 3,
+    "half2_n": 3
+   },
+   "aux_fastcrash_30d": {
+    "n_anchors": 5,
+    "n_skipped": 3,
+    "hit_rate": 0.0,
+    "base_rate": 0.13747228381374724,
+    "lift": 0.0,
+    "null_p50": 0.2,
+    "pctile": 0.225,
+    "half1_hit_rate": 0.0,
+    "half2_hit_rate": 0.0,
+    "half1_n": 4,
+    "half2_n": 4
+   }
+  },
+  "C2_btc_funding_ann_7d_ge30pct": {
+   "data_span": [
+    "2020-01-07",
+    "2026-10-23"
+   ],
+   "n_valid_days": 2482,
+   "n_on_days": 234,
+   "primary_90d": {
+    "n_anchors": 3,
+    "n_skipped": 2,
+    "hit_rate": 0.6666666666666666,
+    "base_rate": 0.33068561872909696,
+    "lift": 2.016013485040034,
+    "null_p50": 0.3333333333333333,
+    "pctile": 0.83775,
+    "half1_hit_rate": 1.0,
+    "half2_hit_rate": 0.5,
+    "half1_n": 3,
+    "half2_n": 2
+   },
+   "aux_break_30d": {
+    "n_anchors": 4,
+    "n_skipped": 2,
+    "hit_rate": 0.25,
+    "base_rate": 0.2092169657422512,
+    "lift": 1.1949317738791423,
+    "null_p50": 0.25,
+    "pctile": 0.5892499999999999,
+    "half1_hit_rate": 1.0,
+    "half2_hit_rate": 0.0,
+    "half1_n": 3,
+    "half2_n": 3
+   },
+   "aux_fastcrash_30d": {
+    "n_anchors": 3,
+    "n_skipped": 5,
+    "hit_rate": 0.6666666666666666,
+    "base_rate": 0.2092169657422512,
+    "lift": 3.1864847303443793,
+    "null_p50": 0.3333333333333333,
+    "pctile": 0.96625,
+    "half1_hit_rate": null,
+    "half2_hit_rate": 0.6666666666666666,
+    "half1_n": 4,
+    "half2_n": 4
+   }
+  },
+  "C3_btc_oi_30d_growth_pct_ge90": {
+   "data_span": [
+    "2021-06-09",
+    "2026-10-22"
+   ],
+   "n_valid_days": 1959,
+   "n_on_days": 57,
+   "primary_90d": {
+    "n_anchors": 2,
+    "n_skipped": 3,
+    "hit_rate": 0.5,
+    "base_rate": 0.3685897435897436,
+    "lift": 1.3565217391304347,
+    "null_p50": 0.0,
+    "pctile": 0.69075,
+    "half1_hit_rate": null,
+    "half2_hit_rate": 0.5,
+    "half1_n": 3,
+    "half2_n": 2
+   },
+   "aux_break_30d": {
+    "n_anchors": 2,
+    "n_skipped": 4,
+    "hit_rate": 0.5,
+    "base_rate": 0.15269151138716355,
+    "lift": 3.274576271186441,
+    "null_p50": 0.0,
+    "pctile": 0.857,
+    "half1_hit_rate": null,
+    "half2_hit_rate": 0.5,
+    "half1_n": 3,
+    "half2_n": 3
+   },
+   "aux_fastcrash_30d": {
+    "n_anchors": 1,
+    "n_skipped": 7,
+    "hit_rate": 0.0,
+    "base_rate": 0.15269151138716355,
+    "lift": 0.0,
+    "null_p50": 0.0,
+    "pctile": 0.42575,
+    "half1_hit_rate": null,
+    "half2_hit_rate": 0.0,
+    "half1_n": 4,
+    "half2_n": 4
+   }
+  },
+  "C4_stables_30d_growth_lt0": {
+   "data_span": [
+    "2020-01-30",
+    "2026-10-22"
+   ],
+   "n_valid_days": 2458,
+   "n_on_days": 660,
+   "primary_90d": {
+    "n_anchors": 3,
+    "n_skipped": 2,
+    "hit_rate": 0.0,
+    "base_rate": 0.5831925675675675,
+    "lift": 0.0,
+    "null_p50": 0.6666666666666666,
+    "pctile": 0.02675,
+    "half1_hit_rate": 0.0,
+    "half2_hit_rate": 0.0,
+    "half1_n": 3,
+    "half2_n": 2
+   },
+   "aux_break_30d": {
+    "n_anchors": 4,
+    "n_skipped": 2,
+    "hit_rate": 0.75,
+    "base_rate": 0.4262767710049423,
+    "lift": 1.7594202898550726,
+    "null_p50": 0.5,
+    "pctile": 0.9455,
+    "half1_hit_rate": 1.0,
+    "half2_hit_rate": 0.6666666666666666,
+    "half1_n": 3,
+    "half2_n": 3
+   },
+   "aux_fastcrash_30d": {
+    "n_anchors": 2,
+    "n_skipped": 6,
+    "hit_rate": 0.5,
+    "base_rate": 0.4262767710049423,
+    "lift": 1.1729468599033817,
+    "null_p50": 0.5,
+    "pctile": 0.5700000000000001,
+    "half1_hit_rate": null,
+    "half2_hit_rate": 0.5,
+    "half1_n": 4,
+    "half2_n": 4
+   }
+  },
+  "C5_btc_share_60d_drop_ge10pp": {
+   "data_span": [
+    "2018-03-02",
+    "2026-10-22"
+   ],
+   "n_valid_days": 3157,
+   "n_on_days": 91,
+   "primary_90d": {
+    "n_anchors": 4,
+    "n_skipped": 1,
+    "hit_rate": 0.75,
+    "base_rate": 0.4300619497880665,
+    "lift": 1.7439347990902199,
+    "null_p50": 0.25,
+    "pctile": 0.9645,
+    "half1_hit_rate": 1.0,
+    "half2_hit_rate": 0.5,
+    "half1_n": 3,
+    "half2_n": 2
+   },
+   "aux_break_30d": {
+    "n_anchors": 5,
+    "n_skipped": 1,
+    "hit_rate": 0.4,
+    "base_rate": 0.21714102974096577,
+    "lift": 1.8421207658321062,
+    "null_p50": 0.2,
+    "pctile": 0.9057499999999999,
+    "half1_hit_rate": 0.5,
+    "half2_hit_rate": 0.3333333333333333,
+    "half1_n": 3,
+    "half2_n": 3
+   },
+   "aux_fastcrash_30d": {
+    "n_anchors": 4,
+    "n_skipped": 4,
+    "hit_rate": 0.5,
+    "base_rate": 0.21714102974096577,
+    "lift": 2.302650957290133,
+    "null_p50": 0.0,
+    "pctile": 0.9239999999999999,
+    "half1_hit_rate": null,
+    "half2_hit_rate": 0.5,
+    "half1_n": 4,
+    "half2_n": 4
+   }
+  },
+  "C6_total_vol_30d_mean_pct_ge90": {
+   "data_span": [
+    "2018-12-06",
+    "2026-10-22"
+   ],
+   "n_valid_days": 2878,
+   "n_on_days": 869,
+   "primary_90d": {
+    "n_anchors": 4,
+    "n_skipped": 1,
+    "hit_rate": 1.0,
+    "base_rate": 0.5502152080344332,
+    "lift": 1.8174706649282921,
+    "null_p50": 0.5,
+    "pctile": 1.0,
+    "half1_hit_rate": 1.0,
+    "half2_hit_rate": 1.0,
+    "half1_n": 3,
+    "half2_n": 2
+   },
+   "aux_break_30d": {
+    "n_anchors": 4,
+    "n_skipped": 2,
+    "hit_rate": 0.5,
+    "base_rate": 0.40098314606741575,
+    "lift": 1.2469352014010506,
+    "null_p50": 0.25,
+    "pctile": 0.6992499999999999,
+    "half1_hit_rate": 1.0,
+    "half2_hit_rate": 0.3333333333333333,
+    "half1_n": 3,
+    "half2_n": 3
+   },
+   "aux_fastcrash_30d": {
+    "n_anchors": 3,
+    "n_skipped": 5,
+    "hit_rate": 0.6666666666666666,
+    "base_rate": 0.40098314606741575,
+    "lift": 1.6625802685347342,
+    "null_p50": 0.3333333333333333,
+    "pctile": 0.8897499999999999,
+    "half1_hit_rate": null,
+    "half2_hit_rate": 0.6666666666666666,
+    "half1_n": 4,
+    "half2_n": 4
+   }
+  }
+ },
+ "robustness_anchor_shift_1d": {
+  "C1_fng_ge75_7d": {
+   "shift-1": {
+    "n_anchors": 4,
+    "hit_rate": 0.75,
+    "lift": 2.9664750957854404,
+    "pctile": 0.9754999999999999
+   },
+   "shift+1": {
+    "n_anchors": 4,
+    "hit_rate": 0.75,
+    "lift": 2.9664750957854404,
+    "pctile": 0.9752500000000001
+   },
+   "hit_rate_stable": true
+  },
+  "C2_btc_funding_ann_7d_ge30pct": {
+   "shift-1": {
+    "n_anchors": 3,
+    "hit_rate": 0.6666666666666666,
+    "lift": 2.016013485040034,
+    "pctile": 0.8375
+   },
+   "shift+1": {
+    "n_anchors": 3,
+    "hit_rate": 0.6666666666666666,
+    "lift": 2.016013485040034,
+    "pctile": 0.83675
+   },
+   "hit_rate_stable": true
+  },
+  "C3_btc_oi_30d_growth_pct_ge90": {
+   "shift-1": {
+    "n_anchors": 2,
+    "hit_rate": 0.5,
+    "lift": 1.3565217391304347,
+    "pctile": 0.6935
+   },
+   "shift+1": {
+    "n_anchors": 2,
+    "hit_rate": 0.5,
+    "lift": 1.3565217391304347,
+    "pctile": 0.6924999999999999
+   },
+   "hit_rate_stable": true
+  },
+  "C4_stables_30d_growth_lt0": {
+   "shift-1": {
+    "n_anchors": 3,
+    "hit_rate": 0.0,
+    "lift": 0.0,
+    "pctile": 0.026
+   },
+   "shift+1": {
+    "n_anchors": 3,
+    "hit_rate": 0.0,
+    "lift": 0.0,
+    "pctile": 0.02675
+   },
+   "hit_rate_stable": true
+  },
+  "C5_btc_share_60d_drop_ge10pp": {
+   "shift-1": {
+    "n_anchors": 4,
+    "hit_rate": 0.75,
+    "lift": 1.7439347990902199,
+    "pctile": 0.96375
+   },
+   "shift+1": {
+    "n_anchors": 4,
+    "hit_rate": 0.75,
+    "lift": 1.7439347990902199,
+    "pctile": 0.9655
+   },
+   "hit_rate_stable": true
+  },
+  "C6_total_vol_30d_mean_pct_ge90": {
+   "shift-1": {
+    "n_anchors": 4,
+    "hit_rate": 1.0,
+    "lift": 1.8174706649282921,
+    "pctile": 1.0
+   },
+   "shift+1": {
+    "n_anchors": 4,
+    "hit_rate": 1.0,
+    "lift": 1.8174706649282921,
+    "pctile": 1.0
+   },
+   "hit_rate_stable": true
+  }
+ },
+ "alt_styles_used": [
+  "defi",
+  "second_l1_l2",
+  "infra_tokenization",
+  "ai",
+  "app"
+ ],
+ "styles": {
+  "BTC_hold": [
+   {
+    "peak_d": "2017-12-15",
+    "trough_d": "2018-02-05",
+    "depth": -0.6478565026907815,
+    "first_leg": true,
+    "pre": 2.484388015144161,
+    "crash": -0.6478565026907815,
+    "recovery": 0.09411407986135445
+   },
+   {
+    "peak_d": "2018-03-05",
+    "trough_d": "2018-12-15",
+    "depth": -0.7171078854922341,
+    "first_leg": false,
+    "pre": -0.3800044475224186,
+    "crash": -0.7171078854922341,
+    "recovery": 0.6038972435224186
+   },
+   {
+    "peak_d": "2019-06-26",
+    "trough_d": "2020-03-16",
+    "depth": -0.6122360158768159,
+    "first_leg": true,
+    "pre": 1.483711777615893,
+    "crash": -0.6122360158768159,
+    "recovery": 0.8302575617912831
+   },
+   {
+    "peak_d": "2021-04-13",
+    "trough_d": "2021-07-20",
+    "depth": -0.5299354429178096,
+    "first_leg": true,
+    "pre": 0.3427188153395422,
+    "crash": -0.5299354429178096,
+    "recovery": 1.0260717343459498
+   },
+   {
+    "peak_d": "2021-11-08",
+    "trough_d": "2022-11-21",
+    "depth": -0.7661446524320938,
+    "first_leg": true,
+    "pre": 0.45199167626450354,
+    "crash": -0.7661446524320938,
+    "recovery": 0.7914091016143239
+   },
+   {
+    "peak_d": "2025-10-06",
+    "trough_d": "2026-06-30",
+    "depth": -0.5304939812328693,
+    "first_leg": true,
+    "pre": 0.06177267872933445,
+    "crash": -0.5304939812328693,
+    "recovery": null
+   }
+  ],
+  "BTC_trend200_nav": [
+   {
+    "peak_d": "2017-12-15",
+    "trough_d": "2018-02-05",
+    "depth": -0.6478565026907815,
+    "first_leg": true,
+    "pre": 2.4843880151441593,
+    "crash": -0.6478565026907819,
+    "recovery": -0.024601674179963617
+   },
+   {
+    "peak_d": "2018-03-05",
+    "trough_d": "2018-12-15",
+    "depth": -0.7171078854922341,
+    "first_leg": false,
+    "pre": -0.5124251322861786,
+    "crash": -0.24449632889249706,
+    "recovery": 0.05756290379398976
+   },
+   {
+    "peak_d": "2019-06-26",
+    "trough_d": "2020-03-16",
+    "depth": -0.6122360158768159,
+    "first_leg": true,
+    "pre": 1.4837117776158948,
+    "crash": -0.501526080928931,
+    "recovery": 0.05880609584055785
+   },
+   {
+    "peak_d": "2021-04-13",
+    "trough_d": "2021-07-20",
+    "depth": -0.5299354429178096,
+    "first_leg": true,
+    "pre": 0.3427188153395424,
+    "crash": -0.46453851318166073,
+    "recovery": -0.036324147811336194
+   },
+   {
+    "peak_d": "2021-11-08",
+    "trough_d": "2022-11-21",
+    "depth": -0.7661446524320938,
+    "first_leg": true,
+    "pre": 0.2010634859969218,
+    "crash": -0.3571070820513834,
+    "recovery": 0.4192681361573367
+   },
+   {
+    "peak_d": "2025-10-06",
+    "trough_d": "2026-06-30",
+    "depth": -0.5304939812328693,
+    "first_leg": true,
+    "pre": 0.06177267872933423,
+    "crash": -0.19142156441204217,
+    "recovery": null
+   }
+  ],
+  "X1V_trade_path_rally_l20": [
+   {
+    "peak_d": "2017-12-15",
+    "trough_d": "2018-02-05",
+    "depth": -0.6478565026907815,
+    "first_leg": true,
+    "pre": 2.0197759475094696,
+    "crash": -0.15769925299919363,
+    "recovery": -0.05518588373857103
+   },
+   {
+    "peak_d": "2018-03-05",
+    "trough_d": "2018-12-15",
+    "depth": -0.7171078854922341,
+    "first_leg": false,
+    "pre": 0.02403025484151855,
+    "crash": -0.16548084612745717,
+    "recovery": 0.18257061859349655
+   },
+   {
+    "peak_d": "2019-06-26",
+    "trough_d": "2020-03-16",
+    "depth": -0.6122360158768159,
+    "first_leg": true,
+    "pre": 1.4343357151053344,
+    "crash": -0.2873432880355965,
+    "recovery": 0.11463150464932736
+   },
+   {
+    "peak_d": "2021-04-13",
+    "trough_d": "2021-07-20",
+    "depth": -0.5299354429178096,
+    "first_leg": true,
+    "pre": 0.3363527024864945,
+    "crash": -0.3498436068217716,
+    "recovery": 0.3135155222062038
+   },
+   {
+    "peak_d": "2021-11-08",
+    "trough_d": "2022-11-21",
+    "depth": -0.7661446524320938,
+    "first_leg": true,
+    "pre": 0.3508304823571966,
+    "crash": -0.3453939793021401,
+    "recovery": 0.19407432353036325
+   },
+   {
+    "peak_d": "2025-10-06",
+    "trough_d": "2026-06-30",
+    "depth": -0.5304939812328693,
+    "first_leg": true,
+    "pre": -0.0832972208629259,
+    "crash": -0.1308724386147342,
+    "recovery": null
+   }
+  ],
+  "ETH_hold": [
+   {
+    "peak_d": "2017-12-15",
+    "trough_d": "2018-02-05",
+    "depth": -0.6478565026907815,
+    "first_leg": true,
+    "pre": 1.209023470891652,
+    "crash": -0.004245248504078258,
+    "recovery": -0.13917965222694517
+   },
+   {
+    "peak_d": "2018-03-05",
+    "trough_d": "2018-12-15",
+    "depth": -0.7171078854922341,
+    "first_leg": false,
+    "pre": -0.17259426666770472,
+    "crash": -0.899189525083154,
+    "recovery": 1.0025478816748352
+   },
+   {
+    "peak_d": "2019-06-26",
+    "trough_d": "2020-03-16",
+    "depth": -0.6122360158768159,
+    "first_leg": true,
+    "pre": 1.13562049628064,
+    "crash": -0.6706931147967377,
+    "recovery": 1.1604937989086546
+   },
+   {
+    "peak_d": "2021-04-13",
+    "trough_d": "2021-07-20",
+    "depth": -0.5299354429178096,
+    "first_leg": true,
+    "pre": 0.2550821370217229,
+    "crash": -0.22358685890730745,
+    "recovery": 1.4020485336557686
+   },
+   {
+    "peak_d": "2021-11-08",
+    "trough_d": "2022-11-21",
+    "depth": -0.7661446524320938,
+    "first_leg": true,
+    "pre": 0.3991518576892472,
+    "crash": -0.7694851983736859,
+    "recovery": 0.6341526767964907
+   },
+   {
+    "peak_d": "2025-10-06",
+    "trough_d": "2026-06-30",
+    "depth": -0.5304939812328693,
+    "first_leg": true,
+    "pre": 0.200439306770966,
+    "crash": -0.665341838094266,
+    "recovery": null
+   }
+  ],
+  "ALT_sector_EW_nav": [
+   {
+    "peak_d": "2017-12-15",
+    "trough_d": "2018-02-05",
+    "depth": -0.6478565026907815,
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2018-03-05",
+    "trough_d": "2018-12-15",
+    "depth": -0.7171078854922341,
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2019-06-26",
+    "trough_d": "2020-03-16",
+    "depth": -0.6122360158768159,
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": 2.219889630812147
+   },
+   {
+    "peak_d": "2021-04-13",
+    "trough_d": "2021-07-20",
+    "depth": -0.5299354429178096,
+    "first_leg": true,
+    "pre": 1.383603769353165,
+    "crash": -0.5467073867942767,
+    "recovery": 2.450064769668619
+   },
+   {
+    "peak_d": "2021-11-08",
+    "trough_d": "2022-11-21",
+    "depth": -0.7661446524320938,
+    "first_leg": true,
+    "pre": 0.4594362264296501,
+    "crash": -0.7864842050097928,
+    "recovery": 0.6752120646142605
+   },
+   {
+    "peak_d": "2025-10-06",
+    "trough_d": "2026-06-30",
+    "depth": -0.5304939812328693,
+    "first_leg": true,
+    "pre": 0.05070792064516372,
+    "crash": -0.45897405240842726,
+    "recovery": null
+   }
+  ],
+  "BTC_over_ALT": [
+   {
+    "peak_d": "2017-12-15",
+    "trough_d": "2018-02-05",
+    "depth": -0.6478565026907815,
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2018-03-05",
+    "trough_d": "2018-12-15",
+    "depth": -0.7171078854922341,
+    "first_leg": false,
+    "pre": null,
+    "crash": null,
+    "recovery": null
+   },
+   {
+    "peak_d": "2019-06-26",
+    "trough_d": "2020-03-16",
+    "depth": -0.6122360158768159,
+    "first_leg": true,
+    "pre": null,
+    "crash": null,
+    "recovery": -0.43157754716901875
+   },
+   {
+    "peak_d": "2021-04-13",
+    "trough_d": "2021-07-20",
+    "depth": -0.5299354429178096,
+    "first_leg": true,
+    "pre": -0.43668539519724225,
+    "crash": 0.03700025852584354,
+    "recovery": -0.41274385566374294
+   },
+   {
+    "peak_d": "2021-11-08",
+    "trough_d": "2022-11-21",
+    "depth": -0.7661446524320938,
+    "first_leg": true,
+    "pre": -0.005100976685606162,
+    "crash": 0.09526017772423745,
+    "recovery": 0.06936258367194781
+   },
+   {
+    "peak_d": "2025-10-06",
+    "trough_d": "2026-06-30",
+    "depth": -0.5304939812328693,
+    "first_leg": true,
+    "pre": 0.010530764893612377,
+    "crash": -0.13219315846646462,
+    "recovery": null
+   }
+  ]
+ },
+ "sentiment": {
+  "fng": {
+   "per_episode": [
+    {
+     "peak_d": "2017-12-15",
+     "trough_d": "2018-02-05",
+     "first_leg": true,
+     "d90": null,
+     "d30": null,
+     "peak": null,
+     "trough": 11.0
+    },
+    {
+     "peak_d": "2018-03-05",
+     "trough_d": "2018-12-15",
+     "first_leg": false,
+     "d90": null,
+     "d30": 40.0,
+     "peak": 55.0,
+     "trough": 11.0
+    },
+    {
+     "peak_d": "2019-06-26",
+     "trough_d": "2020-03-16",
+     "first_leg": true,
+     "d90": 49.0,
+     "d30": 70.0,
+     "peak": 95.0,
+     "trough": 9.0
+    },
+    {
+     "peak_d": "2021-04-13",
+     "trough_d": "2021-07-20",
+     "first_leg": true,
+     "d90": 78.0,
+     "d30": 78.0,
+     "peak": 74.0,
+     "trough": 19.0
+    },
+    {
+     "peak_d": "2021-11-08",
+     "trough_d": "2022-11-21",
+     "first_leg": true,
+     "d90": 71.0,
+     "d30": 72.0,
+     "peak": 75.0,
+     "trough": 21.0
+    },
+    {
+     "peak_d": "2025-10-06",
+     "trough_d": "2026-06-30",
+     "first_leg": true,
+     "d90": 65.0,
+     "d30": 48.0,
+     "peak": 71.0,
+     "trough": 15.0
+    }
+   ],
+   "median_first_leg": {
+    "d90": 68.0,
+    "d30": 71.0,
+    "peak": 74.5,
+    "trough": 15.0
+   },
+   "median_all": {
+    "d90": 68.0,
+    "d30": 70.0,
+    "peak": 74.0,
+    "trough": 13.0
+   }
+  },
+  "vix": {
+   "per_episode": [
+    {
+     "peak_d": "2017-12-15",
+     "trough_d": "2018-02-05",
+     "first_leg": true,
+     "d90": 10.17,
+     "d30": 13.13,
+     "peak": 9.42,
+     "trough": 37.32
+    },
+    {
+     "peak_d": "2018-03-05",
+     "trough_d": "2018-12-15",
+     "first_leg": false,
+     "d90": 11.33,
+     "d30": 17.31,
+     "peak": 18.73,
+     "trough": 21.63
+    },
+    {
+     "peak_d": "2019-06-26",
+     "trough_d": "2020-03-16",
+     "first_leg": true,
+     "d90": 14.43,
+     "d30": 15.85,
+     "peak": 16.21,
+     "trough": 82.69
+    },
+    {
+     "peak_d": "2021-04-13",
+     "trough_d": "2021-07-20",
+     "first_leg": true,
+     "d90": 22.21,
+     "d30": 20.69,
+     "peak": 16.65,
+     "trough": 19.73
+    },
+    {
+     "peak_d": "2021-11-08",
+     "trough_d": "2022-11-21",
+     "first_leg": true,
+     "d90": 16.79,
+     "d30": 18.77,
+     "peak": 17.22,
+     "trough": 22.36
+    },
+    {
+     "peak_d": "2025-10-06",
+     "trough_d": "2026-06-30",
+     "first_leg": true,
+     "d90": 16.81,
+     "d30": 15.18,
+     "peak": 16.37,
+     "trough": 16.45
+    }
+   ],
+   "median_first_leg": {
+    "d90": 16.79,
+    "d30": 15.85,
+    "peak": 16.37,
+    "trough": 22.36
+   },
+   "median_all": {
+    "d90": 15.61,
+    "d30": 16.58,
+    "peak": 16.509999999999998,
+    "trough": 21.994999999999997
+   }
+  },
+  "btc_funding_annualized": {
+   "per_episode": [
+    {
+     "peak_d": "2017-12-15",
+     "trough_d": "2018-02-05",
+     "first_leg": true,
+     "d90": null,
+     "d30": null,
+     "peak": null,
+     "trough": null
+    },
+    {
+     "peak_d": "2018-03-05",
+     "trough_d": "2018-12-15",
+     "first_leg": false,
+     "d90": null,
+     "d30": null,
+     "peak": null,
+     "trough": null
+    },
+    {
+     "peak_d": "2019-06-26",
+     "trough_d": "2020-03-16",
+     "first_leg": true,
+     "d90": null,
+     "d30": null,
+     "peak": null,
+     "trough": -0.56762245
+    },
+    {
+     "peak_d": "2021-04-13",
+     "trough_d": "2021-07-20",
+     "first_leg": true,
+     "d90": 0.39379119999999995,
+     "d30": 1.0274385,
+     "peak": 1.0828455000000001,
+     "trough": -0.17226175
+    },
+    {
+     "peak_d": "2021-11-08",
+     "trough_d": "2022-11-21",
+     "first_leg": true,
+     "d90": 0.10950000000000001,
+     "d30": 0.13036704999999998,
+     "peak": 0.45241385,
+     "trough": 0.0327843
+    },
+    {
+     "peak_d": "2025-10-06",
+     "trough_d": "2026-06-30",
+     "first_leg": true,
+     "d90": 0.03371505,
+     "d30": 0.044044549999999995,
+     "peak": 0.08472015,
+     "trough": 0.06515615
+    }
+   ],
+   "median_first_leg": {
+    "d90": 0.10950000000000001,
+    "d30": 0.13036704999999998,
+    "peak": 0.45241385,
+    "trough": -0.069738725
+   },
+   "median_all": {
+    "d90": 0.10950000000000001,
+    "d30": 0.13036704999999998,
+    "peak": 0.45241385,
+    "trough": -0.069738725
+   }
+  }
+ }
+}
