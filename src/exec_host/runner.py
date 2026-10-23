@@ -31,6 +31,13 @@ HL API 钱包的私钥只放在这台主机的 `/etc/cometcloud/executor.env`(Ja
 计划里的 `tickets` 段(Railway `ticket_plan`)→ `tickets.ticket_actions` → HL 永续:IOC 进场、按成交价挂减仓止损触发单、
 不在持有单里的票减仓出场。净值 = 永续账户净值,封顶 `EXECUTOR_TICKETS_MAX_EQUITY_USD`。
 **USDC 要在永续账户里**(现货 → 永续的划转是 Jazz 在 HL 上手动做的,本包不划转)。
+
+## 子账户(`HL_SUBACCOUNT_ADDRESS`,可选)
+
+不设:整个主账户都是执行器的 —— 它把账上全部 UBTC / UETH、全部永续净值与仓位当成自己的。Jazz 同时在主账户上手动交易,
+两边会把对方的仓位算进来(同一个币上,执行器会把 Jazz 平掉的仓位记成「交易所上已平」)。
+设了:余额、仓位、成交都读子账户,下单带 vaultAddress = 子账户(主账户批准的 API 钱包可以替子账户签名,私钥不变)。
+钱进子账户是 Jazz 在 HL 网页上划的,本包不划转。启动时子账户不在主账户名下 ⇒ 不启动。
 """
 from __future__ import annotations
 
@@ -86,8 +93,16 @@ class Config:
         if self.mode not in ("dry_run", "live"):
             raise SystemExit(f"EXECUTOR_MODE 必须是 dry_run 或 live,收到 {self.mode!r}")
         self.account = env.get("HL_ACCOUNT_ADDRESS", "").strip()
-        if not (self.account.startswith("0x") and len(self.account) == 42):
+        if not _is_addr(self.account):
             raise SystemExit("HL_ACCOUNT_ADDRESS 必须是主钱包地址(0x + 40 位)")
+        # 子账户(可选):设了 ⇒ 读余额 / 仓位 / 成交、下单(vaultAddress)全部在子账户上,主账户留给 Jazz 手动交易。
+        # 没设 ⇒ 照旧整个主账户都当成执行器的(两边同时用会互相把对方的仓位算进来)。
+        sub = env.get("HL_SUBACCOUNT_ADDRESS", "").strip()
+        if sub and not _is_addr(sub):
+            raise SystemExit("HL_SUBACCOUNT_ADDRESS 必须是子账户地址(0x + 40 位),不用就留空")
+        if sub and sub.lower() == self.account.lower():
+            raise SystemExit("HL_SUBACCOUNT_ADDRESS 与主账户相同 —— 子账户是另一个地址(HL 网页「子账户」里看)")
+        self.subaccount: Optional[str] = sub or None
         self.token = env.get("EXECUTOR_TOKEN", "").strip()
         if not self.token:
             raise SystemExit("EXECUTOR_TOKEN 未设置")
@@ -112,6 +127,15 @@ class Config:
     @property
     def halt_file(self) -> Path:
         return self.state_dir / "HALT"
+
+    @property
+    def trade_account(self) -> str:
+        """执行器读写的那个账户:有子账户就是子账户,否则是主账户。"""
+        return self.subaccount or self.account
+
+
+def _is_addr(a: str) -> bool:
+    return a.startswith("0x") and len(a) == 42
 
 
 # ── Railway ─────────────────────────────────────────────────────────────────
@@ -213,7 +237,22 @@ class Venue:
         return self.info.post("/info", payload)
 
     def balances(self) -> dict:
-        return core.parse_balances(self.info.spot_user_state(self.cfg.account))
+        return core.parse_balances(self.info.spot_user_state(self.cfg.trade_account))
+
+    def subaccount_check(self) -> dict[str, Any]:
+        """设了子账户时:它是不是主账户名下的。ok = True / False(HL 答了),None(读不到 —— 不等于不是)。"""
+        sub = self.cfg.subaccount
+        if not sub:
+            return {"ok": None, "why": "没设子账户(整个主账户归执行器)"}
+        try:
+            rows = self.info.query_sub_accounts(self.cfg.account) or []
+        except Exception as e:                                           # noqa: BLE001
+            return {"ok": None, "address": sub, "why": f"读不到子账户列表:{type(e).__name__}: {str(e)[:120]}"}
+        for r in rows if isinstance(rows, list) else []:
+            if str((r or {}).get("subAccountUser", "")).lower() == sub.lower():
+                return {"ok": True, "address": sub, "name": r.get("name")}
+        return {"ok": False, "address": sub, "n_subaccounts": len(rows) if isinstance(rows, list) else 0,
+                "why": "主账户名下没有这个子账户 —— 地址抄错了,或者子账户不是这个主账户开的"}
 
     def quotes(self) -> dict:
         from src.data.execution.dry_run import _spot_quotes_sync
@@ -225,7 +264,7 @@ class Venue:
         return {s: float(allm[p]) for s, p in pairs.items() if p in allm}
 
     def fills_since(self, t_ms: int) -> list[dict]:
-        return self.info.user_fills_by_time(self.cfg.account, t_ms) or []
+        return self.info.user_fills_by_time(self.cfg.trade_account, t_ms) or []
 
     def exchange(self) -> Any:
         if self.cfg.mode != "live" and self.cfg.tickets_mode != "live":
@@ -235,7 +274,9 @@ class Venue:
             from hyperliquid.exchange import Exchange
             from hyperliquid.utils import constants
             wallet = Account.from_key(os.environ["HL_API_WALLET_PRIVATE_KEY"])
-            self._exchange = Exchange(wallet, constants.MAINNET_API_URL, account_address=self.cfg.account)
+            # 子账户:主账户批准的 API 钱包可以替子账户签名,动作里带 vaultAddress = 子账户(HL 文档「Nonces and API wallets」)
+            self._exchange = Exchange(wallet, constants.MAINNET_API_URL, account_address=self.cfg.account,
+                                      vault_address=self.cfg.subaccount)
         return self._exchange
 
     def order(self, pair: str, side: str, qty: float, limit_px: float, cloid: str) -> Any:
@@ -250,7 +291,7 @@ class Venue:
         return {k: float(v) for k, v in (self.info.all_mids() or {}).items() if not str(k).startswith("@")}
 
     def perp_state(self) -> dict[str, Any]:
-        return tickets.parse_perp_state(self.info.user_state(self.cfg.account))
+        return tickets.parse_perp_state(self.info.user_state(self.cfg.trade_account))
 
     def order_perp(self, coin: str, side: str, qty: float, limit_px: float, cloid: str, reduce_only: bool) -> Any:
         from hyperliquid.utils.types import Cloid
@@ -834,7 +875,8 @@ class Executor:
         halted, why = self.halted()
         plan = self.state.get("plan") or {}
         self._report("heartbeat", asof=plan.get("asof"), detail={
-            "balances": bal, "plan_asof": plan.get("asof"), "done_asof": self.state.get("done_asof"),
+            "balances": bal, "trade_account": self.cfg.trade_account, "subaccount": bool(self.cfg.subaccount),
+            "plan_asof": plan.get("asof"), "done_asof": self.state.get("done_asof"),
             "stop_px": plan.get("stop_px"), "halted": halted, "halt_why": why,
             "tickets_mode": self.cfg.tickets_mode, "ticket_book": self._book_brief(self.state.get("ticket_book") or {}),
             "ticket_plan_asof": (self.state.get("ticket_plan") or {}).get("asof"),
@@ -880,8 +922,10 @@ def _r(d: dict) -> dict:
 
 def check(ex: Executor) -> dict[str, Any]:
     """部署后跑一次:配置、计划、余额、按真实余额算出的订单 —— 不下单。最后发一条心跳,验证回报这条路是通的。"""
-    out: dict[str, Any] = {"mode": ex.cfg.mode, "account": ex.cfg.account, "api": ex.cfg.api,
-                           "nav_cap": ex.cfg.nav_cap, "halted": ex.halted()}
+    out: dict[str, Any] = {"mode": ex.cfg.mode, "account": ex.cfg.account, "trade_account": ex.cfg.trade_account,
+                           "api": ex.cfg.api, "nav_cap": ex.cfg.nav_cap, "halted": ex.halted()}
+    if ex.cfg.subaccount:
+        out["subaccount"] = ex.venue.subaccount_check()
     code, plan = ex.railway.plan()
     out["plan_http"] = code
     out["plan"] = {k: plan.get(k) for k in ("ok", "asof", "targets", "stop_px", "halted", "halt_status", "why")} \
@@ -909,7 +953,8 @@ def check(ex: Executor) -> dict[str, Any]:
             t["perp_account"] = {"ok": st.get("ok"), "equity": st.get("equity"), "positions": st.get("positions")}
             t["hl_perps_listed"] = len(szd)
             if not st.get("ok") or (st.get("equity") or 0) < tickets.MIN_NOTIONAL_USD:
-                t["warning"] = "永续账户里没有可用的 USDC —— 真跑前要在 HL 上把 USDC 从现货划到永续(Jazz 手动)"
+                t["warning"] = (("子账户" if ex.cfg.subaccount else "") + "永续账户里没有可用的 USDC —— 真跑前要在 HL 上把 USDC "
+                                + ("划进子账户的永续" if ex.cfg.subaccount else "从现货划到永续") + "(Jazz 手动)")
             if tp and tp.get("ready"):
                 eq = min(st.get("equity") or 0.0, ex.cfg.tickets_equity_cap) or ex.cfg.tickets_equity_cap
                 book, done = ex.state.get("ticket_book") or {}, set((ex.state.get("ticket_done") or {}).keys())
@@ -930,6 +975,16 @@ def check(ex: Executor) -> dict[str, Any]:
     return out
 
 
+def refuse_foreign_subaccount(venue: Venue) -> None:
+    """子账户地址 HL 明确说不在主账户名下 ⇒ 不启动(读余额会读到别人的账户、按别人的净值定尺寸)。
+    读不到列表(网络)⇒ 照常启动:下单时 HL 自己会拒绝没被授权的 vaultAddress。"""
+    c = venue.subaccount_check()
+    if c.get("ok") is False:
+        raise SystemExit(f"HL_SUBACCOUNT_ADDRESS {c.get('address')}:{c.get('why')} —— 不启动")
+    if c.get("ok") is None and venue.cfg.subaccount:
+        log.warning("subaccount not verified at start: %s", c.get("why"))
+
+
 def main(argv: Optional[list[str]] = None) -> None:
     ap = argparse.ArgumentParser(description="CometCloud 云主机执行器")
     ap.add_argument("--check", action="store_true", help="自检一次(不下单)并发一条心跳,然后退出")
@@ -938,11 +993,17 @@ def main(argv: Optional[list[str]] = None) -> None:
     cfg = Config()
     ex = Executor(cfg, Venue(cfg), Railway(cfg.api, cfg.token))
     if args.check:
-        print(json.dumps(check(ex), ensure_ascii=False, indent=2, default=str))
+        out = check(ex)
+        print(json.dumps(out, ensure_ascii=False, indent=2, default=str))
+        if (out.get("subaccount") or {}).get("ok") is False:
+            raise SystemExit("HL_SUBACCOUNT_ADDRESS 不是这个主账户的子账户 —— 不启动")
         return
-    log.info("executor up · mode=%s · account=%s · api=%s · nav_cap=%s", cfg.mode, cfg.account, cfg.api, cfg.nav_cap)
-    ex._report("heartbeat", detail={"event": "start", "mode": cfg.mode, "nav_cap": cfg.nav_cap},
-               alert=f"执行器启动 · {cfg.mode} · {cfg.host}")
+    refuse_foreign_subaccount(ex.venue)
+    log.info("executor up · mode=%s · account=%s · trade_account=%s · api=%s · nav_cap=%s",
+             cfg.mode, cfg.account, cfg.trade_account, cfg.api, cfg.nav_cap)
+    ex._report("heartbeat", detail={"event": "start", "mode": cfg.mode, "nav_cap": cfg.nav_cap,
+                                    "trade_account": cfg.trade_account, "subaccount": bool(cfg.subaccount)},
+               alert=f"执行器启动 · {cfg.mode} · {cfg.host}" + (" · 子账户" if cfg.subaccount else ""))
     while True:
         ex.tick()
         time.sleep(LOOP_S)

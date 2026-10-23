@@ -307,3 +307,101 @@ def test_plan_core_ships_targets_and_stop_lines_from_the_same_kernel(monkeypatch
     hp._CORE_CACHE.clear()
     late = asyncio.run(hp.plan_core("2026-10-20"))
     assert not late["ok"] and "2026-10-20" in late["why"]
+
+
+# ── 子账户(HL_SUBACCOUNT_ADDRESS)──────────────────────────────────────────
+SUB = "0x" + "cd" * 20
+
+
+class FakeInfo:
+    def __init__(self, subs=None, fail=False):
+        self.users, self.subs, self.fail = [], subs, fail
+
+    def spot_user_state(self, user):
+        self.users.append(("spot", user))
+        return {"balances": []}
+
+    def user_state(self, user):
+        self.users.append(("perp", user))
+        return {"marginSummary": {"accountValue": "0"}, "assetPositions": []}
+
+    def user_fills_by_time(self, user, t_ms):
+        self.users.append(("fills", user))
+        return []
+
+    def query_sub_accounts(self, user):
+        if self.fail:
+            raise TimeoutError("hl down")
+        self.users.append(("subs", user))
+        return self.subs
+
+
+def _sub_cfg(tmp_path, sub=SUB, mode="dry_run", tickets="dry_run"):
+    return rn.Config({"EXECUTOR_MODE": mode, "EXECUTOR_TICKETS_MODE": tickets, "HL_ACCOUNT_ADDRESS": MASTER,
+                      "HL_SUBACCOUNT_ADDRESS": sub, "EXECUTOR_TOKEN": "t", "EXECUTOR_STATE_DIR": str(tmp_path)})
+
+
+def test_subaccount_is_optional_and_must_be_a_different_address(tmp_path):
+    assert _cfg(tmp_path).trade_account == MASTER and _cfg(tmp_path).subaccount is None, "不设 ⇒ 照旧整个主账户"
+    assert _sub_cfg(tmp_path).trade_account == SUB
+    with pytest.raises(SystemExit):
+        _sub_cfg(tmp_path, sub="0x123")
+    with pytest.raises(SystemExit):
+        _sub_cfg(tmp_path, sub=MASTER.upper().replace("0X", "0x"))
+
+
+def test_with_a_subaccount_every_read_is_on_the_subaccount_not_the_master(tmp_path):
+    info = FakeInfo()
+    v = rn.Venue(_sub_cfg(tmp_path), info=info)
+    v.balances(), v.perp_state(), v.fills_since(0)
+    assert info.users == [("spot", SUB), ("perp", SUB), ("fills", SUB)], \
+        "Jazz 在主账户手动交易:执行器读主账户就会把他的仓位当成自己的"
+
+
+def test_orders_on_a_subaccount_are_signed_by_the_same_api_wallet_with_vault_address(tmp_path, monkeypatch):
+    """不依赖本机装没装 SDK(Mac 上的 preflight 没装 hyperliquid / eth_account):把三个模块换成假的。"""
+    import sys
+    import types
+    built = {}
+
+    class FakeExchange:
+        def __init__(self, wallet, url, **kw):
+            built.update(kw, wallet=wallet.address, url=url)
+
+    class FakeAccount:
+        @staticmethod
+        def from_key(k):
+            return types.SimpleNamespace(address="0xagent")
+
+    utils = types.ModuleType("hyperliquid.utils")
+    utils.constants = types.SimpleNamespace(MAINNET_API_URL="https://api.hyperliquid.xyz")
+    mods = {"hyperliquid": types.ModuleType("hyperliquid"), "hyperliquid.exchange": types.ModuleType("hyperliquid.exchange"),
+            "hyperliquid.utils": utils, "eth_account": types.ModuleType("eth_account")}
+    mods["hyperliquid.exchange"].Exchange = FakeExchange
+    mods["eth_account"].Account = FakeAccount
+    for k, m in mods.items():
+        monkeypatch.setitem(sys.modules, k, m)
+    monkeypatch.setenv("HL_API_WALLET_PRIVATE_KEY", "0x" + "11" * 32)
+    rn.Venue(_sub_cfg(tmp_path, mode="dry_run", tickets="live"), info=object()).exchange()
+    assert built["vault_address"] == SUB and built["account_address"] == MASTER and built["wallet"] == "0xagent"
+    built.clear()
+    rn.Venue(rn.Config({"EXECUTOR_MODE": "live", "HL_ACCOUNT_ADDRESS": MASTER, "EXECUTOR_TOKEN": "t",
+                        "EXECUTOR_STATE_DIR": str(tmp_path)}), info=object()).exchange()
+    assert built["vault_address"] is None, "不设子账户 ⇒ 不带 vaultAddress(照旧)"
+
+
+def test_a_subaccount_that_is_not_under_the_master_refuses_to_start(tmp_path):
+    cfg = _sub_cfg(tmp_path)
+    mine = rn.Venue(cfg, info=FakeInfo(subs=[{"name": "cometcloud-rv2", "subAccountUser": SUB.upper().replace("0X", "0x")}]))
+    assert mine.subaccount_check() == {"ok": True, "address": SUB, "name": "cometcloud-rv2"}
+    rn.refuse_foreign_subaccount(mine)
+    foreign = rn.Venue(cfg, info=FakeInfo(subs=[{"name": "x", "subAccountUser": "0x" + "ee" * 20}]))
+    assert foreign.subaccount_check()["ok"] is False
+    with pytest.raises(SystemExit):
+        rn.refuse_foreign_subaccount(foreign)
+    none = rn.Venue(cfg, info=FakeInfo(subs=None))
+    assert none.subaccount_check()["ok"] is False, "主账户名下一个子账户都没有"
+    down = rn.Venue(cfg, info=FakeInfo(fail=True))
+    assert down.subaccount_check()["ok"] is None, "读不到 ≠ 不是"
+    rn.refuse_foreign_subaccount(down)
+    assert rn.Venue(_cfg(tmp_path), info=FakeInfo()).subaccount_check()["ok"] is None
