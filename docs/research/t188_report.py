@@ -9,10 +9,20 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = "/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-188_offcrypto_venues.md"
+# 第三方条款原文在私有数据根,不在公开仓库(2026-10-23 从 docs/research/t188_hk_text/ 移出)
+TEXT_ROOT = os.environ.get("T188_TEXT_ROOT", "/Volumes/CometCloudAI/cometcloud-local/research/t188")
 V = json.load(open(os.path.join(HERE, "t188_venues.json")))
 C = json.load(open(os.path.join(HERE, "t188_costs.json")))
 ASOF = V["asof"]
 SIZES = C["sizes_usd"]
+
+
+def n_hk_text():
+    """私有数据根里的条款原文文件数;目录不在就写「查不到」,不猜。"""
+    try:
+        return len(os.listdir(os.path.join(TEXT_ROOT, "hk_text")))
+    except OSError:
+        return "查不到"
 
 
 def n(x, dp=0):
@@ -342,7 +352,7 @@ def main():
 | `docs/research/t188_venues.json` | 全部实测原始值 |
 | `docs/research/t188_costs.json` | 成本推算结果 |
 | `docs/research/t188_notes.md` | 香港可得性取证笔记（每条含链接 + 取数日期） |
-| `docs/research/t188_hk_text/*.txt` | 条款原文全文（本轮抓取，共 {len(os.listdir(os.path.join(HERE, 't188_hk_text')))} 个来源文件） |
+| `{TEXT_ROOT}/hk_text/*.txt` | 条款原文全文（本轮抓取，共 {n_hk_text()} 个来源文件）—— **私有数据根，不在公开仓库** |
 | `docs/research/t188_hk_fetch*.py` / `t188_hk_print.py` | 取证脚本 |
 
 **合规口径**：本报告只描述工具结构、实测流动性与条款事实，不含任何买入/卖出建议。

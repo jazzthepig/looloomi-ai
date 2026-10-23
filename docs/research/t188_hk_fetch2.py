@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """T-188 第二轮：找 Restricted Countries / Tether Gold ToS / HL 条款的可读版本。
 
-把候选 URL 逐个试，命中即存全文到 docs/research/t188_hk_text/。
+把候选 URL 逐个试，命中即存全文到 <私有数据根>/research/t188/hk_text/。
 """
 import html
 import os
@@ -11,7 +11,9 @@ import urllib.request
 import urllib.error
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-TXTDIR = os.path.join(HERE, "t188_hk_text")
+# 第三方条款原文与摘录留在私有数据根,不进公开仓库(2026-10-23 Seth 要求)
+TEXT_ROOT = os.environ.get("T188_TEXT_ROOT", "/Volumes/CometCloudAI/cometcloud-local/research/t188")
+TXTDIR = os.path.join(TEXT_ROOT, "hk_text")
 UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
       "Accept": "text/html,application/xhtml+xml,application/pdf,*/*"}
@@ -39,7 +41,7 @@ def fetch(url, timeout=35):
         with urllib.request.urlopen(req, timeout=timeout) as r:
             raw = r.read()
             if raw[:4] == b"%PDF" or url.lower().endswith(".pdf"):
-                tmp = os.path.join(HERE, "_t188_tmp2.pdf")
+                tmp = os.path.join(TEXT_ROOT, "_t188_tmp2.pdf")
                 with open(tmp, "wb") as f:
                     f.write(raw)
                 txt = subprocess.run(["pdftotext", "-layout", tmp, "-"],

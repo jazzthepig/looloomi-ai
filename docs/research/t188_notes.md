@@ -1,11 +1,15 @@
 # T-188 取证笔记 —— 香港可得性（逐条，含链接 + 日期）
 
-取数日期：2026-10-24（UTC）。全部只读公开网页，未注册、未连钱包、未下单。
-原文全文落在本目录 `t188_hk_text/`（每文件一个来源），此文件只存结论。
+取数日期：2026-10-23（UTC）。全部只读公开网页，未注册、未连钱包、未下单。
+条款原文全文（第三方整段原文）不进公开仓库，已存私有数据根
+`/Volumes/CometCloudAI/cometcloud-local/research/t188/hk_text/`（每文件一个来源），
+摘录 JSON 同目录 `t188_hk_snippets.json`；此文件只存结论 + 链接 + 不超过一句的原文引用。
 
 ---
 
 ## 1. PAXG —— Paxos Trust Company, NA（OCC 监管的美国信托）
+
+- 取数日期：2026-10-23（UTC）
 
 - 发行方与法律结构：`Paxos Trust Company, NA`（美国国民银行协会，受 OCC 监管）发行 PAXG；`Paxos Global PTE LTD` 为转售商。PAXG 是 ERC-20，1 枚 = 1 金衡盎司 London Good Delivery 分配金条（LBMA 保管、编号可识别、实物在伦敦 LBMA 保管库）。
   - 依据：`Paxos General Terms and Conditions`（Last Modified: December 12, 2025）+ `PAX Gold Terms and Conditions`
@@ -22,6 +26,8 @@
 
 ## 2. XAUT —— Tether（Gold token, XAUt）
 
+- 取数日期：2026-10-23（UTC）
+
 - 发行方与法律结构：Tether Gold 由 `Tether International SA` 体系发行（`gold.tether.to`）。具体发行实体与实物金保管安排本轮**只拿到 JS 渲染壳页（253 字符）**，结构细节 → **查不到**（FAQ 与白皮书页同样 JS 渲染）。
 - 依据：Tether 通用条款（`https://tether.to/en/legal/`，78888 字符全文已存）
 - 定义（原文要点）：「**Prohibited Person**」= 任何 U.S. Person（Tether 自行酌情同意的 Eligible Contract Participants 除外）、任何 Canadian Person、任何 Singaporean Person、委内瑞拉政府、任何 Prohibited Jurisdiction（古巴、朝鲜、伊朗、叙利亚、克里米亚、顿涅茨克、卢甘斯克、赫尔松、扎波罗热）居民或政府官员，以及任何被制裁人士。
@@ -31,6 +37,8 @@
 - 风险：发行人无信用/主权信用；实物金托管与审计为发行人自述（`gold.tether.to/reports`）。
 
 ## 3. GLDX（Ondo Global Markets 代币化黄金）/ SPYX / QQQX / AAPLX —— Ondo Global Markets (BVI) Limited
+
+- 取数日期：2026-10-23（UTC）
 
 - 发行方与法律结构：`Ondo Global Markets (BVI) Limited`（BVI）发行 Ondo Stocks；法律类别为**追踪凭证（tracker）**，不是直接股权，无股东投票权。
 - 关键条款（`https://docs.ondo.finance/ondo-stocks/eligibility` 全文已存）：
@@ -49,6 +57,8 @@
 - 链与场所（实测，见 t188_venues.json）：Ondo Stocks 走 BNB Chain / Solana / Ethereum。
 
 ## 4. SPYX / QQQX / AAPLX（xStocks）—— Backed Assets (JE) Limited
+
+- 取数日期：2026-10-23（UTC）
 
 注意：SPYX / QQQX / AAPLX 在本卡实测数据中为 xStocks 体系（Backed），与 Ondo 代币不是同一发行方；**GLDX 才是 Ondo 家的黄金代币**。
 
@@ -70,6 +80,8 @@
 
 ## 5. HL HIP-3 黄金 / 股指 / 个股永续
 
+- 取数日期：2026-10-23（UTC）
+
 - 机制：HIP-3 = 协议级 builder-deployed perpetuals。部署方负责市场定义（含**预言机定义**）、市场运营（设置预言机价格、杠杆上限、必要时结算市场）；每个 perp dex 有独立保证金、订单簿与部署方设置；与 HyperCore 同一套 API/保证金引擎；抵押品可为任何通过许可清单的 quote asset（`USDC` 等）；主网上线需质押 500k HYPE，至少维持 183 天。
   - 链接（官方 GitBook，Markdown 版）：https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-improvement-proposals-hips/hip-3-builder-deployed-perpetuals
   - 链接（部署方动作 API）：https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/hip-3-deployer-actions
@@ -86,7 +98,9 @@
 ## 取证方法与限制（供复核）
 
 - 抓取脚本：`docs/research/t188_hk_fetch.py`（第 1 轮）、`t188_hk_fetch2.py`（第 2 轮）、`t188_hk_fetch3.py`（第 3 轮）、`t188_hk_fetch4.py`（第 4 轮）、`t188_hk_fetch5.py`（第 5 轮）、`t188_hk_print.py`（打印轮）。全部只读 GET。
-- 原文全文：`docs/research/t188_hk_text/*.txt`（每个来源一个文件，含 JS 壳页的空文件）。
+  脚本仍留在仓库（可复跑），但读写路径已改到私有数据根：`T188_TEXT_ROOT`
+  （默认 `/Volumes/CometCloudAI/cometcloud-local/research/t188`），原文落到 `<TEXT_ROOT>/hk_text/`、摘录落到 `<TEXT_ROOT>/t188_hk_snippets.json`。
+- 原文全文：`<TEXT_ROOT>/hk_text/*.txt`（每个来源一个文件，含 JS 壳页的空文件）—— **私有数据根，不在公开仓库**（2026-10-23 从 `docs/research/t188_hk_text/` 移出）。
 - 未取到的项一律写「查不到」，未做任何估算：
   1. Tether Gold 发行实体与实物金保管结构细节、申赎最小额与时效（JS 渲染页）。
   2. Hyperliquid 官方 Terms of Use 正文的 Restricted Jurisdiction 名单（JS 渲染页）。

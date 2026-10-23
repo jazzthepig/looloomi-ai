@@ -2,7 +2,8 @@
 """T-188 香港可得性取证：抓发行方 / 交易所条款原文，只抽取相关段落。
 
 只读公开网页，不注册、不填表、不下单。
-输出 docs/research/t188_hk_snippets.json + docs/research/t188_notes.md 的证据段。
+输出 <私有数据根>/research/t188/t188_hk_snippets.json + docs/research/t188_notes.md 的证据段。
+条款原文与摘录不进公开仓库(2026-10-23 Seth 要求)。
 """
 import json
 import os
@@ -12,7 +13,9 @@ import urllib.request
 import urllib.error
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "t188_hk_snippets.json")
+# 第三方条款原文与摘录留在私有数据根,不进公开仓库(2026-10-23 Seth 要求)
+TEXT_ROOT = os.environ.get("T188_TEXT_ROOT", "/Volumes/CometCloudAI/cometcloud-local/research/t188")
+OUT = os.path.join(TEXT_ROOT, "t188_hk_snippets.json")
 UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"}
 
@@ -60,7 +63,7 @@ def fetch(url, timeout=40):
             enc = r.headers.get_content_charset() or "utf-8"
             data = raw.decode(enc, errors="replace")
             if url.lower().endswith(".pdf") or raw[:4] == b"%PDF":
-                tmp = os.path.join(HERE, "_t188_tmp.pdf")
+                tmp = os.path.join(TEXT_ROOT, "_t188_tmp.pdf")
                 with open(tmp, "wb") as f:
                     f.write(raw)
                 import subprocess
@@ -105,7 +108,7 @@ def snippets(text, keywords, cap=6, width=300):
 
 def main():
     res = {}
-    txtdir = os.path.join(HERE, "t188_hk_text")
+    txtdir = os.path.join(TEXT_ROOT, "hk_text")
     os.makedirs(txtdir, exist_ok=True)
     for key, url, kws in TARGETS:
         raw, status, final = fetch(url)

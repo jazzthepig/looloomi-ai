@@ -25,7 +25,8 @@ from datetime import datetime, timedelta, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "t188_venues.json")
-ASOF = "2026-10-24"
+# 取数日 = 抓取时刻的 UTC 日期。Mac 侧时钟是 JST,直接用本地日期会写成次日。
+ASOF = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 UA = {"User-Agent": "cometcloud-research/1.0 (T-188)"}
 HL = "https://api.hyperliquid.xyz/info"
@@ -624,7 +625,7 @@ def main():
     out["token_volume_30d"] = vol30
 
     with open(OUT, "w") as f:
-        json.dump(out, f, indent=1, default=str)
+        json.dump(out, f, indent=1, default=str, ensure_ascii=False)
     print("\nwrote", OUT)
     return out
 

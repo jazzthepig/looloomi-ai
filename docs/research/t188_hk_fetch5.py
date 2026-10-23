@@ -5,7 +5,9 @@ import re
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-TXTDIR = os.path.join(HERE, "t188_hk_text")
+# 第三方条款原文与摘录留在私有数据根,不进公开仓库(2026-10-23 Seth 要求)
+TEXT_ROOT = os.environ.get("T188_TEXT_ROOT", "/Volumes/CometCloudAI/cometcloud-local/research/t188")
+TXTDIR = os.path.join(TEXT_ROOT, "hk_text")
 UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"}
 
