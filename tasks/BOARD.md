@@ -4,6 +4,7 @@
 |---|---|---|---|---|---|---|
 | in_review | T-089 | lane-a | 完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改 | 从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。 |  |
 | in_review | T-179 | lane-a | CIS 页上公司的「股数 52 周变化」(改按申报股数之后)逐家核对:剩下 |变化| > 5% 的,是真的公司行为还是我们入库的口径错 | 脚本 docs/research/t179_share_change_audit.py;表 /Volumes/CometCloudAI/cometcloud-local/research/t179/share_change_audit.csv(key, 新 52 周变化, 旧推法 52 周变化, 台阶日期, 类别, 证据);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-179_share_change_audit.md(开头一张按类别的计数表,B 类每家写怎么修);in_review,推 lane-a/T-179。新分支 `git switch -c lane-a/T-179 origin/main`。 | B 类交 Seth 改入库口径;修好之前,页面上 B 类公司的股数变化不展示。 |  |
+| in_review | T-184 | lane-a | T-179 的 18 家股数缺口名单:端点固定到整周五重跑,并核对其余 14 家的起点申报 | 名单家数随端点变动被量出来;14 家起点各有 A/B 分类和申报出处;不引入新的探索性信号。 | 当前名单 18 家(周三端点)。 |  |
 | in_review | T-093 | lane-b | 逆向按情景用(Jazz 10-14):T-092 三条规则加「边际流动性 × BTC 趋势」四状态、每周重判 —— 对照无条件版与打乱的状态标签 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张表:三条规则 × 三个窗口 × {无条件, 条件} 的总收益 / 最大回撤 / 超额 / 打乱分位,外加每个状态的周数。不改任何前向账本。 | S-570(探索性):暴涨名 30 日相对 BTC 在边际变差时 −28.9(同情景中间组 −6.6),改善时 −13.0(−5.0);暴跌名 90 日在三个窗口里都是改善好过变差;能让暴涨名继续涨的只有「弱底子回暖」约 9 周。 |  |
 | in_review | T-177 | lane-b | S-672:CIS v2 的慢维度合成(规模 + 稳定 + 供给)在开票当时,是不是比「只看稀释」更能分开 R-v2 的好票与坏票 | 脚本 docs/research/t177_s672_v2_tickets.py;结果 docs/research/t177_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-177_s672_v2_tickets.md(末尾「S-672 结果」草稿 + 挖掘);in_review,推 lane-b/T-177。新分支 `git switch -c lane-b/T-177 origin/main`。 | 过 ⇒ 前向票标签加 v2 合成分(交易层与 CIS v2 一个内核);不过 ⇒ 交易层只记稀释,v2 合成不进交易层。实盘用不用都等前向、Jazz 定。 |  |
 | in_review | T-174 | lane-c | T-171 返工(S-669):置换对照改成打乱「标签 ↔ 收益」的配对再判候选 —— 原来的块置换零化的是均值,空转 | 脚本 docs/research/t174_state_permutation.py;结果 docs/research/t174_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-174_s669_rework.md(末尾「S-669 返工结果」草稿);in_review,推 lane-c/T-174。新分支 `git switch -c lane-c/T-174 origin/main`。翻页读一律带 order=。 | 给 S-669 的候选一个有意义的死活;决定状态层对外文案里「没有预测力」能不能说。 |  |
@@ -184,4 +185,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 7 · claimed 10 · blocked 7 · in_review 5 · done 149 · dropped 3
+open 7 · claimed 10 · blocked 7 · in_review 6 · done 149 · dropped 3
