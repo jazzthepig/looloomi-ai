@@ -1,9 +1,13 @@
 {
   "id": "T-099",
   "owner": "seth",
-  "status": "claimed",
+  "status": "done",
   "created": "2026-10-14",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-23T17:18Z",
+    "value": "World50 按时点回放已做(S-581 预注册 / S-583 修池子后重跑,台账);产品 = 等权 × 有界动量(Jazz 10-14/16,DECISIONS);前向账本按 S-581 定在 2026-12-31 开账(world50_book_nav 现在 0 行是设计如此,不是坏了)。"
+  },
   "title": "World50 按时点回放(指数层)+ 风险层(波动目标 / 趋势)分开记账,对照 ACWI / Nasdaq-100 / 全球 60/40",
   "source": "S-576(月度、价格收益的第一次量测:同风险下卡玛 1.1–1.4 对 BTC 0.44)",
   "allowed_paths": [

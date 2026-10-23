@@ -1,9 +1,13 @@
 {
   "id": "T-133",
   "owner": "seth",
-  "status": "claimed",
+  "status": "done",
   "created": "2026-10-19",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-23T17:18Z",
+    "value": "表有真实数据:deriv_metrics_daily BTC 2020-09-01 → 2026-10-22 共 2,243 行(持仓量 / 大户多空比 / 主动买卖比);调度者 _binance_vision_loop(近 3 天 98 次 ok,最后 10-23 17:07);判活 = loop_attempt 该循环 + max(d) = 昨天。三件齐(规则 5b)。"
+  },
   "title": "接 Binance Vision 免费历史档:永续 5 分钟持仓结构(未平仓量、大户多空比、主动买卖量比)+ 盘口深度带 → 日度特征表",
   "source": "Jazz 10-19「先不买,在现有数据源想办法」;Seth 实测 data.binance.vision:UM metrics BTC 2020-09-01 起、ARB 自上市 2023-03-23 起,每日更新(10-15 的文件 10-16 上传);bookDepth BTC 2023-01-01 起",
   "allowed_paths": [
