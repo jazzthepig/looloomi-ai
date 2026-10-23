@@ -1,0 +1,28 @@
+{
+  "id": "T-190",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-10-23",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/",
+    "docs/research/crash_atlas_common.py"
+  ],
+  "title": "S-679:X1V 的两种快回场(反弹不止盈 / 55 日新高即回场),在没用来设计它的资产上验 —— 修复段抓得回来吗、下跌段会不会多亏",
+  "source": "台账 S-679(2026-10-23 16:16 UTC)。崩盘图谱三道的风格表:趋势规则躲过大半下跌,也丢了大半修复(NASDAQ 200 日趋势修复段 +2.0% vs 持有 +27.3%;BTC X1V 修复段 +11–31% vs 持有 +60–103%)。X1V 是真钱要跑的 ① + ③,它的牛年代价也是同一件事。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-190.json"
+  ],
+  "acceptance": {
+    "check": "**照台账 S-679 一字不改**(变体定义、资产分组与时间段、熊市门槛、判据门槛)。① 把 `src/data/signals/tom.py` 的 `trade_path` 在研究脚本里参数化重写(只读 import 原函数做对照,不改 src):参数 = 反弹止盈(B / V2 = 1.15,V1 = 无)、多头进场(B / V1 = 收盘 > 200 日线且 > 前 20 日最高;V2 = 收盘 > 前 55 日最高收盘);**先证明 B 与 `tom.trade_path(close, \"rally\", 0.0, exit_mode=\"l20\", vol=True)` 在 BTC 全史(asset_mcap_daily price)上逐日一致,不一致就停、报差异。**② 资产:G1 NASDAQCOM(数据根 research/crash_atlas/fred/,只用 1971-02 → 2014-12);G2 数据根 research/s677/_bv_daily.jsonl(≥ 400 根的对;XRP / BNB / LTC / BCH / ADA / LINK / DOGE / XLM / TRX / ETC / XMR / ATOM 这 12 个只用 2019-05-31 之前);G3 World50 候选池个股(ohlcv_daily source = eodhd、asset_class = Equity,复权收盘;publishable key,翻页带 order=symbol.asc,trade_date.asc)。BTC / ETH 只报。③ 熊市段用 `crash_atlas_common.bear_episodes`(股票 / 指数 0.20、加密 0.50),修复 / 下跌用 `phase_returns`(pre_days=60, post_days=120)套在各变体自己的净值上;净值从第 201 天起,成本 10 bp × |Δ 敞口|,现金 0(用 `tom.trade_returns` 的同一口径,funding 传 None 时按它的默认)。④ 判据逐组算,报每组每变体:段中位「修复差」、段中位「下跌差」、资产中位 Calmar 变化,是否过;以及只报项(年化 / 回撤 / 平均敞口 / 换手 / 修复抓到持有的比例 / 假回场次数 / 挪一天)。",
+    "expect": "脚本 docs/research/t190_s679_reentry.py;结果 docs/research/t190_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-190_s679_reentry.md:开头一张「变体 × 组 × 三条判据」表,然后 BTC / ETH 只报、逐组细表、协议问题、未做。按 S-679 判定写清楚每个变体过几组;不写推荐买卖的话。in_review,推 lane-a/T-190。新分支 `git switch -c lane-a/T-190 origin/main`。"
+  },
+  "prior_value": "X1V(B)在 BTC 2015–2026:年化 72.8% / 回撤 −38.7%(S-601);修复段明显落后持有(S-675 C 道风格表)。没有人测过换回场规则。",
+  "notes": ""
+}
