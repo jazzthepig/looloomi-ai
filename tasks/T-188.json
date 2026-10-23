@@ -1,0 +1,27 @@
+{
+  "id": "T-188",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-23",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "title": "灵活组合的非加密腿(金 20% / 股 30%)在链上用什么持有:代币化黄金与股票 / 指数工具的深度、成本、申赎、香港可得性、跟踪误差 —— 一张表给 Jazz 定场所",
+  "source": "Seth 10-23 高维复盘(WEEKLY_REVIEW 2026-10-23 §4 第 9 条):Jazz 10-16/18 定的灵活组合 −25% 档 = X1V 30 / 股 30 / 金 20 / 现金 20,执行器只会在 HL 上做 BTC / ETH 现货与 R-v2 永续 —— 金和股这两条腿没有执行场所,灵活组合真钱化卡在这里。CLAUDE.md:链跟着流动性走,① 的工具不动(持有 = 现货 / 代币化实物,永续是合成多头要付资金费)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-188.json"
+  ],
+  "acceptance": {
+    "check": "纯调研 + 公开数据测量,不注册、不连钱包、不下单、不填任何表单。候选至少覆盖:黄金 —— PAXG、XAUT(各自主链与主要场所,含 HL 现货若有)、HL 上的黄金永续(HIP-3 或原生,若有);美股 / 指数 —— Ondo Global Markets 代币、xStocks(Backed)、其他按 1:1 托管的代币化股票 / ETF、HL HIP-3 股指 / 个股永续(用 HL 公开 info 接口列 perpDexs 与各 dex 的币)、其他链上 RWA 永续(只列,标「合成」)。每个工具一行:发行方与托管 / 法律结构;链与主要场所;近 30 天日均成交额;±0.5% 与 ±1% 盘口深度(有订单簿的场所实测,AMM 按池子估算并写明方法);典型点差;交易与申赎费用、申赎最小额与时效;**持有资格:香港个人 / 香港公司能不能合法持有与申赎(发行方条款原文链接;美国人限制、KYC 要求)**;跟踪误差 —— 近 90 天日收益对标的(黄金用库里 GLD / XAU 序列,股票用 ohlcv_daily eodhd 同名或对应 ETF)的相关与年化跟踪误差;永续版本另报近 30 天资金费年化(多头的持有成本,对照 CLAUDE.md「永续做多 ≠ 持有」);主要风险(托管、预言机、暂停申赎的历史)。每个数带取数日期与来源链接,查不到写「查不到」,不估。",
+    "expect": "脚本(若有测量)docs/research/t188_venues.py;结果 docs/research/t188_venues.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-188_offcrypto_venues.md:开头一张总表(工具 × 深度 / 成本 / 香港可得性 / 跟踪误差 / 是否现货持有),然后每条腿给「按 $10k / $100k / $1M 一次买入的预计总成本」;末尾写「哪些现在就能用、哪些要先开户 / 签协议」—— 只陈述事实,不写推荐买卖的话,选哪个是 Jazz 的事。in_review,推 lane-b/T-188。新分支 `git switch -c lane-b/T-188 origin/main`。"
+  },
+  "prior_value": "没有。S-606 / S-609 用 World50 回放与黄金序列算过这两条腿的收益与回撤,但从没问过「在链上买得到吗、要花多少、香港能不能持有」。",
+  "notes": ""
+}

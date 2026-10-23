@@ -17,6 +17,7 @@
 | claimed | T-122 | seth | 执行器核心:X1V 目标 → 订单计划 → 只算不发(dry-run)→ 写 execution_intents;收盘后 1 小时内跑、灾难止损盘中盯 | dry-run 在 Railway 或云主机上跑满 2 天,每天一批意图,人工核对无误(TRADE_PATH §5 第 1–2 天) | 执行是 X1V 成立的一部分;没有它,X1V 只能按悲观摩擦列算。 |  |
 | claimed | T-133 | seth | 接 Binance Vision 免费历史档:永续 5 分钟持仓结构(未平仓量、大户多空比、主动买卖量比)+ 盘口深度带 → 日度特征表 | 表有第一行真实数据 + 判活判据 + 调度者(规则 5b 三件齐);2020-09 起回填完成;然后预注册 S-614:R 信号日的持仓结构 / 主动买卖能不能把赢家和输家分开(交 C 道)。 | Jazz 说的「结合资金流、跟踪聪明钱」在现有免费数据里能做到的最接近版本:大户多空比是聪明钱的代理,主动买卖量比是资金流,5 年历史可以直接回测,不用等。 |  |
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
+| open | T-188 | lane-b | 灵活组合的非加密腿(金 20% / 股 30%)在链上用什么持有:代币化黄金与股票 / 指数工具的深度、成本、申赎、香港可得性、跟踪误差 —— 一张表给 Jazz 定场所 | 脚本(若有测量)docs/research/t188_venues.py;结果 docs/research/t188_venues.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-188_offcrypto_venues.md:开头一张总表(工具 × 深度 / 成本 / 香港可得性 / 跟踪误差 / 是否现货持有),然后每条腿给「按 $10k / $100k / $1M 一次买入的预计总成本」;末尾写「哪些现在就能用、哪些要先开户 / 签协议」—— 只陈述事实,不写推荐买卖的话,选哪个是 Jazz 的事。in_review,推 lane-b/T-188。新分支 `git switch -c lane-b/T-188 origin/main`。 | 没有。S-606 / S-609 用 World50 回放与黄金序列算过这两条腿的收益与回撤,但从没问过「在链上买得到吗、要花多少、香港能不能持有」。 |  |
 | open | T-187 | lane-c | 崩盘图谱 · 加密(S-675):BTC 2014 起每次 −50% 熊市与 14 天 −30% 急跌之前的迹象(对基准率)、事件、情绪,和各阶段里什么风格扛得住 | 脚本 docs/research/t187_crash_atlas_crypto.py;结果 docs/research/t187_results.json(每个锚点、每个迹象的原始命中都在里面,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-187_crash_atlas_crypto.md:崩盘目录 → 迹象排名表(带基准率与零分布分位)→ 事件表(带来源)→ 情绪画像 → 风格分阶段表 → 线索候选(标「探索性」)→ 协议问题 → 未做。in_review,推 lane-c/T-187。 | 没有。崩前迹象此前只碰过 S-570(稳定币代理,探索性)和 S-673 / S-674(边际流动性定时,都不过)。这一轮是挖掘,不计试验数。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
@@ -190,4 +191,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 8 · claimed 10 · blocked 7 · in_review 5 · done 154 · dropped 3
+open 9 · claimed 10 · blocked 7 · in_review 5 · done 154 · dropped 3
