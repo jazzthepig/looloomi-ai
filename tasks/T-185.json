@@ -1,7 +1,7 @@
 {
   "id": "T-185",
   "owner": "lane-a",
-  "status": "blocked",
+  "status": "open",
   "created": "2026-10-23",
   "forbidden_paths": [
     "Shadow/",
@@ -24,6 +24,5 @@
     "expect": "脚本 docs/research/t185_crash_atlas_developed.py;结果 docs/research/t185_results.json(每个锚点、每个迹象的原始命中都在里面,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-185_crash_atlas_developed.md:崩盘目录 → 迹象排名表(带基准率与零分布分位)→ 事件表(带来源)→ 情绪画像 → 风格分阶段表 → 线索候选(标「探索性」)→ 协议问题 → 未做。in_review,推 lane-a/T-185。"
   },
   "prior_value": "没有。崩前迹象此前只碰过 S-570(稳定币代理,探索性)和 S-673 / S-674(边际流动性定时,都不过)。这一轮是挖掘,不计试验数。",
-  "notes": "",
-  "blocked_by": "Seth:内核 docs/research/crash_atlas_common.py 还没进 origin/main —— 推上去后改 open 并写 wake"
+  "notes": ""
 }
