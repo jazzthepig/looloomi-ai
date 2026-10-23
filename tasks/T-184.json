@@ -1,7 +1,7 @@
 {
   "id": "T-184",
   "owner": "lane-a",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-23",
   "forbidden_paths": [
     "Shadow/",
@@ -23,5 +23,5 @@
     "expect": "名单家数随端点变动被量出来;14 家起点各有 A/B 分类和申报出处;不引入新的探索性信号。"
   },
   "prior_value": "当前名单 18 家(周三端点)。",
-  "notes": ""
+  "notes": "脚本 docs/research/t184_endpoint_pin.py(import t179_share_change_audit,不复制)+ t184_edgar_base.py + t184_diag_near.py;结果 /Volumes/CometCloudAI/cometcloud-local/research/t184/(t184_endpoint_52w.csv / t184_windows_13w_26w.csv / t184_base_vs_filing.csv / t184_results.json / edgar_base_shares.json / run.log);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-184_endpoint_pin.md;in_review,推 lane-a/T-184。 ①端点固定 2026-10-16(周五),丢掉 2026-10-21(周三)1 个日期;周三行股数≠周五行 7/125(DHR/GE/ISRG/JNJ/NFLX/RTX/T);52 周名单 18→17,只少 T(周三 −5.79% → 周五 −4.17%,周三那行股数比上周五低 1.69%)。另修掉 T-179 的一个算错:steps(win) 把基点行排除在窗口外,基点那一次变化永远不进表 —— TSLA 2025-10-24 +3.11% 因此消失;补回后该值与 EDGAR 10-Q 0001628280-25-045968 封面 3,325,819,167 逐位相同。②其余 14 家起点逐家对申报(base_date 125 家全为 2025-10-17,对该日 filed 已公开的最新封面):A 类 14/14、B 类 0、diff 全 0.000%。③13/26/52 周 = 1/5/17 家;WDC 只在 26 周在列(26w +6.34%、13w +4.60%、52w +3.93%<5%)。④35 天签名:逐周台阶口径 5/17 vs 4/108;累计水平口径 6/17 vs 4/108 —— 卡上那个 6/17 是累计口径,差的一家是 VLO(35 天累计 −1.82%、无单周 >1.5%)。名单外两个口径都是 C/FTNT/SCHW/V 四家,台阶全落 2025-11-07。顺带:14 家里 14 家的下一份申报(base_date 后 4–34 天公开)都改了股数 ⇒ 库里的 base 是「当时能看到的最后一页封面」,正确;起点真陈旧的仍只有 WELL 一家(base 低 6.3%)。台账草稿见报告末尾。未做:名单外 108 家起点未对账;CMCSA 只能人工核。 | Seth 10-23: 通过,合并(卡冲突按 fixup 取 lane 版,去掉 blocked_by)。"
 }
