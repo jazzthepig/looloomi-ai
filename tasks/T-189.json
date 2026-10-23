@@ -1,7 +1,7 @@
 {
   "id": "T-189",
   "owner": "lane-a",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-23",
   "forbidden_paths": [
     "Shadow/",
@@ -25,5 +25,10 @@
     "expect": "脚本 docs/research/t189_s677_replicate.py;票表 docs/research/t189_tickets.csv(symbol, signal_d, entry_d, exit_d, entry_px, stop_px, exit_px, r, still);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-189_s677_replicate.md:票数、平均 R、合计 R、按年 —— 不做任何判定,判定是 Seth 对完两份之后的事。in_review,推 lane-a/T-189。新分支 `git switch -c lane-a/T-189 origin/main`。"
   },
   "prior_value": "Seth 另有一份实现(交付前不给你看);两份逐张对票,差异逐张解释 —— 这是这张卡的全部价值,所以不看对方的代码。",
-  "notes": ""
+  "notes": "实现:从 r_v2_tickets.sql 逐行直译,不看 Seth 任何脚本(4 个禁读文件全程没打开);数据只读数据根 _bv_daily.jsonl(145 对 / 48,132 根,2017-08-17→2020-08-31)+ _gate_proxy.json 的 runs。脚本 docs/research/t189_s677_replicate.py(0-based numpy)+ docs/research/t189_s677_selfcheck.py(1-based 纯 Python,SQL 直译)+ docs/research/t189_s677_sensitivity.py(读法/闸门敏感性 + 诊断);票表 docs/research/t189_tickets.csv(26 行);逐张明细含判据余量 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-189_s677_tickets.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-189_s677_replicate.md。测得:票数 26(全部已出场,still 0),平均 R +0.2689,合计 R +6.9915;按信号日 —— 2018 年 0 张,2019 年 17 张(平均 +0.4329 / 合计 +7.3591),2020 年 9 张(平均 -0.0408 / 合计 -0.3675);13 个币;出场 20 张 SMA20 / 6 张止损,平均持有 15.9 根(最长 62 根 = BTC 2019-04-02)。与台账 S-677 已报数逐位吻合:26 张 / +0.27 / +6.99 / 胜率 42% / 2019 年 17 张 +7.36R / BTC 2019-04-02 那张 +10.128R / 其余 25 张 -3.137R / 「不设闸门」33 张 +0.6470 +21.3499(闸门强制打开复算)。唯一对不上的是中位:台账 -0.21 = 排序后第 14 个值(上中位口径),标准中位(两个中位均值)= -0.2454,判为口径差不是票差。自检:两份互不相干的实现逐张一致(票数/日期/进场价/止损价/出场价/R/still 全同);四种规则读法(SQL 的 dd 366 根+mindd121 个 vs 卡复述的 365/120;不叠票严格 ei>xi vs 宽松)票表逐张不变 ⇒ 这几处不可能是分歧来源。诊断:2018 零票 = 数据长度(rn≥220 到 2018-03-24 才成立,闸门 2018-03-14 已关)× 闸门关闭,不是闸门单独造成;2018 年「闸门开着且已满 220 根」的 (币,日) 只有 10 个(BTC/ETH,2018-04-24 与 05-03→05-06),全部差在具体条件上。边界票(判据余量最小,若两份对不上先看这四张):XRP 2020-02-04、TRX 2019-04-08、ADA 2020-01-27、XLM 2020-02-05。按卡要求未做任何判定(未跑月块自助、未跑随机进场零分布、未给过/不过结论);未跑资金曲线;未写库。需要 @seth:给出他那份逐张票表以便逐张 diff,中位口径对齐(上中位 vs 标准中位)。诚实声明:台账 S-677 那节已带结果块(汇总数),实现前已读到,故非盲复现;但逐张的信号日/进场日/出场日/止损价/每张 R 台账未报,逐张对票仍是有效检验。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-10-23T16:22Z",
+    "value": "独立复现与 Seth 的 s677_rv2_oos.py 逐张一致:26 / 26 张票同币同信号日,|ΔR| 最大 1.2e-13。lane 自报台账 S-677 节里已带结果块(读规则时看到了汇总数),但两份独立实现(numpy + 1-based 纯 Python SQL 直译)逐张对上,实现层的错已排除。S-677 只报(26 < 30);S-678(加 BTC 计价对)40 张 +0.10R 不过 —— 台账 S-677 / S-678。"
+  }
 }
