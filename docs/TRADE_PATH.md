@@ -130,6 +130,12 @@ Jazz 的三步:① HL 网页「子账户」开一个(比如 `cometcloud-rv2`),�
 ② 主机上把地址加进 env 再跑 install.sh(拉代码 → 自检 → 重启):自检里 `trade_account` 是子账户、`subaccount.ok` 为 true、
 永续净值是划进去的数;③ `EXECUTOR_TICKETS_MODE` 仍是 `dry_run`,第一张票空跑对上回放后由 Jazz 改 `live`。
 
+**10-23 实测:HL 开子账户要累计成交 ≥ $100,000(HL 文档 Trading → Sub-accounts),现在开不了。** 在那之前用**另一个钱包**隔开 ——
+两个主账户互不相干,执行器不用改代码(它只认 `HL_ACCOUNT_ADDRESS` + 那个账户批准的 API 钱包):Jazz 的手动交易挪到一个新钱包
+(HL 内部转 USDC 到新地址,新账户收 1 USDC 开户费),现在这个账户和主机上已有的 API 钱包整个留给执行器 —— 主机不换钥匙、不改 env。
+前提:现在这个账户上手动开的仓先平掉或留在新钱包里重开;留下的永续 USDC ≥ 约 600(R-v2)、现货 USDC 归 X1V。
+成交量到 $100k 后再改用子账户(上面那套),届时只加一行 env。
+
 ## §4 执行器的硬约束
 
 - **Key = HL API 钱包(agent wallet)**:Jazz 在 HL 里自己创建并授权给主账户;
