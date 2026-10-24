@@ -263,6 +263,29 @@ class Venue:
         allm = self.info.all_mids() or {}
         return {s: float(allm[p]) for s, p in pairs.items() if p in allm}
 
+    def agent_check(self) -> dict[str, Any]:
+        """切 live 前:主机上这把 API 钱包是不是主账户批准的 agent(HL `userRole`;`extraAgents` 给到期时间)。不下单。
+        ok = True / False(HL 答了),None(读不到 —— 不等于不是)。只在 live 模式调用(要建交易客户端、读私钥)。"""
+        try:
+            agent = str(self.exchange().wallet.address)
+        except Exception as e:                                           # noqa: BLE001
+            return {"ok": False, "why": f"建不了交易客户端(私钥没配或不对):{type(e).__name__}: {str(e)[:120]}"}
+        try:
+            role = self.info.user_role(agent) or {}
+        except Exception as e:                                           # noqa: BLE001
+            return {"ok": None, "agent": agent, "why": f"读不到 userRole:{type(e).__name__}: {str(e)[:120]}"}
+        master = str((role.get("data") or {}).get("user") or "")
+        ok = role.get("role") == "agent" and master.lower() == self.cfg.account.lower()
+        valid_until = None
+        try:
+            for a in self.info.extra_agents(self.cfg.account) or []:
+                if str((a or {}).get("address", "")).lower() == agent.lower() and a.get("validUntil"):
+                    valid_until = dt.datetime.fromtimestamp(int(a["validUntil"]) / 1000, dt.timezone.utc).isoformat()
+        except Exception:                                                # noqa: BLE001 —— 到期时间只是附带信息
+            pass
+        return {"ok": ok, "agent": agent, "role": role.get("role"), "agent_of": master or None, "valid_until": valid_until,
+                "why": None if ok else "这把 API 钱包不是 HL_ACCOUNT_ADDRESS 批准的 agent(没批准、已过期,或被新的替换了)"}
+
     def fills_since(self, t_ms: int) -> list[dict]:
         return self.info.user_fills_by_time(self.cfg.trade_account, t_ms) or []
 
@@ -926,6 +949,8 @@ def check(ex: Executor) -> dict[str, Any]:
                            "api": ex.cfg.api, "nav_cap": ex.cfg.nav_cap, "halted": ex.halted()}
     if ex.cfg.subaccount:
         out["subaccount"] = ex.venue.subaccount_check()
+    if ex.cfg.mode == "live" or ex.cfg.tickets_mode == "live":
+        out["agent"] = ex.venue.agent_check()
     code, plan = ex.railway.plan()
     out["plan_http"] = code
     out["plan"] = {k: plan.get(k) for k in ("ok", "asof", "targets", "stop_px", "halted", "halt_status", "why")} \
@@ -985,6 +1010,20 @@ def refuse_foreign_subaccount(venue: Venue) -> None:
         log.warning("subaccount not verified at start: %s", c.get("why"))
 
 
+def refuse_unapproved_agent(venue: Venue) -> None:
+    """live 模式:HL 明确说这把 API 钱包不是主账户的 agent ⇒ 不启动(第一张真单才发现「签名被拒」太晚)。
+    dry_run 不读私钥,不查。读不到 userRole ⇒ 照常启动、记警告(HL 自己会拒没授权的签名)。"""
+    if venue.cfg.mode != "live" and venue.cfg.tickets_mode != "live":
+        return
+    c = venue.agent_check()
+    if c.get("ok") is False:
+        raise SystemExit(f"API 钱包没被主账户批准:{c.get('why')} —— 不启动")
+    if c.get("ok") is None:
+        log.warning("agent not verified at start: %s", c.get("why"))
+    else:
+        log.info("agent %s approved by %s, valid until %s", c.get("agent"), c.get("agent_of"), c.get("valid_until"))
+
+
 def main(argv: Optional[list[str]] = None) -> None:
     ap = argparse.ArgumentParser(description="CometCloud 云主机执行器")
     ap.add_argument("--check", action="store_true", help="自检一次(不下单)并发一条心跳,然后退出")
@@ -997,8 +1036,11 @@ def main(argv: Optional[list[str]] = None) -> None:
         print(json.dumps(out, ensure_ascii=False, indent=2, default=str))
         if (out.get("subaccount") or {}).get("ok") is False:
             raise SystemExit("HL_SUBACCOUNT_ADDRESS 不是这个主账户的子账户 —— 不启动")
+        if (out.get("agent") or {}).get("ok") is False:
+            raise SystemExit(f"live 模式但 API 钱包没被主账户批准:{out['agent'].get('why')} —— 不启动")
         return
     refuse_foreign_subaccount(ex.venue)
+    refuse_unapproved_agent(ex.venue)
     log.info("executor up · mode=%s · account=%s · trade_account=%s · api=%s · nav_cap=%s",
              cfg.mode, cfg.account, cfg.trade_account, cfg.api, cfg.nav_cap)
     ex._report("heartbeat", detail={"event": "start", "mode": cfg.mode, "nav_cap": cfg.nav_cap,

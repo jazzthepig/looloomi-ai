@@ -405,3 +405,51 @@ def test_a_subaccount_that_is_not_under_the_master_refuses_to_start(tmp_path):
     assert down.subaccount_check()["ok"] is None, "读不到 ≠ 不是"
     rn.refuse_foreign_subaccount(down)
     assert rn.Venue(_cfg(tmp_path), info=FakeInfo()).subaccount_check()["ok"] is None
+
+
+# ── 切 live 前:API 钱包是不是主账户批准的 agent ─────────────────────────────
+AGENT = "0x" + "77" * 20
+
+
+class RoleInfo:
+    def __init__(self, role=None, agents=None, fail=False):
+        self.role, self.agents, self.fail = role, agents, fail
+
+    def user_role(self, user):
+        if self.fail:
+            raise TimeoutError("hl down")
+        return self.role
+
+    def extra_agents(self, user):
+        return self.agents or []
+
+
+def _live_venue(tmp_path, info, tickets="live"):
+    import types
+    cfg = rn.Config({"EXECUTOR_MODE": "dry_run", "EXECUTOR_TICKETS_MODE": tickets, "HL_ACCOUNT_ADDRESS": MASTER,
+                     "EXECUTOR_TOKEN": "t", "EXECUTOR_STATE_DIR": str(tmp_path)})
+    return rn.Venue(cfg, info=info, exchange=types.SimpleNamespace(wallet=types.SimpleNamespace(address=AGENT)))
+
+
+def test_live_refuses_to_start_when_the_api_wallet_is_not_an_approved_agent(tmp_path):
+    ok = _live_venue(tmp_path, RoleInfo(role={"role": "agent", "data": {"user": MASTER.upper().replace("0X", "0x")}},
+                                        agents=[{"name": "x", "address": AGENT, "validUntil": 1830000000000}]))
+    c = ok.agent_check()
+    assert c["ok"] is True and c["agent"] == AGENT and c["valid_until"].startswith("2027-")
+    rn.refuse_unapproved_agent(ok)
+    other = _live_venue(tmp_path, RoleInfo(role={"role": "agent", "data": {"user": "0x" + "ee" * 20}}))
+    assert other.agent_check()["ok"] is False, "批准它的是别的主账户"
+    with pytest.raises(SystemExit):
+        rn.refuse_unapproved_agent(other)
+    missing = _live_venue(tmp_path, RoleInfo(role={"role": "missing"}))
+    assert missing.agent_check()["ok"] is False, "没批准 / 已过期"
+    down = _live_venue(tmp_path, RoleInfo(fail=True))
+    assert down.agent_check()["ok"] is None, "读不到 ≠ 没批准"
+    rn.refuse_unapproved_agent(down)
+
+
+def test_dry_run_never_checks_the_agent_and_never_reads_the_key(tmp_path):
+    v = rn.Venue(_cfg(tmp_path), info=RoleInfo(fail=True))
+    rn.refuse_unapproved_agent(v)                 # dry_run:直接返回,不建交易客户端
+    with pytest.raises(RuntimeError):
+        v.exchange()
