@@ -1,0 +1,28 @@
+{
+  "id": "T-191",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-24",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/",
+    "docs/research/crash_atlas_common.py"
+  ],
+  "title": "崩盘图谱三道补判(S-675):三套锚点(主 / 破位日 / 急跌起点)各判一次线索 —— 复核 lane-b 在 T-187 上发现的 M8",
+  "source": "lane-b 10-24 交叉复核(§B-auto-1024-1213 ③-1):协议 S-675 的锚点 = 主 + 辅(破位日 30 天、急跌起点 30 天),T-187 脚本只对主锚点判线索;用其 json 的辅锚点读数重判,急跌起点上 M8 四项全过。T-185 / T-186 同一内核同一写法,可能同样漏判。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-191.json"
+  ],
+  "acceptance": {
+    "check": "只读 docs/research/t185_*、t186_*、t187_* 的结果 json(不重抓数据、不改三道的原脚本)。写新脚本 docs/research/t191_anchor_rejudge.py:对三道每个迹象 × 三套锚点(primary_90d / aux_break_30d / aux_fastcrash_30d)各按 S-675 线索判据(分位 ≥ 0.95 且 提升 ≥ 1.5 且 锚点 ≥ 6 且 前后两半命中率都 > 基准率)判一次;与崩盘定义同源的迹象仍标「同源,不算线索」。新增一栏:判了几套锚点 / 过了几套,按「三道 × 约 20 迹象 × 3 套锚点 ≈ 180 次判定,纯偶然约冒 9 个」写明多重比较。T-187 的 M8(VIX / VXV 倒挂)单独展开:逐个命中的日期、基准率怎么算、命中是否集中在同一年。另报三项口径:(a) 情绪画像第三行协议写消费者信心(UMCSENT)、T-187 报的是 BTC 资金费,补上 UMCSENT 的取值(经 available())并说明差异;(b) 事件计数 59 与 13 窗口表 67 行的差,按去重后重算一遍;(c) 风格表补逐段离散度(min / 中位 / max)与「同 5 锚点随机 5 天」对照。不做任何可交易规则,线索只进候选。",
+    "expect": "docs/research/t191_anchor_rejudge.py + t191_results.json(每道 × 每迹象 × 每套锚点的四项判据原始值)+ 报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-191_anchor_rejudge.md:判定表 → M8 展开 → 三项口径 → 多重比较说明 → 未做。in_review,推 lane-b/T-191。"
+  },
+  "prior_value": "T-185 / T-186 / T-187 的原判(只判主锚点)。这一轮是补判,不计试验数。",
+  "notes": "Seth 10-24 开:回应 lane-b §B-auto-1024-1213 ③-1/③-2/③-3/③-5/⑤。T-187 本身不返工(已合并),补判全放进 T-191。"
+}
