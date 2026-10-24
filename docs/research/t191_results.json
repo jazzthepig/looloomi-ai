@@ -7507,7 +7507,637 @@
      30
     ]
    },
-   "T-185|M7_vix_gt30|aux_break": {
+   "T-185|M3|main": {
+    "rows": [
+     {
+      "anchor": "1978-09-13",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1980-02-08",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1981-05-29",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1983-06-24",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "1987-08-26",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1989-10-09",
+      "hit": 1,
+      "offset_days": 22,
+      "on_anchor_day": 0,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "1998-07-20",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2000-03-10",
+      "hit": 1,
+      "offset_days": 60,
+      "on_anchor_day": 0,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2007-10-31",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2018-08-29",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2020-02-19",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2021-11-19",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2024-12-16",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     }
+    ],
+    "n_anchors": 13,
+    "n_skipped": 1,
+    "hit_rate": 0.5384615384615384,
+    "n_hit": 7,
+    "n_hit_on_anchor_day": 5,
+    "hit_rate_strictly_before": 0.5384615384615384,
+    "n_strictly_before": 7,
+    "n_hit_but_only_on_anchor_day": 0,
+    "offset_days_list": [
+     0,
+     22,
+     0,
+     60,
+     0,
+     0,
+     0
+    ]
+   },
+   "T-185|M5|main": {
+    "rows": [
+     {
+      "anchor": "1987-08-26",
+      "hit": 1,
+      "offset_days": 10,
+      "on_anchor_day": 0,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "1989-10-09",
+      "hit": 1,
+      "offset_days": 70,
+      "on_anchor_day": 0,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "1998-07-20",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2000-03-10",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2007-10-31",
+      "hit": 1,
+      "offset_days": 42,
+      "on_anchor_day": 0,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2018-08-29",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2020-02-19",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2021-11-19",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2024-12-16",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     }
+    ],
+    "n_anchors": 9,
+    "n_skipped": 5,
+    "hit_rate": 0.3333333333333333,
+    "n_hit": 3,
+    "n_hit_on_anchor_day": 0,
+    "hit_rate_strictly_before": 0.3333333333333333,
+    "n_strictly_before": 3,
+    "n_hit_but_only_on_anchor_day": 0,
+    "offset_days_list": [
+     10,
+     70,
+     42
+    ]
+   },
+   "T-185|M7|main": {
+    "rows": [
+     {
+      "anchor": "1998-07-20",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2000-03-10",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2007-10-31",
+      "hit": 1,
+      "offset_days": 76,
+      "on_anchor_day": 0,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2018-08-29",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2020-02-19",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2021-11-19",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2024-12-16",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     }
+    ],
+    "n_anchors": 7,
+    "n_skipped": 7,
+    "hit_rate": 0.14285714285714285,
+    "n_hit": 1,
+    "n_hit_on_anchor_day": 0,
+    "hit_rate_strictly_before": 0.14285714285714285,
+    "n_strictly_before": 1,
+    "n_hit_but_only_on_anchor_day": 0,
+    "offset_days_list": [
+     76
+    ]
+   },
+   "T-185|M8|main": {
+    "rows": [
+     {
+      "anchor": "2018-08-29",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2020-02-19",
+      "hit": 1,
+      "offset_days": 17,
+      "on_anchor_day": 0,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2021-11-19",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2024-12-16",
+      "hit": 1,
+      "offset_days": 41,
+      "on_anchor_day": 0,
+      "strictly_before": 1
+     }
+    ],
+    "n_anchors": 4,
+    "n_skipped": 10,
+    "hit_rate": 0.5,
+    "n_hit": 2,
+    "n_hit_on_anchor_day": 0,
+    "hit_rate_strictly_before": 0.5,
+    "n_strictly_before": 2,
+    "n_hit_but_only_on_anchor_day": 0,
+    "offset_days_list": [
+     17,
+     41
+    ]
+   },
+   "T-185|M9|main": {
+    "rows": [
+     {
+      "anchor": "2007-10-31",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2018-08-29",
+      "hit": 1,
+      "offset_days": 58,
+      "on_anchor_day": 0,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2020-02-19",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2021-11-19",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2024-12-16",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     }
+    ],
+    "n_anchors": 5,
+    "n_skipped": 9,
+    "hit_rate": 0.4,
+    "n_hit": 2,
+    "n_hit_on_anchor_day": 1,
+    "hit_rate_strictly_before": 0.4,
+    "n_strictly_before": 2,
+    "n_hit_but_only_on_anchor_day": 0,
+    "offset_days_list": [
+     58,
+     0
+    ]
+   },
+   "T-185|M3|aux_break": {
+    "rows": [
+     {
+      "anchor": "1978-10-31",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1980-03-27",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1981-09-25",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1984-02-06",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1987-10-19",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1990-08-21",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "1998-08-31",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2000-04-12",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2000-10-06",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2001-02-21",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2001-08-21",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2002-05-02",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2008-02-06",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2009-03-03",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2018-12-21",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2020-03-12",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2022-03-07",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2022-10-11",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2025-04-04",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     }
+    ],
+    "n_anchors": 19,
+    "n_skipped": 1,
+    "hit_rate": 0.42105263157894735,
+    "n_hit": 8,
+    "n_hit_on_anchor_day": 8,
+    "hit_rate_strictly_before": 0.42105263157894735,
+    "n_strictly_before": 8,
+    "n_hit_but_only_on_anchor_day": 0,
+    "offset_days_list": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "T-185|M5|aux_break": {
+    "rows": [
+     {
+      "anchor": "1987-10-19",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1990-08-21",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1998-08-31",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2000-04-12",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2000-10-06",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2001-02-21",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2001-08-21",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2002-05-02",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2008-02-06",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2009-03-03",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2018-12-21",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2020-03-12",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2022-03-07",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2022-10-11",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2025-04-04",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 0
+     }
+    ],
+    "n_anchors": 15,
+    "n_skipped": 5,
+    "hit_rate": 0.3333333333333333,
+    "n_hit": 5,
+    "n_hit_on_anchor_day": 5,
+    "hit_rate_strictly_before": 0.26666666666666666,
+    "n_strictly_before": 4,
+    "n_hit_but_only_on_anchor_day": 1,
+    "offset_days_list": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "T-185|M7|aux_break": {
     "rows": [
      {
       "anchor": "1990-08-21",
@@ -7628,7 +8258,7 @@
      0
     ]
    },
-   "T-185|M8_vix_over_vxv_gt1|aux_break": {
+   "T-185|M8|aux_break": {
     "rows": [
      {
       "anchor": "2008-02-06",
@@ -7698,52 +8328,52 @@
      0
     ]
    },
-   "T-185|M7_vix_gt30|main": {
+   "T-185|M9|aux_break": {
     "rows": [
      {
-      "anchor": "1998-07-20",
-      "hit": 0,
-      "offset_days": null,
-      "on_anchor_day": 0,
-      "strictly_before": 0
-     },
-     {
-      "anchor": "2000-03-10",
-      "hit": 0,
-      "offset_days": null,
-      "on_anchor_day": 0,
-      "strictly_before": 0
-     },
-     {
-      "anchor": "2007-10-31",
+      "anchor": "2008-02-06",
       "hit": 1,
-      "offset_days": 76,
+      "offset_days": 21,
       "on_anchor_day": 0,
       "strictly_before": 1
      },
      {
-      "anchor": "2018-08-29",
+      "anchor": "2009-03-03",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2018-12-21",
       "hit": 0,
       "offset_days": null,
       "on_anchor_day": 0,
       "strictly_before": 0
      },
      {
-      "anchor": "2020-02-19",
+      "anchor": "2020-03-12",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2022-03-07",
       "hit": 0,
       "offset_days": null,
       "on_anchor_day": 0,
       "strictly_before": 0
      },
      {
-      "anchor": "2021-11-19",
-      "hit": 0,
-      "offset_days": null,
-      "on_anchor_day": 0,
-      "strictly_before": 0
+      "anchor": "2022-10-11",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
      },
      {
-      "anchor": "2024-12-16",
+      "anchor": "2025-04-04",
       "hit": 0,
       "offset_days": null,
       "on_anchor_day": 0,
@@ -7751,62 +8381,974 @@
      }
     ],
     "n_anchors": 7,
-    "n_skipped": 7,
-    "hit_rate": 0.14285714285714285,
-    "n_hit": 1,
-    "n_hit_on_anchor_day": 0,
-    "hit_rate_strictly_before": 0.14285714285714285,
-    "n_strictly_before": 1,
-    "n_hit_but_only_on_anchor_day": 0,
+    "n_skipped": 13,
+    "hit_rate": 0.5714285714285714,
+    "n_hit": 4,
+    "n_hit_on_anchor_day": 3,
+    "hit_rate_strictly_before": 0.42857142857142855,
+    "n_strictly_before": 3,
+    "n_hit_but_only_on_anchor_day": 1,
     "offset_days_list": [
-     76
+     21,
+     0,
+     0,
+     0
     ]
    },
-   "T-185|M8_vix_over_vxv_gt1|main": {
+   "T-185|M3|aux_fast": {
     "rows": [
      {
-      "anchor": "2018-08-29",
+      "anchor": "1978-10-10",
       "hit": 0,
       "offset_days": null,
       "on_anchor_day": 0,
       "strictly_before": 0
      },
      {
-      "anchor": "2020-02-19",
+      "anchor": "1979-10-05",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1980-03-03",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1987-10-02",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1990-07-23",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "1996-07-01",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1997-10-13",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1998-08-17",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2000-03-21",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2000-07-14",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2000-09-19",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2000-11-19",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2001-01-26",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2001-06-05",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2001-08-24",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2002-04-19",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2002-07-09",
+      "hit": 1,
+      "offset_days": 21,
+      "on_anchor_day": 0,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2002-09-10",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2007-12-25",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2008-09-03",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2008-11-03",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2009-01-06",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2010-04-23",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2011-07-22",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2015-08-10",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2015-12-30",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2018-12-10",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2020-02-13",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2022-01-11",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2022-04-25",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2022-09-09",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2024-07-22",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2025-03-21",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     }
+    ],
+    "n_anchors": 33,
+    "n_skipped": 2,
+    "hit_rate": 0.3939393939393939,
+    "n_hit": 13,
+    "n_hit_on_anchor_day": 12,
+    "hit_rate_strictly_before": 0.3939393939393939,
+    "n_strictly_before": 13,
+    "n_hit_but_only_on_anchor_day": 0,
+    "offset_days_list": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     21,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "T-185|M5|aux_fast": {
+    "rows": [
+     {
+      "anchor": "1987-10-02",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1990-07-23",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1996-07-01",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1997-10-13",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1998-08-17",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2000-03-21",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2000-07-14",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2000-09-19",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2000-11-19",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2001-01-26",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2001-06-05",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2001-08-24",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2002-04-19",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2002-07-09",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2002-09-10",
+      "hit": 1,
+      "offset_days": 28,
+      "on_anchor_day": 0,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2007-12-25",
+      "hit": 1,
+      "offset_days": 13,
+      "on_anchor_day": 0,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2008-09-03",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2008-11-03",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2009-01-06",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2010-04-23",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2011-07-22",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2015-08-10",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2015-12-30",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2018-12-10",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2020-02-13",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2022-01-11",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2022-04-25",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2022-09-09",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2024-07-22",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2025-03-21",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     }
+    ],
+    "n_anchors": 30,
+    "n_skipped": 5,
+    "hit_rate": 0.13333333333333333,
+    "n_hit": 4,
+    "n_hit_on_anchor_day": 2,
+    "hit_rate_strictly_before": 0.13333333333333333,
+    "n_strictly_before": 4,
+    "n_hit_but_only_on_anchor_day": 0,
+    "offset_days_list": [
+     28,
+     13,
+     0,
+     0
+    ]
+   },
+   "T-185|M7|aux_fast": {
+    "rows": [
+     {
+      "anchor": "1990-07-23",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1996-07-01",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1997-10-13",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "1998-08-17",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2000-03-21",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2000-07-14",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2000-09-19",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2000-11-19",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2001-01-26",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2001-06-05",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2001-08-24",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2002-04-19",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2002-07-09",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2002-09-10",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2007-12-25",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2008-09-03",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2008-11-03",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2009-01-06",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2010-04-23",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2011-07-22",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2015-08-10",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2015-12-30",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2018-12-10",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2020-02-13",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2022-01-11",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2022-04-25",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2022-09-09",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2024-07-22",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2025-03-21",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     }
+    ],
+    "n_anchors": 29,
+    "n_skipped": 6,
+    "hit_rate": 0.1724137931034483,
+    "n_hit": 5,
+    "n_hit_on_anchor_day": 5,
+    "hit_rate_strictly_before": 0.13793103448275862,
+    "n_strictly_before": 4,
+    "n_hit_but_only_on_anchor_day": 1,
+    "offset_days_list": [
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "T-185|M8|aux_fast": {
+    "rows": [
+     {
+      "anchor": "2008-09-03",
+      "hit": 1,
+      "offset_days": 30,
+      "on_anchor_day": 0,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2008-11-03",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2009-01-06",
+      "hit": 1,
+      "offset_days": 12,
+      "on_anchor_day": 0,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2010-04-23",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2011-07-22",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2015-08-10",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2015-12-30",
       "hit": 1,
       "offset_days": 17,
       "on_anchor_day": 0,
       "strictly_before": 1
      },
      {
-      "anchor": "2021-11-19",
+      "anchor": "2018-12-10",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2020-02-13",
+      "hit": 1,
+      "offset_days": 11,
+      "on_anchor_day": 0,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2022-01-11",
       "hit": 0,
       "offset_days": null,
       "on_anchor_day": 0,
       "strictly_before": 0
      },
      {
-      "anchor": "2024-12-16",
+      "anchor": "2022-04-25",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2022-09-09",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2024-07-22",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2025-03-21",
       "hit": 1,
-      "offset_days": 41,
+      "offset_days": 8,
       "on_anchor_day": 0,
       "strictly_before": 1
      }
     ],
-    "n_anchors": 4,
-    "n_skipped": 10,
+    "n_anchors": 14,
+    "n_skipped": 21,
     "hit_rate": 0.5,
-    "n_hit": 2,
-    "n_hit_on_anchor_day": 0,
+    "n_hit": 7,
+    "n_hit_on_anchor_day": 2,
     "hit_rate_strictly_before": 0.5,
-    "n_strictly_before": 2,
+    "n_strictly_before": 7,
     "n_hit_but_only_on_anchor_day": 0,
     "offset_days_list": [
+     30,
+     0,
+     12,
      17,
-     41
+     0,
+     11,
+     8
+    ]
+   },
+   "T-185|M9|aux_fast": {
+    "rows": [
+     {
+      "anchor": "2007-12-25",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2008-09-03",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2008-11-03",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2009-01-06",
+      "hit": 1,
+      "offset_days": 27,
+      "on_anchor_day": 0,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2010-04-23",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2011-07-22",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2015-08-10",
+      "hit": 1,
+      "offset_days": 5,
+      "on_anchor_day": 0,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2015-12-30",
+      "hit": 1,
+      "offset_days": 9,
+      "on_anchor_day": 0,
+      "strictly_before": 1
+     },
+     {
+      "anchor": "2018-12-10",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2020-02-13",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2022-01-11",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2022-04-25",
+      "hit": 1,
+      "offset_days": 0,
+      "on_anchor_day": 1,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2022-09-09",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2024-07-22",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     },
+     {
+      "anchor": "2025-03-21",
+      "hit": 0,
+      "offset_days": null,
+      "on_anchor_day": 0,
+      "strictly_before": 0
+     }
+    ],
+    "n_anchors": 15,
+    "n_skipped": 20,
+    "hit_rate": 0.4,
+    "n_hit": 6,
+    "n_hit_on_anchor_day": 3,
+    "hit_rate_strictly_before": 0.3333333333333333,
+    "n_strictly_before": 5,
+    "n_hit_but_only_on_anchor_day": 1,
+    "offset_days_list": [
+     0,
+     0,
+     27,
+     5,
+     9,
+     0
     ]
    }
-  }
+  },
+  "t185_sign_source": "重建 + 与 T-185 原读数对账"
  },
  "clue_offset_crosscheck": [
   {
@@ -7820,10 +9362,17 @@
    "base_rate": 0.31955667176239355,
    "lift": 1.6850267449959915,
    "pctile": 0.96425,
-   "offset_case": null,
+   "offset_case": "T-185|M3|main",
    "counted_in_multcomp": true,
-   "checked": false,
-   "note": "本轮只重算了 M7 / M8(波动类)的亮灯序列,这条线索没查锚点自亮"
+   "checked": true,
+   "n_anchors_audited": 13,
+   "n_skipped_audited": 1,
+   "n_hit_on_anchor_day": 5,
+   "n_hit_but_only_on_anchor_day": 0,
+   "hit_rate_strictly_before": 0.5384615384615384,
+   "strict_lift": 1.6850267449959915,
+   "strict_survives_lift": true,
+   "strict_survives_beats_base": true
   },
   {
    "task": "T-185",
@@ -7836,10 +9385,17 @@
    "base_rate": 0.12042486976523915,
    "lift": 2.7679775280898875,
    "pctile": 0.98,
-   "offset_case": null,
+   "offset_case": "T-185|M5|aux_break",
    "counted_in_multcomp": true,
-   "checked": false,
-   "note": "本轮只重算了 M7 / M8(波动类)的亮灯序列,这条线索没查锚点自亮"
+   "checked": true,
+   "n_anchors_audited": 15,
+   "n_skipped_audited": 5,
+   "n_hit_on_anchor_day": 5,
+   "n_hit_but_only_on_anchor_day": 1,
+   "hit_rate_strictly_before": 0.26666666666666666,
+   "strict_lift": 2.21438202247191,
+   "strict_survives_lift": true,
+   "strict_survives_beats_base": true
   },
   {
    "task": "T-185",
@@ -7852,7 +9408,7 @@
    "base_rate": 0.18654935878317924,
    "lift": 3.4460431654676262,
    "pctile": 1.0,
-   "offset_case": "T-185|M7_vix_gt30|aux_break",
+   "offset_case": "T-185|M7|aux_break",
    "counted_in_multcomp": true,
    "checked": true,
    "n_anchors_audited": 14,
@@ -7875,7 +9431,7 @@
    "base_rate": 0.37920489296636084,
    "lift": 2.6370967741935485,
    "pctile": 1.0,
-   "offset_case": "T-185|M8_vix_over_vxv_gt1|aux_break",
+   "offset_case": "T-185|M8|aux_break",
    "counted_in_multcomp": true,
    "checked": true,
    "n_anchors_audited": 7,
@@ -7898,10 +9454,17 @@
    "base_rate": 0.2331356049110222,
    "lift": 2.4510566356720203,
    "pctile": 0.981,
-   "offset_case": null,
+   "offset_case": "T-185|M9|aux_break",
    "counted_in_multcomp": true,
-   "checked": false,
-   "note": "本轮只重算了 M7 / M8(波动类)的亮灯序列,这条线索没查锚点自亮"
+   "checked": true,
+   "n_anchors_audited": 7,
+   "n_skipped_audited": 13,
+   "n_hit_on_anchor_day": 3,
+   "n_hit_but_only_on_anchor_day": 1,
+   "hit_rate_strictly_before": 0.42857142857142855,
+   "strict_lift": 1.8382924767540152,
+   "strict_survives_lift": true,
+   "strict_survives_beats_base": true
   },
   {
    "task": "T-186",
@@ -8007,6 +9570,420 @@
    "strict_survives_beats_base": true
   }
  ],
+ "t185_sign_rebuild_reconcile": {
+  "note": "重建序列跑内核 sign_lift(seed=675, n_shift=2000)与 T-185 原读数对账",
+  "cases": {
+   "M3|main": {
+    "rebuilt": {
+     "n_anchors": 13,
+     "n_skipped": 1,
+     "hit_rate": 0.5384615384615384,
+     "base_rate": 0.31955667176239355,
+     "lift": 1.6850267449959915,
+     "pctile": 0.96425
+    },
+    "stored": {
+     "n_anchors": 13,
+     "n_skipped": 1,
+     "hit_rate": 0.5384615384615384,
+     "base_rate": 0.31955667176239355,
+     "lift": 1.6850267449959915,
+     "pctile": 0.96425
+    },
+    "abs_diff": {
+     "hit_rate": 0.0,
+     "base_rate": 0.0,
+     "lift": 0.0,
+     "pctile": 0.0
+    },
+    "n_anchors_match": true,
+    "n_skipped_match": true,
+    "max_abs_diff": 0.0
+   },
+   "M3|aux_break": {
+    "rebuilt": {
+     "n_anchors": 19,
+     "n_skipped": 1,
+     "hit_rate": 0.42105263157894735,
+     "base_rate": 0.2779712668698302,
+     "lift": 1.514734369204138,
+     "pctile": 0.914
+    },
+    "stored": {
+     "n_anchors": 19,
+     "n_skipped": 1,
+     "hit_rate": 0.42105263157894735,
+     "base_rate": 0.2779712668698302,
+     "lift": 1.514734369204138,
+     "pctile": 0.914
+    },
+    "abs_diff": {
+     "hit_rate": 0.0,
+     "base_rate": 0.0,
+     "lift": 0.0,
+     "pctile": 0.0
+    },
+    "n_anchors_match": true,
+    "n_skipped_match": true,
+    "max_abs_diff": 0.0
+   },
+   "M3|aux_fast": {
+    "rebuilt": {
+     "n_anchors": 33,
+     "n_skipped": 2,
+     "hit_rate": 0.3939393939393939,
+     "base_rate": 0.2779712668698302,
+     "lift": 1.4171946560356896,
+     "pctile": 0.86975
+    },
+    "stored": {
+     "n_anchors": 33,
+     "n_skipped": 2,
+     "hit_rate": 0.3939393939393939,
+     "base_rate": 0.2779712668698302,
+     "lift": 1.4171946560356896,
+     "pctile": 0.86975
+    },
+    "abs_diff": {
+     "hit_rate": 0.0,
+     "base_rate": 0.0,
+     "lift": 0.0,
+     "pctile": 0.0
+    },
+    "n_anchors_match": true,
+    "n_skipped_match": true,
+    "max_abs_diff": 0.0
+   },
+   "M5|main": {
+    "rebuilt": {
+     "n_anchors": 9,
+     "n_skipped": 5,
+     "hit_rate": 0.3333333333333333,
+     "base_rate": 0.20501324638271856,
+     "lift": 1.6259111994698474,
+     "pctile": 0.7942499999999999
+    },
+    "stored": {
+     "n_anchors": 9,
+     "n_skipped": 5,
+     "hit_rate": 0.3333333333333333,
+     "base_rate": 0.20501324638271856,
+     "lift": 1.6259111994698474,
+     "pctile": 0.7942499999999999
+    },
+    "abs_diff": {
+     "hit_rate": 0.0,
+     "base_rate": 0.0,
+     "lift": 0.0,
+     "pctile": 0.0
+    },
+    "n_anchors_match": true,
+    "n_skipped_match": true,
+    "max_abs_diff": 0.0
+   },
+   "M5|aux_break": {
+    "rebuilt": {
+     "n_anchors": 15,
+     "n_skipped": 5,
+     "hit_rate": 0.3333333333333333,
+     "base_rate": 0.12042486976523915,
+     "lift": 2.7679775280898875,
+     "pctile": 0.98
+    },
+    "stored": {
+     "n_anchors": 15,
+     "n_skipped": 5,
+     "hit_rate": 0.3333333333333333,
+     "base_rate": 0.12042486976523915,
+     "lift": 2.7679775280898875,
+     "pctile": 0.98
+    },
+    "abs_diff": {
+     "hit_rate": 0.0,
+     "base_rate": 0.0,
+     "lift": 0.0,
+     "pctile": 0.0
+    },
+    "n_anchors_match": true,
+    "n_skipped_match": true,
+    "max_abs_diff": 0.0
+   },
+   "M5|aux_fast": {
+    "rebuilt": {
+     "n_anchors": 30,
+     "n_skipped": 5,
+     "hit_rate": 0.13333333333333333,
+     "base_rate": 0.12042486976523915,
+     "lift": 1.107191011235955,
+     "pctile": 0.5922499999999999
+    },
+    "stored": {
+     "n_anchors": 30,
+     "n_skipped": 5,
+     "hit_rate": 0.13333333333333333,
+     "base_rate": 0.12042486976523915,
+     "lift": 1.107191011235955,
+     "pctile": 0.5922499999999999
+    },
+    "abs_diff": {
+     "hit_rate": 0.0,
+     "base_rate": 0.0,
+     "lift": 0.0,
+     "pctile": 0.0
+    },
+    "n_anchors_match": true,
+    "n_skipped_match": true,
+    "max_abs_diff": 0.0
+   },
+   "M7|main": {
+    "rebuilt": {
+     "n_anchors": 7,
+     "n_skipped": 7,
+     "hit_rate": 0.14285714285714285,
+     "base_rate": 0.31073996405032955,
+     "lift": 0.4597321213373274,
+     "pctile": 0.17775000000000002
+    },
+    "stored": {
+     "n_anchors": 7,
+     "n_skipped": 7,
+     "hit_rate": 0.14285714285714285,
+     "base_rate": 0.31073996405032955,
+     "lift": 0.4597321213373274,
+     "pctile": 0.17775000000000002
+    },
+    "abs_diff": {
+     "hit_rate": 0.0,
+     "base_rate": 0.0,
+     "lift": 0.0,
+     "pctile": 0.0
+    },
+    "n_anchors_match": true,
+    "n_skipped_match": true,
+    "max_abs_diff": 0.0
+   },
+   "M7|aux_break": {
+    "rebuilt": {
+     "n_anchors": 14,
+     "n_skipped": 6,
+     "hit_rate": 0.6428571428571429,
+     "base_rate": 0.18654935878317924,
+     "lift": 3.4460431654676262,
+     "pctile": 1.0
+    },
+    "stored": {
+     "n_anchors": 14,
+     "n_skipped": 6,
+     "hit_rate": 0.6428571428571429,
+     "base_rate": 0.18654935878317924,
+     "lift": 3.4460431654676262,
+     "pctile": 1.0
+    },
+    "abs_diff": {
+     "hit_rate": 0.0,
+     "base_rate": 0.0,
+     "lift": 0.0,
+     "pctile": 0.0
+    },
+    "n_anchors_match": true,
+    "n_skipped_match": true,
+    "max_abs_diff": 0.0
+   },
+   "M7|aux_fast": {
+    "rebuilt": {
+     "n_anchors": 29,
+     "n_skipped": 6,
+     "hit_rate": 0.1724137931034483,
+     "base_rate": 0.18654935878317924,
+     "lift": 0.9242261363323135,
+     "pctile": 0.475
+    },
+    "stored": {
+     "n_anchors": 29,
+     "n_skipped": 6,
+     "hit_rate": 0.1724137931034483,
+     "base_rate": 0.18654935878317924,
+     "lift": 0.9242261363323135,
+     "pctile": 0.475
+    },
+    "abs_diff": {
+     "hit_rate": 0.0,
+     "base_rate": 0.0,
+     "lift": 0.0,
+     "pctile": 0.0
+    },
+    "n_anchors_match": true,
+    "n_skipped_match": true,
+    "max_abs_diff": 0.0
+   },
+   "M8|main": {
+    "rebuilt": {
+     "n_anchors": 4,
+     "n_skipped": 10,
+     "hit_rate": 0.5,
+     "base_rate": 0.672249155281328,
+     "lift": 0.7437718531468532,
+     "pctile": 0.2485
+    },
+    "stored": {
+     "n_anchors": 4,
+     "n_skipped": 10,
+     "hit_rate": 0.5,
+     "base_rate": 0.672249155281328,
+     "lift": 0.7437718531468532,
+     "pctile": 0.2485
+    },
+    "abs_diff": {
+     "hit_rate": 0.0,
+     "base_rate": 0.0,
+     "lift": 0.0,
+     "pctile": 0.0
+    },
+    "n_anchors_match": true,
+    "n_skipped_match": true,
+    "max_abs_diff": 0.0
+   },
+   "M8|aux_break": {
+    "rebuilt": {
+     "n_anchors": 7,
+     "n_skipped": 13,
+     "hit_rate": 1.0,
+     "base_rate": 0.37920489296636084,
+     "lift": 2.6370967741935485,
+     "pctile": 1.0
+    },
+    "stored": {
+     "n_anchors": 7,
+     "n_skipped": 13,
+     "hit_rate": 1.0,
+     "base_rate": 0.37920489296636084,
+     "lift": 2.6370967741935485,
+     "pctile": 1.0
+    },
+    "abs_diff": {
+     "hit_rate": 0.0,
+     "base_rate": 0.0,
+     "lift": 0.0,
+     "pctile": 0.0
+    },
+    "n_anchors_match": true,
+    "n_skipped_match": true,
+    "max_abs_diff": 0.0
+   },
+   "M8|aux_fast": {
+    "rebuilt": {
+     "n_anchors": 14,
+     "n_skipped": 21,
+     "hit_rate": 0.5,
+     "base_rate": 0.37920489296636084,
+     "lift": 1.3185483870967742,
+     "pctile": 0.8205
+    },
+    "stored": {
+     "n_anchors": 14,
+     "n_skipped": 21,
+     "hit_rate": 0.5,
+     "base_rate": 0.37920489296636084,
+     "lift": 1.3185483870967742,
+     "pctile": 0.8205
+    },
+    "abs_diff": {
+     "hit_rate": 0.0,
+     "base_rate": 0.0,
+     "lift": 0.0,
+     "pctile": 0.0
+    },
+    "n_anchors_match": true,
+    "n_skipped_match": true,
+    "max_abs_diff": 0.0
+   },
+   "M9|main": {
+    "rebuilt": {
+     "n_anchors": 5,
+     "n_skipped": 9,
+     "hit_rate": 0.4,
+     "base_rate": 0.38711920990402005,
+     "lift": 1.0332734459216673,
+     "pctile": 0.53825
+    },
+    "stored": {
+     "n_anchors": 5,
+     "n_skipped": 9,
+     "hit_rate": 0.4,
+     "base_rate": 0.38711920990402005,
+     "lift": 1.0332734459216673,
+     "pctile": 0.53825
+    },
+    "abs_diff": {
+     "hit_rate": 0.0,
+     "base_rate": 0.0,
+     "lift": 0.0,
+     "pctile": 0.0
+    },
+    "n_anchors_match": true,
+    "n_skipped_match": true,
+    "max_abs_diff": 0.0
+   },
+   "M9|aux_break": {
+    "rebuilt": {
+     "n_anchors": 7,
+     "n_skipped": 13,
+     "hit_rate": 0.5714285714285714,
+     "base_rate": 0.2331356049110222,
+     "lift": 2.4510566356720203,
+     "pctile": 0.981
+    },
+    "stored": {
+     "n_anchors": 7,
+     "n_skipped": 13,
+     "hit_rate": 0.5714285714285714,
+     "base_rate": 0.2331356049110222,
+     "lift": 2.4510566356720203,
+     "pctile": 0.981
+    },
+    "abs_diff": {
+     "hit_rate": 0.0,
+     "base_rate": 0.0,
+     "lift": 0.0,
+     "pctile": 0.0
+    },
+    "n_anchors_match": true,
+    "n_skipped_match": true,
+    "max_abs_diff": 0.0
+   },
+   "M9|aux_fast": {
+    "rebuilt": {
+     "n_anchors": 15,
+     "n_skipped": 20,
+     "hit_rate": 0.4,
+     "base_rate": 0.2331356049110222,
+     "lift": 1.7157396449704143,
+     "pctile": 0.9177500000000001
+    },
+    "stored": {
+     "n_anchors": 15,
+     "n_skipped": 20,
+     "hit_rate": 0.4,
+     "base_rate": 0.2331356049110222,
+     "lift": 1.7157396449704143,
+     "pctile": 0.9177500000000001
+    },
+    "abs_diff": {
+     "hit_rate": 0.0,
+     "base_rate": 0.0,
+     "lift": 0.0,
+     "pctile": 0.0
+    },
+    "n_anchors_match": true,
+    "n_skipped_match": true,
+    "max_abs_diff": 0.0
+   }
+  },
+  "n_cases": 15,
+  "n_cases_match": 15,
+  "all_match": true,
+  "mismatches": []
+ },
  "caliber_a_umcsent": {
   "series": "UMCSENT(密歇根消费者信心;FRED 属期月初、终值月底发布 ⇒ available() 滞后 31 天;to_calendar 上限 40 天)",
   "raw_monthly_span": [
@@ -8915,7 +10892,7 @@
   "没有改三道的原脚本、没有重抓 FRED / 事件数据;三道 json 只读。",
   "没有把任何线索变成可交易规则;线索只进候选名单。",
   "T-186 的 FX 锚点(fx_start_30d / fx_hit_30d)与 eem_peak_all_90d 稳健性锚点没有算进三套锚点的多重比较计数(它们是 EM 独有的第四/第五类锚点);它们的额外通过项在 §2.2 与 §4 照报读数,但没单独做锚点自亮审计。",
-  "锚点自亮审计只重建了 M7 / M8(波动类)的亮灯序列 ⇒ 6 条线索里有 3 条(T-185 M3 / M5 / M9)的「剔掉锚点当天后还剩多少」本轮查不了。",
+  "锚点自亮审计只覆盖 T-185 的 M3 / M5 / M7 / M8 / M9 与 T-187 的 M7 / M8 —— T-186 的迹象(含那 5 个额外通过项)与 T-185 的其余迹象没有重建亮灯序列,查不了。",
   "没有为任何一条线索另立预注册、没有在新数据上过零信号对照 —— 本轮所有读数都是探索性的。",
   "T-185 / T-186 的风格表只补了逐段离散度(min/中位/max),随机 5 天对照只在 T-187 上做。"
  ]

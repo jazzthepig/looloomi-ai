@@ -36,6 +36,7 @@ sys.path.insert(0, os.path.join(HERE, "..", ".."))
 
 from docs.research.crash_atlas_common import (  # noqa: E402
     available,
+    expanding_pct,
     load_fred,
     phase_returns,
     to_calendar,
@@ -470,8 +471,95 @@ def control_percentiles(t187: dict, levels: dict, n_draw: int = 200, seed: int =
     return out
 
 
+# ── T-185 迹象重建(逐字复刻 build_signals)+ 与内核读数对账 ────────────────
+def mk(deps: list[pd.Series], fn) -> pd.Series:
+    """T-185 内核的 mk():依赖对齐到日历日后判条件,依赖全有数的地方给 0/1,缺值给 NaN。
+
+    **逐字复刻** docs/research/t185_crash_atlas_developed.py 的 mk()(不 import 那个模块 ——
+    它在 import 时会跑模块级代码;复刻后用内核 sign_lift 对账,读数一致才算复刻成功)。"""
+    idx = None
+    for d in deps:
+        idx = d.index if idx is None else idx.union(d.index)
+    idx = idx.sort_values()
+    vals = np.column_stack([d.reindex(idx).values for d in deps])
+    ok = ~np.isnan(vals).any(axis=1)
+    out = np.full(len(idx), np.nan)
+    if ok.any():
+        out[ok] = np.asarray(fn(*[vals[ok, i] for i in range(len(deps))]), dtype=float)
+    return pd.Series(out, index=idx)
+
+
+def t185_sign_rebuild() -> dict:
+    """重建 T-185 的 M3 / M5 / M7 / M8 / M9 亮灯序列(口径逐字照 T-185 的 build_signals)。"""
+    t10y2y = available(load_fred("T10Y2Y", FRED_DIR), "T10Y2Y")
+    baa10y = available(load_fred("BAA10Y", FRED_DIR), "BAA10Y")
+    vix_c = to_calendar(available(load_fred("VIXCLS", FRED_DIR), "VIXCLS"), 7)
+    vxv_c = to_calendar(available(load_fred("VXVCLS", FRED_DIR), "VXVCLS"), 7)
+    usd_c = to_calendar(available(load_fred("DTWEXBGS", FRED_DIR), "DTWEXBGS"), 7)
+
+    inv365 = (t10y2y < 0).rolling(366, min_periods=1).max()
+    baa_63 = baa10y - baa10y.shift(63)
+    usd63_pct = expanding_pct(usd_c / usd_c.shift(63) - 1.0, 252)
+
+    raw = {
+        "M3": mk([t10y2y, inv365], lambda a, b: (a > 0) & (b >= 1)),
+        "M5": mk([baa_63], lambda a: (a >= 0.5)),
+        "M7": mk([vix_c], lambda a: (a > 30)),
+        "M8": mk([vix_c, vxv_c], lambda a, b: (a / b > 1.0)),
+        "M9": mk([usd63_pct], lambda a: (a >= 0.9)),
+    }
+    # T-185 的 build_signals 末尾统一 to_calendar(v, gap);M3/M5/M7/M8/M9 的 gap 都是 7(默认)
+    return {k: to_calendar(v, 7) for k, v in raw.items()}
+
+
+def t185_rebuild_reconcile(t185: dict, signs: dict) -> dict:
+    """重建的亮灯序列 vs T-185 原读数 —— 对账。
+
+    用内核自己的 sign_lift(同一个 seed 675 / n_shift 2000)重算,逐项比 hit_rate / base_rate /
+    lift / pctile / n_anchors / n_skipped。全部一致 ⇒ 复刻成功,锚点自亮审计可以信。"""
+    from docs.research.crash_atlas_common import sign_lift
+
+    stored = {(r["signal"], r["anchor_set"]): r for r in t185["signals"]}
+    out: dict[str, Any] = {"note": "重建序列跑内核 sign_lift(seed=675, n_shift=2000)与 T-185 原读数对账",
+                           "cases": {}}
+    for sname, on in signs.items():
+        for ak, lb in (("main", 90), ("aux_break", 30), ("aux_fast", 30)):
+            key = "%s|%s" % (sname, ak)
+            st = stored.get((sname, ak))
+            if st is None:
+                continue
+            anchors = [pd.Timestamp(a) for a in t185["anchors"][ak]]
+            try:
+                r = sign_lift(on, anchors, lb, n_shift=2000, seed=SEED)
+            except Exception as exc:  # noqa: BLE001
+                out["cases"][key] = {"error": repr(exc)}
+                continue
+            diffs = {}
+            for k in ("hit_rate", "base_rate", "lift", "pctile"):
+                a, b = r.get(k), st.get(k)
+                diffs[k] = None if (a is None or b is None) else abs(float(a) - float(b))
+            out["cases"][key] = {
+                "rebuilt": {k: r.get(k) for k in ("n_anchors", "n_skipped", "hit_rate", "base_rate",
+                                                  "lift", "pctile")},
+                "stored": {k: st.get(k) for k in ("n_anchors", "n_skipped", "hit_rate", "base_rate",
+                                                 "lift", "pctile")},
+                "abs_diff": diffs,
+                "n_anchors_match": r.get("n_anchors") == st.get("n_anchors"),
+                "n_skipped_match": r.get("n_skipped") == st.get("n_skipped"),
+                "max_abs_diff": max([v for v in diffs.values() if v is not None], default=None),
+            }
+    ok = [k for k, v in out["cases"].items()
+          if v.get("n_anchors_match") and v.get("n_skipped_match")
+          and (v.get("max_abs_diff") is None or v.get("max_abs_diff") < 1e-9)]
+    out["n_cases"] = len(out["cases"])
+    out["n_cases_match"] = len(ok)
+    out["all_match"] = (len(ok) == len(out["cases"]))
+    out["mismatches"] = [k for k in out["cases"] if k not in ok]
+    return out
+
+
 # ── M8 展开 ────────────────────────────────────────────────────────────────
-def anchor_offset_audit(t185: dict, t187: dict) -> dict:
+def anchor_offset_audit(t185: dict, t187: dict, t185_signs: Optional[dict] = None) -> dict:
     """锚点当天自亮检查 —— 线索是不是「锚点当天才亮」的定义性假象。
 
     锚点回看窗口**含锚点当天**(内核 _window_any 是 rolling(lookback+1))。破位日本身就是一根 −20% 的破位阴线、
@@ -537,11 +625,15 @@ def anchor_offset_audit(t185: dict, t187: dict) -> dict:
         anchors = t187["anchors"][t187_anchor_key[fam]]
         for sname, on in signs.items():
             out["cases"]["T-187|%s|%s" % (sname, fam)] = offsets(on, anchors, L)
-    # T-185:破位日 30 天(主锚点 90 天也一并算)
-    for ak, L in (("aux_break", 30), ("main", 90)):
+    # T-185:三套锚点(主 90 天 / 破位 30 天 / 急跌 30 天)—— 用重建并对账过的亮灯序列
+    t185_sign_map = t185_signs or {"M7_vix_gt30": signs["M7_vix_gt30"],
+                                  "M8_vix_over_vxv_gt1": signs["M8_vix_over_vxv_gt1"]}
+    for ak, L in (("main", 90), ("aux_break", 30), ("aux_fast", 30)):
         anchors = t185["anchors"][ak]
-        for sname, on in signs.items():
+        for sname, on in t185_sign_map.items():
             out["cases"]["T-185|%s|%s" % (sname, ak)] = offsets(on, anchors, L)
+    out["t185_sign_source"] = ("重建 + 与 T-185 原读数对账" if t185_signs
+                               else "只重建了 M7 / M8")
     return out
 
 
@@ -582,9 +674,6 @@ def m8_deep_dive(t187: dict, rows: list[dict]) -> dict:
 
 
 # ── 线索 × 锚点当天自亮(把锚点当天从命中里剔掉,线索还剩多少)───────────────
-T185_SIGN_LONG = {"M7": "M7_vix_gt30", "M8": "M8_vix_over_vxv_gt1"}
-
-
 def _pctile_by_sign(fam_rows: list[dict]) -> dict:
     """(道, 迹象) → 过了分位这一条的锚点集数。"""
     out: dict = defaultdict(int)
@@ -608,9 +697,7 @@ def clue_offset_crosscheck(rows: list[dict], offsets: dict) -> list[dict]:
         if r["task"] == "T-187":
             key = "T-187|%s|%s" % (r["sign"], r["family"])
         elif r["task"] == "T-185":
-            long = T185_SIGN_LONG.get(r["sign"])
-            if long:
-                key = "T-185|%s|%s" % (long, r["anchor_set"])
+            key = "T-185|%s|%s" % (r["sign"], r["anchor_set"])
         c = (offsets.get("cases") or {}).get(key) if key else None
         rec = {"task": r["task"], "sign": r["sign"], "label": r["label"], "family": r["family"],
                "anchor_set": r["anchor_set"], "n_anchors": r["n_anchors"],
@@ -720,7 +807,11 @@ def main() -> None:
                         "不含 20% 熊市门槛)—— 这是对照本身的局限,已在正文写明。"}
 
     m8 = m8_deep_dive(t187, rows)
-    offsets = anchor_offset_audit(t185, t187)
+    # 重建 T-185 的 M3 / M5 / M7 / M8 / M9 亮灯序列,并与 T-185 原读数对账(对不上就不采信)
+    t185_signs = t185_sign_rebuild()
+    recon = t185_rebuild_reconcile(t185, t185_signs)
+    audit_signs = t185_signs if recon.get("all_match") else None
+    offsets = anchor_offset_audit(t185, t187, audit_signs)
     clue_off = clue_offset_crosscheck(rows, offsets)
 
     res = {
@@ -733,6 +824,7 @@ def main() -> None:
         "m8_deep_dive": m8,
         "anchor_offset_audit": offsets,
         "clue_offset_crosscheck": clue_off,
+        "t185_sign_rebuild_reconcile": recon,
         "caliber_a_umcsent": calib_a,
         "caliber_b_events": calib_b,
         "caliber_c_styles": calib_c,
@@ -742,8 +834,8 @@ def main() -> None:
             "T-186 的 FX 锚点(fx_start_30d / fx_hit_30d)与 eem_peak_all_90d 稳健性锚点"
             "没有算进三套锚点的多重比较计数(它们是 EM 独有的第四/第五类锚点);"
             "它们的额外通过项在 §2.2 与 §4 照报读数,但没单独做锚点自亮审计。",
-            "锚点自亮审计只重建了 M7 / M8(波动类)的亮灯序列 ⇒ 6 条线索里有 3 条"
-            "(T-185 M3 / M5 / M9)的「剔掉锚点当天后还剩多少」本轮查不了。",
+            "锚点自亮审计只覆盖 T-185 的 M3 / M5 / M7 / M8 / M9 与 T-187 的 M7 / M8 —— "
+            "T-186 的迹象(含那 5 个额外通过项)与 T-185 的其余迹象没有重建亮灯序列,查不了。",
             "没有为任何一条线索另立预注册、没有在新数据上过零信号对照 —— "
             "本轮所有读数都是探索性的。",
             "T-185 / T-186 的风格表只补了逐段离散度(min/中位/max),随机 5 天对照只在 T-187 上做。",
@@ -867,9 +959,34 @@ def write_report(res: dict, t185: dict, t186: dict, t187: dict) -> None:
     w("")
     w("锚点的回看窗口**含锚点当天**。破位日本身是一根 −20% 的破位阴线,急跌起点又紧邻急跌 —"
       "波动类迹象(VIX > 30、VIX/VXV 倒挂)有可能只是「锚点当天自己亮」。"
-      "这里本地重算 M7 / M8(同一 FRED 快照、同一口径),对每个锚点记「离锚点最近的亮灯日差几天」"
-      "(0 = 就是锚点当天),并另算「严格早于锚点」的命中 —— 后者才是真正的「崩之前就有」。")
+      "这里本地重算 T-185 的 M3 / M5 / M7 / M8 / M9(同一 FRED 快照、同一口径),"
+      "对每个锚点记「离锚点最近的亮灯日差几天」(0 = 就是锚点当天),并另算「严格早于锚点」的命中 —— "
+      "后者才是真正的「崩之前就有」。")
     w("")
+    rec = res.get("t185_sign_rebuild_reconcile", {})
+    if rec.get("cases"):
+        w("**重建对账(先证明复刻成功,再谈结论)** —— 把 T-185 的亮灯序列按它的 `build_signals` 口径逐字重建,"
+          "再用内核自己的 `sign_lift`(seed 675 / n_shift 2000)重算,与 T-185 原 json 的读数逐项比:")
+        w("")
+        w("| 迹象 | 锚点 | 重建命中率 | 原命中率 | 重建基准率 | 原基准率 | 重建分位 | 原分位 | 锚点数一致 | 最大绝对差 |")
+        w("|---|---|---|---|---|---|---|---|---|---|")
+        for key, v in rec["cases"].items():
+            if v.get("error"):
+                w("| %s | — | %s | | | | | | | %s |" % (key, "—", v["error"][:40]))
+                continue
+            rb, st = v["rebuilt"], v["stored"]
+            w("| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |" % (
+                key.split("|")[0], key.split("|")[1], _pc(rb["hit_rate"]), _pc(st["hit_rate"]),
+                _pc(rb["base_rate"]), _pc(st["base_rate"]), _f(rb["pctile"]), _f(st["pctile"]),
+                "✓" if v["n_anchors_match"] and v["n_skipped_match"] else "✗",
+                _f(v["max_abs_diff"], 10)))
+        w("")
+        w("**对账结果:%d / %d 组读数完全一致**%s ⇒ 重建的亮灯序列与 T-185 内核同源,下面的自亮检查"
+          "可以用。" % (rec.get("n_cases_match", 0), rec.get("n_cases", 0),
+                        "(最大绝对差 0)" if rec.get("all_match") else
+                        ";**不一致的组:%s —— 这几组本轮不采信重建序列**"
+                        % "、".join(rec.get("mismatches", []))))
+        w("")
     w("| 道 | 迹象 | 锚点 | 锚点数(可用) | 跳过 | 命中率 | 其中锚点当天亮 | 严格早于锚点的命中率 | 只在锚点当天亮 |")
     w("|---|---|---|---|---|---|---|---|---|")
     for key, v in off["cases"].items():
@@ -922,11 +1039,16 @@ def write_report(res: dict, t185: dict, t186: dict, t187: dict) -> None:
     checked = [c for c in counted if c.get("checked")]
     if checked:
         surv = [c for c in checked if c["strict_survives_lift"] and c["strict_survives_beats_base"]]
-        w("**读法**(只算三套锚点的 %d 条线索):查得了的 %d 条里,%d 条在剔掉锚点当天之后**仍然**同时过"
-          "「提升 ≥ 1.5」与「命中率 > 基准率」;其余的要么没查(本轮只重建了 M7 / M8 的亮灯序列),"
-          "要么剔掉锚点当天后提升掉到 1.5 以下 —— 后者说明它的原始提升是崩盘当天自己贡献的,"
-          "**不能当独立证据**。"
-          % (len(counted), len(checked), len(surv)))
+        w("**读法**(只算三套锚点的 %d 条线索):%d 条都查得了(亮灯序列已重建并与 T-185 原读数对账,"
+          "见 §2.1),其中 %d 条在剔掉锚点当天之后**仍然**同时过「提升 ≥ 1.5」与「命中率 > 基准率」"
+          "—— 也就是说,这 %d 条线索**不是**「锚点当天自己亮」造出来的。"
+          % (len(counted), len(checked), len(surv), len(surv)))
+        w("")
+        for c in checked:
+            if not (c["strict_survives_lift"] and c["strict_survives_beats_base"]):
+                w("- %s %s(%s)严格提升 %s < 1.5(原始提升 %s)⇒ 原始提升里混着锚点当天的成分,"
+                  "本轮**降级为待查**,不当线索。" % (
+                      c["task"], c["sign"], c["family"], _f(c["strict_lift"], 2), _f(c["lift"], 2)))
         w("")
         for c in checked:
             if not (c["strict_survives_lift"] and c["strict_survives_beats_base"]):
