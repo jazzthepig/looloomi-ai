@@ -2,6 +2,7 @@
 
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
+| in_review | T-200 | lane-c | S-685:崩盘图谱的压力线索(信用利差走阔 M5 / VIX > 30 M7 / VIX 期限倒挂 M8 / 任一)当 ③ 减仓规则 —— 亮着时 BTC 敞口 0.5,对持有与循环平移随机减仓 | 脚本 docs/research/t200_stress_derisk.py;结果 docs/research/t200_results.json(每条规则的逐日敞口序列与零分布都在,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-200_stress_derisk.md:开头判据表(4 条规则 × 3 条判据 + 判定),然后只报项、协议问题。in_review,推 lane-c/T-200。 | 三条在 NASDAQ / EM 锚点上的提升已看过(T-185 / T-186 / T-193),在 BTC 锚点上不是线索(T-187);当成每日敞口规则从没算过。 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-069 | seth | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
@@ -201,4 +202,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 10 · claimed 7 · blocked 7 · done 171 · dropped 3
+open 10 · claimed 7 · blocked 7 · in_review 1 · done 171 · dropped 3
