@@ -1939,13 +1939,33 @@ async def _binance_vision_loop():
             print(f"[BINANCE-VISION-FUNDING] ⚠️  pass FAILED: {_e}")
             await _record_loop_attempt("_binance_vision_funding", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                        writer="src.api.main._binance_vision_loop")
+        # S-683:同一族的 1d klines —— Binance U 本位永续**全部** USDT 合约(含之后下架的)→ perp_bv_daily;
+        # 然后推进两条做空纸面臂(short_paper)。各记各的 loop_attempt 名字,一边坏了不遮另一边。
+        # 判活:`select max(d) from perp_bv_daily` ≥ 前天;`select arm, last_d from short_paper_state` ≥ 前天。
+        rk: dict = {}
+        for _name, _mod in (("_perp_bv_daily", "src.data.market.perp_bv_daily"), ("_short_paper", "src.data.signals.short_paper")):
+            try:
+                import importlib as _il
+                _r = await _il.import_module(_mod).run_once()
+                if _name == "_perp_bv_daily":
+                    rk = _r
+                _st = "ok" if _r.get("ok") and not _r.get("refused") else "refused" if _r.get("refused") else "error"
+                print(f"[{_name.upper().lstrip('_')}] {_st} · {str(_r.get('reason'))[:160]}")
+                await _record_loop_attempt(_name, _st, reason=str(_r.get("reason"))[:400] if _r.get("reason") else None,
+                                           detail={k: v for k, v in _r.items() if k not in ("ok", "refused", "reason")},
+                                           writer="src.api.main._binance_vision_loop")
+            except Exception as _e:
+                print(f"[{_name.upper().lstrip('_')}] ⚠️  pass FAILED: {_e}")
+                await _record_loop_attempt(_name, "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                           writer="src.api.main._binance_vision_loop")
         # 回补期(这一轮把预算用满 = 还有积压)10 分钟一轮,补完后每小时一轮只取新的一天(10-19 首轮:6,000 档 0 失败,美国出口也读得到)
         try:
             from src.data.market.binance_vision import BUDGET as _BV_BUDGET
             from src.data.market.binance_vision_funding import BUDGET as _BVF_BUDGET
         except Exception:
             _BV_BUDGET, _BVF_BUDGET = 6000, 2000
-        _backlog = (r or {}).get("planned", 0) >= _BV_BUDGET or (rf or {}).get("planned", 0) >= _BVF_BUDGET
+        _backlog = ((r or {}).get("planned", 0) >= _BV_BUDGET or (rf or {}).get("planned", 0) >= _BVF_BUDGET
+                    or (rk or {}).get("backlog", 0) > 0)
         await _asyncio.sleep(600 if _backlog else 3600)
 
 

@@ -2538,24 +2538,50 @@ async def get_binance_hourly_page(symbol: str, start_ms: int, limit: int = 1000)
 #: T-133:Binance 公开历史档(静态文件,不是 API —— 与 data-api.binance.vision 同族)。只放行下列数据集。
 BINANCE_VISION_UM_DAILY = "https://data.binance.vision/data/futures/um/daily"
 BINANCE_VISION_UM_MONTHLY = "https://data.binance.vision/data/futures/um/monthly"
-BINANCE_VISION_KINDS = frozenset({"metrics"})
+#: S-683:日线 klines(只取 1d)日档 + 月档,做空纸面臂的全宇宙日线(perp_bv_daily)。
+BINANCE_VISION_KINDS = frozenset({"metrics", "klines"})
 #: S-638 后续:资金费率只有月档(没有日档)。
-BINANCE_VISION_MONTHLY_KINDS = frozenset({"fundingRate"})
+BINANCE_VISION_MONTHLY_KINDS = frozenset({"fundingRate", "klines"})
+#: 同一个桶的目录(S3 列表):发现新合约、查某合约第一份日档。只读、无 key。
+BINANCE_VISION_INDEX = "https://s3-ap-northeast-1.amazonaws.com/data.binance.vision"
 
 
-async def get_binance_vision_um_daily(kind: str, pair: str, day: str, *, monthly: bool = False) -> Optional[bytes]:
+def _bv_path(kind: str, pair: str, day: str) -> str:
+    """klines 的路径多一层周期目录(只用 1d);其余数据集是 <kind>/<PAIR>/<PAIR>-<kind>-<day>.zip。"""
+    if kind == "klines":
+        return f"klines/{pair}/1d/{pair}-1d-{day}.zip"
+    return f"{kind}/{pair}/{pair}-{kind}-{day}.zip"
+
+
+async def get_binance_vision_um_daily(kind: str, pair: str, day: str, *, monthly: bool = False,
+                                      index: bool = False, max_keys: int = 1000) -> Optional[bytes]:
     """T-133:U 本位永续某一天的历史档(zip 原样字节)。404 ⇒ None(那天没有文件 —— 未上市 / 未上传);
     其他非 200 ⇒ 抛错(读不到 ≠ 没有)。kind 只能是 BINANCE_VISION_KINDS 里的。
     monthly=True 时 day 是 'YYYY-MM',取月档(kind 只能是 BINANCE_VISION_MONTHLY_KINDS 里的)——
-    同一个入口加一个参数,不新开取数函数(取数入口只减不增)。"""
-    if monthly:
-        if kind not in BINANCE_VISION_MONTHLY_KINDS:
-            raise ValueError(f"binance vision 月档 {kind!r} 不在白名单 {sorted(BINANCE_VISION_MONTHLY_KINDS)}")
-        url = f"{BINANCE_VISION_UM_MONTHLY}/{kind}/{pair}/{pair}-{kind}-{day}.zip"
-    elif kind not in BINANCE_VISION_KINDS:
-        raise ValueError(f"binance vision 数据集 {kind!r} 不在白名单 {sorted(BINANCE_VISION_KINDS)}")
-    else:
-        url = f"{BINANCE_VISION_UM_DAILY}/{kind}/{pair}/{pair}-{kind}-{day}.zip"
+    同一个入口加一个参数,不新开取数函数(取数入口只减不增)。
+    index=True(S-683)取的是同一个数据集的**目录**(S3 列表 XML 原样字节),不是档:
+    pair 为空 ⇒ 列出这个数据集下所有合约(day 当翻页 marker,即上一页最后一个合约名);
+    pair 给了 ⇒ 列出这个合约的档,从 day 之后开始(day 为空 = 从第一份起),最多 max_keys 个。"""
+    base = BINANCE_VISION_UM_MONTHLY if monthly else BINANCE_VISION_UM_DAILY
+    allowed = BINANCE_VISION_MONTHLY_KINDS if monthly else BINANCE_VISION_KINDS
+    if kind not in allowed:
+        raise ValueError(f"binance vision {'月档' if monthly else '数据集'} {kind!r} 不在白名单 {sorted(allowed)}")
+    if index:
+        top = f"data/futures/um/{'monthly' if monthly else 'daily'}/{kind}/"
+        if pair:
+            prefix = top + (f"{pair}/1d/" if kind == "klines" else f"{pair}/")
+            marker = (prefix + _bv_path(kind, pair, day).rsplit("/", 1)[1]) if day else ""
+            params = {"prefix": prefix, "max-keys": str(int(max_keys))}
+        else:
+            prefix, params = top, {"prefix": top, "delimiter": "/"}
+            marker = f"{top}{day}/" if day else ""
+        if marker:
+            params["marker"] = marker
+        resp = await _get_binance_client().get(BINANCE_VISION_INDEX, params=params, timeout=30)
+        if resp.status_code != 200:
+            raise RuntimeError(f"HTTP {resp.status_code} data.binance.vision 目录 {prefix}")
+        return resp.content
+    url = f"{base}/{_bv_path(kind, pair, day)}"
     resp = await _get_binance_client().get(url, timeout=30)
     if resp.status_code == 404:
         return None

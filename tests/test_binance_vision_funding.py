@@ -90,8 +90,8 @@ def test_data_layer_keeps_one_entry_point_and_whitelists_the_monthly_kind():
     import src.data.market.data_layer as dl
     assert "fundingRate" in dl.BINANCE_VISION_MONTHLY_KINDS and "fundingRate" not in dl.BINANCE_VISION_KINDS
     assert not hasattr(dl, "get_binance_vision_um_monthly"), "取数入口只减不增:月档走同一个函数的 monthly 参数"
-    with pytest.raises(ValueError):
-        asyncio.run(dl.get_binance_vision_um_daily("klines", "BTCUSDT", "2024-01", monthly=True))
+    with pytest.raises(ValueError):                 # S-683 起 klines 进了白名单;白名单本身照样拦别的
+        asyncio.run(dl.get_binance_vision_um_daily("aggTrades", "BTCUSDT", "2024-01", monthly=True))
 
 
 def test_main_runs_it_inside_the_vision_loop_with_its_own_attempt_name():

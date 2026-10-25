@@ -1,0 +1,21 @@
+{
+ "H": {
+  "prod": 3751,
+  "research": 3751,
+  "both": 3751,
+  "prod_only": [],
+  "research_only": [],
+  "max_abs_dR_price": 8.881784197001252e-16,
+  "exit_mismatch": 0,
+  "blocked_gate_open": 8476
+ },
+ "L": {
+  "prod": 620,
+  "research": 620,
+  "both": 620,
+  "prod_only": [],
+  "research_only": [],
+  "max_abs_dR_price": 2.220446049250313e-16,
+  "exit_mismatch": 0
+ }
+}
