@@ -585,6 +585,35 @@
       "2026": 39
     }
   },
+  "fish_s618": {
+    "A": {
+      "universe_fish": 414,
+      "captured": 68,
+      "share": 0.1642512077294686,
+      "tickets": 956,
+      "tickets_per_captured_fish": 14.058823529411764,
+      "fish_total_all": 414,
+      "peak_multiple_median": 3.4032656501127576
+    },
+    "S": {
+      "universe_fish": 275,
+      "captured": 62,
+      "share": 0.22545454545454546,
+      "tickets": 765,
+      "tickets_per_captured_fish": 12.338709677419354,
+      "fish_total_all": 414,
+      "peak_multiple_median": 3.4841606385632327
+    },
+    "D": {
+      "universe_fish": 139,
+      "captured": 6,
+      "share": 0.04316546762589928,
+      "tickets": 191,
+      "tickets_per_captured_fish": 31.833333333333332,
+      "fish_total_all": 414,
+      "peak_multiple_median": 3.3755696343225523
+    }
+  },
   "tickets": [
     {
       "symbol": "EOS",

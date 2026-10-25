@@ -47,6 +47,12 @@ _spec = importlib.util.spec_from_file_location(
 s657_boot = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(s657_boot)
 
+# 「大鱼」计数器用 T-154 的公用模块 `docs/research/fish_counter.py`(S-618 口径,rn≥220、adv30 ≥ $5M、
+# 之后 120 根内最高收盘 ≥ 3× 当日收盘,同名命中相隔 ≤ 30 根并成一条鱼)。
+_spec = importlib.util.spec_from_file_location("fish_counter", os.path.join(HERE, "fish_counter.py"))
+fish_counter = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(fish_counter)
+
 DATA = "/Volumes/CometCloudAI/cometcloud-local/research"
 UM_DAILY = f"{DATA}/s681/_um_daily.jsonl"
 SURVIVORS = f"{DATA}/s677/_survivor_symbols.json"
@@ -164,6 +170,38 @@ def pct(x):
     return "n/a" if x is None else ("%+.2f%%" % (100 * x))
 
 
+def build_fish(bars):
+    """S-618 口径的「鱼」:rn≥220、adv30 ≥ $5M、之后 120 根内最高收盘 ≥ 3× 当日收盘 ⇒ 命中;
+    同名命中相隔 ≤ 30 根并成一条鱼。c × vol = quote volume(= S-618 的 dv)。"""
+    panel = {}
+    for s, rows in bars.items():
+        pr = []
+        for r in rows:
+            c = r[4]
+            if c <= 0:
+                continue
+            pr.append({"d": r[0], "c": c, "vol": r[5] / c})   # c × vol = quote volume(S-618 的 dv)
+        panel[s] = pr
+    return fish_counter.fish(panel, D_FROM, D_TO)
+
+
+def fish_capture(fishes, tickets, sym_set):
+    """一条鱼被捕获 = 该币有一张票的**进场日**落在鱼的命中区间 [start_date, last_hit_date] 内。"""
+    entry_by_sym = defaultdict(list)
+    for t in tickets:
+        entry_by_sym[t["symbol"]].append(t["entry_d"])
+    mine = [f for f in fishes if f["symbol"] in sym_set]
+    got = [f for f in mine if any(f["start_date"] <= e <= f["last_hit_date"]
+                                  for e in entry_by_sym.get(f["symbol"], []))]
+    n_tk = sum(1 for t in tickets if t["symbol"] in sym_set)
+    return dict(universe_fish=len(mine), captured=len(got),
+                share=(len(got) / len(mine)) if mine else None,
+                tickets=n_tk,
+                tickets_per_captured_fish=(n_tk / len(got)) if got else None,
+                fish_total_all=len(fishes),
+                peak_multiple_median=float(np.median([f["peak_multiple"] for f in mine])) if mine else None)
+
+
 # ── 主流程 ──────────────────────────────────────────────────────────────────────────────────────────────────
 def main():
     ap = argparse.ArgumentParser()
@@ -234,6 +272,13 @@ def main():
     rob["total_R"] = float(va.sum())
     rob["top1_share"] = float(va[0] / va.sum()) if va.sum() else None
 
+    # 抓到的大行情(S-618 口径):全宇宙的「鱼」与各臂的捕获
+    fishes = build_fish(bars)
+    fish_res = {lab: fish_capture(fishes, tk, syms)
+                for lab, tk, syms in (("A", A, set(bars)),
+                                      ("S", S, {s for s in bars if uni[s] == "S"}),
+                                      ("D", D, {s for s in bars if uni[s] == "D"}))}
+
     # S 与面板票的重合(同币同信号日)
     panel = None
     if not args.no_panel:
@@ -276,6 +321,7 @@ def main():
         still_held=[dict(symbol=t["symbol"], signal_d=t["signal_d"], entry_d=t["entry_d"],
                          universe=t["universe"]) for t in still],
         panel_overlap=panel,
+        fish_s618=fish_res,
     )
     res["tickets"] = [dict(symbol=t["symbol"], signal_d=t["signal_d"], entry_d=t["entry_d"],
                            exit_d=t["exit_d"], r=t["r"], universe=t["universe"]) for t in A]
@@ -380,6 +426,18 @@ def main():
                  f"占面板票的 **{panel['overlap_of_panel']:.1%}**")
         L.append(f"- 面板票按年:{panel['panel_by_year']}\n")
 
+    L.append("## 抓到的大行情(S-618 口径)\n")
+    L.append("- 鱼 = 之后 120 根内最高收盘 ≥ 3 × 当日收盘的命中日链(rn ≥ 220、adv30 ≥ $5M,同名相隔 ≤ 30 根并成一条);"
+             "计数器用 T-154 的公用模块 `docs/research/fish_counter.py`。")
+    L.append(f"- 全宇宙(A 的 890 个币,窗口 {D_FROM} → {D_TO})共 **{fish_res['A']['fish_total_all']}** 条鱼。\n")
+    L.append("| 宇宙 | 该宇宙的鱼 | 捕获 | 捕获率 | 票数 | 每捕一条的票钱 |")
+    L.append("|---|---|---|---|---|---|")
+    for lab in ("A", "S", "D"):
+        f = fish_res[lab]
+        L.append(f"| {lab} | {f['universe_fish']} | {f['captured']} | "
+                 f"{f['share']:.1%} | {f['tickets']} | {f['tickets_per_captured_fish']:.1f} |")
+    L.append("")
+
     L.append("## 稳健性检查(探索性 —— 需另立预注册、在新数据上过零信号对照;不改判据)\n")
     L.append(f"- **p 值不依赖 RNG 实现**:用仓库自己的 `s657_s658_breadth_second_leg.boot_months`(`random.Random(684)`、同块定义)"
              f"复算同一批票 ⇒ p(≤ 0) = **{p_cross:.4f}**(apparatus 那条是 {pA:.4f})—— 两条都 > 0.05,判据 ① 的结论不变。")
@@ -425,8 +483,11 @@ PROTOCOL_NOTES = """
 6. **仍持有的票**:`run_long` 自己判定(120 根到期但数据不够)⇒ `r = None`;这些票不进任何平均,单列在结果 JSON 的 `still_held`,
    但**进资金曲线**(按最后一个收盘价盯市,与线上口径一致)。
 7. **资金曲线的截止日**用 `2026-09-30`(K 线的最后一天),不是 `t159.CURVE_TO`(2026-10-19)—— 后者会多出 19 天空盯市。
-8. **台账「只报」里的一项没算**:「抓到的大行情(S-618 口径)」—— S-618 的全宇宙大行情数据集不在数据根(`research/` 下无 s618 目录),
-   没有可复用的输入,故未算;需要 @seth 指认数据源。
+8. **「抓到的大行情(S-618 口径)」的宇宙换成了永续**:S-618 原文的宇宙是 `binance_hist` **现货**面板(并用它自己的 286/287 条鱼做对账);
+   本卡要把鱼算在 A/S/D 上,所以鱼是在 s681 的 890 个 UM 永续上数的,成交额用 quote volume(= S-618 的 `close × volume`,
+   这里是真美元额,不是面板那种「收盘 × 基础币量」的近似)。`fish_counter.py` docstring 里「先对上 286/287」那条对账
+   **没有在本卡重做**(那是现货面板的事,与本卡的永续宇宙不同源)。捕获口径沿用 `s677_rv2_oos.capture`:该币有一张票的
+   **进场日**落在鱼的命中区间 [起点, 末次命中] 内即算捕获。
 9. **A 的票数可能与「面板 770 张」不可直接比**:面板票用的是现货 K 线、A 用的是永续 K 线,同一信号日的进出场价不同,
    两者 R 的差异不能当作「幸存者偏差」。
 """
