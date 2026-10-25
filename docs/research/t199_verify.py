@@ -141,3 +141,47 @@ for m in sorted(set(list(mm) + list(mc))):
         badg += 1
         print("  GATE MISMATCH", m, "recomputed", (gd, gc), "stored", mm.get(m))
 print("gate month mismatches:", badg, "| recomputed closed months:", len(mc))
+
+# ── 4) 宇宙分类(只加密,台账修订 2026-10-26)独立重算 ─────────────────────────────────────
+snap = json.load(open(os.path.join(S681, "_um_exchangeinfo_20261025.json")))
+by_sym = {s["symbol"]: s for s in snap["symbols"]}
+by_base = {}
+for s in snap["symbols"]:
+    by_base.setdefault(s.get("baseAsset"), []).append(s)
+crypto, noncrypto, notinsnap = set(), {}, []
+for sym in raw:
+    e = by_sym.get(sym + "USDT")
+    if e is None:
+        cands = by_base.get(sym, [])
+        if not cands:
+            notinsnap.append(sym)
+            crypto.add(sym)
+            continue
+        if any(c.get("underlyingType") == "COIN" for c in cands):
+            crypto.add(sym)
+            continue
+        e = cands[0]
+    if e.get("underlyingType") == "COIN":
+        crypto.add(sym)
+    else:
+        noncrypto[sym] = e.get("underlyingType")
+uc = res["universe_classification"]
+print("universe recomputed: crypto", len(crypto), "non_crypto", len(noncrypto),
+      "not_in_snapshot", len(notinsnap),
+      "| stored:", uc["n_crypto"], uc["n_non_crypto"], uc["n_not_in_snapshot"])
+bytype = {}
+for v in noncrypto.values():
+    bytype[v] = bytype.get(v, 0) + 1
+print("non_crypto by type recomputed:", json.dumps(bytype, sort_keys=True),
+      "| stored:", json.dumps(uc["non_crypto_by_underlying_type"], sort_keys=True))
+leak_L = sorted({t["symbol"] for t in res["arm_L"]["tickets"] if t["symbol"] not in crypto})
+leak_H = sorted({t["symbol"] for t in res["arm_H"]["tickets"] if t["symbol"] not in crypto})
+print("crypto-universe leaks: arm_L", len(leak_L), leak_L[:5], "| arm_H", len(leak_H), leak_H[:5])
+print("all-contracts comparison arm_L tickets",
+      res["all_contracts_comparison"]["arm_L"]["universe"]["n_tickets"],
+      "| crypto arm_L tickets", res["arm_L"]["universe"]["n_tickets"],
+      "| delta", res["all_contracts_comparison"]["arm_L"]["universe"]["n_tickets"]
+      - res["arm_L"]["universe"]["n_tickets"])
+print("all-contracts comparison arm_H tickets",
+      res["all_contracts_comparison"]["arm_H"]["universe"]["n_tickets"],
+      "| crypto arm_H tickets", res["arm_H"]["universe"]["n_tickets"])

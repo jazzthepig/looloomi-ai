@@ -63,6 +63,7 @@ H_JUDGE_N, H_JUDGE_M = 100, 3    # 台账判据
 BOOT_DRAWS, BOOT_SEED = 2000, 683
 BTC_COST = 2 * sl.COST_SIDE      # BTC 腿来回成本:2 × 0.10%
 SURVIVOR_PATH = os.path.join(DATA_ROOT, "research", "s677", "_survivor_symbols.json")
+EXCHANGEINFO_PATH = os.path.join(DATA_ROOT, "research", "s681", "_um_exchangeinfo_20261025.json")
 EXCL_BASES = {"BTCDOM", "DEFI", "USDC", "BUSD", "TUSD", "DAI", "FDUSD", "USDP",
               "USDE", "EURI", "XUSD", "EURT", "USD1", "USDD", "USTC", "FRAX", "LUSD"}
 
@@ -124,6 +125,73 @@ def load_survivors() -> Optional[set[str]]:
     return {str(s) for s in syms} if syms else None
 
 
+def load_universe_class(um: dict) -> dict:
+    """台账修订(Seth 2026-10-26):两条臂的宇宙改成**只做加密合约**。
+
+    分类源 = `research/s681/_um_exchangeinfo_20261025.json` 的 underlyingType:
+      - 面板的 symbol 是 base 名(BTC / 1000BONK 这种),BINANCE 快照里的 symbol 是 base+quote
+        ⇒ 按 `base + "USDT"` 对到快照条目;
+      - underlyingType == "COIN" ⇒ 加密;
+      - 快照里根本没有的(已下架的老币)按加密算(台账修订原文)。
+    面板里被剔出去的非 COIN 类型:EQUITY / COMMODITY / HK_EQUITY / KR_EQUITY / CN_EQUITY /
+    PREMARKET / INDEX / FX —— 绝大多数是 2026 年新上的股票 / 商品永续。
+    """
+    info: dict = {"source": EXCHANGEINFO_PATH,
+                  "rule": "base+USDT → underlyingType == 'COIN' ⇒ 加密;快照里没有的条目 ⇒ 按加密算"}
+    if not os.path.exists(EXCHANGEINFO_PATH):
+        info["error"] = "快照不存在"
+        return {"crypto": None, "non_crypto": {}, "not_in_snapshot": [], "info": info}
+    d = json.load(open(EXCHANGEINFO_PATH))
+    by_sym = {s.get("symbol"): s for s in d.get("symbols", [])}
+    by_base: dict[str, list[dict]] = defaultdict(list)
+    for s in d.get("symbols", []):
+        by_base[s.get("baseAsset")].append(s)
+
+    crypto: set[str] = set()
+    non_crypto: dict[str, dict] = {}
+    not_in_snapshot: list[str] = []
+    for sym in sorted(um):
+        base = base_of(sym)
+        e = by_sym.get(base + "USDT")
+        if e is None:
+            cands = by_base.get(base, [])
+            if not cands:
+                not_in_snapshot.append(base)
+                crypto.add(base)
+                continue
+            types = {c.get("underlyingType") for c in cands}
+            if "COIN" in types:
+                crypto.add(base)
+                continue
+            e = cands[0]
+        if e.get("underlyingType") == "COIN":
+            crypto.add(base)
+        else:
+            non_crypto[base] = {"snapshot_symbol": e.get("symbol"),
+                                 "underlyingType": e.get("underlyingType"),
+                                 "underlyingSubType": e.get("underlyingSubType"),
+                                 "contractType": e.get("contractType"),
+                                 "status": e.get("status")}
+    by_type: dict[str, int] = defaultdict(int)
+    for v in non_crypto.values():
+        by_type[v["underlyingType"]] += 1
+    first_bar = {b: um[b]["d"][0][:7] for b in um}
+    non_crypto_by_month: dict[str, int] = defaultdict(int)
+    for b in non_crypto:
+        non_crypto_by_month[first_bar.get(b, "?")[:7]] += 1
+    info.update({
+        "n_snapshot_symbols": len(by_sym),
+        "n_panel_symbols": len(um),
+        "n_crypto": len(crypto),
+        "n_non_crypto": len(non_crypto),
+        "n_not_in_snapshot": len(not_in_snapshot),
+        "non_crypto_by_underlying_type": dict(sorted(by_type.items())),
+        "non_crypto_by_first_bar_month": dict(sorted(non_crypto_by_month.items())),
+        "not_in_snapshot_symbols": sorted(not_in_snapshot),
+    })
+    return {"crypto": crypto, "non_crypto": non_crypto, "not_in_snapshot": not_in_snapshot, "info": info}
+
+
 # ── 臂 L:空新币 + 等名义多 BTC ───────────────────────────────────────────────────────────
 def btc_hedge(um: dict, fund_daily: dict, t: dict) -> Optional[dict]:
     """BTCUSDT 永续多头腿:entry_d 开盘进、exit_d 开盘出(仍持有按最后收盘盯市)。
@@ -163,7 +231,7 @@ def btc_hedge(um: dict, fund_daily: dict, t: dict) -> Optional[dict]:
             "hedged_ret": hedged_ret, "hedged_r": hedged_ret / t["risk"]}
 
 
-def arm_l(um: dict, fund_daily: dict) -> tuple[list[dict], dict]:
+def arm_l(um: dict, fund_daily: dict, allowed: Optional[set[str]] = None) -> tuple[list[dict], dict]:
     tickets: list[dict] = []
     skipped: dict[str, int] = defaultdict(int)
     for sym in sorted(um):
@@ -174,6 +242,9 @@ def arm_l(um: dict, fund_daily: dict) -> tuple[list[dict], dict]:
             continue
         if base in EXCL_BASES:
             skipped["excluded_base"] += 1
+            continue
+        if allowed is not None and base not in allowed:
+            skipped["non_crypto_universe"] += 1
             continue
         if a["d"][0][:7] == "2019-09":
             skipped["listed_2019_09"] += 1
@@ -199,12 +270,22 @@ def arm_l(um: dict, fund_daily: dict) -> tuple[list[dict], dict]:
 
 
 # ── 臂 H:S-681 H4(T-196 的实现,一字不改)+ majors 闸门 ───────────────────────────────────
-def arm_h(um: dict, fund_daily: dict, gate: dict) -> tuple[list[dict], list[dict], dict]:
-    scan = h4.scan_um(um, fund_daily)
+def arm_h(um: dict, fund_daily: dict, gate: dict, allowed: Optional[set[str]] = None,
+          scan: Optional[dict] = None) -> tuple[list[dict], list[dict], dict, list[dict], int]:
+    """返回 (kept, blocked, scan, excluded_by_universe, chained_total)。
+
+    `allowed` = 只做加密合约的 universe(base 名集合);不在里面的票整条剔掉(不算 blocked)。
+    `chained_total` = sl.chain 叠票之后的总票数(叠票前的原始候选数是 len(scan["tickets"]))。"""
+    if scan is None:
+        scan = h4.scan_um(um, fund_daily)
     allt = sl.chain(scan["tickets"])
     kept: list[dict] = []
     blocked: list[dict] = []
+    excluded: list[dict] = []
     for t in allt:
+        if allowed is not None and base_of(t["symbol"]) not in allowed:
+            excluded.append(t)
+            continue
         g = gate.get(t["signal_d"])
         if g is None:
             blocked.append(dict(t, gate_state="missing"))
@@ -216,7 +297,7 @@ def arm_h(um: dict, fund_daily: dict, gate: dict) -> tuple[list[dict], list[dict
             kept.append(t)
         else:
             blocked.append(dict(t, gate_state="open"))
-    return kept, blocked, scan
+    return kept, blocked, scan, excluded, len(allt)
 
 
 # ── 月序列 / 分布 / 判据画像 ──────────────────────────────────────────────────────────────
@@ -407,8 +488,19 @@ def write_report(res: dict, path: str) -> None:
       "在历史上都已经看过,历史只能给出「它们长什么样」,给不出「它们会不会过」。"
       "本文件把历史画像冻结成前向逐月对照的**预期带**;判据本身只用来算「要到判据要几个月」,不在这份报告里下结论。")
     a("")
+    a("**宇宙 = 只做加密合约**(台账修订 2026-10-26,Seth)。两条臂的票、月序列、到判据画像、"
+      "冻结的预期带全部按只加密宇宙算;「全部合约」(不筛宇宙)只在下面**对照**一节里报一档。")
+    a("")
     a(f"- 数据根:`{res['meta']['data_root']}`(`research/s681/`:890 个 USDT 本位永续含已下架 + 891 个资金费;"
       f"majors 闸门 = `t159.load_gate()`,源 `{res['meta']['gate_source']}`)")
+    uc = res.get("universe_classification", {})
+    a(f"- **宇宙(主口径 = 只做加密合约,台账修订 2026-10-26):** 分类源 `{uc.get('source', '—')}`;"
+      f"规则:按 `base+USDT` 对到快照条目,`underlyingType == 'COIN'` ⇒ 加密,**快照里没有的(已下架)按加密算**。"
+      f"面板 {uc.get('n_panel_symbols', '—')} 个 base 里:加密 {uc.get('n_crypto', '—')}、"
+      f"非加密 {uc.get('n_non_crypto', '—')}(其中 {uc.get('n_not_in_snapshot', '—')} 个不在快照里 ⇒ 按加密算)。")
+    a(f"  - 非加密类型分布:{json.dumps(uc.get('non_crypto_by_underlying_type', {}), ensure_ascii=False)}"
+      f"(绝大多数是 2026 年新上的股票 / 商品永续;按第一根日线月份:"
+      f"{json.dumps(uc.get('non_crypto_by_first_bar_month', {}), ensure_ascii=False)})")
     a(f"- 窗口:月序列 {months[0]} → {months[-1]};逐张票清单 {TICKET_LO} → {TICKET_HI}")
     a(f"- 判据(台账写死):臂 L 已平仓 ≥ {L_JUDGE_N} 且距 inception ≥ {L_JUDGE_M} 个月;"
       f"臂 H 已平仓 ≥ {H_JUDGE_N} 且 ≥ {H_JUDGE_M} 个月")
@@ -422,8 +514,8 @@ def write_report(res: dict, path: str) -> None:
           f"({fmt(sb['H']['frac_survivor'], 3)})落在今天仍在交易的名字上 ⇒ 前向月票数结构上低于历史带;"
           f"预期带另给一份「只算今天仍在交易的名字」的带。")
     a("")
-    for arm, blk, title in (("L", L, "臂 L:空新币 + 等名义多 BTC(对冲 R)"),
-                             ("H", H, "臂 H:S-681 H4 × majors 闸门关(单腿 R)")):
+    for arm, blk, title in (("L", L, "臂 L:空新币 + 等名义多 BTC(对冲 R)· 只加密"),
+                             ("H", H, "臂 H:S-681 H4 × majors 闸门关(单腿 R)· 只加密")):
         a(f"## {title}")
         a("")
         d = blk["distribution"]
@@ -434,9 +526,11 @@ def write_report(res: dict, path: str) -> None:
               f"跳过:{json.dumps(u['skipped'], ensure_ascii=False)};"
               f"第一根日线落在 2019-09 的合约 {u['n_2019_09_listed']} 个")
         else:
-            a(f"- 宇宙:{u['n_symbols_total']} 个合约;H4 票(闸门前) {u['n_h4_tickets_before_gate']},"
+            a(f"- 宇宙:{u['n_symbols_total']} 个合约;H4 原始候选 {u.get('n_h4_candidates_raw', '—')} → "
+              f"叠票后 {u['n_h4_tickets_before_gate']} 张(闸门前、只加密),"
               f"闸门关留下 {u['n_tickets']},blocked {u['n_blocked']}"
-              f"(闸门开 {u['n_blocked_gate_open']}、闸门无记录 {u['n_blocked_gate_missing']})")
+              f"(闸门开 {u['n_blocked_gate_open']}、闸门无记录 {u['n_blocked_gate_missing']});"
+              f"非加密合约的叠票剔出 {u.get('n_excluded_non_crypto', 0)} 张")
         a(f"- R 分布:均值 {fmt(d.get('mean_r'))}、中位 {fmt(d.get('median_r'))}、"
           f"5 分位 {fmt(d.get('p05_r'))}、95 分位 {fmt(d.get('p95_r'))}、"
           f"胜率 {fmt(d.get('win_rate'), 3)}、最差 1% {fmt(d.get('worst_1pct_r'))}")
@@ -499,6 +593,37 @@ def write_report(res: dict, path: str) -> None:
                 a(f"| {pth['start_month']} | — | 未到判 | {pth['n_closed_at_end']} | "
                   f"{fmt(pth.get('mean_r_at_end'))} | — | 否 |")
         a("")
+    a("## 对照:全部合约(修订前口径,只报一档)")
+    a("")
+    cmp_blk = res.get("all_contracts_comparison", {})
+    a("同一套规则、只是**不筛宇宙**(2026-10-26 修订前的主口径)。只报一档,不逐张票。")
+    a("")
+    a("| 口径 | 臂 | 票数 | 平均 R | 中位 R | 胜率 | 会判过的起点 / 能到判 | 到判要几个月 |")
+    a("|---|---|---|---|---|---|---|---|")
+    for arm, key in (("L", "arm_L"), ("H", "arm_H")):
+        for label, src in (("只加密(主)", res[key]), ("全部合约(对照)", cmp_blk.get(key, {}))):
+            if not src:
+                continue
+            d = src["distribution"]
+            js = src["judge_summary"]
+            a(f"| {label} | {arm} | {src['universe']['n_tickets']} | {fmt(d.get('mean_r'))} | "
+              f"{fmt(d.get('median_r'))} | {fmt(d.get('win_rate'), 3)} | "
+              f"{js['n_would_pass']}/{js['n_reached']} | "
+              f"{fmt(js.get('months_to_judge_min'), 0)}–{fmt(js.get('months_to_judge_max'), 0)}"
+              f"(p50 {fmt((js.get('months_to_judge') or {}).get('p50'), 1)}) |")
+    a("")
+    a("| 口径 | 臂 | 月票数 p10 / p50 / p90 | 月平均 R p10 / p50 / p90 |")
+    a("|---|---|---|---|")
+    for arm, key in (("L", "arm_L"), ("H", "arm_H")):
+        for label, src in (("只加密(主)", res[key]), ("全部合约(对照)", cmp_blk.get(key, {}))):
+            bb = (src or {}).get("bands", {}).get("全期(2020-01 → 2026-09)")
+            if not bb:
+                continue
+            tp, mr = bb["tickets_per_month"], bb["mean_r_per_month"]
+            a(f"| {label} | {arm} | "
+              f"{fmt((tp or {}).get('p10'), 1)} / {fmt((tp or {}).get('p50'), 1)} / {fmt((tp or {}).get('p90'), 1)} | "
+              f"{fmt((mr or {}).get('p10'))} / {fmt((mr or {}).get('p50'))} / {fmt((mr or {}).get('p90'))} |")
+    a("")
     a("## 协议问题(照台账一字不改,只记录)")
     a("")
     for line in res["protocol_notes"]:
@@ -511,11 +636,41 @@ def write_report(res: dict, path: str) -> None:
     a("")
     a("## 产物")
     a("")
-    a("- `docs/research/t199_results.json`:两条臂每张票 + 月序列 + 判据画像")
-    a("- `docs/research/t199_forward_bands.json`:冻结的预期带(前向逐月对照只读它)")
+    a("- `docs/research/t199_results.json`:两条臂(只加密)每张票 + 月序列 + 判据画像 + 全部合约对照档")
+    a("- `docs/research/t199_forward_bands.json`:冻结的预期带(前向逐月对照只读它的 `arm_L` / `arm_H`;"
+      "`all_contracts_comparison` 是修订前口径,只作对照)")
     a("")
     with open(path, "w") as f:
         f.write("\n".join(out) + "\n")
+
+
+# ── 一条臂的画像块(两个宇宙共用)─────────────────────────────────────────────────────────
+def arm_profile(tickets: list[dict], months: list[str], gstate: dict, need_n: int, need_m: int,
+                universe_meta: dict, surv: Optional[set[str]] = None,
+                with_tickets: bool = True) -> dict:
+    monthly = monthly_rows(tickets, months, gstate)
+    paths = judge_paths(tickets, months, need_n, need_m)
+    bands: dict = {"全期(2020-01 → 2026-09)": band_block(monthly),
+                   "闸门全关的月份": band_block(monthly, lambda r: r["gate_all_closed"])}
+    blk: dict = {"universe": universe_meta,
+                 "distribution": distribution(tickets),
+                 "by_year": by_year(tickets),
+                 "monthly": monthly,
+                 "bands": bands,
+                 "judge_paths": paths,
+                 "judge_summary": judge_summary(paths)}
+    if surv:
+        ts = [t for t in tickets if base_of(t["symbol"]) in surv]
+        ms = monthly_rows(ts, months, gstate)
+        bands["只算今天仍在交易的名字(幸存者口径)"] = band_block(ms)
+        blk["survivor_subset"] = {"n_tickets": len(ts),
+                                  "frac_of_all": (len(ts) / len(tickets)) if tickets else None,
+                                  "mean_r": float(np.mean([t["R"] for t in ts])) if ts else None}
+    if with_tickets:
+        blk["tickets"] = [dict({k: t[k] for k in TICKET_FIELDS if k in t}) for t in tickets]
+        blk["tickets_2026"] = [dict({k: t[k] for k in TICKET_FIELDS if k in t})
+                               for t in tickets if TICKET_LO <= t["signal_d"] <= TICKET_HI]
+    return blk
 
 
 # ── 主流程 ────────────────────────────────────────────────────────────────────────────────
@@ -535,30 +690,76 @@ def main() -> None:
     months = month_range(MONTH_LO, MONTH_HI)
     gstate = gate_month_state(gate, months)
 
-    # ── 臂 L ──────────────────────────────────────────────────────────────────────────────
-    L, L_skip = arm_l(um, fund_daily)
-    L_monthly = monthly_rows(L, months, gstate)
-    L_paths = judge_paths(L, months, L_JUDGE_N, L_JUDGE_M)
-    L_bands = {"全期(2020-01 → 2026-09)": band_block(L_monthly),
-               "闸门全关的月份": band_block(L_monthly, lambda r: r["gate_all_closed"])}
+    # ── 宇宙分类:只做加密合约(台账修订 2026-10-26:Seth)──────────────────────────────
+    ucls = load_universe_class(um)
+    if ucls.get("crypto") is None:
+        raise SystemExit(f"exchangeinfo 快照读不到({EXCHANGEINFO_PATH}),不能按台账修订分类宇宙")
+    crypto: set[str] = ucls["crypto"]
 
-    # ── 臂 H ──────────────────────────────────────────────────────────────────────────────
-    H, H_blocked, H_scan = arm_h(um, fund_daily, gate)
-    H_monthly = monthly_rows(H, months, gstate)
-    H_paths = judge_paths(H, months, H_JUDGE_N, H_JUDGE_M)
-    H_bands = {"全期(2020-01 → 2026-09)": band_block(H_monthly),
-               "闸门全关的月份": band_block(H_monthly, lambda r: r["gate_all_closed"])}
+    # ── 扫描:两个宇宙共用一次 H4 scan(贵的部分只跑一遍)──────────────────────────────
+    scan = h4.scan_um(um, fund_daily)
+    surv = load_survivors()
+
+    # ── 臂 L(主口径 = 只加密;「全部合约」只作一档对照)───────────────────────────────
+    L, L_skip = arm_l(um, fund_daily, allowed=crypto)
+    L_all, L_all_skip = arm_l(um, fund_daily)
+    L_blk = arm_profile(
+        L, months, gstate, L_JUDGE_N, L_JUDGE_M,
+        {"n_symbols_total": len(um), "n_symbols_in_scope": len(L),
+         "n_tickets": len(L), "n_closed": sum(1 for t in L if not t["still"]),
+         "n_open": sum(1 for t in L if t["still"]), "skipped": L_skip,
+         "n_2019_09_listed": sum(1 for a in um.values() if a["d"][0][:7] == "2019-09")},
+        surv)
+    L_all_blk = arm_profile(
+        L_all, months, gstate, L_JUDGE_N, L_JUDGE_M,
+        {"n_symbols_total": len(um), "n_symbols_in_scope": len(L_all),
+         "n_tickets": len(L_all), "n_closed": sum(1 for t in L_all if not t["still"]),
+         "n_open": sum(1 for t in L_all if t["still"]), "skipped": L_all_skip,
+         "n_2019_09_listed": sum(1 for a in um.values() if a["d"][0][:7] == "2019-09")},
+        with_tickets=False)
+
+    # ── 臂 H(主口径 = 只加密)──────────────────────────────────────────────────────────
+    H, H_blocked, H_scan, H_excluded, H_chained = arm_h(um, fund_daily, gate, allowed=crypto, scan=scan)
+    H_all, H_all_blocked, _, H_all_excluded, H_all_chained = arm_h(um, fund_daily, gate, scan=scan)
+    n_raw_noncrypto = sum(1 for t in H_scan["tickets"] if base_of(t["symbol"]) not in crypto)
+    H_blk = arm_profile(
+        H, months, gstate, H_JUDGE_N, H_JUDGE_M,
+        {"n_symbols_total": len(um),
+         "n_h4_candidates_raw": len(H_scan["tickets"]),
+         "n_h4_candidates_raw_non_crypto": n_raw_noncrypto,
+         "n_h4_tickets_chained_before_gate": H_chained,
+         "n_h4_tickets_before_gate": H_chained,
+         "n_tickets": len(H), "n_closed": sum(1 for t in H if not t["still"]),
+         "n_open": sum(1 for t in H if t["still"]),
+         "n_blocked": len(H_blocked),
+         "n_blocked_gate_open": sum(1 for t in H_blocked if t["gate_state"] == "open"),
+         "n_blocked_gate_missing": sum(1 for t in H_blocked if t["gate_state"] == "missing"),
+         "n_excluded_non_crypto": len(H_excluded),
+         "n_state_days": H_scan["n_state_days"], "n_cand_days": H_scan["n_cand_days"]},
+        surv)
+    H_all_blk = arm_profile(
+        H_all, months, gstate, H_JUDGE_N, H_JUDGE_M,
+        {"n_symbols_total": len(um),
+         "n_h4_candidates_raw": len(H_scan["tickets"]),
+         "n_h4_tickets_chained_before_gate": H_all_chained,
+         "n_h4_tickets_before_gate": H_all_chained,
+         "n_tickets": len(H_all), "n_closed": sum(1 for t in H_all if not t["still"]),
+         "n_open": sum(1 for t in H_all if t["still"]),
+         "n_blocked": len(H_all_blocked),
+         "n_blocked_gate_open": sum(1 for t in H_all_blocked if t["gate_state"] == "open"),
+         "n_blocked_gate_missing": sum(1 for t in H_all_blocked if t["gate_state"] == "missing"),
+         "n_excluded_non_crypto": 0,
+         "n_state_days": H_scan["n_state_days"], "n_cand_days": H_scan["n_cand_days"]},
+        with_tickets=False)
+
+    L_monthly, L_paths, L_bands = L_blk["monthly"], L_blk["judge_paths"], L_blk["bands"]
+    H_monthly, H_paths, H_bands = H_blk["monthly"], H_blk["judge_paths"], H_blk["bands"]
 
     # ── 幸存者偏差:只留「今天还在交易的名字」(前向只可能在这批名字上开新票)──────────────
-    surv = load_survivors()
     surv_block: dict = {}
     if surv:
         L_s = [t for t in L if base_of(t["symbol"]) in surv]
         H_s = [t for t in H if base_of(t["symbol"]) in surv]
-        L_ms = monthly_rows(L_s, months, gstate)
-        H_ms = monthly_rows(H_s, months, gstate)
-        L_bands["只算今天仍在交易的名字(幸存者口径)"] = band_block(L_ms)
-        H_bands["只算今天仍在交易的名字(幸存者口径)"] = band_block(H_ms)
         surv_block = {
             "source": SURVIVOR_PATH,
             "n_survivor_symbols": len(surv),
@@ -583,7 +784,7 @@ def main() -> None:
     L_ex_paths = judge_paths(L_ex, months, L_JUDGE_N, L_JUDGE_M)
     old_min = h4.MIN_LISTED_DAYS
     h4.MIN_LISTED_DAYS = 220
-    H220, _, _ = arm_h(um, fund_daily, gate)
+    H220, _, _, _, _ = arm_h(um, fund_daily, gate, allowed=crypto)
     h4.MIN_LISTED_DAYS = old_min
     H220_paths = judge_paths(H220, months, H_JUDGE_N, H_JUDGE_M)
 
@@ -635,6 +836,29 @@ def main() -> None:
     }
 
     protocol_notes = [
+        "**宇宙(台账修订 2026-10-26,Seth):两条臂只做加密合约。** 分类源 = "
+        f"`{EXCHANGEINFO_PATH}` 的 underlyingType:面板的 symbol 是 base 名(BTC / 1000BONK),"
+        "按 `base+USDT` 对到快照条目,underlyingType == 'COIN' ⇒ 加密;"
+        "**快照里根本没有的(已下架的老币)按加密算**。面板 890 个 base 里:加密 "
+        f"{ucls['info']['n_crypto']} 个、非加密 {ucls['info']['n_non_crypto']} 个"
+        f"(其中 {ucls['info']['n_not_in_snapshot']} 个不在快照里 ⇒ 按加密算)。"
+        "非加密的类型分布:"
+        f"{json.dumps(ucls['info']['non_crypto_by_underlying_type'], ensure_ascii=False)} —— "
+        "绝大多数是 2026 年新上的股票 / 商品永续(按第一根日线月份:"
+        f"{json.dumps(ucls['info']['non_crypto_by_first_bar_month'], ensure_ascii=False)})。"
+        "本报告的**主口径 = 只加密**(判过占比、预期带都按它算);「全部合约」只作一档对照。"
+        "分类规则的两处边界,照台账原文执行但要记下来:(a) `underlyingType == 'INDEX'` 的"
+        "指数合约(如 ALL / DEFI,快照里 underlyingSubType 写的是 ['Index','Crypto'])"
+        "**按规则算作非加密** ⇒ 被剔出加密宇宙;(b) 快照里查不到的按加密算 ⇒ "
+        f"29 个已下架的老币(AERGO / LUNA / MATIC / EOS …)留在加密宇宙里。",
+        "**这次宇宙修订实际只改动了臂 L。** 臂 H(H4 × majors 闸门关)在只加密宇宙下与全部合约"
+        f"**完全相同**:叠票后 {H_all_chained} 张里只有 {len(H_excluded)} 张落在非加密合约上"
+        "(且那 1 张也被 majors 闸门挡掉)。机制不是「闸门挡住了股票永续」,而是更靠前一步:"
+        f"H4 的原始候选 {len(H_scan['tickets'])} 张里,落在非加密合约上的只有 {n_raw_noncrypto} 张"
+        "(都在 2026-09)。原因是 H4 规则自带「上市 ≥ 200 天」门槛(`h4.MIN_LISTED_DAYS = 200`),"
+        "而 2026 年新上的股票 / 商品永续在面板末端(2026-09)普遍还没满 200 天 ⇒ 它们本来就没进过 H4。"
+        "⇒ 臂 H 的票集合本来就是加密的;这次修订不是「臂 H 变得更干净」,而是「臂 H 本来就是干净的」。"
+        "(推论:等这些合约满 200 天,H4 就可能开始对它们开票 —— 那是未来才发生的事,不在本报告的范围内。)",
         "臂 L 的「数据第一个月 2019-09 上市的不算」这条规则在本面板上是**空规则**:"
         "`research/s681/_um_daily.jsonl` 里第一根日线落在 2019-09 的合约数为 0"
         "(面板最早的第一根日线是 2020-01-01)。实际后果是:2019-09 ~ 2019-12 上线的合约"
@@ -682,6 +906,15 @@ def main() -> None:
     ]
 
     exploratory_notes = [
+        "**只加密宇宙把臂 L 的 2026 年票数压到历史带的量级以下**:2026-01 → 09 臂 L 只加密 "
+        f"{sum(r['n'] for r in L_monthly if r['month'] >= '2026-01')} 张(全部合约 "
+        f"{sum(r['n'] for r in L_all_blk['monthly'] if r['month'] >= '2026-01')} 张),"
+        "其中 2026-06 → 09 只有 "
+        f"{sum(r['n'] for r in L_monthly if '2026-06' <= r['month'] <= '2026-09')} 张(全部合约 "
+        f"{sum(r['n'] for r in L_all_blk['monthly'] if '2026-06' <= r['month'] <= '2026-09')} 张)。"
+        "⇒ 前向逐月对照时臂 L 的月票数**几乎必然落在历史带下缘**,那是「2026 年的新币里加密的少、"
+        "股票 / 商品永续的多」这个宇宙事实,不是策略变差。"
+        "**探索性 —— 需另立预注册、在新数据上过零信号对照。**",
         "臂 L 剔除「第一根日线 = 2020-01-01」的 "
         f"{len(panel_start)} 个合约后:票数 {len(L_ex)}(原 {len(L)})、平均对冲 R "
         f"{fmt(exploratory['L_without_panel_start']['mean_r'])};"
@@ -714,6 +947,8 @@ def main() -> None:
             "data_root": DATA_ROOT,
             "gate_source": os.path.join(DATA_ROOT, "research", "t156", "_style.json"),
             "months": months, "ticket_window": [TICKET_LO, TICKET_HI],
+            "universe_primary": "crypto_only",
+            "universe_revision": "台账修订 2026-10-26:两条臂只做加密合约;全部合约只作一档对照",
             "judge": {"L": {"n_closed": L_JUDGE_N, "months": L_JUDGE_M},
                       "H": {"n_closed": H_JUDGE_N, "months": H_JUDGE_M}},
             "boot": {"draws": BOOT_DRAWS, "seed": BOOT_SEED, "scheme": "month_block_resample"},
@@ -721,41 +956,15 @@ def main() -> None:
                       "H": "s681_h4_bear_rally_fail.py (T-196) verbatim",
                       "H_gate": "t159.load_gate().gate_closed on signal_d"},
         },
-        "arm_L": {
-            "universe": {"n_symbols_total": len(um), "n_symbols_in_scope": len(L),
-                         "n_tickets": len(L), "n_closed": sum(1 for t in L if not t["still"]),
-                         "n_open": sum(1 for t in L if t["still"]), "skipped": L_skip,
-                         "n_2019_09_listed": sum(1 for a in um.values() if a["d"][0][:7] == "2019-09")},
-            "distribution": distribution(L),
-            "by_year": by_year(L),
-            "monthly": L_monthly,
-            "bands": L_bands,
-            "judge_paths": L_paths,
-            "judge_summary": judge_summary(L_paths),
-            "tickets": [dict({k: t[k] for k in TICKET_FIELDS if k in t}) for t in L],
-            "tickets_2026": [dict({k: t[k] for k in TICKET_FIELDS if k in t})
-                             for t in L if TICKET_LO <= t["signal_d"] <= TICKET_HI],
-        },
-        "arm_H": {
-            "universe": {"n_symbols_total": len(um),
-                         "n_h4_tickets_before_gate": len(H_scan["tickets"]),
-                         "n_tickets": len(H), "n_closed": sum(1 for t in H if not t["still"]),
-                         "n_open": sum(1 for t in H if t["still"]),
-                         "n_blocked": len(H_blocked),
-                         "n_blocked_gate_open": sum(1 for t in H_blocked if t["gate_state"] == "open"),
-                         "n_blocked_gate_missing": sum(1 for t in H_blocked if t["gate_state"] == "missing"),
-                         "n_state_days": H_scan["n_state_days"], "n_cand_days": H_scan["n_cand_days"]},
-            "distribution": distribution(H),
-            "by_year": by_year(H),
-            "monthly": H_monthly,
-            "bands": H_bands,
-            "judge_paths": H_paths,
-            "judge_summary": judge_summary(H_paths),
-            "tickets": [dict({k: t[k] for k in TICKET_FIELDS if k in t}) for t in H],
-            "tickets_2026": [dict({k: t[k] for k in TICKET_FIELDS if k in t})
-                             for t in H if TICKET_LO <= t["signal_d"] <= TICKET_HI],
-            "blocked": [{"symbol": t["symbol"], "signal_d": t["signal_d"], "gate_state": t["gate_state"],
-                         "r": t["r"]} for t in H_blocked],
+        "universe_classification": ucls["info"],
+        "arm_L": L_blk,
+        "arm_H": dict(H_blk,
+                      blocked=[{"symbol": t["symbol"], "signal_d": t["signal_d"],
+                                "gate_state": t["gate_state"], "r": t["r"]} for t in H_blocked]),
+        "all_contracts_comparison": {
+            "note": "对照档:不筛宇宙的全部合约(2026-10-26 修订前的主口径)。只报一档,不逐张票。",
+            "arm_L": {k: v for k, v in L_all_blk.items() if k not in ("tickets", "tickets_2026")},
+            "arm_H": {k: v for k, v in H_all_blk.items() if k not in ("tickets", "tickets_2026")},
         },
         "protocol_notes": protocol_notes,
         "exploratory": exploratory,
@@ -769,8 +978,13 @@ def main() -> None:
         "frozen_at_utc": res["meta"]["generated_at_utc"],
         "task": "T-199", "ledger": "S-683",
         "kind": "expected_bands_from_history_DESCRIPTION_ONLY",
-        "how_to_read": "前向逐月对照只读这份文件:每个前向月的票数与平均 R,落在对应分位带内即『与历史画像一致』;"
-                       "落在带外只是画像不一致,不构成结论。",
+        "universe_primary": "crypto_only",
+        "universe_rule": "只做加密合约:underlyingType == 'COIN'(base+USDT 对到快照);"
+                         "快照里没有的(已下架)按加密算。来源 research/s681/_um_exchangeinfo_20261025.json",
+        "how_to_read": "前向逐月对照只读这份文件的 arm_L / arm_H 两个块(只加密宇宙):"
+                       "每个前向月的票数与平均 R,落在对应分位带内即『与历史画像一致』;"
+                       "落在带外只是画像不一致,不构成结论。"
+                       "all_contracts_comparison 是修订前口径,只作对照,不用于判定。",
         "conventions": {
             "months": f"{MONTH_LO} → {MONTH_HI}",
             "ticket_counts_include_zero_ticket_months": True,
@@ -785,7 +999,14 @@ def main() -> None:
                   "months_with_tickets": sum(1 for r in L_monthly if r["n"] > 0)},
         "arm_H": {"bands": H_bands, "n_tickets": len(H),
                   "months_with_tickets": sum(1 for r in H_monthly if r["n"] > 0)},
+        "all_contracts_comparison": {
+            "arm_L": {"bands": L_all_blk["bands"], "n_tickets": len(L_all),
+                      "months_with_tickets": sum(1 for r in L_all_blk["monthly"] if r["n"] > 0)},
+            "arm_H": {"bands": H_all_blk["bands"], "n_tickets": len(H_all),
+                      "months_with_tickets": sum(1 for r in H_all_blk["monthly"] if r["n"] > 0)},
+        },
         "survivorship": surv_block,
+        "universe_classification": ucls["info"],
     }
     json.dump(bands_out, open(OUT_BANDS, "w"), indent=1, default=str)
 
@@ -795,15 +1016,26 @@ def main() -> None:
     # ── 汇总行(上下文要省)──────────────────────────────────────────────────────────────
     for arm, blk in (("L", res["arm_L"]), ("H", res["arm_H"])):
         js = blk["judge_summary"]
-        print(arm, "n", blk["universe"]["n_tickets"], "closed", blk["universe"]["n_closed"],
+        print(arm, "CRYPTO n", blk["universe"]["n_tickets"], "closed", blk["universe"]["n_closed"],
               "meanR", fmt(blk["distribution"].get("mean_r")), "medR", fmt(blk["distribution"].get("median_r")),
               "win", fmt(blk["distribution"].get("win_rate")),
               "p05", fmt(blk["distribution"].get("p05_r")), "p95", fmt(blk["distribution"].get("p95_r")),
               "worst1%", fmt(blk["distribution"].get("worst_1pct_r")))
-        print(arm, "judge reached", js["n_reached"], "/", js["n_start_months"],
+        print(arm, "CRYPTO judge reached", js["n_reached"], "/", js["n_start_months"],
               "months", js.get("months_to_judge_min"), "-", js.get("months_to_judge_max"),
               "p50", fmt((js.get("months_to_judge") or {}).get("p50"), 1),
               "pass", js["n_would_pass"], "frac", fmt(js.get("frac_would_pass_of_reached")))
+    for arm, blk in (("L", res["all_contracts_comparison"]["arm_L"]),
+                     ("H", res["all_contracts_comparison"]["arm_H"])):
+        js = blk["judge_summary"]
+        print(arm, "ALL n", blk["universe"]["n_tickets"], "meanR", fmt(blk["distribution"].get("mean_r")),
+              "medR", fmt(blk["distribution"].get("median_r")), "win", fmt(blk["distribution"].get("win_rate")),
+              "| judge pass", js["n_would_pass"], "/", js["n_reached"],
+              "months", js.get("months_to_judge_min"), "-", js.get("months_to_judge_max"),
+              "p50", fmt((js.get("months_to_judge") or {}).get("p50"), 1))
+    print("universe crypto", ucls["info"]["n_crypto"], "non_crypto", ucls["info"]["n_non_crypto"],
+          "not_in_snapshot", ucls["info"]["n_not_in_snapshot"],
+          "non_crypto_by_type", json.dumps(ucls["info"]["non_crypto_by_underlying_type"]))
     print("L skipped", json.dumps(L_skip), "L 2019-09 listed",
           res["arm_L"]["universe"]["n_2019_09_listed"], "panel_start", len(panel_start))
     print("H blocked", res["arm_H"]["universe"]["n_blocked"],
