@@ -1,8 +1,7 @@
 {
   "id": "T-194",
   "owner": "lane-c",
-  "status": "blocked",
-  "blocked_by": "Seth:docs/research/short_lab_common.py 与 S-681 数据还没进 origin/main —— 推上去后改 open",
+  "status": "open",
   "created": "2026-10-25",
   "forbidden_paths": [
     "Shadow/",
@@ -25,5 +24,5 @@
     "expect": "脚本 docs/research/s681_h2_pump_fade.py;结果 docs/research/s681_h2_pump_fade_results.json(每张票都在,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-194_s681_h2_pump_fade.md:开头一张判据表(四条 + 判定),然后发现段 / 留出段汇总、资金曲线、只报项、协议问题。in_review,推 lane-c/T-194。"
   },
   "prior_value": "没有。这一族坟场见 S-681;这个定义从没算过。",
-  "notes": ""
+  "notes": "2026-10-25 开卡(内核 f460aff4 已在 origin/main)。**独立复算:** 交付前不要读 REFUTATION_LEDGER.md 里 S-681 的任何「结果」小节,也不要读 docs/research/s681_*_seth* —— 判据数字只能自己算出来,交回后 Seth 逐张对照。**钱曲线:** short_lab_common.money() 走 t159.nav,空单成本符号的修正(abs(units),tests/test_t159_nav_short_cost.py)随下一个提交进 main;分支请在该提交之后从 origin/main 切,开工前 `git show origin/main:tests/test_t159_nav_short_cost.py` 能看到就对了。"
 }
