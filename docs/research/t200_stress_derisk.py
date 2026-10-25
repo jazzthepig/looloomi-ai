@@ -535,7 +535,9 @@ def build_report(R: dict[str, Any]) -> str:
     L.append("---")
     L.append("")
     L.append(f"复算:`python3 docs/research/t200_stress_derisk.py` → `docs/research/t200_results.json`"
-             f"(逐日敞口序列 + 每条规则每档的零分布全在里面)。生成于 {R['generated_at_utc']}。")
+             f"(逐日敞口序列 + 每条规则每档的零分布全在里面);"
+             f"独立复算 `python3 docs/research/t200_verify.py`(不 import 本脚本,从 JSON + 原始库重算"
+             f"敞口序列 / 年化 / 回撤 / Calmar / 零分布抽样,逐位一致)。生成于 {R['generated_at_utc']}。")
     L.append("")
     return "\n".join(L)
 
