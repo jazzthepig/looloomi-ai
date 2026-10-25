@@ -1,0 +1,29 @@
+{
+  "id": "T-202",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-25",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/",
+    "docs/research/t159_bear_short.py",
+    "docs/research/short_lab_common.py"
+  ],
+  "title": "S-686 独立复算:R-v2 关停线的分辨力(与 B 道 T-201 互不看,交回后对数)",
+  "source": "Jazz 10-25 晚「开,然后分任务给 abc」。S-684 之后 R-v2 的证据是「为正但不显著、重右尾、按月成簇」;10-23 给 Jazz 的关停线(30 张票平均 R > 0、峰值回撤 −18%)要先知道分辨力。台账 S-686。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-202.json"
+  ],
+  "acceptance": {
+    "check": "**照台账 S-686 一字不改**(有问题写进报告「协议问题」,不自己改)。票 = `docs/research/t197_results.json` 的 tickets.A(B 道 T-197 的结果,已合并,已合并;只用已平的 908 张,R 与信号日 / 进出场日照原样)。两个世界:有边 = 原样;没边 = 每张 R 减去 A 的平均 R。按信号月整块抽(种子 686,每档 5,000 次)。① N ∈ {10, 20, 30, 50, 100, 200}:观测平均 R 的 5 / 50 / 95 分位;R1「均值 > 0」、R2「均值 > 0 且月块自助 p < 0.10」、R3「p < 0.05」(月块自助 2,000 次)在两个世界的通过率。② 钱曲线 6 / 12 / 24 个月:`t159.nav`(import,不复制;f = 0.01、cap = 10)按抽到的票的真实持有期排在一条假想时间线上(先保留每张票相对信号月的天数偏移,再把抽到的月依次接上);最大回撤分布,触到 −10% / −18% / −25% 的概率,两个世界各一份。③ 按 A 在 2024 年的每月开票数分布换算 N = 30 / 50 / 100 要等多少个月(中位 / 90 分位)。最后一张表:「检出力 ≥ 80% 且误放 ≤ 10%」的最小 N(每条规则一个数;够不到就写够不到)。只打印汇总行。不写任何「建议」—— 选线是 Jazz 的事。 新分支 `git switch -c lane-c/T-202 origin/main`。**独立:** 交付前不读 `docs/research/t201_*`、不读 B 道报告。",
+    "expect": "脚本 docs/research/t202_rv2_killline_power_replica.py;结果 docs/research/t202_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-202_rv2_killline_power_replica.md:同 T-201 的表。in_review,推 lane-c/T-202。"
+  },
+  "prior_value": "关停线的数是 10-23 拍的;S-647 的蒙特卡洛量过回撤分布,但用的是面板票(幸存者),也没问「没边的世界里多常过」。",
+  "notes": "若 origin/main 上还没有 docs/research/t197_results.json(T-197 的合并在排队),用 `git show origin/lane-b/T-197:docs/research/t197_results.json` 读同一份。"
+}
