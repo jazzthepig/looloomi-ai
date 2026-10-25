@@ -1,0 +1,28 @@
+{
+  "id": "T-200",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-25",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/",
+    "docs/research/crash_atlas_common.py"
+  ],
+  "title": "S-685:崩盘图谱的压力线索(信用利差走阔 M5 / VIX > 30 M7 / VIX 期限倒挂 M8 / 任一)当 ③ 减仓规则 —— 亮着时 BTC 敞口 0.5,对持有与循环平移随机减仓",
+  "source": "10-23 计划第 7 条:图谱线索 → ③(0–1 倍)候选,先另立预注册。T-193 加随机锚点后剩下的 M5 / M7 / M8,M5 在 NASDAQ 与新兴市场两边都亮。台账 S-685(2026-10-25 15:49 UTC)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-200.json"
+  ],
+  "acceptance": {
+    "check": "**照台账 S-685 一字不改**(有问题写进报告「协议问题」,不自己改)。数据:FRED 用 `docs/research/crash_atlas_common.load_fred`(BAA10Y / VIXCLS / VXVCLS / NASDAQCOM,数据根 research/crash_atlas/fred/,import 不复制);BTC / ETH 价格 = `asset_mcap_daily` 的 price 列(publishable key 只读,同 T-187 的 fetch;翻页带 order)。信号用 t−1 已发布的值;亮 ⇒ 敞口 0.5,亮过后保持 10 个自然日;切换扣 0.10% × |变化|;空出部分收 0;休市日沿用最近交易日读数。四条规则(M5 / M7 / M8 / 任一)各自:BTC 2014-09-17 → 2026-09-30 上的年化、最大回撤、Calmar,对持有;循环平移对照 1,000 次(种子 685,平移量在 [60, 长度 − 60] 天均匀)的 Calmar 零分布与分位;三条判据 + 判定。只报:ETH、NASDAQ(1990 →,图谱发现用过 ⇒ 不进判据,报告写明)、亮的天数占比、切换次数、按年、四段熊市(2018 / 2020-03 / 2022 / 2025-10 → 2026)各自少亏多少、亮着时 BTC 之后 20 日平均收益、敞口 0 一档。上下文要省:只打印汇总行。不写任何「建议」。新分支 `git switch -c lane-c/T-200 origin/main`。",
+    "expect": "脚本 docs/research/t200_stress_derisk.py;结果 docs/research/t200_results.json(每条规则的逐日敞口序列与零分布都在,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-200_stress_derisk.md:开头判据表(4 条规则 × 3 条判据 + 判定),然后只报项、协议问题。in_review,推 lane-c/T-200。"
+  },
+  "prior_value": "三条在 NASDAQ / EM 锚点上的提升已看过(T-185 / T-186 / T-193),在 BTC 锚点上不是线索(T-187);当成每日敞口规则从没算过。",
+  "notes": ""
+}
