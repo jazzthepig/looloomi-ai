@@ -3805,6 +3805,17 @@ async def get_cg_category_ids() -> set[str]:
     return {c.get("category_id") for c in r.json() or [] if c.get("category_id")}
 
 
+async def get_cg_derivatives_exchange_tickers(exchange_id: str) -> list[dict]:
+    """S-683 修订:CoinGecko Pro `/derivatives/exchanges/{id}` 的全部未到期合约(一次请求)。
+    加密合约带 `coin_id`,Binance 的股票 / 商品 / 外汇永续不带 —— 做空纸面臂用它给新上的合约分类。读不到抛异常。"""
+    client = _get_cg_client()
+    r = await client.get(f"{CG_PRO_BASE}/derivatives/exchanges/{exchange_id}", headers=_cg_headers(), timeout=30,
+                         params={"include_tickers": "unexpired"})
+    if r.status_code != 200:
+        raise RuntimeError(f"CoinGecko /derivatives/exchanges/{exchange_id} HTTP {r.status_code}: {r.text[:160]}")
+    return list((r.json() or {}).get("tickers") or [])
+
+
 async def get_cg_category_name_map() -> dict[str, str]:
     """CoinGecko Pro `/coins/categories/list` → {分类名: 分类 id}。`/coins/{id}` 给的是**名字**,分类法用的是 id(T-067)。"""
     client = _get_cg_client()

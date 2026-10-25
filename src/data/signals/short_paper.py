@@ -3,6 +3,8 @@
 - 臂 L `short_listing_hedged`:Binance U 本位永续新合约,第 8 根日线开盘空(信号 = 第 7 根收盘),s = 50%,60 天;
   同时按 BTCUSDT 永续开盘价等名义多 BTC,空腿哪天出 BTC 腿就那天开盘出。判 **对冲 R**。
 - 臂 H `short_h4_gate`:S-681 H4(熊市反弹失败)一字不改,加一条:信号日 majors 闸门关(与 `r_tickets_scan` 同一个闸门)。
+- **宇宙(S-683 修订,inception 前):只做加密合约**(`perp_bv_pairs.kind` = 'coin')。Binance 2025-12 起上了 200 多个
+  股票 / 商品 / 外汇永续,臂的原因(低流通、解锁卖压)对它们不成立;没分类的合约也不进。
 
 **一个内核。** 单票的语义与研究的 `docs/research/short_lab_common.short_ticket` 逐行相同(次日开盘进;日内触及止损按止损价、
 跳空开在止损上方按开盘;到期 = 第 ei + N 根开盘;规则出场 = 次日开盘;单边 0.10%),研究脚本能拿同一批日线逐张对
@@ -163,6 +165,16 @@ def listing_tickets(bars: dict[str, dict], first_d: dict[str, str], d_from: str,
             if t:
                 out.append({**t, "pair": pair, "symbol": pair[:-4], "listing_d": f})
     return chain(out), problems
+
+
+def coin_universe(pairs: list[dict], d_from: str, d_to: str) -> tuple[set[str], list[str]]:
+    """S-683 修订:臂只用 kind = 'coin' 的合约(股票 / 商品 / 外汇永续与还没分类的都不进)。
+    → (可用的合约, 窗口里上市但被排除的合约及原因 —— 报告用)。"""
+    coins = {r["pair"] for r in pairs if r.get("kind") == "coin"}
+    lo = (date.fromisoformat(d_from) - timedelta(days=L_SIGNAL_IDX)).isoformat()
+    excluded = [f"{r['pair']}:{r.get('kind') or '未分类'}" for r in pairs
+                if r.get("kind") != "coin" and r.get("first_d") and lo <= str(r["first_d"])[:10] <= d_to]
+    return coins, sorted(excluded)
 
 
 # ── 资金费、对冲腿、R ───────────────────────────────────────────────────────────────────────────────
@@ -365,10 +377,12 @@ async def run_once(today: Optional[date] = None) -> dict[str, Any]:
         return {"ok": True, "refused": True, "reason": f"数据没到 inception 之后的完整一天:{why}"}
     bars_to = {p: _cut(a, d_to) for p, a in bars.items()}
     bars_to = {p: a for p, a in bars_to.items() if a["d"]}
-    pairs = await _read_all("perp_bv_pairs", {"select": "pair,first_d"})
+    pairs = await _read_all("perp_bv_pairs", {"select": "pair,first_d,kind"})
     first_d = {r["pair"]: str(r["first_d"])[:10] for r in pairs if r.get("first_d")}
-    tl, problems = listing_tickets(bars_to, first_d, INCEPTION, d_to)
-    th, blocked = h4_tickets(bars_to, gate, INCEPTION, d_to)
+    coins, excluded = coin_universe(pairs, INCEPTION, d_to)
+    signal_bars = {p: a for p, a in bars_to.items() if p in coins}
+    tl, problems = listing_tickets(signal_bars, first_d, INCEPTION, d_to)
+    th, blocked = h4_tickets(signal_bars, gate, INCEPTION, d_to)
     syms = sorted({t["symbol"] for t in tl + th} | {"BTC"})
     fund_rows = await _read_all("funding_history", {"select": "symbol,funding_time,funding_rate", "venue": "eq.binance_perp",
                                                     "symbol": f"in.({','.join(syms)})",
@@ -376,7 +390,8 @@ async def run_once(today: Optional[date] = None) -> dict[str, Any]:
     fund = daily_funding(fund_rows)
     btc = bars_to.get(HEDGE_PAIR)
     stamp = datetime.now(timezone.utc).isoformat()
-    report: dict[str, Any] = {"d_to": d_to, "stopped_because": why, "listing_problems": problems[:5], "h_blocked_gate_open": blocked}
+    report: dict[str, Any] = {"d_to": d_to, "stopped_because": why, "listing_problems": problems[:5], "h_blocked_gate_open": blocked,
+                              "universe_coin": len(coins), "new_listings_not_coin": excluded[:20]}
     for arm, tks in ((ARM_L, tl), (ARM_H, th)):
         rows = [{**finish(t, bars_to[t["pair"]], fund, btc, arm), "updated_at": stamp} for t in tks]
         stored = await _read_all(TICKETS, {"select": "ticket_id,status," + ",".join(FROZEN_FIELDS), "arm": f"eq.{arm}"})

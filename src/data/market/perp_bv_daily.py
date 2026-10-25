@@ -46,6 +46,7 @@ UPLOAD_GRACE_DAYS = 3                 # 日档最近 3 天 404 = 还没传,不�
 CONCURRENCY = 24
 TIME_BUDGET_S = 210.0
 FAIL_REFUSE_FRACTION = 0.5
+CLASSIFY_LOOKBACK_DAYS = 60           # S-683 修订:只给最近 60 天上的新合约问 CoinGecko 分类
 #: 与研究抓取同一张排除表(docs/research/s681_um_fetch.py):指数类、稳定币、非常规合约。
 EXCLUDE_BASE = frozenset({"BTCDOM", "DEFI", "USDC", "FDUSD", "TUSD", "BUSD", "USDP", "DAI", "FOOTBALL", "BLUEBIRD"})
 
@@ -203,6 +204,34 @@ async def _fetch(pair: str, when: str, monthly: bool, sem: asyncio.Semaphore) ->
         return None, False, f"{pair} {when}: parse {type(e).__name__}: {str(e)[:80]}"
 
 
+def classify(pairs: list[str], tickers: list[dict], now_iso: str) -> list[dict]:
+    """纯函数(S-683 修订)。CoinGecko 的 binance_futures 行情 → 有 coin_id 的合约记为 coin;
+    没有 coin_id 的**不分类**(可能是股票 / 商品永续,也可能是 CG 还没对上的新币)—— 下一轮再查,臂里不用。
+    2026-10-25 快照上:520 / 520 个加密合约有 coin_id,225 个 TradFi 里 222 个没有。"""
+    m = {str(t.get("symbol") or "").upper(): t.get("coin_id") for t in tickers if t.get("symbol")}
+    return [{"pair": p, "symbol": p[:-4], "kind": "coin", "underlying_type": "COIN(cg)",
+             "classified_by": f"coingecko:{m[p]}", "classified_at": now_iso} for p in pairs if m.get(p)]
+
+
+async def _classify_new(known: dict[str, dict], today: date) -> tuple[int, Optional[str]]:
+    """最近 60 天上的、还没分类的合约,问一次 CoinGecko(只在有这种合约时才问)。→ (分了几个, 错误)。"""
+    from src.api.store import supabase_upsert_table
+    from src.data.market.data_layer import get_cg_derivatives_exchange_tickers
+    cutoff = (today - timedelta(days=CLASSIFY_LOOKBACK_DAYS)).isoformat()
+    todo = sorted(p for p, r in known.items() if not r.get("kind") and str(r.get("first_d") or "")[:10] >= cutoff)
+    if not todo:
+        return 0, None
+    try:
+        rows = classify(todo, await get_cg_derivatives_exchange_tickers("binance_futures"), datetime.now(timezone.utc).isoformat())
+    except Exception as e:                                           # noqa: BLE001  读不到 ⇒ 不分类,臂里照样不用
+        return 0, f"{type(e).__name__}: {str(e)[:120]}"
+    if rows:
+        r = await supabase_upsert_table(PAIRS, rows, on_conflict="pair")
+        if not r.ok:
+            return 0, f"{PAIRS} 写入失败(分类):{r.why}"
+    return len(rows), None
+
+
 async def run_once(today: Optional[date] = None, time_budget: float = TIME_BUDGET_S) -> dict[str, Any]:
     from src.api.store import supabase_upsert_table
     from src.data.market.source_policy import MARKET_DATA, assert_purpose_source
@@ -211,7 +240,7 @@ async def run_once(today: Optional[date] = None, time_budget: float = TIME_BUDGE
     today = today or datetime.now(timezone.utc).date()
     sem = asyncio.Semaphore(CONCURRENCY)
     # 1. 合约名单
-    known = {r["pair"]: r for r in await _read_all(PAIRS, {"select": "pair,symbol,first_d,active,dead_from"})}
+    known = {r["pair"]: r for r in await _read_all(PAIRS, {"select": "pair,symbol,first_d,active,dead_from,kind"})}
     listed = [p for p in await _index_pairs() if keep(p)]
     new = [p for p in listed if p not in known]
     assert_purpose_source(MARKET_DATA, VENUE, n_assets=max(len(listed), 1),
@@ -227,6 +256,7 @@ async def run_once(today: Optional[date] = None, time_budget: float = TIME_BUDGE
             return {"ok": False, "refused": False, "reason": f"{PAIRS} 写入失败:{r.why}"}
         for p in probed:
             known[p["pair"]] = p
+    n_classified, classify_error = await _classify_new(known, today)
     # 2. 日线
     cov = {r["pair"]: r for r in await _read_all(COVERAGE_VIEW, {"select": "pair,min_d,max_d,n"})}
     tasks = plan(list(known.values()), cov, today)
@@ -253,7 +283,8 @@ async def run_once(today: Optional[date] = None, time_budget: float = TIME_BUDGE
                 dead[pair] = min(dead.get(pair, when), when)
     detail = {"pairs_listed": len(listed), "pairs_new": len(new), "active": sum(1 for p in known.values() if p.get("active")),
               "planned": len(tasks), "fetched": done, "rows": len(rows), "errors": len(errors), "error_sample": errors[:3],
-              "dead_marked": len(dead), "backlog": len(tasks) - done}
+              "dead_marked": len(dead), "backlog": len(tasks) - done,
+              "classified_coin": n_classified, "classify_error": classify_error}
     if done and len(errors) > FAIL_REFUSE_FRACTION * done:
         return {"ok": False, "refused": True, "reason": f"{len(errors)}/{done} 个档读不到 —— 整轮拒写:{errors[:2]}", **detail}
     seen: dict[tuple, dict] = {}

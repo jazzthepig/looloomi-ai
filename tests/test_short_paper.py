@@ -155,3 +155,22 @@ def test_plan_uses_months_for_whole_months_days_for_the_rest_and_stops_at_dead_f
 def test_month_days_falls_back_to_daily_files():
     assert bv.month_days("2026-02", dt.date(2026, 10, 1))[-1] == "2026-02-28"
     assert bv.month_days("2026-10", dt.date(2026, 10, 3)) == ["2026-10-01", "2026-10-02", "2026-10-03"]
+
+
+# ── S-683 修订:只做加密合约 ───────────────────────────────────────────────────────────────────────
+def test_coin_universe_excludes_tradfi_and_unclassified_and_reports_new_ones():
+    pairs = [{"pair": "BTCUSDT", "first_d": "2019-09-08", "kind": "coin"},
+             {"pair": "NEWUSDT", "first_d": "2026-10-22", "kind": "coin"},
+             {"pair": "IBKRUSDT", "first_d": "2026-10-21", "kind": "tradfi"},
+             {"pair": "MYSTUSDT", "first_d": "2026-10-23", "kind": None},
+             {"pair": "TSLAUSDT", "first_d": "2026-01-28", "kind": "tradfi"}]
+    coins, excluded = sp.coin_universe(pairs, "2026-10-26", "2026-10-30")
+    assert coins == {"BTCUSDT", "NEWUSDT"}
+    assert excluded == ["IBKRUSDT:tradfi", "MYSTUSDT:未分类"], "窗口里上市却被排除的要报出来;老的 TSLA 不在窗口"
+
+
+def test_classify_marks_only_contracts_with_a_coingecko_coin_id():
+    tickers = [{"symbol": "NEWUSDT", "coin_id": "new-token"}, {"symbol": "IBKRUSDT", "coin_id": None}]
+    rows = bv.classify(["NEWUSDT", "IBKRUSDT", "GHOSTUSDT"], tickers, "2026-10-25T00:00:00+00:00")
+    assert [(r["pair"], r["kind"], r["symbol"]) for r in rows] == [("NEWUSDT", "coin", "NEW")], \
+        "没有 coin_id 的不分类(可能是股票,也可能是 CG 还没对上的新币),下一轮再查"
