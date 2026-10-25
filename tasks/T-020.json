@@ -2,12 +2,13 @@
   "id": "T-020",
   "title": "DQS 的新鲜度改用源自己的时间戳(CG last_updated / kline close / TVL date / 日线 bar date),不用抓取时刻",
   "owner": "lane-c",
-  "status": "blocked",
+  "status": "in_review",
   "source": "§T-009-DECISION",
   "blocked_by": ["T-001"],
   "allowed_paths": [
     "/Volumes/CometCloudAI/cometcloud-local/data_fetcher.py",
-    "/Volumes/CometCloudAI/cometcloud-local/cis_v4_engine.py"
+    "/Volumes/CometCloudAI/cometcloud-local/cis_v4_engine.py",
+    "/Volumes/CometCloudAI/cometcloud-local/cis_scheduler.py"
   ],
   "forbidden_paths": [
     "src/",
@@ -19,5 +20,6 @@
   },
   "prior_value": "同一次 push 只有 2 档(0.67/0.81 → 0.70/0.85),随批次时刻整体漂移",
   "created": "2026-09-25",
-  "verified": null
+  "verified": null,
+  "notes": "2026-10-25 lane-c 交付(阻塞条件 T-001 已于 10-06 done,本卡恢复)。**范围:** Mac 仓库 cometcloud-local 分支 lane-c/T-020,改 data_fetcher.py + cis_scheduler.py;未动 cis_v4_engine.py(引擎的 confidence 本来就是 base-only,不该进衰减)。**卡上原来的 allowed_paths 少了 cis_scheduler.py** —— `_compute_data_quality_score` / `_source_decay` 在 T-009 A′ 改版后住在 cis_scheduler.py(不在 cis_v4_engine.py),已把该路径加进 allowed_paths(只加这一个,其余照旧)。**做了什么:** DQS = confidence × 新鲜度,新鲜度按每个源自己的最后更新时间算,不再用抓取时刻。data_fetcher 新增 per-source 时间戳登记(_SOURCE_TS)与按源节奏的衰减:coingecko_price(CG last_updated_at,加 include_last_updated_at 参数)/ coingecko_market(CG /coins/{id} last_updated)/ binance_kline(日线 kline 收盘,未收盘用开盘)/ defillama_tvl(DeFiLlama 日度点位日期,best-effort,24h 缓存)/ tradfi_daily(日线 bar 日期 → 美股 16:00 New_York,按 DST)。缓存命中也保留源自己的时间戳。日线源在「最近一个应有收盘」之内不衰减;周末不算落后收盘;重抓不再把年龄归零。cis_scheduler:DQS 用 get_source_decay(asset);没有源时间戳时退回 _source_decay(source_age_s)(batch age)。**DQS 仍是元数据:不进 confidence、不进 LAS、不改 CIS 分/评级。**\n\n**测得的原始数字:** ①改动前(2026-10-25 23:01:14 push,job cis_20261025_230005,43 资产):DQS ∈ {0.70×38, 0.85×5},且 43/43 DQS == confidence —— 正是 A′ 钉死的结果(卡上 prior_value 的「只有 2 档」在 A′ 后就是 0.70/0.85)。②离线规则检查(脚本 /Volumes/CometCloudAI/cometcloud-local/_t020_dqs_check.py,合成时间戳):CG 价格 60 秒前 decay 1.0000;CG 价格 30 分钟前 decay 0.9826(5min 宽限);当日 kline(今日 00:00)decay 1.0000;kline 落后 2 个收盘 decay 0.1000(底);今日 TradFi bar decay 1.0000;上一交易日 bar decay 0.8000;周六读周五 bar decay 1.0000、周六读周四 bar decay 0.8000。③一次 push 取值表(6 资产、同一 now):DQS 0.85 / 0.84 / 0.81 / 0.68 / 0.70 / 0.56 → 6 档(随各自源时间戳变,不再只有 2 档)。④重抓不重置:源时间戳固定,3 次重抓后立刻读 A′ 年龄恒 0.0min(每次归零),T-020 依次 0 / 16 / 36min;30min 后再读 A′ 恒 30min,T-020 26 / 46 / 66min。\n\n**要 @seth 做的:** 验收 SQL 要读 cis_scores,但本机 SUPABASE_KEY 是 publishable 只读,查 cis_scores 返回 0 行(该表由 Railway 写);改动前基线因此取自 Mac 本地 _data/cis_scores_latest.json(与 POST 给 Railway 的同一 payload)。请用 service 端跑卡上那条 SQL 复核改动后的档数,或给 lane 该表的读权限。\n\n**协议问题(未自行改规则):** ①卡上 allowed_paths 原先没写 cis_scheduler.py —— DQS 的计算函数在 T-009 A′ 改版后搬到那儿了,已加进 allowed_paths。②日线源的「应有收盘」按美股 16:00 New_York 算(夏令时正确),但没有交易所节假日表:节假日当天/次日会被读成落后 1 个收盘(TradFi decay 0.8)。③TVL 日期要打 DeFiLlama /protocol/{id}(比 /tvl 重),best-effort 6s 超时 + 24h 缓存;失败则 TVL 源不盖章(不罚,也不会盖错)。④连续源(CG 价格 5min、CG 市场快照 1h)按「宽限一个节奏」算,不是硬 TTL。"
 }
