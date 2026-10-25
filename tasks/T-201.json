@@ -1,7 +1,7 @@
 {
   "id": "T-201",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-25",
   "forbidden_paths": [
     "Shadow/",
@@ -25,5 +25,5 @@
     "expect": "脚本 docs/research/t201_rv2_killline_power.py;结果 docs/research/t201_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-201_rv2_killline_power.md:开头一张「最小 N」表,然后 ① ② ③、协议问题。in_review,推 lane-b/T-201。"
   },
   "prior_value": "关停线的数是 10-23 拍的;S-647 的蒙特卡洛量过回撤分布,但用的是面板票(幸存者),也没问「没边的世界里多常过」。",
-  "notes": "若 origin/main 上还没有 docs/research/t197_results.json(T-197 的合并在排队),用 `git show origin/lane-b/T-197:docs/research/t197_results.json` 读同一份。"
+  "notes": "2026-10-26 交付(B 道;交付前未读 docs/research/t202_*)。照台账 S-686 配置表跑完:908 张已平票当真实过程,按信号月整块抽、种子 686、每档 5,000 次、月块自助 2,000 次。**最小 N(检出力 ≥ 80% 且误放 ≤ 10%)= R1 / R2 / R3 三条规则全部够不到(N ≤ 200 网格内)。** 主口径 `size`(按该月票数加权整块抽):R1 N=200 检出力 85.2% / 误放 72.6%、N=30 67.0% / 44.0%;R2 N=200 33.3% / 14.8%、N=30 4.8% / 2.5%、N=100 21.4% / 10.0%;R3 N=200 26.1% / 11.8%。敏感性 `month`(40 个信号月等权):R1 N=200 69.2% / 48.7%;R2 15.6% / 5.7%。观测平均 R 5/50/95 分位(size):有边 N=30 −0.668/0.286/3.245、N=200 −0.221/0.708/1.515;没边 N=200 −0.532/0.382/1.163。② 钱曲线(t159.nav import、f=1%、cap=10、每格 5,000 条 replicate):size 口径 MDD 中位 6/12/24 月 = 有边 −20.5%/−25.6%/−30.5%、没边 −26.9%/−34.8%/−42.9%;触 −18% = 有边 66.8%/92.2%/99.4%、没边 90.2%/99.4%/100%;触 −25% = 有边 25.8%/53.1%/81.0%、没边 57.8%/87.2%/98.5%;触 −10% 两世界都 ≈100%;净值 ≤ 0 的 0%。③ 2024 每月开票数 {01:14,02:71,03:28,04:0,05:13,06:13,07:2,08:0,09:0,10:10,11:152,12:5}(2024 开出 308 张、全部已平 ⇒ 开票数 = 已平数):N=30 中位 3.0 月 / p90 6.0;N=50 4.0 / 7.0;N=100 5.0 / 11.0。自检:908 张按原日历走本脚本时间线再跑 nav 与直接 nav 逐位相同(Δ=0.0e+00 / 0.0e+00,直接 nav 期末 4.1550、MDD −36.94%);没边世界每票 R 与 (R − 0.3329) 最大误差 1.8e-15、中途标记价翻负 0 张。脚本 docs/research/t201_rv2_killline_power.py;结果 docs/research/t201_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-201_rv2_killline_power.md(开头「最小 N」表,然后 ①②③ + 协议问题 8 条;报告只报数,无任何建议)。跑法:python3 docs/research/t201_rv2_killline_power.py --draws 5000 --workers 10(约 19 分钟)。交付前 lane-b 独立复跑一档(size|edge|N=50|truncate)与 results.json 逐位相同(mean_q / r1 / r2 / r3 / r2_excl / degen 全 OK);并从 raw_means 重算 ① 的通过率与分位、从 cells 重算「最小 N」表(全部够不到)、独立重算 908 张票 / grand mean R=+0.332867 / 40 个信号月 —— 均一致;② 单跑一条 replicate 的 MDD 落在文件分布区间内。"
 }
