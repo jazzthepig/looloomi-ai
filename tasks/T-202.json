@@ -1,7 +1,7 @@
 {
   "id": "T-202",
   "owner": "lane-c",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-25",
   "forbidden_paths": [
     "Shadow/",
@@ -25,5 +25,5 @@
     "expect": "脚本 docs/research/t202_rv2_killline_power_replica.py;结果 docs/research/t202_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-202_rv2_killline_power_replica.md:同 T-201 的表。in_review,推 lane-c/T-202。"
   },
   "prior_value": "关停线的数是 10-23 拍的;S-647 的蒙特卡洛量过回撤分布,但用的是面板票(幸存者),也没问「没边的世界里多常过」。",
-  "notes": "若 origin/main 上还没有 docs/research/t197_results.json(T-197 的合并在排队),用 `git show origin/lane-b/T-197:docs/research/t197_results.json` 读同一份。"
+  "notes": "已交付(2026-10-26,lane-c,分支 lane-c/T-202):脚本 docs/research/t202_rv2_killline_power_replica.py;结果 docs/research/t202_results.json;另附独立复核脚本 docs/research/t202_indep_check.py + 其 json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-202_rv2_killline_power_replica.md。测得:908 张已平票平均 R +0.332867(=t197 的 A.mean_r);全样本 40 个月月块自助 p(≤0)=0.107、百分位 0.5195(与 T-197 逐位一致,机器校验)。① 有边 R1/R2/R3 通过率:N=30 41.0%/6.9%/6.0%(不可判 27.2%)、N=100 56.9%/12.8%/8.5%、N=200 67.1%/16.8%/8.7%;没边同档 R1 = 30.7%/36.5%/44.1%(误放随 N 涨)。② 6/12/24 月最大回撤中位:有边 −21.8%/−30.8%/−39.5%(触到 −18% 的概率 70.8%/95.0%/99.8%),没边 −30.1%/−43.3%/−57.1%(92.3%/99.8%/100%)。③ N=30/50/100 需 3/4/5 个月(90 分位 6/7/11)。④ 最小 N:R1/R2/R3 在 N ≤ 200 内都「够不到」(最大检出力 67.1%/16.8%/8.7%,对应误放 44.1%/5.5%/2.6%)。协议问题 7 条(照抄执行、不改协议)在报告 §5;独立复核(另写实现、换种子 20261026)R1 最大差 2.4pp;报告未写任何建议。"
 }
