@@ -1,0 +1,4575 @@
+{
+ "task": "T-193",
+ "ledger": "S-675",
+ "seeds": {
+  "kernel": 675,
+  "kernel_n_shift": 2000,
+  "random_anchor_control": 675,
+  "style_null": 675,
+  "style_n_draw": 2000,
+  "n_random_draws": 5000
+ },
+ "criteria": {
+  "old4": [
+   "pctile ≥ 0.95",
+   "lift ≥ 1.5",
+   "n_anchors ≥ 6",
+   "前后两半命中率都 > 基准率"
+  ],
+  "new5": "旧四条 + 随机锚点「命中率 ≥ 实测」的比例 ≤ 0.05"
+ },
+ "block1_random_anchor": {
+  "targets": [
+   {
+    "task": "T-185",
+    "sign": "M3",
+    "label": "10Y−2Y > 0 且过去 365 天倒挂过(解除倒挂)",
+    "family": "primary_90d",
+    "anchor_set": "main",
+    "lookback": 90,
+    "n_anchors": 13,
+    "hit_rate_t191": 0.5384615384615384,
+    "base_rate": 0.31955667176239355,
+    "lift": 1.6850267449959915,
+    "kernel_pctile": 0.96425,
+    "half1": 0.42857142857142855,
+    "half2": 0.6666666666666666,
+    "t191_same_source": false,
+    "t191_is_clue": true,
+    "series_span": [
+     "1976-06-01",
+     "2026-10-22"
+    ],
+    "series_len_days": 18406,
+    "random_anchor": {
+     "n_draw": 5000,
+     "seed": 675,
+     "note": "随机锚点:同样本量、从该道可用日里无放回抽,算命中率",
+     "n_anchors_passed": 14,
+     "n_anchors": 13,
+     "n_anchors_skipped": 1,
+     "n_pool_days": 18316,
+     "first_ok": "1976-08-30",
+     "ratio_ge_observed": 0.083,
+     "apparatus_percentile_of": 0.9456,
+     "null_p50": 0.3076923076923077,
+     "null_p95": 0.5384615384615384,
+     "null_max": 0.7692307692307693
+    },
+    "random_ratio_ge_observed": 0.083,
+    "n_hits": 7,
+    "binom_p": 0.0848355630891559,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": false,
+    "pass_new5": false,
+    "dropped_by_random_anchor": true
+   },
+   {
+    "task": "T-185",
+    "sign": "M5",
+    "label": "Baa−10Y 利差 63 天升 ≥ 0.5pp",
+    "family": "aux_break_30d",
+    "anchor_set": "aux_break",
+    "lookback": 30,
+    "n_anchors": 15,
+    "hit_rate_t191": 0.3333333333333333,
+    "base_rate": 0.12042486976523915,
+    "lift": 2.7679775280898875,
+    "kernel_pctile": 0.98,
+    "half1": 0.125,
+    "half2": 0.5714285714285714,
+    "t191_same_source": false,
+    "t191_is_clue": true,
+    "series_span": [
+     "1986-04-04",
+     "2026-10-21"
+    ],
+    "series_len_days": 14811,
+    "random_anchor": {
+     "n_draw": 5000,
+     "seed": 675,
+     "note": "随机锚点:同样本量、从该道可用日里无放回抽,算命中率",
+     "n_anchors_passed": 20,
+     "n_anchors": 15,
+     "n_anchors_skipped": 5,
+     "n_pool_days": 14781,
+     "first_ok": "1986-05-04",
+     "ratio_ge_observed": 0.0278,
+     "apparatus_percentile_of": 0.9832,
+     "null_p50": 0.13333333333333333,
+     "null_p95": 0.26666666666666666,
+     "null_max": 0.4666666666666667
+    },
+    "random_ratio_ge_observed": 0.0278,
+    "n_hits": 5,
+    "binom_p": 0.02686598390030232,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": true,
+    "pass_new5": true,
+    "dropped_by_random_anchor": false
+   },
+   {
+    "task": "T-185",
+    "sign": "M7",
+    "label": "VIX > 30",
+    "family": "aux_break_30d",
+    "anchor_set": "aux_break",
+    "lookback": 30,
+    "n_anchors": 14,
+    "hit_rate_t191": 0.6428571428571429,
+    "base_rate": 0.18654935878317924,
+    "lift": 3.4460431654676262,
+    "kernel_pctile": 1.0,
+    "half1": 0.375,
+    "half2": 1.0,
+    "t191_same_source": false,
+    "t191_is_clue": true,
+    "series_span": [
+     "1990-01-02",
+     "2026-10-21"
+    ],
+    "series_len_days": 13442,
+    "random_anchor": {
+     "n_draw": 5000,
+     "seed": 675,
+     "note": "随机锚点:同样本量、从该道可用日里无放回抽,算命中率",
+     "n_anchors_passed": 20,
+     "n_anchors": 14,
+     "n_anchors_skipped": 6,
+     "n_pool_days": 13412,
+     "first_ok": "1990-02-01",
+     "ratio_ge_observed": 0.0,
+     "apparatus_percentile_of": 1.0,
+     "null_p50": 0.14285714285714285,
+     "null_p95": 0.35714285714285715,
+     "null_max": 0.5714285714285714
+    },
+    "random_ratio_ge_observed": 0.0,
+    "n_hits": 9,
+    "binom_p": 0.00021945100351796184,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": true,
+    "pass_new5": true,
+    "dropped_by_random_anchor": false
+   },
+   {
+    "task": "T-185",
+    "sign": "M8",
+    "label": "VIX / VXV > 1(期限结构倒挂)",
+    "family": "aux_break_30d",
+    "anchor_set": "aux_break",
+    "lookback": 30,
+    "n_anchors": 7,
+    "hit_rate_t191": 1.0,
+    "base_rate": 0.37920489296636084,
+    "lift": 2.6370967741935485,
+    "kernel_pctile": 1.0,
+    "half1": 1.0,
+    "half2": 1.0,
+    "t191_same_source": false,
+    "t191_is_clue": true,
+    "series_span": [
+     "2007-12-04",
+     "2026-10-21"
+    ],
+    "series_len_days": 6897,
+    "random_anchor": {
+     "n_draw": 5000,
+     "seed": 675,
+     "note": "随机锚点:同样本量、从该道可用日里无放回抽,算命中率",
+     "n_anchors_passed": 20,
+     "n_anchors": 7,
+     "n_anchors_skipped": 13,
+     "n_pool_days": 6867,
+     "first_ok": "2008-01-03",
+     "ratio_ge_observed": 0.0012,
+     "apparatus_percentile_of": 0.9994,
+     "null_p50": 0.42857142857142855,
+     "null_p95": 0.7142857142857143,
+     "null_max": 1.0
+    },
+    "random_ratio_ge_observed": 0.0012,
+    "n_hits": 7,
+    "binom_p": 0.001127502536361373,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": true,
+    "pass_new5": true,
+    "dropped_by_random_anchor": false
+   },
+   {
+    "task": "T-185",
+    "sign": "M9",
+    "label": "美元广义指数 63 天变化分位 ≥ 0.9",
+    "family": "aux_break_30d",
+    "anchor_set": "aux_break",
+    "lookback": 30,
+    "n_anchors": 7,
+    "hit_rate_t191": 0.5714285714285714,
+    "base_rate": 0.2331356049110222,
+    "lift": 2.4510566356720203,
+    "kernel_pctile": 0.981,
+    "half1": 0.75,
+    "half2": 0.3333333333333333,
+    "t191_same_source": false,
+    "t191_is_clue": true,
+    "series_span": [
+     "2006-11-12",
+     "2026-10-16"
+    ],
+    "series_len_days": 7279,
+    "random_anchor": {
+     "n_draw": 5000,
+     "seed": 675,
+     "note": "随机锚点:同样本量、从该道可用日里无放回抽,算命中率",
+     "n_anchors_passed": 20,
+     "n_anchors": 7,
+     "n_anchors_skipped": 13,
+     "n_pool_days": 7249,
+     "first_ok": "2006-12-12",
+     "ratio_ge_observed": 0.0568,
+     "apparatus_percentile_of": 0.9666,
+     "null_p50": 0.2857142857142857,
+     "null_p95": 0.5714285714285714,
+     "null_max": 0.8571428571428571
+    },
+    "random_ratio_ge_observed": 0.0568,
+    "n_hits": 4,
+    "binom_p": 0.056034072419410004,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": false,
+    "pass_new5": false,
+    "dropped_by_random_anchor": true
+   },
+   {
+    "task": "T-187",
+    "sign": "M8_vix_over_vxv_gt1",
+    "label": "VIX / VXV > 1(期限结构倒挂)",
+    "family": "aux_fastcrash_30d",
+    "anchor_set": "aux_fastcrash_30d",
+    "lookback": 30,
+    "n_anchors": 8,
+    "hit_rate_t191": 0.625,
+    "base_rate": 0.37920489296636084,
+    "lift": 1.6481854838709677,
+    "kernel_pctile": 0.976,
+    "half1": 0.5,
+    "half2": 0.75,
+    "t191_same_source": false,
+    "t191_is_clue": true,
+    "series_span": [
+     "1990-01-02",
+     "2026-10-21"
+    ],
+    "series_len_days": 13442,
+    "random_anchor": {
+     "n_draw": 5000,
+     "seed": 675,
+     "note": "随机锚点:同样本量、从该道可用日里无放回抽,算命中率",
+     "n_anchors_passed": 8,
+     "n_anchors": 8,
+     "n_anchors_skipped": 0,
+     "n_pool_days": 6867,
+     "first_ok": "2008-01-03",
+     "ratio_ge_observed": 0.1454,
+     "apparatus_percentile_of": 0.9081,
+     "null_p50": 0.375,
+     "null_p95": 0.625,
+     "null_max": 1.0
+    },
+    "random_ratio_ge_observed": 0.1454,
+    "n_hits": 5,
+    "binom_p": 0.14316342424923795,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": false,
+    "pass_new5": false,
+    "dropped_by_random_anchor": true
+   },
+   {
+    "task": "T-185",
+    "sign": "P4",
+    "label": "20 日实现波动分位 ≥ 0.9(动荡)",
+    "family": "aux_break_30d",
+    "anchor_set": "aux_break",
+    "lookback": 30,
+    "n_anchors": 20,
+    "hit_rate_t191": 0.9,
+    "base_rate": 0.3138467677573823,
+    "lift": 2.867641449459631,
+    "kernel_pctile": 1.0,
+    "half1": 0.9090909090909091,
+    "half2": 0.8888888888888888,
+    "t191_same_source": true,
+    "t191_is_clue": false,
+    "series_span": [
+     "1971-11-03",
+     "2026-10-22"
+    ],
+    "series_len_days": 20078,
+    "random_anchor": {
+     "n_draw": 5000,
+     "seed": 675,
+     "note": "随机锚点:同样本量、从该道可用日里无放回抽,算命中率",
+     "n_anchors_passed": 20,
+     "n_anchors": 20,
+     "n_anchors_skipped": 0,
+     "n_pool_days": 20048,
+     "first_ok": "1971-12-03",
+     "ratio_ge_observed": 0.0,
+     "apparatus_percentile_of": 1.0,
+     "null_p50": 0.3,
+     "null_p95": 0.5,
+     "null_max": 0.7
+    },
+    "random_ratio_ge_observed": 0.0,
+    "n_hits": 18,
+    "binom_p": 8.192040456725957e-08,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": true,
+    "pass_new5": true,
+    "dropped_by_random_anchor": false
+   },
+   {
+    "task": "T-185",
+    "sign": "P4",
+    "label": "20 日实现波动分位 ≥ 0.9(动荡)",
+    "family": "aux_fastcrash_30d",
+    "anchor_set": "aux_fast",
+    "lookback": 30,
+    "n_anchors": 35,
+    "hit_rate_t191": 0.4857142857142857,
+    "base_rate": 0.3138467677573823,
+    "lift": 1.547616020343293,
+    "kernel_pctile": 0.96775,
+    "half1": 0.5,
+    "half2": 0.47058823529411764,
+    "t191_same_source": true,
+    "t191_is_clue": false,
+    "series_span": [
+     "1971-11-03",
+     "2026-10-22"
+    ],
+    "series_len_days": 20078,
+    "random_anchor": {
+     "n_draw": 5000,
+     "seed": 675,
+     "note": "随机锚点:同样本量、从该道可用日里无放回抽,算命中率",
+     "n_anchors_passed": 35,
+     "n_anchors": 35,
+     "n_anchors_skipped": 0,
+     "n_pool_days": 20048,
+     "first_ok": "1971-12-03",
+     "ratio_ge_observed": 0.0276,
+     "apparatus_percentile_of": 0.9814,
+     "null_p50": 0.3142857142857143,
+     "null_p95": 0.45714285714285713,
+     "null_max": 0.6
+    },
+    "random_ratio_ge_observed": 0.0276,
+    "n_hits": 17,
+    "binom_p": 0.025014180862121434,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": true,
+    "pass_new5": true,
+    "dropped_by_random_anchor": false
+   },
+   {
+    "task": "T-186",
+    "sign": "E1",
+    "label": "KRW/BRL/MXN/INR 任一 63 天贬 ≥ 10%(DEX 涨 ≥ 1/0.9 − 1 = 11.11%)",
+    "family": "extra:fx_hit_30d",
+    "anchor_set": "fx_hit_30d",
+    "lookback": 30,
+    "n_anchors": 15,
+    "hit_rate_t191": 1.0,
+    "base_rate": 0.13527335958676417,
+    "lift": 7.392438563327032,
+    "kernel_pctile": 1.0,
+    "half1": 1.0,
+    "half2": 1.0,
+    "t191_same_source": true,
+    "t191_is_clue": false,
+    "series_span": [
+     "1973-03-06",
+     "2026-10-16"
+    ],
+    "series_len_days": 19583,
+    "random_anchor": {
+     "n_draw": 5000,
+     "seed": 675,
+     "note": "随机锚点:同样本量、从该道可用日里无放回抽,算命中率",
+     "n_anchors_passed": 15,
+     "n_anchors": 15,
+     "n_anchors_skipped": 0,
+     "n_pool_days": 19553,
+     "first_ok": "1973-04-05",
+     "ratio_ge_observed": 0.0,
+     "apparatus_percentile_of": 1.0,
+     "null_p50": 0.13333333333333333,
+     "null_p95": 0.26666666666666666,
+     "null_max": 0.5333333333333333
+    },
+    "random_ratio_ge_observed": 0.0,
+    "n_hits": 15,
+    "binom_p": 9.293603533347326e-14,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": true,
+    "pass_new5": true,
+    "dropped_by_random_anchor": false
+   },
+   {
+    "task": "T-187",
+    "sign": "P4_rv20_pct_ge90",
+    "label": "20 日实现波动分位 ≥ 0.9(动荡)",
+    "family": "aux_break_30d",
+    "anchor_set": "aux_break_30d",
+    "lookback": 30,
+    "n_anchors": 6,
+    "hit_rate_t191": 0.5,
+    "base_rate": 0.17642661350610517,
+    "lift": 2.8340395480225986,
+    "kernel_pctile": 0.97975,
+    "half1": 0.6666666666666666,
+    "half2": 0.3333333333333333,
+    "t191_same_source": true,
+    "t191_is_clue": false,
+    "series_span": [
+     "2014-12-31",
+     "2026-10-24"
+    ],
+    "series_len_days": 4316,
+    "random_anchor": {
+     "n_draw": 5000,
+     "seed": 675,
+     "note": "随机锚点:同样本量、从该道可用日里无放回抽,算命中率",
+     "n_anchors_passed": 6,
+     "n_anchors": 6,
+     "n_anchors_skipped": 0,
+     "n_pool_days": 4015,
+     "first_ok": "2015-10-28",
+     "ratio_ge_observed": 0.0642,
+     "apparatus_percentile_of": 0.9631,
+     "null_p50": 0.16666666666666666,
+     "null_p95": 0.5,
+     "null_max": 0.8333333333333334
+    },
+    "random_ratio_ge_observed": 0.0642,
+    "n_hits": 3,
+    "binom_p": 0.0720840390927984,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": false,
+    "pass_new5": false,
+    "dropped_by_random_anchor": true
+   }
+  ],
+  "n_clues_t191": 6,
+  "n_clues_new_criterion": 3,
+  "clues_dropped": [
+   {
+    "task": "T-185",
+    "sign": "M3",
+    "family": "primary_90d",
+    "random_ratio_ge_observed": 0.083,
+    "binom_p": 0.0848355630891559
+   },
+   {
+    "task": "T-185",
+    "sign": "M9",
+    "family": "aux_break_30d",
+    "random_ratio_ge_observed": 0.0568,
+    "binom_p": 0.056034072419410004
+   },
+   {
+    "task": "T-187",
+    "sign": "M8_vix_over_vxv_gt1",
+    "family": "aux_fastcrash_30d",
+    "random_ratio_ge_observed": 0.1454,
+    "binom_p": 0.14316342424923795
+   }
+  ],
+  "clues_kept": [
+   {
+    "task": "T-185",
+    "sign": "M5",
+    "family": "aux_break_30d",
+    "random_ratio_ge_observed": 0.0278,
+    "binom_p": 0.02686598390030232
+   },
+   {
+    "task": "T-185",
+    "sign": "M7",
+    "family": "aux_break_30d",
+    "random_ratio_ge_observed": 0.0,
+    "binom_p": 0.00021945100351796184
+   },
+   {
+    "task": "T-185",
+    "sign": "M8",
+    "family": "aux_break_30d",
+    "random_ratio_ge_observed": 0.0012,
+    "binom_p": 0.001127502536361373
+   }
+  ],
+  "same_source_full_pass": [
+   {
+    "task": "T-185",
+    "sign": "P4",
+    "label": "20 日实现波动分位 ≥ 0.9(动荡)",
+    "family": "aux_break_30d",
+    "anchor_set": "aux_break",
+    "lookback": 30,
+    "n_anchors": 20,
+    "hit_rate_t191": 0.9,
+    "base_rate": 0.3138467677573823,
+    "lift": 2.867641449459631,
+    "kernel_pctile": 1.0,
+    "half1": 0.9090909090909091,
+    "half2": 0.8888888888888888,
+    "t191_same_source": true,
+    "t191_is_clue": false,
+    "series_span": [
+     "1971-11-03",
+     "2026-10-22"
+    ],
+    "series_len_days": 20078,
+    "random_anchor": {
+     "n_draw": 5000,
+     "seed": 675,
+     "note": "随机锚点:同样本量、从该道可用日里无放回抽,算命中率",
+     "n_anchors_passed": 20,
+     "n_anchors": 20,
+     "n_anchors_skipped": 0,
+     "n_pool_days": 20048,
+     "first_ok": "1971-12-03",
+     "ratio_ge_observed": 0.0,
+     "apparatus_percentile_of": 1.0,
+     "null_p50": 0.3,
+     "null_p95": 0.5,
+     "null_max": 0.7
+    },
+    "random_ratio_ge_observed": 0.0,
+    "n_hits": 18,
+    "binom_p": 8.192040456725957e-08,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": true,
+    "pass_new5": true,
+    "dropped_by_random_anchor": false
+   },
+   {
+    "task": "T-185",
+    "sign": "P4",
+    "label": "20 日实现波动分位 ≥ 0.9(动荡)",
+    "family": "aux_fastcrash_30d",
+    "anchor_set": "aux_fast",
+    "lookback": 30,
+    "n_anchors": 35,
+    "hit_rate_t191": 0.4857142857142857,
+    "base_rate": 0.3138467677573823,
+    "lift": 1.547616020343293,
+    "kernel_pctile": 0.96775,
+    "half1": 0.5,
+    "half2": 0.47058823529411764,
+    "t191_same_source": true,
+    "t191_is_clue": false,
+    "series_span": [
+     "1971-11-03",
+     "2026-10-22"
+    ],
+    "series_len_days": 20078,
+    "random_anchor": {
+     "n_draw": 5000,
+     "seed": 675,
+     "note": "随机锚点:同样本量、从该道可用日里无放回抽,算命中率",
+     "n_anchors_passed": 35,
+     "n_anchors": 35,
+     "n_anchors_skipped": 0,
+     "n_pool_days": 20048,
+     "first_ok": "1971-12-03",
+     "ratio_ge_observed": 0.0276,
+     "apparatus_percentile_of": 0.9814,
+     "null_p50": 0.3142857142857143,
+     "null_p95": 0.45714285714285713,
+     "null_max": 0.6
+    },
+    "random_ratio_ge_observed": 0.0276,
+    "n_hits": 17,
+    "binom_p": 0.025014180862121434,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": true,
+    "pass_new5": true,
+    "dropped_by_random_anchor": false
+   },
+   {
+    "task": "T-186",
+    "sign": "E1",
+    "label": "KRW/BRL/MXN/INR 任一 63 天贬 ≥ 10%(DEX 涨 ≥ 1/0.9 − 1 = 11.11%)",
+    "family": "extra:fx_hit_30d",
+    "anchor_set": "fx_hit_30d",
+    "lookback": 30,
+    "n_anchors": 15,
+    "hit_rate_t191": 1.0,
+    "base_rate": 0.13527335958676417,
+    "lift": 7.392438563327032,
+    "kernel_pctile": 1.0,
+    "half1": 1.0,
+    "half2": 1.0,
+    "t191_same_source": true,
+    "t191_is_clue": false,
+    "series_span": [
+     "1973-03-06",
+     "2026-10-16"
+    ],
+    "series_len_days": 19583,
+    "random_anchor": {
+     "n_draw": 5000,
+     "seed": 675,
+     "note": "随机锚点:同样本量、从该道可用日里无放回抽,算命中率",
+     "n_anchors_passed": 15,
+     "n_anchors": 15,
+     "n_anchors_skipped": 0,
+     "n_pool_days": 19553,
+     "first_ok": "1973-04-05",
+     "ratio_ge_observed": 0.0,
+     "apparatus_percentile_of": 1.0,
+     "null_p50": 0.13333333333333333,
+     "null_p95": 0.26666666666666666,
+     "null_max": 0.5333333333333333
+    },
+    "random_ratio_ge_observed": 0.0,
+    "n_hits": 15,
+    "binom_p": 9.293603533347326e-14,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": true,
+    "pass_new5": true,
+    "dropped_by_random_anchor": false
+   },
+   {
+    "task": "T-187",
+    "sign": "P4_rv20_pct_ge90",
+    "label": "20 日实现波动分位 ≥ 0.9(动荡)",
+    "family": "aux_break_30d",
+    "anchor_set": "aux_break_30d",
+    "lookback": 30,
+    "n_anchors": 6,
+    "hit_rate_t191": 0.5,
+    "base_rate": 0.17642661350610517,
+    "lift": 2.8340395480225986,
+    "kernel_pctile": 0.97975,
+    "half1": 0.6666666666666666,
+    "half2": 0.3333333333333333,
+    "t191_same_source": true,
+    "t191_is_clue": false,
+    "series_span": [
+     "2014-12-31",
+     "2026-10-24"
+    ],
+    "series_len_days": 4316,
+    "random_anchor": {
+     "n_draw": 5000,
+     "seed": 675,
+     "note": "随机锚点:同样本量、从该道可用日里无放回抽,算命中率",
+     "n_anchors_passed": 6,
+     "n_anchors": 6,
+     "n_anchors_skipped": 0,
+     "n_pool_days": 4015,
+     "first_ok": "2015-10-28",
+     "ratio_ge_observed": 0.0642,
+     "apparatus_percentile_of": 0.9631,
+     "null_p50": 0.16666666666666666,
+     "null_p95": 0.5,
+     "null_max": 0.8333333333333334
+    },
+    "random_ratio_ge_observed": 0.0642,
+    "n_hits": 3,
+    "binom_p": 0.0720840390927984,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": false,
+    "pass_new5": false,
+    "dropped_by_random_anchor": true
+   }
+  ],
+  "extra_families_outside_card": [
+   {
+    "task": "T-186",
+    "sign": "M8",
+    "label": "VIX / VXV > 1",
+    "family": "extra:fx_start_30d",
+    "anchor_set": "fx_start_30d",
+    "lookback": 30,
+    "n_anchors": 7,
+    "hit_rate": 0.7142857142857143,
+    "base_rate": 0.37920489296636084,
+    "lift": 1.883640552995392,
+    "kernel_pctile": 0.95075,
+    "random_ratio_ge_observed": 0.076,
+    "binom_p": 0.07750619331135172,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": false,
+    "pass_new5": false
+   },
+   {
+    "task": "T-186",
+    "sign": "M5",
+    "label": "Baa−10Y 利差 63 天升 ≥ 0.5pp",
+    "family": "extra:fx_hit_30d",
+    "anchor_set": "fx_hit_30d",
+    "lookback": 30,
+    "n_anchors": 15,
+    "hit_rate": 0.6666666666666666,
+    "base_rate": 0.35415259959486833,
+    "lift": 1.8824277089291388,
+    "kernel_pctile": 0.99375,
+    "random_ratio_ge_observed": 0.0092,
+    "binom_p": 0.013627032721459003,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": true,
+    "pass_new5": true
+   },
+   {
+    "task": "T-186",
+    "sign": "M7",
+    "label": "VIX > 30",
+    "family": "extra:fx_hit_30d",
+    "anchor_set": "fx_hit_30d",
+    "lookback": 30,
+    "n_anchors": 15,
+    "hit_rate": 0.4666666666666667,
+    "base_rate": 0.18654935878317924,
+    "lift": 2.501572075672795,
+    "kernel_pctile": 0.99775,
+    "random_ratio_ge_observed": 0.0114,
+    "binom_p": 0.01238154803000941,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": true,
+    "pass_new5": true
+   },
+   {
+    "task": "T-186",
+    "sign": "M9",
+    "label": "美元广义指数 63 天变化分位 ≥ 0.9",
+    "family": "extra:fx_hit_30d",
+    "anchor_set": "fx_hit_30d",
+    "lookback": 30,
+    "n_anchors": 7,
+    "hit_rate": 0.8571428571428571,
+    "base_rate": 0.22533333333333333,
+    "lift": 3.8038884192730347,
+    "kernel_pctile": 0.99975,
+    "random_ratio_ge_observed": 0.0008,
+    "binom_p": 0.0007393453322704813,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": true,
+    "pass_new5": true
+   },
+   {
+    "task": "T-186",
+    "sign": "M12",
+    "label": "密歇根消费者信心分位 ≥ 0.8",
+    "family": "extra:fx_hit_30d",
+    "anchor_set": "fx_hit_30d",
+    "lookback": 30,
+    "n_anchors": 15,
+    "hit_rate": 0.4,
+    "base_rate": 0.1565391905452113,
+    "lift": 2.5552706552706552,
+    "kernel_pctile": 0.9695,
+    "random_ratio_ge_observed": 0.0806,
+    "binom_p": 0.0205277109036796,
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "c_random_anchor": false,
+    "pass_new5": false
+   }
+  ]
+ },
+ "block2_t187_m_caliber": {
+  "m8": [
+   {
+    "family": "primary_90d",
+    "lookback": 90,
+    "n_anchors": 5,
+    "stored_t187": {
+     "n_anchors": 5,
+     "hit_rate": 0.4,
+     "base_rate": 0.672249155281328,
+     "lift": 0.5950174825174825,
+     "null_p50": 0.2,
+     "pctile": 0.5892499999999999
+    },
+    "rebuilt_archived_caliber": {
+     "n_anchors": 5,
+     "hit_rate": 0.4,
+     "base_rate": 0.672249155281328,
+     "lift": 0.5950174825174825,
+     "null_p50": 0.2,
+     "pctile": 0.5892499999999999
+    },
+    "rebuilt_t185_caliber": {
+     "n_anchors": 5,
+     "hit_rate": 0.4,
+     "base_rate": 0.672249155281328,
+     "lift": 0.5950174825174825,
+     "null_p50": 0.6,
+     "pctile": 0.1065
+    },
+    "archived_span_days": 13442,
+    "t185_caliber_span_days": 6897,
+    "archived_span": [
+     "1990-01-02",
+     "2026-10-21"
+    ],
+    "t185_caliber_span": [
+     "2007-12-04",
+     "2026-10-21"
+    ],
+    "random_anchor_t185_caliber": {
+     "n_draw": 5000,
+     "seed": 675,
+     "note": "随机锚点:同样本量、从该道可用日里无放回抽,算命中率",
+     "n_anchors_passed": 5,
+     "n_anchors": 5,
+     "n_anchors_skipped": 0,
+     "n_pool_days": 6807,
+     "first_ok": "2008-03-03",
+     "ratio_ge_observed": 0.9594,
+     "apparatus_percentile_of": 0.115,
+     "null_p50": 0.6,
+     "null_p95": 1.0,
+     "null_max": 1.0
+    },
+    "delta_pctile_minus_random_ratio": -0.8529,
+    "delta_archived_pctile_minus_random_ratio": -0.3701500000000001
+   },
+   {
+    "family": "aux_break_30d",
+    "lookback": 30,
+    "n_anchors": 6,
+    "stored_t187": {
+     "n_anchors": 6,
+     "hit_rate": 0.5,
+     "base_rate": 0.37920489296636084,
+     "lift": 1.3185483870967742,
+     "null_p50": 0.16666666666666666,
+     "pctile": 0.90125
+    },
+    "rebuilt_archived_caliber": {
+     "n_anchors": 6,
+     "hit_rate": 0.5,
+     "base_rate": 0.37920489296636084,
+     "lift": 1.3185483870967742,
+     "null_p50": 0.16666666666666666,
+     "pctile": 0.90125
+    },
+    "rebuilt_t185_caliber": {
+     "n_anchors": 6,
+     "hit_rate": 0.5,
+     "base_rate": 0.37920489296636084,
+     "lift": 1.3185483870967742,
+     "null_p50": 0.3333333333333333,
+     "pctile": 0.74125
+    },
+    "archived_span_days": 13442,
+    "t185_caliber_span_days": 6897,
+    "archived_span": [
+     "1990-01-02",
+     "2026-10-21"
+    ],
+    "t185_caliber_span": [
+     "2007-12-04",
+     "2026-10-21"
+    ],
+    "random_anchor_t185_caliber": {
+     "n_draw": 5000,
+     "seed": 675,
+     "note": "随机锚点:同样本量、从该道可用日里无放回抽,算命中率",
+     "n_anchors_passed": 6,
+     "n_anchors": 6,
+     "n_anchors_skipped": 0,
+     "n_pool_days": 6867,
+     "first_ok": "2008-01-03",
+     "ratio_ge_observed": 0.4138,
+     "apparatus_percentile_of": 0.7156,
+     "null_p50": 0.3333333333333333,
+     "null_p95": 0.6666666666666666,
+     "null_max": 1.0
+    },
+    "delta_pctile_minus_random_ratio": 0.32744999999999996,
+    "delta_archived_pctile_minus_random_ratio": 0.48745
+   },
+   {
+    "family": "aux_fastcrash_30d",
+    "lookback": 30,
+    "n_anchors": 8,
+    "stored_t187": {
+     "n_anchors": 8,
+     "hit_rate": 0.625,
+     "base_rate": 0.37920489296636084,
+     "lift": 1.6481854838709677,
+     "null_p50": 0.125,
+     "pctile": 0.976
+    },
+    "rebuilt_archived_caliber": {
+     "n_anchors": 8,
+     "hit_rate": 0.625,
+     "base_rate": 0.37920489296636084,
+     "lift": 1.6481854838709677,
+     "null_p50": 0.125,
+     "pctile": 0.976
+    },
+    "rebuilt_t185_caliber": {
+     "n_anchors": 8,
+     "hit_rate": 0.625,
+     "base_rate": 0.37920489296636084,
+     "lift": 1.6481854838709677,
+     "null_p50": 0.375,
+     "pctile": 0.9295
+    },
+    "archived_span_days": 13442,
+    "t185_caliber_span_days": 6897,
+    "archived_span": [
+     "1990-01-02",
+     "2026-10-21"
+    ],
+    "t185_caliber_span": [
+     "2007-12-04",
+     "2026-10-21"
+    ],
+    "random_anchor_t185_caliber": {
+     "n_draw": 5000,
+     "seed": 675,
+     "note": "随机锚点:同样本量、从该道可用日里无放回抽,算命中率",
+     "n_anchors_passed": 8,
+     "n_anchors": 8,
+     "n_anchors_skipped": 0,
+     "n_pool_days": 6867,
+     "first_ok": "2008-01-03",
+     "ratio_ge_observed": 0.1454,
+     "apparatus_percentile_of": 0.9081,
+     "null_p50": 0.375,
+     "null_p95": 0.625,
+     "null_max": 1.0
+    },
+    "delta_pctile_minus_random_ratio": 0.7841,
+    "delta_archived_pctile_minus_random_ratio": 0.8306
+   }
+  ],
+  "m_series_table": [
+   {
+    "sign": "M1_ffr_12m_up_ge1pp",
+    "family": "primary_90d",
+    "lookback": 90,
+    "n_anchors": 5,
+    "hit_rate": 0.2,
+    "base_rate": 0.48347202958853447,
+    "lift": 0.4136743963662443,
+    "pctile_archived": 0.18175,
+    "pctile_t185_caliber": 0.18025,
+    "random_ratio_ge_observed": 0.958,
+    "delta_pctile_minus_random_ratio": -0.7777499999999999,
+    "archived_span_days": 26411,
+    "t185_caliber_span_days": 26046
+   },
+   {
+    "sign": "M1_ffr_12m_up_ge1pp",
+    "family": "aux_break_30d",
+    "lookback": 30,
+    "n_anchors": 6,
+    "hit_rate": 0.16666666666666666,
+    "base_rate": 0.38510916359163594,
+    "lift": 0.43277772232757755,
+    "pctile_archived": 0.199,
+    "pctile_t185_caliber": 0.198,
+    "random_ratio_ge_observed": 0.9472,
+    "delta_pctile_minus_random_ratio": -0.7492000000000001,
+    "archived_span_days": 26411,
+    "t185_caliber_span_days": 26046
+   },
+   {
+    "sign": "M1_ffr_12m_up_ge1pp",
+    "family": "aux_fastcrash_30d",
+    "lookback": 30,
+    "n_anchors": 8,
+    "hit_rate": 0.25,
+    "base_rate": 0.38510916359163594,
+    "lift": 0.6491665834913664,
+    "pctile_archived": 0.31325000000000003,
+    "pctile_t185_caliber": 0.30375,
+    "random_ratio_ge_observed": 0.8786,
+    "delta_pctile_minus_random_ratio": -0.5748500000000001,
+    "archived_span_days": 26411,
+    "t185_caliber_span_days": 26046
+   },
+   {
+    "sign": "M2_10y2y_lt0",
+    "family": "primary_90d",
+    "lookback": 90,
+    "n_anchors": 5,
+    "hit_rate": 0.0,
+    "base_rate": 0.2330749071849749,
+    "lift": 0.0,
+    "pctile_archived": 0.1395,
+    "pctile_t185_caliber": 0.1395,
+    "random_ratio_ge_observed": 1.0,
+    "delta_pctile_minus_random_ratio": -0.8605,
+    "archived_span_days": 18406,
+    "t185_caliber_span_days": 18406
+   },
+   {
+    "sign": "M2_10y2y_lt0",
+    "family": "aux_break_30d",
+    "lookback": 30,
+    "n_anchors": 6,
+    "hit_rate": 0.0,
+    "base_rate": 0.19492816717457553,
+    "lift": 0.0,
+    "pctile_archived": 0.15025,
+    "pctile_t185_caliber": 0.15025,
+    "random_ratio_ge_observed": 1.0,
+    "delta_pctile_minus_random_ratio": -0.84975,
+    "archived_span_days": 18406,
+    "t185_caliber_span_days": 18406
+   },
+   {
+    "sign": "M2_10y2y_lt0",
+    "family": "aux_fastcrash_30d",
+    "lookback": 30,
+    "n_anchors": 8,
+    "hit_rate": 0.0,
+    "base_rate": 0.19492816717457553,
+    "lift": 0.0,
+    "pctile_archived": 0.13175,
+    "pctile_t185_caliber": 0.13175,
+    "random_ratio_ge_observed": 1.0,
+    "delta_pctile_minus_random_ratio": -0.86825,
+    "archived_span_days": 18406,
+    "t185_caliber_span_days": 18406
+   },
+   {
+    "sign": "M3_10y2y_gt0_after_inversion",
+    "family": "primary_90d",
+    "lookback": 90,
+    "n_anchors": 5,
+    "hit_rate": 0.2,
+    "base_rate": 0.25946969696969696,
+    "lift": 0.7708029197080293,
+    "pctile_archived": 0.40700000000000003,
+    "pctile_t185_caliber": 0.39375,
+    "random_ratio_ge_observed": 0.779,
+    "delta_pctile_minus_random_ratio": -0.38525000000000004,
+    "archived_span_days": 18406,
+    "t185_caliber_span_days": 18042
+   },
+   {
+    "sign": "M3_10y2y_gt0_after_inversion",
+    "family": "aux_break_30d",
+    "lookback": 30,
+    "n_anchors": 6,
+    "hit_rate": 0.3333333333333333,
+    "base_rate": 0.2172440595158783,
+    "lift": 1.5343726041400458,
+    "pctile_archived": 0.7605000000000001,
+    "pctile_t185_caliber": 0.73975,
+    "random_ratio_ge_observed": 0.3854,
+    "delta_pctile_minus_random_ratio": 0.35435,
+    "archived_span_days": 18406,
+    "t185_caliber_span_days": 18042
+   },
+   {
+    "sign": "M3_10y2y_gt0_after_inversion",
+    "family": "aux_fastcrash_30d",
+    "lookback": 30,
+    "n_anchors": 8,
+    "hit_rate": 0.25,
+    "base_rate": 0.2172440595158783,
+    "lift": 1.1507794531050346,
+    "pctile_archived": 0.615,
+    "pctile_t185_caliber": 0.599,
+    "random_ratio_ge_observed": 0.5432,
+    "delta_pctile_minus_random_ratio": 0.05579999999999996,
+    "archived_span_days": 18406,
+    "t185_caliber_span_days": 18042
+   },
+   {
+    "sign": "M4_nfci_gt0",
+    "family": "primary_90d",
+    "lookback": 90,
+    "n_anchors": 5,
+    "hit_rate": 0.0,
+    "base_rate": 0.3440165672304127,
+    "lift": 0.0,
+    "pctile_archived": 0.1285,
+    "pctile_t185_caliber": 0.1285,
+    "random_ratio_ge_observed": 1.0,
+    "delta_pctile_minus_random_ratio": -0.8714999999999999,
+    "archived_span_days": 20371,
+    "t185_caliber_span_days": 20371
+   },
+   {
+    "sign": "M4_nfci_gt0",
+    "family": "aux_break_30d",
+    "lookback": 30,
+    "n_anchors": 6,
+    "hit_rate": 0.0,
+    "base_rate": 0.31148911066319257,
+    "lift": 0.0,
+    "pctile_archived": 0.1345,
+    "pctile_t185_caliber": 0.1345,
+    "random_ratio_ge_observed": 1.0,
+    "delta_pctile_minus_random_ratio": -0.8654999999999999,
+    "archived_span_days": 20371,
+    "t185_caliber_span_days": 20371
+   },
+   {
+    "sign": "M4_nfci_gt0",
+    "family": "aux_fastcrash_30d",
+    "lookback": 30,
+    "n_anchors": 8,
+    "hit_rate": 0.0,
+    "base_rate": 0.31148911066319257,
+    "lift": 0.0,
+    "pctile_archived": 0.128,
+    "pctile_t185_caliber": 0.128,
+    "random_ratio_ge_observed": 1.0,
+    "delta_pctile_minus_random_ratio": -0.872,
+    "archived_span_days": 20371,
+    "t185_caliber_span_days": 20371
+   },
+   {
+    "sign": "M5_baa10y_63d_up_ge0p5pp",
+    "family": "primary_90d",
+    "lookback": 90,
+    "n_anchors": 5,
+    "hit_rate": 0.0,
+    "base_rate": 0.15959322033898304,
+    "lift": 0.0,
+    "pctile_archived": 0.191,
+    "pctile_t185_caliber": 0.196,
+    "random_ratio_ge_observed": 1.0,
+    "delta_pctile_minus_random_ratio": -0.804,
+    "archived_span_days": 14903,
+    "t185_caliber_span_days": 14840
+   },
+   {
+    "sign": "M5_baa10y_63d_up_ge0p5pp",
+    "family": "aux_break_30d",
+    "lookback": 30,
+    "n_anchors": 6,
+    "hit_rate": 0.16666666666666666,
+    "base_rate": 0.08710330857528698,
+    "lift": 1.9134366925064596,
+    "pctile_archived": 0.74025,
+    "pctile_t185_caliber": 0.73425,
+    "random_ratio_ge_observed": 0.4232,
+    "delta_pctile_minus_random_ratio": 0.31104999999999994,
+    "archived_span_days": 14903,
+    "t185_caliber_span_days": 14840
+   },
+   {
+    "sign": "M5_baa10y_63d_up_ge0p5pp",
+    "family": "aux_fastcrash_30d",
+    "lookback": 30,
+    "n_anchors": 8,
+    "hit_rate": 0.0,
+    "base_rate": 0.08710330857528698,
+    "lift": 0.0,
+    "pctile_archived": 0.236,
+    "pctile_t185_caliber": 0.233,
+    "random_ratio_ge_observed": 1.0,
+    "delta_pctile_minus_random_ratio": -0.767,
+    "archived_span_days": 14903,
+    "t185_caliber_span_days": 14840
+   },
+   {
+    "sign": "M6_vix_lt13",
+    "family": "primary_90d",
+    "lookback": 90,
+    "n_anchors": 5,
+    "hit_rate": 0.4,
+    "base_rate": 0.3983672857998802,
+    "lift": 1.0040985147584132,
+    "pctile_archived": 0.5277499999999999,
+    "pctile_t185_caliber": 0.5277499999999999,
+    "random_ratio_ge_observed": 0.6596,
+    "delta_pctile_minus_random_ratio": -0.13185000000000002,
+    "archived_span_days": 13442,
+    "t185_caliber_span_days": 13442
+   },
+   {
+    "sign": "M6_vix_lt13",
+    "family": "aux_break_30d",
+    "lookback": 30,
+    "n_anchors": 6,
+    "hit_rate": 0.16666666666666666,
+    "base_rate": 0.31106471816283926,
+    "lift": 0.5357941834451901,
+    "pctile_archived": 0.243,
+    "pctile_t185_caliber": 0.243,
+    "random_ratio_ge_observed": 0.8932,
+    "delta_pctile_minus_random_ratio": -0.6502,
+    "archived_span_days": 13442,
+    "t185_caliber_span_days": 13442
+   },
+   {
+    "sign": "M6_vix_lt13",
+    "family": "aux_fastcrash_30d",
+    "lookback": 30,
+    "n_anchors": 8,
+    "hit_rate": 0.375,
+    "base_rate": 0.31106471816283926,
+    "lift": 1.2055369127516777,
+    "pctile_archived": 0.65325,
+    "pctile_t185_caliber": 0.65325,
+    "random_ratio_ge_observed": 0.4656,
+    "delta_pctile_minus_random_ratio": 0.18764999999999998,
+    "archived_span_days": 13442,
+    "t185_caliber_span_days": 13442
+   },
+   {
+    "sign": "M7_vix_gt30",
+    "family": "primary_90d",
+    "lookback": 90,
+    "n_anchors": 5,
+    "hit_rate": 0.2,
+    "base_rate": 0.31073996405032955,
+    "lift": 0.6436249698722584,
+    "pctile_archived": 0.331,
+    "pctile_t185_caliber": 0.331,
+    "random_ratio_ge_observed": 0.838,
+    "delta_pctile_minus_random_ratio": -0.5069999999999999,
+    "archived_span_days": 13442,
+    "t185_caliber_span_days": 13442
+   },
+   {
+    "sign": "M7_vix_gt30",
+    "family": "aux_break_30d",
+    "lookback": 30,
+    "n_anchors": 6,
+    "hit_rate": 0.3333333333333333,
+    "base_rate": 0.18654935878317924,
+    "lift": 1.7868371969091392,
+    "pctile_archived": 0.8115,
+    "pctile_t185_caliber": 0.8115,
+    "random_ratio_ge_observed": 0.3158,
+    "delta_pctile_minus_random_ratio": 0.4957,
+    "archived_span_days": 13442,
+    "t185_caliber_span_days": 13442
+   },
+   {
+    "sign": "M7_vix_gt30",
+    "family": "aux_fastcrash_30d",
+    "lookback": 30,
+    "n_anchors": 8,
+    "hit_rate": 0.375,
+    "base_rate": 0.18654935878317924,
+    "lift": 2.010191846522782,
+    "pctile_archived": 0.87875,
+    "pctile_t185_caliber": 0.87875,
+    "random_ratio_ge_observed": 0.18,
+    "delta_pctile_minus_random_ratio": 0.69875,
+    "archived_span_days": 13442,
+    "t185_caliber_span_days": 13442
+   },
+   {
+    "sign": "M8_vix_over_vxv_gt1",
+    "family": "primary_90d",
+    "lookback": 90,
+    "n_anchors": 5,
+    "hit_rate": 0.4,
+    "base_rate": 0.672249155281328,
+    "lift": 0.5950174825174825,
+    "pctile_archived": 0.5892499999999999,
+    "pctile_t185_caliber": 0.1065,
+    "random_ratio_ge_observed": 0.9594,
+    "delta_pctile_minus_random_ratio": -0.8529,
+    "archived_span_days": 13442,
+    "t185_caliber_span_days": 6897
+   },
+   {
+    "sign": "M8_vix_over_vxv_gt1",
+    "family": "aux_break_30d",
+    "lookback": 30,
+    "n_anchors": 6,
+    "hit_rate": 0.5,
+    "base_rate": 0.37920489296636084,
+    "lift": 1.3185483870967742,
+    "pctile_archived": 0.90125,
+    "pctile_t185_caliber": 0.74125,
+    "random_ratio_ge_observed": 0.4138,
+    "delta_pctile_minus_random_ratio": 0.32744999999999996,
+    "archived_span_days": 13442,
+    "t185_caliber_span_days": 6897
+   },
+   {
+    "sign": "M8_vix_over_vxv_gt1",
+    "family": "aux_fastcrash_30d",
+    "lookback": 30,
+    "n_anchors": 8,
+    "hit_rate": 0.625,
+    "base_rate": 0.37920489296636084,
+    "lift": 1.6481854838709677,
+    "pctile_archived": 0.976,
+    "pctile_t185_caliber": 0.9295,
+    "random_ratio_ge_observed": 0.1454,
+    "delta_pctile_minus_random_ratio": 0.7841,
+    "archived_span_days": 13442,
+    "t185_caliber_span_days": 6897
+   },
+   {
+    "sign": "M9_usd_broad_63d_chg_pct_ge90",
+    "family": "primary_90d",
+    "lookback": 90,
+    "n_anchors": 5,
+    "hit_rate": 0.0,
+    "base_rate": 0.38711920990402005,
+    "lift": 0.0,
+    "pctile_archived": 0.029,
+    "pctile_t185_caliber": 0.02575,
+    "random_ratio_ge_observed": 1.0,
+    "delta_pctile_minus_random_ratio": -0.97425,
+    "archived_span_days": 7593,
+    "t185_caliber_span_days": 7279
+   },
+   {
+    "sign": "M9_usd_broad_63d_chg_pct_ge90",
+    "family": "aux_break_30d",
+    "lookback": 30,
+    "n_anchors": 6,
+    "hit_rate": 0.3333333333333333,
+    "base_rate": 0.2331356049110222,
+    "lift": 1.429783037475345,
+    "pctile_archived": 0.7434999999999999,
+    "pctile_t185_caliber": 0.7264999999999999,
+    "random_ratio_ge_observed": 0.4288,
+    "delta_pctile_minus_random_ratio": 0.2976999999999999,
+    "archived_span_days": 7593,
+    "t185_caliber_span_days": 7279
+   },
+   {
+    "sign": "M9_usd_broad_63d_chg_pct_ge90",
+    "family": "aux_fastcrash_30d",
+    "lookback": 30,
+    "n_anchors": 8,
+    "hit_rate": 0.25,
+    "base_rate": 0.2331356049110222,
+    "lift": 1.072337278106509,
+    "pctile_archived": 0.609,
+    "pctile_t185_caliber": 0.5935,
+    "random_ratio_ge_observed": 0.5916,
+    "delta_pctile_minus_random_ratio": 0.0019000000000000128,
+    "archived_span_days": 7593,
+    "t185_caliber_span_days": 7279
+   },
+   {
+    "sign": "M10_wti_126d_up_ge50pct",
+    "family": "primary_90d",
+    "lookback": 90,
+    "n_anchors": 5,
+    "hit_rate": 0.2,
+    "base_rate": 0.11504185795301107,
+    "lift": 1.7384976525821598,
+    "pctile_archived": 0.718,
+    "pctile_t185_caliber": 0.718,
+    "random_ratio_ge_observed": 0.45,
+    "delta_pctile_minus_random_ratio": 0.26799999999999996,
+    "archived_span_days": 14902,
+    "t185_caliber_span_days": 14902
+   },
+   {
+    "sign": "M10_wti_126d_up_ge50pct",
+    "family": "aux_break_30d",
+    "lookback": 30,
+    "n_anchors": 6,
+    "hit_rate": 0.3333333333333333,
+    "base_rate": 0.0650887573964497,
+    "lift": 5.121212121212121,
+    "pctile_archived": 0.9862500000000001,
+    "pctile_t185_caliber": 0.9862500000000001,
+    "random_ratio_ge_observed": 0.0528,
+    "delta_pctile_minus_random_ratio": 0.9334500000000001,
+    "archived_span_days": 14902,
+    "t185_caliber_span_days": 14902
+   },
+   {
+    "sign": "M10_wti_126d_up_ge50pct",
+    "family": "aux_fastcrash_30d",
+    "lookback": 30,
+    "n_anchors": 8,
+    "hit_rate": 0.0,
+    "base_rate": 0.0650887573964497,
+    "lift": 0.0,
+    "pctile_archived": 0.2735,
+    "pctile_t185_caliber": 0.2735,
+    "random_ratio_ge_observed": 1.0,
+    "delta_pctile_minus_random_ratio": -0.7264999999999999,
+    "archived_span_days": 14902,
+    "t185_caliber_span_days": 14902
+   },
+   {
+    "sign": "M11_fed_balance_91d_shrink",
+    "family": "primary_90d",
+    "lookback": 90,
+    "n_anchors": 5,
+    "hit_rate": 0.6,
+    "base_rate": 0.7026337162083769,
+    "lift": 0.8539299867899602,
+    "pctile_archived": 0.302,
+    "pctile_t185_caliber": 0.302,
+    "random_ratio_ge_observed": 0.8454,
+    "delta_pctile_minus_random_ratio": -0.5434000000000001,
+    "archived_span_days": 8709,
+    "t185_caliber_span_days": 8709
+   },
+   {
+    "sign": "M11_fed_balance_91d_shrink",
+    "family": "aux_break_30d",
+    "lookback": 30,
+    "n_anchors": 6,
+    "hit_rate": 0.3333333333333333,
+    "base_rate": 0.5792141951837769,
+    "lift": 0.5754923413566739,
+    "pctile_archived": 0.10275000000000001,
+    "pctile_t185_caliber": 0.10275000000000001,
+    "random_ratio_ge_observed": 0.9468,
+    "delta_pctile_minus_random_ratio": -0.84405,
+    "archived_span_days": 8709,
+    "t185_caliber_span_days": 8709
+   },
+   {
+    "sign": "M11_fed_balance_91d_shrink",
+    "family": "aux_fastcrash_30d",
+    "lookback": 30,
+    "n_anchors": 8,
+    "hit_rate": 0.625,
+    "base_rate": 0.5792141951837769,
+    "lift": 1.0790481400437637,
+    "pctile_archived": 0.60375,
+    "pctile_t185_caliber": 0.60375,
+    "random_ratio_ge_observed": 0.5492,
+    "delta_pctile_minus_random_ratio": 0.05454999999999999,
+    "archived_span_days": 8709,
+    "t185_caliber_span_days": 8709
+   },
+   {
+    "sign": "M12_umcsent_pct_ge80",
+    "family": "primary_90d",
+    "lookback": 90,
+    "n_anchors": 5,
+    "hit_rate": 0.4,
+    "base_rate": 0.2733266286735948,
+    "lift": 1.4634505314799675,
+    "pctile_archived": 0.7265,
+    "pctile_t185_caliber": 0.7024999999999999,
+    "random_ratio_ge_observed": 0.4204,
+    "delta_pctile_minus_random_ratio": 0.2820999999999999,
+    "archived_span_days": 26937,
+    "t185_caliber_span_days": 26937
+   },
+   {
+    "sign": "M12_umcsent_pct_ge80",
+    "family": "aux_break_30d",
+    "lookback": 30,
+    "n_anchors": 6,
+    "hit_rate": 0.3333333333333333,
+    "base_rate": 0.21444233842494517,
+    "lift": 1.554419410745234,
+    "pctile_archived": 0.7675,
+    "pctile_t185_caliber": 0.73075,
+    "random_ratio_ge_observed": 0.3908,
+    "delta_pctile_minus_random_ratio": 0.33995000000000003,
+    "archived_span_days": 26937,
+    "t185_caliber_span_days": 26937
+   },
+   {
+    "sign": "M12_umcsent_pct_ge80",
+    "family": "aux_fastcrash_30d",
+    "lookback": 30,
+    "n_anchors": 8,
+    "hit_rate": 0.375,
+    "base_rate": 0.21444233842494517,
+    "lift": 1.7487218370883884,
+    "pctile_archived": 0.8172499999999999,
+    "pctile_t185_caliber": 0.787,
+    "random_ratio_ge_observed": 0.2518,
+    "delta_pctile_minus_random_ratio": 0.5352,
+    "archived_span_days": 26937,
+    "t185_caliber_span_days": 26937
+   },
+   {
+    "sign": "M13_icsa_ma4_13w_up_ge15pct",
+    "family": "primary_90d",
+    "lookback": 90,
+    "n_anchors": 5,
+    "hit_rate": 0.0,
+    "base_rate": 0.13487129898236405,
+    "lift": 0.0,
+    "pctile_archived": 0.245,
+    "pctile_t185_caliber": 0.24225,
+    "random_ratio_ge_observed": 1.0,
+    "delta_pctile_minus_random_ratio": -0.75775,
+    "archived_span_days": 21834,
+    "t185_caliber_span_days": 21807
+   },
+   {
+    "sign": "M13_icsa_ma4_13w_up_ge15pct",
+    "family": "aux_break_30d",
+    "lookback": 30,
+    "n_anchors": 6,
+    "hit_rate": 0.0,
+    "base_rate": 0.08334481333517013,
+    "lift": 0.0,
+    "pctile_archived": 0.3,
+    "pctile_t185_caliber": 0.2965,
+    "random_ratio_ge_observed": 1.0,
+    "delta_pctile_minus_random_ratio": -0.7035,
+    "archived_span_days": 21834,
+    "t185_caliber_span_days": 21807
+   },
+   {
+    "sign": "M13_icsa_ma4_13w_up_ge15pct",
+    "family": "aux_fastcrash_30d",
+    "lookback": 30,
+    "n_anchors": 8,
+    "hit_rate": 0.0,
+    "base_rate": 0.08334481333517013,
+    "lift": 0.0,
+    "pctile_archived": 0.26225,
+    "pctile_t185_caliber": 0.26,
+    "random_ratio_ge_observed": 1.0,
+    "delta_pctile_minus_random_ratio": -0.74,
+    "archived_span_days": 21834,
+    "t185_caliber_span_days": 21807
+   }
+  ],
+  "note": "同一套定义,只差收尾的 to_calendar ⇒ hit/base/lift 逐位相同,分位随序列长度动"
+ },
+ "block3_lookback_sweep": {
+  "clues": [
+   {
+    "task": "T-185",
+    "sign": "M3",
+    "label": "10Y−2Y > 0 且过去 365 天倒挂过(解除倒挂)",
+    "family": "primary_90d",
+    "anchor_set": "main",
+    "lookback": 90,
+    "anchor_dates": [
+     "1973-01-11",
+     "1978-09-13",
+     "1980-02-08",
+     "1981-05-29",
+     "1983-06-24",
+     "1987-08-26",
+     "1989-10-09",
+     "1998-07-20",
+     "2000-03-10",
+     "2007-10-31",
+     "2018-08-29",
+     "2020-02-19",
+     "2021-11-19",
+     "2024-12-16"
+    ],
+    "by_L": {
+     "15": {
+      "n_anchors": 13,
+      "n_hits": 5,
+      "hit_rate": 0.38461538461538464,
+      "base_rate": 0.26241096188352997,
+      "lift": 1.4656986196563488,
+      "pctile": 0.85925,
+      "null_p50": 0.23076923076923078
+     },
+     "30": {
+      "n_anchors": 13,
+      "n_hits": 6,
+      "hit_rate": 0.46153846153846156,
+      "base_rate": 0.2779712668698302,
+      "lift": 1.660381904704536,
+      "pctile": 0.9437500000000001,
+      "null_p50": 0.23076923076923078
+     },
+     "60": {
+      "n_anchors": 13,
+      "n_hits": 7,
+      "hit_rate": 0.5384615384615384,
+      "base_rate": 0.299411315818162,
+      "lift": 1.7984007618087354,
+      "pctile": 0.9772500000000001,
+      "null_p50": 0.3076923076923077
+     },
+     "90": {
+      "n_anchors": 13,
+      "n_hits": 7,
+      "hit_rate": 0.5384615384615384,
+      "base_rate": 0.31955667176239355,
+      "lift": 1.6850267449959915,
+      "pctile": 0.96425,
+      "null_p50": 0.3076923076923077
+     },
+     "120": {
+      "n_anchors": 13,
+      "n_hits": 7,
+      "hit_rate": 0.5384615384615384,
+      "base_rate": 0.3397681286229903,
+      "lift": 1.5847911946415083,
+      "pctile": 0.9450000000000001,
+      "null_p50": 0.3076923076923077
+     }
+    }
+   },
+   {
+    "task": "T-185",
+    "sign": "M5",
+    "label": "Baa−10Y 利差 63 天升 ≥ 0.5pp",
+    "family": "aux_break_30d",
+    "anchor_set": "aux_break",
+    "lookback": 30,
+    "anchor_dates": [
+     "1973-04-25",
+     "1978-10-31",
+     "1980-03-27",
+     "1981-09-25",
+     "1984-02-06",
+     "1987-10-19",
+     "1990-08-21",
+     "1998-08-31",
+     "2000-04-12",
+     "2000-10-06",
+     "2001-02-21",
+     "2001-08-21",
+     "2002-05-02",
+     "2008-02-06",
+     "2009-03-03",
+     "2018-12-21",
+     "2020-03-12",
+     "2022-03-07",
+     "2022-10-11",
+     "2025-04-04"
+    ],
+    "by_L": {
+     "15": {
+      "n_anchors": 15,
+      "n_hits": 5,
+      "hit_rate": 0.3333333333333333,
+      "base_rate": 0.09563395512300622,
+      "lift": 3.485512367491166,
+      "pctile": 0.99425,
+      "null_p50": 0.06666666666666667
+     },
+     "30": {
+      "n_anchors": 15,
+      "n_hits": 5,
+      "hit_rate": 0.3333333333333333,
+      "base_rate": 0.12042486976523915,
+      "lift": 2.7679775280898875,
+      "pctile": 0.98,
+      "null_p50": 0.13333333333333333
+     },
+     "60": {
+      "n_anchors": 15,
+      "n_hits": 6,
+      "hit_rate": 0.4,
+      "base_rate": 0.16446342620839266,
+      "lift": 2.432151690024732,
+      "pctile": 0.9882500000000001,
+      "null_p50": 0.13333333333333333
+     },
+     "90": {
+      "n_anchors": 15,
+      "n_hits": 7,
+      "hit_rate": 0.4666666666666667,
+      "base_rate": 0.20501324638271856,
+      "lift": 2.2762756792577865,
+      "pctile": 0.9905,
+      "null_p50": 0.2
+     },
+     "120": {
+      "n_anchors": 15,
+      "n_hits": 8,
+      "hit_rate": 0.5333333333333333,
+      "base_rate": 0.2420529575930842,
+      "lift": 2.2033745781777276,
+      "pctile": 0.994,
+      "null_p50": 0.26666666666666666
+     }
+    }
+   },
+   {
+    "task": "T-185",
+    "sign": "M7",
+    "label": "VIX > 30",
+    "family": "aux_break_30d",
+    "anchor_set": "aux_break",
+    "lookback": 30,
+    "anchor_dates": [
+     "1973-04-25",
+     "1978-10-31",
+     "1980-03-27",
+     "1981-09-25",
+     "1984-02-06",
+     "1987-10-19",
+     "1990-08-21",
+     "1998-08-31",
+     "2000-04-12",
+     "2000-10-06",
+     "2001-02-21",
+     "2001-08-21",
+     "2002-05-02",
+     "2008-02-06",
+     "2009-03-03",
+     "2018-12-21",
+     "2020-03-12",
+     "2022-03-07",
+     "2022-10-11",
+     "2025-04-04"
+    ],
+    "by_L": {
+     "15": {
+      "n_anchors": 14,
+      "n_hits": 9,
+      "hit_rate": 0.6428571428571429,
+      "base_rate": 0.1433678409175542,
+      "lift": 4.483970315398887,
+      "pctile": 1.0,
+      "null_p50": 0.14285714285714285
+     },
+     "30": {
+      "n_anchors": 14,
+      "n_hits": 9,
+      "hit_rate": 0.6428571428571429,
+      "base_rate": 0.18654935878317924,
+      "lift": 3.4460431654676262,
+      "pctile": 1.0,
+      "null_p50": 0.14285714285714285
+     },
+     "60": {
+      "n_anchors": 14,
+      "n_hits": 9,
+      "hit_rate": 0.6428571428571429,
+      "base_rate": 0.2562397250037364,
+      "lift": 2.5088113985751783,
+      "pctile": 0.9994999999999999,
+      "null_p50": 0.21428571428571427
+     },
+     "90": {
+      "n_anchors": 14,
+      "n_hits": 10,
+      "hit_rate": 0.7142857142857143,
+      "base_rate": 0.31073996405032955,
+      "lift": 2.298660606686637,
+      "pctile": 1.0,
+      "null_p50": 0.2857142857142857
+     },
+     "120": {
+      "n_anchors": 14,
+      "n_hits": 10,
+      "hit_rate": 0.7142857142857143,
+      "base_rate": 0.356402942501126,
+      "lift": 2.0041521242026716,
+      "pctile": 0.9984999999999999,
+      "null_p50": 0.35714285714285715
+     }
+    }
+   },
+   {
+    "task": "T-185",
+    "sign": "M8",
+    "label": "VIX / VXV > 1(期限结构倒挂)",
+    "family": "aux_break_30d",
+    "anchor_set": "aux_break",
+    "lookback": 30,
+    "anchor_dates": [
+     "1973-04-25",
+     "1978-10-31",
+     "1980-03-27",
+     "1981-09-25",
+     "1984-02-06",
+     "1987-10-19",
+     "1990-08-21",
+     "1998-08-31",
+     "2000-04-12",
+     "2000-10-06",
+     "2001-02-21",
+     "2001-08-21",
+     "2002-05-02",
+     "2008-02-06",
+     "2009-03-03",
+     "2018-12-21",
+     "2020-03-12",
+     "2022-03-07",
+     "2022-10-11",
+     "2025-04-04"
+    ],
+    "by_L": {
+     "15": {
+      "n_anchors": 7,
+      "n_hits": 7,
+      "hit_rate": 1.0,
+      "base_rate": 0.2667829119442023,
+      "lift": 3.748366013071895,
+      "pctile": 1.0,
+      "null_p50": 0.2857142857142857
+     },
+     "30": {
+      "n_anchors": 7,
+      "n_hits": 7,
+      "hit_rate": 1.0,
+      "base_rate": 0.37920489296636084,
+      "lift": 2.6370967741935485,
+      "pctile": 1.0,
+      "null_p50": 0.42857142857142855
+     },
+     "60": {
+      "n_anchors": 7,
+      "n_hits": 7,
+      "hit_rate": 1.0,
+      "base_rate": 0.5540441714202136,
+      "lift": 1.8049102428722281,
+      "pctile": 0.99775,
+      "null_p50": 0.5714285714285714
+     },
+     "90": {
+      "n_anchors": 6,
+      "n_hits": 6,
+      "hit_rate": 1.0,
+      "base_rate": 0.672249155281328,
+      "lift": 1.4875437062937065,
+      "pctile": 0.9625,
+      "null_p50": 0.6666666666666666
+     },
+     "120": {
+      "n_anchors": 6,
+      "n_hits": 6,
+      "hit_rate": 1.0,
+      "base_rate": 0.7560867640548915,
+      "lift": 1.3225995316159251,
+      "pctile": 0.9157500000000001,
+      "null_p50": 0.8333333333333334
+     }
+    }
+   },
+   {
+    "task": "T-185",
+    "sign": "M9",
+    "label": "美元广义指数 63 天变化分位 ≥ 0.9",
+    "family": "aux_break_30d",
+    "anchor_set": "aux_break",
+    "lookback": 30,
+    "anchor_dates": [
+     "1973-04-25",
+     "1978-10-31",
+     "1980-03-27",
+     "1981-09-25",
+     "1984-02-06",
+     "1987-10-19",
+     "1990-08-21",
+     "1998-08-31",
+     "2000-04-12",
+     "2000-10-06",
+     "2001-02-21",
+     "2001-08-21",
+     "2002-05-02",
+     "2008-02-06",
+     "2009-03-03",
+     "2018-12-21",
+     "2020-03-12",
+     "2022-03-07",
+     "2022-10-11",
+     "2025-04-04"
+    ],
+    "by_L": {
+     "15": {
+      "n_anchors": 7,
+      "n_hits": 3,
+      "hit_rate": 0.42857142857142855,
+      "base_rate": 0.18378303964757708,
+      "lift": 2.3319422150882825,
+      "pctile": 0.92375,
+      "null_p50": 0.14285714285714285
+     },
+     "30": {
+      "n_anchors": 7,
+      "n_hits": 4,
+      "hit_rate": 0.5714285714285714,
+      "base_rate": 0.2331356049110222,
+      "lift": 2.4510566356720203,
+      "pctile": 0.981,
+      "null_p50": 0.14285714285714285
+     },
+     "60": {
+      "n_anchors": 7,
+      "n_hits": 4,
+      "hit_rate": 0.5714285714285714,
+      "base_rate": 0.3165258346031306,
+      "lift": 1.805314160675211,
+      "pctile": 0.9179999999999999,
+      "null_p50": 0.2857142857142857
+     },
+     "90": {
+      "n_anchors": 7,
+      "n_hits": 5,
+      "hit_rate": 0.7142857142857143,
+      "base_rate": 0.38711920990402005,
+      "lift": 1.8451311534315487,
+      "pctile": 0.9694999999999999,
+      "null_p50": 0.42857142857142855
+     },
+     "120": {
+      "n_anchors": 7,
+      "n_hits": 5,
+      "hit_rate": 0.7142857142857143,
+      "base_rate": 0.4482469618661824,
+      "lift": 1.5935093264479367,
+      "pctile": 0.9275,
+      "null_p50": 0.42857142857142855
+     }
+    }
+   },
+   {
+    "task": "T-187",
+    "sign": "M8_vix_over_vxv_gt1",
+    "label": "VIX / VXV > 1(期限结构倒挂)",
+    "family": "aux_fastcrash_30d",
+    "anchor_set": "aux_fastcrash_30d",
+    "lookback": 30,
+    "anchor_dates": [
+     "2014-12-31",
+     "2017-08-30",
+     "2017-12-15",
+     "2018-03-03",
+     "2018-11-06",
+     "2020-02-27",
+     "2021-05-05",
+     "2022-05-31"
+    ],
+    "by_L": {
+     "15": {
+      "n_anchors": 8,
+      "n_hits": 4,
+      "hit_rate": 0.5,
+      "base_rate": 0.2667829119442023,
+      "lift": 1.8741830065359475,
+      "pctile": 0.9712500000000001,
+      "null_p50": 0.125
+     },
+     "30": {
+      "n_anchors": 8,
+      "n_hits": 5,
+      "hit_rate": 0.625,
+      "base_rate": 0.37920489296636084,
+      "lift": 1.6481854838709677,
+      "pctile": 0.976,
+      "null_p50": 0.125
+     },
+     "60": {
+      "n_anchors": 8,
+      "n_hits": 5,
+      "hit_rate": 0.625,
+      "base_rate": 0.5540441714202136,
+      "lift": 1.1280689017951426,
+      "pctile": 0.884,
+      "null_p50": 0.25
+     },
+     "90": {
+      "n_anchors": 8,
+      "n_hits": 5,
+      "hit_rate": 0.625,
+      "base_rate": 0.672249155281328,
+      "lift": 0.9297148164335665,
+      "pctile": 0.7542500000000001,
+      "null_p50": 0.375
+     },
+     "120": {
+      "n_anchors": 8,
+      "n_hits": 6,
+      "hit_rate": 0.75,
+      "base_rate": 0.7560867640548915,
+      "lift": 0.9919496487119438,
+      "pctile": 0.8079999999999999,
+      "null_p50": 0.375
+     }
+    }
+   }
+  ],
+  "lookbacks": [
+   15,
+   30,
+   60,
+   90,
+   120
+  ],
+  "t185_m8_at_L90": {
+   "n_anchors": 6,
+   "n_hits": 6,
+   "hit_rate": 1.0,
+   "base_rate": 0.672249155281328,
+   "lift": 1.4875437062937065,
+   "pctile": 0.9625,
+   "null_p50": 0.6666666666666666
+  },
+  "t185_m8_L90_verdict": false
+ },
+ "block4_anchor_detail": {
+  "clues": [
+   {
+    "rows": [
+     {
+      "anchor": "1978-09-13",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "1980-02-08",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "1981-05-29",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "1983-06-24",
+      "hit": 1,
+      "n_on_days_in_window": 91,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 91,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "1987-08-26",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "1989-10-09",
+      "hit": 1,
+      "n_on_days_in_window": 35,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "1998-07-20",
+      "hit": 1,
+      "n_on_days_in_window": 20,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 11,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2000-03-10",
+      "hit": 1,
+      "n_on_days_in_window": 31,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2007-10-31",
+      "hit": 1,
+      "n_on_days_in_window": 91,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 91,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2018-08-29",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2020-02-19",
+      "hit": 1,
+      "n_on_days_in_window": 91,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 91,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2021-11-19",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2024-12-16",
+      "hit": 1,
+      "n_on_days_in_window": 91,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 91,
+      "strict_hit_ex_anchor_day": 1
+     }
+    ],
+    "n_anchors": 13,
+    "n_hit": 7,
+    "hit_rate": 0.5384615384615384,
+    "n_hit_only_on_anchor_day": 0,
+    "strict_hit_rate": 0.5384615384615384,
+    "n_on_anchor_day": 5,
+    "mean_on_days_in_window_hit": 64.28571428571429,
+    "median_on_days_in_window_hit": 91.0,
+    "max_on_days_in_window_hit": 91,
+    "mean_contiguous_run_to_anchor_hit": 53.57142857142857,
+    "median_contiguous_run_to_anchor_hit": 91.0,
+    "task": "T-185",
+    "sign": "M3",
+    "label": "10Y−2Y > 0 且过去 365 天倒挂过(解除倒挂)",
+    "family": "primary_90d",
+    "lookback": 90
+   },
+   {
+    "rows": [
+     {
+      "anchor": "1987-10-19",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "1990-08-21",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "1998-08-31",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2000-04-12",
+      "hit": 1,
+      "n_on_days_in_window": 13,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 13,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2000-10-06",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2001-02-21",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2001-08-21",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2002-05-02",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2008-02-06",
+      "hit": 1,
+      "n_on_days_in_window": 31,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 31,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2009-03-03",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2018-12-21",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2020-03-12",
+      "hit": 1,
+      "n_on_days_in_window": 4,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 4,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2022-03-07",
+      "hit": 1,
+      "n_on_days_in_window": 6,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 4,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2022-10-11",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2025-04-04",
+      "hit": 1,
+      "n_on_days_in_window": 1,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 1,
+      "strict_hit_ex_anchor_day": 0
+     }
+    ],
+    "n_anchors": 15,
+    "n_hit": 5,
+    "hit_rate": 0.3333333333333333,
+    "n_hit_only_on_anchor_day": 1,
+    "strict_hit_rate": 0.26666666666666666,
+    "n_on_anchor_day": 5,
+    "mean_on_days_in_window_hit": 11.0,
+    "median_on_days_in_window_hit": 6.0,
+    "max_on_days_in_window_hit": 31,
+    "mean_contiguous_run_to_anchor_hit": 10.6,
+    "median_contiguous_run_to_anchor_hit": 4.0,
+    "task": "T-185",
+    "sign": "M5",
+    "label": "Baa−10Y 利差 63 天升 ≥ 0.5pp",
+    "family": "aux_break_30d",
+    "lookback": 30
+   },
+   {
+    "rows": [
+     {
+      "anchor": "1990-08-21",
+      "hit": 1,
+      "n_on_days_in_window": 2,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "1998-08-31",
+      "hit": 1,
+      "n_on_days_in_window": 17,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 11,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2000-04-12",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2000-10-06",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2001-02-21",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2001-08-21",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2002-05-02",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2008-02-06",
+      "hit": 1,
+      "n_on_days_in_window": 1,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2009-03-03",
+      "hit": 1,
+      "n_on_days_in_window": 31,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 31,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2018-12-21",
+      "hit": 1,
+      "n_on_days_in_window": 1,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 1,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2020-03-12",
+      "hit": 1,
+      "n_on_days_in_window": 15,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 15,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2022-03-07",
+      "hit": 1,
+      "n_on_days_in_window": 10,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 8,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2022-10-11",
+      "hit": 1,
+      "n_on_days_in_window": 14,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 6,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2025-04-04",
+      "hit": 1,
+      "n_on_days_in_window": 2,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 2,
+      "strict_hit_ex_anchor_day": 1
+     }
+    ],
+    "n_anchors": 14,
+    "n_hit": 9,
+    "hit_rate": 0.6428571428571429,
+    "n_hit_only_on_anchor_day": 1,
+    "strict_hit_rate": 0.5714285714285714,
+    "n_on_anchor_day": 7,
+    "mean_on_days_in_window_hit": 10.333333333333334,
+    "median_on_days_in_window_hit": 10.0,
+    "max_on_days_in_window_hit": 31,
+    "mean_contiguous_run_to_anchor_hit": 8.222222222222221,
+    "median_contiguous_run_to_anchor_hit": 6.0,
+    "task": "T-185",
+    "sign": "M7",
+    "label": "VIX > 30",
+    "family": "aux_break_30d",
+    "lookback": 30
+   },
+   {
+    "rows": [
+     {
+      "anchor": "2008-02-06",
+      "hit": 1,
+      "n_on_days_in_window": 20,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 3,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2009-03-03",
+      "hit": 1,
+      "n_on_days_in_window": 26,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 19,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2018-12-21",
+      "hit": 1,
+      "n_on_days_in_window": 11,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 5,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2020-03-12",
+      "hit": 1,
+      "n_on_days_in_window": 18,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 18,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2022-03-07",
+      "hit": 1,
+      "n_on_days_in_window": 5,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 1,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2022-10-11",
+      "hit": 1,
+      "n_on_days_in_window": 4,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 1,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2025-04-04",
+      "hit": 1,
+      "n_on_days_in_window": 13,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 3,
+      "strict_hit_ex_anchor_day": 1
+     }
+    ],
+    "n_anchors": 7,
+    "n_hit": 7,
+    "hit_rate": 1.0,
+    "n_hit_only_on_anchor_day": 0,
+    "strict_hit_rate": 1.0,
+    "n_on_anchor_day": 7,
+    "mean_on_days_in_window_hit": 13.857142857142858,
+    "median_on_days_in_window_hit": 13.0,
+    "max_on_days_in_window_hit": 26,
+    "mean_contiguous_run_to_anchor_hit": 7.142857142857143,
+    "median_contiguous_run_to_anchor_hit": 3.0,
+    "task": "T-185",
+    "sign": "M8",
+    "label": "VIX / VXV > 1(期限结构倒挂)",
+    "family": "aux_break_30d",
+    "lookback": 30
+   },
+   {
+    "rows": [
+     {
+      "anchor": "2008-02-06",
+      "hit": 1,
+      "n_on_days_in_window": 9,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2009-03-03",
+      "hit": 1,
+      "n_on_days_in_window": 17,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 16,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2018-12-21",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2020-03-12",
+      "hit": 1,
+      "n_on_days_in_window": 1,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 1,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2022-03-07",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2022-10-11",
+      "hit": 1,
+      "n_on_days_in_window": 19,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 19,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2025-04-04",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     }
+    ],
+    "n_anchors": 7,
+    "n_hit": 4,
+    "hit_rate": 0.5714285714285714,
+    "n_hit_only_on_anchor_day": 1,
+    "strict_hit_rate": 0.42857142857142855,
+    "n_on_anchor_day": 3,
+    "mean_on_days_in_window_hit": 11.5,
+    "median_on_days_in_window_hit": 13.0,
+    "max_on_days_in_window_hit": 19,
+    "mean_contiguous_run_to_anchor_hit": 9.0,
+    "median_contiguous_run_to_anchor_hit": 8.5,
+    "task": "T-185",
+    "sign": "M9",
+    "label": "美元广义指数 63 天变化分位 ≥ 0.9",
+    "family": "aux_break_30d",
+    "lookback": 30
+   },
+   {
+    "rows": [
+     {
+      "anchor": "2014-12-31",
+      "hit": 1,
+      "n_on_days_in_window": 4,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2017-08-30",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2017-12-15",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2018-03-03",
+      "hit": 1,
+      "n_on_days_in_window": 19,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2018-11-06",
+      "hit": 1,
+      "n_on_days_in_window": 20,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 1,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2020-02-27",
+      "hit": 1,
+      "n_on_days_in_window": 7,
+      "on_anchor_day": 1,
+      "contiguous_run_to_anchor": 4,
+      "strict_hit_ex_anchor_day": 1
+     },
+     {
+      "anchor": "2021-05-05",
+      "hit": 0,
+      "n_on_days_in_window": 0,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 0
+     },
+     {
+      "anchor": "2022-05-31",
+      "hit": 1,
+      "n_on_days_in_window": 1,
+      "on_anchor_day": 0,
+      "contiguous_run_to_anchor": 0,
+      "strict_hit_ex_anchor_day": 1
+     }
+    ],
+    "n_anchors": 8,
+    "n_hit": 5,
+    "hit_rate": 0.625,
+    "n_hit_only_on_anchor_day": 0,
+    "strict_hit_rate": 0.625,
+    "n_on_anchor_day": 2,
+    "mean_on_days_in_window_hit": 10.2,
+    "median_on_days_in_window_hit": 7.0,
+    "max_on_days_in_window_hit": 20,
+    "mean_contiguous_run_to_anchor_hit": 1.0,
+    "median_contiguous_run_to_anchor_hit": 0.0,
+    "task": "T-187",
+    "sign": "M8_vix_over_vxv_gt1",
+    "label": "VIX / VXV > 1(期限结构倒挂)",
+    "family": "aux_fastcrash_30d",
+    "lookback": 30
+   }
+  ],
+  "c_series": {
+   "C6_total_vol_30d_mean_pct_ge90": {
+    "sign": "C6_total_vol_30d_mean_pct_ge90",
+    "family": "primary_90d",
+    "anchor_dates": [
+     "2017-12-15",
+     "2019-06-26",
+     "2021-04-13",
+     "2021-11-08",
+     "2025-10-06"
+    ],
+    "t191_rows": [
+     {
+      "family": "primary_90d",
+      "n_anchors": 4,
+      "hit_rate": 1.0,
+      "base_rate": 0.5502152080344332,
+      "lift": 1.8174706649282921,
+      "pctile": 1.0,
+      "c_pctile": true,
+      "c_lift": true,
+      "c_n_anchors": false,
+      "c_halves": true,
+      "pass_raw": false,
+      "is_clue": false
+     },
+     {
+      "family": "aux_break_30d",
+      "n_anchors": 4,
+      "hit_rate": 0.5,
+      "base_rate": 0.40098314606741575,
+      "lift": 1.2469352014010506,
+      "pctile": 0.6992499999999999,
+      "c_pctile": false,
+      "c_lift": false,
+      "c_n_anchors": false,
+      "c_halves": false,
+      "pass_raw": false,
+      "is_clue": false
+     },
+     {
+      "family": "aux_fastcrash_30d",
+      "n_anchors": 3,
+      "hit_rate": 0.6666666666666666,
+      "base_rate": 0.40098314606741575,
+      "lift": 1.6625802685347342,
+      "pctile": 0.8897499999999999,
+      "c_pctile": false,
+      "c_lift": true,
+      "c_n_anchors": false,
+      "c_halves": false,
+      "pass_raw": false,
+      "is_clue": false
+     }
+    ],
+    "by_L": {
+     "14": {
+      "n_anchors": 4,
+      "n_hits": 4,
+      "hit_rate": 1.0,
+      "base_rate": 0.3520586182833217,
+      "lift": 2.8404360753221014,
+      "pctile": 0.98675
+     },
+     "15": {
+      "n_anchors": 4,
+      "n_hits": 4,
+      "hit_rate": 1.0,
+      "base_rate": 0.3553228621291449,
+      "lift": 2.8143418467583494,
+      "pctile": 0.9874999999999999
+     },
+     "30": {
+      "n_anchors": 4,
+      "n_hits": 4,
+      "hit_rate": 1.0,
+      "base_rate": 0.4007017543859649,
+      "lift": 2.4956217162872156,
+      "pctile": 0.996
+     },
+     "60": {
+      "n_anchors": 4,
+      "n_hits": 4,
+      "hit_rate": 1.0,
+      "base_rate": 0.4847517730496454,
+      "lift": 2.062911485003658,
+      "pctile": 1.0
+     },
+     "90": {
+      "n_anchors": 4,
+      "n_hits": 4,
+      "hit_rate": 1.0,
+      "base_rate": 0.5498207885304659,
+      "lift": 1.8187744458930901,
+      "pctile": 1.0
+     },
+     "120": {
+      "n_anchors": 4,
+      "n_hits": 4,
+      "hit_rate": 1.0,
+      "base_rate": 0.6101449275362318,
+      "lift": 1.63895486935867,
+      "pctile": 1.0
+     }
+    },
+    "anchor_detail_L14": {
+     "rows": [
+      {
+       "anchor": "2019-06-26",
+       "hit": 1,
+       "n_on_days_in_window": 15,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 15,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-04-13",
+       "hit": 1,
+       "n_on_days_in_window": 15,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 15,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-11-08",
+       "hit": 1,
+       "n_on_days_in_window": 13,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 13,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2025-10-06",
+       "hit": 1,
+       "n_on_days_in_window": 15,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 15,
+       "strict_hit_ex_anchor_day": 1
+      }
+     ],
+     "n_anchors": 4,
+     "n_hit": 4,
+     "hit_rate": 1.0,
+     "n_hit_only_on_anchor_day": 0,
+     "strict_hit_rate": 1.0,
+     "n_on_anchor_day": 4,
+     "mean_on_days_in_window_hit": 14.5,
+     "median_on_days_in_window_hit": 15.0,
+     "max_on_days_in_window_hit": 15,
+     "mean_contiguous_run_to_anchor_hit": 14.5,
+     "median_contiguous_run_to_anchor_hit": 15.0
+    },
+    "anchor_detail_L30": {
+     "rows": [
+      {
+       "anchor": "2019-06-26",
+       "hit": 1,
+       "n_on_days_in_window": 31,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 31,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-04-13",
+       "hit": 1,
+       "n_on_days_in_window": 31,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 31,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-11-08",
+       "hit": 1,
+       "n_on_days_in_window": 13,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 13,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2025-10-06",
+       "hit": 1,
+       "n_on_days_in_window": 31,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 31,
+       "strict_hit_ex_anchor_day": 1
+      }
+     ],
+     "n_anchors": 4,
+     "n_hit": 4,
+     "hit_rate": 1.0,
+     "n_hit_only_on_anchor_day": 0,
+     "strict_hit_rate": 1.0,
+     "n_on_anchor_day": 4,
+     "mean_on_days_in_window_hit": 26.5,
+     "median_on_days_in_window_hit": 31.0,
+     "max_on_days_in_window_hit": 31,
+     "mean_contiguous_run_to_anchor_hit": 26.5,
+     "median_contiguous_run_to_anchor_hit": 31.0
+    },
+    "anchor_detail_L60": {
+     "rows": [
+      {
+       "anchor": "2019-06-26",
+       "hit": 1,
+       "n_on_days_in_window": 49,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 37,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-04-13",
+       "hit": 1,
+       "n_on_days_in_window": 61,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 61,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-11-08",
+       "hit": 1,
+       "n_on_days_in_window": 42,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 13,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2025-10-06",
+       "hit": 1,
+       "n_on_days_in_window": 61,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 61,
+       "strict_hit_ex_anchor_day": 1
+      }
+     ],
+     "n_anchors": 4,
+     "n_hit": 4,
+     "hit_rate": 1.0,
+     "n_hit_only_on_anchor_day": 0,
+     "strict_hit_rate": 1.0,
+     "n_on_anchor_day": 4,
+     "mean_on_days_in_window_hit": 53.25,
+     "median_on_days_in_window_hit": 55.0,
+     "max_on_days_in_window_hit": 61,
+     "mean_contiguous_run_to_anchor_hit": 43.0,
+     "median_contiguous_run_to_anchor_hit": 49.0
+    },
+    "anchor_detail_L90": {
+     "rows": [
+      {
+       "anchor": "2019-06-26",
+       "hit": 1,
+       "n_on_days_in_window": 67,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 37,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-04-13",
+       "hit": 1,
+       "n_on_days_in_window": 91,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 91,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-11-08",
+       "hit": 1,
+       "n_on_days_in_window": 58,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 13,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2025-10-06",
+       "hit": 1,
+       "n_on_days_in_window": 78,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 78,
+       "strict_hit_ex_anchor_day": 1
+      }
+     ],
+     "n_anchors": 4,
+     "n_hit": 4,
+     "hit_rate": 1.0,
+     "n_hit_only_on_anchor_day": 0,
+     "strict_hit_rate": 1.0,
+     "n_on_anchor_day": 4,
+     "mean_on_days_in_window_hit": 73.5,
+     "median_on_days_in_window_hit": 72.5,
+     "max_on_days_in_window_hit": 91,
+     "mean_contiguous_run_to_anchor_hit": 54.75,
+     "median_contiguous_run_to_anchor_hit": 57.5
+    },
+    "anchor_detail_L120": {
+     "rows": [
+      {
+       "anchor": "2019-06-26",
+       "hit": 1,
+       "n_on_days_in_window": 67,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 37,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-04-13",
+       "hit": 1,
+       "n_on_days_in_window": 121,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 121,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-11-08",
+       "hit": 1,
+       "n_on_days_in_window": 58,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 13,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2025-10-06",
+       "hit": 1,
+       "n_on_days_in_window": 78,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 78,
+       "strict_hit_ex_anchor_day": 1
+      }
+     ],
+     "n_anchors": 4,
+     "n_hit": 4,
+     "hit_rate": 1.0,
+     "n_hit_only_on_anchor_day": 0,
+     "strict_hit_rate": 1.0,
+     "n_on_anchor_day": 4,
+     "mean_on_days_in_window_hit": 81.0,
+     "median_on_days_in_window_hit": 72.5,
+     "max_on_days_in_window_hit": 121,
+     "mean_contiguous_run_to_anchor_hit": 62.25,
+     "median_contiguous_run_to_anchor_hit": 57.5
+    }
+   },
+   "C1_fng_ge75_7d": {
+    "sign": "C1_fng_ge75_7d",
+    "family": "primary_90d",
+    "anchor_dates": [
+     "2017-12-15",
+     "2019-06-26",
+     "2021-04-13",
+     "2021-11-08",
+     "2025-10-06"
+    ],
+    "t191_rows": [
+     {
+      "family": "primary_90d",
+      "n_anchors": 4,
+      "hit_rate": 0.75,
+      "base_rate": 0.25282531482079434,
+      "lift": 2.9664750957854404,
+      "pctile": 0.97575,
+      "c_pctile": true,
+      "c_lift": true,
+      "c_n_anchors": false,
+      "c_halves": true,
+      "pass_raw": false,
+      "is_clue": false
+     },
+     {
+      "family": "aux_break_30d",
+      "n_anchors": 5,
+      "hit_rate": 0.0,
+      "base_rate": 0.13747228381374724,
+      "lift": 0.0,
+      "pctile": 0.19425,
+      "c_pctile": false,
+      "c_lift": false,
+      "c_n_anchors": false,
+      "c_halves": false,
+      "pass_raw": false,
+      "is_clue": false
+     },
+     {
+      "family": "aux_fastcrash_30d",
+      "n_anchors": 5,
+      "hit_rate": 0.0,
+      "base_rate": 0.13747228381374724,
+      "lift": 0.0,
+      "pctile": 0.225,
+      "c_pctile": false,
+      "c_lift": false,
+      "c_n_anchors": false,
+      "c_halves": false,
+      "pass_raw": false,
+      "is_clue": false
+     }
+    ],
+    "by_L": {
+     "14": {
+      "n_anchors": 4,
+      "n_hits": 1,
+      "hit_rate": 0.25,
+      "base_rate": 0.10141732283464568,
+      "lift": 2.465062111801242,
+      "pctile": 0.8162499999999999
+     },
+     "15": {
+      "n_anchors": 4,
+      "n_hits": 1,
+      "hit_rate": 0.25,
+      "base_rate": 0.10365469439193446,
+      "lift": 2.4118541033434653,
+      "pctile": 0.81175
+     },
+     "30": {
+      "n_anchors": 4,
+      "n_hits": 2,
+      "hit_rate": 0.5,
+      "base_rate": 0.1373852484963596,
+      "lift": 3.639400921658986,
+      "pctile": 0.952
+     },
+     "60": {
+      "n_anchors": 4,
+      "n_hits": 3,
+      "hit_rate": 0.75,
+      "base_rate": 0.19718759987216364,
+      "lift": 3.803484602917342,
+      "pctile": 0.98775
+     },
+     "90": {
+      "n_anchors": 4,
+      "n_hits": 3,
+      "hit_rate": 0.75,
+      "base_rate": 0.2526621490803485,
+      "lift": 2.968390804597701,
+      "pctile": 0.97575
+     },
+     "120": {
+      "n_anchors": 4,
+      "n_hits": 3,
+      "hit_rate": 0.75,
+      "base_rate": 0.3040078201368524,
+      "lift": 2.4670418006430865,
+      "pctile": 0.983
+     }
+    },
+    "anchor_detail_L14": {
+     "rows": [
+      {
+       "anchor": "2019-06-26",
+       "hit": 1,
+       "n_on_days_in_window": 6,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 6,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-04-13",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      },
+      {
+       "anchor": "2021-11-08",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      },
+      {
+       "anchor": "2025-10-06",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      }
+     ],
+     "n_anchors": 4,
+     "n_hit": 1,
+     "hit_rate": 0.25,
+     "n_hit_only_on_anchor_day": 0,
+     "strict_hit_rate": 0.25,
+     "n_on_anchor_day": 1,
+     "mean_on_days_in_window_hit": 6.0,
+     "median_on_days_in_window_hit": 6.0,
+     "max_on_days_in_window_hit": 6,
+     "mean_contiguous_run_to_anchor_hit": 6.0,
+     "median_contiguous_run_to_anchor_hit": 6.0
+    },
+    "anchor_detail_L30": {
+     "rows": [
+      {
+       "anchor": "2019-06-26",
+       "hit": 1,
+       "n_on_days_in_window": 6,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 6,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-04-13",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      },
+      {
+       "anchor": "2021-11-08",
+       "hit": 1,
+       "n_on_days_in_window": 1,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2025-10-06",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      }
+     ],
+     "n_anchors": 4,
+     "n_hit": 2,
+     "hit_rate": 0.5,
+     "n_hit_only_on_anchor_day": 0,
+     "strict_hit_rate": 0.5,
+     "n_on_anchor_day": 1,
+     "mean_on_days_in_window_hit": 3.5,
+     "median_on_days_in_window_hit": 3.5,
+     "max_on_days_in_window_hit": 6,
+     "mean_contiguous_run_to_anchor_hit": 3.0,
+     "median_contiguous_run_to_anchor_hit": 3.0
+    },
+    "anchor_detail_L60": {
+     "rows": [
+      {
+       "anchor": "2019-06-26",
+       "hit": 1,
+       "n_on_days_in_window": 6,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 6,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-04-13",
+       "hit": 1,
+       "n_on_days_in_window": 16,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-11-08",
+       "hit": 1,
+       "n_on_days_in_window": 1,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2025-10-06",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      }
+     ],
+     "n_anchors": 4,
+     "n_hit": 3,
+     "hit_rate": 0.75,
+     "n_hit_only_on_anchor_day": 0,
+     "strict_hit_rate": 0.75,
+     "n_on_anchor_day": 1,
+     "mean_on_days_in_window_hit": 7.666666666666667,
+     "median_on_days_in_window_hit": 6.0,
+     "max_on_days_in_window_hit": 16,
+     "mean_contiguous_run_to_anchor_hit": 2.0,
+     "median_contiguous_run_to_anchor_hit": 0.0
+    },
+    "anchor_detail_L90": {
+     "rows": [
+      {
+       "anchor": "2019-06-26",
+       "hit": 1,
+       "n_on_days_in_window": 6,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 6,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-04-13",
+       "hit": 1,
+       "n_on_days_in_window": 33,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-11-08",
+       "hit": 1,
+       "n_on_days_in_window": 1,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2025-10-06",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      }
+     ],
+     "n_anchors": 4,
+     "n_hit": 3,
+     "hit_rate": 0.75,
+     "n_hit_only_on_anchor_day": 0,
+     "strict_hit_rate": 0.75,
+     "n_on_anchor_day": 1,
+     "mean_on_days_in_window_hit": 13.333333333333334,
+     "median_on_days_in_window_hit": 6.0,
+     "max_on_days_in_window_hit": 33,
+     "mean_contiguous_run_to_anchor_hit": 2.0,
+     "median_contiguous_run_to_anchor_hit": 0.0
+    },
+    "anchor_detail_L120": {
+     "rows": [
+      {
+       "anchor": "2019-06-26",
+       "hit": 1,
+       "n_on_days_in_window": 6,
+       "on_anchor_day": 1,
+       "contiguous_run_to_anchor": 6,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-04-13",
+       "hit": 1,
+       "n_on_days_in_window": 63,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-11-08",
+       "hit": 1,
+       "n_on_days_in_window": 1,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2025-10-06",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      }
+     ],
+     "n_anchors": 4,
+     "n_hit": 3,
+     "hit_rate": 0.75,
+     "n_hit_only_on_anchor_day": 0,
+     "strict_hit_rate": 0.75,
+     "n_on_anchor_day": 1,
+     "mean_on_days_in_window_hit": 23.333333333333332,
+     "median_on_days_in_window_hit": 6.0,
+     "max_on_days_in_window_hit": 63,
+     "mean_contiguous_run_to_anchor_hit": 2.0,
+     "median_contiguous_run_to_anchor_hit": 0.0
+    }
+   },
+   "C5_btc_share_60d_drop_ge10pp": {
+    "sign": "C5_btc_share_60d_drop_ge10pp",
+    "family": "primary_90d",
+    "anchor_dates": [
+     "2017-12-15",
+     "2019-06-26",
+     "2021-04-13",
+     "2021-11-08",
+     "2025-10-06"
+    ],
+    "t191_rows": [
+     {
+      "family": "primary_90d",
+      "n_anchors": 4,
+      "hit_rate": 0.75,
+      "base_rate": 0.4300619497880665,
+      "lift": 1.7439347990902199,
+      "pctile": 0.9645,
+      "c_pctile": true,
+      "c_lift": true,
+      "c_n_anchors": false,
+      "c_halves": true,
+      "pass_raw": false,
+      "is_clue": false
+     },
+     {
+      "family": "aux_break_30d",
+      "n_anchors": 5,
+      "hit_rate": 0.4,
+      "base_rate": 0.21714102974096577,
+      "lift": 1.8421207658321062,
+      "pctile": 0.9057499999999999,
+      "c_pctile": false,
+      "c_lift": true,
+      "c_n_anchors": false,
+      "c_halves": true,
+      "pass_raw": false,
+      "is_clue": false
+     },
+     {
+      "family": "aux_fastcrash_30d",
+      "n_anchors": 4,
+      "hit_rate": 0.5,
+      "base_rate": 0.21714102974096577,
+      "lift": 2.302650957290133,
+      "pctile": 0.9239999999999999,
+      "c_pctile": false,
+      "c_lift": true,
+      "c_n_anchors": false,
+      "c_halves": false,
+      "pass_raw": false,
+      "is_clue": false
+     }
+    ],
+    "by_L": {
+     "14": {
+      "n_anchors": 4,
+      "n_hits": 0,
+      "hit_rate": 0.0,
+      "base_rate": 0.13131955484896662,
+      "lift": 0.0,
+      "pctile": 0.3245
+     },
+     "15": {
+      "n_anchors": 4,
+      "n_hits": 0,
+      "hit_rate": 0.0,
+      "base_rate": 0.13708651399491095,
+      "lift": 0.0,
+      "pctile": 0.31575
+     },
+     "30": {
+      "n_anchors": 4,
+      "n_hits": 1,
+      "hit_rate": 0.25,
+      "base_rate": 0.21700223713646533,
+      "lift": 1.152061855670103,
+      "pctile": 0.7035
+     },
+     "60": {
+      "n_anchors": 4,
+      "n_hits": 1,
+      "hit_rate": 0.25,
+      "base_rate": 0.3378509196515005,
+      "lift": 0.7399713467048711,
+      "pctile": 0.5579999999999999
+     },
+     "90": {
+      "n_anchors": 4,
+      "n_hits": 3,
+      "hit_rate": 0.75,
+      "base_rate": 0.42978168784620396,
+      "lift": 1.7450720242608038,
+      "pctile": 0.9645
+     },
+     "120": {
+      "n_anchors": 4,
+      "n_hits": 3,
+      "hit_rate": 0.75,
+      "base_rate": 0.5074037512339585,
+      "lift": 1.4781128404669261,
+      "pctile": 0.9570000000000001
+     }
+    },
+    "anchor_detail_L14": {
+     "rows": [
+      {
+       "anchor": "2019-06-26",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      },
+      {
+       "anchor": "2021-04-13",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      },
+      {
+       "anchor": "2021-11-08",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      },
+      {
+       "anchor": "2025-10-06",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      }
+     ],
+     "n_anchors": 4,
+     "n_hit": 0,
+     "hit_rate": 0.0,
+     "n_hit_only_on_anchor_day": 0,
+     "strict_hit_rate": 0.0,
+     "n_on_anchor_day": 0,
+     "mean_on_days_in_window_hit": null,
+     "median_on_days_in_window_hit": null,
+     "max_on_days_in_window_hit": null,
+     "mean_contiguous_run_to_anchor_hit": null,
+     "median_contiguous_run_to_anchor_hit": null
+    },
+    "anchor_detail_L30": {
+     "rows": [
+      {
+       "anchor": "2019-06-26",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      },
+      {
+       "anchor": "2021-04-13",
+       "hit": 1,
+       "n_on_days_in_window": 2,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-11-08",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      },
+      {
+       "anchor": "2025-10-06",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      }
+     ],
+     "n_anchors": 4,
+     "n_hit": 1,
+     "hit_rate": 0.25,
+     "n_hit_only_on_anchor_day": 0,
+     "strict_hit_rate": 0.25,
+     "n_on_anchor_day": 0,
+     "mean_on_days_in_window_hit": 2.0,
+     "median_on_days_in_window_hit": 2.0,
+     "max_on_days_in_window_hit": 2,
+     "mean_contiguous_run_to_anchor_hit": 0.0,
+     "median_contiguous_run_to_anchor_hit": 0.0
+    },
+    "anchor_detail_L60": {
+     "rows": [
+      {
+       "anchor": "2019-06-26",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      },
+      {
+       "anchor": "2021-04-13",
+       "hit": 1,
+       "n_on_days_in_window": 7,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-11-08",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      },
+      {
+       "anchor": "2025-10-06",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      }
+     ],
+     "n_anchors": 4,
+     "n_hit": 1,
+     "hit_rate": 0.25,
+     "n_hit_only_on_anchor_day": 0,
+     "strict_hit_rate": 0.25,
+     "n_on_anchor_day": 0,
+     "mean_on_days_in_window_hit": 7.0,
+     "median_on_days_in_window_hit": 7.0,
+     "max_on_days_in_window_hit": 7,
+     "mean_contiguous_run_to_anchor_hit": 0.0,
+     "median_contiguous_run_to_anchor_hit": 0.0
+    },
+    "anchor_detail_L90": {
+     "rows": [
+      {
+       "anchor": "2019-06-26",
+       "hit": 1,
+       "n_on_days_in_window": 3,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-04-13",
+       "hit": 1,
+       "n_on_days_in_window": 9,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-11-08",
+       "hit": 1,
+       "n_on_days_in_window": 2,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2025-10-06",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      }
+     ],
+     "n_anchors": 4,
+     "n_hit": 3,
+     "hit_rate": 0.75,
+     "n_hit_only_on_anchor_day": 0,
+     "strict_hit_rate": 0.75,
+     "n_on_anchor_day": 0,
+     "mean_on_days_in_window_hit": 4.666666666666667,
+     "median_on_days_in_window_hit": 3.0,
+     "max_on_days_in_window_hit": 9,
+     "mean_contiguous_run_to_anchor_hit": 0.0,
+     "median_contiguous_run_to_anchor_hit": 0.0
+    },
+    "anchor_detail_L120": {
+     "rows": [
+      {
+       "anchor": "2019-06-26",
+       "hit": 1,
+       "n_on_days_in_window": 3,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-04-13",
+       "hit": 1,
+       "n_on_days_in_window": 9,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2021-11-08",
+       "hit": 1,
+       "n_on_days_in_window": 2,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 1
+      },
+      {
+       "anchor": "2025-10-06",
+       "hit": 0,
+       "n_on_days_in_window": 0,
+       "on_anchor_day": 0,
+       "contiguous_run_to_anchor": 0,
+       "strict_hit_ex_anchor_day": 0
+      }
+     ],
+     "n_anchors": 4,
+     "n_hit": 3,
+     "hit_rate": 0.75,
+     "n_hit_only_on_anchor_day": 0,
+     "strict_hit_rate": 0.75,
+     "n_on_anchor_day": 0,
+     "mean_on_days_in_window_hit": 4.666666666666667,
+     "median_on_days_in_window_hit": 3.0,
+     "max_on_days_in_window_hit": 9,
+     "mean_contiguous_run_to_anchor_hit": 0.0,
+     "median_contiguous_run_to_anchor_hit": 0.0
+    }
+   }
+  },
+  "note": "C6 / C1 / C5 在 T-191 里**不是线索**(锚点数 < 6),这里只分开评,不计入线索条数"
+ },
+ "block5_strict_anchor_day": {
+  "cases": [
+   {
+    "task": "T-185",
+    "sign": "M3",
+    "family": "primary_90d",
+    "anchor_set": "main",
+    "lookback": 90,
+    "t191_same_source": false,
+    "t191_is_clue": true,
+    "old_hit_rate": 0.5384615384615384,
+    "old_base_rate": 0.31955667176239355,
+    "old_lift": 1.6850267449959915,
+    "old_pctile": 0.96425,
+    "strict": {
+     "lookback": 90,
+     "n_shift": 2000,
+     "seed": 675,
+     "window": "[a-L, a-1](不含锚点当天)",
+     "n_anchors": 13,
+     "n_skipped": 1,
+     "hit_rate": 0.5384615384615384,
+     "base_rate": 0.3189015068792313,
+     "lift": 1.6884885359461628,
+     "null_p50": 0.3076923076923077,
+     "pctile": 0.965
+    },
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "survives_ex_anchor_day": true,
+    "strict_binom_p": 0.08400650140340402
+   },
+   {
+    "task": "T-185",
+    "sign": "M5",
+    "family": "aux_break_30d",
+    "anchor_set": "aux_break",
+    "lookback": 30,
+    "t191_same_source": false,
+    "t191_is_clue": true,
+    "old_hit_rate": 0.3333333333333333,
+    "old_base_rate": 0.12042486976523915,
+    "old_lift": 2.7679775280898875,
+    "old_pctile": 0.98,
+    "strict": {
+     "lookback": 30,
+     "n_shift": 2000,
+     "seed": 675,
+     "window": "[a-L, a-1](不含锚点当天)",
+     "n_anchors": 15,
+     "n_skipped": 5,
+     "hit_rate": 0.26666666666666666,
+     "base_rate": 0.11880116365604493,
+     "lift": 2.244646924829157,
+     "null_p50": 0.13333333333333333,
+     "pctile": 0.932
+    },
+    "c_pctile": false,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": false,
+    "survives_ex_anchor_day": false,
+    "strict_binom_p": 0.09311384033362302
+   },
+   {
+    "task": "T-185",
+    "sign": "M7",
+    "family": "aux_break_30d",
+    "anchor_set": "aux_break",
+    "lookback": 30,
+    "t191_same_source": false,
+    "t191_is_clue": true,
+    "old_hit_rate": 0.6428571428571429,
+    "old_base_rate": 0.18654935878317924,
+    "old_lift": 3.4460431654676262,
+    "old_pctile": 1.0,
+    "strict": {
+     "lookback": 30,
+     "n_shift": 2000,
+     "seed": 675,
+     "window": "[a-L, a-1](不含锚点当天)",
+     "n_anchors": 14,
+     "n_skipped": 6,
+     "hit_rate": 0.5714285714285714,
+     "base_rate": 0.18393975544288696,
+     "lift": 3.1066072152411834,
+     "null_p50": 0.14285714285714285,
+     "pctile": 0.99925
+    },
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "survives_ex_anchor_day": true,
+    "strict_binom_p": 0.0013582683680901902
+   },
+   {
+    "task": "T-185",
+    "sign": "M8",
+    "family": "aux_break_30d",
+    "anchor_set": "aux_break",
+    "lookback": 30,
+    "t191_same_source": false,
+    "t191_is_clue": true,
+    "old_hit_rate": 1.0,
+    "old_base_rate": 0.37920489296636084,
+    "old_lift": 2.6370967741935485,
+    "old_pctile": 1.0,
+    "strict": {
+     "lookback": 30,
+     "n_shift": 2000,
+     "seed": 675,
+     "window": "[a-L, a-1](不含锚点当天)",
+     "n_anchors": 7,
+     "n_skipped": 13,
+     "hit_rate": 1.0,
+     "base_rate": 0.3725061890199505,
+     "lift": 2.684519155590305,
+     "null_p50": 0.42857142857142855,
+     "pctile": 1.0
+    },
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "survives_ex_anchor_day": true,
+    "strict_binom_p": 0.0009952551859732644
+   },
+   {
+    "task": "T-185",
+    "sign": "M9",
+    "family": "aux_break_30d",
+    "anchor_set": "aux_break",
+    "lookback": 30,
+    "t191_same_source": false,
+    "t191_is_clue": true,
+    "old_hit_rate": 0.5714285714285714,
+    "old_base_rate": 0.2331356049110222,
+    "old_lift": 2.4510566356720203,
+    "old_pctile": 0.981,
+    "strict": {
+     "lookback": 30,
+     "n_shift": 2000,
+     "seed": 675,
+     "window": "[a-L, a-1](不含锚点当天)",
+     "n_anchors": 7,
+     "n_skipped": 13,
+     "hit_rate": 0.42857142857142855,
+     "base_rate": 0.22996275348323908,
+     "lift": 1.8636558402605192,
+     "null_p50": 0.14285714285714285,
+     "pctile": 0.8715
+    },
+    "c_pctile": false,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": false,
+    "survives_ex_anchor_day": false,
+    "strict_binom_p": 0.20318536148703034
+   },
+   {
+    "task": "T-187",
+    "sign": "M8_vix_over_vxv_gt1",
+    "family": "aux_fastcrash_30d",
+    "anchor_set": "aux_fastcrash_30d",
+    "lookback": 30,
+    "t191_same_source": false,
+    "t191_is_clue": true,
+    "old_hit_rate": 0.625,
+    "old_base_rate": 0.37920489296636084,
+    "old_lift": 1.6481854838709677,
+    "old_pctile": 0.976,
+    "strict": {
+     "lookback": 30,
+     "n_shift": 2000,
+     "seed": 675,
+     "window": "[a-L, a-1](不含锚点当天)",
+     "n_anchors": 8,
+     "n_skipped": 0,
+     "hit_rate": 0.625,
+     "base_rate": 0.3725061890199505,
+     "lift": 1.6778244722439406,
+     "null_p50": 0.125,
+     "pctile": 0.97875
+    },
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "survives_ex_anchor_day": true,
+    "strict_binom_p": 0.1340624809062467
+   },
+   {
+    "task": "T-185",
+    "sign": "P4",
+    "family": "aux_break_30d",
+    "anchor_set": "aux_break",
+    "lookback": 30,
+    "t191_same_source": true,
+    "t191_is_clue": false,
+    "old_hit_rate": 0.9,
+    "old_base_rate": 0.3138467677573823,
+    "old_lift": 2.867641449459631,
+    "old_pctile": 1.0,
+    "strict": {
+     "lookback": 30,
+     "n_shift": 2000,
+     "seed": 675,
+     "window": "[a-L, a-1](不含锚点当天)",
+     "n_anchors": 20,
+     "n_skipped": 0,
+     "hit_rate": 0.9,
+     "base_rate": 0.31065442936951315,
+     "lift": 2.897109826589596,
+     "null_p50": 0.3,
+     "pctile": 1.0
+    },
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "survives_ex_anchor_day": true,
+    "strict_binom_p": 6.873759631997291e-08
+   },
+   {
+    "task": "T-185",
+    "sign": "P4",
+    "family": "aux_fastcrash_30d",
+    "anchor_set": "aux_fast",
+    "lookback": 30,
+    "t191_same_source": true,
+    "t191_is_clue": false,
+    "old_hit_rate": 0.4857142857142857,
+    "old_base_rate": 0.3138467677573823,
+    "old_lift": 1.547616020343293,
+    "old_pctile": 0.96775,
+    "strict": {
+     "lookback": 30,
+     "n_shift": 2000,
+     "seed": 675,
+     "window": "[a-L, a-1](不含锚点当天)",
+     "n_anchors": 35,
+     "n_skipped": 0,
+     "hit_rate": 0.4857142857142857,
+     "base_rate": 0.31065442936951315,
+     "lift": 1.563519588953115,
+     "null_p50": 0.3142857142857143,
+     "pctile": 0.97025
+    },
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "survives_ex_anchor_day": true,
+    "strict_binom_p": 0.022630456653797176
+   },
+   {
+    "task": "T-186",
+    "sign": "E1",
+    "family": "extra:fx_hit_30d",
+    "anchor_set": "fx_hit_30d",
+    "lookback": 30,
+    "t191_same_source": true,
+    "t191_is_clue": false,
+    "old_hit_rate": 1.0,
+    "old_base_rate": 0.13527335958676417,
+    "old_lift": 7.392438563327032,
+    "old_pctile": 1.0,
+    "strict": {
+     "lookback": 30,
+     "n_shift": 2000,
+     "seed": 675,
+     "window": "[a-L, a-1](不含锚点当天)",
+     "n_anchors": 15,
+     "n_skipped": 0,
+     "hit_rate": 0.8666666666666667,
+     "base_rate": 0.13338106684396256,
+     "lift": 6.49767382413088,
+     "null_p50": 0.13333333333333333,
+     "pctile": 1.0
+    },
+    "c_pctile": true,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": true,
+    "pass_old4": true,
+    "survives_ex_anchor_day": true,
+    "strict_binom_p": 3.4088771218809603e-10
+   },
+   {
+    "task": "T-187",
+    "sign": "P4_rv20_pct_ge90",
+    "family": "aux_break_30d",
+    "anchor_set": "aux_break_30d",
+    "lookback": 30,
+    "t191_same_source": true,
+    "t191_is_clue": false,
+    "old_hit_rate": 0.5,
+    "old_base_rate": 0.17642661350610517,
+    "old_lift": 2.8340395480225986,
+    "old_pctile": 0.97975,
+    "strict": {
+     "lookback": 30,
+     "n_shift": 2000,
+     "seed": 675,
+     "window": "[a-L, a-1](不含锚点当天)",
+     "n_anchors": 6,
+     "n_skipped": 0,
+     "hit_rate": 0.3333333333333333,
+     "base_rate": 0.17334993773349938,
+     "lift": 1.9228927203065131,
+     "null_p50": 0.16666666666666666,
+     "pctile": 0.859
+    },
+    "c_pctile": false,
+    "c_lift": true,
+    "c_n_anchors": true,
+    "c_halves": false,
+    "pass_old4": false,
+    "survives_ex_anchor_day": false,
+    "strict_binom_p": 0.27939942963079156
+   }
+  ],
+  "same_source_field_in_json": {
+   "t185_results.json": "有(same_source 逐信号写在 signals[] 里)",
+   "t186_results.json": "有(same_source 逐信号写在 signal_table[锚点集][信号] 里)",
+   "t187_results.json": "**没有** —— T-191 是按规则现补的(t191_anchor_rejudge.py:201-203)"
+  },
+  "note": "「同源」是事后手写名单;这里换成实测口径:剔锚点当天(窗口 [a-L, a-1])后四条判据还成不成立"
+ },
+ "block6_styles": {
+  "n_draw": 2000,
+  "seed": 675,
+  "note": "零分布走 apparatus.null_distribution + percentile_of;随机日的『谷底』口径 = d 之后 H 天内最低点(与 T-191 相同)",
+  "aggregate_t191_pipeline_2000": {
+   "n_draw": 2000,
+   "H_days_median_crash_len": 264,
+   "n_eligible_days_btc": 4316,
+   "pseudo_episode_rule": "随机日 d;谷底 = d 之后 H 天内 BTC 最低点;三段口径与真实锚点相同(顶前 60 / 顶→谷底 / 谷底→+120)",
+   "styles": {
+    "BTC_hold": {
+     "n_eligible_days": 3872,
+     "legs": {
+      "pre": {
+       "actual_median": 0.45199167626450354,
+       "null_median": 0.09260952450107651,
+       "null_p05": -0.13978964576993466,
+       "null_p95": 0.39490068718405075,
+       "n_null_finite": 2000,
+       "percentile_of_actual": 0.96975
+      },
+      "crash": {
+       "actual_median": -0.6122360158768159,
+       "null_median": -0.1621485065995485,
+       "null_p05": -0.4666944694813496,
+       "null_p95": -0.017528910657836926,
+       "n_null_finite": 2000,
+       "percentile_of_actual": 0.001
+      },
+      "recovery": {
+       "actual_median": 0.8108333317028035,
+       "null_median": 0.7748276231993483,
+       "null_p05": 0.32399599692973613,
+       "null_p95": 1.0260717343459498,
+       "n_null_finite": 2000,
+       "percentile_of_actual": 0.659
+      }
+     }
+    },
+    "BTC_trend200_nav": {
+     "n_eligible_days": 3872,
+     "legs": {
+      "pre": {
+       "actual_median": 0.3427188153395424,
+       "null_median": 0.0,
+       "null_p05": -0.08102035731261459,
+       "null_p95": 0.30507322005393206,
+       "n_null_finite": 2000,
+       "percentile_of_actual": 0.9615
+      },
+      "crash": {
+       "actual_median": -0.46453851318166073,
+       "null_median": -0.042880786181971886,
+       "null_p05": -0.19636306152400307,
+       "null_p95": 0.0,
+       "n_null_finite": 2000,
+       "percentile_of_actual": 0.0
+      },
+      "recovery": {
+       "actual_median": 0.017102210830297115,
+       "null_median": 0.4192681361573367,
+       "null_p05": 0.045209663079479157,
+       "null_p95": 0.7392608776787153,
+       "n_null_finite": 2000,
+       "percentile_of_actual": 0.0455
+      }
+     }
+    },
+    "X1V_trade_path_rally_l20": {
+     "n_eligible_days": 3872,
+     "legs": {
+      "pre": {
+       "actual_median": 0.3508304823571966,
+       "null_median": 0.02644420475881204,
+       "null_p05": -0.059641061085620936,
+       "null_p95": 0.2703255095779597,
+       "n_null_finite": 2000,
+       "percentile_of_actual": 0.97325
+      },
+      "crash": {
+       "actual_median": -0.2873432880355965,
+       "null_median": -0.03949309440613119,
+       "null_p05": -0.13284053980663313,
+       "null_p95": 0.0,
+       "n_null_finite": 2000,
+       "percentile_of_actual": 0.0
+      },
+      "recovery": {
+       "actual_median": 0.1543529140898453,
+       "null_median": 0.26258496860645164,
+       "null_p05": 0.06185040045141399,
+       "null_p95": 0.8584917580723006,
+       "n_null_finite": 2000,
+       "percentile_of_actual": 0.163
+      }
+     }
+    },
+    "ETH_hold": {
+     "n_eligible_days": 3654,
+     "legs": {
+      "pre": {
+       "actual_median": 0.3991518576892472,
+       "null_median": 0.10227515745698779,
+       "null_p05": -0.2284985699509642,
+       "null_p95": 0.5516450741290774,
+       "n_null_finite": 2000,
+       "percentile_of_actual": 0.8785
+      },
+      "crash": {
+       "actual_median": -0.665341838094266,
+       "null_median": -0.1689066281696247,
+       "null_p05": -0.5491879829607386,
+       "null_p95": 0.003759951241381883,
+       "n_null_finite": 2000,
+       "percentile_of_actual": 0.005
+      },
+      "recovery": {
+       "actual_median": 0.8973232378525726,
+       "null_median": 0.7376845041966527,
+       "null_p05": 0.08644539374170512,
+       "null_p95": 1.4975445887560865,
+       "n_null_finite": 2000,
+       "percentile_of_actual": 0.5635
+      }
+     }
+    },
+    "ALT_sector_EW_nav": {
+     "n_eligible_days": 2045,
+     "legs": {
+      "pre": {
+       "actual_median": 0.4594362264296501,
+       "null_median": 0.05066727091017065,
+       "null_p05": -0.23622618088213287,
+       "null_p95": 0.6028742438677458,
+       "n_null_finite": 2000,
+       "percentile_of_actual": 0.905
+      },
+      "crash": {
+       "actual_median": -0.5467073867942767,
+       "null_median": -0.2174796024414125,
+       "null_p05": -0.5257397067859254,
+       "null_p95": -0.014721608707061962,
+       "n_null_finite": 2000,
+       "percentile_of_actual": 0.031
+      },
+      "recovery": {
+       "actual_median": 2.219889630812147,
+       "null_median": 0.6752120646142605,
+       "null_p05": 0.12969507371795053,
+       "null_p95": 1.452740349331036,
+       "n_null_finite": 2000,
+       "percentile_of_actual": 0.97425
+      }
+     }
+    },
+    "BTC_over_ALT": {
+     "n_eligible_days": 2045,
+     "legs": {
+      "pre": {
+       "actual_median": -0.005100976685606162,
+       "null_median": 0.00035530356391122453,
+       "null_p05": -0.18559109121524342,
+       "null_p95": 0.2255656203020271,
+       "n_null_finite": 2000,
+       "percentile_of_actual": 0.482
+      },
+      "crash": {
+       "actual_median": 0.03700025852584354,
+       "null_median": 0.03335494391180727,
+       "null_p05": -0.05100887722584154,
+       "null_p95": 0.271368100110263,
+       "n_null_finite": 2000,
+       "percentile_of_actual": 0.526
+      },
+      "recovery": {
+       "actual_median": -0.41274385566374294,
+       "null_median": -0.12175521800694278,
+       "null_p05": -0.2901270272544506,
+       "null_p95": 0.06936258367194781,
+       "n_null_finite": 2000,
+       "percentile_of_actual": 0.016
+      }
+     }
+    }
+   }
+  },
+  "H_days_median_crash_len": 264,
+  "n_first_leg_cycles": 5,
+  "style_x_cycle": [
+   {
+    "style": "BTC_hold",
+    "peak_d": "2017-12-15",
+    "trough_d": "2018-02-05",
+    "n_eligible_days": 3872,
+    "pre": 2.484388015144161,
+    "pre_pctile": 0.9995,
+    "crash": -0.6478565026907815,
+    "crash_pctile": 0.0265,
+    "recovery": 0.09411407986135445,
+    "recovery_pctile": 0.1255
+   },
+   {
+    "style": "BTC_hold",
+    "peak_d": "2019-06-26",
+    "trough_d": "2020-03-16",
+    "n_eligible_days": 3872,
+    "pre": 1.483711777615893,
+    "pre_pctile": 0.9895,
+    "crash": -0.6122360158768159,
+    "crash_pctile": 0.0495,
+    "recovery": 0.8302575617912831,
+    "recovery_pctile": 0.6575
+   },
+   {
+    "style": "BTC_hold",
+    "peak_d": "2021-04-13",
+    "trough_d": "2021-07-20",
+    "n_eligible_days": 3872,
+    "pre": 0.3427188153395422,
+    "pre_pctile": 0.75325,
+    "crash": -0.5299354429178096,
+    "crash_pctile": 0.11025,
+    "recovery": 1.0260717343459498,
+    "recovery_pctile": 0.76425
+   },
+   {
+    "style": "BTC_hold",
+    "peak_d": "2021-11-08",
+    "trough_d": "2022-11-21",
+    "n_eligible_days": 3872,
+    "pre": 0.45199167626450354,
+    "pre_pctile": 0.82825,
+    "crash": -0.7661446524320938,
+    "crash_pctile": 0.0,
+    "recovery": 0.7914091016143239,
+    "recovery_pctile": 0.54
+   },
+   {
+    "style": "BTC_hold",
+    "peak_d": "2025-10-06",
+    "trough_d": "2026-06-30",
+    "n_eligible_days": 3872,
+    "pre": 0.06177267872933445,
+    "pre_pctile": 0.4375,
+    "crash": -0.5304939812328693,
+    "crash_pctile": 0.11,
+    "recovery": null,
+    "recovery_pctile": null
+   },
+   {
+    "style": "BTC_trend200_nav",
+    "peak_d": "2017-12-15",
+    "trough_d": "2018-02-05",
+    "n_eligible_days": 3872,
+    "pre": 2.4843880151441593,
+    "pre_pctile": 0.9995,
+    "crash": -0.6478565026907819,
+    "crash_pctile": 0.0005,
+    "recovery": -0.024601674179963617,
+    "recovery_pctile": 0.069
+   },
+   {
+    "style": "BTC_trend200_nav",
+    "peak_d": "2019-06-26",
+    "trough_d": "2020-03-16",
+    "n_eligible_days": 3872,
+    "pre": 1.4837117776158948,
+    "pre_pctile": 0.9895,
+    "crash": -0.501526080928931,
+    "crash_pctile": 0.013,
+    "recovery": 0.05880609584055785,
+    "recovery_pctile": 0.3245
+   },
+   {
+    "style": "BTC_trend200_nav",
+    "peak_d": "2021-04-13",
+    "trough_d": "2021-07-20",
+    "n_eligible_days": 3872,
+    "pre": 0.3427188153395424,
+    "pre_pctile": 0.80525,
+    "crash": -0.46453851318166073,
+    "crash_pctile": 0.01475,
+    "recovery": -0.036324147811336194,
+    "recovery_pctile": 0.03975
+   },
+   {
+    "style": "BTC_trend200_nav",
+    "peak_d": "2021-11-08",
+    "trough_d": "2022-11-21",
+    "n_eligible_days": 3872,
+    "pre": 0.2010634859969218,
+    "pre_pctile": 0.70725,
+    "crash": -0.3571070820513834,
+    "crash_pctile": 0.05525,
+    "recovery": 0.4192681361573367,
+    "recovery_pctile": 0.507
+   },
+   {
+    "style": "BTC_trend200_nav",
+    "peak_d": "2025-10-06",
+    "trough_d": "2026-06-30",
+    "n_eligible_days": 3872,
+    "pre": 0.06177267872933423,
+    "pre_pctile": 0.5445,
+    "crash": -0.19142156441204217,
+    "crash_pctile": 0.1935,
+    "recovery": null,
+    "recovery_pctile": null
+   },
+   {
+    "style": "X1V_trade_path_rally_l20",
+    "peak_d": "2017-12-15",
+    "trough_d": "2018-02-05",
+    "n_eligible_days": 3872,
+    "pre": 2.0197759475094696,
+    "pre_pctile": 0.999,
+    "crash": -0.15769925299919363,
+    "crash_pctile": 0.142,
+    "recovery": -0.05518588373857103,
+    "recovery_pctile": 0.0305
+   },
+   {
+    "style": "X1V_trade_path_rally_l20",
+    "peak_d": "2019-06-26",
+    "trough_d": "2020-03-16",
+    "n_eligible_days": 3872,
+    "pre": 1.4343357151053344,
+    "pre_pctile": 0.985,
+    "crash": -0.2873432880355965,
+    "crash_pctile": 0.0025,
+    "recovery": 0.11463150464932736,
+    "recovery_pctile": 0.2265
+   },
+   {
+    "style": "X1V_trade_path_rally_l20",
+    "peak_d": "2021-04-13",
+    "trough_d": "2021-07-20",
+    "n_eligible_days": 3872,
+    "pre": 0.3363527024864945,
+    "pre_pctile": 0.83025,
+    "crash": -0.3498436068217716,
+    "crash_pctile": 0.00025,
+    "recovery": 0.3135155222062038,
+    "recovery_pctile": 0.54625
+   },
+   {
+    "style": "X1V_trade_path_rally_l20",
+    "peak_d": "2021-11-08",
+    "trough_d": "2022-11-21",
+    "n_eligible_days": 3872,
+    "pre": 0.3508304823571966,
+    "pre_pctile": 0.83975,
+    "crash": -0.3453939793021401,
+    "crash_pctile": 0.0005,
+    "recovery": 0.19407432353036325,
+    "recovery_pctile": 0.4255
+   },
+   {
+    "style": "X1V_trade_path_rally_l20",
+    "peak_d": "2025-10-06",
+    "trough_d": "2026-06-30",
+    "n_eligible_days": 3872,
+    "pre": -0.0832972208629259,
+    "pre_pctile": 0.1305,
+    "crash": -0.1308724386147342,
+    "crash_pctile": 0.2045,
+    "recovery": null,
+    "recovery_pctile": null
+   },
+   {
+    "style": "ETH_hold",
+    "peak_d": "2017-12-15",
+    "trough_d": "2018-02-05",
+    "n_eligible_days": 3654,
+    "pre": 1.209023470891652,
+    "pre_pctile": 0.919,
+    "crash": -0.004245248504078258,
+    "crash_pctile": 0.797,
+    "recovery": -0.13917965222694517,
+    "recovery_pctile": 0.0655
+   },
+   {
+    "style": "ETH_hold",
+    "peak_d": "2019-06-26",
+    "trough_d": "2020-03-16",
+    "n_eligible_days": 3654,
+    "pre": 1.13562049628064,
+    "pre_pctile": 0.915,
+    "crash": -0.6706931147967377,
+    "crash_pctile": 0.0895,
+    "recovery": 1.1604937989086546,
+    "recovery_pctile": 0.6755
+   },
+   {
+    "style": "ETH_hold",
+    "peak_d": "2021-04-13",
+    "trough_d": "2021-07-20",
+    "n_eligible_days": 3654,
+    "pre": 0.2550821370217229,
+    "pre_pctile": 0.61625,
+    "crash": -0.22358685890730745,
+    "crash_pctile": 0.46975,
+    "recovery": 1.4020485336557686,
+    "recovery_pctile": 0.7635
+   },
+   {
+    "style": "ETH_hold",
+    "peak_d": "2021-11-08",
+    "trough_d": "2022-11-21",
+    "n_eligible_days": 3654,
+    "pre": 0.3991518576892472,
+    "pre_pctile": 0.71825,
+    "crash": -0.7694851983736859,
+    "crash_pctile": 0.062,
+    "recovery": 0.6341526767964907,
+    "recovery_pctile": 0.38875
+   },
+   {
+    "style": "ETH_hold",
+    "peak_d": "2025-10-06",
+    "trough_d": "2026-06-30",
+    "n_eligible_days": 3654,
+    "pre": 0.200439306770966,
+    "pre_pctile": 0.5735,
+    "crash": -0.665341838094266,
+    "crash_pctile": 0.0895,
+    "recovery": null,
+    "recovery_pctile": null
+   },
+   {
+    "style": "ALT_sector_EW_nav",
+    "peak_d": "2017-12-15",
+    "trough_d": "2018-02-05",
+    "n_eligible_days": 2045,
+    "pre": null,
+    "pre_pctile": null,
+    "crash": null,
+    "crash_pctile": null,
+    "recovery": null,
+    "recovery_pctile": null
+   },
+   {
+    "style": "ALT_sector_EW_nav",
+    "peak_d": "2019-06-26",
+    "trough_d": "2020-03-16",
+    "n_eligible_days": 2045,
+    "pre": null,
+    "pre_pctile": null,
+    "crash": null,
+    "crash_pctile": null,
+    "recovery": 2.219889630812147,
+    "recovery_pctile": 0.82725
+   },
+   {
+    "style": "ALT_sector_EW_nav",
+    "peak_d": "2021-04-13",
+    "trough_d": "2021-07-20",
+    "n_eligible_days": 2045,
+    "pre": 1.383603769353165,
+    "pre_pctile": 0.9555,
+    "crash": -0.5467073867942767,
+    "crash_pctile": 0.1505,
+    "recovery": 2.450064769668619,
+    "recovery_pctile": 0.89075
+   },
+   {
+    "style": "ALT_sector_EW_nav",
+    "peak_d": "2021-11-08",
+    "trough_d": "2022-11-21",
+    "n_eligible_days": 2045,
+    "pre": 0.4594362264296501,
+    "pre_pctile": 0.765,
+    "crash": -0.7864842050097928,
+    "crash_pctile": 0.0075,
+    "recovery": 0.6752120646142605,
+    "recovery_pctile": 0.48725
+   },
+   {
+    "style": "ALT_sector_EW_nav",
+    "peak_d": "2025-10-06",
+    "trough_d": "2026-06-30",
+    "n_eligible_days": 2045,
+    "pre": 0.05070792064516372,
+    "pre_pctile": 0.518,
+    "crash": -0.45897405240842726,
+    "crash_pctile": 0.241,
+    "recovery": null,
+    "recovery_pctile": null
+   }
+  ]
+ },
+ "compliance": "全部读数为探索性 —— 需另立预注册、在新数据上过零信号对照;不构成投资建议,不含任何买卖措辞。"
+}
