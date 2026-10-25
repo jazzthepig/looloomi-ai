@@ -1,0 +1,156 @@
+{
+ "frozen_at_utc": "2026-10-25T15:34:05+00:00",
+ "task": "T-199",
+ "ledger": "S-683",
+ "kind": "expected_bands_from_history_DESCRIPTION_ONLY",
+ "how_to_read": "\u524d\u5411\u9010\u6708\u5bf9\u7167\u53ea\u8bfb\u8fd9\u4efd\u6587\u4ef6:\u6bcf\u4e2a\u524d\u5411\u6708\u7684\u7968\u6570\u4e0e\u5e73\u5747 R,\u843d\u5728\u5bf9\u5e94\u5206\u4f4d\u5e26\u5185\u5373\u300e\u4e0e\u5386\u53f2\u753b\u50cf\u4e00\u81f4\u300f;\u843d\u5728\u5e26\u5916\u53ea\u662f\u753b\u50cf\u4e0d\u4e00\u81f4,\u4e0d\u6784\u6210\u7ed3\u8bba\u3002",
+ "conventions": {
+  "months": "2020-01 \u2192 2026-09",
+  "ticket_counts_include_zero_ticket_months": true,
+  "mean_r_percentiles_use_months_with_at_least_one_closed_ticket": true,
+  "monthly_mean_r_is_over_closed_tickets": true,
+  "gate_closed_month_definition": "\u8be5\u6708\u5185\u95f8\u95e8\u6bcf\u4e2a\u4ea4\u6613\u65e5\u90fd gate_closed",
+  "judge": {
+   "L": {
+    "n_closed": 60,
+    "months": 6
+   },
+   "H": {
+    "n_closed": 100,
+    "months": 3
+   }
+  },
+  "boot": {
+   "draws": 2000,
+   "seed": 683
+  }
+ },
+ "arm_L": {
+  "bands": {
+   "\u5168\u671f(2020-01 \u2192 2026-09)": {
+    "n_months": 81,
+    "n_months_with_r": 73,
+    "tickets_per_month": {
+     "p10": 1.0,
+     "p50": 8.0,
+     "p90": 24.0
+    },
+    "tickets_per_month_mean": 10.814814814814815,
+    "mean_r_per_month": {
+     "p10": -0.45574715951988126,
+     "p50": 0.15081213693372322,
+     "p90": 0.6667084043959036
+    },
+    "mean_r_per_month_mean": 0.08949573525519725
+   },
+   "\u95f8\u95e8\u5168\u5173\u7684\u6708\u4efd": {
+    "n_months": 22,
+    "n_months_with_r": 19,
+    "tickets_per_month": {
+     "p10": 0.10000000000000009,
+     "p50": 4.0,
+     "p90": 24.60000000000001
+    },
+    "tickets_per_month_mean": 11.181818181818182,
+    "mean_r_per_month": {
+     "p10": -0.9535972746247114,
+     "p50": -0.14061142072897556,
+     "p90": 0.4607901053386424
+    },
+    "mean_r_per_month_mean": -0.12426171987141578
+   },
+   "\u53ea\u7b97\u4eca\u5929\u4ecd\u5728\u4ea4\u6613\u7684\u540d\u5b57(\u5e78\u5b58\u8005\u53e3\u5f84)": {
+    "n_months": 81,
+    "n_months_with_r": 61,
+    "tickets_per_month": {
+     "p10": 0.0,
+     "p50": 2.0,
+     "p90": 7.0
+    },
+    "tickets_per_month_mean": 3.185185185185185,
+    "mean_r_per_month": {
+     "p10": -0.4003993891284173,
+     "p50": 0.3228734684194739,
+     "p90": 1.0334302992561035
+    },
+    "mean_r_per_month_mean": 0.25481994275162384
+   }
+  },
+  "n_tickets": 876,
+  "months_with_tickets": 74
+ },
+ "arm_H": {
+  "bands": {
+   "\u5168\u671f(2020-01 \u2192 2026-09)": {
+    "n_months": 81,
+    "n_months_with_r": 37,
+    "tickets_per_month": {
+     "p10": 0.0,
+     "p50": 0.0,
+     "p90": 237.0
+    },
+    "tickets_per_month_mean": 64.01234567901234,
+    "mean_r_per_month": {
+     "p10": -0.49281744879907413,
+     "p50": -0.13404410163643948,
+     "p90": 0.41348284807911606
+    },
+    "mean_r_per_month_mean": -0.08663767479476261
+   },
+   "\u95f8\u95e8\u5168\u5173\u7684\u6708\u4efd": {
+    "n_months": 22,
+    "n_months_with_r": 22,
+    "tickets_per_month": {
+     "p10": 61.900000000000006,
+     "p50": 155.0,
+     "p90": 266.80000000000007
+    },
+    "tickets_per_month_mean": 164.63636363636363,
+    "mean_r_per_month": {
+     "p10": -0.3352538496251981,
+     "p50": -0.10496635697249651,
+     "p90": 0.39084074424575543
+    },
+    "mean_r_per_month_mean": -0.0056137756012035675
+   },
+   "\u53ea\u7b97\u4eca\u5929\u4ecd\u5728\u4ea4\u6613\u7684\u540d\u5b57(\u5e78\u5b58\u8005\u53e3\u5f84)": {
+    "n_months": 81,
+    "n_months_with_r": 37,
+    "tickets_per_month": {
+     "p10": 0.0,
+     "p50": 0.0,
+     "p90": 135.0
+    },
+    "tickets_per_month_mean": 40.851851851851855,
+    "mean_r_per_month": {
+     "p10": -0.4554784169611437,
+     "p50": -0.114831004114344,
+     "p90": 0.5540051810486465
+    },
+    "mean_r_per_month_mean": -0.06958062723889918
+   }
+  },
+  "n_tickets": 5185,
+  "months_with_tickets": 37
+ },
+ "survivorship": {
+  "source": "/Volumes/CometCloudAI/cometcloud-local/research/s677/_survivor_symbols.json",
+  "n_survivor_symbols": 262,
+  "n_panel_symbols": 877,
+  "n_panel_symbols_in_survivor": 258,
+  "L": {
+   "n_tickets": 876,
+   "n_tickets_survivor": 258,
+   "frac_survivor": 0.2945205479452055,
+   "mean_r": 0.16628093604020014,
+   "mean_r_survivor": 0.3396151213423522
+  },
+  "H": {
+   "n_tickets": 5185,
+   "n_tickets_survivor": 3309,
+   "frac_survivor": 0.6381870781099325,
+   "mean_r": 0.032495873711668066,
+   "mean_r_survivor": 0.04641571217064439
+  }
+ }
+}
