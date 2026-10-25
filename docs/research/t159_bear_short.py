@@ -424,10 +424,12 @@ def nav(tickets, closes, f, cap=10, d_to=CURVE_TO, compound=True, equity0=1.0, d
         for k in tk:
             if k["state"] != "taken":
                 continue
+            # cost is always a debit: abs(units). Before 2026-10-25 this was units * (… − cost), which for a short
+            # (units < 0) turned the 0.4% round trip into a 0.4% CREDIT — every short money curve was flattered.
             if k["exit_d"] and k["exit_d"] <= prev:
-                eq_prev += k["units"] * (k["exit_px"] - k["entry_px"] - 0.004 * k["entry_px"])
+                eq_prev += k["units"] * (k["exit_px"] - k["entry_px"]) - abs(k["units"]) * 0.004 * k["entry_px"]
             elif prev in k["_pmap"]:
-                eq_prev += k["units"] * (k["_pmap"][prev] - k["entry_px"] - 0.002 * k["entry_px"])
+                eq_prev += k["units"] * (k["_pmap"][prev] - k["entry_px"]) - abs(k["units"]) * 0.002 * k["entry_px"]
         occ = sum(1 for k in tk if k["state"] == "taken" and k["entry_d"] < v_e
                   and (k["exit_d"] is None or k["exit_d"] >= v_e))
         taken_today = 0
@@ -442,7 +444,8 @@ def nav(tickets, closes, f, cap=10, d_to=CURVE_TO, compound=True, equity0=1.0, d
     closes_by_day = defaultdict(int)
     for k in tk:
         if k["state"] == "taken" and k["exit_d"]:
-            exits_by_day[k["exit_d"]] += k["units"] * (k["exit_px"] - k["entry_px"] - 0.004 * k["entry_px"])
+            exits_by_day[k["exit_d"]] += (k["units"] * (k["exit_px"] - k["entry_px"])
+                                          - abs(k["units"]) * 0.004 * k["entry_px"])
             closes_by_day[k["exit_d"]] += 1
     ent_by_day = defaultdict(lambda: [0, 0])
     for k in tk:
@@ -458,7 +461,7 @@ def nav(tickets, closes, f, cap=10, d_to=CURVE_TO, compound=True, equity0=1.0, d
             if k["state"] != "taken":
                 continue
             un += k["units"] * (m - k["entry_px"])
-            ec += k["units"] * 0.002 * k["entry_px"]
+            ec += abs(k["units"]) * 0.002 * k["entry_px"]
             gr += abs(k["units"]) * m
         nt, ns = ent_by_day.get(d, (0, 0))
         taken_c += nt
