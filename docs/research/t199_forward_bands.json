@@ -1,0 +1,300 @@
+{
+ "frozen_at_utc": "2026-10-25T16:35:16+00:00",
+ "task": "T-199",
+ "ledger": "S-683",
+ "kind": "expected_bands_from_history_DESCRIPTION_ONLY",
+ "universe_primary": "crypto_only",
+ "universe_rule": "\u53ea\u505a\u52a0\u5bc6\u5408\u7ea6:underlyingType == 'COIN'(base+USDT \u5bf9\u5230\u5feb\u7167);\u5feb\u7167\u91cc\u6ca1\u6709\u7684(\u5df2\u4e0b\u67b6)\u6309\u52a0\u5bc6\u7b97\u3002\u6765\u6e90 research/s681/_um_exchangeinfo_20261025.json",
+ "how_to_read": "\u524d\u5411\u9010\u6708\u5bf9\u7167\u53ea\u8bfb\u8fd9\u4efd\u6587\u4ef6\u7684 arm_L / arm_H \u4e24\u4e2a\u5757(\u53ea\u52a0\u5bc6\u5b87\u5b99):\u6bcf\u4e2a\u524d\u5411\u6708\u7684\u7968\u6570\u4e0e\u5e73\u5747 R,\u843d\u5728\u5bf9\u5e94\u5206\u4f4d\u5e26\u5185\u5373\u300e\u4e0e\u5386\u53f2\u753b\u50cf\u4e00\u81f4\u300f;\u843d\u5728\u5e26\u5916\u53ea\u662f\u753b\u50cf\u4e0d\u4e00\u81f4,\u4e0d\u6784\u6210\u7ed3\u8bba\u3002all_contracts_comparison \u662f\u4fee\u8ba2\u524d\u53e3\u5f84,\u53ea\u4f5c\u5bf9\u7167,\u4e0d\u7528\u4e8e\u5224\u5b9a\u3002",
+ "conventions": {
+  "months": "2020-01 \u2192 2026-09",
+  "ticket_counts_include_zero_ticket_months": true,
+  "mean_r_percentiles_use_months_with_at_least_one_closed_ticket": true,
+  "monthly_mean_r_is_over_closed_tickets": true,
+  "gate_closed_month_definition": "\u8be5\u6708\u5185\u95f8\u95e8\u6bcf\u4e2a\u4ea4\u6613\u65e5\u90fd gate_closed",
+  "judge": {
+   "L": {
+    "n_closed": 60,
+    "months": 6
+   },
+   "H": {
+    "n_closed": 100,
+    "months": 3
+   }
+  },
+  "boot": {
+   "draws": 2000,
+   "seed": 683
+  }
+ },
+ "arm_L": {
+  "bands": {
+   "\u5168\u671f(2020-01 \u2192 2026-09)": {
+    "n_months": 81,
+    "n_months_with_r": 72,
+    "tickets_per_month": {
+     "p10": 1.0,
+     "p50": 6.0,
+     "p90": 20.0
+    },
+    "tickets_per_month_mean": 8.320987654320987,
+    "mean_r_per_month": {
+     "p10": -0.40029305796942705,
+     "p50": 0.15253017755563217,
+     "p90": 0.6696187101315999
+    },
+    "mean_r_per_month_mean": 0.10560181529389295
+   },
+   "\u95f8\u95e8\u5168\u5173\u7684\u6708\u4efd": {
+    "n_months": 22,
+    "n_months_with_r": 19,
+    "tickets_per_month": {
+     "p10": 0.10000000000000009,
+     "p50": 3.5,
+     "p90": 10.700000000000006
+    },
+    "tickets_per_month_mean": 4.681818181818182,
+    "mean_r_per_month": {
+     "p10": -0.9535972746247114,
+     "p50": 0.020867296941406533,
+     "p90": 0.4496530884951128
+    },
+    "mean_r_per_month_mean": -0.11872562458153914
+   },
+   "\u53ea\u7b97\u4eca\u5929\u4ecd\u5728\u4ea4\u6613\u7684\u540d\u5b57(\u5e78\u5b58\u8005\u53e3\u5f84)": {
+    "n_months": 81,
+    "n_months_with_r": 60,
+    "tickets_per_month": {
+     "p10": 0.0,
+     "p50": 2.0,
+     "p90": 7.0
+    },
+    "tickets_per_month_mean": 3.1728395061728394,
+    "mean_r_per_month": {
+     "p10": -0.4015500615808939,
+     "p50": 0.3332112370134312,
+     "p90": 1.0384850757616688
+    },
+    "mean_r_per_month_mean": 0.25947967960024654
+   }
+  },
+  "n_tickets": 674,
+  "months_with_tickets": 74
+ },
+ "arm_H": {
+  "bands": {
+   "\u5168\u671f(2020-01 \u2192 2026-09)": {
+    "n_months": 81,
+    "n_months_with_r": 37,
+    "tickets_per_month": {
+     "p10": 0.0,
+     "p50": 0.0,
+     "p90": 237.0
+    },
+    "tickets_per_month_mean": 64.01234567901234,
+    "mean_r_per_month": {
+     "p10": -0.49281744879907413,
+     "p50": -0.13404410163643948,
+     "p90": 0.41348284807911606
+    },
+    "mean_r_per_month_mean": -0.08663767479476261
+   },
+   "\u95f8\u95e8\u5168\u5173\u7684\u6708\u4efd": {
+    "n_months": 22,
+    "n_months_with_r": 22,
+    "tickets_per_month": {
+     "p10": 61.900000000000006,
+     "p50": 155.0,
+     "p90": 266.80000000000007
+    },
+    "tickets_per_month_mean": 164.63636363636363,
+    "mean_r_per_month": {
+     "p10": -0.3352538496251981,
+     "p50": -0.10496635697249651,
+     "p90": 0.39084074424575543
+    },
+    "mean_r_per_month_mean": -0.0056137756012035675
+   },
+   "\u53ea\u7b97\u4eca\u5929\u4ecd\u5728\u4ea4\u6613\u7684\u540d\u5b57(\u5e78\u5b58\u8005\u53e3\u5f84)": {
+    "n_months": 81,
+    "n_months_with_r": 37,
+    "tickets_per_month": {
+     "p10": 0.0,
+     "p50": 0.0,
+     "p90": 135.0
+    },
+    "tickets_per_month_mean": 40.851851851851855,
+    "mean_r_per_month": {
+     "p10": -0.4554784169611437,
+     "p50": -0.114831004114344,
+     "p90": 0.5540051810486465
+    },
+    "mean_r_per_month_mean": -0.06958062723889918
+   }
+  },
+  "n_tickets": 5185,
+  "months_with_tickets": 37
+ },
+ "all_contracts_comparison": {
+  "arm_L": {
+   "bands": {
+    "\u5168\u671f(2020-01 \u2192 2026-09)": {
+     "n_months": 81,
+     "n_months_with_r": 73,
+     "tickets_per_month": {
+      "p10": 1.0,
+      "p50": 8.0,
+      "p90": 24.0
+     },
+     "tickets_per_month_mean": 10.814814814814815,
+     "mean_r_per_month": {
+      "p10": -0.45574715951988126,
+      "p50": 0.15081213693372322,
+      "p90": 0.6667084043959036
+     },
+     "mean_r_per_month_mean": 0.08949573525519725
+    },
+    "\u95f8\u95e8\u5168\u5173\u7684\u6708\u4efd": {
+     "n_months": 22,
+     "n_months_with_r": 19,
+     "tickets_per_month": {
+      "p10": 0.10000000000000009,
+      "p50": 4.0,
+      "p90": 24.60000000000001
+     },
+     "tickets_per_month_mean": 11.181818181818182,
+     "mean_r_per_month": {
+      "p10": -0.9535972746247114,
+      "p50": -0.14061142072897556,
+      "p90": 0.4607901053386424
+     },
+     "mean_r_per_month_mean": -0.12426171987141578
+    }
+   },
+   "n_tickets": 876,
+   "months_with_tickets": 74
+  },
+  "arm_H": {
+   "bands": {
+    "\u5168\u671f(2020-01 \u2192 2026-09)": {
+     "n_months": 81,
+     "n_months_with_r": 37,
+     "tickets_per_month": {
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 237.0
+     },
+     "tickets_per_month_mean": 64.01234567901234,
+     "mean_r_per_month": {
+      "p10": -0.49281744879907413,
+      "p50": -0.13404410163643948,
+      "p90": 0.41348284807911606
+     },
+     "mean_r_per_month_mean": -0.08663767479476261
+    },
+    "\u95f8\u95e8\u5168\u5173\u7684\u6708\u4efd": {
+     "n_months": 22,
+     "n_months_with_r": 22,
+     "tickets_per_month": {
+      "p10": 61.900000000000006,
+      "p50": 155.0,
+      "p90": 266.80000000000007
+     },
+     "tickets_per_month_mean": 164.63636363636363,
+     "mean_r_per_month": {
+      "p10": -0.3352538496251981,
+      "p50": -0.10496635697249651,
+      "p90": 0.39084074424575543
+     },
+     "mean_r_per_month_mean": -0.0056137756012035675
+    }
+   },
+   "n_tickets": 5185,
+   "months_with_tickets": 37
+  }
+ },
+ "survivorship": {
+  "source": "/Volumes/CometCloudAI/cometcloud-local/research/s677/_survivor_symbols.json",
+  "n_survivor_symbols": 262,
+  "n_panel_symbols": 675,
+  "n_panel_symbols_in_survivor": 257,
+  "L": {
+   "n_tickets": 674,
+   "n_tickets_survivor": 257,
+   "frac_survivor": 0.38130563798219586,
+   "mean_r": 0.17289071588371255,
+   "mean_r_survivor": 0.3410329399785705
+  },
+  "H": {
+   "n_tickets": 5185,
+   "n_tickets_survivor": 3309,
+   "frac_survivor": 0.6381870781099325,
+   "mean_r": 0.032495873711668066,
+   "mean_r_survivor": 0.04641571217064439
+  }
+ },
+ "universe_classification": {
+  "source": "/Volumes/CometCloudAI/cometcloud-local/research/s681/_um_exchangeinfo_20261025.json",
+  "rule": "base+USDT \u2192 underlyingType == 'COIN' \u21d2 \u52a0\u5bc6;\u5feb\u7167\u91cc\u6ca1\u6709\u7684\u6761\u76ee \u21d2 \u6309\u52a0\u5bc6\u7b97",
+  "n_snapshot_symbols": 932,
+  "n_panel_symbols": 890,
+  "n_crypto": 676,
+  "n_non_crypto": 214,
+  "n_not_in_snapshot": 29,
+  "non_crypto_by_underlying_type": {
+   "CN_EQUITY": 2,
+   "COMMODITY": 8,
+   "EQUITY": 175,
+   "FX": 1,
+   "HK_EQUITY": 15,
+   "INDEX": 1,
+   "KR_EQUITY": 8,
+   "PREMARKET": 4
+  },
+  "non_crypto_by_first_bar_month": {
+   "2023-06": 1,
+   "2025-08": 1,
+   "2025-12": 1,
+   "2026-01": 4,
+   "2026-02": 7,
+   "2026-03": 7,
+   "2026-04": 12,
+   "2026-05": 28,
+   "2026-06": 51,
+   "2026-07": 39,
+   "2026-08": 30,
+   "2026-09": 33
+  },
+  "not_in_snapshot_symbols": [
+   "1000BTTC",
+   "AERGO",
+   "AKRO",
+   "ANC",
+   "ANT",
+   "AUDIO",
+   "BDXN",
+   "BTCST",
+   "BTS",
+   "BTT",
+   "BZRX",
+   "COCOS",
+   "DODO",
+   "DOTECO",
+   "EOS",
+   "FRONT",
+   "GAL",
+   "HNT",
+   "KEEP",
+   "LEND",
+   "LUNA",
+   "MATIC",
+   "MBL",
+   "NU",
+   "RNDR",
+   "SRM",
+   "SXP",
+   "TOMO",
+   "YFII"
+  ]
+ }
+}
