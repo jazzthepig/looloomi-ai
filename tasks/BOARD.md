@@ -11,6 +11,7 @@
 | in_review | T-191 | lane-b | 崩盘图谱三道补判(S-675):三套锚点(主 / 破位日 / 急跌起点)各判一次线索 —— 复核 lane-b 在 T-187 上发现的 M8 | docs/research/t191_anchor_rejudge.py + t191_results.json(每道 × 每迹象 × 每套锚点的四项判据原始值)+ 报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-191_anchor_rejudge.md:判定表 → M8 展开 → 三项口径 → 多重比较说明 → 未做。in_review,推 lane-b/T-191。 | T-185 / T-186 / T-187 的原判(只判主锚点)。这一轮是补判,不计试验数。 |  |
 | in_review | T-174 | lane-c | T-171 返工(S-669):置换对照改成打乱「标签 ↔ 收益」的配对再判候选 —— 原来的块置换零化的是均值,空转 | 脚本 docs/research/t174_state_permutation.py;结果 docs/research/t174_results.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-174_s669_rework.md(末尾「S-669 返工结果」草稿);in_review,推 lane-c/T-174。新分支 `git switch -c lane-c/T-174 origin/main`。翻页读一律带 order=。 | 给 S-669 的候选一个有意义的死活;决定状态层对外文案里「没有预测力」能不能说。 |  |
 | in_review | T-187 | lane-c | 崩盘图谱 · 加密(S-675):BTC 2014 起每次 −50% 熊市与 14 天 −30% 急跌之前的迹象(对基准率)、事件、情绪,和各阶段里什么风格扛得住 | 脚本 docs/research/t187_crash_atlas_crypto.py;结果 docs/research/t187_results.json(每个锚点、每个迹象的原始命中都在里面,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-187_crash_atlas_crypto.md:崩盘目录 → 迹象排名表(带基准率与零分布分位)→ 事件表(带来源)→ 情绪画像 → 风格分阶段表 → 线索候选(标「探索性」)→ 协议问题 → 未做。in_review,推 lane-c/T-187。 | 没有。崩前迹象此前只碰过 S-570(稳定币代理,探索性)和 S-673 / S-674(边际流动性定时,都不过)。这一轮是挖掘,不计试验数。 |  |
+| in_review | T-198 | lane-c | S-684 独立复算:R-v2 在全部 USDT 永续(含已下架)上的幸存者偏差 —— 与 B 道 T-197 互不看,交回后逐张对照 | 脚本 docs/research/t198_rv2_survivorship_replica.py;结果 docs/research/t198_results.json(每张票:symbol、signal_d、entry_d、exit_d、r、宇宙标记);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-198_rv2_survivorship_replica.md:判据表 + A / S / D 汇总 + 协议问题。in_review,推 lane-c/T-198。 | 同 T-197。 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-069 | seth | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
@@ -198,4 +199,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 10 · claimed 7 · blocked 7 · in_review 9 · done 159 · dropped 3
+open 10 · claimed 7 · blocked 7 · in_review 10 · done 159 · dropped 3
