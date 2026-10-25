@@ -1,0 +1,29 @@
+{
+  "id": "T-197",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-25",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/",
+    "docs/research/short_lab_common.py",
+    "docs/research/t159_bear_short.py"
+  ],
+  "title": "S-684:R-v2 的幸存者偏差 —— 在 Binance 全部 USDT 永续(含已下架 890 个)上一字不改重跑 run_long,对比「今天还在面板里的」",
+  "source": "R-v2 是在跑真钱的凸性腿;它 2020–2026 的全部证据算在 binance_hist 面板(= 今天还在的 262 名)上,后来下架的币从没进过样本。台账 S-684 预注册(2026-10-25 15:03 UTC)。Jazz 10-25 晚「开,然后分任务给 abc」。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-197.json"
+  ],
+  "acceptance": {
+    "check": "**import `docs/research/t159_bear_short.py`**,用它的 `run_long(bars, gate, '2020-01-01', '2026-09-30')` 与 `load_gate()`(设环境变量 T156_DATA / T159_DATA 指到数据根 research/t156/、research/t159/),**不复制、不改**;只把 bars 换成 `research/s681/_um_daily.jsonl`:每个 symbol 的行 = (d, o, h, l, c, quote_volume)。两个宇宙:A = 全部 890;S = A 里基础币名在 `_survivor_symbols.json` 的(1000 前缀去掉也算同名,如 1000SHIB ↔ SHIB);D = A \\ S。判据(S-684):① A 上平均 R > 0 且月块自助 2,000 次(种子 684)p(≤ 0)< 0.05;② A 平均 R ≥ 0.5 × S 平均 R。仍持有的票(still)不进平均,单列。只报:D 的票数 / 平均 R / 最差 5 张(币名、信号日、R);A 与 S 的资金曲线(`t159.nav`,f = 0.01、cap = 10,d_to = 2026-09-30;nav 已修空单成本,多单不变)年化与最大回撤;按年;S 的票与面板 770 张的重合率(面板票可用 `t159.load_bars()` + 同一 `run_long` 复现,同币同信号日算重合);抓到的大行情(S-618 口径:120 天内从低点涨 ≥ 100% 的币有多少被开过票)。**照台账一字不改**(有问题写进报告「协议问题」,不自己改)。数据只读数据根(`research/s681/` 890 个 U 本位永续含已下架 + 891 个资金费;`research/t156/_style.json` = 线上 majors 闸门;`research/s677/_survivor_symbols.json` = 今天 binance_hist 的 262 名)。上下文要省:只打印汇总行。不写任何「建议」。 新分支 `git switch -c lane-b/T-197 origin/main`。**独立:** C 道 T-198 做同一件事的独立复算,交付前不读 `docs/research/t198_*`、不读台账 S-684 之后的任何结果小节。",
+    "expect": "脚本 docs/research/t197_rv2_survivorship.py;结果 docs/research/t197_results.json(A / S / D 每张票都在,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-197_rv2_survivorship.md:开头判据表(两条 + 判定),然后 A / S / D 汇总、按年、资金曲线、只报项、协议问题。in_review,推 lane-b/T-197。"
+  },
+  "prior_value": "S-677 / S-678 只查过 2018–2020(那段 R-v2 不显著);2020–2026 的幸存者偏差从没量过。面板 770 张是 T-156 / S-620 的数。",
+  "notes": ""
+}
