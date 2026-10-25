@@ -1,0 +1,29 @@
+{
+  "id": "T-196",
+  "owner": "lane-a",
+  "status": "blocked",
+  "blocked_by": "Seth:docs/research/short_lab_common.py 与 S-681 数据还没进 origin/main —— 推上去后改 open",
+  "created": "2026-10-25",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/",
+    "docs/research/short_lab_common.py"
+  ],
+  "title": "S-681 H4:熊市反弹失败做空 —— 200 日线下且 200 日线向下时,反弹 ≥ 15% 之后跌破昨日低点与 20 日线,次日开盘空,止损在反弹高点(≤ 30%)",
+  "source": "Jazz 10-25「认真研究一下做空策略」。台账 S-681(四个有原因的做空假设、同一模拟器、同一组判据;H1 新币做空 Seth 自己做)。坟场与死因在 S-681 开头。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-196.json"
+  ],
+  "acceptance": {
+    "check": "状态 = c_t < SMA200_t 且 SMA200_t < SMA200_{t−20};设置 = 过去 10 天(含 t)最高收盘 ≥ 过去 20 天(含 t)最低收盘 × 1.15,且 c_t < l_{t−1} 且 c_t < SMA20_t;止损价 = 过去 10 天(含 t)最高价,若 止损价 / 次日开盘 − 1 > 0.30 则取 0.30;出场规则 = 收盘 > SMA20 的次日开盘(exit_rule),或 N = 30。宇宙 = 全部永续(含 BTC / ETH),30 日成交额 ≥ $5M、上市 ≥ 200 天;同币持仓不叠。对照 = 同一币、同样处于该状态(只要求状态,不要求设置)的随机日子空,同样止损口径(那天的过去 10 天最高价、封顶 30%)与出场规则 —— 用 null_same_day 的接口,pools 按「同币」组织即可(pools 的键改成票号,写明)。只报:NASDAQ 1971–2014(数据根 research/crash_atlas/fred/NASDAQCOM,同一规则,无资金费)、Binance 现货 2018–2020;BTC / ETH 单独列;和 S-600 破位空(41 次 24 次被反抽止损)对照写一段。 **照台账 S-681 一字不改**(信号、止损 s、持有 N、对照、发现段 2020-01-01 → 2023-12-31、留出段 2024-01-01 起、四条判据;有问题写进报告「协议问题」,不自己改)。**import `docs/research/short_lab_common.py`**(load_um / load_funding / daily_funding / short_ticket / chain / summary / boot_months / null_same_day / judge / money / nav_bars),不复制它的函数;数据只读数据根 `research/s681/`(_um_daily.jsonl:890 个 USDT 本位永续含已下架,2019-09 → 2026-09;_um_funding.jsonl:891 个)。**先在发现段把判据算完、写进结果 json,再打开留出段**(脚本里两段分两个函数,报告写明先后)。资金费覆盖率照报。上下文要省:只打印汇总行。报告用合规词以外的内部措辞即可,但不写任何「建议」;判定照 judge() 的输出。新分支 `git switch -c lane-a/T-196 origin/main`。",
+    "expect": "脚本 docs/research/s681_h4_bear_rally_fail.py;结果 docs/research/s681_h4_bear_rally_fail_results.json(每张票都在,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-196_s681_h4_bear_rally_fail.md:开头一张判据表(四条 + 判定),然后发现段 / 留出段汇总、资金曲线、只报项、协议问题。in_review,推 lane-a/T-196。"
+  },
+  "prior_value": "没有。这一族坟场见 S-681;这个定义从没算过。",
+  "notes": ""
+}

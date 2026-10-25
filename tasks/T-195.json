@@ -1,0 +1,29 @@
+{
+  "id": "T-195",
+  "owner": "lane-b",
+  "status": "blocked",
+  "blocked_by": "Seth:docs/research/short_lab_common.py 与 S-681 数据还没进 origin/main —— 推上去后改 open",
+  "created": "2026-10-25",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/",
+    "docs/research/short_lab_common.py"
+  ],
+  "title": "S-681 H3:资金费拥挤 —— 3 日平均资金费年化 ≥ 50% 的永续,次日开盘空、+30% 硬止损、持有 10 天(收资金费),对同日随机空不拥挤的合格合约",
+  "source": "Jazz 10-25「认真研究一下做空策略」。台账 S-681(四个有原因的做空假设、同一模拟器、同一组判据;H1 新币做空 Seth 自己做)。坟场与死因在 S-681 开头。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-195.json"
+  ],
+  "acceptance": {
+    "check": "信号 = 该币 3 个 UTC 日(t−2..t)资金费日合计的平均 × 365 ≥ 0.50、30 日成交额 ≥ $5M、上市 ≥ 60 天;同币 10 天内只取第一次。BTC / ETH 也在宇宙里。short_ticket(a, i, s=0.30, n_hold=10, fund=日资金费)。对照 = null_same_day:pools[信号日] = 当天合格且 3 日资金费年化 < 0.20 的(币, 下标)。只报:资金费贡献 vs 价格贡献拆开;按拥挤度分档(50–100% / 100–200% / > 200%);对冲版;周末信号与工作日信号分开(S-611 的延伸)。 **照台账 S-681 一字不改**(信号、止损 s、持有 N、对照、发现段 2020-01-01 → 2023-12-31、留出段 2024-01-01 起、四条判据;有问题写进报告「协议问题」,不自己改)。**import `docs/research/short_lab_common.py`**(load_um / load_funding / daily_funding / short_ticket / chain / summary / boot_months / null_same_day / judge / money / nav_bars),不复制它的函数;数据只读数据根 `research/s681/`(_um_daily.jsonl:890 个 USDT 本位永续含已下架,2019-09 → 2026-09;_um_funding.jsonl:891 个)。**先在发现段把判据算完、写进结果 json,再打开留出段**(脚本里两段分两个函数,报告写明先后)。资金费覆盖率照报。上下文要省:只打印汇总行。报告用合规词以外的内部措辞即可,但不写任何「建议」;判定照 judge() 的输出。新分支 `git switch -c lane-b/T-195 origin/main`。",
+    "expect": "脚本 docs/research/s681_h3_funding_crowd.py;结果 docs/research/s681_h3_funding_crowd_results.json(每张票都在,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-195_s681_h3_funding_crowd.md:开头一张判据表(四条 + 判定),然后发现段 / 留出段汇总、资金曲线、只报项、协议问题。in_review,推 lane-b/T-195。"
+  },
+  "prior_value": "没有。这一族坟场见 S-681;这个定义从没算过。",
+  "notes": ""
+}

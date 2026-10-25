@@ -1,0 +1,29 @@
+{
+  "id": "T-194",
+  "owner": "lane-c",
+  "status": "blocked",
+  "blocked_by": "Seth:docs/research/short_lab_common.py 与 S-681 数据还没进 origin/main —— 推上去后改 open",
+  "created": "2026-10-25",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/",
+    "docs/research/short_lab_common.py"
+  ],
+  "title": "S-681 H2:暴涨回落 + 硬止损 —— 3 日涨 ≥ 40% 的山寨永续,次日开盘空、+30% 硬止损、持有 14 天,对同日随机空没暴涨的合格合约",
+  "source": "Jazz 10-25「认真研究一下做空策略」。台账 S-681(四个有原因的做空假设、同一模拟器、同一组判据;H1 新币做空 Seth 自己做)。坟场与死因在 S-681 开头。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-194.json"
+  ],
+  "acceptance": {
+    "check": "信号 = 3 日收益(close_t / close_{t−3} − 1)≥ +40%、上市 ≥ 60 天(该合约第 61 根日线起)、30 日成交额均值(含当天,quote volume)≥ $5M、**不在**当天 30 日成交额前 20 名;同币 14 天内只取第一次。short_ticket(a, i, s=0.30, n_hold=14, fund=该币日资金费)。对照 = null_same_day:pools[信号日] = 当天所有合格(上市 ≥ 60 天、成交额 ≥ $5M、不在前 20)且 3 日收益 < +40% 的(币, 下标),同样 s / N。只报:Binance 现货 2018–2020(数据根 research/s677/_bv_daily.jsonl,同一信号与管理,无资金费)、对冲版(空 + 等名义多 BTC)、按信号强度分档(40–60% / 60–100% / > 100%)。 **照台账 S-681 一字不改**(信号、止损 s、持有 N、对照、发现段 2020-01-01 → 2023-12-31、留出段 2024-01-01 起、四条判据;有问题写进报告「协议问题」,不自己改)。**import `docs/research/short_lab_common.py`**(load_um / load_funding / daily_funding / short_ticket / chain / summary / boot_months / null_same_day / judge / money / nav_bars),不复制它的函数;数据只读数据根 `research/s681/`(_um_daily.jsonl:890 个 USDT 本位永续含已下架,2019-09 → 2026-09;_um_funding.jsonl:891 个)。**先在发现段把判据算完、写进结果 json,再打开留出段**(脚本里两段分两个函数,报告写明先后)。资金费覆盖率照报。上下文要省:只打印汇总行。报告用合规词以外的内部措辞即可,但不写任何「建议」;判定照 judge() 的输出。新分支 `git switch -c lane-c/T-194 origin/main`。",
+    "expect": "脚本 docs/research/s681_h2_pump_fade.py;结果 docs/research/s681_h2_pump_fade_results.json(每张票都在,能复算);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-194_s681_h2_pump_fade.md:开头一张判据表(四条 + 判定),然后发现段 / 留出段汇总、资金曲线、只报项、协议问题。in_review,推 lane-c/T-194。"
+  },
+  "prior_value": "没有。这一族坟场见 S-681;这个定义从没算过。",
+  "notes": ""
+}
