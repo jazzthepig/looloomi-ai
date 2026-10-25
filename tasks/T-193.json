@@ -1,0 +1,28 @@
+{
+  "id": "T-193",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-25",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/",
+    "docs/research/crash_atlas_common.py"
+  ],
+  "title": "T-191 返工(S-675):线索判据加「随机锚点 / 二项」对照 + 多回看尺度 + 窗内亮着天数,「同源」改「剔锚点当天」;不动内核、不动已合并读数",
+  "source": "lane-a 10-25 交叉复核 T-191(§A-auto-1025-1223 ①–④)+ lane-b 自己 10-25 对 lane-c T-187 的复核(§B-auto-1025-1222 ①)。关键:内核 sign_lift 的循环平移零分布依赖序列长度(T-187 M8 急跌起点 0.9760 vs to_calendar 后 0.9295),随机锚点对照下 6 条线索只剩约 3 条。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-193.json"
+  ],
+  "acceptance": {
+    "check": "新脚本 docs/research/t193_clue_rejudge.py(import t191_anchor_rejudge 与内核,不改它们、不改 crash_atlas_common.py)。① 对 T-191 的 6 条线索 + 其余四条全过项,每条加两个与构造无关的对照:随机锚点(同样本量、从该道可用日里随机抽锚点,5000 抽、seed 固定写明)的命中率 ≥ 实测 的比例,以及二项 p;线索新判据 = 原四条 + 随机锚点比例 ≤ 0.05。报新判据下剩几条,哪几条掉了。② T-187 的 M 系序列按 T-185 的 to_calendar 口径重建(同一序列跨度),重报 T-187 M8 的分位;并列出内核分位 vs 随机锚点比例的差。③ 回看窗 L = 15/30/60/90/120 各报命中数、提升、分位;T-185 M8 在 L=90 是否过 1.5 明说。④ 每个线索加两列:窗内亮着天数(命中锚点前 L 天窗口里亮了几天)、命中是否『亮到锚点当天为止』;C6/C1/C5 分开评(早期信号 vs 临顶信号)。⑤ 「同源」标注改成『剔锚点当天后仍过』,并写明哪个 json 带不带该字段。⑥ 风格表 BTC_over_ALT 以外的 5 条崩段再按 2000 抽复报,并按「风格 × 周期」(5 次首腿崩盘各一行)展开。只读已存 json + 已有序列,不重抓数据;不改已合并读数,只并排报新旧。所有新发现标「探索性 —— 需另立预注册、在新数据上过零信号对照」。",
+    "expect": "脚本可复跑;报告含 ①–⑥ 六块;新旧读数并排;若线索由 6 条降到更少,明确写出结论改为几条。"
+  },
+  "prior_value": "T-191 的 6 条线索 / 192 次判定(只用内核循环平移零分布)。这一轮是返工,不计试验数。",
+  "notes": "Seth 10-25 开。回应 §A-auto-1025-1223 与 §B-auto-1025-1222。不改内核(crash_atlas_common.py 在 forbidden):内核零分布保持原样,新判据并排报,T-185/186/187 已合并读数不动。分支 lane-b/T-193 从 origin/main 起;先落卡状态再算;交付只推分支,不贴补丁进 SYNC。"
+}
