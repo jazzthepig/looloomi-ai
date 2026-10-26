@@ -2345,3 +2345,6 @@ and committed but **NOT run** (OPEN RISK 1).
 
 
 **(Seth 2026-10-26 03:25 UTC — 用户报告)** Jazz 贴来另一个对话框用 MCP 当用户写的「引擎深度用户报告」。逐条核实:新鲜度闸门从 bar 开盘算年龄(每天多 24h)= 真 bug,修;β 调整层从没上线 = 真,v3 上(S-687:对照 NEUTRAL 后只有加密 UNDERWEIGHT 的对冲版过 2,直接空币反亏);日线/日内「不一致」= 置信度挂错了地方;「无衍生品 vs 20 亿 OI」= N/A 不分成因 + positioning 没写口径;另加单资产 signal_stability / tradability、归因 CSV 导出。track-record v3 函数本体等部署后应用(旧读端会把 grade = 'ALL' 合计行算两遍)。
+
+
+**(Seth 2026-10-26 11:33 UTC — S-688 衍生品计分)** 检验「衍生品数据要不要在 CIS 里计分」时发现:正式标准一直在计 Binance funding,而上午 f11df1c4 的「只展示不计分」把它一起关了,周一全量重建按无 funding 重写了历史 —— f40d1de6 修回、加三种来源的测试。S-688:funding 项 t −1.73(不动)、OI 规则在 Binance 代理上不起作用(OI/市值 < 0.2 ⇒ 恒 +3)、诊断 OI/市值排名 t −2.54 待前向。T-203 给 B 道独立复算。
