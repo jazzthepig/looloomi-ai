@@ -360,11 +360,26 @@ def main():
         print("  %-5s mean=%.6f t=%.4f h1=%.6f h2=%.6f" %
               (k, mine[k]["month_mean"], mine[k]["month_t"], mine[k]["h1_mean"], mine[k]["h2_mean"]))
 
+    out = {"task": "T-204", "scope": a.scope,
+           "what": "第二实现(pandas/numpy)对主脚本的 %s" % other_key,
+           "synthetic_cg_branch_pass": ok,
+           "kept": kept, "dropped": dropped,
+           "n_cross_section_days": len(daily), "n_rows": len(row_df),
+           "stats": mine, "diff_vs_main": {}}
+    if a.out:                      # 先落盘:对数崩了也不丢结果
+        with open(a.out, "w") as f:
+            json.dump(out, f, ensure_ascii=False, indent=1)
+        print("wrote", a.out)
+
     diff = {}
     if a.compare:
         other = json.load(open(a.compare))
         if other_key == "out_of_panel":
-            oc = other["out_of_panel"]["stats_diagnostic_pre_gate"]["stats"]
+            oc = other["out_of_panel"].get("stats") \
+                or other["out_of_panel"].get("stats_diagnostic_pre_gate") \
+                or other["out_of_panel"]["stats_diagnostic_pre_gate"]["stats"]
+            if "stats" in oc and "monthly" not in oc:
+                oc = oc["stats"]
         else:
             oc = other["panel_control"]["stats"]
         for k in ("main", "raw", "size"):
@@ -382,17 +397,10 @@ def main():
             print("  比对 %-5s 逐月最大差=%.2e 月均差=%.2e 月 t 差=%.2e" %
                   (k, dmax or 0, dmean or 0, diff[k]["month_t_diff"]))
             ok &= (dmax is not None and dmax < 1e-4 and diff[k]["month_t_diff"] < 1e-3)
-
-    out = {"task": "T-204", "scope": a.scope,
-           "what": "第二实现(pandas/numpy)对主脚本的 %s" % other_key,
-           "synthetic_cg_branch_pass": ok,
-           "kept": kept, "dropped": dropped,
-           "n_cross_section_days": len(daily), "n_rows": len(row_df),
-           "stats": mine, "diff_vs_main": diff}
-    if a.out:
-        with open(a.out, "w") as f:
-            json.dump(out, f, ensure_ascii=False, indent=1)
-        print("wrote", a.out)
+        out["diff_vs_main"] = diff
+        if a.out:
+            with open(a.out, "w") as f:
+                json.dump(out, f, ensure_ascii=False, indent=1)
     print("总判定:", "PASS" if ok else "FAIL")
     return 0 if ok else 1
 
