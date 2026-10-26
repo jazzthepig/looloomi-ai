@@ -486,235 +486,236 @@
    "t_month": -1.725,
    "first_half": -0.036563,
    "second_half": -0.00891,
-   "mean_partial": -0.021954,
-   "t_partial": -1.873,
+   "mean_partial": null,
+   "t_partial": null,
    "months": {
     "2023-01": {
      "rho": -0.047474,
-     "prho": -0.044687,
+     "prho": null,
      "n_days": 27
     },
     "2023-02": {
      "rho": -0.18961,
-     "prho": -0.120947,
+     "prho": null,
      "n_days": 25
     },
     "2023-03": {
      "rho": -0.092928,
-     "prho": -0.103519,
+     "prho": null,
      "n_days": 29
     },
     "2023-04": {
      "rho": -0.065956,
-     "prho": -0.010169,
+     "prho": null,
      "n_days": 29
     },
     "2023-05": {
      "rho": 0.176662,
-     "prho": 0.147062,
+     "prho": null,
      "n_days": 27
     },
     "2023-06": {
      "rho": -0.053471,
-     "prho": -0.053593,
+     "prho": null,
      "n_days": 27
     },
     "2023-07": {
      "rho": -0.059684,
-     "prho": -0.047054,
+     "prho": null,
      "n_days": 28
     },
     "2023-08": {
      "rho": -0.00192,
-     "prho": 0.029054,
+     "prho": null,
      "n_days": 29
     },
     "2023-09": {
      "rho": -0.027007,
-     "prho": 0.02617,
+     "prho": null,
      "n_days": 29
     },
     "2023-10": {
      "rho": 0.057331,
-     "prho": 0.057681,
+     "prho": null,
      "n_days": 30
     },
     "2023-11": {
      "rho": -0.029943,
-     "prho": -0.009129,
+     "prho": null,
      "n_days": 29
     },
     "2023-12": {
      "rho": -0.006892,
-     "prho": -0.012038,
+     "prho": null,
      "n_days": 31
     },
     "2024-01": {
      "rho": 0.026188,
-     "prho": 0.023482,
+     "prho": null,
      "n_days": 28
     },
     "2024-02": {
      "rho": -0.075285,
-     "prho": -0.06491,
+     "prho": null,
      "n_days": 29
     },
     "2024-03": {
      "rho": -0.144616,
-     "prho": -0.148543,
+     "prho": null,
      "n_days": 31
     },
     "2024-04": {
      "rho": -0.105535,
-     "prho": -0.088609,
+     "prho": null,
      "n_days": 29
     },
     "2024-05": {
      "rho": 0.083846,
-     "prho": 0.024984,
+     "prho": null,
      "n_days": 24
     },
     "2024-06": {
      "rho": -0.101835,
-     "prho": -0.125197,
+     "prho": null,
      "n_days": 11
     },
     "2024-07": {
      "rho": 0.003196,
-     "prho": 0.025764,
+     "prho": null,
      "n_days": 18
     },
     "2024-08": {
      "rho": 0.006575,
-     "prho": -0.020515,
+     "prho": null,
      "n_days": 28
     },
     "2024-09": {
      "rho": 0.003201,
-     "prho": -0.003918,
+     "prho": null,
      "n_days": 25
     },
     "2024-10": {
      "rho": -0.007858,
-     "prho": -0.056114,
+     "prho": null,
      "n_days": 30
     },
     "2024-11": {
      "rho": 0.010201,
-     "prho": 0.000428,
+     "prho": null,
      "n_days": 29
     },
     "2024-12": {
      "rho": -0.089716,
-     "prho": -0.150155,
+     "prho": null,
      "n_days": 28
     },
     "2025-01": {
      "rho": -0.086643,
-     "prho": -0.14752,
+     "prho": null,
      "n_days": 21
     },
     "2025-02": {
      "rho": 0.025402,
-     "prho": 0.01535,
+     "prho": null,
      "n_days": 23
     },
     "2025-03": {
      "rho": 0.040618,
-     "prho": 0.042923,
+     "prho": null,
      "n_days": 29
     },
     "2025-04": {
      "rho": -0.058835,
-     "prho": -0.097684,
+     "prho": null,
      "n_days": 21
     },
     "2025-05": {
      "rho": -0.100216,
-     "prho": -0.096412,
+     "prho": null,
      "n_days": 15
     },
     "2025-06": {
      "rho": 0.000957,
-     "prho": -0.026569,
+     "prho": null,
      "n_days": 22
     },
     "2025-07": {
      "rho": -0.171522,
-     "prho": -0.160949,
+     "prho": null,
      "n_days": 15
     },
     "2025-08": {
      "rho": 0.101829,
-     "prho": 0.12893,
+     "prho": null,
      "n_days": 13
     },
     "2025-09": {
      "rho": -0.027979,
-     "prho": -0.044461,
+     "prho": null,
      "n_days": 16
     },
     "2025-10": {
      "rho": 0.057323,
-     "prho": 0.055397,
+     "prho": null,
      "n_days": 31
     },
     "2025-11": {
      "rho": -0.106942,
-     "prho": -0.088716,
+     "prho": null,
      "n_days": 29
     },
     "2025-12": {
      "rho": 0.091509,
-     "prho": 0.116672,
+     "prho": null,
      "n_days": 22
     },
     "2026-01": {
      "rho": -0.106038,
-     "prho": -0.125422,
+     "prho": null,
      "n_days": 18
     },
     "2026-02": {
      "rho": 0.06829,
-     "prho": 0.05973,
+     "prho": null,
      "n_days": 26
     },
     "2026-03": {
      "rho": -0.054711,
-     "prho": -0.074851,
+     "prho": null,
      "n_days": 30
     },
     "2026-04": {
      "rho": 0.011254,
-     "prho": 0.023195,
+     "prho": null,
      "n_days": 23
     },
     "2026-05": {
      "rho": 0.018838,
-     "prho": -0.01076,
+     "prho": null,
      "n_days": 16
     },
     "2026-06": {
      "rho": -0.049602,
-     "prho": -0.032331,
+     "prho": null,
      "n_days": 23
     },
     "2026-07": {
      "rho": 0.081876,
-     "prho": 0.091634,
+     "prho": null,
      "n_days": 20
     },
     "2026-08": {
      "rho": -0.001226,
-     "prho": 0.012729,
+     "prho": null,
      "n_days": 12
     },
     "2026-09": {
      "rho": 0.099638,
-     "prho": 0.095672,
+     "prho": null,
      "n_days": 10
     }
-   }
+   },
+   "partial_note": "not computed: the funding term is part of the score, so a partial on the score is circular (pre-registration says no partial); an earlier draft reported -0.022 / -1.87 in error"
   }
  }
 }

@@ -1,0 +1,27 @@
+{
+ "id": "T-204",
+ "owner": "lane-c",
+ "status": "open",
+ "created": "2026-10-26",
+ "forbidden_paths": [
+  "Shadow/",
+  "src/",
+  "paper_trading/",
+  "PROJECT_STATE.md",
+  "PROJECT_STATE_LOG.md",
+  "scripts/",
+  "migrations/"
+ ],
+ "title": "S-689 独立复算:OI/市值在面板外名字上、控制规模后的截面 IC(与 Seth 互不看,交回后逐月对数)",
+ "source": "S-688 诊断(官方 24 名,ρ −0.103、t −2.54)是看过全样本才看到的;lane-a 复核指出它与小市值高度相关(ρ ≈ −0.81)。台账 S-689 预注册:换一批没看过的名字、主统计量控制规模。",
+ "allowed_paths": [
+  "docs/research/",
+  "tasks/T-204.json"
+ ],
+ "acceptance": {
+  "check": "**照台账 S-689 一字不改**(有问题写进报告「协议问题」,不自己改)。**开工条件:** `perp_cg_map` 里没有 verdict = 'pending' 的行(Railway 正在每 10 分钟 3 次请求慢慢补),或已过 2026-10-28 00:00 UTC —— 不满足就直接停,下一轮再看。只读 Supabase(publishable key 可读):`deriv_metrics_daily`、`asset_mcap_daily`(source = coingecko_pro_market_chart)、`cg_coin_mcap_daily`、`perp_cg_map`。剔除的面板名字 = AAVE ADA APT ARB AVAX BNB BTC DOT ETH HYPE INJ LDO LINK NEAR ONDO OP PENDLE POL SKY SOL STRK SUI TIA UNI XRP。映射:先按 symbol 取 asset_mcap_daily,没有的用 perp_cg_map 里 verdict = 'resolved' 的 coin_id 去 cg_coin_mcap_daily;每个名字都过一次价格校验(隐含价 = oi_value_close / oi_close,1000 前缀倍数 1000,≥ 30 个重叠日且 median 相对误差 ≤ 0.05)。行、结果、特征、规模、偏相关公式、按月 t、两半、判定全部照 S-689。BTC 价格用 asset_mcap_daily 的 coin_id = bitcoin。**独立:** 交付前不读 `docs/research/s689_*`。新分支 `git switch -c lane-c/T-204 origin/main`。",
+  "expect": "脚本 docs/research/t204_oi_mcap_outofpanel.py;结果 docs/research/t204_results.json —— 名单(留下 / 剔除及原因)、主统计量与两个副统计量的**逐月**值(6 位小数)、月数、月 t、两半;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-204_oi_mcap_outofpanel.md:开头一张表,然后套 S-689 的判定写结论,最后「协议问题」。in_review,推 lane-c/T-204。**交付 = 文件已推上分支**,只写在 worktree 里不算。"
+ },
+ "prior_value": "OI/市值的信息只在看过的 24 个名字上出现过,且没控规模。",
+ "notes": ""
+}
