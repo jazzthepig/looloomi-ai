@@ -1,0 +1,11 @@
+{
+  "batches_sample1": {
+    "2026-10-26T12:32:51": 78857
+  },
+  "batches_sample2": {
+    "2026-10-26T12:32:51": 78857
+  },
+  "newest_batch": "2026-10-26T12:32:51",
+  "rows_newest": 78857,
+  "fr_present_newest": 31409
+}

@@ -1,0 +1,85 @@
+{
+  "task": "T-203",
+  "compare": "A 道 docs/research/s688_results.json vs B 道 docs/research/t203_results.json",
+  "a_computed_at": "2026-10-26T11:30Z",
+  "b_generated_at": "2026-10-26T13:07:07.645481+00:00",
+  "a_panel": "cis_standard_outcomes grp=crypto, symbol<>BTC, 2023-01 .. 2026-09; rebuild cis-standard-v1.3 read after the 11:10 UTC rewrite",
+  "b_panel": [
+    "2023-01-01",
+    "2026-09-25"
+  ],
+  "items": {
+    "fr_adj": {
+      "a_months_n": 45,
+      "b_months_n": 45,
+      "comparable": 45,
+      "max_abs_monthly_diff": 0.0,
+      "months_over_1e_6": 0,
+      "mismatch_sample": [],
+      "a_summary": {
+        "mean_rho": -0.019971,
+        "n_months": 45
+      },
+      "b_summary": {
+        "mean_rho": -0.019971,
+        "t": -1.725086,
+        "n_months": 45,
+        "monthly_sd": 0.077661
+      }
+    },
+    "diag_fr_level": {
+      "a_months_n": 45,
+      "b_months_n": 45,
+      "comparable": 45,
+      "max_abs_monthly_diff": 0.0,
+      "months_over_1e_6": 0,
+      "mismatch_sample": [],
+      "a_summary": {
+        "mean_rho": 0.021085,
+        "n_months": 45
+      },
+      "b_summary": {
+        "mean_rho": 0.021085,
+        "t": 1.255304,
+        "n_months": 45,
+        "monthly_sd": 0.112674
+      }
+    },
+    "diag_oi_ratio": {
+      "a_months_n": 45,
+      "b_months_n": 45,
+      "comparable": 45,
+      "max_abs_monthly_diff": 0.0,
+      "months_over_1e_6": 0,
+      "mismatch_sample": [],
+      "a_summary": {
+        "mean_rho": -0.103402,
+        "n_months": 45
+      },
+      "b_summary": {
+        "mean_rho": -0.103402,
+        "t": -2.544815,
+        "n_months": 45,
+        "monthly_sd": 0.27257
+      }
+    }
+  },
+  "partial_diag_oi_ratio": {
+    "comparable": 45,
+    "max_abs_monthly_diff": 0.0,
+    "months_over_1e_6": 0,
+    "mismatch_sample": []
+  },
+  "oi_adj": {
+    "a": {
+      "testable": false,
+      "why": "Binance OI / mcap never reaches 0.2 on this panel (27,422 rows, max 0.184, p99 0.086): the v4.3 rule gives every name +3 every day, so no day has two distinct values"
+    },
+    "b": {
+      "n_months": 0,
+      "mean_rho": null,
+      "t": null,
+      "verdict": "❌ 不通过(月均 ρ > 0、月 t ≥ 2.0、偏相关月 t ≥ 2.0、两半月均 ρ 都 > 0):OI 继续只展示"
+    }
+  }
+}
