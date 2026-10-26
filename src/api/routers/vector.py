@@ -344,7 +344,11 @@ async def get_funding_rates(response: Response = None):
     return {
         "count":   len(rows),
         "assets":  rows,
-        "note":    "Funding rate per 8h period (OI-weighted avg across all exchanges). Ann = rate × 3 × 365.",
+        "note":    ("OI-weighted average across all venues CoinGecko lists. Each venue reports funding per its own "
+                    "settlement interval (8h on most centralised venues, 1h on Hyperliquid), so funding_rate_8h is an "
+                    "approximation: Ann = rate × 3 × 365 is exact only when every venue settles 8-hourly, and venues that "
+                    "settle more often pull the average down. "
+                    "Single-venue depth: /api/v1/cis/asset/{symbol} → tradability."),
     }
 
 

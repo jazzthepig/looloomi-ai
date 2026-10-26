@@ -1526,7 +1526,12 @@ def calculate_cis_score(
     else:
         _fr_signal = "N/A (asset not in derivatives feed)"
 
-    if _drv and not _is_tradfi:
+    # 计分只用场所合并源(venue_consolidated,单位已知);CoinGecko 聚合源从 03-22 起解析为空、10-26 修好后
+    # 只展示不计分 —— 各场所结算周期不同,未经检验就让它改 O 支柱,等于不声不响换了一套打分(S-687 附记)。
+    _drv_scored = _drv.get("source") == "venue_consolidated"
+    if _drv and not _is_tradfi and not _drv_scored:
+        _fr_signal = f'{_drv.get("funding_signal", "unknown")} (measured, not scored)'
+    if _drv and not _is_tradfi and _drv_scored:
         _fr_signal = _drv.get("funding_signal", "unknown")
         # Funding rate modifier
         if _fr > 0.0005:      # >0.05%/8h — overleveraged longs
@@ -2833,7 +2838,9 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         # hypotheses for that latency were wrong. Use the same defensive read as the
         # surrounding code rather than reintroducing a bare name.
         _mcap_for_las = float(market_data.get("market_cap", 0) or 0)
-        _oi_for_las = float((_deriv_map or {}).get(asset_id.upper(), {}).get("open_interest_usd") or 0)
+        _drv_las = (_deriv_map or {}).get(asset_id.upper(), {}) or {}
+        # 同上:只有场所合并源的 OI 进 LAS(10-26 前 CoinGecko 源恒空,保持现状)
+        _oi_for_las = float(_drv_las.get("open_interest_usd") or 0) if _drv_las.get("source") == "venue_consolidated" else 0.0
         if _oi_for_las > 0 and _mcap_for_las > 0:
             _oi_ratio_las = _oi_for_las / _mcap_for_las
             # OI > 20% MCap starts applying discount (max 30% LAS reduction at 100% OI/MCap)

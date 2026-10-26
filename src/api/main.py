@@ -1728,6 +1728,9 @@ async def _standard_outcomes_loop():
             if r.get("ok"):
                 r["track_record_rows"] = await supabase_rpc("refresh_signal_track_record")
                 r["edge_map_rows"] = await supabase_rpc("refresh_signal_edge_map")
+                # 读端缓存 6h:刚算出的一批要立刻可见,否则 07:00 的新批最晚 13:00 才露面(10-26 v3 上线时撞到)
+                from src.api.store import _TRACKREC_CACHE
+                _TRACKREC_CACHE["rows"] = None
             print(f"[STD-OUTCOMES] {str(r.get('reason'))[:160]}")
             _detail = {k: r.get(k) for k in ("written", "published", "track_record_rows", "edge_map_rows")}
             await _beat("_standard_outcomes_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")), detail=_detail,

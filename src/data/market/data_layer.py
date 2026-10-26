@@ -1815,22 +1815,32 @@ async def get_cg_derivatives() -> list:
 
         # Aggregate per symbol: weighted avg funding rate (by OI), sum OI
         _agg: dict[str, dict] = {}
+        # 2026-10-26:这里从 03-22 起一直读 `base` —— /derivatives 的行里没有这个字段(那是
+        # /derivatives/exchanges/{id} 的),于是每次解析出 0 个资产:funding 工具回空、O 支柱的衍生品项
+        # 全写「N/A」,而 positioning(按 index_id 解析)同一时刻报 NEAR 20 亿 OI。实测 10-26 一次 27,229 行,
+        # 0 行带 base。字段是 index_id;funding_rate 是**百分数**、按各场所自己的结算周期(Binance 8h、
+        # Hyperliquid 1h …)—— 换成小数(÷100)以对上下面按小数写的阈值,周期不统一的事写进 funding_units。
         for t in tickers:
-            sym = (t.get("base") or "").upper()
+            sym = (t.get("index_id") or t.get("base") or "").upper()
             if sym not in _CIS_PERPS:
+                continue
+            if (t.get("contract_type") or "perpetual") != "perpetual":
                 continue
             fr = t.get("funding_rate")
             oi = float(t.get("open_interest_usd") or t.get("open_interest") or 0)
             if fr is None:
                 continue
-            fr = float(fr)
+            try:
+                fr = float(fr) / 100.0
+            except (TypeError, ValueError):
+                continue
             if sym not in _agg:
                 _agg[sym] = {
                     "symbol":       sym,
                     "markets":      [],
                     "_fr_oi_sum":   0.0,   # Σ(fr × oi) for weighted avg
                     "_oi_sum":      0.0,
-                    "price":        float(t.get("last") or 0),
+                    "price":        float(t.get("price") or t.get("last") or 0),
                     "price_change_pct": float(t.get("price_percentage_change_24h") or 0),
                 }
             _agg[sym]["markets"].append(t.get("market", ""))
@@ -1867,6 +1877,8 @@ async def get_cg_derivatives() -> list:
                 "markets_count":       len(d["markets"]),
                 "price":               d["price"],
                 "price_change_pct":    d["price_change_pct"],
+                "funding_units":       ("decimal per venue settlement interval (CoinGecko percent ÷ 100), "
+                                        "OI-weighted across venues; intervals differ (1h / 4h / 8h)"),
             })
 
         # Sort by OI descending
