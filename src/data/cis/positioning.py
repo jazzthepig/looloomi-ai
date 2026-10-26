@@ -23,6 +23,11 @@ logger = logging.getLogger(__name__)
 _POS_KEY = "cis:positioning"
 _POS_TTL = 30 * 60          # positioning moves faster than supply → 30 min
 _MIN_OI_USD = 5_000_000     # ignore illiquid perps; positioning is only meaningful with real OI
+#: 2026-10-26 用户报告:NEAR 的 oi_usd 20 亿,而 Hyperliquid 上只有 2.6 亿 —— 两个都对,口径不同。写进每条记录。
+POSITIONING_SCOPE = ("CoinGecko /derivatives, every listed perp venue summed (includes small venues); funding = "
+                     "OI-weighted mean of venue-reported rates in CoinGecko units (venues settle on different "
+                     "intervals) — read positioning_pressure, not the raw funding; single-venue depth is in "
+                     "tradability")
 
 
 def _clamp(x, lo, hi):
@@ -48,7 +53,7 @@ def _compute(agg: dict) -> dict:
         # extreme POSITIVE funding → overleveraged longs → forced SELL → bearish (negative pressure)
         pressure = _clamp(-f / scale, -1.0, 1.0)
         out[sym] = {"positioning_pressure": round(pressure, 3),
-                    "funding": round(f, 6), "oi_usd": round(oi, 0)}
+                    "funding": round(f, 6), "oi_usd": round(oi, 0), "scope": POSITIONING_SCOPE}
     return out
 
 

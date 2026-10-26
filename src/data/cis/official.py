@@ -339,6 +339,10 @@ def overlay(data: Any, latest: Optional[Mapping[str, Any]], today: Optional[date
             continue
         hit += 1
         b["intraday"] = {k: a.get(k) for k in INTRADAY_KEYS if k in a}
+        # 盘中引擎的状态置信度属于盘中那份状态,不该挂在正式的 macro_regime 旁边(10-26 用户报告:
+        # 「日线 NEUTRAL,置信度 0.41」—— 0.41 是盘中 TIGHTENING 的置信度)
+        if "regime_confidence" in b:
+            b["intraday"]["regime_confidence"] = b.pop("regime_confidence")
         p = {k.upper(): r.get(f"pillar_{k}") for k in "fmosa"}
         pct = r.get("pct")
         b.update({
@@ -391,6 +395,7 @@ def overlay(data: Any, latest: Optional[Mapping[str, Any]], today: Optional[date
     regimes = {r.get("regime") for r in rows.values() if r.get("regime")}
     if len(regimes) == 1:
         out["macro_regime"] = regimes.pop()
+        out.pop("regime_confidence", None)      # 那是盘中状态的置信度,已在 out["intraday"] 里;不挂在正式状态旁边
     age = None
     try:
         age = ((today or datetime.now(timezone.utc).date()) - date.fromisoformat(d[:10])).days
@@ -566,6 +571,8 @@ def regime_overlay(data: Any, latest: Optional[Mapping[str, Any]]) -> Any:
         return data
     out = dict(data)
     out["intraday_regime"] = {"macro_regime": data.get("macro_regime"), "regime_source": data.get("regime_source")}
+    if "regime_confidence" in out:              # 盘中状态的置信度跟着盘中状态走(10-26 用户报告)
+        out["intraday_regime"]["regime_confidence"] = out.pop("regime_confidence")
     out["macro_regime"] = regimes.pop()
     out["regime_source"] = "official_daily_close"
     out["regime_as_of"] = str(latest.get("d"))

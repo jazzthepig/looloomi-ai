@@ -1517,7 +1517,14 @@ def calculate_cis_score(
     _oi_usd    = float(_drv.get("open_interest_usd") or 0)
     _fr_adj    = 0.0
     _oi_adj    = 0.0
-    _fr_signal = "N/A (no derivatives)"
+    # 10-26 用户报告:breakdown 写「N/A (no derivatives)」,同一资产的 positioning 却有 20 亿 OI。
+    # 这个值过去不区分三种情况 —— 本轮衍生品源没拿到(分支超时 / 报错 ⇒ 空 map)· 源里没有这个名字 · 传统资产。
+    if _is_tradfi:
+        _fr_signal = "N/A (traditional asset)"
+    elif not _deriv_map:
+        _fr_signal = "N/A (derivatives feed unavailable this run)"
+    else:
+        _fr_signal = "N/A (asset not in derivatives feed)"
 
     if _drv and not _is_tradfi:
         _fr_signal = _drv.get("funding_signal", "unknown")

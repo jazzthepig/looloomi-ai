@@ -1415,13 +1415,123 @@ async def get_cis_top(limit: int = 10, response: Response = None):
     }
 
 
+# ── 单个资产:读的人要拿去交易(2026-10-26 用户报告)────────────────────────────────────────────────────
+#   ① 哪一份是记录在案的(正式日终)、哪一份是盘中预览,写在响应里,不让读者猜;
+#   ② 档位稳不稳:当前档位持续了几天、30 / 90 天里换了几次(历史上 18–29% 的变更 3 天内翻回);
+#   ③ 能不能交易:主要永续所(Hyperliquid)上有没有、持仓量与成交额多少。
+
+BASIS_GUIDE = {
+    "of_record": ("signal, grade, cis_score, f/m/o/s/a, macro_regime, group_percentile — the official UTC daily close "
+                  "(official_date). This is the signal the track record measures."),
+    "intraday_preview": ("intraday.* — the intraday engine's latest run (refreshes ~30 min). A preview, not a signal of "
+                         "record; it can disagree with the close until the next close."),
+    "breakdown": ("breakdown.* holds the component inputs of the INTRADAY run (provenance.as_of), not of the official "
+                  "score; the official pillars have no component breakdown. A component reading 'no derivatives' there "
+                  "means the intraday engine had no derivatives input — see positioning / tradability for venue data."),
+    "macro_regime": ("macro_regime = the market state on the official close (one label for every surface); "
+                     "intraday.macro_regime is the intraday engine's classification, a preview."),
+}
+
+_HL_CACHE: dict = {"at": 0.0, "snap": None}
+_HL_TTL_S = 600.0
+
+
+def signal_stability(points: list, today_signal: Optional[str] = None) -> dict:
+    """纯函数。正式序列(旧→新的 {d, signal})→ 当前档位从哪天起、持续几天、30 / 90 天里换了几次。"""
+    pts = [p for p in points or [] if p.get("signal")]
+    if not pts:
+        return {"available": False}
+    last = pts[-1]
+    cur = today_signal or last["signal"]
+    since = last["d"]
+    for p in reversed(pts):
+        if p["signal"] != cur:
+            break
+        since = p["d"]
+    from datetime import date as _date, timedelta as _td
+    d_last = _date.fromisoformat(str(last["d"])[:10])
+
+    def changes(days: int) -> int:
+        lo = (d_last - _td(days=days)).isoformat()
+        win = [p for p in pts if str(p["d"])[:10] >= lo]
+        return sum(1 for a, b in zip(win, win[1:]) if a["signal"] != b["signal"])
+
+    def reverted(days: int) -> int:
+        """窗口里有几次换档在 3 天内换回原档(只数已经能观察满 3 天的换档)。"""
+        lo = (d_last - _td(days=days)).isoformat()
+        n = 0
+        for i in range(1, len(pts)):
+            a, b = pts[i - 1], pts[i]
+            d_b = _date.fromisoformat(str(b["d"])[:10])
+            if a["signal"] == b["signal"] or str(b["d"])[:10] < lo or (d_last - d_b).days < 3:
+                continue
+            n += any(p["signal"] == a["signal"] for p in pts[i + 1:]
+                     if (_date.fromisoformat(str(p["d"])[:10]) - d_b).days <= 3)
+        return n
+
+    held = (d_last - _date.fromisoformat(str(since)[:10])).days + 1
+    return {"available": True, "signal": cur, "since": str(since)[:10], "days_held": held,
+            "changes_30d": changes(30), "changes_90d": changes(90), "reverted_within_3d_90d": reverted(90),
+            "note": STABILITY_NOTE}
+
+
+#: 实测(2026-10-26,正式日终序列 10-11→10-22 的全部换档):107 次里 33 次(31%)在 3 天内换回原档。
+STABILITY_NOTE = ("Measured 2026-10-26 on the official daily series: 33 of 107 label changes (31%) reverted "
+                  "within 3 days. A label held under 3 days is the least reliable reading.")
+
+
+def hl_tradability(symbol: str, snap: Optional[dict]) -> dict:
+    """纯函数。Hyperliquid 一次 metaAndAssetCtxs 的快照 → 这个资产在 HL 上能不能交易、规模多大。
+    HL 的持仓量单位是币,乘标记价换成美元。"""
+    if not snap or not snap.get("ok"):
+        return {"venue": "hyperliquid", "available": False, "reason": (snap or {}).get("reason") or "snapshot unavailable"}
+    assets = snap.get("assets") or {}
+    sym = (symbol or "").upper()
+    a = assets.get(sym) or assets.get("K" + sym)
+    if not a:
+        return {"venue": "hyperliquid", "available": True, "listed": False, "as_of": snap.get("fetched_at")}
+    mark, oi = a.get("mark"), a.get("open_interest")
+    return {"venue": "hyperliquid", "available": True, "listed": True,
+            "open_interest_usd": round(oi * mark, 0) if oi is not None and mark is not None else None,
+            "day_volume_usd": a.get("day_notional_volume"), "funding_1h": a.get("funding_1h"),
+            "mark": mark, "as_of": snap.get("fetched_at"),
+            "note": "venue snapshot; check order-book depth before placing a stop on a thin book"}
+
+
+async def _hl_snapshot() -> Optional[dict]:
+    now = time.time()
+    if _HL_CACHE["snap"] is not None and now - _HL_CACHE["at"] < _HL_TTL_S:
+        return _HL_CACHE["snap"]
+    try:
+        from src.data.market.hyperliquid_collector import venue_snapshot
+        snap = await venue_snapshot()
+    except Exception as e:                                           # noqa: BLE001
+        snap = {"ok": False, "reason": f"{type(e).__name__}: {str(e)[:80]}"}
+    if snap.get("ok"):
+        _HL_CACHE.update(at=now, snap=snap)
+    return snap
+
+
 @router.get("/api/v1/cis/asset/{symbol}")
 async def get_cis_asset(symbol: str):
-    """Get CIS score for a specific asset."""
+    """Get CIS score for a specific asset — plus, for someone who trades on it: which fields are the signal of
+    record (`basis_guide`), how long the current label has held (`signal_stability`), and whether / how deep it
+    trades on the main perp venue (`tradability`)."""
     universe = await get_cis_universe()
     for asset in universe.get("universe", []):
         if asset.get("symbol", asset.get("asset_id", "")).upper() == symbol.upper():
-            return asset
+            out = dict(asset)                                   # 宇宙是缓存的,不改原对象
+            if out.get("signal_basis") == "daily_close":
+                out["basis_guide"] = BASIS_GUIDE
+            try:
+                from src.data.cis.official import standard_history
+                hist = await standard_history([symbol.upper()], 120)
+                out["signal_stability"] = signal_stability(hist.get(symbol.upper(), []), out.get("signal"))
+            except Exception as e:                               # noqa: BLE001  读不到 ≠ 稳定
+                out["signal_stability"] = {"available": False, "reason": f"{type(e).__name__}"}
+            if out.get("asset_class") not in ("US Equity", "US Bond", "Commodity", "ETF"):
+                out["tradability"] = hl_tradability(symbol, await _hl_snapshot())
+            return out
     return {"error": "Asset not found"}
 
 
@@ -3448,8 +3558,43 @@ def _attr_public(r: dict) -> dict:
     }
 
 
+#: CSV 导出的列(用户报告 10-26:「完整历史 17,658 条不能拉取」)—— 一行一个信号变更,研究者能自己复算。
+ATTR_CSV_COLUMNS = ("symbol", "d", "series", "provenance", "grp", "asset_class", "signal", "prev_signal", "prev_d", "grade",
+                    "score", "prev_score", "pct", "prev_pct", "d_score", "contrib_residual", "top_driver", "pre30_ret",
+                    "pre30_rel", "beta_btc", "btc_below_ma50", "matured_7", "ret_7", "univ_7", "rel_7", "btc_7", "alpha_7",
+                    "matured_30", "ret_30", "univ_30", "rel_30", "btc_30", "alpha_30", "next_d", "next_signal",
+                    "held_days", "reverted_3d")
+
+
+def attribution_window(rows: list, symbol: str = "", since: str = "", until: str = "",
+                       offset: int = 0, limit: Optional[int] = None) -> tuple:
+    """纯函数。按标的 / 日期窗筛,再分页。→ (这一页, 符合条件的总数)。rows 已按日期倒序。"""
+    sym = (symbol or "").strip().upper()
+    sel = [r for r in rows
+           if (not sym or str(r.get("symbol", "")).upper() == sym)
+           and (not since or str(r.get("d") or "")[:10] >= since[:10])
+           and (not until or str(r.get("d") or "")[:10] <= until[:10])]
+    off = max(0, int(offset or 0))
+    page = sel[off:] if limit is None else sel[off:off + max(1, int(limit))]
+    return page, len(sel)
+
+
+def attribution_csv(rows: list) -> str:
+    """纯函数。信号变更行 → CSV 文本(列 = ATTR_CSV_COLUMNS)。"""
+    import csv
+    import io
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(ATTR_CSV_COLUMNS)
+    for r in rows:
+        w.writerow(["" if r.get(c) is None else r.get(c) for c in ATTR_CSV_COLUMNS])
+    return buf.getvalue()
+
+
 @router.get("/api/v1/cis/attribution")
-async def cis_signal_attribution(symbol: Optional[str] = None, limit: int = 50, response: Response = None):
+async def cis_signal_attribution(symbol: Optional[str] = None, limit: int = 50, offset: int = 0,
+                                 since: Optional[str] = None, until: Optional[str] = None,
+                                 format: str = "json", response: Response = None):
     """
     Every CIS signal change, attributed (T-078), on the official daily-close series (T-080):
     published changes plus the point-in-time reconstruction of the same standard, each tagged
@@ -3466,6 +3611,9 @@ async def cis_signal_attribution(symbol: Optional[str] = None, limit: int = 50, 
     and kept out of the outcome statistics; each signal carries `held` (how long it lasted).
     Signals describe where an asset sits on past and current data; outcomes are historical, not forecasts.
     Returns are fractions (0.05 = 5%). Example: GET /api/v1/cis/attribution?symbol=STRK
+    Paging / export (2026-10-26): `offset` + `limit` page through the whole history (`total_matching` says how many);
+    `since` / `until` (YYYY-MM-DD) bound the signal date; `format=csv` returns EVERY matching change as CSV, one row per
+    change (no 500 cap), e.g. GET /api/v1/cis/attribution?format=csv&since=2024-01-01
     """
     from src.api.contracts.disclosure import OFFICIAL_BASIS, SIGNAL_DISCLOSURE, TRACK_RECORD_READING
     from src.data.cis.signal_attribution import (LEGACY_END, SERIES_LEGACY, SERIES_STANDARD,
@@ -3490,9 +3638,13 @@ async def cis_signal_attribution(symbol: Optional[str] = None, limit: int = 50, 
     legacy = [r for r in all_rows if (r.get("series") or SERIES_LEGACY) == SERIES_LEGACY]
     series = SERIES_STANDARD if std else SERIES_LEGACY
     rows = std or legacy
+    if (format or "").lower() == "csv":
+        page, total = attribution_window(rows, symbol or "", since or "", until or "", 0, None)
+        return Response(content=attribution_csv(page), media_type="text/csv",
+                        headers={"Content-Disposition": "attachment; filename=cis_signal_attribution.csv",
+                                 "X-Total-Matching": str(total), "Cache-Control": "public, max-age=600"})
     lim = max(1, min(int(limit or 50), 500))
-    sym = (symbol or "").strip().upper()
-    sel = [r for r in rows if not sym or str(r.get("symbol", "")).upper() == sym][:lim]
+    sel, total = attribution_window(rows, symbol or "", since or "", until or "", offset, lim)
     return sanitize_floats({
         "disclosure": SIGNAL_DISCLOSURE,
         "reading": TRACK_RECORD_READING,
@@ -3510,6 +3662,9 @@ async def cis_signal_attribution(symbol: Optional[str] = None, limit: int = 50, 
         "previous_method_basis": (f"signals as published by the previous intraday method, through {LEGACY_END}; "
                                   "a different formula and labelling from the official series"),
         "count": len(sel),
+        "offset": max(0, int(offset or 0)),
+        "total_matching": total,
+        "export": "add format=csv for every matching change as one CSV (no page cap); offset pages the JSON",
         "signals": [_attr_public(r) for r in sel],
     })
 

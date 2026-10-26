@@ -467,6 +467,12 @@ class SignalAttributionInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
     symbol: Optional[str] = Field(default=None, description="Asset ticker; omit for the latest signal changes across the universe.", max_length=12)
     limit: int = Field(default=20, description="How many signal changes to return (1–200).", ge=1, le=200)
+    offset: int = Field(default=0, description="Skip this many (newest-first) to page through the full history; "
+                        "the response's total_matching says how many there are.", ge=0)
+    since: Optional[str] = Field(default=None, description="Only signal changes on or after this date (YYYY-MM-DD).",
+                                 pattern=r"^\d{4}-\d{2}-\d{2}$")
+    until: Optional[str] = Field(default=None, description="Only signal changes on or before this date (YYYY-MM-DD).",
+                                 pattern=r"^\d{4}-\d{2}-\d{2}$")
 
     @field_validator("symbol")
     @classmethod
@@ -1083,7 +1089,7 @@ async def cometcloud_get_market_movers() -> str:
     },
 )
 async def cometcloud_get_track_record() -> str:
-    """Returns CometCloud's validated 30-day BENCHMARK-RELATIVE track record for all DIRECTIONAL signals (STRONG OUTPERFORM / OUTPERFORM / UNDERPERFORM / UNDERWEIGHT), computed from our own stored data (cis_scores × ohlcv_daily) and refreshed daily by the Supabase RPC refresh_signal_track_record (v2, 2026-07-26; MINIMAX_SYNC §BETA-METRIC-AGG).
+    """Returns CometCloud's validated 30-day BENCHMARK-RELATIVE track record for all DIRECTIONAL signals (STRONG OUTPERFORM / OUTPERFORM / UNDERPERFORM / UNDERWEIGHT), computed from the official daily-close series (cis_standard_outcomes) and refreshed daily by the Supabase RPC refresh_signal_track_record (v3, 2026-10-26: PIT β from each asset's matured 30d outcomes; `by_group` keeps crypto-vs-BTC and traditional-vs-SPY apart and carries n_months plus a month-clustered t — adjacent days' 30d windows overlap, so read edge_beta_adj_t_month, not the per-day t; edge_vs_neutral_pct / edge_vs_neutral_t_month subtract the same month's NEUTRAL β-residual, so a short label does not get credit for the drag the whole group shows against its β).
 
     Call this to decide HOW MUCH TO TRUST a CIS signal before acting on it. Two layers, LABELLED:
       - RAW (`avg_alpha_pct`): what an UNHEDGED holder experiences.
@@ -1204,9 +1210,13 @@ async def cometcloud_get_signal_attribution(params: SignalAttributionInput) -> s
         - "How have OUTPERFORM signals done relative to the universe historically?" → read track_record
     """
     try:
-        q: dict = {"limit": params.limit}
+        q: dict = {"limit": params.limit, "offset": params.offset}
         if params.symbol:
             q["symbol"] = params.symbol
+        if params.since:
+            q["since"] = params.since
+        if params.until:
+            q["until"] = params.until
         data = await _get("/api/v1/cis/attribution", params=q)
         return json.dumps(data, indent=2)
     except Exception as e:
