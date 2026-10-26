@@ -911,11 +911,12 @@ async def supabase_get_latest_track_record() -> list[dict[str, Any]]:
         return []
     url = f"{_SB_URL}/rest/v1/signal_track_record"
     params = {
-        "order": "computed_at.desc", "limit": "60",
-        "select": ("signal,grade,n,avg_alpha_pct,alpha_win_pct,"
+        # v3(2026-10-26):每批 = 每组 × 每信号 × 每档 + 每组每信号一行 'ALL',约 60 行 —— 取 300 行再按最新批过滤
+        "order": "computed_at.desc", "limit": "300",
+        "select": ("grp,signal,grade,n,avg_alpha_pct,alpha_win_pct,"
                    "avg_abs_return_pct,"
                    "avg_edge_beta_adj_pct,edge_beta_adj_t,"
-                   "avg_beta_pit,n_beta_adj,computed_at"),
+                   "avg_beta_pit,n_beta_adj,n_months,alpha_t_month,edge_beta_adj_t_month,edge_vs_neutral_pct,edge_vs_neutral_t_month,computed_at"),
     }
     headers = {"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"}
     try:
@@ -944,8 +945,21 @@ _OHLCV_FRESH_TTL = 300
 # least one row in the last 36 h to be considered "fresh." The 24 h admin
 # threshold (cis `freshness_s`) intentionally allows a 12 h buffer because
 # daily collectors can land anywhere in the 24 h window.
-_OHLCV_FRESH_OPEN_S = 36 * 3600       # gate opens if age < 36 h
+_OHLCV_FRESH_OPEN_S = 36 * 3600       # gate opens if age < 36 h (age measured from the bar's CLOSE)
 _OHLCV_FRESH_RECENT_S = 7 * 24 * 3600  # "recent" warning band
+
+
+def ohlcv_bar_age_seconds(last_trade_date: str, now: datetime) -> float:
+    """Pure. Age of the newest daily bar, measured from when that bar CLOSED (trade_date + 1 day, 00:00 UTC).
+
+    Until 2026-10-26 this was measured from trade_date 00:00 — the bar's OPEN. A perfectly current feed
+    always has yesterday as its newest closed bar, so that age was 24 h + the time of day, and the 36 h gate
+    shut every afternoon on fresh data. A user report (10-26) read the closed gate as "price data 39.8 h
+    stale" at 15:48 UTC, when the 10-24 bar had closed 15.8 h earlier. A bar dated today (still forming)
+    reports 0, not a negative age."""
+    d = datetime.fromisoformat(str(last_trade_date)[:10]).replace(tzinfo=timezone.utc)
+    closed_at = d + timedelta(days=1)
+    return max(0.0, (now - closed_at).total_seconds())
 
 
 async def supabase_ohlcv_daily_freshness() -> dict[str, Any]:
@@ -973,15 +987,11 @@ async def supabase_ohlcv_daily_freshness() -> dict[str, Any]:
             if rows:
                 last = str(rows[0].get("trade_date"))
                 out["last_trade_date"] = last
-                # Parse and age. trade_date is a date string (YYYY-MM-DD); we
-                # assume UTC midnight — adequate for a "how stale is the feed"
-                # check; the actual close time would be more precise but adds
-                # schema coupling.
+                # Age from the bar's CLOSE (trade_date + 1 day), not its open — see ohlcv_bar_age_seconds.
                 try:
-                    dt = datetime.fromisoformat(last.replace("Z", ""))
-                    dt = dt.replace(tzinfo=timezone.utc)
-                    age = (datetime.now(timezone.utc) - dt).total_seconds()
+                    age = ohlcv_bar_age_seconds(last, datetime.now(timezone.utc))
                     out["age_seconds"] = round(age, 1)
+                    out["age_basis"] = "since the newest daily bar closed (trade_date + 1 day, 00:00 UTC)"
                     if age <= _OHLCV_FRESH_OPEN_S:
                         out["gate_open"] = True
                         out["verdict"] = "fresh"

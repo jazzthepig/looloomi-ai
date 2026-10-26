@@ -90,6 +90,7 @@ def build_headline(rows: list[dict]) -> dict:
         (not silently substituted with raw).
       - WIN_PCT uses weight_key="n" (win rate is per row, not per β window).
     """
+    rows = grade_rows(rows)                     # v3 的 grade = 'ALL' 合计行不进 n 加权(否则每个信号算两遍)
     buckets = {tier: bucket_rows(rows, _signal_name_from_tier(tier))
                for tier in TIER_ORDER}
 
@@ -106,6 +107,41 @@ def build_headline(rows: list[dict]) -> dict:
         "BETA_ADJ_T_STAT": head_beta_t,
         "WIN_PCT":        head_win,
     }
+
+
+ALL_GRADES = "ALL"
+#: 按组合计行的字段(v3,2026-10-26)。t_month = 先按信号月取平均、再对月度平均做 t —— 相邻日的观察
+#: 是同一段行情数了几十遍,逐日的 t 会被放大(10-26 实测:UNDERPERFORM 逐日 t 7.7,按月 1.5)。
+#: edge_vs_neutral_* = 同组同月 NEUTRAL 的 β 残差作基线 —— 加密整体都跑输自己的 β×BTC,不扣这一项,
+#: 空头标签的 β 调整边会把全宇宙共有的拖累算成标签的本事(10-26:UNDERPERFORM 2.27% → 对 NEUTRAL 1.21%,t 0.86)。
+GROUP_FIELDS = ("n", "n_months", "avg_alpha_pct", "alpha_win_pct", "alpha_t_month",
+                "n_beta_adj", "avg_beta_pit", "avg_edge_beta_adj_pct", "edge_beta_adj_t", "edge_beta_adj_t_month",
+                "edge_vs_neutral_pct", "edge_vs_neutral_t_month")
+_BETA_FIELDS = ("n_beta_adj", "avg_beta_pit", "avg_edge_beta_adj_pct", "edge_beta_adj_t", "edge_beta_adj_t_month",
+                "edge_vs_neutral_pct", "edge_vs_neutral_t_month")
+
+
+def grade_rows(rows: list[dict]) -> list[dict]:
+    """Per-grade rows only (drops v3's grade = 'ALL' per-signal totals)."""
+    return [r for r in (rows or []) if str(r.get("grade") or "") != ALL_GRADES]
+
+
+def group_summary(rows: list[dict], gate_open: bool) -> dict:
+    """v3 per-group totals: {grp: {tier: {...GROUP_FIELDS}}} from the grade = 'ALL' rows.
+
+    Crypto is measured against BTC and traditional assets against SPY, so the two groups are never blended
+    here. When the price-feed gate is closed the β fields are None (same rule as the headline)."""
+    out: dict = {}
+    for r in rows or []:
+        if str(r.get("grade") or "") != ALL_GRADES or not r.get("grp"):
+            continue
+        sig = str(r.get("signal") or "").strip().upper()
+        tier = next((t for t, s in _TIER_TO_SIGNAL.items() if s == sig), sig.replace(" ", "_"))
+        cell = {k: r.get(k) for k in GROUP_FIELDS}
+        if not gate_open:
+            cell.update({k: None for k in _BETA_FIELDS})
+        out.setdefault(str(r["grp"]), {})[tier] = cell
+    return out
 
 
 def apply_ship_gate(headline: dict, gate_open: bool) -> dict:

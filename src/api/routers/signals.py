@@ -21,6 +21,7 @@ import math
 import time
 from src.api.contracts.disclosure import SIGNAL_DISCLOSURE
 from datetime import datetime, timezone, timedelta
+from typing import Optional
 
 import httpx
 import numpy as np
@@ -1215,16 +1216,21 @@ def track_record_note(headline: dict) -> str:
     return base + " Read each tier's β-ADJ value and its t-stat directly; no tier is pre-judged here."
 
 
-def beta_layer_status(headline: dict) -> dict:
+def beta_layer_status(headline: dict, rows: Optional[list] = None, gate_open: bool = True) -> dict:
     """S-496:β 调整层的真实状态,写进响应 —— 不让读者自己从一排 null 里猜。
 
-    线上的 `refresh_signal_track_record` 是 v1(只算 RAW 与胜率);带 PIT β 的 v2
-    (`scripts/supabase_refresh_signal_track_record_v2.sql`,2026-07-26)写好了但**从未应用**,
-    所以 `signal_track_record.n_beta_adj` 自 07-01 第一行起全空。CIS 在面板内的倾斜价值改由
+    2026-07-01 → 10-25 线上的 `refresh_signal_track_record` 是 v1(只算 RAW 与胜率),`n_beta_adj` 全空。
+    10-26 起是 v3(migrations/2026-10-26_signal_track_record_v3_beta.sql:正式日终序列 + PIT β + 按月聚类的 t)。
+    三种状态:算了且发布 / 算了但被新鲜度闸门压住 / 没算。CIS 在面板内的倾斜价值另由
     `/api/v1/proof/books` 的 `cis_tilt` 账本前向检验(T-052)。
     """
     if any(v for v in (headline.get("BETA_ADJ") or {}).values()):
         return {"status": "computed"}
+    if rows and any(int(r.get("n_beta_adj") or 0) > 0 for r in rows) and not gate_open:
+        # v3(2026-10-26)起算了;是新鲜度闸门压住了,不是没算 —— 两件事要说开(用户报告把它读成「从未上线」)
+        return {"status": "computed_but_suppressed",
+                "why": "β-adjusted values exist in this refresh but are withheld while the price feed is stale "
+                       "(see ship_gate); they return when the next daily bar lands."}
     return {"status": "not_computed",
             "why": "The live refresh computes RAW and WIN_PCT only; the beta-adjusted version was never deployed.",
             "see_instead": "/api/v1/proof/books (cis_tilt: CIS used as a tilt inside the core, forward record)"}
@@ -1236,8 +1242,8 @@ async def get_signal_track_record(response: Response = None):
     The honest, defensible track record: 30-day BENCHMARK-RELATIVE outcomes of our
     DIRECTIONAL signals (STRONG OUTPERFORM / OUTPERFORM / UNDERPERFORM /
     UNDERWEIGHT), computed from the official daily-close series (cis_standard_outcomes, S-540),
-    refreshed daily by the Supabase RPC refresh_signal_track_record (v2, 2026-07-26;
-    MINIMAX_SYNC §BETA-METRIC-AGG).
+    refreshed by the Supabase RPC refresh_signal_track_record (v3, 2026-10-26:
+    migrations/2026-10-26_signal_track_record_v3_beta.sql).
 
     Two layers, labelled. Each tier exposes both RAW and β-ADJ aggregates:
 
@@ -1247,21 +1253,20 @@ async def get_signal_track_record(response: Response = None):
 
       - β-ADJ (`avg_edge_beta_adj_pct`): the HEDGED excess return. Capturing
         it requires shorting the benchmark at the PIT-estimated β. PIT-safe
-        expanding-window OLS, ≥20 priors, NEVER default β=1.0 (insufficient
-        history → NULL — the row is honestly excluded from n_beta_adj).
+        expanding-window OLS on the asset's MATURED 30d outcomes (signal day ≤ d − 30), ≥20 priors,
+        NEVER default β=1.0 (insufficient history → NULL — excluded from n_beta_adj).
 
-    SHIP GATE: when ohlcv_daily is stale (>=36 h since last_trade_date), the
+    SHIP GATE: when ohlcv_daily is stale (>=36 h since the newest daily bar CLOSED), the
     β-ADJ headline is SUPPRESSED rather than published β-correct-but-STALE.
     The RAW block stays published — it's a pre-R62 number either way, and the
     ship verdict block says so explicitly. The gate auto-opens the moment
     the daily collector writes a fresh trade_date.
 
-    Reading guide (which rows are real edges):
-      STRONG OUTPERFORM  — top conviction; β-ADJ expected positive.
-      OUTPERFORM         — broad tier; β-ADJ expected positive but smaller.
-      UNDERPERFORM       — negative-edge tier; β-ADJ treats negative alpha as a
-                            correct call, so positive β-ADJ is the edge.
-      UNDERWEIGHT        — the one KNOWN defect (R62 t = −3.56); do not size.
+    Reading guide (which rows are real edges) — read `by_group`, not the blended headline:
+      by_group.<crypto|tradfi>.<tier>.edge_vs_neutral_pct / _t_month is the cleanest read: the tier's
+      β-residual (a − β·b) minus the same month's NEUTRAL β-residual, signed by direction. It removes
+      what the whole group does relative to its β (crypto as a group lags β×BTC), which a short label
+      would otherwise take credit for. Month-clustered t < 2 ⇒ not distinguishable from no edge.
 
     Consuming agents and investor pages should cite the tier breakdown
     under both raw AND β-ADJ headings, NOT a blended headline, and never
@@ -1271,7 +1276,7 @@ async def get_signal_track_record(response: Response = None):
         response.headers["Cache-Control"] = "public, max-age=1800, stale-while-revalidate=3600"
     from src.api.store import supabase_get_latest_track_record, supabase_ohlcv_daily_freshness
     from src.api.routers._track_record_agg import (
-        build_headline, apply_ship_gate, defect_warning as _defect_warning,
+        build_headline, apply_ship_gate, defect_warning as _defect_warning, group_summary, grade_rows,
     )
     rows = await supabase_get_latest_track_record()
     freshness = await supabase_ohlcv_daily_freshness()
@@ -1286,8 +1291,11 @@ async def get_signal_track_record(response: Response = None):
     return {
         "basis": "30d benchmark-relative alpha (BTC for crypto / SPY for TradFi), "
                  "from the official daily-close series (published days + point-in-time reconstruction of the same standard; cis_standard_outcomes), daily snapshot.",
-        "tiers": rows,
+        "tiers": grade_rows(rows),
         "headline": headline,
+        # v3(2026-10-26):每组每个信号一行合计 —— 加密对 BTC、传统资产对 SPY,不混;
+        # 带信号月数与按月聚类的 t(相邻日的观察高度重叠,逐日 t 会被放大)
+        "by_group": group_summary(rows, gate_open),
         "tier_definitions": {
             "RAW": "raw_alpha = a_ret − b_ret. What an UNHEDGED holder of the asset "
                    "experiences. NOT the same as alpha in a high-β universe.",
@@ -1302,19 +1310,28 @@ async def get_signal_track_record(response: Response = None):
                                "honestly survives, regardless of point estimate.",
             "WIN_PCT": "Share of resolved signals where the asset return beat the "
                        "benchmark return over the same 30d window. Independent of β.",
+            "EDGE_VS_NEUTRAL": ("by_group.*.edge_vs_neutral_pct: directional β-residual of the tier MINUS the "
+                                "same group's NEUTRAL β-residual in the same signal month, averaged over months "
+                                "(edge_vs_neutral_t_month = t of those monthly differences). The β-adjusted edge "
+                                "alone credits a short label with the drag the whole group shows against its β; "
+                                "this does not."),
+            "MONTH_CLUSTERED_T": ("by_group.*.edge_beta_adj_t_month / alpha_t_month: t-stat of the MONTHLY "
+                                  "means (n_months blocks). Adjacent days' 30d windows overlap almost entirely, so "
+                                  "the per-day t (edge_beta_adj_t) counts one market move dozens of times; read the "
+                                  "month-clustered t, and n_months, before trusting any tier."),
         },
         "defect_warning": warning,
         "ship_gate": {
             "ohlcv_daily_freshness": freshness,
             "publish_beta_adj": gate_open,
             "reason": ("ohlcv_daily staleness gate. β-ADJ headline is suppressed "
-                       "when last_trade_date > 36 h old — stale + β-correct is "
+                       "when the newest daily bar closed > 36 h ago — stale + β-correct is "
                        "worse than pre-R62 raw. Gate auto-opens when the daily "
                        "collector writes a fresh row.")
                       if not gate_open else None,
         },
         "note": track_record_note(headline),
-        "beta_adj_layer": beta_layer_status(headline),
+        "beta_adj_layer": beta_layer_status(headline, rows, gate_open),
         "compliance": SIGNAL_DISCLOSURE,
     }
 
