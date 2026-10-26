@@ -43,6 +43,7 @@ MCAP_FLOOR = 20_000_000.0
 MIN_OVERLAP = 30
 MAX_ERR = 0.05
 MIN_NAMES = 8          # 面板对照档(台账未写这一档门槛;主脚本同样用 8)
+MIN_NAMES_OUT = 30     # 面板外档(台账:每个 d 至少 30 个名字;主脚本 MIN_NAMES_PER_DAY=30)
 CUT = "2024-07"
 
 
@@ -377,7 +378,8 @@ def main():
         kept, dropped, row_df = out_of_panel()
         other_key = "out_of_panel"
 
-    daily = cross_section(row_df, btc)
+    daily = cross_section(row_df, btc,
+                          min_names=(MIN_NAMES if a.scope == "panel" else MIN_NAMES_OUT))
     mine = summarize(daily)
     print("kept=%d dropped=%d 截面日=%d 行=%d" % (len(kept), len(dropped), len(daily), len(row_df)))
     for k in ("main", "raw", "size"):
