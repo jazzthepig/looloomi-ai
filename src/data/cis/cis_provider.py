@@ -1261,6 +1261,49 @@ def _linear_interp(x: float, x0: float, x1: float, y0: float, y1: float) -> floa
 
 #: get_cg_derivatives 给每条记录打的来源标记;带这个标记的衍生品数据只展示、不进 O 支柱与 LAS(S-687 附记)。
 CG_AGG_SOURCE = "coingecko_aggregate"
+#: 盘中计分用的 funding 来源 = 正式标准用的那一个(Binance 永续日均,v_funding_daily)。
+BINANCE_DAILY_SOURCE = "binance_daily_mean"
+
+
+def latest_binance_funding(events: list, today: str) -> dict:
+    """纯函数。funding_history 的结算记录(symbol, funding_time, funding_rate;venue = binance_perp)→
+    每个名字最近一个 UTC 日的日均 funding(= v_funding_daily 的定义:按 UTC 日取平均),做成 O 支柱吃的格式。
+
+    正式标准对 d 用 d 当天的日均(收盘后,通常 3 次结算);盘中预览用今天已结算的部分(没有就用昨天)——
+    同一个来源、同一个单位,收盘那一刻两者相同。2026-10-26(S-688):盘中此前对少数名字用场所合并的
+    funding + OI 计分、其余名字不计,和正式标准不是一套口径。"""
+    days: dict = {}
+    for r in events or []:
+        sym, ts, fr = (r.get("symbol") or "").upper(), str(r.get("funding_time") or ""), r.get("funding_rate")
+        if not sym or len(ts) < 10 or fr is None:
+            continue
+        try:                                           # timestamptz → UTC 日(不信字符串前 10 位:会话时区不一定是 UTC)
+            from datetime import timezone as _tz
+            d = datetime.fromisoformat(ts.replace("Z", "+00:00")).astimezone(_tz.utc).date().isoformat()
+        except ValueError:
+            continue
+        if d > today:
+            continue
+        days.setdefault(sym, {}).setdefault(d, []).append(float(fr))
+    out: dict = {}
+    for sym, by_d in days.items():
+        d = max(by_d)
+        v = by_d[d]
+        out[sym] = {"funding_rate": sum(v) / len(v), "funding_signal": "binance_perp_daily_mean",
+                    "funding_day": d, "partial_day": d == today, "n_settlements": len(v),
+                    "source": BINANCE_DAILY_SOURCE}
+    return out
+
+
+async def get_binance_funding_today() -> dict:
+    """读我们自己库里的 funding_history(采集器已落库的 Binance 结算记录,走 funding_time 索引)—— 不向 Binance 发请求。"""
+    from datetime import timedelta as _td, timezone as _tz
+    from src.data.style.header import _read_all
+    now = datetime.now(_tz.utc)
+    rows = await _read_all("funding_history", {"select": "symbol,funding_time,funding_rate", "venue": "eq.binance_perp",
+                                               "funding_time": f"gte.{(now - _td(days=3)).date().isoformat()}T00:00:00Z",
+                                               "order": "funding_time.asc,symbol.asc"})
+    return latest_binance_funding(rows, now.date().isoformat())
 
 
 def calculate_cis_score(
@@ -2407,6 +2450,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         "trending":    float(os.environ.get("CIS_T2_BUDGET_DECOR_S",    "3")),
         "ic_mult":     float(os.environ.get("CIS_T2_BUDGET_DECOR_S",    "3")),
         "nma":         float(os.environ.get("CIS_T2_BUDGET_DECOR_S",    "3")),
+        "binance_funding": float(os.environ.get("CIS_T2_BUDGET_DECOR_S", "3")),
     }
     _branch_ms: dict = {}
     _branch_timeouts: list = []
@@ -2434,7 +2478,7 @@ async def calculate_cis_universe() -> Dict[str, Any]:
 
     _t_fanout = time.time()
     (binance_prices, cg_markets, llama_tvl, fng, github_activity, cg_dev_data,
-     eodhd_data, _deriv_map, _trend_map, _ic_mult, _nma_map) = await asyncio.gather(
+     eodhd_data, _deriv_map, _trend_map, _ic_mult, _nma_map, _bn_funding) = await asyncio.gather(
         _bounded("binance",     fetch_binance_prices(),   {}),
         _bounded("cg_markets",  fetch_cg_markets(),       []),
         _bounded("defillama",   fetch_defillama_tvl(),    {}),
@@ -2462,6 +2506,8 @@ async def calculate_cis_universe() -> Dict[str, Any]:
         # silently killing the entire Railway T2 universe (blank leaderboard whenever
         # the Mac Mini cache lapsed). Fixed 2026-06-05.
         _bounded("nma",         _fetch_narrative_signals(), {}),
+        # S-688:O 支柱的 funding 项与正式标准同源(Binance 日均,读本库,不打交易所)
+        _bounded("binance_funding", get_binance_funding_today(), {}),
     )
     _branch_ms["fanout_total_ms"] = int((time.time() - _t_fanout) * 1000)
     if _branch_timeouts:
@@ -2744,7 +2790,9 @@ async def calculate_cis_universe() -> Dict[str, Any]:
                 dev_activity_score=asset_dev_score,
                 eodhd_fundamentals=asset_eodhd,
                 regime=regime,
-                _deriv_map=_deriv_map,
+                # 计分只吃与正式标准同源的 funding;CoinGecko 聚合 / 场所合并的 funding、OI 不进 O 支柱
+                # (场所 OI 仍进 LAS,见下)。S-688。
+                _deriv_map=_bn_funding or {},
                 _trend_map=_trend_map,
                 narrative_modifier=_get_narrative_modifier(asset_id, _nma_map),
             )
