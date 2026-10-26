@@ -1877,6 +1877,7 @@ async def get_cg_derivatives() -> list:
                 "markets_count":       len(d["markets"]),
                 "price":               d["price"],
                 "price_change_pct":    d["price_change_pct"],
+                "source":              "coingecko_aggregate",      # = cis_provider.CG_AGG_SOURCE:只展示不计分
                 "funding_units":       ("decimal per venue settlement interval (CoinGecko percent ÷ 100), "
                                         "OI-weighted across venues; intervals differ (1h / 4h / 8h)"),
             })
