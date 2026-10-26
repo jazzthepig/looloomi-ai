@@ -58,6 +58,12 @@ MAX_CANDIDATES = 6
 HISTORY_FROM = date(2022, 12, 1)
 #: 名字里带的东西与 CoinGecko symbol 不同的几个(Binance 的叫法)。
 SPECIAL_QUERY = {"LUNA2": "LUNA", "NEIROETH": "NEIRO"}
+#: 跨链包装 / 桥接版:价格与原币一样(价格校验会放它过),但市值只是桥上那一小截 —— 写进来就把市值写错。一律不试。
+#: 10-26 第一轮:FXS 的候选里只剩 frax-share-wormhole / linea-bridged-fxs-linea 之类(原币改名 FRAX 了)。
+WRAPPER_RE = re.compile(r"wormhole|bridged|binance-peg|wrapped|layerzero|-peg-")
+#: CoinGecko 上 symbol 已经改掉、或 /coins/list 里按 symbol 找不到的(10-26 第一轮:IP / STPT 零候选,FXS 原币改名 FRAX)。
+#: 只是**多给一个候选**,照样过价格校验。
+EXTRA_IDS = {"FXS": ["frax-share"], "IP": ["story-2"], "STPT": ["stp-network"]}
 
 
 def query_symbol(binance_symbol: str) -> tuple[str, int]:
@@ -71,10 +77,12 @@ def query_symbol(binance_symbol: str) -> tuple[str, int]:
     return s, 1
 
 
-def order_candidates(query: str, ids: list[str]) -> list[str]:
-    """纯函数。候选的试法:id 与 symbol 同名的先试,其余按 id 长度(短的多是原生币)—— 只决定**先后**,对不对由价格说了算。"""
-    q = query.lower()
-    return sorted(dict.fromkeys(ids), key=lambda i: (i.lower() != q, not i.lower().startswith(q), len(i), i))
+def order_candidates(query: str, ids: list[str], mcap: Optional[dict] = None) -> list[str]:
+    """纯函数。候选的试法:去掉包装 / 桥接版;**按现在的市值从大到小**(同 ticker 的杂币几乎都比真币小),
+    市值查不到的(多半已经不活跃)排在后面,再按「id 与 symbol 同名 / 同前缀 / 短」—— 只决定**先后**,对不对由价格说了算。"""
+    q, mcap = query.lower(), mcap or {}
+    keep = [i for i in dict.fromkeys(ids) if not WRAPPER_RE.search(i)]
+    return sorted(keep, key=lambda i: (-(mcap.get(i) or 0.0), i.lower() != q, not i.lower().startswith(q), len(i), i))
 
 
 def implied_prices(rows: list[dict]) -> dict[str, float]:
@@ -123,18 +131,30 @@ async def run_once(today: Optional[date] = None) -> dict[str, Any]:
 
     need_cands = [r for r in todo if r.get("candidates") is None]
     if need_cands:
+        from src.data.market.data_layer import get_cg_markets
         client = _get_cg_client()
         idx = await _coins_list(client, include_inactive=True)
         calls += 2
+        raw_ids = {r["symbol"]: [i for i in EXTRA_IDS.get(r["symbol"], []) + idx.get(query_symbol(r["symbol"])[0], [])
+                                 if not WRAPPER_RE.search(i)]
+                   for r in need_cands}
+        allc = sorted({i for v in raw_ids.values() for i in v})
+        mcap: dict = {}
+        for i in range(0, len(allc), 250):                   # 一次 /coins/markets 最多 250 个 id
+            for m in await get_cg_markets(allc[i:i + 250]) or []:
+                if isinstance(m, dict) and m.get("id"):
+                    mcap[m["id"]] = m.get("market_cap")
+            calls += 1
         for r in need_cands:
             q, mult = query_symbol(r["symbol"])
-            ids = order_candidates(q, idx.get(q, []))
+            ranked = order_candidates(q, raw_ids[r["symbol"]], mcap)
+            ids = ranked[:MAX_CANDIDATES]
             upd = {"symbol": r["symbol"], "query_symbol": q, "mult": mult, "candidates": ids,
-                   "checked_at": datetime.now(timezone.utc).isoformat()}
+                   "checked_at": datetime.now(timezone.utc).isoformat(),
+                   "note": (f"{len(ranked)} candidates after dropping wrappers; trying the {len(ids)} largest by "
+                            f"current market cap" if len(ranked) > len(ids) else None)}
             if not ids:
-                upd.update(verdict="unresolved", note="no CoinGecko coin with this symbol (active or inactive)")
-            elif len(ids) > MAX_CANDIDATES:
-                upd.update(verdict="too_many", note=f"{len(ids)} candidates; not trying blind")
+                upd.update(verdict="unresolved", note="no CoinGecko coin with this symbol (active or inactive), wrappers excluded")
             r.update(upd)
             w = await supabase_upsert_table(MAP_TABLE, [upd], on_conflict="symbol")
             if not w.ok:
