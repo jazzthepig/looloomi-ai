@@ -175,11 +175,12 @@ def mult_for(symbol):
     return 1000.0 if symbol.startswith("1000") else 1.0
 
 
-def price_check(symbol, deriv, cg_price):
+def price_check(symbol, deriv, cg_price, mult=1.0):
     """映射校验:隐含价 = oi_value_close / oi_close;
     median |CG价×倍数/隐含价 − 1|;≥ 30 个重叠日且 ≤ 0.05 才留。
+    mult = 该名字**所用价格源**的倍数(台账 px 两分支不同:
+      asset_mcap_daily 分支 mult = 1;cg_coin_mcap_daily 分支 mult = perp_cg_map.mult)。
     返回 (ok, n_overlap, med_err, reason)。"""
-    mult = mult_for(symbol)
     errs = []
     for d, (oi_c, oi_v) in deriv.items():
         p = cg_price.get(d)
@@ -222,17 +223,24 @@ def build_rows(symbol, deriv, cg):
 
 
 # ── 截面统计 ────────────────────────────────────────────────────────────
-def cross_section(per_name, btc, min_names=MIN_NAMES_PER_DAY):
-    """per_name: {symbol: rows}。返回 {d: {main, raw, size, n}}。"""
+def cross_section(per_name, btc, min_names=MIN_NAMES_PER_DAY, mults=None, r_mode="as_is"):
+    """per_name: {symbol: rows}。mults: {symbol: mult}(价格源的倍数)。
+    r_mode='as_is'   ⇒ 台账口径:r = oi_value_close / mcap(mcap 是「1 枚币」的市值);
+    r_mode='nominal' ⇒ 名义市值口径:r = oi_value_close / (mcap × mult)
+                        (1000 前缀名字的持仓名义市值是 1000 枚币,台账口径下 r 被放大 1000 倍)。
+    返回 {d: {main, raw, size, n}}。"""
+    mults = mults or {}
     by_day = {}
-    for rows in per_name.values():
+    for sym, rows in per_name.items():
+        m = float(mults.get(sym, 1.0))
         for (d, p1, p2, mc1, oi_v) in rows:
             bp1 = btc.get(d)
             bp2 = btc.get((dt.date.fromisoformat(d) + dt.timedelta(days=HOLD_DAYS)).isoformat())
             if bp1 is None or bp2 is None or bp1 <= 0:
                 continue
             out = (p2 / p1 - 1.0) - (bp2 / bp1 - 1.0)
-            by_day.setdefault(d, []).append((oi_v / mc1, out, math.log(mc1)))
+            den = (mc1 * m) if r_mode == "nominal" else mc1
+            by_day.setdefault(d, []).append((oi_v / den, out, math.log(mc1)))
     res = {}
     for d, vals in by_day.items():
         if len(vals) < min_names:
@@ -331,19 +339,23 @@ def load_btc():
 
 
 def build_set(symbols, deriv_all, cg_sym, cg_coin, resolved):
-    """价格校验 + 行构造。返回 (kept, dropped)。"""
+    """价格校验 + 行构造。返回 (kept, dropped)。
+    mult 按台账 px 的两个分支分别取:asset_mcap_daily 分支 = 1;
+    cg_coin_mcap_daily 分支 = perp_cg_map.mult(台账 px 第二分支的 p.mult)。"""
     kept, dropped = {}, []
     for s in symbols:
         d = deriv_all.get(s, {})
-        cg, src = cg_sym.get(s), "asset_mcap_daily"
+        cg, src, mult = cg_sym.get(s), "asset_mcap_daily", 1.0
         if cg is None and s in resolved:
             cg = cg_coin.get(resolved[s]["coin_id"])
             src = "cg_coin_mcap_daily"
+            rm = resolved[s].get("mult")
+            mult = float(rm) if rm else mult_for(s)
         if not cg:
             dropped.append({"symbol": s, "n_overlap": 0, "med_err": None, "src": None,
                             "reason": "无 CG 价源(asset_mcap_daily 无此 symbol;perp_cg_map 未 resolved)"})
             continue
-        ok, n_ov, med, why = price_check(s, d, {k: v[0] for k, v in cg.items()})
+        ok, n_ov, med, why = price_check(s, d, {k: v[0] for k, v in cg.items()}, mult)
         if not ok:
             dropped.append({"symbol": s, "n_overlap": n_ov, "med_err": med, "src": src, "reason": why})
             continue
@@ -352,7 +364,7 @@ def build_set(symbols, deriv_all, cg_sym, cg_coin, resolved):
             dropped.append({"symbol": s, "n_overlap": n_ov, "med_err": med, "src": src,
                             "reason": "价格校验通过但无可用行(mcap≥2e7 / OI>0 / d+30 有价)"})
             continue
-        kept[s] = {"rows": rows, "src": src, "n_overlap": n_ov, "med_err": med,
+        kept[s] = {"rows": rows, "src": src, "mult": mult, "n_overlap": n_ov, "med_err": med,
                    "n_rows": len(rows),
                    # 诊断(不改协议):mcap/price = 隐含流通量;若某名字的单位错/量纲错,这里会炸
                    "supply_med": statistics.median([r[3] / r[1] for r in rows if r[1] > 0])}
@@ -378,6 +390,42 @@ def sensitivity_block(kept, btc):
 
 
 # ── 别名证据(诊断,不改协议) ───────────────────────────────────────────
+def dimension_block(kept, btc):
+    """量纲敏感性(不是预注册统计量):台账口径 r = oi_value/mcap 里,1000 前缀名字的
+    市值来自 cg_coin_mcap_daily(是「1 枚币」的市值),而持仓名义价值是 1000 枚币的
+    ⇒ 台账口径下这批名字的 r 比同口径大 mult 倍,秩被推到一端(见报告 §8 协议问题)。
+    两档:
+      nominal_mcap:r = oi_value/(mcap×mult)(名义市值口径);
+      exclude_1000:台账口径,但剔除 1000 前缀名字。
+    主统计量一律照台账一字不改。"""
+    mults = dict((k, v.get("mult", 1.0)) for k, v in kept.items())
+    out = {}
+    nm = cross_section(dict((k, v["rows"]) for k, v in kept.items()), btc,
+                       mults=mults, r_mode="nominal")
+    out["nominal_mcap"] = {
+        "note": "敏感性(不是预注册统计量):r = oi_value_close/(mcap×mult)(名义市值口径);"
+                "主统计量仍照台账一字不改",
+        "n_kept": len(kept),
+        "rows_total": sum(len(v["rows"]) for v in kept.values()),
+        "n_cross_section_days": len(nm),
+        "stats": summarize(nm),
+    }
+    names_1000 = sorted(k for k in kept if k.startswith("1000"))
+    sub = dict((k, v) for k, v in kept.items() if not k.startswith("1000"))
+    if names_1000 and len(sub) != len(kept):
+        sd = cross_section(dict((k, v["rows"]) for k, v in sub.items()), btc)
+        out["exclude_1000"] = {
+            "note": "敏感性(不是预注册统计量):台账口径,但剔除 1000 前缀名字 "
+                    + ",".join(names_1000),
+            "excluded": names_1000,
+            "n_kept": len(sub),
+            "rows_total": sum(len(v["rows"]) for v in sub.values()),
+            "n_cross_section_days": len(sd),
+            "stats": summarize(sd),
+        }
+    return out
+
+
 def alias_evidence(deriv_all, cg_sym, panel_syms):
     """面板里换过 ticker 的资产:用数据复核「永续旧代号 ↔ 面板新代号」是不是同一个项目。
 
@@ -611,6 +659,7 @@ def run(mode):
             "**这不是交付物**,交付物是闸门开后的 --mode full。" % len(pending))
         res["out_of_panel"]["stats_diagnostic_pre_gate"] = summarize(pg_daily)
         res["out_of_panel"]["sensitivity_exclude_seen_alias"] = sensitivity_block(kept, btc)
+        res["out_of_panel"]["dimension_sensitivity"] = dimension_block(kept, btc)
         res["out_of_panel"]["alias_evidence"] = alias_evidence(deriv_all, cg_sym, PANEL)
         log("[data] 诊断分支:截面日=%d(非交付物)" % len(pg_daily))
         return res
@@ -635,6 +684,7 @@ def run(mode):
         "symbol_multi_coinid": multi,
         "stats": summ,
         "sensitivity_exclude_seen_alias": sens,
+        "dimension_sensitivity": dimension_block(kept, btc),
         "alias_evidence": alias,
     }
     return res

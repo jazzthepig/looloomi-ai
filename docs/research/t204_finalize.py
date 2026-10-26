@@ -50,6 +50,17 @@ PROTOCOL_NOTES = """
 5. **`cg_coin_mcap_daily` 里有 `mcap = −1` 与 null 的行**:价格校验不看市值 ⇒ 这类币能过校验、然后在「行」段
    被整段丢掉(名字算「留下」但一行都没有)。台账的「行」规则要求 CG 市值 ≥ 2000 万,−1/null 不该算「有价」——
    本卡照台账的字面执行(名字留下、行丢掉),但语义上更接近「剔除」⇒ 记在这里,不改协议。
+6. **量纲:台账的 `r = oi_value_close / mcap` 对「1000 前缀」名字差一个 mult 倍**(本轮新发现):
+   台账 `px` 第二分支(`cg_coin_mcap_daily`)的 mcap 是**1 枚币**的市值(shiba-inu / terra-luna / …),
+   而 `oi_value_close` 是 **1000 枚**代币的持仓名义价值 ⇒ r 比同口径大 1000 倍 ⇒ 秩上这批名字被推到最高端,
+   而它们的 size 秩最低 ⇒ 人工造出「r 高 ↔ size 小」,直接污染偏相关。
+   闸门未开时的名字层实测:宇宙里有 **1000LUNC / 1000SHIB / 1000WHY / 1000XEC** 四个这种名字。
+   面板 25 名**不含** 1000 前缀 ⇒ S-688 官方 ρ −0.103 不受此问题影响;**面板外宇宙受影响**。
+   按卡「照台账一字不改」,**主统计量照台账**;另加两档标注清楚的敏感性(不是预注册统计量):
+   `nominal_mcap`(r = oi_value/(mcap×mult),名义市值口径)与 `exclude_1000`(剔除 1000 前缀名字),
+   数字在 `docs/research/t204_results.json` 的 `out_of_panel.dimension_sensitivity`,报告开头表里也列了。
+   附:台账 `px` 第一分支(`asset_mcap_daily`)的 mult 硬编码为 **1**、第二分支才是 `p.mult` ——
+   复算实现已按**分分支**取 mult(不是「1000 前缀 ⇒ 1000」的硬规则),两分支在当前数据下等价(已核)。
 """.strip()
 
 
@@ -158,6 +169,17 @@ def build_head(res, gate_line, diff=None):
                  (f6(raw["month_mean"]), f4(raw["month_t"])))
     lines.append("> | 副:规模 ρ(ln 市值, 结果) 月均 / 月 t | %s / %s |" %
                  (f6(size["month_mean"]), f4(size["month_t"])))
+    ds = oop.get("dimension_sensitivity") or {}
+    nm = (ds.get("nominal_mcap") or {}).get("stats") or {}
+    ex = (ds.get("exclude_1000") or {}).get("stats") or {}
+    if nm:
+        lines.append("> | 量纲敏感性(非预注册)名义市值口径 r=oi/(mcap×mult) 主:月均 / 月 t | %s / %s |" %
+                     (f6(nm["main"]["month_mean"]), f4(nm["main"]["month_t"])))
+        lines.append("> | 量纲敏感性(非预注册)名义市值口径 副:原始 ρ 月均 / 月 t | %s / %s |" %
+                     (f6(nm["raw"]["month_mean"]), f4(nm["raw"]["month_t"])))
+    if ex:
+        lines.append("> | 量纲敏感性(非预注册)剔除 1000 前缀名字 主:月均 / 月 t | %s / %s |" %
+                     (f6(ex["main"]["month_mean"]), f4(ex["main"]["month_t"])))
     if pc:
         lines.append("> | 面板对照(台账「附带·不判」)主:月均 / 月 t | %s / %s |" %
                      (f6(pc["main"]["month_mean"]), f4(pc["main"]["month_t"])))
@@ -190,7 +212,11 @@ def patch_report(head_text):
     pre = txt.split(HEAD_START)[0]
     post = txt.split(HEAD_END)[1]
     new = pre + HEAD_START + "\n" + head_text + "\n" + HEAD_END + post
-    if "## 8. 协议问题(本轮新增" not in new:
+    # §8 由本脚本的 PROTOCOL_NOTES 独占(总是替换,不追加)⇒ 报告与脚本常量不会漂移
+    marker = "## 8. 协议问题"
+    if marker in new:
+        new = new.split(marker)[0].rstrip() + "\n\n---\n\n" + PROTOCOL_NOTES + "\n"
+    else:
         new = new.rstrip() + "\n\n---\n\n" + PROTOCOL_NOTES + "\n"
     with open(REPORT, "w") as f:
         f.write(new)
@@ -292,6 +318,7 @@ def main():
     gate_line = "开(%s UTC;perp_cg_map 无 pending 行:%d/%d 行)" % (now().isoformat(), total - n, total)
     head = build_head(res, gate_line, diff)
     oop = res["out_of_panel"]
+    dim = oop.get("dimension_sensitivity") or {}
     st = oop["stats"]
     main_s, raw_s, size_s = st["main"], st["raw"], st["size"]
     tag, why = decide(main_s, raw_s)
@@ -301,6 +328,8 @@ def main():
         "面板外:宇宙 %s 个 deriv 名字(2023-01 起、去面板 25 名)⇒ 留下 **%s** / 剔除 %s;行 %s、截面日 %s、月数 %s。"
         "主(偏 Spearman ρ(OI/市值, 结果|规模))月均 **%s** / 月 t **%s**;两半 H1 %s / H2 %s(H1 t %s / H2 t %s)。"
         "副 原始 ρ 月均 %s / 月 t %s;副 规模 ρ 月均 %s / 月 t %s。面板对照(附带·不判)主:月均 %s / 月 t %s。"
+        "量纲敏感性(非预注册;台账 r=oi/mcap 对 1000 前缀名字差一个 mult 倍):名义市值口径主 %s / 月 t %s;"
+        "剔除 1000 前缀名字主 %s / 月 t %s。"
         "第二实现(pandas/numpy)逐月对数:最大绝对差 主 %s / 副原始 %s / 副规模 %s。"
         "**S-689 判定:%s** —— %s"
         "剔除名单与原因、逐月值(6 位小数)在 docs/research/t204_results.json;"
@@ -317,6 +346,10 @@ def main():
            f6(size_s["month_mean"]), f4(size_s["month_t"]),
            f6(res.get("panel_control", {}).get("stats", {}).get("main", {}).get("month_mean")),
            f4(res.get("panel_control", {}).get("stats", {}).get("main", {}).get("month_t")),
+           f6((dim.get("nominal_mcap") or {}).get("stats", {}).get("main", {}).get("month_mean")),
+           f4((dim.get("nominal_mcap") or {}).get("stats", {}).get("main", {}).get("month_t")),
+           f6((dim.get("exclude_1000") or {}).get("stats", {}).get("main", {}).get("month_mean")),
+           f4((dim.get("exclude_1000") or {}).get("stats", {}).get("main", {}).get("month_t")),
            "%.2e" % diff["main"]["max_abs_monthly_diff"],
            "%.2e" % diff["raw"]["max_abs_monthly_diff"],
            "%.2e" % diff["size"]["max_abs_monthly_diff"],
