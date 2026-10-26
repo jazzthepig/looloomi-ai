@@ -3,7 +3,6 @@
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
 | in_review | T-203 | lane-b | S-688 独立复算:CIS 衍生品两项(funding 项 / OI-市值项)对 30 天超额的截面 IC(与 Seth 互不看,交回后逐月对数) | 脚本 docs/research/t203_deriv_terms_ic.py;结果 docs/research/t203_results.json —— 必须含每一项的**逐月**月均 ρ 列表(月份 → 值,6 位小数)、月数、月 t、两半月均,OI 项另有偏相关的同一套;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-203_deriv_terms_ic.md:开头一张表(项 × 月均 ρ / 月 t / 两半 / 偏相关),然后逐条套 S-688 的判定写结论,最后「协议问题」。in_review,推 lane-b/T-203。 | funding 项从正式标准 v1 起就在计分,从没有单独的证据;OI 项写在 v4.3、从没计过。 |  |
-| in_review(等 ['T-001']) | T-020 | lane-c | DQS 的新鲜度改用源自己的时间戳(CG last_updated / kline close / TVL date / 日线 bar date),不用抓取时刻 | 同一次 push 内的取值随各资产源时间戳变化;日线源在最近一个应有收盘之内不被衰减 | 同一次 push 只有 2 档(0.67/0.81 → 0.70/0.85),随批次时刻整体漂移 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-069 | seth | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
@@ -114,6 +113,7 @@
 | done | T-006 | lane-c | Strategy 3/4 按正确问题复核 | 每格都有数字,不是只给一个总 Sharpe | 只用绝对 Sharpe 判为 REFUTED | 交付(探索性,非预注册):BULL×LV 5 个 spec 同向为正,主驱是横截面 alpha 残差,不是某条共有风格;报告 M-208h_style。已合并,作背景,不进任何账本。 @ 2026-10-16 |
 | done | T-007 | lane-c | CG 新闻监听器写入 Supabase(经 Railway mac_writes) | > 0 | 只在 Mac 本地 cis_history.db,13 行 | narrative_events:近 24 小时 154 行,共 1,329 行,最新 2026-10-08 03:37 UTC(lane-c 10-08 00:13 测得 150 / 1,310,一致) @ 2026-10-08T03:58Z |
 | done | T-009 | lane-c | data_quality_score:先修 data_freshness,再算分,随推送落库 | > 0 且 值有区分度(不全相同) | 0(列一直为空) | T1 最近 2h:86/86 行 DQS 非空,取值 {0.70, 0.85}(区分度满足原验收)。注:A′ 口径下 DQS = confidence,目前不带额外信息 —— 是否让它随源时间戳变化是 T-020 的事。 @ 2026-09-29T08:10Z |
+| done(等 ['T-001']) | T-020 | lane-c | DQS 的新鲜度改用源自己的时间戳(CG last_updated / kline close / TVL date / 日线 bar date),不用抓取时刻 | 同一次 push 内的取值随各资产源时间戳变化;日线源在最近一个应有收盘之内不被衰减 | 同一次 push 只有 2 档(0.67/0.81 → 0.70/0.85),随批次时刻整体漂移 | cis_scores T1 last 6h, 5 pushes x 43 assets: distinct data_quality_score per push = 3,4,3,4,3 (before: 2 tiers 0.70/0.85); range 0.09-0.85; daily-source assets (BTC, equities, commodity) 0.70 = confidence, not decayed; only MKR 0.09 (stale source, confidence 0.85) @ 2026-10-26T16:50:00Z |
 | done | T-038 | lane-c | 风格周期:大币 / 头部公链 / 二线公链 / 山寨 / meme 之间的轮动 —— 状态能否提前识别(预注册研究) | 一张表:每个状态格子的天数、未来 30 天收益差均值与 95% 区间、各年符号;结论只说「哪个状态在样本外仍把收益差分开」,不给仓位建议 | 无 —— 这个问题从没被单独问过;① 的基准是等权面板,而过去三年收益几乎全在 BTC | M-195 预注册判据下 2/6 ⇒ PARTIAL(AI、代币化);不改判据;结题。S-454 @ 2026-10-01 |
 | done | T-042 | lane-c | 解读层 v2:特征组合(K 线形态 × 背景)的相似日 —— C 用 autoresearch 在样本内搜索,样本外只开一次 | 样本外:组合的分位数损失同时优于 ① 无条件 ② 只看形态 ③ 只看背景,30 天块 bootstrap 单侧 p < 0.05,且按 deflated 口径(按试过的变体数折扣)仍成立;报告首行写数据来源与日期范围 | T-040 v1(价格空间三角度各自找相似日再平均)M-196 全部 FAIL;单角度都比无条件差 | S-492:按事先写下的规则关闭 —— v1.3 S4 没过(组合 vs 无条件 0.695;单边基线 vs 随机 0.999;无信号时组合对单边基线 p=0.00)。价值 = 墓地:这套 kNN + 分位损失架构取不出埋进去的纯交互信号。trial 计数停在 v1.3。 @ 2026-10-06T05:00Z |
 | done | T-046 | lane-c | 上游通道 → 市场:稳定币供给、代币化资产规模、全市场市值的变化,能否联合解释风格价差与 ① 的未来收益(预注册研究) | 样本外(2025+)只评一次:联合模型的样本外 R² / 分位数损失优于无条件与只用价格动量的基线,块 bootstrap 单侧 p < 0.05,按试过的设定数 deflate 后仍成立;报告首行写数据来源与日期范围 | 通道数据只入库,没有任何研究读它;稳定币/代币化分类成员是今天的幸存者往回取(basis 列已标) | M-206 预注册 → M-207 结论:合成 S4 过(方法能找到埋进去的通道效应);真实数据 2020–2024 样本内被证伪;2025+ 一次性样本外 ΔR² 最大 +0.0006(判据 0.05,差两个量级),联合模型与无条件基准的样本外 R² 都为负且几乎相等 —— 没有可用的线性通道效应。价值 = 墓地;2025+ 样本外对这一族假设已打开,后续变体只能前向检验(S-495)。 @ 2026-10-06T10:30Z |
@@ -206,4 +206,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 8 · claimed 7 · blocked 6 · in_review 2 · done 177 · dropped 3
+open 8 · claimed 7 · blocked 6 · in_review 1 · done 178 · dropped 3
