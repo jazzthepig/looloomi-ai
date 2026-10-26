@@ -1753,6 +1753,40 @@ async def _start_standard_outcomes_loop():
     print("[STD-OUTCOMES] ✅ official-series outcomes scheduled (cis_standard_outcomes → track record / edge map)")
 
 
+async def _perp_mcap_backfill_loop():
+    """S-689(Jazz 10-26「可以补,但不可以暴力向 Binance 的 API 发起请求,分开来」):面板外 Binance 永续名字的
+    CoinGecko 价格 / 市值,每 10 分钟最多 3 次 CoinGecko 请求,价格校验后才写。**对 Binance 零请求**(OI 早已在库)。
+    待办表 `perp_cg_map` 清空后每轮只读一次本库。判活:`select verdict, count(*) from perp_cg_map group by 1`。
+    """
+    from src.data.market.perp_mcap_backfill import INTERVAL_S as _PMB_INTERVAL
+    await _asyncio.sleep(_boot_delay(5400))     # 落在开机后 ~18 分钟的空档里(test_boot_does_not_stampede)
+    while True:
+        try:
+            from src.data.market.perp_mcap_backfill import run_once as _pmb_run
+            r = await _pmb_run()
+            print(f"[PERP-MCAP] {str(r.get('reason'))[:160]}")
+            _detail = {k: r.get(k) for k in ("calls", "resolved_now", "pending", "notes")}
+            await _beat("_perp_mcap_backfill_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")), detail=_detail,
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt(
+                "_perp_mcap_backfill_loop", "ok" if r.get("ok") and not r.get("refused") else
+                "refused" if r.get("refused") else "error",
+                reason=str(r.get("reason"))[:400] if r.get("reason") else None,
+                detail=_detail, writer="src.api.main._perp_mcap_backfill_loop")
+        except Exception as _e:
+            print(f"[PERP-MCAP] ⚠️  pass FAILED: {_e}")
+            await _beat("_perp_mcap_backfill_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_perp_mcap_backfill_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._perp_mcap_backfill_loop")
+        await _asyncio.sleep(_PMB_INTERVAL)
+
+
+@app.on_event("startup")
+async def _start_perp_mcap_backfill_loop():
+    _asyncio.create_task(_perp_mcap_backfill_loop())
+    print("[PERP-MCAP] ✅ paced CoinGecko market-cap backfill scheduled (perp_cg_map → cg_coin_mcap_daily)")
+
+
 async def _signal_attribution_loop():
     """S-529 / T-078:每个 CIS 信号变化的归因(支柱贡献 + 7 / 30 天结果:同类、相对、BTC β)→ cis_signal_attribution。
     Jazz 10-09:信号是根据过往表现的展示,不是预测;每个信号都要归因。每 6 小时一轮,幂等。

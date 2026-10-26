@@ -55,6 +55,7 @@ LIVENESS_SLOS: dict[str, dict] = {
     "_cis_rebuild_loop":         {"max_age_h": 30, "kind": "marker"},   # S-531 CIS 按时点重建(12 小时一轮)
     "_cis_official_loop":        {"max_age_h": 3, "kind": "marker"},    # S-533 正式 CIS 日终发布(每小时看一次)
     "_standard_outcomes_loop":   {"max_age_h": 26, "kind": "marker"},   # S-540 正式序列的 30 日结果(日更 07:00)
+    "_perp_mcap_backfill_loop":  {"max_age_h": 1, "kind": "collector"},  # S-689 面板外名字的 CG 市值补数(10 分钟一轮,补完后只读本库)
     "_style_pit_loop":           {"max_age_h": 30, "kind": "marker"},   # T-067 时点风格指数(日更)
     "_portfolio_layer_loop":     {"max_age_h": 30, "kind": "marker"},   # T-070 组合层 0–1 敞口
     "_binance_hf_loop":          {"max_age_h": 30, "kind": "collector"},  # S-509 小时线 + 资金费率(日更)
