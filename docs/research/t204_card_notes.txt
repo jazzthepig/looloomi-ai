@@ -19,6 +19,11 @@ pending」的死锁 ⇒ 闸门能开。终态口径:候选试完循环判 `unres
 ④**闸门内的状态探针**(`t204_gate_check.py` / `t204_gate_diag.py` / `t204_gate_rate.py`,新文件):只读,
 能一眼看出 pending 数、resolved 名单、候选分布、cg_coin_mcap_daily 行数(459,733 行 / 769 个 coin)。
 
+⑤**`perp_cg_map resolved → cg_coin_mcap_daily` 这条分支第一次用真数据跑通**(之前只有合成数据自检):
+新 resolved 的 **1000SHIB → shiba-inu** 进宇宙、**1,316 行**;1000LUNC 1,316 行;1000XEC 1,316 行;1000WHY 157 行
+(币太新);42 → semantic-layer 只有 1 行(几乎不贡献截面)。名字层现状(16:1x,**闸门未开 ⇒ 只看名字,不算统计量**):
+宇宙 236 → 留下 **184** / 剔除 52 / 行 **174,084**(名字层干跑结果存 `docs/research/t204_names_check.json`)。
+
 **还差什么(一条命令)**:闸门开(或 10-28 00:00 UTC 到点)⇒ `python3 docs/research/t204_finalize.py --wait`
 (或 `--now`)⇒ 出面板外**名单**(留下/剔除及原因)、主统计量与两个副统计量的**逐月**值(6 位小数)、月数、月 t、两半,
 写 `docs/research/t204_results.json`;再由第二实现对数写 `docs/research/t204_verify_out_of_panel.json`;
