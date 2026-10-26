@@ -1,0 +1,41 @@
+**闸门仍未开 ⇒ 面板外主统计量本轮不落(卡上「不满足就直接停,下一轮再看」)。卡状态保持 open。**
+
+本轮(2026-10-26 15:57–16:1x UTC)把「等闸门」这件事从「干等」变成「有实测、有自动化」:
+
+①**闸门速率实测(不是估算)**:15:11–15:58 UTC(47 分钟)resolved 0 → **5**、pending 43 → **38**(逐行核过
+`perp_cg_map`:resolved 5 = 1000LUNC/1000WHY/1000XEC/1000SHIB/42,各有 coin_id 与 checked_at)⇒ **约 1 个名字 / 9–10 分钟**
+⇒ 剩 38 个 ≈ **6 小时** ⇒ 闸门 ETA **≈ 2026-10-26 21:00–22:00 UTC**(早于台账 10-28 00:00 UTC 兜底)。
+速率口径:`MAX_CALLS_PER_RUN=3` / `INTERVAL_S=600` / `MAX_CANDIDATES=6`(`src/data/market/perp_mcap_backfill.py`),
+一轮内某个名字候选试完会接着试下一个。
+
+②**闸门可达性核对(新)**:38 个 pending 名字**全部**有候选(候选数 1–6、中位 4),**没有**「候选为空 ⇒ 永远停在
+pending」的死锁 ⇒ 闸门能开。终态口径:候选试完循环判 `unresolved`(≠ pending),所以闸门不会卡在某个名字上。
+
+③**自动收尾器已装并自检过**(`docs/research/t204_finalize.py`,新文件):`--wait` 每 5 分钟查一次闸门,一开就
+自动跑 `--mode full` → 第二实现(pandas/numpy)逐月对数 → 填报告开头表 + 按台账 S-689 三条下判定 → 改卡
+`in_review` + 写 notes → `scripts/task_board.py` → `scripts/preflight.sh` → commit + push `lane-c/T-204`。
+**第二实现逐月差 ≥ 1e-4 就不推**,只留诊断文件。排版与判定分支已用夹具自检过(`--selftest`)。
+
+④**闸门内的状态探针**(`t204_gate_check.py` / `t204_gate_diag.py` / `t204_gate_rate.py`,新文件):只读,
+能一眼看出 pending 数、resolved 名单、候选分布、cg_coin_mcap_daily 行数(459,733 行 / 769 个 coin)。
+
+**还差什么(一条命令)**:闸门开(或 10-28 00:00 UTC 到点)⇒ `python3 docs/research/t204_finalize.py --wait`
+(或 `--now`)⇒ 出面板外**名单**(留下/剔除及原因)、主统计量与两个副统计量的**逐月**值(6 位小数)、月数、月 t、两半,
+写 `docs/research/t204_results.json`;再由第二实现对数写 `docs/research/t204_verify_out_of_panel.json`;
+报告 `/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-204_oi_mcap_outofpanel.md` 的开头表与判定
+由脚本填(§8 新增本轮协议问题)。
+
+**要 @seth 拍板 / 知道(不自己定)**:
+1. **`too_many` 那 8 个名字** —— 上一轮发现按当时规则它们是终态(永久出宇宙,含市值最大的 1000SHIB 之一),
+   Seth 已用 `7ffa3903`「candidates ranked by market cap, wrappers dropped, three known renames」把方向修掉并重置
+   perp_cg_map(15:3x),本轮实测 **1000SHIB 已 resolved ⇒ 1000SHIB → shiba-inu**;⇒ 这项不再是待拍板项,**但**
+   「候选超限 ⇒ 该不该剔」这条规则本身仍没写死(台账只说「没补上的名字列名剔除」),要 Seth 认一下口径。
+2. **MKR 算不算「看过」** —— 主统计量照台账保留它(台账的 25 名面板里没有 MKR,但永续宇宙里有 MKR→SKY 的别名关系),
+   剔 MKR 的敏感性已备好(`sensitivity_exclude_seen_alias`)。
+3. **独立性的字面冲突**(继续有效):卡上「交付前不读 `docs/research/s689_*`」与「照台账 S-689 一字不改」冲突 ——
+   台账本体就是 `docs/research/s689_oi_mcap_outofpanel.sql`。我的处理:只读那一个预注册文件(73 行、只有查询、
+   没有结果),**交付前没读任何 s689 的结果文件**;主仓库至今没有 s689 的结果文件。
+
+**协议问题(本轮新增 5 条,报告 §8)**:闸门口径(空候选会永远 pending)/ 速率与请求预算(候选搜索阶段在预算检查之前,
+可能单轮发出 >3 次 CG 请求)/ 独立性的字面冲突 / `cg_coin_mcap_daily` 里有 mcap = −1 与 null 的行(能过价格校验、
+然后在「行」段被整段丢掉)/ §5 的 13 条(上一轮)。
