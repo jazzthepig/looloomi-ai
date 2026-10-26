@@ -32,3 +32,11 @@ def test_price_check_picks_the_coin_that_trades_at_the_binance_price():
 
 def test_paced():
     assert MAX_CALLS_PER_RUN <= 3
+
+
+def test_wrappers_dropped_and_largest_cap_first():
+    ids = ["shibaqua", "shiba-inu", "shiba-inu-wormhole", "binance-peg-shib", "shib-on-solana"]
+    out = order_candidates("SHIB", ids, {"shiba-inu": 6e9, "shibaqua": 1e5, "shib-on-solana": 2e6})
+    assert out[0] == "shiba-inu" and "shiba-inu-wormhole" not in out and "binance-peg-shib" not in out
+    assert order_candidates("FXS", ["frax-share-wormhole", "linea-bridged-fxs-linea", "flexstay"]) == ["flexstay"]
+    assert "neiro-on-eth" in order_candidates("NEIRO", ["neiro", "neiro-on-eth"]), "-on-eth is the real coin here"
