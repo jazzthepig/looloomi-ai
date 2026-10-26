@@ -72,6 +72,16 @@ def mult_for(sym):
     return 1000.0 if sym.upper().startswith("1000") else 1.0
 
 
+def _mult_for_source(sym, from_asset, resolved):
+    """台账 px 两个分支的倍数:asset_mcap_daily 分支 = 1(台账写死);
+    cg_coin_mcap_daily 分支 = perp_cg_map.mult。"""
+    if from_asset:
+        return 1.0
+    row = (resolved or {}).get(sym) or {}
+    rm = row.get("mult")
+    return float(rm) if rm else mult_for(sym)
+
+
 # ── 取数 ────────────────────────────────────────────────────────────────
 def deriv_for(symbols):
     rows = fetch("deriv_metrics_daily",
@@ -115,15 +125,16 @@ def btc_series():
 
 
 # ── 台账口径:价格校验 → 行 → 截面 → 逐月 ────────────────────────────────
-def build_rows(dv, cg):
-    """dv: deriv 行(DataFrame), cg: CG 价/市值(DataFrame)。返回该名字的行。"""
+def build_rows(dv, cg, mult=1.0):
+    """dv: deriv 行(DataFrame), cg: CG 价/市值(DataFrame)。
+    mult = 该名字**所用价格源**的倍数(台账 px 两分支不同:
+      asset_mcap_daily 分支 = 1;cg_coin_mcap_daily 分支 = perp_cg_map.mult)。"""
     if dv is None or cg is None or dv.empty or cg.empty:
         return [], None, 0
     sym = dv["symbol"].iloc[0]
     m = dv.merge(cg, on="d", how="inner")
     m = m[(m["oi_close"] > 0) & (m["oi_value_close"] > 0) & (m["price"] > 0)]
     implied = m["oi_value_close"] / m["oi_close"]
-    mult = mult_for(sym)
     err = (m["price"] * mult / implied - 1.0).abs()
     n = len(err)
     if n < MIN_OVERLAP:
@@ -234,7 +245,7 @@ def synth_cg_branch():
     dv = {d: (1000.0, 20.0) for d in days}
     kept, dropped = T.build_set(["1000SHIB"], {"1000SHIB": dv}, {},
                                  {"shib": {r["d"]: (r["price"], r["mcap"]) for r in cg_coin}},
-                                 {"1000SHIB": {"coin_id": "shib"}})
+                                 {"1000SHIB": {"coin_id": "shib", "mult": 1000}})
     print("合成② build_set(resolved 分支): kept=%s dropped=%s" % (sorted(kept), dropped))
     ok &= (len(kept) == 1) and (kept["1000SHIB"]["src"] == "cg_coin_mcap_daily")
     if kept:
@@ -245,13 +256,26 @@ def synth_cg_branch():
         ok &= (len(rows) == 90) and kept["1000SHIB"]["n_overlap"] == 120
 
     # ③ asset_mcap_daily 里已有的 symbol:即使 perp_cg_map 也 resolved,仍走 symbol 分支
-    kept2, _ = T.build_set(["1000SHIB"], {"1000SHIB": dv},
+    #    (用**普通** symbol 测「源优先级」;asset 分支的价格要跟隐含价自洽才能过校验)
+    dv3 = dict((d, (1000.0, 20.0)) for d in days)          # 隐含价 = 20/1000 = 0.02
+    px3 = dict((r["d"], (0.02, r["mcap"])) for r in cg_coin)  # asset 分支给同一个 0.02
+    kept3, _ = T.build_set(["SHIB"], {"SHIB": dv3},
+                            {"SHIB": px3},
+                            {"shib": px3},
+                            {"SHIB": {"coin_id": "shib", "mult": 1000}})
+    src3 = kept3["SHIB"]["src"] if kept3 else None
+    print("合成③ symbol 分支优先: src=%s(应=asset_mcap_daily)" % src3)
+    ok &= (src3 == "asset_mcap_daily")
+
+    # ④ 台账 px 第一分支 mult 写死 1 ⇒ 1000 前缀名字若落在 asset 分支,
+    #    隐含价(1000 枚合约价)与 asset 的 1 枚币价差 1000 倍 ⇒ 过不了校验 ⇒ 被剔
+    #    (这正是报告 §5.14 那个量纲问题的后果;主统计量照台账,敏感性另算)
+    kept4, _ = T.build_set(["1000SHIB"], {"1000SHIB": dv},
                             {"1000SHIB": {r["d"]: (r["price"], r["mcap"]) for r in cg_coin}},
                             {"shib": {r["d"]: (r["price"], r["mcap"]) for r in cg_coin}},
-                            {"1000SHIB": {"coin_id": "shib"}})
-    src2 = kept2["1000SHIB"]["src"] if kept2 else None
-    print("合成③ symbol 分支优先: src=%s(应=asset_mcap_daily)" % src2)
-    ok &= (src2 == "asset_mcap_daily")
+                            {"1000SHIB": {"coin_id": "shib", "mult": 1000}})
+    print("合成④ 1000 前缀走 asset 分支(mult=1): kept=%s(应=空 ⇒ 被剔)" % sorted(kept4))
+    ok &= (len(kept4) == 0)
     print("合成测试:", "PASS" if ok else "FAIL")
     return ok
 
@@ -310,7 +334,7 @@ def out_of_panel():
                 continue
             c1 = pd.DataFrame([{"symbol": s, "coin_id": cid, "d": d, "price": p, "mcap": m}
                                for d, (p, m) in series.items()])
-        r, med, n = build_rows(d1, c1)
+        r, med, n = build_rows(d1, c1, _mult_for_source(s, s in have_sym, resolved))
         if r:
             rows.extend(r)
             kept.append(s)
@@ -340,7 +364,7 @@ def main():
         for s in syms:
             d1 = dv[dv["symbol"] == s] if not dv.empty else dv
             c1 = cg[cg["symbol"] == s] if not cg.empty else cg
-            r, med, n = build_rows(d1, c1)
+            r, med, n = build_rows(d1, c1, 1.0)   # 面板对照全走 asset_mcap_daily 分支 ⇒ mult = 1
             if r:
                 rows.extend(r)
                 kept.append(s)
