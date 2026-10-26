@@ -1,0 +1,27 @@
+{
+ "id": "T-203",
+ "owner": "lane-b",
+ "status": "open",
+ "created": "2026-10-26",
+ "forbidden_paths": [
+  "Shadow/",
+  "src/",
+  "paper_trading/",
+  "PROJECT_STATE.md",
+  "PROJECT_STATE_LOG.md",
+  "scripts/",
+  "migrations/"
+ ],
+ "title": "S-688 独立复算:CIS 衍生品两项(funding 项 / OI-市值项)对 30 天超额的截面 IC(与 Seth 互不看,交回后逐月对数)",
+ "source": "Jazz 10-26「下一步开始」:检验衍生品数据要不要在 CIS 里计分。正式标准 v1.3 已经在计 Binance funding 项(从没单独检验过);OI 项有规则、从没计过。台账 S-688。",
+ "allowed_paths": [
+  "docs/research/",
+  "tasks/T-203.json"
+ ],
+ "acceptance": {
+  "check": "**照台账 S-688 一字不改**(有问题写进报告「协议问题」,不自己改)。只读 Supabase:面板 = `cis_standard_outcomes` 里 grp = 'crypto'、symbol ≠ 'BTC'、alpha 非空的全部 (symbol, d);结果 = 该行 alpha。funding = `cis_rebuild_daily.inputs->>'funding'`(code_ref = 'cis-standard-v1.3',同 symbol、同 d);mcap = 同一行 `inputs->>'mcap'`;OI = `deriv_metrics_daily.oi_value_close`(同 symbol、同 d);分数 = 同一行 `score`(**在 2026-10-26 12:00 UTC 之后读** —— 那之前的重建行少了 funding 项,见台账 S-687 附记二)。两项公式照 S-688 原文(= src/data/cis/cis_provider.py 里 fr_adj / oi_adj 的分段,可以读那段代码对照,不 import)。每个 d:该项有定义 ≥ 8 个名字、且至少两个不同值,算截面 Spearman ρ(项, alpha);日 ρ 按自然月平均;t = 月均 / 月标准差 × √月数;上下半段以 2024-07-01 切。OI 项另算控制分数的偏相关(三者当天各自排名后套偏相关公式),同样按月。诊断:funding 水平、OI/mcap 比值本身的 IC。**独立:** Seth 同时在算同一件事;交付前不读 `docs/research/s688_*`。新分支 `git switch -c lane-b/T-203 origin/main`。",
+  "expect": "脚本 docs/research/t203_deriv_terms_ic.py;结果 docs/research/t203_results.json —— 必须含每一项的**逐月**月均 ρ 列表(月份 → 值,6 位小数)、月数、月 t、两半月均,OI 项另有偏相关的同一套;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-203_deriv_terms_ic.md:开头一张表(项 × 月均 ρ / 月 t / 两半 / 偏相关),然后逐条套 S-688 的判定写结论,最后「协议问题」。in_review,推 lane-b/T-203。"
+ },
+ "prior_value": "funding 项从正式标准 v1 起就在计分,从没有单独的证据;OI 项写在 v4.3、从没计过。",
+ "notes": ""
+}
