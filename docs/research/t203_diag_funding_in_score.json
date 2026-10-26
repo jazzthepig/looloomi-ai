@@ -1,0 +1,61 @@
+{
+  "common_rows": 78857,
+  "pillar_o_diff_rows": 5209,
+  "score_diff_rows": 5118,
+  "examples": [
+    {
+      "symbol": "AAVE",
+      "d": "2023-01-14",
+      "pillar_o_stale": 27.1,
+      "pillar_o_live": 29.2,
+      "score_stale": 58.9,
+      "score_live": 59.4,
+      "funding_live": 0.000220996666666667
+    },
+    {
+      "symbol": "AAVE",
+      "d": "2023-01-15",
+      "pillar_o_stale": 27,
+      "pillar_o_live": 28.3,
+      "score_stale": 61.9,
+      "score_live": 62.3,
+      "funding_live": 0.000325573333333333
+    },
+    {
+      "symbol": "AAVE",
+      "d": "2023-01-16",
+      "pillar_o_stale": 34.9,
+      "pillar_o_live": 37.7,
+      "score_stale": 63.3,
+      "score_live": 64,
+      "funding_live": 0.000129573333333333
+    },
+    {
+      "symbol": "AAVE",
+      "d": "2023-01-18",
+      "pillar_o_stale": 27,
+      "pillar_o_live": 29.9,
+      "score_stale": 63.6,
+      "score_live": 64.4,
+      "funding_live": 0.000113843333333333
+    },
+    {
+      "symbol": "AAVE",
+      "d": "2023-01-23",
+      "pillar_o_stale": 39.6,
+      "pillar_o_live": 42.4,
+      "score_stale": 63.5,
+      "score_live": 64.2,
+      "funding_live": 0.000124083333333333
+    },
+    {
+      "symbol": "AAVE",
+      "d": "2023-02-02",
+      "pillar_o_stale": 40.5,
+      "pillar_o_live": 43.5,
+      "score_stale": 63.4,
+      "score_live": 64,
+      "funding_live": 0.000105923333333333
+    }
+  ]
+}
