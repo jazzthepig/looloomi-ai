@@ -1,0 +1,394 @@
+{
+ "rows": [
+  {
+   "symbol": "1000LUNC",
+   "deriv_rows": 1430,
+   "usable_days": 1000,
+   "implied_med": 0.0990307250000001,
+   "first": "2022-09-09",
+   "last": "2025-06-04"
+  },
+  {
+   "symbol": "1000SHIB",
+   "deriv_rows": 1917,
+   "usable_days": 794,
+   "implied_med": 0.010514365000000001,
+   "first": "2021-05-10",
+   "last": "2024-02-03"
+  },
+  {
+   "symbol": "1000WHY",
+   "deriv_rows": 478,
+   "usable_days": 477,
+   "implied_med": 3.26e-05,
+   "first": "2024-11-25",
+   "last": "2026-03-17"
+  },
+  {
+   "symbol": "1000XEC",
+   "deriv_rows": 1787,
+   "usable_days": 924,
+   "implied_med": 0.03669,
+   "first": "2021-09-17",
+   "last": "2024-06-12"
+  },
+  {
+   "symbol": "42",
+   "deriv_rows": 96,
+   "usable_days": 96,
+   "implied_med": 0.0469175,
+   "first": "2025-10-27",
+   "last": "2026-01-30"
+  },
+  {
+   "symbol": "ALPACA",
+   "deriv_rows": 252,
+   "usable_days": 252,
+   "implied_med": 0.15789246499999998,
+   "first": "2024-08-22",
+   "last": "2025-04-30"
+  },
+  {
+   "symbol": "ALPHA",
+   "deriv_rows": 1766,
+   "usable_days": 626,
+   "implied_med": 0.12050385,
+   "first": "2020-11-23",
+   "last": "2023-08-19"
+  },
+  {
+   "symbol": "AMB",
+   "deriv_rows": 695,
+   "usable_days": 694,
+   "implied_med": 0.00806639,
+   "first": "2023-03-30",
+   "last": "2025-02-21"
+  },
+  {
+   "symbol": "ATA",
+   "deriv_rows": 1723,
+   "usable_days": 907,
+   "implied_med": 0.15217525,
+   "first": "2021-08-31",
+   "last": "2024-05-26"
+  },
+  {
+   "symbol": "BADGER",
+   "deriv_rows": 523,
+   "usable_days": 522,
+   "implied_med": 3.5454606049999997,
+   "first": "2023-11-09",
+   "last": "2025-04-14"
+  },
+  {
+   "symbol": "BEL",
+   "deriv_rows": 2168,
+   "usable_days": 621,
+   "implied_med": 0.6858165199999999,
+   "first": "2020-11-18",
+   "last": "2023-08-14"
+  },
+  {
+   "symbol": "BID",
+   "deriv_rows": 308,
+   "usable_days": 307,
+   "implied_med": 0.05457495,
+   "first": "2025-03-20",
+   "last": "2026-01-21"
+  },
+  {
+   "symbol": "BSW",
+   "deriv_rows": 376,
+   "usable_days": 375,
+   "implied_med": 0.03883694,
+   "first": "2024-09-05",
+   "last": "2025-09-15"
+  },
+  {
+   "symbol": "COS",
+   "deriv_rows": 620,
+   "usable_days": 620,
+   "implied_med": 0.0031599999999999996,
+   "first": "2024-09-30",
+   "last": "2026-06-11"
+  },
+  {
+   "symbol": "DAM",
+   "deriv_rows": 255,
+   "usable_days": 254,
+   "implied_med": 0.030332144999999998,
+   "first": "2025-08-18",
+   "last": "2026-04-29"
+  },
+  {
+   "symbol": "DMC",
+   "deriv_rows": 212,
+   "usable_days": 211,
+   "implied_med": 0.003151,
+   "first": "2025-06-24",
+   "last": "2026-01-21"
+  },
+  {
+   "symbol": "EPT",
+   "deriv_rows": 285,
+   "usable_days": 284,
+   "implied_med": 0.004334640000000001,
+   "first": "2025-04-21",
+   "last": "2026-01-30"
+  },
+  {
+   "symbol": "FIS",
+   "deriv_rows": 230,
+   "usable_days": 229,
+   "implied_med": 0.10575629,
+   "first": "2025-04-25",
+   "last": "2025-12-10"
+  },
+  {
+   "symbol": "FXS",
+   "deriv_rows": 1083,
+   "usable_days": 999,
+   "implied_med": 4.2397802800000015,
+   "first": "2023-01-20",
+   "last": "2025-10-15"
+  },
+  {
+   "symbol": "HIGH",
+   "deriv_rows": 1221,
+   "usable_days": 1000,
+   "implied_med": 1.3493668950000002,
+   "first": "2023-02-07",
+   "last": "2025-11-02"
+  },
+  {
+   "symbol": "IP",
+   "deriv_rows": 501,
+   "usable_days": 501,
+   "implied_med": 3.1470000000000002,
+   "first": "2025-02-13",
+   "last": "2026-06-28"
+  },
+  {
+   "symbol": "KEY",
+   "deriv_rows": 560,
+   "usable_days": 559,
+   "implied_med": 0.0055344,
+   "first": "2023-05-24",
+   "last": "2024-12-03"
+  },
+  {
+   "symbol": "LEVER",
+   "deriv_rows": 889,
+   "usable_days": 889,
+   "implied_med": 0.001496,
+   "first": "2023-03-30",
+   "last": "2025-09-03"
+  },
+  {
+   "symbol": "LINA",
+   "deriv_rows": 1470,
+   "usable_days": 742,
+   "implied_med": 0.010553125000000007,
+   "first": "2021-03-19",
+   "last": "2023-12-13"
+  },
+  {
+   "symbol": "LOOM",
+   "deriv_rows": 426,
+   "usable_days": 424,
+   "implied_med": 0.08255227500000001,
+   "first": "2023-10-11",
+   "last": "2024-12-09"
+  },
+  {
+   "symbol": "LUNA2",
+   "deriv_rows": 1429,
+   "usable_days": 1000,
+   "implied_med": 0.599414785,
+   "first": "2022-09-10",
+   "last": "2025-06-05"
+  },
+  {
+   "symbol": "MEMEFI",
+   "deriv_rows": 109,
+   "usable_days": 108,
+   "implied_med": 0.00138252,
+   "first": "2025-04-25",
+   "last": "2025-08-11"
+  },
+  {
+   "symbol": "MILK",
+   "deriv_rows": 214,
+   "usable_days": 214,
+   "implied_med": 0.045343115,
+   "first": "2025-05-06",
+   "last": "2025-12-05"
+  },
+  {
+   "symbol": "NEIROETH",
+   "deriv_rows": 386,
+   "usable_days": 385,
+   "implied_med": 0.073995,
+   "first": "2024-09-06",
+   "last": "2025-09-26"
+  },
+  {
+   "symbol": "NULS",
+   "deriv_rows": 232,
+   "usable_days": 232,
+   "implied_med": 0.32984181,
+   "first": "2024-08-26",
+   "last": "2025-04-14"
+  },
+  {
+   "symbol": "OMG",
+   "deriv_rows": 1614,
+   "usable_days": 543,
+   "implied_med": 1.8222748899999996,
+   "first": "2020-09-01",
+   "last": "2023-05-28"
+  },
+  {
+   "symbol": "PERP",
+   "deriv_rows": 992,
+   "usable_days": 991,
+   "implied_med": 0.6034999999999999,
+   "first": "2023-03-06",
+   "last": "2025-11-21"
+  },
+  {
+   "symbol": "QUICK",
+   "deriv_rows": 778,
+   "usable_days": 449,
+   "implied_med": 0.025390000000000003,
+   "first": "2024-09-06",
+   "last": "2026-10-23"
+  },
+  {
+   "symbol": "SLERF",
+   "deriv_rows": 334,
+   "usable_days": 333,
+   "implied_med": 0.079278,
+   "first": "2024-11-21",
+   "last": "2025-10-20"
+  },
+  {
+   "symbol": "STPT",
+   "deriv_rows": 209,
+   "usable_days": 208,
+   "implied_med": 0.062314140000000004,
+   "first": "2023-10-18",
+   "last": "2024-05-13"
+  },
+  {
+   "symbol": "SWELL",
+   "deriv_rows": 386,
+   "usable_days": 386,
+   "implied_med": 0.010364015,
+   "first": "2024-11-08",
+   "last": "2025-11-28"
+  },
+  {
+   "symbol": "TOKEN",
+   "deriv_rows": 764,
+   "usable_days": 763,
+   "implied_med": 0.0339261,
+   "first": "2023-11-03",
+   "last": "2025-12-05"
+  },
+  {
+   "symbol": "TROY",
+   "deriv_rows": 166,
+   "usable_days": 166,
+   "implied_med": 0.002140475,
+   "first": "2024-10-31",
+   "last": "2025-04-14"
+  },
+  {
+   "symbol": "TRU",
+   "deriv_rows": 1142,
+   "usable_days": 1000,
+   "implied_med": 0.04772087,
+   "first": "2023-03-07",
+   "last": "2025-11-30"
+  },
+  {
+   "symbol": "VANRY",
+   "deriv_rows": 878,
+   "usable_days": 877,
+   "implied_med": 0.03139,
+   "first": "2024-03-13",
+   "last": "2026-08-07"
+  },
+  {
+   "symbol": "VIDT",
+   "deriv_rows": 235,
+   "usable_days": 235,
+   "implied_med": 0.02994,
+   "first": "2024-08-23",
+   "last": "2025-04-14"
+  },
+  {
+   "symbol": "VINE",
+   "deriv_rows": 460,
+   "usable_days": 459,
+   "implied_med": 0.03396,
+   "first": "2025-01-24",
+   "last": "2026-04-28"
+  },
+  {
+   "symbol": "VOXEL",
+   "deriv_rows": 478,
+   "usable_days": 477,
+   "implied_med": 0.07570778,
+   "first": "2024-08-20",
+   "last": "2025-12-10"
+  }
+ ],
+ "need_cg_calls": [
+  "1000LUNC",
+  "1000SHIB",
+  "1000WHY",
+  "1000XEC",
+  "42",
+  "ALPACA",
+  "ALPHA",
+  "AMB",
+  "ATA",
+  "BADGER",
+  "BEL",
+  "BID",
+  "BSW",
+  "COS",
+  "DAM",
+  "DMC",
+  "EPT",
+  "FIS",
+  "FXS",
+  "HIGH",
+  "IP",
+  "KEY",
+  "LEVER",
+  "LINA",
+  "LOOM",
+  "LUNA2",
+  "MEMEFI",
+  "MILK",
+  "NEIROETH",
+  "NULS",
+  "OMG",
+  "PERP",
+  "QUICK",
+  "SLERF",
+  "STPT",
+  "SWELL",
+  "TOKEN",
+  "TROY",
+  "TRU",
+  "VANRY",
+  "VIDT",
+  "VINE",
+  "VOXEL"
+ ],
+ "cheap_unresolved": []
+}
