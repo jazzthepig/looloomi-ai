@@ -3829,6 +3829,22 @@ async def get_cg_derivatives_exchange_tickers(exchange_id: str) -> list[dict]:
     return list((r.json() or {}).get("tickers") or [])
 
 
+async def get_cg_markets_strict(ids: list[str]) -> list[dict]:
+    """S-690 真钱过滤用:CoinGecko Pro `/coins/markets`(按 id,每次 250 个,不带 sparkline)。
+    读不到**抛异常** —— `get_cg_markets` 出错回 [],用在真钱的过滤上会把「没读到」当成「没有市值」。"""
+    client = _get_cg_client()
+    out: list[dict] = []
+    ids = sorted(set(i for i in ids if i))
+    for i in range(0, len(ids), 250):
+        r = await client.get(f"{CG_PRO_BASE}/coins/markets", headers=_cg_headers(), timeout=30,
+                             params={"vs_currency": "usd", "ids": ",".join(ids[i:i + 250]), "per_page": 250, "page": 1,
+                                     "sparkline": "false"})
+        if r.status_code != 200:
+            raise RuntimeError(f"CoinGecko /coins/markets HTTP {r.status_code}: {r.text[:160]}")
+        out += list(r.json() or [])
+    return out
+
+
 async def get_cg_category_name_map() -> dict[str, str]:
     """CoinGecko Pro `/coins/categories/list` → {分类名: 分类 id}。`/coins/{id}` 给的是**名字**,分类法用的是 id(T-067)。"""
     client = _get_cg_client()

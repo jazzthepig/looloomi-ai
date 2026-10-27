@@ -287,4 +287,7 @@ async def load_book_of_truth(mode: str = "live", asof: Optional[str] = None) -> 
         c = governing_call(calls, r["signal_d"]) if r.get("signal_d") else None
         if c and c.get("state") in ("off", "flat") and not str(r["ticket_id"]).startswith("J:"):
             skips.setdefault(r["ticket_id"], f"Jazz ⓪ = {c['state']}(判断 #{c.get('id')})")
+    # S-690(Jazz 10-27 真钱):开票日 OI/市值快照分位 ≥ 2/3 的票计划里不进 —— 规则挡的,不是「主机没记录」
+    for t in await _read_all("r_ticket_oi_tags", {"select": "ticket_id,p_live", "high_live": "is.true"}):
+        skips.setdefault(t["ticket_id"], f"S-690 过滤:开票日 OI/市值分位 {float(t['p_live']):.2f} ≥ 2/3")
     return reconcile(paper, intents, outcomes, mode=mode, asof=asof, host_skips=skips)

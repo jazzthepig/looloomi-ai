@@ -103,7 +103,8 @@ def make_ticket_plan(rows: list[dict], last_d: Optional[str], asof: str, closes:
             "exit": exit_, "skipped_cap": skipped, "bad_stop": bad}
 
 
-async def load_ticket_plan(asof: str, risk_frac: Optional[float] = None) -> dict[str, Any]:
+async def load_ticket_plan(asof: str, risk_frac: Optional[float] = None,
+                           now: Optional[dt.datetime] = None) -> dict[str, Any]:
     """读账本(`r_tickets_paper` 全部、`r_tickets_state.last_d`)+ 信号日收盘 → 计划。读不到就抛,不当 0 行。"""
     import os
 
@@ -126,6 +127,23 @@ async def load_ticket_plan(asof: str, risk_frac: Optional[float] = None) -> dict
                                                "trade_date": f"eq.{asof}", "symbol": f"in.({','.join(syms)})"})
         closes = {(b["symbol"], str(b["trade_date"])[:10]): float(b["close"]) for b in bars if b.get("close")}
     plan = make_ticket_plan(rows, last_d, asof, closes, rf, DEFAULT_CAP, lev)
+    # S-690(Jazz 10-27「直接应用」):开票日 d 收盘的 OI/市值(规模中性)分位 ≥ 2/3 的票不进、不腾位置。
+    # 截面是 d+1 00:05 UTC 的 CoinGecko 快照(归档要到 07:30,滞后一天的版本检验不过 —— 台账 S-690 附记一)。
+    # 读不到 ⇒ 这一轮不开新票(fail closed),持有与出场照常。规则与停用条件见 signals/oi_leverage 模块头。
+    plan["skipped_oi"] = []
+    if plan.get("ready") and plan.get("enter"):
+        from src.data.signals.oi_leverage import filter_enter, load_filter_inputs
+        try:
+            snap, audit = await load_filter_inputs(asof)
+        except Exception as e:                                   # noqa: BLE001
+            plan.update({"skipped_oi": [{**x, "why": "OI 快照读不到 —— 这一轮不开新票"} for x in plan["enter"]],
+                         "enter": [], "oi_filter": {"status": "read_error", "why": f"{type(e).__name__}: {str(e)[:200]}"}})
+        else:
+            kept, skipped, info = filter_enter(plan["enter"], asof, snap, audit,
+                                                 now or dt.datetime.now(dt.timezone.utc))
+            plan.update({"enter": kept, "skipped_oi": skipped, "oi_filter": info})
+    else:
+        plan["oi_filter"] = {"status": "nothing_to_enter"}
     # Jazz ⓪(regime_call):off / flat 挡新票、flat 平所有、信心档位放大每票风险、战场上的 J 票。
     # **读不到判断 ⇒ 不开不平(fail closed)**:一条「off」被当成「没有判断」,就会在 Jazz 说别进的时候进场。
     from src.data.execution.regime_call import governing_call, overlay, read_calls, read_j_tickets

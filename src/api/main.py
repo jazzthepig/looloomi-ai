@@ -2083,6 +2083,49 @@ async def _r_tickets_paper_loop():
         await _sleep_until_utc(_now.hour if _now.minute < 45 else (_now.hour + 1) % 24, 45)
 
 
+async def _oi_snapshot_loop():
+    """S-690 真钱进场过滤的截面(Jazz 10-27「直接应用」;signals/oi_leverage):信号日 d 收盘那一刻的规模中性 OI/市值。
+    d 的 Binance 归档要到 d+1 约 07:30 UTC 才有,执行器 00:45 取计划 —— 所以 d+1 00:05 UTC 从 CoinGecko Pro 拍一张
+    (合约行情一次 + 市值一到两次,不碰 Binance API),窗口内失败每 5 分钟重试到 02:00;每小时第 5 分把归档已落库的
+    快照日逐名核一遍(p_archive)。部署后第一轮先对最新一天归档拍一张 probe,只作对照、不进计划。
+    判活:`select max(d) from oi_lev_snapshot_daily where kind = 'live'` = 昨天;`loop_attempt` 里 `_oi_snapshot_loop`。"""
+    await _asyncio.sleep(_boot_delay(4500))
+    first = True
+    while True:
+        res: dict = {}
+        try:
+            from src.data.signals.oi_leverage import SNAP_WINDOW_H, audit_snapshots, snapshot_once
+            if first:
+                res["probe"] = await snapshot_once(kind="probe")
+            if _dt.datetime.now(_dt.timezone.utc).hour < SNAP_WINDOW_H:
+                res["live"] = await snapshot_once(kind="live")
+            res["audit"] = await audit_snapshots()
+            bad = [k for k, v in res.items() if v.get("status") == "error"]
+            st = "error" if bad else "ok"
+            why = "; ".join(f"{k}: {str(v.get('reason') or v.get('audited') or '')[:120]}" for k, v in res.items())
+            print(f"[OI-SNAP] {st} · {why[:200]}")
+            await _beat("_oi_snapshot_loop", ok=st == "ok", detail=res, error=None if st == "ok" else why[:200])
+            await _record_loop_attempt("_oi_snapshot_loop", st, reason=why[:400], detail=res,
+                                       writer="src.api.main._oi_snapshot_loop")
+        except Exception as _e:
+            print(f"[OI-SNAP] ⚠️  pass FAILED: {_e}")
+            await _beat("_oi_snapshot_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_oi_snapshot_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._oi_snapshot_loop")
+        first = False
+        _now = _dt.datetime.now(_dt.timezone.utc)
+        if _now.hour < 2 and (res.get("live") or {}).get("status") != "ok":
+            await _asyncio.sleep(300)                            # 窗口内没拍成:5 分钟后再试
+        else:
+            await _sleep_until_utc(_now.hour if _now.minute < 5 else (_now.hour + 1) % 24, 5)
+
+
+@app.on_event("startup")
+async def _start_oi_snapshot_loop():
+    _asyncio.create_task(_oi_snapshot_loop())
+    print("[OI-SNAP] ✅ S-690 d-close OI/mcap snapshot scheduled (00:05 UTC live, hourly audit vs archive)")
+
+
 async def _protocol_revenue_loop():
     """协议收入 / 持币人收入的每日快照(S-661 的价值捕获比的前向数据;src/data/market/protocol_revenue.py)。
     DeFiLlama 概览两次请求覆盖全部协议;每天 01:20 UTC(前一天的 24h / 30d 已结)。

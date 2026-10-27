@@ -305,11 +305,14 @@ def test_loader_reads_the_book_state_and_signal_day_closes(monkeypatch):
             return [{"symbol": "UNI", "trade_date": ASOF, "close": 8.0}]
         if table in ("regime_calls", "j_tickets"):
             return []                                              # 没有 Jazz ⓪ 判断 ⇒ 系统默认
+        if table == "oi_lev_snapshot_daily":
+            return []                                              # S-690 快照没有;10-21 的窗口早过了 ⇒ 不过滤照常进
         raise AssertionError(table)
     monkeypatch.setattr(hdr, "_read_all", fake)
     monkeypatch.delenv("R_V2_RISK_FRAC", raising=False)
     p = asyncio.run(tpm.load_ticket_plan(ASOF))
     assert p["ready"] and p["risk_frac"] == 0.005 and p["enter"][0]["stop_frac"] == pytest.approx(0.125)
+    assert p["oi_filter"]["status"] == "unavailable"
     monkeypatch.setenv("R_V2_RISK_FRAC", "0.05")
     with pytest.raises(ValueError):
         asyncio.run(tpm.load_ticket_plan(ASOF))
