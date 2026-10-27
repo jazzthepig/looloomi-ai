@@ -1,0 +1,57 @@
+{
+ "ledger": "S-692",
+ "asset": "BTC",
+ "n_days": 1369,
+ "derisked_days": 308,
+ "gated": {
+  "total": 3.3032,
+  "cagr": 0.4765,
+  "mdd": 0.4121,
+  "calmar": 1.1561
+ },
+ "hold": {
+  "total": 4.0528,
+  "cagr": 0.5411,
+  "mdd": 0.5305,
+  "calmar": 1.02
+ },
+ "null_calmar_p95": 1.4103,
+ "null_calmar_median": 0.9683,
+ "gated_calmar_pct_in_null": 0.8055,
+ "halves": {
+  "2023-01_2024-10": {
+   "gated": {
+    "total": 2.7428,
+    "cagr": 1.0556,
+    "mdd": 0.2682,
+    "calmar": 3.9354
+   },
+   "hold": {
+    "total": 3.2428,
+    "cagr": 1.2013,
+    "mdd": 0.2618,
+    "calmar": 4.5891
+   }
+  },
+  "2024-11_2026-09": {
+   "gated": {
+    "total": 0.1497,
+    "cagr": 0.0757,
+    "mdd": 0.4121,
+    "calmar": 0.1838
+   },
+   "hold": {
+    "total": 0.1909,
+    "cagr": 0.0957,
+    "mdd": 0.5305,
+    "calmar": 0.1805
+   }
+  }
+ },
+ "verdict": {
+  "c1_mdd_15pct_shallower": true,
+  "c2_calmar_above_null_p95": false,
+  "c3_both_halves_calmar_ge_hold": false,
+  "pass": false
+ }
+}
