@@ -1,0 +1,27 @@
+{
+ "id": "T-206",
+ "owner": "lane-b",
+ "status": "open",
+ "created": "2026-10-27",
+ "forbidden_paths": [
+  "Shadow/",
+  "src/",
+  "paper_trading/",
+  "PROJECT_STATE.md",
+  "PROJECT_STATE_LOG.md",
+  "scripts/",
+  "migrations/"
+ ],
+ "title": "S-691 发现段独立复算:14 个时点可得因子在宽宇宙上的规模控制截面 IC(只算 2023-01 → 2024-11,留出段封存)",
+ "source": "Jazz 10-27「开启一个长任务做算法研究和升级」。台账 S-691。",
+ "allowed_paths": [
+  "docs/research/",
+  "tasks/T-206.json"
+ ],
+ "acceptance": {
+  "check": "**照台账 S-691 一字不改**。**封存:不对信号日 ≥ 2024-12-01 的行算任何因子统计量**(连「看一眼」也不行;读数据时就按日期截断)。只读 Supabase(publishable key 可读):deriv_metrics_daily、asset_mcap_daily(source = coingecko_pro_market_chart)、cg_coin_mcap_daily、perp_cg_map、funding_history(venue = binance_perp,自己按 UTC 日平均;v_funding_daily 对 publishable key 不可读)、cis_rebuild_daily。名字映射与价格校验照 S-689 原文(可读 docs/research/s689_oi_mcap_outofpanel.sql 的映射段对照 —— 那是已发布的方法,不是结果)。14 个因子的定义、≥ 30 名门槛、偏 Spearman(F14 用原始)、按月 t 全部照 S-691。另报(探索,不判):发现段里 14 个因子两两的截面秩相关均值(看哪些是同一件事)。**独立:** 交付前不读 docs/research/s691_*。新分支 git switch -c lane-b/T-206 origin/main。",
+  "expect": "脚本 docs/research/t206_factor_zoo_discovery.py;结果 docs/research/t206_results.json(每个因子:逐月均值 6 位小数、月数、月 t、覆盖名字数;短名单 = |t| ≥ 3.0 的因子与符号;相关矩阵);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-206_factor_zoo_discovery.md:开头一张 14 行的表,然后短名单,最后「协议问题」与「还看到了什么」(标探索)。in_review,推 lane-b/T-206。**交付 = 已推上分支**。"
+ },
+ "prior_value": "S-688 / S-689 一个因子一个因子地撞;宽宇宙的截面信息只验过 OI/市值。",
+ "notes": ""
+}

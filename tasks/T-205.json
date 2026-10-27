@@ -1,0 +1,27 @@
+{
+ "id": "T-205",
+ "owner": "lane-a",
+ "status": "open",
+ "created": "2026-10-27",
+ "forbidden_paths": [
+  "Shadow/",
+  "src/",
+  "paper_trading/",
+  "PROJECT_STATE.md",
+  "PROJECT_STATE_LOG.md",
+  "scripts/",
+  "migrations/"
+ ],
+ "title": "S-690 独立复算:R-v2 的票按开票日规模中性 OI/市值分位分组,H(前 1/3)是否更差、是否偏砍大鱼",
+ "source": "Jazz 10-27「开」:S-689 ✅ 之后,问这条信息能不能做 R-v2 的进场过滤。台账 S-690。",
+ "allowed_paths": [
+  "docs/research/",
+  "tasks/T-205.json"
+ ],
+ "acceptance": {
+  "check": "**照台账 S-690 一字不改**(有问题写进报告「协议问题」,不自己改)。票 = docs/research/t197_results.json 的 tickets.A 里 exit_d 非空的 908 张。只读 Supabase(publishable key 可读):deriv_metrics_daily、asset_mcap_daily(source = coingecko_pro_market_chart)、cg_coin_mcap_daily、perp_cg_map、funding_history(venue = binance_perp,自己按 UTC 日平均;v_funding_daily 对 publishable key 不可读)、cis_rebuild_daily。名字映射与价格校验照 S-689 原文(可读 docs/research/s689_oi_mcap_outofpanel.sql 的映射段对照 —— 那是已发布的方法,不是结果)。截面、残差分位 p、H / L、主统计量(月块自助 2,000 次,种子 690)、三条判定、副统计量全部照 S-690。**独立:** 交付前不读 docs/research/s690_*。新分支 git switch -c lane-a/T-205 origin/main。",
+  "expect": "脚本 docs/research/t205_rv2_oi_filter.py;结果 docs/research/t205_results.json(每张票的 symbol、signal_d、R、p、组别 —— 逐票,便于对数;剔除的票与原因;主统计量与判定);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-205_rv2_oi_filter.md:开头判定表,然后套 S-690 三条,最后「协议问题」。in_review,推 lane-a/T-205。**交付 = 已推上分支**。"
+ },
+ "prior_value": "R-v2 真钱规则从没用过衍生品信息。",
+ "notes": ""
+}

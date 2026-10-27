@@ -9,6 +9,9 @@
 | claimed | T-096 | seth | 前向判断记录:每周一按情景卡 + 当周新闻摘要请本地 Qwen 9B / 27B 判断,先锚定、后看结果 | 新闻层(历史上测不了的那一层)从今天起有可验证的前向记录;T-095 的历史结论与它对照。 | 没有任何 LLM 判断的前向记录;narrative_events 新闻 2026-09-28 起、约 150 条 / 天,没有消费者。 |  |
 | claimed | T-098 | seth | World50 的数据:候选池(全球前 ~150 大资产)的复权价格与历史流通市值 + 贵金属口径 + 每个候选的链上形式映射与跟踪误差 | 大类 ① 候选可以用日频全收益回放;知道哪些资产今天在链上真的买得到、买多少。 | eodhd 只有 2022-08 起、未复权;yfinance 2015 起但 06-18 后停更、未复权(SHY 九年价格持平,票息全丢)。链上形式从没系统量过。 |  |
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
+| open | T-205 | lane-a | S-690 独立复算:R-v2 的票按开票日规模中性 OI/市值分位分组,H(前 1/3)是否更差、是否偏砍大鱼 | 脚本 docs/research/t205_rv2_oi_filter.py;结果 docs/research/t205_results.json(每张票的 symbol、signal_d、R、p、组别 —— 逐票,便于对数;剔除的票与原因;主统计量与判定);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-205_rv2_oi_filter.md:开头判定表,然后套 S-690 三条,最后「协议问题」。in_review,推 lane-a/T-205。**交付 = 已推上分支**。 | R-v2 真钱规则从没用过衍生品信息。 |  |
+| open | T-206 | lane-b | S-691 发现段独立复算:14 个时点可得因子在宽宇宙上的规模控制截面 IC(只算 2023-01 → 2024-11,留出段封存) | 脚本 docs/research/t206_factor_zoo_discovery.py;结果 docs/research/t206_results.json(每个因子:逐月均值 6 位小数、月数、月 t、覆盖名字数;短名单 = |t| ≥ 3.0 的因子与符号;相关矩阵);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-206_factor_zoo_discovery.md:开头一张 14 行的表,然后短名单,最后「协议问题」与「还看到了什么」(标探索)。in_review,推 lane-b/T-206。**交付 = 已推上分支**。 | S-688 / S-689 一个因子一个因子地撞;宽宇宙的截面信息只验过 OI/市值。 |  |
+| open | T-207 | lane-c | S-692 独立复算:全市场杠杆(前 30 名 Σ OI / Σ 市值)偏高时 ① 降到 0.5 —— 对照持有与随机降仓 | 脚本 docs/research/t207_market_leverage_gate.py;结果 docs/research/t207_results.json(逐日 L、z、暴露;两条曲线的年化、最大回撤、Calmar;随机分布分位;两半;判定);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-207_market_leverage_gate.md:开头判定表,然后三条,最后「协议问题」。in_review,推 lane-c/T-207。**交付 = 已推上分支**。 | ③ 的降仓规则至今没有一条过(S-685)。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -206,4 +209,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 7 · claimed 7 · blocked 6 · done 180 · dropped 3
+open 10 · claimed 7 · blocked 6 · done 180 · dropped 3

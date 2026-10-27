@@ -1,0 +1,27 @@
+{
+ "id": "T-207",
+ "owner": "lane-c",
+ "status": "open",
+ "created": "2026-10-27",
+ "forbidden_paths": [
+  "Shadow/",
+  "src/",
+  "paper_trading/",
+  "PROJECT_STATE.md",
+  "PROJECT_STATE_LOG.md",
+  "scripts/",
+  "migrations/"
+ ],
+ "title": "S-692 独立复算:全市场杠杆(前 30 名 Σ OI / Σ 市值)偏高时 ① 降到 0.5 —— 对照持有与随机降仓",
+ "source": "Jazz 10-27「开启一个长任务做算法研究和升级」;③ 暴露倍数。台账 S-692(S-685 宏观压力读数版四条全不过,这次用加密自己的杠杆)。",
+ "allowed_paths": [
+  "docs/research/",
+  "tasks/T-207.json"
+ ],
+ "acceptance": {
+  "check": "**照台账 S-692 一字不改**。只读 Supabase(publishable key 可读):deriv_metrics_daily、asset_mcap_daily(source = coingecko_pro_market_chart)、cg_coin_mcap_daily、perp_cg_map、funding_history(venue = binance_perp,自己按 UTC 日平均;v_funding_daily 对 publishable key 不可读)、cis_rebuild_daily。名字映射与价格校验照 S-689 原文(可读 docs/research/s689_oi_mcap_outofpanel.sql 的映射段对照 —— 那是已发布的方法,不是结果)。信号 L_d / z_d、规则、BTC(主)与 ① 面板(副,cis_rebuild_daily 加密 24 名当天市值加权 —— 面板价格用 asset_mcap_daily 的同一 coin_id)、随机降仓(循环平移 2,000 次,种子 692)、三条判定全部照 S-692。**独立:** 交付前不读 docs/research/s692_*。新分支 git switch -c lane-c/T-207 origin/main。",
+  "expect": "脚本 docs/research/t207_market_leverage_gate.py;结果 docs/research/t207_results.json(逐日 L、z、暴露;两条曲线的年化、最大回撤、Calmar;随机分布分位;两半;判定);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-207_market_leverage_gate.md:开头判定表,然后三条,最后「协议问题」。in_review,推 lane-c/T-207。**交付 = 已推上分支**。"
+ },
+ "prior_value": "③ 的降仓规则至今没有一条过(S-685)。",
+ "notes": ""
+}
