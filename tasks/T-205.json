@@ -1,7 +1,7 @@
 {
  "id": "T-205",
  "owner": "lane-a",
- "status": "open",
+ "status": "in_review",
  "created": "2026-10-27",
  "forbidden_paths": [
   "Shadow/",
@@ -23,5 +23,5 @@
   "expect": "脚本 docs/research/t205_rv2_oi_filter.py;结果 docs/research/t205_results.json(每张票的 symbol、signal_d、R、p、组别 —— 逐票,便于对数;剔除的票与原因;主统计量与判定);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-205_rv2_oi_filter.md:开头判定表,然后套 S-690 三条,最后「协议问题」。in_review,推 lane-a/T-205。**交付 = 已推上分支**。"
  },
  "prior_value": "R-v2 真钱规则从没用过衍生品信息。",
- "notes": ""
+ "notes": "A 道独立复算完成。908 张票 → 进组 656 / 剔除 252(名字层 167、当天截面不可用 70、当天无 CG 市值 11、当天无 OI 3、市值<2000万 1)。名字 259 → 留 251 / 剔 8(1000X/AI/CHESS/COMBO/OM/PEPE/REI/TON)。预注册的覆盖先验「286 个票名里 184 个有 OI 历史」被独立复现(184/286)。主统计量:H 299 张平均 +0.0318R(中位 −0.7015、胜率 30.1%、总 R +9.51 = 全部的 3.25%、R≥5 共 9 张);L 357 张平均 +0.7934R(中位 −0.1284、胜率 46.8%、总 R +283.24 = 96.75%、R≥5 共 15 张);差 −0.7616R;月块自助 p = 0.0015(apparatus null_distribution,2,000 次,种子 690)。② 两半 −0.4114 / −1.3998 都 < 0;③ H 占 R≥5 票 37.5% ≤ H 占票 45.58%。⇒ ✅ 三条全过,过滤值得上前向(开纸面前向臂「R-v2 去掉 H」与 R-v2 并排,不改真钱规则)。副:Spearman(p,R) 合并 −0.1048、按月聚类 t = −0.3408(26 个月)。敏感性(只换实现口径、不换阈值):分位 midrank/minmax/rankn 三档 ⇒ H 299/302/303、差 −0.762/−0.787/−0.792、p 均 0.0015、三条全过;映射校验窗口切成 S-689 口径(仅 2023 起)⇒ 结果完全相同(多剔 FTT/RAY/SC,它们没有可判的票)—— 该窗口下映射校验剔除名单(11 个:1000X/AI/CHESS/COMBO/FTT/OM/PEPE/RAY/REI/SC/TON)与 S-689 / C 道 T-204 的剔除名单逐个一致(同样原因与 med_err),是价源与校验实现同源同义的交叉验证。【本轮(复核轮)补做】① 复现:同脚本重跑,除 run_utc 外 t205_results.json 逐字节相同;脚本自检 6 项合成数据断言全过(残差分位与 r 的 ρ、残差与规模的 ρ、OLS 自洽、构造差值、自助可复现、H 占比)。② 第二条代码路径独立复核(research/t205/verify_independent.py:不读主脚本缓存、直接打 Supabase、名次/OLS 残差/分位 p 另写一遍):票源 908 张/286 票名对上、逐票 R 0 张对不上、覆盖先验 184/286 从库里独立数出、票最密的四天(2024-11-10/11/16/23)共 72 张票的 p 与组别逐张对到 1e-9、四个抽查日的截面名字数(189/191/192/189)与主脚本逐日相同、主统计量直接重算 −0.761601 与主脚本一致。③ 分支已 rebase 到当前 origin/main。④ 报告 §7 的写库请求已由上游完成(commit c793a7c7:migrations/2026-10-27_r_ticket_oi_tags.sql + src/data/signals/oi_leverage.py),本卡不再需要 @seth 执行写库。探索性(不判):三档单调(低 +1.00 / 中 +0.29 / 高 +0.05 R);每个信号年 H 都更差(2023 −0.15 / 2024 −0.95 / 2025 −3.41 / 2026 −0.31);最大一张票 ZEC 2025-09-06 +73.16R 的 p=0.081 落在 L(第二三大 DOGE +16.06 p=0.832、第三 FET +14.43 p=0.811 在 H)。协议问题(报告 §6,共 8 条):① 独立性自报 —— 实现轮读台账 30681–30760 行时读到「S-690 结果(Seth)」段(30718 行起),本复核轮只读 30681–30717(预注册本身);s690_* 四个文件未读;实现脚本在更早一轮已写好 ⇒ 只能称「实现独立、结果不盲」;② 「S-689 宇宙」日期歧义实测无影响(259 个名字全部有 2023 起数据;72 张 pre-2023 票当天全部无 oi_value);③ 映射校验重叠日窗口未写死(主口径全历史,与 perp_cg_map 存的口径一致);④ 分位 p 口径未写死(主口径 midrank 给 H=299,minmax 给 302,与 Seth 报的一致);⑤ asset_mcap_daily 同 symbol 多 coin_id 会重复计数(本库实测 0 例);⑥ 当天截面最少名字数未写死(实际每个可判信号日都 ≥30 名,0 张票落在 <30 名的日子);⑦ 自助 p 第三位随 RNG 流变(apparatus numpy 0.0015 / Python random 0.005,判定不变);⑧ R 是倍数不是百分比。需要 @seth:逐票 p 逐位对数(我的 656 行在 t205_results.json 的 tickets 段;已知差异来源是分位口径 midrank vs minmax,不是实现分歧)、真钱规则是否上由 Jazz 定。交付物:docs/research/t205_rv2_oi_filter.py、docs/research/t205_results.json、报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-205_rv2_oi_filter.md;分支 lane-a/T-205。"
 }
