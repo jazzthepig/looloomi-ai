@@ -1,0 +1,173 @@
+{
+ "0": {
+  "ledger": "S-690",
+  "n_tickets": 908,
+  "n_used": 656,
+  "dropped": {
+   "当天不在截面(无 OI / 市值 < 2,000 万 / 无价)": 252
+  },
+  "H": {
+   "n": 302,
+   "mean_r": 0.0216,
+   "median_r": -0.7121,
+   "win": 0.298,
+   "sum_r": 6.52,
+   "n_r_ge_5": 9
+  },
+  "L": {
+   "n": 354,
+   "mean_r": 0.8086,
+   "median_r": -0.1227,
+   "win": 0.4718,
+   "sum_r": 286.23,
+   "n_r_ge_5": 15
+  },
+  "diff_mean_r": -0.787,
+  "boot_p_diff_ge0": 0.004,
+  "boot_draws": 2000,
+  "halves": {
+   "to_2024_06": {
+    "n_H": 188,
+    "n_L": 229,
+    "mean_H": 0.0418,
+    "mean_L": 0.4767,
+    "diff": -0.4349
+   },
+   "after": {
+    "n_H": 114,
+    "n_L": 125,
+    "mean_H": -0.0117,
+    "mean_L": 1.4166,
+    "diff": -1.4283
+   }
+  },
+  "fish": {
+   "n_r_ge_5": 24,
+   "in_H": 9,
+   "share_fish_in_H": 0.375,
+   "share_tickets_in_H": 0.4604
+  },
+  "verdict_addendum": {
+   "a_diff_le_-0.40": true,
+   "b_boot_p_lt_005": true,
+   "c_both_halves_neg": true,
+   "pass": true
+  }
+ },
+ "1": {
+  "ledger": "S-690",
+  "n_tickets": 908,
+  "n_used": 653,
+  "dropped": {
+   "当天不在截面(无 OI / 市值 < 2,000 万 / 无价)": 255
+  },
+  "H": {
+   "n": 198,
+   "mean_r": 0.2174,
+   "median_r": -0.5503,
+   "win": 0.3434,
+   "sum_r": 43.04,
+   "n_r_ge_5": 8
+  },
+  "L": {
+   "n": 455,
+   "mean_r": 0.5556,
+   "median_r": -0.3217,
+   "win": 0.4154,
+   "sum_r": 252.79,
+   "n_r_ge_5": 16
+  },
+  "diff_mean_r": -0.3382,
+  "boot_p_diff_ge0": 0.063,
+  "boot_draws": 2000,
+  "halves": {
+   "to_2024_06": {
+    "n_H": 115,
+    "n_L": 301,
+    "mean_H": 0.2074,
+    "mean_L": 0.3129,
+    "diff": -0.1056
+   },
+   "after": {
+    "n_H": 83,
+    "n_L": 154,
+    "mean_H": 0.2313,
+    "mean_L": 1.0298,
+    "diff": -0.7985
+   }
+  },
+  "fish": {
+   "n_r_ge_5": 24,
+   "in_H": 8,
+   "share_fish_in_H": 0.3333,
+   "share_tickets_in_H": 0.3032
+  },
+  "verdict_addendum": {
+   "a_diff_le_-0.40": false,
+   "b_boot_p_lt_005": false,
+   "c_both_halves_neg": true,
+   "pass": false
+  }
+ },
+ "2": {
+  "ledger": "S-690",
+  "n_tickets": 908,
+  "n_used": 654,
+  "dropped": {
+   "当天不在截面(无 OI / 市值 < 2,000 万 / 无价)": 254
+  },
+  "H": {
+   "n": 176,
+   "mean_r": 0.3279,
+   "median_r": -0.4675,
+   "win": 0.3807,
+   "sum_r": 57.72,
+   "n_r_ge_5": 8
+  },
+  "L": {
+   "n": 478,
+   "mean_r": 0.496,
+   "median_r": -0.3518,
+   "win": 0.3975,
+   "sum_r": 237.08,
+   "n_r_ge_5": 16
+  },
+  "diff_mean_r": -0.168,
+  "boot_p_diff_ge0": 0.1985,
+  "boot_draws": 2000,
+  "halves": {
+   "to_2024_06": {
+    "n_H": 104,
+    "n_L": 313,
+    "mean_H": 0.3327,
+    "mean_L": 0.2633,
+    "diff": 0.0693
+   },
+   "after": {
+    "n_H": 72,
+    "n_L": 165,
+    "mean_H": 0.3211,
+    "mean_L": 0.9373,
+    "diff": -0.6162
+   }
+  },
+  "fish": {
+   "n_r_ge_5": 24,
+   "in_H": 8,
+   "share_fish_in_H": 0.3333,
+   "share_tickets_in_H": 0.2691
+  },
+  "verdict_addendum": {
+   "a_diff_le_-0.40": false,
+   "b_boot_p_lt_005": false,
+   "c_both_halves_neg": false,
+   "pass": false
+  }
+ },
+ "agreement_lag1_vs_lag0": {
+  "n_both": 654,
+  "same": 547,
+  "H0_to_L1": 104,
+  "L0_to_H1": 3
+ }
+}
