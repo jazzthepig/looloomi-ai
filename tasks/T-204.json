@@ -1,7 +1,7 @@
 {
  "id": "T-204",
  "owner": "lane-c",
- "status": "in_review",
+ "status": "done",
  "created": "2026-10-26",
  "forbidden_paths": [
   "Shadow/",
@@ -23,5 +23,10 @@
   "expect": "脚本 docs/research/t204_oi_mcap_outofpanel.py;结果 docs/research/t204_results.json —— 名单(留下 / 剔除及原因)、主统计量与两个副统计量的**逐月**值(6 位小数)、月数、月 t、两半;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-204_oi_mcap_outofpanel.md:开头一张表,然后套 S-689 的判定写结论,最后「协议问题」。in_review,推 lane-c/T-204。**交付 = 文件已推上分支**,只写在 worktree 里不算。"
  },
  "prior_value": "OI/市值的信息只在看过的 24 个名字上出现过,且没控规模。",
- "notes": "**闸门开(2026-10-26T19:32:24.592721+00:00 UTC)后跑完 `--mode full`,交付物已推 `lane-c/T-204`。** 面板外:宇宙 259 个 deriv 名字(2023-01 起、去面板 25 名)⇒ 留下 **220** / 剔除 16;行 190231、截面日 1364、月数 45。主(偏 Spearman ρ(OI/市值, 结果|规模))月均 **-0.108624** / 月 t **-7.4781**;两半 H1 -0.128021 / H2 -0.095693(H1 t -5.9533 / H2 t -4.9254)。副 原始 ρ 月均 -0.117113 / 月 t -6.1075;副 规模 ρ 月均 0.062757 / 月 t 2.6978。面板对照(附带·不判)主:月均 -0.030752 / 月 t -1.0829。第二实现(pandas/numpy)逐月对数:最大绝对差 主 0.00e+00 / 副原始 0.00e+00 / 副规模 0.00e+00。**S-689 判定:✅「OI/市值在规模之外有信息」** —— 主统计量月均 -0.108624 < 0、月 t -7.4781 ≤ −2.0、两半 -0.128021 / -0.095693 都 < 0 ⇒ 命中台账第一条。剔除名单与原因、逐月值(6 位小数)在 docs/research/t204_results.json;对数在 docs/research/t204_verify_out_of_panel.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-204_oi_mcap_outofpanel.md。协议问题见报告 §5 与 §8(闸门口径、请求预算与候选搜索阶段、独立性字面冲突、mcap=-1 的行)。"
+ "notes": "**闸门开(2026-10-26T19:32:24.592721+00:00 UTC)后跑完 `--mode full`,交付物已推 `lane-c/T-204`。** 面板外:宇宙 259 个 deriv 名字(2023-01 起、去面板 25 名)⇒ 留下 **220** / 剔除 16;行 190231、截面日 1364、月数 45。主(偏 Spearman ρ(OI/市值, 结果|规模))月均 **-0.108624** / 月 t **-7.4781**;两半 H1 -0.128021 / H2 -0.095693(H1 t -5.9533 / H2 t -4.9254)。副 原始 ρ 月均 -0.117113 / 月 t -6.1075;副 规模 ρ 月均 0.062757 / 月 t 2.6978。面板对照(附带·不判)主:月均 -0.030752 / 月 t -1.0829。第二实现(pandas/numpy)逐月对数:最大绝对差 主 0.00e+00 / 副原始 0.00e+00 / 副规模 0.00e+00。**S-689 判定:✅「OI/市值在规模之外有信息」** —— 主统计量月均 -0.108624 < 0、月 t -7.4781 ≤ −2.0、两半 -0.128021 / -0.095693 都 < 0 ⇒ 命中台账第一条。剔除名单与原因、逐月值(6 位小数)在 docs/research/t204_results.json;对数在 docs/research/t204_verify_out_of_panel.json;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-204_oi_mcap_outofpanel.md。协议问题见报告 §5 与 §8(闸门口径、请求预算与候选搜索阶段、独立性字面冲突、mcap=-1 的行)。",
+ "verified": {
+  "by": "seth",
+  "at": "2026-10-27T04:13Z",
+  "value": "C 道主统计量 −0.108624 / t −7.478 与 Seth(docs/research/s689_results.json)45 个月里 44 个逐位一致到 1e-6;2026-09 差在 Seth 晚跑多到期一天(26 vs 25)。S-689 ✅:OI/市值在规模之外有信息(面板外 220 名)。C 道附带的面板对照(控规模 t −1.08)说明它在 CIS 的 22 个大币里基本是规模。"
+ }
 }
