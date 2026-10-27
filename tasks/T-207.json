@@ -1,7 +1,7 @@
 {
  "id": "T-207",
  "owner": "lane-c",
- "status": "open",
+ "status": "in_review",
  "created": "2026-10-27",
  "forbidden_paths": [
   "Shadow/",
@@ -23,5 +23,5 @@
   "expect": "脚本 docs/research/t207_market_leverage_gate.py;结果 docs/research/t207_results.json(逐日 L、z、暴露;两条曲线的年化、最大回撤、Calmar;随机分布分位;两半;判定);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-207_market_leverage_gate.md:开头判定表,然后三条,最后「协议问题」。in_review,推 lane-c/T-207。**交付 = 已推上分支**。"
  },
  "prior_value": "③ 的降仓规则至今没有一条过(S-685)。",
- "notes": ""
+ "notes": "❌ 照台账 S-692 判定(主资产 BTC)。① 回撤浅 ≥15%(相对):✅ 持有 -0.5305 → 规则 -0.4121,深度比 0.7768 ≤ 0.85。② Calmar 高于随机降仓分布 p95:❌ 规则 1.1540 vs 随机 p95 1.4054,实测值在 2000 次零分布里的分位 0.7913(416/2000 抽样比实测好)。③ 两半各自 Calmar ≥ 持有:❌ 前半 2023-01→2024-10 持有 4.5736 / 规则 3.9218(25 个降仓日);后半 2024-11→2026-09 持有 0.1800 / 规则 0.1834(284 个降仓日)。副资产 ① 面板按同样三条:① ✓ ② ✗ ③ ✗ ⇒ ❌。数字:deriv 宇宙 259 名 → S-689 映射/价格校验(n_overlap ≥ 30 且 med_err ≤ 0.05)过 251 / 剔 8;L 有定义 1733 天(2022-01-01 → 2026-09-30);信号日 1369 天 z 全部有定义;降仓 309 天(29 段,最长 93 天,284 天落在 2024-11 之后)。BTC:持有 年化 0.5401 / 累计 4.0522 / Calmar 1.0182;规则 年化 0.4755 / 累计 3.3021 / Calmar 1.1540。A/B(apparatus.ab_test,块长 20 天,2000 次自助,种子 692):总对数差 -0.1607、单侧 p(B≤A)=0.7380、结论「分不开」(功效不足)。交付物:脚本 docs/research/t207_market_leverage_gate.py(--mode selftest 合成数据自检全过;--mode full 重跑两次结果逐位相同)、结果 docs/research/t207_results.json(逐日 L / z / 暴露 / 两条曲线 / 零分布分位 / 两半 / 判定)、报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-207_market_leverage_gate.md(判定表 → 三条 → 协议问题)。独立复核(另写脚本从 Supabase 原始数据重算,不复用本脚本的取数缓存):L(2023-06-15、2024-06-15)、z(2024-06-15,窗口 365 个值)、BTC 持有与规则曲线、零分布 p95 与实测分位 —— 与脚本差 0;暴露序列逐日核对 0 处不一致。z 窗口口径敏感性:365 个日历日 309 个降仓日 / 365 个观测值 309 / 364 个日历日 307 / d 进窗 307 / ddof=0 309 —— 结论不变。按预注册:只记,不动任何在跑的规则;③ 降仓族第 5 条同样不过。 交回对照(交付推上分支之后才读 docs/research/s692_results.json):三条判定逐条一致(C 道 ❌ = ①✅ ②❌ ③❌ = Seth 的 true/false/false),数字一致到 3–4 位:持有 total 4.0522 vs 4.0528、cagr 0.5401 vs 0.5411、mdd 0.5305 vs 0.5305、calmar 1.0182 vs 1.02;规则 total 3.3021 vs 3.3032、cagr 0.4755 vs 0.4765、mdd 0.4121 vs 0.4121、calmar 1.1540 vs 1.1561;随机 p95 1.4054 vs 1.4103、中位 0.9701 vs 0.9683、实测分位 0.7913 vs 0.8055;两半 Calmar 前半 4.5736/3.9218 vs 4.5891/3.9354、后半 0.1800/0.1834 vs 0.1805/0.1838。唯一差:降仓天数 309 vs 308 —— 窗口边界的临界日(2023-01-02 的 z 正好 1.0025),已在协议问题 1 里说明。"
 }
