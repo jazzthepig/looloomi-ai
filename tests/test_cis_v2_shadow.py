@@ -105,3 +105,15 @@ def test_crypto_bands_use_v1_hysteresis_and_companies_get_none():
     c16 = next(r for r in rows2 if r["symbol"] == "C16")
     assert c16["pct"] == 0.85 and c16["signal"] == "STRONG OUTPERFORM" and c16["watch"], \
         "分位 0.85 = 90 分位门槛 − 外侧缓冲 0.05 ⇒ 还在缓冲带里,保持原档并标观察"
+
+
+def test_oi_mcap_is_recorded_not_scored():
+    """S-689 ✅ 后的前向记录:状态里记 oi_mcap(OI 美元 ÷ 当日市值),缺任一边就是 None。"""
+    from datetime import date as _d
+    from src.data.cis.v2_shadow import attach_oi_mcap
+    states = {"NEAR": {"trend": "up"}, "SKY": {"trend": "down"}}
+    by_coin = {"near": [("2026-10-25", 4.0, 5e9), ("2026-10-26", 4.1, 6e9)], "sky": [("2026-10-26", 0.07, 1.5e9)]}
+    oi = [{"symbol": "NEAR", "d": "2026-10-26", "oi_value_close": 2.4e8}, {"symbol": "NEAR", "d": "2026-10-25", "oi_value_close": 9e9}]
+    n = attach_oi_mcap(states, oi, by_coin, {"NEAR": "near", "SKY": "sky"}, _d(2026, 10, 26))
+    assert n == 1 and states["NEAR"]["oi_mcap"] == 0.04 and states["SKY"]["oi_mcap"] is None
+    assert states["NEAR"]["trend"] == "up"

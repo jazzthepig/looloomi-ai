@@ -54,6 +54,24 @@ def weekly_closes(mcap_rows: list[dict], closes: dict[str, list[tuple[str, float
     return out
 
 
+def attach_oi_mcap(states: dict[str, dict], oi_rows: list[dict], by_coin: dict[str, list[tuple]],
+                   cu: dict[str, str], d: date) -> int:
+    """S-689 ✅ 之后的前向记录(台账:「写进 CIS v2 影子,前向记录、到期再判,不直接改正式标准」)。纯函数。
+
+    每个加密名字的状态里记 `oi_mcap` = Binance U 本位当日收盘 OI(美元,deriv_metrics_daily)÷ 当日 CG 市值。
+    只记数,不计分、不进档位;到期后用记下的值和规模(同一行的市值)做规模中性的前向检验。返回记上的个数。"""
+    oi = {r["symbol"]: r.get("oi_value_close") for r in oi_rows or [] if str(r.get("d"))[:10] == d.isoformat()}
+    n = 0
+    for sym, cid in cu.items():
+        if sym not in states:
+            continue
+        mc = next((x[2] for x in reversed(by_coin.get(cid) or []) if x[0] == d.isoformat()), None)
+        v = oi.get(sym)
+        states[sym]["oi_mcap"] = round(float(v) / float(mc), 6) if v and mc and float(mc) > 0 and float(v) > 0 else None
+        n += states[sym]["oi_mcap"] is not None
+    return n
+
+
 def shadow_rows(d: date, crypto: dict[str, dict], equity: dict[str, dict], published_at: str,
                 states: Optional[dict[str, dict]] = None, prev_signal: Optional[dict[str, str]] = None) -> list[dict]:
     """两组的原始维度 → 写库的行(含状态;加密带档位)。纯函数。"""
@@ -144,6 +162,9 @@ async def run_once(now: Optional[datetime] = None) -> dict[str, Any]:
         raw["f"] = (fo.get(sym) or {}).get("pillar_f")
         raw["o"] = (fo.get(sym) or {}).get("pillar_o")
         crypto[sym] = raw
+    oi_rows = await _read_all("deriv_metrics_daily", {"select": "symbol,d,oi_value_close", "symbol": f"in.({','.join(cu)})",
+                                                      "d": f"eq.{d.isoformat()}", "order": "symbol.asc"})
+    n_oi = attach_oi_mcap(states, oi_rows, by_coin, cu, d)
     # 个股
     wlo = (d - timedelta(weeks=EQUITY_LOOKBACK_WEEKS)).isoformat()
     # 只取一个口径(三个历史口径并存,混用会把口径差当成股数变化 —— 实测 CMCSA 在 4.6B / 4.2B 股之间来回跳)
@@ -171,6 +192,6 @@ async def run_once(now: Optional[datetime] = None) -> dict[str, Any]:
     if not res.ok:
         return {"ok": False, "refused": False, "written": 0, "reason": f"写入失败:{res.why}"}
     low = [g for g, c in cov.items() if c < MIN_COVERAGE]
-    return {"ok": True, "refused": False, "written": len(rows), "d": d.isoformat(), "coverage": cov,
+    return {"ok": True, "refused": False, "written": len(rows), "d": d.isoformat(), "coverage": cov, "oi_mcap_named": n_oi,
             "reason": f"{d} v2 影子 {len(rows)} 行(加密 {len(cu)} / 个股 {len(eu)})"
                       + (f" · 有分比例低于 {MIN_COVERAGE:.0%}:{low}(S-668 切换条件 ① 这天不算)" if low else "")}
