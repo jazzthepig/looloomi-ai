@@ -80,6 +80,7 @@
     "protocol_revenue_daily",
     "protocol_tvl_daily",
     "r_money_daily",
+    "r_ticket_oi_tags",
     "r_ticket_tags",
     "regime_band_log",
     "regime_calls",

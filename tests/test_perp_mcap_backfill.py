@@ -40,3 +40,14 @@ def test_wrappers_dropped_and_largest_cap_first():
     assert out[0] == "shiba-inu" and "shiba-inu-wormhole" not in out and "binance-peg-shib" not in out
     assert order_candidates("FXS", ["frax-share-wormhole", "linea-bridged-fxs-linea", "flexstay"]) == ["flexstay"]
     assert "neiro-on-eth" in order_candidates("NEIRO", ["neiro", "neiro-on-eth"]), "-on-eth is the real coin here"
+
+
+def test_top_up_picks_live_stale_coins_oldest_first():
+    from datetime import date
+    from src.data.market.perp_mcap_backfill import stale_coins
+    resolved = [{"symbol": "1000SHIB", "coin_id": "shiba-inu"}, {"symbol": "OMG", "coin_id": "omisego"},
+                {"symbol": "IP", "coin_id": "story-2"}, {"symbol": "VANRY", "coin_id": "vanar-chain"}]
+    last_cg = {"shiba-inu": "2026-10-20", "omisego": "2025-01-31", "story-2": "2026-10-26", "vanar-chain": "2026-10-10"}
+    last_oi = {"1000SHIB": "2026-10-26", "OMG": "2025-01-31", "IP": "2026-10-26", "VANRY": "2026-10-25"}
+    out = stale_coins(resolved, last_cg, last_oi, date(2026, 10, 27))
+    assert [m["symbol"] for m in out] == ["VANRY", "1000SHIB"], "delisted OMG skipped; IP already current"

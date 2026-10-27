@@ -2062,6 +2062,12 @@ async def _r_tickets_paper_loop():
                 r["detail"]["tags"] = await _tag()
             except Exception as _te:
                 r["detail"]["tags"] = {"status": "error", "reason": f"{type(_te).__name__}: {str(_te)[:200]}"}
+            # S-690 前向:开票日的规模中性 OI/市值分位(「去掉高杠杆三分之一」纸面臂);同样打不上不挡 R-v2
+            try:
+                from src.data.signals.oi_leverage import tag_oi_new_tickets as _oitag
+                r["detail"]["oi_tags"] = await _oitag()
+            except Exception as _oe:
+                r["detail"]["oi_tags"] = {"status": "error", "reason": f"{type(_oe).__name__}: {str(_oe)[:200]}"}
             print(f"[R-TICKETS] {r['status']} · {str(r.get('reason'))[:160]}")
             await _beat("_r_tickets_paper_loop", ok=r["status"] == "ok", refused=r["status"] == "refused",
                         detail=r.get("detail"), error=None if r["status"] == "ok" else str(r.get("reason"))[:200])

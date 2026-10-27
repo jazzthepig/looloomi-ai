@@ -118,6 +118,56 @@ async def _coins_list(client, include_inactive: bool) -> dict[str, list[str]]:
     return idx
 
 
+def stale_coins(resolved: list[dict], last_cg: dict[str, str], last_oi: dict[str, str], today: date) -> list[dict]:
+    """纯函数。补完之后的日常续补:还在交易(OI 近 7 天有数)、CG 日线落后到昨天之前的币,最旧的排前面。
+    S-690 前向标签每天要这些名字的市值 —— 不续补,它们会从截面里慢慢掉出去。"""
+    y = (today - timedelta(days=1)).isoformat()
+    week = (today - timedelta(days=7)).isoformat()
+    out = [m for m in resolved
+           if last_oi.get(m["symbol"], "") >= week and last_cg.get(m["coin_id"], "") < y]
+    return sorted(out, key=lambda m: (last_cg.get(m["coin_id"], ""), m["symbol"]))
+
+
+async def top_up(today: date) -> dict[str, Any]:
+    """待补清单清空后:每轮最多 MAX_CALLS_PER_RUN 个还在交易的币,补最近 10 天。对 Binance 零请求。"""
+    from src.api.store import supabase_upsert_table
+    from src.data.market.data_layer import get_cg_market_chart_range
+    from src.data.style.header import _read_all, parse_market_chart
+    resolved = await _read_all(MAP_TABLE, {"select": "symbol,coin_id", "verdict": "eq.resolved", "order": "symbol.asc"})
+    if not resolved:
+        return {"ok": True, "refused": True, "calls": 0, "reason": "没有待补、也没有已认出的名字"}
+    last_cg: dict[str, str] = {}
+    last_oi: dict[str, str] = {}
+    lo = (today - timedelta(days=45)).isoformat()             # 两次批量读,不逐币读(每 10 分钟一轮)
+    for r in await _read_all(TABLE, {"select": "coin_id,d", "coin_id": f"in.({','.join(sorted({m['coin_id'] for m in resolved}))})",
+                                     "d": f"gte.{lo}", "order": "coin_id.asc,d.asc"}):
+        last_cg[r["coin_id"]] = max(last_cg.get(r["coin_id"], ""), str(r["d"])[:10])
+    for r in await _read_all("deriv_metrics_daily", {"select": "symbol,d", "symbol": f"in.({','.join(m['symbol'] for m in resolved)})",
+                                                     "d": f"gte.{(today - timedelta(days=10)).isoformat()}", "order": "symbol.asc,d.asc"}):
+        last_oi[r["symbol"]] = max(last_oi.get(r["symbol"], ""), str(r["d"])[:10])
+    todo = stale_coins(resolved, last_cg, last_oi, today)[:MAX_CALLS_PER_RUN]
+    if not todo:
+        return {"ok": True, "refused": True, "calls": 0, "reason": "没有待补;已认出的币都是最新的(或已下架)"}
+    calls, done = 0, []
+    to = int(datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc).timestamp())
+    for m in todo:
+        frm_d = (date.fromisoformat(last_cg[m["coin_id"]]) - timedelta(days=10)) if last_cg.get(m["coin_id"]) else today - timedelta(days=45)
+        frm = int(datetime.combine(frm_d, datetime.min.time(), tzinfo=timezone.utc).timestamp())
+        raw = await get_cg_market_chart_range(m["coin_id"], frm, to, interval="daily")
+        calls += 1
+        if not raw.get("available"):
+            continue
+        pts = [{"coin_id": m["coin_id"], "source": SOURCE, **p} for p in parse_market_chart(raw.get("prices"), raw.get("market_caps"))]
+        if pts:
+            w = await supabase_upsert_table(TABLE, pts, on_conflict="coin_id,d")
+            if not w.ok:
+                return {"ok": False, "refused": False, "calls": calls, "reason": f"{TABLE} 写入失败:{w.why}"}
+            done.append(f"{m['symbol']}→{pts[-1]['d']}")
+        await asyncio.sleep(1.0)
+    return {"ok": True, "refused": False, "calls": calls, "resolved_now": [], "pending": 0, "topped_up": done,
+            "reason": f"续补 {len(done)} 个还在交易的币({calls} 次 CoinGecko 请求)"}
+
+
 async def run_once(today: Optional[date] = None) -> dict[str, Any]:
     """一轮:读待办 → 必要时给没有候选的行补候选(1–2 次请求)→ 用剩下的额度按候选取日线、校验、写。"""
     from src.api.store import supabase_upsert_table
@@ -126,7 +176,7 @@ async def run_once(today: Optional[date] = None) -> dict[str, Any]:
     today = today or datetime.now(timezone.utc).date()
     todo = await _read_all(MAP_TABLE, {"select": "*", "verdict": "eq.pending", "order": "symbol.asc"})
     if not todo:
-        return {"ok": True, "refused": True, "calls": 0, "reason": "没有待补的名字"}
+        return await top_up(today)
     calls, done, notes = 0, [], []
 
     need_cands = [r for r in todo if r.get("candidates") is None]
