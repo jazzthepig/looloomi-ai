@@ -1,0 +1,27 @@
+{
+ "id": "T-208",
+ "owner": "lane-b",
+ "status": "open",
+ "created": "2026-10-27",
+ "forbidden_paths": [
+  "Shadow/",
+  "src/",
+  "paper_trading/",
+  "PROJECT_STATE.md",
+  "PROJECT_STATE_LOG.md",
+  "scripts/",
+  "migrations/"
+ ],
+ "title": "S-691 留出段独立复算:冻结的 5 个因子(F3−、F7+、F8−、F9−、F11−)+ F1 在信号日 2025-01 → 2026-09 上的规模控制截面 IC",
+ "source": "Jazz 10-27「开启一个长任务做算法研究和升级」。台账 S-691(预注册)+ §短名单冻结 + §留出段开封。预注册写明「留出段由 Seth 跑、B 道复算」。",
+ "allowed_paths": [
+  "docs/research/",
+  "tasks/T-208.json"
+ ],
+ "acceptance": {
+  "check": "**照台账 S-691 与你自己 T-206 的发现段代码,只换日期段,一字不改口径**:留出 = 信号日 2025-01-01 → 最后一个 d + 30 有 CG 价的日子(现在是 2026-09-26);2024-12 隔离不用。主口径 = 宇宙每天要 OI(oi_value_close > 0,§Seth-1027a 定的括注读法),字面口径作敏感性。只算冻结的 F3、F7、F8、F9、F11,F1 照报不计。统计量同发现段:每天 ≥ 30 名、偏 Spearman 控规模、按自然月平均、月 t。判定照预注册:同号、|月 t| ≥ 2.0、≥ 60% 留出月份同号。映射校验名单:用你 T-206 的定义(与 Seth 的 248 名差异已知,不影响判定;报你的名单大小)。另报(探索,不判):五因子等权秩合成的偏 IC 与最高 / 最低五分位相对宇宙均值的 30 天超额。只读 Supabase(publishable key)。**独立:** 交付前不读 docs/research/s691_holdout*。新分支 git switch -c lane-b/T-208 origin/main。",
+  "expect": "脚本 docs/research/t208_factor_zoo_holdout.py;结果 docs/research/t208_results.json(每个因子两口径:逐月均值 6 位小数、月数、月 t、同号月份数、覆盖名字数、判定);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-208_factor_zoo_holdout.md:开头一张 6 行的表,然后判定,最后「协议问题」与「还看到了什么」(标探索)。in_review,推 lane-b/T-208。**交付 = 已推上分支**。"
+ },
+ "prior_value": "S-691 发现段两道一致冻结 5 个因子;留出段只有 Seth 一道。",
+ "notes": ""
+}
