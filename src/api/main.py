@@ -1852,7 +1852,19 @@ async def _style_pit_loop():
             await _record_loop_attempt("_style_pit_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                        writer="src.api.main._style_pit_loop")
         # S-644:定点 00:30 UTC(深盘 00:10 之后);R-v2 的闸门要等 majors 指数写到昨天才开票。
-        await _sleep_until_utc(0, 30)
+        # 10-28:00:30 那一轮可能早于风格表头写进昨天的大币市值 ⇒ 昨天的 majors 没出来就 30 分钟后再跑,
+        # 不等到明天(10-27 因此停了一天半)。指数每轮重算最近 40 天,重跑是幂等的。
+        try:
+            from src.data.vector.market_state_writer import _sb_get as _pit_get
+            _y = (_dt.datetime.now(_dt.timezone.utc).date() - _dt.timedelta(days=1)).isoformat()
+            _rd = await _pit_get("style_index_pit_daily", {"select": "d", "style": "eq.majors", "d": f"eq.{_y}", "limit": "1"})
+            _have_y = bool(_rd.ok and _rd.rows)
+        except Exception:                                        # noqa: BLE001 — 读不到就按没有,30 分钟后再看
+            _have_y = False
+        if not _have_y and _dt.datetime.now(_dt.timezone.utc).hour < 23:
+            await _asyncio.sleep(1800)
+        else:
+            await _sleep_until_utc(0, 30)
 
 
 @app.on_event("startup")
@@ -2083,6 +2095,79 @@ async def _r_tickets_paper_loop():
         await _sleep_until_utc(_now.hour if _now.minute < 45 else (_now.hour + 1) % 24, 45)
 
 
+async def _protocol_revenue_loop():
+    """协议收入 / 持币人收入的每日快照(S-661 的价值捕获比的前向数据;src/data/market/protocol_revenue.py)。
+    DeFiLlama 概览两次请求覆盖全部协议;每天 01:20 UTC(前一天的 24h / 30d 已结)。
+    判活:`select max(d) from protocol_revenue_daily` = 昨天;`loop_attempt` 里 `_protocol_revenue_loop`。"""
+    await _asyncio.sleep(_boot_delay(2400))
+    while True:
+        try:
+            from src.data.market.protocol_revenue import run_once as _pr_run
+            r = await _pr_run()
+            print(f"[PROTOCOL-REV] {r['status']} · {str(r.get('reason'))[:160]}")
+            await _beat("_protocol_revenue_loop", ok=r["status"] == "ok", refused=r["status"] == "refused",
+                        detail=r.get("detail"), error=None if r["status"] == "ok" else str(r.get("reason"))[:200])
+            await _record_loop_attempt("_protocol_revenue_loop", r["status"], reason=str(r.get("reason"))[:400],
+                                       detail=r.get("detail"), writer="src.api.main._protocol_revenue_loop")
+        except Exception as _e:
+            print(f"[PROTOCOL-REV] ⚠️  pass FAILED: {_e}")
+            await _beat("_protocol_revenue_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_protocol_revenue_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._protocol_revenue_loop")
+        await _sleep_until_utc(1, 20)
+
+
+@app.on_event("startup")
+async def _start_protocol_revenue_loop():
+    _asyncio.create_task(_protocol_revenue_loop())
+    print("[PROTOCOL-REV] ✅ DeFiLlama revenue / holders-revenue daily snapshot scheduled (01:20 UTC)")
+
+
+@app.on_event("startup")
+async def _start_r_tickets_paper_loop():
+    _asyncio.create_task(_r_tickets_paper_loop())
+    print("[R-TICKETS] ✅ trading layer v2 paper book scheduled (r_tickets_scan, hourly)")
+
+
+async def _executor_host_watch_loop():
+    """真钱腿的心跳看门(10-28,lane-a 交叉复核报:主机从 10-26 21:42 UTC 起没有任何回报,而 health-summary 一直 healthy)。
+    主机每小时 POST /internal/executor/report 一次心跳,写进 loop_attempt(loop_name = executor_host)。这里每小时看一次
+    最新那一行:2 小时内有 ⇒ beat ok;没有 ⇒ beat 失败,并在「有 → 没有」「没有 → 有」翻转时各发一次 Telegram。
+    主机那一边的事(进程、网络、令牌)这里看不到,只负责让沉默响起来。
+    判活:`loop_beat` 里 `_executor_host_watch_loop`(liveness 里是 marker,3 小时没 ok ⇒ critical)。"""
+    await _asyncio.sleep(_boot_delay(6000))
+    _was_fresh = None
+    while True:
+        try:
+            from src.data.vector.market_state_writer import _sb_get as _ew_get
+            _rd = await _ew_get("loop_attempt", {"select": "at,outcome", "loop_name": "eq.executor_host",
+                                                 "order": "at.desc", "limit": "1"})
+            if not _rd.ok:
+                raise RuntimeError(f"loop_attempt 读不到:{_rd.reason}")
+            _last = (_rd.rows or [{}])[0].get("at")
+            _age_h = ((_dt.datetime.now(_dt.timezone.utc) - _dt.datetime.fromisoformat(str(_last).replace("Z", "+00:00")))
+                      .total_seconds() / 3600) if _last else None
+            _fresh = _age_h is not None and _age_h <= 2.0
+            _why = None if _fresh else (f"执行主机 {_age_h:.1f} 小时没有回报(最后一次 {_last})" if _age_h is not None
+                                       else "执行主机从没回报过")
+            await _beat("_executor_host_watch_loop", ok=_fresh, error=_why,
+                        detail={"last_report_at": _last, "age_h": round(_age_h, 2) if _age_h is not None else None})
+            if _was_fresh is not None and _fresh != _was_fresh or (_was_fresh is None and not _fresh):
+                from src.api.notify import notify_telegram
+                await notify_telegram(f"[executor watch] {'主机恢复回报' if _fresh else _why} —— 真钱腿请查东京主机")
+            _was_fresh = _fresh
+        except Exception as _e:
+            print(f"[EXEC-WATCH] ⚠️  pass FAILED: {_e}")
+            await _beat("_executor_host_watch_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_executor_host_watch_loop():
+    _asyncio.create_task(_executor_host_watch_loop())
+    print("[EXEC-WATCH] ✅ executor host heartbeat watch scheduled (hourly)")
+
+
 async def _oi_snapshot_loop():
     """S-690 真钱进场过滤的截面(Jazz 10-27「直接应用」;signals/oi_leverage):信号日 d 收盘那一刻的规模中性 OI/市值。
     d 的 Binance 归档要到 d+1 约 07:30 UTC 才有,执行器 00:45 取计划 —— 所以 d+1 00:05 UTC 从 CoinGecko Pro 拍一张
@@ -2124,40 +2209,6 @@ async def _oi_snapshot_loop():
 async def _start_oi_snapshot_loop():
     _asyncio.create_task(_oi_snapshot_loop())
     print("[OI-SNAP] ✅ S-690 d-close OI/mcap snapshot scheduled (00:05 UTC live, hourly audit vs archive)")
-
-
-async def _protocol_revenue_loop():
-    """协议收入 / 持币人收入的每日快照(S-661 的价值捕获比的前向数据;src/data/market/protocol_revenue.py)。
-    DeFiLlama 概览两次请求覆盖全部协议;每天 01:20 UTC(前一天的 24h / 30d 已结)。
-    判活:`select max(d) from protocol_revenue_daily` = 昨天;`loop_attempt` 里 `_protocol_revenue_loop`。"""
-    await _asyncio.sleep(_boot_delay(2400))
-    while True:
-        try:
-            from src.data.market.protocol_revenue import run_once as _pr_run
-            r = await _pr_run()
-            print(f"[PROTOCOL-REV] {r['status']} · {str(r.get('reason'))[:160]}")
-            await _beat("_protocol_revenue_loop", ok=r["status"] == "ok", refused=r["status"] == "refused",
-                        detail=r.get("detail"), error=None if r["status"] == "ok" else str(r.get("reason"))[:200])
-            await _record_loop_attempt("_protocol_revenue_loop", r["status"], reason=str(r.get("reason"))[:400],
-                                       detail=r.get("detail"), writer="src.api.main._protocol_revenue_loop")
-        except Exception as _e:
-            print(f"[PROTOCOL-REV] ⚠️  pass FAILED: {_e}")
-            await _beat("_protocol_revenue_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
-            await _record_loop_attempt("_protocol_revenue_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
-                                       writer="src.api.main._protocol_revenue_loop")
-        await _sleep_until_utc(1, 20)
-
-
-@app.on_event("startup")
-async def _start_protocol_revenue_loop():
-    _asyncio.create_task(_protocol_revenue_loop())
-    print("[PROTOCOL-REV] ✅ DeFiLlama revenue / holders-revenue daily snapshot scheduled (01:20 UTC)")
-
-
-@app.on_event("startup")
-async def _start_r_tickets_paper_loop():
-    _asyncio.create_task(_r_tickets_paper_loop())
-    print("[R-TICKETS] ✅ trading layer v2 paper book scheduled (r_tickets_scan, hourly)")
 
 
 @app.on_event("startup")
@@ -2266,7 +2317,13 @@ async def _style_header_loop():
                                        writer="src.api.main._style_header_loop")
         # 失败(多为部署后所有循环同时起跑时的读超时)20 分钟后重试,不等 6 小时 ——
         # ① 的周一再平衡读的就是这里写的前一日市值(S-474)
-        await _asyncio.sleep(6 * 3600 if _st_ok else 1200)
+        # 10-28:成功后也不能只睡 6 小时 —— 6 小时是从部署那一刻起算的,10-27 那天它在 21:01 / 03:08 跑,
+        # 00:30 的时点指数读不到 10-27 的大币市值 ⇒ majors 缺一天 ⇒ R-v2 扫描停了 30 多小时。
+        # 每个 UTC 日收盘后 00:05 必跑一轮(与 6 小时一轮取先到的)。
+        _now = _dt.datetime.now(_dt.timezone.utc)
+        _next_close = (_now + _dt.timedelta(days=1)).replace(hour=0, minute=5, second=0, microsecond=0) \
+            if _now.hour > 0 or _now.minute >= 5 else _now.replace(hour=0, minute=5, second=0, microsecond=0)
+        await _asyncio.sleep(min(6 * 3600, max(60.0, (_next_close - _now).total_seconds())) if _st_ok else 1200)
 
 
 @app.on_event("startup")
