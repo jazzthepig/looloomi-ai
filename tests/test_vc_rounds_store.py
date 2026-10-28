@@ -151,3 +151,12 @@ def test_parse_rss_google_news_shape():
     assert items[0]["publisher"] == "The Block"
     r = parse_headline(items[0]["title"], items[0]["publisher"], items[0]["pub_ts"], items[0]["link"])
     assert r["project"] == "Acme" and r["announced_date"] == "2026-10-27"
+
+
+def test_investor_spellings_count_once():
+    rows = merge_rounds([], [
+        _row("Acme raises $5M seed led by a16z crypto for stablecoin rails", "The Block", 20),
+        _row("Bolt raises $6M seed led by Andreessen Horowitz for onchain credit", "The Block", 21),
+    ])
+    top = aggregate(rows, dt.date(2026, 10, 28))["top_investors"][0]
+    assert top["name"] == "a16z" and top["deals"] == 2 and top["led"] == 2

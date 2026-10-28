@@ -1952,7 +1952,28 @@ async def get_cg_vc_portfolios() -> list[dict]:
     r_cached = await _redis_get(key)
     if r_cached:
         return _cache_set(key, r_cached)
+    # A fresh build makes ~15 sequential CoinGecko calls (≈ 60–90 s); never make a visitor wait for it.
+    # Serve the last build (kept 24 h) and refresh in the background.
+    stale = await _redis_get(f"{key}:stale")
+    if stale and not _VC_PORT_REFRESHING.get("on"):
+        _VC_PORT_REFRESHING["on"] = True
 
+        async def _bg():
+            try:
+                await _build_cg_vc_portfolios(key)
+            finally:
+                _VC_PORT_REFRESHING["on"] = False
+        asyncio.create_task(_bg())
+        return stale
+    if stale:
+        return stale
+    return await _build_cg_vc_portfolios(key)
+
+
+_VC_PORT_REFRESHING: dict = {"on": False}
+
+
+async def _build_cg_vc_portfolios(key: str) -> list[dict]:
     if not CG_API_KEY:
         return []
 
@@ -2026,6 +2047,7 @@ async def get_cg_vc_portfolios() -> list[dict]:
             await asyncio.sleep(0.4)
         result.sort(key=lambda x: -(x["market_cap"] or 0))
         await _redis_set(key, result, ttl=1800)
+        await _redis_set(f"{key}:stale", result, ttl=86400)
         return _cache_set(key, result)
     except Exception as e:
         _logger.warning(f"[CG_VC_PORTFOLIOS] Error: {e}")

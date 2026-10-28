@@ -822,7 +822,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                   <Label Icon={Activity}>VC Portfolio Performance</Label>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ fontSize: 9, fontFamily: FONTS.mono, color: T.muted, letterSpacing: "0.06em" }}>
-                      Refreshed · 10 min
+                      Refreshed · 30 min
                     </span>
                     <span style={{
                       fontSize: 8, fontWeight: 700, letterSpacing: "0.1em",

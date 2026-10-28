@@ -500,6 +500,23 @@ def merge_rounds(existing: list[dict], new: list[dict]) -> list[dict]:
 
 
 # ── Aggregate (what the panel shows) ─────────────────────────────────────────
+# One firm, several spellings in headlines ("a16z crypto", "a16z", "Andreessen Horowitz") — count once.
+_INV_ALIASES = {"a16z crypto": "a16z", "andreessen horowitz": "a16z", "a16z": "a16z",
+                "binance labs": "yzi labs", "yzi labs": "yzi labs", "coinbase ventures": "coinbase ventures",
+                "pantera": "pantera capital", "pantera capital": "pantera capital",
+                "polychain": "polychain capital", "polychain capital": "polychain capital",
+                "multicoin": "multicoin capital", "multicoin capital": "multicoin capital",
+                "dragonfly": "dragonfly", "dragonfly capital": "dragonfly"}
+_INV_DISPLAY = {"a16z": "a16z", "yzi labs": "YZi Labs", "pantera capital": "Pantera Capital",
+                "polychain capital": "Polychain Capital", "multicoin capital": "Multicoin Capital",
+                "dragonfly": "Dragonfly", "coinbase ventures": "Coinbase Ventures"}
+
+
+def _inv_key(name: str) -> str:
+    k = re.sub(r"\s+", " ", (name or "").strip().lower())
+    return _INV_ALIASES.get(k, k)
+
+
 def aggregate(rows: list[dict], today: dt.date, window_days: int = WINDOW_DAYS) -> dict[str, Any]:
     start = today - dt.timedelta(days=window_days)
     inwin = [r for r in rows if r.get("announced_date") and dt.date.fromisoformat(str(r["announced_date"])[:10]) >= start]
@@ -514,12 +531,16 @@ def aggregate(rows: list[dict], today: dt.date, window_days: int = WINDOW_DAYS) 
         c["usd"] += float(r.get("amount_usd") or 0) if in_totals(r) else 0.0
     inv: dict[str, dict] = {}
     for r in rounds:
-        leads = {x.lower() for x in r.get("lead_investors") or []}
+        leads = {_inv_key(x) for x in r.get("lead_investors") or []}
+        seen: set = set()
         for v in r.get("investors") or []:
-            k = v.strip()
-            e = inv.setdefault(k.lower(), {"name": k, "deals": 0, "led": 0})
+            key = _inv_key(v)
+            if key in seen:
+                continue
+            seen.add(key)
+            e = inv.setdefault(key, {"name": _INV_DISPLAY.get(key, v.strip()), "deals": 0, "led": 0})
             e["deals"] += 1
-            e["led"] += int(k.lower() in leads)
+            e["led"] += int(key in leads)
     top_inv = sorted(inv.values(), key=lambda e: (-e["deals"], -e["led"], e["name"]))[:10]
     weeks: dict[str, dict] = {}
     for r in rounds:
