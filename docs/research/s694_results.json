@@ -1,0 +1,56 @@
+{
+ "ledger": "S-694",
+ "weeks": 199,
+ "rebalance": "2023-01-02..2026-10-19 Mondays",
+ "verdict": "fail",
+ "cw_half": {
+  "all": {
+   "excess_ann_net": 0.0073,
+   "excess_ann_gross": 0.0137,
+   "te": 0.0257,
+   "base_ann": 0.395
+  },
+  "to_2024_11": {
+   "excess_ann_net": -0.0055,
+   "excess_ann_gross": 0.0006
+  },
+  "after": {
+   "excess_ann_net": 0.0204,
+   "excess_ann_gross": 0.027
+  }
+ },
+ "ew_half": {
+  "all": {
+   "excess_ann_net": -0.005,
+   "excess_ann_gross": 0.0037
+  },
+  "to_2024_11": {
+   "excess_ann_net": -0.0362
+  },
+  "after": {
+   "excess_ann_net": 0.0276
+  }
+ },
+ "cw_drop": {
+  "all": {
+   "excess_ann_net": 0.0045
+  },
+  "to_2024_11": {
+   "excess_ann_net": -0.0221
+  },
+  "after": {
+   "excess_ann_net": 0.032
+  }
+ },
+ "random_control_gross": {
+  "draws": 1000,
+  "seed": 0.694,
+  "actual_log_excess": 0.052,
+  "pct_all": 0.874,
+  "pct_to_2024_11": 0.536,
+  "pct_after": 0.953,
+  "random_mean": -0.0077,
+  "random_p95": 0.0843
+ },
+ "share_weeks_in_q1": "SOL 45%, INJ 44%, OP 38%, SUI 38%, AAVE 38%, UNI 37%, LINK 37%, NEAR 36%, AVAX 34%, XRP 32%, ARB 32%, DOGE 31%, BCH 30%, ETH 28%, APT 26%, FIL 24%, ADA 24%, BTC 20%, ETC 20%, LTC 19%, BNB 17%, DOT 15%, ATOM 12%, TRX 9%"
+}

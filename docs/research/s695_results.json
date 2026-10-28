@@ -1,0 +1,153 @@
+{
+ "ledger": "S-695",
+ "n_both_tagged": 653,
+ "main_in_s690_kept": {
+  "label": "S-690 留下的票(非 H)",
+  "n": 354,
+  "G": {
+   "n": 58,
+   "mean_r": 0.5624,
+   "sum_r": 32.62,
+   "n_r_ge_5": 2
+  },
+  "notG": {
+   "n": 296,
+   "mean_r": 0.8568,
+   "sum_r": 253.61,
+   "n_r_ge_5": 13
+  },
+  "diff": -0.2944,
+  "boot_p": 0.1915,
+  "halves": {
+   "to_2024_06": {
+    "n_G": 36,
+    "n_N": 193,
+    "diff": 0.1342
+   },
+   "after": {
+    "n_G": 22,
+    "n_N": 103,
+    "diff": -1.0909
+   }
+  },
+  "fish": {
+   "n": 15,
+   "share_in_G": 0.1333,
+   "share_tickets_G": 0.1638
+  },
+  "verdict": {
+   "a": false,
+   "b": false,
+   "c": true,
+   "pass": false
+  }
+ },
+ "side_all": {
+  "label": "全部有两个标签的票",
+  "n": 653,
+  "G": {
+   "n": 173,
+   "mean_r": 0.3524,
+   "sum_r": 60.97,
+   "n_r_ge_5": 6
+  },
+  "notG": {
+   "n": 480,
+   "mean_r": 0.4893,
+   "sum_r": 234.86,
+   "n_r_ge_5": 18
+  },
+  "diff": -0.1369,
+  "boot_p": 0.336,
+  "halves": {
+   "to_2024_06": {
+    "n_G": 99,
+    "n_N": 317,
+    "diff": 0.2428
+   },
+   "after": {
+    "n_G": 74,
+    "n_N": 163,
+    "diff": -0.8046
+   }
+  },
+  "fish": {
+   "n": 24,
+   "share_in_G": 0.25,
+   "share_tickets_G": 0.2649
+  },
+  "verdict": {
+   "a": false,
+   "b": false,
+   "c": true,
+   "pass": false
+  }
+ },
+ "side_cells": {
+  "H0G0": {
+   "n": 296,
+   "mean_r": 0.8568,
+   "sum_r": 253.61,
+   "n_r_ge_5": 13
+  },
+  "H0G1": {
+   "n": 58,
+   "mean_r": 0.5624,
+   "sum_r": 32.62,
+   "n_r_ge_5": 2
+  },
+  "H1G0": {
+   "n": 184,
+   "mean_r": -0.1019,
+   "sum_r": -18.75,
+   "n_r_ge_5": 5
+  },
+  "H1G1": {
+   "n": 115,
+   "mean_r": 0.2465,
+   "sum_r": 28.35,
+   "n_r_ge_5": 4
+  }
+ },
+ "side_drop_top_ticket": {
+  "label": "非 H 去掉 ZEC 2025-09-06",
+  "n": 353,
+  "G": {
+   "n": 58,
+   "mean_r": 0.5624,
+   "sum_r": 32.62,
+   "n_r_ge_5": 2
+  },
+  "notG": {
+   "n": 295,
+   "mean_r": 0.6117,
+   "sum_r": 180.45,
+   "n_r_ge_5": 12
+  },
+  "diff": -0.0493,
+  "boot_p": 0.456,
+  "halves": {
+   "to_2024_06": {
+    "n_G": 36,
+    "n_N": 193,
+    "diff": 0.1342
+   },
+   "after": {
+    "n_G": 22,
+    "n_N": 102,
+    "diff": -0.3894
+   }
+  },
+  "fish": {
+   "n": 14,
+   "share_in_G": 0.1429,
+   "share_tickets_G": 0.1643
+  },
+  "verdict": {
+   "a": false,
+   "b": false,
+   "c": true,
+   "pass": false
+  }
+ }
+}
