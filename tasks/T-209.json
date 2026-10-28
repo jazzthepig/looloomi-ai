@@ -1,0 +1,27 @@
+{
+ "id": "T-209",
+ "owner": "lane-c",
+ "status": "open",
+ "created": "2026-10-28",
+ "forbidden_paths": [
+  "Shadow/",
+  "src/",
+  "paper_trading/",
+  "PROJECT_STATE.md",
+  "PROJECT_STATE_LOG.md",
+  "scripts/",
+  "migrations/"
+ ],
+ "title": "S-694 盲复算:① 面板 24 名里落在宽宇宙五因子合成最差五分之一的名字权重减半 vs 不倾斜 vs 随机减半(2023-01 → 2026-10,每周一调仓)",
+ "source": "Jazz 10-27「开启一个长任务做算法研究和升级」。台账 S-694 预注册(2026-10-28 12:04 UTC)写明 C 道盲复算。",
+ "allowed_paths": [
+  "docs/research/",
+  "tasks/T-209.json"
+ ],
+ "acceptance": {
+  "check": "**照台账 S-694 一字不改**。合成 = S-691 冻结的 F3−、F7+、F8−、F9−、F11−(定义同台账 S-691;宇宙 = 过 S-689 映射校验、CG 市值 ≥ 2,000 万、当天 OI > 0、五个因子都有定义、当天 ≥ 30 名),每个调仓日(周一 UTC,2023-01-02 → 2026-10-19)comp = 五个 percent_rank 的平均(方向按冻结符号),最差五分之一 = ntile(5) 第 1 档。面板 = 24 名(BTC ETH SOL BNB XRP DOGE ADA AVAX LINK DOT LTC TRX ATOM NEAR APT ARB OP SUI UNI AAVE INJ FIL ETC BCH),收益 = CG 日收盘(asset_mcap_daily,source = coingecko_pro_market_chart)周一到下周一。主 = 市值加权,落在最差档的权重 × 0.5 后归一;副 = 等权、剔除。成本 10 bp × Σ|目标 − 上周漂移后权重|。判据:(a) 年化净超额 > 0 且随机对照(每周随机挑同样个数减半,1,000 次)≥ 95 分位;(b) 两段(调仓日 ≤ 2024-11-30 / 之后)净超额都 > 0。只读 Supabase(publishable key)。**独立:** 交付前不读 docs/research/s694_*。新分支 git switch -c lane-c/T-209 origin/main。",
+  "expect": "脚本 docs/research/t209_avoid_tilt.py;结果 docs/research/t209_results.json(三个口径 × 全段 / 两段:年化净 / 毛超额、跟踪误差;随机对照分位;每个面板名字落在最差档的周占比);报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-209_avoid_tilt.md:开头一张表,然后判定,最后「协议问题」与「还看到了什么」(标探索)。in_review,推 lane-c/T-209。**交付 = 已推上分支**。"
+ },
+ "prior_value": "S-691 的「躲开」信号只在宽宇宙验过;在 ① 的大币盘子里没验过。",
+ "notes": ""
+}
