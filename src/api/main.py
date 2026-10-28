@@ -2168,6 +2168,51 @@ async def _start_executor_host_watch_loop():
     print("[EXEC-WATCH] ✅ executor host heartbeat watch scheduled (hourly)")
 
 
+async def _vc_rounds_loop():
+    """VC 融资轮(10-28 Jazz「特别是 vc funding flows」;data/vc/rounds_store):公开新闻标题 → vc_funding_rounds。
+    每小时一轮:Google News RSS 10 个检索(when:2d)+ 8 个加密媒体 RSS,顺序请求、间隔 3 秒;解析、跨媒体合并、upsert。
+    表里最早一轮晚于 180 天前 ⇒ 这一轮顺带补 4 周的历史窗口(每次 40 个请求,补满为止)。
+    判活:`select max(first_seen_at) from vc_funding_rounds`;`loop_beat` 里 `_vc_rounds_loop`。"""
+    await _asyncio.sleep(_boot_delay(600))
+    _bf_tried: set = set()                       # 同一个起点周只补一次(Google 那几周可能本来就没结果)
+    while True:
+        try:
+            from src.data.vc.rounds_store import WINDOW_DAYS, collect_once
+            from src.data.vector.market_state_writer import _sb_get as _vc_get
+            _rd = await _vc_get("vc_funding_rounds", {"select": "announced_date", "order": "announced_date.asc",
+                                                      "limit": "1"})
+            if not _rd.ok:
+                raise RuntimeError(f"vc_funding_rounds 读不到:{_rd.reason}")
+            _first = (_rd.rows or [{}])[0].get("announced_date")
+            _today = _dt.datetime.now(_dt.timezone.utc).date()
+            _gap_w, _done_w = 0, 0
+            if _first is None or _dt.date.fromisoformat(str(_first)[:10]) > _today - _dt.timedelta(days=WINDOW_DAYS - 7):
+                _done_w = 0 if _first is None else (_today - _dt.date.fromisoformat(str(_first)[:10])).days // 7
+                if _done_w not in _bf_tried:
+                    _bf_tried.add(_done_w)
+                    # 表是空的(或只有近几周):一轮补满 26 周(≈ 270 个请求 × 3 秒 ≈ 14 分钟,后台跑);之后每轮最多 4 周
+                    _gap_w = max(0, min(27 if _done_w <= 4 else 4, WINDOW_DAYS // 7 + 1 - _done_w))
+            res = await collect_once(backfill_weeks=_gap_w, backfill_start=_done_w)
+            st = res.get("status", "error")
+            print(f"[VC-ROUNDS] {st} · {res.get('headlines')} headlines → {res.get('parsed')} rounds → "
+                  f"{res.get('upserted')} upserted · backfill {_gap_w}w")
+            await _beat("_vc_rounds_loop", ok=st == "ok", detail=res, error=None if st == "ok" else res.get("reason"))
+            await _record_loop_attempt("_vc_rounds_loop", st, reason=str(res.get("reason") or "")[:400], detail=res,
+                                       writer="src.api.main._vc_rounds_loop")
+        except Exception as _e:
+            print(f"[VC-ROUNDS] ⚠️  pass FAILED: {_e}")
+            await _beat("_vc_rounds_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_vc_rounds_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._vc_rounds_loop")
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_vc_rounds_loop():
+    _asyncio.create_task(_vc_rounds_loop())
+    print("[VC-ROUNDS] ✅ VC funding rounds from public headlines scheduled (hourly, vc_funding_rounds)")
+
+
 async def _oi_snapshot_loop():
     """S-690 真钱进场过滤的截面(Jazz 10-27「直接应用」;signals/oi_leverage):信号日 d 收盘那一刻的规模中性 OI/市值。
     d 的 Binance 归档要到 d+1 约 07:30 UTC 才有,执行器 00:45 取计划 —— 所以 d+1 00:05 UTC 从 CoinGecko Pro 拍一张

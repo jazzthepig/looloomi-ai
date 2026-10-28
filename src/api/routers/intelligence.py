@@ -3,7 +3,7 @@ Intelligence router — macro events, VC funding, token unlocks, protocol intell
 Endpoints: /api/v1/intelligence/*, /api/v1/vc/*, /api/v1/protocols/*
 """
 from fastapi import APIRouter, HTTPException, Query, Response
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import logging
 import time
 
@@ -115,13 +115,47 @@ async def get_macro_events(response: Response):
 
 # ── VC Deal Flow ──────────────────────────────────────────────────────────────
 
+_VC_STORE_NOTE = (
+    "Rounds as reported in public news headlines (Google News and crypto outlets), collected hourly and "
+    "kept; the same round reported by several outlets is one row. Not a complete census: unreported or "
+    "undisclosed rounds are missing, and amounts are as reported, not verified.")
+
+
 @router.get("/api/v1/vc/funding-rounds")
-async def get_funding_rounds(response: Response, limit: int = 20):
+async def get_funding_rounds(response: Response, limit: int = 20, days: int = 180):
     """
-    Recent crypto VC funding rounds via DeFiLlama /raises.
-    Sorted by date desc, last 180 days, ≥$100K raises only.
-    TTL: 1h. Returns empty list when DeFiLlama is unavailable — never mock data.
+    Crypto VC funding rounds over the last `days` (default 180), newest first, plus window stats.
+
+    Primary: the persistent record `vc_funding_rounds` (src/data/vc/rounds_store.py, hourly
+    `_vc_rounds_loop`). Structured feeds are gated (DeFiLlama /raises 402 since 2026-06;
+    CryptoRank funding rounds need a paid tier), so rows are reported rounds parsed from public
+    headlines — the response says so. If the record cannot be read, falls back to the old
+    one-shot scan and labels it degraded. Never mock data.
     """
+    limit = max(1, min(int(limit or 20), 500))
+    days = max(7, min(int(days or 180), 365))
+    try:
+        from src.data.vc.rounds_store import aggregate, load_rows, to_api_row
+        today = datetime.now(timezone.utc).date()
+        rows = await load_rows(today - timedelta(days=days))
+        if rows:
+            stats = aggregate(rows, today, window_days=days)
+            srcs = sorted({s for r in rows for s in (r.get("sources") or [])})
+            response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=3600"
+            return {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "data": [to_api_row(r) for r in rows[:limit]],
+                "count": min(len(rows), limit), "total_in_window": len(rows),
+                "stats": stats,
+                "source": "news_headlines", "sources": srcs[:40], "n_outlets": len(srcs),
+                "data_status": "ok" if stats["covers_window"] else "partial",
+                "degraded": False,
+                "basis": "reported_rounds",
+                "note": _VC_STORE_NOTE + ("" if stats["covers_window"] else
+                         f" The record starts {stats['record_starts']}; the {days}-day window is still filling."),
+            }
+    except Exception as e:
+        _logger.warning(f"[VC] vc_funding_rounds read failed, falling back to live scan: {e}")
     try:
         raises = _sanitize_raises(await get_vc_raises(limit))
         response.headers["Cache-Control"] = "public, max-age=1800, stale-while-revalidate=3600"

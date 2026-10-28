@@ -154,6 +154,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
   const [raisesFilter, setRaisesFilter] = useState("All");
   const [lastUpdate, setLastUpdate]     = useState(null);
   const [stats, setStats]               = useState(null);
+  const [vcMeta, setVcMeta]             = useState(null);
   const [showUpdateDrawer, setShowUpdateDrawer] = useState(false);
   const [iframeError, setIframeError]   = useState(false);
   // selectedRWA removed — replaced by ProtocolIntelligence component
@@ -196,7 +197,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
         clearTimeout(timeoutId);
         const data = await res.json();
         // Map API data to sector format — live fields from get_defi_overview v2
-        const fmtB = (v) => (v && v > 1e7) ? `$${(v / 1e9).toFixed(1)}B` : (v && v > 0 ? `$${(v / 1e6).toFixed(0)}M` : "—");
+        const fmtB = (v) => (v && v > 1e8) ? `$${(v / 1e9).toFixed(1)}B` : (v && v >= 1e6 ? `$${(v / 1e6).toFixed(0)}M` : "—");
         // S-394 (2026-09-21): return null (not 0) when input is null, so backend's
         // "data unavailable" signal propagates to the heatmap rendering layer instead
         // of being collapsed into a real-looking 0.0% (S-262 §"一个形状,十次").
@@ -210,7 +211,8 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
           { name: "RWA",     change: fmtChg(data.rwa_change_24h),     tvl: fmtB(data.rwa_tvl) },
           { name: "DEX",     change: fmtChg(data.dex_change_24h),     tvl: fmtB(data.dex_tvl) },
           { name: "Lending", change: fmtChg(data.lending_change_24h), tvl: fmtB(data.lending_tvl) },
-          { name: "Oracle",  change: fmtChg(data.oracle_change_24h),  tvl: fmtB(data.oracle_tvl) },
+          // Oracles secure value, they do not hold it: DeFiLlama has no TVL for them (a few $K of dust). Direction only.
+          { name: "Oracle",  change: fmtChg(data.oracle_change_24h),  tvl: "—" },
         ];
         setSectorData(mapped);
       } catch (e) {
@@ -264,9 +266,23 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
   const fetchRaises = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${API_BASE}/vc/funding-rounds?limit=100`);
+      const r = await fetch(`${API_BASE}/vc/funding-rounds?limit=400&days=180`);
       const json = await r.json();
       const raw = json.data || [];
+      setVcMeta({
+        status: json.data_status || (raw.length ? "ok" : "no_data"),
+        note: json.note || null,
+        nOutlets: json.n_outlets ?? null,
+        source: json.source || null,
+        weekly: json.stats?.weekly || [],
+        byCategory: json.stats?.by_category || null,
+        fundCloses: json.stats?.fund_closes ?? null,
+        fundClosesUsd: json.stats?.fund_closes_usd ?? null,
+        heldOut: json.stats?.held_out_of_totals ?? 0,
+        heldOutRule: json.stats?.held_out_rule || null,
+        recordStarts: json.stats?.record_starts || null,
+        median: json.stats?.median_usd ?? null,
+      });
 
       /* ── Normalize backend fields with comprehensive fallback ── */
       const all = raw.map(item => {
@@ -304,9 +320,16 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
           amount,
           date,
           dateStr,
-          leadInvestors: Array.isArray(item.investors) ? item.investors
-            : Array.isArray(item.leadInvestors) ? item.leadInvestors
+          // Named leads first; when no lead is named, the investors the headline mentions.
+          leadInvestors: (Array.isArray(item.leadInvestors) && item.leadInvestors.length) ? item.leadInvestors
+            : Array.isArray(item.investors) ? item.investors
             : [],
+          hasLead: Array.isArray(item.leadInvestors) && item.leadInvestors.length > 0,
+          nSources: item.n_sources || 1,
+          sources: item.sources || [],
+          link: item.link || "",
+          valuation: item.valuation_usd ? item.valuation_usd / 1_000_000 : null,
+          inTotals: item.in_totals !== false,
           category: item.category || item.sector || "—",
           categoryGroup: item.categoryGroup || item.category || "—",
           sector: item.sector || item.category || "—",
@@ -338,24 +361,40 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
       const recent = recent180;
       const recentRwa = sector;
 
-      const vcMap = {};
-      recent.forEach(r => {
-        r.leadInvestors.forEach(v => { vcMap[v] = (vcMap[v] || 0) + 1; });
-      });
-      const topVC = Object.entries(vcMap).sort((a, b) => b[1] - a[1])[0];
-
-      // totalAmount / rwaAmount only count disclosed amounts (amount > 0)
-      const disclosedRecent = recent.filter(r => r.amount > 0);
-      const disclosedRwa    = recentRwa.filter(r => r.amount > 0);
-      setStats({
-        totalDeals:       recent.length,
-        disclosedDeals:   disclosedRecent.length,
-        totalAmount:      disclosedRecent.reduce((s, r) => s + r.amount, 0),
-        rwaAmount:        disclosedRwa.reduce((s, r) => s + r.amount, 0),
-        rwaDeals:         recentRwa.length,
-        topVC:            topVC ? topVC[0] : "—",
-        topVCDeals:       topVC ? topVC[1] : 0,
-      });
+      // Server stats cover the whole window (not just the rows sent); fall back to counting rows.
+      const st = json.stats;
+      if (st) {
+        const rwa = st.by_category?.RWA || { deals: 0, usd: 0 };
+        const top = (st.top_investors || [])[0];
+        setStats({
+          totalDeals:     st.deals,
+          disclosedDeals: st.disclosed_deals,
+          totalAmount:    (st.total_usd || 0) / 1_000_000,
+          rwaAmount:      (rwa.usd || 0) / 1_000_000,
+          rwaDeals:       rwa.deals || 0,
+          topVC:          top ? top.name : "—",
+          topVCDeals:     top ? top.deals : 0,
+          topVCLed:       top ? top.led : 0,
+        });
+      } else {
+        const vcMap = {};
+        recent.filter(r => r.category !== "VC Fund").forEach(r => {
+          r.leadInvestors.forEach(v => { vcMap[v] = (vcMap[v] || 0) + 1; });
+        });
+        const topVC = Object.entries(vcMap).sort((a, b) => b[1] - a[1])[0];
+        const rounds          = recent.filter(r => r.category !== "VC Fund");
+        const disclosedRecent = rounds.filter(r => r.amount > 0 && r.inTotals);
+        const disclosedRwa    = recentRwa.filter(r => r.amount > 0 && r.inTotals);
+        setStats({
+          totalDeals:       rounds.length,
+          disclosedDeals:   disclosedRecent.length,
+          totalAmount:      disclosedRecent.reduce((s, r) => s + r.amount, 0),
+          rwaAmount:        disclosedRwa.reduce((s, r) => s + r.amount, 0),
+          rwaDeals:         recentRwa.length,
+          topVC:            topVC ? topVC[0] : "—",
+          topVCDeals:       topVC ? topVC[1] : 0,
+        });
+      }
     } catch (e) {
       console.error("Raises fetch error:", e);
     } finally {
@@ -385,13 +424,14 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
     fetchMacroEvents();
   }, []);
 
-  const FILTERS = ["All", "RWA", "DeFi", "AI", "Infrastructure"];
+  const FILTERS = ["All", "RWA", "Payments", "DeFi", "Trading", "AI", "Infrastructure", "VC Fund"];
 
   const filtered = raises.filter(r => {
-    // All: show all (including undisclosed amounts — shown as "—" in table)
-    if (raisesFilter === "All") return true;
-    // RWA: show RWA-related projects
-    if (raisesFilter === "RWA") return isRWA(r);
+    // All: company rounds (fund closes have their own filter — a $1B fund is not a $1B round)
+    if (raisesFilter === "All") return r.category !== "VC Fund";
+    if (raisesFilter === "VC Fund") return r.category === "VC Fund";
+    // RWA: the server's category, or RWA words for rows from the old live scan
+    if (raisesFilter === "RWA") return r.category === "RWA" || (r.category !== "VC Fund" && isRWA(r));
     // Other filters: match category
     return (r.category || "").toLowerCase().includes(raisesFilter.toLowerCase()) ||
            (r.categoryGroup || "").toLowerCase().includes(raisesFilter.toLowerCase());
@@ -491,7 +531,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                 <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 0 }}>
                   {[
                     (view === "all" || view === "macro") && { label: "MACRO EVENTS", value: macroEvents.length || "—", color: T.cyan },
-                    (view === "all" || view === "events") && { label: "VC ROUNDS", value: raises.length || "—", color: T.t2 },
+                    (view === "all" || view === "events") && { label: "VC ROUNDS", value: stats?.totalDeals || raises.length || "—", color: T.t2 },
                     (view === "all" || view === "macro") && { label: "DEFI TVL", value: sectorData.find(s => s.name === "DeFi")?.tvl || "—", color: T.t2 },
                   ].filter(Boolean).map((s, i, arr) => (
                     <div key={i} style={{
@@ -565,10 +605,13 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               flexWrap: "wrap",
             }}>
               {[
-                { label: "180d Total Raised", value: stats ? fmt.amount(stats.totalAmount) : null, sub: `${stats?.totalDeals ?? "—"} deals (${stats?.disclosedDeals ?? 0} disclosed)`, color: T.blue },
-                { label: "RWA Sector",        value: stats ? fmt.amount(stats.rwaAmount)  : null, sub: `${stats?.rwaDeals ?? "—"} RWA deals`, color: T.amber },
-                { label: "Most Active VC",    value: stats?.topVC ?? null,                         sub: `${stats?.topVCDeals ?? "—"} deals`, color: T.green },
-                { label: "Source",            value: "Live",                                sub: "Verified feeds · refreshed hourly", color: T.t3 },
+                { label: "180d Total Raised", value: stats ? fmt.amount(stats.totalAmount) : null, sub: `${stats?.totalDeals ?? "—"} rounds (${stats?.disclosedDeals ?? 0} with amount)`, color: T.blue },
+                { label: "RWA Sector",        value: stats ? fmt.amount(stats.rwaAmount)  : null, sub: `${stats?.rwaDeals ?? "—"} RWA rounds`, color: T.amber },
+                { label: "Most Active VC",    value: stats?.topVC ?? null,                         sub: `${stats?.topVCDeals ?? "—"} rounds named${stats?.topVCLed ? ` · ${stats.topVCLed} led` : ""}`, color: T.green },
+                { label: "Fund Closes",       value: vcMeta?.fundCloses != null ? fmt.amount((vcMeta.fundClosesUsd || 0) / 1_000_000) : "—",
+                  sub: vcMeta?.fundCloses != null ? `${vcMeta.fundCloses} VC funds closed` : "—", color: T.t2 },
+                { label: "Source",            value: vcMeta?.source === "news_headlines" ? "News-reported" : (vcMeta?.status === "degraded" ? "Degraded" : "—"),
+                  sub: vcMeta?.nOutlets ? `${vcMeta.nOutlets} outlets · collected hourly` : "headline scan · best effort", color: T.t3 },
               ].map((s, i, arr) => (
                 <div key={i} style={{
                   paddingRight: 36, paddingLeft: i === 0 ? 0 : 0,
@@ -588,6 +631,34 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
               ))}
             </div>
             )}
+
+            {/* Weekly flow — disclosed amount per week (company rounds; fund closes and unstaged ≥$500M rows excluded) */}
+            {(view === "all" || view === "events") && vcMeta?.weekly?.length > 0 && (() => {
+              const wk = vcMeta.weekly;
+              const max = Math.max(...wk.map(w => w.usd || 0), 1);
+              return (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 9, letterSpacing: "0.14em", color: T.t3, textTransform: "uppercase", opacity: 0.6 }}>
+                      Weekly flow · disclosed $ per week
+                    </span>
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, opacity: 0.5 }}>
+                      {vcMeta.median ? `median round ${fmt.amount(vcMeta.median / 1_000_000)}` : ""}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 64 }}>
+                    {wk.map(w => (
+                      <div key={w.week} title={`week of ${w.week}: ${w.deals} rounds · ${fmt.amount((w.usd || 0) / 1_000_000)}`}
+                        style={{ flex: 1, minWidth: 4, height: `${Math.max(3, (w.usd || 0) / max * 100)}%`,
+                                 background: "rgba(75,158,255,0.45)", borderRadius: "2px 2px 0 0" }} />
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5, marginTop: 4 }}>
+                    <span>{wk[0]?.week}</span><span>{wk[wk.length - 1]?.week}</span>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* ══ Protocol Intelligence ════════════════════════════════════ */}
             {view === "all" && (
@@ -896,10 +967,11 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                             Data Source Information
                           </div>
                           <div style={{ fontSize: 11, color: T.secondary, fontFamily: FONTS.body, lineHeight: 1.5 }}>
-                            Sources: The Block · Blockworks · CryptoSlate · CoinTelegraph · CoinGecko Pro
+                            {vcMeta?.note || "Rounds as reported in public news headlines."}
                           </div>
                           <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body, marginTop: 6 }}>
-                            Coverage: Global crypto VC funding rounds · RSS headline extraction + CoinGecko data
+                            {vcMeta?.recordStarts ? `Record starts ${vcMeta.recordStarts}. ` : ""}
+                            {vcMeta?.heldOutRule ? `${vcMeta.heldOut} row(s) listed but kept out of totals: ${vcMeta.heldOutRule}.` : ""}
                           </div>
                         </div>
                         <button className="lm-action-btn" onClick={fetchRaises} style={{ borderColor: `${T.amber}40` }}>
@@ -907,7 +979,7 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                         </button>
                       </div>
                       <div style={{ fontSize: 10, color: T.muted, fontFamily: FONTS.body }}>
-                        Default filter: RWA/DeFi/Infrastructure · Amount &gt; $1M · Sorted by date
+                        Same round reported by several outlets = one row · earliest report date · sorted newest first
                       </div>
                     </div>
                   )}
@@ -934,8 +1006,8 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                       color: '#4B9EFF', padding: '2px 7px', borderRadius: '3px',
                       fontSize: '8px', fontWeight: '700', letterSpacing: '0.1em',
                       fontFamily: FONTS.display
-                    }}>LIVE</span>
-                    <span>Aggregated · refreshed hourly</span>
+                    }}>{vcMeta?.status === "ok" || vcMeta?.status === "partial" ? "LIVE" : "DEGRADED"}</span>
+                    <span>{vcMeta?.status === "partial" ? "Record still filling · collected hourly" : "News-reported · collected hourly"}</span>
                     <span style={{color:'rgba(148,163,184,0.35)'}}>·</span>
                     <span id="vcUpdateTime">Updated {lastUpdate ? lastUpdate.toLocaleTimeString() : 'just now'}</span>
                   </div>
@@ -978,10 +1050,12 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                             display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
                           }}>
                             <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: T.muted, letterSpacing: "0.10em", textTransform: "uppercase", marginBottom: 4 }}>
-                              Funding feed — awaiting data source
+                              {raises.length ? "No rounds in this category" : "Funding record is empty"}
                             </div>
                             <div style={{ fontFamily: FONTS.body, fontSize: 11, color: T.t4, lineHeight: 1.6, maxWidth: 340 }}>
-                              Structured funding-round data resumes when CryptoRank Pro is enabled. Headline sources are scanned best-effort in the meantime.
+                              {raises.length
+                                ? "Try another filter — categories come from each headline's wording."
+                                : "The hourly collector has not written rounds yet. This is a collection gap, not a quiet market."}
                             </div>
                             <button
                               className="lm-action-btn"
@@ -1021,21 +1095,34 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                                     {r.name}
                                   </span>
                                   {r.source && r.source !== "defillama" && (
-                                    <span style={{
+                                    <span title={(r.sources || []).join(" · ")} style={{
                                       fontFamily: FONTS.mono, fontSize: 7, fontWeight: 600,
                                       color: T.t4, background: "rgba(99,102,241,0.06)",
                                       border: `1px solid rgba(99,102,241,0.12)`,
                                       padding: "1px 4px", borderRadius: 2, letterSpacing: "0.04em",
                                     }}>
-                                      {r.source}
+                                      {r.nSources > 1 ? `${r.nSources} outlets` : r.source}
                                     </span>
+                                  )}
+                                  {!r.inTotals && (
+                                    <span title="≥ $500M with no stage named — listed, kept out of totals" style={{
+                                      fontFamily: FONTS.mono, fontSize: 7, color: T.amber, border: `1px solid ${T.amber}40`,
+                                      padding: "1px 4px", borderRadius: 2,
+                                    }}>not in totals</span>
                                   )}
                                 </div>
                                 <div style={{ fontSize: 9, color: T.t3, fontFamily: FONTS.body, marginTop: 2 }}>
                                   {r.sector !== "—" ? r.sector : r.category}
                                   {r.description && selectedVCRound?.name === r.name && (
                                     <span style={{ display: "block", marginTop: 4, fontSize: 10, color: T.t2, lineHeight: 1.5 }}>
-                                      {r.description.slice(0, 160)}
+                                      {stripHtml(r.description).slice(0, 200)}
+                                      {r.valuation ? ` · valuation ${fmt.amount(r.valuation)}` : ""}
+                                      {r.sources?.length ? ` · reported by ${r.sources.slice(0, 5).join(", ")}` : ""}
+                                      {r.link && (
+                                        <a href={r.link} target="_blank" rel="noopener noreferrer"
+                                           onClick={e => e.stopPropagation()}
+                                           style={{ marginLeft: 6, color: T.cyan }}>source ↗</a>
+                                      )}
                                     </span>
                                   )}
                                 </div>
@@ -1083,11 +1170,10 @@ export default function IntelligencePage({ activeTab, setActiveTab, isSection = 
                     fontSize: '9px', color: 'rgba(148,163,184,0.45)', letterSpacing: '0.06em'
                   }}>
                     <span>
-                      Sources: The Block · Blockworks · CryptoSlate · CoinGecko Pro ·
-                      Deal amounts reflect reported figures and may be estimates.
-                      CometCloud does not verify individual deal terms.
+                      Rounds as reported in public news headlines{vcMeta?.nOutlets ? ` (${vcMeta.nOutlets} outlets)` : ""} ·
+                      amounts as reported, not verified · not a complete census of all rounds.
                     </span>
-                    <span>Data refreshes hourly</span>
+                    <span>Collected hourly</span>
                   </div>
                 </div>
             </div>}
