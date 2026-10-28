@@ -288,10 +288,12 @@ const PILLAR_DEFS = [
 
 // Grade definitions — percentile-based (Option A)
 const GRADE_DEFINITIONS = [
-  { grade: "A", minScore: "Top 15%", label: "Institutional Quality", desc: "CIS rating: VERY HIGH. Meets institutional-grade standards across all five pillars. Strong composite signal supported by fundamental and momentum data.", borderColor: "#00D98A" },
-  { grade: "B", minScore: "Top 50%", label: "Investment Grade",       desc: "CIS rating: HIGH. Solid fundamentals with selective risk factors. Scores above the universe median across the majority of pillars.", borderColor: "#4472FF" },
-  { grade: "C", minScore: "Top 85%", label: "Watch List",             desc: "CIS rating: NEUTRAL. Elevated risk or compressing momentum. Pillar scores show mixed signals — monitor for directional change.", borderColor: "#F59E0B" },
-  { grade: "D", minScore: "Bottom 15%", label: "Low Score",           desc: "CIS rating: LOW. Significant structural weakness across multiple pillars. Scores in the bottom quartile of the live universe.", borderColor: "#FF2D55" },
+  // Grades are ABSOLUTE score bands (same thresholds as the methodology text below), not percentiles —
+  // the old "Top 15% / bottom quartile" copy contradicted the published rule.
+  { grade: "A", minScore: "75 – 100", label: "Institutional Quality", desc: "A+ ≥ 85, A ≥ 75. Strong across all five pillars on the absolute scale.", borderColor: "#00D98A" },
+  { grade: "B", minScore: "55 – 74",  label: "Investment Grade",       desc: "B+ ≥ 65, B ≥ 55. Solid on most pillars with selective weaknesses.", borderColor: "#4472FF" },
+  { grade: "C", minScore: "35 – 54",  label: "Watch List",             desc: "C+ ≥ 45, C ≥ 35. Mixed pillar picture — strengths offset by clear weaknesses.", borderColor: "#F59E0B" },
+  { grade: "D", minScore: "below 35", label: "Low Score",              desc: "D ≥ 25, F < 25. Structural weakness across several pillars.", borderColor: "#FF2D55" },
 ];
 
 // Responsive styles
@@ -1530,7 +1532,7 @@ export default function CISLeaderboard({ minimal = false, externalData = null, o
               fontFamily: FONTS.display, fontSize: 14, fontWeight: 700,
               color: T.primary, letterSpacing: "-0.01em", marginBottom: 4,
             }}>
-              CIS Methodology v4.0
+              CIS Methodology v4.1
             </div>
             <div style={{
               fontFamily: FONTS.body, fontSize: 12, color: T.secondary,

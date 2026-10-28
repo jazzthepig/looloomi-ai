@@ -25,9 +25,9 @@ def _strip_html(text: str) -> str:
     text = re.sub(r"<[^>]+>", " ", text)
     # Remove any remaining unclosed tag fragments (e.g. truncated <img src="...")
     text = re.sub(r"<[^>]*$", "", text)
-    # Decode common HTML entities
-    text = text.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">") \
-               .replace("&nbsp;", " ").replace("&quot;", '"').replace("&#39;", "'")
+    # Decode ALL entities — numeric ones too ("&#8216;", "&#9654;" reached the page raw, 2026-10-28)
+    import html as _html
+    text = _html.unescape(_html.unescape(text))
     # Collapse whitespace
     return re.sub(r"\s+", " ", text).strip()
 
@@ -145,10 +145,17 @@ async def _fetch_rss(feed: dict, client: httpx.AsyncClient) -> list:
         if channel is None:
             return []
         for item in channel.findall("item")[:12]:
-            title       = (item.findtext("title") or "").strip()
+            title       = _strip_html(item.findtext("title") or "")
             link        = (item.findtext("link") or "").strip()
             pub_date    = (item.findtext("pubDate") or "").strip()
-            description = _strip_html(item.findtext("description") or "")[:250]
+            description = _strip_html(item.findtext("description") or "")
+            # Some feeds open the description with "▶ <Outlet> <Title> …" — drop the echo, keep the body.
+            description = description.lstrip("▶►▸ ").strip()
+            if description.startswith(feed["source"]):
+                description = description[len(feed["source"]):].strip()
+            if title and description.startswith(title):
+                description = description[len(title):].strip(" -–:")
+            description = description[:250]
 
             if not title or not _is_macro_relevant(title, description):
                 continue

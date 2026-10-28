@@ -130,9 +130,10 @@ const ProtocolDetail = ({ protocol }) => {
       {/* TVL stats row */}
       <div style={{ display: "flex", gap: 20, marginBottom: 14, flexWrap: "wrap" }}>
         {[
-          { label: "TVL", value: p.live_data ? (p.tvl_formatted || "—") : "—", color: p.live_data ? T.t1 : T.t3 },
-          { label: "7D", value: p.live_data ? `${p.tvl_change_7d > 0 ? "+" : ""}${p.tvl_change_7d?.toFixed(1) ?? 0}%` : "—", color: p.live_data ? (p.tvl_change_7d > 0 ? T.green : p.tvl_change_7d < 0 ? T.red : T.t3) : T.t3 },
-          { label: "30D", value: p.live_data ? `${p.tvl_change_30d > 0 ? "+" : ""}${p.tvl_change_30d?.toFixed(1) ?? 0}%` : "—", color: p.live_data ? (p.tvl_change_30d > 0 ? T.green : p.tvl_change_30d < 0 ? T.red : T.t3) : T.t3 },
+          { label: p.tvl_basis === "token_mcap" ? `AUM (${(p.aum_tokens || []).join("+") || "fund tokens"})` : "TVL",
+            value: p.live_data ? (p.tvl_formatted || "—") : "—", color: p.live_data ? T.t1 : T.t3 },
+          { label: "7D", value: p.live_data && p.tvl_change_7d != null ? `${p.tvl_change_7d > 0 ? "+" : ""}${p.tvl_change_7d.toFixed(1)}%` : "—", color: p.live_data && p.tvl_change_7d != null ? (p.tvl_change_7d > 0 ? T.green : p.tvl_change_7d < 0 ? T.red : T.t3) : T.t3 },
+          { label: "30D", value: p.live_data && p.tvl_change_30d != null ? `${p.tvl_change_30d > 0 ? "+" : ""}${p.tvl_change_30d.toFixed(1)}%` : "—", color: p.live_data && p.tvl_change_30d != null ? (p.tvl_change_30d > 0 ? T.green : p.tvl_change_30d < 0 ? T.red : T.t3) : T.t3 },
           { label: "APY", value: p.apy > 0 ? `${p.apy}%` : "—", color: p.apy > 0 ? T.green : T.t3 },
           { label: "Audit", value: `${p.audit_score}/10`, color: p.audit_score >= 8 ? T.green : p.audit_score >= 6 ? T.gold : T.red },
           { label: "Age", value: `${p.age_months}mo`, color: T.t2 },
@@ -502,7 +503,7 @@ export default function ProtocolIntelligence() {
           display: "flex", justifyContent: "space-between", alignItems: "center",
           fontSize: 9, color: T.t3, fontFamily: FONTS.mono,
         }}>
-          <span>Source: DeFiLlama TVL · Protocol scoring v1.0 (separate from CIS; the signal column is the token's official CIS) · Sorted by {sortBy === "score" ? "Protocol Score ↓" : sortBy === "tvl" ? "TVL ↓" : "7D Flow ↓"}</span>
+          <span>Source: DeFiLlama TVL; tokenized-fund issuers (BUIDL, Ondo, Superstate, Franklin, Anemoy) show fund-token market cap from CoinGecko where DeFiLlama no longer counts them · Protocol scoring v1.0 (separate from CIS; the signal column is the token's official CIS) · Sorted by {sortBy === "score" ? "Protocol Score ↓" : sortBy === "tvl" ? "TVL ↓" : "7D Flow ↓"}</span>
           <span>Showing {filtered.length} of {protocols.length} protocols · Click row to expand · Refreshes every 10 min</span>
         </div>
       </div>

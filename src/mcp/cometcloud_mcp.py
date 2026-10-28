@@ -1612,7 +1612,7 @@ async def cometcloud_get_protocols(params: ProtocolsInput) -> str:
             "|---|----------|----------|----------------|-----|-----|----------------------|",
         ]
         for i, p in enumerate(protos, 1):
-            tvl_chg = p.get("tvl_change_7d", 0)
+            tvl_chg = p.get("tvl_change_7d") or 0
             c = p.get("cis") or {}
             cis_txt = f"{c.get('symbol')} {c.get('grade')} · {c.get('signal')}" if c else "—"
             lines.append(

@@ -43,6 +43,7 @@ PROTOCOL_REGISTRY = [
     # RWA — Treasuries
     {
         "id": "ondo", "name": "Ondo Finance", "slug": "ondo-finance",
+        "aum_cg_ids": ["ondo-us-dollar-yield", "ousg"],
         "category": "RWA - Treasuries", "chain": "Multi-chain",
         "base_apy": 4.8, "audit_score": 9, "age_months": 42,  # launched Jan 2022
         "desc": "Ondo Finance brings institutional-grade US Treasury exposure on-chain through its OUSG (BlackRock T-bill ETF) and OMMF (money market) tokens. Redemptions settle T+0 for qualified buyers, bridging the operational gap between TradFi yield and DeFi composability.",
@@ -51,6 +52,7 @@ PROTOCOL_REGISTRY = [
     },
     {
         "id": "blackrock", "name": "BlackRock BUIDL", "slug": "blackrock-buidl",
+        "aum_cg_ids": ["blackrock-usd-institutional-digital-liquidity-fund"],
         "category": "RWA - Treasuries", "chain": "Multi-chain",
         "base_apy": 4.3, "audit_score": 10, "age_months": 26,  # launched March 2024
         "desc": "BUIDL is BlackRock's tokenized money market fund — the world's largest asset manager issuing directly on-chain via Securitize. Investors hold tokenized shares of a fund that invests exclusively in US Treasury bills, overnight repos, and cash. BlackRock custody, Deloitte audit.",
@@ -59,6 +61,7 @@ PROTOCOL_REGISTRY = [
     },
     {
         "id": "franklin", "name": "Franklin Templeton", "slug": "franklin-onchain-us-government-money-fund",
+        "aum_cg_ids": ["franklin-templeton-benji"],
         "category": "RWA - Treasuries", "chain": "Polygon",
         "base_apy": 4.5, "audit_score": 10, "age_months": 53,  # launched April 2021
         "desc": "The Franklin OnChain US Government Money Fund (FOBXX) was the first US-registered mutual fund to use a public blockchain for transaction processing and record-keeping. The BENJI token on Polygon represents fund shares, accruing daily yield from T-bills and government repos.",
@@ -67,6 +70,7 @@ PROTOCOL_REGISTRY = [
     },
     {
         "id": "superstate", "name": "Superstate", "slug": "superstate",
+        "aum_cg_ids": ["superstate-short-duration-us-government-securities-fund-ustb", "superstate-uscc"],
         "category": "RWA - Treasuries", "chain": "Ethereum",
         "base_apy": 4.6, "audit_score": 8, "age_months": 26,  # launched March 2023
         "desc": "Superstate issues USTB — a tokenized short-duration US Treasury fund built on Ethereum and designed specifically for DeFi composability. Founded by Robert Leshner (Compound founder), it targets DeFi treasuries and DAOs seeking compliant on-chain yield without custody risk.",
@@ -74,7 +78,8 @@ PROTOCOL_REGISTRY = [
         "strengths": ["Founded by Robert Leshner (Compound creator)", "Designed for DeFi protocol treasury integration", "Short-duration focus minimises interest rate risk", "Growing DAO/treasury client base provides sticky AUM"],
     },
     {
-        "id": "anemoy", "name": "Anemoy Capital", "slug": "anemoy",
+        "id": "anemoy", "name": "Anemoy Capital", "slug": "anemoy-capital",
+        "aum_cg_ids": ["janus-henderson-anemoy-treasury-fund", "janus-henderson-anemoy-aaa-clo-fund"],
         "category": "RWA - Treasuries", "chain": "Multi-chain",
         "base_apy": 5.2, "audit_score": 7, "age_months": 20,  # launched Sep 2023; DL slug: anemoy
         "desc": "Anemoy operates the Liquid Treasury Fund — a tokenized T-bill vehicle built on Centrifuge's infrastructure with cross-chain reach via Axelar. Its higher APY relative to peers reflects a slightly wider maturity ladder and tactical allocation to short-dated agency paper.",
@@ -152,7 +157,7 @@ PROTOCOL_REGISTRY = [
         "strengths": ["$1T+ cumulative trading volume — dominant market share", "v4 hooks: programmable AMM logic unlocks infinite protocol design space", "10/10 audit score across 6 years of open-source scrutiny", "LP fee revenue is real, sustainable yield — not token emissions"],
     },
     {
-        "id": "curve", "name": "Curve Finance", "slug": "curve",
+        "id": "curve", "name": "Curve Finance", "slug": "curve-dex",
         "category": "DeFi - DEX", "chain": "Multi-chain",
         "base_apy": 2.0, "audit_score": 9, "age_months": 64,  # launched Jan 2020; DL slug: curve
         "desc": "Curve Finance runs the deepest stablecoin and pegged-asset liquidity in DeFi. Its StableSwap invariant minimises slippage on correlated assets — USDC/USDT, stETH/ETH, crvUSD — making it the backbone of stable liquidity across the ecosystem. The veToken governance model (vote-escrowed CRV) created Curve Wars, influencing emissions allocation across the entire DeFi sector.",
@@ -258,6 +263,29 @@ PROTOCOL_REGISTRY = [
 
 # ── DeFiLlama TVL Fetcher ───────────────────────────────────────────────────
 
+_DL_SPECIAL_KEYS = {"borrowed", "staking", "pool2", "vesting", "doublecounted", "liquidstaking",
+                    "dcAndLsOverlap", "treasury", "offers"}
+
+
+async def _fetch_tokenized_aum(ids: list[str]) -> dict | None:
+    """Tokenized funds (BUIDL, USDY/OUSG, USTB …) are not DeFiLlama TVL any more; their AUM is the fund
+    token's market cap on CoinGecko. No 7d/30d history here — those stay unknown (None), not 0."""
+    try:
+        from src.data.market.data_layer import get_cg_markets
+    except ImportError:
+        from data.market.data_layer import get_cg_markets
+    try:
+        rows = await get_cg_markets(ids)
+    except Exception:
+        return None
+    total = sum(float(r.get("market_cap") or 0) for r in rows or [] if isinstance(r, dict))
+    if total <= 0:
+        return None
+    return {"tvl": total, "tvl_basis": "token_mcap", "tvl_7d_ago": None, "tvl_30d_ago": None,
+            "change_7d": None, "change_30d": None, "chains": [], "mcap": 0, "category": "RWA",
+            "aum_tokens": [r.get("symbol", "").upper() for r in rows or [] if isinstance(r, dict) and r.get("market_cap")]}
+
+
 async def _fetch_defillama_tvl(slug: str) -> dict | None:
     """Fetch TVL + TVL changes from DeFiLlama for a single protocol."""
     cache_key = f"proto_tvl:{slug}"
@@ -271,15 +299,21 @@ async def _fetch_defillama_tvl(slug: str) -> dict | None:
             if r.status_code != 200:
                 return _cset(cache_key, None)
             data = r.json()
-            tvl_now = data.get("currentChainTvls", {})
-            total_tvl = sum(v for k, v in tvl_now.items()
-                           if not k.endswith("-borrowed") and not k.endswith("-staking")
-                           and isinstance(v, (int, float)))
-            if total_tvl == 0:
-                total_tvl = data.get("tvl", [{}])[-1].get("totalLiquidityUSD", 0) if data.get("tvl") else 0
-
-            # TVL history for 7d/30d change
-            tvl_history = data.get("tvl", [])
+            tvl_now = data.get("currentChainTvls", {}) or {}
+            tvl_history = data.get("tvl", []) or []
+            # 2026-10-28: the headline TVL and the 7d/30d baseline must be the SAME series. The old sum over
+            # currentChainTvls skipped "Ethereum-borrowed" but kept the bare aggregate "borrowed"/"staking"
+            # keys, so Maple showed $4.60B (DeFiLlama: $2.63B) and a "+67.9%" 7-day flow that was just the
+            # borrowed book added to today and not to last week. Use DeFiLlama's own series end-to-end.
+            if tvl_history:
+                total_tvl = tvl_history[-1].get("totalLiquidityUSD", 0) or 0
+            else:
+                total_tvl = sum(v for k, v in tvl_now.items()
+                                if isinstance(v, (int, float)) and k.split("-")[-1] not in _DL_SPECIAL_KEYS)
+            if not tvl_history and total_tvl <= 0:
+                # Parent pages (ondo-finance, centrifuge …) and RWA funds DeFiLlama no longer counts as TVL
+                # come back empty: that is "unknown", not "$0".
+                return _cset(cache_key, None)
             tvl_7d_ago = None
             tvl_30d_ago = None
             now_ts = time.time()
@@ -309,6 +343,7 @@ async def _fetch_defillama_tvl(slug: str) -> dict | None:
 
             result = {
                 "tvl": total_tvl,
+                "tvl_basis": "defillama_tvl",
                 "tvl_7d_ago": tvl_7d_ago,
                 "tvl_30d_ago": tvl_30d_ago,
                 "change_7d": round(change_7d, 2),
@@ -344,6 +379,9 @@ async def fetch_all_protocol_tvls() -> dict:
             tvl_map[p["id"]] = result
         else:
             tvl_map[p["id"]] = None
+    for p in PROTOCOL_REGISTRY:
+        if tvl_map.get(p["id"]) is None and p.get("aum_cg_ids"):
+            tvl_map[p["id"]] = await _fetch_tokenized_aum(p["aum_cg_ids"])
 
     return _cset(cache_key, tvl_map)
 
@@ -359,8 +397,11 @@ def _score_protocol(proto: dict, tvl_data: dict | None, category_stats: dict) ->
     cat = proto["category"]
 
     tvl = tvl_data["tvl"] if tvl_data else 0
-    chg_7d = tvl_data["change_7d"] if tvl_data else 0
-    chg_30d = tvl_data["change_30d"] if tvl_data else 0
+    # None = no history for this basis (tokenized-fund AUM); scored as flat, shown as "—"
+    chg_7d_raw = tvl_data.get("change_7d") if tvl_data else None
+    chg_30d_raw = tvl_data.get("change_30d") if tvl_data else None
+    chg_7d = chg_7d_raw or 0
+    chg_30d = chg_30d_raw or 0
     live_tvl = tvl_data is not None
 
     # ── F pillar (Fundamental): TVL scale + audit + age ──────────────────
@@ -512,8 +553,10 @@ def _score_protocol(proto: dict, tvl_data: dict | None, category_stats: dict) ->
         "live_data": live_tvl,
         "tvl": round(tvl, 0) if tvl else 0,
         "tvl_formatted": _fmt_usd(tvl),
-        "tvl_change_7d": chg_7d,
-        "tvl_change_30d": chg_30d,
+        "tvl_change_7d": chg_7d_raw,
+        "tvl_change_30d": chg_30d_raw,
+        "tvl_basis": (tvl_data or {}).get("tvl_basis"),
+        "aum_tokens": (tvl_data or {}).get("aum_tokens"),
         "tvl_direction": tvl_direction,
         "apy": apy,
         "cis_score": normalized,
@@ -553,8 +596,8 @@ def _compute_category_stats(protocols: list, tvl_map: dict) -> dict:
     for p in protocols:
         cat = p["category"]
         tvl_d = tvl_map.get(p["id"])
-        if tvl_d:
-            cat_data.setdefault(cat, []).append(tvl_d.get("change_7d", 0))
+        if tvl_d and tvl_d.get("change_7d") is not None:
+            cat_data.setdefault(cat, []).append(tvl_d["change_7d"])
     return {
         cat: {"avg_change_7d": sum(vals) / len(vals) if vals else 0}
         for cat, vals in cat_data.items()

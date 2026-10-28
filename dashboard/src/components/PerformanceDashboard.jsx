@@ -40,7 +40,7 @@ const pColor  = (v) => !isNum(v) ? T.t3 : v >= 0 ? C.green : C.red;
 function fmtDate(iso) {
   if (!iso) return "—";
   try {
-    return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" });
+    return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
   } catch { return "—"; }
 }
 
@@ -544,18 +544,28 @@ export default function PerformanceDashboard() {
         }}>
           <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: C.amber,
                         fontWeight: 700, marginBottom: 6, letterSpacing: 0.4 }}>
-            可测样本 {p.measurable.n_measurable} / {p.measurable.n_total}
-            {" · "}不足以给出结论
+            Measurable outcomes {p.measurable.n_measurable} / {p.measurable.n_total}
+            {" · "}not enough to conclude
           </div>
           <div style={{ fontFamily: FONTS.mono, fontSize: 9, color: T.t3, lineHeight: 1.6 }}>
-            下方数字用全部 {p.measurable.n_total} 条算出,其中{" "}
-            <strong style={{ color: T.t2 }}>
-              {(p.measurable.source_mix?.barred ?? 0) + (p.measurable.source_mix?.unsourced ?? 0)} 条
-            </strong>{" "}
-            的出口价来自我们自己规则里已禁用的价源,
-            <strong style={{ color: T.t2 }}> {p.measurable.source_mix?.trusted ?? 0} 条</strong> 可信。
-            按 ≥{p.measurable.min_measurable} 个可信样本的门槛,
-            <strong style={{ color: C.amber }}> 我们现在既不能声称有效,也不能声称无效。</strong>
+            {p.measurable.n_total === 0 ? (
+              <>
+                No signal has reached its 30-day outcome yet
+                {p.outcome_30d_pending ? <> — <strong style={{ color: T.t2 }}>{p.outcome_30d_pending} pending</strong></> : null}.
+                Each signal is scored 30 days after it is issued.
+              </>
+            ) : (
+              <>
+                Of {p.measurable.n_total} outcomes,{" "}
+                <strong style={{ color: T.t2 }}>
+                  {(p.measurable.source_mix?.barred ?? 0) + (p.measurable.source_mix?.unsourced ?? 0)}
+                </strong>{" "}
+                use exit prices from sources our own rules have retired;
+                <strong style={{ color: T.t2 }}> {p.measurable.source_mix?.trusted ?? 0}</strong> are trustworthy.
+              </>
+            )}
+            {" "}Below {p.measurable.min_measurable ?? 12} trustworthy outcomes
+            <strong style={{ color: C.amber }}> we claim neither that the signals work nor that they do not.</strong>
           </div>
         </div>
       )}
@@ -679,14 +689,13 @@ export default function PerformanceDashboard() {
           fontFamily: FONTS.mono, fontSize: 10, color: T.t3, lineHeight: 1.8,
         }}>
           <div style={{ color: T.t2, fontWeight: 700, marginBottom: 8 }}>
-            曲线与明细在基建补齐后展示
+            The curve and the trade list appear once enough outcomes are measurable
           </div>
-          可测样本 {p.measurable.n_measurable}/{p.measurable.n_total} ·
-          门槛 ≥{p.measurable.min_measurable}。
-          价源层正在重建中,当前多数出口价来自已停用的源 ——
-          在那之前画出来的曲线测的是价源的死活,不是策略。
+          Measurable {p.measurable.n_measurable}/{p.measurable.n_total} ·
+          threshold ≥{p.measurable.min_measurable ?? 12}. A curve drawn before then would describe a handful of
+          trades, not the signal.
           <div style={{ marginTop: 8, color: T.t3 }}>
-            四层策略账本(①②③④)的 OOS 验证结果不在此页 —— 它们各自有独立记录。
+            The layered strategy books (① ② ③ ④) are validated separately — see Track Record.
           </div>
         </div>
       ) : (

@@ -61,8 +61,9 @@ const SOURCE_LABEL = {
   multiplier: "③ Multiplier",
   beta_and_multiplier: "①+③ Hold + timing",
   alpha: "④ Alpha",
-  portfolio_layer: "Portfolio layer",
-  event: "Event",
+  portfolio_layer: "PL Portfolio layer",
+  regime_override: "Regime overlay",
+  event: "EV Event",
   other: "Other",
 };
 const SOURCE_GLYPH = { beta: "①", beta_plus: "②", multiplier: "③", beta_and_multiplier: "①+③",
@@ -140,7 +141,7 @@ function BooksTable({ books }) {
       <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.body, fontSize: 12 }}>
         <thead>
           <tr style={{ borderBottom: `1px solid ${T.border}` }}>
-            {["Layer", "Book", "Status", "Record", "Source", "Note"].map(h => (
+            {["Layer", "Book", "Status", "Record", "Note"].map(h => (
               <th key={h} style={{
                 fontFamily: F.mono, fontSize: 9, color: T.t3, textTransform: "uppercase",
                 letterSpacing: "0.1em", padding: "8px 10px", textAlign: "left", fontWeight: 700,
@@ -152,8 +153,7 @@ function BooksTable({ books }) {
           {books.map(b => (
             <tr key={b.id} style={{ borderBottom: `1px solid ${T.border}` }}>
               <td style={{ padding: "10px", color: T.t2, whiteSpace: "nowrap", fontFamily: F.mono }}>
-                {SOURCE_GLYPH[b.source] || "—"}&nbsp;
-                <span style={{ color: T.t3, fontFamily: F.body, fontSize: 10 }}>{SOURCE_LABEL[b.source] || b.source || "Other"}</span>
+                <span style={{ color: T.t3, fontFamily: F.body, fontSize: 10 }}>{SOURCE_LABEL[b.source] || b.layer || "Other"}</span>
               </td>
               <td style={{ padding: "10px", color: T.t1, fontWeight: 600 }}>
                 {b.name || b.id}
@@ -169,9 +169,6 @@ function BooksTable({ books }) {
               <td style={{ padding: "10px", color: T.t2, fontFamily: F.mono, fontSize: 11, whiteSpace: "nowrap" }}>
                 {b.record ? `${DATE(b.record[0])} → ${DATE(b.record[1])}` : "—"}
               </td>
-              <td style={{ padding: "10px", color: T.t2, fontFamily: F.body, fontSize: 11 }}>
-                {b.source || "—"}
-              </td>
               <td style={{ padding: "10px", color: T.t3, fontFamily: F.body, fontSize: 11, maxWidth: 320 }}>
                 {b.note || "—"}
               </td>
@@ -183,7 +180,10 @@ function BooksTable({ books }) {
   );
 }
 
-function ProofTable({ rows }) {
+// The proof surface carries the internal working label; the books surface carries the published one.
+// Show the published name and note (same id), never the internal label or its research caveat.
+function ProofTable({ rows, books = [] }) {
+  const pub = Object.fromEntries((books || []).map(b => [b.id, b]));
   if (!rows.length) {
     return <p style={{ fontFamily: F.body, fontSize: 12, color: T.t3 }}>No books with forward evidence yet.</p>;
   }
@@ -211,13 +211,13 @@ function ProofTable({ rows }) {
             return (
               <tr key={r.id} style={{ borderBottom: `1px solid ${T.border}` }}>
                 <td style={{ padding: "10px", color: T.t2, fontFamily: F.mono }}>
-                  {SOURCE_GLYPH[r.layer] || "—"}
+                  {pub[r.id] ? (SOURCE_GLYPH[pub[r.id].source] || pub[r.id].layer || "—") : (SOURCE_GLYPH[r.layer] || r.layer || "—")}
                 </td>
                 <td style={{ padding: "10px", color: T.t1, fontWeight: 600, maxWidth: 220 }}>
-                  {r.name || r.id}
-                  {r.caveat && (
-                    <div style={{ fontFamily: F.body, fontSize: 10, color: T.red, marginTop: 3, lineHeight: 1.4 }}>
-                      caveat: {SHORT(r.caveat)}
+                  {pub[r.id]?.name || r.id}
+                  {r.caveat && pub[r.id]?.note && pub[r.id].note !== "paper record" && (
+                    <div style={{ fontFamily: F.body, fontSize: 10, color: T.amber, marginTop: 3, lineHeight: 1.4 }}>
+                      {pub[r.id].note}
                     </div>
                   )}
                 </td>
@@ -384,7 +384,7 @@ export default function TrackRecord() {
       >
         {proof.error
           ? <ReadFail label={proof.error} />
-          : <ProofTable rows={proof.rows} />}
+          : <ProofTable rows={proof.rows} books={books.list} />}
       </Section>
 
       {/* Daily anchors */}

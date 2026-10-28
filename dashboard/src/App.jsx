@@ -68,7 +68,7 @@ const TrackRecord           = lazy(() => import("./components/TrackRecord"));
 function StagingBanner() {
   const [env, setEnv] = useState(null);
   useEffect(() => {
-    fetch("/health").then(r => r.json()).then(d => setEnv(d.environment)).catch(() => {});
+    fetch("/api/v1/health").then(r => r.json()).then(d => setEnv(d.environment)).catch(() => {});
   }, []);
   if (env !== "staging") return null;
   return (

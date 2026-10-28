@@ -575,21 +575,24 @@ const STRATEGIES = [
     regimeNote:
       "Yield is relatively regime-stable but the strategy shifts weight toward established lending protocols (Aave, Compound) in RISK OFF / TIGHTENING, and opens allocations to higher-APY structured products (Pendle, Ethena) in RISK ON.",
     regimeShort:
-      "TIGHTENING: overweight Aave / Compound. Reduces Ethena exposure.",
+      "TIGHTENING: favours lending and staking over structured yield.",
     metrics: [
       { label: "Rebalance",       value: "Weekly",        color: T.cyan },
       { label: "Min Allocation",  value: "$500 USDC",     color: T.t2 },
       { label: "Protocol Min TVL",value: "$100M",         color: T.t2 },
     ],
     allocation: [
-      { label: "Top-1 protocol (Aave / MakerDAO)", pct: 50, color: T.green },
-      { label: "Top-2 protocol (Compound / Pendle)",pct: 30, color: "#00D98A" },
-      { label: "Top-3 protocol (Ethena / Spark)",   pct: 20, color: "#6366f1" },
+      { label: "Top-1 protocol by score", pct: 50, color: T.green },
+      { label: "Top-2 protocol by score", pct: 30, color: "#00D98A" },
+      { label: "Top-3 protocol by score", pct: 20, color: "#6366f1" },
     ],
     buildPositions(_, protocols) {
       if (!protocols || protocols.length === 0) return [];
+      // The rule as written above: yield from lending, staking, liquidity provision or RWA only,
+      // TVL ≥ $100M, live TVL. (Was: any protocol by score — a perps venue could be "top-3 yield".)
+      const YIELD_CAT = /lending|staking|dex|yield|stablecoin|rwa/i;
       return protocols
-        .filter(p => p.protocol_score > 0)
+        .filter(p => p.protocol_score > 0 && p.live_data && (p.tvl || 0) >= 1e8 && YIELD_CAT.test(p.category || ""))
         .sort((a, b) => (b.protocol_score || 0) - (a.protocol_score || 0))
         .slice(0, 3)
         .map(p => ({

@@ -562,8 +562,10 @@ async def get_cis_universe(force_source: str = None, response: Response = None, 
     if not official:
         return data
     from src.data.cis.official import apply_official
+    from src.data.cis.display_fields import fix_universe_display
     try:
-        return await apply_official(data)
+        # TradFi size fields on the surface: dollar volume and filed-share market cap (display only)
+        return await fix_universe_display(await apply_official(data))
     except Exception:
         _logger.exception("[CIS] official overlay raised — serving live payload, flagged")
         if isinstance(data, dict) and data.get("universe"):
