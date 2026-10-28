@@ -73,10 +73,16 @@ def avg_ranks(values: list[float]) -> list[float]:
 def size_neutral_pct(rows: Iterable[dict]) -> dict[str, float]:
     """纯函数。[{sym, oi, mcap}] → {sym: p}。p = rank(r) 对 rank(ln 市值) 的 OLS 残差的 percent_rank。"""
     xs = [r for r in rows if r.get("oi") and r.get("mcap") and float(r["oi"]) > 0 and float(r["mcap"]) >= MIN_MCAP]
+    return size_neutral_pct_of([{"sym": r["sym"], "v": float(r["oi"]) / float(r["mcap"]), "mcap": r["mcap"]} for r in xs])
+
+
+def size_neutral_pct_of(rows: Iterable[dict]) -> dict[str, float]:
+    """纯函数。[{sym, v, mcap}] → {sym: p}:任意因子 v 的规模中性分位(同一内核;v 为空或市值不够的名字不进)。"""
+    xs = [r for r in rows if r.get("v") is not None and r.get("mcap") and float(r["mcap"]) >= MIN_MCAP]
     n = len(xs)
     if n < 3:
         return {}
-    rr = avg_ranks([float(r["oi"]) / float(r["mcap"]) for r in xs])
+    rr = avg_ranks([float(r["v"]) for r in xs])
     rs = avg_ranks([math.log(float(r["mcap"])) for r in xs])
     ms, mr = sum(rs) / n, sum(rr) / n
     sxx = sum((s - ms) ** 2 for s in rs)
@@ -109,6 +115,14 @@ def tag_row(ticket: dict, pmap: dict[str, float], n_cs: int, why: Optional[str] 
             "why_missing": None if p is not None else (why or "名字不在当天截面(无 OI / 市值 < 2,000 万 / 映射校验不过)"),
             "p_live": round(pl, 5) if pl is not None else None, "high_live": (pl >= H_CUT) if pl is not None else None,
             "rule": RULE}
+
+
+def extra_tags(ticket: dict, full: dict[str, Any]) -> dict[str, Any]:
+    """纯函数。S-696 前向记录:同一截面上的 F3(ΔOI 30 天)与 F7(主动买卖比 7 天)分位。只记,不挡票。"""
+    sym = str(ticket["symbol"]).upper()
+    p3, p7 = full.get("p3", {}).get(sym), full.get("p7", {}).get(sym)
+    return {"p_doi30": round(p3, 5) if p3 is not None else None, "high_doi30": (p3 >= H_CUT) if p3 is not None else None,
+            "p_taker7": round(p7, 5) if p7 is not None else None}
 
 
 # ── 真钱:d 收盘那一刻的快照 ─────────────────────────────────────────────────
@@ -339,13 +353,33 @@ async def audit_snapshots(today: Optional[dt.date] = None) -> dict[str, Any]:
 
 async def cross_section(d: dt.date) -> tuple[dict[str, float], int]:
     """d 当天的 {symbol: p} 与截面名字数。只读本库(Binance Vision 归档 + CoinGecko 日线),不打任何交易所。"""
+    full = await cross_section_full(d)
+    return full["p"], full["n"]
+
+
+def factor_values(rs: list[dict], d: dt.date) -> dict[str, Optional[float]]:
+    """纯函数。一个名字按日期排好的归档行 → S-691 的 F3、F7(d 收盘已知):
+    q3 = ln(oi_close_d / oi_close_{d−30})(张数,不含价格);f7 = d−6 … d 的 taker_ratio_mean 平均(≥ 5 天)。"""
+    by_d = {str(r["d"])[:10]: r for r in rs}
+    t, b = by_d.get(d.isoformat()), by_d.get((d - dt.timedelta(days=30)).isoformat())
+    q3 = None
+    if t and b and _f(t.get("oi_close")) and _f(b.get("oi_close")) and float(t["oi_close"]) > 0 and float(b["oi_close"]) > 0:
+        q3 = math.log(float(t["oi_close"]) / float(b["oi_close"]))
+    tk = [_f(by_d[k].get("taker_ratio_mean")) for k in ((d - dt.timedelta(days=i)).isoformat() for i in range(7)) if k in by_d]
+    tk = [x for x in tk if x is not None]
+    return {"q3": q3, "f7": sum(tk) / len(tk) if len(tk) >= 5 else None}
+
+
+async def cross_section_full(d: dt.date) -> dict[str, Any]:
+    """d 当天的截面:p(OI/市值,S-690)、p3(ΔOI 30 天,S-691 F3)、p7(主动买卖比 7 天,S-691 F7),都是规模中性分位;
+    n = OI/市值截面的名字数。p3 / p7 只作前向记录(S-696),不进任何规则。"""
     from src.data.style.header import _read_all
     lo = (d - dt.timedelta(days=CHECK_DAYS)).isoformat()
-    oi = await _read_all("deriv_metrics_daily", {"select": "symbol,d,oi_value_close,oi_close", "d": f"gte.{lo}",
+    oi = await _read_all("deriv_metrics_daily", {"select": "symbol,d,oi_value_close,oi_close,taker_ratio_mean", "d": f"gte.{lo}",
                                                  "order": "symbol.asc,d.asc"})
     oi = [r for r in oi if str(r["d"])[:10] <= d.isoformat()]
     if not any(str(r["d"])[:10] == d.isoformat() for r in oi):
-        return {}, 0
+        return {"p": {}, "p3": {}, "p7": {}, "n": 0}
     syms = sorted({r["symbol"] for r in oi})
     am = await _read_all("asset_mcap_daily", {"select": "symbol,d,price,mcap", "source": "eq.coingecko_pro_market_chart",
                                               "symbol": f"in.({','.join(syms)})", "d": f"gte.{lo}",
@@ -382,9 +416,12 @@ async def cross_section(d: dt.date) -> tuple[dict[str, float], int]:
         mult = next(iter(p.values()))[2]
         if not mapping_ok({k: v[0] for k, v in p.items()}, implied, mult):
             continue
-        rows.append({"sym": s, "oi": today.get("oi_value_close"), "mcap": p[d.isoformat()][1]})
+        rows.append({"sym": s, "oi": today.get("oi_value_close"), "mcap": p[d.isoformat()][1], **factor_values(rs, d)})
     pmap = size_neutral_pct(rows)
-    return pmap, len(pmap)
+    inside = [r for r in rows if r["sym"] in pmap]                # F3 / F7 在同一个截面里排
+    return {"p": pmap, "n": len(pmap),
+            "p3": size_neutral_pct_of([{"sym": r["sym"], "v": r["q3"], "mcap": r["mcap"]} for r in inside]),
+            "p7": size_neutral_pct_of([{"sym": r["sym"], "v": r["f7"], "mcap": r["mcap"]} for r in inside])}
 
 
 async def tag_oi_new_tickets(today: Optional[dt.date] = None) -> dict[str, Any]:
@@ -401,11 +438,12 @@ async def tag_oi_new_tickets(today: Optional[dt.date] = None) -> dict[str, Any]:
         return {"status": "ok", "tagged": 0}
     out = []
     for d in sorted({str(t["signal_d"])[:10] for t in todo}):
-        pmap, n = await cross_section(dt.date.fromisoformat(d))
-        why = None if n else "当天的 Binance OI 归档还没落库(隔天才有)"
+        full = await cross_section_full(dt.date.fromisoformat(d))
+        why = None if full["n"] else "当天的 Binance OI 归档还没落库(隔天才有)"
         live = {r["symbol"]: float(r["p"]) for r in await _read_all(SNAP_TABLE, {
             "select": "symbol,p", "d": f"eq.{d}", "kind": "eq.live", "p": "not.is.null"})}
-        out += [tag_row(t, pmap, n, why, live) for t in todo if str(t["signal_d"])[:10] == d]
+        out += [{**tag_row(t, full["p"], full["n"], why, live), **extra_tags(t, full)}
+                for t in todo if str(t["signal_d"])[:10] == d]
     w = await supabase_upsert_table(TABLE, out, on_conflict="ticket_id")
     if not w:
         return {"status": "error", "reason": f"{TABLE} 写不进去:{getattr(w, 'why', '')}"}
