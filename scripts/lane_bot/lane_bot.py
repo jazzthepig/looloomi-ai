@@ -357,7 +357,9 @@ def run_lane(lane: str, cfg: dict, reason: str, dry: bool = False, task: str = "
     stem.with_suffix(".json").write_text(
         json.dumps({**res, "result": text, "stderr_tail": (err or "")[-2000:]}, ensure_ascii=False, indent=1),
         encoding="utf-8")
-    if not quota_hit(text):                    # 额度报错不进 SYNC(同一句话每 15 分钟一段)
+    if quota_hit(text) or context_overflow(text):   # 额度报错 / 上下文溢出不进 SYNC(同一句话每 15 分钟一段;10-28 lane-a 复核又报一次)
+        log(f"✗ {lane} 本轮无交付({'额度' if quota_hit(text) else '上下文溢出'}),只记在 runs/,不进 SYNC")
+    else:
         append_to_sync(lane, lc, text, f"{reason};{res.get('num_turns') or '?'} 步;{res['seconds']} 秒")
     res["text"] = text[:2000]
     return res
@@ -533,6 +535,12 @@ def quota_hit(text: str) -> bool:
     """纯函数。lane 的模型额度用完(MiniMax Token Plan 429)。10-15:三个 lane 撞上之后,每 15 分钟一醒、每轮 1 步就失败,
     还往 SYNC 里追加一段同样的报错 —— 撞上一次就整体停 QUOTA_BACKOFF_MIN 分钟。"""
     return any(m in (text or "") for m in _QUOTA_MARKS)
+
+
+def context_overflow(text: str) -> bool:
+    """纯函数。这一轮的「最终回复」只是一句上下文溢出(lane 整读了大文件)—— 没有交付,贴进 SYNC 只是噪声。"""
+    t = (text or "").strip()
+    return t.startswith("Prompt is too long") and len(t) < 200
 
 
 def quota_paused(at_ts: float) -> bool:

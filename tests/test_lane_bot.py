@@ -250,7 +250,7 @@ def test_quota_exhaustion_pauses_every_lane() -> None:
         assert lb.quota_paused(lb.now().timestamp())
         assert not lb.quota_paused(lb.now().timestamp() + lb.QUOTA_BACKOFF_MIN * 60 + 1)
     src = (ROOT / "scripts/lane_bot/lane_bot.py").read_text(encoding="utf-8")
-    assert "if not quota_hit(text):" in src, "额度报错不进 SYNC"
+    assert "if quota_hit(text) or context_overflow(text):" in src, "额度报错 / 上下文溢出不进 SYNC"
 
 
 # ── 2026-10-20:service_role 泄露之后,lane 只拿 publishable key ─────────────────────────────────────
@@ -315,3 +315,10 @@ def test_weekly_script_env_carries_only_the_publishable_key(monkeypatch) -> None
     assert not any(k in env for k in ("SUPABASE_SERVICE_KEY", "INTERNAL_TOKEN", "EXECUTOR_TOKEN"))
     jobs = load_config().get("weekly_scripts", [])
     assert any(j["script"] == "docs/research/t144_narrative_ab.py" and j["weekday"] == 0 for j in jobs)
+
+
+def test_a_context_overflow_round_does_not_go_into_sync():
+    from scripts.lane_bot import lane_bot as lb
+    assert lb.context_overflow("Prompt is too long") and lb.context_overflow("  Prompt is too long\n")
+    assert not lb.context_overflow("T-208 交付完成。…Prompt is too long 只是正文里提到")
+    assert not lb.context_overflow("")
