@@ -97,11 +97,14 @@ def test_a2_strategypage_btc7d_color_uses_isMissing() -> None:
     rel = "dashboard/src/components/StrategyPage.jsx"
     text = _file_text(rel)
     has_ismissing = "import { isMissing }" in text
+    # 2026-10-28: the value now falls back to the BTC universe row (macro-pulse has no 7d field) and is held
+    # in `btc7d`; the guard is the same — the missing branch goes through isMissing, not `|| 0`.
     has_color_guard = ('isMissing(macro?.btc?.usd_7d_change) ? T.t3' in text
-                       or 'isMissing(macro?.btc?.usd_7d_change)' in text)
+                       or 'isMissing(macro?.btc?.usd_7d_change)' in text
+                       or 'isMissing(btc7d) ? T.t3' in text)
     check("A2 imports isMissing", has_ismissing, f"check {rel} for `import {{ isMissing }}`")
     check("A2 color branch uses isMissing", has_color_guard,
-          "expected `isMissing(macro?.btc?.usd_7d_change)` in color branch")
+          "expected `isMissing(btc7d)` (or the macro field) in color branch")
     # Old `|| 0` color proxy must be removed.
     check("A2 `|| 0` color proxy removed",
           "(macro?.btc?.usd_7d_change || 0) >= 0" not in text,

@@ -53,14 +53,19 @@ function gradeForScore(score) {
 }
 
 /* ─── Grade Migration Heatmap ────────────────────────────────────────────── */
+// The official record has one row per asset per UTC close (`d`). Columns are the closes that exist —
+// not "today − 6 … today" in the viewer's clock, which invented a column for a close that had not
+// happened yet and filled every gap with today's grade.
+function officialDays(historyMap, n = 7) {
+  const all = new Set();
+  Object.values(historyMap || {}).forEach(rows => (rows || []).forEach(h => { if (h.d) all.add(String(h.d).slice(0, 10)); }));
+  return [...all].sort().slice(-n);
+}
+const dayLabel = (iso) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+
 function GradeHeatmap({ assets, historyMap }) {
-  // Build 7 date labels (today → -6d)
-  const days = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    days.push(d.toLocaleDateString("en-US", { month: "short", day: "numeric" }));
-  }
+  const dayKeys = officialDays(historyMap);
+  const days = dayKeys.map(dayLabel);
 
   const rows = assets.slice(0, 20);
   const cellW = 52, cellH = 28;
@@ -73,7 +78,7 @@ function GradeHeatmap({ assets, historyMap }) {
 
   return (
     <div style={{ overflowX: "auto" }}>
-      <div style={{ display: "grid", gridTemplateColumns: `100px repeat(7, ${cellW}px)`, gap: 1, minWidth: 480 }}>
+      <div style={{ display: "grid", gridTemplateColumns: `100px repeat(${Math.max(days.length, 1)}, ${cellW}px)`, gap: 1, minWidth: 480 }}>
         {/* Header */}
         <div style={{ fontSize: 10, color: T.t4, fontFamily: FONTS.mono, padding: "6px 0" }} />
         {days.map(d => (
@@ -83,19 +88,9 @@ function GradeHeatmap({ assets, historyMap }) {
         {/* Rows */}
         {rows.map(asset => {
           const hist = historyMap[asset.symbol] || [];
-          // Bucket history into 7 day slots
-          const now = Date.now();
-          const slotGrades = days.map((_, idx) => {
-            const dayStart = now - (6 - idx) * 86400000;
-            const dayEnd   = dayStart + 86400000;
-            const inSlot   = hist.filter(h => {
-              const ts = new Date(h.recorded_at || h.ts || 0).getTime();
-              return ts >= dayStart && ts < dayEnd;
-            });
-            if (!inSlot.length) return asset.grade || gradeForScore(asset.score || 0);
-            const avg = inSlot.reduce((s, h) => s + (h.score || 0), 0) / inSlot.length;
-            return gradeForScore(avg);
-          });
+          const byDay = Object.fromEntries(hist.filter(h => h.d).map(h => [String(h.d).slice(0, 10), h]));
+          // No row for that close = no grade, shown as "·" (not today's grade copied backwards)
+          const slotGrades = dayKeys.map(k => byDay[k] ? (byDay[k].grade || gradeForScore(byDay[k].score || 0)) : null);
 
           return [
             <div key={`sym-${asset.symbol}`} style={{
@@ -108,12 +103,12 @@ function GradeHeatmap({ assets, historyMap }) {
             ...slotGrades.map((grade, di) => (
               <div key={`${asset.symbol}-${di}`} style={{
                 height: cellH, display: "flex", alignItems: "center", justifyContent: "center",
-                background: `${GRADE_COLOR[grade]}18`,
-                border: `1px solid ${GRADE_COLOR[grade]}30`,
+                background: grade ? `${GRADE_COLOR[grade]}18` : "transparent",
+                border: `1px solid ${grade ? `${GRADE_COLOR[grade]}30` : T.border}`,
                 borderRadius: 4,
               }}>
-                <span style={{ fontSize: 10, fontFamily: FONTS.mono, color: GRADE_COLOR[grade], fontWeight: 600 }}>
-                  {grade}
+                <span style={{ fontSize: 10, fontFamily: FONTS.mono, color: grade ? GRADE_COLOR[grade] : T.t4, fontWeight: 600 }}>
+                  {grade || "·"}
                 </span>
               </div>
             )),
@@ -139,34 +134,16 @@ function SectorRotation({ assets, historyMap }) {
   // Group assets by class, compute average score per day per class
   const classes = [...new Set(assets.map(a => a.asset_class).filter(Boolean))];
 
-  const days = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    days.push({
-      label: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      start: d.setHours(0, 0, 0, 0),
-      end:   d + 86400000,
-    });
-  }
+  const dayKeys = officialDays(historyMap);
 
-  const chartData = days.map(({ label, start, end }) => {
-    const row = { date: label };
+  const chartData = dayKeys.map(k => {
+    const row = { date: dayLabel(k) };
     classes.forEach(cls => {
       const classAssets = assets.filter(a => a.asset_class === cls);
       const scores = [];
       classAssets.forEach(asset => {
-        const hist = historyMap[asset.symbol] || [];
-        const inSlot = hist.filter(h => {
-          const ts = new Date(h.recorded_at || h.ts || 0).getTime();
-          return ts >= start && ts < end;
-        });
-        if (inSlot.length) {
-          const avg = inSlot.reduce((s, h) => s + (h.score || 0), 0) / inSlot.length;
-          scores.push(avg);
-        } else if (asset.score) {
-          scores.push(asset.score); // fallback to current
-        }
+        const h = (historyMap[asset.symbol] || []).find(x => String(x.d || "").slice(0, 10) === k);
+        if (h && h.score != null) scores.push(h.score);   // no row that day → not counted (no fallback to today)
       });
       if (scores.length) {
         row[cls] = parseFloat((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1));

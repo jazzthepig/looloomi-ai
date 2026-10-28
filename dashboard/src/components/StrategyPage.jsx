@@ -395,6 +395,10 @@ export default function StrategyPage() {
   const fngVal = macro?.fng?.value;
   const fngLabel = macro?.fng?.value_classification;
   const mcapChange = macro?.data?.market_cap_change_percentage_24h_usd;
+  // macro-pulse carries no 7-day BTC change; the universe row does (same daily-close source as the table below)
+  const btc7d = macro?.btc?.usd_7d_change
+    ?? (cisData?.universe || []).find(a => a.symbol === "BTC")?.change_7d
+    ?? null;
 
   // Use backend regime from CIS universe (authoritative) — fallback to macro-pulse estimate
   const regime = (() => {
@@ -543,7 +547,7 @@ export default function StrategyPage() {
               { label: "BTC Dominance", value: btcDom ? `${btcDom.toFixed(1)}%` : "—", color: T.t1 },
               { label: "Fear & Greed", value: fngVal || "—", sub: fngLabel || "", color: fngVal ? (parseInt(fngVal) > 65 ? T.green : parseInt(fngVal) < 35 ? T.red : T.gold) : T.t3 },
               { label: "Total MCap 24h", value: mcapChange != null ? `${mcapChange >= 0 ? "+" : ""}${mcapChange.toFixed(1)}%` : "—", color: mcapChange >= 0 ? T.green : T.red },
-              { label: "BTC 7D", value: macro?.btc?.usd_7d_change != null ? `${macro.btc.usd_7d_change >= 0 ? "+" : ""}${macro.btc.usd_7d_change.toFixed(1)}%` : "—", color: isMissing(macro?.btc?.usd_7d_change) ? T.t3 : ((macro.btc.usd_7d_change >= 0) ? T.green : T.red) },
+              { label: "BTC 7D", value: btc7d != null ? `${btc7d >= 0 ? "+" : ""}${btc7d.toFixed(1)}%` : "—", color: isMissing(btc7d) ? T.t3 : (btc7d >= 0 ? T.green : T.red) },
             ].map((m, i) => (
               <div key={i} style={{
                 background: "rgba(10,14,24,0.7)", border: `1px solid ${T.border}`,

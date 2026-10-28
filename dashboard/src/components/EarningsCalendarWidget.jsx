@@ -16,7 +16,15 @@ export function EarningsCalendarWidget() {
     fetch("/api/v1/market/earnings-calendar?symbols=AAPL,NVDA,MSFT,AMZN,GOOGL&days_ahead=30")
       .then(r => r.ok ? r.json() : null)
       .catch(() => null)
-      .then(json => { if (!cancelled) { setData(json); setLoading(false); } });
+      // The endpoint returns a bare list [{symbol, report_date, eps_estimate, …}]; the widget used to expect
+      // {available, events:[{date}]} and so hid itself on every response, data or not.
+      .then(json => {
+        if (cancelled) return;
+        const list = Array.isArray(json) ? json : (json?.events || []);
+        setData({ available: list.length > 0,
+                  events: list.map(e => ({ ...e, date: e.date || e.report_date })) });
+        setLoading(false);
+      });
     return () => { cancelled = true; };
   }, []);
 

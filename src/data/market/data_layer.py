@@ -1919,12 +1919,21 @@ _VC_CATS = [
     {"id": "sequoia-capital-portfolio",          "short": "Sequoia",         "tier": 2},
     {"id": "delphi-ventures-portfolio",          "short": "Delphi",          "tier": 2},
     {"id": "okx-ventures-portfolio",             "short": "OKX Ventures",    "tier": 2},
-    {"id": "binance-labs-portfolio",             "short": "Binance Labs",    "tier": 2},
-    {"id": "animoca-brands-portfolio",           "short": "Animoca",         "tier": 2},
-    {"id": "hashkey-capital-portfolio",          "short": "HashKey",         "tier": 2},
+    {"id": "yzi-labs-portfolio",                 "short": "YZi Labs (ex-Binance Labs)", "tier": 2},
+    {"id": "animoca-brands",                     "short": "Animoca",         "tier": 2},
+    {"id": "blockchain-capital-portfolio",       "short": "Blockchain Capital", "tier": 2},
     {"id": "dwf-labs-portfolio",                 "short": "DWF Labs",        "tier": 2},
     {"id": "circle-ventures-portfolio",          "short": "Circle Ventures", "tier": 2},
 ]
+
+
+def _is_stable(c: dict) -> bool:
+    sym = str(c.get("symbol") or "").lower()
+    try:
+        px = float(c.get("current_price") or 0)
+    except (TypeError, ValueError):
+        px = 0.0
+    return ("usd" in sym or sym in {"dai", "frax", "gho", "eurc"}) and abs(px - 1.0) < 0.03
 _VC_CAT_IDS = {c["id"] for c in _VC_CATS}
 _VC_SHORT    = {c["id"]: c["short"] for c in _VC_CATS}
 _VC_TIER     = {c["id"]: c["tier"]  for c in _VC_CATS}
@@ -1936,8 +1945,8 @@ async def get_cg_vc_portfolios() -> list[dict]:
     Returns ~16 firms with: name, market_cap, change_24h, volume_24h, top_3_coins, tier.
     Sorted by market_cap desc. TTL: 10 min.
     """
-    key = "cg_vc_portfolios"
-    cached = _cache_get(key, ttl=600)
+    key = "cg_vc_portfolios_v2"
+    cached = _cache_get(key, ttl=1800)
     if cached:
         return cached
     r_cached = await _redis_get(key)
@@ -1975,7 +1984,8 @@ async def get_cg_vc_portfolios() -> list[dict]:
             # (Pump Fund Portfolio = $0 mcap, scam holdings like CLAWPUMP). Require a real
             # portfolio (whitelisted firms bypass the floor) and block meme/pump buckets.
             if cid not in _VC_CAT_IDS:
-                if mcap < 25_000_000 or any(b in cid for b in ("pump", "meme", "sample", "test", "airdrop")):
+                # world-liberty-financial-portfolio is a token treasury dominated by ETH/USDT/USDC ($590B+), not a VC book
+                if mcap < 25_000_000 or any(b in cid for b in ("pump", "meme", "sample", "test", "airdrop", "world-liberty")):
                     continue
             result.append({
                 "id":          cid,
@@ -1989,8 +1999,33 @@ async def get_cg_vc_portfolios() -> list[dict]:
                 "updated_at":  cat.get("updated_at", ""),
             })
 
+        # 2026-10-28: /coins/categories (with market data) now carries only 3 of CoinGecko's ~25 "-portfolio"
+        # categories, so the panel showed two firms. For each tracked firm missing there, aggregate its
+        # constituents from /coins/markets?category= (top 100 by market cap, stablecoins excluded).
+        have = {r["id"] for r in result}
+        for c in _VC_CATS:
+            if c["id"] in have:
+                continue
+            try:
+                rows = [x for x in (await get_cg_category_markets(c["id"], per_page=100)) if not _is_stable(x)]
+            except Exception as e:
+                _logger.info(f"[CG_VC_PORTFOLIOS] {c['id']}: {e}")
+                continue
+            mc = sum(float(x.get("market_cap") or 0) for x in rows)
+            if mc < 25_000_000:
+                continue
+            chg = sum(float(x.get("market_cap") or 0) * float(x.get("price_change_percentage_24h") or 0) for x in rows) / mc
+            top = sorted(rows, key=lambda x: -(x.get("market_cap") or 0))[:3]
+            result.append({
+                "id": c["id"], "name": c["short"], "full_name": c["short"], "tier": c["tier"],
+                "market_cap": mc, "change_24h": round(chg, 2),
+                "volume_24h": sum(float(x.get("total_volume") or 0) for x in rows),
+                "top_coins": [x.get("id") for x in top], "updated_at": "",
+                "basis": "constituents_top100_ex_stablecoins", "n_constituents": len(rows),
+            })
+            await asyncio.sleep(0.4)
         result.sort(key=lambda x: -(x["market_cap"] or 0))
-        await _redis_set(key, result, ttl=600)
+        await _redis_set(key, result, ttl=1800)
         return _cache_set(key, result)
     except Exception as e:
         _logger.warning(f"[CG_VC_PORTFOLIOS] Error: {e}")
@@ -3414,6 +3449,8 @@ async def get_eodhd_earnings_calendar(symbols: list[str], days_ahead: int = 14) 
         result.sort(key=lambda x: x["report_date"])
         return _cache_set(key, result)
     except Exception as e:
+        # Was silent: an empty calendar in earnings week looked like "nothing scheduled".
+        _logger.warning(f"[EODHD] earnings calendar failed: {type(e).__name__}: {str(e)[:160]}")
         return []
 
 
