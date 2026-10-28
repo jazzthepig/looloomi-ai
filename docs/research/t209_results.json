@@ -1,0 +1,4688 @@
+{
+ "card": "T-209",
+ "ledger": "S-694",
+ "generated_at": "2026-10-28T12:49:14.468908+00:00",
+ "spec": {
+  "panel": [
+   "BTC",
+   "ETH",
+   "SOL",
+   "BNB",
+   "XRP",
+   "DOGE",
+   "ADA",
+   "AVAX",
+   "LINK",
+   "DOT",
+   "LTC",
+   "TRX",
+   "ATOM",
+   "NEAR",
+   "APT",
+   "ARB",
+   "OP",
+   "SUI",
+   "UNI",
+   "AAVE",
+   "INJ",
+   "FIL",
+   "ETC",
+   "BCH"
+  ],
+  "signal_start": "2023-01-02",
+  "signal_end": "2026-10-19",
+  "outcome_end": "2026-10-26",
+  "rebalance": "周一 UTC",
+  "frozen_factors": [
+   {
+    "code": "F3",
+    "name": "ΔOI 30天 (ln 张数)",
+    "sign": -1
+   },
+   {
+    "code": "F7",
+    "name": "主动买卖比 7天均",
+    "sign": 1
+   },
+   {
+    "code": "F8",
+    "name": "30天相对动量 (对 BTC)",
+    "sign": -1
+   },
+   {
+    "code": "F9",
+    "name": "7天相对动量 (对 BTC)",
+    "sign": -1
+   },
+   {
+    "code": "F11",
+    "name": "30天波动 (日对数收益标准差)",
+    "sign": -1
+   }
+  ],
+  "universe": "deriv 名字;过 S-689 映射校验(重叠 ≥ 30 日、中位误差 ≤ 0.05);CG 市值 ≥ 20,000,000;当天 OI > 0;五因子都有定义;当天 ≥ 30 名",
+  "comp": "五个 percent_rank 的平均(方向按冻结符号)",
+  "worst": "ntile(5) 第 1 档",
+  "main_arm": "市值加权(落在最差档的权重 × 0.5 后归一)",
+  "secondary_arms": [
+   "等权",
+   "剔除"
+  ],
+  "cost": "10 bp × Σ|目标 − 上周漂移后权重|",
+  "judgement": "(a) 年化净超额 > 0 且随机对照 ≥ 95 分位;(b) 两段净超额都 > 0"
+ },
+ "data": {
+  "deriv_rows": 260611,
+  "asset_mcap_rows": 481032,
+  "cg_rows": 429302,
+  "map_rows": 43,
+  "map_kept_names": 248,
+  "names_with_price": 259,
+  "map_checked": 255
+ },
+ "universe": {
+  "n_rebalance_mondays": 199,
+  "n_weeks_used": 199,
+  "weeks_skipped_universe_lt_min": 0,
+  "universe_size_mean": 157.45226130653268,
+  "universe_size_min": 105,
+  "universe_size_max": 187,
+  "worst_bucket_mean": 31.90954773869347,
+  "panel_flagged_mean_per_week": 6.773869346733668,
+  "panel_flagged_max_per_week": 15,
+  "weeks_panel_below_24": 18,
+  "panel_short_weeks_range": "2023-01-02 → 2023-05-01"
+ },
+ "arms": {
+  "mcap_weighted_tilt": {
+   "full": {
+    "n_weeks": 199,
+    "ann_gross_tilt": 0.41520084741275376,
+    "ann_gross_base": 0.3954701458295735,
+    "ann_net_tilt": 0.4061899413307577,
+    "ann_net_base": 0.3953910454354457,
+    "ann_excess_gross_geo": 0.019730701583180243,
+    "ann_excess_net_geo": 0.010798895895312022,
+    "ann_excess_net_arith": 0.007099383040025541,
+    "ann_excess_gross_arith": 0.0134735319717893,
+    "tracking_error_net": 0.025653491007056908,
+    "weekly_excess_net_mean": 0.0001365265969235681,
+    "cost_bp_per_year_tilt": 64.31234947929268,
+    "cost_bp_per_year_base": 0.5708601616550399,
+    "ann_excess_net_vs_costless_base": 0.010719795501184182,
+    "null_pct": 0.927,
+    "null_q50": -0.017343522253420174
+   },
+   "h1_le_2024-11-30": {
+    "n_weeks": 100,
+    "ann_gross_tilt": 1.2802781105190908,
+    "ann_gross_base": 1.2760972318486785,
+    "ann_net_tilt": 1.2659301465650223,
+    "ann_net_base": 1.2759215316997627,
+    "ann_excess_gross_geo": 0.00418087867041228,
+    "ann_excess_net_geo": -0.009991385134740405,
+    "ann_excess_net_arith": -0.005120129340042169,
+    "ann_excess_gross_arith": 0.001234612475092498,
+    "tracking_error_net": 0.026082770798587104,
+    "weekly_excess_net_mean": -9.846402577004171e-05,
+    "cost_bp_per_year_tilt": 64.33008891423464,
+    "cost_bp_per_year_base": 0.7826707628879221,
+    "ann_excess_net_vs_costless_base": -0.010167085283656174,
+    "null_pct": 0.627,
+    "null_q50": -0.024187829937101224
+   },
+   "h2_after_2024-11-30": {
+    "n_weeks": 99,
+    "ann_gross_tilt": -0.12591087292098047,
+    "ann_gross_base": -0.1486578718473135,
+    "ann_net_tilt": -0.13154263654649434,
+    "ann_net_base": -0.14868849136598195,
+    "ann_excess_gross_geo": 0.02274699892633303,
+    "ann_excess_net_geo": 0.017145854819487605,
+    "ann_excess_net_arith": 0.019442324838073732,
+    "ann_excess_gross_arith": 0.02583607691794769,
+    "tracking_error_net": 0.025228777706501903,
+    "weekly_excess_net_mean": 0.0003738908622706487,
+    "cost_bp_per_year_tilt": 64.29443085813917,
+    "cost_bp_per_year_base": 0.3569100593996032,
+    "ann_excess_net_vs_costless_base": 0.017115235300819154,
+    "null_pct": 0.98,
+    "null_q50": -0.012012556895468818
+   }
+  },
+  "equal_weight_tilt": {
+   "full": {
+    "n_weeks": 199,
+    "ann_gross_tilt": 0.20448982898053525,
+    "ann_gross_base": 0.20005105016230318,
+    "ann_net_tilt": 0.19093828018966952,
+    "ann_net_base": 0.19688206875415593,
+    "ann_excess_gross_geo": 0.00443877881823207,
+    "ann_excess_net_geo": -0.0059437885644864075,
+    "ann_excess_net_arith": -0.012592724266133592,
+    "ann_excess_gross_arith": -0.003952807461324329,
+    "tracking_error_net": 0.04127848700404517,
+    "weekly_excess_net_mean": -0.00024216777434872292,
+    "cost_bp_per_year_tilt": 112.83583025632589,
+    "cost_bp_per_year_base": 26.43666220823348,
+    "ann_excess_net_vs_costless_base": -0.00911276997263366,
+    "null_pct": 0.671,
+    "null_q50": -0.014380020721455722
+   },
+   "h1_le_2024-11-30": {
+    "n_weeks": 100,
+    "ann_gross_tilt": 1.3263212659280783,
+    "ann_gross_base": 1.3947610829559411,
+    "ann_net_tilt": 1.301995010508438,
+    "ann_net_base": 1.3881384502014442,
+    "ann_excess_gross_geo": -0.06843981702786284,
+    "ann_excess_net_geo": -0.08614343969300631,
+    "ann_excess_net_arith": -0.04770337500998236,
+    "ann_excess_gross_arith": -0.03986423732690533,
+    "tracking_error_net": 0.04578350002471544,
+    "weekly_excess_net_mean": -0.0009173725963458147,
+    "cost_bp_per_year_tilt": 106.5748655833173,
+    "cost_bp_per_year_base": 28.183488752547493,
+    "ann_excess_net_vs_costless_base": -0.09276607244750323,
+    "null_pct": 0.143,
+    "null_q50": -0.0293390164493883
+   },
+   "h2_after_2024-11-30": {
+    "n_weeks": 99,
+    "ann_gross_tilt": -0.3804889710463255,
+    "ann_gross_base": -0.40281853927544153,
+    "ann_net_tilt": -0.3879554006504996,
+    "ann_net_base": -0.4043202523452729,
+    "ann_excess_gross_geo": 0.022329568229116026,
+    "ann_excess_net_geo": 0.016364851694773308,
+    "ann_excess_net_arith": 0.02287257951553184,
+    "ann_excess_gross_arith": 0.03232136412007063,
+    "tracking_error_net": 0.03572753894547932,
+    "weekly_excess_net_mean": 0.0004398572983756123,
+    "cost_bp_per_year_tilt": 119.1600369967386,
+    "cost_bp_per_year_base": 24.672190951350625,
+    "ann_excess_net_vs_costless_base": 0.01486313862494193,
+    "null_pct": 0.982,
+    "null_q50": -0.007764539820451499
+   }
+  },
+  "exclude_worst": {
+   "full": {
+    "n_weeks": 199,
+    "ann_gross_tilt": 0.45094958153530484,
+    "ann_gross_base": 0.3954701458295735,
+    "ann_net_tilt": 0.40527969395242724,
+    "ann_net_base": 0.3953910454354457,
+    "ann_excess_gross_geo": 0.05547943570573133,
+    "ann_excess_net_geo": 0.009888648516981569,
+    "ann_excess_net_arith": 0.010662625145784251,
+    "ann_excess_gross_arith": 0.04267952753115742,
+    "tracking_error_net": 0.14148335871582216,
+    "weekly_excess_net_mean": 0.00020505048357277405,
+    "cost_bp_per_year_tilt": 320.73988401538674,
+    "cost_bp_per_year_base": 0.5708601616550399,
+    "ann_excess_net_vs_costless_base": 0.009809548122853728,
+    "null_pct": 0.879,
+    "null_q50": -0.0977760040002128
+   },
+   "h1_le_2024-11-30": {
+    "n_weeks": 100,
+    "ann_gross_tilt": 1.3061447825161947,
+    "ann_gross_base": 1.2760972318486785,
+    "ann_net_tilt": 1.2379498973697234,
+    "ann_net_base": 1.2759215316997627,
+    "ann_excess_gross_geo": 0.030047550667516187,
+    "ann_excess_net_geo": -0.03797163433003936,
+    "ann_excess_net_arith": -0.0203113707775495,
+    "ann_excess_gross_arith": 0.010097183799286182,
+    "tracking_error_net": 0.13114477148508766,
+    "weekly_excess_net_mean": -0.00039060328418364423,
+    "cost_bp_per_year_tilt": 304.86821653124474,
+    "cost_bp_per_year_base": 0.7826707628879221,
+    "ann_excess_net_vs_costless_base": -0.03814733447895513,
+    "null_pct": 0.597,
+    "null_q50": -0.08345580065151093
+   },
+   "h2_after_2024-11-30": {
+    "n_weeks": 99,
+    "ann_gross_tilt": -0.09137348781549859,
+    "ann_gross_base": -0.1486578718473135,
+    "ann_net_tilt": -0.12171817942881868,
+    "ann_net_base": -0.14868849136598195,
+    "ann_excess_gross_geo": 0.057284384031814906,
+    "ann_excess_net_geo": 0.02697031193716326,
+    "ann_excess_net_arith": 0.04194948971480825,
+    "ann_excess_gross_arith": 0.07559098584617888,
+    "tracking_error_net": 0.15176069803267242,
+    "weekly_excess_net_mean": 0.0008067209560540048,
+    "cost_bp_per_year_tilt": 336.771871373106,
+    "cost_bp_per_year_base": 0.3569100593996032,
+    "ann_excess_net_vs_costless_base": 0.02693969241849481,
+    "null_pct": 0.925,
+    "null_q50": -0.08620062298019182
+   }
+  }
+ },
+ "sensitivity_panel_ntile": {
+  "note": "协议歧义:ntile(5) 改在 24 名面板内部做(而不是在宽宇宙上做)",
+  "flagged_per_week_mean": 5.0,
+  "segments": {
+   "full": {
+    "n_weeks": 199,
+    "ann_gross_tilt": 0.3878337005323085,
+    "ann_gross_base": 0.3954701458295735,
+    "ann_net_tilt": 0.3818105855670828,
+    "ann_net_base": 0.3953910454354457,
+    "ann_excess_gross_geo": -0.007636445297265038,
+    "ann_excess_net_geo": -0.01358045986836287,
+    "ann_excess_net_arith": -0.010896607360919042,
+    "ann_excess_gross_arith": -0.006632268115769972,
+    "tracking_error_net": 0.019489628978175473,
+    "weekly_excess_net_mean": -0.00020955014155613544,
+    "cost_bp_per_year_tilt": 43.21425261314577,
+    "cost_bp_per_year_base": 0.5708601616550399,
+    "ann_excess_net_vs_costless_base": -0.013659560262490711,
+    "null_pct": 0.54,
+    "null_q50": -0.014924892031689452
+   },
+   "h1_le_2024-11-30": {
+    "n_weeks": 100,
+    "ann_gross_tilt": 1.2389360038977033,
+    "ann_gross_base": 1.2760972318486785,
+    "ann_net_tilt": 1.2298598333267443,
+    "ann_net_base": 1.2759215316997627,
+    "ann_excess_gross_geo": -0.037161227950975206,
+    "ann_excess_net_geo": -0.046061698373018434,
+    "ann_excess_net_arith": -0.021857577522303315,
+    "ann_excess_gross_arith": -0.017830992273930663,
+    "tracking_error_net": 0.022935627310375514,
+    "weekly_excess_net_mean": -0.00042033802927506374,
+    "cost_bp_per_year_tilt": 41.04852324661438,
+    "cost_bp_per_year_base": 0.7826707628879221,
+    "ann_excess_net_vs_costless_base": -0.0462373985219342
+   },
+   "h2_after_2024-11-30": {
+    "n_weeks": 99,
+    "ann_gross_tilt": -0.1438789894954835,
+    "ann_gross_base": -0.1486578718473135,
+    "ann_net_tilt": -0.14784188763311623,
+    "ann_net_base": -0.14868849136598195,
+    "ann_excess_gross_geo": 0.004778882351829994,
+    "ann_excess_net_geo": 0.0008466037328657139,
+    "ann_excess_net_arith": 0.0001750796707822395,
+    "ann_excess_gross_arith": 0.004679574468230729,
+    "tracking_error_net": 0.015208334693614262,
+    "weekly_excess_net_mean": 3.3669167458122982e-06,
+    "cost_bp_per_year_tilt": 45.401858033884544,
+    "cost_bp_per_year_base": 0.3569100593996032,
+    "ann_excess_net_vs_costless_base": 0.0008159842141972629
+   }
+  }
+ },
+ "null_control": {
+  "mcap_weighted_tilt": {
+   "observed": 0.010798895895312022,
+   "null_pct": 0.927,
+   "null_error": null,
+   "null_q025": -0.05289569052709763,
+   "null_q50": -0.017343522253420174,
+   "null_q975": 0.021970597898327768,
+   "null_mean": -0.016485955155931948
+  },
+  "equal_weight_tilt": {
+   "observed": -0.0059437885644864075,
+   "null_pct": 0.671,
+   "null_error": null,
+   "null_q025": -0.05014105448242962,
+   "null_q50": -0.014380020721455722,
+   "null_q975": 0.023824826998578134,
+   "null_mean": -0.013801008937938591
+  },
+  "exclude_worst": {
+   "observed": 0.009888648516981569,
+   "null_pct": 0.879,
+   "null_error": null,
+   "null_q025": -0.23897989304654355,
+   "null_q50": -0.0977760040002128,
+   "null_q975": 0.07284903877171514,
+   "null_mean": -0.09181983659059374
+  }
+ },
+ "judgement": {
+  "criterion_a_net_excess_positive": true,
+  "criterion_a_null_pct_ge_95": false,
+  "criterion_b_h1_positive": false,
+  "criterion_b_h2_positive": true,
+  "pass": false
+ },
+ "panel_worst_bucket_share": {
+  "BTC": {
+   "weeks_flagged": 41,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.20603015075376885,
+   "share_of_universe_weeks": 0.20603015075376885
+  },
+  "ETH": {
+   "weeks_flagged": 55,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.27638190954773867,
+   "share_of_universe_weeks": 0.27638190954773867
+  },
+  "SOL": {
+   "weeks_flagged": 89,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.4472361809045226,
+   "share_of_universe_weeks": 0.4472361809045226
+  },
+  "BNB": {
+   "weeks_flagged": 33,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.1658291457286432,
+   "share_of_universe_weeks": 0.1658291457286432
+  },
+  "XRP": {
+   "weeks_flagged": 64,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.32160804020100503,
+   "share_of_universe_weeks": 0.32160804020100503
+  },
+  "DOGE": {
+   "weeks_flagged": 61,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.3065326633165829,
+   "share_of_universe_weeks": 0.3065326633165829
+  },
+  "ADA": {
+   "weeks_flagged": 48,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.24120603015075376,
+   "share_of_universe_weeks": 0.24120603015075376
+  },
+  "AVAX": {
+   "weeks_flagged": 68,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.3417085427135678,
+   "share_of_universe_weeks": 0.3417085427135678
+  },
+  "LINK": {
+   "weeks_flagged": 73,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.36683417085427134,
+   "share_of_universe_weeks": 0.36683417085427134
+  },
+  "DOT": {
+   "weeks_flagged": 30,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.1507537688442211,
+   "share_of_universe_weeks": 0.1507537688442211
+  },
+  "LTC": {
+   "weeks_flagged": 38,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.19095477386934673,
+   "share_of_universe_weeks": 0.19095477386934673
+  },
+  "TRX": {
+   "weeks_flagged": 18,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.09045226130653267,
+   "share_of_universe_weeks": 0.09045226130653267
+  },
+  "ATOM": {
+   "weeks_flagged": 23,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.11557788944723618,
+   "share_of_universe_weeks": 0.11557788944723618
+  },
+  "NEAR": {
+   "weeks_flagged": 72,
+   "weeks_in_universe": 198,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.36180904522613067,
+   "share_of_universe_weeks": 0.36363636363636365
+  },
+  "APT": {
+   "weeks_flagged": 51,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.2562814070351759,
+   "share_of_universe_weeks": 0.2562814070351759
+  },
+  "ARB": {
+   "weeks_flagged": 59,
+   "weeks_in_universe": 183,
+   "weeks_eligible": 187,
+   "share_of_all_weeks": 0.2964824120603015,
+   "share_of_universe_weeks": 0.3224043715846995
+  },
+  "OP": {
+   "weeks_flagged": 76,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.38190954773869346,
+   "share_of_universe_weeks": 0.38190954773869346
+  },
+  "SUI": {
+   "weeks_flagged": 69,
+   "weeks_in_universe": 177,
+   "weeks_eligible": 181,
+   "share_of_all_weeks": 0.34673366834170855,
+   "share_of_universe_weeks": 0.3898305084745763
+  },
+  "UNI": {
+   "weeks_flagged": 73,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.36683417085427134,
+   "share_of_universe_weeks": 0.36683417085427134
+  },
+  "AAVE": {
+   "weeks_flagged": 75,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.3768844221105528,
+   "share_of_universe_weeks": 0.3768844221105528
+  },
+  "INJ": {
+   "weeks_flagged": 85,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.4271356783919598,
+   "share_of_universe_weeks": 0.4271356783919598
+  },
+  "FIL": {
+   "weeks_flagged": 48,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.24120603015075376,
+   "share_of_universe_weeks": 0.24120603015075376
+  },
+  "ETC": {
+   "weeks_flagged": 39,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.19597989949748743,
+   "share_of_universe_weeks": 0.19597989949748743
+  },
+  "BCH": {
+   "weeks_flagged": 60,
+   "weeks_in_universe": 199,
+   "weeks_eligible": 199,
+   "share_of_all_weeks": 0.3015075376884422,
+   "share_of_universe_weeks": 0.3015075376884422
+  }
+ },
+ "weekly": [
+  {
+   "date": "2023-01-02",
+   "universe": 125,
+   "worst_bucket": 25,
+   "panel": 22,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "SOL",
+    "BNB",
+    "LTC",
+    "ATOM",
+    "OP",
+    "FIL",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2023-01-09",
+   "universe": 127,
+   "worst_bucket": 26,
+   "panel": 22,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "SOL",
+    "ADA",
+    "NEAR",
+    "APT",
+    "OP",
+    "AAVE",
+    "FIL",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2023-01-16",
+   "universe": 128,
+   "worst_bucket": 26,
+   "panel": 22,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "SOL",
+    "AVAX",
+    "NEAR",
+    "APT",
+    "OP",
+    "AAVE",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2023-01-23",
+   "universe": 128,
+   "worst_bucket": 26,
+   "panel": 22,
+   "panel_flagged": 4,
+   "panel_flagged_names": [
+    "NEAR",
+    "APT",
+    "OP",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2023-01-30",
+   "universe": 128,
+   "worst_bucket": 26,
+   "panel": 22,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "SOL",
+    "AVAX",
+    "APT",
+    "OP",
+    "INJ",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2023-02-06",
+   "universe": 128,
+   "worst_bucket": 26,
+   "panel": 22,
+   "panel_flagged": 3,
+   "panel_flagged_names": [
+    "APT",
+    "OP",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2023-02-13",
+   "universe": 128,
+   "worst_bucket": 26,
+   "panel": 22,
+   "panel_flagged": 2,
+   "panel_flagged_names": [
+    "APT",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2023-02-20",
+   "universe": 130,
+   "worst_bucket": 26,
+   "panel": 22,
+   "panel_flagged": 2,
+   "panel_flagged_names": [
+    "INJ",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2023-02-27",
+   "universe": 132,
+   "worst_bucket": 27,
+   "panel": 22,
+   "panel_flagged": 2,
+   "panel_flagged_names": [
+    "OP",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2023-03-06",
+   "universe": 132,
+   "worst_bucket": 27,
+   "panel": 22,
+   "panel_flagged": 2,
+   "panel_flagged_names": [
+    "BTC",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2023-03-13",
+   "universe": 133,
+   "worst_bucket": 27,
+   "panel": 22,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "BNB",
+    "XRP",
+    "ADA",
+    "AVAX",
+    "DOT",
+    "OP",
+    "INJ",
+    "FIL",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2023-03-20",
+   "universe": 137,
+   "worst_bucket": 28,
+   "panel": 22,
+   "panel_flagged": 3,
+   "panel_flagged_names": [
+    "BTC",
+    "SOL",
+    "AVAX"
+   ]
+  },
+  {
+   "date": "2023-03-27",
+   "universe": 141,
+   "worst_bucket": 29,
+   "panel": 23,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "BTC",
+    "XRP",
+    "ADA",
+    "AVAX",
+    "LTC",
+    "INJ",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2023-04-03",
+   "universe": 142,
+   "worst_bucket": 29,
+   "panel": 23,
+   "panel_flagged": 4,
+   "panel_flagged_names": [
+    "XRP",
+    "DOGE",
+    "ADA",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2023-04-10",
+   "universe": 145,
+   "worst_bucket": 29,
+   "panel": 23,
+   "panel_flagged": 4,
+   "panel_flagged_names": [
+    "BTC",
+    "XRP",
+    "INJ",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2023-04-17",
+   "universe": 145,
+   "worst_bucket": 29,
+   "panel": 23,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "SOL",
+    "DOGE",
+    "ADA",
+    "AVAX",
+    "LINK",
+    "NEAR",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2023-04-24",
+   "universe": 147,
+   "worst_bucket": 30,
+   "panel": 23,
+   "panel_flagged": 4,
+   "panel_flagged_names": [
+    "SOL",
+    "DOGE",
+    "ARB",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2023-05-01",
+   "universe": 150,
+   "worst_bucket": 30,
+   "panel": 23,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "SOL",
+    "DOGE",
+    "AVAX",
+    "APT",
+    "ARB",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2023-05-08",
+   "universe": 152,
+   "worst_bucket": 31,
+   "panel": 24,
+   "panel_flagged": 11,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "BNB",
+    "ADA",
+    "AVAX",
+    "LINK",
+    "LTC",
+    "ARB",
+    "AAVE",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2023-05-15",
+   "universe": 153,
+   "worst_bucket": 31,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "SOL",
+    "LTC",
+    "ATOM",
+    "ARB",
+    "INJ",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2023-05-22",
+   "universe": 153,
+   "worst_bucket": 31,
+   "panel": 24,
+   "panel_flagged": 4,
+   "panel_flagged_names": [
+    "XRP",
+    "LTC",
+    "TRX",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2023-05-29",
+   "universe": 153,
+   "worst_bucket": 31,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "SOL",
+    "XRP",
+    "LTC",
+    "ARB",
+    "AAVE",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2023-06-05",
+   "universe": 155,
+   "worst_bucket": 31,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "BTC",
+    "SOL",
+    "XRP",
+    "LTC",
+    "ARB",
+    "OP",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2023-06-12",
+   "universe": 155,
+   "worst_bucket": 31,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "XRP",
+    "LTC",
+    "OP",
+    "SUI",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2023-06-19",
+   "universe": 154,
+   "worst_bucket": 31,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "BTC",
+    "SOL",
+    "BNB",
+    "APT",
+    "OP",
+    "SUI",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2023-06-26",
+   "universe": 157,
+   "worst_bucket": 32,
+   "panel": 24,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "BTC",
+    "NEAR",
+    "OP",
+    "UNI",
+    "AAVE",
+    "INJ",
+    "ETC",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2023-07-03",
+   "universe": 157,
+   "worst_bucket": 32,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "SOL",
+    "LTC",
+    "AAVE",
+    "INJ",
+    "FIL",
+    "ETC",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2023-07-10",
+   "universe": 157,
+   "worst_bucket": 32,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "SOL",
+    "AVAX",
+    "LTC",
+    "APT",
+    "AAVE",
+    "ETC",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2023-07-17",
+   "universe": 157,
+   "worst_bucket": 32,
+   "panel": 24,
+   "panel_flagged": 12,
+   "panel_flagged_names": [
+    "SOL",
+    "XRP",
+    "ADA",
+    "AVAX",
+    "LINK",
+    "LTC",
+    "ARB",
+    "OP",
+    "UNI",
+    "AAVE",
+    "INJ",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2023-07-24",
+   "universe": 156,
+   "worst_bucket": 32,
+   "panel": 24,
+   "panel_flagged": 11,
+   "panel_flagged_names": [
+    "SOL",
+    "XRP",
+    "DOGE",
+    "ADA",
+    "LINK",
+    "LTC",
+    "OP",
+    "UNI",
+    "AAVE",
+    "FIL",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2023-07-31",
+   "universe": 157,
+   "worst_bucket": 32,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "SOL",
+    "XRP",
+    "DOGE",
+    "ADA",
+    "LINK",
+    "OP",
+    "UNI"
+   ]
+  },
+  {
+   "date": "2023-08-07",
+   "universe": 157,
+   "worst_bucket": 32,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "XRP",
+    "DOGE",
+    "LINK",
+    "OP",
+    "UNI"
+   ]
+  },
+  {
+   "date": "2023-08-14",
+   "universe": 158,
+   "worst_bucket": 32,
+   "panel": 24,
+   "panel_flagged": 4,
+   "panel_flagged_names": [
+    "DOGE",
+    "LINK",
+    "APT",
+    "UNI"
+   ]
+  },
+  {
+   "date": "2023-08-21",
+   "universe": 157,
+   "worst_bucket": 32,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "BNB",
+    "DOGE",
+    "DOT",
+    "OP",
+    "SUI",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2023-08-28",
+   "universe": 158,
+   "worst_bucket": 32,
+   "panel": 24,
+   "panel_flagged": 2,
+   "panel_flagged_names": [
+    "BNB",
+    "SUI"
+   ]
+  },
+  {
+   "date": "2023-09-04",
+   "universe": 158,
+   "worst_bucket": 32,
+   "panel": 24,
+   "panel_flagged": 1,
+   "panel_flagged_names": [
+    "BCH"
+   ]
+  },
+  {
+   "date": "2023-09-11",
+   "universe": 159,
+   "worst_bucket": 32,
+   "panel": 24,
+   "panel_flagged": 1,
+   "panel_flagged_names": [
+    "BCH"
+   ]
+  },
+  {
+   "date": "2023-09-18",
+   "universe": 160,
+   "worst_bucket": 32,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "SOL",
+    "LINK",
+    "ATOM",
+    "AAVE",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2023-09-25",
+   "universe": 160,
+   "worst_bucket": 32,
+   "panel": 24,
+   "panel_flagged": 3,
+   "panel_flagged_names": [
+    "LINK",
+    "AAVE",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2023-10-02",
+   "universe": 161,
+   "worst_bucket": 33,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "SOL",
+    "LINK",
+    "ARB",
+    "AAVE",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2023-10-09",
+   "universe": 161,
+   "worst_bucket": 33,
+   "panel": 24,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "BTC",
+    "SOL",
+    "XRP",
+    "AVAX",
+    "LINK",
+    "TRX",
+    "ATOM",
+    "AAVE"
+   ]
+  },
+  {
+   "date": "2023-10-16",
+   "universe": 163,
+   "worst_bucket": 33,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "SOL",
+    "AVAX",
+    "LINK",
+    "AAVE",
+    "INJ",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2023-10-23",
+   "universe": 163,
+   "worst_bucket": 33,
+   "panel": 24,
+   "panel_flagged": 10,
+   "panel_flagged_names": [
+    "BTC",
+    "SOL",
+    "AVAX",
+    "LINK",
+    "DOT",
+    "APT",
+    "AAVE",
+    "INJ",
+    "FIL",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2023-10-30",
+   "universe": 164,
+   "worst_bucket": 33,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "SOL",
+    "AVAX",
+    "LINK",
+    "APT",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2023-11-06",
+   "universe": 164,
+   "worst_bucket": 33,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "SOL",
+    "XRP",
+    "LINK",
+    "NEAR",
+    "UNI",
+    "AAVE",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2023-11-13",
+   "universe": 165,
+   "worst_bucket": 33,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "SOL",
+    "AVAX",
+    "LINK",
+    "SUI",
+    "FIL",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2023-11-20",
+   "universe": 168,
+   "worst_bucket": 34,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "SOL",
+    "DOGE",
+    "AVAX",
+    "NEAR",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2023-11-27",
+   "universe": 170,
+   "worst_bucket": 34,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "SOL",
+    "AVAX",
+    "ATOM",
+    "OP",
+    "UNI"
+   ]
+  },
+  {
+   "date": "2023-12-04",
+   "universe": 173,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 4,
+   "panel_flagged_names": [
+    "SOL",
+    "DOGE",
+    "AVAX",
+    "NEAR"
+   ]
+  },
+  {
+   "date": "2023-12-11",
+   "universe": 174,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "SOL",
+    "DOGE",
+    "ADA",
+    "AVAX",
+    "DOT",
+    "NEAR",
+    "OP",
+    "UNI",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2023-12-18",
+   "universe": 169,
+   "worst_bucket": 34,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "ADA",
+    "AVAX",
+    "ATOM",
+    "OP",
+    "INJ",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2023-12-25",
+   "universe": 174,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "SOL",
+    "AVAX",
+    "DOT",
+    "NEAR",
+    "APT",
+    "ARB",
+    "OP",
+    "SUI",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2024-01-01",
+   "universe": 175,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "ADA",
+    "NEAR",
+    "ARB",
+    "OP",
+    "SUI",
+    "UNI",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2024-01-08",
+   "universe": 175,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "SOL",
+    "NEAR",
+    "APT",
+    "ARB",
+    "OP",
+    "SUI",
+    "INJ",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2024-01-15",
+   "universe": 164,
+   "worst_bucket": 33,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "ETH",
+    "SOL",
+    "NEAR",
+    "APT",
+    "ARB",
+    "OP",
+    "SUI",
+    "FIL",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2024-01-22",
+   "universe": 177,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "ETH",
+    "LINK",
+    "ARB",
+    "SUI",
+    "ETC",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2024-01-29",
+   "universe": 177,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "BTC",
+    "SOL",
+    "ADA",
+    "AVAX",
+    "APT",
+    "ARB",
+    "SUI",
+    "INJ",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2024-02-05",
+   "universe": 177,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "SOL",
+    "ADA",
+    "AVAX",
+    "LINK",
+    "SUI",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2024-02-12",
+   "universe": 177,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 10,
+   "panel_flagged_names": [
+    "BTC",
+    "SOL",
+    "ADA",
+    "AVAX",
+    "LINK",
+    "NEAR",
+    "OP",
+    "SUI",
+    "INJ",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2024-02-19",
+   "universe": 177,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 3,
+   "panel_flagged_names": [
+    "ADA",
+    "APT",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2024-02-26",
+   "universe": 177,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 3,
+   "panel_flagged_names": [
+    "NEAR",
+    "UNI",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2024-03-04",
+   "universe": 177,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "DOGE",
+    "APT",
+    "UNI",
+    "FIL",
+    "ETC",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2024-03-11",
+   "universe": 177,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "DOGE",
+    "NEAR",
+    "APT",
+    "UNI",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2024-03-18",
+   "universe": 177,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "SOL",
+    "DOGE",
+    "AVAX",
+    "NEAR",
+    "APT",
+    "UNI",
+    "FIL",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2024-03-25",
+   "universe": 178,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 4,
+   "panel_flagged_names": [
+    "DOGE",
+    "NEAR",
+    "APT",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2024-04-01",
+   "universe": 177,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "SOL",
+    "DOGE",
+    "LTC",
+    "NEAR",
+    "FIL",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2024-04-08",
+   "universe": 178,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "DOGE",
+    "AVAX",
+    "LTC",
+    "NEAR",
+    "ETC",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2024-04-15",
+   "universe": 179,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "BNB",
+    "DOGE",
+    "LTC",
+    "ETC",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2024-04-22",
+   "universe": 179,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 3,
+   "panel_flagged_names": [
+    "NEAR",
+    "SUI",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2024-04-29",
+   "universe": 179,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "BNB",
+    "NEAR",
+    "OP",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2024-05-06",
+   "universe": 180,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "SOL",
+    "DOGE",
+    "AVAX",
+    "DOT",
+    "ATOM",
+    "NEAR",
+    "OP"
+   ]
+  },
+  {
+   "date": "2024-05-13",
+   "universe": 178,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 3,
+   "panel_flagged_names": [
+    "SOL",
+    "NEAR",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2024-05-20",
+   "universe": 175,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "ETH",
+    "SOL",
+    "AVAX",
+    "LINK",
+    "NEAR",
+    "OP",
+    "UNI",
+    "INJ",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2024-05-27",
+   "universe": 175,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "ETH",
+    "DOGE",
+    "LINK",
+    "ARB",
+    "UNI",
+    "AAVE",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2024-06-03",
+   "universe": 175,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 2,
+   "panel_flagged_names": [
+    "ETH",
+    "SOL"
+   ]
+  },
+  {
+   "date": "2024-06-10",
+   "universe": 175,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 11,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "BNB",
+    "AVAX",
+    "LINK",
+    "OP",
+    "SUI",
+    "UNI",
+    "INJ",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2024-06-17",
+   "universe": 173,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "ETH",
+    "BNB",
+    "ARB",
+    "OP",
+    "UNI",
+    "AAVE",
+    "INJ",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2024-06-24",
+   "universe": 173,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 4,
+   "panel_flagged_names": [
+    "SUI",
+    "UNI",
+    "AAVE",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2024-07-01",
+   "universe": 171,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "BTC",
+    "SOL",
+    "BNB",
+    "AVAX",
+    "DOT",
+    "UNI",
+    "AAVE",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2024-07-08",
+   "universe": 170,
+   "worst_bucket": 34,
+   "panel": 24,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "SOL",
+    "XRP",
+    "AVAX",
+    "LINK",
+    "DOT",
+    "TRX",
+    "UNI",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2024-07-15",
+   "universe": 171,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "XRP",
+    "NEAR",
+    "SUI",
+    "AAVE",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2024-07-22",
+   "universe": 170,
+   "worst_bucket": 34,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "SOL",
+    "XRP",
+    "DOGE",
+    "AVAX",
+    "NEAR",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2024-07-29",
+   "universe": 171,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 4,
+   "panel_flagged_names": [
+    "SOL",
+    "XRP",
+    "AAVE",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2024-08-05",
+   "universe": 169,
+   "worst_bucket": 34,
+   "panel": 24,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "BTC",
+    "SOL",
+    "XRP",
+    "ADA",
+    "AVAX",
+    "SUI",
+    "AAVE",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2024-08-12",
+   "universe": 172,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "SOL",
+    "XRP",
+    "APT",
+    "ARB",
+    "SUI",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2024-08-19",
+   "universe": 170,
+   "worst_bucket": 34,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "BNB",
+    "LTC",
+    "TRX",
+    "SUI",
+    "AAVE"
+   ]
+  },
+  {
+   "date": "2024-08-26",
+   "universe": 171,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "AVAX",
+    "LINK",
+    "TRX",
+    "APT",
+    "SUI",
+    "AAVE"
+   ]
+  },
+  {
+   "date": "2024-09-02",
+   "universe": 172,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "LTC",
+    "TRX",
+    "APT",
+    "OP",
+    "SUI",
+    "AAVE"
+   ]
+  },
+  {
+   "date": "2024-09-09",
+   "universe": 172,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "AVAX",
+    "OP",
+    "SUI",
+    "UNI",
+    "AAVE"
+   ]
+  },
+  {
+   "date": "2024-09-16",
+   "universe": 170,
+   "worst_bucket": 34,
+   "panel": 24,
+   "panel_flagged": 3,
+   "panel_flagged_names": [
+    "SUI",
+    "AAVE",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2024-09-23",
+   "universe": 176,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "NEAR",
+    "APT",
+    "OP",
+    "SUI",
+    "AAVE",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2024-09-30",
+   "universe": 178,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "DOGE",
+    "NEAR",
+    "OP",
+    "SUI",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2024-10-07",
+   "universe": 181,
+   "worst_bucket": 37,
+   "panel": 24,
+   "panel_flagged": 3,
+   "panel_flagged_names": [
+    "NEAR",
+    "APT",
+    "SUI"
+   ]
+  },
+  {
+   "date": "2024-10-14",
+   "universe": 182,
+   "worst_bucket": 37,
+   "panel": 24,
+   "panel_flagged": 4,
+   "panel_flagged_names": [
+    "NEAR",
+    "APT",
+    "SUI",
+    "UNI"
+   ]
+  },
+  {
+   "date": "2024-10-21",
+   "universe": 184,
+   "worst_bucket": 37,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "DOGE",
+    "LINK",
+    "LTC",
+    "NEAR",
+    "APT",
+    "SUI",
+    "UNI"
+   ]
+  },
+  {
+   "date": "2024-10-28",
+   "universe": 184,
+   "worst_bucket": 37,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "DOGE",
+    "LTC",
+    "APT",
+    "SUI",
+    "UNI",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2024-11-04",
+   "universe": 181,
+   "worst_bucket": 37,
+   "panel": 24,
+   "panel_flagged": 15,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "XRP",
+    "DOGE",
+    "ADA",
+    "LINK",
+    "DOT",
+    "LTC",
+    "APT",
+    "ARB",
+    "SUI",
+    "UNI",
+    "ETC",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2024-11-11",
+   "universe": 186,
+   "worst_bucket": 38,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "SOL",
+    "DOGE",
+    "ADA",
+    "LINK",
+    "DOT",
+    "APT",
+    "SUI",
+    "INJ",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2024-11-18",
+   "universe": 186,
+   "worst_bucket": 38,
+   "panel": 24,
+   "panel_flagged": 10,
+   "panel_flagged_names": [
+    "SOL",
+    "XRP",
+    "DOGE",
+    "ADA",
+    "DOT",
+    "ATOM",
+    "NEAR",
+    "ARB",
+    "SUI",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2024-11-25",
+   "universe": 186,
+   "worst_bucket": 38,
+   "panel": 24,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "XRP",
+    "DOGE",
+    "ADA",
+    "AVAX",
+    "DOT",
+    "ATOM",
+    "ARB",
+    "OP"
+   ]
+  },
+  {
+   "date": "2024-12-02",
+   "universe": 186,
+   "worst_bucket": 38,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "XRP",
+    "DOGE",
+    "ADA",
+    "LINK",
+    "LTC",
+    "UNI",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2024-12-09",
+   "universe": 184,
+   "worst_bucket": 37,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "XRP",
+    "DOGE",
+    "LINK",
+    "TRX",
+    "UNI"
+   ]
+  },
+  {
+   "date": "2024-12-16",
+   "universe": 186,
+   "worst_bucket": 38,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "XRP",
+    "AVAX",
+    "LINK",
+    "TRX",
+    "OP",
+    "UNI",
+    "AAVE"
+   ]
+  },
+  {
+   "date": "2024-12-23",
+   "universe": 187,
+   "worst_bucket": 38,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "XRP",
+    "LINK",
+    "LTC",
+    "TRX",
+    "UNI",
+    "AAVE"
+   ]
+  },
+  {
+   "date": "2024-12-30",
+   "universe": 186,
+   "worst_bucket": 38,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "BTC",
+    "SOL",
+    "LINK",
+    "TRX",
+    "AAVE"
+   ]
+  },
+  {
+   "date": "2025-01-06",
+   "universe": 187,
+   "worst_bucket": 38,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "SOL",
+    "ADA",
+    "AVAX",
+    "LINK",
+    "ATOM",
+    "ARB",
+    "SUI",
+    "AAVE",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2025-01-13",
+   "universe": 187,
+   "worst_bucket": 38,
+   "panel": 24,
+   "panel_flagged": 12,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "XRP",
+    "DOGE",
+    "ADA",
+    "LTC",
+    "ATOM",
+    "SUI",
+    "UNI",
+    "AAVE",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-01-20",
+   "universe": 186,
+   "worst_bucket": 38,
+   "panel": 24,
+   "panel_flagged": 10,
+   "panel_flagged_names": [
+    "SOL",
+    "XRP",
+    "DOGE",
+    "ADA",
+    "AVAX",
+    "LINK",
+    "LTC",
+    "AAVE",
+    "INJ",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2025-01-27",
+   "universe": 182,
+   "worst_bucket": 37,
+   "panel": 24,
+   "panel_flagged": 13,
+   "panel_flagged_names": [
+    "SOL",
+    "XRP",
+    "DOGE",
+    "ADA",
+    "AVAX",
+    "LINK",
+    "LTC",
+    "TRX",
+    "ATOM",
+    "ARB",
+    "SUI",
+    "ETC",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-02-03",
+   "universe": 179,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 12,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "XRP",
+    "DOGE",
+    "LINK",
+    "LTC",
+    "SUI",
+    "UNI",
+    "AAVE",
+    "INJ",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2025-02-10",
+   "universe": 177,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "SOL",
+    "BNB",
+    "LTC",
+    "TRX",
+    "ATOM",
+    "APT",
+    "AAVE"
+   ]
+  },
+  {
+   "date": "2025-02-17",
+   "universe": 179,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "BNB",
+    "XRP",
+    "LTC",
+    "ATOM",
+    "OP",
+    "AAVE"
+   ]
+  },
+  {
+   "date": "2025-02-24",
+   "universe": 178,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "BNB",
+    "LTC",
+    "TRX",
+    "ATOM",
+    "APT",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2025-03-03",
+   "universe": 178,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "SOL",
+    "XRP",
+    "ADA",
+    "LTC",
+    "APT",
+    "OP",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-03-10",
+   "universe": 171,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 13,
+   "panel_flagged_names": [
+    "XRP",
+    "ADA",
+    "AVAX",
+    "LINK",
+    "DOT",
+    "LTC",
+    "APT",
+    "ARB",
+    "OP",
+    "AAVE",
+    "FIL",
+    "ETC",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-03-17",
+   "universe": 179,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 11,
+   "panel_flagged_names": [
+    "BNB",
+    "XRP",
+    "ADA",
+    "AVAX",
+    "DOT",
+    "ATOM",
+    "NEAR",
+    "ARB",
+    "OP",
+    "SUI",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2025-03-24",
+   "universe": 179,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 13,
+   "panel_flagged_names": [
+    "SOL",
+    "XRP",
+    "ADA",
+    "AVAX",
+    "LINK",
+    "ATOM",
+    "NEAR",
+    "APT",
+    "ARB",
+    "OP",
+    "UNI",
+    "AAVE",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2025-03-31",
+   "universe": 177,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 13,
+   "panel_flagged_names": [
+    "SOL",
+    "BNB",
+    "XRP",
+    "DOGE",
+    "ADA",
+    "AVAX",
+    "LINK",
+    "TRX",
+    "NEAR",
+    "SUI",
+    "AAVE",
+    "FIL",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-04-07",
+   "universe": 171,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 10,
+   "panel_flagged_names": [
+    "BTC",
+    "SOL",
+    "XRP",
+    "DOGE",
+    "AVAX",
+    "LINK",
+    "DOT",
+    "ATOM",
+    "NEAR",
+    "SUI"
+   ]
+  },
+  {
+   "date": "2025-04-14",
+   "universe": 167,
+   "worst_bucket": 34,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "SOL",
+    "XRP",
+    "DOGE",
+    "AVAX",
+    "LINK",
+    "TRX",
+    "SUI",
+    "AAVE",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2025-04-21",
+   "universe": 172,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 4,
+   "panel_flagged_names": [
+    "SOL",
+    "LINK",
+    "SUI",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-04-28",
+   "universe": 177,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 3,
+   "panel_flagged_names": [
+    "LINK",
+    "SUI",
+    "AAVE"
+   ]
+  },
+  {
+   "date": "2025-05-05",
+   "universe": 176,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "BTC",
+    "SOL",
+    "LINK",
+    "SUI",
+    "AAVE",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-05-12",
+   "universe": 183,
+   "worst_bucket": 37,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "ETH",
+    "DOGE",
+    "NEAR",
+    "ARB",
+    "OP",
+    "SUI",
+    "UNI",
+    "AAVE",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2025-05-19",
+   "universe": 178,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "ETH",
+    "DOGE",
+    "LTC",
+    "NEAR",
+    "ARB",
+    "SUI",
+    "AAVE"
+   ]
+  },
+  {
+   "date": "2025-05-26",
+   "universe": 180,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "ETH",
+    "DOGE",
+    "AVAX",
+    "NEAR",
+    "ARB",
+    "OP",
+    "UNI",
+    "AAVE",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2025-06-02",
+   "universe": 178,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 11,
+   "panel_flagged_names": [
+    "ETH",
+    "BNB",
+    "DOGE",
+    "AVAX",
+    "NEAR",
+    "ARB",
+    "OP",
+    "UNI",
+    "AAVE",
+    "INJ",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2025-06-09",
+   "universe": 177,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "XRP",
+    "UNI",
+    "AAVE",
+    "INJ",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-06-16",
+   "universe": 172,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 10,
+   "panel_flagged_names": [
+    "ETH",
+    "SOL",
+    "XRP",
+    "LINK",
+    "TRX",
+    "NEAR",
+    "UNI",
+    "AAVE",
+    "INJ",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-06-23",
+   "universe": 167,
+   "worst_bucket": 34,
+   "panel": 24,
+   "panel_flagged": 10,
+   "panel_flagged_names": [
+    "ETH",
+    "SOL",
+    "LTC",
+    "TRX",
+    "ATOM",
+    "ARB",
+    "UNI",
+    "AAVE",
+    "INJ",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-06-30",
+   "universe": 168,
+   "worst_bucket": 34,
+   "panel": 24,
+   "panel_flagged": 11,
+   "panel_flagged_names": [
+    "ETH",
+    "SOL",
+    "XRP",
+    "LINK",
+    "APT",
+    "ARB",
+    "OP",
+    "UNI",
+    "AAVE",
+    "INJ",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-07-07",
+   "universe": 173,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 10,
+   "panel_flagged_names": [
+    "ETH",
+    "XRP",
+    "LINK",
+    "NEAR",
+    "APT",
+    "ARB",
+    "OP",
+    "SUI",
+    "UNI",
+    "AAVE"
+   ]
+  },
+  {
+   "date": "2025-07-14",
+   "universe": 179,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "XRP",
+    "ADA",
+    "ARB",
+    "SUI",
+    "UNI"
+   ]
+  },
+  {
+   "date": "2025-07-21",
+   "universe": 180,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "XRP",
+    "DOGE",
+    "ADA",
+    "ARB",
+    "OP",
+    "UNI",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2025-07-28",
+   "universe": 180,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 14,
+   "panel_flagged_names": [
+    "ETH",
+    "BNB",
+    "XRP",
+    "DOGE",
+    "ADA",
+    "AVAX",
+    "LINK",
+    "LTC",
+    "ARB",
+    "OP",
+    "SUI",
+    "UNI",
+    "INJ",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2025-08-04",
+   "universe": 175,
+   "worst_bucket": 35,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "XRP",
+    "DOGE",
+    "ADA",
+    "LINK",
+    "LTC",
+    "SUI",
+    "UNI",
+    "ETC",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-08-11",
+   "universe": 180,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "ETH",
+    "DOGE",
+    "LINK",
+    "OP",
+    "SUI",
+    "UNI",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2025-08-18",
+   "universe": 179,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 10,
+   "panel_flagged_names": [
+    "ETH",
+    "SOL",
+    "BNB",
+    "DOGE",
+    "ADA",
+    "AVAX",
+    "LINK",
+    "ARB",
+    "INJ",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-08-25",
+   "universe": 177,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "ETH",
+    "SOL",
+    "BNB",
+    "AVAX",
+    "LINK",
+    "ARB",
+    "OP",
+    "AAVE",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2025-09-01",
+   "universe": 178,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "ETH",
+    "SOL",
+    "DOGE",
+    "AVAX",
+    "LINK",
+    "ARB",
+    "ETC",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-09-08",
+   "universe": 179,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "SOL",
+    "DOGE",
+    "ADA",
+    "AVAX",
+    "LINK",
+    "DOT",
+    "ARB",
+    "OP",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2025-09-15",
+   "universe": 181,
+   "worst_bucket": 37,
+   "panel": 24,
+   "panel_flagged": 11,
+   "panel_flagged_names": [
+    "ETH",
+    "SOL",
+    "BNB",
+    "DOGE",
+    "AVAX",
+    "LINK",
+    "DOT",
+    "NEAR",
+    "ARB",
+    "AAVE",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2025-09-22",
+   "universe": 179,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 12,
+   "panel_flagged_names": [
+    "SOL",
+    "BNB",
+    "XRP",
+    "DOGE",
+    "ADA",
+    "AVAX",
+    "DOT",
+    "NEAR",
+    "APT",
+    "OP",
+    "SUI",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2025-09-29",
+   "universe": 176,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 10,
+   "panel_flagged_names": [
+    "BTC",
+    "SOL",
+    "BNB",
+    "XRP",
+    "DOGE",
+    "AVAX",
+    "DOT",
+    "NEAR",
+    "APT",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2025-10-06",
+   "universe": 178,
+   "worst_bucket": 36,
+   "panel": 24,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "SOL",
+    "BNB",
+    "DOGE",
+    "AVAX",
+    "DOT",
+    "NEAR",
+    "APT",
+    "OP"
+   ]
+  },
+  {
+   "date": "2025-10-13",
+   "universe": 167,
+   "worst_bucket": 34,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "BNB",
+    "TRX",
+    "ATOM",
+    "APT",
+    "ETC",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-10-20",
+   "universe": 166,
+   "worst_bucket": 34,
+   "panel": 24,
+   "panel_flagged": 3,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "LINK"
+   ]
+  },
+  {
+   "date": "2025-10-27",
+   "universe": 162,
+   "worst_bucket": 33,
+   "panel": 24,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "BNB",
+    "XRP",
+    "NEAR",
+    "APT",
+    "UNI",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-11-03",
+   "universe": 156,
+   "worst_bucket": 32,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "AAVE",
+    "ETC",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-11-10",
+   "universe": 157,
+   "worst_bucket": 32,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "DOT",
+    "NEAR",
+    "ARB",
+    "OP",
+    "UNI",
+    "AAVE",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2025-11-17",
+   "universe": 149,
+   "worst_bucket": 30,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "BTC",
+    "XRP",
+    "LTC",
+    "NEAR",
+    "OP",
+    "UNI",
+    "FIL",
+    "ETC",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-11-24",
+   "universe": 146,
+   "worst_bucket": 30,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "XRP",
+    "NEAR",
+    "UNI",
+    "AAVE",
+    "FIL",
+    "ETC",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-12-01",
+   "universe": 139,
+   "worst_bucket": 28,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "NEAR",
+    "OP",
+    "UNI",
+    "AAVE",
+    "FIL",
+    "ETC",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-12-08",
+   "universe": 140,
+   "worst_bucket": 28,
+   "panel": 24,
+   "panel_flagged": 13,
+   "panel_flagged_names": [
+    "ETH",
+    "SOL",
+    "XRP",
+    "ADA",
+    "AVAX",
+    "LINK",
+    "ARB",
+    "OP",
+    "SUI",
+    "UNI",
+    "AAVE",
+    "INJ",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-12-15",
+   "universe": 137,
+   "worst_bucket": 28,
+   "panel": 24,
+   "panel_flagged": 12,
+   "panel_flagged_names": [
+    "ETH",
+    "SOL",
+    "XRP",
+    "ADA",
+    "AVAX",
+    "LINK",
+    "DOT",
+    "ARB",
+    "OP",
+    "SUI",
+    "AAVE",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-12-22",
+   "universe": 136,
+   "worst_bucket": 28,
+   "panel": 24,
+   "panel_flagged": 10,
+   "panel_flagged_names": [
+    "ETH",
+    "XRP",
+    "DOGE",
+    "AVAX",
+    "LINK",
+    "ARB",
+    "SUI",
+    "UNI",
+    "INJ",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2025-12-29",
+   "universe": 136,
+   "worst_bucket": 28,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "DOT",
+    "NEAR",
+    "ARB",
+    "OP",
+    "SUI",
+    "UNI",
+    "AAVE",
+    "FIL",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2026-01-05",
+   "universe": 139,
+   "worst_bucket": 28,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "XRP",
+    "DOGE",
+    "ADA",
+    "DOT",
+    "ARB",
+    "OP",
+    "SUI",
+    "INJ",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2026-01-12",
+   "universe": 144,
+   "worst_bucket": 29,
+   "panel": 24,
+   "panel_flagged": 0,
+   "panel_flagged_names": []
+  },
+  {
+   "date": "2026-01-19",
+   "universe": 142,
+   "worst_bucket": 29,
+   "panel": 24,
+   "panel_flagged": 1,
+   "panel_flagged_names": [
+    "OP"
+   ]
+  },
+  {
+   "date": "2026-01-26",
+   "universe": 140,
+   "worst_bucket": 28,
+   "panel": 24,
+   "panel_flagged": 0,
+   "panel_flagged_names": []
+  },
+  {
+   "date": "2026-02-02",
+   "universe": 137,
+   "worst_bucket": 28,
+   "panel": 24,
+   "panel_flagged": 2,
+   "panel_flagged_names": [
+    "APT",
+    "OP"
+   ]
+  },
+  {
+   "date": "2026-02-09",
+   "universe": 129,
+   "worst_bucket": 26,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "XRP",
+    "AVAX",
+    "LTC",
+    "ATOM",
+    "AAVE",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2026-02-16",
+   "universe": 135,
+   "worst_bucket": 27,
+   "panel": 24,
+   "panel_flagged": 0,
+   "panel_flagged_names": []
+  },
+  {
+   "date": "2026-02-23",
+   "universe": 137,
+   "worst_bucket": 28,
+   "panel": 24,
+   "panel_flagged": 2,
+   "panel_flagged_names": [
+    "ATOM",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2026-03-02",
+   "universe": 134,
+   "worst_bucket": 27,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "ADA",
+    "LINK",
+    "DOT",
+    "NEAR",
+    "OP",
+    "UNI",
+    "AAVE"
+   ]
+  },
+  {
+   "date": "2026-03-09",
+   "universe": 139,
+   "worst_bucket": 28,
+   "panel": 24,
+   "panel_flagged": 2,
+   "panel_flagged_names": [
+    "DOT",
+    "UNI"
+   ]
+  },
+  {
+   "date": "2026-03-16",
+   "universe": 139,
+   "worst_bucket": 28,
+   "panel": 24,
+   "panel_flagged": 13,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "XRP",
+    "DOGE",
+    "ADA",
+    "AVAX",
+    "LINK",
+    "DOT",
+    "NEAR",
+    "OP",
+    "UNI",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2026-03-23",
+   "universe": 136,
+   "worst_bucket": 28,
+   "panel": 24,
+   "panel_flagged": 2,
+   "panel_flagged_names": [
+    "ETH",
+    "APT"
+   ]
+  },
+  {
+   "date": "2026-03-30",
+   "universe": 123,
+   "worst_bucket": 25,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "BNB",
+    "DOGE",
+    "LINK",
+    "NEAR",
+    "APT",
+    "ETC",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2026-04-06",
+   "universe": 125,
+   "worst_bucket": 25,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "LINK",
+    "NEAR",
+    "OP",
+    "FIL",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2026-04-13",
+   "universe": 124,
+   "worst_bucket": 25,
+   "panel": 24,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "AVAX",
+    "LINK",
+    "NEAR",
+    "ARB",
+    "OP",
+    "AAVE"
+   ]
+  },
+  {
+   "date": "2026-04-20",
+   "universe": 124,
+   "worst_bucket": 25,
+   "panel": 24,
+   "panel_flagged": 3,
+   "panel_flagged_names": [
+    "XRP",
+    "ARB",
+    "OP"
+   ]
+  },
+  {
+   "date": "2026-04-27",
+   "universe": 125,
+   "worst_bucket": 25,
+   "panel": 24,
+   "panel_flagged": 3,
+   "panel_flagged_names": [
+    "ARB",
+    "AAVE",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2026-05-04",
+   "universe": 124,
+   "worst_bucket": 25,
+   "panel": 24,
+   "panel_flagged": 3,
+   "panel_flagged_names": [
+    "BTC",
+    "DOGE",
+    "OP"
+   ]
+  },
+  {
+   "date": "2026-05-11",
+   "universe": 125,
+   "worst_bucket": 25,
+   "panel": 24,
+   "panel_flagged": 4,
+   "panel_flagged_names": [
+    "OP",
+    "SUI",
+    "INJ",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2026-05-18",
+   "universe": 122,
+   "worst_bucket": 25,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "BNB",
+    "DOGE",
+    "NEAR",
+    "SUI",
+    "UNI",
+    "INJ",
+    "ETC"
+   ]
+  },
+  {
+   "date": "2026-05-25",
+   "universe": 122,
+   "worst_bucket": 25,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "BNB",
+    "NEAR",
+    "SUI",
+    "INJ",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2026-06-01",
+   "universe": 122,
+   "worst_bucket": 25,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "BNB",
+    "NEAR",
+    "SUI",
+    "INJ",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2026-06-08",
+   "universe": 121,
+   "worst_bucket": 25,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "BTC",
+    "ETH",
+    "BNB",
+    "XRP",
+    "NEAR",
+    "SUI",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2026-06-15",
+   "universe": 121,
+   "worst_bucket": 25,
+   "panel": 24,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "SOL",
+    "XRP",
+    "ATOM",
+    "NEAR",
+    "OP",
+    "UNI",
+    "AAVE",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2026-06-22",
+   "universe": 119,
+   "worst_bucket": 24,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "SOL",
+    "BNB",
+    "APT",
+    "UNI",
+    "AAVE",
+    "INJ",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2026-06-29",
+   "universe": 117,
+   "worst_bucket": 24,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "SOL",
+    "AVAX",
+    "NEAR",
+    "OP",
+    "UNI",
+    "AAVE",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2026-07-06",
+   "universe": 118,
+   "worst_bucket": 24,
+   "panel": 24,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "ETH",
+    "SOL",
+    "ADA",
+    "LINK",
+    "NEAR",
+    "UNI",
+    "AAVE",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2026-07-13",
+   "universe": 117,
+   "worst_bucket": 24,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "ETH",
+    "ARB",
+    "UNI",
+    "AAVE",
+    "INJ",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2026-07-20",
+   "universe": 117,
+   "worst_bucket": 24,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "ETH",
+    "ADA",
+    "LINK",
+    "LTC",
+    "ARB",
+    "SUI",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2026-07-27",
+   "universe": 116,
+   "worst_bucket": 24,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "ETH",
+    "ADA",
+    "LINK",
+    "ARB",
+    "UNI",
+    "AAVE"
+   ]
+  },
+  {
+   "date": "2026-08-03",
+   "universe": 114,
+   "worst_bucket": 23,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "ADA",
+    "DOT",
+    "ARB",
+    "UNI",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2026-08-10",
+   "universe": 110,
+   "worst_bucket": 22,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "ETH",
+    "ADA",
+    "LINK",
+    "APT",
+    "OP",
+    "SUI",
+    "UNI"
+   ]
+  },
+  {
+   "date": "2026-08-17",
+   "universe": 105,
+   "worst_bucket": 21,
+   "panel": 24,
+   "panel_flagged": 6,
+   "panel_flagged_names": [
+    "ETH",
+    "DOGE",
+    "AVAX",
+    "LINK",
+    "AAVE",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2026-08-24",
+   "universe": 112,
+   "worst_bucket": 23,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "ETH",
+    "XRP",
+    "DOGE",
+    "LINK",
+    "UNI",
+    "AAVE",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2026-08-31",
+   "universe": 111,
+   "worst_bucket": 23,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "ETH",
+    "SOL",
+    "XRP",
+    "LINK",
+    "ARB",
+    "UNI",
+    "BCH"
+   ]
+  },
+  {
+   "date": "2026-09-07",
+   "universe": 112,
+   "worst_bucket": 23,
+   "panel": 24,
+   "panel_flagged": 8,
+   "panel_flagged_names": [
+    "LINK",
+    "DOT",
+    "NEAR",
+    "ARB",
+    "OP",
+    "SUI",
+    "UNI",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2026-09-14",
+   "universe": 111,
+   "worst_bucket": 23,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "ETH",
+    "XRP",
+    "NEAR",
+    "ARB",
+    "UNI",
+    "INJ",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2026-09-21",
+   "universe": 113,
+   "worst_bucket": 23,
+   "panel": 24,
+   "panel_flagged": 9,
+   "panel_flagged_names": [
+    "AVAX",
+    "DOT",
+    "NEAR",
+    "APT",
+    "ARB",
+    "OP",
+    "SUI",
+    "UNI",
+    "INJ"
+   ]
+  },
+  {
+   "date": "2026-09-28",
+   "universe": 113,
+   "worst_bucket": 23,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "LINK",
+    "NEAR",
+    "APT",
+    "ARB",
+    "SUI",
+    "UNI",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2026-10-05",
+   "universe": 116,
+   "worst_bucket": 24,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "AVAX",
+    "NEAR",
+    "SUI",
+    "UNI",
+    "AAVE",
+    "INJ",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2026-10-12",
+   "universe": 117,
+   "worst_bucket": 24,
+   "panel": 24,
+   "panel_flagged": 5,
+   "panel_flagged_names": [
+    "AVAX",
+    "NEAR",
+    "APT",
+    "OP",
+    "FIL"
+   ]
+  },
+  {
+   "date": "2026-10-19",
+   "universe": 115,
+   "worst_bucket": 23,
+   "panel": 24,
+   "panel_flagged": 7,
+   "panel_flagged_names": [
+    "NEAR",
+    "ARB",
+    "OP",
+    "SUI",
+    "INJ",
+    "FIL",
+    "BCH"
+   ]
+  }
+ ],
+ "map_check_detail": {
+  "1000LUNC": {
+   "overlap_days": 1315,
+   "median_err": 0.001309
+  },
+  "1000SHIB": {
+   "overlap_days": 1315,
+   "median_err": 0.000924
+  },
+  "1000WHY": {
+   "overlap_days": 477,
+   "median_err": 0.003493
+  },
+  "1000X": {
+   "overlap_days": 312,
+   "median_err": 0.94908
+  },
+  "1000XEC": {
+   "overlap_days": 1315,
+   "median_err": 0.001639
+  },
+  "1INCH": {
+   "overlap_days": 1387,
+   "median_err": 0.001147
+  },
+  "42": {
+   "overlap_days": 96,
+   "median_err": 0.006049
+  },
+  "A2Z": {
+   "overlap_days": 237,
+   "median_err": 0.001694
+  },
+  "AAVE": {
+   "overlap_days": 1387,
+   "median_err": 0.000817
+  },
+  "ACH": {
+   "overlap_days": 1336,
+   "median_err": 0.001222
+  },
+  "ACX": {
+   "overlap_days": 610,
+   "median_err": 0.00127
+  },
+  "ADA": {
+   "overlap_days": 1386,
+   "median_err": 0.000819
+  },
+  "AGIX": {
+   "overlap_days": 496,
+   "median_err": 0.001222
+  },
+  "AI": {
+   "overlap_days": 1,
+   "median_err": 4.556906
+  },
+  "AI16Z": {
+   "overlap_days": 309,
+   "median_err": 0.001256
+  },
+  "ALGO": {
+   "overlap_days": 1387,
+   "median_err": 0.001076
+  },
+  "ALICE": {
+   "overlap_days": 1387,
+   "median_err": 0.001025
+  },
+  "ALPACA": {
+   "overlap_days": 252,
+   "median_err": 0.00112
+  },
+  "ALPHA": {
+   "overlap_days": 995,
+   "median_err": 0.001156
+  },
+  "AMB": {
+   "overlap_days": 694,
+   "median_err": 0.00147
+  },
+  "ANKR": {
+   "overlap_days": 1387,
+   "median_err": 0.00166
+  },
+  "APE": {
+   "overlap_days": 1387,
+   "median_err": 0.000942
+  },
+  "API3": {
+   "overlap_days": 1387,
+   "median_err": 0.00119
+  },
+  "APT": {
+   "overlap_days": 1387,
+   "median_err": 0.000919
+  },
+  "AR": {
+   "overlap_days": 1387,
+   "median_err": 0.000993
+  },
+  "ARB": {
+   "overlap_days": 1307,
+   "median_err": 0.00085
+  },
+  "ARPA": {
+   "overlap_days": 1387,
+   "median_err": 0.001179
+  },
+  "ASTR": {
+   "overlap_days": 1344,
+   "median_err": 0.001257
+  },
+  "ATA": {
+   "overlap_days": 1234,
+   "median_err": 0.001357
+  },
+  "ATOM": {
+   "overlap_days": 1387,
+   "median_err": 0.000871
+  },
+  "AVAX": {
+   "overlap_days": 1387,
+   "median_err": 0.000764
+  },
+  "AXS": {
+   "overlap_days": 1387,
+   "median_err": 0.001077
+  },
+  "B3": {
+   "overlap_days": 439,
+   "median_err": 0.001565
+  },
+  "BADGER": {
+   "overlap_days": 522,
+   "median_err": 0.00097
+  },
+  "BAKE": {
+   "overlap_days": 1005,
+   "median_err": 0.001345
+  },
+  "BAL": {
+   "overlap_days": 833,
+   "median_err": 0.001117
+  },
+  "BAND": {
+   "overlap_days": 1387,
+   "median_err": 0.001166
+  },
+  "BAT": {
+   "overlap_days": 1387,
+   "median_err": 0.001246
+  },
+  "BCH": {
+   "overlap_days": 1387,
+   "median_err": 0.000793
+  },
+  "BEL": {
+   "overlap_days": 1387,
+   "median_err": 0.001162
+  },
+  "BID": {
+   "overlap_days": 307,
+   "median_err": 0.003002
+  },
+  "BLZ": {
+   "overlap_days": 722,
+   "median_err": 0.001312
+  },
+  "BNB": {
+   "overlap_days": 1387,
+   "median_err": 0.000745
+  },
+  "BNX": {
+   "overlap_days": 87,
+   "median_err": 0.014681
+  },
+  "BOB": {
+   "overlap_days": 159,
+   "median_err": 0.00206
+  },
+  "BOND": {
+   "overlap_days": 429,
+   "median_err": 0.001158
+  },
+  "BSW": {
+   "overlap_days": 375,
+   "median_err": 0.00148
+  },
+  "BTC": {
+   "overlap_days": 1385,
+   "median_err": 0.000554
+  },
+  "C98": {
+   "overlap_days": 1387,
+   "median_err": 0.001123
+  },
+  "CELO": {
+   "overlap_days": 1387,
+   "median_err": 0.001182
+  },
+  "CELR": {
+   "overlap_days": 1387,
+   "median_err": 0.001213
+  },
+  "CFX": {
+   "overlap_days": 1338,
+   "median_err": 0.000949
+  },
+  "CHESS": {
+   "overlap_days": 520,
+   "median_err": 0.570398
+  },
+  "CHR": {
+   "overlap_days": 1387,
+   "median_err": 0.00141
+  },
+  "CHZ": {
+   "overlap_days": 1387,
+   "median_err": 0.001079
+  },
+  "CKB": {
+   "overlap_days": 1330,
+   "median_err": 0.001333
+  },
+  "COMBO": {
+   "overlap_days": 665,
+   "median_err": 0.981942
+  },
+  "COMMON": {
+   "overlap_days": 95,
+   "median_err": 0.002975
+  },
+  "COMP": {
+   "overlap_days": 1387,
+   "median_err": 0.000966
+  },
+  "COS": {
+   "overlap_days": 620,
+   "median_err": 0.001419
+  },
+  "COTI": {
+   "overlap_days": 1387,
+   "median_err": 0.001323
+  },
+  "CRV": {
+   "overlap_days": 1387,
+   "median_err": 0.000936
+  },
+  "CTSI": {
+   "overlap_days": 1387,
+   "median_err": 0.001301
+  },
+  "CUDIS": {
+   "overlap_days": 164,
+   "median_err": 0.003938
+  },
+  "D": {
+   "overlap_days": 519,
+   "median_err": 0.001739
+  },
+  "DAM": {
+   "overlap_days": 254,
+   "median_err": 0.006669
+  },
+  "DAR": {
+   "overlap_days": 724,
+   "median_err": 0.001236
+  },
+  "DASH": {
+   "overlap_days": 1387,
+   "median_err": 0.001094
+  },
+  "DEGEN": {
+   "overlap_days": 530,
+   "median_err": 0.001309
+  },
+  "DEGO": {
+   "overlap_days": 495,
+   "median_err": 0.001466
+  },
+  "DENT": {
+   "overlap_days": 1205,
+   "median_err": 0.001381
+  },
+  "DF": {
+   "overlap_days": 403,
+   "median_err": 0.001237
+  },
+  "DGB": {
+   "overlap_days": 455,
+   "median_err": 0.001217
+  },
+  "DMC": {
+   "overlap_days": 211,
+   "median_err": 0.002291
+  },
+  "DOGE": {
+   "overlap_days": 1387,
+   "median_err": 0.000801
+  },
+  "DOT": {
+   "overlap_days": 1387,
+   "median_err": 0.000787
+  },
+  "DUSK": {
+   "overlap_days": 1387,
+   "median_err": 0.001182
+  },
+  "DYDX": {
+   "overlap_days": 1060,
+   "median_err": 0.000937
+  },
+  "EGLD": {
+   "overlap_days": 1387,
+   "median_err": 0.001019
+  },
+  "ENA": {
+   "overlap_days": 931,
+   "median_err": 0.000862
+  },
+  "ENJ": {
+   "overlap_days": 1387,
+   "median_err": 0.001413
+  },
+  "ENS": {
+   "overlap_days": 1387,
+   "median_err": 0.00093
+  },
+  "EPT": {
+   "overlap_days": 284,
+   "median_err": 0.00221
+  },
+  "ETC": {
+   "overlap_days": 1387,
+   "median_err": 0.000769
+  },
+  "ETH": {
+   "overlap_days": 1387,
+   "median_err": 0.0006
+  },
+  "FET": {
+   "overlap_days": 1372,
+   "median_err": 0.001213
+  },
+  "FIL": {
+   "overlap_days": 1387,
+   "median_err": 0.000764
+  },
+  "FIO": {
+   "overlap_days": 572,
+   "median_err": 0.001582
+  },
+  "FIS": {
+   "overlap_days": 229,
+   "median_err": 0.001731
+  },
+  "FLM": {
+   "overlap_days": 1055,
+   "median_err": 0.00134
+  },
+  "FLOW": {
+   "overlap_days": 1387,
+   "median_err": 0.001195
+  },
+  "FORTH": {
+   "overlap_days": 351,
+   "median_err": 0.00155
+  },
+  "FTM": {
+   "overlap_days": 736,
+   "median_err": 0.001003
+  },
+  "FUN": {
+   "overlap_days": 381,
+   "median_err": 0.002322
+  },
+  "FXS": {
+   "overlap_days": 1081,
+   "median_err": 0.001068
+  },
+  "GALA": {
+   "overlap_days": 1387,
+   "median_err": 0.001016
+  },
+  "GHST": {
+   "overlap_days": 501,
+   "median_err": 0.001158
+  },
+  "GLMR": {
+   "overlap_days": 232,
+   "median_err": 0.001197
+  },
+  "GMT": {
+   "overlap_days": 1387,
+   "median_err": 0.001083
+  },
+  "GMX": {
+   "overlap_days": 1341,
+   "median_err": 0.001016
+  },
+  "GRT": {
+   "overlap_days": 1386,
+   "median_err": 0.001146
+  },
+  "GTC": {
+   "overlap_days": 1387,
+   "median_err": 0.001527
+  },
+  "HBAR": {
+   "overlap_days": 1387,
+   "median_err": 0.000953
+  },
+  "HFT": {
+   "overlap_days": 1220,
+   "median_err": 0.001276
+  },
+  "HIFI": {
+   "overlap_days": 749,
+   "median_err": 0.001321
+  },
+  "HIGH": {
+   "overlap_days": 1221,
+   "median_err": 0.001398
+  },
+  "HIPPO": {
+   "overlap_days": 512,
+   "median_err": 0.001894
+  },
+  "HOOK": {
+   "overlap_days": 1156,
+   "median_err": 0.001193
+  },
+  "HOT": {
+   "overlap_days": 1387,
+   "median_err": 0.001558
+  },
+  "ICP": {
+   "overlap_days": 1385,
+   "median_err": 0.000973
+  },
+  "ICX": {
+   "overlap_days": 1333,
+   "median_err": 0.001439
+  },
+  "ID": {
+   "overlap_days": 1307,
+   "median_err": 0.001321
+  },
+  "IDEX": {
+   "overlap_days": 378,
+   "median_err": 0.000999
+  },
+  "IMX": {
+   "overlap_days": 1387,
+   "median_err": 0.001159
+  },
+  "INJ": {
+   "overlap_days": 1387,
+   "median_err": 0.000968
+  },
+  "IOST": {
+   "overlap_days": 1386,
+   "median_err": 0.001319
+  },
+  "IOTA": {
+   "overlap_days": 1385,
+   "median_err": 0.001168
+  },
+  "IOTX": {
+   "overlap_days": 1386,
+   "median_err": 0.001417
+  },
+  "IP": {
+   "overlap_days": 501,
+   "median_err": 0.001675
+  },
+  "IR": {
+   "overlap_days": 129,
+   "median_err": 0.002548
+  },
+  "JASMY": {
+   "overlap_days": 1387,
+   "median_err": 0.001111
+  },
+  "JOE": {
+   "overlap_days": 1301,
+   "median_err": 0.001174
+  },
+  "KAVA": {
+   "overlap_days": 1387,
+   "median_err": 0.001049
+  },
+  "KDA": {
+   "overlap_days": 414,
+   "median_err": 0.001127
+  },
+  "KEY": {
+   "overlap_days": 559,
+   "median_err": 0.001147
+  },
+  "KLAY": {
+   "overlap_days": 660,
+   "median_err": 0.000989
+  },
+  "KNC": {
+   "overlap_days": 1387,
+   "median_err": 0.001232
+  },
+  "KSM": {
+   "overlap_days": 1386,
+   "median_err": 0.001045
+  },
+  "LDO": {
+   "overlap_days": 1386,
+   "median_err": 0.000923
+  },
+  "LEVER": {
+   "overlap_days": 889,
+   "median_err": 0.001678
+  },
+  "LINA": {
+   "overlap_days": 815,
+   "median_err": 0.001223
+  },
+  "LINK": {
+   "overlap_days": 1387,
+   "median_err": 0.000761
+  },
+  "LOKA": {
+   "overlap_days": 300,
+   "median_err": 0.001187
+  },
+  "LOOM": {
+   "overlap_days": 424,
+   "median_err": 0.001664
+  },
+  "LPT": {
+   "overlap_days": 1386,
+   "median_err": 0.001225
+  },
+  "LQTY": {
+   "overlap_days": 1320,
+   "median_err": 0.00125
+  },
+  "LRC": {
+   "overlap_days": 1177,
+   "median_err": 0.001272
+  },
+  "LTC": {
+   "overlap_days": 1387,
+   "median_err": 0.000651
+  },
+  "LUNA2": {
+   "overlap_days": 1314,
+   "median_err": 0.001302
+  },
+  "MAGIC": {
+   "overlap_days": 1364,
+   "median_err": 0.001199
+  },
+  "MANA": {
+   "overlap_days": 1387,
+   "median_err": 0.001096
+  },
+  "MASK": {
+   "overlap_days": 1387,
+   "median_err": 0.001053
+  },
+  "MBOX": {
+   "overlap_days": 653,
+   "median_err": 0.001389
+  },
+  "MDT": {
+   "overlap_days": 322,
+   "median_err": 0.001039
+  },
+  "MEMEFI": {
+   "overlap_days": 108,
+   "median_err": 0.002155
+  },
+  "MILK": {
+   "overlap_days": 214,
+   "median_err": 0.001202
+  },
+  "MINA": {
+   "overlap_days": 1350,
+   "median_err": 0.001212
+  },
+  "MKR": {
+   "overlap_days": 980,
+   "median_err": 0.000958
+  },
+  "MLN": {
+   "overlap_days": 414,
+   "median_err": 0.002231
+  },
+  "MTL": {
+   "overlap_days": 1387,
+   "median_err": 0.00203
+  },
+  "MYRO": {
+   "overlap_days": 620,
+   "median_err": 0.001354
+  },
+  "NEAR": {
+   "overlap_days": 1386,
+   "median_err": 0.000825
+  },
+  "NEIROETH": {
+   "overlap_days": 385,
+   "median_err": 0.001589
+  },
+  "NEO": {
+   "overlap_days": 1387,
+   "median_err": 0.001151
+  },
+  "NFP": {
+   "overlap_days": 918,
+   "median_err": 0.001364
+  },
+  "NKN": {
+   "overlap_days": 1132,
+   "median_err": 0.001336
+  },
+  "NTRN": {
+   "overlap_days": 861,
+   "median_err": 0.001235
+  },
+  "NULS": {
+   "overlap_days": 232,
+   "median_err": 0.001065
+  },
+  "OBOL": {
+   "overlap_days": 212,
+   "median_err": 0.001462
+  },
+  "OCEAN": {
+   "overlap_days": 540,
+   "median_err": 0.001044
+  },
+  "OGN": {
+   "overlap_days": 1387,
+   "median_err": 0.001138
+  },
+  "OL": {
+   "overlap_days": 288,
+   "median_err": 0.002234
+  },
+  "OMG": {
+   "overlap_days": 760,
+   "median_err": 0.001238
+  },
+  "OMNI": {
+   "overlap_days": 523,
+   "median_err": 0.001123
+  },
+  "ONDO": {
+   "overlap_days": 557,
+   "median_err": 0.000958
+  },
+  "ONE": {
+   "overlap_days": 1386,
+   "median_err": 0.001402
+  },
+  "ONT": {
+   "overlap_days": 1387,
+   "median_err": 0.001552
+  },
+  "OP": {
+   "overlap_days": 1387,
+   "median_err": 0.000833
+  },
+  "ORBS": {
+   "overlap_days": 419,
+   "median_err": 0.001179
+  },
+  "OXT": {
+   "overlap_days": 979,
+   "median_err": 0.001121
+  },
+  "PENDLE": {
+   "overlap_days": 1179,
+   "median_err": 0.000986
+  },
+  "PEOPLE": {
+   "overlap_days": 1387,
+   "median_err": 0.001142
+  },
+  "PERP": {
+   "overlap_days": 991,
+   "median_err": 0.001151
+  },
+  "PHB": {
+   "overlap_days": 1187,
+   "median_err": 0.001297
+  },
+  "POL": {
+   "overlap_days": 767,
+   "median_err": 0.000769
+  },
+  "POLYX": {
+   "overlap_days": 1091,
+   "median_err": 0.001535
+  },
+  "PONKE": {
+   "overlap_days": 389,
+   "median_err": 0.001436
+  },
+  "PORT3": {
+   "overlap_days": 173,
+   "median_err": 0.003121
+  },
+  "PUFFER": {
+   "overlap_days": 309,
+   "median_err": 0.002392
+  },
+  "QNT": {
+   "overlap_days": 1387,
+   "median_err": 0.000957
+  },
+  "QTUM": {
+   "overlap_days": 1387,
+   "median_err": 0.001108
+  },
+  "QUICK": {
+   "overlap_days": 449,
+   "median_err": 0.000979
+  },
+  "RAD": {
+   "overlap_days": 369,
+   "median_err": 0.001031
+  },
+  "RAY": {
+   "overlap_days": 6,
+   "median_err": 0.025739
+  },
+  "RDNT": {
+   "overlap_days": 1084,
+   "median_err": 0.001118
+  },
+  "REEF": {
+   "overlap_days": 750,
+   "median_err": 0.002043
+  },
+  "REI": {
+   "overlap_days": 384,
+   "median_err": 1.320726
+  },
+  "REN": {
+   "overlap_days": 700,
+   "median_err": 0.001089
+  },
+  "RLC": {
+   "overlap_days": 1387,
+   "median_err": 0.001266
+  },
+  "RLS": {
+   "overlap_days": 127,
+   "median_err": 0.001904
+  },
+  "ROSE": {
+   "overlap_days": 1387,
+   "median_err": 0.001137
+  },
+  "RSR": {
+   "overlap_days": 1387,
+   "median_err": 0.001064
+  },
+  "RUNE": {
+   "overlap_days": 1386,
+   "median_err": 0.001151
+  },
+  "RVN": {
+   "overlap_days": 1387,
+   "median_err": 0.00158
+  },
+  "RVV": {
+   "overlap_days": 116,
+   "median_err": 0.00352
+  },
+  "SAND": {
+   "overlap_days": 1385,
+   "median_err": 0.001014
+  },
+  "SEI": {
+   "overlap_days": 1160,
+   "median_err": 0.00109
+  },
+  "SFP": {
+   "overlap_days": 1387,
+   "median_err": 0.000937
+  },
+  "SKATE": {
+   "overlap_days": 184,
+   "median_err": 0.002417
+  },
+  "SKL": {
+   "overlap_days": 1387,
+   "median_err": 0.001187
+  },
+  "SLERF": {
+   "overlap_days": 333,
+   "median_err": 0.001331
+  },
+  "SNT": {
+   "overlap_days": 193,
+   "median_err": 0.001431
+  },
+  "SNX": {
+   "overlap_days": 1386,
+   "median_err": 0.001077
+  },
+  "SOL": {
+   "overlap_days": 1387,
+   "median_err": 0.000724
+  },
+  "SPELL": {
+   "overlap_days": 1386,
+   "median_err": 0.001533
+  },
+  "SSV": {
+   "overlap_days": 1334,
+   "median_err": 0.001152
+  },
+  "STG": {
+   "overlap_days": 1361,
+   "median_err": 0.001101
+  },
+  "STMX": {
+   "overlap_days": 781,
+   "median_err": 0.001769
+  },
+  "STORJ": {
+   "overlap_days": 1333,
+   "median_err": 0.001486
+  },
+  "STPT": {
+   "overlap_days": 208,
+   "median_err": 0.001051
+  },
+  "STRAX": {
+   "overlap_days": 156,
+   "median_err": 0.001765
+  },
+  "STRK": {
+   "overlap_days": 973,
+   "median_err": 0.001006
+  },
+  "STX": {
+   "overlap_days": 1336,
+   "median_err": 0.001262
+  },
+  "SUI": {
+   "overlap_days": 1265,
+   "median_err": 0.000823
+  },
+  "SUSHI": {
+   "overlap_days": 1387,
+   "median_err": 0.00104
+  },
+  "SWELL": {
+   "overlap_days": 386,
+   "median_err": 0.001182
+  },
+  "SYS": {
+   "overlap_days": 639,
+   "median_err": 0.001533
+  },
+  "T": {
+   "overlap_days": 1357,
+   "median_err": 0.001698
+  },
+  "TANSSI": {
+   "overlap_days": 196,
+   "median_err": 0.003513
+  },
+  "THETA": {
+   "overlap_days": 1386,
+   "median_err": 0.001
+  },
+  "TIA": {
+   "overlap_days": 1085,
+   "median_err": 0.000955
+  },
+  "TLM": {
+   "overlap_days": 1299,
+   "median_err": 0.001315
+  },
+  "TOKEN": {
+   "overlap_days": 763,
+   "median_err": 0.001185
+  },
+  "TON": {
+   "overlap_days": 845,
+   "median_err": 0.628574
+  },
+  "TRB": {
+   "overlap_days": 1387,
+   "median_err": 0.000894
+  },
+  "TROY": {
+   "overlap_days": 166,
+   "median_err": 0.001653
+  },
+  "TRU": {
+   "overlap_days": 1142,
+   "median_err": 0.001353
+  },
+  "TRX": {
+   "overlap_days": 1387,
+   "median_err": 0.000661
+  },
+  "UNFI": {
+   "overlap_days": 667,
+   "median_err": 0.001137
+  },
+  "UNI": {
+   "overlap_days": 1387,
+   "median_err": 0.000828
+  },
+  "UXLINK": {
+   "overlap_days": 376,
+   "median_err": 0.00156
+  },
+  "VANRY": {
+   "overlap_days": 877,
+   "median_err": 0.001619
+  },
+  "VET": {
+   "overlap_days": 1385,
+   "median_err": 0.001
+  },
+  "VFY": {
+   "overlap_days": 169,
+   "median_err": 0.002341
+  },
+  "VIC": {
+   "overlap_days": 514,
+   "median_err": 0.001638
+  },
+  "VIDT": {
+   "overlap_days": 235,
+   "median_err": 0.00132
+  },
+  "VINE": {
+   "overlap_days": 459,
+   "median_err": 0.00181
+  },
+  "VOXEL": {
+   "overlap_days": 477,
+   "median_err": 0.001151
+  },
+  "WAVES": {
+   "overlap_days": 526,
+   "median_err": 0.001939
+  },
+  "WOO": {
+   "overlap_days": 1387,
+   "median_err": 0.001065
+  },
+  "XCN": {
+   "overlap_days": 224,
+   "median_err": 0.001426
+  },
+  "XEM": {
+   "overlap_days": 705,
+   "median_err": 0.002309
+  },
+  "XLM": {
+   "overlap_days": 1386,
+   "median_err": 0.000949
+  },
+  "XMR": {
+   "overlap_days": 1313,
+   "median_err": 0.00106
+  },
+  "XRP": {
+   "overlap_days": 1387,
+   "median_err": 0.000817
+  },
+  "XTZ": {
+   "overlap_days": 1386,
+   "median_err": 0.001143
+  },
+  "XVS": {
+   "overlap_days": 1285,
+   "median_err": 0.001152
+  },
+  "YALA": {
+   "overlap_days": 188,
+   "median_err": 0.003229
+  },
+  "YFI": {
+   "overlap_days": 1387,
+   "median_err": 0.000975
+  },
+  "ZEC": {
+   "overlap_days": 1386,
+   "median_err": 0.001193
+  },
+  "ZEN": {
+   "overlap_days": 1385,
+   "median_err": 0.000926
+  },
+  "ZIL": {
+   "overlap_days": 1387,
+   "median_err": 0.001331
+  },
+  "ZKJ": {
+   "overlap_days": 352,
+   "median_err": 0.002966
+  },
+  "ZRC": {
+   "overlap_days": 177,
+   "median_err": 0.001509
+  },
+  "ZRX": {
+   "overlap_days": 1386,
+   "median_err": 0.001378
+  }
+ }
+}
