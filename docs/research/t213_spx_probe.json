@@ -1,0 +1,112 @@
+{
+ "candidates": [
+  {
+   "symbol": "SPX",
+   "ok": true,
+   "n_returned": 5,
+   "first": {
+    "symbol": "SPX",
+    "trade_date": "2026-08-23",
+    "close": 0.47437,
+    "source": "hyperliquid"
+   }
+  },
+  {
+   "symbol": "^GSPC",
+   "ok": false,
+   "n_returned": 0,
+   "first": null
+  },
+  {
+   "symbol": "GSPC",
+   "ok": false,
+   "n_returned": 0,
+   "first": null
+  },
+  {
+   "symbol": "SP500",
+   "ok": false,
+   "n_returned": 0,
+   "first": null
+  },
+  {
+   "symbol": "SPXTR",
+   "ok": false,
+   "n_returned": 0,
+   "first": null
+  },
+  {
+   "symbol": "SPX.IND",
+   "ok": false,
+   "n_returned": 0,
+   "first": null
+  },
+  {
+   "symbol": "IDX:SPX",
+   "ok": false,
+   "n_returned": 0,
+   "first": null
+  },
+  {
+   "symbol": "SPX.INDEX",
+   "ok": false,
+   "n_returned": 0,
+   "first": null
+  },
+  {
+   "symbol": "SP500.INDEX",
+   "ok": false,
+   "n_returned": 0,
+   "first": null
+  },
+  {
+   "symbol": "SP500TR",
+   "ok": false,
+   "n_returned": 0,
+   "first": null
+  },
+  {
+   "symbol": "SPXTR.IND",
+   "ok": false,
+   "n_returned": 0,
+   "first": null
+  },
+  {
+   "symbol": "INDEX:SPX",
+   "ok": false,
+   "n_returned": 0,
+   "first": null
+  }
+ ],
+ "symbol_scan": {
+  "method": "like 过滤(整表扫描会被 max-rows=1000 + order=symbol.asc 截断)",
+  "patterns": {
+   "SPX*": [
+    "SPX"
+   ],
+   "*SPX": [
+    "SPX"
+   ],
+   "*GSPC*": [],
+   "*SP500*": [],
+   "*SP5*": [],
+   "*INDEX*": [],
+   "I:*": []
+  }
+ },
+ "http_attempts": [
+  {
+   "url": "https://stooq.com/q/d/l/?s=%5Espx&i=d",
+   "ok": false,
+   "bytes_head": 400,
+   "head": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"noindex,nofollow\"></head><body><noscript>T",
+   "note": "S&P500 指数日线 CSV"
+  },
+  {
+   "url": "https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?range=2y&interval=1d",
+   "ok": false,
+   "error": "HTTPError: HTTP Error 403: Forbidden",
+   "note": "Yahoo chart API ^GSPC"
+  }
+ ]
+}
