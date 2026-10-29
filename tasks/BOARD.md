@@ -2,6 +2,7 @@
 
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
+| in_review | T-210 | lane-b | 灵活组合 T25 的链上腿怎么买:代币化黄金 / 代币化 SPY / 现金(稳定币、代币化国债)在我们这个量级的执行路径对比(只读调查) | 报告 docs/research/t210_onchain_legs.md:开头一张对比表(每条腿推荐一个、备选一个,写理由),然后每个候选的明细与链接,最后「风险」与「还看到了什么」(标探索);跟踪误差的脚本与结果 docs/research/t210_tracking.py / t210_tracking.json。in_review,推 lane-b/T-210。**交付 = 已推上分支**。 | 执行器只会说 Hyperliquid;T25 的黄金 / 股票 / 现金腿在链上能不能买、怎么买,我们没有一份对比。 |  |
 | in_review | T-211 | lane-c | Mac 引擎的三处静默失败:宏观输入写死默认值 ≥30 天、risk_meter_history_push.py 与 vector_push.py 不在了(MINIMAX_SYNC §Seth-1029a) | Supabase:`select max(d) from risk_meter_history` = 昨天(若恢复);Mac 日志 24 小时内 [MACRO] 不再出现那组默认值;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-211_mac_silent_failures.md(三处各:原因、改动、前后日志行、怎么判活)。卡片 notes 写清改了哪些文件(Mac 根内的路径)。in_review 时在卡上写明「改动在 Mac 根,不在分支」。 | Mac 盘中预览与它的纸面交易模块用了至少 30 天的假宏观;risk_meter_history 停 17 天没人知道。 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-069 | seth | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
@@ -10,7 +11,6 @@
 | claimed | T-096 | seth | 前向判断记录:每周一按情景卡 + 当周新闻摘要请本地 Qwen 9B / 27B 判断,先锚定、后看结果 | 新闻层(历史上测不了的那一层)从今天起有可验证的前向记录;T-095 的历史结论与它对照。 | 没有任何 LLM 判断的前向记录;narrative_events 新闻 2026-09-28 起、约 150 条 / 天,没有消费者。 |  |
 | claimed | T-098 | seth | World50 的数据:候选池(全球前 ~150 大资产)的复权价格与历史流通市值 + 贵金属口径 + 每个候选的链上形式映射与跟踪误差 | 大类 ① 候选可以用日频全收益回放;知道哪些资产今天在链上真的买得到、买多少。 | eodhd 只有 2022-08 起、未复权;yfinance 2015 起但 06-18 后停更、未复权(SHY 九年价格持平,票息全丢)。链上形式从没系统量过。 |  |
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
-| open | T-210 | lane-b | 灵活组合 T25 的链上腿怎么买:代币化黄金 / 代币化 SPY / 现金(稳定币、代币化国债)在我们这个量级的执行路径对比(只读调查) | 报告 docs/research/t210_onchain_legs.md:开头一张对比表(每条腿推荐一个、备选一个,写理由),然后每个候选的明细与链接,最后「风险」与「还看到了什么」(标探索);跟踪误差的脚本与结果 docs/research/t210_tracking.py / t210_tracking.json。in_review,推 lane-b/T-210。**交付 = 已推上分支**。 | 执行器只会说 Hyperliquid;T25 的黄金 / 股票 / 现金腿在链上能不能买、怎么买,我们没有一份对比。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -213,4 +213,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 8 · claimed 7 · blocked 6 · in_review 1 · done 185 · dropped 3
+open 7 · claimed 7 · blocked 6 · in_review 2 · done 185 · dropped 3

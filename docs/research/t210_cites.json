@@ -1,0 +1,1669 @@
+{
+ "fetched_at_utc": "2026-10-29T08:47:13.146967+00:00",
+ "pages": {
+  "paxos_paxg_terms": {
+   "url": "https://www.paxos.com/terms-and-conditions/pax-gold-terms-conditions",
+   "keywords": [
+    "verified Customers",
+    "minimum of 430",
+    "storage fee",
+    "freeze",
+    "seize",
+    "withdraw",
+    "OCC"
+   ],
+   "chars": 28741,
+   "quotes": [
+    {
+     "kw": "OCC",
+     "line_no": 105,
+     "text": "4.5. Paxos Trust issues PAXG pursuant to specific approval from the OCC)."
+    },
+    {
+     "kw": "withdraw",
+     "line_no": 106,
+     "text": "4.6. PAXG is available on the Paxos Platform for trading, for custody with Paxos, and for withdrawal. PAXG was approved for Customers of Paxos Trust through specific approval from the OCC. Restrictions may apply in accordance with applicable law."
+    },
+    {
+     "kw": "verified Customers",
+     "line_no": 111,
+     "text": "4.11. Only verified Customers may purchase PAXG from us or convert or redeem PAXG from us. We may also refuse to issue PAXG to, or convert or redeem PAXG from, a verified Customers in the event of the suspension and/or termination of our account with Paxos (an “ Account ”) or any circumstances in violation of the Paxos Contractual Documentation, including, without limitation, where we believe that the issuance or redemption of PAXG would be contrary to applicable law or would otherwise expose us to legal liability. Absent a reasonable justification not to convert or redeem PAXG, and provided that you are a fully verified Customers of Paxos, your PAXG are freely convertible, subject to the conversion requirements described herein."
+    },
+    {
+     "kw": "withdraw",
+     "line_no": 149,
+     "text": "Once the request has been submitted and processed, Paxos will send via wire withdrawal the corresponding Unallocated Gold ounces to your disclosed account."
+    },
+    {
+     "kw": "minimum of 430",
+     "line_no": 151,
+     "text": "You must redeem a minimum of 430 PAXG tokens plus the fee set forth in the Paxos User Guide, per London Good Delivery gold bar."
+    },
+    {
+     "kw": "withdraw",
+     "line_no": 157,
+     "text": "12.1. Customers may withdraw some or all of their US dollars from their Accounts at any time, upon request to us. US dollars will be transferred from the Customer’s Account with the Paxos Platform to the bank account designated by, and owned by, the Customer."
+    },
+    {
+     "kw": "withdraw",
+     "line_no": 158,
+     "text": "12.2. Paxos may impose withdrawal limits on your Account as per the Paxos User Guide, available at https://help.paxos.com ."
+    },
+    {
+     "kw": "withdraw",
+     "line_no": 159,
+     "text": "12.3. Please note that any withdrawal of US dollars may be delayed as necessary to comply with applicable law and/or Paxos’s compliance programs and policies, including verification of customer identification and anti-money laundering procedures. Withdrawals may take up to two (2) days to complete, provided that larger withdrawals may take substantially longer to complete."
+    },
+    {
+     "kw": "OCC",
+     "line_no": 161,
+     "text": "13.1. You understand, acknowledge and agree that the underlying operating rules of the Ethereum blockchain may change from time to time in such a way as to result in more than one related version of Ethereum (each instance of any such change, a “ Fork ”). If a Fork occurs, it will result in the creation of a new branch of the Ethereum blockchain. Paxos will evaluate all forks and make a determination, based on a number of factors, to support PAXG on one, and only one, of the Forks. Paxos will continue to provide Services for, support and hold US dollars against, PAXG held on the supported Fork only."
+    },
+    {
+     "kw": "OCC",
+     "line_no": 162,
+     "text": "13.2. If a Fork occurs, you understand, acknowledge and agree that we may temporarily suspend the operations of the Paxos Platform."
+    },
+    {
+     "kw": "freeze",
+     "line_no": 164,
+     "text": "14.1. As part of the ERC20 smart contract and as part of the Services, Paxos has the ability and the right to freeze and upgrade all PAXG tokens (on an aggregate basis), regardless of where the PAXG is being held. Paxos will make commercially reasonable efforts to provide prior notice of any material freeze or upgrade and inform holders of PAXG of the reasons and consequences of such freeze and/or upgrade. Paxos will make commercially reasonable efforts to use the freeze and/or upgrade feature only under limited circumstances."
+    },
+    {
+     "kw": "freeze",
+     "line_no": 165,
+     "text": "14.2. Paxos must comply with any legal directive to freeze, temporarily or permanently, user access to their PAXG or the Allocated Gold backing your PAXG with or without advance notice. Paxos will only freeze such assets (1) if required to do so by law, specifically when Paxos receives a formal legal directive from a regulator, judicial body, law enforcement agency, or other legal entity having jurisdiction over Paxos, (2) pursuant to a formal notification by a Paxos partner according to previously agreed contractual terms, or (3) as deemed necessary by Paxos in its sole discretion. Legal directive formats include court-ordered subpoenas, national security letters, and formal written directives from a regulator with oversight over Paxos."
+    },
+    {
+     "kw": "seize",
+     "line_no": 166,
+     "text": "14.3. Your PAXG and the Allocated Gold backing your PAXG may be subject to seizure or forfeiture by formal written legal directive from a regulator, judicial body, law enforcement agency, or other legal entity having jurisdiction over Paxos, and we will comply with the legal process in respect thereof. Seizure may not occur under any circumstances absent such a binding legal directive. If tokens are seized, the Paxos transaction generation will ensure that the seized funds are sent to a segregated wallet address held by Paxos for the purposes of seizure/forfeiture, until such time as they may be disposed of or otherwise handled as required by law."
+    },
+    {
+     "kw": "freeze",
+     "line_no": 168,
+     "text": "14.5. Any PAXG or Allocated Gold underlying the PAXG that are subject to freeze, seizure, forfeiture or similar limitation on their use imposed by law may become wholly and permanently unrecoverable and unusable, and in appropriate circumstances, may be destroyed. If tokens are seized, the Paxos transaction generation will ensure that the seized funds are sent to a segregated wallet address held by Paxos for the purposes of seizure/forfeiture, until such time as they may be disposed of or otherwise handled as required by law."
+    },
+    {
+     "kw": "storage fee",
+     "line_no": 175,
+     "text": "15.2. Paxos may charge storage fees to all token holders by issuing to Paxos new PAXG tokens, thereby diluting the value of existing PAXG tokens. The storage fee will be in line with industry practice, and such storage fee will be passed on to all PAXG token holders on a pro rata basis. The full methodology and exact timing of the storage fee will be disseminated at least thirty (30) days prior to the implementation of such storage fees. The storage fees are an obligation of all PAXG token holders, regardless of whether such token holder is a Customer. By purchasing PAXG tokens, you agree to assign the obligation to pay any and all storage fees tied to the PAXG tokens to subsequent holders of such PAXG tokens, and by receiving transfers of PAXG tokens, token holders agree to accept the assignment of such obligation."
+    },
+    {
+     "kw": "withdraw",
+     "line_no": 176,
+     "text": "15.3. Your financial institution and/or the provider of your crypto-asset wallet may charge transaction and other fees related to the transfer of funds to your Account. To the extent Paxos is charged any banking fees by your financial institution or Paxos’s financial institution for the deposit or withdrawal of US dollars to or from your Account, Paxos will deduct an amount equal to any such fees from the amount being transferred."
+    },
+    {
+     "kw": "freeze",
+     "line_no": 181,
+     "text": "WE MAY FREEZE, TEMPORARILY OR PERMANENTLY, YOUR USE OF, AND ACCESS TO, PAXG OR THE LONDON GOOD DELIVERY GOLD BARS BACKING YOUR PAXG, WITH OR WITHOUT ADVANCE NOTICE."
+    },
+    {
+     "kw": "freeze",
+     "line_no": 184,
+     "text": "ANY PAXG OR FIAT CURRENCY UNDERLYING PAXG THAT IS SUBJECT TO FREEZE, SEIZURE, FORFEITURE OR SIMILAR LIMITATION ON ITS USE IMPOSED BY LAW MAY BECOME WHOLLY AND PERMANENTLY UNRECOVERABLE AND UNUSABLE, AND IN APPROPRIATE CIRCUMSTANCES, MAY BE DESTROYED."
+    }
+   ]
+  },
+  "tether_terms": {
+   "url": "https://tether.to/en/legal/",
+   "keywords": [
+    "Prohibited Person",
+    "Prohibited Jurisdiction",
+    "Sanctioned Person",
+    "redemption",
+    "freeze"
+   ],
+   "chars": 78886,
+   "quotes": [
+    {
+     "kw": "Prohibited Jurisdiction",
+     "line_no": 70,
+     "text": "“ Prohibited Jurisdiction ” means Cuba, the Democratic People’s Republic of Korea (North Korea), Iran, Syria, Crimea (a region of Ukraine annexed by the Russian Federation), the self-proclaimed Donetsk People’s Republic (a region of Ukraine), the self-proclaimed Luhansk People’s Republic (a region of Ukraine), Kherson (a region of Ukraine) and Zaporizhzhia (a region of Ukraine);"
+    },
+    {
+     "kw": "Prohibited Person",
+     "line_no": 71,
+     "text": "“ Prohibited Person ” means any U.S. Person (except for Eligible Contract Participants agreed by Tether, in its sole discretion); any Canadian Person; any Singaporean Person; the Government of Venezuela; any resident of, or Government or Government Official of, or any person in any Prohibited Jurisdiction and any Sanctioned Person;"
+    },
+    {
+     "kw": "Prohibited Jurisdiction",
+     "line_no": 74,
+     "text": "“ Sanctioned Person ” refers to any Person or Digital Tokens Address that is: (i) specifically listed in any Sanctions List; (ii) directly or indirectly owned 50 per cent or more by any Person or group of Persons in the aggregate, or a Digital Tokens Wallet associated with such Person or Persons, referred to in any Sanctions List, or Government or Government Official of any Prohibited Jurisdiction; or (iii) subject to any Government Approval or otherwise sanctioned, restricted or penalised under applicable Economic Sanctions, AML or CTF Laws;"
+    },
+    {
+     "kw": "Prohibited Person",
+     "line_no": 105,
+     "text": "Right to Use the Service : If you (a) have a Tether Tokens Wallet, (b) are not a Prohibited Person, (c) do not operate your Tether Tokens Wallet for the benefit of a Prohibited Person, and (d) consent to and comply with these Terms, Tether grants you the limited right to use the Services. The right to use the Services is a personal, restricted, non-exclusive, non-transferable, non-sublicensable, revocable, limited licence, and it is subject to the limitations and obligations in these Terms. Nothing in these Terms gives you any licence (other than as set out in this paragraph), right, title, or ownership of, in, or to the Site, any of the Services, the Copyrights or the Marks. Tether may suspend or terminate your access to the Site or any of the Services, freeze any Tether Tokens held by you, or terminate your Tether Token Wallet, as required by applicable Law or where Tether, in its sole discretion, determines it is prudent to do so or where you have violated, breached, or acted in a manner inconsistent with any provision of these Terms or Applicable Law."
+    },
+    {
+     "kw": "Prohibited Person",
+     "line_no": 106,
+     "text": "Restrictions on Prohibited Persons. Every Prohibited Person is strictly prohibited from directly or indirectly holding, owning or operating a Tether Tokens Wallet in any way or otherwise transacting on or using the Services."
+    },
+    {
+     "kw": "Prohibited Person",
+     "line_no": 107,
+     "text": "No Tether Tokens Wallet may be operated for and no order or transaction in a Tether Tokens Wallet may be for the financial or other benefit of a Prohibited Person."
+    },
+    {
+     "kw": "redemption",
+     "line_no": 116,
+     "text": "Incurrence of Liability and Passage of Title : The Parties hereby agree that (i) Tether has obtained authorisation as a Stablecoin Issuer and Digital Assets Service Provider under the El Salvador Regulations for Issuance of Stablecoin Public Offerings and is subject to the regulatory requirements specified by the National Commission of Digital Assets of El Salvador; (ii) each Party incurs liability irrevocably for: (x) the sale and purchase of Tether Tokens through the Site upon the satisfaction of the conditions to purchase through the Site, and, (y) the redemption of Tether Tokens through the Site upon the satisfaction of the conditions to redeem through the Site in each case, such transactions deemed to be located within the Republic of El Salvador; and (iii) title in the Tether Tokens passes from Tether to a verified customer of Tether when Tether initiates transmission of the Tether Tokens to a User Wallet designated by such customer, such initiation deemed to be from the Republic of El Salvador."
+    },
+    {
+     "kw": "redemption",
+     "line_no": 119,
+     "text": "Suspension of Services. You acknowledge that Tether may delay or suspend your access to the Site or the Services (including in respect of purchases and redemptions), and through that your ability to interact with the Site or the Services at its sole discretion, including in the event that Tether determines that you have engaged in a Prohibited Use; when Tether suspects that there has been a violation of these Terms; if Tether believes that providing any Service to you (including any purchase or redemption) would be contrary to Law; when Tether is directed to do so by any Government; if your Tether Tokens Wallet or other User Wallet is subject to pending litigation, investigation, or Government proceedings; when Tether believes that someone is attempting to gain unauthorised access to your Tether Tokens Wallet or other account or wallet; or circumstances in which Tether believes that providing any Service to you (including any purchase or redemption) would otherwise expose Tether or any Associate to legal liability or unacceptable risk."
+    },
+    {
+     "kw": "Prohibited Jurisdiction",
+     "line_no": 141,
+     "text": "where you are subject to prohibitions or restrictions as set forth in paragraph 2, access the Site or use any Services utilising any virtual private network, proxy service, or any other third party service, network, or product with the effect of disguising your IP address or location, or access the Site or use any Services from, or being subject to, the jurisdiction of any Prohibited Jurisdiction or Government or Government Official thereof;"
+    },
+    {
+     "kw": "Prohibited Person",
+     "line_no": 142,
+     "text": "utilise a Tether Tokens Wallet, any Services or the Site for the financial or other benefit of a Prohibited Person;"
+    },
+    {
+     "kw": "Prohibited Person",
+     "line_no": 165,
+     "text": "that neither you nor any of your Affiliates shall use any Digital Tokens, Fiat, property, proceeds or funds subject to the Services directly or indirectly (i) on behalf of or for the benefit of a Prohibited Person or any Person subject to the jurisdiction of a Prohibited Jurisdiction, except where authorised under any Government Approval or not restricted by applicable Laws; (ii) in violation of or as prohibited, restricted, or penalised under applicable Economic Sanctions Laws; or (iii) in any way that would violate, be inconsistent with, penalised under, or cause the omission of filing of any report required under applicable AML Laws, CTF Laws, or Economic Sanctions Laws;"
+    },
+    {
+     "kw": "Prohibited Person",
+     "line_no": 167,
+     "text": "that neither you nor any of your Affiliates is: (i) itself or owned (beneficially or of record) or controlled by a Sanctioned Person; (ii) involved in any transaction, transfer, or conduct, whether or not by using or receiving the Services or the Site, that is likely to result in you or your Affiliates or your or your Affiliate’s shareholders, directors, officers, employees, agents, or partners becoming a Sanctioned Person; (iii) residing or domiciled in, or transferring Digital Tokens, Fiat, funds, or property to, from, or through any User Wallet, Digital Tokens Address or engaging in any transaction on the Site from a Prohibited Jurisdiction; (iv) a Government or Government Official of a Prohibited Jurisdiction or (v) otherwise a Prohibited Person;"
+    },
+    {
+     "kw": "freeze",
+     "line_no": 195,
+     "text": "any delay in transferring in or out, or loss of value of Tether Tokens resulting from failure or insolvency of any third party, or from the theft of such assets, or from freezes, seizures or other legal process asserted by a Government;"
+    },
+    {
+     "kw": "freeze",
+     "line_no": 202,
+     "text": "No Waiver; Available Remedies : Any failure by Tether or any Associate to exercise any of its rights, powers, or remedies under these Terms, or any delay by Tether or any Associate in doing so, does not constitute a waiver of any such right, power, or remedy. The single or partial exercise of any right, power, or remedy by Tether or any Associate does not prevent any of them from exercising any other rights, powers, or remedies. The remedies of Tether and each Associate are cumulative with and not exclusive of any other remedy conferred by the provisions of these Terms, or by Law or equity. You agree that the remedies to which Tether and each Associate is entitled include: (i) injunctions to prevent breaches of these Terms and to enforce specifically the terms and provisions hereof, and you waive the requirement of any posting of a bond in connection with such remedies; (ii) the right to recover the amount of any Losses by set off against any amounts that Tether would otherwise be obligated to pay you; and (iii) the right to either freeze your Tether Tokens or seize and recover against any of your Tether Tokens, other Digital Tokens, Fiat or other funds, or your interests therein, "
+    },
+    {
+     "kw": "redemption",
+     "line_no": 206,
+     "text": "Effect of Redemption : These Terms shall continue to apply notwithstanding the redemption of any Tether Token or the withdrawal of any Tether Token from a Tether Tokens Wallet."
+    }
+   ]
+  },
+  "tether_gold": {
+   "url": "https://tether.to/en/gold/",
+   "keywords": [
+    "gold",
+    "XAUT",
+    "redeem",
+    "vault",
+    "Tether Gold",
+    "fee"
+   ],
+   "chars": 6310,
+   "quotes": [
+    {
+     "kw": "gold",
+     "line_no": 59,
+     "text": "Tether supports US dollars (USD), Mexican peso, and Gold, with the following Tether Tokens, respectively: USD₮, MXN₮ and XAU₮."
+    }
+   ]
+  },
+  "ondo_stocks_eligibility": {
+   "url": "https://docs.ondo.finance/ondo-stocks/eligibility.md",
+   "keywords": [
+    "United States",
+    "Hong Kong",
+    "Professional Investor",
+    "Prohibited Persons",
+    "8 million"
+   ],
+   "chars": 9125,
+   "quotes": [
+    {
+     "kw": "Prohibited Persons",
+     "line_no": 6,
+     "text": "Ondo prohibits business activities from certain jurisdictions in accordance with its Compliance policies. By agreeing to a business relationship with Ondo, any partners agree to not offer Ondo related products or services in connection with any of the outlined prohibited jurisdictions. Individuals located or residing in and entities organized under the laws of or with a principal place of business in, any jurisdiction listed below (**\"Prohibited Persons\"**) are prohibited from subscribing for, acquiring or redeeming Ondo Stocks:"
+    },
+    {
+     "kw": "United States",
+     "line_no": 21,
+     "text": "* United States, or any of its states, possessions, territories or federal districts\\*"
+    },
+    {
+     "kw": "United States",
+     "line_no": 22,
+     "text": "\\* Persons who place buy orders from within the United States, or any of its states, possessions, territories or federal districts, and persons who are \"U.S. persons\" or acting for the account or benefit of any \"U.S. persons\" within the meaning of Rule 902 of Regulation S promulgated under the United States Securities Act of 1933, as amended, are also prohibited from subscribing for, acquiring or redeeming Ondo Stocks."
+    },
+    {
+     "kw": "Prohibited Persons",
+     "line_no": 23,
+     "text": "Ondo Global Markets (BVI) Limited, the issuer of Ondo Stocks, also prohibits persons from subscribing for, acquiring or redeeming its tokens if it determines, in its sole discretion, that such activity may constitute a violation of (i) applicable laws, rules or regulations, including but not limited to sanctions restrictions, (ii) the terms of the Ondo Stocks' governing documents; or (iii) the issuer's governing documents and policies. In addition, if Prohibited Persons, directly or indirectly, hold in the aggregate 50% or more beneficial ownership or control of any entity, such entity may also be (or will be, if Prohibited Persons are prohibited as a result of applicable sanctions regulations) prohibited from subscribing for, acquiring or redeeming Ondo Stocks."
+    },
+    {
+     "kw": "Professional Investor",
+     "line_no": 28,
+     "text": "| **Brazil** | \"Qualified Investor\" under CVM Resolution No. 30, of May 11th, 2021 (Article 12) | R\\$1 million in financial investments; or approved technical qualification/certification | Professional investors; investment funds; or investment clubs (managed by Qualified Investors) |"
+    },
+    {
+     "kw": "Professional Investor",
+     "line_no": 29,
+     "text": "| | \"Professional Investor\" under CVM Resolution No. 30, of May 11th, 2021 (Article 11) | R\\$10 million in financial investments; non-resident investor; or professionals who hold certain financial services accreditation by the Brazilian Securities Commission (Comissão de Valores Mobiliários - CVM) | Financial institutions; insurance/capitalization companies; pension entities; investment funds; or investment clubs (managed by CVM-authorized managers) |"
+    },
+    {
+     "kw": "Hong Kong",
+     "line_no": 31,
+     "text": "| **Hong Kong** | \"Professional Investor\" (Individual) under the Securities and Futures (Professional Investor) Rules (PI Rules) | HK\\$8 million portfolio value (alone or with associates) | Not applicable |"
+    },
+    {
+     "kw": "Professional Investor",
+     "line_no": 32,
+     "text": "| | \"Professional Investor\" (Corporate/Trust) under the Securities and Futures (Professional Investor) Rules (PI Rules) | Not applicable | Trust corporations with HK\\$40 million total assets; corporations or partnerships with HK\\$8 million portfolio or HK\\$40 million total assets; or investment holding corporations wholly owned by Professional Investors |"
+    },
+    {
+     "kw": "Professional Investor",
+     "line_no": 33,
+     "text": "| | \"Professional Investor\" (Institutional) under the Securities and Futures Ordinance (SFO) Schedule 1 Part 1 | Not applicable | Recognized exchange companies; intermediaries; financial institutions; insurers; collective investment schemes; governments; or central banks |"
+    }
+   ]
+  },
+  "ondo_stocks_invest_redeem": {
+   "url": "https://docs.ondo.finance/ondo-stocks/investing-and-redeeming.md",
+   "keywords": [
+    "minimum",
+    "redeem",
+    "redemption",
+    "burn",
+    "fee",
+    "settlement",
+    "NAV"
+   ],
+   "chars": 6355,
+   "quotes": [
+    {
+     "kw": "minimum",
+     "line_no": 5,
+     "text": "### What is the minimum I can invest or redeem?"
+    },
+    {
+     "kw": "redemption",
+     "line_no": 10,
+     "text": "All Ondo tokenized stocks purchased from the Ondo Stocks platform are purchased with [USDon](https://docs.ondo.finance/ondo-stocks/available-assets.md#what-is-usdon), our native stablecoin. Thanks to the platform's stablecoin swapper, however, USDC can be atomically converted 1:1 to USDon for mints, and USDon can be converted 1:1 to USDC automatically for redemptions.\\*"
+    },
+    {
+     "kw": "redeem",
+     "line_no": 13,
+     "text": "Also note that, even if there weren't enough USDC in the swapper to redeem the entire amount to USDC, you can always redeem the entire amount to USDon and then swap USDon to USDC as the swapper is replenished. For example, say you had \\$100M worth of AAPLon that you wanted to redeem to USDC, but the swapper only contained 50M USDC. You could redeem the entire amount to USDon, swap 50M USDon for 50M USDC now, and then swap the remaining 50M USDon to USDC after the swapper is replenished. Because each USDon is backed by a dollar of cash or equivalents at an Ondo Stocks brokerage account—and because 1 USDon is always swappable 1:1 for 1 USDC—once you redeem for USDon you are not exposed to further market risk."
+    },
+    {
+     "kw": "redeem",
+     "line_no": 20,
+     "text": "If you wish to hold USDon in your wallet directly (as opposed to just atomically swapping USDC for USDon and then using USDon to purchase your tokenized stocks), you can still use our [stablecoin swapper](https://docs.ondo.finance/ondo-stocks/investing-and-redeeming.md#what-forms-of-payment-can-i-use-to-purchase-ondo-tokenized-stocks) to swap USDC for USDon and hold the USDon for later use. As noted [elsewhere](https://docs.ondo.finance/ondo-stocks/investing-and-redeeming.md#what-forms-of-payment-can-i-use-to-purchase-ondo-tokenized-stocks), however, the ability to swap USDC for USDon instantly is dependent upon the amount of USDon available in the swapper. If you wish to obtain very large amounts of USDon (say \\$10M+) in very short order (i.e. within a day or two), please contact us at [support@ondo.finance](mailto:support@ondo.finance). Please note that the swapper does not currently have a UI; at this time, using it requires interacting directly with the smart contract."
+    },
+    {
+     "kw": "minimum",
+     "line_no": 28,
+     "text": "Everything we mention above about investing applies to redemptions as well: you can redeem to USDon or USDC. The redemption to USDon will always be instant; redemptions to USDC will be instant provided there is enough liquidity in the stablecoin swapper. The minimum redemption amount to USDon or USDC is \\$1.00. Redemptions to USD via bank wire are not currently supported."
+    }
+   ]
+  },
+  "ondo_stocks_fees": {
+   "url": "https://docs.ondo.finance/ondo-stocks/fees-and-taxes.md",
+   "keywords": [
+    "fee",
+    "spread",
+    "commission",
+    "management"
+   ],
+   "chars": 3304,
+   "quotes": [
+    {
+     "kw": "fee",
+     "line_no": 5,
+     "text": "When [a quote is generated](https://docs.ondo.finance/ondo-stocks/token-and-quote-pricing.md#when-i-am-actually-buying-or-selling-an-ondo-tokenized-stock-the-price-seems-to-be-slightly-different-from-the-main-price-listed-why) for an investor to buy (or sell) a token, the price may be slightly more (or less) than the price at which Ondo Stocks buys (or sells) the underlying stock, with any difference and any fees being retained by Ondo Stocks. Investors are responsible for their own gas costs."
+    },
+    {
+     "kw": "fee",
+     "line_no": 6,
+     "text": "(Note that if Ondo tokenized stocks are acquired in the secondary market, fees may be charged to you by other parties.)"
+    }
+   ]
+  },
+  "ondo_stocks_transferability": {
+   "url": "https://docs.ondo.finance/ondo-stocks/transferability.md",
+   "keywords": [
+    "transfer",
+    "wallet",
+    "restricted",
+    "blockchain"
+   ],
+   "chars": 795,
+   "quotes": [
+    {
+     "kw": "transfer",
+     "line_no": 5,
+     "text": "Yes. All Ondo stocks are **transferable outside the US** across supported blockchains like [Ethereum](https://ethereum.org/), [BNB Chain](https://www.bnbchain.org/), [Solana](https://solana.com/), [HyperEVM](https://hyperliquid.xyz/), and [Robinhood Chain](https://robinhood.com/us/en/crypto/chain/) (with other chains coming soon), subject to [certain jurisdictional and other restrictions](https://docs.ondo.finance/ondo-stocks/eligibility.md)."
+    }
+   ]
+  },
+  "ondo_stocks_secondary": {
+   "url": "https://docs.ondo.finance/ondo-stocks/secondary-market-restrictions.md",
+   "keywords": [
+    "secondary",
+    "transfer",
+    "resell",
+    "restriction",
+    "trading"
+   ],
+   "chars": 7960,
+   "quotes": [
+    {
+     "kw": "secondary",
+     "line_no": 4,
+     "text": "Tokens may, in accordance with relevant applicable law, become listed on or acquired through one or more secondary markets. The Issuer does not guarantee that any secondary market exists or will exist for the Tokens, nor that such secondary markets will be available at any particular time. There is no guarantee that sufficient liquidity will be available to facilitate secondary markets in any particular Token. The Issuer also makes no representation as to the price of any Token on any secondary market; the price at which a Token may be issued at may not necessarily reflect the secondary market price of such Token. Each Token holder will assume and be solely responsible for all taxes of any jurisdiction related to their purchase, acquisition, sale or possession of any Tokens, and are advised to consult their tax advisors as to their specific consequences."
+    },
+    {
+     "kw": "secondary",
+     "line_no": 5,
+     "text": "Each person who acquires Tokens on any secondary market will be deemed, by such acquisition, to have represented that: (a) they have received and acknowledged the disclaimers and warnings set out herein; (b) they understand the risks associated with each such disclaimer and warning; (c) that they are not then prohibited from acquiring Tokens, as described from time to time at [docs.ondo.finance/ondo-stocks/eligibility](https://docs.ondo.finance/ondo-stocks/eligibility.md) (such prohibited persons, \"Prohibited Persons\"); (d) that the Tokens are suitable for them; and (e) that they wish to acquire Tokens issued by the Issuer."
+    },
+    {
+     "kw": "secondary",
+     "line_no": 7,
+     "text": "As a condition to redeeming any of its Tokens, a Token holder must satisfy the Issuer's customer due diligence, or \"know your customer\", requirements. In the event of a redemption, the Issuer may refuse any redemption to a holder of any securities if the Issuer suspects or is advised that the redemption may be non-compliant with applicable laws, rules or regulations, or if such refusal is considered necessary or appropriate to ensure the compliance by the Issuer with any of its policies, procedures, practices or internal controls or any applicable laws, rules or regulations. Accordingly, there is a risk that a person acquiring Tokens on secondary markets will not meet such due diligence requirements and therefore may not be able to redeem any or all of its Tokens. Further, any delay, failure or violation could adversely affect the timing and number of payments by the Issuer to the holders of the securities."
+    },
+    {
+     "kw": "secondary",
+     "line_no": 8,
+     "text": "Each person who acquires Tokens on the secondary market, by acquiring such Tokens, appoints Ankura Trust Company, LLC as the Security Agent. The Security Agent will hold the security interests in respect of any collateral related to the Tokens for the benefit of those parties possessing a security interest of the Issuer, and will be responsible for enforcing such security interests (as set forth in the Offering Documents) and causing payments to be made out of proceeds from any repossessed collateral in accordance with the Offering Documents."
+    },
+    {
+     "kw": "secondary",
+     "line_no": 9,
+     "text": "Notices to acquirors of Tokens offered on blockchain platforms and other secondary markets will be published at [ondo.finance/ondo-stocks](https://ondo.finance/ondo-stocks). They will only be published in the English language. It is presumed that notices published on the aforementioned website of the Issuer have been sufficiently brought to the attention and knowledge of secondary market acquirors of Tokens."
+    },
+    {
+     "kw": "secondary",
+     "line_no": 10,
+     "text": "Consistent with with the Offering Documents, acquirors of Tokens on any secondary market acknowledge that the Issuer bears no liability whatsoever to holders of Tokens other than to carry out redemptions (for which \"know your customer\" diligence is a condition precedent) or as otherwise expressly set forth in the Sales Terms of the Issuer. Without limiting the foregoing the Issuer shall not have any responsibility to the extent permitted by law for any errors or omissions in the calculation of any amount or with respect to any other determination or decisions required to be made under any Offering Document or otherwise with respect to the Tokens. The Issuer shall not be liable for any extraordinary event outside of its direct control. Any such extraordinary event may reduce the redemption amount owed to Token holders, as determined by the Issuer. In no event shall the Issuer have any liability for indirect, incidental, consequential or other damages (even if it was advised of the possibility of such damages) other than interest until the date of payment on sums not paid when due in respect of any Tokens. Token holders are entitled to damages only (if any) and are not entitled to th"
+    },
+    {
+     "kw": "secondary",
+     "line_no": 12,
+     "text": "Consistent with the Offering Documents, to the fullest extent permitted by applicable laws, purchasers of Tokens on any secondary market acknowledge that any dispute, controversy, or claim arising out of, or in relation to, the Tokens involving the Issuer (whether arising under contract law, tort law or otherwise), including without limitation regarding invalidity, breach, and/or termination thereof, and in relation with the Tokens, shall be resolved by arbitration in accordance with the Swiss Rules of International Arbitration of the Swiss Arbitration Centre in force on the date on which the \"Note of Arbitration\" is submitted as defined and in accordance with those rules. The number of arbitrations shall be one or three. The seat of the arbitration shall be Zurich, Switzerland. The arbitral proceedings shall be conducted in English."
+    }
+   ]
+  },
+  "ondo_ousg_eligibility": {
+   "url": "https://docs.ondo.finance/qualified-access-products/ousg/eligibility-and-onboarding.md",
+   "keywords": [
+    "Qualified-Access",
+    "net worth",
+    "5M",
+    "25M",
+    "redeem",
+    "transfer"
+   ],
+   "chars": 1593,
+   "quotes": [
+    {
+     "kw": "redeem",
+     "line_no": 4,
+     "text": "### **Who can invest in OUSG? Who can redeem? Who can hold and/or transfer it?**"
+    },
+    {
+     "kw": "Qualified-Access",
+     "line_no": 5,
+     "text": "Only individuals who have onboarded to our [Qualified-Access Funds](https://docs.ondo.finance/qualified-access-products/cash-management-101.md) can invest in, redeem, or transfer, or receive OUSG or any other Qualified-Access Product. The most common criteria are individuals with a net worth of over \\$5M or organizations or entities with over \\$25M in assets. [See all the ways you can qualify.](https://docs.ondo.finance/qualified-access-products/eligibility.md)"
+    },
+    {
+     "kw": "Qualified-Access",
+     "line_no": 6,
+     "text": "If you do not meet the eligibility criteria for our Qualified-Access Funds, you may still be eligible for [Ondo Stocks](https://ondo.finance/ondo-stocks) - you can find out more about eligibility for Ondo Stocks [here](https://docs.ondo.finance/ondo-stocks/eligibility.md). You may also want to consider [Flux Finance](https://fluxfinance.com/), a lending protocol we developed that allows you to lend permissionlessly against our other tokens."
+    },
+    {
+     "kw": "Qualified-Access",
+     "line_no": 8,
+     "text": "OUSG doesn't have it's own specific KYC and onboarding process. Instead, you would need to [onboard to our Qualified-Access Funds](https://docs.ondo.finance/qualified-access-products/onboarding-and-kyc.md), which includes OUSG."
+    }
+   ]
+  },
+  "xstocks_legal": {
+   "url": "https://docs.xstocks.fi/docs/product-legal-overview",
+   "keywords": [
+    "not marketed",
+    "U.S. Persons",
+    "Jersey",
+    "FMA",
+    "Security Agent",
+    "collateral"
+   ],
+   "chars": 5779,
+   "quotes": [
+    {
+     "kw": "Jersey",
+     "line_no": 22,
+     "text": "xStocks are structured financial instruments issued by Backed Assets (JE) Limited, a Jersey company registered with the Jersey Financial Services Commission (JFSC). Each xStock is a tracker certificate, fully collateralized 1:1 by the underlying equity held with regulated custodians in segregated accounts with no commingling. A base prospectus approved by the Liechtenstein FMA is passportable across the EEA."
+    },
+    {
+     "kw": "Jersey",
+     "line_no": 24,
+     "text": "xStocks are issued by Backed Assets (JE) Limited, a Jersey-based special purpose vehicle dedicated solely to the issuance and redemption of xStocks. The SPV maintains its own bank and collateral accounts and conducts KYC and AML procedures in accordance with Jersey law."
+    },
+    {
+     "kw": "Jersey",
+     "line_no": 25,
+     "text": "Backed Assets (JE) Limited is registered with the Jersey Financial Services Commission (JFSC) and holds the required COBO and CGPO consents to issue security tokens."
+    },
+    {
+     "kw": "FMA",
+     "line_no": 30,
+     "text": "For distribution in the EU/EEA, the products are governed by a base prospectus approved by the Liechtenstein Financial Market Authority (FMA) under the EU Prospectus Regulation. This approval is passportable across the European Economic Area, enabling licensed third-party distributors to offer xStocks to retail clients."
+    },
+    {
+     "kw": "Jersey",
+     "line_no": 32,
+     "text": "Although xStocks are issued as securities under the frameworks of Jersey and the European Union, other jurisdictions may classify them differently, including as crypto assets. Licensing requirements for distribution vary accordingly. Product documentation, including the prospectus and Final Terms, is available at: assets.backed.fi/legal-documentation"
+    },
+    {
+     "kw": "collateral",
+     "line_no": 34,
+     "text": "Every xStock is fully collateralized by the corresponding underlying asset."
+    },
+    {
+     "kw": "collateral",
+     "line_no": 35,
+     "text": "Collateral is held with regulated custodians and brokers."
+    },
+    {
+     "kw": "collateral",
+     "line_no": 38,
+     "text": "No commingling of collateral between products occurs."
+    },
+    {
+     "kw": "Security Agent",
+     "line_no": 41,
+     "text": "Collateral accounts are governed by a three-party Account Control Agreement between the issuer, the custodian or broker, and an independent Security Agent."
+    },
+    {
+     "kw": "Security Agent",
+     "line_no": 42,
+     "text": "The Security Agent has visibility over collateral accounts and may assume control if token holders' rights, as defined in the prospectus, are not being upheld."
+    },
+    {
+     "kw": "Security Agent",
+     "line_no": 43,
+     "text": "In the event of issuer default, the Security Agent may take control of the collateral accounts, liquidate the underlying assets, and distribute proceeds to token holders in accordance with the prospectus terms."
+    },
+    {
+     "kw": "not marketed",
+     "line_no": 48,
+     "text": "xStocks are not marketed, offered, or solicited in the United States, to U.S. Persons, or in any other prohibited jurisdiction."
+    },
+    {
+     "kw": "Jersey",
+     "line_no": 52,
+     "text": "Backed Assets (JE) Limited is registered with the Jersey Financial Services Commission (JFSC) and holds the required COBO and CGPO consents to issue security tokens. Each xStock is a bearer debt instrument classified as a tracker certificate. It provides economic exposure to the underlying equity. It does not confer shareholder voting rights."
+    },
+    {
+     "kw": "collateral",
+     "line_no": 53,
+     "text": "How is the collateral backing xStocks held?"
+    },
+    {
+     "kw": "collateral",
+     "line_no": 54,
+     "text": "Every xStock is fully collateralized by the corresponding underlying asset. Collateral is held with regulated custodians and brokers. Each product is backed on an asset-by-asset basis. Dedicated sub-accounts are used to ensure segregation. No commingling of collateral between products occurs."
+    },
+    {
+     "kw": "Security Agent",
+     "line_no": 56,
+     "text": "Collateral accounts are governed by a three-party Account Control Agreement between the issuer, the custodian or broker, and an independent Security Agent. In the event of issuer default, the Security Agent may take control of the collateral accounts, liquidate the underlying assets, and distribute proceeds to token holders in accordance with the prospectus terms."
+    },
+    {
+     "kw": "collateral",
+     "line_no": 65,
+     "text": "Issuer Legal Classification Prospectus & Distribution Collateral & Segregation Safeguarding & Bankruptcy Protection Blockchain Registration Distribution Restrictions Common Questions"
+    }
+   ]
+  },
+  "xstocks_llms": {
+   "url": "https://docs.xstocks.fi/llms.txt",
+   "keywords": [
+    "redemption",
+    "minting",
+    "fee",
+    "eligibility"
+   ],
+   "chars": 5174,
+   "quotes": [
+    {
+     "kw": "redemption",
+     "line_no": 5,
+     "text": "- [xChange - Atomic RFQ](https://docs.xstocks.fi/docs/issuance-and-redemption/atomic-rfq-xchange.md)"
+    },
+    {
+     "kw": "redemption",
+     "line_no": 15,
+     "text": "- [xPort - In-Kind Flow](https://docs.xstocks.fi/docs/issuance-and-redemption/in-kind-flow-xport.md)"
+    },
+    {
+     "kw": "redemption",
+     "line_no": 23,
+     "text": "- [Market Flow](https://docs.xstocks.fi/docs/issuance-and-redemption/market-flow.md)"
+    },
+    {
+     "kw": "redemption",
+     "line_no": 24,
+     "text": "- [Issuance and Redemption](https://docs.xstocks.fi/docs/issuance-and-redemption.md)"
+    },
+    {
+     "kw": "redemption",
+     "line_no": 25,
+     "text": "- [xStocks API Reference](https://docs.xstocks.fi/apis/v1/openapi.md): The xStocks API provides programmatic access to the xStocks platform, market data, and token metadata.It is designed for two audiences:Clients - Onboarded organizations with a Backed account who need programmatic access to sweeping wallet addresses, issuance and redemption flows, transaction status, and account-specific data.Integrators - Exchanges, protocols, and developers who need access to public data such as underlying asset prices, token contract addresses, and current multiplier values.All endpoints are served under /api/v1/*. Authentication is handled via API key, generated through the Backed platform under Settings → API. Public endpoints are available without authentication.For product documentation, including issuance and redemption flows, the rebasing mechanism, and integration guides, visit docs.xstocks.fi."
+    },
+    {
+     "kw": "redemption",
+     "line_no": 26,
+     "text": "- [xStocks API Reference](https://docs.xstocks.fi/apis/openapi.md): The xStocks API provides programmatic access to the xStocks platform, market data, and token metadata.It is designed for two audiences:Clients - Onboarded organizations with a Backed account who need programmatic access to sweeping wallet addresses, issuance and redemption flows, transaction status, and account-specific data.Integrators - Exchanges, protocols, and developers who need access to public data such as underlying asset prices, token contract addresses, and current multiplier values.All endpoints are served under /api/v2/*. Authentication is handled via API key, generated through the Backed platform under Settings → API. Public endpoints are available without authentication.For product documentation, including issuance and redemption flows, the rebasing mechanism, and integration guides, visit docs.xstocks.fi."
+    },
+    {
+     "kw": "redemption",
+     "line_no": 27,
+     "text": "- [xStocks API Documentation (v2)](https://docs.xstocks.fi/apis/openapi_stale.md): The xStocks API provides programmatic access to the xStocks platform, market data, and token metadata.It is designed for two audiences:Clients - Onboarded organizations with a Backed account who need programmatic access to sweeping wallet addresses, issuance and redemption flows, transaction status, and account-specific data.Integrators - Exchanges, protocols, and developers who need access to public data such as underlying asset prices, token contract addresses, and current multiplier values.All endpoints are served under /api/v2/*. Authentication is handled via API key, generated through the Backed platform under Settings → API. Public endpoints are available without authentication.For product documentation, including issuance and redemption flows, the rebasing mechanism, and integration guides, visit docs.xstocks.fi."
+    }
+   ]
+  },
+  "circle_usdc_terms": {
+   "url": "https://www.circle.com/legal/usdc-terms",
+   "keywords": [
+    "Restricted Person",
+    "Blocked Addresses",
+    "supported jurisdictions",
+    "not reversible",
+    "freeze"
+   ],
+   "chars": 79125,
+   "quotes": [
+    {
+     "kw": "Restricted Person",
+     "line_no": 243,
+     "text": "Applicable laws require us to prevent Restricted Persons from holding USDC using USDC Services. A Restricted Person means any person that is the subject or target of any sanctions, including a person that is:"
+    },
+    {
+     "kw": "supported jurisdictions",
+     "line_no": 248,
+     "text": "The following applies to both User Type A and User Type B: Circle Mint accounts, USDC Services and support for USDC are currently only available to individuals and institutions (as applicable) located in supported jurisdictions. For a complete list of currently supported jurisdictions, please see here ."
+    },
+    {
+     "kw": "Restricted Person",
+     "line_no": 250,
+     "text": "you are at least 18 years old, are not a Restricted Person, and are not holding USDC on behalf of a Restricted Person."
+    },
+    {
+     "kw": "Blocked Addresses",
+     "line_no": 253,
+     "text": "If Circle suspects or determines that you or any of your authorized users or customers, as applicable, have violated this these Terms, including, but not limited to, attempting to transact or transacting with Blocked Addresses (as defined in Section 13) or attempting to engage or engaging in Restricted Activities or Prohibited Transactions, and you have a Circle Mint account, then Circle may be forced to terminate your Circle Mint account and you may forfeit any USD funds otherwise eligible for redemption."
+    },
+    {
+     "kw": "not reversible",
+     "line_no": 287,
+     "text": "USDC transactions are not reversible. Once you send USDC to an address, you accept the risk that you may lose access to, and any claim on, that USDC indefinitely or permanently. For example, (i) an address may have been entered incorrectly and the true owner of the address may never be discovered, (ii) you may not have (or subsequently lose) the private key associated with such address, (iii) an address may belong to an entity that will not return the USDC, or (iv) an address belongs to an entity that may return the USDC but first requires action on your part, such as verification of your identity. For the avoidance of doubt, nothing in these Terms is intended to obligate Circle to track, verify or determine the provenance of USDC balances for Users, including any form of security interests claimed thereon."
+    },
+    {
+     "kw": "Blocked Addresses",
+     "line_no": 289,
+     "text": "Circle reserves the right to “block” certain USDC addresses and, if such addresses are Circle custodied addresses, freeze associated USDC (temporarily or permanently) that it determines, in its sole discretion, may be associated with illegal activity or activity that otherwise violates these Terms (“Blocked Addresses”). In the event that you send USDC to a Blocked Address, or receive USDC from a Blocked Address, Circle may freeze such USDC and take steps to terminate your USDC Account. In certain circumstances, Circle may deem it necessary to report such suspected illegal activity to applicable law enforcement agencies and you may forfeit any rights associated with your USDC, including the ability to redeem USDC for USD. Circle may also be required to freeze USDC and/or surrender associated USD held in Segregated Accounts in the event it receives a legal order from a valid government authority requiring it to do so."
+    },
+    {
+     "kw": "Blocked Addresses",
+     "line_no": 375,
+     "text": "Each Holder is subject to all terms of these Terms as if a User including, but not limited to, the requirements to not transact with Blocked Addresses and not engage in Restricted Activities or Prohibited Transactions."
+    },
+    {
+     "kw": "Restricted Person",
+     "line_no": 382,
+     "text": "The USDC and USDC Services are subject to AML and CTF provisions, including Sanctions. By holding or using USDC, or using the USDC Services, you represent and warrant that your actions are not in violation of Sanctions. Without limiting the foregoing, you may not hold or use USDC, or use the USDC Services if you are a Restricted Person or intend to transact with or on behalf of any Restricted Persons."
+    },
+    {
+     "kw": "supported jurisdictions",
+     "line_no": 519,
+     "text": "The following applies to both User Type A and User Type B: Circle Mint Accounts, USDC Services and support for USDC are currently only available to individuals and institutions (as applicable) located in supported jurisdictions. For a complete list of currently supported jurisdictions, please see here ."
+    },
+    {
+     "kw": "Restricted Person",
+     "line_no": 521,
+     "text": "you are at least 21 years old and are not a Restricted Person, and are not holding USDC on behalf of a Restricted Person."
+    }
+   ]
+  },
+  "kraken_xstocks": {
+   "url": "https://www.kraken.com/legal/xstocks",
+   "keywords": [
+    "United States",
+    "eligible",
+    "KYC",
+    "minimum investment",
+    "jurisdiction",
+    "redemption",
+    "not available"
+   ],
+   "chars": 15796,
+   "quotes": [
+    {
+     "kw": "minimum investment",
+     "line_no": 294,
+     "text": "What’s the minimum investment for xStocks?"
+    },
+    {
+     "kw": "redemption",
+     "line_no": 315,
+     "text": "Tokenholders may redeem their xStocks with Backed (for an additional fee), or sell them for USD, crypto, or stablecoins directly on the Kraken platform. Remember, all investments in xStocks are subject to fees, as set forth in the Base Prospectus for each xStock. Consequently, the value of your xStocks at redemption may be less than the potential return of actual ownership of the underlying stock or shares of companies held during the same period."
+    },
+    {
+     "kw": "jurisdiction",
+     "line_no": 424,
+     "text": "These materials are for general information purposes only and are not investment or financial product advice or a recommendation or solicitation to buy, sell, stake or hold any cryptoasset or to engage in any specific trading strategy. Kraken does not and will not work to increase or decrease the price of any particular cryptoasset it makes available. The unpredictable nature of the crypto-asset markets can lead to loss of funds. Tax may be payable on any return and/or on any increase in the value of your cryptoassets and you should seek independent advice on your taxation position. Geographic restrictions may apply. Some crypto products and markets are unregulated. Kraken’s regulatory status for its various products and services differs per jurisdiction and you may not be protected by government compensation and/or regulatory protection schemes. See Legal Disclosures for each jurisdiction."
+    }
+   ]
+  },
+  "binance_spot_fees": {
+   "url": "https://www.binance.com/en/fee/schedule",
+   "keywords": [
+    "maker",
+    "taker",
+    "Spot",
+    "0.1000%",
+    "0.0750%"
+   ],
+   "chars": 0,
+   "quotes": []
+  },
+  "kraken_fees": {
+   "url": "https://www.kraken.com/features/fee-schedule",
+   "keywords": [
+    "maker",
+    "taker",
+    "0.26%",
+    "0.16%"
+   ],
+   "chars": 27323,
+   "quotes": [
+    {
+     "kw": "maker",
+     "line_no": 370,
+     "text": "Kraken uses a maker-taker fee tier system with volume incentives based on your spot, margin, and futures volume, as well as your assets on platform (AoP) in the past 30 days.*"
+    },
+    {
+     "kw": "maker",
+     "line_no": 416,
+     "text": "Spot rebates are a new maker fee incentive structure on a select number of lower-liquidity spot pairs."
+    },
+    {
+     "kw": "maker",
+     "line_no": 425,
+     "text": "Tier Spot 30-Day Vol (USD) OR Futures 30-Day Vol (USD) OR AoP (USD) Spot Maker (%) Spot Taker (%)"
+    },
+    {
+     "kw": "maker",
+     "line_no": 602,
+     "text": "Kraken uses a maker-taker fee tier system with volume incentives based on your spot, margin and Futures volume, as well as your assets on platform (AoP) in the past 30 days.*"
+    },
+    {
+     "kw": "maker",
+     "line_no": 607,
+     "text": "Tier Futures 30-Day Vol (USD) OR Spot 30-Day Vol (USD) OR AoP (USD) Futures Maker (%) Futures Taker (%) Spot Maker (%) Spot Taker (%)"
+    },
+    {
+     "kw": "maker",
+     "line_no": 631,
+     "text": "Kraken uses a maker-taker fee schedule for xStocks."
+    },
+    {
+     "kw": "maker",
+     "line_no": 653,
+     "text": "Almost all of our cryptocurrency pairs follow the same fee schedule, which incentivizes market makers to increase liquidity - meaning it’s easier for you to execute trades at the price you want."
+    }
+   ]
+  },
+  "okx_fees": {
+   "url": "https://www.okx.com/help/okx-trade-fees",
+   "keywords": [
+    "maker",
+    "taker",
+    "0.10%",
+    "0.08%"
+   ],
+   "error": "HTTPError: HTTP Error 404: Not Found"
+  },
+  "coinbase_fees": {
+   "url": "https://help.coinbase.com/en/coinbase/trading-and-funding/fees",
+   "keywords": [
+    "maker",
+    "taker",
+    "0.40%",
+    "0.60%",
+    "0.50%"
+   ],
+   "error": "HTTPError: HTTP Error 404: Not Found"
+  },
+  "hashkey_ousg": {
+   "url": "https://support.hashkey.com/hc/en-gb/articles/60100192600985-HashKey-Earn-Channel-Launches-Ondo-Short-Term-U-S-Treasuries-Treasuries-Fund-OUSG",
+   "keywords": [
+    "OUSG",
+    "minimum",
+    "fee",
+    "redeem",
+    "Hong Kong",
+    "eligible"
+   ],
+   "error": "HTTPError: HTTP Error 403: Forbidden"
+  },
+  "dinari": {
+   "url": "https://docs.dinari.com/",
+   "keywords": [
+    "United States",
+    "eligible",
+    "tokenized",
+    "KYC",
+    "minimum",
+    "custody"
+   ],
+   "chars": 6451,
+   "quotes": [
+    {
+     "kw": "KYC",
+     "line_no": 22,
+     "text": "Entity Management Identity Verification (KYC)"
+    },
+    {
+     "kw": "tokenized",
+     "line_no": 52,
+     "text": "Dinari is infrastructure for tokenized real-world assets. Our API lets you offer your users U.S. equities and a yield-bearing dollar, on-chain, without becoming a broker-dealer yourself. We handle the brokerage relationships, settlement, custody, and compliance layer underneath. Partners can sign up for our account by going to https://partners.dinari.com."
+    },
+    {
+     "kw": "KYC",
+     "line_no": 65,
+     "text": "2. Perform KYC - Every entity needs KYC before it can trade. Bring your own provider (Persona, Onfido, and others are supported) or use Dinari's white-label Managed KYC flow."
+    },
+    {
+     "kw": "custody",
+     "line_no": 66,
+     "text": "3. Open an Account and connect a Wallet - An Account is the financial account attached to an Entity. Wallets can be Dinari-managed or a self-custody wallet, linked by signed message."
+    },
+    {
+     "kw": "KYC",
+     "line_no": 91,
+     "text": "Listing supported stocks needs no Entity, no KYC, and no funding it's the fastest way to confirm your credentials work."
+    }
+   ]
+  },
+  "ondo_stocks_overview": {
+   "url": "https://docs.ondo.finance/ondo-stocks/overview.md",
+   "keywords": [
+    "SPY",
+    "SPDR",
+    "S&P 500",
+    "token",
+    "NAV",
+    "Ondo Global Markets",
+    "tokenized"
+   ],
+   "chars": 8342,
+   "quotes": [
+    {
+     "kw": "token",
+     "line_no": 4,
+     "text": "This overview, along with all docs associated with Ondo Stocks or Ondo tokenized stocks located at [https://docs.ondo.finance/](https://docs.ondo.finance/index.md), are provided for informational purposes only. Each Ondo tokenized stock is issued pursuant to a prospectus as well as additional offering documentation, which can be accessed by qualified purchasers at the applicable webpage for each such asset."
+    },
+    {
+     "kw": "token",
+     "line_no": 6,
+     "text": "Ondo Stocks is a tokenization platform designed to provide onchain exposure to publicly traded securities. The platform will enable investors [outside the US](https://docs.ondo.finance/ondo-stocks/eligibility.md) to gain exposure to thousands of US publicly traded securities, including stocks and ETFs. By providing tokenized exposure to these assets, Ondo Stocks brings the transparency, efficiency, and accessibility enabled by blockchain technology to institutional-grade finance. Through its APIs and SDKs, the platform also empowers third-party developers to build innovative financial applications, making it a cornerstone for the next generation of financial services."
+    },
+    {
+     "kw": "token",
+     "line_no": 8,
+     "text": "Ondo tokenized stocks (when we say 'stocks' we are also referring to ETFs and other publicly traded securities, for convenience), including USDY, are tokens issued by the Ondo Stocks platform. They are designed to give holders the same economic exposure as they would receive if they owned the underlying asset and invested dividends back into the stock (net of [withholding tax](https://docs.ondo.finance/ondo-stocks/fees-and-taxes.md#how-are-ondo-tokenized-stocks-taxed)). They are designated by the `on` suffix. For example, the stock ticker for Tesla is `TSLA`, therefore the corresponding Ondo tokenized stock is called `TSLAon` . You can think of the `on` suffix as standing for onchain or Ondo—whichever you prefer."
+    },
+    {
+     "kw": "token",
+     "line_no": 9,
+     "text": "Ondo tokenized stocks are offered by Ondo Global Markets (BVI) Limited (the Issuer). Ondo supports the Issuer, including by powering the Ondo Stocks platform. For further information, please see the offering documents associated with Ondo tokenized stocks."
+    },
+    {
+     "kw": "token",
+     "line_no": 11,
+     "text": "* **Ondo tokenized stocks are designed differently than many other tokenized stocks.** They are designed to be as liquid as the underlying assets, minimizing slippage and price deviation from the underlying assets they represent. [Learn more](https://docs.ondo.finance/ondo-stocks/comparison-to-other-tokenized-stocks.md)."
+    },
+    {
+     "kw": "token",
+     "line_no": 12,
+     "text": "* **One token does not necessarily represent the value of one share, and the price of one token will not always match the price of the underlying asset.** Ondo tokenized stocks are *fully backed* with the underlying asset (together with any cash in transit), but they are what is known as *total return trackers;* they are meant to provide tokenholders with the same economics as holding the underlying asset *and* investing any dividends back into the stock (net of [withholding taxes](https://docs.ondo.finance/ondo-stocks/fees-and-taxes.md#how-are-ondo-tokenized-stocks-taxed)). Therefore, over time, a given token may provide economic exposure to *more than* one share, and the price of the token and the underlying stock are likely to diverge. [Learn more](https://docs.ondo.finance/ondo-stocks/token-and-quote-pricing.md#how-is-the-price-of-an-ondo-tokenized-stock-determined)"
+    },
+    {
+     "kw": "token",
+     "line_no": 13,
+     "text": "* **Solana and BNB Chain:** On Solana and BNB Chain, supported wallets and explorers use a display multiplier to adjust the token balances and prices shown to you. This allows changes in shares per token, including those resulting from dividend reinvestment, to be reflected in your displayed balance, with a corresponding adjustment to the price per displayed unit. Wallets and explorers that do not support these adjustments use a presentation similar to Ethereum, where changes in shares per token are reflected in the per-token price. These adjustments affect only how your holdings are displayed; they do not change your onchain token balance or economic exposure."
+    },
+    {
+     "kw": "token",
+     "line_no": 15,
+     "text": "* **There are no mint or burn fees.** When you buy or sell an Ondo tokenized stock, the quoted price is the price you will pay (or receive), though this may differ slightly from the price at which we buy (or sell) the underlying. [Learn more](https://docs.ondo.finance/ondo-stocks/fees-and-taxes.md)"
+    },
+    {
+     "kw": "token",
+     "line_no": 16,
+     "text": "* **Minting and burning are instant.** When you buy or sell Ondo tokenized stocks, you get your tokens or stablecoins in a single atomic transaction. [Learn more](https://docs.ondo.finance/ondo-stocks/investing-and-redeeming.md#what-forms-of-payment-can-i-use-to-purchase-ondo-tokenized-stocks)"
+    },
+    {
+     "kw": "token",
+     "line_no": 17,
+     "text": "* **You can buy fractional tokens.** You do not need to purchase full tokens."
+    },
+    {
+     "kw": "token",
+     "line_no": 18,
+     "text": "* **They are currently available on Ethereum, BNB Chain, and Solana, and select tokens are transferable to HyperEVM and Robinhood Chain via bridge.** Other chains are coming soon."
+    },
+    {
+     "kw": "token",
+     "line_no": 20,
+     "text": "* **They are designed to give you economic exposure to the underlying asset, not direct title to them.** While you can redeem your Tokens for cash or stablecoins for the then-value of the underlying assets, you do not receive shareholder voting rights, statutory information rights or other shareholder rights from the issuer of those securities. [Learn more](https://docs.ondo.finance/ondo-stocks/legal-and-regulatory.md#does-this-mean-the-tokenholder-does-not-actually-own-the-underlying-asset)"
+    },
+    {
+     "kw": "token",
+     "line_no": 22,
+     "text": "* **They are transferrable and DeFi compatible.** Ondo tokenized stocks are designed to be usable in DeFi protocols that support them. For example, they could be used as collateral for lending or in perps protocols."
+    },
+    {
+     "kw": "token",
+     "line_no": 23,
+     "text": "* **They are being launched with an ecosystem of partners.** Ondo tokenized stocks are being launched in partnership with many participants of the Ondo Ecosystem, including Bitget, Trust Wallet, OKX, HTX Global, 1inch, CoW Protocol, Ledger, BitGo, CoinGecko, Morpho, Gauntlet, Alpaca Markets, and others."
+    },
+    {
+     "kw": "token",
+     "line_no": 25,
+     "text": "* **They are designed with best-in-class investor protections.** Ondo tokenized stocks offer a bankruptcy-remote legal structure using a special purpose vehicle with at least one independent director, full asset backing with overcollateralization, a first-priority security interest held by a third-party security agent, daily attestations of assets held at regulated US entities, rigorously audited smart contracts, and transparent reporting via daily updates, monthly reconciliations, and annual audits. [Learn more](https://docs.ondo.finance/ondo-stocks/trust-and-transparency.md)"
+    }
+   ]
+  },
+  "ondo_stocks_assets": {
+   "url": "https://docs.ondo.finance/ondo-stocks/assets.md",
+   "keywords": [
+    "SPY",
+    "ticker",
+    "symbol",
+    "issuer",
+    "CUSIP",
+    "eligible"
+   ],
+   "error": "HTTPError: HTTP Error 404: Not Found"
+  },
+  "ondo_usdy_overview": {
+   "url": "https://docs.ondo.finance/usdy/overview.md",
+   "keywords": [
+    "USDY",
+    "T-bill",
+    "Treasury",
+    "redemption",
+    "minimum",
+    "eligible",
+    "Ondo"
+   ],
+   "error": "HTTPError: HTTP Error 404: Not Found"
+  },
+  "ondo_usdy_eligibility": {
+   "url": "https://docs.ondo.finance/general-access-products/usdy/eligibility.md",
+   "keywords": [
+    "United States",
+    "Hong Kong",
+    "eligible",
+    "Prohibited",
+    "minimum",
+    "KYC",
+    "net worth",
+    "Professional"
+   ],
+   "chars": 9071,
+   "quotes": [
+    {
+     "kw": "Prohibited",
+     "line_no": 4,
+     "text": "This page provides information on the types of persons that are prohibited or restricted from subscribing for, acquiring or redeeming USDY tokens."
+    },
+    {
+     "kw": "Prohibited",
+     "line_no": 6,
+     "text": "Ondo prohibits business activities from certain jurisdictions in accordance with its Compliance policies. By agreeing to a business relationship with Ondo, any partners agree to not offer Ondo related products or services in connection with any of the outlined prohibited jurisdictions. Individuals located or residing in and entities organized under the laws of or with a principal place of business in, any jurisdiction listed below (**\"Prohibited Persons\"**) are prohibited from subscribing for, acquiring or redeeming USDY tokens:"
+    },
+    {
+     "kw": "United States",
+     "line_no": 21,
+     "text": "* United States, or any of its states, possessions, territories or federal districts\\*"
+    },
+    {
+     "kw": "United States",
+     "line_no": 22,
+     "text": "\\* Persons who place buy orders from within the United States, or any of its states, possessions, territories or federal districts, and persons who are \"US persons\" or acting for the account or benefit of any \"US persons\" within the meaning of Rule 902 of Regulation S promulgated under the United States Securities Act of 1933, as amended, are also prohibited from subscribing for, acquiring or redeeming USDY tokens."
+    },
+    {
+     "kw": "Prohibited",
+     "line_no": 23,
+     "text": "Ondo Global Markets (BVI) Limited, the issuer of USDY tokens, also prohibits persons from subscribing for, acquiring or redeeming its tokens if it determines, in its sole discretion, that such activity may constitute a violation of (i) applicable laws, rules or regulations, including but not limited to sanctions restrictions, (ii) the terms of the USDY tokens' governing documents; or (iii) the issuer's governing documents and policies. In addition, if Prohibited Persons, directly or indirectly, hold in the aggregate 50% or more beneficial ownership or control of any entity, such entity may also be (or will be, if Prohibited Persons are prohibited as a result of applicable sanctions regulations) prohibited from subscribing for, acquiring or redeeming USDY tokens."
+    },
+    {
+     "kw": "eligible",
+     "line_no": 25,
+     "text": "Individuals residing in or, in certain cases, citizens of, and entities organized under the laws of or with a principal place of business in, any jurisdiction in the table set forth below must satisfy one or more of the eligibility requirements set forth opposite the name of such jurisdiction in order to be issued USDY tokens. For convenience purposes only, the below table also lists the key financial thresholds that are generally sufficient for an individual or entity to satisfy the applicable requirements; however, such information is provided only as a guide and does not amend, replace or supersede the requirements set forth under applicable laws, rules or regulations. Please refer to the applicable jurisdiction's law, rules and regulations for definitions of the defined terms used in the table below. To onboard with the token issuer, Restricted Persons generally will be required to produce evidence that they satisfy the applicable eligibility requirements and to certify or declare their eligible status."
+    },
+    {
+     "kw": "Professional",
+     "line_no": 28,
+     "text": "| **Brazil** | \"Qualified Investor\" under CVM Resolution No. 30, of May 11th, 2021 (Article 12) | R\\$1 million in financial investments; or approved technical qualification/certification | Professional investors; investment funds; or investment clubs (managed by Qualified Investors) |"
+    },
+    {
+     "kw": "Professional",
+     "line_no": 29,
+     "text": "| | \"Professional Investor\" under CVM Resolution No. 30, of May 11th, 2021 (Article 11) | R\\$10 million in financial investments; non-resident investor; or professionals who hold certain financial services accreditation by the Brazilian Securities Commission (Comissão de Valores Mobiliários - CVM) | Financial institutions; insurance/capitalization companies; pension entities; investment funds; or investment clubs (managed by CVM-authorized managers) |"
+    },
+    {
+     "kw": "Professional",
+     "line_no": 30,
+     "text": "| **Any Member State of the European Economic Area** | \"Professional Client\" under MiFID II, Annex II, Section I; or \"Qualified Investor\" under article 2(1)(e) of Prospectus Regulation (EU) 2017/1129 | Applicable for entities or individuals: Fulfill 2 of the 3 below criteria: EUR 500,000 financial portfolio; 10 significant transactions/quarter over the previous 4 quarters; or 1 year of financial sector experience | Certain regulated financial institutions, or large undertakings that meet two of the following three size requirements: balance sheet total of at least EUR 20 million; net turnover of at least EUR 40 million; or own funds of at least EUR 2 million |"
+    },
+    {
+     "kw": "Hong Kong",
+     "line_no": 31,
+     "text": "| **Hong Kong** | \"Professional Investor\" (Individual) under the Securities and Futures (Professional Investor) Rules (PI Rules) | HK\\$8 million portfolio value (alone or with associates) | Not applicable |"
+    },
+    {
+     "kw": "Professional",
+     "line_no": 32,
+     "text": "| | \"Professional Investor\" (Corporate/Trust) under the Securities and Futures (Professional Investor) Rules (PI Rules) | Not applicable | Trust corporations with HK\\$40 million total assets; corporations or partnerships with HK\\$8 million portfolio or HK\\$40 million total assets; or investment holding corporations wholly owned by Professional Investors |"
+    },
+    {
+     "kw": "Professional",
+     "line_no": 33,
+     "text": "| | \"Professional Investor\" (Institutional) under the Securities and Futures Ordinance (SFO) Schedule 1 Part 1 | Not applicable | Recognized exchange companies; intermediaries; financial institutions; insurers; collective investment schemes; governments; or central banks |"
+    },
+    {
+     "kw": "net worth",
+     "line_no": 34,
+     "text": "| **Malaysia** | \"Sophisticated Investor\" (\"High Net Worth Individual\") under the Capital Markets and Services Act 2007 | RM 3 million net personal/joint assets (excluding primary residence); or RM 300,000 annual income (individual) / RM 400,000 annual income (joint) | Not applicable |"
+    },
+    {
+     "kw": "net worth",
+     "line_no": 35,
+     "text": "| | \"Sophisticated Investor\" (\"High Net Worth Entity\") under the Capital Markets and Services Act 2007 | Not applicable | Trust companies or public company trustees with RM 10 million assets under management; corporations or partnerships with RM 10 million total net assets; statutory bodies; or pension funds |"
+    },
+    {
+     "kw": "net worth",
+     "line_no": 39,
+     "text": "| **Switzerland** | FinSA \"Professional Client\" or \"Institutional Client\" in accordance with Article 4, paragraphs 3 and 4 of the Swiss Financial Services Act. | Not applicable. | Regulated financial intermediary; insurance company; foreign client subject to prudential supervision; central bank; certain public entities; pension fund; company with professional treasury operations; or a large company meeting two of the following three criteria: CHF 20 million balance, CHF 40 million turnover, CHF 2 million equity; private investment structures with professional treasury operations that have been established for High Net Worth Individuals (HNWI) |"
+    },
+    {
+     "kw": "Professional",
+     "line_no": 40,
+     "text": "| **United Kingdom** | \"Professional Client\" under MiFID II, Annex II, Section I; or \"Qualified Investor\" under article 2(1)(e) of Prospectus Regulation (EU) 2017/1129 | Fulfill 2 of the 3 below criteria: EUR 500,000 financial portfolio; 10 significant transactions/quarter over the previous 4 quarters; or 1 year of financial sector experience | Certain regulated financial institutions, or large undertakings meeting two of the following three: balance sheet total of at least EUR 20 million; net turnover of at least EUR 40 million; or own funds of at least EUR 2 million |"
+    }
+   ]
+  },
+  "xstocks_products": {
+   "url": "https://xstocks.com/products",
+   "keywords": [
+    "SPY",
+    "SPYX",
+    "S&P 500",
+    "fee",
+    "xStock",
+    "Backed"
+   ],
+   "chars": 8000,
+   "quotes": [
+    {
+     "kw": "SPY",
+     "line_no": 0,
+     "text": "xStocks Products - NVIDIA, Tesla, SPY & Leading Tokenized U.S. Equities xStocks are not available in the U.S. or to U.S. persons. Geo restrictions apply. Read Kraken's xStocks Risk Disclosure and the Base Prospectus and related Final Terms for more information."
+    },
+    {
+     "kw": "xStock",
+     "line_no": 8,
+     "text": "xStocks provide onchain exposure to the world's top equities, backed 1:1 by the underlying security. This is what investing looks like when it's designed for everyone. Check our legal documentation for more information."
+    },
+    {
+     "kw": "xStock",
+     "line_no": 82,
+     "text": "By checking this box, I consent to receiving xStocks news, product updates, event information, and other marketing communications from us. You can unsubscribe at any time. See our Privacy Policy ."
+    }
+   ]
+  },
+  "xstocks_faq": {
+   "url": "https://docs.xstocks.fi/docs/faq",
+   "keywords": [
+    "redemption",
+    "fee",
+    "custody",
+    "SPY",
+    "broker",
+    "eligible"
+   ],
+   "error": "HTTPError: HTTP Error 404: Not Found"
+  },
+  "paxos_gold_faq": {
+   "url": "https://gold.paxos.com/faq",
+   "keywords": [
+    "vault",
+    "custod",
+    "allocated",
+    "buy",
+    "redeem",
+    "fee",
+    "minimum"
+   ],
+   "error": "URLError: <urlopen error [Errno 8] nodename nor servname provided, or not known>"
+  },
+  "paxos_paxg_faq": {
+   "url": "https://www.paxos.com/pax-gold/faq",
+   "keywords": [
+    "vault",
+    "custod",
+    "allocated",
+    "redeem",
+    "fee",
+    "KYC",
+    "verified"
+   ],
+   "error": "HTTPError: HTTP Error 404: Not Found"
+  },
+  "tether_gold_faq": {
+   "url": "https://tether.to/en/gold/",
+   "keywords": [
+    "vault",
+    "redeem",
+    "fee",
+    "Tether Gold",
+    "XAUT",
+    "gold bars",
+    "Switzerland"
+   ],
+   "chars": 6310,
+   "quotes": []
+  },
+  "dinari_tokens": {
+   "url": "https://docs.dinari.com/tokenized-stocks",
+   "keywords": [
+    "SPY",
+    "Arbitrum",
+    "ticker",
+    "eligible",
+    "minimum",
+    "redemption"
+   ],
+   "error": "HTTPError: HTTP Error 404: Not Found"
+  },
+  "sfc_va_retail": {
+   "url": "https://www.sfc.hk/en/Regulatory-functions/Intermediaries/Virtual-asset-trading-platforms",
+   "keywords": [
+    "licen",
+    "retail",
+    "virtual asset",
+    "Hong Kong",
+    "professional investor"
+   ],
+   "error": "HTTPError: HTTP Error 404: Not Found"
+  },
+  "sfc_va_consult": {
+   "url": "https://www.sfc.hk/en/News-and-announcements/Policy-statements-and-announcements/Consultation-conclusions-on-the-regulatory-regime-for-virtual-asset-trading-platforms-and-dealing-in-virtual-assets",
+   "keywords": [
+    "retail",
+    "professional investor",
+    "licensed",
+    "virtual asset",
+    "Hong Kong"
+   ],
+   "error": "HTTPError: HTTP Error 404: Not Found"
+  },
+  "kraken_ousg": {
+   "url": "https://www.kraken.com/legal/ousg",
+   "keywords": [
+    "OUSG",
+    "eligible",
+    "KYC",
+    "minimum",
+    "redemption",
+    "jurisdiction"
+   ],
+   "error": "HTTPError: HTTP Error 404: Not Found"
+  },
+  "circle_usdc_reserve": {
+   "url": "https://www.circle.com/transparency",
+   "keywords": [
+    "reserve",
+    "USDC",
+    "cash",
+    "custodian",
+    "BofA"
+   ],
+   "chars": 10617,
+   "quotes": [
+    {
+     "kw": "reserve",
+     "line_no": 18,
+     "text": "Learn how USDC and EURC are fully backed and redeemable 1:1, with reserves reported weekly."
+    },
+    {
+     "kw": "USDC",
+     "line_no": 33,
+     "text": "Launch a USDC-backed stablecoin on your blockchain"
+    },
+    {
+     "kw": "USDC",
+     "line_no": 147,
+     "text": "USDC is always redeemable 1:1 for US dollars, and EURC is always redeemable 1:1 for euros. Always."
+    },
+    {
+     "kw": "reserve",
+     "line_no": 173,
+     "text": "Deposits held as reserves for the benefit of USDC holders that are not held with Systemically Important Institutions (\"SIIs\", defined as globally or domestically significant financial institutions and national central banks)."
+    },
+    {
+     "kw": "reserve",
+     "line_no": 174,
+     "text": "Deposits at SIIs, held as reserves for the benefit of USDC holders."
+    },
+    {
+     "kw": "reserve",
+     "line_no": 175,
+     "text": "Treasuries and overnight reverse repurchase agreements (Overnight Reverse Treasury Repo) held as reserves for the benefit of USDC holders may be held by the Issuer in custodial accounts, as part of a separately managed account, or within the Circle Reserve Fund, a 2a-7 money market fund managed by BlackRock. Further information on the Circle Reserve Fund (USDXX) and its holdings may be found on BlackRock’s website ."
+    },
+    {
+     "kw": "reserve",
+     "line_no": 198,
+     "text": "USDC and EURC are fully backed by highly liquid fiat reserves held separately from Circle’s operating funds at leading financial institutions for the benefit of our stablecoin holders. As part of our strong commitment to transparency, we’ve issued reports on all reserve assets since 2018, along with SEC filings in 2021 and 2022."
+    },
+    {
+     "kw": "reserve",
+     "line_no": 200,
+     "text": "USDC reserve holdings are fully disclosed on a weekly basis, along with associated mint/burn flows. Additionally, a Big Four accounting firm provides monthly third-party assurance that the value of USDC reserves are greater than the amount of USDC in circulation. The reports are prepared according to attestation standards set out by the American Institute of Certified Public Accountants (AICPA)."
+    },
+    {
+     "kw": "USDC",
+     "line_no": 555,
+     "text": "USDC is a digital dollar backed 100% by highly liquid cash and cash-equivalent assets and is always redeemable 1:1 for US dollars."
+    },
+    {
+     "kw": "reserve",
+     "line_no": 556,
+     "text": "The majority of the USDC reserve is held in the Circle Reserve Fund (USDXX), an SEC-registered 2a-7 government money market fund."
+    },
+    {
+     "kw": "reserve",
+     "line_no": 557,
+     "text": "The Circle Reserve Fund can contain cash, short-dated US Treasuries and overnight US Treasury repurchase agreements with leading global banks. These are commonly used assets in money market funds because of their liquidity and stability. Daily, independent, third-party reporting on the portfolio is publicly available via BlackRock ."
+    },
+    {
+     "kw": "reserve",
+     "line_no": 558,
+     "text": "The remainder of the reserve is held in cash, mostly among a handful of the world's largest banks with the highest capital, liquidity and supervisory requirements in the world."
+    },
+    {
+     "kw": "reserve",
+     "line_no": 559,
+     "text": "The reserve is designed to provide holders with ready liquidity, even under extremely stressed conditions."
+    },
+    {
+     "kw": "USDC",
+     "line_no": 562,
+     "text": "During the 12 months ending on October 12, 2023, Circle bridged more than $277 billion between the banking system and blockchains through minting and redeeming USDC."
+    },
+    {
+     "kw": "USDC",
+     "line_no": 563,
+     "text": "We are continually strengthening our global banking infrastructure to facilitate local creation and redemption of our stablecoins, and to ensure USDC stability."
+    }
+   ]
+  },
+  "ondo_usdy_basics": {
+   "url": "https://docs.ondo.finance/general-access-products/usdy/basics.md",
+   "keywords": [
+    "USDY",
+    "rebasing",
+    "redeem",
+    "transfer",
+    "minimum",
+    "eligible",
+    "T-bill"
+   ],
+   "chars": 7515,
+   "quotes": [
+    {
+     "kw": "USDY",
+     "line_no": 5,
+     "text": "USDY (**US** **D**ollar **Y**ield Token) is a tokenized note formerly issued by Ondo USDY LLC, which as of December 15, 2025 has been folded into the Ondo Stocks umbrella. Depending on the issuance date, USDY may be secured by either short-term US Treasuries, shares of iShares Short Treasury Bond ETF, or bank demand deposits. USDY is accessible to qualifying non-US individual and institutional investors and is designed to combine the accessibility of a stablecoin with high-quality, US dollar-denominated yield."
+    },
+    {
+     "kw": "USDY",
+     "line_no": 6,
+     "text": "USDY comes in two versions: an “accumulating” version (USDY) whose per-token price increases as yield accrues, and a “rebasing” version (rUSDY) whose price remains at \\$1.00. Whereas the price of USDY tokens increases as the value of the underlying assets increase, with rUSDY you simply receive more rUSDY in your wallet; in effect the yield on the underlying assets accrues in the form of additional rUSDY tokens. For example, if you acquired 100 rUSDY tokens when the price per token of USDY was \\$1.00 – and then the price per token of USDY increased to \\$1.01, the price per token of rUSDY would remain at \\$1.00, but your wallet would now hold 101 rUSDY tokens. This ‘rebasing’ happens automatically when the USDY price is updated each business day."
+    },
+    {
+     "kw": "USDY",
+     "line_no": 7,
+     "text": "You can easily and instantly convert back and forth between USDY and rUSDY on our [website](https://docs.ondo.finance/general-access-products/usdy/usdy-vs-rebasing-usdy.md#how-do-i-convert-between-usdy-and-rusdy) at any time."
+    },
+    {
+     "kw": "rebasing",
+     "line_no": 10,
+     "text": "| Token Type | Accumulating | Rebasing (distributing) |"
+    },
+    {
+     "kw": "USDY",
+     "line_no": 11,
+     "text": "| Yield Accrual Profile | Reflected through an increasing redemption price (Reference Token Price) | Reflected as a subdivision of rUSDY tokens into additional rUSDY tokens daily |"
+    },
+    {
+     "kw": "USDY",
+     "line_no": 16,
+     "text": "Once your onboarding is completed, you can mint USDY with USDC at any time. (For deposits of \\$100K plus, USD bank wires are also possible. Contact us at [support@ondo.finance](mailto:support@ondo.finance) for more information.) You will start earning interest as soon as your transaction is processed. For all current purchases of USDY through the web app, please see the [terms for Ondo Stocks](https://app.ondo.finance/assets/usdy?tab=buy\\&fromToken=usdc\\&toToken=usdy)."
+    },
+    {
+     "kw": "USDY",
+     "line_no": 18,
+     "text": "Note that to comply with applicable US laws and regulations, Ondo USDY LLC can only redeem USD via bank wire to non-US bank accounts. If you wish to redeem via this method you will be required to provide us with such bank details before we can process a redemption request. To redeem for USDC through Ondo Global Markets (BVI) Limited, please go [here](https://app.ondo.finance/assets/usdy?tab=buy\\&fromToken=usdc\\&toToken=usdy)."
+    },
+    {
+     "kw": "redeem",
+     "line_no": 20,
+     "text": "### Minting and Redeeming on Other Networks"
+    },
+    {
+     "kw": "USDY",
+     "line_no": 21,
+     "text": "To mint and redeem USDY on Sui, Aptos, Stellar, XRP, or Noble, please contact [support@ondo.finance](mailto:support@ondo.finance). Please note that that there is a \\$5,000 minimum for minting and redeeming on these networks."
+    },
+    {
+     "kw": "USDY",
+     "line_no": 24,
+     "text": "It's important to understand that each rUSDY still corresponds to some amount of \"regular\" USDY that is locked in a wrapper contract. This wrapper contract locks the USDY in the contract, mints the corresponding amount of rUSDY, and sends that rUSDY to your wallet. For example, if you had 1,000 USDY tokens worth \\$10 each — so, a total of \\$10,000 of value — the 1,000 USDY would be locked in the wrapper contract, which would then mint 10,000 rUSDY tokens and then send those to your wallet. Conversely, if you wanted to [convert](https://docs.ondo.finance/general-access-products/usdy/usdy-vs-rebasing-usdy.md#how-do-i-convert-between-usdy-and-rusdy) your rUSDY tokens back to USDY tokens, your rUSDY tokens would be sent to the wrapper contract. This wrapper would then burn the rUSDY tokens, \"unlock\" the corresponding number of USDY tokens, and send those USDY tokens to your wallet."
+    },
+    {
+     "kw": "USDY",
+     "line_no": 25,
+     "text": "This means that the *total* supply of USDY is comprised of two 'types' of USDY:"
+    },
+    {
+     "kw": "USDY",
+     "line_no": 26,
+     "text": "* **Wrapped USDY** - i.e. USDY that is locked in the rUSDY wrapper contract and corresponds to the 'reserve' for the corresponding issued rUSDY."
+    },
+    {
+     "kw": "USDY",
+     "line_no": 27,
+     "text": "* **Non-Wrapped USDY** — i.e. USDY that *isn't* locked in the rUSDY wrapper contract."
+    },
+    {
+     "kw": "USDY",
+     "line_no": 29,
+     "text": "* The \"dollar value\" that is represented by all rUSDY tokens is exactly equal to the amount of \"dollar value\" represented by all applicable wrapped USDY tokens. In other words, `TVL_rUSDY = TVL_Wrapped_USDY` → `TVL_rUSDY = Num_Wrapped_USDY_Tokens * TokenReferencePrice_per_USDY` (Token Reference Price is the 'face value' of the token)."
+    },
+    {
+     "kw": "USDY",
+     "line_no": 30,
+     "text": "* Because of this, if you were to add up the total amount of USDY and the amount of rUSDY, you would be *double counting the value of the wrapped USDY*, because some of that value is already represented by the rUSDY."
+    },
+    {
+     "kw": "USDY",
+     "line_no": 31,
+     "text": "* Therefore, to properly calculate the TVL of USDY, the appropriate calculation is as follows:"
+    },
+    {
+     "kw": "USDY",
+     "line_no": 32,
+     "text": "`Total USDY TVL (e.g. both versions) = Num_rUSDY_Tokens * $1.00 + Num_Non-Wrapped_USDY_Tokens * TokenReferencePrice_per_USDY`"
+    },
+    {
+     "kw": "USDY",
+     "line_no": 34,
+     "text": "`Total USDY TVL (e.g. both versions) = (Num_Wrapped_USDY_Tokens + Num_Non-Wrapped_USDY_Tokens_ * TokenReferencePrice_per_USDY`"
+    },
+    {
+     "kw": "USDY",
+     "line_no": 37,
+     "text": "Rebasing is a mechanism through which the total supply of tokens is adjusted. The basic intuition is that, if we're trying to keep the price per token at \\$1.00, as the value of rUSDY's underlying assets increase in value, we need to increase the number of tokens such that the \"value of assets\" divided by the number of tokens remains constant. For tokens like USDY and rUSDY, the redemption value of the rUSDY token can be calculated by dividing the TVL of the rUSDY share class by the number of rUSDY tokens"
+    },
+    {
+     "kw": "USDY",
+     "line_no": 38,
+     "text": "`TokenReferencePrice_per_rUSDY = TVL_rUSDY / Num_rUSDY_Tokens`"
+    },
+    {
+     "kw": "USDY",
+     "line_no": 39,
+     "text": "From above, recall that `TVL_rUSDY = Num_Wrapped_USDY_Tokens * TokenReferencePrice_per_USDY`, so we have `TokenReferencePrice_per_rUSDY = (Num_Wrapped_USDY_Tokens * TokenReferencePrice_per_USDY) / Num_rUSDY_Tokens` Therefore, as `TokenReferencePrice_per_USDY` increases each day based on the Token yield rate for that month, `TokenReferencePrice_per_rUSDY` would *also* increase…unless we also increased `Num_rUSDY_Tokens`. Since we want to keep `TokenReferencePrice_per_rUSDY` at \\$1.00, this means that we must increase `Num_rUSDY_Tokens` to keep the price at \\$1.00."
+    },
+    {
+     "kw": "USDY",
+     "line_no": 40,
+     "text": "For more technical details on how rebasing works, you can read more [here](https://docs.ondo.finance/general-access-products/usdy/rebasing.md). For more detailed information about USDY, please refer to the rest of these support docs or reach out to us at [support@ondo.finance](mailto:support@ondo.finance)"
+    }
+   ]
+  },
+  "ondo_usdy_important": {
+   "url": "https://docs.ondo.finance/general-access-products/usdy/important-notes.md",
+   "keywords": [
+    "redeem",
+    "minimum",
+    "transfer",
+    "freeze",
+    "blocked",
+    "T+0",
+    "fee",
+    "smart contract"
+   ],
+   "chars": 5658,
+   "quotes": [
+    {
+     "kw": "transfer",
+     "line_no": 4,
+     "text": "\\[\\*] USDY tokens have not been registered under the US Securities Act of 1933, as amended (the \"Act\") or the securities or financial instrument laws of any other jurisdiction, and may not be offered or sold in the US or to US persons unless registered under the Act or an exemption from the registration requirements thereof is available. In certain jurisdictions, including the United Kingdom, Switzerland and Singapore, the tokens are offered and sold only to qualified investors or professional clients, as the case may be (or that jurisdiction's analogue thereof). [Other jurisdiction-based prohibitions and restrictions apply](https://docs.ondo.finance/general-access-products/usdy/eligibility.md). The issuer of USDY is not registered as an investment company under the US Investment Company Act of 1940, as amended, or as an Alternative Investment Fund or Undertaking for Collective Investment in Transferable Securities in the European Economic Area, or under the securities or financial instrument laws of any other jurisdiction."
+    }
+   ]
+  },
+  "ondo_ousg_fees": {
+   "url": "https://docs.ondo.finance/qualified-access-products/ousg/fees-and-taxes.md",
+   "keywords": [
+    "fee",
+    "redemption",
+    "management",
+    "expense",
+    "0."
+   ],
+   "chars": 2916,
+   "quotes": [
+    {
+     "kw": "fee",
+     "line_no": 5,
+     "text": "Ondo charges a management fee of 0.15%, which we have waived until January 1, 2027. Fund expenses are capped at 0.15% per annum. Funds that OUSG itself invests in may also incur expenses, but those fees simply reduce the return the OUSG receives on those assets and are not charged to the Fund directly. Instant minting and redemption may incur additional fees; please see the [OUSG product page](https://ondo.finance/ousg) for the most up to date information."
+    }
+   ]
+  },
+  "ondo_ousg_investing": {
+   "url": "https://docs.ondo.finance/qualified-access-products/ousg/investing.md",
+   "keywords": [
+    "minimum",
+    "redeem",
+    "subscribe",
+    "NAV",
+    "settlement",
+    "wallet"
+   ],
+   "chars": 3236,
+   "quotes": [
+    {
+     "kw": "redeem",
+     "line_no": 5,
+     "text": "To invest, you must have first [onboarded to our Qualified-Access Funds](https://docs.ondo.finance/qualified-access-products/onboarding-and-kyc.md). Doing so will enable you to access all such funds, including OUSG. After you have onboarded, you can invest either USD via wire transfer or via any [supported stablecoin](https://docs.ondo.finance/qualified-access-products/minting-and-redeeming.md#what-currency-or-stablecoins-can-i-use-to-invest-in-your-qualified-access-funds)."
+    },
+    {
+     "kw": "wallet",
+     "line_no": 6,
+     "text": "To make an investment, visit [https://ondo.finance/ousg](https://ondo.finance/ousg), connect your wallet, and follow the instructions."
+    },
+    {
+     "kw": "minimum",
+     "line_no": 7,
+     "text": "### **What is the minimum I can invest in OUSG?**"
+    },
+    {
+     "kw": "minimum",
+     "line_no": 8,
+     "text": "For instant transactions, the minimum amount is \\$5,000 for both investments and redemptions. For non-instant transactions, our minimum investment and redemption amounts are \\$100K and \\$50K, respectively. [Limitations may apply, see here for more detail](https://docs.ondo.finance/qualified-access-products/ousg/instant-limits.md)"
+    },
+    {
+     "kw": "wallet",
+     "line_no": 11,
+     "text": "If you instant mint, then upon depositing your stablecoins you will receive your OUSG tokens back to that same wallet 'instantly'; i.e. within the same transaction. The entire transaction is 'atomic', meaning that the entire transaction (i.e. depositing your stables *and* getting the OUSG in return) will either succeed or fail — there is no scenario where you will deposit funds and not receive your OUSG."
+    },
+    {
+     "kw": "wallet",
+     "line_no": 14,
+     "text": "### **Can any type of wallet or account hold OUSG?**"
+    },
+    {
+     "kw": "wallet",
+     "line_no": 15,
+     "text": "Currently, we only support non-custodial wallets: this means EOAs (i.e. wallets like Metamask) or multisigs. We do ***not*** currently support custodial wallets (i.e. Binance, Coinbase, etc.) If you plan to invest from, or withdraw to, a bank account, you will also be asked to provide your wallet information. Note: We do support Fireblocks wallets."
+    }
+   ]
+  },
+  "ondo_ousg_important": {
+   "url": "https://docs.ondo.finance/qualified-access-products/ousg/important-notes.md",
+   "keywords": [
+    "redeem",
+    "freeze",
+    "block",
+    "transfer",
+    "holder",
+    "T+0",
+    "custod"
+   ],
+   "chars": 4861,
+   "quotes": [
+    {
+     "kw": "transfer",
+     "line_no": 4,
+     "text": "\\[\\*] OUSG tokens have not been registered under the US Securities Act of 1933, as amended (the \"Act\") or the securities or financial instrument laws of any other jurisdiction, and are available solely to persons who are accredited investors (as defined in Rule 501 of Regulation D under the Act) and qualified purchasers (as defined in Section 2(a)(51) of the US Investment Company Act of 1940, as amended (the \"40 Act\")). The issuer of OUSG is Ondo I LP, a Delaware (USA) limited partnership (the \"Fund\") is not registered as an investment company under the 40 Act or as an Alternative Investment Fund or Undertaking for Collective Investment in Transferable Securities in the European Economic Area, or under the securities or financial instrument laws of any other jurisdiction."
+    },
+    {
+     "kw": "holder",
+     "line_no": 6,
+     "text": "The OUSG issuer, its affiliates, their respective shareholders and members, and their respective directors, officers, employees, consultants, agents and representatives (the \"Ondo Persons\") do not endorse, the Ondo Persons do not make any representation or warranty whatsoever (express or implied, including but not limited to any warranty of merchantability, fitness for a particular purpose, or non-infringement) regarding, and THE ONDO PERSONS SHALL NOT HAVE ANY LIABILITY WHATSOEVER WITH RESPECT TO ANYONE'S USE OF, any third-party products, services or technologies referenced herein."
+    },
+    {
+     "kw": "holder",
+     "line_no": 7,
+     "text": "Nothing herein constitutes any offer to sell, or any solicitation of an offer to buy, any assets. Nothing herein constitutes investment, legal, tax or financial advice. Acquiring tokens involves risks. A holder of tokens may incur losses, including total loss of their purchase price. Past performance may not be (and for the tokens will not be) an indication of future results. Investors are responsible for conducting their own research, investigation, verification, checks or consultation for professional or investment advice."
+    }
+   ]
+  },
+  "ondo_ousg_instant_limits": {
+   "url": "https://docs.ondo.finance/qualified-access-products/ousg/instant-limits.md",
+   "keywords": [
+    "limit",
+    "instant",
+    "redeem",
+    "million"
+   ],
+   "chars": 2586,
+   "quotes": [
+    {
+     "kw": "limit",
+     "line_no": 4,
+     "text": "Instant minting and instant redemption both have a transaction minimum of \\$5,000. In addition, they both are subject to certain limitations, as detailed below."
+    },
+    {
+     "kw": "limit",
+     "line_no": 6,
+     "text": "Instant minting has a \\$50M **Global Limit**. This is the total value of OUSG that can be instantly minted by all investors combined within 24 hours. This Global Limit resets every 24 hours."
+    },
+    {
+     "kw": "limit",
+     "line_no": 7,
+     "text": "There is also an **Individual Limit** of \\$25M within 24 hours. This is the limit per investor, which also resets every 24 hours."
+    },
+    {
+     "kw": "limit",
+     "line_no": 8,
+     "text": "Please note that instant minting is constrained by whichever of these limits is lowest at the time. In other words, if the remaining Global Limit is less than your remaining Individual Limit, the maximum amount you could instantly mint at that time would be constrained by the remaining Global Limit. If the remaining Global Limit is more than your remaining Individual Limit, the maximum amount you could instantly mint at that time would be constrained by your remaining Individual Limit."
+    },
+    {
+     "kw": "limit",
+     "line_no": 9,
+     "text": "To request a subscription that exceeds your instant minting limit, please contact us at [support@ondo.finance](mailto:support@ondo.finance)."
+    },
+    {
+     "kw": "limit",
+     "line_no": 11,
+     "text": "Instant redemptions have a \\$50M **Global Limit**. This is the total value of OUSG that can be instantly redeemed by all investors combined within 24 hours. This Global Limit resets every 24 hours."
+    },
+    {
+     "kw": "limit",
+     "line_no": 13,
+     "text": "Please note that instant redemptions are constrained by whichever of these limits is lowest at the time. In other words, if the remaining Global Limit is less than your remaining Individual Limit, the maximum amount you could instantly redeem at that time would be constrained by the remaining Global Limit. If the remaining Global Limit is more than your remaining Individual Limit, the maximum amount you could instantly redeem at that time would be constrained by your remaining Individual Limit."
+    },
+    {
+     "kw": "limit",
+     "line_no": 14,
+     "text": "Instant Redemptions may also be limited by the availability of USDC tokens for instant redemption that Circle supports."
+    },
+    {
+     "kw": "limit",
+     "line_no": 15,
+     "text": "To request a redemption that exceeds your instant redemption limit, please contact us at [support@ondo.finance](mailto:support@ondo.finance)."
+    }
+   ]
+  },
+  "ondo_stocks_available_assets": {
+   "url": "https://docs.ondo.finance/ondo-stocks/available-assets.md",
+   "keywords": [
+    "SPY",
+    "ticker",
+    "USDon",
+    "minimum",
+    "asset",
+    "CUSIP"
+   ],
+   "chars": 2012,
+   "quotes": [
+    {
+     "kw": "asset",
+     "line_no": 4,
+     "text": "### What assets are available to trade through Ondo Stocks?"
+    },
+    {
+     "kw": "SPY",
+     "line_no": 5,
+     "text": "Investors can currently trade 100+ tokenized stocks and ETFs via the Ondo Stocks platform, including the stock of popular companies (e.g. Tesla, Nvidia, Figma), indexes (e.g. QQQ, SPY), and fixed income ETFs (e.g. TLT, TIP, AGG). For a complete list, please visit our web app at [app.ondo.finance](https://app.ondo.finance)."
+    },
+    {
+     "kw": "asset",
+     "line_no": 7,
+     "text": "Yes, ETFs are available—when we say 'tokenized stocks' we intend to refer to the full set of available assets."
+    },
+    {
+     "kw": "asset",
+     "line_no": 9,
+     "text": "The Ondo Stocks platform was designed to be scalable quickly, and we intend to tokenize thousands of publicly traded assets over the coming months. Stay tuned."
+    },
+    {
+     "kw": "USDon",
+     "line_no": 13,
+     "text": "USDon is a stablecoin backed 1:1 by a US dollar in one of Ondo Stocks' brokerage accounts. USDon is the stablecoin used to instantly buy or redeem Ondo tokenized stocks. When you purchase Ondo tokenized stocks with other stablecoins such as USDC, our platform [atomically swaps that stablecoin for USDon](https://docs.ondo.finance/ondo-stocks/investing-and-redeeming.md#what-forms-of-payment-can-i-use-to-purchase-ondo-tokenized-stocks) and then uses USDon to buy the tokenized stock. Similarly, when you sell your tokenized stock for USDC, our platform first redeems for USDon and then swaps that for USDC, all in one atomic transaction."
+    }
+   ]
+  },
+  "sfc_va_list": {
+   "url": "https://apps.sfc.hk/edistributionWeb/gateway/EN/va-sfc-list/",
+   "keywords": [
+    "licence",
+    "platform",
+    "name",
+    "HashKey",
+    "OSL"
+   ],
+   "chars": 14,
+   "quotes": []
+  },
+  "hashkey_earn": {
+   "url": "https://www.hashkey.com/earn",
+   "keywords": [
+    "OUSG",
+    "Treasury",
+    "eligible",
+    "Hong Kong",
+    "minimum",
+    "redeem",
+    "APY"
+   ],
+   "chars": 104,
+   "quotes": []
+  },
+  "dinari_llms": {
+   "url": "https://docs.dinari.com/llms.txt",
+   "keywords": [
+    "SPY",
+    "tokenized",
+    "eligib",
+    "minimum",
+    "redemption",
+    "Arbitrum",
+    "United States",
+    "custod"
+   ],
+   "chars": 18578,
+   "quotes": [
+    {
+     "kw": "eligib",
+     "line_no": 33,
+     "text": "- [24/7 Tradable Assets](https://docs.dinari.com/docs/24-7-trading.md): The dShares™ currently eligible for trading during the Open (24/7) session."
+    },
+    {
+     "kw": "eligib",
+     "line_no": 34,
+     "text": "- [24/5 Tradable Assets](https://docs.dinari.com/docs/245-tradable-assets.md): The dShares™ currently eligible for trading during the Regular, Extended, and Overnight (24/5) sessions."
+    },
+    {
+     "kw": "tokenized",
+     "line_no": 61,
+     "text": "- [Get Stock Dividend Announcements](https://docs.dinari.com/reference/getstockdividendsbystockid.md): Get a list of announced stock dividend details for a specified `Stock`. Note that this data applies only to actual stocks. Yield received for holding tokenized shares may differ from this."
+    }
+   ]
+  },
+  "okx_fee_spot": {
+   "url": "https://www.okx.com/trade-spot",
+   "keywords": [
+    "maker",
+    "taker",
+    "fee",
+    "0.1",
+    "0.08"
+   ],
+   "chars": 3128,
+   "quotes": [
+    {
+     "kw": "fee",
+     "line_no": 2,
+     "text": "Buy/Sell with zero trading fees via 100+ payment methods"
+    },
+    {
+     "kw": "fee",
+     "line_no": 9,
+     "text": "Quick conversion, zero trading fees, no slippage"
+    },
+    {
+     "kw": "fee",
+     "line_no": 90,
+     "text": "Campaign center My rewards Deposit match Referral VIP program Affiliates X Drops Club OKX Ventures Trade on TradingView Listing application Fees"
+    }
+   ]
+  },
+  "coinbase_fee_help": {
+   "url": "https://help.coinbase.com/en/coinbase/trading-and-funding/advanced-fees",
+   "keywords": [
+    "maker",
+    "taker",
+    "fee",
+    "0.4",
+    "0.6"
+   ],
+   "error": "HTTPError: HTTP Error 404: Not Found"
+  }
+ },
+ "retried_at_utc": "2026-10-29T09:40:11.911403+00:00",
+ "batch2_at_utc": "2026-10-29T09:40:52.689330+00:00"
+}

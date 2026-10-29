@@ -1,0 +1,34 @@
+{
+ "https://apps.sfc.hk/edistributionWeb/gateway/EN/va-sfc-list/": {
+  "ok": true,
+  "status": 200,
+  "ctype": "text/html",
+  "bytes": 3908,
+  "head": "<!doctype html><html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\"><head><link rel=\"icon\" type=\"image/x-icon\" href=\"//www.sfc.hk/assets/favicon.png\"><link rel=\"shortcut icon\" type=\"image/x-icon\" href=\"//www.sfc.hk/assets/favicon.png\"><link rel=\"apple-touch-icon\" type=\"image/x-icon\" href=\"//www.sfc.hk/assets/favicon.png\"/><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/><met"
+ },
+ "https://apps.sfc.hk/edistributionWeb/api/va-sfc-list/list?lang=EN": {
+  "ok": false,
+  "error": "HTTP 404",
+  "head": "{\"timestamp\":\"2026-10-29T10:00:24.768+0000\",\"status\":404,\"error\":\"Not Found\",\"message\":\"No message available\",\"path\":\"/edistributionWeb/api/va-sfc-list/list\"}"
+ },
+ "https://apps.sfc.hk/edistributionWeb/api/va-intermediaries/list?lang=EN": {
+  "ok": false,
+  "error": "HTTP 404",
+  "head": "{\"timestamp\":\"2026-10-29T10:00:25.127+0000\",\"status\":404,\"error\":\"Not Found\",\"message\":\"No message available\",\"path\":\"/edistributionWeb/api/va-intermediaries/list\"}"
+ },
+ "https://apps.sfc.hk/edistributionWeb/api/va-list/list?lang=EN": {
+  "ok": false,
+  "error": "HTTP 404",
+  "head": "{\"timestamp\":\"2026-10-29T10:00:25.484+0000\",\"status\":404,\"error\":\"Not Found\",\"message\":\"No message available\",\"path\":\"/edistributionWeb/api/va-list/list\"}"
+ },
+ "https://apps.sfc.hk/edistributionWeb/api/common/list?lang=EN": {
+  "ok": false,
+  "error": "HTTP 404",
+  "head": "{\"timestamp\":\"2026-10-29T10:00:25.966+0000\",\"status\":404,\"error\":\"Not Found\",\"message\":\"No message available\",\"path\":\"/edistributionWeb/api/common/list\"}"
+ },
+ "https://www.sfc.hk/en/Regulatory-functions/Intermediaries/Virtual-asset-trading-platforms": {
+  "ok": false,
+  "error": "HTTP 404",
+  "head": "\r\n\r\n\r\n<!DOCTYPE html>\r\n\r\n<html lang=\"en\">\r\n<head>\r\n\r\n    <title>404 | Securities &amp; Futures Commission of Hong Kong</title>\r\n    <meta name=\"robots\" content=\"NOINDEX,NOFOLLOW\" />\r\n    <meta name=\"d"
+ }
+}

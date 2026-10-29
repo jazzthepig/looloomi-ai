@@ -1,0 +1,1070 @@
+{
+ "measured_at_utc": "2026-10-29T08:50:14.234862+00:00",
+ "notionals_usd": [
+  500,
+  5000,
+  50000
+ ],
+ "method": "slippage_bps = (VWAP_走完盘口 - mid) / mid * 1e4;价格冲击,不含交易所手续费",
+ "binance": {
+  "PAXGUSDT": {
+   "source": "binance_public_depth",
+   "ts_utc": "2026-10-29T08:50:14.235155+00:00",
+   "mid": 4025.7650000000003,
+   "best_bid": 4025.76,
+   "best_ask": 4025.77,
+   "spread_bps": 0.0248,
+   "depth_0.5pct_bid_usd": 1753385.01,
+   "depth_0.5pct_ask_usd": 1148674.82,
+   "levels": {
+    "bids": 1000,
+    "asks": 1000
+   },
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 4025.77,
+      "slippage_bps": 0.012,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4025.76,
+      "slippage_bps": -0.012,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.025
+    },
+    "5000": {
+     "buy": {
+      "vwap": 4025.77,
+      "slippage_bps": 0.012,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4025.68639194,
+      "slippage_bps": -0.195,
+      "levels_consumed": 3,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.208
+    },
+    "50000": {
+     "buy": {
+      "vwap": 4026.07761231,
+      "slippage_bps": 0.777,
+      "levels_consumed": 16,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4025.12174684,
+      "slippage_bps": -1.598,
+      "levels_consumed": 15,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 2.374
+    }
+   },
+   "venue": "Binance spot",
+   "pair": "PAXGUSDT"
+  },
+  "XAUTUSDT": {
+   "source": "binance_public_depth",
+   "ts_utc": "2026-10-29T08:50:15.077626+00:00",
+   "mid": 4019.465,
+   "best_bid": 4019.46,
+   "best_ask": 4019.47,
+   "spread_bps": 0.0249,
+   "depth_0.5pct_bid_usd": 965680.41,
+   "depth_0.5pct_ask_usd": 802531.0,
+   "levels": {
+    "bids": 1000,
+    "asks": 1000
+   },
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 4019.47,
+      "slippage_bps": 0.012,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4019.45019293,
+      "slippage_bps": -0.037,
+      "levels_consumed": 2,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.049
+    },
+    "5000": {
+     "buy": {
+      "vwap": 4019.47,
+      "slippage_bps": 0.012,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4019.39281346,
+      "slippage_bps": -0.18,
+      "levels_consumed": 6,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.192
+    },
+    "50000": {
+     "buy": {
+      "vwap": 4019.47,
+      "slippage_bps": 0.012,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4018.75139496,
+      "slippage_bps": -1.775,
+      "levels_consumed": 24,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 1.788
+    }
+   },
+   "venue": "Binance spot",
+   "pair": "XAUTUSDT"
+  },
+  "USDCUSDT": {
+   "source": "binance_public_depth",
+   "ts_utc": "2026-10-29T08:50:15.899435+00:00",
+   "mid": 1.000975,
+   "best_bid": 1.00097,
+   "best_ask": 1.00098,
+   "spread_bps": 0.0999,
+   "depth_0.5pct_bid_usd": 18097063.07,
+   "depth_0.5pct_ask_usd": 27943285.69,
+   "levels": {
+    "bids": 700,
+    "asks": 676
+   },
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 1.00098,
+      "slippage_bps": 0.05,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 1.00097,
+      "slippage_bps": -0.05,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.1
+    },
+    "5000": {
+     "buy": {
+      "vwap": 1.00098,
+      "slippage_bps": 0.05,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 1.00097,
+      "slippage_bps": -0.05,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.1
+    },
+    "50000": {
+     "buy": {
+      "vwap": 1.00098,
+      "slippage_bps": 0.05,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 1.00097,
+      "slippage_bps": -0.05,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.1
+    }
+   },
+   "venue": "Binance spot",
+   "pair": "USDCUSDT"
+  }
+ },
+ "kraken": {
+  "PAXGUSD": {
+   "source": "kraken_public_depth",
+   "ts_utc": "2026-10-29T08:50:16.659792+00:00",
+   "mid": 4020.3,
+   "best_bid": 4020.11,
+   "best_ask": 4020.49,
+   "spread_bps": 0.9452,
+   "depth_0.5pct_bid_usd": 804738.29,
+   "depth_0.5pct_ask_usd": 760575.35,
+   "levels": {
+    "bids": 500,
+    "asks": 500
+   },
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 4020.49654237,
+      "slippage_bps": 0.489,
+      "levels_consumed": 2,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4020.11,
+      "slippage_bps": -0.473,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.961
+    },
+    "5000": {
+     "buy": {
+      "vwap": 4020.66884013,
+      "slippage_bps": 0.917,
+      "levels_consumed": 6,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4019.79609014,
+      "slippage_bps": -1.253,
+      "levels_consumed": 3,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 2.171
+    },
+    "50000": {
+     "buy": {
+      "vwap": 4022.10909431,
+      "slippage_bps": 4.5,
+      "levels_consumed": 16,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4018.54877445,
+      "slippage_bps": -4.356,
+      "levels_consumed": 19,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 8.856
+    }
+   },
+   "venue": "Kraken spot",
+   "pair": "PAXGUSD"
+  },
+  "XAUTUSD": {
+   "source": "kraken_public_depth",
+   "ts_utc": "2026-10-29T08:50:18.142662+00:00",
+   "mid": 4014.3999999999996,
+   "best_bid": 4014.2,
+   "best_ask": 4014.6,
+   "spread_bps": 0.9964,
+   "depth_0.5pct_bid_usd": 419397.67,
+   "depth_0.5pct_ask_usd": 377873.82,
+   "levels": {
+    "bids": 155,
+    "asks": 127
+   },
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 4014.6,
+      "slippage_bps": 0.498,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4014.2,
+      "slippage_bps": -0.498,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.996
+    },
+    "5000": {
+     "buy": {
+      "vwap": 4015.75062189,
+      "slippage_bps": 3.364,
+      "levels_consumed": 4,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4014.2,
+      "slippage_bps": -0.498,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 3.863
+    },
+    "50000": {
+     "buy": {
+      "vwap": 4017.01330905,
+      "slippage_bps": 6.51,
+      "levels_consumed": 12,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4013.88927309,
+      "slippage_bps": -1.272,
+      "levels_consumed": 7,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 7.782
+    }
+   },
+   "venue": "Kraken spot",
+   "pair": "XAUTUSD"
+  },
+  "USDCUSD": {
+   "source": "kraken_public_depth",
+   "ts_utc": "2026-10-29T08:50:19.985262+00:00",
+   "mid": 0.99975,
+   "best_bid": 0.9997,
+   "best_ask": 0.9998,
+   "spread_bps": 1.0003,
+   "depth_0.5pct_bid_usd": 7503356.44,
+   "depth_0.5pct_ask_usd": 9197197.43,
+   "levels": {
+    "bids": 122,
+    "asks": 110
+   },
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 0.9998,
+      "slippage_bps": 0.5,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 0.9997,
+      "slippage_bps": -0.5,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 1.0
+    },
+    "5000": {
+     "buy": {
+      "vwap": 0.9998,
+      "slippage_bps": 0.5,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 0.9997,
+      "slippage_bps": -0.5,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 1.0
+    },
+    "50000": {
+     "buy": {
+      "vwap": 0.9998,
+      "slippage_bps": 0.5,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 0.9997,
+      "slippage_bps": -0.5,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 1.0
+    }
+   },
+   "venue": "Kraken spot",
+   "pair": "USDCUSD"
+  }
+ },
+ "coinbase": {
+  "PAXG-USD": {
+   "source": "coinbase_public_book",
+   "ts_utc": "2026-10-29T08:50:24.827236+00:00",
+   "mid": 4019.885,
+   "best_bid": 4019.21,
+   "best_ask": 4020.56,
+   "spread_bps": 3.3583,
+   "depth_0.5pct_bid_usd": 1112364.37,
+   "depth_0.5pct_ask_usd": 355923.48,
+   "levels": {
+    "bids": 488,
+    "asks": 439
+   },
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 4020.56,
+      "slippage_bps": 1.679,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4019.21,
+      "slippage_bps": -1.679,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 3.358
+    },
+    "5000": {
+     "buy": {
+      "vwap": 4021.06392947,
+      "slippage_bps": 2.933,
+      "levels_consumed": 3,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4018.74964487,
+      "slippage_bps": -2.824,
+      "levels_consumed": 4,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 5.757
+    },
+    "50000": {
+     "buy": {
+      "vwap": 4022.5766524,
+      "slippage_bps": 6.696,
+      "levels_consumed": 17,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4018.06014223,
+      "slippage_bps": -4.54,
+      "levels_consumed": 11,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 11.235
+    }
+   },
+   "venue": "Coinbase Exchange",
+   "pair": "PAXG-USD"
+  },
+  "XAUT-USD": {
+   "source": "coinbase_public_book",
+   "ts_utc": "2026-10-29T08:50:25.785731+00:00",
+   "error": "HTTP 404"
+  }
+ },
+ "okx": {
+  "PAXG-USDT": {
+   "source": "okx_public_books",
+   "ts_utc": "2026-10-29T08:50:21.050721+00:00",
+   "mid": 4025.45,
+   "best_bid": 4025.4,
+   "best_ask": 4025.5,
+   "spread_bps": 0.2484,
+   "depth_0.5pct_bid_usd": 263171.19,
+   "depth_0.5pct_ask_usd": 267173.61,
+   "levels": {
+    "bids": 400,
+    "asks": 400
+   },
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 4025.5,
+      "slippage_bps": 0.124,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4025.4,
+      "slippage_bps": -0.124,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.248
+    },
+    "5000": {
+     "buy": {
+      "vwap": 4025.57576609,
+      "slippage_bps": 0.312,
+      "levels_consumed": 4,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4024.82700652,
+      "slippage_bps": -1.548,
+      "levels_consumed": 5,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 1.86
+    },
+    "50000": {
+     "buy": {
+      "vwap": 4026.50826296,
+      "slippage_bps": 2.629,
+      "levels_consumed": 18,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4023.78150295,
+      "slippage_bps": -4.145,
+      "levels_consumed": 21,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 6.774
+    }
+   },
+   "venue": "OKX spot",
+   "pair": "PAXG-USDT"
+  },
+  "XAUT-USDT": {
+   "source": "okx_public_books",
+   "ts_utc": "2026-10-29T08:50:21.855395+00:00",
+   "mid": 4019.05,
+   "best_bid": 4019.0,
+   "best_ask": 4019.1,
+   "spread_bps": 0.2488,
+   "depth_0.5pct_bid_usd": 1200915.86,
+   "depth_0.5pct_ask_usd": 899508.02,
+   "levels": {
+    "bids": 400,
+    "asks": 400
+   },
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 4019.1,
+      "slippage_bps": 0.124,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4018.98848607,
+      "slippage_bps": -0.153,
+      "levels_consumed": 2,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.277
+    },
+    "5000": {
+     "buy": {
+      "vwap": 4019.1,
+      "slippage_bps": 0.124,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4018.87251855,
+      "slippage_bps": -0.442,
+      "levels_consumed": 3,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.566
+    },
+    "50000": {
+     "buy": {
+      "vwap": 4019.299567,
+      "slippage_bps": 0.621,
+      "levels_consumed": 8,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4018.28190085,
+      "slippage_bps": -1.911,
+      "levels_consumed": 11,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 2.532
+    }
+   },
+   "venue": "OKX spot",
+   "pair": "XAUT-USDT"
+  }
+ },
+ "bybit": {
+  "PAXGUSDT": {
+   "source": "bybit_public_orderbook",
+   "ts_utc": "2026-10-29T08:50:22.659758+00:00",
+   "error": "empty book"
+  },
+  "XAUTUSDT": {
+   "source": "bybit_public_orderbook",
+   "ts_utc": "2026-10-29T08:50:23.478677+00:00",
+   "mid": 4019.705,
+   "best_bid": 4019.7,
+   "best_ask": 4019.71,
+   "spread_bps": 0.0249,
+   "depth_0.5pct_bid_usd": 448447.82,
+   "depth_0.5pct_ask_usd": 409169.86,
+   "levels": {
+    "bids": 200,
+    "asks": 200
+   },
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 4019.71,
+      "slippage_bps": 0.012,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4019.7,
+      "slippage_bps": -0.012,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.025
+    },
+    "5000": {
+     "buy": {
+      "vwap": 4019.73726123,
+      "slippage_bps": 0.08,
+      "levels_consumed": 3,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4019.43853708,
+      "slippage_bps": -0.663,
+      "levels_consumed": 8,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.743
+    },
+    "50000": {
+     "buy": {
+      "vwap": 4020.21864282,
+      "slippage_bps": 1.278,
+      "levels_consumed": 24,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4018.30800966,
+      "slippage_bps": -3.475,
+      "levels_consumed": 36,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 4.753
+    }
+   },
+   "venue": "Bybit spot",
+   "pair": "XAUTUSDT"
+  },
+  "USDCUSDT": {
+   "source": "bybit_public_orderbook",
+   "ts_utc": "2026-10-29T08:50:24.151198+00:00",
+   "mid": 1.00095,
+   "best_bid": 1.0009,
+   "best_ask": 1.001,
+   "spread_bps": 0.9991,
+   "depth_0.5pct_bid_usd": 11600924.34,
+   "depth_0.5pct_ask_usd": 14316840.62,
+   "levels": {
+    "bids": 186,
+    "asks": 193
+   },
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 1.001,
+      "slippage_bps": 0.5,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 1.0009,
+      "slippage_bps": -0.5,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.999
+    },
+    "5000": {
+     "buy": {
+      "vwap": 1.001,
+      "slippage_bps": 0.5,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 1.0009,
+      "slippage_bps": -0.5,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.999
+    },
+    "50000": {
+     "buy": {
+      "vwap": 1.001,
+      "slippage_bps": 0.5,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 1.0009,
+      "slippage_bps": -0.5,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.999
+    }
+   },
+   "venue": "Bybit spot",
+   "pair": "USDCUSDT"
+  }
+ },
+ "dex": {
+  "PAXG:eth": {
+   "source": "geckoterminal_token_pools",
+   "ts_utc": "2026-10-29T08:50:26.899366+00:00",
+   "network": "eth",
+   "token": "PAXG",
+   "token_address": "0x45804880De22913dafe09b4984769B7C5562aC7",
+   "error": "no pools / no platform"
+  },
+  "XAUT:eth": {
+   "source": "geckoterminal_token_pools",
+   "ts_utc": "2026-10-29T08:50:28.807822+00:00",
+   "network": "eth",
+   "token": "XAUT",
+   "token_address": "0x68749665Ff8D2d112fa859Aa293f07A622782f38",
+   "top_pools": [
+    {
+     "pool": "0x0c592152111098ac7e5c9c0b007bb2e7985d7542",
+     "name": "GOLDGR / XAUt 0.01%",
+     "reserve_usd": 15317899.9318,
+     "vol24_usd": 786.355537363,
+     "price_usd": 129.526020305
+    },
+    {
+     "pool": "0xc5c7c21f4e60770ca5991a8832127a40f5236f73",
+     "name": "XAUt / WETH 0.3%",
+     "reserve_usd": 7186675.5383,
+     "vol24_usd": 2045092.9879724,
+     "price_usd": 4013.0180054307
+    },
+    {
+     "pool": "0xc756bba710d45647715079ce50aa16aab36ded42",
+     "name": "PAXG / XAUt 0.01%",
+     "reserve_usd": 6534829.3035,
+     "vol24_usd": 2538890.8145836,
+     "price_usd": 4042.6616744573
+    },
+    {
+     "pool": "0x6546055f46e866a4b9a4a13e81273e3152bae5da",
+     "name": "XAUt / USDT 0.05%",
+     "reserve_usd": 3749258.9128,
+     "vol24_usd": 692916.066775322,
+     "price_usd": 4006.8094977642
+    },
+    {
+     "pool": "0xed7ef9a9a05a48858a507c080def0405ad1eaa3e",
+     "name": "PAXG / XAUt 0.05%",
+     "reserve_usd": 3091801.2395,
+     "vol24_usd": 55306.1066640183,
+     "price_usd": 4035.5417241302
+    }
+   ],
+   "note": "reserve_usd = 池内两边资产的美元总量;share_of_pool = 名义额 / reserve_usd(量级估计,未建模价格曲线)",
+   "notional_vs_pool": {
+    "500": {
+     "share_of_pool_pct": 0.0033,
+     "pool_reserve_usd": 15317899.9318
+    },
+    "5000": {
+     "share_of_pool_pct": 0.0326,
+     "pool_reserve_usd": 15317899.9318
+    },
+    "50000": {
+     "share_of_pool_pct": 0.3264,
+     "pool_reserve_usd": 15317899.9318
+    }
+   }
+  },
+  "SPYX_xstocks:eth": {
+   "source": "geckoterminal_token_pools",
+   "ts_utc": "2026-10-29T08:50:30.756437+00:00",
+   "network": "eth",
+   "token": "SPYX_xstocks",
+   "token_address": "0x90a2a4c76b5d8c0bc892a69ea28aa775a8f2dd48",
+   "top_pools": [
+    {
+     "pool": "0x91e22588bf5997e958b32f72131b21b0c50e126addd273e0de39260032ddf6fd",
+     "name": "SPYx / ETH 0.3%",
+     "reserve_usd": 797.3444,
+     "vol24_usd": 0.0,
+     "price_usd": 780.6561570934
+    },
+    {
+     "pool": "0x26cfe1e3e714882131f39fe733c59285e9b4ae72469b3379f1b1ac58e84efc13",
+     "name": "SPYx / USDC 87%",
+     "reserve_usd": 553.9776,
+     "vol24_usd": 0.0,
+     "price_usd": 816.6427319084
+    },
+    {
+     "pool": "0x490279d144afd96c1a46fa50dc6234190e6ecfd99d724a32ee3ebfa8a4edf857",
+     "name": "SPYx / USDC 96.5%",
+     "reserve_usd": 476.3523,
+     "vol24_usd": 0.0,
+     "price_usd": 841.7025792151
+    },
+    {
+     "pool": "0x00c6d0888007890b3fb8db596845697fbc3d311feabc5e088c736c4d8da3d399",
+     "name": "SPYx / USDC 81.349%",
+     "reserve_usd": 316.7248,
+     "vol24_usd": 0.9107775565,
+     "price_usd": 821.8305966919
+    },
+    {
+     "pool": "0x12a9f0385e9988c513c939aae216b551bec9a1773aa02500afb420302f44e1ff",
+     "name": "SPYx / ETH 88%",
+     "reserve_usd": 129.5684,
+     "vol24_usd": 0.0,
+     "price_usd": 1023.0082517329
+    }
+   ],
+   "note": "reserve_usd = 池内两边资产的美元总量;share_of_pool = 名义额 / reserve_usd(量级估计,未建模价格曲线)",
+   "notional_vs_pool": {
+    "500": {
+     "share_of_pool_pct": 62.7082,
+     "pool_reserve_usd": 797.3444
+    },
+    "5000": {
+     "share_of_pool_pct": 627.0816,
+     "pool_reserve_usd": 797.3444
+    },
+    "50000": {
+     "share_of_pool_pct": 6270.816,
+     "pool_reserve_usd": 797.3444
+    }
+   }
+  },
+  "SPYX_xstocks:solana": {
+   "source": "geckoterminal_token_pools",
+   "ts_utc": "2026-10-29T08:50:32.529709+00:00",
+   "network": "solana",
+   "token": "SPYX_xstocks",
+   "token_address": "XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W",
+   "top_pools": [
+    {
+     "pool": "6truu3rZuiB9rKQg4VYC3Dt3QwV7DgwGqXrYUcrvnDDE",
+     "name": "SPYx / USDC",
+     "reserve_usd": 2113301.7857,
+     "vol24_usd": 831444.428128743,
+     "price_usd": 772.1102654359
+    },
+    {
+     "pool": "7a8xxAJBELDo6P9dikSYctdw6ce8F4mWr3ahcAD8Ao49",
+     "name": "STONK / SPYx",
+     "reserve_usd": 1418197.4435,
+     "vol24_usd": 188493.916647472,
+     "price_usd": 0.1372662761
+    },
+    {
+     "pool": "BS9uyGV6XmNnPkM4f3xgxCdQEaFv7RSKs6fwrpvYHxfL",
+     "name": "SPYx / SOL",
+     "reserve_usd": 588455.12,
+     "vol24_usd": 261322.662273567,
+     "price_usd": 771.9893049391
+    },
+    {
+     "pool": "4pCZCVEiYyT4efNdXUdL2tJF8VGMgiMXrZWq6FiNXhRw",
+     "name": "SPYx / USDC",
+     "reserve_usd": 409432.1976,
+     "vol24_usd": 5189341.21513442,
+     "price_usd": 772.5425025213
+    },
+    {
+     "pool": "27x6aSxcAm6SoazoxmmTtFg6fWMQuNmdKJmHagq1DUZy",
+     "name": "SPYx / USDC",
+     "reserve_usd": 235038.8365,
+     "vol24_usd": 567555.724120381,
+     "price_usd": 772.5405609113
+    }
+   ],
+   "note": "reserve_usd = 池内两边资产的美元总量;share_of_pool = 名义额 / reserve_usd(量级估计,未建模价格曲线)",
+   "notional_vs_pool": {
+    "500": {
+     "share_of_pool_pct": 0.0237,
+     "pool_reserve_usd": 2113301.7857
+    },
+    "5000": {
+     "share_of_pool_pct": 0.2366,
+     "pool_reserve_usd": 2113301.7857
+    },
+    "50000": {
+     "share_of_pool_pct": 2.366,
+     "pool_reserve_usd": 2113301.7857
+    }
+   }
+  },
+  "SPY_ondo:eth": {
+   "source": "geckoterminal_token_pools",
+   "ts_utc": "2026-10-29T08:50:34.315750+00:00",
+   "network": "eth",
+   "token": "SPY_ondo",
+   "token_address": "0xfedc5f4a6c38211c1338aa411018dfaf26612c08",
+   "top_pools": [
+    {
+     "pool": "0x5638bbde046ec2efc7c8f3fd8dc5a9a1016f7eeb",
+     "name": "SPYon / USDC 0.3%",
+     "reserve_usd": 81175.9483,
+     "vol24_usd": 12268.8000732735,
+     "price_usd": 778.9503955205
+    },
+    {
+     "pool": "0x7108e2a45472143df9b723298cb0dde0550ce02cff3af71a3ef60f20aa1a0ae6",
+     "name": "SPYon / ETH 1%",
+     "reserve_usd": 15499.2815,
+     "vol24_usd": 287.5867489593,
+     "price_usd": 773.8931253034
+    },
+    {
+     "pool": "0x33c06f219681034e180be747d040cded30396034",
+     "name": "TQQQon / SPYon 0.3%",
+     "reserve_usd": 13645.7702,
+     "vol24_usd": 0.0,
+     "price_usd": 50.1919534679
+    },
+    {
+     "pool": "0xbc7e9391f0806a66691f6f25868464d4523e75937befa13c4610e691f27fb786",
+     "name": "INDEX / SPYon",
+     "reserve_usd": 12419.2986,
+     "vol24_usd": 0.0,
+     "price_usd": 0.0001233622641
+    },
+    {
+     "pool": "0x7c0868b678e3b1d65bf96f82d0a40ccb0f67b10242d263d05787c8a291781949",
+     "name": "STONKS / SPYon 1%",
+     "reserve_usd": 11763.7752,
+     "vol24_usd": 0.0,
+     "price_usd": 1.183993741e-05
+    }
+   ],
+   "note": "reserve_usd = 池内两边资产的美元总量;share_of_pool = 名义额 / reserve_usd(量级估计,未建模价格曲线)",
+   "notional_vs_pool": {
+    "500": {
+     "share_of_pool_pct": 0.6159,
+     "pool_reserve_usd": 81175.9483
+    },
+    "5000": {
+     "share_of_pool_pct": 6.1595,
+     "pool_reserve_usd": 81175.9483
+    },
+    "50000": {
+     "share_of_pool_pct": 61.5946,
+     "pool_reserve_usd": 81175.9483
+    }
+   }
+  },
+  "SPY_ondo:solana": {
+   "source": "geckoterminal_token_pools",
+   "ts_utc": "2026-10-29T08:50:36.157468+00:00",
+   "network": "solana",
+   "token": "SPY_ondo",
+   "token_address": "k18WJUULWheRkSpSquYGdNNmtuE2Vbw1hpuUi92ondo",
+   "error": "no pools / no platform"
+  },
+  "GLD_ondo:eth": {
+   "source": "geckoterminal_token_pools",
+   "ts_utc": "2026-10-29T08:50:37.527273+00:00",
+   "network": "eth",
+   "token": "GLD_ondo",
+   "token_address": "0x423d42e505e64f99b6e277eb7ed324cc5606f139",
+   "error": "no pools / no platform"
+  },
+  "BIL_ondo:eth": {
+   "source": "geckoterminal_token_pools",
+   "ts_utc": "2026-10-29T08:50:38.893453+00:00",
+   "network": "eth",
+   "token": "BIL_ondo",
+   "token_address": "0x2710e30d84b376c34a3b3036aa196b26a83a321b",
+   "error": "no pools / no platform"
+  }
+ },
+ "dex_paraswap": {
+  "PAXG_500usd_buy": {
+   "source": "paraswap_public_prices",
+   "ts_utc": "2026-10-29T08:50:40.255888+00:00",
+   "url": "https://apiv5.paraswap.io/prices?srcToken=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&destToken=0x45804880De22913dafe09b4984769B7C5562aC7&amount=500000000&side=BUY&network=1",
+   "error": "HTTP 400"
+  },
+  "XAUT_500usd_buy": {
+   "source": "paraswap_public_prices",
+   "ts_utc": "2026-10-29T08:50:43.715114+00:00",
+   "url": "https://apiv5.paraswap.io/prices?srcToken=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&destToken=0x68749665Ff8D2d112fa859Aa293f07A622782f38&amount=500000000&side=BUY&network=1",
+   "error": "HTTP 400"
+  }
+ },
+ "coingecko_reference": {
+  "PAXG": {
+   "source": "coingecko_simple_price",
+   "ts_utc": "2026-10-29T08:50:48.257083+00:00",
+   "data": {
+    "pax-gold": {
+     "usd": 4022.68,
+     "usd_market_cap": 1794505700.3358202,
+     "usd_24h_vol": 95778128.85069293
+    }
+   }
+  },
+  "XAUT": {
+   "source": "coingecko_simple_price",
+   "ts_utc": "2026-10-29T08:50:51.954837+00:00",
+   "data": {
+    "tether-gold": {
+     "usd": 4015.84,
+     "usd_market_cap": 3247986482.498782,
+     "usd_24h_vol": 199294234.1279126
+    }
+   }
+  },
+  "SPYX_xstocks": {
+   "source": "coingecko_simple_price",
+   "ts_utc": "2026-10-29T08:50:55.603150+00:00",
+   "data": {
+    "sp500-xstock": {
+     "usd": 772.5,
+     "usd_market_cap": 70459087.04771946,
+     "usd_24h_vol": 11112066.4767471
+    }
+   }
+  },
+  "SPY_ondo": {
+   "source": "coingecko_simple_price",
+   "ts_utc": "2026-10-29T08:50:59.242035+00:00",
+   "data": {
+    "spdr-s-p-500-etf-ondo-tokenized-etf": {
+     "usd": 775.62,
+     "usd_market_cap": 47325265.83214388,
+     "usd_24h_vol": 1435342.2187393936
+    }
+   }
+  },
+  "GLD_ondo": {
+   "source": "coingecko_simple_price",
+   "ts_utc": "2026-10-29T08:51:02.871245+00:00",
+   "data": {
+    "spdr-gold-shares-ondo-tokenized": {
+     "usd": 369.11,
+     "usd_market_cap": 3710351.630202439,
+     "usd_24h_vol": 1139335.2309863323
+    }
+   }
+  },
+  "BIL_ondo": {
+   "source": "coingecko_simple_price",
+   "ts_utc": "2026-10-29T08:51:06.502346+00:00",
+   "data": {
+    "_error": "HTTP 429"
+   }
+  }
+ }
+}

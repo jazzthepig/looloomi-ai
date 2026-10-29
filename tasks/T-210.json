@@ -1,7 +1,7 @@
 {
  "id": "T-210",
  "owner": "lane-b",
- "status": "open",
+ "status": "in_review",
  "created": "2026-10-29",
  "forbidden_paths": [
   "Shadow/",
@@ -23,5 +23,5 @@
   "expect": "报告 docs/research/t210_onchain_legs.md:开头一张对比表(每条腿推荐一个、备选一个,写理由),然后每个候选的明细与链接,最后「风险」与「还看到了什么」(标探索);跟踪误差的脚本与结果 docs/research/t210_tracking.py / t210_tracking.json。in_review,推 lane-b/T-210。**交付 = 已推上分支**。"
  },
  "prior_value": "执行器只会说 Hyperliquid;T25 的黄金 / 股票 / 现金腿在链上能不能买、怎么买,我们没有一份对比。",
- "notes": ""
+ "notes": "已交付 docs/research/t210_onchain_legs.md(+ t210_tracking.py/.json、t210_depth2.json、t210_cites.json 等证据链)。只读:未下单/未注册/未碰私钥/未写库。\n\n【推荐/备选】黄金 XAUT(备选 PAXG);代币化 SPY SPYX-xStocks(Solana,备选 Ondo SPY);现金 USDC 底仓 + USDY 收益腿(OUSG 不推荐)。\n\n【跟踪误差 offset0 vs eodhd 基准,天数已写明】PAXG vs XAUUSD 392d corr .9731 TE_ann 6.86%(35.91bps/d) beta .9624 drift +0.15%/yr;XAUT vs XAUUSD 211d corr .9855 TE_ann 4.527%(23.70bps/d) drift -0.537%/yr;SPYX-DEX vs SPY 124d corr .88 TE_ann 7.52%(39.36bps/d) drift +1.019%/yr;Ondo SPY-DEX vs SPY 123d corr .527 TE_ann 19.154%(100.26bps/d) drift -11.667%/yr。offset±1/±2 相关系数全部掉到 ~0(PAXG .9731→-.02~-08, TE 跳到 42%+),已原样列出未挑数字。\n\n【现金腿 399 天】USDY carry_ann 3.489% jitter 0.965% vol 5.052bps;USDC carry_ann 0.147% jitter 0.425% vol 2.224bps。\n\n【滑点 $500/$5k/$50k,取数 2026-10-29 09:26-09:28 UTC】Binance PAXGUSDT 进场 .012/.125/1.15bps(来回 .025/.144/2.48);XAUTUSDT .012/.06/.92(.025/.07/1.62);PAXGUSDC .88/2.22/32.61;XAUTUSDC .63/1.78/9.03;Bybit USDYUSDT 3.42/3.80/5.76(来回 4.28/4.67/6.63);Binance USDCUSDT .05 三档同。Kraken Spot Tier1 taker 0.40%(自抓)⇒ 费用量级大于滑点,费用主导。DEX 侧用占池比(非真盘口):SPYX 池 $2,113,641 → $50k=2.37%;GLDx-sol $864,628;USDY-sol $2,916,274;Ondo-SPY-eth 仅 $10,326($5k=48% 池深,不可执行);OUSG-eth 池 $0.000002(实质无二级)。\n\n【卡上口径偏差,需 @seth 拍板】world50_onchain_forms 对 publishable key 42501 无读权限(scripts/supabase_t098_world50.sql:37 revoke all from anon),且该表是形式元数据不含价格(价格在 tokenized_market_data/表名实际为 tokenization_tilt_daily,同样 42501)。替代口径=公开交易所/链上日线(Binance/Bybit/GeckoTerminal)+ohlcv_daily eodhd,offset 敏感性已跑。\n\n【最关键发现】$500-$50k 量级下三条腿退出全靠二级卖出而非赎回:PAXG 赎回最低 430 枚(≈$1.73M);OUSG 需 Qualified-Access 准入+即时申赎最低 $5,000(管理费 0.15% 豁免至 2027-01-01);Ondo 赎回用 USDon 且发行方保留单方拒赎权;xStocks 赎回走 Backed 另收费。\n\n【未核实缺口,别当成没问题】SFC 持牌 VA 平台名单本轮未取到(已探测留证 t210_sfc.json:名单页 JS 驱动,4 个候选 API 全 404,bundle 里公开端点只有 circular/consultation/news/intermediaries-licensing,不含 VA 名单)⇒ 香港能用哪些场所做这几条腿未回答;Ondo 页香港对应 Professional/Qualified Investor 具体门槛未定位;港人在 Binance/Kraken/OKX 准入未逐一核实。\n\n【探索性,需另立预注册+新数据零信号对照】(1)同一代币化SPY两家的差距在二级深度不在合规,Ondo ETH 池 $10K vs SPYX $2.11M;(2)TE 对齐口径极敏感,offset±1 相关性归零;(3)用 USDC 直接买同一代币 $50k 贵 28 倍(PAXGUSDC 32.61 vs PAXGUSDT 1.15bps);(4)USDY carry 3.489% 会被 26 次调仓的往返成本吃光;(5)同名假币泛滥(dexscreener PAXG 名池价差 $0.00012-$5007),必须用合约地址白名单。"
 }
