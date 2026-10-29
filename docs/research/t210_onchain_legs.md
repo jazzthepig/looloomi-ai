@@ -168,7 +168,7 @@ Ethereum 侧：最深池只有 **$10,326**（$5k = 池深 48%，$50k = 484%）�
 5. **费用主导而非滑点主导。** $50k 在 Binance 上滑点只有 0.9–1.2 bps，但 Kraken Tier1 现货 taker 是 0.40%（实测自抓 2026-10-29 09:4x UTC）—— **差 30 倍以上**。选错执行场所比选错代币更贵。
 6. **发行人单方裁量。** Ondo（SPY/USDY/OUSG）保留单方拒赎权与「酌情判定是否违规」的权利；PAXG 侧 Paxos 亦可拒绝对 verified Customer 兑换/赎回。⇒ 这类腿的「可赎回」是有条件的，不是权利。
 7. **香港口径的三个缺口（本轮未核实，不是「没问题」）**：
-   - **SFC 持牌虚拟资产交易平台名单本轮未取到**（`sfc.hk` 页面 404 / JS 渲染，只抓到 14 字符）⇒ **我们在香港能合法用哪些交易所/平台做这几条腿，本报告没有回答**。
+   - **SFC 持牌虚拟资产交易平台名单本轮未取到**。已探测并留证（`docs/research/t210_sfc_probe.py` → `docs/research/t210_sfc.json`）：名单页 `apps.sfc.hk/edistributionWeb/gateway/EN/va-sfc-list/` 是 JS 应用，正文只抓到 14 字符；探测 4 个候选 API 路径全 404；`main.41ff7da8.chunk.js` 里公开的 API 端点只有 circular / consultation / news / intermediaries-licensing，**不含 VA 持牌名单端点**。⇒ **我们在香港能合法用哪些交易所/平台做这几条腿，本报告没有回答** —— 这一项要么由人查 SFC 名单，要么走 Jazz 拍板。
    - Ondo 资格页按辖区列门槛，**香港对应的 Professional/Qualified Investor 具体标准本轮未定位到**。
    - 香港居民在 Binance / Kraken / OKX 的准入状态未逐一核实（Kraken 费率与 xStocks 页有 jurisdiction 免责语，但那是免责声明不是准入结论）。
    ⇒ **在补上这三点之前，本报告的「香港可执行」结论只对 CEX 层成立，对发行人层（Ondo 申购、Backed 赎回）不成立。**
@@ -215,3 +215,4 @@ Ethereum 侧：最深池只有 **$10,326**（$5k = 池深 48%，$50k = 484%）�
 - `t210_depth2.json` — CEX 盘口 + DEX 池深度、$500/$5k/$50k 三档滑点（取数 2026-10-29 09:26–09:28 UTC）
 - `t210_tracking.py` / `t210_tracking.json` — 跟踪误差脚本与结果（取数 2026-10-29 09:29 UTC）
 - `t210_recon.json` / `t210_recon2.json` — 合约地址与场所/池侦察
+- `t210_sfc_probe.py` / `t210_sfc.json` — SFC 持牌 VA 平台名单端点探测记录（未取到名单，见 §3 风险 7）
