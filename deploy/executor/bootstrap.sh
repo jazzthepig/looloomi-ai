@@ -28,14 +28,26 @@ else
     printf '%s\n' "$PORTS" >> /etc/ssh/sshd_config
   fi
   sshd -t                                   # 配置写错就停在这里,不重启
-  # Ubuntu 22.10 之后 SSH 由 ssh.socket 监听,端口不看 sshd_config —— 有它就关掉,改由 ssh.service 自己监听
-  if systemctl is-enabled ssh.socket >/dev/null 2>&1; then
-    systemctl disable --now ssh.socket
-    systemctl enable ssh.service >/dev/null 2>&1 || true
-  fi
-  systemctl restart ssh.service 2>/dev/null || systemctl restart sshd
-  echo "已改,当前连接不会断"
+  echo "已写 Port 443"
 fi
+# 10-29 实测:Ubuntu 新版由 ssh.socket 监听,只重启 ssh.service 不会开 443(Connection refused)。
+# socket 在用 ⇒ daemon-reload 让生成器把 sshd_config 的端口带进 socket,再重启 socket;还没开就显式加,失败撤回保住 22。
+listening() { ss -tln | grep -qE "[:.]443[[:space:]]"; }
+systemctl daemon-reload
+if systemctl is-active --quiet ssh.socket; then
+  systemctl restart ssh.socket || true
+  sleep 1
+  if ! listening; then
+    D=/etc/systemd/system/ssh.socket.d; mkdir -p "$D"
+    printf '[Socket]\nListenStream=0.0.0.0:443\nListenStream=[::]:443\n' > "$D/10-cometcloud-443.conf"
+    systemctl daemon-reload
+    systemctl restart ssh.socket || { rm -f "$D/10-cometcloud-443.conf"; systemctl daemon-reload; systemctl restart ssh.socket; }
+  fi
+else
+  systemctl restart ssh.service 2>/dev/null || systemctl restart sshd
+fi
+sleep 1
+listening && echo "✅ 443 在监听(当前连接不会断)" || echo "🔴 443 没开 —— 继续安装,之后发给 Seth"
 if command -v ufw >/dev/null && ufw status 2>/dev/null | grep -q "Status: active"; then
   ufw allow 443/tcp >/dev/null && echo "防火墙 ufw 已放行 443"
 fi
