@@ -1,0 +1,26 @@
+{
+  "id": "T-213",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-29",
+  "title": "T-210 更正与重报:§2.2.2 池深改正 · 跟踪误差按 5 日块 + price_ratio 重报 · 加「不代币化」的基线(GLD / SPY 本身)",
+  "source": "lane-a 交叉复核 T-210(MINIMAX_SYNC 10-29,§Seth-1029d 第 1 条):① §2.2.2 的 $10,325.92 是 GLDx:eth 池,Ondo SPY 真实最深 ETH 池 $81,175.95 / vol24 $12,268.80,且写成了「Solana 侧」;② 逐日 TE 的量级是收市错位的口径伪影,5 日块复合后排序反转(XAUT/PAXG);③ t210_tracking.py:407 `if best_off := …` 把 best_off=0 当假 ⇒ 5 日块检验从未执行;④ 报告没问「要不要用代币化这条腿」—— 同场所 GLD / 普通 SPY 的 TE ≈ 0.02%,是这个量级该比的基线。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-213.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读,不下单、不注册、不碰私钥、不写库。① docs/research/t210_onchain_legs.md §2.2.2 与 §1 表按 t210_depth.json 改正(池地址、链、$81,175.95 / vol24),在文首加一段「更正记录」写清改了哪几处、为什么。② 修 t210_tracking.py:407 的 walrus 判假;四条序列各报:逐日 TE、5 日不重叠块 TE、累计 price_ratio、波动比(代币 / 基准),同一窗口(取四条的公共区间)+ 各自全窗口两列。③ 零信号对照:block_permute 打乱基准(≥ 1000 次),报实际 TE 的分位;**候选之间的差**(XAUT − PAXG、SPYX − Ondo)也要过同一对照,过不了就写「差距不可读」。④ 基线:同一窗口里 GLD vs XAUUSD、SPY(ETF 本身)vs SPY 指数口径的 TE,回答「代币化这条腿比不代币化多付多少跟踪成本」。⑤ 不给推荐措辞以外的建议;XAUT / PAXG 只列发行方、托管、冻结记录、监管四项事实,不替 Jazz 选。",
+    "expect": "报告文首有更正记录;新表四列齐;t210_tracking.json 有 block 检验与零分布分位键;卡片 notes 写:哪些 T-210 结论保留、哪些撤回。"
+  },
+  "prior_value": "灵活组合 T25 真钱的股票 / 黄金腿要选代币;当前的选择理由里有一处数错了池子、一处是口径伪影。"
+}

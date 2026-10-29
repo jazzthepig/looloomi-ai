@@ -1,0 +1,25 @@
+{
+  "id": "T-212",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-10-29",
+  "title": "T-211 收尾:Mac 根 git 合并 · run_cis_scheduler.sh 不再硬编码 token · D1 写 0 行要读回 n_written · risk_meter_history 的 d 改 UTC",
+  "source": "10-29 Seth 高维复核 + lane-b 交叉复核 T-211(research/cross_review_20261029_lanec_t211/findings.md F1/F3/F5)。Supabase 实测 15:00:57 UTC:risk_meter_history 新行 d = 2026-10-30(UTC 还是 10-29)—— risk_meter_history_push.py:421 `date.today()` 取的是 Mac 本地(JST)日期;producer_freshness 把未来日期排除在判活外 ⇒ 事件时钟停在 10-13 ⇒ 顶层 producers_dead,**这盏红灯是真的,修好 writer 之前不会灭**。Mac 根工作区现在在分支 lane-c/T-211-mac(e9e91b0,未推),恢复的两个脚本只在这个分支上被跟踪 —— 谁 checkout main,它们就又从工作区消失。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-212.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "**改的是你自己的根 /Volumes/CometCloudAI/cometcloud-local/,不是仓库。不动任何 key,不请 Jazz 轮换任何东西。** ① Mac 根 git:lane-c/T-211-mac 合进它自己的 main 并推 origin(私有仓库),工作区回到 main;合并后两个脚本在 main 上被跟踪。② scripts/run_cis_scheduler.sh:删掉硬编码的 `export INTERNAL_TOKEN=…`,改为 source 规范 .env(与 ~/Library/LaunchAgents/_launchd_run_cis_scheduler.sh 同一份);顺带核 ~/.config/cometcloud/.env(10-06 版,ohlcv / macro_brief / cg_news 三个 wrapper 在用)是不是也过期 —— **只比指纹,不打印值**。③ D1(asset_embeddings_history_push.py):把响应的 verdict / n_written / n_received / rejections 读回来,n_written < n_received 计失败(rc 置位、日志 ERROR);实跑一次,把 rejections 原样贴进报告 —— asset_embeddings_history 至今 0 行,这一步定位原因。做一次零信号对照:把 n_written 人为置 0,判据要变红。④ risk_meter_history_push.py:421 改 `datetime.now(timezone.utc).date().isoformat()`(规则 5c,不新建 helper);已写的 49 行 d 是 JST 日期 —— 报告里列出哪些行 computed_at 在 15:00 UTC 之后(d 比 UTC 日期多一天),**先别改历史行**,Seth 定。⑤ 判据表每行加「证据出处:实盘 / 自测 / 推断」一列(复核 F4)。",
+    "expect": "Supabase:`select d, computed_at from risk_meter_history order by computed_at desc limit 2` 最新一行 d = computed_at 的 UTC 日期;/internal/data-freshness 的 producers.tables.risk_meter_history 不再是 dead;`select count(*) from asset_embeddings_history` > 0,或者报告里有 rejections 原文 + 原因。报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-212_t211_followups.md,五项各:改动、前后日志行、证据出处。"
+  },
+  "prior_value": "T-211 恢复了写入,但把根因挂错了(token);真正还没解释的「报 OK 写 0 行」和一个日期错位都还在。"
+}
