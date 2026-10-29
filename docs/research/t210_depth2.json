@@ -1,0 +1,1306 @@
+{
+ "measured_at_utc": "2026-10-29T09:26:48.806220+00:00",
+ "notionals_usd": [
+  500,
+  5000,
+  50000
+ ],
+ "method": "slippage_bps = (VWAP \u8d70\u5b8c\u76d8\u53e3 - mid)/mid*1e4;\u4ef7\u683c\u51b2\u51fb,\u4e0d\u542b\u4ea4\u6613\u6240\u624b\u7eed\u8d39",
+ "note": "\u7b2c\u4e8c\u8f6e:\u4e00\u6b21\u8fd0\u884c\u5185\u6d4b\u5b8c\u6240\u6709\u5019\u9009,\u6a2a\u5411\u53ef\u6bd4\u3002\u7b2c\u4e00\u8f6e t210_depth.json \u4fdd\u7559\u4e3a\u5bf9\u7167\u3002DEX \u4fa7\u7528 GeckoTerminal \u6c60\u5b50 reserve_in_usd \u4f5c\u6df1\u5ea6\u4ee3\u7406(\u4e0d\u662f\u771f\u76d8\u53e3),share_of_pool_pct = \u540d\u4e49\u989d / \u6c60\u5185\u7f8e\u5143\u603b\u91cf\u3002",
+ "cex": {
+  "binance|PAXGUSDT": {
+   "source": "binance_public_depth",
+   "ts_utc": "2026-10-29T09:26:48.806360+00:00",
+   "venue": "Binance spot",
+   "pair": "PAXGUSDT",
+   "mid": 4032.1549999999997,
+   "best_bid": 4032.15,
+   "best_ask": 4032.16,
+   "spread_bps": 0.0248,
+   "depth_0.5pct_bid_usd": 1252837.06,
+   "depth_0.5pct_ask_usd": 1313491.8,
+   "levels": {
+    "bids": 1000,
+    "asks": 1000
+   },
+   "error": null,
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 4032.16,
+      "slippage_bps": 0.012,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4032.15,
+      "slippage_bps": -0.012,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.025
+    },
+    "5000": {
+     "buy": {
+      "vwap": 4032.205512,
+      "slippage_bps": 0.125,
+      "levels_consumed": 3,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4032.14764037,
+      "slippage_bps": -0.018,
+      "levels_consumed": 2,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.144
+    },
+    "50000": {
+     "buy": {
+      "vwap": 4032.61856636,
+      "slippage_bps": 1.15,
+      "levels_consumed": 19,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4031.61694661,
+      "slippage_bps": -1.334,
+      "levels_consumed": 16,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 2.484
+    }
+   }
+  },
+  "binance|XAUTUSDT": {
+   "source": "binance_public_depth",
+   "ts_utc": "2026-10-29T09:26:49.659541+00:00",
+   "venue": "Binance spot",
+   "pair": "XAUTUSDT",
+   "mid": 4025.295,
+   "best_bid": 4025.29,
+   "best_ask": 4025.3,
+   "spread_bps": 0.0248,
+   "depth_0.5pct_bid_usd": 798158.97,
+   "depth_0.5pct_ask_usd": 773804.73,
+   "levels": {
+    "bids": 1000,
+    "asks": 1000
+   },
+   "error": null,
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 4025.3,
+      "slippage_bps": 0.012,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4025.29,
+      "slippage_bps": -0.012,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.025
+    },
+    "5000": {
+     "buy": {
+      "vwap": 4025.31967697,
+      "slippage_bps": 0.061,
+      "levels_consumed": 2,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4025.29,
+      "slippage_bps": -0.012,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.074
+    },
+    "50000": {
+     "buy": {
+      "vwap": 4025.66502864,
+      "slippage_bps": 0.919,
+      "levels_consumed": 22,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4025.01387571,
+      "slippage_bps": -0.698,
+      "levels_consumed": 18,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 1.618
+    }
+   }
+  },
+  "binance|USDCUSDT": {
+   "source": "binance_public_depth",
+   "ts_utc": "2026-10-29T09:26:50.510058+00:00",
+   "venue": "Binance spot",
+   "pair": "USDCUSDT",
+   "mid": 1.001005,
+   "best_bid": 1.001,
+   "best_ask": 1.00101,
+   "spread_bps": 0.0999,
+   "depth_0.5pct_bid_usd": 23868116.39,
+   "depth_0.5pct_ask_usd": 20119518.29,
+   "levels": {
+    "bids": 696,
+    "asks": 671
+   },
+   "error": null,
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 1.00101,
+      "slippage_bps": 0.05,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 1.001,
+      "slippage_bps": -0.05,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.1
+    },
+    "5000": {
+     "buy": {
+      "vwap": 1.00101,
+      "slippage_bps": 0.05,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 1.001,
+      "slippage_bps": -0.05,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.1
+    },
+    "50000": {
+     "buy": {
+      "vwap": 1.00101,
+      "slippage_bps": 0.05,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 1.001,
+      "slippage_bps": -0.05,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.1
+    }
+   }
+  },
+  "binance|USDYUSDT": {
+   "source": "binance_public_depth",
+   "ts_utc": "2026-10-29T09:26:51.303452+00:00",
+   "error": "HTTP 400"
+  },
+  "binance|PAXGUSDC": {
+   "source": "binance_public_depth",
+   "ts_utc": "2026-10-29T09:26:52.067468+00:00",
+   "venue": "Binance spot",
+   "pair": "PAXGUSDC",
+   "mid": 4027.755,
+   "best_bid": 4027.4,
+   "best_ask": 4028.11,
+   "spread_bps": 1.7628,
+   "depth_0.5pct_bid_usd": 58830.69,
+   "depth_0.5pct_ask_usd": 38194.14,
+   "levels": {
+    "bids": 255,
+    "asks": 229
+   },
+   "error": null,
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 4028.11,
+      "slippage_bps": 0.881,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4027.4,
+      "slippage_bps": -0.881,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 1.763
+    },
+    "5000": {
+     "buy": {
+      "vwap": 4028.64903511,
+      "slippage_bps": 2.22,
+      "levels_consumed": 11,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4026.85259844,
+      "slippage_bps": -2.24,
+      "levels_consumed": 10,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 4.46
+    },
+    "50000": {
+     "buy": {
+      "vwap": 4040.88913405,
+      "slippage_bps": 32.609,
+      "levels_consumed": 96,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4022.6231915,
+      "slippage_bps": -12.741,
+      "levels_consumed": 42,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 45.35
+    }
+   }
+  },
+  "binance|XAUTUSDC": {
+   "source": "binance_public_depth",
+   "ts_utc": "2026-10-29T09:26:52.842163+00:00",
+   "venue": "Binance spot",
+   "pair": "XAUTUSDC",
+   "mid": 4020.9049999999997,
+   "best_bid": 4020.69,
+   "best_ask": 4021.12,
+   "spread_bps": 1.0694,
+   "depth_0.5pct_bid_usd": 121610.46,
+   "depth_0.5pct_ask_usd": 103314.9,
+   "levels": {
+    "bids": 150,
+    "asks": 130
+   },
+   "error": null,
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 4021.16002752,
+      "slippage_bps": 0.634,
+      "levels_consumed": 2,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4020.67345778,
+      "slippage_bps": -0.576,
+      "levels_consumed": 2,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 1.21
+    },
+    "5000": {
+     "buy": {
+      "vwap": 4021.62082049,
+      "slippage_bps": 1.78,
+      "levels_consumed": 8,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4020.41387791,
+      "slippage_bps": -1.221,
+      "levels_consumed": 6,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 3.002
+    },
+    "50000": {
+     "buy": {
+      "vwap": 4024.53491588,
+      "slippage_bps": 9.028,
+      "levels_consumed": 39,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4016.00353699,
+      "slippage_bps": -12.19,
+      "levels_consumed": 36,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 21.218
+    }
+   }
+  },
+  "kraken|PAXGUSD": {
+   "source": "kraken_public_depth",
+   "ts_utc": "2026-10-29T09:26:53.610078+00:00",
+   "venue": "Kraken spot",
+   "pair": "PAXGUSD",
+   "mid": 4026.9449999999997,
+   "best_bid": 4026.77,
+   "best_ask": 4027.12,
+   "spread_bps": 0.8691,
+   "depth_0.5pct_bid_usd": 787596.95,
+   "depth_0.5pct_ask_usd": 780902.86,
+   "levels": {
+    "bids": 500,
+    "asks": 500
+   },
+   "error": null,
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 4027.12,
+      "slippage_bps": 0.435,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4026.77,
+      "slippage_bps": -0.435,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.869
+    },
+    "5000": {
+     "buy": {
+      "vwap": 4027.28183046,
+      "slippage_bps": 0.836,
+      "levels_consumed": 5,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4026.62161754,
+      "slippage_bps": -0.803,
+      "levels_consumed": 3,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 1.639
+    },
+    "50000": {
+     "buy": {
+      "vwap": 4028.80370823,
+      "slippage_bps": 4.616,
+      "levels_consumed": 16,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4025.22329392,
+      "slippage_bps": -4.275,
+      "levels_consumed": 17,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 8.891
+    }
+   }
+  },
+  "kraken|XAUTUSD": {
+   "source": "kraken_public_depth",
+   "ts_utc": "2026-10-29T09:26:54.620771+00:00",
+   "venue": "Kraken spot",
+   "pair": "XAUTUSD",
+   "mid": 4020.35,
+   "best_bid": 4020.0,
+   "best_ask": 4020.7,
+   "spread_bps": 1.7411,
+   "depth_0.5pct_bid_usd": 417546.49,
+   "depth_0.5pct_ask_usd": 376906.43,
+   "levels": {
+    "bids": 158,
+    "asks": 128
+   },
+   "error": null,
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 4020.7,
+      "slippage_bps": 0.871,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4020.0,
+      "slippage_bps": -0.871,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 1.741
+    },
+    "5000": {
+     "buy": {
+      "vwap": 4021.69167637,
+      "slippage_bps": 3.337,
+      "levels_consumed": 4,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4020.0,
+      "slippage_bps": -0.871,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 4.208
+    },
+    "50000": {
+     "buy": {
+      "vwap": 4022.96738546,
+      "slippage_bps": 6.51,
+      "levels_consumed": 13,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4019.65075734,
+      "slippage_bps": -1.739,
+      "levels_consumed": 8,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 8.25
+    }
+   }
+  },
+  "kraken|USDCUSD": {
+   "source": "kraken_public_depth",
+   "ts_utc": "2026-10-29T09:26:55.513195+00:00",
+   "venue": "Kraken spot",
+   "pair": "USDCUSD",
+   "mid": 0.99975,
+   "best_bid": 0.9997,
+   "best_ask": 0.9998,
+   "spread_bps": 1.0003,
+   "depth_0.5pct_bid_usd": 9293180.35,
+   "depth_0.5pct_ask_usd": 9818775.58,
+   "levels": {
+    "bids": 126,
+    "asks": 111
+   },
+   "error": null,
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 0.9998,
+      "slippage_bps": 0.5,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 0.9997,
+      "slippage_bps": -0.5,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 1.0
+    },
+    "5000": {
+     "buy": {
+      "vwap": 0.9998,
+      "slippage_bps": 0.5,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 0.9997,
+      "slippage_bps": -0.5,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 1.0
+    },
+    "50000": {
+     "buy": {
+      "vwap": 0.9998,
+      "slippage_bps": 0.5,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 0.9997,
+      "slippage_bps": -0.5,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 1.0
+    }
+   }
+  },
+  "okx|PAXG-USDT": {
+   "source": "okx_public_books",
+   "ts_utc": "2026-10-29T09:26:56.385953+00:00",
+   "venue": "OKX spot",
+   "pair": "PAXG-USDT",
+   "mid": 4032.5,
+   "best_bid": 4032.3,
+   "best_ask": 4032.7,
+   "spread_bps": 0.9919,
+   "depth_0.5pct_bid_usd": 264056.95,
+   "depth_0.5pct_ask_usd": 259937.09,
+   "levels": {
+    "bids": 400,
+    "asks": 400
+   },
+   "error": null,
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 4032.7,
+      "slippage_bps": 0.496,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4032.3,
+      "slippage_bps": -0.496,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.992
+    },
+    "5000": {
+     "buy": {
+      "vwap": 4032.76384192,
+      "slippage_bps": 0.654,
+      "levels_consumed": 2,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4032.01651356,
+      "slippage_bps": -1.199,
+      "levels_consumed": 3,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 1.853
+    },
+    "50000": {
+     "buy": {
+      "vwap": 4033.62310701,
+      "slippage_bps": 2.785,
+      "levels_consumed": 14,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4031.25581294,
+      "slippage_bps": -3.085,
+      "levels_consumed": 15,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 5.871
+    }
+   }
+  },
+  "okx|XAUT-USDT": {
+   "source": "okx_public_books",
+   "ts_utc": "2026-10-29T09:26:57.192034+00:00",
+   "venue": "OKX spot",
+   "pair": "XAUT-USDT",
+   "mid": 4025.55,
+   "best_bid": 4025.5,
+   "best_ask": 4025.6,
+   "spread_bps": 0.2484,
+   "depth_0.5pct_bid_usd": 1000317.63,
+   "depth_0.5pct_ask_usd": 870079.97,
+   "levels": {
+    "bids": 400,
+    "asks": 400
+   },
+   "error": null,
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 4025.80990237,
+      "slippage_bps": 0.646,
+      "levels_consumed": 2,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4025.5,
+      "slippage_bps": -0.124,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.77
+    },
+    "5000": {
+     "buy": {
+      "vwap": 4025.89099006,
+      "slippage_bps": 0.847,
+      "levels_consumed": 2,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4025.5,
+      "slippage_bps": -0.124,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.971
+    },
+    "50000": {
+     "buy": {
+      "vwap": 4026.37894684,
+      "slippage_bps": 2.059,
+      "levels_consumed": 10,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4025.12601012,
+      "slippage_bps": -1.053,
+      "levels_consumed": 8,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 3.112
+    }
+   }
+  },
+  "bybit|PAXGUSDT": {
+   "source": "bybit_public_orderbook",
+   "ts_utc": "2026-10-29T09:26:58.041390+00:00",
+   "error": "empty book"
+  },
+  "bybit|XAUTUSDT": {
+   "source": "bybit_public_orderbook",
+   "ts_utc": "2026-10-29T09:26:58.735586+00:00",
+   "venue": "Bybit spot",
+   "pair": "XAUTUSDT",
+   "mid": 4025.965,
+   "best_bid": 4025.96,
+   "best_ask": 4025.97,
+   "spread_bps": 0.0248,
+   "depth_0.5pct_bid_usd": 451710.39,
+   "depth_0.5pct_ask_usd": 425749.95,
+   "levels": {
+    "bids": 200,
+    "asks": 200
+   },
+   "error": null,
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 4025.97,
+      "slippage_bps": 0.012,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4025.96,
+      "slippage_bps": -0.012,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.025
+    },
+    "5000": {
+     "buy": {
+      "vwap": 4026.0496905,
+      "slippage_bps": 0.21,
+      "levels_consumed": 4,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4025.75804134,
+      "slippage_bps": -0.514,
+      "levels_consumed": 11,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.724
+    },
+    "50000": {
+     "buy": {
+      "vwap": 4027.02408237,
+      "slippage_bps": 2.631,
+      "levels_consumed": 44,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4024.82822826,
+      "slippage_bps": -2.824,
+      "levels_consumed": 24,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 5.454
+    }
+   }
+  },
+  "bybit|USDCUSDT": {
+   "source": "bybit_public_orderbook",
+   "ts_utc": "2026-10-29T09:26:59.437327+00:00",
+   "venue": "Bybit spot",
+   "pair": "USDCUSDT",
+   "mid": 1.00105,
+   "best_bid": 1.001,
+   "best_ask": 1.0011,
+   "spread_bps": 0.999,
+   "depth_0.5pct_bid_usd": 8701184.22,
+   "depth_0.5pct_ask_usd": 16530678.07,
+   "levels": {
+    "bids": 190,
+    "asks": 191
+   },
+   "error": null,
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 1.0011,
+      "slippage_bps": 0.499,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 1.001,
+      "slippage_bps": -0.499,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.999
+    },
+    "5000": {
+     "buy": {
+      "vwap": 1.0011,
+      "slippage_bps": 0.499,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 1.001,
+      "slippage_bps": -0.499,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.999
+    },
+    "50000": {
+     "buy": {
+      "vwap": 1.0011,
+      "slippage_bps": 0.499,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 1.001,
+      "slippage_bps": -0.499,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 0.999
+    }
+   }
+  },
+  "bybit|USDYUSDT": {
+   "source": "bybit_public_orderbook",
+   "ts_utc": "2026-10-29T09:27:00.204757+00:00",
+   "venue": "Bybit spot",
+   "pair": "USDYUSDT",
+   "mid": 1.1508,
+   "best_bid": 1.1507,
+   "best_ask": 1.1509,
+   "spread_bps": 1.7379,
+   "depth_0.5pct_bid_usd": 407020.84,
+   "depth_0.5pct_ask_usd": 373865.3,
+   "levels": {
+    "bids": 121,
+    "asks": 122
+   },
+   "error": null,
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 1.15119298,
+      "slippage_bps": 3.415,
+      "levels_consumed": 2,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 1.1507,
+      "slippage_bps": -0.869,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 4.284
+    },
+    "5000": {
+     "buy": {
+      "vwap": 1.15123781,
+      "slippage_bps": 3.804,
+      "levels_consumed": 3,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 1.1507,
+      "slippage_bps": -0.869,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 4.673
+    },
+    "50000": {
+     "buy": {
+      "vwap": 1.15146277,
+      "slippage_bps": 5.759,
+      "levels_consumed": 5,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 1.1507,
+      "slippage_bps": -0.869,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 6.628
+    }
+   }
+  },
+  "coinbase|PAXG-USD": {
+   "source": "coinbase_public_book",
+   "ts_utc": "2026-10-29T09:27:00.898509+00:00",
+   "venue": "Coinbase Exchange",
+   "pair": "PAXG-USD",
+   "mid": 4026.8,
+   "best_bid": 4026.19,
+   "best_ask": 4027.41,
+   "spread_bps": 3.0297,
+   "depth_0.5pct_bid_usd": 1112113.18,
+   "depth_0.5pct_ask_usd": 365997.28,
+   "levels": {
+    "bids": 490,
+    "asks": 443
+   },
+   "error": null,
+   "slippage": {
+    "500": {
+     "buy": {
+      "vwap": 4027.41,
+      "slippage_bps": 1.515,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4026.19,
+      "slippage_bps": -1.515,
+      "levels_consumed": 1,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 3.03
+    },
+    "5000": {
+     "buy": {
+      "vwap": 4027.5656268,
+      "slippage_bps": 1.901,
+      "levels_consumed": 5,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4025.92589382,
+      "slippage_bps": -2.171,
+      "levels_consumed": 4,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 4.072
+    },
+    "50000": {
+     "buy": {
+      "vwap": 4029.3640112,
+      "slippage_bps": 6.367,
+      "levels_consumed": 23,
+      "unfilled_usd": 0.0
+     },
+     "sell": {
+      "vwap": 4025.03569264,
+      "slippage_bps": -4.381,
+      "levels_consumed": 11,
+      "unfilled_usd": 0.0
+     },
+     "round_trip_cost_bps": 10.749
+    }
+   }
+  },
+  "coinbase|XAUT-USD": {
+   "source": "coinbase_public_book",
+   "ts_utc": "2026-10-29T09:27:01.883141+00:00",
+   "error": "HTTP 404"
+  }
+ },
+ "dex": {
+  "USDY:eth": {
+   "source": "geckoterminal_token_pools",
+   "ts_utc": "2026-10-29T09:27:08.601390+00:00",
+   "network": "eth",
+   "token": "USDY",
+   "token_address": "0x96f6ef951840721adbf46ac996b59e0235cb985c",
+   "top_pools": [
+    {
+     "pool": "0x94bccad378af04728a13eedab02d22978c2fe6591be91e35942ebda95feb85f7",
+     "name": "USDY / USDC 41%",
+     "reserve_usd": 20609.7952,
+     "vol24_usd": 0.0,
+     "price_usd": 0.8327450953
+    },
+    {
+     "pool": "0x2563a21d1a219308fda046c39ca4f65d6db700201cd9beb200c7f774e8c1a12a",
+     "name": "USDY / USDC",
+     "reserve_usd": 18730.5136,
+     "vol24_usd": 54.7039096795,
+     "price_usd": 1.1284427278
+    },
+    {
+     "pool": "0x4e7cb9a5a5e147c51981ca461cbd57daeab7cb563ef118a035a7eae2c2b5c313",
+     "name": "USDY / USDC 75%",
+     "reserve_usd": 14553.3486,
+     "vol24_usd": 0.0,
+     "price_usd": 1.2893241374
+    },
+    {
+     "pool": "0xf6ff73dd361621a6a9696aab059996836581577b59859bfd444ecb383a6d3a70",
+     "name": "USDY / USDC 49.9%",
+     "reserve_usd": 7851.8457,
+     "vol24_usd": 0.0,
+     "price_usd": 2.6620448452
+    },
+    {
+     "pool": "0x37b29c14ade1551eb43407744b3a1569937dffbf399394ccf28436f1f9c965cd",
+     "name": "USDY / USDC 77.77%",
+     "reserve_usd": 6723.9214,
+     "vol24_usd": 0.0,
+     "price_usd": 1.1472629761
+    }
+   ],
+   "note": "reserve_usd = \u6c60\u5185\u4e24\u8fb9\u8d44\u4ea7\u7684\u7f8e\u5143\u603b\u91cf;share_of_pool = \u540d\u4e49\u989d / reserve_usd(\u91cf\u7ea7\u4f30\u8ba1,\u672a\u5efa\u6a21\u4ef7\u683c\u66f2\u7ebf)",
+   "notional_vs_pool": {
+    "500": {
+     "share_of_pool_pct": 2.426,
+     "pool_reserve_usd": 20609.7952
+    },
+    "5000": {
+     "share_of_pool_pct": 24.2603,
+     "pool_reserve_usd": 20609.7952
+    },
+    "50000": {
+     "share_of_pool_pct": 242.6031,
+     "pool_reserve_usd": 20609.7952
+    }
+   },
+   "coin_gecko_id": "ondo-us-dollar-yield",
+   "retries": 0
+  },
+  "USDY:solana": {
+   "source": "geckoterminal_token_pools",
+   "ts_utc": "2026-10-29T09:27:19.217581+00:00",
+   "network": "solana",
+   "token": "USDY",
+   "token_address": "A1KLoBrKBde8Ty9qtNQUtq3C2ortoC3u7twggz7sEto6",
+   "top_pools": [
+    {
+     "pool": "AGXrswVDRoUf62UX9voTXv6TCGw6fBUEwDpyUd9YdZfD",
+     "name": "USDY / USDC",
+     "reserve_usd": 2916273.7659,
+     "vol24_usd": 1968.726191427,
+     "price_usd": 1.1454033967
+    },
+    {
+     "pool": "D9H8bRFLfKTRHHN5srQALYnFeKGGkmMXqcypgiop5ffF",
+     "name": "jlUSDC / USDY",
+     "reserve_usd": 91113.5155,
+     "vol24_usd": 0.0,
+     "price_usd": 1.032360327
+    },
+    {
+     "pool": "9cAwQoDuGFnzRYamnfcWYYCNuUxEBVKcs9JWuuudiQCN",
+     "name": "USDY / TQQQx",
+     "reserve_usd": 6092.0166,
+     "vol24_usd": 8.0178597336,
+     "price_usd": 1.1795781051
+    },
+    {
+     "pool": "DauJvXRsc5YUtabDd2jGTcSvTn63qpmteGcVGkRcjBGa",
+     "name": "USDY / SPYx",
+     "reserve_usd": 4990.0543,
+     "vol24_usd": 0.0,
+     "price_usd": 1.1537109486
+    },
+    {
+     "pool": "Drwo7AGFgwXZ9z92MbXLdxRm5Ff9LmYZyDzZXBtKj9MP",
+     "name": "USDY / GSD",
+     "reserve_usd": 2607.6556,
+     "vol24_usd": 0.0,
+     "price_usd": 1.1366303321
+    }
+   ],
+   "note": "reserve_usd = \u6c60\u5185\u4e24\u8fb9\u8d44\u4ea7\u7684\u7f8e\u5143\u603b\u91cf;share_of_pool = \u540d\u4e49\u989d / reserve_usd(\u91cf\u7ea7\u4f30\u8ba1,\u672a\u5efa\u6a21\u4ef7\u683c\u66f2\u7ebf)",
+   "notional_vs_pool": {
+    "500": {
+     "share_of_pool_pct": 0.0171,
+     "pool_reserve_usd": 2916273.7659
+    },
+    "5000": {
+     "share_of_pool_pct": 0.1715,
+     "pool_reserve_usd": 2916273.7659
+    },
+    "50000": {
+     "share_of_pool_pct": 1.7145,
+     "pool_reserve_usd": 2916273.7659
+    }
+   },
+   "coin_gecko_id": "ondo-us-dollar-yield",
+   "retries": 1
+  },
+  "USDY:arbitrum-one": {
+   "source": "geckoterminal_token_pools",
+   "ts_utc": "2026-10-29T09:27:30.280076+00:00",
+   "network": "arbitrum",
+   "token": "USDY",
+   "token_address": "0x35e050d3c0ec2d29d269a8ecea763a183bdf9a9d",
+   "top_pools": [
+    {
+     "pool": "0x28adac57728a7fb7a52d3b51f31992f404e7b010",
+     "name": "USDY / USDC 0.046%",
+     "reserve_usd": 41.7023,
+     "vol24_usd": 0.0,
+     "price_usd": 1.2223494666
+    },
+    {
+     "pool": "0xb2b9964acb4242b459fa017a5f8647e878d679ca",
+     "name": "USDY / USDC 0.05%",
+     "reserve_usd": 0.0272,
+     "vol24_usd": 0.0,
+     "price_usd": 1.0606483159
+    },
+    {
+     "pool": "0x74f89f81c4a807f6137b53fca8dfd880b014e9b7",
+     "name": "USDY / RAD 1%",
+     "reserve_usd": 0.0,
+     "vol24_usd": 0.0,
+     "price_usd": 1.1039902415
+    }
+   ],
+   "note": "reserve_usd = \u6c60\u5185\u4e24\u8fb9\u8d44\u4ea7\u7684\u7f8e\u5143\u603b\u91cf;share_of_pool = \u540d\u4e49\u989d / reserve_usd(\u91cf\u7ea7\u4f30\u8ba1,\u672a\u5efa\u6a21\u4ef7\u683c\u66f2\u7ebf)",
+   "notional_vs_pool": {
+    "500": {
+     "share_of_pool_pct": 1198.9746,
+     "pool_reserve_usd": 41.7023
+    },
+    "5000": {
+     "share_of_pool_pct": 11989.7464,
+     "pool_reserve_usd": 41.7023
+    },
+    "50000": {
+     "share_of_pool_pct": 119897.4637,
+     "pool_reserve_usd": 41.7023
+    }
+   },
+   "coin_gecko_id": "ondo-us-dollar-yield",
+   "retries": 1
+  },
+  "OUSG:eth": {
+   "source": "geckoterminal_token_pools",
+   "ts_utc": "2026-10-29T09:27:41.262482+00:00",
+   "network": "eth",
+   "token": "OUSG",
+   "token_address": "0x1b19c19393e2d034d8ff31ff34c81252fcbbee92",
+   "top_pools": [
+    {
+     "pool": "0x77328ef010f7a9ea556e0a321605b8d27a546f63",
+     "name": "OUSG / USDC",
+     "reserve_usd": 2.008656816e-06,
+     "vol24_usd": 0.0,
+     "price_usd": 100.24852987208264
+    }
+   ],
+   "note": "reserve_usd = \u6c60\u5185\u4e24\u8fb9\u8d44\u4ea7\u7684\u7f8e\u5143\u603b\u91cf;share_of_pool = \u540d\u4e49\u989d / reserve_usd(\u91cf\u7ea7\u4f30\u8ba1,\u672a\u5efa\u6a21\u4ef7\u683c\u66f2\u7ebf)",
+   "notional_vs_pool": {
+    "500": {
+     "share_of_pool_pct": 24892256159.302,
+     "pool_reserve_usd": 2.008656816e-06
+    },
+    "5000": {
+     "share_of_pool_pct": 248922561593.0203,
+     "pool_reserve_usd": 2.008656816e-06
+    },
+    "50000": {
+     "share_of_pool_pct": 2489225615930.2026,
+     "pool_reserve_usd": 2.008656816e-06
+    }
+   },
+   "coin_gecko_id": "ousg",
+   "retries": 1
+  },
+  "OUSG:solana": {
+   "source": "geckoterminal_token_pools",
+   "ts_utc": "2026-10-29T09:28:08.780842+00:00",
+   "network": "solana",
+   "token": "OUSG",
+   "token_address": "i7u4r16TcsJTgq1kAG8opmVZyVnAKBwLKu6ZPMwzxNc",
+   "error": "no pools / no platform",
+   "coin_gecko_id": "ousg",
+   "retries": 2
+  },
+  "GLDx:eth": {
+   "source": "geckoterminal_token_pools",
+   "ts_utc": "2026-10-29T09:28:35.159788+00:00",
+   "network": "eth",
+   "token": "GLDx",
+   "token_address": "0x2380f2673c640fb67e2d6b55b44c62f0e0e69da9",
+   "top_pools": [
+    {
+     "pool": "0x8bd10bd839c2d459b14dd9f0305bd806b8d5fc569e61b9ace23186885fb6ed82",
+     "name": "GLDx / USDC 88%",
+     "reserve_usd": 10325.9154,
+     "vol24_usd": 0.0,
+     "price_usd": 387.2645153866
+    },
+    {
+     "pool": "0xd6dd2926f58ee40b42371fbc6ab70ae49f723c1fde47200edd47b9a0fdd1c262",
+     "name": "GLDx / USDC 93%",
+     "reserve_usd": 3136.4252,
+     "vol24_usd": 0.0,
+     "price_usd": 7160.1220749589
+    },
+    {
+     "pool": "0x230e5ec821275a7e29a947bc7e0290495fe108d69a93b25285354b9a3322f788",
+     "name": "GLDx / USDC 95%",
+     "reserve_usd": 222.0019,
+     "vol24_usd": 0.0,
+     "price_usd": 16683.5376649287
+    }
+   ],
+   "note": "reserve_usd = \u6c60\u5185\u4e24\u8fb9\u8d44\u4ea7\u7684\u7f8e\u5143\u603b\u91cf;share_of_pool = \u540d\u4e49\u989d / reserve_usd(\u91cf\u7ea7\u4f30\u8ba1,\u672a\u5efa\u6a21\u4ef7\u683c\u66f2\u7ebf)",
+   "notional_vs_pool": {
+    "500": {
+     "share_of_pool_pct": 4.8422,
+     "pool_reserve_usd": 10325.9154
+    },
+    "5000": {
+     "share_of_pool_pct": 48.4219,
+     "pool_reserve_usd": 10325.9154
+    },
+    "50000": {
+     "share_of_pool_pct": 484.2186,
+     "pool_reserve_usd": 10325.9154
+    }
+   },
+   "coin_gecko_id": "gold-xstock",
+   "retries": 0
+  },
+  "GLDx:solana": {
+   "source": "geckoterminal_token_pools",
+   "ts_utc": "2026-10-29T09:28:37.812997+00:00",
+   "network": "solana",
+   "token": "GLDx",
+   "token_address": "Xsv9hRk1z5ystj9MhnA7Lq4vjSsLwzL2nxrwmwtD3re",
+   "top_pools": [
+    {
+     "pool": "9wBni6GEBrySTeD42CaUWkwjCSgga4gabCFZzr21M3Wm",
+     "name": "SOLOMON / GLDx",
+     "reserve_usd": 32087524.1919,
+     "vol24_usd": 18.9634229786,
+     "price_usd": 1434.7512566452
+    },
+    {
+     "pool": "78ReVNMLGRWmjtf2HmBoHUe2pRcsctXTTbxJnbhchyze",
+     "name": "GLDx / USDC",
+     "reserve_usd": 864628.3217,
+     "vol24_usd": 454463.524236619,
+     "price_usd": 368.7766921482
+    },
+    {
+     "pool": "7WQcQi2dDgZDnpJKwoY7F9cALk3QEUG4kAyhtjZVkVa1",
+     "name": "XAUt0 / GLDx",
+     "reserve_usd": 440513.9621,
+     "vol24_usd": 41128.6971491144,
+     "price_usd": 4011.2781176988
+    },
+    {
+     "pool": "6iMKsFAkkvXS6E1Q4hyHARQkLn3HFLrwTo1JStLw5q2p",
+     "name": "ORE / GLDx",
+     "reserve_usd": 182453.3526,
+     "vol24_usd": 19381.3250154219,
+     "price_usd": 160.0365086
+    },
+    {
+     "pool": "HxrqS96uHco2a8LxTvUwb9e2tS963Ec6nYkvZso9TDii",
+     "name": "GLDx / SOL",
+     "reserve_usd": 153979.7539,
+     "vol24_usd": 139594.041148797,
+     "price_usd": 369.0017197935
+    }
+   ],
+   "note": "reserve_usd = \u6c60\u5185\u4e24\u8fb9\u8d44\u4ea7\u7684\u7f8e\u5143\u603b\u91cf;share_of_pool = \u540d\u4e49\u989d / reserve_usd(\u91cf\u7ea7\u4f30\u8ba1,\u672a\u5efa\u6a21\u4ef7\u683c\u66f2\u7ebf)",
+   "notional_vs_pool": {
+    "500": {
+     "share_of_pool_pct": 0.0016,
+     "pool_reserve_usd": 32087524.1919
+    },
+    "5000": {
+     "share_of_pool_pct": 0.0156,
+     "pool_reserve_usd": 32087524.1919
+    },
+    "50000": {
+     "share_of_pool_pct": 0.1558,
+     "pool_reserve_usd": 32087524.1919
+    }
+   },
+   "coin_gecko_id": "gold-xstock",
+   "retries": 0
+  },
+  "SPYX_solana:solana": {
+   "source": "geckoterminal_token_pools",
+   "ts_utc": "2026-10-29T09:28:40.583089+00:00",
+   "network": "solana",
+   "token": "SPYX_solana",
+   "token_address": "XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W",
+   "top_pools": [
+    {
+     "pool": "6truu3rZuiB9rKQg4VYC3Dt3QwV7DgwGqXrYUcrvnDDE",
+     "name": "SPYx / USDC",
+     "reserve_usd": 2113640.8319,
+     "vol24_usd": 841744.928799018,
+     "price_usd": 773.3970953377
+    },
+    {
+     "pool": "7a8xxAJBELDo6P9dikSYctdw6ce8F4mWr3ahcAD8Ao49",
+     "name": "STONK / SPYx",
+     "reserve_usd": 1429265.0359,
+     "vol24_usd": 190529.263416858,
+     "price_usd": 0.1409198705
+    },
+    {
+     "pool": "BS9uyGV6XmNnPkM4f3xgxCdQEaFv7RSKs6fwrpvYHxfL",
+     "name": "SPYx / SOL",
+     "reserve_usd": 589559.4399,
+     "vol24_usd": 258949.077698631,
+     "price_usd": 773.6684485905
+    },
+    {
+     "pool": "4pCZCVEiYyT4efNdXUdL2tJF8VGMgiMXrZWq6FiNXhRw",
+     "name": "SPYx / USDC",
+     "reserve_usd": 409305.0801,
+     "vol24_usd": 5268349.62253643,
+     "price_usd": 773.5785345126
+    },
+    {
+     "pool": "27x6aSxcAm6SoazoxmmTtFg6fWMQuNmdKJmHagq1DUZy",
+     "name": "SPYx / USDC",
+     "reserve_usd": 235097.6764,
+     "vol24_usd": 584017.676657983,
+     "price_usd": 773.5836602473
+    }
+   ],
+   "note": "reserve_usd = \u6c60\u5185\u4e24\u8fb9\u8d44\u4ea7\u7684\u7f8e\u5143\u603b\u91cf;share_of_pool = \u540d\u4e49\u989d / reserve_usd(\u91cf\u7ea7\u4f30\u8ba1,\u672a\u5efa\u6a21\u4ef7\u683c\u66f2\u7ebf)",
+   "notional_vs_pool": {
+    "500": {
+     "share_of_pool_pct": 0.0237,
+     "pool_reserve_usd": 2113640.8319
+    },
+    "5000": {
+     "share_of_pool_pct": 0.2366,
+     "pool_reserve_usd": 2113640.8319
+    },
+    "50000": {
+     "share_of_pool_pct": 2.3656,
+     "pool_reserve_usd": 2113640.8319
+    }
+   },
+   "coin_gecko_id": "sp500-xstock",
+   "retries": 0
+  }
+ }
+}
