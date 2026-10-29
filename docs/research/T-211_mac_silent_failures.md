@@ -192,7 +192,9 @@ POST …/internal/asset-vectors → 401 {"detail":"Invalid token"}
 | `research/_tests/test_t211_silent_failures.py` | **新增** | 5 条自测 |
 | `_t211_d2_live.py` | 新增(辅助) | 用 `scripts/run_cis_scheduler.sh` 的 export 跑推送脚本(只读 export 行,不打印 key) |
 
-按卡的要求,引擎改动**留在 Mac 根**(该根的 git 是独立 checkout,分支 `lane-c/T-020`,未提交),PR 分支只带本报告 + 卡 + BOARD。
+按卡的要求,引擎改动**留在 Mac 根**,PR 分支(`lane-c/T-211`)只带本报告 + 卡 + BOARD。
+Mac 根自己的 git 里,这些改动已提交到**本地分支 `lane-c/T-211-mac`(commit `e9e91b0`,未推 origin)** —— 查 diff:`git -C /Volumes/CometCloudAI/cometcloud-local show lane-c/T-211-mac`。
+副作用(好的那种):恢复的两个脚本**进了 git 跟踪**,以后再来一次 `git stash -u` 不会再把它们扫走。
 
 ---
 
