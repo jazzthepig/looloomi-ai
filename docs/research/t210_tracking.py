@@ -25,9 +25,20 @@ import json
 import math
 import os
 import statistics
+import sys
 import time
 import urllib.error
 import urllib.request
+
+import numpy as np
+
+# 零分布 / 分位一律走仓库里的验证装置(T-097),不自己手写
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+from src.data.evaluation.apparatus import (  # noqa: E402
+    NoOpNull, block_permute, null_distribution, percentile_of,
+)
 
 UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120 Safari/537.36"}
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -57,6 +68,7 @@ CG_IDS = {
 }
 # 跟踪误差(代币 vs 底层标的)
 BENCH = {"PAXG": "XAUUSD", "XAUT": "XAUUSD", "GLD_ondo": "XAUUSD",
+         "GLD": "XAUUSD",          # T-213:不代币化的黄金腿基线(实物支撑 ETF vs 现货)
          "SPYX_xstocks": "SPY", "SPY_ondo": "SPY", "GLDx_xstocks": "XAUUSD",
          "PAXG_cg": "XAUUSD", "XAUT_cg": "XAUUSD",
          "SPYX_xstocks_dex": "SPY", "SPY_ondo_dex": "SPY"}
@@ -91,8 +103,9 @@ def dstr(ts):
 
 
 # ---------------------------------------------------------------- Supabase 基准
-def supabase_ohlcv(symbol, want_source="eodhd"):
-    """ohlcv_daily:按 trade_date 倒序取最近 N 条(带 order=),再本地升序 + 按来源去重。"""
+def supabase_ohlcv(symbol, want_source="eodhd", strict=False):
+    """ohlcv_daily:按 trade_date 倒序取最近 N 条(带 order=),再本地升序 + 按来源去重。
+    strict=True 时只保留 want_source 那一路的日期(来源对照用)。"""
     base = SUPABASE_URL.rstrip("/") + "/rest/v1/ohlcv_daily"
     hdr = {"apikey": SUPABASE_KEY, "Authorization": "Bearer " + SUPABASE_KEY}
     url = (base + f"?symbol=eq.{symbol}&select=trade_date,close,source"
@@ -108,8 +121,8 @@ def supabase_ohlcv(symbol, want_source="eodhd"):
         d = row["trade_date"]
         src = row.get("source") or ""
         if src == want_source:
-            pref[d] = float(row["close"])
-        else:
+            pref.setdefault(d, float(row["close"]))
+        elif not strict:
             other.setdefault(d, float(row["close"]))
     series = {**other, **pref}
     srcs = sorted({(r.get("source") or "") for r in rows})
@@ -273,7 +286,9 @@ def te_stats(tok, bench, offset=0, step=1):
     if step > 1:
         # 每 step 天一个不重叠窗口:错位的「日界」噪声被稀释,剩下的才是真跟踪差
         comp_t, comp_b = [], []
-        for k in range(step - 1, len(pairs) - step, step):
+        # 2026-10-30(T-213)修:原起点是 step-1 ⇒ 头 4 对永远不进任何块(off-by-one)。
+        # 现在从第 0 对开始,块与块不重叠且覆盖整段。
+        for k in range(0, len(pairs) - step + 1, step):
             comp_t.append(math.prod([1 + pairs[k][1]] + [1 + pairs[j][1] for j in range(k + 1, k + step)]) - 1)
             comp_b.append(math.prod([1 + pairs[k][2]] + [1 + pairs[j][2] for j in range(k + 1, k + step)]) - 1)
         if len(comp_t) >= 10:
@@ -334,6 +349,18 @@ def main():
 
     print("[2/3] 代币日线 …\n")
     tok = {}
+    # T-213:GLD(实物支撑 ETF)作为「不代币化的黄金腿」序列进同一套 TE 计算
+    # ⇒ 它的 by_offset 扫描直接回答「ETF 收市时间 vs 现货定盘时间差多少」。
+    try:
+        gld_px, gld_srcs, _ = supabase_ohlcv("GLD")
+        if gld_px:
+            tok["GLD"] = gld_px
+            out["tokens"]["GLD"] = {
+                "price_source": "supabase:ohlcv_daily(" + ",".join(gld_srcs) + ",prefer=eodhd)",
+                "n_days": len(gld_px), "first": min(gld_px), "last": max(gld_px)}
+            print("   GLD", gld_srcs, len(gld_px))
+    except Exception as exc:  # noqa: BLE001
+        print("   GLD ERR", exc)
     for sym, pair in BINANCE_KLINE.items():
         try:
             px, src = binance_daily(pair)
@@ -404,8 +431,12 @@ def main():
                "by_offset": {}}
         for off in OFFSETS:
             rec["by_offset"][str(off)] = te_stats(tok[t], bench[b], offset=off)
-        if best_off := max((o for o in OFFSETS if "corr" in rec["by_offset"][str(o)]),
-                            key=lambda o: rec["by_offset"][str(o)]["corr"], default=None):
+        # ⚠️ 2026-10-30(T-213)修:原写法 `if best_off := max(...)` 把 best_off == 0 当假值
+        # ⇒ 最佳对齐恰是 offset 0(黄金/股票腿都是)时,5 日块检验从来没跑过。
+        # 现在先取值再判空,块检验对每条腿都执行。
+        best_off = max((o for o in OFFSETS if "corr" in rec["by_offset"][str(o)]),
+                        key=lambda o: rec["by_offset"][str(o)]["corr"], default=None)
+        if best_off is not None:
             rec["block_5d_at_best_offset"] = te_stats(tok[t], bench[b], offset=best_off, step=5)
         best = max((o for o in OFFSETS if "corr" in rec["by_offset"][str(o)]),
                    key=lambda o: rec["by_offset"][str(o)]["corr"], default=None)
@@ -430,10 +461,529 @@ def main():
         print(f"    {sym}: n={st.get('n_days')} carry_ann={st.get('carry_ann_pct')}% "
               f"jitter_ann={st.get('accrual_jitter_ann_pct')}% tot={st.get('total_return_pct')}%")
 
+    # T-213(2026-10-30)更正与重报:公共窗口/全窗口两列、零信号对照、候选差异、基线
+    try:
+        t213_analysis(out, tok, bench)
+    except Exception as exc:  # noqa: BLE001
+        out["t213_correction"] = {"error": f"{type(exc).__name__}: {exc}"}
+        print("   [T-213] ERR", type(exc).__name__, str(exc)[:200])
+
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "t210_tracking.json")
     with open(path, "w") as fh:
         json.dump(out, fh, indent=1, ensure_ascii=False)
     print("WROTE", path)
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# T-213(2026-10-30):更正与重报
+#   ② 逐日 TE / 5 日不重叠块 TE / 累计 price_ratio / 波动比 —— 公共窗口 + 各自全窗口
+#   ③ 零信号对照:基准 block_permute ≥1000 次,报实际 TE 的分位;候选之间的差走同一对照
+#   ④ 基线:GLD vs XAUUSD(不代币化的黄金腿)、SPY(ETF 本身)vs SPY 指数口径
+#   零分布/分位一律用 src/data/evaluation/apparatus.py(不自己手写)
+# ══════════════════════════════════════════════════════════════════════════
+NULL_N = 2000
+NULL_SEED = 20261030
+
+
+def make_rows(dates, series):
+    """dates: 有序日期;series: {名称: {日期: 价格}} → [{'d','gap','r':{名: 日收益}}]"""
+    rows = []
+    for i in range(1, len(dates)):
+        prev, cur = dates[i - 1], dates[i]
+        r = {}
+        for name, px in series.items():
+            r[name] = px[cur] / px[prev] - 1.0
+        gap = (datetime.date.fromisoformat(cur) - datetime.date.fromisoformat(prev)).days
+        rows.append({"d": cur, "gap": gap, "r": r})
+    return rows
+
+
+def te_stats_from(rt, rb, periods=365):
+    """给定两条同轴收益 ⇒ corr / TE(年化) / drift / 波动 / 波动比。
+    periods=365 逐日、73 = 365/5 五日块、52 自然周块。"""
+    n = len(rt)
+    if n < 5:
+        return None
+    mt, mb = statistics.mean(rt), statistics.mean(rb)
+    cov = sum((a - mt) * (b - mb) for a, b in zip(rt, rb)) / (n - 1)
+    sdt, sdb = statistics.stdev(rt), statistics.stdev(rb)
+    diffs = [a - b for a, b in zip(rt, rb)]
+    sd = statistics.stdev(diffs)
+    return {
+        "n": n,
+        "corr": round(cov / (sdt * sdb), 4) if sdt and sdb else None,
+        "te_ann_pct": round(sd * math.sqrt(periods) * 100, 3),
+        "te_bps": round(sd * 1e4, 2),
+        "drift_ann_pct": round(statistics.mean(diffs) * periods * 100, 3),
+        "tok_vol_ann_pct": round(sdt * math.sqrt(periods) * 100, 2),
+        "ben_vol_ann_pct": round(sdb * math.sqrt(periods) * 100, 2),
+        "vol_ratio": round(sdt / sdb, 4) if sdb else None,
+    }
+
+
+def te_from_rows(rows, arm, bench="bench", periods=365):
+    return te_stats_from([x["r"][arm] for x in rows], [x["r"][bench] for x in rows], periods)
+
+
+def step_blocks(rows, arms, step=5):
+    """不重叠的 step 日块:rows[0..step-1]、rows[step..2*step-1]……(从第一对开始,不丢头部)。
+    所有 arm 共用同一组块边界 ⇒ 腿与腿之间可比。"""
+    out = {a: [] for a in arms}
+    meta = []
+    for k in range(0, len(rows) - step + 1, step):
+        chunk = rows[k:k + step]
+        if len(chunk) < step:
+            break
+        for a in arms:
+            out[a].append(math.prod([1 + c["r"][a] for c in chunk]) - 1)
+        meta.append({"from": chunk[0]["d"], "to": chunk[-1]["d"], "n_days": step})
+    return out, meta
+
+
+def week_blocks(rows, arm, bench="bench"):
+    """ISO 自然周块(gap==1 的周内相邻对复合)。次要口径:周一→周五 = 5 个日历日。"""
+    buckets = {}
+    for x in rows:
+        if x["gap"] != 1:
+            continue
+        y, w, _ = datetime.date.fromisoformat(x["d"]).isocalendar()
+        buckets.setdefault((y, w), []).append(x)
+    out = []
+    for key in sorted(buckets):
+        rs = buckets[key]
+        if len(rs) < 4:
+            continue
+        out.append({
+            "week": "%dW%02d" % key,
+            "n_days": len(rs),
+            "r_tok": math.prod([1 + c["r"][arm] for c in rs]) - 1,
+            "r_bench": math.prod([1 + c["r"][bench] for c in rs]) - 1,
+            "last_day": rs[-1]["d"],
+        })
+    return out
+
+
+def window_slice(px, start, end):
+    return {d: v for d, v in px.items() if start <= d <= end}
+
+
+def series_report(tok, bench, label, window_label):
+    """一条腿的四个量:逐日 TE / 5 日块 TE / 累计 price_ratio / 波动比。"""
+    dates = sorted(set(tok) & set(bench))
+    rows = make_rows(dates, {"tok": tok, "bench": bench})
+    gap1 = [x for x in rows if x["gap"] == 1]
+    blocks5, meta5 = step_blocks(rows, ["tok", "bench"], step=5)
+    wk = week_blocks(rows, "tok")
+    gaps = {}
+    for x in rows:
+        gaps[x["gap"]] = gaps.get(x["gap"], 0) + 1
+    rep = {
+        "label": label,
+        "window": window_label,
+        "n_days_all": len(rows),
+        "n_days_gap1": len(gap1),
+        "gap_hist": {str(k): v for k, v in sorted(gaps.items())},
+        "first_day": rows[0]["d"] if rows else None,
+        "last_day": rows[-1]["d"] if rows else None,
+        "daily_te": te_from_rows(rows, "tok"),
+        "daily_te_gap1": te_from_rows(gap1, "tok"),
+        "block5_te": te_stats_from(blocks5["tok"], blocks5["bench"], periods=365.0 / 5),
+        "block5_meta": {"step_days": 5, "n_blocks": len(meta5),
+                        "first_block": meta5[0] if meta5 else None,
+                        "last_block": meta5[-1] if meta5 else None},
+        "week_block_te": te_stats_from([b["r_tok"] for b in wk],
+                                       [b["r_bench"] for b in wk], periods=52),
+        "week_block_meta": {"n_blocks": len(wk),
+                            "first_week": wk[0]["week"] if wk else None,
+                            "last_week": wk[-1]["week"] if wk else None,
+                            "mean_days_per_block": round(
+                                statistics.mean(b["n_days"] for b in wk), 2) if wk else None},
+        "price_ratio": ratio_drift(tok, bench),
+    }
+    return rep, rows, blocks5
+
+
+def flag_outliers(rows, thresh=0.005):
+    """标出 |r_tok − r_bench| 超过阈值的日子(数据源坏点 / 口径跳变),
+    并给出剔除这些日子后的 TE(敏感性检查)。阈值固定,不因结果调整。"""
+    flagged = [x["d"] for x in rows
+               if abs(x["r"]["tok"] - x["r"]["bench"]) > thresh]
+    fset = set(flagged)
+    keep = [x for x in rows if x["d"] not in fset]
+    te_excl = te_stats_from([x["r"]["tok"] for x in keep],
+                             [x["r"]["bench"] for x in keep])
+    return {
+        "threshold_bps": round(thresh * 10000, 1),
+        "n_flagged": len(flagged),
+        "flagged_days": flagged,
+        "n_kept": len(keep),
+        "te_ann_pct_excl_flagged": te_excl["te_ann_pct"] if te_excl else None,
+        "corr_excl_flagged": te_excl["corr"] if te_excl else None,
+    }
+
+
+def null_daily(rows, n=NULL_N, seed=NULL_SEED, block=5):
+    """零信号对照(逐日):打乱基准的日收益(块长 5 天),重算 TE,报实际 TE 的分位。
+    零分布中心 ≈ sqrt(代币波动² + 基准波动²)(两者被打散成无关)⇒ 这是「完全没在跟踪」的 TE。"""
+    rt = [x["r"]["tok"] for x in rows]
+    rb = [x["r"]["bench"] for x in rows]
+    actual = te_stats_from(rt, rb)
+    if not actual:
+        return {"error": "too few days"}
+
+    def one(rng):
+        perm = list(block_permute(rb, block, rng))
+        s = te_stats_from(rt, perm)
+        return s["te_ann_pct"] if s else float("nan")
+
+    try:
+        null = null_distribution(one, n, seed, actual=actual["te_ann_pct"])
+    except NoOpNull as exc:
+        return {"error": f"NoOpNull: {exc}"}
+    p = percentile_of(actual["te_ann_pct"], null)
+    return {
+        "actual_te_ann_pct": actual["te_ann_pct"],
+        "n_draws": int(len(null)),
+        "permute_block_days": block,
+        "null_median": round(float(np.median(null)), 3),
+        "null_p05": round(float(np.percentile(null, 5)), 3),
+        "null_p95": round(float(np.percentile(null, 95)), 3),
+        "percentile_of_actual": p,
+        "verdict": (f"实际 TE 在零分布的第 {p * 100:.1f} 分位(远低于 50 ⇒ 不是随机噪声)"
+                    if p is not None else None),
+    }
+
+
+def null_block(blocks5, n=NULL_N, seed=NULL_SEED + 1):
+    """零信号对照(5 日块):打乱块级的基准收益,重算块 TE。"""
+    rt, rb = blocks5["tok"], blocks5["bench"]
+    actual = te_stats_from(rt, rb, periods=365.0 / 5)
+    if not actual:
+        return {"error": "too few blocks"}
+
+    def one(rng):
+        perm = list(block_permute(rb, 1, rng))
+        s = te_stats_from(rt, perm, periods=365.0 / 5)
+        return s["te_ann_pct"] if s else float("nan")
+
+    try:
+        null = null_distribution(one, n, seed, actual=actual["te_ann_pct"])
+    except NoOpNull as exc:
+        return {"error": f"NoOpNull: {exc}"}
+    p = percentile_of(actual["te_ann_pct"], null)
+    return {
+        "actual_te_ann_pct": actual["te_ann_pct"],
+        "n_draws": int(len(null)),
+        "null_median": round(float(np.median(null)), 3),
+        "null_p05": round(float(np.percentile(null, 5)), 3),
+        "null_p95": round(float(np.percentile(null, 95)), 3),
+        "percentile_of_actual": p,
+        "verdict": (f"实际块 TE 在零分布的第 {p * 100:.1f} 分位" if p is not None else None),
+    }
+
+
+def diff_null(tok_a, tok_b, bench, dates, label, n=NULL_N, seed=NULL_SEED + 2, block=5):
+    """候选之间的差(XAUT−PAXG、SPYX−Ondo)过同一套零信号对照。
+    同一组日期、同一份被打乱的基准 ⇒ 零分布里的差 = 「两条腿都不跟踪时」的差
+    (≈ 两条腿自身波动率之差,不是 0)⇒ 观测差要落在零分布尾部才算「差距可读」。"""
+    rows = make_rows(dates, {"a": tok_a, "b": tok_b, "bench": bench})
+    sa = te_from_rows(rows, "a")
+    sb = te_from_rows(rows, "b")
+    if not sa or not sb:
+        return {"error": "too few days"}
+    actual_diff = sa["te_ann_pct"] - sb["te_ann_pct"]
+    blocks, meta = step_blocks(rows, ["a", "b", "bench"], step=5)
+    ba = te_stats_from(blocks["a"], blocks["bench"], periods=365.0 / 5)
+    bb = te_stats_from(blocks["b"], blocks["bench"], periods=365.0 / 5)
+
+    def one(rng):
+        perm = list(block_permute([x["r"]["bench"] for x in rows], block, rng))
+        ra = [x["r"]["a"] for x in rows]
+        rb_ = [x["r"]["b"] for x in rows]
+        return te_stats_from(ra, perm)["te_ann_pct"] - te_stats_from(rb_, perm)["te_ann_pct"]
+
+    def one_block(rng):
+        perm = list(block_permute(blocks["bench"], 1, rng))
+        return (te_stats_from(blocks["a"], perm, periods=365.0 / 5)["te_ann_pct"]
+                - te_stats_from(blocks["b"], perm, periods=365.0 / 5)["te_ann_pct"])
+
+    out = {
+        "label": label,
+        "n_days": len(dates),
+        "first_day": dates[0] if dates else None,
+        "last_day": dates[-1] if dates else None,
+        "daily": {
+            "te_a_ann_pct": sa["te_ann_pct"], "te_b_ann_pct": sb["te_ann_pct"],
+            "observed_diff_pp": round(actual_diff, 3),
+        },
+        "block5": {
+            "n_blocks": len(meta),
+            "te_a_ann_pct": ba["te_ann_pct"] if ba else None,
+            "te_b_ann_pct": bb["te_ann_pct"] if bb else None,
+            "observed_diff_pp": (round(ba["te_ann_pct"] - bb["te_ann_pct"], 3)
+                                 if ba and bb else None),
+        },
+    }
+    for key, fn, act in (("daily", one, actual_diff),
+                         ("block5", one_block, out["block5"]["observed_diff_pp"])):
+        if act is None:
+            continue
+        try:
+            null = null_distribution(fn, n, seed)
+        except NoOpNull as exc:
+            out[key]["null"] = {"error": f"NoOpNull: {exc}"}
+            continue
+        p = percentile_of(act, null)
+        p2 = min(1.0, 2 * min(p, 1 - p)) if p is not None else None
+        out[key].update({
+            "n_draws": int(len(null)),
+            "null_median_diff_pp": round(float(np.median(null)), 3),
+            "null_p05_pp": round(float(np.percentile(null, 5)), 3),
+            "null_p95_pp": round(float(np.percentile(null, 95)), 3),
+            "percentile_of_observed": p,
+            "two_sided_p": p2,
+            "verdict": ("差距可读" if (p2 is not None and p2 < 0.05)
+                        else "差距不可读(观测差落在零分布中段,分位 %s)"
+                        % ("NA" if p is None else f"{p:.3f}")),
+        })
+    return out
+
+
+def fetch_spx_series():
+    """标普 500 指数日线。试公开源,记录每个源的成败(拿不到也是结论的一部分)。
+    2026-10-30 追加 FRED(SP500 = S&P Dow Jones 官方指数收盘),前两个源当时取不到。"""
+    attempts = []
+    out = {}
+    src = None
+    for sym in ("i:SPX", "i:SP500", "i:^GSPC", "i:GSPC"):
+        url = f"https://stockanalysis.com/api/symbol/{sym}/history?range=5Y&period=Daily"
+        try:
+            d = get(url)
+            rows = d.get("data") if isinstance(d, dict) else None
+            if rows:
+                out = {r["t"]: float(r["c"]) for r in rows if r.get("c")}
+                attempts.append({"source": "stockanalysis", "symbol": sym,
+                                 "ok": True, "n_days": len(out)})
+                src = "stockanalysis:" + sym
+                break
+            attempts.append({"source": "stockanalysis", "symbol": sym, "ok": False,
+                             "note": "empty data"})
+        except Exception as exc:  # noqa: BLE001
+            attempts.append({"source": "stockanalysis", "symbol": sym, "ok": False,
+                             "note": f"{type(exc).__name__}: {str(exc)[:100]}"})
+    if not out:
+        try:
+            url = ("https://api.investing.com/api/financialdata/historical/166"
+                   "?start-date=2024-08-01&end-date=2026-10-29"
+                   "&interval=P1D&time-frame=Daily")
+            d = get(url)
+            rows = d.get("data") if isinstance(d, dict) else None
+            if rows:
+                out = {r["date"]: float(r["close"]) for r in rows if r.get("close")}
+                attempts.append({"source": "investing.com", "symbol": "SPX(166)",
+                                 "ok": True, "n_days": len(out)})
+                src = "investing.com:SPX(166)"
+            else:
+                attempts.append({"source": "investing.com", "symbol": "SPX(166)",
+                                 "ok": False, "note": "empty data"})
+        except Exception as exc:  # noqa: BLE001
+            attempts.append({"source": "investing.com", "symbol": "SPX(166)",
+                             "ok": False, "note": f"{type(exc).__name__}: {str(exc)[:100]}"})
+    if not out:
+        # FRED:SP500 —— S&P Dow Jones 官方指数收盘,CSV 无需 key
+        try:
+            url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500"
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=40) as r:
+                raw = r.read().decode("utf-8", "replace")
+            out = {}
+            for line in raw.strip().split("\n")[1:]:
+                parts = line.split(",")
+                if len(parts) != 2:
+                    continue
+                d, v = parts[0].strip(), parts[1].strip()
+                if not v or v == ".":
+                    continue
+                out[d] = float(v)
+            if out:
+                attempts.append({"source": "fred", "symbol": "SP500", "ok": True,
+                                 "n_days": len(out), "first_day": min(out),
+                                 "last_day": max(out),
+                                 "note": "S&P Dow Jones 官方指数收盘(CSV,无需 key)"})
+                src = "fred:SP500"
+            else:
+                attempts.append({"source": "fred", "symbol": "SP500", "ok": False,
+                                 "note": "empty data"})
+        except Exception as exc:  # noqa: BLE001
+            attempts.append({"source": "fred", "symbol": "SP500", "ok": False,
+                             "note": f"{type(exc).__name__}: {str(exc)[:100]}"})
+    return out, attempts, src
+
+
+def t213_analysis(out, tok, bench):
+    """T-213 更正与重报:公共窗口 + 全窗口两列、零信号对照、候选差异、基线。"""
+    print("   [T-213] 更正与重报 …")
+    res = {
+        "generated_at_utc": now(),
+        "definition": {
+            "alignment": "代币与基准同窗口 [d-1 → d](offset 0);基准在美国收市结算、代币 24/7 ⇒ 仍有 ~21h 日界错位",
+            "daily_te": "逐日 TE(年化)= std(r_tok − r_bench)·sqrt(365)",
+            "gap1": "只保留基准相邻日(gap==1)的成对;周五→周一(gap==3)被剔除:代币 7×24、基准休市,口径不齐",
+            "block5_te": "5 日不重叠块:连续 5 个成对日收益复合,块 TE(年化)= std(块差)·sqrt(365/5)",
+            "week_block_te": "自然周块(次要口径):周内 gap==1 的逐日收益复合,块 TE(年化)= std·sqrt(52)",
+            "price_ratio": "代币价 / 基准价 的累计变化(%)",
+            "vol_ratio": "代币年化波动 / 基准年化波动",
+            "null_control": ("基准日收益用 src/data/evaluation/apparatus.py 的 block_permute 打乱(块长 5 天),"
+                             "≥1000 次重算 TE,报实际 TE 的分位"),
+            "seed": NULL_SEED, "n_draws": NULL_N,
+        },
+        "series": {}, "candidate_differences": {},
+        "baselines": {}, "spx_fetch_attempts": [],
+    }
+
+    legs = [
+        ("PAXG", "PAXG", "XAUUSD", "黄金:Paxos Gold"),
+        ("XAUT", "XAUT", "XAUUSD", "黄金:Tether Gold"),
+        ("SPYX", "SPYX_xstocks_dex", "SPY", "股票:xStocks SPYX(Solana 池)"),
+        ("SPY_ondo", "SPY_ondo_dex", "SPY", "股票:Ondo SPY(Ethereum 池)"),
+    ]
+
+    # ── 公共窗口:四条腿的日线交集
+    spans = []
+    for name, tkey, bkey, _ in legs:
+        if tkey in tok and bench.get(bkey):
+            ds = sorted(set(tok[tkey]) & set(bench[bkey]))
+            if ds:
+                spans.append((ds[0], ds[-1]))
+    if not spans:
+        res["error"] = "no common series"
+        out["t213_correction"] = res
+        return
+    common_start = max(s[0] for s in spans)
+    common_end = min(s[1] for s in spans)
+    avail = [set(tok[t]) for _, t, _, _ in legs if t in tok]
+    inter = set.intersection(*avail) if avail else set()
+    res["common_window"] = {
+        "start": common_start, "end": common_end,
+        "n_days": len([d for d in sorted(inter) if common_start <= d <= common_end]),
+        "note": "四条腿的价格日线交集(XAUUSD 基准含周末行,SPY 基准只有工作日)",
+    }
+
+    for name, tkey, bkey, desc in legs:
+        if tkey not in tok or not bench.get(bkey):
+            res["series"][name] = {"error": "missing series"}
+            continue
+        rep_full, rows_full, blocks_full = series_report(
+            tok[tkey], bench[bkey], name + " vs " + bkey, "full_window")
+        rep_cw, rows_cw, blocks_cw = series_report(
+            window_slice(tok[tkey], common_start, common_end),
+            window_slice(bench[bkey], common_start, common_end),
+            name + " vs " + bkey, "common_window")
+        res["series"][name] = {
+            "desc": desc, "token_key": tkey, "benchmark": bkey,
+            "full_window": rep_full, "common_window": rep_cw,
+            "null_controls": {
+                "full_window_daily": null_daily(rows_full),
+                "full_window_block5": null_block(blocks_full),
+                "common_window_daily": null_daily(rows_cw, seed=NULL_SEED + 3),
+                "common_window_block5": null_block(blocks_cw, seed=NULL_SEED + 4),
+            },
+            "outlier_check": {
+                "full_window": flag_outliers(rows_full),
+                "common_window": flag_outliers(rows_cw),
+            },
+        }
+        print(f"      {name}: 全窗口 日TE {rep_full['daily_te'] and rep_full['daily_te']['te_ann_pct']}% "
+              f"5日块 {rep_full['block5_te'] and rep_full['block5_te']['te_ann_pct']}% | "
+              f"公共窗口 日TE {rep_cw['daily_te'] and rep_cw['daily_te']['te_ann_pct']}% "
+              f"5日块 {rep_cw['block5_te'] and rep_cw['block5_te']['te_ann_pct']}%")
+
+    # ── 候选之间的差(同一对照)
+    for label, a_key, b_key, bkey, a_name, b_name in (
+            ("XAUT_minus_PAXG", "XAUT", "PAXG", "XAUUSD", "XAUT", "PAXG"),
+            ("SPYX_minus_SPY_ondo", "SPYX_xstocks_dex", "SPY_ondo_dex", "SPY",
+             "SPYX", "SPY(ondo)")):
+        if a_key in tok and b_key in tok and bench.get(bkey):
+            ds = sorted(set(tok[a_key]) & set(tok[b_key]) & set(bench[bkey]))
+            ds = [d for d in ds if common_start <= d <= common_end]
+            res["candidate_differences"][label] = diff_null(
+                tok[a_key], tok[b_key], bench[bkey], ds, f"{a_name} − {b_name}")
+            d = res["candidate_differences"][label]
+            print("      差", label, "日:", (d.get("daily") or {}).get("verdict"),
+                  "| 5日块:", (d.get("block5") or {}).get("verdict"))
+        else:
+            res["candidate_differences"][label] = {"error": "missing series"}
+
+    # ── ④ 基线:不代币化那条腿的跟踪成本
+    try:
+        gld, srcs, _ = supabase_ohlcv("GLD")
+        res["baselines"]["GLD_vs_XAUUSD"] = {
+            "why": "不代币化的黄金腿:实物支撑 ETF 的自身跟踪成本(费用 + 期货展期)",
+            "source": "supabase:ohlcv_daily(" + ",".join(srcs) + ",prefer=eodhd)",
+            "full_window": series_report(gld, bench["XAUUSD"], "GLD vs XAUUSD", "full_window")[0],
+            "common_window": series_report(
+                window_slice(gld, common_start, common_end),
+                window_slice(bench["XAUUSD"], common_start, common_end),
+                "GLD vs XAUUSD", "common_window")[0],
+        }
+        gw = res["baselines"]["GLD_vs_XAUUSD"]["common_window"]
+        print("      基线 GLD vs XAUUSD(公共窗口): 日TE "
+              f"{gw['daily_te'] and gw['daily_te']['te_ann_pct']}% 5日块 "
+              f"{gw['block5_te'] and gw['block5_te']['te_ann_pct']}%")
+    except Exception as exc:  # noqa: BLE001
+        res["baselines"]["GLD_vs_XAUUSD"] = {"error": f"{type(exc).__name__}: {exc}"}
+
+    # 股票:SPY(ETF 本身) vs SPY 指数口径 —— 指数序列能不能拿到是这一步的前提
+    spx, attempts, spx_src = fetch_spx_series()
+    res["spx_fetch_attempts"] = attempts
+    if spx:
+        rep_full, rows_full, _ = series_report(
+            spx, bench["SPY"], "SPY(ETF) vs SPX(指数)", "full_window")
+        rep_cw, rows_cw, _ = series_report(
+            window_slice(spx, common_start, common_end),
+            window_slice(bench["SPY"], common_start, common_end),
+            "SPY(ETF) vs SPX(指数)", "common_window")
+        res["baselines"]["SPY_etf_vs_index"] = {
+            "why": "不代币化的股票腿:ETF 自身对指数的跟踪成本",
+            "spx_source": spx_src,
+            "full_window": rep_full, "common_window": rep_cw,
+            "null_controls": {"common_window_daily": null_daily(rows_cw, seed=NULL_SEED + 5)},
+            "outlier_check": {
+                "full_window": flag_outliers(rows_full),
+                "common_window": flag_outliers(rows_cw),
+            },
+        }
+        print("      基线 SPY(ETF) vs SPX(指数) 全窗口 日TE "
+              f"{rep_full['daily_te'] and rep_full['daily_te']['te_ann_pct']}% 5日块 "
+              f"{rep_full['block5_te'] and rep_full['block5_te']['te_ann_pct']}% | 公共窗口 日TE "
+              f"{rep_cw['daily_te'] and rep_cw['daily_te']['te_ann_pct']}% 5日块 "
+              f"{rep_cw['block5_te'] and rep_cw['block5_te']['te_ann_pct']}%")
+    else:
+        res["baselines"]["SPY_etf_vs_index"] = {
+            "error": "S&P 500 指数日线在本环境取不到(见 spx_fetch_attempts);库内 ohlcv_daily 无指数序列",
+            "fallback": ("用同一只 ETF 的两个数据源(eodhd vs yfinance)之间的偏离度 = 本方法能分辨的"
+                         "最小尺度(测量分辨率下限),代替 ETF-vs-指数"),
+        }
+
+    # 同一只 ETF 两个数据源的偏离 = 测量分辨率下限(两种情况下都算,作对照)
+    try:
+        spy_yf, srcs2, _ = supabase_ohlcv("SPY", want_source="yfinance", strict=True)
+        res["baselines"]["SPY_source_divergence"] = {
+            "why": "同一只 ETF、两个数据源(eodhd vs yfinance)的偏离度 = 测量分辨率下限",
+            "source": "supabase:ohlcv_daily(" + ",".join(srcs2) + ",prefer=yfinance)",
+            "common_window": series_report(
+                window_slice(spy_yf, common_start, common_end),
+                window_slice(bench["SPY"], common_start, common_end),
+                "SPY(eodhd) vs SPY(yfinance)", "common_window")[0],
+        }
+        sd = res["baselines"]["SPY_source_divergence"]["common_window"]
+        print("      基线 SPY(eodhd) vs SPY(yfinance): 日TE "
+              f"{sd['daily_te'] and sd['daily_te']['te_ann_pct']}% 5日块 "
+              f"{sd['block5_te'] and sd['block5_te']['te_ann_pct']}%")
+    except Exception as exc:  # noqa: BLE001
+        res["baselines"]["SPY_source_divergence"] = {"error": f"{type(exc).__name__}: {exc}"}
+
+    out["t213_correction"] = res
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 {
- "generated_at_utc": "2026-10-29T09:50:59.891292+00:00",
+ "generated_at_utc": "2026-10-29T16:22:56.194535+00:00",
  "window_days": 400,
  "alignment": "代币与基准都取同一段日历窗口 [days[i-1] → days[i]](两边同起同止)。代币 UTC 日线收盘 = 00:00 UTC;基准在美国收市(约 21:00 UTC)结算,因此同窗口内仍约有 3 小时错位 —— offset=±1/±2 就是量化这层错位的代价,取相关系数最高的一档作为对齐口径报 TE,其余档原样列出(不挑数字)。注:代币 24/7 交易而基准只在工作日有值,交集日 = 工作日,周一的收益是「周五收市 → 周一收市」,两边同口径。",
  "benchmarks": {
@@ -19,6 +19,12 @@
   }
  },
  "tokens": {
+  "GLD": {
+   "price_source": "supabase:ohlcv_daily(eodhd,yfinance,prefer=eodhd)",
+   "n_days": 546,
+   "first": "2024-08-26",
+   "last": "2026-10-28"
+  },
   "PAXG": {
    "price_source": "binance_spot_daily_kline_close",
    "n_days": 400,
@@ -166,6 +172,32 @@
      "bench_vol_ann_pct": 29.76
     }
    },
+   "block_5d_at_best_offset": {
+    "n_days": 392,
+    "first_day": "2025-09-26",
+    "last_day": "2026-10-27",
+    "gap_days_hist": {
+     "1": 387,
+     "2": 5
+    },
+    "corr": 0.9731,
+    "te_ann_pct": 6.86,
+    "te_daily_bps": 35.91,
+    "mean_daily_diff_bps": 0.041,
+    "drift_ann_pct": 0.15,
+    "beta_vs_bench": 0.9624,
+    "token_vol_ann_pct": 29.39,
+    "bench_vol_ann_pct": 29.72,
+    "block": {
+     "step_days": 5,
+     "n_blocks": 78,
+     "corr": 0.9878,
+     "te_ann_pct": 4.29,
+     "drift_ann_pct": 0.47,
+     "token_vol_ann_pct": 27.53,
+     "bench_vol_ann_pct": 27.36
+    }
+   },
    "best_offset": 0,
    "aligned": {
     "n_days": 392,
@@ -282,6 +314,32 @@
      "bench_vol_ann_pct": 25.57
     }
    },
+   "block_5d_at_best_offset": {
+    "n_days": 211,
+    "first_day": "2026-03-27",
+    "last_day": "2026-10-27",
+    "gap_days_hist": {
+     "1": 207,
+     "2": 4
+    },
+    "corr": 0.9855,
+    "te_ann_pct": 4.527,
+    "te_daily_bps": 23.7,
+    "mean_daily_diff_bps": -0.147,
+    "drift_ann_pct": -0.537,
+    "beta_vs_bench": 0.9207,
+    "token_vol_ann_pct": 23.85,
+    "bench_vol_ann_pct": 25.52,
+    "block": {
+     "step_days": 5,
+     "n_blocks": 42,
+     "corr": 0.9946,
+     "te_ann_pct": 2.364,
+     "drift_ann_pct": -0.109,
+     "token_vol_ann_pct": 21.43,
+     "bench_vol_ann_pct": 22.1
+    }
+   },
    "best_offset": 0,
    "aligned": {
     "n_days": 211,
@@ -303,6 +361,162 @@
   },
   "GLD_ondo_vs_XAUUSD": {
    "error": "missing series"
+  },
+  "GLD_vs_XAUUSD": {
+   "token": "GLD",
+   "benchmark": "XAUUSD",
+   "price_ratio": {
+    "start": "2024-08-26",
+    "end": "2026-10-28",
+    "ratio_start": 0.092528,
+    "ratio_end": 0.092123,
+    "ratio_change_pct": -0.437
+   },
+   "by_offset": {
+    "0": {
+     "n_days": 544,
+     "first_day": "2024-08-27",
+     "last_day": "2026-10-27",
+     "gap_days_hist": {
+      "1": 423,
+      "4": 14,
+      "3": 99,
+      "2": 8
+     },
+     "corr": 0.9433,
+     "te_ann_pct": 9.714,
+     "te_daily_bps": 50.85,
+     "mean_daily_diff_bps": -0.216,
+     "drift_ann_pct": -0.787,
+     "beta_vs_bench": 0.9276,
+     "token_vol_ann_pct": 28.56,
+     "bench_vol_ann_pct": 29.04
+    },
+    "-1": {
+     "n_days": 543,
+     "first_day": "2024-08-28",
+     "last_day": "2026-10-27",
+     "gap_days_hist": {
+      "1": 422,
+      "4": 14,
+      "3": 99,
+      "2": 8
+     },
+     "corr": 0.0123,
+     "te_ann_pct": 40.504,
+     "te_daily_bps": 212.01,
+     "mean_daily_diff_bps": -0.004,
+     "drift_ann_pct": -0.013,
+     "beta_vs_bench": 0.0121,
+     "token_vol_ann_pct": 28.59,
+     "bench_vol_ann_pct": 29.05
+    },
+    "1": {
+     "n_days": 543,
+     "first_day": "2024-08-27",
+     "last_day": "2026-10-26",
+     "gap_days_hist": {
+      "1": 422,
+      "4": 14,
+      "3": 99,
+      "2": 8
+     },
+     "corr": -0.038,
+     "te_ann_pct": 41.527,
+     "te_daily_bps": 217.36,
+     "mean_daily_diff_bps": -0.367,
+     "drift_ann_pct": -1.341,
+     "beta_vs_bench": -0.0374,
+     "token_vol_ann_pct": 28.57,
+     "bench_vol_ann_pct": 29.07
+    },
+    "2": {
+     "n_days": 542,
+     "first_day": "2024-08-27",
+     "last_day": "2026-10-23",
+     "gap_days_hist": {
+      "1": 421,
+      "4": 14,
+      "3": 99,
+      "2": 8
+     },
+     "corr": -0.0181,
+     "te_ann_pct": 41.159,
+     "te_daily_bps": 215.44,
+     "mean_daily_diff_bps": -0.555,
+     "drift_ann_pct": -2.025,
+     "beta_vs_bench": -0.0178,
+     "token_vol_ann_pct": 28.6,
+     "bench_vol_ann_pct": 29.09
+    },
+    "-2": {
+     "n_days": 542,
+     "first_day": "2024-08-29",
+     "last_day": "2026-10-27",
+     "gap_days_hist": {
+      "1": 422,
+      "4": 14,
+      "3": 98,
+      "2": 8
+     },
+     "corr": -0.0538,
+     "te_ann_pct": 41.87,
+     "te_daily_bps": 219.16,
+     "mean_daily_diff_bps": 0.182,
+     "drift_ann_pct": 0.664,
+     "beta_vs_bench": -0.0529,
+     "token_vol_ann_pct": 28.61,
+     "bench_vol_ann_pct": 29.08
+    }
+   },
+   "block_5d_at_best_offset": {
+    "n_days": 544,
+    "first_day": "2024-08-27",
+    "last_day": "2026-10-27",
+    "gap_days_hist": {
+     "1": 423,
+     "4": 14,
+     "3": 99,
+     "2": 8
+    },
+    "corr": 0.9433,
+    "te_ann_pct": 9.714,
+    "te_daily_bps": 50.85,
+    "mean_daily_diff_bps": -0.216,
+    "drift_ann_pct": -0.787,
+    "beta_vs_bench": 0.9276,
+    "token_vol_ann_pct": 28.56,
+    "bench_vol_ann_pct": 29.04,
+    "block": {
+     "step_days": 5,
+     "n_blocks": 108,
+     "corr": 0.9945,
+     "te_ann_pct": 2.69,
+     "drift_ann_pct": -0.517,
+     "token_vol_ann_pct": 25.49,
+     "bench_vol_ann_pct": 25.59
+    }
+   },
+   "best_offset": 0,
+   "aligned": {
+    "n_days": 544,
+    "first_day": "2024-08-27",
+    "last_day": "2026-10-27",
+    "gap_days_hist": {
+     "1": 423,
+     "4": 14,
+     "3": 99,
+     "2": 8
+    },
+    "corr": 0.9433,
+    "te_ann_pct": 9.714,
+    "te_daily_bps": 50.85,
+    "mean_daily_diff_bps": -0.216,
+    "drift_ann_pct": -0.787,
+    "beta_vs_bench": 0.9276,
+    "token_vol_ann_pct": 28.56,
+    "bench_vol_ann_pct": 29.04
+   }
   },
   "SPYX_xstocks_vs_SPY": {
    "error": "missing series"
@@ -419,6 +633,33 @@
      "beta_vs_bench": -0.0213,
      "token_vol_ann_pct": 15.89,
      "bench_vol_ann_pct": 14.58
+    }
+   },
+   "block_5d_at_best_offset": {
+    "n_days": 124,
+    "first_day": "2026-05-01",
+    "last_day": "2026-10-27",
+    "gap_days_hist": {
+     "1": 98,
+     "3": 22,
+     "4": 4
+    },
+    "corr": 0.88,
+    "te_ann_pct": 7.52,
+    "te_daily_bps": 39.36,
+    "mean_daily_diff_bps": 0.279,
+    "drift_ann_pct": 1.019,
+    "beta_vs_bench": 0.9555,
+    "token_vol_ann_pct": 15.77,
+    "bench_vol_ann_pct": 14.53,
+    "block": {
+     "step_days": 5,
+     "n_blocks": 24,
+     "corr": 0.9686,
+     "te_ann_pct": 3.09,
+     "drift_ann_pct": -1.566,
+     "token_vol_ann_pct": 12.38,
+     "bench_vol_ann_pct": 12.26
     }
    },
    "best_offset": 0,
@@ -548,6 +789,34 @@
      "bench_vol_ann_pct": 14.08
     }
    },
+   "block_5d_at_best_offset": {
+    "n_days": 123,
+    "first_day": "2026-04-29",
+    "last_day": "2026-10-27",
+    "gap_days_hist": {
+     "1": 95,
+     "3": 23,
+     "2": 1,
+     "4": 4
+    },
+    "corr": 0.527,
+    "te_ann_pct": 19.154,
+    "te_daily_bps": 100.26,
+    "mean_daily_diff_bps": -3.196,
+    "drift_ann_pct": -11.667,
+    "beta_vs_bench": 0.8404,
+    "token_vol_ann_pct": 22.38,
+    "bench_vol_ann_pct": 14.04,
+    "block": {
+     "step_days": 5,
+     "n_blocks": 24,
+     "corr": 0.7572,
+     "te_ann_pct": 11.173,
+     "drift_ann_pct": -12.749,
+     "token_vol_ann_pct": 16.96,
+     "bench_vol_ann_pct": 14.31
+    }
+   },
    "best_offset": 0,
    "aligned": {
     "n_days": 123,
@@ -587,10 +856,1717 @@
    "n_days": 399,
    "first_day": "2025-09-25",
    "last_day": "2026-10-29",
-   "carry_ann_pct": 0.147,
+   "carry_ann_pct": 0.134,
    "accrual_jitter_ann_pct": 0.425,
    "daily_vol_bps": 2.224,
-   "total_return_pct": 0.16
+   "total_return_pct": 0.145
+  }
+ },
+ "t213_correction": {
+  "generated_at_utc": "2026-10-29T16:23:08.817166+00:00",
+  "definition": {
+   "alignment": "代币与基准同窗口 [d-1 → d](offset 0);基准在美国收市结算、代币 24/7 ⇒ 仍有 ~21h 日界错位",
+   "daily_te": "逐日 TE(年化)= std(r_tok − r_bench)·sqrt(365)",
+   "gap1": "只保留基准相邻日(gap==1)的成对;周五→周一(gap==3)被剔除:代币 7×24、基准休市,口径不齐",
+   "block5_te": "5 日不重叠块:连续 5 个成对日收益复合,块 TE(年化)= std(块差)·sqrt(365/5)",
+   "week_block_te": "自然周块(次要口径):周内 gap==1 的逐日收益复合,块 TE(年化)= std·sqrt(52)",
+   "price_ratio": "代币价 / 基准价 的累计变化(%)",
+   "vol_ratio": "代币年化波动 / 基准年化波动",
+   "null_control": "基准日收益用 src/data/evaluation/apparatus.py 的 block_permute 打乱(块长 5 天),≥1000 次重算 TE,报实际 TE 的分位",
+   "seed": 20261030,
+   "n_draws": 2000
+  },
+  "series": {
+   "PAXG": {
+    "desc": "黄金:Paxos Gold",
+    "token_key": "PAXG",
+    "benchmark": "XAUUSD",
+    "full_window": {
+     "label": "PAXG vs XAUUSD",
+     "window": "full_window",
+     "n_days_all": 393,
+     "n_days_gap1": 388,
+     "gap_hist": {
+      "1": 388,
+      "2": 5
+     },
+     "first_day": "2025-09-26",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 393,
+      "corr": 0.9731,
+      "te_ann_pct": 6.852,
+      "te_bps": 35.87,
+      "drift_ann_pct": 0.041,
+      "tok_vol_ann_pct": 29.35,
+      "ben_vol_ann_pct": 29.68,
+      "vol_ratio": 0.989
+     },
+     "daily_te_gap1": {
+      "n": 388,
+      "corr": 0.9731,
+      "te_ann_pct": 6.894,
+      "te_bps": 36.08,
+      "drift_ann_pct": -0.129,
+      "tok_vol_ann_pct": 29.51,
+      "ben_vol_ann_pct": 29.84,
+      "vol_ratio": 0.9889
+     },
+     "block5_te": {
+      "n": 78,
+      "corr": 0.9878,
+      "te_ann_pct": 4.29,
+      "te_bps": 50.22,
+      "drift_ann_pct": 0.47,
+      "tok_vol_ann_pct": 27.53,
+      "ben_vol_ann_pct": 27.36,
+      "vol_ratio": 1.0065
+     },
+     "block5_meta": {
+      "step_days": 5,
+      "n_blocks": 78,
+      "first_block": {
+       "from": "2025-09-26",
+       "to": "2025-09-30",
+       "n_days": 5
+      },
+      "last_block": {
+       "from": "2026-10-21",
+       "to": "2026-10-25",
+       "n_days": 5
+      }
+     },
+     "week_block_te": {
+      "n": 56,
+      "corr": 0.9954,
+      "te_ann_pct": 2.48,
+      "te_bps": 34.39,
+      "drift_ann_pct": 0.029,
+      "tok_vol_ann_pct": 25.67,
+      "ben_vol_ann_pct": 25.21,
+      "vol_ratio": 1.018
+     },
+     "week_block_meta": {
+      "n_blocks": 56,
+      "first_week": "2025W40",
+      "last_week": "2026W43",
+      "mean_days_per_block": 6.82
+     },
+     "price_ratio": {
+      "start": "2025-09-25",
+      "end": "2026-10-28",
+      "ratio_start": 0.998829,
+      "ratio_end": 1.00034,
+      "ratio_change_pct": 0.151
+     }
+    },
+    "common_window": {
+     "label": "PAXG vs XAUUSD",
+     "window": "common_window",
+     "n_days_all": 177,
+     "n_days_gap1": 173,
+     "gap_hist": {
+      "1": 173,
+      "2": 4
+     },
+     "first_day": "2026-05-01",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 177,
+      "corr": 0.9896,
+      "te_ann_pct": 3.57,
+      "te_bps": 18.69,
+      "drift_ann_pct": 0.034,
+      "tok_vol_ann_pct": 23.33,
+      "ben_vol_ann_pct": 24.31,
+      "vol_ratio": 0.9596
+     },
+     "daily_te_gap1": {
+      "n": 173,
+      "corr": 0.9896,
+      "te_ann_pct": 3.603,
+      "te_bps": 18.86,
+      "drift_ann_pct": -0.245,
+      "tok_vol_ann_pct": 23.5,
+      "ben_vol_ann_pct": 24.5,
+      "vol_ratio": 0.9588
+     },
+     "block5_te": {
+      "n": 35,
+      "corr": 0.9962,
+      "te_ann_pct": 1.899,
+      "te_bps": 22.23,
+      "drift_ann_pct": 0.693,
+      "tok_vol_ann_pct": 20.37,
+      "ben_vol_ann_pct": 20.98,
+      "vol_ratio": 0.9711
+     },
+     "block5_meta": {
+      "step_days": 5,
+      "n_blocks": 35,
+      "first_block": {
+       "from": "2026-05-01",
+       "to": "2026-05-05",
+       "n_days": 5
+      },
+      "last_block": {
+       "from": "2026-10-22",
+       "to": "2026-10-26",
+       "n_days": 5
+      }
+     },
+     "week_block_te": {
+      "n": 25,
+      "corr": 0.9989,
+      "te_ann_pct": 1.164,
+      "te_bps": 16.14,
+      "drift_ann_pct": 0.664,
+      "tok_vol_ann_pct": 20.1,
+      "ben_vol_ann_pct": 20.75,
+      "vol_ratio": 0.9685
+     },
+     "week_block_meta": {
+      "n_blocks": 25,
+      "first_week": "2026W19",
+      "last_week": "2026W43",
+      "mean_days_per_block": 6.68
+     },
+     "price_ratio": {
+      "start": "2026-04-30",
+      "end": "2026-10-28",
+      "ratio_start": 0.99905,
+      "ratio_end": 1.00034,
+      "ratio_change_pct": 0.129
+     }
+    },
+    "null_controls": {
+     "full_window_daily": {
+      "actual_te_ann_pct": 6.852,
+      "n_draws": 2000,
+      "permute_block_days": 5,
+      "null_median": 41.801,
+      "null_p05": 39.955,
+      "null_p95": 43.346,
+      "percentile_of_actual": 0.0,
+      "verdict": "实际 TE 在零分布的第 0.0 分位(远低于 50 ⇒ 不是随机噪声)"
+     },
+     "full_window_block5": {
+      "actual_te_ann_pct": 4.29,
+      "n_draws": 2000,
+      "null_median": 38.821,
+      "null_p05": 35.056,
+      "null_p95": 42.379,
+      "percentile_of_actual": 0.0,
+      "verdict": "实际块 TE 在零分布的第 0.0 分位"
+     },
+     "common_window_daily": {
+      "actual_te_ann_pct": 3.57,
+      "n_draws": 2000,
+      "permute_block_days": 5,
+      "null_median": 33.701,
+      "null_p05": 31.37,
+      "null_p95": 35.784,
+      "percentile_of_actual": 0.0,
+      "verdict": "实际 TE 在零分布的第 0.0 分位(远低于 50 ⇒ 不是随机噪声)"
+     },
+     "common_window_block5": {
+      "actual_te_ann_pct": 1.899,
+      "n_draws": 2000,
+      "null_median": 29.3,
+      "null_p05": 24.714,
+      "null_p95": 33.046,
+      "percentile_of_actual": 0.0,
+      "verdict": "实际块 TE 在零分布的第 0.0 分位"
+     }
+    },
+    "outlier_check": {
+     "full_window": {
+      "threshold_bps": 50.0,
+      "n_flagged": 38,
+      "flagged_days": [
+       "2025-10-08",
+       "2025-10-09",
+       "2025-10-10",
+       "2025-10-11",
+       "2025-10-16",
+       "2025-10-17",
+       "2025-10-20",
+       "2025-11-12",
+       "2025-11-13",
+       "2025-11-14",
+       "2025-11-15",
+       "2025-11-18",
+       "2025-11-19",
+       "2025-11-20",
+       "2025-11-24",
+       "2025-11-25",
+       "2026-01-24",
+       "2026-01-25",
+       "2026-01-31",
+       "2026-02-01",
+       "2026-02-07",
+       "2026-02-08",
+       "2026-02-09",
+       "2026-02-21",
+       "2026-02-28",
+       "2026-03-01",
+       "2026-03-02",
+       "2026-04-15",
+       "2026-04-16",
+       "2026-04-18",
+       "2026-04-19",
+       "2026-04-21",
+       "2026-04-22",
+       "2026-05-05",
+       "2026-05-06",
+       "2026-05-11",
+       "2026-05-12",
+       "2026-05-26"
+      ],
+      "n_kept": 355,
+      "te_ann_pct_excl_flagged": 3.519,
+      "corr_excl_flagged": 0.9932
+     },
+     "common_window": {
+      "threshold_bps": 50.0,
+      "n_flagged": 5,
+      "flagged_days": [
+       "2026-05-05",
+       "2026-05-06",
+       "2026-05-11",
+       "2026-05-12",
+       "2026-05-26"
+      ],
+      "n_kept": 172,
+      "te_ann_pct_excl_flagged": 2.918,
+      "corr_excl_flagged": 0.9932
+     }
+    }
+   },
+   "XAUT": {
+    "desc": "黄金:Tether Gold",
+    "token_key": "XAUT",
+    "benchmark": "XAUUSD",
+    "full_window": {
+     "label": "XAUT vs XAUUSD",
+     "window": "full_window",
+     "n_days_all": 212,
+     "n_days_gap1": 208,
+     "gap_hist": {
+      "1": 208,
+      "2": 4
+     },
+     "first_day": "2026-03-27",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 212,
+      "corr": 0.9855,
+      "te_ann_pct": 4.518,
+      "te_bps": 23.65,
+      "drift_ann_pct": -0.697,
+      "tok_vol_ann_pct": 23.79,
+      "ben_vol_ann_pct": 25.47,
+      "vol_ratio": 0.9343
+     },
+     "daily_te_gap1": {
+      "n": 208,
+      "corr": 0.9854,
+      "te_ann_pct": 4.552,
+      "te_bps": 23.82,
+      "drift_ann_pct": -0.721,
+      "tok_vol_ann_pct": 23.96,
+      "ben_vol_ann_pct": 25.64,
+      "vol_ratio": 0.9343
+     },
+     "block5_te": {
+      "n": 42,
+      "corr": 0.9946,
+      "te_ann_pct": 2.364,
+      "te_bps": 27.66,
+      "drift_ann_pct": -0.109,
+      "tok_vol_ann_pct": 21.43,
+      "ben_vol_ann_pct": 22.1,
+      "vol_ratio": 0.9696
+     },
+     "block5_meta": {
+      "step_days": 5,
+      "n_blocks": 42,
+      "first_block": {
+       "from": "2026-03-27",
+       "to": "2026-03-31",
+       "n_days": 5
+      },
+      "last_block": {
+       "from": "2026-10-22",
+       "to": "2026-10-26",
+       "n_days": 5
+      }
+     },
+     "week_block_te": {
+      "n": 30,
+      "corr": 0.9985,
+      "te_ann_pct": 1.248,
+      "te_bps": 17.31,
+      "drift_ann_pct": -0.04,
+      "tok_vol_ann_pct": 19.51,
+      "ben_vol_ann_pct": 20.14,
+      "vol_ratio": 0.9689
+     },
+     "week_block_meta": {
+      "n_blocks": 30,
+      "first_week": "2026W14",
+      "last_week": "2026W43",
+      "mean_days_per_block": 6.73
+     },
+     "price_ratio": {
+      "start": "2026-03-26",
+      "end": "2026-10-28",
+      "ratio_start": 1.000245,
+      "ratio_end": 0.998567,
+      "ratio_change_pct": -0.168
+     }
+    },
+    "common_window": {
+     "label": "XAUT vs XAUUSD",
+     "window": "common_window",
+     "n_days_all": 177,
+     "n_days_gap1": 173,
+     "gap_hist": {
+      "1": 173,
+      "2": 4
+     },
+     "first_day": "2026-05-01",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 177,
+      "corr": 0.9903,
+      "te_ann_pct": 3.497,
+      "te_bps": 18.31,
+      "drift_ann_pct": -0.232,
+      "tok_vol_ann_pct": 23.18,
+      "ben_vol_ann_pct": 24.31,
+      "vol_ratio": 0.9535
+     },
+     "daily_te_gap1": {
+      "n": 173,
+      "corr": 0.9903,
+      "te_ann_pct": 3.522,
+      "te_bps": 18.44,
+      "drift_ann_pct": -0.249,
+      "tok_vol_ann_pct": 23.37,
+      "ben_vol_ann_pct": 24.5,
+      "vol_ratio": 0.9537
+     },
+     "block5_te": {
+      "n": 35,
+      "corr": 0.9963,
+      "te_ann_pct": 1.855,
+      "te_bps": 21.71,
+      "drift_ann_pct": 0.322,
+      "tok_vol_ann_pct": 20.5,
+      "ben_vol_ann_pct": 20.98,
+      "vol_ratio": 0.9771
+     },
+     "block5_meta": {
+      "step_days": 5,
+      "n_blocks": 35,
+      "first_block": {
+       "from": "2026-05-01",
+       "to": "2026-05-05",
+       "n_days": 5
+      },
+      "last_block": {
+       "from": "2026-10-22",
+       "to": "2026-10-26",
+       "n_days": 5
+      }
+     },
+     "week_block_te": {
+      "n": 25,
+      "corr": 0.9993,
+      "te_ann_pct": 0.929,
+      "te_bps": 12.88,
+      "drift_ann_pct": 0.377,
+      "tok_vol_ann_pct": 20.25,
+      "ben_vol_ann_pct": 20.75,
+      "vol_ratio": 0.9757
+     },
+     "week_block_meta": {
+      "n_blocks": 25,
+      "first_week": "2026W19",
+      "last_week": "2026W43",
+      "mean_days_per_block": 6.68
+     },
+     "price_ratio": {
+      "start": "2026-04-30",
+      "end": "2026-10-28",
+      "ratio_start": 0.998403,
+      "ratio_end": 0.998567,
+      "ratio_change_pct": 0.016
+     }
+    },
+    "null_controls": {
+     "full_window_daily": {
+      "actual_te_ann_pct": 4.518,
+      "n_draws": 2000,
+      "permute_block_days": 5,
+      "null_median": 34.806,
+      "null_p05": 32.668,
+      "null_p95": 36.694,
+      "percentile_of_actual": 0.0,
+      "verdict": "实际 TE 在零分布的第 0.0 分位(远低于 50 ⇒ 不是随机噪声)"
+     },
+     "full_window_block5": {
+      "actual_te_ann_pct": 2.364,
+      "n_draws": 2000,
+      "null_median": 30.879,
+      "null_p05": 26.596,
+      "null_p95": 34.476,
+      "percentile_of_actual": 0.0,
+      "verdict": "实际块 TE 在零分布的第 0.0 分位"
+     },
+     "common_window_daily": {
+      "actual_te_ann_pct": 3.497,
+      "n_draws": 2000,
+      "permute_block_days": 5,
+      "null_median": 33.602,
+      "null_p05": 31.306,
+      "null_p95": 35.651,
+      "percentile_of_actual": 0.0,
+      "verdict": "实际 TE 在零分布的第 0.0 分位(远低于 50 ⇒ 不是随机噪声)"
+     },
+     "common_window_block5": {
+      "actual_te_ann_pct": 1.855,
+      "n_draws": 2000,
+      "null_median": 29.38,
+      "null_p05": 24.76,
+      "null_p95": 33.178,
+      "percentile_of_actual": 0.0,
+      "verdict": "实际块 TE 在零分布的第 0.0 分位"
+     }
+    },
+    "outlier_check": {
+     "full_window": {
+      "threshold_bps": 50.0,
+      "n_flagged": 11,
+      "flagged_days": [
+       "2026-04-15",
+       "2026-04-16",
+       "2026-04-18",
+       "2026-04-19",
+       "2026-04-21",
+       "2026-04-22",
+       "2026-04-30",
+       "2026-05-05",
+       "2026-05-06",
+       "2026-05-11",
+       "2026-05-26"
+      ],
+      "n_kept": 201,
+      "te_ann_pct_excl_flagged": 3.341,
+      "corr_excl_flagged": 0.9925
+     },
+     "common_window": {
+      "threshold_bps": 50.0,
+      "n_flagged": 4,
+      "flagged_days": [
+       "2026-05-05",
+       "2026-05-06",
+       "2026-05-11",
+       "2026-05-26"
+      ],
+      "n_kept": 173,
+      "te_ann_pct_excl_flagged": 2.926,
+      "corr_excl_flagged": 0.9933
+     }
+    }
+   },
+   "SPYX": {
+    "desc": "股票:xStocks SPYX(Solana 池)",
+    "token_key": "SPYX_xstocks_dex",
+    "benchmark": "SPY",
+    "full_window": {
+     "label": "SPYX vs SPY",
+     "window": "full_window",
+     "n_days_all": 125,
+     "n_days_gap1": 99,
+     "gap_hist": {
+      "1": 99,
+      "3": 22,
+      "4": 4
+     },
+     "first_day": "2026-05-01",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 125,
+      "corr": 0.8696,
+      "te_ann_pct": 7.843,
+      "te_bps": 41.05,
+      "drift_ann_pct": -2.955,
+      "tok_vol_ann_pct": 15.82,
+      "ben_vol_ann_pct": 14.48,
+      "vol_ratio": 1.0927
+     },
+     "daily_te_gap1": {
+      "n": 99,
+      "corr": 0.8607,
+      "te_ann_pct": 7.911,
+      "te_bps": 41.41,
+      "drift_ann_pct": -0.0,
+      "tok_vol_ann_pct": 15.32,
+      "ben_vol_ann_pct": 14.52,
+      "vol_ratio": 1.0551
+     },
+     "block5_te": {
+      "n": 25,
+      "corr": 0.9662,
+      "te_ann_pct": 3.162,
+      "te_bps": 37.0,
+      "drift_ann_pct": -3.138,
+      "tok_vol_ann_pct": 12.24,
+      "ben_vol_ann_pct": 12.03,
+      "vol_ratio": 1.0175
+     },
+     "block5_meta": {
+      "step_days": 5,
+      "n_blocks": 25,
+      "first_block": {
+       "from": "2026-05-01",
+       "to": "2026-05-07",
+       "n_days": 5
+      },
+      "last_block": {
+       "from": "2026-10-22",
+       "to": "2026-10-28",
+       "n_days": 5
+      }
+     },
+     "week_block_te": {
+      "n": 21,
+      "corr": 0.971,
+      "te_ann_pct": 2.237,
+      "te_bps": 31.02,
+      "drift_ann_pct": -1.984,
+      "tok_vol_ann_pct": 9.18,
+      "ben_vol_ann_pct": 9.35,
+      "vol_ratio": 0.9814
+     },
+     "week_block_meta": {
+      "n_blocks": 21,
+      "first_week": "2026W19",
+      "last_week": "2026W43",
+      "mean_days_per_block": 4
+     },
+     "price_ratio": {
+      "start": "2026-04-30",
+      "end": "2026-10-28",
+      "ratio_start": 1.006312,
+      "ratio_end": 0.995499,
+      "ratio_change_pct": -1.075
+     }
+    },
+    "common_window": {
+     "label": "SPYX vs SPY",
+     "window": "common_window",
+     "n_days_all": 125,
+     "n_days_gap1": 99,
+     "gap_hist": {
+      "1": 99,
+      "3": 22,
+      "4": 4
+     },
+     "first_day": "2026-05-01",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 125,
+      "corr": 0.8696,
+      "te_ann_pct": 7.843,
+      "te_bps": 41.05,
+      "drift_ann_pct": -2.955,
+      "tok_vol_ann_pct": 15.82,
+      "ben_vol_ann_pct": 14.48,
+      "vol_ratio": 1.0927
+     },
+     "daily_te_gap1": {
+      "n": 99,
+      "corr": 0.8607,
+      "te_ann_pct": 7.911,
+      "te_bps": 41.41,
+      "drift_ann_pct": -0.0,
+      "tok_vol_ann_pct": 15.32,
+      "ben_vol_ann_pct": 14.52,
+      "vol_ratio": 1.0551
+     },
+     "block5_te": {
+      "n": 25,
+      "corr": 0.9662,
+      "te_ann_pct": 3.162,
+      "te_bps": 37.0,
+      "drift_ann_pct": -3.138,
+      "tok_vol_ann_pct": 12.24,
+      "ben_vol_ann_pct": 12.03,
+      "vol_ratio": 1.0175
+     },
+     "block5_meta": {
+      "step_days": 5,
+      "n_blocks": 25,
+      "first_block": {
+       "from": "2026-05-01",
+       "to": "2026-05-07",
+       "n_days": 5
+      },
+      "last_block": {
+       "from": "2026-10-22",
+       "to": "2026-10-28",
+       "n_days": 5
+      }
+     },
+     "week_block_te": {
+      "n": 21,
+      "corr": 0.971,
+      "te_ann_pct": 2.237,
+      "te_bps": 31.02,
+      "drift_ann_pct": -1.984,
+      "tok_vol_ann_pct": 9.18,
+      "ben_vol_ann_pct": 9.35,
+      "vol_ratio": 0.9814
+     },
+     "week_block_meta": {
+      "n_blocks": 21,
+      "first_week": "2026W19",
+      "last_week": "2026W43",
+      "mean_days_per_block": 4
+     },
+     "price_ratio": {
+      "start": "2026-04-30",
+      "end": "2026-10-28",
+      "ratio_start": 1.006312,
+      "ratio_end": 0.995499,
+      "ratio_change_pct": -1.075
+     }
+    },
+    "null_controls": {
+     "full_window_daily": {
+      "actual_te_ann_pct": 7.843,
+      "n_draws": 2000,
+      "permute_block_days": 5,
+      "null_median": 21.267,
+      "null_p05": 19.535,
+      "null_p95": 22.77,
+      "percentile_of_actual": 0.0,
+      "verdict": "实际 TE 在零分布的第 0.0 分位(远低于 50 ⇒ 不是随机噪声)"
+     },
+     "full_window_block5": {
+      "actual_te_ann_pct": 3.162,
+      "n_draws": 2000,
+      "null_median": 17.2,
+      "null_p05": 13.963,
+      "null_p95": 19.915,
+      "percentile_of_actual": 0.0,
+      "verdict": "实际块 TE 在零分布的第 0.0 分位"
+     },
+     "common_window_daily": {
+      "actual_te_ann_pct": 7.843,
+      "n_draws": 2000,
+      "permute_block_days": 5,
+      "null_median": 21.255,
+      "null_p05": 19.435,
+      "null_p95": 22.831,
+      "percentile_of_actual": 0.0,
+      "verdict": "实际 TE 在零分布的第 0.0 分位(远低于 50 ⇒ 不是随机噪声)"
+     },
+     "common_window_block5": {
+      "actual_te_ann_pct": 3.162,
+      "n_draws": 2000,
+      "null_median": 17.179,
+      "null_p05": 13.842,
+      "null_p95": 19.728,
+      "percentile_of_actual": 0.0,
+      "verdict": "实际块 TE 在零分布的第 0.0 分位"
+     }
+    },
+    "outlier_check": {
+     "full_window": {
+      "threshold_bps": 50.0,
+      "n_flagged": 24,
+      "flagged_days": [
+       "2026-05-08",
+       "2026-05-20",
+       "2026-05-28",
+       "2026-06-17",
+       "2026-06-18",
+       "2026-07-01",
+       "2026-07-13",
+       "2026-07-14",
+       "2026-07-28",
+       "2026-07-31",
+       "2026-08-26",
+       "2026-08-27",
+       "2026-09-08",
+       "2026-09-09",
+       "2026-09-11",
+       "2026-09-17",
+       "2026-09-21",
+       "2026-09-24",
+       "2026-09-30",
+       "2026-10-01",
+       "2026-10-06",
+       "2026-10-07",
+       "2026-10-12",
+       "2026-10-28"
+      ],
+      "n_kept": 101,
+      "te_ann_pct_excl_flagged": 5.126,
+      "corr_excl_flagged": 0.9427
+     },
+     "common_window": {
+      "threshold_bps": 50.0,
+      "n_flagged": 24,
+      "flagged_days": [
+       "2026-05-08",
+       "2026-05-20",
+       "2026-05-28",
+       "2026-06-17",
+       "2026-06-18",
+       "2026-07-01",
+       "2026-07-13",
+       "2026-07-14",
+       "2026-07-28",
+       "2026-07-31",
+       "2026-08-26",
+       "2026-08-27",
+       "2026-09-08",
+       "2026-09-09",
+       "2026-09-11",
+       "2026-09-17",
+       "2026-09-21",
+       "2026-09-24",
+       "2026-09-30",
+       "2026-10-01",
+       "2026-10-06",
+       "2026-10-07",
+       "2026-10-12",
+       "2026-10-28"
+      ],
+      "n_kept": 101,
+      "te_ann_pct_excl_flagged": 5.126,
+      "corr_excl_flagged": 0.9427
+     }
+    }
+   },
+   "SPY_ondo": {
+    "desc": "股票:Ondo SPY(Ethereum 池)",
+    "token_key": "SPY_ondo_dex",
+    "benchmark": "SPY",
+    "full_window": {
+     "label": "SPY_ondo vs SPY",
+     "window": "full_window",
+     "n_days_all": 124,
+     "n_days_gap1": 96,
+     "gap_hist": {
+      "1": 96,
+      "2": 1,
+      "3": 23,
+      "4": 4
+     },
+     "first_day": "2026-04-29",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 124,
+      "corr": 0.5249,
+      "te_ann_pct": 19.127,
+      "te_bps": 100.11,
+      "drift_ann_pct": -14.057,
+      "tok_vol_ann_pct": 22.31,
+      "ben_vol_ann_pct": 13.99,
+      "vol_ratio": 1.5952
+     },
+     "daily_te_gap1": {
+      "n": 96,
+      "corr": 0.4931,
+      "te_ann_pct": 17.747,
+      "te_bps": 92.89,
+      "drift_ann_pct": -51.326,
+      "tok_vol_ann_pct": 19.86,
+      "ben_vol_ann_pct": 13.85,
+      "vol_ratio": 1.4343
+     },
+     "block5_te": {
+      "n": 24,
+      "corr": 0.7572,
+      "te_ann_pct": 11.173,
+      "te_bps": 130.77,
+      "drift_ann_pct": -12.749,
+      "tok_vol_ann_pct": 16.96,
+      "ben_vol_ann_pct": 14.31,
+      "vol_ratio": 1.185
+     },
+     "block5_meta": {
+      "step_days": 5,
+      "n_blocks": 24,
+      "first_block": {
+       "from": "2026-04-29",
+       "to": "2026-05-05",
+       "n_days": 5
+      },
+      "last_block": {
+       "from": "2026-10-16",
+       "to": "2026-10-22",
+       "n_days": 5
+      }
+     },
+     "week_block_te": {
+      "n": 19,
+      "corr": 0.7521,
+      "te_ann_pct": 6.12,
+      "te_bps": 84.87,
+      "drift_ann_pct": -11.461,
+      "tok_vol_ann_pct": 8.75,
+      "ben_vol_ann_pct": 8.63,
+      "vol_ratio": 1.0144
+     },
+     "week_block_meta": {
+      "n_blocks": 19,
+      "first_week": "2026W20",
+      "last_week": "2026W43",
+      "mean_days_per_block": 4
+     },
+     "price_ratio": {
+      "start": "2026-04-28",
+      "end": "2026-10-28",
+      "ratio_start": 1.056425,
+      "ratio_end": 1.002051,
+      "ratio_change_pct": -5.147
+     }
+    },
+    "common_window": {
+     "label": "SPY_ondo vs SPY",
+     "window": "common_window",
+     "n_days_all": 122,
+     "n_days_gap1": 94,
+     "gap_hist": {
+      "1": 94,
+      "2": 1,
+      "3": 23,
+      "4": 4
+     },
+     "first_day": "2026-05-01",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 122,
+      "corr": 0.5529,
+      "te_ann_pct": 17.396,
+      "te_bps": 91.06,
+      "drift_ann_pct": -3.089,
+      "tok_vol_ann_pct": 20.64,
+      "ben_vol_ann_pct": 14.01,
+      "vol_ratio": 1.4737
+     },
+     "daily_te_gap1": {
+      "n": 94,
+      "corr": 0.5396,
+      "te_ann_pct": 15.31,
+      "te_bps": 80.14,
+      "drift_ann_pct": -37.884,
+      "tok_vol_ann_pct": 17.39,
+      "ben_vol_ann_pct": 13.86,
+      "vol_ratio": 1.255
+     },
+     "block5_te": {
+      "n": 24,
+      "corr": 0.5586,
+      "te_ann_pct": 11.699,
+      "te_bps": 136.92,
+      "drift_ann_pct": -2.94,
+      "tok_vol_ann_pct": 12.54,
+      "ben_vol_ann_pct": 12.36,
+      "vol_ratio": 1.0151
+     },
+     "block5_meta": {
+      "step_days": 5,
+      "n_blocks": 24,
+      "first_block": {
+       "from": "2026-05-01",
+       "to": "2026-05-08",
+       "n_days": 5
+      },
+      "last_block": {
+       "from": "2026-10-20",
+       "to": "2026-10-26",
+       "n_days": 5
+      }
+     },
+     "week_block_te": {
+      "n": 19,
+      "corr": 0.7521,
+      "te_ann_pct": 6.12,
+      "te_bps": 84.87,
+      "drift_ann_pct": -11.461,
+      "tok_vol_ann_pct": 8.75,
+      "ben_vol_ann_pct": 8.63,
+      "vol_ratio": 1.0144
+     },
+     "week_block_meta": {
+      "n_blocks": 19,
+      "first_week": "2026W20",
+      "last_week": "2026W43",
+      "mean_days_per_block": 4
+     },
+     "price_ratio": {
+      "start": "2026-04-30",
+      "end": "2026-10-28",
+      "ratio_start": 1.016298,
+      "ratio_end": 1.002051,
+      "ratio_change_pct": -1.402
+     }
+    },
+    "null_controls": {
+     "full_window_daily": {
+      "actual_te_ann_pct": 19.127,
+      "n_draws": 2000,
+      "permute_block_days": 5,
+      "null_median": 26.398,
+      "null_p05": 24.367,
+      "null_p95": 28.131,
+      "percentile_of_actual": 0.0,
+      "verdict": "实际 TE 在零分布的第 0.0 分位(远低于 50 ⇒ 不是随机噪声)"
+     },
+     "full_window_block5": {
+      "actual_te_ann_pct": 11.173,
+      "n_draws": 2000,
+      "null_median": 22.191,
+      "null_p05": 17.757,
+      "null_p95": 25.769,
+      "percentile_of_actual": 0.0,
+      "verdict": "实际块 TE 在零分布的第 0.0 分位"
+     },
+     "common_window_daily": {
+      "actual_te_ann_pct": 17.396,
+      "n_draws": 2000,
+      "permute_block_days": 5,
+      "null_median": 24.965,
+      "null_p05": 23.109,
+      "null_p95": 26.68,
+      "percentile_of_actual": 0.0,
+      "verdict": "实际 TE 在零分布的第 0.0 分位(远低于 50 ⇒ 不是随机噪声)"
+     },
+     "common_window_block5": {
+      "actual_te_ann_pct": 11.699,
+      "n_draws": 2000,
+      "null_median": 17.591,
+      "null_p05": 14.259,
+      "null_p95": 20.335,
+      "percentile_of_actual": 0.0025,
+      "verdict": "实际块 TE 在零分布的第 0.2 分位"
+     }
+    },
+    "outlier_check": {
+     "full_window": {
+      "threshold_bps": 50.0,
+      "n_flagged": 62,
+      "flagged_days": [
+       "2026-04-29",
+       "2026-04-30",
+       "2026-05-04",
+       "2026-05-07",
+       "2026-05-11",
+       "2026-05-12",
+       "2026-05-15",
+       "2026-05-19",
+       "2026-05-20",
+       "2026-05-27",
+       "2026-05-28",
+       "2026-06-01",
+       "2026-06-02",
+       "2026-06-03",
+       "2026-06-08",
+       "2026-06-09",
+       "2026-06-15",
+       "2026-06-16",
+       "2026-06-17",
+       "2026-06-18",
+       "2026-06-22",
+       "2026-06-23",
+       "2026-06-25",
+       "2026-06-26",
+       "2026-06-30",
+       "2026-07-02",
+       "2026-07-06",
+       "2026-07-07",
+       "2026-07-08",
+       "2026-07-09",
+       "2026-07-13",
+       "2026-07-15",
+       "2026-07-16",
+       "2026-07-17",
+       "2026-07-20",
+       "2026-07-22",
+       "2026-07-23",
+       "2026-07-27",
+       "2026-07-29",
+       "2026-07-31",
+       "2026-08-03",
+       "2026-08-04",
+       "2026-08-05",
+       "2026-08-07",
+       "2026-08-18",
+       "2026-08-24",
+       "2026-08-27",
+       "2026-08-31",
+       "2026-09-17",
+       "2026-09-18",
+       "2026-09-21",
+       "2026-09-23",
+       "2026-09-24",
+       "2026-09-29",
+       "2026-09-30",
+       "2026-10-01",
+       "2026-10-16",
+       "2026-10-20",
+       "2026-10-21",
+       "2026-10-22",
+       "2026-10-23",
+       "2026-10-28"
+      ],
+      "n_kept": 62,
+      "te_ann_pct_excl_flagged": 5.279,
+      "corr_excl_flagged": 0.9097
+     },
+     "common_window": {
+      "threshold_bps": 50.0,
+      "n_flagged": 60,
+      "flagged_days": [
+       "2026-05-04",
+       "2026-05-07",
+       "2026-05-11",
+       "2026-05-12",
+       "2026-05-15",
+       "2026-05-19",
+       "2026-05-20",
+       "2026-05-27",
+       "2026-05-28",
+       "2026-06-01",
+       "2026-06-02",
+       "2026-06-03",
+       "2026-06-08",
+       "2026-06-09",
+       "2026-06-15",
+       "2026-06-16",
+       "2026-06-17",
+       "2026-06-18",
+       "2026-06-22",
+       "2026-06-23",
+       "2026-06-25",
+       "2026-06-26",
+       "2026-06-30",
+       "2026-07-02",
+       "2026-07-06",
+       "2026-07-07",
+       "2026-07-08",
+       "2026-07-09",
+       "2026-07-13",
+       "2026-07-15",
+       "2026-07-16",
+       "2026-07-17",
+       "2026-07-20",
+       "2026-07-22",
+       "2026-07-23",
+       "2026-07-27",
+       "2026-07-29",
+       "2026-07-31",
+       "2026-08-03",
+       "2026-08-04",
+       "2026-08-05",
+       "2026-08-07",
+       "2026-08-18",
+       "2026-08-24",
+       "2026-08-27",
+       "2026-08-31",
+       "2026-09-17",
+       "2026-09-18",
+       "2026-09-21",
+       "2026-09-23",
+       "2026-09-24",
+       "2026-09-29",
+       "2026-09-30",
+       "2026-10-01",
+       "2026-10-16",
+       "2026-10-20",
+       "2026-10-21",
+       "2026-10-22",
+       "2026-10-23",
+       "2026-10-28"
+      ],
+      "n_kept": 62,
+      "te_ann_pct_excl_flagged": 5.279,
+      "corr_excl_flagged": 0.9097
+     }
+    }
+   }
+  },
+  "candidate_differences": {
+   "XAUT_minus_PAXG": {
+    "label": "XAUT − PAXG",
+    "n_days": 178,
+    "first_day": "2026-04-30",
+    "last_day": "2026-10-28",
+    "daily": {
+     "te_a_ann_pct": 3.497,
+     "te_b_ann_pct": 3.57,
+     "observed_diff_pp": -0.073,
+     "n_draws": 2000,
+     "null_median_diff_pp": -0.097,
+     "null_p05_pp": -0.214,
+     "null_p95_pp": 0.019,
+     "percentile_of_observed": 0.636,
+     "two_sided_p": 0.728,
+     "verdict": "差距不可读(观测差落在零分布中段,分位 0.636)"
+    },
+    "block5": {
+     "n_blocks": 35,
+     "te_a_ann_pct": 1.855,
+     "te_b_ann_pct": 1.899,
+     "observed_diff_pp": -0.044,
+     "n_draws": 2000,
+     "null_median_diff_pp": 0.088,
+     "null_p05_pp": -0.084,
+     "null_p95_pp": 0.262,
+     "percentile_of_observed": 0.102,
+     "two_sided_p": 0.204,
+     "verdict": "差距不可读(观测差落在零分布中段,分位 0.102)"
+    }
+   },
+   "SPYX_minus_SPY_ondo": {
+    "label": "SPYX − SPY(ondo)",
+    "n_days": 123,
+    "first_day": "2026-04-30",
+    "last_day": "2026-10-28",
+    "daily": {
+     "te_a_ann_pct": 7.91,
+     "te_b_ann_pct": 17.396,
+     "observed_diff_pp": -9.486,
+     "n_draws": 2000,
+     "null_median_diff_pp": -4.328,
+     "null_p05_pp": -6.004,
+     "null_p95_pp": -2.661,
+     "percentile_of_observed": 0.0,
+     "two_sided_p": 0.0,
+     "verdict": "差距可读"
+    },
+    "block5": {
+     "n_blocks": 24,
+     "te_a_ann_pct": 3.207,
+     "te_b_ann_pct": 11.699,
+     "observed_diff_pp": -8.492,
+     "n_draws": 2000,
+     "null_median_diff_pp": 0.682,
+     "null_p05_pp": -2.267,
+     "null_p95_pp": 3.616,
+     "percentile_of_observed": 0.0,
+     "two_sided_p": 0.0,
+     "verdict": "差距可读"
+    }
+   }
+  },
+  "baselines": {
+   "GLD_vs_XAUUSD": {
+    "why": "不代币化的黄金腿:实物支撑 ETF 的自身跟踪成本(费用 + 期货展期)",
+    "source": "supabase:ohlcv_daily(eodhd,yfinance,prefer=eodhd)",
+    "full_window": {
+     "label": "GLD vs XAUUSD",
+     "window": "full_window",
+     "n_days_all": 545,
+     "n_days_gap1": 424,
+     "gap_hist": {
+      "1": 424,
+      "2": 8,
+      "3": 99,
+      "4": 14
+     },
+     "first_day": "2024-08-27",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 545,
+      "corr": 0.9431,
+      "te_ann_pct": 9.715,
+      "te_bps": 50.85,
+      "drift_ann_pct": -0.427,
+      "tok_vol_ann_pct": 28.53,
+      "ben_vol_ann_pct": 29.02,
+      "vol_ratio": 0.9834
+     },
+     "daily_te_gap1": {
+      "n": 424,
+      "corr": 0.9343,
+      "te_ann_pct": 10.379,
+      "te_bps": 54.33,
+      "drift_ann_pct": 0.291,
+      "tok_vol_ann_pct": 28.09,
+      "ben_vol_ann_pct": 28.97,
+      "vol_ratio": 0.9697
+     },
+     "block5_te": {
+      "n": 109,
+      "corr": 0.9944,
+      "te_ann_pct": 2.688,
+      "te_bps": 31.46,
+      "drift_ann_pct": -0.317,
+      "tok_vol_ann_pct": 25.42,
+      "ben_vol_ann_pct": 25.54,
+      "vol_ratio": 0.9954
+     },
+     "block5_meta": {
+      "step_days": 5,
+      "n_blocks": 109,
+      "first_block": {
+       "from": "2024-08-27",
+       "to": "2024-09-03",
+       "n_days": 5
+      },
+      "last_block": {
+       "from": "2026-10-22",
+       "to": "2026-10-28",
+       "n_days": 5
+      }
+     },
+     "week_block_te": {
+      "n": 91,
+      "corr": 0.9877,
+      "te_ann_pct": 3.193,
+      "te_bps": 44.28,
+      "drift_ann_pct": 0.118,
+      "tok_vol_ann_pct": 20.17,
+      "ben_vol_ann_pct": 19.38,
+      "vol_ratio": 1.0405
+     },
+     "week_block_meta": {
+      "n_blocks": 91,
+      "first_week": "2024W35",
+      "last_week": "2026W43",
+      "mean_days_per_block": 4
+     },
+     "price_ratio": {
+      "start": "2024-08-26",
+      "end": "2026-10-28",
+      "ratio_start": 0.092528,
+      "ratio_end": 0.092123,
+      "ratio_change_pct": -0.437
+     }
+    },
+    "common_window": {
+     "label": "GLD vs XAUUSD",
+     "window": "common_window",
+     "n_days_all": 125,
+     "n_days_gap1": 99,
+     "gap_hist": {
+      "1": 99,
+      "3": 22,
+      "4": 4
+     },
+     "first_day": "2026-05-01",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 125,
+      "corr": 0.9626,
+      "te_ann_pct": 7.878,
+      "te_bps": 41.24,
+      "drift_ann_pct": 1.476,
+      "tok_vol_ann_pct": 28.74,
+      "ben_vol_ann_pct": 28.89,
+      "vol_ratio": 0.9947
+     },
+     "daily_te_gap1": {
+      "n": 99,
+      "corr": 0.9602,
+      "te_ann_pct": 8.356,
+      "te_bps": 43.74,
+      "drift_ann_pct": 8.98,
+      "tok_vol_ann_pct": 29.46,
+      "ben_vol_ann_pct": 29.71,
+      "vol_ratio": 0.9914
+     },
+     "block5_te": {
+      "n": 25,
+      "corr": 0.9975,
+      "te_ann_pct": 1.995,
+      "te_bps": 23.35,
+      "drift_ann_pct": 1.642,
+      "tok_vol_ann_pct": 27.63,
+      "ben_vol_ann_pct": 27.11,
+      "vol_ratio": 1.0191
+     },
+     "block5_meta": {
+      "step_days": 5,
+      "n_blocks": 25,
+      "first_block": {
+       "from": "2026-05-01",
+       "to": "2026-05-07",
+       "n_days": 5
+      },
+      "last_block": {
+       "from": "2026-10-22",
+       "to": "2026-10-28",
+       "n_days": 5
+      }
+     },
+     "week_block_te": {
+      "n": 21,
+      "corr": 0.996,
+      "te_ann_pct": 1.934,
+      "te_bps": 26.82,
+      "drift_ann_pct": 4.444,
+      "tok_vol_ann_pct": 21.58,
+      "ben_vol_ann_pct": 21.36,
+      "vol_ratio": 1.0103
+     },
+     "week_block_meta": {
+      "n_blocks": 21,
+      "first_week": "2026W19",
+      "last_week": "2026W43",
+      "mean_days_per_block": 4
+     },
+     "price_ratio": {
+      "start": "2026-04-30",
+      "end": "2026-10-28",
+      "ratio_start": 0.09165,
+      "ratio_end": 0.092123,
+      "ratio_change_pct": 0.517
+     }
+    }
+   },
+   "SPY_etf_vs_index": {
+    "why": "不代币化的股票腿:ETF 自身对指数的跟踪成本",
+    "spx_source": "fred:SP500",
+    "full_window": {
+     "label": "SPY(ETF) vs SPX(指数)",
+     "window": "full_window",
+     "n_days_all": 545,
+     "n_days_gap1": 424,
+     "gap_hist": {
+      "1": 424,
+      "2": 8,
+      "3": 99,
+      "4": 14
+     },
+     "first_day": "2024-08-27",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 545,
+      "corr": 0.9913,
+      "te_ann_pct": 2.61,
+      "te_bps": 13.66,
+      "drift_ann_pct": -0.033,
+      "tok_vol_ann_pct": 19.01,
+      "ben_vol_ann_pct": 19.59,
+      "vol_ratio": 0.9704
+     },
+     "daily_te_gap1": {
+      "n": 424,
+      "corr": 0.9902,
+      "te_ann_pct": 2.877,
+      "te_bps": 15.06,
+      "drift_ann_pct": 2.499,
+      "tok_vol_ann_pct": 19.57,
+      "ben_vol_ann_pct": 20.26,
+      "vol_ratio": 0.966
+     },
+     "block5_te": {
+      "n": 109,
+      "corr": 0.9884,
+      "te_ann_pct": 2.354,
+      "te_bps": 27.55,
+      "drift_ann_pct": 0.017,
+      "tok_vol_ann_pct": 15.06,
+      "ben_vol_ann_pct": 15.43,
+      "vol_ratio": 0.9759
+     },
+     "block5_meta": {
+      "step_days": 5,
+      "n_blocks": 109,
+      "first_block": {
+       "from": "2024-08-27",
+       "to": "2024-09-03",
+       "n_days": 5
+      },
+      "last_block": {
+       "from": "2026-10-22",
+       "to": "2026-10-28",
+       "n_days": 5
+      }
+     },
+     "week_block_te": {
+      "n": 91,
+      "corr": 0.9912,
+      "te_ann_pct": 2.029,
+      "te_bps": 28.13,
+      "drift_ann_pct": 1.663,
+      "tok_vol_ann_pct": 15.18,
+      "ben_vol_ann_pct": 15.28,
+      "vol_ratio": 0.9932
+     },
+     "week_block_meta": {
+      "n_blocks": 91,
+      "first_week": "2024W35",
+      "last_week": "2026W43",
+      "mean_days_per_block": 4
+     },
+     "price_ratio": {
+      "start": "2024-08-26",
+      "end": "2026-10-28",
+      "ratio_start": 10.015942,
+      "ratio_end": 10.027036,
+      "ratio_change_pct": 0.111
+     }
+    },
+    "common_window": {
+     "label": "SPY(ETF) vs SPX(指数)",
+     "window": "common_window",
+     "n_days_all": 125,
+     "n_days_gap1": 99,
+     "gap_hist": {
+      "1": 99,
+      "3": 22,
+      "4": 4
+     },
+     "first_day": "2026-05-01",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 125,
+      "corr": 0.9938,
+      "te_ann_pct": 1.616,
+      "te_bps": 8.46,
+      "drift_ann_pct": -1.611,
+      "tok_vol_ann_pct": 14.38,
+      "ben_vol_ann_pct": 14.48,
+      "vol_ratio": 0.9932
+     },
+     "daily_te_gap1": {
+      "n": 99,
+      "corr": 0.9948,
+      "te_ann_pct": 1.491,
+      "te_bps": 7.81,
+      "drift_ann_pct": 2.245,
+      "tok_vol_ann_pct": 14.61,
+      "ben_vol_ann_pct": 14.52,
+      "vol_ratio": 1.0061
+     },
+     "block5_te": {
+      "n": 25,
+      "corr": 0.9996,
+      "te_ann_pct": 0.377,
+      "te_bps": 4.42,
+      "drift_ann_pct": -1.584,
+      "tok_vol_ann_pct": 12.17,
+      "ben_vol_ann_pct": 12.03,
+      "vol_ratio": 1.012
+     },
+     "block5_meta": {
+      "step_days": 5,
+      "n_blocks": 25,
+      "first_block": {
+       "from": "2026-05-01",
+       "to": "2026-05-07",
+       "n_days": 5
+      },
+      "last_block": {
+       "from": "2026-10-22",
+       "to": "2026-10-28",
+       "n_days": 5
+      }
+     },
+     "week_block_te": {
+      "n": 21,
+      "corr": 0.9966,
+      "te_ann_pct": 0.783,
+      "te_bps": 10.86,
+      "drift_ann_pct": 1.026,
+      "tok_vol_ann_pct": 9.18,
+      "ben_vol_ann_pct": 9.35,
+      "vol_ratio": 0.9811
+     },
+     "week_block_meta": {
+      "n_blocks": 21,
+      "first_week": "2026W19",
+      "last_week": "2026W43",
+      "mean_days_per_block": 4
+     },
+     "price_ratio": {
+      "start": "2026-04-30",
+      "end": "2026-10-28",
+      "ratio_start": 10.081996,
+      "ratio_end": 10.027036,
+      "ratio_change_pct": -0.545
+     }
+    },
+    "null_controls": {
+     "common_window_daily": {
+      "actual_te_ann_pct": 1.616,
+      "n_draws": 2000,
+      "permute_block_days": 5,
+      "null_median": 20.143,
+      "null_p05": 18.286,
+      "null_p95": 21.687,
+      "percentile_of_actual": 0.0,
+      "verdict": "实际 TE 在零分布的第 0.0 分位(远低于 50 ⇒ 不是随机噪声)"
+     }
+    },
+    "outlier_check": {
+     "full_window": {
+      "threshold_bps": 50.0,
+      "n_flagged": 4,
+      "flagged_days": [
+       "2024-08-27",
+       "2025-04-09",
+       "2025-04-10",
+       "2026-06-26"
+      ],
+      "n_kept": 541,
+      "te_ann_pct_excl_flagged": 0.9,
+      "corr_excl_flagged": 0.9986
+     },
+     "common_window": {
+      "threshold_bps": 50.0,
+      "n_flagged": 1,
+      "flagged_days": [
+       "2026-06-26"
+      ],
+      "n_kept": 124,
+      "te_ann_pct_excl_flagged": 1.117,
+      "corr_excl_flagged": 0.997
+     }
+    }
+   },
+   "SPY_source_divergence": {
+    "why": "同一只 ETF、两个数据源(eodhd vs yfinance)的偏离度 = 测量分辨率下限",
+    "source": "supabase:ohlcv_daily(eodhd,yfinance,prefer=yfinance)",
+    "common_window": {
+     "label": "SPY(eodhd) vs SPY(yfinance)",
+     "window": "common_window",
+     "n_days_all": 34,
+     "n_days_gap1": 27,
+     "gap_hist": {
+      "1": 27,
+      "3": 6,
+      "4": 1
+     },
+     "first_day": "2026-05-01",
+     "last_day": "2026-06-18",
+     "daily_te": {
+      "n": 34,
+      "corr": 0.9988,
+      "te_ann_pct": 0.851,
+      "te_bps": 4.45,
+      "drift_ann_pct": -2.788,
+      "tok_vol_ann_pct": 17.24,
+      "ben_vol_ann_pct": 17.37,
+      "vol_ratio": 0.9924
+     },
+     "daily_te_gap1": {
+      "n": 27,
+      "corr": 0.9987,
+      "te_ann_pct": 0.955,
+      "te_bps": 5.0,
+      "drift_ann_pct": -3.51,
+      "tok_vol_ann_pct": 18.13,
+      "ben_vol_ann_pct": 18.31,
+      "vol_ratio": 0.9906
+     },
+     "block5_te": {
+      "n": 6,
+      "corr": 1.0,
+      "te_ann_pct": 0.0,
+      "te_bps": 0.01,
+      "drift_ann_pct": -0.001,
+      "tok_vol_ann_pct": 15.83,
+      "ben_vol_ann_pct": 15.83,
+      "vol_ratio": 1.0
+     },
+     "block5_meta": {
+      "step_days": 5,
+      "n_blocks": 6,
+      "first_block": {
+       "from": "2026-05-01",
+       "to": "2026-05-07",
+       "n_days": 5
+      },
+      "last_block": {
+       "from": "2026-06-08",
+       "to": "2026-06-12",
+       "n_days": 5
+      }
+     },
+     "week_block_te": {
+      "n": 5,
+      "corr": 1.0,
+      "te_ann_pct": 0.0,
+      "te_bps": 0.01,
+      "drift_ann_pct": 0.001,
+      "tok_vol_ann_pct": 14.34,
+      "ben_vol_ann_pct": 14.34,
+      "vol_ratio": 1.0
+     },
+     "week_block_meta": {
+      "n_blocks": 5,
+      "first_week": "2026W19",
+      "last_week": "2026W24",
+      "mean_days_per_block": 4
+     },
+     "price_ratio": {
+      "start": "2026-04-30",
+      "end": "2026-06-18",
+      "ratio_start": 1.005065,
+      "ratio_end": 1.002482,
+      "ratio_change_pct": -0.257
+     }
+    }
+   }
+  },
+  "spx_fetch_attempts": [
+   {
+    "source": "stockanalysis",
+    "symbol": "i:SPX",
+    "ok": false,
+    "note": "HTTPError: HTTP Error 404: Not Found"
+   },
+   {
+    "source": "stockanalysis",
+    "symbol": "i:SP500",
+    "ok": false,
+    "note": "HTTPError: HTTP Error 404: Not Found"
+   },
+   {
+    "source": "stockanalysis",
+    "symbol": "i:^GSPC",
+    "ok": false,
+    "note": "HTTPError: HTTP Error 404: Not Found"
+   },
+   {
+    "source": "stockanalysis",
+    "symbol": "i:GSPC",
+    "ok": false,
+    "note": "HTTPError: HTTP Error 404: Not Found"
+   },
+   {
+    "source": "investing.com",
+    "symbol": "SPX(166)",
+    "ok": false,
+    "note": "HTTPError: HTTP Error 403: Forbidden"
+   },
+   {
+    "source": "fred",
+    "symbol": "SP500",
+    "ok": true,
+    "n_days": 2512,
+    "first_day": "2016-10-31",
+    "last_day": "2026-10-28",
+    "note": "S&P Dow Jones 官方指数收盘(CSV,无需 key)"
+   }
+  ],
+  "common_window": {
+   "start": "2026-04-30",
+   "end": "2026-10-28",
+   "n_days": 177,
+   "note": "四条腿的价格日线交集(XAUUSD 基准含周末行,SPY 基准只有工作日)"
   }
  }
 }
