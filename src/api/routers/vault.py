@@ -19,38 +19,8 @@ router = APIRouter()
 
 # Real verified GP partners only — no fictional data
 _VAULT_FUNDS = [
-    {
-        "id": "est-alpha",
-        "name": "EST Alpha",
-        "strategy": "Multi-Strategy",
-        "location": "Singapore",
-        "aum": "Confidential",
-        "yearFounded": 2024,
-        "status": "active",
-        "verified": True,
-        "note": "CometCloud Founding GP Partner",
-        "performance": {
-            "ytd": 8.5,
-            "annualReturn": None,
-            "sharpeRatio": None,
-            "maxDrawdown": -2.1,
-            "_note": "YTD preliminary, unaudited — live track record accumulating",
-        },
-        "scores": {
-            "performance": 15,
-            "strategy": 18,
-            "team": 20,
-            "risk": 15,
-            "transparency": 10,
-            "aumTrackRecord": 5,
-            "total": 83,
-        },
-        "grade": "A",  # 不对外(S-545):对外是星级,由 scores.total 推出
-        "description": "CometCloud's flagship GP partner specializing in institutional DeFi strategies.",
-        "team": "Ex-Jane Street, Wintermute, Delphi Digital",
-        "strategyDetail": "Multi-strategy DeFi: yield optimization, delta-neutral, protocol governance",
-        "advantage": "Direct integration with CometCloud vault infrastructure",
-    },
+    # EST Alpha removed from every public surface (Jazz 2026-10-28): its YTD, "verified" mark and team
+    # background were partner-supplied, unaudited, and hard-coded here. Not to be re-added without Jazz.
     {
         "id": "humblebee-capital",
         "name": "HumbleBee Capital",

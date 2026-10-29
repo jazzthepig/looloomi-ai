@@ -807,7 +807,7 @@ export default function StrategyPage() {
               icon="🗂"
               title="Fund of Funds"
               subtitle="INSTITUTIONAL · MULTI-GP · ON-CHAIN"
-              description="Solana-based fund-of-funds allocating across CIS-scored GP partners, offered through a regulated fund structure: a management fee covering fund costs plus a performance fee. Denominated in OSL stablecoin."
+              description="On-chain fund-of-funds, venue- and chain-agnostic, allocating across CIS-scored GP partners, offered through a regulated fund structure: a management fee covering fund costs plus a performance fee. Denominated in OSL stablecoin."
               metrics={[
                 { label: "Structure", value: "On-chain FoF", color: T.t1 },
                 { label: "Target AUM", value: "$30M · built for $500M", color: T.t1 },
@@ -819,29 +819,15 @@ export default function StrategyPage() {
             >
               <div>
                 <div style={{ fontFamily: F.mono, fontSize: 9, color: T.t3, letterSpacing: "0.1em", marginBottom: 8 }}>
-                  CONFIRMED GP PARTNERS
-                </div>
-                <div style={{
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                  padding: "8px 0", borderBottom: `1px solid ${T.border}`,
-                }}>
-                  <div>
-                    <div style={{ fontFamily: F.display, fontSize: 12, fontWeight: 600, color: T.t1 }}>EST Alpha</div>
-                    <div style={{ fontFamily: F.mono, fontSize: 10, color: T.t3 }}>Multi-Strategy · Singapore</div>
-                  </div>
-                  <span style={{
-                    fontFamily: F.mono, fontSize: 9, fontWeight: 700, padding: "2px 8px",
-                    borderRadius: 3, background: "rgba(0,232,122,0.08)", color: T.green,
-                    border: "1px solid rgba(0,232,122,0.2)",
-                  }}>CONFIRMED</span>
+                  GP PARTNERS
                 </div>
                 <div style={{
                   display: "flex", justifyContent: "space-between", alignItems: "center",
                   padding: "8px 0",
                 }}>
                   <div>
-                    <div style={{ fontFamily: F.display, fontSize: 12, fontWeight: 600, color: T.t3 }}>Additional GPs</div>
-                    <div style={{ fontFamily: F.mono, fontSize: 10, color: T.t3 }}>Onboarding</div>
+                    <div style={{ fontFamily: F.display, fontSize: 12, fontWeight: 600, color: T.t3 }}>GP partners</div>
+                    <div style={{ fontFamily: F.mono, fontSize: 10, color: T.t3 }}>Onboarding · named once agreements are final</div>
                   </div>
                   <span style={{
                     fontFamily: F.mono, fontSize: 9, fontWeight: 700, padding: "2px 8px",
@@ -910,7 +896,7 @@ export default function StrategyPage() {
               { title: "Regulatory Framework", desc: "Hong Kong incorporated entity. Structured for institutional LP participation with proper fund documentation and compliance.", icon: "🏛" },
               { title: "Technology Stack", desc: "Point-in-time data pipelines, one scoring standard for history and publication, and append-only daily records.", icon: "⚙" },
               { title: "Fee Structure", desc: "Strategies carry zero management fee — performance fee only, so our interests stay aligned with LP returns. A regulated fund vehicle adds a management fee that covers fund administration costs; the two structures sit side by side.", icon: "💎" },
-              { title: "On-Chain Settlement", desc: "Solana-based fund operations. OSL stablecoin denominated. Designed for both human LPs and autonomous AI agent participation.", icon: "⛓" },
+              { title: "On-Chain Settlement", desc: "On-chain fund operations, chain-agnostic. OSL stablecoin denominated. Designed for both human LPs and autonomous AI agent participation.", icon: "⛓" },
               { title: "Risk Controls", desc: "Max 8% single-asset allocation. Regime-based derisking. Drawdown triggers. 6 macro regime detection for dynamic weight adjustment.", icon: "🛡" },
               { title: "Transparency", desc: "Full CIS methodology published. Daily official scores, an intraday preview, score history and grade migration for all assets.", icon: "📊" },
             ].map((card, i) => (

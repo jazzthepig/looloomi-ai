@@ -8,7 +8,7 @@
 //   DesktopApp    — sidebar + topnav fallback + content pane w/ per-route lazy mounts
 //   StagingBanner — orange ribbon only on ?env=staging
 //   useIsMobile   — matchMedia hook
-//   QuantGPContent — wrapper that composes QuantMonitor + EstAlphaSection
+//   QuantGPContent — wrapper around QuantMonitor (Research Desk)
 //
 // Extracted in B2 split (2026-08-13):
 //   SectionLabel / CompactSectionLabel / SectionLoader  → SectionLabels.jsx
@@ -36,7 +36,6 @@ const ApiKeysPage           = lazy(() => import("./components/ApiKeysPage"));
 const ProtocolIntelligence  = lazy(() => import("./components/ProtocolIntelligence"));
 const MobileApp             = lazy(() => import("./components/MobileApp"));
 const QuantMonitor          = lazy(() => import("./components/QuantMonitor"));
-const EstAlphaSection       = lazy(() => import("./components/EstAlphaSection"));
 const MyPortfolio           = lazy(() => import("./components/MyPortfolio"));
 // AssetRadar: restored 2026-08-18. It is rendered at the `cis.radar` section
 // below but its import was lost in the 227edcd split (App.jsx 1046 -> 445), so
@@ -144,7 +143,7 @@ const contentPad = {
 };
 
 /* ─────────────────────────────────────────────────────────────────────────
-   QUANT GP SECTION — EST Alpha Partner
+   QUANT GP SECTION — Research Desk
 ──────────────────────────────────────────────────────────────────────── */
 function QuantGPContent() {
   return (
@@ -156,10 +155,7 @@ function QuantGPContent() {
         </Suspense>
       </div>
 
-      {/* Section 2 — EST Alpha Strategic GP (data-driven) */}
-      <Suspense fallback={<SectionLoader />}>
-        <EstAlphaSection />
-      </Suspense>
+      {/* EST Alpha section removed from public display (Jazz 2026-10-28) */}
     </div>
   );
 }
