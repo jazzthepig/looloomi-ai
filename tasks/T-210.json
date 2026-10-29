@@ -1,0 +1,27 @@
+{
+ "id": "T-210",
+ "owner": "lane-b",
+ "status": "open",
+ "created": "2026-10-29",
+ "forbidden_paths": [
+  "Shadow/",
+  "src/",
+  "paper_trading/",
+  "PROJECT_STATE.md",
+  "PROJECT_STATE_LOG.md",
+  "scripts/",
+  "migrations/"
+ ],
+ "title": "灵活组合 T25 的链上腿怎么买:代币化黄金 / 代币化 SPY / 现金(稳定币、代币化国债)在我们这个量级的执行路径对比(只读调查)",
+ "source": "Jazz 10-29「好的」(高维复盘:真钱先跑灵活组合 T25)。设计 docs/PORTFOLIO_LAYER_DESIGN.md 的 P2。",
+ "allowed_paths": [
+  "docs/research/",
+  "tasks/T-210.json"
+ ],
+ "acceptance": {
+  "check": "**只读、不碰任何私钥、不下任何单、不注册任何账户。** 对每条腿列 2–4 个候选(黄金:PAXG、XAUT 等;股票:Ondo Global Markets、xStocks、Dinari 等的 SPY;现金:USDC 与 1–2 个净值型代币化国债)。每个候选一行,列:链;发行方与托管;**能不能在二级市场直接买**(DEX / CEX)还是只能找发行方申赎;香港居民 / 非美国人的 KYC 与地区限制(引发行方原文链接);$500 / $5,000 / $50,000 三档订单的估计滑点(DEX 深度或 CEX 盘口,写明取数时刻与来源);来回费用;与底层的跟踪误差(用 Supabase `world50_onchain_forms` 的价格快照对 `ohlcv_daily` eodhd 的 XAUUSD / SPY 同日收盘算,写明天数);赎回 / 冻结 / 黑名单条款。数据只来自公开网页与我们库里的只读表(publishable key)。新分支 git switch -c lane-b/T-210 origin/main。",
+  "expect": "报告 docs/research/t210_onchain_legs.md:开头一张对比表(每条腿推荐一个、备选一个,写理由),然后每个候选的明细与链接,最后「风险」与「还看到了什么」(标探索);跟踪误差的脚本与结果 docs/research/t210_tracking.py / t210_tracking.json。in_review,推 lane-b/T-210。**交付 = 已推上分支**。"
+ },
+ "prior_value": "执行器只会说 Hyperliquid;T25 的黄金 / 股票 / 现金腿在链上能不能买、怎么买,我们没有一份对比。",
+ "notes": ""
+}

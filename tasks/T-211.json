@@ -1,0 +1,26 @@
+{
+ "id": "T-211",
+ "owner": "lane-c",
+ "status": "open",
+ "created": "2026-10-29",
+ "forbidden_paths": [
+  "Shadow/",
+  "src/",
+  "paper_trading/",
+  "PROJECT_STATE.md",
+  "PROJECT_STATE_LOG.md",
+  "migrations/"
+ ],
+ "title": "Mac 引擎的三处静默失败:宏观输入写死默认值 ≥30 天、risk_meter_history_push.py 与 vector_push.py 不在了(MINIMAX_SYNC §Seth-1029a)",
+ "source": "10-29 Seth 体检:cis_scheduler 日志 09-29 起每轮 [MACRO] 都是 MacroSnapshot 默认值(VIX 18.0 / 2Y 4.50 / 10Y 4.25 / DXY 104.0,regime 恒为 Tightening),10-29 换 EODHD token 后才出现真值;risk_meter_history 10-12 起 0 次写入尝试(脚本缺失时 _maybe_run_d1_d2 直接 continue、不计失败);每轮 [A-N2-VP] vector_push.py missing。",
+ "allowed_paths": [
+  "docs/research/",
+  "tasks/T-211.json"
+ ],
+ "acceptance": {
+  "check": "**改的是你自己的根 /Volumes/CometCloudAI/cometcloud-local/(Minimax 的 lane),不是仓库。** ① 找出两个脚本去了哪(哪次清理、移到了哪);恢复或说明为什么退役 —— 退役就同时删掉调度里的调用。Shadow 里有一份 risk_meter_history_push.py 可对照,**以你的根为准**。② `_maybe_run_d1_d2` 与 vector push:脚本缺失计入失败(rc_total 置位、日志 ERROR),不再 continue 静默。③ 宏观:`fetch_macro_indicators` 取不到时**不许**落回 MacroSnapshot 的默认值 —— 标 unavailable、日志 ERROR、selfcheck 计红;推送里带上「宏观来源 = 实测 / 不可用」字段之前先在 MINIMAX_SYNC §2 写合约变更(规则 2),Seth 确认后再改推送。④ 每一处改动附「改之前日志里的那一行」与「改之后的那一行」。",
+  "expect": "Supabase:`select max(d) from risk_meter_history` = 昨天(若恢复);Mac 日志 24 小时内 [MACRO] 不再出现那组默认值;报告 /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/T-211_mac_silent_failures.md(三处各:原因、改动、前后日志行、怎么判活)。卡片 notes 写清改了哪些文件(Mac 根内的路径)。in_review 时在卡上写明「改动在 Mac 根,不在分支」。"
+ },
+ "prior_value": "Mac 盘中预览与它的纸面交易模块用了至少 30 天的假宏观;risk_meter_history 停 17 天没人知道。",
+ "notes": ""
+}
