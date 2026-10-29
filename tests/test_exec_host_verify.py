@@ -212,6 +212,10 @@ class Venue:
     def perp_state(self):
         return {"ok": True, "equity": 704.0, "positions": {}}
 
+    def ticket_account(self):
+        from src.exec_host import tickets
+        return tickets.account_for_tickets(self.perp_state(), "default", None)
+
     def daily_bars(self, coin, through):
         self.asked.append((coin, through.isoformat()))
         return self.bars.get(coin, [])

@@ -6,7 +6,8 @@
 2. **出场:** 主机账上的票不在计划的 `hold` 里 ⇒ 减仓 IOC 卖出(先撤它的止损触发单)。原因写进意图的 signal_ref。
 3. **进场:** 计划的 `enter`,按信号日、名字的顺序;不在 HL 上 / 主机已满 10 张 / 同一个币已有仓 / 按风险算出来不到
    最小名义额 ⇒ 记「不可执行」,不找别的票替补。仓位 = 风险预算 ÷ 止损距离:
-   `名义 = 净值 × risk_frac ÷ stop_frac`(单票名义不超过净值的一半,合计不超过净值本身);成交后按成交价挂减仓止损触发单
+   `名义 = 净值 × risk_frac ÷ stop_frac`(单票名义不超过净值的一半,合计不超过净值 × `gross_cap_frac` ——
+   组合层给,Jazz 10-29 = 0.30;没给按 1);统一账户的净值 = 现货 USDC(`unified_equity`)。成交后按成交价挂减仓止损触发单
    `止损 = 成交价 × (1 − stop_frac)`。
 
 ## 盘中(每分钟)
@@ -75,16 +76,44 @@ def resolve_coin(symbol: str, names: dict[str, int] | set[str]) -> Optional[str]
 
 
 def parse_perp_state(us: Any) -> dict[str, Any]:
-    """`info.user_state(地址)` → {"ok", "equity": 账户净值, "positions": {币: 张数(多为正)}}。"""
+    """`info.user_state(地址)` → {"ok", "equity": 账户净值, "positions": {币: 张数(多为正)}, "upnl": 未实现盈亏合计}。"""
     ms = (us or {}).get("marginSummary") or {}
-    pos = {}
+    pos, upnl = {}, 0.0
     for ap in (us or {}).get("assetPositions") or []:
         p = ap.get("position") or {}
         szi = _f(p.get("szi"))
         if p.get("coin") and szi:
             pos[p["coin"]] = szi
+            upnl += _f(p.get("unrealizedPnl")) or 0.0
     # ok = 读到了账户(有 marginSummary)。读不到 ≠ 没有仓位 —— 调用方据此决定能不能记「交易所上已平」
-    return {"ok": bool(ms), "equity": _f(ms.get("accountValue")) or 0.0, "positions": pos}
+    return {"ok": bool(ms), "equity": _f(ms.get("accountValue")) or 0.0, "positions": pos, "upnl": upnl}
+
+
+#: HL 账户模式(info `userAbstraction`)。这两种模式下现货 USDC 就是永续保证金,`clearinghouseState` 的
+#: marginSummary 不代表账户(HL 文档「Account abstraction modes」:「unified account and portfolio margin show all
+#: balances and holds in the spot clearinghouse state. Individual perp dex user states are not meaningful」)。
+UNIFIED_MODES = frozenset({"unifiedAccount", "portfolioMargin"})
+
+
+def unified_equity(perp: dict[str, Any], spot_balances: dict[str, dict[str, float]], mode: str) -> dict[str, Any]:
+    """统一账户的 R-v2 净值 = 现货 USDC 合计 + 未实现**亏损**(浮盈不计)。
+
+    10-29 实测:Jazz 的账户是 unifiedAccount,630 USDC 在现货,永续 marginSummary 全是 0 ⇒ 执行器读成「永续里没钱」,
+    R-v2 一张票都开不了。现货 USDC 合计是否已含浮动盈亏,文档没写清 —— 只加亏损、不加浮盈:
+    含了 ⇒ 亏损被算两次(少开一点,偏保守);没含 ⇒ 正好。两种情形都不会把仓位开大。"""
+    usdc = float((spot_balances.get("USDC") or {}).get("total") or 0.0)
+    loss = min(0.0, float(perp.get("upnl") or 0.0))
+    return {**perp, "equity": usdc + loss, "mode": mode,
+            "basis": f"统一账户({mode}):现货 USDC {usdc:.2f} + 未实现亏损 {loss:.2f}"}
+
+
+def account_for_tickets(perp: dict[str, Any], mode: Optional[str],
+                        spot_balances: Optional[dict[str, dict[str, float]]]) -> dict[str, Any]:
+    """纯函数。R-v2 记账用的账户:仓位来自永续状态;净值按账户模式 —— 统一账户 / 组合保证金 = `unified_equity`,
+    其余 = 永续 marginSummary。模式读不到 ⇒ 按永续算(统一账户下那是 0 ⇒ 不开新票,偏安全)。"""
+    if mode in UNIFIED_MODES and spot_balances is not None:
+        return unified_equity(perp, spot_balances, mode)
+    return {**perp, "mode": mode, "basis": f"永续账户({mode or '模式读不到'})"}
 
 
 def size_entry(equity: float, risk_frac: float, stop_frac: float, mid: float, sz_decimals: int) -> dict[str, Any]:
@@ -131,6 +160,9 @@ def ticket_actions(tplan: dict, book: dict[str, dict], positions: dict[str, floa
     # 组合层杠杆:策略按「分到的资金」= 净值 × L 记账;L 读不到按 1,超过 5 按 5(主机这一侧再守一次上限)
     lev = min(max(float(tplan.get("portfolio_leverage") or 1.0), 1.0), MAX_PORTFOLIO_LEVERAGE)
     alloc = equity * lev
+    # 组合层的风险预算(Jazz 10-29:名义合计 ≤ 净值 × 30%)。没给 ⇒ 1(旧计划 / 模拟器);主机再守一次:只能收紧,不能放大
+    gcap = _f(tplan.get("gross_cap_frac"))
+    gross_frac = MAX_GROSS_FRAC if gcap is None or gcap <= 0 else min(MAX_GROSS_FRAC, gcap)
     gone = {x["ticket_id"] for x in exits + closed_on_venue}
     gross = sum(b["qty"] * (mids.get(b["coin"]) or b.get("entry_px") or 0.0) for t, b in book.items() if t not in gone)
     entries, not_exec = [], []
@@ -154,17 +186,17 @@ def ticket_actions(tplan: dict, book: dict[str, dict], positions: dict[str, floa
         if not s["qty"]:
             not_exec.append({**e, "coin": coin, "why": s["why"], "mid": mid})
             continue
-        if gross + s["notional"] > alloc * MAX_GROSS_FRAC:
+        if gross + s["notional"] > alloc * gross_frac:
             not_exec.append({**e, "coin": coin, "mid": mid,
                              "why": f"名义合计会到 ${gross + s['notional']:.0f},超过分到的资金 ${alloc:.0f}"
-                                    f"(净值 × 组合杠杆 {lev:g})的 {MAX_GROSS_FRAC} 倍"})
+                                    f"(净值 × 组合杠杆 {lev:g})的 {gross_frac} 倍"})
             continue
         entries.append({**e, "coin": coin, "mid": mid, "sz_decimals": szd[coin], **s})
         gross += s["notional"]
         open_after += 1
         held_coins.add(coin)
     return {"closed_on_venue": closed_on_venue, "exits": exits, "entries": entries, "not_executable": not_exec,
-            "portfolio_leverage": lev, "alloc": alloc}
+            "portfolio_leverage": lev, "alloc": alloc, "gross_cap_frac": gross_frac}
 
 
 def stop_breaches(book: dict[str, dict], mids: dict[str, float]) -> list[str]:

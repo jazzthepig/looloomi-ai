@@ -232,6 +232,8 @@ class Venue:
             info = Info(constants.MAINNET_API_URL, skip_ws=True)
         self.info = info
         self._exchange = exchange
+        self._mode: Optional[str] = None
+        self._mode_at = 0.0
 
     def _poster(self, payload: dict, timeout: Any = None) -> Any:
         return self.info.post("/info", payload)
@@ -322,6 +324,26 @@ class Venue:
     def perp_state(self) -> dict[str, Any]:
         return tickets.parse_perp_state(self.info.user_state(self.cfg.trade_account))
 
+    def account_mode(self) -> Optional[str]:
+        """HL 账户模式(`userAbstraction`):unifiedAccount / portfolioMargin / default / disabled …;读不到 ⇒ None。
+        一小时缓存一次(Jazz 在网页上切模式的情形很少,但会发生)。"""
+        now = time.time()
+        if self._mode_at and now - self._mode_at < 3600:
+            return self._mode
+        try:
+            m = self._poster({"type": "userAbstraction", "user": self.cfg.trade_account})
+        except Exception as e:                                           # noqa: BLE001
+            log.warning("userAbstraction unreadable: %s", e)
+            return self._mode                                            # 沿用上一次读到的(可能是 None)
+        self._mode, self._mode_at = (m if isinstance(m, str) else None), now
+        return self._mode
+
+    def ticket_account(self) -> dict[str, Any]:
+        """R-v2 记账用的账户(`tickets.account_for_tickets`):统一账户的净值在现货 USDC,不在永续 marginSummary。"""
+        st = self.perp_state()
+        mode = self.account_mode()
+        return tickets.account_for_tickets(st, mode, self.balances() if mode in tickets.UNIFIED_MODES else None)
+
     def order_perp(self, coin: str, side: str, qty: float, limit_px: float, cloid: str, reduce_only: bool) -> Any:
         from hyperliquid.utils.types import Cloid
         return self.exchange().order(coin, side == BUY, qty, limit_px, {"limit": {"tif": "Ioc"}},
@@ -397,7 +419,8 @@ class Executor:
         balances, quotes = self.venue.balances(), self.venue.quotes()
         self.state.set(pairs={s: {"pair": q["pair"], "sz_decimals": int(q["sz_decimals"])} for s, q in quotes.items()})
         # 停着也照样算出订单(halted=False),只是不提交 —— 停的时候也要知道「本来会做什么」
-        res = core.plan_host_orders(plan, balances, quotes, now.timestamp(), self.cfg.nav_cap, halted=False)
+        nav_cap, cap_src = x1v_nav_cap(plan, self.cfg.nav_cap)
+        res = core.plan_host_orders(plan, balances, quotes, now.timestamp(), nav_cap, halted=False)
         sleeve = plan["sleeves"][self.cfg.mode]
         staged = []
         for o in res["orders"]:
@@ -408,7 +431,7 @@ class Executor:
         detail = {"phase": "intents", "minutes_after_close": round(mins, 1), "on_time": mins <= 60,
                   "targets": res["targets"], "holdings_usd": _r(res["holdings_usd"]), "dust_usd": _r(res["dust_usd"]),
                   "cash_usd": round(res["cash_usd"], 2), "nav_raw": round(res["nav_raw"], 2),
-                  "nav_book": round(res["nav_book"], 2), "nav_cap": self.cfg.nav_cap,
+                  "nav_book": round(res["nav_book"], 2), "nav_cap": nav_cap, "nav_cap_source": cap_src,
                   "orders": [{k: o.get(k) for k in ("symbol", "side", "qty_base", "notional_rounded",
                                                     "est_slippage_bps", "truncated")} | {"limit_px": i.limit_price}
                              for i, o, _ in staged],
@@ -523,23 +546,24 @@ class Executor:
         账户为空时拿上限当净值(写明来源,不假装)。"""
         live = self.cfg.tickets_mode == "live"
         try:
-            st = self.venue.perp_state()
+            st = self.venue.ticket_account()
         except Exception as e:                                           # noqa: BLE001
             if live:
                 raise
             st = {"ok": False, "equity": 0.0, "positions": {}, "error": f"{type(e).__name__}: {str(e)[:120]}"}
         raw = float(st.get("equity") or 0.0)
         cap = self.cfg.tickets_equity_cap
+        basis = st.get("basis") or "永续账户"
         if live:
             # 读不到账户 ≠ 账户里没有仓位:当成「全平了」会把账上的票全部记成已平,真仓位就没人管了
             if not st.get("ok"):
                 raise RuntimeError("永续账户状态读不到(没有 marginSummary)—— 这一轮不动")
-            return min(raw, cap), st.get("positions") or {}, f"永续账户 {raw:.2f}(上限 {cap:.0f})"
+            return min(raw, cap), st.get("positions") or {}, f"{basis} = {raw:.2f}(上限 {cap:.0f})"
         book = self.state.get("ticket_book") or {}
         virt = {b["coin"]: b["qty"] for b in book.values()}
         if raw >= tickets.MIN_NOTIONAL_USD:
-            return min(raw, cap), virt, f"空跑 · 永续账户 {raw:.2f}(上限 {cap:.0f})"
-        return cap, virt, f"空跑 · 永续账户为空({raw:.2f}),按上限 {cap:.0f} 记账"
+            return min(raw, cap), virt, f"空跑 · {basis} = {raw:.2f}(上限 {cap:.0f})"
+        return cap, virt, f"空跑 · {basis} 为空({raw:.2f}),按上限 {cap:.0f} 记账"
 
     def _ticket_intent(self, coin: str, side: str, qty: float, mid: float, sleeve: str, ref: str, now: dt.datetime,
                        limit_px: float):
@@ -903,8 +927,17 @@ class Executor:
             bal = {"error": f"{type(e).__name__}: {str(e)[:120]}"}
         halted, why = self.halted()
         plan = self.state.get("plan") or {}
+        # P1(每日真钱快照)读心跳:账户模式、R-v2 记账净值、永续仓位与浮动盈亏 —— 现货余额之外的那一半
+        acct: dict[str, Any] = {}
+        if self.cfg.tickets_mode != "off":
+            try:
+                ta = self.venue.ticket_account()
+                acct = {"mode": ta.get("mode"), "ticket_equity": round(float(ta.get("equity") or 0.0), 2),
+                        "upnl": round(float(ta.get("upnl") or 0.0), 4), "perp_positions": ta.get("positions") or {}}
+            except Exception as e:                                       # noqa: BLE001
+                acct = {"error": f"{type(e).__name__}: {str(e)[:120]}"}
         self._report("heartbeat", asof=plan.get("asof"), detail={
-            "balances": bal, "trade_account": self.cfg.trade_account, "subaccount": bool(self.cfg.subaccount),
+            "balances": bal, "account": acct, "trade_account": self.cfg.trade_account, "subaccount": bool(self.cfg.subaccount),
             "plan_asof": plan.get("asof"), "done_asof": self.state.get("done_asof"),
             "stop_px": plan.get("stop_px"), "halted": halted, "halt_why": why,
             "tickets_mode": self.cfg.tickets_mode, "ticket_book": self._book_brief(self.state.get("ticket_book") or {}),
@@ -949,6 +982,19 @@ def _r(d: dict) -> dict:
     return {k: round(v, 2) for k, v in d.items()}
 
 
+def x1v_nav_cap(plan: dict, env_cap: float) -> tuple[float, str]:
+    """X1V 的记账净值上限 = min(主机环境变量, 组合层给的加密腿额度)。组合层没给(旧计划)⇒ 环境变量。
+    Jazz 10-29:T25 起始 600、加密腿 30% ⇒ $180 —— 不加这一条,X1V 开仓时会把整个账户的 USDC 都买成 BTC / ETH,
+    R-v2 的保证金(统一账户下同一份 USDC)也一起没了。只能收紧,不能放大。"""
+    try:
+        b = float(((plan or {}).get("portfolio") or {}).get("x1v_nav_budget_usd") or 0)
+    except (TypeError, ValueError):
+        b = 0.0
+    if b > 0 and b < env_cap:
+        return b, f"组合层加密腿额度 ${b:.0f}(EXECUTOR_MAX_NAV_USD {env_cap:.0f})"
+    return env_cap, "EXECUTOR_MAX_NAV_USD"
+
+
 def check(ex: Executor) -> dict[str, Any]:
     """部署后跑一次:配置、计划、余额、按真实余额算出的订单 —— 不下单。最后发一条心跳,验证回报这条路是通的。"""
     out: dict[str, Any] = {"mode": ex.cfg.mode, "account": ex.cfg.account, "trade_account": ex.cfg.trade_account,
@@ -965,7 +1011,9 @@ def check(ex: Executor) -> dict[str, Any]:
     out["balances"] = {k: v["total"] for k, v in b.items() if v.get("total")}
     if isinstance(plan, dict) and plan.get("ok"):
         q = ex.venue.quotes()
-        r = core.plan_host_orders(plan, b, q, time.time(), ex.cfg.nav_cap, halted=False)
+        nav_cap, cap_src = x1v_nav_cap(plan, ex.cfg.nav_cap)
+        out["nav_cap_effective"] = {"usd": nav_cap, "source": cap_src}
+        r = core.plan_host_orders(plan, b, q, time.time(), nav_cap, halted=False)
         out["would_trade"] = [{k: o.get(k) for k in ("symbol", "side", "qty_base", "notional_rounded")} for o in r["orders"]]
         out["refused"] = r["refused"]
         out["nav_book"] = round(r["nav_book"], 2)
@@ -979,13 +1027,16 @@ def check(ex: Executor) -> dict[str, Any]:
                              "plan": {k: (tp or {}).get(k) for k in ("asof", "ready", "why", "last_d", "risk_frac", "cap",
                                                                       "portfolio_leverage")}}
         try:
-            st = ex.venue.perp_state()
+            st = ex.venue.ticket_account()
             szd, mids = ex.venue.perp_meta(), ex.venue.perp_mids()
-            t["perp_account"] = {"ok": st.get("ok"), "equity": st.get("equity"), "positions": st.get("positions")}
+            t["perp_account"] = {"ok": st.get("ok"), "equity": st.get("equity"), "positions": st.get("positions"),
+                                 "mode": st.get("mode"), "basis": st.get("basis")}
             t["hl_perps_listed"] = len(szd)
             if not st.get("ok") or (st.get("equity") or 0) < tickets.MIN_NOTIONAL_USD:
-                t["warning"] = (("子账户" if ex.cfg.subaccount else "") + "永续账户里没有可用的 USDC —— 真跑前要在 HL 上把 USDC "
-                                + ("划进子账户的永续" if ex.cfg.subaccount else "从现货划到永续") + "(Jazz 手动)")
+                unified = st.get("mode") in tickets.UNIFIED_MODES
+                t["warning"] = ("统一账户里没有可用的 USDC" if unified else
+                                (("子账户" if ex.cfg.subaccount else "") + "永续账户里没有可用的 USDC —— 真跑前要在 HL 上把 USDC "
+                                 + ("划进子账户的永续" if ex.cfg.subaccount else "从现货划到永续") + "(Jazz 手动)"))
             if tp and tp.get("ready"):
                 eq = min(st.get("equity") or 0.0, ex.cfg.tickets_equity_cap) or ex.cfg.tickets_equity_cap
                 book, done = ex.state.get("ticket_book") or {}, set((ex.state.get("ticket_done") or {}).keys())

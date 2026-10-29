@@ -119,6 +119,13 @@ class PerpVenue:
             return {"ok": False, "equity": 0.0, "positions": {}}
         return {"ok": True, "equity": self.equity, "positions": dict(self.pos)}
 
+    mode, usdc = "default", 0.0
+
+    def ticket_account(self):                                      # 与 runner.Venue 同一个纯函数
+        st = self.perp_state()
+        return tickets.account_for_tickets(st, self.mode, {"USDC": {"total": self.usdc, "hold": 0.0}}
+                                           if self.mode in tickets.UNIFIED_MODES else None)
+
     def order_perp(self, coin, side, qty, px, cloid, reduce_only):
         self.sent.append({"coin": coin, "side": side, "qty": qty, "px": px, "reduce_only": reduce_only})
         if not self.fill:
@@ -454,3 +461,54 @@ def test_every_report_the_live_host_writes_passes_railway_vetting(tmp_path):
 
 def _ms_now():
     return int(NOW.timestamp() * 1000)
+
+
+# ── 10-29:HL 统一账户 + 组合层的名义上限 ─────────────────────────────────────
+def test_unified_account_equity_is_spot_usdc_plus_losses_only():
+    """10-29 实测:Jazz 的账户是 unifiedAccount,630 USDC 在现货,永续 marginSummary 全是 0。"""
+    perp = tickets.parse_perp_state({"marginSummary": {"accountValue": "0.0"}, "assetPositions": [
+        {"position": {"coin": "UNI", "szi": "2.0", "unrealizedPnl": "-3.5"}},
+        {"position": {"coin": "SOL", "szi": "0.1", "unrealizedPnl": "5.0"}}]})
+    assert perp["ok"] and perp["equity"] == 0.0 and perp["upnl"] == pytest.approx(1.5)
+    bal = {"USDC": {"total": 630.64, "hold": 12.0}}
+    u = tickets.account_for_tickets(perp, "unifiedAccount", bal)
+    assert u["equity"] == pytest.approx(630.64), "浮盈不计(+1.5 不加)"
+    loss = tickets.account_for_tickets({**perp, "upnl": -4.0}, "portfolioMargin", bal)
+    assert loss["equity"] == pytest.approx(626.64), "浮亏要减"
+    assert tickets.account_for_tickets(perp, "default", bal)["equity"] == 0.0, "标准账户:永续是永续,现货是现货"
+    assert tickets.account_for_tickets(perp, None, None)["equity"] == 0.0, "模式读不到 ⇒ 按永续(不开新票)"
+
+
+def test_live_host_on_a_unified_account_opens_the_ticket_the_perp_balance_would_have_refused(tmp_path):
+    """零信号对照:同一个账户,标准模式读法 ⇒ 永续 0 ⇒ 一张不开(10-29 的 bug);统一账户读法 ⇒ 开。"""
+    for mode, opens in (("default", False), ("unifiedAccount", True)):
+        v = PerpVenue(equity=0.0)
+        v.mode, v.usdc = mode, 630.64
+        e = _exe(tmp_path / mode, "live", v, _tplan(enter=[_e("N1", "UNI", 0.1)]))
+        e._maybe_ticket_cycle(NOW)
+        assert bool(v.sent) is opens, mode
+        if opens:
+            assert v.sent[0]["qty"] * 8.0 == pytest.approx(630.64 * 0.005 / 0.1, rel=0.02), "单票风险 = 净值 × 0.5%"
+
+
+def test_gross_cap_from_the_portfolio_layer_only_tightens():
+    """Jazz 10-29:R-v2 名义合计 ≤ 净值 × 30%;单票风险仍按整个净值。主机只收紧,计划给 > 1 也按 1。"""
+    szd, mids = {"UNI": 1, "SOL": 2}, {"UNI": 8.0, "SOL": 150.0}
+    book = {"H": {"coin": "SOL", "qty": 1.2, "entry_px": 150.0}}                 # 已有 $180 名义
+    plan = {**_tplan(enter=[_e("N1", "UNI", 0.1)], hold=[{"ticket_id": "H"}]), "gross_cap_frac": 0.30}
+    act = tickets.ticket_actions(plan, book, {"SOL": 1.2}, mids, szd, 630.0, set())
+    assert not act["entries"] and "0.3 倍" in act["not_executable"][0]["why"], "180 + 31.2 > 630 × 0.3 = 189"
+    act = tickets.ticket_actions({**plan, "gross_cap_frac": 0.30}, {}, {}, mids, szd, 630.0, set())
+    assert act["entries"] and act["gross_cap_frac"] == 0.30
+    loose = tickets.ticket_actions({**plan, "gross_cap_frac": 3.0}, book, {"SOL": 1.2}, mids, szd, 630.0, set())
+    assert loose["gross_cap_frac"] == 1.0, "放大不了"
+
+
+def test_x1v_nav_cap_is_the_crypto_leg_budget_when_the_plan_carries_one():
+    assert rn.x1v_nav_cap({"portfolio": {"x1v_nav_budget_usd": 180.0}}, 3000.0)[0] == 180.0
+    assert rn.x1v_nav_cap({}, 3000.0) == (3000.0, "EXECUTOR_MAX_NAV_USD"), "旧计划没有组合层 ⇒ 环境变量"
+    assert rn.x1v_nav_cap({"portfolio": {"x1v_nav_budget_usd": 5000.0}}, 3000.0)[0] == 3000.0, "只能收紧"
+    assert rn.x1v_nav_cap({"portfolio": {"x1v_nav_budget_usd": "x"}}, 3000.0)[0] == 3000.0
+    # 统一账户里 630 USDC:X1V 全仓目标时只用 $180,其余留给现金腿 / R-v2 保证金
+    st = core.book_state({"USDC": {"total": 630.64, "hold": 0.0}}, {}, 180.0, 10.0)
+    assert st["nav_book"] == pytest.approx(180.0) and st["nav_raw"] == pytest.approx(630.64)
