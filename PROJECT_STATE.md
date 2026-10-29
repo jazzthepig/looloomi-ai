@@ -1,10 +1,10 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-10-29 04:22 UTC (Seth — **后端体检**(Jazz「回到高维,thorough code check,连着后端问题一起解决」;S-697)。**数据错,已改:** ② factor_tilt / ③ pod_aggregator 两本账 09-14 起 46 行 NAV 都是「1 + 当天收益」,从没复利 —— 共享读函数默认带 `void_reason` 过滤,这两张表没有该列,PostgREST 每次 400,读不到被当起点;已改读法(无此列去掉过滤、读不到就拒绝不当起点)并按 daily_return 复利改正历史:factor_tilt **1.0411**、pod **1.0366**(原显示 1.0002 / 1.0035)。pod 的 state 从没存过(n_days 永远 1),已修。depth-divergence 前向记录 10-28 差点永久缺口(循环与面板写入撞车),已补写并把循环固定到 06:30 UTC、没推进每小时重试。**观测错,已改:** 6 本冻结账让 liveness 永久 critical → 判 frozen;退役循环永远「死」→ 显式退役登记;成功轮 detail 带 numpy/NaN 序列化失败被吞 → 只有成功的那轮没记录(meta_allocator)→ json_safe;signal_outcomes 无写入端 → 历史表;meta_allocator 与 core_variants 6 小时相位锁死 → 输入没到 30 分钟重试;global_recent 00:52 的「0 行」是 CG 点未到 → 截止前判等待。**静态检查:** vault 存款意向接口从没跑通过(`os`/`_logger` 未定义,表 0 行);data_layer 一个从未定义的函数调用(删,行为不变);FRED 回退 GDP 多乘 4(2.2%→8.8% 进状态阈值)、CPI 前值写成环比。**EODHD:** Railway 新 token 已生效(04:13 写入 eodhd 8,283 行);**Mac 还是旧 token —— 换值是 Jazz 的动作**,SYNC §Seth-1029a 已告知 Mac 换完重启 scheduler。**risk_meter_history 10-12 起停写:Mac 根目录的推送脚本不见了**(调度器静默跳过),已在 §Seth-1029a 交给 Minimax。上线 7144d1f9 / 8793c9d5 / 5f207729,已核:liveness 6 本记 frozen,dead 只剩东京执行主机(待重建,真);producers 只剩 risk_meter_history(真,Mac 脚本缺);signal_outcomes = not_applicable。FRED 修正要等 Redis 4 小时缓存过期(约 07:20 UTC)才显示。)
+**Last updated:** 2026-10-29 06:05 UTC (Seth — **高维复盘**(Jazz「回到高维 thorough checking」;全文 WEEKLY_REVIEW 10-29)。**一句话:** 我们在扩宽度(60+ 条臂、对外页面),卡住我们的是真钱从未进场 —— live 以来 0 笔成交:X1V 规则空仓(对的)、R-v2 永续子账户权益为 0(现货→永续划转未做)、执行主机 10-26 起宕。**统计功效:** 3.8 年 PIT 回放里 ②③ 对 ① 的 t 全部 |t|<1.1(CIS 倾斜为负 −1.8%/年;到 t=2 要 20–70 年)⇒ L3「前向 ≥60 天且下界>0」对这些层结构上过不去;前向的真实用途是完整性(前向 ≡ 回放续写,实测 0.0bp)。纯加密每本 ~−50% 回撤(2023-07 起:BTC −53%、① −56.8%、③ tom_pd13 −48.1% 最好);「攻守都突出」只有跨资产给得了(S-604 灵活组合 T25)。**新查实:** Mac 宏观输入至少 30 天是写死默认值(今天换 token 后恢复);外部使用 ≈ 0;组合层(SPINE 7b)无实现;World50 前向设计成 12-31 才起。**提给 Jazz 的一个优先项:** 灵活组合 T25 用真钱跑起来(一条腿一条腿上,每日快照锚定),同时停止加臂。待 Jazz:R-v2 划转或改回纸面、账户差额核对、World50 是否从 09-30 起算。)
+
+**更早:** 2026-10-29 04:22 UTC (Seth — **后端体检**(Jazz「回到高维,thorough code check,连着后端问题一起解决」;S-697)。**数据错,已改:** ② factor_tilt / ③ pod_aggregator 两本账 09-14 起 46 行 NAV 都是「1 + 当天收益」,从没复利 —— 共享读函数默认带 `void_reason` 过滤,这两张表没有该列,PostgREST 每次 400,读不到被当起点;已改读法(无此列去掉过滤、读不到就拒绝不当起点)并按 daily_return 复利改正历史:factor_tilt **1.0411**、pod **1.0366**(原显示 1.0002 / 1.0035)。pod 的 state 从没存过(n_days 永远 1),已修。depth-divergence 前向记录 10-28 差点永久缺口(循环与面板写入撞车),已补写并把循环固定到 06:30 UTC、没推进每小时重试。**观测错,已改:** 6 本冻结账让 liveness 永久 critical → 判 frozen;退役循环永远「死」→ 显式退役登记;成功轮 detail 带 numpy/NaN 序列化失败被吞 → 只有成功的那轮没记录(meta_allocator)→ json_safe;signal_outcomes 无写入端 → 历史表;meta_allocator 与 core_variants 6 小时相位锁死 → 输入没到 30 分钟重试;global_recent 00:52 的「0 行」是 CG 点未到 → 截止前判等待。**静态检查:** vault 存款意向接口从没跑通过(`os`/`_logger` 未定义,表 0 行);data_layer 一个从未定义的函数调用(删,行为不变);FRED 回退 GDP 多乘 4(2.2%→8.8% 进状态阈值)、CPI 前值写成环比。**EODHD:** Railway 新 token 已生效(04:13 写入 eodhd 8,283 行);**Mac 还是旧 token —— 换值是 Jazz 的动作**,SYNC §Seth-1029a 已告知 Mac 换完重启 scheduler。**risk_meter_history 10-12 起停写:Mac 根目录的推送脚本不见了**(调度器静默跳过),已在 §Seth-1029a 交给 Minimax。上线 7144d1f9 / 8793c9d5 / 5f207729,已核:liveness 6 本记 frozen,dead 只剩东京执行主机(待重建,真);producers 只剩 risk_meter_history(真,Mac 脚本缺);signal_outcomes = not_applicable。FRED 修正要等 Redis 4 小时缓存过期(约 07:20 UTC)才显示。)
 
 **更早:** 2026-10-29 03:47 UTC (Seth — 前端第三轮(9ea85d06 / e14dd86c,上线已核):**慢面板**:dingge-board 每次 7 秒、trading/metrics 每次 6 秒 → 进程内 stale-while-revalidate(`src/api/ttl_cache.py`);部署后冷启动 8–90 秒的面板(协议、书、证明、归因、VC 组合)由 `_public_cache_warm_loop` 回环每 4 分钟预热 —— 实测全部 ≤3 秒冷、多数 <1.5 秒。**合规**:信号流与市场注释里「fade strength / not dip-buys / contrarian entry zone / long BTC/short alts / before acting」改为定位语言,合规守卫加了这几种构造并带反例。**数据**:Asset Radar 供应量改读本库 asset_mcap_daily(市值÷价格,标为推算),CG 那个接口不在我们套餐里;Paper Agent 头部改读进程内 sleeve 账本(原来读已退役的外部状态,永远「$—, 0 active」);Score Analytics 板块轮动用全宇宙。)
-
-**更早:** 2026-10-29 00:22 UTC (Seth — 前端长任务第二轮(Jazz 10-28:「EST 不公开展示;先不加数据源;看开源架构,安全就部署;continue」)。**① EST Alpha 全部下线**(e9e6b5d8):/vault/funds、Research Desk 区块(组件删除)、Fund 页「已确认 GP」行、vision 页、内嵌 est.cc 的死 tab;内部 token 门控的线索归因保留。**② 开源评估**:RSSHub(AGPL-3.0,独立服务,多数路由靠抓网页、部分用无头浏览器,还要公网鉴权)—— **不部署**:等于加数据源且越过「不抓取」线,也要 Jazz 在 Railway 开新服务;trafilatura(Apache-2.0)要逐篇抓文章页 —— 不需要:我们已读的 8 个媒体源里 DL News / Bitcoin Magazine 自带全文、其余带导语,**直接读 feed 自带的正文**补投资方/轮次/估值(G 任务,无新主机、无抓页);Blockworks 是 Atom 之前一直读不到,已支持。**③ 第二轮修复**(H 任务):部署后旧标签页懒加载块 404 → 整块报错(线上实测 CIS v2 面板)→ 遇到就自动刷新一次;Agent 页「9,946+ 条排除」实为 14/70 → 改真数并改为实时读取;MCP 排除工具描述删「每日更新」「机构基金信赖」;方法论页「84 资产」写死 → 实时;移动端 NEUTRAL 时 regime 永远「LOADING」。Jazz 10-29:Fund 页「Long/Short」保留(多空书在跑;① 仍只持现货),记入 DECISIONS。)
 
 > **本项目的主导缺陷类:「拿不到」被渲染成一个合理的数字,而不是被渲染成「拿不到」。**
 > 十一次实例(S-180…S-243)+ 三条课 + 守卫自己失败七轮的记录 →
@@ -417,7 +417,6 @@ The cap is doing its job only if closure is as routine as addition.*
 
 ---
 
-
 ## 一个形状,十次(历史教训 —— 排在危险之后)
 
 > **S-283 最需要记住的一条:三个 P0 里有两个不是「没有控制」,是「控制的作用域差一格」。**
@@ -807,7 +806,6 @@ Jazz 指出 2019 是新周期起点后,spread 0.52 → **0.033(robust)** ——
 读数(**不是信号**):黄金对债/日元/美元同时贴在体制内 ~93 分位,
 债券对日元贴在 11 分位 —— 形状与「拿套息收益换黄金」一致,但无因、无基础率、
 无 OOS,只作 S-271 `divergence()` 的输入,不进定仓。
-
 
 ## 历史条目(完整内容 → `PROJECT_STATE_LOG.md`)
 
