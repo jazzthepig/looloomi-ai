@@ -2,6 +2,7 @@
 
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
+| in_review(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-069 | seth | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
@@ -21,7 +22,6 @@
 | blocked(等 Jazz 10-19「留在待办,先不买那个数据,在我们现有的数据源想办法」) | T-132 | jazz | (待办,暂不买)Hyperliquid 历史盘口:官方 S3 存档 / Hydromancer Reservoir,按流量付费 | 有报价再决定 | 突破那一刻的 HL 盘口历史 —— 能直接回测「盘口失衡筛假突破」,不用等主机自录几周 |  |
 | blocked(等 jazz: portfolio_layer_daily / allocation_daily 对 publishable key 不可读(42501,lane 实测)。给 lane 开读权限 = 公开 key 也能读到配置与组合层 —— 开不开是 Jazz 的决定;不开就由 Seth 用 service 端导出一份快照给 lane) | T-089 | lane-a | 完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改 | 从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。 |  |
 | blocked(等 Jazz 10-21「迟些先」:账户规模研究延后,等 Jazz 重新排期) | T-157 | lane-a | X1V 最大的一块拖累(限额 / 最小单 / nav_cap,−6.27pp/年)拆开,并按账户规模重跑:1k / 3k / 10k / 100k USDT | 脚本 docs/research/t157_x1v_limits_by_size.py;报告(脚本写)_reports/absorb_input/T-157_x1v_limits.md,开头一张「规模 × 拖累」表;in_review,推 lane-a/T-157。 | 如果拖累主要是小账户的整数化 / 最小单,那它不是策略的缺陷,是规模的 —— 真钱开关的条件里就要写最低规模;如果在 100k 上还在,就得改执行器。 |  |
-| blocked(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | blocked(等 jazz: 删除 ~/.config/cometcloud/.env(key 文件只经 Jazz 的手);其余部分 lane-c 已交(cb30023)) | T-036 | lane-c | Mac 只留一份 env:canonical=/Volumes/CometCloudAI/cometcloud-local/.env(§Seth-1006g);~/.config/cometcloud/.env 孤儿由 Jazz 删;Python 日志改 UTC | 一次轮换只动 Railway + 1 个文件;轮换后 1h 内 mac_mini 简报与 T1 推送都有新行 | 三份 env(仓库 .env / cometcloud-local/.env / ~/.config/cometcloud/.env),09-28 轮换漏改第三份 |  |
 | blocked(等 T-015) | T-016 | seth | 实盘执行器(只算不发两天 → 3,000U 真跑) | > 0,且每日对账有数 | 0 |  |
 | done | T-015 | jazz | 创建 HL API 钱包 + 开东京/新加坡云主机 | API 钱包只可交易不可提币;主机可 SSH | 无 | Jazz did both halves on 10-19. Host: Vultr Tokyo vc2-1c-2gb, Ubuntu 24.04, 45.32.39.6, UTC; SSH key-only on port 443 (the VPN node drops outbound 22), password and keyboard-interactive login off, Vultr firewall to the VPN exit /32. Latency to api.hyperliquid.xyz 83 ms. API wallet 'cometcloud-exec' (the first one was entered as its address, not its key; regenerated): userRole of the address derived on the host from the key = agent, bound to master 0x958B...524D (True). Key only in /etc/cometcloud/executor.env (600 root), filled by Jazz; Seth never saw it. Railway has EXECUTOR_TOKEN and HL_ACCOUNT_ADDRESS. Spot balance at check: 868.85 USDC, no UBTC / UETH. @ 2026-10-19T10:40Z |
@@ -215,4 +215,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 9 · claimed 7 · blocked 6 · done 187 · dropped 3
+open 9 · claimed 7 · blocked 5 · in_review 1 · done 187 · dropped 3
