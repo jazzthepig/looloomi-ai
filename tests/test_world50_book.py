@@ -153,7 +153,7 @@ def test_nothing_is_written_before_the_forward_start(monkeypatch) -> None:
     keys = [f"K{i:02d}" for i in range(60)]
     _patch(monkeypatch, db, _prices(keys), {k: 100.0 + i for i, k in enumerate(keys)})
     r = asyncio.run(wb.run_book(today="2026-10-16"))
-    assert r["ok"] and "2026-12-31" in r["waiting"]
+    assert r["ok"] and wb.OPEN_DATE in r["waiting"]
     assert r["preview"]["as_of"] == "2026-09-30" and r["preview"]["members"] == 50
     assert db.tables == {"world50_book_holdings": [], "world50_book_nav": []}
 
@@ -166,20 +166,43 @@ def test_the_book_opens_marks_and_never_rewrites(monkeypatch) -> None:
     r = asyncio.run(wb.run_book(today="2027-01-08"))
     assert r["ok"], r
     h = db.tables["world50_book_holdings"]
-    assert {x["as_of"] for x in h} == {"2026-12-31"} and len(h) == 100
+    assert {x["as_of"] for x in h} == {wb.OPEN_DATE, "2026-12-31"} and len(h) == 200
     for arm in wb.ARMS:
-        assert math.isclose(sum(x["weight"] for x in h if x["arm"] == arm), 1.0)
+        for q in (wb.OPEN_DATE, "2026-12-31"):
+            assert math.isclose(sum(x["weight"] for x in h if x["arm"] == arm and x["as_of"] == q), 1.0)
     nav = [x for x in db.tables["world50_book_nav"] if x["arm"] == "EW"]
-    assert nav[0]["d"] == "2026-12-31" and nav[0]["nav"] == 1.0, "开账 = 1,不收成本"
-    assert [x["d"] for x in nav][1:] == ["2027-01-01", "2027-01-04", "2027-01-05", "2027-01-06"], "只写到今天 − 2"
+    assert nav[0]["d"] == wb.OPEN_DATE and nav[0]["nav"] == 1.0, "开账 = 1,不收成本"
+    assert all(x["d"] >= wb.OPEN_DATE for x in db.tables["world50_book_nav"]), "开账日之前一行不写"
+    q12 = [x for x in nav if x["d"] == "2026-12-31"][0]
+    assert q12["as_of"] == "2026-12-31" and q12["nav"] != 1.0, "12-31 照常调仓,净值从开账日连续下来"
+    assert [x["d"] for x in nav][-4:] == ["2027-01-01", "2027-01-04", "2027-01-05", "2027-01-06"], "只写到今天 − 2"
     frozen = {(x["d"], x["arm"]): x["nav"] for x in db.tables["world50_book_nav"]}
     for k in keys:                                      # 之后价格序列被改写(复权调整):写过的净值不跟着变
         prices[k] = [(d, p * (0.9 if d < "2027-01-05" else 1.0)) for d, p in prices[k]]
     r = asyncio.run(wb.run_book(today="2027-04-09"))
     assert r["ok"], r
-    assert {x["as_of"] for x in db.tables["world50_book_holdings"]} == {"2026-12-31", "2027-03-31"}
+    assert {x["as_of"] for x in db.tables["world50_book_holdings"]} == {wb.OPEN_DATE, "2026-12-31", "2027-03-31"}
     after = {(x["d"], x["arm"]): x["nav"] for x in db.tables["world50_book_nav"]}
     assert all(after[k] == v for k, v in frozen.items())
     q = [x for x in db.tables["world50_book_nav"] if x["d"] == "2027-03-31" and x["arm"] == "EWxMom"][0]
     assert q["as_of"] == "2027-03-31"
     assert max(x["d"] for x in db.tables["world50_book_nav"]) == "2027-04-07"
+
+
+def test_mid_quarter_open_equals_the_replay_from_the_open_date(monkeypatch) -> None:
+    """10-29:季内开账 = 09-30 季末权重漂到 10-28 收盘;此后每天的净值 = 从 09-30 一路漂移的净值 ÷ 它在 10-28 的值。"""
+    db = _DB()
+    keys = [f"K{i:02d}" for i in range(60)]
+    prices = _prices(keys)
+    _patch(monkeypatch, db, prices, {k: 100.0 + i for i, k in enumerate(keys)})
+    r = asyncio.run(wb.run_book(today="2026-11-20"))
+    assert r["ok"], r
+    h = [x for x in db.tables["world50_book_holdings"] if x["arm"] == "EWxMom"]
+    assert {x["as_of"] for x in h} == {wb.OPEN_DATE} and "季内开账" in h[0]["rule"]
+    c = asyncio.run(wb.compute("2026-09-30", []))
+    w0 = c["EWxMom"]
+    px = {k: prices[k] for k in w0}
+    g_open, _, _ = wb.drift(w0, px, "2026-09-30", wb.OPEN_DATE)
+    for row in [x for x in db.tables["world50_book_nav"] if x["arm"] == "EWxMom" and x["d"] > wb.OPEN_DATE]:
+        g, _, _ = wb.drift(w0, px, "2026-09-30", row["d"])
+        assert math.isclose(row["nav"], g / g_open, rel_tol=1e-9), row["d"]

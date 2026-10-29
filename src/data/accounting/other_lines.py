@@ -16,6 +16,7 @@ from typing import Any, Mapping, Optional
 import pandas as pd
 
 from src.data.allocation.allocator import MIN_DAYS, evidence
+from src.data.universe.world50_book import OPEN_DATE as WORLD50_OPEN   # 10-29:World50 不等 12-31,10-28 收盘开账
 
 FORWARD_START = "2026-12-31"
 
@@ -35,9 +36,9 @@ class Line:
 LINES: tuple[Line, ...] = (
     Line("world50_ewxmom", "world50", "World50 equal weight, momentum-tilted (quarterly 6 + 12 month)",
          "The 50 largest listed assets (companies, gold, crypto) held equally, tilted toward the stronger half (S-581 / S-584).",
-         "world50:EWxMom", "world50:EW"),
+         "world50:EWxMom", "world50:EW", (), WORLD50_OPEN),
     Line("world50_ew", "world50", "World50 equal weight",
-         "The 50 largest listed assets held equally; the reference for the momentum tilt.", "world50:EW", None),
+         "The 50 largest listed assets held equally; the reference for the momentum tilt.", "world50:EW", None, (), WORLD50_OPEN),
     Line("alt_top6", "alt_leaders", "Alt leaders, six by fundamentals + flows + size - volatility",
          "Inside the leader gate (top 15 non-BTC, calm, not diluting), pick six by the pre-registered score (S-589).",
          "alt_leaders:TOP6", "alt_leaders:GATE_EW", ("alt_leaders:ETH", "core")),

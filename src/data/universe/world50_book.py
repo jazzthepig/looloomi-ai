@@ -1,4 +1,7 @@
-"""World50 前向账本 —— EW 与 EW×Mom 两条臂,2026-12-31 起前向记账(Jazz 10-15;S-581「不论回放结果,两条臂下一个季末起前向记账」)。
+"""World50 前向账本 —— EW 与 EW×Mom 两条臂,**2026-10-28 收盘开账**(Jazz 10-29「好的」:不等 12-31;原定 S-581「下一个季末起」)。
+
+季内开账:取开账日之前最近一个季末(09-30)按规则算出的权重,用价格漂移到开账日收盘,作为开账持仓(净值 = 1);
+之后与回放逐日相同(季内漂移,下一个季末 12-31 照常调仓)。开账之前的日子**一行不写** —— 那段不是事前记录。
 
 规则 = 回放(S-581 / S-583)照代码的那一套,调仓只走 `world50.rebalance`(与回放共用一个核,
 tests/test_world50_book.py 逐个权重比对):每年 12 月按当时可知市值重选 50(缓冲 40 / 60),每季末重设权重,季内随价格漂移;
@@ -9,7 +12,7 @@ tests/test_world50_book.py 逐个权重比对):每年 12 月按当时可知市�
   world50_book_holdings  每个调仓日 × 臂 × 成分的权重(调仓日收盘后的目标权重)
   world50_book_nav       每个工作日 × 臂的净值(开账 = 1),**写一次不再改**(d ≤ 今天 − 2 且所有成分在那天前都有价才写)
 净值 = 上一个调仓日净值 × Σ 权重 × 价格(d) / 价格(调仓日),价格每次从当前的复权序列现读(分红随复权进来)。
-FORWARD_START 之前:不写任何一行,只把「如果今天是上一个季末,成分与权重会是什么」放进循环的 detail(核在真数据上跑得通的证据)。
+OPEN_DATE 之前:不写任何一行,只把「如果今天是上一个季末,成分与权重会是什么」放进循环的 detail(核在真数据上跑得通的证据)。
 """
 from __future__ import annotations
 
@@ -17,7 +20,8 @@ import bisect
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Optional
 
-FORWARD_START = "2026-12-31"
+OPEN_DATE = "2026-10-28"     # Jazz 10-29:不等季末;开账 = 这天收盘
+FORWARD_START = OPEN_DATE   # 兼容旧名
 ARMS = ("EW", "EWxMom")
 RULE = "world50_book_v1:S-581 规则照回放代码(12 月重选 40/60、季末重设、季内漂移、动量到调仓当月月末);美元"
 COST_BP = {"equity": 10, "metal": 10, "crypto": 20}
@@ -201,10 +205,10 @@ async def run_book(today: Optional[str] = None) -> dict[str, Any]:
     from src.data.universe.world50 import CANDIDATES
     today = today or datetime.now(timezone.utc).date().isoformat()
     cutoff = _shift(today, -FREEZE_DAYS)
-    qs = quarter_ends(FORWARD_START, cutoff)
-    if not qs:
+    if cutoff < OPEN_DATE:
         prev_q = last_quarter_end_before(cutoff)
-        return {"ok": True, "waiting": f"前向账本从 {FORWARD_START} 起", "preview": _preview(await compute(prev_q, []))}
+        return {"ok": True, "waiting": f"前向账本 {OPEN_DATE} 收盘开账", "preview": _preview(await compute(prev_q, []))}
+    qs = [OPEN_DATE] + quarter_ends(_shift(OPEN_DATE, 1), cutoff)
     cls = {c.key: c.cls for c in CANDIDATES}
     held = await _get_all("world50_book_holdings?select=as_of,arm,key,weight&order=as_of")
     navs = await _get_all("world50_book_nav?select=d,arm,nav,as_of&order=d")
@@ -220,10 +224,18 @@ async def run_book(today: Optional[str] = None) -> dict[str, Any]:
             continue
         prev_dates = sorted(d for d in book["EW"] if d < q)
         previous = list(book["EW"][prev_dates[-1]]) if prev_dates else []
-        c = await compute(q, previous)
+        mid_open = q == OPEN_DATE and q not in quarter_ends(q, q)
+        c = await compute(last_quarter_end_before(q) if mid_open else q, previous)
         if not c.get("ok"):
             notes.append(f"{q}: {c.get('why')}")
             break
+        if mid_open:                                         # 季内开账:季末权重漂移到开账日收盘
+            for a in ARMS:
+                px0 = await usd_prices(sorted(c[a]), _shift(c["as_of"], -10), q)
+                g0, drifted0, _ = drift(c[a], px0, c["as_of"], q)
+                if g0 is None:
+                    return {"ok": False, "why": f"{a} {q}: 季末权重漂不到开账日(没有价)"}
+                c[a] = drifted0
         rows_h, rows_n = [], []
         for a in ARMS:
             new = c[a]
@@ -237,9 +249,10 @@ async def run_book(today: Optional[str] = None) -> dict[str, Any]:
                 nav_q = _nav_at(navs, a, p) * g * (1 - turnover_cost(drifted, new, cls))
             else:
                 nav_q = 1.0                                  # 开账:不收成本(与回放同)
+            rule_q = RULE + (f" · 季内开账:{c['as_of']} 季末权重漂移到 {q} 收盘" if mid_open else "")
             rows_h += [{"as_of": q, "arm": a, "key": k, "weight": w, "rank": c["rank"].get(k), "mcap_usd": c["mcap"].get(k),
-                        "neutral": k in c["neutral"], "rule": RULE} for k, w in new.items()]
-            rows_n.append({"d": q, "arm": a, "nav": nav_q, "ret": None, "n_priced": len(new), "as_of": q, "rule": RULE})
+                        "neutral": k in c["neutral"], "rule": rule_q} for k, w in new.items()]
+            rows_n.append({"d": q, "arm": a, "nav": nav_q, "ret": None, "n_priced": len(new), "as_of": q, "rule": rule_q})
             book[a][q] = new
             navs.append({"d": q, "arm": a, "nav": nav_q, "as_of": q})
             last_nav[a] = (q, nav_q)

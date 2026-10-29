@@ -29,7 +29,8 @@ def test_before_the_start_every_line_says_when_it_opens():
     rows = ol.other_line_rows(_navs(days), pd.Timestamp("2026-10-15"))
     assert len(rows) == len(ol.LINES)
     assert all(r["evidence_class"] == "not_started" for r in rows)
-    assert {r["opens"] for r in rows if r["id"] in ("world50_ewxmom", "alt_top6", "flex_35_50_15")} == {ol.FORWARD_START}
+    assert {r["opens"] for r in rows if r["id"] in ("alt_top6", "flex_35_50_15")} == {ol.FORWARD_START}
+    assert {r["opens"] for r in rows if r["line"] == "world50"} == {ol.WORLD50_OPEN}, "10-29:World50 不等 12-31"
     assert {r["opens"] for r in rows if r["line"] == "tom_trader" or r["id"] == "flex_x1v_t25"} == {"2026-10-16"}
 
 
