@@ -117,7 +117,7 @@ _NOT_A_ROUND = re.compile(
     r"best crypto|100x|price prediction|ico\b|airdrop|before listing|listing price|launch price|"
     r"whitelist|stock jumps|shares (?:jump|rise|fall|slide|surge)|transfers?|inflows?|outflows?|withdraw\w*|"
     r"deposits?|hack\w*|exploit\w*|stolen|breach\w*|bailout|relief|in (?:eth|btc|usdc|usdt|sol)|"
-    r"earnings|price hike|crypto buyers|new crypto(?! (?:venture )?funds?)|next crypto|meme ?coin presale)\b", re.I)
+    r"earnings|boost|injection|grant|bounty|reward|prize|fine|penalty|settlement|lawsuit|price hike|crypto buyers|new crypto(?! (?:venture )?funds?)|next crypto|meme ?coin presale)\b", re.I)
 # Public-market capital (IPOs, offerings, warrants, PIPEs, treasury-company raises) is not venture flow.
 _PUBLIC_MARKET = re.compile(
     r"\b(ipo|offering|warrants?|notes|convertible notes|pipe|at-the-market|atm program|preferred|"
@@ -261,6 +261,45 @@ def _split_investors(who: str) -> list[str]:
     return out[:6]
 
 
+_BODY_VALUATION = re.compile(rf"\bvaluation of\s+(?:about\s+|around\s+|roughly\s+)?{_AMOUNT}", re.I)
+_BODY_INV = re.compile(
+    r"\b(?:with participation from|participation from|participants? (?:included|include)|joined by|"
+    r"(?:other |additional |existing )?investors (?:include|included|including|such as)|backed by|alongside)\s+"
+    r"(?P<who>.+?)(?=[.;:(]|\s+(?:to|for|as|in order|bringing|according|the company|which)\b|$)", re.I)
+_ROUND_WORDS = re.compile(r"\b(raise[sd]?|round|funding|financing|seed|series|led by|investors?|valuation)\b", re.I)
+
+
+def _round_sentences(body: str, project: str, n: int = 4) -> str:
+    """The first few sentences of the lead that talk about the round (the project named, or round words)."""
+    sents = re.split(r"(?<=[.!?])\s+", body[:1500])
+    keep = [x for x in sents[:12] if (project and project.lower() in x.lower()) or _ROUND_WORDS.search(x)]
+    return " ".join(keep[:n])
+
+
+_DASH_LED = re.compile(r"(?:^|[\s,(])(?:the\s+)?(?P<who>[A-Z][\w&.'’]*(?:\s+[A-Z][\w&.'’]*){0,3})[-–]led\s+"
+                       r"(?:seed\s+|series\s+\w\s+|strategic\s+|funding\s+|investment\s+)?(?:round|raise|funding|financing)",
+                       re.M)
+
+
+def _body_investors(body: str, project: str) -> tuple[list[str], list[str]]:
+    text = _round_sentences(body, project)
+    lead: list[str] = []
+    for m in _DASH_LED.finditer(text):                    # "The CMT Digital-led round …"
+        v = m.group("who").strip()
+        if v.lower() not in ("the", project.lower()) and v not in lead:
+            lead.append(re.sub(r"^The\s+", "", v))
+    for m in _LED_BY.finditer(text):
+        for v in _split_investors(m.group("who")):
+            if v not in lead and v.lower() != project.lower():
+                lead.append(v)
+    others: list[str] = []
+    for m in _BODY_INV.finditer(text):
+        for v in _split_investors(m.group("who")):
+            if v not in lead and v not in others and v.lower() != project.lower():
+                others.append(v)
+    return lead[:6], others[:10]
+
+
 def is_crypto(title: str, publisher: str = "", investors: Iterable[str] = ()) -> Optional[str]:
     """Why this headline counts as crypto: 'keyword' | 'investor' | 'publisher' | None."""
     if _CRYPTO_WORDS.search(title):
@@ -304,7 +343,7 @@ def classify(text: str) -> str:
 
 
 def parse_headline(title: str, publisher: str = "", pub_ts: Optional[float] = None,
-                   link: str = "") -> Optional[dict[str, Any]]:
+                   link: str = "", body: str = "") -> Optional[dict[str, Any]]:
     """One headline → one reported round, or None. Deterministic; no network."""
     if publisher.strip().lower() in _SPAM_PUBLISHERS:
         return None
@@ -335,6 +374,9 @@ def parse_headline(title: str, publisher: str = "", pub_ts: Optional[float] = No
             return None    # "Wonder's $650m raise, Crypto.com's $20b valuation, …" — a newsletter line
     if _INTENT.search(pre):
         return None
+    if m and re.match(r"announce", m.groupdict().get("verb") or "", re.I) and not re.search(
+            r"\b(round|funding|financing|raise|seed|series|strategic investment)\b", t[m.start("verb"):], re.I):
+        return None        # 'X announces $20M boost for Y' is not a round; 'X announces $20M seed round' is
     project = _project_from_pre(pre)
     if not project:
         return None
@@ -363,6 +405,25 @@ def parse_headline(title: str, publisher: str = "", pub_ts: Optional[float] = No
                 investors.append(v)
     vm = _VALUATION.search(t)
     valuation = (_amount_usd(vm)[0] if vm else None) or val_only
+    # The headline decides WHETHER this is a round; the feed's own lead text (when the outlet ships one)
+    # fills in WHO funded it, the stage and the valuation. Only sentences that talk about the round.
+    if body:
+        b_lead, b_inv = _body_investors(body, project)
+        for v in b_lead:
+            if v.lower() not in {x.lower() for x in lead}:
+                lead.append(v)
+        for v in b_lead + b_inv:
+            if v.lower() not in {x.lower() for x in investors}:
+                investors.append(v)
+        if not rm:
+            bm = _ROUND.search(_round_sentences(body, project))
+            if bm:
+                rm = bm
+                rnd = _round_label(bm.group(1))
+        if valuation is None:
+            bv = _VALUATION.search(_round_sentences(body, project)) or _BODY_VALUATION.search(_round_sentences(body, project))
+            if bv:
+                valuation = _amount_usd(bv)[0]
     basis = is_crypto(t, publisher, investors)
     if not basis:
         return None
@@ -609,36 +670,67 @@ def to_api_row(r: dict) -> dict[str, Any]:
 
 
 # ── I/O ──────────────────────────────────────────────────────────────────────
+_ATOM = "{http://www.w3.org/2005/Atom}"
+_CONTENT = "{http://purl.org/rss/1.0/modules/content/}encoded"
+
+
+def _body_text(raw: str, limit: int = 1500) -> str:
+    """Feed description / full content → plain text lead (first `limit` chars). No page fetch:
+    DL News and Bitcoin Magazine ship whole articles in the feed, the rest a 1–2 sentence summary."""
+    t = re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", raw or "", flags=re.S | re.I)
+    t = re.sub(r"<[^>]+>", " ", t)
+    return _clean(t)[:limit]
+
+
 def parse_rss(xml_text: str, default_publisher: str = "") -> list[dict]:
-    """RSS 2.0 → [{title, publisher, pub_ts, link}]. Google News items carry <source>."""
+    """RSS 2.0 or Atom → [{title, publisher, pub_ts, link, body}]. Google News items carry <source>."""
     import xml.etree.ElementTree as ET
     try:
         root = ET.fromstring(xml_text)
     except Exception:
         return []
-    ch = root.find("channel")
-    if ch is None:
-        return []
     out = []
-    for it in ch.findall("item"):
-        title = it.findtext("title") or ""
-        src = it.find("source")
-        pub = (src.text if src is not None and src.text else default_publisher) or ""
-        ts = None
-        pd = (it.findtext("pubDate") or "").strip()
-        if pd:
-            try:
-                ts = parsedate_to_datetime(pd).timestamp()
-            except Exception:
-                ts = None
-        out.append({"title": title, "publisher": _clean(pub), "pub_ts": ts, "link": it.findtext("link") or ""})
+    ch = root.find("channel")
+    if ch is not None:
+        for it in ch.findall("item"):
+            title = it.findtext("title") or ""
+            src = it.find("source")
+            pub = (src.text if src is not None and src.text else default_publisher) or ""
+            ts = None
+            pd = (it.findtext("pubDate") or "").strip()
+            if pd:
+                try:
+                    ts = parsedate_to_datetime(pd).timestamp()
+                except Exception:
+                    ts = None
+            # Google News items (they carry <source>) have no lead text — the description is the title
+            # plus the outlet's name glued on, which would read as an investor ("… led by CoinFund LatamList").
+            body = "" if src is not None else _body_text(it.findtext(_CONTENT) or it.findtext("description") or "")
+            out.append({"title": title, "publisher": _clean(pub), "pub_ts": ts,
+                        "link": it.findtext("link") or "", "body": body})
+        return out
+    if root.tag == _ATOM + "feed":                      # Blockworks serves Atom
+        for e in root.findall(_ATOM + "entry"):
+            title = e.findtext(_ATOM + "title") or ""
+            ln = e.find(_ATOM + "link")
+            link = ln.get("href", "") if ln is not None else ""
+            stamp = e.findtext(_ATOM + "published") or e.findtext(_ATOM + "updated") or ""
+            ts = None
+            if stamp:
+                try:
+                    ts = dt.datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp()
+                except Exception:
+                    ts = None
+            body = _body_text(e.findtext(_ATOM + "content") or e.findtext(_ATOM + "summary") or "")
+            out.append({"title": title, "publisher": default_publisher, "pub_ts": ts, "link": link, "body": body})
     return out
 
 
 def extract(items: Iterable[dict], since: Optional[dt.date] = None) -> list[dict]:
     rows = []
     for it in items:
-        r = parse_headline(it["title"], it.get("publisher", ""), it.get("pub_ts"), it.get("link", ""))
+        r = parse_headline(it["title"], it.get("publisher", ""), it.get("pub_ts"), it.get("link", ""),
+                           body=it.get("body", ""))
         if r and (since is None or r["announced_date"] >= since.isoformat()):
             rows.append(r)
     return rows
@@ -647,7 +739,8 @@ def extract(items: Iterable[dict], since: Optional[dt.date] = None) -> list[dict
 async def _get(client, url: str) -> Optional[str]:
     try:
         r = await client.get(url, follow_redirects=True)
-        if r.status_code == 200 and "<rss" in r.text[:400]:
+        head = r.text[:400]
+        if r.status_code == 200 and ("<rss" in head or "<feed" in head):
             return r.text
     except Exception:
         return None

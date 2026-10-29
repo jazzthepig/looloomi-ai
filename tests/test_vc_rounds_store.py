@@ -160,3 +160,31 @@ def test_investor_spellings_count_once():
     ])
     top = aggregate(rows, dt.date(2026, 10, 28))["top_investors"][0]
     assert top["name"] == "a16z" and top["deals"] == 2 and top["led"] == 2
+
+
+def test_feed_lead_text_fills_investors_stage_valuation():
+    r = parse_headline("Acme raises $10M to build stablecoin rails", "The Block", TS, "",
+                       body="Acme, a payments startup, raised $10 million in a seed round led by Paradigm and "
+                            "Dragonfly, with participation from Coinbase Ventures and Circle Ventures. The round "
+                            "values the company at a valuation of $80 million. Separately, Foo raised money from Bar.")
+    assert r["lead_investors"] == ["Paradigm", "Dragonfly"]
+    assert r["investors"] == ["Paradigm", "Dragonfly", "Coinbase Ventures", "Circle Ventures"]
+    assert r["round"] == "Seed" and r["valuation_usd"] == 80_000_000
+    d = parse_headline("Bitcoin mining firm Lumen raises $16 million to scale AI compute", "Decrypt", TS, "",
+                       body="The CMT Digital-led round, which drew hardware makers, will fund the expansion.")
+    assert d["lead_investors"] == ["CMT Digital"]
+
+
+def test_announcements_that_are_not_rounds():
+    assert p("Tron founder announces $20m boost for a DeFi lender as he calls on it to expand", "DL News") is None
+    assert p("Acme announces $12M seed round to build onchain credit") is not None
+
+
+def test_atom_feed_is_read():
+    xml = ('<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><entry><title>Acme raises $5M seed '
+           'for stablecoin rails</title><link href="https://x.test/a"/><published>2026-10-27T10:00:00Z</published>'
+           '<summary>Acme raised $5M led by Polychain.</summary></entry></feed>')
+    items = parse_rss(xml, "Blockworks")
+    assert items[0]["publisher"] == "Blockworks" and items[0]["link"] == "https://x.test/a"
+    r = parse_headline(items[0]["title"], "Blockworks", items[0]["pub_ts"], items[0]["link"], body=items[0]["body"])
+    assert r["lead_investors"] == ["Polychain"]
