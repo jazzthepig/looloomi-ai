@@ -2409,3 +2409,8 @@ and committed but **NOT run** (OPEN RISK 1).
 ### Archived header (moved from PROJECT_STATE.md on 2026-10-29 06:05 UTC)
 
 **更早:** 2026-10-29 00:22 UTC (Seth — 前端长任务第二轮(Jazz 10-28:「EST 不公开展示;先不加数据源;看开源架构,安全就部署;continue」)。**① EST Alpha 全部下线**(e9e6b5d8):/vault/funds、Research Desk 区块(组件删除)、Fund 页「已确认 GP」行、vision 页、内嵌 est.cc 的死 tab;内部 token 门控的线索归因保留。**② 开源评估**:RSSHub(AGPL-3.0,独立服务,多数路由靠抓网页、部分用无头浏览器,还要公网鉴权)—— **不部署**:等于加数据源且越过「不抓取」线,也要 Jazz 在 Railway 开新服务;trafilatura(Apache-2.0)要逐篇抓文章页 —— 不需要:我们已读的 8 个媒体源里 DL News / Bitcoin Magazine 自带全文、其余带导语,**直接读 feed 自带的正文**补投资方/轮次/估值(G 任务,无新主机、无抓页);Blockworks 是 Atom 之前一直读不到,已支持。**③ 第二轮修复**(H 任务):部署后旧标签页懒加载块 404 → 整块报错(线上实测 CIS v2 面板)→ 遇到就自动刷新一次;Agent 页「9,946+ 条排除」实为 14/70 → 改真数并改为实时读取;MCP 排除工具描述删「每日更新」「机构基金信赖」;方法论页「84 资产」写死 → 实时;移动端 NEUTRAL 时 regime 永远「LOADING」。Jazz 10-29:Fund 页「Long/Short」保留(多空书在跑;① 仍只持现货),记入 DECISIONS。)
+
+
+### Archived header (moved from PROJECT_STATE.md on 2026-10-29 08:28 UTC)
+
+**更早:** 2026-10-29 03:47 UTC (Seth — 前端第三轮(9ea85d06 / e14dd86c,上线已核):**慢面板**:dingge-board 每次 7 秒、trading/metrics 每次 6 秒 → 进程内 stale-while-revalidate(`src/api/ttl_cache.py`);部署后冷启动 8–90 秒的面板(协议、书、证明、归因、VC 组合)由 `_public_cache_warm_loop` 回环每 4 分钟预热 —— 实测全部 ≤3 秒冷、多数 <1.5 秒。**合规**:信号流与市场注释里「fade strength / not dip-buys / contrarian entry zone / long BTC/short alts / before acting」改为定位语言,合规守卫加了这几种构造并带反例。**数据**:Asset Radar 供应量改读本库 asset_mcap_daily(市值÷价格,标为推算),CG 那个接口不在我们套餐里;Paper Agent 头部改读进程内 sleeve 账本(原来读已退役的外部状态,永远「$—, 0 active」);Score Analytics 板块轮动用全宇宙。)
