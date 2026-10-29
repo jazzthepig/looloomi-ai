@@ -1002,12 +1002,15 @@ RERUN_AFTER_DAYS = 6
 LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
 #: mcap 21(10-23):行里加 shares 列 —— 下一次部署整段重写一遍,把历史行的股数填上(市值本身不变)。
-PART_VERSIONS = {"prices": 4, "mcap": 21, "onchain_forms": 1, "revenue": 1, "book": 1, "fwd_books": 2}
+#: book 2(10-29):季内开账(OPEN_DATE 10-28)。
+PART_VERSIONS = {"prices": 4, "mcap": 21, "onchain_forms": 1, "revenue": 1, "book": 2, "fwd_books": 2}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
     """6 天内已经真跑成了的段。每次部署都会重启循环 —— 不拦的话,一天几次部署就是一天几次整段重写 29 万行日线。
-    **只认真跑成的,不认「跳过」**:否则跳过会一轮轮续期,永远不再真跑。读不到 ⇒ 空集(全跑)。"""
+    **只认真跑成的,不认「跳过」**:否则跳过会一轮轮续期,永远不再真跑。读不到 ⇒ 空集(全跑)。
+    **也不认「waiting」**(还没到开账日,只写了预演):10-29 实测,10-27 那轮的 waiting 被当成已成,
+    把 10-28 开账的 World50 账本的第一行推迟到 11-02 之后 —— 等待中的段每轮都要再看一次日期。"""
     from src.data.signals.hl_book_daily import _supabase_get
     now = now or datetime.now(timezone.utc)
     try:
@@ -1023,7 +1026,7 @@ async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:
         if (now - at).total_seconds() > RERUN_AFTER_DAYS * 86400:
             break
         for name, p in (r.get("detail") or {}).items():
-            if (isinstance(p, dict) and p.get("ok") and not p.get("skipped")
+            if (isinstance(p, dict) and p.get("ok") and not p.get("skipped") and not p.get("waiting")
                     and p.get("v", 1) == PART_VERSIONS.get(name)):
                 done.add(name)
     return done

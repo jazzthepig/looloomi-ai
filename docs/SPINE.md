@@ -566,7 +566,7 @@ CI 校验的是**这张表与代码一致**,不是"代码已经干净" ——
     `compute_current_band`、`/api/v1/cis/conviction` + `conviction_verdicts_daily`、纸面再平衡、`crowd_clock`、`grade-changes`。
     判活:`select max(d) from cis_official_daily` = 昨天(UTC 06:00 后)。
 
-14. **第 7c 段(World50 前向账本)** — EW 与 EW×Mom 两条臂 **2026-10-28 收盘开账**(Jazz 10-29「不按日期等」;原定 12-31,S-581 / S-583):09-30 季末权重漂移到开账日作开账持仓,之后与回放逐日相同(测试 `test_mid_quarter_open_equals_the_replay_from_the_open_date`)。证据面 `/api/v1/proof/books` 的 `other_lines` 段已接(T-112)。判活(11-02 之后):`select arm, max(d) from world50_book_nav group by arm` 距今 ≤ 9 天;此前:`select detail->'book'->'preview' from loop_attempt where loop_name = '_world50_history_loop' order by at desc limit 1` 有成分数。
+14. **第 7c 段(World50 前向账本)** — EW 与 EW×Mom 两条臂 **2026-10-28 收盘开账**(Jazz 10-29「不按日期等」;原定 12-31,S-581 / S-583):09-30 季末权重漂移到开账日作开账持仓,之后与回放逐日相同(测试 `test_mid_quarter_open_equals_the_replay_from_the_open_date`)。证据面 `/api/v1/proof/books` 的 `other_lines` 段已接(T-112)。判活(10-31 之后;循环每天醒,waiting 不算已成 —— 10-29 修,之前会拖到 11-02):`select arm, max(d) from world50_book_nav group by arm` 距今 ≤ 9 天;此前:`select detail->'book'->'preview' from loop_attempt where loop_name = '_world50_history_loop' order by at desc limit 1` 有成分数。
 
 15. **第 7d 段(龙头腿 / 灵活组合前向账本)** — 与 World50 账本同日开账(Jazz 10-16)。🟡 只因还没开账:此前 fwd_books 段只在循环 detail 里预演龙头腿的选择。判活(2027-01-02 之后):`select book, arm, max(d) from forward_book_nav group by 1, 2` 距今 ≤ 9 天。
 

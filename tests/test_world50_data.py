@@ -341,6 +341,13 @@ def test_deploys_do_not_rerun_parts_that_already_succeeded(monkeypatch):
     rows.insert(0, {"at": "2026-10-19T13:00:00+00:00", "detail": {"mcap": {"ok": True, "v": wd.PART_VERSIONS["mcap"]}}})
     assert "mcap" in asyncio.run(wd._recent_ok_parts(now))
 
+    rows.insert(0, {"at": "2026-10-19T14:00:00+00:00", "detail": {
+        "book": {"ok": True, "v": wd.PART_VERSIONS["book"], "waiting": "前向账本 2026-10-28 收盘开账", "preview": {"members": 50}},
+        "fwd_books": {"ok": True, "v": wd.PART_VERSIONS["fwd_books"], "nav_written": 4}}})
+    got = asyncio.run(wd._recent_ok_parts(now))
+    assert "book" not in got, "10-29 实测:waiting 被当成已成,开账日的第一行被推迟一周 —— 等待中的段每轮都要再看日期"
+    assert "fwd_books" in got
+
     async def boom(tail):
         raise RuntimeError("HTTP 503")
     monkeypatch.setattr(hb, "_supabase_get", boom)

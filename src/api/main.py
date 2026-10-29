@@ -1515,6 +1515,8 @@ async def _world50_history_loop():
     ② 公司历史市值 → world50_mcap_weekly;③ 链上形式(CG `/rwas`)→ world50_onchain_forms。任何一段没成,整轮不算 ok。
     判活:`select count(distinct symbol) from ohlcv_daily where source='eodhd' and trade_date < '2015-02-01'` ≥ 60;
     `select count(distinct key) from world50_mcap_weekly`;`select count(*) from world50_onchain_forms where key is not null`。
+    10-29:**每天醒一次**,重的段仍由 6 天门(`_recent_ok_parts`)挡成周更;醒得勤是为了 waiting 的段(开账日前)
+    过了日期当天就开账,而不是再等一整周。
     """
     await _asyncio.sleep(_boot_delay(4500))   # S-482 错峰:900 秒上限之后的空档
     while True:
@@ -1534,7 +1536,7 @@ async def _world50_history_loop():
             await _beat("_world50_history_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _record_loop_attempt("_world50_history_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                        writer="src.api.main._world50_history_loop")
-        await _asyncio.sleep(7 * 24 * 3600)
+        await _asyncio.sleep(24 * 3600)
 
 
 @app.on_event("startup")
@@ -2150,7 +2152,7 @@ async def _executor_host_watch_loop():
     主机那一边的事(进程、网络、令牌)这里看不到,只负责让沉默响起来。
     判活:`loop_beat` 里 `_executor_host_watch_loop`(liveness 里是 marker,3 小时没 ok ⇒ critical)。"""
     await _asyncio.sleep(_boot_delay(6000))
-    _was_fresh = None
+    _was_fresh, _since = None, 0
     while True:
         try:
             from src.data.vector.market_state_writer import _sb_get as _ew_get
@@ -2166,7 +2168,10 @@ async def _executor_host_watch_loop():
                                        else "执行主机从没回报过")
             await _beat("_executor_host_watch_loop", ok=_fresh, error=_why,
                         detail={"last_report_at": _last, "age_h": round(_age_h, 2) if _age_h is not None else None})
-            if _was_fresh is not None and _fresh != _was_fresh or (_was_fresh is None and not _fresh):
+            # 10-29(lane-a 复核):只在翻转时响一次 ⇒ 10-26 起沉默 62 小时只响了一声。没回报期间每 6 小时再响,带真实时长。
+            _since = 0 if _fresh or _was_fresh is not False else _since + 1
+            if (_was_fresh is not None and _fresh != _was_fresh or (_was_fresh is None and not _fresh)
+                    or (not _fresh and _since and _since % 6 == 0)):
                 from src.api.notify import notify_telegram
                 await notify_telegram(f"[executor watch] {'主机恢复回报' if _fresh else _why} —— 真钱腿请查东京主机")
             _was_fresh = _fresh
