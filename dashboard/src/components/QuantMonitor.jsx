@@ -53,11 +53,12 @@ const fmtTime = (ts) => {
 
 /* ─── API ───────────────────────────────────────────────────────────── */
 async function fetchQuantData() {
-  const [status, trades] = await Promise.all([
+  const [status, trades, metrics] = await Promise.all([
     fetch(`${API_BASE}/quant/status`).then(r => r.ok ? r.json() : null).catch(() => null),
     fetch(`${API_BASE}/quant/trades?limit=30`).then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch(`${API_BASE}/trading/metrics`).then(r => r.ok ? r.json() : null).catch(() => null),
   ]);
-  return { status, trades };
+  return { status, trades, metrics };
 }
 
 /* ─── Equity Card ───────────────────────────────────────────────────── */
@@ -116,7 +117,7 @@ function EquityCard({ equity, starting, dailyPnl, stale, updated }) {
           <div style={{ fontFamily: FONTS.mono, fontSize: 28, fontWeight: 400, color: T.t2, letterSpacing: "-0.02em", lineHeight: 1 }}>
             ${starting > 0 ? starting.toFixed(0) : "—"}
           </div>
-          <div style={{ fontFamily: FONTS.mono, fontSize: 9, marginTop: 7, color: T.t3, opacity: 0.6 }}>USDT paper</div>
+          <div style={{ fontFamily: FONTS.mono, fontSize: 9, marginTop: 7, color: T.t3, opacity: 0.6 }}>{starting >= 50000 ? "paper notional" : "USDT paper"}</div>
         </div>
 
         {/* Status indicator — far right */}
@@ -1014,15 +1015,17 @@ function SimonsPanel() {
 
 /* ─── Main Component ────────────────────────────────────────────────── */
 export default function QuantMonitor() {
-  const [data, setData] = useState({ status: null, trades: null });
+  const [data, setData] = useState({ status: null, trades: null, metrics: null });
   const [loading, setLoading] = useState(true);
   const [stale, setStale] = useState(false);
   const [mainTab, setMainTab] = useState("performance"); // performance | paper
 
   const fetchData = useCallback(async () => {
-    const { status, trades } = await fetchQuantData();
-    setData({ status, trades });
-    setStale(status?._stale ?? false);
+    const { status, trades, metrics } = await fetchQuantData();
+    setData({ status, trades, metrics });
+    // The old external status feed is retired (always stale); the in-process sleeve book is the live record.
+    const sleeveLive = !!metrics?.sleeve;
+    setStale(sleeveLive ? false : (status?._stale ?? false));
     setLoading(false);
   }, []);
 
@@ -1034,8 +1037,15 @@ export default function QuantMonitor() {
     }
   }, [fetchData, mainTab]);
 
-  const { status, trades } = data;
+  const { status, trades, metrics } = data;
   const openTrades   = status?.open_trades || [];
+  // Header numbers: the external status feed when it is live, else the in-process sleeve book
+  // (it carries the 18 open / 360 closed shown in the IC loop below — the header used to read "$—, 0 active").
+  const sleeve = metrics?.sleeve || null;
+  const useSleeve = !!sleeve && (status?._stale || status?.balance?.equity == null);
+  const hdrEquity   = useSleeve ? sleeve.nav * (1 + (sleeve.return_pct || 0) / 100) : status?.balance?.equity;
+  const hdrStarting = useSleeve ? sleeve.nav : (status?.balance?.starting || 10000);
+  const hdrOpenN    = useSleeve ? sleeve.open_positions : openTrades.length;
   const closedTrades = (trades?.trades || []).slice(0, 30);
 
   return (
@@ -1103,9 +1113,9 @@ export default function QuantMonitor() {
           {/* Equity + Stats */}
           {loading ? <SkeletonCard /> : (
             <EquityCard
-              equity={status?.balance?.equity}
-              starting={status?.balance?.starting || 10000}
-              dailyPnl={status?.daily_pnl}
+              equity={hdrEquity}
+              starting={hdrStarting}
+              dailyPnl={useSleeve ? null : status?.daily_pnl}
               stale={stale}
               updated={status?.updated}
             />
@@ -1117,7 +1127,7 @@ export default function QuantMonitor() {
               <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: ".10em", color: T.t2, textTransform: "uppercase" }}>
                 Open Positions
               </span>
-              <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5 }}>{openTrades.length} active</span>
+              <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5 }}>{hdrOpenN} active{useSleeve ? " · sleeve book, listed below" : ""}</span>
             </div>
             {openTrades.length === 0 ? null : (
               <div>
@@ -1137,7 +1147,7 @@ export default function QuantMonitor() {
               <span style={{ fontFamily: FONTS.display, fontSize: 11, fontWeight: 700, letterSpacing: ".10em", color: T.t2, textTransform: "uppercase" }}>
                 Trade History
               </span>
-              <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5 }}>{closedTrades.length} recent</span>
+              <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: T.t3, opacity: 0.5 }}>{useSleeve ? `${sleeve.closed_trades ?? 0} closed (sleeve book)` : `${closedTrades.length} recent`}</span>
             </div>
             {closedTrades.length === 0 ? null : (
               <div>

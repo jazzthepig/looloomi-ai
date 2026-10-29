@@ -694,7 +694,7 @@ export default function PortfolioAllocation({ universe = [] }) {
                     {corrWarning.cluster.join(" · ")}
                   </span>
                   {" "}move together (r ≈ {corrWarning.maxCorr.toFixed(2)}, combined {(corrWarning.combinedWeight * 100).toFixed(0)}% of portfolio).
-                  Effective diversification may be lower than {corrWarning.cluster.length} positions suggest — consider reducing concentration or adding non-correlated classes.
+                  These {corrWarning.cluster.length} positions move close to as one, so effective diversification is lower than the position count suggests; less concentration or non-correlated classes would widen it.
                 </div>
                 {corrWarning.pairs.length > 1 && (
                   <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 5 }}>

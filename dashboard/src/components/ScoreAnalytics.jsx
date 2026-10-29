@@ -255,7 +255,9 @@ export default function ScoreAnalytics({ universe: universeProp = [] }) {
   // 2. Batch fetch history whenever universe changes
   useEffect(() => {
     if (!universe.length) return;
-    const top20 = universe.slice(0, 20).map(a => a.symbol).join(",");
+    // Whole universe (the endpoint takes up to 60): sector rotation averaged only the top 20 before, so whole
+    // classes (bonds, FX, real estate) had no line at all.
+    const top20 = universe.slice(0, 60).map(a => a.symbol).join(",");
     setHistLoading(true);
     fetch(`${API}/api/v1/cis/history/batch?symbols=${top20}&days=7`)
       .then(r => r.json())

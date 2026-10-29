@@ -1,0 +1,1 @@
+import{c as t,j as o}from"./chunkReload-2BfHW3Gy.js";/* empty css              */import r from"./QuantMonitor-DzSr1hHN.js";import"./generateCategoricalChart-CnZ_BLsu.js";t.createRoot(document.getElementById("root")).render(o.jsx(r,{}));
