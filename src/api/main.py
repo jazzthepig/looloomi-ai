@@ -2207,6 +2207,66 @@ async def _vc_rounds_loop():
         await _asyncio.sleep(3600)
 
 
+_WARM_PATHS = (
+    # cold on every deploy and 8–90 s to build (measured 2026-10-29); each keeps its own server-side cache
+    "/api/v1/protocols/universe",
+    "/api/v1/portfolio/books?mode=forward",
+    "/api/v1/portfolio/books?mode=replay",
+    "/api/v1/proof/books",
+    "/api/v1/cis/attribution?symbol=BTC&limit=8",
+    "/api/v1/market/economic-indicators",
+    "/api/v1/vc/portfolios",
+    "/api/v1/signals/dingge-board",
+    "/api/v1/trading/metrics",
+)
+
+
+async def _public_cache_warm_loop():
+    """面板冷启动预热(2026-10-29):部署后第一个访客要等 8–90 秒的接口(协议、书、证明、归因、VC 组合),
+    由进程内回环先请求一遍(127.0.0.1:$PORT,回环不限流、不记 agent 流量,S-557),之后每 4 分钟一轮保持在缓存里。
+    判活:`loop_beat` 里 `_public_cache_warm_loop`(每轮);loop_attempt 每小时记一次。"""
+    await _asyncio.sleep(_boot_delay(120))
+    import httpx as _hx
+    _port = os.environ.get("PORT", "8000")
+    _n = 0
+    while True:
+        _fail: list = []
+        _slow: dict = {}
+        try:
+            async with _hx.AsyncClient(timeout=150, headers={"User-Agent": "cometcloud-cache-warm"}) as _c:
+                import time as _tm
+                for _p in _WARM_PATHS:
+                    try:
+                        _t0 = _tm.time()
+                        _r = await _c.get(f"http://127.0.0.1:{_port}{_p}")
+                        _dt_s = round(_tm.time() - _t0, 1)
+                        if _r.status_code != 200:
+                            _fail.append(f"{_p} {_r.status_code}")
+                        elif _dt_s >= 5:
+                            _slow[_p] = _dt_s
+                    except Exception as _e:
+                        _fail.append(f"{_p} {type(_e).__name__}")
+                    await _asyncio.sleep(2)
+            _why = "; ".join(_fail)[:300] or None
+            await _beat("_public_cache_warm_loop", ok=not _fail, error=_why,
+                        detail={"paths": len(_WARM_PATHS), "failed": _fail, "slow_s": _slow})
+            if _n % 15 == 0 or _fail:
+                await _record_loop_attempt("_public_cache_warm_loop", "ok" if not _fail else "error",
+                                           reason=_why or "", detail={"failed": _fail, "slow_s": _slow},
+                                           writer="src.api.main._public_cache_warm_loop")
+        except Exception as _e:
+            print(f"[CACHE-WARM] ⚠️  pass FAILED: {_e}")
+            await _beat("_public_cache_warm_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+        _n += 1
+        await _asyncio.sleep(240)
+
+
+@app.on_event("startup")
+async def _start_public_cache_warm_loop():
+    _asyncio.create_task(_public_cache_warm_loop())
+    print("[CACHE-WARM] ✅ public panel cache warm-up scheduled (loopback, every 4 min)")
+
+
 @app.on_event("startup")
 async def _start_vc_rounds_loop():
     _asyncio.create_task(_vc_rounds_loop())
@@ -5405,10 +5465,15 @@ async def dingge_board(response: Response = None):
         response.headers["Cache-Control"] = "public, max-age=900, stale-while-revalidate=1800"
     import asyncio as _a, datetime as _d
     from src.data.signals.dingge_rwa import scan_live
-    try:
+    from src.api.ttl_cache import swr
+
+    async def _scan():
         board = await _a.to_thread(scan_live)
         active = [b for b in board if b.get("at_cap") or (b.get("days_since_cap") is not None and b["days_since_cap"] <= 45)]
         return {"board": board, "active_or_recent": len(active), "as_of": _d.datetime.now(_d.timezone.utc).isoformat()}
+    try:
+        # the scan takes ~7 s; it was re-run on every page view (2026-10-29). 15 min fresh, then served stale while one refresh runs
+        return await swr("dingge_board", 900, _scan)
     except Exception as e:
         return {"error": "dingge_board_unavailable", "detail": str(e)[:120]}
 

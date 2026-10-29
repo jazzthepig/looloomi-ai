@@ -880,12 +880,12 @@ async def assemble_briefing(symbol: str = None) -> dict:
         posn.append({"id": f"positioning:{crowded_long}", "symbol": crowded_long,
                      "headline": f"{crowded_long} — leveraged longs crowded",
                      "narrative": f"Positioning pressure {cl_p:+.2f}: leverage is one-sided long in {crowded_long}. "
-                                  "Crowded longs are the fuel for a flush — vulnerable if the tape turns. We'd fade "
-                                  "strength here, not chase it.", "direction": "UNDERPERFORM",
+                                  "Crowded longs are the fuel for a flush — vulnerable if the tape turns; strength here "
+                                  "is leverage-driven rather than broad.", "direction": "UNDERPERFORM",
                      "source": "Positioning", "timestamp": now})
         ai_items.append({"id": f"positioning:{crowded_long}", "kind": "positioning", "symbol": crowded_long,
                          "crowding": "long", "pressure": round(cl_p, 2), "direction": "UNDERPERFORM",
-                         "point": "crowded longs = flush risk if tape turns; fade strength, don't chase"})
+                         "point": "crowded longs = flush risk if tape turns; strength is leverage-driven"})
     if crowded_short and crowded_short != crowded_long:
         posn.append({"id": f"positioning:{crowded_short}", "symbol": crowded_short,
                      "headline": f"{crowded_short} — shorts crowded, squeeze setup",
@@ -910,8 +910,7 @@ async def assemble_briefing(symbol: str = None) -> dict:
             s_syms = [(a.get('symbol') or '').upper() for a in strong[:4]]
             shifts.append({"id": "cross:strong", "headline": "Where quality is strongest now",
                            "narrative": f"Across the {len(uni)}-asset universe, {', '.join(s_syms)} carry the strongest "
-                                        f"quality reads in the {regime} regime — the names positioned best if the "
-                                        f"tape turns constructive. (Regime lens and relative positioning only.)",
+                                        f"quality reads in the {regime} regime. (Regime lens and relative positioning only.)",
                            "symbols": s_syms, "source": "Cross-Asset", "timestamp": now})
             ai_items.append({"id": "cross:strong", "kind": "cross_asset_strength", "symbols": s_syms,
                              "regime": regime, "universe_size": len(uni),
@@ -920,10 +919,10 @@ async def assemble_briefing(symbol: str = None) -> dict:
             w_syms = [(a.get('symbol') or '').upper() for a in weak[:4]]
             shifts.append({"id": "cross:weak", "headline": "Where quality is eroding",
                            "narrative": f"{', '.join(w_syms)} are weakening across the universe — structural or positioning "
-                                        f"drag. In a {regime} regime these are underweight candidates, not dip-buys.",
+                                        f"drag in the {regime} regime. (Relative positioning only.)",
                            "symbols": w_syms, "source": "Cross-Asset", "timestamp": now})
             ai_items.append({"id": "cross:weak", "kind": "cross_asset_weakness", "symbols": w_syms,
-                             "regime": regime, "point": "quality eroding; underweight candidates, not dip-buys"})
+                             "regime": regime, "point": "quality eroding; relative positioning only"})
     if shifts:
         sections.append({"tier": "cross_asset", "title": "Cross-Asset Shifts", "items": shifts})
 
@@ -935,7 +934,7 @@ async def assemble_briefing(symbol: str = None) -> dict:
         "select": "id,symbol,grade,signal,macro_regime,signal_date"})
     calls = []
     for r in (open_rows or [])[:8]:
-        sig = (r.get("signal") or "").upper()
+        sig = (r.get("signal") or "").upper().replace("_", " ")     # STRONG_OUTPERFORM → STRONG OUTPERFORM (display enum)
         sym_u = (r.get("symbol") or "").upper()
         calls.append({"id": f"call:{sym_u}", "symbol": sym_u, "direction": sig or "NEUTRAL",
                       "headline": f"{sym_u} — {sig or 'NEUTRAL'}",

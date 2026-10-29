@@ -1655,6 +1655,14 @@ async def _backfill_regime_from_history(positions: list) -> int:
 
 @router.get("/api/v1/trading/metrics")
 async def get_metrics():
+    """Realized trade performance: win rate, avg return, total P&L, Sharpe approximation.
+    Served from a 2-minute stale-while-revalidate cache: the computation re-queries history per
+    symbol for the regime backfill and took ~6 s on every request (2026-10-29)."""
+    from src.api.ttl_cache import swr
+    return await swr("trading_metrics", 120, _compute_metrics, stale_for=1800)
+
+
+async def _compute_metrics():
     """
     Realized trade performance: win rate, avg return, total P&L, Sharpe approximation.
     """

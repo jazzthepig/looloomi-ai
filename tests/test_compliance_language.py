@@ -60,7 +60,11 @@ _STATIC_HTML = ("strategy.html", "vision.html", "index.html")
 _FORBIDDEN = re.compile(
     r"\b(buy|sell|accumulate|liquidate|avoid|trim|stop out|load up|"
     r"go long|go short|(?:long|short)\s+the\b|"
-    r"we recommend|you should|investors should|price target|top pick)\b", re.I)
+    r"we recommend|you should|investors should|price target|top pick|"
+    # 2026-10-29: the same advice, said as trader slang, sat in the signal feed and market notes for weeks —
+    # "fade strength here, not chase it", "not dip-buys", "contrarian entry zone", "long BTC/short alts".
+    r"fade (?:strength|the|this|rallies)|chase it|dip[- ]buys?|entry zone|contrarian entry|"
+    r"long [A-Z]{2,6}\s*/\s*short)\b", re.I)
 
 # Substrings that are the same letters in a non-transactional role.
 _EXEMPT = re.compile(
@@ -143,7 +147,11 @@ def test_the_guard_fires_on_the_phrasing_that_slipped_through():
     sound CAUTIOUS — which is precisely why they survived human review, and why the
     check has to be mechanical."""
     for lit in ("Commodities, RWA, and BTC as inflation hedges. Avoid high-beta altcoins.",
-                "strongest quality reads; regime lens, not a buy list"):
+                "strongest quality reads; regime lens, not a buy list",
+                "vulnerable if the tape turns. We'd fade strength here, not chase it.",
+                "these are underweight candidates, not dip-buys.",
+                "this creates a high-conviction contrarian entry zone",
+                "Relative strategy: long BTC/short alts until reversal"):
         assert _FORBIDDEN.search(lit), f"guard must flag: {lit!r}"
         assert not _EXEMPT.search(lit), f"exemption wrongly swallows: {lit!r}"
     # and must NOT fire on the legitimate internal usages

@@ -309,9 +309,9 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             "Extreme Fear (≤20) signals capitulation-phase sentiment. "
             "S pillar hard-depressed across crypto (-24). Historically BTC "
             "mean-reverts within 72–120h of readings ≤20. A pillar elevated "
-            "(+18): assets are statistically cheap vs long-run baseline — "
-            "creates contrarian entry. Confirm with OBV / on-chain accumulation "
-            "before acting. Do NOT fade into accelerating volume.",
+            "(+18): assets are statistically cheap vs long-run baseline. "
+            "Confirmation to look for: OBV / on-chain accumulation; accelerating "
+            "volume against the move weakens the read. Positioning context, not advice.",
             "7D"))
         elif fng_val <= 40:
             pi = {"F": 0, "M": -6, "O": 0, "S": -12, "A": +8}
@@ -384,7 +384,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                         "M pillar surges short-term but mean-reversion risk is acute. "
                         "O pillar stressed (-12): funding rates likely elevated, "
                         "OI concentrated = liquidation cascade exposure. "
-                        "A pillar depleted (-18): entry alpha exhausted at these levels. "
+                        "A pillar depleted (-18): little independent alpha left at these levels. "
                         "Positioning: UNDERWEIGHT pending pullback confirmation."
                     ), "24H"
                 elif chg >= 10:
@@ -423,8 +423,8 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                         "cascade — check exchange flow data for capitulation signals. "
                         "F pillar moderately impacted (-8): assess protocol health before "
                         "assuming recovery. A pillar elevated (+16): if F intact, "
-                        "this creates a high-conviction contrarian entry zone — "
-                        "watch for volume capitulation + OBV divergence."
+                        "this has historically been a contrarian setup — the confirmation "
+                        "is volume capitulation + OBV divergence."
                     ), "7D"
                 elif chg <= -10:
                     pi = {"F": -3, "M": -16, "O": -8, "S": -10, "A": +10}
@@ -825,8 +825,8 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             }, pi,
             f"BTC dominance at {btc_dom:.1f}%: capital concentrated in BTC vs altcoins. "
             "Historically alt season requires BTC.D <50%. M pillar compressed for alts (-12). "
-            "Relative strategy: long BTC/short alts until BTC.D reversal confirmed. "
-            "Watch BTC.D breaking below 55% as alt cycle re-entry signal.",
+            "Relative positioning: BTC OUTPERFORM vs alts until a BTC.D reversal is confirmed. "
+            "BTC.D breaking below 55% would mark an alt-cycle turn.",
             "7D"))
         elif btc_dom <= 45:
             pi = {"F": 0, "M": +15, "O": +5, "S": +12, "A": +5}
@@ -917,7 +917,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             f"Price {'+' if chg24>0 else ''}{chg24:.1f}% 24h. Market cap rank: #{rank}. "
             "Trending precedes price by 12–48h in typical breakout scenarios. "
             "S pillar elevated from social momentum. Validate with F pillar: "
-            "check TVL/revenue for DeFi tokens, network metrics for L1s before acting.",
+            "check TVL/revenue for DeFi tokens, network metrics for L1s to confirm.",
             "24H"))
 
         if len(trending_defi) >= 3:
@@ -931,7 +931,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             f"Multiple DeFi/L1 tokens trending simultaneously ({', '.join(trending_defi)}). "
             "Sector-wide social momentum = capital rotation signal. "
             "F+M pillars benefit when trending driven by protocol events (upgrades, governance). "
-            "Validate: check if trend is news-driven (sustainable) or meme-driven (fade quickly).",
+            "Validate: check if trend is news-driven (tends to persist) or meme-driven (tends to fade quickly).",
             "7D"))
 
     # ── 10. GeckoTerminal On-chain Pools → O + M vector ──────────────────────
@@ -991,8 +991,8 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             }, pi,
             f"DEX pool {name} crashed {chg24:.0f}%. O pillar damaged (-15): "
             "liquidity flight. F impacted (-10): assess exploit/rug risk first. "
-            "If F pillar (protocol fundamentals) intact, A pillar (+12) creates "
-            "contrarian entry zone — confirm with on-chain TVL stabilization.",
+            "If F pillar (protocol fundamentals) intact, A pillar (+12) marks a "
+            "historically contrarian setup — the confirmation is on-chain TVL stabilization.",
             "7D"))
 
     # ── 11. Derivatives: funding rates + open interest → O vector ────────────
@@ -1223,7 +1223,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             }, pi_neg,
             f"{len(failing)} tracked assets fail CIS ≥{threshold}. S and A pillars most suppressed. "
             f"Common causes {regime_clause}: momentum breakdown (M pillar), vol regime negative (S pillar), "
-            f"underperformance vs BTC benchmark (A pillar). Do not override with manual entry.",
+            f"underperformance vs BTC benchmark (A pillar).",
             "24H"))
 
     # ── Whale movement detection — vol/mcap spike across CIS universe ────────────
@@ -1587,6 +1587,29 @@ async def earnings_calendar(response: Response, symbols: str = "AAPL,MSFT,NVDA,G
         raise HTTPException(status_code=500, detail=f"Earnings calendar error: {e}")
 
 
+async def _implied_supply_from_db(coin_id: str, days: int) -> dict | None:
+    """Implied circulating supply (market cap ÷ price) from our own daily record. None when we hold < 2 days."""
+    try:
+        from datetime import date as _date, timedelta as _td
+        from src.data.style.header import _read_all
+        since = (_date.today() - _td(days=days + 1)).isoformat()
+        rows = await _read_all("asset_mcap_daily", {"select": "d,price,mcap", "coin_id": f"eq.{coin_id}",
+                                                    "source": "eq.coingecko_pro_market_chart",
+                                                    "d": f"gte.{since}", "order": "d.asc"})
+    except Exception:
+        return None
+    pts = [(str(r["d"])[:10], float(r["mcap"]) / float(r["price"])) for r in rows
+           if r.get("price") and r.get("mcap") and float(r["price"]) > 0 and float(r["mcap"]) > 0]
+    if len(pts) < 2:
+        return None
+    first, last = pts[0][1], pts[-1][1]
+    return {"coin_id": coin_id, "available": True, "days": days,
+            "supply_earliest": first, "supply_latest": last,
+            "supply_change_pct": round((last - first) / first * 100, 4) if first > 0 else 0,
+            "data_points": len(pts), "series": [[d, v] for d, v in pts[-30:]],
+            "source": "asset_mcap_daily", "basis": "implied supply = market cap ÷ price (daily close)"}
+
+
 @router.get("/api/v1/market/supply-chart/{coin_id}")
 async def supply_chart(coin_id: str, days: int = 30):
     """
@@ -1616,9 +1639,16 @@ async def supply_chart(coin_id: str, days: int = 30):
         raise HTTPException(status_code=400, detail="Invalid coin_id")
     days = max(7, min(365, days))
     try:
+        # 2026-10-29: CoinGecko's circulating_supply_chart is not on our plan — every Asset Radar row asked
+        # and got a 404. Our own daily record (asset_mcap_daily, CG market_chart) carries market cap and price
+        # for the same coins; implied supply = mcap ÷ price, labelled as implied. Read it first; CG only for
+        # coins we do not hold.
+        own = await _implied_supply_from_db(coin_id, days)
+        if own:
+            return own
         data = await get_cg_circulating_supply_chart(coin_id, days)
         if not data.get("available"):
-            reason = data.get("reason", "unknown")
+            reason = data.get("reason") or ("unavailable" if data.get("error") else "unknown")
             if reason == "pro_only":
                 raise HTTPException(status_code=503, detail="CoinGecko Pro key required for supply chart data")
             raise HTTPException(status_code=404, detail=f"Supply chart unavailable for {coin_id}: {reason}")

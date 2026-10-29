@@ -59,6 +59,7 @@ LIVENESS_SLOS: dict[str, dict] = {
     "_oi_snapshot_loop":         {"max_age_h": 2, "kind": "collector"},  # S-690 真钱过滤:d 收盘 OI/市值快照(00:05 UTC)+ 每小时对归档核
     "_executor_host_watch_loop": {"max_age_h": 3, "kind": "marker"},     # 10-28 真钱腿:主机 2 小时没回报 ⇒ 不 ok;3 小时 ⇒ critical
     "_vc_rounds_loop":           {"max_age_h": 6, "kind": "collector"},  # 10-28 VC 融资轮:公开新闻标题 → vc_funding_rounds(每小时)
+    "_public_cache_warm_loop":   {"max_age_h": 1, "kind": "collector"},  # 10-29 面板冷启动预热(回环,每 4 分钟)
     "_style_pit_loop":           {"max_age_h": 30, "kind": "marker"},   # T-067 时点风格指数(日更)
     "_portfolio_layer_loop":     {"max_age_h": 30, "kind": "marker"},   # T-070 组合层 0–1 敞口
     "_binance_hf_loop":          {"max_age_h": 30, "kind": "collector"},  # S-509 小时线 + 资金费率(日更)
