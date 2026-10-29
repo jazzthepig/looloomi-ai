@@ -13,6 +13,7 @@ import { createRoot } from "react-dom/client";
 import { useState, useEffect, Suspense, lazy } from "react";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { T, FONTS } from "./tokens";
+import './lib/chunkReload.js'   // stale-chunk recovery after a deploy
 
 const PortfolioAllocation = lazy(() => import("./components/PortfolioAllocation"));
 const MyPortfolio          = lazy(() => import("./components/MyPortfolio"));

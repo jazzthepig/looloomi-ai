@@ -4,7 +4,7 @@
  * Tone: institutional. Transparent. Precise.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SiteNav from "./SiteNav";
 import { T, FONTS } from "../tokens";
 
@@ -188,6 +188,13 @@ const ANCHORS = [
 /* ─── page ───────────────────────────────────────────────────────────── */
 export default function MethodologyPage() {
   const [activeAnchor, setActiveAnchor] = useState("#purpose");
+  // Live count (was a hard-coded "84" long after the universe changed)
+  const [nAssets, setNAssets] = useState(null);
+  useEffect(() => {
+    fetch("/api/v1/cis/universe").then(r => r.ok ? r.json() : null)
+      .then(d => { if (d && Array.isArray(d.universe)) setNAssets(d.universe.length); })
+      .catch(() => {});
+  }, []);
 
   const scrollTo = (hash) => {
     const el = document.querySelector(hash);
@@ -283,7 +290,7 @@ export default function MethodologyPage() {
             {/* Stats row */}
             <div style={{ display: "flex", gap: 24, marginTop: 36, flexWrap: "wrap" }}>
               {[
-                ["84",    "Assets Scored",     C.cyan],
+                [nAssets ?? "—", "Assets Scored",  C.cyan],
                 ["5",     "Analytical Pillars", C.indigo],
                 ["2",     "Data Tiers",         C.gold],
                 ["6",     "Macro Regimes",      C.green],

@@ -10,6 +10,7 @@ import "./index.css";   // shared design foundation — fonts + navy field (sing
 import { createRoot } from "react-dom/client";
 import { useState, useEffect, Suspense, lazy } from "react";
 import { T, FONTS } from "./tokens";
+import './lib/chunkReload.js'   // stale-chunk recovery after a deploy
 
 const ScoreAnalytics = lazy(() => import("./components/ScoreAnalytics"));
 

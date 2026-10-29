@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { T, FONTS } from './tokens';
 import SiteNav from './components/SiteNav';
+import './lib/chunkReload.js'   // stale-chunk recovery after a deploy
 
 const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
   ? 'http://localhost:8000'
@@ -299,17 +300,24 @@ function RequestKeyForm() {
 // ── Live stats strip ─────────────────────────────────────────────────────────
 function LiveStats() {
   const [pulse, setPulse] = useState(null);
+  const [counts, setCounts] = useState({ universe: null, excluded: null, evaluated: null });
 
   useEffect(() => {
     fetch(`${API_BASE}/api/v1/market/macro-pulse`)
       .then(r => r.json())
       .then(d => setPulse(d))
       .catch(() => {});
+    // Counts come from the same endpoints the tools call — the page used to hard-code them (54+, 14).
+    fetch(`${API_BASE}/api/v1/cis/universe`).then(r => r.ok ? r.json() : null)
+      .then(d => d && setCounts(c => ({ ...c, universe: (d.universe || []).length || null }))).catch(() => {});
+    fetch(`${API_BASE}/api/v1/agent/cis-exclusions`).then(r => r.ok ? r.json() : null)
+      .then(d => d && setCounts(c => ({ ...c, excluded: d.total_excluded ?? null, evaluated: d.universe_evaluated ?? null }))).catch(() => {});
   }, []);
 
   const stats = [
-    { label: 'Universe', value: '54+', unit: 'assets rated' },
-    { label: 'Exclusion records', value: '14', unit: 'structured rejections' },
+    { label: 'Universe', value: counts.universe ?? '—', unit: 'assets rated' },
+    { label: 'Exclusion records', value: counts.excluded ?? '—',
+      unit: counts.evaluated ? `of ${counts.evaluated} evaluated` : 'structured rejections' },
     { label: 'Score refresh', value: '30', unit: 'min cadence' },
     // Was `|| 'Risk-Off'` — a hardcoded regime rendered under the label "live".
     // An unmeasured regime shows as "—"; inventing one is the S-120 pattern in
@@ -317,7 +325,7 @@ function LiveStats() {
     { label: 'Macro regime',
       value: pulse?.macro_regime ? String(pulse.macro_regime).replace(/_/g, ' ') : '—',
       unit: pulse?.macro_regime ? 'live' : 'awaiting engine' },
-    { label: 'MCP tools', value: '19', unit: 'available' },
+    { label: 'MCP tools', value: '40', unit: 'on the MCP server' },
   ];
 
   return (
@@ -360,7 +368,7 @@ export default function AgentPage() {
       tool: 'get_cis_exclusions()',
       tier: 'pro',
       badge: true,
-      description: 'Structured rejection list of 9,946+ assets that failed the 7-criterion inclusion standard. Each rejection includes the specific criterion triggered and the reason. No other data provider offers this.',
+      description: 'Structured rejection list: every asset we evaluated and did not admit under the 7-criterion inclusion standard, with the criterion triggered and the reason.',
       returns: 'Array of rejected assets with criterion_violated, reason, excluded_since',
     },
     {
@@ -524,7 +532,7 @@ response = client.messages.create(
                 get_cis_exclusions()
               </div>
               <p style={{ fontFamily: FONTS.body, fontSize: 14, color: T.t2, lineHeight: 1.7, margin: '0 0 16px' }}>
-                Returns the complete rejection list of 9,946+ assets that failed CometCloud's 7-criterion institutional inclusion standard. Each rejection includes the exact criterion violated and the specific reason — anonymous team, unresolved exploit, custody gap, regulatory concern, or liquidity failure.
+                Returns every documented rejection from CometCloud's 7-criterion institutional inclusion standard — each asset we evaluated and did not admit. Each rejection includes the exact criterion violated and the specific reason — anonymous team, unresolved exploit, custody gap, regulatory concern, or liquidity failure.
               </p>
               <p style={{ fontFamily: FONTS.body, fontSize: 14, color: T.t2, lineHeight: 1.7, margin: 0 }}>
                 No other MCP server, no other data provider, returns a structured exclusion list with institutional-grade reasoning. When your agent builds a portfolio, it can now check every candidate against a published standard — before any allocation decision.
@@ -541,7 +549,7 @@ response = client.messages.create(
             MCP Tools
           </div>
           <h2 style={{ fontFamily: FONTS.brand, fontWeight: 700, fontSize: 26, color: T.t1, margin: 0 }}>
-            6 tools. One server.
+            Six featured tools. One server.
           </h2>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: 14 }}>

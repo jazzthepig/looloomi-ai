@@ -28,7 +28,8 @@ const SIGNAL_COLOR = {
 
 const REGIME_CONFIG = {
   RISK_ON:      { label: "RISK ON",      color: "#00E87A", bg: "rgba(0,232,122,0.08)",  desc: "Favorable conditions" },
-  RISK_OFF:     { label: "RISK OFF",     color: "#FF3D5A", bg: "rgba(255,61,90,0.08)",  desc: "Defensive posture recommended" },
+  RISK_OFF:     { label: "RISK OFF",     color: "#FF3D5A", bg: "rgba(255,61,90,0.08)",  desc: "Risk-off conditions" },
+  NEUTRAL:      { label: "NEUTRAL",      color: "#94A3B8", bg: "rgba(148,163,184,0.08)", desc: "No dominant macro regime" },
   TIGHTENING:   { label: "TIGHTENING",   color: "#E8A000", bg: "rgba(232,160,0,0.08)",  desc: "Monetary tightening" },
   EASING:       { label: "EASING",       color: "#4B9EFF", bg: "rgba(75,158,255,0.08)", desc: "Monetary easing" },
   STAGFLATION:  { label: "STAGFLATION",  color: "#FF8C42", bg: "rgba(255,140,66,0.08)", desc: "Stagflation regime" },
@@ -43,7 +44,7 @@ function normalizeRegime(raw) {
   const map = {
     "risk-on": "RISK_ON", "risk on": "RISK_ON",
     "risk-off": "RISK_OFF", "risk off": "RISK_OFF",
-    "neutral": null,
+    "neutral": "NEUTRAL",   // was null: the banner sat on "REGIME · LOADING" forever in a neutral market
     "tightening": "TIGHTENING",
     "easing": "EASING",
     "stagflation": "STAGFLATION",
@@ -266,7 +267,7 @@ function MobilePulse({ universe, macro, signals, sparkData, loading, regimeRaw }
           marginBottom: 16,
         }}>
           <span style={{ fontFamily: FONTS.display, fontSize: 11, color: T.t3, letterSpacing: "0.1em" }}>
-            REGIME · LOADING
+            REGIME · —
           </span>
         </div>
       )}

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
+import './lib/chunkReload.js'   // stale-chunk recovery after a deploy
 
 // Lightweight analytics — fire-and-forget to /api/v1/analytics/track
 // Writes to analytics_events in Supabase. No third-party, full data ownership.

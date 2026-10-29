@@ -26,6 +26,7 @@ import { Sidebar, SECTIONS } from "./components/Sidebar";
 import { SectionLabel, SectionLoader } from "./components/SectionLabels";
 import { CISContent } from "./components/CISContent";
 import { T, FONTS } from "./tokens";
+import { isChunkLoadError, reloadOnceForNewBuild } from "./lib/chunkReload.js";
 
 /* ── Lazy-loaded views (below fold / conditional / heavy) ── */
 // Vault UNPUBLISHED 2026-08-19 (Jazz): content down, "in progress" up with a GP
@@ -96,6 +97,8 @@ class SectionErrorBoundary extends Component {
     // surface to console for diagnosis — silent swallow would defeat the test
     // that a future bug catches via the boundary rather than via blank pages
     console.error("[SectionErrorBoundary]", err, info && info.componentStack);
+    // A chunk from the previous deploy (tab opened before a push): reload once for the new build
+    if (isChunkLoadError(err)) reloadOnceForNewBuild();
   }
   render() {
     if (this.state.err) {
