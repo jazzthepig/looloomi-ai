@@ -2181,6 +2181,66 @@ async def _executor_host_watch_loop():
         await _asyncio.sleep(3600)
 
 
+async def _portfolio_targets_loop():
+    """组合层目标表(Jazz 10-29,`src/data/execution/portfolio_targets.py`):每小时醒一次,今天的目标没写就写(写一次不改)。
+    执行器读的是同一个函数(计划里的 `portfolio`),这张表是它的记录。
+    判活:`select d, sleeve, target_usd, executable from portfolio_targets_daily order by d desc, sleeve limit 6`。"""
+    await _asyncio.sleep(_boot_delay(700))
+    while True:
+        try:
+            from src.data.execution.portfolio_targets import write_today as _pt_write
+            r = await _pt_write()
+            print(f"[PORTFOLIO] {r}")
+            await _beat("_portfolio_targets_loop", ok=bool(r.get("ok")), detail=r,
+                        error=None if r.get("ok") else str(r.get("why"))[:200])
+            if r.get("written") or not r.get("ok"):
+                await _record_loop_attempt("_portfolio_targets_loop", "ok" if r.get("ok") else "error",
+                                           reason=str(r.get("why") or "")[:400] or None, detail=r,
+                                           writer="src.api.main._portfolio_targets_loop")
+        except Exception as _e:
+            print(f"[PORTFOLIO] ⚠️  pass FAILED: {_e}")
+            await _beat("_portfolio_targets_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_portfolio_targets_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._portfolio_targets_loop")
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_portfolio_targets_loop():
+    _asyncio.create_task(_portfolio_targets_loop())
+    print("[PORTFOLIO] ✅ T25 live target table scheduled (portfolio_targets_daily, hourly check, write once a day)")
+
+
+async def _live_account_loop():
+    """P1 真钱账户每日快照(`src/data/accounting/live_account.py`):每小时醒,完成了、还没写的 UTC 日补写一行(写一次不改)。
+    来源是东京主机的心跳;出入金读 HL 公开账本。进 forward_anchor_daily(T+2)。
+    判活:`select d, equity_usd, nav, account_mode, note from live_account_daily order by d desc limit 3`(UTC 01:00 后应有昨天)。"""
+    await _asyncio.sleep(_boot_delay(720))
+    while True:
+        try:
+            from src.data.accounting.live_account import run_once as _la_run
+            r = await _la_run()
+            print(f"[LIVE-ACCT] {str(r)[:300]}")
+            await _beat("_live_account_loop", ok=bool(r.get("ok")), detail=r,
+                        error=None if r.get("ok") else str(r.get("why"))[:200])
+            if r.get("written") or r.get("skipped") or not r.get("ok"):
+                await _record_loop_attempt("_live_account_loop", "ok" if r.get("ok") else "error",
+                                           reason=str(r.get("why") or "")[:400] or None, detail=r,
+                                           writer="src.api.main._live_account_loop")
+        except Exception as _e:
+            print(f"[LIVE-ACCT] ⚠️  pass FAILED: {_e}")
+            await _beat("_live_account_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_live_account_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._live_account_loop")
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_live_account_loop():
+    _asyncio.create_task(_live_account_loop())
+    print("[LIVE-ACCT] ✅ real-money account daily snapshot scheduled (live_account_daily, hourly check)")
+
+
 @app.on_event("startup")
 async def _start_executor_host_watch_loop():
     _asyncio.create_task(_executor_host_watch_loop())

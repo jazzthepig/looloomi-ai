@@ -74,8 +74,11 @@ def make_ticket_plan(rows: list[dict], last_d: Optional[str], asof: str, closes:
                      portfolio_leverage: float = 1.0) -> dict[str, Any]:
     """纯函数。账本行 + 账本推进到哪天 + 信号日收盘价 → 主机计划。"""
     a = _d(asof)
+    from src.data.execution.portfolio_targets import RV2_GROSS_CAP_FRAC
     base = {"asof": asof, "last_d": str(last_d)[:10] if last_d else None, "risk_frac": risk_frac, "cap": cap,
             "portfolio_leverage": portfolio_leverage,
+            # Jazz 10-29:名义合计 ≤ 账户净值 × 30%(组合层的风险预算);单票风险仍按整个净值算(portfolio_targets 模块头)
+            "gross_cap_frac": RV2_GROSS_CAP_FRAC,
             "stop_atr": STOP_ATR, "rule_version": RULE_VERSION, "sleeves": dict(TICKET_SLEEVE_FOR_MODE)}
     if not last_d or _d(last_d) < a:
         return {**base, "ready": False, "why": f"r_tickets_scan 还没推进到 {asof}(last_d = {last_d})",

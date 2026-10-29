@@ -10,6 +10,8 @@
 
 - `targets`:X1V 现货目标权重(`executor.target_weights`,与 `dry_run` 同一个函数);
 - `stop_px`:盘中灾难止损线(`executor.stop_price`)—— 主机缓存它,盘中每分钟拿现价比,**Railway 掉线也照样能止损**;
+- `portfolio`:组合层的两个上限(`portfolio_targets.plan_fields`,Jazz 10-29)—— X1V 记账净值 ≤ 加密腿额度、
+  R-v2 名义合计 ≤ 净值 × 30%(后者也在 `tickets.gross_cap_frac`);
 - `halted`:一键停(Redis `executor:halt`)。读不到(`halt_status = error`)不当作「没停」也不当作「停了」——
   原样告诉主机,由主机决定(主机侧:读不到 ⇒ 沿用上一次读到的值)。
 
@@ -87,5 +89,8 @@ async def build_host_plan(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     except Exception as e:                                       # noqa: BLE001 — X1V 读不到不挡单票
         core = {"ok": False, "asof": asof, "why": f"X1V 计划读不到:{type(e).__name__}: {str(e)[:200]}"}
     halted, halt_status = await read_halt()
+    from src.data.execution.portfolio_targets import plan_fields
+    # 组合层(Jazz 10-29):X1V 只用加密腿的额度,R-v2 名义 ≤ 净值 30%。与 portfolio_targets_daily 同一个函数
     return {**core, "halted": halted, "halt_status": halt_status, "generated_at": now.isoformat(),
+            "portfolio": plan_fields(now.astimezone(dt.timezone.utc).date().isoformat()),
             "tickets": await ticket_section(asof)}

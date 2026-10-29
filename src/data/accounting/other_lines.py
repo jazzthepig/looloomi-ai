@@ -1,4 +1,4 @@
-"""证据面的「其他产品线」(T-112):World50、山寨龙头腿、灵活组合三本前向账本。
+"""证据面的「其他产品线」(T-112):World50、山寨龙头腿、灵活组合三本前向账本,外加真钱账户(10-29,P1)。
 
 它们**不在登记表 BOOKS 里** —— 登记表的每一本都是配置层(L3)的候选,超额一律对 ①;
 这三本是另一条产品线,各有各的基准(World50 的 EW×Mom 对 EW,龙头腿的挑法对门内等权),
@@ -17,6 +17,7 @@ import pandas as pd
 
 from src.data.allocation.allocator import MIN_DAYS, evidence
 from src.data.universe.world50_book import OPEN_DATE as WORLD50_OPEN   # 10-29:World50 不等 12-31,10-28 收盘开账
+from src.data.accounting.live_account import OPEN_DATE as LIVE_OPEN     # 10-29:真钱账户每日快照(P1)
 
 FORWARD_START = "2026-12-31"
 
@@ -54,6 +55,11 @@ LINES: tuple[Line, ...] = (
     Line("flex_x1v_t25", "flex", "Flexible mix at the -25% drawdown tier: 30% crypto (core, trend rules) / 30% global equities / 20% gold / 20% cash",
          "The mix the simulations put at a worst-5% drawdown of about -25% with the crypto leg on the trend rules (S-604); the tier used until execution is live.",
          "flex_x1v:T25", "flex_x1v:H_T25", ("flex_x1v:T35",), "2026-10-16"),
+    Line("t25_live", "flex", "Real money: the live account, building the -25% tier leg by leg",
+         "The account itself, marked once a day and anchored. Legs not yet live (equities, gold, the yield part of "
+         "cash) sit in dollars until they are built, and the R-v2 ticket sleeve trades inside the same account; the gap to "
+         "the paper tier is the implementation shortfall, shown as it is.",
+         "live:T25", "flex_x1v:T25", ("flex_x1v:H_T25",), LIVE_OPEN),
     Line("tom_core_x1v", "tom_trader", "Trend trader on the crypto core: add on profit, out on a 20-day low, smaller when volatility runs hot",
          "Long and adding only while the core is making money; out entirely on a 20-day low; exposure scaled down when volatility is "
          "above its own two-year norm; small bear-rally trades that take profit at +15% (S-600 / S-601).",
@@ -148,4 +154,9 @@ async def load_other_navs() -> dict[str, pd.Series]:
         for k, pts in groups.items():
             s = pd.Series([v for _, v in pts], index=pd.to_datetime([d for d, _ in pts]))
             out[k] = s[~s.index.duplicated(keep="last")].sort_index()
+    # 真钱账户(只出收益,不出美元额):nav 为空的那天不画(链断 / 出入金认不出,note 里写着)
+    rows = await _read_all("live_account_daily", {"select": "d,nav", "order": "d.asc"})
+    pts = [(r["d"], float(r["nav"])) for r in rows or [] if r.get("nav") is not None]
+    if pts:
+        out["live:T25"] = pd.Series([v for _, v in pts], index=pd.to_datetime([d for d, _ in pts])).sort_index()
     return out

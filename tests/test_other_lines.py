@@ -71,3 +71,16 @@ def test_public_text_has_no_verdicts():
     text = json.dumps([ol.HOW_TO_READ_OTHER] + [[ln.name, ln.thesis] for ln in ol.LINES], ensure_ascii=False).lower()
     for w in ("outperforms", "beats", "positive edge", "buy", "sell", "accumulate", "avoid", "reduce"):
         assert w not in text
+
+
+def test_the_real_money_line_is_measured_against_the_paper_t25():
+    """10-29(P1):真钱账户对纸面 T25 —— 差距 = 实施缺口;开账前写开账日;只给收益。"""
+    days = pd.date_range("2026-10-29", periods=30, freq="D")
+    navs = {**_navs(days), "live:T25": _nav(days, 0.0002, 99)}
+    early = {r["id"]: r for r in ol.other_line_rows(navs, pd.Timestamp("2026-10-28"))}
+    assert early["t25_live"]["evidence_class"] == "not_started" and early["t25_live"]["opens"] == ol.LIVE_OPEN
+    r = {x["id"]: x for x in ol.other_line_rows(navs, days[-1])}["t25_live"]
+    assert r["benchmark"] == "flex_x1v:T25" and r["excess_vs_benchmark"] is not None
+    assert "usd" not in json.dumps(r).lower(), "证据面不出美元额"
+    missing = {r["id"]: r for r in ol.other_line_rows(_navs(days), days[-1])}["t25_live"]
+    assert missing["evidence_class"] == "no_record", "读不到 ≠ 0"

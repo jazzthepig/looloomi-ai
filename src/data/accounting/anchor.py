@@ -38,11 +38,11 @@ CALENDARS = ("https://a.pool.opentimestamps.org", "https://b.pool.opentimestamps
 OTS_MAGIC = b"\x00OpenTimestamps\x00\x00Proof\x00\xbf\x89\xe2\xe8\x84\xe8\x92\x94"
 OTS_VERSION = b"\x01"
 OTS_SHA256 = b"\x08"
-DROP = {"computed_at", "updated_at", "recorded_at"}
+DROP = {"computed_at", "updated_at", "recorded_at", "written_at"}
 
 #: (表, 额外过滤, 排序键)。只锚前向:回放行(d < inception)在 build_payload 里按行过滤掉。
 KEYS = {}  # 下面按 SOURCES 填:表 → 一天之内区分行的键
-SOURCES: tuple[tuple[str, dict, str], ...] = (
+SOURCES: tuple[tuple[str, dict, Any], ...] = (
     ("core_cap_daily", {}, "arm"),
     ("cis_tilt_daily", {}, "arm"),
     ("beta_plus_daily", {}, "arm"),
@@ -56,6 +56,11 @@ SOURCES: tuple[tuple[str, dict, str], ...] = (
     ("allocation_daily", {}, "book"),
     ("allocation_nav_daily", {}, "d"),
     ("exploration_ideas", {}, "id"),
+    # 10-29(P1):真钱账户快照 + 组合层目标 + 它要对照的纸面前向账本(T25 / World50 / 交易层)
+    ("live_account_daily", {}, "d"),
+    ("portfolio_targets_daily", {}, "sleeve"),
+    ("forward_book_nav", {}, ("book", "arm")),
+    ("world50_book_nav", {}, "arm"),
 )
 
 
@@ -67,10 +72,17 @@ def canonical(payload: dict) -> bytes:
     return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False).encode("utf-8")
 
 
-def clean_rows(rows: list[dict], key: str) -> list[dict]:
+def key_of(row: dict, key: Any) -> str:
+    """纯函数。一天之内区分行的键;复合键(元组)用 `|` 连起来。"""
+    if isinstance(key, tuple):
+        return "|".join(str(row.get(k)) for k in key)
+    return str(row.get(key))
+
+
+def clean_rows(rows: list[dict], key: Any) -> list[dict]:
     """纯函数。去掉重算时间列,按排序键排好。"""
     out = [{k: v for k, v in r.items() if k not in DROP} for r in rows]
-    return sorted(out, key=lambda r: str(r.get(key)))
+    return sorted(out, key=lambda r: key_of(r, key))
 
 
 def digest_of(payload: dict) -> str:
@@ -104,7 +116,7 @@ async def build_payload(d: date) -> dict:
 
 def _ident(table: str, row: dict) -> str:
     k = KEYS.get(table, "arm")
-    return str(row.get(k)) if k != "d" else "-"
+    return key_of(row, k) if k != "d" else "-"
 
 
 #: v1 锚只收了这两张表的这一个臂;核对 v1 锚时现表按同一范围取,否则 v1 没收的新臂会被报成「锚后补进」。

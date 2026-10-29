@@ -57,6 +57,7 @@
     "interpretation_validation_runs",
     "j_tickets",
     "j_tickets_state",
+    "live_account_daily",
     "loop_attempt",
     "macro_briefs",
     "macro_daily",
@@ -77,6 +78,7 @@
     "pod_aggregator_nav",
     "pod_aggregator_state",
     "portfolio_layer_daily",
+    "portfolio_targets_daily",
     "price_source_agreement_daily",
     "protocol_revenue_daily",
     "protocol_tvl_daily",
@@ -208,6 +210,22 @@
       "last_result",
       "last_run_at"
     ],
+    "live_account_daily": [
+      "account_mode",
+      "d",
+      "equity_usd",
+      "flows_usd",
+      "heartbeat_at",
+      "n_heartbeats",
+      "nav",
+      "note",
+      "perp_positions",
+      "perp_upnl",
+      "ret",
+      "rule",
+      "spot_usd",
+      "usdc"
+    ],
     "macro_briefs": [
       "brief",
       "data_snapshot",
@@ -242,6 +260,21 @@
       "symbol",
       "trade_date",
       "weight"
+    ],
+    "portfolio_targets_daily": [
+      "book",
+      "capital_usd",
+      "d",
+      "executable",
+      "instrument",
+      "kind",
+      "next_rebalance_d",
+      "rule",
+      "sleeve",
+      "target_usd",
+      "target_w",
+      "venue",
+      "why"
     ],
     "scalable_book_nav": [
       "daily_return",
