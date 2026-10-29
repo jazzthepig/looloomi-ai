@@ -1,10 +1,10 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-10-29 03:47 UTC (Seth — 前端第三轮(9ea85d06 / e14dd86c,上线已核):**慢面板**:dingge-board 每次 7 秒、trading/metrics 每次 6 秒 → 进程内 stale-while-revalidate(`src/api/ttl_cache.py`);部署后冷启动 8–90 秒的面板(协议、书、证明、归因、VC 组合)由 `_public_cache_warm_loop` 回环每 4 分钟预热 —— 实测全部 ≤3 秒冷、多数 <1.5 秒。**合规**:信号流与市场注释里「fade strength / not dip-buys / contrarian entry zone / long BTC/short alts / before acting」改为定位语言,合规守卫加了这几种构造并带反例。**数据**:Asset Radar 供应量改读本库 asset_mcap_daily(市值÷价格,标为推算),CG 那个接口不在我们套餐里;Paper Agent 头部改读进程内 sleeve 账本(原来读已退役的外部状态,永远「$—, 0 active」);Score Analytics 板块轮动用全宇宙。)
+**Last updated:** 2026-10-29 04:22 UTC (Seth — **后端体检**(Jazz「回到高维,thorough code check,连着后端问题一起解决」;S-697)。**数据错,已改:** ② factor_tilt / ③ pod_aggregator 两本账 09-14 起 46 行 NAV 都是「1 + 当天收益」,从没复利 —— 共享读函数默认带 `void_reason` 过滤,这两张表没有该列,PostgREST 每次 400,读不到被当起点;已改读法(无此列去掉过滤、读不到就拒绝不当起点)并按 daily_return 复利改正历史:factor_tilt **1.0411**、pod **1.0366**(原显示 1.0002 / 1.0035)。pod 的 state 从没存过(n_days 永远 1),已修。depth-divergence 前向记录 10-28 差点永久缺口(循环与面板写入撞车),已补写并把循环固定到 06:30 UTC、没推进每小时重试。**观测错,已改:** 6 本冻结账让 liveness 永久 critical → 判 frozen;退役循环永远「死」→ 显式退役登记;成功轮 detail 带 numpy/NaN 序列化失败被吞 → 只有成功的那轮没记录(meta_allocator)→ json_safe;signal_outcomes 无写入端 → 历史表;meta_allocator 与 core_variants 6 小时相位锁死 → 输入没到 30 分钟重试;global_recent 00:52 的「0 行」是 CG 点未到 → 截止前判等待。**静态检查:** vault 存款意向接口从没跑通过(`os`/`_logger` 未定义,表 0 行);data_layer 一个从未定义的函数调用(删,行为不变);FRED 回退 GDP 多乘 4(2.2%→8.8% 进状态阈值)、CPI 前值写成环比。**EODHD:** Railway 新 token 已生效(04:13 写入 eodhd 8,283 行);**Mac 还是旧 token —— 换值是 Jazz 的动作**,SYNC §Seth-1029a 已告知 Mac 换完重启 scheduler。**risk_meter_history 10-12 起停写:Mac 根目录的推送脚本不见了**(调度器静默跳过),已在 §Seth-1029a 交给 Minimax。上线 7144d1f9 / 8793c9d5 / 5f207729,已核:liveness 6 本记 frozen,dead 只剩东京执行主机(待重建,真);producers 只剩 risk_meter_history(真,Mac 脚本缺);signal_outcomes = not_applicable。FRED 修正要等 Redis 4 小时缓存过期(约 07:20 UTC)才显示。)
+
+**更早:** 2026-10-29 03:47 UTC (Seth — 前端第三轮(9ea85d06 / e14dd86c,上线已核):**慢面板**:dingge-board 每次 7 秒、trading/metrics 每次 6 秒 → 进程内 stale-while-revalidate(`src/api/ttl_cache.py`);部署后冷启动 8–90 秒的面板(协议、书、证明、归因、VC 组合)由 `_public_cache_warm_loop` 回环每 4 分钟预热 —— 实测全部 ≤3 秒冷、多数 <1.5 秒。**合规**:信号流与市场注释里「fade strength / not dip-buys / contrarian entry zone / long BTC/short alts / before acting」改为定位语言,合规守卫加了这几种构造并带反例。**数据**:Asset Radar 供应量改读本库 asset_mcap_daily(市值÷价格,标为推算),CG 那个接口不在我们套餐里;Paper Agent 头部改读进程内 sleeve 账本(原来读已退役的外部状态,永远「$—, 0 active」);Score Analytics 板块轮动用全宇宙。)
 
 **更早:** 2026-10-29 00:22 UTC (Seth — 前端长任务第二轮(Jazz 10-28:「EST 不公开展示;先不加数据源;看开源架构,安全就部署;continue」)。**① EST Alpha 全部下线**(e9e6b5d8):/vault/funds、Research Desk 区块(组件删除)、Fund 页「已确认 GP」行、vision 页、内嵌 est.cc 的死 tab;内部 token 门控的线索归因保留。**② 开源评估**:RSSHub(AGPL-3.0,独立服务,多数路由靠抓网页、部分用无头浏览器,还要公网鉴权)—— **不部署**:等于加数据源且越过「不抓取」线,也要 Jazz 在 Railway 开新服务;trafilatura(Apache-2.0)要逐篇抓文章页 —— 不需要:我们已读的 8 个媒体源里 DL News / Bitcoin Magazine 自带全文、其余带导语,**直接读 feed 自带的正文**补投资方/轮次/估值(G 任务,无新主机、无抓页);Blockworks 是 Atom 之前一直读不到,已支持。**③ 第二轮修复**(H 任务):部署后旧标签页懒加载块 404 → 整块报错(线上实测 CIS v2 面板)→ 遇到就自动刷新一次;Agent 页「9,946+ 条排除」实为 14/70 → 改真数并改为实时读取;MCP 排除工具描述删「每日更新」「机构基金信赖」;方法论页「84 资产」写死 → 实时;移动端 NEUTRAL 时 regime 永远「LOADING」。Jazz 10-29:Fund 页「Long/Short」保留(多空书在跑;① 仍只持现货),记入 DECISIONS。)
-
-**更早:** 2026-10-28 16:45 UTC (Seth — **前端开发长任务第一轮(Jazz「looloomi 前端很多 bug、数据没通;特别是 vc funding flows」)**。全站逐页扫(API 43 个端点 + 浏览器渲染每个 section),修了 17 处,已上线 97f0b9c7 / 642fb5a8 / 805c2861:**① VC Funding Flows 重做** —— 原来 180 天只有 1 笔(结构化源全被付费墙挡住,兜底每次只读 RSS 最新 ~20 条、什么都不存);现在 `src/data/vc/rounds_store.py` 从公开新闻标题(Google News RSS 10 个检索 + 8 家加密媒体 RSS,顺序请求间隔 3 秒)解析出轮次,跨媒体合并,存进新表 `vc_funding_rounds`;`_vc_rounds_loop` 每小时一轮、空表时一轮补 26 周;API 返回窗口统计(总额/分类/最常出现的投资方/每周流量/基金募集)。沙箱干跑:2026-04-28 起 186 轮、披露 $6.7B、中位 $14.5M。判活:`select count(*), max(first_seen_at) from vc_funding_rounds`。**② 协议 TVL** 把 DeFiLlama 的 borrowed 总量算进了今天却没算进 7 天前 → Maple $4.60B/「+67.9%」实为 $2.63B/−3.9%;代币化基金改用基金代币市值(BUIDL $2.2B、Ondo $2.7B、Superstate $0.69B)。**③ TradFi 规模字段**:成交量是股数却当美元显示、单股市值陈旧(NVDA $554B→$5.25T),展示层修好,引擎侧已在 SYNC §Seth-1028d 提给 Mac。④ 宏观事件 HTML 实体、⑤ Research Desk 中文文案与错误归因、⑥ Track Record 前向表显示内部标签、⑦ 收益策略卡写死协议名、⑧ 评级定义写成百分位(实为绝对分档)、⑨ Score Analytics 用浏览器时钟造出不存在的 10-29 收盘并拿今天的等级填空、⑩ 财报日历组件和接口格式对不上所以永远隐藏、⑪ VC 组合表只有 2 家(CG 分类变了)等。**待 Jazz:** Research Desk 里 EST Alpha 的 YTD +8.5%、「Verified」、团队背景是写死在 vault.py 的合作方资料 —— 是否仍可公开展示?)
 
 > **本项目的主导缺陷类:「拿不到」被渲染成一个合理的数字,而不是被渲染成「拿不到」。**
 > 十一次实例(S-180…S-243)+ 三条课 + 守卫自己失败七轮的记录 →
@@ -418,7 +418,6 @@ The cap is doing its job only if closure is as routine as addition.*
 ---
 
 
-
 ## 一个形状,十次(历史教训 —— 排在危险之后)
 
 > **S-283 最需要记住的一条:三个 P0 里有两个不是「没有控制」,是「控制的作用域差一格」。**
@@ -808,7 +807,6 @@ Jazz 指出 2019 是新周期起点后,spread 0.52 → **0.033(robust)** ——
 读数(**不是信号**):黄金对债/日元/美元同时贴在体制内 ~93 分位,
 债券对日元贴在 11 分位 —— 形状与「拿套息收益换黄金」一致,但无因、无基础率、
 无 OOS,只作 S-271 `divergence()` 的输入,不进定仓。
-
 
 
 ## 历史条目(完整内容 → `PROJECT_STATE_LOG.md`)
