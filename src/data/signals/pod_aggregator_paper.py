@@ -301,6 +301,26 @@ async def _row_exists_for(table: str, day: str) -> bool | None:
     except Exception:                                           # noqa: BLE001
         return None
 
+
+async def _table_span(table: str, before: str) -> tuple[str | None, int] | None:
+    """(第一行的 mark_date, `before` 之前的行数);空表 → (None, 0);读不到 → None。"""
+    try:
+        import httpx
+        from src.api.store import _SB_KEY, _SB_URL
+        if not _SB_URL or not _SB_KEY:
+            return None
+        async with httpx.AsyncClient(timeout=10) as c:
+            r = await c.get(f"{_SB_URL}/rest/v1/{table}",
+                            params={"select": "mark_date", "mark_date": f"lt.{before}", "order": "mark_date.asc"},
+                            headers={"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"})
+        if r.status_code != 200:
+            return None
+        rows = r.json()
+        return (str(rows[0]["mark_date"])[:10] if rows else None), len(rows)
+    except Exception:                                           # noqa: BLE001
+        return None
+
+
 async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
                            source: str = "cron") -> dict[str, Any]:
     """Daily mark of the pod aggregator paper book. Idempotent per calendar day.
@@ -338,13 +358,20 @@ async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
 
     today = dt.date.today()
     state = await _load_state()
-    if state.get("last_mark_date") == str(today):
-        # ⚠️ **state 说做过不算数,表说有才算** (S-321)。
-        # 读不到(None)时**不跳过** —— 读不到 ≠ 已经写过,重跑是幂等的。
-        _has = await _row_exists_for(NAV_TABLE, str(today))
-        if _has:
-            return {"status": "skipped", "reason": "already_marked_today",
-                "date": str(today), "nav": state.get("nav", 1.0)}
+    # ⚠️ **表说有才算,而且不先问 state** (S-321)。10-29 实测:`_save_state` 从没被调用过,
+    # state 永远是默认值,于是「state 说今天做过」这道门永远不开 —— 每次部署后的重跑都去写
+    # 今天已有的那一行,写失败,报 `degraded`。读不到(None)时**不跳过** —— 读不到 ≠ 已经写过。
+    if not dry_run and await _row_exists_for(NAV_TABLE, str(today)):
+        return {"status": "skipped", "reason": "already_marked_today",
+                "date": str(today), "nav": state.get("nav")}
+    if not state.get("last_mark_date"):
+        # state 是空的(从没存过):起点与天数以表为准,而不是「今天」—— 否则 validated 永远到不了。
+        _span = await _table_span(NAV_TABLE, before=str(today))
+        if _span is None:
+            return {"status": "mark_failed", "reason": f"{NAV_TABLE} 读不到历史 —— 起点未知,不从今天重起",
+                    "date": str(today)}
+        if _span[0]:
+            state = {**state, "inception_date": _span[0], "n_days_marked": _span[1]}
 
     # 28-asset strict intersection (same as R63/Fusion Paper)
     from src.data.signals.fusion_paper import UNIVERSE
@@ -417,9 +444,12 @@ async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
     # Same root cause as factor_tilt: pod_aggregator_state was empty on disk,
     # so `_load_state()` returned `nav=1.0` every cycle, breaking the compounding
     # chain. See nav_persist.nav_table_last_nav and factor_tilt_paper.py:439.
-    from src.data.signals.nav_persist import nav_table_last_nav
-    state_nav = float(state.get("nav", 1.0))
-    disk_prev_nav, disk_prev_date = await nav_table_last_nav(NAV_TABLE, before=str(today))
+    from src.data.signals.nav_persist import nav_table_last_nav_status
+    disk_prev_nav, disk_prev_date, _disk = await nav_table_last_nav_status(NAV_TABLE, before=str(today))
+    if _disk == "unreadable":
+        # 10-29:读不到上一行 ≠ 起点。原来这里拿 None 当起点 —— 46 天每一行都是 1 + 当天收益。
+        return {"status": "mark_failed", "reason": f"{NAV_TABLE} 上一行 NAV 读不到 —— 不把曲线重置成 1.0",
+                "date": str(today)}
     nav_base = _compute_nav_base(state, disk_prev_nav, disk_prev_date, today)
     new_nav = nav_base * (1.0 + today_ret)
     n_days_marked = int(state.get("n_days_marked", 0)) + 1
@@ -466,6 +496,8 @@ async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
             "max_corr_retained": gate_log["max_corr_retained"],
             "mark_source": source,
         })
+        if nav_write.ok:
+            await _save_state(new_state)        # 10-29:定义了从没调用过 —— state 因此永远是默认值
 
     return {
         # A failed NAV write is not an "ok" mark. The status reflects what landed,

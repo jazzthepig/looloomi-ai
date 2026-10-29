@@ -157,35 +157,37 @@ async def nav_row_exists(table: str, day: str) -> bool | None:
         return None
 
 
-async def nav_table_last_nav(table: str, before: str | None = None,
-                              inception_id: str | None = None,
-                              include_voided: bool = False) -> tuple[float | None, str | None]:
-    """Return (nav, mark_date) of the last row in `table`, optionally before `before`.
+async def _nav_get(table: str, params: list[tuple[str, str]]):
+    """GET 一张 NAV 表。**没有 `void_reason` 列的表,去掉那个过滤再读一次。**
 
-    Three-valued: (nav, date) tuple / (None, None) if empty / (None, None) if read failed.
+    10-29 实测:`factor_tilt_nav` / `pod_aggregator_nav` 没有 `void_reason` 列(只有 fusion / beta_core 有),
+    而默认的 `void_reason=is.null` 让 PostgREST 每次回 400 → 两本账「读不到上一行」→ 调用方当成起点
+    → **46 天里每一行 NAV 都是 1 + 当天收益,从没复利过**(S-378b 修的正是这件事,后来加的作废过滤把它又弄坏了)。
+    没有这一列 ⇒ 这张表不可能有作废行 ⇒ 去掉过滤与原查询**完全等价**,不是放宽。
+    返回 httpx.Response 或抛异常。"""
+    import httpx
 
-    S-378b: factor_tilt and pod_aggregator had L1 self-consistency failures because
-    their state.nav reset to 1.0 every cycle (state empty on read), while disk
-    nav rows were real. state.nav * (1 + today_ret) produced nav that didn't
-    compound with disk daily_returns. Fix: when state is missing or stale, read
-    the last disk nav and use it as the compounding base.
+    from src.api.store import _SB_KEY, _SB_URL
+    headers = {"apikey": _SB_KEY, "Authorization": f"Bearer {_SB_KEY}"}
+    async with httpx.AsyncClient(timeout=10) as c:
+        r = await c.get(f"{_SB_URL}/rest/v1/{table}", params=params, headers=headers)
+        if r.status_code == 400 and "void_reason" in (r.text or "") and ("void_reason", "is.null") in params:
+            r = await c.get(f"{_SB_URL}/rest/v1/{table}",
+                            params=[p for p in params if p[0] != "void_reason"], headers=headers)
+    return r
 
-    S-378b (fusion): the table may hold voided v1 rows AND live v2 rows. The
-    `inception_id` filter scopes the read to a specific incarnation. By default
-    voided rows (void_reason IS NOT NULL) are excluded — `include_voided=True`
-    flips that for callers that want the raw history.
 
-    None means we could not read. Callers MUST NOT read None as "1.0 inception"
-    — that's exactly the bug this function exists to prevent.
-    """
+async def nav_table_last_nav_status(table: str, before: str | None = None,
+                                    inception_id: str | None = None,
+                                    include_voided: bool = False) -> tuple[float | None, str | None, str]:
+    """(nav, mark_date, status),status ∈ ok / empty / unreadable —— **空表与读不到分得开**。
+    只有 empty 可以当起点(1.0);unreadable 必须拒绝,不许把一条活的曲线重置。"""
     if not table:
-        return None, None
+        return None, None, "unreadable"
     try:
-        import httpx
-
         from src.api.store import _SB_KEY, _SB_URL
         if not _SB_URL or not _SB_KEY:
-            return None, None
+            return None, None, "unreadable"
         params = [("select", "mark_date,nav"), ("order", "mark_date.desc"), ("limit", "1")]
         if before:
             params.append(("mark_date", f"lt.{before}"))
@@ -193,24 +195,39 @@ async def nav_table_last_nav(table: str, before: str | None = None,
             params.append(("inception_id", f"eq.{inception_id}"))
         if not include_voided:
             params.append(("void_reason", "is.null"))
-        async with httpx.AsyncClient(timeout=10) as c:
-            r = await c.get(
-                f"{_SB_URL}/rest/v1/{table}",
-                params=params,
-                headers={"apikey": _SB_KEY,
-                         "Authorization": f"Bearer {_SB_KEY}"})
+        r = await _nav_get(table, params)
         if r.status_code != 200:
-            _log.warning("[NAV] %s last_nav check HTTP %s — returning None, "
-                         "which the caller must NOT read as 'inception'",
-                         table, r.status_code)
-            return None, None
+            _log.warning("[NAV] %s last_nav check HTTP %s %s — unreadable, which the caller "
+                         "must NOT read as 'inception'", table, r.status_code, (r.text or "")[:160])
+            return None, None, "unreadable"
         rows = r.json()
         if not rows:
-            return None, None
-        return float(rows[0]["nav"]), rows[0]["mark_date"]
+            return None, None, "empty"
+        return float(rows[0]["nav"]), rows[0]["mark_date"], "ok"
     except Exception as e:                                        # noqa: BLE001
         _log.warning("[NAV] %s last_nav check raised: %s", table, e)
-        return None, None
+        return None, None, "unreadable"
+
+
+async def nav_table_last_nav(table: str, before: str | None = None,
+                              inception_id: str | None = None,
+                              include_voided: bool = False) -> tuple[float | None, str | None]:
+    """Return (nav, mark_date) of the last row in `table`, optionally before `before`.
+
+    (None, None) for BOTH empty and unreadable —— 要分开时用 `nav_table_last_nav_status`。
+
+    S-378b: factor_tilt and pod_aggregator had L1 self-consistency failures because
+    their state.nav reset to 1.0 every cycle (state empty on read), while disk
+    nav rows were real. Fix: when state is missing or stale, read the last disk
+    nav and use it as the compounding base.
+
+    S-378b (fusion): the table may hold voided v1 rows AND live v2 rows. The
+    `inception_id` filter scopes the read to a specific incarnation. By default
+    voided rows (void_reason IS NOT NULL) are excluded — `include_voided=True`
+    flips that for callers that want the raw history.
+    """
+    nav, d, _status = await nav_table_last_nav_status(table, before, inception_id, include_voided)
+    return nav, d
 
 
 async def nav_table_has_any_rows(table: str, inception_id: str | None = None,
@@ -253,8 +270,6 @@ async def nav_table_has_any_rows(table: str, inception_id: str | None = None,
     if not table:
         return None
     try:
-        import httpx
-
         from src.api.store import _SB_KEY, _SB_URL
         if not _SB_URL or not _SB_KEY:
             return None
@@ -263,12 +278,7 @@ async def nav_table_has_any_rows(table: str, inception_id: str | None = None,
             params.append(("inception_id", f"eq.{inception_id}"))
         if not include_voided:
             params.append(("void_reason", "is.null"))
-        async with httpx.AsyncClient(timeout=10) as c:
-            r = await c.get(
-                f"{_SB_URL}/rest/v1/{table}",
-                params=params,
-                headers={"apikey": _SB_KEY,
-                         "Authorization": f"Bearer {_SB_KEY}"})
+        r = await _nav_get(table, params)
         if r.status_code != 200:
             _log.warning("[NAV] %s history check HTTP %s — returning None, which "
                          "the caller must NOT read as 'never marked'",

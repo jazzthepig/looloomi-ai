@@ -480,9 +480,14 @@ async def mark_and_rebalance(dry_run: bool = False, force: bool = False,
     # 2.5pp because disk nav was from inception each cycle, not from prev disk nav.
     # Fix: prefer state.nav when present AND matches disk prev nav; otherwise fall
     # back to disk prev nav. Read disk via nav_persist.nav_table_last_nav.
-    from src.data.signals.nav_persist import nav_table_last_nav
-    state_nav = float(state.get("nav", 1.0))
-    disk_prev_nav, disk_prev_date = await nav_table_last_nav(NAV_TABLE, before=str(today))
+    # ⚠️ 10-29:上面这段修法从 09-19 起就没生效过 —— 读上一行时带的 `void_reason=is.null`
+    # 在这张没有该列的表上每次 400,读不到被当成起点,46 天每一行 NAV = 1 + 当天收益。
+    # 现在 `_nav_get` 对无此列的表去掉过滤(等价),且**读不到就拒绝**,不再当起点。
+    from src.data.signals.nav_persist import nav_table_last_nav_status
+    disk_prev_nav, disk_prev_date, _disk = await nav_table_last_nav_status(NAV_TABLE, before=str(today))
+    if _disk == "unreadable":
+        return {"status": "mark_failed", "reason": f"{NAV_TABLE} 上一行 NAV 读不到 —— 不把曲线重置成 1.0",
+                "date": str(today)}
     nav_base = _compute_nav_base(state, disk_prev_nav, disk_prev_date, today)
     new_nav = nav_base * (1.0 + today_ret)
     n_days_marked = int(state.get("n_days_marked", 0)) + 1
