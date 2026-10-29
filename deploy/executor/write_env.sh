@@ -20,6 +20,7 @@ ask()   { local n="$1" d="$2" v; read -r -p "  $n [$d]: " v; v="$(strip "${v:-$d
 secret() { local n="$1" v; read -rs -p "  $n(输入不显示): " v; echo >&2; strip "$v" "$n"; }
 
 echo "── 账户 ──"
+echo "  HL_ACCOUNT_ADDRESS = 你的主钱包地址(资金所在的那个),**不是** API 钱包自己的地址"
 ACC="$(ask HL_ACCOUNT_ADDRESS "")"
 [[ "$ACC" =~ ^0x[0-9a-fA-F]{40}$ ]] || { echo "  🔴 HL_ACCOUNT_ADDRESS 要是主钱包地址(0x + 40 位)"; exit 1; }
 SUB="$(ask HL_SUBACCOUNT_ADDRESS "")"

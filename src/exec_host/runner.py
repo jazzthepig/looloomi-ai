@@ -283,8 +283,14 @@ class Venue:
                     valid_until = dt.datetime.fromtimestamp(int(a["validUntil"]) / 1000, dt.timezone.utc).isoformat()
         except Exception:                                                # noqa: BLE001 —— 到期时间只是附带信息
             pass
+        why = None
+        if not ok:
+            why = "这把 API 钱包不是 HL_ACCOUNT_ADDRESS 批准的 agent(没批准、已过期,或被新的替换了)"
+            # 10-29 实测:重建主机时把 API 钱包自己的地址填进了 HL_ACCOUNT_ADDRESS —— 说出该填什么
+            if agent.lower() == self.cfg.account.lower() and role.get("role") == "agent" and master:
+                why = f"HL_ACCOUNT_ADDRESS 填成了 API 钱包自己的地址;应填它的主账户 {master}(私钥没问题,只改这一行)"
         return {"ok": ok, "agent": agent, "role": role.get("role"), "agent_of": master or None, "valid_until": valid_until,
-                "why": None if ok else "这把 API 钱包不是 HL_ACCOUNT_ADDRESS 批准的 agent(没批准、已过期,或被新的替换了)"}
+                "why": why}
 
     def fills_since(self, t_ms: int) -> list[dict]:
         return self.info.user_fills_by_time(self.cfg.trade_account, t_ms) or []
