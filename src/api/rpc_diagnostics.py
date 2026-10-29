@@ -260,12 +260,14 @@ async def _record_loop_attempt(loop_name: str,
                   or _os.environ.get("GIT_COMMIT_SHA")
                   or _os.environ.get("SOURCE_COMMIT")
                   or "")[:8]
+        from src.api.json_safe import json_safe
         row = {
             "loop_name":  str(loop_name)[:120],
             "outcome":    str(outcome)[:40],
             "reason":     (str(reason)[:400] if reason else None),
             "elapsed_ms": int(elapsed_ms) if elapsed_ms is not None else None,
-            "detail":     detail,
+            # 10-29:成功轮的 detail 带 numpy / NaN → 序列化抛出 → 被吞 → 只有成功的那几轮没有记录
+            "detail":     json_safe(detail) if detail is not None else None,
             "writer":     (writer or _caller())[:120],
             "build":      _build,
         }

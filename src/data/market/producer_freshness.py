@@ -77,6 +77,16 @@ class ProducerSpec:
     why: str = ""
 
 
+#: 写入端已经迁走、原表只作历史保留的表 —— 判「不适用」并写明去向,不判死。
+#: 10-29 实测:`signal_outcomes` 是 data-freshness 总裁决 `producers_dead` 的两个来源之一,而它**按设计没有写入端**:
+#: 代码与库函数里零个写它的地方(`pg_proc` 查过),30 日结果改写在 `signal_journal.outcome_30d`
+#: (`_outcome_tracker_loop`,待结 0 行、已结 302 行),档位历史从 `cis_standard_outcomes` 算(S-540)。
+#: 一盏为一张不会再写的表常亮的灯,会把真正停了的那张(`risk_meter_history`)淹掉。
+HISTORICAL: dict[str, str] = {
+    "signal_outcomes": ("2026-05-03 后无写入端(Mac 旧追踪器停用);30 日结果在 signal_journal.outcome_30d,"
+                        "档位历史在 cis_standard_outcomes(S-540);原表只经 signal_outcomes_unified 读(SPINE §3)"),
+}
+
 #: 未在此表内的生产者判 `unknown` —— **不判 ok**。
 EXPECTED: dict[str, ProducerSpec] = {
     "cis_scores": ProducerSpec(
@@ -234,6 +244,11 @@ def assess(table: str, n_rows: int, write_last: Optional[str],
             table, n_rows, nul, nul, UNKNOWN,
             f"`{table}` 不在 EXPECTED 里 —— **判 unknown 而不是 ok**。"
             f"一张没人声明过节奏的表,我们无从判断它是死是活 (S-180)")
+
+    hist = HISTORICAL.get(table)
+    if hist is not None:
+        na = ClockRead(None, None, None, NOT_APPLICABLE, "历史表,无写入端")
+        return ProducerHealth(table, n_rows, na, na, NOT_APPLICABLE, f"`{table}` 是历史表:{hist}")
 
     # S-631:冻结的账本按设计停写 —— 判「不适用」并写明,不判死(否则下一个人会去把它「修好」,S-323i)
     from src.data.accounting.frozen import frozen_tables

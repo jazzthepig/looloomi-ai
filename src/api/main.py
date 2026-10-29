@@ -472,7 +472,18 @@ async def _forward_record_loop():
                 "_forward_record_loop", "error",
                 reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                 writer="src.api.main._forward_record_loop")
-        await _asyncio.sleep(24 * 3600)
+            _stalled = True
+        else:
+            _stalled = any(b.get("status") == "stalled" for b in (r.get("books") or []))
+        # 10-29 实测:这一轮原来是「上次部署后 24 小时」,于是 00:52:00 跑在面板写 10-28 的
+        # 00:51:53–00:55:54 中间 —— SQL 自动选日落回 10-27,10-28 没写,而下一轮(24h 后)
+        # 会直接写 10-29,**10-28 永久成缺口**,前向记录被判 gapped。面板(`_cg_panel_loop`)
+        # 每 6 小时一轮,所以固定在 06:30 UTC(收盘后一定已写完);没推进就每小时重试,
+        # 告警本身有 24h 冷却,不会刷屏。
+        if _stalled:
+            await _asyncio.sleep(3600)
+        else:
+            await _sleep_until_utc(6, 30)
 
 
 @app.on_event("startup")
@@ -1392,7 +1403,10 @@ async def _meta_allocator_loop():
             await _beat("_meta_allocator_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _record_loop_attempt("_meta_allocator_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                        writer="src.api.main._meta_allocator_loop")
-        await _asyncio.sleep(6 * 3600)
+            r = {}
+        # 10-29 实测:它每轮都比 `_core_variants_loop`(读 4 年月块,要几分钟)早几分钟跑完,
+        # 两个都睡整 6 小时 ⇒ 相位锁死,天天「策略库只到前天」。输入没到就 30 分钟后再看,而不是 6 小时。
+        await _asyncio.sleep(1800 if r.get("refused") else 6 * 3600)
 
 
 @app.on_event("startup")

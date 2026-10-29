@@ -241,10 +241,28 @@ def compute_liveness_summary(loop_rows: list[dict]) -> dict:
     per_loop: dict[str, dict] = {}
     dead: list[str] = []
     stale: list[str] = []
+    frozen: list[str] = []
+    # 冻结的账本(src/data/accounting/frozen.py)停写是**按裁决**,不是故障。那份登记表的
+    # docstring 早写着「判活器对它的表判不适用而不是死了」,而这里一直没接 —— 10-29 实测
+    # 六本 ④ 冻结账本把 overall 永久钉在 critical,真正的 critical(执行主机)跟它们混在一起。
+    # **一个永远响的警报等于没有警报。** 读不到登记表 ⇒ 不豁免(宁可吵,不可哑)。
+    try:
+        from src.data.accounting.frozen import frozen_loops
+        _frozen = frozen_loops()
+    except Exception:                                            # noqa: BLE001
+        _frozen = {}
 
     for row in loop_rows:
         loop = row.get("loop")
         if not loop:
+            continue
+        if loop in _frozen:
+            f = _frozen[loop]
+            per_loop[loop] = {"loop": loop, "verdict": "frozen", "age_s": row.get("age_s"),
+                              "last_ok_at": row.get("last_ok_at"), "last_run_at": row.get("last_run_at"),
+                              "budget_remaining_h": None,
+                              "reason": f"frozen since {f.since} by ruling — not a fault (src/data/accounting/frozen.py)"}
+            frozen.append(loop)
             continue
         v = compute_liveness_for_loop(
             loop_name=loop,
@@ -282,12 +300,14 @@ def compute_liveness_summary(loop_rows: list[dict]) -> dict:
         overall = "healthy"
 
     return {
-        "n_total": len(per_loop),
+        "n_total": len(per_loop) - len(frozen),   # live + stale + dead;冻结的另计 n_frozen
         "n_live": n_live,
         "n_stale": n_stale,
         "n_dead": n_dead,
+        "n_frozen": len(frozen),
         "dead_loops": sorted(dead),
         "stale_loops": sorted(stale),
+        "frozen_loops": sorted(frozen),
         "marker_loops_problem": marker_loops_problem,
         "per_loop": per_loop,
         "overall": overall,

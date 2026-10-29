@@ -120,8 +120,9 @@ def t_overall_reports_the_worst_not_the_average():
     ]
     o = overall([assess(t, n, w, e, today=TODAY) for t, n, w, e in live])
     _check("总裁决 dead", o["verdict"] == DEAD, o["verdict"])
-    _check("三张死/污染的表被点名", set(o["dead_or_corrupt"]) == {
-        "signal_outcomes", "risk_meter_history", "market_state_vectors"},
+    # 10-29:signal_outcomes 改登记为历史表(无写入端,见 HISTORICAL)—— 判不适用,不再计入死表;其余两张照旧点名
+    _check("死/污染的表被点名(历史表除外)", set(o["dead_or_corrupt"]) == {
+        "risk_meter_history", "market_state_vectors"},
            str(o["dead_or_corrupt"]))
     _check("理由把「未来日期」单独说明", "未来日期单列" in o["reason"],
            o["reason"][-70:])
@@ -143,6 +144,21 @@ def t_sql_names_each_tables_own_time_column():
            str([t for t in EXPECTED if t not in s]))
 
 
+def t_historical_table_without_a_writer_is_not_dead():
+    """10-29:`signal_outcomes` 没有写入端(代码与库函数零个),是 `producers_dead` 的两个来源之一。
+    历史表判「不适用」并写明去向;**真正停了的表(risk_meter_history)照样判死**。"""
+    import datetime as _dt
+    from src.data.market.producer_freshness import HISTORICAL, NOT_APPLICABLE, assess
+    assert "signal_outcomes" in HISTORICAL
+    h = assess("signal_outcomes", 7743, None, "2026-05-03", today=_dt.date(2026, 10, 29))
+    assert h.verdict == NOT_APPLICABLE and "signal_journal" in h.reason
+    r = assess("risk_meter_history", 48, "2026-10-12", "2026-10-13", today=_dt.date(2026, 10, 29))
+    assert r.verdict == "dead"
+
+
+test_historical_table_without_a_writer_is_not_dead = t_historical_table_without_a_writer_is_not_dead
+
+
 def main() -> int:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("t_")]:
         print(f"\n▸ {fn.__name__}")
@@ -155,3 +171,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

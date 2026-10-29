@@ -57,6 +57,14 @@ BEAT_KEY = "loops:beat"
 #: 键消失本身就是信号,不需要再判一次过期。
 BEAT_TTL_S = 3 * 24 * 3600
 
+#: 已退役的循环 —— **代码里已经没有它**,但它在 Redis 心跳里的那一条不会自己消失:
+#: 整个心跳是一个 key,每次写都刷新 TTL,单条永不过期。于是一个完成使命、被取代的循环
+#: 会被永远判成「死了」(10-29 实测:`_narrative_probe_loop` 208 小时没心跳,一直挂在 dead 里)。
+#: 不能按「多久没心跳」自动清 —— 那会让真死掉的循环悄悄消失。**只认这里的显式登记。**
+RETIRED_LOOPS: dict[str, str] = {
+    "_narrative_probe_loop": "10-20 一次性形状探针,完成后由 _social_ingest_loop 取代(main.py 那段 docstring)",
+}
+
 NEVER_RAN, OK, FAILING = "never_ran", "ok", "failing"
 
 #: ⚠️ **第三个状态 (S-294)。** 心跳上线第一天就误报:`_deep_panel_loop` 被记成
@@ -226,8 +234,11 @@ async def beat(name: str, *, ok: bool, error: Optional[str] = None,
             "build": build_sha(),
         }
         if detail:
-            entry["detail"] = detail
+            from src.api.json_safe import json_safe     # 10-29:numpy / NaN 让整次写入失败,这一条心跳就丢了
+            entry["detail"] = json_safe(detail)
         cur[name] = entry
+        for _gone in RETIRED_LOOPS:
+            cur.pop(_gone, None)
         await redis_set_key(BEAT_KEY, cur, ttl=BEAT_TTL_S)
     except Exception:                                          # noqa: BLE001
         # **心跳失败绝不能影响业务循环。** 一个为了记录健康而弄死循环的
@@ -350,7 +361,7 @@ def assess(name: str, beats: dict, *, expect_every_s: Optional[int] = None,
 def overall(beats: dict, expected: Optional[dict] = None) -> dict:
     """面板层。**报失败中的和从没跑过的,不报「多少个健康」。**"""
     expected = expected or {}
-    names = sorted(set(beats) | set(expected))
+    names = sorted((set(beats) | set(expected)) - set(RETIRED_LOOPS))
     rows = [assess(n, beats, expect_every_s=expected.get(n)) for n in names]
     failing = [r for r in rows if r["verdict"] == FAILING]
     refused = [r for r in rows if r["verdict"] == REFUSED]

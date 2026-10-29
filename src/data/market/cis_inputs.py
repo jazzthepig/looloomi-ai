@@ -250,8 +250,27 @@ async def _upsert(table: str, rows: list[dict], conflict: str) -> Optional[str]:
     return None
 
 
-async def _macro(today: date) -> dict[str, Any]:
+#: 正式发布的截止钟点(与 `src/data/cis/official.py` PUBLISH_DEADLINE_HOUR 同值;那边 import 这边,反向 import 会成环)。
+RECENT_PENDING_UNTIL_HOUR = 6
+
+
+def global_recent_status(rows: list[dict], have: set, today: date, hour: int) -> Optional[str]:
+    """纯函数。`days=1` 的最近收盘点筛完是 0 行时,区分三种情况(只有第三种是错):
+    ① 昨天的收盘 `days=max` 已经有了 → 没事可做;② 还没到发布截止钟点 → CG 的 00:00 点常晚到
+    (实测 10-28 / 10-29 两天 00:52 都没有、13:00 有),正式发布器每小时自己补(S-538)—— 等待,不算失败;
+    ③ 过了截止还没有 → 错。返回 None = 不是错。"""
+    if rows:
+        return None
+    if ("total_mcap", (today - timedelta(days=1)).isoformat()) in have:
+        return None
+    if hour < RECENT_PENDING_UNTIL_HOUR:
+        return None
+    return "global_recent: 0 行"
+
+
+async def _macro(today: date, now: Optional[datetime] = None) -> dict[str, Any]:
     from src.data.market.data_layer import get_cg_global_market_cap_chart, get_eodhd_eod_range, get_fng_history
+    now = now or datetime.now(timezone.utc)
     out: dict[str, Any] = {}
     for name, fetch in (("fng", lambda: get_fng_history()),
                         ("vix", lambda: get_eodhd_eod_range("VIX", "INDX", MACRO_HISTORY_START)),
@@ -267,8 +286,15 @@ async def _macro(today: date) -> dict[str, Any]:
                         if name == "vix" else global_rows(raw, MACRO_HISTORY_START))
             if name == "global":
                 out["_global_rows"] = rows
-            err = await _upsert(MACRO_TABLE, rows, "series,d") if rows else f"{name}: 0 行"
+            if rows:
+                err = await _upsert(MACRO_TABLE, rows, "series,d")
+            elif name == "global_recent":
+                err = global_recent_status(rows, have, today, now.hour)
+            else:
+                err = f"{name}: 0 行"
             out[name] = {"rows": len(rows), "error": err, "last": rows[-1]["d"] if rows else None}
+            if name == "global_recent" and not rows and err is None:
+                out[name]["pending"] = "CG 的 00:00 点未到或昨天已覆盖;正式发布器每小时补"
         except Exception as e:                              # noqa: BLE001
             out[name] = {"rows": 0, "error": f"{type(e).__name__}: {str(e)[:100]}"}
     out.pop("_global_rows", None)
@@ -459,7 +485,7 @@ async def refresh_close_inputs(now: Optional[datetime] = None) -> dict[str, Any]
     from src.data.style.header import SOURCE, parse_market_chart
     from src.data.vector.market_state_writer import _sb_get
     now = now or datetime.now(timezone.utc)
-    out: dict[str, Any] = {"macro": await _macro(now.date())}
+    out: dict[str, Any] = {"macro": await _macro(now.date(), now)}
     frm_ts = int((now - timedelta(days=4)).timestamp())
     to_ts = int(now.timestamp())
     rows, failed = [], {}

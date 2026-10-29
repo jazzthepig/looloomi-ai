@@ -121,3 +121,17 @@ def test_volume_history_also_covers_past_leaders_not_only_todays_members():
             {"d": "2020-06-30", "symbol": "ETH", "coin_id": "ethereum", "mcap": 2.6e10},
             {"d": "2020-06-30", "symbol": "NOMC", "coin_id": "nomc", "mcap": None}]
     assert ci.top_pairs(rows, 2) == [{"symbol": "ETH", "coin_id": "ethereum"}, {"symbol": "FTT", "coin_id": "ftx-token"}]
+
+
+def test_global_recent_zero_rows_before_the_publish_deadline_is_pending_not_error():
+    """10-29:每天 00:52 的那一轮,CG `days=1` 还没有 00:00 的点(10-28 / 10-29 两天都是,13:00 就有了)
+    —— 循环被记成 error,而正式发布器每小时自己补(S-538)。截止钟点前 = 等待;过了截止还没有 = 错;昨天已有 = 没事做。"""
+    from src.data.market.cis_inputs import RECENT_PENDING_UNTIL_HOUR, global_recent_status
+    from src.data.cis.official import PUBLISH_DEADLINE_HOUR
+    assert RECENT_PENDING_UNTIL_HOUR == PUBLISH_DEADLINE_HOUR
+    today = date(2026, 10, 29)
+    assert global_recent_status([], set(), today, 0) is None
+    assert global_recent_status([], set(), today, 5) is None
+    assert global_recent_status([], set(), today, 7) == "global_recent: 0 行"
+    assert global_recent_status([], {("total_mcap", "2026-10-28")}, today, 12) is None
+    assert global_recent_status([{"d": "2026-10-28"}], set(), today, 12) is None
