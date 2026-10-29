@@ -3,6 +3,7 @@ Vault router — GP funds, portfolio optimization
 Endpoints: /api/v1/vault/*, /api/v1/portfolio/*
 """
 import asyncio, json
+import os
 import numpy as np
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
@@ -13,6 +14,9 @@ from src.api.utils import validate_symbols as _validate_assets
 from src.api.store import redis_set_key as _redis_set, redis_get_key as _redis_get
 
 router = APIRouter()
+# 10-29 静态检查:这个文件用了 `os` 和 `_logger` 却从没定义 —— `POST /vault/deposit-intent` 每次第一行就
+# NameError(500),存款意向一条都没记下来;其余用 `_logger` 的分支也只在出错时才炸。
+_logger = logging.getLogger(__name__)
 
 
 # ── Vault GP Funds ────────────────────────────────────────────────────────────

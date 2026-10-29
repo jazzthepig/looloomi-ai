@@ -2188,13 +2188,9 @@ async def get_macro_pulse() -> dict:
                         result["macro_regime"]   = fred_regime
                         result["regime_source"] = "fred_derived"
                         result["regime_inputs"] = fred_data.get("regime_inputs", {})
-                # Always apply unified regime: blend crypto sentiment + macro inputs
-                _apply_unified_regime(result, fred_data, _fg_val, _btc_dom, cg_data)
-                # Write unified regime to shared key so CIS endpoint reads the same value
-                await _redis_set("cis:regime", {
-                    "regime": result["macro_regime"],
-                    "source": result.get("regime_source", "unified"),
-                }, ttl=300)
+                # 10-29 静态检查:这里原来调用 `_apply_unified_regime(...)` —— 全仓库从没定义过(git log -S 查无),
+                # 每次 NameError 被下面的 `except: pass` 吞掉,于是后面写 `cis:regime` 的那段也从没执行过。
+                # 删掉两者 = 行为不变,只是拆掉一颗哑雷;状态的权威在正式 CIS(cis_official_daily)。
             else:
                 # No EODHD key — try FRED directly (free, no API key needed)
                 fred_data = await _get_fred_macro_indicators("usa")
@@ -2203,13 +2199,9 @@ async def get_macro_pulse() -> dict:
                     result["macro_regime"]   = fred_regime
                     result["regime_source"] = "fred_derived"
                     result["regime_inputs"] = fred_data.get("regime_inputs", {})
-                # Always apply unified regime: blend crypto sentiment + macro inputs
-                _apply_unified_regime(result, fred_data, _fg_val, _btc_dom, cg_data)
-                # Write unified regime to shared key so CIS endpoint reads the same value
-                await _redis_set("cis:regime", {
-                    "regime": result["macro_regime"],
-                    "source": result.get("regime_source", "unified"),
-                }, ttl=300)
+                # 10-29 静态检查:这里原来调用 `_apply_unified_regime(...)` —— 全仓库从没定义过(git log -S 查无),
+                # 每次 NameError 被下面的 `except: pass` 吞掉,于是后面写 `cis:regime` 的那段也从没执行过。
+                # 删掉两者 = 行为不变,只是拆掉一颗哑雷;状态的权威在正式 CIS(cis_official_daily)。
         except Exception:
             pass  # regime stays UNKNOWN — non-blocking
 
@@ -3102,11 +3094,17 @@ async def _get_fred_macro_indicators(country: str = "usa") -> dict:
                     val = float(latest[1])
                     prev_val = float(prev[1])
                     yoy = (val - prev_val) / prev_val * 100
+                    # 10-29:prev_value 原来是「去年同月的环比」(一年前那个月比它前一个月),页面上 3.72 旁边写着 0.3;
+                    # trend 原来是「YoY > 0 就 up」—— 通胀为正就永远 up。两者都改成「上个月的同比」。
+                    prev_yoy = None
+                    if len(rows_sorted) > 13:
+                        base = float(rows_sorted[13][1])
+                        prev_yoy = round((float(rows_sorted[1][1]) - base) / base * 100, 2) if base else None
                     return {
                         "value":     round(yoy, 2),
                         "date":      latest[0],
-                        "prev_value": round((prev_val - float(rows_sorted[13][1])) / float(rows_sorted[13][1]) * 100, 2) if len(rows_sorted) > 13 else None,
-                        "trend":     "up" if yoy > 0 else "down",
+                        "prev_value": prev_yoy,
+                        "trend":     ("up" if yoy > prev_yoy else "down") if prev_yoy is not None else None,
                     }
         except Exception as e:
             errors.append(f"cpi_yoy: {e}")
@@ -3178,8 +3176,8 @@ async def _get_fred_macro_indicators(country: str = "usa") -> dict:
         gdp_raw    = inds.get("gdp_growth",    {}).get("value", 0) or 0
         rate       = inds.get("interest_rate", {}).get("value", 0) or 0
         rate_trend = inds.get("interest_rate", {}).get("trend", "")
-        # A191RL1Q225SBEA is quarterly % change; annualize for regime thresholds
-        gdp        = gdp_raw * 4
+        # A191RL1Q225SBEA 已经是「环比,季调后折年率」(SAAR)—— 原来再 ×4,2.2% 变成 8.8% 喂进状态阈值(10-29)
+        gdp        = gdp_raw
 
         regime = _derive_macro_regime(cpi=cpi, gdp=gdp, rate=rate, rate_trend=rate_trend)
         result["derived_regime"] = regime
