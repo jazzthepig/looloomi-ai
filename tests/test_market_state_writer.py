@@ -408,12 +408,13 @@ def test_unwired_dims_are_out_of_the_denominator():
            full.source_completeness == 1.0, str(full.source_completeness))
     _check("分母可被单独读出", full.attainable_dims == len(live),
            f"{full.attainable_dims} vs {len(live)}")
-    # 负控制:若某个未接线维被误算进分母,上面那条就会 <1.0。
-    with_unwired = [k for k in DIMS if not k.startswith("_reserved")]
-    _check("负控制:把未接线维算进分母会掉到 1.0 以下",
-           len(with_unwired) > len(live)
-           and round(len(live) / len(with_unwired), 4) < 1.0,
-           "负控制没成立 —— UNWIRED_DIMS 可能是空集")
+    # 负控制:若被排除的维(10-30 起 UNWIRED_DIMS 已空,只剩 `_reserved_*`)被误算进分母,上面那条就会 <1.0。
+    with_excluded = list(DIMS)
+    _check("负控制:把被排除的维算进分母会掉到 1.0 以下",
+           len(with_excluded) > len(live)
+           and round(len(live) / len(with_excluded), 4) < 1.0,
+           "负控制没成立 —— 分母里没有任何被排除的维")
+    _check("UNWIRED_DIMS 只能减:10-30 三维接上源后为空(T-094)", UNWIRED_DIMS == frozenset(), str(UNWIRED_DIMS))
 
 
 if __name__ == "__main__":

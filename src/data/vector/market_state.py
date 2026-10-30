@@ -96,11 +96,10 @@ NEUTRAL_FILL = 0.0
 #: 「我们不打算测的东西」的永久藏身处 —— 和 `KNOWN_CODE_ONLY`、
 #: `DECISION_INPUTS_DEBT` 同一个设计,同一个失效模式。
 #: `tests/test_lesson_guards.py` 钉住"名单里的维必须真的没有表"。
-UNWIRED_DIMS: frozenset[str] = frozenset({
-    "fng",                # Alternative.me 只在实时路径调用,没有落库
-    "oi_mcap",            # 未平仓合约:无表
-    "stable_supply_chg",  # 稳定币供给:无表(模块 docstring 早写着 "not wired at all")
-})
+#: 2026-10-30(T-094 / S-699):三维全部接上 —— fng ← macro_daily(2018-02 起)、oi_mcap ← deriv_metrics_daily
+#: (2020-09 起,面板成员未平仓价值合计 ÷ macro_daily.total_mcap)、stable_supply_chg ← cg_coin_mcap_daily
+#: (USDT + USDC 市值 30 日变化,2019-12 起)。名单因此为空 —— 它只能减,空是它该到的地方。
+UNWIRED_DIMS: frozenset[str] = frozenset()
 assert UNWIRED_DIMS <= set(DIMS), "UNWIRED_DIMS 必须是 DIMS 的子集"
 
 
@@ -330,6 +329,34 @@ def zscore_columns(rows: list[StateVector], min_obs: int = 60) -> list[StateVect
             x = r.values.get(k)
             if x is not None and math.isfinite(float(x)):
                 r.values[k] = (float(x) - m) / s
+    return rows
+
+
+def zscore_expanding(rows: list[StateVector], min_obs: int = 180) -> list[StateVector]:
+    """**按时点**的标准化(T-094):第 t 天的 z 只用 ≤ t 的值算均值与标准差(含当天)。
+
+    `zscore_columns` 用全史一次 —— 2022 年某天的坐标里含着 2026 年的均值,邻居查询因此「看到了未来」
+    (interpret 层自己按时点重标准化,所以它不受影响;`similar_market_states()` 直接用 `vec`,受影响)。
+    按时点之后,一行一旦写下,新的一天不会再改它 —— 增量写在数学上第一次可行。
+    某维累计不足 `min_obs` 个读数之前,那一维记 None(坐标系还没稳,不是 0)。"""
+    rows.sort(key=lambda r: r.d)
+    for k in DIMS:
+        n, m, m2 = 0, 0.0, 0.0
+        for r in rows:
+            x = r.values.get(k)
+            if x is None or not math.isfinite(float(x)):
+                r.values[k] = None
+                continue
+            x = float(x)
+            n += 1
+            dlt = x - m
+            m += dlt / n
+            m2 += dlt * (x - m)
+            if n < min_obs:
+                r.values[k] = None
+                continue
+            sd = math.sqrt(m2 / (n - 1)) if n > 1 else 0.0
+            r.values[k] = (x - m) / sd if sd > 0 else 0.0
     return rows
 
 

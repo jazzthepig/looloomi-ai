@@ -72,6 +72,7 @@
 """
 from __future__ import annotations
 
+import bisect
 import logging
 import os
 from dataclasses import dataclass, field
@@ -83,7 +84,7 @@ from src.data.market.single_source import (
 from src.data.vector.market_state import (
     DIMS, StateVector, build_rows_for_upsert, breadth_above_ma, downside_ratio,
     herfindahl, mean, mean_pairwise_corr, pct_change, realized_vol, skew,
-    stdev, trend_phase, zscore_columns)
+    stdev, trend_phase, zscore_columns, zscore_expanding)
 
 log = logging.getLogger("market_state_writer")
 
@@ -138,6 +139,20 @@ MIN_DAYS = 400
 #: 这条注释本身是地板的产出物:没有它,我会静默地选 2018 并得到一张 8 个
 #: 标的的表,而它长得和一张好表一模一样。
 DEFAULT_START = "2022-01-01"
+
+#: ── v2(2026-10-30,T-094 / S-699):时点面板 + 按时点标准化 + 往前一个周期 ─────────────────────────
+#: 上面那张取舍表是**定盘**逼出来的:成员必须在整段窗口里都有 ≥ 90% 覆盖,于是窗口越早,能活满全程的币越少
+#: (2018 只剩 8 个)。而定盘本身看了未来 —— 一个币能不能进 2022 年的面板,取决于它活没活到 2026。
+#: v2 换成**按月的时点面板**:每个自然月的成员 = 上月最后一个交易日、此前 30 天成交额(close × volume)前 N 名,
+#: 只在已有 ≥ MIN_BARS 根日线、当天有 bar 的标的里挑。成员数恒定(④ 的可比性要求还在),选法只用当时已知的数据,
+#: 死掉的币在它活着、够大的月份里照样在面板里。深度因此不再被「活到今天」卡住 —— 回到 2019(binance_hist 现货修复后,S-698)。
+PIT_V2 = False                         # binance_hist 现货修复(S-698)全部做完之前不切 —— 没修的标的成交额是永续的,会把排名带偏
+V2_START = "2019-01-01"
+N_MEMBERS = 25
+MIN_BARS = WARMUP_DAYS
+ADV_DAYS = 30
+Z_MIN_OBS = 180
+PANEL_EXCLUDE = frozenset({"USDC", "USDT", "FDUSD", "TUSD", "BUSD", "USDP", "DAI", "BTCDOM", "DEFI"})
 
 #: 一次拉取的分页大小 = PostgREST 服务端上限(S-416)。
 #:
@@ -360,6 +375,46 @@ def pin_panel(panel: dict[str, dict[str, tuple[float, float]]], start: str,
     return PanelSpec(source, tuple(sorted(keep)), days[0], days[-1], len(days), excluded)
 
 
+def monthly_members(panel: dict[str, dict[str, tuple[float, float]]], start: str, *, n: int = N_MEMBERS,
+                    min_bars: int = MIN_BARS, adv_days: int = ADV_DAYS,
+                    exclude: frozenset = PANEL_EXCLUDE) -> dict[str, tuple[str, ...]]:
+    """纯函数。{YYYY-MM: 那个月的成员}。成员只用上个月最后一个交易日及之前的数据选出(无前视);
+    凑不满 n 个的月份不出成员(那个月不产出向量 —— 一个 12 个币的「面板」和 25 个的长得一样)。"""
+    all_days = sorted({d for ser in panel.values() for d in ser})
+    months = sorted({d[:7] for d in all_days if d >= start})
+    series = {s: sorted(ser) for s, ser in panel.items() if s not in exclude and not s.startswith("1000")}
+    out: dict[str, tuple[str, ...]] = {}
+    for m in months:
+        k = bisect.bisect_left(all_days, m + "-01")
+        if k == 0:
+            continue
+        p = all_days[k - 1]
+        lo = (date.fromisoformat(p) - timedelta(days=adv_days - 1)).isoformat()
+        cands = []
+        for sym, ds in series.items():
+            i = bisect.bisect_right(ds, p)
+            if i < min_bars or ds[i - 1] != p:
+                continue
+            j = bisect.bisect_left(ds, lo)
+            dv = [panel[sym][x][0] * panel[sym][x][1] for x in ds[j:i]]
+            if len(dv) < 0.8 * adv_days:
+                continue
+            cands.append((sum(dv) / len(dv), sym))
+        if len(cands) >= n:
+            cands.sort(key=lambda t: (-t[0], t[1]))
+            out[m] = tuple(sorted(sym for _, sym in cands[:n]))
+    return out
+
+
+def members_spec(panel: dict, members: dict[str, tuple[str, ...]], *, source: str) -> PanelSpec:
+    """时点面板的 PanelSpec:symbols = 出现过的成员并集;天数 = 有成员的月份里的交易日。"""
+    union = tuple(sorted({s for v in members.values() for s in v}))
+    days = sorted({d for s in union for d in panel.get(s, {}) if d[:7] in members})
+    if not days:
+        return PanelSpec(source, (), "?", "?", 0, {"__all__": "no_months: 没有一个月凑满成员"})
+    return PanelSpec(source, union, days[0], days[-1], len(days), {})
+
+
 # ── 计算 ──────────────────────────────────────────────────────────────────────
 
 def _returns(closes: dict[str, float], upto: str, n: int) -> list[float]:
@@ -370,7 +425,8 @@ def _returns(closes: dict[str, float], upto: str, n: int) -> list[float]:
 
 def compute_vectors(panel: dict[str, dict[str, tuple[float, float]]],
                     spec: PanelSpec, *, vol_window: int = 30,
-                    ma_window: int = 200) -> list[StateVector]:
+                    ma_window: int = 200,
+                    members: Optional[dict[str, tuple[str, ...]]] = None) -> list[StateVector]:
     """逐日算面板维与价格维。**价格只进二阶矩与相位,永不进方向。**
 
     这条不是风格偏好:`market_state.py` 的模块 docstring 记着 Shadow 的
@@ -388,7 +444,8 @@ def compute_vectors(panel: dict[str, dict[str, tuple[float, float]]],
     vol_hist: list[float] = []
 
     for d in days:
-        live = [s for s in spec.symbols if s in closes and d in closes[s]]
+        pool = spec.symbols if members is None else members.get(d[:7], ())
+        live = [s for s in pool if s in closes and d in closes[s]]
         if len(live) < MIN_SYMBOLS:
             # 成员不足的一天不产出向量。写一个"测到了但很稀"的向量,
             # 和写一个正确的向量,在下游长得一模一样。
@@ -512,6 +569,96 @@ async def attach_cis_and_funding(vectors: list[StateVector]) -> dict[str, Any]:
     return filled
 
 
+async def attach_context_dims(vectors: list[StateVector],
+                              members: dict[str, tuple[str, ...]]) -> dict[str, Any]:
+    """v2:资金费 / 未平仓 / CIS 三个横截面在服务端聚合(`msv_*_xs`,一次调用),fng 与稳定币供给读日表。
+
+    ⚠️ 旧的 `attach_cis_and_funding` 用一页 `limit=5000` 读,服务端 `db-max-rows` = 1000 —— 资金费维只拿到窗口开头
+    1000 行(几天),CIS 同理(S-416 的形状,这里漏了)。所以那几维在 2022 起的 1,763 行里几乎全空,不是「没有源」。
+    每一维读不到就记下原因、那一维留 None —— 读不到 ≠ 没有(S-180)。全部只用当天及之前的数据。"""
+    from src.api.store import supabase_rpc_all
+    from src.data.style.header import _read_all
+    by_day = {sv.d: sv for sv in vectors}
+    if not by_day:
+        return {}
+    lo = min(by_day)
+    mem = {m: list(v) for m, v in members.items()}
+    filled: dict[str, Any] = {}
+
+    rows = await supabase_rpc_all("msv_funding_xs", {"p_members": mem, "p_from": lo}, params={"order": "d.asc"})
+    if rows is None:
+        filled["funding_error"] = "msv_funding_xs 读不到"
+    else:
+        for r in rows:
+            sv = by_day.get(str(r.get("d"))[:10])
+            if sv is not None and (r.get("n") or 0) >= 5:
+                sv.values["funding_mean"] = r.get("mean_rate")
+                sv.values["funding_disp"] = r.get("sd_rate")
+        filled["funding"] = sum(1 for sv in vectors if sv.values.get("funding_mean") is not None)
+
+    try:
+        tm = {str(r["d"])[:10]: float(r["value"]) for r in await _read_all(
+            "macro_daily", {"select": "d,value", "series": "eq.total_mcap", "d": f"gte.{lo}", "order": "d.asc"})
+            if r.get("value")}
+    except RuntimeError as e:
+        tm, filled["total_mcap_error"] = {}, str(e)[:120]
+    rows = await supabase_rpc_all("msv_oi_xs", {"p_members": mem, "p_from": lo}, params={"order": "d.asc"})
+    if rows is None:
+        filled["oi_error"] = "msv_oi_xs 读不到"
+    else:
+        for r in rows:
+            d = str(r.get("d"))[:10]
+            sv = by_day.get(d)
+            if sv is not None and (r.get("n") or 0) >= 5 and tm.get(d) and r.get("oi_value"):
+                sv.values["oi_mcap"] = float(r["oi_value"]) / tm[d]
+        filled["oi_mcap"] = sum(1 for sv in vectors if sv.values.get("oi_mcap") is not None)
+
+    rows = await supabase_rpc_all("msv_cis_xs", {"p_from": lo}, params={"order": "d.asc"})
+    if rows is None:
+        filled["cis_error"] = "msv_cis_xs 读不到"
+    else:
+        prev = None
+        for r in rows:
+            sv = by_day.get(str(r.get("d"))[:10])
+            m = r.get("mean_score")
+            if sv is not None and (r.get("n") or 0) >= 10 and m is not None:
+                sv.values["cis_mean"] = m
+                sv.values["cis_disp"] = r.get("sd_score")
+                sv.values["cis_skew"] = r.get("skew_score")
+                sv.values["pct_grade_A"] = r.get("pct_grade_a")
+                sv.values["d_cis_mean"] = None if prev is None else m - prev
+            if m is not None:
+                prev = m
+        filled["cis"] = sum(1 for sv in vectors if sv.values.get("cis_mean") is not None)
+
+    try:
+        for r in await _read_all("macro_daily", {"select": "d,value", "series": "eq.fng", "d": f"gte.{lo}",
+                                                 "order": "d.asc"}):
+            sv = by_day.get(str(r["d"])[:10])
+            if sv is not None and r.get("value") is not None:
+                sv.values["fng"] = float(r["value"])
+        filled["fng"] = sum(1 for sv in vectors if sv.values.get("fng") is not None)
+    except RuntimeError as e:
+        filled["fng_error"] = str(e)[:120]
+
+    try:
+        lo40 = (date.fromisoformat(lo) - timedelta(days=40)).isoformat()
+        sup: dict[str, dict[str, float]] = {}
+        for r in await _read_all("cg_coin_mcap_daily", {"select": "coin_id,d,mcap", "coin_id": "in.(tether,usd-coin)",
+                                                        "d": f"gte.{lo40}", "order": "d.asc,coin_id.asc"}):
+            if r.get("mcap"):
+                sup.setdefault(str(r["d"])[:10], {})[r["coin_id"]] = float(r["mcap"])
+        tot = {d: v["tether"] + v["usd-coin"] for d, v in sup.items() if len(v) == 2}
+        for d, sv in by_day.items():
+            back = (date.fromisoformat(d) - timedelta(days=30)).isoformat()
+            if d in tot and back in tot and tot[back] > 0:
+                sv.values["stable_supply_chg"] = tot[d] / tot[back] - 1.0
+        filled["stable_supply_chg"] = sum(1 for sv in vectors if sv.values.get("stable_supply_chg") is not None)
+    except RuntimeError as e:
+        filled["stable_supply_error"] = str(e)[:120]
+    return filled
+
+
 async def attach_regime(vectors: list[StateVector]) -> int:
     """贴 `regime_label`。没有读数的日子留 None —— 那是 2025-05 之前的真实情况。"""
     by_day = {sv.d: sv for sv in vectors}
@@ -584,7 +731,7 @@ async def survey_depth_breadth(source: str, *, candidates: Sequence[str] = (),
 
 async def recompute_all(start: str = DEFAULT_START, *,
                         source: str = PANEL_SOURCE,
-                        dry_run: bool = False) -> RecomputeResult:
+                        dry_run: bool = False, pit: Optional[bool] = None) -> RecomputeResult:
     """全量重算并 upsert。**增量在数学上不可行** (S-232)。
 
     z-score 跨整段历史 —— 多一天就改变每一个历史 z 值,所以"只算今天再插一行"
@@ -593,6 +740,9 @@ async def recompute_all(start: str = DEFAULT_START, *,
     """
     from datetime import datetime, timezone
 
+    v2 = PIT_V2 if pit is None else pit
+    if v2 and start == DEFAULT_START:
+        start = V2_START
     try:
         # 源是显式的。**不做回退** —— 见 PANEL_SOURCE 上的说明:
         # 运行之间换源会让两批行落在不同的坐标系里,而表里看不出来。
@@ -600,7 +750,20 @@ async def recompute_all(start: str = DEFAULT_START, *,
     except CrossSourceError as e:
         return RecomputeResult(False, False, 0, None, None, str(e))
 
-    spec = pin_panel(panel, start, source=src.source)
+    members: Optional[dict[str, tuple[str, ...]]] = None
+    if v2:
+        from src.data.market.binance_hist_repair import perp_only_symbols
+        excl = PANEL_EXCLUDE | frozenset(await perp_only_symbols())
+        members = monthly_members(panel, start, exclude=excl)
+        spec = members_spec(panel, members, source=src.source)
+        if spec.n_days and spec.n_days < MIN_DAYS:
+            return RecomputeResult(False, True, 0, None, spec,
+                                   f"窗口只有 {spec.n_days} 天 < {MIN_DAYS} —— z-score 的分母不够,不写。")
+        if not members:
+            return RecomputeResult(False, True, 0, None, spec,
+                                   f"定盘后只剩 0 个标的 —— 没有一个月凑满 {N_MEMBERS} 个成员。不写。")
+    else:
+        spec = pin_panel(panel, start, source=src.source)
 
     # ── 地板在写之前 (S-220) ────────────────────────────────────────────────
     if spec.n_symbols < MIN_SYMBOLS:
@@ -614,24 +777,40 @@ async def recompute_all(start: str = DEFAULT_START, *,
             f"窗口只有 {spec.n_days} 天 < {MIN_DAYS} —— z-score 的分母不够,"
             f"标准化后的坐标系不稳。不写。")
 
-    vectors = compute_vectors(panel, spec)
+    vectors = compute_vectors(panel, spec, members=members)
     if not vectors:
         return RecomputeResult(False, True, 0, None, spec,
                                "逐日计算后 0 个向量 —— 每一天的存活标的都不足 "
                                f"{MIN_SYMBOLS}")
 
-    await attach_cis_and_funding(vectors)
+    if v2:
+        filled = await attach_context_dims(vectors, members or {})
+    else:
+        filled = await attach_cis_and_funding(vectors)
     await attach_regime(vectors)
 
-    zscore_columns(vectors)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    zpass = f"{src.source}:{spec.n_symbols}sym:{stamp}"
+    if v2:
+        zscore_expanding(vectors, min_obs=Z_MIN_OBS)
+        zpass = f"{src.source}:pit{N_MEMBERS}:expanding{Z_MIN_OBS}:{stamp}"
+    else:
+        zscore_columns(vectors)
+        zpass = f"{src.source}:{spec.n_symbols}sym:{stamp}"
     rows = build_rows_for_upsert(vectors, zscore_pass=zpass)
 
     # 溯源随行同走:哪个源、哪些标的、覆盖到哪 —— 而不是留在一次运行的日志里。
     for r in rows:
-        r["n_symbols"] = spec.n_symbols
         r["price_sources"] = [src.source]
+        if v2:
+            r["n_symbols"] = N_MEMBERS
+            r["provenance_note"] = (
+                f"PIT v2 (T-094 / S-699): {src.source} spot only (S-698); monthly point-in-time panel = top "
+                f"{N_MEMBERS} by prior-30-day dollar volume among symbols with >={MIN_BARS} bars, chosen on the "
+                f"last trading day of the previous month ({len(spec.symbols)} distinct members over "
+                f"{len(members or {})} months); each dim z-scored on an EXPANDING window (only data <= d, "
+                f"min {Z_MIN_OBS} readings). Context dims: {filled}.")
+            continue
+        r["n_symbols"] = spec.n_symbols
         r["provenance_note"] = (
             f"single-source recompute (S-245): {src.source} only; panel pinned to "
             f"{spec.n_symbols} symbols with >={MIN_COVERAGE:.0%} coverage over "

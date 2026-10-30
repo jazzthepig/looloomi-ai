@@ -56,6 +56,11 @@ _ALLOWED_WRITERS = {
     # A-408-3(a34e804)把它改走 `supabase_upsert_table` 以进 write_log,于是守卫第一次看见了它。
     # 退出条件:TradFi 日线并入 deep_walk / cg_pro 同一条 lane 后,从这里摘掉。
     "src/api/routers/ohlcv.py",
+    # S-698(10-30):binance_hist 里 168 个标的是永续 bar、08-08 起被现货接上 —— 同一条 lane(Seth)对**同一条序列**的
+    # 一次性修复:把非现货行原样复制到 binance_um_hist 存档,再用 data.binance.vision 现货月档覆盖、补到现货上市日。
+    # 不是第二个采集器:不追新日子(只写到 2026-08,之后归 deep_panel_collector)。
+    # 退出条件:全部标的在 VERSION 下做完、核过之后,删掉模块与 `_binance_hist_repair_loop`,从这里摘掉。
+    "src/data/market/binance_hist_repair.py",
 }
 
 _WRITE_HELPERS = {"supabase_insert_table", "supabase_upsert_table",

@@ -56,9 +56,16 @@ CHUNK = 2000
 WRITES_TABLES = ("ohlcv_daily",)
 #: 先只做这几个(拼接的 TRX / ETC、现货的 ADA / BTC、永续独有的 1000SHIB),Seth 用 SQL 核过结果再打开全量。
 CANARY = ("TRX", "ETC", "ADA", "BTC", "1000SHIB")
-FULL_RUN = False
+FULL_RUN = True                         # 10-30 04:10 UTC 哨兵核过(TRX / ETC 各补 583 天深度、2,050 行永续存档后改现货;ADA / BTC 各 2 天;1000SHIB 原样存档)
 PERP_ONLY_NOTE = ("S-698:没有现货对的标的(2026-10-30 实测 32 个,如 1000SHIB / 1000LUNC / BTCDOM / LUNA2 / XMR)仍在 binance_hist 里、"
                   "2026-08-08 起停更;它们的 bar 是永续的。面板读取方按 `perp_only` 名单显式排除。")
+
+#: 2026-10-30 实测的 32 个(2025-06-15 有 bar、档里没有现货对)。修复跑完后以 loop_attempt 里的 `no_spot_pair` 为准,
+#: 这个常量只是「修复还没跑到」时的保底名单。
+PERP_ONLY_MEASURED = frozenset({
+    "1000LUNC", "1000SHIB", "1000WHY", "1000X", "1000XEC", "AI16Z", "B3", "BID", "BTCDOM", "DEFI", "DEGEN", "EPT",
+    "HIPPO", "IP", "LUNA2", "MEMEFI", "MILK", "MYRO", "NEIROETH", "OBOL", "PONKE", "PORT3", "PUFFER", "SKATE",
+    "SLERF", "SWELL", "TOKEN", "UXLINK", "VINE", "XCN", "XMR", "ZKJ"})
 
 _MONTH_RE = re.compile(r"-1d-(\d{4}-\d{2})\.zip$")
 _KEY_RE = re.compile(r"<Key>([^<]+)</Key>")
@@ -157,6 +164,18 @@ def done_from(rows: list[dict], version: int = VERSION) -> dict[str, str]:
         for s, v in (det.get("done") or {}).items():
             done.setdefault(s, v)
     return done
+
+
+async def perp_only_symbols() -> set[str]:
+    """binance_hist 里没有现货对的标的(它们的 bar 是永续的)。读不到修复记录 ⇒ 用实测名单。面板读取方显式排除它们。"""
+    out = set(PERP_ONLY_MEASURED)
+    try:
+        from src.data.signals.hl_book_daily import _supabase_get
+        rows = await _supabase_get(f"loop_attempt?select=at,detail&loop_name=eq.{LOOP_NAME}&order=at.desc&limit=80")
+        out |= {s for s, v in done_from(rows or []).items() if v in ("no_spot_pair", "not_same_asset")}
+    except Exception:                                                    # noqa: BLE001
+        pass
+    return out
 
 
 # ── 一轮 ────────────────────────────────────────────────────────────────────

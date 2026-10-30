@@ -2212,6 +2212,7 @@ async def _binance_hist_repair_loop():
     判活:`select detail->'done', detail->'remaining' from loop_attempt where loop_name = '_binance_hist_repair_loop' order by at desc limit 1`。"""
     await _asyncio.sleep(_boot_delay(760))
     while True:
+        r: dict = {}
         try:
             from src.data.market.binance_hist_repair import run_once as _bhr_run
             r = await _bhr_run()
@@ -2228,7 +2229,9 @@ async def _binance_hist_repair_loop():
             await _beat("_binance_hist_repair_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _record_loop_attempt("_binance_hist_repair_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                        writer="src.api.main._binance_hist_repair_loop")
-        await _asyncio.sleep(3600)
+            r = {}
+        # 还有没做完的标的 ⇒ 歇 5 分钟接着做(每轮 15 分钟上限);做完了 ⇒ 每小时看一眼
+        await _asyncio.sleep(300 if (r or {}).get("remaining") else 3600)
 
 
 @app.on_event("startup")
