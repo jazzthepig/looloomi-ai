@@ -348,13 +348,7 @@ async def _regime_fitness_loop():
             print(f"[REGIME_FITNESS] daily — ok={res.get('ok')} rows={res.get('rows')}")
             # 10-30:S-202 把函数的 ok=True/rows=0 改成了 degraded,但这里照旧记 ok —— 同一个谎搬了个家。
             # 实测:cis_regime_fitness 0 行、IC 乘数从未通电;90 天窗口里独立交易日 18 < 20。记真话,并把原因带进 loop_attempt。
-            if res.get("ok"):
-                await _iteration_ok("_regime_fitness_loop")   # S-564 / T-061
-            else:
-                await _record_loop_attempt("_regime_fitness_loop", "refused" if res.get("degraded") else "error",
-                                           reason=str(res.get("reason") or res.get("consequence") or "")[:400] or None,
-                                           detail={k: res.get(k) for k in ("rows", "window_days", "reason", "consequence")},
-                                           writer="src.api.main._regime_fitness_loop")
+            await _iteration_result("_regime_fitness_loop", res)   # S-564 / T-061;degraded ⇒ refused + 原因
         except Exception as _e:
             print(f"[REGIME_FITNESS] ⚠️  daily run failed: {_e}")
             await _iteration_error("_regime_fitness_loop", _e)   # S-564 / T-061
@@ -837,7 +831,7 @@ async def _forward_return_backfill_loop():
                       f"{cov.get('independent_days')} (IC gate needs 20)")
             else:
                 print(f"[FWD] ⚠️  {r.get('reason')}")
-            await _iteration_ok("_forward_return_backfill_loop")   # S-564 / T-061
+            await _iteration_result("_forward_return_backfill_loop", r)   # S-564 / T-061;10-30 记真话
         except Exception as _e:
             print(f"[FWD] ⚠️  backfill failed: {_e}")
             await _iteration_error("_forward_return_backfill_loop", _e)   # S-564 / T-061
@@ -3633,7 +3627,9 @@ async def _r76_paper_loop():
             print(f"[R76-PAPER] mark — status={res.get('status')} nav={res.get('nav')} "
                   f"gross={res.get('gross')} n={res.get('n')} "
                   f"n_days={res.get('n_days_marked')} validated={res.get('validated')}")
-            await _iteration_ok("_r76_paper_loop")   # S-564 / T-061
+            # status ∈ marked / ok / already_marked / skipped(都是正常)· no_data(拒绝:没价不记账)
+            await _iteration_result("_r76_paper_loop", {**res, "status": {"marked": "ok", "already_marked": "ok", "no_data": "refused"}.get(res.get("status"), res.get("status")),
+                                                        "refused": res.get("status") == "no_data"}, ok_key="status")   # 10-30 记真话
         except Exception as _e:
             print(f"[R76-PAPER] ⚠️  mark failed: {_e}")
             await _iteration_error("_r76_paper_loop", _e)   # S-564 / T-061
@@ -4252,7 +4248,8 @@ async def _paper_rebalance_loop():
             elif res.get("executed"):
                 print(f"[REBAL] {res.get('reason')} opened={res.get('opened')} "
                       f"closed={res.get('closed')} regime={res.get('regime')}")
-            await _iteration_ok("_paper_rebalance_loop")   # S-564 / T-061
+            # 正常返回没有 status 键(executed / 无事可做);status = refused 是 S-122 的拒绝 —— 记 refused,不记 ok
+            await _iteration_result("_paper_rebalance_loop", {**res, "refused": res.get("status") == "refused"}, ok_key="status")   # 10-30 记真话
         except Exception as _e:
             print(f"[REBAL] ⚠️  run failed: {_e}")
             await _iteration_error("_paper_rebalance_loop", _e)   # S-564 / T-061
@@ -5558,7 +5555,7 @@ async def _conviction_loop():
             print(f"[CONVICTION] watchlist {wl.get('n')} cands (logged {n_logged}), "
                   f"top={wl['candidates'][0]['symbol'] if wl.get('candidates') else None}; "
                   f"track_record={tr.get('status')} resolved={tr.get('total_resolved')}")
-            await _iteration_ok("_conviction_loop")   # S-564 / T-061
+            await _iteration_result("_conviction_loop", {**tr, "status": "ok" if tr.get("status") in ("ok", "skipped", "accruing") else tr.get("status")}, ok_key="status")   # 10-30
         except Exception as _e:
             print(f"[CONVICTION] ⚠️  loop failed: {_e}")
             await _iteration_error("_conviction_loop", _e)   # S-564 / T-061
@@ -5582,7 +5579,8 @@ async def _ai_briefing_loop():
             from src.api.routers.signals import refresh_ai_briefing
             r = await refresh_ai_briefing()
             print(f"[AI-BRIEFING] {r.get('status')} — {r.get('coverage') or r.get('reason') or ''}")
-            await _iteration_ok("_ai_briefing_loop")   # S-564 / T-061
+            # skipped(没配 LLM)算正常;unavailable / generated_uncached 是降级 ⇒ refused + 原因
+            await _iteration_result("_ai_briefing_loop", {**r, "refused": r.get("status") in ("unavailable", "generated_uncached")}, ok_key="status")   # 10-30 记真话
         except Exception as _e:
             print(f"[AI-BRIEFING] ⚠️  loop failed: {_e}")
             await _iteration_error("_ai_briefing_loop", _e)   # S-564 / T-061
