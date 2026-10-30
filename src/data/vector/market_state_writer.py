@@ -146,7 +146,7 @@ DEFAULT_START = "2022-01-01"
 #: v2 换成**按月的时点面板**:每个自然月的成员 = 上月最后一个交易日、此前 30 天成交额(close × volume)前 N 名,
 #: 只在已有 ≥ MIN_BARS 根日线、当天有 bar 的标的里挑。成员数恒定(④ 的可比性要求还在),选法只用当时已知的数据,
 #: 死掉的币在它活着、够大的月份里照样在面板里。深度因此不再被「活到今天」卡住 —— 回到 2019(binance_hist 现货修复后,S-698)。
-PIT_V2 = False                         # binance_hist 现货修复(S-698)全部做完之前不切 —— 没修的标的成交额是永续的,会把排名带偏
+PIT_V2 = True                          # 10-30 06:05 UTC S-698 现货修复跑完(262 个全过)后打开
 V2_START = "2019-01-01"
 N_MEMBERS = 25
 MIN_BARS = WARMUP_DAYS
@@ -756,9 +756,11 @@ async def recompute_all(start: str = DEFAULT_START, *,
         excl = PANEL_EXCLUDE | frozenset(await perp_only_symbols())
         members = monthly_members(panel, start, exclude=excl)
         spec = members_spec(panel, members, source=src.source)
-        if spec.n_days and spec.n_days < MIN_DAYS:
+        n_window = len({d for ser in panel.values() for d in ser if d >= start})
+        if n_window < MIN_DAYS or (spec.n_days and spec.n_days < MIN_DAYS):
+            n = spec.n_days if spec.n_days and n_window >= MIN_DAYS else n_window
             return RecomputeResult(False, True, 0, None, spec,
-                                   f"窗口只有 {spec.n_days} 天 < {MIN_DAYS} —— z-score 的分母不够,不写。")
+                                   f"窗口只有 {n} 天 < {MIN_DAYS} —— z-score 的分母不够,不写。")
         if not members:
             return RecomputeResult(False, True, 0, None, spec,
                                    f"定盘后只剩 0 个标的 —— 没有一个月凑满 {N_MEMBERS} 个成员。不写。")
