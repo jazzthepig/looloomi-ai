@@ -1,0 +1,26 @@
+{
+  "id": "T-214",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-30",
+  "title": "P3 前置(只读):XAUT 与 SPYX 两条腿,一个香港居民今天能走通的执行路径 —— 场所、KYC、钱包 / 链、费用、出金",
+  "source": "Jazz 10-29 拍板:T25 起始 600 USDC,黄金 = XAUT,股票 = SPYX(T-210 / T-213 方向);组合层目标表 portfolio_targets_daily 已在记,两条腿 executable = false、额度($120 / $180)以 USDC 留在 HL。T-210 §3 的三个香港缺口仍开(SFC 持牌 VA 平台名单、Ondo 香港门槛、各所准入)。P3 = 第二个执行器(链上钱包),要先知道走哪条路。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-214.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读:不注册、不下单、不碰私钥、不连钱包、不写库。每条腿给 2–3 条候选路径(例:CEX 现货 / 链上 DEX + 自托管钱包 / 发行方直购),每条写:① 场所与它在香港的监管身份(SFC 持牌 VA 平台名单原文 + 抓取时间;没在名单上就写没在);② 香港居民能否开户、KYC 要什么(条款原文 + 链接 + 抓取时间,读不到写读不到);③ 链与钱包:XAUT 在哪些链上有官方合约(合约地址 + 出处),SPYX 在 Solana 之外有没有;**能不能一个钱包 / 一条链装下两条腿**;④ $120 / $180 量级的全部成本:交易费、点差、链上 gas、出入金费(实测或条款原文);⑤ 出金:卖成 USDC 回到 HL 的路径与费用。**不推荐措辞以外的建议**;最后一节写「哪条路径今天就能走、缺哪一步」,每条带证据出处。",
+    "expect": "报告 docs/research/t214_p3_paths.md + 引用 JSON docs/research/t214_cites.json(每条:url、抓取时间、原文片段);卡片 notes:每条腿的候选清单与「今天能走 / 缺什么」。"
+  },
+  "prior_value": "T25 的一半额度在等第二个执行器;选错路径(香港居民开不了户、两条链两个钱包)要返工。"
+}
