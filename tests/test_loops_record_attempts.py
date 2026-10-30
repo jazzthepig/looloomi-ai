@@ -62,5 +62,6 @@ def test_iteration_result_logic_pinned() -> None:
     f = ns["_iteration_result"]
     asyncio.run(f("a", {"ok": True})); asyncio.run(f("b", {"ok": False, "degraded": True, "reason": "thin"}))
     asyncio.run(f("c", {"status": "failed", "error": "redis"}, ok_key="status")); asyncio.run(f("d", {"status": "ok"}, ok_key="status"))
-    asyncio.run(f("e", None))
-    assert calls == [("ok", "a"), ("refused", "b", "thin"), ("error", "c", "redis"), ("ok", "d"), ("ok", "e")], calls
+    asyncio.run(f("e", None)); asyncio.run(f("g", {"status": "nothing_to_flush"}, ok_key="status"))
+    asyncio.run(f("h", {"status": "unconfigured"}, ok_key="status"))
+    assert calls == [("ok", "a"), ("refused", "b", "thin"), ("error", "c", "redis"), ("ok", "d"), ("ok", "e"), ("ok", "g"), ("ok", "h")], calls

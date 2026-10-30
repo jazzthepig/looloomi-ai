@@ -2745,7 +2745,9 @@ async def _iteration_result(name: str, res: dict | None, ok_key: str = "ok") -> 
     `_regime_fitness_loop` 四个月 ok=True rows=0(S-202 修了函数,这里照旧记 ok),cis_regime_fitness 一直 0 行没人看见。"""
     r = res if isinstance(res, dict) else {}
     if ok_key == "status" or ok_key not in r:
-        good = r.get("status") in (None, "ok", "skipped", "nothing_to_do")
+        # 「没事可做」是正常(nothing_to_flush / skipped / 没配就不跑);failed / error / refused / unavailable / degraded 不是
+        st = str(r.get("status") or "ok").lower()
+        good = st not in ("failed", "error", "refused", "rejected", "unavailable", "degraded", "generated_uncached", "no_data")
     else:
         good = bool(r.get(ok_key))
     if good:
