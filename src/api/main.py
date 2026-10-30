@@ -30,7 +30,8 @@ import os, sys, json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from fastapi import FastAPI, Request, Header, Response
+from fastapi import FastAPI, Request, Header, Response, HTTPException
+from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -2297,6 +2298,65 @@ async def _exec_quality_loop():
             await _record_loop_attempt("_exec_quality_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                        writer="src.api.main._exec_quality_loop")
         await _asyncio.sleep(3600)
+
+
+async def _mcap_deepen_loop():
+    """S-700 数据补齐(`src/data/market/mcap_deepen.py`):asset_mcap_daily 往前补到 2018-12 + 接上 ① 历史上的死币(EOS / LUNA / BSV …)。
+    每币一次 CoinGecko 请求、间隔 2.5 秒;每轮最多 12 分钟;做过的按版本记在 loop_attempt(detail.done)。全做完只是空转。
+    判活:`select detail->'done', detail->'remaining' from loop_attempt where loop_name = '_mcap_deepen_loop' order by at desc limit 1`。"""
+    await _asyncio.sleep(_boot_delay(800))
+    while True:
+        r: dict = {}
+        try:
+            from src.data.market.mcap_deepen import run_once as _md_run
+            r = await _md_run()
+            print(f"[MCAP-DEEPEN] {str(r)[:300]}")
+            await _beat("_mcap_deepen_loop", ok=bool(r.get("ok")), detail={k: r.get(k) for k in ("v", "remaining", "already_done", "n_jobs", "elapsed_s")},
+                        error=None if r.get("ok") else "某个名字写入失败")
+            if r.get("done") or not r.get("ok"):
+                await _record_loop_attempt("_mcap_deepen_loop", "ok" if r.get("ok") else "error", detail=r,
+                                           writer="src.api.main._mcap_deepen_loop")
+        except Exception as _e:
+            print(f"[MCAP-DEEPEN] ⚠️  pass FAILED: {_e}")
+            await _beat("_mcap_deepen_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_mcap_deepen_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._mcap_deepen_loop")
+            r = {}
+        await _asyncio.sleep(300 if (r or {}).get("remaining") else 6 * 3600)
+
+
+async def _core_pit_loop():
+    """S-700:按时点的 ① 回放臂 `cap_pit24`(`src/data/signals/core_pit.py`)→ core_variants_daily。库函数算,每天整条重算
+    (数据补齐在跑,成员会变);前向行由 forward_lock 冻结。每 6 小时一轮,描述表(逐年对幸存者 ① 与 BTC)写进 loop_attempt.detail。
+    判活:`select min(d), max(d), count(*) from core_variants_daily where arm = 'cap_pit24'`。"""
+    await _asyncio.sleep(_boot_delay(840))
+    while True:
+        try:
+            from src.data.signals.core_pit import run_once as _cp_run
+            r = await _cp_run()
+            print(f"[CORE-PIT] {str(r)[:300]}")
+            await _beat("_core_pit_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")),
+                        detail={k: r.get(k) for k in ("written", "reason", "lock")}, error=None if r.get("ok") else str(r.get("reason"))[:200])
+            await _record_loop_attempt("_core_pit_loop", "refused" if r.get("refused") else ("ok" if r.get("ok") else "error"),
+                                       reason=str(r.get("reason") or "")[:400] or None, detail=r, writer="src.api.main._core_pit_loop")
+        except Exception as _e:
+            print(f"[CORE-PIT] ⚠️  pass FAILED: {_e}")
+            await _beat("_core_pit_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_core_pit_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._core_pit_loop")
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_core_pit_loop():
+    _asyncio.create_task(_core_pit_loop())
+    print("[CORE-PIT] ✅ S-700 point-in-time core replay arm scheduled (6h)")
+
+
+@app.on_event("startup")
+async def _start_mcap_deepen_loop():
+    _asyncio.create_task(_mcap_deepen_loop())
+    print("[MCAP-DEEPEN] ✅ S-700 asset_mcap_daily deepening scheduled (one-shot, checkpointed)")
 
 
 @app.on_event("startup")
@@ -4633,10 +4693,7 @@ async def r77_forward_episodes(x_internal_token: str = Header(None)):
     # 「只在错误路径上炸」:_INTERNAL_TOKEN 不存在 → HTTPException 不存在 →
     # os 被遮蔽。四次的共同点是**静态检查一次都抓不到**,
     # 而每一次都是 TestClient 打一个真请求抓到的。
-    import os as _os
-    _tok = _os.environ.get("INTERNAL_TOKEN", "")
-    if not _tok or not x_internal_token or x_internal_token != _tok:
-        return JSONResponse(status_code=401, content={"detail": "Invalid token"})
+    require_internal_token(x_internal_token)
     import os
     import httpx
     import pandas as pd
@@ -4919,8 +4976,11 @@ async def data_freshness(x_internal_token: str = Header(None, alias="X-Internal-
     # Public by design (external probe), so the token only ADDS detail — it
     # never gates the verdict. A probe that starts 401-ing is a probe that
     # gets deleted, and then nothing watches the pipelines at all.
-    _expected_tok = os.environ.get("INTERNAL_TOKEN")
-    _tok_ok = bool(_expected_tok) and x_internal_token == _expected_tok
+    try:
+        require_internal_token(x_internal_token)
+        _tok_ok = True
+    except HTTPException:
+        _tok_ok = False
 
     from src.api.store import supabase_ohlcv_daily_freshness
 
@@ -5271,10 +5331,7 @@ async def prediction_track_record(x_internal_token: str = Header(None)):
     # 「只在错误路径上炸」:_INTERNAL_TOKEN 不存在 → HTTPException 不存在 →
     # os 被遮蔽。四次的共同点是**静态检查一次都抓不到**,
     # 而每一次都是 TestClient 打一个真请求抓到的。
-    import os as _os
-    _tok = _os.environ.get("INTERNAL_TOKEN", "")
-    if not _tok or not x_internal_token or x_internal_token != _tok:
-        return JSONResponse(status_code=401, content={"detail": "Invalid token"})
+    require_internal_token(x_internal_token)
     from src.data.signals.prediction_resolver import source_track_record
     return await source_track_record()
 
@@ -5633,9 +5690,7 @@ async def loop_health():
 @app.post("/internal/notify/test")
 async def notify_test(payload: dict = None, x_internal_token: str = Header(None)):
     """Send a test Telegram alert. INTERNAL_TOKEN guarded. Confirms env wiring."""
-    _tok = os.environ.get("INTERNAL_TOKEN", "")
-    if not _tok or x_internal_token != _tok:
-        return JSONResponse(status_code=401, content={"detail": "Invalid token"})
+    require_internal_token(x_internal_token)
     from src.api.notify import notify_telegram, telegram_configured
     msg = (payload or {}).get("text") or "✅ CometCloud alerts wired — Telegram is live."
     ok = await notify_telegram(msg)
@@ -5662,9 +5717,7 @@ async def beta_core_probe(x_internal_token: str = Header(None)):
     caught in seconds instead of after two days of flat curve.
 
     Token-guarded: it is diagnostic, not investor-facing, and it names internals."""
-    _tok = os.environ.get("INTERNAL_TOKEN", "")
-    if not _tok or x_internal_token != _tok:
-        return JSONResponse(status_code=401, content={"detail": "Invalid token"})
+    require_internal_token(x_internal_token)
     try:
         from src.data.signals.beta_core_paper import (
             _current_regime, _exposure_cap, _regime_history)
@@ -5714,9 +5767,7 @@ async def loops_envelopes(x_internal_token: str = Header(None)):
 
     Token-guarded:envelope 含 Mac-side 错误信息,不是公开面。
     """
-    _tok = os.environ.get("INTERNAL_TOKEN", "")
-    if not _tok or x_internal_token != _tok:
-        return JSONResponse(status_code=401, content={"detail": "Invalid token"})
+    require_internal_token(x_internal_token)
     try:
         from src.api.loops_envelopes import build_report, to_dict
         report = build_report()
