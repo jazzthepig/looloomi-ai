@@ -44,9 +44,9 @@ DRIFT_BAND = 0.05
 RULE = ("t25_live_v1:Jazz 10-29(起始 600 USDC;权重 = forward_books.FLEX_X1V_ARMS['T25'];XAUT / SPYX / USDC+USDY;"
         "R-v2 名义 ≤ 净值 30%、单票风险不变;21 交易日或偏离 > 5pp 再平衡)")
 
-#: 10-30:黄金 / 股票腿接进东京执行器(`exec_host/legs.py`),先空跑;Jazz 把主机切到 EXECUTOR_T25_MODE=live 之后改 True。
-LEGS_LIVE = False
-LEGS_STAGE = "执行器已接、空跑中(主机 EXECUTOR_T25_MODE=dry_run)" if not LEGS_LIVE else "真跑中"
+#: 10-30 15:44 UTC:Jazz 切 EXECUTOR_T25_MODE=live,两条腿当场成交(SPYX 0.23 @ 762.23、XAUT0 0.03 @ 3907.5,sleeve t25_legs_live)。
+LEGS_LIVE = True
+LEGS_STAGE = "真跑中(东京执行器,10-30 15:44 UTC 建仓)" if LEGS_LIVE else "执行器已接、空跑中(主机 EXECUTOR_T25_MODE=dry_run)"
 #: 记账名(= HL 现货代币名)↔ 组合层的腿
 LEG_SYMBOLS = {"gold": "XAUT0", "equity": "SPYX"}
 

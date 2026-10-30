@@ -18,7 +18,8 @@ def test_rows_and_plan_fields_are_one_function():
     rows = {r["sleeve"]: r for r in pl.t25_rows("2026-10-30")}
     assert set(rows) == {"crypto_x1v", "equity", "gold", "cash", "rv2"}
     assert rows["crypto_x1v"]["target_usd"] == 180.0 and rows["gold"]["target_usd"] == 120.0
-    assert "XAUT" in rows["gold"]["instrument"] and not rows["gold"]["executable"], "没建的腿照实写"
+    assert "XAUT" in rows["gold"]["instrument"]
+    assert rows["gold"]["executable"] is pl.LEGS_LIVE and rows["equity"]["executable"] is pl.LEGS_LIVE, "腿是否在跑照实写"
     assert rows["rv2"]["kind"] == "gross_cap" and rows["rv2"]["target_w"] == 0.30
     f = pl.plan_fields("2026-10-30")
     assert f["x1v_nav_budget_usd"] == 180.0 and f["rv2_gross_cap_frac"] == 0.30
