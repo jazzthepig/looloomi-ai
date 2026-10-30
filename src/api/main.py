@@ -346,7 +346,15 @@ async def _regime_fitness_loop():
                 dry_run=False,
             )
             print(f"[REGIME_FITNESS] daily — ok={res.get('ok')} rows={res.get('rows')}")
-            await _iteration_ok("_regime_fitness_loop")   # S-564 / T-061
+            # 10-30:S-202 把函数的 ok=True/rows=0 改成了 degraded,但这里照旧记 ok —— 同一个谎搬了个家。
+            # 实测:cis_regime_fitness 0 行、IC 乘数从未通电;90 天窗口里独立交易日 18 < 20。记真话,并把原因带进 loop_attempt。
+            if res.get("ok"):
+                await _iteration_ok("_regime_fitness_loop")   # S-564 / T-061
+            else:
+                await _record_loop_attempt("_regime_fitness_loop", "refused" if res.get("degraded") else "error",
+                                           reason=str(res.get("reason") or res.get("consequence") or "")[:400] or None,
+                                           detail={k: res.get(k) for k in ("rows", "window_days", "reason", "consequence")},
+                                           writer="src.api.main._regime_fitness_loop")
         except Exception as _e:
             print(f"[REGIME_FITNESS] ⚠️  daily run failed: {_e}")
             await _iteration_error("_regime_fitness_loop", _e)   # S-564 / T-061
@@ -2738,6 +2746,24 @@ async def _iteration_ok(name: str, refused: bool = False) -> None:
     await _record_loop_attempt(name, "refused" if refused else "ok", writer=f"src.api.main.{name}")
 
 
+async def _iteration_result(name: str, res: dict | None, ok_key: str = "ok") -> None:
+    """10-30:循环「跑了」≠「做成了」。函数回了 ok=False / status=failed 的,记 refused / error 并带原因,不记 ok ——
+    `_regime_fitness_loop` 四个月 ok=True rows=0(S-202 修了函数,这里照旧记 ok),cis_regime_fitness 一直 0 行没人看见。"""
+    r = res if isinstance(res, dict) else {}
+    if ok_key == "status" or ok_key not in r:
+        good = r.get("status") in (None, "ok", "skipped", "nothing_to_do")
+    else:
+        good = bool(r.get(ok_key))
+    if good:
+        await _iteration_ok(name)
+        return
+    status = str(r.get("status") or "")
+    await _record_loop_attempt(name, "refused" if (r.get("degraded") or r.get("refused") or status == "refused") else "error",
+                               reason=str(r.get("reason") or r.get("why") or r.get("error") or r.get("consequence") or status)[:400] or None,
+                               detail={k: r.get(k) for k in ("rows", "n", "status", "reason", "why", "consequence", "window_days") if k in r},
+                               writer=f"src.api.main.{name}")
+
+
 async def _iteration_error(name: str, e: BaseException) -> None:
     await _record_loop_attempt(name, "error", reason=f"{type(e).__name__}: {str(e)[:300]}",
                                writer=f"src.api.main.{name}")
@@ -3415,7 +3441,7 @@ async def _metering_flush_loop():
                 print(f"[METERING] ⚠️  flush failed: {res}")
             elif res.get("status") == "ok":
                 print(f"[METERING] flushed {res.get('n')} key-days for {res.get('date')}")
-            await _iteration_ok("_metering_flush_loop")   # S-564 / T-061
+            await _iteration_result("_metering_flush_loop", res, ok_key="status")   # S-564 / T-061;10-30 记真话
         except Exception as _e:
             print(f"[METERING] ⚠️  loop error: {_e}")
             await _iteration_error("_metering_flush_loop", _e)   # S-564 / T-061
@@ -4025,7 +4051,7 @@ async def _daily_snapshot_loop():
             res = await snapshot_full_universe_to_supabase()
             print(f"[SNAPSHOT] daily — ok={res.get('ok')} rows={res.get('rows')} "
                   f"T1={res.get('t1')} T2={res.get('t2')}")
-            await _iteration_ok("_daily_snapshot_loop")   # S-564 / T-061
+            await _iteration_result("_daily_snapshot_loop", res)   # S-564 / T-061;10-30 记真话
         except Exception as _e:
             print(f"[SNAPSHOT] ⚠️  daily run failed: {_e}")
             await _iteration_error("_daily_snapshot_loop", _e)   # S-564 / T-061
@@ -4093,7 +4119,7 @@ async def _trending_loop():
             from scripts.trending_collector import collect_trending
             res = await collect_trending()
             print(f"[TRENDING] daily — ok={res.get('ok')} rows={res.get('rows')}")
-            await _iteration_ok("_trending_loop")   # S-564 / T-061
+            await _iteration_result("_trending_loop", res)   # S-564 / T-061;10-30 记真话
         except Exception as _e:
             print(f"[TRENDING] ⚠️  daily run failed: {_e}")
             await _iteration_error("_trending_loop", _e)   # S-564 / T-061
