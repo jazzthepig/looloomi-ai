@@ -31,11 +31,15 @@ from src.data.venues.registry import (
 
 # ── The collision that started this ───────────────────────────────────────────
 
-def test_hype_never_maps_to_binance_spot():
+def test_hype_never_maps_to_hyperlane_on_binance_spot():
     """HYPERUSDT on Binance spot is Hyperlane ($0.0558), not Hyperliquid
-    ($52.32). This mapping cost us a +256% run. It must stay verified-absent."""
-    assert SYMBOL_MAP["HYPE"]["binance_spot"] == NOT_LISTED
-    assert venue_symbol("HYPE", "binance_spot") is None
+    ($52.32). This mapping cost us a +256% run. Since the 2026-10-30 review the
+    real HYPE spot market exists (HYPEUSDT, 92.32 vs native 92.28) and is mapped;
+    the thing that must never happen is the template collision."""
+    assert SYMBOL_MAP["HYPE"]["binance_spot"] == "HYPEUSDT"
+    assert venue_symbol("HYPE", "binance_spot") != "HYPERUSDT"
+    assert venue_symbol("MKR", "binance_spot") is None, "MKR verified dead on 2026-10-30; SKY carries the asset"
+    assert venue_symbol("SKY", "hyperliquid") == "SKY"
 
 
 def test_hype_has_real_perp_venues():

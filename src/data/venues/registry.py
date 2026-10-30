@@ -25,7 +25,13 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 # Registry review cadence — see docs/UNIVERSE_DECISION_HYPE.md §4.
-REVIEWED_AT = "2026-08-01"
+# Review log (every mapped symbol checked against the venue's live instrument list; NOT_LISTED rows re-checked):
+#   2026-08-01  first registry (HYPE collision, MKR redenomination).
+#   2026-10-30  Binance spot now lists the real HYPE (HYPEUSDT 92.32 vs Hyperliquid mid 92.28; HYPERUSDT is still
+#               Hyperlane) -> mapped. MKR is dead on every venue (Binance spot BREAK, fapi SETTLING, Bybit gone,
+#               Hyperliquid isDelisted) -> NOT_LISTED everywhere, row kept as the record. SKY added (all four venues).
+#               Every other mapped symbol: TRADING on its venue.
+REVIEWED_AT = "2026-10-30"
 REVIEW_CADENCE_DAYS = 90
 
 # Sentinel: asset is deliberately known NOT to trade on this venue.
@@ -141,11 +147,14 @@ SYMBOL_MAP: dict[str, dict[str, str]] = {
         "bybit_perp": "APTUSDT", "hyperliquid": "APT",
     },
     # ── HYPE: the collision case. ─────────────────────────────────────────────
-    # Binance SPOT has no HYPE market. HYPERUSDT on spot is Hyperlane
-    # ($0.0558 on 2026-08-01) — mapping HYPE there caused the 937x error and
-    # buried the asset at grade D through a +256% run. Verified absent.
+    # On 2026-08-01 Binance SPOT had no HYPE market; HYPERUSDT on spot is
+    # Hyperlane ($0.0558) — mapping HYPE there caused the 937x error and
+    # buried the asset at grade D through a +256% run.
+    # 2026-10-30 review: Binance spot now lists HYPEUSDT and it IS Hyperliquid's
+    # HYPE (92.32 vs native mid 92.28). HYPERUSDT remains Hyperlane and must
+    # never be used for this asset (tests pin that, not the absence).
     "HYPE": {
-        "binance_spot": NOT_LISTED,
+        "binance_spot": "HYPEUSDT",     # verified 2026-10-30 against the native mid
         "binance_perp": "HYPEUSDT",     # fapi DOES list the real HYPE perp
         "bybit_perp": "HYPEUSDT",
         "hyperliquid": "HYPE",          # native venue — 72% of open interest
@@ -208,11 +217,20 @@ SYMBOL_MAP: dict[str, dict[str, str]] = {
     # MKR -> SKY is a product decision (see docs/UNIVERSE_DECISION_HYPE.md
     # Appendix A for the intake template; FTM->Sonic is the precedent, already
     # excluded under inclusion-standard criterion 5).
+    # 2026-10-30 review: dead on every venue (Binance spot MKRUSDT status BREAK,
+    # fapi MKRUSDT SETTLING, Bybit linear MKRUSDT gone, Hyperliquid isDelisted).
+    # The universe migrated to SKY (src/data/cis/migrations.py); the row stays
+    # as the record of the redenomination, every venue verified absent.
     "MKR": {
-        "binance_spot": "MKRUSDT",
+        "binance_spot": NOT_LISTED,
         "binance_perp": NOT_LISTED,
-        "bybit_perp": "MKRUSDT",
-        "hyperliquid": "MKR",
+        "bybit_perp": NOT_LISTED,
+        "hyperliquid": NOT_LISTED,
+    },
+    # SKY (the MKR successor, 1 MKR = 24,000 SKY): all four venues on 2026-10-30.
+    "SKY": {
+        "binance_perp": "SKYUSDT", "binance_spot": "SKYUSDT",
+        "bybit_perp": "SKYUSDT", "hyperliquid": "SKY",
     },
 }
 
