@@ -1,7 +1,7 @@
 {
   "id": "T-214",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-10-30",
   "title": "P3 前置(只读):XAUT 与 SPYX 两条腿,一个香港居民今天能走通的执行路径 —— 场所、KYC、钱包 / 链、费用、出金",
   "source": "Jazz 10-29 拍板:T25 起始 600 USDC,黄金 = XAUT,股票 = SPYX(T-210 / T-213 方向);组合层目标表 portfolio_targets_daily 已在记,两条腿 executable = false、额度($120 / $180)以 USDC 留在 HL。T-210 §3 的三个香港缺口仍开(SFC 持牌 VA 平台名单、Ondo 香港门槛、各所准入)。P3 = 第二个执行器(链上钱包),要先知道走哪条路。",
@@ -22,5 +22,6 @@
     "check": "只读:不注册、不下单、不碰私钥、不连钱包、不写库。每条腿给 2–3 条候选路径(例:CEX 现货 / 链上 DEX + 自托管钱包 / 发行方直购),每条写:① 场所与它在香港的监管身份(SFC 持牌 VA 平台名单原文 + 抓取时间;没在名单上就写没在);② 香港居民能否开户、KYC 要什么(条款原文 + 链接 + 抓取时间,读不到写读不到);③ 链与钱包:XAUT 在哪些链上有官方合约(合约地址 + 出处),SPYX 在 Solana 之外有没有;**能不能一个钱包 / 一条链装下两条腿**;④ $120 / $180 量级的全部成本:交易费、点差、链上 gas、出入金费(实测或条款原文);⑤ 出金:卖成 USDC 回到 HL 的路径与费用。**不推荐措辞以外的建议**;最后一节写「哪条路径今天就能走、缺哪一步」,每条带证据出处。",
     "expect": "报告 docs/research/t214_p3_paths.md + 引用 JSON docs/research/t214_cites.json(每条:url、抓取时间、原文片段);卡片 notes:每条腿的候选清单与「今天能走 / 缺什么」。"
   },
-  "prior_value": "T25 的一半额度在等第二个执行器;选错路径(香港居民开不了户、两条链两个钱包)要返工。"
+  "prior_value": "T25 的一半额度在等第二个执行器;选错路径(香港居民开不了户、两条链两个钱包)要返工。",
+  "notes": "交付:docs/research/t214_p3_paths.md(正文 10 节)+ docs/research/t214_cites.json(119 页,每条 url/抓取时间/原文片段)+ docs/research/t214_venues.json(场所/价差/池子汇总)+ docs/research/t214_verify.json(复核轮 42 条断言,PASS 42 / FAIL 0 / READ_FAIL 0,2026-10-30T04:15Z)。只读:未注册、未下单、未碰私钥、未连钱包、未写库。\n\n黄金腿(XAUT,$120)候选:①Hyperliquid 现货 XAUT0/USDC(不在 SFC 名单;条款读不到;token index 297,合约 0xf4d9235269a96aadafc9adae454a0618ebe37949;taker 0.070%/maker 0.040%,价差 0.0100%,24h $400,666;gas 0、出金 0;合计约 $0.096)②海外 CEX 现货 Kraken/Binance/OKX/Bybit(全部不在 SFC 名单;Kraken XAUT/USD ordermin 0.0012≈$4.79;价差 0.010–0.015%;Binance minQty 0.0001;费率与提现网络读不到)③链上 DEX+自托管钱包(Uniswap V3 ETH 0.3% 池 $7.07M;HyperEVM 0.05% 池;gas 实测 ETH 0.6276/ARB 0.0201/HyperEVM 0.1694 gwei;发行方 KYC 读不到)。今天能走:②③ 技术上今天可走;缺:香港居民开户资格条款原文、各所提现网络清单(拿到的 XAUT 是 XAU₮ 还是 XAUt0 无证据)、各所提现费。\n\n股票腿(SPYX,$180)候选:①Hyperliquid 现货 SPYX/USDC(不在 SFC 名单;token index 846,合约 0xe7e553cd128f0011777323a0b44a7b96ea1cb540,fullName Wrapped SP500 xStock;midPx 767.12,24h $134,064;合计约 $0.185;缺口只有 l2book 盘口档位读不到)②Kraken xStocks SPYX/USD(不在 SFC 名单;FAQ 原文 1.0% 买入加价 = $1.80;最小 $1;可自托管提现;盘口价差 0.0126%)③Binance bStocks SPYB(不在 SFC 名单;公告原文只在 ADGM 发行、其他辖区无公开发售、仅 permitted jurisdictions 的合格用户可二级市场交易;盘口 0.004%,24h $1.10M;SPYB 与 Backed 的 SPYX 不是同一标的)④链上 DEX(Solana SpYx/USDC 池 $2.10M;HyperEVM USDC/wSPYx 0.05% 池 $143,340)。今天能走:②③ 技术上今天可走;缺:香港是否属 permitted jurisdiction、xStocks 走哪条链/提现网络。\n\n一链一钱包:成立。HyperEVM 一条链装下两条腿且两条腿都有 USDC 直池(XAUt0 0xf4d9235…/wSPYX 0xe7e553cd…),Solana 亦成立但黄金腿缺 USDC 直池;Ethereum 与 Arbitrum 不成立(股票腿那侧没池子)。合约出处:只有 XAU₮ 以太坊合约 0x68749665FF8D2d112Fa859AA293F07A622782F38 有一手出处(Tether 集成页原文),其余为 CoinGecko 记录。\n\n复核与更正:初稿有两条「读数警告」(midPx 差 14,000 倍、SPYX 深度为 0)是抓取脚本自身配对错误——t214_cites_gap.py:189 用 zip(universe, ctxs) 按位置配对,而 universe 347 条、ctxs 1186 条长度与顺序都不同。正确按 coin 字段配对后,@182 XAUT0/USDC midPx 3990.25、@703 SPYX/USDC midPx 767.12 / dayNtlVlm 134,063.71,与 CoinGecko 的 3990.20 / 132,829 一致。两条警告已在报告 §10.1 撤下,脚本已修并留注释。报告主结论不变:卡点在「谁有权让香港居民开户」与「提出来是哪个合约」,不在技术格;成本量级(0.09%–0.73%)不是决策变量。\n\n读不到的(§7 逐条列明,未猜):各所提现网络清单、香港居民在 Kraken/Binance/OKX/Bybit/HL 的开户资格条款原文、SFC 持牌方(Bullish/HashKey 等,api.hashkey.com 与 api.bullish.com 在本环境 DNS 被挡)是否挂这两条腿、各所提现费与现货费率、xStocks 发行/赎回费数值、XAUt0 与 XAU₮ 是否同源、wSPYX 与 SPYX 是否同一权利凭证、Ondo 香港门槛(不在本卡范围)。"
 }

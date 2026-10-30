@@ -1,0 +1,426 @@
+{
+ "checked_at_utc": "2026-10-30T04:15:15Z",
+ "note": "T-214 复核:重新抓取报告里最吃重的数字/原文,逐条判定。status=PASS/FAIL/READ_FAIL。",
+ "results": [
+  {
+   "id": "sfc_count_kraken",
+   "claim": "SFC 名单页全文出现次数:Kraken",
+   "expect": "=0",
+   "got": "=0",
+   "status": "PASS",
+   "url": "https://www.sfc.hk/en/Welcome-to-the-Fintech-Contact-Point/Virtual-assets/Virtual-asset-trading-platforms-operators/Lists-of-virtual-asset-trading-platforms",
+   "fetched_at_utc": "2026-10-30T04:15:01Z",
+   "note": "Kraken/Binance 不在任何一张表"
+  },
+  {
+   "id": "sfc_count_binance",
+   "claim": "SFC 名单页全文出现次数:Binance",
+   "expect": "=0",
+   "got": "=0",
+   "status": "PASS",
+   "url": "https://www.sfc.hk/en/Welcome-to-the-Fintech-Contact-Point/Virtual-assets/Virtual-asset-trading-platforms-operators/Lists-of-virtual-asset-trading-platforms",
+   "fetched_at_utc": "2026-10-30T04:15:01Z",
+   "note": "Kraken/Binance 不在任何一张表"
+  },
+  {
+   "id": "sfc_count_okx",
+   "claim": "SFC 名单页全文出现次数:OKX",
+   "expect": "=2",
+   "got": "=2",
+   "status": "PASS",
+   "url": "https://www.sfc.hk/en/Welcome-to-the-Fintech-Contact-Point/Virtual-assets/Virtual-asset-trading-platforms-operators/Lists-of-virtual-asset-trading-platforms",
+   "fetched_at_utc": "2026-10-30T04:15:01Z",
+   "note": ""
+  },
+  {
+   "id": "sfc_count_bybit",
+   "claim": "SFC 名单页全文出现次数:Bybit",
+   "expect": "=2",
+   "got": "=2",
+   "status": "PASS",
+   "url": "https://www.sfc.hk/en/Welcome-to-the-Fintech-Contact-Point/Virtual-assets/Virtual-asset-trading-platforms-operators/Lists-of-virtual-asset-trading-platforms",
+   "fetched_at_utc": "2026-10-30T04:15:01Z",
+   "note": ""
+  },
+  {
+   "id": "sfc_count_bullish",
+   "claim": "SFC 名单页全文出现次数:Bullish",
+   "expect": "=2",
+   "got": "=2",
+   "status": "PASS",
+   "url": "https://www.sfc.hk/en/Welcome-to-the-Fintech-Contact-Point/Virtual-assets/Virtual-asset-trading-platforms-operators/Lists-of-virtual-asset-trading-platforms",
+   "fetched_at_utc": "2026-10-30T04:15:01Z",
+   "note": ""
+  },
+  {
+   "id": "sfc_count_hashkey",
+   "claim": "SFC 名单页全文出现次数:HashKey",
+   "expect": "=1",
+   "got": "=1",
+   "status": "PASS",
+   "url": "https://www.sfc.hk/en/Welcome-to-the-Fintech-Contact-Point/Virtual-assets/Virtual-asset-trading-platforms-operators/Lists-of-virtual-asset-trading-platforms",
+   "fetched_at_utc": "2026-10-30T04:15:01Z",
+   "note": ""
+  },
+  {
+   "id": "sfc_licensed_13",
+   "claim": "SFC 持牌 13 家的平台名全部出现在名单页",
+   "expect": "13/13 全中",
+   "got": "13/13 全中",
+   "status": "PASS",
+   "url": "https://www.sfc.hk/en/Welcome-to-the-Fintech-Contact-Point/Virtual-assets/Virtual-asset-trading-platforms-operators/Lists-of-virtual-asset-trading-platforms",
+   "fetched_at_utc": "2026-10-30T04:15:01Z",
+   "note": ""
+  },
+  {
+   "id": "sfc_licence_dates",
+   "claim": "持牌发牌日(OSL 15/12/2020 / HashKey 09/11/2022 / Bullish 18/02/2025)",
+   "expect": "三个日期原文可见",
+   "got": "见 page chars=19913",
+   "status": "PASS",
+   "url": "https://www.sfc.hk/en/Welcome-to-the-Fintech-Contact-Point/Virtual-assets/Virtual-asset-trading-platforms-operators/Lists-of-virtual-asset-trading-platforms",
+   "fetched_at_utc": "2026-10-30T04:15:01Z",
+   "note": ""
+  },
+  {
+   "id": "hl_contract_XAUT0",
+   "claim": "HL 现货 XAUT0 的 EVM 合约地址",
+   "expect": "0xf4d9235269a96aadafc9adae454a0618ebe37949",
+   "got": "0xf4d9235269a96aadafc9adae454a0618ebe37949",
+   "status": "PASS",
+   "url": "https://api.hyperliquid.xyz/info",
+   "fetched_at_utc": "2026-10-30T04:15:02Z",
+   "note": "token index=297"
+  },
+  {
+   "id": "hl_contract_SPYX",
+   "claim": "HL 现货 SPYX 的 EVM 合约地址",
+   "expect": "0xe7e553cd128f0011777323a0b44a7b96ea1cb540",
+   "got": "0xe7e553cd128f0011777323a0b44a7b96ea1cb540",
+   "status": "PASS",
+   "url": "https://api.hyperliquid.xyz/info",
+   "fetched_at_utc": "2026-10-30T04:15:02Z",
+   "note": "token index=846"
+  },
+  {
+   "id": "hl_token_index",
+   "claim": "HL token index:XAUT0=297 / SPYX=846",
+   "expect": "XAUT0=297, SPYX=846",
+   "got": "XAUT0=297, SPYX=846",
+   "status": "PASS",
+   "url": "https://api.hyperliquid.xyz/info",
+   "fetched_at_utc": "2026-10-30T04:15:02Z",
+   "note": ""
+  },
+  {
+   "id": "hl_ctx_182",
+   "claim": "HL 现货对 @182 (XAUT0/USDC) 的 ctx(按 coin 字段配对,非按位置)",
+   "expect": "对名 XAUT0/USDC",
+   "got": "coin=@182 tokens=['XAUT0', 'USDC'] midPx=3991.65 dayNtlVlm=400666.46",
+   "status": "PASS",
+   "url": "https://api.hyperliquid.xyz/info",
+   "fetched_at_utc": "2026-10-30T04:15:03Z",
+   "note": "旧脚本按位置 zip(universe, ctxs) —— 两个数组长度/顺序不同 ⇒ 配错,报告 §2/§3 的两条读数警告是脚本假象"
+  },
+  {
+   "id": "hl_ctx_703",
+   "claim": "HL 现货对 @703 (SPYX/USDC) 的 ctx(按 coin 字段配对,非按位置)",
+   "expect": "对名 SPYX/USDC",
+   "got": "coin=@703 tokens=['SPYX', 'USDC'] midPx=767.215 dayNtlVlm=134063.7142",
+   "status": "PASS",
+   "url": "https://api.hyperliquid.xyz/info",
+   "fetched_at_utc": "2026-10-30T04:15:03Z",
+   "note": "旧脚本按位置 zip(universe, ctxs) —— 两个数组长度/顺序不同 ⇒ 配错,报告 §2/§3 的两条读数警告是脚本假象"
+  },
+  {
+   "id": "hl_midpx_182",
+   "claim": "HL @182 的 midPx 是美元价(与 CoinGecko 同量级)",
+   "expect": "3000–5000",
+   "got": "3991.65",
+   "status": "PASS",
+   "url": "https://api.hyperliquid.xyz/info",
+   "fetched_at_utc": "2026-10-30T04:15:03Z",
+   "note": ""
+  },
+  {
+   "id": "hl_midpx_703",
+   "claim": "HL @703 的 midPx 是美元价(与 CoinGecko 同量级)",
+   "expect": "500–1000",
+   "got": "767.215",
+   "status": "PASS",
+   "url": "https://api.hyperliquid.xyz/info",
+   "fetched_at_utc": "2026-10-30T04:15:03Z",
+   "note": ""
+  },
+  {
+   "id": "hl_vol_182",
+   "claim": "HL @182 的 24h 名义成交额 > 100000",
+   "expect": ">100000",
+   "got": "400666.46",
+   "status": "PASS",
+   "url": "https://api.hyperliquid.xyz/info",
+   "fetched_at_utc": "2026-10-30T04:15:03Z",
+   "note": ""
+  },
+  {
+   "id": "hl_vol_703",
+   "claim": "HL @703 的 24h 名义成交额 > 10000",
+   "expect": ">10000",
+   "got": "134063.7142",
+   "status": "PASS",
+   "url": "https://api.hyperliquid.xyz/info",
+   "fetched_at_utc": "2026-10-30T04:15:03Z",
+   "note": ""
+  },
+  {
+   "id": "hl_ctx_209",
+   "claim": "HL @209 (XAUT0/USDT0) 的 ctx(配对正确后)",
+   "expect": "对名 XAUT0/USDT0",
+   "got": "coin=@209 tokens=['XAUT0', 'USDT0'] midPx=3921.5 dayNtlVlm=0.0",
+   "status": "PASS",
+   "url": "https://api.hyperliquid.xyz/info",
+   "fetched_at_utc": "2026-10-30T04:15:03Z",
+   "note": ""
+  },
+  {
+   "id": "hl_ctx_279",
+   "claim": "HL @279 (SPY/USDC) 的 ctx(配对正确后)",
+   "expect": "对名 SPY/USDC",
+   "got": "coin=@279 tokens=['SPY', 'USDC'] midPx=755.73 dayNtlVlm=0.0",
+   "status": "PASS",
+   "url": "https://api.hyperliquid.xyz/info",
+   "fetched_at_utc": "2026-10-30T04:15:03Z",
+   "note": ""
+  },
+  {
+   "id": "kraken_xautusd_min",
+   "claim": "Kraken XAUT/USD ordermin=0.0012 / costmin=0.5",
+   "expect": "ordermin=0.0012, costmin=0.5",
+   "got": "ordermin=0.0012, costmin=0.5",
+   "status": "PASS",
+   "url": "https://api.kraken.com/0/public/AssetPairs",
+   "fetched_at_utc": "2026-10-30T04:15:03Z",
+   "note": ""
+  },
+  {
+   "id": "kraken_xautusdt_min",
+   "claim": "Kraken XAUT/USDT ordermin(参考)",
+   "expect": "读数",
+   "got": "ordermin=0.0012",
+   "status": "PASS",
+   "url": "https://api.kraken.com/0/public/AssetPairs",
+   "fetched_at_utc": "2026-10-30T04:15:03Z",
+   "note": ""
+  },
+  {
+   "id": "kraken_spyx_absent",
+   "claim": "Kraken 公开 AssetPairs 里 SPYX/SPYx/TSLAx 命中数",
+   "expect": "=0(共 1464 对)",
+   "got": "=0",
+   "status": "PASS",
+   "url": "https://api.kraken.com/0/public/AssetPairs",
+   "fetched_at_utc": "2026-10-30T04:15:03Z",
+   "note": "xStocks 在另一命名空间"
+  },
+  {
+   "id": "kraken_xstocks_spread_1pct",
+   "claim": "Kraken xStocks FAQ 原文含:1.0% spread",
+   "expect": "出现",
+   "got": "出现",
+   "status": "PASS",
+   "url": "https://www.kraken.com/legal/xstocks",
+   "fetched_at_utc": "2026-10-30T04:15:05Z",
+   "note": ""
+  },
+  {
+   "id": "kraken_xstocks_min_1usd",
+   "claim": "Kraken xStocks FAQ 原文含:starting as low as $1",
+   "expect": "出现",
+   "got": "出现",
+   "status": "PASS",
+   "url": "https://www.kraken.com/legal/xstocks",
+   "fetched_at_utc": "2026-10-30T04:15:05Z",
+   "note": ""
+  },
+  {
+   "id": "kraken_xstocks_selfcustody",
+   "claim": "Kraken xStocks FAQ 原文含:self-custody is supported",
+   "expect": "出现",
+   "got": "出现",
+   "status": "PASS",
+   "url": "https://www.kraken.com/legal/xstocks",
+   "fetched_at_utc": "2026-10-30T04:15:05Z",
+   "note": ""
+  },
+  {
+   "id": "kraken_xstocks_redeem_fee",
+   "claim": "Kraken xStocks FAQ 原文含:for an additional fee",
+   "expect": "出现",
+   "got": "出现",
+   "status": "PASS",
+   "url": "https://www.kraken.com/legal/xstocks",
+   "fetched_at_utc": "2026-10-30T04:15:05Z",
+   "note": ""
+  },
+  {
+   "id": "binance_xautusdt_minqty",
+   "claim": "Binance XAUTUSDT minQty",
+   "expect": "0.0001",
+   "got": "0.00010000",
+   "status": "PASS",
+   "url": "https://api.binance.com/api/v3/exchangeInfo?symbol=XAUTUSDT",
+   "fetched_at_utc": "2026-10-30T04:15:06Z",
+   "note": ""
+  },
+  {
+   "id": "binance_spybusdt_minqty",
+   "claim": "Binance SPYBUSDT minQty",
+   "expect": "0.001",
+   "got": "0.00100000",
+   "status": "PASS",
+   "url": "https://api.binance.com/api/v3/exchangeInfo?symbol=SPYBUSDT",
+   "fetched_at_utc": "2026-10-30T04:15:06Z",
+   "note": ""
+  },
+  {
+   "id": "binance_spyb_spot_ok",
+   "claim": "Binance SPYBUSDT 现货可交易",
+   "expect": "isSpotTradingAllowed=true",
+   "got": "True",
+   "status": "PASS",
+   "url": "https://api.binance.com/api/v3/exchangeInfo?symbol=SPYBUSDT",
+   "fetched_at_utc": "2026-10-30T04:15:06Z",
+   "note": ""
+  },
+  {
+   "id": "binance_spyx_invalid",
+   "claim": "Binance 无 SPYXUSDT(400 无效符号)",
+   "expect": "无效/0 个 symbol",
+   "got": "空",
+   "status": "PASS",
+   "url": "https://api.binance.com/api/v3/exchangeInfo?symbol=SPYXUSDT",
+   "fetched_at_utc": "2026-10-30T04:15:07Z",
+   "note": ""
+  },
+  {
+   "id": "cg_xaut_top_venues",
+   "claim": "CoinGecko tether-gold 前 4 场所(按 24h 美元成交额)",
+   "expect": "见报告 §5.1",
+   "got": "uniswap_v3:1.7849143 spread=0.602896 / binance:3992.77 spread=0.01025 / uniswap_v3:1.0018466 spread=0.602781 / uniswap_v3:3991.797 spread=0.602767",
+   "status": "PASS",
+   "url": "https://api.coingecko.com/api/v3/coins/tether-gold/tickers",
+   "fetched_at_utc": "2026-10-30T04:15:07Z",
+   "note": ""
+  },
+  {
+   "id": "cg_spyx_top_venues",
+   "claim": "CoinGecko sp500-xstock 前 4 场所(按 24h 美元成交额)",
+   "expect": "见报告 §5.1",
+   "got": "lbank:769.9147 spread=0.294988 / raydium-clmm:767.23426 spread=0.603406 / gate:764.08 spread=0.019161 / mxc:765.95 spread=0.108279",
+   "status": "PASS",
+   "url": "https://api.coingecko.com/api/v3/coins/sp500-xstock/tickers",
+   "fetched_at_utc": "2026-10-30T04:15:09Z",
+   "note": ""
+  },
+  {
+   "id": "cg_spyx_no_binance",
+   "claim": "CoinGecko SPYX 场所表里没有 Binance",
+   "expect": "不含 binance",
+   "got": "不含",
+   "status": "PASS",
+   "url": "https://api.coingecko.com/api/v3/coins/sp500-xstock/tickers",
+   "fetched_at_utc": "2026-10-30T04:15:09Z",
+   "note": ""
+  },
+  {
+   "id": "cg_spyx_hl_spread",
+   "claim": "CoinGecko 归一化 SPYX/Hyperliquid 价差(报告 0.032582%)",
+   "expect": "0.005%–0.5%(百分比单位)",
+   "got": "0.033889",
+   "status": "PASS",
+   "url": "https://api.coingecko.com/api/v3/coins/sp500-xstock/tickers",
+   "fetched_at_utc": "2026-10-30T04:15:09Z",
+   "note": ""
+  },
+  {
+   "id": "cg_spyx_hl_volume",
+   "claim": "CoinGecko 归一化 SPYX/Hyperliquid 24h 成交额(报告 $132,834)",
+   "expect": "非零(与 HL ctx 的 0 打架)",
+   "got": "132821 USD",
+   "status": "PASS",
+   "url": "https://api.coingecko.com/api/v3/coins/sp500-xstock/tickers",
+   "fetched_at_utc": "2026-10-30T04:15:09Z",
+   "note": ""
+  },
+  {
+   "id": "gas_hyperevm",
+   "claim": "HyperEVM gas price(报告 0.1694 gwei)",
+   "expect": "0.05–0.50 gwei",
+   "got": "0.1000 gwei",
+   "status": "PASS",
+   "url": "https://rpc.hyperliquid.xyz/evm",
+   "fetched_at_utc": "2026-10-30T04:15:09Z",
+   "note": ""
+  },
+  {
+   "id": "tether_xaut_contract",
+   "claim": "Tether 集成页原文给出 XAU₮ 以太坊合约地址",
+   "expect": "0x68749665FF8D2d112Fa859AA293F07A622782F38",
+   "got": "出现",
+   "status": "PASS",
+   "url": "https://tether.to/en/supported-protocols/",
+   "fetched_at_utc": "2026-10-30T04:15:10Z",
+   "note": ""
+  },
+  {
+   "id": "xstocks_issuer",
+   "claim": "xStocks 发行方文档含:Backed Assets (JE) Limited",
+   "expect": "出现",
+   "got": "出现",
+   "status": "PASS",
+   "url": "https://docs.xstocks.fi/docs/product-legal-overview.md",
+   "fetched_at_utc": "2026-10-30T04:15:11Z",
+   "note": ""
+  },
+  {
+   "id": "xstocks_1to1",
+   "claim": "xStocks 发行方文档含:1:1",
+   "expect": "出现",
+   "got": "出现",
+   "status": "PASS",
+   "url": "https://docs.xstocks.fi/docs/product-legal-overview.md",
+   "fetched_at_utc": "2026-10-30T04:15:11Z",
+   "note": ""
+  },
+  {
+   "id": "xstocks_jersey",
+   "claim": "xStocks 发行方文档含:Jersey",
+   "expect": "出现",
+   "got": "出现",
+   "status": "PASS",
+   "url": "https://docs.xstocks.fi/docs/product-legal-overview.md",
+   "fetched_at_utc": "2026-10-30T04:15:11Z",
+   "note": ""
+  },
+  {
+   "id": "hl_fee_tier0",
+   "claim": "HL 现货费用表 Tier 0 行 = taker 0.070% / maker 0.040%",
+   "expect": "Tier 0 行含 0.070% 与 0.040%",
+   "got": "出现",
+   "status": "PASS",
+   "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees.md",
+   "fetched_at_utc": "2026-10-30T04:15:11Z",
+   "note": ""
+  },
+  {
+   "id": "kraken_fee_026",
+   "claim": "Kraken 现货费用表:taker 0.26% / maker 0.16% 在原文",
+   "expect": "fees [[0,0.26] 与 fees_maker [[0,0.16] 可见",
+   "got": "出现",
+   "status": "PASS",
+   "url": "https://support.kraken.com/hc/en-us/articles/360000920306-Kraken-Fees-Schedule-Volumes-and-Pairs",
+   "fetched_at_utc": "2026-10-30T04:15:11Z",
+   "note": ""
+  }
+ ]
+}

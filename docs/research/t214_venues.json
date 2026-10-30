@@ -1,0 +1,5198 @@
+{
+ "generated_at_utc": "2026-10-30T03:55:47.045141+00:00",
+ "venues": {
+  "tether-gold": {
+   "url": "https://api.coingecko.com/api/v3/coins/tether-gold/tickers",
+   "fetched_at_utc": "2026-10-30T03:55:47Z",
+   "rows": [
+    {
+     "venue": "Uniswap V3 (Ethereum)",
+     "identifier": "uniswap_v3",
+     "base": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "target": "0XC02AAA39B223FE8D0A0E5C4F27EAD9083C756CC2",
+     "last": 1.7849143459,
+     "volume": 5702.659666,
+     "spread_pct": 0.602902,
+     "converted_volume_usd": 22735776,
+     "trade_url": "https://app.uniswap.org/explore/tokens/ethereum/0x68749665ff8d2d112fa859aa293f07a622782f38",
+     "last_traded_at": "2026-10-30T03:50:38+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Binance",
+     "identifier": "binance",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3992.36,
+     "volume": 4980.3875,
+     "spread_pct": 0.01025,
+     "converted_volume_usd": 19851992,
+     "trade_url": "https://www.binance.com/en/trade/XAUT_USDT?ref=37754157",
+     "last_traded_at": "2026-10-30T03:53:46+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (Ethereum)",
+     "identifier": "uniswap_v3",
+     "base": "0X45804880DE22913DAFE09F4980848ECE6ECBAF78",
+     "target": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "last": 1.0018413133,
+     "volume": 4068.7845447582,
+     "spread_pct": 0.602781,
+     "converted_volume_usd": 16251594,
+     "trade_url": "https://app.uniswap.org/explore/tokens/ethereum/0x45804880de22913dafe09f4980848ece6ecbaf78",
+     "last_traded_at": "2026-10-30T03:53:51+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (Ethereum)",
+     "identifier": "uniswap_v3",
+     "base": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "target": "0XDAC17F958D2EE523A2206206994597C13D831EC7",
+     "last": 3993.8485799674,
+     "volume": 3933.475338,
+     "spread_pct": 0.602767,
+     "converted_volume_usd": 15684811,
+     "trade_url": "https://app.uniswap.org/explore/tokens/ethereum/0x68749665ff8d2d112fa859aa293f07a622782f38",
+     "last_traded_at": "2026-10-30T03:53:51+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Hotcoin",
+     "identifier": "hotcoin_global",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3992.37,
+     "volume": 3737.0769,
+     "spread_pct": 0.011002,
+     "converted_volume_usd": 14896151,
+     "trade_url": "https://www.hotcoin.com/en_US/trade/exchange/?tradeCode=xaut_usdt",
+     "last_traded_at": "2026-10-30T03:53:50+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Bybit",
+     "identifier": "bybit_spot",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3996.14,
+     "volume": 3556.22981,
+     "spread_pct": 0.01025,
+     "converted_volume_usd": 14188673,
+     "trade_url": "https://www.bybit.com/trade/spot/XAUT/USDT",
+     "last_traded_at": "2026-10-30T03:53:48+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "MEXC",
+     "identifier": "mxc",
+     "base": "GOLD(XAUT)",
+     "target": "USDT",
+     "last": 3992.63,
+     "volume": 2949.55956,
+     "spread_pct": 0.01025,
+     "converted_volume_usd": 11757839,
+     "trade_url": "https://www.mexc.com/exchange/GOLD(XAUT)_USDT",
+     "last_traded_at": "2026-10-30T03:53:48+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "OKX",
+     "identifier": "okex",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3993.2,
+     "volume": 2583.465152,
+     "spread_pct": 0.012504,
+     "converted_volume_usd": 10299946,
+     "trade_url": "https://www.okx.com/trade-spot/xaut-usdt",
+     "last_traded_at": "2026-10-30T03:53:03+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Gate",
+     "identifier": "gate",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3993.0,
+     "volume": 2461.4048,
+     "spread_pct": 0.012504,
+     "converted_volume_usd": 9812815,
+     "trade_url": "https://www.gate.com/trade/XAUT_USDT",
+     "last_traded_at": "2026-10-30T03:53:47+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "BitDelta",
+     "identifier": "bitdelta",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 4016.27,
+     "volume": 2344.102,
+     "spread_pct": 0.350475,
+     "converted_volume_usd": 9399628,
+     "trade_url": "https://bitdelta.com/en/trade/XAUT_USDT",
+     "last_traded_at": "2026-10-30T03:15:47+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "XT.COM",
+     "identifier": "xt",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3994.1,
+     "volume": 2190.1681,
+     "spread_pct": 0.012504,
+     "converted_volume_usd": 8733889,
+     "trade_url": "https://www.xt.com/en/trade/xaut_usdt",
+     "last_traded_at": "2026-10-30T03:53:53+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Ourbit",
+     "identifier": "ourbit",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3992.4,
+     "volume": 1667.5284,
+     "spread_pct": 0.012505,
+     "converted_volume_usd": 6646891,
+     "trade_url": "https://www.ourbit.com/exchange/XAUT_USDT",
+     "last_traded_at": "2026-10-30T03:53:45+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Bitget",
+     "identifier": "bitget",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3993.01,
+     "volume": 1572.2752,
+     "spread_pct": 0.01025,
+     "converted_volume_usd": 6268162,
+     "trade_url": "https://www.bitget.com/spot/XAUTUSDT",
+     "last_traded_at": "2026-10-30T03:53:08+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V4 (Ethereum)",
+     "identifier": "uniswap-v4-ethereum",
+     "base": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "target": "0XDAC17F958D2EE523A2206206994597C13D831EC7",
+     "last": 3997.9746836964,
+     "volume": 1481.366904,
+     "spread_pct": 0.602834,
+     "converted_volume_usd": 5913082,
+     "trade_url": "https://app.uniswap.org/#/swap?inputCurrency=0x68749665ff8d2d112fa859aa293f07a622782f38&outputCurrency=0xdac17f958d2ee523a2206206994597c13d831ec7",
+     "last_traded_at": "2026-10-30T03:44:05+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "LBank",
+     "identifier": "lbank",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3992.6,
+     "volume": 1396.2407,
+     "spread_pct": 0.012522,
+     "converted_volume_usd": 5565797,
+     "trade_url": "https://www.lbank.com/trade/xaut_usdt",
+     "last_traded_at": "2026-10-30T03:53:52+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "OrangeX",
+     "identifier": "orangex",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3992.46,
+     "volume": 1140.4453,
+     "spread_pct": 0.01025,
+     "converted_volume_usd": 4545967,
+     "trade_url": "https://www.orangex.com/spot/XAUT-USDT-SPOT",
+     "last_traded_at": "2026-10-30T03:53:02+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Biconomy.com",
+     "identifier": "biconomy",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3992.36,
+     "volume": 1134.44975,
+     "spread_pct": 0.088634,
+     "converted_volume_usd": 4521955,
+     "trade_url": "https://www.biconomy.com/exchange/XAUT_USDT",
+     "last_traded_at": "2026-10-30T03:53:45+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Zoomex",
+     "identifier": "zoomex",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3995.52,
+     "volume": 1068.88097,
+     "spread_pct": 0.01025,
+     "converted_volume_usd": 4263968,
+     "trade_url": "https://www.zoomex.com/trade/spot/XAUT/USDT",
+     "last_traded_at": "2026-10-30T03:53:50+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Tapbit",
+     "identifier": "tapbit",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3993.1,
+     "volume": 1015.243,
+     "spread_pct": null,
+     "converted_volume_usd": 4047543,
+     "trade_url": "https://www.tapbit.com/spot/exchange/XAUt_USDT",
+     "last_traded_at": "2026-10-30T03:53:50+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "MEXC",
+     "identifier": "mxc",
+     "base": "GOLD(XAUT)",
+     "target": "USD1",
+     "last": 3995.1,
+     "volume": 987.48767,
+     "spread_pct": 0.110052,
+     "converted_volume_usd": 3937600,
+     "trade_url": "https://www.mexc.com/exchange/GOLD(XAUT)_USD1",
+     "last_traded_at": "2026-10-30T03:53:48+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Deepcoin",
+     "identifier": "deepcoin",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3993.1,
+     "volume": 956.75,
+     "spread_pct": 0.012504,
+     "converted_volume_usd": 3814345,
+     "trade_url": "https://www.deepcoin.com/en/Spot?currentId=XAUT",
+     "last_traded_at": "2026-10-30T03:53:46+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Toobit",
+     "identifier": "toobit",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3993.2,
+     "volume": 949.030782,
+     "spread_pct": 0.012504,
+     "converted_volume_usd": 3783665,
+     "trade_url": "https://www.toobit.com/en-US/spot/XAUT_USDT",
+     "last_traded_at": "2026-10-30T03:53:51+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Aero Slipstream (Ethereum)",
+     "identifier": "aero-slipstream-ethereum",
+     "base": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "target": "0XDAC17F958D2EE523A2206206994597C13D831EC7",
+     "last": 3993.3792038816,
+     "volume": 886.409583,
+     "spread_pct": 0.603298,
+     "converted_volume_usd": 3534160,
+     "trade_url": null,
+     "last_traded_at": "2026-10-30T03:50:42+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Aivora Exchange",
+     "identifier": "aivora-exchange",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3992.37,
+     "volume": 885.0429,
+     "spread_pct": 0.010501,
+     "converted_volume_usd": 3527820,
+     "trade_url": "https://www.aivora.com/en-us/spot/XAUT_USDT",
+     "last_traded_at": "2026-10-30T03:53:52+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (Ethereum)",
+     "identifier": "uniswap_v3",
+     "base": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "target": "0XDAC17F958D2EE523A2206206994597C13D831EC7",
+     "last": 3997.4665088347,
+     "volume": 860.387305,
+     "spread_pct": 0.603066,
+     "converted_volume_usd": 3433919,
+     "trade_url": "https://app.uniswap.org/explore/tokens/ethereum/0x68749665ff8d2d112fa859aa293f07a622782f38",
+     "last_traded_at": "2026-10-30T02:38:06+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "WhiteBIT",
+     "identifier": "whitebit",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3993.47,
+     "volume": 821.26067,
+     "spread_pct": 0.01025,
+     "converted_volume_usd": 3274483,
+     "trade_url": "https://whitebit.com/trade/XAUT_USDT",
+     "last_traded_at": "2026-10-30T03:53:45+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Bitfinex",
+     "identifier": "bitfinex",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3993.5,
+     "volume": 793.3746035,
+     "spread_pct": 0.025038,
+     "converted_volume_usd": 3163321,
+     "trade_url": "https://trading.bitfinex.com/t/XAUT:UST?type=exchange",
+     "last_traded_at": "2026-10-30T03:49:06+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Hibt",
+     "identifier": "hibt",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3992.3,
+     "volume": 747.2500200000002,
+     "spread_pct": 0.010019,
+     "converted_volume_usd": 2978519,
+     "trade_url": "https://hibt.com/trade/XAUT-USDT",
+     "last_traded_at": "2026-10-30T03:53:08+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Phemex",
+     "identifier": "phemex",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3995.5,
+     "volume": 699.1734,
+     "spread_pct": 0.160144,
+     "converted_volume_usd": 2789121,
+     "trade_url": "https://phemex.com/trade/XAUT-USDT",
+     "last_traded_at": "2026-10-30T03:53:46+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Hotcoin",
+     "identifier": "hotcoin_global",
+     "base": "XAUT",
+     "target": "USDC",
+     "last": 3985.45,
+     "volume": 658.4305,
+     "spread_pct": 0.106828,
+     "converted_volume_usd": 2619984,
+     "trade_url": "https://www.hotcoin.com/en_US/trade/exchange/?tradeCode=xaut_usdc",
+     "last_traded_at": "2026-10-30T03:53:50+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V4 (Ethereum)",
+     "identifier": "uniswap-v4-ethereum",
+     "base": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "target": "0X0000000000000000000000000000000000000000",
+     "last": 1.7850466043,
+     "volume": 574.373304,
+     "spread_pct": 0.603038,
+     "converted_volume_usd": 2289775,
+     "trade_url": "https://app.uniswap.org/#/swap?inputCurrency=0x68749665ff8d2d112fa859aa293f07a622782f38&outputCurrency=0x0000000000000000000000000000000000000000",
+     "last_traded_at": "2026-10-30T03:50:44+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "WhiteBIT",
+     "identifier": "whitebit",
+     "base": "XAUT",
+     "target": "USDC",
+     "last": 3985.23,
+     "volume": 455.64707,
+     "spread_pct": 0.069743,
+     "converted_volume_usd": 1812981,
+     "trade_url": "https://whitebit.com/trade/XAUT_USDC",
+     "last_traded_at": "2026-10-30T03:53:45+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "HTX",
+     "identifier": "huobi",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3992.55,
+     "volume": 399.322776356475,
+     "spread_pct": 0.126406,
+     "converted_volume_usd": 1591790,
+     "trade_url": "https://www.huobi.com/en-us/exchange/xaut_usdt",
+     "last_traded_at": "2026-10-30T03:53:47+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V4 (Ethereum)",
+     "identifier": "uniswap-v4-ethereum",
+     "base": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "target": "0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48",
+     "last": 3985.7664240605,
+     "volume": 379.585857,
+     "spread_pct": 0.603143,
+     "converted_volume_usd": 1510543,
+     "trade_url": "https://app.uniswap.org/#/swap?inputCurrency=0x68749665ff8d2d112fa859aa293f07a622782f38&outputCurrency=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+     "last_traded_at": "2026-10-30T03:22:35+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "DigiFinex",
+     "identifier": "digifinex",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3993.64,
+     "volume": 378.3936,
+     "spread_pct": 0.162146,
+     "converted_volume_usd": 1508773,
+     "trade_url": "https://www.digifinex.com/en-ww/trade/usdt/xaut",
+     "last_traded_at": "2026-10-30T03:53:08+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "BloFin",
+     "identifier": "blofin_spot",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3995.21,
+     "volume": 363.722,
+     "spread_pct": 0.153681,
+     "converted_volume_usd": 1450843,
+     "trade_url": "https://blofin.com/spot/XAUT-USDT",
+     "last_traded_at": "2026-10-30T03:53:50+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "KuCoin",
+     "identifier": "kucoin",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3993.04,
+     "volume": 343.2336,
+     "spread_pct": 0.01025,
+     "converted_volume_usd": 1368374,
+     "trade_url": "https://www.kucoin.com/trade/XAUT-USDT",
+     "last_traded_at": "2026-10-30T03:53:52+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "BingX",
+     "identifier": "bingx",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3997.24,
+     "volume": 311.307918,
+     "spread_pct": 0.010007,
+     "converted_volume_usd": 1242401,
+     "trade_url": "https://bingx.com/en/spot/XAUTUSDT",
+     "last_traded_at": "2026-10-30T03:53:09+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "WhiteBIT",
+     "identifier": "whitebit",
+     "base": "XAUT",
+     "target": "WBT",
+     "last": 53.397,
+     "volume": 301.899,
+     "spread_pct": 0.013105,
+     "converted_volume_usd": 1200474,
+     "trade_url": "https://whitebit.com/trade/XAUT_WBT",
+     "last_traded_at": "2026-10-30T03:52:12+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "bitcastle",
+     "identifier": "bitcastle",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3992.36,
+     "volume": 297.9925,
+     "spread_pct": 0.019267,
+     "converted_volume_usd": 1187808,
+     "trade_url": "https://bitcastle.io/en/exchange/XAUT_USDT",
+     "last_traded_at": "2026-10-30T03:53:49+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Bitfinex",
+     "identifier": "bitfinex",
+     "base": "XAUT",
+     "target": "USD",
+     "last": 3995.6,
+     "volume": 269.75189081,
+     "spread_pct": 0.100075,
+     "converted_volume_usd": 1079531,
+     "trade_url": "https://trading.bitfinex.com/t/XAUT:USD?type=exchange",
+     "last_traded_at": "2026-10-30T03:49:06+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "BitKan",
+     "identifier": "bitkan",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3993.2,
+     "volume": 234.332686,
+     "spread_pct": 0.012504,
+     "converted_volume_usd": 934254,
+     "trade_url": "https://bitkan.com/trade/XAUT-USDT",
+     "last_traded_at": "2026-10-30T03:53:05+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Binance",
+     "identifier": "binance",
+     "base": "XAUT",
+     "target": "TRY",
+     "last": 198678.0,
+     "volume": 221.0597,
+     "spread_pct": 0.010503,
+     "converted_volume_usd": 880951,
+     "trade_url": "https://www.binance.com/en/trade/XAUT_TRY?ref=37754157",
+     "last_traded_at": "2026-10-30T03:53:03+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Kraken",
+     "identifier": "kraken",
+     "base": "XAUT",
+     "target": "USD",
+     "last": 3984.4,
+     "volume": 199.01889199,
+     "spread_pct": 0.01251,
+     "converted_volume_usd": 794229,
+     "trade_url": "https://pro.kraken.com/app/trade/XAUT-USD",
+     "last_traded_at": "2026-10-30T03:53:48+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "CoinW",
+     "identifier": "coinw",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3990.98,
+     "volume": 183.8909,
+     "spread_pct": 0.102623,
+     "converted_volume_usd": 732742,
+     "trade_url": "https://www.coinw.com/spot/xautusdt",
+     "last_traded_at": "2026-10-30T03:53:52+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Bitunix",
+     "identifier": "bitunix",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3993.2,
+     "volume": 180.026523,
+     "spread_pct": 0.012504,
+     "converted_volume_usd": 717743,
+     "trade_url": "https://www.bitunix.com/spot-trade/XAUTUSDT",
+     "last_traded_at": "2026-10-30T03:53:52+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Binance",
+     "identifier": "binance",
+     "base": "XAUT",
+     "target": "USDC",
+     "last": 3985.48,
+     "volume": 170.6309,
+     "spread_pct": 0.015016,
+     "converted_volume_usd": 678968,
+     "trade_url": "https://www.binance.com/en/trade/XAUT_USDC?ref=37754157",
+     "last_traded_at": "2026-10-30T03:50:40+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (Ethereum)",
+     "identifier": "uniswap_v3",
+     "base": "0X45804880DE22913DAFE09F4980848ECE6ECBAF78",
+     "target": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "last": 1.0018354335,
+     "volume": 157.9763425348,
+     "spread_pct": 0.602787,
+     "converted_volume_usd": 630988,
+     "trade_url": "https://app.uniswap.org/explore/tokens/ethereum/0x45804880de22913dafe09f4980848ece6ecbaf78",
+     "last_traded_at": "2026-10-30T03:45:11+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Tapbit",
+     "identifier": "tapbit",
+     "base": "XAUT",
+     "target": "USDC",
+     "last": 3993.1,
+     "volume": 157.208,
+     "spread_pct": 0.302561,
+     "converted_volume_usd": 626753,
+     "trade_url": "https://www.tapbit.com/spot/exchange/XAUT_USDC",
+     "last_traded_at": "2026-10-30T03:53:50+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Hotcoin",
+     "identifier": "hotcoin_global",
+     "base": "XAUT",
+     "target": "BTC",
+     "last": 0.05161,
+     "volume": 152.9728,
+     "spread_pct": 0.077474,
+     "converted_volume_usd": 616067,
+     "trade_url": "https://www.hotcoin.com/en_US/trade/exchange/?tradeCode=xaut_btc",
+     "last_traded_at": "2026-10-30T03:53:02+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Bitrue",
+     "identifier": "bitrue",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3988.4,
+     "volume": 138.94185,
+     "spread_pct": 0.36289,
+     "converted_volume_usd": 553278,
+     "trade_url": "https://www.bitrue.com/trade/xaut_usdt",
+     "last_traded_at": "2026-10-30T03:53:53+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Bitrue",
+     "identifier": "bitrue",
+     "base": "XAUT",
+     "target": "XRP",
+     "last": 3195.95,
+     "volume": 138.82635,
+     "spread_pct": 0.368086,
+     "converted_volume_usd": 552705,
+     "trade_url": "https://www.bitrue.com/trade/xaut_xrp",
+     "last_traded_at": "2026-10-30T03:53:53+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V4 (Ethereum)",
+     "identifier": "uniswap-v4-ethereum",
+     "base": "0X45804880DE22913DAFE09F4980848ECE6ECBAF78",
+     "target": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "last": 1.0012272036,
+     "volume": 132.5140574216,
+     "spread_pct": 0.602846,
+     "converted_volume_usd": 528965,
+     "trade_url": "https://app.uniswap.org/#/swap?inputCurrency=0x45804880de22913dafe09f4980848ece6ecbaf78&outputCurrency=0x68749665ff8d2d112fa859aa293f07a622782f38",
+     "last_traded_at": "2026-10-29T22:22:36+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "PointPay",
+     "identifier": "pointpay",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3995.38,
+     "volume": 129.61131,
+     "spread_pct": 0.200239,
+     "converted_volume_usd": 517026,
+     "trade_url": "https://exchange.pointpay.io/trade-classic/XAUT_USDT",
+     "last_traded_at": "2026-10-30T03:53:47+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "XBO.com",
+     "identifier": "xbo_com",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3991.4,
+     "volume": 128.8996,
+     "spread_pct": 0.085111,
+     "converted_volume_usd": 513675,
+     "trade_url": "https://www.xbo.com/platform/spot/XAUT-USDT",
+     "last_traded_at": "2026-10-30T03:53:07+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Bitbaby",
+     "identifier": "bitbaby-exchange",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3993.2,
+     "volume": 110.3966,
+     "spread_pct": 0.012504,
+     "converted_volume_usd": 440137,
+     "trade_url": "https://www.bitbaby.com/en-us/spot/XAUT_USDT",
+     "last_traded_at": "2026-10-30T03:53:08+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Fluid (Ethereum)",
+     "identifier": "fluid",
+     "base": "0X45804880DE22913DAFE09F4980848ECE6ECBAF78",
+     "target": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "last": 1.001841334,
+     "volume": 94.4813490365,
+     "spread_pct": 0.602939,
+     "converted_volume_usd": 377379,
+     "trade_url": null,
+     "last_traded_at": "2026-10-30T03:46:45+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V4 (Ethereum)",
+     "identifier": "uniswap-v4-ethereum",
+     "base": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "target": "0X2260FAC5E5542A773AA44FBCFEDF7C193BC2C599",
+     "last": 0.05119148188,
+     "volume": 93.916981,
+     "spread_pct": 0.6035,
+     "converted_volume_usd": 374488,
+     "trade_url": "https://app.uniswap.org/#/swap?inputCurrency=0x68749665ff8d2d112fa859aa293f07a622782f38&outputCurrency=0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+     "last_traded_at": "2026-10-30T03:50:44+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (Ethereum)",
+     "identifier": "uniswap_v3",
+     "base": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "target": "0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48",
+     "last": 3987.5049189449,
+     "volume": 89.658731,
+     "spread_pct": 0.603423,
+     "converted_volume_usd": 356948,
+     "trade_url": "https://app.uniswap.org/explore/tokens/ethereum/0x68749665ff8d2d112fa859aa293f07a622782f38",
+     "last_traded_at": "2026-10-30T03:35:56+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Kraken",
+     "identifier": "kraken",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3996.0,
+     "volume": 86.72136024,
+     "spread_pct": 0.012504,
+     "converted_volume_usd": 345989,
+     "trade_url": "https://pro.kraken.com/app/trade/XAUT-USDT",
+     "last_traded_at": "2026-10-30T01:43:52+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "BloFin",
+     "identifier": "blofin_spot",
+     "base": "XAUT",
+     "target": "USDC",
+     "last": 3985.29,
+     "volume": 86.0228,
+     "spread_pct": 0.019283,
+     "converted_volume_usd": 342283,
+     "trade_url": "https://blofin.com/spot/XAUT-USDC",
+     "last_traded_at": "2026-10-30T03:53:50+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Biconomy.com",
+     "identifier": "biconomy",
+     "base": "XAUT",
+     "target": "USDC",
+     "last": 3985.46,
+     "volume": 85.8648,
+     "spread_pct": 0.085776,
+     "converted_volume_usd": 341668,
+     "trade_url": "https://www.biconomy.com/exchange/XAUT_USDC",
+     "last_traded_at": "2026-10-30T03:53:45+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (Ethereum)",
+     "identifier": "uniswap_v3",
+     "base": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "target": "0X2260FAC5E5542A773AA44FBCFEDF7C193BC2C599",
+     "last": 0.05117759033,
+     "volume": 85.376925,
+     "spread_pct": 0.603218,
+     "converted_volume_usd": 340342,
+     "trade_url": "https://app.uniswap.org/explore/tokens/ethereum/0x68749665ff8d2d112fa859aa293f07a622782f38",
+     "last_traded_at": "2026-10-30T03:50:38+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V4 (Ethereum)",
+     "identifier": "uniswap-v4-ethereum",
+     "base": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "target": "0XDAC17F958D2EE523A2206206994597C13D831EC7",
+     "last": 4007.1572594669,
+     "volume": 83.222235,
+     "spread_pct": 0.603209,
+     "converted_volume_usd": 332956,
+     "trade_url": "https://app.uniswap.org/#/swap?inputCurrency=0x68749665ff8d2d112fa859aa293f07a622782f38&outputCurrency=0xdac17f958d2ee523a2206206994597c13d831ec7",
+     "last_traded_at": "2026-10-30T03:12:00+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Bitfinex",
+     "identifier": "bitfinex",
+     "base": "XAUT",
+     "target": "BTC",
+     "last": 0.051162,
+     "volume": 81.91577973,
+     "spread_pct": 0.136799,
+     "converted_volume_usd": 327035,
+     "trade_url": "https://trading.bitfinex.com/t/XAUT:BTC?type=exchange",
+     "last_traded_at": "2026-10-30T03:48:19+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "MEXC",
+     "identifier": "mxc",
+     "base": "GOLD(XAUT)",
+     "target": "USDC",
+     "last": 3985.8,
+     "volume": 81.58929,
+     "spread_pct": 0.012509,
+     "converted_volume_usd": 324683,
+     "trade_url": "https://www.mexc.com/exchange/GOLD(XAUT)_USDC",
+     "last_traded_at": "2026-10-30T03:53:48+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Bitfinex",
+     "identifier": "bitfinex",
+     "base": "ETH",
+     "target": "XAUT",
+     "last": 0.56269,
+     "volume": 139.12246819,
+     "spread_pct": 0.977778,
+     "converted_volume_usd": 312104,
+     "trade_url": "https://trading.bitfinex.com/t/ETH:XAUT?type=exchange",
+     "last_traded_at": "2026-10-30T03:50:38+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Icrypex",
+     "identifier": "icrypex",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3993.3,
+     "volume": 74.56287448,
+     "spread_pct": 0.032555,
+     "converted_volume_usd": 297280,
+     "trade_url": "https://www.icrypex.com/en/trade/spot/XAUTUSDT",
+     "last_traded_at": "2026-10-30T03:53:51+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "OrangeX",
+     "identifier": "orangex",
+     "base": "XAUT",
+     "target": "BTC",
+     "last": 0.05114,
+     "volume": 74.0264,
+     "spread_pct": 0.01391,
+     "converted_volume_usd": 295411,
+     "trade_url": "https://www.orangex.com/spot/XAUT-BTC-SPOT",
+     "last_traded_at": "2026-10-30T03:53:45+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "CoinUp.io",
+     "identifier": "coinup",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3995.52,
+     "volume": 71.8642,
+     "spread_pct": 8.584995,
+     "converted_volume_usd": 286680,
+     "trade_url": "https://www.coinup.io/en_US/trade/XAUT_USDT",
+     "last_traded_at": "2026-10-30T03:53:50+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "WhiteBIT",
+     "identifier": "whitebit",
+     "base": "XAUT",
+     "target": "BTC",
+     "last": 0.05117,
+     "volume": 68.357,
+     "spread_pct": 0.136986,
+     "converted_volume_usd": 272947,
+     "trade_url": "https://whitebit.com/trade/XAUT_BTC",
+     "last_traded_at": "2026-10-30T03:50:02+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "KCEX",
+     "identifier": "kcex",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3993.16,
+     "volume": 68.004,
+     "spread_pct": 0.01025,
+     "converted_volume_usd": 271121,
+     "trade_url": "https://www.kcex.com/exchange/XAUT_USDT",
+     "last_traded_at": "2026-10-30T03:53:51+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Upbit",
+     "identifier": "upbit",
+     "base": "XAUT",
+     "target": "KRW",
+     "last": 5395000.0,
+     "volume": 60.10889372,
+     "spread_pct": 0.295312,
+     "converted_volume_usd": 242865,
+     "trade_url": "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-XAUT",
+     "last_traded_at": "2026-10-30T03:49:58+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Crypto.com Exchange",
+     "identifier": "crypto_com",
+     "base": "XAUT",
+     "target": "USD",
+     "last": 3984.93,
+     "volume": 60.4361,
+     "spread_pct": 0.045394,
+     "converted_volume_usd": 241216,
+     "trade_url": "https://crypto.com/exchange/trade/spot/XAUT_USD",
+     "last_traded_at": "2026-10-30T03:51:27+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Crypto.com Exchange",
+     "identifier": "crypto_com",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3994.32,
+     "volume": 58.4065,
+     "spread_pct": 0.059078,
+     "converted_volume_usd": 232925,
+     "trade_url": "https://crypto.com/exchange/trade/spot/XAUT_USDT",
+     "last_traded_at": "2026-10-30T03:50:02+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "MEXC",
+     "identifier": "mxc",
+     "base": "GOLD(XAUT)",
+     "target": "EUR",
+     "last": 3530.2,
+     "volume": 57.28889,
+     "spread_pct": 0.028317,
+     "converted_volume_usd": 226642,
+     "trade_url": "https://www.mexc.com/exchange/GOLD(XAUT)_EUR",
+     "last_traded_at": "2026-10-30T03:53:48+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Bitkub",
+     "identifier": "bitkub",
+     "base": "XAUT",
+     "target": "THB",
+     "last": 134869.5,
+     "volume": 56.44347061,
+     "spread_pct": 0.147015,
+     "converted_volume_usd": 226105,
+     "trade_url": "https://www.bitkub.com/th/market/XAUT_THB",
+     "last_traded_at": "2026-10-30T03:49:58+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Supernova (CL)",
+     "identifier": "supernova-cl",
+     "base": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "target": "0XDAC17F958D2EE523A2206206994597C13D831EC7",
+     "last": 4000.9333143318,
+     "volume": 49.342399,
+     "spread_pct": 0.606014,
+     "converted_volume_usd": 197103,
+     "trade_url": "https://supernova.xyz/swap?inputCurrency=0x68749665ff8d2d112fa859aa293f07a622782f38&outputCurrency=0xdac17f958d2ee523a2206206994597c13d831ec7",
+     "last_traded_at": "2026-10-30T03:44:09+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V4 (Ethereum)",
+     "identifier": "uniswap-v4-ethereum",
+     "base": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "target": "0XA0B86991C6218B36C1D19D4A2E9EB0CE3606EB48",
+     "last": 3994.2482824732,
+     "volume": 43.818177,
+     "spread_pct": 0.605733,
+     "converted_volume_usd": 174743,
+     "trade_url": "https://app.uniswap.org/#/swap?inputCurrency=0x68749665ff8d2d112fa859aa293f07a622782f38&outputCurrency=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+     "last_traded_at": "2026-10-30T03:44:05+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Curve (Ethereum)",
+     "identifier": "curve_ethereum",
+     "base": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "target": "0X45804880DE22913DAFE09F4980848ECE6ECBAF78",
+     "last": 0.9983375595,
+     "volume": 40.828718,
+     "spread_pct": 0.603686,
+     "converted_volume_usd": 162811,
+     "trade_url": "https://www.curve.finance/dex/ethereum/swap?from=0x68749665ff8d2d112fa859aa293f07a622782f38&to=0x45804880de22913dafe09f4980848ece6ecbaf78",
+     "last_traded_at": "2026-10-30T03:40:22+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (Ethereum)",
+     "identifier": "uniswap_v3",
+     "base": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "target": "0XC02AAA39B223FE8D0A0E5C4F27EAD9083C756CC2",
+     "last": 1.7861052814,
+     "volume": 39.553863,
+     "spread_pct": 0.608847,
+     "converted_volume_usd": 157696,
+     "trade_url": "https://app.uniswap.org/explore/tokens/ethereum/0x68749665ff8d2d112fa859aa293f07a622782f38",
+     "last_traded_at": "2026-10-30T03:50:38+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "BigONE",
+     "identifier": "bigone",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3999.4,
+     "volume": 37.8877,
+     "spread_pct": 0.995966,
+     "converted_volume_usd": 151288,
+     "trade_url": "https://big.one/trade/XAUt-USDT",
+     "last_traded_at": "2026-10-30T03:53:05+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Foxbit",
+     "identifier": "foxbit",
+     "base": "XAUT",
+     "target": "BRL",
+     "last": 21696.0,
+     "volume": 37.02496515,
+     "spread_pct": 0.507029,
+     "converted_volume_usd": 149379,
+     "trade_url": "https://foxbit.com.br/grafico-bitcoin/",
+     "last_traded_at": "2026-10-30T03:52:14+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "BtcTurk | Kripto",
+     "identifier": "btcturk",
+     "base": "XAUT",
+     "target": "TRY",
+     "last": 198874.0,
+     "volume": 29.75982,
+     "spread_pct": 0.077885,
+     "converted_volume_usd": 118714,
+     "trade_url": "https://pro.btcturk.com/pro/al-sat/XAUT_TRY",
+     "last_traded_at": "2026-10-30T03:24:13+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "CoinUp.io",
+     "identifier": "coinup",
+     "base": "XAUT",
+     "target": "USDC",
+     "last": 3985.43,
+     "volume": 27.9232,
+     "spread_pct": 0.013298,
+     "converted_volume_usd": 111110,
+     "trade_url": "https://www.coinup.io/en_US/trade/XAUT_USDC",
+     "last_traded_at": "2026-10-30T03:53:50+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "CoinTR",
+     "identifier": "cointr",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3992.21,
+     "volume": 26.1463,
+     "spread_pct": 0.21243,
+     "converted_volume_usd": 104216,
+     "trade_url": "https://www.cointr.com/en/spot/XAUTUSDT?type=spot",
+     "last_traded_at": "2026-10-30T03:53:52+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "BTSE",
+     "identifier": "btse",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3993.33348018768,
+     "volume": 25.853523884796573,
+     "spread_pct": 0.013256,
+     "converted_volume_usd": 103078,
+     "trade_url": "https://www.btse.com/en/trading/XAUT-USDT",
+     "last_traded_at": "2026-10-30T03:53:45+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "BtcTurk | Kripto",
+     "identifier": "btcturk",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3993.0,
+     "volume": 24.2751,
+     "spread_pct": 0.065093,
+     "converted_volume_usd": 96777,
+     "trade_url": "https://pro.btcturk.com/pro/al-sat/XAUT_USDT",
+     "last_traded_at": "2026-10-30T03:37:32+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Bithumb",
+     "identifier": "bithumb",
+     "base": "XAUT",
+     "target": "KRW",
+     "last": 5400000.0,
+     "volume": 23.65499232,
+     "spread_pct": 0.166389,
+     "converted_volume_usd": 95664,
+     "trade_url": "https://www.bithumb.com/trade/order/XAUT_KRW",
+     "last_traded_at": "2026-10-30T03:47:33+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "CoinTR",
+     "identifier": "cointr",
+     "base": "XAUT",
+     "target": "TRY",
+     "last": 198841.0,
+     "volume": 22.109,
+     "spread_pct": 0.211689,
+     "converted_volume_usd": 88179,
+     "trade_url": "https://www.cointr.com/en/spot/XAUTTRY?type=spot",
+     "last_traded_at": "2026-10-30T03:53:52+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "OKX",
+     "identifier": "okex",
+     "base": "XAUT",
+     "target": "TRY",
+     "last": 198788.5,
+     "volume": 22.10333355,
+     "spread_pct": 0.101438,
+     "converted_volume_usd": 88134,
+     "trade_url": "https://www.okx.com/trade-spot/xaut-try",
+     "last_traded_at": "2026-10-30T03:10:35+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "O2",
+     "identifier": "o2",
+     "base": "XAUT",
+     "target": "USDC",
+     "last": 3986.48,
+     "volume": 20.242089,
+     "spread_pct": 0.040633,
+     "converted_volume_usd": 80567,
+     "trade_url": "https://trade.o2.app/",
+     "last_traded_at": "2026-10-30T03:53:50+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Hibt",
+     "identifier": "hibt",
+     "base": "XAUT",
+     "target": "BTC",
+     "last": 0.05103,
+     "volume": 20.12250000000003,
+     "spread_pct": 0.234512,
+     "converted_volume_usd": 80129,
+     "trade_url": "https://hibt.com/trade/XAUT-BTC",
+     "last_traded_at": "2026-10-30T03:53:46+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "WhiteBIT",
+     "identifier": "whitebit",
+     "base": "XAUT",
+     "target": "TRY",
+     "last": 199716.39,
+     "volume": 18.5244,
+     "spread_pct": 0.814866,
+     "converted_volume_usd": 74208,
+     "trade_url": "https://whitebit.com/trade/XAUT_TRY",
+     "last_traded_at": "2026-10-30T03:46:48+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "KoinBX",
+     "identifier": "koinbazar",
+     "base": "XAUT",
+     "target": "USDT",
+     "last": 3993.0,
+     "volume": 17.625481250094694,
+     "spread_pct": 0.359838,
+     "converted_volume_usd": 70267,
+     "trade_url": "https://www.koinbazar.com/trade/XAUT-USDT",
+     "last_traded_at": "2026-10-30T03:53:52+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "SAFEbit",
+     "identifier": "bitci",
+     "base": "XAUT",
+     "target": "TRY",
+     "last": 199303.0,
+     "volume": 17.04679,
+     "spread_pct": 0.54821,
+     "converted_volume_usd": 68147,
+     "trade_url": "https://www.safebit.com.tr/en/exchange/advanced/BTC_TRYXAUT_TRY",
+     "last_traded_at": "2026-10-30T03:53:48+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V4 (Ethereum)",
+     "identifier": "uniswap-v4-ethereum",
+     "base": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "target": "0XA3931D71877C0E7A3148CB7EB4463524FEC27FBD",
+     "last": 3576.2310938829,
+     "volume": 14.529738,
+     "spread_pct": 0.60287,
+     "converted_volume_usd": 57875,
+     "trade_url": "https://app.uniswap.org/#/swap?inputCurrency=0x68749665ff8d2d112fa859aa293f07a622782f38&outputCurrency=0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
+     "last_traded_at": "2026-10-30T03:44:05+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "KoinBX",
+     "identifier": "koinbazar",
+     "base": "XAUT",
+     "target": "INR",
+     "last": 404850.27,
+     "volume": 12.281832177991939,
+     "spread_pct": 0.376572,
+     "converted_volume_usd": 52290,
+     "trade_url": "https://www.koinbazar.com/trade/XAUT-INR",
+     "last_traded_at": "2026-10-30T03:53:52+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (Ethereum)",
+     "identifier": "uniswap_v3",
+     "base": "0X45804880DE22913DAFE09F4980848ECE6ECBAF78",
+     "target": "0X68749665FF8D2D112FA859AA293F07A622782F38",
+     "last": 1.002020901,
+     "volume": 12.7858964756,
+     "spread_pct": 0.603853,
+     "converted_volume_usd": 51079,
+     "trade_url": "https://app.uniswap.org/explore/tokens/ethereum/0x45804880de22913dafe09f4980848ece6ecbaf78",
+     "last_traded_at": "2026-10-29T21:12:23+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "bitcastle",
+     "identifier": "bitcastle",
+     "base": "XAUT",
+     "target": "USDC",
+     "last": 4014.2,
+     "volume": 12.5304,
+     "spread_pct": 0.029892,
+     "converted_volume_usd": 50220,
+     "trade_url": "https://bitcastle.io/en/exchange/XAUT_USDC",
+     "last_traded_at": "2026-10-30T03:53:07+00:00",
+     "is_stale": false
+    }
+   ]
+  },
+  "sp500-xstock": {
+   "url": "https://api.coingecko.com/api/v3/coins/sp500-xstock/tickers",
+   "fetched_at_utc": "2026-10-30T03:55:47Z",
+   "rows": [
+    {
+     "venue": "LBank",
+     "identifier": "lbank",
+     "base": "SPYX",
+     "target": "USDT",
+     "last": 769.9861,
+     "volume": 3866.47,
+     "spread_pct": 0.278283,
+     "converted_volume_usd": 2972411,
+     "trade_url": "https://www.lbank.com/trade/spyx_usdt",
+     "last_traded_at": "2026-10-30T03:53:52+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Raydium (CLMM)",
+     "identifier": "raydium-clmm",
+     "base": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "target": "EPJFWDD5AUFQSSQEM2QN1XZYBAPC8G4WEGGKZWYTDT1V",
+     "last": 767.422453157,
+     "volume": 3810.10720869,
+     "spread_pct": 0.603411,
+     "converted_volume_usd": 2919328,
+     "trade_url": "https://raydium.io/swap?inputCurrency=xsocs1tfeyffhfvj8etz528l3cakbdbrqrapnbbdf2w&outputCurrency=epjfwdd5aufqssqem2qn1xzybapc8g4weggkzwytdt1v",
+     "last_traded_at": "2026-10-30T03:53:09+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Gate",
+     "identifier": "gate",
+     "base": "SPYX",
+     "target": "USDT",
+     "last": 764.28,
+     "volume": 1202.015,
+     "spread_pct": 0.015701,
+     "converted_volume_usd": 917220,
+     "trade_url": "https://www.gate.com/trade/SPYX_USDT",
+     "last_traded_at": "2026-10-30T03:53:47+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "MEXC",
+     "identifier": "mxc",
+     "base": "SPYX",
+     "target": "USDT",
+     "last": 765.83,
+     "volume": 811.845,
+     "spread_pct": 0.108279,
+     "converted_volume_usd": 620750,
+     "trade_url": "https://www.mexc.com/exchange/SPYX_USDT",
+     "last_traded_at": "2026-10-30T03:53:48+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Byreal",
+     "identifier": "byreal",
+     "base": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "target": "EPJFWDD5AUFQSSQEM2QN1XZYBAPC8G4WEGGKZWYTDT1V",
+     "last": 767.2200772201,
+     "volume": 567.53571299,
+     "spread_pct": 0.604205,
+     "converted_volume_usd": 434735,
+     "trade_url": null,
+     "last_traded_at": "2026-10-30T03:53:08+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Raydium (CLMM)",
+     "identifier": "raydium-clmm",
+     "base": "6GMAFSYS4GK3FDAO5FZZYSQPPZAWSA4RUJHACPMPUNGX",
+     "target": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "last": 0.0001790366665,
+     "volume": 2303433.92683822,
+     "spread_pct": 0.603068,
+     "converted_volume_usd": 315010,
+     "trade_url": "https://raydium.io/swap?inputCurrency=6gmafsys4gk3fdao5fzzysqppzawsa4rujhacpmpungx&outputCurrency=xsocs1tfeyffhfvj8etz528l3cakbdbrqrapnbbdf2w",
+     "last_traded_at": "2026-10-30T03:50:03+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Raydium (CLMM)",
+     "identifier": "raydium-clmm",
+     "base": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "target": "SO11111111111111111111111111111111111111112",
+     "last": 7.9446181698,
+     "volume": 381.26053891,
+     "spread_pct": 0.604844,
+     "converted_volume_usd": 291225,
+     "trade_url": "https://raydium.io/swap?inputCurrency=xsocs1tfeyffhfvj8etz528l3cakbdbrqrapnbbdf2w&outputCurrency=so11111111111111111111111111111111111111112",
+     "last_traded_at": "2026-10-30T03:53:09+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Raydium (CLMM)",
+     "identifier": "raydium-clmm",
+     "base": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "target": "EPJFWDD5AUFQSSQEM2QN1XZYBAPC8G4WEGGKZWYTDT1V",
+     "last": 767.4252050364,
+     "volume": 292.65520568,
+     "spread_pct": 0.602953,
+     "converted_volume_usd": 224235,
+     "trade_url": "https://raydium.io/swap?inputCurrency=xsocs1tfeyffhfvj8etz528l3cakbdbrqrapnbbdf2w&outputCurrency=epjfwdd5aufqssqem2qn1xzybapc8g4weggkzwytdt1v",
+     "last_traded_at": "2026-10-30T03:52:17+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Hyperliquid",
+     "identifier": "hyperliquid-spot",
+     "base": "SPYX",
+     "target": "USDC",
+     "last": 767.18,
+     "volume": 173.42,
+     "spread_pct": 0.032582,
+     "converted_volume_usd": 132834,
+     "trade_url": "https://app.hyperliquid.xyz/trade/SPYX/USDC",
+     "last_traded_at": "2026-10-30T03:44:09+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Meteora",
+     "identifier": "meteora",
+     "base": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "target": "SO11111111111111111111111111111111111111112",
+     "last": 7.9198355601,
+     "volume": 157.06268148,
+     "spread_pct": 0.610577,
+     "converted_volume_usd": 119972,
+     "trade_url": null,
+     "last_traded_at": "2026-10-30T03:51:23+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Kraken",
+     "identifier": "kraken",
+     "base": "SPYX",
+     "target": "USD",
+     "last": 762.32365,
+     "volume": 149.033408,
+     "spread_pct": 0.012623,
+     "converted_volume_usd": 113792,
+     "trade_url": "https://pro.kraken.com/app/trade/SPYx-USD",
+     "last_traded_at": "2026-10-30T03:51:30+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Pancakeswap V3 (Solana)",
+     "identifier": "pancakeswap-v3-solana",
+     "base": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "target": "EPJFWDD5AUFQSSQEM2QN1XZYBAPC8G4WEGGKZWYTDT1V",
+     "last": 767.26114786,
+     "volume": 144.5204451,
+     "spread_pct": 0.612932,
+     "converted_volume_usd": 110709,
+     "trade_url": "https://pancakeswap.finance/swap?chain=sol&inputCurrency=xsocs1tfeyffhfvj8etz528l3cakbdbrqrapnbbdf2w&outputCurrency=epjfwdd5aufqssqem2qn1xzybapc8g4weggkzwytdt1v",
+     "last_traded_at": "2026-10-30T03:53:47+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Orca",
+     "identifier": "orca",
+     "base": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "target": "EPJFWDD5AUFQSSQEM2QN1XZYBAPC8G4WEGGKZWYTDT1V",
+     "last": 767.4050632911,
+     "volume": 124.41810866,
+     "spread_pct": 0.604257,
+     "converted_volume_usd": 95328,
+     "trade_url": "https://www.orca.so/?tokenIn=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&tokenOut=XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W ",
+     "last_traded_at": "2026-10-30T03:53:03+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "AlphaQ",
+     "identifier": "alphaq",
+     "base": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "target": "EPJFWDD5AUFQSSQEM2QN1XZYBAPC8G4WEGGKZWYTDT1V",
+     "last": 767.2077026367188,
+     "volume": 96.42830297001638,
+     "spread_pct": null,
+     "converted_volume_usd": 73863,
+     "trade_url": "https://stats.alphaq.xyz/",
+     "last_traded_at": "2026-10-30T03:53:52+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Nado (Spot)",
+     "identifier": "nado-spot",
+     "base": "WSPYX",
+     "target": "USDT0",
+     "last": 765.74,
+     "volume": 72.186,
+     "spread_pct": 0.101759,
+     "converted_volume_usd": 55139,
+     "trade_url": "https://app.nado.xyz/spot?market=wSPYx/USDT0",
+     "last_traded_at": "2026-10-30T03:53:50+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "BingX",
+     "identifier": "bingx",
+     "base": "SPYX",
+     "target": "USDT",
+     "last": 764.29,
+     "volume": 70.5975,
+     "spread_pct": 0.020934,
+     "converted_volume_usd": 53871,
+     "trade_url": "https://bingx.com/en/spot/SPYXUSDT",
+     "last_traded_at": "2026-10-30T03:53:09+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Orca",
+     "identifier": "orca",
+     "base": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "target": "SO11111111111111111111111111111111111111112",
+     "last": 7.912092226,
+     "volume": 57.36578124,
+     "spread_pct": 0.616593,
+     "converted_volume_usd": 43819,
+     "trade_url": "https://www.orca.so/?tokenIn=So11111111111111111111111111111111111111112&tokenOut=XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W ",
+     "last_traded_at": "2026-10-30T03:50:41+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Manifest",
+     "identifier": "manifest",
+     "base": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "target": "EPJFWDD5AUFQSSQEM2QN1XZYBAPC8G4WEGGKZWYTDT1V",
+     "last": 767.40409409409,
+     "volume": 33.9855675,
+     "spread_pct": 0.1,
+     "converted_volume_usd": 26039,
+     "trade_url": "https://app.manifest.trade/market/EREEifFsydin66SPy8uyH7HPKJ7YjdfDf8xR2kDfyYRr",
+     "last_traded_at": "2026-10-30T03:53:45+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Orca",
+     "identifier": "orca",
+     "base": "XS8S1UUS1ZVS2P7IWTSG3B6FKHPVMWZ4GYU3GWAMWHZ",
+     "target": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "last": 0.9177387877,
+     "volume": 30.35760344,
+     "spread_pct": 0.617435,
+     "converted_volume_usd": 21281,
+     "trade_url": "https://www.orca.so/?tokenIn=XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W&tokenOut=Xs8S1uUs1zvS2p7iwtsG3b6fkhpvmwz4GYU3gWAmWHZ ",
+     "last_traded_at": "2026-10-30T03:45:58+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Raydium",
+     "identifier": "raydium2",
+     "base": "8ERE7RKKOIGYJTCYQDFWMPNNA8CAKY14XE6RYJJHADKP",
+     "target": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "last": 3.601278618e-07,
+     "volume": 37636452.52483,
+     "spread_pct": 0.611299,
+     "converted_volume_usd": 10353.14,
+     "trade_url": "https://raydium.io/swap/?outputCurrency=8erE7RkkoiGYJtCyQdfwMpnNA8cAkY14Xe6RYjjHAdKP",
+     "last_traded_at": "2026-10-30T03:50:05+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Orca",
+     "identifier": "orca",
+     "base": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "target": "EPJFWDD5AUFQSSQEM2QN1XZYBAPC8G4WEGGKZWYTDT1V",
+     "last": 767.4756814023,
+     "volume": 5.93912544,
+     "spread_pct": 0.64579,
+     "converted_volume_usd": 4550.91,
+     "trade_url": "https://www.orca.so/?tokenIn=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&tokenOut=XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W ",
+     "last_traded_at": "2026-10-30T03:52:10+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Orca",
+     "identifier": "orca",
+     "base": "SPCXXCQXJ6E5DJDVNOVHN8744ZKBHM2BYUDU45BIMGB",
+     "target": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "last": 0.1829750779,
+     "volume": 26.025847,
+     "spread_pct": 0.664509,
+     "converted_volume_usd": 3637.5,
+     "trade_url": "https://www.orca.so/?tokenIn=XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W&tokenOut=SPCXxcqXj6e5dJDVNovHN8744zkbhM2bYudU45BimGb ",
+     "last_traded_at": "2026-10-30T03:49:56+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Raydium (CLMM)",
+     "identifier": "raydium-clmm",
+     "base": "XS8S1UUS1ZVS2P7IWTSG3B6FKHPVMWZ4GYU3GWAMWHZ",
+     "target": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "last": 0.915227782,
+     "volume": 3.03922241,
+     "spread_pct": 0.614344,
+     "converted_volume_usd": 2124.7,
+     "trade_url": "https://raydium.io/swap?inputCurrency=xs8s1uus1zvs2p7iwtsg3b6fkhpvmwz4gyu3gwamwhz&outputCurrency=xsocs1tfeyffhfvj8etz528l3cakbdbrqrapnbbdf2w",
+     "last_traded_at": "2026-10-30T03:28:03+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Raydium (CLMM)",
+     "identifier": "raydium-clmm",
+     "base": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "target": "EPJFWDD5AUFQSSQEM2QN1XZYBAPC8G4WEGGKZWYTDT1V",
+     "last": 765.6994195482,
+     "volume": 1.68733128,
+     "spread_pct": 0.612629,
+     "converted_volume_usd": 1289.94,
+     "trade_url": "https://raydium.io/swap?inputCurrency=xsocs1tfeyffhfvj8etz528l3cakbdbrqrapnbbdf2w&outputCurrency=epjfwdd5aufqssqem2qn1xzybapc8g4weggkzwytdt1v",
+     "last_traded_at": "2026-10-30T03:28:03+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Orca",
+     "identifier": "orca",
+     "base": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "target": "SO11111111111111111111111111111111111111112",
+     "last": 7.907093185,
+     "volume": 1.20903135,
+     "spread_pct": 0.756949,
+     "converted_volume_usd": 923.52,
+     "trade_url": "https://www.orca.so/?tokenIn=So11111111111111111111111111111111111111112&tokenOut=XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W ",
+     "last_traded_at": "2026-10-30T03:52:10+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Byreal",
+     "identifier": "byreal",
+     "base": "XS8S1UUS1ZVS2P7IWTSG3B6FKHPVMWZ4GYU3GWAMWHZ",
+     "target": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "last": 0.9176857224,
+     "volume": 1.16521582,
+     "spread_pct": 0.668003,
+     "converted_volume_usd": 816.78,
+     "trade_url": null,
+     "last_traded_at": "2026-10-30T03:50:02+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Orca",
+     "identifier": "orca",
+     "base": "XS8S1UUS1ZVS2P7IWTSG3B6FKHPVMWZ4GYU3GWAMWHZ",
+     "target": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "last": 0.9152558198,
+     "volume": 0.97915902,
+     "spread_pct": 0.681449,
+     "converted_volume_usd": 684.55,
+     "trade_url": "https://www.orca.so/?tokenIn=XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W&tokenOut=Xs8S1uUs1zvS2p7iwtsG3b6fkhpvmwz4GYU3gWAmWHZ ",
+     "last_traded_at": "2026-10-30T03:29:23+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Meteora",
+     "identifier": "meteora",
+     "base": "XSF9MBKTVB9BSU5KF4NHXPQ5HCBJ2J2UI3ECFGXPRGC",
+     "target": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "last": 0.03123896131,
+     "volume": 16.9188372,
+     "spread_pct": 0.730089,
+     "converted_volume_usd": 403.13,
+     "trade_url": null,
+     "last_traded_at": "2026-10-29T18:22:55+00:00",
+     "is_stale": true
+    },
+    {
+     "venue": "PumpSwap",
+     "identifier": "pumpswap",
+     "base": "GOADAWUX19TGXB3W4YKPZZZ8P5JCSYAXBRPUW7S9PUMP",
+     "target": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "last": 1.617422763e-08,
+     "volume": 24600939.853668,
+     "spread_pct": 0.635042,
+     "converted_volume_usd": 303.94,
+     "trade_url": "https://swap.pump.fun/?input=GoADAwux19tGxb3W4ykPzZz8p5JCSYaxBRpuW7s9pump&output=XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W",
+     "last_traded_at": "2026-10-30T02:08:32+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Meteora",
+     "identifier": "meteora",
+     "base": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "target": "EPJFWDD5AUFQSSQEM2QN1XZYBAPC8G4WEGGKZWYTDT1V",
+     "last": 769.3914759975,
+     "volume": 0.26454536,
+     "spread_pct": 2.24737,
+     "converted_volume_usd": 203.27,
+     "trade_url": null,
+     "last_traded_at": "2026-10-26T14:19:53+00:00",
+     "is_stale": true
+    },
+    {
+     "venue": "Meteora",
+     "identifier": "meteora",
+     "base": "XSBEHLATCF6HDFPFZ5XEMDQW8NFAVCSP5BDUDRLJZJP",
+     "target": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "last": 0.460021526,
+     "volume": 0.1710756,
+     "spread_pct": 3.403355,
+     "converted_volume_usd": 60.11,
+     "trade_url": null,
+     "last_traded_at": "2026-10-30T00:53:00+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Orca",
+     "identifier": "orca",
+     "base": "XSV9HRK1Z5YSTJ9MHNA7LQ4VJSSLWZL2NXRWMWTD3RE",
+     "target": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "last": 0.4767921215,
+     "volume": 0.13228461,
+     "spread_pct": 0.735888,
+     "converted_volume_usd": 48.18,
+     "trade_url": "https://www.orca.so/?tokenIn=XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W&tokenOut=Xsv9hRk1z5ystj9MhnA7Lq4vjSsLwzL2nxrwmwtD3re ",
+     "last_traded_at": "2026-10-30T03:53:03+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Orca",
+     "identifier": "orca",
+     "base": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "target": "XSV9HRK1Z5YSTJ9MHNA7LQ4VJSSLWZL2NXRWMWTD3RE",
+     "last": 2.1028489712,
+     "volume": 0.04131207,
+     "spread_pct": 2.024377,
+     "converted_volume_usd": 32.29,
+     "trade_url": "https://www.orca.so/?tokenIn=Xsv9hRk1z5ystj9MhnA7Lq4vjSsLwzL2nxrwmwtD3re&tokenOut=XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W ",
+     "last_traded_at": "2026-10-27T10:39:50+00:00",
+     "is_stale": true
+    },
+    {
+     "venue": "VALR",
+     "identifier": "valr",
+     "base": "SPYX",
+     "target": "USDT",
+     "last": 769.45,
+     "volume": 0.012,
+     "spread_pct": 0.494836,
+     "converted_volume_usd": 9.22,
+     "trade_url": "https://www.valr.com/exchange/SPYX/USDT",
+     "last_traded_at": "2026-10-29T15:57:40+00:00",
+     "is_stale": true
+    },
+    {
+     "venue": "Orca",
+     "identifier": "orca",
+     "base": "XSOCS1TFEYFFHFVJ8ETZ528L3CAKBDBRQRAPNBBDF2W",
+     "target": "ES9VMFRZACERMJFRF4H2FYD4KCONKY11MCCE8BENWNYB",
+     "last": 751.5189873418,
+     "volume": 0.01210389,
+     "spread_pct": 0.779258,
+     "converted_volume_usd": 9.09,
+     "trade_url": "https://www.orca.so/?tokenIn=Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB&tokenOut=XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W ",
+     "last_traded_at": "2026-10-28T19:58:24+00:00",
+     "is_stale": true
+    }
+   ]
+  },
+  "wrapped-sp500-xstock": {
+   "url": "https://api.coingecko.com/api/v3/coins/wrapped-sp500-xstock/tickers",
+   "fetched_at_utc": "2026-10-30T03:55:48Z",
+   "rows": [
+    {
+     "venue": "Uniswap V3 (x Layer)",
+     "identifier": "uniswap-v3-x-layer",
+     "base": "0XE7E553CD128F0011777323A0B44A7B96EA1CB540",
+     "target": "0X4AE46A509F6B1D9056937BA4500CB143933D2DC8",
+     "last": 766.8848994774,
+     "volume": 2290.7926140696,
+     "spread_pct": 0.602807,
+     "converted_volume_usd": 1757219,
+     "trade_url": "https://app.uniswap.org/swap?inputCurrency=0xe7e553cd128f0011777323a0b44a7b96ea1cb540&outputCurrency=0x4ae46a509f6b1d9056937ba4500cb143933d2dc8",
+     "last_traded_at": "2026-10-30T03:46:50+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (x Layer)",
+     "identifier": "uniswap-v3-x-layer",
+     "base": "0XE7E553CD128F0011777323A0B44A7B96EA1CB540",
+     "target": "0XF8C5308F80E459BB53D9EBE689854D9CBB2CAA6F",
+     "last": 2.7140881833,
+     "volume": 870.9273111264,
+     "spread_pct": 0.605379,
+     "converted_volume_usd": 667935,
+     "trade_url": "https://app.uniswap.org/swap?inputCurrency=0xe7e553cd128f0011777323a0b44a7b96ea1cb540&outputCurrency=0xf8c5308f80e459bb53d9ebe689854d9cbb2caa6f",
+     "last_traded_at": "2026-10-30T03:43:15+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (x Layer)",
+     "identifier": "uniswap-v3-x-layer",
+     "base": "0X943BF64D566C32A2BCD41AC92FB63C111CC9DE8F",
+     "target": "0XE7E553CD128F0011777323A0B44A7B96EA1CB540",
+     "last": 0.4578071886,
+     "volume": 1044.1651744979,
+     "spread_pct": 0.616076,
+     "converted_volume_usd": 366610,
+     "trade_url": "https://app.uniswap.org/swap?inputCurrency=0x943bf64d566c32a2bcd41ac92fb63c111cc9de8f&outputCurrency=0xe7e553cd128f0011777323a0b44a7b96ea1cb540",
+     "last_traded_at": "2026-10-30T03:31:15+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (Reservoir on Ink)",
+     "identifier": "reservoir-v3-ink",
+     "base": "0XE7E553CD128F0011777323A0B44A7B96EA1CB540",
+     "target": "0XE343167631D89B6FFC58B88D6B7FB0228795491D",
+     "last": 766.7905037538,
+     "volume": 90.018403771,
+     "spread_pct": 0.610267,
+     "converted_volume_usd": 69043,
+     "trade_url": null,
+     "last_traded_at": "2026-10-30T03:53:08+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Nest",
+     "identifier": "nest",
+     "base": "0XB88339CB7199B77E23DB6E890353E22632BA630F",
+     "target": "0XE7E553CD128F0011777323A0B44A7B96EA1CB540",
+     "last": 0.001303985752,
+     "volume": 56713.578879,
+     "spread_pct": 0.604788,
+     "converted_volume_usd": 56717,
+     "trade_url": null,
+     "last_traded_at": "2026-10-30T03:50:02+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (Reservoir on Ink)",
+     "identifier": "reservoir-v3-ink",
+     "base": "0XE343167631D89B6FFC58B88D6B7FB0228795491D",
+     "target": "0XE7E553CD128F0011777323A0B44A7B96EA1CB540",
+     "last": 0.001301756803,
+     "volume": 44768.670765,
+     "spread_pct": 0.603228,
+     "converted_volume_usd": 44695,
+     "trade_url": null,
+     "last_traded_at": "2026-10-30T03:48:18+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Ramses V3 (HyperEVM)",
+     "identifier": "ramses-v3-hyperevm",
+     "base": "0XB88339CB7199B77E23DB6E890353E22632BA630F",
+     "target": "0XE7E553CD128F0011777323A0B44A7B96EA1CB540",
+     "last": 0.00130394811,
+     "volume": 23083.209342,
+     "spread_pct": 0.621173,
+     "converted_volume_usd": 23084,
+     "trade_url": "https://www.ramses.xyz/trade?inputCurrency=0xb88339cb7199b77e23db6e890353e22632ba630f&outputCurrency=0xe7e553cd128f0011777323a0b44a7b96ea1cb540",
+     "last_traded_at": "2026-10-30T03:50:01+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Project X",
+     "identifier": "project-x",
+     "base": "0XE7E553CD128F0011777323A0B44A7B96EA1CB540",
+     "target": "0X5555555555555555555555555555555555555555",
+     "last": 8.2797592328,
+     "volume": 10.4765979032,
+     "spread_pct": 0.649561,
+     "converted_volume_usd": 8034.76,
+     "trade_url": "https://www.prjx.com/#/swap?inputCurrency=0xe7e553cd128f0011777323a0b44a7b96ea1cb540&outputCurrency=0x5555555555555555555555555555555555555555",
+     "last_traded_at": "2026-10-30T03:49:58+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Nest",
+     "identifier": "nest",
+     "base": "0X07C57E32A3C29D5659BDA1D3EFC2E7BF004E3035",
+     "target": "0XE7E553CD128F0011777323A0B44A7B96EA1CB540",
+     "last": 2.88349874e-05,
+     "volume": 187872.068043727,
+     "spread_pct": 0.655447,
+     "converted_volume_usd": 4154.65,
+     "trade_url": null,
+     "last_traded_at": "2026-10-30T03:50:02+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (x Layer)",
+     "identifier": "uniswap-v3-x-layer",
+     "base": "0X5F8A1C74C112865BD05DBE4752C7608332719062",
+     "target": "0XE7E553CD128F0011777323A0B44A7B96EA1CB540",
+     "last": 0.001364465291,
+     "volume": 335.7999114545,
+     "spread_pct": 0.650394,
+     "converted_volume_usd": 351.39,
+     "trade_url": "https://app.uniswap.org/swap?inputCurrency=0x5f8a1c74c112865bd05dbe4752c7608332719062&outputCurrency=0xe7e553cd128f0011777323a0b44a7b96ea1cb540",
+     "last_traded_at": "2026-10-30T03:26:26+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Ramses Legacy (HyperEVM)",
+     "identifier": "ramses-legacy-hyperevm",
+     "base": "0X555570A286F15EBDFE42B66EDE2F724AA1AB5555",
+     "target": "0XE7E553CD128F0011777323A0B44A7B96EA1CB540",
+     "last": 4.520872703e-05,
+     "volume": 5916.6644086533,
+     "spread_pct": 0.688707,
+     "converted_volume_usd": 205.14,
+     "trade_url": null,
+     "last_traded_at": "2026-10-30T01:48:29+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V4 (Ink)",
+     "identifier": "uniswap-v4-ink",
+     "base": "0X0000000000000000000000000000000000000000",
+     "target": "0XE7E553CD128F0011777323A0B44A7B96EA1CB540",
+     "last": 2.9023354645,
+     "volume": 0.0353896684,
+     "spread_pct": 0.704058,
+     "converted_volume_usd": 78.77,
+     "trade_url": null,
+     "last_traded_at": "2026-10-30T03:49:56+00:00",
+     "is_stale": false
+    }
+   ]
+  },
+  "tether-gold-tokens": {
+   "url": "https://api.coingecko.com/api/v3/coins/tether-gold-tokens/tickers",
+   "fetched_at_utc": "2026-10-30T03:55:48Z",
+   "rows": [
+    {
+     "venue": "PancakeSwap V3 (BSC)",
+     "identifier": "pancakeswap-v3-bsc",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0X55D398326F99059FF775485246999027B3197955",
+     "last": 3995.9993969445,
+     "volume": 338.559359,
+     "spread_pct": 0.602856,
+     "converted_volume_usd": 1349996,
+     "trade_url": "https://pancakeswap.finance/swap?inputCurrency=0x21caef8a43163eea865baee23b9c2e327696a3bf&outputCurrency=0x55d398326f99059ff775485246999027b3197955",
+     "last_traded_at": "2026-10-30T03:53:46+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "PancakeSwap V3 (BSC)",
+     "identifier": "pancakeswap-v3-bsc",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0X7130D2A12B9BCBFAE4F2634D864A1EE1CE3EAD9C",
+     "last": 0.05104333738,
+     "volume": 296.407036,
+     "spread_pct": 0.605313,
+     "converted_volume_usd": 1177390,
+     "trade_url": "https://pancakeswap.finance/swap?inputCurrency=0x21caef8a43163eea865baee23b9c2e327696a3bf&outputCurrency=0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c",
+     "last_traded_at": "2026-10-30T03:51:25+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V4 (BSC)",
+     "identifier": "uniswap-v4-bsc",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0X55D398326F99059FF775485246999027B3197955",
+     "last": 3999.2944790838,
+     "volume": 123.387994,
+     "spread_pct": 0.605142,
+     "converted_volume_usd": 492412,
+     "trade_url": "https://app.uniswap.org/#/swap?inputCurrency=0x21caef8a43163eea865baee23b9c2e327696a3bf&outputCurrency=0x55d398326f99059ff775485246999027b3197955",
+     "last_traded_at": "2026-10-30T03:51:29+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Hyperliquid",
+     "identifier": "hyperliquid-spot",
+     "base": "XAUT0",
+     "target": "USDC",
+     "last": 3990.2,
+     "volume": 99.63,
+     "spread_pct": 0.010017,
+     "converted_volume_usd": 396914,
+     "trade_url": "https://app.hyperliquid.xyz/trade/XAUT0/USDC",
+     "last_traded_at": "2026-10-30T03:49:07+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Project X",
+     "identifier": "project-x",
+     "base": "0XF4D9235269A96AADAFC9ADAE454A0618EBE37949",
+     "target": "0X5555555555555555555555555555555555555555",
+     "last": 43.064528548,
+     "volume": 87.367867,
+     "spread_pct": 0.603741,
+     "converted_volume_usd": 348809,
+     "trade_url": "https://www.prjx.com/#/swap?inputCurrency=0xf4d9235269a96aadafc9adae454a0618ebe37949&outputCurrency=0x5555555555555555555555555555555555555555",
+     "last_traded_at": "2026-10-30T03:52:14+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Byreal",
+     "identifier": "byreal",
+     "base": "AYMATZ4TCL9SWNEEV9KVYZ45CHVHDZ6KUGJTJPZLPU9P",
+     "target": "ES9VMFRZACERMJFRF4H2FYD4KCONKY11MCCE8BENWNYB",
+     "last": 3994.9300676764,
+     "volume": 33.934263,
+     "spread_pct": 0.60359,
+     "converted_volume_usd": 135350,
+     "trade_url": null,
+     "last_traded_at": "2026-10-30T03:53:08+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "PancakeSwap V3 (BSC)",
+     "identifier": "pancakeswap-v3-bsc",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0XBB4CDB9CBD36B01BD1CBAEBF2DE08D9173BC095C",
+     "last": 5.5582051256,
+     "volume": 29.293441,
+     "spread_pct": 0.606482,
+     "converted_volume_usd": 116521,
+     "trade_url": "https://pancakeswap.finance/swap?inputCurrency=0x21caef8a43163eea865baee23b9c2e327696a3bf&outputCurrency=0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+     "last_traded_at": "2026-10-30T03:51:25+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "PancakeSwap V3 (BSC)",
+     "identifier": "pancakeswap-v3-bsc",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0X55D398326F99059FF775485246999027B3197955",
+     "last": 3995.7737495282,
+     "volume": 25.102472,
+     "spread_pct": 0.60669,
+     "converted_volume_usd": 100090,
+     "trade_url": "https://pancakeswap.finance/swap?inputCurrency=0x21caef8a43163eea865baee23b9c2e327696a3bf&outputCurrency=0x55d398326f99059ff775485246999027b3197955",
+     "last_traded_at": "2026-10-30T03:24:59+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "PancakeSwap (v2)",
+     "identifier": "pancakeswap_new",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0XB0C2AB5AF4028461ACE3F6E1C33A4EE1404E7777",
+     "last": 2302499.48605475,
+     "volume": 19.258484,
+     "spread_pct": 0.604889,
+     "converted_volume_usd": 75440,
+     "trade_url": "https://pancakeswap.finance/swap?inputCurrency=0x21caef8a43163eea865baee23b9c2e327696a3bf&outputCurrency=0xb0c2ab5af4028461ace3f6e1c33a4ee1404e7777",
+     "last_traded_at": "2026-10-30T03:24:59+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Orca",
+     "identifier": "orca",
+     "base": "A7BDIYDS5GJQGFTXF17PPRHTDKPKKRQBKTR27DXVQXAS",
+     "target": "AYMATZ4TCL9SWNEEV9KVYZ45CHVHDZ6KUGJTJPZLPU9P",
+     "last": 0.319684663,
+     "volume": 57.73190417,
+     "spread_pct": 0.617221,
+     "converted_volume_usd": 73582,
+     "trade_url": "https://www.orca.so/?tokenIn=AymATz4TCL9sWNEEV9Kvyz45CHVhDZ6kUgjTJPzLpU9P&tokenOut=A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS ",
+     "last_traded_at": "2026-10-30T03:53:03+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (Celo)",
+     "identifier": "uniswap_v3_celo",
+     "base": "0X48065FBBE25F71C9282DDF5E1CD6D6A887483D5E",
+     "target": "0XAF37E8B6C9ED7F6318979F56FC287D76C30847FF",
+     "last": 0.0002016129032,
+     "volume": 50979.062672,
+     "spread_pct": 0.608982,
+     "converted_volume_usd": 50898,
+     "trade_url": "https://app.uniswap.org/explore/tokens/celo/0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e",
+     "last_traded_at": "2026-10-30T03:52:17+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "PancakeSwap (v2)",
+     "identifier": "pancakeswap_new",
+     "base": "0X975FAED559B45FEB8A5C5CEB940E614302947777",
+     "target": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "last": 6.657532041e-07,
+     "volume": 13327415.5715129,
+     "spread_pct": 0.605102,
+     "converted_volume_usd": 35426,
+     "trade_url": "https://pancakeswap.finance/swap?inputCurrency=0x975faed559b45feb8a5c5ceb940e614302947777&outputCurrency=0x21caef8a43163eea865baee23b9c2e327696a3bf",
+     "last_traded_at": "2026-10-30T03:53:53+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Blackhole V3",
+     "identifier": "blackhole-v3",
+     "base": "0X2775D5105276781B4B85BA6EA6A6653BEED1DD32",
+     "target": "0X9702230A8EA53601F5CD2DC00FDBC13D4DF4A8C7",
+     "last": 3999.0141803279,
+     "volume": 8.463419,
+     "spread_pct": 0.607339,
+     "converted_volume_usd": 33792,
+     "trade_url": "https://www.blackhole.xyz/swap?token0=0x2775d5105276781b4b85ba6ea6a6653beed1dd32&token1=0x9702230a8ea53601f5cd2dc00fdbc13d4df4a8c7",
+     "last_traded_at": "2026-10-30T03:50:02+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Blackhole V3",
+     "identifier": "blackhole-v3",
+     "base": "0X2775D5105276781B4B85BA6EA6A6653BEED1DD32",
+     "target": "0X152B9D0FDC40C096757F570A51E494BD4B943E50",
+     "last": 0.05126582278,
+     "volume": 7.161036,
+     "spread_pct": 0.639145,
+     "converted_volume_usd": 28648,
+     "trade_url": "https://www.blackhole.xyz/swap?token0=0x2775d5105276781b4b85ba6ea6a6653beed1dd32&token1=0x152b9d0fdc40c096757f570a51e494bd4b943e50",
+     "last_traded_at": "2026-10-30T03:50:02+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Meteora",
+     "identifier": "meteora",
+     "base": "GOLDPPDJB1VDTPSGXYMJFQDNJ134YH6PRG9EQSGDIW6A",
+     "target": "AYMATZ4TCL9SWNEEV9KVYZ45CHVHDZ6KUGJTJPZLPU9P",
+     "last": 1.0060438718,
+     "volume": 5.172018,
+     "spread_pct": 0.607495,
+     "converted_volume_usd": 20775,
+     "trade_url": null,
+     "last_traded_at": "2026-10-30T03:20:23+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Byreal",
+     "identifier": "byreal",
+     "base": "AYMATZ4TCL9SWNEEV9KVYZ45CHVHDZ6KUGJTJPZLPU9P",
+     "target": "ES9VMFRZACERMJFRF4H2FYD4KCONKY11MCCE8BENWNYB",
+     "last": 3995.4737030925,
+     "volume": 4.982806,
+     "spread_pct": 0.603256,
+     "converted_volume_usd": 19877.12,
+     "trade_url": null,
+     "last_traded_at": "2026-10-30T03:29:16+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Project X",
+     "identifier": "project-x",
+     "base": "0XB8CE59FC3717ADA4C02EADF9682A9E934F625EBB",
+     "target": "0XF4D9235269A96AADAFC9ADAE454A0618EBE37949",
+     "last": 0.0002496319003,
+     "volume": 18533.315866,
+     "spread_pct": 0.684508,
+     "converted_volume_usd": 18445.29,
+     "trade_url": "https://www.prjx.com/#/swap?inputCurrency=0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb&outputCurrency=0xf4d9235269a96aadafc9adae454a0618ebe37949",
+     "last_traded_at": "2026-10-30T03:44:04+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "PancakeSwap (v2)",
+     "identifier": "pancakeswap_new",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0XBB4CDB9CBD36B01BD1CBAEBF2DE08D9173BC095C",
+     "last": 5.5664922601,
+     "volume": 4.166056,
+     "spread_pct": 0.614821,
+     "converted_volume_usd": 16596.13,
+     "trade_url": "https://pancakeswap.finance/swap?inputCurrency=0x21caef8a43163eea865baee23b9c2e327696a3bf&outputCurrency=0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+     "last_traded_at": "2026-10-30T03:52:18+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Pancakeswap V3 (Monad)",
+     "identifier": "pancakeswap-v3-monad",
+     "base": "0X01BFF41798A0BCF287B996046CA68B395DBC1071",
+     "target": "0XE7CD86E13AC4309349F30B3435A9D337750FC82D",
+     "last": 3999.5714285714,
+     "volume": 2.8713,
+     "spread_pct": 0.610151,
+     "converted_volume_usd": 11465.77,
+     "trade_url": null,
+     "last_traded_at": "2026-10-30T03:50:38+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Orca",
+     "identifier": "orca",
+     "base": "AYMATZ4TCL9SWNEEV9KVYZ45CHVHDZ6KUGJTJPZLPU9P",
+     "target": "EPJFWDD5AUFQSSQEM2QN1XZYBAPC8G4WEGGKZWYTDT1V",
+     "last": 3989.2589465219,
+     "volume": 2.533465,
+     "spread_pct": 0.604593,
+     "converted_volume_usd": 10090.63,
+     "trade_url": "https://www.orca.so/?tokenIn=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&tokenOut=AymATz4TCL9sWNEEV9Kvyz45CHVhDZ6kUgjTJPzLpU9P ",
+     "last_traded_at": "2026-10-30T03:53:03+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (Arbitrum One)",
+     "identifier": "uniswap_v3_arbitrum",
+     "base": "0X40461291347E1ECBB09499F3371D3F17F10D7159",
+     "target": "0XFD086BC7CD5C481DCC9C85EBE478A1C0B69FCBB9",
+     "last": 4001.1282717283,
+     "volume": 1.598916,
+     "spread_pct": 0.610004,
+     "converted_volume_usd": 6387.33,
+     "trade_url": "https://app.uniswap.org/explore/tokens/arbitrum/0x40461291347e1ecbb09499f3371d3f17f10d7159",
+     "last_traded_at": "2026-10-30T03:24:54+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Orca",
+     "identifier": "orca",
+     "base": "AYMATZ4TCL9SWNEEV9KVYZ45CHVHDZ6KUGJTJPZLPU9P",
+     "target": "SO11111111111111111111111111111111111111112",
+     "last": 41.1401286953,
+     "volume": 1.507636,
+     "spread_pct": 0.621425,
+     "converted_volume_usd": 6019.58,
+     "trade_url": "https://www.orca.so/?tokenIn=So11111111111111111111111111111111111111112&tokenOut=AymATz4TCL9sWNEEV9Kvyz45CHVhDZ6kUgjTJPzLpU9P ",
+     "last_traded_at": "2026-10-30T03:53:03+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "PancakeSwap (v2)",
+     "identifier": "pancakeswap_new",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0X5460B5E88799D27BBDF8A210926C17DEC18D7777",
+     "last": 62265967.690168,
+     "volume": 0.80158,
+     "spread_pct": 0.612775,
+     "converted_volume_usd": 3200.45,
+     "trade_url": "https://pancakeswap.finance/swap?inputCurrency=0x21caef8a43163eea865baee23b9c2e327696a3bf&outputCurrency=0x5460b5e88799d27bbdf8a210926c17dec18d7777",
+     "last_traded_at": "2026-10-30T03:46:02+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V4 (BSC)",
+     "identifier": "uniswap-v4-bsc",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0X8AC76A51CC950D9822D68B83FE1AD97B32CD580D",
+     "last": 3986.3352839341,
+     "volume": 0.791882,
+     "spread_pct": 0.60766,
+     "converted_volume_usd": 3157.09,
+     "trade_url": "https://app.uniswap.org/#/swap?inputCurrency=0x21caef8a43163eea865baee23b9c2e327696a3bf&outputCurrency=0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+     "last_traded_at": "2026-10-30T03:53:46+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Oku Trade (Plasma)",
+     "identifier": "oku-trade-plasma",
+     "base": "0X1B64B9025EEBB9A6239575DF9EA4B9AC46D4D193",
+     "target": "0XB8CE59FC3717ADA4C02EADF9682A9E934F625EBB",
+     "last": 3998.2227272727,
+     "volume": 0.671633,
+     "spread_pct": 0.605594,
+     "converted_volume_usd": 2681.08,
+     "trade_url": null,
+     "last_traded_at": "2026-10-30T03:44:09+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "LFJ V2.2 (Avalanche)",
+     "identifier": "traderjoe-v2-2-avalanche",
+     "base": "0X2775D5105276781B4B85BA6EA6A6653BEED1DD32",
+     "target": "0X9702230A8EA53601F5CD2DC00FDBC13D4DF4A8C7",
+     "last": 4003.8138801262,
+     "volume": 0.59482,
+     "spread_pct": 0.612479,
+     "converted_volume_usd": 2377.77,
+     "trade_url": "https://lfj.gg/avalanche/trade?inputCurrency=0x2775d5105276781b4b85ba6ea6a6653beed1dd32&outputCurrency=0x9702230a8ea53601f5cd2dc00fdbc13d4df4a8c7",
+     "last_traded_at": "2026-10-30T03:32:49+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "AllBlue V3",
+     "identifier": "aquaspace-v3",
+     "base": "0X2775D5105276781B4B85BA6EA6A6653BEED1DD32",
+     "target": "0X152B9D0FDC40C096757F570A51E494BD4B943E50",
+     "last": 0.05131029244,
+     "volume": 0.556613,
+     "spread_pct": 0.646117,
+     "converted_volume_usd": 2228.68,
+     "trade_url": "https://pumpspace.io/swap?inputCurrency=0x2775d5105276781b4b85ba6ea6a6653beed1dd32&outputCurrency=0x152b9d0fdc40c096757f570a51e494bd4b943e50",
+     "last_traded_at": "2026-10-30T03:46:43+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Ramses V3 (HyperEVM)",
+     "identifier": "ramses-v3-hyperevm",
+     "base": "0XB8CE59FC3717ADA4C02EADF9682A9E934F625EBB",
+     "target": "0XF4D9235269A96AADAFC9ADAE454A0618EBE37949",
+     "last": 0.0002504957159,
+     "volume": 2065.120141,
+     "spread_pct": 3.391973,
+     "converted_volume_usd": 2062.42,
+     "trade_url": "https://www.ramses.xyz/trade?inputCurrency=0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb&outputCurrency=0xf4d9235269a96aadafc9adae454a0618ebe37949",
+     "last_traded_at": "2026-10-30T01:46:43+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "AllBlue V3",
+     "identifier": "aquaspace-v3",
+     "base": "0X038DBE3D967BB8389190446DACDFE7B95B44F73D",
+     "target": "0X2775D5105276781B4B85BA6EA6A6653BEED1DD32",
+     "last": 0.0002503658198,
+     "volume": 1858.912394,
+     "spread_pct": 0.715506,
+     "converted_volume_usd": 1860.18,
+     "trade_url": "https://pumpspace.io/swap?inputCurrency=0x038dbe3d967bb8389190446dacdfe7b95b44f73d&outputCurrency=0x2775d5105276781b4b85ba6ea6a6653beed1dd32",
+     "last_traded_at": "2026-10-30T03:19:36+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "PancakeSwap (v2)",
+     "identifier": "pancakeswap_new",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0X92EF5E9E7F80C071AC871691AF1D4059DD4D7777",
+     "last": 367698002.248275,
+     "volume": 0.379303,
+     "spread_pct": 0.635555,
+     "converted_volume_usd": 1514.43,
+     "trade_url": "https://pancakeswap.finance/swap?inputCurrency=0x21caef8a43163eea865baee23b9c2e327696a3bf&outputCurrency=0x92ef5e9e7f80c071ac871691af1d4059dd4d7777",
+     "last_traded_at": "2026-10-30T02:33:49+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (BSC)",
+     "identifier": "uniswap-bsc",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0X55D398326F99059FF775485246999027B3197955",
+     "last": 3997.2890215336,
+     "volume": 0.3284,
+     "spread_pct": 0.656919,
+     "converted_volume_usd": 1309.91,
+     "trade_url": "https://app.uniswap.org/explore/tokens/bnb/0x21caef8a43163eea865baee23b9c2e327696a3bf",
+     "last_traded_at": "2026-10-30T03:13:35+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Orca",
+     "identifier": "orca",
+     "base": "AYMATZ4TCL9SWNEEV9KVYZ45CHVHDZ6KUGJTJPZLPU9P",
+     "target": "CBBTCF3AA214ZXHBIAZQWF4122FBYBRANDFQGW4IMIJ",
+     "last": 0.05119852165,
+     "volume": 0.314054,
+     "spread_pct": 0.658895,
+     "converted_volume_usd": 1254.73,
+     "trade_url": "https://www.orca.so/?tokenIn=cbbtcf3aa214zXHbiAZQwf4122FBYbraNdFqgw4iMij&tokenOut=AymATz4TCL9sWNEEV9Kvyz45CHVhDZ6kUgjTJPzLpU9P ",
+     "last_traded_at": "2026-10-30T03:50:41+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "PancakeSwap V3 (BSC)",
+     "identifier": "pancakeswap-v3-bsc",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0XE60106A5CAB7E7C64830919D36AB20CAAF50AC91",
+     "last": 0.9959030297,
+     "volume": 0.293608,
+     "spread_pct": 0.604423,
+     "converted_volume_usd": 1181.29,
+     "trade_url": "https://pancakeswap.finance/swap?inputCurrency=0x21caef8a43163eea865baee23b9c2e327696a3bf&outputCurrency=0xe60106a5cab7e7c64830919d36ab20caaf50ac91",
+     "last_traded_at": "2026-10-29T12:17:21+00:00",
+     "is_stale": true
+    },
+    {
+     "venue": "Orca",
+     "identifier": "orca",
+     "base": "9TPL8DROGJ7JTHSQ4MOMAOZ6UHTCVX2SEMQIPOPMNA8R",
+     "target": "AYMATZ4TCL9SWNEEV9KVYZ45CHVHDZ6KUGJTJPZLPU9P",
+     "last": 0.03243393827,
+     "volume": 8.770300962,
+     "spread_pct": 0.654162,
+     "converted_volume_usd": 1138.01,
+     "trade_url": "https://www.orca.so/?tokenIn=AymATz4TCL9sWNEEV9Kvyz45CHVhDZ6kUgjTJPzLpU9P&tokenOut=9TPL8droGJ7jThsq4momaoz6uhTcvX2SeMqipoPmNa8R ",
+     "last_traded_at": "2026-10-30T03:49:56+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "STON.fi (V2)",
+     "identifier": "stonfi-v2",
+     "base": "EQA1R_LUQCLHLMGOO1S4G7Y7W1CD0FRAKBA10ZQ7RDDKXI9K",
+     "target": "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9C",
+     "last": 3421.3408847619,
+     "volume": 0.282822,
+     "spread_pct": 0.619072,
+     "converted_volume_usd": 1135.16,
+     "trade_url": "https://app.ston.fi/swap?inputCurrency=eqa1r_luqclhlmgoo1s4g7y7w1cd0frakba10zq7rddkxi9k&outputCurrency=eqaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaam9c",
+     "last_traded_at": "2026-10-30T03:35:55+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (BSC)",
+     "identifier": "uniswap-bsc",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0XBB4CDB9CBD36B01BD1CBAEBF2DE08D9173BC095C",
+     "last": 5.5718995527,
+     "volume": 0.274344,
+     "spread_pct": 0.913635,
+     "converted_volume_usd": 1093.95,
+     "trade_url": "https://app.uniswap.org/explore/tokens/bnb/0x21caef8a43163eea865baee23b9c2e327696a3bf",
+     "last_traded_at": "2026-10-30T03:52:14+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V2 (BSC) ",
+     "identifier": "uniswap-v2-bsc",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0XB0C2AB5AF4028461ACE3F6E1C33A4EE1404E7777",
+     "last": 2368268.89204378,
+     "volume": 0.269576,
+     "spread_pct": 0.93463,
+     "converted_volume_usd": 1086.16,
+     "trade_url": "https://app.uniswap.org/explore/tokens/bnb/0x21caef8a43163eea865baee23b9c2e327696a3bf",
+     "last_traded_at": "2026-10-30T03:12:02+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "PancakeSwap V3 (BSC)",
+     "identifier": "pancakeswap-v3-bsc",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0X2170ED0880AC9A755FD29B2688956BD959F933F8",
+     "last": 1.7903593218,
+     "volume": 0.270129,
+     "spread_pct": 0.707362,
+     "converted_volume_usd": 1077.54,
+     "trade_url": "https://pancakeswap.finance/swap?inputCurrency=0x21caef8a43163eea865baee23b9c2e327696a3bf&outputCurrency=0x2170ed0880ac9a755fd29b2688956bd959f933f8",
+     "last_traded_at": "2026-10-30T03:50:04+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "STON.fi (V2)",
+     "identifier": "stonfi-v2",
+     "base": "EQA1R_LUQCLHLMGOO1S4G7Y7W1CD0FRAKBA10ZQ7RDDKXI9K",
+     "target": "EQCXE6MUTQJKFNGFAROTKOT1LZBDIIX1KCIXRV7NW2ID_SDS",
+     "last": 4028.8861384301,
+     "volume": 0.259168,
+     "spread_pct": 0.604726,
+     "converted_volume_usd": 1042.5,
+     "trade_url": "https://app.ston.fi/swap?inputCurrency=eqa1r_luqclhlmgoo1s4g7y7w1cd0frakba10zq7rddkxi9k&outputCurrency=eqcxe6mutqjkfngfarotkot1lzbdiix1kcixrv7nw2id_sds",
+     "last_traded_at": "2026-10-30T03:20:23+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V4 (BSC)",
+     "identifier": "uniswap-v4-bsc",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0X55D398326F99059FF775485246999027B3197955",
+     "last": 4001.0142241837,
+     "volume": 0.252343,
+     "spread_pct": 0.684898,
+     "converted_volume_usd": 1007.47,
+     "trade_url": "https://app.uniswap.org/#/swap?inputCurrency=0x21caef8a43163eea865baee23b9c2e327696a3bf&outputCurrency=0x55d398326f99059ff775485246999027b3197955",
+     "last_traded_at": "2026-10-30T03:12:47+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Blackhole V3",
+     "identifier": "blackhole-v3",
+     "base": "0X2775D5105276781B4B85BA6EA6A6653BEED1DD32",
+     "target": "0XB31F66AA3C1E785363F0875A1B74E27B85FD66C7",
+     "last": 473.8215960476,
+     "volume": 0.192811,
+     "spread_pct": 0.816489,
+     "converted_volume_usd": 771.85,
+     "trade_url": "https://www.blackhole.xyz/swap?token0=0x2775d5105276781b4b85ba6ea6a6653beed1dd32&token1=0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7",
+     "last_traded_at": "2026-10-30T03:50:02+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (Celo)",
+     "identifier": "uniswap_v3_celo",
+     "base": "0XAF37E8B6C9ED7F6318979F56FC287D76C30847FF",
+     "target": "0X471ECE3750DA237F93B8E339C536989B8978A438",
+     "last": 56435.4618882803,
+     "volume": 0.136376,
+     "spread_pct": 1.300912,
+     "converted_volume_usd": 548.89,
+     "trade_url": "https://app.uniswap.org/explore/tokens/celo/0xaf37e8b6c9ed7f6318979f56fc287d76c30847ff",
+     "last_traded_at": "2026-10-30T03:46:46+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "HyperSwap V3",
+     "identifier": "hyperswap-v3",
+     "base": "0XB8CE59FC3717ADA4C02EADF9682A9E934F625EBB",
+     "target": "0XF4D9235269A96AADAFC9ADAE454A0618EBE37949",
+     "last": 0.0002505122252,
+     "volume": 446.321733,
+     "spread_pct": 0.715366,
+     "converted_volume_usd": 445.77,
+     "trade_url": "https://app.hyperswap.exchange/#/swap?inputCurrency=0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb&outputCurrency=0xf4d9235269a96aadafc9adae454a0618ebe37949",
+     "last_traded_at": "2026-10-30T01:51:50+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Project X",
+     "identifier": "project-x",
+     "base": "0XB88339CB7199B77E23DB6E890353E22632BA630F",
+     "target": "0XF4D9235269A96AADAFC9ADAE454A0618EBE37949",
+     "last": 0.0002507784954,
+     "volume": 233.515639,
+     "spread_pct": 0.830649,
+     "converted_volume_usd": 233.54,
+     "trade_url": "https://www.prjx.com/#/swap?inputCurrency=0xb88339cb7199b77e23db6e890353e22632ba630f&outputCurrency=0xf4d9235269a96aadafc9adae454a0618ebe37949",
+     "last_traded_at": "2026-10-30T03:25:40+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Project X",
+     "identifier": "project-x",
+     "base": "0X9FDBDA0A5E284C32744D2F17EE5C74B284993463",
+     "target": "0XF4D9235269A96AADAFC9ADAE454A0618EBE37949",
+     "last": 19.4603112074,
+     "volume": 0.002951,
+     "spread_pct": 0.953758,
+     "converted_volume_usd": 228.96,
+     "trade_url": "https://www.prjx.com/#/swap?inputCurrency=0x9fdbda0a5e284c32744d2f17ee5c74b284993463&outputCurrency=0xf4d9235269a96aadafc9adae454a0618ebe37949",
+     "last_traded_at": "2026-10-30T03:44:04+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V3 (Arbitrum One)",
+     "identifier": "uniswap_v3_arbitrum",
+     "base": "0X40461291347E1ECBB09499F3371D3F17F10D7159",
+     "target": "0XAF88D065E77C8CC2239327C5EDB3A432268E5831",
+     "last": 4002.0811202318,
+     "volume": 0.052859,
+     "spread_pct": 0.654294,
+     "converted_volume_usd": 211.21,
+     "trade_url": "https://app.uniswap.org/explore/tokens/arbitrum/0x40461291347e1ecbb09499f3371d3f17f10d7159",
+     "last_traded_at": "2026-10-30T03:38:07+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Orca",
+     "identifier": "orca",
+     "base": "AYMATZ4TCL9SWNEEV9KVYZ45CHVHDZ6KUGJTJPZLPU9P",
+     "target": "GOLDPPDJB1VDTPSGXYMJFQDNJ134YH6PRG9EQSGDIW6A",
+     "last": 0.9958391123,
+     "volume": 0.047037,
+     "spread_pct": 0.768332,
+     "converted_volume_usd": 188.15,
+     "trade_url": "https://www.orca.so/?tokenIn=GoLDppdjB1vDTPSGxyMJFqdnj134yH6Prg9eqsGDiw6A&tokenOut=AymATz4TCL9sWNEEV9Kvyz45CHVhDZ6kUgjTJPzLpU9P ",
+     "last_traded_at": "2026-10-30T03:29:23+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V4 (Arbitrum)",
+     "identifier": "uniswap-v4-arbitrum",
+     "base": "0X40461291347E1ECBB09499F3371D3F17F10D7159",
+     "target": "0XFD086BC7CD5C481DCC9C85EBE478A1C0B69FCBB9",
+     "last": 4002.4855644356,
+     "volume": 0.045044,
+     "spread_pct": 0.607005,
+     "converted_volume_usd": 180.0,
+     "trade_url": "https://app.uniswap.org/#/swap?inputCurrency=0x40461291347e1ecbb09499f3371d3f17f10d7159&outputCurrency=0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9",
+     "last_traded_at": "2026-10-30T03:17:18+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Manifest",
+     "identifier": "manifest",
+     "base": "GOLDPPDJB1VDTPSGXYMJFQDNJ134YH6PRG9EQSGDIW6A",
+     "target": "AYMATZ4TCL9SWNEEV9KVYZ45CHVHDZ6KUGJTJPZLPU9P",
+     "last": 1.00401606425702,
+     "volume": 0.029623,
+     "spread_pct": 0.4,
+     "converted_volume_usd": 118.99,
+     "trade_url": "https://app.manifest.trade/market/GAtD7C7H2z1FkpovWsTjqcZh7KQPBd9zrbFGpQz43zf7",
+     "last_traded_at": "2026-10-29T22:18:19+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Uniswap V4 (Arbitrum)",
+     "identifier": "uniswap-v4-arbitrum",
+     "base": "0X40461291347E1ECBB09499F3371D3F17F10D7159",
+     "target": "0X2F2A2543B76A4166549F7AAB2E75BEF0AEFC5B0F",
+     "last": 0.05182037663,
+     "volume": 0.026367,
+     "spread_pct": 0.830007,
+     "converted_volume_usd": 106.43,
+     "trade_url": "https://app.uniswap.org/#/swap?inputCurrency=0x40461291347e1ecbb09499f3371d3f17f10d7159&outputCurrency=0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f",
+     "last_traded_at": "2026-10-30T03:38:11+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Blackhole V2",
+     "identifier": "blackhole-v2",
+     "base": "0X2775D5105276781B4B85BA6EA6A6653BEED1DD32",
+     "target": "0XCD94A87696FAC69EDAE3A70FE5725307AE1C43F6",
+     "last": 1578575.0091115,
+     "volume": 0.023583,
+     "spread_pct": 0.758894,
+     "converted_volume_usd": 93.22,
+     "trade_url": "https://www.blackhole.xyz/swap?token0=0x2775d5105276781b4b85ba6ea6a6653beed1dd32&token1=0xcd94a87696fac69edae3a70fe5725307ae1c43f6",
+     "last_traded_at": "2026-10-30T03:31:54+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "PancakeSwap V3 (BSC)",
+     "identifier": "pancakeswap-v3-bsc",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0XBB4CDB9CBD36B01BD1CBAEBF2DE08D9173BC095C",
+     "last": 5.5844894989,
+     "volume": 0.022128,
+     "spread_pct": 0.772815,
+     "converted_volume_usd": 88.44,
+     "trade_url": "https://pancakeswap.finance/swap?inputCurrency=0x21caef8a43163eea865baee23b9c2e327696a3bf&outputCurrency=0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+     "last_traded_at": "2026-10-30T03:51:25+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "PancakeSwap V3 (BSC)",
+     "identifier": "pancakeswap-v3-bsc",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0X3EE2200EFB3400FABB9AACF31297CBDD1D435D47",
+     "last": 21029.0031349537,
+     "volume": 0.02112,
+     "spread_pct": 32.88808,
+     "converted_volume_usd": 85.32,
+     "trade_url": "https://pancakeswap.finance/swap?inputCurrency=0x21caef8a43163eea865baee23b9c2e327696a3bf&outputCurrency=0x3ee2200efb3400fabb9aacf31297cbdd1d435d47",
+     "last_traded_at": "2026-10-29T23:08:11+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Meteora",
+     "identifier": "meteora",
+     "base": "AYMATZ4TCL9SWNEEV9KVYZ45CHVHDZ6KUGJTJPZLPU9P",
+     "target": "XSV9HRK1Z5YSTJ9MHNA7LQ4VJSSLWZL2NXRWMWTD3RE",
+     "last": 10.8978815911,
+     "volume": 0.019883,
+     "spread_pct": 0.781185,
+     "converted_volume_usd": 79.71,
+     "trade_url": null,
+     "last_traded_at": "2026-10-30T00:29:26+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Velodrome Finance Slipstream (Ink)",
+     "identifier": "velodrome-finance-slipstream-ink",
+     "base": "0X0200C29006150606B650577BBE7B6248F58470C1",
+     "target": "0XF50258D3C1DD88946C567920B986A12E65B50DAC",
+     "last": 0.0002487414714,
+     "volume": 20.428991,
+     "spread_pct": 0.619411,
+     "converted_volume_usd": 20.26,
+     "trade_url": "https://velodrome.finance/swap?inputCurrency=0x0200c29006150606b650577bbe7b6248f58470c1&outputCurrency=0xf50258d3c1dd88946c567920b986a12e65b50dac",
+     "last_traded_at": "2026-10-29T20:19:37+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "DeDust",
+     "identifier": "dedust",
+     "base": "EQA1R_LUQCLHLMGOO1S4G7Y7W1CD0FRAKBA10ZQ7RDDKXI9K",
+     "target": "EQD0VDSA_NEDR9UVBGN9EIKRX-SUESDXGEFG69XQMAVFLQIW",
+     "last": 274814.800765223,
+     "volume": 0.003519,
+     "spread_pct": 0.972732,
+     "converted_volume_usd": 14.28,
+     "trade_url": "https://dedust.io/swap?inputCurrency=eqa1r_luqclhlmgoo1s4g7y7w1cd0frakba10zq7rddkxi9k&outputCurrency=eqd0vdsa_nedr9uvbgn9eikrx-suesdxgefg69xqmavflqiw",
+     "last_traded_at": "2026-10-30T00:23:13+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "HyperSwap V3",
+     "identifier": "hyperswap-v3",
+     "base": "0XF4D9235269A96AADAFC9ADAE454A0618EBE37949",
+     "target": "0X5555555555555555555555555555555555555555",
+     "last": 44.1487713062,
+     "volume": 0.002507,
+     "spread_pct": 0.698533,
+     "converted_volume_usd": 10.26,
+     "trade_url": "https://app.hyperswap.exchange/#/swap?inputCurrency=0xf4d9235269a96aadafc9adae454a0618ebe37949&outputCurrency=0x5555555555555555555555555555555555555555",
+     "last_traded_at": "2026-10-30T03:06:50+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Orca",
+     "identifier": "orca",
+     "base": "XSV9HRK1Z5YSTJ9MHNA7LQ4VJSSLWZL2NXRWMWTD3RE",
+     "target": "AYMATZ4TCL9SWNEEV9KVYZ45CHVHDZ6KUGJTJPZLPU9P",
+     "last": 0.09153846154,
+     "volume": 0.0104,
+     "spread_pct": 4.473419,
+     "converted_volume_usd": 3.81,
+     "trade_url": "https://www.orca.so/?tokenIn=AymATz4TCL9sWNEEV9Kvyz45CHVhDZ6kUgjTJPzLpU9P&tokenOut=Xsv9hRk1z5ystj9MhnA7Lq4vjSsLwzL2nxrwmwtD3re ",
+     "last_traded_at": "2026-10-23T09:07:25+00:00",
+     "is_stale": true
+    },
+    {
+     "venue": "Meteora",
+     "identifier": "meteora",
+     "base": "AYMATZ4TCL9SWNEEV9KVYZ45CHVHDZ6KUGJTJPZLPU9P",
+     "target": "EPJFWDD5AUFQSSQEM2QN1XZYBAPC8G4WEGGKZWYTDT1V",
+     "last": 4047.4932735426,
+     "volume": 0.000669,
+     "spread_pct": 0.605815,
+     "converted_volume_usd": 2.7,
+     "trade_url": null,
+     "last_traded_at": "2026-10-29T22:28:34+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "PancakeSwap (v2)",
+     "identifier": "pancakeswap_new",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0XD007C3B72F09A8D4039117446B759DD10D7B7777",
+     "last": 1413056801.80764,
+     "volume": 0.000604,
+     "spread_pct": 0.681566,
+     "converted_volume_usd": 2.42,
+     "trade_url": "https://pancakeswap.finance/swap?inputCurrency=0x21caef8a43163eea865baee23b9c2e327696a3bf&outputCurrency=0xd007c3b72f09a8d4039117446b759dd10d7b7777",
+     "last_traded_at": "2026-10-26T23:16:08+00:00",
+     "is_stale": true
+    },
+    {
+     "venue": "Meteora",
+     "identifier": "meteora",
+     "base": "AYMATZ4TCL9SWNEEV9KVYZ45CHVHDZ6KUGJTJPZLPU9P",
+     "target": "XSV9HRK1Z5YSTJ9MHNA7LQ4VJSSLWZL2NXRWMWTD3RE",
+     "last": 10.8783928571,
+     "volume": 0.000392,
+     "spread_pct": 0.85303,
+     "converted_volume_usd": 1.57,
+     "trade_url": null,
+     "last_traded_at": "2026-10-29T23:53:59+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "PancakeSwap V3 (BSC)",
+     "identifier": "pancakeswap-v3-bsc",
+     "base": "0X21CAEF8A43163EEA865BAEE23B9C2E327696A3BF",
+     "target": "0X55D398326F99059FF775485246999027B3197955",
+     "last": 3998.1992292416,
+     "volume": 0.000372,
+     "spread_pct": 0.705097,
+     "converted_volume_usd": 1.48,
+     "trade_url": "https://pancakeswap.finance/swap?inputCurrency=0x21caef8a43163eea865baee23b9c2e327696a3bf&outputCurrency=0x55d398326f99059ff775485246999027b3197955",
+     "last_traded_at": "2026-10-30T02:08:26+00:00",
+     "is_stale": false
+    },
+    {
+     "venue": "Lithos",
+     "identifier": "lithos",
+     "base": "0X1B64B9025EEBB9A6239575DF9EA4B9AC46D4D193",
+     "target": "0XB8CE59FC3717ADA4C02EADF9682A9E934F625EBB",
+     "last": 4038.052631579,
+     "volume": 0.000252,
+     "spread_pct": 1.008961,
+     "converted_volume_usd": 1.016,
+     "trade_url": null,
+     "last_traded_at": "2026-10-29T15:31:27+00:00",
+     "is_stale": true
+    }
+   ]
+  }
+ },
+ "pools": {
+  "eth_xaut_0x68749665": {
+   "url": "https://api.geckoterminal.com/api/v2/networks/eth/tokens/0x68749665ff8d2d112fa859aa293f07a622782f38/pools",
+   "fetched_at_utc": "2026-10-30T03:55:49Z",
+   "rows": [
+    {
+     "name": "GOLDGR / XAUt 0.01%",
+     "address": "0x0c592152111098ac7e5c9c0b007bb2e7985d7542",
+     "reserve_usd": "15314857.6075",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "580.7160141198",
+      "h24": "4198.2975840377"
+     },
+     "fee_pct": null,
+     "price_usd": "128.7854681903",
+     "created": "2025-04-02T15:23:11Z"
+    },
+    {
+     "name": "XAUt / WETH 0.3%",
+     "address": "0xc5c7c21f4e60770ca5991a8832127a40f5236f73",
+     "reserve_usd": "7073858.1676",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "92747.5202835769",
+      "m30": "195575.554061712",
+      "h1": "248070.315220871",
+      "h6": "3883024.17525002",
+      "h24": "21204285.4307152"
+     },
+     "fee_pct": null,
+     "price_usd": "3981.162202775",
+     "created": "2021-12-29T14:39:06Z"
+    },
+    {
+     "name": "PAXG / XAUt 0.01%",
+     "address": "0xc756bba710d45647715079ce50aa16aab36ded42",
+     "reserve_usd": "6427983.019",
+     "volume_usd": {
+      "m5": "4995.5818169151",
+      "m15": "56763.9591543585",
+      "m30": "190782.606081228",
+      "h1": "295584.62698669",
+      "h6": "2785938.72763586",
+      "h24": "15166140.9499308"
+     },
+     "fee_pct": null,
+     "price_usd": "3991.1056300698",
+     "created": "2025-10-22T13:31:23Z"
+    },
+    {
+     "name": "XAUt / USDT 0.05%",
+     "address": "0x6546055f46e866a4b9a4a13e81273e3152bae5da",
+     "reserve_usd": "3745625.1407",
+     "volume_usd": {
+      "m5": "2038.1653756335",
+      "m15": "5206.7191829149",
+      "m30": "16930.3262843911",
+      "h1": "39848.0920548798",
+      "h6": "1249494.06756119",
+      "h24": "14052272.1665289"
+     },
+     "fee_pct": null,
+     "price_usd": "3981.1490581019",
+     "created": "2021-12-29T14:39:06Z"
+    },
+    {
+     "name": "PAXG / XAUt 0.05%",
+     "address": "0xed7ef9a9a05a48858a507c080def0405ad1eaa3e",
+     "reserve_usd": "3061624.9643",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "2398.0639476558",
+      "m30": "2398.0639476558",
+      "h1": "22473.7698369989",
+      "h6": "32693.7616003214",
+      "h24": "573559.320181128"
+     },
+     "fee_pct": null,
+     "price_usd": "3995.651594975",
+     "created": "2024-09-02T08:55:47Z"
+    },
+    {
+     "name": "PAXG / XAUt 0.05%",
+     "address": "0x4bb2f1067164203bb9007338c523fa7c2fc69bc458c277d285a19650e8ef2239",
+     "reserve_usd": "2480455.9131",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "1886.5526068111",
+      "h24": "479080.807091594"
+     },
+     "fee_pct": null,
+     "price_usd": "3969.581930714",
+     "created": "2025-02-05T06:04:11Z"
+    },
+    {
+     "name": "PAXG / XAUt",
+     "address": "0x218c659b6bbb73d47c7926fc90d9893342534b84",
+     "reserve_usd": "2247236.892",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "5535.74398359",
+      "m30": "5535.74398359",
+      "h1": "5535.74398359",
+      "h6": "95335.6632911433",
+      "h24": "346269.618600371"
+     },
+     "fee_pct": null,
+     "price_usd": "3991.4392067685",
+     "created": "2025-04-25T18:52:35Z"
+    },
+    {
+     "name": "XAUt / sUSDS 1%",
+     "address": "0x2f5dff74b96e2df0fa8a5695318d59839c3ce5d058b19024fbfe276100b676ff",
+     "reserve_usd": "1868262.0142",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "102.9296694822",
+      "m30": "102.9296694822",
+      "h1": "102.9296694822",
+      "h6": "2636.2945754246",
+      "h24": "48719.9901736531"
+     },
+     "fee_pct": null,
+     "price_usd": "3195.5811698905",
+     "created": "2026-02-01T18:51:47Z"
+    },
+    {
+     "name": "XAUt / WBTC 0.3%",
+     "address": "0xe8a1f39c16eea2844e98f951d711bb4bb31557ad",
+     "reserve_usd": "1783290.4982",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "8039.9367041799",
+      "m30": "36448.6428569282",
+      "h1": "38453.5838436688",
+      "h6": "108457.139701211",
+      "h24": "322735.49281418"
+     },
+     "fee_pct": null,
+     "price_usd": "3981.7755480192",
+     "created": "2025-01-21T13:12:59Z"
+    },
+    {
+     "name": "XAUt / USDT 0.05%",
+     "address": "0xd52eb9285b87e38e3c228b4e339bfe15f24888953966085cd25a2f6403a95326",
+     "reserve_usd": "1683296.7798",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "684.2679040959",
+      "h1": "6473.8866807374",
+      "h6": "360231.805566668",
+      "h24": "5184788.36103709"
+     },
+     "fee_pct": null,
+     "price_usd": "3983.3434400475",
+     "created": "2025-09-28T08:44:47Z"
+    },
+    {
+     "name": "XAUt / ETH 0.3%",
+     "address": "0x69c36d29eb9d2eb3546ab0906de9e7fe56827a358d1f5a3518f2737d33df2903",
+     "reserve_usd": "1107207.5596",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "23068.9867524229",
+      "m30": "51255.2846089579",
+      "h1": "66192.1905030906",
+      "h6": "739814.332133",
+      "h24": "2270410.36571663"
+     },
+     "fee_pct": null,
+     "price_usd": "3981.4571986645",
+     "created": "2025-03-30T21:20:23Z"
+    },
+    {
+     "name": "XAUt / USDT 0.3%",
+     "address": "0xa91f80380d9cc9c86eb98d2965a0ded9e2000791",
+     "reserve_usd": "665629.0856",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "11671.9413127961",
+      "h24": "3069484.31806962"
+     },
+     "fee_pct": null,
+     "price_usd": "3976.8157490386",
+     "created": "2022-07-09T19:55:57Z"
+    },
+    {
+     "name": "XAUt / USDC 0.3%",
+     "address": "0xa8dd78582e31791c08187169a3343365a1e3282c67bc7f93c1e585ddd0a4c4e0",
+     "reserve_usd": "639264.678",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "1278.902875437",
+      "h6": "22046.435062695",
+      "h24": "1400686.43129935"
+     },
+     "fee_pct": null,
+     "price_usd": "3983.1722470656",
+     "created": "2025-03-10T23:20:47Z"
+    },
+    {
+     "name": "XAUt / WBTC 0.3%",
+     "address": "0x5791b454341cda5a501956623095896e73d6861a03e41f9a104798e66ad1031f",
+     "reserve_usd": "489108.6293",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "3516.5729610562",
+      "m30": "13120.8038706899",
+      "h1": "14294.1851039741",
+      "h6": "93167.887705359",
+      "h24": "362295.188090761"
+     },
+     "fee_pct": null,
+     "price_usd": "3981.910171557",
+     "created": "2025-07-07T10:02:35Z"
+    },
+    {
+     "name": "PAXG / XAUt 0.03%",
+     "address": "0x5c1a9a7329913354597817638e615e0ecb38ae13679125eb1a3b5953ed4612d4",
+     "reserve_usd": "481432.7982",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "31402.2166183054"
+     },
+     "fee_pct": null,
+     "price_usd": "3455.4582501509",
+     "created": "2025-08-14T06:15:23Z"
+    },
+    {
+     "name": "XAUt / USDT 0.051%",
+     "address": "0xace88ccc9f71c811ea38ea93d707d036579166d4",
+     "reserve_usd": "431331.3098",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "13338.9593251024",
+      "m30": "52814.1062299962",
+      "h1": "80666.8925081564",
+      "h6": "159240.320482951",
+      "h24": "3315273.26194828"
+     },
+     "fee_pct": null,
+     "price_usd": "3981.1570424009",
+     "created": "2026-10-22T03:11:50Z"
+    },
+    {
+     "name": "XAUt / USDT 0.044%",
+     "address": "0x19a01cd4a3d7a1fd58ee778fcdc74fce46023adb0ac179a603e5b3234dd5610d",
+     "reserve_usd": "423864.3995",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "1635.4601115183",
+      "h24": "276638.752852409"
+     },
+     "fee_pct": null,
+     "price_usd": "3985.6189160823",
+     "created": "2025-10-18T15:07:59Z"
+    },
+    {
+     "name": "XAUt / USDC 0.3%",
+     "address": "0x841ea2475a989eeccd27fe39967c19cb097357a3",
+     "reserve_usd": "307050.2995",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "157.6708905914",
+      "h1": "157.6708905914",
+      "h6": "1766.3049141057",
+      "h24": "319424.318397523"
+     },
+     "fee_pct": null,
+     "price_usd": "3987.5291619178",
+     "created": "2022-11-21T10:41:48Z"
+    },
+    {
+     "name": "XAUt / PAXG",
+     "address": "0xc48a38499a90e3b883c509ca08ec1b540cdf15ee",
+     "reserve_usd": "284129.7402",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "3466.9381586249",
+      "h1": "3466.9381586249",
+      "h6": "108112.854529772",
+      "h24": "156216.756597187"
+     },
+     "fee_pct": null,
+     "price_usd": "3985.6293381172",
+     "created": "2025-03-19T03:58:19Z"
+    },
+    {
+     "name": "XAUt / WETH 1%",
+     "address": "0x3e04d683f7187bc0293e05006203accb29311767",
+     "reserve_usd": "114153.3518",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "1112.3491190981",
+      "m30": "1112.3491190981",
+      "h1": "1112.3491190981",
+      "h6": "14700.7615288103",
+      "h24": "147767.69399653"
+     },
+     "fee_pct": null,
+     "price_usd": "3983.8185249941",
+     "created": "2025-02-22T02:35:47Z"
+    }
+   ]
+  },
+  "eth_spyx_0x90a2a4c7": {
+   "url": "https://api.geckoterminal.com/api/v2/networks/eth/tokens/0x90a2a4c76b5d8c0bc892a69ea28aa775a8f2dd48/pools",
+   "fetched_at_utc": "2026-10-30T03:55:49Z",
+   "rows": [
+    {
+     "name": "SPYx / ETH 0.3%",
+     "address": "0x91e22588bf5997e958b32f72131b21b0c50e126addd273e0de39260032ddf6fd",
+     "reserve_usd": "797.3444",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "780.6561570934",
+     "created": "2026-06-26T06:42:47Z"
+    },
+    {
+     "name": "SPYx / USDC 87%",
+     "address": "0x26cfe1e3e714882131f39fe733c59285e9b4ae72469b3379f1b1ac58e84efc13",
+     "reserve_usd": "553.9776",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "816.6427319084",
+     "created": "2026-06-19T01:53:23Z"
+    },
+    {
+     "name": "SPYx / USDC 96.5%",
+     "address": "0x490279d144afd96c1a46fa50dc6234190e6ecfd99d724a32ee3ebfa8a4edf857",
+     "reserve_usd": "476.3523",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "841.7025792151",
+     "created": "2026-04-16T04:22:11Z"
+    },
+    {
+     "name": "SPYx / USDC 81.349%",
+     "address": "0x00c6d0888007890b3fb8db596845697fbc3d311feabc5e088c736c4d8da3d399",
+     "reserve_usd": "305.3458",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.9107775565"
+     },
+     "fee_pct": null,
+     "price_usd": "821.8305966919",
+     "created": "2026-06-09T23:56:11Z"
+    },
+    {
+     "name": "SPYx / ETH 88%",
+     "address": "0x12a9f0385e9988c513c939aae216b551bec9a1773aa02500afb420302f44e1ff",
+     "reserve_usd": "129.5684",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "1023.0082517329",
+     "created": "2026-08-16T19:44:11Z"
+    },
+    {
+     "name": "SPYx / USDC 0.3%",
+     "address": "0xafdd3bdc20a31652e48b56b73952ca324f544575",
+     "reserve_usd": "21.8742",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "9.6204724928"
+     },
+     "fee_pct": null,
+     "price_usd": "740.1795924237",
+     "created": "2025-09-08T09:44:59Z"
+    },
+    {
+     "name": "SPYx / USDT 0.3%",
+     "address": "0xa5d0c0a6e91c36e2dbc3189ed2f1bd1c88cd01825195fec72a8c6f955ee56b0e",
+     "reserve_usd": "5.156",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "756.2485567763",
+     "created": "2026-07-12T05:41:35Z"
+    },
+    {
+     "name": "SPYx / USDC",
+     "address": "0xd9aecbf2ba0a76eaf2a53ba319655304101f4cd5",
+     "reserve_usd": "0.01481454115",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "1106.3494213309",
+     "created": "2025-11-14T02:32:47Z"
+    },
+    {
+     "name": "SPYx / USDC 0.3%",
+     "address": "0xf7b732fe5888a0447da5f2469045b6ad4a32a67be075b721b7e7669818fcdd0c",
+     "reserve_usd": "0.0119628533609802",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "781.5016335676",
+     "created": "2026-07-03T13:41:11Z"
+    }
+   ]
+  },
+  "arb_xaut0_0x40461291": {
+   "url": "https://api.geckoterminal.com/api/v2/networks/arbitrum/tokens/0x40461291347e1ecbb09499f3371d3f17f10d7159/pools",
+   "fetched_at_utc": "2026-10-30T03:55:59Z",
+   "rows": [
+    {
+     "name": "XAUt0 / USDT 0.6%",
+     "address": "0xb896675bfb20eed4b90d83f64cf137a860a99a86604f7fac201a822f2b4abc34",
+     "reserve_usd": "48546.7823",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "79.9774409852",
+      "h6": "149.2094362602",
+      "h24": "180.1267479372"
+     },
+     "fee_pct": null,
+     "price_usd": "3994.8771720879",
+     "created": "2025-12-19T13:08:12Z"
+    },
+    {
+     "name": "XAUt0 / USDT 0.3%",
+     "address": "0xf87da73cfb22804ccd9562c714b6cbf06dc7d0cb",
+     "reserve_usd": "34723.0935",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "159.8696256795",
+      "h6": "2402.5727436669",
+      "h24": "6424.1470221211"
+     },
+     "fee_pct": null,
+     "price_usd": "3991.9866004979",
+     "created": "2026-03-30T22:00:28Z"
+    },
+    {
+     "name": "GBULL / XAUt0 1%",
+     "address": "0xe16ec4892623b84a2ad762af76f43677d073b285",
+     "reserve_usd": "10390.9206",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.00001040510994",
+     "created": "2026-10-22T16:23:17Z"
+    },
+    {
+     "name": "GM / XAUt0 1%",
+     "address": "0xf2b043715203ae06cd92c88bc5c66d71903a47cd",
+     "reserve_usd": "10301.1299",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.0000100872369",
+     "created": "2026-10-26T20:12:23Z"
+    },
+    {
+     "name": "GB / XAUt0 1%",
+     "address": "0x7d7a04c6ade08d80d82947df7beba0ed328d74fe",
+     "reserve_usd": "10022.2209",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.00001014124782",
+     "created": "2026-10-24T18:39:25Z"
+    },
+    {
+     "name": "GLD / XAUt0 1%",
+     "address": "0x494427f76629d11bbd342e4cb9e5a21a2585735c",
+     "reserve_usd": "9992.5519",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.0000101873229",
+     "created": "2026-10-23T17:39:29Z"
+    },
+    {
+     "name": "PAXG / XAUt0 1%",
+     "address": "0x2eaf9cef39fd77cbc2f1eebc4663e1488f34fd9a",
+     "reserve_usd": "9894.5894",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.00001012495744",
+     "created": "2026-10-22T17:15:52Z"
+    },
+    {
+     "name": "GOLDFEDER / XAUt0 1%",
+     "address": "0x3eda0e2304e043a92a7ccb6c2d8029e02c5875b5",
+     "reserve_usd": "9871.7592",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.00001002925718",
+     "created": "2026-10-22T16:53:00Z"
+    },
+    {
+     "name": "GCAT / XAUt0 1%",
+     "address": "0xf42a6de4773eb18d939e4b7465f707af9a74807f",
+     "reserve_usd": "9857.822",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.00001001385032",
+     "created": "2026-10-22T20:27:52Z"
+    },
+    {
+     "name": "XAUt0 / PAXG 0.3%",
+     "address": "0x19efde347dc05b5647e9e53f85df83d9af40c1ea1f81d37f37bade539fbc69ce",
+     "reserve_usd": "9045.4232",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "92.5585874954",
+      "h24": "5661.6476283822"
+     },
+     "fee_pct": null,
+     "price_usd": "3994.6432021897",
+     "created": "2025-11-22T15:56:27Z"
+    },
+    {
+     "name": "GBULL / XAUt0 1%",
+     "address": "0x667e2006b86f79b961e8b136467f418eee8b0567",
+     "reserve_usd": "4931.4304",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000005074460013",
+     "created": "2026-10-23T05:18:50Z"
+    },
+    {
+     "name": "XAUt0 / USDC 0.3%",
+     "address": "0xf36fc5525640dabed6101d0753fec7e4cebe268e",
+     "reserve_usd": "4728.3812",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "8.27600803",
+      "h1": "8.27600803",
+      "h6": "149.5437038698",
+      "h24": "212.2838635084"
+     },
+     "fee_pct": null,
+     "price_usd": "3996.1410091869",
+     "created": "2026-03-22T19:22:10Z"
+    },
+    {
+     "name": "XAUt0 / WBTC 0.7%",
+     "address": "0xf66d4a73bc43cecf3d1fa0b948f5b8e1c5fb3d749b87f4ca6cd0bdda6dcec784",
+     "reserve_usd": "2304.1555",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "8.3088316404",
+      "h1": "8.3088316404",
+      "h6": "66.0810115323",
+      "h24": "106.2311607859"
+     },
+     "fee_pct": null,
+     "price_usd": "4011.9901691849",
+     "created": "2026-03-24T09:25:42Z"
+    },
+    {
+     "name": "XAUt0 / WBTC 0.15%",
+     "address": "0x55cc3c7680e20b59064ad1f0f4faea42a4349659",
+     "reserve_usd": "1025.14",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "4559.2432733349",
+     "created": "2025-11-23T14:02:59Z"
+    },
+    {
+     "name": "XAUt0 / USDT 0.31%",
+     "address": "0xf64bca9d1f27b2657b7a25795fcaf1c7086824f3",
+     "reserve_usd": "719.6161",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "6.5406320067"
+     },
+     "fee_pct": null,
+     "price_usd": "4034.9364630955",
+     "created": "2025-09-18T10:23:42Z"
+    },
+    {
+     "name": "XAUt0 / USDC 0.05%",
+     "address": "0xcb3964cd928e451d42ef28279dac51c83398b78f6cf9a9ae66c766d637c35ffe",
+     "reserve_usd": "349.5406",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "17.7216516272"
+     },
+     "fee_pct": null,
+     "price_usd": "4006.299497913",
+     "created": "2026-03-24T20:57:28Z"
+    },
+    {
+     "name": "XAUt0 / USDT 1%",
+     "address": "0x11845dd376aa55ed41d7630de9feeb1a953b7a1f",
+     "reserve_usd": "201.1119",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "4062.1707823642",
+     "created": "2025-12-17T14:46:01Z"
+    },
+    {
+     "name": "SESH / XAUt0 0.3%",
+     "address": "0x91c1ff5226deb773428a3a5bc1c6017c33b5a82a",
+     "reserve_usd": "94.4263",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.8088590389"
+     },
+     "fee_pct": null,
+     "price_usd": "0.0182029791",
+     "created": "2026-03-24T19:46:12Z"
+    },
+    {
+     "name": "XAUt0 / ETH 0.25%",
+     "address": "0x264fb2f5fac883c35ad829582d30b6a3caeba9d321c50577a9d147d0a85fbe48",
+     "reserve_usd": "69.1939",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "13.9892662376",
+      "h24": "82.0242544026"
+     },
+     "fee_pct": null,
+     "price_usd": "3978.6631707192",
+     "created": "2026-10-19T17:48:57Z"
+    },
+    {
+     "name": "XAUt0 / PAXG 0.038%",
+     "address": "0x70ca7a10446d7a98ed0b8142578b63eeae24ca0f945734e8529521357bea7ff7",
+     "reserve_usd": "56.4711",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "30.6690019129",
+      "h24": "74.749128149"
+     },
+     "fee_pct": null,
+     "price_usd": "3908.644256629",
+     "created": "2026-09-21T01:04:28Z"
+    }
+   ]
+  },
+  "arb_spyx_0x90a2a4c7": {
+   "url": "https://api.geckoterminal.com/api/v2/networks/arbitrum/tokens/0x90a2a4c76b5d8c0bc892a69ea28aa775a8f2dd48/pools",
+   "fetched_at_utc": "2026-10-30T03:56:09Z",
+   "rows": []
+  },
+  "sol_spyx_XsoCS1Tf": {
+   "url": "https://api.geckoterminal.com/api/v2/networks/solana/tokens/XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W/pools",
+   "fetched_at_utc": "2026-10-30T03:56:19Z",
+   "rows": [
+    {
+     "name": "SPYx / USDC",
+     "address": "6truu3rZuiB9rKQg4VYC3Dt3QwV7DgwGqXrYUcrvnDDE",
+     "reserve_usd": "2099939.3307",
+     "volume_usd": {
+      "m5": "0.06659327963",
+      "m15": "1420.2397192612",
+      "m30": "1426.1093566398",
+      "h1": "1433.5326617451",
+      "h6": "30265.0300652873",
+      "h24": "226153.331916265"
+     },
+     "fee_pct": null,
+     "price_usd": "769.2419963621",
+     "created": "2026-02-11T11:14:22Z"
+    },
+    {
+     "name": "STONK / SPYx",
+     "address": "7a8xxAJBELDo6P9dikSYctdw6ce8F4mWr3ahcAD8Ao49",
+     "reserve_usd": "1413863.9905",
+     "volume_usd": {
+      "m5": "4239.8718108055",
+      "m15": "10419.4502796774",
+      "m30": "10892.0902420197",
+      "h1": "10895.2994238613",
+      "h6": "138415.763620254",
+      "h24": "311647.424831811"
+     },
+     "fee_pct": null,
+     "price_usd": "0.137735404",
+     "created": "2026-07-23T19:07:17Z"
+    },
+    {
+     "name": "SPYx / SOL",
+     "address": "BS9uyGV6XmNnPkM4f3xgxCdQEaFv7RSKs6fwrpvYHxfL",
+     "reserve_usd": "574053.2651",
+     "volume_usd": {
+      "m5": "0.520988969",
+      "m15": "3750.6020770383",
+      "m30": "12630.0809318332",
+      "h1": "20637.3270351015",
+      "h6": "115841.155201297",
+      "h24": "293815.964281858"
+     },
+     "fee_pct": null,
+     "price_usd": "768.9344806463",
+     "created": "2025-07-01T02:10:04Z"
+    },
+    {
+     "name": "SPYx / USDC",
+     "address": "4pCZCVEiYyT4efNdXUdL2tJF8VGMgiMXrZWq6FiNXhRw",
+     "reserve_usd": "410286.0637",
+     "volume_usd": {
+      "m5": "889.722015373",
+      "m15": "22714.5981802785",
+      "m30": "35229.5733355982",
+      "h1": "60897.9408302382",
+      "h6": "658107.543092553",
+      "h24": "2941536.67559698"
+     },
+     "fee_pct": null,
+     "price_usd": "768.8365098971",
+     "created": "2026-03-18T14:41:51Z"
+    },
+    {
+     "name": "SPYx / USDC",
+     "address": "27x6aSxcAm6SoazoxmmTtFg6fWMQuNmdKJmHagq1DUZy",
+     "reserve_usd": "234317.5739",
+     "volume_usd": {
+      "m5": "4.65134261",
+      "m15": "854.0876047907",
+      "m30": "2189.2120565386",
+      "h1": "5522.8730630561",
+      "h6": "70191.4718191513",
+      "h24": "438396.435926778"
+     },
+     "fee_pct": null,
+     "price_usd": "769.1270753781",
+     "created": "2025-08-06T08:45:37Z"
+    },
+    {
+     "name": "SPYx / USDC",
+     "address": "Fae5dWVntUt6zbWu2voXxioDpMii7SqQwtsxBmoVCsHR",
+     "reserve_usd": "172850.0186",
+     "volume_usd": {
+      "m5": "0.06321590932",
+      "m15": "221.9200425212",
+      "m30": "493.7054535705",
+      "h1": "1206.4649896733",
+      "h6": "15253.3922484715",
+      "h24": "96101.0745078812"
+     },
+     "fee_pct": null,
+     "price_usd": "769.4244075083",
+     "created": "2025-07-02T16:30:11Z"
+    },
+    {
+     "name": "TQQQx / SPYx",
+     "address": "Bztq1RwZmU4L7cCnkh5pVz4LnRZ2YUMBzQ5VC2ETg789",
+     "reserve_usd": "83441.8781",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "713.381361386",
+      "h24": "3169.8828517059"
+     },
+     "fee_pct": null,
+     "price_usd": "132.4066984512",
+     "created": "2026-05-29T19:22:00Z"
+    },
+    {
+     "name": "SPYx / USDC",
+     "address": "7sHMnvE7WqP7vQFWJGEnMT4vZg6Za9K7PpddDoXJCqME",
+     "reserve_usd": "78242.8193",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "564.6133943982",
+      "h24": "1298.6735047368"
+     },
+     "fee_pct": null,
+     "price_usd": "767.5830719734",
+     "created": "2025-06-27T12:59:33Z"
+    },
+    {
+     "name": "CAT / SPYx",
+     "address": "7sY6BrhDBkJdcYFrDd1M49hinSXrqk2bzS3rT6Juanch",
+     "reserve_usd": "46655.3973",
+     "volume_usd": {
+      "m5": "0.144164043",
+      "m15": "8.1121592397",
+      "m30": "8.1121592397",
+      "h1": "39.863695167",
+      "h6": "48.3759544393",
+      "h24": "10257.3541053402"
+     },
+     "fee_pct": null,
+     "price_usd": "0.0002774704109",
+     "created": "2026-09-21T15:53:21Z"
+    },
+    {
+     "name": "SPYx / SOL",
+     "address": "DAcfUT7Xnfm91xv4YZojgpYirLC3JfDG6PbtNqtaAkTn",
+     "reserve_usd": "44008.5096",
+     "volume_usd": {
+      "m5": "0.004589358056",
+      "m15": "853.8216344954",
+      "m30": "3118.8208275747",
+      "h1": "5479.9563663145",
+      "h6": "10431.8197044638",
+      "h24": "44254.2216262827"
+     },
+     "fee_pct": null,
+     "price_usd": "767.5545218029",
+     "created": "2026-03-18T16:53:36Z"
+    },
+    {
+     "name": "SPYx / SOL",
+     "address": "5JWX8pQhJNpFMjPwKhFSSVWRpss4wSyoqgRGnBNJfyuX",
+     "reserve_usd": "37127.7358",
+     "volume_usd": {
+      "m5": "492.7643007374",
+      "m15": "1091.3494051769",
+      "m30": "2604.5273640045",
+      "h1": "5643.4100087253",
+      "h6": "35486.8973851747",
+      "h24": "121147.619617783"
+     },
+     "fee_pct": null,
+     "price_usd": "767.6431542785",
+     "created": "2026-09-09T16:40:35Z"
+    },
+    {
+     "name": "SPYx / USDC",
+     "address": "Ph2aw6fSKja9MT39L27gwJcZi3F8hZL4xMnuVh36h8a",
+     "reserve_usd": "28824.4806",
+     "volume_usd": {
+      "m5": "30.5369832356",
+      "m15": "240.7694889996",
+      "m30": "552.8251535146",
+      "h1": "1388.1158820077",
+      "h6": "14484.840773633",
+      "h24": "111657.313165723"
+     },
+     "fee_pct": null,
+     "price_usd": "769.4546022476",
+     "created": "2026-06-25T08:18:00Z"
+    },
+    {
+     "name": "FLOATER / SPYx",
+     "address": "Dac3Fzmt6Pq6zyyrMBRpkuGHTKqyCnSU8NRT5gzHZYwd",
+     "reserve_usd": "27502.5211",
+     "volume_usd": {
+      "m5": "32.9211883452",
+      "m15": "78.2979393559",
+      "m30": "78.2979393559",
+      "h1": "585.0260065544",
+      "h6": "10329.70892812",
+      "h24": "193322.482131527"
+     },
+     "fee_pct": null,
+     "price_usd": "0.00001749799344",
+     "created": "2026-10-28T22:35:18Z"
+    },
+    {
+     "name": "QQQx / SPYx",
+     "address": "FN27PwZpDnSBNZR5vzx6B7waxowV84ZNFQrzgr6XeYbf",
+     "reserve_usd": "25975.4663",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "580.4564104962",
+      "h24": "2160.0400967288"
+     },
+     "fee_pct": null,
+     "price_usd": "703.1061115356",
+     "created": "2025-08-06T06:16:00Z"
+    },
+    {
+     "name": "QQQx / SPYx",
+     "address": "7mYFrN2TQtYc2HMZEXuVfWkPu9n5EFfX9Ha59X3n6PWE",
+     "reserve_usd": "21561.3614",
+     "volume_usd": {
+      "m5": "118.8581979161",
+      "m15": "129.6910061056",
+      "m30": "206.8915464897",
+      "h1": "308.7052207483",
+      "h6": "5138.2208643667",
+      "h24": "21664.2553296021"
+     },
+     "fee_pct": null,
+     "price_usd": "700.6997920037",
+     "created": "2026-07-12T15:09:51Z"
+    },
+    {
+     "name": "LIQUITITTY / SPYx",
+     "address": "A7Y7J282RH2BT4JKqXd3kicFkyZCqZQcA6UFMBoaV5EA",
+     "reserve_usd": "20342.5663",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "2.3447867663",
+      "h24": "6080.868491212"
+     },
+     "fee_pct": null,
+     "price_usd": "0.00001962708425",
+     "created": "2026-10-28T22:41:56Z"
+    },
+    {
+     "name": "TOWER / SPYx",
+     "address": "57Am4By6gFmeVR1YrdGLEz5q6RFY25RYAKehrK2vBGFd",
+     "reserve_usd": "20043.9475",
+     "volume_usd": {
+      "m5": "5.7490778467",
+      "m15": "5.7490778467",
+      "m30": "8.6395430018",
+      "h1": "11.5321603448",
+      "h6": "941.1152542604",
+      "h24": "7495.0197219932"
+     },
+     "fee_pct": null,
+     "price_usd": "0.0000574837373",
+     "created": "2026-10-13T14:44:09Z"
+    },
+    {
+     "name": "BREAD / SPYx",
+     "address": "52i2winHNRk8sczH3uTooHH177Rb4ZRgtcNJQgB1UuyP",
+     "reserve_usd": "19591.8933",
+     "volume_usd": {
+      "m5": "18.8123352378",
+      "m15": "40.6651452799",
+      "m30": "43.3286504739",
+      "h1": "43.3286504739",
+      "h6": "43.3286504739",
+      "h24": "3237.1172441749"
+     },
+     "fee_pct": null,
+     "price_usd": "0.00001956596506",
+     "created": "2026-10-29T04:53:30Z"
+    },
+    {
+     "name": "POP / SPYx",
+     "address": "9RMkt7SYwU5zHYVMfk7Luvwa3Jf3n5cLvSK5MPzioFaG",
+     "reserve_usd": "19327.1743",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "13097.1341415216"
+     },
+     "fee_pct": null,
+     "price_usd": "0.00001980057783",
+     "created": "2026-10-29T20:03:01Z"
+    },
+    {
+     "name": "BACK / SPYx",
+     "address": "A2L6hmn2s7TMD2qKfT8k8BFuJq6sUMDg5yk8BtbsGBUh",
+     "reserve_usd": "7751.7875",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "64.519764909",
+      "h24": "7314.5576034055"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000009764102925",
+     "created": "2026-10-29T15:40:12Z"
+    }
+   ]
+  },
+  "sol_xaut0_AymATz4T": {
+   "url": "https://api.geckoterminal.com/api/v2/networks/solana/tokens/AymATz4TCL9sWNEEV9Kvyz45CHVhDZ6kUgjTJPzLpU9P/pools",
+   "fetched_at_utc": "2026-10-30T03:56:29Z",
+   "rows": [
+    {
+     "name": "XAUt0 / GLDx",
+     "address": "7WQcQi2dDgZDnpJKwoY7F9cALk3QEUG4kAyhtjZVkVa1",
+     "reserve_usd": "439696.3541",
+     "volume_usd": {
+      "m5": "37.4843088987",
+      "m15": "37.883517117",
+      "m30": "259.2323625387",
+      "h1": "2605.9177744502",
+      "h6": "7387.5527124162",
+      "h24": "63768.060195281"
+     },
+     "fee_pct": null,
+     "price_usd": "3996.1949785386",
+     "created": "2026-02-06T12:14:00Z"
+    },
+    {
+     "name": "XAUt0 / USDT",
+     "address": "9KWAAyaYF7nmMWzirnBmVhE1q4YXPHcXjzfi6YreNtDY",
+     "reserve_usd": "405987.4292",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "401.2173231432",
+      "h1": "401.2173231432",
+      "h6": "5042.424337263",
+      "h24": "20024.6280803832"
+     },
+     "fee_pct": null,
+     "price_usd": "3991.5338518621",
+     "created": "2025-10-25T08:37:26Z"
+    },
+    {
+     "name": "XAUt0 / USDT",
+     "address": "EUAa7W7omZMN6mzLFidmULMYwJBFxfUzE3kD8ywX9Qq9",
+     "reserve_usd": "254816.3832",
+     "volume_usd": {
+      "m5": "86.669267548",
+      "m15": "964.3793179291",
+      "m30": "2331.2560220238",
+      "h1": "4387.1562448371",
+      "h6": "39355.4611519716",
+      "h24": "136219.873684456"
+     },
+     "fee_pct": null,
+     "price_usd": "3997.8657117427",
+     "created": "2026-03-05T02:30:00Z"
+    },
+    {
+     "name": "XAUt0 / USDC",
+     "address": "B3QsKvpsBYVAuJBzyKRBWBJw8CAM45zStdJhtE1miBri",
+     "reserve_usd": "108252.2091",
+     "volume_usd": {
+      "m5": "10.7542309486",
+      "m15": "150.0574478567",
+      "m30": "262.5020958975",
+      "h1": "480.5210396686",
+      "h6": "3759.7081036044",
+      "h24": "10169.338443655"
+     },
+     "fee_pct": null,
+     "price_usd": "3982.8647582695",
+     "created": "2026-02-10T14:16:25Z"
+    },
+    {
+     "name": "GOLD / XAUt0",
+     "address": "C4LZ1YcqVbbCh3WqDuig7zQpG24o4UUDXwdJjhoy7PjR",
+     "reserve_usd": "107710.4143",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "131.080635383",
+      "m30": "2660.8512022202",
+      "h1": "3114.7909577396",
+      "h6": "5997.847198421",
+      "h24": "20950.1411350875"
+     },
+     "fee_pct": null,
+     "price_usd": "4021.4951797219",
+     "created": "2026-02-06T15:51:02Z"
+    },
+    {
+     "name": "XAUt0 / GLDx",
+     "address": "92ntxmz5vWkRAE1iSQ9HpX7y6bxMiNTaMf1Sh6rSa9BC",
+     "reserve_usd": "57417.1953",
+     "volume_usd": {
+      "m5": "0.2983173315",
+      "m15": "0.2983173315",
+      "m30": "3.7921294641",
+      "h1": "3.7921294641",
+      "h6": "1990.1886131642",
+      "h24": "1990.1886131642"
+     },
+     "fee_pct": null,
+     "price_usd": "3977.5644201511",
+     "created": "2026-01-30T08:06:00Z"
+    },
+    {
+     "name": "ZEC / XAUt0",
+     "address": "7fqohXEWP41Rjwr7Nbo4UQFeDZxJQEmZVup81iFhfMgy",
+     "reserve_usd": "27230.7022",
+     "volume_usd": {
+      "m5": "90.6239990891",
+      "m15": "277.3803756574",
+      "m30": "997.512735365",
+      "h1": "1789.3773459499",
+      "h6": "29052.6003595322",
+      "h24": "73168.4430927538"
+     },
+     "fee_pct": null,
+     "price_usd": "1272.2811682813",
+     "created": "2026-03-16T23:27:01Z"
+    },
+    {
+     "name": "XAUt0 / BBC",
+     "address": "CA4xewcd8MMgoUyabnFeCb48WZivbMQmzTV1KFyhV1GR",
+     "reserve_usd": "23508.9896",
+     "volume_usd": {
+      "m5": "35.1656709763",
+      "m15": "92.7020195366",
+      "m30": "132.6089120391",
+      "h1": "132.6089120391",
+      "h6": "669.4294442734",
+      "h24": "1754.4405773755"
+     },
+     "fee_pct": null,
+     "price_usd": "3983.6875972574",
+     "created": "2026-06-03T18:18:00Z"
+    },
+    {
+     "name": "XAUt0 / SOL",
+     "address": "B2q3X5QA47NTaVrQKNhGo2ii1Zs8x5h6CZK6qydRdJrA",
+     "reserve_usd": "13712.5238",
+     "volume_usd": {
+      "m5": "35.071792886",
+      "m15": "84.4200297307",
+      "m30": "229.1823696549",
+      "h1": "449.0834021839",
+      "h6": "2822.2216516916",
+      "h24": "6047.2983573107"
+     },
+     "fee_pct": null,
+     "price_usd": "3984.2688536258",
+     "created": "2026-02-04T12:35:10Z"
+    },
+    {
+     "name": "VNXAU / XAUt0",
+     "address": "2KRf2V4KaVfVWn6fUKmKdgUDh5LsErWD9xJp6vqU4Jfp",
+     "reserve_usd": "13202.872",
+     "volume_usd": {
+      "m5": "0.4893771209",
+      "m15": "28.3217618484",
+      "m30": "68.1233499893",
+      "h1": "144.1473553743",
+      "h6": "484.6835973015",
+      "h24": "1137.1900784233"
+     },
+     "fee_pct": null,
+     "price_usd": "129.58855127",
+     "created": "2026-03-19T03:30:00Z"
+    },
+    {
+     "name": "XAUt0 / cbBTC",
+     "address": "8YNjiE4KG5XK7jQn2EpFT6TXPr1TktYeJHq93hvTLPUL",
+     "reserve_usd": "5905.7042",
+     "volume_usd": {
+      "m5": "6.5331695838",
+      "m15": "34.348783157",
+      "m30": "95.9565355338",
+      "h1": "106.5320792889",
+      "h6": "562.4269631952",
+      "h24": "1259.6895041348"
+     },
+     "fee_pct": null,
+     "price_usd": "3980.0113196846",
+     "created": "2026-02-14T17:15:25Z"
+    },
+    {
+     "name": "PAXG / XAUt0",
+     "address": "J24aSiPSxLgVpDoegcbkxw1Jcaq69qj7rMsdEnYva3k",
+     "reserve_usd": "4551.1001",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "14.5824754443",
+      "m30": "14.5824754443",
+      "h1": "14.5824754443",
+      "h6": "14.5824754443",
+      "h24": "146.0259756907"
+     },
+     "fee_pct": null,
+     "price_usd": "4009.7161202436",
+     "created": "2026-07-11T00:31:21Z"
+    },
+    {
+     "name": "PAXG / XAUt0",
+     "address": "DrenqTKH8wKfLy3Yz19aYhqqe36Gn1WmLfGZiSrfXGxF",
+     "reserve_usd": "4297.0038",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "370.9150246615"
+     },
+     "fee_pct": null,
+     "price_usd": "4033.4926001631",
+     "created": "2026-10-15T21:43:44Z"
+    },
+    {
+     "name": "XAUt0 / GLDx",
+     "address": "BgwPpa9ZoCiwZVJoHSmuLyvGo28N7tr1a2xHDdYLCNR4",
+     "reserve_usd": "2178.5467",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "8.6641948651",
+      "h24": "79.8342467427"
+     },
+     "fee_pct": null,
+     "price_usd": "4007.490686924",
+     "created": "2026-10-09T21:42:21Z"
+    },
+    {
+     "name": "XAUt0 / GOLD",
+     "address": "8zmcoZboLLjAr8oM2FSHt6mvbc5D6WU7TSD3bQXVuJW3",
+     "reserve_usd": "1168.8302",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "329.1440103324"
+     },
+     "fee_pct": null,
+     "price_usd": "4007.7914218282",
+     "created": "2026-06-27T05:28:00Z"
+    },
+    {
+     "name": "XAUt0 / WAIFU",
+     "address": "8i9rtxbLG36NTdUuTU2av8fPGcA3J1UYgdN5eQxYMk7i",
+     "reserve_usd": "1002.4023",
+     "volume_usd": {
+      "m5": "1.2761192583",
+      "m15": "1.2761192583",
+      "m30": "1.2761192583",
+      "h1": "2.5011303385",
+      "h6": "4.2478098178",
+      "h24": "11.7448993484"
+     },
+     "fee_pct": null,
+     "price_usd": "3995.3698561298",
+     "created": "2026-08-08T17:16:00Z"
+    },
+    {
+     "name": "XAUt0 / PAXG",
+     "address": "BRAfc8XtLaBWgSKWPm8vpqatyvHsEWEuzEm7CZsYcQxW",
+     "reserve_usd": "516.2903",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "18.8188960209"
+     },
+     "fee_pct": null,
+     "price_usd": "4028.9400225507",
+     "created": "2026-02-10T14:47:37Z"
+    },
+    {
+     "name": "XAUt0 / USDC",
+     "address": "AdCg9iVVmj7zoLUJFdCPmAxF3BTN9caPV3WoTNXEM7AH",
+     "reserve_usd": "367.583",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "3.987477492",
+      "h6": "34.8876851399",
+      "h24": "170.5913565139"
+     },
+     "fee_pct": null,
+     "price_usd": "3995.468428826",
+     "created": "2026-08-14T16:25:54Z"
+    },
+    {
+     "name": "SOW / XAUt0",
+     "address": "FAqYfneGo3D1YR4c1ppfkJeSnXpDDd1bxA1P3VQunKZH",
+     "reserve_usd": "223.9764",
+     "volume_usd": {
+      "m5": "0.1878322202",
+      "m15": "0.3757414432",
+      "m30": "0.3757414432",
+      "h1": "7.4909837005",
+      "h6": "8.5411747299",
+      "h24": "28.0034433454"
+     },
+     "fee_pct": null,
+     "price_usd": "0.0004661705848",
+     "created": "2026-02-03T23:08:04Z"
+    },
+    {
+     "name": "PAXG / XAUt0",
+     "address": "9xSuwrd6mVgcpW2G98MBPLCQUJic4RBxfgFauVayu1Rf",
+     "reserve_usd": null,
+     "volume_usd": {
+      "m5": "572.3461784774",
+      "m15": "1023.8885076127",
+      "m30": "1909.4463396482",
+      "h1": "7281.6524642983",
+      "h6": "39454.0774926855",
+      "h24": "151915.085127021"
+     },
+     "fee_pct": null,
+     "price_usd": "3997.9647396366",
+     "created": "2026-06-26T06:32:36Z"
+    }
+   ]
+  },
+  "hyper_xaut0_0xf4d9235": {
+   "url": "https://api.geckoterminal.com/api/v2/networks/hyperevm/tokens/0xf4d9235269a96aadafc9adae454a0618ebe37949/pools",
+   "fetched_at_utc": "2026-10-30T03:56:38Z",
+   "rows": [
+    {
+     "name": "XAUt0 / WHYPE 0.3%",
+     "address": "0x6d6e9d95c40cd9041c71b620177ddce33a3137f6",
+     "reserve_usd": "217174.4234",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "2031.6075364531",
+      "m30": "7829.0121403571",
+      "h1": "8188.3431059738",
+      "h6": "94026.8796630832",
+      "h24": "350414.321599365"
+     },
+     "fee_pct": null,
+     "price_usd": "3981.7463095522",
+     "created": "2025-09-26T16:47:38Z"
+    },
+    {
+     "name": "USD₮0 / XAUt0 0.05%",
+     "address": "0xc096da06e8fa70386dedbc5d4d6b2a453b9106f5",
+     "reserve_usd": "20554.6425",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "7.8888325285",
+      "m30": "547.8164976858",
+      "h1": "643.2626048424",
+      "h6": "5030.2503950805",
+      "h24": "18489.3220277011"
+     },
+     "fee_pct": null,
+     "price_usd": "0.9966114653",
+     "created": "2025-10-08T06:18:00Z"
+    },
+    {
+     "name": "USD₮0 / XAUt0 0.3%",
+     "address": "0xa8ee47f759f90a88e7c0ed1734a62dc294cb43b1",
+     "reserve_usd": "13273.2377",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "159.3705837584",
+      "h24": "447.0231120641"
+     },
+     "fee_pct": null,
+     "price_usd": "0.9985778253",
+     "created": "2025-06-12T14:22:00Z"
+    },
+    {
+     "name": "USD₮0 / XAUt0 0.23%",
+     "address": "0x750b241273ad42f9c1855f9bd928ee1a1f65330e",
+     "reserve_usd": "9419.367",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "361.8767508008",
+      "h24": "2062.0668690884"
+     },
+     "fee_pct": null,
+     "price_usd": "0.9999290604",
+     "created": "2025-12-01T02:22:17Z"
+    },
+    {
+     "name": "XAUt0 / USD₮0",
+     "address": "0xc4414a0e54356c121d2cdee2afb6c08ed33ba2a6",
+     "reserve_usd": "6897.0768",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "3389.4372154583",
+     "created": "2025-08-24T03:46:56Z"
+    },
+    {
+     "name": "HYPGLD / XAUt0 1%",
+     "address": "0x3c22ecb590d4b6000f937ae4178a4dad32b7c1d9",
+     "reserve_usd": "5807.8608",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "608.4892983837"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000006385928144",
+     "created": "2026-09-09T17:45:00Z"
+    },
+    {
+     "name": "GEGG / XAUt0 1%",
+     "address": "0x79b639aaa7a91190b665197d5954f2fb3b40f425",
+     "reserve_usd": "5506.3737644118",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000005559433473",
+     "created": "2026-09-10T12:37:00Z"
+    },
+    {
+     "name": "XAU / XAUt0 1%",
+     "address": "0x9a4f9644c8c994ef1900ec167f5f16f93a6be1ff",
+     "reserve_usd": "4916.6077387305",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000004989618519",
+     "created": "2026-08-24T08:25:00Z"
+    },
+    {
+     "name": "GG / XAUt0 1%",
+     "address": "0xb3a50b70a70e13aea42374283bace4d464516216",
+     "reserve_usd": "4736.7503490237",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000004733724294",
+     "created": "2026-09-09T19:41:00Z"
+    },
+    {
+     "name": "GOLDMINER / XAUt0 1%",
+     "address": "0xc6e97049d8040ff244e77c0f2508579efbfe3193",
+     "reserve_usd": "4693.5539071379",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000004918070053",
+     "created": "2026-09-09T18:30:00Z"
+    },
+    {
+     "name": "GOLD / XAUt0 1%",
+     "address": "0xcda8cc81e589e695f0a6aac31e0d86f168f860b3",
+     "reserve_usd": "4690.6137514654",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000004808385883",
+     "created": "2026-09-09T19:31:00Z"
+    },
+    {
+     "name": "EGG / XAUt0 1%",
+     "address": "0xf6f8e431bb12b5847694a05f68d6abbe0e32c29f",
+     "reserve_usd": "4513.7973092867",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000004768769709",
+     "created": "2026-09-10T11:43:00Z"
+    },
+    {
+     "name": "GG / XAUt0 1%",
+     "address": "0x3b54f55a0b7912824e6512e7b662ea9a86787b3b",
+     "reserve_usd": "4509.7850729856",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000004464530182",
+     "created": "2026-09-09T17:31:00Z"
+    },
+    {
+     "name": "XAUt0 / USD₮0",
+     "address": "0xc781ee426e9682ab9aced5e194b03eb4a84875b2",
+     "reserve_usd": "4282.4761",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "3344.5825379146",
+     "created": "2025-08-09T00:12:08Z"
+    },
+    {
+     "name": "USDC / XAUt0 0.3%",
+     "address": "0xb65a8db0f97139682d96030ad3d861471896fb26",
+     "reserve_usd": "3973.1778",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "143.0687008235",
+      "h24": "243.732184004"
+     },
+     "fee_pct": null,
+     "price_usd": "1.0046944682",
+     "created": "2025-09-20T14:58:00Z"
+    },
+    {
+     "name": "XAUt0 / WHYPE 0.3%",
+     "address": "0xf0fc398eaa69d12e812c66eb4f351f5eae8ba11a",
+     "reserve_usd": "2334.2054",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "2.2747231256",
+      "h24": "10.2057905889"
+     },
+     "fee_pct": null,
+     "price_usd": "4038.2881113763",
+     "created": "2025-06-12T14:18:00Z"
+    },
+    {
+     "name": "UBTC / WHYPE / XAUt0 1%",
+     "address": "0x5942fc9eecd646277b7e010f8740553bb0aac108",
+     "reserve_usd": "2200.2175",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "65992.354642802",
+     "created": "2026-02-13T02:03:46Z"
+    },
+    {
+     "name": "UBTC / XAUt0 0.3%",
+     "address": "0x609bfccfa4cb05f672056fb9b880cfa5faf7a74d",
+     "reserve_usd": "1765.9729",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "7.8759517875",
+      "m30": "20.9760077028",
+      "h1": "24.8466940874",
+      "h6": "107.0300096548",
+      "h24": "233.3226724458"
+     },
+     "fee_pct": null,
+     "price_usd": "77565.0166190648",
+     "created": "2025-10-22T13:15:00Z"
+    },
+    {
+     "name": "UBTC / XAUt0 0.3%",
+     "address": "0xe7b8198e30d4b212a4c20a3d170f80191c6d60bb",
+     "reserve_usd": "364.1174",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.2604306494",
+      "h24": "0.2604306494"
+     },
+     "fee_pct": null,
+     "price_usd": "77741.7993507014",
+     "created": "2025-06-12T14:23:00Z"
+    },
+    {
+     "name": "XAUt0 / WHYPE 0.2%",
+     "address": "0xe4452aae43c3e9ea9c02ce8cfeec0a8924ccd2df",
+     "reserve_usd": "6.8305",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.3080916452"
+     },
+     "fee_pct": null,
+     "price_usd": "4163.4006101659",
+     "created": "2025-07-10T07:20:05Z"
+    }
+   ]
+  },
+  "hyper_wspyx_0xe7e553cd": {
+   "url": "https://api.geckoterminal.com/api/v2/networks/hyperevm/tokens/0xe7e553cd128f0011777323a0b44a7b96ea1cb540/pools",
+   "fetched_at_utc": "2026-10-30T03:57:03Z",
+   "rows": [
+    {
+     "name": "USDC / wSPYx 0.05%",
+     "address": "0x16c969c457c82b5ad2526426584a8d483633120b",
+     "reserve_usd": "143340.3078",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "316.0742922902",
+      "m30": "413.8796029178",
+      "h1": "413.8796029178",
+      "h6": "11243.087582099",
+      "h24": "56765.2769073938"
+     },
+     "fee_pct": null,
+     "price_usd": "0.9994180499",
+     "created": "2026-08-10T20:56:00Z"
+    },
+    {
+     "name": "USDC / wSPYx 0.025%",
+     "address": "0x1574fb1cc418ed7e18c5538192331c165eb6da32",
+     "reserve_usd": "23751.21",
+     "volume_usd": {
+      "m5": "5.1876198119",
+      "m15": "87.7735367548",
+      "m30": "144.769228279",
+      "h1": "144.769228279",
+      "h6": "4772.4185588401",
+      "h24": "23087.8084775822"
+     },
+     "fee_pct": null,
+     "price_usd": "1.0017371743",
+     "created": "2026-09-10T07:55:00Z"
+    },
+    {
+     "name": "MICRO / wSPYx 1%",
+     "address": "0xf66ad8c6f630c7025f551750cd0d6168310da7b7",
+     "reserve_usd": "16253.987360317",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.00001646389817",
+     "created": "2026-09-11T13:59:00Z"
+    },
+    {
+     "name": "NEST / wSPYx 2%",
+     "address": "0xe744fd70800c1b24cdf3c792e28a4e405648b12b",
+     "reserve_usd": "13572.6318",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "111.0638142642",
+      "m30": "111.0638142642",
+      "h1": "111.0638142642",
+      "h6": "1117.666841254",
+      "h24": "4203.0578461164"
+     },
+     "fee_pct": null,
+     "price_usd": "0.02158680537",
+     "created": "2026-09-06T01:43:00Z"
+    },
+    {
+     "name": "SNP500 / wSPYx 2%",
+     "address": "0x906d08615106569270455b1a478e0e35ddfeb342",
+     "reserve_usd": "9813.7424297675",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.00001004966309",
+     "created": "2026-09-09T10:16:00Z"
+    },
+    {
+     "name": "STONKS / wSPYx 1%",
+     "address": "0x3050ef067744346fdcbca169702f45c4c1aa693f",
+     "reserve_usd": "5867.8826358275",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000006001743215",
+     "created": "2026-08-24T00:42:00Z"
+    },
+    {
+     "name": "STONKS / wSPYx 1%",
+     "address": "0x6274408d0aede90e648bdad6a520f86904d69bb4",
+     "reserve_usd": "5833.6592747205",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000005976605905",
+     "created": "2026-09-09T16:55:00Z"
+    },
+    {
+     "name": "STONKS / wSPYx 1%",
+     "address": "0x9521c511d57b080bf173c081e12766c722cc20c0",
+     "reserve_usd": "5693.0306",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000005768321887",
+     "created": "2026-09-09T16:21:00Z"
+    },
+    {
+     "name": "SPYTEST / wSPYx 1%",
+     "address": "0x03830c2280e4848a1a7c73f805777e360169eeed",
+     "reserve_usd": "5676.7318",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "67.7536399027"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000005515280139",
+     "created": "2026-09-07T00:40:00Z"
+    },
+    {
+     "name": "wSPYx / WHYPE 1%",
+     "address": "0xe35a998bc42fe387c0bda7e489dcd2ca15f886f9",
+     "reserve_usd": "5599.3376",
+     "volume_usd": {
+      "m5": "5.1784114691",
+      "m15": "102.0389322811",
+      "m30": "255.7704699268",
+      "h1": "255.7704699268",
+      "h6": "1670.3606345736",
+      "h24": "8096.7641392201"
+     },
+     "fee_pct": null,
+     "price_usd": "766.6919812934",
+     "created": "2026-09-08T16:12:00Z"
+    },
+    {
+     "name": "PST / wSPYx 1%",
+     "address": "0x16a8e081f9561d92720af6127c7f1d809ea23bde",
+     "reserve_usd": "5257.7138932554",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000005179854177",
+     "created": "2026-09-09T23:58:00Z"
+    },
+    {
+     "name": "wSPYx / ITSYBITSY 1%",
+     "address": "0x2d6484fc37c444b1c5fc8563c816453a7b6a1b8f",
+     "reserve_usd": "4947.2274690661",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "772.9373349033",
+     "created": "2026-09-21T15:16:00Z"
+    },
+    {
+     "name": "RAM / wSPYx",
+     "address": "0xd1c8800526898540b30083afd3145d036595ec67",
+     "reserve_usd": "4939.5738",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "136.3122862283",
+      "h24": "219.8328310456"
+     },
+     "fee_pct": null,
+     "price_usd": "0.03438023082",
+     "created": "2026-09-09T23:02:00Z"
+    },
+    {
+     "name": "SDOG / wSPYx 1%",
+     "address": "0x3bb4fa5bd820a224839720cfdc414543611f0684",
+     "reserve_usd": "4933.7115905789",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000004738581715",
+     "created": "2026-09-10T01:33:00Z"
+    },
+    {
+     "name": "PST / wSPYx 1%",
+     "address": "0x79a268533bdcdb69a44a5a7cbdc2c61e5020bc37",
+     "reserve_usd": "4852.3889544742",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000005008881735",
+     "created": "2026-09-09T23:45:00Z"
+    },
+    {
+     "name": "STONKS / wSPYx 1%",
+     "address": "0xc80bfb3464c36d43f64a193b478481e375a03fc9",
+     "reserve_usd": "4719.6937",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "45.0522395355",
+      "h24": "591.5655484706"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000004875540653",
+     "created": "2026-09-08T17:39:00Z"
+    },
+    {
+     "name": "PST / wSPYx 1%",
+     "address": "0xcebc06434ce34ee3e9df128ff676691def43a477",
+     "reserve_usd": "4469.7468",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000003943579698",
+     "created": "2026-09-08T18:03:00Z"
+    },
+    {
+     "name": "TEST2 / wSPYx 1%",
+     "address": "0x4a5abc364a5b3821ca10f70690cc96c1b60cc213",
+     "reserve_usd": "3473.5993174984",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000003547580551",
+     "created": "2026-09-08T17:26:00Z"
+    },
+    {
+     "name": "CPA / wSPYx 1%",
+     "address": "0x0c60edfc0f2bc1eaa1c39700ababbeab49d7243c",
+     "reserve_usd": "3266.2716",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000003189630457",
+     "created": "2026-09-08T18:34:00Z"
+    },
+    {
+     "name": "wSPYx / WHYPE 0.05%",
+     "address": "0x724f3721db3d7bf8bd27d003b83c8728fa132f77",
+     "reserve_usd": "470.5355",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "1.2516002375",
+      "h1": "1.2516002375",
+      "h6": "11.5922853975",
+      "h24": "35.0572799289"
+     },
+     "fee_pct": null,
+     "price_usd": "769.6055188127",
+     "created": "2026-08-10T18:19:00Z"
+    }
+   ]
+  },
+  "xlayer_wspyx_0xe7e553cd": {
+   "url": "https://api.geckoterminal.com/api/v2/networks/x-layer/tokens/0xe7e553cd128f0011777323a0b44a7b96ea1cb540/pools",
+   "fetched_at_utc": "2026-10-30T03:57:04Z",
+   "rows": [
+    {
+     "name": "wSPYx / USDG 0.05%",
+     "address": "0x07c40850d14064d20eb0afdef9574675392f2c11",
+     "reserve_usd": "4120802.9758",
+     "volume_usd": {
+      "m5": "20.3443907811",
+      "m15": "7524.4820130739",
+      "m30": "8608.9409785089",
+      "h1": "21846.8159773547",
+      "h6": "258221.545805366",
+      "h24": "1770102.04915049"
+     },
+     "fee_pct": null,
+     "price_usd": "766.9704339004",
+     "created": "2026-07-22T10:18:16Z"
+    },
+    {
+     "name": "wSPYx / wGOOGLx 0.05%",
+     "address": "0x091f2abeb246fc3a186457af9e3aaab3c78e6832",
+     "reserve_usd": "389932.551",
+     "volume_usd": {
+      "m5": "502.814699668",
+      "m15": "828.1557203739",
+      "m30": "3837.0976031487",
+      "h1": "7481.9047475653",
+      "h6": "68185.167637581",
+      "h24": "673037.720252368"
+     },
+     "fee_pct": null,
+     "price_usd": "766.8393960895",
+     "created": "2026-09-16T11:46:41Z"
+    },
+    {
+     "name": "XSTX / wSPYx 1%",
+     "address": "0x82518db6eaacb2895d9fbc81f9337fdcfac627b8644ef3f2ae0d56bf07a18528",
+     "reserve_usd": "109809.0091",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "15.8649842295",
+      "h24": "3177.5762111266"
+     },
+     "fee_pct": null,
+     "price_usd": "0.0001046071145",
+     "created": "2026-08-26T19:22:43Z"
+    },
+    {
+     "name": "wAAPLx / wSPYx 0.05%",
+     "address": "0x0c7cbe2821f74122b184560cd2aaf8fa96dca584",
+     "reserve_usd": "53723.8554",
+     "volume_usd": {
+      "m5": "48.9551474164",
+      "m15": "904.8768181713",
+      "m30": "1164.2953568388",
+      "h1": "1537.4512973054",
+      "h6": "39094.4245233153",
+      "h24": "364331.666592382"
+     },
+     "fee_pct": null,
+     "price_usd": "350.9820335936",
+     "created": "2026-09-16T11:47:10Z"
+    },
+    {
+     "name": "wMSx / wSPYx 0.05%",
+     "address": "0x13ad37f6139fa25472562d8c43a9274e5a44776a",
+     "reserve_usd": "45186.789",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "1432.5367313498",
+      "h24": "11540.0403198987"
+     },
+     "fee_pct": null,
+     "price_usd": "190.2837236877",
+     "created": "2026-09-16T11:47:22Z"
+    },
+    {
+     "name": "wMAx / wSPYx 0.05%",
+     "address": "0xefec58a48b21dd63c5b052a659ed55328b858ff0",
+     "reserve_usd": "37411.4197",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.295038813",
+      "h1": "0.295038813",
+      "h6": "202.5995422834",
+      "h24": "11489.0182663504"
+     },
+     "fee_pct": null,
+     "price_usd": "637.3626007863",
+     "created": "2026-09-16T11:47:32Z"
+    },
+    {
+     "name": "wVx / wSPYx 0.05%",
+     "address": "0xd424b796fce31ea24967bd7f78595eaef1f44936",
+     "reserve_usd": "35357.2504",
+     "volume_usd": {
+      "m5": "8.2729958674",
+      "m15": "8.2729958674",
+      "m30": "8.2729958674",
+      "h1": "115.7735718511",
+      "h6": "773.924776878",
+      "h24": "4092.2560809104"
+     },
+     "fee_pct": null,
+     "price_usd": "417.0052361194",
+     "created": "2026-09-16T11:47:26Z"
+    },
+    {
+     "name": "wJNJx / wSPYx 0.05%",
+     "address": "0x26383c9770c146bff5c9c5bcc5ce3f325fefb072",
+     "reserve_usd": "31712.468",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "1410.4019954158",
+      "h24": "11367.2654255373"
+     },
+     "fee_pct": null,
+     "price_usd": "283.5615394776",
+     "created": "2026-09-16T11:47:37Z"
+    },
+    {
+     "name": "wGSx / wSPYx 0.05%",
+     "address": "0xd905b03915f9975edb32c2009418bf7c4ea892f1",
+     "reserve_usd": "28281.4479",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "101.1351756121",
+      "h24": "2639.9508701406"
+     },
+     "fee_pct": null,
+     "price_usd": "934.5345729412",
+     "created": "2026-09-16T11:47:18Z"
+    },
+    {
+     "name": "wLLYx / wSPYx 0.05%",
+     "address": "0x8bd7f70bd805bc1203b190834911d7f59759f07f",
+     "reserve_usd": "26729.8147",
+     "volume_usd": {
+      "m5": "12.0581461594",
+      "m15": "12.0581461594",
+      "m30": "12.0581461594",
+      "h1": "42.1727064768",
+      "h6": "1692.9687767276",
+      "h24": "34232.3222882045"
+     },
+     "fee_pct": null,
+     "price_usd": "1384.6859835721",
+     "created": "2026-09-16T11:47:40Z"
+    },
+    {
+     "name": "dejaaa / wSPYx 0.3%",
+     "address": "0x46564a2d2f6e1063d8078f5448aaa08912866f42",
+     "reserve_usd": "9858.8147",
+     "volume_usd": {
+      "m5": "6.3611266436",
+      "m15": "8.7662977208",
+      "m30": "8.7662977208",
+      "h1": "13.5011036427",
+      "h6": "288.0814122726",
+      "h24": "350.5012084201"
+     },
+     "fee_pct": null,
+     "price_usd": "1.0435267951",
+     "created": "2026-09-21T08:37:43Z"
+    },
+    {
+     "name": "万事OK / wSPYx 1%",
+     "address": "0xd6f9902f7b81ac49798e4b890d3f483f9c67ea20",
+     "reserve_usd": "6310.5278261711",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000006264474974",
+     "created": "2026-08-03T03:55:37Z"
+    },
+    {
+     "name": "xStocks / wSPYx 1%",
+     "address": "0xf9ee674902304d006d1110ba56cfb20c9f563221",
+     "reserve_usd": "5589.5141631633",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000005565473046",
+     "created": "2026-08-03T03:35:26Z"
+    },
+    {
+     "name": "合规 / wSPYx 1%",
+     "address": "0x945f05a4f6dcb678722d17a60c02779a825de598",
+     "reserve_usd": "4916.3167",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.0"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000005216789333",
+     "created": "2026-08-03T03:22:52Z"
+    },
+    {
+     "name": "bullshit / wSPYx 1%",
+     "address": "0xf3c6b2e6818b8ea47005a7a513f03454bea8de62",
+     "reserve_usd": "4118.6292",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "11.6686828399"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000004036646204",
+     "created": "2026-08-29T05:03:06Z"
+    },
+    {
+     "name": "Stonks / wSPYx 1%",
+     "address": "0x55b8643feae3b84c761e6bb2927c626013118240",
+     "reserve_usd": "3818.6049",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "5.3625782915"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000003770336681",
+     "created": "2026-08-03T03:24:32Z"
+    },
+    {
+     "name": "招财 / wSPYx 1%",
+     "address": "0x4aa238b53051badf598de5f546197bad681b1a48",
+     "reserve_usd": "3522.5621",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "1.0911048382"
+     },
+     "fee_pct": null,
+     "price_usd": "0.000003397354241",
+     "created": "2026-08-03T04:06:05Z"
+    },
+    {
+     "name": "wSNDKx / wSPYx 0.038%",
+     "address": "0x723f5c218951578a8338dfc7b34a7e8fc74cd011c729168fdf25fc1c388c1fbe",
+     "reserve_usd": "46.8973",
+     "volume_usd": {
+      "m5": "0.506445541",
+      "m15": "0.506445541",
+      "m30": "0.506445541",
+      "h1": "0.506445541",
+      "h6": "11.3840140305",
+      "h24": "52.5622778631"
+     },
+     "fee_pct": null,
+     "price_usd": "1281.9789616176",
+     "created": "2026-10-23T10:37:52Z"
+    },
+    {
+     "name": "wNVDAx / wSPYx 0.05%",
+     "address": "0xeb6ab0300f19da5f21a519e660f058d24d7d9416",
+     "reserve_usd": "2.7599",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.07602668575",
+      "h24": "0.2211477918"
+     },
+     "fee_pct": null,
+     "price_usd": "210.494923719",
+     "created": "2026-08-25T08:26:29Z"
+    },
+    {
+     "name": "wAAPLx / wSPYx 0.05%",
+     "address": "0x184764b856dbfff20a2e3f1819fe86f742b10b107890082ee457c70b38c0022a",
+     "reserve_usd": "0.1244",
+     "volume_usd": {
+      "m5": "0.0",
+      "m15": "0.0",
+      "m30": "0.0",
+      "h1": "0.0",
+      "h6": "0.0",
+      "h24": "0.005255636712"
+     },
+     "fee_pct": null,
+     "price_usd": "350.2728935958",
+     "created": "2026-10-08T22:50:52Z"
+    }
+   ]
+  }
+ }
+}
