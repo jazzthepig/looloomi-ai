@@ -59,6 +59,7 @@ SOURCES: tuple[tuple[str, dict, Any], ...] = (
     # 10-29(P1):真钱账户快照 + 组合层目标 + 它要对照的纸面前向账本(T25 / World50 / 交易层)
     ("live_account_daily", {}, "d"),
     ("portfolio_targets_daily", {}, "sleeve"),
+    ("execution_quality_daily", {}, ("sleeve", "span")),     # 10-30:真钱执行质量(滑点 / 费 / 成交率),事后改不了
     ("forward_book_nav", {}, ("book", "arm")),
     ("world50_book_nav", {}, "arm"),
 )

@@ -38,6 +38,7 @@
     "equity_fundamentals_q",
     "execution_intents",
     "execution_outcomes",
+    "execution_quality_daily",
     "exploration_ideas",
     "factor_tilt_nav",
     "factor_tilt_state",

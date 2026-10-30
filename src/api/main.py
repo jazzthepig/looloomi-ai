@@ -2276,6 +2276,35 @@ async def _start_live_account_loop():
     print("[LIVE-ACCT] ✅ real-money account daily snapshot scheduled (live_account_daily, hourly check)")
 
 
+async def _exec_quality_loop():
+    """执行质量日表(`src/data/execution/exec_quality.py`):每本执行账每天一行 + 累计行 —— fill_log 的第一个消费者(10-30)。
+    每小时重算最近 7 天(幂等);进 forward_anchor_daily。
+    判活:`select d, sleeve, span, n_intents, fill_rate, mean_slippage_bps from execution_quality_daily order by d desc limit 10`。"""
+    await _asyncio.sleep(_boot_delay(780))
+    while True:
+        try:
+            from src.data.execution.exec_quality import run_once as _eq_run
+            r = await _eq_run()
+            print(f"[EXEC-Q] {str(r)[:300]}")
+            await _beat("_exec_quality_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")), detail=r,
+                        error=None if r.get("ok") else str(r.get("why"))[:200])
+            await _record_loop_attempt("_exec_quality_loop", "refused" if r.get("refused") else ("ok" if r.get("ok") else "error"),
+                                       reason=str(r.get("why") or "")[:400] or None, detail=r,
+                                       writer="src.api.main._exec_quality_loop")
+        except Exception as _e:
+            print(f"[EXEC-Q] ⚠️  pass FAILED: {_e}")
+            await _beat("_exec_quality_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_exec_quality_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._exec_quality_loop")
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_exec_quality_loop():
+    _asyncio.create_task(_exec_quality_loop())
+    print("[EXEC-Q] ✅ execution quality daily scheduled (execution_quality_daily, hourly)")
+
+
 @app.on_event("startup")
 async def _start_executor_host_watch_loop():
     _asyncio.create_task(_executor_host_watch_loop())

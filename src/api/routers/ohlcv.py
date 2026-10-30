@@ -618,10 +618,19 @@ async def proof_books():
         other = {"status": "ok", "rows": other_line_rows(other_navs, pd.Timestamp(now.date())), "how_to_read": HOW_TO_READ_OTHER}
     except Exception as e:  # noqa: BLE001 —— 这一段读不到不该让整个证据面 502
         other = {"status": "unavailable", "why": f"{type(e).__name__}: {str(e)[:160]}"}
+    # 10-30:真钱执行质量(东京执行器的成交对决策时中间价;每本执行账一行累计)—— 读不到只影响这一段
+    try:
+        from src.data.execution.exec_quality import HOW_TO_READ_EXEC, public_rows
+        eq_rows = await _read_all("execution_quality_daily", {"select": "*", "span": "eq.since_inception",
+                                                             "order": "d.desc,sleeve.asc", "limit": "40"})
+        execution = {"status": "ok", "rows": public_rows(eq_rows), "how_to_read": HOW_TO_READ_EXEC}
+    except Exception as e:  # noqa: BLE001
+        execution = {"status": "unavailable", "why": f"{type(e).__name__}: {str(e)[:160]}"}
     body = {"status": "ok", "as_of": asof.date().isoformat(), "allocation_as_of": last_d,
-            "core": CORE, "books": rows, "other_lines": other, "how_to_read": HOW_TO_READ,
-            "note": "Paper records, not live-traded P&L. Every number is labelled with its evidence class; "
-                    "no book is pre-judged here.",
+            "core": CORE, "books": rows, "other_lines": other, "execution": execution, "how_to_read": HOW_TO_READ,
+            "note": "Paper records, not live-traded P&L, except the lines marked live under other_lines (the real-money "
+                    "account, marked daily and anchored) and the execution section (real fills against the decision "
+                    "mid). Every number is labelled with its evidence class; no book is pre-judged here.",
             "compliance": "Positioning language only; not investment advice."}
     _PROOF_CACHE.update({"at": now, "body": body})
     return body
