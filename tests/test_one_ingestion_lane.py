@@ -59,7 +59,8 @@ _ALLOWED_WRITERS = {
     # S-698(10-30):binance_hist 里 168 个标的是永续 bar、08-08 起被现货接上 —— 同一条 lane(Seth)对**同一条序列**的
     # 一次性修复:把非现货行原样复制到 binance_um_hist 存档,再用 data.binance.vision 现货月档覆盖、补到现货上市日。
     # 不是第二个采集器:不追新日子(只写到 2026-08,之后归 deep_panel_collector)。
-    # 退出条件:全部标的在 VERSION 下做完、核过之后,删掉模块与 `_binance_hist_repair_loop`,从这里摘掉。
+    # 10-30 17:35:全部做完、核过,`_binance_hist_repair_loop` 已退役;模块留着是因为 `perp_only_symbols()` 被面板读取方用。
+    # 退出条件(余下的半步):把 perp_only_symbols 搬到不写表的模块,再删这个模块与这一行。
     "src/data/market/binance_hist_repair.py",
 }
 
