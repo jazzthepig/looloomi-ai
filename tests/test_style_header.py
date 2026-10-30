@@ -167,3 +167,30 @@ def test_stable_order_makes_paging_deterministic() -> None:
     assert stable_order({"select": "symbol,d", "order": "d.asc,symbol.asc"}) == {"select": "symbol,d", "order": "d.asc,symbol.asc"}
     assert "order" not in stable_order({"select": "*", "d": "eq.2026-10-01"}), "select * 推不出列,原样"
     assert "order" not in stable_order({"select": "a,count()"})
+
+
+def test_mcap_backfill_refuses_a_symbol_that_already_belongs_to_another_coin(monkeypatch):
+    """10-30(S-700 附记):asset_mcap_daily 主键是 (symbol, d, source);同一符号两个 coin_id 会互相覆盖
+    (OM:MANTRA 的市值被马赛球迷币每天覆盖最近 10 天)。写入端看到符号已属于别的 coin_id ⇒ 不写、说原因。"""
+    import asyncio
+    from datetime import date
+    from src.data.style import header as h
+    from src.data.vector import market_state_writer as msw
+
+    calls = []
+
+    async def fake_get(table, params):
+        calls.append(params)
+        if params.get("coin_id", "").startswith("neq."):
+            return msw.SbRead([{"coin_id": "mantra-dao"}], None)
+        return msw.SbRead([{"d": "2026-10-29"}], None)
+
+    async def never_fetch(*a, **k):
+        raise AssertionError("must not fetch CoinGecko for a colliding symbol")
+
+    monkeypatch.setattr(msw, "_sb_get", fake_get)
+    import src.data.market.data_layer as dl
+    monkeypatch.setattr(dl, "get_cg_market_chart_range", never_fetch)
+    out = asyncio.run(h.backfill_mcap([{"symbol": "OM", "coin_id": "olympique-de-marseille-fan-token", "tier_base": "L1"}],
+                                      date(2026, 10, 30)))
+    assert out["rows"] == 0 and "符号撞车" in out["failed"]["OM"] and "mantra-dao" in out["failed"]["OM"]

@@ -250,6 +250,18 @@ async def backfill_mcap(members: list[dict], today: date) -> dict[str, Any]:
         if not rd.ok:
             failed[m["symbol"]] = f"读不到已有历史:{rd.reason}"
             continue
+        # 10-30(S-700 附记):同一个 symbol 在表里已经属于另一个 coin_id 时**不写**。主键是 (symbol, d, source),
+        # 两个币共用一个符号就会互相覆盖 —— OM 的 MANTRA 市值被马赛球迷币每天覆盖最近 10 天,就是这样来的。
+        # 符号撞车由人改映射(cg_coin_map manual_verified),不由写入端决定谁赢。
+        other = await _sb_get("asset_mcap_daily", {"select": "coin_id", "symbol": f"eq.{m['symbol']}",
+                                                   "coin_id": f"neq.{m['coin_id']}", "limit": "1"})
+        if not other.ok:
+            failed[m["symbol"]] = f"读不到符号归属:{other.reason}"
+            continue
+        if other.rows:
+            failed[m["symbol"]] = (f"符号撞车:表里 {m['symbol']} 已属于 {other.rows[0].get('coin_id')},这里要写 {m['coin_id']} —— 不写,"
+                                   f"改 cg_coin_map 或换记账名")
+            continue
         last = (rd.rows or [{}])[0].get("d")
         frm = (date.fromisoformat(last) - timedelta(days=10)) if last else date.fromisoformat(HISTORY_START)
         from_ts = int(datetime.combine(frm, datetime.min.time(), tzinfo=timezone.utc).timestamp())
