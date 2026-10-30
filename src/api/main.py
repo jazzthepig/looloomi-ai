@@ -2205,6 +2205,38 @@ async def _portfolio_targets_loop():
         await _asyncio.sleep(3600)
 
 
+async def _binance_hist_repair_loop():
+    """S-698:`binance_hist` 统一成现货 + 往前补深度(`src/data/market/binance_hist_repair.py`)。
+    每小时醒一次,每轮最多 15 分钟;做过的标的按版本记在 loop_attempt(detail.done),下一轮接着做,全做完就只是空转。
+    `FULL_RUN = False` 时只做 5 个哨兵标的 —— Seth 用 SQL 核过才打开全量。
+    判活:`select detail->'done', detail->'remaining' from loop_attempt where loop_name = '_binance_hist_repair_loop' order by at desc limit 1`。"""
+    await _asyncio.sleep(_boot_delay(760))
+    while True:
+        try:
+            from src.data.market.binance_hist_repair import run_once as _bhr_run
+            r = await _bhr_run()
+            print(f"[BH-REPAIR] done={len(r.get('done') or {})} remaining={r.get('remaining')} ok={r.get('ok')}")
+            await _beat("_binance_hist_repair_loop", ok=bool(r.get("ok")), detail={k: r.get(k) for k in
+                        ("v", "remaining", "already_done", "elapsed_s")},
+                        error=None if r.get("ok") else str(r.get("why") or "某个标的写入失败")[:200])
+            if r.get("done") or not r.get("ok"):
+                await _record_loop_attempt("_binance_hist_repair_loop", "ok" if r.get("ok") else "error",
+                                           reason=str(r.get("why") or "")[:400] or None, detail=r,
+                                           writer="src.api.main._binance_hist_repair_loop")
+        except Exception as _e:
+            print(f"[BH-REPAIR] ⚠️  pass FAILED: {_e}")
+            await _beat("_binance_hist_repair_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_binance_hist_repair_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._binance_hist_repair_loop")
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_binance_hist_repair_loop():
+    _asyncio.create_task(_binance_hist_repair_loop())
+    print("[BH-REPAIR] ✅ binance_hist spot rewrite + depth scheduled (S-698, hourly, 15-min budget)")
+
+
 @app.on_event("startup")
 async def _start_portfolio_targets_loop():
     _asyncio.create_task(_portfolio_targets_loop())

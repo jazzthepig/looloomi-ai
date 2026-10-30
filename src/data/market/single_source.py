@@ -60,6 +60,8 @@ BARRED_RETURN_SOURCES = {
     "coingecko": "market_chart 采样点塌缩成日期,不是收盘 (S-195);"
                  "改用 /ohlc/range interval=daily 并标为 coingecko_pro_ohlc",
     "yfinance":  "63 天不更新,已死",
+    "binance_um_hist": "S-698 存档:原先混在 binance_hist 里的 U 本位永续 bar(价格差基差、成交量差 5–10 倍),"
+                       "不是现货;只给永续研究显式读,不进收益序列",
 }
 
 
