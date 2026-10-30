@@ -72,3 +72,31 @@ def test_done_set_is_per_version_and_errors_are_retried():
             {"detail": {"v": br.VERSION - 1, "done": {"ETC": "ok"}}}]
     d = br.done_from(rows)
     assert d == {"TRX": "ok", "AAA": "error"}, "旧版本做过的不算"
+
+
+def test_progress_is_checkpointed_so_a_restart_does_not_redo_the_pass(monkeypatch):
+    """10-30 实测:一次合并部署把进行到第 46 个标的的一轮杀掉,而进度只在轮末落库 ⇒ 下一轮从头再来。"""
+    import asyncio
+    import src.data.market.source_policy as sp
+    import src.data.signals.hl_book_daily as hb
+    ckpts, recorded = [], []
+
+    async def get(tail):
+        return [{"detail": d} for d in reversed(recorded)]
+
+    async def repair(sym):
+        return {"verdict": "ok"}
+
+    async def ckpt(done):
+        ckpts.append(dict(done))
+        recorded.append({"v": br.VERSION, "done": dict(done)})
+    monkeypatch.setattr(hb, "_supabase_get", get)
+    monkeypatch.setattr(br, "repair_symbol", repair)
+    monkeypatch.setattr(br, "_checkpoint", ckpt)
+    monkeypatch.setattr(br, "FULL_RUN", True)
+    monkeypatch.setattr(sp, "assert_purpose_source", lambda *a, **k: None)
+    syms = [f"S{i:02d}" for i in range(20)]
+    out = asyncio.run(br.run_once(symbols=syms))
+    assert len(out["done"]) == 20 and [len(c) for c in ckpts] == [br.CHECKPOINT_EVERY, br.CHECKPOINT_EVERY]
+    again = asyncio.run(br.run_once(symbols=syms))
+    assert len(again["done"]) == 4, "检查点里的 16 个不再做;没落检查点的最后 4 个重做"

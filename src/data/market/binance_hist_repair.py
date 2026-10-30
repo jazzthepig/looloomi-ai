@@ -53,6 +53,7 @@ CONCURRENCY = 4
 PAUSE_S = 0.1
 TIME_BUDGET_S = 900.0
 CHUNK = 2000
+CHECKPOINT_EVERY = 8                   # 每做完 8 个标的记一次进度:一次部署 / 重启不再把整轮白做(10-30 实测:一次合并把进行到第 46 个的一轮杀掉)
 WRITES_TABLES = ("ohlcv_daily",)
 #: 先只做这几个(拼接的 TRX / ETC、现货的 ADA / BTC、永续独有的 1000SHIB),Seth 用 SQL 核过结果再打开全量。
 CANARY = ("TRX", "ETC", "ADA", "BTC", "1000SHIB")
@@ -171,7 +172,7 @@ async def perp_only_symbols() -> set[str]:
     out = set(PERP_ONLY_MEASURED)
     try:
         from src.data.signals.hl_book_daily import _supabase_get
-        rows = await _supabase_get(f"loop_attempt?select=at,detail&loop_name=eq.{LOOP_NAME}&order=at.desc&limit=80")
+        rows = await _supabase_get(f"loop_attempt?select=at,detail&loop_name=eq.{LOOP_NAME}&order=at.desc&limit=200")
         out |= {s for s, v in done_from(rows or []).items() if v in ("no_spot_pair", "not_same_asset")}
     except Exception:                                                    # noqa: BLE001
         pass
@@ -238,12 +239,23 @@ async def repair_symbol(sym: str) -> dict[str, Any]:
     return out
 
 
+async def _checkpoint(done: dict[str, str]) -> None:
+    """进度落一行 loop_attempt(同一个 loop 名、同一个版本),`done_from` 会把它算进去。写不进去不致命 —— 最多重做。"""
+    try:
+        from src.api.rpc_diagnostics import _record_loop_attempt
+        await _record_loop_attempt(LOOP_NAME, "ok", reason="checkpoint", detail={"v": VERSION, "done": dict(done),
+                                                                               "checkpoint": True},
+                                   writer="src.data.market.binance_hist_repair._checkpoint")
+    except Exception:                                                    # noqa: BLE001
+        pass
+
+
 async def run_once(time_budget: float = TIME_BUDGET_S, symbols: Optional[list[str]] = None) -> dict[str, Any]:
     from src.data.market.deep_panel_collector import deep_panel_symbols_detailed
     from src.data.market.source_policy import MARKET_DATA, assert_purpose_source
     t0 = time.monotonic()
     from src.data.signals.hl_book_daily import _supabase_get
-    prev = await _supabase_get(f"loop_attempt?select=at,detail&loop_name=eq.{LOOP_NAME}&order=at.desc&limit=80")
+    prev = await _supabase_get(f"loop_attempt?select=at,detail&loop_name=eq.{LOOP_NAME}&order=at.desc&limit=200")
     done = done_from(prev or [])
     if symbols is None:
         syms, detail, _latest = await deep_panel_symbols_detailed()
@@ -258,14 +270,19 @@ async def run_once(time_budget: float = TIME_BUDGET_S, symbols: Optional[list[st
                           job="S-698 binance_hist spot rewrite + depth (data.binance.vision spot archive)", secondary_ok=True)
     this: dict[str, str] = {}
     notes: dict[str, Any] = {}
+    since_ckpt: dict[str, str] = {}
     for s in todo:
         if time.monotonic() - t0 > time_budget:
             break
+        if len(since_ckpt) >= CHECKPOINT_EVERY:
+            await _checkpoint(since_ckpt)
+            since_ckpt = {}
         try:
             r = await repair_symbol(s)
         except Exception as e:                                           # noqa: BLE001 — 一个标的炸了,下一个照做
             r = {"verdict": "error", "why": f"{type(e).__name__}: {str(e)[:160]}"}
         this[s] = r["verdict"]
+        since_ckpt[s] = r["verdict"]
         if r["verdict"] != "ok" or r.get("n_overwrite") or r.get("n_insert"):
             notes[s] = {k: r[k] for k in ("verdict", "n_overwrite", "n_insert", "n_nonspot_extra", "first_before",
                                           "first_after", "archived", "why", "median_close_gap", "overlap_days")
