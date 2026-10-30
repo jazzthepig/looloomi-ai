@@ -27,11 +27,11 @@ import httpx
 import numpy as np
 
 from fastapi import APIRouter, Query, Header, HTTPException, Response
+from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
 
 _logger = logging.getLogger(__name__)
 router  = APIRouter()
 
-_INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 
 # ── Config ────────────────────────────────────────────────────────────────────
 _SB_URL    = os.environ.get("SUPABASE_URL", "").rstrip("/")
@@ -1050,8 +1050,7 @@ async def refresh_ai_briefing() -> dict:
 @router.post("/internal/refresh-briefing")
 async def refresh_briefing_endpoint(x_internal_token: str = Header(None)):
     """Internal: regenerate the AI narrative now (also lets Mac-side/Minimax trigger a refresh)."""
-    if not _INTERNAL_TOKEN or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    require_internal_token(x_internal_token)
     return await refresh_ai_briefing()
 
 
@@ -1060,8 +1059,7 @@ async def push_ai_briefing(payload: dict, x_internal_token: str = Header(None)):
     """Internal: Mac-side (Minimax) pushes an AI-written briefing directly. Body:
     {headline?, items:{item_id: narrative}, model?}. Compliance-gated on read via _overlay_ai
     (we still only overlay onto known ids). Stored to Redis `signal:ai_briefing`."""
-    if not _INTERNAL_TOKEN or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    require_internal_token(x_internal_token)
     items = payload.get("items")
     if not isinstance(items, dict) or not items:
         raise HTTPException(status_code=400, detail="items:{id:narrative} required")
@@ -1158,8 +1156,7 @@ async def run_outcome_tracker_endpoint(
     Internal-only — guarded by INTERNAL_TOKEN. Idempotent; safe to call repeatedly.
     Also runs automatically once/day via the startup background task.
     """
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    require_internal_token(x_internal_token)
     from src.data.signals.outcome_tracker import run_outcome_tracker
     result = await run_outcome_tracker(dry_run=dry_run, limit=limit)
     # bust the cached performance metrics so the new outcomes surface immediately

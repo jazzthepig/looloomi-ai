@@ -24,6 +24,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException, Header, Request, Response
+from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
@@ -655,9 +656,7 @@ async def list_tasks(
     """
     List recent in-memory tasks. Internal use only (requires X-Internal-Token).
     """
-    _internal_token = os.getenv("INTERNAL_TOKEN", "")
-    if not _internal_token or x_internal_token != _internal_token:
-        raise HTTPException(status_code=401, detail="Internal token required")
+    require_internal_token(x_internal_token)
 
     tasks = sorted(
         _active_tasks.values(),

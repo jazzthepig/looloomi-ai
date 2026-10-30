@@ -8,7 +8,7 @@ from src.api.routers import ohlcv
 
 
 def _client(monkeypatch, calls):
-    monkeypatch.setattr(ohlcv, "_INTERNAL_TOKEN", "t0k")
+    monkeypatch.setenv("INTERNAL_TOKEN", "t0k")          # S-371 A-1:校验在请求期读 env,不再有模块常量
 
     async def fake_collect(days=None, symbols=None):
         calls.append((days, list(symbols or [])))

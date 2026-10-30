@@ -318,15 +318,9 @@ async def get_portfolio_stats(assets: str = "BTC,ETH,SOL"):
 #
 # No cron binding. No "wait for the next minute". Caller fires it,
 # reads the response, decides.
-def _internal_token() -> str:
-    import os
-    return os.getenv("INTERNAL_TOKEN", "")
-
-
 def _vault_auth(tok: str | None) -> None:
-    t = _internal_token()
-    if not t or not tok or tok != t:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
+    require_internal_token(tok)
 
 
 @router.post("/internal/vault-tick/{vault_id}")

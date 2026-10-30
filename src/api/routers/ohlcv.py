@@ -25,13 +25,13 @@ from typing import Optional
 
 import httpx
 from fastapi import APIRouter, Header, HTTPException, Query
+from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
 
 _logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
 #: 内部端点的令牌 —— 与其他 /internal/ 路由同源。
-_INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 
 _SB_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
 _SB_KEY = os.environ.get("SUPABASE_KEY", "") or os.environ.get("SUPABASE_SERVICE_KEY", "")
@@ -502,8 +502,7 @@ async def research_core_alpha(start: str = Query("2023-01-01"),
 @router.get("/internal/research/book-navs")
 async def research_book_navs(x_internal_token: str = Header(None)):
     """登记表里每本账的逐日 NAV 与它自己的基准(给 T-047 / T-045 用)。只读。"""
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    require_internal_token(x_internal_token)
     from src.data.accounting.registry import BOOKS, load_navs
     navs, bench = await load_navs()
 
@@ -575,8 +574,7 @@ async def get_style_index(style: str = Query(..., description="majors / top_l1 /
 async def books_scorecard(x_internal_token: str = Header(None)):
     """每本纸面账本一行:层级、记账是否走公用内核、起止、缺几天、总收益、同期持有同一面板、差值、最大回撤。
     记账还没迁到公用内核的账本标 `accounting=own` —— 那一行的数字仍是它自己的记账算的。"""
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    require_internal_token(x_internal_token)
     from src.data.accounting.registry import scorecard
     rows = await scorecard()
     return {"status": "ok", "n": len(rows), "books": rows}
@@ -642,8 +640,7 @@ async def proof_books():
 async def exploration_submit(body: dict, x_internal_token: str = Header(None)):
     """提交一个机会:asset(必填)、thesis(必填,一句话:为什么、会怎样、什么情况下算错)、chain / contract / source /
     horizon(hours|days|weeks|months)/ submitted_by。只追加;当天锚定。"""
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    require_internal_token(x_internal_token)
     from src.data.exploration.ideas import submit
     out = await submit(body or {})
     if not out.get("ok"):
@@ -653,8 +650,7 @@ async def exploration_submit(body: dict, x_internal_token: str = Header(None)):
 
 @router.get("/internal/exploration/ideas")
 async def exploration_list(start: str = Query("2026-10-01"), x_internal_token: str = Header(None)):
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    require_internal_token(x_internal_token)
     from src.data.style.header import _read_all
     rows = await _read_all("exploration_ideas", {"select": "*", "d": f"gte.{start}", "order": "submitted_at.asc"})
     return {"status": "ok", "count": len(rows), "ideas": rows}
@@ -722,8 +718,7 @@ class AllocationOverrideIn(BaseModel):
 async def allocation_override(body: AllocationOverrideIn, x_internal_token: str = Header(None)):
     """⓪ 人工通道:下一条带理由、带期限的敞口偏置(7d / 14d / 1m / delegate=全委托 即不设偏置)。
     写入后在后台整条重算配置。"""
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    require_internal_token(x_internal_token)
     from src.api.store import supabase_insert_table
     from src.data.allocation.allocator import HORIZONS, run_once
     start = body.start_d or datetime.now(timezone.utc).date()
@@ -741,8 +736,7 @@ async def allocation_override(body: AllocationOverrideIn, x_internal_token: str 
 @router.get("/internal/allocation/latest")
 async def allocation_latest(x_internal_token: str = Header(None), days: int = Query(30, ge=1, le=400)):
     """最新一天的配置(权重、敞口、为什么)+ 最近 N 天纸面 NAV + 生效中的人工偏置。"""
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    require_internal_token(x_internal_token)
     from src.data.vector.market_state_writer import _sb_get
     nav = await _sb_get("allocation_nav_daily", {"select": "*", "order": "d.desc", "limit": str(days)})
     if not nav.ok:
@@ -769,8 +763,7 @@ async def allocation_latest(x_internal_token: str = Header(None), days: int = Qu
 async def interpret_validate(x_internal_token: str = Header(None)):
     """按台账 M-196 回放 2023-01 起每一天:相似日分布 vs 只用过去的无条件分布 vs 随机相似日。
     后台执行(几分钟);结果看 `select verdict, result from interpretation_validation_runs order by id desc limit 1`。"""
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    require_internal_token(x_internal_token)
     from src.api.rpc_diagnostics import _record_loop_attempt
     from src.data.interpret.validate import run as _validate
 
@@ -812,8 +805,7 @@ async def backfill_deep_panel(
     与 `select symbol, count(*) from ohlcv_daily where source='binance_hist' …`。
     值不变的重写不会刷新 `recorded_at`(S-430 触发器),所以补洞不会污染 PIT。
     """
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    require_internal_token(x_internal_token)
     if symbols.strip():
         syms = [x.strip().upper() for x in symbols.split(",") if x.strip()]
     else:
@@ -879,8 +871,7 @@ async def backfill_cg_pro(
 
     `dry_run` **默认 True**:一个默认写库的回填端点,按错一次就是几万行。
     """
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    require_internal_token(x_internal_token)
 
     from datetime import date as _date
     from datetime import timedelta as _td

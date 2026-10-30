@@ -41,13 +41,13 @@ import logging
 import os
 
 from fastapi import APIRouter, Header, HTTPException
+from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
 
 from src.data.vector.strategy_schema import StrategyRecord, Verdict
 
 _logger = logging.getLogger(__name__)
 router = APIRouter()
 
-_INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 
 # Fields a caller may set. Anything else is dropped with a warning rather than
 # silently accepted — an unknown field usually means the sender's schema has
@@ -86,8 +86,7 @@ async def receive_strategy_records(payload: dict, x_internal_token: str = Header
     Returns per-record verdicts so a partial batch lands. 207 when some were
     rejected, so a caller cannot read a blanket 200 as "all stored"."""
     # Reject-by-default: a missing env var must fail closed, never open.
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    require_internal_token(x_internal_token)
 
     records = payload.get("records")
     if not isinstance(records, list) or not records:

@@ -67,7 +67,6 @@ ENDPOINT_TRACKING = "/api/v1/signals/pod-aggregator-tracking"
 
 _SB_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
 _SB_KEY = os.environ.get("SUPABASE_KEY", "")
-_INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 
 _logger = logging.getLogger("pod_aggregator_paper")
 

@@ -38,6 +38,7 @@ import logging
 import os
 
 from fastapi import APIRouter, Header, HTTPException
+from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
 
 log = logging.getLogger(__name__)
 router = APIRouter()
@@ -111,13 +112,12 @@ MAX_ROWS = 500
 
 
 def _auth(token: str | None) -> None:
-    expected = os.environ.get("INTERNAL_TOKEN", "")
-    if not expected:
+    from src.api.auth_internal import internal_token_configured
+    if not internal_token_configured():
         # **未配置必须 fail-closed。** S-262 修的 telegram webhook 正是
         # 「没配 secret 就放行」—— 一个空字符串比较通过了。
         raise HTTPException(503, "INTERNAL_TOKEN is not configured on the server")
-    if token != expected:
-        raise HTTPException(403, "bad or missing X-Internal-Token")
+    require_internal_token(token)
 
 
 def _vet(row: dict, spec: dict, idx: int) -> tuple:

@@ -11,6 +11,7 @@ import os
 from datetime import datetime, timezone
 import logging
 from fastapi import APIRouter, HTTPException, Header
+from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
 
 from src.api.store import (redis_set_key, redis_get_key, redis_get_key_status,
                            supabase_insert_batch)
@@ -19,7 +20,6 @@ _logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-_INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 _REDIS_KEY_STATUS = "quant:status"
 _REDIS_KEY_TRADES = "quant:trades"
 _REDIS_KEY_EQUITY = "quant:equity"
@@ -93,8 +93,7 @@ async def receive_quant_status(payload: dict, x_internal_token: str = Header(Non
     Receives Freqtrade dry-run status from Mac Mini.
     Mac Mini polls Freqtrade REST API (port 18432) every 30s and pushes here.
     """
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    require_internal_token(x_internal_token)
 
     if not payload:
         raise HTTPException(status_code=400, detail="Empty payload")

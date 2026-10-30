@@ -20,6 +20,7 @@ from typing import Optional
 
 import httpx
 from fastapi import APIRouter, Header, Request
+from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -27,7 +28,6 @@ _log = logging.getLogger(__name__)
 
 _SB_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
 _SB_KEY = os.getenv("SUPABASE_SERVICE_KEY", os.getenv("SUPABASE_KEY", ""))
-_INTERNAL_TOKEN = os.getenv("INTERNAL_TOKEN", "")
 
 router = APIRouter(prefix="/api/v1/analytics", tags=["analytics"])
 
@@ -110,8 +110,7 @@ async def analytics_summary(
     x_internal_token: str = Header(None, alias="X-Internal-Token"),
 ):
     """Internal summary — top events + section views + key creations. Requires internal token."""
-    if not _INTERNAL_TOKEN or x_internal_token != _INTERNAL_TOKEN:
-        return JSONResponse(status_code=403, content={"error": "forbidden"})
+    require_internal_token(x_internal_token)
 
     if not _SB_URL or not _SB_KEY:
         return {"error": "Supabase not configured"}

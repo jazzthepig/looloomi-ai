@@ -56,7 +56,7 @@ def test_research_ohlcv_requires_a_single_source():
 def test_backfill_cg_pro_symbols_restricts_to_the_named_mappings(monkeypatch):
     """S-468:改了映射之后只重写那几个;不在映射表里的报出来,不猜。"""
     from src.data.market import cg_pro_backfill as bf
-    monkeypatch.setattr(ohlcv, "_INTERNAL_TOKEN", "t")
+    monkeypatch.setenv("INTERNAL_TOKEN", "t")            # S-371 A-1:校验在请求期读 env,不再有模块常量
     monkeypatch.setattr(ohlcv, "_SB_URL", "http://x")
     monkeypatch.setattr(ohlcv, "_SB_KEY", "k")
 

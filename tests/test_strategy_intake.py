@@ -101,11 +101,27 @@ def test_a_bad_verdict_string_is_refused_with_the_valid_set():
 
 def test_auth_fails_closed_when_the_env_var_is_missing():
     """A missing INTERNAL_TOKEN must reject everything, never accept everything.
-    The `not _INTERNAL_TOKEN or ...` ordering is the whole of that guarantee."""
+    S-371 A-1 (2026-10-30): the guarantee now lives in one place, auth_internal.require_internal_token —
+    this test checks the behaviour, not the spelling (a spelling check is what went green through real faults).
+    No pytest fixtures: preflight also runs this file as a script."""
+    from fastapi import HTTPException
+    from src.api.auth_internal import require_internal_token
+    keys = ("INTERNAL_TOKEN", "INTERNAL_TOKEN_A", "INTERNAL_TOKEN_B", "INTERNAL_TOKEN_C", "INTERNAL_TOKEN_SETH")
+    saved = {k: os.environ.pop(k, None) for k in keys}
+    try:
+        for given in ("anything", "", None):
+            try:
+                require_internal_token(given)
+                raise AssertionError(f"missing env must reject {given!r}")
+            except HTTPException as e:
+                assert e.status_code == 401
+    finally:
+        for k, v in saved.items():
+            if v is not None:
+                os.environ[k] = v
     src = open(os.path.join(os.path.dirname(__file__), "..",
                             "src/api/routers/strategy_intake.py"), encoding="utf-8").read()
-    assert "if not _INTERNAL_TOKEN or not x_internal_token" in src, \
-        "auth must fail closed on a missing env var"
+    assert "require_internal_token(x_internal_token)" in src, "the router must use the one helper"
     assert "service_role is NOT required and NOT shared" in src, \
         "the schema echo must state that the DB key stays here"
 

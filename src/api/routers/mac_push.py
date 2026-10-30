@@ -66,14 +66,9 @@ _RISK_METER_ARGS = (
 )
 
 
-def _token() -> str:
-    return os.getenv("INTERNAL_TOKEN", "")
-
-
 def _auth(tok: str | None) -> None:
-    real = _token()
-    if not real or not tok or tok != real:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
+    require_internal_token(tok)
 
 
 async def _call(fn: str, payload: dict, label: str, n_rows: int | None) -> dict:

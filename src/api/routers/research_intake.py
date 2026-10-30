@@ -32,6 +32,7 @@ from __future__ import annotations
 import logging
 import os
 from fastapi import APIRouter, Header, HTTPException
+from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
 
 from src.api.contracts.research_intake import (
     NATURAL_KEY,
@@ -42,12 +43,6 @@ from src.api.contracts.research_intake import (
 
 router = APIRouter(tags=["internal"])
 _log = logging.getLogger("research_intake")
-
-
-def _token() -> str:
-    # Read at call time, not import time: Railway rotates it, and a module-level
-    # snapshot would keep authenticating against a value nobody can see.
-    return os.getenv("INTERNAL_TOKEN", "")
 
 
 def _drift_consequence(msplit: dict, rpc_missing: list, missing: list,
@@ -126,9 +121,7 @@ async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-To
     Authenticated: the table list is architecture, and CLAUDE.md #8 keeps
     internals off surfaces a competitor reads.
     """
-    tok = _token()
-    if not tok or not x_internal_token or x_internal_token != tok:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    require_internal_token(x_internal_token)
 
     import json
     from src.api.schema_manifest import manifest_path
@@ -304,10 +297,8 @@ async def receive_research_batch(
     payload: dict,
     x_internal_token: str = Header(None, alias="X-Internal-Token"),
 ):
-    tok = _token()
-    # Reject by default: a missing env var must fail closed, not open.
-    if not tok or not x_internal_token or x_internal_token != tok:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    # Reject by default: a missing env var must fail closed, not open (auth_internal 里统一做)。
+    require_internal_token(x_internal_token)
 
     report = normalize_research_payload(payload)
 

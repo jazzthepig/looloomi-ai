@@ -11,6 +11,7 @@ from datetime import datetime
 
 import logging
 from fastapi import APIRouter, HTTPException, Header, Response
+from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
 
 from src.api.store import redis_set_key, redis_get_key, supabase_insert_table
 
@@ -105,7 +106,6 @@ async def _persist_brief(brief: str, model: str, data_snapshot: dict, source: st
         _logger.warning(f"[MACRO] persist failed: {e}")
         return False
 
-_INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 _REDIS_KEY      = "macro:brief"
 # S-187 (2026-08-20). These were sized for "briefs are twice daily". The Mac now
 # polls every 5 minutes and regenerates on material change (see
@@ -243,8 +243,7 @@ async def receive_macro_brief(payload: dict, x_internal_token: str = Header(None
         "generated_at": "..."   # ISO timestamp
     }
     """
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=403, detail="Forbidden")
+    require_internal_token(x_internal_token)
 
     if not payload.get("brief"):
         raise HTTPException(status_code=400, detail="Missing 'brief' field")

@@ -14,13 +14,13 @@ GET  /api/v1/factory/fund/{id} — Get fund details
 """
 
 from fastapi import APIRouter, HTTPException, Header, Depends
+from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, timezone
 import asyncio
 import os
 
-_INTERNAL_TOKEN = os.getenv("INTERNAL_TOKEN", "")
 
 # Solana RPC integration flag — set SOLANA_READY=true in env when programs are deployed
 # S-358。这个门原来叫 `_SOLANA_READY`,而 Jazz 2026-09-16 明确:
@@ -197,8 +197,7 @@ async def deploy_fund(
     # - Return { transaction: base64, message: "Sign with wallet" }
 
     # Auth: reject-by-default
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=403, detail="Forbidden")
+    require_internal_token(x_internal_token)
 
     return {
         "status": "pending",
@@ -239,8 +238,7 @@ async def deposit(
         return JSONResponse(status_code=503, content=dict(_COMING_SOON))
 
     # TODO: Integrate with Solana RPC
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=403, detail="Forbidden")
+    require_internal_token(x_internal_token)
 
     fund = MOCK_FUNDS.get(request.fund_id)
     if not fund:
@@ -293,8 +291,7 @@ async def redeem(
         return JSONResponse(status_code=503, content=dict(_COMING_SOON))
 
     # TODO: Integrate with Solana RPC
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=403, detail="Forbidden")
+    require_internal_token(x_internal_token)
 
     fund = MOCK_FUNDS.get(request.fund_id)
     if not fund:
@@ -342,8 +339,7 @@ async def update_nav(
     if not _VAULT_READY:
         return JSONResponse(status_code=503, content=dict(_COMING_SOON))
 
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=403, detail="Forbidden")
+    require_internal_token(x_internal_token)
 
     # TODO: Integrate with Solana RPC
 
@@ -387,8 +383,7 @@ async def manage_whitelist(
     if not _VAULT_READY:
         return JSONResponse(status_code=503, content=dict(_COMING_SOON))
 
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=403, detail="Forbidden")
+    require_internal_token(x_internal_token)
 
     # TODO: Integrate with Solana RPC
 

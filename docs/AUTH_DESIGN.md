@@ -1,7 +1,9 @@
 # AUTH_DESIGN.md — `INTERNAL_TOKEN` 边界的第一性原理设计
 
-> **Status:** 冻结的设计(2026-09-17,Seth/Cowork lane,Jazz 拍板)。
-> 解冻时按此实施 —— 不要再重新想一遍。
+> **Status:** 冻结的设计(2026-09-17,Seth/Cowork lane,Jazz 拍板)。**2026-10-30 已实施(A-1 + A-2):**
+> `src/api/auth_internal.py::require_internal_token()` 是全仓库唯一的比较(45 处 / 17 个文件 → 1;12 个 import 期常量 → 0;
+> 常数时间比较;`INTERNAL_TOKEN` + `INTERNAL_TOKEN_A/_B/_C/_SETH` 按 lane 归因)。`tests/test_internal_token_contract.py` 11 项绿,已进 preflight。
+> **轮换现在是原子的**:改 Railway 的值,所有端点同一时刻切换。Railway 10-21 入侵后的轮换(Jazz 的动作)从这一刻起可以做。
 > 关联:`PROJECT_STATE.md` OPEN RISK **#0b** · `tests/test_internal_token_contract.py` · S-371 · A-1 / A-2
 
 ---

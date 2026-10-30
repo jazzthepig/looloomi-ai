@@ -189,11 +189,15 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Determine identity + limits
         raw_key = request.headers.get("X-API-Key", "").strip()
         internal_token = request.headers.get("X-Internal-Token", "").strip()
-        _INTERNAL = os.getenv("INTERNAL_TOKEN", "")
 
-        # Internal token — skip rate limiting
-        if internal_token and _INTERNAL and internal_token == _INTERNAL:
-            return await call_next(request)
+        # Internal token (any configured lane) — skip rate limiting. S-371 A-1:同一处校验,轮换立刻生效
+        if internal_token:
+            from src.api.auth_internal import require_internal_token
+            try:
+                require_internal_token(internal_token)
+                return await call_next(request)
+            except Exception:          # noqa: BLE001 —— 不是内部 token 就按普通请求限流
+                pass
 
         # Same-origin dashboard requests — high limit, never blocks the UI
         if not raw_key and _is_same_origin(request):

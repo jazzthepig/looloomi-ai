@@ -33,6 +33,7 @@ from dataclasses import fields
 from typing import Any, Optional
 
 from fastapi import APIRouter, Body, Header, HTTPException
+from src.api.auth_internal import require_internal_token   # S-371 A-1:INTERNAL_TOKEN 只在一处校验(EXECUTOR_TOKEN 另算,爆炸半径不同)
 
 from src.data.execution.dry_run import SPOT_TOKENS
 from src.data.execution.fill_log import _TERMINAL, Intent, Outcome
@@ -177,7 +178,7 @@ async def executor_book_of_truth(mode: str = "live", detail: bool = False,
                                  x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
     """R-v2 的真相之书(docs/TRADER_TOM_DOCTRINE.md §11):纸面票 vs 交易所上实际发生的,逐票对账 + 违规 + 挣来的杠杆上限。
     `mode` = live / dry_run;`detail=true` 带逐票明细。只读;走 Jazz 的 INTERNAL_TOKEN(这是真钱的账)。"""
-    _token_ok(x_internal_token, "INTERNAL_TOKEN")
+    require_internal_token(x_internal_token)
     from src.data.execution.book_of_truth import load_book_of_truth
     if mode not in TICKET_SLEEVE_FOR_MODE:
         raise HTTPException(422, f"mode 必须是 {sorted(TICKET_SLEEVE_FOR_MODE)}")
@@ -196,7 +197,7 @@ async def regime_call_post(body: Any = Body(...),
                            x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
     """Jazz ⓪ 开关:提交一条完整的判断(state on / off / flat、conviction 1–3、battlefield、close、note、days)。
     只追加;最新一条生效。说明见 src/data/execution/regime_call.py。"""
-    _token_ok(x_internal_token, "INTERNAL_TOKEN")
+    require_internal_token(x_internal_token)
     from src.data.execution.regime_call import post_call
     r = await post_call(body)
     if not r.get("ok"):
@@ -212,7 +213,7 @@ async def regime_call_post(body: Any = Body(...),
 @router.get("/internal/regime-call")
 async def regime_call_get(x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
     """现在生效的判断(下一轮计划用哪条)、最近 20 条、在持的 J 票、记分卡。"""
-    _token_ok(x_internal_token, "INTERNAL_TOKEN")
+    require_internal_token(x_internal_token)
     from src.data.execution.regime_call import call_view, governing_call, load_scorecard, read_calls, read_j_tickets
     try:
         calls, js = await read_calls(), await read_j_tickets()
@@ -232,7 +233,7 @@ async def regime_call_get(x_internal_token: Optional[str] = Header(None, alias="
 @router.get("/internal/regime-call/brief")
 async def regime_call_brief(top: int = 40, x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
     """⓪ 战场简报:HL 成交额前 N 的永续,趋势位置 / 第一段 / 回撤 / 第二段形态 / 资金费 / 未平仓 / 止损宽度。只读;筛子不是信号。"""
-    _token_ok(x_internal_token, "INTERNAL_TOKEN")
+    require_internal_token(x_internal_token)
     from src.data.execution.battlefield_brief import build_brief
     try:
         return {"ok": True, **await build_brief(max(5, min(int(top), 80)))}
@@ -244,7 +245,7 @@ async def regime_call_brief(top: int = 40, x_internal_token: Optional[str] = Hea
 async def executor_halt(body: dict = Body(...),
                         x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
     """一键停 / 解除。body: {"halted": true|false, "reason": "..."}。TTL 90 天(过期 = 解除,写在这里不藏)。"""
-    _token_ok(x_internal_token, "INTERNAL_TOKEN")
+    require_internal_token(x_internal_token)
     if not isinstance(body.get("halted"), bool):
         raise HTTPException(422, "halted 必须是 true / false")
     from src.api.store import redis_set_key

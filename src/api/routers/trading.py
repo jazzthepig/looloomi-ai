@@ -34,6 +34,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional, Literal
 
 from fastapi import APIRouter, HTTPException, Header, Query
+from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
 from pydantic import BaseModel, Field
 
 from src.api.store import redis_set_key, redis_get_key, supabase_insert_table
@@ -44,7 +45,6 @@ router  = APIRouter()
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
-_INTERNAL_TOKEN    = os.environ.get("INTERNAL_TOKEN", "")
 _UPSTASH_URL       = os.environ.get("UPSTASH_REDIS_REST_URL", "").rstrip("/")
 _UPSTASH_TOKEN     = os.environ.get("UPSTASH_REDIS_REST_TOKEN", "")
 _COINGECKO_KEY     = os.environ.get("COINGECKO_API_KEY", "")
@@ -939,9 +939,7 @@ async def trigger_sweep_aged(x_internal_token: str = Header(default="")):
     Manual trigger for aged-position sweep. Auth: X-Internal-Token must match
     INTERNAL_TOKEN env var. Returns sweep summary.
     """
-    expected = os.environ.get("INTERNAL_TOKEN", "")
-    if not expected or x_internal_token != expected:
-        raise HTTPException(status_code=401, detail="Unauthorized")
+    require_internal_token(x_internal_token)
     return await sweep_aged_positions()
 
 
@@ -1014,9 +1012,7 @@ async def _sl_tp_exit() -> dict:
 @router.post("/internal/sl-tp-exit")
 async def trigger_sl_tp(x_internal_token: str = Header(default="")):
     """Manual trigger for SL/TP auto-execution. Auth via INTERNAL_TOKEN."""
-    expected = os.environ.get("INTERNAL_TOKEN", "")
-    if not expected or x_internal_token != expected:
-        raise HTTPException(status_code=401, detail="Unauthorized")
+    require_internal_token(x_internal_token)
     return await _sl_tp_exit()
 
 
@@ -1095,9 +1091,7 @@ async def _cis_flip_exit() -> dict:
 @router.post("/internal/cis-flip-exit")
 async def trigger_cis_flip(x_internal_token: str = Header(default="")):
     """Manual trigger for CIS-flip exit. Auth via INTERNAL_TOKEN."""
-    expected = os.environ.get("INTERNAL_TOKEN", "")
-    if not expected or x_internal_token != expected:
-        raise HTTPException(status_code=401, detail="Unauthorized")
+    require_internal_token(x_internal_token)
     return await _cis_flip_exit()
 
 
@@ -1364,9 +1358,7 @@ async def rebalance_preview():
 @router.post("/internal/rebalance")
 async def trigger_rebalance(x_internal_token: str = Header(default="")):
     """Execute one meter rebalance. Auth via INTERNAL_TOKEN."""
-    expected = os.environ.get("INTERNAL_TOKEN", "")
-    if not expected or x_internal_token != expected:
-        raise HTTPException(status_code=401, detail="Unauthorized")
+    require_internal_token(x_internal_token)
     return await _run_paper_rebalance(dry_run=False)
 
 
@@ -1781,8 +1773,7 @@ async def get_signal_queue(x_internal_token: str = Header(None)):
     Returns signals in SIGNAL mode that haven't been acked yet.
     Requires X-Internal-Token.
     """
-    if not _INTERNAL_TOKEN or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="X-Internal-Token required")
+    require_internal_token(x_internal_token)
     queue = await _get_signal_queue()
     pending = [s for s in queue if s.get("status") == "pending"]
     return {"count": len(pending), "signals": pending}
@@ -1791,8 +1782,7 @@ async def get_signal_queue(x_internal_token: str = Header(None)):
 @router.delete("/api/v1/trading/signal-queue/{signal_id}")
 async def ack_signal(signal_id: str, x_internal_token: str = Header(None)):
     """Mac Mini acks a signal as executed. Marks it done in queue."""
-    if not _INTERNAL_TOKEN or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="X-Internal-Token required")
+    require_internal_token(x_internal_token)
     queue = await _get_signal_queue()
     for s in queue:
         if s.get("signal_id") == signal_id:

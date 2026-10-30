@@ -21,13 +21,13 @@ from datetime import datetime, timezone, timedelta
 
 import httpx
 from fastapi import APIRouter, HTTPException, Header
+from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
 
 _logger = logging.getLogger(__name__)
 router = APIRouter()
 
 _SB_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
 _SB_KEY = os.environ.get("SUPABASE_KEY", "") or os.environ.get("SUPABASE_SERVICE_KEY", "")
-_INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 
 
 # ── Tables we track ─────────────────────────────────────────────────────────
@@ -210,8 +210,7 @@ async def trigger_regime_fitness(x_internal_token: str = Header(None),
     Runs the same logic the Mac Mini cron would, but inserts directly to
     cis_regime_fitness via Supabase REST. INTERNAL_TOKEN guarded.
     """
-    if not _INTERNAL_TOKEN or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="unauthorized")
+    require_internal_token(x_internal_token)
 
     try:
         from scripts.compute_regime_fitness import (
@@ -271,8 +270,7 @@ async def trigger_ohlcv_collect(x_internal_token: str = Header(None),
     84-asset universe. Writes to ohlcv_daily via Supabase REST.
     INTERNAL_TOKEN guarded.
     """
-    if not _INTERNAL_TOKEN or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="unauthorized")
+    require_internal_token(x_internal_token)
 
     try:
         from src.api.routers.ohlcv import collect_ohlcv

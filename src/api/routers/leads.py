@@ -10,6 +10,7 @@ import os, json
 import logging
 from datetime import datetime
 from fastapi import APIRouter, HTTPException
+from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from src.api.store import redis_get_key as _redis_get, redis_set_key as _redis_set
@@ -209,9 +210,7 @@ async def leads_summary(token: str = ""):
     Internal: referral attribution summary.
     Protected by INTERNAL_TOKEN query param.
     """
-    internal_token = os.getenv("INTERNAL_TOKEN", "")
-    if not internal_token or token != internal_token:
-        raise HTTPException(status_code=401, detail="Unauthorized")
+    require_internal_token(token)
 
     # Try Supabase first
     supabase_url = os.getenv("SUPABASE_URL")

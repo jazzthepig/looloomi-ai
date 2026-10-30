@@ -922,7 +922,8 @@ def test_the_probe_reads_the_same_path_the_loop_will_run():
         assert fn in body, f"the probe does not call the book's own {fn}"
     assert "dry" in body.lower() and "no row written" in body, (
         "the probe must state that it writes nothing")
-    assert "INTERNAL_TOKEN" in body, "the probe names internals — it must be guarded"
+    assert "require_internal_token(x_internal_token)" in body, (
+        "the probe names internals — it must be guarded (S-371 A-1: the guard is the one helper, not an inline compare)")
 
 
 def test_annualizing_a_short_curve_is_flagged_not_hidden():

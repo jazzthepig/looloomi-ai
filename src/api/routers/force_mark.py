@@ -98,15 +98,9 @@ _NAV_TABLE_BY_BOOK: dict[str, str] = {
 }
 
 
-def _token() -> str:
-    # Read at call time, not import time — Railway rotates it.
-    return os.getenv("INTERNAL_TOKEN", "")
-
-
 def _auth(tok: str | None) -> None:
-    t = _token()
-    if not t or not tok or tok != t:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
+    require_internal_token(tok)
 
 
 def _already_marked_response(*, book: str, today: str, nav_table: str) -> dict:

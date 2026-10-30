@@ -8,6 +8,7 @@ from datetime import datetime
 
 import logging
 from fastapi import APIRouter, HTTPException, Header, Query, WebSocket, WebSocketDisconnect, Response, Request
+from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
 from fastapi.responses import JSONResponse
 
 from src.api.store import (
@@ -25,7 +26,6 @@ _logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-_INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 _SB_KEY_SET     = bool(os.environ.get("SUPABASE_KEY", ""))  # guard signal logging
 
 
@@ -109,8 +109,7 @@ async def receive_local_cis_scores(payload: dict, x_internal_token: str = Header
     Triggers WebSocket broadcast to connected clients.
     """
     # Reject-by-default: require token always (fail secure if env var missing)
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    require_internal_token(x_internal_token)
 
     try:
         # ── Normalize to canonical CIS push contract v1 (single source of truth) ──
@@ -3363,7 +3362,9 @@ async def websocket_cis(websocket: WebSocket):
     # Auth via first message — must contain valid token
     try:
         msg = await asyncio.wait_for(websocket.receive_text(), timeout=10)
-        if msg != f"auth:{_INTERNAL_TOKEN}":
+        try:
+            require_internal_token(msg[5:] if str(msg).startswith("auth:") else None)
+        except HTTPException:
             await websocket.close(code=4001, reason="Unauthorized")
             return
     except asyncio.TimeoutError:
@@ -3954,6 +3955,5 @@ async def snapshot_full_universe_to_supabase() -> dict:
 async def trigger_cis_snapshot(x_internal_token: str = Header(None)):
     """Manually trigger the daily full-universe snapshot (same write the daily loop
     performs). Guarded by INTERNAL_TOKEN."""
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="unauthorized")
+    require_internal_token(x_internal_token)
     return await snapshot_full_universe_to_supabase()

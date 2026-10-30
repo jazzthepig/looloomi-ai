@@ -15,6 +15,7 @@ import time
 from typing import Optional
 
 from fastapi import APIRouter, Query, HTTPException, Response, Header
+from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
 from fastapi.responses import JSONResponse
 
 _logger = logging.getLogger(__name__)
@@ -22,7 +23,6 @@ router  = APIRouter()
 
 # Mac T1 → Railway asset-vector push contract (MINIMAX_SYNC §ASSET-VECTORS).
 ASSET_VECTOR_SCHEMA_VERSION = "1.0"
-_INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 
 
 def _load_store():
@@ -428,9 +428,7 @@ async def rebuild_asset_vectors(x_internal_token: str = Header(None)):
     "the migration is done" is a fact you can establish rather than wait for.
 
     Token-guarded and idempotent (upsert on symbol)."""
-    _tok = os.environ.get("INTERNAL_TOKEN", "")
-    if not _tok or x_internal_token != _tok:
-        return JSONResponse(status_code=401, content={"detail": "Invalid token"})
+    require_internal_token(x_internal_token)
 
     # ONE implementation, two callers (S-220). The rebuild used to live only here,
     # so the daily loop would have had to re-implement it — and two versions of
@@ -495,8 +493,7 @@ async def receive_asset_vectors(payload: dict, x_internal_token: str = Header(No
     already succeeded by the time this fires, so a failure here must never look like a scoring
     failure (Mac logs WARNING and moves on).
     """
-    if not _INTERNAL_TOKEN or not x_internal_token or x_internal_token != _INTERNAL_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    require_internal_token(x_internal_token)
 
     sv = str(payload.get("schema_version") or "")
     if sv != ASSET_VECTOR_SCHEMA_VERSION:

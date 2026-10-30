@@ -68,7 +68,6 @@ FULL_UNIVERSE = sorted(set(CRYPTO_UNIVERSE) | set(TRADFI_UNIVERSE))
 
 _SB_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
 _SB_KEY = os.environ.get("SUPABASE_KEY", "")
-_INTERNAL_TOKEN = os.environ.get("INTERNAL_TOKEN", "")
 
 _logger = logging.getLogger("factor_tilt_paper")
 
