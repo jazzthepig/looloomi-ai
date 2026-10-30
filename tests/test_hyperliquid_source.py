@@ -89,15 +89,18 @@ def test_the_loop_is_registered():
     assert "collect_venue_marks" in loop
 
 
-def test_coingecko_writer_is_flagged_for_the_date_bug():
-    """S-191 is not fixed here — it is in the CoinGecko write path and touching
-    it rewrites history. This test exists so the finding cannot be forgotten
-    while the fix is pending; it should be replaced by a real guard once the
-    writer is corrected."""
-    state = (ROOT / "PROJECT_STATE.md").read_text()
-    assert "S-191" in state, (
-        "the CoinGecko off-by-one must stay on the first screen until fixed — "
-        "every return series from that source is shifted one day")
+def test_coingecko_date_bug_has_a_real_guard_not_a_reminder():
+    """S-191 (08-20) was the CoinGecko off-by-one; S-436 / S-436b (09-28/29) fixed the writer and
+    relabelled the table, and T-044 / S-484 put a daily cross-source agreement guard on it
+    (`price_source_agreement_daily` ← `_price_agreement_loop`, replay-tested in
+    tests/test_price_agreement_guard.py). This test used to pin the string "S-191" to the first
+    screen of PROJECT_STATE as a reminder; a reminder is not a guard, and once the real guard
+    exists the reminder must point at it instead (2026-10-30, OPEN RISKS rewrite)."""
+    main = code_only((ROOT / "src/api/main.py").read_text())
+    assert "_price_agreement_loop" in main and "create_task(_price_agreement_loop())" in main.replace(" ", ""), (
+        "the cross-source agreement loop must be scheduled — it is the guard that replaced the S-191 reminder")
+    pre = (ROOT / "scripts/preflight.sh").read_text()
+    assert "tests/test_price_agreement_guard.py" in pre, "the guard's replay tests must run in preflight"
 
 
 # ── S-204: the collector throttled itself into refusing to write ─────────────

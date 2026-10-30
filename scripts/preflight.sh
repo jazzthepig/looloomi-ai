@@ -1460,12 +1460,8 @@ python3 -m tests.test_loops_envelopes || {
 # insert_with_detail 在 on_conflict kwarg 存在时设置,9 本其它书不动。
 python3 -m tests.test_fusion_paper_mark_date_upsert || {
   echo "  ✗ S-389 FIX-A mark_date upsert — do not push"; exit 1; }
-# C-13 P4: schema_manifest 注册 cap-weighted ① nav_panel_* + 3 个 mcap 字段。
-# Mac-side writers 写在 cometcloud-local/(Rule 3 不归 Seth),Seth 用显式声明
-# 把 nav_panel_rebalances / nav_panel_daily / market_state_vectors{mcap_usd,
-# adv_usd_20d, adv_screen_pass} 暴露给 offline manifest。
-python3 -m tests.test_c13_nav_panel_manifest_registered || {
-  echo "  ✗ C-13 P4 nav_panel manifest 注册 — do not push"; exit 1; }
+# C-13 P4(nav_panel_* 的 manifest 声明)10-30 撤销:Mac 侧 nav_writer 从未 ship,① 的 cap 加权在 Railway 的
+# core_cap_daily 上(S-472 / S-473)。声明先于写入端 24 天(OPEN RISK #0c 的到期日 10-06),按它自己写的兜底撤掉。
 
 # ── S-245: 几何基底的写者 —— 单源 · 定盘 · 写前地板 ──────────────────────────
 # 实测 2026-08-27:`market_state_vectors` 的 582 行里 **568 行(97.6%)混了价源**

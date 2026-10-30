@@ -68,8 +68,6 @@
     "multiplier_daily",
     "narrative_events",
     "nav_exceptions",
-    "nav_panel_daily",
-    "nav_panel_rebalances",
     "ohlcv_daily",
     "oi_lev_snapshot_daily",
     "open_interest_history",
@@ -234,11 +232,6 @@
       "recorded_at",
       "source"
     ],
-    "market_state_vectors": [
-      "adv_screen_pass",
-      "adv_usd_20d",
-      "mcap_usd"
-    ],
     "nav_exceptions": [
       "action",
       "actor",
@@ -249,18 +242,6 @@
       "mark_date",
       "reason",
       "symbol"
-    ],
-    "nav_panel_daily": [
-      "nav",
-      "return_pct",
-      "trade_date"
-    ],
-    "nav_panel_rebalances": [
-      "as_of",
-      "mcap_usd",
-      "symbol",
-      "trade_date",
-      "weight"
     ],
     "portfolio_targets_daily": [
       "book",

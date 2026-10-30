@@ -1,10 +1,10 @@
 # PROJECT_STATE.md — the living single source of truth
 
-**Last updated:** 2026-10-30 15:42 UTC (Seth — **T25 黄金 / 股票腿接进东京执行器(Jazz 10-30「change the nav_cap to 600 // yes」),先空跑。**同一个 HL 账户、同一套意图 / 成交记录:XAUT0/USDC(@182)目标 $120、SPYX/USDC(@703)目标 $180,来自 `portfolio_targets.plan_fields` 的 `portfolio.t25`(与目标表同一份权重)。规则 `exec_host/legs`:第一次接上(持仓 0)直接建仓;再平衡日回到目标;其余日子只纠偏离 > 5% × 600 的腿;差额 < $10 或没报价 ⇒ 不动(没报价 ≠ 持仓 0);卖在前、不超过可用余额。`EXECUTOR_T25_MODE` 默认 dry_run(sleeve `t25_legs_host_dry`),一天一轮按模式记 ⇒ 当天空跑过、切 live 当场跑一轮。R-v2 统一账户净值从此把现货代币按 USDC 中间价算进去;每日真钱快照用主机心跳里的 XAUT0 / SPYX 市值(没有日线收盘)。顺手修了一个会留零头的取整(0.06 − 0.02 向下取整成 0.03)。**15:39 UTC 主机已更新、空跑核过:** nav_cap 600(X1V 实际 $180)、agent 有效到 2027-01-27;`execution_intents` 两行 sleeve `t25_legs_host_dry`(SPYX 买 0.23 ≈ $175.35 限价 766.22、XAUT0 买 0.03 ≈ $117.24 限价 3927.6,都是中间价 +0.5%;估滑点 2.8 / 4.9 bps;`t25:再平衡日` = 开账日),回报 `book = t25` 被 Railway 收下,心跳 `t25_done_asof = 2026-10-29`。**剩 Jazz 一步:** 双击 `scripts/host_t25_live.command`(要输 yes)⇒ 当场真单;成交后 Seth 把 `LEGS_LIVE` 翻成 True。X1V 实际额度仍是 min(600, 加密腿 $180) = $180。commit 走 seth_bot `zv`。)
+**Last updated:** 2026-10-30 17:25 UTC (Seth — **夜班(Jazz「回到高维,按你的想法完善整个项目」),到 17:25 落了四件:** ① **执行质量日表** `execution_quality_daily`(18d3cb96):`fill_log.execution_quality` 自 T-122 起从没有调用者,真钱第一批成交之后有了 —— 每本执行账每天一行 + 累计,滑点对决策时中间价 / 费 / 机会成本 / 实施差额,锚进 forward_anchor_daily,证据面 `/api/v1/proof/books` 加 `execution` 段;实测 t25_legs_live 2 笔 fill_rate 1、滑点 +3.5 bps、费 7 bps、差额 10.5 bps。证据面的 note 不再说「全是纸面」。② **S-371 A-1 + A-2 收敛落地**(d0bdf7ab):`INTERNAL_TOKEN` 的 45 处比较 / 17 个文件 / 12 个 import 期常量 → `src/api/auth_internal.require_internal_token()` 一处,请求期读 env、常数时间、按 lane 归因;契约测试 2 红 9 跳 → 11 绿并进 preflight;**轮换现在是原子的**(Railway 入侵后的轮换从此可做,OPEN RISK 1)。③ **S-700 按时点的 ① 对照臂** `cap_pit24`(b8bbe7a9):逐月前 24 大市值、含死币、排稳定币 / 包裹凭证 / 代币化债权、选成员那天换手 ≥ 1%,权重公式同 `core_alpha_daily`,2019 起,6 小时一轮写 core_variants_daily;`asset_mcap_daily` 补齐循环在跑(2018-12 起 + 22 个死币 / 缺名,核价后才写)。补齐前第一眼:2021 PIT +203% vs 幸存者 +236%。**不改 registry.core_nav,换锚是 Jazz 的决定。**④ **OPEN RISKS 整块重写**:11 条 → 5 条活的,旧块原文进 LOG;C-13 nav_panel 声明按 10-06 兜底撤掉;venue registry 90 天复核(4580e07d:HYPE 已在 Binance 现货、MKR 全场死、SKY 加入)。另:`asset_embeddings_history.vec` 全空是 S-178 的设计(vec_full 为准),我 06:38 那句「要走 §2 合约」是错的,撤回。T25 腿 10-30 15:44 真单成交(SPYX 0.23 @ 762.23、XAUT0 0.03 @ 3907.5,费 $0.20),`LEGS_LIVE = True`(f0a8f48b)。)
+
+**更早:** 2026-10-30 15:42 UTC (Seth — **T25 黄金 / 股票腿接进东京执行器(Jazz 10-30「change the nav_cap to 600 // yes」),先空跑。**同一个 HL 账户、同一套意图 / 成交记录:XAUT0/USDC(@182)目标 $120、SPYX/USDC(@703)目标 $180,来自 `portfolio_targets.plan_fields` 的 `portfolio.t25`(与目标表同一份权重)。规则 `exec_host/legs`:第一次接上(持仓 0)直接建仓;再平衡日回到目标;其余日子只纠偏离 > 5% × 600 的腿;差额 < $10 或没报价 ⇒ 不动(没报价 ≠ 持仓 0);卖在前、不超过可用余额。`EXECUTOR_T25_MODE` 默认 dry_run(sleeve `t25_legs_host_dry`),一天一轮按模式记 ⇒ 当天空跑过、切 live 当场跑一轮。R-v2 统一账户净值从此把现货代币按 USDC 中间价算进去;每日真钱快照用主机心跳里的 XAUT0 / SPYX 市值(没有日线收盘)。顺手修了一个会留零头的取整(0.06 − 0.02 向下取整成 0.03)。**15:39 UTC 主机已更新、空跑核过:** nav_cap 600(X1V 实际 $180)、agent 有效到 2027-01-27;`execution_intents` 两行 sleeve `t25_legs_host_dry`(SPYX 买 0.23 ≈ $175.35 限价 766.22、XAUT0 买 0.03 ≈ $117.24 限价 3927.6,都是中间价 +0.5%;估滑点 2.8 / 4.9 bps;`t25:再平衡日` = 开账日),回报 `book = t25` 被 Railway 收下,心跳 `t25_done_asof = 2026-10-29`。**剩 Jazz 一步:** 双击 `scripts/host_t25_live.command`(要输 yes)⇒ 当场真单;成交后 Seth 把 `LEGS_LIVE` 翻成 True。X1V 实际额度仍是 min(600, 加密腿 $180) = $180。commit 走 seth_bot `zv`。)
 
 **更早:** 2026-10-30 06:38 UTC (Seth — **矢量库 v2 上线 + 地基修好(S-698 / S-699)。** **① `binance_hist` 统一成现货:** 06:05 UTC 跑完,262 个标的全过(216 改成 / 核成现货,46 个没有现货对、留原处并从面板排除);187,928 行永续 bar 原样存进 `binance_um_hist` 后换成现货,141 个标的补深度 79,834 行(2020-01-01 前已有数据的标的 14 → 59、2019 年 7 → 17);独立复核:同一脚本 2025-06-15 抽 10 个,修前 9 个是永续,修后 10/10 是现货。**会动的:** 吃成交量的回放(R-v2 历史扫描、ADV 准入、① 回放臂)—— 前向锁住的行不动。**② `market_state_vectors` v2(06:31 UTC):** 2,525 行,2019-12 → 2026-10;按月时点面板(上月末 30 日成交额前 25,83 个月 / 140 个成员,无前视)、扩张窗口 z;实测维 v1 每天 11 → 2021–24 年 15–16、2026 年 20.5(资金费 / OI / CIS / fng / 稳定币供给接上;旧读法一页 limit=5000 撞 1000 行上限,那几维原来只有几天);与 v1 近邻重叠平均 1.08 / 10,18% 的近邻落在新补的 2020–21。`similar_market_states` 改在共同实测维上比(旧版只留维数齐备的天,v2 下会只剩最近一年)。**③ T-214 done:** 黄金 XAUT0 与股票 SPYX 都在 **HL 现货上有 USDC 对** —— T25 三条腿可以在同一个账户、同一个执行器(待 Jazz 定)。**④ 东京主机已更新(13:54 UTC 10-30,Jazz):** 自检 `perp_account.mode = unifiedAccount`、R-v2 记账净值 630.64(原来读成 0)、X1V `nav_cap_effective = 180`(组合层加密腿额度);13:55 心跳已带 `account` 段 ⇒ 每日真钱快照从 10-30 起有账户模式。443 那次「主机钥匙变了」是 known_hosts 里重建前旧机器的记录,脚本核对 22 上认过的同一把钥匙后才替换。`asset_embeddings_history` 4,003 行 vec 空(Mac 推 27 维、列是 18 维,要走 §2 合约)。)
-
-**更早:** 2026-10-30 04:26 UTC (Seth — **扩充矢量库(Jazz 10-30「继续长任务,然后扩充矢量数据库」)—— 先挖出地基里的一个大缺陷(S-698)。**往 2018–2020 补 `binance_hist` 深度前拿 data.binance.vision 对已有行:**209 个标的里 168 个是 U 本位永续的 bar,只有 41 个是现货**;收集器 08-08 起写现货 ⇒ 136 个拼接(价格差基差、**成交量差 5–10 倍**),32 个没有现货对的停更。凡用 `close × volume` 的(ADV 门槛、R-v2 放量条件、矢量库量维)在拼接处看到悬崖。**修复在跑**(`_binance_hist_repair_loop`,aa778ece):非现货行原样复制到 `binance_um_hist`,再用现货月档覆盖并补到现货上市日;哨兵核过(TRX / ETC 各 2,050 行存档改现货、多 583 天深度从 2018-06 起;ADA / BTC 各 2 天;1000SHIB 原样存档),全量 15 分钟一轮、预计今天跑完;不删任何行。**矢量库 v2(S-699,T-094)代码已上、开关关着**:按月时点面板(上月末 30 日成交额前 25,无前视、死币在它活着的月份在)、扩张窗口 z、2019 起、资金费 / OI / CIS 改服务端聚合(旧读法一页 limit=5000 撞 1000 行上限,那几维只填到几天)、fng / oi_mcap / stable_supply_chg 接上(UNWIRED 清空);验收测试:截到 d 算出的 d 行 = 全史的 d 行。**修复跑完再开 `PIT_V2`。** 另:`asset_embeddings_history` 4,003 行 vec 全空 —— Mac 推 27 维、列是 vector(18),要走 §2 合约变更。主机仍未更新(X1V 仍空仓,BTC 离开仓线 +8.9%)。)
 
 > **本项目的主导缺陷类:「拿不到」被渲染成一个合理的数字,而不是被渲染成「拿不到」。**
 > 十一次实例(S-180…S-243)+ 三条课 + 守卫自己失败七轮的记录 →
@@ -15,15 +15,16 @@
 ## 现在能跑的 / 不能跑的
 
 ```
-(2026-10-20 19:1x UTC 实测,Supabase 直查;上一版是 10-13)
-✅ 价格源       binance_hist 136 标的日更(① 价源;08-08 起非核心名是现货口径,见 #0e)· coingecko_pro_ohlc 210 · eodhd 193(World50 扩池后)
+(2026-10-30 17:20 UTC 实测,Supabase 直查;上一版是 10-20)
+✅ 价格源       binance_hist 现货口径贯通(S-698 10-30;永续 bar 存 source = binance_um_hist)· coingecko_pro_ohlc 210 · eodhd 193(World50 扩池后)
 ✅ 循环         loop_attempt 3 天内 78 个:69 最近一次 ok · 6 本 ④ 冻结记 refused(causal / scalable / combined / dingge / fusion / two_layer,S-631)
                 · _hl_book_loop refused「当天已记录」· _meta_allocator_loop refused「策略库只到前天」· _cis_inputs_loop error(macro.global_recent 单项)
 ✅ 正式 CIS     cis_official_daily 每天一批、只追加,最新 = 昨天
 ✅ 前向记录     S-560 起 d ≤ 今天 − 2 冻结;① cap_a1_u / ③ tom_pd13 / R-v2 票(r_tickets_state)都到昨天;ⓠ 两臂 10-22 起出前向行
 ✅ 部署        Railway 16:56 → 20:40 UTC 卡了约 4 小时(02fc20c0 的部署记录建了没动,之后的推送没有部署记录),20:40 自己恢复(89dff45b、6761340c 上线);原因未查 —— 再出现就去 Railway 看部署队列
-🟡 执行器       东京主机 dry_run,每小时心跳;改 live 是 Jazz 的动作:
-                 select at, outcome, detail->>'kind', detail->>'mode' from loop_attempt where loop_name = 'executor_host' order by at desc limit 5;
+🟢 执行器       东京主机 **live**(X1V / R-v2 10-29 起、T25 腿 10-30 15:44 起);真钱第一批成交 SPYX 0.23 @ 762.23、XAUT0 0.03 @ 3907.5;每小时心跳
+                 select at, outcome, detail->>'book', detail->>'mode', left(reason,80) from loop_attempt where loop_name = 'executor_host' order by at desc limit 6;
+✅ 真钱记账     live_account_daily(每日快照,锚定)· execution_quality_daily(10-30 起:成交对决策中间价,锚定,证据面 execution 段)· portfolio_targets_daily
 ⚪ agent_call_log 0 行 = 没有外部 agent 流量(写入任务 S-562 已修;watch_census 标「量随流量,不判活」)
 ✅ lane 数据通路 lanes 只拿 publishable key(10-20 轮换后),读权限按表开 lane_read;写只经 seth_bot
 ```
@@ -36,386 +37,37 @@ the lessons lived only in a 5,672-line ledger. **Don't transmit memory, transmit
 Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
 `tests/test_cold_start_contract.py`.*
 
-### #0e · 🟡 binance_hist 口径拼接:192 个名字 08-07 及以前是永续、08-08 起是现货 —— 等 Jazz 定执行口径(S-637, 2026-10-20)
+*2026-10-30 17:20 UTC 整块重写(Seth):旧块 390 行、11 条,逐条按它自己的 VERIFY 核过 —— #0a 面板断线三条判据全过(writer 4 / 当日 210 名 / loop_attempt 1,968 行/天)、
+#0c nav_panel 声明按 10-06 兜底撤掉、#0d Supabase key 已收尾、#0b INTERNAL_TOKEN 收敛已落地(d0bdf7ab)、8 月的 0–5 号全部早已关闭或被取代。
+原文整块移到 `PROJECT_STATE_LOG.md` `[OPEN RISKS archived 2026-10-30]`,一行没删。下面只有活的。*
 
-**T-151 已量化(台账 S-637 量化):** 切换日 **2026-08-08,整块切**(08-07 及以前与永续逐位一致、成交量是现货的 5.2–5.9 倍;08-08 起全部与现货一致,73 天无例外)。全程现货 40(核心)、切换前永续 192、全程永续 0。R 臂(2023-01 → 2026-06-20,k = 2.5):**现状 769 票 / +0.253R;永续面板 759 / +0.234;现货面板 492 / +0.178(票少 36%)**。研究回测窗口整段是永续口径,前向 R-v2 账本是现货口径 —— 不是同一个宇宙。
-**要 Jazz 定:** R-v2 在**永续**上执行 ⇒ 采集器改回永续口径(研究结论几乎不变);在**现货**上执行 ⇒ 历史重取现货、S-638 / S-639 按现货面板重算(票少三分之一)。**定之前不改任何一行。**
+1. **🔴 Railway 10-21 入侵后的变量轮换没做完,而真钱已经在跑(10-30 15:44 起)。**
+   已换:`GITHUB_TOKEN`(10-22)、Supabase secret(10-22)、CoinGecko key(10-29 脚本)。**没换或不确定:** `INTERNAL_TOKEN`(Mac 推 CIS / ⓪ 开关 / 一键停 —— 收敛 d0bdf7ab 之后轮换**现在是原子的**,
+   改 Railway 的值所有端点同一时刻切;同一时刻改 Mac 引擎 env 与仓库根 `.env`)、`EXECUTOR_TOKEN`(主机 10-29 重建时 write_env 问过一次 —— 填的是新值还是旧值只有 Jazz 知道;泄露的后果是能读计划、能伪造执行记录,不能下单)、
+   `UPSTASH_REDIS_REST_TOKEN` / `EODHD` / `TELEGRAM_BOT_TOKEN` / 其余(`docs/RAILWAY_ROTATION_RUNBOOK.md` §4 表)。runbook 第 1–4 步一次改完再部署,第 5 步 Seth 验。
+   VERIFY: Supabase → Logs 里旧 secret 前缀 0 次;`curl -s https://web-production-0cdf76.up.railway.app/internal/build-state | python3 -c 'import sys,json;d=json.load(sys.stdin);print(d["git_sha_short"], d["last_cis_push"]["age_seconds"])'` 换 INTERNAL_TOKEN 后 30 分钟内 age < 1800;主机 `install.sh` 自检 `plan_http: 200`。
+   OWNER: **Jazz(密钥只经他的手)** · Seth(每步之后的验证命令与日志核对)
 
-VERIFY: `select symbol, trade_date, volume from ohlcv_daily where source='binance_hist' and symbol='CRV' and trade_date in ('2026-07-15','2026-09-15')` 对比 `https://data-api.binance.vision/api/v3/klines?symbol=CRVUSDT&interval=1d&startTime=1784073600000&limit=1` 的第 6 列。
+2. **🟡 R-v2 的研究与前向不是同一个宇宙(S-637 → S-698 之后剩下的半截)。** 数据侧已定:`binance_hist` 10-30 起现货贯通,永续 bar 原样存 `source = binance_um_hist`(禁入收益序列)。
+   研究(S-610 / S-638 / S-639,769 票 / +0.253R)跑在永续混合口径上;前向 `r_tickets_scan` 读 binance_hist = 现货。T-151 量过:现货面板 492 票 / +0.178R(少 36%)。
+   **要 Jazz 定:** 要不要按现货面板重算 S-638 / S-639 并把它当前向的对照;或者 R-v2 的回放改读 `binance_um_hist`(永续 = 它实际执行的市场)。定之前两边都不改。
+   VERIFY: `select source, count(*) from ohlcv_daily where symbol = 'CRV' and trade_date between '2025-06-01' and '2025-06-30' group by 1` → 两个 source 各约 30 行;`select count(*) from ohlcv_daily where source = 'binance_um_hist'` = 259,986(10-30 实测;187,928 是改成现货的那部分,其余是没有现货对、原地保留并同时存档的)。
+   OWNER: Jazz(定口径)· Seth(执行)
 
-### #0e · 🔴 Railway 平台被入侵(10-21)—— 构建暂停、环境变量须全部轮换
+3. **🟡 真钱第一周:三条新记账线都只有一两行,每条都要在第一个完整日核一次。**
+   ① `live_account_daily` 10-30 这行应把 XAUT0 / SPYX 按主机心跳市值计入(`spot_usd` 两个键,`note` 含「HL 中间价」);② `execution_quality_daily` since_inception:t25_legs_live 2 笔、fill_rate 1、滑点 +3.5 bps、费 7 bps(HL 现货 taker 0.07%);
+   ③ `portfolio_targets_daily` 10-31 起 gold / equity `executable = true`。已知未做:再平衡日(21 个交易日后 ≈ 11-30)资本仍按 600 定,不按真钱快照(legs.py 注「P5」);HL 现货买单手续费扣基础币 ⇒ 持仓 0.029979 不是 0.03,整仓卖出会留 0.0099 零头(≈ $39)——当前规则不会整仓卖,记着。
+   VERIFY: `select d, equity_usd, spot_usd, nav, note from live_account_daily order by d desc limit 2` · `select sleeve, n_intents, fill_rate, mean_slippage_bps, implementation_shortfall_bps from execution_quality_daily where span = 'since_inception'` · `select d, sleeve, executable from portfolio_targets_daily where d = current_date`。
+   OWNER: Seth
 
-Railway 公告:存放客户环境变量的系统被入侵,部分变量被解密拿走;全平台构建暂停(10-21 07:24 UTC 起,10-22 02:00 仍未恢复)。我们的线上停在 27d52ba0(10-21 06:59 部署),之后的提交都没部署。**查过:** Supabase 7 天 edge 日志里 secret key 的请求全来自 Railway(asOrganization = Railway)与 Mac;库没有外部直连;GitHub 10-20 以来的提交全是我们自己的身份。**已做:** 主机复核(TRADE_PATH §3f)—— 能写库最多只能让主机做一张像信号的票(R-v2 复核目前 report,J 票 / 信心倍数签名强制)。**GitHub(10-22 02:50 已做):** Railway 的 `GITHUB_TOKEN` 与 Mac 的 `gh` 登录是同一份 OAuth 授权(repo + workflow,覆盖全部仓库)⇒ Mac 改用只限本仓库的 fine-grained token,`gh` 的 OAuth 授权已撤销;私有文档(台账 / 策略手册 / DECISIONS)的备份仓库 `~/Projects/looloomi-private` **没有 GitHub 远端**,从没上过 GitHub ⇒ 不在这把授权能读的范围内;本仓库是公开的。Mac 的推送已用新 token 验通(4fb6c44b)。**Jazz 还要做:**(推理 key / RESEND:Jazz 10-22 判 Railway 上几乎没有,不急,随构建恢复后的轮换一起做)构建恢复后按 `docs/RAILWAY_ROTATION_RUNBOOK.md` 一次轮换;~~Mac 上 `regime_call.py keygen` + 抄密钥到主机~~ ✅ 10-23 01:10 UTC 主机已配 `JAZZ_CALL_KEY`(主机指纹 8ec89132;install.sh 自检过,executor / recorder / whales 三个服务在跑,dry_run,代码 d821e36;当前生效的判断是配 key 之前提交的、未签名 ⇒ 风险倍数 1、不开 J 票,要生效就在 Mac 上重提一次)。**切 live 前的前置条件(10-23):Jazz 在同一个 HL 主账户上手动交易试错** —— 执行器现在把账户当成只属于自己:X1V 现货把账户里全部 UBTC / UETH 当自己的持仓(目标 0 就卖、灾难止损线下也卖),上限 3,000 以内的 USDC 当自己的现金;R-v2 按整个永续账户的净值定仓位(封顶 1,000)。代码不支持子账户(没有 vault_address)⇒ **手动交易挪到 HL 子账户,主账户只放执行器那份钱**,再切 live。空跑期间互不影响。**主机保持空跑,轮换完才切真钱。** VERIFY:`curl -s https://web-production-0cdf76.up.railway.app/internal/build-state` 的 git_sha_short = origin/main;Supabase 日志旧 secret 前缀 0 次。
+4. **🟡 ① 的历史是今天的名单回填(S-700):状态层与评估层拿幸存者名单当基准。** 对照臂 `cap_pit24`(逐月前 24 大市值、含死币、2019 起)10-30 起每 6 小时写 `core_variants_daily`;`asset_mcap_daily` 补齐在跑(2018-12 起 + EOS / LUNA / BSV / LEO / HT / OMG …,每个映射核价后才写)。
+   补齐前第一眼(描述,不判):2021 PIT +203% vs 幸存者 +236%;2020 +267% vs +285%;LUNA / FTT 接上后 2022 会再低。**换不换 `registry.core_nav` 的历史锚是 Jazz 的决定**;换了 ⇒ state_daily 回填 2019 起、rr_matrix 重算。
+   VERIFY: `select min(d), max(d), count(*) from core_variants_daily where arm = 'cap_pit24'` → 2019-01 起、到昨天;`select detail->'remaining', detail->'notes' from loop_attempt where loop_name = '_mcap_deepen_loop' order by at desc limit 1` → remaining 0,notes 里 rejected 的名字逐个看。
+   OWNER: Seth(数据 + 臂)· Jazz(锚)
 
-### #0d · ✅ Supabase key —— 10-22 收尾:legacy JWT key 停用(00:30)+ legacy JWT secret 吊销(00:34),均实测
-
-**10-22 更正(S-94 探针报红后查出):** 下面「legacy 已停用」不成立 —— 那天看到的是「06:05 后我们自己零 legacy 请求」,不是「legacy key 被拒」;10-20 之后 legacy anon 读 `cis_scores` 仍 200。细节与日志核查在 `MINIMAX_SYNC` §IN-FLIGHT #31(私有)。已做:`cis_scores` 的 anon policy 收回(`migrations/2026-10-22_restore_s94_cis_scores.sql`;探针 200+`[]` 或 401/403 都算过;`tests/test_cis_scores_not_anon_readable.py` 守住)。① **Jazz 10-22 00:30 停用 legacy JWT API keys —— 已验**:探针那把 legacy anon 读 `ohlcv_daily` / `cis_scores` / `cis_official_daily`、带 Bearer 也一样,全 401;Railway(secret key)停用后照常 200 / 201;探针 ✅。② **Jazz 00:34 吊销 legacy JWT secret —— 已验**:有效 publishable key + 旧 secret 签的 JWT(Bearer)⇒ 401 `PGRST301 No suitable key was found to decode the JWT` ⇒ 泄露过的 service_role JWT 彻底作废;Railway 吊销后照常 200 / 201;publishable 单独读 200;探针 ✅。剩的只是 Mac 侧 `active_monitor` 的 key(SYNC #38)与引擎 secret 搬家(SYNC #31)。
-
-两处泄露:`/api/v1/auth/config` 自 03-26 返回 `SUPABASE_KEY`(Railway = service_role);lane-a 把同一把 key 推到公开分支 `lane-a/T-137`。代码侧已封(接口不返回 key;`scripts/secret_scan.py` 在 preflight 与 pre-push)。**已完成**:Railway 05:50 起用新 secret(0 错误);Mac 两份 .env 换新;publishable 换新、公开的那把已删;legacy anon + service_role 已停用(06:05 后零 legacy 请求)。06:02–06:05 那批 legacy 请求 = seth_bot 的 preflight(主仓库 .env 还没换),不是常驻进程。**尾巴**:① Mac 引擎的 secret 仍在 `cometcloud-local/.env`(只靠钩子挡 lane)→ Minimax 挪到 `~/.cometcloud/engine.env`(SYNC #31);② advisor:8 个 SECURITY DEFINER 函数 anon 可执行(panel_closes / panel_funding / public_columns / catalog_inventory 等,早于本次,只读)→ 逐个改 INVOKER 或收回。 **Jazz 10-20 裁定:lane 只拿 publishable key。** 已做:`migrations/2026-10-20_lane_read_publishable.sql`(28 张研究表 + 4 个只读 RPC 给 anon 读)—— **已暂停**(`..._suspend.sql`):现用的 publishable key 自 06-19 写在公开的 `docs/SUPABASE_SETUP.md` 里,RLS 分不出是哪把 publishable;Jazz 建新的 `lanes` publishable、删旧的之后再开;lane_bot 启动时清掉一切写权限 key,只从 `~/.cometcloud/lane.env`(Jazz 建,只放 URL + sb_publishable_)注入;钩子拦 lane 读 `.env` / 打印 key。**Mac 引擎那把 secret 不能再放 `cometcloud-local/.env`**(lane 读得到)—— 放 `~/.cometcloud/engine.env`,引擎脚本改读它(Minimax 侧,SYNC 已登记)。
-
-VERIFY: `curl -s https://<prod>/api/v1/auth/config` 不含 `key`;Supabase → Settings → API Keys → Legacy 显示 disabled;`python3 scripts/secret_scan.py` ✓。
-
-### #0a · 🔴 面板断线 2 天,而每个仪表都说它活着 (S-408, 2026-09-22) — 已派 A,判据三条
-
-`coingecko_pro_ohlc` 当日标的数 **09-20 = 157 → 09-21 = 17 → 09-22 = 25**。
-活下来的 25 个是 **① 的持仓面板**,不是宇宙 —— **行情最猛的两天,观测宽度塌了 85%。**
-
-断点是 09-20 08:11–13:36 一次 **5h25m Railway 停机**:七个写入端全部恢复,
-**只有 `_cg_panel_loop` 的两段(`cg_coin_map` + `cg_pro_backfill`)再也没回来**。
-两段同死 ⇒ **不是额度**(额度只杀回填那段)。**S-401 的额度结论已被推翻。**
-
-**两天没人发现,是因为 `write_log` 对 `ohlcv_daily` 的覆盖率是 1/5** ——
-`routers/ohlcv.py`、`routers/admin.py`、`deep_panel_collector.py`、`price_route.py`
-四个写入端一行都不记。**看表 ⇒ 活着;看账 ⇒ 09-20 死。两个都对,说的是不同的写入端。**
-
-**VERIFY(三条,缺一不算完):**
-
-```sql
-select count(distinct writer) from write_log where table_name='ohlcv_daily';
-select count(distinct symbol) from ohlcv_daily
- where source='coingecko_pro_ohlc' and recorded_at::date = current_date;
-```
-
-判据:writer ≥ 4(现 1)· 当日 distinct symbol ≥ 150 连续 3 天(现 25)·
-`loop_attempt` 每天 ≥ 100 行(现:表不存在)。
-⚠️ 用**当日 distinct symbol**,不是 `max(trade_date)` 也不是总行数 —— S-379 的并集统计教训第二次适用。
-派活:`MINIMAX_SYNC.md` §S-408-面板断线-2026-09-22。
-
-**S-410 ✅ closed caller unpack,本条三条 VERIFY 仍未过 —— 两条独立**:
-S-410 (commit `1bb885f`, 2026-09-23) 修了 `main.py:1056` 2-tuple → 3-tuple unpack,
-`_cg_panel_loop` heartbeat `verdict=ok`,age=158min(well within `_CG_PANEL_INTERVAL_S=6*3600`)。
-**但 S-410 只闭合 caller 漏接返回值,**§S-408 三条 VERIFY 判据(distinct writer ≥ 4 /
-`_cg_panel_loop` ≥ 100 attempt/天 / 当日 distinct symbol ≥ 150 连续 3d)仍派 A,
-**A-408-1 让它重新跑起来 + A-408-2 写 loop_attempt + A-408-3 补四个 write_log writer**。
-**A-408-2 ✅ SHIPPED `067e10f` 2026-09-23 + A-408-3 ✅ SHIPPED `a34e804` 2026-09-23** —— DDL 待 MCP apply(A-408-2 表不存在时 `_record_loop_attempt` try-hard 返 False 永不抛,无静默错数据),distinct writer ≥ 4 等 S-415 累积(A-408-3 自身 ship 后即得 +1 writer → 累计 2:cg_pro_backfill + ohlcv._upsert_ohlcv)。**A-408-1 未指派**(S-410 闭合即隐式闭合 — `_cg_panel_loop` heartbeat 已恢复)。
-**S-302 cross-lane**:两个 PR push 时 preflight 🔴,Seth 未跟踪的 `src/data/signals/hl_book_daily.py` 加 1 entrypoint 越过 S-302 「只减不增」预算(24→25)。Jazz override 推。**lane owner 拍板项**:见 `MINIMAX_SYNC.md` §S-302-2026-09-23(选项 1 ship S-413 + bump 预算 25 / 选项 2 hl_book_daily 走 panel_read / 选项 3 加白名单例外)。本条不因 S-410 而关,也不因 A-408-2/A-408-3 ship 而关 —— VERIFY 三条要绿才算完。
-
-### #0c · `nav_panel_*` 两张表:**声明在前,写入端在后** (S-399, 2026-09-22)
-
-`/internal/schema-drift` RED:`nav_panel_daily` / `nav_panel_rebalances` 不存在。
-**这个红灯是对的,而它此前的措辞是错的。**
-
-实测:`src/` 里**零调用点**写这两张表;它们只出现在
-`c13_nav_panel_manifest.WRITES_TABLES` 的声明里(注册 commit `83aab37` 在写入端存在之前)。
-Mac 侧只有 `nav_writer_2026-09-20.py` 的骨架(TODO 在 43/101 行),**无 launchctl 调度**。
-7 步 ship 规格在 `cometcloud-local/research/c_path_15_mac_ship_7step_2026-09-20.md`:
-步骤 1–6 归 Min-A(~2 个工作日),步骤 7 归 Seth(~4 小时)。
-
-**为什么不现在建表(三个方案都不选):**
-- 建了 → drift 立刻变绿,而两张表**永远是空的** = **S-201 原形**
-  (「表存在、永远空、看起来这项有人管」,就在本文件 §一个形状,十次 里)。
-  **一个因错误理由变绿的检查,比红的更坏。**
-- 撤注册(方案 A)→ 等写入端真 ship 而表仍缺失时,**没有东西会抓到**。拆守卫。
-- `pending_writer: true` 降级 WARN(方案 C)→ **一个没有理由字段、没有删除条件的豁免**。
-  仓库里唯一好用的豁免机制(`test_every_test_is_registered.EXEMPT`)两样都有,
-  它的注释写着为什么:**「豁免不是赦免……被注册之后这一行必须删掉,否则名单会变成永久特赦」**。
-  且 RED→WARN 在一个打几十行的 preflight 里等于不存在(S-372:三个监控面报健康而五个 producer 在死)。
-
-**已做的(S-399,不是把红灯变绿,是让红灯说真话):**
-`write_tables_by_provenance()` 把「有调用点」和「只有声明」分开,
-drift 的 consequence 按来源分两段措辞。
-⚠️ **关键口径:`declared_only` ≠ 没有写入者** —— 实测六张 declared_only 表里**四张是活的**
-(`cg_coin_map` 211 / `corporate_treasury_history` 3852 / `treasury_decisions` 896 /
-`treasury_entities` 102),因为显式声明这个机制存在的理由正是 AST 走查跟不进
-`cometcloud-local/`。所以措辞只说「从这里看不到调用点」。守卫:
-`tests/test_drift_separates_declared_from_written.py`(已进 preflight)。
-
-VERIFY: `curl -s .../internal/schema-drift | python3 -m json.tool | grep -A2 missing_declared_only`
-→ 期望 `nav_panel_daily` / `nav_panel_rebalances` 落在 `missing_declared_only`,
-**且 consequence 里那一段不含「returns False and is swallowed」**。
-**解除条件**:A 完成步骤 1–6 且 launchctl 有调度 → Seth 建表(步骤 7)→ 红灯因为管子通了而变绿。
-**日期兜底 2026-10-06**:到期未 ship,则**撤掉 manifest 注册**(不是撤红灯),
-并在这里记明「声明先于实现」这次的代价。
-OWNER: Min-A(1–6)· Seth(7 + 本条到期盯)
-
-### #0b · `INTERNAL_TOKEN` 按已泄露对待,而我们**选择**带着它继续开发 (S-371, 2026-09-17)
-
-**这是一条被接受的风险,不是一个被遗忘的缺陷。** Jazz 2026-09-17 裁定:
-**先赶开发进度,做完再收回和更换。** 记在这里是为了让它有到期日,不是为了提醒它存在。
-
-事实(实测,非估计):`INTERNAL_TOKEN` 在 Mac 的 `.env` 里,而 Minimax-backed 的
-Claude Code 在这个仓库跑过,其上下文走第三方中转。它打开 ~30 个 `/internal/*` 写入口
-+ trading 的 DELETE —— **写的是 system of record**。同批量到的另外六个 key 代价有界:
-anon 读 80 表 / 写 0 表,4 个付费 key 只能盗配额,`SUPABASE_SERVICE_KEY` 不在 `.env`(S-169 守住)。
-**七个里只有这一个值得花力气**,所以这条 OPEN RISK 只装它。
-
-**而且轮换今天是坏的**,不是"还没做":36 处比较 / 17 个文件 / 零共享校验函数,
-12 个 router 在 import 期读常量而 `main.py` 请求期读 environ —— 改掉 Railway 的值之后
-**旧 token 打 router 仍 200、打 main.py 已 401**。所以"到时候换一个就行"这句话现在不成立:
-**必须先收敛(36→1,请求期读 env),换才是原子的。** 判据已写好并跑过(见 VERIFY)。
-
-**解除条件(两个都写,因为只有里程碑的待办就是会被忘掉的那种):**
-① 开发冲刺结束由 Jazz 宣布 → 立即执行 A-1 收敛 → A-2 拆 lane token → 旧值作废;
-② **日期兜底 2026-10-08** —— 到期未动则此条转 🔴,不再是"接受的风险"而是"过期的接受"。
-**🔴 2026-10-08 已到期,未执行。** Jazz 10-07 对已泄露的 CoinGecko key 说「之后统一 revoke,先跑通」—— 那是推迟,没给新日期;所以这条现在是**过期的接受**,不是被接受的风险。需要 Jazz 给一个新兜底日(或宣布冲刺结束触发 ①)。
-
-VERIFY: `python3 -m pytest tests/test_internal_token_contract.py -q`
-→ 今天预期 **2 failed / 9 skipped**(红得对:活没干)。
-全绿 **且** 该文件已进 `scripts/preflight.sh` 清单 ⇒ 本条可关。
-**只绿不进清单不算** —— preflight 跑的是显式清单不是 glob,清单外的测试永远不跑。
-OWNER: Seth(收敛判据 + 到期盯)· Minimax-A(执行 A-1/A-2)· **Jazz(唯一接触 key 真值的人)**
-
-**解冻即实施**(`docs/AUTH_DESIGN.md`,2026-09-17 第一性原理设计冻结):
-所有 auth 收口到 `src/api/auth_internal.py::require_internal_token()`,env 读每次重新读,
-constant-time compare,返回值=lane 名;36 处端点 / 加 lane / 换 HSM / 加审计 都不需要写第二遍。
-paid-first 同步 hold —— 它经过的 ohlcv.py 落 36 处之一,A-1 收敛后才能 push。
-
-HL 那条路已正确关闭(用途轴:面板行情是 market_data,归 CG Pro)。
-CG Pro 那条路只覆盖 `ASSETS_CONFIG` 的 25 个,因为**全仓没有面板级的
-symbol→coin_id 映射表** —— `cg_pro_backfill` 与 `deep_walk` 都要求
-调用方传 `(symbol, coin_id)` 对,而那份对照表从来没有被建过。
-
-**这不是「源选错了」的残留,是一个独立的缺口。** 修法是一次 CG Pro
-`/coins/list` 调用(~17,000 条 symbol+id)落成映射表,再用 S-258 的
-实证校验(收盘价对比,错的 coin_id 会差几十倍)逐个确认后写入。
-**不要在没有校验的情况下按 symbol 猜 id** —— 一个错的映射会把另一个币
-的整段历史写进这个标的,而曲线看起来完全正常。
-
-```
-curl -s 'https://web-production-0cdf76.up.railway.app/internal/data-freshness' | python3 -c 'import sys,json;d=json.load(sys.stdin)["by_source"];print(json.dumps(d,ensure_ascii=False)[:400])'
-```
-
-⚠️ **用 `d["key"]` 不要用 `d.get("key")`。** 2026-09-05 我给 Jazz 的两条验证命令
-都问错了字段(`loop-health` 上问 `n_failing`,`data-coverage` 上问 `n_covered`),
-两条都打印 `None` —— **而「字段不存在」和「系统健康但没什么可报」在 `None` 上同形**。
-心跳面板在 `/internal/data-freshness` 的 `loops` 键下,不在 `/internal/loop-health`。
-
-*RETIRED 2026-08-12 to make room for #0: **#5 MCP streamable-transport migration** — closed
-2026-08-09, no open follow-on, and its VERIFY (`grep -c 'mcp/sse' src/mcp/*.py` → 0) is a
-regression check, not a risk. Moved to the ledger. Structural note while retiring it: **5 of
-the 8 entries were 🟢 closed.** A cap of 7 does not bind on risk, it binds on the list, so
-resolved items crowd out live ones and a cold agent reads eight entries to find three risks.
-The cap is doing its job only if closure is as routine as addition.*
-
-0. **🔴 两份 regime 标签在同一台机器上打架,而 book 读的是没人复核的那一份 (S-263, 2026-09-01)。**
-   Supabase 侧(系统记录)`daily_macro_regime` = **TIGHTENING**,自 07-27 起 36 天未翻;
-   M-120 往 Mac 本地 `_data/cis_history.db::narrative_daily` 回填的是 **EASING**,由 BTC 30d
-   收益(+24.6%)导出 —— **那不是宏观判定,是单资产动量换了个名字**。book_trader 读本地那份。
-   两份都不可全信:本地那份没有宏观内容;Supabase 那份是**一个多数票,而选民从 3 个掉到过 1 个**
-   (08-17/21/22 `n_sources=1`),而 `daily_macro_regime` 这个 VIEW **每天都算出 `n_obs`/`n_sources`,
-   两个消费者却只 `select d,regime`** —— 票数被扔了,所以「3 票一致」和「1 票独裁」在下游同形。
-   已建 `src/data/market/regime_quorum.py` 五值裁决(ok/thin/COLLAPSED/frozen/no_baseline),
-   今日实测 **thin**(信源 2/基线 3)。**Seth 侧闸已 ship**(2026-09-04 S-284 C fix →
-   `paper_trading/spec_runner.py:430 decide_gated()`,commit 62133ad;22 守卫绿 +
-   24 CLI 守卫绿,全部 wired preflight)。thin/COLLAPSED/frozen/no_baseline/no_data
-   现在**真的拦 book**(Seth 侧全链路 ready,等 Mac 切到新入口)。原来的
-   「只报不拦」是 HALT 期主动选择 —— 跟 OPEN RISK 0b 同源。
-   **Mac 侧 `book_trader.py` 仍读裸 label,没接 decide_gated —— 闸 Seth 侧 ship 了,
-   Mac 侧要接才生效**(见 §SETH-DISPATCH-2026-09-05)。
-   VERIFY: `python3 -m tests.test_regime_quorum` → green ·
-   `python3 -m tests.test_regime_quorum_blocks_book` → green ·
-   `python3 paper_trading/spec_runner.py --book=b --dry-run --require-regime=ok --as-of=2026-09-01` →
-   `ENTERED`,regime=EASING,synthetic_quorum=true ·
-   `python3 paper_trading/spec_runner.py --book=b --dry-run --require-regime=COLLAPSED --as-of=2026-09-01` →
-   `SKIPPED`,reason 引用 S-263 ·
-   `select d,regime,n_obs,n_sources from daily_macro_regime order by d desc limit 10;`
-   → `n_sources` 连续 ≤1 即为塌陷
-   OWNER: Seth(闸 + 闸守卫 + ingestion guard,shipped)· Minimax-C(Mac book_trader 接 decide_gated)·
-   Minimax(本地 `narrative_daily` 的 producer 与定义)
-
-0b. **🟢 Option C signed 2026-09-05 (BOOK_TRADER_DECISION_2026-09-01.md)。**
-   M-112(08-30,P0)：`book_trader.py` HALT,Sharpe +8.2 是 same-bar look-ahead,诚实值 +1.25/+1.63。
-   M-120(08-31)：「book_trader 自 08-29 18:06 起未运行」—— 时间线是 18:04:46 触发
-   DD-STOP **-60.07%**、18:06:35 停止,**109 秒 by design 不是崩溃**。
-   M-115 Book B(M-93 + R14-Lite,lag-1,SR +1.629 / cum +321.5% / MaxDD -22.9%,beats
-   Book A by Δ +0.380 SR)over M-113 Book A;**Seth lane 闸已 ship**:regime_quorum 5-value
-   arbiter + `decide_gated()` wrapper(spec_runner.py:430)+ 22 闸守卫(test_regime_quorum_blocks_book)+
-   24 CLI 守卫(test_spec_runner_cli --require-regime=ok/thin 放行,COLLAPSED/frozen/no_baseline/no_data SKIPPED)
-   + ingestion lane guard(test_one_ingestion_lane,§M-118,待 commit)。**下一步 Minimax-C**:
-   `book_trader.py` 切到 `decide_gated` 入口,regime_quorum 闸把 verdict=COLLAPSED/frozen/no_baseline/no_data
-   全部拦截成 SKIPPED(thin 放行,但带 `verdict_kind=skipped` 标注);恢复时走 Book B config(M-93+R14-Lite)。
-   **不在 OPEN RISK 0 重抄「要不要拦,跟恢复 book 一起签」** —— 那一句在 OPEN RISK 0 顶部已升级为
-   「闸已 ship 等 Mac 切」,本条只剩 Mac 侧 wiring 一件事。
-   VERIFY(Mac 切完): `python3 paper_trading/spec_runner.py --book=b --dry-run --require-regime=ok` →
-   `ENTERED` · 同上 COLLAPSED → `SKIPPED` · `bash scripts/preflight.sh` 绿 ·
-   `ps aux | grep book_trader` → 1 line · `select max(trade_date) from beta_core_nav` ≥ 恢复日 ·
-   `python3 -m tests.test_regime_quorum_blocks_book` 绿 ·
-   `python3 -m tests.test_spec_runner_cli` 绿
-   OWNER: Seth(闸 + 守卫全部 shipped)· Minimax-C(book_trader 切 decide_gated + 恢复 Book B config)· JAZZ(已签 C)
-
-0c. **✅ 已收口 (S-345, 2026-09-14) · bridge option(a)。** `daily_runner.py:50-58` 改
-   `subprocess.run([sys.executable, ...], capture_output=True, ...)` 为
-   `importlib.import_module(module_name)` + `mod.main()`,保留 prototype
-   sleeve + spec_runner 两条路,删掉 subprocess 这块让它们各走各的方向的胶水;
-   5 个守卫(`tests/test_paper_books_uses_direct_imports.py`)全 5/5 绿,登记
-   preflight stage 3a-undevicesima-ter;`test_every_test_is_registered` 报 125 注册 ·
-   0 orphan。A-17 `panel_long_only` 已 ship spec_runner canonical path(M-117g
-   Book B 同 lane),paper_books 仍是 prototype 不动 —— **这是关掉 0c,不是解决
-   0c**(解决要等 60d verdict 后或 Jazz 拍 fold 才到)。原 (A) fold / (B) ack
-   两个候选已弃用,**bridge 是 C 的 plan 第 5 项**(Seth 评价同意);详见
-   `REFUTATION_LEDGER.md` S-345。
-   VERIFY: `python3 -m tests.test_paper_books_uses_direct_imports`(5/5);CLAUDE.md
-   lane table line 113「`src/research/paper_books/` (older sleeve+ledger prototypes,
-   pre-spec_runner — reconciliation pending, see PROJECT_STATE.md OPEN RISKS §0c)」
-   —— 已写「pre-spec_runner」字样,test 4 即验。
-   OWNER: **Seth** · closed by S-345
-
-0. **🔴 C3 sizing table was INVERTED ON BOTH AXES (S-151, 2026-08-12).** Measured by
-   execution: `lookup_size(regime=5 out-of-distribution, signal=1 weakest) = 1.30` and
-   `(regime=1 in-dist, signal=5 strongest) = 0.10` — exactly backwards from the module's own
-   stated design; `compute_size(None, None) = 1.20`, i.e. **no information produced leverage**,
-   and `beta_core_size_hook` documented that 1.20 as the intended first-ship baseline.
-   It survived because table + smoke test + hook docstring all agreed with EACH OTHER; only the
-   stated intent dissented. **A frozen-value check could not have caught it — the table was
-   transposed before it was frozen, and freezing preserves it.** Fixed by making the wrong
-   ORIENTATION unable to load (`src/data/signals/strategy_params.py`, behavioural invariants
-   validated at load), not by editing Minimax-C's 25 values. Until C seeds a re-oriented table,
-   C3 runs the neutral table = ① baseline, no edge. Reversing both axes yields a passing table
-   from the SAME 25 values — the magnitudes were designed right, the assembly was not.
-   **AWAITING MINIMAX-C** (`MINIMAX_SYNC.md` §C3-SIZE-INVERSION-2026-08-12, items C6/C7).
-   VERIFY: `python3 -m tests.test_sizing_cannot_invert` → green ⇒ an inverted orientation
-   cannot load · `python3 -c "from src.data.signals.beta_core_size import compute_size as c;
-   print(c('x',None,None,1.0).size_final)"` → ≤1.0 ⇒ no information buys no leverage
-   OWNER: Seth (the gate) · Minimax-C (the 25 values + C7 polarity call)
-
-1. **🟢 Service_role RESOLVED in production 2026-08-09 13:57Z.** `/health.strategy_library:
-   pg_configured:true, degraded:false, consecutive:0`. ① clock live (OPEN RISK #4 below),
-   §BETA-METRIC-AGG track record populated (66 signals, 60 scored). Kept here as the lesson +
-   the local-Mac-side follow-on: **local `.env` still missing the real service_role key** —
-   Mac-side Seth backfills (D1, D2, §OHLCV-DEAD backfill) remain blocked until Jazz pastes
-   the real key. Downgraded from P0 to P2 because: (a) the immediate P0 consequence (Railway
-   writes blocked, ① ② ③ unable to start) is RESOLVED, (b) all Mac-side-only work can be
-   deferred without blocking product surface. **Lesson #72: a JWT that decodes is not a JWT
-   that verifies.** The token carried `iss=supabase`, `ref=soupjamxlfsmgmmtoeok`,
-   `role=service_role`, exp 2036 — every local check passed. It was the **anon key's signature
-   spliced onto an edited payload**: byte-identical header, byte-identical 43-char signature,
-   only the `role` claim differed. A signature is an HMAC over header+payload, so it cannot
-   survive a payload edit — proof it was hand-assembled, not issued. Server verdict:
-   `401 Invalid API key`. Almost certainly an earlier agent that needed service_role, had only
-   anon, and produced one. **Never validate a credential by decoding it; validate it against
-   the server that issued it.** Now enforced in `build_l1_observations.py --diagnose`, which
-   probes for ROWS (real anon returns 200/0 rows under S-94 RLS, so status alone also proves
-   nothing). Forged copies purged from `.env` and both `.claude/**/settings.local.json`
-   (12 entries); never git-tracked (`.gitignore:42`).
-   VERIFY: `bash -c 'set -a; . .env; set +a; curl -s -H "apikey: $SUPABASE_KEY" "$SUPABASE_URL/rest/v1/ohlcv_daily?select=symbol&limit=1"'`
-   → `[{...}]` = real service_role · `401` = forged/stale · `[]` = anon under RLS, still blocked
-   → **currently returns `401` (no local key) — expected, deferred**
-   OWNER: Jazz (dashboard → Project Settings → API Keys → service_role → paste into `.env` —
-   follow-on, not P0)
-
-   **Lesson #71: a security linter's silence is not safety.** Four of the worst exposures were absent from the advisor's 11 errors — it excludes permissive SELECT policies, so `cis_scores` was world-readable and unflagged. Audit `pg_policies` / `pg_proc` directly.
-
-2. **🟡 External probe live 2026-07-30, unproven** — `cometcloud-external-probe`, every 2 h,
-   **outside the monitored process** (5 checks: liveness · the endpoint that died · Mac-push
-   freshness · security-regression on the revoked RPC · anonymous read). Worst-case blind window
-   **10.4 h → 2 h**. Still open because: it runs only while the desktop app is open, it has never
-   fired on a real failure, and **an unfired alarm is not a proven alarm**. Downgrade to 🟢 only
-   after it catches something, or after a deliberate induced failure confirms it fires.
-   VERIFY: `ls /Users/sbb/Documents/Claude/Scheduled/cometcloud-external-probe/` and check the
-   last run reported `✅ probe OK`; no run in >3 h ⇒ the probe itself is dead.
-   OWNER: Jazz (keep the app open) / Seth (induce a failure to prove it fires)
-
-3. **🔴 The VDB's durable layer is not finished — and one gap was silently losing research.**
-   *(merged from two entries: "tables are empty" and "the graveyard was in a cache" are the same
-   problem seen from the data side and the mechanism side.)*
-
-   **(a) A table that was never created.** `scripts/supabase_strategy_records.sql`, written
-   2026-07-26 specifically to move the strategy record library off a 24 h-TTL Redis key, **was
-   never applied.** `_pg_upsert()` POSTed to a nonexistent table, caught the exception, logged one
-   WARNING, returned False, and `upsert_record()` fell back to Redis with `_TTL = 86_400`.
-   CLAUDE.md calls the graveyard the asset; the asset sat in a cache that expires daily, for 12
-   days. **It survived because the warning fired on EVERY write — an always-on warning carries no
-   information.**
-
-   **🔴→🟢 THE CLASS, NOT THE INSTANCE (S-166, 2026-08-15).** This entry described ONE table
-   that was never created. On 2026-08-15 the same check run across the whole codebase found
-   **ELEVEN more** — `beta_core_nav_q(_meta)`, `beta_core_nav_size(_meta)`, `strategy_params`,
-   `execution_intents/outcomes`, `fusion_paper_nav/lifecycle`, `crowd_clock_log`. This file's
-   own header had called C2 and C3 "complete; 79/79 smoke green" while neither sleeve had
-   anywhere to write a row. **The risk was written here, the lesson was recorded, and it still
-   recurred eleven times — because what got fixed was that table, not the absence of any
-   comparison between the set of tables the code writes and the set that exists.** Fixing an
-   instance and calling the class closed is how one bug gets renamed eleven times.
-   All 11 created; verified live `23/23 present, missing: []`.
-   VERIFY: `python3 -m tests.test_every_written_table_exists` (offline: manifest matches source)
-   · `curl -s -H "X-Internal-Token: $INTERNAL_TOKEN" $RAILWAY/internal/schema-drift` → `missing: []`
-   OWNER: Seth (both halves shipped) · **🟢 2026-09-20 close (M-189)** — `scripts/supabase_fusion_paper.sql`
-   no longer grants PUBLIC writes: only `DROP POLICY IF EXISTS` + history comments remain, no live
-   `CREATE POLICY` lines. All 7 migration files (`supabase_setup`/`supabase_all_tables`/
-   `supabase_fusion_paper`/`supabase_migration_cause_history`/`supabase_migration_week10`/
-   `supabase_migration_timeseries`/`supabase_strategy_records`) verified clean; the 3 files that
-   DO have live CREATE POLICY use `service_role_only` posture (fusion_paper_regime_track /
-   fusion_paper_state / strategy34_books). `tests/test_no_sql_file_grants_public_access.py` 5/5
-   PASS (no-PUBLIC-grant / no-TO-clause / no-false-denial / OR-trap-doc / leaked-tables-named).
-   "Next person re-runs it" failure mode is now mechanically impossible at the file level
-   (S-167 in production + structural guard in preflight).
-
-   Migration now applied (RLS on, anon revoked); `/health` gained
-   `data_layer.strategy_library`; `tests/test_strategy_durability.py` 4/4 in preflight. Kept OUT of
-   `degraded` on purpose: losing durable research does not make the API unhealthy, and conflating
-   them would either 503 a healthy API or bury data loss under a green tick.
-   **Service_role RESOLVED on Railway 2026-08-09** (see risk #1 below) — Railway-side writes work.
-   `/health.strategy_library: pg_configured:true, degraded:false, total:0, last_ok_ts:null` (no
-   records yet because no record has been written since the migration). **Mac-side backfill remains
-   P2** awaiting local `.env` service_role key (Jazz's call). DUAL_WRITE=0 flip safe to schedule
-   once first record lands and Postgres ≥ Redis is verified.
-   **Task #20 "VDB 落库" was logged COMPLETE but only the asset half landed** — `asset_embeddings`
-   72 rows, strategy side absent. A half-migration recorded as done is how the next agent stops looking.
-
-   **(b) Tables that exist but are empty.** `asset_embeddings_history` (risk #1) ·
-   `risk_meter_history` 0 rows (M-WO-D2) · **`decisions` 0 rows / `entities` 1 row.**
-   ARCHITECTURE.md says the deepest object is the entity-and-decision, not the asset; that is where
-   the claim lands, and it is empty. **Either wire them or demote the claim — an empty table cannot
-   carry an ontological argument.** `signal_outcomes` also ends 2026-05-03, so the response surface
-   omits the last 3 months.
-   VERIFY: `select count(*) from strategy_records;` → 0 ⇒ backfill pending ·
-   `curl -s $BASE/health | jq .data_layer.strategy_library.degraded` → true ⇒ writes not durable ·
-   `select count(*) from decisions;` → 0 ⇒ ontology claim still unbacked
-   OWNER: Jazz (service_role → risk #1; judgement call on the ontology) · Seth (backfill, extend
-   signal_outcomes) · Minimax-A (M-WO-D2)
-
-4. **🟢 ① beta_core: v2 inception LIVE 2026-08-09 13:57Z.** `/internal/beta-core-clock`
-   returns `{"configured":true,"marks":1,"started":true,"inception":"2026-08-09",
-   "last_mark":"2026-08-09","days_since_mark":0,"missing_days":0,
-   "gate_days_remaining":59,"stalled":false}`. Migration ran (v2 row present),
-   service_role works (`/health.strategy_library.pg_configured:true, degraded:false`),
-   the loop fires and writes. **60-day SHIP-ready gate opens 2026-10-08** (was
-   2026-10-初 per OVERSIGHT §3). Kept here as a verification record + monitor; if
-   `marks` stops advancing or `stalled:true` flips back, escalate P0.
-   VERIFY: `curl -sm 15 -H "X-Internal-Token: $INTERNAL_TOKEN" "$BASE/internal/beta-core-clock"`
-   ⇒ `marks≥1, started:true, gate_days_remaining:59-58-...` ⇒ loop firing.
-   `stalled:true` ⇒ escalate P0.
-   OWNER: Seth (verify) · Jazz (service_role → resolved 2026-08-09)
-
-   *Original entry, for the record (kept as the lesson, not the status — see header above).*
-   S-103 + S-105 refuted the ④-layer cross-sectional market-neutral L/S construction (β confounded
-   across all 5 tiers, cost 4.6 %/yr > ~3 % best-case effect). **3 of 5 live L/S paper books
-   (causal_paper / combined_book / scalable_paper) demoted to RESEARCH RECORDS on 2026-08-08**
-   (commit `fc4d331`). The product book `beta_core_paper` (commit `121b54c`) is the only forward-clock
-   with a SHIP floor in mind: equal-weight hold-the-panel (no short, no neutralisation) + ex-ante
-   vol target + ⓠ regime override caps gross at {0.0, 0.5, 1.0, 1.3}, marked daily to Supabase
-   `beta_core_nav` with `benchmark_nav` alongside `nav` so excess is arithmetic. S-123 fix in code
-   (commits b8af18b + c0516f9) AND migration `scripts/supabase_beta_core_reinception.sql` BOTH
-   deployed & applied by 2026-08-09 13:57Z. **A book that is silent cannot be told from a book
-   that is alive but writes were dropped on the floor (S-105 redux) — the silent period
-   (2026-08-08 → 2026-08-09) was both; the S-123 fix was the half that was visible. The migration
-   was the other half, and was the harder dependency to see because it sat in Supabase, not in
-   code.** Full audit (S-103, S-105, S-106, demotion reasoning, anti-amnesia state recovery,
-   S-123 inception identity) lives in OVERSIGHT_2026-08.md §0 + §3 + §7 + REFUTATION_LEDGER.md S-124.
-   · Seth (verification probe — see VERIFY; re-run once Jazz pastes key) · Minimax-A
-   (M1: keep T1 engine push alive — Mac T1 health drives this loop's panel).
-
-5. **🔴 CoinGecko 日线整体错位一天 (S-191, 2026-08-20).** 我们 `trade_date=2026-08-19` 的
-   BTC close 是 **64,686.30**;Hyperliquid 的 **08-18** close 是 64,696,08-19 是 69,323。
-   ETH(我们 1,916.40 / HL 08-18 1,916.8)、SOL(77.00 / 77.036)同样。**写入端用【写入日期】
-   打标签,不是【K线日期】** —— 07:49 跑的 loop 把昨天的收盘记在今天名下。
-   影响:coingecko 全部 25 个 symbol 的收益序列整体滞后一天 · 与 `binance_hist`/`eodhd` 拼接
-   就是两套日期口径的 splice(**S-106 在日期轴上的重演**)· 所有纸面账本 mark 晚一天。
-   **这是我今天回答"暴涨抓到没有"时答错的原因** —— 库里说 08-19 BTC +0.30% 是平的,
-   HL 说 +7.15%,ETH +17.57%。**Bar 知道自己是哪天,写它的进程不知道。**
-   缓解(已做):`hyperliquid` 采集器上线,日期取自 candle 自带 epoch,`ohlcv_daily_canonical`
-   的 source 优先级里 hyperliquid 已经排在 coingecko 之上,所以有 HL 行的地方会自动改用。
-   **未做:coingecko 写入端本身没改,历史也没回补(那是改写历史,需要决定)。**
-   VERIFY: `curl -s -X POST https://api.hyperliquid.xyz/info -d '{"type":"candleSnapshot","req":{"coin":"BTC","interval":"1d","startTime":1755648000000,"endTime":1755907200000}}' -H 'Content-Type: application/json' | python3 -m json.tool | head -20`
-   → 对比 `select trade_date, close from ohlcv_daily where source='coingecko' and symbol='BTC' order by trade_date desc limit 3;`
-   两者应当同日同价;若我们的 D 等于 HL 的 D−1,bug 仍在。
-   OWNER: Seth(写入端 + 是否回补历史 → 需 Jazz 决定)
-
-***RETIRED 2026-09-01 为 #0 腾位:🟢 S-104 T2 fan-out fix** — 2026-08-09 已在生产验证(`git_sha=5a54d1c1`, `fanout_total_ms=634`, `degraded_branches=[]`),其 VERIFY 是回归检查而非风险。正文进 `PROJECT_STATE_LOG.md` / 台账。**它带的那句教训单独留下:***
-   *代码修好而它的数据迁移没跑,是修了一半* —— S-123 的修复本身就带了迁移,
-   而迁移要 service_role,于是修复挂在另一条 OPEN RISK 上。
-
----
+5. **🟡 `INTERNAL_TOKEN` 的 Mac 副本仍在 `cometcloud-local/.env`(lane 能读到的位置)。** #0d 的尾巴:Mac 引擎的 secret 应搬到 `~/.cometcloud/engine.env`(SYNC #31),搬完再做第 1 条的轮换才不会漏一处(S-371 的「漏改第三份」09-28 发生过)。
+   VERIFY: Mac 上 `grep -c INTERNAL_TOKEN /Volumes/CometCloudAI/cometcloud-local/.env` → 0,`test -s ~/.cometcloud/engine.env`。
+   OWNER: Minimax(搬)· Jazz(值)· Seth(核)
 
 ## 一个形状,十次(历史教训 —— 排在危险之后)
 

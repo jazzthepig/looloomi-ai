@@ -346,8 +346,8 @@ def write_tables_by_provenance() -> dict[str, list[str]]:
     「N table(s) **the code writes to** do not exist. Every write to them returns
     False and is swallowed」。2026-09-22 它对 `nav_panel_daily` /
     `nav_panel_rebalances` 报了这句 —— 而 `src/` 里**没有任何调用点**写这两张表,
-    它们只出现在 `c13_nav_panel_manifest.WRITES_TABLES` 的声明里。
-    **于是那句话在描述一个不存在的吞掉的写入**,会把人送去找一批不存在的 False。
+    它们只出现在 `c13_nav_panel_manifest.WRITES_TABLES` 的声明里(那份声明 2026-10-30 已撤:写入端从未 ship,
+    ① 的 cap 加权在 core_cap_daily 上)。**于是那句话在描述一个不存在的吞掉的写入**,会把人送去找一批不存在的 False。
 
     这和 S-354 是同一处伤口的另一支:那次是 RPC 探针把「读不到」说成「缺失」,
     修法写在本文件上游 ——「**三值一路带到输出,绝不在最后一步塌成两值**」。
