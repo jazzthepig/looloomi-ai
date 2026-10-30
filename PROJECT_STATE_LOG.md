@@ -2429,3 +2429,8 @@ and committed but **NOT run** (OPEN RISK 1).
 ### Archived header (moved from PROJECT_STATE.md on 2026-10-29 16:19 UTC)
 
 **更早:** 2026-10-29 08:28 UTC (Seth — **往前铺排**(Jazz 10-29:主机等下他重建、R-v2 继续真钱、账户差额是他的手工试错单、复盘的优先项「好的」)。**已做:** ① 主机重建手册 `docs/HOST_REBUILD_RUNBOOK.md` + `deploy/executor/write_env.sh`(36e21bf4;隐藏输入写 env、显示 JAZZ_CALL_KEY 指纹;旧 API 钱包按已泄露撤销;手工单挪到另一个钱包,TRADE_PATH §3g)。② World50 前向账本 **10-28 收盘开账**(不等 12-31;09-30 季末权重漂到开账日,之后与回放逐日相同,新测试钉到 1e-9;开账前一行不写)。③ 组合层设计 `docs/PORTFOLIO_LAYER_DESIGN.md`(SPINE 7b:一张目标表、各执行器只读它;R-v2 是独立凸性腿 + 风险预算上限;P0–P5)。④ lane 卡:T-210(B,链上黄金 / SPY / 现金腿的执行路径调查,只读)、T-211(C,Mac 三处静默失败);T-209 验收 done(盲复算与 S-694 同判 ❌)。⑤ FRED 修正已在 Railway 生效(CPI 前值 3.35、GDP 2.2);looloomi.ai 边缘缓存稍后跟上。**待 Jazz:** 主机按手册重建(含 R-v2 永续保证金 a/b 两种做法);组合层四个决定(T25 起步资本、R-v2 风险预算上限、链上钱包 / 链、再平衡口径);是否冻结 meta_knn(会动锚定完整性,先问)。)
+
+
+### Archived header (moved from PROJECT_STATE.md on 2026-10-30 02:42 UTC)
+
+**更早:** 2026-10-29 14:57 UTC (Seth — **东京执行主机恢复,live**(10-26 21:42 起 Vultr 节点故障停机约 66 小时)。14:48 UTC 起三个服务在跑;agent 已核(API 钱包由主账户批准,到 2027-01-27);14:54 第一轮:X1V 目标 BTC / ETH 0(规则空仓,不下单,现货 630.64 USDC),R-v2 永续权益 0 ⇒ 开不了票 —— **待 Jazz 在 HL 网页把 ≈ 550–600 USDC 从现货划到永续**(划完不用重启,下一轮 UTC 00:50 读到)。重建中修了三处:SSH 443 在 socket 监听的 Ubuntu 上要重启 ssh.socket(bootstrap.sh 已改)、`HL_ACCOUNT_ADDRESS` 误填 API 钱包地址(自检现在会说该填哪个)、双击脚本 `scripts/host_connect.command` / `host_fix.command`(不再往 Vultr 网页控制台打字)。判活:`select at, detail->>'kind', detail->'balances' from loop_attempt where loop_name='executor_host' order by at desc limit 3`。)
