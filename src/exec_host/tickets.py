@@ -95,7 +95,30 @@ def parse_perp_state(us: Any) -> dict[str, Any]:
 UNIFIED_MODES = frozenset({"unifiedAccount", "portfolioMargin"})
 
 
-def unified_equity(perp: dict[str, Any], spot_balances: dict[str, dict[str, float]], mode: str) -> dict[str, Any]:
+def spot_value_usd(spot_balances: dict[str, dict[str, float]], meta_ctxs: Any) -> tuple[float, dict[str, float]]:
+    """纯函数。现货里非 USDC 代币的美元市值(按 `spotMetaAndAssetCtxs` 的 USDC 对中间价)。没有 USDC 对 / 没有价的代币不计、单列。
+    10-30:T25 的黄金 / 股票腿与 X1V 都是同一个账户里的现货代币 —— 它们是总资本的一部分,R-v2 的风险预算按总资本算。"""
+    try:
+        meta, ctxs = meta_ctxs
+        names = {int(t["index"]): t["name"] for t in meta.get("tokens") or []}
+        usdc = next(i for i, n in names.items() if n == "USDC")
+    except (TypeError, ValueError, KeyError, StopIteration):
+        return 0.0, {}
+    mid: dict[str, float] = {}
+    for u in meta.get("universe") or []:
+        tk = u.get("tokens") or []
+        if len(tk) == 2 and tk[1] == usdc and names.get(tk[0]) not in mid:
+            i = int(u.get("index", -1))
+            px = _f((ctxs[i] if 0 <= i < len(ctxs) else {}).get("midPx"))
+            if px:
+                mid[names[tk[0]]] = px
+    vals = {tok: float(b.get("total") or 0.0) * mid[tok] for tok, b in (spot_balances or {}).items()
+            if tok != "USDC" and tok in mid and float(b.get("total") or 0.0) > 0}
+    return sum(vals.values()), vals
+
+
+def unified_equity(perp: dict[str, Any], spot_balances: dict[str, dict[str, float]], mode: str,
+                   spot_tokens_usd: float = 0.0) -> dict[str, Any]:
     """统一账户的 R-v2 净值 = 现货 USDC 合计 + 未实现**亏损**(浮盈不计)。
 
     10-29 实测:Jazz 的账户是 unifiedAccount,630 USDC 在现货,永续 marginSummary 全是 0 ⇒ 执行器读成「永续里没钱」,
@@ -103,16 +126,18 @@ def unified_equity(perp: dict[str, Any], spot_balances: dict[str, dict[str, floa
     含了 ⇒ 亏损被算两次(少开一点,偏保守);没含 ⇒ 正好。两种情形都不会把仓位开大。"""
     usdc = float((spot_balances.get("USDC") or {}).get("total") or 0.0)
     loss = min(0.0, float(perp.get("upnl") or 0.0))
-    return {**perp, "equity": usdc + loss, "mode": mode,
-            "basis": f"统一账户({mode}):现货 USDC {usdc:.2f} + 未实现亏损 {loss:.2f}"}
+    tok = max(0.0, float(spot_tokens_usd or 0.0))
+    return {**perp, "equity": usdc + tok + loss, "mode": mode, "spot_tokens_usd": round(tok, 2),
+            "basis": f"统一账户({mode}):现货 USDC {usdc:.2f} + 现货代币 {tok:.2f} + 未实现亏损 {loss:.2f}"}
 
 
 def account_for_tickets(perp: dict[str, Any], mode: Optional[str],
-                        spot_balances: Optional[dict[str, dict[str, float]]]) -> dict[str, Any]:
-    """纯函数。R-v2 记账用的账户:仓位来自永续状态;净值按账户模式 —— 统一账户 / 组合保证金 = `unified_equity`,
-    其余 = 永续 marginSummary。模式读不到 ⇒ 按永续算(统一账户下那是 0 ⇒ 不开新票,偏安全)。"""
+                        spot_balances: Optional[dict[str, dict[str, float]]],
+                        spot_tokens_usd: float = 0.0) -> dict[str, Any]:
+    """纯函数。R-v2 记账用的账户:仓位来自永续状态;净值按账户模式 —— 统一账户 / 组合保证金 = `unified_equity`
+    (USDC + 现货代币市值 + 未实现亏损),其余 = 永续 marginSummary。模式读不到 ⇒ 按永续算(统一账户下那是 0 ⇒ 不开新票,偏安全)。"""
     if mode in UNIFIED_MODES and spot_balances is not None:
-        return unified_equity(perp, spot_balances, mode)
+        return unified_equity(perp, spot_balances, mode, spot_tokens_usd)
     return {**perp, "mode": mode, "basis": f"永续账户({mode or '模式读不到'})"}
 
 

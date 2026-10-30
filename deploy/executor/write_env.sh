@@ -44,10 +44,12 @@ MODE="$(ask EXECUTOR_MODE live)"
 TMODE="$(ask EXECUTOR_TICKETS_MODE live)"
 case "$MODE" in live|dry_run) ;; *) echo "  🔴 EXECUTOR_MODE 只能是 live / dry_run"; exit 1 ;; esac
 case "$TMODE" in live|dry_run|off) ;; *) echo "  🔴 EXECUTOR_TICKETS_MODE 只能是 live / dry_run / off"; exit 1 ;; esac
+L25="$(ask EXECUTOR_T25_MODE dry_run)"   # T25 黄金 / 股票腿(HL 现货 XAUT0 / SPYX);切 live 是 Jazz 的动作
+case "$L25" in live|dry_run|off) ;; *) echo "  🔴 EXECUTOR_T25_MODE 只能是 live / dry_run / off"; exit 1 ;; esac
 VER="$(ask EXECUTOR_VERIFY report)"
 HOSTN="$(ask EXECUTOR_HOST_NAME vultr-tokyo)"
 TCAP="$(ask EXECUTOR_TICKETS_MAX_EQUITY_USD 1000)"
-NCAP="$(ask EXECUTOR_MAX_NAV_USD 3000)"
+NCAP="$(ask EXECUTOR_MAX_NAV_USD 600)"   # Jazz 10-30:= T25 起始资金
 
 TMP="$(mktemp /etc/cometcloud/.env.XXXXXX)"
 {
@@ -59,6 +61,7 @@ TMP="$(mktemp /etc/cometcloud/.env.XXXXXX)"
   [ -n "$JK" ] && echo "JAZZ_CALL_KEY=$JK"
   echo "EXECUTOR_MODE=$MODE"
   echo "EXECUTOR_TICKETS_MODE=$TMODE"
+  echo "EXECUTOR_T25_MODE=$L25"
   echo "EXECUTOR_VERIFY=$VER"
   echo "EXECUTOR_HOST_NAME=$HOSTN"
   echo "EXECUTOR_TICKETS_MAX_EQUITY_USD=$TCAP"

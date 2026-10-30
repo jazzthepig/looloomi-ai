@@ -508,10 +508,13 @@ class HlSpotFixture:
         target = find_token_by_name(tokens, base_name)
         if target is None:
             return None
-        for p in self.pairs():
-            if p.base_token_index == target.index:
+        usdc = find_token_by_name(tokens, "USDC")
+        cands = [p for p in self.pairs() if p.base_token_index == target.index]
+        # 10-30:XAUT0 同时有 XAUT0/USDC(@182)与 XAUT0/USDT0(@209)—— 只认 USDC 计价的那一对,不靠排序碰运气
+        for p in cands:
+            if usdc is not None and p.quote_token_index == usdc.index:
                 return p
-        return None
+        return cands[0] if cands and usdc is None else None
 
     def l2_book_for(self, base_name: str) -> L2Book:
         """L2Book for a UBTC / UETH pair, parsed from the matching fixture."""

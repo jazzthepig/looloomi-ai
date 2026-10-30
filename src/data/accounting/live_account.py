@@ -90,7 +90,8 @@ def snapshot_row(d: str, beats: list[dict], closes: dict[str, float], flows: Opt
     acct = det.get("account") or {}
     usdc = bal.get("USDC", 0.0)
     tok_to_sym = {t: s for s, t in SPOT_TOKENS.items()}
-    spot, unpriced, notes = {}, [], []
+    host_vals = {k: float(v) for k, v in (acct.get("spot_values") or {}).items() if _f(v) is not None}
+    spot, unpriced, notes, host_valued = {}, [], [], []
     for tok, qty in bal.items():
         if tok == "USDC":
             continue
@@ -98,8 +99,13 @@ def snapshot_row(d: str, beats: list[dict], closes: dict[str, float], flows: Opt
         px = closes.get(sym)
         if px:
             spot[sym] = round(qty * px, 4)
+        elif tok in host_vals:                       # 10-30:XAUT0 / SPYX 没有日线收盘 ⇒ 用主机心跳里按 HL 中间价估的市值
+            spot[sym] = round(host_vals[tok], 4)
+            host_valued.append(tok)
         else:
             unpriced.append(tok)
+    if host_valued:
+        notes.append(f"{sorted(host_valued)} 按最后一次心跳的 HL 中间价估值(不是日线收盘)")
     upnl = _f(acct.get("upnl")) or 0.0
     equity = usdc + sum(spot.values()) + upnl
     if unpriced:

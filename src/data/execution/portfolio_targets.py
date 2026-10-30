@@ -44,15 +44,22 @@ DRIFT_BAND = 0.05
 RULE = ("t25_live_v1:Jazz 10-29(起始 600 USDC;权重 = forward_books.FLEX_X1V_ARMS['T25'];XAUT / SPYX / USDC+USDY;"
         "R-v2 名义 ≤ 净值 30%、单票风险不变;21 交易日或偏离 > 5pp 再平衡)")
 
+#: 10-30:黄金 / 股票腿接进东京执行器(`exec_host/legs.py`),先空跑;Jazz 把主机切到 EXECUTOR_T25_MODE=live 之后改 True。
+LEGS_LIVE = False
+LEGS_STAGE = "执行器已接、空跑中(主机 EXECUTOR_T25_MODE=dry_run)" if not LEGS_LIVE else "真跑中"
+#: 记账名(= HL 现货代币名)↔ 组合层的腿
+LEG_SYMBOLS = {"gold": "XAUT0", "equity": "SPYX"}
+
 #: 每条腿:用什么、在哪、谁执行、现在能不能执行
 SLEEVES: dict[str, dict[str, Any]] = {
     "crypto_x1v": {"instrument": "BTC / ETH 现货(X1V 规则决定在场与否;不在场 = 这 30% 是 USDC)",
                    "venue": "Hyperliquid 现货", "executable": True, "why": "东京执行器在跑(X1V)"},
-    "equity": {"instrument": "SPYX(xStocks,Solana)—— 纸面 T25 用 ACWI,真钱用 SPY 作替身",
-               "venue": "Solana", "executable": False,
-               "why": "链上钱包执行器未建(P3 / P4)—— 这部分暂以 USDC 留在 HL 账户"},
-    "gold": {"instrument": "XAUT(Tether Gold)", "venue": "Ethereum / CEX 现货", "executable": False,
-             "why": "链上钱包执行器未建(P3)—— 这部分暂以 USDC 留在 HL 账户"},
+    "equity": {"instrument": "SPYX(Wrapped SP500 xStock)—— 纸面 T25 用 ACWI,真钱用 SPY 作替身",
+               "venue": "Hyperliquid 现货 SPYX/USDC(@703)", "executable": LEGS_LIVE,
+               "why": "Jazz 10-30:走 HL 现货,与 X1V 同一个账户 / 执行器(T-214);" + LEGS_STAGE},
+    "gold": {"instrument": "XAUT0(Tether Gold,omnichain)", "venue": "Hyperliquid 现货 XAUT0/USDC(@182)",
+             "executable": LEGS_LIVE,
+             "why": "Jazz 10-30:走 HL 现货,与 X1V 同一个账户 / 执行器(T-214);" + LEGS_STAGE},
     "cash": {"instrument": "USDC 底仓 + USDY 收益腿", "venue": "Hyperliquid(USDC)/ 链上(USDY)",
              "executable": True, "why": "USDC 留在 HL 即现金腿;USDY 收益腿未建(收益记 0,与纸面同)"},
 }
@@ -103,9 +110,13 @@ def plan_fields(d: Optional[str] = None) -> dict[str, Any]:
     """随执行器计划下发的那几个数(与表同一个函数)。"""
     d = d or dt.datetime.now(dt.timezone.utc).date().isoformat()
     rows = {r["sleeve"]: r for r in t25_rows(d)}
+    nxt = rows["crypto_x1v"]["next_rebalance_d"]
     return {"book": BOOK, "d": d, "t25_capital_usd": T25_CAPITAL_USD,
             "x1v_nav_budget_usd": rows["crypto_x1v"]["target_usd"],
-            "rv2_gross_cap_frac": RV2_GROSS_CAP_FRAC, "next_rebalance_d": rows["crypto_x1v"]["next_rebalance_d"],
+            "rv2_gross_cap_frac": RV2_GROSS_CAP_FRAC, "next_rebalance_d": nxt,
+            # 黄金 / 股票腿(主机 `exec_host/legs.py`):再平衡日回到目标,其余日子只纠偏离 > 带宽 × 资本的腿
+            "t25": {"capital_usd": T25_CAPITAL_USD, "band": DRIFT_BAND, "rebalance_today": nxt == d,
+                    "legs": {LEG_SYMBOLS[k]: {"target_usd": rows[k]["target_usd"], "sleeve": k} for k in LEG_SYMBOLS}},
             "rule": RULE}
 
 

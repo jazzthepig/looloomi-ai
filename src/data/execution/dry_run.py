@@ -60,13 +60,14 @@ def size_orders(orders: list[dict], quotes: dict[str, dict]) -> tuple[list[dict]
     return sized, refused
 
 
-def _spot_quotes_sync(client=None) -> dict[str, dict]:
-    """HL 现货 UBTC / UETH 的盘口(4 个只读请求)。同步,由调用方放进线程。"""
+def _spot_quotes_sync(client=None, tokens: Optional[dict[str, str]] = None) -> dict[str, dict]:
+    """HL 现货的盘口(默认 UBTC / UETH,4 个只读请求;`tokens` = {记账名: 代币名},10-30 起 T25 的 XAUT0 / SPYX 也走这里)。
+    同步,由调用方放进线程。"""
     from src.data.venues.hl_spot import HlSpotClient, HlSpotFixture, parse_l2_book
     c = client or HlSpotClient()
     fx = HlSpotFixture(c.spot_meta(), c.spot_meta_and_asset_ctxs(), {}, {})
     out = {}
-    for sym, base in SPOT_TOKENS.items():
+    for sym, base in (tokens or SPOT_TOKENS).items():
         pair = fx.find_pair_by_token(base)
         if pair is None:
             continue

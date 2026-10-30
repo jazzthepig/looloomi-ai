@@ -47,8 +47,10 @@ OUTCOME_FIELDS = frozenset(f.name for f in fields(Outcome))
 INTENT_REQUIRED = frozenset({"intent_id", "ts_decision", "symbol", "side", "target_notional_usd", "decision_mid", "sleeve"})
 KINDS = frozenset({"cycle", "stop", "heartbeat", "error"})
 REPORT_KEYS = frozenset({"mode", "kind", "host", "asof", "intents", "outcomes", "detail", "alert", "book"})
-#: 两本账:X1V 现货(没有 book 字段 = x1v,向后兼容)与 R-v2 单票(HL 永续)。sleeve 按 (book, mode) 定,互不串
-SLEEVES = {"x1v": SLEEVE_FOR_MODE, "r_v2": TICKET_SLEEVE_FOR_MODE}
+#: 三本账:X1V 现货(没有 book 字段 = x1v,向后兼容)、R-v2 单票(HL 永续)、T25 的黄金 / 股票腿(HL 现货,10-30)。
+#: sleeve 按 (book, mode) 定,互不串
+from src.exec_host.legs import LEG_TOKENS as _T25_LEGS, SLEEVES as _T25_SLEEVES  # noqa: E402
+SLEEVES = {"x1v": SLEEVE_FOR_MODE, "r_v2": TICKET_SLEEVE_FOR_MODE, "t25": _T25_SLEEVES}
 _PERP_COIN = re.compile(r"^[A-Za-z0-9]{1,20}$")
 MAX_ROWS = 50
 LOOP_NAME = "executor_host"
@@ -105,6 +107,8 @@ def vet_report(body: Any) -> tuple[Optional[dict], list[str]]:
             why.append(f"intents[{k}] symbol {row.get('symbol')!r} 不在 {sorted(SPOT_TOKENS)}")
         if book == "r_v2" and not _PERP_COIN.match(str(row.get("symbol") or "")):
             why.append(f"intents[{k}] symbol {row.get('symbol')!r} 不是 HL 永续币名")
+        if book == "t25" and row.get("symbol") not in _T25_LEGS:
+            why.append(f"intents[{k}] symbol {row.get('symbol')!r} 不在 {sorted(_T25_LEGS)}")
     if mode == "dry_run" and outcomes:
         why.append("空跑不下单,不能带成交结果")
     for k, row in enumerate(outcomes):

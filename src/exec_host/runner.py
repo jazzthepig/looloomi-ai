@@ -56,7 +56,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from src.data.execution.fill_log import BUY, CANCELLED, FILLED, PARTIAL, SELL
-from src.exec_host import core, tickets, verify
+from src.exec_host import core, legs, tickets, verify
 
 log = logging.getLogger("exec_host")
 DEFAULT_API = "https://web-production-0cdf76.up.railway.app"
@@ -116,6 +116,11 @@ class Config:
         if self.tickets_mode not in ("off", "dry_run", "live"):
             raise SystemExit(f"EXECUTOR_TICKETS_MODE 必须是 off / dry_run / live,收到 {self.tickets_mode!r}")
         self.tickets_equity_cap = float(env.get("EXECUTOR_TICKETS_MAX_EQUITY_USD", "1000"))
+        # T25 的黄金 / 股票腿(Jazz 10-30:XAUT0 / SPYX 走 HL 现货)。默认空跑 —— 切 live 是 Jazz 的动作
+        self.t25_mode = env.get("EXECUTOR_T25_MODE", "dry_run").strip()
+        if self.t25_mode not in ("off", "dry_run", "live"):
+            raise SystemExit(f"EXECUTOR_T25_MODE 必须是 off / dry_run / live,收到 {self.t25_mode!r}")
+        self.t25_slip_bps = float(env.get("EXECUTOR_T25_SLIP_BPS", "50"))
         self.tickets_slip_bps = float(env.get("EXECUTOR_TICKETS_SLIP_BPS", "100"))
         # 主机复核(S-666 / S-667):规则 V′ 的开关;签名校验不受它管,始终强制
         self.verify_mode = env.get("EXECUTOR_VERIFY", verify.DEFAULT_MODE).strip()
@@ -256,10 +261,11 @@ class Venue:
         return {"ok": False, "address": sub, "n_subaccounts": len(rows) if isinstance(rows, list) else 0,
                 "why": "主账户名下没有这个子账户 —— 地址抄错了,或者子账户不是这个主账户开的"}
 
-    def quotes(self) -> dict:
+    def quotes(self, tokens: Optional[dict[str, str]] = None) -> dict:
+        """现货盘口。默认 X1V 的 UBTC / UETH;`tokens` = {记账名: 代币名}(T25 腿传 `legs.LEG_TOKENS`)。"""
         from src.data.execution.dry_run import _spot_quotes_sync
         from src.data.venues.hl_spot import HlSpotClient
-        return _spot_quotes_sync(HlSpotClient(poster=self._poster))
+        return _spot_quotes_sync(HlSpotClient(poster=self._poster), tokens)
 
     def mids(self, pairs: dict[str, str]) -> dict[str, float]:
         allm = self.info.all_mids() or {}
@@ -298,7 +304,7 @@ class Venue:
         return self.info.user_fills_by_time(self.cfg.trade_account, t_ms) or []
 
     def exchange(self) -> Any:
-        if self.cfg.mode != "live" and self.cfg.tickets_mode != "live":
+        if self.cfg.mode != "live" and self.cfg.tickets_mode != "live" and self.cfg.t25_mode != "live":
             raise RuntimeError("dry_run 不建交易客户端,也不读私钥")
         if self._exchange is None:
             from eth_account import Account
@@ -342,7 +348,16 @@ class Venue:
         """R-v2 记账用的账户(`tickets.account_for_tickets`):统一账户的净值在现货 USDC,不在永续 marginSummary。"""
         st = self.perp_state()
         mode = self.account_mode()
-        return tickets.account_for_tickets(st, mode, self.balances() if mode in tickets.UNIFIED_MODES else None)
+        if mode not in tickets.UNIFIED_MODES:
+            return tickets.account_for_tickets(st, mode, None)
+        bal = self.balances()
+        vals: dict[str, float] = {}
+        try:                                                             # 代币市值读不到 ⇒ 只按 USDC 算(偏小,偏安全)
+            tok, vals = tickets.spot_value_usd(bal, self._poster({"type": "spotMetaAndAssetCtxs"}))
+        except Exception as e:                                           # noqa: BLE001
+            log.warning("spot token values unreadable: %s", e)
+            tok = 0.0
+        return {**tickets.account_for_tickets(st, mode, bal, tok), "spot_values": vals}
 
     def order_perp(self, coin: str, side: str, qty: float, limit_px: float, cloid: str, reduce_only: bool) -> Any:
         from hyperliquid.utils.types import Cloid
@@ -490,7 +505,9 @@ class Executor:
         except Exception as e:                                           # noqa: BLE001
             log.warning("fills fetch failed: %s", e)
             fills = []
+        # 成交后中间价:X1V 的币对在 state 里;T25 腿(XAUT0 / SPYX)的币对只在这一轮的报价里 —— 两处合起来
         pairs = {s: p["pair"] for s, p in (self.state.get("pairs") or {}).items()}
+        pairs.update({i.symbol: q["pair"] for i, _, q in staged if q.get("pair")})
         try:
             mids = self.venue.mids(pairs)
         except Exception:                                                # noqa: BLE001
@@ -536,6 +553,63 @@ class Executor:
         # 只留今天:每个币每天最多止一次(止完当天不再追;第二天收盘规则重新定目标)
         self.state.set(stopped={today: stopped + hits})
         return hits
+
+    # ── T25 的黄金 / 股票腿(HL 现货,10-30)─────────────────────────────────
+    def _report_l(self, kind: str, **kw: Any) -> None:
+        self.outbox.put({"mode": self.cfg.t25_mode, "book": "t25", "kind": kind, "host": self.cfg.host, **kw})
+
+    def run_t25_cycle(self, now: dt.datetime) -> dict[str, Any]:
+        """一天一轮:再平衡日回到目标,其余日子只纠偏离 > 带宽的腿(`legs.leg_orders`)。停着也算出订单,只是不提交。"""
+        plan = self.state.get("plan") or {}
+        t25 = (plan.get("portfolio") or {}).get("t25") or {}
+        live = self.cfg.t25_mode == "live"
+        halted, why_halt = self.halted()
+        balances = self.venue.balances()
+        quotes = self.venue.quotes(legs.LEG_TOKENS)
+        held = legs.holdings_usd(balances, quotes)
+        lo = legs.leg_orders(t25, held)
+        sized, refused = legs.size_leg_orders(lo["orders"], quotes, balances)
+        sleeve = legs.SLEEVES[self.cfg.t25_mode]
+        staged = []
+        for o in sized:
+            q = quotes[o["symbol"]]
+            o = {**o, "price": q["mid"]}
+            lim = core.ioc_limit_px(q["mid"], o["side"], self.cfg.t25_slip_bps, int(q["sz_decimals"]))
+            staged.append((core.make_intent(o, sleeve, f"t25:{o['why']}", now, lim), o, q))
+        detail = {"phase": "intents", "held_usd": _r(held), "targets": {k: v.get("target_usd") for k, v in
+                                                                         (t25.get("legs") or {}).items()},
+                  "rebalance_today": lo["rebalance_today"], "band": lo["band"], "capital_usd": lo["capital_usd"],
+                  "orders": [{k: o.get(k) for k in ("symbol", "side", "qty_base", "notional_rounded", "est_slippage_bps",
+                                                    "why")} | {"limit_px": i.limit_price} for i, o, _ in staged],
+                  "skipped": lo["skipped"], "refused": refused, "halted": halted, "halt_why": why_halt,
+                  "pairs": {s: q.get("pair") for s, q in quotes.items()}}
+        txt = "; ".join(f"{i.symbol} {i.side} {o['qty_base']} (~${o['notional_rounded']}) 限价 {i.limit_price}"
+                        for i, o, _ in staged)
+        alert = f"T25 腿 {plan.get('asof')} · {self.cfg.t25_mode}{' · 已停,不提交' if halted else ''}: {txt}" if staged else None
+        self._report_l("cycle", asof=plan.get("asof"), intents=[asdict(i) for i, _, _ in staged], detail=detail,
+                       alert=alert if (not live or halted) else None)
+        outcomes = []
+        if live and staged and halted:
+            outcomes = self._not_submitted(staged, f"一键停({why_halt}):未提交")
+        elif live and staged:
+            outcomes = self._execute(staged, self.cfg.t25_slip_bps)
+        if live and staged:
+            self._report_l("cycle", asof=plan.get("asof"), outcomes=[asdict(x) for x in outcomes],
+                           detail={"phase": "outcomes", "statuses": [x.status for x in outcomes]},
+                           alert=None if halted else "T25 腿真单: " + "; ".join(
+                               f"{i.symbol} {i.side} → {x.status} {x.avg_fill_price or ''}"
+                               for (i, _, _), x in zip(staged, outcomes)))
+        self.state.set(t25_done_asof=plan.get("asof"), t25_done_mode=self.cfg.t25_mode, t25_last_at=now.isoformat())
+        return {**detail, "intents": [asdict(i) for i, _, _ in staged], "outcomes": [asdict(x) for x in outcomes]}
+
+    def _maybe_t25_cycle(self, now: dt.datetime) -> None:
+        plan = self.state.get("plan") or {}
+        # 一天一轮,按模式记:当天空跑过、Jazz 再切 live ⇒ live 当场跑一轮(不用等到明天收盘)
+        done = self.state.get("t25_done_asof") == plan.get("asof") and self.state.get("t25_done_mode") == self.cfg.t25_mode
+        if (self.cfg.t25_mode != "off" and plan.get("ok") and plan.get("asof") == asof_for(now)
+                and (plan.get("portfolio") or {}).get("t25") and not done):
+            r = self.run_t25_cycle(now)
+            log.info("t25 cycle %s: %d orders, skipped=%s", plan["asof"], len(r["orders"]), r["skipped"])
 
     # ── R-v2 单票(HL 永续)────────────────────────────────────────────────
     def _report_t(self, kind: str, **kw: Any) -> None:
@@ -933,7 +1007,9 @@ class Executor:
             try:
                 ta = self.venue.ticket_account()
                 acct = {"mode": ta.get("mode"), "ticket_equity": round(float(ta.get("equity") or 0.0), 2),
-                        "upnl": round(float(ta.get("upnl") or 0.0), 4), "perp_positions": ta.get("positions") or {}}
+                        "upnl": round(float(ta.get("upnl") or 0.0), 4), "perp_positions": ta.get("positions") or {},
+                        # 10-30:每个现货代币的美元市值(XAUT0 / SPYX 没有日线收盘可估,每日真钱快照用这一份)
+                        "spot_values": {k: round(v, 4) for k, v in (ta.get("spot_values") or {}).items()}}
             except Exception as e:                                       # noqa: BLE001
                 acct = {"error": f"{type(e).__name__}: {str(e)[:120]}"}
         self._report("heartbeat", asof=plan.get("asof"), detail={
@@ -941,6 +1017,7 @@ class Executor:
             "plan_asof": plan.get("asof"), "done_asof": self.state.get("done_asof"),
             "stop_px": plan.get("stop_px"), "halted": halted, "halt_why": why,
             "tickets_mode": self.cfg.tickets_mode, "ticket_book": self._book_brief(self.state.get("ticket_book") or {}),
+            "t25_mode": self.cfg.t25_mode, "t25_done_asof": self.state.get("t25_done_asof"),
             "ticket_plan_asof": (self.state.get("ticket_plan") or {}).get("asof"),
             "ticket_done_asof": self.state.get("ticket_done_asof"),
             "truth_pending": sorted((self.state.get("truth_pending") or {}).keys()),
@@ -951,6 +1028,7 @@ class Executor:
         for name, fn in (("flush", lambda: self.outbox.flush(self.railway)),
                          ("plan", lambda: self.refresh_plan(now)),
                          ("cycle", lambda: self._maybe_cycle(now)),
+                         ("t25", lambda: self._maybe_t25_cycle(now)),
                          ("tickets", lambda: self._maybe_ticket_cycle(now)),
                          ("stop", lambda: self._every("stop", STOP_EVERY_S, lambda: self.check_stops(now))),
                          ("ticket_stop", lambda: self._every("ticket_stop", STOP_EVERY_S,
@@ -1001,7 +1079,7 @@ def check(ex: Executor) -> dict[str, Any]:
                            "api": ex.cfg.api, "nav_cap": ex.cfg.nav_cap, "halted": ex.halted()}
     if ex.cfg.subaccount:
         out["subaccount"] = ex.venue.subaccount_check()
-    if ex.cfg.mode == "live" or ex.cfg.tickets_mode == "live":
+    if "live" in (ex.cfg.mode, ex.cfg.tickets_mode, ex.cfg.t25_mode):
         out["agent"] = ex.venue.agent_check()
     code, plan = ex.railway.plan()
     out["plan_http"] = code
@@ -1017,6 +1095,21 @@ def check(ex: Executor) -> dict[str, Any]:
         out["would_trade"] = [{k: o.get(k) for k in ("symbol", "side", "qty_base", "notional_rounded")} for o in r["orders"]]
         out["refused"] = r["refused"]
         out["nav_book"] = round(r["nav_book"], 2)
+        t25 = (plan.get("portfolio") or {}).get("t25")
+        if ex.cfg.t25_mode != "off" and t25:
+            try:
+                lq = ex.venue.quotes(legs.LEG_TOKENS)
+                held = legs.holdings_usd(b, lq)
+                lo = legs.leg_orders(t25, held)
+                sized, refused = legs.size_leg_orders(lo["orders"], lq, b)
+                out["t25"] = {"mode": ex.cfg.t25_mode, "pairs": {k: v.get("pair") for k, v in lq.items()},
+                              "mids": {k: v.get("mid") for k, v in lq.items()}, "held_usd": _r(held),
+                              "targets": {k: v.get("target_usd") for k, v in (t25.get("legs") or {}).items()},
+                              "would_trade": [{k: o.get(k) for k in ("symbol", "side", "qty_base", "notional_rounded",
+                                                                     "est_slippage_bps")} for o in sized],
+                              "skipped": lo["skipped"], "refused": refused}
+            except Exception as e:                                       # noqa: BLE001
+                out["t25"] = {"mode": ex.cfg.t25_mode, "error": f"{type(e).__name__}: {str(e)[:160]}"}
     if ex.cfg.tickets_mode != "off":
         tp = plan.get("tickets") if isinstance(plan, dict) else None
         key = os.environ.get("JAZZ_CALL_KEY", "").strip()
