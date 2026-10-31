@@ -2857,3 +2857,11 @@ The cap is doing its job only if closure is as routine as addition.*
 
 
 **[header archived 2026-10-31 02:42 UTC]** 2026-10-30 06:38 UTC (Seth — **矢量库 v2 上线 + 地基修好(S-698 / S-699)。** **① `binance_hist` 统一成现货:** 06:05 UTC 跑完,262 个标的全过(216 改成 / 核成现货,46 个没有现货对、留原处并从面板排除);187,928 行永续 bar 原样存进 `binance_um_hist` 后换成现货,141 个标的补深度 79,834 行(2020-01-01 前已有数据的标的 14 → 59、2019 年 7 → 17);独立复核:同一脚本 2025-06-15 抽 10 个,修前 9 个是永续,修后 10/10 是现货。**会动的:** 吃成交量的回放(R-v2 历史扫描、ADV 准入、① 回放臂)—— 前向锁住的行不动。**② `market_state_vectors` v2(06:31 UTC):** 2,525 行,2019-12 → 2026-10;按月时点面板(上月末 30 日成交额前 25,83 个月 / 140 个成员,无前视)、扩张窗口 z;实测维 v1 每天 11 → 2021–24 年 15–16、2026 年 20.5(资金费 / OI / CIS / fng / 稳定币供给接上;旧读法一页 limit=5000 撞 1000 行上限,那几维原来只有几天);与 v1 近邻重叠平均 1.08 / 10,18% 的近邻落在新补的 2020–21。`similar_market_states` 改在共同实测维上比(旧版只留维数齐备的天,v2 下会只剩最近一年)。**③ T-214 done:** 黄金 XAUT0 与股票 SPYX 都在 **HL 现货上有 USDC 对** —— T25 三条腿可以在同一个账户、同一个执行器(待 Jazz 定)。**④ 东京主机已更新(13:54 UTC 10-30,Jazz):** 自检 `perp_account.mode = unifiedAccount`、R-v2 记账净值 630.64(原来读成 0)、X1V `nav_cap_effective = 180`(组合层加密腿额度);13:55 心跳已带 `account` 段 ⇒ 每日真钱快照从 10-30 起有账户模式。443 那次「主机钥匙变了」是 known_hosts 里重建前旧机器的记录,脚本核对 22 上认过的同一把钥匙后才替换。`asset_embeddings_history` 4,003 行 vec 空(Mac 推 27 维、列是 18 维,要走 §2 合约)。)
+
+
+## [OPEN RISK closed 2026-10-31 02:50 UTC] ① 换锚后 state_daily 回填 —— 02:38 UTC 自动跑完并核过(2,860 天,v2 code_ref)
+
+3. **🟡 ① 的历史锚已换成 `cap_pit24`(Jazz 10-31「换」,4c54b19e):`state_daily` 要整条回填到 2019,等第一轮核。** `registry.core_nav` 10-02 前读 `core_variants_daily.cap_pit24`;`state_daily` CODE_REF 变 ⇒ 下一轮(每天 06:00 UTC 后)自动从 2019-01-01 整条重算(约 2,860 天 × 24 特征)。rr_matrix / 成绩单的「相对 ① 超额」历史段随之变。
+   VERIFY: `select min(d), max(d), count(*), max(code_ref) from state_daily where feature = 'mom_20'` → min 2019-01-01、code_ref 含 `v2 (core = cap_pit24`;`select at, outcome, reason from loop_attempt where loop_name = '_state_daily_loop' order by at desc limit 2`。
+   OWNER: Seth
+
