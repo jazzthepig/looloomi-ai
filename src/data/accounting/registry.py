@@ -278,22 +278,26 @@ async def _core_benchmark() -> Optional[pd.Series]:
     return await core_nav()
 
 
+#: ① 10-02 之前的历史(Jazz 10-31「换」,S-700):按时点的 `cap_pit24`(逐月前 24 大市值、含死币、2019 起),
+#: 不再是 `core_alpha_daily` 的今天 24 名回填(幸存者,7.8 年多报 32%)。那条函数留作研究对照(/api/v1/research/core-alpha)。
+HISTORY_ARM = "cap_pit24"
+HISTORY_TABLE = "core_variants_daily"
+
+
 async def core_nav(start: str = "2026-06-01") -> Optional[pd.Series]:
     """① 的逐日 NAV —— 全系统只这一个读法(成绩单基准、L3、T-048 状态层都从这里取)。
 
-    10-02 及以前:库函数 `core_alpha_daily` 的 α=1 回放(24 名市值加权、单币 ≤ 40%、每日再平衡);
+    10-02 及以前:`core_variants_daily` 的 `cap_pit24`(S-700:逐月前 24 大市值、含死币、单币 ≤ 40%、每日再平衡,2019-01 起;
+    Jazz 10-31 定为历史锚,取代 `core_alpha_daily` 的幸存者回填);
     10-02 → 10-12:`core_cap_daily.cap_a1` 的前向收益;10-12 之后:`cap_a1_u`(不设单币上限,S-556)。按收益拼接成一条 NAV。
-    读不到 ⇒ None,成绩单会说「基准没有覆盖」,不悄悄退回等权。
+    读不到 ⇒ None,成绩单会说「基准没有覆盖」,不悄悄退回等权或旧回放。
     """
-    from src.api.store import supabase_rpc_all
     from src.data.signals.core_cap import CORE_ARM, CORE_SINCE, INCEPTION, LEGACY_CORE_ARM, TABLE
     from src.data.style.header import _read_all
-    rows = await supabase_rpc_all("core_alpha_daily", {"p_start": start},
-                                  {"alpha": "eq.1", "order": "d.asc"})
+    rows = await _read_all(HISTORY_TABLE, {"select": "d,ret", "arm": f"eq.{HISTORY_ARM}", "d": f"gte.{start}", "order": "d.asc"})
     if not isinstance(rows, list) or not rows:
         return None
-    rep_ = pd.Series({pd.Timestamp(r["d"]): float(r["ret"]) for r in rows
-                      if float(r.get("alpha", -1)) == 1.0 and r.get("ret") is not None}).sort_index()
+    rep_ = pd.Series({pd.Timestamp(r["d"]): float(r["ret"]) for r in rows if r.get("ret") is not None}).sort_index()
     rep_ = rep_[rep_.index <= INCEPTION]
 
     async def _arm(arm: str) -> pd.Series:

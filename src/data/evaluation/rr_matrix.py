@@ -671,7 +671,7 @@ def compute_rr_matrix(
     ----------
     book_navs     : {strategy_id: NAV index(DatetimeIndex, 升序)}
     bench_nav     : ① registry.core_nav NAV index(per §Seth-1006d #4)
-                    = core_alpha_daily 回放 + core_cap 前向同一序列
+                    = cap_pit24 历史(10-31 起;此前 core_alpha_daily)+ core_cap 前向同一序列
     state_daily   : (d, entity, feature, value) — T-048 long format;None = 全缺
     fomc_dates    : iterable of date — FOMC 会议日(2022-2026 共 40 次)
     as_of         : UTC 重算日

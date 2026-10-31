@@ -496,7 +496,8 @@ async def research_core_alpha(start: str = Query("2023-01-01"),
     if not isinstance(rows, list):
         raise HTTPException(status_code=502, detail="core_alpha_daily 读不到 —— 读不到 ≠ 没有数据")
     return {"status": "ok", "count": len(rows), "data": rows,
-            "note": "回放序列:成员是今天的 24 名往回取(幸存者),不计成本;① = α=1"}
+            "note": "回放序列:成员是今天的 24 名往回取(幸存者),不计成本;① = α=1。10-31 起 ① 的历史锚不再是它,"
+                    "是 core_variants_daily 的 cap_pit24(按时点、含死币,S-700);这里留作对照"}
 
 
 @router.get("/internal/research/book-navs")

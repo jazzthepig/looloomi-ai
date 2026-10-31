@@ -5,11 +5,11 @@
 `registry.core_nav` 10-02 之前那一段 = 库函数 `core_alpha_daily`:**今天**的 24 个名字回填到 2015。SOL / AVAX / APT / SUI 在 2019 不存在,
 EOS / XEM / BSV / LUNA / FTT 在 2019–2022 真在前 24 里、后来归零或掉出去 —— 一个都不在。幸存者名单的历史收益偏高,状态层与评估层拿它当基准。
 
-## 规则(台账 S-700 + 两条修订;**不改 `registry.core_nav`,不改任何前向账本**)
+## 规则(台账 S-700 + 两条修订;**10-31 起 `registry.core_nav` 的历史段读这条臂(Jazz「换」);不改任何前向账本**)
 
 - 库函数 `core_pit_members` / `core_pit_daily`(migrations/2026-10-30_core_pit.sql):每月第一天按上月最后一个有数的日子的市值取前 24,
   排稳定币 / 包裹凭证 / 代币化债权,选成员那天 volume/mcap ≥ 1%;权重 = 市值加权、单币 ≤ 40%、每日再平衡 —— 与 `core_alpha_daily(alpha=1)` 同一套公式。
-- 每天整条重算(数据补齐在跑,成员会变),写 `core_variants_daily` 臂 `cap_pit24`;前向行(d ≥ inception = 2026-10-30)由 forward_lock 冻结。
+- 每 6 小时整条重算,写 `core_variants_daily` 臂 `cap_pit24`;前向行(d ≥ inception = 2026-10-30)由 forward_lock 冻结。**它现在是 ① 10-02 之前的历史锚**(`registry.HISTORY_ARM`)。
 - `code_ref = S-700 core_pit v1`。一并写一份描述表(逐年 cap_pit24 vs 幸存者 ① vs BTC)进 loop_attempt detail —— 判读交 Jazz。
 
 ## 判活

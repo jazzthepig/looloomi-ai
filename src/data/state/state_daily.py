@@ -13,7 +13,7 @@ A 版的读取端用了库里不存在的列(funding_history.d / rate、open_int
 
 ## 特征(entity = 'panel',每天一组;缺数据 = None,不是 0)
 
-    mom_20 / mom_60 / mom_200   ① NAV 的日历日动量:nav(d) / nav(d−N) − 1(任一端缺 ⇒ None)
+    mom_20 / mom_60 / mom_200   ① NAV 的日历日动量:nav(d) / nav(d−N) − 1(任一端缺 ⇒ None);① = registry.core_nav(10-31 起历史段 = cap_pit24)
     dist_200                     nav(d) / 近 200 日均值 − 1(窗口内 ≥ 180 个点)
     vol_30                       ① 日收益近 30 日标准差 × √365(≥ 25 个点)
     vol_pct_3y                   vol_30 在近 3 年 vol_30 序列里的分位(≥ 900 个点)
@@ -50,10 +50,12 @@ import pandas as pd
 TABLE = "state_daily"
 WRITES_TABLES = (TABLE,)
 ENTITY = "panel"
-CODE_REF = "T-048 state_daily v1"
+#: 10-31(Jazz「换」,S-700 / T-094):① 的历史锚换成按时点的 cap_pit24(2019 起)⇒ mom / vol / dist 从 2019 起有意义;
+#: 整条回填到 2019-01-01。code_ref 变 ⇒ 库里最新一行的 code_ref 不等于这里 ⇒ 下一轮自动整条回填(不等人手动触发)。
+CODE_REF = "T-048 state_daily v2 (core = cap_pit24, 2019-)"
 #: 新特征第一次出现时整条回填(不等人手动触发):这个特征在库里 0 行 ⇒ 回填
 NEWEST_FEATURE = "stable_supply_30d"
-BACKFILL_START = "2023-01-01"
+BACKFILL_START = "2019-01-01"
 RECENT_DAYS = 14
 
 #: regime_daily.regime_db 实测 9 种写法 = 6 类(S-485 复盘时查明)
@@ -332,13 +334,14 @@ async def run_once(backfill: bool = False) -> dict[str, Any]:
     from src.data.style.header import _read_all
 
     target = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize() - pd.Timedelta(days=1)
-    have = await _read_all(TABLE, {"select": "d", "feature": "eq.mom_20", "order": "d.desc", "limit": "1"})
+    have = await _read_all(TABLE, {"select": "d,code_ref", "feature": "eq.mom_20", "order": "d.desc", "limit": "1"})
     have_new = await _read_all(TABLE, {"select": "d", "feature": f"eq.{NEWEST_FEATURE}", "limit": "1"})
+    stale_ref = bool(have) and (have[0].get("code_ref") != CODE_REF)      # 规则 / 锚换了 ⇒ 整条重算
     # 源比特征晚到(借贷池那一轮还没跑,状态层先跑了)⇒ 那一列整段是空的;源到了而特征一个非空值都没有 ⇒ 再回填一次
     lend_src = await _read_all("stable_lending_daily", {"select": "d", "limit": "1"})
     lend_feat = await _read_all(TABLE, {"select": "d", "feature": "eq.stable_lend_apy_7d", "value": "not.is.null",
                                         "limit": "1"})
-    first = backfill or not have or not have_new or (bool(lend_src) and not lend_feat)
+    first = backfill or not have or not have_new or stale_ref or (bool(lend_src) and not lend_feat)
     start_days = pd.Timestamp(BACKFILL_START) if first else target - pd.Timedelta(days=RECENT_DAYS)
     # 读的起点要早于写的起点:200 日动量、3 年波动分位要往回看
     inputs = await load_inputs((start_days - pd.Timedelta(days=3 * 365 + 60)).date().isoformat())

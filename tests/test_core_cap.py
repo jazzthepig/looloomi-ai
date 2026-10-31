@@ -151,11 +151,11 @@ def test_ls_books_are_scored_against_the_core_not_equal_weight(monkeypatch):
     import src.data.style.header as hdr
 
     async def fake_rpc(fn, payload, params):
-        assert fn == "core_alpha_daily" and params["alpha"] == "eq.1"   # S-487:只取 ① 那一臂,分页读
-        return [{"alpha": 1.0, "d": "2026-10-01", "ret": 0.01}, {"alpha": 0.0, "d": "2026-10-01", "ret": 0.5},
-                {"alpha": 1.0, "d": "2026-10-02", "ret": 0.02}, {"alpha": 1.0, "d": "2026-10-03", "ret": 0.9}]
+        raise AssertionError("10-31 起 ① 的历史不再读 core_alpha_daily(幸存者回填),读 core_variants_daily 的 cap_pit24")
 
     async def fake_read_all(table, params):
+        if table == reg.HISTORY_TABLE and params["arm"] == f"eq.{reg.HISTORY_ARM}":          # S-700 按时点的历史
+            return [{"d": "2026-10-01", "ret": 0.01}, {"d": "2026-10-02", "ret": 0.02}, {"d": "2026-10-03", "ret": 0.9}]
         assert table == cc.TABLE and params["arm"] in (f"eq.{cc.CORE_ARM}", f"eq.{cc.LEGACY_CORE_ARM}")
         if params["arm"] == f"eq.{cc.LEGACY_CORE_ARM}":
             return [{"d": "2026-10-02", "nav": 0.999}, {"d": "2026-10-03", "nav": 0.999 * 1.03}]
@@ -163,7 +163,7 @@ def test_ls_books_are_scored_against_the_core_not_equal_weight(monkeypatch):
     monkeypatch.setattr(store, "supabase_rpc_all", fake_rpc)
     monkeypatch.setattr(hdr, "_read_all", fake_read_all)
     s = asyncio.run(reg._core_benchmark())
-    # 10-01、10-02 用回放(α=1),10-03 用前向(+3%),回放里 10-03 的 +90% 不用;α=0 的行不用
+    # 10-01、10-02 用历史臂 cap_pit24,10-03 用前向(+3%),历史臂里 10-03 的 +90% 不用
     assert s.iloc[-1] == pytest.approx(1.01 * 1.02 * 1.03)
     assert all(b.benchmark in ("core",) or b.benchmark.startswith("arm:")
                for b in reg.BOOKS)
