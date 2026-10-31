@@ -37,23 +37,31 @@ def spl(block, key):
 
 
 def strip_block(text, beg, end):
-    """删掉 marker 之间的整块(含 marker),让重排幂等。"""
+    """删掉 marker 之间的整块(含 marker)与紧随其后的空行,让重排幂等(字节级)。"""
     while True:
         i = text.find(beg)
         j = text.find(end)
         if i == -1 or j == -1 or j < i:
             return text
-        text = text[:i] + text[j + len(end):]
+        k = j + len(end)
+        while k < len(text) and text[k] == "\n":
+            k += 1
+        text = text[:i] + text[k:]
 
 
 def splice(text, beg, end, body, anchor):
-    """把 marker 块放到 anchor 行之前;已存在则先删旧块。幂等。"""
+    """把 marker 块放到 anchor 行之前;已存在则先删旧块。幂等(字节级)。"""
     text = strip_block(text, beg, end)
-    block = beg + "\n" + body.rstrip() + "\n" + end + "\n\n"
+    block = beg + "\n" + body.rstrip() + "\n" + end
     i = text.find(anchor)
     if i == -1:
         raise SystemExit("anchor not found: " + anchor)
-    return text[:i] + block + text[i:]
+    prefix = text[:i].rstrip("\n")
+    suffix = text[i + len(anchor):].lstrip("\n")
+    out = prefix + "\n\n" + block + "\n\n" + anchor
+    if suffix:
+        out += "\n\n" + suffix
+    return out
 
 
 def te_cell(t):
@@ -187,6 +195,10 @@ def build_section(t, dep):
     A("- **逐日 TE**（年化）= `std(r_tok − r_bench) · sqrt(365)`。")
     A("- **5 日不重叠块 TE**（年化）= `std(块差) · sqrt(365/5)`，块 = 连续 5 个成对日收益复合，"
       "从第一对开始切、不丢头部；四条腿共用同一组块边界 ⇒ 腿与腿可比。")
+    A("- **【T-215 更正】本节的 5 日块单点 = 块起点 offset_0 那一格，块起点本身是任意的**"
+      "（可挪 0..4 位），**单点量级已被 §1.7 作废**：权威口径是**基准 ISO 自然周块**，"
+      "5 种块起点只报区间；代币序列也改成**固定日期窗口**（原先是滚动 `limit=400`，同码两天不同数）。"
+      "本节保留 T-213 的原样数字，作为**历史口径的存档**，读时请以 §1.7 为准。")
     A("- **累计 price_ratio** = 代币价 / 基准价 的累计变化（%）。")
     A("- **波动比** = 代币年化波动 / 基准年化波动。")
     A("- **零信号对照**：用 `src/data/evaluation/apparatus.py` 的 `block_permute` 打乱基准日收益"
@@ -215,6 +227,10 @@ def build_section(t, dep):
     A("")
     A("> `price_ratio` 的绝对水平不可比（PAXG/XAUT 是「枚价 ÷ 美元金价」，比值 1.00 附近；"
       "SPYX/SPY 是「份价 ÷ 份价」）；可比的是它的**变化**列。")
+    A("> **【T-215】这一列标注为「两点估计 · 无对照 · 不可读」**：它没有零分布对照，"
+      "且对末日极敏感。**不写「这个量是空的」** —— 退化是零分布族（置换保值）的性质，不是这个量的性质；"
+      "正确口径（重抽）下的结论是「**实测漂移在重抽噪声内**」（§1.7 表 G）。"
+      "**不得用这一列排序候选。**")
     A("")
     A("#### 表 B —— 零信号对照：实际 TE 在零分布里的分位")
     A("")
@@ -293,7 +309,9 @@ def build_section(t, dep):
     A("")
     A("**答案（黄金腿，公共窗口 %s → %s）**：不代币化的 GLD 5 日块 TE **%s%%**，"
       "代币化的 PAXG **%s%%**、XAUT **%s%%** ⇒ "
-      "**代币化这条腿多付的跟踪成本 ≈ 0（在 5 日块口径下与不代币化同量级，差 %+.3f / %+.3f pp）**。"
+      "**代币化这条腿多付的跟踪成本：不作为量级结论**"
+      "（本节单点随块起点变、且取自滚动窗口，权威口径与区间见 §1.7）；"
+      "**方向上代币化不高于不代币化**（本行集差 %+.3f / %+.3f pp）。"
       % (common["start"], common["end"],
          fmt(gld["common_window"]["block5_te"]["te_ann_pct"]),
          fmt(ser["PAXG"]["common_window"]["block5_te"]["te_ann_pct"]),
@@ -313,8 +331,9 @@ def build_section(t, dep):
         A("**答案（股票腿，公共窗口 %s → %s）**："
           "「不代币化」的 **SPY(ETF) vs SPX(指数)** 逐日 TE **%s%%**、"
           "**5 日块 TE %s%%**（n=%d 天 / %d 块；指数源 FRED `SP500`，S&P Dow Jones 官方收盘）"
-          "⇒ 代币化两条腿相对它多付的跟踪成本 = "
-          "**SPYX %+.3f pp、Ondo SPY %+.3f pp（5 日块口径）**。"
+          "⇒ 代币化两条腿相对它的跟踪成本差 **方向上明显更高**"
+          "（本行集差 %+.3f / %+.3f pp，5 日块口径）；"
+          "**量级不作单点结论**（随块起点变，见 §1.7 表 E 的区间）。"
           % (common["start"], common["end"],
              fmt(spx_cw["daily_te"]["te_ann_pct"]), fmt(spx_cw["block5_te"]["te_ann_pct"]),
              spx_cw["n_days_all"], spx_cw["block5_meta"]["n_blocks"],
@@ -396,11 +415,25 @@ def build_section(t, dep):
       "那是 GLDx 的池；Ondo SPY ETH 最深池 $81,175.95（vol24 $12,268.80），$5k 占 6.16%、$50k 占 61.6% |")
     A("| 「跟踪误差很大：黄金腿 6.86% / 4.53%、股票腿 7.52%」 | **改口径后换数字** | "
       "逐日 TE 含收市错位伪影；5 日块口径：PAXG 4.290%、XAUT 2.364%、SPYX 3.162%、Ondo 11.173%（各自全窗口） |")
-    A("| §3 风险 4「TE 是这条腿的成本项，月度调仓会吃掉 alpha」 | **保留但改写** | "
-      "逐日 TE 里主要是口径伪影；5 日块口径下黄金腿 TE 与不代币化的 GLD 同量级"
-      "（GLD 1.995% vs PAXG 1.899% / XAUT 1.855%，公共窗口）⇒ **代币化溢价在黄金腿上测不到**；"
-      "股票腿的溢价则确实存在（不代币化基线 SPY(ETF) vs SPX(指数) 5 日块 0.377%，"
-      "SPYX 3.162% ⇒ +2.785 pp、Ondo 11.699% ⇒ +11.322 pp，公共窗口） |")
+    A("| §3 风险 4「TE 是这条腿的成本项，月度调仓会吃掉 alpha」 | **保留但改写（T-215 再改写）** | "
+      "逐日 TE 里主要是口径伪影；**T-215：5 日块单点也随块起点变 ⇒ 量级只报区间**。"
+      "**方向结论**：黄金腿的代币化跟踪成本差 **方向为「不高于」**不代币化的 GLD；"
+      "股票腿的代币化跟踪成本差 **方向为「明显高于」**不代币化基线"
+      "（SPY(ETF) vs SPX(指数)）。区间见 §1.7 表 E |")
+    A("| 【T-215】§4 探索 2「日界错位本身可能是可交易的时序源」 | **撤回** | "
+      "本轮没有任何小时级对齐检验，也没有零信号对照；是从口径敏感性直接跳出来的猜想。"
+      "前半句（对齐口径极度敏感）经 T-215 复现成立（§1.7 表 E），后半句不成立 |")
+    A("| 【T-215】§1.4 表 A 的「累计 price_ratio」列 | **保留但标注为不可读** | "
+      "两点估计 · 无对照 · 不可读；且漂移对末日极敏感。"
+      "**不写「这个量是空的」**——退化是零分布族（置换保值）的性质；"
+      "正确口径（重抽）下的结论是「实测漂移在重抽噪声内」（§1.7 表 G），"
+      "lane-c 判据①**结论对、理由按此改写** |")
+    A("| 【T-215】黄金腿「代币化没有额外跟踪成本差」/ 股票腿「溢价 +2.785 / +11.322 pp」 | "
+      "**量级降级为方向性结论** | "
+      "单点量级随块起点变（同一行集 5 种块起点的 TE 极差 1.3–2.6 pp），"
+      "且原数字取自**滚动窗口**（不可复现）。保留下来的只有方向："
+      "①黄金腿代币化成本差方向为「不高于」；②股票腿方向为「明显高于」；"
+      "③股票腿 SPYX 优于 Ondo SPY（ISO + 5 种块起点 6/6 成立） |")
     A("")
     return "\n".join(lines)
 
@@ -416,8 +449,11 @@ def main():
     with open(MD) as fh:
         md = fh.read()
     md = splice(md, C_BEG, C_END, build_correction(t, dep, dep2),
-                "## 0. 口径偏差（先说清楚，因为它改了卡上的一个字）")
-    md = splice(md, S_BEG, S_END, build_section(t, dep), "## 2. 明细")
+                "<!-- T215:CORRECTION:BEGIN -->" if "<!-- T215:CORRECTION:BEGIN -->" in md
+                else "## 0. 口径偏差（先说清楚，因为它改了卡上的一个字）")
+    md = splice(md, S_BEG, S_END, build_section(t, dep),
+                "<!-- T215:SECTION:BEGIN -->" if "<!-- T215:SECTION:BEGIN -->" in md
+                else "## 2. 明细")
     with open(MD, "w") as fh:
         fh.write(md)
     print("WROTE", MD, len(md), "chars")
