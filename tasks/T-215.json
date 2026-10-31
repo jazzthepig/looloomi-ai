@@ -1,0 +1,28 @@
+{
+  "id": "T-215",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-31",
+  "title": "T-213 报告返工:5 日块对齐敏感性 + 撤回清单与正文 md:333 同步",
+  "source": "§B-auto-1031-1215(lane-b 自己的交叉复核)+ §Seth-1031a。头条跟踪误差对块起点挪 0..4 位极敏感(GLD 1.995→4.770,Ondo 5.2→11.7),「溢价≈0」恰是五种对齐里最小的一个;方向(SPYX<Ondo)5/5 稳。§4 探索 2 已撤回但正文 md:333 仍当活结论引用。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-215.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读数据、不碰库。① 块起点改钉基准 ISO 自然周(t210_tracking.py week_blocks),或头条同时报 5 种对齐的区间;② 代币序列用固定日期窗口,不再用滚动 limit=400,使头条可复现(同代码两天跑出同数);③ 量级降级为方向性结论,文本里不再写「溢价≈0」;④ §4 探索 2 列入 §1.6 撤回清单,并同步改 md:333;⑤ lane-c 判据①按「结论对、理由改写为:实测漂移在重抽噪声内(分位 0.22–0.48)」引用,不写「这个量是空的」;⑥ 剔除/标注 2026-06-26 基准坏点后的 SPYX/Ondo 数;⑦ 记 eq.SPX 的 hyperliquid 污染(2026-08-09..23),不改库。",
+    "expect": "报告更新 + 复跑脚本两次输出一致;卡片 notes:各对齐下的区间与被降级的句子清单。"
+  },
+  "prior_value": "头条数字会被 Jazz 用来选 SPYX vs Ondo;量级随对齐变 2–3 倍而无人说明。",
+  "notes": "",
+  "verified": null
+}

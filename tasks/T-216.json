@@ -1,0 +1,28 @@
+{
+  "id": "T-216",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-10-31",
+  "title": "T-005 预注册台账返工(lane-a 交叉复核 F1/F3/F2/F5):按实际代码重算样本量与判据",
+  "source": "§A-auto-1031-1217(lane-a 对 lane-b 的复核,F2/F3/F4 数字已被 lane-b 复现)+ §Seth-1031a。只返工 F1/F3,不整体退回。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-216.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读、不跑 24 格。① 按预注册 §1 ① 的价格 PIT 定义(close_BTC(d−lag)<MA200_BTC(d−lag))重算 RISK_OFF 天数、有效天、60/40 OOS 有效天(lane-a 测:401/296/26,非 290/349/88),并说明 harness 仍读 V5_macro_regime;② β∈[0.5,0.9] 带的实测分布(AB 族 3645/3645 在带内,D 族 0/32805)写进台账,并写零分布 95 分位口径的通过率(与 T-038 裁定一致);③ 把「加仓机制 + lag 轴(401/401/401 退化,有效宽度≈8 格)+ MA200 预热 + 选源(守护库同键三源)」写进预注册;④ 台账 §0.2 输入表按实际重写(phases_7d.csv;state_vectors/phases 实际起 2023-12-26);⑤ 90 vs 88 对齐。",
+    "expect": "台账更新;卡片 notes:改前改后三个数与 β 带分布。"
+  },
+  "prior_value": "预注册里的样本量比实际宽 3 倍,会让后续裁决显得比实际更有把握。",
+  "notes": "",
+  "verified": null
+}
