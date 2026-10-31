@@ -1,0 +1,2291 @@
+{
+ "generated_at_utc": "2026-10-31T13:57:12.849857+00:00",
+ "seed": 20261031,
+ "n_boot": 2000,
+ "windows": {
+  "token": [
+   "2025-09-01",
+   "2026-10-28"
+  ],
+  "benchmark": [
+   "2024-08-01",
+   "2026-10-28"
+  ],
+  "common": [
+   "2026-04-30",
+   "2026-10-28"
+  ],
+  "bad_day": "2026-06-26"
+ },
+ "definitions": {
+  "row_set_canonical": "代币与基准的公共日期 ∩ [窗口] ∩ 周一~周五,只保留日历相邻(gap==1)的成对 ⇒ 块内没有跨周末的对",
+  "row_set_legacy": "T-213 原行集:公共日期全部保留(含周五→周一的 gap==3 对)",
+  "block_iso_week": "ISO 自然周块:同一 ISO 周内(周一~周五)的逐日收益复合,块 TE(年化)=std(块差)·sqrt(52);整周不足 4 天则弃",
+  "block_5d_align": "5 日不重叠块,从第 k 行开始切(k=0..4);块 TE(年化)=std(块差)·sqrt(365/5)",
+  "daily_te": "逐日 TE(年化)=std(r_a − r_b)·sqrt(365)",
+  "drift_pct": "累计漂移(%)= 代币累计/基准累计 − 1(= price_ratio 的变化)",
+  "null_te_diff": "打乱基准日收益(块长 5)后重算两腿 TE 的差 ⇒ 零分布(差距是否可读)",
+  "null_drift": "平稳块自助(mean_block=5)重抽中心化超出收益 ⇒ 漂移的零分布(置换保值会退化)"
+ },
+ "sources": {
+  "bench_XAUUSD": {
+   "source": "supabase:ohlcv_daily(source=eodhd)",
+   "rows_in_window": 774,
+   "first": "2024-08-01",
+   "last": "2026-10-28",
+   "sources_seen": [
+    "eodhd"
+   ],
+   "channel_quality_full": {
+    "eodhd": {
+     "n_rows": 774,
+     "n_null_close": 0,
+     "n_distinct_days": 774,
+     "first": "2024-08-01",
+     "last": "2026-10-28"
+    },
+    "_total_rows": 774
+   },
+   "channel_quality_common": {
+    "eodhd": {
+     "n_rows": 178,
+     "n_null_close": 0,
+     "n_distinct_days": 178,
+     "first": "2026-04-30",
+     "last": "2026-10-28"
+    },
+    "_total_rows": 178
+   }
+  },
+  "bench_SPY": {
+   "source": "supabase:ohlcv_daily(source=eodhd)",
+   "rows_in_window": 563,
+   "first": "2024-08-01",
+   "last": "2026-10-28",
+   "sources_seen": [
+    "eodhd"
+   ],
+   "channel_quality_full": {
+    "eodhd": {
+     "n_rows": 528,
+     "n_null_close": 0,
+     "n_distinct_days": 528,
+     "first": "2024-08-01",
+     "last": "2026-09-09"
+    },
+    "yfinance": {
+     "n_rows": 472,
+     "n_null_close": 0,
+     "n_distinct_days": 472,
+     "first": "2024-08-01",
+     "last": "2026-06-18"
+    },
+    "_total_rows": 1000
+   },
+   "channel_quality_common": {
+    "eodhd": {
+     "n_rows": 126,
+     "n_null_close": 0,
+     "n_distinct_days": 126,
+     "first": "2026-04-30",
+     "last": "2026-10-28"
+    },
+    "yfinance": {
+     "n_rows": 35,
+     "n_null_close": 0,
+     "n_distinct_days": 35,
+     "first": "2026-04-30",
+     "last": "2026-06-18"
+    },
+    "_total_rows": 161
+   }
+  },
+  "bench_GLD": {
+   "source": "supabase:ohlcv_daily(source=eodhd)",
+   "rows_in_window": 563,
+   "first": "2024-08-01",
+   "last": "2026-10-28",
+   "sources_seen": [
+    "eodhd"
+   ],
+   "channel_quality_full": {
+    "eodhd": {
+     "n_rows": 528,
+     "n_null_close": 0,
+     "n_distinct_days": 528,
+     "first": "2024-08-01",
+     "last": "2026-09-09"
+    },
+    "yfinance": {
+     "n_rows": 472,
+     "n_null_close": 0,
+     "n_distinct_days": 472,
+     "first": "2024-08-01",
+     "last": "2026-06-18"
+    },
+    "_total_rows": 1000
+   },
+   "channel_quality_common": {
+    "eodhd": {
+     "n_rows": 126,
+     "n_null_close": 0,
+     "n_distinct_days": 126,
+     "first": "2026-04-30",
+     "last": "2026-10-28"
+    },
+    "yfinance": {
+     "n_rows": 35,
+     "n_null_close": 0,
+     "n_distinct_days": 35,
+     "first": "2026-04-30",
+     "last": "2026-06-18"
+    },
+    "_total_rows": 161
+   }
+  },
+  "token_PAXG": {
+   "source": "binance_spot_daily_kline_close",
+   "pair": "PAXGUSDT",
+   "rows": 423,
+   "first": "2025-09-01",
+   "last": "2026-10-28"
+  },
+  "token_XAUT": {
+   "source": "binance_spot_daily_kline_close",
+   "pair": "XAUTUSDT",
+   "rows": 217,
+   "first": "2026-03-26",
+   "last": "2026-10-28"
+  },
+  "token_SPYX": {
+   "source": "geckoterminal_pool_ohlcv_day:solana",
+   "network": "solana",
+   "pool": "6truu3rZuiB9rKQg4VYC3Dt3QwV7DgwGqXrYUcrvnDDE",
+   "rows": 181,
+   "first": "2026-05-01",
+   "last": "2026-10-28"
+  },
+  "token_SPY_ondo": {
+   "source": "geckoterminal_pool_ohlcv_day:eth",
+   "network": "eth",
+   "pool": "0x5638bbde046ec2efc7c8f3fd8dc5a9a1016f7eeb",
+   "rows": 180,
+   "first": "2026-04-26",
+   "last": "2026-10-28"
+  },
+  "SPX_index": {
+   "source": "fred:SP500",
+   "rows": 563,
+   "first": "2024-08-01",
+   "last": "2026-10-28"
+  }
+ },
+ "legs": {
+  "PAXG": {
+   "common_window": {
+    "desc": "黄金:Paxos Gold",
+    "token": "PAXG",
+    "benchmark": "XAUUSD",
+    "window": [
+     "2026-04-30",
+     "2026-10-28"
+    ],
+    "canonical": {
+     "label": "PAXG vs XAUUSD (周一~周五行集)",
+     "n_rows": 103,
+     "first_day": "2026-05-01",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 103,
+      "te_ann_pct": 3.835,
+      "te_bps": 20.07,
+      "corr": 0.9923,
+      "drift_ann_pct": -1.98,
+      "vol_ratio": 0.9539
+     },
+     "iso_week_te": {
+      "n": 25,
+      "te_ann_pct": 1.637,
+      "te_bps": 22.7,
+      "corr": 0.997,
+      "drift_ann_pct": -0.129
+     },
+     "iso_week_meta": {
+      "n_blocks": 25,
+      "first_block": "2026-05-05",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 20,
+       "te_ann_pct": 1.807
+      },
+      "offset_1": {
+       "n_blocks": 20,
+       "te_ann_pct": 2.263
+      },
+      "offset_2": {
+       "n_blocks": 20,
+       "te_ann_pct": 3.316
+      },
+      "offset_3": {
+       "n_blocks": 20,
+       "te_ann_pct": 2.023
+      },
+      "offset_4": {
+       "n_blocks": 19,
+       "te_ann_pct": 2.756
+      }
+     },
+     "drift_pct": -0.4492,
+     "align_min": 1.807,
+     "align_max": 3.316,
+     "align_spread": 1.509
+    },
+    "legacy": {
+     "label": "PAXG vs XAUUSD (T-213 原行集)",
+     "n_rows": 177,
+     "first_day": "2026-05-01",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 177,
+      "te_ann_pct": 3.57,
+      "te_bps": 18.69,
+      "corr": 0.9896,
+      "drift_ann_pct": 0.034,
+      "vol_ratio": 0.9596
+     },
+     "iso_week_te": {
+      "n": 25,
+      "te_ann_pct": 1.114,
+      "te_bps": 15.45,
+      "corr": 0.999,
+      "drift_ann_pct": 0.945
+     },
+     "iso_week_meta": {
+      "n_blocks": 25,
+      "first_block": "2026-05-04",
+      "last_block": "2026-10-25",
+      "days_per_block": [
+       6,
+       7
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 35,
+       "te_ann_pct": 1.899
+      },
+      "offset_1": {
+       "n_blocks": 35,
+       "te_ann_pct": 1.717
+      },
+      "offset_2": {
+       "n_blocks": 35,
+       "te_ann_pct": 2.03
+      },
+      "offset_3": {
+       "n_blocks": 34,
+       "te_ann_pct": 2.077
+      },
+      "offset_4": {
+       "n_blocks": 34,
+       "te_ann_pct": 1.809
+      }
+     },
+     "drift_pct": 0.1291,
+     "align_min": 1.717,
+     "align_max": 2.077,
+     "align_spread": 0.36
+    }
+   },
+   "fixed_window": {
+    "desc": "黄金:Paxos Gold",
+    "token": "PAXG",
+    "benchmark": "XAUUSD",
+    "window": [
+     "2025-09-01",
+     "2026-10-28"
+    ],
+    "canonical": {
+     "label": "PAXG vs XAUUSD (周一~周五行集)",
+     "n_rows": 242,
+     "first_day": "2025-09-02",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 242,
+      "te_ann_pct": 6.455,
+      "te_bps": 33.79,
+      "corr": 0.9826,
+      "drift_ann_pct": -7.366,
+      "vol_ratio": 0.9879
+     },
+     "iso_week_te": {
+      "n": 60,
+      "te_ann_pct": 2.549,
+      "te_bps": 35.35,
+      "corr": 0.9937,
+      "drift_ann_pct": -4.123
+     },
+     "iso_week_meta": {
+      "n_blocks": 60,
+      "first_block": "2025-09-02",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 48,
+       "te_ann_pct": 3.635
+      },
+      "offset_1": {
+       "n_blocks": 48,
+       "te_ann_pct": 3.748
+      },
+      "offset_2": {
+       "n_blocks": 48,
+       "te_ann_pct": 3.776
+      },
+      "offset_3": {
+       "n_blocks": 47,
+       "te_ann_pct": 3.996
+      },
+      "offset_4": {
+       "n_blocks": 47,
+       "te_ann_pct": 3.918
+      }
+     },
+     "drift_pct": -4.672,
+     "align_min": 3.635,
+     "align_max": 3.996,
+     "align_spread": 0.361
+    },
+    "legacy": {
+     "label": "PAXG vs XAUUSD (T-213 原行集)",
+     "n_rows": 417,
+     "first_day": "2025-09-02",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 417,
+      "te_ann_pct": 6.724,
+      "te_bps": 35.2,
+      "corr": 0.973,
+      "drift_ann_pct": -0.383,
+      "vol_ratio": 0.9881
+     },
+     "iso_week_te": {
+      "n": 60,
+      "te_ann_pct": 2.39,
+      "te_bps": 33.14,
+      "corr": 0.9955,
+      "drift_ann_pct": 0.088
+     },
+     "iso_week_meta": {
+      "n_blocks": 60,
+      "first_block": "2025-09-02",
+      "last_block": "2026-10-25",
+      "days_per_block": [
+       6,
+       7
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 83,
+       "te_ann_pct": 4.542
+      },
+      "offset_1": {
+       "n_blocks": 83,
+       "te_ann_pct": 2.298
+      },
+      "offset_2": {
+       "n_blocks": 83,
+       "te_ann_pct": 2.651
+      },
+      "offset_3": {
+       "n_blocks": 82,
+       "te_ann_pct": 2.573
+      },
+      "offset_4": {
+       "n_blocks": 82,
+       "te_ann_pct": 4.187
+      }
+     },
+     "drift_pct": -0.3189,
+     "align_min": 2.298,
+     "align_max": 4.542,
+     "align_spread": 2.244
+    }
+   }
+  },
+  "XAUT": {
+   "common_window": {
+    "desc": "黄金:Tether Gold",
+    "token": "XAUT",
+    "benchmark": "XAUUSD",
+    "window": [
+     "2026-04-30",
+     "2026-10-28"
+    ],
+    "canonical": {
+     "label": "XAUT vs XAUUSD (周一~周五行集)",
+     "n_rows": 103,
+     "first_day": "2026-05-01",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 103,
+      "te_ann_pct": 3.847,
+      "te_bps": 20.14,
+      "corr": 0.9924,
+      "drift_ann_pct": -2.507,
+      "vol_ratio": 0.9486
+     },
+     "iso_week_te": {
+      "n": 25,
+      "te_ann_pct": 1.57,
+      "te_bps": 21.77,
+      "corr": 0.9973,
+      "drift_ann_pct": -0.691
+     },
+     "iso_week_meta": {
+      "n_blocks": 25,
+      "first_block": "2026-05-05",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 20,
+       "te_ann_pct": 2.162
+      },
+      "offset_1": {
+       "n_blocks": 20,
+       "te_ann_pct": 2.359
+      },
+      "offset_2": {
+       "n_blocks": 20,
+       "te_ann_pct": 3.32
+      },
+      "offset_3": {
+       "n_blocks": 20,
+       "te_ann_pct": 2.038
+      },
+      "offset_4": {
+       "n_blocks": 19,
+       "te_ann_pct": 3.028
+      }
+     },
+     "drift_pct": -0.5853,
+     "align_min": 2.038,
+     "align_max": 3.32,
+     "align_spread": 1.282
+    },
+    "legacy": {
+     "label": "XAUT vs XAUUSD (T-213 原行集)",
+     "n_rows": 177,
+     "first_day": "2026-05-01",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 177,
+      "te_ann_pct": 3.498,
+      "te_bps": 18.31,
+      "corr": 0.9903,
+      "drift_ann_pct": -0.232,
+      "vol_ratio": 0.9535
+     },
+     "iso_week_te": {
+      "n": 25,
+      "te_ann_pct": 0.918,
+      "te_bps": 12.73,
+      "corr": 0.9992,
+      "drift_ann_pct": 0.403
+     },
+     "iso_week_meta": {
+      "n_blocks": 25,
+      "first_block": "2026-05-04",
+      "last_block": "2026-10-25",
+      "days_per_block": [
+       6,
+       7
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 35,
+       "te_ann_pct": 1.855
+      },
+      "offset_1": {
+       "n_blocks": 35,
+       "te_ann_pct": 1.756
+      },
+      "offset_2": {
+       "n_blocks": 35,
+       "te_ann_pct": 2.005
+      },
+      "offset_3": {
+       "n_blocks": 34,
+       "te_ann_pct": 1.97
+      },
+      "offset_4": {
+       "n_blocks": 34,
+       "te_ann_pct": 1.538
+      }
+     },
+     "drift_pct": 0.0164,
+     "align_min": 1.538,
+     "align_max": 2.005,
+     "align_spread": 0.467
+    }
+   },
+   "fixed_window": {
+    "desc": "黄金:Tether Gold",
+    "token": "XAUT",
+    "benchmark": "XAUUSD",
+    "window": [
+     "2025-09-01",
+     "2026-10-28"
+    ],
+    "canonical": {
+     "label": "XAUT vs XAUUSD (周一~周五行集)",
+     "n_rows": 123,
+     "first_day": "2026-03-27",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 123,
+      "te_ann_pct": 4.949,
+      "te_bps": 25.91,
+      "corr": 0.9887,
+      "drift_ann_pct": -6.318,
+      "vol_ratio": 0.9306
+     },
+     "iso_week_te": {
+      "n": 30,
+      "te_ann_pct": 1.855,
+      "te_bps": 25.72,
+      "corr": 0.9961,
+      "drift_ann_pct": -2.542
+     },
+     "iso_week_meta": {
+      "n_blocks": 30,
+      "first_block": "2026-03-31",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 24,
+       "te_ann_pct": 2.879
+      },
+      "offset_1": {
+       "n_blocks": 24,
+       "te_ann_pct": 3.48
+      },
+      "offset_2": {
+       "n_blocks": 24,
+       "te_ann_pct": 3.146
+      },
+      "offset_3": {
+       "n_blocks": 24,
+       "te_ann_pct": 1.88
+      },
+      "offset_4": {
+       "n_blocks": 23,
+       "te_ann_pct": 3.127
+      }
+     },
+     "drift_pct": -1.901,
+     "align_min": 1.88,
+     "align_max": 3.48,
+     "align_spread": 1.6
+    },
+    "legacy": {
+     "label": "XAUT vs XAUUSD (T-213 原行集)",
+     "n_rows": 212,
+     "first_day": "2026-03-27",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 212,
+      "te_ann_pct": 4.518,
+      "te_bps": 23.65,
+      "corr": 0.9855,
+      "drift_ann_pct": -0.697,
+      "vol_ratio": 0.9343
+     },
+     "iso_week_te": {
+      "n": 30,
+      "te_ann_pct": 1.242,
+      "te_bps": 17.22,
+      "corr": 0.9985,
+      "drift_ann_pct": -0.018
+     },
+     "iso_week_meta": {
+      "n_blocks": 30,
+      "first_block": "2026-03-30",
+      "last_block": "2026-10-25",
+      "days_per_block": [
+       6,
+       7
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 42,
+       "te_ann_pct": 2.364
+      },
+      "offset_1": {
+       "n_blocks": 42,
+       "te_ann_pct": 2.05
+      },
+      "offset_2": {
+       "n_blocks": 42,
+       "te_ann_pct": 2.327
+      },
+      "offset_3": {
+       "n_blocks": 41,
+       "te_ann_pct": 2.988
+      },
+      "offset_4": {
+       "n_blocks": 41,
+       "te_ann_pct": 2.215
+      }
+     },
+     "drift_pct": -0.1678,
+     "align_min": 2.05,
+     "align_max": 2.988,
+     "align_spread": 0.938
+    }
+   }
+  },
+  "SPYX": {
+   "common_window": {
+    "desc": "股票:xStocks SPYX(Solana 池)",
+    "token": "SPYX",
+    "benchmark": "SPY",
+    "window": [
+     "2026-04-30",
+     "2026-10-28"
+    ],
+    "canonical": {
+     "label": "SPYX vs SPY (周一~周五行集)",
+     "n_rows": 98,
+     "first_day": "2026-05-05",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 98,
+      "te_ann_pct": 7.945,
+      "te_bps": 41.58,
+      "corr": 0.8606,
+      "drift_ann_pct": -0.663,
+      "vol_ratio": 1.0541
+     },
+     "iso_week_te": {
+      "n": 21,
+      "te_ann_pct": 2.237,
+      "te_bps": 31.02,
+      "corr": 0.971,
+      "drift_ann_pct": -1.984
+     },
+     "iso_week_meta": {
+      "n_blocks": 21,
+      "first_block": "2026-05-05",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 19,
+       "te_ann_pct": 5.507
+      },
+      "offset_1": {
+       "n_blocks": 19,
+       "te_ann_pct": 3.757
+      },
+      "offset_2": {
+       "n_blocks": 19,
+       "te_ann_pct": 5.187
+      },
+      "offset_3": {
+       "n_blocks": 19,
+       "te_ann_pct": 5.456
+      },
+      "offset_4": {
+       "n_blocks": 18,
+       "te_ann_pct": 6.385
+      }
+     },
+     "drift_pct": -0.2089,
+     "align_min": 3.757,
+     "align_max": 6.385,
+     "align_spread": 2.628
+    },
+    "legacy": {
+     "label": "SPYX vs SPY (T-213 原行集)",
+     "n_rows": 124,
+     "first_day": "2026-05-04",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 124,
+      "te_ann_pct": 7.868,
+      "te_bps": 41.18,
+      "corr": 0.8696,
+      "drift_ann_pct": -3.503,
+      "vol_ratio": 1.092
+     },
+     "iso_week_te": {
+      "n": 25,
+      "te_ann_pct": 3.04,
+      "te_bps": 42.15,
+      "corr": 0.9689,
+      "drift_ann_pct": 0.327
+     },
+     "iso_week_meta": {
+      "n_blocks": 25,
+      "first_block": "2026-05-04",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4,
+       5
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 24,
+       "te_ann_pct": 3.148
+      },
+      "offset_1": {
+       "n_blocks": 24,
+       "te_ann_pct": 3.657
+      },
+      "offset_2": {
+       "n_blocks": 24,
+       "te_ann_pct": 3.798
+      },
+      "offset_3": {
+       "n_blocks": 24,
+       "te_ann_pct": 4.165
+      },
+      "offset_4": {
+       "n_blocks": 24,
+       "te_ann_pct": 3.227
+      }
+     },
+     "drift_pct": -1.2497,
+     "align_min": 3.148,
+     "align_max": 4.165,
+     "align_spread": 1.017
+    }
+   },
+   "fixed_window": {
+    "desc": "股票:xStocks SPYX(Solana 池)",
+    "token": "SPYX",
+    "benchmark": "SPY",
+    "window": [
+     "2025-09-01",
+     "2026-10-28"
+    ],
+    "canonical": {
+     "label": "SPYX vs SPY (周一~周五行集)",
+     "n_rows": 98,
+     "first_day": "2026-05-05",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 98,
+      "te_ann_pct": 7.945,
+      "te_bps": 41.58,
+      "corr": 0.8606,
+      "drift_ann_pct": -0.663,
+      "vol_ratio": 1.0541
+     },
+     "iso_week_te": {
+      "n": 21,
+      "te_ann_pct": 2.237,
+      "te_bps": 31.02,
+      "corr": 0.971,
+      "drift_ann_pct": -1.984
+     },
+     "iso_week_meta": {
+      "n_blocks": 21,
+      "first_block": "2026-05-05",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 19,
+       "te_ann_pct": 5.507
+      },
+      "offset_1": {
+       "n_blocks": 19,
+       "te_ann_pct": 3.757
+      },
+      "offset_2": {
+       "n_blocks": 19,
+       "te_ann_pct": 5.187
+      },
+      "offset_3": {
+       "n_blocks": 19,
+       "te_ann_pct": 5.456
+      },
+      "offset_4": {
+       "n_blocks": 18,
+       "te_ann_pct": 6.385
+      }
+     },
+     "drift_pct": -0.2089,
+     "align_min": 3.757,
+     "align_max": 6.385,
+     "align_spread": 2.628
+    },
+    "legacy": {
+     "label": "SPYX vs SPY (T-213 原行集)",
+     "n_rows": 124,
+     "first_day": "2026-05-04",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 124,
+      "te_ann_pct": 7.868,
+      "te_bps": 41.18,
+      "corr": 0.8696,
+      "drift_ann_pct": -3.503,
+      "vol_ratio": 1.092
+     },
+     "iso_week_te": {
+      "n": 25,
+      "te_ann_pct": 3.04,
+      "te_bps": 42.15,
+      "corr": 0.9689,
+      "drift_ann_pct": 0.327
+     },
+     "iso_week_meta": {
+      "n_blocks": 25,
+      "first_block": "2026-05-04",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4,
+       5
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 24,
+       "te_ann_pct": 3.148
+      },
+      "offset_1": {
+       "n_blocks": 24,
+       "te_ann_pct": 3.657
+      },
+      "offset_2": {
+       "n_blocks": 24,
+       "te_ann_pct": 3.798
+      },
+      "offset_3": {
+       "n_blocks": 24,
+       "te_ann_pct": 4.165
+      },
+      "offset_4": {
+       "n_blocks": 24,
+       "te_ann_pct": 3.227
+      }
+     },
+     "drift_pct": -1.2497,
+     "align_min": 3.148,
+     "align_max": 4.165,
+     "align_spread": 1.017
+    }
+   }
+  },
+  "SPY_ondo": {
+   "common_window": {
+    "desc": "股票:Ondo SPY(Ethereum 池)",
+    "token": "SPY_ondo",
+    "benchmark": "SPY",
+    "window": [
+     "2026-04-30",
+     "2026-10-28"
+    ],
+    "canonical": {
+     "label": "SPY_ondo vs SPY (周一~周五行集)",
+     "n_rows": 94,
+     "first_day": "2026-05-01",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 94,
+      "te_ann_pct": 15.31,
+      "te_bps": 80.14,
+      "corr": 0.5396,
+      "drift_ann_pct": -37.884,
+      "vol_ratio": 1.255
+     },
+     "iso_week_te": {
+      "n": 19,
+      "te_ann_pct": 6.12,
+      "te_bps": 84.87,
+      "corr": 0.7521,
+      "drift_ann_pct": -11.461
+     },
+     "iso_week_meta": {
+      "n_blocks": 19,
+      "first_block": "2026-05-12",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 18,
+       "te_ann_pct": 14.891
+      },
+      "offset_1": {
+       "n_blocks": 18,
+       "te_ann_pct": 14.323
+      },
+      "offset_2": {
+       "n_blocks": 18,
+       "te_ann_pct": 13.74
+      },
+      "offset_3": {
+       "n_blocks": 18,
+       "te_ann_pct": 17.835
+      },
+      "offset_4": {
+       "n_blocks": 18,
+       "te_ann_pct": 13.756
+      }
+     },
+     "drift_pct": -9.4308,
+     "align_min": 13.74,
+     "align_max": 17.835,
+     "align_spread": 4.095
+    },
+    "legacy": {
+     "label": "SPY_ondo vs SPY (T-213 原行集)",
+     "n_rows": 122,
+     "first_day": "2026-05-01",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 122,
+      "te_ann_pct": 17.396,
+      "te_bps": 91.06,
+      "corr": 0.5529,
+      "drift_ann_pct": -3.089,
+      "vol_ratio": 1.4737
+     },
+     "iso_week_te": {
+      "n": 24,
+      "te_ann_pct": 5.432,
+      "te_bps": 75.33,
+      "corr": 0.8753,
+      "drift_ann_pct": -1.465
+     },
+     "iso_week_meta": {
+      "n_blocks": 24,
+      "first_block": "2026-05-04",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4,
+       5
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 24,
+       "te_ann_pct": 11.699
+      },
+      "offset_1": {
+       "n_blocks": 24,
+       "te_ann_pct": 5.922
+      },
+      "offset_2": {
+       "n_blocks": 24,
+       "te_ann_pct": 9.172
+      },
+      "offset_3": {
+       "n_blocks": 23,
+       "te_ann_pct": 8.542
+      },
+      "offset_4": {
+       "n_blocks": 23,
+       "te_ann_pct": 5.213
+      }
+     },
+     "drift_pct": -1.4019,
+     "align_min": 5.213,
+     "align_max": 11.699,
+     "align_spread": 6.486
+    }
+   },
+   "fixed_window": {
+    "desc": "股票:Ondo SPY(Ethereum 池)",
+    "token": "SPY_ondo",
+    "benchmark": "SPY",
+    "window": [
+     "2025-09-01",
+     "2026-10-28"
+    ],
+    "canonical": {
+     "label": "SPY_ondo vs SPY (周一~周五行集)",
+     "n_rows": 96,
+     "first_day": "2026-04-29",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 96,
+      "te_ann_pct": 17.747,
+      "te_bps": 92.89,
+      "corr": 0.4931,
+      "drift_ann_pct": -51.326,
+      "vol_ratio": 1.4343
+     },
+     "iso_week_te": {
+      "n": 19,
+      "te_ann_pct": 6.12,
+      "te_bps": 84.87,
+      "corr": 0.7521,
+      "drift_ann_pct": -11.461
+     },
+     "iso_week_meta": {
+      "n_blocks": 19,
+      "first_block": "2026-05-12",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 19,
+       "te_ann_pct": 18.803
+      },
+      "offset_1": {
+       "n_blocks": 19,
+       "te_ann_pct": 13.437
+      },
+      "offset_2": {
+       "n_blocks": 18,
+       "te_ann_pct": 14.891
+      },
+      "offset_3": {
+       "n_blocks": 18,
+       "te_ann_pct": 14.323
+      },
+      "offset_4": {
+       "n_blocks": 18,
+       "te_ann_pct": 13.74
+      }
+     },
+     "drift_pct": -12.8709,
+     "align_min": 13.437,
+     "align_max": 18.803,
+     "align_spread": 5.366
+    },
+    "legacy": {
+     "label": "SPY_ondo vs SPY (T-213 原行集)",
+     "n_rows": 124,
+     "first_day": "2026-04-29",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 124,
+      "te_ann_pct": 19.127,
+      "te_bps": 100.11,
+      "corr": 0.5249,
+      "drift_ann_pct": -14.057,
+      "vol_ratio": 1.5952
+     },
+     "iso_week_te": {
+      "n": 24,
+      "te_ann_pct": 5.432,
+      "te_bps": 75.33,
+      "corr": 0.8753,
+      "drift_ann_pct": -1.465
+     },
+     "iso_week_meta": {
+      "n_blocks": 24,
+      "first_block": "2026-05-04",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4,
+       5
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 24,
+       "te_ann_pct": 11.173
+      },
+      "offset_1": {
+       "n_blocks": 24,
+       "te_ann_pct": 5.627
+      },
+      "offset_2": {
+       "n_blocks": 24,
+       "te_ann_pct": 11.699
+      },
+      "offset_3": {
+       "n_blocks": 24,
+       "te_ann_pct": 5.922
+      },
+      "offset_4": {
+       "n_blocks": 24,
+       "te_ann_pct": 9.172
+      }
+     },
+     "drift_pct": -5.147,
+     "align_min": 5.627,
+     "align_max": 11.699,
+     "align_spread": 6.072
+    }
+   }
+  }
+ },
+ "baselines": {
+  "GLD_vs_XAUUSD": {
+   "why": "不代币化的黄金腿:实物支撑 ETF 的自身跟踪成本",
+   "common_window": {
+    "label": "GLD vs XAUUSD",
+    "n_rows": 99,
+    "first_day": "2026-05-01",
+    "last_day": "2026-10-28",
+    "daily_te": {
+     "n": 99,
+     "te_ann_pct": 8.356,
+     "te_bps": 43.74,
+     "corr": 0.9602,
+     "drift_ann_pct": 8.98,
+     "vol_ratio": 0.9914
+    },
+    "iso_week_te": {
+     "n": 21,
+     "te_ann_pct": 1.934,
+     "te_bps": 26.82,
+     "corr": 0.996,
+     "drift_ann_pct": 4.444
+    },
+    "iso_week_meta": {
+     "n_blocks": 21,
+     "first_block": "2026-05-05",
+     "last_block": "2026-10-23",
+     "days_per_block": [
+      4
+     ]
+    },
+    "align": {
+     "offset_0": {
+      "n_blocks": 19,
+      "te_ann_pct": 3.607
+     },
+     "offset_1": {
+      "n_blocks": 19,
+      "te_ann_pct": 5.739
+     },
+     "offset_2": {
+      "n_blocks": 19,
+      "te_ann_pct": 3.913
+     },
+     "offset_3": {
+      "n_blocks": 19,
+      "te_ann_pct": 5.147
+     },
+     "offset_4": {
+      "n_blocks": 19,
+      "te_ann_pct": 3.509
+     }
+    },
+    "drift_pct": 2.4818,
+    "align_min": 3.509,
+    "align_max": 5.739,
+    "align_spread": 2.23
+   },
+   "common_window_legacy": {
+    "label": "GLD vs XAUUSD(T-213 原行集)",
+    "n_rows": 125,
+    "first_day": "2026-05-01",
+    "last_day": "2026-10-28",
+    "daily_te": {
+     "n": 125,
+     "te_ann_pct": 7.878,
+     "te_bps": 41.24,
+     "corr": 0.9626,
+     "drift_ann_pct": 1.476,
+     "vol_ratio": 0.9947
+    },
+    "iso_week_te": {
+     "n": 25,
+     "te_ann_pct": 1.987,
+     "te_bps": 27.55,
+     "corr": 0.9955,
+     "drift_ann_pct": 0.313
+    },
+    "iso_week_meta": {
+     "n_blocks": 25,
+     "first_block": "2026-05-04",
+     "last_block": "2026-10-23",
+     "days_per_block": [
+      4,
+      5
+     ]
+    },
+    "align": {
+     "offset_0": {
+      "n_blocks": 25,
+      "te_ann_pct": 1.995
+     },
+     "offset_1": {
+      "n_blocks": 24,
+      "te_ann_pct": 3.464
+     },
+     "offset_2": {
+      "n_blocks": 24,
+      "te_ann_pct": 2.925
+     },
+     "offset_3": {
+      "n_blocks": 24,
+      "te_ann_pct": 4.77
+     },
+     "offset_4": {
+      "n_blocks": 24,
+      "te_ann_pct": 3.23
+     }
+    },
+    "drift_pct": 0.5167,
+    "align_min": 1.995,
+    "align_max": 4.77,
+    "align_spread": 2.775
+   },
+   "fixed_window": {
+    "label": "GLD vs XAUUSD",
+    "n_rows": 228,
+    "first_day": "2025-09-03",
+    "last_day": "2026-10-28",
+    "daily_te": {
+     "n": 228,
+     "te_ann_pct": 13.748,
+     "te_bps": 71.96,
+     "corr": 0.9214,
+     "drift_ann_pct": 6.349,
+     "vol_ratio": 0.957
+    },
+    "iso_week_te": {
+     "n": 49,
+     "te_ann_pct": 3.986,
+     "te_bps": 55.27,
+     "corr": 0.9841,
+     "drift_ann_pct": 3.204
+    },
+    "iso_week_meta": {
+     "n_blocks": 49,
+     "first_block": "2025-09-09",
+     "last_block": "2026-10-23",
+     "days_per_block": [
+      4
+     ]
+    },
+    "align": {
+     "offset_0": {
+      "n_blocks": 45,
+      "te_ann_pct": 6.679
+     },
+     "offset_1": {
+      "n_blocks": 45,
+      "te_ann_pct": 5.202
+     },
+     "offset_2": {
+      "n_blocks": 45,
+      "te_ann_pct": 4.379
+     },
+     "offset_3": {
+      "n_blocks": 45,
+      "te_ann_pct": 11.473
+     },
+     "offset_4": {
+      "n_blocks": 44,
+      "te_ann_pct": 6.695
+     }
+    },
+    "drift_pct": 4.3777,
+    "align_min": 4.379,
+    "align_max": 11.473,
+    "align_spread": 7.094
+   }
+  },
+  "SPY_etf_vs_index": {
+   "why": "不代币化的股票腿:ETF 自身对指数的跟踪成本",
+   "index_source": "fred:SP500",
+   "common_window": {
+    "label": "SPY(ETF) vs SPX(指数)",
+    "n_rows": 99,
+    "first_day": "2026-05-01",
+    "last_day": "2026-10-28",
+    "daily_te": {
+     "n": 99,
+     "te_ann_pct": 1.491,
+     "te_bps": 7.81,
+     "corr": 0.9948,
+     "drift_ann_pct": -2.245,
+     "vol_ratio": 0.9939
+    },
+    "iso_week_te": {
+     "n": 21,
+     "te_ann_pct": 0.783,
+     "te_bps": 10.86,
+     "corr": 0.9966,
+     "drift_ann_pct": -1.026
+    },
+    "iso_week_meta": {
+     "n_blocks": 21,
+     "first_block": "2026-05-05",
+     "last_block": "2026-10-23",
+     "days_per_block": [
+      4
+     ]
+    },
+    "align": {
+     "offset_0": {
+      "n_blocks": 19,
+      "te_ann_pct": 1.596
+     },
+     "offset_1": {
+      "n_blocks": 19,
+      "te_ann_pct": 1.093
+     },
+     "offset_2": {
+      "n_blocks": 19,
+      "te_ann_pct": 1.038
+     },
+     "offset_3": {
+      "n_blocks": 19,
+      "te_ann_pct": 0.893
+     },
+     "offset_4": {
+      "n_blocks": 19,
+      "te_ann_pct": 1.196
+     }
+    },
+    "drift_pct": -0.6035,
+    "align_min": 0.893,
+    "align_max": 1.596,
+    "align_spread": 0.703
+   },
+   "common_window_legacy": {
+    "label": "SPY(ETF) vs SPX(指数)(T-213 原行集)",
+    "n_rows": 125,
+    "first_day": "2026-05-01",
+    "last_day": "2026-10-28",
+    "daily_te": {
+     "n": 125,
+     "te_ann_pct": 1.616,
+     "te_bps": 8.46,
+     "corr": 0.9938,
+     "drift_ann_pct": 1.611,
+     "vol_ratio": 1.0068
+    },
+    "iso_week_te": {
+     "n": 25,
+     "te_ann_pct": 0.925,
+     "te_bps": 12.83,
+     "corr": 0.9965,
+     "drift_ann_pct": 1.107
+    },
+    "iso_week_meta": {
+     "n_blocks": 25,
+     "first_block": "2026-05-04",
+     "last_block": "2026-10-23",
+     "days_per_block": [
+      4,
+      5
+     ]
+    },
+    "align": {
+     "offset_0": {
+      "n_blocks": 25,
+      "te_ann_pct": 0.377
+     },
+     "offset_1": {
+      "n_blocks": 24,
+      "te_ann_pct": 0.342
+     },
+     "offset_2": {
+      "n_blocks": 24,
+      "te_ann_pct": 0.348
+     },
+     "offset_3": {
+      "n_blocks": 24,
+      "te_ann_pct": 0.705
+     },
+     "offset_4": {
+      "n_blocks": 24,
+      "te_ann_pct": 1.275
+     }
+    },
+    "drift_pct": 0.5481,
+    "align_min": 0.342,
+    "align_max": 1.275,
+    "align_spread": 0.933
+   },
+   "fixed_window": {
+    "label": "SPY(ETF) vs SPX(指数)",
+    "n_rows": 228,
+    "first_day": "2025-09-03",
+    "last_day": "2026-10-28",
+    "daily_te": {
+     "n": 228,
+     "te_ann_pct": 1.101,
+     "te_bps": 5.76,
+     "corr": 0.9974,
+     "drift_ann_pct": -0.34,
+     "vol_ratio": 0.9962
+    },
+    "iso_week_te": {
+     "n": 49,
+     "te_ann_pct": 0.568,
+     "te_bps": 7.88,
+     "corr": 0.9986,
+     "drift_ann_pct": -0.159
+    },
+    "iso_week_meta": {
+     "n_blocks": 49,
+     "first_block": "2025-09-09",
+     "last_block": "2026-10-23",
+     "days_per_block": [
+      4
+     ]
+    },
+    "align": {
+     "offset_0": {
+      "n_blocks": 45,
+      "te_ann_pct": 0.784
+     },
+     "offset_1": {
+      "n_blocks": 45,
+      "te_ann_pct": 0.734
+     },
+     "offset_2": {
+      "n_blocks": 45,
+      "te_ann_pct": 0.692
+     },
+     "offset_3": {
+      "n_blocks": 45,
+      "te_ann_pct": 0.869
+     },
+     "offset_4": {
+      "n_blocks": 44,
+      "te_ann_pct": 1.111
+     }
+    },
+    "drift_pct": -0.2066,
+    "align_min": 0.692,
+    "align_max": 1.111,
+    "align_spread": 0.419
+   }
+  }
+ },
+ "comparisons": {
+  "SPYX_minus_SPY_ondo": {
+   "common_days": 93,
+   "window": [
+    "2026-04-30",
+    "2026-10-28"
+   ],
+   "iso": {
+    "mode": "iso",
+    "n_rows": 93,
+    "te_a": 2.304,
+    "te_b": 6.12,
+    "actual_diff_pp": -3.816,
+    "null_median": -0.2495,
+    "null_p05": -2.4874,
+    "null_p95": 2.2474,
+    "percentile": 0.002,
+    "two_sided_p": 0.004,
+    "n_draws": 2000
+   },
+   "align_0": {
+    "mode": "align_0",
+    "n_rows": 93,
+    "te_a": 5.367,
+    "te_b": 14.323,
+    "actual_diff_pp": -8.956,
+    "null_median": -6.194,
+    "null_p05": -9.6692,
+    "null_p95": -2.078,
+    "percentile": 0.093,
+    "two_sided_p": 0.186,
+    "n_draws": 2000
+   },
+   "align_1": {
+    "mode": "align_1",
+    "n_rows": 93,
+    "te_a": 3.25,
+    "te_b": 13.74,
+    "actual_diff_pp": -10.49,
+    "null_median": -8.7735,
+    "null_p05": -11.033,
+    "null_p95": -5.3042,
+    "percentile": 0.121,
+    "two_sided_p": 0.242,
+    "n_draws": 2000
+   },
+   "align_2": {
+    "mode": "align_2",
+    "n_rows": 93,
+    "te_a": 5.24,
+    "te_b": 17.835,
+    "actual_diff_pp": -12.595,
+    "null_median": -8.413,
+    "null_p05": -12.2781,
+    "null_p95": -4.2078,
+    "percentile": 0.04075,
+    "two_sided_p": 0.0815,
+    "n_draws": 2000
+   },
+   "align_3": {
+    "mode": "align_3",
+    "n_rows": 93,
+    "te_a": 5.767,
+    "te_b": 13.756,
+    "actual_diff_pp": -7.989,
+    "null_median": -6.056,
+    "null_p05": -9.3413,
+    "null_p95": -2.5769,
+    "percentile": 0.1715,
+    "two_sided_p": 0.343,
+    "n_draws": 2000
+   },
+   "align_4": {
+    "mode": "align_4",
+    "n_rows": 93,
+    "te_a": 6.39,
+    "te_b": 15.08,
+    "actual_diff_pp": -8.69,
+    "null_median": -6.932,
+    "null_p05": -10.2792,
+    "null_p95": -2.9675,
+    "percentile": 0.2005,
+    "two_sided_p": 0.401,
+    "n_draws": 2000
+   },
+   "drift_a_pct": 0.0639,
+   "drift_b_pct": -9.1934
+  },
+  "XAUT_minus_PAXG": {
+   "common_days": 103,
+   "window": [
+    "2026-04-30",
+    "2026-10-28"
+   ],
+   "iso": {
+    "mode": "iso",
+    "n_rows": 103,
+    "te_a": 1.57,
+    "te_b": 1.637,
+    "actual_diff_pp": -0.067,
+    "null_median": -0.067,
+    "null_p05": -0.278,
+    "null_p95": 0.138,
+    "percentile": 0.5005,
+    "two_sided_p": 0.999,
+    "n_draws": 2000
+   },
+   "align_0": {
+    "mode": "align_0",
+    "n_rows": 103,
+    "te_a": 2.162,
+    "te_b": 1.807,
+    "actual_diff_pp": 0.355,
+    "null_median": -0.344,
+    "null_p05": -0.5751,
+    "null_p95": -0.0779,
+    "percentile": 1.0,
+    "two_sided_p": 0.0,
+    "n_draws": 2000
+   },
+   "align_1": {
+    "mode": "align_1",
+    "n_rows": 103,
+    "te_a": 2.359,
+    "te_b": 2.263,
+    "actual_diff_pp": 0.096,
+    "null_median": -0.092,
+    "null_p05": -0.4101,
+    "null_p95": 0.2482,
+    "percentile": 0.8125,
+    "two_sided_p": 0.375,
+    "n_draws": 2000
+   },
+   "align_2": {
+    "mode": "align_2",
+    "n_rows": 103,
+    "te_a": 3.32,
+    "te_b": 3.316,
+    "actual_diff_pp": 0.004,
+    "null_median": -0.1545,
+    "null_p05": -0.4031,
+    "null_p95": 0.093,
+    "percentile": 0.866,
+    "two_sided_p": 0.268,
+    "n_draws": 2000
+   },
+   "align_3": {
+    "mode": "align_3",
+    "n_rows": 103,
+    "te_a": 2.038,
+    "te_b": 2.023,
+    "actual_diff_pp": 0.015,
+    "null_median": -0.043,
+    "null_p05": -0.2871,
+    "null_p95": 0.2002,
+    "percentile": 0.643,
+    "two_sided_p": 0.714,
+    "n_draws": 2000
+   },
+   "align_4": {
+    "mode": "align_4",
+    "n_rows": 103,
+    "te_a": 3.028,
+    "te_b": 2.756,
+    "actual_diff_pp": 0.272,
+    "null_median": -0.124,
+    "null_p05": -0.3931,
+    "null_p95": 0.164,
+    "percentile": 0.989,
+    "two_sided_p": 0.022,
+    "n_draws": 2000
+   },
+   "drift_a_pct": -0.5853,
+   "drift_b_pct": -0.4492
+  }
+ },
+ "drift_null": {
+  "PAXG": {
+   "actual_drift_pct": -0.4492,
+   "null_median_pct": 0.081,
+   "null_sd_pct": 1.3343,
+   "null_p05_pct": -2.1841,
+   "null_p95_pct": 2.09,
+   "percentile_one_sided": 0.357,
+   "two_sided_p": 0.714,
+   "n": 2000,
+   "mean_block": 5.0,
+   "note": "零假设=无方向性漂移;重抽中心化超出收益(平稳块自助),乘积会被重抽改变"
+  },
+  "PAXG_legacy_rows": {
+   "actual_drift_pct": 0.1291,
+   "null_median_pct": -0.0229,
+   "null_sd_pct": 1.3287,
+   "null_p05_pct": -2.1595,
+   "null_p95_pct": 2.1202,
+   "percentile_one_sided": 0.539,
+   "two_sided_p": 0.922,
+   "n": 2000,
+   "mean_block": 5.0,
+   "note": "零假设=无方向性漂移;重抽中心化超出收益(平稳块自助),乘积会被重抽改变"
+  },
+  "XAUT": {
+   "actual_drift_pct": -0.5853,
+   "null_median_pct": 0.0142,
+   "null_sd_pct": 1.4062,
+   "null_p05_pct": -2.3539,
+   "null_p95_pct": 2.2936,
+   "percentile_one_sided": 0.342,
+   "two_sided_p": 0.684,
+   "n": 2000,
+   "mean_block": 5.0,
+   "note": "零假设=无方向性漂移;重抽中心化超出收益(平稳块自助),乘积会被重抽改变"
+  },
+  "XAUT_legacy_rows": {
+   "actual_drift_pct": 0.0164,
+   "null_median_pct": -0.0101,
+   "null_sd_pct": 1.3211,
+   "null_p05_pct": -2.1496,
+   "null_p95_pct": 2.1726,
+   "percentile_one_sided": 0.509,
+   "two_sided_p": 0.982,
+   "n": 2000,
+   "mean_block": 5.0,
+   "note": "零假设=无方向性漂移;重抽中心化超出收益(平稳块自助),乘积会被重抽改变"
+  },
+  "SPYX": {
+   "actual_drift_pct": -0.2089,
+   "null_median_pct": -0.0727,
+   "null_sd_pct": 2.8039,
+   "null_p05_pct": -4.6577,
+   "null_p95_pct": 4.6159,
+   "percentile_one_sided": 0.4815,
+   "two_sided_p": 0.963,
+   "n": 2000,
+   "mean_block": 5.0,
+   "note": "零假设=无方向性漂移;重抽中心化超出收益(平稳块自助),乘积会被重抽改变"
+  },
+  "SPYX_legacy_rows": {
+   "actual_drift_pct": -1.2497,
+   "null_median_pct": -0.0966,
+   "null_sd_pct": 2.2959,
+   "null_p05_pct": -3.9671,
+   "null_p95_pct": 3.5636,
+   "percentile_one_sided": 0.298,
+   "two_sided_p": 0.596,
+   "n": 2000,
+   "mean_block": 5.0,
+   "note": "零假设=无方向性漂移;重抽中心化超出收益(平稳块自助),乘积会被重抽改变"
+  },
+  "SPY_ondo": {
+   "actual_drift_pct": -9.4308,
+   "null_median_pct": 0.2139,
+   "null_sd_pct": 7.0191,
+   "null_p05_pct": -12.4781,
+   "null_p95_pct": 10.9246,
+   "percentile_one_sided": 0.091,
+   "two_sided_p": 0.182,
+   "n": 2000,
+   "mean_block": 5.0,
+   "note": "零假设=无方向性漂移;重抽中心化超出收益(平稳块自助),乘积会被重抽改变"
+  },
+  "SPY_ondo_legacy_rows": {
+   "actual_drift_pct": -1.4019,
+   "null_median_pct": -0.5197,
+   "null_sd_pct": 4.5867,
+   "null_p05_pct": -7.7758,
+   "null_p95_pct": 7.0744,
+   "percentile_one_sided": 0.4295,
+   "two_sided_p": 0.859,
+   "n": 2000,
+   "mean_block": 5.0,
+   "note": "零假设=无方向性漂移;重抽中心化超出收益(平稳块自助),乘积会被重抽改变"
+  },
+  "SPY_etf_vs_index": {
+   "actual_drift_pct": -0.6035,
+   "null_median_pct": 0.0723,
+   "null_sd_pct": 0.6172,
+   "null_p05_pct": -1.1235,
+   "null_p95_pct": 0.8284,
+   "percentile_one_sided": 0.1645,
+   "two_sided_p": 0.329,
+   "n": 2000,
+   "mean_block": 5.0,
+   "note": "零假设=无方向性漂移;重抽中心化超出收益(平稳块自助),乘积会被重抽改变"
+  }
+ },
+ "bad_day": {
+  "SPYX": {
+   "with_bad_day": {
+    "leg": {
+     "label": "SPYX vs SPY(ETF)",
+     "n_rows": 98,
+     "first_day": "2026-05-05",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 98,
+      "te_ann_pct": 7.945,
+      "te_bps": 41.58,
+      "corr": 0.8606,
+      "drift_ann_pct": -0.663,
+      "vol_ratio": 1.0541
+     },
+     "iso_week_te": {
+      "n": 21,
+      "te_ann_pct": 2.237,
+      "te_bps": 31.02,
+      "corr": 0.971,
+      "drift_ann_pct": -1.984
+     },
+     "iso_week_meta": {
+      "n_blocks": 21,
+      "first_block": "2026-05-05",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 19,
+       "te_ann_pct": 5.507
+      },
+      "offset_1": {
+       "n_blocks": 19,
+       "te_ann_pct": 3.757
+      },
+      "offset_2": {
+       "n_blocks": 19,
+       "te_ann_pct": 5.187
+      },
+      "offset_3": {
+       "n_blocks": 19,
+       "te_ann_pct": 5.456
+      },
+      "offset_4": {
+       "n_blocks": 18,
+       "te_ann_pct": 6.385
+      }
+     },
+     "drift_pct": -0.2089,
+     "align_min": 3.757,
+     "align_max": 6.385,
+     "align_spread": 2.628
+    },
+    "baseline_etf_vs_index": {
+     "label": "SPY(ETF) vs SPX(指数)",
+     "n_rows": 98,
+     "first_day": "2026-05-05",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 98,
+      "te_ann_pct": 1.499,
+      "te_bps": 7.85,
+      "corr": 0.9948,
+      "drift_ann_pct": -2.209,
+      "vol_ratio": 0.9939
+     },
+     "iso_week_te": {
+      "n": 21,
+      "te_ann_pct": 0.783,
+      "te_bps": 10.86,
+      "corr": 0.9966,
+      "drift_ann_pct": -1.026
+     },
+     "iso_week_meta": {
+      "n_blocks": 21,
+      "first_block": "2026-05-05",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 19,
+       "te_ann_pct": 1.093
+      },
+      "offset_1": {
+       "n_blocks": 19,
+       "te_ann_pct": 1.038
+      },
+      "offset_2": {
+       "n_blocks": 19,
+       "te_ann_pct": 0.893
+      },
+      "offset_3": {
+       "n_blocks": 19,
+       "te_ann_pct": 1.196
+      },
+      "offset_4": {
+       "n_blocks": 18,
+       "te_ann_pct": 1.642
+      }
+     },
+     "drift_pct": -0.5877,
+     "align_min": 0.893,
+     "align_max": 1.642,
+     "align_spread": 0.749
+    },
+    "premium_pp": {
+     "iso_week": 1.454,
+     "align_min": 2.864,
+     "align_max": 4.743
+    }
+   },
+   "without_bad_day": {
+    "leg": {
+     "label": "SPYX vs SPY(ETF)",
+     "n_rows": 97,
+     "first_day": "2026-05-05",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 97,
+      "te_ann_pct": 7.971,
+      "te_bps": 41.72,
+      "corr": 0.8603,
+      "drift_ann_pct": -1.585,
+      "vol_ratio": 1.0573
+     },
+     "iso_week_te": {
+      "n": 20,
+      "te_ann_pct": 2.226,
+      "te_bps": 30.86,
+      "corr": 0.9689,
+      "drift_ann_pct": -2.843
+     },
+     "iso_week_meta": {
+      "n_blocks": 20,
+      "first_block": "2026-05-05",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 19,
+       "te_ann_pct": 4.749
+      },
+      "offset_1": {
+       "n_blocks": 19,
+       "te_ann_pct": 5.3
+      },
+      "offset_2": {
+       "n_blocks": 19,
+       "te_ann_pct": 5.661
+      },
+      "offset_3": {
+       "n_blocks": 18,
+       "te_ann_pct": 6.526
+      },
+      "offset_4": {
+       "n_blocks": 18,
+       "te_ann_pct": 4.883
+      }
+     },
+     "drift_pct": -0.4527,
+     "align_min": 4.749,
+     "align_max": 6.526,
+     "align_spread": 1.777
+    },
+    "baseline_etf_vs_index": {
+     "label": "SPY(ETF) vs SPX(指数)",
+     "n_rows": 97,
+     "first_day": "2026-05-05",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 97,
+      "te_ann_pct": 0.739,
+      "te_bps": 3.87,
+      "corr": 0.9988,
+      "drift_ann_pct": 0.312,
+      "vol_ratio": 0.9891
+     },
+     "iso_week_te": {
+      "n": 20,
+      "te_ann_pct": 0.196,
+      "te_bps": 2.72,
+      "corr": 0.9998,
+      "drift_ann_pct": 0.169
+     },
+     "iso_week_meta": {
+      "n_blocks": 20,
+      "first_block": "2026-05-05",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 19,
+       "te_ann_pct": 0.39
+      },
+      "offset_1": {
+       "n_blocks": 19,
+       "te_ann_pct": 0.71
+      },
+      "offset_2": {
+       "n_blocks": 19,
+       "te_ann_pct": 0.413
+      },
+      "offset_3": {
+       "n_blocks": 18,
+       "te_ann_pct": 0.408
+      },
+      "offset_4": {
+       "n_blocks": 18,
+       "te_ann_pct": 0.515
+      }
+     },
+     "drift_pct": 0.0892,
+     "align_min": 0.39,
+     "align_max": 0.71,
+     "align_spread": 0.32
+    },
+    "premium_pp": {
+     "iso_week": 2.03,
+     "align_min": 4.359,
+     "align_max": 5.816
+    }
+   }
+  },
+  "SPY_ondo": {
+   "with_bad_day": {
+    "leg": {
+     "label": "SPY_ondo vs SPY(ETF)",
+     "n_rows": 94,
+     "first_day": "2026-05-01",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 94,
+      "te_ann_pct": 15.31,
+      "te_bps": 80.14,
+      "corr": 0.5396,
+      "drift_ann_pct": -37.884,
+      "vol_ratio": 1.255
+     },
+     "iso_week_te": {
+      "n": 19,
+      "te_ann_pct": 6.12,
+      "te_bps": 84.87,
+      "corr": 0.7521,
+      "drift_ann_pct": -11.461
+     },
+     "iso_week_meta": {
+      "n_blocks": 19,
+      "first_block": "2026-05-12",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 18,
+       "te_ann_pct": 14.891
+      },
+      "offset_1": {
+       "n_blocks": 18,
+       "te_ann_pct": 14.323
+      },
+      "offset_2": {
+       "n_blocks": 18,
+       "te_ann_pct": 13.74
+      },
+      "offset_3": {
+       "n_blocks": 18,
+       "te_ann_pct": 17.835
+      },
+      "offset_4": {
+       "n_blocks": 18,
+       "te_ann_pct": 13.756
+      }
+     },
+     "drift_pct": -9.4308,
+     "align_min": 13.74,
+     "align_max": 17.835,
+     "align_spread": 4.095
+    },
+    "baseline_etf_vs_index": {
+     "label": "SPY(ETF) vs SPX(指数)",
+     "n_rows": 94,
+     "first_day": "2026-05-01",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 94,
+      "te_ann_pct": 1.509,
+      "te_bps": 7.9,
+      "corr": 0.9941,
+      "drift_ann_pct": -2.497,
+      "vol_ratio": 0.998
+     },
+     "iso_week_te": {
+      "n": 19,
+      "te_ann_pct": 0.825,
+      "te_bps": 11.44,
+      "corr": 0.9956,
+      "drift_ann_pct": -1.062
+     },
+     "iso_week_meta": {
+      "n_blocks": 19,
+      "first_block": "2026-05-12",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 18,
+       "te_ann_pct": 1.617
+      },
+      "offset_1": {
+       "n_blocks": 18,
+       "te_ann_pct": 1.12
+      },
+      "offset_2": {
+       "n_blocks": 18,
+       "te_ann_pct": 1.032
+      },
+      "offset_3": {
+       "n_blocks": 18,
+       "te_ann_pct": 0.97
+      },
+      "offset_4": {
+       "n_blocks": 18,
+       "te_ann_pct": 1.22
+      }
+     },
+     "drift_pct": -0.64,
+     "align_min": 0.97,
+     "align_max": 1.617,
+     "align_spread": 0.647
+    },
+    "premium_pp": {
+     "iso_week": 5.295,
+     "align_min": 12.77,
+     "align_max": 16.218
+    }
+   },
+   "without_bad_day": {
+    "leg": {
+     "label": "SPY_ondo vs SPY(ETF)",
+     "n_rows": 93,
+     "first_day": "2026-05-01",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 93,
+      "te_ann_pct": 15.324,
+      "te_bps": 80.21,
+      "corr": 0.5426,
+      "drift_ann_pct": -40.758,
+      "vol_ratio": 1.2619
+     },
+     "iso_week_te": {
+      "n": 18,
+      "te_ann_pct": 5.313,
+      "te_bps": 73.67,
+      "corr": 0.7609,
+      "drift_ann_pct": -6.024
+     },
+     "iso_week_meta": {
+      "n_blocks": 18,
+      "first_block": "2026-05-12",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 18,
+       "te_ann_pct": 13.369
+      },
+      "offset_1": {
+       "n_blocks": 18,
+       "te_ann_pct": 15.27
+      },
+      "offset_2": {
+       "n_blocks": 18,
+       "te_ann_pct": 14.448
+      },
+      "offset_3": {
+       "n_blocks": 18,
+       "te_ann_pct": 18.372
+      },
+      "offset_4": {
+       "n_blocks": 17,
+       "te_ann_pct": 13.803
+      }
+     },
+     "drift_pct": -10.0003,
+     "align_min": 13.369,
+     "align_max": 18.372,
+     "align_spread": 5.003
+    },
+    "baseline_etf_vs_index": {
+     "label": "SPY(ETF) vs SPX(指数)",
+     "n_rows": 93,
+     "first_day": "2026-05-01",
+     "last_day": "2026-10-28",
+     "daily_te": {
+      "n": 93,
+      "te_ann_pct": 0.712,
+      "te_bps": 3.72,
+      "corr": 0.9987,
+      "drift_ann_pct": 0.129,
+      "vol_ratio": 0.9926
+     },
+     "iso_week_te": {
+      "n": 18,
+      "te_ann_pct": 0.202,
+      "te_bps": 2.8,
+      "corr": 0.9997,
+      "drift_ann_pct": 0.264
+     },
+     "iso_week_meta": {
+      "n_blocks": 18,
+      "first_block": "2026-05-12",
+      "last_block": "2026-10-23",
+      "days_per_block": [
+       4
+      ]
+     },
+     "align": {
+      "offset_0": {
+       "n_blocks": 18,
+       "te_ann_pct": 0.453
+      },
+      "offset_1": {
+       "n_blocks": 18,
+       "te_ann_pct": 0.408
+      },
+      "offset_2": {
+       "n_blocks": 18,
+       "te_ann_pct": 0.687
+      },
+      "offset_3": {
+       "n_blocks": 18,
+       "te_ann_pct": 0.559
+      },
+      "offset_4": {
+       "n_blocks": 17,
+       "te_ann_pct": 0.402
+      }
+     },
+     "drift_pct": 0.0365,
+     "align_min": 0.402,
+     "align_max": 0.687,
+     "align_spread": 0.285
+    },
+    "premium_pp": {
+     "iso_week": 5.111,
+     "align_min": 12.967,
+     "align_max": 17.685
+    }
+   }
+  }
+ },
+ "eq_spx": {
+  "why": "库内 eq.SPX 不是 S&P 500 指数(是 Hyperliquid 的 SPX 永续)",
+  "by_source": {
+   "hyperliquid": {
+    "n_rows": 15,
+    "first": "2026-08-09",
+    "last": "2026-08-23",
+    "max_abs_daily_move_pct": 17.168,
+    "n_days_abs_move_gt_5pct": 4
+   }
+  },
+  "hyperliquid_detail": {
+   "first": "2026-08-09",
+   "last": "2026-08-23",
+   "n_rows": 15,
+   "daily_moves_gt_5pct": [
+    {
+     "d": "2026-08-19",
+     "pct": 15.5
+    },
+    {
+     "d": "2026-08-20",
+     "pct": 7.418
+    },
+    {
+     "d": "2026-08-21",
+     "pct": 17.168
+    },
+    {
+     "d": "2026-08-23",
+     "pct": 5.926
+    }
+   ],
+   "note": "任何走 ohlcv_daily eq.SPX 的基线都会踩到这段污染(T-213 的基线走 FRED SP500,没踩到)"
+  }
+ },
+ "fingerprint_sha256_excl_timestamp": "6799b017df72cb876ca1b7dfde52e64138a935e8aa120b2dfc277e456c277faa"
+}
