@@ -1,0 +1,2763 @@
+{
+ "meta": {},
+ "inputs": {
+  "state_vectors_1000d.csv": {
+   "rows": 1001,
+   "first": "2023-12-26",
+   "last": "2026-09-21",
+   "data_status_counts": {
+    "PARTIAL": 673,
+    "INCOMPLETE_FEATURES": 328
+   }
+  },
+  "phases_7d.csv": {
+   "rows": 1001,
+   "first": "2023-12-26",
+   "last": "2026-09-21",
+   "final_phase_counts": {
+    "CASH": 640,
+    "ALT_LED": 225,
+    "BTC_LED": 136
+   }
+  },
+  "b1_daily_nav.json": {
+   "rows": 837,
+   "first": "2024-06-07",
+   "last": "2026-09-21"
+  },
+  "parquet_24": {
+   "BTC": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "ETH": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "SOL": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "BNB": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "XRP": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "ADA": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "AVAX": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "DOGE": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "ARB": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "OP": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "NEAR": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "APT": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "UNI": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "AAVE": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "MKR": {
+    "first": "2024-06-07",
+    "last": "2025-09-15",
+    "n": 466
+   },
+   "LINK": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "ONDO": {
+    "first": "2025-04-11",
+    "last": "2026-10-31",
+    "n": 569
+   },
+   "DOT": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "INJ": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "ATOM": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "CRV": null,
+   "LDO": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "COMP": {
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "n": 877
+   },
+   "GRT": null
+  },
+  "guard_db_panel_cover": {
+   "BTC": {
+    "coingecko": {
+     "n": 3954,
+     "first": "2015-07-14",
+     "last": "2026-09-16"
+    },
+    "binance_hist": {
+     "n": 3362,
+     "first": "2017-08-17",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 431,
+     "first": "2025-08-26",
+     "last": "2026-10-30"
+    }
+   },
+   "ETH": {
+    "coingecko": {
+     "n": 3954,
+     "first": "2015-08-07",
+     "last": "2026-09-16"
+    },
+    "binance_hist": {
+     "n": 3362,
+     "first": "2017-08-17",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 431,
+     "first": "2025-08-26",
+     "last": "2026-10-30"
+    }
+   },
+   "SOL": {
+    "coingecko": {
+     "n": 1954,
+     "first": "2020-04-11",
+     "last": "2026-09-16"
+    },
+    "binance_hist": {
+     "n": 2272,
+     "first": "2020-08-11",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 431,
+     "first": "2025-08-26",
+     "last": "2026-10-30"
+    }
+   },
+   "BNB": {
+    "coingecko": {
+     "n": 2954,
+     "first": "2017-09-16",
+     "last": "2026-09-16"
+    },
+    "binance_hist": {
+     "n": 3281,
+     "first": "2017-11-06",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 431,
+     "first": "2025-08-26",
+     "last": "2026-10-30"
+    }
+   },
+   "XRP": {
+    "coingecko": {
+     "n": 3955,
+     "first": "2015-07-14",
+     "last": "2026-09-17"
+    },
+    "binance_hist": {
+     "n": 3102,
+     "first": "2018-05-04",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 2495,
+     "first": "2019-12-31",
+     "last": "2026-10-30"
+    }
+   },
+   "ADA": {
+    "coingecko": {
+     "n": 2954,
+     "first": "2017-10-18",
+     "last": "2026-09-16"
+    },
+    "binance_hist": {
+     "n": 3119,
+     "first": "2018-04-17",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 431,
+     "first": "2025-08-26",
+     "last": "2026-10-30"
+    }
+   },
+   "AVAX": {
+    "coingecko": {
+     "n": 1954,
+     "first": "2020-09-22",
+     "last": "2026-09-16"
+    },
+    "binance_hist": {
+     "n": 2230,
+     "first": "2020-09-22",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 431,
+     "first": "2025-08-26",
+     "last": "2026-10-30"
+    }
+   },
+   "DOGE": {
+    "binance_hist": {
+     "n": 2675,
+     "first": "2019-07-05",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 431,
+     "first": "2025-08-26",
+     "last": "2026-10-30"
+    }
+   },
+   "ARB": {
+    "coingecko": {
+     "n": 954,
+     "first": "2023-03-23",
+     "last": "2026-09-16"
+    },
+    "binance_hist": {
+     "n": 1318,
+     "first": "2023-03-23",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 431,
+     "first": "2025-08-26",
+     "last": "2026-10-30"
+    }
+   },
+   "OP": {
+    "coingecko": {
+     "n": 1454,
+     "first": "2022-05-31",
+     "last": "2026-09-16"
+    },
+    "binance_hist": {
+     "n": 1613,
+     "first": "2022-06-01",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 431,
+     "first": "2025-08-26",
+     "last": "2026-10-30"
+    }
+   },
+   "NEAR": {
+    "coingecko": {
+     "n": 1955,
+     "first": "2020-10-14",
+     "last": "2026-09-17"
+    },
+    "binance_hist": {
+     "n": 2208,
+     "first": "2020-10-14",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 2208,
+     "first": "2020-09-29",
+     "last": "2026-10-30"
+    }
+   },
+   "APT": {
+    "coingecko": {
+     "n": 954,
+     "first": "2022-10-19",
+     "last": "2026-09-16"
+    },
+    "binance_hist": {
+     "n": 1473,
+     "first": "2022-10-19",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 431,
+     "first": "2025-08-26",
+     "last": "2026-10-30"
+    }
+   },
+   "UNI": {
+    "coingecko": {
+     "n": 1954,
+     "first": "2020-09-17",
+     "last": "2026-09-16"
+    },
+    "binance_hist": {
+     "n": 2235,
+     "first": "2020-09-17",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 431,
+     "first": "2025-08-26",
+     "last": "2026-10-30"
+    }
+   },
+   "AAVE": {
+    "coingecko": {
+     "n": 1954,
+     "first": "2020-10-03",
+     "last": "2026-09-16"
+    },
+    "binance_hist": {
+     "n": 2207,
+     "first": "2020-10-15",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 431,
+     "first": "2025-08-26",
+     "last": "2026-10-30"
+    }
+   },
+   "MKR": {
+    "coingecko": {
+     "n": 2954,
+     "first": "2017-12-20",
+     "last": "2026-09-16"
+    },
+    "binance_hist": {
+     "n": 1881,
+     "first": "2020-07-23",
+     "last": "2025-09-15"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 430,
+     "first": "2025-08-27",
+     "last": "2026-10-30"
+    }
+   },
+   "LINK": {
+    "coingecko": {
+     "n": 2954,
+     "first": "2017-11-09",
+     "last": "2026-09-16"
+    },
+    "binance_hist": {
+     "n": 2845,
+     "first": "2019-01-16",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 431,
+     "first": "2025-08-26",
+     "last": "2026-10-30"
+    }
+   },
+   "ONDO": {
+    "coingecko": {
+     "n": 955,
+     "first": "2024-01-18",
+     "last": "2026-09-17"
+    },
+    "binance_hist": {
+     "n": 568,
+     "first": "2025-04-11",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 1017,
+     "first": "2024-01-18",
+     "last": "2026-10-30"
+    }
+   },
+   "DOT": {
+    "coingecko": {
+     "n": 1954,
+     "first": "2020-08-19",
+     "last": "2026-09-16"
+    },
+    "binance_hist": {
+     "n": 2265,
+     "first": "2020-08-18",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 431,
+     "first": "2025-08-26",
+     "last": "2026-10-30"
+    }
+   },
+   "INJ": {
+    "coingecko": {
+     "n": 1955,
+     "first": "2020-10-21",
+     "last": "2026-09-17"
+    },
+    "binance_hist": {
+     "n": 2201,
+     "first": "2020-10-21",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 2200,
+     "first": "2020-10-21",
+     "last": "2026-10-30"
+    }
+   },
+   "ATOM": {
+    "binance_hist": {
+     "n": 2742,
+     "first": "2019-04-29",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 431,
+     "first": "2025-08-26",
+     "last": "2026-10-30"
+    }
+   },
+   "CRV": {
+    "binance_hist": {
+     "n": 2268,
+     "first": "2020-08-15",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 431,
+     "first": "2025-08-26",
+     "last": "2026-10-30"
+    }
+   },
+   "LDO": {
+    "coingecko": {
+     "n": 1955,
+     "first": "2021-01-05",
+     "last": "2026-09-17"
+    },
+    "binance_hist": {
+     "n": 1636,
+     "first": "2022-05-09",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 2124,
+     "first": "2021-01-05",
+     "last": "2026-10-30"
+    }
+   },
+   "COMP": {
+    "binance_hist": {
+     "n": 2319,
+     "first": "2020-06-25",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 431,
+     "first": "2025-08-26",
+     "last": "2026-10-30"
+    }
+   },
+   "GRT": {
+    "binance_hist": {
+     "n": 2144,
+     "first": "2020-12-17",
+     "last": "2026-10-30"
+    },
+    "coingecko_pro_ohlc": {
+     "n": 431,
+     "first": "2025-08-26",
+     "last": "2026-10-30"
+    }
+   }
+  },
+  "guard_db_panel_from_2021_01_05": {
+   "n_with_data": 20,
+   "missing": [
+    "APT",
+    "ARB",
+    "ONDO",
+    "OP"
+   ]
+  },
+  "btc_three_source_spread": {
+   "binance_hist_vs_coingecko": {
+    "n_both": 3189,
+    "last_date": "2026-09-16",
+    "max_rel_pct": 39.51247051232938,
+    "mean_rel_pct": 2.2510651837315385,
+    "last_rel_pct": 0.8146558680887244
+   },
+   "binance_hist_vs_coingecko_pro_ohlc": {
+    "n_both": 431,
+    "last_date": "2026-10-30",
+    "max_rel_pct": 3.6569256937952925,
+    "mean_rel_pct": 0.07897595906447918,
+    "last_rel_pct": 0.18750647467109047
+   },
+   "coingecko_vs_coingecko_pro_ohlc": {
+    "n_both": 387,
+    "last_date": "2026-09-16",
+    "max_rel_pct": 16.29048663424558,
+    "mean_rel_pct": 1.6091886728596,
+    "last_rel_pct": 0.7338244756989625
+   }
+  },
+  "ohlcv_daily_columns": [
+   "asset_class",
+   "asset_id",
+   "close",
+   "high",
+   "id",
+   "low",
+   "open",
+   "recorded_at",
+   "source",
+   "symbol",
+   "trade_date",
+   "volume"
+  ],
+  "btc_guard_db_rows": {
+   "server_count": 7764,
+   "read": 7764
+  },
+  "ma_sources": {
+   "local_parquet": {
+    "n": 877,
+    "first": "2024-06-07",
+    "last": "2026-10-31",
+    "rows_per_year": 365.7
+   },
+   "guard_db:binance_hist": {
+    "n": 3362,
+    "first": "2017-08-17",
+    "last": "2026-10-30",
+    "rows_per_year": 365.4
+   },
+   "guard_db:binance_um_hist": {
+    "n": 2,
+    "first": "2021-01-11",
+    "last": "2021-01-21",
+    "rows_per_year": 73.0
+   },
+   "guard_db:coingecko": {
+    "n": 3954,
+    "first": "2015-07-14",
+    "last": "2026-09-16",
+    "rows_per_year": 353.8
+   },
+   "guard_db:coingecko_pro_ohlc": {
+    "n": 431,
+    "first": "2025-08-26",
+    "last": "2026-10-30",
+    "rows_per_year": 366.1
+   },
+   "guard_db:hyperliquid": {
+    "n": 15,
+    "first": "2026-08-09",
+    "last": "2026-08-23",
+    "rows_per_year": 391.3
+   }
+  }
+ },
+ "windows": {
+  "W_sv": {
+   "n": 1001,
+   "first": "2023-12-26",
+   "last": "2026-09-21"
+  },
+  "W_b1": {
+   "n": 837,
+   "first": "2024-06-07",
+   "last": "2026-09-21"
+  },
+  "harness_like_cov_ge_18": {
+   "n": 837,
+   "first": "2024-06-07",
+   "last": "2026-09-21"
+  },
+  "panel_cov_over_W_b1": {
+   "mean": 21.188769414575866,
+   "min": 21,
+   "max": 22,
+   "days_lt_19": 0
+  },
+  "W_run_836": {
+   "n": 836,
+   "first": "2024-06-08",
+   "last": "2026-09-21"
+  }
+ },
+ "v5": {
+  "regime_counts_on_W_b1": {
+   "NEUTRAL": 420,
+   "RISK_OFF": 281,
+   "EASING": 110,
+   "TIGHTENING": 17,
+   "STAGFLATION": 9
+  },
+  "phase_counts_on_W_b1": {
+   "CASH": 476,
+   "ALT_LED": 225,
+   "BTC_LED": 136
+  },
+  "risk_days_total": 290,
+  "live_days_total": 349,
+  "splits": {
+   "60/40": {
+    "is_n": 502,
+    "oos_n": 335,
+    "v5_risk_days_total": 290,
+    "v5_risk_days_oos": 187,
+    "v5_live_days_total": 349,
+    "v5_live_days_oos": 88,
+    "phase_cash_days_oos": 245,
+    "risk_and_cash_oos": 185,
+    "identity_1_minus_risk_over_oos": 0.4417910447761194
+   },
+   "50/50": {
+    "is_n": 418,
+    "oos_n": 419,
+    "v5_risk_days_total": 290,
+    "v5_risk_days_oos": 198,
+    "v5_live_days_total": 349,
+    "v5_live_days_oos": 161,
+    "phase_cash_days_oos": 251,
+    "risk_and_cash_oos": 191,
+    "identity_1_minus_risk_over_oos": 0.5274463007159904
+   },
+   "70/30": {
+    "is_n": 585,
+    "oos_n": 252,
+    "v5_risk_days_total": 290,
+    "v5_risk_days_oos": 105,
+    "v5_live_days_total": 349,
+    "v5_live_days_oos": 88,
+    "phase_cash_days_oos": 162,
+    "risk_and_cash_oos": 103,
+    "identity_1_minus_risk_over_oos": 0.5833333333333333
+   }
+  }
+ },
+ "pit": {
+  "local_parquet|K19|lag1": {
+   "lag": 1,
+   "K": 19,
+   "days": 837,
+   "criterion_days": 637,
+   "risk_off_days": 328,
+   "valid_days": 637,
+   "live_days": 226,
+   "risk_off_and_phase_not_cash": 64,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 302,
+     "valid_oos": 335,
+     "live_is": 200,
+     "live_oos": 26,
+     "risk_oos": 291,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 218,
+     "valid_oos": 419,
+     "live_is": 122,
+     "live_oos": 104,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 385,
+     "valid_oos": 252,
+     "live_is": 200,
+     "live_oos": 26,
+     "risk_oos": 219,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "local_parquet|K19|lag3": {
+   "lag": 3,
+   "K": 19,
+   "days": 837,
+   "criterion_days": 635,
+   "risk_off_days": 328,
+   "valid_days": 635,
+   "live_days": 224,
+   "risk_off_and_phase_not_cash": 64,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 300,
+     "valid_oos": 335,
+     "live_is": 198,
+     "live_oos": 26,
+     "risk_oos": 291,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 216,
+     "valid_oos": 419,
+     "live_is": 120,
+     "live_oos": 104,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 383,
+     "valid_oos": 252,
+     "live_is": 198,
+     "live_oos": 26,
+     "risk_oos": 221,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "local_parquet|K19|lag7": {
+   "lag": 7,
+   "K": 19,
+   "days": 837,
+   "criterion_days": 631,
+   "risk_off_days": 328,
+   "valid_days": 631,
+   "live_days": 220,
+   "risk_off_and_phase_not_cash": 64,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 296,
+     "valid_oos": 335,
+     "live_is": 194,
+     "live_oos": 26,
+     "risk_oos": 293,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 212,
+     "valid_oos": 419,
+     "live_is": 116,
+     "live_oos": 104,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 379,
+     "valid_oos": 252,
+     "live_is": 194,
+     "live_oos": 26,
+     "risk_oos": 225,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "local_parquet|K18|lag1": {
+   "lag": 1,
+   "K": 18,
+   "days": 837,
+   "criterion_days": 637,
+   "risk_off_days": 328,
+   "valid_days": 637,
+   "live_days": 226,
+   "risk_off_and_phase_not_cash": 64,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 302,
+     "valid_oos": 335,
+     "live_is": 200,
+     "live_oos": 26,
+     "risk_oos": 291,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 218,
+     "valid_oos": 419,
+     "live_is": 122,
+     "live_oos": 104,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 385,
+     "valid_oos": 252,
+     "live_is": 200,
+     "live_oos": 26,
+     "risk_oos": 219,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "local_parquet|K18|lag3": {
+   "lag": 3,
+   "K": 18,
+   "days": 837,
+   "criterion_days": 635,
+   "risk_off_days": 328,
+   "valid_days": 635,
+   "live_days": 224,
+   "risk_off_and_phase_not_cash": 64,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 300,
+     "valid_oos": 335,
+     "live_is": 198,
+     "live_oos": 26,
+     "risk_oos": 291,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 216,
+     "valid_oos": 419,
+     "live_is": 120,
+     "live_oos": 104,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 383,
+     "valid_oos": 252,
+     "live_is": 198,
+     "live_oos": 26,
+     "risk_oos": 221,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "local_parquet|K18|lag7": {
+   "lag": 7,
+   "K": 18,
+   "days": 837,
+   "criterion_days": 631,
+   "risk_off_days": 328,
+   "valid_days": 631,
+   "live_days": 220,
+   "risk_off_and_phase_not_cash": 64,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 296,
+     "valid_oos": 335,
+     "live_is": 194,
+     "live_oos": 26,
+     "risk_oos": 293,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 212,
+     "valid_oos": 419,
+     "live_is": 116,
+     "live_oos": 104,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 379,
+     "valid_oos": 252,
+     "live_is": 194,
+     "live_oos": 26,
+     "risk_oos": 225,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:binance_hist|K19|lag1": {
+   "lag": 1,
+   "K": 19,
+   "days": 837,
+   "criterion_days": 837,
+   "risk_off_days": 401,
+   "valid_days": 837,
+   "live_days": 296,
+   "risk_off_and_phase_not_cash": 65,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 502,
+     "valid_oos": 335,
+     "live_is": 270,
+     "live_oos": 26,
+     "risk_oos": 291,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 418,
+     "valid_oos": 419,
+     "live_is": 192,
+     "live_oos": 104,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 585,
+     "valid_oos": 252,
+     "live_is": 270,
+     "live_oos": 26,
+     "risk_oos": 219,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:binance_hist|K19|lag3": {
+   "lag": 3,
+   "K": 19,
+   "days": 837,
+   "criterion_days": 837,
+   "risk_off_days": 401,
+   "valid_days": 837,
+   "live_days": 294,
+   "risk_off_and_phase_not_cash": 67,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 502,
+     "valid_oos": 335,
+     "live_is": 268,
+     "live_oos": 26,
+     "risk_oos": 291,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 418,
+     "valid_oos": 419,
+     "live_is": 190,
+     "live_oos": 104,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 585,
+     "valid_oos": 252,
+     "live_is": 268,
+     "live_oos": 26,
+     "risk_oos": 221,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:binance_hist|K19|lag7": {
+   "lag": 7,
+   "K": 19,
+   "days": 837,
+   "criterion_days": 837,
+   "risk_off_days": 401,
+   "valid_days": 837,
+   "live_days": 290,
+   "risk_off_and_phase_not_cash": 71,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 502,
+     "valid_oos": 335,
+     "live_is": 264,
+     "live_oos": 26,
+     "risk_oos": 293,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 418,
+     "valid_oos": 419,
+     "live_is": 186,
+     "live_oos": 104,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 585,
+     "valid_oos": 252,
+     "live_is": 264,
+     "live_oos": 26,
+     "risk_oos": 225,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:binance_hist|K18|lag1": {
+   "lag": 1,
+   "K": 18,
+   "days": 837,
+   "criterion_days": 837,
+   "risk_off_days": 401,
+   "valid_days": 837,
+   "live_days": 296,
+   "risk_off_and_phase_not_cash": 65,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 502,
+     "valid_oos": 335,
+     "live_is": 270,
+     "live_oos": 26,
+     "risk_oos": 291,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 418,
+     "valid_oos": 419,
+     "live_is": 192,
+     "live_oos": 104,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 585,
+     "valid_oos": 252,
+     "live_is": 270,
+     "live_oos": 26,
+     "risk_oos": 219,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:binance_hist|K18|lag3": {
+   "lag": 3,
+   "K": 18,
+   "days": 837,
+   "criterion_days": 837,
+   "risk_off_days": 401,
+   "valid_days": 837,
+   "live_days": 294,
+   "risk_off_and_phase_not_cash": 67,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 502,
+     "valid_oos": 335,
+     "live_is": 268,
+     "live_oos": 26,
+     "risk_oos": 291,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 418,
+     "valid_oos": 419,
+     "live_is": 190,
+     "live_oos": 104,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 585,
+     "valid_oos": 252,
+     "live_is": 268,
+     "live_oos": 26,
+     "risk_oos": 221,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:binance_hist|K18|lag7": {
+   "lag": 7,
+   "K": 18,
+   "days": 837,
+   "criterion_days": 837,
+   "risk_off_days": 401,
+   "valid_days": 837,
+   "live_days": 290,
+   "risk_off_and_phase_not_cash": 71,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 502,
+     "valid_oos": 335,
+     "live_is": 264,
+     "live_oos": 26,
+     "risk_oos": 293,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 418,
+     "valid_oos": 419,
+     "live_is": 186,
+     "live_oos": 104,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 585,
+     "valid_oos": 252,
+     "live_is": 264,
+     "live_oos": 26,
+     "risk_oos": 225,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:binance_um_hist|K19|lag1": {
+   "lag": 1,
+   "K": 19,
+   "days": 837,
+   "criterion_days": 0,
+   "risk_off_days": 0,
+   "valid_days": 0,
+   "live_days": 0,
+   "risk_off_and_phase_not_cash": 0,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 0
+    }
+   }
+  },
+  "guard_db:binance_um_hist|K19|lag3": {
+   "lag": 3,
+   "K": 19,
+   "days": 837,
+   "criterion_days": 0,
+   "risk_off_days": 0,
+   "valid_days": 0,
+   "live_days": 0,
+   "risk_off_and_phase_not_cash": 0,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 0
+    }
+   }
+  },
+  "guard_db:binance_um_hist|K19|lag7": {
+   "lag": 7,
+   "K": 19,
+   "days": 837,
+   "criterion_days": 0,
+   "risk_off_days": 0,
+   "valid_days": 0,
+   "live_days": 0,
+   "risk_off_and_phase_not_cash": 0,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 0
+    }
+   }
+  },
+  "guard_db:binance_um_hist|K18|lag1": {
+   "lag": 1,
+   "K": 18,
+   "days": 837,
+   "criterion_days": 0,
+   "risk_off_days": 0,
+   "valid_days": 0,
+   "live_days": 0,
+   "risk_off_and_phase_not_cash": 0,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 0
+    }
+   }
+  },
+  "guard_db:binance_um_hist|K18|lag3": {
+   "lag": 3,
+   "K": 18,
+   "days": 837,
+   "criterion_days": 0,
+   "risk_off_days": 0,
+   "valid_days": 0,
+   "live_days": 0,
+   "risk_off_and_phase_not_cash": 0,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 0
+    }
+   }
+  },
+  "guard_db:binance_um_hist|K18|lag7": {
+   "lag": 7,
+   "K": 18,
+   "days": 837,
+   "criterion_days": 0,
+   "risk_off_days": 0,
+   "valid_days": 0,
+   "live_days": 0,
+   "risk_off_and_phase_not_cash": 0,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 0
+    }
+   }
+  },
+  "guard_db:coingecko|K19|lag1": {
+   "lag": 1,
+   "K": 19,
+   "days": 837,
+   "criterion_days": 837,
+   "risk_off_days": 365,
+   "valid_days": 837,
+   "live_days": 295,
+   "risk_off_and_phase_not_cash": 66,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 502,
+     "valid_oos": 335,
+     "live_is": 269,
+     "live_oos": 26,
+     "risk_oos": 291,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 418,
+     "valid_oos": 419,
+     "live_is": 191,
+     "live_oos": 104,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 585,
+     "valid_oos": 252,
+     "live_is": 269,
+     "live_oos": 26,
+     "risk_oos": 220,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:coingecko|K19|lag3": {
+   "lag": 3,
+   "K": 19,
+   "days": 837,
+   "criterion_days": 837,
+   "risk_off_days": 365,
+   "valid_days": 837,
+   "live_days": 293,
+   "risk_off_and_phase_not_cash": 68,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 502,
+     "valid_oos": 335,
+     "live_is": 267,
+     "live_oos": 26,
+     "risk_oos": 292,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 418,
+     "valid_oos": 419,
+     "live_is": 189,
+     "live_oos": 104,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 585,
+     "valid_oos": 252,
+     "live_is": 267,
+     "live_oos": 26,
+     "risk_oos": 222,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:coingecko|K19|lag7": {
+   "lag": 7,
+   "K": 19,
+   "days": 837,
+   "criterion_days": 837,
+   "risk_off_days": 365,
+   "valid_days": 837,
+   "live_days": 289,
+   "risk_off_and_phase_not_cash": 72,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 502,
+     "valid_oos": 335,
+     "live_is": 263,
+     "live_oos": 26,
+     "risk_oos": 293,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 418,
+     "valid_oos": 419,
+     "live_is": 185,
+     "live_oos": 104,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 585,
+     "valid_oos": 252,
+     "live_is": 263,
+     "live_oos": 26,
+     "risk_oos": 226,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:coingecko|K18|lag1": {
+   "lag": 1,
+   "K": 18,
+   "days": 837,
+   "criterion_days": 837,
+   "risk_off_days": 365,
+   "valid_days": 837,
+   "live_days": 295,
+   "risk_off_and_phase_not_cash": 66,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 502,
+     "valid_oos": 335,
+     "live_is": 269,
+     "live_oos": 26,
+     "risk_oos": 291,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 418,
+     "valid_oos": 419,
+     "live_is": 191,
+     "live_oos": 104,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 585,
+     "valid_oos": 252,
+     "live_is": 269,
+     "live_oos": 26,
+     "risk_oos": 220,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:coingecko|K18|lag3": {
+   "lag": 3,
+   "K": 18,
+   "days": 837,
+   "criterion_days": 837,
+   "risk_off_days": 365,
+   "valid_days": 837,
+   "live_days": 293,
+   "risk_off_and_phase_not_cash": 68,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 502,
+     "valid_oos": 335,
+     "live_is": 267,
+     "live_oos": 26,
+     "risk_oos": 292,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 418,
+     "valid_oos": 419,
+     "live_is": 189,
+     "live_oos": 104,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 585,
+     "valid_oos": 252,
+     "live_is": 267,
+     "live_oos": 26,
+     "risk_oos": 222,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:coingecko|K18|lag7": {
+   "lag": 7,
+   "K": 18,
+   "days": 837,
+   "criterion_days": 837,
+   "risk_off_days": 365,
+   "valid_days": 837,
+   "live_days": 289,
+   "risk_off_and_phase_not_cash": 72,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 502,
+     "valid_oos": 335,
+     "live_is": 263,
+     "live_oos": 26,
+     "risk_oos": 293,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 418,
+     "valid_oos": 419,
+     "live_is": 185,
+     "live_oos": 104,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 585,
+     "valid_oos": 252,
+     "live_is": 263,
+     "live_oos": 26,
+     "risk_oos": 226,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:coingecko_pro_ohlc|K19|lag1": {
+   "lag": 1,
+   "K": 19,
+   "days": 837,
+   "criterion_days": 192,
+   "risk_off_days": 159,
+   "valid_days": 192,
+   "live_days": 26,
+   "risk_off_and_phase_not_cash": 64,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 0,
+     "valid_oos": 192,
+     "live_is": 0,
+     "live_oos": 26,
+     "risk_oos": 159,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 0,
+     "valid_oos": 192,
+     "live_is": 0,
+     "live_oos": 26,
+     "risk_oos": 159,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 0,
+     "valid_oos": 192,
+     "live_is": 0,
+     "live_oos": 26,
+     "risk_oos": 159,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:coingecko_pro_ohlc|K19|lag3": {
+   "lag": 3,
+   "K": 19,
+   "days": 837,
+   "criterion_days": 190,
+   "risk_off_days": 159,
+   "valid_days": 190,
+   "live_days": 26,
+   "risk_off_and_phase_not_cash": 64,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 0,
+     "valid_oos": 190,
+     "live_is": 0,
+     "live_oos": 26,
+     "risk_oos": 159,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 0,
+     "valid_oos": 190,
+     "live_is": 0,
+     "live_oos": 26,
+     "risk_oos": 159,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 0,
+     "valid_oos": 190,
+     "live_is": 0,
+     "live_oos": 26,
+     "risk_oos": 159,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:coingecko_pro_ohlc|K19|lag7": {
+   "lag": 7,
+   "K": 19,
+   "days": 837,
+   "criterion_days": 186,
+   "risk_off_days": 159,
+   "valid_days": 186,
+   "live_days": 26,
+   "risk_off_and_phase_not_cash": 64,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 0,
+     "valid_oos": 186,
+     "live_is": 0,
+     "live_oos": 26,
+     "risk_oos": 159,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 0,
+     "valid_oos": 186,
+     "live_is": 0,
+     "live_oos": 26,
+     "risk_oos": 159,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 0,
+     "valid_oos": 186,
+     "live_is": 0,
+     "live_oos": 26,
+     "risk_oos": 159,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:coingecko_pro_ohlc|K18|lag1": {
+   "lag": 1,
+   "K": 18,
+   "days": 837,
+   "criterion_days": 192,
+   "risk_off_days": 159,
+   "valid_days": 192,
+   "live_days": 26,
+   "risk_off_and_phase_not_cash": 64,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 0,
+     "valid_oos": 192,
+     "live_is": 0,
+     "live_oos": 26,
+     "risk_oos": 159,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 0,
+     "valid_oos": 192,
+     "live_is": 0,
+     "live_oos": 26,
+     "risk_oos": 159,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 0,
+     "valid_oos": 192,
+     "live_is": 0,
+     "live_oos": 26,
+     "risk_oos": 159,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:coingecko_pro_ohlc|K18|lag3": {
+   "lag": 3,
+   "K": 18,
+   "days": 837,
+   "criterion_days": 190,
+   "risk_off_days": 159,
+   "valid_days": 190,
+   "live_days": 26,
+   "risk_off_and_phase_not_cash": 64,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 0,
+     "valid_oos": 190,
+     "live_is": 0,
+     "live_oos": 26,
+     "risk_oos": 159,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 0,
+     "valid_oos": 190,
+     "live_is": 0,
+     "live_oos": 26,
+     "risk_oos": 159,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 0,
+     "valid_oos": 190,
+     "live_is": 0,
+     "live_oos": 26,
+     "risk_oos": 159,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:coingecko_pro_ohlc|K18|lag7": {
+   "lag": 7,
+   "K": 18,
+   "days": 837,
+   "criterion_days": 186,
+   "risk_off_days": 159,
+   "valid_days": 186,
+   "live_days": 26,
+   "risk_off_and_phase_not_cash": 64,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 0,
+     "valid_oos": 186,
+     "live_is": 0,
+     "live_oos": 26,
+     "risk_oos": 159,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 0,
+     "valid_oos": 186,
+     "live_is": 0,
+     "live_oos": 26,
+     "risk_oos": 159,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 0,
+     "valid_oos": 186,
+     "live_is": 0,
+     "live_oos": 26,
+     "risk_oos": 159,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:hyperliquid|K19|lag1": {
+   "lag": 1,
+   "K": 19,
+   "days": 837,
+   "criterion_days": 0,
+   "risk_off_days": 0,
+   "valid_days": 0,
+   "live_days": 0,
+   "risk_off_and_phase_not_cash": 0,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 0
+    }
+   }
+  },
+  "guard_db:hyperliquid|K19|lag3": {
+   "lag": 3,
+   "K": 19,
+   "days": 837,
+   "criterion_days": 0,
+   "risk_off_days": 0,
+   "valid_days": 0,
+   "live_days": 0,
+   "risk_off_and_phase_not_cash": 0,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 0
+    }
+   }
+  },
+  "guard_db:hyperliquid|K19|lag7": {
+   "lag": 7,
+   "K": 19,
+   "days": 837,
+   "criterion_days": 0,
+   "risk_off_days": 0,
+   "valid_days": 0,
+   "live_days": 0,
+   "risk_off_and_phase_not_cash": 0,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 0
+    }
+   }
+  },
+  "guard_db:hyperliquid|K18|lag1": {
+   "lag": 1,
+   "K": 18,
+   "days": 837,
+   "criterion_days": 0,
+   "risk_off_days": 0,
+   "valid_days": 0,
+   "live_days": 0,
+   "risk_off_and_phase_not_cash": 0,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 0
+    }
+   }
+  },
+  "guard_db:hyperliquid|K18|lag3": {
+   "lag": 3,
+   "K": 18,
+   "days": 837,
+   "criterion_days": 0,
+   "risk_off_days": 0,
+   "valid_days": 0,
+   "live_days": 0,
+   "risk_off_and_phase_not_cash": 0,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 0
+    }
+   }
+  },
+  "guard_db:hyperliquid|K18|lag7": {
+   "lag": 7,
+   "K": 18,
+   "days": 837,
+   "criterion_days": 0,
+   "risk_off_days": 0,
+   "valid_days": 0,
+   "live_days": 0,
+   "risk_off_and_phase_not_cash": 0,
+   "splits": {
+    "60/40": {
+     "is_n": 502,
+     "oos_n": 335,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 419,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 0
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 252,
+     "valid_is": 0,
+     "valid_oos": 0,
+     "live_is": 0,
+     "live_oos": 0,
+     "risk_oos": 0,
+     "phase_cash_oos": 162,
+     "risk_off_and_phase_not_cash_oos": 0
+    }
+   }
+  },
+  "guard_db:binance_hist|K19|lag1|W_sv": {
+   "lag": 1,
+   "K": 19,
+   "days": 1001,
+   "criterion_days": 1001,
+   "risk_off_days": 401,
+   "valid_days": 837,
+   "live_days": 460,
+   "risk_off_and_phase_not_cash": 65,
+   "splits": {
+    "60/40": {
+     "is_n": 600,
+     "oos_n": 401,
+     "valid_is": 436,
+     "valid_oos": 401,
+     "live_is": 374,
+     "live_oos": 86,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 500,
+     "oos_n": 501,
+     "valid_is": 336,
+     "valid_oos": 501,
+     "live_is": 282,
+     "live_oos": 178,
+     "risk_oos": 293,
+     "phase_cash_oos": 259,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 700,
+     "oos_n": 301,
+     "valid_is": 536,
+     "valid_oos": 301,
+     "live_is": 434,
+     "live_oos": 26,
+     "risk_oos": 268,
+     "phase_cash_oos": 211,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "local_parquet|K19|lag1|W_sv": {
+   "lag": 1,
+   "K": 19,
+   "days": 1001,
+   "criterion_days": 637,
+   "risk_off_days": 328,
+   "valid_days": 637,
+   "live_days": 226,
+   "risk_off_and_phase_not_cash": 64,
+   "splits": {
+    "60/40": {
+     "is_n": 600,
+     "oos_n": 401,
+     "valid_is": 236,
+     "valid_oos": 401,
+     "live_is": 140,
+     "live_oos": 86,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 500,
+     "oos_n": 501,
+     "valid_is": 136,
+     "valid_oos": 501,
+     "live_is": 48,
+     "live_oos": 178,
+     "risk_oos": 293,
+     "phase_cash_oos": 259,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 700,
+     "oos_n": 301,
+     "valid_is": 336,
+     "valid_oos": 301,
+     "live_is": 200,
+     "live_oos": 26,
+     "risk_oos": 268,
+     "phase_cash_oos": 211,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:binance_hist|K19|lag1|W_run836": {
+   "lag": 1,
+   "K": 19,
+   "days": 836,
+   "criterion_days": 836,
+   "risk_off_days": 401,
+   "valid_days": 836,
+   "live_days": 296,
+   "risk_off_and_phase_not_cash": 65,
+   "splits": {
+    "60/40": {
+     "is_n": 501,
+     "oos_n": 335,
+     "valid_is": 501,
+     "valid_oos": 335,
+     "live_is": 270,
+     "live_oos": 26,
+     "risk_oos": 291,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 418,
+     "valid_is": 418,
+     "valid_oos": 418,
+     "live_is": 193,
+     "live_oos": 103,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 251,
+     "valid_is": 585,
+     "valid_oos": 251,
+     "live_is": 270,
+     "live_oos": 26,
+     "risk_oos": 218,
+     "phase_cash_oos": 161,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:binance_hist|K19|lag3|W_run836": {
+   "lag": 3,
+   "K": 19,
+   "days": 836,
+   "criterion_days": 836,
+   "risk_off_days": 401,
+   "valid_days": 836,
+   "live_days": 294,
+   "risk_off_and_phase_not_cash": 67,
+   "splits": {
+    "60/40": {
+     "is_n": 501,
+     "oos_n": 335,
+     "valid_is": 501,
+     "valid_oos": 335,
+     "live_is": 268,
+     "live_oos": 26,
+     "risk_oos": 291,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 418,
+     "valid_is": 418,
+     "valid_oos": 418,
+     "live_is": 191,
+     "live_oos": 103,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 251,
+     "valid_is": 585,
+     "valid_oos": 251,
+     "live_is": 268,
+     "live_oos": 26,
+     "risk_oos": 220,
+     "phase_cash_oos": 161,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "guard_db:binance_hist|K19|lag7|W_run836": {
+   "lag": 7,
+   "K": 19,
+   "days": 836,
+   "criterion_days": 836,
+   "risk_off_days": 401,
+   "valid_days": 836,
+   "live_days": 290,
+   "risk_off_and_phase_not_cash": 71,
+   "splits": {
+    "60/40": {
+     "is_n": 501,
+     "oos_n": 335,
+     "valid_is": 501,
+     "valid_oos": 335,
+     "live_is": 264,
+     "live_oos": 26,
+     "risk_oos": 293,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 418,
+     "valid_is": 418,
+     "valid_oos": 418,
+     "live_is": 187,
+     "live_oos": 103,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 251,
+     "valid_is": 585,
+     "valid_oos": 251,
+     "live_is": 264,
+     "live_oos": 26,
+     "risk_oos": 224,
+     "phase_cash_oos": 161,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "local_parquet|K19|lag1|W_run836": {
+   "lag": 1,
+   "K": 19,
+   "days": 836,
+   "criterion_days": 637,
+   "risk_off_days": 328,
+   "valid_days": 637,
+   "live_days": 226,
+   "risk_off_and_phase_not_cash": 64,
+   "splits": {
+    "60/40": {
+     "is_n": 501,
+     "oos_n": 335,
+     "valid_is": 302,
+     "valid_oos": 335,
+     "live_is": 200,
+     "live_oos": 26,
+     "risk_oos": 291,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 418,
+     "valid_is": 219,
+     "valid_oos": 418,
+     "live_is": 123,
+     "live_oos": 103,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 251,
+     "valid_is": 386,
+     "valid_oos": 251,
+     "live_is": 200,
+     "live_oos": 26,
+     "risk_oos": 218,
+     "phase_cash_oos": 161,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "local_parquet|K19|lag3|W_run836": {
+   "lag": 3,
+   "K": 19,
+   "days": 836,
+   "criterion_days": 635,
+   "risk_off_days": 328,
+   "valid_days": 635,
+   "live_days": 224,
+   "risk_off_and_phase_not_cash": 64,
+   "splits": {
+    "60/40": {
+     "is_n": 501,
+     "oos_n": 335,
+     "valid_is": 300,
+     "valid_oos": 335,
+     "live_is": 198,
+     "live_oos": 26,
+     "risk_oos": 291,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 418,
+     "valid_is": 217,
+     "valid_oos": 418,
+     "live_is": 121,
+     "live_oos": 103,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 251,
+     "valid_is": 384,
+     "valid_oos": 251,
+     "live_is": 198,
+     "live_oos": 26,
+     "risk_oos": 220,
+     "phase_cash_oos": 161,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  },
+  "local_parquet|K19|lag7|W_run836": {
+   "lag": 7,
+   "K": 19,
+   "days": 836,
+   "criterion_days": 631,
+   "risk_off_days": 328,
+   "valid_days": 631,
+   "live_days": 220,
+   "risk_off_and_phase_not_cash": 64,
+   "splits": {
+    "60/40": {
+     "is_n": 501,
+     "oos_n": 335,
+     "valid_is": 296,
+     "valid_oos": 335,
+     "live_is": 194,
+     "live_oos": 26,
+     "risk_oos": 293,
+     "phase_cash_oos": 245,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "50/50": {
+     "is_n": 418,
+     "oos_n": 418,
+     "valid_is": 213,
+     "valid_oos": 418,
+     "live_is": 117,
+     "live_oos": 103,
+     "risk_oos": 293,
+     "phase_cash_oos": 251,
+     "risk_off_and_phase_not_cash_oos": 64
+    },
+    "70/30": {
+     "is_n": 585,
+     "oos_n": 251,
+     "valid_is": 380,
+     "valid_oos": 251,
+     "live_is": 194,
+     "live_oos": 26,
+     "risk_oos": 224,
+     "phase_cash_oos": 161,
+     "risk_off_and_phase_not_cash_oos": 64
+    }
+   }
+  }
+ },
+ "beta": {
+  "total_rows": 36936,
+  "by_prefix": {
+   "AB": {
+    "n": 3645,
+    "beta_min": 0.7278,
+    "beta_max": 0.75,
+    "beta_mean": 0.7362199999999999,
+    "avg_cash_pct_mean": 20.25,
+    "in_band_0.5_0.9": 3645,
+    "in_band_frac": 1.0
+   },
+   "D": {
+    "n": 32805,
+    "beta_min": 0.35,
+    "beta_max": 0.3599,
+    "beta_mean": 0.3543725925925925,
+    "avg_cash_pct_mean": 54.429999999999986,
+    "in_band_0.5_0.9": 0,
+    "in_band_frac": 0.0
+   },
+   "Dv2": {
+    "n": 486,
+    "beta_min": 0.348,
+    "beta_max": 0.364,
+    "beta_mean": 0.3545444444444445,
+    "avg_cash_pct_mean": 56.820000000000014,
+    "in_band_0.5_0.9": 0,
+    "in_band_frac": 0.0
+   }
+  }
+ },
+ "v5_vs_90_88": {
+  "window_days": 837,
+  "split_idx_60": 502,
+  "oos_days": 335,
+  "oos_phase_cash_days": 245,
+  "oos_phase_not_cash_days": 90,
+  "oos_risk_days": 187,
+  "oos_risk_and_cash_days": 185,
+  "oos_live_days": 88,
+  "gap_days_phase_not_cash_but_risk": [
+   "2026-06-06",
+   "2026-06-07"
+  ],
+  "gap_days_regime": [
+   "STAGFLATION",
+   "STAGFLATION"
+  ],
+  "identity_avg_cash_observed": 0.7313432835820896,
+  "identity_245_over_335": 0.7313432835820896,
+  "identity_1_minus_90_over_335": 0.7313432835820896,
+  "identity_1_minus_88_over_335": 0.7373134328358208,
+  "identity_187_over_335_risk_only": 0.5582089552238806
+ },
+ "code_grep": {
+  "w_add": {
+   "total": 0,
+   "files": []
+  },
+  "add_size": {
+   "total": 0,
+   "files": []
+  },
+  "add_w": {
+   "total": 0,
+   "files": []
+  },
+  "MA200": {
+   "total": 10,
+   "files": [
+    "state_vector_builder.py:8",
+    "state_vector_builder_v2.py:2"
+   ]
+  },
+  "ma200": {
+   "total": 4,
+   "files": [
+    "state_vector_builder.py:4"
+   ]
+  },
+  "add_threshold": {
+   "total": 0,
+   "files": []
+  }
+ }
+}
