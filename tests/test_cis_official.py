@@ -13,7 +13,7 @@ import inspect
 from datetime import date
 from pathlib import Path
 
-from src.data.cis.official import completeness, official_rows, overlay
+from src.data.cis.official import is_hard, completeness, official_rows, overlay
 from src.data.cis.rebuild import CODE_REF
 
 BASE = Path(__file__).resolve().parents[1]
@@ -42,6 +42,11 @@ def test_completeness_ok_and_failures():
     assert any("8/10" in p for p in completeness(thin, assets))
     no_fng = [_row(s, fng=None) if s == "BTC" else _row(s) for s in assets]
     assert completeness(no_fng, assets) == ["恐惧贪婪缺"]
+    # 11-02:10-31 ETH 收盘晚到,按「有价 ≥ 90%」照发、没有任何标记。少一个名字也要说出来(软缺:06:00 前等)
+    one_short = [r for r in rows if r["symbol"] != "C3"]
+    probs = completeness(one_short, assets)
+    assert probs == ["加密名字缺价 1:C3"] and not any(is_hard(p) for p in probs)
+    assert completeness(rows + [_row("T0")], assets) == [], "传统资产不算加密缺价"
 
 
 def test_official_rows_continue_yesterdays_level_through_the_buffer():

@@ -10,6 +10,9 @@ Jazz 10-11 批准:对外的正式 CIS = 统一标准的日终序列(每天 UTC �
 
 - 每天 UTC 收盘后算前一天 d。**一个 d 只发一次**:表上有触发器,写进去之后不能改、不能删 —— 后来修订的数据不回改已发布的信号。
 - 数据不全(BTC 没有价、加密名字有价的 < 90%、恐惧贪婪或全市场市值缺)时等;过了 UTC 06:00 照发,缺的写进 `missing`。
+  **11-02:任何一个加密名字没有收盘也等**(软缺,06:00 前每小时自补一次,过点照发并在每行 `missing` 写 `batch:加密名字缺价 …`)。
+  原因:10-31 ETH 的收盘 06:16 才落库,00:57 的发布按「有价 ≥ 90%」照发了 57 个名字 —— ETH 那天在正式序列里**没有一行,
+  也没有任何标记**;少一个名字还会挪动同组所有人的分位。
 - 滞回的「上一档」= 前一天的正式档;没有(第一天、或漏了一天)取重建序列(`cis_rebuild_daily` 同版本)的前一天;
   两者都没有就不发,等重建跑完。漏掉的日子不补发 —— 留空,如实。
 - 公式、取数、分位都复用 `rebuild`(同一段代码)。
@@ -51,6 +54,9 @@ def completeness(rows: list[dict], assets: Mapping[str, Mapping[str, Any]]) -> l
     priced = sum(1 for s in crypto if s in syms)
     if crypto and priced / len(crypto) < MIN_CRYPTO_PRICED:
         probs.append(f"加密名字有价的 {priced}/{len(crypto)}")
+    absent = sorted(s for s in crypto if s not in syms)
+    if absent:                                              # 软缺:06:00 前等,过点照发并写明是谁(11-02,10-31 ETH)
+        probs.append(f"加密名字缺价 {len(absent)}:{','.join(absent[:8])}" + ("…" if len(absent) > 8 else ""))
     btc = next((r for r in rows if r["symbol"] == "BTC"), None)
     if btc is not None:
         if btc["inputs"].get("fng") is None:
@@ -185,7 +191,8 @@ async def _close_inputs_ready(d: date) -> bool:
                                               "series": "in.(total_mcap,fng)"})
     except Exception:                                       # noqa: BLE001
         return False
-    return len({r["coin_id"] for r in have}) >= MIN_CRYPTO_PRICED * len(coins) and \
+    # 11-02:一个都不能少(原来 ≥ 90% 就算齐 ⇒ 少一个名字时不去补,10-31 ETH)
+    return len({r["coin_id"] for r in have}) >= len(set(coins)) and \
         {r["series"] for r in mac} >= {"total_mcap", "fng"}
 
 
