@@ -132,6 +132,107 @@ function EvidenceTag({ klass }) {
   );
 }
 
+const TH = (h) => (
+  <th key={h} style={{
+    fontFamily: F.mono, fontSize: 9, color: T.t3, textTransform: "uppercase",
+    letterSpacing: "0.1em", padding: "8px 10px", textAlign: "left", fontWeight: 700,
+  }}>{h}</th>
+);
+const TD = (v, extra = {}) => (
+  <td style={{ padding: "10px", color: T.t2, fontFamily: F.mono, fontSize: 11, whiteSpace: "nowrap", ...extra }}>{v}</td>
+);
+const tone = (v) => v == null ? T.t3 : v > 0 ? T.green : v < 0 ? T.red : T.t3;
+const bps = (v) => (v == null || Number.isNaN(v)) ? "—" : `${v > 0 ? "+" : ""}${Number(v).toFixed(1)} bp`;
+
+// Real money + the other product lines (world50 / flex / trend trader). Same /api/v1/proof/books call,
+// the `other_lines` part. The live row is the account itself, marked daily and anchored; the surface
+// publishes returns only, never dollar amounts.
+function LinesTable({ rows, liveOnly }) {
+  const list = (rows || []).filter(r => liveOnly ? r.live : !r.live);
+  if (!list.length) {
+    return <p style={{ fontFamily: F.body, fontSize: 12, color: T.t3 }}>
+      {liveOnly ? "No live account recorded yet." : "No other lines recorded yet."}</p>;
+  }
+  return (
+    <div className="tbl-wrap" style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.body, fontSize: 12 }}>
+        <thead>
+          <tr style={{ borderBottom: `1px solid ${T.border}` }}>
+            {["Line", "Opens", "Window", "Forward days", "Period return", "Same-window benchmark",
+              "Excess vs benchmark", "Evidence"].map(TH)}
+          </tr>
+        </thead>
+        <tbody>
+          {list.map(r => {
+            const w = r.window || [];
+            return (
+              <tr key={r.id} style={{ borderBottom: `1px solid ${T.border}` }}>
+                <td style={{ padding: "10px", color: T.t1, fontWeight: 600, maxWidth: 360 }}>
+                  {r.name}
+                  <div style={{ fontFamily: F.body, fontSize: 10, color: T.t3, marginTop: 3, lineHeight: 1.45 }}>
+                    {r.thesis}
+                  </div>
+                  {r.note && <div style={{ fontFamily: F.body, fontSize: 10, color: T.amber, marginTop: 3 }}>{r.note}</div>}
+                </td>
+                {TD(DATE(r.opens))}
+                {TD(w.length === 2 ? `${DATE(w[0])} → ${DATE(w[1])}` : "—")}
+                {TD(r.forward_days ?? "—", { textAlign: "right" })}
+                {TD(pct(r.total_return), { textAlign: "right", color: tone(r.total_return) })}
+                {TD(pct(r.benchmark_return_same_window), { textAlign: "right" })}
+                {TD(pct(r.excess_vs_benchmark), { textAlign: "right", color: tone(r.excess_vs_benchmark) })}
+                <td style={{ padding: "10px" }}><EvidenceTag klass={r.evidence_class} /></td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// Execution quality: what the live account actually paid against the mid price it decided at.
+// Positive slippage = paid more than the decision mid. Sleeves ending in _dry record intentions only.
+function ExecutionTable({ rows }) {
+  const list = (rows || []).filter(r => r.live);
+  if (!list.length) {
+    return <p style={{ fontFamily: F.body, fontSize: 12, color: T.t3 }}>No live fills recorded yet.</p>;
+  }
+  return (
+    <div className="tbl-wrap" style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: F.body, fontSize: 12 }}>
+        <thead>
+          <tr style={{ borderBottom: `1px solid ${T.border}` }}>
+            {["Sleeve", "Since", "Decisions", "Filled", "Fill rate", "Slippage vs decision mid",
+              "Venue fee", "Shortfall", "Quoted spread at decision"].map(TH)}
+          </tr>
+        </thead>
+        <tbody>
+          {list.map(r => (
+            <tr key={r.sleeve} style={{ borderBottom: `1px solid ${T.border}` }}>
+              <td style={{ padding: "10px", color: T.t1, fontWeight: 600 }}>{r.sleeve}
+                {r.note && <div style={{ fontFamily: F.body, fontSize: 10, color: T.t3, marginTop: 3 }}>{r.note}</div>}
+              </td>
+              {TD(DATE(r.first_d))}
+              {TD(r.n_intents ?? "—", { textAlign: "right" })}
+              {TD(r.n_filled ?? "—", { textAlign: "right" })}
+              {TD(r.fill_rate == null ? "—" : `${(r.fill_rate * 100).toFixed(0)}%`, { textAlign: "right" })}
+              {TD(bps(r.mean_slippage_bps), { textAlign: "right", color: r.mean_slippage_bps > 0 ? T.red : T.t2 })}
+              {TD(bps(r.mean_fee_bps), { textAlign: "right" })}
+              {TD(bps(r.implementation_shortfall_bps), { textAlign: "right", color: r.implementation_shortfall_bps > 0 ? T.red : T.t2 })}
+              {TD(bps(r.median_quoted_spread_bps), { textAlign: "right" })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p style={{ fontFamily: F.body, fontSize: 11, color: T.t3, marginTop: 10, lineHeight: 1.5 }}>
+        Slippage = fill price against the mid at decision time (positive = paid). Shortfall = slippage + venue fee
+        + the cost of anything unfilled. Quoted spread = what the backtest assumed and never observed. Small counts
+        are a thin estimate, not a good one.
+      </p>
+    </div>
+  );
+}
+
 function BooksTable({ books }) {
   if (!books.length) {
     return <p style={{ fontFamily: F.body, fontSize: 12, color: T.t3 }}>No books in this basis yet.</p>;
@@ -320,7 +421,8 @@ function AnchorsList({ anchors, howToVerify, error }) {
 
 export default function TrackRecord() {
   const [books, setBooks]     = useState({ list: [], reading: null, error: null });
-  const [proof, setProof]     = useState({ rows: [], asOf: null, error: null });
+  const [proof, setProof]     = useState({ rows: [], asOf: null, error: null, other: null, otherError: null,
+                                           execution: null, executionError: null });
   const [anchors, setAnchors] = useState({ list: [], howToVerify: null, error: null });
 
   useEffect(() => {
@@ -332,8 +434,12 @@ export default function TrackRecord() {
         error: FAIL_BOOKS + (err && err.status ? ` (status ${err.status})` : "") }); });
     fetch("/api/v1/proof/books")
       .then(r => r.ok ? r.json() : Promise.reject({ status: r.status }))
-      .then(d => { if (alive) setProof({ rows: d.books || [], asOf: d.as_of || null, error: null }); })
-      .catch(err => { if (alive) setProof({ rows: [], asOf: null,
+      .then(d => { if (alive) setProof({ rows: d.books || [], asOf: d.as_of || null, error: null,
+        other: (d.other_lines && d.other_lines.status === "ok") ? (d.other_lines.rows || []) : null,
+        otherError: (d.other_lines && d.other_lines.status !== "ok") ? (d.other_lines.why || "unavailable") : null,
+        execution: (d.execution && d.execution.status === "ok") ? (d.execution.rows || []) : null,
+        executionError: (d.execution && d.execution.status !== "ok") ? (d.execution.why || "unavailable") : null }); })
+      .catch(err => { if (alive) setProof({ rows: [], asOf: null, other: null, execution: null,
         error: FAIL_PROOF + (err && err.status ? ` (status ${err.status})` : "") }); });
     fetch("/api/v1/proof/anchors")
       .then(r => r.ok ? r.json() : Promise.reject({ status: r.status }))
@@ -355,12 +461,36 @@ export default function TrackRecord() {
           fontFamily: F.body, fontSize: 13, color: T.t3,
           margin: "10px 0 0", lineHeight: 1.6, maxWidth: 760,
         }}>
-          Every paper book we publish, the period return the books actually carried,
-          and a daily digest anchored against Bitcoin's clock. We cannot edit history
-          after the day is anchored; if a row is wrong it is wrong in the snapshot too,
-          and an outsider can re-compute the digest and check.
+          The live account, every paper book we publish, the period return each actually carried,
+          what the live account paid to execute, and a daily digest anchored against Bitcoin's clock.
+          We cannot edit history after the day is anchored; if a row is wrong it is wrong in the
+          snapshot too, and an outsider can re-compute the digest and check.
         </p>
       </header>
+
+      {/* Real money: the live account, marked daily and anchored */}
+      <Section
+        title="Real money"
+        sub="The live account itself, marked once a day and anchored. Returns only; the paper tier it is built to track is the benchmark."
+      >
+        {proof.error
+          ? <ReadFail label={proof.error} />
+          : proof.otherError
+            ? <ReadFail label={`live account line: ${proof.otherError}`} />
+            : <LinesTable rows={proof.other} liveOnly />}
+      </Section>
+
+      {/* Execution quality */}
+      <Section
+        title="Execution quality"
+        sub="Every live decision against the mid price it was decided at. This is the number that says whether the live account is the paper record or a shadow of it."
+      >
+        {proof.error
+          ? <ReadFail label={proof.error} />
+          : proof.executionError
+            ? <ReadFail label={`execution: ${proof.executionError}`} />
+            : <ExecutionTable rows={proof.execution} />}
+      </Section>
 
       {/* Books in scope (mode=forward) */}
       <Section
@@ -385,6 +515,18 @@ export default function TrackRecord() {
         {proof.error
           ? <ReadFail label={proof.error} />
           : <ProofTable rows={proof.rows} books={books.list} />}
+      </Section>
+
+      {/* Other product lines: World50, flexible mix, trend trader — paper, each with its own benchmark */}
+      <Section
+        title="Other product lines"
+        sub="Paper records kept apart from the crypto allocation layer: World50, the flexible mix, the trend trader. Each has its own benchmark; none competes for the core's weight."
+      >
+        {proof.error
+          ? <ReadFail label={proof.error} />
+          : proof.otherError
+            ? <ReadFail label={`other lines: ${proof.otherError}`} />
+            : <LinesTable rows={proof.other} liveOnly={false} />}
       </Section>
 
       {/* Daily anchors */}

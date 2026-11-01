@@ -108,6 +108,22 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
 
 ## 方向(不放 MINIMAX_SYNC —— 那个文件会按体积轮转)
 
+### 2026-11 铺排(Jazz 11-01「往前铺排」;Seth 11-01 15:20 UTC 写,按先后排)
+
+真钱已经在跑(T25,600 USDC,10-30 起),地基三件(现货口径 / 按时点 ① / 执行质量)都落了。接下来两周的主线只有一条:**把「可验证的前向记录」从 JSON 变成 LP 和 agent 看得见的东西,同时把真钱账本的第一个月跑干净。**
+
+| 期限 | 事 | 谁 | 判据 |
+|---|---|---|---|
+| 11-01 | **Track Record 页展示真钱**:`other_lines`(真钱 t25_live、World50、灵活组合)+ `execution` 段(成交对决策中间价)—— 页面现在只画纸面 books,标题还写「paper book」 | Seth | 页面三段齐;静态测试守合规词;dist 已构建 |
+| 11-02 | **每日 00:30 UTC Telegram 简报**:真钱 equity / nav / 当日、三本执行账昨夜的轮次、执行质量累计、不 ok 的循环、OPEN RISKS 条数 —— 让 Jazz 每天一眼 | Seth | `loop_attempt` 里 `_daily_digest_loop` 每天一行,Telegram 收到 |
+| 11-08 | **CIS v2 加密影子满 20 天前的对照报告**(v1 vs v2 的档位换手、分数分布、与前向收益的关系),11-09 满 20 天 ⇒ 切(S-668) | Seth 报 → Jazz 定 | `/api/v1/cis/v2` shadow.crypto_consecutive_days ≥ 20 |
+| 11-20 前 | **T25 第一次再平衡日(11-30)的机制(P5)**:再平衡时资本按真钱快照还是固定 600?现金腿里 USDY 收益腿建不建? | Jazz 定 → Seth 建 | `portfolio_targets.plan_fields` 的 capital 来源写进 DECISIONS;11-30 前一周空跑一次 |
+| 11 月 | **容量(T-082)用自己录的盘口算**:东京主机 10-19 起每 10 秒录 HL 前 20 档 —— 每名每天 ±1% 深度汇总进库,再算 $30M / $500M 下每本账几天建满 | Seth(主机 → 库的管子)→ lane(研究) | 新表每天有行;报告按名字给容量 |
+| 待 Jazz | IC 乘数这层留不留(S-702);密钥轮换(runbook 就位);World50 EW×Mom 有链上形式后股票腿换掉 SPYX 替身 | Jazz | DECISIONS 一行 |
+| lanes | Mac 引擎 secret 搬家(SYNC §IN-FLIGHT 第 43 行);S-690 / S-695 在现货面板上复核(S-701 之后研究与前向同口径了) | Minimax | SYNC 回执;台账 M- 条目 |
+
+**不做的:** 不加新数据源;不开新策略臂;不碰 ④。真钱第一个月的全部注意力在「账对不对、显示对不对、停得住不住」。
+
 > **2026-09-22 定规(S-398):** 09-21 一次按体积的轮转把 SYNC 从 69,725 砍到 21,602,
 > **「自证率 / 棘轮 / S-380」在活文件里的提及变成 0 次。**
 > 设计来防止「三天没人发现六个价格源死了」的那个机制,自己被归档掉了。

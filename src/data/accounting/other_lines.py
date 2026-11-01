@@ -55,10 +55,11 @@ LINES: tuple[Line, ...] = (
     Line("flex_x1v_t25", "flex", "Flexible mix at the -25% drawdown tier: 30% crypto (core, trend rules) / 30% global equities / 20% gold / 20% cash",
          "The mix the simulations put at a worst-5% drawdown of about -25% with the crypto leg on the trend rules (S-604); the tier used until execution is live.",
          "flex_x1v:T25", "flex_x1v:H_T25", ("flex_x1v:T35",), "2026-10-16"),
-    Line("t25_live", "flex", "Real money: the live account, building the -25% tier leg by leg",
-         "The account itself, marked once a day and anchored. Legs not yet live (equities, gold, the yield part of "
-         "cash) sit in dollars until they are built, and the R-v2 ticket sleeve trades inside the same account; the gap to "
-         "the paper tier is the implementation shortfall, shown as it is.",
+    Line("t25_live", "flex", "Real money: the live account at the -25% tier",
+         "The account itself, marked once a day from the host's own readings and anchored. All four legs are live since "
+         "2026-10-30 (crypto on the trend rules, global equities and gold as tokenised spot, cash held as a stablecoin; the "
+         "yield part of cash is not built yet); the R-v2 ticket sleeve trades inside the same account. The gap to the paper "
+         "tier is the implementation shortfall, shown as it is.",
          "live:T25", "flex_x1v:T25", ("flex_x1v:H_T25",), LIVE_OPEN),
     Line("tom_core_x1v", "tom_trader", "Trend trader on the crypto core: add on profit, out on a 20-day low, smaller when volatility runs hot",
          "Long and adding only while the core is making money; out entirely on a 20-day low; exposure scaled down when volatility is "
@@ -101,7 +102,7 @@ def other_line_rows(navs: Mapping[str, Optional[pd.Series]], asof: pd.Timestamp,
     for ln in lines:
         st = ln.start if ln.start != FORWARD_START else start
         row: dict[str, Any] = {"id": ln.id, "line": ln.line, "name": ln.name, "thesis": ln.thesis,
-                               "opens": st, "benchmark": ln.benchmark}
+                               "opens": st, "benchmark": ln.benchmark, "live": ln.series.startswith("live:")}
         if asof < pd.Timestamp(st):
             row.update({"evidence_class": "not_started", "note": f"Forward record opens on {st}; nothing is recorded before it."})
             out.append(row)
@@ -135,6 +136,8 @@ HOW_TO_READ_OTHER = {
     "excess_vs_benchmark": "Total return minus the named benchmark's over the same window (world50: momentum tilt vs equal "
                            "weight; alt leaders: each picker vs every name in the gate; the gate vs the crypto core).",
     "also_same_window": "Other references over the same window, returns only (ETH, the crypto core, the World50 book).",
+    "live": "true = a real account marked from its own readings (returns only; dollar amounts are not published). "
+            "Everything else on this surface is a paper record.",
 }
 
 

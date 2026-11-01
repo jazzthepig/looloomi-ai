@@ -132,6 +132,19 @@ def test_disclosure_present() -> None:
     _check("positioning language disclosure present", "Positioning language" in src)
 
 
+def test_real_money_and_execution_sections_present() -> None:
+    """11-01(Jazz「往前铺排」第一条):页面要画真钱那条线与执行质量,不只是纸面 books。
+    数据来自同一个 /api/v1/proof/books(other_lines 的 live 行、execution 段)。只出收益与 bp,不出美元额。"""
+    src = TR.read_text(encoding="utf-8")
+    _check("Real money section rendered", 'title="Real money"' in src)
+    _check("Execution quality section rendered", 'title="Execution quality"' in src)
+    _check("Other product lines section rendered", 'title="Other product lines"' in src)
+    _check("live rows come from other_lines", "other_lines" in src and "liveOnly" in src)
+    _check("execution rows come from the execution section", "d.execution" in src and "implementation_shortfall_bps" in src)
+    _check("no dollar amounts on the surface (returns and bp only)",
+           "equity_usd" not in src and "notional_usd" not in src and "usdc" not in src.lower())
+
+
 def test_wired_into_sidebar_and_app() -> None:
     """Sidebar 导航项 + App.jsx 路由挂载 —— 不是孤儿组件。"""
     sidebar = SIDEBAR.read_text(encoding="utf-8")
@@ -156,6 +169,7 @@ def main() -> int:
     test_no_buy_sell_language()
     test_read_failure_copy_present()
     test_disclosure_present()
+    test_real_money_and_execution_sections_present()
     test_wired_into_sidebar_and_app()
     if FAILURES:
         print(f"\n{len(FAILURES)} FAILURE(S):")
