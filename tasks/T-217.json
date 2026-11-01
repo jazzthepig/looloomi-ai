@@ -19,10 +19,10 @@
     "migrations/"
   ],
   "acceptance": {
-    "check": "只读 SELECT,不改代码、不动密钥、不做 DDL。①对每条按日写入的前向记录(core_cap_daily、cis_tilt_daily、beta_plus_daily、tokenization_tilt_daily、hl_book_daily、allocation_daily、allocation_nav_daily、live_account_daily、depth_divergence_log、rr_matrix_daily,及你发现的其它按日前向表)列:首日、末日、应有天数、缺失天数、最长连续缺口(日期+长度)、computed_at 晚于 d+2 天的行数(事后改写/补写)或 correction 列非空的行数,并判断它能否被外部第三方当作「自首日起连续、未回填」的证据。②把近 7 天 loop_attempt 里 _forward_record_loop(约 21 次 error:'refresh: no response from Supabase after retries' / 'refresh returned NoneType')、_forward_return_backfill_loop(约 20 次 error、reason 为空)、_feature_arms_loop / _core_variants_loop / _public_cache_warm_loop / _tokenization_tilt_loop(约 11 次读超时)按时间点对齐成一张表,判断是不是同一来源(数据库负载 / 某个大表扫描 / 连接池 / 某个同时刻的批任务),给最小处置建议。③查清 executor_host 心跳 2026-10-26 21:42 UTC → 10-29 14:24 UTC 共 64.7 小时无行期间,live 账户余额 613.25(10-26)→ 630.64(10-29 开账日)的 +17.4 在库里有无任何可解释的行(live_account_daily 10-29 才开账);查不到就写「查不到」。",
+    "check": "只读 SELECT,不改代码、不动密钥、不做 DDL。数据通道:只用 lane 能读到的表与公开接口(/api/v1/ 下的 GET);401 的表(beta_plus/tokenization_tilt/allocation/allocation_nav/live_account/rr_matrix)本卡不查,列入「需 Seth 代查」清单,Seth 用 Supabase MCP 只读补。①对可读的按日前向表(core_cap_daily、cis_tilt_daily、hl_book_daily,及公开接口可见的其它按日表)列:首日、末日、应有天数、缺失天数、最长连续缺口(日期+长度)。写入口径先判表:逐行 upsert 的表(仅 hl_book_daily)用 computed_at 晚于 d+2 天的行数/correction 列非空数;整段重算的表(core_cap/cis_tilt)computed_at 全同属整条重算,不得判为回填,只报「整段重算,无逐行时间戳证据」。并判断能否被外部第三方当作「自首日起连续、未回填」的证据。②loop_attempt 可读才做;读不到(0 行/401)写「读不到」,不推测来源。③executor_host 心跳 10-26 21:42Z→10-29 14:24Z 无行期间 live 余额 +17.4:读不到 live_account_daily 就写「读不到」。纪律:步数过半先把脚本与中间结果落文件;遇 Prompt is too long 下一轮以未提交脚本为续跑起点,不整份重写。",
     "expect": "报告 docs/research/T-217_record_continuity.md,开头一张连续性总表;卡片 notes 写三个结论各一句。"
   },
   "prior_value": "只有 10-28 的口头判断:'记录没断、监视器沉默';没有逐条记录的连续性证明,也不知道超时是不是同一来源。",
-  "notes": "",
+  "notes": "Seth 11-01 改卡(§Seth-1101a):lane-a 11-01 两轮 Prompt is too long 零交付,根因是卡面要求的 6 张表对 lane 返回 401。缩到可读表,判据改为按写入口径分类。",
   "verified": null
 }
