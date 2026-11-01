@@ -148,15 +148,26 @@ def _ms(d: str) -> int:
     return int(dt.datetime.fromisoformat(d).replace(tzinfo=dt.timezone.utc).timestamp() * 1000)
 
 
-async def _ledger(addr: str, first_d: str, last_d: str) -> list[dict]:
-    """[first_d 00:00, last_d + 1 日 00:00) 的账本更新(UTC)。"""
+#: 这个文件对 HL 公开接口只读按地址查的这几类(不要 key);`dead_host_guard` 也经这里,不再开一条取数路径(S-302)
+HL_ACCOUNT_INFO_TYPES = frozenset({"userNonFundingLedgerUpdates", "spotClearinghouseState", "clearinghouseState",
+                                   "frontendOpenOrders"})
+
+
+async def hl_info(body: dict[str, Any]) -> Any:
+    """HL 公开 `/info`,只允许按账户地址查的那几类。"""
+    if body.get("type") not in HL_ACCOUNT_INFO_TYPES:
+        raise ValueError(f"refusing info type {body.get('type')!r}")
     import httpx
-    body = {"type": "userNonFundingLedgerUpdates", "user": addr, "startTime": _ms(first_d),
-            "endTime": _ms(last_d) + 86_400_000 - 1}
     async with httpx.AsyncClient(timeout=20) as c:
         r = await c.post("https://api.hyperliquid.xyz/info", json=body)
         r.raise_for_status()
-        out = r.json()
+        return r.json()
+
+
+async def _ledger(addr: str, first_d: str, last_d: str) -> list[dict]:
+    """[first_d 00:00, last_d + 1 日 00:00) 的账本更新(UTC)。"""
+    out = await hl_info({"type": "userNonFundingLedgerUpdates", "user": addr, "startTime": _ms(first_d),
+                         "endTime": _ms(last_d) + 86_400_000 - 1})
     if not isinstance(out, list):
         raise RuntimeError(f"ledger 回了 {type(out).__name__}")
     return out
@@ -168,11 +179,7 @@ XCHECK_REL_TOL, XCHECK_ABS_TOL = 0.005, 1e-6
 
 async def _hl_spot_balances(addr: str) -> dict[str, float]:
     """HL 公开接口:这个地址**现在**的现货余额(coin → total)。只读、不要 key。"""
-    import httpx
-    async with httpx.AsyncClient(timeout=20) as c:
-        r = await c.post("https://api.hyperliquid.xyz/info", json={"type": "spotClearinghouseState", "user": addr})
-        r.raise_for_status()
-        out = r.json()
+    out = await hl_info({"type": "spotClearinghouseState", "user": addr})
     bals = (out or {}).get("balances") if isinstance(out, dict) else None
     if not isinstance(bals, list):
         raise RuntimeError(f"spotClearinghouseState 回了 {type(out).__name__}")

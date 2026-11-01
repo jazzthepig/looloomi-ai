@@ -41,9 +41,9 @@ if str(ROOT) not in sys.path:
 
 from scripts.loop_status import sense_entrypoints            # noqa: E402
 
-#: 2026-09-05 首测值。**只减不增。**
-#: 降到新值时把这里改成新值,锁住成果 —— 与 NO_BEAT_BUDGET 同模式。
-SENSE_ENTRYPOINT_BUDGET = 24
+#: 2026-09-05 首测值 24。**只减不增。**
+#: 降到新值时把这里改成新值,锁住成果 —— 与 NO_BEAT_BUDGET 同模式。11-02 实测 23,锁住。
+SENSE_ENTRYPOINT_BUDGET = 23
 
 _OK, _FAIL = [], []
 

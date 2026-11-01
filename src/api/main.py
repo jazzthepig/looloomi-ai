@@ -2353,6 +2353,36 @@ async def _daily_digest_loop():
         await _asyncio.sleep(1200)
 
 
+async def _dead_host_guard_loop():
+    """主机死了的那一段(`src/data/execution/dead_host_guard.py`,11-02):每 10 分钟用 HL 公开接口独立看一次真钱账户 ——
+    主机沉默且现货已穿灾难止损线 ⇒ Telegram;永续仓位没有减仓触发单(主机沉默,或连续两轮)⇒ Telegram。不下单。"""
+    await _asyncio.sleep(_boot_delay(420))
+    while True:
+        try:
+            from src.data.execution.dead_host_guard import run_once as _dg_run
+            r = await _dg_run()
+            if r.get("alerts"):
+                print(f"[DEAD-GUARD] {r.get('why')}")
+                await _record_loop_attempt("_dead_host_guard_loop", "ok" if r.get("ok") else "error", reason=str(r.get("why"))[:400],
+                                           detail={k: r.get(k) for k in ("host_age_h", "breaches", "naked", "alerts", "delivered")},
+                                           writer="src.api.main._dead_host_guard_loop")
+            else:
+                await _iteration_result("_dead_host_guard_loop", r)
+            await _beat("_dead_host_guard_loop", ok=bool(r.get("ok")), error=None if r.get("ok") else str(r.get("why"))[:200],
+                        detail={"host_age_h": r.get("host_age_h"), "alerts": r.get("alerts")})
+        except Exception as _e:
+            print(f"[DEAD-GUARD] ⚠️  pass FAILED: {_e}")
+            await _beat("_dead_host_guard_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_dead_host_guard_loop", _e)
+        await _asyncio.sleep(600)
+
+
+@app.on_event("startup")
+async def _start_dead_host_guard_loop():
+    _asyncio.create_task(_dead_host_guard_loop())
+    print("[DEAD-GUARD] ✅ dead-host guard scheduled (10 min; HL public reads, alerts only)")
+
+
 @app.on_event("startup")
 async def _start_daily_digest_loop():
     _asyncio.create_task(_daily_digest_loop())
