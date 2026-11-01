@@ -222,3 +222,24 @@ def test_per_lane_tokens_are_attributable(monkeypatch):
 
     with pytest.raises(Exception):
         mod.require_internal_token("tok-b")  # 未配置的 lane 必须拒绝
+
+
+def test_halt_only_token_can_stop_but_is_not_a_lane(monkeypatch):
+    """Jazz 11-01「要的」:Seth 拿一把只能停的 token。它停得了(一键停端点接受),但打任何别的内部端点都是 401。"""
+    mod = _load_helper()
+    for k in ("INTERNAL_TOKEN", "INTERNAL_TOKEN_A", "INTERNAL_TOKEN_B", "INTERNAL_TOKEN_C", "INTERNAL_TOKEN_SETH"):
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.setenv("INTERNAL_TOKEN", "tok-main")
+    monkeypatch.setenv("INTERNAL_TOKEN_HALT", "tok-halt")
+    assert mod.require_halt_token("tok-halt") == "halt"
+    assert mod.require_halt_token("tok-main") == "seth", "正常 token 也能停"
+    with pytest.raises(Exception):
+        mod.require_internal_token("tok-halt")                           # 只能停,不是 lane
+    with pytest.raises(Exception):
+        mod.require_halt_token("tok-nope")
+    monkeypatch.delenv("INTERNAL_TOKEN_HALT")
+    with pytest.raises(Exception):
+        mod.require_halt_token("tok-halt")                               # 没配就不存在
+    src = _read(API / "routers" / "executor.py")
+    assert "require_halt_token(x_internal_token)" in src and 'lane == "halt" and body["halted"] is False' in src, \
+        "一键停端点要用 require_halt_token,且 halt-only 不能解除"

@@ -44,6 +44,23 @@ def require_internal_token(given: Optional[str]) -> str:
     raise HTTPException(status_code=401, detail="Invalid token")
 
 
+#: 只能停、不能做别的(Jazz 11-01):Seth 拿这一把。它**不**通过 `require_internal_token`,只被一键停端点接受;
+#: 所有正常 lane 的 token 也能停(停是最小动作)。
+HALT_ENV = "INTERNAL_TOKEN_HALT"
+
+
+def require_halt_token(given: Optional[str]) -> str:
+    """一键停专用:任何 lane 的 token,或只能停的 `INTERNAL_TOKEN_HALT`。通过 ⇒ lane 名(halt-only 返回 "halt");否则 401。"""
+    try:
+        return require_internal_token(given)
+    except HTTPException:
+        pass
+    expected = os.environ.get(HALT_ENV, "")
+    if given and expected and hmac.compare_digest(str(given).encode(), expected.encode()):
+        return "halt"
+    raise HTTPException(status_code=401, detail="Invalid token")
+
+
 def internal_token_configured() -> bool:
     """有没有任何一把 token 配着(给健康检查 / 启动自检用;不返回值本身)。"""
     return any(os.environ.get(env_name) for _, env_name in LANES)

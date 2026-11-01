@@ -18,7 +18,7 @@ HL API 钱包的私钥只放在这台主机的 `/etc/cometcloud/executor.env`(Ja
 ## 两个停
 
 - `/var/lib/cometcloud/HALT` 存在 ⇒ 不下任何单(主机上 `touch` 即生效);
-- Railway 一键停(`POST /internal/executor/halt`,Jazz 的 INTERNAL_TOKEN)⇒ 下一次取计划时生效(≤ 15 分钟)。
+- Railway 一键停(`POST /internal/executor/halt`,Jazz 的 INTERNAL_TOKEN;Seth 的 INTERNAL_TOKEN_HALT 只能停不能解)⇒ 下一次取计划时生效(≤ 15 分钟)。
 停着时照样算、照样记意图,只是不提交 —— 停的时候也要知道「本来会做什么」。
 
 ## 只调用一种写操作

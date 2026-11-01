@@ -68,9 +68,11 @@ def test_run_once_writes_each_finished_day_once(monkeypatch):
     async def read_all(t, params):
         if t == la.TABLE:
             return [dict(v) for v in sorted(table.values(), key=lambda r: r["d"])]
-        if t == "loop_attempt":
+        if t == "loop_attempt" and "and" in params:
             lo = params["and"][7:17]
             return [_beat(f"{lo}T23:50:00Z", 630.0), {"at": f"{lo}T23:55:00Z", "detail": {"kind": "cycle"}}]
+        if t == "loop_attempt":
+            return []                                                     # 独立核对:心跳之后没有回报
         if t == "ohlcv_daily":
             return []
         raise AssertionError(t)
@@ -83,12 +85,18 @@ def test_run_once_writes_each_finished_day_once(monkeypatch):
         for r in rows:
             table[r["d"]] = r
         return True
+
+    async def hl_live(addr):
+        return {"USDC": 630.0}
     monkeypatch.setattr(hdr, "_read_all", read_all)
     monkeypatch.setattr(store, "supabase_upsert_table", upsert)
     monkeypatch.setattr(la, "_ledger", ledger)
+    monkeypatch.setattr(la, "_hl_spot_balances", hl_live)
     now = dt.datetime(2026, 10, 31, 1, 0, tzinfo=dt.timezone.utc)
     r = asyncio.run(la.run_once(now))
     assert r["written"] == ["2026-10-29", "2026-10-30"] and table["2026-10-30"]["nav"] == pytest.approx(1.0)
+    assert r["xcheck"] == {"2026-10-30": {**r["xcheck"]["2026-10-30"], "verdict": "match"}}, "只核最近一天,且一致"
+    assert "独立核对" not in (table["2026-10-30"].get("note") or ""), "一致就不写进 note"
     assert asked_ledger[-1] == (ME, "2026-10-30", "2026-10-30")
     assert asyncio.run(la.run_once(now))["written"] == [], "写一次不改"
     early = asyncio.run(la.run_once(dt.datetime(2026, 10, 29, 20, 0, tzinfo=dt.timezone.utc)))
@@ -101,3 +109,67 @@ def test_the_anchor_now_covers_the_live_book_and_its_paper_references():
     for t in ("live_account_daily", "portfolio_targets_daily", "forward_book_nav", "world50_book_nav"):
         assert t in tables
     assert key_of({"book": "flex_x1v", "arm": "T25"}, tables["forward_book_nav"]) == "flex_x1v|T25"
+
+
+def test_cross_check_is_about_quantities_with_a_small_tolerance():
+    hb = {"USDC": 338.11, "XAUT0": 0.0291, "SPYX": 0.2524}
+    assert la.cross_check(hb, {"USDC": 338.1134, "XAUT0": 0.0291, "SPYX": 0.2524}) == []
+    bad = la.cross_check(hb, {"USDC": 300.0, "XAUT0": 0.0291, "SPYX": 0.2524, "UBTC": 0.001})
+    assert bad == ["UBTC 心跳 0 / HL 0.001", "USDC 心跳 338.11 / HL 300"], bad
+    assert la.cross_check({"UETH": 0.0}, {}) == [], "两边都 ≈0 的币不算"
+
+
+def test_mismatch_is_written_into_the_note_and_alerted(monkeypatch):
+    import src.api.notify as notify
+    import src.api.store as store
+    import src.data.style.header as hdr
+    table, alerts = {}, []
+
+    async def read_all(t, params):
+        if t == la.TABLE:
+            return [dict(v) for v in sorted(table.values(), key=lambda r: r["d"])]
+        if t == "loop_attempt" and "and" in params:
+            lo = params["and"][7:17]
+            return [_beat(f"{lo}T23:50:00Z", 630.0)]
+        if t == "loop_attempt":
+            return []                                                     # 心跳之后没有带单的 cycle
+        return []
+
+    async def upsert(t, rows, on_conflict):
+        for r in rows:
+            table[r["d"]] = r
+        return True
+
+    async def ledger(addr, first, last):
+        return []
+
+    async def hl_live(addr):
+        return {"USDC": 580.0}
+
+    async def tg(text):
+        alerts.append(text)
+        return True
+    monkeypatch.setattr(hdr, "_read_all", read_all)
+    monkeypatch.setattr(store, "supabase_upsert_table", upsert)
+    monkeypatch.setattr(la, "_ledger", ledger)
+    monkeypatch.setattr(la, "_hl_spot_balances", hl_live)
+    monkeypatch.setattr(notify, "notify_telegram", tg)
+    r = asyncio.run(la.run_once(dt.datetime(2026, 10, 30, 1, 0, tzinfo=dt.timezone.utc)))
+    assert r["xcheck"]["2026-10-29"]["verdict"] == "mismatch"
+    assert "独立核对:心跳余额与 HL 公开余额对不上 —— USDC 心跳 630 / HL 580" in table["2026-10-29"]["note"]
+    assert table["2026-10-29"]["equity_usd"] == pytest.approx(630.0), "快照仍按心跳口径,核对只报不改"
+    assert alerts and "USDC 心跳 630 / HL 580" in alerts[0]
+
+
+def test_trades_after_the_heartbeat_skip_the_cross_check(monkeypatch):
+    import src.data.style.header as hdr
+
+    async def read_all(t, params):
+        return [{"at": "2026-10-30T23:58:00Z", "detail": {"kind": "cycle", "book": "t25", "orders": [{"symbol": "XAUT0"}]}}]
+
+    async def boom(addr):
+        raise AssertionError("有单就不该去读 HL")
+    monkeypatch.setattr(hdr, "_read_all", read_all)
+    monkeypatch.setattr(la, "_hl_spot_balances", boom)
+    xc = asyncio.run(la._xcheck(ME, _beat("2026-10-30T23:50:00Z", 630.0), dt.datetime(2026, 10, 31, 1, 0, tzinfo=dt.timezone.utc)))
+    assert xc["verdict"] == "skipped" and "1 轮带单" in xc["why"]

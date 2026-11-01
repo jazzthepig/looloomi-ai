@@ -2,7 +2,7 @@
 
     GET  /internal/executor/plan     X-Executor-Token   今天的计划(目标、止损线、一键停)
     POST /internal/executor/report   X-Executor-Token   主机回报:意图、成交结果、余额、心跳
-    POST /internal/executor/halt     X-Internal-Token   一键停 / 解除(Redis `executor:halt`)
+    POST /internal/executor/halt     X-Internal-Token   一键停 / 解除(Redis `executor:halt`);INTERNAL_TOKEN_HALT 只能停(scripts/seth_halt.sh)
     GET  /internal/executor/book-of-truth  X-Internal-Token   R-v2 真相之书:纸面 vs 交易所逐票对账(只读)
     POST /internal/regime-call       X-Internal-Token   Jazz ⓪ 开关:提交一条判断(on / off / flat、信心、战场)
     GET  /internal/regime-call       X-Internal-Token   生效的判断、最近 20 条、在持 J 票、记分卡
@@ -244,16 +244,21 @@ async def regime_call_brief(top: int = 40, x_internal_token: Optional[str] = Hea
 @router.post("/internal/executor/halt")
 async def executor_halt(body: dict = Body(...),
                         x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
-    """一键停 / 解除。body: {"halted": true|false, "reason": "..."}。TTL 90 天(过期 = 解除,写在这里不藏)。"""
-    require_internal_token(x_internal_token)
+    """一键停 / 解除。body: {"halted": true|false, "reason": "..."}。TTL 90 天(过期 = 解除,写在这里不藏)。
+    Jazz 11-01:除了正常 lane 的 token,还接受只能停的 `INTERNAL_TOKEN_HALT`(Seth 那把);**解除**仍只有正常 token 能做 ——
+    停是最小动作,恢复真钱不是。"""
+    from src.api.auth_internal import require_halt_token
+    lane = require_halt_token(x_internal_token)
     if not isinstance(body.get("halted"), bool):
         raise HTTPException(422, "halted 必须是 true / false")
+    if lane == "halt" and body["halted"] is False:
+        raise HTTPException(403, "这把 token 只能停,不能解除")
     from src.api.store import redis_set_key
     payload = {"halted": body["halted"], "reason": str(body.get("reason") or "")[:300],
-               "at": dt.datetime.now(dt.timezone.utc).isoformat()}
+               "at": dt.datetime.now(dt.timezone.utc).isoformat(), "by": lane}
     r = await redis_set_key(HALT_KEY, payload, ttl=90 * 86400)
     if not r:
         raise HTTPException(502, f"halt flag not written: {getattr(r, 'why', '')}")
     from src.api.notify import notify_telegram
-    await notify_telegram(f"[executor] {'HALTED' if body['halted'] else 'resumed'} · {payload['reason']}")
+    await notify_telegram(f"[executor] {'HALTED' if body['halted'] else 'resumed'} · {payload['reason']} · by {lane}")
     return {"ok": True, **payload}

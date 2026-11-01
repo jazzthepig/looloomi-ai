@@ -18,6 +18,14 @@ internalTransfer / subAccountTransfer 按方向记;同一地址自己划转 = �
 
 每个完成的 UTC 日写一行,写过就不再写(前向记录);锚定在 `anchor.SOURCES`。证据面只给收益,不给美元额。
 
+## 独立核对(11-01,Jazz「要的」)
+
+快照里的余额来自主机心跳 —— 主机是**同一个**写入方,它读错 / 停了 / 被改了,快照照单全收。所以写最近一天的行之前,
+Railway 自己再向 HL 公开接口(`spotClearinghouseState`,只要地址,不要 key)读一次现在的现货余额,与心跳里的数量逐币对照:
+心跳之后没有成交(`loop_attempt` 里没有带单的 cycle)⇒ 两边应当一样;差超过容差 ⇒ `note` 写明、Telegram 报。
+**不一致也照写**(快照仍是心跳口径,规则写在 `rule`),但写着「与 HL 对不上」—— 这是报警不是修正。
+手动交易也会在这里露出来(Jazz 11-01:以后不在这个账户手动交易)。
+
 判活:`select d, equity_usd, nav, account_mode, note from live_account_daily order by d desc limit 3`。
 """
 from __future__ import annotations
@@ -154,6 +162,56 @@ async def _ledger(addr: str, first_d: str, last_d: str) -> list[dict]:
     return out
 
 
+#: 独立核对容差:数量相对 0.5%,绝对下限只够吃掉粉尘(0.001 UBTC 是一百美元,绝对容差不能按 USDC 的尺子定)
+XCHECK_REL_TOL, XCHECK_ABS_TOL = 0.005, 1e-6
+
+
+async def _hl_spot_balances(addr: str) -> dict[str, float]:
+    """HL 公开接口:这个地址**现在**的现货余额(coin → total)。只读、不要 key。"""
+    import httpx
+    async with httpx.AsyncClient(timeout=20) as c:
+        r = await c.post("https://api.hyperliquid.xyz/info", json={"type": "spotClearinghouseState", "user": addr})
+        r.raise_for_status()
+        out = r.json()
+    bals = (out or {}).get("balances") if isinstance(out, dict) else None
+    if not isinstance(bals, list):
+        raise RuntimeError(f"spotClearinghouseState 回了 {type(out).__name__}")
+    return {str(b.get("coin")): float(b.get("total")) for b in bals if _f(b.get("total")) is not None}
+
+
+def cross_check(heartbeat: dict[str, Any], live: dict[str, float]) -> list[str]:
+    """纯函数。心跳余额 vs HL 公开余额(都是数量)→ 不一致的币(空 = 一致)。两边都没有或都 ≈0 的币不算。"""
+    bad = []
+    for tok in sorted(set(heartbeat) | set(live)):
+        a, b = _f(heartbeat.get(tok)) or 0.0, _f(live.get(tok)) or 0.0
+        if abs(a - b) <= max(XCHECK_ABS_TOL, XCHECK_REL_TOL * max(abs(a), abs(b))):
+            continue
+        bad.append(f"{tok} 心跳 {a:g} / HL {b:g}")
+    return bad
+
+
+async def _xcheck(addr: str, beat: dict, now: dt.datetime) -> dict[str, Any]:
+    """最近一天的行写之前:心跳之后没有成交 ⇒ 心跳余额应当等于 HL 现在的余额。读不到 / 中间有单 ⇒ 不下结论,写明。"""
+    from src.data.style.header import _read_all
+    hb_at = str(beat.get("at") or "")
+    try:
+        later = await _read_all("loop_attempt", {"select": "at,detail", "loop_name": "eq.executor_host",
+                                                 "at": f"gt.{hb_at}", "order": "at.asc"})
+    except Exception as e:                                               # noqa: BLE001
+        return {"verdict": "unknown", "why": f"心跳之后的回报读不到:{type(e).__name__}"}
+    traded = [r for r in later or [] if (r.get("detail") or {}).get("kind") == "cycle"
+              and ((r.get("detail") or {}).get("orders") or (r.get("detail") or {}).get("intents_written"))]
+    if traded:
+        return {"verdict": "skipped", "why": f"心跳之后有 {len(traded)} 轮带单,余额本就该变"}
+    try:
+        live = await _hl_spot_balances(addr)
+    except Exception as e:                                               # noqa: BLE001
+        return {"verdict": "unknown", "why": f"HL 公开余额读不到:{type(e).__name__}"}
+    bad = cross_check((beat.get("detail") or {}).get("balances") or {}, live)
+    return {"verdict": "mismatch" if bad else "match", "diff": bad, "checked_at": now.isoformat(),
+            "n_tokens": len(set(live) | set((beat.get("detail") or {}).get("balances") or {}))}
+
+
 async def run_once(now: Optional[dt.datetime] = None, max_days: int = 7) -> dict[str, Any]:
     """补写所有完成了、还没写的 UTC 日(从开账日起,一轮最多 max_days 天)。"""
     from src.api.store import supabase_upsert_table
@@ -169,7 +227,7 @@ async def run_once(now: Optional[dt.datetime] = None, max_days: int = 7) -> dict
         if cur.isoformat() not in done:
             todo.append(cur.isoformat())
         cur += dt.timedelta(days=1)
-    wrote, skipped = [], []
+    wrote, skipped, xchecks = [], [], {}
     for d in todo:
         d1 = (dt.date.fromisoformat(d) + dt.timedelta(days=1)).isoformat()
         rows = await _read_all("loop_attempt", {
@@ -199,9 +257,22 @@ async def run_once(now: Optional[dt.datetime] = None, max_days: int = 7) -> dict
         if row is None:
             skipped.append(f"{d}: 心跳里没有余额")
             continue
+        if d == yday and addr:
+            xc = await _xcheck(addr, beats[-1], now)
+            xchecks[d] = xc
+            if xc["verdict"] == "mismatch":
+                msg = f"独立核对:心跳余额与 HL 公开余额对不上 —— {'; '.join(xc['diff'])}"
+                row["note"] = f"{row['note']}; {msg}" if row.get("note") else msg
+                try:
+                    from src.api.notify import notify_telegram
+                    await notify_telegram(f"[live_account] {d} {msg}(手动交易?主机读错?快照照写,按心跳口径)")
+                except Exception:                                        # noqa: BLE001 — 报警失败不拦快照
+                    pass
+            elif xc["verdict"] != "match":
+                row["note"] = f"{row['note']}; 独立核对未做:{xc['why']}" if row.get("note") else f"独立核对未做:{xc['why']}"
         w = await supabase_upsert_table(TABLE, [row], on_conflict="d")
         if not w:
             return {"ok": False, "why": f"写 {d} 失败:{(getattr(w, 'why', '') or '')[:200]}", "written": wrote}
         done[d] = row
         wrote.append(d)
-    return {"ok": True, "written": wrote, "skipped": skipped}
+    return {"ok": True, "written": wrote, "skipped": skipped, "xcheck": xchecks}

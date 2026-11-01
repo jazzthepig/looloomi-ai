@@ -117,6 +117,13 @@ async def endpoint(request: Request):
 
 ---
 
+### 2.x · 只能停的 token(2026-11-01,Jazz「要的」)
+
+`INTERNAL_TOKEN_HALT` **不是 lane**:`require_internal_token` 不认它,只有 `require_halt_token`(一键停端点独用)认,
+返回 lane 名 `halt`;而且 `halt` 只能 `halted=true`,解除 403。所以这把 token 泄露的最坏结果是**停一次**,而停是唯一
+不会亏钱的动作。Seth 用它(`scripts/seth_halt.sh`,值放 `.seth_bot/halt_token`,gitignored,不经聊天)。
+正常 lane 的 token 也能停 —— 停不该比任何别的动作难。
+
 ## 3 · 调整性轴线 (Adaptability Axes)
 
 每条轴线**只改一个文件**(`auth_internal.py`)或只改 env —— 端点不动。
