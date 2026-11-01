@@ -19,7 +19,9 @@ from src.api.contracts.fund import (BUILD_DAYS, DESIGN_AUM_USD, PARTICIPATION_RA
                                     TARGET_AUM_USD)
 
 #: 有持仓权重的账本:登记表 id → (表, 臂)
-WEIGHTED_BOOKS = {"core_cap": ("core_cap_daily", "cap_a1_u"),     # S-556:① 不设单币上限(首行出来之前退回旧臂) "cis_tilt": ("cis_tilt_daily", "cis_a1"),
+#: 11-02:`cis_tilt` 曾经写在 core_cap 那一行的行尾注释里(S-556 加注释时吞掉了),容量报告从那天起一直少一本账、不报错。
+WEIGHTED_BOOKS = {"core_cap": ("core_cap_daily", "cap_a1_u"),     # S-556:① 不设单币上限(首行出来之前退回旧臂)
+                  "cis_tilt": ("cis_tilt_daily", "cis_a1"),
                   "beta_plus_w": ("beta_plus_daily", "momentum_52w_w"), "beta_plus_m": ("beta_plus_daily", "momentum_52w_m"),
                   "tokenization_tilt": ("tokenization_tilt_daily", "tokenization_tilt_25")}
 

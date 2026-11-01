@@ -83,3 +83,9 @@ def test_book_venue_capacity_is_the_thinnest_holding_over_its_weight():
     assert r["missing_depth"] == ["DOGE"], "没有深度数据的持仓单列,不当成无限深"
     assert r["venue_ok_at_target"] is False
     assert book_venue({}, vcap)["venue_capacity_aum_usd"] is None
+
+
+def test_every_weighted_book_is_in_the_capacity_report():
+    """11-02:cis_tilt 被同一行的行尾注释吞掉,容量报告少了一本账、没有任何报错。"""
+    from src.data.accounting.capacity import WEIGHTED_BOOKS
+    assert set(WEIGHTED_BOOKS) == {"core_cap", "cis_tilt", "beta_plus_w", "beta_plus_m", "tokenization_tilt"}
