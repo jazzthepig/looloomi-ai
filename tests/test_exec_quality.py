@@ -84,3 +84,22 @@ def test_the_table_is_anchored_and_the_loop_is_registered():
     import pathlib
     main = pathlib.Path(__file__).resolve().parents[1] / "src" / "api" / "main.py"
     assert "_exec_quality_loop" in main.read_text(encoding="utf-8")
+
+
+def test_latency_three_legs_medians_and_catastrophe_excluded_from_close_timing():
+    """11-02:收盘 → 决策(分)、决策 → 回报(秒)、交易所往返(秒)。10-30 那两笔:决策 15:44:26 → 回报 15:44:30 = 4 秒,交易所 0.4 秒。"""
+    intents = [_i("a", "t25_legs_live", "buy", 762.41, 762.18, 762.64), _i("b", "t25_legs_live", "buy", 3908.1, 3906.2, 3910.0),
+               {**_i("c", "x1v_spot", "sell", 100.0, 99.9, 100.1, ts="2026-10-30T13:00:00+00:00"), "signal_ref": "x1v · catastrophe"}]
+    lat = eq.latency(intents, {"a": _o("a", 762.23), "b": _o("b", 3907.5)})
+    assert lat["median_close_to_decision_min"] == round(15 * 60 + 44 + 26 / 60, 1), "止损那笔不算收盘时延"
+    assert lat["median_decision_to_fill_s"] == 4.0 and lat["median_venue_s"] == 0.4
+    r = eq.rows_for(intents[:2], [_o("a", 762.23), _o("b", 3907.5)], "2026-10-31")[-1]
+    assert r["median_decision_to_fill_s"] == 4.0 and set(eq.LATENCY_FIELDS) <= set(eq.WRITES_COLUMNS[eq.TABLE])
+    dry = eq.rows_for([_i("d", "x1v_spot_host_dry", "buy", 1.0, 0.9, 1.1, ts="2026-10-31T00:08:00+00:00")], [], "2026-10-31")[-1]
+    assert dry["median_close_to_decision_min"] == 8.0 and dry["median_decision_to_fill_s"] is None, "空跑也记决策时间"
+
+
+def test_latency_columns_are_not_in_the_anchor_payload():
+    from src.data.accounting import anchor
+    assert set(eq.LATENCY_FIELDS) <= anchor.DROP
+    assert set(eq.LATENCY_FIELDS) <= set(eq.PUBLIC_FIELDS)

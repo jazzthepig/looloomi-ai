@@ -38,7 +38,9 @@ CALENDARS = ("https://a.pool.opentimestamps.org", "https://b.pool.opentimestamps
 OTS_MAGIC = b"\x00OpenTimestamps\x00\x00Proof\x00\xbf\x89\xe2\xe8\x84\xe8\x92\x94"
 OTS_VERSION = b"\x01"
 OTS_SHA256 = b"\x08"
-DROP = {"computed_at", "updated_at", "recorded_at", "written_at"}
+DROP = {"computed_at", "updated_at", "recorded_at", "written_at",
+        # 11-02:execution_quality_daily 的延迟三列是诊断不是记录;锚过的日子重算时会多出这几列,不能被报成「改过」
+        "median_close_to_decision_min", "median_decision_to_fill_s", "median_venue_s"}
 
 #: (表, 额外过滤, 排序键)。只锚前向:回放行(d < inception)在 build_payload 里按行过滤掉。
 KEYS = {}  # 下面按 SOURCES 填:表 → 一天之内区分行的键

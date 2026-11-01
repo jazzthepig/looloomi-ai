@@ -8,7 +8,8 @@ def test_compose_puts_real_money_first_and_marks_unreadable_sections():
     live = [{"d": "2026-10-30", "equity_usd": 629.49, "usdc": 338.11, "spot_usd": {"SPYX": 175.04, "XAUT0": 116.34}, "nav": 0.99817, "ret": -0.0018},
             {"d": "2026-10-31", "equity_usd": 629.52, "usdc": 338.11, "spot_usd": {"SPYX": 175.1, "XAUT0": 116.3}, "nav": 0.99822, "ret": 0.00005,
              "account_mode": "unifiedAccount", "note": "['SPYX', 'XAUT0'] 按最后一次心跳的 HL 中间价估值"}]
-    ex = [{"sleeve": "t25_legs_live", "n_intents": 2, "fill_rate": 1.0, "mean_slippage_bps": 3.492, "implementation_shortfall_bps": 10.492},
+    ex = [{"sleeve": "t25_legs_live", "n_intents": 2, "fill_rate": 1.0, "mean_slippage_bps": 3.492, "implementation_shortfall_bps": 10.492,
+           "median_decision_to_fill_s": 9.27},
           {"sleeve": "t25_legs_host_dry", "n_intents": 2, "fill_rate": None, "mean_slippage_bps": None, "implementation_shortfall_bps": None}]
     host = [{"at": "2026-11-01T00:08:34Z", "outcome": "ok", "detail": {"book": "t25", "kind": "cycle", "orders": []}},
             {"at": "2026-11-01T00:08:34Z", "outcome": "ok", "detail": {"book": "x1v", "kind": "cycle", "orders": []}},
@@ -20,7 +21,7 @@ def test_compose_puts_real_money_first_and_marks_unreadable_sections():
     assert lines[0].startswith("CometCloud 日报 · 2026-11-01")
     assert "净值 629.52 USDC" in lines[1] and "当日 +0.01%" in lines[2] and "开账以来 -0.18%" in lines[2] and "SPYX 175" in lines[2]
     assert "x1v 1 轮 / 0 单" in text and "t25 1 轮 / 0 单" in text and "r_v2 1 轮 / 1 单" in text, "心跳不算轮次"
-    assert "t25_legs_live 2 笔 成交率 100% 滑点 +3.5bp 差额 +10.5bp" in text and "host_dry" not in text, "空跑账不进简报"
+    assert "t25_legs_live 2 笔 成交率 100% 滑点 +3.5bp 差额 +10.5bp 决策→回报 9.3s" in text and "host_dry" not in text, "空跑账不进简报"
     assert "代码: 主机 d318119d · Railway ab12cd34" in text
     assert "循环不 ok: _forward_record_loop" in text and "OPEN RISKS: 4 条" in text and "读不到的段: PROJECT_STATE" in text
     for w in ("buy", "sell", "BUY", "SELL", "买", "卖"):

@@ -15,6 +15,15 @@
 - live sleeve 里**没有结果的意图**单列 `n_unresolved`:成交记录没落下来是真实状态,不能当成「没下」。
 - 每天重算最近 `RECENT_DAYS` 天 + 累计行(幂等 upsert);进 `forward_anchor_daily`(键 sleeve + span)。
 
+## 延迟(11-02)
+
+三段,各取中位数(秒 / 分),不进锚(`anchor.DROP`):这是诊断,不是业绩 —— 而且锚过的日子重算时多出几列,
+不能让锚把它报成「记录被改过」。
+- `median_close_to_decision_min`:日收盘(UTC 00:00)→ 决策(意图的 `ts_decision`)。**按收盘定的规则才有意义**;
+  灾难止损(`signal_ref` 带 catastrophe)不算 —— 它本来就是盘中触发。空跑也记(决策时间与有没有成交无关)。
+- `median_decision_to_fill_s`:决策 → 结果(`ts_resolved − ts_decision`),含取盘口、落发件箱、签名、往返。
+- `median_venue_s`:交易所那一段(`seconds_to_resolve`,下单 → 回报)。两者之差 = 主机自己花的时间。
+
 ## 判活判据(规则 5b ②)
 
     select d, sleeve, span, n_intents, fill_rate, mean_slippage_bps, implementation_shortfall_bps
@@ -32,7 +41,10 @@ WRITES_TABLES = (TABLE,)
 WRITES_COLUMNS = {TABLE: ("d", "sleeve", "span", "n_intents", "n_resolved", "n_unresolved", "n_filled", "fill_rate",
                           "notional_usd", "mean_slippage_bps", "mean_fee_bps", "mean_opportunity_bps",
                           "implementation_shortfall_bps", "median_quoted_spread_bps", "maker_share", "first_d",
+                          "median_close_to_decision_min", "median_decision_to_fill_s", "median_venue_s",
                           "note", "code_ref", "computed_at")}
+#: 11-02 延迟三列:诊断、不进锚(见 docstring「延迟」);CODE_REF 不升 —— 升了会改掉已锚日子的 payload
+LATENCY_FIELDS = ("median_close_to_decision_min", "median_decision_to_fill_s", "median_venue_s")
 CODE_REF = "exec_quality v1 (10-30)"
 RECENT_DAYS = 7
 DRY_SUFFIX = "_dry"
@@ -63,6 +75,42 @@ def _day(ts: str) -> str:
     return str(ts)[:10]
 
 
+def _ts(x: Any) -> Optional[dt.datetime]:
+    try:
+        t = dt.datetime.fromisoformat(str(x).replace("Z", "+00:00"))
+        return t if t.tzinfo else t.replace(tzinfo=dt.timezone.utc)
+    except (TypeError, ValueError):
+        return None
+
+
+def _median(xs: list[float], nd: int) -> Optional[float]:
+    xs = sorted(xs)
+    return round(xs[len(xs) // 2], nd) if xs else None
+
+
+def latency(intents: list[dict], outcomes: dict[str, dict]) -> dict[str, Optional[float]]:
+    """纯函数。三段延迟的中位数(偶数个取上中位,与价差同一个口径)。"""
+    close_min, d2f, venue = [], [], []
+    for r in intents:
+        td = _ts(r.get("ts_decision"))
+        if td is None:
+            continue
+        if "catastrophe" not in str(r.get("signal_ref") or ""):
+            midnight = td.astimezone(dt.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+            close_min.append((td - midnight).total_seconds() / 60)
+        o = outcomes.get(r["intent_id"])
+        if o is None:
+            continue
+        tr = _ts(o.get("ts_resolved"))
+        if tr is not None and tr >= td:
+            d2f.append((tr - td).total_seconds())
+        v = _f(o.get("seconds_to_resolve"))
+        if v is not None and v >= 0:
+            venue.append(v)
+    return {"median_close_to_decision_min": _median(close_min, 1), "median_decision_to_fill_s": _median(d2f, 2),
+            "median_venue_s": _median(venue, 3)}
+
+
 def summarise(sleeve: str, window: str, d: str, intents: list[dict], outcomes: dict[str, dict]) -> dict[str, Any]:
     """纯函数。一本账在一个窗口里的一行。`outcomes` 按 intent_id。"""
     pairs, unresolved = [], 0
@@ -89,6 +137,7 @@ def summarise(sleeve: str, window: str, d: str, intents: list[dict], outcomes: d
         "maker_share": None if q.maker_share is None else round(q.maker_share, 4),
         "first_d": min(_day(r["ts_decision"]) for r in intents) if intents else None,
         "code_ref": CODE_REF,
+        **latency(intents, outcomes),
     }
     notes = []
     if dry:
@@ -120,13 +169,15 @@ def rows_for(intents: list[dict], outcomes: list[dict], today: str, recent_days:
 #: 对外(证据面 `execution` 段):只出聚合,不出方向词与币名;每本账最新的一行累计。
 PUBLIC_FIELDS = ("sleeve", "d", "first_d", "n_intents", "n_resolved", "n_unresolved", "n_filled", "fill_rate", "notional_usd",
                  "mean_slippage_bps", "mean_fee_bps", "mean_opportunity_bps", "implementation_shortfall_bps",
-                 "median_quoted_spread_bps", "note")
+                 "median_quoted_spread_bps", *LATENCY_FIELDS, "note")
 HOW_TO_READ_EXEC = (
     "One row per execution sleeve, cumulative since its first intent. Sleeves ending in _dry record intents only (no "
     "orders), so slippage is blank there, not zero. For live sleeves: mean_slippage_bps is the fill price against the "
     "mid at decision time (positive = paid), mean_fee_bps the venue fee on filled notional, mean_opportunity_bps what "
     "unfilled orders cost, implementation_shortfall_bps their sum. median_quoted_spread_bps is the spread at decision "
-    "time, i.e. what a backtest assumes and never observes. n_unresolved counts intents with no recorded outcome; "
+    "time, i.e. what a backtest assumes and never observes. Latency (medians): median_close_to_decision_min is minutes "
+    "from the 00:00 UTC daily close to the decision, median_decision_to_fill_s decision to venue response, median_venue_s "
+    "the venue round trip alone. n_unresolved counts intents with no recorded outcome; "
     "that is a data gap, not a trade that did not happen. Small n means a thin estimate, not a good one."
 )
 

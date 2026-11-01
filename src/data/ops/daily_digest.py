@@ -49,8 +49,10 @@ def _bp(x: Any) -> str:
 
 def _exec_line(r: dict) -> str:
     fr = _f(r.get("fill_rate"))
+    lat = _f(r.get("median_decision_to_fill_s"))
     return (f"{r.get('sleeve')} {r.get('n_intents')} 笔 成交率 {'—' if fr is None else f'{fr * 100:.0f}%'} "
-            f"滑点 {_bp(r.get('mean_slippage_bps'))} 差额 {_bp(r.get('implementation_shortfall_bps'))}")
+            f"滑点 {_bp(r.get('mean_slippage_bps'))} 差额 {_bp(r.get('implementation_shortfall_bps'))}"
+            + (f" 决策→回报 {lat:.1f}s" if lat is not None else ""))
 
 
 def compose(d: str, live: list[dict], exec_rows: list[dict], host_events: list[dict], bad_loops: list[dict],
@@ -149,7 +151,8 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
                                                                            "order": "d.desc", "limit": "2"}))
     live = sorted(live, key=lambda r: str(r.get("d")))
     exec_rows = await _try("execution_quality_daily", _read_all("execution_quality_daily", {
-        "select": "sleeve,d,n_intents,fill_rate,mean_slippage_bps,implementation_shortfall_bps", "span": "eq.since_inception",
+        "select": "sleeve,d,n_intents,fill_rate,mean_slippage_bps,implementation_shortfall_bps,median_decision_to_fill_s",
+        "span": "eq.since_inception",
         "order": "d.desc", "limit": "20"}))
     latest: dict[str, dict] = {}
     for r in exec_rows:
