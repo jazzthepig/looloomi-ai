@@ -453,3 +453,17 @@ def test_dry_run_never_checks_the_agent_and_never_reads_the_key(tmp_path):
     rn.refuse_unapproved_agent(v)                 # dry_run:直接返回,不建交易客户端
     with pytest.raises(RuntimeError):
         v.exchange()
+
+
+def test_code_sha_reads_git_files_without_running_git(tmp_path):
+    """11-02:心跳带上主机代码版本。服务用户不是仓库属主,`git rev-parse` 会被 safe.directory 拒 ⇒ 直接读文件。"""
+    from src.exec_host.runner import code_sha
+    g = tmp_path / ".git"
+    (g / "refs" / "heads").mkdir(parents=True)
+    (g / "HEAD").write_text("ref: refs/heads/main\n")
+    (g / "refs" / "heads" / "main").write_text("d318119dabcdef\n")
+    assert code_sha(tmp_path) == "d318119d"
+    (g / "refs" / "heads" / "main").unlink()
+    (g / "packed-refs").write_text("# pack-refs\n5da2bfcaaaaa refs/heads/main\n")
+    assert code_sha(tmp_path) == "5da2bfca"
+    assert code_sha(tmp_path / "nope") is None

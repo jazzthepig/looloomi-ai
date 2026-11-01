@@ -70,6 +70,29 @@ TRIGGER_RETRY_S = 900          # 止损触发单没挂上:每 15 分钟重挂一
 TRUTH_GIVE_UP_S = 86400        # 交易所上已平、成交一直找不到:24 小时后按「找不到」结案(Book of Truth)
 
 
+def code_sha(repo: Optional[Path] = None) -> Optional[str]:
+    """主机上跑的是哪一版代码(11-02:真钱跑在主机上,而 Railway 看不到主机拉没拉)。
+    直接读 `.git/HEAD` 与 refs,不调 git —— 服务用户不是仓库属主,`git rev-parse` 会被 safe.directory 拒绝。读不到 ⇒ None。"""
+    repo = repo or Path(__file__).resolve().parents[2]
+    g = repo / ".git"
+    try:
+        head = (g / "HEAD").read_text(encoding="utf-8").strip()
+        if not head.startswith("ref: "):
+            return head[:8] or None
+        ref = head[5:].strip()
+        if (g / ref).exists():
+            return (g / ref).read_text(encoding="utf-8").strip()[:8] or None
+        for line in (g / "packed-refs").read_text(encoding="utf-8").splitlines():
+            if line.endswith(" " + ref):
+                return line.split()[0][:8]
+    except OSError:
+        return None
+    return None
+
+
+CODE_SHA = code_sha()
+
+
 def _ms(iso: Any) -> int:
     """ISO 时间 → 毫秒;缺 ⇒ 0(从头查)。"""
     try:
@@ -1031,7 +1054,7 @@ class Executor:
             "ticket_plan_asof": (self.state.get("ticket_plan") or {}).get("asof"),
             "ticket_done_asof": self.state.get("ticket_done_asof"),
             "truth_pending": sorted((self.state.get("truth_pending") or {}).keys()),
-            "outbox_pending": len(self.outbox.pending()), "at": now.isoformat()})
+            "outbox_pending": len(self.outbox.pending()), "code": CODE_SHA, "at": now.isoformat()})
 
     def tick(self) -> None:
         now = self.clock()
@@ -1203,9 +1226,9 @@ def main(argv: Optional[list[str]] = None) -> None:
     refuse_unapproved_agent(ex.venue)
     log.info("executor up · mode=%s · account=%s · trade_account=%s · api=%s · nav_cap=%s",
              cfg.mode, cfg.account, cfg.trade_account, cfg.api, cfg.nav_cap)
-    ex._report("heartbeat", detail={"event": "start", "mode": cfg.mode, "nav_cap": cfg.nav_cap,
+    ex._report("heartbeat", detail={"event": "start", "mode": cfg.mode, "nav_cap": cfg.nav_cap, "code": CODE_SHA,
                                     "trade_account": cfg.trade_account, "subaccount": bool(cfg.subaccount)},
-               alert=f"执行器启动 · {cfg.mode} · {cfg.host}" + (" · 子账户" if cfg.subaccount else ""))
+               alert=f"执行器启动 · {cfg.mode} · {cfg.host} · 代码 {CODE_SHA or '读不到'}" + (" · 子账户" if cfg.subaccount else ""))
     while True:
         ex.tick()
         time.sleep(LOOP_S)

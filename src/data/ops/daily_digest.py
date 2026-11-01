@@ -54,7 +54,8 @@ def _exec_line(r: dict) -> str:
 
 
 def compose(d: str, live: list[dict], exec_rows: list[dict], host_events: list[dict], bad_loops: list[dict],
-            n_open_risks: Optional[int], unreadable: Optional[list[str]] = None) -> str:
+            n_open_risks: Optional[int], unreadable: Optional[list[str]] = None,
+            host_code: Optional[str] = None, railway_code: Optional[str] = None) -> str:
     """纯函数。`live` 按 d 升序(最后两行);`host_events` = 昨夜 executor_host 非心跳行;`bad_loops` = [{loop_name, reason}]。"""
     L = [f"CometCloud 日报 · {d}"]
     # 1 真钱
@@ -101,6 +102,8 @@ def compose(d: str, live: list[dict], exec_rows: list[dict], host_events: list[d
         L.append("执行器昨夜: " + " · ".join(parts))
     else:
         L.append("执行器昨夜: 没有任何回报(看心跳)")
+    # 11-02:真钱跑在主机上,主机拉没拉代码 Railway 看不到 —— 两个版本并排写出来(不判对错:主机只在主机侧代码改了才需要拉)
+    L.append(f"代码: 主机 {host_code or '心跳里没有(旧版主机)'} · Railway {railway_code or '—'}")
     # 3 执行质量
     live_eq = [r for r in exec_rows if not str(r.get("sleeve", "")).endswith("_dry")]
     if live_eq:
@@ -154,6 +157,8 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     yday = (now.date() - dt.timedelta(days=1)).isoformat()
     host = await _try("loop_attempt(executor_host)", _read_all("loop_attempt", {
         "select": "at,outcome,detail", "loop_name": "eq.executor_host", "at": f"gte.{yday}T23:00:00Z", "order": "at.asc"}))
+    host_code = next((str((e.get("detail") or {}).get("code")) for e in reversed(host)
+                      if (e.get("detail") or {}).get("code")), None)
     host = [e for e in host if (e.get("detail") or {}).get("kind") != "heartbeat"]
     recent = await _try("loop_attempt", _read_all("loop_attempt", {"select": "loop_name,outcome,reason,at",
                                                                    "at": f"gte.{yday}T00:30:00Z", "order": "at.desc"}))
@@ -167,7 +172,9 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         n_risks = open_risks_count(Path(__file__).resolve().parents[3].joinpath("PROJECT_STATE.md").read_text(encoding="utf-8"))
     except Exception as e:                                               # noqa: BLE001
         unreadable.append(f"PROJECT_STATE: {type(e).__name__}")
-    text = compose(today, live, sorted(latest.values(), key=lambda r: r["sleeve"]), host, bad, n_risks, unreadable)
+    from src.api.loop_beat import build_sha
+    text = compose(today, live, sorted(latest.values(), key=lambda r: r["sleeve"]), host, bad, n_risks, unreadable,
+                   host_code=host_code, railway_code=build_sha() or None)
     if not telegram_configured():
         return {"ok": False, "why": "TELEGRAM_BOT_TOKEN 未配", "text": text}
     sent_ok = await notify_telegram(text)

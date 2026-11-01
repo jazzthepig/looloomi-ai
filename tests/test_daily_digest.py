@@ -14,12 +14,14 @@ def test_compose_puts_real_money_first_and_marks_unreadable_sections():
             {"at": "2026-11-01T00:08:34Z", "outcome": "ok", "detail": {"book": "x1v", "kind": "cycle", "orders": []}},
             {"at": "2026-11-01T00:45:00Z", "outcome": "ok", "detail": {"book": "r_v2", "kind": "cycle", "intents_written": 1}},
             {"at": "2026-11-01T00:50:00Z", "outcome": "ok", "detail": {"book": "x1v", "kind": "heartbeat"}}]
-    text = dd.compose("2026-11-01", live, ex, host, [{"loop_name": "_forward_record_loop", "reason": "no response"}], 4, ["PROJECT_STATE: OSError"])
+    text = dd.compose("2026-11-01", live, ex, host, [{"loop_name": "_forward_record_loop", "reason": "no response"}], 4, ["PROJECT_STATE: OSError"],
+                      host_code="d318119d", railway_code="ab12cd34")
     lines = text.split("\n")
     assert lines[0].startswith("CometCloud 日报 · 2026-11-01")
     assert "净值 629.52 USDC" in lines[1] and "当日 +0.01%" in lines[2] and "开账以来 -0.18%" in lines[2] and "SPYX 175" in lines[2]
     assert "x1v 1 轮 / 0 单" in text and "t25 1 轮 / 0 单" in text and "r_v2 1 轮 / 1 单" in text, "心跳不算轮次"
     assert "t25_legs_live 2 笔 成交率 100% 滑点 +3.5bp 差额 +10.5bp" in text and "host_dry" not in text, "空跑账不进简报"
+    assert "代码: 主机 d318119d · Railway ab12cd34" in text
     assert "循环不 ok: _forward_record_loop" in text and "OPEN RISKS: 4 条" in text and "读不到的段: PROJECT_STATE" in text
     for w in ("buy", "sell", "BUY", "SELL", "买", "卖"):
         assert w not in text, w
@@ -29,6 +31,7 @@ def test_empty_inputs_say_so_instead_of_zero():
     text = dd.compose("2026-11-01", [], [], [], [], None)
     assert "快照还没落" in text and "没有任何回报" in text and "循环: 全部 ok" in text and "OPEN RISKS: 读不到" in text
     assert " 0 USDC" not in text
+    assert "心跳里没有(旧版主机)" in text
 
 
 def test_once_a_day_after_0030_utc():
