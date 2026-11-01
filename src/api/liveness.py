@@ -62,7 +62,8 @@ LIVENESS_SLOS: dict[str, dict] = {
     "_live_account_loop":        {"max_age_h": 3, "kind": "marker"},
     "_exec_quality_loop":        {"max_age_h": 3, "kind": "marker"},     # 10-30 执行质量日表(fill_log 的消费者)
     "_mcap_deepen_loop":         {"max_age_h": 8, "kind": "marker"},     # 10-30 S-700 一次性补齐(做完每 6h 空转一次)
-    "_core_pit_loop":            {"max_age_h": 8, "kind": "marker"},     # 10-30 S-700 按时点 ① 回放臂 cap_pit24(6h)     # 10-29 P1 真钱账户每日快照(主机心跳 → live_account_daily)
+    "_core_pit_loop":            {"max_age_h": 8, "kind": "marker"},     # 10-30 S-700 按时点 ① 回放臂 cap_pit24(6h)
+    "_daily_digest_loop":        {"max_age_h": 2, "kind": "marker"},     # 11-01 每日 Telegram 简报(00:30 UTC;每 20 分钟看一眼)     # 10-29 P1 真钱账户每日快照(主机心跳 → live_account_daily)
     "_vc_rounds_loop":           {"max_age_h": 6, "kind": "collector"},  # 10-28 VC 融资轮:公开新闻标题 → vc_funding_rounds(每小时)
     "_public_cache_warm_loop":   {"max_age_h": 1, "kind": "collector"},  # 10-29 面板冷启动预热(回环,每 4 分钟)
     "_style_pit_loop":           {"max_age_h": 30, "kind": "marker"},   # T-067 时点风格指数(日更)

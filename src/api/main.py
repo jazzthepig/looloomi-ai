@@ -2330,6 +2330,35 @@ async def _start_mcap_deepen_loop():
     print("[MCAP-DEEPEN] ✅ S-700 asset_mcap_daily deepening scheduled (one-shot, checkpointed)")
 
 
+async def _daily_digest_loop():
+    """每日简报(`src/data/ops/daily_digest.py`,Jazz 11-01):UTC 00:30 后一条 Telegram —— 真钱净值 / 当日、三本执行账昨夜轮次、
+    执行质量累计、不 ok 的循环、OPEN RISKS 条数。一天一次(以 loop_attempt 当天的 ok 行为准);每 20 分钟看一眼。"""
+    await _asyncio.sleep(_boot_delay(300))
+    while True:
+        try:
+            from src.data.ops.daily_digest import run_once as _dd_run
+            r = await _dd_run()
+            if not r.get("refused"):
+                print(f"[DIGEST] {str(r.get('why') or 'sent')[:120]}")
+                await _record_loop_attempt("_daily_digest_loop", "ok" if r.get("ok") else "error",
+                                           reason=(r.get("why") or "sent")[:400], detail={"text": r.get("text"), "unreadable": r.get("unreadable")},
+                                           writer="src.api.main._daily_digest_loop")
+            await _beat("_daily_digest_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")),
+                        error=None if r.get("ok") else str(r.get("why"))[:200])
+        except Exception as _e:
+            print(f"[DIGEST] ⚠️  pass FAILED: {_e}")
+            await _beat("_daily_digest_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _record_loop_attempt("_daily_digest_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._daily_digest_loop")
+        await _asyncio.sleep(1200)
+
+
+@app.on_event("startup")
+async def _start_daily_digest_loop():
+    _asyncio.create_task(_daily_digest_loop())
+    print("[DIGEST] ✅ daily Telegram digest scheduled (00:30 UTC)")
+
+
 @app.on_event("startup")
 async def _start_exec_quality_loop():
     _asyncio.create_task(_exec_quality_loop())
