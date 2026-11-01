@@ -1,10 +1,12 @@
 #!/bin/bash
-# 双击:东京主机 ① EXECUTOR_MAX_NAV_USD 改成 600(Jazz 10-30「change the nav_cap to 600」= T25 起始资金)
-# ② 拉最新代码(T25 黄金 / 股票腿接进执行器,EXECUTOR_T25_MODE 默认 dry_run —— 只记意图、不下单)、自检、重启。
+# 双击:东京主机 ① 设 EXECUTOR_MAX_NAV_USD(主机侧的记账净值天花板)② 拉最新代码、自检、重启。
 # 只改 nav_cap 这一行;私钥 / token 不动。你只需要:输一次 root 密码(VPN 开着也行,走 443)。
-# 改完之后 X1V 实际用的仍是 min(600, 组合层加密腿额度 $180) = $180;600 是整个执行器记账净值的天花板。
 IP="45.32.39.6"
-CAP="600"
+# 11-01 起资本跟着真钱快照走(加钱当天再平衡);这个数只是主机侧的天花板(X1V 实际额度 = min(它, 组合层加密腿额度))。
+# 加钱之后把它抬到够用的高度即可 —— 输入新值,回车用默认。
+read -r -p "EXECUTOR_MAX_NAV_USD(回车 = 600): " CAP_IN
+CAP="${CAP_IN:-600}"
+case "$CAP" in ''|*[!0-9.]*) echo "要一个数字"; read -r -p "回车关闭"; exit 1 ;; esac
 SOCK="/tmp/cc-cap-$$"
 OUT="/tmp/cc-cap-out-$$"
 OPTS=(-o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new -o ControlMaster=auto -o "ControlPath=$SOCK" -o ControlPersist=120)
@@ -38,6 +40,5 @@ grep -A 40 '"t25": {' "$OUT" | head -40
 grep -E "Active:" "$OUT" | head -3
 rm -f "$OUT"
 echo
-echo "应看到 EXECUTOR_MAX_NAV_USD=600、nav_cap 600.0、t25 段 mode = dry_run、pairs XAUT0 @182 / SPYX @703、"
-echo "would_trade 两笔(黄金约 \$120、股票约 \$180)、三个服务 active。这是空跑:不下单。把这几行发给 Seth。"
+echo "应看到 EXECUTOR_MAX_NAV_USD=$CAP、nav_cap $CAP、t25 段、三个服务 active。把这几行发给 Seth。"
 read -r -p "回车关闭"

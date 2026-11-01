@@ -17,7 +17,7 @@ from src.exec_host import runner as rn
 from tests.test_exec_host import MASTER, FakeRailway, _outbox, _plan
 
 FIX = pathlib.Path(__file__).resolve().parent / "fixtures" / "hl_spot"
-NOW = dt.datetime(2026, 10, 31, 0, 31, tzinfo=dt.timezone.utc)
+NOW = dt.datetime(2026, 11, 2, 0, 31, tzinfo=dt.timezone.utc)   # 周一:偏离带再平衡只在工作日(Jazz 11-01)
 MID = {"@182": 4000.0, "@703": 700.0}
 
 
@@ -247,3 +247,19 @@ def test_plan_fields_carry_the_leg_targets_from_the_same_weights():
     assert f["capital_usd"] == 600 and f["band"] == pt.DRIFT_BAND
     assert f["legs"] == {"XAUT0": {"target_usd": 120.0, "sleeve": "gold"}, "SPYX": {"target_usd": 180.0, "sleeve": "equity"}}
     assert set(f["legs"]) == set(legs.LEG_TOKENS), "目标表与执行器认的是同两条腿"
+
+
+def test_band_rebalance_waits_for_a_weekday_unless_an_event_is_flagged():
+    """Jazz 11-01:腿的再平衡只在工作日;周末只为重大事件。再平衡日按构造是工作日,不受影响。"""
+    import datetime as dt
+    held = {"XAUT0": 60.0, "SPYX": 180.0}                               # 黄金偏离 10% > 5%
+    sat, mon = dt.date(2026, 11, 7), dt.date(2026, 11, 9)
+    wk = legs.leg_orders(_t25(), held, mon)
+    assert [o["symbol"] for o in wk["orders"]] == ["XAUT0"] and wk["weekend"] is False
+    we = legs.leg_orders(_t25(), held, sat)
+    assert we["orders"] == [] and we["weekend"] is True and "周末不动" in [s for s in we["skipped"] if s["symbol"] == "XAUT0"][0]["why"]
+    ev = legs.leg_orders({**_t25(), "event": True}, held, sat)
+    assert [o["symbol"] for o in ev["orders"]] == ["XAUT0"], "事件标记 ⇒ 周末也动"
+    rb = legs.leg_orders(_t25(rebalance=True), held, sat)
+    assert [o["symbol"] for o in rb["orders"]] == ["XAUT0"], "再平衡日不受周末规则管(按构造是工作日)"
+    assert legs.leg_orders(_t25(), held)["weekend"] is False, "不给日期 = 不套周末规则(旧调用方)"

@@ -89,8 +89,8 @@ async def build_host_plan(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     except Exception as e:                                       # noqa: BLE001 — X1V 读不到不挡单票
         core = {"ok": False, "asof": asof, "why": f"X1V 计划读不到:{type(e).__name__}: {str(e)[:200]}"}
     halted, halt_status = await read_halt()
-    from src.data.execution.portfolio_targets import plan_fields
-    # 组合层(Jazz 10-29):X1V 只用加密腿的额度,R-v2 名义 ≤ 净值 30%。与 portfolio_targets_daily 同一个函数
+    from src.data.execution.portfolio_targets import plan_fields_live
+    # 组合层(Jazz 10-29 / 11-01):X1V 只用加密腿的额度,R-v2 名义 ≤ 净值 30%;资本 = 最近一次真钱快照。与 portfolio_targets_daily 同一个函数
     return {**core, "halted": halted, "halt_status": halt_status, "generated_at": now.isoformat(),
-            "portfolio": plan_fields(now.astimezone(dt.timezone.utc).date().isoformat()),
+            "portfolio": await plan_fields_live(now.astimezone(dt.timezone.utc).date().isoformat()),
             "tickets": await ticket_section(asof)}

@@ -37,12 +37,15 @@ def holdings_usd(balances: dict[str, dict[str, float]], quotes: dict[str, dict])
     return out
 
 
-def leg_orders(t25: dict, held: dict[str, float]) -> dict[str, Any]:
-    """计划的 t25 段 + 每条腿现有美元 → 名义额订单(还没取整)。不下单。"""
+def leg_orders(t25: dict, held: dict[str, float], today: Optional[Any] = None) -> dict[str, Any]:
+    """计划的 t25 段 + 每条腿现有美元 → 名义额订单(还没取整)。不下单。
+    Jazz 11-01:偏离带触发的再平衡**只在工作日**(SPYX / XAUT0 的底层周末不开盘,周末盘口薄);再平衡日按构造就是工作日;
+    周末只为重大事件动 —— 事件由计划里的 `t25.event` 标出(目前没有写入端,留口)。"""
     legs = (t25 or {}).get("legs") or {}
     capital = _f((t25 or {}).get("capital_usd")) or 0.0
     band = _f((t25 or {}).get("band")) or 0.05
     rebalance = bool((t25 or {}).get("rebalance_today"))
+    weekend = today is not None and today.weekday() >= 5 and not bool((t25 or {}).get("event"))
     orders, skipped = [], []
     for sym in sorted(legs):
         if sym not in LEG_TOKENS:
@@ -61,6 +64,9 @@ def leg_orders(t25: dict, held: dict[str, float]) -> dict[str, Any]:
         if not rebalance and drift <= band:
             skipped.append({"symbol": sym, "why": f"偏离 {drift:.1%} ≤ {band:.0%},不是再平衡日", "held_usd": round(have, 2)})
             continue
+        if not rebalance and weekend:
+            skipped.append({"symbol": sym, "why": f"偏离 {drift:.1%} > {band:.0%},但周末不动(底层不开盘;没有事件标记)", "held_usd": round(have, 2)})
+            continue
         if abs(diff) < MIN_NOTIONAL_USD:
             skipped.append({"symbol": sym, "why": f"差额 ${abs(diff):.2f} 不到最小名义额", "held_usd": round(have, 2)})
             continue
@@ -69,7 +75,7 @@ def leg_orders(t25: dict, held: dict[str, float]) -> dict[str, Any]:
                        "why": "再平衡日" if rebalance else f"偏离 {drift:.1%} > {band:.0%}"})
     # 卖在前:先腾出 USDC 再买
     orders.sort(key=lambda o: 0 if o["side"] == "sell" else 1)
-    return {"orders": orders, "skipped": skipped, "rebalance_today": rebalance, "capital_usd": capital, "band": band}
+    return {"orders": orders, "skipped": skipped, "rebalance_today": rebalance, "capital_usd": capital, "band": band, "weekend": weekend}
 
 
 def size_leg_orders(orders: list[dict], quotes: dict[str, dict],

@@ -44,6 +44,9 @@ DRIFT_BAND = 0.05
 RULE = ("t25_live_v1:Jazz 10-29(起始 600 USDC;权重 = forward_books.FLEX_X1V_ARMS['T25'];XAUT / SPYX / USDC+USDY;"
         "R-v2 名义 ≤ 净值 30%、单票风险不变;21 交易日或偏离 > 5pp 再平衡)")
 
+#: Jazz 11-01:账户的加密总敞口(X1V 现货 + R-v2 永续名义)在策略层各 30%、**组合层流动性充裕时可 ×3 到 0.9**。
+#: 0.9 是硬顶(主机 `tickets.ticket_actions` 守);「流动性充裕」的判据与不充裕时的上限等预注册,在那之前只守硬顶。
+CRYPTO_GROSS_CAP_FRAC = 0.90
 #: 10-30 15:44 UTC:Jazz 切 EXECUTOR_T25_MODE=live,两条腿当场成交(SPYX 0.23 @ 762.23、XAUT0 0.03 @ 3907.5,sleeve t25_legs_live)。
 LEGS_LIVE = True
 LEGS_STAGE = "真跑中(东京执行器,10-30 15:44 UTC 建仓)" if LEGS_LIVE else "执行器已接、空跑中(主机 EXECUTOR_T25_MODE=dry_run)"
@@ -87,9 +90,14 @@ def next_rebalance(open_d: str, d: str, every: int = REBALANCE_TRADING_DAYS) -> 
     return next(x for x in days[every - 1::every] if x >= d)
 
 
-def t25_rows(d: str, capital: float = T25_CAPITAL_USD) -> list[dict[str, Any]]:
-    """纯函数。一天的目标表行:四条 T25 腿(权重)+ R-v2(名义上限)。"""
-    nxt = next_rebalance(OPEN_DATE, d)
+#: 11-01(Jazz「再平衡资本 = 真钱快照」+「下周加钱」):资本 = 最近一次真钱快照的净值,不再固定 600;
+#: 前一天有外部出入金 ⇒ 当天就是再平衡日(新钱不躺在 USDC 里等 11-30)。还没有快照 ⇒ 用起始 600,写明。
+CAPITAL_FALLBACK_USD = T25_CAPITAL_USD
+
+
+def t25_rows(d: str, capital: float = T25_CAPITAL_USD, flow_event: bool = False) -> list[dict[str, Any]]:
+    """纯函数。一天的目标表行:四条 T25 腿(权重)+ R-v2(名义上限)。`flow_event` = 前一天有出入金 ⇒ 当天再平衡。"""
+    nxt = d if flow_event else next_rebalance(OPEN_DATE, d)
     rows = []
     for sleeve, w in t25_weights().items():
         s = SLEEVES[sleeve]
@@ -106,18 +114,53 @@ def t25_rows(d: str, capital: float = T25_CAPITAL_USD) -> list[dict[str, Any]]:
     return rows
 
 
-def plan_fields(d: Optional[str] = None) -> dict[str, Any]:
-    """随执行器计划下发的那几个数(与表同一个函数)。"""
+def plan_fields(d: Optional[str] = None, capital: float = T25_CAPITAL_USD, flow_event: bool = False,
+                capital_source: str = "起始资本 600(还没有真钱快照)") -> dict[str, Any]:
+    """纯函数。随执行器计划下发的那几个数(与表同一个函数)。资本与出入金事件由 `resolve_capital` 给。"""
     d = d or dt.datetime.now(dt.timezone.utc).date().isoformat()
-    rows = {r["sleeve"]: r for r in t25_rows(d)}
+    rows = {r["sleeve"]: r for r in t25_rows(d, capital, flow_event)}
     nxt = rows["crypto_x1v"]["next_rebalance_d"]
-    return {"book": BOOK, "d": d, "t25_capital_usd": T25_CAPITAL_USD,
+    return {"book": BOOK, "d": d, "t25_capital_usd": capital, "capital_source": capital_source,
             "x1v_nav_budget_usd": rows["crypto_x1v"]["target_usd"],
             "rv2_gross_cap_frac": RV2_GROSS_CAP_FRAC, "next_rebalance_d": nxt,
             # 黄金 / 股票腿(主机 `exec_host/legs.py`):再平衡日回到目标,其余日子只纠偏离 > 带宽 × 资本的腿
-            "t25": {"capital_usd": T25_CAPITAL_USD, "band": DRIFT_BAND, "rebalance_today": nxt == d,
+            "t25": {"capital_usd": capital, "band": DRIFT_BAND, "rebalance_today": nxt == d, "flow_event": flow_event,
                     "legs": {LEG_SYMBOLS[k]: {"target_usd": rows[k]["target_usd"], "sleeve": k} for k in LEG_SYMBOLS}},
             "rule": RULE}
+
+
+def capital_from_snapshots(rows: list[dict], d: str) -> tuple[float, bool, str]:
+    """纯函数。`rows` = live_account_daily 按 d 降序(最多两行,d < 今天)。
+    返回 (资本, 前一天有出入金, 来源说明)。没有快照 ⇒ 起始 600。"""
+    rows = [r for r in rows if str(r.get("d")) < d and r.get("equity_usd") is not None]
+    if not rows:
+        return CAPITAL_FALLBACK_USD, False, "起始资本 600(还没有真钱快照)"
+    last = rows[0]
+    eq = float(last["equity_usd"])
+    # 快照每小时补写,00:08 的计划常常只看得到前两天的那份:最近一份快照带出入金、且不超过 3 天 ⇒ 再平衡。
+    # 它只会触发一次:再下一份快照 flows = 0。
+    recent = str(last.get("d")) >= (dt.date.fromisoformat(d) - dt.timedelta(days=3)).isoformat()
+    flows = float(last.get("flows_usd") or 0.0)
+    flow_event = recent and abs(flows) >= 1.0
+    src = f"真钱快照 {last.get('d')} 净值 {eq:.2f}" + (f";出入金 {flows:+.2f} ⇒ 今天再平衡" if flow_event else "")
+    return round(eq, 2), flow_event, src
+
+
+async def resolve_capital(d: str) -> tuple[float, bool, str]:
+    """读最近两份真钱快照(d 之前)。读不到抛 —— 读不到 ≠ 没有钱。"""
+    from src.data.style.header import _read_all
+    rows = await _read_all("live_account_daily", {"select": "d,equity_usd,flows_usd", "d": f"lt.{d}", "order": "d.desc", "limit": "2"})
+    return capital_from_snapshots(rows, d)
+
+
+async def plan_fields_live(d: Optional[str] = None) -> dict[str, Any]:
+    """`plan_fields` + 真钱资本。快照读不到 ⇒ 用起始 600 并在 capital_source 里写明(不假装读到了)。"""
+    d = d or dt.datetime.now(dt.timezone.utc).date().isoformat()
+    try:
+        cap, flow, src = await resolve_capital(d)
+    except Exception as e:                                   # noqa: BLE001
+        cap, flow, src = CAPITAL_FALLBACK_USD, False, f"真钱快照读不到({type(e).__name__}),用起始 600"
+    return plan_fields(d, cap, flow, src)
 
 
 async def write_today(now: Optional[dt.datetime] = None) -> dict[str, Any]:
@@ -129,10 +172,12 @@ async def write_today(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         return {"ok": True, "waiting": f"目标表 {OPEN_DATE} 起", "preview": plan_fields(OPEN_DATE)}
     have = await _read_all("portfolio_targets_daily", {"select": "sleeve", "d": f"eq.{d}", "book": f"eq.{BOOK}"})
     done = {r.get("sleeve") for r in have or []}
-    rows = [r for r in t25_rows(d) if r["sleeve"] not in done]
+    cap, flow, src = await resolve_capital(d)             # 读不到就抛:目标表宁可晚写,不按猜的资本写
+    rows = [r for r in t25_rows(d, cap, flow) if r["sleeve"] not in done]
     if not rows:
         return {"ok": True, "d": d, "written": 0, "skipped": "今天的目标已写过"}
     w = await supabase_upsert_table("portfolio_targets_daily", rows, on_conflict="d,book,sleeve")
     if not w:
         return {"ok": False, "d": d, "why": f"写 portfolio_targets_daily 失败:{(getattr(w, 'why', '') or '')[:200]}"}
-    return {"ok": True, "d": d, "written": len(rows), "x1v_nav_budget_usd": plan_fields(d)["x1v_nav_budget_usd"]}
+    return {"ok": True, "d": d, "written": len(rows), "capital_usd": cap, "capital_source": src,
+            "x1v_nav_budget_usd": plan_fields(d, cap, flow, src)["x1v_nav_budget_usd"]}

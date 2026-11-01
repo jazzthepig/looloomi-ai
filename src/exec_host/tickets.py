@@ -167,8 +167,9 @@ def trigger_order(stop_px: float, sz_decimals: int) -> tuple[float, dict]:
 
 
 def ticket_actions(tplan: dict, book: dict[str, dict], positions: dict[str, float], mids: dict[str, float],
-                   szd: dict[str, int], equity: float, done: set[str]) -> dict[str, Any]:
-    """纯函数。计划 + 主机账 + 交易所仓位(空跑 = 账上的虚拟仓位)→ 今天要做的事。不下单。"""
+                   szd: dict[str, int], equity: float, done: set[str], crypto_held_usd: float = 0.0) -> dict[str, Any]:
+    """纯函数。计划 + 主机账 + 交易所仓位(空跑 = 账上的虚拟仓位)→ 今天要做的事。不下单。
+    `crypto_held_usd` = 账户里 X1V 现货(UBTC / UETH)的市值:Jazz 11-01「加密总敞口 ≤ 净值 × 0.9」—— R-v2 名义 + X1V 现货一起算。"""
     hold = {h["ticket_id"] for h in tplan.get("hold") or []}
     why_exit = {x["ticket_id"]: x.get("why") for x in tplan.get("exit") or []}
     closed_on_venue, exits = [], []
@@ -188,6 +189,14 @@ def ticket_actions(tplan: dict, book: dict[str, dict], positions: dict[str, floa
     # 组合层的风险预算(Jazz 10-29:名义合计 ≤ 净值 × 30%)。没给 ⇒ 1(旧计划 / 模拟器);主机再守一次:只能收紧,不能放大
     gcap = _f(tplan.get("gross_cap_frac"))
     gross_frac = MAX_GROSS_FRAC if gcap is None or gcap <= 0 else min(MAX_GROSS_FRAC, gcap)
+    gross_limit = alloc * gross_frac
+    # Jazz 11-01:账户的加密总敞口(X1V 现货 + R-v2 名义)≤ 净值 × crypto_gross_cap_frac(0.9;流动性充裕时的组合层上限,
+    # 不充裕时的更低上限等预注册)。计划没给 ⇒ 不加这一层;给了 ⇒ 只能收紧。
+    ccap = _f(tplan.get("crypto_gross_cap_frac"))
+    crypto_room = None
+    if ccap is not None and ccap > 0:
+        crypto_room = max(0.0, equity * ccap - max(0.0, float(crypto_held_usd or 0.0)))
+        gross_limit = min(gross_limit, crypto_room)
     gone = {x["ticket_id"] for x in exits + closed_on_venue}
     gross = sum(b["qty"] * (mids.get(b["coin"]) or b.get("entry_px") or 0.0) for t, b in book.items() if t not in gone)
     entries, not_exec = [], []
@@ -211,17 +220,20 @@ def ticket_actions(tplan: dict, book: dict[str, dict], positions: dict[str, floa
         if not s["qty"]:
             not_exec.append({**e, "coin": coin, "why": s["why"], "mid": mid})
             continue
-        if gross + s["notional"] > alloc * gross_frac:
-            not_exec.append({**e, "coin": coin, "mid": mid,
-                             "why": f"名义合计会到 ${gross + s['notional']:.0f},超过分到的资金 ${alloc:.0f}"
-                                    f"(净值 × 组合杠杆 {lev:g})的 {gross_frac} 倍"})
+        if gross + s["notional"] > gross_limit:
+            why = (f"名义合计会到 ${gross + s['notional']:.0f},超过分到的资金 ${alloc:.0f}(净值 × 组合杠杆 {lev:g})的 {gross_frac} 倍"
+                   if crypto_room is None or gross_limit < crypto_room - 1e-9 or alloc * gross_frac <= crypto_room else
+                   f"名义合计会到 ${gross + s['notional']:.0f},加上 X1V 现货 ${float(crypto_held_usd or 0):.0f} 超过账户加密总敞口上限 "
+                   f"净值 × {ccap:g} = ${equity * ccap:.0f}")
+            not_exec.append({**e, "coin": coin, "mid": mid, "why": why})
             continue
         entries.append({**e, "coin": coin, "mid": mid, "sz_decimals": szd[coin], **s})
         gross += s["notional"]
         open_after += 1
         held_coins.add(coin)
     return {"closed_on_venue": closed_on_venue, "exits": exits, "entries": entries, "not_executable": not_exec,
-            "portfolio_leverage": lev, "alloc": alloc, "gross_cap_frac": gross_frac}
+            "portfolio_leverage": lev, "alloc": alloc, "gross_cap_frac": gross_frac, "gross_limit_usd": round(gross_limit, 2),
+            "crypto_gross_cap_frac": ccap, "crypto_held_usd": round(float(crypto_held_usd or 0.0), 2)}
 
 
 def stop_breaches(book: dict[str, dict], mids: dict[str, float]) -> list[str]:

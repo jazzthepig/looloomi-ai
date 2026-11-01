@@ -567,7 +567,7 @@ class Executor:
         balances = self.venue.balances()
         quotes = self.venue.quotes(legs.LEG_TOKENS)
         held = legs.holdings_usd(balances, quotes)
-        lo = legs.leg_orders(t25, held)
+        lo = legs.leg_orders(t25, held, now.astimezone(dt.timezone.utc).date())
         sized, refused = legs.size_leg_orders(lo["orders"], quotes, balances)
         sleeve = legs.SLEEVES[self.cfg.t25_mode]
         staged = []
@@ -614,6 +614,16 @@ class Executor:
     # ── R-v2 单票(HL 永续)────────────────────────────────────────────────
     def _report_t(self, kind: str, **kw: Any) -> None:
         self.outbox.put({"mode": self.cfg.tickets_mode, "book": "r_v2", "kind": kind, "host": self.cfg.host, **kw})
+
+    def _crypto_held_usd(self) -> float:
+        """账户里 X1V 现货(UBTC / UETH)的市值 —— Jazz 11-01 加密总敞口上限要把它和 R-v2 名义加在一起。读不到 ⇒ 0(只会放宽,
+        但上限本身 0.9 远高于今天的 0.3 + 0.3;读不到的那一轮在 detail 里写明)。"""
+        try:
+            vals = (self.venue.ticket_account() or {}).get("spot_values") or {}
+            return float(sum(float(v) for k, v in vals.items() if k in core.SPOT_TOKENS.values()))
+        except Exception as e:                                           # noqa: BLE001
+            log.warning("crypto spot value unreadable: %s", e)
+            return 0.0
 
     def _ticket_equity(self) -> tuple[float, dict, str]:
         """(记账净值, 交易所仓位, 净值来源)。live:永续账户净值封顶;空跑:账上虚拟仓位,净值同样读真实账户,
@@ -810,7 +820,7 @@ class Executor:
         book = dict(self.state.get("ticket_book") or {})
         done = set((self.state.get("ticket_done") or {}).keys())
         tp_v, vsum = self._verify_plan(tp, szd, book, done)
-        act = tickets.ticket_actions(tp_v, book, positions, mids, szd, equity, done)
+        act = tickets.ticket_actions(tp_v, book, positions, mids, szd, equity, done, crypto_held_usd=self._crypto_held_usd())
         act["not_executable"] = list(act["not_executable"]) + list(tp_v.get("host_rejected") or [])
         if act["closed_on_venue"]:
             self._venue_closed([c["ticket_id"] for c in act["closed_on_venue"]], now)
@@ -1100,7 +1110,7 @@ def check(ex: Executor) -> dict[str, Any]:
             try:
                 lq = ex.venue.quotes(legs.LEG_TOKENS)
                 held = legs.holdings_usd(b, lq)
-                lo = legs.leg_orders(t25, held)
+                lo = legs.leg_orders(t25, held, dt.datetime.now(dt.timezone.utc).date())
                 sized, refused = legs.size_leg_orders(lo["orders"], lq, b)
                 out["t25"] = {"mode": ex.cfg.t25_mode, "pairs": {k: v.get("pair") for k, v in lq.items()},
                               "mids": {k: v.get("mid") for k, v in lq.items()}, "held_usd": _r(held),

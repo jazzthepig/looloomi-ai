@@ -512,3 +512,22 @@ def test_x1v_nav_cap_is_the_crypto_leg_budget_when_the_plan_carries_one():
     # 统一账户里 630 USDC:X1V 全仓目标时只用 $180,其余留给现金腿 / R-v2 保证金
     st = core.book_state({"USDC": {"total": 630.64, "hold": 0.0}}, {}, 180.0, 10.0)
     assert st["nav_book"] == pytest.approx(180.0) and st["nav_raw"] == pytest.approx(630.64)
+
+
+def test_crypto_gross_ceiling_counts_x1v_spot_together_with_ticket_notional():
+    """Jazz 11-01:账户加密总敞口(X1V 现货 + R-v2 名义)≤ 净值 × 0.9。计划没给 ⇒ 不加这层;给了 ⇒ 只收紧。"""
+    tplan = {"risk_frac": 0.01, "cap": 10, "gross_cap_frac": 1.0, "hold": [], "exit": [],
+             "enter": [{"ticket_id": "a", "symbol": "SOL", "stop_frac": 0.05, "risk_mult": 1.0},
+                       {"ticket_id": "b", "symbol": "DOGE", "stop_frac": 0.05, "risk_mult": 1.0}]}
+    szd = {"SOL": 2, "DOGE": 0}
+    mids = {"SOL": 100.0, "DOGE": 0.1}
+    # 净值 1000,每票名义 = 1000 × 1% ÷ 5% = 200;两张 400。X1V 现货已占 600 ⇒ 0.9 × 1000 − 600 = 300 的余地 ⇒ 只进一张
+    act = tickets.ticket_actions({**tplan, "crypto_gross_cap_frac": 0.9}, {}, {}, mids, szd, 1000.0, set(), crypto_held_usd=600.0)
+    assert [e["ticket_id"] for e in act["entries"]] == ["a"] and act["gross_limit_usd"] == 300.0
+    assert "加密总敞口上限" in act["not_executable"][0]["why"]
+    # 没给上限 ⇒ 两张都进(旧行为)
+    act0 = tickets.ticket_actions(tplan, {}, {}, mids, szd, 1000.0, set(), crypto_held_usd=600.0)
+    assert len(act0["entries"]) == 2 and act0["crypto_gross_cap_frac"] is None
+    # 现货读不到按 0 ⇒ 余地 900,只收紧不放大(策略层 gross_cap_frac 仍在)
+    act1 = tickets.ticket_actions({**tplan, "gross_cap_frac": 0.3, "crypto_gross_cap_frac": 0.9}, {}, {}, mids, szd, 1000.0, set())
+    assert act1["gross_limit_usd"] == 300.0 and len(act1["entries"]) == 1

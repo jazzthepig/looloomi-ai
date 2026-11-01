@@ -46,6 +46,8 @@ def test_write_once_per_day(monkeypatch):
     wrote, have = [], []
 
     async def read_all(table, params):
+        if table == "live_account_daily":                      # 11-01:资本来自真钱快照
+            return [{"d": "2026-10-29", "equity_usd": 630.64, "flows_usd": 0}]
         assert table == "portfolio_targets_daily" and params["d"] == "eq.2026-10-30"
         return list(have)
 
@@ -63,7 +65,7 @@ def test_write_once_per_day(monkeypatch):
     import datetime as dt
     now = dt.datetime(2026, 10, 30, 0, 20, tzinfo=dt.timezone.utc)
     r = asyncio.run(pl.write_today(now))
-    assert r["ok"] and r["written"] == 5
+    assert r["ok"] and r["written"] == 5 and r["capital_usd"] == 630.64 and wrote[0][0]["capital_usd"] == 630.64
     have.extend({"sleeve": s} for s in ("crypto_x1v", "equity", "gold", "cash", "rv2"))
     r = asyncio.run(pl.write_today(now))
     assert r["written"] == 0 and len(wrote) == 1, "写一次不改"
@@ -88,3 +90,24 @@ def test_the_host_plan_carries_the_portfolio_caps(monkeypatch):
     monkeypatch.setattr(hp, "ticket_section", tickets)
     p = asyncio.run(hp.build_host_plan(dt.datetime(2026, 10, 30, 0, 50, tzinfo=dt.timezone.utc)))
     assert p["portfolio"]["x1v_nav_budget_usd"] == 180.0 and p["portfolio"]["rv2_gross_cap_frac"] == 0.30
+
+
+def test_capital_follows_the_live_snapshot_and_a_deposit_makes_today_a_rebalance_day():
+    """Jazz 11-01:再平衡资本 = 真钱快照;下周加钱 —— 新钱不能躺到 11-30。"""
+    rows = [{"d": "2026-11-05", "equity_usd": 2629.52, "flows_usd": 2000.0}, {"d": "2026-11-04", "equity_usd": 629.5, "flows_usd": 0}]
+    cap, flow, src = pl.capital_from_snapshots(rows, "2026-11-06")
+    assert cap == 2629.52 and flow is True and "出入金 +2000.00" in src
+    f = pl.plan_fields("2026-11-06", cap, flow, src)
+    assert f["t25"]["rebalance_today"] is True and f["t25"]["flow_event"] is True and f["t25_capital_usd"] == 2629.52
+    assert f["x1v_nav_budget_usd"] == pytest.approx(0.3 * 2629.52, abs=0.01)
+    assert f["t25"]["legs"]["XAUT0"]["target_usd"] == pytest.approx(0.2 * 2629.52, abs=0.01)
+    # 00:08 的计划常常只看得到前两天的快照:3 天内带出入金的最近一份也触发;再下一份 flows = 0 就不再触发
+    cap2, flow2, _ = pl.capital_from_snapshots([{"d": "2026-11-04", "equity_usd": 2600.0, "flows_usd": 2000.0}], "2026-11-06")
+    assert flow2 is True
+    cap3, flow3, _ = pl.capital_from_snapshots([{"d": "2026-11-05", "equity_usd": 2610.0, "flows_usd": 0}], "2026-11-06")
+    assert flow3 is False and cap3 == 2610.0
+    cap4, flow4, src4 = pl.capital_from_snapshots([], "2026-11-06")
+    assert cap4 == 600 and flow4 is False and "还没有真钱快照" in src4
+    # 快照里今天的行不算(还没收盘)
+    cap5, _, _ = pl.capital_from_snapshots([{"d": "2026-11-06", "equity_usd": 1.0, "flows_usd": 0}, {"d": "2026-11-05", "equity_usd": 700.0, "flows_usd": 0}], "2026-11-06")
+    assert cap5 == 700.0
