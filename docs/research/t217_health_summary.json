@@ -1,0 +1,27 @@
+{
+ "status": "healthy",
+ "checks": [
+  {
+   "name": "upstream_scores_push",
+   "state": "ok",
+   "detail": "872s ago"
+  },
+  {
+   "name": "universe",
+   "state": "ok",
+   "detail": "43 assets"
+  },
+  {
+   "name": "contract_drift",
+   "state": "ok",
+   "detail": "0 warning(s)"
+  },
+  {
+   "name": "macro_brief",
+   "state": "ok",
+   "detail": "fresh (25m)"
+  }
+ ],
+ "deploy_sha": "2444e32a",
+ "as_of": "2026-11-01T11:15:21.631488+00:00"
+}

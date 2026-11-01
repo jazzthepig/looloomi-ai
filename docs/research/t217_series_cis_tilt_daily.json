@@ -1,0 +1,41 @@
+{
+ "table": "cis_tilt_daily",
+ "arms": [
+  {
+   "arm": "cis_a1",
+   "inception": "2026-10-06",
+   "first": "2026-10-06",
+   "last": "2026-10-31",
+   "n": 26
+  },
+  {
+   "arm": "cis_a1_u",
+   "inception": "2026-10-12",
+   "first": "2026-10-12",
+   "last": "2026-10-31",
+   "n": 20
+  },
+  {
+   "arm": "cis_a1_u_replay",
+   "inception": "2023-01-02",
+   "first": "2023-01-02",
+   "last": "2026-10-31",
+   "n": 1399
+  },
+  {
+   "arm": "fund_a1_u",
+   "inception": "2026-10-26",
+   "first": "2026-10-26",
+   "last": "2026-10-31",
+   "n": 6
+  },
+  {
+   "arm": "fund_a1_u_replay",
+   "inception": "2023-01-02",
+   "first": "2023-01-02",
+   "last": "2026-10-31",
+   "n": 1399
+  }
+ ],
+ "note": "Daily return and NAV of one book arm. Rows dated before `inception` are point-in-time replays (simulated with the rule as written, not traded); rows from `inception` on are the forward paper record. Not live-traded P&L, not a forecast."
+}

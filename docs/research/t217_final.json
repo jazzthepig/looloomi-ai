@@ -1,0 +1,1693 @@
+{
+ "read_at": "2026-11-01T13:05:29.849468+00:00",
+ "base": "https://web-production-0cdf76.up.railway.app",
+ "direct": {
+  "core_cap_daily": {
+   "table": "core_cap_daily",
+   "cols": [
+    "d",
+    "arm",
+    "alpha",
+    "nav",
+    "ret",
+    "weights",
+    "max_weight",
+    "rebalanced",
+    "turnover",
+    "n_quoted",
+    "n_filled",
+    "barred",
+    "source",
+    "inception",
+    "code_ref",
+    "computed_at"
+   ],
+   "n_rows": 110,
+   "date_col": "d",
+   "arm_col": "arm",
+   "ts_cols": {
+    "computed_at": true,
+    "inception": true
+   },
+   "arms": [
+    {
+     "arm": "cap_a05",
+     "first": "2026-10-02",
+     "last": "2026-10-31",
+     "n_days": 30,
+     "expected_cal": 30,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "inception": "2026-10-02",
+     "fwd_first": "2026-10-02",
+     "fwd_last": "2026-10-31",
+     "fwd_n": 30,
+     "fwd_expected": 30,
+     "fwd_missing": 0,
+     "fwd_longest_gap": null,
+     "pre_inception_days": 0,
+     "computed_at_distinct": 1,
+     "computed_at_max_lag_days": 30,
+     "computed_at_n_lag_gt2": 28,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1,
+     "write_mode": "整段重算(computed_at 全表同一时刻,最晚 d+30 天)⇒ 无逐行时间戳证据"
+    },
+    {
+     "arm": "cap_a1",
+     "first": "2026-10-02",
+     "last": "2026-10-31",
+     "n_days": 30,
+     "expected_cal": 30,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "inception": "2026-10-02",
+     "fwd_first": "2026-10-02",
+     "fwd_last": "2026-10-31",
+     "fwd_n": 30,
+     "fwd_expected": 30,
+     "fwd_missing": 0,
+     "fwd_longest_gap": null,
+     "pre_inception_days": 0,
+     "computed_at_distinct": 1,
+     "computed_at_max_lag_days": 30,
+     "computed_at_n_lag_gt2": 28,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1,
+     "write_mode": "整段重算(computed_at 全表同一时刻,最晚 d+30 天)⇒ 无逐行时间戳证据"
+    },
+    {
+     "arm": "cap_a1_u",
+     "first": "2026-10-12",
+     "last": "2026-10-31",
+     "n_days": 20,
+     "expected_cal": 20,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "inception": "2026-10-12",
+     "fwd_first": "2026-10-12",
+     "fwd_last": "2026-10-31",
+     "fwd_n": 20,
+     "fwd_expected": 20,
+     "fwd_missing": 0,
+     "fwd_longest_gap": null,
+     "pre_inception_days": 0,
+     "computed_at_distinct": 1,
+     "computed_at_max_lag_days": 20,
+     "computed_at_n_lag_gt2": 18,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1,
+     "write_mode": "整段重算(computed_at 全表同一时刻,最晚 d+20 天)⇒ 无逐行时间戳证据"
+    },
+    {
+     "arm": "ew_a0",
+     "first": "2026-10-02",
+     "last": "2026-10-31",
+     "n_days": 30,
+     "expected_cal": 30,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "inception": "2026-10-02",
+     "fwd_first": "2026-10-02",
+     "fwd_last": "2026-10-31",
+     "fwd_n": 30,
+     "fwd_expected": 30,
+     "fwd_missing": 0,
+     "fwd_longest_gap": null,
+     "pre_inception_days": 0,
+     "computed_at_distinct": 1,
+     "computed_at_max_lag_days": 30,
+     "computed_at_n_lag_gt2": 28,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1,
+     "write_mode": "整段重算(computed_at 全表同一时刻,最晚 d+30 天)⇒ 无逐行时间戳证据"
+    }
+   ]
+  },
+  "cis_tilt_daily": {
+   "table": "cis_tilt_daily",
+   "cols": [
+    "d",
+    "arm",
+    "k",
+    "nav",
+    "ret",
+    "weights",
+    "z",
+    "n_scored",
+    "max_weight",
+    "rebalanced",
+    "turnover",
+    "n_quoted",
+    "n_filled",
+    "barred",
+    "source",
+    "inception",
+    "code_ref",
+    "computed_at"
+   ],
+   "n_rows": 1000,
+   "date_col": "d",
+   "arm_col": "arm",
+   "ts_cols": {
+    "computed_at": true,
+    "inception": true
+   },
+   "arms": [
+    {
+     "arm": "cis_a1_u_replay",
+     "first": "2023-01-02",
+     "last": "2024-05-15",
+     "n_days": 500,
+     "expected_cal": 500,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "inception": "2023-01-02",
+     "fwd_first": "2023-01-02",
+     "fwd_last": "2024-05-15",
+     "fwd_n": 500,
+     "fwd_expected": 500,
+     "fwd_missing": 0,
+     "fwd_longest_gap": null,
+     "pre_inception_days": 0,
+     "computed_at_distinct": 1,
+     "computed_at_max_lag_days": 1380,
+     "computed_at_n_lag_gt2": 500,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 881,
+     "write_mode": "整段重算(computed_at 全表同一时刻,最晚 d+1380 天)⇒ 无逐行时间戳证据"
+    },
+    {
+     "arm": "fund_a1_u_replay",
+     "first": "2023-01-02",
+     "last": "2024-05-15",
+     "n_days": 500,
+     "expected_cal": 500,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "inception": "2023-01-02",
+     "fwd_first": "2023-01-02",
+     "fwd_last": "2024-05-15",
+     "fwd_n": 500,
+     "fwd_expected": 500,
+     "fwd_missing": 0,
+     "fwd_longest_gap": null,
+     "pre_inception_days": 0,
+     "computed_at_distinct": 1,
+     "computed_at_max_lag_days": 1387,
+     "computed_at_n_lag_gt2": 500,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 888,
+     "write_mode": "整段重算(computed_at 全表同一时刻,最晚 d+1387 天)⇒ 无逐行时间戳证据"
+    }
+   ]
+  },
+  "hl_book_daily": {
+   "table": "hl_book_daily",
+   "cols": [
+    "d",
+    "is_decision",
+    "n_coins",
+    "features",
+    "mech_answers",
+    "jev_raw",
+    "jev_error",
+    "decided",
+    "held",
+    "book",
+    "ret",
+    "nav",
+    "code_ref",
+    "computed_at",
+    "correction"
+   ],
+   "n_rows": 39,
+   "date_col": "d",
+   "arm_col": "book",
+   "ts_cols": {
+    "computed_at": true,
+    "correction": true
+   },
+   "arms": [
+    {
+     "arm": "{'H0_hold': {'BTC': {'w': 1.0, 'px': 80029.0}, 'ETH': {'w': 1.0, 'px': 2320.89}, 'SOL': {'w': 1.0, 'px': 100.78}, 'HYPE': {'w': 1.0, 'px': 78.24}}, 'JEV_tom': {'BTC': {'w': 0.16666666666666666, 'px': 80029.0}, 'ETH': {'w': 0.16666666666666666, 'px': 2320.89}, 'SOL': {'w': 0.16666666666666666, 'px': 100.78}, 'HYPE': {'w': 0.16666666666666666, 'px': 78.24}}, 'MECH_tom': {'BTC': {'w': 0.3333333333333333, 'px': 80029.0}, 'ETH': {'w': 0.3333333333333333, 'px': 2320.89}, 'SOL': {'w': 0.3333333333333333, 'px': 100.78}, 'HYPE': {'w': 0.3333333333333333, 'px': 78.24}}, 'T3_weekly': {'BTC': {'w': 0.3333333333333333, 'px': 80029.0}, 'ETH': {'w': 0.3333333333333333, 'px': 2320.89}, 'SOL': {'w': 0.3333333333333333, 'px': 100.78}, 'HYPE': {'w': 0.3333333333333333, 'px': 78.24}}, 'JEV_trend_only': {'BTC': {'w': 0.3333333333333333, 'px': 80029.0}, 'ETH': {'w': 0.3333333333333333, 'px': 2320.89}, 'SOL': {'w': 0.3333333333333333, 'px': 100.78}, 'HYPE': {'w': 0.5, 'px': 78.24}}}",
+     "first": "2026-10-26",
+     "last": "2026-10-31",
+     "n_days": 6,
+     "expected_cal": 6,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "computed_at_distinct": 6,
+     "computed_at_max_lag_days": 1,
+     "computed_at_n_lag_gt2": 0,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1,
+     "correction_nonempty": 0,
+     "write_mode": "逐行 upsert,无 d+2 之后的晚写行(computed_at distinct=6)"
+    },
+    {
+     "arm": "{'H0_hold': {'BTC': {'w': 1.0, 'px': 81776.0}, 'ETH': {'w': 1.0, 'px': 2444.8}, 'SOL': {'w': 1.0, 'px': 105.63}, 'HYPE': {'w': 1.0, 'px': 80.94}}, 'JEV_tom': {'BTC': {'w': 0.3333333333333333, 'px': 81776.0}, 'ETH': {'w': 0.3333333333333333, 'px': 2444.8}, 'SOL': {'w': 0.16666666666666666, 'px': 105.63}, 'HYPE': {'w': 0.16666666666666666, 'px': 80.94}}, 'MECH_tom': {'BTC': {'w': 0.6666666666666666, 'px': 81776.0}, 'ETH': {'w': 0.6666666666666666, 'px': 2444.8}, 'SOL': {'w': 0.6666666666666666, 'px': 105.63}, 'HYPE': {'w': 0.6666666666666666, 'px': 80.94}}, 'T3_weekly': {'BTC': {'w': 0.6666666666666666, 'px': 81776.0}, 'ETH': {'w': 0.6666666666666666, 'px': 2444.8}, 'SOL': {'w': 0.6666666666666666, 'px': 105.63}, 'HYPE': {'w': 0.6666666666666666, 'px': 80.94}}, 'JEV_trend_only': {'BTC': {'w': 0.6666666666666666, 'px': 81776.0}, 'ETH': {'w': 0.6666666666666666, 'px': 2444.8}, 'SOL': {'w': 0.6666666666666666, 'px': 105.63}, 'HYPE': {'w': 0.5, 'px': 80.94}}}",
+     "first": "2026-10-12",
+     "last": "2026-10-18",
+     "n_days": 7,
+     "expected_cal": 7,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "computed_at_distinct": 7,
+     "computed_at_max_lag_days": 1,
+     "computed_at_n_lag_gt2": 0,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1,
+     "correction_nonempty": 0,
+     "write_mode": "逐行 upsert,无 d+2 之后的晚写行(computed_at distinct=7)"
+    },
+    {
+     "arm": "{'H0_hold': {'BTC': {'w': 1.0, 'px': 81875.0}, 'ETH': {'w': 1.0, 'px': 2405.92}, 'SOL': {'w': 1.0, 'px': 104.98}, 'HYPE': {'w': 1.0, 'px': 79.19}}, 'JEV_tom': {'BTC': {'w': 0.6666666666666666, 'px': 81875.0}, 'ETH': {'w': 0.6666666666666666, 'px': 2405.92}, 'SOL': {'w': 0.6666666666666666, 'px': 104.98}, 'HYPE': {'w': 0.6666666666666666, 'px': 79.19}}, 'MECH_tom': {'BTC': {'w': 0.6666666666666666, 'px': 81875.0}, 'ETH': {'w': 0.6666666666666666, 'px': 2405.92}, 'SOL': {'w': 0.6666666666666666, 'px': 104.98}, 'HYPE': {'w': 0.6666666666666666, 'px': 79.19}}, 'T3_weekly': {'BTC': {'w': 0.6666666666666666, 'px': 81875.0}, 'ETH': {'w': 0.6666666666666666, 'px': 2405.92}, 'SOL': {'w': 0.6666666666666666, 'px': 104.98}, 'HYPE': {'w': 0.6666666666666666, 'px': 79.19}}, 'JEV_trend_only': {'BTC': {'w': 0.6666666666666666, 'px': 81875.0}, 'ETH': {'w': 0.6666666666666666, 'px': 2405.92}, 'SOL': {'w': 0.6666666666666666, 'px': 104.98}, 'HYPE': {'w': 0.5, 'px': 79.19}}}",
+     "first": "2026-10-19",
+     "last": "2026-10-25",
+     "n_days": 7,
+     "expected_cal": 7,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "computed_at_distinct": 7,
+     "computed_at_max_lag_days": 1,
+     "computed_at_n_lag_gt2": 0,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1,
+     "correction_nonempty": 0,
+     "write_mode": "逐行 upsert,无 d+2 之后的晚写行(computed_at distinct=7)"
+    },
+    {
+     "arm": "{'H0_hold': {'BTC': {'w': 1.0, 'px': 84448.8}, 'ETH': {'w': 1.0, 'px': 2687.54}, 'SOL': {'w': 1.0, 'px': 121.956}, 'HYPE': {'w': 1.0, 'px': 91.6756}}, 'JEV_tom': {'BTC': {'w': 1.0, 'px': 84448.8}, 'ETH': {'w': 1.0, 'px': 2687.54}, 'SOL': {'w': 1.0, 'px': 121.956}, 'HYPE': {'w': 0.5, 'px': 91.6756}}, 'MECH_tom': {'BTC': {'w': 1.0, 'px': 84448.8}, 'ETH': {'w': 1.0, 'px': 2687.54}, 'SOL': {'w': 1.5, 'px': 121.956}, 'HYPE': {'w': 0.5, 'px': 91.6756}}, 'T3_weekly': {'BTC': {'w': 1.0, 'px': 84448.8}, 'ETH': {'w': 1.0, 'px': 2687.54}, 'SOL': {'w': 1.0, 'px': 121.956}, 'HYPE': {'w': 1.0, 'px': 91.6756}}, 'JEV_trend_only': {'BTC': {'w': 1.0, 'px': 84448.8}, 'ETH': {'w': 1.0, 'px': 2687.54}, 'SOL': {'w': 1.5, 'px': 121.956}, 'HYPE': {'w': 0.5, 'px': 91.6756}}}",
+     "first": "2026-09-28",
+     "last": "2026-10-04",
+     "n_days": 7,
+     "expected_cal": 7,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "computed_at_distinct": 7,
+     "computed_at_max_lag_days": 3,
+     "computed_at_n_lag_gt2": 1,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1,
+     "correction_nonempty": 7,
+     "write_mode": "逐行 upsert,另有 1 行写于 d+2 之后 ⇒ 有晚写/回填迹象"
+    },
+    {
+     "arm": "{'H0_hold': {'BTC': {'w': 1.0, 'px': 85771.0}, 'ETH': {'w': 1.0, 'px': 2710.4}, 'SOL': {'w': 1.0, 'px': 120.76}, 'HYPE': {'w': 1.0, 'px': 94.16}}, 'JEV_tom': {'BTC': {'w': 1.5, 'px': 85771.0}, 'ETH': {'w': 1.5, 'px': 2710.4}, 'SOL': {'w': 1.0, 'px': 120.76}, 'HYPE': {'w': 1.0, 'px': 94.16}}, 'MECH_tom': {'BTC': {'w': 1.5, 'px': 85771.0}, 'ETH': {'w': 1.5, 'px': 2710.4}, 'SOL': {'w': 1.0, 'px': 120.76}, 'HYPE': {'w': 1.0, 'px': 94.16}}, 'T3_weekly': {'BTC': {'w': 1.0, 'px': 85771.0}, 'ETH': {'w': 1.0, 'px': 2710.4}, 'SOL': {'w': 1.0, 'px': 120.76}, 'HYPE': {'w': 1.0, 'px': 94.16}}, 'JEV_trend_only': {'BTC': {'w': 1.5, 'px': 85771.0}, 'ETH': {'w': 1.5, 'px': 2710.4}, 'SOL': {'w': 1.0, 'px': 120.76}, 'HYPE': {'w': 0.5, 'px': 94.16}}}",
+     "first": "2026-10-05",
+     "last": "2026-10-11",
+     "n_days": 7,
+     "expected_cal": 7,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "computed_at_distinct": 7,
+     "computed_at_max_lag_days": 1,
+     "computed_at_n_lag_gt2": 0,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1,
+     "correction_nonempty": 1,
+     "write_mode": "逐行 upsert,无 d+2 之后的晚写行(computed_at distinct=7)"
+    },
+    {
+     "arm": "{'H0_hold': {'BTC': {'w': 1.0, 'px': 86183.3}, 'ETH': {'w': 1.0, 'px': 2752.63}, 'SOL': {'w': 1.0, 'px': 118.507}, 'HYPE': {'w': 1.0, 'px': 97.1905}}, 'JEV_tom': {'BTC': {'w': 1.0, 'px': 86183.3}, 'ETH': {'w': 1.0, 'px': 2752.63}, 'SOL': {'w': 1.0, 'px': 118.507}, 'HYPE': {'w': 0.5, 'px': 97.1905}}, 'MECH_tom': {'BTC': {'w': 1.0, 'px': 86183.3}, 'ETH': {'w': 1.0, 'px': 2752.63}, 'SOL': {'w': 1.0, 'px': 118.507}, 'HYPE': {'w': 0.5, 'px': 97.1905}}, 'T3_weekly': {'BTC': {'w': 1.0, 'px': 86183.3}, 'ETH': {'w': 1.0, 'px': 2752.63}, 'SOL': {'w': 1.0, 'px': 118.507}, 'HYPE': {'w': 1.0, 'px': 97.1905}}, 'JEV_trend_only': {'BTC': {'w': 1.0, 'px': 86183.3}, 'ETH': {'w': 1.0, 'px': 2752.63}, 'SOL': {'w': 1.0, 'px': 118.507}, 'HYPE': {'w': 0.5, 'px': 97.1905}}}",
+     "first": "2026-09-23",
+     "last": "2026-09-27",
+     "n_days": 5,
+     "expected_cal": 5,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "computed_at_distinct": 5,
+     "computed_at_max_lag_days": 3,
+     "computed_at_n_lag_gt2": 1,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1,
+     "correction_nonempty": 3,
+     "write_mode": "逐行 upsert,另有 1 行写于 d+2 之后 ⇒ 有晚写/回填迹象"
+    }
+   ]
+  },
+  "core_variants_daily": {
+   "table": "core_variants_daily",
+   "cols": [
+    "d",
+    "arm",
+    "ret",
+    "nav",
+    "inception",
+    "code_ref",
+    "computed_at"
+   ],
+   "n_rows": 1000,
+   "date_col": "d",
+   "arm_col": "arm",
+   "ts_cols": {
+    "computed_at": true,
+    "inception": true
+   },
+   "arms": [
+    {
+     "arm": "cap_pit24",
+     "first": "2019-01-01",
+     "last": "2021-09-26",
+     "n_days": 1000,
+     "expected_cal": 1000,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "computed_at_distinct": 1,
+     "computed_at_max_lag_days": 2861,
+     "computed_at_n_lag_gt2": 1000,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1862,
+     "write_mode": "整段重算(computed_at 全表同一时刻,最晚 d+2861 天)⇒ 无逐行时间戳证据"
+    }
+   ]
+  },
+  "multiplier_daily": {
+   "table": "multiplier_daily",
+   "cols": [
+    "d",
+    "arm",
+    "m",
+    "ret",
+    "nav",
+    "cost",
+    "dist_200",
+    "vol_pct_3y",
+    "inception",
+    "code_ref",
+    "computed_at"
+   ],
+   "n_rows": 1000,
+   "date_col": "d",
+   "arm_col": "arm",
+   "ts_cols": {
+    "computed_at": true,
+    "inception": true
+   },
+   "arms": [
+    {
+     "arm": "core_replay",
+     "first": "2023-01-02",
+     "last": "2023-05-24",
+     "n_days": 143,
+     "expected_cal": 143,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "computed_at_distinct": 1,
+     "computed_at_max_lag_days": 1399,
+     "computed_at_n_lag_gt2": 143,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1257,
+     "write_mode": "整段重算(computed_at 全表同一时刻,最晚 d+1399 天)⇒ 无逐行时间戳证据"
+    },
+    {
+     "arm": "core_u_replay",
+     "first": "2023-01-02",
+     "last": "2023-05-24",
+     "n_days": 143,
+     "expected_cal": 143,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "computed_at_distinct": 1,
+     "computed_at_max_lag_days": 1399,
+     "computed_at_n_lag_gt2": 143,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1257,
+     "write_mode": "整段重算(computed_at 全表同一时刻,最晚 d+1399 天)⇒ 无逐行时间戳证据"
+    },
+    {
+     "arm": "mult_v1_replay",
+     "first": "2023-01-02",
+     "last": "2023-05-24",
+     "n_days": 143,
+     "expected_cal": 143,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "computed_at_distinct": 1,
+     "computed_at_max_lag_days": 1399,
+     "computed_at_n_lag_gt2": 143,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1257,
+     "write_mode": "整段重算(computed_at 全表同一时刻,最晚 d+1399 天)⇒ 无逐行时间戳证据"
+    },
+    {
+     "arm": "mult_v2_c1_replay",
+     "first": "2023-01-02",
+     "last": "2023-05-24",
+     "n_days": 143,
+     "expected_cal": 143,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "computed_at_distinct": 1,
+     "computed_at_max_lag_days": 1399,
+     "computed_at_n_lag_gt2": 143,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1257,
+     "write_mode": "整段重算(computed_at 全表同一时刻,最晚 d+1399 天)⇒ 无逐行时间戳证据"
+    },
+    {
+     "arm": "mult_v2_replay",
+     "first": "2023-01-02",
+     "last": "2023-05-24",
+     "n_days": 143,
+     "expected_cal": 143,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "computed_at_distinct": 1,
+     "computed_at_max_lag_days": 1399,
+     "computed_at_n_lag_gt2": 143,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1257,
+     "write_mode": "整段重算(computed_at 全表同一时刻,最晚 d+1399 天)⇒ 无逐行时间戳证据"
+    },
+    {
+     "arm": "tom_pd10_replay",
+     "first": "2023-01-02",
+     "last": "2023-05-24",
+     "n_days": 143,
+     "expected_cal": 143,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "computed_at_distinct": 1,
+     "computed_at_max_lag_days": 1399,
+     "computed_at_n_lag_gt2": 143,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1257,
+     "write_mode": "整段重算(computed_at 全表同一时刻,最晚 d+1399 天)⇒ 无逐行时间戳证据"
+    },
+    {
+     "arm": "tom_pd13_replay",
+     "first": "2023-01-02",
+     "last": "2023-05-23",
+     "n_days": 142,
+     "expected_cal": 142,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "computed_at_distinct": 1,
+     "computed_at_max_lag_days": 1399,
+     "computed_at_n_lag_gt2": 142,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1258,
+     "write_mode": "整段重算(computed_at 全表同一时刻,最晚 d+1399 天)⇒ 无逐行时间戳证据"
+    }
+   ]
+  },
+  "r_money_daily": {
+   "table": "r_money_daily",
+   "cols": [
+    "d",
+    "nav",
+    "ret",
+    "realized",
+    "unrealized",
+    "open_n",
+    "gross",
+    "taken",
+    "skipped",
+    "closed",
+    "f",
+    "cap",
+    "inception",
+    "rule_version",
+    "computed_at"
+   ],
+   "n_rows": 13,
+   "date_col": "d",
+   "arm_col": null,
+   "ts_cols": {
+    "computed_at": true,
+    "inception": true
+   },
+   "arms": [
+    {
+     "arm": "(all)",
+     "first": "2026-10-19",
+     "last": "2026-10-31",
+     "n_days": 13,
+     "expected_cal": 13,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "inception": "2026-10-19",
+     "fwd_first": "2026-10-19",
+     "fwd_last": "2026-10-31",
+     "fwd_n": 13,
+     "fwd_expected": 13,
+     "fwd_missing": 0,
+     "fwd_longest_gap": null,
+     "pre_inception_days": 0,
+     "computed_at_distinct": 13,
+     "computed_at_max_lag_days": 1,
+     "computed_at_n_lag_gt2": 0,
+     "computed_at_n_lag_lt0": 0,
+     "computed_at_min_lag_days": 1,
+     "write_mode": "逐行 upsert,无 d+2 之后的晚写行(computed_at distinct=13)"
+    }
+   ]
+  },
+  "short_paper_money": {
+   "table": "short_paper_money",
+   "cols": [
+    "arm",
+    "d",
+    "nav",
+    "ret",
+    "open_n",
+    "taken",
+    "skipped",
+    "f",
+    "cap",
+    "inception",
+    "rule_version",
+    "recorded_at"
+   ],
+   "n_rows": 12,
+   "date_col": "d",
+   "arm_col": "arm",
+   "ts_cols": {
+    "recorded_at": true,
+    "inception": true
+   },
+   "arms": [
+    {
+     "arm": "short_h4_gate",
+     "first": "2026-10-26",
+     "last": "2026-10-31",
+     "n_days": 6,
+     "expected_cal": 6,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "inception": "2026-10-26",
+     "fwd_first": "2026-10-26",
+     "fwd_last": "2026-10-31",
+     "fwd_n": 6,
+     "fwd_expected": 6,
+     "fwd_missing": 0,
+     "fwd_longest_gap": null,
+     "pre_inception_days": 0,
+     "recorded_at_distinct": 4,
+     "recorded_at_max_lag_days": 3,
+     "recorded_at_n_lag_gt2": 1,
+     "recorded_at_n_lag_lt0": 0,
+     "recorded_at_min_lag_days": 1,
+     "write_mode": "逐行 upsert,另有 1 行写于 d+2 之后 ⇒ 有晚写/回填迹象"
+    },
+    {
+     "arm": "short_listing_hedged",
+     "first": "2026-10-26",
+     "last": "2026-10-31",
+     "n_days": 6,
+     "expected_cal": 6,
+     "missing_cal": 0,
+     "longest_gap_cal": null,
+     "missing_weekdays": 0,
+     "longest_gap_weekdays": null,
+     "n_gaps_cal": 0,
+     "inception": "2026-10-26",
+     "fwd_first": "2026-10-26",
+     "fwd_last": "2026-10-31",
+     "fwd_n": 6,
+     "fwd_expected": 6,
+     "fwd_missing": 0,
+     "fwd_longest_gap": null,
+     "pre_inception_days": 0,
+     "recorded_at_distinct": 4,
+     "recorded_at_max_lag_days": 3,
+     "recorded_at_n_lag_gt2": 1,
+     "recorded_at_n_lag_lt0": 0,
+     "recorded_at_min_lag_days": 1,
+     "write_mode": "逐行 upsert,另有 1 行写于 d+2 之后 ⇒ 有晚写/回填迹象"
+    }
+   ]
+  }
+ },
+ "series": {
+  "portfolio_layer_daily": {
+   "status": 200,
+   "arms": [
+    {
+     "arm": "pl_v1cash_replay",
+     "inception": "2026-10-08",
+     "first": "2023-01-02",
+     "last": "2026-10-31",
+     "n": 1399
+    },
+    {
+     "arm": "pl_v2",
+     "inception": "2026-10-08",
+     "first": "2026-10-09",
+     "last": "2026-10-31",
+     "n": 23
+    },
+    {
+     "arm": "pl_v2_replay",
+     "inception": "2026-10-08",
+     "first": "2023-01-02",
+     "last": "2026-10-31",
+     "n": 1399
+    },
+    {
+     "arm": "pl_v3",
+     "inception": "2026-10-12",
+     "first": "2026-10-13",
+     "last": "2026-10-31",
+     "n": 19
+    },
+    {
+     "arm": "pl_v3_replay",
+     "inception": "2026-10-12",
+     "first": "2023-01-02",
+     "last": "2026-10-31",
+     "n": 1399
+    }
+   ],
+   "note": "Daily return and NAV of one book arm. Rows dated before `inception` are point-in-time replays (simulated with the rule as written, not traded); rows from `inception` on are the forward paper record. Not live-traded P&L, not a forecast."
+  },
+  "feature_arms_daily": {
+   "status": 200,
+   "arms": [
+    {
+     "arm": "cis_contra",
+     "inception": "2026-10-11",
+     "first": "2025-05-12",
+     "last": "2026-10-31",
+     "n": 538
+    },
+    {
+     "arm": "cis_ew",
+     "inception": "2026-10-11",
+     "first": "2025-05-12",
+     "last": "2026-10-31",
+     "n": 538
+    },
+    {
+     "arm": "cis_follow",
+     "inception": "2026-10-11",
+     "first": "2025-05-12",
+     "last": "2026-10-31",
+     "n": 538
+    }
+   ],
+   "note": "Daily return and NAV of one book arm. Rows dated before `inception` are point-in-time replays (simulated with the rule as written, not traded); rows from `inception` on are the forward paper record. Not live-traded P&L, not a forecast."
+  },
+  "meta_allocator_daily": {
+   "status": 200,
+   "arms": [
+    {
+     "arm": "meta_knn",
+     "inception": "2026-10-08",
+     "first": "2023-07-03",
+     "last": "2026-10-31",
+     "n": 1217
+    }
+   ],
+   "note": "Daily return and NAV of one book arm. Rows dated before `inception` are point-in-time replays (simulated with the rule as written, not traded); rows from `inception` on are the forward paper record. Not live-traded P&L, not a forecast."
+  },
+  "core_cap_daily": {
+   "status": 200,
+   "arms": [
+    {
+     "arm": "cap_a05",
+     "inception": "2026-10-02",
+     "first": "2026-10-02",
+     "last": "2026-10-31",
+     "n": 30
+    },
+    {
+     "arm": "cap_a1",
+     "inception": "2026-10-02",
+     "first": "2026-10-02",
+     "last": "2026-10-31",
+     "n": 30
+    },
+    {
+     "arm": "cap_a1_u",
+     "inception": "2026-10-12",
+     "first": "2026-10-12",
+     "last": "2026-10-31",
+     "n": 20
+    },
+    {
+     "arm": "ew_a0",
+     "inception": "2026-10-02",
+     "first": "2026-10-02",
+     "last": "2026-10-31",
+     "n": 30
+    }
+   ],
+   "note": "Daily return and NAV of one book arm. Rows dated before `inception` are point-in-time replays (simulated with the rule as written, not traded); rows from `inception` on are the forward paper record. Not live-traded P&L, not a forecast."
+  },
+  "cis_tilt_daily": {
+   "status": 200,
+   "arms": [
+    {
+     "arm": "cis_a1",
+     "inception": "2026-10-06",
+     "first": "2026-10-06",
+     "last": "2026-10-31",
+     "n": 26
+    },
+    {
+     "arm": "cis_a1_u",
+     "inception": "2026-10-12",
+     "first": "2026-10-12",
+     "last": "2026-10-31",
+     "n": 20
+    },
+    {
+     "arm": "cis_a1_u_replay",
+     "inception": "2023-01-02",
+     "first": "2023-01-02",
+     "last": "2026-10-31",
+     "n": 1399
+    },
+    {
+     "arm": "fund_a1_u",
+     "inception": "2026-10-26",
+     "first": "2026-10-26",
+     "last": "2026-10-31",
+     "n": 6
+    },
+    {
+     "arm": "fund_a1_u_replay",
+     "inception": "2023-01-02",
+     "first": "2023-01-02",
+     "last": "2026-10-31",
+     "n": 1399
+    }
+   ],
+   "note": "Daily return and NAV of one book arm. Rows dated before `inception` are point-in-time replays (simulated with the rule as written, not traded); rows from `inception` on are the forward paper record. Not live-traded P&L, not a forecast."
+  },
+  "hl_book_daily": {
+   "status": 400,
+   "arms": null,
+   "note": null
+  }
+ },
+ "proof": {
+  "/api/v1/proof/anchors": {
+   "status": 200,
+   "head": "{\"status\": \"ok\", \"count\": 24, \"anchors\": [{\"d\": \"2026-10-07\", \"digest\": \"4855d0903032a8b8c037f6517cd7f950a897172c5b90ff5b1d062d20eef86b41\", \"n_rows\": 17, \"submitted_at\": \"2026-10-08T12:11:15.341344+00:00\", \"calendars\": [\"https://a.pool.opentimestamps.org\", \"https://b.pool.opentimestamps.org\", \"https://finney.calendar.eternitywall.com\"]}, {\"d\": \"2026-10-08\", \"digest\": \"e70a8c03afc7773e7deb1445de1a34a181f97de13820b6300ebcb8ce73aa85ec\", \"n_rows\": 27, \"submitted_at\": \"2026-10-09T01:48:39.718785+00:00\", \"calendars\": [\"https://a.pool.opentimestamps.org\", \"https://b.pool.opentimestamps.org\", \"https://finney.calendar.eternitywall.com\"]}, {\"d\": \"2026-10-09\", \"digest\": \"f8efe0b300051c30a9cf2f69efa1f84ec500ae7358bf24fa2071b30d43daf541\", \"n_rows\": 29, \"submitted_at\": \"2026-10-10T11:30:53.417043+00:00\", \"calendars\": [\"https://a.pool.opentimestamps.org\", \"https://b.pool.opentimestamps.org\", \"https://finney.calendar.eternitywall.com\"]}, {\"d\": \"2026-10-10\", \"digest\": \"ce5817b8afb82ac6e248b8627b809e50e795bb567a61d5c6ad20c112ddc1b69e\", \"n_rows\": 29, \"submitted_at\": \"2026-10-11T03:12:14.199832+00:00\", \"calendars\": [\"https://a.pool.opentimestamps.org\", \"https://b.pool.opentimestamps.org\", \"https://fin"
+  },
+  "/api/v1/proof/books": {
+   "status": 200,
+   "head": "{\"status\": \"ok\", \"as_of\": \"2026-10-31\", \"allocation_as_of\": \"2026-10-31\", \"core\": \"core_cap\", \"books\": [{\"id\": \"core_cap\", \"layer\": \"①\", \"name\": \"核心持仓(24 名市值加权,不设单币上限;10-12 前单币 ≤ 40%)\", \"thesis\": \"持有市场吃 beta;FoF 的本体(S-472/S-473/S-556)\", \"evidence_class\": \"forward\", \"caveat\": null, \"window\": [\"2026-10-03\", \"2026-10-31\"], \"forward_days\": 29, \"total_return\": -0.11500541968399769, \"core_return_same_window\": -0.11500541968399769, \"excess_vs_core\": 0.0, \"excess_ann\": null, \"excess_vol_ann\": null, \"anytime_lower_bound_ann\": null, \"l3_weight\": 1, \"l3_as_of\": \"2026-10-31\"}, {\"id\": \"core_cap_c40\", \"layer\": \"①\", \"name\": \"旧核心持仓(单币 ≤ 40%,10-12 前的 ①;留作对照)\", \"thesis\": \"解除上限这个决定的前向对照(S-556)\", \"evidence_class\": \"caveat\", \"caveat\": \"对照臂:10-12 起 ① 已不设单币上限\", \"window\": [\"2026-10-03\", \"2026-10-31\"], \"forward_days\": 29, \"total_return\": -0.1217235335335336, \"core_return_same_window\": -0.11500541968399769, \"excess_vs_core\": -0.006718113849535912, \"excess_ann\": -0.09232000740927987, \"excess_vol_ann\": 0.026237456801277412, \"anytime_lower_bound_ann\": -0.4569285248543226, \"l3_weight\": 0.0, \"l3_as_of\": null}, {\"id\": \"beta_core\", \"layer\": \"②\", \"name\": \"等权 + 波动率目标(原 ①,S-473 起为 ② 候选)\", \"thesis\": \"面板内等权 = 风格倾斜;另含 ③"
+  }
+ },
+ "loop_attempt_direct": {
+  "status": 200,
+  "n_rows": 0,
+  "sample": []
+ },
+ "loop_rpc": {
+  "status": 200,
+  "n_loops": 97,
+  "sum_fail_24h": 240,
+  "sum_ok_24h": 1009,
+  "n_loops_fail24h": 19,
+  "loops": [
+   {
+    "loop": "_ohlcv_collector_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 5,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T13:05:49.520068+00:00"
+   },
+   {
+    "loop": "_protocol_revenue_loop",
+    "last_fail": null,
+    "last_reason": "2026-10-31:2148 个母协议,224 个接上 gecko_id",
+    "n_ok_24h": 6,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T13:05:49.201288+00:00"
+   },
+   {
+    "loop": "_fusion_paper_tracking_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 6,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T13:05:46.106732+00:00"
+   },
+   {
+    "loop": "_embedding_rebuild_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 4,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T13:05:45.319399+00:00"
+   },
+   {
+    "loop": "_cis_v2_shadow_loop",
+    "last_fail": null,
+    "last_reason": "2026-10-31 已算 —— 只发一次",
+    "n_ok_24h": 26,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T13:05:42.057001+00:00"
+   },
+   {
+    "loop": "_j_tickets_scan",
+    "last_fail": null,
+    "last_reason": "up to date",
+    "n_ok_24h": 29,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T13:05:41.854113+00:00"
+   },
+   {
+    "loop": "_age_sweep_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 5,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T13:05:40.769051+00:00"
+   },
+   {
+    "loop": "_core_pit_loop",
+    "last_fail": null,
+    "last_reason": "cap_pit24 2019-01-01 → 2026-10-31",
+    "n_ok_24h": 7,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T13:03:16.486949+00:00"
+   },
+   {
+    "loop": "_exec_quality_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 25,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T13:02:03.31055+00:00"
+   },
+   {
+    "loop": "_vc_rounds_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 25,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:59:46.873226+00:00"
+   },
+   {
+    "loop": "_perp_bv_daily",
+    "last_fail": null,
+    "last_reason": "合约 913(新 0)· 写 0 行 · 积压 0 档 · 失败 0",
+    "n_ok_24h": 24,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:59:03.906359+00:00"
+   },
+   {
+    "loop": "_binance_vision_funding",
+    "last_fail": null,
+    "last_reason": "全部已覆盖",
+    "n_ok_24h": 24,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:59:01.543221+00:00"
+   },
+   {
+    "loop": "_conviction_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 4,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:59:00.414884+00:00"
+   },
+   {
+    "loop": "_binance_vision_loop",
+    "last_fail": null,
+    "last_reason": "写入 0 行(缺档 0,失败 0)",
+    "n_ok_24h": 24,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:58:59.744849+00:00"
+   },
+   {
+    "loop": "_hourly_t2_snapshot_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 25,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:58:32.571767+00:00"
+   },
+   {
+    "loop": "_treasury_decisions_loop",
+    "last_fail": null,
+    "last_reason": "81 个实体 · 决策 1060 条 · 快照 216 行 · 1 个问题。**0 条是合法的**(今天没有披露),而「内容陈旧」由 producer_freshness 的事件时钟判,不由这里判",
+    "n_ok_24h": 4,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:56:51.647979+00:00"
+   },
+   {
+    "loop": "_band_log_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 4,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:55:55.185845+00:00"
+   },
+   {
+    "loop": "_paper_rebalance_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 7,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:55:18.196795+00:00"
+   },
+   {
+    "loop": "_ai_briefing_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 25,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:53:42.520967+00:00"
+   },
+   {
+    "loop": "_daily_snapshot_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 4,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:53:39.214475+00:00"
+   },
+   {
+    "loop": "_positioning_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 25,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:53:35.712178+00:00"
+   },
+   {
+    "loop": "_prediction_resolver_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 4,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:52:32.329536+00:00"
+   },
+   {
+    "loop": "_forward_supply_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 7,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:52:29.358363+00:00"
+   },
+   {
+    "loop": "_cis_flip_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 25,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:52:24.615856+00:00"
+   },
+   {
+    "loop": "_sl_tp_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 25,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:51:46.55225+00:00"
+   },
+   {
+    "loop": "_heartbeat_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 25,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:51:31.381881+00:00"
+   },
+   {
+    "loop": "_outcome_tracker_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 4,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:50:16.534035+00:00"
+   },
+   {
+    "loop": "_t2_precompute_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 25,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:50:06.271974+00:00"
+   },
+   {
+    "loop": "_social_ingest_loop",
+    "last_fail": null,
+    "last_reason": "santiment: 今天已取过(最近一次 2026-10-31T21:48) | sharpe: 今天的快照已在(2026-11-01)",
+    "n_ok_24h": 7,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:49:54.406403+00:00"
+   },
+   {
+    "loop": "_oi_snapshot_loop",
+    "last_fail": null,
+    "last_reason": "audit: ",
+    "n_ok_24h": 26,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:05:00.549488+00:00"
+   },
+   {
+    "loop": "_cis_rebuild_loop",
+    "last_fail": null,
+    "last_reason": "79205 行(全量写入 79205)",
+    "n_ok_24h": 5,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T11:56:59.391517+00:00"
+   },
+   {
+    "loop": "_standard_outcomes_loop",
+    "last_fail": null,
+    "last_reason": "77432 个 (名字, 日) 的 30 日结果(其中已发布 0)",
+    "n_ok_24h": 5,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T11:47:41.545199+00:00"
+   },
+   {
+    "loop": "_deep_panel_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 5,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T11:38:07.958295+00:00"
+   },
+   {
+    "loop": "_live_account_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 1,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T00:59:00.254594+00:00"
+   },
+   {
+    "loop": "_portfolio_targets_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 1,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T00:58:35.838841+00:00"
+   },
+   {
+    "loop": "_r76_paper_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 1,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T00:05:03.239795+00:00"
+   },
+   {
+    "loop": "_mcap_deepen_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 0,
+    "n_fail_24h": 0,
+    "last_ok": "2026-10-30T18:01:19.276702+00:00"
+   },
+   {
+    "loop": "_regime_fitness_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 0,
+    "n_fail_24h": 0,
+    "last_ok": "2026-10-30T14:28:09.504219+00:00"
+   },
+   {
+    "loop": "_binance_hist_repair_loop",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 0,
+    "n_fail_24h": 0,
+    "last_ok": "2026-10-30T06:05:20.361965+00:00"
+   },
+   {
+    "loop": "_narrative_probe_loop",
+    "last_fail": null,
+    "last_reason": "7/7 项成功",
+    "n_ok_24h": 0,
+    "n_fail_24h": 0,
+    "last_ok": "2026-10-20T11:39:08.765422+00:00"
+   },
+   {
+    "loop": "_deep_panel_backfill",
+    "last_fail": null,
+    "last_reason": "",
+    "n_ok_24h": 0,
+    "n_fail_24h": 0,
+    "last_ok": "2026-09-30T00:37:07.29661+00:00"
+   },
+   {
+    "loop": "_interpret_validate",
+    "last_fail": "2026-10-02T09:30:00.72105+00:00",
+    "last_reason": "M-196 verdict=FAIL",
+    "n_ok_24h": 0,
+    "n_fail_24h": 0,
+    "last_ok": "2026-10-02T09:59:16.528096+00:00"
+   },
+   {
+    "loop": "_backfill_cg_pro",
+    "last_fail": "2026-10-03T06:39:40.110026+00:00",
+    "last_reason": "[{'asset_class': 'Crypto', 'n_pairs': 14, 'status': 'ok'}, {'asset_class': 'Infrastructure', 'n_pairs': 1, 'status': 'ok'}, {'asset_class': 'L1', 'n_pairs': 3, 'status': 'ok'}]",
+    "n_ok_24h": 0,
+    "n_fail_24h": 0,
+    "last_ok": "2026-10-03T08:51:10.201278+00:00"
+   },
+   {
+    "loop": "_rr_matrix_loop",
+    "last_fail": "2026-10-09T00:28:01.097581+00:00",
+    "last_reason": "2026-10-31:20 本账 × 格子 = 79 行",
+    "n_ok_24h": 5,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T11:38:42.070002+00:00"
+   },
+   {
+    "loop": "_track_record_loop",
+    "last_fail": "2026-10-12T04:28:03.09259+00:00",
+    "last_reason": "",
+    "n_ok_24h": 4,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:53:48.39996+00:00"
+   },
+   {
+    "loop": "_cis_official_loop",
+    "last_fail": "2026-10-13T14:44:46.760548+00:00",
+    "last_reason": "2026-10-31 已发布 —— 只发一次",
+    "n_ok_24h": 25,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:58:59.435882+00:00"
+   },
+   {
+    "loop": "_state_daily_loop",
+    "last_fail": "2026-10-13T14:44:47.085839+00:00",
+    "last_reason": "写到 2026-10-31(近 14 天);最后一天 23 个特征,空 0 个",
+    "n_ok_24h": 7,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:59:35.943892+00:00"
+   },
+   {
+    "loop": "_style_header_loop",
+    "last_fail": "2026-10-13T14:44:47.850129+00:00",
+    "last_reason": "290 个币有风格;市值写 3398 行,失败 0 个;指数写 656 行;账本风格暴露写 1770 行",
+    "n_ok_24h": 8,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T13:02:39.345546+00:00"
+   },
+   {
+    "loop": "_stable_lending_loop",
+    "last_fail": "2026-10-13T14:44:47.862164+00:00",
+    "last_reason": "2 个池写 2723 行",
+    "n_ok_24h": 4,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:55:30.051569+00:00"
+   },
+   {
+    "loop": "_regime_daily_loop",
+    "last_fail": "2026-10-13T14:44:48.235368+00:00",
+    "last_reason": "重算 2026-10-29 起已收完的日子:3 行",
+    "n_ok_24h": 7,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:56:52.539033+00:00"
+   },
+   {
+    "loop": "_price_agreement_loop",
+    "last_fail": "2026-10-13T14:44:48.924658+00:00",
+    "last_reason": "近 45 天对 binance_hist:coingecko_pro_ohlc 0 条(27 币); asset_mcap_daily 0 条(27 币); hyperliquid 0 条(0 币)",
+    "n_ok_24h": 7,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:57:53.182145+00:00"
+   },
+   {
+    "loop": "_interpret_loop",
+    "last_fail": "2026-10-13T15:45:13.537533+00:00",
+    "last_reason": "解读 1400 天,至 2026-10-31;今天可用角度 ['style', 'macro', 'micro'];各空间落后天数 {'style': 0, 'macro': 0, 'micro': 0}",
+    "n_ok_24h": 7,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T11:39:51.427038+00:00"
+   },
+   {
+    "loop": "_style_pit_loop",
+    "last_fail": "2026-10-13T15:45:14.164541+00:00",
+    "last_reason": "宽宇宙 150 个币(候选 150,本轮取分类 0,失败 1);市值写 1728 行,失败 2;时点指数写 656 行",
+    "n_ok_24h": 16,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T11:43:36.729997+00:00"
+   },
+   {
+    "loop": "_fusion_paper_regime_track_loop",
+    "last_fail": "2026-10-13T16:51:52.081044+00:00",
+    "last_reason": "",
+    "n_ok_24h": 4,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T13:00:40.91626+00:00"
+   },
+   {
+    "loop": "_allocation_loop",
+    "last_fail": "2026-10-14T13:46:33.210091+00:00",
+    "last_reason": "配置 30 天至 2026-10-31;① 100%;敞口 1.00;NAV 0.8850",
+    "n_ok_24h": 7,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T13:03:02.794551+00:00"
+   },
+   {
+    "loop": "_world50_history_loop",
+    "last_fail": "2026-10-15T10:18:05.323211+00:00",
+    "last_reason": "日线 跳过(6 天内已成) · 市值 跳过(6 天内已成) · 链上形式 跳过(6 天内已成) · 营收 跳过(6 天内已成) · 前向账本 新调仓行 0 · 新净值行 4 · 龙头腿 / 灵活组合 前向账本从 2026-12-31 起(预演 TOP6:ETH, BNB, SOL, XRP, HYPE, ADA;FO6:ETH, BNB, SOL, SKY, XRP, NEAR)",
+    "n_ok_24h": 4,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T11:39:14.781974+00:00"
+   },
+   {
+    "loop": "_holder_refresh_loop",
+    "last_fail": "2026-10-15T14:32:21.090288+00:00",
+    "last_reason": "8 tokens",
+    "n_ok_24h": 7,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:51:25.740255+00:00"
+   },
+   {
+    "loop": "_beta_core_loop",
+    "last_fail": "2026-10-18T00:34:41.867534+00:00",
+    "last_reason": "",
+    "n_ok_24h": 1,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T00:05:22.085032+00:00"
+   },
+   {
+    "loop": "_factory_recalibrate_loop",
+    "last_fail": "2026-10-22T18:15:24.808663+00:00",
+    "last_reason": "",
+    "n_ok_24h": 5,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T13:05:42.995103+00:00"
+   },
+   {
+    "loop": "_chain_activity_loop",
+    "last_fail": "2026-10-22T18:17:16.604439+00:00",
+    "last_reason": "62 条链写 4084 行(全量 3 条);缺手续费 / DEX 序列 3 条",
+    "n_ok_24h": 5,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T11:39:45.986102+00:00"
+   },
+   {
+    "loop": "_binance_hf_loop",
+    "last_fail": "2026-10-22T19:43:42.917349+00:00",
+    "last_reason": "",
+    "n_ok_24h": 5,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:58:04.863086+00:00"
+   },
+   {
+    "loop": "_egress_probe_loop",
+    "last_fail": "2026-10-25T17:10:13.511401+00:00",
+    "last_reason": "fapi reachable | ip=152.55.188.13 SG AS400940 Railway",
+    "n_ok_24h": 7,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:52:40.975274+00:00"
+   },
+   {
+    "loop": "_core_cap_loop",
+    "last_fail": "2026-10-26T00:05:26.385548+00:00",
+    "last_reason": "重算至 2026-10-31",
+    "n_ok_24h": 25,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:55:19.673117+00:00"
+   },
+   {
+    "loop": "_beta_plus_loop",
+    "last_fail": "2026-10-26T00:05:40.101363+00:00",
+    "last_reason": "重算至 2026-10-31",
+    "n_ok_24h": 25,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:55:24.040091+00:00"
+   },
+   {
+    "loop": "_portfolio_layer_loop",
+    "last_fail": "2026-10-26T01:07:43.187066+00:00",
+    "last_reason": "回放至 2026-10-31",
+    "n_ok_24h": 7,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:59:15.051158+00:00"
+   },
+   {
+    "loop": "_hyperliquid_loop",
+    "last_fail": "2026-10-27T04:37:55.188912+00:00",
+    "last_reason": "235 个永续一次请求 · 写入 235 行 funding · 235 行 OI",
+    "n_ok_24h": 8,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T13:05:46.370545+00:00"
+   },
+   {
+    "loop": "_market_state_loop",
+    "last_fail": "2026-10-27T15:06:43.701899+00:00",
+    "last_reason": "",
+    "n_ok_24h": 4,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:55:40.70821+00:00"
+   },
+   {
+    "loop": "_pod_aggregator_loop",
+    "last_fail": "2026-10-29T00:32:33.744931+00:00",
+    "last_reason": "",
+    "n_ok_24h": 1,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T00:05:07.811931+00:00"
+   },
+   {
+    "loop": "_factor_tilt_loop",
+    "last_fail": "2026-10-29T00:33:36.811024+00:00",
+    "last_reason": "",
+    "n_ok_24h": 1,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T00:05:06.410757+00:00"
+   },
+   {
+    "loop": "_short_paper",
+    "last_fail": "2026-10-29T09:12:53.292944+00:00",
+    "last_reason": "两条臂都已推进到 2026-10-31,这一轮没有新的一天",
+    "n_ok_24h": 24,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:59:04.557802+00:00"
+   },
+   {
+    "loop": "_cg_panel_loop",
+    "last_fail": "2026-10-29T14:27:13.529716+00:00",
+    "last_reason": "",
+    "n_ok_24h": 7,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T11:44:20.823549+00:00"
+   },
+   {
+    "loop": "_cis_inputs_loop",
+    "last_fail": "2026-10-29T14:31:36.655987+00:00",
+    "last_reason": "全部写入",
+    "n_ok_24h": 5,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T11:40:16.670598+00:00"
+   },
+   {
+    "loop": "_trending_loop",
+    "last_fail": "2026-10-30T19:12:20.637487+00:00",
+    "last_reason": "",
+    "n_ok_24h": 4,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:55:54.47706+00:00"
+   },
+   {
+    "loop": "_metering_flush_loop",
+    "last_fail": "2026-10-30T21:00:53.243842+00:00",
+    "last_reason": "",
+    "n_ok_24h": 25,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:50:31.491534+00:00"
+   },
+   {
+    "loop": "_channels_loop",
+    "last_fail": "2026-10-30T21:22:00.565561+00:00",
+    "last_reason": "分类 58 个({'stablecoin': 28, 'tokenized': 26, 'rwa': 4}),币 697 个,市值写 8364 行,失败 0;序列 79836 行",
+    "n_ok_24h": 4,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:03:02.658577+00:00"
+   },
+   {
+    "loop": "_meta_allocator_loop",
+    "last_fail": "2026-10-31T00:46:10.301125+00:00",
+    "last_reason": "回放至 2026-10-31",
+    "n_ok_24h": 7,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T13:03:36.004022+00:00"
+   },
+   {
+    "loop": "_feature_arms_loop",
+    "last_fail": "2026-10-31T09:16:03.106144+00:00",
+    "last_reason": "回放至 2026-10-31",
+    "n_ok_24h": 8,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T13:05:49.622547+00:00"
+   },
+   {
+    "loop": "executor_host",
+    "last_fail": "2026-10-31T09:33:37.493862+00:00",
+    "last_reason": "",
+    "n_ok_24h": 27,
+    "n_fail_24h": 0,
+    "last_ok": "2026-11-01T12:55:53.896202+00:00"
+   },
+   {
+    "loop": "_core_variants_loop",
+    "last_fail": "2026-10-31T16:04:11.182189+00:00",
+    "last_reason": "回放至 2026-10-31",
+    "n_ok_24h": 6,
+    "n_fail_24h": 1,
+    "last_ok": "2026-11-01T11:42:18.883757+00:00"
+   },
+   {
+    "loop": "_public_cache_warm_loop",
+    "last_fail": "2026-10-31T16:04:33.393548+00:00",
+    "last_reason": "",
+    "n_ok_24h": 22,
+    "n_fail_24h": 1,
+    "last_ok": "2026-11-01T12:51:48.478846+00:00"
+   },
+   {
+    "loop": "_anchor_loop",
+    "last_fail": "2026-10-31T21:00:21.551067+00:00",
+    "last_reason": "2026-10-30 已锚过 —— 只追加不覆盖",
+    "n_ok_24h": 17,
+    "n_fail_24h": 8,
+    "last_ok": "2026-11-01T13:00:56.433748+00:00"
+   },
+   {
+    "loop": "_multiplier_loop",
+    "last_fail": "2026-11-01T00:04:42.865987+00:00",
+    "last_reason": "回放至 2026-10-31",
+    "n_ok_24h": 24,
+    "n_fail_24h": 1,
+    "last_ok": "2026-11-01T12:57:24.837019+00:00"
+   },
+   {
+    "loop": "_cis_tilt_loop",
+    "last_fail": "2026-11-01T00:07:27.056+00:00",
+    "last_reason": "重算至 2026-10-31 (5 臂)",
+    "n_ok_24h": 23,
+    "n_fail_24h": 1,
+    "last_ok": "2026-11-01T12:56:45.466342+00:00"
+   },
+   {
+    "loop": "_tokenization_tilt_loop",
+    "last_fail": "2026-11-01T03:53:27.099816+00:00",
+    "last_reason": "重算至 2026-10-31",
+    "n_ok_24h": 21,
+    "n_fail_24h": 4,
+    "last_ok": "2026-11-01T12:54:13.845892+00:00"
+   },
+   {
+    "loop": "_executor_dry_run_loop",
+    "last_fail": "2026-11-01T06:13:36.242156+00:00",
+    "last_reason": "",
+    "n_ok_24h": 1,
+    "n_fail_24h": 73,
+    "last_ok": "2026-11-01T06:18:43.917673+00:00"
+   },
+   {
+    "loop": "_r_tickets_paper_loop",
+    "last_fail": "2026-11-01T06:45:14.33558+00:00",
+    "last_reason": "up to date",
+    "n_ok_24h": 22,
+    "n_fail_24h": 7,
+    "last_ok": "2026-11-01T13:05:48.145818+00:00"
+   },
+   {
+    "loop": "_signal_attribution_loop",
+    "last_fail": "2026-11-01T11:37:54.055117+00:00",
+    "last_reason": "standard:8629 个信号变化(已发布 207),8197 个有 7 天结果 | live_mixed:4090 个信号变化(已发布 1549),3920 个有 7 天结果",
+    "n_ok_24h": 5,
+    "n_fail_24h": 2,
+    "last_ok": "2026-11-01T13:02:56.035541+00:00"
+   },
+   {
+    "loop": "_perp_mcap_backfill_loop",
+    "last_fail": "2026-11-01T12:38:16.159015+00:00",
+    "last_reason": "没有待补;已认出的币都是最新的(或已下架)",
+    "n_ok_24h": 64,
+    "n_fail_24h": 73,
+    "last_ok": "2026-11-01T00:09:22.863512+00:00"
+   },
+   {
+    "loop": "_causal_paper_loop",
+    "last_fail": "2026-11-01T12:48:13.145444+00:00",
+    "last_reason": "冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-13 起 −4.1%(价格 −5.1%、资金费 +1.4%、成本 −0.4%)",
+    "n_ok_24h": 0,
+    "n_fail_24h": 4,
+    "last_ok": "2026-10-20T00:05:16.492956+00:00"
+   },
+   {
+    "loop": "_dingge_paper_loop",
+    "last_fail": "2026-11-01T12:48:13.809515+00:00",
+    "last_reason": "冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-15 起 −3.3%",
+    "n_ok_24h": 0,
+    "n_fail_24h": 4,
+    "last_ok": "2026-10-20T00:05:09.321299+00:00"
+   },
+   {
+    "loop": "_combined_book_loop",
+    "last_fail": "2026-11-01T12:48:14.590022+00:00",
+    "last_reason": "冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-15 起 −10.7%(同上,一并冻结)",
+    "n_ok_24h": 0,
+    "n_fail_24h": 4,
+    "last_ok": "2026-10-20T00:05:18.728712+00:00"
+   },
+   {
+    "loop": "_scalable_book_loop",
+    "last_fail": "2026-11-01T12:48:14.934785+00:00",
+    "last_reason": "冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-16 起 −10.7%(Jazz 批的是前四本,这本同属 ④ 多空,同一条理由一并冻结)",
+    "n_ok_24h": 0,
+    "n_fail_24h": 4,
+    "last_ok": "2026-10-20T00:05:23.408911+00:00"
+   },
+   {
+    "loop": "_two_layer_paper_loop",
+    "last_fail": "2026-11-01T12:48:15.569942+00:00",
+    "last_reason": "冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-22 起 ≈ 0(核心多数日子不触发,本就按设计退役)",
+    "n_ok_24h": 0,
+    "n_fail_24h": 4,
+    "last_ok": "2026-10-20T00:05:16.791229+00:00"
+   },
+   {
+    "loop": "_fusion_paper_loop",
+    "last_fail": "2026-11-01T12:48:16.19088+00:00",
+    "last_reason": "冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;v2 09-19 → 10-13 −1.2%,全部是成本;v3 10-20 刚重开即冻结",
+    "n_ok_24h": 0,
+    "n_fail_24h": 4,
+    "last_ok": "2026-10-20T00:05:26.930386+00:00"
+   },
+   {
+    "loop": "_hl_book_loop",
+    "last_fail": "2026-11-01T12:53:38.522847+00:00",
+    "last_reason": "2026-10-31 已记录",
+    "n_ok_24h": 1,
+    "n_fail_24h": 24,
+    "last_ok": "2026-11-01T04:52:08.841309+00:00"
+   },
+   {
+    "loop": "_forward_return_backfill_loop",
+    "last_fail": "2026-11-01T13:05:50.523911+00:00",
+    "last_reason": "",
+    "n_ok_24h": 11,
+    "n_fail_24h": 15,
+    "last_ok": "2026-11-01T09:07:30.3592+00:00"
+   },
+   {
+    "loop": "_forward_record_loop",
+    "last_fail": "2026-11-01T13:05:51.483393+00:00",
+    "last_reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int — the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+    "n_ok_24h": 1,
+    "n_fail_24h": 6,
+    "last_ok": "2026-10-31T16:04:30.66885+00:00"
+   }
+  ]
+ },
+ "executor_host_table": {
+  "status": 404,
+  "note": "{\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.execution_intents'\",\"message\":\"Could not find the table 'public.executor_host' in the schema cache\"}"
+ },
+ "alt_heartbeat_tables": {
+  "agent_call_log": {
+   "status": 200,
+   "cols": []
+  },
+  "write_log": {
+   "status": 200,
+   "cols": []
+  }
+ },
+ "seth_only": {
+  "beta_plus_daily": {
+   "status": 401,
+   "note": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table beta_plus_daily\"}"
+  },
+  "tokenization_tilt_daily": {
+   "status": 401,
+   "note": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table tokenization_tilt_daily\"}"
+  },
+  "allocation_daily": {
+   "status": 401,
+   "note": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table allocation_daily\"}"
+  },
+  "allocation_nav_daily": {
+   "status": 401,
+   "note": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table allocation_nav_daily\"}"
+  },
+  "live_account_daily": {
+   "status": 401,
+   "note": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table live_account_daily\"}"
+  },
+  "rr_matrix_daily": {
+   "status": 401,
+   "note": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table rr_matrix_daily\"}"
+  }
+ }
+}

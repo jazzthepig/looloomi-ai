@@ -1,0 +1,296 @@
+{
+ "read_at": "2026-11-01T12:41:49.985099+00:00",
+ "n_tables": 100,
+ "fails": [
+  {
+   "table_name": "dingge_paper_nav",
+   "last_ok": "2026-10-20T00:05:09.059631+00:00",
+   "last_fail": "2026-09-19T23:46:01.648945+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 0,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "scalable_book_nav",
+   "last_ok": "2026-10-20T00:05:23.148968+00:00",
+   "last_fail": "2026-09-19T23:46:03.120331+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 0,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "funding_history",
+   "last_ok": "2026-11-01T11:37:55.403879+00:00",
+   "last_fail": "2026-09-20T07:53:11.606658+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 10,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "open_interest_history",
+   "last_ok": "2026-11-01T11:37:57.346901+00:00",
+   "last_fail": "2026-09-26T22:40:32.465504+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 7,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "interpretation_validation_runs",
+   "last_ok": "2026-10-02T09:59:16.148219+00:00",
+   "last_fail": "2026-10-02T09:30:00.400895+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 0,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "allocation_daily",
+   "last_ok": "2026-11-01T11:34:47.363757+00:00",
+   "last_fail": "2026-10-06T03:02:38.064612+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 7,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "asset_mcap_daily",
+   "last_ok": "2026-11-01T11:43:16.399015+00:00",
+   "last_fail": "2026-10-11T03:15:40.462509+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 4450,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "portfolio_layer_daily",
+   "last_ok": "2026-11-01T11:30:58.080138+00:00",
+   "last_fail": "2026-10-12T12:47:19.590104+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 21,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "factor_tilt_nav",
+   "last_ok": "2026-11-01T00:05:05.922883+00:00",
+   "last_fail": "2026-10-12T23:41:31.016331+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 1,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "fusion_paper_state",
+   "last_ok": "2026-10-20T00:05:26.706211+00:00",
+   "last_fail": "2026-10-13T00:05:52.16555+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 0,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "github_commits_weekly",
+   "last_ok": "2026-11-01T11:40:15.976348+00:00",
+   "last_fail": "2026-10-13T12:22:53.950718+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 110,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "regime_band_log",
+   "last_ok": "2026-11-01T11:28:58.619605+00:00",
+   "last_fail": "2026-10-13T14:44:43.399794+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 4,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "fusion_paper_lifecycle",
+   "last_ok": "2026-11-01T12:02:10.630153+00:00",
+   "last_fail": "2026-10-13T15:45:13.233648+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 14,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "channel_categories",
+   "last_ok": "2026-11-01T11:37:54.465949+00:00",
+   "last_fail": "2026-10-13T15:45:13.921732+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 4,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "chain_activity_daily",
+   "last_ok": "2026-11-01T11:39:45.552231+00:00",
+   "last_fail": "2026-10-16T03:46:37.453747+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 299,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "fusion_paper_nav",
+   "last_ok": "2026-10-20T00:05:26.28278+00:00",
+   "last_fail": "2026-10-19T00:33:58.268149+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 0,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "beta_core_nav",
+   "last_ok": "2026-11-01T00:05:13.954142+00:00",
+   "last_fail": "2026-10-20T06:02:37.847267+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 1,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "feature_arms_daily",
+   "last_ok": "2026-11-01T11:38:30.80727+00:00",
+   "last_fail": "2026-10-22T18:16:36.600909+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 7,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "market_state_vectors",
+   "last_ok": "2026-11-01T11:29:27.875427+00:00",
+   "last_fail": "2026-10-27T15:06:42.506899+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 4,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "narrative_events",
+   "last_ok": "2026-10-29T09:49:04.68695+00:00",
+   "last_fail": "2026-10-28T18:48:16.47809+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 0,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "pod_aggregator_nav",
+   "last_ok": "2026-11-01T00:05:07.093575+00:00",
+   "last_fail": "2026-10-29T00:32:33.50692+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 1,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "trending_log",
+   "last_ok": "2026-11-01T11:28:58.269959+00:00",
+   "last_fail": "2026-10-30T19:12:19.701777+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 4,
+   "n_fail_24h": 0
+  },
+  {
+   "table_name": "experiment_runs",
+   "last_ok": "2026-11-01T11:37:53.897991+00:00",
+   "last_fail": "2026-10-31T16:04:11.529037+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 1,
+   "n_fail_24h": 3
+  },
+  {
+   "table_name": "ohlcv_daily",
+   "last_ok": "2026-11-01T11:44:20.406895+00:00",
+   "last_fail": "2026-10-31T16:04:28.716933+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 2620,
+   "n_fail_24h": 1
+  },
+  {
+   "table_name": "treasury_decisions",
+   "last_ok": "2026-11-01T11:30:59.807546+00:00",
+   "last_fail": "2026-11-01T11:29:21.581006+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 316,
+   "n_fail_24h": 4
+  },
+  {
+   "table_name": "cis_signal_attribution",
+   "last_ok": "2026-11-01T11:34:17.69502+00:00",
+   "last_fail": "2026-11-01T11:37:52.464555+00:00",
+   "last_outcome": "store_result_fail",
+   "last_body": "no response from Supabase after retries (breaker may be open)",
+   "n_ok_24h": 93,
+   "n_fail_24h": 1
+  },
+  {
+   "table_name": "cis_backtest_results",
+   "last_ok": null,
+   "last_fail": "2026-11-01T11:59:45.716747+00:00",
+   "last_outcome": "store_result_fail",
+   "last_body": "HTTP 400: {\"code\":\"PGRST204\",\"details\":null,\"hint\":null,\"message\":\"Could not find the 'asset_count' column of 'cis_backtest_result",
+   "n_ok_24h": 0,
+   "n_fail_24h": 2
+  }
+ ],
+ "recent_fail_24h": [
+  {
+   "table_name": "treasury_decisions",
+   "last_ok": "2026-11-01T11:30:59.807546+00:00",
+   "last_fail": "2026-11-01T11:29:21.581006+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 316,
+   "n_fail_24h": 4
+  },
+  {
+   "table_name": "experiment_runs",
+   "last_ok": "2026-11-01T11:37:53.897991+00:00",
+   "last_fail": "2026-10-31T16:04:11.529037+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 1,
+   "n_fail_24h": 3
+  },
+  {
+   "table_name": "cis_backtest_results",
+   "last_ok": null,
+   "last_fail": "2026-11-01T11:59:45.716747+00:00",
+   "last_outcome": "store_result_fail",
+   "last_body": "HTTP 400: {\"code\":\"PGRST204\",\"details\":null,\"hint\":null,\"message\":\"Could not find the 'asset_count' column of 'cis_backtest_result",
+   "n_ok_24h": 0,
+   "n_fail_24h": 2
+  },
+  {
+   "table_name": "ohlcv_daily",
+   "last_ok": "2026-11-01T11:44:20.406895+00:00",
+   "last_fail": "2026-10-31T16:04:28.716933+00:00",
+   "last_outcome": "ok",
+   "last_body": null,
+   "n_ok_24h": 2620,
+   "n_fail_24h": 1
+  },
+  {
+   "table_name": "cis_signal_attribution",
+   "last_ok": "2026-11-01T11:34:17.69502+00:00",
+   "last_fail": "2026-11-01T11:37:52.464555+00:00",
+   "last_outcome": "store_result_fail",
+   "last_body": "no response from Supabase after retries (breaker may be open)",
+   "n_ok_24h": 93,
+   "n_fail_24h": 1
+  }
+ ]
+}

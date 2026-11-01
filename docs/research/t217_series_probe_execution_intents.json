@@ -1,0 +1,1 @@
+{"detail":"table must be one of ['cis_tilt_daily', 'core_cap_daily', 'core_variants_daily', 'feature_arms_daily', 'meta_allocator_daily', 'multiplier_daily', 'portfolio_layer_daily']"}

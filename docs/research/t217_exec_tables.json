@@ -1,0 +1,30 @@
+{
+ "execution_intents": {
+  "cols": [],
+  "note": "sample empty — table empty or fully RLS-filtered"
+ },
+ "execution_outcomes": {
+  "cols": [],
+  "note": "sample empty — table empty or fully RLS-filtered"
+ },
+ "decisions": {
+  "cols": [],
+  "note": "sample empty — table empty or fully RLS-filtered"
+ },
+ "vault_nav_tick": {
+  "cols": [],
+  "note": "sample empty — table empty or fully RLS-filtered"
+ },
+ "trade_results": {
+  "cols": [],
+  "note": "sample empty — table empty or fully RLS-filtered"
+ },
+ "wallet_profiles": {
+  "cols": [],
+  "note": "sample empty — table empty or fully RLS-filtered"
+ },
+ "nav_exceptions": {
+  "cols": [],
+  "note": "sample empty — table empty or fully RLS-filtered"
+ }
+}

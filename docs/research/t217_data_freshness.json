@@ -1,0 +1,1108 @@
+{
+ "checked_at": 1793531708,
+ "producers": {
+  "verdict": "dead",
+  "n": 20,
+  "n_dead_or_corrupt": 1,
+  "n_stale_or_empty": 1,
+  "n_unknown": 0,
+  "dead_or_corrupt": [
+   "strategy_records"
+  ],
+  "stale_or_empty": [
+   "treasury_decisions"
+  ],
+  "tables": {
+   "cis_scores": {
+    "verdict": "fresh",
+    "n_rows": 216949,
+    "write": {
+     "col": "recorded_at",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "recorded_at = 2026-11-01(0 天前) · 按设计没有事件时钟(规格已声明)—— 不参与裁决"
+   },
+   "signal_journal": {
+    "verdict": "fresh",
+    "n_rows": 349,
+    "write": {
+     "col": "recorded_at",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "signal_date",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "reason": "recorded_at = 2026-11-01(0 天前) · signal_date = 2026-11-01(0 天前)"
+   },
+   "signal_outcomes": {
+    "verdict": "not_applicable",
+    "n_rows": 7743,
+    "write": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "`signal_outcomes` 是历史表:2026-05-03 后无写入端(Mac 旧追踪器停用);30 日结果在 signal_journal.outcome_30d,档位历史在 cis_standard_outcomes(S-540);原表只经 signal_outcomes_unified 读(SPINE §3)"
+   },
+   "risk_meter_history": {
+    "verdict": "fresh",
+    "n_rows": 51,
+    "write": {
+     "col": "computed_at",
+     "last": "2026-10-31",
+     "age_days": 1.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "d",
+     "last": "2026-10-31",
+     "age_days": 1.0,
+     "verdict": "fresh"
+    },
+    "reason": "computed_at = 2026-10-31(1 天前) · d = 2026-10-31(1 天前)"
+   },
+   "beta_core_nav": {
+    "verdict": "fresh",
+    "n_rows": 74,
+    "write": {
+     "col": "marked_at",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "mark_date",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "reason": "marked_at = 2026-11-01(0 天前) · mark_date = 2026-11-01(0 天前)"
+   },
+   "asset_embeddings_history": {
+    "verdict": "fresh",
+    "n_rows": 4119,
+    "write": {
+     "col": "computed_at",
+     "last": "2026-10-31",
+     "age_days": 1.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "d",
+     "last": "2026-10-31",
+     "age_days": 1.0,
+     "verdict": "fresh"
+    },
+    "reason": "computed_at = 2026-10-31(1 天前) · d = 2026-10-31(1 天前)"
+   },
+   "asset_embeddings": {
+    "verdict": "fresh",
+    "n_rows": 73,
+    "write": {
+     "col": "computed_at",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "computed_at = 2026-11-01(0 天前) · 按设计没有事件时钟(规格已声明)—— 不参与裁决"
+   },
+   "market_state_vectors": {
+    "verdict": "fresh",
+    "n_rows": 2526,
+    "write": {
+     "col": "computed_at",
+     "last": "2026-10-31",
+     "age_days": 1.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "d",
+     "last": "2026-10-30",
+     "age_days": 2.0,
+     "verdict": "fresh"
+    },
+    "reason": "computed_at = 2026-10-31(1 天前) · d = 2026-10-30(2 天前)"
+   },
+   "trade_results": {
+    "verdict": "fresh",
+    "n_rows": 1864,
+    "write": {
+     "col": "created_at",
+     "last": "2026-10-30",
+     "age_days": 2.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "entry_time",
+     "last": "2026-10-29",
+     "age_days": 3.0,
+     "verdict": "fresh"
+    },
+    "reason": "created_at = 2026-10-30(2 天前) · entry_time = 2026-10-29(3 天前)"
+   },
+   "strategy_records": {
+    "verdict": "dead",
+    "n_rows": 26,
+    "write": {
+     "col": "created_at",
+     "last": "2026-09-01",
+     "age_days": 61.0,
+     "verdict": "dead"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "created_at 停在 2026-09-01(61 天前 ≥ 死亡线 60) · 按设计没有事件时钟(规格已声明)—— 不参与裁决"
+   },
+   "treasury_decisions": {
+    "verdict": "stale",
+    "n_rows": 935,
+    "write": {
+     "col": "recorded_at",
+     "last": "2026-10-30",
+     "age_days": 2.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "decision_date",
+     "last": "2026-10-23",
+     "age_days": 9.0,
+     "verdict": "stale"
+    },
+    "reason": "recorded_at = 2026-10-30(2 天前) · decision_date 停在 2026-10-23(9 天前 ≥ 陈旧线 7)。⚠️ **写入者活着但内容是陈的** —— 进程在跑、日志在滚,而产出已经不当期了;单一个新鲜度数字会把这种情况报成健康"
+   },
+   "corporate_treasury_history": {
+    "verdict": "fresh",
+    "n_rows": 12435,
+    "write": {
+     "col": "recorded_at",
+     "last": "2026-10-31",
+     "age_days": 1.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "d",
+     "last": "2026-10-31",
+     "age_days": 1.0,
+     "verdict": "fresh"
+    },
+    "reason": "recorded_at = 2026-10-31(1 天前) · d = 2026-10-31(1 天前)"
+   },
+   "causal_paper_nav": {
+    "verdict": "not_applicable",
+    "n_rows": 86,
+    "write": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "`causal_paper_nav` 已冻结(2026-10-20 起停写,历史保留;S-631):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-13 起 −4.1%(价格 −5.1%、资金费 +1.4%、成本 −0.4%)"
+   },
+   "combined_book_nav": {
+    "verdict": "not_applicable",
+    "n_rows": 83,
+    "write": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "`combined_book_nav` 已冻结(2026-10-20 起停写,历史保留;S-631):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-15 起 −10.7%(同上,一并冻结)"
+   },
+   "dingge_paper_nav": {
+    "verdict": "not_applicable",
+    "n_rows": 90,
+    "write": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "`dingge_paper_nav` 已冻结(2026-10-20 起停写,历史保留;S-631):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-15 起 −3.3%"
+   },
+   "scalable_book_nav": {
+    "verdict": "not_applicable",
+    "n_rows": 82,
+    "write": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "`scalable_book_nav` 已冻结(2026-10-20 起停写,历史保留;S-631):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-16 起 −10.7%(Jazz 批的是前四本,这本同属 ④ 多空,同一条理由一并冻结)"
+   },
+   "fusion_paper_nav": {
+    "verdict": "not_applicable",
+    "n_rows": 52,
+    "write": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "`fusion_paper_nav` 已冻结(2026-10-20 起停写,历史保留;S-631):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;v2 09-19 → 10-13 −1.2%,全部是成本;v3 10-20 刚重开即冻结"
+   },
+   "factor_tilt_nav": {
+    "verdict": "fresh",
+    "n_rows": 49,
+    "write": {
+     "col": "marked_at",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "mark_date",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "reason": "marked_at = 2026-11-01(0 天前) · mark_date = 2026-11-01(0 天前)"
+   },
+   "pod_aggregator_nav": {
+    "verdict": "fresh",
+    "n_rows": 49,
+    "write": {
+     "col": "marked_at",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "mark_date",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "reason": "marked_at = 2026-11-01(0 天前) · mark_date = 2026-11-01(0 天前)"
+   },
+   "two_layer_paper_nav": {
+    "verdict": "not_applicable",
+    "n_rows": 54,
+    "write": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "`two_layer_paper_nav` 已冻结(2026-10-20 起停写,历史保留;S-631):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-22 起 ≈ 0(核心多数日子不触发,本就按设计退役)"
+   }
+  },
+  "reason": "1 张死亡或被未来日期污染 ['strategy_records']、1 张陈旧或空。**未来日期单列** —— 它会让 max() 判活永远报新鲜,是判活器被数据本身关掉的那种失败"
+ },
+ "by_source": {
+  "sources": [
+   {
+    "source": "binance_um_hist",
+    "verdict": "DEAD",
+    "last_bar": "2026-08-08",
+    "age_days": 85,
+    "symbols_recent": 0,
+    "symbols_typical": null,
+    "usable_for_returns": false,
+    "detail": "最近 3 天一个标的都没写"
+   },
+   {
+    "source": "hyperliquid",
+    "verdict": "DEAD",
+    "last_bar": "2026-08-23",
+    "age_days": 70,
+    "symbols_recent": 0,
+    "symbols_typical": null,
+    "usable_for_returns": false,
+    "detail": "最近 3 天一个标的都没写"
+   },
+   {
+    "source": "coingecko",
+    "verdict": "DEAD",
+    "last_bar": "2026-09-17",
+    "age_days": 45,
+    "symbols_recent": 0,
+    "symbols_typical": 6,
+    "usable_for_returns": false,
+    "detail": "最近 3 天一个标的都没写;此前常态 6 个"
+   },
+   {
+    "source": "yfinance",
+    "verdict": "DEAD",
+    "last_bar": "2026-10-09",
+    "age_days": 23,
+    "symbols_recent": 0,
+    "symbols_typical": 5,
+    "usable_for_returns": false,
+    "detail": "最近 6 天一个标的都没写;此前常态 5 个"
+   },
+   {
+    "source": "eodhd",
+    "verdict": "flowing",
+    "last_bar": "2026-10-30",
+    "age_days": 2,
+    "symbols_recent": 193,
+    "symbols_typical": 135,
+    "usable_for_returns": true,
+    "detail": ""
+   },
+   {
+    "source": "coingecko_pro_ohlc",
+    "verdict": "flowing",
+    "last_bar": "2026-10-31",
+    "age_days": 1,
+    "symbols_recent": 210,
+    "symbols_typical": 211,
+    "usable_for_returns": true,
+    "detail": ""
+   },
+   {
+    "source": "binance_hist",
+    "verdict": "flowing",
+    "last_bar": "2026-10-31",
+    "age_days": 1,
+    "symbols_recent": 135,
+    "symbols_typical": 137,
+    "usable_for_returns": true,
+    "detail": ""
+   }
+  ],
+  "by_domain": {
+   "unknown": {
+    "usable": [],
+    "dead": [
+     "binance_um_hist"
+    ],
+    "flowing_but_barred": [],
+    "verdict": "all_dead"
+   },
+   "crypto": {
+    "usable": [
+     "coingecko_pro_ohlc",
+     "binance_hist"
+    ],
+    "dead": [
+     "hyperliquid",
+     "coingecko"
+    ],
+    "flowing_but_barred": [],
+    "verdict": "ok"
+   },
+   "tradfi": {
+    "usable": [
+     "eodhd"
+    ],
+    "dead": [
+     "yfinance"
+    ],
+    "flowing_but_barred": [],
+    "verdict": "ok"
+   }
+  },
+  "domains_without_usable_source": [],
+  "unregistered_sources": [
+   "binance_um_hist"
+  ],
+  "verdict": "unregistered_source",
+  "note": "⚠️ 未登记到 DOMAIN_OF_SOURCE 的源:binance_um_hist —— **这不是「属于 unknown 域」,是注册表有洞**;在补上之前,它对任何按域给出的判决都不算数 (S-323n)。"
+ },
+ "ohlcv_daily": {
+  "last_trade_date": "2026-10-31",
+  "age_days": 0.5,
+  "verdict": "fresh",
+  "error": null,
+  "caveat": "self-healing feed: collect_ohlcv upserts 365d per run, so max(trade_date) is transient. Judge on run completion, not on this date. Weekends are crypto-only by design.",
+  "answers": "这一轮跑完没有(max(trade_date) 是否新鲜)—— **不回答「这个管道是活的吗」**,那个在 by_source 里"
+ },
+ "verdict": "producers_dead",
+ "verdict_source": "producers",
+ "loops": {
+  "verdict": "ok",
+  "n": 21,
+  "n_failing": 0,
+  "n_never_ran": 0,
+  "n_refusing": 2,
+  "n_failing_on_stale_build": 0,
+  "failing": [],
+  "refusing": [
+   {
+    "loop": "_hl_book_loop",
+    "n": 1,
+    "why": ""
+   },
+   {
+    "loop": "_perp_mcap_backfill_loop",
+    "n": 6,
+    "why": ""
+   }
+  ],
+  "never_ran": [],
+  "rows": [
+   {
+    "loop": "_anchor_loop",
+    "verdict": "ok",
+    "age_s": 848,
+    "last_ok_at": 1793530864,
+    "last_run_at": 1793530864,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 14 分钟前"
+   },
+   {
+    "loop": "_beta_plus_loop",
+    "verdict": "ok",
+    "age_s": 1143,
+    "last_ok_at": 1793530569,
+    "last_run_at": 1793530569,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 19 分钟前"
+   },
+   {
+    "loop": "_binance_vision_loop",
+    "verdict": "ok",
+    "age_s": 3289,
+    "last_ok_at": 1793528423,
+    "last_run_at": 1793528423,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 54 分钟前"
+   },
+   {
+    "loop": "_cg_panel_loop",
+    "verdict": "ok",
+    "age_s": 2921,
+    "last_ok_at": 1793528791,
+    "last_run_at": 1793528791,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 48 分钟前"
+   },
+   {
+    "loop": "_cis_official_loop",
+    "verdict": "ok",
+    "age_s": 704,
+    "last_ok_at": 1793531008,
+    "last_run_at": 1793531008,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 11 分钟前"
+   },
+   {
+    "loop": "_cis_tilt_loop",
+    "verdict": "ok",
+    "age_s": 3221,
+    "last_ok_at": 1793528491,
+    "last_run_at": 1793528491,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 53 分钟前"
+   },
+   {
+    "loop": "_cis_v2_shadow_loop",
+    "verdict": "ok",
+    "age_s": 621,
+    "last_ok_at": 1793531091,
+    "last_run_at": 1793531091,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 10 分钟前"
+   },
+   {
+    "loop": "_core_cap_loop",
+    "verdict": "ok",
+    "age_s": 1245,
+    "last_ok_at": 1793530467,
+    "last_run_at": 1793530467,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 20 分钟前"
+   },
+   {
+    "loop": "_core_variants_loop",
+    "verdict": "ok",
+    "age_s": 2791,
+    "last_ok_at": 1793528921,
+    "last_run_at": 1793528921,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 46 分钟前"
+   },
+   {
+    "loop": "_exec_quality_loop",
+    "verdict": "ok",
+    "age_s": 832,
+    "last_ok_at": 1793530880,
+    "last_run_at": 1793530880,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 13 分钟前"
+   },
+   {
+    "loop": "_executor_host_watch_loop",
+    "verdict": "ok",
+    "age_s": 624,
+    "last_ok_at": 1793531088,
+    "last_run_at": 1793531088,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 10 分钟前"
+   },
+   {
+    "loop": "_hl_book_loop",
+    "verdict": "refused",
+    "build": "2444e32a",
+    "stale_build": false,
+    "n_consecutive_refusals": 1,
+    "last_refusal": "",
+    "last_ok_at": null,
+    "last_run_at": 1793530336,
+    "age_s": 1376,
+    "reason": "**正确地拒绝写入**,连续 1 轮:。循环没坏 —— 但**连续 1 轮拒绝说明上游一直没恢复**,那是它自己的信号,不是健康"
+   },
+   {
+    "loop": "_live_account_loop",
+    "verdict": "ok",
+    "age_s": 968,
+    "last_ok_at": 1793530744,
+    "last_run_at": 1793530744,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 16 分钟前"
+   },
+   {
+    "loop": "_oi_snapshot_loop",
+    "verdict": "ok",
+    "age_s": 612,
+    "last_ok_at": 1793531100,
+    "last_run_at": 1793531100,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 10 分钟前"
+   },
+   {
+    "loop": "_perp_mcap_backfill_loop",
+    "verdict": "refused",
+    "build": "2444e32a",
+    "stale_build": false,
+    "n_consecutive_refusals": 6,
+    "last_refusal": "",
+    "last_ok_at": null,
+    "last_run_at": 1793531519,
+    "age_s": 193,
+    "reason": "**正确地拒绝写入**,连续 6 轮:。循环没坏 —— 但**连续 6 轮拒绝说明上游一直没恢复**,那是它自己的信号,不是健康"
+   },
+   {
+    "loop": "_portfolio_targets_loop",
+    "verdict": "ok",
+    "age_s": 992,
+    "last_ok_at": 1793530720,
+    "last_run_at": 1793530720,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 16 分钟前"
+   },
+   {
+    "loop": "_public_cache_warm_loop",
+    "verdict": "ok",
+    "age_s": 163,
+    "last_ok_at": 1793531549,
+    "last_run_at": 1793531549,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 2 分钟前"
+   },
+   {
+    "loop": "_r_tickets_paper_loop",
+    "verdict": "ok",
+    "age_s": 1807,
+    "last_ok_at": 1793529905,
+    "last_run_at": 1793529905,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 30 分钟前"
+   },
+   {
+    "loop": "_signal_attribution_loop",
+    "verdict": "ok",
+    "age_s": 3557,
+    "last_ok_at": 1793528155,
+    "last_run_at": 1793528155,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 59 分钟前"
+   },
+   {
+    "loop": "_tokenization_tilt_loop",
+    "verdict": "ok",
+    "age_s": 1264,
+    "last_ok_at": 1793530448,
+    "last_run_at": 1793530448,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 21 分钟前"
+   },
+   {
+    "loop": "_vc_rounds_loop",
+    "verdict": "ok",
+    "age_s": 3565,
+    "last_ok_at": 1793528147,
+    "last_run_at": 1793528147,
+    "build": "2444e32a",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 59 分钟前"
+   }
+  ],
+  "reason": "21 个循环都在按时成功"
+ },
+ "liveness": {
+  "n_total": 21,
+  "n_live": 19,
+  "n_stale": 0,
+  "n_dead": 2,
+  "n_frozen": 0,
+  "dead_loops": [
+   "_hl_book_loop",
+   "_perp_mcap_backfill_loop"
+  ],
+  "stale_loops": [],
+  "frozen_loops": [],
+  "marker_loops_problem": [
+   "_hl_book_loop"
+  ],
+  "per_loop": {
+   "_anchor_loop": {
+    "loop": "_anchor_loop",
+    "verdict": "live",
+    "age_s": 848,
+    "last_ok_at": 1793530864,
+    "last_run_at": 1793530864,
+    "budget_remaining_h": 29.76,
+    "reason": "age=0.2h within budget (30h, kind=marker)"
+   },
+   "_beta_plus_loop": {
+    "loop": "_beta_plus_loop",
+    "verdict": "live",
+    "age_s": 1143,
+    "last_ok_at": 1793530569,
+    "last_run_at": 1793530569,
+    "budget_remaining_h": 47.68,
+    "reason": "age=0.3h within budget (48h, kind=marker)"
+   },
+   "_binance_vision_loop": {
+    "loop": "_binance_vision_loop",
+    "verdict": "live",
+    "age_s": 3289,
+    "last_ok_at": 1793528423,
+    "last_run_at": 1793528423,
+    "budget_remaining_h": 47.09,
+    "reason": "age=0.9h within budget (48h, kind=unknown)"
+   },
+   "_cg_panel_loop": {
+    "loop": "_cg_panel_loop",
+    "verdict": "live",
+    "age_s": 2921,
+    "last_ok_at": 1793528791,
+    "last_run_at": 1793528791,
+    "budget_remaining_h": 167.19,
+    "reason": "age=0.8h within budget (168h, kind=fanout)"
+   },
+   "_cis_official_loop": {
+    "loop": "_cis_official_loop",
+    "verdict": "live",
+    "age_s": 704,
+    "last_ok_at": 1793531008,
+    "last_run_at": 1793531008,
+    "budget_remaining_h": 2.8,
+    "reason": "age=0.2h within budget (3h, kind=marker)"
+   },
+   "_cis_tilt_loop": {
+    "loop": "_cis_tilt_loop",
+    "verdict": "live",
+    "age_s": 3221,
+    "last_ok_at": 1793528491,
+    "last_run_at": 1793528491,
+    "budget_remaining_h": 47.11,
+    "reason": "age=0.9h within budget (48h, kind=marker)"
+   },
+   "_cis_v2_shadow_loop": {
+    "loop": "_cis_v2_shadow_loop",
+    "verdict": "live",
+    "age_s": 621,
+    "last_ok_at": 1793531091,
+    "last_run_at": 1793531091,
+    "budget_remaining_h": 47.83,
+    "reason": "age=0.2h within budget (48h, kind=unknown)"
+   },
+   "_core_cap_loop": {
+    "loop": "_core_cap_loop",
+    "verdict": "live",
+    "age_s": 1245,
+    "last_ok_at": 1793530467,
+    "last_run_at": 1793530467,
+    "budget_remaining_h": 47.65,
+    "reason": "age=0.3h within budget (48h, kind=marker)"
+   },
+   "_core_variants_loop": {
+    "loop": "_core_variants_loop",
+    "verdict": "live",
+    "age_s": 2791,
+    "last_ok_at": 1793528921,
+    "last_run_at": 1793528921,
+    "budget_remaining_h": 29.22,
+    "reason": "age=0.8h within budget (30h, kind=marker)"
+   },
+   "_exec_quality_loop": {
+    "loop": "_exec_quality_loop",
+    "verdict": "live",
+    "age_s": 832,
+    "last_ok_at": 1793530880,
+    "last_run_at": 1793530880,
+    "budget_remaining_h": 2.77,
+    "reason": "age=0.2h within budget (3h, kind=marker)"
+   },
+   "_executor_host_watch_loop": {
+    "loop": "_executor_host_watch_loop",
+    "verdict": "live",
+    "age_s": 624,
+    "last_ok_at": 1793531088,
+    "last_run_at": 1793531088,
+    "budget_remaining_h": 2.83,
+    "reason": "age=0.2h within budget (3h, kind=marker)"
+   },
+   "_hl_book_loop": {
+    "loop": "_hl_book_loop",
+    "verdict": "dead",
+    "age_s": 1376,
+    "last_ok_at": null,
+    "last_run_at": 1793530336,
+    "budget_remaining_h": -47952.0,
+    "reason": "effective_age=48000.0h > 4× budget (192h, kind=marker) — last_ok_at=never"
+   },
+   "_live_account_loop": {
+    "loop": "_live_account_loop",
+    "verdict": "live",
+    "age_s": 968,
+    "last_ok_at": 1793530744,
+    "last_run_at": 1793530744,
+    "budget_remaining_h": 2.73,
+    "reason": "age=0.3h within budget (3h, kind=marker)"
+   },
+   "_oi_snapshot_loop": {
+    "loop": "_oi_snapshot_loop",
+    "verdict": "live",
+    "age_s": 612,
+    "last_ok_at": 1793531100,
+    "last_run_at": 1793531100,
+    "budget_remaining_h": 1.83,
+    "reason": "age=0.2h within budget (2h, kind=collector)"
+   },
+   "_perp_mcap_backfill_loop": {
+    "loop": "_perp_mcap_backfill_loop",
+    "verdict": "dead",
+    "age_s": 193,
+    "last_ok_at": null,
+    "last_run_at": 1793531519,
+    "budget_remaining_h": -999.0,
+    "reason": "effective_age=1000.0h > 4× budget (4h, kind=collector) — last_ok_at=never"
+   },
+   "_portfolio_targets_loop": {
+    "loop": "_portfolio_targets_loop",
+    "verdict": "live",
+    "age_s": 992,
+    "last_ok_at": 1793530720,
+    "last_run_at": 1793530720,
+    "budget_remaining_h": 2.72,
+    "reason": "age=0.3h within budget (3h, kind=marker)"
+   },
+   "_public_cache_warm_loop": {
+    "loop": "_public_cache_warm_loop",
+    "verdict": "live",
+    "age_s": 163,
+    "last_ok_at": 1793531549,
+    "last_run_at": 1793531549,
+    "budget_remaining_h": 0.95,
+    "reason": "age=0.0h within budget (1h, kind=collector)"
+   },
+   "_r_tickets_paper_loop": {
+    "loop": "_r_tickets_paper_loop",
+    "verdict": "live",
+    "age_s": 1807,
+    "last_ok_at": 1793529905,
+    "last_run_at": 1793529905,
+    "budget_remaining_h": 47.5,
+    "reason": "age=0.5h within budget (48h, kind=unknown)"
+   },
+   "_signal_attribution_loop": {
+    "loop": "_signal_attribution_loop",
+    "verdict": "live",
+    "age_s": 3557,
+    "last_ok_at": 1793528155,
+    "last_run_at": 1793528155,
+    "budget_remaining_h": 13.01,
+    "reason": "age=1.0h within budget (14h, kind=marker)"
+   },
+   "_tokenization_tilt_loop": {
+    "loop": "_tokenization_tilt_loop",
+    "verdict": "live",
+    "age_s": 1264,
+    "last_ok_at": 1793530448,
+    "last_run_at": 1793530448,
+    "budget_remaining_h": 47.65,
+    "reason": "age=0.4h within budget (48h, kind=marker)"
+   },
+   "_vc_rounds_loop": {
+    "loop": "_vc_rounds_loop",
+    "verdict": "live",
+    "age_s": 3565,
+    "last_ok_at": 1793528147,
+    "last_run_at": 1793528147,
+    "budget_remaining_h": 5.01,
+    "reason": "age=1.0h within budget (6h, kind=collector)"
+   }
+  },
+  "overall": "critical"
+ },
+ "coverage": {
+  "n_not_covered": 128,
+  "n_write_observed": 88,
+  "n_dark": 40,
+  "n_blocking": 7,
+  "n_total": 161,
+  "n_covered": 14,
+  "not_covered_by_tier": {
+   "track_record": [
+    "allocation_nav_daily",
+    "beta_core_nav_q",
+    "beta_core_nav_q_meta",
+    "beta_core_nav_size",
+    "beta_core_nav_size_meta",
+    "causal_paper_nav",
+    "cause_outcomes",
+    "combined_book_nav",
+    "dingge_paper_nav",
+    "execution_intents",
+    "execution_outcomes",
+    "factor_tilt_nav",
+    "forward_book_nav",
+    "fusion_paper_nav",
+    "nav_exceptions",
+    "pod_aggregator_nav",
+    "prediction_outcomes",
+    "scalable_book_nav",
+    "signal_track_record",
+    "two_layer_paper_nav",
+    "vault_nav_tick",
+    "world50_book_nav"
+   ],
+   "signal": [
+    "cause_snapshots_daily",
+    "cis_official_daily",
+    "cis_rebuild_daily",
+    "cis_regime_fitness",
+    "cis_signal_attribution",
+    "cis_signal_remap_audit",
+    "cis_standard_outcomes",
+    "cis_tilt_daily",
+    "cis_v2_daily",
+    "conviction_verdicts_daily",
+    "conviction_watchlist_log",
+    "crowd_clock_log",
+    "decisions",
+    "depth_divergence_log",
+    "entities",
+    "factor_tilt_state",
+    "fusion_paper_lifecycle",
+    "macro_briefs",
+    "macro_daily",
+    "narrative_events",
+    "narrative_snapshots",
+    "pod_aggregator_state",
+    "regime_band_log",
+    "regime_calls",
+    "regime_daily",
+    "signal_edge_map",
+    "strategy_response",
+    "trending_log"
+   ],
+   "input": [
+    "funding_history",
+    "funding_vision_absent",
+    "holder_concentration_history",
+    "ohlcv_hourly",
+    "universe_membership"
+   ],
+   "ops": [
+    "allocation_daily",
+    "allocation_override",
+    "asset_mcap_daily",
+    "beta_plus_daily",
+    "book_style_exposure_daily",
+    "cg_coin_map",
+    "cg_coin_mcap_daily",
+    "chain_activity_daily",
+    "channel_categories",
+    "channel_series_daily",
+    "core_cap_daily",
+    "core_variants_daily",
+    "deriv_metrics_daily",
+    "equity_fundamentals_q",
+    "execution_quality_daily",
+    "exploration_ideas",
+    "feature_arms_daily",
+    "forward_anchor_daily",
+    "forward_book_holdings",
+    "fusion_paper_regime_track",
+    "fusion_paper_state",
+    "github_commits_weekly",
+    "hl_book_daily",
+    "interpretation_validation_runs",
+    "j_tickets",
+    "j_tickets_state",
+    "live_account_daily",
+    "loop_attempt",
+    "market_interpretation_daily",
+    "meta_allocator_daily",
+    "multiplier_daily",
+    "oi_lev_snapshot_daily",
+    "open_interest_history",
+    "perp_bv_daily",
+    "perp_bv_pairs",
+    "perp_cg_map",
+    "portfolio_layer_daily",
+    "portfolio_targets_daily",
+    "price_source_agreement_daily",
+    "protocol_revenue_daily",
+    "protocol_tvl_daily",
+    "r77_forward_episodes",
+    "r77_forward_episodes_meta",
+    "r_money_daily",
+    "r_ticket_oi_tags",
+    "r_ticket_tags",
+    "r_tickets_paper",
+    "r_tickets_state",
+    "research_scratch",
+    "rr_matrix_daily",
+    "santiment_slug_map",
+    "sharpe_mindshare_snap",
+    "sharpe_narrative_mindshare",
+    "short_paper_money",
+    "short_paper_state",
+    "short_paper_tickets",
+    "social_daily",
+    "stable_lending_daily",
+    "state_daily",
+    "style_index_daily",
+    "style_index_pit_daily",
+    "style_membership",
+    "style_pit_coverage_daily",
+    "style_universe_broad",
+    "tokenization_tilt_daily",
+    "vault_positions",
+    "vault_state",
+    "vc_funding_rounds",
+    "world50_book_holdings",
+    "world50_mcap_weekly",
+    "world50_onchain_forms",
+    "world50_revenue",
+    "write_log"
+   ]
+  },
+  "verdict": "blocked",
+  "reason": "128/161 个对象没有任何检查在看,其中 **7 个属于 track_record** (['beta_core_nav_q_meta', 'beta_core_nav_size', 'beta_core_nav_size_meta', 'cause_outcomes', 'prediction_outcomes', 'signal_track_record']…)。**产品是可验证的前向记录,而 NAV 表就是那个记录本身** —— 它们没被判活,意味着记录可能有洞而我们不知道"
+ },
+ "verdict_scope": {
+  "verdict": "producers_dead",
+  "unqualified": false,
+  "covers": "14/161",
+  "n_not_covered": 128,
+  "n_blocking": 7,
+  "scope_note": "⚠️ **这个裁决只对 14/161 个对象成立**,另有 128 个无人监视(其中 7 个是 track_record 层 —— 产品就是可验证的前向记录,而承载它的表没被判活)。**不是警报,是范围声明** —— 一盏常亮的红灯等于一盏坏灯"
+ },
+ "verdict_note": "**顶层裁决取自 by_source(每源 × 覆盖标的数),不是 ohlcv_daily。**后者回答的是「这一轮跑完没有」,它的 max(trade_date) 在自愈式回填下是瞬态值 —— 两块并排是有意的(S-251),但只有这一个回答「我该担心吗」。取值见 by_source.by_domain。",
+ "books": {
+  "verdict": "gated",
+  "reason": "book 名册需要 X-Internal-Token —— 本端点对外部探针公开,而 book 名字与存活状态是架构信息(规则 8)。**看到这一行就说明这段代码已经部署**;字段整个缺失才是没部署。"
+ }
+}

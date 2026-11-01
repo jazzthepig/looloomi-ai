@@ -1,0 +1,1 @@
+{"status":"healthy","checks":[{"name":"upstream_scores_push","state":"ok","detail":"1941s ago"},{"name":"universe","state":"ok","detail":"43 assets"},{"name":"contract_drift","state":"ok","detail":"0 warning(s)"},{"name":"macro_brief","state":"ok","detail":"fresh (11m)"}],"deploy_sha":"ad672440","as_of":"2026-11-01T11:33:10.707510+00:00"}

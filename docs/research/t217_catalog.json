@@ -1,0 +1,2487 @@
+[
+ {
+  "kind": "function",
+  "name": "api_usage_upsert",
+  "args": "p_rows jsonb",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "array_to_halfvec",
+  "args": "integer[], integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "array_to_halfvec",
+  "args": "real[], integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "array_to_halfvec",
+  "args": "double precision[], integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "array_to_halfvec",
+  "args": "numeric[], integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "array_to_sparsevec",
+  "args": "double precision[], integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "array_to_sparsevec",
+  "args": "numeric[], integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "array_to_sparsevec",
+  "args": "integer[], integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "array_to_sparsevec",
+  "args": "real[], integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "array_to_vector",
+  "args": "integer[], integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "array_to_vector",
+  "args": "numeric[], integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "array_to_vector",
+  "args": "real[], integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "array_to_vector",
+  "args": "double precision[], integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "backfill_binance_funding",
+  "args": "p_symbol text, p_start_ms bigint, p_max_batches integer",
+  "n_args": 3,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "backfill_binance_hourly",
+  "args": "p_symbol text, p_start_ms bigint, p_max_batches integer",
+  "n_args": 3,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "backfill_binance_ohlcv",
+  "args": "p_symbol text, p_asset_class text, p_start_ms bigint",
+  "n_args": 3,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "backfill_daily_for_asset",
+  "args": "p_asset text, p_max_batches integer",
+  "n_args": 2,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "binance_hist_interior_holes",
+  "args": "p_lookback integer",
+  "n_args": 1,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "binary_quantize",
+  "args": "halfvec",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "binary_quantize",
+  "args": "vector",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "catalog_inventory",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "cg_coin_map_keep_manual",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "cg_known_coin_map",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "cis_official_daily_immutable",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "cis_v2_daily_append_only",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "core_alpha_daily",
+  "args": "p_start date",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "core_pit_daily",
+  "args": "p_start date, p_end date, p_n integer, p_cap double precision",
+  "n_args": 4,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "core_pit_excluded",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "core_pit_members",
+  "args": "p_start date, p_end date, p_n integer",
+  "n_args": 3,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "core_pit_min_turnover",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "cosine_distance",
+  "args": "halfvec, halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "cosine_distance",
+  "args": "vector, vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "cosine_distance",
+  "args": "sparsevec, sparsevec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "decision_source_term",
+  "args": "as_of date, lookback_days integer",
+  "n_args": 2,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "deep_panel_symbol_list",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "deep_panel_symbols_fast",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "exec_backfill_forward_returns",
+  "args": "horizon_days integer",
+  "n_args": 1,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "forward_return_coverage",
+  "args": "p_horizon integer",
+  "n_args": 1,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "fusion_paper_regime_track_touch_updated_at",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "halfvec",
+  "args": "halfvec, integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_accum",
+  "args": "double precision[], halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_add",
+  "args": "halfvec, halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_avg",
+  "args": "double precision[]",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_cmp",
+  "args": "halfvec, halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_combine",
+  "args": "double precision[], double precision[]",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_concat",
+  "args": "halfvec, halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_eq",
+  "args": "halfvec, halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_ge",
+  "args": "halfvec, halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_gt",
+  "args": "halfvec, halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_in",
+  "args": "cstring, oid, integer",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_l2_squared_distance",
+  "args": "halfvec, halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_le",
+  "args": "halfvec, halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_lt",
+  "args": "halfvec, halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_mul",
+  "args": "halfvec, halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_ne",
+  "args": "halfvec, halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_negative_inner_product",
+  "args": "halfvec, halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_out",
+  "args": "halfvec",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_recv",
+  "args": "internal, oid, integer",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_send",
+  "args": "halfvec",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_spherical_distance",
+  "args": "halfvec, halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_sub",
+  "args": "halfvec, halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_to_float4",
+  "args": "halfvec, integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_to_sparsevec",
+  "args": "halfvec, integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_to_vector",
+  "args": "halfvec, integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "halfvec_typmod_in",
+  "args": "cstring[]",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "hamming_distance",
+  "args": "bit, bit",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "hnsw_bit_support",
+  "args": "internal",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "hnsw_halfvec_support",
+  "args": "internal",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "hnsw_sparsevec_support",
+  "args": "internal",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "hnswhandler",
+  "args": "internal",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "increment_api_key_usage",
+  "args": "p_key_id bigint",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "increment_webhook_delivery",
+  "args": "p_key_prefix text, p_url text, p_success boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "ingest_binance_universe",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "inner_product",
+  "args": "sparsevec, sparsevec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "inner_product",
+  "args": "halfvec, halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "inner_product",
+  "args": "vector, vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "ivfflat_bit_support",
+  "args": "internal",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "ivfflat_halfvec_support",
+  "args": "internal",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "ivfflathandler",
+  "args": "internal",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "jaccard_distance",
+  "args": "bit, bit",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "l1_distance",
+  "args": "sparsevec, sparsevec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "l1_distance",
+  "args": "halfvec, halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "l1_distance",
+  "args": "vector, vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "l2_distance",
+  "args": "halfvec, halfvec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "l2_distance",
+  "args": "sparsevec, sparsevec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "l2_distance",
+  "args": "vector, vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "l2_norm",
+  "args": "sparsevec",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "l2_norm",
+  "args": "halfvec",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "l2_normalize",
+  "args": "sparsevec",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "l2_normalize",
+  "args": "vector",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "l2_normalize",
+  "args": "halfvec",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "loop_attempt_health",
+  "args": "p_loop_name text",
+  "n_args": 1,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "market_state_cluster",
+  "args": "v jsonb",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "match_asset_embeddings",
+  "args": "target text, k integer, class_mode text",
+  "n_args": 3,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "match_entities",
+  "args": "target_entity_id text, k integer",
+  "n_args": 2,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "mcap_first_days",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "msv_cis_xs",
+  "args": "p_from date",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "msv_funding_xs",
+  "args": "p_members jsonb, p_from date",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "msv_oi_xs",
+  "args": "p_members jsonb, p_from date",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "ohlcv_daily_touch_recorded_at",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "ohlcv_resolve_asset_id",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "ohlcv_source_coverage",
+  "args": "recent_crypto integer, recent_tradfi integer, base_lo integer, base_hi integer",
+  "n_args": 4,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "ohlcv_symbol_coverage",
+  "args": "p_source text",
+  "n_args": 1,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "panel_closes",
+  "args": "p_symbols text[], p_days integer",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "panel_funding",
+  "args": "p_symbols text[], p_points integer",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "paper_book_freshness",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "producer_freshness",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "public_columns",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "r_tickets_nav",
+  "args": "p_tickets jsonb, p_f double precision, p_cap integer, p_from date, p_to date, p_compound boolean, p_equity0 double precision",
+  "n_args": 7,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "r_tickets_nav_paper",
+  "args": "p_f double precision, p_cap integer, p_from date",
+  "n_args": 3,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "r_tickets_scan",
+  "args": "p_to date, p_from date",
+  "n_args": 2,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "refresh_depth_divergence",
+  "args": "p_date date",
+  "n_args": 1,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "refresh_regime_daily",
+  "args": "p_since date",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "refresh_signal_edge_map",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "refresh_signal_track_record",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "resolve_depth_divergence",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "rpc_reachability_audit",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "similar_market_states",
+  "args": "target_day date, k integer, min_shared integer",
+  "n_args": 3,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "similar_market_states",
+  "args": "target_day date, k integer, min_shared integer, exclude_days integer",
+  "n_args": 4,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "social_ingest_plan",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "sparsevec",
+  "args": "sparsevec, integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "sparsevec_cmp",
+  "args": "sparsevec, sparsevec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "sparsevec_eq",
+  "args": "sparsevec, sparsevec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "sparsevec_ge",
+  "args": "sparsevec, sparsevec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "sparsevec_gt",
+  "args": "sparsevec, sparsevec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "sparsevec_in",
+  "args": "cstring, oid, integer",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "sparsevec_l2_squared_distance",
+  "args": "sparsevec, sparsevec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "sparsevec_le",
+  "args": "sparsevec, sparsevec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "sparsevec_lt",
+  "args": "sparsevec, sparsevec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "sparsevec_ne",
+  "args": "sparsevec, sparsevec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "sparsevec_negative_inner_product",
+  "args": "sparsevec, sparsevec",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "sparsevec_out",
+  "args": "sparsevec",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "sparsevec_recv",
+  "args": "internal, oid, integer",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "sparsevec_send",
+  "args": "sparsevec",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "sparsevec_to_halfvec",
+  "args": "sparsevec, integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "sparsevec_to_vector",
+  "args": "sparsevec, integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "sparsevec_typmod_in",
+  "args": "cstring[]",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "strategy_records_bump_updated_at",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "subvector",
+  "args": "halfvec, integer, integer",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "subvector",
+  "args": "vector, integer, integer",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "treasury_known_entities",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "upsert_asset_embeddings_history",
+  "args": "p_rows jsonb",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "upsert_risk_meter_history",
+  "args": "p_d date, p_regime text, p_band text, p_score numeric, p_long_gross numeric, p_interpretation text, p_components jsonb",
+  "n_args": 7,
+  "n_required": 7
+ },
+ {
+  "kind": "function",
+  "name": "vector",
+  "args": "vector, integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "vector_accum",
+  "args": "double precision[], vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "vector_add",
+  "args": "vector, vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "vector_avg",
+  "args": "double precision[]",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "vector_cmp",
+  "args": "vector, vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "vector_combine",
+  "args": "double precision[], double precision[]",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "vector_concat",
+  "args": "vector, vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "vector_dims",
+  "args": "halfvec",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "vector_dims",
+  "args": "vector",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "vector_eq",
+  "args": "vector, vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "vector_ge",
+  "args": "vector, vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "vector_gt",
+  "args": "vector, vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "vector_in",
+  "args": "cstring, oid, integer",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "vector_l2_squared_distance",
+  "args": "vector, vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "vector_le",
+  "args": "vector, vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "vector_lt",
+  "args": "vector, vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "vector_mul",
+  "args": "vector, vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "vector_ne",
+  "args": "vector, vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "vector_negative_inner_product",
+  "args": "vector, vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "vector_norm",
+  "args": "vector",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "vector_out",
+  "args": "vector",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "vector_recv",
+  "args": "internal, oid, integer",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "vector_send",
+  "args": "vector",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "vector_spherical_distance",
+  "args": "vector, vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "vector_sub",
+  "args": "vector, vector",
+  "n_args": 2,
+  "n_required": 2
+ },
+ {
+  "kind": "function",
+  "name": "vector_to_float4",
+  "args": "vector, integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "vector_to_halfvec",
+  "args": "vector, integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "vector_to_sparsevec",
+  "args": "vector, integer, boolean",
+  "n_args": 3,
+  "n_required": 3
+ },
+ {
+  "kind": "function",
+  "name": "vector_typmod_in",
+  "args": "cstring[]",
+  "n_args": 1,
+  "n_required": 1
+ },
+ {
+  "kind": "function",
+  "name": "watch_census",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "function",
+  "name": "write_health",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "_write_probe",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "agent_call_log",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "allocation_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "allocation_nav_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "allocation_override",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "analytics_events",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "api_key_usage",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "api_keys",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "api_tiers",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "api_usage",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "asset_aliases",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "asset_edge_moments",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "asset_embeddings",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "asset_embeddings_history",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "asset_embeddings_latest",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "asset_mcap_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "assets",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "audit_log",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "beta_core_nav",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "beta_core_nav_q",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "beta_core_nav_q_meta",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "beta_core_nav_size",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "beta_core_nav_size_meta",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "beta_plus_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "book_style_exposure_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "causal_paper_nav",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "cause_outcomes",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "cause_snapshots_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "cg_coin_map",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "cg_coin_mcap_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "chain_activity_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "channel_categories",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "channel_series_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "cis_backtest_results",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "cis_official_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "cis_rebuild_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "cis_regime_fitness",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "cis_score_history_7d",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "cis_score_latest",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "cis_scores",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "cis_signal_attribution",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "cis_signal_remap_audit",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "cis_standard_outcomes",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "cis_tilt_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "cis_v2_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "combined_book_nav",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "conviction_verdicts_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "conviction_watchlist_log",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "core_cap_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "core_variants_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "corporate_treasury_history",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "crowd_clock_log",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "crypto_universe",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "daily_macro_regime",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "decisions",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "depth_divergence_log",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "depth_divergence_unresolved",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "deriv_metrics_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "deriv_metrics_plan",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "dingge_paper_nav",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "entities",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "equity_fundamentals_q",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "execution_intents",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "execution_outcomes",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "execution_quality_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "execution_unresolved",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "experiment_runs",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "exploration_ideas",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "factor_tilt_nav",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "factor_tilt_state",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "feature_arms_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "forward_anchor_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "forward_book_holdings",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "forward_book_nav",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "funding_history",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "funding_vision_absent",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "funding_vision_plan",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "fusion_paper_lifecycle",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "fusion_paper_nav",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "fusion_paper_regime_track",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "fusion_paper_state",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "github_commits_weekly",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "hl_book_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "holder_concentration_history",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "interpretation_validation_runs",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "j_tickets",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "j_tickets_state",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "leads",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "live_account_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "loop_attempt",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "macro_briefs",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "macro_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "market_interpretation_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "market_state_vectors",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "meta_allocator_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "multiplier_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "narrative_events",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "narrative_snapshots",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "nav_exceptions",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "ohlcv_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "ohlcv_daily_canonical",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "ohlcv_hourly",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "ohlcv_venue_spread",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "oi_lev_snapshot_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "open_interest_history",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "organizations",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "panel_ew_forward_returns",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "perp_bv_coverage",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "perp_bv_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "perp_bv_pairs",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "perp_cg_map",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "pod_aggregator_nav",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "pod_aggregator_state",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "portfolio_layer_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "portfolio_targets_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "prediction_outcomes",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "price_source_agreement_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "protocol_revenue_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "protocol_tvl_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "r77_forward_episodes",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "r77_forward_episodes_meta",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "r_money_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "r_ticket_oi_tags",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "r_ticket_tags",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "r_tickets_paper",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "r_tickets_state",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "regime_band_log",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "regime_calls",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "regime_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "regime_transitions",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "research_scratch",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "risk_meter_history",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "risk_meter_history_high_days",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "rr_matrix_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "santiment_slug_map",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "scalable_book_nav",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "sharpe_mindshare_snap",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "sharpe_narrative_mindshare",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "short_paper_money",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "short_paper_state",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "short_paper_tickets",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "signal_beta_scorecard",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "signal_edge_map",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "signal_journal",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "signal_outcomes",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "signal_outcomes_unified",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "signal_track_record",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "social_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "stable_lending_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "state_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "strategy_params",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "strategy_records",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "strategy_response",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "style_index_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "style_index_pit_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "style_membership",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "style_pit_coverage_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "style_universe_broad",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "tokenization_tilt_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "trade_results",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "treasury_decisions",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "treasury_entities",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "trending_log",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "two_layer_paper_nav",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "universe_membership",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "v_cis_signal_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "v_funding_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "v_taker_share_daily",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "vault_deposit_intents",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "vault_nav_tick",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "vault_positions",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "vault_state",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "vc_funding_rounds",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "wallet_profiles",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "webhook_subscriptions",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "world50_book_holdings",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "world50_book_nav",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "world50_mcap_weekly",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "world50_onchain_forms",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "world50_revenue",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ },
+ {
+  "kind": "table",
+  "name": "write_log",
+  "args": "",
+  "n_args": 0,
+  "n_required": 0
+ }
+]

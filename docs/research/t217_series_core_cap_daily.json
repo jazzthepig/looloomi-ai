@@ -1,0 +1,34 @@
+{
+ "table": "core_cap_daily",
+ "arms": [
+  {
+   "arm": "cap_a05",
+   "inception": "2026-10-02",
+   "first": "2026-10-02",
+   "last": "2026-10-31",
+   "n": 30
+  },
+  {
+   "arm": "cap_a1",
+   "inception": "2026-10-02",
+   "first": "2026-10-02",
+   "last": "2026-10-31",
+   "n": 30
+  },
+  {
+   "arm": "cap_a1_u",
+   "inception": "2026-10-12",
+   "first": "2026-10-12",
+   "last": "2026-10-31",
+   "n": 20
+  },
+  {
+   "arm": "ew_a0",
+   "inception": "2026-10-02",
+   "first": "2026-10-02",
+   "last": "2026-10-31",
+   "n": 30
+  }
+ ],
+ "note": "Daily return and NAV of one book arm. Rows dated before `inception` are point-in-time replays (simulated with the rule as written, not traded); rows from `inception` on are the forward paper record. Not live-traded P&L, not a forecast."
+}

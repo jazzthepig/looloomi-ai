@@ -1,0 +1,1925 @@
+{
+ "checked_at": 1793534646,
+ "producers": {
+  "verdict": "dead",
+  "n": 20,
+  "n_dead_or_corrupt": 1,
+  "n_stale_or_empty": 1,
+  "n_unknown": 0,
+  "dead_or_corrupt": [
+   "strategy_records"
+  ],
+  "stale_or_empty": [
+   "treasury_decisions"
+  ],
+  "tables": {
+   "cis_scores": {
+    "verdict": "fresh",
+    "n_rows": 217008,
+    "write": {
+     "col": "recorded_at",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "recorded_at = 2026-11-01(0 天前) · 按设计没有事件时钟(规格已声明)—— 不参与裁决"
+   },
+   "signal_journal": {
+    "verdict": "fresh",
+    "n_rows": 349,
+    "write": {
+     "col": "recorded_at",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "signal_date",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "reason": "recorded_at = 2026-11-01(0 天前) · signal_date = 2026-11-01(0 天前)"
+   },
+   "signal_outcomes": {
+    "verdict": "not_applicable",
+    "n_rows": 7743,
+    "write": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "`signal_outcomes` 是历史表:2026-05-03 后无写入端(Mac 旧追踪器停用);30 日结果在 signal_journal.outcome_30d,档位历史在 cis_standard_outcomes(S-540);原表只经 signal_outcomes_unified 读(SPINE §3)"
+   },
+   "risk_meter_history": {
+    "verdict": "fresh",
+    "n_rows": 51,
+    "write": {
+     "col": "computed_at",
+     "last": "2026-10-31",
+     "age_days": 1.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "d",
+     "last": "2026-10-31",
+     "age_days": 1.0,
+     "verdict": "fresh"
+    },
+    "reason": "computed_at = 2026-10-31(1 天前) · d = 2026-10-31(1 天前)"
+   },
+   "beta_core_nav": {
+    "verdict": "fresh",
+    "n_rows": 74,
+    "write": {
+     "col": "marked_at",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "mark_date",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "reason": "marked_at = 2026-11-01(0 天前) · mark_date = 2026-11-01(0 天前)"
+   },
+   "asset_embeddings_history": {
+    "verdict": "fresh",
+    "n_rows": 4119,
+    "write": {
+     "col": "computed_at",
+     "last": "2026-10-31",
+     "age_days": 1.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "d",
+     "last": "2026-10-31",
+     "age_days": 1.0,
+     "verdict": "fresh"
+    },
+    "reason": "computed_at = 2026-10-31(1 天前) · d = 2026-10-31(1 天前)"
+   },
+   "asset_embeddings": {
+    "verdict": "fresh",
+    "n_rows": 73,
+    "write": {
+     "col": "computed_at",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "computed_at = 2026-11-01(0 天前) · 按设计没有事件时钟(规格已声明)—— 不参与裁决"
+   },
+   "market_state_vectors": {
+    "verdict": "fresh",
+    "n_rows": 2527,
+    "write": {
+     "col": "computed_at",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "d",
+     "last": "2026-10-31",
+     "age_days": 1.0,
+     "verdict": "fresh"
+    },
+    "reason": "computed_at = 2026-11-01(0 天前) · d = 2026-10-31(1 天前)"
+   },
+   "trade_results": {
+    "verdict": "fresh",
+    "n_rows": 1864,
+    "write": {
+     "col": "created_at",
+     "last": "2026-10-30",
+     "age_days": 2.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "entry_time",
+     "last": "2026-10-29",
+     "age_days": 3.0,
+     "verdict": "fresh"
+    },
+    "reason": "created_at = 2026-10-30(2 天前) · entry_time = 2026-10-29(3 天前)"
+   },
+   "strategy_records": {
+    "verdict": "dead",
+    "n_rows": 26,
+    "write": {
+     "col": "created_at",
+     "last": "2026-09-01",
+     "age_days": 61.0,
+     "verdict": "dead"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "created_at 停在 2026-09-01(61 天前 ≥ 死亡线 60) · 按设计没有事件时钟(规格已声明)—— 不参与裁决"
+   },
+   "treasury_decisions": {
+    "verdict": "stale",
+    "n_rows": 935,
+    "write": {
+     "col": "recorded_at",
+     "last": "2026-10-30",
+     "age_days": 2.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "decision_date",
+     "last": "2026-10-23",
+     "age_days": 9.0,
+     "verdict": "stale"
+    },
+    "reason": "recorded_at = 2026-10-30(2 天前) · decision_date 停在 2026-10-23(9 天前 ≥ 陈旧线 7)。⚠️ **写入者活着但内容是陈的** —— 进程在跑、日志在滚,而产出已经不当期了;单一个新鲜度数字会把这种情况报成健康"
+   },
+   "corporate_treasury_history": {
+    "verdict": "fresh",
+    "n_rows": 12651,
+    "write": {
+     "col": "recorded_at",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "d",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "reason": "recorded_at = 2026-11-01(0 天前) · d = 2026-11-01(0 天前)"
+   },
+   "causal_paper_nav": {
+    "verdict": "not_applicable",
+    "n_rows": 86,
+    "write": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "`causal_paper_nav` 已冻结(2026-10-20 起停写,历史保留;S-631):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-13 起 −4.1%(价格 −5.1%、资金费 +1.4%、成本 −0.4%)"
+   },
+   "combined_book_nav": {
+    "verdict": "not_applicable",
+    "n_rows": 83,
+    "write": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "`combined_book_nav` 已冻结(2026-10-20 起停写,历史保留;S-631):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-15 起 −10.7%(同上,一并冻结)"
+   },
+   "dingge_paper_nav": {
+    "verdict": "not_applicable",
+    "n_rows": 90,
+    "write": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "`dingge_paper_nav` 已冻结(2026-10-20 起停写,历史保留;S-631):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-15 起 −3.3%"
+   },
+   "scalable_book_nav": {
+    "verdict": "not_applicable",
+    "n_rows": 82,
+    "write": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "`scalable_book_nav` 已冻结(2026-10-20 起停写,历史保留;S-631):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-16 起 −10.7%(Jazz 批的是前四本,这本同属 ④ 多空,同一条理由一并冻结)"
+   },
+   "fusion_paper_nav": {
+    "verdict": "not_applicable",
+    "n_rows": 52,
+    "write": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "`fusion_paper_nav` 已冻结(2026-10-20 起停写,历史保留;S-631):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;v2 09-19 → 10-13 −1.2%,全部是成本;v3 10-20 刚重开即冻结"
+   },
+   "factor_tilt_nav": {
+    "verdict": "fresh",
+    "n_rows": 49,
+    "write": {
+     "col": "marked_at",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "mark_date",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "reason": "marked_at = 2026-11-01(0 天前) · mark_date = 2026-11-01(0 天前)"
+   },
+   "pod_aggregator_nav": {
+    "verdict": "fresh",
+    "n_rows": 49,
+    "write": {
+     "col": "marked_at",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "event": {
+     "col": "mark_date",
+     "last": "2026-11-01",
+     "age_days": 0.0,
+     "verdict": "fresh"
+    },
+    "reason": "marked_at = 2026-11-01(0 天前) · mark_date = 2026-11-01(0 天前)"
+   },
+   "two_layer_paper_nav": {
+    "verdict": "not_applicable",
+    "n_rows": 54,
+    "write": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "event": {
+     "col": null,
+     "last": null,
+     "age_days": null,
+     "verdict": "not_applicable"
+    },
+    "reason": "`two_layer_paper_nav` 已冻结(2026-10-20 起停写,历史保留;S-631):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-22 起 ≈ 0(核心多数日子不触发,本就按设计退役)"
+   }
+  },
+  "reason": "1 张死亡或被未来日期污染 ['strategy_records']、1 张陈旧或空。**未来日期单列** —— 它会让 max() 判活永远报新鲜,是判活器被数据本身关掉的那种失败"
+ },
+ "by_source": {
+  "sources": [
+   {
+    "source": "binance_um_hist",
+    "verdict": "DEAD",
+    "last_bar": "2026-08-08",
+    "age_days": 85,
+    "symbols_recent": 0,
+    "symbols_typical": null,
+    "usable_for_returns": false,
+    "detail": "最近 3 天一个标的都没写"
+   },
+   {
+    "source": "hyperliquid",
+    "verdict": "DEAD",
+    "last_bar": "2026-08-23",
+    "age_days": 70,
+    "symbols_recent": 0,
+    "symbols_typical": null,
+    "usable_for_returns": false,
+    "detail": "最近 3 天一个标的都没写"
+   },
+   {
+    "source": "coingecko",
+    "verdict": "DEAD",
+    "last_bar": "2026-09-17",
+    "age_days": 45,
+    "symbols_recent": 0,
+    "symbols_typical": 6,
+    "usable_for_returns": false,
+    "detail": "最近 3 天一个标的都没写;此前常态 6 个"
+   },
+   {
+    "source": "yfinance",
+    "verdict": "DEAD",
+    "last_bar": "2026-10-09",
+    "age_days": 23,
+    "symbols_recent": 0,
+    "symbols_typical": 5,
+    "usable_for_returns": false,
+    "detail": "最近 6 天一个标的都没写;此前常态 5 个"
+   },
+   {
+    "source": "eodhd",
+    "verdict": "flowing",
+    "last_bar": "2026-10-30",
+    "age_days": 2,
+    "symbols_recent": 193,
+    "symbols_typical": 135,
+    "usable_for_returns": true,
+    "detail": ""
+   },
+   {
+    "source": "coingecko_pro_ohlc",
+    "verdict": "flowing",
+    "last_bar": "2026-10-31",
+    "age_days": 1,
+    "symbols_recent": 210,
+    "symbols_typical": 211,
+    "usable_for_returns": true,
+    "detail": ""
+   },
+   {
+    "source": "binance_hist",
+    "verdict": "flowing",
+    "last_bar": "2026-10-31",
+    "age_days": 1,
+    "symbols_recent": 135,
+    "symbols_typical": 137,
+    "usable_for_returns": true,
+    "detail": ""
+   }
+  ],
+  "by_domain": {
+   "unknown": {
+    "usable": [],
+    "dead": [
+     "binance_um_hist"
+    ],
+    "flowing_but_barred": [],
+    "verdict": "all_dead"
+   },
+   "crypto": {
+    "usable": [
+     "coingecko_pro_ohlc",
+     "binance_hist"
+    ],
+    "dead": [
+     "hyperliquid",
+     "coingecko"
+    ],
+    "flowing_but_barred": [],
+    "verdict": "ok"
+   },
+   "tradfi": {
+    "usable": [
+     "eodhd"
+    ],
+    "dead": [
+     "yfinance"
+    ],
+    "flowing_but_barred": [],
+    "verdict": "ok"
+   }
+  },
+  "domains_without_usable_source": [],
+  "unregistered_sources": [
+   "binance_um_hist"
+  ],
+  "verdict": "unregistered_source",
+  "note": "⚠️ 未登记到 DOMAIN_OF_SOURCE 的源:binance_um_hist —— **这不是「属于 unknown 域」,是注册表有洞**;在补上之前,它对任何按域给出的判决都不算数 (S-323n)。"
+ },
+ "ohlcv_daily": {
+  "last_trade_date": "2026-10-31",
+  "age_days": 0.5,
+  "verdict": "fresh",
+  "error": null,
+  "caveat": "self-healing feed: collect_ohlcv upserts 365d per run, so max(trade_date) is transient. Judge on run completion, not on this date. Weekends are crypto-only by design.",
+  "answers": "这一轮跑完没有(max(trade_date) 是否新鲜)—— **不回答「这个管道是活的吗」**,那个在 by_source 里"
+ },
+ "verdict": "producers_dead",
+ "verdict_source": "producers",
+ "loops": {
+  "verdict": "failing",
+  "n": 59,
+  "n_failing": 2,
+  "n_never_ran": 0,
+  "n_refusing": 8,
+  "n_failing_on_stale_build": 0,
+  "failing": [
+   {
+    "loop": "_forward_record_loop",
+    "n": 1,
+    "err": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refres"
+   },
+   {
+    "loop": "_signal_attribution_loop",
+    "n": 1,
+    "err": "standard:8629 个信号变化(已发布 207),8197 个有 7 天结果 | live_mixed 写入失败:no response from Su"
+   }
+  ],
+  "refusing": [
+   {
+    "loop": "_causal_paper_loop",
+    "n": 1,
+    "why": "冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「"
+   },
+   {
+    "loop": "_combined_book_loop",
+    "n": 1,
+    "why": "冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「"
+   },
+   {
+    "loop": "_dingge_paper_loop",
+    "n": 1,
+    "why": "冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「"
+   },
+   {
+    "loop": "_fusion_paper_loop",
+    "n": 1,
+    "why": "冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「"
+   },
+   {
+    "loop": "_hl_book_loop",
+    "n": 2,
+    "why": ""
+   },
+   {
+    "loop": "_perp_mcap_backfill_loop",
+    "n": 9,
+    "why": ""
+   },
+   {
+    "loop": "_scalable_book_loop",
+    "n": 1,
+    "why": "冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「"
+   },
+   {
+    "loop": "_two_layer_paper_loop",
+    "n": 1,
+    "why": "冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「"
+   }
+  ],
+  "never_ran": [],
+  "rows": [
+   {
+    "loop": "_allocation_loop",
+    "verdict": "ok",
+    "age_s": 1764,
+    "last_ok_at": 1793532888,
+    "last_run_at": 1793532888,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 29 分钟前"
+   },
+   {
+    "loop": "_anchor_loop",
+    "verdict": "ok",
+    "age_s": 1892,
+    "last_ok_at": 1793532760,
+    "last_run_at": 1793532760,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 31 分钟前"
+   },
+   {
+    "loop": "_beta_plus_loop",
+    "verdict": "ok",
+    "age_s": 2105,
+    "last_ok_at": 1793532547,
+    "last_run_at": 1793532547,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 35 分钟前"
+   },
+   {
+    "loop": "_binance_hf_loop",
+    "verdict": "ok",
+    "age_s": 2062,
+    "last_ok_at": 1793532590,
+    "last_run_at": 1793532590,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 34 分钟前"
+   },
+   {
+    "loop": "_binance_vision_loop",
+    "verdict": "ok",
+    "age_s": 2014,
+    "last_ok_at": 1793532638,
+    "last_run_at": 1793532638,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 33 分钟前"
+   },
+   {
+    "loop": "_causal_paper_loop",
+    "verdict": "refused",
+    "build": "ad672440",
+    "stale_build": false,
+    "n_consecutive_refusals": 1,
+    "last_refusal": "冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-13 起 −4.1%(价格 −5.1%、资金费 +1.4%、成本 −0.4%)",
+    "last_ok_at": null,
+    "last_run_at": 1793531996,
+    "age_s": 2656,
+    "reason": "**正确地拒绝写入**,连续 1 轮:冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对。循环没坏 —— 但**连续 1 轮拒绝说明上游一直没恢复**,那是它自己的信号,不是健康"
+   },
+   {
+    "loop": "_cg_panel_loop",
+    "verdict": "ok",
+    "age_s": 1192,
+    "last_ok_at": 1793533460,
+    "last_run_at": 1793533460,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 19 分钟前"
+   },
+   {
+    "loop": "_chain_activity_loop",
+    "verdict": "ok",
+    "age_s": 1467,
+    "last_ok_at": 1793533185,
+    "last_run_at": 1793533185,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 24 分钟前"
+   },
+   {
+    "loop": "_channels_loop",
+    "verdict": "ok",
+    "age_s": 70,
+    "last_ok_at": 1793534582,
+    "last_run_at": 1793534582,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 1 分钟前"
+   },
+   {
+    "loop": "_cis_inputs_loop",
+    "verdict": "ok",
+    "age_s": 1436,
+    "last_ok_at": 1793533216,
+    "last_run_at": 1793533216,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 23 分钟前"
+   },
+   {
+    "loop": "_cis_official_loop",
+    "verdict": "ok",
+    "age_s": 2015,
+    "last_ok_at": 1793532637,
+    "last_run_at": 1793532637,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 33 分钟前"
+   },
+   {
+    "loop": "_cis_rebuild_loop",
+    "verdict": "ok",
+    "age_s": 433,
+    "last_ok_at": 1793534219,
+    "last_run_at": 1793534219,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 7 分钟前"
+   },
+   {
+    "loop": "_cis_tilt_loop",
+    "verdict": "ok",
+    "age_s": 2029,
+    "last_ok_at": 1793532623,
+    "last_run_at": 1793532623,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 33 分钟前"
+   },
+   {
+    "loop": "_cis_v2_shadow_loop",
+    "verdict": "ok",
+    "age_s": 3561,
+    "last_ok_at": 1793531091,
+    "last_run_at": 1793531091,
+    "build": "2444e32a",
+    "stale_build": true,
+    "late": false,
+    "reason": "⚠️ **旧构建 2444e32a 记的,当前 ad672440 下还没跑过 —— 这不是对当前构建的判断,是化石。** 上次成功 59 分钟前"
+   },
+   {
+    "loop": "_combined_book_loop",
+    "verdict": "refused",
+    "build": "ad672440",
+    "stale_build": false,
+    "n_consecutive_refusals": 1,
+    "last_refusal": "冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-15 起 −10.7%(同上,一并冻结)",
+    "last_ok_at": null,
+    "last_run_at": 1793531997,
+    "age_s": 2655,
+    "reason": "**正确地拒绝写入**,连续 1 轮:冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对。循环没坏 —— 但**连续 1 轮拒绝说明上游一直没恢复**,那是它自己的信号,不是健康"
+   },
+   {
+    "loop": "_core_cap_loop",
+    "verdict": "ok",
+    "age_s": 2111,
+    "last_ok_at": 1793532541,
+    "last_run_at": 1793532541,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 35 分钟前"
+   },
+   {
+    "loop": "_core_pit_loop",
+    "verdict": "ok",
+    "age_s": 1749,
+    "last_ok_at": 1793532903,
+    "last_run_at": 1793532903,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 29 分钟前"
+   },
+   {
+    "loop": "_core_variants_loop",
+    "verdict": "ok",
+    "age_s": 1314,
+    "last_ok_at": 1793533338,
+    "last_run_at": 1793533338,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 21 分钟前"
+   },
+   {
+    "loop": "_deep_panel_loop",
+    "verdict": "ok",
+    "age_s": 1565,
+    "last_ok_at": 1793533087,
+    "last_run_at": 1793533087,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 26 分钟前"
+   },
+   {
+    "loop": "_dingge_paper_loop",
+    "verdict": "refused",
+    "build": "ad672440",
+    "stale_build": false,
+    "n_consecutive_refusals": 1,
+    "last_refusal": "冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-15 起 −3.3%",
+    "last_ok_at": null,
+    "last_run_at": 1793531996,
+    "age_s": 2656,
+    "reason": "**正确地拒绝写入**,连续 1 轮:冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对。循环没坏 —— 但**连续 1 轮拒绝说明上游一直没恢复**,那是它自己的信号,不是健康"
+   },
+   {
+    "loop": "_exec_quality_loop",
+    "verdict": "ok",
+    "age_s": 1825,
+    "last_ok_at": 1793532827,
+    "last_run_at": 1793532827,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 30 分钟前"
+   },
+   {
+    "loop": "_executor_host_watch_loop",
+    "verdict": "ok",
+    "age_s": 1554,
+    "last_ok_at": 1793533098,
+    "last_run_at": 1793533098,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 25 分钟前"
+   },
+   {
+    "loop": "_feature_arms_loop",
+    "verdict": "ok",
+    "age_s": 1541,
+    "last_ok_at": 1793533111,
+    "last_run_at": 1793533111,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 25 分钟前"
+   },
+   {
+    "loop": "_forward_record_loop",
+    "verdict": "failing",
+    "build": "ad672440",
+    "stale_build": false,
+    "n_consecutive_failures": 1,
+    "last_error": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not ",
+    "last_ok_at": null,
+    "last_run_at": 1793533084,
+    "age_s": 1568,
+    "reason": "连续失败 **1** 次,最后一次:stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not 。**一次失败和连续 1 次是两个状态**"
+   },
+   {
+    "loop": "_fusion_paper_loop",
+    "verdict": "refused",
+    "build": "ad672440",
+    "stale_build": false,
+    "n_consecutive_refusals": 1,
+    "last_refusal": "冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;v2 09-19 → 10-13 −1.2%,全部是成本;v3 10-20 刚重开即冻结",
+    "last_ok_at": null,
+    "last_run_at": 1793531998,
+    "age_s": 2654,
+    "reason": "**正确地拒绝写入**,连续 1 轮:冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对。循环没坏 —— 但**连续 1 轮拒绝说明上游一直没恢复**,那是它自己的信号,不是健康"
+   },
+   {
+    "loop": "_hl_book_loop",
+    "verdict": "refused",
+    "build": "ad672440",
+    "stale_build": false,
+    "n_consecutive_refusals": 2,
+    "last_refusal": "",
+    "last_ok_at": null,
+    "last_run_at": 1793532322,
+    "age_s": 2330,
+    "reason": "**正确地拒绝写入**,连续 2 轮:。循环没坏 —— 但**连续 2 轮拒绝说明上游一直没恢复**,那是它自己的信号,不是健康"
+   },
+   {
+    "loop": "_holder_refresh_loop",
+    "verdict": "ok",
+    "age_s": 2466,
+    "last_ok_at": 1793532186,
+    "last_run_at": 1793532186,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 41 分钟前"
+   },
+   {
+    "loop": "_hyperliquid_loop",
+    "verdict": "ok",
+    "age_s": 1575,
+    "last_ok_at": 1793533077,
+    "last_run_at": 1793533077,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 26 分钟前"
+   },
+   {
+    "loop": "_interpret_loop",
+    "verdict": "ok",
+    "age_s": 1461,
+    "last_ok_at": 1793533191,
+    "last_run_at": 1793533191,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 24 分钟前"
+   },
+   {
+    "loop": "_live_account_loop",
+    "verdict": "ok",
+    "age_s": 1900,
+    "last_ok_at": 1793532752,
+    "last_run_at": 1793532752,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 31 分钟前"
+   },
+   {
+    "loop": "_market_state_loop",
+    "verdict": "ok",
+    "age_s": 2084,
+    "last_ok_at": 1793532568,
+    "last_run_at": 1793532568,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 34 分钟前"
+   },
+   {
+    "loop": "_mcap_deepen_loop",
+    "verdict": "ok",
+    "age_s": 1807,
+    "last_ok_at": 1793532845,
+    "last_run_at": 1793532845,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 30 分钟前"
+   },
+   {
+    "loop": "_meta_allocator_loop",
+    "verdict": "ok",
+    "age_s": 1577,
+    "last_ok_at": 1793533075,
+    "last_run_at": 1793533075,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 26 分钟前"
+   },
+   {
+    "loop": "_multiplier_loop",
+    "verdict": "ok",
+    "age_s": 2064,
+    "last_ok_at": 1793532588,
+    "last_run_at": 1793532588,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 34 分钟前"
+   },
+   {
+    "loop": "_oi_snapshot_loop",
+    "verdict": "ok",
+    "age_s": 1532,
+    "last_ok_at": 1793533120,
+    "last_run_at": 1793533120,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 25 分钟前"
+   },
+   {
+    "loop": "_outcome_tracker_loop",
+    "verdict": "ok",
+    "age_s": 2532,
+    "last_ok_at": 1793532120,
+    "last_run_at": 1793532120,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 42 分钟前"
+   },
+   {
+    "loop": "_perp_mcap_backfill_loop",
+    "verdict": "refused",
+    "build": "ad672440",
+    "stale_build": false,
+    "n_consecutive_refusals": 9,
+    "last_refusal": "",
+    "last_ok_at": null,
+    "last_run_at": 1793534286,
+    "age_s": 366,
+    "reason": "**正确地拒绝写入**,连续 9 轮:。循环没坏 —— 但**连续 9 轮拒绝说明上游一直没恢复**,那是它自己的信号,不是健康"
+   },
+   {
+    "loop": "_portfolio_layer_loop",
+    "verdict": "ok",
+    "age_s": 1994,
+    "last_ok_at": 1793532658,
+    "last_run_at": 1793532658,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 33 分钟前"
+   },
+   {
+    "loop": "_portfolio_targets_loop",
+    "verdict": "ok",
+    "age_s": 1925,
+    "last_ok_at": 1793532727,
+    "last_run_at": 1793532727,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 32 分钟前"
+   },
+   {
+    "loop": "_price_agreement_loop",
+    "verdict": "ok",
+    "age_s": 2075,
+    "last_ok_at": 1793532577,
+    "last_run_at": 1793532577,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 34 分钟前"
+   },
+   {
+    "loop": "_protocol_revenue_loop",
+    "verdict": "ok",
+    "age_s": 1574,
+    "last_ok_at": 1793533078,
+    "last_run_at": 1793533078,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 26 分钟前"
+   },
+   {
+    "loop": "_public_cache_warm_loop",
+    "verdict": "ok",
+    "age_s": 165,
+    "last_ok_at": 1793534487,
+    "last_run_at": 1793534487,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 2 分钟前"
+   },
+   {
+    "loop": "_r_tickets_paper_loop",
+    "verdict": "ok",
+    "age_s": 1148,
+    "last_ok_at": 1793533504,
+    "last_run_at": 1793533504,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 19 分钟前"
+   },
+   {
+    "loop": "_regime_daily_loop",
+    "verdict": "ok",
+    "age_s": 2115,
+    "last_ok_at": 1793532537,
+    "last_run_at": 1793532537,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 35 分钟前"
+   },
+   {
+    "loop": "_rr_matrix_loop",
+    "verdict": "ok",
+    "age_s": 1531,
+    "last_ok_at": 1793533121,
+    "last_run_at": 1793533121,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 25 分钟前"
+   },
+   {
+    "loop": "_scalable_book_loop",
+    "verdict": "refused",
+    "build": "ad672440",
+    "stale_build": false,
+    "n_consecutive_refusals": 1,
+    "last_refusal": "冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-16 起 −10.7%(Jazz 批的是前四本,这本同属 ④ 多空,同一条理由一并冻结)",
+    "last_ok_at": null,
+    "last_run_at": 1793531997,
+    "age_s": 2655,
+    "reason": "**正确地拒绝写入**,连续 1 轮:冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对。循环没坏 —— 但**连续 1 轮拒绝说明上游一直没恢复**,那是它自己的信号,不是健康"
+   },
+   {
+    "loop": "_signal_attribution_loop",
+    "verdict": "failing",
+    "build": "ad672440",
+    "stale_build": false,
+    "n_consecutive_failures": 1,
+    "last_error": "standard:8629 个信号变化(已发布 207),8197 个有 7 天结果 | live_mixed 写入失败:no response from Supabase after retries (breaker may be open)",
+    "last_ok_at": 1793528155,
+    "last_run_at": 1793533073,
+    "age_s": 1579,
+    "reason": "连续失败 **1** 次,最后一次:standard:8629 个信号变化(已发布 207),8197 个有 7 天结果 | live_mixed 写入失败:no response from Supabase after retries (breaker may be ope。**一次失败和连续 1 次是两个状态**"
+   },
+   {
+    "loop": "_social_ingest_loop",
+    "verdict": "ok",
+    "age_s": 2554,
+    "last_ok_at": 1793532098,
+    "last_run_at": 1793532098,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 42 分钟前"
+   },
+   {
+    "loop": "_stable_lending_loop",
+    "verdict": "ok",
+    "age_s": 2108,
+    "last_ok_at": 1793532544,
+    "last_run_at": 1793532544,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 35 分钟前"
+   },
+   {
+    "loop": "_standard_outcomes_loop",
+    "verdict": "ok",
+    "age_s": 991,
+    "last_ok_at": 1793533661,
+    "last_run_at": 1793533661,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 16 分钟前"
+   },
+   {
+    "loop": "_state_daily_loop",
+    "verdict": "ok",
+    "age_s": 1966,
+    "last_ok_at": 1793532686,
+    "last_run_at": 1793532686,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 32 分钟前"
+   },
+   {
+    "loop": "_style_header_loop",
+    "verdict": "ok",
+    "age_s": 1315,
+    "last_ok_at": 1793533337,
+    "last_run_at": 1793533337,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 21 分钟前"
+   },
+   {
+    "loop": "_style_pit_loop",
+    "verdict": "ok",
+    "age_s": 1236,
+    "last_ok_at": 1793533416,
+    "last_run_at": 1793533416,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 20 分钟前"
+   },
+   {
+    "loop": "_tokenization_tilt_loop",
+    "verdict": "ok",
+    "age_s": 2110,
+    "last_ok_at": 1793532542,
+    "last_run_at": 1793532542,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 35 分钟前"
+   },
+   {
+    "loop": "_track_record_loop",
+    "verdict": "ok",
+    "age_s": 2322,
+    "last_ok_at": 1793532330,
+    "last_run_at": 1793532330,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 38 分钟前"
+   },
+   {
+    "loop": "_treasury_decisions_loop",
+    "verdict": "ok",
+    "age_s": 1992,
+    "last_ok_at": 1793532660,
+    "last_run_at": 1793532660,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 33 分钟前"
+   },
+   {
+    "loop": "_two_layer_paper_loop",
+    "verdict": "refused",
+    "build": "ad672440",
+    "stale_build": false,
+    "n_consecutive_refusals": 1,
+    "last_refusal": "冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负;07-22 起 ≈ 0(核心多数日子不触发,本就按设计退役)",
+    "last_ok_at": null,
+    "last_run_at": 1793531997,
+    "age_s": 2655,
+    "reason": "**正确地拒绝写入**,连续 1 轮:冻结(2026-10-20 起不再写新行;历史保留;恢复 = 删 src/data/accounting/frozen.py 里这一行):Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对。循环没坏 —— 但**连续 1 轮拒绝说明上游一直没恢复**,那是它自己的信号,不是健康"
+   },
+   {
+    "loop": "_vc_rounds_loop",
+    "verdict": "ok",
+    "age_s": 1965,
+    "last_ok_at": 1793532687,
+    "last_run_at": 1793532687,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 32 分钟前"
+   },
+   {
+    "loop": "_world50_history_loop",
+    "verdict": "ok",
+    "age_s": 1498,
+    "last_ok_at": 1793533154,
+    "last_run_at": 1793533154,
+    "build": "ad672440",
+    "stale_build": false,
+    "late": false,
+    "reason": "上次成功 24 分钟前"
+   }
+  ],
+  "reason": "2 个循环正在连续失败、0 个这一轮没有心跳、8 个在**正确地拒绝写入**(不是故障)。**一个只进 stdout 的失败等于没有发生** —— 实测 39 个循环里 28 个是那个形状,而 signal_outcomes 因此死了 123 天无人知"
+ },
+ "liveness": {
+  "n_total": 53,
+  "n_live": 50,
+  "n_stale": 0,
+  "n_dead": 3,
+  "n_frozen": 6,
+  "dead_loops": [
+   "_forward_record_loop",
+   "_hl_book_loop",
+   "_perp_mcap_backfill_loop"
+  ],
+  "stale_loops": [],
+  "frozen_loops": [
+   "_causal_paper_loop",
+   "_combined_book_loop",
+   "_dingge_paper_loop",
+   "_fusion_paper_loop",
+   "_scalable_book_loop",
+   "_two_layer_paper_loop"
+  ],
+  "marker_loops_problem": [
+   "_hl_book_loop"
+  ],
+  "per_loop": {
+   "_allocation_loop": {
+    "loop": "_allocation_loop",
+    "verdict": "live",
+    "age_s": 1764,
+    "last_ok_at": 1793532888,
+    "last_run_at": 1793532888,
+    "budget_remaining_h": 23.51,
+    "reason": "age=0.5h within budget (24h, kind=marker)"
+   },
+   "_anchor_loop": {
+    "loop": "_anchor_loop",
+    "verdict": "live",
+    "age_s": 1892,
+    "last_ok_at": 1793532760,
+    "last_run_at": 1793532760,
+    "budget_remaining_h": 29.47,
+    "reason": "age=0.5h within budget (30h, kind=marker)"
+   },
+   "_beta_plus_loop": {
+    "loop": "_beta_plus_loop",
+    "verdict": "live",
+    "age_s": 2105,
+    "last_ok_at": 1793532547,
+    "last_run_at": 1793532547,
+    "budget_remaining_h": 47.42,
+    "reason": "age=0.6h within budget (48h, kind=marker)"
+   },
+   "_binance_hf_loop": {
+    "loop": "_binance_hf_loop",
+    "verdict": "live",
+    "age_s": 2062,
+    "last_ok_at": 1793532590,
+    "last_run_at": 1793532590,
+    "budget_remaining_h": 29.43,
+    "reason": "age=0.6h within budget (30h, kind=collector)"
+   },
+   "_binance_vision_loop": {
+    "loop": "_binance_vision_loop",
+    "verdict": "live",
+    "age_s": 2014,
+    "last_ok_at": 1793532638,
+    "last_run_at": 1793532638,
+    "budget_remaining_h": 47.44,
+    "reason": "age=0.6h within budget (48h, kind=unknown)"
+   },
+   "_causal_paper_loop": {
+    "loop": "_causal_paper_loop",
+    "verdict": "frozen",
+    "age_s": 2656,
+    "last_ok_at": null,
+    "last_run_at": 1793531996,
+    "budget_remaining_h": null,
+    "reason": "frozen since 2026-10-20 by ruling — not a fault (src/data/accounting/frozen.py)"
+   },
+   "_cg_panel_loop": {
+    "loop": "_cg_panel_loop",
+    "verdict": "live",
+    "age_s": 1192,
+    "last_ok_at": 1793533460,
+    "last_run_at": 1793533460,
+    "budget_remaining_h": 167.67,
+    "reason": "age=0.3h within budget (168h, kind=fanout)"
+   },
+   "_chain_activity_loop": {
+    "loop": "_chain_activity_loop",
+    "verdict": "live",
+    "age_s": 1467,
+    "last_ok_at": 1793533185,
+    "last_run_at": 1793533185,
+    "budget_remaining_h": 29.59,
+    "reason": "age=0.4h within budget (30h, kind=collector)"
+   },
+   "_channels_loop": {
+    "loop": "_channels_loop",
+    "verdict": "live",
+    "age_s": 70,
+    "last_ok_at": 1793534582,
+    "last_run_at": 1793534582,
+    "budget_remaining_h": 47.98,
+    "reason": "age=0.0h within budget (48h, kind=marker)"
+   },
+   "_cis_inputs_loop": {
+    "loop": "_cis_inputs_loop",
+    "verdict": "live",
+    "age_s": 1436,
+    "last_ok_at": 1793533216,
+    "last_run_at": 1793533216,
+    "budget_remaining_h": 29.6,
+    "reason": "age=0.4h within budget (30h, kind=collector)"
+   },
+   "_cis_official_loop": {
+    "loop": "_cis_official_loop",
+    "verdict": "live",
+    "age_s": 2015,
+    "last_ok_at": 1793532637,
+    "last_run_at": 1793532637,
+    "budget_remaining_h": 2.44,
+    "reason": "age=0.6h within budget (3h, kind=marker)"
+   },
+   "_cis_rebuild_loop": {
+    "loop": "_cis_rebuild_loop",
+    "verdict": "live",
+    "age_s": 433,
+    "last_ok_at": 1793534219,
+    "last_run_at": 1793534219,
+    "budget_remaining_h": 29.88,
+    "reason": "age=0.1h within budget (30h, kind=marker)"
+   },
+   "_cis_tilt_loop": {
+    "loop": "_cis_tilt_loop",
+    "verdict": "live",
+    "age_s": 2029,
+    "last_ok_at": 1793532623,
+    "last_run_at": 1793532623,
+    "budget_remaining_h": 47.44,
+    "reason": "age=0.6h within budget (48h, kind=marker)"
+   },
+   "_cis_v2_shadow_loop": {
+    "loop": "_cis_v2_shadow_loop",
+    "verdict": "live",
+    "age_s": 3561,
+    "last_ok_at": 1793531091,
+    "last_run_at": 1793531091,
+    "budget_remaining_h": 47.01,
+    "reason": "age=1.0h within budget (48h, kind=unknown)"
+   },
+   "_combined_book_loop": {
+    "loop": "_combined_book_loop",
+    "verdict": "frozen",
+    "age_s": 2655,
+    "last_ok_at": null,
+    "last_run_at": 1793531997,
+    "budget_remaining_h": null,
+    "reason": "frozen since 2026-10-20 by ruling — not a fault (src/data/accounting/frozen.py)"
+   },
+   "_core_cap_loop": {
+    "loop": "_core_cap_loop",
+    "verdict": "live",
+    "age_s": 2111,
+    "last_ok_at": 1793532541,
+    "last_run_at": 1793532541,
+    "budget_remaining_h": 47.41,
+    "reason": "age=0.6h within budget (48h, kind=marker)"
+   },
+   "_core_pit_loop": {
+    "loop": "_core_pit_loop",
+    "verdict": "live",
+    "age_s": 1749,
+    "last_ok_at": 1793532903,
+    "last_run_at": 1793532903,
+    "budget_remaining_h": 7.51,
+    "reason": "age=0.5h within budget (8h, kind=marker)"
+   },
+   "_core_variants_loop": {
+    "loop": "_core_variants_loop",
+    "verdict": "live",
+    "age_s": 1314,
+    "last_ok_at": 1793533338,
+    "last_run_at": 1793533338,
+    "budget_remaining_h": 29.64,
+    "reason": "age=0.4h within budget (30h, kind=marker)"
+   },
+   "_deep_panel_loop": {
+    "loop": "_deep_panel_loop",
+    "verdict": "live",
+    "age_s": 1565,
+    "last_ok_at": 1793533087,
+    "last_run_at": 1793533087,
+    "budget_remaining_h": 167.57,
+    "reason": "age=0.4h within budget (168h, kind=fanout)"
+   },
+   "_dingge_paper_loop": {
+    "loop": "_dingge_paper_loop",
+    "verdict": "frozen",
+    "age_s": 2656,
+    "last_ok_at": null,
+    "last_run_at": 1793531996,
+    "budget_remaining_h": null,
+    "reason": "frozen since 2026-10-20 by ruling — not a fault (src/data/accounting/frozen.py)"
+   },
+   "_exec_quality_loop": {
+    "loop": "_exec_quality_loop",
+    "verdict": "live",
+    "age_s": 1825,
+    "last_ok_at": 1793532827,
+    "last_run_at": 1793532827,
+    "budget_remaining_h": 2.49,
+    "reason": "age=0.5h within budget (3h, kind=marker)"
+   },
+   "_executor_host_watch_loop": {
+    "loop": "_executor_host_watch_loop",
+    "verdict": "live",
+    "age_s": 1554,
+    "last_ok_at": 1793533098,
+    "last_run_at": 1793533098,
+    "budget_remaining_h": 2.57,
+    "reason": "age=0.4h within budget (3h, kind=marker)"
+   },
+   "_feature_arms_loop": {
+    "loop": "_feature_arms_loop",
+    "verdict": "live",
+    "age_s": 1541,
+    "last_ok_at": 1793533111,
+    "last_run_at": 1793533111,
+    "budget_remaining_h": 29.57,
+    "reason": "age=0.4h within budget (30h, kind=marker)"
+   },
+   "_forward_record_loop": {
+    "loop": "_forward_record_loop",
+    "verdict": "dead",
+    "age_s": 1568,
+    "last_ok_at": null,
+    "last_run_at": 1793533084,
+    "budget_remaining_h": -23976.0,
+    "reason": "effective_age=24000.0h > 4× budget (96h, kind=high_freq) — last_ok_at=never"
+   },
+   "_fusion_paper_loop": {
+    "loop": "_fusion_paper_loop",
+    "verdict": "frozen",
+    "age_s": 2654,
+    "last_ok_at": null,
+    "last_run_at": 1793531998,
+    "budget_remaining_h": null,
+    "reason": "frozen since 2026-10-20 by ruling — not a fault (src/data/accounting/frozen.py)"
+   },
+   "_hl_book_loop": {
+    "loop": "_hl_book_loop",
+    "verdict": "dead",
+    "age_s": 2330,
+    "last_ok_at": null,
+    "last_run_at": 1793532322,
+    "budget_remaining_h": -47952.0,
+    "reason": "effective_age=48000.0h > 4× budget (192h, kind=marker) — last_ok_at=never"
+   },
+   "_holder_refresh_loop": {
+    "loop": "_holder_refresh_loop",
+    "verdict": "live",
+    "age_s": 2466,
+    "last_ok_at": 1793532186,
+    "last_run_at": 1793532186,
+    "budget_remaining_h": 13.31,
+    "reason": "age=0.7h within budget (14h, kind=marker)"
+   },
+   "_hyperliquid_loop": {
+    "loop": "_hyperliquid_loop",
+    "verdict": "live",
+    "age_s": 1575,
+    "last_ok_at": 1793533077,
+    "last_run_at": 1793533077,
+    "budget_remaining_h": 23.56,
+    "reason": "age=0.4h within budget (24h, kind=high_freq)"
+   },
+   "_interpret_loop": {
+    "loop": "_interpret_loop",
+    "verdict": "live",
+    "age_s": 1461,
+    "last_ok_at": 1793533191,
+    "last_run_at": 1793533191,
+    "budget_remaining_h": 23.59,
+    "reason": "age=0.4h within budget (24h, kind=marker)"
+   },
+   "_live_account_loop": {
+    "loop": "_live_account_loop",
+    "verdict": "live",
+    "age_s": 1900,
+    "last_ok_at": 1793532752,
+    "last_run_at": 1793532752,
+    "budget_remaining_h": 2.47,
+    "reason": "age=0.5h within budget (3h, kind=marker)"
+   },
+   "_market_state_loop": {
+    "loop": "_market_state_loop",
+    "verdict": "live",
+    "age_s": 2084,
+    "last_ok_at": 1793532568,
+    "last_run_at": 1793532568,
+    "budget_remaining_h": 47.42,
+    "reason": "age=0.6h within budget (48h, kind=high_freq)"
+   },
+   "_mcap_deepen_loop": {
+    "loop": "_mcap_deepen_loop",
+    "verdict": "live",
+    "age_s": 1807,
+    "last_ok_at": 1793532845,
+    "last_run_at": 1793532845,
+    "budget_remaining_h": 7.5,
+    "reason": "age=0.5h within budget (8h, kind=marker)"
+   },
+   "_meta_allocator_loop": {
+    "loop": "_meta_allocator_loop",
+    "verdict": "live",
+    "age_s": 1577,
+    "last_ok_at": 1793533075,
+    "last_run_at": 1793533075,
+    "budget_remaining_h": 29.56,
+    "reason": "age=0.4h within budget (30h, kind=marker)"
+   },
+   "_multiplier_loop": {
+    "loop": "_multiplier_loop",
+    "verdict": "live",
+    "age_s": 2064,
+    "last_ok_at": 1793532588,
+    "last_run_at": 1793532588,
+    "budget_remaining_h": 47.43,
+    "reason": "age=0.6h within budget (48h, kind=marker)"
+   },
+   "_oi_snapshot_loop": {
+    "loop": "_oi_snapshot_loop",
+    "verdict": "live",
+    "age_s": 1532,
+    "last_ok_at": 1793533120,
+    "last_run_at": 1793533120,
+    "budget_remaining_h": 1.57,
+    "reason": "age=0.4h within budget (2h, kind=collector)"
+   },
+   "_outcome_tracker_loop": {
+    "loop": "_outcome_tracker_loop",
+    "verdict": "live",
+    "age_s": 2532,
+    "last_ok_at": 1793532120,
+    "last_run_at": 1793532120,
+    "budget_remaining_h": 23.3,
+    "reason": "age=0.7h within budget (24h, kind=high_freq)"
+   },
+   "_perp_mcap_backfill_loop": {
+    "loop": "_perp_mcap_backfill_loop",
+    "verdict": "dead",
+    "age_s": 366,
+    "last_ok_at": null,
+    "last_run_at": 1793534286,
+    "budget_remaining_h": -999.0,
+    "reason": "effective_age=1000.0h > 4× budget (4h, kind=collector) — last_ok_at=never"
+   },
+   "_portfolio_layer_loop": {
+    "loop": "_portfolio_layer_loop",
+    "verdict": "live",
+    "age_s": 1994,
+    "last_ok_at": 1793532658,
+    "last_run_at": 1793532658,
+    "budget_remaining_h": 29.45,
+    "reason": "age=0.6h within budget (30h, kind=marker)"
+   },
+   "_portfolio_targets_loop": {
+    "loop": "_portfolio_targets_loop",
+    "verdict": "live",
+    "age_s": 1925,
+    "last_ok_at": 1793532727,
+    "last_run_at": 1793532727,
+    "budget_remaining_h": 2.47,
+    "reason": "age=0.5h within budget (3h, kind=marker)"
+   },
+   "_price_agreement_loop": {
+    "loop": "_price_agreement_loop",
+    "verdict": "live",
+    "age_s": 2075,
+    "last_ok_at": 1793532577,
+    "last_run_at": 1793532577,
+    "budget_remaining_h": 23.42,
+    "reason": "age=0.6h within budget (24h, kind=marker)"
+   },
+   "_protocol_revenue_loop": {
+    "loop": "_protocol_revenue_loop",
+    "verdict": "live",
+    "age_s": 1574,
+    "last_ok_at": 1793533078,
+    "last_run_at": 1793533078,
+    "budget_remaining_h": 47.56,
+    "reason": "age=0.4h within budget (48h, kind=unknown)"
+   },
+   "_public_cache_warm_loop": {
+    "loop": "_public_cache_warm_loop",
+    "verdict": "live",
+    "age_s": 165,
+    "last_ok_at": 1793534487,
+    "last_run_at": 1793534487,
+    "budget_remaining_h": 0.95,
+    "reason": "age=0.0h within budget (1h, kind=collector)"
+   },
+   "_r_tickets_paper_loop": {
+    "loop": "_r_tickets_paper_loop",
+    "verdict": "live",
+    "age_s": 1148,
+    "last_ok_at": 1793533504,
+    "last_run_at": 1793533504,
+    "budget_remaining_h": 47.68,
+    "reason": "age=0.3h within budget (48h, kind=unknown)"
+   },
+   "_regime_daily_loop": {
+    "loop": "_regime_daily_loop",
+    "verdict": "live",
+    "age_s": 2115,
+    "last_ok_at": 1793532537,
+    "last_run_at": 1793532537,
+    "budget_remaining_h": 23.41,
+    "reason": "age=0.6h within budget (24h, kind=marker)"
+   },
+   "_rr_matrix_loop": {
+    "loop": "_rr_matrix_loop",
+    "verdict": "live",
+    "age_s": 1531,
+    "last_ok_at": 1793533121,
+    "last_run_at": 1793533121,
+    "budget_remaining_h": 35.57,
+    "reason": "age=0.4h within budget (36h, kind=marker)"
+   },
+   "_scalable_book_loop": {
+    "loop": "_scalable_book_loop",
+    "verdict": "frozen",
+    "age_s": 2655,
+    "last_ok_at": null,
+    "last_run_at": 1793531997,
+    "budget_remaining_h": null,
+    "reason": "frozen since 2026-10-20 by ruling — not a fault (src/data/accounting/frozen.py)"
+   },
+   "_signal_attribution_loop": {
+    "loop": "_signal_attribution_loop",
+    "verdict": "live",
+    "age_s": 1579,
+    "last_ok_at": 1793528155,
+    "last_run_at": 1793533073,
+    "budget_remaining_h": 12.2,
+    "reason": "age=0.4h within budget (14h, kind=marker)"
+   },
+   "_social_ingest_loop": {
+    "loop": "_social_ingest_loop",
+    "verdict": "live",
+    "age_s": 2554,
+    "last_ok_at": 1793532098,
+    "last_run_at": 1793532098,
+    "budget_remaining_h": 47.29,
+    "reason": "age=0.7h within budget (48h, kind=unknown)"
+   },
+   "_stable_lending_loop": {
+    "loop": "_stable_lending_loop",
+    "verdict": "live",
+    "age_s": 2108,
+    "last_ok_at": 1793532544,
+    "last_run_at": 1793532544,
+    "budget_remaining_h": 29.41,
+    "reason": "age=0.6h within budget (30h, kind=collector)"
+   },
+   "_standard_outcomes_loop": {
+    "loop": "_standard_outcomes_loop",
+    "verdict": "live",
+    "age_s": 991,
+    "last_ok_at": 1793533661,
+    "last_run_at": 1793533661,
+    "budget_remaining_h": 25.72,
+    "reason": "age=0.3h within budget (26h, kind=marker)"
+   },
+   "_state_daily_loop": {
+    "loop": "_state_daily_loop",
+    "verdict": "live",
+    "age_s": 1966,
+    "last_ok_at": 1793532686,
+    "last_run_at": 1793532686,
+    "budget_remaining_h": 29.45,
+    "reason": "age=0.5h within budget (30h, kind=marker)"
+   },
+   "_style_header_loop": {
+    "loop": "_style_header_loop",
+    "verdict": "live",
+    "age_s": 1315,
+    "last_ok_at": 1793533337,
+    "last_run_at": 1793533337,
+    "budget_remaining_h": 23.63,
+    "reason": "age=0.4h within budget (24h, kind=marker)"
+   },
+   "_style_pit_loop": {
+    "loop": "_style_pit_loop",
+    "verdict": "live",
+    "age_s": 1236,
+    "last_ok_at": 1793533416,
+    "last_run_at": 1793533416,
+    "budget_remaining_h": 29.66,
+    "reason": "age=0.3h within budget (30h, kind=marker)"
+   },
+   "_tokenization_tilt_loop": {
+    "loop": "_tokenization_tilt_loop",
+    "verdict": "live",
+    "age_s": 2110,
+    "last_ok_at": 1793532542,
+    "last_run_at": 1793532542,
+    "budget_remaining_h": 47.41,
+    "reason": "age=0.6h within budget (48h, kind=marker)"
+   },
+   "_track_record_loop": {
+    "loop": "_track_record_loop",
+    "verdict": "live",
+    "age_s": 2322,
+    "last_ok_at": 1793532330,
+    "last_run_at": 1793532330,
+    "budget_remaining_h": 47.35,
+    "reason": "age=0.6h within budget (48h, kind=unknown)"
+   },
+   "_treasury_decisions_loop": {
+    "loop": "_treasury_decisions_loop",
+    "verdict": "live",
+    "age_s": 1992,
+    "last_ok_at": 1793532660,
+    "last_run_at": 1793532660,
+    "budget_remaining_h": 47.45,
+    "reason": "age=0.6h within budget (48h, kind=unknown)"
+   },
+   "_two_layer_paper_loop": {
+    "loop": "_two_layer_paper_loop",
+    "verdict": "frozen",
+    "age_s": 2655,
+    "last_ok_at": null,
+    "last_run_at": 1793531997,
+    "budget_remaining_h": null,
+    "reason": "frozen since 2026-10-20 by ruling — not a fault (src/data/accounting/frozen.py)"
+   },
+   "_vc_rounds_loop": {
+    "loop": "_vc_rounds_loop",
+    "verdict": "live",
+    "age_s": 1965,
+    "last_ok_at": 1793532687,
+    "last_run_at": 1793532687,
+    "budget_remaining_h": 5.45,
+    "reason": "age=0.5h within budget (6h, kind=collector)"
+   },
+   "_world50_history_loop": {
+    "loop": "_world50_history_loop",
+    "verdict": "live",
+    "age_s": 1498,
+    "last_ok_at": 1793533154,
+    "last_run_at": 1793533154,
+    "budget_remaining_h": 173.58,
+    "reason": "age=0.4h within budget (174h, kind=collector)"
+   }
+  },
+  "overall": "critical"
+ },
+ "coverage": {
+  "n_not_covered": 128,
+  "n_write_observed": 88,
+  "n_dark": 40,
+  "n_blocking": 7,
+  "n_total": 161,
+  "n_covered": 14,
+  "not_covered_by_tier": {
+   "track_record": [
+    "allocation_nav_daily",
+    "beta_core_nav_q",
+    "beta_core_nav_q_meta",
+    "beta_core_nav_size",
+    "beta_core_nav_size_meta",
+    "causal_paper_nav",
+    "cause_outcomes",
+    "combined_book_nav",
+    "dingge_paper_nav",
+    "execution_intents",
+    "execution_outcomes",
+    "factor_tilt_nav",
+    "forward_book_nav",
+    "fusion_paper_nav",
+    "nav_exceptions",
+    "pod_aggregator_nav",
+    "prediction_outcomes",
+    "scalable_book_nav",
+    "signal_track_record",
+    "two_layer_paper_nav",
+    "vault_nav_tick",
+    "world50_book_nav"
+   ],
+   "signal": [
+    "cause_snapshots_daily",
+    "cis_official_daily",
+    "cis_rebuild_daily",
+    "cis_regime_fitness",
+    "cis_signal_attribution",
+    "cis_signal_remap_audit",
+    "cis_standard_outcomes",
+    "cis_tilt_daily",
+    "cis_v2_daily",
+    "conviction_verdicts_daily",
+    "conviction_watchlist_log",
+    "crowd_clock_log",
+    "decisions",
+    "depth_divergence_log",
+    "entities",
+    "factor_tilt_state",
+    "fusion_paper_lifecycle",
+    "macro_briefs",
+    "macro_daily",
+    "narrative_events",
+    "narrative_snapshots",
+    "pod_aggregator_state",
+    "regime_band_log",
+    "regime_calls",
+    "regime_daily",
+    "signal_edge_map",
+    "strategy_response",
+    "trending_log"
+   ],
+   "input": [
+    "funding_history",
+    "funding_vision_absent",
+    "holder_concentration_history",
+    "ohlcv_hourly",
+    "universe_membership"
+   ],
+   "ops": [
+    "allocation_daily",
+    "allocation_override",
+    "asset_mcap_daily",
+    "beta_plus_daily",
+    "book_style_exposure_daily",
+    "cg_coin_map",
+    "cg_coin_mcap_daily",
+    "chain_activity_daily",
+    "channel_categories",
+    "channel_series_daily",
+    "core_cap_daily",
+    "core_variants_daily",
+    "deriv_metrics_daily",
+    "equity_fundamentals_q",
+    "execution_quality_daily",
+    "exploration_ideas",
+    "feature_arms_daily",
+    "forward_anchor_daily",
+    "forward_book_holdings",
+    "fusion_paper_regime_track",
+    "fusion_paper_state",
+    "github_commits_weekly",
+    "hl_book_daily",
+    "interpretation_validation_runs",
+    "j_tickets",
+    "j_tickets_state",
+    "live_account_daily",
+    "loop_attempt",
+    "market_interpretation_daily",
+    "meta_allocator_daily",
+    "multiplier_daily",
+    "oi_lev_snapshot_daily",
+    "open_interest_history",
+    "perp_bv_daily",
+    "perp_bv_pairs",
+    "perp_cg_map",
+    "portfolio_layer_daily",
+    "portfolio_targets_daily",
+    "price_source_agreement_daily",
+    "protocol_revenue_daily",
+    "protocol_tvl_daily",
+    "r77_forward_episodes",
+    "r77_forward_episodes_meta",
+    "r_money_daily",
+    "r_ticket_oi_tags",
+    "r_ticket_tags",
+    "r_tickets_paper",
+    "r_tickets_state",
+    "research_scratch",
+    "rr_matrix_daily",
+    "santiment_slug_map",
+    "sharpe_mindshare_snap",
+    "sharpe_narrative_mindshare",
+    "short_paper_money",
+    "short_paper_state",
+    "short_paper_tickets",
+    "social_daily",
+    "stable_lending_daily",
+    "state_daily",
+    "style_index_daily",
+    "style_index_pit_daily",
+    "style_membership",
+    "style_pit_coverage_daily",
+    "style_universe_broad",
+    "tokenization_tilt_daily",
+    "vault_positions",
+    "vault_state",
+    "vc_funding_rounds",
+    "world50_book_holdings",
+    "world50_mcap_weekly",
+    "world50_onchain_forms",
+    "world50_revenue",
+    "write_log"
+   ]
+  },
+  "verdict": "blocked",
+  "reason": "128/161 个对象没有任何检查在看,其中 **7 个属于 track_record** (['beta_core_nav_q_meta', 'beta_core_nav_size', 'beta_core_nav_size_meta', 'cause_outcomes', 'prediction_outcomes', 'signal_track_record']…)。**产品是可验证的前向记录,而 NAV 表就是那个记录本身** —— 它们没被判活,意味着记录可能有洞而我们不知道"
+ },
+ "verdict_scope": {
+  "verdict": "producers_dead",
+  "unqualified": false,
+  "covers": "14/161",
+  "n_not_covered": 128,
+  "n_blocking": 7,
+  "scope_note": "⚠️ **这个裁决只对 14/161 个对象成立**,另有 128 个无人监视(其中 7 个是 track_record 层 —— 产品就是可验证的前向记录,而承载它的表没被判活)。**不是警报,是范围声明** —— 一盏常亮的红灯等于一盏坏灯"
+ },
+ "verdict_note": "**顶层裁决取自 by_source(每源 × 覆盖标的数),不是 ohlcv_daily。**后者回答的是「这一轮跑完没有」,它的 max(trade_date) 在自愈式回填下是瞬态值 —— 两块并排是有意的(S-251),但只有这一个回答「我该担心吗」。取值见 by_source.by_domain。",
+ "books": {
+  "verdict": "gated",
+  "reason": "book 名册需要 X-Internal-Token —— 本端点对外部探针公开,而 book 名字与存活状态是架构信息(规则 8)。**看到这一行就说明这段代码已经部署**;字段整个缺失才是没部署。"
+ }
+}

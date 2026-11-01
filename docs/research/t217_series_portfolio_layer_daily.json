@@ -1,0 +1,41 @@
+{
+ "table": "portfolio_layer_daily",
+ "arms": [
+  {
+   "arm": "pl_v1cash_replay",
+   "inception": "2026-10-08",
+   "first": "2023-01-02",
+   "last": "2026-10-31",
+   "n": 1399
+  },
+  {
+   "arm": "pl_v2",
+   "inception": "2026-10-08",
+   "first": "2026-10-09",
+   "last": "2026-10-31",
+   "n": 23
+  },
+  {
+   "arm": "pl_v2_replay",
+   "inception": "2026-10-08",
+   "first": "2023-01-02",
+   "last": "2026-10-31",
+   "n": 1399
+  },
+  {
+   "arm": "pl_v3",
+   "inception": "2026-10-12",
+   "first": "2026-10-13",
+   "last": "2026-10-31",
+   "n": 19
+  },
+  {
+   "arm": "pl_v3_replay",
+   "inception": "2026-10-12",
+   "first": "2023-01-02",
+   "last": "2026-10-31",
+   "n": 1399
+  }
+ ],
+ "note": "Daily return and NAV of one book arm. Rows dated before `inception` are point-in-time replays (simulated with the rule as written, not traded); rows from `inception` on are the forward paper record. Not live-traded P&L, not a forecast."
+}

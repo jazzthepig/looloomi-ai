@@ -1,0 +1,311 @@
+{
+ "mode": "forward",
+ "books": [
+  {
+   "id": "core_cap",
+   "name": "Core holding",
+   "layer": "①",
+   "source": "beta",
+   "thesis": "24 names, market-cap weighted, no single-name cap (until 2026-10-12: no name above 40%) — holding the market.",
+   "status": "paper",
+   "available": true,
+   "record": [
+    "2026-10-02",
+    "2026-10-31"
+   ],
+   "note": "paper record"
+  },
+  {
+   "id": "core_cap_c40",
+   "name": "Core holding, 40% cap (control)",
+   "layer": "①",
+   "source": "beta",
+   "thesis": "The previous core rule, kept running as the control for removing the cap.",
+   "status": "paper",
+   "available": false,
+   "record": [
+    "2026-10-02",
+    "2026-10-31"
+   ],
+   "note": "record under review — not selectable"
+  },
+  {
+   "id": "beta_core",
+   "name": "Equal weight + volatility target",
+   "layer": "②",
+   "source": "beta_plus",
+   "thesis": "The same panel equal-weighted, with exposure scaled to a volatility target.",
+   "status": "paper",
+   "available": true,
+   "record": [
+    "2026-09-03",
+    "2026-10-31"
+   ],
+   "note": "paper record"
+  },
+  {
+   "id": "beta_plus_w",
+   "name": "Momentum tilt (weekly)",
+   "layer": "②",
+   "source": "beta_plus",
+   "thesis": "Overweights names with strong trends near their 52-week highs, inside the panel.",
+   "status": "paper",
+   "available": true,
+   "record": [
+    "2026-09-25",
+    "2026-10-31"
+   ],
+   "note": "paper record"
+  },
+  {
+   "id": "beta_plus_m",
+   "name": "Momentum tilt (monthly)",
+   "layer": "②",
+   "source": "beta_plus",
+   "thesis": "The momentum tilt, rebalanced monthly.",
+   "status": "paper",
+   "available": true,
+   "record": [
+    "2026-09-25",
+    "2026-10-31"
+   ],
+   "note": "paper record"
+  },
+  {
+   "id": "cis_tilt",
+   "name": "CIS tilt",
+   "layer": "②",
+   "source": "beta_plus",
+   "thesis": "Overweights higher-CIS names inside the core holding.",
+   "status": "paper",
+   "available": true,
+   "record": [
+    "2026-10-06",
+    "2026-10-31"
+   ],
+   "note": "paper record"
+  },
+  {
+   "id": "multiplier",
+   "name": "Exposure timing (0.7–1.3x)",
+   "layer": "③",
+   "source": "multiplier",
+   "thesis": "The core holding scaled between 0.7x and 1.3x by market state; never short.",
+   "status": "paper",
+   "available": true,
+   "record": [
+    "2026-10-13",
+    "2026-10-31"
+   ],
+   "note": "paper record"
+  },
+  {
+   "id": "tom_overlay",
+   "name": "Add-to-winners overlay (0.7–1.3x)",
+   "layer": "③",
+   "source": "multiplier",
+   "thesis": "The core scaled up only while it is already making money - one step per new high, steps removed on a 20-day low - and cut to 0.7x below its long-term trend; never short.",
+   "status": "paper",
+   "available": true,
+   "record": [
+    "2026-10-17",
+    "2026-10-31"
+   ],
+   "note": "paper record"
+  },
+  {
+   "id": "q_overlay",
+   "name": "Regime-match overlay (0–1.3x)",
+   "layer": "ⓠ",
+   "source": "regime_override",
+   "thesis": "The core scaled by how closely today's market resembles past phases (0, 0.5, 1 or 1.3x).",
+   "status": "paper",
+   "available": true,
+   "record": [
+    "2026-10-21",
+    "2026-10-31"
+   ],
+   "note": "paper record"
+  },
+  {
+   "id": "q_slow",
+   "name": "Regime-match overlay, cuts only below trend",
+   "layer": "ⓠ",
+   "source": "regime_override",
+   "thesis": "The same overlay, but it may only cut exposure while large caps sit below their 200-day average.",
+   "status": "paper",
+   "available": true,
+   "record": [
+    "2026-10-21",
+    "2026-10-31"
+   ],
+   "note": "paper record"
+  },
+  {
+   "id": "multiplier_v1",
+   "name": "Exposure timing v1 (control)",
+   "layer": "③",
+   "source": "multiplier",
+   "thesis": "The same timing rule on the previous 40%-capped core, kept as the control.",
+   "status": "paper",
+   "available": false,
+   "record": [
+    "2026-10-09",
+    "2026-10-31"
+   ],
+   "note": "record under review — not selectable"
+  },
+  {
+   "id": "portfolio_layer",
+   "name": "Portfolio layer (0–1x)",
+   "layer": "组合层",
+   "source": "portfolio_layer",
+   "thesis": "Exposure between 0 and 1 by market-state flags; can sit in cash.",
+   "status": "paper",
+   "available": true,
+   "record": [
+    "2026-10-13",
+    "2026-10-31"
+   ],
+   "note": "paper record"
+  },
+  {
+   "id": "portfolio_layer_v2",
+   "name": "Portfolio layer v2 (control)",
+   "layer": "组合层",
+   "source": "portfolio_layer",
+   "thesis": "The same exposure rule on the previous 40%-capped core, kept as the control.",
+   "status": "paper",
+   "available": false,
+   "record": [
+    "2026-10-09",
+    "2026-10-31"
+   ],
+   "note": "record under review — not selectable"
+  },
+  {
+   "id": "tokenization_tilt",
+   "name": "Tokenization infrastructure tilt",
+   "layer": "②",
+   "source": "beta_plus",
+   "thesis": "A 25% tilt toward names carrying traditional assets on-chain.",
+   "status": "paper",
+   "available": true,
+   "record": [
+    "2026-09-25",
+    "2026-10-31"
+   ],
+   "note": "paper record"
+  },
+  {
+   "id": "hl_mech",
+   "name": "Four-coin rule-based sizing",
+   "layer": "①+③",
+   "source": "beta_and_multiplier",
+   "thesis": "Four liquid coins held spot, position size set by rule.",
+   "status": "paper",
+   "available": true,
+   "record": [
+    "2026-09-23",
+    "2026-10-31"
+   ],
+   "note": "paper record"
+  },
+  {
+   "id": "hl_jev",
+   "name": "Four-coin discretionary sizing",
+   "layer": "①+③",
+   "source": "beta_and_multiplier",
+   "thesis": "The same four coins, with discretionary size adjustments.",
+   "status": "paper",
+   "available": true,
+   "record": [
+    "2026-09-23",
+    "2026-10-31"
+   ],
+   "note": "paper record"
+  },
+  {
+   "id": "causal_paper",
+   "name": "Funding-rate long/short",
+   "layer": "④",
+   "source": "alpha",
+   "thesis": "Long/short on funding-rate and positioning structure.",
+   "status": "frozen",
+   "available": false,
+   "record": [
+    "2026-07-12",
+    "2026-10-19"
+   ],
+   "note": "frozen — no new rows since 2026-10-20, record kept"
+  },
+  {
+   "id": "scalable_book",
+   "name": "Multi-strategy long/short",
+   "layer": "④",
+   "source": "alpha",
+   "thesis": "A long/short book built to scale.",
+   "status": "frozen",
+   "available": false,
+   "record": [
+    "2026-07-15",
+    "2026-10-19"
+   ],
+   "note": "frozen — no new rows since 2026-10-20, record kept"
+  },
+  {
+   "id": "combined_book",
+   "name": "Combined long/short",
+   "layer": "④",
+   "source": "alpha",
+   "thesis": "Several long/short sleeves combined.",
+   "status": "frozen",
+   "available": false,
+   "record": [
+    "2026-07-14",
+    "2026-10-19"
+   ],
+   "note": "frozen — no new rows since 2026-10-20, record kept"
+  },
+  {
+   "id": "dingge_paper",
+   "name": "Event-driven",
+   "layer": "事件",
+   "source": "event",
+   "thesis": "Positions taken around identified events.",
+   "status": "frozen",
+   "available": false,
+   "record": [
+    "2026-07-14",
+    "2026-10-19"
+   ],
+   "note": "frozen — no new rows since 2026-10-20, record kept"
+  },
+  {
+   "id": "fusion_paper",
+   "name": "Fusion long/short",
+   "layer": "④",
+   "source": "alpha",
+   "thesis": "Several sleeves fused into one long/short book.",
+   "status": "frozen",
+   "available": false,
+   "record": null,
+   "note": "frozen — no new rows since 2026-10-20, record kept"
+  },
+  {
+   "id": "two_layer_paper",
+   "name": "Two-layer book",
+   "layer": "—",
+   "source": "other",
+   "thesis": "A core-plus-overlay book; inactive while its core is replaced.",
+   "status": "frozen",
+   "available": false,
+   "record": [
+    "2026-07-21",
+    "2026-10-19"
+   ],
+   "note": "frozen — no new rows since 2026-10-20, record kept"
+  }
+ ],
+ "reading": "Paper records and point-in-time replays, not live-traded P&L. The combined figures describe what the selected books did over the shown window; they are not forecasts and not investment advice. Returns are annualised only over a full year of shared record; shorter windows show the period return."
+}

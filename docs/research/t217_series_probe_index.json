@@ -1,0 +1,168 @@
+{
+ "core_cap_daily": {
+  "status": 200,
+  "keys": [
+   "table",
+   "arms",
+   "note"
+  ],
+  "n_arms": 4,
+  "sample": "arm0={\"arm\": \"cap_a05\", \"inception\": \"2026-10-02\", \"first\": \"2026-10-02\", \"last\": \"2026-10-31\", \"n\": 30}"
+ },
+ "cis_tilt_daily": {
+  "status": 200,
+  "keys": [
+   "table",
+   "arms",
+   "note"
+  ],
+  "n_arms": 5,
+  "sample": "arm0={\"arm\": \"cis_a1\", \"inception\": \"2026-10-06\", \"first\": \"2026-10-06\", \"last\": \"2026-10-31\", \"n\": 26}"
+ },
+ "beta_plus_daily": {
+  "status": 400,
+  "keys": [
+   "detail"
+  ],
+  "n_arms": -1,
+  "sample": ""
+ },
+ "tokenization_tilt_daily": {
+  "status": 400,
+  "keys": [
+   "detail"
+  ],
+  "n_arms": -1,
+  "sample": ""
+ },
+ "hl_book_daily": {
+  "status": 400,
+  "keys": [
+   "detail"
+  ],
+  "n_arms": -1,
+  "sample": ""
+ },
+ "allocation_daily": {
+  "status": 400,
+  "keys": [
+   "detail"
+  ],
+  "n_arms": -1,
+  "sample": ""
+ },
+ "allocation_nav_daily": {
+  "status": 400,
+  "keys": [
+   "detail"
+  ],
+  "n_arms": -1,
+  "sample": ""
+ },
+ "live_account_daily": {
+  "status": 400,
+  "keys": [
+   "detail"
+  ],
+  "n_arms": -1,
+  "sample": ""
+ },
+ "depth_divergence_log": {
+  "status": 400,
+  "keys": [
+   "detail"
+  ],
+  "n_arms": -1,
+  "sample": ""
+ },
+ "rr_matrix_daily": {
+  "status": 400,
+  "keys": [
+   "detail"
+  ],
+  "n_arms": -1,
+  "sample": ""
+ },
+ "core_variants_daily": {
+  "status": 200,
+  "keys": [
+   "table",
+   "arms",
+   "note"
+  ],
+  "n_arms": 12,
+  "sample": "arm0={\"arm\": \"broad_mom30_breadth\", \"inception\": \"2026-10-08\", \"first\": \"2023-01-02\", \"last\": \"2026-10-31\", \"n\": 1399}"
+ },
+ "multiplier_daily": {
+  "status": 200,
+  "keys": [
+   "table",
+   "arms",
+   "note"
+  ],
+  "n_arms": 16,
+  "sample": "arm0={\"arm\": \"core_replay\", \"inception\": \"2026-10-08\", \"first\": \"2023-01-02\", \"last\": \"2026-10-31\", \"n\": 1399}"
+ },
+ "portfolio_layer_daily": {
+  "status": 200,
+  "keys": [
+   "table",
+   "arms",
+   "note"
+  ],
+  "n_arms": 5,
+  "sample": "arm0={\"arm\": \"pl_v1cash_replay\", \"inception\": \"2026-10-08\", \"first\": \"2023-01-02\", \"last\": \"2026-10-31\", \"n\": 1399}"
+ },
+ "feature_arms_daily": {
+  "status": 200,
+  "keys": [
+   "table",
+   "arms",
+   "note"
+  ],
+  "n_arms": 3,
+  "sample": "arm0={\"arm\": \"cis_contra\", \"inception\": \"2026-10-11\", \"first\": \"2025-05-12\", \"last\": \"2026-10-31\", \"n\": 538}"
+ },
+ "meta_allocator_daily": {
+  "status": 200,
+  "keys": [
+   "table",
+   "arms",
+   "note"
+  ],
+  "n_arms": 1,
+  "sample": "arm0={\"arm\": \"meta_knn\", \"inception\": \"2026-10-08\", \"first\": \"2023-07-03\", \"last\": \"2026-10-31\", \"n\": 1217}"
+ },
+ "r_money_daily": {
+  "status": 400,
+  "keys": [
+   "detail"
+  ],
+  "n_arms": -1,
+  "sample": ""
+ },
+ "short_paper_money": {
+  "status": 400,
+  "keys": [
+   "detail"
+  ],
+  "n_arms": -1,
+  "sample": ""
+ },
+ "execution_intents": {
+  "status": 400,
+  "keys": [
+   "detail"
+  ],
+  "n_arms": -1,
+  "sample": ""
+ },
+ "decisions": {
+  "status": 400,
+  "keys": [
+   "detail"
+  ],
+  "n_arms": -1,
+  "sample": ""
+ }
+}

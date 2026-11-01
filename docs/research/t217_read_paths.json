@@ -1,0 +1,478 @@
+{
+ "tables": {
+  "core_cap_daily": {
+   "status": 200,
+   "n_sample": 2,
+   "cols": [
+    "d",
+    "arm",
+    "alpha",
+    "nav",
+    "ret",
+    "weights",
+    "max_weight",
+    "rebalanced",
+    "turnover",
+    "n_quoted",
+    "n_filled",
+    "barred",
+    "source",
+    "inception",
+    "code_ref",
+    "computed_at"
+   ]
+  },
+  "cis_tilt_daily": {
+   "status": 200,
+   "n_sample": 2,
+   "cols": [
+    "d",
+    "arm",
+    "k",
+    "nav",
+    "ret",
+    "weights",
+    "z",
+    "n_scored",
+    "max_weight",
+    "rebalanced",
+    "turnover",
+    "n_quoted",
+    "n_filled",
+    "barred",
+    "source",
+    "inception",
+    "code_ref",
+    "computed_at"
+   ]
+  },
+  "beta_plus_daily": {
+   "status": 401,
+   "err": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table beta_plus_daily\"}"
+  },
+  "tokenization_tilt_daily": {
+   "status": 401,
+   "err": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table tokenization_tilt_daily\"}"
+  },
+  "hl_book_daily": {
+   "status": 200,
+   "n_sample": 2,
+   "cols": [
+    "d",
+    "is_decision",
+    "n_coins",
+    "features",
+    "mech_answers",
+    "jev_raw",
+    "jev_error",
+    "decided",
+    "held",
+    "book",
+    "ret",
+    "nav",
+    "code_ref",
+    "computed_at",
+    "correction"
+   ]
+  },
+  "allocation_daily": {
+   "status": 401,
+   "err": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table allocation_daily\"}"
+  },
+  "allocation_nav_daily": {
+   "status": 401,
+   "err": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table allocation_nav_daily\"}"
+  },
+  "live_account_daily": {
+   "status": 401,
+   "err": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table live_account_daily\"}"
+  },
+  "depth_divergence_log": {
+   "status": 200,
+   "n_sample": 0,
+   "cols": []
+  },
+  "rr_matrix_daily": {
+   "status": 401,
+   "err": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table rr_matrix_daily\"}"
+  },
+  "core_variants_daily": {
+   "status": 200,
+   "n_sample": 2,
+   "cols": [
+    "d",
+    "arm",
+    "ret",
+    "nav",
+    "inception",
+    "code_ref",
+    "computed_at"
+   ]
+  },
+  "multiplier_daily": {
+   "status": 200,
+   "n_sample": 2,
+   "cols": [
+    "d",
+    "arm",
+    "m",
+    "ret",
+    "nav",
+    "cost",
+    "dist_200",
+    "vol_pct_3y",
+    "inception",
+    "code_ref",
+    "computed_at"
+   ]
+  },
+  "r_money_daily": {
+   "status": 200,
+   "n_sample": 2,
+   "cols": [
+    "d",
+    "nav",
+    "ret",
+    "realized",
+    "unrealized",
+    "open_n",
+    "gross",
+    "taken",
+    "skipped",
+    "closed",
+    "f",
+    "cap",
+    "inception",
+    "rule_version",
+    "computed_at"
+   ]
+  },
+  "short_paper_money": {
+   "status": 200,
+   "n_sample": 2,
+   "cols": [
+    "arm",
+    "d",
+    "nav",
+    "ret",
+    "open_n",
+    "taken",
+    "skipped",
+    "f",
+    "cap",
+    "inception",
+    "rule_version",
+    "recorded_at"
+   ]
+  },
+  "portfolio_layer_daily": {
+   "status": 401,
+   "err": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table portfolio_layer_daily\"}"
+  },
+  "feature_arms_daily": {
+   "status": 401,
+   "err": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table feature_arms_daily\"}"
+  },
+  "meta_allocator_daily": {
+   "status": 401,
+   "err": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table meta_allocator_daily\"}"
+  },
+  "beta_core_nav": {
+   "status": 200,
+   "n_sample": 2,
+   "cols": [
+    "mark_date",
+    "nav",
+    "benchmark_nav",
+    "daily_return",
+    "benchmark_return",
+    "excess_return",
+    "exposure_cap",
+    "regime",
+    "vol_target_scalar",
+    "realized_vol_30d",
+    "n_positions",
+    "gross",
+    "cost",
+    "rebalanced",
+    "top_weights",
+    "note",
+    "marked_at",
+    "cap_source",
+    "inception_id",
+    "void_reason",
+    "interval_hours",
+    "mark_source"
+   ]
+  },
+  "risk_meter_history": {
+   "status": 200,
+   "n_sample": 2,
+   "cols": [
+    "d",
+    "regime",
+    "band",
+    "score",
+    "long_gross",
+    "interpretation",
+    "components",
+    "computed_at"
+   ]
+  },
+  "cis_official_daily": {
+   "status": 200,
+   "n_sample": 2,
+   "cols": [
+    "symbol",
+    "d",
+    "asset_class",
+    "cis_score",
+    "regime_adjusted_score",
+    "grade",
+    "signal",
+    "watch",
+    "pct",
+    "pillar_f",
+    "pillar_m",
+    "pillar_o",
+    "pillar_s",
+    "pillar_a",
+    "regime",
+    "inputs",
+    "missing",
+    "code_ref",
+    "published_at"
+   ]
+  },
+  "signal_journal": {
+   "status": 200,
+   "n_sample": 2,
+   "cols": [
+    "id",
+    "symbol",
+    "asset_class",
+    "grade",
+    "signal",
+    "cis_score",
+    "raw_cis_score",
+    "las",
+    "pillar_f",
+    "pillar_m",
+    "pillar_o",
+    "pillar_s",
+    "pillar_a",
+    "macro_regime",
+    "strategy",
+    "data_tier",
+    "entry_price",
+    "exit_price",
+    "exit_date",
+    "exit_reason",
+    "return_pct",
+    "holding_days",
+    "signal_date",
+    "recorded_at",
+    "outcome_30d",
+    "return_pct_30d",
+    "price_at_30d",
+    "mcap_at_30d",
+    "circ_supply_at_entry",
+    "outcome_source",
+    "outcome_at",
+    "benchmark_symbol",
+    "benchmark_return_30d",
+    "alpha_30d"
+   ]
+  },
+  "write_log": {
+   "status": 200,
+   "n_sample": 0,
+   "cols": []
+  },
+  "loop_attempt": {
+   "status": 200,
+   "n_sample": 0,
+   "cols": []
+  },
+  "execution_intents": {
+   "status": 200,
+   "n_sample": 0,
+   "cols": []
+  },
+  "execution_outcomes": {
+   "status": 200,
+   "n_sample": 0,
+   "cols": []
+  },
+  "decisions": {
+   "status": 200,
+   "n_sample": 0,
+   "cols": []
+  },
+  "vault_nav_tick": {
+   "status": 200,
+   "n_sample": 0,
+   "cols": []
+  },
+  "trade_results": {
+   "status": 200,
+   "n_sample": 0,
+   "cols": []
+  },
+  "ohlcv_daily": {
+   "status": 200,
+   "n_sample": 2,
+   "cols": [
+    "id",
+    "symbol",
+    "asset_class",
+    "trade_date",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "source",
+    "recorded_at",
+    "asset_id"
+   ]
+  },
+  "portfolio_targets_daily": {
+   "status": 401,
+   "err": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table portfolio_targets_daily\"}"
+  },
+  "execution_quality_daily": {
+   "status": 401,
+   "err": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table execution_quality_daily\"}"
+  },
+  "core_pit": {
+   "status": 404,
+   "err": "{\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.core_cap_daily'\",\"message\":\"Could not find"
+  },
+  "short_paper_state": {
+   "status": 200,
+   "n_sample": 2,
+   "cols": [
+    "arm",
+    "last_d",
+    "inception",
+    "rule_version",
+    "n_pending",
+    "n_open",
+    "n_closed",
+    "mean_r_closed",
+    "judge_on",
+    "drift",
+    "detail",
+    "updated_at"
+   ]
+  },
+  "j_tickets_state": {
+   "status": 200,
+   "n_sample": 0,
+   "cols": []
+  },
+  "r_tickets_state": {
+   "status": 200,
+   "n_sample": 1,
+   "cols": [
+    "id",
+    "last_d",
+    "last_run_at",
+    "last_result"
+   ]
+  }
+ },
+ "rpc": {
+  "loop_attempt_health": {
+   "status": 200,
+   "body": [],
+   "n": 0
+  },
+  "write_health": {
+   "status": 200,
+   "body": [
+    {
+     "table_name": "execution_quality_daily",
+     "last_ok": "2026-11-01T12:33:48.902186+00:00",
+     "last_fail": null,
+     "last_outcome": "ok",
+     "last_body": null,
+     "n_ok_24h": 25,
+     "n_fail_24h": 0
+    },
+    {
+     "table_name": "cis_tilt_daily",
+     "last_ok": "2026-11-01T12:31:58.057931+00:00",
+     "last_fail": null,
+     "last_outcome": "ok",
+     "last_body": null,
+     "n_ok_24h": 23,
+     "n_fail_24h": 0
+    },
+    {
+     "table_name": "multiplier_daily",
+     "last_ok": "2026-11-01T12:30:47.921457+00:00",
+     "last_fail": null,
+     "last_outcome": "ok",
+     "last_body": null,
+     "n_ok_24h": 120,
+     "n_fail_24h": 0
+    },
+    {
+     "table_name": "macro_briefs",
+     "last_ok": "2026-11-01T12:29:57.545072+00:00",
+     "last_fail": null,
+     "last_outcome": "ok",
+     "last_body": null,
+     "n_ok_24h": 48,
+     "n_fail_24h": 0
+    },
+    {
+     "table_name": "beta_plus_daily",
+     "last_ok": "2026-11-01T12:29:16.746138+00:00",
+     "last_fail": null,
+     "last_outcome": "ok",
+     "last_body": null,
+     "n_ok_24h": 25,
+     "n_fail_24h": 0
+    }
+   ],
+   "n": 100
+  }
+ },
+ "endpoints": {
+  "/api/v1/portfolio/series?table=allocation_daily": {
+   "status": 400,
+   "n": 0
+  },
+  "/api/v1/portfolio/series?table=live_account_daily": {
+   "status": 400,
+   "n": 0
+  },
+  "/api/v1/portfolio/series?table=beta_plus_daily": {
+   "status": 400,
+   "n": 0
+  },
+  "/api/v1/portfolio/series?table=rr_matrix_daily": {
+   "status": 400,
+   "n": 0
+  },
+  "/api/v1/portfolio/series?table=tokenization_tilt_daily": {
+   "status": 400,
+   "n": 0
+  },
+  "/internal/allocation/latest": {
+   "status": 401,
+   "n": 0
+  },
+  "/api/v1/trading/portfolio": {
+   "status": 200,
+   "n": 3
+  },
+  "/internal/research/book-navs": {
+   "status": 401,
+   "n": 0
+  }
+ }
+}

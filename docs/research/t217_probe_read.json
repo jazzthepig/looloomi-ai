@@ -1,0 +1,193 @@
+{
+ "core_cap_daily": {
+  "status": 200,
+  "note": "n=1",
+  "cols": [
+   "d",
+   "arm",
+   "alpha",
+   "nav",
+   "ret",
+   "weights",
+   "max_weight",
+   "rebalanced",
+   "turnover",
+   "n_quoted",
+   "n_filled",
+   "barred",
+   "source",
+   "inception",
+   "code_ref",
+   "computed_at"
+  ]
+ },
+ "cis_tilt_daily": {
+  "status": 200,
+  "note": "n=1",
+  "cols": [
+   "d",
+   "arm",
+   "k",
+   "nav",
+   "ret",
+   "weights",
+   "z",
+   "n_scored",
+   "max_weight",
+   "rebalanced",
+   "turnover",
+   "n_quoted",
+   "n_filled",
+   "barred",
+   "source",
+   "inception",
+   "code_ref",
+   "computed_at"
+  ]
+ },
+ "hl_book_daily": {
+  "status": 200,
+  "note": "n=1",
+  "cols": [
+   "d",
+   "is_decision",
+   "n_coins",
+   "features",
+   "mech_answers",
+   "jev_raw",
+   "jev_error",
+   "decided",
+   "held",
+   "book",
+   "ret",
+   "nav",
+   "code_ref",
+   "computed_at",
+   "correction"
+  ]
+ },
+ "core_variants_daily": {
+  "status": 200,
+  "note": "n=1",
+  "cols": [
+   "d",
+   "arm",
+   "ret",
+   "nav",
+   "inception",
+   "code_ref",
+   "computed_at"
+  ]
+ },
+ "multiplier_daily": {
+  "status": 200,
+  "note": "n=1",
+  "cols": [
+   "d",
+   "arm",
+   "m",
+   "ret",
+   "nav",
+   "cost",
+   "dist_200",
+   "vol_pct_3y",
+   "inception",
+   "code_ref",
+   "computed_at"
+  ]
+ },
+ "portfolio_layer_daily": {
+  "status": 401,
+  "note": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table portfolio_layer_daily\"}",
+  "cols": null
+ },
+ "feature_arms_daily": {
+  "status": 401,
+  "note": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table feature_arms_daily\"}",
+  "cols": null
+ },
+ "meta_allocator_daily": {
+  "status": 401,
+  "note": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table meta_allocator_daily\"}",
+  "cols": null
+ },
+ "loop_attempt": {
+  "status": 200,
+  "note": "empty",
+  "cols": null
+ },
+ "executor_host": {
+  "status": 404,
+  "note": "{\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.execution_intents'\",\"message\":\"Could not find the table 'public.executor",
+  "cols": null
+ },
+ "r_money_daily": {
+  "status": 200,
+  "note": "n=1",
+  "cols": [
+   "d",
+   "nav",
+   "ret",
+   "realized",
+   "unrealized",
+   "open_n",
+   "gross",
+   "taken",
+   "skipped",
+   "closed",
+   "f",
+   "cap",
+   "inception",
+   "rule_version",
+   "computed_at"
+  ]
+ },
+ "short_paper_money": {
+  "status": 200,
+  "note": "n=1",
+  "cols": [
+   "arm",
+   "d",
+   "nav",
+   "ret",
+   "open_n",
+   "taken",
+   "skipped",
+   "f",
+   "cap",
+   "inception",
+   "rule_version",
+   "recorded_at"
+  ]
+ },
+ "cis_standard_outcomes": {
+  "status": 401,
+  "note": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table cis_standard_outcomes\"}",
+  "cols": null
+ },
+ "cis_official_daily": {
+  "status": 200,
+  "note": "n=1",
+  "cols": [
+   "symbol",
+   "d",
+   "asset_class",
+   "cis_score",
+   "regime_adjusted_score",
+   "grade",
+   "signal",
+   "watch",
+   "pct",
+   "pillar_f",
+   "pillar_m",
+   "pillar_o",
+   "pillar_s",
+   "pillar_a",
+   "regime",
+   "inputs",
+   "missing",
+   "code_ref",
+   "published_at"
+  ]
+ }
+}

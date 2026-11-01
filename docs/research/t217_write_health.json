@@ -1,0 +1,902 @@
+[
+ {
+  "table_name": "channel_series_daily",
+  "last_ok": "2026-11-01T13:24:04.57172+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 160,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "cis_rebuild_daily",
+  "last_ok": "2026-11-01T13:22:36.858983+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 400,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "cg_coin_mcap_daily",
+  "last_ok": "2026-11-01T13:20:39.819266+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 2910,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "cis_standard_outcomes",
+  "last_ok": "2026-11-01T13:13:11.604778+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 390,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "macro_briefs",
+  "last_ok": "2026-11-01T13:12:03.836828+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 49,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "ohlcv_daily",
+  "last_ok": "2026-11-01T13:10:28.721388+00:00",
+  "last_fail": "2026-10-31T16:04:28.716933+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 2620,
+  "n_fail_24h": 1
+ },
+ {
+  "table_name": "style_pit_coverage_daily",
+  "last_ok": "2026-11-01T13:09:06.100547+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 16,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "style_index_pit_daily",
+  "last_ok": "2026-11-01T13:09:04.756135+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 16,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "asset_mcap_daily",
+  "last_ok": "2026-11-01T13:08:53.770124+00:00",
+  "last_fail": "2026-10-11T03:15:40.462509+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 4451,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "core_variants_daily",
+  "last_ok": "2026-11-01T13:07:39.81081+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 62,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "github_commits_weekly",
+  "last_ok": "2026-11-01T13:06:44.471336+00:00",
+  "last_fail": "2026-10-13T12:22:53.950718+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 110,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "chain_activity_daily",
+  "last_ok": "2026-11-01T13:06:39.568605+00:00",
+  "last_fail": "2026-10-16T03:46:37.453747+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 299,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "market_interpretation_daily",
+  "last_ok": "2026-11-01T13:06:25.972556+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 21,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "rr_matrix_daily",
+  "last_ok": "2026-11-01T13:06:04.919322+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 5,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "feature_arms_daily",
+  "last_ok": "2026-11-01T13:05:49.285204+00:00",
+  "last_fail": "2026-10-22T18:16:36.600909+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 7,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "protocol_revenue_daily",
+  "last_ok": "2026-11-01T13:05:48.850098+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 15,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "r_money_daily",
+  "last_ok": "2026-11-01T13:05:45.609987+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 21,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "fusion_paper_lifecycle",
+  "last_ok": "2026-11-01T13:05:45.369841+00:00",
+  "last_fail": "2026-10-13T15:45:13.233648+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 14,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "open_interest_history",
+  "last_ok": "2026-11-01T13:05:43.784655+00:00",
+  "last_fail": "2026-09-26T22:40:32.465504+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 7,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "channel_categories",
+  "last_ok": "2026-11-01T13:05:43.017223+00:00",
+  "last_fail": "2026-10-13T15:45:13.921732+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 4,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "funding_history",
+  "last_ok": "2026-11-01T13:05:42.671767+00:00",
+  "last_fail": "2026-09-20T07:53:11.606658+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 10,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "experiment_runs",
+  "last_ok": "2026-11-01T11:37:53.897991+00:00",
+  "last_fail": "2026-11-01T13:05:42.186871+00:00",
+  "last_outcome": "store_result_fail",
+  "last_body": "HTTP 409: {\"code\":\"23505\",\"details\":\"Key (run_id)=(signal_factory_20261101) already exists.\",\"hint\":null,\"message\":\"duplicate key ",
+  "n_ok_24h": 1,
+  "n_fail_24h": 3
+ },
+ {
+  "table_name": "meta_allocator_daily",
+  "last_ok": "2026-11-01T13:03:35.664975+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 7,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "allocation_nav_daily",
+  "last_ok": "2026-11-01T13:03:02.417938+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 7,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "allocation_daily",
+  "last_ok": "2026-11-01T13:03:01.63997+00:00",
+  "last_fail": "2026-10-06T03:02:38.064612+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 7,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "cis_signal_attribution",
+  "last_ok": "2026-11-01T13:02:55.648843+00:00",
+  "last_fail": "2026-11-01T11:37:52.464555+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 93,
+  "n_fail_24h": 1
+ },
+ {
+  "table_name": "book_style_exposure_daily",
+  "last_ok": "2026-11-01T13:02:38.99457+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 7,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "style_index_daily",
+  "last_ok": "2026-11-01T13:02:26.769425+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 7,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "execution_quality_daily",
+  "last_ok": "2026-11-01T13:02:02.932022+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 25,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "protocol_tvl_daily",
+  "last_ok": "2026-11-01T13:01:43.594506+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 20,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "macro_daily",
+  "last_ok": "2026-11-01T13:01:33.885195+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 60,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "state_daily",
+  "last_ok": "2026-11-01T12:59:35.496962+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 7,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "portfolio_layer_daily",
+  "last_ok": "2026-11-01T12:59:14.721277+00:00",
+  "last_fail": "2026-10-12T12:47:19.590104+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 21,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "price_source_agreement_daily",
+  "last_ok": "2026-11-01T12:57:52.80268+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 7,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "ohlcv_hourly",
+  "last_ok": "2026-11-01T12:57:52.747798+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 5,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "multiplier_daily",
+  "last_ok": "2026-11-01T12:57:22.781712+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 120,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "treasury_decisions",
+  "last_ok": "2026-11-01T12:56:51.292988+00:00",
+  "last_fail": "2026-11-01T12:55:25.107735+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 316,
+  "n_fail_24h": 4
+ },
+ {
+  "table_name": "cis_tilt_daily",
+  "last_ok": "2026-11-01T12:56:45.103222+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 23,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "corporate_treasury_history",
+  "last_ok": "2026-11-01T12:56:31.461897+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 8,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "regime_band_log",
+  "last_ok": "2026-11-01T12:55:54.875096+00:00",
+  "last_fail": "2026-10-13T14:44:43.399794+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 4,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "trending_log",
+  "last_ok": "2026-11-01T12:55:54.157788+00:00",
+  "last_fail": "2026-10-30T19:12:19.701777+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 4,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "market_state_vectors",
+  "last_ok": "2026-11-01T12:55:40.234132+00:00",
+  "last_fail": "2026-10-27T15:06:42.506899+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 4,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "stable_lending_daily",
+  "last_ok": "2026-11-01T12:55:29.682626+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 8,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "beta_plus_daily",
+  "last_ok": "2026-11-01T12:55:23.70894+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 25,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "core_cap_daily",
+  "last_ok": "2026-11-01T12:55:19.302678+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 25,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "tokenization_tilt_daily",
+  "last_ok": "2026-11-01T12:54:13.519525+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 21,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "holder_concentration_history",
+  "last_ok": "2026-11-01T12:51:25.069071+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 7,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "crowd_clock_log",
+  "last_ok": "2026-11-01T12:00:34.126823+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 1,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "cis_backtest_results",
+  "last_ok": null,
+  "last_fail": "2026-11-01T11:59:45.716747+00:00",
+  "last_outcome": "store_result_fail",
+  "last_body": "HTTP 400: {\"code\":\"PGRST204\",\"details\":null,\"hint\":null,\"message\":\"Could not find the 'asset_count' column of 'cis_backtest_result",
+  "n_ok_24h": 0,
+  "n_fail_24h": 2
+ },
+ {
+  "table_name": "world50_book_nav",
+  "last_ok": "2026-11-01T11:38:57.819734+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 2,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "oi_lev_snapshot_daily",
+  "last_ok": "2026-11-01T11:38:39.337539+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 4,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "short_paper_state",
+  "last_ok": "2026-11-01T09:20:20.237512+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 18,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "short_paper_money",
+  "last_ok": "2026-11-01T09:20:19.570462+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 2,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "perp_bv_daily",
+  "last_ok": "2026-11-01T09:17:52.775308+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 2,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "vc_funding_rounds",
+  "last_ok": "2026-11-01T09:14:33.222375+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 11,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "deriv_metrics_daily",
+  "last_ok": "2026-11-01T07:13:23.760011+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 2,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "forward_book_holdings",
+  "last_ok": "2026-11-01T07:11:41.47667+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 2,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "forward_book_nav",
+  "last_ok": "2026-11-01T07:11:40.274567+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 2,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "hl_book_daily",
+  "last_ok": "2026-11-01T04:52:07.849404+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 1,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "sharpe_narrative_mindshare",
+  "last_ok": "2026-11-01T03:49:45.194843+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 1,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "sharpe_mindshare_snap",
+  "last_ok": "2026-11-01T03:49:41.125318+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 1,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "cis_v2_daily",
+  "last_ok": "2026-11-01T01:04:41.205588+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 1,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "cis_official_daily",
+  "last_ok": "2026-11-01T01:03:16.401876+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 1,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "live_account_daily",
+  "last_ok": "2026-11-01T00:58:59.830082+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 1,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "portfolio_targets_daily",
+  "last_ok": "2026-11-01T00:58:35.476546+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 1,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "funding_vision_absent",
+  "last_ok": "2026-11-01T00:58:29.084018+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 1,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "j_tickets_state",
+  "last_ok": "2026-11-01T00:45:01.567369+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 1,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "beta_core_nav_q",
+  "last_ok": "2026-11-01T00:05:21.700473+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 1,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "beta_core_nav",
+  "last_ok": "2026-11-01T00:05:13.954142+00:00",
+  "last_fail": "2026-10-20T06:02:37.847267+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 1,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "nav_exceptions",
+  "last_ok": "2026-11-01T00:05:12.818619+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 1,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "pod_aggregator_nav",
+  "last_ok": "2026-11-01T00:05:07.093575+00:00",
+  "last_fail": "2026-10-29T00:32:33.50692+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 1,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "factor_tilt_nav",
+  "last_ok": "2026-11-01T00:05:05.922883+00:00",
+  "last_fail": "2026-10-12T23:41:31.016331+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 1,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "forward_anchor_daily",
+  "last_ok": "2026-11-01T00:00:54.541216+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 2,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "social_daily",
+  "last_ok": "2026-10-31T21:48:20.381965+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 2,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "risk_meter_history",
+  "last_ok": "2026-10-31T18:00:06.689356+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 1,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "asset_embeddings_history",
+  "last_ok": "2026-10-31T18:00:04.364247+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 1,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "world50_revenue",
+  "last_ok": "2026-10-31T02:44:16.026415+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "santiment_slug_map",
+  "last_ok": "2026-10-31T00:33:14.840606+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "execution_outcomes",
+  "last_ok": "2026-10-30T15:45:08.18259+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "execution_intents",
+  "last_ok": "2026-10-30T15:45:06.945033+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "world50_mcap_weekly",
+  "last_ok": "2026-10-30T14:56:31.948098+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "perp_bv_pairs",
+  "last_ok": "2026-10-30T10:29:57.790039+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "world50_onchain_forms",
+  "last_ok": "2026-10-30T04:12:20.812578+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "world50_book_holdings",
+  "last_ok": "2026-10-30T03:21:14.805042+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "trade_results",
+  "last_ok": "2026-10-30T03:00:36.322568+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "narrative_events",
+  "last_ok": "2026-10-29T09:49:04.68695+00:00",
+  "last_fail": "2026-10-28T18:48:16.47809+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "treasury_entities",
+  "last_ok": "2026-10-27T05:18:34.185543+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "style_universe_broad",
+  "last_ok": "2026-10-27T04:37:59.416362+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "style_membership",
+  "last_ok": "2026-10-27T01:59:30.20091+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "perp_cg_map",
+  "last_ok": "2026-10-26T19:09:35.614534+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "cg_coin_map",
+  "last_ok": "2026-10-23T07:41:47.485367+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "fusion_paper_state",
+  "last_ok": "2026-10-20T00:05:26.706211+00:00",
+  "last_fail": "2026-10-13T00:05:52.16555+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "fusion_paper_nav",
+  "last_ok": "2026-10-20T00:05:26.28278+00:00",
+  "last_fail": "2026-10-19T00:33:58.268149+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "scalable_book_nav",
+  "last_ok": "2026-10-20T00:05:23.148968+00:00",
+  "last_fail": "2026-09-19T23:46:03.120331+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "combined_book_nav",
+  "last_ok": "2026-10-20T00:05:18.468488+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "two_layer_paper_nav",
+  "last_ok": "2026-10-20T00:05:16.563449+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "causal_paper_nav",
+  "last_ok": "2026-10-20T00:05:15.905656+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "dingge_paper_nav",
+  "last_ok": "2026-10-20T00:05:09.059631+00:00",
+  "last_fail": "2026-09-19T23:46:01.648945+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "interpretation_validation_runs",
+  "last_ok": "2026-10-02T09:59:16.148219+00:00",
+  "last_fail": "2026-10-02T09:30:00.400895+00:00",
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ },
+ {
+  "table_name": "_write_probe",
+  "last_ok": "2026-09-16T14:34:42.637676+00:00",
+  "last_fail": null,
+  "last_outcome": "ok",
+  "last_body": null,
+  "n_ok_24h": 0,
+  "n_fail_24h": 0
+ }
+]

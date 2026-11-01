@@ -1,0 +1,13 @@
+{
+ "table": "meta_allocator_daily",
+ "arms": [
+  {
+   "arm": "meta_knn",
+   "inception": "2026-10-08",
+   "first": "2023-07-03",
+   "last": "2026-10-31",
+   "n": 1217
+  }
+ ],
+ "note": "Daily return and NAV of one book arm. Rows dated before `inception` are point-in-time replays (simulated with the rule as written, not traded); rows from `inception` on are the forward paper record. Not live-traded P&L, not a forecast."
+}

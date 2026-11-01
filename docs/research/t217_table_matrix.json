@@ -1,0 +1,90 @@
+{
+ "core_cap_daily": {
+  "status": 200,
+  "body": "[{\"d\":\"2026-10-02\",\"arm\":\"cap_a1\",\"alpha\":1,\"nav\":0.999,\"ret\":-0.001,\"weights\":{\"OP\": 0.00025, \"ADA\": 0.00784, \"APT\": 0.00057, \"ARB\": 0.00115, \"BCH\": 0.00527, \"BNB\": 0.08713, \"BTC\": 0.4, \"DOT\": 0.0017, \"ETC\": 0.00119, \"ETH\": 0.28015, \"FIL\": 0.00072, \"INJ\": 0.00062, \"LTC\": 0.00449, \"SOL\": 0.05905, \"S"
+ },
+ "cis_tilt_daily": {
+  "status": 200,
+  "body": "[{\"d\":\"2026-10-10\",\"arm\":\"cis_a1\",\"k\":0.5,\"nav\":0.94888184,\"ret\":0.0075966,\"weights\":{\"OP\": 0.00027, \"ADA\": 0.01226, \"APT\": 0.00078, \"ARB\": 0.00213, \"BCH\": 0.00732, \"BNB\": 0.06656, \"BTC\": 0.40852, \"DOT\": 0.00203, \"ETC\": 0.00174, \"ETH\": 0.25905, \"FIL\": 0.00123, \"INJ\": 0.00115, \"LTC\": 0.00647, \"SOL\": "
+ },
+ "beta_plus_daily": {
+  "status": 401,
+  "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table beta_plus_daily\"}"
+ },
+ "tokenization_tilt_daily": {
+  "status": 401,
+  "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table tokenization_tilt_daily\"}"
+ },
+ "hl_book_daily": {
+  "status": 200,
+  "body": "[{\"d\":\"2026-09-23\",\"is_decision\":true,\"n_coins\":4,\"features\":{\"BTC\": {\"ret_20d\": 0.114962, \"ret_60d\": 0.344668, \"ret_120d\": 0.11552, \"vol_30d_ann\": 0.43381, \"funding_7d_ann\": 0.116919, \"dist_from_ma200\": 0.21964, \"drawdown_from_200d_high\": -0.004774}, \"ETH\": {\"ret_20d\": 0.151352, \"ret_60d\": 0.479559"
+ },
+ "allocation_daily": {
+  "status": 401,
+  "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table allocation_daily\"}"
+ },
+ "allocation_nav_daily": {
+  "status": 401,
+  "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table allocation_nav_daily\"}"
+ },
+ "live_account_daily": {
+  "status": 401,
+  "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table live_account_daily\"}"
+ },
+ "depth_divergence_log": {
+  "status": 200,
+  "body": "[]"
+ },
+ "rr_matrix_daily": {
+  "status": 401,
+  "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table rr_matrix_daily\"}"
+ },
+ "loop_attempt": {
+  "status": 200,
+  "body": "[]"
+ },
+ "executor_host": {
+  "status": 404,
+  "body": "{\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.execution_intents'\",\"message\":\"Could not find the table 'public.executor_host' in the schema cache\"}"
+ },
+ "core_variants_daily": {
+  "status": 200,
+  "body": "[{\"d\":\"2019-01-01\",\"arm\":\"cap_pit24\",\"ret\":0.0381137,\"nav\":1.0381137,\"inception\":\"2026-10-30\",\"code_ref\":\"S-700 core_pit v1\",\"computed_at\":\"2026-11-01T10:02:25.048322+00:00\"}, \n {\"d\":\"2019-01-02\",\"arm\":\"cap_pit24\",\"ret\":0.03883731,\"nav\":1.07843124,\"inception\":\"2026-10-30\",\"code_ref\":\"S-700 core_pit "
+ },
+ "multiplier_daily": {
+  "status": 200,
+  "body": "[{\"d\":\"2023-03-09\",\"arm\":\"mult_v1_replay\",\"m\":1.3,\"ret\":-0.07493297,\"nav\":1.16503873,\"cost\":0,\"dist_200\":-0.011348,\"vol_pct_3y\":0.225571,\"inception\":\"2026-10-08\",\"code_ref\":\"T-063 multiplier v1\",\"computed_at\":\"2026-11-01T11:29:37.423975+00:00\"}, \n {\"d\":\"2023-03-10\",\"arm\":\"mult_v1_replay\",\"m\":1,\"ret\""
+ },
+ "portfolio_layer_daily": {
+  "status": 401,
+  "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table portfolio_layer_daily\"}"
+ },
+ "feature_arms_daily": {
+  "status": 401,
+  "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table feature_arms_daily\"}"
+ },
+ "meta_allocator_daily": {
+  "status": 401,
+  "body": "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for table meta_allocator_daily\"}"
+ },
+ "r_money_daily": {
+  "status": 200,
+  "body": "[{\"d\":\"2026-10-21\",\"nav\":1,\"ret\":0,\"realized\":0,\"unrealized\":0,\"open_n\":0,\"gross\":0,\"taken\":0,\"skipped\":0,\"closed\":0,\"f\":0.01,\"cap\":10,\"inception\":\"2026-10-19\",\"rule_version\":\"r_v2_k2.5_gate200\",\"computed_at\":\"2026-10-22T00:45:09.724183+00:00\"}, \n {\"d\":\"2026-10-19\",\"nav\":1,\"ret\":0,\"realized\":0,\"unre"
+ },
+ "short_paper_money": {
+  "status": 200,
+  "body": "[{\"arm\":\"short_listing_hedged\",\"d\":\"2026-10-26\",\"nav\":1,\"ret\":0,\"open_n\":0,\"taken\":0,\"skipped\":0,\"f\":0.005,\"cap\":10,\"inception\":\"2026-10-26\",\"rule_version\":\"s683_v1\",\"recorded_at\":\"2026-10-27T10:30:55.881572+00:00\"}, \n {\"arm\":\"short_h4_gate\",\"d\":\"2026-10-26\",\"nav\":1,\"ret\":0,\"open_n\":0,\"taken\":0,\"ski"
+ },
+ "cis_official_daily": {
+  "status": 200,
+  "body": "[{\"symbol\":\"BTC\",\"d\":\"2026-10-10\",\"asset_class\":\"L1\",\"cis_score\":59.6,\"regime_adjusted_score\":57.1,\"grade\":\"B\",\"signal\":\"OUTPERFORM\",\"watch\":null,\"pct\":0.7,\"pillar_f\":73.6,\"pillar_m\":65.4,\"pillar_o\":72.7,\"pillar_s\":15.4,\"pillar_a\":42.7,\"regime\":\"RISK_ON\",\"inputs\":{\"fng\": 64.0, \"tvl\": null, \"vix\": 14"
+ },
+ "execution_intents": {
+  "status": 200,
+  "body": "[]"
+ },
+ "decisions": {
+  "status": 200,
+  "body": "[]"
+ }
+}
