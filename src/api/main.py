@@ -2377,6 +2377,32 @@ async def _dead_host_guard_loop():
         await _asyncio.sleep(600)
 
 
+async def _venue_depth_loop():
+    """我们真能下单的场所的盘口深度(T-082 B,`src/data/market/venue_depth.py`,11-02):UTC 00 / 08 / 16 各一批 HL 现货 + 永续的
+    ±1% / ±2% 深度 → venue_depth_snapshots;容量接口的「场所口径」读它。每 20 分钟看一眼,这一批采过就跳过。"""
+    await _asyncio.sleep(_boot_delay(480))
+    while True:
+        try:
+            from src.data.market.venue_depth import run_once as _vd_run
+            r = await _vd_run()
+            if r.get("written"):
+                print(f"[VENUE-DEPTH] {r.get('why')}")
+            await _iteration_result("_venue_depth_loop", r)
+            await _beat("_venue_depth_loop", ok=bool(r.get("ok")), error=None if r.get("ok") else str(r.get("why"))[:200],
+                        detail={"written": r.get("written"), "failed": (r.get("failed") or [])[:6]})
+        except Exception as _e:
+            print(f"[VENUE-DEPTH] ⚠️  pass FAILED: {_e}")
+            await _beat("_venue_depth_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_venue_depth_loop", _e)
+        await _asyncio.sleep(1200)
+
+
+@app.on_event("startup")
+async def _start_venue_depth_loop():
+    _asyncio.create_task(_venue_depth_loop())
+    print("[VENUE-DEPTH] ✅ HL order-book depth sampling scheduled (UTC 00/08/16)")
+
+
 @app.on_event("startup")
 async def _start_dead_host_guard_loop():
     _asyncio.create_task(_dead_host_guard_loop())

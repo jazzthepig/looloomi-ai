@@ -7,6 +7,8 @@ Jazz 10-12:「AUM 先解决 30M,之后再达到 500M。我们需要定好设计�
   容量 = 在 BUILD_DAYS 天内建满时能承受的最大规模。
 - 账本:按最新持仓权重,每个持仓都要在 BUILD_DAYS 天内建满 —— 账本容量 = 各持仓容量的最小值,并写出卡住的那个名字。
 - 成交额是全市场报告值(CoinGecko 聚合 / EODHD),我们能下单的场所的深度更低;场所检查另列。
+- **场所口径(T-082 B,11-02):** `venue_depth_snapshots`(HL 现货 / 永续 ±2% 深度,7 天中位,min(买, 卖))÷ 仓位比例
+  = 一次吃进 ±2% 以内能建的最大规模 —— 冰山看不见,是**下限**;全市场口径是上限。两列并排,不合成一个数。
 """
 from __future__ import annotations
 
@@ -92,11 +94,45 @@ async def _adv() -> dict[str, float]:
     return out
 
 
+def book_venue(weights: Mapping[str, float], vcap: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
+    """纯函数。账本的场所口径:每个持仓 ±2% 深度(min 边)÷ 权重,取最小;没有深度数据的持仓单列(不当成无限深)。"""
+    caps, missing = [], []
+    for sym, w in weights.items():
+        if not w or w <= 0:
+            continue
+        v = vcap.get(sym.upper()) or {}
+        d2 = v.get("depth_2pct_min_usd")
+        if not d2:
+            missing.append(sym)
+            continue
+        caps.append((d2 / w, sym, w, v.get("venue")))
+    if not caps:
+        return {"venue_capacity_aum_usd": None, "venue_binding": None, "missing_depth": missing}
+    cap, sym, w, venue = min(caps)
+    return {"venue_capacity_aum_usd": round(cap, 0), "venue_binding": {"symbol": sym, "weight": w, "venue": venue},
+            "venue_ok_at_target": cap >= TARGET_AUM_USD, "venue_ok_at_design": cap >= DESIGN_AUM_USD,
+            "missing_depth": missing}
+
+
+async def _venue_capacity() -> dict[str, dict[str, Any]]:
+    from src.data.market.venue_depth import MEDIAN_DAYS, TABLE, venue_capacity
+    from src.data.style.header import _read_all
+    since = (datetime.now(timezone.utc) - timedelta(days=MEDIAN_DAYS)).isoformat()
+    rows = await _read_all(TABLE, {"select": "venue,symbol,spread_bps,depth_1pct_bid_usd,depth_1pct_ask_usd,depth_2pct_bid_usd,"
+                                             "depth_2pct_ask_usd,covered_bid_pct,covered_ask_pct", "fetched_utc": f"gte.{since}"})
+    return venue_capacity(rows, SATELLITE_POSITION_PCT)
+
+
 async def report() -> dict[str, Any]:
     from src.data.cis.cis_provider import ASSETS_CONFIG
     from src.data.vector.market_state_writer import _sb_get
     adv = await _adv()
-    assets = [asset_row(s, c.get("class"), adv.get(s)) for s, c in ASSETS_CONFIG.items()]
+    try:
+        vcap = await _venue_capacity()
+        vwhy = None
+    except Exception as e:                                               # noqa: BLE001 — 场所口径读不到不挡全市场口径
+        vcap, vwhy = {}, f"{type(e).__name__}: {str(e)[:120]}"
+    assets = [asset_row(s, c.get("class"), adv.get(s)) | {"venue": vcap.get(s.upper())} for s, c in ASSETS_CONFIG.items()]
     books = []
     for bid, (table, arm) in WEIGHTED_BOOKS.items():
         rd = await _sb_get(table, {"select": "d,weights", "arm": f"eq.{arm}", "weights": "not.is.null",
@@ -108,13 +144,18 @@ async def report() -> dict[str, Any]:
         w = ((rd.rows or [{}])[0].get("weights") or {}) if rd.ok else {}
         row = book_row(bid, {k: float(v) for k, v in w.items() if v is not None}, adv)
         row["as_of"] = (rd.rows or [{}])[0].get("d") if rd.ok else None
+        row |= book_venue({k: float(v) for k, v in w.items() if v is not None}, vcap)
         books.append(row)
     return {
         "target_aum_usd": TARGET_AUM_USD, "design_aum_usd": DESIGN_AUM_USD,
         "assumptions": {"satellite_position_pct": SATELLITE_POSITION_PCT, "participation_rate": PARTICIPATION_RATE,
                         "build_days": BUILD_DAYS,
                         "volume": "median daily USD volume over 30 days, as reported across venues (CoinGecko aggregate "
-                                  "for crypto, EODHD for traditional assets); depth on the venues we can trade is lower"},
+                                  "for crypto, EODHD for traditional assets); depth on the venues we can trade is lower",
+                        "venue": "venue view: order-book depth within ±2% of mid on the venue we execute on (Hyperliquid "
+                                 "spot first, perps otherwise), 7-day median of the thinner side, divided by the position "
+                                 "weight = the largest book that fills in one pass within 2%. Hidden size is not visible, so "
+                                 "this is a lower bound; the volume view is an upper bound." + (f" Unreadable now: {vwhy}" if vwhy else "")},
         "summary": {"assets_ok_at_target": sum(a["ok_at_target"] for a in assets),
                     "assets_ok_at_design": sum(a["ok_at_design"] for a in assets), "assets": len(assets),
                     "books_ok_at_design": [b["book"] for b in books if b.get("ok_at_design")],

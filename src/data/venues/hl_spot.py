@@ -428,8 +428,12 @@ class HlSpotClient:
     def spot_meta_and_asset_ctxs(self) -> Any:
         return self._post({"type": "spotMetaAndAssetCtxs"})
 
-    def l2_book(self, coin: str) -> dict[str, Any]:
-        return self._post({"type": "l2Book", "coin": coin})
+    def l2_book(self, coin: str, n_sig_figs: Optional[int] = None) -> dict[str, Any]:
+        """`n_sig_figs`(2–5):HL 按有效数字聚合档位 —— 每边只给 20 档,原始档覆盖不到 ±2% 时用(T-082 B,`venue_depth`)。"""
+        body: dict[str, Any] = {"type": "l2Book", "coin": coin}
+        if n_sig_figs is not None:
+            body["nSigFigs"] = int(n_sig_figs)
+        return self._post(body)
 
     def all_mids(self) -> dict[str, Any]:
         return self._post({"type": "allMids"})
