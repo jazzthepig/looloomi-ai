@@ -54,7 +54,7 @@ def _match(path: str, pattern: str) -> bool:
     return path == pattern or path.startswith(pattern.rstrip("/") + "/")
 
 
-def check(branch: str, changed: list[str], card: dict | None) -> list[str]:
+def check(branch: str, changed: list[str], card: dict | None, reader=None) -> list[str]:
     """返回问题列表;空 = 通过。纯函数,测试直接调。"""
     m = BRANCH_RE.match(branch)
     if not m:
@@ -79,6 +79,36 @@ def check(branch: str, changed: list[str], card: dict | None) -> list[str]:
             out.append(f"{f} 不在 {tid} 的 allowed_paths 里")
     if not changed:
         out.append("分支相对 base 没有任何改动")
+    out += scenario_problems(lane, tid, card, changed, reader)
+    return out
+
+
+def scenario_problems(lane: str, tid: str, card: dict, changed: list[str], reader=None) -> list[str]:
+    """S-705:卡的 expect 点名了 `scenarios/` ⇒ 交付必须带 `docs/research/scenarios/<lane>-<tid>.json`,
+    ≥ 3 条、每条过 scenario_ledger.validate(结算日 ≥ 今天 + 7)。reader(path) → 文件文本,测试注入。"""
+    if "scenarios/" not in str((card.get("acceptance") or {}).get("expect") or ""):
+        return []
+    want = f"docs/research/scenarios/{lane}-{tid}.json"
+    if want not in changed:
+        return [f"{tid} 的交付要带 {want}(≥ 3 条机器可核命题 + 概率;格式见 docs/research/scenarios/README.md)"]
+    import datetime as dt
+    try:
+        text = reader(want) if reader else (ROOT / want).read_text(encoding="utf-8")
+        j = json.loads(text)
+    except (OSError, ValueError) as e:
+        return [f"{want} 读不了:{e}"]
+    if j.get("author") != lane:
+        return [f"{want} 的 author 要是 {lane!r}"]
+    entries = j.get("entries") if isinstance(j.get("entries"), list) else []
+    if len(entries) < 3:
+        return [f"{want} 只有 {len(entries)} 条,要 ≥ 3"]
+    from src.data.evaluation.scenario_ledger import validate
+    soon = dt.datetime.now(dt.timezone.utc).date() + dt.timedelta(days=7)
+    out = []
+    for e in entries:
+        why = validate({**e, "author": lane}, soon) if isinstance(e, dict) else ["不是对象"]
+        if why:
+            out.append(f"{want}/{e.get('id') if isinstance(e, dict) else '?'}: {'; '.join(why)}")
     return out
 
 

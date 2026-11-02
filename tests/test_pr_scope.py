@@ -54,3 +54,26 @@ if __name__ == "__main__":
             fn()
             print(f"  ✓ {name}")
     print("\n✅ passed")
+
+
+def test_research_cards_that_ask_for_scenarios_must_ship_them():
+    """S-705:expect 里点名 scenarios/ 的卡,交付必须带 docs/research/scenarios/<lane>-<tid>.json,≥ 3 条、每条合格、结算日留 7 天。"""
+    import json
+    card = {"owner": "lane-a", "status": "in_review", "allowed_paths": ["docs/research/", "tasks/T-222.json"],
+            "acceptance": {"expect": "报告 …;scenarios/lane-a-T-222.json;in_review"}}
+    rpt = ["docs/research/T-222_funding_carry.md", "tasks/T-222.json"]
+    assert any("scenarios/lane-a-T-222.json" in p for p in check("lane-a/T-222", rpt, card))
+    good = {"author": "lane-a", "entries": [
+        {"id": f"T-222-{i}", "scenario": "s", "statement": "x", "variable": "close:BTC", "op": "gt", "lo": 1, "prob": 0.5,
+         "horizon_d": "2099-01-01"} for i in range(3)]}
+    f = "docs/research/scenarios/lane-a-T-222.json"
+    assert check("lane-a/T-222", rpt + [f], card, reader=lambda p: json.dumps(good)) == []
+    short = {**good, "entries": good["entries"][:2]}
+    assert any("要 ≥ 3" in p for p in check("lane-a/T-222", rpt + [f], card, reader=lambda p: json.dumps(short)))
+    soon = {**good, "entries": [{**good["entries"][0], "horizon_d": "2026-11-03"}] + good["entries"][1:]}
+    assert any("horizon_d" in p for p in check("lane-a/T-222", rpt + [f], card, reader=lambda p: json.dumps(soon)))
+    wrong = {**good, "author": "jazz"}
+    assert any("author" in p for p in check("lane-a/T-222", rpt + [f], card, reader=lambda p: json.dumps(wrong)))
+    old_card = {**card, "acceptance": {"expect": "报告 docs/research/T-220_x.md;in_review"}}
+    assert check("lane-a/T-220", ["docs/research/T-220_x.md", "tasks/T-220.json"], {**old_card}) == [] or \
+        all("scenarios" not in p for p in check("lane-a/T-220", ["docs/research/T-220_x.md", "tasks/T-220.json"], old_card))
