@@ -1,0 +1,85 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T-217-1",
+      "scenario": "T-217 前向记录连续性",
+      "statement": "2026-12-10 时 hl_book_daily 的日期覆盖 > 69 天(即 ≥ 70 天)且仍 0 缺失日。2026-11-02 实测:首日 2026-09-23、末日 2026-11-01、40 天、0 缺失、最长缺口无。人工结算,按 T-217 报告 §0 的连续性口径(应有天数 = 末日 − 首日 + 1)。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 69,
+      "prob": 0.85,
+      "horizon_d": "2026-12-10"
+    },
+    {
+      "id": "T-217-2",
+      "scenario": "T-217 前向记录连续性",
+      "statement": "2026-12-10 时,hl_book_daily 仍是唯一「逐行 upsert」的按日前向表(判据:computed_at 跨 ≥ 20 个 UTC 日、晚于 d+2 的行 ≤ 5%、每日期 1 行;成立记 1、不成立记 0)。2026-11-02 实测:6 张可读表里只有它成立(40 个 computed_at 跨 35 个 UTC 日、晚于 d+2 的 2 行 = 5%、40 天每天 1 行),其余 5 张是整段重算(晚于 d+2 的 92.9 %–98.8 %)。人工结算。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0.5,
+      "prob": 0.8,
+      "horizon_d": "2026-12-10"
+    },
+    {
+      "id": "T-217-3",
+      "scenario": "T-217 前向记录连续性",
+      "statement": "2026-12-10 时,core_cap_daily 仍是「整段重算」而不是逐行写(判据:全表的 computed_at 落在 ≤ 3 个 UTC 日内、晚于 d+2 的行 ≥ 90 %;成立记 1)。2026-11-02 实测:114 行的 computed_at 全是同一时刻 2026-11-02T11:30:57、晚于 d+2 的 106/114 = 92.9 %,而日期层面 31 天一天不缺 —— 连续是重算出来的。人工结算。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0.5,
+      "prob": 0.8,
+      "horizon_d": "2026-12-10"
+    },
+    {
+      "id": "T-217-4",
+      "scenario": "T-217 前向记录连续性",
+      "statement": "Fear & Greed(macro_daily / fng)在 2026-12-01 仍高于 30。2026-11-02 读数 37;年末读数历史上偏高(2023-12 BTC +12.1 %、2024-12、2025-12 均为正月),但 FNG 掉到 30 以下曾与资金费转负的月份重合(2026-02、2026-06)。这条约束前向核对所处的市场状态 —— 记录窗口落在恐慌区时,连续性缺口的成因与常态不同。",
+      "variable": "macro:fng",
+      "op": "gt",
+      "lo": 30,
+      "prob": 0.62,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-217-5",
+      "scenario": "T-217 前向记录连续性",
+      "statement": "state_daily / panel 的 breadth_above_ma50 在 2026-12-01 大于 0(2026-11-01 读数 0,面板全员在 MA50 之下)。若宽度仍为 0,前向循环的写入内容(风格暴露、core_cap 分配)处在最窄的可用集合上,记录连续但信息量低;宽度修复则前向记录的覆盖面本身就变了 —— 这会改变 2026-12-10 人工核对时的基线。",
+      "variable": "state:breadth_above_ma50",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.3,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-217-6",
+      "scenario": "T-217 前向记录连续性",
+      "statement": "2026-12-10 时,_forward_record_loop 在 2026-12-04→12-10 这 7 天内至少有一次 outcome='ok'。2026-11-03 实测:该循环 10-26/27/28 零失败、10-29 起失败上升,11-01 与 11-02 两天「零次成功」(全部失败原因为 'refresh: no response from Supabase after retries'),而同期按日前向表的缺失天数仍是 0 —— 那是整段重算补的。若写端仍熄火,「记录连续」的证据链只剩重算。人工结算,按 loop_attempt 里 loop_name='_forward_record_loop' 的 outcome 计数。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.5,
+      "horizon_d": "2026-12-10"
+    },
+    {
+      "id": "T-217-7",
+      "scenario": "T-217 前向记录连续性",
+      "statement": "2026-12-10 时,executor_host 心跳的 detail.balances.USDC 与 live_account_daily 最近一行的 equity 之差 ≤ 1。2026-11-03 实测:心跳余额 2026-10-29T14:51:55Z 为 630.643136,2026-10-30T15:45:09Z 起为 338.105236(mode 仍为 live);而 Seth 11-02 读的 live_account_daily 是 10-29 630.64 / 10-30 629.49 / 10-31 629.52 ⇒ 两个「live 权益」口径从 10-30 起差 ≈ 291.4。本 key 读不到 live_account_daily(401),未判对错。人工结算。",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 1,
+      "prob": 0.3,
+      "horizon_d": "2026-12-10"
+    },
+    {
+      "id": "T-217-8",
+      "scenario": "T-217 前向记录连续性",
+      "statement": "2026-12-10 时,6 张可读按日前向表(core_cap_daily / cis_tilt_daily / hl_book_daily / multiplier_daily / style_index_pit_daily / core_variants_daily)的「缺失天数」仍全为 0。2026-11-03 实测:6 张全 0、最长连续缺口皆无(其中 5 张是整段重算:晚于 d+2 的行占 92.9 %–98.8 %,core_cap_daily 114 行的 computed_at 全是同一时刻 2026-11-02T11:30:57)。缺的天数不会凭空出现 —— 风险不在「缺日」,在「补出来的日」是否还带逐行时间戳。人工结算,按 T-217 报告 §0 的连续性口径。",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 1,
+      "prob": 0.72,
+      "horizon_d": "2026-12-10"
+    }
+  ]
+}

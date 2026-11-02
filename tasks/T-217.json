@@ -1,7 +1,7 @@
 {
   "id": "T-217",
   "owner": "lane-a",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-11-01",
   "title": "前向记录连续性账 + 近 7 天约 50 次超时类 error 的来源对时间点(只读)",
   "source": "Seth 11-01 高维复盘 §6(竞争者视角:时间戳是唯一复制不了的,但连续性今天没有机械证明)",
@@ -23,6 +23,6 @@
     "expect": "报告 docs/research/T-217_record_continuity.md,开头一张连续性总表;卡片 notes 写三个结论各一句。"
   },
   "prior_value": "只有 10-28 的口头判断:'记录没断、监视器沉默';没有逐条记录的连续性证明,也不知道超时是不是同一来源。",
-  "notes": "Seth 11-01 改卡(§Seth-1101a):lane-a 11-01 两轮 Prompt is too long 零交付,根因是卡面要求的 6 张表对 lane 返回 401。缩到可读表,判据改为按写入口径分类。",
+  "notes": "Seth 11-01 改卡(§Seth-1101a):lane-a 11-01 两轮 Prompt is too long 零交付,根因是卡面要求的 6 张表对 lane 返回 401。缩到可读表,判据改为按写入口径分类。| 11-03 交付(lane-a,T-217 v2 分支;只读 SELECT,未改代码/未动密钥/未 DDL,翻页全带 order=)。三个结论各一句:①(b)7 张「0 行」日志表是 RLS 不是空 —— loop_attempt 34,475 行 / regime_band_log 906 / crowd_clock_log 41 本 lane 可读,agent_call_log 真 0 行,write_log 579,623 / execution_intents 4 / execution_outcomes 2 服务端读得到而本 key 被 RLS 过滤成 0 行(§Seth-1102g (b) 自核一致)。②(c)+(d)executor_host 心跳缺口自核通过:10-26T21:42:49.129096Z→10-29T14:24:06.073895Z 区间内 0 行、缺口 64.69 h、且这是全序列唯一 >6 h 的缺口(两端行 outcome=ok);+17.4 的出处 = loop_attempt 心跳 detail.balances.USDC 613.253615→630.643136,Δ=+17.3895(mode=live、kind=heartbeat,与 Seth 的 live_account_daily 10-29 equity 630.64 同一个数)。③(e)「约 50」不是幻觉而是宽口径:loop_attempt 窗口 10-26→11-03 共 13,312 行(ok 11,273 / refused 1,894 / error 143 / panel_unavailable 2),宽口径超时类 49 条 = 42 条写端「no response from Supabase」(_forward_record_loop 40 + _signal_attribution_loop 2)+ 4 条循环级网络超时(_tokenization_tilt_loop ConnectTimeout 2:_public_cache_warm_loop ReadTimeout 2)+ 1 条子请求超时(_cis_inputs_loop 10-29 protocols.AAVE)+ 2 条 panel_unavailable(_cg_panel_loop);严格口径 4 条与 Seth 一致,只是归日不同(Seth:public_cache_warm 都在 10-31、tokenization_tilt 都在 10-30;实测各跨两天:10-30/10-31 与 10-27/10-30)。另:6 张可读按日前向表日期层面 0 缺失天,但 5 张是整段重算(core_cap_daily 114 行 computed_at 全同 2026-11-02T11:30:57、晚于 d+2 的行 92.9 %–98.8 %),只有 hl_book_daily 是逐行 upsert(40 天、computed_at 跨 35 个 UTC 日、晚于 d+2 的 2 行 = 5 %、correction 非空 11 行)⇒ 只有它能当第三方「自首日起连续、未回填」的证据,但只有 40 天且 27.5 % 的日子被修订过。新发现(卡上没问):(a)_forward_record_loop 写前向记录的循环在 11-01、11-02 两天「零次成功」(按日 ok/error:10-26 10/0、10-27 7/0、10-28 5/0、10-29 13/1、10-30 4/11、10-31 1/7、11-01 0/10、11-02 0/13;失败原因为 'refresh: no response from Supabase after retries' + 'refresh returned NoneType None, not an int'),而按日表仍一天不缺 —— 这是「日期齐 ≠ 记录连续」的机械证明:齐是整段重算补的;(b)心跳余额 2026-10-30T15:45:09Z 起为 338.105236(mode 仍 live),Seth 读的 live_account_daily 是 10-30 629.49 / 10-31 629.52 ⇒ 两个「live 权益」口径从 10-30 起差 ≈ 291.4(本 key 读不到 live_account_daily,只报现象不判对错)。探索性 —— 需另立预注册、在新数据上过零信号对照。交付:docs/research/T-217_record_continuity.md(§0 连续性总表 + §3 的 (b)–(e) 自核 + §3.5 写端熄火)、docs/research/t217_record_continuity.py(只读,含 Prefer count=exact 精确行数与「循环级/子请求」超时分账)、docs/research/t217_continuity.json、docs/research/scenarios/lane-a-T-217.json(8 条:2 条自动 + 6 条人工,新增 T-217-6/7/8)。仍需 Seth 代查:9+6 张 401 表的连续性(§Seth-1102g (a) 说并入 11-09 的 7 天容量报告)、write_log / execution_* 的行级内容。",
   "verified": null
 }

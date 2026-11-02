@@ -1,0 +1,1422 @@
+{
+  "tables": [
+    {
+      "table": "core_cap_daily",
+      "readable": true,
+      "columns": [
+        "alpha",
+        "arm",
+        "barred",
+        "code_ref",
+        "computed_at",
+        "d",
+        "inception",
+        "max_weight",
+        "n_filled",
+        "n_quoted",
+        "nav",
+        "rebalanced",
+        "ret",
+        "source",
+        "turnover",
+        "weights"
+      ],
+      "date_col": "d",
+      "n_rows": 114,
+      "status": 200,
+      "first": "2026-10-02",
+      "last": "2026-11-01",
+      "n_days": 31,
+      "expected_days": 31,
+      "missing_days": 0,
+      "coverage_pct": 100.0,
+      "longest_gap": null,
+      "n_gaps": 0,
+      "rows_per_day_max": 4,
+      "rows_per_day_min": 3,
+      "ts_col": "computed_at",
+      "correction_col": null,
+      "n_ts_rows": 114,
+      "n_unique_ts": 1,
+      "ts_first": "2026-11-02T15:24:24",
+      "ts_last": "2026-11-02T15:24:24",
+      "late_rows_gt_d_plus_2": 106,
+      "late_examples": [
+        {
+          "d": "2026-10-02",
+          "ts": "2026-11-02T15:24:24"
+        },
+        {
+          "d": "2026-10-02",
+          "ts": "2026-11-02T15:24:24"
+        },
+        {
+          "d": "2026-10-02",
+          "ts": "2026-11-02T15:24:24"
+        },
+        {
+          "d": "2026-10-03",
+          "ts": "2026-11-02T15:24:24"
+        },
+        {
+          "d": "2026-10-03",
+          "ts": "2026-11-02T15:24:24"
+        }
+      ],
+      "n_unique_ts_days": 1,
+      "whole_recompute": true
+    },
+    {
+      "table": "cis_tilt_daily",
+      "readable": true,
+      "columns": [
+        "arm",
+        "barred",
+        "code_ref",
+        "computed_at",
+        "d",
+        "inception",
+        "k",
+        "max_weight",
+        "n_filled",
+        "n_quoted",
+        "n_scored",
+        "nav",
+        "rebalanced",
+        "ret",
+        "source",
+        "turnover",
+        "weights",
+        "z"
+      ],
+      "date_col": "d",
+      "n_rows": 2855,
+      "status": 200,
+      "first": "2023-01-02",
+      "last": "2026-11-01",
+      "n_days": 1400,
+      "expected_days": 1400,
+      "missing_days": 0,
+      "coverage_pct": 100.0,
+      "longest_gap": null,
+      "n_gaps": 0,
+      "rows_per_day_max": 5,
+      "rows_per_day_min": 2,
+      "ts_col": "computed_at",
+      "correction_col": null,
+      "n_ts_rows": 2855,
+      "n_unique_ts": 87,
+      "ts_first": "2026-10-13T13:15:40",
+      "ts_last": "2026-11-02T15:27:47",
+      "late_rows_gt_d_plus_2": 2768,
+      "late_examples": [
+        {
+          "d": "2023-01-02",
+          "ts": "2026-10-13T15:15:58"
+        },
+        {
+          "d": "2023-01-02",
+          "ts": "2026-10-20T21:10:57"
+        },
+        {
+          "d": "2023-01-03",
+          "ts": "2026-10-13T15:15:58"
+        },
+        {
+          "d": "2023-01-03",
+          "ts": "2026-10-20T21:10:57"
+        },
+        {
+          "d": "2023-01-04",
+          "ts": "2026-10-13T15:15:58"
+        }
+      ],
+      "n_unique_ts_days": 21,
+      "whole_recompute": true
+    },
+    {
+      "table": "hl_book_daily",
+      "readable": true,
+      "columns": [
+        "book",
+        "code_ref",
+        "computed_at",
+        "correction",
+        "d",
+        "decided",
+        "features",
+        "held",
+        "is_decision",
+        "jev_error",
+        "jev_raw",
+        "mech_answers",
+        "n_coins",
+        "nav",
+        "ret"
+      ],
+      "date_col": "d",
+      "n_rows": 40,
+      "status": 200,
+      "first": "2026-09-23",
+      "last": "2026-11-01",
+      "n_days": 40,
+      "expected_days": 40,
+      "missing_days": 0,
+      "coverage_pct": 100.0,
+      "longest_gap": null,
+      "n_gaps": 0,
+      "rows_per_day_max": 1,
+      "rows_per_day_min": 1,
+      "ts_col": "computed_at",
+      "correction_col": "correction",
+      "n_ts_rows": 40,
+      "n_unique_ts": 40,
+      "ts_first": "2026-09-24T04:59:01",
+      "ts_last": "2026-11-02T02:04:25",
+      "late_rows_gt_d_plus_2": 2,
+      "late_examples": [
+        {
+          "d": "2026-09-26",
+          "ts": "2026-09-29T03:56:57"
+        },
+        {
+          "d": "2026-09-29",
+          "ts": "2026-10-02T07:50:49"
+        }
+      ],
+      "n_unique_ts_days": 35,
+      "whole_recompute": false,
+      "correction_non_null": 11
+    },
+    {
+      "table": "forward_anchor_daily",
+      "readable": false,
+      "status": 401,
+      "reason": "http_401",
+      "n_rows": null
+    },
+    {
+      "table": "portfolio_targets_daily",
+      "readable": false,
+      "status": 401,
+      "reason": "http_401",
+      "n_rows": null
+    },
+    {
+      "table": "portfolio_layer_daily",
+      "readable": false,
+      "status": 401,
+      "reason": "http_401",
+      "n_rows": null
+    },
+    {
+      "table": "book_style_exposure_daily",
+      "readable": false,
+      "status": 401,
+      "reason": "http_401",
+      "n_rows": null
+    },
+    {
+      "table": "multiplier_daily",
+      "readable": true,
+      "columns": [
+        "arm",
+        "code_ref",
+        "computed_at",
+        "cost",
+        "d",
+        "dist_200",
+        "inception",
+        "m",
+        "nav",
+        "ret",
+        "vol_pct_3y"
+      ],
+      "date_col": "d",
+      "n_rows": 10060,
+      "status": 200,
+      "first": "2023-01-02",
+      "last": "2026-11-01",
+      "n_days": 1400,
+      "expected_days": 1400,
+      "missing_days": 0,
+      "coverage_pct": 100.0,
+      "longest_gap": null,
+      "n_gaps": 0,
+      "rows_per_day_max": 16,
+      "rows_per_day_min": 7,
+      "ts_col": "computed_at",
+      "correction_col": null,
+      "n_ts_rows": 10060,
+      "n_unique_ts": 83,
+      "ts_first": "2026-10-13T13:17:18",
+      "ts_last": "2026-11-02T15:27:37",
+      "late_rows_gt_d_plus_2": 9811,
+      "late_examples": [
+        {
+          "d": "2023-01-02",
+          "ts": "2026-11-02T15:27:35"
+        },
+        {
+          "d": "2023-01-02",
+          "ts": "2026-11-02T15:27:35"
+        },
+        {
+          "d": "2023-01-02",
+          "ts": "2026-11-02T15:27:35"
+        },
+        {
+          "d": "2023-01-02",
+          "ts": "2026-11-02T15:27:35"
+        },
+        {
+          "d": "2023-01-02",
+          "ts": "2026-11-02T15:27:35"
+        }
+      ],
+      "n_unique_ts_days": 21,
+      "whole_recompute": true
+    },
+    {
+      "table": "meta_allocator_daily",
+      "readable": false,
+      "status": 401,
+      "reason": "http_401",
+      "n_rows": null
+    },
+    {
+      "table": "execution_quality_daily",
+      "readable": false,
+      "status": 401,
+      "reason": "http_401",
+      "n_rows": null
+    },
+    {
+      "table": "feature_arms_daily",
+      "readable": false,
+      "status": 401,
+      "reason": "http_401",
+      "n_rows": null
+    },
+    {
+      "table": "market_interpretation_daily",
+      "readable": false,
+      "status": 401,
+      "reason": "http_401",
+      "n_rows": null
+    },
+    {
+      "table": "style_index_pit_daily",
+      "readable": true,
+      "columns": [
+        "basis",
+        "code_ref",
+        "computed_at",
+        "d",
+        "dimension",
+        "level",
+        "members",
+        "n_dropped",
+        "n_members",
+        "n_not_in_today_lists",
+        "ret",
+        "style",
+        "top_member",
+        "top_weight",
+        "weighting"
+      ],
+      "date_col": "d",
+      "n_rows": 38922,
+      "status": 200,
+      "first": "2020-01-01",
+      "last": "2026-11-01",
+      "n_days": 2497,
+      "expected_days": 2497,
+      "missing_days": 0,
+      "coverage_pct": 100.0,
+      "longest_gap": null,
+      "n_gaps": 0,
+      "rows_per_day_max": 16,
+      "rows_per_day_min": 12,
+      "ts_col": "computed_at",
+      "correction_col": null,
+      "n_ts_rows": 38922,
+      "n_unique_ts": 54,
+      "ts_first": "2026-10-08T10:30:03",
+      "ts_last": "2026-11-02T00:33:48",
+      "late_rows_gt_d_plus_2": 38490,
+      "late_examples": [
+        {
+          "d": "2020-01-01",
+          "ts": "2026-10-08T10:30:03"
+        },
+        {
+          "d": "2020-01-01",
+          "ts": "2026-10-08T10:30:03"
+        },
+        {
+          "d": "2020-01-01",
+          "ts": "2026-10-08T10:30:03"
+        },
+        {
+          "d": "2020-01-01",
+          "ts": "2026-10-08T10:30:03"
+        },
+        {
+          "d": "2020-01-01",
+          "ts": "2026-10-08T10:30:03"
+        }
+      ],
+      "n_unique_ts_days": 26,
+      "whole_recompute": true
+    },
+    {
+      "table": "style_pit_coverage_daily",
+      "readable": false,
+      "status": 401,
+      "reason": "http_401",
+      "n_rows": null
+    },
+    {
+      "table": "core_variants_daily",
+      "readable": true,
+      "columns": [
+        "arm",
+        "code_ref",
+        "computed_at",
+        "d",
+        "inception",
+        "nav",
+        "ret"
+      ],
+      "date_col": "d",
+      "n_rows": 18262,
+      "status": 200,
+      "first": "2019-01-01",
+      "last": "2026-11-01",
+      "n_days": 2862,
+      "expected_days": 2862,
+      "missing_days": 0,
+      "coverage_pct": 100.0,
+      "longest_gap": null,
+      "n_gaps": 0,
+      "rows_per_day_max": 12,
+      "rows_per_day_min": 1,
+      "ts_col": "computed_at",
+      "correction_col": null,
+      "n_ts_rows": 18262,
+      "n_unique_ts": 25,
+      "ts_first": "2026-10-13T12:42:09",
+      "ts_last": "2026-11-02T15:13:23",
+      "late_rows_gt_d_plus_2": 18017,
+      "late_examples": [
+        {
+          "d": "2019-01-01",
+          "ts": "2026-11-02T15:08:56"
+        },
+        {
+          "d": "2019-01-02",
+          "ts": "2026-11-02T15:08:56"
+        },
+        {
+          "d": "2019-01-03",
+          "ts": "2026-11-02T15:08:56"
+        },
+        {
+          "d": "2019-01-04",
+          "ts": "2026-11-02T15:08:56"
+        },
+        {
+          "d": "2019-01-05",
+          "ts": "2026-11-02T15:08:56"
+        }
+      ],
+      "n_unique_ts_days": 21,
+      "whole_recompute": true
+    }
+  ],
+  "loop_tables": [
+    {
+      "table": "loop_attempt",
+      "readable": true,
+      "columns": [
+        "at",
+        "build",
+        "detail",
+        "elapsed_ms",
+        "id",
+        "loop_name",
+        "outcome",
+        "reason",
+        "writer"
+      ],
+      "date_col": null,
+      "status": 200,
+      "reason": "no_date_column"
+    }
+  ],
+  "locked_expected": [
+    {
+      "table": "beta_plus_daily",
+      "status": 401,
+      "readable": false
+    },
+    {
+      "table": "tokenization_tilt_daily",
+      "status": 401,
+      "readable": false
+    },
+    {
+      "table": "allocation_daily",
+      "status": 401,
+      "readable": false
+    },
+    {
+      "table": "allocation_nav_daily",
+      "status": 401,
+      "readable": false
+    },
+    {
+      "table": "live_account_daily",
+      "status": 401,
+      "readable": false
+    },
+    {
+      "table": "rr_matrix_daily",
+      "status": 401,
+      "readable": false
+    }
+  ],
+  "opened_log_tables": [
+    {
+      "table": "loop_attempt",
+      "status": 200,
+      "has_rows": true,
+      "n_min": 1
+    },
+    {
+      "table": "regime_band_log",
+      "status": 200,
+      "has_rows": true,
+      "n_min": 1
+    },
+    {
+      "table": "crowd_clock_log",
+      "status": 200,
+      "has_rows": true,
+      "n_min": 1
+    },
+    {
+      "table": "agent_call_log",
+      "status": 200,
+      "has_rows": false,
+      "n_min": 0
+    },
+    {
+      "table": "write_log",
+      "status": 200,
+      "has_rows": false,
+      "n_min": 0
+    },
+    {
+      "table": "execution_intents",
+      "status": 200,
+      "has_rows": false,
+      "n_min": null
+    },
+    {
+      "table": "execution_outcomes",
+      "status": 200,
+      "has_rows": false,
+      "n_min": null
+    }
+  ],
+  "heartbeat_gap": {
+    "loop_name": "executor_host",
+    "window_from": "2026-10-26T21:42:49Z",
+    "window_to": "2026-10-29T14:24:06Z",
+    "rows_in_window": 102,
+    "prev_before": {
+      "at": "2026-10-26T21:42:49.129096+00:00",
+      "outcome": "ok"
+    },
+    "next_after": {
+      "at": "2026-10-29T14:24:06.073895+00:00",
+      "outcome": "ok"
+    },
+    "gap_hours": 64.69,
+    "verdict": "confirmed_no_rows_in_window",
+    "status": 200,
+    "n_series": 102,
+    "max_gap_hours": 64.69,
+    "max_gap_from": "2026-10-26T21:42:49.129096+00:00",
+    "max_gap_to": "2026-10-29T14:24:06.073895+00:00",
+    "max_gap_from_outcome": "ok",
+    "max_gap_to_outcome": "ok",
+    "n_gaps_over_6h": 1,
+    "gaps_over_6h": [
+      {
+        "hours": 64.69,
+        "from": "2026-10-26T21:42:49.129096+00:00",
+        "to": "2026-10-29T14:24:06.073895+00:00"
+      }
+    ],
+    "rows_in_window_interior": 0,
+    "interior_rows_sample": [],
+    "rows_in_outer_window": 102,
+    "max_gap_is_the_claimed_window": true
+  },
+  "heartbeat_balance": {
+    "field": "detail.balances.USDC",
+    "n_with_balance": 303,
+    "last_before_gap": {
+      "at": "2026-10-26T20:42:38.550828+00:00",
+      "usdc": 613.253615,
+      "mode": "live",
+      "kind": "heartbeat"
+    },
+    "first_after_gap": {
+      "at": "2026-10-29T14:51:55.927834+00:00",
+      "usdc": 630.643136,
+      "mode": "live",
+      "kind": "heartbeat"
+    },
+    "delta": 17.3895,
+    "gap_hours": 66.15,
+    "series_tail": [
+      {
+        "at": "2026-11-01T21:24:06.010577+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-01T22:24:16.344366+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-01T23:24:25.449572+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T00:24:45.265826+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T01:25:00.781989+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T02:25:11.65956+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T03:18:24.084551+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T03:18:33.234279+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T03:40:45.545532+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T03:40:52.231458+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T04:40:58.436988+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T05:41:13.947426+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T06:41:28.586177+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T07:41:47.279987+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T08:41:59.946517+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T09:31:46.238223+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T09:32:00.793328+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T10:15:28.101287+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T10:15:28.152337+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T10:15:38.724991+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T11:15:51.65604+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T12:16:06.668423+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T13:16:11.44603+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T14:16:16.000869+00:00",
+        "usdc": 338.1052
+      },
+      {
+        "at": "2026-11-02T15:16:40.513072+00:00",
+        "usdc": 338.1052
+      }
+    ],
+    "status": 200,
+    "verdict": "balance_ledger_measured"
+  },
+  "timeout_census": {
+    "window_from": "2026-10-26T00:00:00Z",
+    "n_rows_total": 13312,
+    "by_outcome": {
+      "ok": 11273,
+      "refused": 1894,
+      "error": 143,
+      "panel_unavailable": 2
+    },
+    "timeout_rows": [
+      {
+        "at": "2026-10-27T15:06:28.515117+00:00",
+        "loop_name": "_tokenization_tilt_loop",
+        "outcome": "error",
+        "reason": "ConnectTimeout: ",
+        "detail": "",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-29T14:27:13.529716+00:00",
+        "loop_name": "_cg_panel_loop",
+        "outcome": "panel_unavailable",
+        "reason": "\u6df1\u76d8\u7b26\u53f7\u8868\u6ca1\u8bfb\u5230 \u2014 deep_panel_symbols_fast: no response (timeout or retries exhausted) [137743ms]. breaker(open=False,fails=0,trips=0)",
+        "detail": "{\"fn\": \"deep_panel_symbols_fast\", \"body\": null, \"status\": null, \"outcome\": \"no_response\", \"elapsed_ms\": 137743, \"breaker_open\": false, \"breaker_lifetime_trips\": 0, \"breaker_consecutive_failures\": 0}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-29T14:31:36.655987+00:00",
+        "loop_name": "_cis_inputs_loop",
+        "outcome": "error",
+        "reason": "1 \u9879\u5931\u8d25:['tvl.AAVE']",
+        "detail": "{\"macro\": {\"fed\": {\"last\": \"2026-10-29\", \"rows\": 6340, \"error\": null, \"last_value_bn\": 5801.426}, \"fng\": {\"last\": \"2026-10-29\", \"rows\": 3189, \"error\": null}, \"vix\": {\"last\": \"2026-10-29\", \"rows\": 2255",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-30T05:47:22.088652+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-30T06:40:23.052691+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-30T07:17:46.805794+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-30T14:28:22.971378+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-30T14:55:07.658449+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-30T16:32:42.42333+00:00",
+        "loop_name": "_tokenization_tilt_loop",
+        "outcome": "error",
+        "reason": "ConnectTimeout: ",
+        "detail": "",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-30T16:43:33.368822+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-30T17:26:38.078541+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-30T18:01:23.487055+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-30T19:12:38.637687+00:00",
+        "loop_name": "_public_cache_warm_loop",
+        "outcome": "error",
+        "reason": "/api/v1/protocols/universe ReadTimeout",
+        "detail": "{\"failed\": [\"/api/v1/protocols/universe ReadTimeout\"], \"slow_s\": {}}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-30T19:35:54.07355+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-30T21:22:01.614681+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-31T00:48:57.948692+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=['depth-divergence forward record'] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a n",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-31T01:49:09.983959+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=['depth-divergence forward record'] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a n",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-31T02:43:04.986538+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-31T03:15:02.167608+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-31T06:30:13.133707+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-31T13:06:16.143546+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-31T15:06:04.547252+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-31T16:04:33.393548+00:00",
+        "loop_name": "_public_cache_warm_loop",
+        "outcome": "error",
+        "reason": "/api/v1/cis/attribution?symbol=BTC&limit=8 ReadTimeout",
+        "detail": "{\"failed\": [\"/api/v1/cis/attribution?symbol=BTC&limit=8 ReadTimeout\"], \"slow_s\": {}}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-01T06:30:13.75999+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=['depth-divergence forward record'] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a n",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-01T07:30:26.462178+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-01T11:37:54.055117+00:00",
+        "loop_name": "_signal_attribution_loop",
+        "outcome": "error",
+        "reason": "standard:8629 \u4e2a\u4fe1\u53f7\u53d8\u5316(\u5df2\u53d1\u5e03 207),8197 \u4e2a\u6709 7 \u5929\u7ed3\u679c | live_mixed \u5199\u5165\u5931\u8d25:no response from Supabase after retries (breaker may be open)",
+        "detail": "{\"written\": 8629, \"with_outcome_7d\": 8197, \"groups_without_prices\": null}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-01T11:38:04.238838+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-01T13:05:51.483393+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-01T16:14:46.397317+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-01T16:46:56.930551+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-01T17:11:06.393592+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-01T17:31:34.893137+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-01T18:41:10.167334+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-01T19:16:33.802587+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-02T03:18:30.396538+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=['depth-divergence forward record'] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a n",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-02T03:53:57.425438+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-02T04:33:31.746541+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-02T06:30:21.895138+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-02T06:57:04.526217+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-02T08:14:32.497067+00:00",
+        "loop_name": "_cg_panel_loop",
+        "outcome": "panel_unavailable",
+        "reason": "\u6df1\u76d8\u7b26\u53f7\u8868\u6ca1\u8bfb\u5230 \u2014 deep_panel_symbols_fast: no response (timeout or retries exhausted) [37442ms]. breaker(open=False,fails=0,trips=0)",
+        "detail": "{\"fn\": \"deep_panel_symbols_fast\", \"body\": null, \"status\": null, \"outcome\": \"no_response\", \"elapsed_ms\": 37442, \"breaker_open\": false, \"breaker_lifetime_trips\": 0, \"breaker_consecutive_failures\": 0}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-02T08:14:42.88842+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-02T09:22:43.834054+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-02T10:26:06.910807+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-02T10:54:56.791842+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-02T12:06:18.262872+00:00",
+        "loop_name": "_signal_attribution_loop",
+        "outcome": "error",
+        "reason": "standard:8628 \u4e2a\u4fe1\u53f7\u53d8\u5316(\u5df2\u53d1\u5e03 208),8196 \u4e2a\u6709 7 \u5929\u7ed3\u679c | live_mixed \u5199\u5165\u5931\u8d25:no response from Supabase after retries (breaker may be open)",
+        "detail": "{\"written\": 8628, \"with_outcome_7d\": 8196, \"groups_without_prices\": null}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-02T12:06:29.036546+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-02T13:36:26.359554+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-02T14:40:52.199066+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-11-02T15:11:40.213286+00:00",
+        "loop_name": "_forward_record_loop",
+        "outcome": "error",
+        "reason": "stalled=[] problems=['refresh: no response from Supabase after retries', 'refresh returned NoneType None, not an int \u2014 the SQL contract says this is a row count or a negative refusal code. Unrecognise",
+        "detail": "{\"ok\": false, \"n_books\": 2, \"pit_verdict\": \"pit_clean\", \"pit_lag_days\": 1, \"depth_written\": 0, \"forward_verdict\": \"not_daily\"}",
+        "elapsed_ms": null
+      }
+    ],
+    "errors_by_loop": {
+      "_hl_book_loop": 247,
+      "_executor_dry_run_loop": 113,
+      "_core_cap_loop": 2,
+      "_tokenization_tilt_loop": 24,
+      "_beta_plus_loop": 2,
+      "_short_paper": 42,
+      "_multiplier_loop": 2,
+      "_cis_tilt_loop": 2,
+      "_r_tickets_paper_loop": 31,
+      "_cis_inputs_loop": 5,
+      "_portfolio_layer_loop": 1,
+      "_meta_allocator_loop": 6,
+      "_causal_paper_loop": 132,
+      "_dingge_paper_loop": 132,
+      "_combined_book_loop": 132,
+      "_scalable_book_loop": 132,
+      "_two_layer_paper_loop": 132,
+      "_fusion_paper_loop": 132,
+      "_feature_arms_loop": 3,
+      "_perp_mcap_backfill_loop": 579,
+      "_hyperliquid_loop": 1,
+      "_market_state_loop": 1,
+      "_core_variants_loop": 2,
+      "_pod_aggregator_loop": 1,
+      "_factor_tilt_loop": 1,
+      "_forward_record_loop": 42,
+      "_cg_panel_loop": 2,
+      "_public_cache_warm_loop": 4,
+      "_metering_flush_loop": 32,
+      "_trending_loop": 1,
+      "_forward_return_backfill_loop": 42,
+      "_channels_loop": 1,
+      "_anchor_loop": 48,
+      "executor_host": 2,
+      "_signal_attribution_loop": 3,
+      "_regime_fitness_loop": 3,
+      "_ai_briefing_loop": 2
+    },
+    "all_errors_last7d": [],
+    "status": 200,
+    "strict_timeout_rows": [
+      {
+        "at": "2026-10-27T15:06:28.515117+00:00",
+        "loop_name": "_tokenization_tilt_loop",
+        "outcome": "error",
+        "reason": "ConnectTimeout: ",
+        "detail": "",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-29T14:31:36.655987+00:00",
+        "loop_name": "_cis_inputs_loop",
+        "outcome": "error",
+        "reason": "1 \u9879\u5931\u8d25:['tvl.AAVE']",
+        "detail": "{\"macro\": {\"fed\": {\"last\": \"2026-10-29\", \"rows\": 6340, \"error\": null, \"last_value_bn\": 5801.426}, \"fng\": {\"last\": \"2026-10-29\", \"rows\": 3189, \"error\": null}, \"vix\": {\"last\": \"2026-10-29\", \"rows\": 2255",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-30T16:32:42.42333+00:00",
+        "loop_name": "_tokenization_tilt_loop",
+        "outcome": "error",
+        "reason": "ConnectTimeout: ",
+        "detail": "",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-30T19:12:38.637687+00:00",
+        "loop_name": "_public_cache_warm_loop",
+        "outcome": "error",
+        "reason": "/api/v1/protocols/universe ReadTimeout",
+        "detail": "{\"failed\": [\"/api/v1/protocols/universe ReadTimeout\"], \"slow_s\": {}}",
+        "elapsed_ms": null
+      },
+      {
+        "at": "2026-10-31T16:04:33.393548+00:00",
+        "loop_name": "_public_cache_warm_loop",
+        "outcome": "error",
+        "reason": "/api/v1/cis/attribution?symbol=BTC&limit=8 ReadTimeout",
+        "detail": "{\"failed\": [\"/api/v1/cis/attribution?symbol=BTC&limit=8 ReadTimeout\"], \"slow_s\": {}}",
+        "elapsed_ms": null
+      }
+    ],
+    "n_errors_total": 2039,
+    "n_non_ok_total": 2039,
+    "n_outcome_error": 143,
+    "n_outcome_refused": 1894,
+    "n_timeout_broad": 49,
+    "n_timeout_strict": 5,
+    "strict_by_loop": {
+      "_tokenization_tilt_loop": 2,
+      "_cis_inputs_loop": 1,
+      "_public_cache_warm_loop": 2
+    },
+    "strict_by_day": {
+      "2026-10-27": 1,
+      "2026-10-29": 1,
+      "2026-10-30": 2,
+      "2026-10-31": 1
+    },
+    "strict_by_loop_all_errors": {
+      "_hl_book_loop": 247,
+      "_executor_dry_run_loop": 113,
+      "_core_cap_loop": 2,
+      "_tokenization_tilt_loop": 24,
+      "_beta_plus_loop": 2,
+      "_short_paper": 42,
+      "_multiplier_loop": 2,
+      "_cis_tilt_loop": 2,
+      "_r_tickets_paper_loop": 31,
+      "_cis_inputs_loop": 5,
+      "_portfolio_layer_loop": 1,
+      "_meta_allocator_loop": 6,
+      "_causal_paper_loop": 132,
+      "_dingge_paper_loop": 132,
+      "_combined_book_loop": 132,
+      "_scalable_book_loop": 132,
+      "_two_layer_paper_loop": 132,
+      "_fusion_paper_loop": 132,
+      "_feature_arms_loop": 3,
+      "_perp_mcap_backfill_loop": 579,
+      "_hyperliquid_loop": 1,
+      "_market_state_loop": 1,
+      "_core_variants_loop": 2,
+      "_pod_aggregator_loop": 1,
+      "_factor_tilt_loop": 1,
+      "_forward_record_loop": 42,
+      "_cg_panel_loop": 2,
+      "_public_cache_warm_loop": 4,
+      "_metering_flush_loop": 32,
+      "_trending_loop": 1,
+      "_forward_return_backfill_loop": 42,
+      "_channels_loop": 1,
+      "_anchor_loop": 48,
+      "executor_host": 2,
+      "_signal_attribution_loop": 3,
+      "_regime_fitness_loop": 3,
+      "_ai_briefing_loop": 2
+    },
+    "n_timeout_loop_level": 4,
+    "n_timeout_sub_request": 1,
+    "loop_level_by_loop": {
+      "_tokenization_tilt_loop": 2,
+      "_public_cache_warm_loop": 2
+    },
+    "loop_level_by_day": {
+      "2026-10-27": 1,
+      "2026-10-30": 2,
+      "2026-10-31": 1
+    },
+    "sub_request_rows": [
+      {
+        "at": "2026-10-29T14:31:36.655987+00:00",
+        "loop_name": "_cis_inputs_loop",
+        "reason": "1 \u9879\u5931\u8d25:['tvl.AAVE']"
+      }
+    ],
+    "window_to": "2026-11-02T15:33:23.903638+00:00",
+    "n_no_response_supabase": 42,
+    "no_response_by_loop": {
+      "_forward_record_loop": 40,
+      "_signal_attribution_loop": 2
+    },
+    "no_response_by_day": {
+      "2026-10-30": 10,
+      "2026-10-31": 7,
+      "2026-11-01": 11,
+      "2026-11-02": 14
+    },
+    "forward_record_loop_by_day": {
+      "2026-10-26": {
+        "ok": 10
+      },
+      "2026-10-27": {
+        "ok": 7
+      },
+      "2026-10-28": {
+        "ok": 5
+      },
+      "2026-10-29": {
+        "error": 1,
+        "ok": 13
+      },
+      "2026-10-30": {
+        "error": 11,
+        "ok": 4
+      },
+      "2026-10-31": {
+        "error": 7,
+        "ok": 1
+      },
+      "2026-11-01": {
+        "error": 10
+      },
+      "2026-11-02": {
+        "error": 13
+      }
+    },
+    "forward_record_loop_n": 82,
+    "verdict": "timeout_count_measured"
+  },
+  "live_balance": {
+    "table": "live_account_daily",
+    "status": 401,
+    "readable": false,
+    "reason": "http_401"
+  },
+  "log_table_counts": {
+    "loop_attempt": {
+      "status": 206,
+      "rows_exact": 34475
+    },
+    "regime_band_log": {
+      "status": 206,
+      "rows_exact": 906
+    },
+    "crowd_clock_log": {
+      "status": 206,
+      "rows_exact": 41
+    },
+    "agent_call_log": {
+      "status": 200,
+      "rows_exact": 0
+    },
+    "write_log": {
+      "status": 200,
+      "rows_exact": 0
+    },
+    "execution_intents": {
+      "status": 200,
+      "rows_exact": 0
+    },
+    "execution_outcomes": {
+      "status": 200,
+      "rows_exact": 0
+    }
+  },
+  "heartbeat_modes": {
+    "table": "loop_attempt",
+    "loop_name": "executor_host",
+    "tail": [
+      {
+        "at": "2026-11-02T15:16:41.714135+00:00",
+        "outcome": "ok",
+        "mode": "live",
+        "kind": "liqmap",
+        "usdc": null
+      },
+      {
+        "at": "2026-11-02T15:16:40.513072+00:00",
+        "outcome": "ok",
+        "mode": "live",
+        "kind": "heartbeat",
+        "usdc": 338.105236
+      },
+      {
+        "at": "2026-11-02T14:16:17.600179+00:00",
+        "outcome": "ok",
+        "mode": "live",
+        "kind": "liqmap",
+        "usdc": null
+      },
+      {
+        "at": "2026-11-02T14:16:16.000869+00:00",
+        "outcome": "ok",
+        "mode": "live",
+        "kind": "heartbeat",
+        "usdc": 338.105236
+      },
+      {
+        "at": "2026-11-02T13:16:12.658515+00:00",
+        "outcome": "ok",
+        "mode": "live",
+        "kind": "liqmap",
+        "usdc": null
+      },
+      {
+        "at": "2026-11-02T13:16:11.44603+00:00",
+        "outcome": "ok",
+        "mode": "live",
+        "kind": "heartbeat",
+        "usdc": 338.105236
+      },
+      {
+        "at": "2026-11-02T12:16:07.908595+00:00",
+        "outcome": "ok",
+        "mode": "live",
+        "kind": "liqmap",
+        "usdc": null
+      },
+      {
+        "at": "2026-11-02T12:16:06.668423+00:00",
+        "outcome": "ok",
+        "mode": "live",
+        "kind": "heartbeat",
+        "usdc": 338.105236
+      },
+      {
+        "at": "2026-11-02T11:15:52.75071+00:00",
+        "outcome": "ok",
+        "mode": "live",
+        "kind": "liqmap",
+        "usdc": null
+      },
+      {
+        "at": "2026-11-02T11:15:51.65604+00:00",
+        "outcome": "ok",
+        "mode": "live",
+        "kind": "heartbeat",
+        "usdc": 338.105236
+      },
+      {
+        "at": "2026-11-02T10:15:39.863094+00:00",
+        "outcome": "ok",
+        "mode": "live",
+        "kind": "liqmap",
+        "usdc": null
+      },
+      {
+        "at": "2026-11-02T10:15:38.724991+00:00",
+        "outcome": "ok",
+        "mode": "live",
+        "kind": "heartbeat",
+        "usdc": 338.105236
+      }
+    ],
+    "status": 200
+  }
+}
