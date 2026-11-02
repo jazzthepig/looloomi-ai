@@ -1,0 +1,65 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T-222-1",
+      "scenario": "T-222 资金费套息量测",
+      "statement": "生产面板的 7 日年化资金费(state_daily / funding_7d_ann)在 2026-12-01 仍为正。T-222 测得等权 24 名 2023-01→2026-10 年化毛 4.976%/yr,46 个月里 36 正 10 负,负费率集中于回撤段(r 与 BTC 月回报 +0.38)。",
+      "variable": "state:funding_7d_ann",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.8,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-222-2",
+      "scenario": "T-222 资金费套息量测",
+      "statement": "Binance perp 口径的 7 日年化资金费(state_daily / funding_7d_ann_binance)在 2026-12-01 仍为正。2026-02→04 曾连续三个月为负(2026-02 面板 -0.635%/月),所以这条不是稳态。",
+      "variable": "state:funding_7d_ann_binance",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.78,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-222-3",
+      "scenario": "T-222 资金费套息量测",
+      "statement": "7 日年化资金费在 2026-12-01 低于 10%(压缩而非再放大)。2026-11-01 读数 8.67%;2024-03 单月曾达 +3.789%(折年约 45%),制度值在 2024 之后已从 12.59%/yr 降到 0.58%/yr(2026 年 1-10 月)。",
+      "variable": "state:funding_7d_ann",
+      "op": "lt",
+      "hi": 0.1,
+      "prob": 0.6,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-222-4",
+      "scenario": "T-222 资金费套息量测",
+      "statement": "Fear & Greed(macro_daily / fng)在 2026-12-01 仍高于 30。2026-11-02 读数 37;资金费转负的月份(2025-11、2026-02、2026-06)对应的是恐惧区。",
+      "variable": "macro:fng",
+      "op": "gt",
+      "lo": 30,
+      "prob": 0.65,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-222-5",
+      "scenario": "T-222 资金费套息量测",
+      "statement": "BTC 收盘(ohlcv_daily / binance_hist)在 2026-12-01 高于 70000(2026-11-01 为 78354)。T-222 测得负费率段 6/10 落在 BTC 下跌月,回撤是 carry 转负的主因,所以这一条同时约束 T-222-1。",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 70000,
+      "prob": 0.72,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-222-6",
+      "scenario": "T-222 资金费套息量测",
+      "statement": "Hyperliquid 的等权日资金费(按 24 小时外推,取与 Binance 同名同日的 25 名)仍高于 Binance perp 的同名同日均值。T-222 在 2026-09-05→2026-10-31 的 57 天里测到 HL 更高 100% 的天数、量级约 2.3 倍(HL 9.979%/yr vs Binance 4.293%/yr)。人工结算,按 T-222 报告的同名同日口径。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.72,
+      "horizon_d": "2026-12-31"
+    }
+  ]
+}
