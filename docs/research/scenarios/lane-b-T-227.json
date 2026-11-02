@@ -1,0 +1,69 @@
+{
+  "author": "lane-b",
+  "note": "T-227 前向预期。概率是作者自估,到期按 Brier 结算;写的是可核的量,不是收益承诺。T-227 的预注册闸门未过(events 里 binance listing 只有 107 行,需 ≥2000),所以下面第 1–3 条是针对『替代事件源(ohlcv_daily binance_hist 首次出现日 = Binance 上币日,262 个)』的前向判据,判据文件 docs/research/T-227_listing_event.md;第 4–5 条是自动结算的宏观基线。",
+  "entries": [
+    {
+      "id": "T-227-1",
+      "scenario": "T-227 「开闸」事件源(Binance 上币日)",
+      "statement": "在补齐后的上币事件样本里,上币后 d+1 → d+30 相对『同时点加密市场等权篮』的收益中位数仍为负",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "hi": 0,
+      "prob": 0.6,
+      "horizon_d": "2027-02-28",
+      "check": "跑 docs/research/T-227_listing_event.py 的 B3_pit_market 臂:fwd30.median_rel_pct < 0",
+      "current_reading": {"2026-11-03": "该臂本轮未跑(上下文限额);同族 B1 固定25名篮臂 median_rel = -22.35%,但早期基准只有 2-5 个成分,方向提示而已"}
+    },
+    {
+      "id": "T-227-2",
+      "scenario": "T-227 「密集营销时是高位」的形状",
+      "statement": "在补齐后的上币事件样本里,上币前 d-30 → d 的绝对收益中位数为正(公告前已涨)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "hi": 0,
+      "prob": 0.5,
+      "horizon_d": "2027-02-28",
+      "check": "跑 docs/research/T-227_listing_event.py 的 pre_listing_runup 臂:pre_listing_runup.median_abs_pct > 0",
+      "current_reading": {"2026-11-03": "本轮未跑;CoinGecko 每股只有 ~433 天历史,只对近一年上币的标的够用"}
+    },
+    {
+      "id": "T-227-3",
+      "scenario": "T-227 「开闸」事件源(Binance 上币日)",
+      "statement": "在补齐后的上币事件样本里,固定 25 名 CIS 篮口径的上币后 30 天相对收益中位数仍为负(与 2026-11-03 的 -22.35% 同号)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "hi": 0,
+      "prob": 0.7,
+      "horizon_d": "2027-02-28",
+      "check": "跑 docs/research/T-227_listing_event.py 的 B1_fixed25_pregistered 臂:fwd30.median_rel_pct < 0",
+      "current_reading": {"2026-11-03": -22.35, "n_events": 262, "control_percentile": 0.0}
+    },
+    {
+      "id": "T-227-4",
+      "scenario": "T-227 流动性基线自动结算项",
+      "statement": "稳定币供应的 30 日变化在 2027-03-31 仍为负(供给仍在收缩)",
+      "variable": "state:stable_supply_30d",
+      "op": "lt",
+      "lo": -1,
+      "hi": 0,
+      "prob": 0.5,
+      "horizon_d": "2027-03-31",
+      "current_reading": {"note": "本轮未读 state_daily 的 stable_supply_30d 现值,按 T-223 卡上同族读数(2026-11-01 = -0.0258514)与历史基率给概率"}
+    },
+    {
+      "id": "T-227-5",
+      "scenario": "T-227 宏观基线自动结算项",
+      "statement": "恐惧与贪婪指数在 2027-03-31 落在 25–75 的中性区间内",
+      "variable": "macro:fng",
+      "op": "between",
+      "lo": 25,
+      "hi": 75,
+      "prob": 0.75,
+      "horizon_d": "2027-03-31",
+      "current_reading": {"note": "本轮未读 macro_daily 的 fng 现值,按历史基率给概率"}
+    }
+  ]
+}
