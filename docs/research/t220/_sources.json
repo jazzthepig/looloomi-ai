@@ -1,0 +1,329 @@
+{
+ "llama/emissions": {
+  "status": 402,
+  "len": 0,
+  "head": "Upgrade to the paid API plan at https://defillama.com/subscription"
+ },
+ "llama/emission/aave": {
+  "status": 402,
+  "len": 0,
+  "head": "Upgrade to the paid API plan at https://defillama.com/subscription"
+ },
+ "llama/raises": {
+  "status": 402,
+  "len": 0,
+  "head": "Upgrade to the paid API plan at https://defillama.com/subscription"
+ },
+ "llama/protocols": {
+  "status": 200,
+  "len": 9462034,
+  "head": "[{\"id\":\"2269\",\"name\":\"Binance CEX\",\"address\":null,\"symbol\":\"BNB\",\"url\":\"https://www.binance.com\",\"description\":\"Binance is a cryptocurrency exchange which is the largest exchange in the world in terms of daily trading volume of cryptocurrencies\",\"chain\":\"Multi-Chain\",\"logo\":\"https://icons.llamao.fi/"
+ },
+ "llama/unlocks": {
+  "status": 404,
+  "len": 0,
+  "head": "Route not found"
+ },
+ "llama/tokenUnlocks": {
+  "status": 404,
+  "len": 0,
+  "head": "Route not found"
+ },
+ "llama/emissionProtocols": {
+  "status": 404,
+  "len": 0,
+  "head": "Route not found"
+ },
+ "llama_protocol_aave_keys": [
+  "address",
+  "chainTvls",
+  "chains",
+  "cmcId",
+  "currentChainTvls",
+  "description",
+  "gecko_id",
+  "github",
+  "governanceID",
+  "hacks",
+  "hallmarks",
+  "id",
+  "isParentProtocol",
+  "logo",
+  "mcap",
+  "name",
+  "otherProtocols",
+  "raises",
+  "stablecoins",
+  "symbol",
+  "tokens",
+  "tokensInUsd",
+  "treasury",
+  "tvl",
+  "twitter",
+  "url",
+  "wrongLiquidity"
+ ],
+ "llama_protocol_aave_raises": "[{\"date\": 1594771200, \"name\": \"Aave\", \"round\": \"Private token sale\", \"amount\": 3, \"chains\": [\"Ethereum\", \"Polygon\", \"Avalanche\", \"Fantom\", \"Harmony\", \"Optimism\", \"Arbitrum\"], \"sector\": \"Aave is an open source non-custodial protocol on Ethereum for decentralized lending and borrowing.\", \"category\": \"DeFi\", \"categoryGroup\": \"DeFi & CeFi\", \"source\": \"\", \"leadInvestors\": [\"Framework Ventures\", \"3AC\"], \"otherInvestors\": [], \"valuation\": null, \"defillamaId\": \"111\"}, {\"date\": 1602460800, \"name\": \"Aave\", \"round\": \"Strategic\", \"amount\": 25, \"chains\": [\"Ethereum\", \"Polygon\", \"Avalanche\", \"Fantom\", \"Harmony\", \"Optimism\", \"Arbitrum\"], \"sector\": \"Aave is an open source non-custodial protocol on Ethereum for decentralized lending and borrowing.\", \"category\": \"DeFi\", \"categoryGroup\": \"DeFi & CeFi\", \"source\": \"\", \"leadInvestors\": [\"Blockchain Capital\", \"Blockchain.com Ventures\", \"Standard Crypto\"], \"otherInvestors\": [], \"valuation\": null, \"defillamaId\": \"111\"}, {\"date\": 1594166400, \"name\": \"Aave\", \"round\": \"Private token sale\", \"amount\": 4.5, \"chains\": [\"Ethereum\", \"Polygon\", \"Avalanche\", \"Fantom\", \"Harmony\", \"Optimism\", \"Arbitrum\"], \"sector\": \"Aave is an open source non-custodial protocol on Ethereum for decentralized lending and borrowing.\", \"category\": \"DeFi\", \"categoryGroup\": \"DeFi & CeFi\", \"source\": \"\", \"leadInvestors\": [\"ParaFi Capital\"], \"otherInvestors\": [], \"valuation\": null, \"defillamaId\": \"111\"}, {\"date\": 1512000000, \"name\": \"Aave\", \"round\": \"ICO\", \"amount\": 16.2, \"chains\": [\"Ethe",
+ "llama_protocol_aave_treasury": "\"aave.js\"",
+ "llama_protocol_aave_mcap": "2070274215.7620995",
+ "llama_protocol_25": {
+  "AAVE": {
+   "status": 200,
+   "name": "Aave",
+   "gecko_id": "aave",
+   "has_emissions": false,
+   "has_unlocks": false,
+   "treasury": "aave.js",
+   "raises": true,
+   "mcap": 2070274215.7620995
+  },
+  "ADA": {
+   "status": 200,
+   "name": "Cardano",
+   "gecko_id": "cardano",
+   "has_emissions": false,
+   "has_unlocks": false,
+   "treasury": "cardano.js",
+   "raises": false,
+   "mcap": 7161088827.186848
+  },
+  "APT": {
+   "status": 200,
+   "name": "Aptos",
+   "gecko_id": "aptos",
+   "has_emissions": false,
+   "has_unlocks": false,
+   "treasury": "",
+   "raises": false,
+   "mcap": 554115947.3551244
+  },
+  "ARB": {
+   "status": 400
+  },
+  "AVAX": {
+   "status": 200,
+   "name": "Avalanche",
+   "gecko_id": "avalanche-2",
+   "has_emissions": false,
+   "has_unlocks": false,
+   "treasury": "",
+   "raises": false,
+   "mcap": 3798130389.811482
+  },
+  "BNB": {
+   "status": 200,
+   "name": "Binance Smart Chain",
+   "gecko_id": "binancecoin",
+   "has_emissions": false,
+   "has_unlocks": false,
+   "treasury": "",
+   "raises": false,
+   "mcap": 92925058681.91267
+  },
+  "BTC": {
+   "status": 200,
+   "name": "Bitcoin",
+   "gecko_id": "bitcoin",
+   "has_emissions": false,
+   "has_unlocks": false,
+   "treasury": "",
+   "raises": true,
+   "mcap": 1568168783802.0283
+  },
+  "DOT": {
+   "status": 400
+  },
+  "ETH": {
+   "status": 200,
+   "name": "Ethereum",
+   "gecko_id": null,
+   "has_emissions": false,
+   "has_unlocks": false,
+   "treasury": "",
+   "raises": false,
+   "mcap": null
+  },
+  "HYPE": {
+   "status": 200,
+   "name": "Hyperliquid",
+   "gecko_id": "hyperliquid",
+   "has_emissions": false,
+   "has_unlocks": false,
+   "treasury": "",
+   "raises": false,
+   "mcap": 20490153480.50391
+  },
+  "INJ": {
+   "status": 400
+  },
+  "LDO": {
+   "status": 400
+  },
+  "LINK": {
+   "status": 200,
+   "name": "Chainlink",
+   "gecko_id": "chainlink",
+   "has_emissions": false,
+   "has_unlocks": false,
+   "treasury": "",
+   "raises": true,
+   "mcap": 8672099220.58387
+  },
+  "NEAR": {
+   "status": 200,
+   "name": "NEAR Bridge",
+   "gecko_id": null,
+   "has_emissions": false,
+   "has_unlocks": false,
+   "treasury": "",
+   "raises": false,
+   "mcap": null
+  },
+  "ONDO": {
+   "status": 200,
+   "name": "Ondo Finance",
+   "gecko_id": "ondo-finance",
+   "has_emissions": false,
+   "has_unlocks": false,
+   "treasury": "",
+   "raises": false,
+   "mcap": 1931127274.9530725
+  },
+  "OP": {
+   "status": 400
+  },
+  "PENDLE": {
+   "status": 200,
+   "name": "Pendle",
+   "gecko_id": "pendle",
+   "has_emissions": false,
+   "has_unlocks": false,
+   "treasury": "",
+   "raises": true,
+   "mcap": 314997564.9922056
+  },
+  "POL": {
+   "status": 400
+  },
+  "SKY": {
+   "status": 400
+  },
+  "SOL": {
+   "status": 200,
+   "name": "Solana",
+   "gecko_id": "solana",
+   "has_emissions": false,
+   "has_unlocks": false,
+   "treasury": "",
+   "raises": false,
+   "mcap": 55654039138.42654
+  },
+  "STRK": {
+   "status": 400
+  },
+  "SUI": {
+   "status": 400
+  },
+  "TIA": {
+   "status": 200,
+   "name": "Celestia",
+   "gecko_id": "celestia",
+   "has_emissions": false,
+   "has_unlocks": false,
+   "treasury": "",
+   "raises": true,
+   "mcap": 455828385.6813255
+  },
+  "UNI": {
+   "status": 200,
+   "name": "Uniswap",
+   "gecko_id": "uniswap",
+   "has_emissions": false,
+   "has_unlocks": false,
+   "treasury": "uniswap.js",
+   "raises": true,
+   "mcap": 4471645525.2157755
+  },
+  "XRP": {
+   "status": 400
+  }
+ },
+ "llama_pro_prices": [
+  "$0.60 per ",
+  "$3,000/year",
+  "$300/mo",
+  "$49/mo",
+  "$490/year"
+ ],
+ "llama_pro_page_head": "<!DOCTYPE html><html data-dpl-id=\"p-26ec43e8705de8dea39780299bb759\" lang=\"en\" class=\"rounded-corners theme-clean no-tint sidebar-default sidebar-list-default links-default depth-subtle font-Roboto sheet-open:gutter-stable\"><head><meta charSet=\"utf-8\"/><link rel=\"preconnect\" href=\"https://api.gitbook.com\"/><link rel=\"preconnect\" href=\"https://ka-p.fontawesome.com\"/><link rel=\"preconnect\" href=\"https://static-2v.gitbook.com\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\"/><link rel=\"preload\" as=\"image\" fetchPriority=\"high\" imageSrcSet=\"https://docs.llama.fi/~gitbook/image?url=https%3A%2F%2F2397802182-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-legacy-files%2Fo%2Fspaces%252F-MVnGnXr5_eAilN_e5PP%252Favatar-1617498752653.png%3Fgeneration%3D1617498752834476%26alt%3Dmedia&amp;width=32&amp;dpr=1&amp;quality=100&amp;sign=24756fb37e8174ece5dc5424fd32df11&amp;sv=3 32w, https://docs.llama.fi/~gitbook/image?url=https%3A%2F%2F2397802182-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-legacy-files%2Fo%2Fspaces%252F-MVnGnXr5_eAilN_e5PP%252Favatar-1617498752653.png%3Fgeneration%3D1617498752834476%26alt%3Dmedia&amp;width=32&amp;dpr=2&amp;quality=100&amp;sign=24756fb37e8174ece5dc5424fd32df11&amp;sv=3 64w, https://docs.llama.fi/~gitbook/image?url=https%3A%2F%2F2397802182-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-legacy-files%2Fo%2Fspaces%252F-MVnGnXr5_eAilN_e5PP%252Favatar-1617498752653.png%3Fgeneration%3D1617498752834476%26alt%3Dmedia&am",
+ "etherscan_v2_nokey": {
+  "status": 200,
+  "len": 67,
+  "head": "{\"status\":\"0\",\"message\":\"NOTOK\",\"result\":\"Missing/Invalid API Key\"}"
+ },
+ "arkham_intel_root": {
+  "status": 403,
+  "len": 0,
+  "head": "<!DOCTYPE html><html lang=\"en-US\"><head><title>Just a moment...</title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"><meta name=\"robots\" content=\"noindex,nofollow\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta http-equiv=\"content-security-policy\" content=\"default-src &#39;none&#39;; script-src &#39"
+ },
+ "arkham_api_root": {
+  "status": 200,
+  "len": 3259,
+  "head": "<!doctype html> <html lang=\"en\">   <head>     <meta charset=\"utf-8\" />     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />     <title>Arkham API</title>     <meta       name=\"description\"       content=\"Programmatic access to Arkham wallet intelligence and market data — via API keys and x402 pay-per-request.\"     />     <!-- Base builder verification. Value is the app id f"
+ },
+ "nansen_api_root": {
+  "status": 200,
+  "len": 16,
+  "head": "{\"message\":\"ok\"}"
+ },
+ "tokenomist_api": {
+  "status": 401,
+  "len": 0,
+  "head": "{\"status\":false,\"statusCode\":401,\"errorMessage\":\"x-api-key not found\"}"
+ },
+ "cryptorank_api": {
+  "status": 404,
+  "len": 0,
+  "head": "{\"message\":\"Cannot GET /\",\"error\":\"Not Found\",\"statusCode\":404}"
+ },
+ "openchain_labels": {
+  "status": 404,
+  "len": 0,
+  "head": "<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"utf-8\"> <title>Error</title> </head> <body> <pre>Cannot GET /v1/gas_price</pre> </body> </html> "
+ },
+ "labels_eth_org": {
+  "status": -1,
+  "len": 0,
+  "head": "URLError(gaierror(8, 'nodename nor servname provided, or not known'))"
+ },
+ "blockchair": {
+  "status": 200,
+  "len": 2498,
+  "head": "{\"data\":{\"blocks\":26326943,\"transactions\":3824940573,\"blocks_24h\":7177,\"circulation_approximate\":\"122374665718230000000000000\",\"transactions_24h\":1760875,\"difficulty\":0,\"volume_24h_approximate\":\"14055825931626150000000000\",\"mempool_transactions\":403,\"mempool_median_gas_price\":64060940,\"mempool_tps\":6.566666666666666,\"mempool_total_value_approximate\":\"59051226127256130000\",\"best_block_height\":26325"
+ },
+ "ethplorer": {
+  "status": 404,
+  "len": 0,
+  "head": "{\"error\":{\"code\":17,\"message\":\"Invalid request, check API manual there: https://github.com/EverexIO/Ethplorer/wiki/Ethplorer-API\"}}"
+ },
+ "dune_api_nokey": {
+  "status": 401,
+  "len": 0,
+  "head": "{\"error\":\"invalid API Key\"}"
+ },
+ "coingecko_free": {
+  "status": 200,
+  "len": 34,
+  "head": "{\"gecko_says\":\"(V3) To the Moon!\"}"
+ },
+ "llama_unlocks_page": {
+  "status": 200,
+  "len": 1061031,
+  "head": "<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content\" data-next-head=\"\"/><link rel=\"canonical\" href=\"https://defillama.com/unlocks\" data-next-head=\"\"/><title data-next-head=\"\">Token Unlocks &amp; Vesting Schedules - DefiLlama</title><meta name=\"descrip"
+ },
+ "tokenunlocks_site": {
+  "status": -1,
+  "len": 0,
+  "head": "URLError(ConnectionResetError(54, 'Connection reset by peer'))"
+ }
+}

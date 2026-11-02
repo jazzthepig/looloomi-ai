@@ -1,0 +1,722 @@
+{
+ "n_entries": 371,
+ "entry_keys": [
+  "circSupply",
+  "circSupply30d",
+  "gecko_id",
+  "historicalPrice",
+  "lastEvent",
+  "maxSupply",
+  "name",
+  "next24h",
+  "nextEvent",
+  "nextEventV2",
+  "protocolId",
+  "protocolSlug",
+  "sources",
+  "supplyGeneratedAtSec",
+  "tPrice",
+  "tSymbol",
+  "token",
+  "tokenPrice",
+  "totalLocked",
+  "unlockEvents",
+  "unlocksPerDay",
+  "upcomingEvent"
+ ],
+ "date_like_fields": [],
+ "slugs": [
+  "aave",
+  "abracadabra",
+  "acala",
+  "across",
+  "aero",
+  "aethir",
+  "agility-lsd",
+  "alaya-ai",
+  "alex",
+  "altlayer",
+  "ankr",
+  "apecoin",
+  "api3",
+  "apriori",
+  "aptos",
+  "arbitrum-exchange",
+  "arbitrum-foundation",
+  "arcium",
+  "arkham",
+  "aster",
+  "asymetrix-protocol",
+  "auki",
+  "aura",
+  "avalanche",
+  "axelar-network",
+  "axie-infinity",
+  "babylon-protocol",
+  "backpack",
+  "balancer",
+  "based",
+  "baseswap",
+  "basic-attention",
+  "beam",
+  "benddao",
+  "benqi",
+  "berachain",
+  "bidgrid",
+  "big-time",
+  "billions-network",
+  "binance-smart-chain",
+  "bitcoin",
+  "bittensor",
+  "blackhole",
+  "blast-l2",
+  "bluefin",
+  "blur",
+  "bouncebit",
+  "buzz-farming",
+  "camelot",
+  "canto",
+  "canton",
+  "cap",
+  "carv",
+  "celestia",
+  "cellana-finance",
+  "celo",
+  "centrifuge",
+  "cetus",
+  "chainflip",
+  "chainlink",
+  "cheelee",
+  "citrea-staking",
+  "claimrush",
+  "clearpool",
+  "clever",
+  "common-wealth",
+  "compound-finance",
+  "connex",
+  "contango",
+  "convex-finance",
+  "core-bridge",
+  "cowswap",
+  "credbull",
+  "curve-finance",
+  "cyberconnect",
+  "data-network",
+  "debridge",
+  "deepbook",
+  "delysium",
+  "desk",
+  "dfx-finance",
+  "dinero",
+  "dodo",
+  "dogecoin",
+  "dolomite",
+  "doublezero",
+  "drift",
+  "dune-protocol",
+  "dydx",
+  "dymension",
+  "echelon-prime",
+  "edgex",
+  "eigencloud",
+  "ekubo-protocol",
+  "ens",
+  "equilibre",
+  "equilibria",
+  "ethena",
+  "ether.fi",
+  "ethereum",
+  "etherex",
+  "euler",
+  "exactly",
+  "fake-world-assets",
+  "falcon-finance",
+  "fantom",
+  "fast-token",
+  "fei-protocol",
+  "filecoin",
+  "flare",
+  "flashstake",
+  "flow",
+  "flowr",
+  "flowx-finance",
+  "fluid",
+  "forta",
+  "frax-finance",
+  "fx-protocol",
+  "gaib",
+  "gearbox",
+  "geodnet",
+  "gmx",
+  "gnd-protocol",
+  "godl-protocol",
+  "goldfinch",
+  "golem-network",
+  "grass",
+  "grvt",
+  "gunz",
+  "hashflow",
+  "hedera",
+  "helium-network",
+  "heyelsa",
+  "holdstation",
+  "hop-protocol",
+  "humanity",
+  "humidifi",
+  "hybra",
+  "hyperliquid",
+  "hyperswap",
+  "hypha",
+  "hyphen",
+  "ignore-fud",
+  "immutablex",
+  "infrared-finance",
+  "initia",
+  "injective",
+  "internet-computer",
+  "iota",
+  "ipor-protocol",
+  "jade",
+  "jito",
+  "jones-dao",
+  "jpegd",
+  "jupiter",
+  "justlend",
+  "kaito",
+  "kamino",
+  "kinetiq",
+  "kodiak",
+  "kwenta",
+  "kyan",
+  "land-bid",
+  "layer3",
+  "layerbank",
+  "layerzero",
+  "legacy-network",
+  "level-finance",
+  "lfj",
+  "lido",
+  "lighter",
+  "limitless-exchange",
+  "liquity",
+  "lista-dao",
+  "litecoin",
+  "looksrare",
+  "lybra-finance",
+  "magic-eden",
+  "magpie-ecosystem",
+  "maha.xyz",
+  "maia-dao-ecosystem",
+  "manta-pacific",
+  "mantle-bridge",
+  "mantra-dao",
+  "maple-finance",
+  "maverick-protocol",
+  "megaeth-bridge",
+  "melania-meme",
+  "memecoin",
+  "memecore",
+  "mercury",
+  "meridian",
+  "merit-circle",
+  "metars-go",
+  "meteora",
+  "metis",
+  "mineloot",
+  "moca-network",
+  "mode-bridge",
+  "monad",
+  "moonbeam",
+  "moonwell",
+  "morpheusai",
+  "morpho",
+  "murasaki",
+  "myria",
+  "myshell",
+  "navi-protocol",
+  "near-protocol",
+  "nest",
+  "neverland",
+  "numbers-protocol",
+  "oasys",
+  "official-trump",
+  "omni-network",
+  "onchain-trade",
+  "ondo-finance",
+  "ooia",
+  "opinion",
+  "optimism-foundation",
+  "orca",
+  "orderly",
+  "ore-protocol",
+  "osmosis-dex",
+  "pancakeswap",
+  "pareto",
+  "pea",
+  "peaq",
+  "pendle",
+  "perpetual-protocol",
+  "pharaoh-exchange",
+  "pike",
+  "pinksale",
+  "plasma",
+  "plexus",
+  "plume-mainnet",
+  "polkadot-treasury",
+  "polygon-bridge",
+  "polyhedra-network",
+  "portal",
+  "prisma-finance",
+  "pudgy-penguins",
+  "pump",
+  "pyth",
+  "qidao",
+  "quai-network",
+  "quantixai",
+  "quickswap",
+  "radiant",
+  "rain",
+  "rainbow",
+  "ramsesx",
+  "rarible",
+  "raydium",
+  "re",
+  "redbelly-network",
+  "redstone-finance",
+  "renzo",
+  "resolv",
+  "resupply",
+  "rhea-finance",
+  "ribbon-finance",
+  "river",
+  "rocket-pool",
+  "ronin-bridge",
+  "safe",
+  "saga",
+  "salty.io",
+  "sanctum",
+  "saucerswap",
+  "scallop",
+  "sei",
+  "shadow-exchange",
+  "sign",
+  "silo-finance",
+  "sky",
+  "slvr",
+  "smardex-ecosystem",
+  "solana",
+  "solayer",
+  "solstice",
+  "solv-protocol",
+  "sonic",
+  "sophon-bridge",
+  "sosovalue",
+  "spacefi",
+  "spark",
+  "spectra",
+  "stable",
+  "stader",
+  "stakestone",
+  "stakewise",
+  "stargate-finance",
+  "starknet-bridge",
+  "stella",
+  "stepn",
+  "streamflow",
+  "stryke",
+  "sui-foundation",
+  "suilend-protocol",
+  "sun",
+  "superfarm",
+  "superrare",
+  "sushi",
+  "swell",
+  "synfutures",
+  "synthetix",
+  "synthswap",
+  "tangible",
+  "tectonic",
+  "tensor",
+  "tezos",
+  "thala",
+  "the-graph",
+  "thena",
+  "thorchain-dex",
+  "thorswap",
+  "tokenlon",
+  "ton",
+  "topaz",
+  "tornado-cash",
+  "tranchess",
+  "tron",
+  "truefi",
+  "turtle-club",
+  "uniswap",
+  "up",
+  "usd-ai",
+  "usual",
+  "uwu-lend",
+  "uxd",
+  "uxlink",
+  "valas-finance",
+  "vana",
+  "vector-finance",
+  "vela-exchange",
+  "velo-finance",
+  "velora",
+  "venice",
+  "venus",
+  "virtuals-protocol",
+  "vvs-finance",
+  "walrus-protocol",
+  "whitebit",
+  "wombex-finance",
+  "woofi",
+  "world-of-dypians",
+  "worldcoin",
+  "x2y2",
+  "xai-bridge",
+  "xdc-network",
+  "y2k-finance",
+  "yearn",
+  "yield-basis",
+  "zealousswap",
+  "zest",
+  "zetachain",
+  "zinc",
+  "zkswap-finance",
+  "zksync-era",
+  "zora-protocol",
+  "zyberswap"
+ ],
+ "sample": [
+  {
+   "token": "ethereum:0x0110B0c3391584Ba24Dbf8017Bf462e9f78A6d9F",
+   "sources": [],
+   "protocolId": "4533",
+   "protocolSlug": "salty.io",
+   "name": "Salty.IO",
+   "circSupply": 49516855.12083946,
+   "circSupply30d": 48611176.561108306,
+   "supplyGeneratedAtSec": 1793603049,
+   "totalLocked": 50479101.07590887,
+   "maxSupply": 99995956.19674833,
+   "gecko_id": null,
+   "unlockEvents": null,
+   "nextEvent": {
+    "date": 1793620739,
+    "toUnlock": 248.2
+   },
+   "nextEventV2": {
+    "date": 1793620739,
+    "unlockType": "linear",
+    "previousRatePerWeek": 250.1,
+    "newRatePerWeek": 248.2
+   },
+   "unlocksPerDay": 29925.390672949736,
+   "next24h": {
+    "cliff": 0,
+    "linear": 29925.390672949736,
+    "total": 29925.390672949736,
+    "unknownEventCount": 0
+   },
+   "tokenPrice": [
+    {
+     "decimals": 18,
+     "price": 0.00010162260267641,
+     "symbol": "SALT",
+     "timestamp": 1793603054
+    }
+   ],
+   "upcomingEvent": [
+    {
+     "description": "Linear unlock will decrease from {tokens[0]} to {tokens[1]} tokens per week from Liquidity Bootstrapping on {timestamp}",
+     "category": "liquidity",
+     "timestamp": 1793620739,
+     "unlockType": "linear",
+     "noOfTokens": [
+      250.1,
+      248.2
+     ],
+     "rateDurationDays": 1
+    },
+    {
+     "description": "Linear unlock will decrease from {tokens[0]} to {tokens[1]} tokens per week from Staking Bootstrapping on {timestamp}",
+     "category": "liquidity",
+     "timestamp": 1793620739,
+     "unlockType": "linear",
+     "noOfTokens": [
+      150.1,
+      148.9
+     ],
+     "rateDurationDays": 1
+    }
+   ],
+   "tPrice": 0.00010162260267641,
+   "historicalPrice": [],
+   "lastEvent": [],
+   "tSymbol": "SALT"
+  },
+  {
+   "token": "coingecko:celestia",
+   "sources": [],
+   "protocolId": "3562",
+   "protocolSlug": "celestia",
+   "name": "Celestia",
+   "circSupply": 1114975380.128971,
+   "circSupply30d": 1102823394.2155871,
+   "supplyGeneratedAtSec": 1793603049,
+   "totalLocked": 221120530.48974323,
+   "maxSupply": 1336095910.6187143,
+   "gecko_id": "celestia",
+   "unlockEvents": null,
+   "nextEvent": {
+    "date": 1793648926,
+    "toUnlock": 183561.64383561644,
+    "proportion": 0.00018573027797593846
+   },
+   "nextEventV2": {
+    "date": 1793648926,
+    "unlockType": "cliff",
+    "amount": 183561.64383561644
+   },
+   "unlocksPerDay": 259447.35812133073,
+   "next24h": {
+    "cliff": 183561.64383561644,
+    "linear": 75885.71428571429,
+    "total": 259447.35812133073,
+    "unknownEventCount": 0
+   },
+   "tokenPrice": [
+    {
+     "price": 0.4632766568381546,
+     "symbol": "TIA",
+     "timestamp": 1793602615
+    }
+   ],
+   "mcap": 457867320.32403153,
+   "mcapUpdatedAtSec": 1793602615,
+   "upcomingEvent": [
+    {
+     "description": "On {timestamp} {tokens[0]} of R&D & Ecosystem tokens will be unlocked",
+     "category": "ecosystem",
+     "timestamp": 1793648926,
+     "unlockType": "cliff",
+     "noOfTokens": [
+      183561.64383561644
+     ]
+    }
+   ],
+   "tPrice": 0.4632766568381546,
+   "historicalPrice": [
+    [
+     1792281600000,
+     0.6457259170016076
+    ],
+    [
+     1792368000000,
+     0.6357917012987473
+    ],
+    [
+     1792454400000,
+     0.615176348382343
+    ],
+    [
+     1792540800000,
+     0.6239231162255435
+    ],
+    [
+     1792627015000,
+     0.5972325626980391
+    ],
+    [
+     1792713414000,
+     0.5582933607511696
+    ],
+    [
+     1792799820000,
+     0.5357345278932665
+    ],
+    [
+     1792886220000,
+     0.5339931850576917
+    ],
+    [
+     1792972622000,
+     0.5322088438106791
+    ],
+    [
+     1793059005000,
+     0.5448954551741743
+    ],
+    [
+     1793145425000,
+     0.5362460520581473
+    ],
+    [
+     1793231814000,
+     0.5518109854985124
+    ],
+    [
+     1793318214000,
+     0.4889521294030268
+    ],
+    [
+     1793404625000,
+     0.47572324205808364
+    ],
+    [
+     1793491018000,
+     0.473456815654407
+    ]
+   ],
+   "lastEvent": [
+    {
+     "description": "On {timestamp} {tokens[0]} of R&D & Ecosystem tokens were unlocked",
+     "category": "ecosystem",
+     "timestamp": 1792957726,
+     "unlockType": "cliff",
+     "noOfTokens": [
+      183561.64383561644
+     ]
+    }
+   ],
+   "tSymbol": "TIA"
+  },
+  {
+   "token": "coingecko:opinion",
+   "sources": [],
+   "protocolId": "6926",
+   "protocolSlug": "opinion",
+   "name": "OPINION",
+   "circSupply": 421398083.6566667,
+   "circSupply30d": 391039999.99,
+   "supplyGeneratedAtSec": 1793603049,
+   "totalLocked": 578601916.3433332,
+   "maxSupply": 1000000000,
+   "gecko_id": "opinion",
+   "unlockEvents": null,
+   "nextEvent": {
+    "date": 1793653086,
+    "toUnlock": 1191417,
+    "proportion": 0.006520282546862024
+   },
+   "nextEventV2": {
+    "date": 1793653086,
+    "unlockType": "cliff",
+    "amount": 1191417
+   },
+   "unlocksPerDay": 10358083.666666666,
+   "next24h": {
+    "cliff": 10358083.666666666,
+    "linear": 0,
+    "total": 10358083.666666666,
+    "unknownEventCount": 0
+   },
+   "tokenPrice": [
+    {
+     "price": 0.04333997486413883,
+     "symbol": "OPN",
+     "timestamp": 1793602374
+    }
+   ],
+   "mcap": 7919286.083324445,
+   "mcapUpdatedAtSec": 1793602374,
+   "upcomingEvent": [
+    {
+     "description": "On {timestamp} {tokens[0]} of Ecosystem & Incentives tokens will be unlocked",
+     "category": "ecosystem",
+     "timestamp": 1793653086,
+     "unlockType": "cliff",
+     "noOfTokens": [
+      1191417
+     ]
+    },
+    {
+     "description": "On {timestamp} {tokens[0]} of Foundation tokens will be unlocked",
+     "category": "noncirculating",
+     "timestamp": 1793653086,
+     "unlockType": "cliff",
+     "noOfTokens": [
+      9166666.666666666
+     ]
+    }
+   ],
+   "tPrice": 0.04333997486413883,
+   "historicalPrice": [
+    [
+     1790380310000,
+     0.05185542142547311
+    ],
+    [
+     1790466700000,
+     0.0523267336381504
+    ],
+    [
+     1790553110000,
+     0.05618748870940865
+    ],
+    [
+     1790639490000,
+     0.05267138131133814
+    ],
+    [
+     1790725900000,
+     0.053993296792646445
+    ],
+    [
+     1790812300000,
+     0.05391224957232928
+    ],
+    [
+     1790899300000,
+     0.06223272160030674
+    ],
+    [
+     1790985110000,
+     0.05864676704700902
+    ],
+    [
+     1791071510000,
+     0.05502100118499665
+    ],
+    [
+     1791157910000,
+     0.05634010031878033
+    ],
+    [
+     1791244310000,
+     0.0579987745568317
+    ],
+    [
+     1791330710000,
+     0.05840962563706724
+    ],
+    [
+     1791417100000,
+     0.05836198980344959
+    ],
+    [
+     1791503573000,
+     0.06060619785190109
+    ],
+    [
+     1791589981000,
+     0.061793195039126995
+    ]
+   ],
+   "lastEvent": [
+    {
+     "description": "On {timestamp} {tokens[0]} of Ecosystem & Incentives tokens were unlocked",
+     "category": "ecosystem",
+     "timestamp": 1791023343,
+     "unlockType": "cliff",
+     "noOfTokens": [
+      1191417
+     ]
+    }
+   ],
+   "tSymbol": "OPN"
+  }
+ ]
+}

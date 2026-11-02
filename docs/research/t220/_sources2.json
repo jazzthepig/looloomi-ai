@@ -1,0 +1,74 @@
+{
+ "nansen_holders": {
+  "status": 404,
+  "head": "{   \"message\":\"no Route matched with those values\",   \"request_id\":\"933cbd6622486610440b93229069917d\" }"
+ },
+ "nansen_pro": {
+  "status": -1,
+  "head": "URLError(gaierror(8, 'nodename nor servname provided, or not known'))"
+ },
+ "arkham_addr": {
+  "status": 400,
+  "head": "{\"message\":\"invalid timestamp format, please sign up for an api key :)\"} "
+ },
+ "arkham_entity": {
+  "status": 400,
+  "head": "{\"message\":\"invalid timestamp format, please sign up for an api key :)\"} "
+ },
+ "ethplorer_freekey": {
+  "status": 404,
+  "head": "{\"error\":{\"code\":17,\"message\":\"Invalid request, check API manual there: https://github.com/EverexIO/Ethplorer/wiki/Ethplorer-API\"}}"
+ },
+ "ethplorer_address": {
+  "status": 404,
+  "head": "{\"error\":{\"code\":17,\"message\":\"Invalid request, check API manual there: https://github.com/EverexIO/Ethplorer/wiki/Ethplorer-API\"}}"
+ },
+ "openchain_address": {
+  "status": 404,
+  "head": "<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"utf-8\"> <title>Error</title> </head> <body> <pre>Cannot GET /v1/address/0x28C6c06298d514Db089934071355E5743bf21d60</pre> </body> </html> "
+ },
+ "openchain_label": {
+  "status": -1,
+  "head": "URLError(gaierror(8, 'nodename nor servname provided, or not known'))"
+ },
+ "blockchair_addr": {
+  "status": 430,
+  "head": "{\"data\":null,\"context\":{\"code\":430,\"error\":\"Your IP address is temporary blacklisted due to exceeding usage of API resources. Please apply for an API key by contacting us at info@blockchair.com\",\"mark"
+ },
+ "bitquery_free": {
+  "status": 401,
+  "head": "Unauthorized. Provide Authorization as documented at https://docs.bitquery.io/docs/category/authorization"
+ },
+ "covalent_addr": {
+  "status": 401,
+  "head": "<html>\r <head><title>401 Authorization Required</title></head>\r <body>\r <center><h1>401 Authorization Required</h1></center>\r <hr><center>nginx/1.19.10</center>\r </body>\r </html>\r "
+ },
+ "tokenunlocks_xyz": {
+  "status": -1,
+  "head": "URLError(gaierror(8, 'nodename nor servname provided, or not known'))"
+ },
+ "cryptorank_v2": {
+  "status": 401,
+  "head": "<html>\r <head><title>401 Authorization Required</title></head>\r <body>\r <center><h1>401 Authorization Required</h1></center>\r <hr><center>nginx</center>\r <script type=\"module\" src=\"https://static.clou"
+ },
+ "coingecko_pro_trial": {
+  "status": 401,
+  "head": "{\"status\":{\"error_code\":10002,\"error_message\":\"API Key Missing\"}}"
+ },
+ "santiment_graph": {
+  "status": 400,
+  "head": "{\"errors\":[{\"message\":\"No query document supplied\"}]}"
+ },
+ "llama_emissions_free_sub": {
+  "status": 402,
+  "head": "Upgrade to the paid API plan at https://defillama.com/subscription"
+ },
+ "defillama_pro_page": {
+  "status": 200,
+  "head": "<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+ },
+ "defillama_emissions_page": {
+  "status": 404,
+  "head": "<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+ }
+}

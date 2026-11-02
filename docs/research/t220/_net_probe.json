@@ -1,0 +1,29 @@
+{
+ "llama_emissions": {
+  "status": 402,
+  "head": "Upgrade to the paid API plan at https://defillama.com/subscription"
+ },
+ "llama_emission_aave": {
+  "status": 402,
+  "head": "Upgrade to the paid API plan at https://defillama.com/subscription"
+ },
+ "llama_protocol_aave": {
+  "status": 200,
+  "len": 10909468,
+  "head": "{\"id\":\"parent#aave\",\"name\":\"Aave\",\"url\":\"https://aave.com\",\"description\":\"Aave is an Open Source and Non-Custodial protocol to earn interest on deposits and borrow assets\",\"logo\":\"https://icons.llamao.fi/icons/protocols/aave\",\"chains\":[],\"gecko_id\":\"aave\",\"cmcId\":\"7278\",\"treasury\":\"aave.js\",\"twitter"
+ },
+ "llama_raises": {
+  "status": 402,
+  "head": "Upgrade to the paid API plan at https://defillama.com/subscription"
+ },
+ "etherscan_api": {
+  "status": 200,
+  "len": 155,
+  "head": "{\"status\":\"0\",\"message\":\"NOTOK\",\"result\":\"You are using a deprecated V1 endpoint, switch to Etherscan API V2 using https://docs.etherscan.io/v2-migration\"}"
+ },
+ "example": {
+  "status": 200,
+  "len": 577,
+  "head": "<!doctype html><html lang=en><head><meta charset=utf-8><link rel=icon href=data:,><meta name=viewport content=\"width=device-width,initial-scale=1\"><title>Example Domain</title><style>html{color-scheme:light dark;background:light-dark(#eee,#222)}body{font:16px/1.6 system-ui,sans-serif;max-width:26em;"
+ }
+}
