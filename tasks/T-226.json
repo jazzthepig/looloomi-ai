@@ -1,7 +1,7 @@
 {
   "id": "T-226",
   "owner": "lane-c",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-11-02",
   "title": "自建团队 / 基金会 / 投资方钱包集合(DeFiLlama API 不买,Jazz 11-02):从归属合约与基金会多签反推地址,公共 RPC 拉日频余额与流出事件 —— 先做 T-220 找到有解锁日程的 10 个名字",
   "source": "T-220(lane-c):免费源没有解锁历史、钱包标签全部要 key;DeFiLlama API $3,000/年 Jazz 裁定不买 ⇒ 我们自己成为数据源。docs/UPGRADE_PATHS.md A2。",
@@ -23,6 +23,6 @@
     "expect": "报告 docs/research/T-226_wallet_sets.md(开头覆盖率表)+ docs/research/t226_wallets/*.csv + 地址来源表(每条带 URL);卡 notes 写 10 个名字各自的地址数 / 数据起点 / 事件数;in_review,推 lane-c/T-226。"
   },
   "prior_value": "T-220:没有任何团队 / 基金会地址集合;解锁前行为信号无法量。",
-  "notes": "",
+  "notes": "10 个名字的「地址数 / 有出处地址数 / 数据起点 / 事件数」:ARB 4/4, 2024-01-01, 7 事件(2024-02-21、06-10、10-20、2025-02-17、06-23、08-10、2026-06-28);OP 5/5, 2024-01-01, 7 事件(2024-01-31、03-07、2025-12-04、12-18、2026-01-26、03-07、08-07);ONDO 1/1, 2024-01-18, 18 事件;STRK 1/1, 2024-02-20, 0 事件(该地址窗口内对规范 STRK 无转账,余额恒定 206,705,075);AVAX 0/0, 读不到;C-chain RPC api.avax.network/ext/bc/C/rpc 通(block 99,270,179)、Snowtrace api.snowtrace.io 免 key 可用但无标签,缺带出处的归属地址;SOL 0/0 读不到(api.mainnet-beta.solana.com getSlot 464,509,521);APT 0/0 读不到(fullnode REST 通,事件需 GraphQL indexer);SUI 0/0 读不到(官方 JSON-RPC 已废弃 -32000);TIA 0/0 读不到(ICF 帖只有 4 个 cosmos1、0 个 celestia1);DOT 0/0 读不到(rpc.polkadot.io HTTP POST 403,只给 WebSocket)。产出:docs/research/T-226_wallet_sets.md(覆盖率表+地址来源表每条带 URL)+ docs/research/t226_wallets/{ARB,OP,ONDO,STRK}.csv(列 address,d,balance,out_usd,in_usd;行数 4144/5180/1019/986,区间 2024-01-01/2024-02-20 → 2026-11-01,价源 ohlcv_daily binance_hist,ONDO 用 coingecko_pro_ohlc)。事件定义:集合单日净流出(流出USD-流入USD)≥ 当日集合余额 1%;分母换前一日余额后 ARB/OP 事件数不变(7/7)。余额锚点用两个独立公共 RPC eth_call 一致才认(ARB arbitrum.drpc.org+tenderly;OP optimism-rpc.publicnode.com;ETH publicnode+mevblocker)——实测 blockscout 的 token-balances 对 OP Foundation Safe 给 460,475,104.58 OP 而两个 RPC 都给 318,475,104.58(差 142,000,000,blockscout 偏旧),故不用它做锚点。取数主路径 blockscout v2 地址转账端点 + 服务端 token= 过滤(不加会混币、OP 跑 30 分钟不出结果)+ 同源 Origin/Referer(否则 arbitrum 403);公开 RPC 的 eth_getLogs 实测不可用(publicnode 403 / drpc 400 / llamarpc 525 / mevblocker 503),故事件走 blockscout 索引。限速:请求间隔 0.25s、每页 50 条、403 退避 3/6/9/12/15/18s 重试 6 次;翻页页序最新→最旧,翻到整页早于 2024-01-01 即停。未算收益、未判方向(卡上明写)。事件数过小(7/7/18/0)只能当管道冒烟。遗留:AVAX 只差一个有出处的归属地址;STRK 归属锁仓是每地址一个 LockedTokenGrant 合约(holders API 前 30 页扫到 ≥1500 个),下一轮规则应写「holders API name=LockedTokenGrant 且余额前 N」。复跑脚本在 /Volumes/CometCloudAI/cometcloud-local/research/t226/(fetch_t226.py / prices_t226.py / build_t226.py / crosscheck_t226.py)。",
   "verified": null
 }

@@ -18,6 +18,12 @@
      "variable": "manual", "op": "gt", "lo": 0, "prob": 0.6, "horizon_d": "2026-12-15"},
     {"id": "T-226-6", "scenario": "T-226 团队/基金会钱包集合",
      "statement": "AVAX 与 SOL/APT/SUI/TIA/DOT 的归属/基金会地址集合在 2026-12-31 前仍找不到带官方出处的地址(即集合维持为空)",
-     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.45, "horizon_d": "2026-12-31"}
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.45, "horizon_d": "2026-12-31"},
+    {"id": "T-226-7", "scenario": "T-226 团队/基金会钱包集合",
+     "statement": "ONDO 在 2026-12-15 的 ohlcv_daily 收盘价高于 2026-11-01 的 0.40448",
+     "variable": "close:ONDO", "op": "gt", "lo": 0.40448, "prob": 0.45, "horizon_d": "2026-12-15"},
+    {"id": "T-226-8", "scenario": "T-226 团队/基金会钱包集合",
+     "statement": "STRK 在 2026-12-15 的 ohlcv_daily 收盘价高于 2026-11-01 的 0.0427538",
+     "variable": "close:STRK", "op": "gt", "lo": 0.0427538, "prob": 0.45, "horizon_d": "2026-12-15"}
   ]
 }
