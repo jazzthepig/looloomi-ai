@@ -36,6 +36,7 @@
     "deriv_metrics_daily",
     "dingge_paper_nav",
     "equity_fundamentals_q",
+    "events",
     "execution_intents",
     "execution_outcomes",
     "execution_quality_daily",
@@ -189,6 +190,16 @@
       "opened_today",
       "realized_pnl",
       "unrealized_pnl"
+    ],
+    "events": [
+      "id",
+      "kind",
+      "payload",
+      "source",
+      "symbols",
+      "title",
+      "ts",
+      "url"
     ],
     "feed_items": [
       "dup_of",

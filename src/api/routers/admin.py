@@ -309,3 +309,19 @@ async def news_feed_status(x_internal_token: str = Header(None)):
     require_internal_token(x_internal_token)
     from src.data.ops.news_feed import LAST
     return {"ok": True, **LAST}
+
+
+@router.get("/internal/events")
+async def events_read(x_internal_token: str = Header(None), symbol: str = "", kind: str = "", days: int = 30, limit: int = 200):
+    """11-02:事件库读口 —— 按符号 / 类型 / 天数;最新在前。lane 直接读表,这个口给人和 Railway 侧的情景分析用。"""
+    require_internal_token(x_internal_token)
+    from src.data.style.header import _read_all
+    since = (datetime.now(timezone.utc) - timedelta(days=max(1, min(int(days), 365)))).isoformat()
+    params = {"select": "id,ts,kind,source,symbols,title,url,payload", "ts": f"gte.{since}", "order": "ts.desc",
+              "limit": str(max(1, min(int(limit), 1000)))}
+    if kind:
+        params["kind"] = f"eq.{kind}"
+    if symbol:
+        params["symbols"] = f"cs.{json.dumps([symbol.upper()])}"
+    rows = await _read_all("events", params)
+    return {"ok": True, "n": len(rows), "since": since, "events": rows}
