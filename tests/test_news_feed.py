@@ -128,3 +128,13 @@ def test_loop_is_registered_and_table_is_in_the_migration():
     mig = (ROOT / "migrations/2026-11-02_feed_items.sql").read_text(encoding="utf-8")
     for col in nf.WRITES_COLUMNS[nf.TABLE]:
         assert col in mig, col
+
+
+def test_third_party_price_targets_are_not_reposted_and_boilerplate_is_stripped():
+    """11-02 第一批真帖:Coinbase「price target slashed 53%」、Bitwise「fair value $197,000」—— 别人的目标价转一下也是我们在说。"""
+    assert nf.unpostable("Coinbase downgraded; price target slashed 53%", "") == "含「price target」"
+    assert nf.unpostable("Bitcoin's \"Fair Value\" of $197,000", "") == "含「fair value」"
+    assert nf.unpostable("Strategy resumes Bitcoin purchases with $66M", "") is None, "purchase 是新闻事实,不是建议"
+    assert nf.clean_summary("Andre details BTC as a liquidity canary. This post Bitwise: X first appeared on Bitcoin Magazine.") \
+        == "Andre details BTC as a liquidity canary."
+    assert nf.clean_summary("Plain body.") == "Plain body."

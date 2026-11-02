@@ -2400,8 +2400,8 @@ async def _news_feed_loop():
             r = await _nf_run()
             await _iteration_result("_news_feed_loop", r)
             await _beat("_news_feed_loop", ok=bool(r.get("ok")), error=None if r.get("ok") else str(r.get("why"))[:200],
-                        detail={"new": r.get("new"), "posted": r.get("posted"), "dry": r.get("dry"),
-                                "failed_sources": r.get("failed_sources")})
+                        detail={"new": r.get("new"), "posted": r.get("posted"), "dry": r.get("dry"), "llm": r.get("llm"),
+                                "unpostable": r.get("unpostable"), "chat": r.get("chat"), "failed_sources": r.get("failed_sources")})
         except Exception as _e:
             print(f"[NEWSFEED] ⚠️  pass FAILED: {_e}")
             await _beat("_news_feed_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")

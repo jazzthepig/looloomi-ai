@@ -94,6 +94,24 @@ def relevance(title: str, summary: str) -> tuple[list[str], list[str]]:
     return hits, macro
 
 
+#: 标题 / 摘要里带这些的不发(我们的频道没有投顾牌照:别人的目标价、买卖建议转一下也是我们在说)。入表照入,score 记 0、hits 照记。
+_UNPOSTABLE = re.compile(r"\b(price target|price prediction|fair value|buy|sell|strong buy|strong sell|accumulate|"
+                         r"take profit|stop loss|guaranteed|100x|moon)\b", re.IGNORECASE)
+_BOILERPLATE = re.compile(r"\s*(?:This post .*? first appeared on.*|The post .*? appeared first on.*|Read more.*|Continue reading.*)$",
+                          re.IGNORECASE | re.DOTALL)
+
+
+def unpostable(title: str, summary: str) -> Optional[str]:
+    """纯函数。→ 不发的原因;None = 可以发。"""
+    m = _UNPOSTABLE.search(title + " " + summary)
+    return f"含「{m.group(1).lower()}」" if m else None
+
+
+def clean_summary(text: str) -> str:
+    """去掉 RSS 摘要尾部的「This post … first appeared on …」那类模板句。"""
+    return _BOILERPLATE.sub("", (text or "").strip()).strip()
+
+
 def score(hits: list[str], macro: list[str], source: str) -> int:
     return len(hits) * 2 + min(len(macro), 3) + SOURCE_WEIGHT.get(source, 0)
 
@@ -179,7 +197,8 @@ async def fetch_items(now: dt.datetime) -> tuple[list[dict], list[str]]:
                     continue
                 items.append({"id": item_id(link), "source": feed["source"], "title": title[:300], "link": link[:500],
                               "published_at": e.get("published_at") or None,
-                              "fetched_at": now.isoformat(), "summary_raw": str(e.get("summary") or e.get("description") or "")[:600]})
+                              "fetched_at": now.isoformat(),
+                              "summary_raw": clean_summary(str(e.get("summary") or e.get("description") or ""))[:600]})
     return items, failed
 
 
@@ -221,10 +240,13 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     if not new:
         return {"ok": True, "status": "skipped", "new": 0, "failed_sources": failed, "why": "没有新条目"}
     new = dedupe(new, recent)
+    skipped = 0
     for it in new:
         hits, macro = relevance(it["title"], it["summary_raw"])
         it["hits"] = hits
         it["score"] = score(hits, macro, it["source"]) if it["dup_of"] is None else 0
+        if it["score"] >= MIN_SCORE and unpostable(it["title"], it["summary_raw"]):
+            it["score"], skipped = 0, skipped + 1
     cand = sorted([it for it in new if it["score"] >= MIN_SCORE], key=lambda x: -x["score"])[:MAX_POSTS_PER_RUN]
     chat, chat_why = await resolve_feed_chat()
     syms = sorted({s for it in cand for s in it["hits"]})
@@ -246,6 +268,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     w = await supabase_upsert_table(TABLE, rows, on_conflict="id")
     if not w:
         return {"ok": False, "why": f"写 {TABLE} 失败:{(getattr(w, 'why', '') or '')[:200]}"}
+    from src.data.narrative.llm_narrator import configured as _llm_on
     return {"ok": True, "new": len(new), "candidates": len(cand), "posted": posted, "dry": not chat, "chat": chat_why,
-            "failed_sources": failed,
+            "unpostable": skipped, "llm": _llm_on(), "failed_sources": failed,
             "why": f"新 {len(new)} 条,候选 {len(cand)},发 {posted}" + (f"(干跑:{chat_why})" if not chat else f"(→ {chat_why})")}
