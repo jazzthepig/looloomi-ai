@@ -32,6 +32,7 @@ MiniMax 中转不回 usage,只能数字符):40 轮实测,成功收尾的轮次�
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 
@@ -99,19 +100,39 @@ def secrets_verdict(tool: str, inp: dict) -> str | None:
     return None
 
 
-#: 降落守卫(S-705)。阈值单位 = 转录里 message.content 的 JSON 字符数(见文件头的实测)。
-SOFT_CHARS = 360_000
-HARD_CHARS = 440_000
+#: 降落守卫(S-705)。11-02 第一版按字符数:lane-c 到 49 万字符还能收尾,lane-b 35 万就溢出 —— 上限是 token,不是字符
+#: (中文 / 数字 / JSON 每字符的 token 密度高得多),而且 lane-a / b 的固定开销比 lane-c 多约 4 万 token(cwd 里的 CLAUDE.md、记忆文件)。
+#: 改成估 token:CJK 1.1 / 英文词 1.3 / 数字标点 0.55 / 空白 0.2;85 轮回看:lane-a / b 溢出在估值 115k–143k,lane-c 在 151k–183k。
+#: 阈值按 lane 从环境变量来(lane_bot 按 lanes.json 的 ctx_tokens 给:软 = 0.80×、硬 = 0.95×),没有就用 a / b 的保守默认。
+#: 11-02 09:45Z lane-c 第一轮实测:被拦后它自己的长篇回复 + 被拦的 Write 正文照样进转录,11 次调用涨了 12 万字符;
+#: 「硬」阈值把 git add / push 和改卡也拦了,结果产物在 worktree 里没推出去。⇒ 硬阈值只拦探索,降落永远放行。
+SOFT_CHARS = int(os.environ.get("LANE_CTX_SOFT") or 92_000)        # 名字留着(测试与 lane_bot 引用),单位已是估算 token
+HARD_CHARS = int(os.environ.get("LANE_CTX_HARD") or 109_000)
+_CJK = re.compile(r"[\u3000-\u9fff\uff00-\uffef]")
+_WORD = re.compile(r"[A-Za-z_]{2,}")
+_OTHER = re.compile(r"[^A-Za-z_\s]")
+_WS = re.compile(r"\s")
+
+
+def est_tokens(text: str) -> int:
+    """纯函数。粗估 token 数(见上面的系数;对 85 轮转录的分界比字符数清楚)。"""
+    cjk = len(_CJK.findall(text))
+    rest = _CJK.sub("", text)
+    return int(cjk * 1.1 + len(_WORD.findall(rest)) * 1.3 + len(_OTHER.findall(rest)) * 0.55 + len(_WS.findall(rest)) * 0.2)
 READ_MAX_LINES = 400
+SMALL_WRITE = 8_000
+_GIT = r"git\s+(?:-C\s+\S+\s+)?"
 _LANDING_BASH = re.compile(
-    r"^\s*(?:cd\s+\S+\s*&&\s*)?(?:git\s+(?:add|commit|push|status|diff|log|fetch|switch|rebase)\b|"
-    r"python3\s+scripts/task_board\.py|bash\s+scripts/preflight\.sh|mv\s|ls\s|wc\s)")
+    r"^\s*(?:cd\s+\S+\s*&&\s*)?(?:" + _GIT + r"(?:add|commit|push|status|diff\s+--stat|log|fetch|switch|rebase)\b|"
+    r"python3\s+scripts/task_board\.py|bash\s+scripts/preflight\.sh|mv\s|ls\s|wc\s|pwd\b|"
+    r"(?:tail|head)\s+-n?\s*\d{1,2}\s)")
+_LANDING_FILE = re.compile(r"/(?:tasks/T-\d+[\w-]*\.json|docs/research/scenarios/[\w-]+\.json)$")
 _PY_RUN = re.compile(r"\b(?:python3?|pytest)\b")
 _TRUNCATED = re.compile(r"\|\s*(?:tail|head|wc|grep)\b|>\s*\S|<<")
 
 
 def transcript_chars(path: str) -> int:
-    """转录(jsonl)里所有 message.content 的字符数 —— 上下文大小的代理。读不到 ⇒ 0(不拦)。"""
+    """转录(jsonl)里所有 message.content 的估算 token 数 —— 上下文大小的代理。读不到 ⇒ 0(不拦)。"""
     n = 0
     try:
         with open(path, encoding="utf-8", errors="ignore") as f:
@@ -125,28 +146,35 @@ def transcript_chars(path: str) -> int:
                     continue
                 c = msg.get("content")
                 if c:
-                    n += len(c) if isinstance(c, str) else len(json.dumps(c, ensure_ascii=False))
+                    n += est_tokens(c if isinstance(c, str) else json.dumps(c, ensure_ascii=False))
     except OSError:
         return 0
     return n
 
 
+def _write_size(inp: dict) -> int:
+    return len(str(inp.get("content") or inp.get("new_string") or ""))
+
+
 def landing_verdict(tool: str, inp: dict, used: int, soft: int = SOFT_CHARS, hard: int = HARD_CHARS) -> str | None:
-    """纯函数。上下文用量 used ≥ hard ⇒ 全拦;≥ soft ⇒ 只放行降落工具;否则 None。"""
-    if used >= hard:
-        return (f"拦下:上下文已用 {used // 1000}k 字符(上限附近)。**不要再调用任何工具** —— 现在就写最终回复:做了什么、"
-                "交付在哪(已推的分支 / 已落的路径)、测得的原始数字、还差什么。没交付的部分如实写「未完成」,下一轮接着做。")
-    if used >= soft:
-        ok = False
-        if tool == "Bash":
-            ok = bool(_LANDING_BASH.match(str(inp.get("command") or "")))
-        elif tool in ("Write", "Edit", "MultiEdit"):
-            ok = "/tasks/T-" in str(inp.get("file_path") or "") or "/_reports/" in str(inp.get("file_path") or "")
-        if not ok:
-            return (f"拦下:上下文已用 {used // 1000}k 字符,再读 / 再探就会以「Prompt is too long」中断、什么都交不出(11-02 三个 lane 同时发生)。"
-                    "**现在降落**:① 卡 status / notes 写已测得的值 ② python3 scripts/task_board.py ③ bash scripts/preflight.sh | tail -20 "
-                    "④ git add <允许的路径> → commit → push -u origin <lane>/T-NNN ⑤ 最终回复写清还差什么。只放行这些。")
-    return None
+    """纯函数。used ≥ soft:只放行降落 —— 降落 Bash、改卡 / 情景文件、往 docs/research / 数据根写 ≤ 8k 的报告;
+    used ≥ hard:只剩降落 Bash 与改卡 / 情景文件(小文件)。**降落永远不拦**,拦的是继续探索。"""
+    if used < soft:
+        return None
+    path = str(inp.get("file_path") or "")
+    if tool == "Bash" and _LANDING_BASH.match(str(inp.get("command") or "")):
+        return None
+    if tool in ("Write", "Edit", "MultiEdit") and _LANDING_FILE.search(path) and _write_size(inp) <= SMALL_WRITE:
+        return None
+    if used < hard and tool in ("Write", "Edit", "MultiEdit") and _write_size(inp) <= SMALL_WRITE \
+            and ("/docs/research/" in path or "/_reports/" in path or "/research/" in path):
+        return None
+    stage = "上限附近" if used >= hard else "再读 / 再探就会以「Prompt is too long」中断、什么都交不出"
+    return (f"拦下:上下文已用约 {used // 1000}k token({stage})。**现在降落,只放行这些:** ① Edit 卡 tasks/T-NNN.json(status / notes 写已测得的值)"
+            " ② Write docs/research/scenarios/<lane>-T-NNN.json ③ python3 scripts/task_board.py ④ git add <允许的路径> → git commit → "
+            "git push -u origin <lane>/T-NNN ⑤ 最终回复写清交付在哪、还差什么。"
+            + ("" if used >= hard else " 报告正文 ≤ 8k 字符还可以写。")
+            + " 不要再读文件、不要再跑脚本、不要改写法重试 —— 每次被拦的调用本身也占上下文。")
 
 
 def read_too_long(inp: dict, max_lines: int = READ_MAX_LINES) -> str | None:

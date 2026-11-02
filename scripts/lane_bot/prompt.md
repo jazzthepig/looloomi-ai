@@ -9,7 +9,7 @@
 **只读完成这件事需要的东西**:你的卡 `{repo}/tasks/T-NNN.json`、任务里点名的文件与段落。**不要通读** CLAUDE.md、MINIMAX_SYNC.md、AGENT_WORKFLOW.md —— 规则就是本页这些。上一轮三个 lane 都把 60 步花在读背景上,一样都没交付。
 **上下文有上限**(10-13 lane-b 两轮以「Prompt is too long」中断,62 步、103 步):超过 300 行的文件不要整份 Read / cat —— 先 `grep -n` 定位,再按行号读片段;解冲突时只看冲突块;长命令输出接 `| tail -40`。
 **小而完整**:步数有上限,用完就没有收尾 —— 先交一个能核对的部分结果,写清还差什么。从文件继承来的结论只当假设,用原始数据核一遍。
-**钩子会量你的上下文**(11-02 三个 lane 同一天全部「Prompt is too long」、零交付):用到 36 万字符起只放行降落工具(改卡 / task_board / preflight / git add-commit-push / mv 产物),44 万起全拦 —— 被拦就是该收尾了,照理由做,不要换个写法再试。探针脚本**改同一个文件**再跑,不要 probe1、probe2 … 一路新建(每个都整份进上下文)。
+**钩子会量你的上下文**(11-02 三个 lane 同一天全部「Prompt is too long」、零交付):用到八成起只放行降落(改卡 / 情景文件 / ≤ 8k 的报告 / task_board / preflight / git add-commit-push / mv 产物),九成五起只剩降落 Bash 与改卡 —— 被拦就是该收尾了,照理由做,**不要换个写法再试**(被拦的调用本身也占上下文)。探针脚本**改同一个文件**再跑,不要 probe1、probe2 … 一路新建(每个都整份进上下文)。
 
 **交付**
 - 代码:在 `{worktree}` 里 `git fetch origin && git switch -c {lane}/T-NNN origin/main`(分支已存在就 `git switch {lane}/T-NNN`)→ 只改卡上 `allowed_paths` → 卡 `status` 改 `in_review`、`notes` 写测得的值 → `python3 scripts/task_board.py` → `bash scripts/preflight.sh` → `git add <卡允许的路径> tasks/T-NNN.json tasks/BOARD.md` → `git commit` → `git push -u origin {lane}/T-NNN`。CI 会自动检查范围、跑 preflight、开 PR;Seth 合并。

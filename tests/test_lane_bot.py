@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import ast
 import datetime as dt
+import json
 import sys
 from pathlib import Path
 
@@ -158,7 +159,7 @@ def test_every_launch_installs_the_guard() -> None:
         "10-08:装了 --settings 之后 lane-c 只剩 cwd 可读,连自己的 worktree 都打不开"
     assert '--add-dir "$LANE_DATA"' in _LAUNCH, "10-15:lane-b 写不进 Mac 数据根,T-101 的交付只好留在 worktree 里"
     src = (ROOT / "scripts/lane_bot/lane_bot.py").read_text(encoding="utf-8")
-    assert "LANE_DATA=data_root(wt)" in src and "data_root(wt))))" in src
+    assert "LANE_DATA=data_root(wt)" in src and "data_root(wt)), fb_settings)" in src
     cfg = _json.loads(guard_settings("lane-x", ("/tmp/wt", "/tmp/main")).read_text(encoding="utf-8"))
     assert cfg["permissions"]["additionalDirectories"] == ["/tmp/wt", "/tmp/main"]
     hook = cfg["hooks"]["PreToolUse"][0]
@@ -241,6 +242,8 @@ def test_quota_exhaustion_pauses_every_lane() -> None:
     assert lb.quota_hit(msg) and not lb.quota_hit("到 160 步上限,没有收尾")
     with tempfile.TemporaryDirectory() as td, mock.patch.object(lb, "QUOTA", Path(td) / "quota_until"), \
             mock.patch.object(lb, "BOT", Path(td)), mock.patch.object(lb, "log", lambda *_: None), \
+            mock.patch.object(lb, "USAGE", Path(td) / "usage.jsonl"), mock.patch.object(lb, "OBSERVED_CAP", Path(td) / "obs"), \
+            mock.patch.object(lb, "FALLBACK_ENV_FILE", Path(td) / "none.env"), \
             mock.patch.object(lb, "run_lane", lambda *a, **k: {"exit": 0, "timed_out": False, "seconds": 1, "text": msg}):
         assert not lb.quota_paused(lb.now().timestamp())
         with mock.patch.object(lb, "WAKE", Path(td) / "wake"):
@@ -248,7 +251,17 @@ def test_quota_exhaustion_pauses_every_lane() -> None:
             lb.run_one({}, "lane-b", "Seth 唤醒", "T-105 接着做")
             assert (Path(td) / "wake" / "lane-b").read_text(encoding="utf-8") == "T-105 接着做", "没做成的派活要放回去"
         assert lb.quota_paused(lb.now().timestamp())
-        assert not lb.quota_paused(lb.now().timestamp() + lb.QUOTA_BACKOFF_MIN * 60 + 1)
+        assert not lb.quota_paused(lb.now().timestamp() + lb.QUOTA_BACKOFF_MIN * 60 + 1), "本账里没有调用 ⇒ 固定退避"
+        assert not (Path(td) / "obs").exists(), "窗口内不到 100 次就撞 ⇒ 不当成上限观测"
+        # S-706:本账里有调用 ⇒ 停到最早一次调用滚出窗口;窗口内已用次数记成观测上限
+        at = lb.now()
+        (Path(td) / "usage.jsonl").write_text("".join(json.dumps({"lane": "lane-a", "start": (at - dt.timedelta(hours=h)).isoformat(),
+                                                                   "end": (at - dt.timedelta(hours=h) + dt.timedelta(minutes=20)).isoformat(),
+                                                                   "calls": 400, "backend": "primary"}) + "\n" for h in (4, 3, 2)), encoding="utf-8")
+        lb.run_one({}, "lane-b", "定时", "")
+        until = float((Path(td) / "quota_until").read_text())
+        assert abs(until - (at - dt.timedelta(hours=4) + dt.timedelta(hours=5, minutes=5)).timestamp()) < 120
+        assert (Path(td) / "obs").read_text() == "1200"
     src = (ROOT / "scripts/lane_bot/lane_bot.py").read_text(encoding="utf-8")
     assert "if quota_hit(text) or context_overflow(text):" in src, "额度报错 / 上下文溢出不进 SYNC"
 
@@ -331,25 +344,38 @@ def test_landing_guard_forces_a_landing_before_context_overflow(tmp_path):
     import json
     from scripts.lane_bot.guard_main_dir import (HARD_CHARS, SOFT_CHARS, landing_verdict, read_too_long,
                                                  transcript_chars, truncated_command)
-    assert SOFT_CHARS < HARD_CHARS <= 460_000          # 40 轮实测:成功收尾 ≤ 46 万字符
+    assert SOFT_CHARS < HARD_CHARS <= 115_000          # 85 轮实测(估算 token):lane-a / b 最早在 115k 溢出
     assert landing_verdict("Read", {"file_path": "x"}, SOFT_CHARS - 1) is None
     soft = SOFT_CHARS
     assert "降落" in landing_verdict("Read", {"file_path": "x"}, soft)
     assert "降落" in landing_verdict("Bash", {"command": "python3 docs/research/probe9.py"}, soft)
-    assert "降落" in landing_verdict("Write", {"file_path": "/Users/sbb/Projects/looloomi-ai-lane-a/docs/research/probe9.py"}, soft)
+    wt = "/Users/sbb/Projects/looloomi-ai-lane-a"
+    assert "降落" in landing_verdict("Write", {"file_path": f"{wt}/docs/research/probe9.py", "content": "x" * 9000}, soft), "大文件不写"
+    assert landing_verdict("Write", {"file_path": f"{wt}/docs/research/T-218_report.md", "content": "x" * 5000}, soft) is None, "软阈值还能写短报告"
     for cmd in ("git add tasks/T-218.json docs/research/x.md", "cd /Users/sbb/Projects/looloomi-ai-lane-a && git commit -m x",
                 "git push -u origin lane-a/T-218", "python3 scripts/task_board.py", "bash scripts/preflight.sh | tail -20",
-                "mv /tmp/x.md /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/x.md"):
+                "mv /tmp/x.md /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/x.md",
+                f"git -C {wt} add docs/research ; git -C {wt} commit -m x", f"git -C {wt} status --short", "tail -n 20 /Volumes/x/run.log"):
         assert landing_verdict("Bash", {"command": cmd}, soft) is None, cmd
-    assert landing_verdict("Edit", {"file_path": "/Users/sbb/Projects/looloomi-ai-lane-a/tasks/T-218.json"}, soft) is None
-    assert "不要再调用任何工具" in landing_verdict("Bash", {"command": "git push -u origin lane-a/T-218"}, HARD_CHARS)
+        assert landing_verdict("Bash", {"command": cmd}, HARD_CHARS + 50_000) is None, "降落永远放行(11-02 lane-c 第一轮被硬阈值拦住没推出去)"
+    assert landing_verdict("Edit", {"file_path": f"{wt}/tasks/T-218.json", "new_string": "x"}, HARD_CHARS) is None
+    assert landing_verdict("Write", {"file_path": f"{wt}/docs/research/scenarios/lane-a-T-218.json", "content": "{}"}, HARD_CHARS) is None
+    assert "上限附近" in landing_verdict("Write", {"file_path": f"{wt}/docs/research/T-218_report.md", "content": "x" * 5000}, HARD_CHARS)
+    assert "上限附近" in landing_verdict("Bash", {"command": "python3 docs/research/probe9.py"}, HARD_CHARS)
     # 转录量法:只数 message.content
     t = tmp_path / "t.jsonl"
     t.write_text(json.dumps({"type": "user", "message": {"content": "x" * 1000}}) + "\n"
                  + json.dumps({"type": "progress", "data": "z" * 5000}) + "\n"
                  + json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": "y" * 500}]}}) + "\n",
                  encoding="utf-8")
-    assert 1500 <= transcript_chars(str(t)) < 1600 and transcript_chars(str(tmp_path / "nope")) == 0
+    from scripts.lane_bot.guard_main_dir import est_tokens
+    assert est_tokens("x" * 1000) < 100 and 1000 <= est_tokens("中" * 1000) <= 1200, "中文按字算,英文按词算"
+    assert est_tokens(json.dumps({"close": 81234.5, "d": "2026-11-02"})) > 15, "数字与 JSON 标点按半个 token"
+    assert 0 < transcript_chars(str(t)) <= 1200 and transcript_chars(str(tmp_path / "nope")) == 0
+    # 每个 lane 的阈值由 lane_bot 按 lanes.json 的 ctx_tokens 给钩子(a / b 115k,c 150k)
+    cfg_ = load_config()
+    assert cfg_["lanes"]["lane-c"]["ctx_tokens"] > cfg_["lanes"]["lane-a"]["ctx_tokens"] == 115_000
+    assert "LANE_CTX_SOFT=str(int(ctx * 0.80))" in (ROOT / "scripts/lane_bot/lane_bot.py").read_text(encoding="utf-8")
     # 长文件整读拦;带 limit 放
     big = tmp_path / "big.py"
     big.write_text("x\n" * 500, encoding="utf-8")
@@ -361,3 +387,34 @@ def test_landing_guard_forces_a_landing_before_context_overflow(tmp_path):
     assert truncated_command("python3 -m pytest tests/test_x.py -q") .endswith("| tail -n 80")
     for cmd in ("python3 x.py | tail -5", "python3 x.py > out.txt", "python3 - <<'EOF'\nprint(1)\nEOF", "ls docs", "git status"):
         assert truncated_command(cmd) is None, cmd
+
+
+def test_budget_spreads_the_5h_window_and_keeps_a_reserve_for_seth(tmp_path):
+    """S-706:按滚动窗口记调用;剩得少就缩步数;储备只给 Seth 的唤醒;一小时内不超均速 × burst;
+    429 之后按本账算最早一次调用滚出窗口的时刻再起;备用后端不按主后端的额度限。"""
+    from scripts.lane_bot.lane_bot import budget_turns, calls_since, fallback_env, quota_resume_at
+    cfg = {"max_turns": 120, "budget": {"window_h": 5, "calls_per_window": 1000, "reserve_frac": 0.2, "burst": 1.5, "min_turns": 30}}
+    at = dt.datetime(2026, 11, 2, 12, 0, tzinfo=dt.timezone.utc)
+    mk = lambda h_ago, calls, backend="primary": {"lane": "lane-a", "start": (at - dt.timedelta(hours=h_ago, minutes=20)).isoformat(),  # noqa: E731
+                                                 "end": (at - dt.timedelta(hours=h_ago)).isoformat(), "calls": calls, "backend": backend}
+    assert budget_turns(cfg, [], at, woken=False) == (120, "窗口已用 0/1000,本轮上限 120 步")
+    usage = [mk(4, 300), mk(3, 300), mk(2, 150)]                         # 750 用了,储备 200 ⇒ 剩 50
+    assert budget_turns(cfg, usage, at, woken=False)[0] == 50
+    assert budget_turns(cfg, usage + [mk(1.5, 40)], at, woken=False)[0] == 0, "不够 min_turns 就不醒"
+    assert budget_turns(cfg, usage + [mk(1.5, 40)], at, woken=True)[0] == 120, "Seth 的唤醒可以动储备"
+    assert budget_turns(cfg, [mk(0.5, 310)], at, woken=False)[0] == 0, "一小时 310 ≥ 均速 200 × 1.5 ⇒ 摊开"
+    assert budget_turns(cfg, [mk(0.5, 310)], at, woken=True)[0] == 120
+    assert budget_turns(cfg, [mk(6, 999)], at, woken=False)[0] == 120, "6 小时前的不算"
+    assert budget_turns(cfg, [mk(1, 999, "fallback")], at, woken=False, backend="fallback")[0] == 120
+    assert calls_since([mk(1, 10), mk(1, 5, "fallback")], at, 5) == 10
+    assert quota_resume_at([mk(4, 300), mk(1, 300)], at, 5, 60) == at - dt.timedelta(hours=4, minutes=20) + dt.timedelta(hours=5, minutes=5)
+    assert quota_resume_at([], at, 5, 60) == at + dt.timedelta(minutes=60)
+    f = tmp_path / "fb.env"
+    assert fallback_env(f) == {}
+    f.write_text("ANTHROPIC_BASE_URL=https://x\nANTHROPIC_AUTH_TOKEN=t\nANTHROPIC_MODEL=m\n", encoding="utf-8")
+    assert fallback_env(f) == {"LANE_FB_URL": "https://x", "LANE_FB_TOKEN": "t", "LANE_FB_MODEL": "m"}
+    from scripts.lane_bot.lane_bot import effective_cap
+    assert effective_cap(4500, 0) == 4500 and effective_cap(4500, 1310) == 1179 and effective_cap(1000, 5000) == 1000
+    assert budget_turns({**cfg, "budget": {**cfg["budget"], "observed": 500}}, [mk(1, 400)], at, woken=False)[0] == 0, "观测到的上限压过配置"
+    cfg2 = load_config()
+    assert cfg2["budget"]["calls_per_window"] > 0 and cfg2["budget"]["reserve_frac"] >= 0.1

@@ -54,7 +54,12 @@ _SCRUB = ("unset INTERNAL_TOKEN EXECUTOR_TOKEN SUPABASE_SERVICE_KEY SUPABASE_SER
           "SUPABASE_KEY SUPABASE_URL HL_API_WALLET_PRIVATE_KEY; "
           '[ -n "$LANE_SUPABASE_KEY" ] && export SUPABASE_URL="$LANE_SUPABASE_URL" SUPABASE_KEY="$LANE_SUPABASE_KEY"; '
           "unset LANE_SUPABASE_KEY LANE_SUPABASE_URL; ")
-_LAUNCH = (_SCRUB + 'cd "$LANE_CWD" && exec "$LANE_CMD" -p "$LANE_PROMPT" --output-format stream-json --verbose '
+#: 11-02(S-706)备用后端:主后端(MiniMax M Plan)5 小时 / 每周窗口用完时,用 Jazz 放在 lane_fallback.env 里的
+#: 另一个 Anthropic 兼容端点(第二个订阅、别家 coding plan、或本机 Ollama / LM Studio)。值只从那个文件来,不进日志。
+_FALLBACK = ('[ -n "$LANE_FB_URL" ] && export ANTHROPIC_BASE_URL="$LANE_FB_URL" ANTHROPIC_AUTH_TOKEN="$LANE_FB_TOKEN" '
+             'ANTHROPIC_MODEL="$LANE_FB_MODEL" ANTHROPIC_SMALL_FAST_MODEL="$LANE_FB_MODEL" && unset ANTHROPIC_API_KEY; '
+             'unset LANE_FB_URL LANE_FB_TOKEN LANE_FB_MODEL; ')
+_LAUNCH = (_SCRUB + _FALLBACK + 'cd "$LANE_CWD" && exec "$LANE_CMD" -p "$LANE_PROMPT" --output-format stream-json --verbose '
            '--max-turns "$LANE_TURNS" --permission-mode acceptEdits --settings "$LANE_SETTINGS" '
            '--add-dir "$LANE_WORKTREE" --add-dir "$LANE_MAIN" --add-dir "$LANE_DATA" '
            '--allowedTools "${(@s:,:)LANE_TOOLS}"')
@@ -173,7 +178,7 @@ def build_prompt(lane: str, lc: dict, reason: str, task: str = "") -> str:
                       worktree=os.path.expanduser(lc["worktree"]), task=task)
 
 
-def guard_settings(lane: str = "", dirs: tuple[str, ...] = ()) -> Path:
+def guard_settings(lane: str = "", dirs: tuple[str, ...] = (), env: dict[str, str] | None = None) -> Path:
     """每一轮都装上的 PreToolUse 钩子:lane 不在主目录做 git 写操作、不往主目录写文件(10-08 事故)。
 
     白名单拦不住 —— --allowedTools 是追加在用户自己的权限之上的,而 terminal 里的 claude 早已放行 git。
@@ -185,9 +190,13 @@ def guard_settings(lane: str = "", dirs: tuple[str, ...] = ()) -> Path:
     BOT.mkdir(parents=True, exist_ok=True)
     f = BOT / (f"guard_settings-{lane}.json" if lane else "guard_settings.json")
     guard = ROOT / "scripts" / "lane_bot" / "guard_main_dir.py"
-    f.write_text(json.dumps({"permissions": {"additionalDirectories": list(dirs)}, "hooks": {"PreToolUse": [{
+    doc: dict = {"permissions": {"additionalDirectories": list(dirs)}, "hooks": {"PreToolUse": [{
         "matcher": "Bash|Write|Edit|MultiEdit|NotebookEdit|Read|Grep|Glob",
-        "hooks": [{"type": "command", "command": f'python3 "{guard}"'}]}]}}, ensure_ascii=False), encoding="utf-8")
+        "hooks": [{"type": "command", "command": f'python3 "{guard}"'}]}]}}
+    if env:                      # 备用后端:--settings 的 env 优先级高于用户 settings 里的 MiniMax 配置
+        doc["env"] = dict(env)
+    f.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+    os.chmod(f, 0o600)
     return f
 
 
@@ -230,6 +239,115 @@ def lane_db_env(path: Path = LANE_ENV_FILE) -> dict[str, str]:
 #: 只给 publishable key(SUPABASE_URL / SUPABASE_KEY 两个名字,脚本照 T-142 的写法读),环境里其余一律不带:
 #: lane_bot 自己的进程可能带着别的 key,脚本是 lane 写、Seth 合并的代码,不该看到它们。
 WEEKLY_TIMEOUT_S = 1800
+
+
+FALLBACK_ENV_FILE = Path(os.environ.get("LANE_FALLBACK_ENV_FILE", "~/.cometcloud/lane_fallback.env")).expanduser()
+
+
+def fallback_env(path: Path = FALLBACK_ENV_FILE) -> dict[str, str]:
+    """→ {LANE_FB_URL, LANE_FB_TOKEN, LANE_FB_MODEL};文件不在 / 不全 ⇒ {}(没有备用后端)。
+    文件归 Jazz(chmod 600):ANTHROPIC_BASE_URL=… ANTHROPIC_AUTH_TOKEN=… ANTHROPIC_MODEL=…。值不进日志。"""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return {}
+    kv: dict[str, str] = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.removeprefix("export ").split("=", 1)
+            kv[k.strip()] = v.strip().strip("'\"")
+    url, tok, model = kv.get("ANTHROPIC_BASE_URL", ""), kv.get("ANTHROPIC_AUTH_TOKEN", ""), kv.get("ANTHROPIC_MODEL", "")
+    if not (url.startswith("http") and tok and model):
+        return {}
+    return {"LANE_FB_URL": url, "LANE_FB_TOKEN": tok, "LANE_FB_MODEL": model}
+
+
+# ── 额度预算(S-706,11-02 Jazz「abc 受制于 5 小时 usage limit,不能让整个 harness 停摆」)──
+# MiniMax M Plan:5 小时窗口 + 每周窗口各自独立计,按调用次数;用完就 429。10-27 一天撞了 12 次,每次全停 60 分钟。
+# 这里把每一轮的调用次数记进 usage.jsonl,醒之前按滚动窗口算还剩多少:① 永远留 reserve_frac 给 Seth 的唤醒
+# ② 一小时内不超过窗口均速的 burst 倍(把额度摊开到 5 小时,而不是前两小时烧光、后三小时全停)
+# ③ 剩得少就缩单轮步数(min_turns 以下不醒)④ 真撞 429 时按本账算最早一次调用什么时候滚出窗口,到点再起,不是固定 60 分钟
+# ⑤ 主后端停着而备用后端在 ⇒ 用备用后端跑(各自记账)。calls_per_window 要按 Jazz 的档位填(lanes.json)。
+USAGE = BOT / "usage.jsonl"
+OBSERVED_CAP = BOT / "quota_observed_calls"        # 撞 429 时窗口内的调用数 —— 真实上限的观测值,自动压低配置值
+DEFAULT_BUDGET = {"window_h": 5, "calls_per_window": 4500, "weekly_calls": 0, "reserve_frac": 0.2, "burst": 1.5,
+                  "min_turns": 30}
+
+
+def observed_cap() -> int:
+    try:
+        return int(float(OBSERVED_CAP.read_text().strip()))
+    except (OSError, ValueError):
+        return 0
+
+
+def effective_cap(cfg_cap: int, observed: int) -> int:
+    """纯函数。配置的上限与观测值(撞 429 时窗口内已用次数 × 0.9)取小:档位填高了也不会一直撞。"""
+    return min(cfg_cap, int(observed * 0.9)) if observed > 0 else cfg_cap
+
+
+def record_usage(lane: str, started: dt.datetime, ended: dt.datetime, calls: int, backend: str) -> None:
+    BOT.mkdir(exist_ok=True)
+    with USAGE.open("a", encoding="utf-8") as f:
+        f.write(json.dumps({"lane": lane, "start": started.isoformat(), "end": ended.isoformat(), "calls": int(calls),
+                            "backend": backend}) + "\n")
+
+
+def load_usage(days: float = 8.0, at: dt.datetime | None = None) -> list[dict]:
+    at = at or now()
+    out = []
+    try:
+        for line in USAGE.read_text(encoding="utf-8").splitlines():
+            try:
+                r = json.loads(line)
+                if (at - dt.datetime.fromisoformat(r["end"])).total_seconds() <= days * 86400:
+                    out.append(r)
+            except (ValueError, KeyError):
+                continue
+    except OSError:
+        pass
+    return out
+
+
+def calls_since(usage: list[dict], at: dt.datetime, hours: float, backend: str = "primary") -> int:
+    """纯函数。最近 hours 小时内(按结束时间)该后端的调用次数。"""
+    lo = at - dt.timedelta(hours=hours)
+    return sum(int(r.get("calls") or 0) for r in usage
+               if r.get("backend", "primary") == backend and dt.datetime.fromisoformat(r["end"]) >= lo)
+
+
+def budget_turns(cfg: dict, usage: list[dict], at: dt.datetime, *, woken: bool, backend: str = "primary") -> tuple[int, str]:
+    """纯函数。这一轮最多给几步、为什么(0 = 不醒)。备用后端不限(它的额度我们不知道,撞了再停)。"""
+    b = {**DEFAULT_BUDGET, **(cfg.get("budget") or {})}
+    cap, hours = effective_cap(int(b["calls_per_window"]), int(b.get("observed") or 0)), float(b["window_h"])
+    if backend != "primary" or cap <= 0:
+        return int(cfg["max_turns"]), "不按额度限"
+    used = calls_since(usage, at, hours, backend)
+    reserve = cap * float(b["reserve_frac"]) * (0.25 if woken else 1.0)     # Seth 的唤醒可以动到储备的 3/4
+    left = cap - used - reserve
+    hourly = calls_since(usage, at, 1.0, backend)
+    burst_cap = cap / hours * float(b["burst"])
+    if hourly >= burst_cap and not woken:
+        return 0, f"这一小时已用 {hourly} 次 ≥ 均速 × burst {burst_cap:.0f},摊开到整个窗口"
+    weekly = int(b.get("weekly_calls") or 0)
+    if weekly:
+        wk_left = weekly - calls_since(usage, at, 24 * 7, backend) - weekly * float(b["reserve_frac"]) * (0.25 if woken else 1.0)
+        left = min(left, wk_left)
+    turns = int(min(cfg["max_turns"], left))
+    if turns < int(b["min_turns"]):
+        return 0, f"5 小时窗口已用 {used}/{cap}(含储备 {reserve:.0f}),剩 {max(0, int(left))} 步不够一轮(min_turns {b['min_turns']})"
+    return turns, f"窗口已用 {used}/{cap},本轮上限 {turns} 步"
+
+
+def quota_resume_at(usage: list[dict], at: dt.datetime, hours: float, fallback_min: int) -> dt.datetime:
+    """纯函数。撞 429 之后什么时候再试:窗口内最早一次调用滚出窗口的时刻 + 5 分钟;本账里没有调用 ⇒ 固定 fallback_min。"""
+    lo = at - dt.timedelta(hours=hours)
+    starts = sorted(dt.datetime.fromisoformat(r["start"]) for r in usage
+                    if r.get("backend", "primary") == "primary" and dt.datetime.fromisoformat(r["end"]) >= lo)
+    if not starts:
+        return at + dt.timedelta(minutes=fallback_min)
+    return max(starts[0] + dt.timedelta(hours=hours, minutes=5), at + dt.timedelta(minutes=10))
 
 
 def weekly_due(job: dict, at: dt.datetime, last: str | None) -> bool:
@@ -322,17 +440,26 @@ def parse_stream(out: str, max_turns: int) -> tuple[dict, str]:
     return final, text
 
 
-def run_lane(lane: str, cfg: dict, reason: str, dry: bool = False, task: str = "") -> dict:
+def run_lane(lane: str, cfg: dict, reason: str, dry: bool = False, task: str = "", turns: int | None = None,
+             backend: str = "primary") -> dict:
     lc = cfg["lanes"][lane]
     cwd = os.path.expanduser(lc["cwd"])
     wt = os.path.expanduser(lc.get("worktree") or lc["cwd"])
+    turns = int(turns or cfg["max_turns"])
+    fb = fallback_env() if backend == "fallback" else {}
+    fb_settings = {"ANTHROPIC_BASE_URL": fb["LANE_FB_URL"], "ANTHROPIC_AUTH_TOKEN": fb["LANE_FB_TOKEN"],
+                   "ANTHROPIC_MODEL": fb["LANE_FB_MODEL"], "ANTHROPIC_SMALL_FAST_MODEL": fb["LANE_FB_MODEL"]} if fb else None
+    ctx = int(lc.get("ctx_tokens") or 115_000)      # 该 lane 实测溢出的估算 token(S-705);软 0.80×、硬 0.95×
     env = dict(os.environ, LANE_CWD=cwd, LANE_CMD=cfg.get("command", "claude"),
-               LANE_PROMPT=build_prompt(lane, lc, reason, task), LANE_TURNS=str(cfg["max_turns"]),
+               LANE_CTX_SOFT=str(int(ctx * 0.80)), LANE_CTX_HARD=str(int(ctx * 0.95)),
+               LANE_PROMPT=build_prompt(lane, lc, reason, task), LANE_TURNS=str(turns),
                LANE_TOOLS=",".join(ALLOWED_TOOLS), LANE_WORKTREE=wt, LANE_MAIN=str(ROOT),
-               LANE_DATA=data_root(wt), LANE_SETTINGS=str(guard_settings(lane, (wt, str(ROOT), data_root(wt)))),
-               **lane_db_env())
+               LANE_DATA=data_root(wt),
+               LANE_SETTINGS=str(guard_settings(lane, (wt, str(ROOT), data_root(wt)), fb_settings)),
+               **lane_db_env(), **fb)
     if dry:
-        return {"lane": lane, "reason": reason, "cwd": cwd, "argv": launch_argv(cfg), "tools": ALLOWED_TOOLS}
+        return {"lane": lane, "reason": reason, "cwd": cwd, "argv": launch_argv(cfg), "tools": ALLOWED_TOOLS,
+                "turns": turns, "backend": backend}
     RUNS.mkdir(parents=True, exist_ok=True)
     started = now()
     p = subprocess.Popen(launch_argv(cfg), env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
@@ -346,8 +473,11 @@ def run_lane(lane: str, cfg: dict, reason: str, dry: bool = False, task: str = "
         timed_out = True
     res: dict = {"lane": lane, "reason": reason, "task": task[:500], "started": started.isoformat(), "exit": p.returncode,
                  "timed_out": timed_out, "seconds": round((now() - started).total_seconds())}
-    j, text = parse_stream(out, cfg["max_turns"])
+    j, text = parse_stream(out, turns)
     res.update({k: j.get(k) for k in ("subtype", "num_turns", "total_cost_usd", "session_id")})
+    res["backend"] = backend
+    res["calls"] = sum(1 for line in out.splitlines() if line.startswith('{"type":"assistant"'))
+    record_usage(lane, started, now(), res["calls"], backend)
     if timed_out:
         text = f"(超时 {cfg['timeout_min']} 分钟被终止)\n" + text
     if not out.strip():
@@ -426,6 +556,15 @@ def status(n: int = 3) -> None:
     cfg = load_config()
     busy = interactive_claude_cwds()
     print(f"此刻开着的 claude 会话目录(lane_bot 会让开这些目录):{sorted(busy) or '无'}")
+    b = {**DEFAULT_BUDGET, **(cfg.get("budget") or {})}
+    at = now()
+    usage = load_usage(at=at)
+    print(f"额度(S-706):5 小时窗口已用 {calls_since(usage, at, float(b['window_h']))}/{effective_cap(int(b['calls_per_window']), observed_cap())} 次调用"
+          f"{'(配置 ' + str(b['calls_per_window']) + ',观测 ' + str(observed_cap()) + ')' if observed_cap() else ''},"
+          f"这一小时 {calls_since(usage, at, 1.0)},7 天 {calls_since(usage, at, 168.0)}"
+          f"{'(周上限 ' + str(b['weekly_calls']) + ')' if b.get('weekly_calls') else ''};"
+          f"主后端{'⏸ 停到 ' + dt.datetime.fromtimestamp(float(QUOTA.read_text().strip()), dt.timezone.utc).strftime('%H:%MZ') if quota_paused(at.timestamp()) else '可用'};"
+          f"备用后端{'已配' if fallback_env() else '未配(~/.cometcloud/lane_fallback.env)'}")
     for lane, lc in cfg["lanes"].items():
         cwd = Path(os.path.expanduser(lc["cwd"])).resolve().as_posix()
         print(f"\n══ {lane}  目录 {cwd}  {'← 你正开着' if cwd in busy else ''}")
@@ -485,8 +624,13 @@ def main() -> int:
     if not a.once and not a.dry_run:
         run_weekly(cfg, st, at)                  # T-144:每周的研究脚本,与 lane 的模型额度无关
         STATE.write_text(json.dumps(st, ensure_ascii=False, indent=1), encoding="utf-8")
+    backend = "primary"
     if not a.once and not a.dry_run and quota_paused(at.timestamp()):
-        return 0
+        if not fallback_env() or quota_paused(at.timestamp(), FB_QUOTA):
+            return 0
+        backend = "fallback"                      # 主后端停着、备用在 ⇒ 这一轮全部走备用
+    usage = load_usage(at=at)
+    cfg["budget"] = {**(cfg.get("budget") or {}), "observed": observed_cap()}
     lanes = [a.once] if a.once else list(cfg["lanes"])
     stale = (cfg["timeout_min"] + 10) * 60
     todo: list[tuple[str, str, str]] = []
@@ -501,9 +645,17 @@ def main() -> int:
         else:
             go, why = decide(lane, cfg, st, woken=wake.exists(), cards=actionable_cards(lane), local_hour=local.hour,
                              today=today, at=at, busy=(cwd in busy or locked))
+        turns = int(cfg["max_turns"])
+        if go:
+            turns, bwhy = budget_turns(cfg, usage, at, woken=wake.exists(), backend=backend)
+            if turns <= 0:
+                go, why = False, f"额度:{bwhy}"
+            else:
+                why = f"{why};{bwhy}"
         if a.dry_run:
             print(json.dumps({"lane": lane, "wake": go, "why": why,
-                              **(run_lane(lane, cfg, why, dry=True) if go else {})}, ensure_ascii=False, indent=1))
+                              **(run_lane(lane, cfg, why, dry=True, turns=turns, backend=backend) if go else {})},
+                             ensure_ascii=False, indent=1))
         elif go:
             task = wake.read_text(encoding="utf-8") if wake.exists() else ""
             wake.unlink(missing_ok=True)
@@ -513,7 +665,7 @@ def main() -> int:
                 s.update(day=today, runs_today=0)
             s["runs_today"] = s.get("runs_today", 0) + 1
             s["last_run"] = at.isoformat()
-            todo.append((lane, why, task))
+            todo.append((lane, why, task, turns, backend))
     if todo:
         STATE.write_text(json.dumps(st, ensure_ascii=False, indent=1), encoding="utf-8")
 
@@ -527,6 +679,7 @@ def main() -> int:
 
 
 QUOTA = BOT / "quota_until"
+FB_QUOTA = BOT / "quota_until_fallback"
 QUOTA_BACKOFF_MIN = 60
 _QUOTA_MARKS = ("usage limit reached", "Request rejected (429)")
 
@@ -543,36 +696,52 @@ def context_overflow(text: str) -> bool:
     return t.startswith("Prompt is too long") and len(t) < 200
 
 
-def quota_paused(at_ts: float) -> bool:
+def quota_paused(at_ts: float, f: Path | None = None) -> bool:
     try:
-        return at_ts < float(QUOTA.read_text().strip())
+        return at_ts < float((f or QUOTA).read_text().strip())
     except (OSError, ValueError):
         return False
 
 
-def run_one(cfg: dict, lane: str, why: str, task: str) -> None:
+def run_one(cfg: dict, lane: str, why: str, task: str, turns: int | None = None, backend: str = "primary") -> None:
     try:
-        res = run_lane(lane, cfg, why, task=task)
+        res = run_lane(lane, cfg, why, task=task, turns=turns, backend=backend)
         if quota_hit(res.get("text", "")):
-            QUOTA.write_text(str(now().timestamp() + QUOTA_BACKOFF_MIN * 60))
+            at = now()
+            if backend == "primary":
+                b = {**DEFAULT_BUDGET, **(cfg.get("budget") or {})}
+                usage = load_usage(at=at)
+                until = quota_resume_at(usage, at, float(b["window_h"]), QUOTA_BACKOFF_MIN)
+                QUOTA.write_text(str(until.timestamp()))
+                used = calls_since(usage, at, float(b["window_h"]))
+                if used >= 100:                      # 记下观测到的上限(太小的值多半是别的工具在用同一订阅,不记)
+                    OBSERVED_CAP.write_text(str(used))
+                hint = (f";本账窗口内记了 {used} 次 < calls_per_window {b['calls_per_window']} —— 之后按 {int(used * 0.9)} 算"
+                        if used < int(b["calls_per_window"]) * 0.8 else "")
+                log(f"⏸ {lane} 主后端额度用完(429)—— 停到 {until:%H:%M}Z(最早一次调用滚出窗口){hint};"
+                    + ("备用后端接手" if fallback_env() else "没有备用后端(~/.cometcloud/lane_fallback.env),等窗口"))
+            else:
+                FB_QUOTA.write_text(str(at.timestamp() + QUOTA_BACKOFF_MIN * 60))
+                log(f"⏸ {lane} 备用后端也 429 —— 备用停 {QUOTA_BACKOFF_MIN} 分钟")
             w = WAKE / lane
             if task and not w.exists():          # 这一轮没做成:任务原文放回去,额度恢复后接着做(10-15 两次丢了 Seth 的派活)
                 w.write_text(task, encoding="utf-8")
-            log(f"⏸ {lane} 模型额度用完(429)—— 全部 lane 停 {QUOTA_BACKOFF_MIN} 分钟;wake 文件保留,到时再起")
         ok = res.get("exit") == 0 and not res["timed_out"]
-        log(f"{'✓' if ok else '✗'} {lane} {why} → exit={res.get('exit')} {res.get('num_turns') or '?'} 步 {res['seconds']}s")
+        log(f"{'✓' if ok else '✗'} {lane} {why} → exit={res.get('exit')} {res.get('num_turns') or '?'} 步 "
+            f"{res['seconds']}s · {res.get('calls', '?')} 次调用 · {backend}")
     except Exception as e:  # noqa: BLE001 — 一个 lane 崩了不能挡其他 lane,但必须留痕
         log(f"✗ {lane} {type(e).__name__}: {e}")
     finally:
         (BOT / f"{lane}.lock").unlink(missing_ok=True)
 
 
-def spawn(lane: str, why: str, task: str) -> int:
+def spawn(lane: str, why: str, task: str, turns: int | None = None, backend: str = "primary") -> int:
     """10-15:原来三个 lane 在本进程的线程里跑、最后 join —— launchd 的这次检查要等最慢的 lane 跑完(上限 60 分钟)
     才返回,而 launchd 不会在上一次没返回时再起一次:B 跑长任务时,写给 A / C 的 wake 文件干等了一个小时。
     现在每个 lane 是一个新会话里的独立进程(launchd 收尾时只清自己的进程组),本次检查立刻返回;
     lane 之间互不等待,同一 lane 不重入靠 lock(里面写子进程 pid,进程不在了锁就不算数)。任务原文经文件传,不进 argv。"""
     (BOT / f"task-{lane}.txt").write_text(task, encoding="utf-8")
+    (BOT / f"run-{lane}.json").write_text(json.dumps({"turns": turns, "backend": backend}), encoding="utf-8")
     with open(BOT / "child.log", "a", encoding="utf-8") as errf:
         p = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "--run", lane, "--why", why],
                              cwd=str(ROOT), stdin=subprocess.DEVNULL, stdout=errf, stderr=errf, start_new_session=True)
@@ -584,7 +753,13 @@ def child(lane: str, why: str) -> int:
     tf = BOT / f"task-{lane}.txt"
     task = tf.read_text(encoding="utf-8") if tf.exists() else ""
     tf.unlink(missing_ok=True)
-    run_one(load_config(), lane, why, task)
+    rf = BOT / f"run-{lane}.json"
+    try:
+        opts = json.loads(rf.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        opts = {}
+    rf.unlink(missing_ok=True)
+    run_one(load_config(), lane, why, task, turns=opts.get("turns"), backend=opts.get("backend") or "primary")
     return 0
 
 
