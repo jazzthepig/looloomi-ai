@@ -410,6 +410,24 @@ def append_to_sync(lane: str, lc: dict, text: str, meta: str) -> None:
         log(f"⚠ MINIMAX_SYNC {n} 字符 ≥ {SYNC_SOFT_CAP} —— Seth 的合并轮需要归档")
 
 
+def last_assistant_text(out: str) -> str:
+    """stream-json 里最后一段 assistant 文本(不是工具调用)。没有 ⇒ ""。"""
+    last = ""
+    for line in out.splitlines():
+        if not line.startswith("{") or '"assistant"' not in line[:40]:
+            continue
+        try:
+            e = json.loads(line)
+        except ValueError:
+            continue
+        if e.get("type") != "assistant":
+            continue
+        for c in (e.get("message") or {}).get("content") or []:
+            if c.get("type") == "text" and c.get("text", "").strip():
+                last = c["text"].strip()
+    return last
+
+
 def parse_stream(out: str, max_turns: int) -> tuple[dict, str]:
     """stream-json 的每一行是一个事件;最后的 type=result 是收尾。到步数上限时没有 result 文本 ——
     那时贴进 SYNC 的是一句人话 + 最后在做什么,不是一段原始 JSON(10-07 B 第一轮就是这样把 JSON 尾巴贴进了 SYNC)。"""
@@ -474,9 +492,12 @@ def run_lane(lane: str, cfg: dict, reason: str, dry: bool = False, task: str = "
     res: dict = {"lane": lane, "reason": reason, "task": task[:500], "started": started.isoformat(), "exit": p.returncode,
                  "timed_out": timed_out, "seconds": round((now() - started).total_seconds())}
     j, text = parse_stream(out, turns)
+    res["last_said"] = last_assistant_text(out)[-1500:]          # 溢出 / 超时时 lane 最后说的话也要落盘(§Seth-1102f)
+    res["ok"] = (p.returncode == 0 and not timed_out and not quota_hit(text) and not context_overflow(text)
+                 and j.get("subtype") == "success" and not j.get("is_error"))
     res.update({k: j.get(k) for k in ("subtype", "num_turns", "total_cost_usd", "session_id")})
     res["backend"] = backend
-    res["calls"] = sum(1 for line in out.splitlines() if line.startswith('{"type":"assistant"'))
+    res["calls"] = sum(1 for line in out.splitlines() if line.startswith("{") and '"assistant"' in line[:40])
     record_usage(lane, started, now(), res["calls"], backend)
     if timed_out:
         text = f"(超时 {cfg['timeout_min']} 分钟被终止)\n" + text
@@ -573,7 +594,8 @@ def status(n: int = 3) -> None:
             print("   还没有自动轮次")
         for r in runs:
             d = json.loads(r.read_text(encoding="utf-8"))
-            ok = d.get("exit") == 0 and not d.get("timed_out")
+            ok = d["ok"] if "ok" in d else (d.get("exit") == 0 and not d.get("timed_out")
+                                            and not str(d.get("result") or "").startswith("Prompt is too long"))
             print(f"   {'✓' if ok else '✗'} {d.get('started', '')[:16]}Z  {d.get('num_turns') or '?'} 步 {d.get('seconds')} 秒 —— {d.get('reason')}")
             if d.get("task"):
                 print(f"     任务:{d['task'][:110]}")
@@ -726,7 +748,7 @@ def run_one(cfg: dict, lane: str, why: str, task: str, turns: int | None = None,
             w = WAKE / lane
             if task and not w.exists():          # 这一轮没做成:任务原文放回去,额度恢复后接着做(10-15 两次丢了 Seth 的派活)
                 w.write_text(task, encoding="utf-8")
-        ok = res.get("exit") == 0 and not res["timed_out"]
+        ok = bool(res.get("ok"))
         log(f"{'✓' if ok else '✗'} {lane} {why} → exit={res.get('exit')} {res.get('num_turns') or '?'} 步 "
             f"{res['seconds']}s · {res.get('calls', '?')} 次调用 · {backend}")
     except Exception as e:  # noqa: BLE001 — 一个 lane 崩了不能挡其他 lane,但必须留痕

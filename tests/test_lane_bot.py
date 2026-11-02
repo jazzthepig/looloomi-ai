@@ -418,3 +418,20 @@ def test_budget_spreads_the_5h_window_and_keeps_a_reserve_for_seth(tmp_path):
     assert budget_turns({**cfg, "budget": {**cfg["budget"], "observed": 500}}, [mk(1, 400)], at, woken=False)[0] == 0, "观测到的上限压过配置"
     cfg2 = load_config()
     assert cfg2["budget"]["calls_per_window"] > 0 and cfg2["budget"]["reserve_frac"] >= 0.1
+
+
+def test_failed_rounds_are_not_success_and_the_last_words_are_kept():
+    """§Seth-1102f:exit=1「Prompt is too long」不得记成 success;lane 最后一段话要落盘;降落时可以 Read 自己的卡(Edit 要先 Read)。"""
+    import json
+    from scripts.lane_bot.guard_main_dir import HARD_CHARS, landing_verdict
+    from scripts.lane_bot.lane_bot import last_assistant_text
+    out = "\n".join([json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": "先看卡"}]}}),
+                     json.dumps({"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Read", "input": {}}]}}),
+                     json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": "结果在 t226/ 里,CSV 还没跑完"}]}}),
+                     json.dumps({"type": "result", "subtype": "success", "is_error": True, "result": "Prompt is too long"})])
+    assert last_assistant_text(out) == "结果在 t226/ 里,CSV 还没跑完"
+    src = (ROOT / "scripts/lane_bot/lane_bot.py").read_text(encoding="utf-8")
+    assert 'res["ok"] = (p.returncode == 0 and not timed_out and not quota_hit(text) and not context_overflow(text)' in src
+    wt = "/Users/sbb/Projects/looloomi-ai-lane-c"
+    assert landing_verdict("Read", {"file_path": f"{wt}/tasks/T-226.json"}, HARD_CHARS) is None
+    assert landing_verdict("Read", {"file_path": f"{wt}/docs/research/T-226_wallet_sets.md"}, HARD_CHARS) is not None

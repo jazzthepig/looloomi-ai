@@ -166,6 +166,8 @@ def landing_verdict(tool: str, inp: dict, used: int, soft: int = SOFT_CHARS, har
         return None
     if tool in ("Write", "Edit", "MultiEdit") and _LANDING_FILE.search(path) and _write_size(inp) <= SMALL_WRITE:
         return None
+    if tool == "Read" and _LANDING_FILE.search(path):      # Claude Code 的 Edit 要先 Read 同一个文件(11-02 lane-c T-226 因此改不了卡)
+        return None
     if used < hard and tool in ("Write", "Edit", "MultiEdit") and _write_size(inp) <= SMALL_WRITE \
             and ("/docs/research/" in path or "/_reports/" in path or "/research/" in path):
         return None
