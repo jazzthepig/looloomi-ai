@@ -20,6 +20,7 @@
 | open | T-217 | lane-a | 前向记录连续性账 + 近 7 天约 50 次超时类 error 的来源对时间点(只读) | 报告 docs/research/T-217_record_continuity.md,开头一张连续性总表;卡片 notes 写三个结论各一句。 | 只有 10-28 的口头判断:'记录没断、监视器沉默';没有逐条记录的连续性证明,也不知道超时是不是同一来源。 |  |
 | open | T-222 | lane-a | ④ 候选的量测:HL 现货多 + 永续空收资金费(cash-and-carry)在 ① 的 24 个名字上到底值多少 —— 正费率段 / 负费率段 / 费用之后;不判、不做策略,给 Jazz 一张能定的表 | 报告 docs/research/T-222_funding_carry.md(开头一张表:年化毛 / 净、负费率段、HL−Binance 差、容量);卡 notes 写等权年化毛 / 净与最长负段;scenarios/lane-a-T-222.json;in_review,推 lane-a/T-222。 | funding 只在截面上测过(S-691 F4 无信息、S-688 CIS 计分项);作为时间序列上的收取,从没有一张按月、分正负段、扣费后的表;10-21 的裁定针对 ③,④ 没有裁过。 |  |
 | open | T-223 | lane-b | S-696 前向判据的第一次月度核对(2026-10 信号月)+ 第二族因子普查:链上 / 发行方 6 个因子按 S-691 同一协议(发现段 → 封存留出段) | docs/research/s696_forward.md 追加 2026-10 一行;报告 docs/research/T-223_factor_family_2.md(预注册段在前,结果在后);卡 notes 写五因子前向符号与第二族短名单;scenarios/lane-b-T-223.json;in_review,推 lane-b/T-223。 | S-691 的五因子有留出段证据、还没有一个前向月份;发行方 / 链上这一族(收入、稀释、持币人分配)只在 S-661 / S-664 用「价值捕获比」单独测过,没按普查协议和衍生品族并排过。 |  |
+| open | T-227 | lane-b | 「开闸」回测:Binance 现货上币公告之后 30 / 90 天相对宇宙 —— 事件库 `events` 里 2017 起的全部上币公告(S-708 预注册,只算一次) | 报告 docs/research/T-227_listing_event.md(预注册段在前:判据、对照、试验计数);卡 notes 写事件数 / 有价格的符号数 / 主口径中位数与对照分位 / 三个时代;scenarios/lane-b-T-227.json;in_review,推 lane-b/T-227。 | 「开闸后跌」只有两个例子(UNI、PUMP);2,000+ 条上币公告从来没有按同一口径算过。 |  |
 | open | T-226 | lane-c | 自建团队 / 基金会 / 投资方钱包集合(DeFiLlama API 不买,Jazz 11-02):从归属合约与基金会多签反推地址,公共 RPC 拉日频余额与流出事件 —— 先做 T-220 找到有解锁日程的 10 个名字 | 报告 docs/research/T-226_wallet_sets.md(开头覆盖率表)+ docs/research/t226_wallets/*.csv + 地址来源表(每条带 URL);卡 notes 写 10 个名字各自的地址数 / 数据起点 / 事件数;in_review,推 lane-c/T-226。 | T-220:没有任何团队 / 基金会地址集合;解锁前行为信号无法量。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
@@ -228,4 +229,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 12 · claimed 7 · blocked 5 · in_review 8 · done 190 · dropped 3
+open 13 · claimed 7 · blocked 5 · in_review 8 · done 190 · dropped 3

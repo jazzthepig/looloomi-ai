@@ -1,0 +1,28 @@
+{
+  "id": "T-227",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-02",
+  "title": "「开闸」回测:Binance 现货上币公告之后 30 / 90 天相对宇宙 —— 事件库 `events` 里 2017 起的全部上币公告(S-708 预注册,只算一次)",
+  "source": "Jazz 11-02:密集营销时是高位;「开闸」后多跌(UNI −27%、PUMP −67%);docs/UPGRADE_PATHS.md A5 / B2;事件库 11-02 上线,Binance 公告约 11 小时回填完(看 `events` 里 source=binance 行数 ≥ 2,000 再开工)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-227.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "先核 `select count(*) from events where source='binance' and kind='listing'` ≥ 2,000,不够就只回一行等下一轮。① 事件:kind=listing、payload.scope='spot'(Alpha / Margin / Futures 分开报,不混),symbols 非空;每个 (symbol, ts) 一个事件;同一符号 90 天内重复公告只留第一条。② 价格:ohlcv_daily(symbol、source=binance_hist 优先,其次 coingecko_pro_ohlc;写清每个符号用了哪个源、没价格的符号个数),事件日 = 公告 UTC 日 d;信号日派生量**挪一天**再判一次(S-665)。③ 判据(S-708,写死,只算一次):主口径 = 上币后 d+1 → d+30 的收益减去同期等权宇宙(cis 加密宇宙 25 名)的收益;✅ 「开闸是高位」= 中位数 < 0、且在随机日期对照(同一符号、随机 d,1,000 次,种子 708)里 ≤ 5 分位;副口径 d+1 → d+90,以及按时代分段(2017–2020 / 2021–2022 / 2023–2026)各自报中位数与分位;再报 d−30 → d(公告前的涨幅)—— 若公告前已涨、公告后跌,那是「密集营销时是高位」的形状。④ 不做:不做交易规则、不扫参数、不判「可以做空」。纪律:只读(SELECT),不改代码、不做 DDL、不入库;零分布 / 对照只用 src/data/evaluation/apparatus.py;翻页带 order=;探针脚本改同一个文件再跑;步数过半先落文件;交付附 docs/research/scenarios/lane-b-T-227.json(≥ 3 条,格式见该目录 README)。",
+    "expect": "报告 docs/research/T-227_listing_event.md(预注册段在前:判据、对照、试验计数);卡 notes 写事件数 / 有价格的符号数 / 主口径中位数与对照分位 / 三个时代;scenarios/lane-b-T-227.json;in_review,推 lane-b/T-227。"
+  },
+  "prior_value": "「开闸后跌」只有两个例子(UNI、PUMP);2,000+ 条上币公告从来没有按同一口径算过。",
+  "notes": "",
+  "verified": null
+}
