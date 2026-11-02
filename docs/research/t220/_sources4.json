@@ -1,0 +1,453 @@
+{
+ "AAVE": {
+  "status": 200,
+  "name": "Aave",
+  "gecko_id": "aave",
+  "treasury": "aave.js",
+  "n_raises": 4,
+  "raise_keys": [
+   "amount",
+   "category",
+   "categoryGroup",
+   "chains",
+   "date",
+   "defillamaId",
+   "leadInvestors",
+   "name",
+   "otherInvestors",
+   "round",
+   "sector",
+   "source",
+   "valuation"
+  ],
+  "raise_rounds": [
+   {
+    "round": "Private token sale",
+    "date": 1594771200,
+    "amount": 3,
+    "category": "DeFi"
+   },
+   {
+    "round": "Strategic",
+    "date": 1602460800,
+    "amount": 25,
+    "category": "DeFi"
+   },
+   {
+    "round": "Private token sale",
+    "date": 1594166400,
+    "amount": 4.5,
+    "category": "DeFi"
+   },
+   {
+    "round": "ICO",
+    "date": 1512000000,
+    "amount": 16.2,
+    "category": "DeFi"
+   }
+  ]
+ },
+ "ADA": {
+  "status": 200,
+  "name": "Cardano",
+  "gecko_id": "cardano",
+  "treasury": "cardano.js",
+  "n_raises": 0,
+  "raise_keys": [],
+  "raise_rounds": []
+ },
+ "APT": {
+  "status": 200,
+  "name": "Aptos",
+  "gecko_id": "aptos",
+  "treasury": "",
+  "n_raises": 0,
+  "raise_keys": [],
+  "raise_rounds": []
+ },
+ "ARB": {
+  "status": 200,
+  "name": "Arbitrum Foundation",
+  "gecko_id": "arbitrum",
+  "treasury": "",
+  "n_raises": 0,
+  "raise_keys": [],
+  "raise_rounds": []
+ },
+ "AVAX": {
+  "status": 200,
+  "name": "Avalanche",
+  "gecko_id": "avalanche-2",
+  "treasury": "",
+  "n_raises": 0,
+  "raise_keys": [],
+  "raise_rounds": []
+ },
+ "BNB": {
+  "status": 200,
+  "name": "Binance Smart Chain",
+  "gecko_id": "binancecoin",
+  "treasury": "",
+  "n_raises": 0,
+  "raise_keys": [],
+  "raise_rounds": []
+ },
+ "BTC": {
+  "status": 200,
+  "name": "Bitcoin",
+  "gecko_id": "bitcoin",
+  "treasury": "",
+  "n_raises": 1,
+  "raise_keys": [
+   "amount",
+   "category",
+   "categoryGroup",
+   "chains",
+   "date",
+   "defillamaId",
+   "leadInvestors",
+   "name",
+   "otherInvestors",
+   "round",
+   "sector",
+   "source",
+   "valuation"
+  ],
+  "raise_rounds": [
+   {
+    "round": null,
+    "date": 1606694400,
+    "amount": 14.1,
+    "category": null
+   }
+  ]
+ },
+ "DOT": {
+  "status": 200,
+  "name": "Polkadot Treasury",
+  "gecko_id": "polkadot",
+  "treasury": "polkadot.js",
+  "n_raises": 0,
+  "raise_keys": [],
+  "raise_rounds": []
+ },
+ "ETH": {
+  "status": 200,
+  "name": "Ethereum",
+  "gecko_id": null,
+  "treasury": "",
+  "n_raises": 0,
+  "raise_keys": [],
+  "raise_rounds": []
+ },
+ "HYPE": {
+  "status": 200,
+  "name": "Hyperliquid",
+  "gecko_id": "hyperliquid",
+  "treasury": "",
+  "n_raises": 0,
+  "raise_keys": [],
+  "raise_rounds": []
+ },
+ "INJ": {
+  "status": 200,
+  "name": "Injective",
+  "gecko_id": null,
+  "treasury": "",
+  "n_raises": 0,
+  "raise_keys": [],
+  "raise_rounds": []
+ },
+ "LDO": {
+  "status": 200,
+  "name": "Lido",
+  "gecko_id": "lido-dao",
+  "treasury": "lido.js",
+  "n_raises": 3,
+  "raise_keys": [
+   "amount",
+   "category",
+   "categoryGroup",
+   "chains",
+   "date",
+   "defillamaId",
+   "leadInvestors",
+   "name",
+   "otherInvestors",
+   "round",
+   "sector",
+   "source",
+   "valuation"
+  ],
+  "raise_rounds": [
+   {
+    "round": "Private token sale",
+    "date": 1620172800,
+    "amount": 73,
+    "category": "DeFi"
+   },
+   {
+    "round": null,
+    "date": 1646265600,
+    "amount": 70,
+    "category": "DeFi"
+   },
+   {
+    "round": "Treasury Diversification",
+    "date": 1663113600,
+    "amount": 24,
+    "category": "DeFi"
+   }
+  ]
+ },
+ "LINK": {
+  "status": 200,
+  "name": "Chainlink",
+  "gecko_id": "chainlink",
+  "treasury": "",
+  "n_raises": 1,
+  "raise_keys": [
+   "amount",
+   "category",
+   "categoryGroup",
+   "chains",
+   "date",
+   "defillamaId",
+   "leadInvestors",
+   "name",
+   "otherInvestors",
+   "round",
+   "sector",
+   "source",
+   "valuation"
+  ],
+  "raise_rounds": [
+   {
+    "round": "ICO",
+    "date": 1505865600,
+    "amount": 32,
+    "category": "Infrastructure"
+   }
+  ]
+ },
+ "NEAR": {
+  "status": 200,
+  "name": "NEAR Protocol",
+  "gecko_id": "near",
+  "treasury": "",
+  "n_raises": 0,
+  "raise_keys": [],
+  "raise_rounds": []
+ },
+ "ONDO": {
+  "status": 200,
+  "name": "Ondo Finance",
+  "gecko_id": "ondo-finance",
+  "treasury": "",
+  "n_raises": 0,
+  "raise_keys": [],
+  "raise_rounds": []
+ },
+ "OP": {
+  "status": 200,
+  "name": "Optimism Foundation",
+  "gecko_id": "optimism",
+  "treasury": "op-foundation.js",
+  "n_raises": 0,
+  "raise_keys": [],
+  "raise_rounds": []
+ },
+ "PENDLE": {
+  "status": 200,
+  "name": "Pendle",
+  "gecko_id": "pendle",
+  "treasury": "",
+  "n_raises": 3,
+  "raise_keys": [
+   "amount",
+   "category",
+   "categoryGroup",
+   "chains",
+   "date",
+   "defillamaId",
+   "leadInvestors",
+   "name",
+   "otherInvestors",
+   "round",
+   "sector",
+   "source",
+   "valuation"
+  ],
+  "raise_rounds": [
+   {
+    "round": null,
+    "date": 1692748800,
+    "amount": null,
+    "category": "DeFi"
+   },
+   {
+    "round": "OTC",
+    "date": 1699488000,
+    "amount": null,
+    "category": "DeFi"
+   },
+   {
+    "round": "Seed",
+    "date": 1620086400,
+    "amount": 3.7,
+    "category": "DeFi"
+   }
+  ]
+ },
+ "POL": {
+  "status": 200,
+  "name": "Polygon Bridge",
+  "gecko_id": "polygon-ecosystem-token",
+  "treasury": "",
+  "n_raises": 0,
+  "raise_keys": [],
+  "raise_rounds": []
+ },
+ "SKY": {
+  "status": 200,
+  "name": "Sky",
+  "gecko_id": "sky",
+  "treasury": "maker.js",
+  "n_raises": 3,
+  "raise_keys": [
+   "amount",
+   "category",
+   "categoryGroup",
+   "chains",
+   "date",
+   "defillamaId",
+   "leadInvestors",
+   "name",
+   "otherInvestors",
+   "round",
+   "sector",
+   "source",
+   "valuation"
+  ],
+  "raise_rounds": [
+   {
+    "round": null,
+    "date": 1576713600,
+    "amount": 27.5,
+    "category": "DeFi"
+   },
+   {
+    "round": null,
+    "date": 1537747200,
+    "amount": 15,
+    "category": "DeFi"
+   },
+   {
+    "round": null,
+    "date": 1513296000,
+    "amount": 12,
+    "category": "DeFi"
+   }
+  ]
+ },
+ "SOL": {
+  "status": 200,
+  "name": "Solana",
+  "gecko_id": "solana",
+  "treasury": "",
+  "n_raises": 0,
+  "raise_keys": [],
+  "raise_rounds": []
+ },
+ "STRK": {
+  "status": 200,
+  "name": "Starknet Bridge",
+  "gecko_id": "starknet",
+  "treasury": "",
+  "n_raises": 0,
+  "raise_keys": [],
+  "raise_rounds": []
+ },
+ "SUI": {
+  "status": 200,
+  "name": "Sui Foundation",
+  "gecko_id": "sui",
+  "treasury": "",
+  "n_raises": 0,
+  "raise_keys": [],
+  "raise_rounds": []
+ },
+ "TIA": {
+  "status": 200,
+  "name": "Celestia",
+  "gecko_id": "celestia",
+  "treasury": "",
+  "n_raises": 1,
+  "raise_keys": [
+   "amount",
+   "category",
+   "categoryGroup",
+   "chains",
+   "date",
+   "defillamaId",
+   "leadInvestors",
+   "name",
+   "otherInvestors",
+   "round",
+   "sector",
+   "source",
+   "valuation"
+  ],
+  "raise_rounds": [
+   {
+    "round": "Series A & B",
+    "date": 1666137600,
+    "amount": 55,
+    "category": null
+   }
+  ]
+ },
+ "UNI": {
+  "status": 200,
+  "name": "Uniswap",
+  "gecko_id": "uniswap",
+  "treasury": "uniswap.js",
+  "n_raises": 2,
+  "raise_keys": [
+   "amount",
+   "category",
+   "categoryGroup",
+   "chains",
+   "date",
+   "defillamaId",
+   "leadInvestors",
+   "name",
+   "otherInvestors",
+   "round",
+   "sector",
+   "source",
+   "valuation"
+  ],
+  "raise_rounds": [
+   {
+    "round": null,
+    "date": 1770768000,
+    "amount": null,
+    "category": "DeFi"
+   },
+   {
+    "round": "Series A",
+    "date": 1596758400,
+    "amount": 11,
+    "category": "DeFi"
+   }
+  ]
+ },
+ "XRP": {
+  "status": 400
+ },
+ "_summary": {
+  "n_treasury": 7,
+  "n_raises": 8
+ }
+}

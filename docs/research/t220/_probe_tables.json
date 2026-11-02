@@ -1,0 +1,165 @@
+{
+ "social_daily": {
+  "status": 200,
+  "n_returned": 1,
+  "cols": [
+   "d",
+   "fetched_at",
+   "metric",
+   "slug",
+   "source",
+   "symbol",
+   "value"
+  ]
+ },
+ "sharpe_mindshare_snap": {
+  "status": 200,
+  "n_returned": 1,
+  "cols": [
+   "as_of",
+   "delta24h",
+   "delta7d",
+   "fetched_at",
+   "market_cap",
+   "mindshare_pct",
+   "name",
+   "narrative_ids",
+   "price",
+   "price_change24h",
+   "sentiment_pct",
+   "snap_d",
+   "social_score",
+   "symbol",
+   "token_id",
+   "watchlist_users",
+   "win"
+  ]
+ },
+ "sharpe_narrative_mindshare": {
+  "status": 200,
+  "n_returned": 1,
+  "cols": [
+   "fetched_at",
+   "mindshare_pct",
+   "narrative_id",
+   "snapshot_at",
+   "token_count",
+   "total_social_score",
+   "watchlist_users"
+  ]
+ },
+ "trending_log": {
+  "status": 200,
+  "n_returned": 1,
+  "cols": [
+   "attention_score",
+   "coingecko_id",
+   "id",
+   "market_cap_rank",
+   "recorded_at",
+   "reddit_subscribers",
+   "sentiment_up",
+   "source",
+   "symbol",
+   "telegram_users",
+   "trending_rank",
+   "twitter_followers",
+   "watchlist_users"
+  ]
+ },
+ "cis_v2_daily": {
+  "status": 200,
+  "n_returned": 1,
+  "cols": [
+   "code_ref",
+   "d",
+   "grp",
+   "missing",
+   "n_dims",
+   "pct",
+   "published_at",
+   "ranks",
+   "raw",
+   "score",
+   "signal",
+   "state",
+   "symbol",
+   "watch"
+  ]
+ },
+ "ohlcv_daily": {
+  "status": 200,
+  "n_returned": 1,
+  "cols": [
+   "asset_class",
+   "asset_id",
+   "close",
+   "high",
+   "id",
+   "low",
+   "open",
+   "recorded_at",
+   "source",
+   "symbol",
+   "trade_date",
+   "volume"
+  ]
+ },
+ "asset_mcap_daily": {
+  "status": 200,
+  "n_returned": 1,
+  "cols": [
+   "coin_id",
+   "d",
+   "mcap",
+   "price",
+   "recorded_at",
+   "source",
+   "symbol",
+   "volume"
+  ]
+ },
+ "deriv_metrics_daily": {
+  "status": 200,
+  "n_returned": 1,
+  "cols": [
+   "d",
+   "global_acct_ratio_close",
+   "n_points",
+   "oi_close",
+   "oi_value_close",
+   "recorded_at",
+   "source",
+   "symbol",
+   "taker_ratio_last4h",
+   "taker_ratio_mean",
+   "top_acct_ratio_close",
+   "top_pos_ratio_close",
+   "top_pos_ratio_mean"
+  ]
+ },
+ "state_daily": {
+  "status": 200,
+  "n_returned": 1,
+  "cols": [
+   "code_ref",
+   "computed_at",
+   "d",
+   "entity",
+   "feature",
+   "source",
+   "value"
+  ]
+ },
+ "macro_daily": {
+  "status": 200,
+  "n_returned": 1,
+  "cols": [
+   "computed_at",
+   "d",
+   "series",
+   "source",
+   "value"
+  ]
+ }
+}

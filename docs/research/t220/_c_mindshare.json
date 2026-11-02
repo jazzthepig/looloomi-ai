@@ -1,0 +1,364 @@
+{
+ "mind_per_symbol": {
+  "AAVE": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "ADA": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "APT": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "ARB": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "AVAX": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "BNB": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "BTC": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "ETH": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "HYPE": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "INJ": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "LDO": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "LINK": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "NEAR": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "ONDO": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "OP": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "PENDLE": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "POL": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "SOL": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "STRK": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "SUI": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "TIA": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "UNI": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  },
+  "XRP": {
+   "n": 14,
+   "start": "2026-10-20",
+   "end": "2026-11-02"
+  }
+ },
+ "mind_events_total": 0,
+ "narratives": [
+  {
+   "narrative_id": "account-abstraction",
+   "n": 187,
+   "start": "2026-04-30",
+   "end": "2026-11-02",
+   "n_events": 1,
+   "max_z": 3.257
+  },
+  {
+   "narrative_id": "ai-agents",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 4,
+   "max_z": 11.023
+  },
+  {
+   "narrative_id": "bridges",
+   "n": 187,
+   "start": "2026-04-30",
+   "end": "2026-11-02",
+   "n_events": 5,
+   "max_z": 9.235
+  },
+  {
+   "narrative_id": "cex",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 1,
+   "max_z": 2.328
+  },
+  {
+   "narrative_id": "defai",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 6,
+   "max_z": 16.078
+  },
+  {
+   "narrative_id": "defi",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 2,
+   "max_z": 10.357
+  },
+  {
+   "narrative_id": "depin",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 2,
+   "max_z": 3.601
+  },
+  {
+   "narrative_id": "desci",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 5,
+   "max_z": 5.339
+  },
+  {
+   "narrative_id": "dex",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 8,
+   "max_z": 3.047
+  },
+  {
+   "narrative_id": "gaming",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 0,
+   "max_z": 0.628
+  },
+  {
+   "narrative_id": "intent",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 2,
+   "max_z": 9.408
+  },
+  {
+   "narrative_id": "layer-1",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 6,
+   "max_z": 3.05
+  },
+  {
+   "narrative_id": "layer-2",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 2,
+   "max_z": 5.332
+  },
+  {
+   "narrative_id": "lending",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 3,
+   "max_z": 10.669
+  },
+  {
+   "narrative_id": "liquid-staking",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 3,
+   "max_z": 4.574
+  },
+  {
+   "narrative_id": "memes",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 4,
+   "max_z": 17.631
+  },
+  {
+   "narrative_id": "modular",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 5,
+   "max_z": 29.145
+  },
+  {
+   "narrative_id": "nfts",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 5,
+   "max_z": 2.594
+  },
+  {
+   "narrative_id": "oracles",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 6,
+   "max_z": 11.564
+  },
+  {
+   "narrative_id": "perps",
+   "n": 187,
+   "start": "2026-04-30",
+   "end": "2026-11-02",
+   "n_events": 5,
+   "max_z": 13.19
+  },
+  {
+   "narrative_id": "prediction-markets",
+   "n": 187,
+   "start": "2026-04-30",
+   "end": "2026-11-02",
+   "n_events": 3,
+   "max_z": 16.695
+  },
+  {
+   "narrative_id": "privacy",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 3,
+   "max_z": 6.55
+  },
+  {
+   "narrative_id": "restaking",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 3,
+   "max_z": 14.454
+  },
+  {
+   "narrative_id": "rwa",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 4,
+   "max_z": 11.508
+  },
+  {
+   "narrative_id": "socialfi",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 1,
+   "max_z": 2.942
+  },
+  {
+   "narrative_id": "stablecoins",
+   "n": 194,
+   "start": "2026-04-23",
+   "end": "2026-11-02",
+   "n_events": 5,
+   "max_z": 4.402
+  },
+  {
+   "narrative_id": "tap-to-earn",
+   "n": 187,
+   "start": "2026-04-30",
+   "end": "2026-11-02",
+   "n_events": 2,
+   "max_z": 36.139
+  },
+  {
+   "narrative_id": "telegram-apps",
+   "n": 187,
+   "start": "2026-04-30",
+   "end": "2026-11-02",
+   "n_events": 0,
+   "max_z": 1.169
+  },
+  {
+   "narrative_id": "yield-farming",
+   "n": 187,
+   "start": "2026-04-30",
+   "end": "2026-11-02",
+   "n_events": 3,
+   "max_z": 3.816
+  },
+  {
+   "narrative_id": "zk",
+   "n": 187,
+   "start": "2026-04-30",
+   "end": "2026-11-02",
+   "n_events": 4,
+   "max_z": 11.066
+  }
+ ],
+ "narrative_events_total": 103,
+ "n_narratives": 30
+}

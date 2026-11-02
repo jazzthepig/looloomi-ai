@@ -1,0 +1,90 @@
+{
+ "dl_unlocks_page": {
+  "status": 200,
+  "len": 1061031,
+  "kw": {
+   "nextUnlock": 0,
+   "unlockDate": 0,
+   "unlocks": 417,
+   "vesting": 3,
+   "team": 7,
+   "advisor": 4,
+   "investor": 13,
+   "treasury": 2,
+   "api.llama": 0,
+   "__NEXT_DATA__": 1
+  }
+ },
+ "dl_unlocks_page_llama_endpoints": [
+  "https://defillama.com/api/og/card",
+  "https://defillama.com/assets/og/default-card",
+  "https://defillama.com/unlocks",
+  "https://icons.llamao.fi/icons/protocols/alaya-ai",
+  "https://icons.llamao.fi/icons/protocols/apriori",
+  "https://icons.llamao.fi/icons/protocols/canton",
+  "https://icons.llamao.fi/icons/protocols/carv",
+  "https://icons.llamao.fi/icons/protocols/celestia",
+  "https://icons.llamao.fi/icons/protocols/chainlink",
+  "https://icons.llamao.fi/icons/protocols/cheelee",
+  "https://icons.llamao.fi/icons/protocols/credbull",
+  "https://icons.llamao.fi/icons/protocols/delysium",
+  "https://icons.llamao.fi/icons/protocols/equilibre",
+  "https://icons.llamao.fi/icons/protocols/forta",
+  "https://icons.llamao.fi/icons/protocols/hashflow",
+  "https://icons.llamao.fi/icons/protocols/hyperliquid",
+  "https://icons.llamao.fi/icons/protocols/initia",
+  "https://icons.llamao.fi/icons/protocols/iota",
+  "https://icons.llamao.fi/icons/protocols/magic-eden",
+  "https://icons.llamao.fi/icons/protocols/memecore",
+  "https://icons.llamao.fi/icons/protocols/movement",
+  "https://icons.llamao.fi/icons/protocols/opinion",
+  "https://icons.llamao.fi/icons/protocols/pearl",
+  "https://icons.llamao.fi/icons/protocols/quai-network",
+  "https://icons.llamao.fi/icons/protocols/resolv",
+  "https://icons.llamao.fi/icons/protocols/salty",
+  "https://icons.llamao.fi/icons/protocols/solana",
+  "https://icons.llamao.fi/icons/protocols/solayer",
+  "https://icons.llamao.fi/icons/protocols/stable",
+  "https://icons.llamao.fi/icons/protocols/stader",
+  "https://icons.llamao.fi/icons/protocols/stepn",
+  "https://icons.llamao.fi/icons/protocols/sui-foundation",
+  "https://icons.llamao.fi/icons/protocols/thala"
+ ],
+ "etherscan_addr_page": {
+  "status": 200,
+  "len": 1130678,
+  "has_binance": true
+ },
+ "https://etherscan.io/robots.txt": {
+  "status": 200,
+  "head": "User-agent: *\nContent-Signal: ai-train=no, search=yes, ai-input=yes\n# Search / crawler-waste\nDisallow: /search?\nDisallow: /advancedsearch?\n# Public list pages: keep canonical page crawlable,\n# avoid crawling arbitrary query/filter/pagination variants.\nDisallow: /txs?\nDisallow: /txsPending?\nDisallow: /tokentxns?\nDisallow: /nft-transfers?\nDisallow: /blocks?\nDisallow: /accounts?\nSitemap: https://etherscan.io/sitemap"
+ },
+ "https://api.llama.fi/robots.txt": {
+  "status": 404,
+  "head": "Route not found"
+ },
+ "https://defillama.com/robots.txt": {
+  "status": 200,
+  "head": "User-agent: *\nAllow: /\n# Sitemap\nSitemap: https://defillama.com/sitemap.xml\nSitemap: https://defillama.com/research/sitemap.xml"
+ },
+ "https://api.coingecko.com/robots.txt": {
+  "status": 200,
+  "head": "User-agent: *\nDisallow: /api/v1\nDisallow: /api/v2\nDisallow: /api/v3\nDisallow: *data_source=2.0\nDisallow: /api/mobile"
+ },
+ "https://api.openchain.xyz/": {
+  "status": 404,
+  "head": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /</pre>\n</body>\n</html>\n"
+ },
+ "https://api.openchain.xyz/v1/label/0x28C6c06298d514Db089934071355E5743bf21d60": {
+  "status": 404,
+  "head": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /v1/label/0x28C6c06298d514Db089934071355E5743bf21d60</pre>\n</body>\n</html>\n"
+ },
+ "https://openchain.xyz/api/v1/address/0x28C6c06298d514Db089934071355E5743bf21d60": {
+  "status": 404,
+  "head": "<!DOCTYPE html><!--YLHdvvzk_5HndZyvcG5qa--><html lang=\"en\" class=\"\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_nex"
+ },
+ "santiment_graphql": {
+  "status": 200,
+  "head": "{\"errors\":[{\"message\":\"Cannot query field \\\"getAllTimeseriesMetrics\\\" on type \\\"RootQueryType\\\". Did you mean \\\"allInsightsBySearchTerm\\\", \\\"generateTitleByQuery\\\", \\\"getAccessRestrictions\\\", \\\"getAvailableMetrics\\\", or \\\"getAvailableMetricsForSelector\\\"?\",\"locations\":[{\"line\":1,\"column\":3}]},{\"mess"
+ }
+}

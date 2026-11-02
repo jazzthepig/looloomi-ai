@@ -1,28 +1,28 @@
 {
-  "id": "T-220",
-  "owner": "lane-c",
-  "status": "open",
-  "created": "2026-11-02",
-  "title": "治理的领先信号:解锁前团队 / 基金会钱包流向、出事后的处理、营销强度 —— 先查能不能量(数据源可行性),再写预注册草稿",
-  "source": "Jazz 11-02:小股东待遇(阿里 vs 腾讯;团队通过关联交易瓜分利润;'被朝鲜黑客攻击'甩锅);密集营销时是高位。S-661 / S-664:价值捕获比在留出段有效但控制规模 / 波动 / 稀释后几乎不剩 ⇒ 滞后的那一半已在质量因子里,领先的这一半没测过。§Seth-1102a。",
-  "allowed_paths": [
-    "docs/research/",
-    "tasks/T-220.json"
-  ],
-  "forbidden_paths": [
-    "Shadow/",
-    "src/",
-    "paper_trading/",
-    "PROJECT_STATE.md",
-    "PROJECT_STATE_LOG.md",
-    "scripts/",
-    "migrations/"
-  ],
-  "acceptance": {
-    "check": "① 数据源可行性表(不接入、不付费、不注册账号):代币解锁日程(DeFiLlama emissions / unlocks 公开接口、项目文档、其它免费源)与团队 / 基金会 / 投资方钱包标签(Etherscan 标签、Arkham / Nansen 等是否免费可用)—— 每个:覆盖多少个 CIS 加密名字、历史从哪年起、是否按时点(当时可知)、费用与条款;结论写『免费源够不够做 CIS 加密 25 个名字的检验』,不够就写需要什么、大概多少钱(交 Jazz 定,11-02 两周铺排里写着不加新数据源)。② 营销强度:现有可读表(social_daily、sharpe_mindshare_snap、sharpe_narrative_mindshare、trending_log、santiment 映射)各自覆盖的名字与起始日期;能不能构造「某币热度 30 日 z > 2」这类事件、有多少个事件。③ 把 S-661 的 17 个持币人收入「开闸」事件逐个标上:开闸前 30 天有没有热度峰值(②里能量的才标)。④ 两条预注册草稿(不算任何结果):H1 解锁前 30 天团队钱包向交易所净流出 ⇒ 之后 30 / 90 天相对宇宙跑输;H2 热度事件 ⇒ 之后 30 天相对宇宙跑输 —— 写清截面、窗口、对照(随机日期 + 打乱)、试验计数、需要的数据。纪律:只读(SELECT / 公开 GET / 公开网页),不改代码、不做 DDL、不入库;步数过半先把脚本与中间结果落文件;遇 Prompt is too long,下一轮以未提交的脚本为续跑起点,不整份重写。可读表以 lane_read 为准(asset_mcap_daily、ohlcv_daily、state_daily、macro_daily、protocol_revenue_daily、core_cap_daily、cis_v2_daily、social_daily、trending_log、sharpe_*、deriv_metrics_daily 等);读不到的写「读不到」并在 SYNC 点名请 Seth 代查,不推测。",
-    "expect": "报告 docs/research/T-220_governance_leading_signals.md(开头可行性表);卡片 notes 写:免费源够不够、事件个数、两条草稿是否可在现有数据上跑;in_review,推 lane-c/T-220。"
-  },
-  "prior_value": "治理只量了滞后的一半(S-661 价值捕获比、S-587 质量);领先的行为信号一个都没有,不知道现有数据能不能量。",
-  "notes": "",
-  "verified": null
+ "id": "T-220",
+ "owner": "lane-c",
+ "status": "in_review",
+ "created": "2026-11-02",
+ "title": "治理的领先信号:解锁前团队 / 基金会钱包流向、出事后的处理、营销强度 —— 先查能不能量(数据源可行性),再写预注册草稿",
+ "source": "Jazz 11-02:小股东待遇(阿里 vs 腾讯;团队通过关联交易瓜分利润;'被朝鲜黑客攻击'甩锅);密集营销时是高位。S-661 / S-664:价值捕获比在留出段有效但控制规模 / 波动 / 稀释后几乎不剩 ⇒ 滞后的那一半已在质量因子里,领先的这一半没测过。§Seth-1102a。",
+ "allowed_paths": [
+  "docs/research/",
+  "tasks/T-220.json"
+ ],
+ "forbidden_paths": [
+  "Shadow/",
+  "src/",
+  "paper_trading/",
+  "PROJECT_STATE.md",
+  "PROJECT_STATE_LOG.md",
+  "scripts/",
+  "migrations/"
+ ],
+ "acceptance": {
+  "check": "① 数据源可行性表(不接入、不付费、不注册账号):代币解锁日程(DeFiLlama emissions / unlocks 公开接口、项目文档、其它免费源)与团队 / 基金会 / 投资方钱包标签(Etherscan 标签、Arkham / Nansen 等是否免费可用)—— 每个:覆盖多少个 CIS 加密名字、历史从哪年起、是否按时点(当时可知)、费用与条款;结论写『免费源够不够做 CIS 加密 25 个名字的检验』,不够就写需要什么、大概多少钱(交 Jazz 定,11-02 两周铺排里写着不加新数据源)。② 营销强度:现有可读表(social_daily、sharpe_mindshare_snap、sharpe_narrative_mindshare、trending_log、santiment 映射)各自覆盖的名字与起始日期;能不能构造「某币热度 30 日 z > 2」这类事件、有多少个事件。③ 把 S-661 的 17 个持币人收入「开闸」事件逐个标上:开闸前 30 天有没有热度峰值(②里能量的才标)。④ 两条预注册草稿(不算任何结果):H1 解锁前 30 天团队钱包向交易所净流出 ⇒ 之后 30 / 90 天相对宇宙跑输;H2 热度事件 ⇒ 之后 30 天相对宇宙跑输 —— 写清截面、窗口、对照(随机日期 + 打乱)、试验计数、需要的数据。纪律:只读(SELECT / 公开 GET / 公开网页),不改代码、不做 DDL、不入库;步数过半先把脚本与中间结果落文件;遇 Prompt is too long,下一轮以未提交的脚本为续跑起点,不整份重写。可读表以 lane_read 为准(asset_mcap_daily、ohlcv_daily、state_daily、macro_daily、protocol_revenue_daily、core_cap_daily、cis_v2_daily、social_daily、trending_log、sharpe_*、deriv_metrics_daily 等);读不到的写「读不到」并在 SYNC 点名请 Seth 代查,不推测。",
+  "expect": "报告 docs/research/T-220_governance_leading_signals.md(开头可行性表);卡片 notes 写:免费源够不够、事件个数、两条草稿是否可在现有数据上跑;in_review,推 lane-c/T-220。"
+ },
+ "prior_value": "治理只量了滞后的一半(S-661 价值捕获比、S-587 质量);领先的行为信号一个都没有,不知道现有数据能不能量。",
+ "notes": "**免费源够不够:不够。** ①解锁日程:DeFiLlama API 已全站转付费 —— `/emissions`、`/emission/<slug>`、`/raises` 实测一律 **402** `Upgrade to the paid API plan at https://defillama.com/subscription`;价格实测 **API 档 $300/月 或 $3,000/年**(Pro 档 $49/月 $490/年**不含 API**)。免费只剩网页 `defillama.com/unlocks`(200,`__NEXT_DATA__` 内嵌 371 个协议):**22/25** 个 CIS 名字有条目、其中**只有 10/25 有实际解锁日程**(APT/ARB/AVAX/DOT/ONDO/OP/SOL/STRK/SUI/TIA),且 **371 条全部 `unlockEvents=null` ⇒ 只有未来日程、没有历史** ⇒ 只能前向、不能回测。类别里**没有 team/advisor/treasury**,团队+投资方并进 `insiders`。②钱包标签:Etherscan V2 `Missing/Invalid API Key`、Arkham `please sign up for an api key`、Nansen/Covalent/Bitquery/Dune/CryptoRank/Tokenomist 全部 401、Blockchair 无 key 已 430(限流)⇒ **免费源给不出「团队/基金会地址集合 + 日频余额/转账」**;免费只有 llama `/protocol` 的 `treasury`(**7/25**:aave.js/cardano.js/polkadot.js/lido.js/op-foundation.js/maker.js/uniswap.js)与 `raises`(**8/25**,含 leadInvestors)。缺口量级:解锁历史 = DeFiLlama API **$3,000/年**(或 $300/月做一次性回填);标签+历史余额 = Arkham/Nansen 付费档($几百–几千/月量级,待对方报价)或自建人工。**11-02 两周铺排写着不加新数据源 ⇒ H1 在 Jazz 拍板前不开工。**\n\n**事件个数(实测)。** `social_daily` 每个 (symbol,d) 有 **2 行**(两个 metric:`sentiment_weighted_total` / `social_volume_total`)—— 第一版画像只查到 1 个 metric,按单 metric 算的 z 是错的,已修正为按 metric 分开算。覆盖 **23/25**(缺 HYPE、SKY)、每币 **348 个日观测、2025-10-20 → 2026-10-02**;点值 z>2 事件 **177**(情绪加权)/ **146**(社交量),30 日滚动均值 z>2 **49 / 16**。`trending_log` 25/25 但只从 **2026-06-26** 起、事件 **14**;`sharpe_mindshare_snap` 只有 **14 天**(2026-10-20→11-02)⇒ **0 事件**(30 日 z 不可能);`sharpe_narrative_mindshare` 30 个**叙事**级、2026-04-23 起、**103** 事件(叙事级不是币级)。`cis_v2_daily` 只有 12 天(2026-10-21→11-01),不作事件源。分段(发现段 2025-12-19→2026-03-31 / 留出段 2026-04-01→2026-10-02):社交量点值 31/115、情绪加权点值 59/118、情绪加权 30 日均值 17/32、**社交量 30 日均值 0/16**、**trending 0/9** ⇒ 后两个口径发现段无事件,按纪律进不了留出段。\n\n**③ S-661 开闸事件:现有营销表判不了。** 重跑 `s661_value_mining.py onset` 得 **18 个**(卡上写 17 —— 差 `bankercoin-2`,它没有前瞻价,17 = 有 1 个月前瞻相对收益的)。18 个里**只有 3 个**(YFI 2026-02-07、SPELL 2026-06-01、LDO 2026-06-01)开闸前 30 天有 ≥20 天热度数据,**其中只有 1 个(SPELL)有热度峰值**(情绪加权 z=2.052、社交量 z=2.220);另 12 个事件早于热度历史起点(2025-10-20),5 个币(SYRUP/JUP/PUMP/PYTH/BNKR)根本不在 `social_daily` 里。\n\n**两条草稿是否可在现有数据上跑:H1 不可,H2 可但功效薄。** H1(解锁前 30 天团队钱包→交易所净流出 ⇒ 之后 30/90 天跑输)三样必需输入缺两样(解锁历史、地址标签+日频余额)⇒ 只写成前向草案:宇宙=CIS 加密 25 名,事件=cliff 类 `insiders` 解锁日,信号窗 T−30..T−1 净流出/流通市值,结果=之后 30/90 天相对 25 名等权宇宙,对照=随机日期 + `shuffle_within`/`block_permute`,零分布 `null_distribution` + `percentile_of`,试验计数 治理族第 1 次、卡内 k=4 ⇒ 阈值 0.0125。H2(热度事件 ⇒ 之后 30 天跑输)**数据齐、可跑**:主口径=社交量点值 z>2,变体 3 个 ⇒ 阈值 0.05/3≈0.0167,入场 `price_on_or_after(T+1)`,价格源 binance_hist;**功效上限**:发现段事件 17–59、留出段 32–118,单币中位数个位数 ⇒ 观测差 < MDE 时只能判「功效不足」。价格侧缺口:**SKY 在 `ohlcv_daily` 只有 15 天**(hyperliquid 2026-08-09..08-23),无 binance 价 ⇒ 默认剔除并写明(守护源待 @seth 定)。\n\n**交付位置**:报告 `docs/research/T-220_governance_leading_signals.md`;脚本与中间结果 `docs/research/t220/`(仓库副本)与 `/Volumes/CometCloudAI/cometcloud-local/research/t220/`(工作副本,含缓存)。全程只读(SELECT / 公开 GET),未改代码、未入库。**需 @seth / @jazz**:(a) 是否为解锁历史 + 团队/交易所地址标签花钱(量级如上);(b) 是否为 30–118 个事件开 H2 的卡;(c) SKY 价格的守护源;(d) 免费网页版 unlocks 抓取合规性(建议走 API 档而非长期抓网页)。\n\n**补交(11-02,本轮)**:前向命题文件 `docs/research/scenarios/lane-c-T-220.json` —— 5 条(3 条自动结算:close:SPELL / state:breadth_above_ma50 / state:style_rel_majors_30d;2 条人工:API 档是否获批、每日 unlocks 快照连续天数),全部过了 `scenario_ledger.validate`;报告加 §5 对照表。原始数:SPELL 开闸日 2026-06-01 收盘 0.0001506、2026-11-01 收盘 0.0000771(-48.8%,ohlcv_daily source=binance_hist);state_daily entity=panel 最新日 2026-11-01 breadth_above_ma50=0、style_rel_majors_30d=+0.0867273;面板可结算 state feature 共 23 个。",
+ "verified": null
 }

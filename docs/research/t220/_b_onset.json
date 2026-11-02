@@ -1,0 +1,612 @@
+[
+ {
+  "g": "ethereum",
+  "onset": "2021-08-05",
+  "sym_candidates": [
+   "ETH"
+  ],
+  "mcap_usd_m": 329921,
+  "rel_1m": -0.098,
+  "rel_3m": -0.026,
+  "rel_6m": 0.088,
+  "sentiment_weighted_total_symbol": "ETH",
+  "sentiment_weighted_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "sentiment_weighted_total_pre30_n": 0,
+  "sentiment_weighted_total_pre30_z_max": null,
+  "sentiment_weighted_total_pre30_z30_max": null,
+  "sentiment_weighted_total_pre30_covered": false,
+  "sentiment_weighted_total_peak_pre30": false,
+  "sentiment_weighted_total_peak_pre30_z30": false,
+  "sentiment_weighted_total_post30_z_max": null,
+  "social_volume_total_symbol": "ETH",
+  "social_volume_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "social_volume_total_pre30_n": 0,
+  "social_volume_total_pre30_z_max": null,
+  "social_volume_total_pre30_z30_max": null,
+  "social_volume_total_pre30_covered": false,
+  "social_volume_total_peak_pre30": false,
+  "social_volume_total_peak_pre30_z30": false,
+  "social_volume_total_post30_z_max": null,
+  "trend_symbol": "ETH",
+  "trend_series": [
+   "2026-07-23",
+   "2026-11-02"
+  ],
+  "trend_pre30_n": 0,
+  "trend_pre30_z_max": null,
+  "trend_peak_pre30": false
+ },
+ {
+  "g": "tron",
+  "onset": "2022-11-23",
+  "sym_candidates": [
+   "TRX"
+  ],
+  "mcap_usd_m": 4747,
+  "rel_1m": 0.148,
+  "rel_3m": -0.182,
+  "rel_6m": 0.196,
+  "sentiment_weighted_total_symbol": "TRX",
+  "sentiment_weighted_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "sentiment_weighted_total_pre30_n": 0,
+  "sentiment_weighted_total_pre30_z_max": null,
+  "sentiment_weighted_total_pre30_z30_max": null,
+  "sentiment_weighted_total_pre30_covered": false,
+  "sentiment_weighted_total_peak_pre30": false,
+  "sentiment_weighted_total_peak_pre30_z30": false,
+  "sentiment_weighted_total_post30_z_max": null,
+  "social_volume_total_symbol": "TRX",
+  "social_volume_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "social_volume_total_pre30_n": 0,
+  "social_volume_total_pre30_z_max": null,
+  "social_volume_total_pre30_z30_max": null,
+  "social_volume_total_pre30_covered": false,
+  "social_volume_total_peak_pre30": false,
+  "social_volume_total_peak_pre30_z30": false,
+  "social_volume_total_post30_z_max": null,
+  "trend_symbol": null
+ },
+ {
+  "g": "kyber-network-crystal",
+  "onset": "2023-01-05",
+  "sym_candidates": [
+   "KNC"
+  ],
+  "mcap_usd_m": 78,
+  "rel_1m": 0.117,
+  "rel_3m": 0.014,
+  "rel_6m": -0.057,
+  "sentiment_weighted_total_symbol": "KNC",
+  "sentiment_weighted_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "sentiment_weighted_total_pre30_n": 0,
+  "sentiment_weighted_total_pre30_z_max": null,
+  "sentiment_weighted_total_pre30_z30_max": null,
+  "sentiment_weighted_total_pre30_covered": false,
+  "sentiment_weighted_total_peak_pre30": false,
+  "sentiment_weighted_total_peak_pre30_z30": false,
+  "sentiment_weighted_total_post30_z_max": null,
+  "social_volume_total_symbol": "KNC",
+  "social_volume_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "social_volume_total_pre30_n": 0,
+  "social_volume_total_pre30_z_max": null,
+  "social_volume_total_pre30_z30_max": null,
+  "social_volume_total_pre30_covered": false,
+  "social_volume_total_peak_pre30": false,
+  "social_volume_total_peak_pre30_z30": false,
+  "social_volume_total_post30_z_max": null,
+  "trend_symbol": null
+ },
+ {
+  "g": "woo-network",
+  "onset": "2023-01-10",
+  "sym_candidates": [
+   "WOO"
+  ],
+  "mcap_usd_m": 277,
+  "rel_1m": -0.047,
+  "rel_3m": -0.109,
+  "rel_6m": 0.188,
+  "sentiment_weighted_total_symbol": "WOO",
+  "sentiment_weighted_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "sentiment_weighted_total_pre30_n": 0,
+  "sentiment_weighted_total_pre30_z_max": null,
+  "sentiment_weighted_total_pre30_z30_max": null,
+  "sentiment_weighted_total_pre30_covered": false,
+  "sentiment_weighted_total_peak_pre30": false,
+  "sentiment_weighted_total_peak_pre30_z30": false,
+  "sentiment_weighted_total_post30_z_max": null,
+  "social_volume_total_symbol": "WOO",
+  "social_volume_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "social_volume_total_pre30_n": 0,
+  "social_volume_total_pre30_z_max": null,
+  "social_volume_total_pre30_z30_max": null,
+  "social_volume_total_pre30_covered": false,
+  "social_volume_total_peak_pre30": false,
+  "social_volume_total_peak_pre30_z30": false,
+  "social_volume_total_post30_z_max": null,
+  "trend_symbol": null
+ },
+ {
+  "g": "thorchain",
+  "onset": "2024-09-16",
+  "sym_candidates": [
+   "RUNE"
+  ],
+  "mcap_usd_m": 1295,
+  "rel_1m": 0.164,
+  "rel_3m": -0.173,
+  "rel_6m": -0.977,
+  "sentiment_weighted_total_symbol": "RUNE",
+  "sentiment_weighted_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "sentiment_weighted_total_pre30_n": 0,
+  "sentiment_weighted_total_pre30_z_max": null,
+  "sentiment_weighted_total_pre30_z30_max": null,
+  "sentiment_weighted_total_pre30_covered": false,
+  "sentiment_weighted_total_peak_pre30": false,
+  "sentiment_weighted_total_peak_pre30_z30": false,
+  "sentiment_weighted_total_post30_z_max": null,
+  "social_volume_total_symbol": "RUNE",
+  "social_volume_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "social_volume_total_pre30_n": 0,
+  "social_volume_total_pre30_z_max": null,
+  "social_volume_total_pre30_z30_max": null,
+  "social_volume_total_pre30_covered": false,
+  "social_volume_total_peak_pre30": false,
+  "social_volume_total_peak_pre30_z30": false,
+  "social_volume_total_post30_z_max": null,
+  "trend_symbol": null
+ },
+ {
+  "g": "syrup",
+  "onset": "2025-01-02",
+  "sym_candidates": [
+   "SYRUP"
+  ],
+  "mcap_usd_m": 85,
+  "rel_1m": 0.048,
+  "rel_3m": 0.53,
+  "rel_6m": 1.962,
+  "sentiment_weighted_total_symbol": null,
+  "sentiment_weighted_total_pre30_z_max": null,
+  "sentiment_weighted_total_pre30_covered": false,
+  "sentiment_weighted_total_peak_pre30": null,
+  "social_volume_total_symbol": null,
+  "social_volume_total_pre30_z_max": null,
+  "social_volume_total_pre30_covered": false,
+  "social_volume_total_peak_pre30": null,
+  "trend_symbol": null
+ },
+ {
+  "g": "ssv-network",
+  "onset": "2025-02-06",
+  "sym_candidates": [
+   "SSV"
+  ],
+  "mcap_usd_m": 82,
+  "rel_1m": -0.08,
+  "rel_3m": -0.324,
+  "rel_6m": -0.208,
+  "sentiment_weighted_total_symbol": "SSV",
+  "sentiment_weighted_total_series": [
+   "2025-12-21",
+   "2026-10-02"
+  ],
+  "sentiment_weighted_total_pre30_n": 0,
+  "sentiment_weighted_total_pre30_z_max": null,
+  "sentiment_weighted_total_pre30_z30_max": null,
+  "sentiment_weighted_total_pre30_covered": false,
+  "sentiment_weighted_total_peak_pre30": false,
+  "sentiment_weighted_total_peak_pre30_z30": false,
+  "sentiment_weighted_total_post30_z_max": null,
+  "social_volume_total_symbol": "SSV",
+  "social_volume_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "social_volume_total_pre30_n": 0,
+  "social_volume_total_pre30_z_max": null,
+  "social_volume_total_pre30_z30_max": null,
+  "social_volume_total_pre30_covered": false,
+  "social_volume_total_peak_pre30": false,
+  "social_volume_total_peak_pre30_z30": false,
+  "social_volume_total_post30_z_max": null,
+  "trend_symbol": null
+ },
+ {
+  "g": "jupiter-exchange-solana",
+  "onset": "2025-02-17",
+  "sym_candidates": [
+   "JUP"
+  ],
+  "mcap_usd_m": 2149,
+  "rel_1m": -0.138,
+  "rel_3m": -0.294,
+  "rel_6m": -0.353,
+  "sentiment_weighted_total_symbol": null,
+  "sentiment_weighted_total_pre30_z_max": null,
+  "sentiment_weighted_total_pre30_covered": false,
+  "sentiment_weighted_total_peak_pre30": null,
+  "social_volume_total_symbol": null,
+  "social_volume_total_pre30_z_max": null,
+  "social_volume_total_pre30_covered": false,
+  "social_volume_total_peak_pre30": null,
+  "trend_symbol": "JUP",
+  "trend_series": [
+   "2026-10-25",
+   "2026-10-29"
+  ],
+  "trend_pre30_n": 0,
+  "trend_pre30_z_max": null,
+  "trend_peak_pre30": false
+ },
+ {
+  "g": "aave",
+  "onset": "2025-04-09",
+  "sym_candidates": [
+   "AAVE"
+  ],
+  "mcap_usd_m": 2157,
+  "rel_1m": 0.096,
+  "rel_3m": 0.597,
+  "rel_6m": 0.372,
+  "sentiment_weighted_total_symbol": "AAVE",
+  "sentiment_weighted_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "sentiment_weighted_total_pre30_n": 0,
+  "sentiment_weighted_total_pre30_z_max": null,
+  "sentiment_weighted_total_pre30_z30_max": null,
+  "sentiment_weighted_total_pre30_covered": false,
+  "sentiment_weighted_total_peak_pre30": false,
+  "sentiment_weighted_total_peak_pre30_z30": false,
+  "sentiment_weighted_total_post30_z_max": null,
+  "social_volume_total_symbol": "AAVE",
+  "social_volume_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "social_volume_total_pre30_n": 0,
+  "social_volume_total_pre30_z_max": null,
+  "social_volume_total_pre30_z30_max": null,
+  "social_volume_total_pre30_covered": false,
+  "social_volume_total_peak_pre30": false,
+  "social_volume_total_peak_pre30_z30": false,
+  "social_volume_total_post30_z_max": null,
+  "trend_symbol": "AAVE",
+  "trend_series": [
+   "2026-08-08",
+   "2026-11-02"
+  ],
+  "trend_pre30_n": 0,
+  "trend_pre30_z_max": null,
+  "trend_peak_pre30": false
+ },
+ {
+  "g": "binancecoin",
+  "onset": "2025-06-04",
+  "sym_candidates": [
+   "BNB"
+  ],
+  "mcap_usd_m": 96825,
+  "rel_1m": 0.111,
+  "rel_3m": 0.172,
+  "rel_6m": 0.733,
+  "sentiment_weighted_total_symbol": "BNB",
+  "sentiment_weighted_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "sentiment_weighted_total_pre30_n": 0,
+  "sentiment_weighted_total_pre30_z_max": null,
+  "sentiment_weighted_total_pre30_z30_max": null,
+  "sentiment_weighted_total_pre30_covered": false,
+  "sentiment_weighted_total_peak_pre30": false,
+  "sentiment_weighted_total_peak_pre30_z30": false,
+  "sentiment_weighted_total_post30_z_max": null,
+  "social_volume_total_symbol": "BNB",
+  "social_volume_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "social_volume_total_pre30_n": 0,
+  "social_volume_total_pre30_z_max": null,
+  "social_volume_total_pre30_z30_max": null,
+  "social_volume_total_pre30_covered": false,
+  "social_volume_total_peak_pre30": false,
+  "social_volume_total_peak_pre30_z30": false,
+  "social_volume_total_post30_z_max": null,
+  "trend_symbol": null
+ },
+ {
+  "g": "pump-fun",
+  "onset": "2025-07-15",
+  "sym_candidates": [
+   "PUMP"
+  ],
+  "mcap_usd_m": 2409,
+  "rel_1m": -0.674,
+  "rel_3m": -0.315,
+  "rel_6m": -0.535,
+  "sentiment_weighted_total_symbol": null,
+  "sentiment_weighted_total_pre30_z_max": null,
+  "sentiment_weighted_total_pre30_covered": false,
+  "sentiment_weighted_total_peak_pre30": null,
+  "social_volume_total_symbol": null,
+  "social_volume_total_pre30_z_max": null,
+  "social_volume_total_pre30_covered": false,
+  "social_volume_total_peak_pre30": null,
+  "trend_symbol": "PUMP",
+  "trend_series": [
+   "2026-08-09",
+   "2026-11-02"
+  ],
+  "trend_pre30_n": 0,
+  "trend_pre30_z_max": null,
+  "trend_peak_pre30": false
+ },
+ {
+  "g": "chainlink",
+  "onset": "2025-08-07",
+  "sym_candidates": [
+   "LINK"
+  ],
+  "mcap_usd_m": 12524,
+  "rel_1m": 0.23,
+  "rel_3m": 0.185,
+  "rel_6m": 0.156,
+  "sentiment_weighted_total_symbol": "LINK",
+  "sentiment_weighted_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "sentiment_weighted_total_pre30_n": 0,
+  "sentiment_weighted_total_pre30_z_max": null,
+  "sentiment_weighted_total_pre30_z30_max": null,
+  "sentiment_weighted_total_pre30_covered": false,
+  "sentiment_weighted_total_peak_pre30": false,
+  "sentiment_weighted_total_peak_pre30_z30": false,
+  "sentiment_weighted_total_post30_z_max": null,
+  "social_volume_total_symbol": "LINK",
+  "social_volume_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "social_volume_total_pre30_n": 0,
+  "social_volume_total_pre30_z_max": null,
+  "social_volume_total_pre30_z30_max": null,
+  "social_volume_total_pre30_covered": false,
+  "social_volume_total_peak_pre30": false,
+  "social_volume_total_peak_pre30_z30": false,
+  "social_volume_total_post30_z_max": null,
+  "trend_symbol": "LINK",
+  "trend_series": [
+   "2026-09-26",
+   "2026-11-01"
+  ],
+  "trend_pre30_n": 0,
+  "trend_pre30_z_max": null,
+  "trend_peak_pre30": false
+ },
+ {
+  "g": "uniswap",
+  "onset": "2025-12-29",
+  "sym_candidates": [
+   "UNI"
+  ],
+  "mcap_usd_m": 3771,
+  "rel_1m": -0.268,
+  "rel_3m": -0.238,
+  "rel_6m": -0.282,
+  "sentiment_weighted_total_symbol": "UNI",
+  "sentiment_weighted_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "sentiment_weighted_total_pre30_n": 10,
+  "sentiment_weighted_total_pre30_z_max": 0.676,
+  "sentiment_weighted_total_pre30_z30_max": null,
+  "sentiment_weighted_total_pre30_covered": false,
+  "sentiment_weighted_total_peak_pre30": false,
+  "sentiment_weighted_total_peak_pre30_z30": false,
+  "sentiment_weighted_total_post30_z_max": 1.798,
+  "social_volume_total_symbol": "UNI",
+  "social_volume_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "social_volume_total_pre30_n": 10,
+  "social_volume_total_pre30_z_max": 0.164,
+  "social_volume_total_pre30_z30_max": null,
+  "social_volume_total_pre30_covered": false,
+  "social_volume_total_peak_pre30": false,
+  "social_volume_total_peak_pre30_z30": false,
+  "social_volume_total_post30_z_max": 1.479,
+  "trend_symbol": "UNI",
+  "trend_series": [
+   "2026-08-18",
+   "2026-11-02"
+  ],
+  "trend_pre30_n": 0,
+  "trend_pre30_z_max": null,
+  "trend_peak_pre30": false
+ },
+ {
+  "g": "yearn-finance",
+  "onset": "2026-02-07",
+  "sym_candidates": [
+   "YFI"
+  ],
+  "mcap_usd_m": 110,
+  "rel_1m": -0.102,
+  "rel_3m": -0.215,
+  "rel_6m": -0.192,
+  "sentiment_weighted_total_symbol": "YFI",
+  "sentiment_weighted_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "sentiment_weighted_total_pre30_n": 30,
+  "sentiment_weighted_total_pre30_z_max": -0.103,
+  "sentiment_weighted_total_pre30_z30_max": -0.813,
+  "sentiment_weighted_total_pre30_covered": true,
+  "sentiment_weighted_total_peak_pre30": false,
+  "sentiment_weighted_total_peak_pre30_z30": false,
+  "sentiment_weighted_total_post30_z_max": 4.058,
+  "social_volume_total_symbol": "YFI",
+  "social_volume_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "social_volume_total_pre30_n": 30,
+  "social_volume_total_pre30_z_max": 0.405,
+  "social_volume_total_pre30_z30_max": -1.052,
+  "social_volume_total_pre30_covered": true,
+  "social_volume_total_peak_pre30": false,
+  "social_volume_total_peak_pre30_z30": false,
+  "social_volume_total_post30_z_max": 0.859,
+  "trend_symbol": null
+ },
+ {
+  "g": "spell-token",
+  "onset": "2026-06-01",
+  "sym_candidates": [
+   "SPELL"
+  ],
+  "mcap_usd_m": 26,
+  "rel_1m": -0.29,
+  "rel_3m": -0.586,
+  "rel_6m": null,
+  "sentiment_weighted_total_symbol": "SPELL",
+  "sentiment_weighted_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "sentiment_weighted_total_pre30_n": 30,
+  "sentiment_weighted_total_pre30_z_max": 2.052,
+  "sentiment_weighted_total_pre30_z30_max": 0.183,
+  "sentiment_weighted_total_pre30_covered": true,
+  "sentiment_weighted_total_peak_pre30": true,
+  "sentiment_weighted_total_peak_pre30_z30": false,
+  "sentiment_weighted_total_post30_z_max": 2.625,
+  "social_volume_total_symbol": "SPELL",
+  "social_volume_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "social_volume_total_pre30_n": 30,
+  "social_volume_total_pre30_z_max": 2.22,
+  "social_volume_total_pre30_z30_max": -0.299,
+  "social_volume_total_pre30_covered": true,
+  "social_volume_total_peak_pre30": true,
+  "social_volume_total_peak_pre30_z30": false,
+  "social_volume_total_post30_z_max": 3.717,
+  "trend_symbol": null
+ },
+ {
+  "g": "lido-dao",
+  "onset": "2026-06-01",
+  "sym_candidates": [
+   "LDO"
+  ],
+  "mcap_usd_m": 281,
+  "rel_1m": -0.1,
+  "rel_3m": 0.091,
+  "rel_6m": null,
+  "sentiment_weighted_total_symbol": "LDO",
+  "sentiment_weighted_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "sentiment_weighted_total_pre30_n": 30,
+  "sentiment_weighted_total_pre30_z_max": -0.006,
+  "sentiment_weighted_total_pre30_z30_max": 0.891,
+  "sentiment_weighted_total_pre30_covered": true,
+  "sentiment_weighted_total_peak_pre30": false,
+  "sentiment_weighted_total_peak_pre30_z30": false,
+  "sentiment_weighted_total_post30_z_max": 1.745,
+  "social_volume_total_symbol": "LDO",
+  "social_volume_total_series": [
+   "2025-12-19",
+   "2026-10-02"
+  ],
+  "social_volume_total_pre30_n": 30,
+  "social_volume_total_pre30_z_max": 1.447,
+  "social_volume_total_pre30_z30_max": 2.271,
+  "social_volume_total_pre30_covered": true,
+  "social_volume_total_peak_pre30": false,
+  "social_volume_total_peak_pre30_z30": true,
+  "social_volume_total_post30_z_max": 2.485,
+  "trend_symbol": null
+ },
+ {
+  "g": "pyth-network",
+  "onset": "2026-08-22",
+  "sym_candidates": [
+   "PYTH"
+  ],
+  "mcap_usd_m": 410,
+  "rel_1m": -0.027,
+  "rel_3m": null,
+  "rel_6m": null,
+  "sentiment_weighted_total_symbol": null,
+  "sentiment_weighted_total_pre30_z_max": null,
+  "sentiment_weighted_total_pre30_covered": false,
+  "sentiment_weighted_total_peak_pre30": null,
+  "social_volume_total_symbol": null,
+  "social_volume_total_pre30_z_max": null,
+  "social_volume_total_pre30_covered": false,
+  "social_volume_total_peak_pre30": null,
+  "trend_symbol": null
+ },
+ {
+  "g": "bankercoin-2",
+  "onset": "2026-09-29",
+  "sym_candidates": [
+   "BNKR"
+  ],
+  "mcap_usd_m": 41,
+  "rel_1m": null,
+  "rel_3m": null,
+  "rel_6m": null,
+  "sentiment_weighted_total_symbol": null,
+  "sentiment_weighted_total_pre30_z_max": null,
+  "sentiment_weighted_total_pre30_covered": false,
+  "sentiment_weighted_total_peak_pre30": null,
+  "social_volume_total_symbol": null,
+  "social_volume_total_pre30_z_max": null,
+  "social_volume_total_pre30_covered": false,
+  "social_volume_total_peak_pre30": null,
+  "trend_symbol": null
+ }
+]
