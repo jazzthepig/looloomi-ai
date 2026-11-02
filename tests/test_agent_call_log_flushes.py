@@ -31,7 +31,8 @@ def _ns(sb_url: str) -> dict:
 
     ns = {"asyncio": asyncio, "queue": queue, "os": os, "datetime": datetime, "timezone": timezone,
           "_call_log_queue": queue.Queue(), "_SB_URL": sb_url, "_SB_KEY": "k" if sb_url else "",
-          "_background_task": None, "_CALL_LOG_MAX": 3, "_flush_call_log": _flush_call_log, "flushed": flushed}
+          "_background_task": None, "_CALL_LOG_MAX": 3, "_flush_call_log": _flush_call_log, "flushed": flushed,
+          "_call_log_state": {"enqueued": 0, "written": 0, "task_started": 0, "last_write_at": None, "last_error": None}}
     exec(compile(ast.Module(body=fns, type_ignores=[]), "cometcloud_mcp", "exec"), ns)
     return ns
 

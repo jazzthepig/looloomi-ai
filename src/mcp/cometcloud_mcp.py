@@ -92,6 +92,9 @@ _SB_TABLE = "agent_call_log"
 #: 注释说「首个请求时再启动」,但没有任何地方再启动它 ⇒ agent_call_log 从上线起 0 行,队列只进不出。
 _background_task = None
 _CALL_LOG_MAX = 5000            # 写不出去时最多攒这么多,超了丢最旧的(不让内存无限涨)
+#: 11-02:S-562 修了 19 天表还是 0 行,而 Railway 的日志看不到 —— 把这条管道的状态留在进程里,`GET /internal/agent-call-log` 读。
+_call_log_state: dict = {"enqueued": 0, "written": 0, "task_started": 0, "last_write_at": None, "last_error": None,
+                         "configured": bool(_SB_URL and _SB_KEY)}
 
 
 def _ensure_call_log_task() -> None:
@@ -104,8 +107,10 @@ def _ensure_call_log_task() -> None:
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
+        _call_log_state["last_error"] = "no running loop at enqueue"
         return
     _background_task = loop.create_task(_call_log_loop())
+    _call_log_state["task_started"] += 1
 
 
 def _enqueue_agent_call(tool_name: str, symbol: str = None, latency_ms: float = 0.0, response_size: int = 0):
@@ -116,6 +121,7 @@ def _enqueue_agent_call(tool_name: str, symbol: str = None, latency_ms: float = 
         except queue.Empty:
             break
     _ensure_call_log_task()
+    _call_log_state["enqueued"] += 1
     _call_log_queue.put_nowait({
         "tool_name": tool_name,
         "symbol":    symbol,
@@ -158,8 +164,21 @@ async def _flush_call_log():
             )
         if resp.status_code not in (200, 201):
             _log.warning(f"[AGENT_CALL_LOG] write failed: {resp.status_code}")
+            _call_log_state["last_error"] = f"HTTP {resp.status_code}: {resp.text[:200]}"
+        else:
+            _call_log_state["written"] += len(rows)
+            _call_log_state["last_write_at"] = datetime.now(timezone.utc).isoformat()
     except Exception as e:
         _log.warning(f"[AGENT_CALL_LOG] exception: {e}")
+        _call_log_state["last_error"] = f"{type(e).__name__}: {str(e)[:200]}"
+
+
+def call_log_status() -> dict:
+    """进程内的管道状态(配了没有 / 入队几条 / 写进几条 / 后台任务活着没有 / 最后一次错误)。"""
+    return {**_call_log_state, "queued": _call_log_queue.qsize(),
+            "task_alive": bool(_background_task is not None and not _background_task.done()),
+            "task_error": (repr(_background_task.exception()) if _background_task is not None and _background_task.done()
+                           and not _background_task.cancelled() and _background_task.exception() else None)}
 
 
 # Start background flush task

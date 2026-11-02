@@ -290,3 +290,14 @@ async def trigger_ohlcv_collect(x_internal_token: str = Header(None),
 
     res = await collect_ohlcv(symbols=sym_list, days=days)
     return res
+
+
+@router.get("/internal/agent-call-log")
+async def agent_call_log_status(x_internal_token: str = Header(None)):
+    """11-02:agent_call_log 0 行 19 天,日志看不到 —— 读进程内的管道状态(配置 / 入队 / 写入 / 任务 / 最后错误)。"""
+    require_internal_token(x_internal_token)
+    try:
+        from src.mcp.cometcloud_mcp import call_log_status
+        return {"ok": True, **call_log_status()}
+    except Exception as e:  # noqa: BLE001 —— mcp 包没装(本地)时也要能答
+        return {"ok": False, "why": f"{type(e).__name__}: {str(e)[:200]}"}
