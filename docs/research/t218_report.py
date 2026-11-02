@@ -283,6 +283,11 @@ body = f"""# T-218 长期情景「轨道赢 / 代币赢」:2021Q1→2026Q3 季�
   ⇒ 两个结算日(2027-03-31、2027-06-30)**都是星期三**,不会撞上非交易日导致「读不到」。
 - `author` 给了建议值 `lane-a:t218`(库里由提交方的 token 决定);`code_ref` 由 `row_for()` 固定写
   `scenario_ledger v1 (11-02)`,不需要 (也不应该由 lane) 自己编。
+- **可结算性已用台账实现逐条验过**(`t218_settle_check.py`,只读):按 `_value()` 的同一套过滤条件读库,
+  10/10 条今天就能解析到值 —— `close:ETH/SOL` 走 `eq.binance_hist`(最后 2026-11-01)、
+  `close:COIN/HOOD/CRCL` 走 `eq.eodhd` 回落到(最后 2026-10-30)、
+  `state:breadth_above_ma50` 与 `state:stable_supply_30d` 在 `entity=panel` 下各 2862 行(最后 2026-11-01)、
+  `macro:vix` 2256 行(最后 2026-10-30,台账回看窗口 7 天)。
 
 ```json
 {json.dumps(PROPS, ensure_ascii=False, indent=2)}
@@ -321,7 +326,9 @@ cd ~/Projects/looloomi-ai-lane-a &&
 python3 docs/research/t218_build2.py &&
 python3 docs/research/t218_analysis.py > docs/research/t218_analysis.txt &&
 python3 docs/research/t218_baserates.py &&
-python3 docs/research/t218_report.py
+python3 docs/research/t218_report.py &&
+python3 docs/research/t218_validate_props.py &&
+python3 docs/research/t218_settle_check.py
 ```
 
 `--recompute` 参数让 `t218_build2.py` 复用已落盘的源、不重新请求(调格式时用)。
