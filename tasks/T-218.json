@@ -1,0 +1,28 @@
+{
+  "id": "T-218",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-02",
+  "title": "长期情景「轨道赢 / 代币赢」:2021→2026 季度观察指标 + 第一批可自动结算的前向命题(交情景台账)",
+  "source": "Jazz 11-02 高维对话:价值会短暂落在稳定币发行方,随后发行方剧烈竞争;长期持有有可分配利润、有用户思维的发行方与公链;二选一的平台没有长期价值。§Seth-1102a。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-218.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 季度表 2021Q1→2026Q3(每行一季):稳定币供应(USDT+USDC 市值,asset_mcap_daily)与季度增速;发行方收入(Tether、Circle,来自数据根 research/s661/ 的 DeFiLlama 缓存;缓存里没有就写「缺」)与公链持币人收入(ETH / SOL / TRX / HYPE 等,同一缓存);公链代币季度收益对 BTC;轨道公司股价季度收益(COIN 2021-04 起、HOOD 2021-07 起、CRCL 2025-06 起,ohlcv_daily source=eodhd —— 11-02 才加进周更,读不到就写「待 Seth 入库」,不推测)。② 把两个分支写成可量的判据:A「轨道与代币一起赢」、B「轨道赢、代币跑输(价值落在发行方 / 股权)」—— 各自 2–3 个可观测指标与阈值;并按 ① 的历史说明每个季度更像哪一支(只描述,不判)。③ 6–10 条前向命题,格式严格按情景台账(id 用 R1-A-01 这类、scenario、statement、variable 只能是 close:<SYMBOL> / state:<feature> / macro:<series>、op ∈ between/gt/lt、lo、hi、prob、horizon_d 在 2026-12-01 → 2027-06-30 之间),贴在报告末尾一个 JSON 代码块里 —— Seth 审过后写进 scenario_ledger(lane 不直接写)。纪律:只读(SELECT / 公开 GET / 公开网页),不改代码、不做 DDL、不入库;步数过半先把脚本与中间结果落文件;遇 Prompt is too long,下一轮以未提交的脚本为续跑起点,不整份重写。可读表以 lane_read 为准(asset_mcap_daily、ohlcv_daily、state_daily、macro_daily、protocol_revenue_daily、core_cap_daily、cis_v2_daily、social_daily、trending_log、sharpe_*、deriv_metrics_daily 等);读不到的写「读不到」并在 SYNC 点名请 Seth 代查,不推测。",
+    "expect": "报告 docs/research/T-218_rails_vs_tokens.md(开头季度表,末尾命题 JSON);卡片 notes 写三句结论 + 命题条数;in_review,推 lane-a/T-218(新分支从 origin/main 起)。"
+  },
+  "prior_value": "只有 11-02 的对话判断与一个 30 天截面(Tether $5.2 亿、Circle $2.1 亿收入,0 给代币持有人;HYPE / TRX 100%);没有任何历史序列,也没有可结算的前向命题。",
+  "notes": "",
+  "verified": null
+}

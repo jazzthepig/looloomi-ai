@@ -1,0 +1,26 @@
+{
+  "id": "T-221",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-11-02",
+  "title": "强平地图的数据管:东京主机记的头部账户持仓(T-130,每 15 分钟)送进库 + 按价格冲击算被迫卖出 / 深度",
+  "source": "Jazz 11-02「利用 AI 做情景分析和模拟」;链上透明是我们有、对冲基金没有的东西。§Seth-1102a。",
+  "allowed_paths": [
+    "src/exec_host/",
+    "src/data/market/",
+    "src/api/",
+    "tests/",
+    "migrations/",
+    "docs/"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "① 主机把 whales 的持仓快照(地址做哈希,不落明文)按小时送 Railway(经 /internal/executor/report 同一条口子或新端点,EXECUTOR_TOKEN),入 hl_whale_positions;② 每天一张强平地图:BTC / ETH / SOL / HYPE 在 −5 / −10 / −15% 冲击下,头部账户被强平的名义额 ÷ 永续 ±2% 深度(venue_depth_snapshots);③ 有调度者、判活、第一行真实数据(规则 5b)。",
+    "expect": "表每小时有行;地图每天一行;lane-a 下一张卡可以在它上面做回放。"
+  },
+  "prior_value": "主机 10 月起每 15 分钟记 200 个头部账户持仓,只在主机硬盘上,没有消费者。",
+  "notes": "",
+  "verified": null
+}

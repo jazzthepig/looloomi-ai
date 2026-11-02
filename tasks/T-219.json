@@ -1,0 +1,28 @@
+{
+  "id": "T-219",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-02",
+  "title": "轨道公司股权进宇宙的第一份研究:风险画像、与 ① / BTC 的关系、执行场所逐家判断 —— 先描述,再预注册一条假设",
+  "source": "Jazz 11-02「轨道公司股权进可投资宇宙(按发行方核验、不认代码)」;DECISIONS 09-26/11-02;§Seth-1102a。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-219.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "先查数据:ohlcv_daily source=eodhd 里 CRCL、COIN、HOOD、GLXY、MSTR、PYPL、XYZ、BLSH、FIGR、GEMI 是否已有日线(11-02 加进周更,最晚 11-03 落库);一个都没有 ⇒ 本轮只写「等数据」并停,不推测。有数据的:① 每家的年化波动、最大回撤、对 BTC 与对 ①(core_cap_daily 的 cap_a1_u NAV)的 β 与相关(日收益,按 2023-01 起与 2025 起两段),与老轨道 V / MA / BLK / IBKR / SCHW 并排;② 每家的执行场所表:HL 现货(有没有核验过 tokenId 的 xStock、有没有挂单)、Solana 上的 xStocks(公开页面写的资金池深度,标日期与来源,不交易)、券商真股 —— 三选一的理由;③ 预注册一条假设(写 M- 号,写于算任何结果之前):轨道公司相对 QQQ 的超额与稳定币供应增速(state_daily 的 stable_supply_30d)同向 —— 发现段 / 留出段按 S-661 的格式机械走完,试验计数写清。纪律:只读(SELECT / 公开 GET / 公开网页),不改代码、不做 DDL、不入库;步数过半先把脚本与中间结果落文件;遇 Prompt is too long,下一轮以未提交的脚本为续跑起点,不整份重写。可读表以 lane_read 为准(asset_mcap_daily、ohlcv_daily、state_daily、macro_daily、protocol_revenue_daily、core_cap_daily、cis_v2_daily、social_daily、trending_log、sharpe_*、deriv_metrics_daily 等);读不到的写「读不到」并在 SYNC 点名请 Seth 代查,不推测。",
+    "expect": "报告 docs/research/T-219_rail_equities.md(开头风险画像表 + 场所表,末尾 M- 预注册与结果);卡片 notes 写关键数;in_review,推 lane-b/T-219。"
+  },
+  "prior_value": "宇宙里没有任何轨道公司;V / MA / BLK / IBKR / SCHW 只作为 World50 候选在池子里,从没按『轨道』看过。",
+  "notes": "",
+  "verified": null
+}

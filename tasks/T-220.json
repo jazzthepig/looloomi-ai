@@ -1,0 +1,28 @@
+{
+  "id": "T-220",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-02",
+  "title": "治理的领先信号:解锁前团队 / 基金会钱包流向、出事后的处理、营销强度 —— 先查能不能量(数据源可行性),再写预注册草稿",
+  "source": "Jazz 11-02:小股东待遇(阿里 vs 腾讯;团队通过关联交易瓜分利润;'被朝鲜黑客攻击'甩锅);密集营销时是高位。S-661 / S-664:价值捕获比在留出段有效但控制规模 / 波动 / 稀释后几乎不剩 ⇒ 滞后的那一半已在质量因子里,领先的这一半没测过。§Seth-1102a。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-220.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 数据源可行性表(不接入、不付费、不注册账号):代币解锁日程(DeFiLlama emissions / unlocks 公开接口、项目文档、其它免费源)与团队 / 基金会 / 投资方钱包标签(Etherscan 标签、Arkham / Nansen 等是否免费可用)—— 每个:覆盖多少个 CIS 加密名字、历史从哪年起、是否按时点(当时可知)、费用与条款;结论写『免费源够不够做 CIS 加密 25 个名字的检验』,不够就写需要什么、大概多少钱(交 Jazz 定,11-02 两周铺排里写着不加新数据源)。② 营销强度:现有可读表(social_daily、sharpe_mindshare_snap、sharpe_narrative_mindshare、trending_log、santiment 映射)各自覆盖的名字与起始日期;能不能构造「某币热度 30 日 z > 2」这类事件、有多少个事件。③ 把 S-661 的 17 个持币人收入「开闸」事件逐个标上:开闸前 30 天有没有热度峰值(②里能量的才标)。④ 两条预注册草稿(不算任何结果):H1 解锁前 30 天团队钱包向交易所净流出 ⇒ 之后 30 / 90 天相对宇宙跑输;H2 热度事件 ⇒ 之后 30 天相对宇宙跑输 —— 写清截面、窗口、对照(随机日期 + 打乱)、试验计数、需要的数据。纪律:只读(SELECT / 公开 GET / 公开网页),不改代码、不做 DDL、不入库;步数过半先把脚本与中间结果落文件;遇 Prompt is too long,下一轮以未提交的脚本为续跑起点,不整份重写。可读表以 lane_read 为准(asset_mcap_daily、ohlcv_daily、state_daily、macro_daily、protocol_revenue_daily、core_cap_daily、cis_v2_daily、social_daily、trending_log、sharpe_*、deriv_metrics_daily 等);读不到的写「读不到」并在 SYNC 点名请 Seth 代查,不推测。",
+    "expect": "报告 docs/research/T-220_governance_leading_signals.md(开头可行性表);卡片 notes 写:免费源够不够、事件个数、两条草稿是否可在现有数据上跑;in_review,推 lane-c/T-220。"
+  },
+  "prior_value": "治理只量了滞后的一半(S-661 价值捕获比、S-587 质量);领先的行为信号一个都没有,不知道现有数据能不能量。",
+  "notes": "",
+  "verified": null
+}
