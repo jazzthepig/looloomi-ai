@@ -100,3 +100,37 @@ def test_the_ledger_is_append_only_in_the_database_and_anchored():
     assert "append-only" in sql and "before insert or update or delete" in sql and "new.written_at := now()" in sql
     from src.data.accounting import anchor
     assert anchor.KEYS["scenario_ledger"] == "id" and "scenario_scores" not in anchor.KEYS, "命题锚定,打分可重算不锚"
+
+
+def test_lane_scenario_files_are_ingested_once_with_the_file_author(monkeypatch, tmp_path):
+    """S-705:lane 的前向预期以 docs/research/scenarios/<lane>-T-NNN.json 进 PR,合并后入账;作者认文件、不认正文;
+    已入账的 id 不重写;结算日没留余量的只报不写;author 不合格的整文件不写。"""
+    import json
+    import src.api.store as store
+    import src.data.style.header as hdr
+    d = tmp_path / sl.SCENARIO_DIR
+    d.mkdir(parents=True)
+    (d / "lane-a-T-222.json").write_text(json.dumps({"author": "lane-a", "entries": [
+        {"id": "T-222-1", "author": "jazz", "scenario": "s", "statement": "x", "variable": "close:BTC", "op": "gt", "lo": 1,
+         "prob": 0.6, "horizon_d": "2026-12-01"},
+        {"id": "T-222-2", "scenario": "s", "statement": "y", "variable": "manual", "op": "gt", "lo": 1, "prob": 0.4,
+         "horizon_d": "2026-11-01"},
+        {"id": "E53", "scenario": "s", "statement": "dup", "variable": "manual", "op": "gt", "lo": 1, "prob": 0.5,
+         "horizon_d": "2026-12-01"}]}), encoding="utf-8")
+    (d / "bad.json").write_text(json.dumps({"author": "lane-z", "entries": []}), encoding="utf-8")
+    ins = []
+
+    async def read_all(t, params):
+        assert t == sl.TABLE
+        return [{"id": "E53"}]
+
+    async def insert(t, rows):
+        ins.extend(rows)
+        return type("R", (), {"ok": True, "why": ""})()
+    monkeypatch.setattr(hdr, "_read_all", read_all)
+    monkeypatch.setattr(store, "supabase_insert_table", insert)
+    r = asyncio.run(sl.ingest_repo(dt.date(2026, 11, 3), root=str(tmp_path)))
+    assert r["files"] == 2 and r["written"] == 1
+    assert [x["id"] for x in ins] == ["T-222-1"] and ins[0]["author"] == "lane-a", "作者取文件,正文里的 jazz 不算"
+    assert any("T-222-2" in s and "horizon_d" in s for s in r["skipped"]) and any("lane-z" in s for s in r["skipped"])
+    assert (Path(sl.SCENARIO_DIR) / "README.md").exists(), "格式说明就放在目录里,lane 不用去读别的"

@@ -20,6 +20,13 @@
 - `macro:<series>` —— `macro_daily` 当天或之前 7 天内最近一个值。
 `op`:`between`(lo ≤ x ≤ hi)、`gt`(x > lo)、`lt`(x < hi)。结算日过了 7 天还没有值 ⇒ 记「读不到」,结果留空(不当成假)。
 
+## lane 也是作者(11-02 第二批,S-705)
+
+A / B / C 交研究卡时,把对结果的前向预期写成 `docs/research/scenarios/<lane>-T-NNN.json`(格式见那个目录的 README),
+随分支一起进 PR;Seth 合并 = 闸门;Railway 部署后 `ingest_repo` 把还没入账的条目写进台账 —— `d` 由库记成入账那天,
+所以 lane 给的结算日要留足余量(≥ 入账后 7 天)。作者取文件里的 `author`(只认 lane-a/b/c、seth*、jazz、ai:*),
+之后 `calibration` 按作者分开算 Brier:**三个 lane 的「概率说得准不准」从此是量出来的,不是感觉。**
+
 判活:`select count(*) from scenario_ledger` 只增不减;`loop_attempt` 里 `_scenario_ledger_loop` 每小时一条。
 """
 from __future__ import annotations
@@ -39,6 +46,8 @@ OPS = ("between", "gt", "lt")
 KINDS = ("close", "state", "macro", "manual")
 LATE_DAYS = 7
 _ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$")
+_AUTHOR = re.compile(r"^(?:lane-[abc]|seth(?:[:-][\w.-]+)?|jazz|ai:[\w.-]+)$")
+SCENARIO_DIR = "docs/research/scenarios"
 
 
 def _f(x: Any) -> Optional[float]:
@@ -190,15 +199,64 @@ async def _value(kind: str, key: str, d: str) -> Optional[float]:
     return None
 
 
+def repo_files(root: Optional[str] = None) -> list[dict]:
+    """纯读。`docs/research/scenarios/*.json` → [{file, author, entries, problems}];坏文件只报不抛。"""
+    import json
+    from pathlib import Path
+    base = Path(root) if root else Path(__file__).resolve().parents[3]
+    out = []
+    for f in sorted((base / SCENARIO_DIR).glob("*.json")):
+        rec: dict[str, Any] = {"file": f.name, "author": None, "entries": [], "problems": []}
+        try:
+            j = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as e:
+            rec["problems"].append(f"读不了:{e}")
+            out.append(rec)
+            continue
+        author = str((j or {}).get("author") or "")
+        if not _AUTHOR.match(author):
+            rec["problems"].append(f"author {author!r} 不认(lane-a/b/c、seth…、jazz、ai:…)")
+        elif not isinstance(j.get("entries"), list):
+            rec["problems"].append("entries 要是列表")
+        else:
+            rec["author"], rec["entries"] = author, [e for e in j["entries"] if isinstance(e, dict)]
+        out.append(rec)
+    return out
+
+
+async def ingest_repo(today: dt.date, root: Optional[str] = None) -> dict[str, Any]:
+    """仓库里 lane 写的情景文件 → 台账(只写还没入账的 id;过期 / 不合格的只报)。"""
+    from src.data.style.header import _read_all
+    files = repo_files(root)
+    if not files:
+        return {"files": 0, "written": 0}
+    have = {r["id"] for r in await _read_all(TABLE, {"select": "id"})}
+    written, skipped = 0, []
+    for rec in files:
+        skipped += [f"{rec['file']}: {p}" for p in rec["problems"]]
+        new = [e for e in rec["entries"] if str(e.get("id")) not in have]
+        good = [e for e in new if not validate({**e, "author": rec["author"]}, today)]
+        skipped += [f"{rec['file']}/{e.get('id')}: {'; '.join(validate({**e, 'author': rec['author']}, today))}"
+                    for e in new if e not in good]
+        if good:
+            r = await submit(good, rec["author"], dt.datetime.combine(today, dt.time(), dt.timezone.utc))
+            if r.get("ok"):
+                written += r["written"]
+            else:
+                skipped.append(f"{rec['file']}: {r.get('why')}")
+    return {"files": len(files), "written": written, "skipped": skipped[:20]}
+
+
 async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
-    """结算所有到期、还没结的自动命题。"""
+    """① 仓库里的情景文件入账 ② 结算所有到期、还没结的自动命题。"""
     from src.api.store import supabase_upsert_table
     from src.data.style.header import _read_all
     today = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc).date()
+    ingested = await ingest_repo(today)
     due = await _read_all(TABLE, {"select": "id,variable,op,lo,hi,prob,horizon_d", "horizon_d": f"lt.{today.isoformat()}",
                                   "variable": "neq.manual", "order": "horizon_d.asc"})
     if not due:
-        return {"ok": True, "status": "skipped", "why": "没有到期的自动命题"}
+        return {"ok": True, "status": "skipped", "ingested": ingested, "why": "没有到期的自动命题"}
     done = {r["id"] for r in await _read_all(SCORES, {"select": "id", "outcome": "not.is.null"})}
     rows, waiting = [], 0
     for e in due:
@@ -214,5 +272,5 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         w = await supabase_upsert_table(SCORES, rows, on_conflict="id")
         if not w:
             return {"ok": False, "why": f"写 {SCORES} 失败:{(getattr(w, 'why', '') or '')[:200]}"}
-    return {"ok": True, "scored": len(rows), "waiting": waiting,
-            "why": f"结算 {len(rows)} 条,等值 {waiting} 条"}
+    return {"ok": True, "scored": len(rows), "waiting": waiting, "ingested": ingested,
+            "why": f"结算 {len(rows)} 条,等值 {waiting} 条,入账 {ingested.get('written', 0)} 条"}

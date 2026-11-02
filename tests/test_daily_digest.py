@@ -58,3 +58,13 @@ def test_decision_triggers_from_11_02_are_watched_every_day():
     assert dd.decision_lines("2026-12-02", 100.0, {"XAUT0": 50.0}, {}) == [], "没有深度数据不猜"
     text = dd.compose("2026-12-01", [], [], [], [], 3, decisions=dd.decision_lines("2026-12-01", None, {}, {}))
     assert text.endswith("HL 现货触发单开了没有")
+
+
+def test_digest_reports_scenario_calibration_by_author():
+    """S-705:lane 的概率准不准每天在简报里看得到;没结算时只说已写几条。"""
+    from src.data.ops.daily_digest import calibration_lines
+    assert calibration_lines([], []) == []
+    e = [{"id": "a1", "author": "lane-a", "prob": 0.8}, {"id": "a2", "author": "lane-a", "prob": 0.3}, {"id": "s1", "author": "seth", "prob": 0.5}]
+    assert "已写 3 条" in calibration_lines(e, [])[0]
+    line = calibration_lines(e, [{"id": "a1", "outcome": True, "brier": 0.04}, {"id": "a2", "outcome": True, "brier": 0.49}])[0]
+    assert "lane-a 2 条" in line and "Brier 0.265" in line and "seth" not in line

@@ -59,6 +59,18 @@ def _exec_line(r: dict) -> str:
             + (f" 决策→回报 {lat:.1f}s" if lat is not None else ""))
 
 
+def calibration_lines(entries: list[dict], scores: list[dict]) -> list[str]:
+    """纯函数。情景台账按作者的校准(S-705:lane 也是作者):已结 n、命中率、平均 Brier;什么都没结 ⇒ 一行「未结 / 已写」。"""
+    from src.data.evaluation.scenario_ledger import calibration
+    if not entries:
+        return []
+    cal = calibration(entries, {s["id"]: s for s in scores})
+    if not cal:
+        return [f"情景台账:已写 {len(entries)} 条,还没有结算的(第一批 11-04 起)"]
+    parts = [f"{a} {v['n']} 条 命中 {v['hit_rate']:.0%} Brier {v['mean_brier']:.3f}" for a, v in sorted(cal.items())]
+    return ["情景台账(已结 / 命中率 / Brier,0 = 全对、0.25 = 乱猜):" + " · ".join(parts)]
+
+
 def decision_lines(d: str, equity: Optional[float], leg_targets: dict[str, float], depth2: dict[str, float]) -> list[str]:
     """纯函数。DECISIONS 11-02 的触发线:到了就写一行(不到不写);每月 1 号提醒重跑现货触发单探针。"""
     out = []
@@ -211,9 +223,12 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         if r.get("symbol") not in dep and b_ is not None and a_ is not None:
             dep[r["symbol"]] = min(b_, a_)
     eq = _f(live[-1].get("equity_usd")) if live else None
+    sc_entries = await _try("scenario_ledger", _read_all("scenario_ledger", {"select": "id,author,prob"}))
+    sc_scores = await _try("scenario_scores", _read_all("scenario_scores", {"select": "id,outcome,brier", "outcome": "not.is.null"}))
     from src.api.loop_beat import build_sha
     text = compose(today, live, sorted(latest.values(), key=lambda r: r["sleeve"]), host, bad, n_risks, unreadable,
-                   host_code=host_code, railway_code=build_sha() or None, decisions=decision_lines(today, eq, leg_t, dep))
+                   host_code=host_code, railway_code=build_sha() or None,
+                   decisions=decision_lines(today, eq, leg_t, dep) + calibration_lines(sc_entries, sc_scores))
     if not telegram_configured():
         return {"ok": False, "why": "TELEGRAM_BOT_TOKEN 未配", "text": text}
     sent_ok = await notify_telegram(text)
