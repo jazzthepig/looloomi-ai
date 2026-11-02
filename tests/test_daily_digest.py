@@ -35,10 +35,11 @@ def test_empty_inputs_say_so_instead_of_zero():
     assert "心跳里没有(旧版主机)" in text
 
 
-def test_once_a_day_after_0030_utc():
-    t = dt.datetime(2026, 11, 1, 0, 29, tzinfo=dt.timezone.utc)
+def test_once_a_day_after_0100_utc():
+    """11-02:00:30 发的第一条把 00:45 才跑的 R-v2 写成「没跑」—— 挪到 01:00。"""
+    t = dt.datetime(2026, 11, 1, 0, 59, tzinfo=dt.timezone.utc)
     assert not dd.due(t, sent_today=False)
-    assert dd.due(t.replace(minute=30), sent_today=False)
+    assert dd.due(t.replace(hour=1, minute=0), sent_today=False)
     assert not dd.due(t.replace(hour=9), sent_today=True)
 
 

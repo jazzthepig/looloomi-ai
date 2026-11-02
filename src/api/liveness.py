@@ -63,7 +63,7 @@ LIVENESS_SLOS: dict[str, dict] = {
     "_exec_quality_loop":        {"max_age_h": 3, "kind": "marker"},     # 10-30 执行质量日表(fill_log 的消费者)
     "_mcap_deepen_loop":         {"max_age_h": 8, "kind": "marker"},     # 10-30 S-700 一次性补齐(做完每 6h 空转一次)
     "_core_pit_loop":            {"max_age_h": 8, "kind": "marker"},     # 10-30 S-700 按时点 ① 回放臂 cap_pit24(6h)
-    "_daily_digest_loop":        {"max_age_h": 2, "kind": "marker"},     # 11-01 每日 Telegram 简报(00:30 UTC;每 20 分钟看一眼)
+    "_daily_digest_loop":        {"max_age_h": 2, "kind": "marker"},     # 11-01 每日 Telegram 简报(01:00 UTC;每 20 分钟看一眼)
     "_dead_host_guard_loop":     {"max_age_h": 2, "kind": "marker"},
     "_venue_depth_loop":         {"max_age_h": 2, "kind": "marker"},     # 11-02 T-082 B:HL 盘口深度(00/08/16 一批,每 20 分钟看一眼)     # 11-02 主机死了的那一段:现货越线 / 永续裸仓 ⇒ Telegram(10 分钟)
     "_vc_rounds_loop":           {"max_age_h": 6, "kind": "collector"},  # 10-28 VC 融资轮:公开新闻标题 → vc_funding_rounds(每小时)

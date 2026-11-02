@@ -1661,7 +1661,11 @@ async def _cis_official_loop():
             await _beat("_cis_official_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _record_loop_attempt("_cis_official_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                        writer="src.api.main._cis_official_loop")
-        await _asyncio.sleep(3600)
+            r = {}
+        # 11-02 速度:等收盘的时候每 10 分钟追一次(原来一小时)—— X1V / T25 的主机计划读同一份 asset_mcap_daily,
+        # 11-01 ETH 收盘晚到 06:16,真钱账本跟着晚了 6 小时。06:00 之后、或已发布 ⇒ 照旧一小时一次
+        _waiting = bool(r.get("refused")) and _dt.datetime.now(_dt.timezone.utc).hour < 6
+        await _asyncio.sleep(600 if _waiting else 3600)
 
 
 @app.on_event("startup")
@@ -2331,7 +2335,7 @@ async def _start_mcap_deepen_loop():
 
 
 async def _daily_digest_loop():
-    """每日简报(`src/data/ops/daily_digest.py`,Jazz 11-01):UTC 00:30 后一条 Telegram —— 真钱净值 / 当日、三本执行账昨夜轮次、
+    """每日简报(`src/data/ops/daily_digest.py`,Jazz 11-01):UTC 01:00 后一条 Telegram —— 真钱净值 / 当日、三本执行账昨夜轮次、
     执行质量累计、不 ok 的循环、OPEN RISKS 条数。一天一次(以 loop_attempt 当天的 ok 行为准);每 20 分钟看一眼。"""
     await _asyncio.sleep(_boot_delay(300))
     while True:
@@ -2412,7 +2416,7 @@ async def _start_dead_host_guard_loop():
 @app.on_event("startup")
 async def _start_daily_digest_loop():
     _asyncio.create_task(_daily_digest_loop())
-    print("[DIGEST] ✅ daily Telegram digest scheduled (00:30 UTC)")
+    print("[DIGEST] ✅ daily Telegram digest scheduled (01:00 UTC)")
 
 
 @app.on_event("startup")

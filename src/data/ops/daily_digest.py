@@ -1,4 +1,4 @@
-"""每日简报(Jazz 11-01「往前铺排」第 2 条):UTC 00:30 之后发一条 Telegram,把真钱账本昨天的样子放在一眼之内。
+"""每日简报(Jazz 11-01「往前铺排」第 2 条):UTC 01:00 之后发一条 Telegram,把真钱账本昨天的样子放在一眼之内。
 
 ## 内容(全部来自装置已经在记的表,不新算)
 
@@ -10,7 +10,7 @@
 
 ## 规则
 
-- 一天只发一次(UTC 00:30 后;以 `loop_attempt` 里当天是否已有 `_daily_digest_loop` ok 行为准)。读不到的段写「读不到」,不写 0。
+- 一天只发一次(UTC 01:00 后;以 `loop_attempt` 里当天是否已有 `_daily_digest_loop` ok 行为准)。读不到的段写「读不到」,不写 0。
 - 纯文本(notify_telegram 默认不解析 Markdown —— 符号 / 下划线会 400)。合规:简报只说仓位与收益,不出现买卖字样;这是内部频道,但习惯要一样。
 """
 from __future__ import annotations
@@ -19,7 +19,7 @@ import datetime as dt
 import re
 from typing import Any, Optional
 
-SEND_AFTER_UTC = (0, 30)
+SEND_AFTER_UTC = (1, 0)          # 11-02:R-v2 的一轮在 00:45 之后 —— 00:30 发会把它写成「没跑」
 LOOP_NAME = "_daily_digest_loop"
 
 
@@ -124,7 +124,7 @@ def compose(d: str, live: list[dict], exec_rows: list[dict], host_events: list[d
 
 
 def due(now: dt.datetime, sent_today: bool) -> bool:
-    """UTC 00:30 之后、今天还没发 ⇒ 该发。"""
+    """UTC 01:00 之后、今天还没发 ⇒ 该发。"""
     h, m = SEND_AFTER_UTC
     return not sent_today and (now.hour, now.minute) >= (h, m)
 
@@ -137,7 +137,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     sent = await _read_all("loop_attempt", {"select": "at", "loop_name": f"eq.{LOOP_NAME}", "outcome": "eq.ok",
                                             "at": f"gte.{today}T00:00:00Z", "limit": "1"})
     if not due(now, bool(sent)):
-        return {"ok": True, "refused": True, "why": "今天已发" if sent else "还没到 00:30 UTC"}
+        return {"ok": True, "refused": True, "why": "今天已发" if sent else "还没到 01:00 UTC"}
     unreadable: list[str] = []
 
     async def _try(name, coro):
