@@ -21,7 +21,10 @@ from __future__ import annotations
 
 import asyncio
 import datetime as dt
+import logging
 from typing import Any, Optional
+
+log = logging.getLogger(__name__)
 
 PAPER_ACCOUNT_USD = 3_000.0
 SPOT_TOKENS = {"BTC": "UBTC", "ETH": "UETH"}
@@ -66,7 +69,7 @@ def _spot_quotes_sync(client=None, tokens: Optional[dict[str, str]] = None,
     同步,由调用方放进线程。
     `meta` = 调用方缓存的 (spotMeta, spotMetaAndAssetCtxs)(11-02 速度:两份元数据 ~0.5 MB、每轮 1 秒多,币对与 szDecimals 一天不变)。
     给了缓存 ⇒ 盘口没有中间价时**不**退回元数据里的旧中间价(那是缓存时刻的价),这个名字就没有报价。"""
-    from src.data.venues.hl_spot import HlSpotClient, HlSpotFixture, parse_l2_book
+    from src.data.venues.hl_spot import HlSpotClient, HlSpotFixture, find_token_by_name, parse_l2_book, token_pin_problem
     c = client or HlSpotClient()
     sm, ctxs = meta if meta is not None else (c.spot_meta(), c.spot_meta_and_asset_ctxs())
     fx = HlSpotFixture(sm, ctxs, {}, {})
@@ -74,6 +77,12 @@ def _spot_quotes_sync(client=None, tokens: Optional[dict[str, str]] = None,
     for sym, base in (tokens or SPOT_TOKENS).items():
         pair = fx.find_pair_by_token(base)
         if pair is None:
+            continue
+        # 11-02:按链上 tokenId 核验(名字可以被抢注)—— 对不上就没有报价,下游写「没有盘口报价 —— 不下单」
+        tok = find_token_by_name(fx.tokens(), base)
+        why = token_pin_problem(base, tok.token_id if tok else None)
+        if why:
+            log.warning("spot quote refused: %s", why)
             continue
         book = parse_l2_book(c.l2_book(pair.name))
         mid = book.mid_px or (None if meta is not None else pair.mid_px)

@@ -360,3 +360,25 @@ def test_speed_legs_do_not_wait_for_the_x1v_closes(tmp_path):
     assert len(reps) == 1 and reps[0]["book"] == "t25" and reps[0]["asof"] == today, "腿照常跑"
     e._maybe_t25_cycle(NOW)
     assert len(_outbox(e)) == 1, "同一天只跑一轮"
+
+
+def test_tokens_are_pinned_by_on_chain_id_not_by_name():
+    """11-02:HL 上 `CRCL` 是 $0.02 的无关代币,真正的 Circle 是 `CRCLX` —— 名字能抢注,tokenId 不能。对不上 ⇒ 没有报价 ⇒ 不下单。"""
+    from src.data.venues.hl_spot import PINNED_TOKEN_IDS, token_pin_problem
+    meta = _LegClient().spot_meta()
+    ids = {t["name"]: t.get("tokenId") for t in meta["tokens"]}
+    for name in ("UBTC", "UETH", "XAUT0", "SPYX"):
+        assert token_pin_problem(name, ids[name]) is None, f"{name} 的钉子与 HL 现在的 tokenId 一致"
+    assert "没有钉" in token_pin_problem("CRCL", "0xabc")
+    assert "≠" in token_pin_problem("SPYX", "0x" + "0" * 32)
+
+    class Swapped(_LegClient):
+        def spot_meta(self):
+            m = super().spot_meta()
+            for t in m["tokens"]:
+                if t["name"] == "SPYX":
+                    t["tokenId"] = "0x" + "f" * 32                    # 同名、不同的代币
+            return m
+    q = dr._spot_quotes_sync(Swapped(), legs.LEG_TOKENS)
+    assert "SPYX" not in q and "XAUT0" in q, "被换掉的那一个没有报价,另一个照常"
+    assert set(PINNED_TOKEN_IDS) >= set(legs.LEG_TOKENS.values()) | set(dr.SPOT_TOKENS.values()), "下单的每个代币都钉了"

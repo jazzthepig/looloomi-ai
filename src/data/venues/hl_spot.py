@@ -59,6 +59,27 @@ DEFAULT_MIN_NOTIONAL_USDC = 10.0
 REFERENCE_NOTIONALS_USDC = (3_000.0, 30_000.0, 300_000.0, 3_000_000.0)
 
 
+#: 11-02(Jazz:轨道公司股权进宇宙,「按发行方核验、不认代码」)—— HL 现货的代币名谁都能注册:`CRCL` 是一个 $0.02 的无关代币,
+#: 真正的 Circle 是 `CRCLX`(Wrapped Circle xStock);`QQQ` 的价格对不上纳斯达克 ETF。我们下单的每一个代币按**链上 tokenId**
+#: 钉死(名字可以被抢注,tokenId 不能)。新代币进宇宙 = 先核验发行方,再把 tokenId 写进这里。
+PINNED_TOKEN_IDS: dict[str, str] = {
+    "UBTC": "0x8f254b963e8468305d409b33aa137c67",    # Unit Bitcoin
+    "UETH": "0xe1edd30daaf5caac3fe63569e24748da",    # Unit Ethereum
+    "XAUT0": "0xfd61ec89811ba3cf2ae12d0ed8ef1afd",   # Tether Gold(omnichain)
+    "SPYX": "0x29067197b3125c8b82ad0f338e4a31b2",    # Wrapped SP500 xStock
+}
+
+
+def token_pin_problem(name: str, token_id: Optional[str]) -> Optional[str]:
+    """纯函数。没钉的代币 / tokenId 对不上 ⇒ 原因;对上 ⇒ None。"""
+    want = PINNED_TOKEN_IDS.get(name)
+    if want is None:
+        return f"{name} 没有钉 tokenId —— 先核验发行方再进宇宙"
+    if str(token_id or "").lower() != want.lower():
+        return f"{name} 的 tokenId {token_id} ≠ 钉住的 {want} —— 名字可能被换了 / 抢注了,不下单"
+    return None
+
+
 # Public endpoints we will call. Anything else must be deliberate.
 ALLOWED_INFO_TYPES = frozenset({
     "spotMeta",
