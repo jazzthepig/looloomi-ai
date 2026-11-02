@@ -1,0 +1,170 @@
+{
+ "panel_latest_d": "2026-11-01",
+ "panel_latest": {
+  "breadth_above_ma50": 0,
+  "dist_200": 0.0693494208115319,
+  "funding_7d_ann": 0.0867033003285714,
+  "funding_7d_ann_binance": 0.0664912157142857,
+  "mom_20": -0.0502738838838842,
+  "mom_200": 0.0440098511058469,
+  "mom_60": 0.00337534713830534,
+  "oi_chg_30d": -0.120888863887727,
+  "regime_coverage_30d": 30,
+  "regime_share_30d:EASING": 0,
+  "regime_share_30d:NEUTRAL": 0,
+  "regime_share_30d:RISK_OFF": 0,
+  "regime_share_30d:RISK_ON": 0,
+  "regime_share_30d:STAGFLATION": 0,
+  "regime_share_30d:TIGHTENING": 1,
+  "spy_ret_21": -0.0108247490150395,
+  "stable_lend_apy_7d": 4.1848765680326,
+  "stable_supply_30d": -0.0258514803777369,
+  "style_rel_majors_30d": 0.0867273185826513,
+  "taker_buy_share_30d": 0.502327378474304,
+  "vol_30": 0.320100761190492,
+  "vol_pct_3y": 0.0575342465753425,
+  "vratio_30_180": 0.967714483379281
+ },
+ "n_state_features": 23,
+ "spell_open_window": [
+  {
+   "trade_date": "2026-05-28",
+   "close": 0.0001481,
+   "source": "binance_hist"
+  },
+  {
+   "trade_date": "2026-05-29",
+   "close": 0.0001503,
+   "source": "binance_hist"
+  },
+  {
+   "trade_date": "2026-05-30",
+   "close": 0.0001512,
+   "source": "binance_hist"
+  },
+  {
+   "trade_date": "2026-05-31",
+   "close": 0.0001531,
+   "source": "binance_hist"
+  },
+  {
+   "trade_date": "2026-06-01",
+   "close": 0.0001506,
+   "source": "binance_hist"
+  },
+  {
+   "trade_date": "2026-06-02",
+   "close": 0.0001414,
+   "source": "binance_hist"
+  },
+  {
+   "trade_date": "2026-06-03",
+   "close": 0.0001418,
+   "source": "binance_hist"
+  },
+  {
+   "trade_date": "2026-06-04",
+   "close": 0.0001349,
+   "source": "binance_hist"
+  },
+  {
+   "trade_date": "2026-06-05",
+   "close": 0.0001255,
+   "source": "binance_hist"
+  },
+  {
+   "trade_date": "2026-06-06",
+   "close": 0.000122,
+   "source": "binance_hist"
+  },
+  {
+   "trade_date": "2026-06-07",
+   "close": 0.0001244,
+   "source": "binance_hist"
+  },
+  {
+   "trade_date": "2026-06-08",
+   "close": 0.0001248,
+   "source": "binance_hist"
+  }
+ ],
+ "spell_latest": [
+  {
+   "trade_date": "2026-11-01",
+   "close": 7.71e-05
+  }
+ ],
+ "asset_id_like_sky": {
+  "SKY|SKY|hyperliquid": {
+   "n": 15,
+   "first": "2026-08-09",
+   "last": "2026-08-23",
+   "last_close": 0.066072
+  }
+ },
+ "symbol_like_mkr": {
+  "MKR|MKR|binance_hist": {
+   "n": 60,
+   "first": "2020-07-23",
+   "last": "2020-09-20",
+   "last_close": 475.26
+  }
+ },
+ "mkr_cg": {
+  "n": 432,
+  "first": {
+   "trade_date": "2025-08-27",
+   "close": 1589.8
+  },
+  "last": {
+   "trade_date": "2026-11-01",
+   "close": 1550.58
+  },
+  "sample": [
+   {
+    "trade_date": "2025-08-27",
+    "close": 1589.8
+   },
+   {
+    "trade_date": "2025-10-06",
+    "close": 1641.88
+   },
+   {
+    "trade_date": "2025-11-15",
+    "close": 1226.28
+   },
+   {
+    "trade_date": "2025-12-25",
+    "close": 1600.32
+   },
+   {
+    "trade_date": "2026-02-03",
+    "close": 1440.87
+   },
+   {
+    "trade_date": "2026-03-15",
+    "close": 1622.73
+   },
+   {
+    "trade_date": "2026-04-24",
+    "close": 1949.02
+   },
+   {
+    "trade_date": "2026-06-03",
+    "close": 1579.53
+   },
+   {
+    "trade_date": "2026-07-13",
+    "close": 1389.42
+   },
+   {
+    "trade_date": "2026-08-22",
+    "close": 1512.58
+   },
+   {
+    "trade_date": "2026-10-01",
+    "close": 1918.4
+   }
+  ]
+ }
+}

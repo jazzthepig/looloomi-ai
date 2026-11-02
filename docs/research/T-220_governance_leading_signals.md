@@ -213,7 +213,7 @@ python3 /Volumes/CometCloudAI/cometcloud-local/research/t220/summarize.py       
 1. **要不要花钱**:解锁日程历史(DeFiLlama API $3,000/年 或 $300/月做一次性回填)+ 团队/交易所地址标签(Arkham / Nansen 付费档,或自建人工)。**11-02 两周铺排里写着不加新数据源** ⇒ 在 Jazz 拍板前,H1 不开工。
 2. **先做不花钱的那一半**:H2 可以立刻在现有数据上跑(事件数已量出来,功效薄);要开卡请明确是否值得为 30–118 个事件开一张卡。
 3. **解锁网页版抓取是否合规**:免费网页有数据但 robots 允许、数据本体是付费 API 的网页版 ⇒ 若要用,建议走 API 档而不是长期抓网页。
-4. **SKY 的价格源**:`ohlcv_daily` 里 SKY 只有 15 天;需要指定守护源(改用 MKR 序列?还是 coingecko_pro_ohlc 的 sky?)—— 这属于取数口径,等 @seth 定。
+4. **SKY 的价格源**:已量完,见 §6 —— `symbol='SKY'` 是 **Hyperliquid 的 SKY**(撞名,15 天,0.066),Maker 的 SKY 在库里仍叫 `MKR`(`coingecko_pro_ohlc` 2025-08-27→2026-11-01 连续 432 天无缺)。
 
 ## 5. 前向命题(补交,`docs/research/scenarios/lane-c-T-220.json`)
 
@@ -228,4 +228,23 @@ python3 /Volumes/CometCloudAI/cometcloud-local/research/t220/summarize.py       
 | T-220-5 | 人工 | 每日 `defillama.com/unlocks` 快照到 2026-12-15 连续天数仍 < 30(x=天数)⇒ 免费网页的「只给未来」这一限制原样保留 | 0.85 |
 
 写这些命题时用的原始数(可核):SPELL 开闸日 2026-06-01 收盘 0.0001506、2026-11-01 收盘 0.0000771(`ohlcv_daily`,source=binance_hist);`state_daily` entity=panel 最新日 2026-11-01 的 breadth_above_ma50=0、style_rel_majors_30d=+0.0867273;面板可结算的 `state_daily` feature 共 23 个。
+
+## 6. 遗留问题 4 已量:`SKY` 是撞名(静默错源,不是「数据不够」)
+
+问「S-661 用到的 SKY 该用哪个价格源」时,先撞上一个更前面的坑 —— 只读查 `ohlcv_daily`:
+
+| symbol | asset_id | source | 行数 | 区间 | 最新收盘 |
+|--------|----------|--------|------|------|----------|
+| SKY | SKY | hyperliquid | 15 | 2026-08-09 → 2026-08-23 | 0.066072 |
+| MKR | MKR | coingecko_pro_ohlc | 432 | 2025-08-27 → 2026-11-01 | 1550.58 |
+| MKR | MKR | binance_hist | 1000 | 2020-07-23 → 2023-04-18(下架) | 789 |
+| MKR | MKR | binance_um_hist | 2 | 2021-01-11 → 2021-01-21 | 1154.89 |
+
+- **`symbol='SKY'` 拿到的不是 Maker 的 SKY,是 Hyperliquid 的 SKY**(asset_id=hyperliquid,15 天,0.066)。这不是「读不到」,是**读得到但完全错的那个值** —— 静默错源,比缺数据更危险。
+- Maker 的 SKY 在库里仍叫 **`MKR`**,活序列在 `coingecko_pro_ohlc`:**2025-08-27 → 2026-11-01 共 432 天,一天不缺**(日历上 2025-08-27 + 365 + 66 + 1 = 432,正好),改名节点(2025-11)前后没有断。
+- `binance_hist` 的 MKR 止于 2023-04-18(下架),`binance_um_hist` 只有 2 行 ⇒ 这两条都当不了守护源。
+- **给 @seth 建议(不用拍板就能落地的那一半)**:Maker/SKY 的守护源 = `ohlcv_daily` 的 `symbol=MKR` + `source=coingecko_pro_ohlc`;查价一律用 **asset_id='MKR'** 定位,别用 `symbol='SKY'`。这正好是 T-028(SKY 日线回填)要用的那条序列 —— 本轮只读,没改任何取数逻辑。
+
+**剩下要 @seth 定的只有一件**:回填要不要把 symbol 从 `MKR` 改成 `SKY`(会与 Hyperliquid 的 SKY 冲突 ⇒ 加后缀如 `SKY_MAKER`,还是统一改用 asset_id 定位)。
+
 
