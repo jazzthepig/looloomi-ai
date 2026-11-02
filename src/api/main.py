@@ -3112,6 +3112,10 @@ async def _cg_panel_loop():
                     writer="src.api.main._cg_panel_loop")
                 await _asyncio.sleep(_RETRY_AFTER_FAILURE_S)
                 continue
+            from src.data.market.cg_panel_sync import ensure_cis_names as _ensure_cis
+            _panel, _added = await _ensure_cis(_q, _up, list(_panel))     # 11-02:CIS 的加密名字一定在面板里(SKY)
+            if _added:
+                print(f"[CG-PANEL] cg_coin_map 补了 CIS 名字:{_added}")
             async with _httpx.AsyncClient(headers=_cg_headers(),
                                           timeout=45) as _c:
                 res = await run_once(client=_c, supabase_query=_q,

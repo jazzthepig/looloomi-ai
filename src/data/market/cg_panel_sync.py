@@ -107,6 +107,29 @@ async def _known_map(supabase_query) -> Optional[tuple[dict[str, str], dict[str,
     return ids, cls, rf
 
 
+#: 11-02(T-220 补交「SKY 撞名」的根因):面板日线只覆盖 Binance 永续宇宙,**CIS 自己的 25 个加密名字不一定在里面** ——
+#: SKY 在 `ohlcv_daily` 只有 15 行 HL 永续(2026-08),研究一按 symbol 读就以为「没数据 / 错源」。价格其实一直在
+#: `asset_mcap_daily`(coin_id sky,2024-09 起),只是没进 `coingecko_pro_ohlc`。这里把 CIS 的加密名字并进面板,
+#: 映射直接取 `cis_provider.CRYPTO_ASSETS` 的 coingecko id(人工核过的,写成 manual_verified,S-469 的粘性规则保护它)。
+async def ensure_cis_names(supabase_query, supabase_upsert, panel: list[str]) -> tuple[list[str], list[str]]:
+    """→ (面板 ∪ CIS 加密名字, 本轮新写进 cg_coin_map 的符号)。cg_coin_map 读不到 ⇒ 不写、只并面板。"""
+    from src.data.cis.cis_provider import CRYPTO_ASSETS
+    cis = {s.upper(): (c.get("coingecko") or "") for s, c in CRYPTO_ASSETS.items() if c.get("coingecko")}
+    merged = sorted(set(x.upper() for x in panel) | set(cis))
+    km = await _known_map(supabase_query)
+    if km is None:
+        return merged, []
+    known = km[0]
+    rows = [{"symbol": s, "coin_id": cid, "resolved_from": "manual_verified", "candidates": [cid],
+             "resolved_at": dt.datetime.now(dt.timezone.utc).isoformat()} for s, cid in cis.items() if s not in known]
+    if rows:
+        try:
+            await supabase_upsert("cg_coin_map", rows, "symbol")
+        except Exception:                                           # noqa: BLE001 —— 写不进就让 run_once 自己去解析
+            return merged, []
+    return merged, [r["symbol"] for r in rows]
+
+
 async def run_once(*, client, supabase_query, supabase_upsert,
                    panel_symbols: list[str],
                    today: Optional[str] = None) -> dict[str, Any]:

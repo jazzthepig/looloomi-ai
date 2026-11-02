@@ -78,3 +78,28 @@ def test_mcap_resolved_known_symbols_are_refreshed_but_must_pass_the_check(monke
     assert ("BTC", "bitcoin") in seen["pairs"]
     assert "BTC" not in seen["vendor"] and {"AAVE", "ONE"} <= seen["vendor"]
     assert out["n_mcap_required_check"] == 1 and out["status"] == "ok"
+
+
+def test_cis_crypto_names_are_always_in_the_panel_with_their_verified_ids():
+    """11-02(T-220「SKY 撞名」根因):面板只覆盖 Binance 永续宇宙,CIS 的 25 个加密名字不一定在里面 —— SKY 在 ohlcv_daily
+    只有 15 行 HL 永续。ensure_cis_names 把 CIS 名字并进面板,缺映射的按 cis_provider 的 coingecko id 写成 manual_verified。"""
+    written = []
+
+    async def q(table, cols):
+        return [{"symbol": "BTC", "coin_id": "bitcoin", "resolved_from": "list_unique"},
+                {"symbol": "MKR", "coin_id": "maker", "resolved_from": "list_unique"}]
+
+    async def up(table, rows, on_conflict):
+        written.append((table, rows, on_conflict))
+        return True
+    panel, added = asyncio.run(ps.ensure_cis_names(q, up, ["BTC", "MKR", "DOGE"]))
+    assert "SKY" in panel and "HYPE" in panel and "DOGE" in panel and panel == sorted(set(panel))
+    assert "SKY" in added and "BTC" not in added
+    t, rows, oc = written[0]
+    sky = next(r for r in rows if r["symbol"] == "SKY")
+    assert t == "cg_coin_map" and oc == "symbol" and sky["coin_id"] == "sky" and sky["resolved_from"] == "manual_verified"
+
+    async def q_none(table, cols):
+        return None
+    panel2, added2 = asyncio.run(ps.ensure_cis_names(q_none, up, ["BTC"]))
+    assert "SKY" in panel2 and added2 == [], "映射表读不到 ⇒ 不写、只并面板"
