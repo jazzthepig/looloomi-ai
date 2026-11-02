@@ -19,6 +19,7 @@
 | open | T-217 | lane-a | 前向记录连续性账 + 近 7 天约 50 次超时类 error 的来源对时间点(只读) | 报告 docs/research/T-217_record_continuity.md,开头一张连续性总表;卡片 notes 写三个结论各一句。 | 只有 10-28 的口头判断:'记录没断、监视器沉默';没有逐条记录的连续性证明,也不知道超时是不是同一来源。 |  |
 | open | T-222 | lane-a | ④ 候选的量测:HL 现货多 + 永续空收资金费(cash-and-carry)在 ① 的 24 个名字上到底值多少 —— 正费率段 / 负费率段 / 费用之后;不判、不做策略,给 Jazz 一张能定的表 | 报告 docs/research/T-222_funding_carry.md(开头一张表:年化毛 / 净、负费率段、HL−Binance 差、容量);卡 notes 写等权年化毛 / 净与最长负段;scenarios/lane-a-T-222.json;in_review,推 lane-a/T-222。 | funding 只在截面上测过(S-691 F4 无信息、S-688 CIS 计分项);作为时间序列上的收取,从没有一张按月、分正负段、扣费后的表;10-21 的裁定针对 ③,④ 没有裁过。 |  |
 | open | T-223 | lane-b | S-696 前向判据的第一次月度核对(2026-10 信号月)+ 第二族因子普查:链上 / 发行方 6 个因子按 S-691 同一协议(发现段 → 封存留出段) | docs/research/s696_forward.md 追加 2026-10 一行;报告 docs/research/T-223_factor_family_2.md(预注册段在前,结果在后);卡 notes 写五因子前向符号与第二族短名单;scenarios/lane-b-T-223.json;in_review,推 lane-b/T-223。 | S-691 的五因子有留出段证据、还没有一个前向月份;发行方 / 链上这一族(收入、稀释、持币人分配)只在 S-661 / S-664 用「价值捕获比」单独测过,没按普查协议和衍生品族并排过。 |  |
+| open | T-225 | lane-c | T-224 返工:拆开三个混在一起的变量(面板宽度 × 调仓频率 × 符号),死币规则改时点口径 | 报告 + 复跑脚本两次输出一致;三个臂各报年化超额、95 分位、两段符号;卡 notes 写清哪个变量单独起作用;in_review,推 lane-c/T-225。 | T-224 把宽度与频率一起改,「躲开最差档在宽面板上无效」这个结论没有被单独检验过。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -226,4 +227,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 11 · claimed 7 · blocked 5 · in_review 7 · done 190 · dropped 3
+open 12 · claimed 7 · blocked 5 · in_review 7 · done 190 · dropped 3

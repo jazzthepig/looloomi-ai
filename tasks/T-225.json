@@ -1,0 +1,28 @@
+{
+ "status": "open",
+ "created": "2026-11-02",
+ "forbidden_paths": [
+  "Shadow/",
+  "src/",
+  "paper_trading/",
+  "PROJECT_STATE.md",
+  "PROJECT_STATE_LOG.md",
+  "scripts/",
+  "migrations/"
+ ],
+ "notes": "Seth 11-02 12:50 UTC 开卡。SKY 价格一律 asset_id=MKR(coingecko_pro_ohlc),不读 symbol=SKY。探索性结果需另立预注册。",
+ "verified": null,
+ "id": "T-225",
+ "owner": "lane-c",
+ "title": "T-224 返工:拆开三个混在一起的变量(面板宽度 × 调仓频率 × 符号),死币规则改时点口径",
+ "source": "lane-b 交叉复核 11-02(§B-auto-1102-1217)+ Seth 复核:T-224 预注册 L15「只改面板」,报告 L160 实际同时改了面板与调仓频率(周→月);同信号同分段日后段 S-694(24 名/周)+2.04% / 95 分位,T-224(前 50/月)−1.24% / 39.7 分位 ⇒ 「任何宽度都不够用」无证据。",
+ "allowed_paths": [
+  "docs/research/",
+  "tasks/T-225.json"
+ ],
+ "acceptance": {
+  "check": "先写预注册(判据照抄 S-694 与 T-224:(a) 年化超额>0 且 1000 次随机对照 ≥95 分位,种子 694;(b) 两段都>0),再算,只算一次。三个臂各自只改一个变量:① 前 50 面板 + 周频调仓(拆频率);② 24 名面板 + 月频(拆宽度);③ 反向臂(减半最差档 → 加倍最差档,拆符号)。段落按牛/熊分段(用 state_daily 或价格口径的牛熊标记,先在预注册里写定义),不再照抄日历分段。死币规则改时点口径:每个调仓日只用当日及以前的 last_obs,coin_id 连续性写成断言(>10 天断点报错)。零分布全走 scripts/apparatus.py。T-224 报告 L131 与预注册 L58「任何宽度都不够用」降级为「月频前 50 设定下不够用」,「信息被大币吃掉」撤下。命题文件 lane-c-T-220.json 的「面板 50 个成员」改按 24 名真实宇宙,T-224-1 窗口与 horizon_d 对齐。",
+  "expect": "报告 + 复跑脚本两次输出一致;三个臂各报年化超额、95 分位、两段符号;卡 notes 写清哪个变量单独起作用;in_review,推 lane-c/T-225。"
+ },
+ "prior_value": "T-224 把宽度与频率一起改,「躲开最差档在宽面板上无效」这个结论没有被单独检验过。"
+}
