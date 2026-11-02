@@ -214,3 +214,18 @@ python3 /Volumes/CometCloudAI/cometcloud-local/research/t220/summarize.py       
 2. **先做不花钱的那一半**:H2 可以立刻在现有数据上跑(事件数已量出来,功效薄);要开卡请明确是否值得为 30–118 个事件开一张卡。
 3. **解锁网页版抓取是否合规**:免费网页有数据但 robots 允许、数据本体是付费 API 的网页版 ⇒ 若要用,建议走 API 档而不是长期抓网页。
 4. **SKY 的价格源**:`ohlcv_daily` 里 SKY 只有 15 天;需要指定守护源(改用 MKR 序列?还是 coingecko_pro_ohlc 的 sky?)—— 这属于取数口径,等 @seth 定。
+
+## 5. 前向命题(补交,`docs/research/scenarios/lane-c-T-220.json`)
+
+事后补交这一节,不改上面任何结论 —— 只是把「结果之后会发生什么」写成可结算的量(3 条自动 + 2 条人工;全部过了 `scenario_ledger.validate`)。结算日 2026-12-15。
+
+| id | 量 | 命题 | prob |
+|----|----|------|------|
+| T-220-1 | `close:SPELL`(binance_hist) | 2026-12-15 收盘 < 0.0001506(= 2026-06-01 开闸日收盘)⇒ 唯一可判样本上「热度峰值 + 开闸」的弱势延续(注:2026-11-01 已 0.0000771,已 −48.8%) | 0.65 |
+| T-220-2 | `state:breadth_above_ma50` | 2026-12-15 仍 < 1(2026-11-01 = 0)⇒ 注意力驱动的上涨始终没形成广度 | 0.45 |
+| T-220-3 | `state:style_rel_majors_30d` | 2026-12-15 仍 > 0(2026-11-01 = +0.0867)⇒ 注意力仍在龙头,小币身上的信号买不到 | 0.55 |
+| T-220-4 | 人工 | DeFiLlama API 档到 2026-12-15 仍未获批(x=0)⇒ H1 的数据缺口原样保留 | 0.65 |
+| T-220-5 | 人工 | 每日 `defillama.com/unlocks` 快照到 2026-12-15 连续天数仍 < 30(x=天数)⇒ 免费网页的「只给未来」这一限制原样保留 | 0.85 |
+
+写这些命题时用的原始数(可核):SPELL 开闸日 2026-06-01 收盘 0.0001506、2026-11-01 收盘 0.0000771(`ohlcv_daily`,source=binance_hist);`state_daily` entity=panel 最新日 2026-11-01 的 breadth_above_ma50=0、style_rel_majors_30d=+0.0867273;面板可结算的 `state_daily` feature 共 23 个。
+

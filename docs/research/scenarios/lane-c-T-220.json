@@ -1,0 +1,55 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {
+      "id": "T-220-1",
+      "scenario": "T-220 H2 单样本 · SPELL 热度峰值+开闸后弱势延续",
+      "statement": "SPELL(2026-06-01 开闸、开闸前 30 天是 S-661 十八个开闸事件里唯一有热度峰值的一个:情绪加权 z=2.05、社交量 z=2.22)在 2026-12-15 的收盘价(binance_hist)仍低于开闸日 2026-06-01 的 0.0001506 —— 即「热度峰值 + 解锁开闸」之后的相对弱势在这个唯一可判样本上延续",
+      "variable": "close:SPELL",
+      "op": "lt",
+      "hi": 0.0001506,
+      "prob": 0.65,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-220-2",
+      "scenario": "T-220 注意力 · 热度没有转成广度",
+      "statement": "2026-12-15 时 state_daily(entity=panel)的 breadth_above_ma50 仍小于 1(即面板 50 个成员里仍没有一枚站上 50 日均线;2026-11-01 为 0)—— 注意力/热度驱动的上涨在这段行情里始终没有形成广度,治理与营销的领先信号即便存在也无处显形",
+      "variable": "state:breadth_above_ma50",
+      "op": "lt",
+      "hi": 1,
+      "prob": 0.45,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-220-3",
+      "scenario": "T-220 注意力 · 仍在龙头",
+      "statement": "2026-12-15 时 state_daily(entity=panel)的 style_rel_majors_30d 仍大于 0(2026-11-01 为 +0.0867)—— 注意力与资金仍集中在头部大币,小币身上的治理/营销信号即便可测也买不到",
+      "variable": "state:style_rel_majors_30d",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.55,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-220-4",
+      "scenario": "T-220 数据缺口 · 免费源仍不够,API 未获批",
+      "statement": "到 2026-12-15,DeFiLlama API 档($300/月 或 $3,000/年,解锁日程历史的唯一来源)仍未获 Jazz 批准(x=0 表示未批准、1 表示已批准)⇒ H1(解锁前团队钱包向交易所净流出)的数据缺口原样保留,本轮不可跑",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 0.5,
+      "prob": 0.65,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-220-5",
+      "scenario": "T-220 前向管道 · 每日 unlocks 快照还没攒够",
+      "statement": "到 2026-12-15,「每天抓 defillama.com/unlocks 存快照」这条前向管道的连续运行天数(x=已攒的连续天数)仍小于 30 —— 免费网页只给未来日程,没有快照就永远回不了历史,这条管道不起来则 H1 仍只能等付费源",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 30,
+      "prob": 0.85,
+      "horizon_d": "2026-12-15"
+    }
+  ]
+}
