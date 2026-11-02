@@ -19,6 +19,10 @@ import datetime as dt
 import re
 from typing import Any, Optional
 
+#: DECISIONS 11-02 的两个触发线,简报每天替 Jazz 看着:
+#: 真钱净值过 $5 万(或第一笔外部钱)⇒ 独立 HL 账户 + key + 第二台待命主机;股票 / 黄金腿的目标额超过 HL 现货 ±2% 深度 ⇒ 超出部分走券商或更深场所。
+SCALE_TRIGGER_USD = 50_000.0
+LEG_TOKENS_FOR_DEPTH = ("XAUT0", "SPYX")
 SEND_AFTER_UTC = (1, 0)          # 11-02:R-v2 的一轮在 00:45 之后 —— 00:30 发会把它写成「没跑」
 LOOP_NAME = "_daily_digest_loop"
 
@@ -55,9 +59,24 @@ def _exec_line(r: dict) -> str:
             + (f" 决策→回报 {lat:.1f}s" if lat is not None else ""))
 
 
+def decision_lines(d: str, equity: Optional[float], leg_targets: dict[str, float], depth2: dict[str, float]) -> list[str]:
+    """纯函数。DECISIONS 11-02 的触发线:到了就写一行(不到不写);每月 1 号提醒重跑现货触发单探针。"""
+    out = []
+    if equity is not None and equity >= SCALE_TRIGGER_USD:
+        out.append(f"⚑ 净值 {equity:,.0f} ≥ {SCALE_TRIGGER_USD:,.0f}:DECISIONS 11-02 —— 独立 HL 账户 + key + 第二台待命主机")
+    for tok in LEG_TOKENS_FOR_DEPTH:
+        t, dep = leg_targets.get(tok), depth2.get(tok)
+        if t and dep and t > dep:
+            out.append(f"⚑ {tok} 腿目标 ${t:,.0f} > HL 现货 ±2% 深度 ${dep:,.0f}:DECISIONS 11-02 —— 超出部分走券商或更深场所")
+    if str(d)[8:10] == "01":
+        out.append("提醒(每月 1 号):重跑 scripts/host_probe_spot_trigger.command —— HL 现货触发单开了没有")
+    return out
+
+
 def compose(d: str, live: list[dict], exec_rows: list[dict], host_events: list[dict], bad_loops: list[dict],
             n_open_risks: Optional[int], unreadable: Optional[list[str]] = None,
-            host_code: Optional[str] = None, railway_code: Optional[str] = None) -> str:
+            host_code: Optional[str] = None, railway_code: Optional[str] = None,
+            decisions: Optional[list[str]] = None) -> str:
     """纯函数。`live` 按 d 升序(最后两行);`host_events` = 昨夜 executor_host 非心跳行;`bad_loops` = [{loop_name, reason}]。"""
     L = [f"CometCloud 日报 · {d}"]
     # 1 真钱
@@ -118,6 +137,7 @@ def compose(d: str, live: list[dict], exec_rows: list[dict], host_events: list[d
         L.append("循环: 全部 ok")
     # 5 风险
     L.append(f"OPEN RISKS: {n_open_risks} 条" if n_open_risks is not None else "OPEN RISKS: 读不到")
+    L.extend(decisions or [])
     if unreadable:
         L.append("读不到的段: " + ", ".join(unreadable))
     return "\n".join(L)
@@ -175,9 +195,25 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         n_risks = open_risks_count(Path(__file__).resolve().parents[3].joinpath("PROJECT_STATE.md").read_text(encoding="utf-8"))
     except Exception as e:                                               # noqa: BLE001
         unreadable.append(f"PROJECT_STATE: {type(e).__name__}")
+    tg = await _try("portfolio_targets_daily", _read_all("portfolio_targets_daily", {
+        "select": "d,sleeve,target_usd", "sleeve": "in.(gold,equity)", "order": "d.desc", "limit": "4"}))
+    leg_t: dict[str, float] = {}
+    for r in tg:
+        k = {"gold": "XAUT0", "equity": "SPYX"}.get(str(r.get("sleeve")))
+        if k and k not in leg_t and _f(r.get("target_usd")):
+            leg_t[k] = float(r["target_usd"])
+    vd = await _try("venue_depth_snapshots", _read_all("venue_depth_snapshots", {
+        "select": "symbol,depth_2pct_bid_usd,depth_2pct_ask_usd", "venue": "eq.hyperliquid_spot",
+        "symbol": f"in.({','.join(LEG_TOKENS_FOR_DEPTH)})", "order": "fetched_utc.desc", "limit": "6"}))
+    dep: dict[str, float] = {}
+    for r in vd:
+        b_, a_ = _f(r.get("depth_2pct_bid_usd")), _f(r.get("depth_2pct_ask_usd"))
+        if r.get("symbol") not in dep and b_ is not None and a_ is not None:
+            dep[r["symbol"]] = min(b_, a_)
+    eq = _f(live[-1].get("equity_usd")) if live else None
     from src.api.loop_beat import build_sha
     text = compose(today, live, sorted(latest.values(), key=lambda r: r["sleeve"]), host, bad, n_risks, unreadable,
-                   host_code=host_code, railway_code=build_sha() or None)
+                   host_code=host_code, railway_code=build_sha() or None, decisions=decision_lines(today, eq, leg_t, dep))
     if not telegram_configured():
         return {"ok": False, "why": "TELEGRAM_BOT_TOKEN 未配", "text": text}
     sent_ok = await notify_telegram(text)

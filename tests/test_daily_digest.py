@@ -47,3 +47,14 @@ def test_open_risks_count_reads_only_top_level_items():
     md = "# x\n\n## OPEN RISKS (≤7)\n\nintro\n\n1. **a**\n   VERIFY: x\n   1. sub\n2. **b**\n\n## next\n\n3. **not counted**\n"
     assert dd.open_risks_count(md) == 2
     assert dd.open_risks_count("# nothing") is None
+
+
+def test_decision_triggers_from_11_02_are_watched_every_day():
+    """DECISIONS 11-02:净值过 $5 万 ⇒ 独立账户 / key / 第二台主机;腿目标超过 HL ±2% 深度 ⇒ 走券商;每月 1 号提醒重跑探针。"""
+    assert dd.decision_lines("2026-11-02", 630.0, {"XAUT0": 126.0, "SPYX": 189.0}, {"XAUT0": 25_625.0, "SPYX": 65_294.0}) == []
+    big = dd.decision_lines("2026-12-15", 60_000.0, {"XAUT0": 12_000.0, "SPYX": 18_000.0}, {"XAUT0": 25_625.0, "SPYX": 15_000.0})
+    assert len(big) == 2 and "独立 HL 账户" in big[0] and "SPYX 腿目标 $18,000 > HL 现货 ±2% 深度 $15,000" in big[1]
+    assert dd.decision_lines("2026-12-01", None, {}, {}) == ["提醒(每月 1 号):重跑 scripts/host_probe_spot_trigger.command —— HL 现货触发单开了没有"]
+    assert dd.decision_lines("2026-12-02", 100.0, {"XAUT0": 50.0}, {}) == [], "没有深度数据不猜"
+    text = dd.compose("2026-12-01", [], [], [], [], 3, decisions=dd.decision_lines("2026-12-01", None, {}, {}))
+    assert text.endswith("HL 现货触发单开了没有")
