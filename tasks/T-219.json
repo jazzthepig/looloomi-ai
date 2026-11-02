@@ -1,7 +1,7 @@
 {
   "id": "T-219",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-11-02",
   "title": "轨道公司股权进宇宙的第一份研究:风险画像、与 ① / BTC 的关系、执行场所逐家判断 —— 先描述,再预注册一条假设",
   "source": "Jazz 11-02「轨道公司股权进可投资宇宙(按发行方核验、不认代码)」;DECISIONS 09-26/11-02;§Seth-1102a。",
@@ -23,6 +23,6 @@
     "expect": "报告 docs/research/T-219_rail_equities.md(开头风险画像表 + 场所表,末尾 M- 预注册与结果);卡片 notes 写关键数;in_review,推 lane-b/T-219。"
   },
   "prior_value": "宇宙里没有任何轨道公司;V / MA / BLK / IBKR / SCHW 只作为 World50 候选在池子里,从没按『轨道』看过。",
-  "notes": "",
+  "notes": "报告 docs/research/T-219_rail_equities.md(分支 lane-b/T-219)。① 数据闸门:10 个轨道票在 ohlcv_daily / asset_mcap_daily / world50_mcap_weekly 仍各 0 行(09:2x UTC 复检;EODHD 通道本身 51 万行=周更未落库)。② 风险画像用公共源(Nasdaq historical,未复权)补上并做校准:CRCL 波动 108.3%/回撤 −80.9%、MSTR 87.5%/−82.6%、GEMI 102.5%/−91.2%、COIN 81.7%/−66.4%、GLXY 86.8%/−65.7%、HOOD 64.2%/−57.3%、BLSH 79.9%/−70.8%、FIGR 95.6%/−70.8%、XYZ 49.7%/−55.6%、PYPL 38.1%/−57.4%;β(BTC) MSTR 1.423 / CRCL 1.306 / GEMI 1.241 / COIN 1.115 / GLXY 1.106 / BLSH 1.046 / FIGR 0.833 / HOOD 0.661 / XYZ 0.329 / PYPL 0.228。校准(同 7 票 961 天 vs 我方 EODHD):日收益相关 0.9988–1.0000、波动差 ≤0.1pp、β 差 ≤0.002;唯一偏差=未复权少算股息 ⇒ 累计收益低估 5.9–14.9pp(SCHW/BLK/SPY)。③ 上轮记的「① NAV 读不到」本轮解掉:① = registry.core_nav(cap_pit24 ≤10-02 + cap_a1 + cap_a1_u),2,862 点 2019-01-01→2026-11-01;对齐校验 ① 对 BTC ρ=0.938/0.943;老轨道对 ① 的 β 2023-01 起 V .066 / MA .063 / BLK .148 / IBKR .250 / SCHW .106 / QQQ .167,2025-01 起 .065/.062/.194/.361/.127/.212 ⇒ 老轨道不是 ① 的替代品。④ 场所:10 家全建议券商真股;HL 现货 4 个 tokenId 未核验、现货 COIN 0.0267 与真股 143.5 同名不同物(已用 Nasdaq 收盘交叉确认);HIP-3 xyz:* 永续 mark 与真股 0–3% 一致(是同一发行方股权,但 carry +5.7%~+15.6% 年化 ⇒ 是表达工具不是持有);Solana GLXYx 池 $0、其余 5 家无代币。⑤ M-585(预注册,写于任何结果之前)判决=留空(我方面板不存在);公共源面板探索性跑:面板起点 2025-12-05(受 GEMI/FIGR/BLSH 上市+60 交易日规则)、10 个月度观测、同期 ρ=+0.714(t 2.04)但零分布分位 0.748/0.905 未过 95 分位、留出段 ρ=−0.600 分组差 −0.1282(符号翻转)⇒ 探索性读数=不通过(功效不足,不作判据)。⑥ 需要:Seth 把 10 票落 EODHD 周更 + 核 GLXY 上市前回填历史;Jazz 拍板 PYPL 是否算轨道 / 链上场所能否进宇宙 / 公共源能否进管线 / M-585 处置(等面板到 2027-05 才有功效)。只读:无写库、无新表、未改 src/ scripts/。⑦ 前向预期(交情景台账)5 条:docs/research/scenarios/lane-b-T-219.json,概率用实测基线率打底(QQQ 70 交易日上涨率 0.764、V 135 日 0.787、IBKR 0.616、稳定币供应 30 日变化 3 年无条件 >0 的比例 0.820);顺带测到一条与 M-585 直接相关的事实:stable_supply_30d 已连续 12 天为负(2026-11-01 读数 −2.59%),近 365 天只有 48.4% 的日为正(90 天 49.5%)⇒ M-585 的信号源当前在收缩区,面板(2026-12-05 起)正式判读会从收缩起点开始。⑧ lane-b 自测(可复跑):t219_gate2.py(闸门复检)、t219_public_profile.py(画像+校准)、t219_core_beta.py(对 ① 的 β + 对齐校验)、t219_m585_explore.py(零分布全部走 src/data/evaluation/apparatus.py)、t219_scenarios.py(情景基线率)五个脚本;结果落 t219_*.json;情景文件 5 条用仓库自带 src/data/evaluation/scenario_ledger.validate 逐条验过全 OK(verified 字段留给合并者填)。",
   "verified": null
 }

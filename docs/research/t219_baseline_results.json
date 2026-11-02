@@ -1,0 +1,323 @@
+{
+  "generated_at_utc": "2026-11-02",
+  "symbols": {
+    "V": {
+      "from_2023-01": {
+        "source": "eodhd",
+        "btc_source": "binance_hist",
+        "n_days": 960,
+        "first": "2023-01-04",
+        "last": "2026-10-30",
+        "ann_vol_252": 0.19538097706053567,
+        "max_drawdown": -0.20377713701453604,
+        "dd_peak": "2026-10-22",
+        "dd_trough": "2026-03-27",
+        "beta_vs_btc": 0.06428254195616497,
+        "corr_vs_btc": 0.14125720541278203,
+        "n_beta": 960,
+        "beta_t": 4.4164167191468575,
+        "total_return": 1.001713306681896
+      },
+      "from_2025-01": {
+        "source": "eodhd",
+        "btc_source": "binance_hist",
+        "n_days": 458,
+        "first": "2025-01-03",
+        "last": "2026-10-30",
+        "ann_vol_252": 0.2263715377425111,
+        "max_drawdown": -0.20377713701453604,
+        "dd_peak": "2026-10-22",
+        "dd_trough": "2026-03-27",
+        "beta_vs_btc": 0.07733533196576536,
+        "corr_vs_btc": 0.13509739440376808,
+        "n_beta": 458,
+        "beta_t": 2.9115833566286655,
+        "total_return": 0.3306286857793663
+      },
+      "vs_cap_a1_u": {
+        "n": 14,
+        "beta": -0.17085955819701876,
+        "corr": -0.2429422176765711,
+        "window": [
+          "2026-10-13",
+          "2026-10-30"
+        ]
+      }
+    },
+    "MA": {
+      "from_2023-01": {
+        "source": "eodhd",
+        "btc_source": "binance_hist",
+        "n_days": 960,
+        "first": "2023-01-04",
+        "last": "2026-10-30",
+        "ann_vol_252": 0.1992810491194606,
+        "max_drawdown": -0.20913939597880038,
+        "dd_peak": "2026-10-30",
+        "dd_trough": "2026-06-03",
+        "beta_vs_btc": 0.06079839012425475,
+        "corr_vs_btc": 0.13098631489591955,
+        "n_beta": 960,
+        "beta_t": 4.089466885203344,
+        "total_return": 0.8400666797411256
+      },
+      "from_2025-01": {
+        "source": "eodhd",
+        "btc_source": "binance_hist",
+        "n_days": 458,
+        "first": "2025-01-03",
+        "last": "2026-10-30",
+        "ann_vol_252": 0.23103601434226803,
+        "max_drawdown": -0.20913939597880038,
+        "dd_peak": "2026-10-30",
+        "dd_trough": "2026-06-03",
+        "beta_vs_btc": 0.07320158344847445,
+        "corr_vs_btc": 0.12529439158139463,
+        "n_beta": 458,
+        "beta_t": 2.6968079522721826,
+        "total_return": 0.23868359896014324
+      },
+      "vs_cap_a1_u": {
+        "n": 14,
+        "beta": -0.3878268793153602,
+        "corr": -0.4562311847256917,
+        "window": [
+          "2026-10-13",
+          "2026-10-30"
+        ]
+      }
+    },
+    "BLK": {
+      "from_2023-01": {
+        "source": "eodhd",
+        "btc_source": "binance_hist",
+        "n_days": 960,
+        "first": "2023-01-04",
+        "last": "2026-10-30",
+        "ann_vol_252": 0.2419605536429807,
+        "max_drawdown": -0.23740488200063647,
+        "dd_peak": "2025-10-15",
+        "dd_trough": "2025-04-08",
+        "beta_vs_btc": 0.14158160996464447,
+        "corr_vs_btc": 0.25122457612161964,
+        "n_beta": 960,
+        "beta_t": 8.033438121220092,
+        "total_return": 0.7368863972101809
+      },
+      "from_2025-01": {
+        "source": "eodhd",
+        "btc_source": "binance_hist",
+        "n_days": 458,
+        "first": "2025-01-03",
+        "last": "2026-10-30",
+        "ann_vol_252": 0.2801506515750528,
+        "max_drawdown": -0.23740488200063647,
+        "dd_peak": "2025-10-15",
+        "dd_trough": "2025-04-08",
+        "beta_vs_btc": 0.22183520141100369,
+        "corr_vs_btc": 0.3131335959027254,
+        "n_beta": 458,
+        "beta_t": 7.040791649483278,
+        "total_return": 0.1660084071610235
+      },
+      "vs_cap_a1_u": {
+        "n": 14,
+        "beta": 0.06191247521827515,
+        "corr": 0.060857500046401704,
+        "window": [
+          "2026-10-13",
+          "2026-10-30"
+        ]
+      }
+    },
+    "IBKR": {
+      "from_2023-01": {
+        "source": "eodhd",
+        "btc_source": "binance_hist",
+        "n_days": 960,
+        "first": "2023-01-04",
+        "last": "2026-10-30",
+        "ann_vol_252": 0.3594866035822428,
+        "max_drawdown": -0.38662769292941745,
+        "dd_peak": "2026-08-25",
+        "dd_trough": "2025-04-07",
+        "beta_vs_btc": 0.24918874443266206,
+        "corr_vs_btc": 0.29760865435764694,
+        "n_beta": 960,
+        "beta_t": 9.64865700345142,
+        "total_return": 3.3480473366089756
+      },
+      "from_2025-01": {
+        "source": "eodhd",
+        "btc_source": "binance_hist",
+        "n_days": 458,
+        "first": "2025-01-03",
+        "last": "2026-10-30",
+        "ann_vol_252": 0.43363151078998874,
+        "max_drawdown": -0.38662769292941745,
+        "dd_peak": "2026-08-25",
+        "dd_trough": "2025-04-07",
+        "beta_vs_btc": 0.4347459660101515,
+        "corr_vs_btc": 0.39646565123309285,
+        "n_beta": 458,
+        "beta_t": 9.22193089575574,
+        "total_return": 0.6881694228392419
+      },
+      "vs_cap_a1_u": {
+        "n": 14,
+        "beta": 0.9843657332018432,
+        "corr": 0.6232522192836167,
+        "window": [
+          "2026-10-13",
+          "2026-10-30"
+        ]
+      }
+    },
+    "SCHW": {
+      "from_2023-01": {
+        "source": "eodhd",
+        "btc_source": "binance_hist",
+        "n_days": 960,
+        "first": "2023-01-04",
+        "last": "2026-10-30",
+        "ann_vol_252": 0.30822265000857735,
+        "max_drawdown": -0.4450209590651345,
+        "dd_peak": "2026-08-24",
+        "dd_trough": "2023-05-04",
+        "beta_vs_btc": 0.10335194168955095,
+        "corr_vs_btc": 0.1439640100889711,
+        "n_beta": 960,
+        "beta_t": 4.502819075018176,
+        "total_return": 0.11446526551612846
+      },
+      "from_2025-01": {
+        "source": "eodhd",
+        "btc_source": "binance_hist",
+        "n_days": 458,
+        "first": "2025-01-03",
+        "last": "2026-10-30",
+        "ann_vol_252": 0.25797987369594794,
+        "max_drawdown": -0.22525296964364283,
+        "dd_peak": "2026-08-24",
+        "dd_trough": "2026-10-30",
+        "beta_vs_btc": 0.15646045299755268,
+        "corr_vs_btc": 0.23983336306873776,
+        "n_beta": 458,
+        "beta_t": 5.275406825698451,
+        "total_return": 0.209026297866731
+      },
+      "vs_cap_a1_u": {
+        "n": 14,
+        "beta": -0.1532814644309128,
+        "corr": -0.20362385366629865,
+        "window": [
+          "2026-10-13",
+          "2026-10-30"
+        ]
+      }
+    },
+    "QQQ": {
+      "from_2023-01": {
+        "source": "eodhd",
+        "btc_source": "binance_hist",
+        "n_days": 960,
+        "first": "2023-01-04",
+        "last": "2026-10-30",
+        "ann_vol_252": 0.20173884453936802,
+        "max_drawdown": -0.22768251855701127,
+        "dd_peak": "2026-10-06",
+        "dd_trough": "2025-04-08",
+        "beta_vs_btc": 0.15922755867409769,
+        "corr_vs_btc": 0.33886643406389894,
+        "n_beta": 960,
+        "beta_t": 11.148028664227038,
+        "total_return": 1.654240311209859
+      },
+      "from_2025-01": {
+        "source": "eodhd",
+        "btc_source": "binance_hist",
+        "n_days": 458,
+        "first": "2025-01-03",
+        "last": "2026-10-30",
+        "ann_vol_252": 0.22390585732096535,
+        "max_drawdown": -0.22768251855701127,
+        "dd_peak": "2026-10-06",
+        "dd_trough": "2025-04-08",
+        "beta_vs_btc": 0.23503873117240767,
+        "corr_vs_btc": 0.41511155171062664,
+        "n_beta": 458,
+        "beta_t": 9.743508768334436,
+        "total_return": 0.3428171369673867
+      },
+      "vs_cap_a1_u": {
+        "n": 14,
+        "beta": 0.5417318382571499,
+        "corr": 0.5971135259815741,
+        "window": [
+          "2026-10-13",
+          "2026-10-30"
+        ]
+      }
+    },
+    "SPY": {
+      "from_2023-01": {
+        "source": "eodhd",
+        "btc_source": "binance_hist",
+        "n_days": 960,
+        "first": "2023-01-04",
+        "last": "2026-10-30",
+        "ann_vol_252": 0.14861462376559365,
+        "max_drawdown": -0.18755292195747608,
+        "dd_peak": "2026-10-06",
+        "dd_trough": "2025-04-08",
+        "beta_vs_btc": 0.11821283560913826,
+        "corr_vs_btc": 0.3415096137153636,
+        "n_beta": 960,
+        "beta_t": 11.246414200273861,
+        "total_return": 1.0646056672021333
+      },
+      "from_2025-01": {
+        "source": "eodhd",
+        "btc_source": "binance_hist",
+        "n_days": 458,
+        "first": "2025-01-03",
+        "last": "2026-10-30",
+        "ann_vol_252": 0.16838213020050827,
+        "max_drawdown": -0.18755292195747608,
+        "dd_peak": "2026-10-06",
+        "dd_trough": "2025-04-08",
+        "beta_vs_btc": 0.17248509758714986,
+        "corr_vs_btc": 0.40508523996365564,
+        "n_beta": 458,
+        "beta_t": 9.46128516973381,
+        "total_return": 0.3017423283294147
+      },
+      "vs_cap_a1_u": {
+        "n": 14,
+        "beta": 0.2537735373726765,
+        "corr": 0.566266344082668,
+        "window": [
+          "2026-10-13",
+          "2026-10-30"
+        ]
+      }
+    }
+  },
+  "windows": {
+    "from_2023-01": [
+      "2023-01-01",
+      "2026-11-01"
+    ],
+    "from_2025-01": [
+      "2025-01-01",
+      "2026-11-01"
+    ]
+  },
+  "nav_arm": "cap_a1_u",
+  "nav_points": 21,
+  "notes": [
+    "source per symbol/window = most rows inside window (tie: later last date)",
+    "ann_vol uses sqrt(252); maxdd on raw close series",
+    "beta vs BTC: equity trading days, BTC return on the same calendar date"
+  ]
+}
