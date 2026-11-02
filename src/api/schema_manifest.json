@@ -43,6 +43,7 @@
     "factor_tilt_nav",
     "factor_tilt_state",
     "feature_arms_daily",
+    "feed_items",
     "forward_anchor_daily",
     "forward_book_holdings",
     "forward_book_nav",
@@ -188,6 +189,20 @@
       "opened_today",
       "realized_pnl",
       "unrealized_pnl"
+    ],
+    "feed_items": [
+      "dup_of",
+      "fetched_at",
+      "hits",
+      "id",
+      "link",
+      "post_text",
+      "posted_at",
+      "published_at",
+      "score",
+      "source",
+      "summary_raw",
+      "title"
     ],
     "forward_book_holdings": [
       "arm",

@@ -2391,6 +2391,24 @@ async def _dead_host_guard_loop():
         await _asyncio.sleep(600)
 
 
+async def _news_feed_loop():
+    """新闻流(`src/data/ops/news_feed.py`,11-02):每 20 分钟取 RSS → 入 feed_items → 相关的发 TELEGRAM_FEED_CHAT_ID(没配 ⇒ 干跑)。"""
+    await _asyncio.sleep(_boot_delay(420))
+    while True:
+        try:
+            from src.data.ops.news_feed import run_once as _nf_run
+            r = await _nf_run()
+            await _iteration_result("_news_feed_loop", r)
+            await _beat("_news_feed_loop", ok=bool(r.get("ok")), error=None if r.get("ok") else str(r.get("why"))[:200],
+                        detail={"new": r.get("new"), "posted": r.get("posted"), "dry": r.get("dry"),
+                                "failed_sources": r.get("failed_sources")})
+        except Exception as _e:
+            print(f"[NEWSFEED] ⚠️  pass FAILED: {_e}")
+            await _beat("_news_feed_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_news_feed_loop", _e)
+        await _asyncio.sleep(1200)
+
+
 async def _scenario_ledger_loop():
     """情景台账的结算(`src/data/evaluation/scenario_ledger.py`,11-02):每小时结算到期、还没结的自动命题 → scenario_scores。"""
     await _asyncio.sleep(_boot_delay(540))
@@ -2412,6 +2430,12 @@ async def _scenario_ledger_loop():
 async def _start_scenario_ledger_loop():
     _asyncio.create_task(_scenario_ledger_loop())
     print("[SCENARIOS] ✅ scenario ledger scoring scheduled (hourly)")
+
+
+@app.on_event("startup")
+async def _start_news_feed_loop():
+    _asyncio.create_task(_news_feed_loop())
+    print("[NEWSFEED] ✅ news feed scheduled (every 20 min; dry until TELEGRAM_FEED_CHAT_ID)")
 
 
 async def _venue_depth_loop():
