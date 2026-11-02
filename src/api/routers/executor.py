@@ -46,7 +46,7 @@ router = APIRouter()
 INTENT_FIELDS = frozenset(f.name for f in fields(Intent))
 OUTCOME_FIELDS = frozenset(f.name for f in fields(Outcome))
 INTENT_REQUIRED = frozenset({"intent_id", "ts_decision", "symbol", "side", "target_notional_usd", "decision_mid", "sleeve"})
-KINDS = frozenset({"cycle", "stop", "heartbeat", "error"})
+KINDS = frozenset({"cycle", "stop", "heartbeat", "error", "probe"})   # probe:一次性真钱验证(11-02 现货触发单),不带意图 / 结果
 REPORT_KEYS = frozenset({"mode", "kind", "host", "asof", "intents", "outcomes", "detail", "alert", "book"})
 #: 三本账:X1V 现货(没有 book 字段 = x1v,向后兼容)、R-v2 单票(HL 永续)、T25 的黄金 / 股票腿(HL 现货,10-30)。
 #: sleeve 按 (book, mode) 定,互不串
