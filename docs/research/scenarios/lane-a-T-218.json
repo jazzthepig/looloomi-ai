@@ -1,0 +1,115 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T-218-R1-A-01",
+      "scenario": "A 轨道与代币一起赢",
+      "statement": "代币端:ETH 在结算日收盘不低于 2,560 美元(2026-11-01 收盘 2,275.31 的 1.125 倍),即公链代币在 2027Q1 之前回到资金回流状态",
+      "variable": "close:ETH",
+      "op": "gt",
+      "lo": 2560,
+      "hi": null,
+      "prob": 0.45,
+      "horizon_d": "2027-03-31"
+    },
+    {
+      "id": "T-218-R1-A-02",
+      "scenario": "A 轨道与代币一起赢",
+      "statement": "代币端:SOL 在结算日收盘不低于 115 美元(2026-11-01 收盘 94.53 的 1.22 倍)",
+      "variable": "close:SOL",
+      "op": "gt",
+      "lo": 115,
+      "hi": null,
+      "prob": 0.35,
+      "horizon_d": "2027-03-31"
+    },
+    {
+      "id": "T-218-R1-A-03",
+      "scenario": "A 轨道与代币一起赢",
+      "statement": "轨道端:COIN 在结算日收盘不低于 172 美元(2026-10-30 收盘 143.54 的 1.20 倍);该序列已入库(eq.eodhd),可直接结算",
+      "variable": "close:COIN",
+      "op": "gt",
+      "lo": 172,
+      "hi": null,
+      "prob": 0.4,
+      "horizon_d": "2027-03-31"
+    },
+    {
+      "id": "T-218-R1-A-04",
+      "scenario": "A 轨道与代币一起赢",
+      "statement": "轨道端:HOOD 在结算日收盘不低于 102 美元(2026-10-30 收盘 84.99 的 1.20 倍)",
+      "variable": "close:HOOD",
+      "op": "gt",
+      "lo": 102,
+      "hi": null,
+      "prob": 0.4,
+      "horizon_d": "2027-06-30"
+    },
+    {
+      "id": "T-218-R1-A-05",
+      "scenario": "A 轨道与代币一起赢",
+      "statement": "市场状态:面板中站在 MA50 上方的资产比例回到 50% 以上(2026-11-01 为 0,历史日频 44.7% 的日子在 0.5 以上)——「一起赢」需要宽度,不是只有龙头涨",
+      "variable": "state:breadth_above_ma50",
+      "op": "gt",
+      "lo": 0.5,
+      "hi": null,
+      "prob": 0.4,
+      "horizon_d": "2027-03-31"
+    },
+    {
+      "id": "T-218-R1-B-01",
+      "scenario": "B 轨道赢、代币跑输(价值落在发行方/股权)",
+      "statement": "代币端:ETH 在结算日收盘低于 1,935 美元(2026-11-01 收盘 2,275.31 的 0.85 倍),即代币端继续跑输而价值留在发行方/股权",
+      "variable": "close:ETH",
+      "op": "lt",
+      "lo": null,
+      "hi": 1935,
+      "prob": 0.35,
+      "horizon_d": "2027-06-30"
+    },
+    {
+      "id": "T-218-R1-B-02",
+      "scenario": "B 轨道赢、代币跑输(价值落在发行方/股权)",
+      "statement": "代币端:SOL 在结算日收盘低于 80 美元(2026-11-01 收盘 94.53 的 0.85 倍)",
+      "variable": "close:SOL",
+      "op": "lt",
+      "lo": null,
+      "hi": 80,
+      "prob": 0.4,
+      "horizon_d": "2027-06-30"
+    },
+    {
+      "id": "T-218-R1-B-03",
+      "scenario": "B 轨道赢、代币跑输(价值落在发行方/股权)",
+      "statement": "轨道端:CRCL 在结算日收盘不低于 87 美元(2026-10-30 收盘 72.54 的 1.20 倍);与 R1-B-01/B-02 同时成立即 B 分支",
+      "variable": "close:CRCL",
+      "op": "gt",
+      "lo": 87,
+      "hi": null,
+      "prob": 0.35,
+      "horizon_d": "2027-06-30"
+    },
+    {
+      "id": "T-218-R1-B-04",
+      "scenario": "B 轨道赢、代币跑输(价值落在发行方/股权)",
+      "statement": "发行方业务量:稳定币供应 30 日变化在结算日转正(state:stable_supply_30d > 0;历史 2468 个交易日里 72.9% 为正),即价值继续沉淀在稳定币端而非代币端",
+      "variable": "state:stable_supply_30d",
+      "op": "gt",
+      "lo": 0,
+      "hi": null,
+      "prob": 0.55,
+      "horizon_d": "2027-03-31"
+    },
+    {
+      "id": "T-218-R1-B-05",
+      "scenario": "B 轨道赢、代币跑输(价值落在发行方/股权)",
+      "statement": "风险偏好:波动率指数在结算日低于 18(2026-10-30 为 19.42,历史 52.2% 的日子在 18 以下),低波动环境更利于以股权承载的价值",
+      "variable": "macro:vix",
+      "op": "lt",
+      "lo": null,
+      "hi": 18,
+      "prob": 0.45,
+      "horizon_d": "2027-06-30"
+    }
+  ]
+}
