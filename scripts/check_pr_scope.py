@@ -102,6 +102,8 @@ def scenario_problems(lane: str, tid: str, card: dict, changed: list[str], reade
     entries = j.get("entries") if isinstance(j.get("entries"), list) else []
     if len(entries) < 3:
         return [f"{want} 只有 {len(entries)} 条,要 ≥ 3"]
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
     from src.data.evaluation.scenario_ledger import validate
     soon = dt.datetime.now(dt.timezone.utc).date() + dt.timedelta(days=7)
     out = []
@@ -141,7 +143,7 @@ def main() -> int:
     m = BRANCH_RE.match(a.branch or "")
     card = _card_at(a.head, m.group(2)) if m else None
     changed = [x for x in _git("diff", "--name-only", f"{a.base}...{a.head}").splitlines() if x]
-    bad = check(a.branch or "", changed, card)
+    bad = check(a.branch or "", changed, card, reader=lambda path: _git("show", f"{a.head}:{path}"))
     head = f"范围检查 {a.branch}:{len(changed)} 个文件"
     if bad:
         print(f"✗ {head}\n  " + "\n  ".join(bad))
