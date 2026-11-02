@@ -20,9 +20,19 @@ def _hdrs(extra=None):
     return h
 
 
+def _stable_order(select, order):
+    """S-532: 翻页读必须有确定的顺序 —— 没给 order 时按 select 里的列全部升序排。
+    (与 src/data/style/header.py::stable_order 同规则:select 是 '*' 或含函数 / 别名时无法推断 ⇒ None)"""
+    if order:
+        return order
+    cols = [c.strip() for c in str(select or "*").split(",")
+            if c.strip() and c.strip() != "*" and not any(ch in c for ch in "():!*")]
+    return ",".join(c + ".asc" for c in cols) or None
+
+
 class DB:
     def get(self, path, params=None, extra=None):
-        q = urllib.parse.urlencode(params or {})
+        q = urllib.parse.urlencode({k: v for k, v in (params or {}).items() if v is not None})
         url = U + "/rest/v1/" + path + ("?" + q if q else "")
         req = urllib.request.Request(url, headers=_hdrs(extra))
         with urllib.request.urlopen(req, timeout=120) as r:
@@ -32,16 +42,14 @@ class DB:
 
     def exists(self, table):
         try:
-            rows, cr = self.get(table, {"select": "*", "limit": 1})
+            rows, cr = self.get(table, {"select": "*", "limit": 1, "order": _stable_order("*", None)})
             return True, cr
         except urllib.error.HTTPError as e:
             return False, "HTTP %s" % e.code
 
     def page(self, table, select="*", order=None, filters=None, limit=1000):
         """One page; returns (rows, next_offset_or_None)."""
-        params = {"select": select, "limit": limit}
-        if order:
-            params["order"] = order
+        params = {"select": select, "limit": limit, "order": _stable_order(select, order)}
         for col, val in (filters or {}).items():
             params[col] = val
         rows, cr = self.get(table, params, extra={"Range": "0-%d" % (limit - 1)})
@@ -54,7 +62,7 @@ class DB:
 
     def count(self, table, filters=None):
         """Total row count via Content-Range on a limit=1 read (needs exact-count pref)."""
-        params = {"select": "*", "limit": 1}
+        params = {"select": "*", "limit": 1, "order": _stable_order("*", None)}
         for col, val in (filters or {}).items():
             params[col] = val
         rows, cr = self.get(table, params, extra={"Prefer": "count=exact"})
@@ -67,9 +75,8 @@ class DB:
         """Full paginated read. order is MANDATORY for stable paging."""
         out, off = [], 0
         while True:
-            params = {"select": select, "limit": limit, "offset": off}
-            if order:
-                params["order"] = order
+            params = {"select": select, "limit": limit, "offset": off,
+                      "order": _stable_order(select, order)}
             for col, val in (filters or {}).items():
                 params[col] = val
             rows, cr = self.get(table, params)
