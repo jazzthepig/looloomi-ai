@@ -1,0 +1,30 @@
+{
+  "id": "T-NNN",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "YYYY-MM-DD",
+  "title": "(待命卡:Jazz 填一句话 —— 做什么、做到什么程度算完)",
+  "source": "Seth 待命模式(docs/SETH_STANDBY.md):Claude 用不了,由 Jazz 开卡、MiniMax lane 做、seth_bot 合并。",
+  "allowed_paths": [
+    "src/",
+    "tests/",
+    "docs/",
+    "migrations/",
+    "tasks/T-NNN.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "src/api/schema_manifest.json"
+  ],
+  "acceptance": {
+    "check": "(写清要改哪个文件、新增什么测试、判活 SQL 或 curl;改 src/ 必须加或改 tests/ 里的测试并在 preflight 里注册;迁移只写 SQL 文件到 migrations/,不要应用,写进最终回复 @jazz 应用;合规语言:只用 STRONG OUTPERFORM / OUTPERFORM / NEUTRAL / UNDERPERFORM / UNDERWEIGHT;不读 .env、不打印 key;翻页读带 order=;探针脚本改同一个文件再跑。)",
+    "expect": "卡 status=in_review、notes 写测得的值与判活命令;推 lane-a/T-NNN。"
+  },
+  "prior_value": "(之前是什么样 / 为什么要改)",
+  "notes": "",
+  "verified": null
+}
