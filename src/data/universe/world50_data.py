@@ -1003,7 +1003,8 @@ LOOP_NAME = "_world50_history_loop"
 #: 某一段的算法改了就把它的版本加一:旧版本跑成的不算「已成」,下次部署会重跑这一段(没写版本的旧记录算 1)。
 #: mcap 21(10-23):行里加 shares 列 —— 下一次部署整段重写一遍,把历史行的股数填上(市值本身不变)。
 #: book 2(10-29):季内开账(OPEN_DATE 10-28)。
-PART_VERSIONS = {"prices": 4, "mcap": 21, "onchain_forms": 1, "revenue": 1, "book": 2, "fwd_books": 2}
+PART_VERSIONS = {"prices": 5,   # 5:11-02 加轨道公司(RAIL_EQUITIES)
+                 "mcap": 21, "onchain_forms": 1, "revenue": 1, "book": 2, "fwd_books": 2}
 
 
 async def _recent_ok_parts(now: Optional[datetime] = None) -> set[str]:

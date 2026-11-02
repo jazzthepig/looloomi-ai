@@ -589,3 +589,21 @@ def test_stale_shares_stop_the_series_instead_of_erasing_its_history(monkeypatch
     last = max(r["d"] for r in old["rows"])
     cut = (wd.datetime.strptime("2020-02-06", "%Y-%m-%d") + wd.timedelta(days=wd.STALE_DAYS)).strftime("%Y-%m-%d")
     assert last <= cut and any("之后不写" in n for n in old["notes"])
+
+
+def test_rail_equities_are_priced_but_are_not_world50_candidates(monkeypatch):
+    """Jazz 11-02:轨道公司股权进可投资宇宙 —— 先作研究宇宙取复权价;不进 World50 的候选池(不改它的排名与账本)。"""
+    import src.data.market.tradfi_history as th
+    from src.data.universe.world50 import CANDIDATES, RAIL_EQUITIES
+    keys = {c.key for c in RAIL_EQUITIES}
+    assert {"CRCL", "COIN", "HOOD"} <= keys and not keys & {c.key for c in CANDIDATES}
+    seen = []
+
+    async def one(c, start=th.START):
+        seen.append(c.key)
+        return {"symbol": c.key, "ok": c.key != "GEMI", "why": None if c.key != "GEMI" else "EODHD 返回 0 行可用日线"}
+    monkeypatch.setattr(th, "refresh_one", one)
+    out = asyncio.run(th.run_once())
+    assert keys <= set(seen) and out["ok"], "某个轨道公司代码取不到不影响整轮"
+    assert {"symbol": "GEMI", "why": "EODHD 返回 0 行可用日线"} in out["failed"]
+    assert wd.PART_VERSIONS["prices"] >= 5, "加了代码 = 日线段要重跑一次,不能被 6 天门挡住"

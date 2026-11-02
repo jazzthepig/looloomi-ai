@@ -64,8 +64,9 @@ async def refresh_one(c: Any, start: str = START) -> dict[str, Any]:
 
 
 async def run_once(start: str = START, candidates: Optional[list] = None) -> dict[str, Any]:
-    from src.data.universe.world50 import BENCHMARKS, eodhd_candidates
-    todo = candidates if candidates is not None else eodhd_candidates() + list(BENCHMARKS)   # 对照组一起整段重取(T-099)
+    from src.data.universe.world50 import BENCHMARKS, RAIL_EQUITIES, eodhd_candidates
+    # 对照组(T-099)与轨道公司(11-02,研究宇宙)一起整段重取;轨道公司某个代码 EODHD 没有 ⇒ 记进 failed,不影响整轮判定
+    todo = candidates if candidates is not None else eodhd_candidates() + list(BENCHMARKS) + list(RAIL_EQUITIES)
     sem = asyncio.Semaphore(CONCURRENCY)
 
     async def _guard(c):

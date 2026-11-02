@@ -149,6 +149,15 @@ BENCHMARKS: tuple[Candidate, ...] = tuple(
     Candidate(t, n, "benchmark", "eodhd", f"{t}.US", "global", None, "对照组,不是成分")
     for t, n in (("ACWI", "iShares MSCI ACWI"), ("QQQ", "Invesco QQQ (Nasdaq-100)"),
                  ("SPY", "SPDR S&P 500"), ("AGG", "iShares Core US Aggregate Bond")))
+#: 轨道公司(Jazz 11-02「轨道公司股权进可投资宇宙」):稳定币发行方、交易所、经纪、托管 / 代币化、支付 —— 价值先落在发行方
+#: (DeFiLlama 30 天:Tether $5.2 亿、Circle $2.1 亿收入,0 给代币持有人)。**研究宇宙,不是 World50 成分**,只取复权价;
+#: 执行场所逐个另判(HL 上只有 CRCLX 一个核验过的 xStock,且没有挂单)。V / MA / BLK / IBKR / SCHW 已在池子里,作对照的老轨道。
+RAIL_EQUITIES: tuple[Candidate, ...] = tuple(
+    Candidate(t, n, "equity", "eodhd", f"{t}.US", "US", None, "轨道公司(研究宇宙,11-02)")
+    for t, n in (("CRCL", "Circle Internet"), ("COIN", "Coinbase"), ("HOOD", "Robinhood"), ("GLXY", "Galaxy Digital"),
+                 ("MSTR", "Strategy"), ("PYPL", "PayPal"), ("XYZ", "Block"), ("BLSH", "Bullish"),
+                 ("FIGR", "Figure Technology"), ("GEMI", "Gemini Space Station")))
+
 SNAPSHOT = "companiesmarketcap.com Top assets by market cap, 2026-10-14(去掉 ETF);另加曾经的龙头与五个加密资产"
 
 
