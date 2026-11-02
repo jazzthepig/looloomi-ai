@@ -59,6 +59,7 @@
     "hl_liq_map_hourly",
     "holder_concentration_history",
     "interpretation_validation_runs",
+    "issuer_fundamentals_quarterly",
     "j_tickets",
     "j_tickets_state",
     "live_account_daily",
@@ -232,6 +233,19 @@
       "nav",
       "ret",
       "rule"
+    ],
+    "issuer_fundamentals_quarterly": [
+      "buybacks",
+      "cik",
+      "diluted_shares",
+      "dividends",
+      "filed",
+      "net_income",
+      "period",
+      "period_end",
+      "revenue",
+      "source",
+      "symbol"
     ],
     "j_tickets_state": [
       "id",

@@ -2432,6 +2432,31 @@ async def _start_events_loop():
     print("[EVENTS] ✅ event store scheduled (hourly)")
 
 
+async def _issuer_fundamentals_loop():
+    """轨道公司季度基本面(`src/data/market/issuer_fundamentals.py`,11-02):SEC EDGAR XBRL,每天看一次、7 天内跑过就跳过。"""
+    await _asyncio.sleep(_boot_delay(7200))          # 不急;S-482 的 30 秒窗口里 900–1500 档已经满了
+    while True:
+        try:
+            from src.data.market.issuer_fundamentals import run_once as _if_run
+            r = await _if_run()
+            await _iteration_result("_issuer_fundamentals_loop", r)
+            await _beat("_issuer_fundamentals_loop", ok=bool(r.get("ok")), refused=(r.get("status") == "skipped"),
+                        error=None if r.get("ok") else str(r.get("why"))[:200],
+                        detail={"written": r.get("written"), "companies": r.get("companies"), "missing_cik": r.get("missing_cik"),
+                                "errors": r.get("errors")})
+        except Exception as _e:
+            print(f"[ISSUER-FUND] ⚠️  pass FAILED: {_e}")
+            await _beat("_issuer_fundamentals_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_issuer_fundamentals_loop", _e)
+        await _asyncio.sleep(86400)
+
+
+@app.on_event("startup")
+async def _start_issuer_fundamentals_loop():
+    _asyncio.create_task(_issuer_fundamentals_loop())
+    print("[ISSUER-FUND] ✅ SEC EDGAR fundamentals scheduled (daily check, weekly fetch)")
+
+
 async def _scenario_ledger_loop():
     """情景台账的结算(`src/data/evaluation/scenario_ledger.py`,11-02):每小时结算到期、还没结的自动命题 → scenario_scores。"""
     await _asyncio.sleep(_boot_delay(540))
