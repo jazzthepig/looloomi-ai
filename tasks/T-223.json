@@ -1,5 +1,5 @@
 {
-  "status": "open",
+  "status": "in_review",
   "created": "2026-11-02",
   "forbidden_paths": [
     "Shadow/",
@@ -10,7 +10,7 @@
     "scripts/",
     "migrations/"
   ],
-  "notes": "",
+  "notes": "A. 前向核对(2026-10 信号月,2026-11-02 UTC;口径同 docs/research/s691_holdout.sql;Python 重算端口已与 SQL 台账 s691_holdout_seth.json 对账:封存留出段 634 个信号日,六因子月均偏 IC 最大差 0.0032、t 最大差 0.13、6 因子中 5 个同号月计数完全一致):信号日仅 2026-10-01/2026-10-02(d+30 窗口需数据到 2026-11-01,故本月只有 2 个信号日);kept=249 名(S-691 SQL 248,差 1 未追)。冻结五因子前向月均偏 IC(main):F3 ΔOI30 −0.1041、F7 主动买卖7d +0.1335、F8 mom30 −0.1570、F9 mom7 −0.2254、F11 vol30 −0.1582 ⇒ 与留出段 5/5 同号;字面口径 −0.1041/+0.1335/−0.1894/−0.2085/−0.1942,同样 5/5 同号。参照因子 F1 oi_mcap 前向 +0.0152 vs 留出 −0.0582 ⇒ 反号(留出段同号月仅 6/21,本就不稳)。读法:2 个信号日是一次读数(证管道通、口径对、方向没翻),不是月度结论。 B. 第二族(G1–G6)短名单:空。G1/G2 读不到 —— protocol_revenue_daily 共 25,530 行但只有 12 个日历日(2026-10-21→2026-11-01),与发现段(2023-01→2024-12)和留出段(2025-01→2026-09-26)零重叠,且晚于协议可用的最后信号日 2026-10-02 ⇒ 结构性零重叠(面板内带收入的名字数=0);G3 读不到(该表只有 holders_* 人数与 revenue_* 总额,无按持有人拆分的收入);G4 读不到(asset_mcap_daily / cg_coin_mcap_daily 均无供给量列,16 个供给/流量候选表均不存在);G6 读不到(state_daily 只有 entity=panel、24 个 feature,无流入流出项)。仅 G5 实测(state_daily stable_supply_30d,2019-01-01→2026-11-01):预注册日频 OLS 发现段 n=731 斜率 −0.369 t=−1.968、留出段 n=634 斜率 −0.977 t=−4.99,两段同号;判定未过门(发现段 |t|=1.968<2,也远低于卡面发现段 |t|≥3)⇒ 不进短名单;稳健性检查(探索性,日频结果之后才做):月度聚合后发现段斜率 +0.294 t=+0.32 方向翻面 ⇒ 日频显著性不稳健。试验计数 +6。交付:docs/research/s696_forward.md(新建,追加 2026-10 一行)、docs/research/T-223_factor_family_2.md(预注册段在前 + 结果段)、docs/research/scenarios/lane-b-T-223.json(9 条,4 条自动结算)、t223_part_a.py/.json、t223_part_a_reconcile.json、t223_part_b.py/.json、t223_part_b_coverage.json、t223_probe.py/.json、t223_lib.py、t223_db.py。未完成(留给下一轮):① kept 249 vs 248 的 1 名差未追;② S-691 发现段对账(本地缓存从 2023-01-01 起,缺 2022-12 的 d−30 价格);③ 2026-11 信号月(约 30 个信号日)才有月度统计意义。@seth:让 G1/G2 可测必须回填 protocol_revenue_daily 历史(Mac 侧 ingestion,写库请求,不在本卡 allowed_paths,本轮未写库、未改任何数据);G3 需要按持有人拆分的收入列;G4 需要完全稀释供给表;G6 需要 state_daily 增加交易所流入流出 —— 四项都要写库或改采集,均在本卡范围之外。",
   "verified": null,
   "id": "T-223",
   "owner": "lane-b",

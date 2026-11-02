@@ -1,0 +1,119 @@
+{
+  "author": "lane-b",
+  "note": "T-223 前向预期。概率是作者自估,到期按 Brier 结算;写的是可核的量,不是收益承诺。前五条是 S-696 冻结五因子的符号前向判据(机器无法自动结算,记 manual,人工核 s696_forward.md 追加行);后四条是自动结算的量。",
+  "entries": [
+    {
+      "id": "T-223-1",
+      "scenario": "T-223 S-696 前向判据(冻结五因子)",
+      "statement": "F3(ΔOI30)在接下来的三个前向信号月(2026-11 / 2026-12 / 2027-01)都保持 S-691 封存留出段的负号",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "hi": 0,
+      "prob": 0.62,
+      "horizon_d": "2027-01-31",
+      "check": "docs/research/s696_forward.md 追加行中 f03_doi30(main 口径)的月均偏 IC 每月都为负",
+      "current_reading": {"2026-10": -0.104141, "holdout_mean_ic": -0.0653, "holdout_t": -6.54, "holdout_same_sign_months": "1/21"}
+    },
+    {
+      "id": "T-223-2",
+      "scenario": "T-223 S-696 前向判据(冻结五因子)",
+      "statement": "F7(主动买卖比 7 日均值)在接下来的三个前向信号月都保持留出段的正号",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "hi": 0,
+      "prob": 0.7,
+      "horizon_d": "2027-01-31",
+      "check": "docs/research/s696_forward.md 追加行中 f07_taker7(main 口径)的月均偏 IC 每月都为正",
+      "current_reading": {"2026-10": 0.133498, "holdout_mean_ic": 0.0727, "holdout_t": 4.48, "holdout_same_sign_months": "17/21"}
+    },
+    {
+      "id": "T-223-3",
+      "scenario": "T-223 S-696 前向判据(冻结五因子)",
+      "statement": "F8(mom30 相对 BTC)在接下来的三个前向信号月都保持留出段的负号",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "hi": 0,
+      "prob": 0.6,
+      "horizon_d": "2027-01-31",
+      "check": "docs/research/s696_forward.md 追加行中 f08_mom30(main 口径)的月均偏 IC 每月都为负",
+      "current_reading": {"2026-10": -0.156983, "holdout_mean_ic": -0.0764, "holdout_t": -2.57, "holdout_same_sign_months": "6/21"}
+    },
+    {
+      "id": "T-223-4",
+      "scenario": "T-223 S-696 前向判据(冻结五因子)",
+      "statement": "F9(mom7 相对 BTC)在接下来的三个前向信号月都保持留出段的负号",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "hi": 0,
+      "prob": 0.55,
+      "horizon_d": "2027-01-31",
+      "check": "docs/research/s696_forward.md 追加行中 f09_mom7(main 口径)的月均偏 IC 每月都为负",
+      "current_reading": {"2026-10": -0.225408, "holdout_mean_ic": -0.0369, "holdout_t": -2.53, "holdout_same_sign_months": "7/21"}
+    },
+    {
+      "id": "T-223-5",
+      "scenario": "T-223 S-696 前向判据(冻结五因子)",
+      "statement": "F11(30 日已实现波动)在前向信号月保持留出段的负号",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "hi": 0,
+      "prob": 0.68,
+      "horizon_d": "2027-01-31",
+      "check": "docs/research/s696_forward.md 追加行中 f11_vol30(main 口径)的月均偏 IC 每月都为负",
+      "current_reading": {"2026-10": -0.158171, "holdout_mean_ic": -0.1639, "holdout_t": -4.62, "holdout_same_sign_months": "2/21"}
+    },
+    {
+      "id": "T-223-6",
+      "scenario": "T-223 第二族(G5 稳定币供给)自动结算项",
+      "statement": "稳定币供应的 30 日变化在 2026-12-31 仍为负(供给仍在收缩)",
+      "variable": "state:stable_supply_30d",
+      "op": "lt",
+      "lo": -1,
+      "hi": 0,
+      "prob": 0.55,
+      "horizon_d": "2026-12-31",
+      "current_reading": {"2026-11-01": -0.0258514, "2026-10-31": -0.0240546}
+    },
+    {
+      "id": "T-223-7",
+      "scenario": "T-223 第二族(G5 稳定币供给)自动结算项",
+      "statement": "稳定币供应的 30 日变化在 2027-01-31 仍为负",
+      "variable": "state:stable_supply_30d",
+      "op": "lt",
+      "lo": -1,
+      "hi": 0,
+      "prob": 0.52,
+      "horizon_d": "2027-01-31",
+      "current_reading": {"2026-11-01": -0.0258514, "2026-10-31": -0.0240546}
+    },
+    {
+      "id": "T-223-8",
+      "scenario": "T-223 宏观基线自动结算项",
+      "statement": "恐惧与贪婪指数在 2026-12-31 落在 25–75 的中性区间内",
+      "variable": "macro:fng",
+      "op": "between",
+      "lo": 25,
+      "hi": 75,
+      "prob": 0.75,
+      "horizon_d": "2026-12-31",
+      "current_reading": {"note": "本轮未读 macro_daily 的 fng 现值,按历史基率给概率"}
+    },
+    {
+      "id": "T-223-9",
+      "scenario": "T-223 宏观基线自动结算项",
+      "statement": "VIX 在 2026-12-31 落在 12–40 之间",
+      "variable": "macro:vix",
+      "op": "between",
+      "lo": 12,
+      "hi": 40,
+      "prob": 0.75,
+      "horizon_d": "2026-12-31",
+      "current_reading": {"note": "本轮未读 macro_daily 的 vix 现值,按历史基率给概率"}
+    }
+  ]
+}

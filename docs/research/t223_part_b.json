@@ -1,0 +1,108 @@
+{
+  "kept_stats": {
+    "n_overlap_min": 1,
+    "n_kept": 249,
+    "n_seen": 256,
+    "med_err_max_kept": 0.006669109522203898,
+    "n_median_gt_005": 6,
+    "n_overlap_lt_30": 2
+  },
+  "segments": {
+    "discovery": {
+      "signal_days": 731,
+      "names": 226,
+      "factors": {
+        "g01_rev_mcap": {
+          "primary": {
+            "min_names": 30,
+            "n_days": 0,
+            "stats": {}
+          },
+          "sens10": {
+            "min_names": 10,
+            "n_days": 0,
+            "stats": {}
+          }
+        },
+        "g02_rev_chg": {
+          "primary": {
+            "min_names": 30,
+            "n_days": 0,
+            "stats": {}
+          },
+          "sens10": {
+            "min_names": 10,
+            "n_days": 0,
+            "stats": {}
+          }
+        }
+      }
+    },
+    "holdout": {
+      "signal_days": 634,
+      "names": 230,
+      "factors": {
+        "g01_rev_mcap": {
+          "primary": {
+            "min_names": 30,
+            "n_days": 0,
+            "stats": {}
+          },
+          "sens10": {
+            "min_names": 10,
+            "n_days": 0,
+            "stats": {}
+          }
+        },
+        "g02_rev_chg": {
+          "primary": {
+            "min_names": 30,
+            "n_days": 0,
+            "stats": {}
+          },
+          "sens10": {
+            "min_names": 10,
+            "n_days": 0,
+            "stats": {}
+          }
+        }
+      }
+    }
+  },
+  "g5": {
+    "discovery": {
+      "n": 731,
+      "slope": -0.369095,
+      "t": -1.968,
+      "first": "2023-01-01",
+      "last": "2024-12-31",
+      "monthly": {
+        "n": 24,
+        "slope": 0.293516,
+        "t": 0.32,
+        "first": "2023-01",
+        "last": "2024-12"
+      }
+    },
+    "holdout": {
+      "n": 634,
+      "slope": -0.976813,
+      "t": -4.99,
+      "first": "2025-01-01",
+      "last": "2026-09-26",
+      "monthly": {
+        "n": 21,
+        "slope": -1.264078,
+        "t": -1.383,
+        "first": "2025-01",
+        "last": "2026-09"
+      }
+    }
+  },
+  "g5_note": "G5 = 稳定币市值 30 日变化(state_daily stable_supply_30d,entity=panel):全体名字共用的时间因子 ⇒ 只做时间序列 t 检,不做截面",
+  "g6": {
+    "status": "见 t223_part_b_coverage.json 的 state_features / g6_candidates"
+  },
+  "g3": "读不到(protocol_revenue_daily 没有按持有人拆分的收入列)",
+  "g4": "读不到(全库没有供给量列,隐含供给不是完全稀释)"
+}

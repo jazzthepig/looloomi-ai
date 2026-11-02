@@ -1,0 +1,80 @@
+{
+  "kept_stats": {
+    "n_overlap_min": 1,
+    "n_kept": 249,
+    "n_seen": 256,
+    "med_err_max_kept": 0.006669109522203898,
+    "n_median_gt_005": 6,
+    "n_overlap_lt_30": 2
+  },
+  "universe_kept": 249,
+  "names_with_revenue": [],
+  "n_names_with_revenue": 0,
+  "coverage_g1_g2": {
+    "discovery": {
+      "days": 731,
+      "days_ge30": 0,
+      "days_ge10": 0,
+      "median_names": 0.0,
+      "max_names": 0
+    },
+    "holdout": {
+      "days": 634,
+      "days_ge30": 0,
+      "days_ge10": 0,
+      "median_names": 0.0,
+      "max_names": 0
+    }
+  },
+  "state_features": [
+    "breadth_above_ma50",
+    "dist_200",
+    "funding_7d_ann",
+    "funding_7d_ann_binance",
+    "mom_20",
+    "mom_200",
+    "mom_60",
+    "oi_chg_30d",
+    "regime_coverage_30d",
+    "regime_share_30d:EASING",
+    "regime_share_30d:NEUTRAL",
+    "regime_share_30d:RISK_OFF",
+    "regime_share_30d:RISK_ON",
+    "regime_share_30d:STAGFLATION",
+    "regime_share_30d:TIGHTENING",
+    "spy_ret_21",
+    "stable_lend_apy_7d",
+    "stable_supply_30d",
+    "style_rel_majors_30d",
+    "taker_buy_share_30d",
+    "vol_30",
+    "vol_pct_3y",
+    "vratio_30_180"
+  ],
+  "panel_features": [
+    "breadth_above_ma50",
+    "dist_200",
+    "funding_7d_ann",
+    "funding_7d_ann_binance",
+    "mom_20",
+    "mom_200",
+    "mom_60",
+    "oi_chg_30d",
+    "regime_coverage_30d",
+    "regime_share_30d:EASING",
+    "regime_share_30d:NEUTRAL",
+    "regime_share_30d:RISK_OFF",
+    "regime_share_30d:RISK_ON",
+    "regime_share_30d:STAGFLATION",
+    "regime_share_30d:TIGHTENING",
+    "spy_ret_21",
+    "stable_lend_apy_7d",
+    "stable_supply_30d",
+    "style_rel_majors_30d",
+    "taker_buy_share_30d",
+    "vol_30",
+    "vol_pct_3y",
+    "vratio_30_180"
+  ],
+  "g6_candidates": []
+}

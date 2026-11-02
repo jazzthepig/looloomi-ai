@@ -1,0 +1,177 @@
+{
+  "protocol_revenue_daily": {
+    "rows": 25530,
+    "columns": [
+      "category",
+      "d",
+      "gecko_id",
+      "holders_24h",
+      "holders_30d",
+      "holders_60to30d",
+      "name",
+      "recorded_at",
+      "revenue_24h",
+      "revenue_30d",
+      "revenue_60to30d",
+      "slug"
+    ],
+    "min_d": "2026-10-21",
+    "max_d": "2026-11-01",
+    "distinct_days": 12,
+    "rows_before_2026_10_01": 0,
+    "rows_in_discovery_2023_01_to_2024_12": 0,
+    "rows_in_holdout_2025_01_to_2026_09_26": 0,
+    "distinct_gecko_id": 220,
+    "revenue_columns": [
+      "revenue_24h",
+      "revenue_30d",
+      "revenue_60to30d"
+    ],
+    "holder_columns": [
+      "holders_24h",
+      "holders_30d",
+      "holders_60to30d"
+    ]
+  },
+  "state_daily": {
+    "rows": 65826,
+    "columns": [
+      "d",
+      "entity",
+      "feature",
+      "value"
+    ],
+    "min_d": "2019-01-01",
+    "max_d": "2026-11-01",
+    "entities": [
+      "panel"
+    ],
+    "panel_features": [
+      "breadth_above_ma50",
+      "dist_200",
+      "funding_7d_ann",
+      "funding_7d_ann_binance",
+      "mom_20",
+      "mom_200",
+      "mom_60",
+      "oi_chg_30d",
+      "regime_coverage_30d",
+      "regime_share_30d:EASING",
+      "regime_share_30d:NEUTRAL",
+      "regime_share_30d:RISK_OFF",
+      "regime_share_30d:RISK_ON",
+      "regime_share_30d:STAGFLATION",
+      "regime_share_30d:TIGHTENING",
+      "spy_ret_21",
+      "stable_lend_apy_7d",
+      "stable_supply_30d",
+      "style_rel_majors_30d",
+      "taker_buy_share_30d",
+      "vol_30",
+      "vol_pct_3y",
+      "vratio_30_180"
+    ],
+    "all_features": [
+      "breadth_above_ma50",
+      "dist_200",
+      "funding_7d_ann",
+      "funding_7d_ann_binance",
+      "mom_20",
+      "mom_200",
+      "mom_60",
+      "oi_chg_30d",
+      "regime_coverage_30d",
+      "regime_share_30d:EASING",
+      "regime_share_30d:NEUTRAL",
+      "regime_share_30d:RISK_OFF",
+      "regime_share_30d:RISK_ON",
+      "regime_share_30d:STAGFLATION",
+      "regime_share_30d:TIGHTENING",
+      "spy_ret_21",
+      "stable_lend_apy_7d",
+      "stable_supply_30d",
+      "style_rel_majors_30d",
+      "taker_buy_share_30d",
+      "vol_30",
+      "vol_pct_3y",
+      "vratio_30_180"
+    ]
+  },
+  "stable_supply_30d": {
+    "rows": 2862,
+    "min_d": "2019-01-01",
+    "max_d": "2026-11-01",
+    "last_value": -0.0258514803777369,
+    "value_2026_10_31": -0.0240546411722309
+  },
+  "g6_candidate_features": [],
+  "db_tables_present": {
+    "protocol_revenue_daily": 25530,
+    "state_daily": 65826,
+    "macro_daily": 18193,
+    "asset_mcap_daily": 753580,
+    "cg_coin_mcap_daily": 493783,
+    "ohlcv_daily": 1523750,
+    "deriv_metrics_daily": 406001
+  },
+  "db_columns": {
+    "asset_mcap_daily": [
+      "coin_id",
+      "d",
+      "mcap",
+      "price",
+      "recorded_at",
+      "source",
+      "symbol",
+      "volume"
+    ],
+    "cg_coin_mcap_daily": [
+      "coin_id",
+      "d",
+      "mcap",
+      "price",
+      "recorded_at",
+      "source"
+    ],
+    "protocol_revenue_daily": [
+      "category",
+      "d",
+      "gecko_id",
+      "holders_24h",
+      "holders_30d",
+      "holders_60to30d",
+      "name",
+      "recorded_at",
+      "revenue_24h",
+      "revenue_30d",
+      "revenue_60to30d",
+      "slug"
+    ],
+    "state_daily": [
+      "code_ref",
+      "computed_at",
+      "d",
+      "entity",
+      "feature",
+      "source",
+      "value"
+    ],
+    "macro_daily": [
+      "computed_at",
+      "d",
+      "series",
+      "source",
+      "value"
+    ]
+  },
+  "macro_series": [
+    "fed_balance_sheet",
+    "fed_net_liquidity",
+    "fed_rrp",
+    "fed_tga",
+    "fng",
+    "total_mcap",
+    "total_volume",
+    "vix"
+  ]
+}
