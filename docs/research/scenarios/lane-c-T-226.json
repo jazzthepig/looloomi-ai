@@ -1,0 +1,23 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {"id": "T-226-1", "scenario": "T-226 团队/基金会钱包集合",
+     "statement": "ARB 在 2026-12-01 的 ohlcv_daily 收盘价高于 2026-11-01 的 0.163739",
+     "variable": "close:ARB", "op": "gt", "lo": 0.163739, "prob": 0.45, "horizon_d": "2026-12-01"},
+    {"id": "T-226-2", "scenario": "T-226 团队/基金会钱包集合",
+     "statement": "OP 在 2026-12-01 的 ohlcv_daily 收盘价高于 2026-11-01 的 0.112962",
+     "variable": "close:OP", "op": "gt", "lo": 0.112962, "prob": 0.45, "horizon_d": "2026-12-01"},
+    {"id": "T-226-3", "scenario": "T-226 团队/基金会钱包集合",
+     "statement": "2026-12-01 时 state_daily(entity=panel) 的 breadth_above_ma50 大于 0",
+     "variable": "state:breadth_above_ma50", "op": "gt", "lo": 0, "prob": 0.5, "horizon_d": "2026-12-01"},
+    {"id": "T-226-4", "scenario": "T-226 团队/基金会钱包集合",
+     "statement": "2026-12-01 时 state_daily(entity=panel) 的 style_rel_majors_30d 为正",
+     "variable": "state:style_rel_majors_30d", "op": "gt", "lo": 0, "prob": 0.5, "horizon_d": "2026-12-01"},
+    {"id": "T-226-5", "scenario": "T-226 团队/基金会钱包集合",
+     "statement": "T-226 的 5 个 EVM 名字(ARB/OP/ONDO/STRK/AVAX)日频钱包 CSV 在 2026-12-15 前全部补齐(每名字 address,d,balance,out_usd,in_usd)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.6, "horizon_d": "2026-12-15"},
+    {"id": "T-226-6", "scenario": "T-226 团队/基金会钱包集合",
+     "statement": "AVAX 与 SOL/APT/SUI/TIA/DOT 的归属/基金会地址集合在 2026-12-31 前仍找不到带官方出处的地址(即集合维持为空)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.45, "horizon_d": "2026-12-31"}
+  ]
+}
