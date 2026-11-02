@@ -23,6 +23,12 @@
 """
 from __future__ import annotations
 
+if __name__ == "__main__" and not __package__:
+    # 11-02:在 Mac 上直接 `python3 …/probe_spot_trigger.py` 会卡在 import —— 而且就算过了,Mac 上也没有私钥。说清楚该怎么跑
+    raise SystemExit("这个探针只在东京主机上跑(私钥只在那台机器上)。\n"
+                     "在 Mac 上双击 scripts/host_probe_spot_trigger.command,或在终端:\n"
+                     "  bash ~/Projects/looloomi-ai/scripts/host_probe_spot_trigger.command")
+
 import argparse
 import datetime as dt
 import json
