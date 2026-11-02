@@ -16,8 +16,9 @@ UNDERPERFORM / UNDERWEIGHT;模型吐出买卖词整条丢掉(`llm_narrator._BANN
    低于 `MIN_SCORE` 的只入表不发。
 4. 摘要:`llm_narrator._chat`(OpenAI 兼容端点,`LLM_BASE_URL`;没配 ⇒ 模板:标题 + 原摘要)。事实 = 新闻正文 + 点到名字的
    今日 CIS 行;模型只写两三句 + 一句视角。
-5. 发:`TELEGRAM_FEED_CHAT_ID`(频道,机器人是管理员)。**没配 ⇒ 干跑**:入表、打分、不发(`posted_at` 空)——
-   判活不依赖频道。每轮最多 `MAX_POSTS_PER_RUN` 条,按分数高的先。
+5. 发:chat_id 按 `resolve_feed_chat` 找 —— env `TELEGRAM_FEED_CHAT_ID` > Redis 缓存 > 按群名(默认「Looloomi AI」,
+   11-02 Jazz 建的群)从 getUpdates 找一次。**找不到 ⇒ 干跑**:入表、打分、不发(`posted_at` 空)—— 判活不依赖频道。
+   每轮最多 `MAX_POSTS_PER_RUN` 条,按分数高的先。
 
 判活:`select count(*), max(fetched_at), count(posted_at) from feed_items where fetched_at > now() - interval '1 day'`。
 """
@@ -182,6 +183,29 @@ async def fetch_items(now: dt.datetime) -> tuple[list[dict], list[str]]:
     return items, failed
 
 
+CHAT_KEY = "feed:chat_id"
+DEFAULT_CHAT_TITLE = "Looloomi AI"
+
+
+async def resolve_feed_chat() -> tuple[str, str]:
+    """→ (chat_id, 来源)。优先 env `TELEGRAM_FEED_CHAT_ID`;否则 Redis 缓存;否则按群名(`TELEGRAM_FEED_CHAT_TITLE`,
+    默认「Looloomi AI」)从 getUpdates 找一次并缓存 30 天(11-02 Jazz 建群加机器人,chat_id 不用他去查)。找不到 ⇒ ("", why)。"""
+    from src.api.notify import telegram_find_chat
+    from src.api.store import redis_get_key_status, redis_set_key
+    env = os.environ.get("TELEGRAM_FEED_CHAT_ID", "").strip()
+    if env:
+        return env, "env"
+    cached, _st = await redis_get_key_status(CHAT_KEY)
+    if cached and cached.get("id"):
+        return str(cached["id"]), f"redis({cached.get('title')})"
+    title = os.environ.get("TELEGRAM_FEED_CHAT_TITLE", DEFAULT_CHAT_TITLE)
+    found = await telegram_find_chat(title)
+    if found:
+        await redis_set_key(CHAT_KEY, found, ttl=30 * 86400)
+        return found["id"], f"getUpdates({found.get('title')}, {found.get('type')})"
+    return "", f"没有 TELEGRAM_FEED_CHAT_ID,getUpdates 里也没有叫「{title}」的群(机器人加进群后 24 小时内会出现;或直接填 env)"
+
+
 async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     from src.api.notify import notify_telegram, telegram_configured
     from src.api.store import supabase_upsert_table
@@ -202,7 +226,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         it["hits"] = hits
         it["score"] = score(hits, macro, it["source"]) if it["dup_of"] is None else 0
     cand = sorted([it for it in new if it["score"] >= MIN_SCORE], key=lambda x: -x["score"])[:MAX_POSTS_PER_RUN]
-    chat = os.environ.get("TELEGRAM_FEED_CHAT_ID", "").strip()
+    chat, chat_why = await resolve_feed_chat()
     syms = sorted({s for it in cand for s in it["hits"]})
     facts_all: dict[str, dict] = {}
     if syms:
@@ -222,6 +246,6 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     w = await supabase_upsert_table(TABLE, rows, on_conflict="id")
     if not w:
         return {"ok": False, "why": f"写 {TABLE} 失败:{(getattr(w, 'why', '') or '')[:200]}"}
-    return {"ok": True, "new": len(new), "candidates": len(cand), "posted": posted, "dry": not chat,
+    return {"ok": True, "new": len(new), "candidates": len(cand), "posted": posted, "dry": not chat, "chat": chat_why,
             "failed_sources": failed,
-            "why": f"新 {len(new)} 条,候选 {len(cand)},发 {posted}" + ("(干跑:TELEGRAM_FEED_CHAT_ID 未配)" if not chat else "")}
+            "why": f"新 {len(new)} 条,候选 {len(cand)},发 {posted}" + (f"(干跑:{chat_why})" if not chat else f"(→ {chat_why})")}

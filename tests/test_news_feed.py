@@ -91,6 +91,19 @@ def test_run_once_is_dry_without_channel_and_writes_every_new_item(monkeypatch):
     monkeypatch.setattr(notify, "notify_telegram", tg)
     monkeypatch.setattr(notify, "telegram_configured", lambda: True)
     monkeypatch.delenv("TELEGRAM_FEED_CHAT_ID", raising=False)
+    found = {}
+
+    async def find(title):
+        return found.get(title)
+
+    async def rget(key):
+        return None, "miss"
+
+    async def rset(key, data, ttl=7200):
+        return True
+    monkeypatch.setattr(notify, "telegram_find_chat", find)
+    monkeypatch.setattr(store, "redis_get_key_status", rget)
+    monkeypatch.setattr(store, "redis_set_key", rset)
     r = asyncio.run(nf.run_once(now))
     assert r["ok"] and r["dry"] and r["new"] == 2 and r["candidates"] == 1 and r["posted"] == 0 and sent == []
     assert {x["id"] for x in up} == {"n1", "n2"} and next(x for x in up if x["id"] == "n1")["hits"] == ["HYPE"]
@@ -101,6 +114,12 @@ def test_run_once_is_dry_without_channel_and_writes_every_new_item(monkeypatch):
     r = asyncio.run(nf.run_once(now))
     assert r["posted"] == 1 and sent[0][0] == "-100123" and "<b>Hyperliquid volumes" in sent[0][1]
     assert next(x for x in up if x["id"] == "n1")["posted_at"] == now.isoformat()
+    # 没 env 时按群名从 getUpdates 找(11-02 Jazz 建的「Looloomi AI」群)
+    monkeypatch.delenv("TELEGRAM_FEED_CHAT_ID", raising=False)
+    found["Looloomi AI"] = {"id": "-4001", "title": "Looloomi AI", "type": "group"}
+    sent.clear()
+    r = asyncio.run(nf.run_once(now))
+    assert r["posted"] == 1 and sent[0][0] == "-4001" and "getUpdates" in r["chat"]
 
 
 def test_loop_is_registered_and_table_is_in_the_migration():

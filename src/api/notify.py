@@ -67,6 +67,28 @@ async def notify_telegram(
     return False
 
 
+async def telegram_find_chat(title: str) -> Optional[dict]:
+    """按群 / 频道名找 chat_id(11-02:Jazz 建了「Looloomi AI」群、加了机器人,但 chat_id 只有 Bot API 看得到)。
+    读 getUpdates(没人消费它,待处理更新保留 24 小时):任何一条带 chat.title == title 的更新 ⇒ {id, title, type}。
+    找不到 / 没 token ⇒ None。不设 webhook、不消费更新(不带 offset)。"""
+    if not _TOKEN or not title:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            r = await client.get(f"{_API}/bot{_TOKEN}/getUpdates", params={"limit": 100, "allowed_updates": '["message","my_chat_member","channel_post"]'})
+            if r.status_code != 200:
+                _log.warning("[NOTIFY] getUpdates HTTP %s: %s", r.status_code, r.text[:160])
+                return None
+            for u in reversed(r.json().get("result") or []):
+                for k in ("message", "channel_post", "my_chat_member"):
+                    chat = ((u.get(k) or {}).get("chat") or {})
+                    if str(chat.get("title") or "").strip().lower() == title.strip().lower():
+                        return {"id": str(chat.get("id")), "title": chat.get("title"), "type": chat.get("type")}
+    except Exception as e:  # noqa: BLE001
+        _log.warning("[NOTIFY] getUpdates error: %s", e)
+    return None
+
+
 def notify_telegram_sync(text: str, chat_id: Optional[str] = None,
                          parse_mode: Optional[str] = None) -> bool:
     """Blocking variant for scripts / non-async callers (deploy gate, cron)."""
