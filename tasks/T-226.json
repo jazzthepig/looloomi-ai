@@ -1,0 +1,28 @@
+{
+  "id": "T-226",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-02",
+  "title": "自建团队 / 基金会 / 投资方钱包集合(DeFiLlama API 不买,Jazz 11-02):从归属合约与基金会多签反推地址,公共 RPC 拉日频余额与流出事件 —— 先做 T-220 找到有解锁日程的 10 个名字",
+  "source": "T-220(lane-c):免费源没有解锁历史、钱包标签全部要 key;DeFiLlama API $3,000/年 Jazz 裁定不买 ⇒ 我们自己成为数据源。docs/UPGRADE_PATHS.md A2。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-226.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 名字:APT / ARB / AVAX / DOT / ONDO / OP / SOL / STRK / SUI / TIA(T-220 里有实际解锁日程的 10 个);每个名字写一张「地址来源表」:归属 / 锁仓合约、基金会与团队多签、投资方已知地址 —— 每条地址都要有出处 URL(项目文档、治理提案、代币经济页、公开的 Dune/GitHub 列表),没有出处的不进集合;链上拿不到的(SOL / APT / SUI / TIA 非 EVM)写清用什么公共 RPC / 浏览器 API 能拿、拿不到就写「读不到」。② EVM 名字(ARB / OP / ONDO / STRK / AVAX C-chain)用公共 RPC(如 publicnode / llamarpc,写清用了哪个、限速)拉这些地址的代币 Transfer 事件(eth_getLogs,分段扫,从 2024-01-01 起)→ 每地址每日余额与净流出;落 docs/research/t226_wallets/<SYM>.csv(address, d, balance, out_usd, in_usd)。③ 事件定义(先写再算):「团队 / 基金会单日流出 ≥ 该集合余额 1%」为一个事件;列出事件数与日期;**不算收益、不判** —— 只交数据与覆盖率表(每个名字:地址数、有出处的地址数、数据起点、事件数)。④ 预注册草稿(不算):事件 → 之后 30 / 90 天相对宇宙;对照 = 随机日期 + 打乱;试验计数。纪律:只读(SELECT / 公共 RPC 的 eth_getLogs、eth_call / 公开网页),不注册账号、不付费、不入库;翻页带 order=;探针脚本改同一个文件再跑;步数过半先落文件;交付附 docs/research/scenarios/lane-c-T-226.json(≥ 3 条,格式见该目录 README)。",
+    "expect": "报告 docs/research/T-226_wallet_sets.md(开头覆盖率表)+ docs/research/t226_wallets/*.csv + 地址来源表(每条带 URL);卡 notes 写 10 个名字各自的地址数 / 数据起点 / 事件数;in_review,推 lane-c/T-226。"
+  },
+  "prior_value": "T-220:没有任何团队 / 基金会地址集合;解锁前行为信号无法量。",
+  "notes": "",
+  "verified": null
+}
