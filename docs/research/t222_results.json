@@ -1,0 +1,1367 @@
+{
+  "universe_date": "2026-11-01",
+  "universe": [
+    {
+      "symbol": "AAVE",
+      "asset_class": "DeFi",
+      "grade": "C+",
+      "signal": "OUTPERFORM"
+    },
+    {
+      "symbol": "ADA",
+      "asset_class": "L1",
+      "grade": "C",
+      "signal": "UNDERPERFORM"
+    },
+    {
+      "symbol": "APT",
+      "asset_class": "L1",
+      "grade": "C",
+      "signal": "UNDERWEIGHT"
+    },
+    {
+      "symbol": "ARB",
+      "asset_class": "L2",
+      "grade": "C+",
+      "signal": "NEUTRAL"
+    },
+    {
+      "symbol": "AVAX",
+      "asset_class": "L1",
+      "grade": "C+",
+      "signal": "NEUTRAL"
+    },
+    {
+      "symbol": "BNB",
+      "asset_class": "L1",
+      "grade": "C+",
+      "signal": "STRONG OUTPERFORM"
+    },
+    {
+      "symbol": "BTC",
+      "asset_class": "L1",
+      "grade": "B",
+      "signal": "STRONG OUTPERFORM"
+    },
+    {
+      "symbol": "DOT",
+      "asset_class": "L1",
+      "grade": "C",
+      "signal": "UNDERPERFORM"
+    },
+    {
+      "symbol": "ETH",
+      "asset_class": "L1",
+      "grade": "B",
+      "signal": "OUTPERFORM"
+    },
+    {
+      "symbol": "HYPE",
+      "asset_class": "L1",
+      "grade": "B",
+      "signal": "STRONG OUTPERFORM"
+    },
+    {
+      "symbol": "INJ",
+      "asset_class": "Infrastructure",
+      "grade": "C",
+      "signal": "NEUTRAL"
+    },
+    {
+      "symbol": "LDO",
+      "asset_class": "DeFi",
+      "grade": "C+",
+      "signal": "NEUTRAL"
+    },
+    {
+      "symbol": "LINK",
+      "asset_class": "Infrastructure",
+      "grade": "C",
+      "signal": "UNDERPERFORM"
+    },
+    {
+      "symbol": "NEAR",
+      "asset_class": "L1",
+      "grade": "C+",
+      "signal": "NEUTRAL"
+    },
+    {
+      "symbol": "ONDO",
+      "asset_class": "RWA",
+      "grade": "C",
+      "signal": "UNDERPERFORM"
+    },
+    {
+      "symbol": "OP",
+      "asset_class": "L2",
+      "grade": "C+",
+      "signal": "NEUTRAL"
+    },
+    {
+      "symbol": "PENDLE",
+      "asset_class": "DeFi",
+      "grade": "C",
+      "signal": "NEUTRAL"
+    },
+    {
+      "symbol": "POL",
+      "asset_class": "L2",
+      "grade": "C+",
+      "signal": "NEUTRAL"
+    },
+    {
+      "symbol": "SKY",
+      "asset_class": "RWA",
+      "grade": "C",
+      "signal": "NEUTRAL"
+    },
+    {
+      "symbol": "SOL",
+      "asset_class": "L1",
+      "grade": "C+",
+      "signal": "OUTPERFORM"
+    },
+    {
+      "symbol": "STRK",
+      "asset_class": "L2",
+      "grade": "C+",
+      "signal": "NEUTRAL"
+    },
+    {
+      "symbol": "SUI",
+      "asset_class": "L1",
+      "grade": "C",
+      "signal": "UNDERPERFORM"
+    },
+    {
+      "symbol": "TIA",
+      "asset_class": "Infrastructure",
+      "grade": "C+",
+      "signal": "NEUTRAL"
+    },
+    {
+      "symbol": "UNI",
+      "asset_class": "DeFi",
+      "grade": "C+",
+      "signal": "NEUTRAL"
+    },
+    {
+      "symbol": "XRP",
+      "asset_class": "L1",
+      "grade": "C+",
+      "signal": "NEUTRAL"
+    }
+  ],
+  "window": [
+    "2023-01-01",
+    "2026-10-31"
+  ],
+  "hl_start": "2026-09-05",
+  "fees": {
+    "spot_taker_bp": 4.0,
+    "perp_taker_bp": 3.5,
+    "switch_cost_bp": 7.5
+  },
+  "coverage_binance": {
+    "AAVE": {
+      "n_days": 1400,
+      "first": "2023-01-01",
+      "last": "2026-10-31",
+      "span_days": 1400,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    },
+    "ADA": {
+      "n_days": 1400,
+      "first": "2023-01-01",
+      "last": "2026-10-31",
+      "span_days": 1400,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    },
+    "APT": {
+      "n_days": 1400,
+      "first": "2023-01-01",
+      "last": "2026-10-31",
+      "span_days": 1400,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    },
+    "ARB": {
+      "n_days": 1319,
+      "first": "2023-03-23",
+      "last": "2026-10-31",
+      "span_days": 1319,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    },
+    "AVAX": {
+      "n_days": 1400,
+      "first": "2023-01-01",
+      "last": "2026-10-31",
+      "span_days": 1400,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    },
+    "BNB": {
+      "n_days": 1400,
+      "first": "2023-01-01",
+      "last": "2026-10-31",
+      "span_days": 1400,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    },
+    "BTC": {
+      "n_days": 1400,
+      "first": "2023-01-01",
+      "last": "2026-10-31",
+      "span_days": 1400,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    },
+    "DOT": {
+      "n_days": 1400,
+      "first": "2023-01-01",
+      "last": "2026-10-31",
+      "span_days": 1400,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    },
+    "ETH": {
+      "n_days": 1400,
+      "first": "2023-01-01",
+      "last": "2026-10-31",
+      "span_days": 1400,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    },
+    "HYPE": {
+      "n_days": 520,
+      "first": "2025-05-30",
+      "last": "2026-10-31",
+      "span_days": 520,
+      "coverage_pct": 100.0,
+      "rows_per_day": 5.99
+    },
+    "INJ": {
+      "n_days": 1400,
+      "first": "2023-01-01",
+      "last": "2026-10-31",
+      "span_days": 1400,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    },
+    "LDO": {
+      "n_days": 1400,
+      "first": "2023-01-01",
+      "last": "2026-10-31",
+      "span_days": 1400,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    },
+    "LINK": {
+      "n_days": 1400,
+      "first": "2023-01-01",
+      "last": "2026-10-31",
+      "span_days": 1400,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    },
+    "NEAR": {
+      "n_days": 1400,
+      "first": "2023-01-01",
+      "last": "2026-10-31",
+      "span_days": 1400,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    },
+    "ONDO": {
+      "n_days": 1016,
+      "first": "2024-01-20",
+      "last": "2026-10-31",
+      "span_days": 1016,
+      "coverage_pct": 100.0,
+      "rows_per_day": 6.0
+    },
+    "OP": {
+      "n_days": 1400,
+      "first": "2023-01-01",
+      "last": "2026-10-31",
+      "span_days": 1400,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    },
+    "PENDLE": {
+      "n_days": 1195,
+      "first": "2023-07-25",
+      "last": "2026-10-31",
+      "span_days": 1195,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    },
+    "POL": {
+      "n_days": 779,
+      "first": "2024-09-13",
+      "last": "2026-10-31",
+      "span_days": 779,
+      "coverage_pct": 100.0,
+      "rows_per_day": 5.99
+    },
+    "SKY": {
+      "n_days": 0
+    },
+    "SOL": {
+      "n_days": 1400,
+      "first": "2023-01-01",
+      "last": "2026-10-31",
+      "span_days": 1400,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    },
+    "STRK": {
+      "n_days": 985,
+      "first": "2024-02-20",
+      "last": "2026-10-31",
+      "span_days": 985,
+      "coverage_pct": 100.0,
+      "rows_per_day": 5.99
+    },
+    "SUI": {
+      "n_days": 1278,
+      "first": "2023-05-03",
+      "last": "2026-10-31",
+      "span_days": 1278,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    },
+    "TIA": {
+      "n_days": 1097,
+      "first": "2023-10-31",
+      "last": "2026-10-31",
+      "span_days": 1097,
+      "coverage_pct": 100.0,
+      "rows_per_day": 5.99
+    },
+    "UNI": {
+      "n_days": 1400,
+      "first": "2023-01-01",
+      "last": "2026-10-31",
+      "span_days": 1400,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    },
+    "XRP": {
+      "n_days": 1400,
+      "first": "2023-01-01",
+      "last": "2026-10-31",
+      "span_days": 1400,
+      "coverage_pct": 100.0,
+      "rows_per_day": 3.0
+    }
+  },
+  "no_binance_funding": [
+    "SKY"
+  ],
+  "panel": [
+    "AAVE",
+    "ADA",
+    "APT",
+    "AVAX",
+    "BNB",
+    "BTC",
+    "DOT",
+    "ETH",
+    "INJ",
+    "LDO",
+    "LINK",
+    "NEAR",
+    "OP",
+    "SOL",
+    "UNI",
+    "XRP"
+  ],
+  "panel_n": 16,
+  "n_days": 1400,
+  "first_day": "2023-01-01",
+  "last_day": "2026-10-31",
+  "per_name_ann_pct": {
+    "AAVE": 7.344303700000002,
+    "ADA": 6.9420703107142865,
+    "APT": 0.5216611285714289,
+    "ARB": 8.476559097801365,
+    "AVAX": 5.005097957142858,
+    "BNB": -2.976321325,
+    "BTC": 7.182605310714287,
+    "DOT": 2.845933157142858,
+    "ETH": 7.276754453571428,
+    "HYPE": 8.290541211538462,
+    "INJ": -1.594489464285714,
+    "LDO": 8.765658021428573,
+    "LINK": 8.489104300000001,
+    "NEAR": 6.873658882142858,
+    "ONDO": 5.7991138927165355,
+    "OP": 7.366218300000001,
+    "PENDLE": 7.573976330543933,
+    "POL": -1.523372246469833,
+    "SKY": null,
+    "SOL": 3.860631592857143,
+    "STRK": 3.92953145177665,
+    "SUI": 5.440890207355242,
+    "TIA": -1.9562120100273468,
+    "UNI": 8.68070687857143,
+    "XRP": 6.8118453500000005
+  },
+  "equal_weight_ann_pct": 4.976102770366935,
+  "equal_weight_n_names": 24,
+  "panel_ann_gross_pct": 5.215940581442101,
+  "panel_total_rate_pct": 19.992057187500002,
+  "panel_years": 3.8328767123287673,
+  "panel_by_year": {
+    "2023": {
+      "ann_pct": 4.8222633125000005,
+      "days": 365,
+      "total_pct": 4.8222633125000005
+    },
+    "2024": {
+      "ann_pct": 12.588681337090152,
+      "days": 366,
+      "total_pct": 12.623170874999989
+    },
+    "2025": {
+      "ann_pct": 2.0663953125000014,
+      "days": 365,
+      "total_pct": 2.0663953125000014
+    },
+    "2026": {
+      "ann_pct": 0.5765891642680924,
+      "days": 304,
+      "total_pct": 0.4802276875000002
+    }
+  },
+  "panel_runrate_ann_pct_30d": 3.3573110625,
+  "panel_runrate_ann_pct_90d": 4.629502340277779,
+  "months_total": 46,
+  "months_pos": 36,
+  "months_neg": 10,
+  "months_flat": 0,
+  "monthly_min_pct": -0.634839875,
+  "monthly_max_pct": 3.789255062499999,
+  "n_neg_segments": 125,
+  "neg_segments": [
+    {
+      "start": "2025-10-11",
+      "end": "2025-10-26",
+      "days": 16,
+      "cum_pct": -0.4999748125
+    },
+    {
+      "start": "2026-03-18",
+      "end": "2026-04-02",
+      "days": 16,
+      "cum_pct": -0.1862996875
+    },
+    {
+      "start": "2023-08-16",
+      "end": "2023-08-29",
+      "days": 14,
+      "cum_pct": -0.22006325
+    },
+    {
+      "start": "2025-11-21",
+      "end": "2025-12-02",
+      "days": 12,
+      "cum_pct": -0.1860220625
+    },
+    {
+      "start": "2024-08-04",
+      "end": "2024-08-14",
+      "days": 11,
+      "cum_pct": -0.0942055
+    },
+    {
+      "start": "2026-02-15",
+      "end": "2026-02-24",
+      "days": 10,
+      "cum_pct": -0.4975506875
+    },
+    {
+      "start": "2023-01-01",
+      "end": "2023-01-08",
+      "days": 8,
+      "cum_pct": -0.44390518749999996
+    },
+    {
+      "start": "2025-11-09",
+      "end": "2025-11-16",
+      "days": 8,
+      "cum_pct": -0.06316875
+    },
+    {
+      "start": "2026-02-06",
+      "end": "2026-02-13",
+      "days": 8,
+      "cum_pct": -0.09367162500000001
+    },
+    {
+      "start": "2026-03-02",
+      "end": "2026-03-09",
+      "days": 8,
+      "cum_pct": -0.1308069375
+    },
+    {
+      "start": "2026-06-03",
+      "end": "2026-06-10",
+      "days": 8,
+      "cum_pct": -0.07760775
+    },
+    {
+      "start": "2023-06-10",
+      "end": "2023-06-16",
+      "days": 7,
+      "cum_pct": -0.1725935625
+    }
+  ],
+  "longest_neg_segment": {
+    "start": "2025-10-11",
+    "end": "2025-10-26",
+    "days": 16,
+    "cum_pct": -0.4999748125
+  },
+  "hl_panel_ann_pct_raw": 3.213177205821429,
+  "hl_panel_days_raw": 57,
+  "hl_panel_total_pct_raw": 0.4929806124000001,
+  "hl_panel_ann_pct_ext24": 9.978877247153044,
+  "hl_panel_days_ext24": 57,
+  "hl_panel_total_pct_ext24": 1.531005824220741,
+  "hl_panel_first": "2026-09-05",
+  "hl_panel_last": "2026-10-31",
+  "hl_panel_n_names": 25,
+  "hl_rows_per_day_mean": 7.894736842105263,
+  "hl_rows_per_day_hist": [
+    [
+      3,
+      25
+    ],
+    [
+      4,
+      175
+    ],
+    [
+      5,
+      100
+    ],
+    [
+      6,
+      225
+    ],
+    [
+      7,
+      200
+    ],
+    [
+      8,
+      225
+    ],
+    [
+      9,
+      100
+    ],
+    [
+      10,
+      75
+    ],
+    [
+      11,
+      75
+    ],
+    [
+      12,
+      125
+    ],
+    [
+      13,
+      25
+    ],
+    [
+      14,
+      50
+    ],
+    [
+      17,
+      25
+    ]
+  ],
+  "hl_baseline_ann_pct": 10.950000000000001,
+  "bin_same_window_ann_pct": 4.292541763392857,
+  "bin_same_window_days": 57,
+  "hl_panel_runrate_ann_pct_30d": 7.612287665337629,
+  "hl_panel_runrate_ann_pct_30d_raw": 2.8382544199333344,
+  "rule_A": {
+    "gross_pct": 19.992057187500002,
+    "net_pct": 19.8420571875,
+    "switches": 2,
+    "days_on": 1400,
+    "days_off": 0,
+    "ann_gross_pct": 5.215940581442101,
+    "ann_net_pct": 5.1768054849446035
+  },
+  "rule_B_lag1": {
+    "gross_pct": 22.500115875000002,
+    "net_pct": 17.400115875,
+    "switches": 68,
+    "days_on": 1050,
+    "days_off": 350,
+    "ann_gross_pct": 5.870294706486776,
+    "ann_net_pct": 4.539701425571837
+  },
+  "rule_B_sameday": {
+    "gross_pct": 23.33449175,
+    "net_pct": 18.234491749999997,
+    "switches": 68,
+    "days_on": 1051,
+    "days_off": 349,
+    "ann_gross_pct": 6.0879839090421735,
+    "ann_net_pct": 4.757390628127233
+  },
+  "ab_B_lag1_vs_A": {
+    "n_days": 1400,
+    "years": 3.84,
+    "cum_a": 0.22120577384443624,
+    "cum_b": 0.2522322779818043,
+    "log_diff_total": 0.025089071138461153,
+    "ratio_b_over_a": 1.025406450576871,
+    "ci95_log_diff": [
+      0.009219042838625017,
+      0.04502412224492714
+    ],
+    "p_b_le_a": 0.0,
+    "p_b_ge_a": 1.0,
+    "se_log_diff": 0.009347088634304482,
+    "mde_log_diff_total": 0.02324130090829131,
+    "mde_log_diff_per_year": 0.006059339165375949,
+    "underpowered": false,
+    "verdict": "B > A",
+    "mean_block": 20.0,
+    "n_boot": 2000
+  },
+  "ab_B_sameday_vs_A": {
+    "n_days": 1400,
+    "years": 3.84,
+    "cum_a": 0.22120577384443624,
+    "cum_b": 0.26272596561765943,
+    "log_diff_total": 0.033434138943062054,
+    "ratio_b_over_a": 1.0339993411941666,
+    "ci95_log_diff": [
+      0.016054046925930408,
+      0.05439985154614212
+    ],
+    "p_b_le_a": 0.0,
+    "p_b_ge_a": 1.0,
+    "se_log_diff": 0.00979113478229071,
+    "mde_log_diff_total": 0.024345410492171756,
+    "mde_log_diff_per_year": 0.006347196306887637,
+    "underpowered": false,
+    "verdict": "B > A",
+    "mean_block": 20.0,
+    "n_boot": 2000
+  },
+  "ab_net_B_lag1_vs_A": {
+    "n_days": 1400,
+    "years": 3.84,
+    "cum_a": 0.21937460269377113,
+    "cum_b": 0.18994834411177958,
+    "log_diff_total": -0.02442820869558106,
+    "ratio_b_over_a": 0.9758677452220303,
+    "ci95_log_diff": [
+      -0.05301615749275036,
+      0.0032622337692746646
+    ],
+    "p_b_le_a": 0.954,
+    "p_b_ge_a": 0.046,
+    "se_log_diff": 0.014685604166886747,
+    "mde_log_diff_total": 0.03651538557257607,
+    "mde_log_diff_per_year": 0.009520082667135903,
+    "underpowered": true,
+    "verdict": "B < A",
+    "mean_block": 20.0,
+    "n_boot": 2000
+  },
+  "hl_vs_bin_raw": {
+    "n_days": 57,
+    "hl_mean_pct": 0.008648782673684212,
+    "bin_mean_pct": 0.011554065789473685,
+    "diff_mean_pct": -0.0029052831157894733,
+    "diff_median_pct": -0.0032198589999999994,
+    "corr": 0.47737214891665625,
+    "hl_higher_days": 17,
+    "hl_higher_pct": 29.82456140350877
+  },
+  "hl_vs_bin_ext": {
+    "n_days": 57,
+    "hl_mean_pct": 0.02685975130211826,
+    "bin_mean_pct": 0.011554065789473685,
+    "diff_mean_pct": 0.015305685512644576,
+    "diff_median_pct": 0.013325816706666674,
+    "corr": 0.7226657834900256,
+    "hl_higher_days": 57,
+    "hl_higher_pct": 100.0
+  },
+  "hl_vs_bin_by_name": {
+    "AAVE": {
+      "hl_ann_pct": 9.356739914623153,
+      "bin_ann_pct": 4.40548596491228,
+      "diff_ann_pct": 4.951253949710873
+    },
+    "ADA": {
+      "hl_ann_pct": -0.08699053029529069,
+      "bin_ann_pct": 4.671833508771931,
+      "diff_ann_pct": -4.758824039067221
+    },
+    "APT": {
+      "hl_ann_pct": 9.177651054276732,
+      "bin_ann_pct": 4.3253396491228076,
+      "diff_ann_pct": 4.852311405153924
+    },
+    "ARB": {
+      "hl_ann_pct": 9.845391820297298,
+      "bin_ann_pct": 0.8230750000000002,
+      "diff_ann_pct": 9.022316820297299
+    },
+    "AVAX": {
+      "hl_ann_pct": 6.332554240758341,
+      "bin_ann_pct": 4.32243245614035,
+      "diff_ann_pct": 2.010121784617991
+    },
+    "BNB": {
+      "hl_ann_pct": 7.8691362176816115,
+      "bin_ann_pct": 2.9192699999999996,
+      "diff_ann_pct": 4.9498662176816115
+    },
+    "BTC": {
+      "hl_ann_pct": 8.499568172533083,
+      "bin_ann_pct": 4.957481228070176,
+      "diff_ann_pct": 3.5420869444629073
+    },
+    "DOT": {
+      "hl_ann_pct": 4.850305877835261,
+      "bin_ann_pct": 3.894319473684211,
+      "diff_ann_pct": 0.9559864041510502
+    },
+    "ETH": {
+      "hl_ann_pct": 8.393934012580432,
+      "bin_ann_pct": 3.9306785964912287,
+      "diff_ann_pct": 4.463255416089204
+    },
+    "HYPE": {
+      "hl_ann_pct": 10.762009426003626,
+      "bin_ann_pct": 6.060760964912281,
+      "diff_ann_pct": 4.701248461091345
+    },
+    "INJ": {
+      "hl_ann_pct": 11.151662589152407,
+      "bin_ann_pct": 3.5515268421052633,
+      "diff_ann_pct": 7.600135747047144
+    },
+    "LDO": {
+      "hl_ann_pct": 11.46581033102614,
+      "bin_ann_pct": 6.346908157894737,
+      "diff_ann_pct": 5.118902173131402
+    },
+    "LINK": {
+      "hl_ann_pct": 9.414211858625242,
+      "bin_ann_pct": 4.933333596491228,
+      "diff_ann_pct": 4.480878262134014
+    },
+    "NEAR": {
+      "hl_ann_pct": 14.429616336197054,
+      "bin_ann_pct": 6.187716929824561,
+      "diff_ann_pct": 8.241899406372493
+    },
+    "ONDO": {
+      "hl_ann_pct": 14.141056261101296,
+      "bin_ann_pct": 6.436019385964912,
+      "diff_ann_pct": 7.705036875136384
+    },
+    "OP": {
+      "hl_ann_pct": 5.668481124512842,
+      "bin_ann_pct": 1.9413069298245618,
+      "diff_ann_pct": 3.72717419468828
+    },
+    "PENDLE": {
+      "hl_ann_pct": 12.587262713214855,
+      "bin_ann_pct": 5.010777631578947,
+      "diff_ann_pct": 7.576485081635908
+    },
+    "POL": {
+      "hl_ann_pct": 10.023640386269463,
+      "bin_ann_pct": -3.319021842105262,
+      "diff_ann_pct": 13.342662228374724
+    },
+    "SOL": {
+      "hl_ann_pct": 6.846834084180845,
+      "bin_ann_pct": 3.8997880701754384,
+      "diff_ann_pct": 2.9470460140054064
+    },
+    "STRK": {
+      "hl_ann_pct": 13.961694463257796,
+      "bin_ann_pct": 7.6481203508771936,
+      "diff_ann_pct": 6.313574112380603
+    },
+    "SUI": {
+      "hl_ann_pct": 11.42831415378744,
+      "bin_ann_pct": 5.1252211403508765,
+      "diff_ann_pct": 6.3030930134365635
+    },
+    "TIA": {
+      "hl_ann_pct": 7.730887540273993,
+      "bin_ann_pct": 3.059609298245615,
+      "diff_ann_pct": 4.671278242028378
+    },
+    "UNI": {
+      "hl_ann_pct": 14.130787774216044,
+      "bin_ann_pct": 6.07682096491228,
+      "diff_ann_pct": 8.053966809303763
+    },
+    "XRP": {
+      "hl_ann_pct": 10.11296653597123,
+      "bin_ann_pct": 4.00481201754386,
+      "diff_ann_pct": 6.10815451842737
+    }
+  },
+  "neg_segments_vs_btc": [
+    {
+      "start": "2025-10-11",
+      "end": "2025-10-26",
+      "days": 16,
+      "cum_funding_pct": -0.4999748125,
+      "btc30_mean_pct": -3.371773449542391,
+      "btc_seg_return_pct": 3.5383753298868337,
+      "btc30_neg_days": 14,
+      "n_btc_days": 16
+    },
+    {
+      "start": "2026-03-18",
+      "end": "2026-04-02",
+      "days": 16,
+      "cum_funding_pct": -0.1862996875,
+      "btc30_mean_pct": 2.4226358295081485,
+      "btc_seg_return_pct": -6.097843402833824,
+      "btc30_neg_days": 6,
+      "n_btc_days": 16
+    },
+    {
+      "start": "2023-08-16",
+      "end": "2023-08-29",
+      "days": 14,
+      "cum_funding_pct": -0.22006325,
+      "btc30_mean_pct": -10.589845350845417,
+      "btc_seg_return_pct": -3.530046466298886,
+      "btc30_neg_days": 14,
+      "n_btc_days": 14
+    },
+    {
+      "start": "2025-11-21",
+      "end": "2025-12-02",
+      "days": 12,
+      "cum_funding_pct": -0.1860220625,
+      "btc30_mean_pct": -20.023432867485855,
+      "btc_seg_return_pct": 7.222534165634897,
+      "btc30_neg_days": 12,
+      "n_btc_days": 12
+    },
+    {
+      "start": "2024-08-04",
+      "end": "2024-08-14",
+      "days": 11,
+      "cum_funding_pct": -0.0942055,
+      "btc30_mean_pct": 0.2608242836387659,
+      "btc_seg_return_pct": 0.8981963858943232,
+      "btc30_neg_days": 4,
+      "n_btc_days": 11
+    },
+    {
+      "start": "2026-02-15",
+      "end": "2026-02-24",
+      "days": 10,
+      "cum_funding_pct": -0.4975506875,
+      "btc30_mean_pct": -26.2166487503387,
+      "btc_seg_return_pct": -6.936393511214178,
+      "btc30_neg_days": 10,
+      "n_btc_days": 10
+    },
+    {
+      "start": "2023-01-01",
+      "end": "2023-01-08",
+      "days": 8,
+      "cum_funding_pct": -0.44390518749999996,
+      "btc30_mean_pct": -1.2127427000700977,
+      "btc_seg_return_pct": 3.0752010013961772,
+      "btc30_neg_days": 7,
+      "n_btc_days": 8
+    },
+    {
+      "start": "2025-11-09",
+      "end": "2025-11-16",
+      "days": 8,
+      "cum_funding_pct": -0.06316875,
+      "btc30_mean_pct": -10.360749555769928,
+      "btc_seg_return_pct": -9.989782569254135,
+      "btc30_neg_days": 8,
+      "n_btc_days": 8
+    },
+    {
+      "start": "2026-02-06",
+      "end": "2026-02-13",
+      "days": 8,
+      "cum_funding_pct": -0.09367162500000001,
+      "btc30_mean_pct": -25.251075004206896,
+      "btc_seg_return_pct": -2.445866622839521,
+      "btc30_neg_days": 8,
+      "n_btc_days": 8
+    },
+    {
+      "start": "2026-03-02",
+      "end": "2026-03-09",
+      "days": 8,
+      "cum_funding_pct": -0.1308069375,
+      "btc30_mean_pct": -5.712912779787188,
+      "btc_seg_return_pct": -0.5780901088332069,
+      "btc30_neg_days": 7,
+      "n_btc_days": 8
+    }
+  ],
+  "worst_neg_segment": {
+    "start": "2025-10-11",
+    "end": "2025-10-26",
+    "days": 16,
+    "cum_funding_pct": -0.4999748125,
+    "btc30_mean_pct": -3.371773449542391,
+    "btc_seg_return_pct": 3.5383753298868337,
+    "btc30_neg_days": 14,
+    "n_btc_days": 16
+  },
+  "btc30_on_neg_days_pct": -3.5939189998340497,
+  "btc30_on_pos_days_pct": 7.1014052999020265,
+  "btc30_all_days_pct": 4.412295190254099,
+  "n_neg_days": 352,
+  "n_pos_days": 1048,
+  "contingency": {
+    "neg_funding_btc_down": 222,
+    "neg_funding_btc_up": 130,
+    "pos_funding_btc_down": 355,
+    "pos_funding_btc_up": 693
+  },
+  "p_down_given_neg_funding": 0.6306818181818182,
+  "p_down_given_pos_funding": 0.3387404580152672,
+  "btc30_neg_funding_null_pct": 0.0,
+  "btc30_neg_funding_actual_pct": -3.5939189998340497,
+  "ab_btc_daily_negfund_vs_all": {
+    "n_days": 352,
+    "years": 0.96,
+    "cum_a": 0.21973034805416058,
+    "cum_b": 0.21973034805416058,
+    "log_diff_total": 0.0,
+    "ratio_b_over_a": 1.0,
+    "ci95_log_diff": [
+      0.0,
+      0.0
+    ],
+    "p_b_le_a": 1.0,
+    "p_b_ge_a": 1.0,
+    "se_log_diff": 0.0,
+    "mde_log_diff_total": 0.0,
+    "mde_log_diff_per_year": 0.0,
+    "underpowered": false,
+    "verdict": "\u5206\u4e0d\u5f00",
+    "mean_block": 20.0,
+    "n_boot": 2000
+  },
+  "timeline": [
+    {
+      "month": "2023-01",
+      "funding_pct": 0.1536243750000001,
+      "btc30_pct": 39.16698762697992,
+      "btc_month_pct": 39.79289583131829
+    },
+    {
+      "month": "2023-02",
+      "funding_pct": 0.6245035625000002,
+      "btc30_pct": -2.530083437577657,
+      "btc_month_pct": 0.07135104280631133
+    },
+    {
+      "month": "2023-03",
+      "funding_pct": -0.027160812499999982,
+      "btc30_pct": 20.46806889838757,
+      "btc_month_pct": 23.005323745981276
+    },
+    {
+      "month": "2023-04",
+      "funding_pct": 0.10342081250000004,
+      "btc30_pct": 2.697309716357399,
+      "btc_month_pct": 2.697309716357399
+    },
+    {
+      "month": "2023-05",
+      "funding_pct": 0.23424681250000007,
+      "btc30_pct": -3.0568292344032244,
+      "btc_month_pct": -6.919871926439802
+    },
+    {
+      "month": "2023-06",
+      "funding_pct": 0.059416562500000075,
+      "btc30_pct": 11.987004920930676,
+      "btc_month_pct": 11.987004920930676
+    },
+    {
+      "month": "2023-07",
+      "funding_pct": 0.3817555625,
+      "btc30_pct": -4.425895592413498,
+      "btc_month_pct": -4.068653189813598
+    },
+    {
+      "month": "2023-08",
+      "funding_pct": -0.0025911250000000175,
+      "btc30_pct": -12.674880495522789,
+      "btc_month_pct": -11.25950150861037
+    },
+    {
+      "month": "2023-09",
+      "funding_pct": -0.10416168749999997,
+      "btc30_pct": 3.9389687287978647,
+      "btc_month_pct": 3.9389687287978647
+    },
+    {
+      "month": "2023-10",
+      "funding_pct": 0.28576500000000005,
+      "btc30_pct": 23.746275801461824,
+      "btc_month_pct": 28.473515165451424
+    },
+    {
+      "month": "2023-11",
+      "funding_pct": 1.1535341875000003,
+      "btc30_pct": 8.90363108332033,
+      "btc_month_pct": 8.90363108332033
+    },
+    {
+      "month": "2023-12",
+      "funding_pct": 1.9599100624999997,
+      "btc30_pct": 9.30937762554127,
+      "btc_month_pct": 12.086735234863744
+    },
+    {
+      "month": "2024-01",
+      "funding_pct": 0.9399018125000004,
+      "btc30_pct": -3.6206756059357637,
+      "btc_month_pct": 0.7009809949956924
+    },
+    {
+      "month": "2024-02",
+      "funding_pct": 1.6696034375000002,
+      "btc30_pct": 42.36011653171439,
+      "btc_month_pct": 43.56740253640206
+    },
+    {
+      "month": "2024-03",
+      "funding_pct": 3.789255062499999,
+      "btc30_pct": 14.252924044566328,
+      "btc_month_pct": 16.602051332384548
+    },
+    {
+      "month": "2024-04",
+      "funding_pct": 0.6482966874999999,
+      "btc30_pct": -14.882154882154886,
+      "btc_month_pct": -14.882154882154886
+    },
+    {
+      "month": "2024-05",
+      "funding_pct": 0.654677625,
+      "btc30_pct": 15.720037693823352,
+      "btc_month_pct": 11.319883966244726
+    },
+    {
+      "month": "2024-06",
+      "funding_pct": 0.799710375,
+      "btc30_pct": -7.0595202842759885,
+      "btc_month_pct": -7.0595202842759885
+    },
+    {
+      "month": "2024-07",
+      "funding_pct": 0.5311435625,
+      "btc30_pct": 2.7472178060413244,
+      "btc_month_pct": 2.9567323010259328
+    },
+    {
+      "month": "2024-08",
+      "funding_pct": 0.027877562500000008,
+      "btc30_pct": -9.762218073874596,
+      "btc_month_pct": -8.74853004889522
+    },
+    {
+      "month": "2024-09",
+      "funding_pct": 0.3672245,
+      "btc30_pct": 7.382236239698847,
+      "btc_month_pct": 7.382236239698847
+    },
+    {
+      "month": "2024-10",
+      "funding_pct": 0.5986758750000001,
+      "btc30_pct": 15.600814395995123,
+      "btc_month_pct": 10.997416608240318
+    },
+    {
+      "month": "2024-11",
+      "funding_pct": 1.30501225,
+      "btc30_pct": 37.15358789051386,
+      "btc_month_pct": 37.15358789051386
+    },
+    {
+      "month": "2024-12",
+      "funding_pct": 1.2917921250000002,
+      "btc30_pct": -3.713734189979545,
+      "btc_month_pct": -2.9375155588747814
+    },
+    {
+      "month": "2025-01",
+      "funding_pct": 0.6421763750000001,
+      "btc30_pct": 8.286341945073449,
+      "btc_month_pct": 9.461827819098922
+    },
+    {
+      "month": "2025-02",
+      "funding_pct": 0.011296937500000007,
+      "btc30_pct": -18.685567755680456,
+      "btc_month_pct": -17.651176413160208
+    },
+    {
+      "month": "2025-03",
+      "funding_pct": -0.018930187499999997,
+      "btc30_pct": -4.083565233051956,
+      "btc_month_pct": -2.1338495955537495
+    },
+    {
+      "month": "2025-04",
+      "funding_pct": 0.09910775000000001,
+      "btc30_pct": 14.078740157480318,
+      "btc_month_pct": 14.078740157480318
+    },
+    {
+      "month": "2025-05",
+      "funding_pct": 0.3077646875,
+      "btc30_pct": 8.396837389198254,
+      "btc_month_pct": 11.064860043324988
+    },
+    {
+      "month": "2025-06",
+      "funding_pct": 0.20228825000000009,
+      "btc30_pct": 2.4418693590331886,
+      "btc_month_pct": 2.4418693590331886
+    },
+    {
+      "month": "2025-07",
+      "funding_pct": 0.62472425,
+      "btc30_pct": 9.540977091435554,
+      "btc_month_pct": 8.043230731898522
+    },
+    {
+      "month": "2025-08",
+      "funding_pct": 0.48703587499999995,
+      "btc30_pct": -4.459037229253826,
+      "btc_month_pct": -6.494246916139734
+    },
+    {
+      "month": "2025-09",
+      "funding_pct": 0.477036625,
+      "btc30_pct": 5.360937124697451,
+      "btc_month_pct": 5.360937124697451
+    },
+    {
+      "month": "2025-10",
+      "funding_pct": -0.4604408125000002,
+      "btc30_pct": -7.5778911421223505,
+      "btc_month_pct": -3.8939403238958725
+    },
+    {
+      "month": "2025-11",
+      "funding_pct": -0.3113513125000001,
+      "btc30_pct": -17.560761988176044,
+      "btc_month_pct": -17.560761988176044
+    },
+    {
+      "month": "2025-12",
+      "funding_pct": 0.005686874999999994,
+      "btc30_pct": 1.5787033817768803,
+      "btc_month_pct": -3.0011066843736223
+    },
+    {
+      "month": "2026-01",
+      "funding_pct": 0.1604670625,
+      "btc30_pct": -11.36651695764247,
+      "btc_month_pct": -10.16233077233758
+    },
+    {
+      "month": "2026-02",
+      "funding_pct": -0.634839875,
+      "btc30_pct": -20.882289705163124,
+      "btc_month_pct": -14.944927109222505
+    },
+    {
+      "month": "2026-03",
+      "funding_pct": -0.3291973124999999,
+      "btc30_pct": 3.8129119062279004,
+      "btc_month_pct": 1.9577951213394007
+    },
+    {
+      "month": "2026-04",
+      "funding_pct": -0.16706212500000006,
+      "btc30_pct": 11.806632544720985,
+      "btc_month_pct": 11.806632544720985
+    },
+    {
+      "month": "2026-05",
+      "funding_pct": 0.09946693750000003,
+      "btc30_pct": -5.824665638090232,
+      "btc_month_pct": -3.5000903773056202
+    },
+    {
+      "month": "2026-06",
+      "funding_pct": -0.0782159375,
+      "btc30_pct": -20.427312607907222,
+      "btc_month_pct": -20.427312607907222
+    },
+    {
+      "month": "2026-07",
+      "funding_pct": 0.27137750000000005,
+      "btc30_pct": 4.771258163401315,
+      "btc_month_pct": 7.272020155327019
+    },
+    {
+      "month": "2026-08",
+      "funding_pct": 0.41199418750000005,
+      "btc30_pct": 25.08245309087669,
+      "btc_month_pct": 24.9545620063637
+    },
+    {
+      "month": "2026-09",
+      "funding_pct": 0.45386475000000004,
+      "btc30_pct": 6.4166665606193884,
+      "btc_month_pct": 6.4166665606193884
+    },
+    {
+      "month": "2026-10",
+      "funding_pct": 0.2923725,
+      "btc30_pct": -8.59802073515551,
+      "btc_month_pct": -7.224754734309458
+    }
+  ],
+  "monthly_corr_funding_vs_btc_month": 0.38254324075884466,
+  "monthly_corr_funding_vs_btc30": 0.37338695066186695,
+  "monthly_corr_n": 46,
+  "monthly_corr_p": 0.999,
+  "monthly_corr_null_q025": -0.23841141708261065,
+  "monthly_corr_null_q975": 0.25541388758651207,
+  "hl_spot_depth": [
+    {
+      "symbol": "BTC",
+      "spot_bid2": 4198748.56,
+      "spot_ask2": 4802333.26,
+      "perp_bid2": 169615819.65,
+      "perp_ask2": 167519365.8,
+      "fetched_utc": "2026-11-02T08:05:32.941601+00:00"
+    },
+    {
+      "symbol": "ETH",
+      "spot_bid2": 790520.04,
+      "spot_ask2": 892544.6,
+      "perp_bid2": 78124993.54,
+      "perp_ask2": 84340959.6,
+      "fetched_utc": "2026-11-02T08:05:32.941601+00:00"
+    }
+  ],
+  "hl_spot_depth_n": 2,
+  "hl_spot_total_bid2_usd": 4989268.6,
+  "hl_spot_total_ask2_usd": 5694877.859999999,
+  "hl_spot_total_min_usd": 2494634.3,
+  "asset_mcap_daily_probe": {
+    "AAVE": {
+      "n": 2222,
+      "first": "2020-10-02",
+      "last": "2026-11-01"
+    },
+    "ADA": {
+      "n": 2893,
+      "first": "2018-12-01",
+      "last": "2026-11-01"
+    },
+    "APT": {
+      "n": 1476,
+      "first": "2022-10-18",
+      "last": "2026-11-01"
+    },
+    "AVAX": {
+      "n": 2233,
+      "first": "2020-09-21",
+      "last": "2026-11-01"
+    },
+    "BNB": {
+      "n": 3333,
+      "first": "2017-09-15",
+      "last": "2026-11-01"
+    },
+    "BTC": {
+      "n": 4324,
+      "first": "2014-12-31",
+      "last": "2026-11-01"
+    },
+    "DOT": {
+      "n": 2267,
+      "first": "2020-08-18",
+      "last": "2026-11-01"
+    },
+    "ETH": {
+      "n": 4105,
+      "first": "2015-08-06",
+      "last": "2026-11-01"
+    },
+    "INJ": {
+      "n": 2204,
+      "first": "2020-10-20",
+      "last": "2026-11-01"
+    },
+    "LDO": {
+      "n": 2128,
+      "first": "2021-01-04",
+      "last": "2026-11-01"
+    },
+    "LINK": {
+      "n": 2893,
+      "first": "2018-12-01",
+      "last": "2026-11-01"
+    },
+    "NEAR": {
+      "n": 2212,
+      "first": "2020-09-28",
+      "last": "2026-11-01"
+    },
+    "OP": {
+      "n": 1617,
+      "first": "2022-05-30",
+      "last": "2026-11-01"
+    },
+    "SOL": {
+      "n": 2398,
+      "first": "2020-04-09",
+      "last": "2026-11-01"
+    },
+    "UNI": {
+      "n": 2238,
+      "first": "2020-09-16",
+      "last": "2026-11-01"
+    },
+    "XRP": {
+      "n": 4324,
+      "first": "2014-12-31",
+      "last": "2026-11-01"
+    }
+  }
+}
