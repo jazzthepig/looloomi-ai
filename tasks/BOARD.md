@@ -8,6 +8,7 @@
 | in_review | T-219 | lane-b | 轨道公司股权进宇宙的第一份研究:风险画像、与 ① / BTC 的关系、执行场所逐家判断 —— 先描述,再预注册一条假设 | 报告 docs/research/T-219_rail_equities.md(开头风险画像表 + 场所表,末尾 M- 预注册与结果);卡片 notes 写关键数;in_review,推 lane-b/T-219。 | 宇宙里没有任何轨道公司;V / MA / BLK / IBKR / SCHW 只作为 World50 候选在池子里,从没按『轨道』看过。 |  |
 | in_review(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | in_review | T-220 | lane-c | 治理的领先信号:解锁前团队 / 基金会钱包流向、出事后的处理、营销强度 —— 先查能不能量(数据源可行性),再写预注册草稿 | 报告 docs/research/T-220_governance_leading_signals.md(开头可行性表);卡片 notes 写:免费源够不够、事件个数、两条草稿是否可在现有数据上跑;in_review,推 lane-c/T-220。 | 治理只量了滞后的一半(S-661 价值捕获比、S-587 质量);领先的行为信号一个都没有,不知道现有数据能不能量。 |  |
+| in_review | T-224 | lane-c | ② 倾斜在更宽的面板上:按时点前 50 大(含死币)的 ①,压低 S-691 五因子合成最差五分之一的权重 —— S-694 在 24 名上 ❌,问宽到 50 名「躲开」信号够不够用 | 报告 docs/research/T-224_tilt_pit50.md(预注册段在前);卡 notes 写基线年化 / 倾斜超额 / 随机对照分位 / 两段符号;scenarios/lane-c-T-224.json;in_review,推 lane-c/T-224。 | ② 只在 24 名上试过一次(S-694 ❌);宽面板上「躲开最差档」的倾斜没有任何回放。 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-069 | seth | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
@@ -18,7 +19,6 @@
 | open | T-217 | lane-a | 前向记录连续性账 + 近 7 天约 50 次超时类 error 的来源对时间点(只读) | 报告 docs/research/T-217_record_continuity.md,开头一张连续性总表;卡片 notes 写三个结论各一句。 | 只有 10-28 的口头判断:'记录没断、监视器沉默';没有逐条记录的连续性证明,也不知道超时是不是同一来源。 |  |
 | open | T-222 | lane-a | ④ 候选的量测:HL 现货多 + 永续空收资金费(cash-and-carry)在 ① 的 24 个名字上到底值多少 —— 正费率段 / 负费率段 / 费用之后;不判、不做策略,给 Jazz 一张能定的表 | 报告 docs/research/T-222_funding_carry.md(开头一张表:年化毛 / 净、负费率段、HL−Binance 差、容量);卡 notes 写等权年化毛 / 净与最长负段;scenarios/lane-a-T-222.json;in_review,推 lane-a/T-222。 | funding 只在截面上测过(S-691 F4 无信息、S-688 CIS 计分项);作为时间序列上的收取,从没有一张按月、分正负段、扣费后的表;10-21 的裁定针对 ③,④ 没有裁过。 |  |
 | open | T-223 | lane-b | S-696 前向判据的第一次月度核对(2026-10 信号月)+ 第二族因子普查:链上 / 发行方 6 个因子按 S-691 同一协议(发现段 → 封存留出段) | docs/research/s696_forward.md 追加 2026-10 一行;报告 docs/research/T-223_factor_family_2.md(预注册段在前,结果在后);卡 notes 写五因子前向符号与第二族短名单;scenarios/lane-b-T-223.json;in_review,推 lane-b/T-223。 | S-691 的五因子有留出段证据、还没有一个前向月份;发行方 / 链上这一族(收入、稀释、持币人分配)只在 S-661 / S-664 用「价值捕获比」单独测过,没按普查协议和衍生品族并排过。 |  |
-| open | T-224 | lane-c | ② 倾斜在更宽的面板上:按时点前 50 大(含死币)的 ①,压低 S-691 五因子合成最差五分之一的权重 —— S-694 在 24 名上 ❌,问宽到 50 名「躲开」信号够不够用 | 报告 docs/research/T-224_tilt_pit50.md(预注册段在前);卡 notes 写基线年化 / 倾斜超额 / 随机对照分位 / 两段符号;scenarios/lane-c-T-224.json;in_review,推 lane-c/T-224。 | ② 只在 24 名上试过一次(S-694 ❌);宽面板上「躲开最差档」的倾斜没有任何回放。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -226,4 +226,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 12 · claimed 7 · blocked 5 · in_review 6 · done 190 · dropped 3
+open 11 · claimed 7 · blocked 5 · in_review 7 · done 190 · dropped 3

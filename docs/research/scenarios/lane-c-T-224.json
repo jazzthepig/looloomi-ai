@@ -1,0 +1,56 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {
+      "id": "T-224-1",
+      "scenario": "T-224 避开最差档 · 在 50 名面板上继续无效",
+      "statement": "以 2026-11 月初按时点前 50 的面板为准,落在 S-691 五因子合成最差五分位的成员,往后 30 天(到 2026-12-01)的市值加权收益相对「其余成员」的市值加权均值不低于 −0.5%(即「躲开」在面板上依旧没有系统性威力)",
+      "variable": "manual",
+      "op": "between",
+      "lo": -0.005,
+      "hi": 0.10,
+      "prob": 0.6,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-224-2",
+      "scenario": "T-224 避开最差档 · 宽宇宙里继续有效",
+      "statement": "以 2026-11 月初的宽宇宙(有 OI + CG 市值 ≥ 2000 万 + 五因子都有定义)为准,最差五分位的成员往后 30 天的市值加权收益相对宽宇宙其余成员的市值加权均值不高于 −1.0%",
+      "variable": "manual",
+      "op": "lt",
+      "hi": -0.01,
+      "prob": 0.58,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-224-3",
+      "scenario": "T-224 机制 · 大币继续跑赢",
+      "statement": "2026-12-15 时 state_daily(entity=panel)的 style_rel_majors_30d 仍大于 0(2026-11-01 为 +0.0867)——面板收益继续由动量龙头贡献,减半最差档(=动量最强的一批)会继续吃亏",
+      "variable": "state:style_rel_majors_30d",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.6,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-224-4",
+      "scenario": "T-224 面板 · 宽度仍为零",
+      "statement": "2026-12-15 时 state_daily(entity=panel)的 breadth_above_ma50 仍小于 1(即仍为 0,面板里没有一枚币站在 50 日均线之上;2026-11-01 为 0)",
+      "variable": "state:breadth_above_ma50",
+      "op": "lt",
+      "hi": 1,
+      "prob": 0.45,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-224-5",
+      "scenario": "T-224 面板 · BTC 价位",
+      "statement": "2026-12-15 时 BTC 的收盘价仍高于 70,000(2026-11-01 为 78,354)",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 70000,
+      "prob": 0.65,
+      "horizon_d": "2026-12-15"
+    }
+  ]
+}
