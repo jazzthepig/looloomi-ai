@@ -23,6 +23,8 @@
   灾难止损(`signal_ref` 带 catastrophe)不算 —— 它本来就是盘中触发。空跑也记(决策时间与有没有成交无关)。
 - `median_decision_to_fill_s`:决策 → 结果(`ts_resolved − ts_decision`),含取盘口、落发件箱、签名、往返。
 - `median_venue_s`:交易所那一段(`seconds_to_resolve`,下单 → 回报)。两者之差 = 主机自己花的时间。
+- **口径在 11-02 改过一次(主机侧):** 之前的行 `ts_decision` = tick 开始、`ts_resolved` = 回报后再等 1 秒;之后 = 报价到手 / 交易所回报。
+  10-30 那两笔的 9.3 秒大半是旧口径;累计行的中位数要等新口径的单子多起来才代表现在。
 
 ## 判活判据(规则 5b ②)
 

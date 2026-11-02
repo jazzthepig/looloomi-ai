@@ -263,3 +263,100 @@ def test_band_rebalance_waits_for_a_weekday_unless_an_event_is_flagged():
     rb = legs.leg_orders(_t25(rebalance=True), held, sat)
     assert [o["symbol"] for o in rb["orders"]] == ["XAUT0"], "再平衡日不受周末规则管(按构造是工作日)"
     assert legs.leg_orders(_t25(), held)["weekend"] is False, "不给日期 = 不套周末规则(旧调用方)"
+
+
+# ── 11-02 速度 ───────────────────────────────────────────────────────────────
+class _CountingVenue(LegVenue):
+    def __init__(self, balances):
+        super().__init__(balances)
+        self.balance_reads = 0
+
+    def balances(self):
+        self.balance_reads += 1
+        return self.b
+
+
+def test_speed_usdc_is_read_once_for_consecutive_buys_and_times_are_honest(tmp_path):
+    """两张买单:原来每张前各读一次余额;现在第一张前读一次,第二张按限价扣。决策时刻 = 报价到手,结果时刻 = 交易所回报。"""
+    v = _CountingVenue(_bal())
+    e = _ex(tmp_path, "live", v)
+    ticks = iter(NOW + dt.timedelta(seconds=k) for k in range(100))
+    e.clock = lambda: next(ticks)
+    out = e.run_t25_cycle(NOW)
+    assert len(v.sent) == 2 and v.balance_reads == 2, "一次在 cycle 开头,一次在第一张买单前"
+    i0, o0 = out["intents"][0], out["outcomes"][0]
+    assert i0["ts_decision"] == (NOW + dt.timedelta(seconds=0)).isoformat(), "决策 = 报价之后的第一个时刻"
+    assert dt.datetime.fromisoformat(o0["ts_resolved"]) - dt.datetime.fromisoformat(i0["ts_decision"]) < dt.timedelta(seconds=5)
+    t = e.last_timing
+    assert [x["symbol"] for x in t] == ["SPYX", "XAUT0"] and all(x["venue_s"] >= 0 for x in t)
+    rep = _outbox(e)[-1]
+    assert rep["detail"]["timing"] == t and api.vet_report(rep)[1] == []
+
+
+def test_speed_sells_go_first_and_the_buy_reads_usdc_after_them(tmp_path):
+    """卖单在前(计划排序);买单前那一次读余额在卖单成交之后 —— 卖出的 USDC 算得进去。"""
+    v = _CountingVenue(_bal(usdc=100.0, xaut=0.06))       # 黄金超配 ⇒ 先卖 XAUT0,再买 SPYX
+    e = _ex(tmp_path, "live", v, t25=_t25(rebalance=True, gold=120.0, eq=180.0))
+    e.run_t25_cycle(NOW)
+    sides = [s["side"] for s in v.sent]
+    assert sides[0] == "sell" and "buy" in sides
+    assert v.balance_reads == 2, "cycle 开头一次 + 卖单成交之后、买单之前一次"
+
+
+def test_speed_spot_meta_is_cached_and_trading_runs_before_the_railway_flush(tmp_path, monkeypatch):
+    calls = []
+
+    class C:
+        def __init__(self, poster=None):
+            pass
+
+        def spot_meta(self):
+            calls.append("meta")
+            return _LegClient().spot_meta()
+
+        def spot_meta_and_asset_ctxs(self):
+            calls.append("ctxs")
+            return _LegClient().spot_meta_and_asset_ctxs()
+
+        def l2_book(self, coin):
+            calls.append("l2")
+            return _LegClient().l2_book(coin)
+    import src.data.venues.hl_spot as hs
+    monkeypatch.setattr(hs, "HlSpotClient", C)
+    cfg = rn.Config({"EXECUTOR_MODE": "dry_run", "HL_ACCOUNT_ADDRESS": MASTER, "EXECUTOR_TOKEN": "t",
+                     "EXECUTOR_STATE_DIR": str(tmp_path)})
+    venue = rn.Venue(cfg, info=object())
+    venue.quotes(legs.LEG_TOKENS)
+    venue.quotes(legs.LEG_TOKENS)
+    assert calls.count("meta") == 1 and calls.count("ctxs") == 1 and calls.count("l2") == 4, calls
+    src = pathlib.Path(rn.__file__).read_text(encoding="utf-8")
+    tick = src[src.index("    def tick(self)"):src.index("    def _maybe_cycle")]
+    assert tick.index('("flush"') > tick.index('("t25"') and tick.index('("flush"') > tick.index('("heartbeat"'), \
+        "交易与心跳在前,送回 Railway 在后"
+
+
+def test_speed_cached_meta_never_falls_back_to_a_stale_mid():
+    class Empty(_LegClient):
+        def l2_book(self, coin):
+            return {"coin": coin, "levels": [[], []]}
+    c = Empty()
+    assert dr._spot_quotes_sync(c, legs.LEG_TOKENS, meta=(c.spot_meta(), c.spot_meta_and_asset_ctxs())) == {}, \
+        "缓存的元数据里的中间价是缓存那一刻的 —— 盘口空就没有报价"
+
+
+def test_speed_legs_do_not_wait_for_the_x1v_closes(tmp_path):
+    """11-01:ETH 收盘 06:16 才落库 ⇒ X1V 计划 06:19 才 ok,T25 腿跟着晚了 6 小时。腿只要组合层目标,不要 BTC / ETH 收盘。"""
+    v = LegVenue(_bal())
+    e = _ex(tmp_path, "dry_run", v)
+    today = rn.asof_for(NOW)
+    e.state.set(plan={"ok": True, "asof": "2026-10-31"})                       # 昨天的 X1V 计划还在
+    e.railway = FakeRailway({"ok": False, "asof": today, "why": "收盘没齐", "halted": False, "halt_status": "miss",
+                             "portfolio": {"x1v_nav_budget_usd": 180.0, "t25": _t25()}})
+    e._last.clear()
+    e.refresh_plan(NOW)
+    assert (e.state.get("plan") or {}).get("asof") == "2026-10-31", "X1V 计划没齐 ⇒ 不换"
+    e._maybe_t25_cycle(NOW)
+    reps = _outbox(e)
+    assert len(reps) == 1 and reps[0]["book"] == "t25" and reps[0]["asof"] == today, "腿照常跑"
+    e._maybe_t25_cycle(NOW)
+    assert len(_outbox(e)) == 1, "同一天只跑一轮"

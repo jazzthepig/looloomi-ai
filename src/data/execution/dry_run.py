@@ -60,19 +60,25 @@ def size_orders(orders: list[dict], quotes: dict[str, dict]) -> tuple[list[dict]
     return sized, refused
 
 
-def _spot_quotes_sync(client=None, tokens: Optional[dict[str, str]] = None) -> dict[str, dict]:
+def _spot_quotes_sync(client=None, tokens: Optional[dict[str, str]] = None,
+                      meta: Optional[tuple[Any, Any]] = None) -> dict[str, dict]:
     """HL 现货的盘口(默认 UBTC / UETH,4 个只读请求;`tokens` = {记账名: 代币名},10-30 起 T25 的 XAUT0 / SPYX 也走这里)。
-    同步,由调用方放进线程。"""
+    同步,由调用方放进线程。
+    `meta` = 调用方缓存的 (spotMeta, spotMetaAndAssetCtxs)(11-02 速度:两份元数据 ~0.5 MB、每轮 1 秒多,币对与 szDecimals 一天不变)。
+    给了缓存 ⇒ 盘口没有中间价时**不**退回元数据里的旧中间价(那是缓存时刻的价),这个名字就没有报价。"""
     from src.data.venues.hl_spot import HlSpotClient, HlSpotFixture, parse_l2_book
     c = client or HlSpotClient()
-    fx = HlSpotFixture(c.spot_meta(), c.spot_meta_and_asset_ctxs(), {}, {})
+    sm, ctxs = meta if meta is not None else (c.spot_meta(), c.spot_meta_and_asset_ctxs())
+    fx = HlSpotFixture(sm, ctxs, {}, {})
     out = {}
     for sym, base in (tokens or SPOT_TOKENS).items():
         pair = fx.find_pair_by_token(base)
         if pair is None:
             continue
         book = parse_l2_book(c.l2_book(pair.name))
-        mid = book.mid_px or pair.mid_px
+        mid = book.mid_px or (None if meta is not None else pair.mid_px)
+        if not mid and meta is not None:
+            continue
         out[sym] = {"pair": pair.name, "mid": mid, "bid": book.best_bid, "ask": book.best_ask,
                     "sz_decimals": pair.sz_decimals, "book": book}
     return out

@@ -8,12 +8,20 @@ HL API 钱包的私钥只放在这台主机的 `/etc/cometcloud/executor.env`(Ja
 
 ## 它每 30 秒做的事
 
-1. 发件箱 → Railway(落盘的 JSON;Railway 不在就留着,恢复后按顺序补写 —— TRADE_PATH §4)。
-2. 计划:UTC 00:05 起每 5 分钟取一次,直到拿到「昨天收盘」的计划;之后每 15 分钟刷新一次(只为一键停)。
+1. 计划:UTC 00:05 起每 5 分钟取一次,直到拿到「昨天收盘」的计划;之后每 15 分钟刷新一次(只为一键停)。
 3. 每天一轮(asof 换了就跑):读**真实**余额与盘口 → 订单 → 意图先落发件箱(下单之前)→
    `live` 才下 IOC 限价单 → 每个意图一个结果。`dry_run` 到意图为止,不碰私钥。
 4. 每 60 秒:盘中灾难止损(现价 < 计划里的止损线 ⇒ 全平)。**只用缓存的计划,不需要 Railway 在线。**
 5. 每小时一次心跳(`loop_attempt` 里 `executor_host`)。
+6. 发件箱 → Railway(落盘的 JSON;Railway 不在就留着,恢复后按顺序补写 —— TRADE_PATH §4)。**11-02 起排在最后**:
+   交易几步不再等 Railway 的往返;意图照样在下单之前落盘(本地文件)。
+
+## 速度(Jazz 11-02「速度问题必须解决」)
+
+10-30 第一批真单量出来「决策 → 回报 9.3 秒、交易所只占 0.78 秒」—— 那 8.5 秒大半是**量错了**:决策时刻记的是这一轮 tick
+开始(之后还有 Railway 的计划请求、送回报),结果时刻记在回报之后再等 1 秒取手续费。现在:决策时刻 = 报价到手、结果时刻 =
+交易所回报;中间真正的开销也砍了三处 —— 币对表一小时取一次(原来每轮两份 ~0.5 MB)、USDC 每批只读一次(原来每张买单前一次)、
+送回报挪到交易之后。每张单的「决策 → 发出」「交易所往返」写进结果回报的 `detail.timing`。
 
 ## 两个停
 
@@ -68,6 +76,7 @@ PLAN_REFRESH_EVERY_S = 900
 PLAN_FROM_UTC = (0, 5)
 TRIGGER_RETRY_S = 900          # 止损触发单没挂上:每 15 分钟重挂一次(后备 IOC 每分钟都在看)
 TRUTH_GIVE_UP_S = 86400        # 交易所上已平、成交一直找不到:24 小时后按「找不到」结案(Book of Truth)
+META_TTL_S = 3600              # 现货币对表缓存(11-02 速度):币对与 szDecimals 一天不变
 
 
 def code_sha(repo: Optional[Path] = None) -> Optional[str]:
@@ -262,6 +271,8 @@ class Venue:
         self._exchange = exchange
         self._mode: Optional[str] = None
         self._mode_at = 0.0
+        self._meta: Optional[tuple[Any, Any]] = None
+        self._meta_at = 0.0
 
     def _poster(self, payload: dict, timeout: Any = None) -> Any:
         return self.info.post("/info", payload)
@@ -285,10 +296,15 @@ class Venue:
                 "why": "主账户名下没有这个子账户 —— 地址抄错了,或者子账户不是这个主账户开的"}
 
     def quotes(self, tokens: Optional[dict[str, str]] = None) -> dict:
-        """现货盘口。默认 X1V 的 UBTC / UETH;`tokens` = {记账名: 代币名}(T25 腿传 `legs.LEG_TOKENS`)。"""
+        """现货盘口。默认 X1V 的 UBTC / UETH;`tokens` = {记账名: 代币名}(T25 腿传 `legs.LEG_TOKENS`)。
+        11-02 速度:币对表(spotMeta + spotMetaAndAssetCtxs,~0.5 MB)一小时取一次,每轮只取盘口 —— 报价到下单之间不再夹着元数据下载。"""
         from src.data.execution.dry_run import _spot_quotes_sync
         from src.data.venues.hl_spot import HlSpotClient
-        return _spot_quotes_sync(HlSpotClient(poster=self._poster), tokens)
+        c = HlSpotClient(poster=self._poster)
+        now = time.time()
+        if self._meta is None or now - self._meta_at >= META_TTL_S:
+            self._meta, self._meta_at = (c.spot_meta(), c.spot_meta_and_asset_ctxs()), now
+        return _spot_quotes_sync(c, tokens, meta=self._meta)
 
     def mids(self, pairs: dict[str, str]) -> dict[str, float]:
         allm = self.info.all_mids() or {}
@@ -411,6 +427,7 @@ class Executor:
         self.outbox = Outbox(cfg.state_dir / "outbox")
         self._last: dict[str, float] = {}
         self.settle_s = 1.0          # 下单后等成交记录落到 userFills 再取手续费
+        self.last_timing: list[dict] = []
 
     # 停
     def halted(self) -> tuple[bool, str]:
@@ -445,6 +462,9 @@ class Executor:
             self.state.set(railway_halted=bool(resp.get("halted")))
         if isinstance(resp.get("tickets"), dict):
             self.state.set(ticket_plan=resp["tickets"], ticket_plan_fetched_at=now.isoformat())
+        # 11-02 速度:T25 腿只要组合层目标,不要 BTC / ETH 收盘 —— X1V 的计划没齐(11-01:ETH 收盘 06:16 才到)不再拖住腿 6 小时
+        if isinstance(resp.get("portfolio"), dict) and resp.get("asof"):
+            self.state.set(t25_plan={"asof": resp["asof"], "portfolio": resp["portfolio"]})
         if resp.get("ok"):
             self.state.set(plan=resp, plan_fetched_at=now.isoformat())
         else:
@@ -455,6 +475,7 @@ class Executor:
         plan = self.state.get("plan") or {}
         halted, why_halt = self.halted()
         balances, quotes = self.venue.balances(), self.venue.quotes()
+        t_dec = self.clock()          # 11-02:决策时刻 = 报价到手那一刻(不是这一轮 tick 开始 —— 中间夹着 Railway 的计划请求)
         self.state.set(pairs={s: {"pair": q["pair"], "sz_decimals": int(q["sz_decimals"])} for s, q in quotes.items()})
         # 停着也照样算出订单(halted=False),只是不提交 —— 停的时候也要知道「本来会做什么」
         nav_cap, cap_src = x1v_nav_cap(plan, self.cfg.nav_cap)
@@ -464,7 +485,7 @@ class Executor:
         for o in res["orders"]:
             q = quotes[o["symbol"]]
             lim = core.ioc_limit_px(q["mid"], o["side"], self.cfg.slip_bps, int(q["sz_decimals"]))
-            staged.append((core.make_intent(o, sleeve, plan["signal_ref"], now, lim), o, q))
+            staged.append((core.make_intent(o, sleeve, plan["signal_ref"], t_dec, lim), o, q))
         mins = core.minutes_after_close(now)
         detail = {"phase": "intents", "minutes_after_close": round(mins, 1), "on_time": mins <= 60,
                   "targets": res["targets"], "holdings_usd": _r(res["holdings_usd"]), "dust_usd": _r(res["dust_usd"]),
@@ -490,7 +511,7 @@ class Executor:
         elif self.cfg.mode == "live" and staged:
             outcomes = self._execute(staged, self.cfg.slip_bps)
             self._report("cycle", asof=plan["asof"], outcomes=[asdict(x) for x in outcomes],
-                         detail={"phase": "outcomes", "statuses": [x.status for x in outcomes]},
+                         detail={"phase": "outcomes", "statuses": [x.status for x in outcomes], "timing": self.last_timing},
                          alert=f"{plan['asof']} 真单: " + "; ".join(
                              f"{i.symbol} {i.side} → {x.status} {x.avg_fill_price or ''} ({x.note[:60]})"
                              for (i, _, _), x in zip(staged, outcomes)))
@@ -504,14 +525,19 @@ class Executor:
                 for i, _, _ in staged]
 
     def _execute(self, staged: list, slip_bps: float) -> list:
-        """按序下 IOC(计划里卖单在前)。买单下单前重读 USDC,数量不超过可用余额。每个意图恰好一个结果。"""
+        """按序下 IOC(计划里卖单在前)。买单数量不超过可用 USDC。每个意图恰好一个结果。
+        11-02 速度:USDC 只在第一张买单前、以及每次有卖单成交之后读一次(原来每张买单前都读,一次 HTTP);
+        结果的时刻 = 交易所回报那一刻(原来是回报后再等 1 秒取手续费、读完中间价之后);每张单的「决策 → 发出」「交易所往返」记进 `last_timing`。"""
         t0_ms = int(time.time() * 1000) - 2000
-        sent = []
+        sent, timing = [], []
+        usdc, stale = 0.0, True
         for intent, o, q in staged:
             qty = o["qty_base"]
             if intent.side == BUY:
-                qty = core.cap_buy_qty(qty, core.free(self.venue.balances(), "USDC"), intent.limit_price,
-                                       int(q["sz_decimals"]))
+                if stale:
+                    usdc, stale = core.free(self.venue.balances(), "USDC"), False
+                qty = core.cap_buy_qty(qty, usdc, intent.limit_price, int(q["sz_decimals"]))
+            sent_at = self.clock()
             t_sent = time.time()
             if qty <= 0 or qty * intent.limit_price < 10.0:
                 parsed = {"kind": "error", "error": f"按可用余额截断后 {qty} 低于最小名义额,未提交"}
@@ -521,7 +547,20 @@ class Executor:
                         self.venue.order(q["pair"], intent.side, qty, intent.limit_price, core.cloid_for(intent.intent_id)))
                 except Exception as e:                                   # noqa: BLE001
                     parsed = {"kind": "error", "error": f"{type(e).__name__}: {str(e)[:200]}"}
-            sent.append((intent, qty, parsed, t_sent, time.time()))
+            t_done = time.time()
+            sent.append((intent, qty, parsed, t_sent, t_done, self.clock()))
+            if parsed.get("kind") == "filled":
+                if intent.side == SELL:
+                    stale = True                                         # 卖出的 USDC 进账了 ⇒ 下一张买单前重读
+                else:
+                    usdc = max(0.0, usdc - qty * intent.limit_price)     # 按限价扣(偏保守)
+            try:
+                dec = dt.datetime.fromisoformat(str(intent.ts_decision))
+                d2s = round((sent_at - dec).total_seconds(), 3)
+            except (TypeError, ValueError):
+                d2s = None
+            timing.append({"symbol": intent.symbol, "decision_to_send_s": d2s, "venue_s": round(t_done - t_sent, 3)})
+        self.last_timing = timing
         time.sleep(self.settle_s)
         try:
             fills = self.venue.fills_since(t0_ms)
@@ -535,9 +574,8 @@ class Executor:
             mids = self.venue.mids(pairs)
         except Exception:                                                # noqa: BLE001
             mids = {}
-        now = self.clock()
-        return [core.outcome_for(i, qty, parsed, fills, mids.get(i.symbol), ts, td, now)
-                for i, qty, parsed, ts, td in sent]
+        return [core.outcome_for(i, qty, parsed, fills, mids.get(i.symbol), ts, td, resolved)
+                for i, qty, parsed, ts, td, resolved in sent]
 
     # 盘中灾难止损
     def check_stops(self, now: dt.datetime) -> list[str]:
@@ -549,6 +587,7 @@ class Executor:
         stopped = (self.state.get("stopped") or {}).get(today, [])
         balances = self.venue.balances()
         mids = self.venue.mids({s: p["pair"] for s, p in pairs.items()})
+        t_dec = self.clock()
         min_notional = float((plan.get("limits") or {}).get("min_notional_usd", 10.0))
         hits = core.stop_hits(plan["stop_px"], balances, mids, min_notional, stopped)
         if not hits:
@@ -561,7 +600,7 @@ class Executor:
             qty = core.round_size(core.free(balances, core.SPOT_TOKENS[sym]), p["sz_decimals"])
             lim = core.ioc_limit_px(mids[sym], SELL, self.cfg.stop_slip_bps, p["sz_decimals"])
             o = {"symbol": sym, "side": SELL, "qty_base": qty, "price": mids[sym], "bid": None, "ask": None}
-            staged.append((core.make_intent(o, sleeve, plan["signal_ref"] + " · catastrophe", now, lim), o,
+            staged.append((core.make_intent(o, sleeve, plan["signal_ref"] + " · catastrophe", t_dec, lim), o,
                            {"pair": p["pair"], "sz_decimals": p["sz_decimals"]}))
         lines = "; ".join(f"{s} 现价 {mids[s]} < 止损线 {plan['stop_px'][s]:.2f}" for s in hits)
         self._report("stop", asof=plan.get("asof"), intents=[asdict(i) for i, _, _ in staged],
@@ -581,14 +620,26 @@ class Executor:
     def _report_l(self, kind: str, **kw: Any) -> None:
         self.outbox.put({"mode": self.cfg.t25_mode, "book": "t25", "kind": kind, "host": self.cfg.host, **kw})
 
+    def _t25_plan(self, now: dt.datetime) -> dict[str, Any]:
+        """T25 用的那份计划:X1V 计划齐了就用它(同一份);没齐就用同一次请求里带回的组合层段(`t25_plan`)。都不是今天的 ⇒ {}。"""
+        want = asof_for(now)
+        plan = self.state.get("plan") or {}
+        if plan.get("ok") and plan.get("asof") == want and (plan.get("portfolio") or {}).get("t25"):
+            return plan
+        tp = self.state.get("t25_plan") or {}
+        if tp.get("asof") == want and (tp.get("portfolio") or {}).get("t25"):
+            return tp
+        return {}
+
     def run_t25_cycle(self, now: dt.datetime) -> dict[str, Any]:
         """一天一轮:再平衡日回到目标,其余日子只纠偏离 > 带宽的腿(`legs.leg_orders`)。停着也算出订单,只是不提交。"""
-        plan = self.state.get("plan") or {}
+        plan = self._t25_plan(now) or self.state.get("plan") or {}
         t25 = (plan.get("portfolio") or {}).get("t25") or {}
         live = self.cfg.t25_mode == "live"
         halted, why_halt = self.halted()
         balances = self.venue.balances()
         quotes = self.venue.quotes(legs.LEG_TOKENS)
+        t_dec = self.clock()          # 11-02:决策时刻 = 报价到手那一刻
         held = legs.holdings_usd(balances, quotes)
         lo = legs.leg_orders(t25, held, now.astimezone(dt.timezone.utc).date())
         sized, refused = legs.size_leg_orders(lo["orders"], quotes, balances)
@@ -598,7 +649,7 @@ class Executor:
             q = quotes[o["symbol"]]
             o = {**o, "price": q["mid"]}
             lim = core.ioc_limit_px(q["mid"], o["side"], self.cfg.t25_slip_bps, int(q["sz_decimals"]))
-            staged.append((core.make_intent(o, sleeve, f"t25:{o['why']}", now, lim), o, q))
+            staged.append((core.make_intent(o, sleeve, f"t25:{o['why']}", t_dec, lim), o, q))
         detail = {"phase": "intents", "held_usd": _r(held), "targets": {k: v.get("target_usd") for k, v in
                                                                          (t25.get("legs") or {}).items()},
                   "rebalance_today": lo["rebalance_today"], "band": lo["band"], "capital_usd": lo["capital_usd"],
@@ -618,7 +669,8 @@ class Executor:
             outcomes = self._execute(staged, self.cfg.t25_slip_bps)
         if live and staged:
             self._report_l("cycle", asof=plan.get("asof"), outcomes=[asdict(x) for x in outcomes],
-                           detail={"phase": "outcomes", "statuses": [x.status for x in outcomes]},
+                           detail={"phase": "outcomes", "statuses": [x.status for x in outcomes],
+                                   "timing": self.last_timing if not halted else []},
                            alert=None if halted else "T25 腿真单: " + "; ".join(
                                f"{i.symbol} {i.side} → {x.status} {x.avg_fill_price or ''}"
                                for (i, _, _), x in zip(staged, outcomes)))
@@ -626,11 +678,10 @@ class Executor:
         return {**detail, "intents": [asdict(i) for i, _, _ in staged], "outcomes": [asdict(x) for x in outcomes]}
 
     def _maybe_t25_cycle(self, now: dt.datetime) -> None:
-        plan = self.state.get("plan") or {}
+        plan = self._t25_plan(now)
         # 一天一轮,按模式记:当天空跑过、Jazz 再切 live ⇒ live 当场跑一轮(不用等到明天收盘)
         done = self.state.get("t25_done_asof") == plan.get("asof") and self.state.get("t25_done_mode") == self.cfg.t25_mode
-        if (self.cfg.t25_mode != "off" and plan.get("ok") and plan.get("asof") == asof_for(now)
-                and (plan.get("portfolio") or {}).get("t25") and not done):
+        if self.cfg.t25_mode != "off" and plan and not done:
             r = self.run_t25_cycle(now)
             log.info("t25 cycle %s: %d orders, skipped=%s", plan["asof"], len(r["orders"]), r["skipped"])
 
@@ -687,7 +738,7 @@ class Executor:
                     coin, intent.side, qty, intent.limit_price, core.cloid_for(intent.intent_id), reduce_only))
             except Exception as e:                                       # noqa: BLE001
                 parsed = {"kind": "error", "error": f"{type(e).__name__}: {str(e)[:200]}"}
-            sent.append((intent, qty, parsed, t_sent, time.time()))
+            sent.append((intent, qty, parsed, t_sent, time.time(), self.clock()))   # 结果时刻 = 交易所回报那一刻(11-02)
         time.sleep(self.settle_s)
         try:
             fills = self.venue.fills_since(t0_ms)
@@ -697,8 +748,8 @@ class Executor:
             mids = self.venue.perp_mids()
         except Exception:                                                # noqa: BLE001
             mids = {}
-        now = self.clock()
-        return [core.outcome_for(i, qty, parsed, fills, mids.get(i.symbol), ts, td, now) for i, qty, parsed, ts, td in sent]
+        return [core.outcome_for(i, qty, parsed, fills, mids.get(i.symbol), ts, td, resolved)
+                for i, qty, parsed, ts, td, resolved in sent]
 
     def _place_trigger(self, b: dict, now: dt.datetime) -> dict:
         """按账上的止损线挂减仓止损触发单;返回更新后的账行(trigger_oid / trigger_error)。只在 live。"""
@@ -839,6 +890,7 @@ class Executor:
         sleeve = (tp.get("sleeves") or {}).get(self.cfg.tickets_mode) or f"r_v2_{self.cfg.tickets_mode}"
         halted, why_halt = self.halted()
         szd, mids = self.venue.perp_meta(), self.venue.perp_mids()
+        t_dec = self.clock()          # 11-02:决策时刻 = 中间价到手那一刻
         equity, positions, eq_src = self._ticket_equity()
         book = dict(self.state.get("ticket_book") or {})
         done = set((self.state.get("ticket_done") or {}).keys())
@@ -854,12 +906,12 @@ class Executor:
             mid = mids.get(x["coin"]) or b["entry_px"]
             lim = tickets.ioc_px_perp(mid, False, self.cfg.tickets_slip_bps, b["sz_decimals"])
             staged.append((self._ticket_intent(x["coin"], SELL, x["qty"], mid, sleeve,
-                                               f"r_v2:{x['ticket_id']}:exit:{x['why']}", now, lim),
+                                               f"r_v2:{x['ticket_id']}:exit:{x['why']}", t_dec, lim),
                            x["coin"], x["qty"], True, b["sz_decimals"]))
         for e in act["entries"]:
             lim = tickets.ioc_px_perp(e["mid"], True, self.cfg.tickets_slip_bps, e["sz_decimals"])
             staged.append((self._ticket_intent(e["coin"], BUY, e["qty"], e["mid"], sleeve,
-                                               f"r_v2:{e['ticket_id']}:enter", now, lim),
+                                               f"r_v2:{e['ticket_id']}:enter", t_dec, lim),
                            e["coin"], e["qty"], False, e["sz_decimals"]))
         mins = core.minutes_after_close(now)
         detail = {"phase": "intents", "book_name": "r_v2", "asof": tp.get("asof"), "minutes_after_close": round(mins, 1),
@@ -1058,8 +1110,8 @@ class Executor:
 
     def tick(self) -> None:
         now = self.clock()
-        for name, fn in (("flush", lambda: self.outbox.flush(self.railway)),
-                         ("plan", lambda: self.refresh_plan(now)),
+        # 11-02 速度:交易的几步排在把回报送回 Railway 之前(发件箱是本地文件,意图照样先落盘;送回只是晚几百毫秒)
+        for name, fn in (("plan", lambda: self.refresh_plan(now)),
                          ("cycle", lambda: self._maybe_cycle(now)),
                          ("t25", lambda: self._maybe_t25_cycle(now)),
                          ("tickets", lambda: self._maybe_ticket_cycle(now)),
@@ -1068,7 +1120,8 @@ class Executor:
                                                              lambda: self.check_ticket_stops(now))),
                          ("ticket_truth", lambda: self._every("ticket_truth", STOP_EVERY_S,
                                                               lambda: self.settle_truth(now))),
-                         ("heartbeat", lambda: self._every("heartbeat", HEARTBEAT_EVERY_S, lambda: self.heartbeat(now)))):
+                         ("heartbeat", lambda: self._every("heartbeat", HEARTBEAT_EVERY_S, lambda: self.heartbeat(now))),
+                         ("flush", lambda: self.outbox.flush(self.railway))):
             try:
                 fn()
             except Exception as e:                                       # noqa: BLE001
