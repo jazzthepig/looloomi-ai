@@ -62,6 +62,7 @@ SOURCES: tuple[tuple[str, dict, Any], ...] = (
     ("live_account_daily", {}, "d"),
     ("portfolio_targets_daily", {}, "sleeve"),
     ("execution_quality_daily", {}, ("sleeve", "span")),     # 10-30:真钱执行质量(滑点 / 费 / 成交率),事后改不了
+    ("scenario_ledger", {}, "id"),                            # 11-02:情景台账 —— 事前写下的命题(d = 写下那天);打分不锚(可重算)
     ("forward_book_nav", {}, ("book", "arm")),
     ("world50_book_nav", {}, "arm"),
 )

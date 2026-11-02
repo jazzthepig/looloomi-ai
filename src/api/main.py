@@ -2391,6 +2391,29 @@ async def _dead_host_guard_loop():
         await _asyncio.sleep(600)
 
 
+async def _scenario_ledger_loop():
+    """情景台账的结算(`src/data/evaluation/scenario_ledger.py`,11-02):每小时结算到期、还没结的自动命题 → scenario_scores。"""
+    await _asyncio.sleep(_boot_delay(540))
+    while True:
+        try:
+            from src.data.evaluation.scenario_ledger import run_once as _sl_run
+            r = await _sl_run()
+            await _iteration_result("_scenario_ledger_loop", r)
+            await _beat("_scenario_ledger_loop", ok=bool(r.get("ok")), error=None if r.get("ok") else str(r.get("why"))[:200],
+                        detail={"scored": r.get("scored"), "waiting": r.get("waiting")})
+        except Exception as _e:
+            print(f"[SCENARIOS] ⚠️  pass FAILED: {_e}")
+            await _beat("_scenario_ledger_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_scenario_ledger_loop", _e)
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_scenario_ledger_loop():
+    _asyncio.create_task(_scenario_ledger_loop())
+    print("[SCENARIOS] ✅ scenario ledger scoring scheduled (hourly)")
+
+
 async def _venue_depth_loop():
     """我们真能下单的场所的盘口深度(T-082 B,`src/data/market/venue_depth.py`,11-02):UTC 00 / 08 / 16 各一批 HL 现货 + 永续的
     ±1% / ±2% 深度 → venue_depth_snapshots;容量接口的「场所口径」读它。每 20 分钟看一眼,这一批采过就跳过。"""

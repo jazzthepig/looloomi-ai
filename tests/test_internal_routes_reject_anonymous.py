@@ -155,6 +155,7 @@ VALID_BODIES: dict[str, dict] = {
     "/internal/executor/report": {"mode": "dry_run", "kind": "heartbeat", "detail": {"auth_probe": True}},
     "/internal/executor/halt": {"halted": False, "reason": "auth probe"},
     "/internal/regime-call": {"state": "off", "note": "auth probe"},
+    "/internal/scenarios": {"author": "auth-probe", "entries": []},
 }
 
 GATED, OPEN, WRONG_SHAPE, BROKEN = "gated", "open", "wrong_shape", "broken"

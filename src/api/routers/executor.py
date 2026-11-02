@@ -241,6 +241,38 @@ async def regime_call_brief(top: int = 40, x_internal_token: Optional[str] = Hea
         raise HTTPException(502, f"HL 读不到:{type(e).__name__}: {str(e)[:200]}")
 
 
+@router.post("/internal/scenarios")
+async def scenarios_submit(body: dict = Body(...), x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
+    """情景台账(`src/data/evaluation/scenario_ledger.py`,11-02):事前写下的命题,只追加。
+    body: {"author": "weekly", "entries": [{id, scenario, statement, variable, op, lo, hi, prob, horizon_d}, …]}。
+    作者 = 「token 的 lane:body.author」—— 谁写的从 token 来,不从正文来。任何一条有问题 ⇒ 整批不写(422 带原因)。"""
+    lane = require_internal_token(x_internal_token)
+    from src.data.evaluation.scenario_ledger import submit
+    entries = body.get("entries")
+    if not isinstance(entries, list):
+        raise HTTPException(422, "entries 必须是列表")
+    author = f"{lane}:{str(body.get('author') or 'default')[:40]}"
+    r = await submit(entries, author)
+    if not r.get("ok"):
+        raise HTTPException(422, r)
+    return r
+
+
+@router.get("/internal/scenarios")
+async def scenarios_view(x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
+    """最近 50 条情景、各自的结算,与按作者的校准(平均 Brier、命中率、五档可靠性)。"""
+    require_internal_token(x_internal_token)
+    from src.data.evaluation.scenario_ledger import SCORES, TABLE, calibration
+    from src.data.style.header import _read_all
+    try:
+        entries = await _read_all(TABLE, {"select": "*", "order": "written_at.desc", "limit": "500"})
+        scores = {r["id"]: r for r in await _read_all(SCORES, {"select": "*"})}
+    except Exception as e:                                       # noqa: BLE001
+        raise HTTPException(502, f"{type(e).__name__}: {str(e)[:300]}")
+    return {"ok": True, "n": len(entries), "calibration": calibration(entries, scores),
+            "recent": [{**e, "score": scores.get(e["id"])} for e in entries[:50]]}
+
+
 @router.post("/internal/executor/halt")
 async def executor_halt(body: dict = Body(...),
                         x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
