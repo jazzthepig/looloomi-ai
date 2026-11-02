@@ -71,6 +71,7 @@
     "ohlcv_daily",
     "oi_lev_snapshot_daily",
     "open_interest_history",
+    "overlays",
     "perp_bv_daily",
     "perp_bv_pairs",
     "perp_cg_map",

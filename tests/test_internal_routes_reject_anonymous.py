@@ -156,6 +156,8 @@ VALID_BODIES: dict[str, dict] = {
     "/internal/executor/halt": {"halted": False, "reason": "auth probe"},
     "/internal/regime-call": {"state": "off", "note": "auth probe"},
     "/internal/scenarios": {"author": "auth-probe", "entries": []},
+    "/internal/overlays": {"id": "OV-probe", "source": "seth"},
+    "/internal/overlays/cancel": {"id": "OV-probe", "reason": "auth probe"},
 }
 
 GATED, OPEN, WRONG_SHAPE, BROKEN = "gated", "open", "wrong_shape", "broken"

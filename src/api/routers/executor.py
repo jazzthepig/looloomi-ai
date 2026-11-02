@@ -273,6 +273,49 @@ async def scenarios_view(x_internal_token: Optional[str] = Header(None, alias="X
             "recent": [{**e, "score": scores.get(e["id"])} for e in entries[:50]]}
 
 
+@router.post("/internal/overlays")
+async def overlays_submit(body: dict = Body(...), x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
+    """偏离(`src/data/execution/overlays.py`,Jazz 11-02 规则是零假设):在预算内动真钱的、带编号与退出条件的调整。
+    只有主 token 能写;只追加;撤回走 /internal/overlays/cancel。"""
+    lane = require_internal_token(x_internal_token)
+    from src.data.execution.overlays import submit
+    r = await submit(body if isinstance(body, dict) else {}, lane)
+    if not r.get("ok"):
+        raise HTTPException(422 if "problems" in r else 403, r)
+    from src.api.notify import notify_telegram
+    await notify_telegram(f"[overlay] {body.get('id')} 已写 · {body.get('source')} · {str(body.get('thesis'))[:120]} · "
+                          f"{body.get('starts_d')} → {body.get('ends_d')}")
+    return r
+
+
+@router.post("/internal/overlays/cancel")
+async def overlays_cancel(body: dict = Body(...), x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
+    lane = require_internal_token(x_internal_token)
+    from src.data.execution.overlays import cancel
+    r = await cancel(str(body.get("id") or ""), str(body.get("reason") or ""), lane)
+    if not r.get("ok"):
+        raise HTTPException(422, r)
+    from src.api.notify import notify_telegram
+    await notify_telegram(f"[overlay] {body.get('id')} 撤回 · {str(body.get('reason'))[:160]}")
+    return r
+
+
+@router.get("/internal/overlays")
+async def overlays_view(x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
+    """今天生效的偏离、它们对计划的影响(基线 vs 偏离后)、最近 30 天的逐日记录。"""
+    require_internal_token(x_internal_token)
+    from src.data.execution.overlays import DAILY
+    from src.data.execution.portfolio_targets import plan_fields_live
+    from src.data.style.header import _read_all
+    try:
+        today = await plan_fields_live()
+        daily = await _read_all(DAILY, {"select": "*", "order": "d.desc", "limit": "30"})
+    except Exception as e:                                       # noqa: BLE001
+        raise HTTPException(502, f"{type(e).__name__}: {str(e)[:300]}")
+    return {"ok": True, "today": today.get("overlays"), "x1v_nav_budget_usd": today.get("x1v_nav_budget_usd"),
+            "legs": (today.get("t25") or {}).get("legs"), "daily": daily}
+
+
 @router.post("/internal/executor/halt")
 async def executor_halt(body: dict = Body(...),
                         x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):

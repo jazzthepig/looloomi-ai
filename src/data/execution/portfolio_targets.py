@@ -162,7 +162,28 @@ async def plan_fields_live(d: Optional[str] = None) -> dict[str, Any]:
         cap, flow, src = await resolve_capital(d)
     except Exception as e:                                   # noqa: BLE001
         cap, flow, src = CAPITAL_FALLBACK_USD, False, f"真钱快照读不到({type(e).__name__}),用起始 600"
-    return plan_fields(d, cap, flow, src)
+    fields = plan_fields(d, cap, flow, src)
+    # 11-02(Jazz:规则是零假设,打破是实验):生效的偏离在预算内改额度;读不到偏离 ⇒ 按基线,写明(读不到 ≠ 没有偏离)
+    from src.data.execution import overlays
+    try:
+        act, events = await overlays.load(d)
+    except Exception as e:                                   # noqa: BLE001
+        return {**fields, "overlays": {"ids": [], "why": f"偏离读不到({type(e).__name__})—— 按基线"}}
+    return overlays.apply(fields, act, events)
+
+
+async def _write_overlay_daily(d: str) -> str:
+    """overlay_daily 今天这一行(已写过就不再写)。偏离读不到 ⇒ 不写(不把「读不到」记成「没有偏离」)。"""
+    from src.api.store import supabase_upsert_table
+    from src.data.execution import overlays
+    from src.data.style.header import _read_all
+    if await _read_all(overlays.DAILY, {"select": "d", "d": f"eq.{d}", "limit": "1"}):
+        return "已写过"
+    applied = await plan_fields_live(d)
+    if (applied.get("overlays") or {}).get("why"):
+        return applied["overlays"]["why"]
+    w = await supabase_upsert_table(overlays.DAILY, [overlays.daily_row(d, applied)], on_conflict="d")
+    return "写了" if w else f"写失败:{(getattr(w, 'why', '') or '')[:120]}"
 
 
 async def write_today(now: Optional[dt.datetime] = None) -> dict[str, Any]:
@@ -175,11 +196,12 @@ async def write_today(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     have = await _read_all("portfolio_targets_daily", {"select": "sleeve", "d": f"eq.{d}", "book": f"eq.{BOOK}"})
     done = {r.get("sleeve") for r in have or []}
     cap, flow, src = await resolve_capital(d)             # 读不到就抛:目标表宁可晚写,不按猜的资本写
+    ov_note = await _write_overlay_daily(d)               # 11-02:基线 vs 偏离后,每天一行(表是基线,偏离另记)
     rows = [r for r in t25_rows(d, cap, flow) if r["sleeve"] not in done]
     if not rows:
-        return {"ok": True, "d": d, "written": 0, "skipped": "今天的目标已写过"}
+        return {"ok": True, "d": d, "written": 0, "skipped": "今天的目标已写过", "overlay_daily": ov_note}
     w = await supabase_upsert_table("portfolio_targets_daily", rows, on_conflict="d,book,sleeve")
     if not w:
         return {"ok": False, "d": d, "why": f"写 portfolio_targets_daily 失败:{(getattr(w, 'why', '') or '')[:200]}"}
     return {"ok": True, "d": d, "written": len(rows), "capital_usd": cap, "capital_source": src,
-            "x1v_nav_budget_usd": plan_fields(d, cap, flow, src)["x1v_nav_budget_usd"]}
+            "x1v_nav_budget_usd": plan_fields(d, cap, flow, src)["x1v_nav_budget_usd"], "overlay_daily": ov_note}

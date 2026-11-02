@@ -48,6 +48,8 @@ def test_write_once_per_day(monkeypatch):
     async def read_all(table, params):
         if table == "live_account_daily":                      # 11-01:资本来自真钱快照
             return [{"d": "2026-10-29", "equity_usd": 630.64, "flows_usd": 0}]
+        if table == "overlay_daily":                           # 11-02:基线 vs 偏离后的逐日记录(这里当作已写过)
+            return [{"d": "2026-10-30"}]
         assert table == "portfolio_targets_daily" and params["d"] == "eq.2026-10-30"
         return list(have)
 
