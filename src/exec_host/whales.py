@@ -222,6 +222,7 @@ def parse_clearinghouse(addr: str, raw: Any, ts_ms: int) -> list[dict]:
             "szi": szi,
             "entryPx": _round_value(p.get("entryPx")),
             "positionValue": _round_value(p.get("positionValue")),
+            "liquidationPx": _round_value(p.get("liquidationPx")),   # 11-02 T-221:强平地图要它
             "unrealizedPnl": _round_value(p.get("unrealizedPnl")),
             "leverage": lev_val,
             "leverageType": (lev.get("type") if isinstance(lev, dict) else None),

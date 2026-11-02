@@ -77,6 +77,7 @@ PLAN_FROM_UTC = (0, 5)
 TRIGGER_RETRY_S = 900          # 止损触发单没挂上:每 15 分钟重挂一次(后备 IOC 每分钟都在看)
 TRUTH_GIVE_UP_S = 86400        # 交易所上已平、成交一直找不到:24 小时后按「找不到」结案(Book of Truth)
 META_TTL_S = 3600              # 现货币对表缓存(11-02 速度):币对与 szDecimals 一天不变
+LIQMAP_EVERY_S = 3600          # T-221 强平地图:每小时送一次汇总
 
 
 def code_sha(repo: Optional[Path] = None) -> Optional[str]:
@@ -1078,6 +1079,24 @@ class Executor:
             log.info("ticket cycle %s: %d entries, %d exits, %d not executable", tp["asof"], len(r["entries"]),
                      len(r["exits"]), len(r["not_executable"]))
 
+    def ship_liq_map(self, now: dt.datetime) -> Optional[dict]:
+        """T-221:whales(T-130)最近一轮的头部账户持仓 → 按强平价距离分档的汇总 → Railway(`kind = liqmap`)。**不送地址**。
+        whales 没在跑 / 文件没有 ⇒ 不送(不是 0)。"""
+        from src.exec_host import liqmap
+        from src.exec_host.whales import DEFAULT_REC_DIR
+        days = [now.date().isoformat()] + ([(now.date() - dt.timedelta(days=1)).isoformat()] if now.hour == 0 else [])
+        pos = liqmap.latest_positions(liqmap.read_records(DEFAULT_REC_DIR, days), int(time.time() * 1000))
+        if not pos:
+            return None
+        rows = liqmap.buckets(pos, self.venue.perp_mids())
+        if not rows:
+            return None
+        payload = {"mode": self.cfg.mode, "kind": "liqmap", "host": self.cfg.host,
+                   "detail": {"rows": rows, "n_positions": len(pos), "n_accounts": len({p["address"] for p in pos}),
+                              "at": now.isoformat()}}
+        self.outbox.put(payload)
+        return payload
+
     def heartbeat(self, now: dt.datetime) -> None:
         try:
             b = self.venue.balances()
@@ -1121,6 +1140,7 @@ class Executor:
                          ("ticket_truth", lambda: self._every("ticket_truth", STOP_EVERY_S,
                                                               lambda: self.settle_truth(now))),
                          ("heartbeat", lambda: self._every("heartbeat", HEARTBEAT_EVERY_S, lambda: self.heartbeat(now))),
+                         ("liqmap", lambda: self._every("liqmap", LIQMAP_EVERY_S, lambda: self.ship_liq_map(now))),
                          ("flush", lambda: self.outbox.flush(self.railway))):
             try:
                 fn()

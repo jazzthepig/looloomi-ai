@@ -46,7 +46,7 @@ router = APIRouter()
 INTENT_FIELDS = frozenset(f.name for f in fields(Intent))
 OUTCOME_FIELDS = frozenset(f.name for f in fields(Outcome))
 INTENT_REQUIRED = frozenset({"intent_id", "ts_decision", "symbol", "side", "target_notional_usd", "decision_mid", "sleeve"})
-KINDS = frozenset({"cycle", "stop", "heartbeat", "error", "probe"})   # probe:一次性真钱验证(11-02 现货触发单),不带意图 / 结果
+KINDS = frozenset({"cycle", "stop", "heartbeat", "error", "probe", "liqmap"})   # probe:一次性真钱验证(11-02 现货触发单),不带意图 / 结果
 REPORT_KEYS = frozenset({"mode", "kind", "host", "asof", "intents", "outcomes", "detail", "alert", "book"})
 #: 三本账:X1V 现货(没有 book 字段 = x1v,向后兼容)、R-v2 单票(HL 永续)、T25 的黄金 / 股票腿(HL 现货,10-30)。
 #: sleeve 按 (book, mode) 定,互不串
@@ -161,6 +161,14 @@ async def executor_report(body: Any = Body(...),
         if not r:
             raise HTTPException(502, f"execution_outcomes write failed: {getattr(r, 'why', '')}")
         written["outcomes"] = len(clean["outcomes"])
+    if clean["kind"] == "liqmap":
+        # T-221:强平地图的汇总进自己的表;loop_attempt 只留个数(不把几百行塞进心跳表)
+        from src.data.market.liq_map import write_rows
+        lm = await write_rows((clean.get("detail") or {}).get("rows") or [], (clean.get("detail") or {}).get("at"))
+        if not lm.get("ok"):
+            raise HTTPException(422 if lm.get("bad") else 502, lm)
+        written["liq_rows"] = lm["written"]
+        clean["detail"] = {k: v for k, v in (clean.get("detail") or {}).items() if k != "rows"}
     detail = {**(clean.get("detail") or {}), "mode": clean["mode"], "kind": clean["kind"], "book": clean.get("book") or "x1v",
               "host": clean.get("host"), "asof": clean.get("asof"), **{f"{k}_written": v for k, v in written.items()}}
     outcome = "error" if clean["kind"] == "error" or (clean.get("detail") or {}).get("errors") else "ok"
@@ -271,6 +279,17 @@ async def scenarios_view(x_internal_token: Optional[str] = Header(None, alias="X
         raise HTTPException(502, f"{type(e).__name__}: {str(e)[:300]}")
     return {"ok": True, "n": len(entries), "calibration": calibration(entries, scores),
             "recent": [{**e, "score": scores.get(e["id"])} for e in entries[:50]]}
+
+
+@router.get("/internal/liq-map")
+async def liq_map_view(x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
+    """T-221:最近一小时的强平地图 —— 跌 / 涨 5 / 10 / 15% 时被迫卖出 / 买入的名义额,对永续 ±2% 深度的倍数。"""
+    require_internal_token(x_internal_token)
+    from src.data.market.liq_map import latest_view
+    try:
+        return await latest_view()
+    except Exception as e:                                       # noqa: BLE001
+        raise HTTPException(502, f"{type(e).__name__}: {str(e)[:300]}")
 
 
 @router.post("/internal/overlays")
