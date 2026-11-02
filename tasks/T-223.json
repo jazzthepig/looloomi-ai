@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-02",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "notes": "",
+  "verified": null,
+  "id": "T-223",
+  "owner": "lane-b",
+  "title": "S-696 前向判据的第一次月度核对(2026-10 信号月)+ 第二族因子普查:链上 / 发行方 6 个因子按 S-691 同一协议(发现段 → 封存留出段)",
+  "source": "S-691 留出段 ✅ 五因子(F3 ΔOI30 −、F7 主动买卖 +、F8 mom30 −、F9 mom7 −、F11 vol30 −);S-696 写了前向判据(新月份上还灵不灵);Jazz 11-02「让 abc 继续挖因子」。§Seth-1102b。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-223.json"
+  ],
+  "acceptance": {
+    "check": "A. 前向核对:严格按 docs/research/s691_holdout.sql 的口径(同一宇宙规则、同一偏 Spearman 控制规模、同一 y = 之后 30 天相对宇宙),只算 2026-10 信号月(y 用到 2026-10-02 为止的信号日,之后的信号日等下个月);报五因子的月均偏 IC、符号是否与留出段同号,写进 S-696 的前向记录表(docs/research/s696_forward.md,没有就新建;只追加)。B. 第二族(先写预注册段再算):G1 协议收入 / 市值(protocol_revenue_daily 30 天和 ÷ 市值);G2 收入 30 天变化 ln(r30 / r30_prev);G3 持币人收入占比(protocol_revenue_daily 里 holders 对 total,有就算);G4 市值 / 完全稀释(asset_mcap_daily 与 cg_coin_mcap_daily 能拼出就算,拼不出写「读不到」);G5 稳定币市值 30 天变化(macro_daily 或 state_daily 的系列,作为所有名字共用的时间因子 ⇒ 只能做时间序列 t 检,不做截面);G6 交易所净流入(state_daily 有就算)。发现段 2023-01 → 2024-12,留出段 2025-01 → 2026-09 封存:发现段 |月 t| ≥ 3 进短名单,留出段同号、|t| ≥ 2、≥ 60% 月份同号 ⇒ ✅;试验计数:截面因子族 +6。读不到的因子写「读不到」,不替换。纪律:只读(SELECT),不改代码、不做 DDL、不入库;零分布 / 多空盈亏只用 src/data/evaluation/apparatus.py;翻页带 order=;探针脚本改同一个文件再跑,不新建 probe2/3;步数过半先落文件;交付附 docs/research/scenarios/{lane}-{id}.json(≥ 3 条机器可核命题 + 概率,格式见该目录 README)。",
+    "expect": "docs/research/s696_forward.md 追加 2026-10 一行;报告 docs/research/T-223_factor_family_2.md(预注册段在前,结果在后);卡 notes 写五因子前向符号与第二族短名单;scenarios/lane-b-T-223.json;in_review,推 lane-b/T-223。"
+  },
+  "prior_value": "S-691 的五因子有留出段证据、还没有一个前向月份;发行方 / 链上这一族(收入、稀释、持币人分配)只在 S-661 / S-664 用「价值捕获比」单独测过,没按普查协议和衍生品族并排过。"
+}

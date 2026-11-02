@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-02",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "notes": "",
+  "verified": null,
+  "id": "T-222",
+  "owner": "lane-a",
+  "title": "④ 候选的量测:HL 现货多 + 永续空收资金费(cash-and-carry)在 ① 的 24 个名字上到底值多少 —— 正费率段 / 负费率段 / 费用之后;不判、不做策略,给 Jazz 一张能定的表",
+  "source": "Jazz 11-02:HL 是 perps 为主的 DeFi,落地要具体分析;CLAUDE.md:① 的 24 名等权 funding +23.07% 年化(永续多头付的);10-21 裁定 ③ 降敞口 = 卖现货,不开对冲空 —— 这里问的是另一件事:④ 中性套息作为独立 sleeve 值不值得立预注册。S-691 F4(funding 7 天)在截面上无信息,但这里是时间序列上的收取,不是截面。§Seth-1102b。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-222.json"
+  ],
+  "acceptance": {
+    "check": "数据:funding_history(venue=binance_perp 2020-01 起、hyperliquid 2026-09-05 起,8 小时 / 1 小时一条)、ohlcv_daily 收盘、asset_mcap_daily;名字 = cis_official_daily 最近一天的加密 24 名(读到多少算多少,写清)。① 每名每天的已实现 funding(当日各期之和,空永续方收正费率)2023-01 → 2026-10,按月汇总:等权 24 名的年化、正费率月 / 负费率月各几个、最长连续负费率段(天数、累计 %)。② 两条规则的毛 / 净:A 常开;B 只在 7 天均 funding > 0 时开、否则空仓 —— 净 = 毛 − 开平各一次的费用(现货 taker 4bp + 永续 taker 3.5bp,按切换次数计)。③ HL vs Binance:09-05 起同名同日 funding 的差(均值、相关),写清 HL 更高还是更低。④ 把 ① 的时间线和 BTC 的 30 日回报并排:负费率段是不是都在下跌里(这决定它是不是伪装的 β)。⑤ 容量一句:按 venue_depth_snapshots 的 HL 现货 ±2% 深度,这个 sleeve 在 HL 上一次能放多大。只报表,不判「可以做」;预注册留给 Seth / Jazz。纪律:只读(SELECT),不改代码、不做 DDL、不入库;零分布 / 多空盈亏只用 src/data/evaluation/apparatus.py;翻页带 order=;探针脚本改同一个文件再跑,不新建 probe2/3;步数过半先落文件;交付附 docs/research/scenarios/{lane}-{id}.json(≥ 3 条机器可核命题 + 概率,格式见该目录 README)。",
+    "expect": "报告 docs/research/T-222_funding_carry.md(开头一张表:年化毛 / 净、负费率段、HL−Binance 差、容量);卡 notes 写等权年化毛 / 净与最长负段;scenarios/lane-a-T-222.json;in_review,推 lane-a/T-222。"
+  },
+  "prior_value": "funding 只在截面上测过(S-691 F4 无信息、S-688 CIS 计分项);作为时间序列上的收取,从没有一张按月、分正负段、扣费后的表;10-21 的裁定针对 ③,④ 没有裁过。"
+}
