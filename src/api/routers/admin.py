@@ -301,3 +301,11 @@ async def agent_call_log_status(x_internal_token: str = Header(None)):
         return {"ok": True, **call_log_status()}
     except Exception as e:  # noqa: BLE001 —— mcp 包没装(本地)时也要能答
         return {"ok": False, "why": f"{type(e).__name__}: {str(e)[:200]}"}
+
+
+@router.get("/internal/news-feed")
+async def news_feed_status(x_internal_token: str = Header(None)):
+    """11-02:新闻流最近一轮(进程内):发了几条、chat 从哪来、模型配没配 / 最后一次错误 / 为什么回落模板。"""
+    require_internal_token(x_internal_token)
+    from src.data.ops.news_feed import LAST
+    return {"ok": True, **LAST}

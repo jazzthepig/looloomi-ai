@@ -80,8 +80,18 @@ def configured() -> bool:
     return bool(_BASE)
 
 
+#: 11-02:模型为什么没答(状态码 / 异常 / 未配),留给 `GET /internal/news-feed` 看 —— Railway 日志这边读不到。
+LAST_ERROR: dict = {"at": None, "why": None, "model": _MODEL, "base": _BASE[:40] if _BASE else None}
+
+
+def _note(why: str | None) -> None:
+    import datetime as _dt
+    LAST_ERROR.update(at=_dt.datetime.now(_dt.timezone.utc).isoformat(), why=why)
+
+
 async def _chat(messages: list, temperature: float = 0.4) -> str | None:
     if not _BASE:
+        _note("LLM_BASE_URL 未配")
         return None
     url = f"{_BASE}/chat/completions"
     headers = {"Content-Type": "application/json"}
@@ -94,11 +104,14 @@ async def _chat(messages: list, temperature: float = 0.4) -> str | None:
             r = await cli.post(url, headers=headers, content=json.dumps(payload))
             if r.status_code != 200:
                 _logger.warning(f"[NARRATOR] LLM {r.status_code}: {r.text[:200]}")
+                _note(f"HTTP {r.status_code}: {r.text[:160]}")
                 return None
             data = r.json()
+            _note(None)
             return (data.get("choices") or [{}])[0].get("message", {}).get("content")
     except Exception as e:
         _logger.warning(f"[NARRATOR] LLM call failed: {e}")
+        _note(f"{type(e).__name__}: {str(e)[:160]}")
         return None
 
 

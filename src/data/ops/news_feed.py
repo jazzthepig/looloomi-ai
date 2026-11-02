@@ -170,7 +170,9 @@ async def llm_post(it: dict, facts: dict[str, dict]) -> Optional[str]:
         return None
     text = (text or "").strip()
     if not text or len(text) > 1200 or _BANNED.search(text):
+        LAST["llm_drop"] = ("空回复" if not text else "超长" if len(text) > 1200 else f"含买卖词:{_BANNED.search(text).group(0)}")
         return None
+    LAST["llm_drop"] = None
     return (f"<b>{html.escape(it['title'].strip())}</b>\n\n{html.escape(text)}\n\n"
             f'{html.escape(it["source"])} · <a href="{html.escape(it["link"])}">原文</a>')
 
@@ -202,6 +204,7 @@ async def fetch_items(now: dt.datetime) -> tuple[list[dict], list[str]]:
     return items, failed
 
 
+LAST: dict = {"run": None, "llm_drop": None}      # 进程内最近一轮,`GET /internal/news-feed` 读
 CHAT_KEY = "feed:chat_id"
 DEFAULT_CHAT_TITLE = "Looloomi AI"
 
@@ -268,7 +271,10 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     w = await supabase_upsert_table(TABLE, rows, on_conflict="id")
     if not w:
         return {"ok": False, "why": f"写 {TABLE} 失败:{(getattr(w, 'why', '') or '')[:200]}"}
-    from src.data.narrative.llm_narrator import configured as _llm_on
+    from src.data.narrative.llm_narrator import LAST_ERROR as _llm_err, configured as _llm_on
+    LAST["run"] = {"at": now.isoformat(), "new": len(new), "candidates": len(cand), "posted": posted, "chat": chat_why,
+                   "llm_configured": _llm_on(), "llm_last_error": dict(_llm_err), "llm_drop": LAST.get("llm_drop"),
+                   "failed_sources": failed}
     return {"ok": True, "new": len(new), "candidates": len(cand), "posted": posted, "dry": not chat, "chat": chat_why,
             "unpostable": skipped, "llm": _llm_on(), "failed_sources": failed,
             "why": f"新 {len(new)} 条,候选 {len(cand)},发 {posted}" + (f"(干跑:{chat_why})" if not chat else f"(→ {chat_why})")}
