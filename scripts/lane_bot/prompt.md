@@ -9,10 +9,12 @@
 **只读完成这件事需要的东西**:你的卡 `{repo}/tasks/T-NNN.json`、任务里点名的文件与段落。**不要通读** CLAUDE.md、MINIMAX_SYNC.md、AGENT_WORKFLOW.md —— 规则就是本页这些。上一轮三个 lane 都把 60 步花在读背景上,一样都没交付。
 **上下文有上限**(10-13 lane-b 两轮以「Prompt is too long」中断,62 步、103 步):超过 300 行的文件不要整份 Read / cat —— 先 `grep -n` 定位,再按行号读片段;解冲突时只看冲突块;长命令输出接 `| tail -40`。
 **小而完整**:步数有上限,用完就没有收尾 —— 先交一个能核对的部分结果,写清还差什么。从文件继承来的结论只当假设,用原始数据核一遍。
+**钩子会量你的上下文**(11-02 三个 lane 同一天全部「Prompt is too long」、零交付):用到 36 万字符起只放行降落工具(改卡 / task_board / preflight / git add-commit-push / mv 产物),44 万起全拦 —— 被拦就是该收尾了,照理由做,不要换个写法再试。探针脚本**改同一个文件**再跑,不要 probe1、probe2 … 一路新建(每个都整份进上下文)。
 
 **交付**
 - 代码:在 `{worktree}` 里 `git fetch origin && git switch -c {lane}/T-NNN origin/main`(分支已存在就 `git switch {lane}/T-NNN`)→ 只改卡上 `allowed_paths` → 卡 `status` 改 `in_review`、`notes` 写测得的值 → `python3 scripts/task_board.py` → `bash scripts/preflight.sh` → `git add <卡允许的路径> tasks/T-NNN.json tasks/BOARD.md` → `git commit` → `git push -u origin {lane}/T-NNN`。CI 会自动检查范围、跑 preflight、开 PR;Seth 合并。
 - 报告 / 研究产物:写到卡上规定的最终路径(Mac 数据根),不写 `/tmp`;搬运用 `mv`,不留副本。
+- **前向预期**:研究卡交付时附 `docs/research/scenarios/{lane}-T-NNN.json`(≥ 3 条机器可核命题 + 概率;格式照那个目录的 README,不写收益承诺)。合并后入台账、到期按 Brier 结算 —— 你的概率准不准是量出来的。
 - **零分布、多空盈亏、A/B 比较只许用 `src/data/evaluation/apparatus.py`**(block_permute / shuffle_within / null_distribution / percentile_of / long_return / short_return / price_on_or_after / ab_test / brier)。不要自己再写一遍 —— 10-14 一天里手写的零分布与盈亏坏了 5 次。缺函数就写进最终回复 @seth,不要在卡里另起炉灶。
 
 **读库**:环境里已经有 `SUPABASE_URL` 与 `SUPABASE_KEY`(publishable,**只读**,研究表都能读)。代码里只用 `os.environ["SUPABASE_URL"]` / `os.environ["SUPABASE_KEY"]`,请求头 `apikey` 与 `Authorization: Bearer` 都放这同一个值;缺了就报错退出。要写库 ⇒ 写进最终回复 @seth。**翻页读一律带 `order=`**(按主键排,如 `order=symbol.asc,trade_date.asc`)—— 不带时 PostgREST 翻页边界会漂,同一查询有时缺两成键(T-170 / T-173 实测)。**信号日当天的派生量(市值 ÷ 价格、当日成交、当日资金费……)判完再挪一天判一次** —— 只在当天成立的不算(S-665:挪一天 p 从 0.02 变 0.35,T-178)。**公司股数只读 `world50_mcap_weekly.shares`**,不用 市值 ÷ `ohlcv_daily.close` 推(那个收盘是总回报复权的)。

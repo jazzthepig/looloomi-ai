@@ -322,3 +322,42 @@ def test_a_context_overflow_round_does_not_go_into_sync():
     assert lb.context_overflow("Prompt is too long") and lb.context_overflow("  Prompt is too long\n")
     assert not lb.context_overflow("T-208 交付完成。…Prompt is too long 只是正文里提到")
     assert not lb.context_overflow("")
+
+
+def test_landing_guard_forces_a_landing_before_context_overflow(tmp_path):
+    """S-705:11-02 三个 lane 的定时轮次全部「Prompt is too long」、零交付。钩子按转录量上下文:
+    软阈值只放行降落工具(改卡 / task_board / preflight / git add-commit-push / mv 产物),硬阈值全拦;
+    Read 不带 limit 的长文件拦;python3 不截断输出的命令补 tail。"""
+    import json
+    from scripts.lane_bot.guard_main_dir import (HARD_CHARS, SOFT_CHARS, landing_verdict, read_too_long,
+                                                 transcript_chars, truncated_command)
+    assert SOFT_CHARS < HARD_CHARS <= 460_000          # 40 轮实测:成功收尾 ≤ 46 万字符
+    assert landing_verdict("Read", {"file_path": "x"}, SOFT_CHARS - 1) is None
+    soft = SOFT_CHARS
+    assert "降落" in landing_verdict("Read", {"file_path": "x"}, soft)
+    assert "降落" in landing_verdict("Bash", {"command": "python3 docs/research/probe9.py"}, soft)
+    assert "降落" in landing_verdict("Write", {"file_path": "/Users/sbb/Projects/looloomi-ai-lane-a/docs/research/probe9.py"}, soft)
+    for cmd in ("git add tasks/T-218.json docs/research/x.md", "cd /Users/sbb/Projects/looloomi-ai-lane-a && git commit -m x",
+                "git push -u origin lane-a/T-218", "python3 scripts/task_board.py", "bash scripts/preflight.sh | tail -20",
+                "mv /tmp/x.md /Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/x.md"):
+        assert landing_verdict("Bash", {"command": cmd}, soft) is None, cmd
+    assert landing_verdict("Edit", {"file_path": "/Users/sbb/Projects/looloomi-ai-lane-a/tasks/T-218.json"}, soft) is None
+    assert "不要再调用任何工具" in landing_verdict("Bash", {"command": "git push -u origin lane-a/T-218"}, HARD_CHARS)
+    # 转录量法:只数 message.content
+    t = tmp_path / "t.jsonl"
+    t.write_text(json.dumps({"type": "user", "message": {"content": "x" * 1000}}) + "\n"
+                 + json.dumps({"type": "progress", "data": "z" * 5000}) + "\n"
+                 + json.dumps({"type": "assistant", "message": {"content": [{"type": "text", "text": "y" * 500}]}}) + "\n",
+                 encoding="utf-8")
+    assert 1500 <= transcript_chars(str(t)) < 1600 and transcript_chars(str(tmp_path / "nope")) == 0
+    # 长文件整读拦;带 limit 放
+    big = tmp_path / "big.py"
+    big.write_text("x\n" * 500, encoding="utf-8")
+    assert "offset" in read_too_long({"file_path": str(big)})
+    assert read_too_long({"file_path": str(big), "limit": 120}) is None
+    assert read_too_long({"file_path": str(tmp_path / "missing.py")}) is None
+    # 输出截断
+    assert truncated_command("python3 docs/research/t218_probe.py").endswith("2>&1 | tail -n 80")
+    assert truncated_command("python3 -m pytest tests/test_x.py -q") .endswith("| tail -n 80")
+    for cmd in ("python3 x.py | tail -5", "python3 x.py > out.txt", "python3 - <<'EOF'\nprint(1)\nEOF", "ls docs", "git status"):
+        assert truncated_command(cmd) is None, cmd
