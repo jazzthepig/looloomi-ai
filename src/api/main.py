@@ -943,6 +943,15 @@ def _valuation_point_utc() -> tuple:
 # cannot be struck near it is refused rather than struck late (docs/NAV_POLICY.md §3).
 # Crypto has no close, so the instant must be chosen; `sleep(24h)` chose it by
 # accident, differently after every deploy.
+def _secs_until_utc_or(hour: int, minute: int, cap_s: float) -> float:
+    """到下一个 UTC hour:minute 的秒数,但不超过 cap_s —— 「每小时一次,并且准点赶上收盘后那一刻」。"""
+    now = _dt.datetime.now(_dt.timezone.utc)
+    target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    if target <= now:
+        target += _dt.timedelta(days=1)
+    return max(1.0, min(cap_s, (target - now).total_seconds()))
+
+
 async def _sleep_until_utc(hour: int, minute: int = 0) -> None:
     """Sleep until the next occurrence of hour:minute UTC.
 
@@ -2209,7 +2218,7 @@ async def _portfolio_targets_loop():
             await _beat("_portfolio_targets_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _record_loop_attempt("_portfolio_targets_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                        writer="src.api.main._portfolio_targets_loop")
-        await _asyncio.sleep(3600)
+        await _asyncio.sleep(_secs_until_utc_or(0, 4, 3600))   # 11-02:00:04 写当天目标(快照 00:02 之后)
 
 
 # S-698 的一次性修复循环 `_binance_hist_repair_loop` 10-30 17:35 UTC 退役:262 个标的全部做完并核过(10/10 现货)。
@@ -2243,7 +2252,8 @@ async def _live_account_loop():
             await _beat("_live_account_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _record_loop_attempt("_live_account_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                        writer="src.api.main._live_account_loop")
-        await _asyncio.sleep(3600)
+        # 11-02:收盘后 00:02 UTC 先写一次 —— 主机 00:05 起取计划,资本 / 出入金要看得到昨天(原来每小时漂,00:11 才落)
+        await _asyncio.sleep(_secs_until_utc_or(0, 2, 3600))
 
 
 @app.on_event("startup")

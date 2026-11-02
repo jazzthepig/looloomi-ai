@@ -106,6 +106,13 @@ def test_capital_follows_the_live_snapshot_and_a_deposit_makes_today_a_rebalance
     assert flow2 is True
     cap3, flow3, _ = pl.capital_from_snapshots([{"d": "2026-11-05", "equity_usd": 2610.0, "flows_usd": 0}], "2026-11-06")
     assert flow3 is False and cap3 == 2610.0
+    # 11-02 修:D = 11-04 加钱;D+1 的计划在快照落库前取(看不到 11-04);D+2 时最近一份是 11-05(flows 0)—— 原来这笔永远不触发
+    cap6, flow6, src6 = pl.capital_from_snapshots([{"d": "2026-11-05", "equity_usd": 2610.0, "flows_usd": 0},
+                                                    {"d": "2026-11-04", "equity_usd": 2600.0, "flows_usd": 2000.0}], "2026-11-06")
+    assert flow6 is True and cap6 == 2610.0 and "11-04 出入金 +2000.00" in src6
+    _, flow7, _ = pl.capital_from_snapshots([{"d": "2026-11-06", "equity_usd": 2610.0, "flows_usd": 0},
+                                             {"d": "2026-11-05", "equity_usd": 2610.0, "flows_usd": 0}], "2026-11-07")
+    assert flow7 is False, "两份都没有出入金 ⇒ 不触发"
     cap4, flow4, src4 = pl.capital_from_snapshots([], "2026-11-06")
     assert cap4 == 600 and flow4 is False and "还没有真钱快照" in src4
     # 快照里今天的行不算(还没收盘)

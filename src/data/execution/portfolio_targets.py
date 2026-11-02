@@ -137,12 +137,14 @@ def capital_from_snapshots(rows: list[dict], d: str) -> tuple[float, bool, str]:
         return CAPITAL_FALLBACK_USD, False, "起始资本 600(还没有真钱快照)"
     last = rows[0]
     eq = float(last["equity_usd"])
-    # 快照每小时补写,00:08 的计划常常只看得到前两天的那份:最近一份快照带出入金、且不超过 3 天 ⇒ 再平衡。
-    # 它只会触发一次:再下一份快照 flows = 0。
-    recent = str(last.get("d")) >= (dt.date.fromisoformat(d) - dt.timedelta(days=3)).isoformat()
-    flows = float(last.get("flows_usd") or 0.0)
-    flow_event = recent and abs(flows) >= 1.0
-    src = f"真钱快照 {last.get('d')} 净值 {eq:.2f}" + (f";出入金 {flows:+.2f} ⇒ 今天再平衡" if flow_event else "")
+    # 11-02 修:原来只看最近一份 —— 加钱当天 D 的快照 D+1 00:11 才落,D+1 00:05 的计划看不到它;到 D+2,最近一份已是 D+1
+    # (flows = 0),D 那笔出入金**永远不触发**。现在最近两份里任一份带出入金(3 天内)⇒ 再平衡;可能连着触发两天,
+    # 第二次各腿已在目标附近、差额不到最小名义额,等于不动。
+    cutoff = (dt.date.fromisoformat(d) - dt.timedelta(days=3)).isoformat()
+    flowed = [r for r in rows[:2] if str(r.get("d")) >= cutoff and abs(float(r.get("flows_usd") or 0.0)) >= 1.0]
+    flow_event = bool(flowed)
+    flows = float(flowed[0].get("flows_usd") or 0.0) if flowed else 0.0
+    src = f"真钱快照 {last.get('d')} 净值 {eq:.2f}" + (f";{flowed[0].get('d')} 出入金 {flows:+.2f} ⇒ 今天再平衡" if flow_event else "")
     return round(eq, 2), flow_event, src
 
 
