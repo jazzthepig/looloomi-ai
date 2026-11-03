@@ -1,7 +1,7 @@
 {
   "id": "T-229",
   "owner": "lane-c",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-11-03",
   "title": "S-710 回放:DVOL(BTC 隐含波动率指数)一年分位 ≥ 0.80 时把 ① 降到 0.5(< 0.60 恢复),2022-03 → 2026-10,按 S-692 三条判据 + 随机降仓对照 —— 只算一次、不扫参数",
   "source": "S-685:TradFi 的 VIX / 信用利差在 BTC 上不是减仓信号;加密自己的 IV 没测过。S-710 预注册已写(台账,Seth);数据 `deriv_vol_daily`(Deribit DVOL,2021-03 起,部署后数小时回填完 —— 先核 `select currency, min(d), max(d), count(*) from deriv_vol_daily group by 1`,BTC ≥ 1,900 行再开工)。",
@@ -23,6 +23,6 @@
     "expect": "报告 docs/research/T-229_dvol_multiplier.md(预注册口径在前,结果在后)+ 脚本 docs/research/t229_dvol.py + t229_results.json;卡 notes 写 (a)(b)(c) 三个数与判;scenarios/lane-c-T-229.json;in_review,推 lane-c/T-229。"
   },
   "prior_value": "③ 的减仓输入只有价格趋势;加密隐含波动率作为减仓规则从没回放过(S-685 只测了 TradFi 的压力读数)。",
-  "notes": "",
+  "notes": "判定 ❌ —— S-710 三条判据全过不了。(a) 最大回撤相对深度 0.9585(规则 −63.96% vs 持有 −66.73%,只相对浅了 4.15%,判据要 ≥15%)❌;(b) 规则 Calmar 0.1663,随机降仓零分布(1,000 次、种子 710、apparatus.py)中位 0.2069、p95 0.4123、区间 [−0.0086, 0.6656],实际值落在 30.5 分位(要 >95 分位)❌;(c) 第一半 2022-03-01→2024-06-30 规则 Calmar 0.3037 vs 持有 0.2605 ✅,第二半 2024-07-01→2026-10-31 规则 0.0473 vs 持有 0.1791 ❌ ⇒ ❌。持有:总 +79.75%、年化 +13.37%、MDD −66.73%、Calmar 0.200;规则 R:总 +60.38%、年化 +10.64%、MDD −63.96%、Calmar 0.166;0.5 减仓日 261/1,706(15.3%),进入减仓 17 次,34 次换仓共 17bp 成本。副列(只报不判):触发 0.70 → Calmar 0.115 / 减仓 435 日;触发 0.90 → 0.187 / 157 日;ETH 同规则 −32.86% vs ETH 持有 −22.78%(Calmar −0.114 vs −0.075);对称臂(分位 ≤0.20 ⇒ 1.0、其余 0.5)+29.54%、Calmar 0.101。输入偏离(需对账):deriv_vol_daily 2026-11-04 对只读 key 返回 HTTP 200 / Content-Range */0(0 行;同 key 读 ohlcv_daily 正常 3365 行)⇒ 直接取同一上游 Deribit API get_volatility_index_data(resolution=1D)的 close,原始日线落在 /Volumes/CometCloudAI/cometcloud-local/_cache/t229/;回填后需与 deriv_vol_daily 对账。交付:docs/research/T-229_dvol_multiplier.md + docs/research/t229_dvol.py + docs/research/t229_results.json + docs/research/scenarios/lane-c-T-229.json(4 条)。只读,无代码改动。",
   "verified": null
 }
