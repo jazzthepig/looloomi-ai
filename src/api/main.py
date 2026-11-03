@@ -2506,6 +2506,30 @@ async def _start_deribit_vol_loop():
     print("[DVOL] ✅ Deribit DVOL scheduled (6h)")
 
 
+async def _treatment_loop():
+    """小股东待遇日表(`src/data/entity/treatment.py`,11-03):每小时看一次,昨天那批写过就跳。"""
+    await _asyncio.sleep(_boot_delay(9000))
+    while True:
+        try:
+            from src.data.entity.treatment import run_once as _tr_run
+            r = await _tr_run()
+            await _iteration_result("_treatment_loop", r)
+            await _beat("_treatment_loop", ok=bool(r.get("ok")), refused=(r.get("status") == "skipped"),
+                        error=None if r.get("ok") else str(r.get("why"))[:200],
+                        detail={"d": r.get("d"), "written": r.get("written"), "with_share": r.get("with_share")})
+        except Exception as _e:
+            print(f"[TREATMENT] ⚠️  pass FAILED: {_e}")
+            await _beat("_treatment_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_treatment_loop", _e)
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_treatment_loop():
+    _asyncio.create_task(_treatment_loop())
+    print("[TREATMENT] ✅ minority-holder treatment daily scheduled (hourly check)")
+
+
 async def _scenario_ledger_loop():
     """情景台账的结算(`src/data/evaluation/scenario_ledger.py`,11-02):每小时结算到期、还没结的自动命题 → scenario_scores。"""
     await _asyncio.sleep(_boot_delay(540))

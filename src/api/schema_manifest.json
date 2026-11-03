@@ -116,6 +116,7 @@
     "trade_results",
     "treasury_decisions",
     "treasury_entities",
+    "treatment_daily",
     "two_layer_paper_nav",
     "vault_nav_tick",
     "vc_funding_rounds",
@@ -344,6 +345,23 @@
       "state",
       "top_longs",
       "top_shorts"
+    ],
+    "treatment_daily": [
+      "code_ref",
+      "coin_id",
+      "d",
+      "holder_yield_ann",
+      "holders_30d",
+      "holders_share",
+      "mcap",
+      "n_slugs",
+      "price",
+      "rank_holder_yield",
+      "revenue_30d",
+      "revenue_yield_ann",
+      "supply",
+      "supply_growth_30d",
+      "symbol"
     ],
     "two_layer_paper_nav": [
       "book_state",
