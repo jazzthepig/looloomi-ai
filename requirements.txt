@@ -18,7 +18,7 @@ base58>=2.1.0
 email-validator>=2.0.0
 Pillow>=10.0.0
 # MCP Server — ROADMAP_A2A Phase 2.2
-mcp[cli]>=1.6.0
+mcp[cli]>=1.6.0,<2   # 11-02:2.x 改名 FastMCP → MCPServer;不钉死 Railway 就装到 2.x,/mcp 整个不挂、agent_call_log 0 行
 cachetools>=5.0.0
 tenacity>=8.0.0
 # Buy-side performance metrics — open-source institutional-grade

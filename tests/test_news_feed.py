@@ -138,3 +138,14 @@ def test_third_party_price_targets_are_not_reposted_and_boilerplate_is_stripped(
     assert nf.clean_summary("Andre details BTC as a liquidity canary. This post Bitwise: X first appeared on Bitcoin Magazine.") \
         == "Andre details BTC as a liquidity canary."
     assert nf.clean_summary("Plain body.") == "Plain body."
+
+
+def test_narrator_status_never_carries_the_key():
+    """11-03:httpx 把整段 Authorization 头写进异常,状态口把它原样回给了 curl(密钥进了聊天记录)。"""
+    from src.data.narrative import llm_narrator as ln
+    ln._note("LocalProtocolError: Illegal header value b'Bearer sk-cp-opaiJT32bm7mWkn73v5YVH5tjtqFUZsK \\n  aJ7jTMe0EFp'")
+    assert "opaiJT32" not in ln.LAST_ERROR["why"] and "aJ7jTMe0" not in ln.LAST_ERROR["why"] and "Illegal header value" in ln.LAST_ERROR["why"]
+    ln._note("HTTP 401: invalid api key sk-cp-abcdefghijklmnopqrstuvwxyz")
+    assert "abcdefghij" not in ln.LAST_ERROR["why"]
+    src = (ROOT / "requirements.txt").read_text(encoding="utf-8")
+    assert "mcp[cli]>=1.6.0,<2" in src, "mcp 2.x 改名 FastMCP,不钉死 /mcp 整个不挂"

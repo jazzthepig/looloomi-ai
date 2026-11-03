@@ -33,9 +33,10 @@ import httpx
 _logger = logging.getLogger(__name__)
 
 # env — narrative-specific first, then the shared LLM_* already documented in CLAUDE.md
-_BASE  = (os.environ.get("NARRATIVE_LLM_BASE_URL") or os.environ.get("LLM_BASE_URL") or "").rstrip("/")
-_KEY   = os.environ.get("NARRATIVE_LLM_API_KEY") or os.environ.get("LLM_API_KEY") or ""
-_MODEL = os.environ.get("NARRATIVE_LLM_MODEL") or os.environ.get("LLM_MODEL") or "MiniMax-Text-01"
+#: 11-03:Railway 里粘贴的 key 带了换行,httpx 报 Illegal header value —— 值一律 strip();URL 去尾斜杠。
+_BASE  = (os.environ.get("NARRATIVE_LLM_BASE_URL") or os.environ.get("LLM_BASE_URL") or "").strip().rstrip("/")
+_KEY   = (os.environ.get("NARRATIVE_LLM_API_KEY") or os.environ.get("LLM_API_KEY") or "").strip()
+_MODEL = (os.environ.get("NARRATIVE_LLM_MODEL") or os.environ.get("LLM_MODEL") or "MiniMax-Text-01").strip()
 _TIMEOUT = float(os.environ.get("NARRATIVE_LLM_TIMEOUT", "45"))
 
 # Compliance: if the model emits any of these (whole-word), we DROP its output and fall
@@ -84,9 +85,14 @@ def configured() -> bool:
 LAST_ERROR: dict = {"at": None, "why": None, "model": _MODEL, "base": _BASE[:40] if _BASE else None}
 
 
+_SECRET = re.compile(r"[A-Za-z0-9_\-]{16,}")          # 任何像 token 的长串都抹掉;Bearer 之后整段不留
+
+
 def _note(why: str | None) -> None:
+    """留错误原因,**不留密钥**(11-03:httpx 的 Illegal header value 把整段 Authorization 头原样写进了异常文本)。"""
     import datetime as _dt
-    LAST_ERROR.update(at=_dt.datetime.now(_dt.timezone.utc).isoformat(), why=why)
+    LAST_ERROR.update(at=_dt.datetime.now(_dt.timezone.utc).isoformat(),
+                      why=None if why is None else _SECRET.sub("…", re.sub(r"(?i)bearer\s.*", "Bearer …", why, flags=re.DOTALL))[:200])
 
 
 async def _chat(messages: list, temperature: float = 0.4) -> str | None:
