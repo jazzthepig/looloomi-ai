@@ -1,0 +1,28 @@
+{
+  "id": "T-229",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-03",
+  "title": "S-710 回放:DVOL(BTC 隐含波动率指数)一年分位 ≥ 0.80 时把 ① 降到 0.5(< 0.60 恢复),2022-03 → 2026-10,按 S-692 三条判据 + 随机降仓对照 —— 只算一次、不扫参数",
+  "source": "S-685:TradFi 的 VIX / 信用利差在 BTC 上不是减仓信号;加密自己的 IV 没测过。S-710 预注册已写(台账,Seth);数据 `deriv_vol_daily`(Deribit DVOL,2021-03 起,部署后数小时回填完 —— 先核 `select currency, min(d), max(d), count(*) from deriv_vol_daily group by 1`,BTC ≥ 1,900 行再开工)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-229.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "规则与判据**逐字照 S-710**(台账在主仓根目录,lane 软链可读;读不到就按卡标题的口径,不自创):① BTC 现货日线(ohlcv_daily source=binance_hist),DVOL = deriv_vol_daily currency=BTC 的 dvol_close;分位 = 过去 365 日(不含当日)里 ≤ 当日值的比例;规则 R:分位 ≥ 0.80 ⇒ 次日敞口 0.5,直到 < 0.60 恢复 1.0;成本 10bp × |Δ敞口|;区间 2022-03-01 → 2026-10-31。② 报:持有 vs R 的总收益、年化、最大回撤、Calmar;(a) 回撤相对浅多少;(b) 随机对照 1,000 次(同样的「0.5 总天数」,段长从规则实际段长分布抽,随机放在时间轴上;种子 710;apparatus.py),R 的 Calmar 分位;(c) 两半(≤ 2024-06-30 / 之后)各自 Calmar vs 持有。③ 副列(只报不判):阈值 0.70 / 0.90;ETH 同规则;对称臂「分位 ≤ 0.20 ⇒ 1.0、其余 0.5」。④ 判:(a)(b)(c) 全过 ✅,否则 ❌;写清哪条没过。不做交易规则改动、不扫别的参数。纪律:只读(SELECT),不改代码、不做 DDL、不入库;零分布 / 随机对照只用 src/data/evaluation/apparatus.py;翻页带 order=;探针脚本改同一个文件再跑;步数过半先落文件;交付附 docs/research/scenarios/lane-c-T-229.json(≥ 3 条,格式见该目录 README)。",
+    "expect": "报告 docs/research/T-229_dvol_multiplier.md(预注册口径在前,结果在后)+ 脚本 docs/research/t229_dvol.py + t229_results.json;卡 notes 写 (a)(b)(c) 三个数与判;scenarios/lane-c-T-229.json;in_review,推 lane-c/T-229。"
+  },
+  "prior_value": "③ 的减仓输入只有价格趋势;加密隐含波动率作为减仓规则从没回放过(S-685 只测了 TradFi 的压力读数)。",
+  "notes": "",
+  "verified": null
+}
