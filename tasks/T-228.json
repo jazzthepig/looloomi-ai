@@ -1,0 +1,28 @@
+{
+  "id": "T-228",
+  "owner": "lane-c",
+  "status": "in_review",
+  "created": "2026-11-03",
+  "title": "T-222 v2 盲复算(lane-c 独立重算三个数)—— 交付分支改名为 lane-c/T-228 以过范围检查",
+  "source": "§Seth-1103b:lane-c 盲复算 T-222 v2 逐位一致;分支 lane-c/T-222-blind 被 check_pr_scope 按 T-222(owner lane-a)拒掉。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-228.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "docs/research/T-222_blind_c.md 的三个数与 lane-a T-222 v2 一致;只读 SELECT;零分布走 apparatus.py。",
+    "expect": "推 lane-c/T-228(内容 = 22b09b9d 同一提交);合并后卡转 done。"
+  },
+  "prior_value": "T-222 v2 的数字只有一位作者算过。",
+  "notes": "代码已由 lane-c 在 22b09b9d 交付并经 Seth 05:40 轮次确认三个数逐位一致;本卡只为让分支名合规。",
+  "verified": null
+}

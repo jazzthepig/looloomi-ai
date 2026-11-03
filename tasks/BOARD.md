@@ -13,6 +13,7 @@
 | in_review | T-224 | lane-c | ② 倾斜在更宽的面板上:按时点前 50 大(含死币)的 ①,压低 S-691 五因子合成最差五分之一的权重 —— S-694 在 24 名上 ❌,问宽到 50 名「躲开」信号够不够用 | 报告 docs/research/T-224_tilt_pit50.md(预注册段在前);卡 notes 写基线年化 / 倾斜超额 / 随机对照分位 / 两段符号;scenarios/lane-c-T-224.json;in_review,推 lane-c/T-224。 | ② 只在 24 名上试过一次(S-694 ❌);宽面板上「躲开最差档」的倾斜没有任何回放。 |  |
 | in_review | T-225 | lane-c | T-224 返工:拆开三个混在一起的变量(面板宽度 × 调仓频率 × 符号),死币规则改时点口径 | 报告 + 复跑脚本两次输出一致;三个臂各报年化超额、95 分位、两段符号;卡 notes 写清哪个变量单独起作用;in_review,推 lane-c/T-225。 | T-224 把宽度与频率一起改,「躲开最差档在宽面板上无效」这个结论没有被单独检验过。 |  |
 | in_review | T-226 | lane-c | 自建团队 / 基金会 / 投资方钱包集合(DeFiLlama API 不买,Jazz 11-02):从归属合约与基金会多签反推地址,公共 RPC 拉日频余额与流出事件 —— 先做 T-220 找到有解锁日程的 10 个名字 | 报告 docs/research/T-226_wallet_sets.md(开头覆盖率表)+ docs/research/t226_wallets/*.csv + 地址来源表(每条带 URL);卡 notes 写 10 个名字各自的地址数 / 数据起点 / 事件数;in_review,推 lane-c/T-226。 | T-220:没有任何团队 / 基金会地址集合;解锁前行为信号无法量。 |  |
+| in_review | T-228 | lane-c | T-222 v2 盲复算(lane-c 独立重算三个数)—— 交付分支改名为 lane-c/T-228 以过范围检查 | 推 lane-c/T-228(内容 = 22b09b9d 同一提交);合并后卡转 done。 | T-222 v2 的数字只有一位作者算过。 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-069 | seth | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
@@ -229,4 +230,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 10 · claimed 7 · blocked 5 · in_review 11 · done 190 · dropped 3
+open 10 · claimed 7 · blocked 5 · in_review 12 · done 190 · dropped 3
