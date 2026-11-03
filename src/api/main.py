@@ -2457,6 +2457,32 @@ async def _start_issuer_fundamentals_loop():
     print("[ISSUER-FUND] ✅ SEC EDGAR fundamentals scheduled (daily check, weekly fetch)")
 
 
+async def _exposure_decision_loop():
+    """③ 每日决定(`src/data/execution/exposure_decision.py`,11-03):规则敞口 + 基率情景概率 + 三条台账命题 + 发群;
+    每小时看一次,昨天那行写过就跳过。"""
+    await _asyncio.sleep(_boot_delay(7800))
+    while True:
+        try:
+            from src.data.execution.exposure_decision import run_once as _xd_run
+            r = await _xd_run()
+            await _iteration_result("_exposure_decision_loop", r)
+            await _beat("_exposure_decision_loop", ok=bool(r.get("ok")), refused=(r.get("status") == "skipped"),
+                        error=None if r.get("ok") else str(r.get("why"))[:200],
+                        detail={"d": r.get("d"), "exposure": r.get("exposure"), "probs": r.get("probs"), "flag": r.get("flag"),
+                                "scenarios": r.get("scenarios"), "posted": r.get("posted")})
+        except Exception as _e:
+            print(f"[EXPOSURE] ⚠️  pass FAILED: {_e}")
+            await _beat("_exposure_decision_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_exposure_decision_loop", _e)
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_exposure_decision_loop():
+    _asyncio.create_task(_exposure_decision_loop())
+    print("[EXPOSURE] ✅ daily ③ decision scheduled (hourly check)")
+
+
 async def _scenario_ledger_loop():
     """情景台账的结算(`src/data/evaluation/scenario_ledger.py`,11-02):每小时结算到期、还没结的自动命题 → scenario_scores。"""
     await _asyncio.sleep(_boot_delay(540))

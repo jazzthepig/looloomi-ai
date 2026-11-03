@@ -41,6 +41,7 @@
     "execution_outcomes",
     "execution_quality_daily",
     "exploration_ideas",
+    "exposure_decision_daily",
     "factor_tilt_nav",
     "factor_tilt_state",
     "feature_arms_daily",
@@ -201,6 +202,22 @@
       "title",
       "ts",
       "url"
+    ],
+    "exposure_decision_daily": [
+      "bucket",
+      "code_ref",
+      "d",
+      "flag",
+      "inputs",
+      "mult_arm",
+      "mult_m",
+      "n_bucket",
+      "posted_at",
+      "probs",
+      "rationale",
+      "rule_exposure",
+      "scenario_ids",
+      "sleeve"
     ],
     "feed_items": [
       "dup_of",

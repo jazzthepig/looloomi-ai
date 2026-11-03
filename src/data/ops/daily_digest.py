@@ -59,6 +59,20 @@ def _exec_line(r: dict) -> str:
             + (f" 决策→回报 {lat:.1f}s" if lat is not None else ""))
 
 
+def exposure_lines(rows: list[dict]) -> list[str]:
+    """纯函数。③ 每日决定(11-03):敞口 · 基率三档 · 分歧标记;没有行 ⇒ 空。"""
+    if not rows:
+        return []
+    r = rows[0]
+    p = r.get("probs") or {}
+    e = r.get("rule_exposure")
+    line = (f"③ 决定 {r.get('d')}:敞口 {'—' if e is None else f'{float(e):.0%}'} · 30 日基率 跌>10% {p.get('down', 0):.0%} / "
+            f"±10% {p.get('flat', 0):.0%} / 涨>10% {p.get('up', 0):.0%}({r.get('bucket')}, n={r.get('n_bucket')})")
+    if r.get("flag"):
+        line += f" · ⚑ {r['flag']}"
+    return [line]
+
+
 def calibration_lines(entries: list[dict], scores: list[dict]) -> list[str]:
     """纯函数。情景台账按作者的校准(S-705:lane 也是作者):已结 n、命中率、平均 Brier;什么都没结 ⇒ 一行「未结 / 已写」。"""
     from src.data.evaluation.scenario_ledger import calibration
@@ -223,12 +237,14 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         if r.get("symbol") not in dep and b_ is not None and a_ is not None:
             dep[r["symbol"]] = min(b_, a_)
     eq = _f(live[-1].get("equity_usd")) if live else None
+    xd = await _try("exposure_decision_daily", _read_all("exposure_decision_daily", {
+        "select": "d,rule_exposure,probs,bucket,n_bucket,flag", "order": "d.desc", "limit": "1"}))
     sc_entries = await _try("scenario_ledger", _read_all("scenario_ledger", {"select": "id,author,prob"}))
     sc_scores = await _try("scenario_scores", _read_all("scenario_scores", {"select": "id,outcome,brier", "outcome": "not.is.null"}))
     from src.api.loop_beat import build_sha
     text = compose(today, live, sorted(latest.values(), key=lambda r: r["sleeve"]), host, bad, n_risks, unreadable,
                    host_code=host_code, railway_code=build_sha() or None,
-                   decisions=decision_lines(today, eq, leg_t, dep) + calibration_lines(sc_entries, sc_scores))
+                   decisions=exposure_lines(xd) + decision_lines(today, eq, leg_t, dep) + calibration_lines(sc_entries, sc_scores))
     if not telegram_configured():
         return {"ok": False, "why": "TELEGRAM_BOT_TOKEN 未配", "text": text}
     sent_ok = await notify_telegram(text)

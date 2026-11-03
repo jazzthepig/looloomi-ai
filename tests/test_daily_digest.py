@@ -75,3 +75,11 @@ def test_mcp_mount_failure_is_a_recorded_loop_error():
     src = (ROOT / "src/api/main.py").read_text(encoding="utf-8") if "ROOT" in globals() else __import__("pathlib").Path(__file__).resolve().parents[1].joinpath("src/api/main.py").read_text(encoding="utf-8")
     assert "_MCP_MOUNT_ERROR = f\"{type(_mcp_err).__name__}" in src
     assert 'await _iteration_result("_mcp_mount", {"ok": False' in src
+
+
+def test_digest_leads_with_the_daily_exposure_decision():
+    from src.data.ops.daily_digest import exposure_lines
+    assert exposure_lines([]) == []
+    line = exposure_lines([{"d": "2026-11-02", "rule_exposure": 0.0, "probs": {"down": 0.13, "flat": 0.52, "up": 0.35},
+                            "bucket": "down|TIGHTENING", "n_bucket": 70, "flag": None}])[0]
+    assert line.startswith("③ 决定 2026-11-02:敞口 0%") and "13%" in line and "⚑" not in line
