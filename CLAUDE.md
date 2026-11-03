@@ -67,9 +67,9 @@ Built for human LPs and AI agents equally.
 
 > **Chain-agnostic ≠ instrument-agnostic (Jazz, 2026-08-23).** The chain follows liquidity;
 > ①'s INSTRUMENT does not move. **beta = HOLD, and a long perpetual is not a hold** — it is a
-> synthetic long paying carry. Measured on ①'s own 24 names: equal-weight funding **+23.07%
-> annualised**, so at gross 1.15 a perp-based ① bleeds ~26.5%/yr — more than any alpha we have
-> ever shown. **① holds SPOT.** Perps belong to ②③④, which already account for funding.
+> synthetic long paying carry. Measured on ①'s 24 names (T-222 v2, 2023–26): equal-weight funding
+> **≈5%/yr Binance, ≈10%/yr HL** (the old "+23.07%" had no source) — a bleed with no alpha behind
+> it. **① holds SPOT.** Perps belong to ②③④, which already account for funding.
 
 **Philosophy (full text: ARCHITECTURE.md):** the deepest object is not the Asset but the
 **Entity/Decision** — CIS/momentum are reflections; beta+ comes from being closer to the cause.

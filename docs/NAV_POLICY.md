@@ -193,9 +193,9 @@ after the fact.
 v3 failure (S-194/S-196). Retained here explicitly so the exclusion is a policy, not an accident.
 
 **① holds spot.** Hyperliquid supplies a price *reference*, not an execution venue. A long
-perpetual is a synthetic long that pays carry — the ① panel's own 24 names run +23.07%
-equal-weight annualised funding, i.e. ~26.5%/yr at gross 1.15 (S-197). Pricing off a perp venue
-must never be read as holding the perp.
+perpetual is a synthetic long that pays carry — the ① panel's own 24 names run ≈5%/yr
+equal-weight funding on Binance and ≈10%/yr on HL (T-222 v2, 2023–26; the earlier "+23.07% (S-197)"
+figure had no ledger entry behind it). Pricing off a perp venue must never be read as holding the perp.
 
 ---
 
