@@ -2483,6 +2483,29 @@ async def _start_exposure_decision_loop():
     print("[EXPOSURE] ✅ daily ③ decision scheduled (hourly check)")
 
 
+async def _deribit_vol_loop():
+    """Deribit DVOL 日线(`src/data/market/deribit_vol.py`,11-03):第一轮 2021-03 起回填,之后每 6 小时补最近 10 天。"""
+    await _asyncio.sleep(_boot_delay(8400))
+    while True:
+        try:
+            from src.data.market.deribit_vol import run_once as _dv_run
+            r = await _dv_run()
+            await _iteration_result("_deribit_vol_loop", r)
+            await _beat("_deribit_vol_loop", ok=bool(r.get("ok")), error=None if r.get("ok") else str(r.get("why"))[:200],
+                        detail={"written": r.get("written"), "backfill": r.get("backfill"), "errors": r.get("errors")})
+        except Exception as _e:
+            print(f"[DVOL] ⚠️  pass FAILED: {_e}")
+            await _beat("_deribit_vol_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_deribit_vol_loop", _e)
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_deribit_vol_loop():
+    _asyncio.create_task(_deribit_vol_loop())
+    print("[DVOL] ✅ Deribit DVOL scheduled (6h)")
+
+
 async def _scenario_ledger_loop():
     """情景台账的结算(`src/data/evaluation/scenario_ledger.py`,11-02):每小时结算到期、还没结的自动命题 → scenario_scores。"""
     await _asyncio.sleep(_boot_delay(540))

@@ -170,6 +170,9 @@ def rationale(d: str, exposure: Optional[float], bucket: str, probs: dict, n: in
     parts = [f"③ 加密腿敞口 {exp_txt}(X1V 趋势规则,{d} 收盘)。",
              f"状态:面板 200 日动量 {g('mom_200'):+.1f}%,30 日宏观状态以 {reg} 为主;"
              f"资金费年化 {g('funding_7d_ann'):.1f}%,30 日 OI {g('oi_chg_30d'):+.0f}%,站上 50 日均线的成员 {g('breadth_above_ma50'):.0f}%。"]
+    dv, dvp = _f(inputs.get("dvol_btc")), _f(inputs.get("dvol_btc_pct_1y"))
+    if dv is not None:
+        parts.append(f"隐含波动率 DVOL {dv:.0f}" + (f"(一年分位 {dvp:.0%})" if dvp is not None else "") + "。")
     sell, buy = _f(inputs.get("liq_sell_5pct")), _f(inputs.get("liq_buy_15pct"))
     if sell is not None or buy is not None:
         parts.append("强平地图(头部账户对永续 ±2% 深度):"
@@ -300,6 +303,12 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     mult = await _read_all("multiplier_daily", {"select": "m", "arm": f"eq.{MULT_ARM}", "d": f"eq.{d}", "limit": "1"})
     inputs = {k: today.get(k) for k in ("mom_200", "dist_200", "funding_7d_ann", "oi_chg_30d", "breadth_above_ma50")}
     inputs.update({f"liq_{k}": v for k, v in (await _liq_shock()).items()})
+    try:
+        from src.data.market.deribit_vol import latest as _dvol
+        dv = await _dvol("BTC")
+        inputs["dvol_btc"], inputs["dvol_btc_pct_1y"] = dv.get("dvol"), dv.get("pct_1y")
+    except Exception:                                                     # noqa: BLE001 —— 波动率读不到不挡决定
+        inputs["dvol_btc"], inputs["dvol_btc_pct_1y"] = None, None
     inputs["events_7d"] = await _events_7d(d)
     inputs["btc_close"] = closes[d]
     try:

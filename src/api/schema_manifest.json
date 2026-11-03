@@ -34,6 +34,7 @@
     "corporate_treasury_history",
     "crowd_clock_log",
     "deriv_metrics_daily",
+    "deriv_vol_daily",
     "dingge_paper_nav",
     "equity_fundamentals_q",
     "events",
@@ -181,6 +182,15 @@
       "state",
       "top_longs",
       "top_shorts"
+    ],
+    "deriv_vol_daily": [
+      "currency",
+      "d",
+      "dvol_close",
+      "dvol_high",
+      "dvol_low",
+      "dvol_open",
+      "source"
     ],
     "dingge_paper_nav": [
       "closed_today",
