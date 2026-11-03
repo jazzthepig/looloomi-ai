@@ -140,6 +140,7 @@ def _check(label: str, ok: bool, detail: str = "") -> None:
 #: **1 条真的返回 200**(telegram/webhook,secret 未设时 fail-open)。
 VALID_BODIES: dict[str, dict] = {
     "/internal/ai-briefing": {},
+    "/internal/weekly-letter": {"week_end": "2026-11-08", "graveyard": [], "note": ""},
     "/internal/allocation/override": {"delta": 0.0, "horizon": "delegate", "reason": "auth probe"},
     "/internal/asset-vectors": {"rows": [{"symbol": "BTC"}]},
     "/internal/asset-vectors-history": {"rows": [{"symbol": "BTC", "schema_version": 3}]},

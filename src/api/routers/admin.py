@@ -325,3 +325,27 @@ async def events_read(x_internal_token: str = Header(None), symbol: str = "", ki
         params["symbols"] = f"cs.{json.dumps([symbol.upper()])}"
     rows = await _read_all("events", params)
     return {"ok": True, "n": len(rows), "since": since, "events": rows}
+
+
+@router.post("/internal/weekly-letter")
+async def weekly_letter_build(body: dict, x_internal_token: str = Header(None)):
+    """11-03:生成周信(`src/data/ops/weekly_letter.py`)。body: {week_end: 'YYYY-MM-DD', graveyard: [..], note: ''}。只产 markdown,发是 Jazz 的手。"""
+    require_internal_token(x_internal_token)
+    from src.data.ops.weekly_letter import build
+    week_end = str((body or {}).get("week_end") or "").strip()
+    try:
+        datetime.fromisoformat(week_end)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="week_end 要是 YYYY-MM-DD")
+    g = (body or {}).get("graveyard") or []
+    if not isinstance(g, list) or any(not isinstance(x, str) for x in g):
+        raise HTTPException(status_code=400, detail="graveyard 要是字符串列表")
+    return await build(week_end, [x[:300] for x in g][:20], str((body or {}).get("note") or "")[:1500])
+
+
+@router.get("/internal/weekly-letter")
+async def weekly_letter_latest(x_internal_token: str = Header(None)):
+    require_internal_token(x_internal_token)
+    from src.data.style.header import _read_all
+    rows = await _read_all("weekly_letters", {"select": "week_end,markdown,data,note,created_at", "order": "week_end.desc", "limit": "1"})
+    return {"ok": True, "letter": rows[0] if rows else None}

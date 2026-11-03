@@ -120,6 +120,7 @@
     "vc_funding_rounds",
     "venue_depth_snapshots",
     "wallet_profiles",
+    "weekly_letters",
     "world50_book_holdings",
     "world50_book_nav",
     "world50_mcap_weekly",
@@ -346,6 +347,12 @@
       "nav",
       "note",
       "positions"
+    ],
+    "weekly_letters": [
+      "data",
+      "markdown",
+      "note",
+      "week_end"
     ],
     "world50_book_holdings": [
       "arm",
