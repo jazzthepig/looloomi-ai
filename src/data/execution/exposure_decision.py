@@ -300,6 +300,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     bucket = bucket_of(today)
     fwd = forward_returns({k: v for k, v in closes.items() if k < d})
     probs, n, used = base_rates(buckets, fwd, bucket)
+    p_unc, n_unc, _ = base_rates({}, fwd, "__none__")          # 无条件频率存下来:S-709 的对照组不用事后重算
     mult = await _read_all("multiplier_daily", {"select": "m", "arm": f"eq.{MULT_ARM}", "d": f"eq.{d}", "limit": "1"})
     inputs = {k: today.get(k) for k in ("mom_200", "dist_200", "funding_7d_ann", "oi_chg_30d", "breadth_above_ma50")}
     inputs.update({f"liq_{k}": v for k, v in (await _liq_shock()).items()})
@@ -311,6 +312,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         inputs["dvol_btc"], inputs["dvol_btc_pct_1y"] = None, None
     inputs["events_7d"] = await _events_7d(d)
     inputs["btc_close"] = closes[d]
+    inputs["probs_uncond"], inputs["n_uncond"], inputs["bucket_today"] = p_unc, n_unc, bucket
     try:
         vectors = await _vectors()
         cutoff = (dt.date.fromisoformat(d) - dt.timedelta(days=KNN_EXCLUDE_DAYS)).isoformat()

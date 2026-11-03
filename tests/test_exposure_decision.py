@@ -139,6 +139,7 @@ def test_run_once_writes_row_scenarios_and_posts(monkeypatch):
     assert r["ok"] and r["d"] == "2026-11-02" and r["exposure"] == 0.0 and r["scenarios"] == 3 and r["posted"]
     assert subs[0][0] == x.AUTHOR and up[0]["mult_m"] == 0.5 and up[0]["inputs"]["events_7d"] == {"delisting": 1}
     assert up[0]["inputs"]["liq_buy_15pct"] == 1.7 and "③ 每日决定" in sent[0]
+    assert up[0]["inputs"]["bucket_today"] == "down|TIGHTENING" and abs(sum(up[0]["inputs"]["probs_uncond"].values()) - 1) < 0.01
 
 
 def test_wiring():

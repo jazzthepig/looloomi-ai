@@ -83,7 +83,7 @@ async def fetch(client, currency: str, start: dt.date, end: dt.date) -> list[dic
 async def latest(currency: str = "BTC", days: int = 365) -> dict[str, Any]:
     """③ 决定用:最新 DVOL 收盘与一年分位。读不到 ⇒ {}。"""
     from src.data.style.header import _read_all
-    since = (dt.date.today() - dt.timedelta(days=days + 7)).isoformat()
+    since = (dt.datetime.now(dt.timezone.utc).date() - dt.timedelta(days=days + 7)).isoformat()
     rows = await _read_all(TABLE, {"select": "d,dvol_close", "currency": f"eq.{currency}", "d": f"gte.{since}", "order": "d.asc"})
     vals = [float(r["dvol_close"]) for r in rows if _f(r.get("dvol_close")) is not None]
     if not vals:
