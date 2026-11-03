@@ -1,0 +1,17 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {"id": "T-229-1", "scenario": "T-229 DVOL 减仓规则回放",
+     "statement": "2026-12-01 时 state_daily(entity=panel) 的 vol_pct_3y 仍低于 0.10(2026-10-30 为 0.052)",
+     "variable": "state:vol_pct_3y", "op": "lt", "hi": 0.10, "prob": 0.7, "horizon_d": "2026-12-01"},
+    {"id": "T-229-2", "scenario": "T-229 DVOL 减仓规则回放",
+     "statement": "2026-12-01 时 macro_daily 的 vix 在 13 与 30 之间(2026-11-03 为 20.81)",
+     "variable": "macro:vix", "op": "between", "lo": 13, "hi": 30, "prob": 0.7, "horizon_d": "2026-12-01"},
+    {"id": "T-229-3", "scenario": "T-229 DVOL 减仓规则回放",
+     "statement": "2026-12-01 时 ohlcv_daily 的 BTC 收盘价高于 70000(2026-11-02 为 76816)",
+     "variable": "close:BTC", "op": "gt", "lo": 70000, "prob": 0.62, "horizon_d": "2026-12-01"},
+    {"id": "T-229-4", "scenario": "T-229 DVOL 减仓规则回放",
+     "statement": "用 S-710 的规则(DVOL 一年分位 ≥ 0.80 ⇒ 敞口 0.5,分位 < 0.60 恢复)在 2026-11 之后的新数据上重跑,判据 (b)(Calmar 高于随机降仓分布 95 分位)仍然不通过",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.7, "horizon_d": "2027-01-15"}
+  ]
+}
