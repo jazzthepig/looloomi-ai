@@ -39,6 +39,10 @@ REGIMES = ("RISK_ON", "RISK_OFF", "NEUTRAL", "EASING", "TIGHTENING", "STAGFLATIO
 FEATURES = ("mom_200", "dist_200", "funding_7d_ann", "oi_chg_30d", "breadth_above_ma50") + tuple(f"regime_share_30d:{r}" for r in REGIMES)
 MULT_ARM = "mult_v2_c1"
 HIST_KEY = "exposure:base_rates"
+VEC_KEY = "exposure:state_vectors"
+AUTHOR_KNN = "seth:exposure-knn"
+KNN_K = 150                 # 最相似的 150 个历史交易日(`market_state_vectors` 24 维 z 分数,按时点)
+KNN_EXCLUDE_DAYS = 31       # 最近 31 天不算近邻(它们的 30 日结果还没出来)
 
 
 def _f(x: Any) -> Optional[float]:
@@ -103,6 +107,43 @@ def base_rates(buckets: dict[str, str], fwd: dict[str, float], today_bucket: str
     return {k: round(v / tot, 3) for k, v in probs.items()}, n, today_bucket
 
 
+def knn_rates(vectors: dict[str, list[float]], fwd: dict[str, float], today_vec: list[float], k: int = KNN_K) -> tuple[dict[str, float], int, int]:
+    """纯函数。近邻基率(S-709 第二臂「AI 情景分析」的最朴素形态):与今天状态向量欧氏距离最近的 k 个历史日,
+    它们之后 30 日 BTC 三档频率,按**独立段数**(相邻近邻日期相差 ≥ 30 天才算新段)向无条件频率收缩。
+    → (概率, 近邻数, 段数)。向量维度不一致或样本不够 ⇒ 无条件。"""
+    allc = {"down": 0, "flat": 0, "up": 0}
+    for r in fwd.values():
+        allc[outcome_bin(r)] += 1
+    tot_all = sum(allc.values()) or 1
+    p_all = {kk: v / tot_all for kk, v in allc.items()}
+    dim = len(today_vec)
+    cand = []
+    for d, v in vectors.items():
+        if d not in fwd or len(v) != dim:
+            continue
+        try:
+            dist = sum((float(a) - float(b)) ** 2 for a, b in zip(v, today_vec)) ** 0.5
+        except (TypeError, ValueError):
+            continue
+        cand.append((dist, d))
+    if len(cand) < k:
+        return {kk: round(v, 3) for kk, v in p_all.items()}, 0, 0
+    near = sorted(cand)[:k]
+    counts = {"down": 0, "flat": 0, "up": 0}
+    for _, d in near:
+        counts[outcome_bin(fwd[d])] += 1
+    dates = sorted(dt.date.fromisoformat(d) for _, d in near)
+    segs, last = 0, None
+    for d in dates:
+        if last is None or (d - last).days >= HORIZON_D:
+            segs += 1
+        last = d
+    p_k = {kk: v / k for kk, v in counts.items()}
+    probs = {kk: (segs * p_k[kk] + SHRINK_K * p_all[kk]) / (segs + SHRINK_K) for kk in counts}
+    tot = sum(probs.values()) or 1
+    return {kk: round(v / tot, 3) for kk, v in probs.items()}, k, segs
+
+
 def rule_exposure(plan: dict) -> Optional[float]:
     """X1V 计划 → 加密腿敞口(0..1):目标权重之和。计划没齐 ⇒ None。"""
     if not plan or not plan.get("ok"):
@@ -138,19 +179,23 @@ def rationale(d: str, exposure: Optional[float], bucket: str, probs: dict, n: in
     if ev:
         parts.append("近 7 天事件:" + "、".join(f"{k} {v}" for k, v in ev.items()) + "。")
     parts.append(f"历史基率({'同状态' if used != 'all' else '无条件'},n = {n}):之后 30 日 BTC 跌超 10% {probs['down']:.0%} / "
-                 f"±10% 内 {probs['flat']:.0%} / 涨超 10% {probs['up']:.0%}。这三条已写进情景台账,到期公开结算。")
+                 f"±10% 内 {probs['flat']:.0%} / 涨超 10% {probs['up']:.0%}。")
+    pk = inputs.get("probs_knn")
+    if pk and inputs.get("knn_segments"):
+        parts.append(f"近邻基率({KNN_K} 个最相似的历史交易日、约 {inputs['knn_segments']} 段):{pk['down']:.0%} / {pk['flat']:.0%} / {pk['up']:.0%}。")
+    parts.append("这些命题已写进情景台账,到期公开结算;两种基率各记各的分。")
     if flag:
         parts.append("⚑ " + flag + "(规则不变;偏离只经预注册与编号)。")
     return " ".join(parts)
 
 
-def scenario_entries(d: str, close: float, probs: dict[str, float]) -> list[dict]:
+def scenario_entries(d: str, close: float, probs: dict[str, float], prefix: str = "X") -> list[dict]:
     h = (dt.date.fromisoformat(d) + dt.timedelta(days=HORIZON_D)).isoformat()
     lo, hi = round(close * (1 - BAND), 2), round(close * (1 + BAND), 2)
-    base = {"scenario": f"③ 日决定 {d}", "variable": "close:BTC", "horizon_d": h}
-    return [{**base, "id": f"X-{d}-down", "statement": f"BTC {h} 收盘 < {lo}(较 {d} 跌超 10%)", "op": "lt", "hi": lo, "prob": probs["down"]},
-            {**base, "id": f"X-{d}-flat", "statement": f"BTC {h} 收盘在 {lo}–{hi}(±10% 内)", "op": "between", "lo": lo, "hi": hi, "prob": probs["flat"]},
-            {**base, "id": f"X-{d}-up", "statement": f"BTC {h} 收盘 > {hi}(较 {d} 涨超 10%)", "op": "gt", "lo": hi, "prob": probs["up"]}]
+    base = {"scenario": f"③ 日决定 {d}" + ("(近邻臂)" if prefix != "X" else ""), "variable": "close:BTC", "horizon_d": h}
+    return [{**base, "id": f"{prefix}-{d}-down", "statement": f"BTC {h} 收盘 < {lo}(较 {d} 跌超 10%)", "op": "lt", "hi": lo, "prob": probs["down"]},
+            {**base, "id": f"{prefix}-{d}-flat", "statement": f"BTC {h} 收盘在 {lo}–{hi}(±10% 内)", "op": "between", "lo": lo, "hi": hi, "prob": probs["flat"]},
+            {**base, "id": f"{prefix}-{d}-up", "statement": f"BTC {h} 收盘 > {hi}(较 {d} 涨超 10%)", "op": "gt", "lo": hi, "prob": probs["up"]}]
 
 
 def post_text(row: dict) -> str:
@@ -177,6 +222,19 @@ async def _history() -> tuple[dict[str, str], dict[str, float]]:
     closes = {str(r["trade_date"])[:10]: float(r["close"]) for r in px if _f(r.get("close"))}
     await redis_set_key(HIST_KEY, {"buckets": buckets, "closes": closes}, ttl=20 * 3600)
     return buckets, closes
+
+
+async def _vectors() -> dict[str, list[float]]:
+    """`market_state_vectors` 的 24 维 z 分数(按 d);一天内缓存在 Redis(2,500 × 24 个数)。"""
+    from src.api.store import redis_get_key_status, redis_set_key
+    from src.data.style.header import _read_all
+    cached, _st = await redis_get_key_status(VEC_KEY)
+    if cached and cached.get("vectors"):
+        return cached["vectors"]
+    rows = await _read_all("market_state_vectors", {"select": "d,vec", "order": "d.asc"})
+    vectors = {str(r["d"])[:10]: [round(float(x), 4) for x in (r.get("vec") or [])] for r in rows if r.get("vec")}
+    await redis_set_key(VEC_KEY, {"vectors": vectors}, ttl=20 * 3600)
+    return vectors
 
 
 async def _today_state(d: str) -> dict:
@@ -244,10 +302,21 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     inputs.update({f"liq_{k}": v for k, v in (await _liq_shock()).items()})
     inputs["events_7d"] = await _events_7d(d)
     inputs["btc_close"] = closes[d]
+    try:
+        vectors = await _vectors()
+        cutoff = (dt.date.fromisoformat(d) - dt.timedelta(days=KNN_EXCLUDE_DAYS)).isoformat()
+        pk, kn, segs = knn_rates({k2: v for k2, v in vectors.items() if k2 <= cutoff}, fwd, vectors.get(d) or []) if vectors.get(d) else ({}, 0, 0)
+    except Exception as e:                                                # noqa: BLE001 —— 近邻臂读不到不挡主臂
+        pk, kn, segs = {}, 0, 0
+        inputs["knn_error"] = f"{type(e).__name__}: {str(e)[:120]}"
+    inputs["probs_knn"], inputs["knn_n"], inputs["knn_segments"] = (pk or None), kn, segs
     flag = flag_for(exposure, probs)
     text = rationale(d, exposure, bucket, probs, n, used, inputs, flag)
     sub = await submit(scenario_entries(d, closes[d], probs), AUTHOR, now)
-    ids = sub.get("ids") or []
+    ids = list(sub.get("ids") or [])
+    if pk and kn:
+        sub2 = await submit(scenario_entries(d, closes[d], pk, prefix="K"), AUTHOR_KNN, now)
+        ids += list(sub2.get("ids") or [])
     row = {"d": d, "sleeve": SLEEVE, "rule_exposure": exposure, "mult_arm": MULT_ARM, "mult_m": _f(mult[0].get("m")) if mult else None,
            "inputs": inputs, "bucket": used, "probs": probs, "n_bucket": n, "flag": flag, "rationale": text, "scenario_ids": ids,
            "posted_at": None, "code_ref": CODE_REF}

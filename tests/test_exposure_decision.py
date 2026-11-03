@@ -146,3 +146,27 @@ def test_wiring():
     mig = (ROOT / "migrations/2026-11-03_exposure_decision.sql").read_text(encoding="utf-8")
     for col in x.WRITES_COLUMNS[x.TABLE]:
         assert col in mig, col
+
+
+def test_knn_rates_shrink_by_independent_segments_and_fall_back_when_thin():
+    import random
+    random.seed(1)
+    vectors, fwd = {}, {}
+    base = dt.date(2020, 1, 1)
+    for i in range(2000):
+        d = (base + dt.timedelta(days=i)).isoformat()
+        v = [random.gauss(0, 1) for _ in range(4)]
+        vectors[d] = v
+        fwd[d] = -0.2 if v[0] > 1.0 else (0.2 if v[0] < -1.0 else 0.0)
+    p, k, segs = x.knn_rates(vectors, fwd, [1.5, 0, 0, 0])
+    assert k == 150 and segs >= 10 and p["down"] > 0.4 > p["up"], "近邻都在 v0 高的那边 ⇒ P(跌) 明显高于无条件"
+    assert abs(sum(p.values()) - 1) < 0.01
+    p2, k2, s2 = x.knn_rates(dict(list(vectors.items())[:50]), fwd, [1.5, 0, 0, 0])
+    assert k2 == 0 and abs(p2["down"] - 0.155) < 0.05, "样本不够 ⇒ 无条件"
+    p3, k3, _ = x.knn_rates(vectors, fwd, [1.5, 0])
+    assert k3 == 0, "维度不一致 ⇒ 不当近邻"
+    es = x.scenario_entries("2026-11-02", 100000.0, p, prefix="K")
+    assert es[0]["id"] == "K-2026-11-02-down" and "近邻臂" in es[0]["scenario"]
+    txt = x.rationale("2026-11-02", 0.0, "all", {"down": 0.22, "flat": 0.45, "up": 0.33}, 3334, "all",
+                      {"mom_200": 0.04, "probs_knn": p, "knn_segments": segs}, None)
+    assert "近邻基率(150 个最相似的历史交易日" in txt and "各记各的分" in txt
