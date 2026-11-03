@@ -4550,8 +4550,24 @@ try:
                 pass
 
     print("[MCP] ✅ Mounted /mcp (streamable) + /mcp-sse (sse) — ROADMAP_A2A Phase 2.2")
+    _MCP_MOUNT_ERROR: str | None = None
 except Exception as _mcp_err:
     print(f"[MCP] ⚠️  Not mounted: {_mcp_err}")
+    _MCP_MOUNT_ERROR = f"{type(_mcp_err).__name__}: {str(_mcp_err)[:180]}"
+
+
+@app.on_event("startup")
+async def _mcp_mount_check():
+    """11-03:/mcp 没挂上(mcp 2.x 改名 FastMCP)从 10 月底一直到 11-03 没人看见 —— agent_call_log 0 行被当成日志管道的问题。
+    开机记一条 loop_attempt(`_mcp_mount`):没挂 = error,简报的「不 ok 的循环」会把它列出来。"""
+    await _asyncio.sleep(_boot_delay(120))
+    try:
+        if _MCP_MOUNT_ERROR:
+            await _iteration_result("_mcp_mount", {"ok": False, "why": f"/mcp 没挂上:{_MCP_MOUNT_ERROR}"})
+        else:
+            await _iteration_result("_mcp_mount", {"ok": True, "why": "/mcp + /mcp-sse 已挂"})
+    except Exception as _e:  # noqa: BLE001
+        print(f"[MCP] mount check record failed: {_e}")
 
 
 # ── Agent Discovery (A2A v0.3) ────────────────────────────────────────────────

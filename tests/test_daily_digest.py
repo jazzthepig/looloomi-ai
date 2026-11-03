@@ -68,3 +68,10 @@ def test_digest_reports_scenario_calibration_by_author():
     assert "已写 3 条" in calibration_lines(e, [])[0]
     line = calibration_lines(e, [{"id": "a1", "outcome": True, "brier": 0.04}, {"id": "a2", "outcome": True, "brier": 0.49}])[0]
     assert "lane-a 2 条" in line and "Brier 0.265" in line and "seth" not in line
+
+
+def test_mcp_mount_failure_is_a_recorded_loop_error():
+    """11-03:/mcp 没挂上几周没人看见。开机记 `_mcp_mount`;没挂 = error ⇒ 简报的「不 ok 的循环」列出来。"""
+    src = (ROOT / "src/api/main.py").read_text(encoding="utf-8") if "ROOT" in globals() else __import__("pathlib").Path(__file__).resolve().parents[1].joinpath("src/api/main.py").read_text(encoding="utf-8")
+    assert "_MCP_MOUNT_ERROR = f\"{type(_mcp_err).__name__}" in src
+    assert 'await _iteration_result("_mcp_mount", {"ok": False' in src
