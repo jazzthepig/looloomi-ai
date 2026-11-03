@@ -149,3 +149,35 @@ def test_narrator_status_never_carries_the_key():
     assert "abcdefghij" not in ln.LAST_ERROR["why"]
     src = (ROOT / "requirements.txt").read_text(encoding="utf-8")
     assert "mcp[cli]>=1.6.0,<2" in src, "mcp 2.x 改名 FastMCP,不钉死 /mcp 整个不挂"
+
+
+def test_configured_but_failing_llm_is_reported_as_degraded(monkeypatch):
+    """11-03:key 带换行 / URL 少 /v1 时帖子悄悄回落模板,库里看不出 —— 配了模型却没用上 ⇒ 这一轮记 degraded + 原因。"""
+    from src.data.narrative import llm_narrator as ln
+    import src.api.notify as notify
+    import src.api.store as store
+    import src.data.style.header as hdr
+    now = dt.datetime(2026, 11, 3, 3, 0, tzinfo=dt.timezone.utc)
+
+    async def fetch(_now):
+        return [{"id": "n9", "source": "The Block", "title": "Hyperliquid volumes hit record", "link": "https://t/9",
+                 "published_at": None, "fetched_at": _now.isoformat(), "summary_raw": "x"}], []
+
+    async def read_all(t, params):
+        return [] if t == nf.TABLE else [{"symbol": "HYPE", "d": "2026-11-02", "grade": "B", "signal": "OUTPERFORM"}]
+
+    async def ups(t, rows, on_conflict):
+        return True
+
+    async def chat_fail(msgs, temperature=0.4):
+        ln._note("HTTP 401: invalid key")
+        return None
+    monkeypatch.setattr(nf, "fetch_items", fetch)
+    monkeypatch.setattr(hdr, "_read_all", read_all)
+    monkeypatch.setattr(store, "supabase_upsert_table", ups)
+    monkeypatch.setattr(notify, "telegram_configured", lambda: False)
+    monkeypatch.setenv("TELEGRAM_FEED_CHAT_ID", "-1")
+    monkeypatch.setattr(ln, "configured", lambda: True)
+    monkeypatch.setattr(ln, "_chat", chat_fail)
+    r = asyncio.run(nf.run_once(now))
+    assert r["ok"] is False and r["status"] == "degraded" and "401" in r["reason"] and r["candidates"] == 1

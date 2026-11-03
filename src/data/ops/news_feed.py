@@ -275,6 +275,9 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     LAST["run"] = {"at": now.isoformat(), "new": len(new), "candidates": len(cand), "posted": posted, "chat": chat_why,
                    "llm_configured": _llm_on(), "llm_last_error": dict(_llm_err), "llm_drop": LAST.get("llm_drop"),
                    "failed_sources": failed}
-    return {"ok": True, "new": len(new), "candidates": len(cand), "posted": posted, "dry": not chat, "chat": chat_why,
+    llm_bad = bool(cand) and _llm_on() and (_llm_err.get("why") or LAST.get("llm_drop"))   # 配了模型却没用上 ⇒ 降级,原因进 loop_attempt
+    return {"ok": not llm_bad, "new": len(new), "candidates": len(cand), "posted": posted, "dry": not chat, "chat": chat_why,
             "unpostable": skipped, "llm": _llm_on(), "failed_sources": failed,
+            **({"status": "degraded", "degraded": True,
+                "reason": f"模型没用上,回落模板:{_llm_err.get('why') or LAST.get('llm_drop')}"} if llm_bad else {}),
             "why": f"新 {len(new)} 条,候选 {len(cand)},发 {posted}" + (f"(干跑:{chat_why})" if not chat else f"(→ {chat_why})")}
