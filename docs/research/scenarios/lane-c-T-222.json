@@ -1,0 +1,20 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {"id": "T-222C-1",
+     "scenario": "T-222 盲复算后的市场状态",
+     "statement": "2026-12-01 时市场宽度(breadth_above_ma50)回到 0.5 以上(2026-11-02 读数是 0)",
+     "variable": "state:breadth_above_ma50", "op": "gt", "lo": 0.5, "prob": 0.45,
+     "horizon_d": "2026-12-01"},
+    {"id": "T-222C-2",
+     "scenario": "T-222 盲复算后的市场状态",
+     "statement": "2026-12-01 时 BTC 收盘高于 2026-10-31 的 77,582",
+     "variable": "close:BTC", "op": "gt", "lo": 77582, "prob": 0.53,
+     "horizon_d": "2026-12-01"},
+    {"id": "T-222C-3",
+     "scenario": "T-222 盲复算后的市场状态",
+     "statement": "2026-12-15 时 BTC 收盘落在 68,000–88,000 之间(2026-10-31 为 77,582)",
+     "variable": "close:BTC", "op": "between", "lo": 68000, "hi": 88000, "prob": 0.55,
+     "horizon_d": "2026-12-15"}
+  ]
+}
