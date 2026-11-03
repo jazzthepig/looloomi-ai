@@ -124,14 +124,17 @@ def rationale(d: str, exposure: Optional[float], bucket: str, probs: dict, n: in
     """合规的人话:描述规则与历史频率,不建议任何人做任何事。"""
     trend, _, reg = bucket.partition("|")
     exp_txt = "收盘没齐,规则未给出" if exposure is None else f"{exposure:.0%}"
-    liq = inputs.get("liq_shock_5pct_max")
     ev = inputs.get("events_7d") or {}
     g = lambda k: (_f(inputs.get(k)) or 0.0) * 100   # noqa: E731
     parts = [f"③ 加密腿敞口 {exp_txt}(X1V 趋势规则,{d} 收盘)。",
-             f"状态:200 日趋势{'向上' if trend == 'up' else '向下' if trend == 'down' else '未知'},30 日宏观状态以 {reg} 为主;"
+             f"状态:面板 200 日动量 {g('mom_200'):+.1f}%,30 日宏观状态以 {reg} 为主;"
              f"资金费年化 {g('funding_7d_ann'):.1f}%,30 日 OI {g('oi_chg_30d'):+.0f}%,站上 50 日均线的成员 {g('breadth_above_ma50'):.0f}%。"]
-    if liq is not None:
-        parts.append(f"强平地图:跌 5% 时被迫卖出约为永续 ±2% 深度的 {liq:.1f} 倍。")
+    sell, buy = _f(inputs.get("liq_sell_5pct")), _f(inputs.get("liq_buy_15pct"))
+    if sell is not None or buy is not None:
+        parts.append("强平地图(头部账户对永续 ±2% 深度):"
+                     + (f"跌 5% 被迫卖出 {sell:.1f} 倍" if sell is not None else "")
+                     + (";" if sell is not None and buy is not None else "")
+                     + (f"涨 15% 被迫买入 {buy:.1f} 倍" if buy is not None else "") + "。")
     if ev:
         parts.append("近 7 天事件:" + "、".join(f"{k} {v}" for k, v in ev.items()) + "。")
     parts.append(f"历史基率({'同状态' if used != 'all' else '无条件'},n = {n}):之后 30 日 BTC 跌超 10% {probs['down']:.0%} / "
@@ -183,14 +186,18 @@ async def _today_state(d: str) -> dict:
     return {r["feature"]: _f(r.get("value")) for r in rows}
 
 
-async def _liq_shock() -> Optional[float]:
+async def _liq_shock() -> dict[str, Optional[float]]:
+    """强平地图:跌 5% 时被迫卖出 / 涨 15% 时被迫买入,各对永续 ±2% 深度的最大倍数(BTC / ETH 里取大)。
+    11-03 第一张图:头部账户的多头没有强平价(低杠杆),空头的强平价在上方 10–20% —— 风险在挤空那一侧,只报下跌那半边会漏掉它。"""
     try:
         from src.data.market.liq_map import latest_view
         v = await latest_view()
-        vals = [s["sell_vs_bid_depth"] for s in (v.get("shocks") or []) if s.get("shock") == 0.05 and s.get("sell_vs_bid_depth") is not None]
-        return round(max(vals), 2) if vals else None
+        sh = v.get("shocks") or []
+        sell = [s["sell_vs_bid_depth"] for s in sh if s.get("shock") == 0.05 and s.get("sell_vs_bid_depth") is not None]
+        buy = [s["buy_vs_ask_depth"] for s in sh if s.get("shock") == 0.15 and s.get("buy_vs_ask_depth") is not None]
+        return {"sell_5pct": round(max(sell), 2) if sell else None, "buy_15pct": round(max(buy), 2) if buy else None}
     except Exception:                                                     # noqa: BLE001
-        return None
+        return {"sell_5pct": None, "buy_15pct": None}
 
 
 async def _events_7d(d: str) -> dict[str, int]:
@@ -234,7 +241,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     probs, n, used = base_rates(buckets, fwd, bucket)
     mult = await _read_all("multiplier_daily", {"select": "m", "arm": f"eq.{MULT_ARM}", "d": f"eq.{d}", "limit": "1"})
     inputs = {k: today.get(k) for k in ("mom_200", "dist_200", "funding_7d_ann", "oi_chg_30d", "breadth_above_ma50")}
-    inputs["liq_shock_5pct_max"] = await _liq_shock()
+    inputs.update({f"liq_{k}": v for k, v in (await _liq_shock()).items()})
     inputs["events_7d"] = await _events_7d(d)
     inputs["btc_close"] = closes[d]
     flag = flag_for(exposure, probs)

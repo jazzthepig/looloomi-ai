@@ -67,9 +67,9 @@ def test_scenario_entries_and_rationale_are_machine_checkable_and_compliant():
     from src.data.evaluation.scenario_ledger import validate
     assert all(not validate({**e, "author": x.AUTHOR}, dt.date(2026, 11, 3)) for e in es)
     txt = x.rationale("2026-11-02", 0.0, "down|TIGHTENING", {"down": 0.13, "flat": 0.52, "up": 0.35}, 70, "down|TIGHTENING",
-                      {"funding_7d_ann": 0.08, "oi_chg_30d": -0.12, "breadth_above_ma50": 0.0, "liq_shock_5pct_max": 1.7,
-                       "events_7d": {"delisting": 3}}, None)
-    assert "敞口 0%" in txt and "13%" in txt and "1.7 倍" in txt and "delisting 3" in txt
+                      {"mom_200": 0.044, "funding_7d_ann": 0.08, "oi_chg_30d": -0.12, "breadth_above_ma50": 0.0, "liq_sell_5pct": 0.0,
+                       "liq_buy_15pct": 1.7, "events_7d": {"delisting": 3}}, None)
+    assert "敞口 0%" in txt and "13%" in txt and "涨 15% 被迫买入 1.7 倍" in txt and "delisting 3" in txt and "+4.4%" in txt
     assert not re.search(r"\b(buy|sell|accumulate|avoid|reduce)\b", txt, re.I)
     assert "不是对任何人的建议" in x.post_text({"d": "2026-11-02", "rationale": txt})
 
@@ -124,7 +124,7 @@ def test_run_once_writes_row_scenarios_and_posts(monkeypatch):
         return True
 
     async def liq():
-        return 1.7
+        return {"sell_5pct": 0.0, "buy_15pct": 1.7}
     monkeypatch.setattr(x, "_history", hist)
     monkeypatch.setattr(x, "_today_state", today)
     monkeypatch.setattr(x, "_liq_shock", liq)
@@ -138,7 +138,7 @@ def test_run_once_writes_row_scenarios_and_posts(monkeypatch):
     r = asyncio.run(x.run_once(now))
     assert r["ok"] and r["d"] == "2026-11-02" and r["exposure"] == 0.0 and r["scenarios"] == 3 and r["posted"]
     assert subs[0][0] == x.AUTHOR and up[0]["mult_m"] == 0.5 and up[0]["inputs"]["events_7d"] == {"delisting": 1}
-    assert up[0]["inputs"]["liq_shock_5pct_max"] == 1.7 and "③ 每日决定" in sent[0]
+    assert up[0]["inputs"]["liq_buy_15pct"] == 1.7 and "③ 每日决定" in sent[0]
 
 
 def test_wiring():
