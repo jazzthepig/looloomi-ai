@@ -52,3 +52,16 @@ def test_endpoint_and_migration_exist():
     mig = (ROOT / "migrations/2026-11-03_weekly_letters.sql").read_text(encoding="utf-8")
     for col in wl.WRITES_COLUMNS[wl.TABLE]:
         assert col in mig, col
+
+
+def test_layers_section_reports_phase_tilt_and_outcomes_without_inventing():
+    empty = wl.layers_section([], [], [], "2026-11-02", "2026-11-08")
+    assert "还没有行" in "\n".join(empty) and "还没有到期结算的行" in "\n".join(empty)
+    cycle = [{"d": "2026-11-03", "deterioration": -0.61, "shift_pct": 0.8, "phase": "turning"}, {"d": "2026-11-04", "deterioration": -0.2, "shift_pct": 0.5, "phase": "turning"}]
+    tilt = [{"d": "2026-11-06", "arm": "treatment_tilt", "nav": 1.02, "inception": "2026-11-04"}, {"d": "2026-11-06", "arm": "panel_hold", "nav": 1.0, "inception": "2026-11-04"}]
+    outcomes = [{"kind": "buyback", "horizon_d": 30, "excess": v, "symbol": "COIN", "d": "2026-09-01", "bench": "SPY", "settled_at": "2026-11-05T01:00:00+00:00"} for v in (0.1, -0.02, 0.03, 0.01, 0.0, 0.05)]
+    L = "\n".join(wl.layers_section(cycle, tilt, outcomes, "2026-11-02", "2026-11-08"))
+    assert "2/2 天处于 turning" in L and "倾斜臂 1.0200 · 等权臂 1.0000 · 差 +2.00%" in L
+    assert "| buyback | 6 | +2.00% | 67% |  |" in L and "本周新结:buyback COIN 2026-09-01 → 30 天" in L
+    md = wl.compose("2026-11-08", {"ok": False, "why": "x"}, None, [], {}, {}, [], layers=wl.layers_section(cycle, tilt, outcomes, "2026-11-02", "2026-11-08"))
+    assert "## 6 · 书本与层" in md and md.index("## 6 · 书本与层") < md.index(wl.COMPLIANCE)

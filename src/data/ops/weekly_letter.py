@@ -9,7 +9,9 @@
    还没结算的列「等待」。**这是信的主角**:我们事前写、事后公开结算。
 5. 事件:`events` 本周上币 / 下币 / 永续上下 的条数与点到 CIS 名字的几条。
 6. 坟场:本周否定了什么(`graveyard` 由 Seth 在生成时给;台账是私有的,这里只放结论一句)。
-7. 合规尾注:描述,不是建议;信号枚举只用五档。
+7. 书本与层(11-04 加):⓪ 周期向量本周的相位(`cycle_vector_daily`)、② 待遇倾斜前向账两臂自起点的净值(`treatment_tilt_daily`)、
+   发行方决策 → 结果(`decision_outcomes`:每类决策每期限的超额分布,n < 5 只报 thin;本周新结的行点名)。
+8. 合规尾注:描述,不是建议;信号枚举只用五档。
 
 `POST /internal/weekly-letter {week_end, graveyard[], note}` 生成并存 `weekly_letters`;`GET /internal/weekly-letter` 取最近一封。
 发给谁、怎么发是 Jazz 的手;这里只产 markdown。
@@ -97,8 +99,46 @@ def scorecard(entries: list[dict], scores: list[dict], d0: str, d1: str) -> dict
     return {"settled": settled, "pending": pending}
 
 
+def layers_section(cycle: list[dict], tilt: list[dict], outcomes: list[dict], d0: str, d1: str) -> list[str]:
+    """纯函数。第 6 段:⓪ 相位 · ② 待遇倾斜两臂 · 发行方决策 → 结果。空表写「还没有行」,不编。"""
+    L = ["## 6 · 书本与层", ""]
+    wk = [r for r in cycle if d0 <= str(r.get("d"))[:10] <= d1]
+    if wk:
+        last = max(wk, key=lambda r: str(r.get("d")))
+        n_turn = sum(1 for r in wk if r.get("phase") == "turning")
+        L.append(f"- ⓪ 周期向量:本周 {n_turn}/{len(wk)} 天处于 turning;{str(last.get('d'))[:10]} 恶化分 {_f(last.get('deterioration')) if last.get('deterioration') is not None else '—'}"
+                 f" · 搬家分位 {_f(last.get('shift_pct')) if last.get('shift_pct') is not None else '—'} · {last.get('phase') or '未打分'}(只记,不动钱)")
+    else:
+        L.append("- ⓪ 周期向量:本周还没有行。")
+    by_arm: dict[str, dict] = {}
+    for r in tilt:
+        if str(r.get("d"))[:10] <= d1:
+            cur = by_arm.get(r["arm"])
+            if cur is None or str(r.get("d")) > str(cur.get("d")):
+                by_arm[r["arm"]] = r
+    if by_arm.get("treatment_tilt") and by_arm.get("panel_hold"):
+        t, h = _f(by_arm["treatment_tilt"].get("nav")), _f(by_arm["panel_hold"].get("nav"))
+        L.append(f"- ② 待遇倾斜前向账(起点 {by_arm['treatment_tilt'].get('inception')}):倾斜臂 {t:.4f} · 等权臂 {h:.4f} · 差 {_pct(t / h - 1.0 if t and h else None)}"
+                 f"(到 {str(by_arm['treatment_tilt'].get('d'))[:10]};90 天前不谈结论)")
+    else:
+        L.append("- ② 待遇倾斜前向账:还没有行。")
+    if outcomes:
+        from src.data.entity.decision_outcomes import aggregate
+        agg = [a for a in aggregate(outcomes) if a["horizon_d"] == 30]
+        if agg:
+            L += ["", "| 决策类 | n(30 天) | 超额中位 | 命中 | |", "|---|---|---|---|---|"]
+            for a in agg:
+                L.append(f"| {a['kind']} | {a['n']} | {_pct(a['median_excess'])} | {a['hit_rate']:.0%} | {'thin' if a['thin'] else ''} |")
+        fresh = [r for r in outcomes if d0 <= str(r.get("settled_at") or "")[:10] <= d1]
+        for r in sorted(fresh, key=lambda r: (str(r.get("kind")), str(r.get("d"))))[:8]:
+            L.append(f"- 本周新结:{r.get('kind')} {r.get('symbol')} {str(r.get('d'))[:10]} → {r.get('horizon_d')} 天 超额 {_pct(_f(r.get('excess')))}(对 {r.get('bench')})")
+    else:
+        L.append("- 发行方决策 → 结果:还没有到期结算的行。")
+    return L
+
+
 def compose(week_end: str, live: dict, panel_ret: Optional[float], decisions: list[dict], card: dict, events: dict,
-            graveyard: list[str], note: str = "") -> str:
+            graveyard: list[str], note: str = "", layers: Optional[list[str]] = None) -> str:
     d0, d1 = week_range(week_end)
     L = [f"# CometCloud 周信 · {d0} → {d1}", ""]
     days_in = sum(1 for r in decisions if (_f(r.get("rule_exposure")) or 0) >= 0.5)
@@ -146,6 +186,8 @@ def compose(week_end: str, live: dict, panel_ret: Optional[float], decisions: li
             L.append(f"- {t}")
     L += ["", "## 5 · 坟场(本周否定了什么)", ""]
     L += [f"- {g}" for g in graveyard] if graveyard else ["- 本周没有新的否定。"]
+    if layers:
+        L += [""] + layers
     L += ["", "---", "", f"*{COMPLIANCE}*"]
     return "\n".join(L)
 
@@ -178,10 +220,14 @@ async def build(week_end: str, graveyard: Optional[list[str]] = None, note: str 
         counts[r["kind"]] = counts.get(r["kind"], 0) + 1
         if r.get("symbols") and len(named) < 12:
             named.append(f"{r['kind']}:{','.join(r['symbols'][:4])} — {str(r.get('title') or '')[:80]}")
+    cycle = await _try("cycle_vector_daily", _read_all("cycle_vector_daily", {"select": "d,deterioration,shift_pct,phase", "d": f"gte.{d0}", "order": "d.asc"}))
+    tilt = await _try("treatment_tilt_daily", _read_all("treatment_tilt_daily", {"select": "d,arm,nav,inception", "order": "d.desc", "limit": "14"}))
+    outcomes = await _try("decision_outcomes", _read_all("decision_outcomes", {"select": "kind,horizon_d,excess,symbol,d,bench,settled_at", "order": "d.desc", "limit": "5000"}))
     live = live_week(live_rows)
     panel_ret = panel_week(panel_rows)
     card = scorecard(entries, scores, d0, d1)
-    md = compose(week_end, live, panel_ret, decisions, card, {"counts": counts, "named": named}, graveyard or [], note)
+    layers = layers_section(cycle, tilt, outcomes, d0, d1)
+    md = compose(week_end, live, panel_ret, decisions, card, {"counts": counts, "named": named}, graveyard or [], note, layers)
     if unreadable:
         md += "\n\n*读不到的段:" + "、".join(unreadable) + "*"
     data = {"live": live, "panel_ret": panel_ret, "decisions": len(decisions), "scorecard": card, "events": counts, "unreadable": unreadable}
