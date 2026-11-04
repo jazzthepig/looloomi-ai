@@ -170,6 +170,9 @@ def rationale(d: str, exposure: Optional[float], bucket: str, probs: dict, n: in
     parts = [f"③ 加密腿敞口 {exp_txt}(X1V 趋势规则,{d} 收盘)。",
              f"状态:面板 200 日动量 {g('mom_200'):+.1f}%,30 日宏观状态以 {reg} 为主;"
              f"资金费年化 {g('funding_7d_ann'):.1f}%,30 日 OI {g('oi_chg_30d'):+.0f}%,站上 50 日均线的成员 {g('breadth_above_ma50'):.0f}%。"]
+    if inputs.get("cycle_phase"):
+        parts.append(f"⓪ 周期向量:{'转向相' if inputs['cycle_phase'] == 'turning' else '正常相'}"
+                     f"(恶化 {_f(inputs.get('cycle_deterioration')) or 0:+.2f},搬家分位 {(_f(inputs.get('cycle_shift_pct')) or 0):.0%};只记不动钱)。")
     dv, dvp = _f(inputs.get("dvol_btc")), _f(inputs.get("dvol_btc_pct_1y"))
     if dv is not None:
         parts.append(f"隐含波动率 DVOL {dv:.0f}" + (f"(一年分位 {dvp:.0%})" if dvp is not None else "") + "。")
@@ -304,6 +307,12 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     mult = await _read_all("multiplier_daily", {"select": "m", "arm": f"eq.{MULT_ARM}", "d": f"eq.{d}", "limit": "1"})
     inputs = {k: today.get(k) for k in ("mom_200", "dist_200", "funding_7d_ann", "oi_chg_30d", "breadth_above_ma50")}
     inputs.update({f"liq_{k}": v for k, v in (await _liq_shock()).items()})
+    try:
+        from src.data.state.cycle_vector import latest as _cycle
+        cy = await _cycle()
+        inputs["cycle_phase"], inputs["cycle_deterioration"], inputs["cycle_shift_pct"] = cy.get("phase"), cy.get("deterioration"), cy.get("shift_pct")
+    except Exception:                                                     # noqa: BLE001
+        inputs["cycle_phase"] = None
     try:
         from src.data.market.deribit_vol import latest as _dvol
         dv = await _dvol("BTC")

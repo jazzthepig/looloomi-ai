@@ -2578,6 +2578,30 @@ async def _start_issuer_decisions_loop():
     print("[ISSUERS] ✅ entity / decision layer scheduled (6h)")
 
 
+async def _cycle_vector_loop():
+    """⓪ 周期向量(`src/data/state/cycle_vector.py`,11-04):每小时看、昨天那行写过就跳;写时从 2019 整条重算。"""
+    await _asyncio.sleep(_boot_delay(10800))
+    while True:
+        try:
+            from src.data.state.cycle_vector import run_once as _cv_run
+            r = await _cv_run()
+            await _iteration_result("_cycle_vector_loop", r)
+            await _beat("_cycle_vector_loop", ok=bool(r.get("ok")), refused=(r.get("status") == "skipped"),
+                        error=None if r.get("ok") else str(r.get("why"))[:200],
+                        detail={"d": r.get("d"), "deterioration": r.get("deterioration"), "shift_pct": r.get("shift_pct"), "phase": r.get("phase")})
+        except Exception as _e:
+            print(f"[CYCLE] ⚠️  pass FAILED: {_e}")
+            await _beat("_cycle_vector_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_cycle_vector_loop", _e)
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_cycle_vector_loop():
+    _asyncio.create_task(_cycle_vector_loop())
+    print("[CYCLE] ✅ ⓪ cycle vector scheduled (hourly check)")
+
+
 async def _scenario_ledger_loop():
     """情景台账的结算(`src/data/evaluation/scenario_ledger.py`,11-02):每小时结算到期、还没结的自动命题 → scenario_scores。"""
     await _asyncio.sleep(_boot_delay(540))

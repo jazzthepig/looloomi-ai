@@ -33,6 +33,7 @@
     "core_variants_daily",
     "corporate_treasury_history",
     "crowd_clock_log",
+    "cycle_vector_daily",
     "deriv_metrics_daily",
     "deriv_vol_daily",
     "dingge_paper_nav",
@@ -186,6 +187,17 @@
       "state",
       "top_longs",
       "top_shorts"
+    ],
+    "cycle_vector_daily": [
+      "code_ref",
+      "components",
+      "d",
+      "deterioration",
+      "n_components",
+      "phase",
+      "shift",
+      "shift_pct",
+      "z"
     ],
     "deriv_vol_daily": [
       "currency",
