@@ -1,0 +1,28 @@
+{
+  "id": "T-236",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-04",
+  "title": "走前参数选择(agent 调参的机械版,先量它值不值):R-v2 的 {止损 k ∈ 2.0/2.5/3.0} × {出场 SMA ∈ 10/20/30} × {量能门 ∈ 1.5/2/3} 共 27 组,每月初只用过去 18 个月已出场的票选期望最高的一组;再做 regime 条件版(majors 200 日线上下 × ⓪ turning/normal 四桶各选);对固定 (2.5, 20, 2) 与随机选参 1,000 条路径判",
+  "source": "Jazz 11-04:「agent 主动调参,不做机械海龟」;TRADER_TOM_DOCTRINE §5d「阈值与触发是假设,按市场按 regime 重新归因」。S-677 / S-678 的 Python 票生成器(docs/research/s677_rv2_oos.py:fish / judge / money_curve)可改参数;日线 t156/t159 `_bars*.jsonl`(2018 → 2026-10-19);majors 闸门同 S-627;⓪ 相位 `cycle_vector_daily`(code_ref 'cycle_vector v1.1%')。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-236.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读。先把预注册(就是这段)写进报告开头再算,只算一次。① 用 s677 的生成器按 27 组参数各生成一遍票(进场规则其余不动:120 日内跌到 1 年高点一半以下、40 日振幅 ≤ 40%、破 40 日高、站上 200 日线、majors 闸门;出场 = 收盘破 SMA_x 次日开盘出或 120 根;止损 = 进场 − k×ATR14;量能门 = 成交额 ≥ m × 20 日均量),2020-03-01 → 2026-10-19,成本 0.4% 来回,同时最多 10 张先来先得,f = 1%。② 选择器 A(无条件走前):从 2022-01 起每月 1 日,只用**该日前已出场**、开票日在过去 18 个月内的票,选 27 组里每票 R 均值最高的一组(该组票数 < 30 ⇒ 用固定组);整月按它开新票(已开的票按开票时的参数走到底)。③ 选择器 B(regime 条件):开票日按 majors 在 / 不在 200 日线上 × ⓪ turning / normal 分四桶,每桶各自按 ② 的规则选(桶内 < 30 票 ⇒ 退回 A 的选择);⓪ 2021-02 前 NA 的日子归 normal。④ 对照:固定 (2.5, 20, 2);随机选参(每月在 27 组里均匀抽,1,000 条路径,种子 236,只用 apparatus.py);事后最优(每月选该月实际最好的组,只报,是上界)。⑤ 报 2022-01 → 2026-10-19:总 R、票数、每票 R 均值、f=1% 钱曲线的年化 / 盯市 MDD / Calmar;分 2022–23 / 2024–26 两半;A 与 B 每月选了什么(切换次数)。⑥ 判(全过 ✅):A 或 B 的总 R > 固定;且 ≥ 随机选参路径的 95 分位;且两半都 > 固定;且 Calmar 不比固定低 10% 以上。只有一条不过 ⇒ ❌,写清哪条。⑦ 诚实段:27 组 = 多重比较,走前是 OOS 但 18 个月窗口与 30 票门槛是我定的、没扫;每月切换 ≥ 50% 的月份数说明选的是噪声。纪律:不改代码、不做 DDL、不入库;翻页带 order=;探针脚本改同一个文件再跑;步数过半先落文件;交付附 docs/research/scenarios/lane-b-T-236.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-236_walk_forward_params.md(预注册在前)+ docs/research/t236_walk_forward_params.py + t236_results.json;卡 notes 写 A / B / 固定 / 随机 95 分位 / 事后最优的总 R、两半、Calmar、切换次数与判;scenarios/lane-b-T-236.json;in_review,推 lane-b/T-236。"
+  },
+  "prior_value": "R-v2 参数 (2.5, 20, 2) 是 S-610 / S-620 一次定下的;S-621 只比过 k = 2.0 / 3.0 的平滑性。从没有人问过『按过去选参数』在走前里值不值。",
+  "notes": "",
+  "verified": null
+}

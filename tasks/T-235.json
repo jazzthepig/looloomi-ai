@@ -1,0 +1,28 @@
+{
+  "id": "T-235",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-04",
+  "title": "真突破 vs 诱多的归因:R-v2 全部 770 张票,开票日可观测量(量能比 / 资金费水平与 7 日变化 / 主动买盘 / 突破延伸 / 筑底时长 / majors 趋势 / ⓪ 相位与恶化分 / DVOL 分位)按五分位报 R 的期望与命中 —— 只报不判,给进场证据门做候选",
+  "source": "Jazz 11-04:「必须满足灵活交易和 trader tom 原则,agent 主动调参,不做机械海龟交易」;TRADER_TOM_DOCTRINE §5b「press 是证据门,不是机械:突破要看量、持仓、流动性结构辨真假」§5d「因子按市场按 regime 归因」;S-654 / S-655 / S-656 把 Tom 的机械动作套在 R-v2 上都 ❌ —— 没试过的是**归因本身**。数据:票 `/Volumes/CometCloudAI/cometcloud-local/research/t159/_tickets_2020-03-01_2026-06-20.json`(770 张,S-638 同一份)+ 2026-06 之后的票用 `r_tickets_paper`(lane 可读);日线 t156/t159 `_bars*.jsonl`;资金费 t159 `_funding.json`;主动买盘:docs/research/s695_rv2_taker.py 的来源;⓪ 相位 `cycle_vector_daily`(code_ref 'cycle_vector v1.1%',2021-02 起有分);DVOL `deriv_vol_daily`(BTC,2021-03 起)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-235.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读。先把预注册(就是这段)写进报告开头再算,**只算一次,不挑量、不挑阈值**。① 票集 = 770 张 + r_tickets_paper 2026-06-21 起已出场的票(写明 n);每张票的 R 用票里的数(不重算)。② 八个可观测量,全部取**开票日 d 收盘**可知的值:(1) 量能比 = d 日成交额 / 前 20 日均值;(2) 资金费水平 = d 日 binance_perp 该币日均费率×3×365;(3) 资金费 7 日变化 = (2) 减 d−7 的同口径;(4) 主动买盘 = d 日 taker 买量占比(s695 口径;没有的票标 NA 不补 0);(5) 突破延伸 = d 收盘 / 40 日高(不含 d)− 1;(6) 筑底时长 = d 距 120 日内最低收盘的天数;(7) majors 趋势 = BTC 收盘 / 200 日均 − 1;(8) ⓪ = d 的 deterioration(2021-02 前 NA)。副:DVOL 一年分位(2022-03 前 NA)。③ 每个量按**扩张窗口**(只用 ≤ d 已出场的票)分五分位,每档报 n、R 均值、R 中位、命中率、均值的 95% 自举区间;分 2020-03→2022-12 / 2023-01→2026-10 两半各报一遍。④ 对照:顶档减底档的 ΔR,随机打乱标签 1,000 次(种子 235,只用 src/data/evaluation/apparatus.py)取分位。⑤ 「候选」标记(不是结论):两半同号、|ΔR| ≥ 0.3R、随机分位 ≥ 0.95 的量标 candidate;**不组合、不设阈值、不写规则**。⑥ 诚实段:每个量的缺失率;多重比较(8 个量 × 2 半)。纪律:不改代码、不做 DDL、不入库;翻页带 order=;探针脚本改同一个文件再跑;步数过半先落文件;交付附 docs/research/scenarios/lane-a-T-235.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-235_breakout_attribution.md(预注册在前;8 × 5 档 × 2 半的表;candidate 列表或『无候选』)+ docs/research/t235_breakout_attribution.py + t235_results.json;卡 notes 写 n、candidate 清单与各自 ΔR / 随机分位;scenarios/lane-a-T-235.json;in_review,推 lane-a/T-235。"
+  },
+  "prior_value": "R-v2 的进场只有量能 ≥ 2× 一道门(S-610);S-690 加了 OI/市值分位过滤(真钱)。没有一张表说过『什么样的突破事后是真的』。",
+  "notes": "",
+  "verified": null
+}

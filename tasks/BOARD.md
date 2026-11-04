@@ -27,7 +27,9 @@
 | claimed | T-098 | seth | World50 的数据:候选池(全球前 ~150 大资产)的复权价格与历史流通市值 + 贵金属口径 + 每个候选的链上形式映射与跟踪误差 | 大类 ① 候选可以用日频全收益回放;知道哪些资产今天在链上真的买得到、买多少。 | eodhd 只有 2022-08 起、未复权;yfinance 2015 起但 06-18 后停更、未复权(SHY 九年价格持平,票息全丢)。链上形式从没系统量过。 |  |
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
 | claimed | T-231 | seth | 前向记录写端恢复:refresh_depth_divergence 逼近 statement_timeout 30s —— 给 ohlcv_daily 扫描加下界,并让『重算补的日子』在记录里可见 | 迁移 + 测试 + 前后对比表;卡 notes 写最大耗时前后值、逐行差异数、恢复后第一条 ok 的时间。DDL 的应用要走 Seth 交互轮次(定时轮次只读,不应用)。 | 写端熄火 4 天且在加重(每天 error 10→17→19);『自首日起连续、无回填』这句对外话没有机械保证。 |  |
+| open | T-235 | lane-a | 真突破 vs 诱多的归因:R-v2 全部 770 张票,开票日可观测量(量能比 / 资金费水平与 7 日变化 / 主动买盘 / 突破延伸 / 筑底时长 / majors 趋势 / ⓪ 相位与恶化分 / DVOL 分位)按五分位报 R 的期望与命中 —— 只报不判,给进场证据门做候选 | 报告 docs/research/T-235_breakout_attribution.md(预注册在前;8 × 5 档 × 2 半的表;candidate 列表或『无候选』)+ docs/research/t235_breakout_attribution.py + t235_results.json;卡 notes 写 n、candidate 清单与各自 ΔR / 随机分位;scenarios/lane-a-T-235.json;in_review,推 lane-a/T-235。 | R-v2 的进场只有量能 ≥ 2× 一道门(S-610);S-690 加了 OI/市值分位过滤(真钱)。没有一张表说过『什么样的突破事后是真的』。 |  |
 | open | T-223 | lane-b | S-696 前向判据的第一次月度核对(2026-10 信号月)+ 第二族因子普查:链上 / 发行方 6 个因子按 S-691 同一协议(发现段 → 封存留出段) | docs/research/s696_forward.md 追加 2026-10 一行;报告 docs/research/T-223_factor_family_2.md(预注册段在前,结果在后);卡 notes 写五因子前向符号与第二族短名单;scenarios/lane-b-T-223.json;in_review,推 lane-b/T-223。 | S-691 的五因子有留出段证据、还没有一个前向月份;发行方 / 链上这一族(收入、稀释、持币人分配)只在 S-661 / S-664 用「价值捕获比」单独测过,没按普查协议和衍生品族并排过。 |  |
+| open | T-236 | lane-b | 走前参数选择(agent 调参的机械版,先量它值不值):R-v2 的 {止损 k ∈ 2.0/2.5/3.0} × {出场 SMA ∈ 10/20/30} × {量能门 ∈ 1.5/2/3} 共 27 组,每月初只用过去 18 个月已出场的票选期望最高的一组;再做 regime 条件版(majors 200 日线上下 × ⓪ turning/normal 四桶各选);对固定 (2.5, 20, 2) 与随机选参 1,000 条路径判 | 报告 docs/research/T-236_walk_forward_params.md(预注册在前)+ docs/research/t236_walk_forward_params.py + t236_results.json;卡 notes 写 A / B / 固定 / 随机 95 分位 / 事后最优的总 R、两半、Calmar、切换次数与判;scenarios/lane-b-T-236.json;in_review,推 lane-b/T-236。 | R-v2 参数 (2.5, 20, 2) 是 S-610 / S-620 一次定下的;S-621 只比过 k = 2.0 / 3.0 的平滑性。从没有人问过『按过去选参数』在走前里值不值。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -236,4 +238,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 10 · claimed 7 · blocked 5 · in_review 18 · done 190 · dropped 3
+open 12 · claimed 7 · blocked 5 · in_review 18 · done 190 · dropped 3
