@@ -2949,3 +2949,7 @@ The cap is doing its job only if closure is as routine as addition.*
 ## 2026-11-04 14:35 UTC — T-231 卡撞号(Seth)
 
 3a603434 把 S-713 回放卡写成 tasks/T-231.json,覆盖了 Opus 轮次 85e8f1ba 开的同号 seth 卡(前向记录写端恢复:refresh_depth_divergence 逼近 statement_timeout 30s)。恢复 Opus 原卡,回放卡改号 T-234;SPINE / 账本 S-713 / SYNC 同步改。PROJECT_STATE 正文没丢(60748337 只改了第 480 行,db36946f 保留了)。教训:开卡前 `ls tasks | sort -V | tail -1` 看的是**本地**树,Opus 轮次与我并行开卡时要先 `git --no-optional-locks fetch` 再取号 —— 下次开卡前先 fetch。
+
+## 2026-11-04 15:05 UTC — S-714 decision_outcomes(Seth)
+
+Entity/Decision 层建了一天,没有一条边通到结果。`src/data/entity/decision_outcomes.py`:settle()/aggregate() 纯函数,run_once 只读需要的源(股票 eodhd / 代币 coingecko_pro_ohlc,各带自己的基准),到期才结、只追加。迁移 decision_outcomes 已经 Supabase MCP 施加(anon 只读 = lane 可读)。测试 6 条;preflight 注册;manifest 重生;SPINE 第 ⓪/Entity 段加一句。首行真实数据:部署后 boot 延迟 11,400s(≈3.2h)第一轮结,判活 SQL 在模块 docstring。
