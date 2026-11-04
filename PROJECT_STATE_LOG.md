@@ -2935,3 +2935,8 @@ The cap is doing its job only if closure is as routine as addition.*
 ## [header archived 2026-11-04 03:20 UTC from PROJECT_STATE]
 
 **header:** 2026-11-03 15:35 UTC (Seth — **「2」收完,「3」的工具就位。** ① **③ 每日决定第一行已发群**(05:09Z,11-02 的决定:敞口 0%,无条件基率 22 / 45 / 33,n = 3,334;三条 X-* 命题入账);文案改成报面板动量数值 + 强平地图两侧(头部账户多头没有强平价,空头强平价在上方 10–20%:$95M BTC 空单在 +15% 处 —— 风险在挤空一侧)。② **S-709 第二臂「近邻基率」(29a31b14)**:`market_state_vectors` 24 维按时点 z 分数里最像今天的 150 个历史日,按独立段数收缩;作者 `seth:exposure-knn`,命题 K-*,与主臂同题同期各记各的分 —— **台账选臂,不是我选。** ③ **周信生成器(c06aa5f1)**:`POST /internal/weekly-letter {week_end, graveyard, note}` → `weekly_letters`:真钱周收益 vs cap_pit24 · ③ 一周表(含近邻基率)· 记分表按作者(本周结算、命中率、Brier)· 事件计数 · 坟场 · 合规尾注。**第一封 11-09(周一):E53–56 已结 + 一周 ③ 决定 + CIS v2 切换日。** ④ lane 由定时 Opus 轮次在审(§Seth-1103a:T-223 退回小改、T-222 返 v3;lane-c 复算现行制度段 2025-01→ 套息净 ≈ 1.2%/yr,S-707 ❌ 更稳);T-228 = lane-c 盲复算的合规分支名。⑤ 待 Jazz:换 MiniMax key(露过)。)
+
+
+## [header archived 2026-11-04 05:10 UTC from PROJECT_STATE]
+
+**header:** 2026-11-03 16:50 UTC (Seth — **长任务:加密自己的波动率结构进 ③。** ① **Deribit DVOL**(d47bf6a7)`deriv_vol_daily` ← `_deribit_vol_loop`:BTC / ETH 30 日隐含波动率指数日线,2021-03-24 起已回填完(各 2,051 行),之后每 6 小时补 10 天;③ 每日决定的输入 + 文案多一句「DVOL 40(一年分位 39%)」。② **S-710 预注册**(台账):DVOL 一年分位 ≥ 0.80 ⇒ ① 降 0.5(< 0.60 恢复),判据照抄 S-692(回撤浅 ≥ 15% / Calmar 过随机降仓 95 分位 / 两半都 ≥ 持有);**T-229 lane-c** 回放,闸门已过(§Seth-1103b)。③ 决定行现在把无条件频率和当天的桶一起存进 inputs(ff09e31d),S-709 的对照组不用事后重算。④ 当天读数:DVOL 39.7、一年分位 0.39,不在触发区。**在跑:** lane-c T-226 续抓取 / T-228 盲复算 / T-229;lane-a T-222 v3;lane-b T-223 v2 → T-227(等 events 2,000 条,现 1,474+)。)
