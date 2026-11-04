@@ -10,7 +10,6 @@
 | in_review | T-219 | lane-b | 轨道公司股权进宇宙的第一份研究:风险画像、与 ① / BTC 的关系、执行场所逐家判断 —— 先描述,再预注册一条假设 | 报告 docs/research/T-219_rail_equities.md(开头风险画像表 + 场所表,末尾 M- 预注册与结果);卡片 notes 写关键数;in_review,推 lane-b/T-219。 | 宇宙里没有任何轨道公司;V / MA / BLK / IBKR / SCHW 只作为 World50 候选在池子里,从没按『轨道』看过。 |  |
 | in_review | T-227 | lane-b | 「开闸」回测:Binance 现货上币公告之后 30 / 90 天相对宇宙 —— 事件库 `events` 里 2017 起的全部上币公告(S-708 预注册,只算一次) | 报告 docs/research/T-227_listing_event.md(预注册段在前:判据、对照、试验计数);卡 notes 写事件数 / 有价格的符号数 / 主口径中位数与对照分位 / 三个时代;scenarios/lane-b-T-227.json;in_review,推 lane-b/T-227。 | 「开闸后跌」只有两个例子(UNI、PUMP);2,000+ 条上币公告从来没有按同一口径算过。 |  |
 | in_review | T-230 | lane-b | 发行方登记表核验:issuer_entities 37 家的归属、主体、工具(代币 / 股票 / 稳定币 / 场所)逐条带出处核对;另列「有收入不分」的 6 家各自把收入用在哪 | 报告 docs/research/T-230_issuer_registry_check.md(一张 37 行表:id / 建议 / 出处;+ ②③ 两节);卡 notes 写「建议改」的家数与「核不到」的家数;in_review,推 lane-b/T-230。 | 登记表 37 家全部 assumed;S-711 的分类依赖它。 |  |
-| in_review | T-233 | lane-b | 「开闸」回测第二步:T-227 闸门没过(events 只 107 行),改用 binance_hist 首次出现日作事件源,重新预注册后只算一次 —— PIT 市场篮 + nb≥20 子集 + 三个时代 + 公告前涨幅 | 报告 docs/research/T-233_listing_event_v2.md(预注册段在前)+ 脚本 + 结果 json;卡 notes 写:事件数 / PIT 篮中位数与分位 / 三个时代各自中位数与分位 / nb≥20 / 公告前涨幅;in_review,推 lane-b/T-233。 | T-227 只有固定 25 名篮一臂,早期基准退化把『高位』与『基准坏了』混在一起,−22.35% 只是方向提示。 |  |
 | in_review(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | in_review | T-220 | lane-c | 治理的领先信号:解锁前团队 / 基金会钱包流向、出事后的处理、营销强度 —— 先查能不能量(数据源可行性),再写预注册草稿 | 报告 docs/research/T-220_governance_leading_signals.md(开头可行性表);卡片 notes 写:免费源够不够、事件个数、两条草稿是否可在现有数据上跑;in_review,推 lane-c/T-220。 | 治理只量了滞后的一半(S-661 价值捕获比、S-587 质量);领先的行为信号一个都没有,不知道现有数据能不能量。 |  |
 | in_review | T-224 | lane-c | ② 倾斜在更宽的面板上:按时点前 50 大(含死币)的 ①,压低 S-691 五因子合成最差五分之一的权重 —— S-694 在 24 名上 ❌,问宽到 50 名「躲开」信号够不够用 | 报告 docs/research/T-224_tilt_pit50.md(预注册段在前);卡 notes 写基线年化 / 倾斜超额 / 随机对照分位 / 两段符号;scenarios/lane-c-T-224.json;in_review,推 lane-c/T-224。 | ② 只在 24 名上试过一次(S-694 ❌);宽面板上「躲开最差档」的倾斜没有任何回放。 |  |
@@ -27,6 +26,7 @@
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
 | claimed | T-231 | seth | 前向记录写端恢复:refresh_depth_divergence 逼近 statement_timeout 30s —— 给 ohlcv_daily 扫描加下界,并让『重算补的日子』在记录里可见 | 迁移 + 测试 + 前后对比表;卡 notes 写最大耗时前后值、逐行差异数、恢复后第一条 ok 的时间。DDL 的应用要走 Seth 交互轮次(定时轮次只读,不应用)。 | 写端熄火 4 天且在加重(每天 error 10→17→19);『自首日起连续、无回填』这句对外话没有机械保证。 |  |
 | open | T-223 | lane-b | S-696 前向判据的第一次月度核对(2026-10 信号月)+ 第二族因子普查:链上 / 发行方 6 个因子按 S-691 同一协议(发现段 → 封存留出段) | docs/research/s696_forward.md 追加 2026-10 一行;报告 docs/research/T-223_factor_family_2.md(预注册段在前,结果在后);卡 notes 写五因子前向符号与第二族短名单;scenarios/lane-b-T-223.json;in_review,推 lane-b/T-223。 | S-691 的五因子有留出段证据、还没有一个前向月份;发行方 / 链上这一族(收入、稀释、持币人分配)只在 S-661 / S-664 用「价值捕获比」单独测过,没按普查协议和衍生品族并排过。 |  |
+| open | T-233 | lane-b | 「开闸」回测第二步:T-227 闸门没过(events 只 107 行),改用 binance_hist 首次出现日作事件源,重新预注册后只算一次 —— PIT 市场篮 + nb≥20 子集 + 三个时代 + 公告前涨幅 | 报告 docs/research/T-233_listing_event_v2.md(预注册段在前)+ 脚本 + 结果 json;卡 notes 写:事件数 / PIT 篮中位数与分位 / 三个时代各自中位数与分位 / nb≥20 / 公告前涨幅;in_review,推 lane-b/T-233。 | T-227 只有固定 25 名篮一臂,早期基准退化把『高位』与『基准坏了』混在一起,−22.35% 只是方向提示。 |  |
 | open | T-234 | lane-c | S-713 回放:⓪ 周期向量的 turning 相位在 2020 起每段 ≥ 30% 回撤里亮不亮、把 ① 降到 0.5 有没有削掉回撤 —— 规则与判据逐字照 S-713,只算一次 | 报告 docs/research/T-234_cycle_turning.md(预注册口径在前)+ docs/research/t234_cycle.py + t234_results.json;卡 notes 写事件段数、(a)–(d) 的数与判;scenarios/lane-c-T-234.json;in_review,推 lane-c/T-234。 | ⓪ 层此前没有向量也没有判据;③ 的减仓输入只有价格趋势站得住。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
@@ -236,4 +236,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 11 · claimed 7 · blocked 5 · in_review 17 · done 190 · dropped 3
+open 12 · claimed 7 · blocked 5 · in_review 16 · done 190 · dropped 3
