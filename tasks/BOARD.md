@@ -8,6 +8,7 @@
 | in_review | T-215 | lane-b | T-213 报告返工:5 日块对齐敏感性 + 撤回清单与正文 md:333 同步 | 报告更新 + 复跑脚本两次输出一致;卡片 notes:各对齐下的区间与被降级的句子清单。 | 头条数字会被 Jazz 用来选 SPYX vs Ondo;量级随对齐变 2–3 倍而无人说明。 |  |
 | in_review | T-216 | lane-b | T-005 预注册台账返工(lane-a 交叉复核 F1/F3/F2/F5):按实际代码重算样本量与判据 | 台账更新;卡片 notes:改前改后三个数与 β 带分布。 | 预注册里的样本量比实际宽 3 倍,会让后续裁决显得比实际更有把握。 |  |
 | in_review | T-219 | lane-b | 轨道公司股权进宇宙的第一份研究:风险画像、与 ① / BTC 的关系、执行场所逐家判断 —— 先描述,再预注册一条假设 | 报告 docs/research/T-219_rail_equities.md(开头风险画像表 + 场所表,末尾 M- 预注册与结果);卡片 notes 写关键数;in_review,推 lane-b/T-219。 | 宇宙里没有任何轨道公司;V / MA / BLK / IBKR / SCHW 只作为 World50 候选在池子里,从没按『轨道』看过。 |  |
+| in_review | T-230 | lane-b | 发行方登记表核验:issuer_entities 37 家的归属、主体、工具(代币 / 股票 / 稳定币 / 场所)逐条带出处核对;另列「有收入不分」的 6 家各自把收入用在哪 | 报告 docs/research/T-230_issuer_registry_check.md(一张 37 行表:id / 建议 / 出处;+ ②③ 两节);卡 notes 写「建议改」的家数与「核不到」的家数;in_review,推 lane-b/T-230。 | 登记表 37 家全部 assumed;S-711 的分类依赖它。 |  |
 | in_review(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | in_review | T-220 | lane-c | 治理的领先信号:解锁前团队 / 基金会钱包流向、出事后的处理、营销强度 —— 先查能不能量(数据源可行性),再写预注册草稿 | 报告 docs/research/T-220_governance_leading_signals.md(开头可行性表);卡片 notes 写:免费源够不够、事件个数、两条草稿是否可在现有数据上跑;in_review,推 lane-c/T-220。 | 治理只量了滞后的一半(S-661 价值捕获比、S-587 质量);领先的行为信号一个都没有,不知道现有数据能不能量。 |  |
 | in_review | T-224 | lane-c | ② 倾斜在更宽的面板上:按时点前 50 大(含死币)的 ①,压低 S-691 五因子合成最差五分之一的权重 —— S-694 在 24 名上 ❌,问宽到 50 名「躲开」信号够不够用 | 报告 docs/research/T-224_tilt_pit50.md(预注册段在前);卡 notes 写基线年化 / 倾斜超额 / 随机对照分位 / 两段符号;scenarios/lane-c-T-224.json;in_review,推 lane-c/T-224。 | ② 只在 24 名上试过一次(S-694 ❌);宽面板上「躲开最差档」的倾斜没有任何回放。 |  |
@@ -24,7 +25,6 @@
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
 | open | T-223 | lane-b | S-696 前向判据的第一次月度核对(2026-10 信号月)+ 第二族因子普查:链上 / 发行方 6 个因子按 S-691 同一协议(发现段 → 封存留出段) | docs/research/s696_forward.md 追加 2026-10 一行;报告 docs/research/T-223_factor_family_2.md(预注册段在前,结果在后);卡 notes 写五因子前向符号与第二族短名单;scenarios/lane-b-T-223.json;in_review,推 lane-b/T-223。 | S-691 的五因子有留出段证据、还没有一个前向月份;发行方 / 链上这一族(收入、稀释、持币人分配)只在 S-661 / S-664 用「价值捕获比」单独测过,没按普查协议和衍生品族并排过。 |  |
 | open | T-227 | lane-b | 「开闸」回测:Binance 现货上币公告之后 30 / 90 天相对宇宙 —— 事件库 `events` 里 2017 起的全部上币公告(S-708 预注册,只算一次) | 报告 docs/research/T-227_listing_event.md(预注册段在前:判据、对照、试验计数);卡 notes 写事件数 / 有价格的符号数 / 主口径中位数与对照分位 / 三个时代;scenarios/lane-b-T-227.json;in_review,推 lane-b/T-227。 | 「开闸后跌」只有两个例子(UNI、PUMP);2,000+ 条上币公告从来没有按同一口径算过。 |  |
-| open | T-230 | lane-b | 发行方登记表核验:issuer_entities 37 家的归属、主体、工具(代币 / 股票 / 稳定币 / 场所)逐条带出处核对;另列「有收入不分」的 6 家各自把收入用在哪 | 报告 docs/research/T-230_issuer_registry_check.md(一张 37 行表:id / 建议 / 出处;+ ②③ 两节);卡 notes 写「建议改」的家数与「核不到」的家数;in_review,推 lane-b/T-230。 | 登记表 37 家全部 assumed;S-711 的分类依赖它。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -232,4 +232,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 11 · claimed 7 · blocked 5 · in_review 13 · done 190 · dropped 3
+open 10 · claimed 7 · blocked 5 · in_review 14 · done 190 · dropped 3
