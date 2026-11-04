@@ -1,0 +1,70 @@
+{
+  "author": "lane-b",
+  "note": "T-233 前向预期。概率是作者自估,到期按 Brier 结算;写的是可核的量,不是收益承诺。T-233 用『Binance 现货首现日』当上币事件源(260 个),主口径 = 上币后 d+1→d+30 减时点(PIT)加密市场等权篮,结果:中位数 −18.03%、随机日期对照 0.000 分位;绝对收益对照(不用篮)同样 0.000 分位。判据文件 docs/research/T-233_listing_event_v2.md。第 1–2 条是同族判据在前向新事件上的复现;第 3–5 条是自动结算的基线。",
+  "entries": [
+    {
+      "id": "T-233-1",
+      "scenario": "T-233 「开闸是高位」在前向新事件上复现",
+      "statement": "在 2026-11 之后新增的 Binance 上币事件上,上币后 d+1 → d+30 相对『时点加密市场等权篮』的收益中位数仍为负",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "hi": 0,
+      "prob": 0.65,
+      "horizon_d": "2027-02-28",
+      "check": "跑 docs/research/T-233_listing_event_v2.py,只看 2026-11 之后的事件:fwd30.median_rel_pct < 0",
+      "current_reading": {"2026-11-04": "全样本 260 个事件 median_rel = -18.027%,对照 0.000 分位;但样本最后一个事件是 2025-12-21,2026 的上币完全没进样本 ⇒ 这条真正是在测『新事件』,不是在复述旧结论"}
+    },
+    {
+      "id": "T-233-2",
+      "scenario": "T-233 时代斜率在前向事件上继续",
+      "statement": "2026–2027 上币事件的 d+1 → d+30 相对中位数,比 2017–2020 时代(−10.12%)更负",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "hi": 0,
+      "prob": 0.55,
+      "horizon_d": "2027-02-28",
+      "check": "跑 docs/research/T-233_listing_event_v2.py,比较 2026+ 事件与 2017-2020 时代的 fwd30.median_rel_pct",
+      "current_reading": {"2026-11-04": "时代中位数单调变差 −10.121% → −21.369% → −29.150%;同期对照中位数也单调变差 −3.353% → −4.487% → −7.046%,两者同向 ⇒ 分不开『绝对市场变差』与『超额变差』,所以只给 0.55"}
+    },
+    {
+      "id": "T-233-3",
+      "scenario": "T-233 宏观基线自动结算项(价格)",
+      "statement": "BTC 在 2027-02-28 的收盘价高于 2026-11-03 的 77453.9",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 77453.9,
+      "prob": 0.5,
+      "horizon_d": "2027-02-28",
+      "check": "ohlcv_daily(source=binance_hist, symbol=BTC) 在 2027-02-28 的 close > 77453.9",
+      "current_reading": {"2026-11-04": "基准 = 2026-11-03 收盘 77453.9;无技能基线 0.5,用来标定这条 lane 的校准"}
+    },
+    {
+      "id": "T-233-4",
+      "scenario": "T-233 宏观基线自动结算项(情绪)",
+      "statement": "恐惧与贪婪指数在 2027-03-31 落在 25–75 的中性区间内",
+      "variable": "macro:fng",
+      "op": "between",
+      "lo": 25,
+      "hi": 75,
+      "prob": 0.7,
+      "horizon_d": "2027-03-31",
+      "check": "macro_daily(series=fng) 在 2027-03-31 的 value 落在 [25, 75]",
+      "current_reading": {"2026-11-04": "现值 34(恐惧);历史上落在中性区间的频率约七成"}
+    },
+    {
+      "id": "T-233-5",
+      "scenario": "T-233 流动性基线自动结算项",
+      "statement": "稳定币供应的 30 日变化在 2027-03-31 仍为负(供给仍在收缩)",
+      "variable": "state:stable_supply_30d",
+      "op": "lt",
+      "lo": -1,
+      "hi": 0,
+      "prob": 0.5,
+      "horizon_d": "2027-03-31",
+      "check": "state_daily(entity=panel, feature=stable_supply_30d) 在 2027-03-31 的 value < 0",
+      "current_reading": {"note": "本轮未读 stable_supply_30d 现值,按 T-227 同族读数(2026-11-01 = −0.0258514)与历史基率给概率"}
+    }
+  ]
+}
