@@ -61,6 +61,8 @@
     "hl_liq_map_hourly",
     "holder_concentration_history",
     "interpretation_validation_runs",
+    "issuer_decisions",
+    "issuer_entities",
     "issuer_fundamentals_quarterly",
     "j_tickets",
     "j_tickets_state",
@@ -263,6 +265,28 @@
       "nav",
       "ret",
       "rule"
+    ],
+    "issuer_decisions": [
+      "code_ref",
+      "entity_id",
+      "id",
+      "kind",
+      "payload",
+      "source",
+      "symbols",
+      "ts",
+      "value"
+    ],
+    "issuer_entities": [
+      "code_ref",
+      "coingecko_ids",
+      "confidence",
+      "id",
+      "instruments",
+      "kind",
+      "name",
+      "note",
+      "sec_ticker"
     ],
     "issuer_fundamentals_quarterly": [
       "buybacks",

@@ -349,3 +349,17 @@ async def weekly_letter_latest(x_internal_token: str = Header(None)):
     from src.data.style.header import _read_all
     rows = await _read_all("weekly_letters", {"select": "week_end,markdown,data,note,created_at", "order": "week_end.desc", "limit": "1"})
     return {"ok": True, "letter": rows[0] if rows else None}
+
+
+@router.get("/internal/entities")
+async def entities_read(x_internal_token: str = Header(None), entity: str = "", days: int = 400):
+    """11-04:发行方登记表 + 决策流。entity 给了就只看它;决策按时间倒序。"""
+    require_internal_token(x_internal_token)
+    from src.data.style.header import _read_all
+    ents = await _read_all("issuer_entities", {"select": "id,name,kind,instruments,confidence,note", "order": "id.asc"})
+    since = (datetime.now(timezone.utc) - timedelta(days=max(1, min(int(days), 2000)))).isoformat()
+    params = {"select": "id,entity_id,ts,kind,symbols,value,payload,source", "ts": f"gte.{since}", "order": "ts.desc", "limit": "500"}
+    if entity:
+        params["entity_id"] = f"eq.{entity}"
+    dec = await _read_all("issuer_decisions", params)
+    return {"ok": True, "entities": ents if not entity else [e for e in ents if e["id"] == entity], "decisions": dec}

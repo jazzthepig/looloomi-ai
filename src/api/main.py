@@ -2555,6 +2555,29 @@ async def _start_treatment_tilt_loop():
     print("[TREAT-TILT] ✅ treatment tilt forward book scheduled (hourly)")
 
 
+async def _issuer_decisions_loop():
+    """发行方 / 决策层(`src/data/entity/issuers.py`,11-04):每 6 小时同步登记表、从基本面 / 事件 / 待遇表派生决策流。"""
+    await _asyncio.sleep(_boot_delay(10200))
+    while True:
+        try:
+            from src.data.entity.issuers import run_once as _is_run
+            r = await _is_run()
+            await _iteration_result("_issuer_decisions_loop", r)
+            await _beat("_issuer_decisions_loop", ok=bool(r.get("ok")), error=None if r.get("ok") else str(r.get("why"))[:200],
+                        detail={"entities": r.get("entities"), "written": r.get("written"), "kinds": r.get("kinds"), "errors": r.get("errors")})
+        except Exception as _e:
+            print(f"[ISSUERS] ⚠️  pass FAILED: {_e}")
+            await _beat("_issuer_decisions_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_issuer_decisions_loop", _e)
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_issuer_decisions_loop():
+    _asyncio.create_task(_issuer_decisions_loop())
+    print("[ISSUERS] ✅ entity / decision layer scheduled (6h)")
+
+
 async def _scenario_ledger_loop():
     """情景台账的结算(`src/data/evaluation/scenario_ledger.py`,11-02):每小时结算到期、还没结的自动命题 → scenario_scores。"""
     await _asyncio.sleep(_boot_delay(540))
