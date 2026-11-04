@@ -1,0 +1,59 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {
+      "id": "T-230-1",
+      "scenario": "T-230 发行方登记表核验:核验结果是否被采纳",
+      "statement": "issuer_entities 表在 2027-02-05 之前,37 行里至少 30 行的 confidence 从 assumed 变成 verified(本卡核完了 37 家:29 家建议改、8 家确认不改)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 29,
+      "prob": 0.7,
+      "horizon_d": "2027-02-05",
+      "base_rate": "先验:核验工作已全部落纸(本报告),合并只需改 ENTITIES 的字段与 confidence —— 但 kind 判定的 6 家(chainlink-labs / ondo / celestia / pendle / robinhood / sky)有主观性,name 主次表述有取舍,且改完还要同步入库 ⇒ 打折到 0.70"
+    },
+    {
+      "id": "T-230-2",
+      "scenario": "T-230 §②:六家有收入不分的协议里,几家的分配机制会真正启动",
+      "statement": "AAVE / LDO / POL / ARB / OP / STRK 六家里,到 2027-11-04 至少有 4 家存在「已通过且已生效」的对持有人分配机制(核验当日只有 OP 一家已生效:50% 净 Superchain sequencer 收入按月回购 OP,2026-02 起)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 3,
+      "prob": 0.45,
+      "base_rate": "先验:OP 的回购试点到 2027-01 结束,续期则 OP 稳;Lido NEST 已上线但计数器为负(未达 $40M 收入基准)、从未触发,收入回升才会买;Starknet SNIP 18 的 burn/fee share 条款已通过未启动;Aave 的「回购+质押+销毁」仍在讨论 ⇒ 要从 1 家到 4 家需新增 3 家,偏乐观,取 0.45"
+    },
+    {
+      "id": "T-230-3",
+      "scenario": "T-230 §②:OP 是唯一已生效回购的一家",
+      "statement": "OP 在 2027-02-05 的收盘高于 2026-11-03 的 0.109215(ohlcv_daily 实测 2026-11-03 收盘 0.109215;回购试点 2026-02 至 2027-01 覆盖该日之前)",
+      "variable": "close:OP",
+      "op": "gt",
+      "lo": 0.109215,
+      "prob": 0.52,
+      "horizon_d": "2027-02-05",
+      "base_rate": "base_rate 未在本卡内计算(上下文上限,未跑 94 日滚动窗口统计)—— 94 个自然日、无条件下行略多于上行,取 0.52 作方向锚;本条只检验「回购在窗口内是否压住卖压」这一方向,不作为收益预期"
+    },
+    {
+      "id": "T-230-4",
+      "scenario": "T-230 §②:Lido 的回购机制与 fee switch 都还没真正给到持有人",
+      "statement": "LDO 在 2027-05-07 的收盘高于 2026-11-03 的 0.331899(ohlcv_daily 实测 2026-11-03 收盘 0.331899)",
+      "variable": "close:LDO",
+      "op": "gt",
+      "lo": 0.331899,
+      "prob": 0.5,
+      "horizon_d": "2027-05-07",
+      "base_rate": "base_rate 未在本卡内计算(上下文上限,未跑 184 日滚动窗口统计),取 0.50;方向性理由:Lido 2025 全年总收入 $40.5M、同比 -23%,NEST 回购计数器为负未触发,fee switch 投票结果核不到 ⇒ 多空理由对称"
+    },
+    {
+      "id": "T-230-5",
+      "scenario": "T-230 §2.1:DeFiLlama 的 holders-revenue 口径会不会记上 OP 的回购",
+      "statement": "protocol_revenue_daily 里 optimism 的 holders_30d 在 2027-11-04 之前变成大于 0(即 DeFiLlama 把 OP 的 50% 回购计入 holders revenue 维度)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.25,
+      "horizon_d": "2027-11-04",
+      "base_rate": "先验:uniswap 已证明该维度会记回购销毁(实测 holders_30d = revenue_30d = 8,038,790 ⇒ holders_share = 1.0);但 optimism slug 的 revenue 口径本身与一手材料差约 57 倍(库内 $72,479/30 日 vs Optimism Collective 2025H1 $8.3M),口径不修则 holders 也不会被记 ⇒ 取 0.25"
+    }
+  ]
+}
