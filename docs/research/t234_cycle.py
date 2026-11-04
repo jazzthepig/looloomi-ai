@@ -3,13 +3,15 @@
 把敞口从 1.0 降到 0.5 有没有削掉回撤。
 
 口径(逐字照 S-713 预注册,不改):
-- ① 相位来自 `cycle_vector_daily`(表 = 预注册口径)。**表为空时**用 origin/main 上同一份
-  `src/data/state/cycle_vector.py` 的 `components_by_day()` / `zscores()` 纯函数在本地重算
-  (同样的源表、同样的规则、无随机性),并在结果里写明 `phase_source`;表灌满后 `--verify-table`
-  逐行比对,不一致就以表为准。
+- ① 相位来自 `cycle_vector_daily`(表 = 预注册口径,不自己重算)。**闸门口径**:
+  `code_ref like 'cycle_vector v1.1%'` 且行数 ≥ 2,000、min(d)(deterioration 非空)在 2021 年。
+  表里若有 v1.1 行就用 v1.1,没有就用表里现存的最新 `code_ref`,并把 `code_ref_used` /
+  `gate_open` 写进结果;表整体为空时才退回 origin/main 同一份
+  `src/data/state/cycle_vector.py` 的 `components_by_day()` / `zscores()` 本地重算(写明 `phase_source`)。
 - ② 事件段:BTC 现货 `ohlcv_daily(source=binance_hist)` 收盘,滚动 200 个交易日最高收盘为基准,
   回撤 `close/rolling_max − 1`;**连续**满足 ≤ −30% 的交易日为一段(不合并、不去重、不人工判断)。
-- ③ 规则 R:turning ⇒ 次日敞口 0.5,normal ⇒ 1.0;窗口 2020-01-01 → 2026-10-31;成本 10bp × |Δ敞口|。
+- ③ 规则 R:turning ⇒ 次日敞口 0.5,normal ⇒ 1.0;窗口 2021-02-01 → 2026-10-31(S-713 续,数据可得性);
+  事件段切法在**全样本**上做、再只取起点落在窗口内的段(2020-03 那段因此不计);成本 10bp × |Δ敞口|。
 - ④ (a) 每段 turning 占比;(b) 最大三段里 R 的段内回撤相对持有浅多少;(c) 非事件段 turning 天数占比;
   (d) 全区间持有 vs R 的总收益 / MDD / Calmar,随机对照 1,000 次(同样 turning 总天数、段长从实际抽、种子 713)
   的 Calmar 分位。零分布 / 分位只用 `src/data/evaluation/apparatus.py`。
@@ -32,7 +34,7 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
-WIN0, WIN1 = "2020-01-01", "2026-10-31"
+WIN0, WIN1 = "2021-02-01", "2026-10-31"
 COST = 0.001  # 10bp × |Δ敞口|
 TURN_EXPOSURE = 0.5
 ROLL = 200
@@ -81,19 +83,36 @@ def fetch(table: str, params: dict, page: int = 1000) -> list[dict]:
 
 
 # ── ① 相位:表优先,空则本地重算(同一份代码) ───────────────────────────────
-def phase_from_table() -> tuple[dict[str, dict], int]:
+def phase_from_table() -> tuple[dict[str, dict], int, dict]:
+    """读 `cycle_vector_daily`。卡的闸门口径是 `code_ref like 'cycle_vector v1.1%'`;
+    有 v1.1 行就用 v1.1,没有就用表里现存的最新 code_ref(逐行带 code_ref 一起读,便于复核)。"""
     rows = fetch("cycle_vector_daily",
-                 {"select": "d,phase,z,shift_pct,deterioration,n_components",
-                  "order": "d.asc"})
-    out = {}
+                 {"select": "d,phase,z,shift_pct,deterioration,n_components,code_ref",
+                  "order": "d.asc,code_ref.asc"})
+    by_ref: dict[str, list[dict]] = {}
     for r in rows:
+        by_ref.setdefault(r.get("code_ref") or "(null)", []).append(r)
+    v11 = sorted(k for k in by_ref if k.startswith("cycle_vector v1.1"))
+    code_ref = v11[0] if v11 else (sorted(by_ref)[-1] if by_ref else None)
+    out = {}
+    for r in by_ref.get(code_ref, []):
         z = r.get("z") or {}
         out[str(r.get("d"))[:10]] = {
             "phase": r.get("phase"), "z": z,
             "shift_pct": r.get("shift_pct"), "deterioration": r.get("deterioration"),
             "n_components": r.get("n_components"),
         }
-    return out, len(rows)
+    v11_rows = [r for k in v11 for r in by_ref[k]]
+    v11_det = [str(r.get("d"))[:10] for r in v11_rows if r.get("deterioration") is not None]
+    info = {
+        "code_refs": {k: len(v) for k, v in by_ref.items()},
+        "code_ref_used": code_ref,
+        "v11_rows": len(v11_rows),
+        "v11_min_d_deterioration": min(v11_det) if v11_det else None,
+        "gate_open": bool(len(v11_rows) >= GATE_ROWS and v11_det and min(v11_det)[:4] == "2021"),
+        "used_min_d_phase": min((d for d, v in out.items() if v["phase"]), default=None),
+    }
+    return out, len(rows), info
 
 
 def phase_local_recompute() -> tuple[dict[str, dict], int]:
@@ -386,8 +405,8 @@ def side_eval(w_dates, w_closes, phase, segs, widx, seed=SEED, n_null=N_NULL) ->
 
 def main() -> None:
     # ---- ① 相位 ----
-    table, n_table = phase_from_table()
-    source = "cycle_vector_daily(table)"
+    table, n_table, tinfo = phase_from_table()
+    source = f"cycle_vector_daily(table, code_ref={tinfo['code_ref_used']})"
     by_day = table
     by_day_fb: dict = {}
     cover: dict = {}
@@ -396,7 +415,10 @@ def main() -> None:
         source = f"local_recompute(origin/main src/data/state/cycle_vector.py zscores()) | table_rows={n_table}"
         print(f"[gate] cycle_vector_daily 只有 {n_table} 行(< {GATE_ROWS})→ 用同一份代码本地重算 {n_local} 行")
     else:
-        print(f"[gate] cycle_vector_daily {n_table} 行 ≥ {GATE_ROWS} → 直接读表")
+        print(f"[gate] cycle_vector_daily {n_table} 行 ≥ {GATE_ROWS} → 直接读表 "
+              f"(code_ref={tinfo['code_ref_used']})")
+    print(f"[gate] code_ref 明细 {tinfo['code_refs']} · v1.1 行数 {tinfo['v11_rows']} · "
+          f"v1.1 相位起点 {tinfo['v11_min_d_deterioration']} · 闸门(v1.1≥2000 行且起点 2021)开={tinfo['gate_open']}")
 
     phase_main = {d: rec["phase"] for d, rec in by_day.items()}
     # ---- ② BTC + 事件段 ----
@@ -545,9 +567,10 @@ def main() -> None:
 
     # ---- 落盘 ----
     out = {
-        "card": "T-234", "prereg": "S-713", "generated_at": "2026-11-04 (lane-c)",
+        "card": "T-234", "prereg": "S-713", "generated_at": "2026-11-05 (lane-c, 窗口改 2021-02-01)",
         "phase_source": source, "phase_rows_table": n_table,
         "phase_rows_used": len(by_day),
+        "gate": {"required_rows": GATE_ROWS, **tinfo},
         "window": [WIN0, WIN1], "n_trading_days": len(rep),
         "btc_source": src, "cost_bp": COST * 10000, "turn_exposure": TURN_EXPOSURE,
         "gate_rows_required": GATE_ROWS,
