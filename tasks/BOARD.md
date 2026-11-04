@@ -24,6 +24,7 @@
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
 | open | T-223 | lane-b | S-696 前向判据的第一次月度核对(2026-10 信号月)+ 第二族因子普查:链上 / 发行方 6 个因子按 S-691 同一协议(发现段 → 封存留出段) | docs/research/s696_forward.md 追加 2026-10 一行;报告 docs/research/T-223_factor_family_2.md(预注册段在前,结果在后);卡 notes 写五因子前向符号与第二族短名单;scenarios/lane-b-T-223.json;in_review,推 lane-b/T-223。 | S-691 的五因子有留出段证据、还没有一个前向月份;发行方 / 链上这一族(收入、稀释、持币人分配)只在 S-661 / S-664 用「价值捕获比」单独测过,没按普查协议和衍生品族并排过。 |  |
 | open | T-227 | lane-b | 「开闸」回测:Binance 现货上币公告之后 30 / 90 天相对宇宙 —— 事件库 `events` 里 2017 起的全部上币公告(S-708 预注册,只算一次) | 报告 docs/research/T-227_listing_event.md(预注册段在前:判据、对照、试验计数);卡 notes 写事件数 / 有价格的符号数 / 主口径中位数与对照分位 / 三个时代;scenarios/lane-b-T-227.json;in_review,推 lane-b/T-227。 | 「开闸后跌」只有两个例子(UNI、PUMP);2,000+ 条上币公告从来没有按同一口径算过。 |  |
+| open | T-230 | lane-b | 发行方登记表核验:issuer_entities 37 家的归属、主体、工具(代币 / 股票 / 稳定币 / 场所)逐条带出处核对;另列「有收入不分」的 6 家各自把收入用在哪 | 报告 docs/research/T-230_issuer_registry_check.md(一张 37 行表:id / 建议 / 出处;+ ②③ 两节);卡 notes 写「建议改」的家数与「核不到」的家数;in_review,推 lane-b/T-230。 | 登记表 37 家全部 assumed;S-711 的分类依赖它。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -231,4 +232,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 10 · claimed 7 · blocked 5 · in_review 13 · done 190 · dropped 3
+open 11 · claimed 7 · blocked 5 · in_review 13 · done 190 · dropped 3

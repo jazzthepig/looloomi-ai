@@ -1,0 +1,28 @@
+{
+  "id": "T-230",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-04",
+  "title": "发行方登记表核验:issuer_entities 37 家的归属、主体、工具(代币 / 股票 / 稳定币 / 场所)逐条带出处核对;另列「有收入不分」的 6 家各自把收入用在哪",
+  "source": "Jazz 11-04「今天开始」:Entity / Decision 层落表(HIGH_DIM_ONTOLOGY §5);登记表是 Seth 按公开常识写的(confidence=assumed),要变成 verified 只能靠出处。§Seth-1104a。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-230.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 读 `select id,name,kind,instruments,note from issuer_entities`(lane 可读;或主仓 src/data/entity/issuers.py 的 ENTITIES);逐家核:主体名是否准确(基金会 / Labs / 公司,谁实际控制代币经济)、工具列表是否漏(有没有自家稳定币、有没有上市股票、是不是同时开场所)、kind 对不对;每条带出处 URL;给出建议改法(改 / 不改 / 核不到)。② 「有收入不分」6 家(AAVE / LDO / POL / ARB / OP / STRK):DeFiLlama 口径 holders=0,各自公开的收入去向是什么(国库 / 回购计划 / 安全模块 / 补贴),有没有已通过的分配提案(链接 + 日期)—— 这决定 S-711 的 keeps 分类是不是口径错。③ 稳定币发行方三家(Tether / Circle / Paxos)的收入分配:对持有人 0 是事实,对股东是什么(Circle 10-Q;Tether 公告)。④ 不做评价、不打分。纪律:只读;不改代码、不做 DDL、不入库;每条核验结果带出处 URL(官网 / 治理论坛 / 招股书 / 10-K);核不到的写「核不到」不猜;探针脚本改同一个文件再跑;交付附 docs/research/scenarios/lane-b-T-230.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-230_issuer_registry_check.md(一张 37 行表:id / 建议 / 出处;+ ②③ 两节);卡 notes 写「建议改」的家数与「核不到」的家数;in_review,推 lane-b/T-230。"
+  },
+  "prior_value": "登记表 37 家全部 assumed;S-711 的分类依赖它。",
+  "notes": "",
+  "verified": null
+}
