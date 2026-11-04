@@ -2626,6 +2626,30 @@ async def _start_decision_outcomes_loop():
     print("[OUTCOMES] ✅ decision → outcome settlement scheduled (6h)")
 
 
+async def _book_vectors_loop():
+    """Strategy 空间向量(`src/data/strategy/book_vectors.py`,11-04):每小时看、昨天那行写过就跳;每本前向账本的超额按天气分桶折成稀疏向量。"""
+    await _asyncio.sleep(_boot_delay(12000))
+    while True:
+        try:
+            from src.data.strategy.book_vectors import run_once as _bv_run
+            r = await _bv_run()
+            await _iteration_result("_book_vectors_loop", r)
+            await _beat("_book_vectors_loop", ok=bool(r.get("ok")), refused=(r.get("status") == "skipped"),
+                        error=None if r.get("ok") else str(r.get("why"))[:200],
+                        detail={"d": r.get("d"), "written": r.get("written"), "skipped": r.get("skipped"), "uncovered": r.get("uncovered")})
+        except Exception as _e:
+            print(f"[BOOKVEC] ⚠️  pass FAILED: {_e}")
+            await _beat("_book_vectors_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_book_vectors_loop", _e)
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_book_vectors_loop():
+    _asyncio.create_task(_book_vectors_loop())
+    print("[BOOKVEC] ✅ strategy-space book vectors scheduled (hourly check)")
+
+
 async def _scenario_ledger_loop():
     """情景台账的结算(`src/data/evaluation/scenario_ledger.py`,11-02):每小时结算到期、还没结的自动命题 → scenario_scores。"""
     await _asyncio.sleep(_boot_delay(540))

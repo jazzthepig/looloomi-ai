@@ -14,6 +14,7 @@
     "beta_core_nav_size_meta",
     "beta_plus_daily",
     "book_style_exposure_daily",
+    "book_vectors",
     "causal_paper_nav",
     "cg_coin_map",
     "cg_coin_mcap_daily",
@@ -157,6 +158,16 @@
       "regime",
       "top_weights",
       "vol_target_scalar"
+    ],
+    "book_vectors": [
+      "book_id",
+      "code_ref",
+      "d",
+      "layer",
+      "n_days",
+      "start",
+      "status",
+      "vector"
     ],
     "causal_paper_nav": [
       "cost",

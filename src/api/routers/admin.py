@@ -379,3 +379,11 @@ async def decision_outcomes_read(x_internal_token: str = Header(None), kind: str
         params["entity_id"] = f"eq.{entity}"
     rows = await _read_all("decision_outcomes", params)
     return {"ok": True, **(await summary()), "rows": rows}
+
+
+@router.get("/internal/book-vectors")
+async def book_vectors_read(x_internal_token: str = Header(None), book: str = ""):
+    """11-04:Strategy 空间。最新一天每本账的稀疏向量;book 给了就附共享维余弦最近的三本;uncovered = 没有一本账在里面挣钱的天气桶。"""
+    require_internal_token(x_internal_token)
+    from src.data.strategy.book_vectors import latest
+    return {"ok": True, **(await latest(book))}
