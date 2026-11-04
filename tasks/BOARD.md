@@ -19,6 +19,7 @@
 | in_review | T-228 | lane-c | T-222 v2 盲复算(lane-c 独立重算三个数)—— 交付分支改名为 lane-c/T-228 以过范围检查 | 推 lane-c/T-228(内容 = 22b09b9d 同一提交);合并后卡转 done。 | T-222 v2 的数字只有一位作者算过。 |  |
 | in_review | T-229 | lane-c | S-710 回放:DVOL(BTC 隐含波动率指数)一年分位 ≥ 0.80 时把 ① 降到 0.5(< 0.60 恢复),2022-03 → 2026-10,按 S-692 三条判据 + 随机降仓对照 —— 只算一次、不扫参数 | 报告 docs/research/T-229_dvol_multiplier.md(预注册口径在前,结果在后)+ 脚本 docs/research/t229_dvol.py + t229_results.json;卡 notes 写 (a)(b)(c) 三个数与判;scenarios/lane-c-T-229.json;in_review,推 lane-c/T-229。 | ③ 的减仓输入只有价格趋势;加密隐含波动率作为减仓规则从没回放过(S-685 只测了 TradFi 的压力读数)。 |  |
 | in_review | T-232 | lane-c | ⓪ 标记线的前向基率:『广度≈0 + 离 200 日线 0~10% + 波动分位地板』之后 28 天,BTC 碰线的概率比无条件高多少 —— 给复盘里主观的情景权重一个量出来的底 | 报告 docs/research/T-232_zero_line_base_rate.md(预注册口径在前)+ 脚本 + 结果 json;卡 notes 写碰线概率(条件 / 无条件 / 随机分位)与簇个数;in_review,推 lane-c/T-232。 | 情景权重 10-28 / 11-01 / 11-04 三次都是主观数;无法回答『这个状态组合历史上之后发生了什么』。 |  |
+| in_review | T-234 | lane-c | S-713 回放:⓪ 周期向量的 turning 相位在 2020 起每段 ≥ 30% 回撤里亮不亮、把 ① 降到 0.5 有没有削掉回撤 —— 规则与判据逐字照 S-713,只算一次 | 报告 docs/research/T-234_cycle_turning.md(预注册口径在前)+ docs/research/t234_cycle.py + t234_results.json;卡 notes 写事件段数、(a)–(d) 的数与判;scenarios/lane-c-T-234.json;in_review,推 lane-c/T-234。 | ⓪ 层此前没有向量也没有判据;③ 的减仓输入只有价格趋势站得住。 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 | claimed | T-094 | seth | 状态层往前补一个周期 + 矢量库按时点:state_daily 2019 起、FNG 2018 起;market_state_vectors 改扩张窗口 z、13 个空维补或删 | S-570 / T-093 的情景格子在 2019–2022 多一轮牛熊;S-521 类的匹配不再读到未来。 | state_daily 2023-01 起(一个周期);FNG 2021-06 起;market_state_vectors 24 维里 13 维恒空、全史一次 z(看未来)。 |  |
@@ -27,7 +28,6 @@
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
 | claimed | T-231 | seth | 前向记录写端恢复:refresh_depth_divergence 逼近 statement_timeout 30s —— 给 ohlcv_daily 扫描加下界,并让『重算补的日子』在记录里可见 | 迁移 + 测试 + 前后对比表;卡 notes 写最大耗时前后值、逐行差异数、恢复后第一条 ok 的时间。DDL 的应用要走 Seth 交互轮次(定时轮次只读,不应用)。 | 写端熄火 4 天且在加重(每天 error 10→17→19);『自首日起连续、无回填』这句对外话没有机械保证。 |  |
 | open | T-223 | lane-b | S-696 前向判据的第一次月度核对(2026-10 信号月)+ 第二族因子普查:链上 / 发行方 6 个因子按 S-691 同一协议(发现段 → 封存留出段) | docs/research/s696_forward.md 追加 2026-10 一行;报告 docs/research/T-223_factor_family_2.md(预注册段在前,结果在后);卡 notes 写五因子前向符号与第二族短名单;scenarios/lane-b-T-223.json;in_review,推 lane-b/T-223。 | S-691 的五因子有留出段证据、还没有一个前向月份;发行方 / 链上这一族(收入、稀释、持币人分配)只在 S-661 / S-664 用「价值捕获比」单独测过,没按普查协议和衍生品族并排过。 |  |
-| open | T-234 | lane-c | S-713 回放:⓪ 周期向量的 turning 相位在 2020 起每段 ≥ 30% 回撤里亮不亮、把 ① 降到 0.5 有没有削掉回撤 —— 规则与判据逐字照 S-713,只算一次 | 报告 docs/research/T-234_cycle_turning.md(预注册口径在前)+ docs/research/t234_cycle.py + t234_results.json;卡 notes 写事件段数、(a)–(d) 的数与判;scenarios/lane-c-T-234.json;in_review,推 lane-c/T-234。 | ⓪ 层此前没有向量也没有判据;③ 的减仓输入只有价格趋势站得住。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -236,4 +236,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 11 · claimed 7 · blocked 5 · in_review 17 · done 190 · dropped 3
+open 10 · claimed 7 · blocked 5 · in_review 18 · done 190 · dropped 3
