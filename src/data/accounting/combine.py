@@ -47,6 +47,7 @@ PUBLIC = {
     "portfolio_layer": ("Portfolio layer (0–1x)", "Exposure between 0 and 1 by market-state flags; can sit in cash."),
     "portfolio_layer_v2": ("Portfolio layer v2 (control)", "The same exposure rule on the previous 40%-capped core, kept as the control."),
     "tokenization_tilt": ("Tokenization infrastructure tilt", "A 25% tilt toward names carrying traditional assets on-chain."),
+    "treatment_tilt": ("Holder-treatment tilt", "Overweights issuers that pass protocol revenue to holders; underweights those that keep it."),
     "hl_mech": ("Four-coin rule-based sizing", "Four liquid coins held spot, position size set by rule."),
     "hl_jev": ("Four-coin discretionary sizing", "The same four coins, with discretionary size adjustments."),
     "causal_paper": ("Funding-rate long/short", "Long/short on funding-rate and positioning structure."),

@@ -2530,6 +2530,31 @@ async def _start_treatment_loop():
     print("[TREATMENT] ✅ minority-holder treatment daily scheduled (hourly check)")
 
 
+async def _treatment_tilt_loop():
+    """② 小股东待遇倾斜的前向记录(S-711,`src/data/signals/treatment_tilt.py`):每小时一次,从起点整条重算、整条 upsert。"""
+    await _asyncio.sleep(_boot_delay(9600))
+    while True:
+        try:
+            from src.data.signals.treatment_tilt import run_once as _tr_run
+            r = await _tr_run()
+            await _iteration_result("_treatment_tilt_loop", {**r, "ok": bool(r.get("ok")), "refused": bool(r.get("refused")),
+                                                             "why": r.get("reason")})
+            await _beat("_treatment_tilt_loop", ok=bool(r.get("ok")) and not r.get("refused"), refused=bool(r.get("refused")),
+                        detail={"written": r.get("written"), "nav": r.get("nav"), "classes": r.get("classes")},
+                        error=None if r.get("ok") else str(r.get("reason"))[:200])
+        except Exception as _e:
+            print(f"[TREAT-TILT] ⚠️  pass FAILED: {_e}")
+            await _beat("_treatment_tilt_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_treatment_tilt_loop", _e)
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_treatment_tilt_loop():
+    _asyncio.create_task(_treatment_tilt_loop())
+    print("[TREAT-TILT] ✅ treatment tilt forward book scheduled (hourly)")
+
+
 async def _scenario_ledger_loop():
     """情景台账的结算(`src/data/evaluation/scenario_ledger.py`,11-02):每小时结算到期、还没结的自动命题 → scenario_scores。"""
     await _asyncio.sleep(_boot_delay(540))

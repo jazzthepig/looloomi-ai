@@ -85,6 +85,9 @@ BOOKS: tuple[Book, ...] = (
     Book("tokenization_tilt", "②", "代币化基础设施 25% 倾斜", "TradFi 上链的通路与发行是长期主题(DECISIONS 09-26)",
          "tokenization_tilt_daily", "arms", arm="tokenization_tilt_25", accounting="shared_kernel",
          benchmark="arm:panel_hold"),
+    # S-711(Jazz 11-02「CIS 的核心维度 = 小股东待遇」):等权 × 乘数(分利 1.5 / 有收入不分 0.5 / 无协议收入 1.0),周一再平衡,起点 11-04。
+    Book("treatment_tilt", "②", "小股东待遇倾斜(分利者 1.5× / 留利者 0.5×)", "发行方把可分配利润留给持有人是慢变量,与动量不相关(S-711)",
+         "treatment_tilt_daily", "arms", arm="treatment_tilt", accounting="shared_kernel", benchmark="arm:panel_hold"),
     Book("hl_mech", "①+③", "HL 4 币机械仓位(MECH_tom)", "4 币现货 + 按规则缩放仓位(M-189/M-190)",
          "hl_book_daily", "hl", arm="MECH_tom", benchmark="arm:H0_hold"),
     Book("hl_jev", "①+③", "HL 4 币 Jev 仓位(JEV_tom)", "同上,Jev 参与调整",

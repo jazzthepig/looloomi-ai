@@ -117,6 +117,7 @@
     "treasury_decisions",
     "treasury_entities",
     "treatment_daily",
+    "treatment_tilt_daily",
     "two_layer_paper_nav",
     "vault_nav_tick",
     "vc_funding_rounds",
@@ -362,6 +363,23 @@
       "supply",
       "supply_growth_30d",
       "symbol"
+    ],
+    "treatment_tilt_daily": [
+      "arm",
+      "barred",
+      "code_ref",
+      "computed_at",
+      "d",
+      "inception",
+      "n_filled",
+      "n_quoted",
+      "nav",
+      "rebalanced",
+      "ret",
+      "source",
+      "tilt_classes",
+      "turnover",
+      "weights"
     ],
     "two_layer_paper_nav": [
       "book_state",
