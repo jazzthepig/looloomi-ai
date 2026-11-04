@@ -1,0 +1,60 @@
+{
+  "author": "lane-c",
+  "note": "T-234 前向预期。概率是作者自估,到期按 Brier 结算;写的是可核的量,不是收益承诺。T-234 的闸门(cycle_vector_daily ≥ 2,000 行)本轮未开——表 0 行,相位用 origin/main 同一份 zscores() 在本地重算(源表同一批),报告 docs/research/T-234_cycle_turning.md 记了口径与风险。下面第 1–3 条是自动结算的基线,第 4–5 条是针对本轮结论(turning 在 ≥30% 回撤段里几乎不亮;窗口内 9 个分量最多只有 7 个有值)的前向判据。",
+  "entries": [
+    {
+      "id": "T-234-1",
+      "scenario": "T-234 资金费分量 · 写端补齐后仍为正",
+      "statement": "2026-12-15 时 state_daily(entity=panel)的 funding_7d_ann 仍大于 0.05(2026-11-03 为 0.0934;该 feature 本轮测得只有 2026-09-09 之后的 56 天有值,此前整段为空)",
+      "variable": "state:funding_7d_ann",
+      "op": "gt",
+      "lo": 0.05,
+      "prob": 0.65,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-234-2",
+      "scenario": "T-234 面板宽度 · 仍是零",
+      "statement": "2026-12-15 时 state_daily(entity=panel)的 breadth_above_ma50 仍小于 1(即仍为 0,面板里没有一枚币站在 50 日均线之上;2026-11-03 为 0)",
+      "variable": "state:breadth_above_ma50",
+      "op": "lt",
+      "hi": 1,
+      "prob": 0.5,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-234-3",
+      "scenario": "T-234 宏观底色 · Fed 净流动性不再收缩",
+      "statement": "2026-12-15 时 macro_daily(fed_net_liquidity)仍大于 5700(2026-11-04 为 5745.5)",
+      "variable": "macro:fed_net_liquidity",
+      "op": "gt",
+      "lo": 5700,
+      "prob": 0.55,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-234-4",
+      "scenario": "T-234 核心结论 · turning 仍然不在 ≥30% 回撤段里",
+      "statement": "2027-11-04 之前 BTC 出现的每一段『滚动 200 日高点回撤 ≥ 30%』的段里,phase=turning 的天数占比都低于 30%(本轮 30 段的中位占比 0.0、唯一有信号的一段 68/284≈24%;机制:turning 要 shift_pct ≥ 0.75,在真暴跌里常不成立)",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 0.3,
+      "prob": 0.6,
+      "horizon_d": "2027-11-04",
+      "check": "重跑 docs/research/t234_cycle.py(表灌满后自动改读表),看 segments[].turning_share 的最大值是否都 < 0.3",
+      "current_reading": {"2026-11-04": "30 段中位 0.0;≥30% 的段 0 个;唯一有信号段 2021-11-08→2022-06-18 的簇内占比 68/284 = 23.9%"}
+    },
+    {
+      "id": "T-234-5",
+      "scenario": "T-234 分量缺口 · 写端补历史",
+      "statement": "到 2027-01-31,cycle_vector_daily 里 2021-01-01 之后的行中,n_components ≥ 7 的天数占比不低于 60%(本轮窗口内 n_components 只有 3–7:funding_7d_ann 只有 2026-09 之后 56 天、oi_chg_30d 只有 8 天;funding_7d_ann_binance 有 2,495 天完整窗口可替代)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0.6,
+      "prob": 0.45,
+      "horizon_d": "2027-01-31",
+      "check": "select n_components, count(*) from cycle_vector_daily where d >= '2021-01-01' group by n_components —— n_components >= 7 的天数 / 总天数",
+      "current_reading": {"2026-11-04": "表 0 行,无法核;本地同码重算的窗口内 n_components 分布 = {3:60, 4:334, 5:361, 6:746, 7:995}"}
+    }
+  ]
+}
