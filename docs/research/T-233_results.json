@@ -1,0 +1,247 @@
+{
+ "prereg": {
+  "control_n": 1000,
+  "control_seed": 708,
+  "era_min_n": 30,
+  "nb_min": 20,
+  "dropped": [
+   {
+    "symbol": "BTC",
+    "d": "2017-08-17"
+   },
+   {
+    "symbol": "ETH",
+    "d": "2017-08-17"
+   }
+  ],
+  "windows": {
+   "fwd30": {
+    "entry_offset_days": 1,
+    "exit_offset_days": 30
+   },
+   "fwd30_shift_p1": {
+    "entry_offset_days": 2,
+    "exit_offset_days": 31
+   },
+   "fwd30_shift_m1": {
+    "entry_offset_days": 0,
+    "exit_offset_days": 29
+   },
+   "fwd90": {
+    "entry_offset_days": 1,
+    "exit_offset_days": 90
+   }
+  }
+ },
+ "gate": {
+  "events_binance_listing_rows": 1474
+ },
+ "events": {
+  "n_symbols_crypto": 262,
+  "n_events": 260,
+  "by_year": {
+   "2017": 3,
+   "2018": 12,
+   "2019": 42,
+   "2020": 53,
+   "2021": 54,
+   "2022": 26,
+   "2023": 22,
+   "2024": 17,
+   "2025": 31
+  }
+ },
+ "basket": {
+  "n_components": 262,
+  "grid_start": "2017-08-17",
+  "grid_end": "2027-05-22",
+  "selfcheck": {
+   "n_windows": 200,
+   "max_abs_diff_per_name": 0.0,
+   "max_abs_diff_basket_mean": 0.0,
+   "nb_mismatch_count": 0,
+   "nb_median": 209
+  }
+ },
+ "arms": {
+  "fwd30": {
+   "label": "fwd30",
+   "n": 260,
+   "median_rel_pct": -18.027,
+   "median_abs_pct": -14.495,
+   "mean_rel_pct": -4.741,
+   "win_rate_rel": 0.285,
+   "nb_median": 133,
+   "nb_min": 3,
+   "nb_max": 220,
+   "median_rel_pct_exact": -0.1802686451471131,
+   "control_percentile": 0.0,
+   "control_n": 1000,
+   "control_median_pct": -4.432,
+   "control_p05_pct": -5.937,
+   "verdict": "CONFIRMED"
+  },
+  "fwd30_shift_p1": {
+   "label": "fwd30_shift_p1",
+   "n": 260,
+   "median_rel_pct": -16.427,
+   "median_abs_pct": -15.546,
+   "mean_rel_pct": -3.894,
+   "win_rate_rel": 0.265,
+   "nb_median": 133,
+   "nb_min": 3,
+   "nb_max": 222,
+   "median_rel_pct_exact": -0.16426955603812537,
+   "control_percentile": 0.0,
+   "control_n": 1000,
+   "control_median_pct": -4.432,
+   "control_p05_pct": -5.937,
+   "verdict": "CONFIRMED"
+  },
+  "fwd30_shift_m1": {
+   "label": "fwd30_shift_m1",
+   "n": 260,
+   "median_rel_pct": -21.548,
+   "median_abs_pct": -20.876,
+   "mean_rel_pct": -9.509,
+   "win_rate_rel": 0.269,
+   "nb_median": 133,
+   "nb_min": 3,
+   "nb_max": 220,
+   "median_rel_pct_exact": -0.21547939573582003,
+   "control_percentile": 0.0,
+   "control_n": 1000,
+   "control_median_pct": -4.432,
+   "control_p05_pct": -5.937,
+   "verdict": "CONFIRMED"
+  },
+  "fwd90": {
+   "label": "fwd90",
+   "n": 260,
+   "median_rel_pct": -29.702,
+   "median_abs_pct": -29.238,
+   "mean_rel_pct": -12.453,
+   "win_rate_rel": 0.238,
+   "nb_median": 133,
+   "nb_min": 3,
+   "nb_max": 218,
+   "median_rel_pct_exact": -0.2970180410318983,
+   "control_percentile": 0.0,
+   "control_n": 1000,
+   "control_median_pct": -9.276,
+   "control_p05_pct": -11.802,
+   "verdict": "CONFIRMED"
+  },
+  "fwd30_control_excl_event_window": {
+   "control_percentile": 0.0,
+   "control_n": 1000,
+   "control_median_pct": -4.19,
+   "note": "稳健性对照(非预注册主口径):抽样排除落在事件窗口内"
+  },
+  "fwd30_abs_control": {
+   "actual_median_pct": -14.495,
+   "control_percentile": 0.0,
+   "control_n": 1000,
+   "control_median_pct": -6.542,
+   "statistic": "abs",
+   "note": "诊断臂(非预注册主口径):统计量=绝对收益,不含篮"
+  },
+  "fwd30_early_control": {
+   "actual_median_pct": -18.027,
+   "control_percentile": 0.0,
+   "control_n": 1000,
+   "control_median_pct": -7.086,
+   "statistic": "rel",
+   "note": "诊断臂(非预注册主口径):随机起点只抽在上市后头 365 个交易日,两侧篮厚度拉平"
+  },
+  "fwd30_nb_ge_20": {
+   "label": "nb>=20",
+   "n": 243,
+   "median_rel_pct": -18.713,
+   "median_abs_pct": -14.566,
+   "mean_rel_pct": -3.777,
+   "win_rate_rel": 0.296,
+   "nb_median": 141,
+   "nb_min": 21,
+   "nb_max": 220,
+   "median_rel_pct_exact": -0.18712718699316316,
+   "control_percentile": 0.0,
+   "control_n": 1000,
+   "control_median_pct": -4.688,
+   "control_p05_pct": -6.165,
+   "verdict": "CONFIRMED"
+  }
+ },
+ "eras_fwd30": {
+  "2017-2020": {
+   "n": 110,
+   "median_rel_pct": -10.121,
+   "median_abs_pct": -9.812,
+   "nb_median": 57,
+   "control_percentile": 0.0,
+   "control_n": 1000,
+   "control_median_pct": -3.353,
+   "control_p05_pct": -5.564,
+   "verdict": "CONFIRMED"
+  },
+  "2021-2022": {
+   "n": 80,
+   "median_rel_pct": -21.369,
+   "median_abs_pct": -19.203,
+   "nb_median": 153,
+   "control_percentile": 0.0,
+   "control_n": 1000,
+   "control_median_pct": -4.487,
+   "control_p05_pct": -6.969,
+   "verdict": "CONFIRMED"
+  },
+  "2023-2026": {
+   "n": 70,
+   "median_rel_pct": -29.15,
+   "median_abs_pct": -20.642,
+   "nb_median": 214,
+   "control_percentile": 0.0,
+   "control_n": 1000,
+   "control_median_pct": -7.046,
+   "control_p05_pct": -10.274,
+   "verdict": "CONFIRMED"
+  }
+ },
+ "pre_runup": {
+  "n": 3,
+  "median_pct": 1.83,
+  "mean_pct": 22.624,
+  "win_rate_pos": 0.667,
+  "cg_symbols_total": 217,
+  "cg_date_min": "2021-01-05",
+  "cg_date_max": "2026-11-03",
+  "events_listed": [
+   "2022-05",
+   "2023-07",
+   "2025-04"
+  ],
+  "detail": [
+   {
+    "symbol": "LDO",
+    "d": "2022-05-09",
+    "pre30": -0.412280701754386,
+    "cg_first": "2021-01-05",
+    "cg_last": "2026-11-03"
+   },
+   {
+    "symbol": "PENDLE",
+    "d": "2023-07-03",
+    "pre30": 1.072708315444721,
+    "cg_first": "2021-04-28",
+    "cg_last": "2026-11-03"
+   },
+   {
+    "symbol": "ONDO",
+    "d": "2025-04-11",
+    "pre30": 0.018296654989727656,
+    "cg_first": "2024-01-18",
+    "cg_last": "2026-11-03"
+   }
+  ]
+ }
+}
