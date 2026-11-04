@@ -363,3 +363,19 @@ async def entities_read(x_internal_token: str = Header(None), entity: str = "", 
         params["entity_id"] = f"eq.{entity}"
     dec = await _read_all("issuer_decisions", params)
     return {"ok": True, "entities": ents if not entity else [e for e in ents if e["id"] == entity], "decisions": dec}
+
+
+@router.get("/internal/decision-outcomes")
+async def decision_outcomes_read(x_internal_token: str = Header(None), kind: str = "", entity: str = "", limit: int = 200):
+    """11-04:决策 → 结果。by_kind = 每类决策每个期限的超额分布(n < 5 标 thin,只报不判);rows = 最近结的行。"""
+    require_internal_token(x_internal_token)
+    from src.data.entity.decision_outcomes import summary
+    from src.data.style.header import _read_all
+    params = {"select": "decision_id,horizon_d,entity_id,symbol,kind,d,entry_d,exit_d,ret,bench,ret_bench,excess,hit,source",
+              "order": "d.desc,horizon_d.asc", "limit": str(max(1, min(int(limit), 2000)))}
+    if kind:
+        params["kind"] = f"eq.{kind}"
+    if entity:
+        params["entity_id"] = f"eq.{entity}"
+    rows = await _read_all("decision_outcomes", params)
+    return {"ok": True, **(await summary()), "rows": rows}

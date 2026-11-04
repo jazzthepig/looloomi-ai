@@ -2602,6 +2602,30 @@ async def _start_cycle_vector_loop():
     print("[CYCLE] ✅ ⓪ cycle vector scheduled (hourly check)")
 
 
+async def _decision_outcomes_loop():
+    """决策 → 结果(`src/data/entity/decision_outcomes.py`,11-04):每 6 小时把到期的 7 / 30 / 90 天结果结进 decision_outcomes;只追加。"""
+    await _asyncio.sleep(_boot_delay(11400))
+    while True:
+        try:
+            from src.data.entity.decision_outcomes import run_once as _do_run
+            r = await _do_run()
+            await _iteration_result("_decision_outcomes_loop", r)
+            await _beat("_decision_outcomes_loop", ok=bool(r.get("ok")), refused=(r.get("status") == "skipped"),
+                        error=None if r.get("ok") else str(r.get("why"))[:200],
+                        detail={"written": r.get("written"), "pending": r.get("pending"), "no_price": r.get("no_price"), "decisions": r.get("decisions")})
+        except Exception as _e:
+            print(f"[OUTCOMES] ⚠️  pass FAILED: {_e}")
+            await _beat("_decision_outcomes_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_decision_outcomes_loop", _e)
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_decision_outcomes_loop():
+    _asyncio.create_task(_decision_outcomes_loop())
+    print("[OUTCOMES] ✅ decision → outcome settlement scheduled (6h)")
+
+
 async def _scenario_ledger_loop():
     """情景台账的结算(`src/data/evaluation/scenario_ledger.py`,11-02):每小时结算到期、还没结的自动命题 → scenario_scores。"""
     await _asyncio.sleep(_boot_delay(540))
