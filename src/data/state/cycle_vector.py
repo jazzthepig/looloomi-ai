@@ -18,8 +18,8 @@ S-713 让 lane-c 在 2019 起的每一段 ≥ 30% 回撤上回放它值不值。
 | breadth | state_daily breadth_above_ma50 | + |
 | taker_buy | state_daily taker_buy_share_30d | + |
 | mom_60 | state_daily mom_60 | + |
-| funding | state_daily funding_7d_ann | − 杠杆拥挤 |
-| oi_chg | state_daily oi_chg_30d | − |
+| funding | state_daily funding_7d_ann_binance(binance_perp 5 主流,2020-01 起;HL 的 funding_7d_ann 只有 2026-09 起,混进同一条 z 序列就是 S-273 那种「两条看起来一样的量」) | − 杠杆拥挤 |
+| oi_chg | state_daily oi_chg_30d(HL,2026-10-27 起;满 365 天前不参与打分,是**第 9 个**,不是前 8 个的条件) | − |
 | lend_apy | state_daily stable_lend_apy_7d | − 借贷需求晚周期 |
 | vratio | state_daily vratio_30_180 | − 波动率抬升 |
 
@@ -35,12 +35,12 @@ from typing import Any, Optional
 TABLE = "cycle_vector_daily"
 WRITES_TABLES = (TABLE,)
 WRITES_COLUMNS = {"cycle_vector_daily": ("d", "components", "z", "deterioration", "shift", "shift_pct", "phase", "n_components", "code_ref")}
-CODE_REF = "cycle_vector v1 (11-04)"
+CODE_REF = "cycle_vector v1.1 (11-04: funding ← binance 2020 起; 不写 d 之后的行; code_ref 变了整条重算)"
 LOOP_NAME = "_cycle_vector_loop"
 SIGN = {"stable_supply_30d": 1, "fed_liq_60d": 1, "breadth": 1, "taker_buy": 1, "mom_60": 1,
         "funding": -1, "oi_chg": -1, "lend_apy": -1, "vratio": -1}
 STATE_FEATURES = {"stable_supply_30d": "stable_supply_30d", "breadth": "breadth_above_ma50", "taker_buy": "taker_buy_share_30d",
-                  "mom_60": "mom_60", "funding": "funding_7d_ann", "oi_chg": "oi_chg_30d", "lend_apy": "stable_lend_apy_7d",
+                  "mom_60": "mom_60", "funding": "funding_7d_ann_binance", "oi_chg": "oi_chg_30d", "lend_apy": "stable_lend_apy_7d",
                   "vratio": "vratio_30_180"}
 MIN_HISTORY = 365
 CENTROID_FROM, CENTROID_TO = 90, 30
@@ -138,8 +138,8 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     from src.data.style.header import _read_all
     now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
     d = (now.date() - dt.timedelta(days=1)).isoformat()
-    have = await _read_all(TABLE, {"select": "d", "d": f"eq.{d}", "limit": "1"})
-    if have:
+    have = await _read_all(TABLE, {"select": "d,code_ref", "d": f"eq.{d}", "limit": "1"})
+    if have and (have[0].get("code_ref") or "") == CODE_REF:
         return {"ok": True, "status": "skipped", "why": f"{d} 已写"}
     feats = ",".join(STATE_FEATURES.values())
     state = await _read_all("state_daily", {"select": "d,feature,value", "entity": "eq.panel", "feature": f"in.({feats})", "order": "d.asc,feature.asc"})
@@ -147,7 +147,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     comps = components_by_day(state, macro)
     if d not in comps:
         return {"ok": True, "status": "skipped", "why": f"{d} 的 state_daily 还没到"}
-    rows = zscores(comps)
+    rows = [r for r in zscores(comps) if r["d"] <= d]           # state_daily 可能已有今天的半日行;不写 d 之后的
     w = await supabase_upsert_table(TABLE, rows, on_conflict="d")
     if not w:
         return {"ok": False, "why": f"写 {TABLE} 失败:{(getattr(w, 'why', '') or '')[:200]}"}

@@ -67,3 +67,31 @@ def test_wiring():
     mig = (ROOT / "migrations/2026-11-04_cycle_vector_daily.sql").read_text(encoding="utf-8")
     for col in cv.WRITES_COLUMNS[cv.TABLE]:
         assert col in mig, col
+
+
+def test_run_once_recomputes_when_code_ref_changed_and_never_writes_past_d(monkeypatch):
+    import asyncio
+    import src.api.store as store
+    import src.data.style.header as hdr
+    up = {}
+    state, macro = _synth(400)
+    state.append({"d": "2020-02-05", "feature": "breadth_above_ma50", "value": 0.5})   # 今天的半日行
+
+    async def read_all(t, params):
+        if t == cv.TABLE:
+            return [{"d": "2020-02-04", "code_ref": "cycle_vector v1 (11-04)"}]      # 旧版写的 ⇒ 要重算
+        if t == "state_daily":
+            assert "funding_7d_ann_binance" in params["feature"] and "funding_7d_ann," not in params["feature"]
+            return state
+        if t == "macro_daily":
+            return macro
+        raise AssertionError(t)
+
+    async def ups(t, rows, on_conflict):
+        up[t] = rows
+        return True
+    monkeypatch.setattr(hdr, "_read_all", read_all)
+    monkeypatch.setattr(store, "supabase_upsert_table", ups)
+    r = asyncio.run(cv.run_once(dt.datetime(2020, 2, 5, 9, 0, tzinfo=dt.timezone.utc)))
+    assert r["ok"] and r["d"] == "2020-02-04" and max(x["d"] for x in up[cv.TABLE]) == "2020-02-04"
+    assert all(x["code_ref"] == cv.CODE_REF for x in up[cv.TABLE])
