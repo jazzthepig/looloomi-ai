@@ -2953,3 +2953,7 @@ The cap is doing its job only if closure is as routine as addition.*
 ## 2026-11-04 15:05 UTC — S-714 decision_outcomes(Seth)
 
 Entity/Decision 层建了一天,没有一条边通到结果。`src/data/entity/decision_outcomes.py`:settle()/aggregate() 纯函数,run_once 只读需要的源(股票 eodhd / 代币 coingecko_pro_ohlc,各带自己的基准),到期才结、只追加。迁移 decision_outcomes 已经 Supabase MCP 施加(anon 只读 = lane 可读)。测试 6 条;preflight 注册;manifest 重生;SPINE 第 ⓪/Entity 段加一句。首行真实数据:部署后 boot 延迟 11,400s(≈3.2h)第一轮结,判活 SQL 在模块 docstring。
+
+## 2026-11-04 17:00 UTC — 今晚的三件(Seth)
+
+① `book_vectors`(S-717):Strategy 空间第一张表,从登记表每本账的前向超额算,不回测;天气桶用 state_daily dist_200 / vratio_30_180 + cycle_vector_daily phase。② decision_outcomes 首批 283 行,抽行核对一致。③ ⓪ v1.1 重算:2022 一次没亮、2023 亮 127 天 —— 记下,交 lane-c 判。另:每次推送都重启 Railway,新循环的首轮(boot 延迟 ~21 分钟)被连续三次部署推后了一小时 —— 以后批量落地时先排完队再等首轮,别一边推一边等。T-231 撞号教训:并行开卡先 fetch 再取号。
