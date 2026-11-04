@@ -316,7 +316,10 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     try:
         vectors = await _vectors()
         cutoff = (dt.date.fromisoformat(d) - dt.timedelta(days=KNN_EXCLUDE_DAYS)).isoformat()
-        pk, kn, segs = knn_rates({k2: v for k2, v in vectors.items() if k2 <= cutoff}, fwd, vectors.get(d) or []) if vectors.get(d) else ({}, 0, 0)
+        # 11-04:d 的状态向量在 d+1 08:00 UTC 才算出来,而决定在 02:00 发 ⇒ 用 ≤ d 最近 3 天内的那条(多半是 d−1),写明用了哪天
+        vd = max((k2 for k2 in vectors if k2 <= d and (dt.date.fromisoformat(d) - dt.date.fromisoformat(k2)).days <= 3), default=None)
+        inputs["knn_vector_d"] = vd
+        pk, kn, segs = knn_rates({k2: v for k2, v in vectors.items() if k2 <= cutoff}, fwd, vectors[vd]) if vd else ({}, 0, 0)
     except Exception as e:                                                # noqa: BLE001 —— 近邻臂读不到不挡主臂
         pk, kn, segs = {}, 0, 0
         inputs["knn_error"] = f"{type(e).__name__}: {str(e)[:120]}"

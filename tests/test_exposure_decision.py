@@ -171,3 +171,61 @@ def test_knn_rates_shrink_by_independent_segments_and_fall_back_when_thin():
     txt = x.rationale("2026-11-02", 0.0, "all", {"down": 0.22, "flat": 0.45, "up": 0.33}, 3334, "all",
                       {"mom_200": 0.04, "probs_knn": p, "knn_segments": segs}, None)
     assert "近邻基率(150 个最相似的历史交易日" in txt and "各记各的分" in txt
+
+
+def test_knn_uses_the_latest_vector_within_three_days(monkeypatch):
+    """11-04 实测:d 的状态向量 d+1 08:00 才有,决定 02:00 发 ⇒ 近邻臂一直是空。用 ≤ d 最近 3 天内的那条,并记下用了哪天。"""
+    import src.api.notify as notify
+    import src.api.store as store
+    import src.data.style.header as hdr
+    import src.data.execution.host_plan as hp
+    import src.data.ops.news_feed as nf
+    import src.data.evaluation.scenario_ledger as sl
+    up, subs = [], []
+    now = dt.datetime(2026, 11, 4, 2, 0, tzinfo=dt.timezone.utc)
+    base = dt.date(2025, 1, 1)
+    closes = {(base + dt.timedelta(days=i)).isoformat(): 100.0 + (i % 9) for i in range(680)}
+    closes["2026-11-03"] = 100.0
+    vectors = {(base + dt.timedelta(days=i)).isoformat(): [float(i % 5), 1.0] for i in range(600)}
+    vectors["2026-11-02"] = [2.0, 1.0]                     # d−1 有,d 没有
+
+    async def hist():
+        return {k: "x" for k in closes}, closes
+
+    async def vecs():
+        return vectors
+
+    async def today(d):
+        return _state(-0.05, TIGHTENING=1.0)
+
+    async def read_all(t, params):
+        return [] if t in (x.TABLE, "events") else [{"m": 0.5}]
+
+    async def plan(asof):
+        return {"ok": True, "targets": {"BTC": 0.0, "ETH": 0.0}}
+
+    async def submit(entries, author, now=None):
+        subs.append(author)
+        return {"ok": True, "written": 3, "ids": [e["id"] for e in entries]}
+
+    async def ups(t, rows, on_conflict):
+        up.extend(rows)
+        return True
+
+    async def chat():
+        return "", "dry"
+
+    async def liq():
+        return {"sell_5pct": None, "buy_15pct": None}
+    monkeypatch.setattr(x, "_history", hist)
+    monkeypatch.setattr(x, "_vectors", vecs)
+    monkeypatch.setattr(x, "_today_state", today)
+    monkeypatch.setattr(x, "_liq_shock", liq)
+    monkeypatch.setattr(hdr, "_read_all", read_all)
+    monkeypatch.setattr(hp, "plan_core", plan)
+    monkeypatch.setattr(sl, "submit", submit)
+    monkeypatch.setattr(store, "supabase_upsert_table", ups)
+    monkeypatch.setattr(nf, "resolve_feed_chat", chat)
+    monkeypatch.setattr(notify, "telegram_configured", lambda: False)
+    r = asyncio.run(x.run_once(now))
+    assert r["ok"] and up[0]["inputs"]["knn_vector_d"] == "2026-11-02" and up[0]["inputs"]["probs_knn"] and x.AUTHOR_KNN in subs
