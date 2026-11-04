@@ -1,0 +1,29 @@
+{
+  "id": "T-232",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-04",
+  "title": "⓪ 标记线的前向基率:『广度≈0 + 离 200 日线 0~10% + 波动分位地板』之后 28 天,BTC 碰线的概率比无条件高多少 —— 给复盘里主观的情景权重一个量出来的底",
+  "source": "11-04 复盘:四个认出 S1 的条件全满足(BTC 77,454、vol_pct_3y 0.050、广度 0/24、dist_200 +5.9%),同时 stable_supply_30d −3.3%。复盘里 S1/S2/S3 的权重(37/40/23)是主观数,随机游走给的碰线概率约 50%(28 天 σ≈8.7%,线在 −5.6%);没有一个按历史条件算出来的数。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-232.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/api/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "src/",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读 SELECT。预注册(先写后算,只算一次,不扫参数):条件 C = state_daily(entity=panel)里 breadth_above_ma50 ≤ 0.10 且 dist_200 ∈ [0, 0.10] 且 vol_pct_3y < 0.20;state_daily 自 2019 起(核对最早可得日)。对每个满足 C 的日子 t,相邻 ≤10 天合并为一个事件簇、取首日。量 t→t+28 日:(1) BTC(ohlcv_daily source=binance_hist)收盘是否曾低于当日 200 日线;(2) 28 日收益 p10 / p50 / p90;(3) 28 日内最大回撤。对照:无条件基率(全部日子同口径)+ 随机日期对照(1,000 次抽同样个数的簇首日,块抽样,src/data/evaluation/apparatus.py,种子 232)。报:C 下的碰线概率、与无条件之差、落在随机分布第几分位、独立事件簇个数。簇 < 8 个 → 只报不判。副列(只报不判):加 stable_supply_30d < −0.02(写最早可得日)。纪律:只读,不改代码、不做 DDL、不入库;翻页带 order=;探针脚本改同一个文件再跑;交付附 docs/research/scenarios/lane-c-T-232.json(≥ 3 条,至少一条 state: 或 close: 自动结算,horizon 留 ≥ 7 天余量)。",
+    "expect": "报告 docs/research/T-232_zero_line_base_rate.md(预注册口径在前)+ 脚本 + 结果 json;卡 notes 写碰线概率(条件 / 无条件 / 随机分位)与簇个数;in_review,推 lane-c/T-232。"
+  },
+  "prior_value": "情景权重 10-28 / 11-01 / 11-04 三次都是主观数;无法回答『这个状态组合历史上之后发生了什么』。",
+  "notes": "",
+  "verified": null
+}
