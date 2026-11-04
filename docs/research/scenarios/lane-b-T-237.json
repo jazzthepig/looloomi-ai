@@ -1,0 +1,72 @@
+{
+  "task": "T-237",
+  "lane": "lane-b",
+  "created": "2026-11-05",
+  "as_of": "2026-11-05",
+  "horizon_days": 30,
+  "resolve_by": "2026-12-05",
+  "basis": "docs/research/T-237_volume_regime.md 的实测值(口径核对,不是策略实验)",
+  "note": "命题只写可机器核的量;不写收益承诺;概率到期按 Brier 结算。",
+  "scenarios": [
+    {
+      "id": "universe:gap_persist",
+      "statement": "2026-12-05 之前,按「30 日均成交额 ≥ 500 万美元」口径,`ohlcv_daily` source=binance_hist 的月内宇宙符号数中位,仍比 source=binance_um_hist(永续量)少 ≥ 50 个符号",
+      "probability": 0.75,
+      "resolve_by": "2026-12-05",
+      "auto_settle": false,
+      "measured_basis": "T-237 实测:缓存(永续量)与 DB(现货量)的月内宇宙数中位差 −23;2023–2024 最差的月份差 −69 ~ −96。永续/现货量差 3–6 倍是结构性的,不会自己消失。",
+      "resolution": {
+        "source": "supabase:ohlcv_daily",
+        "rule": "分别在 source=binance_hist 与 source=binance_um_hist 上按 close×volume 算 30 日均成交额,取 2026-09-01→2026-12-05 每日「≥500 万美元」的符号数,取月中位数;diff = hist_median − um_median;命中条件 diff ≤ −50",
+        "hits_if": "diff <= -50",
+        "hits_value": 1
+      },
+      "outcome": null
+    },
+    {
+      "id": "hybrid:persists",
+      "statement": "2026-12-05 之前,`ohlcv_daily` source=binance_hist 的成交量口径仍是 hybrid(约 2020-06→2026-07 为现货量、两端为永续量),中段与两端相对 `binance_um_hist` 的成交量比值中位相差 ≥ 1.5 倍",
+      "probability": 0.70,
+      "resolve_by": "2026-12-05",
+      "auto_settle": false,
+      "measured_basis": "T-237 实测:中段「DB ÷ um_hist」比值中位 0.19–0.49,两端为 1.000(逐字节相同);按月的比值在 2020-06 与 2026-08 各有一次 ≥1.5× 的跳变。没有人回填修过这两处断点。",
+      "resolution": {
+        "source": "supabase:ohlcv_daily",
+        "rule": "取 source=binance_hist 与 source=binance_um_hist 同 symbol 同日成交量,分三段求比值中位:early(2019-12-19→2020-05-31)、mid(2021-01-01→2025-12-31)、late(2026-08-09→2026-11-03);命中条件 max(段比值) / min(段比值) ≥ 1.5",
+        "hits_if": "max_segment_ratio / min_segment_ratio >= 1.5",
+        "hits_value": 1
+      },
+      "outcome": null
+    },
+    {
+      "id": "paper:no_ticket_dec",
+      "statement": "2026-12-05 之前,`r_tickets_paper` 仍然是 0 行(纸面书在 2026-10-19→11-03 这 16 天一笔没开之后,到 12-05 仍然没有出票)",
+      "probability": 0.35,
+      "resolve_by": "2026-12-05",
+      "auto_settle": false,
+      "measured_basis": "T-237 实测:majors 闸门 2026-10-29→11-03 全开(BTC 收盘 76.8–78.4k > 200 日均 73.1–73.2k),但两条序列在这 14 个交易日完整信号数 = 0(宇宙 43–49 → 过量能门 0–4 → 归零)。历史全样本日均信号约 0.45 张,与 16 天零信号矛盾,所以这条只能是弱命题:近期 regime 安静但不代表 30 天仍为零。",
+      "resolution": {
+        "source": "supabase:r_tickets_paper",
+        "rule": "resolve_by 当天 count(*) = 0 ⇒ 命中(1);> 0 ⇒ 不命中(0)",
+        "hits_if": "count == 0",
+        "hits_value": 1
+      },
+      "outcome": null
+    },
+    {
+      "id": "close:BTC",
+      "statement": "2026-12-05 的 BTC 收盘价(source=binance_hist)高于 2026-11-05 的收盘价",
+      "probability": 0.53,
+      "resolve_by": "2026-12-05",
+      "auto_settle": true,
+      "measured_basis": "校准探针,不是观点:majors 风格指数 11.34–11.55 高于其 200 日均 10.81–10.82、BTC 收盘在 200 日均之上,给一点点方向偏置;没有测过任何前瞻收益,故只给 0.53 而不是更高。",
+      "resolution": {
+        "source": "supabase:ohlcv_daily",
+        "rule": "close(symbol=BTC, source=binance_hist, trade_date=2026-12-05) > close(symbol=BTC, source=binance_hist, trade_date=2026-11-05) ⇒ 命中(1);否则 0",
+        "hits_if": "close_2026_12_05 > close_2026_11_05",
+        "hits_value": 1
+      },
+      "outcome": null
+    }
+  ]
+}
