@@ -1,7 +1,7 @@
 {
   "id": "T-227",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-11-02",
   "title": "「开闸」回测:Binance 现货上币公告之后 30 / 90 天相对宇宙 —— 事件库 `events` 里 2017 起的全部上币公告(S-708 预注册,只算一次)",
   "source": "Jazz 11-02:密集营销时是高位;「开闸」后多跌(UNI −27%、PUMP −67%);docs/UPGRADE_PATHS.md A5 / B2;事件库 11-02 上线,Binance 公告约 11 小时回填完(看 `events` 里 source=binance 行数 ≥ 2,000 再开工)。",
@@ -23,6 +23,6 @@
     "expect": "报告 docs/research/T-227_listing_event.md(预注册段在前:判据、对照、试验计数);卡 notes 写事件数 / 有价格的符号数 / 主口径中位数与对照分位 / 三个时代;scenarios/lane-b-T-227.json;in_review,推 lane-b/T-227。"
   },
   "prior_value": "「开闸后跌」只有两个例子(UNI、PUMP);2,000+ 条上币公告从来没有按同一口径算过。",
-  "notes": "",
+  "notes": "闸门未过 ⇒ 预注册裁决不下。事件数:events(source=binance,kind=listing)=107 行(需 ≥2000;binance 全表 440 行,ts 只覆盖 2024-12-11→2026-11-02,recorded_at 全 2026-11-02 ⇒ 一次性回填、被公告 API 分页封顶,等下一轮不会变多)。展开 symbols + 90 天去重后:spot 69 / margin 9 个事件、70 个不同符号;listing 行里大量是代币化股票(AVGO/MSFTB/QQQB/BRKBB/INTCB…),不是加密上币。有价格的符号数:9/70(AVGO 2975、CHIP 15、HYPE 901、MEGA 15、META 5726、QNT 3730、QQQ 5726、STX 5990、AERO 15),其余 61 个零行 ⇒ 预注册臂实际可算 spot 3 / margin 1(N=3 不构成中位数检验,不下结论)。替代事件源(探索性):ohlcv_daily 里 source=binance_hist 的每符号首次出现日 = Binance 上币日;262 个加密符号 / 445,866 行;抽查 9 个与 Binance 实际挂牌日逐条吻合(BTC 2017-08-17、ETH 2017-08-17、BNB 2017-11-06、LTC 2017-12-13、NEO 2017-11-20、QTUM 2018-03-19、ADA 2018-04-17、XRP 2018-05-31、IOTA 2018-05-31)。另证 assets.listed_at 是 CoinGecko 首日不是上币日(SOL=2020-04-11 早于 SOL 上线)⇒ 不可用。主口径中位数与对照分位:B1 固定 25 名篮臂 n=262/262 可算,相对收益中位数 -22.35%,随机日期对照(1,000 次、种子 708)分位 0.000;绝对收益中位数 spot/margin 均 -2.809%。三个时代:事件数 2017-2020=112 / 2021-2022=80 / 2023-2026=70(2026=0);各时代中位数与分位本轮未跑(上下文限额),脚本已实现。重要caveat:固定 25 名篮是今天的篮子,2017-2018 事件里只有 2-5 个成分有价(实测 nb 2-5),早期相对值被放大(LTC 一条 -238.73%),故 -22.35% 目前只是方向提示。脚本已实现但本轮未跑的两臂:PIT 时点市场等权篮(B3,含与 apparatus.long_return 的逐位自检)、nb≥20 子集(B2)、公告前 d-30→d 涨幅(用上币前就有价的 coingecko_pro_ohlc/ffill;CoinGecko 每股仅 ~433 天历史,只够近一年上币的标的)。交付:docs/research/T-227_listing_event.md(预注册段在前)、docs/research/T-227_listing_event.py、docs/research/scenarios/lane-b-T-227.json(5 条,3 manual + state/macro 自动结算)。cache 在 docs/research/t227_cache/(约 40MB,未入库,可直接复跑)。",
   "verified": null
 }

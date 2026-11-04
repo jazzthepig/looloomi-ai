@@ -1,0 +1,210 @@
+{
+ "gate": {
+  "listing_rows": 107,
+  "need": 2000,
+  "pass": false
+ },
+ "universe": {
+  "as_of": "2026-11-01",
+  "crypto": [
+   "AAVE",
+   "ADA",
+   "APT",
+   "ARB",
+   "AVAX",
+   "BNB",
+   "BTC",
+   "DOT",
+   "ETH",
+   "HYPE",
+   "INJ",
+   "LDO",
+   "LINK",
+   "NEAR",
+   "ONDO",
+   "OP",
+   "PENDLE",
+   "POL",
+   "SKY",
+   "SOL",
+   "STRK",
+   "SUI",
+   "TIA",
+   "UNI",
+   "XRP"
+  ]
+ },
+ "prices": {
+  "symbols": 264,
+  "sources": {
+   "binance_hist": 262,
+   "coingecko_pro_ohlc": 2
+  }
+ },
+ "arms": {
+  "A_events_table": {
+   "margin": {
+    "n_events": 9,
+    "n_with_fwd30": 1,
+    "fwd30": {
+     "n": 1,
+     "median_rel_pct": -2.809,
+     "median_abs_pct": -17.073,
+     "mean_rel_pct": -2.809,
+     "win_rate_rel": 0.0
+    },
+    "fwd90": {
+     "n": 0,
+     "median_rel_pct": null,
+     "median_abs_pct": null,
+     "mean_rel_pct": null,
+     "win_rate_rel": null
+    },
+    "pre30": {
+     "n": 1,
+     "median_rel_pct": -23.674,
+     "median_abs_pct": 15.66,
+     "mean_rel_pct": -23.674,
+     "win_rate_rel": 0.0
+    },
+    "eras_fwd30": {
+     "2017-2020": {
+      "n": 0,
+      "median_rel_pct": null,
+      "median_abs_pct": null,
+      "mean_rel_pct": null,
+      "win_rate_rel": null
+     },
+     "2021-2022": {
+      "n": 0,
+      "median_rel_pct": null,
+      "median_abs_pct": null,
+      "mean_rel_pct": null,
+      "win_rate_rel": null
+     },
+     "2023-2026": {
+      "n": 1,
+      "median_rel_pct": -2.809,
+      "median_abs_pct": -17.073,
+      "mean_rel_pct": -2.809,
+      "win_rate_rel": 0.0
+     }
+    }
+   },
+   "spot": {
+    "n_events": 69,
+    "n_with_fwd30": 3,
+    "fwd30": {
+     "n": 3,
+     "median_rel_pct": -2.809,
+     "median_abs_pct": -9.47,
+     "mean_rel_pct": -0.088,
+     "win_rate_rel": 0.333
+    },
+    "fwd90": {
+     "n": 1,
+     "median_rel_pct": 216.08,
+     "median_abs_pct": 282.682,
+     "mean_rel_pct": 216.08,
+     "win_rate_rel": 1.0
+    },
+    "pre30": {
+     "n": 3,
+     "median_rel_pct": -16.249,
+     "median_abs_pct": 15.66,
+     "mean_rel_pct": 12.02,
+     "win_rate_rel": 0.333
+    },
+    "eras_fwd30": {
+     "2017-2020": {
+      "n": 0,
+      "median_rel_pct": null,
+      "median_abs_pct": null,
+      "mean_rel_pct": null,
+      "win_rate_rel": null
+     },
+     "2021-2022": {
+      "n": 0,
+      "median_rel_pct": null,
+      "median_abs_pct": null,
+      "mean_rel_pct": null,
+      "win_rate_rel": null
+     },
+     "2023-2026": {
+      "n": 3,
+      "median_rel_pct": -2.809,
+      "median_abs_pct": -9.47,
+      "mean_rel_pct": -0.088,
+      "win_rate_rel": 0.333
+     }
+    }
+   }
+  },
+  "B_derived_first_appearance": {
+   "n_events": 262,
+   "by_year": {
+    "2017": 5,
+    "2018": 12,
+    "2019": 42,
+    "2020": 53,
+    "2021": 54,
+    "2022": 26,
+    "2023": 22,
+    "2024": 17,
+    "2025": 31
+   },
+   "n_crypto": 262,
+   "stats": {
+    "n_events": 262,
+    "n_with_fwd30": 262,
+    "fwd30": {
+     "n": 262,
+     "median_rel_pct": -22.35,
+     "median_abs_pct": -14.495,
+     "mean_rel_pct": -8.592,
+     "win_rate_rel": 0.263
+    },
+    "fwd90": {
+     "n": 262,
+     "median_rel_pct": -37.943,
+     "median_abs_pct": -28.364,
+     "mean_rel_pct": -24.64,
+     "win_rate_rel": 0.187
+    },
+    "pre30": {
+     "n": 0,
+     "median_rel_pct": null,
+     "median_abs_pct": null,
+     "mean_rel_pct": null,
+     "win_rate_rel": null
+    },
+    "eras_fwd30": {
+     "2017-2020": {
+      "n": 112,
+      "median_rel_pct": -16.266,
+      "median_abs_pct": -9.812,
+      "mean_rel_pct": -10.058,
+      "win_rate_rel": 0.295
+     },
+     "2021-2022": {
+      "n": 80,
+      "median_rel_pct": -22.397,
+      "median_abs_pct": -19.203,
+      "mean_rel_pct": 5.997,
+      "win_rate_rel": 0.263
+     },
+     "2023-2026": {
+      "n": 70,
+      "median_rel_pct": -30.294,
+      "median_abs_pct": -20.642,
+      "mean_rel_pct": -22.918,
+      "win_rate_rel": 0.214
+     }
+    },
+    "fwd30_control_percentile": 0.0,
+    "fwd30_control_n": 1000,
+    "fwd30_control_median": -6.747
+   }
+  }
+ }
+}
