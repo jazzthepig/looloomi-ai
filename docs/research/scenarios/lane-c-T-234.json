@@ -1,6 +1,6 @@
 {
   "author": "lane-c",
-  "note": "T-234 前向预期。概率是作者自估,到期按 Brier 结算;写的是可核的量,不是收益承诺。条目 1–5 是第一轮(窗口 2020-01-01→2026-10-31、相位本地重算)写下、随卡保留,按 README「写下之后不能改」原样结算,只更新了 current_reading;条目 6–9 是第二轮(窗口 2021-02-01→2026-10-31、相位改读表 cycle_vector_daily)新写的。T-234 的闸门(v1.1:code_ref like 'cycle_vector v1.1%' 且 ≥2,000 行、起点 2021)**本轮仍未开**(v1.1 行数 0,表里只有 v1 (11-04) 3,166 行,相位起于 2022-01-25),第二轮结论按作者指示用表里现存的 v1 相位原样判:报告 docs/research/T-234_cycle_turning.md,数值在 docs/research/t234_results.json,脚本 docs/research/t234_cycle.py。",
+  "note": "T-234 前向预期。概率是作者自估,到期按 Brier 结算;写的是可核的量,不是收益承诺。条目 1–5 是第一轮(窗口 2020-01-01→2026-10-31、相位本地重算)写下、随卡保留,按 README「写下之后不能改」原样结算,只更新了 current_reading;条目 6–9 是第二轮(窗口 2021-02-01→2026-10-31、相位改读表 cycle_vector_daily)新写的;条目 10–12 是第三轮(相位换代 v1.1)新写的。**第三轮(2026-11-05)闸门已开**:cycle_vector_daily 里 code_ref = 'cycle_vector v1.1 (11-04: funding ← binance 2020 起; …)' 共 3,165 行、deterioration 非空的 min(d) = 2021-01-29 ⇒ 卡的闸门(code_ref like 'cycle_vector v1.1%' 且 ≥2,000 行、起点 2021)满足,判据与窗口未改,结论重算后仍为 ❌(b) 0/3 · (c) 15.33% > 15% · (d) 52.0 分位 < 95 分位。报告 docs/research/T-234_cycle_turning.md,数值在 docs/research/t234_results.json,脚本 docs/research/t234_cycle.py(自动优先 code_ref v1.1)。条目 6(v1.1 行数 ≥ 2,000)按本轮实测已经成立(3,165 行),到期照常结算。",
   "entries": [
     {
       "id": "T-234-1",
@@ -99,6 +99,39 @@
       "prob": 0.65,
       "horizon_d": "2026-12-15",
       "current_reading": {"2026-11-03": "0.0677(2026-10-30 → 2026-11-03 连续 5 天 0.0651 / 0.0654 / 0.0665 / 0.0658 / 0.0677)"}
+    },
+    {
+      "id": "T-234-10",
+      "scenario": "T-234 v1.1 · 灯仍然一次都不落在回撤段里",
+      "statement": "到 2027-11-04,新增的『滚动 200 日高点回撤 ≥ 30%』段(起点在 2026-10-31 之后)里,turning 天数占比的最大值仍低于 30%(本轮 v1.1:窗口内 24 段 turning 天数全为 0;机制:turning 要恶化 ≤ −0.5 且搬家距离分位 ≥ 0.75 连续 3 天,真暴跌里 shift_pct 达不到 0.75)",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 0.3,
+      "prob": 0.6,
+      "horizon_d": "2027-11-04",
+      "check": "重跑 docs/research/t234_cycle.py(脚本自动优先 code_ref v1.1)→ 只取起点晚于 2026-10-31 的新增段,看 segments[].turning_share 的最大值是否 < 0.3",
+      "current_reading": {"2026-11-05": "v1.1:窗口内 24 段 turning 天数全为 0,唯一两段亮灯 2023-06-17→2023-10-21(127 天)、2025-01-15→2025-04-19(95 天)都在非事件段"}
+    },
+    {
+      "id": "T-234-11",
+      "scenario": "T-234 v1.1 的资金费源 · 仍是正 carry 且不接近零",
+      "statement": "2026-12-15 时 state_daily(entity=panel)的 funding_7d_ann_binance 仍大于 0.02(年化 7 日资金费;2026-11-03 为 0.0677 —— 这正是 v1.1 接进去的那条源;去资金费副列把 turning 从 222 天变 251 天、(c) 从 15.33% 变 17.33%,说明这个分量确实参与判灯)",
+      "variable": "state:funding_7d_ann_binance",
+      "op": "gt",
+      "lo": 0.02,
+      "prob": 0.6,
+      "horizon_d": "2026-12-15",
+      "current_reading": {"2026-11-03": "0.0677(近 5 天 0.0651 / 0.0654 / 0.0665 / 0.0658 / 0.0677)"}
+    },
+    {
+      "id": "T-234-12",
+      "scenario": "T-234 事件段续集 · BTC 未回到 10 万",
+      "statement": "2026-12-15 时 ohlcv_daily(binance_hist/BTC)的收盘仍低于 100000(2026-10-31 收盘 77582;2026-01-29 → 2026-05-04 那段 −49.53% 的回撤之后仍在修复)",
+      "variable": "close:BTC",
+      "op": "lt",
+      "hi": 100000,
+      "prob": 0.7,
+      "horizon_d": "2026-12-15"
     }
   ]
 }
