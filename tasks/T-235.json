@@ -1,7 +1,7 @@
 {
   "id": "T-235",
   "owner": "lane-a",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-11-04",
   "title": "真突破 vs 诱多的归因:R-v2 全部 770 张票,开票日可观测量(量能比 / 资金费水平与 7 日变化 / 主动买盘 / 突破延伸 / 筑底时长 / majors 趋势 / ⓪ 相位与恶化分 / DVOL 分位)按五分位报 R 的期望与命中 —— 只报不判,给进场证据门做候选",
   "source": "Jazz 11-04:「必须满足灵活交易和 trader tom 原则,agent 主动调参,不做机械海龟交易」;TRADER_TOM_DOCTRINE §5b「press 是证据门,不是机械:突破要看量、持仓、流动性结构辨真假」§5d「因子按市场按 regime 归因」;S-654 / S-655 / S-656 把 Tom 的机械动作套在 R-v2 上都 ❌ —— 没试过的是**归因本身**。数据:票 `/Volumes/CometCloudAI/cometcloud-local/research/t159/_tickets_2020-03-01_2026-06-20.json`(770 张,S-638 同一份)+ 2026-06 之后的票用 `r_tickets_paper`(lane 可读);日线 t156/t159 `_bars*.jsonl`;资金费 t159 `_funding.json`;主动买盘:docs/research/s695_rv2_taker.py 的来源;⓪ 相位 `cycle_vector_daily`(code_ref 'cycle_vector v1.1%',2021-02 起有分);DVOL `deriv_vol_daily`(BTC,2021-03 起)。",
@@ -23,6 +23,6 @@
     "expect": "报告 docs/research/T-235_breakout_attribution.md(预注册在前;8 × 5 档 × 2 半的表;candidate 列表或『无候选』)+ docs/research/t235_breakout_attribution.py + t235_results.json;卡 notes 写 n、candidate 清单与各自 ΔR / 随机分位;scenarios/lane-a-T-235.json;in_review,推 lane-a/T-235。"
   },
   "prior_value": "R-v2 的进场只有量能 ≥ 2× 一道门(S-610);S-690 加了 OI/市值分位过滤(真钱)。没有一张表说过『什么样的突破事后是真的』。",
-  "notes": "",
+  "notes": "T-235 交付,分支 lane-a/T-235。报告 docs/research/T-235_breakout_attribution.md(预注册在开头)+ 脚本 docs/research/t235_breakout_attribution.py + 数字 docs/research/t235_results.json。\n【票集】n=767:t159 本地长票 770 张,扣 3 张 r=null(未出场);r_tickets_paper 读到 0 行 ⇒ 前向纸面票 n=0(r_tickets_state.last_d 已到 2026-11-03,但 r_money_daily 16 天 nav 恒 1、ret 恒 0 ⇒ 前向从未开仓);同文件 241 张空头票属另一套策略,未混入。长票 2022 年整年 0 张 ⇒ H1(2020-03→2022-12)只剩 2020+2021 的票,H1/H2 样本量严重不等。\n【candidate 清单】无。8 个量 + DVOL 副量没有一个同时满足 两半同号 + 每半 |ΔR|≥0.3 + 每半分位≥0.95(多重比较 16 次检验,卡上的 0.95 门槛未做校正;Bonferroni 对应 0.05/16=0.003)。d 口径 ΔR(H1,H2):①量能比 +2.7131/-0.7240;②资金费水平 -5.7046/-0.5243;③资金费7日变化 -2.6746/+0.6654;④主动买盘 NA/+1.0760;⑤突破延伸 +0.1021/-0.0698;⑥筑底时长 +1.7031/-0.1882;⑦majors 趋势 +1.2660/+0.2664;⑧⓪ NA/+0.5317;副 DVOL 分位 NA/+0.1393。逐档 n/R 均值/R 中位/命中率/均值 95% 自举区间见报告 §2;每半的随机分位见 t235_results.json 的 quantities.<量>.d.halves.<半>.null_pct。\n【缺失率】①⑤⑥⑦ 0%;②③ 26.5%(203/767);④ 10.7%(82);⑧ 10.4%(80);副 4.4%(34)。一律 NA 不补 0。\n【口径偏离】卡上写 cycle_vector code_ref=cycle_vector v1.1% ⇒ 库里 0 行,现只有 cycle_vector v1 (11-04),deterioration 非空区间 2022-01-25→2026-11-03(卡上写 2021-02 起)⇒ 2022-01 前的票这一列是 NA;主动买盘按卡上写的取 d 日单日值(买量占比=ratio/(1+ratio),是 s695 的 ratio 的单调变换 ⇒ 分档完全相同)。\n【⚠️ ①量能比那张表作废、需重跑】这次跑的时候本地 bars 与 DB ohlcv_daily 混用,而实测 DB 的 volume 量纲与本地快照不同:重叠 316560 行里收盘价只差中位比 1.0000x,但 volume 差 195390 行、比值中位约 0.2,137/184 个符号受影响、其余 42 个逐字节相同 ⇒ 量能比的分档被搅坏。脚本已改成只用本地 snapshot(不混用),重跑一条命令即可重写报告与 json:python3 docs/research/t235_breakout_attribution.py;重跑后仍需复核 无候选 是否成立。②③④⑧+副 来自 funding/taker/cycle/DVOL 表,⑦ 只用 BTC 收盘(BTC 两源一致),⑤⑥ 只用收盘价(跨源差约 0.1%)⇒ 不受 volume 量纲影响。\n【⚠️ 给 Seth】ohlcv_daily 的 volume 定义在 10-21 快照与 11-05 之间变过(42 个符号逐字节相同、其余差 5-8 倍),任何依赖该列的结论都要先确认量纲。报告 §4 诚实段的内容在本 notes 与最终回复里 —— 重跑会把 §4/§5 一并生成。",
   "verified": null
 }
