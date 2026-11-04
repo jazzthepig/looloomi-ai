@@ -1,0 +1,20 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {"id": "T-231-1", "scenario": "T-231 ⓪ 周期向量 turning 相位回放(闸门未开,先写预期)",
+     "statement": "⓪ 管道落地并整条重算后,cycle_vector_daily 的 turning 天数占 2020-01-01 → 2026-10-31 的比例落在 1% 与 8% 之间(亮灯要是少数状态,否则 (c) 非事件段 ≤ 15% 不可能过)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.45, "horizon_d": "2026-12-15"},
+    {"id": "T-231-2", "scenario": "T-231 ⓪ 周期向量 turning 相位回放(闸门未开,先写预期)",
+     "statement": "⓪ 管道落地并整条重算后,30 段 ≥30% 回撤里,亮灯日承担的段内跌幅份额中位数 ≥ 30%(即 ⓪ 至少在三分之一的下跌途中转相,否则 (b) 的 15% 削回撤过不了)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.5, "horizon_d": "2026-12-15"},
+    {"id": "T-231-3", "scenario": "T-231 ⓪ 周期向量 turning 相位回放(闸门未开,先写预期)",
+     "statement": "2026-12-01 时 state_daily(entity=panel) 的 dist_200 仍为正(BTC 站在 200 日线上方;2026-11-03 为 +0.0592)",
+     "variable": "state:dist_200", "op": "gt", "lo": 0, "prob": 0.55, "horizon_d": "2026-12-01"},
+    {"id": "T-231-4", "scenario": "T-231 ⓪ 周期向量 turning 相位回放(闸门未开,先写预期)",
+     "statement": "2026-12-01 时 ohlcv_daily 的 BTC 收盘价在 70000 与 86000 之间(2026-11-03 为 77453.9)",
+     "variable": "close:BTC", "op": "between", "lo": 70000, "hi": 86000, "prob": 0.55, "horizon_d": "2026-12-01"},
+    {"id": "T-231-5", "scenario": "T-231 ⓪ 周期向量 turning 相位回放(闸门未开,先写预期)",
+     "statement": "2026-12-01 时 state_daily(entity=panel) 的 breadth_above_ma50 高于 0.30(2026-11-03 为 0.00,面板没有资产站在 50 日线上)",
+     "variable": "state:breadth_above_ma50", "op": "gt", "lo": 0.30, "prob": 0.35, "horizon_d": "2026-12-01"}
+  ]
+}

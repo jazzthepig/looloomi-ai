@@ -1,0 +1,575 @@
+{
+  "card": "T-231",
+  "prereg": "S-713(PROJECT_STATE.md 11-04 · tasks/T-231.json)",
+  "generated_at_utc": "2026-11-04T14:25:03.980964+00:00",
+  "data": {
+    "btc_rows": 3366,
+    "btc_first": "2017-08-17",
+    "btc_last": "2026-11-03",
+    "btc_last_close": 77453.9,
+    "cycle_vector_rows": 0,
+    "cycle_vector_first": null,
+    "cycle_vector_last": null,
+    "cycle_vector_turning_rows": 0
+  },
+  "gate": {
+    "required_rows": 2000,
+    "actual_rows": 0,
+    "passed": false
+  },
+  "status": "gate_failed",
+  "why": "cycle_vector_daily 只有 0 行(要求 ≥ 2000);⓪ 管道未落地 → (a)(b)(c)(d) 不能判,只出 BTC 事件段与校准",
+  "segments": [
+    {
+      "peak_date": "2021-11-08",
+      "trough_date": "2022-11-21",
+      "seg_start": "2022-03-30",
+      "seg_end": "2023-01-07",
+      "depth": -0.7663,
+      "n_days": 284
+    },
+    {
+      "peak_date": "2019-09-03",
+      "trough_date": "2020-03-12",
+      "seg_start": "2020-03-12",
+      "seg_end": "2020-04-05",
+      "depth": -0.5478,
+      "n_days": 25
+    },
+    {
+      "peak_date": "2021-04-13",
+      "trough_date": "2021-07-20",
+      "seg_start": "2021-05-17",
+      "seg_end": "2021-08-06",
+      "depth": -0.5314,
+      "n_days": 82
+    },
+    {
+      "peak_date": "2025-10-06",
+      "trough_date": "2026-02-05",
+      "seg_start": "2026-01-29",
+      "seg_end": "2026-05-04",
+      "depth": -0.4953,
+      "n_days": 96
+    },
+    {
+      "peak_date": "2021-11-08",
+      "trough_date": "2022-01-22",
+      "seg_start": "2022-01-03",
+      "seg_end": "2022-03-28",
+      "depth": -0.4806,
+      "n_days": 85
+    },
+    {
+      "peak_date": "2026-01-14",
+      "trough_date": "2026-06-30",
+      "seg_start": "2026-06-02",
+      "seg_end": "2026-08-06",
+      "depth": -0.3953,
+      "n_days": 66
+    },
+    {
+      "peak_date": "2020-02-14",
+      "trough_date": "2020-04-15",
+      "seg_start": "2020-04-10",
+      "seg_end": "2020-04-17",
+      "depth": -0.3599,
+      "n_days": 8
+    },
+    {
+      "peak_date": "2021-04-13",
+      "trough_date": "2021-09-21",
+      "seg_start": "2021-09-20",
+      "seg_end": "2021-09-22",
+      "depth": -0.3593,
+      "n_days": 3
+    },
+    {
+      "peak_date": "2021-04-13",
+      "trough_date": "2021-09-28",
+      "seg_start": "2021-09-24",
+      "seg_end": "2021-09-30",
+      "depth": -0.3547,
+      "n_days": 7
+    },
+    {
+      "peak_date": "2020-02-14",
+      "trough_date": "2020-04-20",
+      "seg_start": "2020-04-19",
+      "seg_end": "2020-04-22",
+      "depth": -0.34,
+      "n_days": 4
+    },
+    {
+      "peak_date": "2019-07-09",
+      "trough_date": "2020-01-25",
+      "seg_start": "2020-01-19",
+      "seg_end": "2020-01-25",
+      "depth": -0.3351,
+      "n_days": 7
+    },
+    {
+      "peak_date": "2025-10-06",
+      "trough_date": "2025-11-22",
+      "seg_start": "2025-11-20",
+      "seg_end": "2025-11-23",
+      "depth": -0.3202,
+      "n_days": 4
+    },
+    {
+      "peak_date": "2021-11-08",
+      "trough_date": "2021-12-17",
+      "seg_start": "2021-12-17",
+      "seg_end": "2021-12-20",
+      "depth": -0.3168,
+      "n_days": 4
+    },
+    {
+      "peak_date": "2021-11-08",
+      "trough_date": "2021-12-31",
+      "seg_start": "2021-12-29",
+      "seg_end": "2021-12-31",
+      "depth": -0.3156,
+      "n_days": 3
+    },
+    {
+      "peak_date": "2025-10-06",
+      "trough_date": "2025-12-18",
+      "seg_start": "2025-12-17",
+      "seg_end": "2025-12-18",
+      "depth": -0.314,
+      "n_days": 2
+    },
+    {
+      "peak_date": "2021-04-13",
+      "trough_date": "2021-08-08",
+      "seg_start": "2021-08-08",
+      "seg_end": "2021-08-08",
+      "depth": -0.3111,
+      "n_days": 1
+    },
+    {
+      "peak_date": "2021-11-08",
+      "trough_date": "2021-12-13",
+      "seg_start": "2021-12-13",
+      "seg_end": "2021-12-13",
+      "depth": -0.3084,
+      "n_days": 1
+    },
+    {
+      "peak_date": "2025-10-06",
+      "trough_date": "2025-12-01",
+      "seg_start": "2025-12-01",
+      "seg_end": "2025-12-01",
+      "depth": -0.3078,
+      "n_days": 1
+    },
+    {
+      "peak_date": "2025-10-26",
+      "trough_date": "2026-05-13",
+      "seg_start": "2026-05-13",
+      "seg_end": "2026-05-13",
+      "depth": -0.3077,
+      "n_days": 1
+    },
+    {
+      "peak_date": "2025-10-06",
+      "trough_date": "2025-12-15",
+      "seg_start": "2025-12-15",
+      "seg_end": "2025-12-15",
+      "depth": -0.3067,
+      "n_days": 1
+    },
+    {
+      "peak_date": "2025-11-10",
+      "trough_date": "2026-05-28",
+      "seg_start": "2026-05-28",
+      "seg_end": "2026-05-28",
+      "depth": -0.3056,
+      "n_days": 1
+    },
+    {
+      "peak_date": "2025-11-02",
+      "trough_date": "2026-05-19",
+      "seg_start": "2026-05-18",
+      "seg_end": "2026-05-19",
+      "depth": -0.3049,
+      "n_days": 2
+    },
+    {
+      "peak_date": "2019-07-09",
+      "trough_date": "2020-01-16",
+      "seg_start": "2020-01-16",
+      "seg_end": "2020-01-16",
+      "depth": -0.3048,
+      "n_days": 1
+    },
+    {
+      "peak_date": "2025-10-06",
+      "trough_date": "2026-01-25",
+      "seg_start": "2026-01-25",
+      "seg_end": "2026-01-25",
+      "depth": -0.3047,
+      "n_days": 1
+    },
+    {
+      "peak_date": "2020-02-14",
+      "trough_date": "2020-04-07",
+      "seg_start": "2020-04-07",
+      "seg_end": "2020-04-07",
+      "depth": -0.3042,
+      "n_days": 1
+    },
+    {
+      "peak_date": "2021-11-08",
+      "trough_date": "2021-12-10",
+      "seg_start": "2021-12-10",
+      "seg_end": "2021-12-10",
+      "depth": -0.3019,
+      "n_days": 1
+    },
+    {
+      "peak_date": "2021-04-13",
+      "trough_date": "2021-08-12",
+      "seg_start": "2021-08-12",
+      "seg_end": "2021-08-12",
+      "depth": -0.3016,
+      "n_days": 1
+    },
+    {
+      "peak_date": "2025-10-26",
+      "trough_date": "2026-05-07",
+      "seg_start": "2026-05-07",
+      "seg_end": "2026-05-07",
+      "depth": -0.3016,
+      "n_days": 1
+    },
+    {
+      "peak_date": "2025-10-06",
+      "trough_date": "2025-12-25",
+      "seg_start": "2025-12-25",
+      "seg_end": "2025-12-25",
+      "depth": -0.3003,
+      "n_days": 1
+    },
+    {
+      "peak_date": "2025-10-06",
+      "trough_date": "2025-12-29",
+      "seg_start": "2025-12-29",
+      "seg_end": "2025-12-29",
+      "depth": -0.3002,
+      "n_days": 1
+    }
+  ],
+  "segments_top3_depth": [
+    "2021-11-08",
+    "2019-09-03",
+    "2021-04-13"
+  ],
+  "n_segments_alt_reading": 31,
+  "calibration": {
+    "note": "(b) 的机械上界:规则 R 把亮灯日的跌幅砍一半 ⇒ 段内回撤相对浅 15% 需要亮灯日承担段内跌幅的这份份额(一阶近似,log 口径)",
+    "rows": [
+      {
+        "peak_date": "2021-11-08",
+        "trough_date": "2022-11-21",
+        "seg_start": "2022-03-30",
+        "seg_end": "2023-01-07",
+        "depth": -0.7663,
+        "n_days": 284,
+        "need_turn_loss_share_for_15pct": 0.55,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2019-09-03",
+        "trough_date": "2020-03-12",
+        "seg_start": "2020-03-12",
+        "seg_end": "2020-04-05",
+        "depth": -0.5478,
+        "n_days": 25,
+        "need_turn_loss_share_for_15pct": 0.421,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2021-04-13",
+        "trough_date": "2021-07-20",
+        "seg_start": "2021-05-17",
+        "seg_end": "2021-08-06",
+        "depth": -0.5314,
+        "n_days": 82,
+        "need_turn_loss_share_for_15pct": 0.414,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2025-10-06",
+        "trough_date": "2026-02-05",
+        "seg_start": "2026-01-29",
+        "seg_end": "2026-05-04",
+        "depth": -0.4953,
+        "n_days": 96,
+        "need_turn_loss_share_for_15pct": 0.402,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2021-11-08",
+        "trough_date": "2022-01-22",
+        "seg_start": "2022-01-03",
+        "seg_end": "2022-03-28",
+        "depth": -0.4806,
+        "n_days": 85,
+        "need_turn_loss_share_for_15pct": 0.397,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2026-01-14",
+        "trough_date": "2026-06-30",
+        "seg_start": "2026-06-02",
+        "seg_end": "2026-08-06",
+        "depth": -0.3953,
+        "n_days": 66,
+        "need_turn_loss_share_for_15pct": 0.372,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2020-02-14",
+        "trough_date": "2020-04-15",
+        "seg_start": "2020-04-10",
+        "seg_end": "2020-04-17",
+        "depth": -0.3599,
+        "n_days": 8,
+        "need_turn_loss_share_for_15pct": 0.363,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2021-04-13",
+        "trough_date": "2021-09-21",
+        "seg_start": "2021-09-20",
+        "seg_end": "2021-09-22",
+        "depth": -0.3593,
+        "n_days": 3,
+        "need_turn_loss_share_for_15pct": 0.363,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2021-04-13",
+        "trough_date": "2021-09-28",
+        "seg_start": "2021-09-24",
+        "seg_end": "2021-09-30",
+        "depth": -0.3547,
+        "n_days": 7,
+        "need_turn_loss_share_for_15pct": 0.362,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2020-02-14",
+        "trough_date": "2020-04-20",
+        "seg_start": "2020-04-19",
+        "seg_end": "2020-04-22",
+        "depth": -0.34,
+        "n_days": 4,
+        "need_turn_loss_share_for_15pct": 0.358,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2019-07-09",
+        "trough_date": "2020-01-25",
+        "seg_start": "2020-01-19",
+        "seg_end": "2020-01-25",
+        "depth": -0.3351,
+        "n_days": 7,
+        "need_turn_loss_share_for_15pct": 0.357,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2025-10-06",
+        "trough_date": "2025-11-22",
+        "seg_start": "2025-11-20",
+        "seg_end": "2025-11-23",
+        "depth": -0.3202,
+        "n_days": 4,
+        "need_turn_loss_share_for_15pct": 0.354,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2021-11-08",
+        "trough_date": "2021-12-17",
+        "seg_start": "2021-12-17",
+        "seg_end": "2021-12-20",
+        "depth": -0.3168,
+        "n_days": 4,
+        "need_turn_loss_share_for_15pct": 0.353,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2021-11-08",
+        "trough_date": "2021-12-31",
+        "seg_start": "2021-12-29",
+        "seg_end": "2021-12-31",
+        "depth": -0.3156,
+        "n_days": 3,
+        "need_turn_loss_share_for_15pct": 0.353,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2025-10-06",
+        "trough_date": "2025-12-18",
+        "seg_start": "2025-12-17",
+        "seg_end": "2025-12-18",
+        "depth": -0.314,
+        "n_days": 2,
+        "need_turn_loss_share_for_15pct": 0.352,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2021-04-13",
+        "trough_date": "2021-08-08",
+        "seg_start": "2021-08-08",
+        "seg_end": "2021-08-08",
+        "depth": -0.3111,
+        "n_days": 1,
+        "need_turn_loss_share_for_15pct": 0.352,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2021-11-08",
+        "trough_date": "2021-12-13",
+        "seg_start": "2021-12-13",
+        "seg_end": "2021-12-13",
+        "depth": -0.3084,
+        "n_days": 1,
+        "need_turn_loss_share_for_15pct": 0.351,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2025-10-06",
+        "trough_date": "2025-12-01",
+        "seg_start": "2025-12-01",
+        "seg_end": "2025-12-01",
+        "depth": -0.3078,
+        "n_days": 1,
+        "need_turn_loss_share_for_15pct": 0.351,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2025-10-26",
+        "trough_date": "2026-05-13",
+        "seg_start": "2026-05-13",
+        "seg_end": "2026-05-13",
+        "depth": -0.3077,
+        "n_days": 1,
+        "need_turn_loss_share_for_15pct": 0.351,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2025-10-06",
+        "trough_date": "2025-12-15",
+        "seg_start": "2025-12-15",
+        "seg_end": "2025-12-15",
+        "depth": -0.3067,
+        "n_days": 1,
+        "need_turn_loss_share_for_15pct": 0.351,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2025-11-10",
+        "trough_date": "2026-05-28",
+        "seg_start": "2026-05-28",
+        "seg_end": "2026-05-28",
+        "depth": -0.3056,
+        "n_days": 1,
+        "need_turn_loss_share_for_15pct": 0.351,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2025-11-02",
+        "trough_date": "2026-05-19",
+        "seg_start": "2026-05-18",
+        "seg_end": "2026-05-19",
+        "depth": -0.3049,
+        "n_days": 2,
+        "need_turn_loss_share_for_15pct": 0.35,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2019-07-09",
+        "trough_date": "2020-01-16",
+        "seg_start": "2020-01-16",
+        "seg_end": "2020-01-16",
+        "depth": -0.3048,
+        "n_days": 1,
+        "need_turn_loss_share_for_15pct": 0.35,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2025-10-06",
+        "trough_date": "2026-01-25",
+        "seg_start": "2026-01-25",
+        "seg_end": "2026-01-25",
+        "depth": -0.3047,
+        "n_days": 1,
+        "need_turn_loss_share_for_15pct": 0.35,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2020-02-14",
+        "trough_date": "2020-04-07",
+        "seg_start": "2020-04-07",
+        "seg_end": "2020-04-07",
+        "depth": -0.3042,
+        "n_days": 1,
+        "need_turn_loss_share_for_15pct": 0.35,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2021-11-08",
+        "trough_date": "2021-12-10",
+        "seg_start": "2021-12-10",
+        "seg_end": "2021-12-10",
+        "depth": -0.3019,
+        "n_days": 1,
+        "need_turn_loss_share_for_15pct": 0.35,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2021-04-13",
+        "trough_date": "2021-08-12",
+        "seg_start": "2021-08-12",
+        "seg_end": "2021-08-12",
+        "depth": -0.3016,
+        "n_days": 1,
+        "need_turn_loss_share_for_15pct": 0.35,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2025-10-26",
+        "trough_date": "2026-05-07",
+        "seg_start": "2026-05-07",
+        "seg_end": "2026-05-07",
+        "depth": -0.3016,
+        "n_days": 1,
+        "need_turn_loss_share_for_15pct": 0.35,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2025-10-06",
+        "trough_date": "2025-12-25",
+        "seg_start": "2025-12-25",
+        "seg_end": "2025-12-25",
+        "depth": -0.3003,
+        "n_days": 1,
+        "need_turn_loss_share_for_15pct": 0.349,
+        "max_rel_shallower_possible": 0.5
+      },
+      {
+        "peak_date": "2025-10-06",
+        "trough_date": "2025-12-29",
+        "seg_start": "2025-12-29",
+        "seg_end": "2025-12-29",
+        "depth": -0.3002,
+        "n_days": 1,
+        "need_turn_loss_share_for_15pct": 0.349,
+        "max_rel_shallower_possible": 0.5
+      }
+    ]
+  }
+}
