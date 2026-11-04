@@ -1,0 +1,17 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {"id": "T-232-1", "scenario": "T-232 标记线基率 · 当下簇(2026-10-29 起)",
+     "statement": "2026-11-26 时 state_daily(entity=panel) 的 dist_200 仍为正(状态口径的 200 日线在到期日未破;2026-11-03 为 0.0592)",
+     "variable": "state:dist_200", "op": "gt", "lo": 0, "prob": 0.45, "horizon_d": "2026-11-26"},
+    {"id": "T-232-2", "scenario": "T-232 标记线基率 · 当下簇(2026-10-29 起)",
+     "statement": "2026-12-01 时 state_daily(entity=panel) 的 breadth_above_ma50 仍不高于 0.10(2026-11-03 为 0)",
+     "variable": "state:breadth_above_ma50", "op": "lt", "hi": 0.10, "prob": 0.35, "horizon_d": "2026-12-01"},
+    {"id": "T-232-3", "scenario": "T-232 标记线基率 · 当下簇(2026-10-29 起)",
+     "statement": "2026-12-01 时 state_daily(entity=panel) 的 vol_pct_3y 仍低于 0.10(2026-11-03 为 0.0502)",
+     "variable": "state:vol_pct_3y", "op": "lt", "hi": 0.10, "prob": 0.35, "horizon_d": "2026-12-01"},
+    {"id": "T-232-4", "scenario": "T-232 标记线基率 · 当下簇(2026-10-29 起)",
+     "statement": "2026-10-29 起 28 天内(到 2026-11-26),BTC(binance_hist)曾收盘低于当日 200 日均线",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.40, "horizon_d": "2026-11-26"}
+  ]
+}

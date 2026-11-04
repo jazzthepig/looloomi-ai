@@ -16,6 +16,7 @@
 | in_review | T-226 | lane-c | 自建团队 / 基金会 / 投资方钱包集合(DeFiLlama API 不买,Jazz 11-02):从归属合约与基金会多签反推地址,公共 RPC 拉日频余额与流出事件 —— 先做 T-220 找到有解锁日程的 10 个名字 | 报告 docs/research/T-226_wallet_sets.md(开头覆盖率表)+ docs/research/t226_wallets/*.csv + 地址来源表(每条带 URL);卡 notes 写 10 个名字各自的地址数 / 数据起点 / 事件数;in_review,推 lane-c/T-226。 | T-220:没有任何团队 / 基金会地址集合;解锁前行为信号无法量。 |  |
 | in_review | T-228 | lane-c | T-222 v2 盲复算(lane-c 独立重算三个数)—— 交付分支改名为 lane-c/T-228 以过范围检查 | 推 lane-c/T-228(内容 = 22b09b9d 同一提交);合并后卡转 done。 | T-222 v2 的数字只有一位作者算过。 |  |
 | in_review | T-229 | lane-c | S-710 回放:DVOL(BTC 隐含波动率指数)一年分位 ≥ 0.80 时把 ① 降到 0.5(< 0.60 恢复),2022-03 → 2026-10,按 S-692 三条判据 + 随机降仓对照 —— 只算一次、不扫参数 | 报告 docs/research/T-229_dvol_multiplier.md(预注册口径在前,结果在后)+ 脚本 docs/research/t229_dvol.py + t229_results.json;卡 notes 写 (a)(b)(c) 三个数与判;scenarios/lane-c-T-229.json;in_review,推 lane-c/T-229。 | ③ 的减仓输入只有价格趋势;加密隐含波动率作为减仓规则从没回放过(S-685 只测了 TradFi 的压力读数)。 |  |
+| in_review | T-232 | lane-c | ⓪ 标记线的前向基率:『广度≈0 + 离 200 日线 0~10% + 波动分位地板』之后 28 天,BTC 碰线的概率比无条件高多少 —— 给复盘里主观的情景权重一个量出来的底 | 报告 docs/research/T-232_zero_line_base_rate.md(预注册口径在前)+ 脚本 + 结果 json;卡 notes 写碰线概率(条件 / 无条件 / 随机分位)与簇个数;in_review,推 lane-c/T-232。 | 情景权重 10-28 / 11-01 / 11-04 三次都是主观数;无法回答『这个状态组合历史上之后发生了什么』。 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-069 | seth | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
@@ -232,4 +233,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 10 · claimed 7 · blocked 5 · in_review 14 · done 190 · dropped 3
+open 10 · claimed 7 · blocked 5 · in_review 15 · done 190 · dropped 3
