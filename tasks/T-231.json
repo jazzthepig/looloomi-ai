@@ -1,28 +1,28 @@
 {
   "id": "T-231",
-  "owner": "lane-c",
-  "status": "open",
+  "owner": "seth",
+  "status": "claimed",
   "created": "2026-11-04",
-  "title": "S-713 回放:⓪ 周期向量的 turning 相位在 2020 起每段 ≥ 30% 回撤里亮不亮、把 ① 降到 0.5 有没有削掉回撤 —— 规则与判据逐字照 S-713,只算一次",
-  "source": "HIGH_DIM_ONTOLOGY §5b-bis(⓪ 层最该建);S-685 / S-692 / S-710 ❌ 都是单标量阈值;S-713 预注册已写(台账);数据 `cycle_vector_daily`(部署后约 4 小时第一次整条重算,2019 起;先核 `select min(d), max(d), count(*), sum((phase='turning')::int) from cycle_vector_daily`,≥ 2,000 行再开工)。",
+  "title": "前向记录写端恢复:refresh_depth_divergence 逼近 statement_timeout 30s —— 给 ohlcv_daily 扫描加下界,并让『重算补的日子』在记录里可见",
+  "source": "11-04 高维复盘:_forward_record_loop 自 11-01 起零成功(11-01 0/10、11-02 0/17、11-03 0/19、11-04 0/4;T-217 §3.5),日表却一天不缺(depth_divergence_log 11-03 在)=重算补的。根因证据(只读):pg_stat_statements 里 refresh_depth_divergence 352 次、均值 6.8s、最大 24.5s,函数自带 statement_timeout=30s;函数体对 ohlcv_daily 的 ranked CTE 只写 trade_date <= v_d,没有下界,窗口函数扫全部历史(表 152 万行 / 582MB);特征只需要前 80+21 根日线。数据库 10-29 后更忙时,最大值越过 30s 即超时,客户端只看到 'no response from Supabase'。",
   "allowed_paths": [
-    "docs/research/",
+    "migrations/",
+    "src/data/signals/forward_record_keeper.py",
+    "tests/",
     "tasks/T-231.json"
   ],
   "forbidden_paths": [
     "Shadow/",
-    "src/",
+    "src/api/",
     "paper_trading/",
     "PROJECT_STATE.md",
-    "PROJECT_STATE_LOG.md",
-    "scripts/",
-    "migrations/"
+    "PROJECT_STATE_LOG.md"
   ],
   "acceptance": {
-    "check": "① 读 cycle_vector_daily 的 d / phase(不要自己重算向量 —— 表就是预注册的口径)与 BTC 现货(ohlcv_daily source=binance_hist)。② 事件段:BTC 自滚动 200 日高点回撤 ≥ 30% 的每一段,峰到谷,机械切,列出来(起止、深度)。③ 规则 R:turning ⇒ 次日敞口 0.5,normal ⇒ 1.0;2020-01-01 → 2026-10-31;10bp × |Δ敞口|。④ 报:(a) 每段 turning 占比;(b) 最大三段里 R 的段内回撤相对持有浅多少;(c) 非事件段 turning 天数占比;(d) 全区间持有 vs R 的总收益 / MDD / Calmar,随机对照 1,000 次(同样 turning 总天数、段长从实际抽、种子 713)的 Calmar 分位。⑤ 副列只报不判:去 Fed 分量 / 去资金费分量(用表里 z 自己重组 deterioration,规则不变);TURN_DAYS 1 / 5。⑥ 判:(b)(c)(d) 全过 ✅ 否则 ❌,写清哪条没过。纪律:只读(SELECT),不改代码、不做 DDL、不入库;随机对照只用 src/data/evaluation/apparatus.py;翻页带 order=;探针脚本改同一个文件再跑;步数过半先落文件;交付附 docs/research/scenarios/lane-c-T-231.json(≥ 3 条)。",
-    "expect": "报告 docs/research/T-231_cycle_turning.md(预注册口径在前)+ docs/research/t231_cycle.py + t231_results.json;卡 notes 写事件段数、(a)–(d) 的数与判;scenarios/lane-c-T-231.json;in_review,推 lane-c/T-231。"
+    "check": "① 在 ranked CTE 加 trade_date > v_d - 200(日历天,留足 101 根日线余量),其余不动;新旧函数在同一 p_date 上输出逐行比对:depth_z / px20 / cell 差异 = 0(近 200 天内不足 101 根日线的符号除外,列出来)。② 应用前后各量 refresh_depth_divergence 的 pg_stat_statements 均值与最大值(目标:最大 < 10s)。③ forward_record_keeper 在 refresh 超时时写明确原因(超时 vs 返回 None),不再落到 NoneType 兜底分支。④ 记录里区分『当日写入』与『事后重算补写』:至少在 loop_attempt.detail 里带 recomputed_days 列表。⑤ 恢复判据:修复后 _forward_record_loop 在 24 小时内 ≥ 1 条 ok,且之后 7 天 error 率 < 10%。",
+    "expect": "迁移 + 测试 + 前后对比表;卡 notes 写最大耗时前后值、逐行差异数、恢复后第一条 ok 的时间。DDL 的应用要走 Seth 交互轮次(定时轮次只读,不应用)。"
   },
-  "prior_value": "⓪ 层此前没有向量也没有判据;③ 的减仓输入只有价格趋势站得住。",
-  "notes": "",
+  "prior_value": "写端熄火 4 天且在加重(每天 error 10→17→19);『自首日起连续、无回填』这句对外话没有机械保证。",
+  "notes": "11-04 定时复盘开卡。未应用任何 DDL。同族待查(只读):只有 refresh_depth_divergence / resolve_depth_divergence 两个函数设了 statement_timeout,后者均值 33ms、最大 196ms,安全。_forward_return_backfill_loop 的 73 次无原因 error 不一定同源,修复后再看。",
   "verified": null
 }
