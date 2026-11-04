@@ -2940,3 +2940,8 @@ The cap is doing its job only if closure is as routine as addition.*
 ## [header archived 2026-11-04 05:10 UTC from PROJECT_STATE]
 
 **header:** 2026-11-03 16:50 UTC (Seth — **长任务:加密自己的波动率结构进 ③。** ① **Deribit DVOL**(d47bf6a7)`deriv_vol_daily` ← `_deribit_vol_loop`:BTC / ETH 30 日隐含波动率指数日线,2021-03-24 起已回填完(各 2,051 行),之后每 6 小时补 10 天;③ 每日决定的输入 + 文案多一句「DVOL 40(一年分位 39%)」。② **S-710 预注册**(台账):DVOL 一年分位 ≥ 0.80 ⇒ ① 降 0.5(< 0.60 恢复),判据照抄 S-692(回撤浅 ≥ 15% / Calmar 过随机降仓 95 分位 / 两半都 ≥ 持有);**T-229 lane-c** 回放,闸门已过(§Seth-1103b)。③ 决定行现在把无条件频率和当天的桶一起存进 inputs(ff09e31d),S-709 的对照组不用事后重算。④ 当天读数:DVOL 39.7、一年分位 0.39,不在触发区。**在跑:** lane-c T-226 续抓取 / T-228 盲复算 / T-229;lane-a T-222 v3;lane-b T-223 v2 → T-227(等 events 2,000 条,现 1,474+)。)
+
+
+## [header archived 2026-11-04 06:30 UTC from PROJECT_STATE]
+
+**header:** 2026-11-03 19:15 UTC (Seth — **S-710 ❌ + 小股东待遇日表。** ① **S-710 ❌(lane-c T-229,cc439ab9,交付只用了 1 小时)**:DVOL 一年分位 ≥ 0.80 减到 0.5 —— 回撤只相对浅 4%(要 15%)、Calmar 在随机降仓里 30.5 分位(要 95)、后半输持有;阈值 0.70 / 0.90、ETH、对称臂都不救。读法:IV 高是在跌了之后,躲掉的和错过的一样多,和 S-685 同形状。**③ 倍数族四条路三条 ❌,到现在只有价格趋势本身在随机对照下站得住。** DVOL 留在每日决定里当描述。数据对账:lane-c 直取 Deribit 的缓存与 `deriv_vol_daily` 抽 5 日逐位一致。② **小股东待遇日表(eacae5e6)**:`treatment_daily` ← `_treatment_loop`:CIS 25 名每天的协议收入 / 分给持有人 / 分配率(DeFiLlama 快照按 coingecko id 合并各 slug)、市值 / 供给 / 30 日稀释、年化收入率与持有人收益率、当天排名;没有协议收入 = NULL;只记账。覆盖:25 名里约 20 名有条目(HYPE / UNI / ETH / LINK / SOL / NEAR / BNB … 分配率 1.0;AAVE / LDO / POL / ARB / STRK 0)。**在跑:** lane-a T-222 v3 · lane-b T-223 v2 / T-227 · lane-c T-226 续 / T-228。)
