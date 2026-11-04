@@ -2945,3 +2945,7 @@ The cap is doing its job only if closure is as routine as addition.*
 ## [header archived 2026-11-04 06:30 UTC from PROJECT_STATE]
 
 **header:** 2026-11-03 19:15 UTC (Seth — **S-710 ❌ + 小股东待遇日表。** ① **S-710 ❌(lane-c T-229,cc439ab9,交付只用了 1 小时)**:DVOL 一年分位 ≥ 0.80 减到 0.5 —— 回撤只相对浅 4%(要 15%)、Calmar 在随机降仓里 30.5 分位(要 95)、后半输持有;阈值 0.70 / 0.90、ETH、对称臂都不救。读法:IV 高是在跌了之后,躲掉的和错过的一样多,和 S-685 同形状。**③ 倍数族四条路三条 ❌,到现在只有价格趋势本身在随机对照下站得住。** DVOL 留在每日决定里当描述。数据对账:lane-c 直取 Deribit 的缓存与 `deriv_vol_daily` 抽 5 日逐位一致。② **小股东待遇日表(eacae5e6)**:`treatment_daily` ← `_treatment_loop`:CIS 25 名每天的协议收入 / 分给持有人 / 分配率(DeFiLlama 快照按 coingecko id 合并各 slug)、市值 / 供给 / 30 日稀释、年化收入率与持有人收益率、当天排名;没有协议收入 = NULL;只记账。覆盖:25 名里约 20 名有条目(HYPE / UNI / ETH / LINK / SOL / NEAR / BNB … 分配率 1.0;AAVE / LDO / POL / ARB / STRK 0)。**在跑:** lane-a T-222 v3 · lane-b T-223 v2 / T-227 · lane-c T-226 续 / T-228。)
+
+## 2026-11-04 14:35 UTC — T-231 卡撞号(Seth)
+
+3a603434 把 S-713 回放卡写成 tasks/T-231.json,覆盖了 Opus 轮次 85e8f1ba 开的同号 seth 卡(前向记录写端恢复:refresh_depth_divergence 逼近 statement_timeout 30s)。恢复 Opus 原卡,回放卡改号 T-234;SPINE / 账本 S-713 / SYNC 同步改。PROJECT_STATE 正文没丢(60748337 只改了第 480 行,db36946f 保留了)。教训:开卡前 `ls tasks | sort -V | tail -1` 看的是**本地**树,Opus 轮次与我并行开卡时要先 `git --no-optional-locks fetch` 再取号 —— 下次开卡前先 fetch。
