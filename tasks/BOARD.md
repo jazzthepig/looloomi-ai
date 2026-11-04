@@ -11,6 +11,7 @@
 | in_review | T-227 | lane-b | 「开闸」回测:Binance 现货上币公告之后 30 / 90 天相对宇宙 —— 事件库 `events` 里 2017 起的全部上币公告(S-708 预注册,只算一次) | 报告 docs/research/T-227_listing_event.md(预注册段在前:判据、对照、试验计数);卡 notes 写事件数 / 有价格的符号数 / 主口径中位数与对照分位 / 三个时代;scenarios/lane-b-T-227.json;in_review,推 lane-b/T-227。 | 「开闸后跌」只有两个例子(UNI、PUMP);2,000+ 条上币公告从来没有按同一口径算过。 |  |
 | in_review | T-230 | lane-b | 发行方登记表核验:issuer_entities 37 家的归属、主体、工具(代币 / 股票 / 稳定币 / 场所)逐条带出处核对;另列「有收入不分」的 6 家各自把收入用在哪 | 报告 docs/research/T-230_issuer_registry_check.md(一张 37 行表:id / 建议 / 出处;+ ②③ 两节);卡 notes 写「建议改」的家数与「核不到」的家数;in_review,推 lane-b/T-230。 | 登记表 37 家全部 assumed;S-711 的分类依赖它。 |  |
 | in_review | T-233 | lane-b | 「开闸」回测第二步:T-227 闸门没过(events 只 107 行),改用 binance_hist 首次出现日作事件源,重新预注册后只算一次 —— PIT 市场篮 + nb≥20 子集 + 三个时代 + 公告前涨幅 | 报告 docs/research/T-233_listing_event_v2.md(预注册段在前)+ 脚本 + 结果 json;卡 notes 写:事件数 / PIT 篮中位数与分位 / 三个时代各自中位数与分位 / nb≥20 / 公告前涨幅;in_review,推 lane-b/T-233。 | T-227 只有固定 25 名篮一臂,早期基准退化把『高位』与『基准坏了』混在一起,−22.35% 只是方向提示。 |  |
+| in_review | T-237 | lane-b | S-698 之后 R-v2 看到的是另一条成交量:binance_hist 现在是现货量(137/184 个符号比 10-21 快照小约 5 倍),而 S-610 / S-638 的 770 张票是在混了永续量的序列上验的 —— 重拉 DB 日线,按同一规则重生成票,与 770 张缓存逐票对比;宇宙门槛(30 日均成交额 ≥ 500 万)按月数一遍 | 报告 docs/research/T-237_volume_regime.md + docs/research/t237_volume_regime.py + t237_results.json;卡 notes 写:受影响符号数、票对比三组的 n / 总 R、宇宙按月差、闸门一句话;in_review,推 lane-b/T-237。 | 770 张票是 R-v2 全部验证的底;它站在哪条成交量序列上,今天之前没人问过。 |  |
 | in_review(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | in_review | T-220 | lane-c | 治理的领先信号:解锁前团队 / 基金会钱包流向、出事后的处理、营销强度 —— 先查能不能量(数据源可行性),再写预注册草稿 | 报告 docs/research/T-220_governance_leading_signals.md(开头可行性表);卡片 notes 写:免费源够不够、事件个数、两条草稿是否可在现有数据上跑;in_review,推 lane-c/T-220。 | 治理只量了滞后的一半(S-661 价值捕获比、S-587 质量);领先的行为信号一个都没有,不知道现有数据能不能量。 |  |
 | in_review | T-224 | lane-c | ② 倾斜在更宽的面板上:按时点前 50 大(含死币)的 ①,压低 S-691 五因子合成最差五分之一的权重 —— S-694 在 24 名上 ❌,问宽到 50 名「躲开」信号够不够用 | 报告 docs/research/T-224_tilt_pit50.md(预注册段在前);卡 notes 写基线年化 / 倾斜超额 / 随机对照分位 / 两段符号;scenarios/lane-c-T-224.json;in_review,推 lane-c/T-224。 | ② 只在 24 名上试过一次(S-694 ❌);宽面板上「躲开最差档」的倾斜没有任何回放。 |  |
@@ -238,4 +239,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 12 · claimed 7 · blocked 5 · in_review 18 · done 190 · dropped 3
+open 12 · claimed 7 · blocked 5 · in_review 19 · done 190 · dropped 3
