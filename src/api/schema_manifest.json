@@ -1,6 +1,7 @@
 {
   "write_tables": [
     "agent_call_log",
+    "agent_judgment_daily",
     "allocation_daily",
     "allocation_nav_daily",
     "allocation_override",
@@ -139,6 +140,18 @@
     "write_log"
   ],
   "write_columns": {
+    "agent_judgment_daily": [
+      "author",
+      "change_mind",
+      "code_ref",
+      "d",
+      "dossier_hash",
+      "drivers",
+      "model",
+      "probs",
+      "rationale",
+      "scenario_ids"
+    ],
     "beta_core_nav": [
       "benchmark_nav",
       "benchmark_return",

@@ -2699,6 +2699,31 @@ async def _start_entity_vectors_loop():
     print("[ENTVEC] ✅ entity-space quarterly vectors scheduled (6h)")
 
 
+async def _agent_judgment_loop():
+    """agent 判断臂(`src/data/execution/agent_judgment.py`,S-725,11-05):每小时看;昨天的 ③ 决定落表后,LLM 读同一份档案写 BTC 30 天三档概率入情景台账。
+    排在 ③ 决定(7800)之后;模型不通 ⇒ 记 refused + 原因,当天空着不补。"""
+    await _asyncio.sleep(_boot_delay(8100))
+    while True:
+        try:
+            from src.data.execution.agent_judgment import run_once as _aj_run
+            r = await _aj_run()
+            await _iteration_result("_agent_judgment_loop", r)
+            await _beat("_agent_judgment_loop", ok=bool(r.get("ok")), refused=(r.get("status") == "skipped"),
+                        error=None if r.get("ok") else str(r.get("why"))[:200],
+                        detail={"d": r.get("d"), "author": r.get("author"), "probs": r.get("probs"), "base": r.get("base"), "why": str(r.get("why"))[:200]})
+        except Exception as _e:
+            print(f"[AGENT-J] ⚠️  pass FAILED: {_e}")
+            await _beat("_agent_judgment_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_agent_judgment_loop", _e)
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_agent_judgment_loop():
+    _asyncio.create_task(_agent_judgment_loop())
+    print("[AGENT-J] ✅ agent judgment arm scheduled (hourly check, S-725)")
+
+
 async def _scenario_ledger_loop():
     """情景台账的结算(`src/data/evaluation/scenario_ledger.py`,11-02):每小时结算到期、还没结的自动命题 → scenario_scores。"""
     await _asyncio.sleep(_boot_delay(540))

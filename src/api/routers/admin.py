@@ -381,6 +381,18 @@ async def decision_outcomes_read(x_internal_token: str = Header(None), kind: str
     return {"ok": True, **(await summary()), "rows": rows}
 
 
+@router.get("/internal/agent-judgment")
+async def agent_judgment_read(x_internal_token: str = Header(None), days: int = 30):
+    """11-05(S-725):agent 判断臂最近 N 天 —— 概率、理由、它依据了档案里的哪些字段;对照同日基率臂。"""
+    require_internal_token(x_internal_token)
+    from src.data.style.header import _read_all
+    since = (datetime.now(timezone.utc) - timedelta(days=max(1, min(int(days), 400)))).date().isoformat()
+    rows = await _read_all("agent_judgment_daily", {"select": "d,author,model,probs,rationale,drivers,change_mind,scenario_ids",
+                                                    "d": f"gte.{since}", "order": "d.desc"})
+    base = {str(r["d"])[:10]: r.get("probs") for r in await _read_all("exposure_decision_daily", {"select": "d,probs", "d": f"gte.{since}"})}
+    return {"ok": True, "rows": [{**r, "base_probs": base.get(str(r["d"])[:10])} for r in rows]}
+
+
 @router.get("/internal/entity-vectors")
 async def entity_vectors_read(x_internal_token: str = Header(None), entity: str = "", quarter: str = ""):
     """11-05:Entity 空间 —— 每个发行方每季一个稀疏向量(待遇均值 / 决策计数与金额 / 决策后 30 天超额均值)。"""
