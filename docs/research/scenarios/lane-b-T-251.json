@@ -1,0 +1,83 @@
+{
+  "author": "lane-b",
+  "task": "T-251",
+  "note": "机器可核命题;概率是主观先验,到期按 Brier 结算。命题只描述可查的事实,不含收益承诺。",
+  "entries": [
+    {
+      "id": "T-251-1",
+      "scenario": "T-251 R-v2 名义合计上限",
+      "statement": "2026-12-05,BTC 在 ohlcv_daily(source='binance_hist')的收盘价在 50000 与 300000 之间。",
+      "variable": "close:BTC",
+      "op": "between",
+      "lo": 50000,
+      "hi": 300000,
+      "prob": 0.92,
+      "horizon_d": "2026-12-05"
+    },
+    {
+      "id": "T-251-2",
+      "scenario": "T-251 R-v2 名义合计上限",
+      "statement": "2026-12-05,SOL 在 ohlcv_daily(source='binance_hist')的收盘价在 80 与 400 之间。",
+      "variable": "close:SOL",
+      "op": "between",
+      "lo": 80,
+      "hi": 400,
+      "prob": 0.85,
+      "horizon_d": "2026-12-05"
+    },
+    {
+      "id": "T-251-3",
+      "scenario": "T-251 R-v2 名义合计上限",
+      "statement": "按本卡回放口径(perp_bv_daily + r_tickets_scan 规则)重跑 2026-11-05→2026-12-05 的窗口,新生成并已出场的 R-v2 票中,止损出场(exit_reason='stop')的占比 ≤ 45%。",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 0.45,
+      "prob": 0.62,
+      "horizon_d": "2026-12-05"
+    },
+    {
+      "id": "T-251-4",
+      "scenario": "T-251 R-v2 名义合计上限",
+      "statement": "按本卡回放口径重跑 2026-11-05→2026-12-05 的窗口,名义合计上限 30% 档因上限被挡掉的票 ≥ 1 张(即上限在这个窗口里确实咬合)。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.7,
+      "horizon_d": "2026-12-05"
+    }
+  ],
+  "propositions": [
+    {
+      "id": "T-251-1",
+      "statement": "2026-12-05,BTC 收盘在 50000–300000 之间。",
+      "probability": 0.92,
+      "resolution": "SELECT close FROM ohlcv_daily WHERE source='binance_hist' AND symbol='BTC' AND trade_date='2026-12-05';落在区间记 1,否则 0。",
+      "resolves_by": "2026-12-05",
+      "basis": "宽区间先验:加密主流币一个月内走出该区间的概率低。"
+    },
+    {
+      "id": "T-251-2",
+      "statement": "2026-12-05,SOL 收盘在 80–400 之间。",
+      "probability": 0.85,
+      "resolution": "SELECT close FROM ohlcv_daily WHERE source='binance_hist' AND symbol='SOL' AND trade_date='2026-12-05';落在区间记 1,否则 0。",
+      "resolves_by": "2026-12-05",
+      "basis": "SOL 的波动带宽比 BTC 大,区间相对收窄,先验略低于 BTC 那条。"
+    },
+    {
+      "id": "T-251-3",
+      "statement": "2026-11-05→2026-12-05 新出的 R-v2 票里,止损出场占比 ≤ 45%。",
+      "probability": 0.62,
+      "resolution": "用 docs/research/t251_gross_cap.py 的回放口径重跑该窗口,统计 exit_reason='stop' 的票数 / 已出场票数;≤0.45 记 1,否则 0(已出场票数为 0 记 0)。",
+      "resolves_by": "2026-12-05",
+      "basis": "T-244 实测历史止损出场占比 36.9%(284/770);前向窗口样本小,容忍带放宽到 45%。"
+    },
+    {
+      "id": "T-251-4",
+      "statement": "2026-11-05→2026-12-05 的窗口里,30% 名义上限至少挡掉 1 张票。",
+      "probability": 0.7,
+      "resolution": "同口径重跑,统计 gross_cap=0.30 档被上限挡掉的票数;≥1 记 1,否则 0。",
+      "resolves_by": "2026-12-05",
+      "basis": "本卡的历史窗口里上限反复咬合(同时持有多张票时),中性先验 0.7;若窗口内票量稀疏则可能为 0。"
+    }
+  ]
+}
