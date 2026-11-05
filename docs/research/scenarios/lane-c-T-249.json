@@ -1,0 +1,20 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {"id": "T-249-1", "scenario": "T-249 IC 乘数层 · 支柱 IC 的前向符号",
+     "statement": "2026-12 月末截面(crypto 组)O 支柱与 30 天超额的组内 Spearman IC > 0(2023-01 → 2026-10 全样本 crypto O 的 IC 均值 +0.1105,t 2.51;最近 13 个月末的 IC̄ 一直 ≥ +0.13)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.62, "horizon_d": "2027-02-05"},
+    {"id": "T-249-2", "scenario": "T-249 IC 乘数层 · 支柱 IC 的前向符号",
+     "statement": "2026-12 月末截面(tradfi 组)F 支柱与 30 天超额的组内 Spearman IC > 0(全样本 tradfi F 的 IC 均值 +0.0946,t 3.37;走步里 2025-01 → 2026-05 几乎每月都过启用门槛)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.60, "horizon_d": "2027-02-05"},
+    {"id": "T-249-3", "scenario": "T-249 IC 乘数层 · 支柱 IC 的前向符号",
+     "statement": "2026-12 月末截面(crypto 组)A 支柱与 30 天超额的组内 Spearman IC < 0(全样本 crypto A 的 IC 均值 −0.0400,t −0.96)",
+     "variable": "manual", "op": "lt", "hi": 0, "prob": 0.58, "horizon_d": "2027-02-05"},
+    {"id": "T-249-4", "scenario": "T-249 IC 乘数层 · 乘数层的效用前向",
+     "statement": "2027-01 月末截面(crypto 组),不乘 IC 乘数的总分组内 Spearman IC > 0(本卡走步里 crypto 的月度总分 IC 与乘数的月度差均值 +0.0058、t 1.33 —— 乘数没有证明自己有用,但总分本身的正相关仍可能延续)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.55, "horizon_d": "2027-03-05"},
+    {"id": "T-249-5", "scenario": "T-249 IC 乘数层 · 区间参照量",
+     "statement": "2026-12-01 时 BTC(binance_hist)收盘价高于 80000(2026-10-10 重建序列里的价格为 82917.90;只判价位,不判方向)",
+     "variable": "close:BTC", "op": "gt", "lo": 80000, "prob": 0.55, "horizon_d": "2026-12-01"}
+  ]
+}
