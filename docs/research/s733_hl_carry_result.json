@@ -1,0 +1,118 @@
+{
+ "days_no_names": 7,
+ "min_names_per_day": 12,
+ "names": [
+  "AAVE",
+  "APT",
+  "ARB",
+  "ATOM",
+  "AVAX",
+  "BCH",
+  "BNB",
+  "BTC",
+  "DOGE",
+  "DOT",
+  "ETC",
+  "ETH",
+  "FIL",
+  "INJ",
+  "LINK",
+  "NEAR",
+  "OP",
+  "SOL",
+  "SUI",
+  "TRX",
+  "UNI",
+  "XRP"
+ ],
+ "n_names": 22,
+ "days": 1146,
+ "A": {
+  "ann_net": 0.0895,
+  "max_dd": -0.0842,
+  "neg_run_days": 85,
+  "neg_run_loss": -0.0476
+ },
+ "B": {
+  "ann_net": 0.1219,
+  "max_dd": -0.0027,
+  "neg_run_days": 12,
+  "neg_run_loss": -0.0022
+ },
+ "switches_A": 22,
+ "switches_B": 532,
+ "B_on_share": 0.72,
+ "by_period": {
+  "2023H1": {
+   "A": -0.3442,
+   "B": 0.0158,
+   "days": 30
+  },
+  "2023H2": {
+   "A": 0.0607,
+   "B": 0.1693,
+   "days": 184
+  },
+  "2024": {
+   "A": 0.224,
+   "B": 0.221,
+   "days": 366
+  },
+  "2025": {
+   "A": 0.0539,
+   "B": 0.0626,
+   "days": 365
+  },
+  "2026H1": {
+   "A": -0.0047,
+   "B": 0.0185,
+   "days": 181
+  },
+  "2026H2": {
+   "A": 0.048,
+   "B": 0.0499,
+   "days": 20
+  }
+ },
+ "per_name_A_gross": {
+  "ATOM": -0.0185,
+  "BCH": -0.0173,
+  "APT": 0.0097,
+  "TRX": 0.02,
+  "BNB": 0.0312,
+  "INJ": 0.0646,
+  "DOT": 0.0734,
+  "SUI": 0.0812,
+  "AVAX": 0.0852,
+  "XRP": 0.0923,
+  "OP": 0.0936,
+  "ETC": 0.1099,
+  "ARB": 0.1218,
+  "SOL": 0.1297,
+  "UNI": 0.1465,
+  "BTC": 0.1484,
+  "ETH": 0.1491,
+  "FIL": 0.158,
+  "LINK": 0.1626,
+  "AAVE": 0.1691,
+  "DOGE": 0.1782,
+  "NEAR": 0.2129
+ },
+ "c": {
+  "monthly_future_rho": -0.072,
+  "monthly_n": 37,
+  "monthly_param_p": 0.671,
+  "monthly_same_month_rho": 0.389,
+  "same_month_p": 0.017,
+  "daily_trailing30_vs_fwd30_rho": -0.064,
+  "block30_p": 0.641
+ },
+ "d": {
+  "B_ann": 0.1219,
+  "null_p95": 0.0801,
+  "null_median": 0.0725,
+  "pctile": 1.0,
+  "n": 1000,
+  "note": "per name: rule B's on-runs and off-runs shuffled separately (same on-weeks, same switches)"
+ }
+}
