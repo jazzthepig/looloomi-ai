@@ -1,7 +1,7 @@
 {
   "id": "T-240",
   "owner": "lane-a",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-11-05",
   "title": "T-235 唯一过线的格子出样本检验(S-723):开票日主动买盘占比(tbqv / qv,perp_bv_daily)在 2020-03 → 2022-12 这一半(当时没数据、现在有了)上 ΔR 与随机分位 —— 判据与 T-235 的 candidate 定义逐字相同;只测这一个量",
   "source": "T-235 v2(S-715):主动买盘占比 H2(2023-01 → 2026-10)ΔR = +1.08R、单侧分位 0.997 / 双侧 0.006,H1 n=0 测不了。11-05 perp_bv_daily 回补到 2019-12 并带 tbqv(klines 第 11 列 taker_buy_quote_volume)⇒ H1 现在能测。H2 是发现样本,**H1 是留出样本**。票集与口径沿用 docs/research/t235_breakout_attribution.py(d 口径与 d−1 口径都报)。",
@@ -23,6 +23,6 @@
     "expect": "报告 docs/research/T-240_taker_holdout.md + docs/research/t240_taker_holdout.py + t240_results.json;卡 notes 写 H1 的 n / ΔR / 分位 / 缺失率、H2 对照、口径一致性与判;in_review,推 lane-a/T-240。"
   },
   "prior_value": "T-235 的这格是全表唯一过 0.95 的;没有留出样本之前它只是一次发现。",
-  "notes": "",
+  "notes": "完成(S-723,只测「主动买盘占比」一个量,多重比较只剩 1 次)。票集 = T-235 的 767 张(原样,未改)。H1(留出半,开票日 2020-03-01→2022-12-31)共 80 张(开票 2020-04-29→2021-11-30,2022 长票 0 张):新口径 tbqv/qv(perp_bv_daily)缺失率 2.5%(78/80 可得;旧 s695 口径缺失率 98.75%,这就是 T-235 里 H1 测不了的直接原因);扩张窗口五分位(min_ref=20)定档后 n_labeled=54;ΔR(顶5−底1)=+2.0082;随机打乱标签 1,000 次(种子 240,apparatus)单侧分位 0.768 / 双侧 0.464。H2(发现半)新口径 n_labeled=644,ΔR=+0.6067,单侧 0.909 / 双侧 0.182;T-235 旧口径同段 ΔR=+1.076 / 单侧 0.997 ⇒ 新旧读数不接近。口径一致性:2023 后重叠 644 张,Pearson 0.2126、Spearman 0.2125、中位绝对差 0.0271、分档逐票一致率 21.8%(±1 档 58.1%);滞后诊断 lag0 最高(0.213)、lag ±1~±3 ≤0.068 ⇒ 不是日期错位 ⇒ 新口径与 T-235 的 s695 口径**不是同一个量**(tbqv/qv 是 K 线成交额日汇总;deriv_metrics_daily.taker_ratio_mean 是 binance_vision_metrics 的 5 分钟买卖量比均值),H2 的 +0.6067 是新量的读数、不是旧量的复算。判(S-723 三条):H1 ΔR≥+0.3R ✓(+2.0082)、单侧分位≥0.95 ✗(0.768)、与 H2 同号 ✓ ⇒ **❌ 未确认(留出样本没有复现)**。另:d−1 口径 H1 ΔR=−3.4896(翻号)⇒ 标 d_only(全局纪律:只在当天成立不算);按该纪律即便分位过也不算候选。产物:docs/research/T-240_taker_holdout.md + t240_taker_holdout.py + t240_results.json;情景 docs/research/scenarios/lane-a-T-240.json(5 条)。未改代码、无 DDL、未入库;零分布/分位只用 src/data/evaluation/apparatus.py。",
   "verified": null
 }
