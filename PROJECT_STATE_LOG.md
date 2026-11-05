@@ -2957,3 +2957,7 @@ Entity/Decision 层建了一天,没有一条边通到结果。`src/data/entity/d
 ## 2026-11-04 17:00 UTC — 今晚的三件(Seth)
 
 ① `book_vectors`(S-717):Strategy 空间第一张表,从登记表每本账的前向超额算,不回测;天气桶用 state_daily dist_200 / vratio_30_180 + cycle_vector_daily phase。② decision_outcomes 首批 283 行,抽行核对一致。③ ⓪ v1.1 重算:2022 一次没亮、2023 亮 127 天 —— 记下,交 lane-c 判。另:每次推送都重启 Railway,新循环的首轮(boot 延迟 ~21 分钟)被连续三次部署推后了一小时 —— 以后批量落地时先排完队再等首轮,别一边推一边等。T-231 撞号教训:并行开卡先 fetch 再取号。
+
+## 2026-11-05 01:40 UTC — S-718 落地(Seth)
+
+永续策略读永续序列。没有新写入端 —— 用库内函数从 perp_bv_daily 复制(同一个 data.binance.vision um 日档),Railway 只是每轮调一次;两个 SQL 函数只换源标签,CI 用旧迁移做 diff。不回扫前向(前向锁);重验交 lane。
