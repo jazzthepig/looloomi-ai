@@ -1,0 +1,56 @@
+{
+  "author": "lane-c",
+  "note": "T-246(S-731)前向预期。概率是作者自估,到期按 Brier 结算;写的是可核的量,不是收益承诺。基数取自本卡实测(报告 docs/research/T-246_rv2_pit_universe.md、数值 docs/research/t246_results.json)。T-246 实测:S-731 按原文判 ❌ —— U2(上市满 365 天 + 30 日均 ≥ $20M)的 Calmar 0.286 只有今天名单(U1 0.799)的 36%,离 90% 的线很远;但 U2 两半都 > 0(前半 +16.5R / 后半 +97.1R)、2026-08-08 后一段 +0.77R ≥ 0、2 张开票时已下架的票照常计入。机制与假设相反:门槛挡掉的 481 张每票 +0.41R(比留下的 +0.22R 还好),「薄盘口新合约上的突破多半是做出来的」在全宇宙层面没成立(最差的是上市 1–2 年那档,−0.016R/张)。",
+  "entries": [
+    {
+      "id": "T-246-1",
+      "scenario": "T-246 · R-v2 的真钱宇宙不改",
+      "statement": "到 2027-03-01,R-v2 的真钱宇宙仍然是今天的名单(257 名 + 1000PEPE),没有换成 S-731 的按时点规则(S-731 按原文判 ❌;改真钱宇宙要 Jazz 拍板。记 1=仍然是,0=已换)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.75,
+      "horizon_d": "2027-03-01"
+    },
+    {
+      "id": "T-246-2",
+      "scenario": "T-246 · 按时点规则重算仍不过线",
+      "statement": "到 2027-06-01,用更新的数据重算 S-731 的规则,U2 的 Calmar 仍不到今天名单(U1)的 90%(2026-11-05 实测:36%。记 1=仍不到,0=到了)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.65,
+      "horizon_d": "2027-06-01"
+    },
+    {
+      "id": "T-246-3",
+      "scenario": "T-246 · coin 永续宇宙的规模",
+      "statement": "2026-12-05 时,`perp_bv_pairs` 里 kind='coin' 的合约数仍不少于 649(2026-11-05 实测 653;台账共 913 对)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 649,
+      "prob": 0.85,
+      "horizon_d": "2026-12-05"
+    },
+    {
+      "id": "T-246-4",
+      "scenario": "T-246 · 今天的面板名单还在",
+      "statement": "2026-12-05 时,`ohlcv_daily source=binance_hist` 的 distinct symbol 数仍不少于 257(2026-11-05 实测 262;面板 ∩ coin 永续 = 257)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 257,
+      "prob": 0.85,
+      "horizon_d": "2026-12-05"
+    },
+    {
+      "id": "T-246-5",
+      "scenario": "T-246 · 观察窗口里的 BTC 价格水平",
+      "statement": "2026-12-05 时,BTC 收盘价(ohlcv_daily source=binance_hist)高于 75000(2026-11-04 为 80504)",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 75000,
+      "prob": 0.62,
+      "horizon_d": "2026-12-05"
+    }
+  ]
+}
