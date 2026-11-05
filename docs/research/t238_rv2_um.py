@@ -227,6 +227,7 @@ def load_pbv_universe() -> dict:
         if k == "coin" or (not k and df):
             keep[s] = r
     return {"n_rows": len(rows), "n_keep": len(keep), "kind_hist": dict(kinds),
+            "keep_syms": set(keep),   # 供 load_pbv_raw 过滤;不进 PBV_UNI(结果 JSON 只留计数)
             "n_keep_null_kind_with_dead_from": sum(1 for r in keep.values()
                                                    if not (r.get("kind") or "").strip())}
 
@@ -234,7 +235,8 @@ def load_pbv_universe() -> dict:
 def load_pbv_raw() -> dict[str, list]:
     raw = _read_jsonl_pbv(PBV_JSONL)
     uni = load_pbv_universe()
-    kept = {s: v for s, v in raw.items() if s in uni["keep"]}
+    keep_syms = uni.pop("keep_syms")
+    kept = {s: v for s, v in raw.items() if s in keep_syms}
     PBV_UNI.clear()
     PBV_UNI.update(uni)
     PBV_UNI["n_symbols_before_filter"] = len(raw)
@@ -652,10 +654,194 @@ def coverage_audit(raw: dict[str, list]) -> dict:
             "missing_sample": {s: m for s, m in list(sorted(miss.items()))[:5]}}
 
 
+def _rename_1000(bars: dict[str, list], ref_syms=None):
+    """Binance 微市值永续用 `1000X` 记号(如 1000PEPE),与现货缓存的 `X` 不同名。
+    映射回 X 以便逐票对齐;价格是 1000 倍但 R 是比值、成交额 qv 本就是美元口径
+    ⇒ 阈值(hh40/sma200/adv30/adv40p/dv)与 R 均不受影响。
+    ref_syms = 缓存符号集时:只在缓存里写 `X`(不写 `1000X`)时才把 `1000X` 映成 `X`
+    —— 缓存本身也有 1000LUNC/1000SHIB/1000WHY/1000X/1000XEC,那几只必须保持原名。"""
+    out, renamed = {}, []
+    for s, v in bars.items():
+        tgt = None
+        if s.startswith("1000"):
+            base = s[4:]
+            if ref_syms is None:
+                if base not in bars:
+                    tgt = base
+            elif (base in ref_syms) and (s not in ref_syms):
+                tgt = base
+        if tgt:
+            out[tgt] = v
+            renamed.append([s, tgt])
+        else:
+            out[s] = v
+    return out, renamed
+
+
+def run_sensitivity(cache_bars: dict, gate: dict) -> dict:
+    """【探索性】宇宙/命名变体下的 ⑤ 判据 —— 主结果(预注册宇宙)不变,这里只问:
+    「同键占比不到 95%」与「R 差超出 ±10%」是不是被符号命名与宇宙差撑起来的。"""
+    raw_all = _read_jsonl_pbv(PBV_JSONL)
+    rows = json.load(open(PAIRS_JSONL)).get("rows", [])
+    kinds = {}
+    for r in rows:
+        s = r.get("symbol")
+        if not s:
+            continue
+        kinds[s] = ((r.get("kind") or "").strip().lower(), bool(r.get("dead_from")))
+    U = {
+        "V0_coin_prereg": {s for s, (k, d) in kinds.items() if k == "coin" or (not k and d)},
+        "V1_nontradfi": {s for s, (k, d) in kinds.items() if k != "tradfi"},
+        "V2_every_kind": set(kinds),
+    }
+    tk_cache = mtm(gen_tickets(cache_bars, gate, SIG_FROM, SIG_TO), cache_bars)
+    r_cache_pre = sum(t["r"] for t in tk_cache
+                      if t["signal_d"] <= "2026-08-07" and t.get("r") is not None)
+    VARIANTS = [
+        ("V0_coin_prereg", False, False),
+        ("V0_coin_prereg", True, False),
+        ("V0_coin_prereg", True, True),
+        ("V0_coin_prereg", "to_cache", False),
+        ("V0_coin_prereg", "to_cache", True),
+        ("V1_nontradfi", "to_cache", False),
+        ("V2_every_kind", "to_cache", False),
+    ]
+    out = {}
+    for uni, mapped, aligned in VARIANTS:
+        raw = {s: v for s, v in raw_all.items() if s in U[uni]}
+        bars = to_bars(raw)
+        ren = []
+        if mapped:
+            ref = set(cache_bars) if mapped == "to_cache" else None
+            bars, ren = _rename_1000(bars, ref)
+        if aligned:
+            bars = {s: v for s, v in bars.items() if s in cache_bars}
+        tk = mtm(gen_tickets(bars, gate, SIG_FROM, SIG_TO), bars)
+        pre = compare_tickets(tk_cache, tk, "cache", uni)["pre_split"]
+        r_pre = sum(t["r"] for t in tk if t["signal_d"] <= "2026-08-07" and t.get("r") is not None)
+        share = pre["same_key_share_of_a"]
+        diff = (r_pre / r_cache_pre - 1) if r_cache_pre else None
+        key = (f"{uni}{'+map1000' if mapped is True else ''}"
+               f"{'+map1000_to_cache' if mapped == 'to_cache' else ''}"
+               f"{'+cache_univ' if aligned else ''}")
+        out[key] = {
+            "universe": uni, "map_1000": mapped, "cache_aligned": aligned,
+            "n_symbols": len(bars), "n_renamed": len(ren), "renamed_sample": ren[:10],
+            "n_tickets": len(tk),
+            "total_r": round(sum(t["r"] for t in tk if t.get("r") is not None), 4),
+            "pre_n_cache": pre["n_a"], "pre_n_pbv": pre["n_b"], "pre_n_both": pre["n_both"],
+            "pre_only_cache": pre["n_only_a"], "pre_only_pbv": pre["n_only_b"],
+            "pre_same_key_share_of_cache": share,
+            "pre_total_r_cache": round(r_cache_pre, 4), "pre_total_r_pbv": round(r_pre, 4),
+            "pre_total_r_rel_diff": round(diff, 4) if diff is not None else None,
+            "pass_same_key": bool(share is not None and share >= 0.95),
+            "pass_total_r": bool(diff is not None and abs(diff) <= 0.10),
+            "nav": summarise(tk, bars).get("nav"),
+        }
+    return out
+
+
+def _snap(a: dict, i: int) -> dict:
+    """某个下标上的全部闸门判据(R-v2 长仓口径)。"""
+    c, hh, ll = a["c"][i], a["hh40"][i], a["ll40"][i]
+    sma = a["sma200"][i]
+    adv30, adv40p, dv = a["adv30"][i], a["adv40p"][i], a["dv"][i]
+    return {"c": c, "hh40": hh, "c_over_hh40": (c / hh - 1) if hh else None,
+            "sma200": sma, "c_over_sma200": (c / sma - 1) if sma else None,
+            "adv30": adv30, "dv": dv, "adv40p": adv40p,
+            "dv_over_2adv40p": (dv / (2 * adv40p)) if adv40p else None,
+            "mindd120": a["mindd120"][i],
+            "range40": ((hh - ll) / hh) if hh else None}
+
+
+def run_mechanism(cache_bars: dict, pbv_bars: dict, gate: dict) -> dict:
+    """【探索性】缓存侧有票、永续侧没票的那些张:逐张列出两侧的闸门判据,
+    看是哪一条把它挡掉的(主结果不变,这里只找机制)。"""
+    tk_cache = mtm(gen_tickets(cache_bars, gate, SIG_FROM, SIG_TO), cache_bars)
+    tk_pbv = mtm(gen_tickets(pbv_bars, gate, SIG_FROM, SIG_TO), pbv_bars)
+    A = {_key(t): t for t in tk_cache}
+    B = {_key(t): t for t in tk_pbv}
+    only_a = sorted(k for k in A if k not in B)
+    raw_all = to_bars(_read_jsonl_pbv(PBV_JSONL))       # 未过宇宙过滤的永续序列
+    rows = []
+    for (sym, d) in only_a:
+        rec = {"symbol": sym, "signal_d": d, "r": A[(sym, d)]["r"],
+               "pbv_symbol_used": None, "pbv_bars": 0, "pbv_first_d": None, "pbv_last_d": None}
+        ca = t159.indicators(cache_bars[sym])
+        ic = ca["d"].index(d)
+        rec["cache"] = _snap(ca, ic)
+        cand = None
+        if sym in pbv_bars:
+            cand = pbv_bars[sym]
+        elif ("1000" + sym) in pbv_bars:
+            cand = pbv_bars["1000" + sym]
+            rec["pbv_symbol_used"] = "1000" + sym
+        elif sym in raw_all:
+            cand = raw_all[sym]
+        if cand:
+            rec["pbv_bars"] = len(cand)
+            rec["pbv_first_d"], rec["pbv_last_d"] = cand[0][0], cand[-1][0]
+            pa = t159.indicators(cand)
+            if d in pa["d"]:
+                ip = pa["d"].index(d)
+                rec["pbv"] = _snap(pa, ip)
+                rec["close_rel_diff"] = abs(pa["c"][ip] / ca["c"][ic] - 1)
+                blockers = []
+                if not (rec["pbv"]["c"] > rec["pbv"]["hh40"]):
+                    blockers.append("c<=hh40")
+                if rec["pbv"]["sma200"] is None or not (rec["pbv"]["c"] > rec["pbv"]["sma200"]):
+                    blockers.append("c<=sma200")
+                if rec["pbv"]["mindd120"] is None or rec["pbv"]["mindd120"] > 0.5:
+                    blockers.append("mindd120>0.5")
+                if rec["pbv"]["adv30"] is None or rec["pbv"]["adv30"] < 5e6:
+                    blockers.append("adv30<5M")
+                if rec["pbv"]["range40"] is None or rec["pbv"]["range40"] > 0.40:
+                    blockers.append("range40>0.40")
+                if rec["pbv"]["adv40p"] is None or rec["pbv"]["dv"] < 2 * rec["pbv"]["adv40p"]:
+                    blockers.append("dv<2*adv40p")
+                rec["blockers_on_pbv"] = blockers
+        rows.append(rec)
+    edge = [abs(r["cache"]["c_over_hh40"]) for r in rows
+            if r.get("cache") and r["cache"]["c_over_hh40"] is not None]
+    with_pb = [r for r in rows if r.get("pbv")]
+    blocker_hist = defaultdict(int)
+    for r in with_pb:
+        for b in r.get("blockers_on_pbv", []):
+            blocker_hist[b] += 1
+    return {"n_only_cache": len(rows), "n_with_pbv_series": len(with_pb),
+            "n_blocked_by_hh40": sum(1 for r in with_pb if "c<=hh40" in r.get("blockers_on_pbv", [])),
+            "blocker_hist": dict(blocker_hist),
+            "cache_edge_abs": {"median": _median(edge), "p75": _quant(edge, 0.75) if edge else None,
+                                "max": max(edge) if edge else None,
+                                "n_within_20bp": sum(1 for x in edge if x <= 0.002),
+                                "n_within_50bp": sum(1 for x in edge if x <= 0.005)},
+            "rows": rows}
+
+
 def main() -> None:
     stage = "all"
     if "--stage" in sys.argv:
         stage = sys.argv[sys.argv.index("--stage") + 1]
+    if stage == "mech":
+        cache_bars = to_bars(load_cache_raw())
+        pbv_bars = to_bars(load_pbv_raw())
+        gate = t159.load_gate()
+        out = os.path.join(HERE, "t238_results_mech.json")
+        res = run_mechanism(cache_bars, pbv_bars, gate)
+        json.dump(res, open(out, "w"), indent=1, default=str)
+        brief = {k: v for k, v in res.items() if k != "rows"}
+        brief["sample_rows"] = res["rows"][:8]
+        print(json.dumps(brief, indent=1, default=str))
+        return
+    if stage == "sens":
+        cache_bars = to_bars(load_cache_raw())
+        gate = t159.load_gate()
+        out = os.path.join(HERE, "t238_results_sens.json")
+        json.dump({"generated_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+                   "cache_tickets": len(gen_tickets(cache_bars, gate, SIG_FROM, SIG_TO)),
+                   "variants": run_sensitivity(cache_bars, gate)}, open(out, "w"), indent=1, default=str)
+        print(json.dumps(json.load(open(out))["variants"], indent=1, default=str))
+        return
     if stage == "fetch" or (stage == "all" and not os.path.exists(PBV_JSONL)):
         fetch_pbv()
 
