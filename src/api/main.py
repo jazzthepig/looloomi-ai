@@ -2629,6 +2629,29 @@ async def _start_text_vectors_loop():
     print("[TEXT-VEC] ✅ text vector space (MiniMax embeddings) scheduled (hourly)")
 
 
+async def _prediction_markets_loop():
+    """预测市场先验(`src/data/market/prediction_markets.py`):每小时一轮,Polymarket 三个标签各一页 → prediction_markets(当天覆盖)。"""
+    await _asyncio.sleep(_boot_delay(13200))
+    while True:
+        try:
+            from src.data.market.prediction_markets import run_once as _pm_run
+            r = await _pm_run()
+            await _iteration_result("_prediction_markets_loop", {**r, "ok": bool(r.get("ok")), "refused": bool(r.get("refused")), "why": r.get("why")})
+            await _beat("_prediction_markets_loop", ok=bool(r.get("ok")) and not r.get("refused"), refused=bool(r.get("refused")),
+                        detail={"written": r.get("written")}, error=None if r.get("ok") else str(r.get("why"))[:200])
+        except Exception as _e:
+            print(f"[PRED-MKT] ⚠️  pass FAILED: {_e}")
+            await _beat("_prediction_markets_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_prediction_markets_loop", _e)
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_prediction_markets_loop():
+    _asyncio.create_task(_prediction_markets_loop())
+    print("[PRED-MKT] ✅ prediction-market priors scheduled (hourly)")
+
+
 async def _issuer_decisions_loop():
     """发行方 / 决策层(`src/data/entity/issuers.py`,11-04):每 6 小时同步登记表、从基本面 / 事件 / 待遇表派生决策流。"""
     await _asyncio.sleep(_boot_delay(10200))

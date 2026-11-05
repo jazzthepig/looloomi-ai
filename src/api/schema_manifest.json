@@ -94,6 +94,7 @@
     "pod_aggregator_state",
     "portfolio_layer_daily",
     "portfolio_targets_daily",
+    "prediction_markets",
     "price_source_agreement_daily",
     "protocol_revenue_daily",
     "protocol_tvl_daily",
@@ -443,6 +444,21 @@
       "target_w",
       "venue",
       "why"
+    ],
+    "prediction_markets": [
+      "d",
+      "end_date",
+      "event_slug",
+      "event_title",
+      "fetched_at",
+      "item",
+      "liquidity",
+      "market_id",
+      "p_yes",
+      "question",
+      "tag",
+      "venue",
+      "volume_24h"
     ],
     "scalable_book_nav": [
       "daily_return",

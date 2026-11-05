@@ -343,6 +343,21 @@ async def weekly_letter_build(body: dict, x_internal_token: str = Header(None)):
     return await build(week_end, [x[:300] for x in g][:20], str((body or {}).get("note") or "")[:1500])
 
 
+@router.get("/internal/prediction-markets")
+async def prediction_markets_latest(tag: str = "", limit: int = 50, x_internal_token: str = Header(None)):
+    """最近一天的预测市场概率(Polymarket;按 24h 成交排序)。tag = crypto | fed-rates | economy | 空(全部)。"""
+    require_internal_token(x_internal_token)
+    from src.data.style.header import _read_all
+    last = await _read_all("prediction_markets", {"select": "d", "order": "d.desc", "limit": "1"})
+    if not last:
+        return {"ok": True, "d": None, "rows": []}
+    q = {"select": "market_id,tag,event_title,question,item,p_yes,volume_24h,end_date,fetched_at", "d": f"eq.{last[0]['d']}",
+         "order": "volume_24h.desc.nullslast", "limit": str(max(1, min(limit, 500)))}
+    if tag:
+        q["tag"] = f"eq.{tag}"
+    return {"ok": True, "d": last[0]["d"], "rows": await _read_all("prediction_markets", q)}
+
+
 @router.get("/internal/text-knn")
 async def text_knn(q: str, k: int = 10, source: str = "", x_internal_token: str = Header(None)):
     """VDB 文字空间:问题 → 最近的新闻 / 事件(MiniMax 嵌入,余弦距离)。source = feed_items | events | 空(两者)。"""
