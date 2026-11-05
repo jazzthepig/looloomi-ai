@@ -99,13 +99,16 @@ def test_run_once_writes_three_entries_for_yesterday(monkeypatch):
 def test_run_once_skips_when_model_silent_or_decision_missing(monkeypatch):
     _patch(monkeypatch, None)
     r = asyncio.run(aj.run_once(dt.datetime(2026, 11, 6, 3, 0, tzinfo=dt.timezone.utc)))
-    assert r["status"] == "skipped" and "2026-11-05" in r["why"]
+    assert r["status"] == "refused" and r["refused"] and not r["ok"] and "2026-11-05" in r["why"], "模型不通要留原因,不能记成 ok"
     _patch(monkeypatch, "{}", dec=())
     assert "还没落表" in asyncio.run(aj.run_once(dt.datetime(2026, 11, 6, 3, 0, tzinfo=dt.timezone.utc)))["why"]
     _patch(monkeypatch, "{}", have=[{"d": "2026-11-05"}])
     assert "已写" in asyncio.run(aj.run_once(dt.datetime(2026, 11, 6, 3, 0, tzinfo=dt.timezone.utc)))["why"]
     _patch(monkeypatch, "{}", configured=False)
-    assert "未配" in asyncio.run(aj.run_once(dt.datetime(2026, 11, 6, 3, 0, tzinfo=dt.timezone.utc)))["why"]
+    r = asyncio.run(aj.run_once(dt.datetime(2026, 11, 6, 3, 0, tzinfo=dt.timezone.utc)))
+    assert "未配" in r["why"] and r["status"] == "refused"
+    _patch(monkeypatch, '{"down": 0.5}')
+    assert asyncio.run(aj.run_once(dt.datetime(2026, 11, 6, 3, 0, tzinfo=dt.timezone.utc)))["status"] == "refused"
 
 
 def test_wiring():
