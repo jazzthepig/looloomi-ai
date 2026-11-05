@@ -381,6 +381,14 @@ async def decision_outcomes_read(x_internal_token: str = Header(None), kind: str
     return {"ok": True, **(await summary()), "rows": rows}
 
 
+@router.get("/internal/window-knn")
+async def window_knn_read(x_internal_token: str = Header(None), d: str = ""):
+    """11-05:最近 60 天的 BTC 路径像历史哪段 —— 近邻日期、它们之后 30 天、三档频率(描述,不是建议)。"""
+    require_internal_token(x_internal_token)
+    from src.data.state.window_vectors import query
+    return {"ok": True, **(await query(d or None))}
+
+
 @router.get("/internal/book-vectors")
 async def book_vectors_read(x_internal_token: str = Header(None), book: str = ""):
     """11-04:Strategy 空间。最新一天每本账的稀疏向量;book 给了就附共享维余弦最近的三本;uncovered = 没有一本账在里面挣钱的天气桶。"""

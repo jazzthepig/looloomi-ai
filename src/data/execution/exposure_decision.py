@@ -28,7 +28,7 @@ TABLE = "exposure_decision_daily"
 WRITES_TABLES = (TABLE,)
 WRITES_COLUMNS = {"exposure_decision_daily": ("d", "sleeve", "rule_exposure", "mult_arm", "mult_m", "inputs", "bucket", "probs",
                                               "n_bucket", "flag", "rationale", "scenario_ids", "posted_at", "code_ref")}
-CODE_REF = "exposure_decision v1 (11-03)"
+CODE_REF = "exposure_decision v1.1 (11-05: + probs_window 描述臂)"
 AUTHOR = "seth:exposure"
 SLEEVE = "crypto_core"
 HORIZON_D = 30
@@ -333,6 +333,15 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         pk, kn, segs = {}, 0, 0
         inputs["knn_error"] = f"{type(e).__name__}: {str(e)[:120]}"
     inputs["probs_knn"], inputs["knn_n"], inputs["knn_segments"] = (pk or None), kn, segs
+    try:                                                                  # 11-05:第三条描述臂 —— 最近 60 天的路径像历史哪段(window_vectors);只报不动钱
+        from src.data.state.window_vectors import load_vectors as _wv, window_rates as _wr
+        wv = await _wv()
+        wd = max((k2 for k2 in wv if k2 <= d and (dt.date.fromisoformat(d) - dt.date.fromisoformat(k2)).days <= 3), default=None)
+        wr = _wr(wv, fwd, wv[wd], d) if wd else {"probs": None, "n": 0, "segments": 0, "matches": []}
+        inputs["window_vector_d"], inputs["probs_window"], inputs["window_n"], inputs["window_segments"], inputs["window_matches"] = \
+            wd, (wr["probs"] if wr["n"] else None), wr["n"], wr["segments"], wr["matches"]
+    except Exception as e:                                                # noqa: BLE001
+        inputs["probs_window"], inputs["window_error"] = None, f"{type(e).__name__}: {str(e)[:120]}"
     flag = flag_for(exposure, probs)
     text = rationale(d, exposure, bucket, probs, n, used, inputs, flag)
     sub = await submit(scenario_entries(d, closes[d], probs), AUTHOR, now)
