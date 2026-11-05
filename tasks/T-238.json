@@ -1,0 +1,28 @@
+{
+  "id": "T-238",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-05",
+  "title": "R-v2 在同质永续序列上重验(S-719):`binance_um_hist`(存档 + 11-05 起续写)上用 s677 生成器按固定规则重生成票,与 770 张缓存逐票对比(2026-08-08 前应基本一致),重报 S-638 的钱曲线与 S-677 的 OOS 切片;顺带报 2026-10-19 → 昨天这段在永续序列上的信号数",
+  "source": "Jazz 11-05 拍板 S-718 建议:R-v2 交易永续,序列改读 `binance_um_hist`(r_tickets_scan / r_tickets_nav 已改,迁移 2026-11-05_r_tickets_um_source.sql;续写函数 um_bridge_fill 从 perp_bv_daily 复制,volume = qv / c)。T-237 的发现:现货量序列上 600 张 / 197R,缓存(永续量)770 张 / 372R。lane 可读 ohlcv_daily(source=binance_um_hist,247 符号,2019-12 → 昨天)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-238.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读。预注册在报告开头(照 S-719 原文):① 从 DB 拉 source=binance_um_hist 全部符号 2019-10-01 → 昨天(翻页带 order=trade_date.asc,symbol.asc;落 /Volumes/CometCloudAI/cometcloud-local/research/t238/_bars_um.jsonl,写明拉取时间与行数);与 T-237 的 _bars_db.jsonl(现货)和 t156/t159 缓存按 (symbol, d) 对齐,报三者两两的收盘差中位与成交额比值中位(2026-08-08 前 / 后分开)。② s677 生成器、固定 (2.5, 20, 2)、majors 闸门同 S-627、信号窗 2020-03-01 → 2026-10-31、成本 0.4% 来回、cap 10、f = 1%:在永续序列上生成票;与 770 张缓存逐票对比(两边都有 / 只缓存 / 只永续;2026-08-08 前后分开计数);同键票 R 的相关与平均绝对差。③ 钱曲线:年化 / 盯市 MDD / Calmar / 名义峰值(对 S-638 的 +24.4% / −32.3% / 0.99 倍);按 S-677 的切片(它的 OOS 年份口径,照原文)各报总 R 与每票 R。④ 2026-10-19 → 昨天:永续序列上完整信号数、闸门状态、若有票列出来 —— 这是切换后前向会看到的东西。⑤ 判(S-719):2026-08-08 前同键票占缓存的 ≥ 95% 且 2020-03 → 2026-08-08 总 R 与缓存的差在 ±10% 内 ⇒ ✅「验证在永续序列上成立」;否则 ❌ 并列出差在哪些票 / 哪些月。纪律:不改代码、不做 DDL、不入库;探针脚本改同一个文件再跑;步数过半先落文件;交付附 docs/research/scenarios/lane-b-T-238.json(≥ 2 条)。",
+    "expect": "报告 docs/research/T-238_rv2_um_revalidation.md(预注册在前)+ docs/research/t238_rv2_um.py + t238_results.json;卡 notes 写三组票数、总 R、钱曲线三数、S-677 切片、10-19 起的信号数与判;in_review,推 lane-b/T-238。"
+  },
+  "prior_value": "R-v2 的全部验证数字(S-610 / S-638 / S-677)在 10-21 缓存上;切换源后这些数字是否仍成立,今天没有答案。",
+  "notes": "",
+  "verified": null
+}
