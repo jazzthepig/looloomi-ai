@@ -1,0 +1,71 @@
+{
+  "author": "lane-b",
+  "note": "T-238 v2(perp_bv_daily)前向预期。概率是作者自估,到期按 Brier 结算;写的是可查的事实,不是收益承诺。T-238-1 / T-238-2 是 v1(binance_um_hist)留下的两条,原样带到 v2;其余三条是 v2 的:真永续表 perp_bv_daily 的行数与历史起点,以及真永续序列上 2026-10-19 起是否出过完整票。全部为 manual(按 SQL 取值人工判定 0/1),因为这三张表都不在 ohlcv_daily / state_daily / macro_daily 里,没有自动结算通道。",
+  "entries": [
+    {
+      "id": "T-238-1",
+      "scenario": "T-238 v1:um_hist 拼接序列的预热缺口(带自 v1)",
+      "statement": "到 2026-12-05,`r_tickets_paper` 里的票不含 BTC / ETH / LTC 三个符号(预热不足被排除出宇宙)。",
+      "variable": "manual",
+      "op": "between",
+      "lo": 0,
+      "hi": 1,
+      "prob": 0.65,
+      "horizon_d": "2026-12-05",
+      "resolution": "机械判定:SELECT count(*) FROM r_tickets_paper WHERE symbol IN ('BTC','ETH','LTC') 于 2026-12-05 取值 =0 记 1,>0 记 0。",
+      "basis": "v1 实测:majors 在 um_hist 的连续日线只从 2026-07-10 起,220 根预热要到 2027-05;v1 前向窗(10-19→11-03)的宇宙只有 41-55 个符号、不含 majors。"
+    },
+    {
+      "id": "T-238-2",
+      "scenario": "T-238 v1:um_hist 的历史有洞(带自 v1)",
+      "statement": "到 2026-12-05,`ohlcv_daily` 中 source=binance_um_hist 的 BTC 行数仍 ≤ 200(即 majors 的 2026-07-10 之前日线仍未回填)。",
+      "variable": "manual",
+      "op": "between",
+      "lo": 0,
+      "hi": 1,
+      "prob": 0.3,
+      "horizon_d": "2026-12-05",
+      "resolution": "机械判定:SELECT count(*) FROM ohlcv_daily WHERE source='binance_um_hist' AND symbol='BTC' 于 2026-12-05 取值 ≤200 记 1,>200 记 0。",
+      "basis": "v1 实测:BTC 在 um_hist 只有 118 行(2021-01-11 与 2021-01-21 两根 10 日聚合 K + 2026-07-10 起的日线);该表由 um_bridge_fill 另建,不是 binance_hist 的子集。"
+    },
+    {
+      "id": "T-238-v2-1",
+      "scenario": "T-238 v2:真永续表 perp_bv_daily 继续长",
+      "statement": "到 2026-12-05,`perp_bv_daily` 的行数 ≥ 690,000(即真永续档案在继续走,没有被裁剪或重写)。",
+      "variable": "manual",
+      "op": "between",
+      "lo": 0,
+      "hi": 1,
+      "prob": 0.8,
+      "horizon_d": "2026-12-05",
+      "resolution": "机械判定:SELECT count(*) FROM perp_bv_daily 于 2026-12-05 取值 ≥690000 记 1,<690000 记 0。",
+      "basis": "本轮实测(2026-11-05T03:09Z):668,222 行,min(d)=2019-12-31;按每天约 1,000 行新日线推,30 天后约 698,000 行。"
+    },
+    {
+      "id": "T-238-v2-2",
+      "scenario": "T-238 v2:真永续表的历史起点不被裁",
+      "statement": "到 2026-12-05,`perp_bv_daily` 的最早交易日仍 ≤ 2020-01-01(旧历史没有被修剪到更近的起点)。",
+      "variable": "manual",
+      "op": "between",
+      "lo": 0,
+      "hi": 1,
+      "prob": 0.8,
+      "horizon_d": "2026-12-05",
+      "resolution": "机械判定:SELECT min(d) FROM perp_bv_daily 于 2026-12-05 取值 ≤'2020-01-01' 记 1,>'2020-01-01' 记 0。",
+      "basis": "本轮实测:min(d)=2019-12-31(v2 的 S-677 切片因此是残缺的,只能作部分覆盖对照)。"
+    },
+    {
+      "id": "T-238-v2-3",
+      "scenario": "T-238 v2:真永续序列上的前向票",
+      "statement": "到 2026-12-05,真永续序列(perp_bv_daily)上出现过至少 1 张完整票(信号日 ≥ 2026-10-19,且有进场与出场)。",
+      "variable": "manual",
+      "op": "between",
+      "lo": 0,
+      "hi": 1,
+      "prob": 0.5,
+      "horizon_d": "2026-12-05",
+      "resolution": "机械判定:SELECT count(*) FROM perp_bv_daily 派生的票表里 signal_d >= '2026-10-19' AND exit_d IS NOT NULL 的行数(以 docs/research/t238_rv2_um.py 的 run_long 结果为准)于 2026-12-05 取值 ≥1 记 1,=0 记 0。",
+      "basis": "本卡实测(待 t238_results.json 落盘后填实数):v1 在 um_hist 的同一窗口只有 1 个完整信号、0 张完整票(缺一根进场根);真永续序列历史更连续,门槛可能更低 —— 但闸门(majors)与量能门仍会筛掉大部分日子,故给 0.50。"
+    }
+  ]
+}

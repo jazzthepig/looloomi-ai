@@ -23,6 +23,6 @@
     "expect": "报告 docs/research/T-238_rv2_um_revalidation.md(预注册在前)+ docs/research/t238_rv2_um.py + t238_results.json;卡 notes 写三组票数、总 R、钱曲线三数、S-677 切片、10-19 起的信号数与判;in_review,推 lane-b/T-238。"
   },
   "prior_value": "R-v2 的全部验证数字(S-610 / S-638 / S-677)在 10-21 缓存上;切换源后这些数字是否仍成立,今天没有答案。",
-  "notes": "",
+  "notes": "2026-11-05 lane-b · T-238 v2(闸门已开:序列改 perp_bv_daily)。【本轮已交】分支 lane-b/T-238-v2;脚本 docs/research/t238_rv2_um.py(v2 三处改动:源=perp_bv_daily、宇宙=perp_bv_pairs.kind='coin'(外加 kind 空且 dead_from 有值)、成交额 dv=qv);报告 docs/research/T-238_rv2_um_revalidation.md;scenarios docs/research/scenarios/lane-b-T-238.json。【实测】perp_bv_daily 表内 668,222 行(count exact);拉取窗 d>=2019-10-01 & d<=2026-11-04 的 count 同为 668,222 ⇒ 窗外无行;perp_bv_pairs 913 行,列 symbol/kind/dead_from;翻页 order=symbol.asc,d.asc;拉取时间 2026-11-05T03:09:32Z(pairs)、日线紧接其后同一进程;产物在 Mac 数据根 research/t238/: _bars_pbv.jsonl / _pairs_pbv.json / run.log。抓取工程:单线程顺序翻页实测 ~70 行/秒(668K 行要 2.6 小时)⇒ 改分片并行(按 pairs 符号表每片 12 个符号、10 线程、片内 Range 0-999);覆盖硬闸 = 各片行数合计必须等于 668,222,不等即报错不落半份。【未出】②③④⑤ 的数字(逐票对比 / 钱曲线三数 / S-677 切片 / 10-19 起前向信号数 / ⑤判)本轮未出:上下文在抓取阶段耗尽(92k token 被 lane guard 拦下),脚本仍在跑,结果落 docs/research/t238_results.json。故状态留 open 而非 in_review —— 数字未出,标 in_review 会让下一轮跳过这张卡。【下一轮】先看 research/t238/run.log 尾巴与 docs/research/t238_results.json 的时间戳(不要重跑);读 judge / money / oos_s677 / forward / series.pbv_vs_cache / tickets.compare.pre_split 六个数 → 填报告第 3 节 → 改 in_review + notes → preflight → push。另注:perp_bv_daily 的 min(d)=2019-12-31 ⇒ S-677 切片(2018-01→2020-02)在 v2 上是残缺的,只能作部分覆盖对照,不能当 OOS 复现。",
   "verified": null
 }
