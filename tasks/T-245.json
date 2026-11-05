@@ -1,0 +1,28 @@
+{
+  "id": "T-245",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-05",
+  "title": "投降日之后(S-729):BTC 深回撤里出现「全市场被迫卖出」的那几天,之后 30 / 60 / 90 天 BTC 与 ① 面板怎么走 —— 对照同样深的回撤里随机一天;以及它比「重新站上 200 日线」早多少天、那段错过了多少(S-601:趋势规则的代价付在每次反弹的开头)",
+  "source": "Doctrine §5c:均值回归层(逆人性、在恐慌里接)与趋势层是相反的偏度,书本层面两者都要;我们只有趋势层(X1V / R-v2)。S-601:「代价付在每次反弹的开头 —— 重新入场要等 200 日线与 20 日新高」。S-724:先动的只有价格自己 ⇒ 这张卡不找预警,找**投降**。数据:perp_bv_daily(qv / tbqv 2019-12 起)、v_funding_daily(2020-01 起,lane 可读)、ohlcv_daily source=binance_hist BTC;① 面板等权用 core_variants_daily arm='cap_pit24' 的 nav(时点前 24 大,2019 起)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-245.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读。预注册(S-729 原文)抄进报告开头再算,只算一次。① 投降日(写死,全部按时点):(a) BTC 收盘 ≤ 0.75 × 过去 90 天最高收盘;(b) 全市场永续主动卖出占比 1 − Σtbqv / Σqv(coin 合约,当天)在自己扩张历史 ≥ 90 分位,或 资金费为负的合约占比(v_funding_daily 日均 < 0)≥ 扩张 90 分位;(c) 全市场永续 Σqv ≥ 2 × 前 30 日均。20 天内只计第一次。报每个事件的日期与 BTC 回撤深度。② 前向:d+1 收盘起 30 / 60 / 90 天 BTC 收益与 cap_pit24 nav 收益;最差路径(之后 90 天内的再跌最大幅度)。③ 条件零分布(写死):在**同样满足 (a)** 的日子里随机抽同样个数(按年份分层,1,000 次,种子 729,只用 apparatus.null_distribution)—— 控制「深回撤之后本来就会反弹」。④ 「早多少」:每个事件到下一次 BTC 收盘站上 200 日均线的天数,以及这段 BTC 涨跌(= 等 200 日线的代价或省下的)。⑤ 判(S-729,全过 ✅):90 天 BTC 收益中位 > 条件零分布 95 分位;两半(2020-03 → 2022-12 / 2023-01 → 2026-10)中位都 > 0;最差 10% 事件之后 90 天的再跌最大幅度中位 ≥ −25%(尾巴可控)。事件 < 8 个 ⇒ 只报不判。⑥ 诚实:事件稀少、可能聚在 2020-03 / 2021-05 / 2022-06 / 2022-11 / 2025-10 几次;按事件列表逐条报,不只报均值。纪律:不改代码、不做 DDL、不入库;翻页带 order=;探针脚本改同一个文件再跑;长脚本 nohup 后台、下一轮收;交付附 docs/research/scenarios/lane-c-T-245.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-245_capitulation.md + docs/research/t245_capitulation.py + t245_results.json;卡 notes 写事件清单、30/60/90 天中位与条件零分布分位、两半、尾巴、「早多少天 / 那段多少」,以及判;in_review,推 lane-c/T-245。"
+  },
+  "prior_value": "书本只有趋势层;均值回归层(投降时接)从没在我们自己的数据上量过,X1V 再入场的代价也只有一句话(S-601)。",
+  "notes": "",
+  "verified": null
+}
