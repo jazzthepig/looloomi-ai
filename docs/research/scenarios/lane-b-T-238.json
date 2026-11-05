@@ -1,0 +1,41 @@
+{
+  "task": "T-238",
+  "lane": "lane-b",
+  "created": "2026-11-05",
+  "as_of": "2026-11-05",
+  "note": "机器可核命题;概率是主观先验,到期按 Brier 结算。命题只描述可查的事实,不含收益承诺。",
+  "propositions": [
+    {
+      "id": "t238-p1",
+      "statement": "到 2026-12-05,`ohlcv_daily` 中 source=binance_um_hist 的 BTC 行数仍 ≤ 200(即 majors 的 2026-07-10 之前日线仍未回填)。",
+      "probability": 0.30,
+      "resolution": "机械判定:SELECT count(*) FROM ohlcv_daily WHERE source='binance_um_hist' AND symbol='BTC' 于 2026-12-05 取值 ≤200 记 1,>200 记 0。",
+      "resolves_by": "2026-12-05",
+      "basis": "本卡实测:BTC 在 um_hist 只有 118 行(2021-01-11 与 2021-01-21 两根 10 日聚合 K + 2026-07-10 起的日线);表由 S-698/um_bridge_fill 另建,不是 binance_hist 的子集。"
+    },
+    {
+      "id": "t238-p2",
+      "statement": "到 2026-12-05,`ohlcv_daily` source=binance_um_hist 补上了 2026-10-28 这一交易日的行(BTC 有行)。",
+      "probability": 0.45,
+      "resolution": "机械判定:SELECT count(*) FROM ohlcv_daily WHERE source='binance_um_hist' AND symbol='BTC' AND trade_date='2026-10-28' 于 2026-12-05 取值 ≥1 记 1,=0 记 0。",
+      "resolves_by": "2026-12-05",
+      "basis": "本卡实测:um 序列在 2026-10-27 与 2026-10-29 之间整段缺 10-28(BTC/BCH/ETH/SOL/AR/1000SHIB 六个符号抽查一致);binance_hist 有 11-04,um 末日 11-03。"
+    },
+    {
+      "id": "t238-p3",
+      "statement": "到 2026-12-05,`r_tickets_paper`(已切到 binance_um_hist)里的票不包含 BTC / ETH / LTC 三个符号(预热不足,被排除出宇宙)。",
+      "probability": 0.65,
+      "resolution": "机械判定:SELECT count(*) FROM r_tickets_paper WHERE symbol IN ('BTC','ETH','LTC') 于 2026-12-05 取值 =0 记 1,>0 记 0。",
+      "resolves_by": "2026-12-05",
+      "basis": "本卡实测:majors 在 um_hist 的连续日线只从 2026-07-10 起,220 根预热约需到 2027-05;本卡前向窗口(10-19→11-03)的 universe 只有 41-55 个符号、不含 majors。"
+    },
+    {
+      "id": "t238-p4",
+      "statement": "到 2026-12-05,永续序列(binance_um_hist)上 R-v2 出过至少 1 张完整票(信号日 ≥ 2026-10-19,含进场与出场)。",
+      "probability": 0.45,
+      "resolution": "机械判定:SELECT count(*) FROM r_tickets_paper WHERE signal_d >= '2026-10-19' AND exit_d IS NOT NULL 于 2026-12-05 取值 ≥1 记 1,=0 记 0。",
+      "resolves_by": "2026-12-05",
+      "basis": "本卡实测:10-19→11-03 完整信号 1 个(HOT,2026-11-03),因缺 11-04 进场根未成票;闸门 13/13 天开,宇宙 41-55,过量能门 0-3。"
+    }
+  ]
+}
