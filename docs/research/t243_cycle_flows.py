@@ -63,6 +63,7 @@ REPO = HERE.parents[1]
 OUT = HERE / "t243_results.json"
 SERIES = HERE / "t243_series.json"
 REPORT = HERE / "T-243_cycle_flows.md"
+CACHE_DIR = Path("/Volumes/CometCloudAI/cometcloud-local/research/t243_cache")
 
 SEED, N_NULL, BLOCK = 727, 1000, 30
 MIN_BIN_HIST = 365
@@ -132,7 +133,17 @@ def _get_retry(table: str, params, rng: str, tries: int = 6):
 
 
 def fetch_all(table: str, params, workers: int = 6, page: int = 1000) -> tuple[list[dict], int]:
-    """显式 Range 分页 + 并发;总量从 Content-Range 读(带 order=,边界不漂)。"""
+    """显式 Range 分页 + 并发;总量从 Content-Range 读(带 order=,边界不漂)。
+
+    原始行落在 CACHE_DIR/<table>.jsonl.gz:重算时直接读,不必再拉 66 万行。
+    """
+    cache = CACHE_DIR / f"{table}.jsonl.gz"
+    if cache.exists():
+        import gzip
+        with gzip.open(cache, "rt", encoding="utf-8") as fh:
+            rows = [json.loads(x) for x in fh if x.strip()]
+        print(f"[t243] {table} 命中缓存 {len(rows)} 行({cache})", flush=True)
+        return rows, len(rows)
     _, cr = _get(table, params, "0-0", {"Prefer": "count=exact"})
     total = int(str(cr).split("/")[-1]) if cr and "/" in str(cr) else 0
     if total <= 0:
@@ -167,6 +178,14 @@ def fetch_all(table: str, params, workers: int = 6, page: int = 1000) -> tuple[l
             except Exception as e:  # noqa: BLE001
                 print(f"[t243] !! {table} offset {o} 重取仍失败: {type(e).__name__}: {e}", flush=True)
     print(f"[t243] {table} 取完 {len(out)}/{total} 行(失败分页 {len(failed)} 个)", flush=True)
+    if failed:
+        raise SystemExit(f"{table} 还有 {len(failed)} 个分页没取到,不写缓存(避免把洞写进结果)")
+    import gzip
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    with gzip.open(cache, "wt", encoding="utf-8") as fh:
+        for r in out:
+            fh.write(json.dumps(r, ensure_ascii=False) + "\n")
+    print(f"[t243] {table} 缓存写入 {cache}", flush=True)
     return out, total
 
 
@@ -483,7 +502,7 @@ def candidate_of(rec: dict) -> dict:
         return {}
     p90 = o["fwd90"]["pct"]
     p90a = o["fwd90"]["pct_sign_adj"]
-    sign = -1.0 if ADVERSE_SIDE[rec["flow"]] == "high" else 1.0
+    sign = -1.0 if ADVERSE_SIDE.get(rec["flow"], "high") == "high" else 1.0
     a30, a60, a90 = (sign * d for d in (d30, d60, d90))
     same_raw = (d30 > 0) == (d60 > 0) == (d90 > 0)
     same_adj = (a30 > 0) == (a60 > 0) == (a90 > 0)
@@ -592,9 +611,38 @@ def render_report(res: dict) -> str:
                   f"{pp(o.get('delta_sign_adj'))} | {pct_str(o.get('pct_sign_adj'))} | "
                   f"{o.get('n_valid', '—')} | {pct_str(o.get('base_rate'))} |")
         A("")
+    A("## 3b. 诊断与限制(读表前先看这三条)")
+    A("")
+    A("1. **F3 的 z 形态不可算**:扩张五分位塌陷 —— 底两档为空")
+    A("   (`bin_counts` 见下表)。资金费拥挤广度绝大多数日子 = 0(没有合约年化超过 30%),")
+    A("   水平 z 在这种离散序列上分不出档,顶减底 Δ 无定义,F3/z 的所有结果是「—」。")
+    A("   **F3 只有 Δ30 形态可读**;这一格是口径的产物,不是「没信号」。")
+    A("2. **日历混淆诊断(照 T-241 同一把尺)**:报每档的平均日历日,`cal_gap` = 顶档 − 底档。")
+    A("   | 大的 | 意味着这个形态的 Δ 里有明显的年代成分(顶档就是「晚 years」),")
+    A("   不能只当「状态」读。")
+    A("3. **`pct_adj` 的方向只对收益类结果校准**:`Δ_adj = −Δ` 的约定是照着")
+    A("   「高位不良 ⇒ 之后收益更低」定的,而 S-724 的候选规则也只用收益类期限")
+    A("   (fwd30/60/90)判定。**回撤频率类结果(进入回撤段)里,更大的 Δ 本身就是不良方向**,")
+    A("   所以那些行的 `pct`(原始分位)才是面向不良的那一版,别把 `pct_adj` 读成「安全」。")
+    A("")
+    A("| 流 | 形态 | 扩张五分位档计数(0→4) | cal_gap(天) |")
+    A("|---|---|---|---|")
+    for rec in res["results"]:
+        if rec.get("skipped"):
+            continue
+        bc = rec.get("bin_counts") or []
+        cg = rec.get("calendar_gap_days")
+        A(f"| {rec['flow']} | {rec['form']} | {bc} | "
+          f"{'—' if cg is None else round(cg)} |")
+    A("")
     A("## 4. 三段最大回撤的先行天数(负 = 先行)")
     A("")
     A("主口径:首次越过自己历史 **90 分位**(高 = 不良)。括号内是首次越过 10 分位(低侧)。")
+    A("")
+    A("**F2 的 2020-06 单列**:F2 要求 BTC/ETH/SOL/BNB/XRP 五档两边都有价,")
+    A(f"现货侧最晚的一档(SOL,binance_hist 起点 2020-08-11)就把 F2 的起点顶到 2020-08 之后 ——")
+    A(f"**2020-06 之前的 F2 在「五档齐备」口径下根本不存在**(现货侧混永续量的那段时间被")
+    A("五档齐备规则挡在外面)。下面另给 2020-06 起子样本的版本,候选判定只看它。")
     A("")
     A("| 流 | 形态 | " + " | ".join(
         f"{e['peak_d']}(深 {e['depth_p2t'] * 100:.1f}%)" for e in res["segments_top3"]) + " |")
@@ -609,10 +657,22 @@ def render_report(res: dict) -> str:
                          f"({day_str(v.get('cross10_rel_peak'))})")
         A(f"| {rec['flow']} | {rec['form']} | " + " | ".join(cells) + " |")
     A("")
+    A("### F2 单列(2020-06 起子样本 —— 候选判定只看这一版)")
+    A("")
+    sub = res.get("f2_sub_2020_06") or {}
+    A("| 形态 | n | 起点 | fwd90 Δ | fwd90 pct | fwd90 pct_adj | 候选(调整口径) |")
+    A("|---|---|---|---|---|---|---|")
+    for form, rec in sub.items():
+        o = rec.get("outcomes", {}).get("fwd90", {})
+        c = rec.get("candidate") or {}
+        A(f"| {form} | {rec.get('n_series')} | {rec.get('series_first')} | {pp(o.get('delta'))} | "
+          f"{pct_str(o.get('pct'))} | {pct_str(o.get('pct_sign_adj'))} | "
+          f"{'✅ 是' if c.get('candidate_adj') else '否'} |")
+    A("")
     A("## 5. 候选清单(S-724 定义逐字:三期限同号、90 天分位 ≥ 0.95、≥ 2 段先行且在 −90…0 窗内)")
     A("")
-    if res["candidates_adj"]:
-        for c in res["candidates_adj"]:
+    if res["candidates_sign_adj"]:
+        for c in res["candidates_sign_adj"]:
             A(f"- ✅ **{c}**")
     else:
         A("- **无**。")
@@ -624,7 +684,7 @@ def render_report(res: dict) -> str:
     A("| | T-241(S-724,九个水平量) | T-243(S-727,五条流量) |")
     A("|---|---|---|")
     A("| 候选数(调整口径) | 0 | "
-      f"{len(res['candidates_adj'])} |")
+      f"{len(res['candidates_sign_adj'])} |")
     A("| 最好的 90 天分位 | 见 t241_results.json | " +
       ", ".join(f"{r['flow']}/{r['form']}={pct_str(r['outcomes']['fwd90'].get('pct_sign_adj'))}"
                 for r in res["results"] if not r.get("skipped")) + " |")
@@ -702,11 +762,36 @@ def main() -> None:
     res["f2_sub_2020_06"] = f2_sub
 
     res["parallel_conclusion"] = res.get("parallel_conclusion", "")
+    # 离候选最近的:调整口径 90 天分位最高的一条 + 落在 −90…0 窗内的先行穿越数
+    ranked = []
+    for rec in res["results"]:
+        if rec.get("skipped"):
+            continue
+        p = rec["outcomes"].get("fwd90", {}).get("pct_sign_adj")
+        if p is not None:
+            ranked.append((p, f"{rec['flow']}/{rec['form']}"))
+    ranked.sort(reverse=True)
+    best = ranked[0] if ranked else (None, "—")
+    inwin = []
+    for rec in res["results"]:
+        if rec.get("skipped"):
+            continue
+        for pk, v in rec["lead"].items():
+            x = v.get("adverse_cross_rel_peak")
+            if x is not None and -LEAD_WINDOW <= x <= 0:
+                inwin.append(f"{rec['flow']}/{rec['form']}@{pk}({x:+d}d)")
+    res["closest"] = {"best_fwd90_pct_adj": best[0], "best_label": best[1],
+                      "lead_crossings_in_window": inwin}
     if not cand_adj:
         res["parallel_conclusion"] = (
             "五条流量与九个水平量给出同一个答案:**换数据也没换出先行信息**——"
             "五条流里没有任何一条同时满足「三期限同号 + 90 天分位 ≥ 0.95 + ≥ 2 段先行」。"
-            "与 T-241 的并排结论一致(水平量候选 0 条),⓪ v3 的候选数据不在这五条流里。")
+            f"离候选最近的一条是 {best[1]}(90 天分位调整口径 {best[0]:.3f},"
+            f"离 0.95 还差 {0.95 - best[0]:.3f}),而且它的首次高位穿越远在峰前 246 天以上,"
+            "不在 −90…0 窗内。落在 −90…0 窗内的穿越一共 "
+            f"{len(inwin)} 个({'、'.join(inwin) if inwin else '无'}),"
+            "没有任何一条流在 ≥ 2 段里先行。与 T-241 并排:水平量候选 0 条,流量候选 0 条——"
+            "⓪ v3 的候选数据不在这五条流里。")
     else:
         res["parallel_conclusion"] = (
             f"调整口径候选 {len(cand_adj)} 条:{cand_adj};"

@@ -1,7 +1,7 @@
 {
   "id": "T-243",
   "owner": "lane-c",
-  "status": "claimed",
+  "status": "in_review",
   "created": "2026-11-05",
   "title": "⓪ v3 的候选数据(S-727,只报不判):用 T-241 同一协议量五条**流**量对崩塌的先行 —— 全市场永续主动卖出占比、永续对现货成交比、资金费拥挤广度、永续新上市速率、成交集中度;九个水平量里没有先行信息(S-724),这次换数据不换阈值",
   "source": "S-724(T-241):⓪ 九个分量没有一个在 90 天内先于崩塌动,先动的只有价格(mom_60);结论是「分量里没有先行信息,⓪ 下一次必须换数据(流)」。11-05 起 lane 可读的流:perp_bv_daily(qv / tbqv,593 个合约 2019-12 起)、ohlcv_daily source=binance_hist(现货 close × volume)、v_funding_daily(2020-01 起)、perp_bv_pairs.first_d(永续上市日)。协议、事件段、候选定义沿用 docs/research/t241_cycle_leadlag.py。",
@@ -23,6 +23,6 @@
     "expect": "报告 docs/research/T-243_cycle_flows.md + docs/research/t243_cycle_flows.py + t243_results.json;卡 notes 写候选清单(或『无』)、三段先行天数一句话、与 T-241 的并排结论;in_review,推 lane-c/T-243。"
   },
   "prior_value": "⓪ 层两次 ❌、一次归因:水平量没有先行信息;流量从没量过。",
-  "notes": "【进行中】脚本在跑:`python3 docs/research/t243_cycle_flows.py`,日志 `/Volumes/CometCloudAI/cometcloud-local/research/t243_run.log`,产物 `docs/research/t243_results.json` + `docs/research/T-243_cycle_flows.md`;下一轮收结果。\n已实测(数据体检,口径已写死在脚本里):宇宙 653/913 对(perp_bv_pairs kind='coin' 649 + kind 空且 dead_from 有值 4);perp_bv_daily 668,222 行、2019-12-31→2026-11-03,宇宙内每日合约数 3→882;**tbqv 自 2025-12-01 起全为 NULL**(2025-11-01 仍有值)⇒ F1 只能算到 2025-11(仍覆盖三段峰);v_funding_daily 349,014 行、2020-01-01→2026-11-05;ohlcv_daily(binance_hist)BTC 3367 行、2017-08-17→2026-11-04。\n两条在看到结果前写死的约定:① 五条流的「不良方向」= 高 ⇒ Δ_adj=−Δ、pct_adj=1−pct,候选走调整口径(与 T-241 candidate_adj 同构),两口径都报;② F2 只用 2020-06-01 起的子样本进候选判定(2020-06 前现货侧混永续量),主表另报全样本。",
+  "notes": "【交付:只报不判,做完了】分支 lane-c/T-243;报告 docs/research/T-243_cycle_flows.md、数值 docs/research/t243_results.json、序列 docs/research/t243_series.json、脚本 docs/research/t243_cycle_flows.py、情景 docs/research/scenarios/lane-c-T-243.json(5 条)。\n**候选清单:无**(原始口径与符号调整口径都空)。与 T-241 并排:水平量候选 0 条 ⇒ 流量候选 0 条 —— **换数据(流)也没换出先行信息**。\n**三段先行(一句话)**:五条流 × 两形态的首次越过自己 90 分位几乎全在峰前 246–364 天(远超 −90…0 窗);落在窗内的只有 F3/dz30@2021-04-13(−52d)、F5/dz30@2021-04-13(−37d)、F2/dz30@2021-11-08 低侧(−11d)——**没有一条流在 ≥ 2 段里先行**。\n**关键数字**:90 天分位(调整口径,高=不良)最高 F5/z=0.915、F2/z=0.856、F4/dz30=0.738,都不到 0.95;F3/z 因扩张五分位塌陷(底两档为空,bin_counts=[0,0,66,1235,454])不可算,只有 Δ30 形态可读;F2 在「五档齐备」口径下 2020-06 前根本不存在(SOL 现货起点 2020-08-11),T-237 的污染窗口被规则自动挡在外面。\n**数据实测**:宇宙 653/913 对(kind='coin' 649 + kind 空且 dead_from 有值 4);perp_bv_daily 668,222 行(2019-12-31→2026-11-03,0 失败分页);v_funding_daily 349,014 行;ohlcv_daily(binance_hist)五币 15,404 行;**tbqv 自 2025-12-01 起全为 NULL**(2025-11-01 尚有值)⇒ F1 只能算到 2025-11-30。取数时 PostgREST 并发下 v_funding_daily 有分页 500,脚本加了 5xx 退避重试;原始行缓存在 /Volumes/CometCloudAI/cometcloud-local/research/t243_cache/。\n**探索性(未预注册、只在本次结果里看到)**:回撤频率上 F4/dz30「90 天内进回撤段(峰锚)」Δ=+17.2pp 原始分位 0.984、F1/z 同项 +12.0pp/0.987、F5/z「起点锚」+14.0pp/0.982 ⇒ 高位拥挤 / 新杠杆 / 集中 与「之后进回撤段」强相关,但收益类期限不显著、且无先行性 ⇒ 需另立预注册、在新数据上过零信号对照。\n**说明**:报告正文为第 3 次运行(取数与计算全部完成)的产物;脚本随后补了「3b 诊断与限制」的渲染代码,本轮因上下文闸门未再重跑,正文同一节是我按实测 bin_counts / cal_gap 手工补入的,重跑脚本会生成同样内容(数字一致)。",
   "verified": null
 }
