@@ -155,3 +155,18 @@ def test_float_noise_null_is_still_a_noop():
 
     with pytest.raises(NoOpNull):
         null_distribution(mean_after_block_permute, 200, seed=7)
+
+
+def test_random_dates_like_keeps_key_and_year_and_marks_missing():
+    """11-05(T-242):同合约、保年份的随机日期对照;没合格日期 ⇒ None,不是 0。"""
+    import numpy as np
+    from src.data.evaluation.apparatus import random_dates_like
+    eligible = {"A": ["2021-01-05", "2021-06-01", "2022-03-01"], "B": ["2023-01-01"], "C": []}
+    ev = [("A", "2021-11-11"), ("A", "2022-12-31"), ("B", "2020-05-05"), ("C", "2021-01-01"), ("D", "2021-01-01")]
+    rng = np.random.default_rng(726)
+    draws = [random_dates_like(ev, eligible, rng) for _ in range(200)]
+    assert all(d[0][1] in ("2021-01-05", "2021-06-01") for d in draws), "同一年"
+    assert all(d[1][1] == "2022-03-01" for d in draws)
+    assert all(d[2][1] == "2023-01-01" for d in draws), "同层没有 ⇒ 退到该键全部"
+    assert all(d[3][1] is None and d[4][1] is None for d in draws)
+    assert {d[0][1] for d in draws} == {"2021-01-05", "2021-06-01"}, "真的在抽"

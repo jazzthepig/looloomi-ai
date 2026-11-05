@@ -96,6 +96,27 @@ def shuffle_within(values: Sequence[Any], groups: Sequence[Any], rng: np.random.
     return out
 
 
+def random_dates_like(events: Sequence[tuple[Any, str]], eligible: dict[Any, Sequence[str]], rng: np.random.Generator,
+                      stratum: Callable[[str], Any] = lambda d: str(d)[:4]) -> list[tuple[Any, Optional[str]]]:
+    """事件研究的随机日期对照(11-05,lane-b T-242 要的):每个事件 (键, 日期) 换成**同一个键**、**同一层**(默认同一年)里
+    随机抽的一个合格日期。eligible = {键: 该键可用的日期};同层没有合格日期 ⇒ 退到该键全部合格日期;键没有任何合格日期 ⇒ None
+    (调用方必须把 None 当缺失,不能当 0)。只抽样,不算收益 —— 收益仍用 long_return / short_return。"""
+    pools: dict[Any, dict[Any, list[str]]] = {}
+    out: list[tuple[Any, Optional[str]]] = []
+    for key, d in events:
+        ds = [str(x)[:10] for x in (eligible.get(key) or [])]
+        if not ds:
+            out.append((key, None))
+            continue
+        by = pools.setdefault(key, {})
+        if not by:
+            for x in ds:
+                by.setdefault(stratum(x), []).append(x)
+        pool = by.get(stratum(str(d)[:10])) or ds
+        out.append((key, pool[int(rng.integers(0, len(pool)))]))
+    return out
+
+
 def null_distribution(fn: Callable[[np.random.Generator], float], n: int, seed: int,
                       actual: Optional[float] = None) -> np.ndarray:
     """调用 fn(rng) n 次得到零分布。零分布没有方差,或 ≥ 99% 的抽样等于实际值 ⇒ NoOpNull。"""
