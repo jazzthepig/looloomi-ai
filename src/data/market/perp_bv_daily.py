@@ -45,6 +45,8 @@ from typing import Any, Optional
 TABLE = "perp_bv_daily"
 PAIRS = "perp_bv_pairs"
 COVERAGE_VIEW = "perp_bv_coverage"
+DAY_COUNTS_VIEW = "perp_bv_day_counts"        # 11-05:逐日行数,找中间的洞(迁移 2026-11-05_perp_bv_day_counts)
+TBQV_GAPS_VIEW = "perp_bv_tbqv_gaps"         # 11-05:tbqv 列后加,已有行的缺口(迁移 2026-11-05_perp_bv_tbqv_gaps)
 WRITES_TABLES = ("perp_bv_daily", "perp_bv_pairs")   # 字面量:schema_manifest 只读字面量
 KIND = "klines"
 VENUE = "binance_perp"
@@ -160,6 +162,62 @@ def plan(pairs: list[dict], coverage: dict[str, dict], today: date) -> list[tupl
     return recent + back
 
 
+def repair_tasks(gaps: list[dict], today: date, dead: dict[str, str] | None = None) -> list[tuple[str, str, bool]]:
+    """纯函数(11-05,T-243 发现):`perp_bv_tbqv_gaps` 的 (合约, 月, 缺 tbqv 的行数) → 重取任务。整月已过 ⇒ 月档;当月 ⇒ 缺的那几天的日档
+    (min_d … min(max_d, 昨天))。月档覆盖同值 + 补上 tbqv;已经下架的合约只补到 dead_from 前一天。"""
+    cur = today.isoformat()[:7]
+    yday = today - timedelta(days=1)
+    out: list[tuple[str, str, bool]] = []
+    for g in gaps:
+        pair, m = g.get("pair"), str(g.get("month") or "")
+        if not pair or len(m) != 7:
+            continue
+        if m < cur:
+            out.append((pair, m, True))
+            continue
+        lo = date.fromisoformat(str(g.get("min_d"))[:10])
+        hi = min(date.fromisoformat(str(g.get("max_d"))[:10]), yday)
+        if dead and dead.get(pair):
+            hi = min(hi, date.fromisoformat(str(dead[pair])[:10]) - timedelta(days=1))
+        d = lo
+        while d <= hi:
+            out.append((pair, d.isoformat(), False))
+            d += timedelta(days=1)
+    out.sort(key=lambda t: t[1], reverse=True)
+    return out
+
+
+def hole_tasks(day_counts: list[dict], pairs: list[dict], coverage: dict[str, dict], today: date,
+               frac: float = 0.5) -> list[tuple[str, str, bool]]:
+    """纯函数(11-05,lane-b T-238 v2 发现 2026-10-28 整天缺):`plan` 只看每个合约的 [min_d, max_d],中间的洞永远补不上。
+    day_counts = 近 450 天每天的行数;整天缺、或行数 < 前后 3 天中位数 × frac 的日子(不含最近 UPLOAD_GRACE_DAYS 天)⇒
+    对那天落在自己 [min_d, max_d] 里的每个合约重取:已过完的月份走月档(一次补齐整月),当月走日档。"""
+    if not day_counts:
+        return []
+    n_by = {str(r["d"])[:10]: int(r.get("n") or 0) for r in day_counts}
+    lo = min(n_by)
+    last = (today - timedelta(days=UPLOAD_GRACE_DAYS + 1)).isoformat()
+    holes = []
+    d = date.fromisoformat(lo)
+    while d.isoformat() <= last:
+        k = d.isoformat()
+        around = [n_by[x] for x in ((d + timedelta(days=j)).isoformat() for j in (-3, -2, -1, 1, 2, 3)) if x in n_by]
+        ref = sorted(around)[len(around) // 2] if around else 0
+        if ref and n_by.get(k, 0) < frac * ref:
+            holes.append(k)
+        d += timedelta(days=1)
+    cur = today.isoformat()[:7]
+    out: set[tuple[str, str, bool]] = set()
+    for h in holes:
+        for p in pairs:
+            cov = coverage.get(p["pair"]) or {}
+            a, z = str(cov.get("min_d") or "")[:10], str(cov.get("max_d") or "")[:10]
+            if not a or not (a <= h <= z):
+                continue
+            out.add((p["pair"], h[:7], True) if h[:7] < cur else (p["pair"], h, False))
+    return sorted(out, key=lambda t: t[1], reverse=True)
+
+
 async def _index_pairs() -> list[str]:
     from src.data.market.data_layer import get_binance_vision_um_daily
     out: list[str] = []
@@ -268,6 +326,22 @@ async def run_once(today: Optional[date] = None, time_budget: float = TIME_BUDGE
     # 2. 日线
     cov = {r["pair"]: r for r in await _read_all(COVERAGE_VIEW, {"select": "pair,min_d,max_d,n"})}
     tasks = plan(list(known.values()), cov, today)
+    # 11-05:已有行里缺 tbqv 的 (合约, 月) 重取一遍(只在新段补完之后排;每轮预算用完下一轮接着)
+    try:
+        gaps = await _read_all(TBQV_GAPS_VIEW, {"select": "pair,month,n_null,min_d,max_d", "order": "month.desc,pair.asc"})
+    except Exception:                                                     # noqa: BLE001 —— 视图读不到不挡日线
+        gaps = []
+    planned = {(p, w) for p, w, _ in tasks}
+    tasks += [t for t in repair_tasks(gaps, today, {p: r.get("dead_from") for p, r in known.items() if r.get("dead_from")})
+              if (t[0], t[1]) not in planned]
+    # 11-05:中间的洞(整天缺 / 行数塌一半)—— 覆盖视图看不见,按逐日行数找
+    try:
+        counts = await _read_all(DAY_COUNTS_VIEW, {"select": "d,n", "order": "d.asc"})
+    except Exception:                                                     # noqa: BLE001
+        counts = []
+    planned = {(p, w) for p, w, _ in tasks}
+    holes = [t for t in hole_tasks(counts, list(known.values()), cov, today) if (t[0], t[1]) not in planned]
+    tasks += holes
     rows: list[dict] = []
     dead: dict[str, str] = {}
     errors: list[str] = []
@@ -289,7 +363,7 @@ async def run_once(today: Optional[date] = None, time_budget: float = TIME_BUDGE
                 tasks.extend((pair, d, False) for d in month_days(when, today - timedelta(days=1)))
             elif missing and (today - date.fromisoformat(when)).days > UPLOAD_GRACE_DAYS:
                 dead[pair] = min(dead.get(pair, when), when)
-    detail = {"pairs_listed": len(listed), "pairs_new": len(new), "active": sum(1 for p in known.values() if p.get("active")),
+    detail = {"holes": len(holes), "pairs_listed": len(listed), "pairs_new": len(new), "active": sum(1 for p in known.values() if p.get("active")),
               "planned": len(tasks), "fetched": done, "rows": len(rows), "errors": len(errors), "error_sample": errors[:3],
               "dead_marked": len(dead), "backlog": len(tasks) - done,
               "classified_coin": n_classified, "classify_error": classify_error}

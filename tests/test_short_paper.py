@@ -179,3 +179,34 @@ def test_classify_marks_only_contracts_with_a_coingecko_coin_id():
     rows = bv.classify(["NEWUSDT", "IBKRUSDT", "GHOSTUSDT"], tickers, "2026-10-25T00:00:00+00:00")
     assert [(r["pair"], r["kind"], r["symbol"]) for r in rows] == [("NEWUSDT", "coin", "NEW")], \
         "没有 coin_id 的不分类(可能是股票,也可能是 CG 还没对上的新币),下一轮再查"
+
+
+def test_repair_tasks_refetch_months_missing_taker_flow():
+    """11-05(T-243):tbqv 后加,已有行缺它 —— 整月走月档、当月走缺的那几天、死币只到 dead_from 前一天。"""
+    today = dt.date(2026, 11, 5)
+    gaps = [{"pair": "AUSDT", "month": "2026-10", "n_null": 31, "min_d": "2026-10-01", "max_d": "2026-10-31"},
+            {"pair": "AUSDT", "month": "2026-11", "n_null": 4, "min_d": "2026-11-01", "max_d": "2026-11-05"},
+            {"pair": "DUSDT", "month": "2026-11", "n_null": 3, "min_d": "2026-11-01", "max_d": "2026-11-03"},
+            {"pair": None, "month": "2026-10"}]
+    t = bv.repair_tasks(gaps, today, {"DUSDT": "2026-11-03"})
+    assert ("AUSDT", "2026-10", True) in t
+    assert [w for p, w, m in t if p == "AUSDT" and not m] == ["2026-11-04", "2026-11-03", "2026-11-02", "2026-11-01"], "不取今天"
+    assert [w for p, w, m in t if p == "DUSDT"] == ["2026-11-02", "2026-11-01"]
+    assert t == sorted(t, key=lambda x: x[1], reverse=True)
+
+
+def test_hole_tasks_find_missing_days_inside_coverage():
+    """11-05(T-238 v2):2026-10-28 整天缺,plan 看不见中间的洞 —— 过完的月走月档、当月走日档、最近 3 天不算洞。"""
+    today = dt.date(2026, 11, 20)
+    counts = [{"d": (dt.date(2026, 10, 20) + dt.timedelta(days=i)).isoformat(), "n": 880} for i in range(31)]
+    counts = [c for c in counts if c["d"] not in ("2026-10-28", "2026-11-12")] + [{"d": "2026-11-05", "n": 300}]
+    counts = [c for c in counts if not (c["d"] == "2026-11-05" and c["n"] == 880)]
+    pairs = [{"pair": "AUSDT"}, {"pair": "BUSDT"}, {"pair": "CUSDT"}]
+    cov = {"AUSDT": {"min_d": "2026-01-01", "max_d": "2026-11-19"}, "BUSDT": {"min_d": "2026-10-29", "max_d": "2026-11-19"}}
+    t = bv.hole_tasks(counts, pairs, cov, today)
+    assert ("AUSDT", "2026-10", True) in t and not any(p == "BUSDT" and w == "2026-10" for p, w, _ in t), "洞在 B 上市之前"
+    assert ("AUSDT", "2026-11-05", False) in t and ("BUSDT", "2026-11-05", False) in t, "行数塌一半也算洞"
+    assert ("AUSDT", "2026-11-12", False) in t
+    assert not any(p == "CUSDT" for p, _, _ in t), "没有覆盖的合约不补"
+    assert not any(w >= "2026-11-17" for _, w, m in t if not m), "最近 3 天是还没上传,不是洞"
+    assert bv.hole_tasks([], pairs, cov, today) == []
