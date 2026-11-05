@@ -42,6 +42,7 @@
 | claimed | T-098 | seth | World50 的数据:候选池(全球前 ~150 大资产)的复权价格与历史流通市值 + 贵金属口径 + 每个候选的链上形式映射与跟踪误差 | 大类 ① 候选可以用日频全收益回放;知道哪些资产今天在链上真的买得到、买多少。 | eodhd 只有 2022-08 起、未复权;yfinance 2015 起但 06-18 后停更、未复权(SHY 九年价格持平,票息全丢)。链上形式从没系统量过。 |  |
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
 | claimed | T-231 | seth | 前向记录写端恢复:refresh_depth_divergence 逼近 statement_timeout 30s —— 给 ohlcv_daily 扫描加下界,并让『重算补的日子』在记录里可见 | 迁移 + 测试 + 前后对比表;卡 notes 写最大耗时前后值、逐行差异数、恢复后第一条 ok 的时间。DDL 的应用要走 Seth 交互轮次(定时轮次只读,不应用)。 | 写端熄火 4 天且在加重(每天 error 10→17→19);『自首日起连续、无回填』这句对外话没有机械保证。 |  |
+| open | T-252 | lane-a | 崩盘夜的空头腿(只报不判,先描述):③ 规则判 0 倍(全现金)时,另加一条 BTC 永续空腿(④,与 ③ 分开记账)在 2020-07 → 昨天的大跌段里赚不赚钱、扣资金费后是否为正、Calmar 与「只是空仓」比 —— Jazz 11-05 夜问「我们的策略没有开空或者对冲吗」 | 报告 docs/research/T-252_crash_short_leg.md + docs/research/t252_short_leg.py + t252_results.json;卡 notes 写三种定义的对照表与随机对照分位;in_review,推 lane-a/T-252。 | ④ 没有择时空腿;③ 规则判 0 时账户就是现金。 |  |
 | open | T-223 | lane-b | S-696 前向判据的第一次月度核对(2026-10 信号月)+ 第二族因子普查:链上 / 发行方 6 个因子按 S-691 同一协议(发现段 → 封存留出段) | docs/research/s696_forward.md 追加 2026-10 一行;报告 docs/research/T-223_factor_family_2.md(预注册段在前,结果在后);卡 notes 写五因子前向符号与第二族短名单;scenarios/lane-b-T-223.json;in_review,推 lane-b/T-223。 | S-691 的五因子有留出段证据、还没有一个前向月份;发行方 / 链上这一族(收入、稀释、持币人分配)只在 S-661 / S-664 用「价值捕获比」单独测过,没按普查协议和衍生品族并排过。 |  |
 | open | T-242 | lane-b | 行为型 setup 登记表第一批(S-726):拥挤多头被洗(crowding flush)与拥挤空头被挤(squeeze)—— 2020 起全部 Binance 永续上的每一次,事件后 1 / 7 / 30 天相对时点等权永续篮的收益分布、偏度与最差一成;只报基率,不写交易规则 | 报告 docs/research/T-242_crowding_setups.md(预注册在前;两类 × 三期限 × 两半的表 + 聚集度 + 尾巴)+ docs/research/t242_crowding_setups.py + t242_results.json;卡 notes 写 n、30 天超额中位 / 分位 / 两半 / 挪一天、最差 10%,以及登记与否;in_review,推 lane-b/T-242。 | Tom 的「fade the crowd」在我们这里只以 MVRV 投降买(V2,台账 5c)出现过一次;永续上的拥挤平仓 / 逼空从没量过基率。 |  |
 | open | T-251 | lane-b | R-v2 名义合计上限 30% vs 40% 的回放(Jazz 11-05「4. 更灵活,40%?」;只报,Jazz 定是否改 R_V2_GROSS_CAP_FRAC) | 报告 docs/research/T-251_rv2_gross_cap_30_vs_40.md + docs/research/t251_gross_cap.py + t251_results.json;卡 notes 写三档对照表;in_review,推 lane-b/T-251。 | 上限 30% 是 Jazz 10-29 给的;40% 的代价没量过。 |  |
@@ -253,4 +254,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 13 · claimed 7 · blocked 4 · in_review 33 · done 190 · dropped 3
+open 14 · claimed 7 · blocked 4 · in_review 33 · done 190 · dropped 3

@@ -1,0 +1,28 @@
+{
+  "id": "T-252",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-05",
+  "title": "崩盘夜的空头腿(只报不判,先描述):③ 规则判 0 倍(全现金)时,另加一条 BTC 永续空腿(④,与 ③ 分开记账)在 2020-07 → 昨天的大跌段里赚不赚钱、扣资金费后是否为正、Calmar 与「只是空仓」比 —— Jazz 11-05 夜问「我们的策略没有开空或者对冲吗」",
+  "source": "11-05 夜 BTC 一小时 −3.8%(79,541 → 76,526)、ETH −4.5%;账户加密敞口 0(③ rule_exposure = 0,X1V 空仓,R-v2 无票)。架构:③ 只在 0–1 倍、从不做空(CLAUDE.md 回报层级);空单只能属于 ④,④ 排最后。现有 ④ 空单纸面臂只有 S-683 上币做空(short_paper_*,10-26 起 1 张票)。本卡只描述「如果 ④ 有一条择时空腿会怎样」,不立臂、不动钱;要立臂另写预注册。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-252.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 信号只用已落表、按时点可知的:exposure_decision_daily(③ 的 rule_exposure 与 inputs)、cycle_vector_daily(⓪ phase)、style_index_pit_daily(majors 200 日线)。三种空腿定义各算一遍(不扫参,就这三个):A = ③ 判 0 的日子持 1 倍 BTC 永续空;B = A 且 ⓪ phase = turning;C = majors 指数在 200 日线下。② 价格 = perp_bv_daily 的 BTCUSDT(永续),资金费 = v_funding_daily(Binance)与 hl_funding_hourly(HL,2023-05 起)两口径各报;成本每次开 / 关 7.5bp。③ 报:总收益、年化、最大回撤、Calmar、最长亏损段、资金费合计、逐年;与「同期空仓(0)」比、与 ① 持有比;另列 2020-07 起所有 BTC 30 天 ≥ 25% 的回撤段里空腿各赚了多少、在反弹里还了多少。④ 零信号对照:同等在场天数、同等开关次数的随机空腿 1,000 次(apparatus.null_distribution,种子 252)。⑤ 只报不判;不改代码、不入库;长脚本 nohup。交付附 docs/research/scenarios/lane-a-T-252.json(≥ 3 条可核命题)。",
+    "expect": "报告 docs/research/T-252_crash_short_leg.md + docs/research/t252_short_leg.py + t252_results.json;卡 notes 写三种定义的对照表与随机对照分位;in_review,推 lane-a/T-252。"
+  },
+  "prior_value": "④ 没有择时空腿;③ 规则判 0 时账户就是现金。",
+  "notes": "",
+  "verified": null
+}
