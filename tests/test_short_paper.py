@@ -221,3 +221,12 @@ def test_hole_tasks_skip_days_upstream_never_published():
     pairs, cov = [{"pair": "AUSDT"}], {"AUSDT": {"min_d": "2026-01-01", "max_d": "2026-11-19"}}
     assert bv.hole_tasks(counts, pairs, cov, today) == [("AUSDT", "2026-10", True)]
     assert bv.hole_tasks(counts, pairs, cov, today, skip={"2026-10-28"}) == []
+
+
+def test_a_single_missing_day_does_not_mark_a_contract_dead():
+    """11-05(lane-c T-246):GRTUSDT / ZENUSDT / MDTUSDT 被一天的 404 标了死期却一直有新 bar —— 标死之前必须看那天之后还有没有档。"""
+    src = (Path(__file__).resolve().parents[1] / "src/data/market/perp_bv_daily.py").read_text(encoding="utf-8")
+    i, j = src.find("for pair, when in list(dead.items()):"), src.find("upd = [{**{k: known[p].get(k)")
+    assert 0 < i < j, "标死之前的核对要在写 dead_from 之前"
+    block = src[i:j]
+    assert "get_binance_vision_um_daily(KIND, pair, when, index=True" in block and "if later:" in block and "dead.pop(pair" in block

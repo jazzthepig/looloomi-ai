@@ -395,6 +395,17 @@ async def run_once(today: Optional[date] = None, time_budget: float = TIME_BUDGE
         r = await supabase_upsert_table(TABLE, rows[i:i + 2000], on_conflict="pair,d")
         if not r.ok:
             return {"ok": False, "refused": False, "reason": f"{TABLE} 写入失败:{r.why}", **detail}
+    # 11-05(lane-c T-246 发现):一天的日档 404 ≠ 下架 —— 上游自己会漏天(2026-10-28 全市场都没有),
+    # 结果 GRTUSDT / ZENUSDT / MDTUSDT 被标了死期却一直有新 bar,plan 就再也不往后取它们。标死之前看一眼那天之后还有没有档。
+    for pair, when in list(dead.items()):
+        try:
+            later = parse_index_days(await get_binance_vision_um_daily(KIND, pair, when, index=True, max_keys=4))
+        except Exception:                                                 # noqa: BLE001 —— 目录读不到就这轮不标
+            dead.pop(pair, None)
+            continue
+        if later:
+            dead.pop(pair, None)
+    detail["dead_marked"] = len(dead)
     if dead:
         upd = [{**{k: known[p].get(k) for k in ("pair", "symbol", "first_d", "active")}, "dead_from": d} for p, d in dead.items()]
         r = await supabase_upsert_table(PAIRS, upd, on_conflict="pair")
