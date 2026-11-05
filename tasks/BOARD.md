@@ -2,6 +2,7 @@
 
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
+| in_review | T-157 | lane-a | X1V 最大的一块拖累(限额 / 最小单 / nav_cap,−6.27pp/年)拆开,并按账户规模重跑:1k / 3k / 10k / 100k USDT | 脚本 docs/research/t157_x1v_limits_by_size.py;报告(脚本写)_reports/absorb_input/T-157_x1v_limits.md,开头一张「规模 × 拖累」表;in_review,推 lane-a/T-157。 | 如果拖累主要是小账户的整数化 / 最小单,那它不是策略的缺陷,是规模的 —— 真钱开关的条件里就要写最低规模;如果在 100k 上还在,就得改执行器。 |  |
 | in_review | T-217 | lane-a | 前向记录连续性账 + 近 7 天约 50 次超时类 error 的来源对时间点(只读) | 报告 docs/research/T-217_record_continuity.md,开头一张连续性总表;卡片 notes 写三个结论各一句。 | 只有 10-28 的口头判断:'记录没断、监视器沉默';没有逐条记录的连续性证明,也不知道超时是不是同一来源。 |  |
 | in_review | T-218 | lane-a | 长期情景「轨道赢 / 代币赢」:2021→2026 季度观察指标 + 第一批可自动结算的前向命题(交情景台账) | 报告 docs/research/T-218_rails_vs_tokens.md(开头季度表,末尾命题 JSON);卡片 notes 写三句结论 + 命题条数;in_review,推 lane-a/T-218(新分支从 origin/main 起)。 | 只有 11-02 的对话判断与一个 30 天截面(Tether $5.2 亿、Circle $2.1 亿收入,0 给代币持有人;HYPE / TRX 100%);没有任何历史序列,也没有可结算的前向命题。 |  |
 | in_review | T-222 | lane-a | ④ 候选的量测:HL 现货多 + 永续空收资金费(cash-and-carry)在 ① 的 24 个名字上到底值多少 —— 正费率段 / 负费率段 / 费用之后;不判、不做策略,给 Jazz 一张能定的表 | 报告 docs/research/T-222_funding_carry.md(开头一张表:年化毛 / 净、负费率段、HL−Binance 差、容量);卡 notes 写等权年化毛 / 净与最长负段;scenarios/lane-a-T-222.json;in_review,推 lane-a/T-222。 | funding 只在截面上测过(S-691 F4 无信息、S-688 CIS 计分项);作为时间序列上的收取,从没有一张按月、分正负段、扣费后的表;10-21 的裁定针对 ③,④ 没有裁过。 |  |
@@ -31,7 +32,6 @@
 | in_review | T-241 | lane-c | ⓪ 分量的先行 / 滞后归因(S-724,只报不判):九个分量(z 与 30 日变化)对 BTC 之后 30 / 60 / 90 天收益、对「之后 90 天内是否进入 ≥ 30% 回撤段」的分档频率与块置换零分布 —— 哪个量**先于**崩塌动、提前多少天;给 ⓪ v3 选分量,不选阈值 | 报告 docs/research/T-241_cycle_leadlag.md + docs/research/t241_cycle_leadlag.py + t241_results.json;卡 notes 写候选分量清单(或『无」)、三段的先行天数表一句话;in_review,推 lane-c/T-241。 | ⓪ 的分量是按常识选的,从没有量过谁先谁后。 |  |
 | in_review | T-243 | lane-c | ⓪ v3 的候选数据(S-727,只报不判):用 T-241 同一协议量五条**流**量对崩塌的先行 —— 全市场永续主动卖出占比、永续对现货成交比、资金费拥挤广度、永续新上市速率、成交集中度;九个水平量里没有先行信息(S-724),这次换数据不换阈值 | 报告 docs/research/T-243_cycle_flows.md + docs/research/t243_cycle_flows.py + t243_results.json;卡 notes 写候选清单(或『无』)、三段先行天数一句话、与 T-241 的并排结论;in_review,推 lane-c/T-243。 | ⓪ 层两次 ❌、一次归因:水平量没有先行信息;流量从没量过。 |  |
 | in_review | T-245 | lane-c | 投降日之后(S-729):BTC 深回撤里出现「全市场被迫卖出」的那几天,之后 30 / 60 / 90 天 BTC 与 ① 面板怎么走 —— 对照同样深的回撤里随机一天;以及它比「重新站上 200 日线」早多少天、那段错过了多少(S-601:趋势规则的代价付在每次反弹的开头) | 报告 docs/research/T-245_capitulation.md + docs/research/t245_capitulation.py + t245_results.json;卡 notes 写事件清单、30/60/90 天中位与条件零分布分位、两半、尾巴、「早多少天 / 那段多少」,以及判;in_review,推 lane-c/T-245。 | 书本只有趋势层;均值回归层(投降时接)从没在我们自己的数据上量过,X1V 再入场的代价也只有一句话(S-601)。 |  |
-| claimed | T-157 | lane-a | X1V 最大的一块拖累(限额 / 最小单 / nav_cap,−6.27pp/年)拆开,并按账户规模重跑:1k / 3k / 10k / 100k USDT | 脚本 docs/research/t157_x1v_limits_by_size.py;报告(脚本写)_reports/absorb_input/T-157_x1v_limits.md,开头一张「规模 × 拖累」表;in_review,推 lane-a/T-157。 | 如果拖累主要是小账户的整数化 / 最小单,那它不是策略的缺陷,是规模的 —— 真钱开关的条件里就要写最低规模;如果在 100k 上还在,就得改执行器。 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 | claimed | T-094 | seth | 状态层往前补一个周期 + 矢量库按时点:state_daily 2019 起、FNG 2018 起;market_state_vectors 改扩张窗口 z、13 个空维补或删 | S-570 / T-093 的情景格子在 2019–2022 多一轮牛熊;S-521 类的匹配不再读到未来。 | state_daily 2023-01 起(一个周期);FNG 2021-06 起;market_state_vectors 24 维里 13 维恒空、全史一次 z(看未来)。 |  |
@@ -249,4 +249,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 12 · claimed 8 · blocked 4 · in_review 29 · done 190 · dropped 3
+open 12 · claimed 7 · blocked 4 · in_review 30 · done 190 · dropped 3
