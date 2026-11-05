@@ -58,3 +58,17 @@ def test_universe_is_the_validated_panel_not_every_perp():
     prev_scan = prev[:prev.find("$fn$;") + len("$fn$;")]
     cut = lambda s: _norm(s[:s.find("  with uni as (")] + s[s.find("  ), pre as ("):])   # noqa: E731
     assert cut(prev_scan) == cut(scan)
+
+
+def test_universe_maps_1000x_perps_to_panel_names():
+    """S-730 补:1000PEPE ↔ PEPE(规则全是比例,执行器把 1000X 对到 HL 的 kX)—— 只改 uni,其余与上一版逐字相同。"""
+    body = _body("migrations/2026-11-05_r_tickets_universe_1000x.sql")
+    scan = body[:body.find("$fn$;") + len("$fn$;")]
+    uni = scan[scan.find("with uni as ("):scan.find("), pre as (")]
+    assert "p.symbol like '1000%' and substr(p.symbol, 5) in (" in uni and "o.source = 'binance_hist'" in uni
+    prev = _body("migrations/2026-11-05_r_tickets_validated_universe.sql")
+    prev_scan = prev[:prev.find("$fn$;") + len("$fn$;")]
+    cut = lambda s: _norm(s[:s.find("  with uni as (")] + s[s.find("  ), pre as ("):])   # noqa: E731
+    assert cut(prev_scan) == cut(scan)
+    from src.exec_host.tickets import resolve_coin
+    assert resolve_coin("1000PEPE", {"kPEPE": 0}) == "kPEPE"
