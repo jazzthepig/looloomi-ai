@@ -15,7 +15,7 @@
 `portfolio_targets_daily`:每天一份目标(每条腿的权重、美元额度、用什么、在哪、现在能不能执行、为什么)。
 **写一次不改**(前向记录的纪律)。执行器今天读的是同一个函数算出的数(`plan_fields`,随 /internal/executor/plan 下发):
 - X1V 的记账净值上限 = 加密腿的美元额度(30% × 600 = $180)—— 不加这一条,X1V 开仓时会把整个账户的 USDC 买成 BTC / ETH;
-- R-v2 的名义合计上限 = 账户净值 × 30%。
+- R-v2 的名义合计上限 = 账户净值 × 40%(11-05 夜起;此前 30%)。上限只在建仓那一刻判(T-251),持仓中可以漂过。
 
 ## 还没建的腿
 
@@ -38,12 +38,12 @@ BOOK = "t25_live"
 T25_ARM = "T25"
 T25_CAPITAL_USD = 600.0            # Jazz 10-29
 OPEN_DATE = "2026-10-30"           # 第一份目标(拍板之后的第一个 UTC 日)
-RV2_GROSS_CAP_DEFAULT = 0.30       # Jazz 10-29:R-v2 名义合计 ≤ 账户净值 × 30%;单票风险不变
+RV2_GROSS_CAP_DEFAULT = 0.40       # Jazz 11-05 夜「40%」(T-251:40% 档 Calmar 0.13 vs 30% 档 0.05,且 40% 从未咬合);10-29 起是 30%;单票风险不变
 RV2_GROSS_CAP_MAX = 0.40           # Jazz 11-05:探索仓 0–40% 灵活 —— 上限可到 40%;要放到 40% 由 Jazz 在 Railway 设 R_V2_GROSS_CAP_FRAC
 
 
 def rv2_gross_cap_frac(env: dict | None = None) -> float:
-    """R-v2 名义合计上限(占账户净值)。环境变量 R_V2_GROSS_CAP_FRAC 覆盖默认 0.30;不在 (0, 0.40] ⇒ 抛错(不悄悄夹到边界 ——
+    """R-v2 名义合计上限(占账户净值)。环境变量 R_V2_GROSS_CAP_FRAC 覆盖默认 0.40;不在 (0, 0.40] ⇒ 抛错(不悄悄夹到边界 ——
     写错了的数应该让计划出不来,而不是按另一个数下单)。"""
     import os
     raw = (env if env is not None else os.environ).get("R_V2_GROSS_CAP_FRAC", "").strip()
