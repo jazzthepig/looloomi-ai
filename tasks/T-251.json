@@ -1,0 +1,28 @@
+{
+  "id": "T-251",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-05",
+  "title": "R-v2 名义合计上限 30% vs 40% 的回放(Jazz 11-05「4. 更灵活,40%?」;只报,Jazz 定是否改 R_V2_GROSS_CAP_FRAC)",
+  "source": "11-05 代码已支持 R_V2_GROSS_CAP_FRAC(默认 0.30,上限 0.40;src/data/execution/portfolio_targets.py)。主机规则:src/exec_host/tickets.py —— 新票名义 = 净值 × 0.5% ÷ 止损距离、单票 ≤ 净值 50%、合计超过 净值 × gross_cap ⇒ 这张票不做、不找替补;最多 10 张。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-251.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 票源 = r_tickets_paper(validated 宇宙,perp_bv_daily,S-730 之后的规则)回放的全部票,2020-07 → 昨天;按主机的跳过规则逐日模拟 gross_cap ∈ {0.30, 0.40, 1.00(参考)},f = 0.5%,cap 10 张,复利。② 每档报:总收益、CAGR、最大回撤、Calmar、最差月、被上限挡掉的票数与这些票的 R 合计(挡掉的票若做了会怎样)、名义合计的中位 / p95 / 最大。③ 30% → 40% 的边际:多做了哪些票、它们的 R 分布;按 regime(majors 200 日线上 / 下)分开报。④ 真钱尺度:按今天净值 ≈ $630 算每张票的名义,低于 HL 最小名义 $10 的比例在两档下各多少。⑤ 只报不判;不扫其它档位(30 / 40 / 100 三档是 Jazz 的问题,不是参数搜索)。只算、不改代码、不入库;长脚本 nohup。交付附 docs/research/scenarios/lane-b-T-251.json(≥ 2 条可核命题)。",
+    "expect": "报告 docs/research/T-251_rv2_gross_cap_30_vs_40.md + docs/research/t251_gross_cap.py + t251_results.json;卡 notes 写三档对照表;in_review,推 lane-b/T-251。"
+  },
+  "prior_value": "上限 30% 是 Jazz 10-29 给的;40% 的代价没量过。",
+  "notes": "",
+  "verified": null
+}

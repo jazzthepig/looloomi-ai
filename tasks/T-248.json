@@ -1,0 +1,28 @@
+{
+  "id": "T-248",
+  "owner": "lane-c",
+  "status": "in_review",
+  "created": "2026-11-05",
+  "title": "R-v2 真钱序列体检(只报,不判):perp_bv_daily 在 R-v2 宇宙(257 名 + 1000PEPE)上 2025-06 → 昨天,逐名查缺天 / 重复 / 价格跳变 / 成交额量纲断点 / 死期与 bar 矛盾 / 与 HL 永续日线的收盘差 —— 今天一天就撞上了四种(10-28 整天缺、tbqv 一年空、GRT 被标死、现货量混进永续序列)",
+  "source": "11-05 一天内 perp_bv_daily 暴露的问题:① 2026-10-28 上游整天缺(data.binance.vision 没有);② tbqv 2025-12 起整列空(已补);③ perp_bv_pairs 死期标错(GRT / ZEN / MDT,lane-c T-246 发现,已清);④ binance_hist 现货量与永续量混用(T-237)。R-v2 是真钱(r_tickets_scan 读 perp_bv_daily,执行在 HL 永续)。HL 日线:ohlcv_daily source='hyperliquid'(若某名不在,写明不在)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-248.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读。① 宇宙 = binance_hist 面板符号 ∩ perp_bv_pairs coin(+ 1000X ↔ X),与 r_tickets_scan 的 uni CTE 一字不差(从 migrations/2026-11-05_r_tickets_universe_1000x.sql 抄)。② 窗口 2025-06-01 → 昨天,逐名报:缺天(日历日里没有 bar 的天,区分全市场都缺的天与只有它缺的天)、重复 (symbol, d)、|ln(c_t / c_{t−1})| > 0.5 的跳变日(列出并与 HL 同日比)、qv 与 20 日中位数之比 > 20 或 < 0.05 的日子、dead_from 有值但之后仍有 bar、tbqv 为空或 > qv 的行。③ 与 HL:ohlcv_daily source='hyperliquid' 有的名字,同日收盘相对差的中位 / p99,> 2% 的日子列出(HL 的 1000 倍面值名按 kX ↔ 1000X 对齐,价格 × 1000)。④ 一张总表:每类问题的名字数与行数;再列「R-v2 最近 30 天会看到的」那一段(最近 30 天)。⑤ 只报不判;每类问题附一条可以直接贴进 SQL 编辑器的复查语句。纪律:不改代码、不做 DDL、不入库;翻页带 order=(按 symbol=in.(…) 分片、每页 1000 行);长脚本 nohup 后台、下一轮收;交付附 docs/research/scenarios/lane-c-T-248.json(≥ 2 条,例如「11-12 时 10-28 仍缺」这类可核命题)。",
+    "expect": "报告 docs/research/T-248_rv2_series_health.md + docs/research/t248_series_health.py + t248_results.json;卡 notes 写总表与最近 30 天的问题清单;in_review,推 lane-c/T-248。"
+  },
+  "prior_value": "真钱序列从没做过一次逐名体检;今天的四个问题都是撞上才发现的。",
+  "notes": "2026-11-05 lane-c 交付(T-248 只报不判)。\n\n【口径】宇宙 258 名(与 r_tickets_scan 的 uni CTE 同规则:perp_bv_pairs 的 kind='coin' 或(kind 空且 dead_from 非空)∩ ohlcv_daily(source='binance_hist') 面板;1000X 按 substr(symbol,5) 对到面板;含 6 个 1000X),窗口 2025-06-01 → 2026-11-04(522 天),perp_bv_daily 132,861 行。HL 快照只有 2026-08-09 → 08-23。\n\n【总表:名字数 / 行数】\n1 全市场缺天 1 天(2026-10-28),258/258 名各缺 1 天;窗口内逐名的缺口集合 = {2026-10-28},没有第二个洞;部分缺天 0;个体洞 0;尾部截断 0\n2 重复 (symbol,d) 0\n3 价格跳变 |ln|>0.5:59 名 / 86 行;现货同日同向佐证 85 行;无佐证 1 行(A2Z 2026-03-24,现货同日反向);5 行落在「最后一根真 bar」\n4 成交额量纲断点 qv/med20 越界:180 名 / 1,812 行(非空壳 912 行 / 169 名;空壳 900 行)\n5 dead_from 有值但之后仍有 bar:0(perp_bv_pairs 现只剩 AERGO/BDXN/BTCST/SXP 四个 dead_from,均不在宇宙)\n6 死期漏标(有空壳行、dead_from 空、active=true):127 名 / 42,326 行 = 全部行的 31.86%;37 名窗口起点已是空壳;90 名空壳起点 = 最后一根真 bar + 1 天;最近一次新死 2026-09\n7 tbqv 为空或 > qv:0\n8 与 HL 收盘相对差 > 2%:26 个符号日 / 990 个可比符号日;中位 0.047%、p99 4.45%、max 10.14%;26 天全落在 HL 快照末日 2026-08-23,剔除该日后 924 个符号日 max 0.459%、> 1% 的 0 天\n9 宇宙里没有 HL 对面:191 名(清单见报告附录 G);67 名有对面,乘数全为 1(6 个 1000X 在 HL 快照里都没有)\n10 空壳行(死名冻结价)与 HL 活市价的偏离:1 名(VINE)/ 15 个符号日;相对差中位 120.4%、最大 141.5%(VINE 在 2026-08-14 之前已死,永续冻结 c=0.01575、qv=0,而 HL 当天仍成交 0.006521)\n\n【R-v2 最近 30 天(2026-10-06 → 11-04)会看到的】\n- 2026-10-28 整天 0 bar → r_tickets_scan 的完整性门 v_n_bars < greatest(20, 0.8*v_prev_bars) 命中 → 整条宇宙的扫描在这一天停住,当天不出票;上游 data.binance.vision 当天没发布,没人回补就一直缺\n- 量能尖峰 49 天(OGN 10-08 比值 738、RLC 10-06 723、HOT 11-03 336、RSR 10-12 210、MAGIC 10-09 52.7;另有 BAT/IOST/STRK/CKB/CFX/GTC/CTSI/SAND/API3/ARPA/T 10-25/1000XEC 10-25)→ adv30 是 30 行均值(含当日行)→ 全窗口 868 个可比尖峰行里 158 行由「不过门」变「过门」(563 → 721):一天的量能尖峰能把平时流动性不足的名字顶进可交易宇宙\n- 价格跳变 2 行:OGN 2026-10-08 |ln|=0.693、MAGIC 2026-10-09 |ln|=0.615(都有现货同日同向佐证 → 真实行情,不是数据错)\n- 流动性门通过数:10-06 87 → 10-13 95 → 11-04 80(近一个月净减 15 个)\n- 死名:最近 30 天 0 个新死;tbqv / 重复 / dead_from 矛盾:0\n- HL 交叉验证做不了:HL 快照只到 2026-08-23,不覆盖最近 30 天\n\n【一条新报的机制】127 个死名的空壳行 c > 0(价格冻结在最后一根真 bar 的收盘价,例 1000WHY c=3.4e-06,qv=0)→ r_tickets_scan 的 b0 只过滤 x.c > 0,挡不住它们 → 死名每天各占一行进面板(2026-11-04:258 行里只有 131 行 qv>0)。死名不会出信号(dv=0 → adv30 塌到 0;atr14=0;c > sma200 不成立),但「宇宙 258」这个分母里有一半是死名占位:80/258 = 31% 与 80/131 = 61% 是同一个通过率的两种读法。\n\n【一条自我纠正】写作中途曾假设空壳行 c=0 → 会被 b0 的 x.c>0 剔出面板;复核 V3b 实测 c=3.4e-06(冻结价,不是 0),该假设作废 —— 死名照样进面板(上一段按实测写)。\n\n【对真钱执行的影响】死名若在 R-v2 里仍有持仓,3b 条会用「最后一根 bar 的收盘价」作为退出价(reason=no_data);VINE 显示这个价格可以离活市价一倍以上(冻结 0.01575 vs HL 0.006521,差 141.5%)。本卡只报,不判该不该改。\n\n【独立复核】docs/research/t248_verify.py(不读缓存、直接查库;宇宙在脚本里独立重写一遍):V1a/V1b/V1c/V2(10-27=258、10-28=0、10-29=258)/V3a/V3b/V3c/V4a/V5 全 PASS;V4 在窗口内 132,861 行与另一次全表 394,806 行扫描里都无重复 (symbol,d)。\n\n【交付】docs/research/T-248_rv2_series_health.md(正文 + 附录 A–G,含每类问题一条可贴进 SQL 编辑器的复查语句)、docs/research/t248_series_health.py、docs/research/t248_results.json、docs/research/t248_verify.py、docs/research/scenarios/lane-c-T-248.json(4 条,2 条自动结算)。\n【限制】HL 只有 15 天;只看宇宙内 258 名;跳变的真实/错误靠现货佐证(只 1 行无佐证)。\n【不做】未改代码、未做 DDL、未入库。",
+  "verified": null
+}

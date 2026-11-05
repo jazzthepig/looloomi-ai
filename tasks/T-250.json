@@ -1,0 +1,28 @@
+{
+  "id": "T-250",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-05",
+  "title": "S-733 盲复算 + HL 现货子集:④ 资金费套息在 HL 已实现小时费率上(2023-06 → 2026-07-20)按 S-707 判据五条;另列 ① 24 名里 HL 有现货的名字并在那个子集上重算",
+  "source": "S-733(REFUTATION_LEDGER,Seth 11-05 已判 ✅:B 净 12.19%/yr,但 2025 6.3%、2026H1 1.9%)。数据 = Mac 数据根 _data/hyperliquid_funding/*_funding_1h.csv(Minimax-A 07-20 抓)。**先不要读** src/research/validation/s733_hl_carry.py 与 docs/research/s733_hl_carry_result.json —— 盲复算,自己从 S-733 的口径段写。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-250.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 照 S-733 口径(当日 ≥ 20 个小时档才算有;规则 A 常开;规则 B 每周一看过去 7 天日费率均值 > 0 且至少 5 天有数;成本 7.5bp/次;等权,不在场的份额闲置),窗口 2023-06-01 → 2026-07-20,报 A / B 年化净、最长负段天数与累计、最大回撤、B 的切换次数与在场占比、逐期(2023H2 / 2024 / 2025 / 2026H1);(c) 月度 vs 未来 30 日 BTC 的 Spearman 与 30 天块置换 p(apparatus.block_permute + null_distribution,种子 733);(d) 随机门控:逐名把 B 的开段 / 关段长度各自打乱(开周数、切换数相同),1,000 次,种子 733。② 与 Seth 的数逐项对(写完自己的再读 docs/research/s733_hl_carry_result.json),差 > 0.5pp 的逐条找原因。③ HL 现货子集:用 HL info spotMeta(公开端点,只读)列出 ① 24 名里在 HL 现货上有对应代币的(写明代币名,如 UBTC / UETH),在那个子集上重算 A / B。④ 只算、不改代码、不入库。交付附 docs/research/scenarios/lane-a-T-250.json(≥ 3 条可核命题,例如 2026-12-31 时 carry_hl_daily 的 carry_b NAV 是否 > 1.005)。",
+    "expect": "报告 docs/research/T-250_s733_blind_recompute.md + docs/research/t250_carry.py + t250_results.json;卡 notes 写逐项对照表与 HL 现货子集的数;in_review,推 lane-a/T-250。"
+  },
+  "prior_value": "S-733 只有 Seth 一个人算过。",
+  "notes": "",
+  "verified": null
+}

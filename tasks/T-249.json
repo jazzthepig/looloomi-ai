@@ -1,0 +1,28 @@
+{
+  "id": "T-249",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-05",
+  "title": "IC 乘数层的新喂料与走步验证(S-734):时点重建的支柱 × 30 天超额,月末截面、组内 Spearman、月聚类 t;乘上去的总分是否比不乘的 IC 高",
+  "source": "Jazz 11-05「3 keep it and further develop」。现行喂料是 Redis cis:factor_performance(纸面平仓 7 日收益,372 样本,S-702),门槛从没过、乘数恒为 1。预注册与判据:REFUTATION_LEDGER S-734(Seth 已写,先读那一段,判据一字不改)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-249.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 数据:cis_rebuild_daily(symbol, d, asset_class, pillar_f/m/o/s/a, regime)× cis_standard_outcomes(symbol, d, grp, alpha;provenance = reconstructed),同名同日内连接;每月最后一个两边都有的交易日取截面;组 = cis_standard_outcomes.grp,截面 ≥ 8 名才算;支柱缺值的名字不进该支柱。翻页带 order=、每页 1000 行、按月分片,抓完核行数。② 先报全样本 2023-01 → 最近到期月末:每支柱 × 每组的月度 IC 均值、sd、n、月聚类 t。③ 走步(S-734 (a)–(c)):每个月末 m 用 m 之前已到期的最近 24 个月末截面算 IC̄ 与 t,启用规则照抄 S-734;乘数接进重算的总分 —— 必须调用 src/data/cis/cis_provider.calculate_total_score(pillars, asset_class, regime=…, ic_mult=…)(只 import,不改),与不乘的总分比截面 IC;(b) 前 1/5 超额中位数;(c) 乘数在支柱间置换 1,000 次、种子 734,用 src/data/evaluation/apparatus.py 的 null_distribution / percentile_of。④ (d) 逐期报。⑤ 只算、不改代码、不入库。长脚本 nohup 后台、下一轮收。交付附 docs/research/scenarios/lane-c-T-249.json(≥ 3 条可核命题,例如 2026-12 月末截面某支柱 IC 的符号)。",
+    "expect": "报告 docs/research/T-249_ic_multiplier_walkforward.md + docs/research/t249_ic.py + t249_results.json;卡 notes 写 (a)–(d) 的原始数字与判据逐条是否满足;in_review,推 lane-c/T-249。"
+  },
+  "prior_value": "乘数恒为 1(S-702:没有一个因子过 |r| > 0.10;纸面平仓喂料 372 样本)。",
+  "notes": "",
+  "verified": null
+}
