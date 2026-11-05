@@ -1,0 +1,28 @@
+{
+  "id": "T-240",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-05",
+  "title": "T-235 唯一过线的格子出样本检验(S-723):开票日主动买盘占比(tbqv / qv,perp_bv_daily)在 2020-03 → 2022-12 这一半(当时没数据、现在有了)上 ΔR 与随机分位 —— 判据与 T-235 的 candidate 定义逐字相同;只测这一个量",
+  "source": "T-235 v2(S-715):主动买盘占比 H2(2023-01 → 2026-10)ΔR = +1.08R、单侧分位 0.997 / 双侧 0.006,H1 n=0 测不了。11-05 perp_bv_daily 回补到 2019-12 并带 tbqv(klines 第 11 列 taker_buy_quote_volume)⇒ H1 现在能测。H2 是发现样本,**H1 是留出样本**。票集与口径沿用 docs/research/t235_breakout_attribution.py(d 口径与 d−1 口径都报)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-240.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读。预注册(S-723 原文)抄进报告开头再算,只算一次:① 主动买盘占比 = tbqv / qv(perp_bv_daily,开票日 d;d−1 口径另报),与 T-235 用的 s695 口径在 2023 后重叠段对一遍(相关 / 分档一致率),写明是否同一个量;② 票集 = T-235 的 767 张(不改),H1 = 开票日 2020-03-01 → 2022-12-31 的票,扩张窗口五分位(只用 ≤ d 已出场的票)、顶档减底档 ΔR、随机打乱标签 1,000 次(种子 240,只用 apparatus.py)单侧 / 双侧分位,缺失率;H2 用新口径重算一遍并与 T-235 的 +1.08R 对照(同口径应接近);③ 判(S-723):H1 ΔR ≥ +0.3R 且单侧分位 ≥ 0.95 且与 H2 同号 ⇒ ✅「留出样本确认」;否则 ❌。④ 诚实:H1 的票几乎都是 2020–21 的(2022 长票 0 张);只测这一个量、不扫阈值;多重比较只剩 1 次。纪律:不改代码、不做 DDL、不入库;探针脚本改同一个文件再跑;长脚本 nohup 后台、下一轮收;交付附 docs/research/scenarios/lane-a-T-240.json(≥ 2 条)。",
+    "expect": "报告 docs/research/T-240_taker_holdout.md + docs/research/t240_taker_holdout.py + t240_results.json;卡 notes 写 H1 的 n / ΔR / 分位 / 缺失率、H2 对照、口径一致性与判;in_review,推 lane-a/T-240。"
+  },
+  "prior_value": "T-235 的这格是全表唯一过 0.95 的;没有留出样本之前它只是一次发现。",
+  "notes": "",
+  "verified": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "T-241",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-05",
+  "title": "⓪ 分量的先行 / 滞后归因(S-724,只报不判):九个分量(z 与 30 日变化)对 BTC 之后 30 / 60 / 90 天收益、对「之后 90 天内是否进入 ≥ 30% 回撤段」的分档频率与块置换零分布 —— 哪个量**先于**崩塌动、提前多少天;给 ⓪ v3 选分量,不选阈值",
+  "source": "S-713 ❌、S-720 ❌:⓪ 层两次机械规则都没亮在回撤里;T-239 归因说 turning 的推手是 taker_buy / breadth / mom(同步 / 滞后量),杠杆族在崩塌前**在降**。Jazz:先归因、后规则。数据:cycle_vector_daily(v1.1,z jsonb 九分量,2021-01-29 起;原始分量在 components jsonb,2018 起)+ BTC binance_hist 收盘;事件段切法沿用 t234_cycle.py。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-241.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读。预注册(S-724 原文)抄进报告开头,只算一次,不扫阈值。① 对每个分量 k 和两种形态 x ∈ {z_k, Δ30 z_k}:按扩张窗口五分位分档(只用 ≤ d 的历史),报每档之后 30 / 60 / 90 天 BTC 收益均值与「之后 90 天内进入 ≥ 30% 回撤段」的频率;顶档减底档 Δ 与块置换零分布(块长 30 天、1,000 次、种子 724,只用 apparatus.py)的分位;② 先行结构:对三段最大回撤(2021-04、2021-11、2025-10)各报每个分量的 Δ30 z 在峰前 −90 … 0 天的路径,标出每个分量**首次**越过自己历史 10 / 90 分位的那天相对峰的天数(负 = 先行);③ 一张表:9 分量 × 2 形态 × 3 期限的 Δ 与分位 + 先行天数中位;④ 「候选分量」标记(不是规则):三个期限同号、且 90 天期限分位 ≥ 0.95、且三段里 ≥ 2 段先行天数 < 0 的分量;⑤ 诚实:54 次比较;候选进下一条预注册(⓪ v3)才判,本卡不判。纪律:不改代码、不做 DDL、不入库;探针脚本改同一个文件再跑;步数过半先落文件;交付附 docs/research/scenarios/lane-c-T-241.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-241_cycle_leadlag.md + docs/research/t241_cycle_leadlag.py + t241_results.json;卡 notes 写候选分量清单(或『无』)、三段的先行天数表一句话;in_review,推 lane-c/T-241。"
+  },
+  "prior_value": "⓪ 的分量是按常识选的,从没有量过谁先谁后。",
+  "notes": "",
+  "verified": null
+}
