@@ -44,3 +44,17 @@ def test_no_bridge_into_ohlcv_daily_remains():
     assert "um_bridge_fill" not in main and "_um_bridge" not in main
     mig = (ROOT / "migrations/2026-11-05_um_bridge_fill.sql").read_text(encoding="utf-8")
     assert mig.startswith("-- ⚠️ 同日作废")
+
+
+def test_universe_is_the_validated_panel_not_every_perp():
+    """S-730:序列是永续,宇宙是 R-v2 验证过的那批名字(binance_hist 面板 ∩ coin 永续)—— 扩宇宙要另立预注册。"""
+    body = _body("migrations/2026-11-05_r_tickets_validated_universe.sql")
+    scan = body[:body.find("$fn$;") + len("$fn$;")]
+    assert "create or replace function public.r_tickets_nav(" not in body, "这一版只改扫描"
+    uni = scan[scan.find("with uni as ("):scan.find("), pre as (")]
+    assert "from perp_bv_pairs p" in uni and "o.source = 'binance_hist'" in uni and "p.symbol in (" in uni
+    # 读表段之外,与 perp_source 版逐字相同
+    prev = _body("migrations/2026-11-05_r_tickets_perp_source.sql")
+    prev_scan = prev[:prev.find("$fn$;") + len("$fn$;")]
+    cut = lambda s: _norm(s[:s.find("  with uni as (")] + s[s.find("  ), pre as ("):])   # noqa: E731
+    assert cut(prev_scan) == cut(scan)
