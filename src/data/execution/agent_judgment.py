@@ -33,6 +33,7 @@ LOOP_NAME = "_agent_judgment_loop"
 PREFIX = "A"
 TEMPERATURE = 0.2
 MAX_TOKENS = 12000          # 11-05:推理模型先想再答;4,000 时 10:15 那轮整段都是没写完的思考(剥掉后为空)
+TIMEOUT_S = 300.0          # 11-05:12k token 的推理回复 45 秒(NARRATIVE_LLM_TIMEOUT 默认)写不完 —— 12:10 那轮 ReadTimeout
 NEWS_HOURS = 48
 NEWS_MAX = 12
 _BANNED_ZH = re.compile(r"(买入|卖出|加仓|减仓|建仓|清仓|抄底|止盈|止损|目标价|满仓|梭哈|建议.{0,4}(买|卖|持有))")
@@ -139,7 +140,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     doc = dossier(dec[0], await _news(now))
     text = await llm._chat([{"role": "system", "content": _SYSTEM},
                             {"role": "user", "content": _INSTRUCTION + json.dumps(doc, ensure_ascii=False, default=str)}],
-                           temperature=TEMPERATURE, max_tokens=MAX_TOKENS)
+                           temperature=TEMPERATURE, max_tokens=MAX_TOKENS, timeout=TIMEOUT_S)
     got = parse_reply(llm._extract_json(text or ""))
     if not got:
         # 模型不通 / 答非所问 ≠「没事可做」:记 refused + 原因进 loop_attempt(skipped 会被记成 ok,原因就看不见了)

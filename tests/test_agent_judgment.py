@@ -69,7 +69,7 @@ def _patch(monkeypatch, reply, have=None, dec=(DEC,), configured=True):
         up[t] = rows
         return True
 
-    async def chat(messages, temperature=0.4, max_tokens=1400):
+    async def chat(messages, temperature=0.4, max_tokens=1400, timeout=None):
         assert temperature == aj.TEMPERATURE and max_tokens == aj.MAX_TOKENS and "DOSSIER" in messages[1]["content"]
         return reply
 
@@ -136,3 +136,12 @@ def test_extract_json_survives_reasoning_preamble_and_nested_braces():
     assert _extract_json(t) == {"down": 0.2, "flat": 0.5, "up": 0.3, "drivers": ["a"]}
     assert _extract_json('```json\n{"headline": "x", "items": {"a": "b"}}\n```') == {"headline": "x", "items": {"a": "b"}}
     assert _extract_json("<think>unterminated {") is None and _extract_json("") is None
+
+
+def test_agent_call_gets_a_long_timeout():
+    """11-05 12:10:12k token 的推理回复在 45 秒默认时限内写不完(ReadTimeout)—— agent 臂自己给时限。"""
+    import inspect
+    from src.data.execution import agent_judgment as aj
+    from src.data.narrative import llm_narrator as llm
+    assert "timeout" in inspect.signature(llm._chat).parameters and aj.TIMEOUT_S >= 240
+    assert "timeout=TIMEOUT_S" in inspect.getsource(aj.run_once)

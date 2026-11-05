@@ -108,7 +108,7 @@ def _note(why: str | None) -> None:
                       why=None if why is None else _SECRET.sub("…", re.sub(r"(?i)bearer\s.*", "Bearer …", why, flags=re.DOTALL))[:200])
 
 
-async def _chat(messages: list, temperature: float = 0.4, max_tokens: int = 1400) -> str | None:
+async def _chat(messages: list, temperature: float = 0.4, max_tokens: int = 1400, timeout: float | None = None) -> str | None:
     if not _BASE:
         _note("LLM_BASE_URL 未配")
         return None
@@ -119,7 +119,7 @@ async def _chat(messages: list, temperature: float = 0.4, max_tokens: int = 1400
     payload = {"model": _MODEL, "messages": messages, "temperature": temperature,
                "max_tokens": int(max_tokens), "stream": False}
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as cli:
+        async with httpx.AsyncClient(timeout=timeout or _TIMEOUT) as cli:   # 推理模型长回复按调用方给的时限(agent 臂 300 秒)
             r = await cli.post(url, headers=headers, content=json.dumps(payload))
             if r.status_code != 200:
                 _logger.warning(f"[NARRATOR] LLM {r.status_code}: {r.text[:200]}")
