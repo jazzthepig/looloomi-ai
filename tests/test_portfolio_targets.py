@@ -120,3 +120,14 @@ def test_capital_follows_the_live_snapshot_and_a_deposit_makes_today_a_rebalance
     # 快照里今天的行不算(还没收盘)
     cap5, _, _ = pl.capital_from_snapshots([{"d": "2026-11-06", "equity_usd": 1.0, "flows_usd": 0}, {"d": "2026-11-05", "equity_usd": 700.0, "flows_usd": 0}], "2026-11-06")
     assert cap5 == 700.0
+
+
+def test_rv2_gross_cap_is_flexible_up_to_40pct_and_refuses_beyond():
+    """Jazz 11-05:探索仓 0–40% 灵活。默认 30%;Railway 的 R_V2_GROSS_CAP_FRAC 可改到 ≤ 40%;写错不悄悄夹到边界。"""
+    import pytest
+    from src.data.execution import portfolio_targets as pt
+    assert pt.rv2_gross_cap_frac({}) == 0.30 and pt.rv2_gross_cap_frac({"R_V2_GROSS_CAP_FRAC": "0.40"}) == 0.40
+    assert pt.rv2_gross_cap_frac({"R_V2_GROSS_CAP_FRAC": " 0.35 "}) == 0.35
+    for bad in ("0.41", "0", "-0.1", "x"):
+        with pytest.raises(ValueError):
+            pt.rv2_gross_cap_frac({"R_V2_GROSS_CAP_FRAC": bad})

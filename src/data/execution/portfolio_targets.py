@@ -38,11 +38,32 @@ BOOK = "t25_live"
 T25_ARM = "T25"
 T25_CAPITAL_USD = 600.0            # Jazz 10-29
 OPEN_DATE = "2026-10-30"           # 第一份目标(拍板之后的第一个 UTC 日)
-RV2_GROSS_CAP_FRAC = 0.30          # Jazz 10-29:R-v2 名义合计 ≤ 账户净值 × 30%;单票风险不变
+RV2_GROSS_CAP_DEFAULT = 0.30       # Jazz 10-29:R-v2 名义合计 ≤ 账户净值 × 30%;单票风险不变
+RV2_GROSS_CAP_MAX = 0.40           # Jazz 11-05:探索仓 0–40% 灵活 —— 上限可到 40%;要放到 40% 由 Jazz 在 Railway 设 R_V2_GROSS_CAP_FRAC
+
+
+def rv2_gross_cap_frac(env: dict | None = None) -> float:
+    """R-v2 名义合计上限(占账户净值)。环境变量 R_V2_GROSS_CAP_FRAC 覆盖默认 0.30;不在 (0, 0.40] ⇒ 抛错(不悄悄夹到边界 ——
+    写错了的数应该让计划出不来,而不是按另一个数下单)。"""
+    import os
+    raw = (env if env is not None else os.environ).get("R_V2_GROSS_CAP_FRAC", "").strip()
+    if not raw:
+        return RV2_GROSS_CAP_DEFAULT
+    v = float(raw)
+    if not 0 < v <= RV2_GROSS_CAP_MAX:
+        raise ValueError(f"R_V2_GROSS_CAP_FRAC = {raw} 不在 (0, {RV2_GROSS_CAP_MAX:g}] —— 拒绝出计划")
+    return v
+
+
+try:
+    RV2_GROSS_CAP_FRAC = rv2_gross_cap_frac()   # 进程启动时读一次;改变量后 Railway 重启即生效
+except ValueError as _e:                      # 写错了不让整个服务起不来;出计划的那一步(ticket_plan)会再读一次并拒绝
+    print(f"[PORTFOLIO-TARGETS] ⚠️  {_e};计划将被拒绝,目标表按默认 {RV2_GROSS_CAP_DEFAULT:.0%} 记")
+    RV2_GROSS_CAP_FRAC = RV2_GROSS_CAP_DEFAULT
 REBALANCE_TRADING_DAYS = 21
 DRIFT_BAND = 0.05
 RULE = ("t25_live_v1:Jazz 10-29(起始 600 USDC;权重 = forward_books.FLEX_X1V_ARMS['T25'];XAUT / SPYX / USDC+USDY;"
-        "R-v2 名义 ≤ 净值 30%、单票风险不变;21 交易日或偏离 > 5pp 再平衡)")
+        f"R-v2 名义 ≤ 净值 {RV2_GROSS_CAP_FRAC:.0%}、单票风险不变;21 交易日或偏离 > 5pp 再平衡)")
 
 #: Jazz 11-01:账户的加密总敞口(X1V 现货 + R-v2 永续名义)在策略层各 30%、**组合层流动性充裕时可 ×3 到 0.9**。
 #: 0.9 是硬顶(主机 `tickets.ticket_actions` 守);「流动性充裕」的判据与不充裕时的上限等预注册,在那之前只守硬顶。
@@ -109,7 +130,7 @@ def t25_rows(d: str, capital: float = T25_CAPITAL_USD, flow_event: bool = False)
                  "target_usd": None, "capital_usd": capital,
                  "instrument": "HL 永续单票(R-v2,双向;不在 T25 的 100% 里)", "venue": "Hyperliquid 永续",
                  "executable": True,
-                 "why": "名义合计 ≤ 账户净值 × 30%;单票风险 = 账户净值 × 0.5%(不变)",
+                 "why": f"名义合计 ≤ 账户净值 × {RV2_GROSS_CAP_FRAC:.0%}(Jazz 11-05:可到 40%);单票风险 = 账户净值 × 0.5%(不变)",
                  "next_rebalance_d": None, "rule": RULE})
     return rows
 

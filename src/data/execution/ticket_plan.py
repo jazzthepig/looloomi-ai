@@ -120,6 +120,8 @@ async def load_ticket_plan(asof: str, risk_frac: Optional[float] = None,
     lev = float(os.environ.get("R_V2_PORTFOLIO_LEVERAGE", "1"))
     if not (1.0 <= lev <= MAX_PORTFOLIO_LEVERAGE):
         raise ValueError(f"R_V2_PORTFOLIO_LEVERAGE = {lev} 不在 [1, {MAX_PORTFOLIO_LEVERAGE:g}] —— 拒绝出计划")
+    from src.data.execution.portfolio_targets import rv2_gross_cap_frac
+    rv2_gross_cap_frac()                          # 11-05:R_V2_GROSS_CAP_FRAC 写错(> 40% 或非数)⇒ 这里抛,计划不出
     rows = await _read_all("r_tickets_paper", {
         "select": "ticket_id,symbol,signal_d,atr14,status,entry_d,entry_px,stop_px,bars_held,exit_flag,exit_d,exit_px,"
                   "exit_reason", "status": "in.(pending,open,closed)", "order": "ticket_id.asc"})
