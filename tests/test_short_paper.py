@@ -210,3 +210,14 @@ def test_hole_tasks_find_missing_days_inside_coverage():
     assert not any(p == "CUSDT" for p, _, _ in t), "没有覆盖的合约不补"
     assert not any(w >= "2026-11-17" for _, w, m in t if not m), "最近 3 天是还没上传,不是洞"
     assert bv.hole_tasks([], pairs, cov, today) == []
+
+
+def test_hole_tasks_skip_days_upstream_never_published():
+    """11-05:data.binance.vision 自己没有 2026-10-28 —— 记成 upstream_missing 跳过,不每轮重取整月。"""
+    today = dt.date(2026, 11, 20)
+    counts = [{"d": (dt.date(2026, 10, 20) + dt.timedelta(days=i)).isoformat(), "n": 880} for i in range(31)]
+    counts = [c for c in counts if c["d"] != "2026-10-28"]
+    assert "2026-10-28" in bv.hole_days_from(counts, today)
+    pairs, cov = [{"pair": "AUSDT"}], {"AUSDT": {"min_d": "2026-01-01", "max_d": "2026-11-19"}}
+    assert bv.hole_tasks(counts, pairs, cov, today) == [("AUSDT", "2026-10", True)]
+    assert bv.hole_tasks(counts, pairs, cov, today, skip={"2026-10-28"}) == []

@@ -187,25 +187,31 @@ def repair_tasks(gaps: list[dict], today: date, dead: dict[str, str] | None = No
     return out
 
 
-def hole_tasks(day_counts: list[dict], pairs: list[dict], coverage: dict[str, dict], today: date,
-               frac: float = 0.5) -> list[tuple[str, str, bool]]:
-    """纯函数(11-05,lane-b T-238 v2 发现 2026-10-28 整天缺):`plan` 只看每个合约的 [min_d, max_d],中间的洞永远补不上。
-    day_counts = 近 450 天每天的行数;整天缺、或行数 < 前后 3 天中位数 × frac 的日子(不含最近 UPLOAD_GRACE_DAYS 天)⇒
-    对那天落在自己 [min_d, max_d] 里的每个合约重取:已过完的月份走月档(一次补齐整月),当月走日档。"""
+def hole_days_from(day_counts: list[dict], today: date, frac: float = 0.5) -> list[str]:
+    """纯函数。逐日行数 → 洞日:整天缺、或行数 < 前后 3 天中位数 × frac(不含最近 UPLOAD_GRACE_DAYS 天)。"""
     if not day_counts:
         return []
     n_by = {str(r["d"])[:10]: int(r.get("n") or 0) for r in day_counts}
-    lo = min(n_by)
     last = (today - timedelta(days=UPLOAD_GRACE_DAYS + 1)).isoformat()
-    holes = []
-    d = date.fromisoformat(lo)
+    out, d = [], date.fromisoformat(min(n_by))
     while d.isoformat() <= last:
         k = d.isoformat()
         around = [n_by[x] for x in ((d + timedelta(days=j)).isoformat() for j in (-3, -2, -1, 1, 2, 3)) if x in n_by]
         ref = sorted(around)[len(around) // 2] if around else 0
         if ref and n_by.get(k, 0) < frac * ref:
-            holes.append(k)
+            out.append(k)
         d += timedelta(days=1)
+    return out
+
+
+def hole_tasks(day_counts: list[dict], pairs: list[dict], coverage: dict[str, dict], today: date,
+               frac: float = 0.5, skip: set[str] | None = None) -> list[tuple[str, str, bool]]:
+    """纯函数(11-05,lane-b T-238 v2 发现 2026-10-28 整天缺):`plan` 只看每个合约的 [min_d, max_d],中间的洞永远补不上。
+    day_counts = 近 450 天每天的行数;整天缺、或行数 < 前后 3 天中位数 × frac 的日子(不含最近 UPLOAD_GRACE_DAYS 天)⇒
+    对那天落在自己 [min_d, max_d] 里的每个合约重取:已过完的月份走月档(一次补齐整月),当月走日档。"""
+    holes = [h for h in hole_days_from(day_counts, today, frac) if h not in (skip or set())]   # skip = 上游自己就没有的日子
+    if not holes:
+        return []
     cur = today.isoformat()[:7]
     out: set[tuple[str, str, bool]] = set()
     for h in holes:
@@ -300,6 +306,7 @@ async def _classify_new(known: dict[str, dict], today: date) -> tuple[int, Optio
 
 async def run_once(today: Optional[date] = None, time_budget: float = TIME_BUDGET_S) -> dict[str, Any]:
     from src.api.store import supabase_upsert_table
+    from src.data.market.data_layer import get_binance_vision_um_daily
     from src.data.market.source_policy import MARKET_DATA, assert_purpose_source
     from src.data.style.header import _read_all
     t0 = time.monotonic()
@@ -339,8 +346,19 @@ async def run_once(today: Optional[date] = None, time_budget: float = TIME_BUDGE
         counts = await _read_all(DAY_COUNTS_VIEW, {"select": "d,n", "order": "d.asc"})
     except Exception:                                                     # noqa: BLE001
         counts = []
+    # 上游自己就没有的那天(11-05 实测:data.binance.vision 没有 2026-10-28 的日档,BTCUSDT 也没有)不再每轮重取 ——
+    # 每个洞日先看 BTCUSDT 的档目录里有没有那天;没有 ⇒ 记进 detail.upstream_missing,跳过
+    upstream_missing: list[str] = []
+    for hd in hole_days_from(counts, today):
+        try:
+            prev = (date.fromisoformat(hd) - timedelta(days=1)).isoformat()
+            listed_days = parse_index_days(await get_binance_vision_um_daily(KIND, "BTCUSDT", prev, index=True, max_keys=4))
+        except Exception:                                                 # noqa: BLE001 —— 目录读不到就照常重取
+            continue
+        if hd not in listed_days:
+            upstream_missing.append(hd)
     planned = {(p, w) for p, w, _ in tasks}
-    holes = [t for t in hole_tasks(counts, list(known.values()), cov, today) if (t[0], t[1]) not in planned]
+    holes = [t for t in hole_tasks(counts, list(known.values()), cov, today, skip=set(upstream_missing)) if (t[0], t[1]) not in planned]
     tasks += holes
     rows: list[dict] = []
     dead: dict[str, str] = {}
@@ -363,7 +381,7 @@ async def run_once(today: Optional[date] = None, time_budget: float = TIME_BUDGE
                 tasks.extend((pair, d, False) for d in month_days(when, today - timedelta(days=1)))
             elif missing and (today - date.fromisoformat(when)).days > UPLOAD_GRACE_DAYS:
                 dead[pair] = min(dead.get(pair, when), when)
-    detail = {"holes": len(holes), "pairs_listed": len(listed), "pairs_new": len(new), "active": sum(1 for p in known.values() if p.get("active")),
+    detail = {"holes": len(holes), "upstream_missing": upstream_missing, "pairs_listed": len(listed), "pairs_new": len(new), "active": sum(1 for p in known.values() if p.get("active")),
               "planned": len(tasks), "fetched": done, "rows": len(rows), "errors": len(errors), "error_sample": errors[:3],
               "dead_marked": len(dead), "backlog": len(tasks) - done,
               "classified_coin": n_classified, "classify_error": classify_error}
