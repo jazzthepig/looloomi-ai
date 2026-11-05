@@ -165,10 +165,16 @@ async def llm_post(it: dict, facts: dict[str, dict]) -> Optional[str]:
                                     f"FACTS:\n" + ("\n".join(fact_lines) or "- none")},
     ]
     try:
-        text = await _chat(msgs, temperature=0.3)
+        text = await _chat(msgs, temperature=0.3, max_tokens=3000)       # 11-05:推理模型先想再答,1,400 不够
     except Exception:                                                     # noqa: BLE001 —— 模型挂了用模板
         return None
-    text = (text or "").strip()
+    # 11-05:MiniMax-M3 是推理模型,回复里带 <think>…</think> —— 思考段绝不能进群,先剥掉;没剥干净(未闭合)就整条弃用
+    from src.data.narrative.llm_narrator import _THINK
+    raw = text or ""
+    text = _THINK.sub("", raw).strip()
+    if "<think" in raw.lower() and ("</think>" not in raw.lower()):
+        LAST["llm_drop"] = "思考段未闭合(被截断)"
+        return None
     if not text or len(text) > 1200 or _BANNED.search(text):
         LAST["llm_drop"] = ("空回复" if not text else "超长" if len(text) > 1200 else f"含买卖词:{_BANNED.search(text).group(0)}")
         return None

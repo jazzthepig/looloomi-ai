@@ -108,7 +108,7 @@ def _note(why: str | None) -> None:
                       why=None if why is None else _SECRET.sub("…", re.sub(r"(?i)bearer\s.*", "Bearer …", why, flags=re.DOTALL))[:200])
 
 
-async def _chat(messages: list, temperature: float = 0.4) -> str | None:
+async def _chat(messages: list, temperature: float = 0.4, max_tokens: int = 1400) -> str | None:
     if not _BASE:
         _note("LLM_BASE_URL 未配")
         return None
@@ -117,7 +117,7 @@ async def _chat(messages: list, temperature: float = 0.4) -> str | None:
     if _KEY:
         headers["Authorization"] = f"Bearer {_KEY}"
     payload = {"model": _MODEL, "messages": messages, "temperature": temperature,
-               "max_tokens": 1400, "stream": False}
+               "max_tokens": int(max_tokens), "stream": False}
     try:
         async with httpx.AsyncClient(timeout=_TIMEOUT) as cli:
             r = await cli.post(url, headers=headers, content=json.dumps(payload))
@@ -134,17 +134,31 @@ async def _chat(messages: list, temperature: float = 0.4) -> str | None:
         return None
 
 
+_THINK = re.compile(r"<think>.*?(</think>|$)", re.DOTALL | re.IGNORECASE)
+
+
 def _extract_json(text: str) -> dict | None:
+    """模型回的文字 → 里面**最后一个**能完整解析的 JSON 对象。
+    11-05:MiniMax-M3 是推理模型,先吐 `<think>…</think>` 再给 JSON;原来的贪婪正则从思考里的第一个 `{` 吞到最后一个 `}`,
+    整段解析失败(agent 臂 refused:「回的不是三档概率 JSON」)。现在先去掉思考段,再逐个 `{` 用 raw_decode 试,取最后一个成功的。"""
     if not text:
         return None
-    # models sometimes wrap JSON in ```json fences or add a preamble — grab the object
-    m = re.search(r"\{.*\}", text, re.DOTALL)
-    if not m:
-        return None
-    try:
-        return json.loads(m.group(0))
-    except Exception:
-        return None
+    t = _THINK.sub("", text)
+    dec = json.JSONDecoder()
+    found, i = None, 0
+    while i < len(t):
+        j = t.find("{", i)
+        if j < 0:
+            break
+        try:
+            obj, n = dec.raw_decode(t[j:])
+        except ValueError:
+            i = j + 1
+            continue
+        if isinstance(obj, dict):
+            found = obj                     # 顶层对象;跳过它的内部,不把嵌套的小对象当答案
+        i = j + n
+    return found
 
 
 def _clean(s: str) -> str | None:
@@ -174,6 +188,7 @@ async def compose_ai_briefing(facts: dict) -> dict | None:
     raw = await _chat(
         [{"role": "system", "content": _SYSTEM},
          {"role": "user", "content": _INSTRUCTION + json.dumps(facts, ensure_ascii=False)}],
+        max_tokens=4000,                                                 # 11-05:推理模型先想再答
     )
     parsed = _extract_json(raw or "")
     if not parsed or not isinstance(parsed.get("items"), dict):

@@ -69,8 +69,8 @@ def _patch(monkeypatch, reply, have=None, dec=(DEC,), configured=True):
         up[t] = rows
         return True
 
-    async def chat(messages, temperature=0.4):
-        assert temperature == aj.TEMPERATURE and "DOSSIER" in messages[1]["content"]
+    async def chat(messages, temperature=0.4, max_tokens=1400):
+        assert temperature == aj.TEMPERATURE and max_tokens == aj.MAX_TOKENS and "DOSSIER" in messages[1]["content"]
         return reply
 
     async def submit(entries, author, now=None):
@@ -127,3 +127,12 @@ def test_llm_base_url_is_normalised_for_minimax_only():
     assert n("api.minimaxi.chat") == "https://api.minimaxi.chat/v1"
     assert n("http://192.168.1.5:1234/v1") == "http://192.168.1.5:1234/v1", "局域网 LM Studio 不动"
     assert n("https://api.openai.com/v1") == "https://api.openai.com/v1" and n("") == ""
+
+
+def test_extract_json_survives_reasoning_preamble_and_nested_braces():
+    """11-05:MiniMax-M3 先吐 <think>…</think>(里面也有花括号)再给 JSON —— 取最后一个完整对象。"""
+    from src.data.narrative.llm_narrator import _extract_json
+    t = '<think>base rate {down: 0.2} vs knn {0.25}... {"draft": 1</think>\nHere: {"down":0.2,"flat":0.5,"up":0.3,"drivers":["a"]}'
+    assert _extract_json(t) == {"down": 0.2, "flat": 0.5, "up": 0.3, "drivers": ["a"]}
+    assert _extract_json('```json\n{"headline": "x", "items": {"a": "b"}}\n```') == {"headline": "x", "items": {"a": "b"}}
+    assert _extract_json("<think>unterminated {") is None and _extract_json("") is None

@@ -43,10 +43,10 @@ def test_llm_post_drops_banned_words_and_falls_back(monkeypatch):
     from src.data.narrative import llm_narrator as ln
     monkeypatch.setattr(ln, "configured", lambda: True)
 
-    async def chat_bad(msgs, temperature=0.4):
+    async def chat_bad(msgs, temperature=0.4, max_tokens=1400):
         return "Great news, investors should buy BTC now."
 
-    async def chat_ok(msgs, temperature=0.4):
+    async def chat_ok(msgs, temperature=0.4, max_tokens=1400):
         return "Circle filed. It matters for stablecoin rails. CometCloud view: CRCL C, NEUTRAL."
     it = {"title": "Circle files", "summary_raw": "", "source": "The Block", "link": "https://x/y"}
     monkeypatch.setattr(ln, "_chat", chat_bad)
@@ -181,3 +181,21 @@ def test_configured_but_failing_llm_is_reported_as_degraded(monkeypatch):
     monkeypatch.setattr(ln, "_chat", chat_fail)
     r = asyncio.run(nf.run_once(now))
     assert r["ok"] is False and r["status"] == "degraded" and "401" in r["reason"] and r["candidates"] == 1
+
+
+def test_reasoning_model_thinking_never_reaches_the_channel(monkeypatch):
+    """11-05:MiniMax-M3 回复带 <think>…</think> —— 剥掉再发;思考段没闭合(被截断)就整条弃用,绝不把思考发进群。"""
+    from src.data.narrative import llm_narrator as ln
+    monkeypatch.setattr(ln, "configured", lambda: True)
+    it = {"title": "Circle files", "summary_raw": "", "source": "The Block", "link": "https://x/y"}
+
+    async def chat_think(msgs, temperature=0.4, max_tokens=1400):
+        return "<think>The user wants a post. Facts: CRCL C.</think>\nCircle filed. It matters for stablecoin rails."
+
+    async def chat_cut(msgs, temperature=0.4, max_tokens=1400):
+        return "<think>The user wants a post and I am still thinking about"
+    monkeypatch.setattr(ln, "_chat", chat_think)
+    out = asyncio.run(nf.llm_post(it, {}))
+    assert out and "think" not in out.lower() and "Circle filed." in out
+    monkeypatch.setattr(ln, "_chat", chat_cut)
+    assert asyncio.run(nf.llm_post(it, {})) is None

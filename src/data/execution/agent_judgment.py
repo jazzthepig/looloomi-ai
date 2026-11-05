@@ -32,6 +32,7 @@ CODE_REF = "agent_judgment v1 (11-05, S-725)"
 LOOP_NAME = "_agent_judgment_loop"
 PREFIX = "A"
 TEMPERATURE = 0.2
+MAX_TOKENS = 4000           # 11-05:推理模型先想再答,1,400 不够它把 JSON 写完
 NEWS_HOURS = 48
 NEWS_MAX = 12
 _BANNED_ZH = re.compile(r"(买入|卖出|加仓|减仓|建仓|清仓|抄底|止盈|止损|目标价|满仓|梭哈|建议.{0,4}(买|卖|持有))")
@@ -138,11 +139,12 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     doc = dossier(dec[0], await _news(now))
     text = await llm._chat([{"role": "system", "content": _SYSTEM},
                             {"role": "user", "content": _INSTRUCTION + json.dumps(doc, ensure_ascii=False, default=str)}],
-                           temperature=TEMPERATURE)
+                           temperature=TEMPERATURE, max_tokens=MAX_TOKENS)
     got = parse_reply(llm._extract_json(text or ""))
     if not got:
         # 模型不通 / 答非所问 ≠「没事可做」:记 refused + 原因进 loop_attempt(skipped 会被记成 ok,原因就看不见了)
-        why = (llm.LAST_ERROR or {}).get("why") or ("模型没回" if not text else "回的不是三档概率 JSON")
+        why = (llm.LAST_ERROR or {}).get("why") or ("模型没回" if not text else
+                                                   "回的不是三档概率 JSON:" + re.sub(r"\s+", " ", llm._THINK.sub("", text))[-160:])
         return {"ok": False, "refused": True, "status": "refused", "why": f"{d}:{why}"}
     sub = await submit(scenario_entries(d, float(close), got["probs"], prefix=PREFIX), author, now)
     ids = list(sub.get("ids") or [])
