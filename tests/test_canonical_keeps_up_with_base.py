@@ -44,6 +44,7 @@ from __future__ import annotations
 import os
 import sys
 
+WINDOW_DAYS = 60          # 11-05:只读基表最新日往前 60 天(见 newest 的说明)
 MAX_LAG_DAYS = 1
 
 
@@ -59,15 +60,17 @@ def main() -> int:
 
     hdr = {"apikey": key, "Authorization": f"Bearer {key}"}
 
-    def newest(table: str) -> str | None:
+    def newest(table: str, since: str | None = None) -> str | None:
         """读不到就返回 None ⇒ 判失败。**不许退化成「那就算一致」** ——
-        那正是 S-166/S-168 里「读不到被当成没问题」的同一个坑。"""
+        那正是 S-166/S-168 里「读不到被当成没问题」的同一个坑。
+        11-05:canonical 是对全表 DISTINCT ON 的视图,基表 153 万行时全量排序 9.3 秒,REST 的语句超时(8 秒)一天红三次;
+        带 `trade_date >= since` 时条件下推进 DISTINCT ON(trade_date 是它的键),1.3 秒。窗口外没有行 ⇒ 当作落后超过窗口,照样判失败。"""
+        params = {"select": "trade_date", "order": "trade_date.desc", "limit": "1"}
+        if since:
+            params["trade_date"] = f"gte.{since}"
         try:
             with httpx.Client(timeout=20) as c:
-                r = c.get(f"{url}/rest/v1/{table}",
-                          params={"select": "trade_date", "order": "trade_date.desc",
-                                  "limit": "1"},
-                          headers=hdr)
+                r = c.get(f"{url}/rest/v1/{table}", params=params, headers=hdr)
         except Exception as e:                      # noqa: BLE001
             print(f"  ✗ 读 {table} 不可达: {type(e).__name__}: {e}")
             return None
@@ -80,9 +83,13 @@ def main() -> int:
     import datetime as dt
 
     base = newest("ohlcv_daily")
-    canon = newest("ohlcv_daily_canonical")
-    if base is None or canon is None:
-        print("  ✗ 读不到其中一张 —— **读不到 ≠ 一致**,判失败")
+    if base is None:
+        print("  ✗ 读不到基表 —— **读不到 ≠ 一致**,判失败")
+        return 1
+    since = (dt.date.fromisoformat(base) - dt.timedelta(days=WINDOW_DAYS)).isoformat()
+    canon = newest("ohlcv_daily_canonical", since)
+    if canon is None:
+        print(f"  ✗ canonical 在 {since} 之后一行都没有(落后超过 {WINDOW_DAYS} 天,或读不到)—— 判失败")
         return 1
 
     lag = (dt.date.fromisoformat(base) - dt.date.fromisoformat(canon)).days
@@ -96,7 +103,7 @@ def main() -> int:
     # 第二条:LEFT JOIN 把行救回来了,但 asset_class 不许因此变 NULL
     with httpx.Client(timeout=20) as c:
         r = c.get(f"{url}/rest/v1/ohlcv_daily_canonical",
-                  params={"select": "symbol", "asset_class": "is.null", "limit": "1"},
+                  params={"select": "symbol", "asset_class": "is.null", "trade_date": f"gte.{since}", "limit": "1"},
                   headers={**hdr, "Prefer": "count=exact", "Range": "0-0"})
     n_null = r.headers.get("content-range", "*/0").split("/")[-1]
     ok2 = n_null in ("0", "*")
