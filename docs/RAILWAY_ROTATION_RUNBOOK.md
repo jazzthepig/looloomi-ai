@@ -60,3 +60,28 @@
 
 **不在 Railway 上、不用换的:** HL API 钱包私钥(只在东京主机)、`JAZZ_CALL_KEY`(只在 Jazz 的 Mac 与主机)、
 lane 的 publishable key(只读,不在 Railway)。
+
+---
+
+# 11-05 全量轮换补遗:10-22 之后新增的使用方,以及每把钥匙在哪几处
+
+**为什么要补:** 10-22 之后多了几处读钥匙的地方(lane 的只读 key、东京主机的执行器、⓪ 签名、agent 判断臂、lane 的备用后端)。
+**少换一处 = 那一处静默停**(执行器 / CIS 推送 / lane 读库都是「拿不到 ⇒ 不做」,不会报错到你面前)。值只经过 Jazz 的手;下面只有**名字与位置**。
+
+**顺序:** ① 只在 Railway 的(第 4 节那张表 + `LLM_API_KEY`)→ ② 两边共用的(`INTERNAL_TOKEN`、`EXECUTOR_TOKEN`、`JAZZ_CALL_KEY`)**同一时刻**改两边 → ③ Supabase 两把 → ④ **最后**才动钱相关的 `HL_API_WALLET_PRIVATE_KEY`(避开整点后 5 分钟的执行轮次)。Railway 变量全部改完**只部署一次**。
+
+| 钥匙 | 在哪几处(全部要换) | 不换 / 漏换的样子 | 换完怎么验(不打印值) |
+|---|---|---|---|
+| Supabase **secret** key | Railway `SUPABASE_KEY`(`SUPABASE_SERVICE_KEY` 若在,同一把)· Mac 引擎 env(`~/.cometcloud/engine.env`;Minimax 根下脚本读 `SUPABASE_KEY` / `SUPABASE_SERVICE_KEY`)· 仓库根 `.env`(Seth 的脚本) | 循环写库全 401,`loop_attempt` 停在换钥匙那一刻 | Seth 查 `select max(at) from loop_attempt` 在 10 分钟内;Supabase 日志旧前缀 0 次 |
+| Supabase **publishable** key(lane 只读) | `~/.cometcloud/lane.env`(`SUPABASE_URL` / `SUPABASE_KEY`,必须是 `sb_publishable_` 开头,否则 lane_bot 不给 lane) | lane 读库全 401,交付里写「连不上库」 | `python3 scripts/lane_bot/lane_bot.py --status`;下一轮 lane 回复里有行数 |
+| `INTERNAL_TOKEN` | Railway · Mac 引擎 env(CIS 推送)· 仓库根 `.env`(`scripts/regime_call.py`、seth_bot 的核对) | Mac 推 CIS 403,`last_cis_push` 变老;⓪ 开关 403 | `curl -s https://web-production-0cdf76.up.railway.app/internal/build-state` 的 `last_cis_push.age_seconds` < 1800 |
+| `EXECUTOR_TOKEN` | Railway · 东京主机 `/etc/cometcloud/executor.env` → `bash /opt/cometcloud/repo/deploy/executor/install.sh` | 主机拿不到计划 ⇒ 不交易(安全失败),2 小时后看门狗发 Telegram | install.sh 自检 `plan_http: 200`;Seth 查 `executor_host` 下一个整点有行 |
+| `JAZZ_CALL_KEY`(⓪ 签名) | Mac(`scripts/regime_call.py` 读的 key 文件)· 东京主机 executor.env | 主机验签失败 ⇒ J 票与信心倍数一律不生效(强制) | `python3 scripts/regime_call.py status` 不报签名错;主机日志只记指纹 |
+| `HL_API_WALLET_PRIVATE_KEY` | **只在**东京主机 executor.env;轮换 = HL 网页上用主账户新批一个 API 钱包 → 换 env → 重启 → 撤销旧的 | 真钱下单失败 | Seth 查 `executor_host` 下一轮 `mode = live` 且无 error;HL 网页上旧 API 钱包已撤 |
+| `LLM_API_KEY`(MiniMax 推理 API) | Railway(`LLM_BASE_URL` = `https://api.minimax.io/v1`,`LLM_MODEL` = `MiniMax-M3`,三项都 strip 过换行) | 新闻帖退回模板;**agent 判断臂(S-725)当天空着** | Seth 查 `loop_attempt` 的 `_agent_judgment_loop` 不再 refused、`agent_judgment_daily` 有当天行 |
+| lane 的 MiniMax coding plan token | 三个 lane 各自 claude 设置(`ANTHROPIC_AUTH_TOKEN`)· `~/.cometcloud/lane_fallback.env`(若配了) | lane 轮次 exit 1「auth」 | `lane_bot.py --status` 下一轮 exit 0 |
+| `TELEGRAM_BOT_TOKEN`(+ webhook secret) | Railway(群按标题自动找,换 token 不用改 chat id) | 简报 / 群帖 / 看门狗告警全停 | 下一条 feed 帖或 01:00 UTC 简报到群 |
+| CoinGecko / EODHD / FRED / Upstash | Railway **和** Mac 引擎 env(Minimax 根下 `CG_PRO_API_KEY` / `COINGECKO_API_KEY` / `EODHD_API_KEY` / `FRED_API_KEY` / `UPSTASH_REDIS_REST_TOKEN`)| 面板 / 宏观 / 缓存某一侧断 | Seth 查 `ohlcv_daily` 当天 coingecko_pro_ohlc / eodhd 有行 |
+| 其余只在 Railway 的(第 4 节表:Sharpe / Santiment / Moralis / Helius / Etherscan / CryptoRank / JEV / Dune / Resend / GitHub) | Railway(Mac 的 gh 是另一把 fine-grained,10-22 已分开) | 对应数据源那一块空 | 跟着上面一起看 `loop_attempt` 有没有新 error |
+
+**做完告诉 Seth 一句「换完了」** —— Seth 从库这侧把上表最后一列逐条核一遍,结果写进 PROJECT_STATE。
