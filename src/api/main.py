@@ -2676,6 +2676,29 @@ async def _start_window_vectors_loop():
     print("[WINDOW] ✅ 60-day path window vectors scheduled (hourly check)")
 
 
+async def _entity_vectors_loop():
+    """Entity 空间向量(`src/data/entity/entity_vectors.py`,11-05):每 6 小时把最近三季(首次整段)按发行方折成季度向量;排在决策流(10200)之后。"""
+    await _asyncio.sleep(_boot_delay(10500))
+    while True:
+        try:
+            from src.data.entity.entity_vectors import run_once as _ev_run
+            r = await _ev_run()
+            await _iteration_result("_entity_vectors_loop", r)
+            await _beat("_entity_vectors_loop", ok=bool(r.get("ok")), refused=(r.get("status") == "skipped"),
+                        error=None if r.get("ok") else str(r.get("why"))[:200], detail={"written": r.get("written"), "quarters": r.get("quarters"), "full": r.get("full")})
+        except Exception as _e:
+            print(f"[ENTVEC] ⚠️  pass FAILED: {_e}")
+            await _beat("_entity_vectors_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_entity_vectors_loop", _e)
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_entity_vectors_loop():
+    _asyncio.create_task(_entity_vectors_loop())
+    print("[ENTVEC] ✅ entity-space quarterly vectors scheduled (6h)")
+
+
 async def _scenario_ledger_loop():
     """情景台账的结算(`src/data/evaluation/scenario_ledger.py`,11-02):每小时结算到期、还没结的自动命题 → scenario_scores。"""
     await _asyncio.sleep(_boot_delay(540))
