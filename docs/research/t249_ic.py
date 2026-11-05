@@ -45,7 +45,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import numpy as np
@@ -349,26 +349,58 @@ def main() -> int:
     wf_rows = []
     mult_by = {}                     # (g, month) → {pillar: mult}
     mult_info = {}                   # (g, month) → {pillar: 启用依据}
+    mf_rows = []                     # 成熟期过滤前后的逐格对照
     for m in wf_months:
         for g in ("crypto", "tradfi"):
             mult = {}
             info = {}
+            # as-of 截面日 D:该组本月的截面日;本月没有合格截面时,取该组 ≤ 本月末
+            # 的最近一次截面日(取不到就没有历史可用)
+            mdate = xsec_date.get((g, m))
+            if mdate is None:
+                cands = [d for (gg, mm), d in xsec_date.items() if gg == g and mm <= m]
+                mdate = max(cands) if cands else None
+            d_asof = date.fromisoformat(mdate) if mdate else None
             for p in PG:
-                hist = [r for r in ic_series.get((g, p), []) if r["month"] < m][-LOOKBACK_M:]
+                series = ic_series.get((g, p), [])
+                # 已到期口径(S-734 原文:「m 之前**已到期**的最近 24 个月末截面」):
+                # 历史截面 d' 的 30 天前瞻收益要到 d' + 30d 才成熟,必须 ≤ as-of 截面日 D。
+                # 旧实现只比月份(r["month"] < m),会把 d' + 30d > D 的截面算进来 = 前视。
+                hist = ([r for r in series
+                         if d_asof is not None
+                         and date.fromisoformat(r["date"]) + timedelta(days=30) <= d_asof]
+                        [-LOOKBACK_M:] if d_asof is not None else [])
+                # 旧口径(只比月份)保留作对照:过滤前后差多少
+                hist_old = [r for r in series if r["month"] < m][-LOOKBACK_M:]
                 ics = [r["ic"] for r in hist]
+                s_new = clustered_t(ics)
                 if len(ics) >= MIN_N:
-                    s_ = clustered_t(ics)
-                    t_ = s_["t"]
+                    t_ = s_new["t"]
                     if t_ is not None and t_ >= T_ON:
-                        mult[p] = round(1.0 + clamp(K * s_["mean"], -CLAMP, CLAMP), 6)
+                        mult[p] = round(1.0 + clamp(K * s_new["mean"], -CLAMP, CLAMP), 6)
                     else:
                         mult[p] = 1.0
                 else:
                     mult[p] = 1.0
+                ics_old = [r["ic"] for r in hist_old]
+                s_old = clustered_t(ics_old)
+                mult_old = 1.0
+                if len(ics_old) >= MIN_N:
+                    t_old = s_old["t"]
+                    if t_old is not None and t_old >= T_ON:
+                        mult_old = round(1.0 + clamp(K * s_old["mean"], -CLAMP, CLAMP), 6)
                 info[p] = {"n": len(ics), "ic_mean": (round(float(np.mean(ics)), 6) if ics else None),
                            "ic_sd": (round(float(np.std(ics, ddof=1)), 6) if len(ics) > 1 else None),
                            "t": (clustered_t(ics)["t"] if len(ics) > 1 else None),
-                           "mult": mult[p]}
+                           "mult": mult[p],
+                           "legacy_month_filter": {"n": len(ics_old),
+                                                   "ic_mean": s_old["mean"], "t": s_old["t"],
+                                                   "mult": mult_old}}
+                mf_rows.append({"group": g, "month": m, "pillar": p, "asof": mdate,
+                                "n_new": len(ics), "n_old": len(ics_old),
+                                "mean_new": s_new["mean"], "mean_old": s_old["mean"],
+                                "t_new": s_new["t"], "t_old": s_old["t"],
+                                "mult_new": mult[p], "mult_old": mult_old})
             mult_by[(g, m)] = mult
             mult_info[(g, m)] = info
 
@@ -578,6 +610,22 @@ def main() -> int:
         "c_null": c_res,
         "d_by_period": by_period,
         "multipliers": mult_summary,
+        "maturity_filter": {
+            "rule": "历史截面 d' 只有在 d' + 30d ≤ 该组该月的 as-of 截面日 D 时才算「已到期」;"
+                    "旧实现只比月份(r['month'] < m),会把 d'+30d > D 的截面算进来 = 前视",
+            "asof": "D = 该组该月的截面日;该月无合格截面时取该组 ≤ 本月末的最近截面日",
+            "n_cells": len(mf_rows),
+            "cells_n_changed": sum(1 for r in mf_rows if r["n_new"] != r["n_old"]),
+            "cells_mult_changed": sum(1 for r in mf_rows if r["mult_new"] != r["mult_old"]),
+            "cells_t_changed": sum(1 for r in mf_rows if r["t_new"] != r["t_old"]),
+            "max_abs_delta_mean": (max(abs(r["mean_new"] - r["mean_old"]) for r in mf_rows
+                                       if r["mean_new"] is not None and r["mean_old"] is not None)
+                                   if mf_rows else None),
+            "max_abs_delta_t": (max(abs(r["t_new"] - r["t_old"]) for r in mf_rows
+                                    if r["t_new"] is not None and r["t_old"] is not None)
+                                if mf_rows else None),
+            "rows": mf_rows,
+        },
         "robustness": robust,
         "validation": {"score_recompute_vs_stored": score_check, "alpha_vs_edge_map": edge_check},
         "runtime_sec": round(time.time() - t_start, 1),
