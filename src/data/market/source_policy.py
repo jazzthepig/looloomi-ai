@@ -49,6 +49,8 @@ subscription we already hold.
 """
 from __future__ import annotations
 
+from typing import Any
+
 #: Above this many assets in one job, a paid source is mandatory. Six is small
 #: on purpose — the two incidents were 262 and 232, and any honest bulk job is
 #: far above this, so the threshold never needs judgement at a call site.
@@ -281,6 +283,28 @@ def assert_bulk_source(n_assets: int, source: str, *, job: str,
         f"a free source. Bulk access belongs on a paid source "
         f"({', '.join(sorted(PAID_SOURCES))}) — we pay monthly and were using the "
         f"free-shaped endpoints anyway (S-195).{hint}")
+
+
+#: 免费场馆上**逐条批准**的多资产作业(Jazz 11-05「Exception, 1 call/coin/day」)。规则本身不变:多资产重复调取走付费源;
+#: 这里只登记「没有付费源可走、Jazz 点过头」的那几件,每条写死名单上限、频率与理由。不在表里 ⇒ 照样 raise。
+FREE_BULK_EXCEPTIONS: dict[tuple[str, str], dict[str, Any]] = {
+    ("hyperliquid", "hl_funding_hourly"): {
+        "max_assets": 24,
+        "cadence": "回填一次性;之后每个名字每天一次(昨天的 24 个小时档齐了就不再取)",
+        "why": "HL 结算后的小时资金费只有逐币的 fundingHistory;CoinGecko Pro 没有费率历史。名单 = ① 面板(S-733,④ 套息纸面账)",
+        "approved": "Jazz 2026-11-05",
+    },
+}
+
+
+def assert_free_bulk_exception(job: str, source: str, *, n_assets: int) -> dict[str, Any]:
+    """登记过的免费多资产作业才放行;名单超上限、或没登记 ⇒ SourcePolicyError。返回那条登记(调用方按它的频率做)。"""
+    ex = FREE_BULK_EXCEPTIONS.get((source, job))
+    if ex is None:
+        raise SourcePolicyError(f"{job}: '{source}' 上的多资产作业没有登记在 FREE_BULK_EXCEPTIONS —— 免费源默认不许扇出(S-195 / S-323u)")
+    if n_assets > int(ex["max_assets"]):
+        raise SourcePolicyError(f"{job}: {n_assets} 个标的超过登记的上限 {ex['max_assets']}(批准:{ex['approved']})")
+    return ex
 
 
 class PurposeMismatch(SourcePolicyError):

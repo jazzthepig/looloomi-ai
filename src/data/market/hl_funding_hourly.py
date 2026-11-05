@@ -9,7 +9,7 @@
 ## 范围(S-296:成交场馆的扇出必须显式给名单)
 
 名单 = ① 面板 24 名(`core_cap.panel_universe()`);回填起点 2023-05-01(HL 小时档从 2023-05-12 起)。
-每轮最多 `MAX_PAGES_PER_RUN` 页、页间 `PAUSE_S` 秒(HL info 权重:fundingHistory 每页约 45,每分钟 1,200);
+**每个名字每天最多取一次**(昨天的 24 个小时档齐了就跳过;Jazz 11-05 批准的免费源例外,`source_policy.FREE_BULK_EXCEPTIONS`);回填期间每轮最多 `MAX_PAGES_PER_RUN` 页、页间 `PAUSE_S` 秒(HL info 权重:fundingHistory 每页约 45,每分钟 1,200);
 一轮没回填完下一轮接着从 `last_t` 往后取 —— 升序分页,所以只要每个名字的 `last_t` 往前走,就不会漏中间。
 
 判活:`select coin, last_t, n from hl_funding_hourly_last order by last_t limit 3`(最旧的 last_t 应在 2 小时内);
@@ -79,14 +79,19 @@ def start_for(last_t: Optional[str]) -> int:
     return int(dt.datetime.fromisoformat(str(last_t).replace("Z", "+00:00")).timestamp() * 1000) + 1
 
 
+def due(start_ms: int, day_start_ms: int) -> bool:
+    """纯函数。这个名字今天还要不要取:昨天 23:00 那个小时档还没有 ⇒ 要(回填期间一直是「要」);有了 ⇒ 今天不再取。"""
+    return start_ms <= day_start_ms - 3_600_000
+
+
 async def run_once(now: Optional[dt.datetime] = None, post: Optional[Callable[[dict], Any]] = None,
                    max_pages: int = MAX_PAGES_PER_RUN, pause_s: float = PAUSE_S) -> dict[str, Any]:
     from src.api.store import supabase_upsert_table
-    from src.data.market.source_policy import EXECUTION, assert_purpose_source
+    from src.data.market.source_policy import assert_free_bulk_exception
     from src.data.style.header import _read_all
     names = coins()
-    assert_purpose_source(EXECUTION, "hyperliquid", n_assets=len(names), job="HL realized funding for the ④ carry paper book (S-733)",
-                          explicit_set=True)
+    # Jazz 11-05:免费场馆上的多资产作业逐条批准 —— 这一条登记在 source_policy.FREE_BULK_EXCEPTIONS(≤ 24 名;回填一次性,之后每名每天一次)
+    assert_free_bulk_exception("hl_funding_hourly", "hyperliquid", n_assets=len(names))
     if post is None:
         from src.data.market.hyperliquid_collector import info_post_sync as post
     now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
@@ -95,8 +100,13 @@ async def run_once(now: Optional[dt.datetime] = None, post: Optional[Callable[[d
     pages = written = 0
     per: dict[str, int] = {}
     failed: dict[str, str] = {}
+    day_start_ms = int(now.replace(hour=0, minute=0, second=0, microsecond=0).timestamp() * 1000)
+    skipped = 0
     for c in names:
         start = start_for(last.get(c))
+        if not due(start, day_start_ms):
+            skipped += 1
+            continue
         while pages < max_pages and start < now_ms - 3_600_000:
             try:
                 raw = await asyncio.to_thread(post, {"type": "fundingHistory", "coin": c, "startTime": start})
@@ -118,5 +128,6 @@ async def run_once(now: Optional[dt.datetime] = None, post: Optional[Callable[[d
             await asyncio.sleep(pause_s)
     behind = pages >= max_pages
     return {"ok": not failed, "written": written, "pages": pages, "per_coin": per, "failed": failed or None, "behind": behind,
+            "skipped_today": skipped,
             "why": (f"写 {written} 行 / {pages} 页" + (" · 页数用完,下一轮接着回填" if behind else "")
                     + (f" · 不通:{', '.join(sorted(failed))}" if failed else ""))}

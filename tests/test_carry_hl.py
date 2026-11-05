@@ -55,6 +55,7 @@ def test_run_once_pages_until_short_page_and_names_the_failures(monkeypatch):
     monkeypatch.setattr(header, "_read_all", read_all)
     monkeypatch.setattr(store, "supabase_upsert_table", upsert)
     r = asyncio.run(hf.run_once(now=dt.datetime(2026, 11, 5, 12, tzinfo=dt.timezone.utc), post=post, pause_s=0))
+    assert r["skipped_today"] == 0
     btc = [c for c in calls if c["coin"] == "BTC"]
     assert len(btc) == 2 and btc[0]["startTime"] == hf.start_for("2026-10-01T00:00:00+00:00"), "从 last_t 往后,满页翻下一页,短页停"
     assert r["written"] == hf.PAGE + 3 and r["failed"] == {"ETH": "RuntimeError: 429"} and not r["ok"]
@@ -118,3 +119,18 @@ def test_spot_arm_uses_only_names_with_hl_spot_and_runs_rule_b():
     days, F = ch.matrix(rows, ("BTC",), d0, ch.INCEPTION + dt.timedelta(days=9))
     q = {r["d"]: r for r in ch.path(days, F, "carry_b_spot")}
     assert q["2026-11-09"]["n_on"] == 0, "carry_b_spot 也每周一按过去 7 天换"
+
+
+def test_daily_cadence_and_registered_exception():
+    """Jazz 11-05:免费源例外 —— ≤ 24 名、每名每天一次;没登记或超上限照样拒。"""
+    import pytest
+    from src.data.market import source_policy as sp
+    day = hf._ms("2026-11-05T00:00:00")
+    assert hf.due(hf.start_for("2026-11-04T22:00:00+00:00"), day), "缺 23:00 那一档 ⇒ 今天要取"
+    assert not hf.due(hf.start_for("2026-11-04T23:00:00+00:00"), day), "昨天齐了 ⇒ 今天不再取"
+    assert hf.due(hf.start_for(None), day)
+    assert sp.assert_free_bulk_exception("hl_funding_hourly", "hyperliquid", n_assets=24)["approved"].startswith("Jazz")
+    with pytest.raises(sp.SourcePolicyError):
+        sp.assert_free_bulk_exception("hl_funding_hourly", "hyperliquid", n_assets=25)
+    with pytest.raises(sp.SourcePolicyError):
+        sp.assert_free_bulk_exception("panel_bars", "hyperliquid", n_assets=24)
