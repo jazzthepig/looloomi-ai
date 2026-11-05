@@ -2605,6 +2605,30 @@ async def _start_carry_hl_loop():
     print("[CARRY-HL] ✅ ④ HL funding carry paper book scheduled (hourly)")
 
 
+async def _text_vectors_loop():
+    """VDB 文字空间(`src/data/vector/text_vectors.py`):每小时一轮,把还没嵌的新闻 / 事件标题送 MiniMax 嵌入、写 text_vectors。"""
+    await _asyncio.sleep(_boot_delay(12900))
+    while True:
+        try:
+            from src.data.vector.text_vectors import run_once as _tv_run
+            r = await _tv_run()
+            await _iteration_result("_text_vectors_loop", {**r, "ok": bool(r.get("ok")), "refused": bool(r.get("refused")), "why": r.get("why")})
+            await _beat("_text_vectors_loop", ok=bool(r.get("ok")) and not r.get("refused"), refused=bool(r.get("refused")),
+                        detail={"written": r.get("written"), "dim": r.get("dim")},
+                        error=None if r.get("ok") else str(r.get("why"))[:200])
+        except Exception as _e:
+            print(f"[TEXT-VEC] ⚠️  pass FAILED: {_e}")
+            await _beat("_text_vectors_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_text_vectors_loop", _e)
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_text_vectors_loop():
+    _asyncio.create_task(_text_vectors_loop())
+    print("[TEXT-VEC] ✅ text vector space (MiniMax embeddings) scheduled (hourly)")
+
+
 async def _issuer_decisions_loop():
     """发行方 / 决策层(`src/data/entity/issuers.py`,11-04):每 6 小时同步登记表、从基本面 / 事件 / 待遇表派生决策流。"""
     await _asyncio.sleep(_boot_delay(10200))

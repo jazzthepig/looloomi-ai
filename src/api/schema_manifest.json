@@ -121,6 +121,7 @@
     "style_membership",
     "style_pit_coverage_daily",
     "style_universe_broad",
+    "text_vectors",
     "tokenization_tilt_daily",
     "trade_results",
     "treasury_decisions",
@@ -457,6 +458,15 @@
       "state",
       "top_longs",
       "top_shorts"
+    ],
+    "text_vectors": [
+      "dim",
+      "embedding",
+      "item_id",
+      "model",
+      "published_at",
+      "source",
+      "text"
     ],
     "treatment_daily": [
       "code_ref",

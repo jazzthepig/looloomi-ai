@@ -343,6 +343,14 @@ async def weekly_letter_build(body: dict, x_internal_token: str = Header(None)):
     return await build(week_end, [x[:300] for x in g][:20], str((body or {}).get("note") or "")[:1500])
 
 
+@router.get("/internal/text-knn")
+async def text_knn(q: str, k: int = 10, source: str = "", x_internal_token: str = Header(None)):
+    """VDB 文字空间:问题 → 最近的新闻 / 事件(MiniMax 嵌入,余弦距离)。source = feed_items | events | 空(两者)。"""
+    require_internal_token(x_internal_token)
+    from src.data.vector.text_vectors import nearest
+    return await nearest(q, k=k, source=source or None)
+
+
 @router.get("/internal/weekly-letter")
 async def weekly_letter_latest(x_internal_token: str = Header(None), edition: str = ""):
     """最近一封。edition=public ⇒ 只回社群版 markdown(Jazz 11-05:周信发到他的社群;数字与内部版相同,只换叫法)。"""
