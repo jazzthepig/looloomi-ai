@@ -1,0 +1,1736 @@
+{
+ "card": "T-252",
+ "generated_at": "2026-11-05T16:26:50.947398+00:00",
+ "window": {
+  "start": "2020-07-01",
+  "end": "2026-11-04",
+  "n_days": 2317
+ },
+ "data": {
+  "perp_rows": 2500,
+  "perp_dup_days": 0,
+  "perp_first": "2019-12-31",
+  "perp_last": "2026-11-04",
+  "asset_mcap_btc": 2865,
+  "asset_mcap_eth": 2865,
+  "v_funding_days": 2501,
+  "hl_funding_days": 1274,
+  "style_majors_rows": 2500,
+  "cycle_rows": 3166,
+  "exposure_decision_rows": 3
+ },
+ "exposure_reconstruction": {
+  "validation": [
+   {
+    "d": "2026-11-02",
+    "published": 0,
+    "recon_full": 0.0,
+    "recon_live": 0.0,
+    "match_live": true,
+    "match_full": true
+   },
+   {
+    "d": "2026-11-03",
+    "published": 0,
+    "recon_full": 0.0,
+    "recon_live": 0.0,
+    "match_live": true,
+    "match_full": true
+   },
+   {
+    "d": "2026-11-04",
+    "published": 0,
+    "recon_full": 0.0,
+    "recon_live": 0.0,
+    "match_live": true,
+    "match_full": true
+   }
+  ],
+  "disagree_pct_since_2024": 0.3060635226179018,
+  "zero_agree_pct": 0.9238921001926782,
+  "zero_disagree_days": 79,
+  "zero_disagree_first": [
+   "2024-01-25",
+   "2024-01-26",
+   "2024-01-27",
+   "2024-01-28",
+   "2024-01-29",
+   "2024-01-30",
+   "2024-01-31",
+   "2024-02-01",
+   "2024-02-02",
+   "2024-02-03"
+  ],
+  "zero_days_full_over_perp_calendar": 1031,
+  "tom_warm_from": "2024-01-01"
+ },
+ "results": {
+  "binance": {
+   "funding_label": "Binance(v_funding_daily)",
+   "window": [
+    "2020-07-01",
+    "2026-11-04"
+   ],
+   "defs": {
+    "A": {
+     "total_return": -0.6414144914842371,
+     "cagr": -0.14928055417252073,
+     "max_dd": -0.7500073947206277,
+     "calmar": -0.19903877644849974,
+     "longest_losing_streak_d": 7,
+     "funding_total": 0.11738801000000001,
+     "price_pnl_total": -0.6364681407469652,
+     "cost_total": -0.05625000000000001,
+     "days_in_market": 978,
+     "switches": 75,
+     "n_days": 2317,
+     "years": 6.3436002737850785,
+     "eq_final": 0.3585855085157629,
+     "yearly": [
+      {
+       "year": "2020",
+       "return": -0.12647001086729048,
+       "days_in_market": 42,
+       "n_days": 184,
+       "funding": -0.006811890000000001
+      },
+      {
+       "year": "2021",
+       "return": -0.2795271163498875,
+       "days_in_market": 117,
+       "n_days": 365,
+       "funding": -0.017758520000000014
+      },
+      {
+       "year": "2022",
+       "return": 0.27533157161924904,
+       "days_in_market": 221,
+       "n_days": 365,
+       "funding": -0.018467450000000003
+      },
+      {
+       "year": "2023",
+       "return": -0.3098366029545798,
+       "days_in_market": 133,
+       "n_days": 365,
+       "funding": -0.01796911
+      },
+      {
+       "year": "2024",
+       "return": -0.3203623802893063,
+       "days_in_market": 130,
+       "n_days": 366,
+       "funding": -0.019833560000000004
+      },
+      {
+       "year": "2025",
+       "return": -0.17180360700191522,
+       "days_in_market": 184,
+       "n_days": 365,
+       "funding": -0.021858860000000008
+      },
+      {
+       "year": "2026",
+       "return": 0.1500361618350876,
+       "days_in_market": 151,
+       "n_days": 307,
+       "funding": -0.014688620000000001
+      }
+     ]
+    },
+    "B": {
+     "total_return": -0.08077443458482525,
+     "cagr": -0.013189211979368065,
+     "max_dd": -0.20867323753375833,
+     "calmar": -0.06320509584864406,
+     "longest_losing_streak_d": 4,
+     "funding_total": 0.016629949999999998,
+     "price_pnl_total": -0.04736829982736912,
+     "cost_total": -0.007500000000000001,
+     "days_in_market": 151,
+     "switches": 10,
+     "n_days": 2317,
+     "years": 6.3436002737850785,
+     "eq_final": 0.9192255654151748,
+     "yearly": [
+      {
+       "year": "2020",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 184,
+       "funding": 0.0
+      },
+      {
+       "year": "2021",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 365,
+       "funding": 0.0
+      },
+      {
+       "year": "2022",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 365,
+       "funding": 0.0
+      },
+      {
+       "year": "2023",
+       "return": -0.07075867372876743,
+       "days_in_market": 75,
+       "n_days": 365,
+       "funding": -0.008876470000000001
+      },
+      {
+       "year": "2024",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 366,
+       "funding": 0.0
+      },
+      {
+       "year": "2025",
+       "return": -0.010778428135829743,
+       "days_in_market": 76,
+       "n_days": 365,
+       "funding": -0.0077534799999999975
+      },
+      {
+       "year": "2026",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 307,
+       "funding": 0.0
+      }
+     ]
+    },
+    "C": {
+     "total_return": -0.45667618002686083,
+     "cagr": -0.09168836856955209,
+     "max_dd": -0.600305544268025,
+     "calmar": -0.15273616818140695,
+     "longest_losing_streak_d": 10,
+     "funding_total": 0.07991554000000001,
+     "price_pnl_total": -0.23964975463212068,
+     "cost_total": -0.030000000000000006,
+     "days_in_market": 938,
+     "switches": 40,
+     "n_days": 2317,
+     "years": 6.3436002737850785,
+     "eq_final": 0.5433238199731392,
+     "yearly": [
+      {
+       "year": "2020",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 184,
+       "funding": 0.0
+      },
+      {
+       "year": "2021",
+       "return": -0.47520524586737256,
+       "days_in_market": 68,
+       "n_days": 365,
+       "funding": -0.002033169999999998
+      },
+      {
+       "year": "2022",
+       "return": 0.819280655701528,
+       "days_in_market": 360,
+       "n_days": 365,
+       "funding": -0.04014925000000003
+      },
+      {
+       "year": "2023",
+       "return": -0.27214985071262643,
+       "days_in_market": 77,
+       "n_days": 365,
+       "funding": -0.004671679999999998
+      },
+      {
+       "year": "2024",
+       "return": -0.16043219140575937,
+       "days_in_market": 83,
+       "n_days": 366,
+       "funding": -0.0063630299999999996
+      },
+      {
+       "year": "2025",
+       "return": -0.16896430253069528,
+       "days_in_market": 119,
+       "n_days": 365,
+       "funding": -0.01239476
+      },
+      {
+       "year": "2026",
+       "return": 0.1206038894932151,
+       "days_in_market": 231,
+       "n_days": 307,
+       "funding": -0.014303650000000001
+      }
+     ]
+    }
+   }
+  },
+  "hl": {
+   "funding_label": "HL(hl_funding_hourly,2023-05-12 起)",
+   "window": [
+    "2023-05-12",
+    "2026-11-04"
+   ],
+   "defs": {
+    "A": {
+     "total_return": -0.4293926753952395,
+     "cagr": -0.14879691827416996,
+     "max_dd": -0.5927297550911613,
+     "calmar": -0.25103669420355845,
+     "longest_losing_streak_d": 7,
+     "funding_total": 0.08661069500000002,
+     "price_pnl_total": -0.43872385962369265,
+     "cost_total": -0.03225,
+     "days_in_market": 562,
+     "switches": 43,
+     "n_days": 1272,
+     "years": 3.482546201232033,
+     "eq_final": 0.5706073246047605,
+     "yearly": [
+      {
+       "year": "2023",
+       "return": -0.15085544335504675,
+       "days_in_market": 97,
+       "n_days": 234,
+       "funding": 0.007246957200000004
+      },
+      {
+       "year": "2024",
+       "return": -0.3098983266141945,
+       "days_in_market": 130,
+       "n_days": 366,
+       "funding": -0.03504826710000002
+      },
+      {
+       "year": "2025",
+       "return": -0.15735066527766262,
+       "days_in_market": 184,
+       "n_days": 365,
+       "funding": -0.039187742700000035
+      },
+      {
+       "year": "2026",
+       "return": 0.1555686456066927,
+       "days_in_market": 151,
+       "n_days": 307,
+       "funding": -0.019621642400000014
+      }
+     ]
+    },
+    "B": {
+     "total_return": -0.0890764251963575,
+     "cagr": -0.026434013590589833,
+     "max_dd": -0.205630603917774,
+     "calmar": -0.12855096997701795,
+     "longest_losing_streak_d": 4,
+     "funding_total": 0.0074864249,
+     "price_pnl_total": -0.04736829982736912,
+     "cost_total": -0.0075,
+     "days_in_market": 151,
+     "switches": 10,
+     "n_days": 1272,
+     "years": 3.482546201232033,
+     "eq_final": 0.9109235748036425,
+     "yearly": [
+      {
+       "year": "2023",
+       "return": -0.08465725970183391,
+       "days_in_market": 75,
+       "n_days": 234,
+       "funding": 0.006261864400000001
+      },
+      {
+       "year": "2024",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 366,
+       "funding": 0.0
+      },
+      {
+       "year": "2025",
+       "return": -0.004827880639641902,
+       "days_in_market": 76,
+       "n_days": 365,
+       "funding": -0.013748289299999997
+      },
+      {
+       "year": "2026",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 307,
+       "funding": 0.0
+      }
+     ]
+    },
+    "C": {
+     "total_return": -0.2858820103449041,
+     "cagr": -0.0921573125061863,
+     "max_dd": -0.4946258408482135,
+     "calmar": -0.1863172218179089,
+     "longest_losing_streak_d": 8,
+     "funding_total": 0.07055072609999999,
+     "price_pnl_total": -0.2436620568815694,
+     "cost_total": -0.015000000000000001,
+     "days_in_market": 497,
+     "switches": 20,
+     "n_days": 1272,
+     "years": 3.482546201232033,
+     "eq_final": 0.7141179896550959,
+     "yearly": [
+      {
+       "year": "2023",
+       "return": -0.12102383967178632,
+       "days_in_market": 64,
+       "n_days": 234,
+       "funding": 0.0009822338000000017
+      },
+      {
+       "year": "2024",
+       "return": -0.1444793360845238,
+       "days_in_market": 83,
+       "n_days": 366,
+       "funding": -0.025175553000000017
+      },
+      {
+       "year": "2025",
+       "return": -0.16286882304588435,
+       "days_in_market": 119,
+       "n_days": 365,
+       "funding": -0.01967804760000001
+      },
+      {
+       "year": "2026",
+       "return": 0.13440689410988038,
+       "days_in_market": 231,
+       "n_days": 307,
+       "funding": -0.026679359300000035
+      }
+     ]
+    }
+   }
+  },
+  "hybrid": {
+   "funding_label": "混合(2023-05-12 前 Binance / 后 HL)",
+   "window": [
+    "2020-07-01",
+    "2026-11-04"
+   ],
+   "defs": {
+    "A": {
+     "total_return": -0.6358222512852358,
+     "cagr": -0.1472027300102765,
+     "max_dd": -0.7483023461314594,
+     "calmar": -0.19671557996748068,
+     "longest_losing_streak_d": 7,
+     "funding_total": 0.1329168541,
+     "price_pnl_total": -0.6364681407469652,
+     "cost_total": -0.05625000000000001,
+     "days_in_market": 978,
+     "switches": 75,
+     "n_days": 2317,
+     "years": 6.3436002737850785,
+     "eq_final": 0.36417774871476416,
+     "yearly": [
+      {
+       "year": "2020",
+       "return": -0.12647001086729048,
+       "days_in_market": 42,
+       "n_days": 184,
+       "funding": -0.006811890000000001
+      },
+      {
+       "year": "2021",
+       "return": -0.2795271163498875,
+       "days_in_market": 117,
+       "n_days": 365,
+       "funding": -0.017758520000000014
+      },
+      {
+       "year": "2022",
+       "return": 0.27533157161924904,
+       "days_in_market": 221,
+       "n_days": 365,
+       "funding": -0.018467450000000003
+      },
+      {
+       "year": "2023",
+       "return": -0.32478959792323825,
+       "days_in_market": 133,
+       "n_days": 365,
+       "funding": 0.003978658100000001
+      },
+      {
+       "year": "2024",
+       "return": -0.3098983266141945,
+       "days_in_market": 130,
+       "n_days": 366,
+       "funding": -0.03504826710000002
+      },
+      {
+       "year": "2025",
+       "return": -0.15735066527766262,
+       "days_in_market": 184,
+       "n_days": 365,
+       "funding": -0.039187742700000035
+      },
+      {
+       "year": "2026",
+       "return": 0.1555686456066927,
+       "days_in_market": 151,
+       "n_days": 307,
+       "funding": -0.019621642400000014
+      }
+     ]
+    },
+    "B": {
+     "total_return": -0.0890764251963575,
+     "cagr": -0.01459952750065896,
+     "max_dd": -0.205630603917774,
+     "calmar": -0.0709988067072784,
+     "longest_losing_streak_d": 4,
+     "funding_total": 0.0074864249,
+     "price_pnl_total": -0.04736829982736912,
+     "cost_total": -0.007500000000000001,
+     "days_in_market": 151,
+     "switches": 10,
+     "n_days": 2317,
+     "years": 6.3436002737850785,
+     "eq_final": 0.9109235748036425,
+     "yearly": [
+      {
+       "year": "2020",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 184,
+       "funding": 0.0
+      },
+      {
+       "year": "2021",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 365,
+       "funding": 0.0
+      },
+      {
+       "year": "2022",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 365,
+       "funding": 0.0
+      },
+      {
+       "year": "2023",
+       "return": -0.08465725970183391,
+       "days_in_market": 75,
+       "n_days": 365,
+       "funding": 0.006261864400000001
+      },
+      {
+       "year": "2024",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 366,
+       "funding": 0.0
+      },
+      {
+       "year": "2025",
+       "return": -0.004827880639641902,
+       "days_in_market": 76,
+       "n_days": 365,
+       "funding": -0.013748289299999997
+      },
+      {
+       "year": "2026",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 307,
+       "funding": 0.0
+      }
+     ]
+    },
+    "C": {
+     "total_return": -0.43739889307671864,
+     "cagr": -0.08668240899695778,
+     "max_dd": -0.592678888081839,
+     "calmar": -0.14625526695830002,
+     "longest_losing_streak_d": 10,
+     "funding_total": 0.11483181610000001,
+     "price_pnl_total": -0.23964975463212068,
+     "cost_total": -0.030000000000000006,
+     "days_in_market": 938,
+     "switches": 40,
+     "n_days": 2317,
+     "years": 6.3436002737850785,
+     "eq_final": 0.5626011069232814,
+     "yearly": [
+      {
+       "year": "2020",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 184,
+       "funding": 0.0
+      },
+      {
+       "year": "2021",
+       "return": -0.47520524586737256,
+       "days_in_market": 68,
+       "n_days": 365,
+       "funding": -0.002033169999999998
+      },
+      {
+       "year": "2022",
+       "return": 0.819280655701528,
+       "days_in_market": 360,
+       "n_days": 365,
+       "funding": -0.04014925000000003
+      },
+      {
+       "year": "2023",
+       "return": -0.27469859628608817,
+       "days_in_market": 77,
+       "n_days": 365,
+       "funding": -0.0011164361999999985
+      },
+      {
+       "year": "2024",
+       "return": -0.1444793360845238,
+       "days_in_market": 83,
+       "n_days": 366,
+       "funding": -0.025175553000000017
+      },
+      {
+       "year": "2025",
+       "return": -0.16286882304588435,
+       "days_in_market": 119,
+       "n_days": 365,
+       "funding": -0.01967804760000001
+      },
+      {
+       "year": "2026",
+       "return": 0.13440689410988038,
+       "days_in_market": 231,
+       "n_days": 307,
+       "funding": -0.026679359300000035
+      }
+     ]
+    }
+   }
+  },
+  "inverse_price": {
+   "funding_label": "同 Binance 资金费;价格口径 inverse",
+   "window": [
+    "2020-07-01",
+    "2026-11-04"
+   ],
+   "defs": {
+    "A": {
+     "total_return": -0.12117797215416415,
+     "cagr": -0.020156787031550105,
+     "max_dd": -0.6466420335797162,
+     "calmar": -0.031171476620480525,
+     "longest_losing_streak_d": 7,
+     "funding_total": 0.11738801000000001,
+     "price_pnl_total": 0.2591508051701944,
+     "cost_total": -0.05625000000000001,
+     "days_in_market": 978,
+     "switches": 75,
+     "n_days": 2317,
+     "years": 6.3436002737850785,
+     "eq_final": 0.8788220278458359,
+     "yearly": [
+      {
+       "year": "2020",
+       "return": -0.11564829383445507,
+       "days_in_market": 42,
+       "n_days": 184,
+       "funding": -0.006811890000000001
+      },
+      {
+       "year": "2021",
+       "return": -0.11712972598267402,
+       "days_in_market": 117,
+       "n_days": 365,
+       "funding": -0.017758520000000014
+      },
+      {
+       "year": "2022",
+       "return": 0.7084549470239931,
+       "days_in_market": 221,
+       "n_days": 365,
+       "funding": -0.018467450000000003
+      },
+      {
+       "year": "2023",
+       "return": -0.26135953427935177,
+       "days_in_market": 133,
+       "n_days": 365,
+       "funding": -0.01796911
+      },
+      {
+       "year": "2024",
+       "return": -0.24880443187575807,
+       "days_in_market": 130,
+       "n_days": 366,
+       "funding": -0.019833560000000004
+      },
+      {
+       "year": "2025",
+       "return": -0.07125739004038789,
+       "days_in_market": 184,
+       "n_days": 365,
+       "funding": -0.021858860000000008
+      },
+      {
+       "year": "2026",
+       "return": 0.2784801997565949,
+       "days_in_market": 151,
+       "n_days": 307,
+       "funding": -0.014688620000000001
+      }
+     ]
+    },
+    "B": {
+     "total_return": 0.007322715172394023,
+     "cagr": 0.0011508025873845362,
+     "max_dd": -0.20035714831408746,
+     "calmar": 0.0057437560729327935,
+     "longest_losing_streak_d": 4,
+     "funding_total": 0.016629949999999998,
+     "price_pnl_total": 0.04384015951642439,
+     "cost_total": -0.007500000000000001,
+     "days_in_market": 151,
+     "switches": 10,
+     "n_days": 2317,
+     "years": 6.3436002737850785,
+     "eq_final": 1.007322715172394,
+     "yearly": [
+      {
+       "year": "2020",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 184,
+       "funding": 0.0
+      },
+      {
+       "year": "2021",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 365,
+       "funding": 0.0
+      },
+      {
+       "year": "2022",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 365,
+       "funding": 0.0
+      },
+      {
+       "year": "2023",
+       "return": -0.04802942840954938,
+       "days_in_market": 75,
+       "n_days": 365,
+       "funding": -0.008876470000000001
+      },
+      {
+       "year": "2024",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 366,
+       "funding": 0.0
+      },
+      {
+       "year": "2025",
+       "return": 0.05814480534778266,
+       "days_in_market": 76,
+       "n_days": 365,
+       "funding": -0.0077534799999999975
+      },
+      {
+       "year": "2026",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 307,
+       "funding": 0.0
+      }
+     ]
+    },
+    "C": {
+     "total_return": 0.25709465027870704,
+     "cagr": 0.03672670930607591,
+     "max_dd": -0.529676055514581,
+     "calmar": 0.06933805846744548,
+     "longest_losing_streak_d": 10,
+     "funding_total": 0.07991554000000001,
+     "price_pnl_total": 0.6018227438624558,
+     "cost_total": -0.030000000000000006,
+     "days_in_market": 938,
+     "switches": 40,
+     "n_days": 2317,
+     "years": 6.3436002737850785,
+     "eq_final": 1.257094650278707,
+     "yearly": [
+      {
+       "year": "2020",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 184,
+       "funding": 0.0
+      },
+      {
+       "year": "2021",
+       "return": -0.4020085094001513,
+       "days_in_market": 68,
+       "n_days": 365,
+       "funding": -0.002033169999999998
+      },
+      {
+       "year": "2022",
+       "return": 1.7298398045942163,
+       "days_in_market": 360,
+       "n_days": 365,
+       "funding": -0.04014925000000003
+      },
+      {
+       "year": "2023",
+       "return": -0.2533309691963441,
+       "days_in_market": 77,
+       "n_days": 365,
+       "funding": -0.004671679999999998
+      },
+      {
+       "year": "2024",
+       "return": -0.10665351539964829,
+       "days_in_market": 83,
+       "n_days": 366,
+       "funding": -0.0063630299999999996
+      },
+      {
+       "year": "2025",
+       "return": -0.09889034966948418,
+       "days_in_market": 119,
+       "n_days": 365,
+       "funding": -0.01239476
+      },
+      {
+       "year": "2026",
+       "return": 0.2811798509399115,
+       "days_in_market": 231,
+       "n_days": 307,
+       "funding": -0.014303650000000001
+      }
+     ]
+    }
+   }
+  },
+  "exposure_live_start": {
+   "funding_label": "③ 敞口用 2024-01-01 起复算",
+   "window": [
+    "2020-07-01",
+    "2026-11-04"
+   ],
+   "defs": {
+    "A": {
+     "total_return": -0.2591570246512874,
+     "cagr": -0.04618589890718938,
+     "max_dd": -0.5165101835670769,
+     "calmar": -0.08941914482348522,
+     "longest_losing_streak_d": 7,
+     "funding_total": 0.03950332,
+     "price_pnl_total": -0.18135524943300496,
+     "cost_total": -0.021750000000000002,
+     "days_in_market": 386,
+     "switches": 29,
+     "n_days": 2317,
+     "years": 6.3436002737850785,
+     "eq_final": 0.7408429753487126,
+     "yearly": [
+      {
+       "year": "2020",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 184,
+       "funding": 0.0
+      },
+      {
+       "year": "2021",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 365,
+       "funding": 0.0
+      },
+      {
+       "year": "2022",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 365,
+       "funding": 0.0
+      },
+      {
+       "year": "2023",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 365,
+       "funding": 0.0
+      },
+      {
+       "year": "2024",
+       "return": -0.22217600592842823,
+       "days_in_market": 51,
+       "n_days": 366,
+       "funding": -0.002955840000000001
+      },
+      {
+       "year": "2025",
+       "return": -0.17180360700191522,
+       "days_in_market": 184,
+       "n_days": 365,
+       "funding": -0.021858860000000008
+      },
+      {
+       "year": "2026",
+       "return": 0.1500361618350876,
+       "days_in_market": 151,
+       "n_days": 307,
+       "funding": -0.014688620000000001
+      }
+     ]
+    },
+    "B": {
+     "total_return": -0.010778428135829743,
+     "cagr": -0.0017068674697685582,
+     "max_dd": -0.1146474923693711,
+     "calmar": -0.014887961650913177,
+     "longest_losing_streak_d": 2,
+     "funding_total": 0.007753479999999999,
+     "price_pnl_total": 0.018267969299633702,
+     "cost_total": -0.003,
+     "days_in_market": 76,
+     "switches": 4,
+     "n_days": 2317,
+     "years": 6.3436002737850785,
+     "eq_final": 0.9892215718641703,
+     "yearly": [
+      {
+       "year": "2020",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 184,
+       "funding": 0.0
+      },
+      {
+       "year": "2021",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 365,
+       "funding": 0.0
+      },
+      {
+       "year": "2022",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 365,
+       "funding": 0.0
+      },
+      {
+       "year": "2023",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 365,
+       "funding": 0.0
+      },
+      {
+       "year": "2024",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 366,
+       "funding": 0.0
+      },
+      {
+       "year": "2025",
+       "return": -0.010778428135829743,
+       "days_in_market": 76,
+       "n_days": 365,
+       "funding": -0.0077534799999999975
+      },
+      {
+       "year": "2026",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 307,
+       "funding": 0.0
+      }
+     ]
+    },
+    "C": {
+     "total_return": -0.45667618002686083,
+     "cagr": -0.09168836856955209,
+     "max_dd": -0.600305544268025,
+     "calmar": -0.15273616818140695,
+     "longest_losing_streak_d": 10,
+     "funding_total": 0.07991554000000001,
+     "price_pnl_total": -0.23964975463212068,
+     "cost_total": -0.030000000000000006,
+     "days_in_market": 938,
+     "switches": 40,
+     "n_days": 2317,
+     "years": 6.3436002737850785,
+     "eq_final": 0.5433238199731392,
+     "yearly": [
+      {
+       "year": "2020",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 184,
+       "funding": 0.0
+      },
+      {
+       "year": "2021",
+       "return": -0.47520524586737256,
+       "days_in_market": 68,
+       "n_days": 365,
+       "funding": -0.002033169999999998
+      },
+      {
+       "year": "2022",
+       "return": 0.819280655701528,
+       "days_in_market": 360,
+       "n_days": 365,
+       "funding": -0.04014925000000003
+      },
+      {
+       "year": "2023",
+       "return": -0.27214985071262643,
+       "days_in_market": 77,
+       "n_days": 365,
+       "funding": -0.004671679999999998
+      },
+      {
+       "year": "2024",
+       "return": -0.16043219140575937,
+       "days_in_market": 83,
+       "n_days": 366,
+       "funding": -0.0063630299999999996
+      },
+      {
+       "year": "2025",
+       "return": -0.16896430253069528,
+       "days_in_market": 119,
+       "n_days": 365,
+       "funding": -0.01239476
+      },
+      {
+       "year": "2026",
+       "return": 0.1206038894932151,
+       "days_in_market": 231,
+       "n_days": 307,
+       "funding": -0.014303650000000001
+      }
+     ]
+    }
+   }
+  },
+  "funding_two_thirds": {
+   "funding_label": "资金费按日内 2/3 归因",
+   "window": [
+    "2020-07-01",
+    "2026-11-04"
+   ],
+   "defs": {
+    "A": {
+     "total_return": -0.6550923656718646,
+     "cagr": -0.1544800763967601,
+     "max_dd": -0.7546563163087636,
+     "calmar": -0.2047025553994772,
+     "longest_losing_streak_d": 7,
+     "funding_total": 0.07825867333333333,
+     "price_pnl_total": -0.6364681407469652,
+     "cost_total": -0.05625000000000001,
+     "days_in_market": 978,
+     "switches": 75,
+     "n_days": 2317,
+     "years": 6.3436002737850785,
+     "eq_final": 0.3449076343281354,
+     "yearly": [
+      {
+       "year": "2020",
+       "return": -0.12846153739091326,
+       "days_in_market": 42,
+       "n_days": 184,
+       "funding": -0.004541260000000001
+      },
+      {
+       "year": "2021",
+       "return": -0.28370116867462525,
+       "days_in_market": 117,
+       "n_days": 365,
+       "funding": -0.01183901333333334
+      },
+      {
+       "year": "2022",
+       "return": 0.26765874110814103,
+       "days_in_market": 221,
+       "n_days": 365,
+       "funding": -0.012311633333333325
+      },
+      {
+       "year": "2023",
+       "return": -0.3139623502298151,
+       "days_in_market": 133,
+       "n_days": 365,
+       "funding": -0.011979406666666666
+      },
+      {
+       "year": "2024",
+       "return": -0.3248332978058832,
+       "days_in_market": 130,
+       "n_days": 366,
+       "funding": -0.013222373333333343
+      },
+      {
+       "year": "2025",
+       "return": -0.17781651625962946,
+       "days_in_market": 184,
+       "n_days": 365,
+       "funding": -0.014572573333333323
+      },
+      {
+       "year": "2026",
+       "return": 0.1444371227166905,
+       "days_in_market": 151,
+       "n_days": 307,
+       "funding": -0.009792413333333335
+      }
+     ]
+    },
+    "B": {
+     "total_return": -0.08584842134374704,
+     "cagr": -0.014049883121373341,
+     "max_dd": -0.20959851520642192,
+     "calmar": -0.06703235997419349,
+     "longest_losing_streak_d": 4,
+     "funding_total": 0.011086633333333333,
+     "price_pnl_total": -0.04736829982736912,
+     "cost_total": -0.007500000000000001,
+     "days_in_market": 151,
+     "switches": 10,
+     "n_days": 2317,
+     "years": 6.3436002737850785,
+     "eq_final": 0.914151578656253,
+     "yearly": [
+      {
+       "year": "2020",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 184,
+       "funding": 0.0
+      },
+      {
+       "year": "2021",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 365,
+       "funding": 0.0
+      },
+      {
+       "year": "2022",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 365,
+       "funding": 0.0
+      },
+      {
+       "year": "2023",
+       "return": -0.07349323770172034,
+       "days_in_market": 75,
+       "n_days": 365,
+       "funding": -0.005917646666666665
+      },
+      {
+       "year": "2024",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 366,
+       "funding": 0.0
+      },
+      {
+       "year": "2025",
+       "return": -0.013335233097899413,
+       "days_in_market": 76,
+       "n_days": 365,
+       "funding": -0.005168986666666665
+      },
+      {
+       "year": "2026",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 307,
+       "funding": 0.0
+      }
+     ]
+    },
+    "C": {
+     "total_return": -0.4708099332606819,
+     "cagr": -0.09545459862217553,
+     "max_dd": -0.6025373735985151,
+     "calmar": -0.15842104208755553,
+     "longest_losing_streak_d": 10,
+     "funding_total": 0.053277026666666664,
+     "price_pnl_total": -0.23964975463212068,
+     "cost_total": -0.030000000000000006,
+     "days_in_market": 938,
+     "switches": 40,
+     "n_days": 2317,
+     "years": 6.3436002737850785,
+     "eq_final": 0.5291900667393181,
+     "yearly": [
+      {
+       "year": "2020",
+       "return": 0.0,
+       "days_in_market": 0,
+       "n_days": 184,
+       "funding": 0.0
+      },
+      {
+       "year": "2021",
+       "return": -0.47551803588338026,
+       "days_in_market": 68,
+       "n_days": 365,
+       "funding": -0.001355446666666665
+      },
+      {
+       "year": "2022",
+       "return": 0.7953894166913971,
+       "days_in_market": 360,
+       "n_days": 365,
+       "funding": -0.026766166666666664
+      },
+      {
+       "year": "2023",
+       "return": -0.27328677900305776,
+       "days_in_market": 77,
+       "n_days": 365,
+       "funding": -0.003114453333333335
+      },
+      {
+       "year": "2024",
+       "return": -0.16219988066980795,
+       "days_in_market": 83,
+       "n_days": 366,
+       "funding": -0.004242020000000001
+      },
+      {
+       "year": "2025",
+       "return": -0.17238311990962074,
+       "days_in_market": 119,
+       "n_days": 365,
+       "funding": -0.008263173333333334
+      },
+      {
+       "year": "2026",
+       "return": 0.11529471782185352,
+       "days_in_market": 231,
+       "n_days": 307,
+       "funding": -0.009535766666666662
+      }
+     ]
+    }
+   }
+  }
+ },
+ "benchmarks": {
+  "flat_0": {
+   "total_return": 0.0,
+   "cagr": 0.0,
+   "max_dd": 0.0,
+   "calmar": null
+  },
+  "hold_majors": {
+   "total_return": 7.953693458552797,
+   "cagr": 0.41277453352757276,
+   "max_dd": -0.7673552493950992,
+   "calmar": 0.5379184332849225,
+   "start": "2020-07-01",
+   "end": "2026-11-04",
+   "n_days": 2318
+  }
+ },
+ "episodes": [
+  {
+   "peak_d": "2021-01-08",
+   "trough_d": "2021-01-27",
+   "end_d": "2021-01-27",
+   "recover_d": "2021-02-08",
+   "recovered": "True",
+   "peak_px": 40637.23,
+   "trough_px": 30381.04,
+   "btc_crash_pct": -0.2523840822811988,
+   "A": {
+    "crash_pnl": 0.0,
+    "rebound_pnl": 0.0,
+    "net_pnl": 0.0,
+    "days_in_market_crash": 0,
+    "days_in_market_rebound": 0,
+    "funding_crash": 0.0
+   },
+   "B": {
+    "crash_pnl": 0.0,
+    "rebound_pnl": 0.0,
+    "net_pnl": 0.0,
+    "days_in_market_crash": 0,
+    "days_in_market_rebound": 0,
+    "funding_crash": 0.0
+   },
+   "C": {
+    "crash_pnl": 0.0,
+    "rebound_pnl": 0.0,
+    "net_pnl": 0.0,
+    "days_in_market_crash": 0,
+    "days_in_market_rebound": 0,
+    "funding_crash": 0.0
+   }
+  },
+  {
+   "peak_d": "2021-04-17",
+   "trough_d": "2021-06-08",
+   "end_d": "2021-06-12",
+   "recover_d": "2021-09-06",
+   "recovered": "False",
+   "peak_px": 60090.14,
+   "trough_px": 33372.58,
+   "btc_crash_pct": -0.44462469217079537,
+   "A": {
+    "crash_pnl": 0.06934978472308101,
+    "rebound_pnl": -0.34512105555182665,
+    "net_pnl": -0.27577127082874564,
+    "days_in_market_crash": 20,
+    "days_in_market_rebound": 40,
+    "funding_crash": -0.00476329
+   },
+   "B": {
+    "crash_pnl": 0.0,
+    "rebound_pnl": 0.0,
+    "net_pnl": 0.0,
+    "days_in_market_crash": 0,
+    "days_in_market_rebound": 0,
+    "funding_crash": 0.0
+   },
+   "C": {
+    "crash_pnl": -0.17134775968993457,
+    "rebound_pnl": -0.33933421472691633,
+    "net_pnl": -0.5106819744168509,
+    "days_in_market_crash": 6,
+    "days_in_market_rebound": 55,
+    "funding_crash": -0.0012504
+   }
+  },
+  {
+   "peak_d": "2021-11-08",
+   "trough_d": "2021-12-17",
+   "end_d": "2021-12-13",
+   "recover_d": "2022-03-17",
+   "recovered": "False",
+   "peak_px": 67606.96,
+   "trough_px": 46125.33,
+   "btc_crash_pct": -0.31774287736055584,
+   "A": {
+    "crash_pnl": 0.1988974998238405,
+    "rebound_pnl": 0.02121137517326261,
+    "net_pnl": 0.2201088749971031,
+    "days_in_market_crash": 29,
+    "days_in_market_rebound": 78,
+    "funding_crash": -0.009552520000000002
+   },
+   "B": {
+    "crash_pnl": 0.0,
+    "rebound_pnl": 0.0,
+    "net_pnl": 0.0,
+    "days_in_market_crash": 0,
+    "days_in_market_rebound": 0,
+    "funding_crash": 0.0
+   },
+   "C": {
+    "crash_pnl": 0.0,
+    "rebound_pnl": 0.017536586949457603,
+    "net_pnl": 0.017536586949457603,
+    "days_in_market_crash": 0,
+    "days_in_market_rebound": 71,
+    "funding_crash": 0.0
+   }
+  },
+  {
+   "peak_d": "2021-12-23",
+   "trough_d": "2022-01-22",
+   "end_d": "2022-01-25",
+   "recover_d": "2022-04-22",
+   "recovered": "False",
+   "peak_px": 50817.92,
+   "trough_px": 35043.73,
+   "btc_crash_pct": -0.3104060536125838,
+   "A": {
+    "crash_pnl": 0.3646420048475506,
+    "rebound_pnl": -0.26338523088330246,
+    "net_pnl": 0.10125677396424815,
+    "days_in_market_crash": 30,
+    "days_in_market_rebound": 48,
+    "funding_crash": -0.00693997
+   },
+   "B": {
+    "crash_pnl": 0.0,
+    "rebound_pnl": 0.0,
+    "net_pnl": 0.0,
+    "days_in_market_crash": 0,
+    "days_in_market_rebound": 0,
+    "funding_crash": 0.0
+   },
+   "C": {
+    "crash_pnl": 0.20772611236234512,
+    "rebound_pnl": -0.16398866939575454,
+    "net_pnl": 0.04373744296659057,
+    "days_in_market_crash": 17,
+    "days_in_market_rebound": 90,
+    "funding_crash": -0.003170989999999999
+   }
+  },
+  {
+   "peak_d": "2022-04-09",
+   "trough_d": "2022-05-27",
+   "end_d": "2022-05-29",
+   "recover_d": "2022-08-25",
+   "recovered": "False",
+   "peak_px": 42727.7,
+   "trough_px": 28623.2,
+   "btc_crash_pct": -0.33010201812875484,
+   "A": {
+    "crash_pnl": 0.32030105444347184,
+    "rebound_pnl": 0.1223770407338969,
+    "net_pnl": 0.4426780951773687,
+    "days_in_market_crash": 36,
+    "days_in_market_rebound": 36,
+    "funding_crash": -0.00292239
+   },
+   "B": {
+    "crash_pnl": 0.0,
+    "rebound_pnl": 0.0,
+    "net_pnl": 0.0,
+    "days_in_market_crash": 0,
+    "days_in_market_rebound": 0,
+    "funding_crash": 0.0
+   },
+   "C": {
+    "crash_pnl": 0.37230880685007023,
+    "rebound_pnl": 0.23299526540585863,
+    "net_pnl": 0.6053040722559289,
+    "days_in_market_crash": 48,
+    "days_in_market_rebound": 90,
+    "funding_crash": -0.0034834699999999994
+   }
+  },
+  {
+   "peak_d": "2022-05-31",
+   "trough_d": "2022-06-18",
+   "end_d": "2022-07-10",
+   "recover_d": "2022-09-16",
+   "recovered": "False",
+   "peak_px": 31797.8,
+   "trough_px": 18959.7,
+   "btc_crash_pct": -0.40374176829843567,
+   "A": {
+    "crash_pnl": 0.40309734474217024,
+    "rebound_pnl": -0.176559568140785,
+    "net_pnl": 0.22653777660138524,
+    "days_in_market_crash": 8,
+    "days_in_market_rebound": 40,
+    "funding_crash": -6.110999999999968e-05
+   },
+   "B": {
+    "crash_pnl": 0.0,
+    "rebound_pnl": 0.0,
+    "net_pnl": 0.0,
+    "days_in_market_crash": 0,
+    "days_in_market_rebound": 0,
+    "funding_crash": 0.0
+   },
+   "C": {
+    "crash_pnl": 0.4900502483456311,
+    "rebound_pnl": -0.0798466009094511,
+    "net_pnl": 0.41020364743618,
+    "days_in_market_crash": 18,
+    "days_in_market_rebound": 90,
+    "funding_crash": -0.00167295
+   }
+  },
+  {
+   "peak_d": "2022-11-05",
+   "trough_d": "2022-11-09",
+   "end_d": "2022-11-09",
+   "recover_d": "2023-01-20",
+   "recovered": "True",
+   "peak_px": 21289.9,
+   "trough_px": 15905.0,
+   "btc_crash_pct": -0.25293214153190013,
+   "A": {
+    "crash_pnl": 0.14070186556059133,
+    "rebound_pnl": -0.10177854384905569,
+    "net_pnl": 0.03892332171153565,
+    "days_in_market_crash": 1,
+    "days_in_market_rebound": 44,
+    "funding_crash": 0.00039555000000000005
+   },
+   "B": {
+    "crash_pnl": 0.0,
+    "rebound_pnl": 0.0,
+    "net_pnl": 0.0,
+    "days_in_market_crash": 0,
+    "days_in_market_rebound": 0,
+    "funding_crash": 0.0
+   },
+   "C": {
+    "crash_pnl": 0.2751600956391097,
+    "rebound_pnl": -0.238264654548081,
+    "net_pnl": 0.03689544109102871,
+    "days_in_market_crash": 4,
+    "days_in_market_rebound": 65,
+    "funding_crash": -0.00026519999999999994
+   }
+  },
+  {
+   "peak_d": "2022-11-05",
+   "trough_d": "2022-11-21",
+   "end_d": "2022-11-21",
+   "recover_d": "2023-01-20",
+   "recovered": "True",
+   "peak_px": 21289.9,
+   "trough_px": 15773.0,
+   "btc_crash_pct": -0.25913226459494887,
+   "A": {
+    "crash_pnl": 0.13831919223430142,
+    "rebound_pnl": -0.09939587052276581,
+    "net_pnl": 0.038923321711535605,
+    "days_in_market_crash": 13,
+    "days_in_market_rebound": 32,
+    "funding_crash": 0.0036825300000000007
+   },
+   "B": {
+    "crash_pnl": 0.0,
+    "rebound_pnl": 0.0,
+    "net_pnl": 0.0,
+    "days_in_market_crash": 0,
+    "days_in_market_rebound": 0,
+    "funding_crash": 0.0
+   },
+   "C": {
+    "crash_pnl": 0.2727774223128199,
+    "rebound_pnl": -0.23588198122179116,
+    "net_pnl": 0.03689544109102871,
+    "days_in_market_crash": 16,
+    "days_in_market_rebound": 53,
+    "funding_crash": 0.0030217800000000004
+   }
+  },
+  {
+   "peak_d": "2025-10-26",
+   "trough_d": "2025-11-22",
+   "end_d": "2025-11-22",
+   "recover_d": "2026-02-20",
+   "recovered": "False",
+   "peak_px": 114497.8,
+   "trough_px": 84689.4,
+   "btc_crash_pct": -0.26034037335215177,
+   "A": {
+    "crash_pnl": 0.29862898069070726,
+    "rebound_pnl": 0.10222369302706842,
+    "net_pnl": 0.40085267371777566,
+    "days_in_market_crash": 27,
+    "days_in_market_rebound": 66,
+    "funding_crash": -0.004907699999999998
+   },
+   "B": {
+    "crash_pnl": 0.0,
+    "rebound_pnl": 0.0,
+    "net_pnl": 0.0,
+    "days_in_market_crash": 0,
+    "days_in_market_rebound": 0,
+    "funding_crash": 0.0
+   },
+   "C": {
+    "crash_pnl": 0.22562819386391106,
+    "rebound_pnl": 0.1916200781971312,
+    "net_pnl": 0.41724827206104226,
+    "days_in_market_crash": 19,
+    "days_in_market_rebound": 90,
+    "funding_crash": -0.003396819999999999
+   }
+  },
+  {
+   "peak_d": "2026-01-14",
+   "trough_d": "2026-02-05",
+   "end_d": "2026-02-24",
+   "recover_d": "2026-05-06",
+   "recovered": "False",
+   "peak_px": 96907.9,
+   "trough_px": 62868.1,
+   "btc_crash_pct": -0.3512592884584229,
+   "A": {
+    "crash_pnl": 0.32464974569560284,
+    "rebound_pnl": -0.2250542902280095,
+    "net_pnl": 0.09959545546759335,
+    "days_in_market_crash": 16,
+    "days_in_market_rebound": 43,
+    "funding_crash": -0.0017898499999999997
+   },
+   "B": {
+    "crash_pnl": 0.0,
+    "rebound_pnl": 0.0,
+    "net_pnl": 0.0,
+    "days_in_market_crash": 0,
+    "days_in_market_rebound": 0,
+    "funding_crash": 0.0
+   },
+   "C": {
+    "crash_pnl": 0.41680005710539686,
+    "rebound_pnl": -0.2907502340021942,
+    "net_pnl": 0.12604982310320267,
+    "days_in_market_crash": 22,
+    "days_in_market_rebound": 90,
+    "funding_crash": -0.0025456699999999994
+   }
+  },
+  {
+   "peak_d": "2026-05-10",
+   "trough_d": "2026-06-06",
+   "end_d": "2026-06-06",
+   "recover_d": "2026-09-04",
+   "recovered": "False",
+   "peak_px": 82177.7,
+   "trough_px": 60849.7,
+   "btc_crash_pct": -0.2595351293599115,
+   "A": {
+    "crash_pnl": 0.25872988207470465,
+    "rebound_pnl": -0.1541462370595738,
+    "net_pnl": 0.10458364501513084,
+    "days_in_market_crash": 22,
+    "days_in_market_rebound": 48,
+    "funding_crash": -0.00314556
+   },
+   "B": {
+    "crash_pnl": 0.0,
+    "rebound_pnl": 0.0,
+    "net_pnl": 0.0,
+    "days_in_market_crash": 0,
+    "days_in_market_rebound": 0,
+    "funding_crash": 0.0
+   },
+   "C": {
+    "crash_pnl": 0.2976092086879356,
+    "rebound_pnl": -0.13211766268303404,
+    "net_pnl": 0.16549154600490157,
+    "days_in_market_crash": 27,
+    "days_in_market_rebound": 74,
+    "funding_crash": -0.0035600399999999996
+   }
+  }
+ ],
+ "null_control": {
+  "A": {
+   "actual_total_return": -0.6414144914842371,
+   "percentile": 0.754,
+   "null_mean": -0.7186908481938151,
+   "null_sd": 0.2110653688724301,
+   "null_p05": -0.9263555194833251,
+   "null_p50": -0.7805784221826102,
+   "null_p95": -0.31631083191216075,
+   "runs": 38,
+   "run_lengths": [
+    7,
+    35,
+    26,
+    34,
+    14,
+    80,
+    32,
+    39,
+    27,
+    21,
+    14,
+    12,
+    24,
+    21,
+    6,
+    6,
+    34,
+    10,
+    66,
+    5
+   ],
+   "days_in_market": 978,
+   "switches": 75,
+   "n": 1000,
+   "seed": 252
+  },
+  "B": {
+   "actual_total_return": -0.08077443458482525,
+   "percentile": 0.627,
+   "null_mean": -0.14250928778239308,
+   "null_sd": 0.2740963338854955,
+   "null_p05": -0.5392788524891171,
+   "null_p50": -0.19101101359917333,
+   "null_p95": 0.35103934678509424,
+   "runs": 5,
+   "run_lengths": [
+    4,
+    66,
+    5,
+    3,
+    73
+   ],
+   "days_in_market": 151,
+   "switches": 10,
+   "n": 1000,
+   "seed": 252
+  },
+  "C": {
+   "actual_total_return": -0.45667618002686083,
+   "percentile": 0.791,
+   "null_mean": -0.6249619654834264,
+   "null_sd": 0.336946260380205,
+   "null_p05": -0.9254817549901018,
+   "null_p50": -0.7244665711457997,
+   "null_p95": 0.004723453631538509,
+   "runs": 20,
+   "run_lengths": [
+    1,
+    3,
+    1,
+    2,
+    3,
+    51,
+    2,
+    2,
+    3,
+    373,
+    64,
+    9,
+    73,
+    1,
+    4,
+    2,
+    49,
+    4,
+    2,
+    289
+   ],
+   "days_in_market": 938,
+   "switches": 40,
+   "n": 1000,
+   "seed": 252
+  }
+ }
+}

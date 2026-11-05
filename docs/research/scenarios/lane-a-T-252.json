@@ -1,0 +1,20 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {"id": "T-252-1", "scenario": "T-252 崩盘夜的空头腿",
+     "statement": "BTC 收盘价(ohlcv_daily)在 2026-12-05 低于 2026-11-04 的收盘 80504",
+     "variable": "close:BTC", "op": "lt", "lo": 80504, "prob": 0.55, "horizon_d": "2026-12-05"},
+    {"id": "T-252-2", "scenario": "T-252 崩盘夜的空头腿",
+     "statement": "7 日年化资金费(state_daily panel)2026-12-05 仍为正 —— 空腿收租的前提",
+     "variable": "state:funding_7d_ann", "op": "gt", "lo": 0, "prob": 0.7, "horizon_d": "2026-12-05"},
+    {"id": "T-252-3", "scenario": "T-252 崩盘夜的空头腿",
+     "statement": "① 面板距 200 日线(state dist_200)2026-12-05 转负 —— 定义 C 的入场条件",
+     "variable": "state:dist_200", "op": "lt", "lo": 0, "prob": 0.4, "horizon_d": "2026-12-05"},
+    {"id": "T-252-4", "scenario": "T-252 崩盘夜的空头腿",
+     "statement": "站上 50 日均线的成员比例(state breadth_above_ma50)2026-12-05 低于 2026-11-04 的 4.17%",
+     "variable": "state:breadth_above_ma50", "op": "lt", "lo": 0.0416666666666667, "prob": 0.45, "horizon_d": "2026-12-05"},
+    {"id": "T-252-5", "scenario": "T-252 崩盘夜的空头腿",
+     "statement": "BTC 收盘价(ohlcv_daily)在 2026-12-05 反弹到 85000 以上 —— 空腿在反弹里回吐的场景",
+     "variable": "close:BTC", "op": "gt", "lo": 85000, "prob": 0.3, "horizon_d": "2026-12-05"}
+  ]
+}
