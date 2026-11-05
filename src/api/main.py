@@ -2039,6 +2039,22 @@ async def _binance_vision_loop():
                 print(f"[{_name.upper().lstrip('_')}] ⚠️  pass FAILED: {_e}")
                 await _record_loop_attempt(_name, "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                            writer="src.api.main._binance_vision_loop")
+        # S-718(11-05,Jazz 拍板):R-v2 改读永续序列 `binance_um_hist`(存档到 2026-08-08)。perp_bv_daily 每来一天,
+        # 就用库内函数 um_bridge_fill() 续写同一批符号(只插不改;volume = qv / c)。紧跟在 _perp_bv_daily 之后,票的扫描
+        # (`_r_tickets_paper_loop`,每小时)才拿得到昨天的永续 bar。判活:`select max(trade_date) from ohlcv_daily where source = 'binance_um_hist'` ≥ 前天。
+        try:
+            from src.api.store import supabase_rpc_write
+            _b = await supabase_rpc_write("um_bridge_fill", {})
+            _bv = _b.value if _b.ok and isinstance(_b.value, dict) else {}
+            await _record_loop_attempt("_um_bridge", "ok" if _b.ok and _bv.get("ok") else "error",
+                                       reason=None if _b.ok and _bv.get("ok") else str(_b.why or _bv.get("reason"))[:300],
+                                       detail={k: _bv.get(k) for k in ("from", "to", "inserted", "max_d", "symbols_last")},
+                                       writer="src.api.main._binance_vision_loop")
+            print(f"[UM-BRIDGE] {'ok' if _b.ok else 'error'} · {_bv or _b.why}")
+        except Exception as _e:
+            print(f"[UM-BRIDGE] ⚠️  pass FAILED: {_e}")
+            await _record_loop_attempt("_um_bridge", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
+                                       writer="src.api.main._binance_vision_loop")
         # 回补期(这一轮把预算用满 = 还有积压)10 分钟一轮,补完后每小时一轮只取新的一天(10-19 首轮:6,000 档 0 失败,美国出口也读得到)
         try:
             from src.data.market.binance_vision import BUDGET as _BV_BUDGET
@@ -2648,6 +2664,30 @@ async def _book_vectors_loop():
 async def _start_book_vectors_loop():
     _asyncio.create_task(_book_vectors_loop())
     print("[BOOKVEC] ✅ strategy-space book vectors scheduled (hourly check)")
+
+
+async def _window_vectors_loop():
+    """时序窗口向量(`src/data/state/window_vectors.py`,11-05):每小时看、昨天那行写过就跳;写时从 2018 整条重算(BTC 60 日路径形状)。
+    排在 ③ 每日决定(7800)之前,决定才拿得到昨天的窗口。"""
+    await _asyncio.sleep(_boot_delay(7500))
+    while True:
+        try:
+            from src.data.state.window_vectors import run_once as _wv_run
+            r = await _wv_run()
+            await _iteration_result("_window_vectors_loop", r)
+            await _beat("_window_vectors_loop", ok=bool(r.get("ok")), refused=(r.get("status") == "skipped"),
+                        error=None if r.get("ok") else str(r.get("why"))[:200], detail={"d": r.get("d"), "written": r.get("written")})
+        except Exception as _e:
+            print(f"[WINDOW] ⚠️  pass FAILED: {_e}")
+            await _beat("_window_vectors_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_window_vectors_loop", _e)
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_window_vectors_loop():
+    _asyncio.create_task(_window_vectors_loop())
+    print("[WINDOW] ✅ 60-day path window vectors scheduled (hourly check)")
 
 
 async def _scenario_ledger_loop():

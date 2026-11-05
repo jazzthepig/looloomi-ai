@@ -129,6 +129,7 @@
     "venue_depth_snapshots",
     "wallet_profiles",
     "weekly_letters",
+    "window_vectors",
     "world50_book_holdings",
     "world50_book_nav",
     "world50_mcap_weekly",
@@ -469,6 +470,13 @@
       "note",
       "week_end"
     ],
+    "window_vectors": [
+      "close",
+      "code_ref",
+      "d",
+      "dims",
+      "vec"
+    ],
     "world50_book_holdings": [
       "arm",
       "as_of",
@@ -530,6 +538,7 @@
     "r_tickets_scan",
     "refresh_depth_divergence",
     "refresh_regime_daily",
-    "resolve_depth_divergence"
+    "resolve_depth_divergence",
+    "um_bridge_fill"
   ]
 }
