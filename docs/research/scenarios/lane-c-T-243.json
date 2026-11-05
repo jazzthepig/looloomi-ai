@@ -1,0 +1,56 @@
+{
+  "author": "lane-c",
+  "note": "T-243(S-727)前向预期。概率是作者自估,到期按 Brier 结算;写的是可核的量,不是收益承诺。基数取自本卡实测(报告 docs/research/T-243_cycle_flows.md、数值 docs/research/t243_results.json)。T-243 实测结论:五条流量里没有候选(调整口径候选 0 条,与 T-241 的水平量并排一致),所以下面写的预期都围绕「数据能不能补上」和「⓪ v3 会不会用这五条流」,不是「信号会不会灵」。",
+  "entries": [
+    {
+      "id": "T-243-1",
+      "scenario": "T-243 五条流量 · F1 的数据缺口",
+      "statement": "2026-12-05 时,supabase `perp_bv_daily` 的 tbqv 列仍然对全部合约为 NULL(F1 全市场永续主动卖出占比还是算不出来;2026-11-03 实测:2025-11-01 尚有值、2025-12-01 起全空,整段缺口约一年)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.8,
+      "horizon_d": "2026-12-05"
+    },
+    {
+      "id": "T-243-2",
+      "scenario": "T-243 五条流量 · 资金费拥挤的持续性",
+      "statement": "2026-12-05 时,state_daily(entity=panel)的 funding_7d_ann 仍大于 0.05(T-234 于 2026-11-03 测得 0.0934;F3 用的是年化 > 30% 的合约占比,这条是资金费总水平的代理)",
+      "variable": "state:funding_7d_ann",
+      "op": "gt",
+      "lo": 0.05,
+      "prob": 0.6,
+      "horizon_d": "2026-12-05"
+    },
+    {
+      "id": "T-243-3",
+      "scenario": "T-243 五条流量 · 永续宇宙的规模",
+      "statement": "2026-12-05 时,`perp_bv_pairs` 里 kind='coin' 的合约数仍不少于 649(2026-11-05 实测 649;台账共 913 对,其中 tradfi 225 对、kind 为空 39 对)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 649,
+      "prob": 0.8,
+      "horizon_d": "2026-12-05"
+    },
+    {
+      "id": "T-243-4",
+      "scenario": "T-243 五条流量 · ⓪ v3 的候选数据不是这五条流",
+      "statement": "到 2027-01-15,⓪ v3 的预注册写定时,候选清单里不含 S-727 的 F1–F5 任何一条(T-243 实测:五条流调整口径候选 0 条,90 天分位最高的一条 F5/z = 0.915,离 0.95 还差 0.035,且没有一条流在 ≥ 2 段回撤里先行)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.7,
+      "horizon_d": "2027-01-15"
+    },
+    {
+      "id": "T-243-5",
+      "scenario": "T-243 五条流量 · 观察窗口里的 BTC 价格水平",
+      "statement": "2026-12-05 时,ohlcv_daily(source=binance_hist)的 BTC 收盘价高于 75000(2026-11-04 为 80504)",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 75000,
+      "prob": 0.62,
+      "horizon_d": "2026-12-05"
+    }
+  ]
+}
