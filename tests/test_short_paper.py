@@ -123,7 +123,7 @@ def test_parse_klines_zip_reads_header_and_microsecond_files():
     with zipfile.ZipFile(buf, "w") as z:
         z.writestr("X-1d-2025-10.csv", "\n".join(rows))
     got = bv.parse_klines_zip(buf.getvalue())
-    assert got == [("2025-10-26", 1.0, 2.0, 0.5, 1.5, 15.0), ("2025-10-27", 1.5, 2.0, 1.0, 1.8, 18.0)]
+    assert got == [("2025-10-26", 1.0, 2.0, 0.5, 1.5, 15.0, 1.0), ("2025-10-27", 1.5, 2.0, 1.0, 1.8, 18.0, 1.0)]   # 11-05:+ taker 买入报价额
 
 
 def test_parse_index_pages():
@@ -140,16 +140,21 @@ def test_plan_uses_months_for_whole_months_days_for_the_rest_and_stops_at_dead_f
     today = dt.date(2026, 10, 26)
     pairs = [{"pair": "AUSDT", "first_d": "2020-01-01", "active": True},
              {"pair": "BUSDT", "first_d": "2026-10-21", "active": True},
-             {"pair": "CUSDT", "first_d": "2025-01-01", "active": True, "dead_from": "2025-12-03"},
-             {"pair": "DUSDT", "first_d": "2025-01-01", "active": False}]
+             {"pair": "CUSDT", "first_d": "2025-11-20", "active": True, "dead_from": "2025-12-03"},
+             {"pair": "DUSDT", "first_d": "2025-01-01", "active": False},
+             {"pair": "EUSDT", "first_d": "2021-03-01", "active": False, "dead_from": "2021-05-01"}]
     p = bv.plan(pairs, {}, today)
     a = [w for pair, w, m in p if pair == "AUSDT"]
-    assert "2025-12" in a and "2026-09" in a and "2026-10-01" in a and "2026-10-25" in a and "2026-10-26" not in a
+    assert "2020-01" in a and "2025-12" in a and "2026-09" in a and "2026-10-01" in a and "2026-10-25" in a and "2026-10-26" not in a
     assert sorted(w for pair, w, m in p if pair == "BUSDT") == [f"2026-10-{d}" for d in range(21, 26)]
-    assert sorted(w for pair, w, m in p if pair == "CUSDT") == ["2025-12-01", "2025-12-02"]
-    assert not any(pair == "DUSDT" for pair, _, _ in p)
+    assert sorted(w for pair, w, m in p if pair == "CUSDT") == ["2025-11-20", "2025-11-21", "2025-11-22", "2025-11-23", "2025-11-24", "2025-11-25",
+                                                                 "2025-11-26", "2025-11-27", "2025-11-28", "2025-11-29", "2025-11-30", "2025-12-01", "2025-12-02"]
+    assert not any(pair == "DUSDT" for pair, _, _ in p), "不活跃又不知死期 ⇒ 没有区间"
+    assert sorted(w for pair, w, m in p if pair == "EUSDT") == ["2021-03", "2021-04"], "11-05:死币也补到 dead_from 前一天 —— 留出段才有死币"
     covered = bv.plan(pairs[:1], {"AUSDT": {"min_d": "2025-12-01", "max_d": "2026-10-23"}}, today)
-    assert [w for _, w, _ in covered] == ["2026-10-25", "2026-10-24"], "只补缺的尾巴,最近的先取"
+    assert [w for _, w, _ in covered][:2] == ["2026-10-25", "2026-10-24"], "先补缺的尾巴,最近的先取"
+    assert [w for _, w, _ in covered][2:4] == ["2025-11", "2025-10"] and "2020-01" in [w for _, w, _ in covered], "再往前补到上市月(11-05 起整个永续史)"
+    assert not any("2026-0" in w for _, w, _ in covered), "已覆盖的段不重取"
 
 
 def test_month_days_falls_back_to_daily_files():

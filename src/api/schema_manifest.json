@@ -538,7 +538,6 @@
     "r_tickets_scan",
     "refresh_depth_divergence",
     "refresh_regime_daily",
-    "resolve_depth_divergence",
-    "um_bridge_fill"
+    "resolve_depth_divergence"
   ]
 }

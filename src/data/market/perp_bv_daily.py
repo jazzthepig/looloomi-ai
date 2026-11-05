@@ -11,6 +11,13 @@
 `data.binance.vision` 的 U 本位永续 1d klines:日档(每天上传前一天)+ 月档(回补);合约名单 = 同一个桶的目录。
 全部经 `data_layer.get_binance_vision_um_daily`(同一个取数入口,klines 与 index 只是它的参数)。无 key、静态文件。
 
+## 11-05 起这张表就是「永续序列」(S-718 / S-719)
+
+R-v2 的宇宙按定义是「Binance U 本位永续在册」,它的量能门与宇宙门槛都吃永续成交额 —— `r_tickets_scan` / `r_tickets_nav` 直接读这张表
+(迁移 2026-11-05_r_tickets_perp_source.sql),不再经 `ohlcv_daily`。为此 BACKFILL_FROM 退到 2019-09-01(U 本位永续上线),
+月档把每个合约从上市补齐;`tbqv`(主动买入的报价成交额,klines 第 11 列)一起存 —— T-235 全表唯一过 0.95 的格子是「开票日主动买盘占比」,
+而它 2020–21 测不了,因为没人存过。已下架的合约(dead_from 有值)也补到 dead_from − 1:留出段才有死币。
+
 ## 取什么
 
 - **合约登记** `perp_bv_pairs`:每轮列一次目录(约 1,100 个前缀,两三页);新出现的合约查它第一份日档的日期
@@ -41,7 +48,7 @@ COVERAGE_VIEW = "perp_bv_coverage"
 WRITES_TABLES = ("perp_bv_daily", "perp_bv_pairs")   # 字面量:schema_manifest 只读字面量
 KIND = "klines"
 VENUE = "binance_perp"
-BACKFILL_FROM = "2025-12-01"          # 臂 H 要 220 根以上:inception 2026-10-26 前约 330 根
+BACKFILL_FROM = "2019-09-01"          # 11-05(S-719):整个永续史;此前 2025-12-01(臂 H 要 220 根以上)
 UPLOAD_GRACE_DAYS = 3                 # 日档最近 3 天 404 = 还没传,不是下架
 CONCURRENCY = 24
 TIME_BUDGET_S = 210.0
@@ -74,9 +81,9 @@ def parse_index_days(xml: bytes) -> list[str]:
     return [m.group(1) for k in _KEY_RE.findall(x) if (m := _DAY_RE.search(k))]
 
 
-def parse_klines_zip(blob: bytes) -> list[tuple[str, float, float, float, float, float]]:
-    """纯函数。klines zip → [(UTC 日期, o, h, l, c, quote_volume)]。表头行 / 读不出的行跳过。
-    列序(Binance 文档):open_time, open, high, low, close, volume, close_time, quote_volume, …"""
+def parse_klines_zip(blob: bytes) -> list[tuple[str, float, float, float, float, float, Optional[float]]]:
+    """纯函数。klines zip → [(UTC 日期, o, h, l, c, quote_volume, taker_buy_quote_volume)]。表头行 / 读不出的行跳过。
+    列序(Binance 文档):open_time, open, high, low, close, volume, close_time, quote_volume, count, taker_buy_volume, taker_buy_quote_volume, ignore"""
     with zipfile.ZipFile(io.BytesIO(blob)) as z:
         names = [n for n in z.namelist() if n.endswith(".csv")]
         if not names:
@@ -92,16 +99,17 @@ def parse_klines_zip(blob: bytes) -> list[tuple[str, float, float, float, float,
             d = datetime.fromtimestamp(t / 1000, tz=timezone.utc).date().isoformat()
             o, h, l, c = (float(v) for v in r[1:5])
             qv = float(r[7]) if len(r) > 7 and r[7] else float(r[5]) * c
+            tbqv = float(r[10]) if len(r) > 10 and r[10] not in ("", None) else None
         except (IndexError, ValueError):
             continue
         if c > 0:
-            out.append((d, o, h, l, c, qv))
+            out.append((d, o, h, l, c, qv, tbqv))
     return out
 
 
 def bar_rows(pair: str, bars: list[tuple]) -> list[dict]:
     sym = pair[:-4]
-    return [{"pair": pair, "symbol": sym, "d": d, "o": o, "h": h, "l": l, "c": c, "qv": qv} for d, o, h, l, c, qv in bars]
+    return [{"pair": pair, "symbol": sym, "d": d, "o": o, "h": h, "l": l, "c": c, "qv": qv, "tbqv": tbqv} for d, o, h, l, c, qv, tbqv in bars]
 
 
 def _month(d: str) -> str:
@@ -117,8 +125,8 @@ def plan(pairs: list[dict], coverage: dict[str, dict], today: date) -> list[tupl
     recent: list[tuple[str, str, bool]] = []
     back: list[tuple[str, str, bool]] = []
     for p in pairs:
-        if not p.get("active"):
-            continue
+        if not p.get("active") and not p.get("dead_from"):
+            continue                                                  # 既不活跃又不知道死于哪天 ⇒ 没有可补的区间
         pair = p["pair"]
         start = max(str(p.get("first_d") or BACKFILL_FROM)[:10], BACKFILL_FROM)
         end = yday.isoformat()
