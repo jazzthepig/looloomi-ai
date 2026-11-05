@@ -66,15 +66,18 @@ I1 未测=NaN 永不为0 · I3 β分离不内嵌 · I5 分布不点估计 · R63
 
 VDB 不是缓存,是**本体论的几何基底** —— 内核六对象全部向量化、全部可查询、跨空间连边:
 
-| 空间 | 维度/形态 | 状态 | 备注 |
+| 空间 | 维度/形态 | 状态(2026-11-05) | 表 / 查询 |
 |---|---|---|---|
-| Asset (CIS v2) | 27d, dense核+NaN尾 | ✅ live (pgvector) | `asset_embeddings` + kNN RPC |
-| Strategy | 30d 稀疏 | 🔨 M-WO-3 | 持久 jsonb + Python 余弦, **不进 ANN** |
-| Regime 指纹 | 12d | 📋 已算未入库 | `generate_regime_embedding` → 入 pgvector, 历史相位检索 |
-| Entity/Decision | 待定义 | 🎯 frontier | 内核的缺失层; 从 holder/flow/治理事件起步 |
-| Text/News (RAG) | 384-1536d | 📋 规划 | 独立表; 叙事→资产 连边 |
-| 时序窗口 | shapelet/窗口向量 | 📋 规划 | "当前60天像历史哪段" = 相位检索 |
-| Outcome | 结果向量 | 📋 规划 | 信号→30d结果分布, §P1 的几何形式 |
+| Asset (CIS v2) | 27d, dense 核 + NaN 尾 | ✅ live (pgvector) | `asset_embeddings` + kNN RPC |
+| Regime / 市场态 | 状态向量 | ✅ live | `market_state_vectors`(T-094 按时点补到 2019) |
+| Strategy | 每本账的回报 × 状态向量 | ✅ live(S-717) | `book_vectors` · `/internal/book-vectors`(相似 / 缩放 / 未覆盖) |
+| Entity/Decision | 季度 × 发行方(待遇 / 决策 / 结果) | ✅ live(S-722) | `entity_vectors` · `/internal/entity-vectors` |
+| 时序窗口 | 60 天 17 维形状,步长 5 | ✅ live(S-721) | `window_vectors` · `/internal/window-knn`(只描述,不进敞口) |
+| Outcome | 决策 → 7 / 30 / 90 天超额 | ✅ live(S-714) | `decision_outcomes` · `/internal/decision-outcomes` |
+| Text/News | MiniMax `embo-01`,`dim` 列标维数 | 🟡 11-05 上线,首轮撞限速 | `text_vectors` · `text_vectors_nearest` · `/internal/text-knn` |
+
+**11-05 的读法:** 七个空间都有表、有写入端、有查询口。还差的是**跨空间的边**(叙事 → 资产、窗口 → 结果)被某个决定真正用上 ——
+今天所有空间只描述、不动钱;任何一条边要进敞口,另立预注册(S-721 / S-725 的纪律)。
 
 跨空间边 = 内核边(Entity→Decision→Asset→Quality→Outcome)。终态:**任何 operator(人/agent)
 对任何对象问"像什么/谁领先/什么没覆盖",都是一次向量查询。** 这就是 OS 的 kernel 落成几何。
