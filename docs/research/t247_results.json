@@ -1,0 +1,546 @@
+{
+ "task": "T-247",
+ "prereg": "S-732",
+ "as_of": "2026-11-05",
+ "n_tickets": 770,
+ "n_symbols": 259,
+ "constants": {
+  "cost": 0.004,
+  "f": 0.01,
+  "cap": 10,
+  "disaster_atr": 4.0,
+  "curve_to": "2026-06-30",
+  "h1_end": "2022-12-31",
+  "h2": [
+   "2023-01-01",
+   "2026-06-30"
+  ]
+ },
+ "selfcheck": {
+  "n_checked": 770,
+  "entry_px_match": 770,
+  "stop_atr_match": 770,
+  "r_mismatch": 0,
+  "max_abs_dr": 0.0,
+  "no_bars": 0,
+  "reason_counts": {
+   "sma20": 519,
+   "stop": 248,
+   "time": 3
+  }
+ },
+ "step1_cap": {
+  "hold_convention": "持有根数 = 出场根 − 进场根 + 1(含进场根与出场根;与缓存 bars_held 同口径)",
+  "n_taken_A_cap10": 303,
+  "n_skipped_A_cap10": 426,
+  "n_taken_C_cap10": 296,
+  "n_skipped_C_cap10": 433,
+  "hold_A": 14.811881188118813,
+  "hold_C": 15.969594594594595,
+  "hold_ratio_C_over_A": 1.0781611323890736,
+  "cap_C": 11,
+  "cap_C_formula": "round(10 × 15.969595 / 14.811881) = 11",
+  "hold_A_median": 13,
+  "hold_C_median": 15.0
+ },
+ "selfcheck_admit_vs_nav": {
+  "mismatches": [],
+  "n_mismatch": 0
+ },
+ "selfcheck_regression_vs_t244": {
+  "A_cap10": {
+   "end": {
+    "published": 4.155,
+    "recomputed": 4.15492997850261,
+    "delta": -7.002149739054886e-05
+   },
+   "annualised": {
+    "published": 0.2599,
+    "recomputed": 0.2598659298499404,
+    "delta": -3.4070150059628546e-05
+   },
+   "mdd": {
+    "published": -0.3229,
+    "recomputed": -0.3229397854203996,
+    "delta": -3.97854203995629e-05
+   },
+   "calmar": {
+    "published": 0.805,
+    "recomputed": 0.8046884948277577,
+    "delta": -0.0003115051722423212
+   }
+  },
+  "C_cap10": {
+   "end": {
+    "published": 4.109,
+    "recomputed": 4.109097869651729,
+    "delta": 9.78696517286437e-05
+   },
+   "annualised": {
+    "published": 0.2576,
+    "recomputed": 0.2576014519064942,
+    "delta": 1.4519064941986848e-06
+   },
+   "mdd": {
+    "published": -0.3389,
+    "recomputed": -0.33890227099730796,
+    "delta": -2.2709973079848567e-06
+   },
+   "calmar": {
+    "published": 0.76,
+    "recomputed": 0.7601054166690445,
+    "delta": 0.0001054166690445113
+   }
+  }
+ },
+ "step3_checks": {
+  "J1_calmar_ge": {
+   "A": 0.8046884948277577,
+   "C_capC": 0.7867886903214896,
+   "pass": false
+  },
+  "J2_both_halves_ge": {
+   "h1": {
+    "A": 1.7137948610014762,
+    "C_capC": 1.6284841322549708
+   },
+   "h2": {
+    "A": 2.4244033361581145,
+    "C_capC": 2.7251188438715697
+   },
+   "pass": false
+  },
+  "J3_mdd_not_3pp_deeper": {
+   "A": -0.3229397854203996,
+   "C_capC": -0.3474845620776522,
+   "delta_pp": -2.454477665725263,
+   "pass": true
+  },
+  "J4_nominal_peak_le_1p5x": {
+   "A": 0.992140453158807,
+   "C_capC": 1.060767331560457,
+   "ratio": 1.0691705274017946,
+   "pass": true
+  },
+  "all_pass": false
+ },
+ "curves": {
+  "A_cap10": {
+   "cap": 10,
+   "full": {
+    "d0": "2020-04-30",
+    "d1": "2026-06-30",
+    "days": 2253,
+    "end": 4.15492997850261,
+    "annualised": 0.2598659298499404,
+    "mdd": -0.3229397854203996,
+    "mdd_peak": "2024-12-08",
+    "mdd_trough": "2025-09-25",
+    "taken": 303,
+    "skipped": 426,
+    "closed": 303,
+    "peak_gross": 0.992140453158807,
+    "calmar": 0.8046884948277577,
+    "avg_open_n": 1.8575233022636484,
+    "max_open_n": 10,
+    "n_tickets_in": 770,
+    "total_r": 369.0076158598938,
+    "total_r_taken": 184.29227315419067,
+    "n_taken_r": 303
+   },
+   "h1": {
+    "d0": "2020-04-30",
+    "d1": "2022-12-31",
+    "days": 976,
+    "end": 1.7137948610014762,
+    "annualised": 0.22361440032194868,
+    "mdd": -0.20689647107177545,
+    "mdd_peak": "2021-05-06",
+    "mdd_trough": "2021-10-27",
+    "taken": 64,
+    "skipped": 16,
+    "closed": 64,
+    "peak_gross": 0.694015134091272,
+    "calmar": 1.080803356207915,
+    "avg_open_n": 0.8842213114754098,
+    "max_open_n": 10,
+    "n_tickets_in": 770,
+    "total_r": 369.0076158598938,
+    "total_r_taken": 67.99803483494529,
+    "n_taken_r": 64
+   },
+   "h2": {
+    "d0": "2023-01-14",
+    "d1": "2026-06-30",
+    "days": 1264,
+    "end": 2.4244033361581145,
+    "annualised": 0.2918878265438376,
+    "mdd": -0.3229397854204,
+    "mdd_peak": "2024-12-08",
+    "mdd_trough": "2025-09-25",
+    "taken": 239,
+    "skipped": 410,
+    "closed": 239,
+    "peak_gross": 0.9921404531588068,
+    "calmar": 0.9038459791005953,
+    "avg_open_n": 2.6281645569620253,
+    "max_open_n": 10,
+    "n_tickets_in": 649,
+    "total_r": 299.51961253487264,
+    "total_r_taken": 116.29423831924537,
+    "n_taken_r": 239
+   }
+  },
+  "C_cap10": {
+   "cap": 10,
+   "full": {
+    "d0": "2020-04-30",
+    "d1": "2026-06-30",
+    "days": 2253,
+    "end": 4.109097869651729,
+    "annualised": 0.2576014519064942,
+    "mdd": -0.33890227099730796,
+    "mdd_peak": "2024-12-08",
+    "mdd_trough": "2025-09-25",
+    "taken": 296,
+    "skipped": 433,
+    "closed": 296,
+    "peak_gross": 0.9921404531588068,
+    "calmar": 0.7601054166690445,
+    "avg_open_n": 1.966711051930759,
+    "max_open_n": 10,
+    "n_tickets_in": 770,
+    "total_r": 455.46273227471295,
+    "total_r_taken": 182.09487365058632,
+    "n_taken_r": 296
+   },
+   "h1": {
+    "d0": "2020-04-30",
+    "d1": "2022-12-31",
+    "days": 976,
+    "end": 1.6730423780843804,
+    "annualised": 0.21263231930570026,
+    "mdd": -0.21334757141803518,
+    "mdd_peak": "2021-05-06",
+    "mdd_trough": "2021-10-27",
+    "taken": 63,
+    "skipped": 17,
+    "closed": 63,
+    "peak_gross": 0.7441600372687726,
+    "calmar": 0.9966474794740764,
+    "avg_open_n": 0.9774590163934426,
+    "max_open_n": 10,
+    "n_tickets_in": 770,
+    "total_r": 455.46273227471295,
+    "total_r_taken": 65.57226167442758,
+    "n_taken_r": 63
+   },
+   "h2": {
+    "d0": "2023-01-14",
+    "d1": "2026-06-30",
+    "days": 1264,
+    "end": 2.4560632315581907,
+    "annualised": 0.2967441869314229,
+    "mdd": -0.3389022709973081,
+    "mdd_peak": "2024-12-08",
+    "mdd_trough": "2025-09-25",
+    "taken": 233,
+    "skipped": 416,
+    "closed": 233,
+    "peak_gross": 0.9921404531588068,
+    "calmar": 0.875604008371428,
+    "avg_open_n": 2.7507911392405062,
+    "max_open_n": 10,
+    "n_tickets_in": 649,
+    "total_r": 385.0612880101267,
+    "total_r_taken": 116.52261197615874,
+    "n_taken_r": 233
+   }
+  },
+  "C_capC": {
+   "cap": 11,
+   "full": {
+    "d0": "2020-04-30",
+    "d1": "2026-06-30",
+    "days": 2253,
+    "end": 4.43781279575386,
+    "annualised": 0.27339692350401235,
+    "mdd": -0.3474845620776522,
+    "mdd_peak": "2024-12-08",
+    "mdd_trough": "2025-09-25",
+    "taken": 312,
+    "skipped": 417,
+    "closed": 312,
+    "peak_gross": 1.060767331560457,
+    "calmar": 0.7867886903214896,
+    "avg_open_n": 2.072791833111407,
+    "max_open_n": 11,
+    "n_tickets_in": 770,
+    "total_r": 455.46273227471295,
+    "total_r_taken": 194.83942779069227,
+    "n_taken_r": 312
+   },
+   "h1": {
+    "d0": "2020-04-30",
+    "d1": "2022-12-31",
+    "days": 976,
+    "end": 1.6284841322549708,
+    "annualised": 0.20043146120598765,
+    "mdd": -0.2133475714180354,
+    "mdd_peak": "2021-05-06",
+    "mdd_trough": "2021-10-27",
+    "taken": 66,
+    "skipped": 14,
+    "closed": 66,
+    "peak_gross": 0.7781401461689718,
+    "calmar": 0.9394597738975908,
+    "avg_open_n": 1.0040983606557377,
+    "max_open_n": 11,
+    "n_tickets_in": 770,
+    "total_r": 455.46273227471295,
+    "total_r_taken": 62.79076539094131,
+    "n_taken_r": 66
+   },
+   "h2": {
+    "d0": "2023-01-14",
+    "d1": "2026-06-30",
+    "days": 1264,
+    "end": 2.7251188438715697,
+    "annualised": 0.3363190571125152,
+    "mdd": -0.34748456207765244,
+    "mdd_peak": "2024-12-08",
+    "mdd_trough": "2025-09-25",
+    "taken": 246,
+    "skipped": 403,
+    "closed": 246,
+    "peak_gross": 1.0607673315604567,
+    "calmar": 0.9678676229574709,
+    "avg_open_n": 2.9193037974683542,
+    "max_open_n": 11,
+    "n_tickets_in": 649,
+    "total_r": 385.0612880101267,
+    "total_r_taken": 132.04866239975098,
+    "n_taken_r": 246
+   }
+  }
+ },
+ "step4_side": {
+  "cap_9": {
+   "cap": 9,
+   "full": {
+    "d0": "2020-04-30",
+    "d1": "2026-06-30",
+    "days": 2253,
+    "end": 3.9617612404502687,
+    "annualised": 0.2501755586753145,
+    "mdd": -0.3212203860812076,
+    "mdd_peak": "2024-12-08",
+    "mdd_trough": "2025-09-25",
+    "taken": 278,
+    "skipped": 451,
+    "closed": 278,
+    "peak_gross": 0.9247343657187456,
+    "calmar": 0.7788283979338337,
+    "avg_open_n": 1.8592987128273413,
+    "max_open_n": 9,
+    "n_tickets_in": 770,
+    "total_r": 455.46273227471295
+   }
+  },
+  "cap_13": {
+   "cap": 13,
+   "full": {
+    "d0": "2020-04-30",
+    "d1": "2026-06-30",
+    "days": 2253,
+    "end": 4.789033557508738,
+    "annualised": 0.28922534812799205,
+    "mdd": -0.3534623162041458,
+    "mdd_peak": "2024-12-08",
+    "mdd_trough": "2025-09-25",
+    "taken": 333,
+    "skipped": 396,
+    "closed": 333,
+    "peak_gross": 1.1662466537818001,
+    "calmar": 0.818263602281571,
+    "avg_open_n": 2.2547714158899246,
+    "max_open_n": 13,
+    "n_tickets_in": 770,
+    "total_r": 455.46273227471295
+   }
+  }
+ },
+ "step4_blocked": {
+  "definition": "cap_C 比 cap 10 多接下的票(cap 10 下被挡、cap_C 下进场)的 R 分布",
+  "n_newly_taken": 16,
+  "n_newly_with_r": 16,
+  "newly_total_r": 12.744554140105958,
+  "newly_mean_r": 0.7965346337566224,
+  "newly_median_r": -0.5100545472666915,
+  "newly_min_r": -1.6216571275742175,
+  "newly_max_r": 14.972429931972785,
+  "newly_total_r_ex_top1": -2.2278757918668273,
+  "newly_mean_r_ex_top1": -0.14852505279112183,
+  "newly_share_positive": 37.5,
+  "newly_share_ge_1R": 25.0,
+  "n_still_blocked_at_capC": 0,
+  "still_blocked_total_r": null,
+  "still_blocked_mean_r": null,
+  "still_blocked_share_positive": null,
+  "newly_rows": [
+   {
+    "symbol": "XTZ",
+    "signal_d": "2020-11-24",
+    "entry_d": "2020-11-25",
+    "exit_d": "2020-12-05",
+    "r": -0.8749100917431188,
+    "c_reason": "sma20",
+    "bars_held_C": 11
+   },
+   {
+    "symbol": "THETA",
+    "signal_d": "2021-10-30",
+    "entry_d": "2021-10-31",
+    "exit_d": "2021-11-13",
+    "r": -0.6108960585128,
+    "c_reason": "sma20",
+    "bars_held_C": 14
+   },
+   {
+    "symbol": "TRX",
+    "signal_d": "2021-11-15",
+    "entry_d": "2021-11-16",
+    "exit_d": "2021-11-19",
+    "r": -1.2956901332303539,
+    "c_reason": "close_stop",
+    "bars_held_C": 4
+   },
+   {
+    "symbol": "HOT",
+    "signal_d": "2023-01-17",
+    "entry_d": "2023-01-18",
+    "exit_d": "2023-02-10",
+    "r": 0.11312796208530786,
+    "c_reason": "sma20",
+    "bars_held_C": 24
+   },
+   {
+    "symbol": "NEO",
+    "signal_d": "2023-02-19",
+    "entry_d": "2023-02-20",
+    "exit_d": "2023-03-08",
+    "r": 0.5701968277663751,
+    "c_reason": "sma20",
+    "bars_held_C": 17
+   },
+   {
+    "symbol": "COTI",
+    "signal_d": "2023-04-15",
+    "entry_d": "2023-04-16",
+    "exit_d": "2023-04-22",
+    "r": -0.8700580364900083,
+    "c_reason": "sma20",
+    "bars_held_C": 7
+   },
+   {
+    "symbol": "CELO",
+    "signal_d": "2023-07-03",
+    "entry_d": "2023-07-04",
+    "exit_d": "2023-07-12",
+    "r": -1.0441521044992743,
+    "c_reason": "close_stop",
+    "bars_held_C": 9
+   },
+   {
+    "symbol": "ZEN",
+    "signal_d": "2023-10-24",
+    "entry_d": "2023-10-25",
+    "exit_d": "2023-11-21",
+    "r": 1.589048670756644,
+    "c_reason": "sma20",
+    "bars_held_C": 28
+   },
+   {
+    "symbol": "BAL",
+    "signal_d": "2023-12-04",
+    "entry_d": "2023-12-05",
+    "exit_d": "2023-12-16",
+    "r": -0.822326670910248,
+    "c_reason": "sma20",
+    "bars_held_C": 12
+   },
+   {
+    "symbol": "LRC",
+    "signal_d": "2023-12-17",
+    "entry_d": "2023-12-18",
+    "exit_d": "2024-01-04",
+    "r": -0.40921303602058295,
+    "c_reason": "sma20",
+    "bars_held_C": 18
+   },
+   {
+    "symbol": "ARPA",
+    "signal_d": "2024-01-05",
+    "entry_d": "2024-01-06",
+    "exit_d": "2024-01-21",
+    "r": -0.3550601654501216,
+    "c_reason": "sma20",
+    "bars_held_C": 16
+   },
+   {
+    "symbol": "DENT",
+    "signal_d": "2024-02-15",
+    "entry_d": "2024-02-16",
+    "exit_d": "2024-03-17",
+    "r": 3.5509593495934944,
+    "c_reason": "sma20",
+    "bars_held_C": 31
+   },
+   {
+    "symbol": "STG",
+    "signal_d": "2024-05-30",
+    "entry_d": "2024-05-31",
+    "exit_d": "2024-06-07",
+    "r": -1.6216571275742175,
+    "c_reason": "disaster",
+    "bars_held_C": 8
+   },
+   {
+    "symbol": "ALGO",
+    "signal_d": "2024-11-10",
+    "entry_d": "2024-11-11",
+    "exit_d": "2024-12-15",
+    "r": 14.972429931972785,
+    "c_reason": "sma20",
+    "bars_held_C": 35
+   },
+   {
+    "symbol": "CRV",
+    "signal_d": "2025-07-15",
+    "entry_d": "2025-07-16",
+    "exit_d": "2025-08-02",
+    "r": 1.0274040435458782,
+    "c_reason": "sma20",
+    "bars_held_C": 18
+   },
+   {
+    "symbol": "VOXEL",
+    "signal_d": "2025-09-13",
+    "entry_d": "2025-09-14",
+    "exit_d": "2025-09-16",
+    "r": -1.1746492211838016,
+    "c_reason": "close_stop",
+    "bars_held_C": 3
+   }
+  ]
+ },
+ "mechanism": {
+  "end_delta_pct": 6.808365452964826,
+  "ann_delta_pp": 1.3530993654071954,
+  "mdd_delta_pp": -2.454477665725263,
+  "calmar_delta": -0.017899804506268158,
+  "total_r_delta_pct": 23.429087286817612,
+  "cap13_calmar": 0.818263602281571,
+  "cap13_beats_A_calmar": true
+ }
+}
