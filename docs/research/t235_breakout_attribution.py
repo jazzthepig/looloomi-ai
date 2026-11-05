@@ -283,24 +283,32 @@ def analyse(tickets: list[dict], qvals: dict, label: str) -> dict:
         bot = [t["r"] for t, b in sel if b == 1]
         obs = (st.mean(top) - st.mean(bot)) if top and bot else None
         pctl = None
+        p2 = None
         null_note = ""
         if obs is not None:
             rs = [t["r"] for t, b in sel]
             labs = [b for t, b in sel]
 
             def fn(rng, rs=rs, labs=labs):
+                # 打乱**标签**:把档位重新分配给票,再算顶档−底档。
+                # (11-05 修正:旧写法只打乱下标顺序、过滤条件仍用原档位 ⇒ 每一次抽样的
+                #  a/b 集合完全相同 ⇒ 零分布零方差 ⇒ apparatus 抛 NoOpNull,分位永远是 None。)
                 perm = rng.permutation(len(labs))
-                a = [rs[i] for i in perm if labs[i] == 5]
-                b = [rs[i] for i in perm if labs[i] == 1]
+                lp = [labs[i] for i in perm]
+                a = [r for r, l in zip(rs, lp) if l == 5]
+                b = [r for r, l in zip(rs, lp) if l == 1]
                 return st.mean(a) - st.mean(b) if a and b else float("nan")
 
             try:
                 null = null_distribution(fn, n=1000, seed=235, actual=obs)
                 pctl = percentile_of(obs, null)
+                p2 = 2.0 * min(pctl, 1.0 - pctl) if pctl is not None else None
             except NoOpNull as e:
                 null_note = f"NoOpNull: {e}"
+                p2 = None
         res["halves"][hname] = {"quintiles": q_stats, "delta_r": round(obs, 4) if obs is not None else None,
                                 "null_pct": round(pctl, 4) if pctl is not None else None,
+                                "null_pct_two_sided": round(p2, 4) if p2 is not None else None,
                                 "null_note": null_note, "n_labeled": len(sel)}
     return res
 
@@ -309,10 +317,15 @@ def candidate_verdict(res_d: dict, res_d1: dict | None, on_day: bool) -> dict:
     h1, h2 = list(res_d["halves"].values())
     d1, d2 = h1["delta_r"], h2["delta_r"]
     p1, p2 = h1["null_pct"], h2["null_pct"]
+    q1, q2 = h1.get("null_pct_two_sided"), h2.get("null_pct_two_sided")
     same_sign = d1 is not None and d2 is not None and (d1 > 0) == (d2 > 0)
     mag = d1 is not None and d2 is not None and abs(d1) >= 0.3 and abs(d2) >= 0.3
     sig = p1 is not None and p2 is not None and p1 >= 0.95 and p2 >= 0.95
     core = same_sign and mag and sig
+    # 双侧读法(预注册原文只写了「分位 ≥ 0.95」;但同一条规则也允许「两半同号」的全负 ΔR,
+    #  单侧分位会把每一个负向效应机械地判成不显著)。双侧标记单独出列,不改预注册的 candidate 判定。
+    sig2 = q1 is not None and q2 is not None and q1 <= 0.05 and q2 <= 0.05
+    core2 = same_sign and mag and sig2
     d_only = False
     if core and on_day and res_d1 is not None:
         hh1, hh2 = list(res_d1["halves"].values())
@@ -324,7 +337,9 @@ def candidate_verdict(res_d: dict, res_d1: dict | None, on_day: bool) -> dict:
               and hh1["null_pct"] >= 0.95 and hh2["null_pct"] >= 0.95)
         d_only = not (s1 and m1 and g1)
     return {"same_sign": same_sign, "magnitude": mag, "signif": sig, "core": core,
-            "d_only": d_only, "candidate": core and not d_only}
+            "signif_two_sided": sig2, "core_two_sided": core2,
+            "d_only": d_only, "candidate": core and not d_only,
+            "candidate_two_sided": core2}
 
 
 # ───────────────────────────── 4. 主流程 ─────────────────────────────
@@ -453,8 +468,9 @@ def main() -> None:
         results[key] = {"name": name, "d": r_d, "d_minus_1": r_d1,
                         "n_missing": n_miss, "missing_rate": round(n_miss / len(tickets), 4),
                         "verdict": verdict}
-        print(key, "miss", n_miss, "d1", r_d["halves"][HALVES[0][0]]["delta_r"],
-              r_d["halves"][HALVES[1][0]]["delta_r"], "cand", verdict["candidate"], flush=True)
+        print(key, "miss", n_miss, "d", r_d["halves"][HALVES[0][0]]["delta_r"],
+              r_d["halves"][HALVES[1][0]]["delta_r"], "cand", verdict["candidate"],
+              "cand2", verdict["candidate_two_sided"], flush=True)
 
     payload = {
         "card": "T-235",
@@ -472,7 +488,6 @@ def main() -> None:
                     "cycle_deterioration": len(cyc), "cycle_code_refs": cyc_refs,
                     "cycle_deterioration_from": cyc_min, "cycle_deterioration_to": cyc_max,
                     "dvol_rows": len(dvol)},
-        "tickets_by_year": {},
         "quantities": results,
     }
     with open(out_js, "w") as fh:
@@ -523,12 +538,14 @@ def write_report(p: dict, out_md: Path) -> None:
                 L.append(f"| Q{q['q']} | {q['n']} | {mr} | {md} | {ht} | {ci} |")
             L.append(f"\nΔR(Q5−Q1) = **{h['delta_r'] if h['delta_r'] is not None else '—'}**,"
                      f"随机分位 = **{h['null_pct'] if h['null_pct'] is not None else '—'}**"
+                     + (f"(双侧 {h['null_pct_two_sided']})" if h.get("null_pct_two_sided") is not None else "")
                      + (f"({h['null_note']})" if h["null_note"] else "") + "\n")
         h1d = r["d_minus_1"]["halves"][HALVES[0][0]]
         h2d = r["d_minus_1"]["halves"][HALVES[1][0]]
         L.append(f"\n*d−1 口径(稳健性)*:ΔR H1 = {h1d['delta_r']}, H2 = {h2d['delta_r']};"
                  f"分位 H1 = {h1d['null_pct']}, H2 = {h2d['null_pct']}。\n")
     cands = [k for k, r in p["quantities"].items() if r["verdict"]["candidate"]]
+    cands2 = [k for k, r in p["quantities"].items() if r["verdict"].get("candidate_two_sided")]
     L.append("\n## 3. candidate 清单\n")
     if cands:
         for k in cands:
@@ -539,7 +556,36 @@ def write_report(p: dict, out_md: Path) -> None:
                      f"H2 = {h2['delta_r']}(分位 {h2['null_pct']})")
         L.append("\n**只是候选,不是结论** —— 不组合、不设阈值、不写规则。\n")
     else:
-        L.append("**无候选。**\n")
+        L.append("**无候选**(按预注册原文:两半同号 + 每半 |ΔR| ≥ 0.3 + 每半随机分位 ≥ 0.95)。\n")
+    L.append("**双侧读法(口径说明,不是新规则)。** 预注册的「分位 ≥ 0.95」是单侧口径,"
+             "而同一条规则又允许「两半同号」的全负 ΔR —— 单侧口径会把每一个负向效应机械地判成不显著"
+             "(分位 ≈ 0)。所以这里另记一个双侧标记:实际值落在零分布的两端(双侧分位 ≤ 0.05)。"
+             "**预注册的 candidate 判定不改**,双侧只作参考:\n")
+    if cands2:
+        for k in cands2:
+            r = p["quantities"][k]
+            h1 = r["d"]["halves"][HALVES[0][0]]
+            h2 = r["d"]["halves"][HALVES[1][0]]
+            L.append(f"- **{r['name']}**:ΔR H1 = {h1['delta_r']}(单侧 {h1['null_pct']} / 双侧 {h1['null_pct_two_sided']}),"
+                     f"H2 = {h2['delta_r']}(单侧 {h2['null_pct']} / 双侧 {h2['null_pct_two_sided']})")
+        L.append("\n**双侧命中也不等于候选** —— 它的方向是负的(顶档比底档差),"
+                 "且 8 个量 × 2 半共 16 次检验没有多重校正 ⇒ 任何一条都要另立预注册、换新数据重跑。\n")
+    else:
+        L.append("- 无(没有任何量在两半都通过双侧 ≤ 0.05)。\n")
+    near = []
+    for k, r in p["quantities"].items():
+        for hname, _, _ in HALVES:
+            h = r["d"]["halves"][hname]
+            if h["delta_r"] is not None and abs(h["delta_r"]) >= 0.3 and h["null_pct"] is not None \
+                    and h["null_pct"] >= 0.95:
+                near.append((r["name"], hname, h["delta_r"], h["null_pct"], h["n_labeled"]))
+    L.append("\n**最接近的格子(单项过了门槛,但凑不齐「两半」)。**\n")
+    if near:
+        for nm, hname, dr, pc, nl in near:
+            L.append(f"- {nm} · {hname}:ΔR = {dr},单侧分位 = {pc},定档 n = {nl}。"
+                     "单项(|ΔR| ≥ 0.3 且分位 ≥ 0.95)成立,但另一半不成立 ⇒ 不算 candidate。\n")
+    else:
+        L.append("- 无单项过门槛的格子。\n")
     L.append("\n## 4. 诚实段\n")
     L.append("**① 多重比较。** 8 个量 × 2 半 = 16 次检验。卡上的门槛(分位 ≥ 0.95)没有做多重校正;"
              "Bonferroni 对应 0.05/16 = **0.003**。所有量都用同一个种子 235 ⇒ 零分布跨量相关,"
@@ -551,8 +597,13 @@ def write_report(p: dict, out_md: Path) -> None:
              f"但 **volume 不一致 {dg['vol_diffs']} 行**,比值中位 {dg['vol_ratio_median']},"
              f"且 **{dg['symbols_with_vol_diff']}/{dg['symbols_total']} 个符号**受影响(其余符号逐字节相同)。"
              "结论:`ohlcv_daily.binance_hist` 的 volume 在 10-21 快照与 11-05 之间被换过定义/来源,"
-             "本卡因此只用本地快照这一套 vintage(不混用),否则量能比会被两个量纲搅坏。"
+             "本卡只用本地快照这一套 vintage(不混用)。"
              "**这是给 Seth 的工程问题:任何依赖 `ohlcv_daily.volume` 的结论都要先确认量纲。**\n")
+    L.append("**②′ 更正:上一版把「①量能比那张表」标成作废是过度谨慎。** "
+             "去掉 DB 混用重跑后,①量能比(以及其余全部本地量:⑤⑥⑦ 与 ②③④ 的档位)"
+             "在 d 与 d−1 两个口径下 **767 张票的档位逐位相同**,ΔR 也逐位相同 ⇒ "
+             "上一版的 DB 混用实际上没有落到任何一张票的可观测量上,那张表**不作废**。"
+             "只有 ⑧⓪ 变了(见 ④)。\n")
     L.append("**③ 票集本身的缺口。** "
              f"①`r_tickets_paper` 读到 {u['r_tickets_paper_rows']} 行 ⇒ 前向纸面票 0 张:"
              "纸面书的 `r_tickets_state.last_d` 已经走到 2026-11-03,但 `r_money_daily` 的 16 天 nav 恒为 1、ret 恒为 0"
@@ -561,10 +612,22 @@ def write_report(p: dict, out_md: Path) -> None:
              "所以卡上规定的第一半(2020-03→2022-12)只剩 2020+2021 两年的票,H1 与 H2 的样本量严重不等;"
              "③3 张 2024-11 的票在快照时仍未出场(r 为 null),已剔除;"
              "④文件里另有 241 张空头票(带 exit_reason:sma20/stop),属另一套策略,未混入。\n")
-    L.append(f"**④ ⓪ 相位的口径与卡上写的不一样。** 卡上写 code_ref = `cycle_vector v1.1%`,"
-             f"库里现在只有 `{s['cycle_code_refs']}`(11-04 重建过),`cycle_vector v1.1%` 0 行;"
-             f"deterioration 非空的区间是 {s['cycle_deterioration_from']} → {s['cycle_deterioration_to']}"
-             "(卡上写 2021-02 起),所以 2022-01 之前的票这一列是 NA。\n")
+    L.append(f"**④ ⓪ 相位用的是 v1.1。** `cycle_vector_daily` 现在只有 `{s['cycle_code_refs']}`,"
+             f"deterioration 非空 {s['cycle_deterioration']} 行,"
+             f"区间 {s['cycle_deterioration_from']} → {s['cycle_deterioration_to']};"
+             "脚本按行取(库里只有一个 code_ref,不过滤也只有一个版本),所以本轮 ⑧ 用的就是 **v1.1**"
+             "(上一轮用的是 v1,起点 2022-01-25)。v1.1 把起点前推到 2021-01-29 ⇒ "
+             "⑧ 的缺失率从 10.4% 降到 3.8%,767 张票里 218 张重新定档,H2 的 ΔR 从 0.5317 变成 0.4592。"
+             "库里不再有 `cycle_vector v1` 的行 ⇒ 想要 v1 口径得另跑重建。\n")
+    L.append("**⑧ 零分布的接线曾经是坏的(本次修正,重要)。** 第一次跑出来的每一个格子的 `null_pct` 都是 "
+             "`None`,`null_note` 写着 `NoOpNull: 零分布没有方差` —— 原因不是数据,是代码:"
+             "旧的打乱函数只打乱了下标顺序,而过滤条件仍然按**原档位**取子集 ⇒ "
+             "每次抽样的顶档/底档集合完全相同 ⇒ ΔR 每次都等于实际值 ⇒ 零分布零方差。"
+             "后果:预注册里的「随机分位 ≥ 0.95」这一条**从来没有被真正检验过**,"
+             "「无候选」有相当一部分是这道坏门造成的,不是统计结论。"
+             "修正 = 按预注册原文「随机打乱标签」把档位重新分配给票再算 ΔR,零分布仍只用 "
+             "`src/data/evaluation/apparatus.py`。**本次的 % 是第一次有效读数。**"
+             "为免混淆,预注册的 candidate 判定一字未改,双侧读法单独出列(见 §3)。\n")
     L.append("**⑤ 主动买盘的两处口径偏离。** ①卡上写「d 日 taker 买量占比」,s695 用的是 d−7..d−1 的均值;"
              "本卡按卡上写的取 d 日单日值(买量占比 = ratio/(1+ratio),是 s695 的 ratio 的单调变换 ⇒ 分档完全相同);"
              "②`deriv_metrics_daily` 的 taker_ratio_mean 是 Binance metrics 的日均,入库有滞后,"
