@@ -510,7 +510,7 @@ def merge_tagged() -> None:
 
 def write_report(subsplit: dict, by_size: list[dict],
                  size_real: dict, rep_3k_total_drag_from_t152: float,
-                 xcheck: dict) -> None:
+                 xcheck: dict, tag: str = '') -> None:
     # ── 表 1:规模 × 5 档拖累矩阵 ──────────────────────────────────────
     size_rows = []
     for r in by_size:
@@ -699,7 +699,7 @@ def main() -> None:
 
     sys.stdout.reconfigure(line_buffering=True)
 
-    sizes = [float(s) for s in args.sizes.split(',')]
+    sizes = [float(s) for s in args.sizes.split(',') if s.strip()]
     t_start = time.time()
 
     ohlc = t137.fetch_ohlc(t137.SYMS, START, END)
@@ -745,11 +745,21 @@ def main() -> None:
         print(f"     {time.time()-ts:.0f}s | 总拖累 = {r['total_drag_pp']:+.2f} pp/年,"
               f"理想={r['anns_pp']['N0']:.2f}% 回放={r['anns_pp']['N5']:.2f}%")
 
-    three_k = next(r for r in by_size if r['account'] == 3_000.0)
+    # 中间结果先落盘:后面任何一步崩了都不至于把这一规模的数丢掉
+    # (11-05 实测:一个只跑 630 的 job 在 3k 复现检查处 StopIteration,
+    #  结果 JSON 没写出来,512s 的算力白费)
+    dump_json(subsplit, by_size, {}, xcheck, tag=args.tag)
+
+    # 3,000 复现检查:只有本 job 的规模表里真的有 3,000 时才做
+    # (单规模 job 不含 3,000 —— 不能因此崩掉)
     rep_3k_total_drag_from_t152 = -9.46
-    ok_3k = abs(three_k['total_drag_pp'] - rep_3k_total_drag_from_t152) < 0.5
-    print(f"\n  3k 复现 T-152:差异 {three_k['total_drag_pp'] - rep_3k_total_drag_from_t152:+.2f} pp"
-          f" {'OK' if ok_3k else 'WARN:差过大'}")
+    three_k = next((r for r in by_size if r['account'] == 3_000.0), None)
+    if three_k is not None:
+        ok_3k = abs(three_k['total_drag_pp'] - rep_3k_total_drag_from_t152) < 0.5
+        print(f"\n  3k 复现 T-152:差异 {three_k['total_drag_pp'] - rep_3k_total_drag_from_t152:+.2f} pp"
+              f" {'OK' if ok_3k else 'WARN:差过大'}")
+    else:
+        print('\n  (本 job 的规模表里没有 3,000,跳过 3k 复现检查)')
 
     # ── 任务 ③:真钱账户规模那一行 —— **真跑**而不是在 1k/3k 之间插 ──────
     # 插值会在整数化的台阶上取到中间值,而整数化恰恰是非线性的;真钱规模就在台阶上,
