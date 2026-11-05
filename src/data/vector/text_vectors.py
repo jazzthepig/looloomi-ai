@@ -27,8 +27,10 @@ TODO_VIEW = "text_vectors_todo"
 NEAREST_RPC = "text_vectors_nearest"
 LOOP_NAME = "_text_vectors_loop"
 MODEL = (os.environ.get("TEXT_EMBED_MODEL") or "embo-01").strip()
-BATCH = 64
-MAX_PER_RUN = 1024
+BATCH = 16
+MAX_PER_RUN = 512
+PAUSE_S = 4.0                # 11-05 15:44 第一轮:base_resp 1002「rate limit exceeded(RPM)」—— 每批之间停一下
+RETRY_WAITS = (20.0, 60.0)   # 撞到 1002 再等这么久重试;还不行 ⇒ refused,下一轮接着嵌
 TIMEOUT_S = 60.0
 TEXT_MAX = 600
 
@@ -70,8 +72,24 @@ def vec_literal(v: list[float]) -> str:
     return "[" + ",".join(f"{x:.7g}" for x in v) + "]"
 
 
-async def embed(texts: list[str], kind: str = "db") -> tuple[Optional[list[list[float]]], Optional[str]]:
-    """MiniMax 嵌入。kind = db(入库)/ query(查询)。"""
+def rate_limited(err: Optional[str]) -> bool:
+    return bool(err) and ("1002" in err or "rate limit" in err.lower() or "HTTP 429" in err)
+
+
+async def embed(texts: list[str], kind: str = "db", waits: tuple[float, ...] = RETRY_WAITS) -> tuple[Optional[list[list[float]]], Optional[str]]:
+    """MiniMax 嵌入,撞到频率限制按 `waits` 重试。"""
+    import asyncio
+    vecs, err = await _embed_once(texts, kind)
+    for w in waits:
+        if not rate_limited(err):
+            break
+        await asyncio.sleep(w)
+        vecs, err = await _embed_once(texts, kind)
+    return vecs, err
+
+
+async def _embed_once(texts: list[str], kind: str = "db") -> tuple[Optional[list[list[float]]], Optional[str]]:
+    """MiniMax 嵌入一次。kind = db(入库)/ query(查询)。"""
     import httpx
 
     from src.data.narrative import llm_narrator as llm
@@ -118,6 +136,9 @@ async def run_once(max_items: int = MAX_PER_RUN) -> dict[str, Any]:
         if not w:
             return {"ok": False, "written": written, "why": f"写 {TABLE} 失败:{(getattr(w, 'why', '') or '')[:200]}"}
         written += len(rows)
+        if i + BATCH < len(items):
+            import asyncio
+            await asyncio.sleep(PAUSE_S)
     return {"ok": True, "written": written, "dim": dim, "model": MODEL, "why": f"嵌了 {written} 条({MODEL},{dim} 维)"}
 
 

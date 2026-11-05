@@ -54,6 +54,7 @@ def test_run_once_refuses_without_partial_writes(monkeypatch):
     monkeypatch.setattr(header, "_read_all", read_all)
     monkeypatch.setattr(store, "supabase_upsert_table", upsert)
     monkeypatch.setattr(tv, "embed", embed)
+    monkeypatch.setattr(tv, "PAUSE_S", 0)
     r = asyncio.run(tv.run_once())
     assert r["refused"] and r["written"] == tv.BATCH and "401" in r["why"] and len(written) == tv.BATCH
     assert written[0]["embedding"] == "[0.1,0.2]" and written[0]["dim"] == 2 and written[0]["model"] == tv.MODEL
@@ -64,3 +65,23 @@ def test_wiring():
     assert '"/internal/text-knn"' in (ROOT / "src/api/routers/admin.py").read_text(encoding="utf-8")
     mig = (ROOT / "migrations/2026-11-05_text_vectors.sql").read_text(encoding="utf-8")
     assert all(c in mig for c in tv.WRITES_COLUMNS[tv.TABLE]) and tv.TODO_VIEW in mig and tv.NEAREST_RPC in mig
+
+
+def test_embed_retries_on_rate_limit_then_gives_up(monkeypatch):
+    calls = []
+
+    async def once(texts, kind="db"):
+        calls.append(kind)
+        return (None, "base_resp 1002: rate limit exceeded(RPM)") if len(calls) < 3 else ([[1.0]], None)
+
+    monkeypatch.setattr(tv, "_embed_once", once)
+    v, e = asyncio.run(tv.embed(["a"], waits=(0, 0)))
+    assert e is None and v == [[1.0]] and len(calls) == 3
+    calls.clear()
+    monkeypatch.setattr(tv, "_embed_once", lambda texts, kind="db": _err())
+    v, e = asyncio.run(tv.embed(["a"], waits=(0,)))
+    assert v is None and tv.rate_limited(e) and not tv.rate_limited("HTTP 401: bad key")
+
+
+async def _err():
+    return None, "base_resp 1002: rate limit exceeded(RPM)"
