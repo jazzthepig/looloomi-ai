@@ -22,6 +22,7 @@
 | in_review | T-229 | lane-c | S-710 回放:DVOL(BTC 隐含波动率指数)一年分位 ≥ 0.80 时把 ① 降到 0.5(< 0.60 恢复),2022-03 → 2026-10,按 S-692 三条判据 + 随机降仓对照 —— 只算一次、不扫参数 | 报告 docs/research/T-229_dvol_multiplier.md(预注册口径在前,结果在后)+ 脚本 docs/research/t229_dvol.py + t229_results.json;卡 notes 写 (a)(b)(c) 三个数与判;scenarios/lane-c-T-229.json;in_review,推 lane-c/T-229。 | ③ 的减仓输入只有价格趋势;加密隐含波动率作为减仓规则从没回放过(S-685 只测了 TradFi 的压力读数)。 |  |
 | in_review | T-232 | lane-c | ⓪ 标记线的前向基率:『广度≈0 + 离 200 日线 0~10% + 波动分位地板』之后 28 天,BTC 碰线的概率比无条件高多少 —— 给复盘里主观的情景权重一个量出来的底 | 报告 docs/research/T-232_zero_line_base_rate.md(预注册口径在前)+ 脚本 + 结果 json;卡 notes 写碰线概率(条件 / 无条件 / 随机分位)与簇个数;in_review,推 lane-c/T-232。 | 情景权重 10-28 / 11-01 / 11-04 三次都是主观数;无法回答『这个状态组合历史上之后发生了什么』。 |  |
 | in_review | T-234 | lane-c | S-713 回放:⓪ 周期向量的 turning 相位在 2020 起每段 ≥ 30% 回撤里亮不亮、把 ① 降到 0.5 有没有削掉回撤 —— 规则与判据逐字照 S-713,只算一次 | 报告 docs/research/T-234_cycle_turning.md(预注册口径在前)+ docs/research/t234_cycle.py + t234_results.json;卡 notes 写事件段数、(a)–(d) 的数与判;scenarios/lane-c-T-234.json;in_review,推 lane-c/T-234。 | ⓪ 层此前没有向量也没有判据;③ 的减仓输入只有价格趋势站得住。 |  |
+| in_review | T-239 | lane-c | ⓪ 归因(S-720):2023-06→10 与 2025-01→04 两段 turning 是哪些分量在推、2021-11 / 2025-10 两次崩塌前后各分量怎么走 —— 用表里的 z 按时点分解;然后按 S-720 预注册的 v2 规则(杠杆类分量取 30 日变化的负号,不取水平)重打相位,判据逐字照 S-713 (a)–(d) | 报告 docs/research/T-239_cycle_attribution.md(预注册在前;归因三张表 + v2 的 (a)–(d))+ docs/research/t239_cycle_attribution.py + t239_results.json;卡 notes 写两段 turning 的前三分量、三段回撤的分量走势一句话、v2 的 (a)–(d) 数与判;in_review,推 lane-c/T-239。 | ⓪ 层只有一次 ❌,没有归因;不知道 v1 的灯是被哪个分量点亮的。 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 | claimed | T-094 | seth | 状态层往前补一个周期 + 矢量库按时点:state_daily 2019 起、FNG 2018 起;market_state_vectors 改扩张窗口 z、13 个空维补或删 | S-570 / T-093 的情景格子在 2019–2022 多一轮牛熊;S-521 类的匹配不再读到未来。 | state_daily 2023-01 起(一个周期);FNG 2021-06 起;market_state_vectors 24 维里 13 维恒空、全史一次 z(看未来)。 |  |
@@ -239,4 +240,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 11 · claimed 7 · blocked 5 · in_review 20 · done 190 · dropped 3
+open 11 · claimed 7 · blocked 5 · in_review 21 · done 190 · dropped 3
