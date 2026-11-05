@@ -39,6 +39,7 @@
     "deriv_metrics_daily",
     "deriv_vol_daily",
     "dingge_paper_nav",
+    "entity_vectors",
     "equity_fundamentals_q",
     "events",
     "execution_intents",
@@ -253,6 +254,14 @@
       "opened_today",
       "realized_pnl",
       "unrealized_pnl"
+    ],
+    "entity_vectors": [
+      "code_ref",
+      "entity_id",
+      "n_days",
+      "n_decisions",
+      "quarter",
+      "vector"
     ],
     "events": [
       "id",

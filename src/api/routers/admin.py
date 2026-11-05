@@ -381,6 +381,14 @@ async def decision_outcomes_read(x_internal_token: str = Header(None), kind: str
     return {"ok": True, **(await summary()), "rows": rows}
 
 
+@router.get("/internal/entity-vectors")
+async def entity_vectors_read(x_internal_token: str = Header(None), entity: str = "", quarter: str = ""):
+    """11-05:Entity 空间 —— 每个发行方每季一个稀疏向量(待遇均值 / 决策计数与金额 / 决策后 30 天超额均值)。"""
+    require_internal_token(x_internal_token)
+    from src.data.entity.entity_vectors import read
+    return {"ok": True, "rows": await read(entity, quarter)}
+
+
 @router.get("/internal/window-knn")
 async def window_knn_read(x_internal_token: str = Header(None), d: str = ""):
     """11-05:最近 60 天的 BTC 路径像历史哪段 —— 近邻日期、它们之后 30 天、三档频率(描述,不是建议)。"""
