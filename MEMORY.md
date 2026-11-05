@@ -15,7 +15,7 @@
 - **幸存者偏差 = 25.1pp/年**(S-111),是最大效应的 8 倍;`SETTLING` 是免费死亡样本。**准入 ADV>~$15M**(S-112)。
 - **`N_eff` 连同「约束哪本 book」引用**(S-115),是**窗口读数非常数**(S-113)。
 - **分散只能来自别的资产类**(S-114):加密内 ρ̄ **0.441** vs 跨 TradFi **0.104**。**纯加密只剩 ①+③。**
-- **① 产品 = `core_cap_daily`(24 名市值加权,SPINE 第 7 段)**,所有 book 的基准。真钱 = T25(HL 一账户;资本=最近快照;Seth 停 `scripts/seth_halt.sh`)。
+- **① 产品 = `core_cap_daily`(24 名市值加权,SPINE 第 7 段)**,所有 book 的基准。真钱 = T25(HL 一账户;Seth 停 `scripts/seth_halt.sh`)。
 
 ## 🧭 ONTOLOGY CORE — never evict (full `HIGH_DIM_ONTOLOGY.md` + `ARCHITECTURE.md`)
 - 市场真实状态高维;全部工作 = **保结构的降维**;VDB 是几何基底。最深对象是 **Entity/Decision**,CIS/价格是波前过后的**反射**;**edge = lag**。
@@ -30,16 +30,16 @@
 - **大额对消出的小数字比大数字危险**(S-103);**先判定假说是「连续关系」还是「稀有事件」再选检验**(S-108);**采样顺序自己控制时,先查该群体基准率 vs 总体**(S-112)。
 
 ## 环境陷阱
-- **监控分层按「频率」不按「资产数」**:日线@687=42MB/年 · 小时线 1,096MB/年(要窄)。
 - FUSE sandbox:git 写命令残留 `.git/index.lock` → **所有 git 走 Mac 侧**。沙箱无任意出网;yfinance 已死。
 - Supabase 在 **ap-southeast-2**;Railway → fapi.binance.com **按部署随机 451** ⇒ 账本只读库(S-607)。
-- **RLS 开启后匿名读全封** ⇒ 回填脚本需 service_role,沙箱跑不了。**凭证只能对签发它的服务器验证,不能靠解码**(伪造 JWT 全本地检查皆过)。
+- **RLS 开启后匿名读全封** ⇒ 回填脚本需 service_role,沙箱跑不了。**凭证只能对签发它的服务器验证,不能靠解码**。
 
 ## 数据法则(位置与陷阱,不记行数)
 - **`signal_outcomes` 与 `signal_journal` 是同一测量的两个世代** ⇒ 读 `signal_outcomes_unified`,单读任一表静默丢一半历史。
 - 决策链:`market_state_vectors`→`similar_market_states()`→`strategy_response`(`sample_grade='none'` = 一等信息)。
 - pillar_O 是**异常探测器**;持续性 L/S 是误用。`cis_scores` 无市场数据列。
 - **`ohlcv_daily`(eodhd)close 是总回报复权的**;公司股数读 `world50_mcap_weekly.shares`,**绝不**用市值 ÷ close 推(股息 / 分拆会变成「回购」,S-668 更正)。
+- **`binance_hist` = 现货,`binance_um_hist` = 永续;永续策略(R-v2)读永续 —— 同一规则换序列 R 差 47%**(S-718)。
 
 ## 已验证(引台账,不重推)
 - S-77/S-80:v5 双分数成立,**O 是离散度支柱、F 是收益锚**;**F_IC +0.197 且 12/12 年为正**。
