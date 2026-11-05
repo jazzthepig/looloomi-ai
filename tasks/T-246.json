@@ -1,0 +1,28 @@
+{
+  "id": "T-246",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-05",
+  "title": "R-v2 的宇宙能不能写成一条按时点的规则(S-731):在全部 coin 永续(含死币,perp_bv_daily)上,「上市满 365 天 且 30 日均成交额 ≥ 2,000 万美元」—— 对照现行的 257 名面板宇宙(今天的幸存者名单)与无门槛全宇宙;原因 = 薄盘口的新合约上的突破多半是做出来的",
+  "source": "S-730 / T-238 v2:全部 coin 永续上 R-v2 是 960 张 / 0.32R,2026-08 后扩出来的 123 张合计 −24.9R、10-19 → 11-03 的 8 张全亏(新上的小永续);现行宇宙 = binance_hist 面板 ∩ coin 永续(257 名)是一份**今天的名单**,不是规则(S-684:幸存者偏差)。MEMORY:准入 ADV > ~$15M(S-112)。Jazz:机械交易是做市商的提款机 —— 薄盘口最容易被做出突破。数据:perp_bv_daily(o/h/l/c/qv,2019-12 起,含死币)、perp_bv_pairs(first_d / dead_from / kind)。票生成器复用 lane-b 的 docs/research/t238_rv2_um.py(宇宙开关)或 s677 生成器。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-246.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读。预注册(S-731 原文)抄进报告开头再算,只算一次。① 三个宇宙,同一条 R-v2 规则(S-610 进场、majors 闸门 S-627、2.5 ATR、SMA20 / 120 根、0.4% 来回、cap 10、f = 1%)、同一份 perp_bv_daily:U0 = 全部 coin 永续(kind='coin' 或 kind 空且 dead_from 有值),无额外门槛;U1 = 现行 257 名(binance_hist 面板 ∩ coin 永续,+1000PEPE);**U2 = 开票日 d 当天:上市满 365 天(d − first_d ≥ 365)且 30 日均 qv ≥ 2,000 万美元**(都只用 ≤ d 的数)。② 每个宇宙报:票数、总 R、每票 R、胜率、钱曲线年化 / 盯市 MDD / Calmar / 名义峰值;两半 2020-03 → 2022-12 / 2023-01 → 2026-10;2026-08-08 之后单独一段;按开票时上市年数分档(< 1 / 1–2 / 2–4 / ≥ 4 年)的每票 R。③ 判(S-731,全过 ✅「U2 可以替代 U1」):U2 的 Calmar ≥ U1 的 90%;两半的总 R 都 > 0;2026-08-08 之后一段总 R ≥ 0;U2 的票里开票时已下架(dead_from 有值)的合约照常计入(这是 U2 相对 U1 的意义)。④ 只报:U0 相对 U2 多出来的票的每票 R(= 门槛挡掉的那部分值多少);2,000 万换成 1,000 万 / 5,000 万、365 天换成 180 / 730 天各一列(不判)。⑤ 诚实:U1 是今天的名单(含幸存者偏差),U2 是规则 —— U2 比 U1 差一点是预期的;门槛 2,000 万与 365 天是我按 S-112 定的,没有扫。纪律:不改代码、不做 DDL、不入库;零分布(如需)只用 apparatus.py;翻页带 order=(大表按 symbol=in.(…) 分片、每页 1000 行);长脚本 nohup 后台、下一轮收;交付附 docs/research/scenarios/lane-c-T-246.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-246_rv2_pit_universe.md(预注册在前)+ docs/research/t246_rv2_pit_universe.py + t246_results.json;卡 notes 写三个宇宙的票数 / 总 R / Calmar / 两半 / 08-08 后,以及判;in_review,推 lane-c/T-246。"
+  },
+  "prior_value": "R-v2 的宇宙一直是一份名单;从没量过一条按时点的准入规则能不能接替它。",
+  "notes": "",
+  "verified": null
+}
