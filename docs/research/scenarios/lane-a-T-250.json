@@ -1,0 +1,17 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {"id": "T-250-1", "scenario": "T-250 ④ HL 已实现费率套息(S-733 口径,盲复算)",
+     "statement": "carry_hl_daily 的 carry_b 臂 NAV 在 2026-12-31 时 > 1.005",
+     "variable": "state:carry_b", "op": "gt", "lo": 1.005, "prob": 0.7, "horizon_d": "2026-12-31"},
+    {"id": "T-250-2", "scenario": "T-250 ④ HL 已实现费率套息(S-733 口径,盲复算)",
+     "statement": "carry_hl_daily 的 carry_b 臂 NAV 在 2026-12-31 时 > 1.02",
+     "variable": "state:carry_b", "op": "gt", "lo": 1.02, "prob": 0.45, "horizon_d": "2026-12-31"},
+    {"id": "T-250-3", "scenario": "T-250 ④ HL 已实现费率套息(S-733 口径,盲复算)",
+     "statement": "carry_hl_daily 的 carry_a 臂(常开)NAV 在 2026-12-31 时 > 1.0",
+     "variable": "state:carry_a", "op": "gt", "lo": 1.0, "prob": 0.45, "horizon_d": "2026-12-31"},
+    {"id": "T-250-4", "scenario": "T-250 ④ HL 已实现费率套息(S-733 口径,盲复算)",
+     "statement": "BTC 永续 8 小时资金费 30 日均值在 2026-12-01 仍为正",
+     "variable": "state:funding_btc_30d", "op": "gt", "lo": 0, "prob": 0.68, "horizon_d": "2026-12-01"}
+  ]
+}
