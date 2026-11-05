@@ -105,3 +105,16 @@ def test_wiring():
     from src.data.accounting.combine import PUBLIC
     b = [x for x in BOOKS if x.id == "carry_hl"]
     assert b and b[0].layer == "④" and b[0].table == ch.TABLE and b[0].arm == "carry_b" and "carry_hl" in PUBLIC
+
+
+def test_spot_arm_uses_only_names_with_hl_spot_and_runs_rule_b():
+    assert set(ch.HL_SPOT_NAMES) <= set(__import__("src.data.signals.core_cap", fromlist=["x"]).panel_universe())
+    assert "carry_b_spot" in ch.ARMS and len(ch.HL_SPOT_NAMES) == 10 and "ADA" not in ch.HL_SPOT_NAMES
+    d0 = ch.INCEPTION - dt.timedelta(days=ch.WARMUP_DAYS)
+    days, F = ch.matrix(_rows(("BTC",), d0, ch.WARMUP_DAYS + 3, lambda c, i: 0.0002), ("BTC",), d0, ch.INCEPTION + dt.timedelta(days=2))
+    p = ch.path(days, F, "carry_b_spot")
+    assert p[1]["n_on"] == 1 and abs(p[1]["ret"] - (0.0002 - ch.COST)) < 1e-12, "carry_b_spot 走 B 的规则"
+    rows = _rows(("BTC",), d0, ch.WARMUP_DAYS + 10, lambda c, i: 0.0002 if d0 + dt.timedelta(i) <= ch.INCEPTION else -0.0005)
+    days, F = ch.matrix(rows, ("BTC",), d0, ch.INCEPTION + dt.timedelta(days=9))
+    q = {r["d"]: r for r in ch.path(days, F, "carry_b_spot")}
+    assert q["2026-11-09"]["n_on"] == 0, "carry_b_spot 也每周一按过去 7 天换"

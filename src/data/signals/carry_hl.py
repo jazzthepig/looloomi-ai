@@ -5,6 +5,7 @@
     名单    ① 面板 24 名里 HL 有永续费率的(当日 ≥ 20 个小时档才算有)
     臂      carry_a  常开                                     —— ④ 的基准线(什么都不判的套息拿多少)
             carry_b  每周一(UTC)看过去 7 天日费率均值 > 0 才开(至少 5 天有数),否则空仓 —— 这是 S-733 判 ✅ 的那条
+            carry_b_spot  同 carry_b,只在 HL 有现货代币的 10 名上(lane-a T-250 用 spotMeta 列的;现货腿与永续腿同场馆,真能做的那一档)
     收益    当日 = 在场名字的当日费率之和(空方收正费率)÷ 当日有费率的名字数(等权、不在场的份额闲置)
     成本    每次开 / 关:现货 taker 4bp + 永续 taker 3.5bp(按该名字的名义);A 只在起点付一次
     口径    **按名义本金**。资本口径 = 名义 ÷ (1 + 保证金率);基差盈亏不记(S-707 同)
@@ -25,9 +26,11 @@ import numpy as np
 TABLE = "carry_hl_daily"
 WRITES_TABLES = (TABLE,)
 WRITES_COLUMNS = {TABLE: ("d", "arm", "ret", "nav", "n_names", "n_on", "switches", "inception", "code_ref")}
-CODE_REF = "carry_hl v1 (11-05, S-733)"
+CODE_REF = "carry_hl v1.1 (11-05, S-733;+ carry_b_spot)"
 LOOP_NAME = "_carry_hl_loop"
-ARMS = ("carry_a", "carry_b")
+ARMS = ("carry_a", "carry_b", "carry_b_spot")
+#: ① 24 名里 HL 现货有对应代币的(lane-a T-250,HL info spotMeta,11-05):UBTC / UETH / USOL / BNB0 / XRP1 / UDOGE / UAVAX / LINK0 / TRX0 / AAVE0
+HL_SPOT_NAMES = ("BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "AVAX", "LINK", "TRX", "AAVE")
 INCEPTION = dt.date(2026, 11, 5)
 WARMUP_DAYS = 21
 COST = 0.0004 + 0.00035
@@ -60,7 +63,7 @@ def rule_b(F: np.ndarray, i: int) -> np.ndarray:
 
 
 def path(days: list[dt.date], F: np.ndarray, arm: str, inception: dt.date = INCEPTION) -> list[dict]:
-    """纯函数。从起点起逐日记账:起点那天收盘建仓(成本记在第一天前向收益上),NAV 在起点 = 1。"""
+    """纯函数。从起点起逐日记账:起点那天收盘建仓(成本记在第一天前向收益上),NAV 在起点 = 1。carry_b_spot 由调用方传子集列。"""
     avail = ~np.isnan(F)
     Fz = np.nan_to_num(F)
     k0 = days.index(inception)
@@ -88,7 +91,7 @@ def path(days: list[dt.date], F: np.ndarray, arm: str, inception: dt.date = INCE
         nav *= 1.0 + r
         out.append({"d": days[i].isoformat(), "arm": arm, "ret": round(r, 8), "nav": round(nav, 8), "n_names": n,
                     "n_on": int((held & avail[i]).sum()), "switches": switches})
-        if arm == "carry_b" and days[i].weekday() == 6:   # 周日收盘决定 ⇒ 周一生效(= 周一看过去 7 天)
+        if arm != "carry_a" and days[i].weekday() == 6:   # 周日收盘决定 ⇒ 周一生效(= 周一看过去 7 天)
             pending = rule_b(F, i + 1)
     return out
 
@@ -110,7 +113,9 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     if have_last < MIN_COVERAGE * len(names):
         return {"ok": False, "refused": True, "status": "refused",
                 "why": f"{through} 只有 {have_last}/{len(names)} 名有完整的已实现费率(hl_funding_hourly 还在回填或断了)"}
-    out = [r | {"inception": INCEPTION.isoformat(), "code_ref": CODE_REF} for arm in ARMS for r in path(days, F, arm)]
+    spot = [j for j, n in enumerate(names) if n in HL_SPOT_NAMES]
+    cols = {"carry_a": slice(None), "carry_b": slice(None), "carry_b_spot": spot}
+    out = [r | {"inception": INCEPTION.isoformat(), "code_ref": CODE_REF} for arm in ARMS for r in path(days, F[:, cols[arm]], arm)]
     w = await supabase_upsert_table(TABLE, out, on_conflict="d,arm")
     if not w:
         return {"ok": False, "why": f"写 {TABLE} 失败:{(getattr(w, 'why', '') or '')[:200]}"}
