@@ -344,10 +344,17 @@ async def weekly_letter_build(body: dict, x_internal_token: str = Header(None)):
 
 
 @router.get("/internal/weekly-letter")
-async def weekly_letter_latest(x_internal_token: str = Header(None)):
+async def weekly_letter_latest(x_internal_token: str = Header(None), edition: str = ""):
+    """最近一封。edition=public ⇒ 只回社群版 markdown(Jazz 11-05:周信发到他的社群;数字与内部版相同,只换叫法)。"""
     require_internal_token(x_internal_token)
+    from src.data.ops.weekly_letter import public_edition
     from src.data.style.header import _read_all
     rows = await _read_all("weekly_letters", {"select": "week_end,markdown,data,note,created_at", "order": "week_end.desc", "limit": "1"})
+    if edition == "public":
+        if not rows:
+            return {"ok": True, "week_end": None, "markdown": None}
+        r = rows[0]
+        return {"ok": True, "week_end": r["week_end"], "markdown": (r.get("data") or {}).get("markdown_public") or public_edition(r["markdown"])}
     return {"ok": True, "letter": rows[0] if rows else None}
 
 

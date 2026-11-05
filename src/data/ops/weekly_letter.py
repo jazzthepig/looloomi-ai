@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import re
 from typing import Any, Optional
 
 TABLE = "weekly_letters"
@@ -192,6 +193,40 @@ def compose(week_end: str, live: dict, panel_ret: Optional[float], decisions: li
     return "\n".join(L)
 
 
+#: 11-05(Jazz:周信发到他的社群)—— 社群版只换叫法、去掉内部编号与表名,数字一个不改。
+_PUBLIC_AUTHORS = (
+    (re.compile(r"seth:exposure-knn"), "近邻臂(机械)"),
+    (re.compile(r"seth:exposure"), "基率臂(机械)"),
+    (re.compile(r"\bai:[A-Za-z0-9_.\-]+"), "AI 判断臂"),
+    (re.compile(r"\bseth[:\-][a-z\-]+"), "研究团队"),
+    (re.compile(r"\blane-([abc])\b"), lambda m: f"研究组 {m.group(1).upper()}"),
+    (re.compile(r"\bjazz\b"), "Jazz"),
+)
+_PUBLIC_TERMS = (
+    ("## 1 · 真钱账", "## 1 · 实盘账户"), ("真钱净值", "实盘净值"), ("③ 每日决定", "每日决定"),
+    ("⓪ 周期向量", "周期向量"), ("② 待遇倾斜前向账", "小股东待遇倾斜(前向记录)"), ("搬家分位", "状态变化分位"),
+    ("处于 turning", "处于转向相"), ("· turning", "· 转向相"), ("· normal", "· 常态相"), ("X1V", "趋势规则"), ("T25", "实盘组合"), ("R-v2", "交易层"),
+    ("## 6 · 书本与层", "## 6 · 其他前向记录"), ("| thin |", "| 样本少 |"), ("perp_delisting", "永续下线"), ("perp_listing", "永续上线"), ("delisting", "现货下币"), ("listing", "现货上币"),
+)
+
+
+def public_edition(md: str) -> str:
+    """纯函数。周信 → 社群版:作者换成人话、命题去掉内部编号、层级记号与内部代号换掉、「读不到的段」只说有缺。数字不动。"""
+    out = []
+    for line in md.split("\n"):
+        if line.startswith("*读不到的段:"):
+            out.append("*本周有部分数据没有取到,相关段落按「没有行」写出,没有估算。*")
+            continue
+        line = re.sub(r"`[^`]+`\(p = ([0-9.]+)\)", lambda m: f"(事前概率 {float(m.group(1)):.0%})", line)
+        for pat, rep in _PUBLIC_AUTHORS:
+            line = pat.sub(rep, line)
+        for a, b in _PUBLIC_TERMS:
+            line = line.replace(a, b)
+        line = re.sub(r"[⓪①②③④]\s?", "", line) if not line.startswith("*") else line
+        out.append(line)
+    return "\n".join(out)
+
+
 async def build(week_end: str, graveyard: Optional[list[str]] = None, note: str = "") -> dict[str, Any]:
     from src.api.store import supabase_upsert_table
     from src.data.style.header import _read_all
@@ -230,6 +265,8 @@ async def build(week_end: str, graveyard: Optional[list[str]] = None, note: str 
     md = compose(week_end, live, panel_ret, decisions, card, {"counts": counts, "named": named}, graveyard or [], note, layers)
     if unreadable:
         md += "\n\n*读不到的段:" + "、".join(unreadable) + "*"
-    data = {"live": live, "panel_ret": panel_ret, "decisions": len(decisions), "scorecard": card, "events": counts, "unreadable": unreadable}
+    data = {"live": live, "panel_ret": panel_ret, "decisions": len(decisions), "scorecard": card, "events": counts, "unreadable": unreadable,
+            "markdown_public": public_edition(md)}
     w = await supabase_upsert_table(TABLE, [{"week_end": week_end, "markdown": md, "data": data, "note": note}], on_conflict="week_end")
-    return {"ok": bool(w), "week_end": week_end, "markdown": md, "data": data, "why": None if w else f"写 {TABLE} 失败"}
+    return {"ok": bool(w), "week_end": week_end, "markdown": md, "markdown_public": data["markdown_public"], "data": data,
+            "why": None if w else f"写 {TABLE} 失败"}

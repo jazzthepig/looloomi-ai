@@ -65,3 +65,34 @@ def test_layers_section_reports_phase_tilt_and_outcomes_without_inventing():
     assert "| buyback | 6 | +2.00% | 67% |  |" in L and "本周新结:buyback COIN 2026-09-01 → 30 天" in L
     md = wl.compose("2026-11-08", {"ok": False, "why": "x"}, None, [], {}, {}, [], layers=wl.layers_section(cycle, tilt, outcomes, "2026-11-02", "2026-11-08"))
     assert "## 6 · 书本与层" in md and md.index("## 6 · 书本与层") < md.index(wl.COMPLIANCE)
+
+
+def test_public_edition_keeps_numbers_drops_internals():
+    """11-05(Jazz:周信发社群):社群版数字与内部版逐个相同;作者换人话、命题无内部编号、无表名、无层级代号、合规。"""
+    live = {"ok": True, "d0": "2026-11-02", "d1": "2026-11-08", "equity0": 630.0, "equity1": 640.0, "ret": 0.016, "days": 7, "flows": False}
+    decisions = [{"d": "2026-11-02", "rule_exposure": 0.0, "probs": {"down": 0.22, "flat": 0.45, "up": 0.33}, "bucket": "all", "n_bucket": 3334,
+                  "flag": None, "inputs": {"probs_knn": {"down": 0.3, "flat": 0.4, "up": 0.3}}}]
+    card = {"settled": {"seth:weekly": {"n": 2, "hits": 1, "hit_rate": 0.5, "mean_brier": 0.09,
+                                        "items": [{"id": "E53", "statement": "BTC in band", "prob": 0.7, "outcome": True, "observed": 80000}]},
+                        "ai:MiniMax-M3": {"n": 3, "hits": 2, "hit_rate": 2 / 3, "mean_brier": 0.2, "items": []}},
+            "pending": {"seth:exposure": 3, "seth:exposure-knn": 3, "lane-b": 1}}
+    md = wl.compose("2026-11-08", live, 0.01, decisions, card, {"counts": {"perp_listing": 2, "listing": 5}, "named": []},
+                    ["④ 套息 ❌:24 名等权资金费 ≈ 5%/yr,低于 8%"],
+                    layers=wl.layers_section([{"d": "2026-11-03", "deterioration": -0.6, "shift_pct": 0.8, "phase": "turning"}], [], [],
+                                             "2026-11-02", "2026-11-08"))
+    md += "\n\n*读不到的段:cycle_vector_daily、treatment_tilt_daily*"
+    pub = wl.public_edition(md)
+    for n in ("+1.60%", "+1.00%", "30%/40%/30%", "22%/45%/33%", "0.090", "50%", "3334"):
+        assert n in md and n in pub, n
+    for gone in ("seth:", "ai:", "lane-", "`E53`", "cycle_vector_daily", "treatment_tilt_daily", "perp_listing", "turning", "⓪", "③", "④", "真钱"):
+        assert gone not in pub, gone
+    assert "研究团队 | 2 | 50%" in pub and "AI 判断臂 | 3 | 67%" in pub and "基率臂(机械) 3 条" in pub and "近邻臂(机械) 3 条" in pub
+    assert "研究组 B 1 条" in pub and "(事前概率 70%)" in pub and "本周有部分数据没有取到" in pub and wl.COMPLIANCE in pub
+    assert not re.search(r"\b(buy|sell|accumulate|avoid|reduce)\b", pub, re.I)
+    assert wl.public_edition(pub) == pub, "幂等"
+
+
+def test_public_edition_is_served_and_stored():
+    src = (ROOT / "src/api/routers/admin.py").read_text(encoding="utf-8")
+    assert 'edition == "public"' in src and "public_edition" in src
+    assert '"markdown_public": public_edition(md)' in (ROOT / "src/data/ops/weekly_letter.py").read_text(encoding="utf-8")
