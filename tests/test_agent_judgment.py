@@ -117,3 +117,13 @@ def test_wiring():
     mig = (ROOT / "migrations/2026-11-05_agent_judgment_daily.sql").read_text(encoding="utf-8")
     for col in aj.WRITES_COLUMNS[aj.TABLE]:
         assert col in mig, col
+
+
+def test_llm_base_url_is_normalised_for_minimax_only():
+    """11-05:第一次留下的原因是 HTTP 302(Railway 里是 http://api.minimax.io,没 https、没 /v1)。只修 MiniMax 公网域名。"""
+    from src.data.narrative.llm_narrator import normalize_base as n
+    assert n("http://api.minimax.io") == "https://api.minimax.io/v1"
+    assert n(" https://api.minimax.io/v1/ \n") == "https://api.minimax.io/v1"
+    assert n("api.minimaxi.chat") == "https://api.minimaxi.chat/v1"
+    assert n("http://192.168.1.5:1234/v1") == "http://192.168.1.5:1234/v1", "局域网 LM Studio 不动"
+    assert n("https://api.openai.com/v1") == "https://api.openai.com/v1" and n("") == ""

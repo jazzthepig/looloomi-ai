@@ -34,7 +34,20 @@ _logger = logging.getLogger(__name__)
 
 # env — narrative-specific first, then the shared LLM_* already documented in CLAUDE.md
 #: 11-03:Railway 里粘贴的 key 带了换行,httpx 报 Illegal header value —— 值一律 strip();URL 去尾斜杠。
-_BASE  = (os.environ.get("NARRATIVE_LLM_BASE_URL") or os.environ.get("LLM_BASE_URL") or "").strip().rstrip("/")
+def normalize_base(u: str) -> str:
+    """11-05:`_agent_judgment_loop` 第一次留下原因就是「HTTP 302 … alb」—— Railway 里填的是 `http://api.minimax.io`(没 https、没 /v1),
+    POST 被负载均衡 302 到 https,httpx 不跟。只对 MiniMax 的公网域名补 https 与 /v1;局域网 / 本机(LM Studio)原样不动。"""
+    u = (u or "").strip().rstrip("/")
+    m = re.match(r"^(?:https?://)?(api\.minimax(?:i)?\.(?:io|chat))(/.*)?$", u, re.IGNORECASE)
+    if not m:
+        return u
+    path = (m.group(2) or "").rstrip("/")
+    if not path.startswith("/v1"):
+        path = "/v1"
+    return f"https://{m.group(1).lower()}{path}"
+
+
+_BASE  = normalize_base(os.environ.get("NARRATIVE_LLM_BASE_URL") or os.environ.get("LLM_BASE_URL") or "")
 _KEY   = (os.environ.get("NARRATIVE_LLM_API_KEY") or os.environ.get("LLM_API_KEY") or "").strip()
 _MODEL = (os.environ.get("NARRATIVE_LLM_MODEL") or os.environ.get("LLM_MODEL") or "MiniMax-Text-01").strip()
 _TIMEOUT = float(os.environ.get("NARRATIVE_LLM_TIMEOUT", "45"))
