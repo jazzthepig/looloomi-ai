@@ -18,6 +18,19 @@ from src.data.execution.fill_log import (BUY, CANCELLED, EXPIRED, FILLED, MAKER,
                                          Outcome)
 
 MAX_SPOT_DECIMALS = 8
+#: T-157(lane-a,Jazz 11-05「ok」):单笔 / 日换手上限是**绝对美元**(3,000U 试跑时定的 2,000 / 6,000),账户一大就把复利掐断
+#: (100k 上单笔上限一项 −5.6 pp/年)。改成随记账净值放大、**永远不比原来的绝对值更紧**:小账户行为一模一样。
+#: 比例照试跑时的标定:2,000 / 3,000 = 2/3、6,000 / 3,000 = 2。`EXECUTOR_MAX_NAV_USD` 是授权上限,不在这里放大。
+ORDER_FRAC_OF_NAV = 2.0 / 3.0
+TURNOVER_FRAC_OF_NAV = 2.0
+
+
+def scale_limits(limits: Any, nav_book: float) -> Any:
+    """纯函数。按记账净值放大单笔与日换手上限;只放大,不收紧。"""
+    nav = max(0.0, float(nav_book or 0.0))
+    limits.max_order_usd = max(float(limits.max_order_usd), ORDER_FRAC_OF_NAV * nav)
+    limits.max_daily_turnover_usd = max(float(limits.max_daily_turnover_usd), TURNOVER_FRAC_OF_NAV * nav)
+    return limits
 #: IOC 在限价内一档都吃不到时 HL 返回的错误(这是市场结果 = expired,不是我们的错)
 _NO_MATCH = "could not immediately match"
 
@@ -88,6 +101,7 @@ def plan_host_orders(plan: dict, balances: dict, quotes: dict, now_ts: float, na
     limits = ex.Limits(**{k: v for k, v in (plan.get("limits") or {}).items() if k in known})
     limits.halted = bool(halted)
     st = book_state(balances, quotes, nav_cap, limits.min_notional_usd)
+    limits = scale_limits(limits, st["nav_book"])
     prices = {s: (q["mid"], now_ts) for s, q in quotes.items() if q.get("mid")}
     p = ex.plan_orders(plan.get("targets") or {}, st["holdings_usd"], st["cash_eff"], prices, now_ts, limits)
     sized, refused = size_orders(p.orders, quotes)

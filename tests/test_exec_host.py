@@ -467,3 +467,15 @@ def test_code_sha_reads_git_files_without_running_git(tmp_path):
     (g / "packed-refs").write_text("# pack-refs\n5da2bfcaaaaa refs/heads/main\n")
     assert code_sha(tmp_path) == "5da2bfca"
     assert code_sha(tmp_path / "nope") is None
+
+
+def test_order_and_turnover_caps_scale_with_book_but_never_tighten():
+    """T-157(Jazz 11-05):单笔 / 日换手上限随记账净值放大;小账户与原来的绝对值一样。"""
+    from src.data.execution import executor as ex
+    from src.exec_host import core as hc
+    small = hc.scale_limits(ex.Limits(), 630.0)
+    assert small.max_order_usd == 2_000.0 and small.max_daily_turnover_usd == 6_000.0, "小账户行为不变"
+    big = hc.scale_limits(ex.Limits(), 100_000.0)
+    assert abs(big.max_order_usd - 100_000.0 * 2 / 3) < 1e-6 and big.max_daily_turnover_usd == 200_000.0
+    assert hc.scale_limits(ex.Limits(), 3_000.0).max_order_usd == 2_000.0, "3,000U 试跑的标定点上两者相等"
+    assert hc.scale_limits(ex.Limits(), -5).max_order_usd == 2_000.0
