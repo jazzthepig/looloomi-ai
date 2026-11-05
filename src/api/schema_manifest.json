@@ -16,6 +16,7 @@
     "beta_plus_daily",
     "book_style_exposure_daily",
     "book_vectors",
+    "carry_hl_daily",
     "causal_paper_nav",
     "cg_coin_map",
     "cg_coin_mcap_daily",
@@ -63,6 +64,7 @@
     "fusion_paper_state",
     "github_commits_weekly",
     "hl_book_daily",
+    "hl_funding_hourly",
     "hl_liq_map_hourly",
     "holder_concentration_history",
     "interpretation_validation_runs",
@@ -183,6 +185,17 @@
       "start",
       "status",
       "vector"
+    ],
+    "carry_hl_daily": [
+      "arm",
+      "code_ref",
+      "d",
+      "inception",
+      "n_names",
+      "n_on",
+      "nav",
+      "ret",
+      "switches"
     ],
     "causal_paper_nav": [
       "cost",
@@ -333,6 +346,12 @@
       "nav",
       "ret",
       "rule"
+    ],
+    "hl_funding_hourly": [
+      "coin",
+      "premium",
+      "rate",
+      "t"
     ],
     "issuer_decisions": [
       "code_ref",

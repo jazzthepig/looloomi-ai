@@ -2557,6 +2557,54 @@ async def _start_treatment_tilt_loop():
     print("[TREAT-TILT] ✅ treatment tilt forward book scheduled (hourly)")
 
 
+async def _hl_funding_hourly_loop():
+    """HL 已实现小时资金费率(S-733,`src/data/market/hl_funding_hourly.py`):每小时一轮,从各名的 last_t 往后翻页;回填 2023-05 起,每轮最多 400 页。"""
+    await _asyncio.sleep(_boot_delay(12300))
+    while True:
+        try:
+            from src.data.market.hl_funding_hourly import run_once as _hf_run
+            r = await _hf_run()
+            await _iteration_result("_hl_funding_hourly_loop", {**r, "ok": bool(r.get("ok")), "why": r.get("why")})
+            await _beat("_hl_funding_hourly_loop", ok=bool(r.get("ok")),
+                        detail={"written": r.get("written"), "pages": r.get("pages"), "behind": r.get("behind")},
+                        error=None if r.get("ok") else str(r.get("why"))[:200])
+        except Exception as _e:
+            print(f"[HL-FUNDING] ⚠️  pass FAILED: {_e}")
+            await _beat("_hl_funding_hourly_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_hl_funding_hourly_loop", _e)
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_hl_funding_hourly_loop():
+    _asyncio.create_task(_hl_funding_hourly_loop())
+    print("[HL-FUNDING] ✅ HL realized hourly funding collector scheduled (hourly)")
+
+
+async def _carry_hl_loop():
+    """④ 资金费套息纸面前向账(S-733,`src/data/signals/carry_hl.py`):每小时一次,从起点整条重算、整条 upsert;费率没回填到昨天 ⇒ refused。"""
+    await _asyncio.sleep(_boot_delay(12600))
+    while True:
+        try:
+            from src.data.signals.carry_hl import run_once as _carry_run
+            r = await _carry_run()
+            await _iteration_result("_carry_hl_loop", {**r, "ok": bool(r.get("ok")), "refused": bool(r.get("refused")), "why": r.get("why")})
+            await _beat("_carry_hl_loop", ok=bool(r.get("ok")) and not r.get("refused"), refused=bool(r.get("refused")),
+                        detail={"written": r.get("written"), "nav": r.get("nav")},
+                        error=None if r.get("ok") else str(r.get("why"))[:200])
+        except Exception as _e:
+            print(f"[CARRY-HL] ⚠️  pass FAILED: {_e}")
+            await _beat("_carry_hl_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_carry_hl_loop", _e)
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_carry_hl_loop():
+    _asyncio.create_task(_carry_hl_loop())
+    print("[CARRY-HL] ✅ ④ HL funding carry paper book scheduled (hourly)")
+
+
 async def _issuer_decisions_loop():
     """发行方 / 决策层(`src/data/entity/issuers.py`,11-04):每 6 小时同步登记表、从基本面 / 事件 / 待遇表派生决策流。"""
     await _asyncio.sleep(_boot_delay(10200))

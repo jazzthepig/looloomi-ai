@@ -50,6 +50,7 @@ PUBLIC = {
     "treatment_tilt": ("Holder-treatment tilt", "Overweights issuers that pass protocol revenue to holders; underweights those that keep it."),
     "hl_mech": ("Four-coin rule-based sizing", "Four liquid coins held spot, position size set by rule."),
     "hl_jev": ("Four-coin discretionary sizing", "The same four coins, with discretionary size adjustments."),
+    "carry_hl": ("Funding carry (hedged)", "Each core name held spot with an equal short perpetual, collecting the funding that leveraged longs pay; on only while the past week's funding was positive."),
     "causal_paper": ("Funding-rate long/short", "Long/short on funding-rate and positioning structure."),
     "scalable_book": ("Multi-strategy long/short", "A long/short book built to scale."),
     "combined_book": ("Combined long/short", "Several long/short sleeves combined."),

@@ -92,6 +92,11 @@ BOOKS: tuple[Book, ...] = (
          "hl_book_daily", "hl", arm="MECH_tom", benchmark="arm:H0_hold"),
     Book("hl_jev", "①+③", "HL 4 币 Jev 仓位(JEV_tom)", "同上,Jev 参与调整",
          "hl_book_daily", "hl", arm="JEV_tom", benchmark="arm:H0_hold"),
+    # S-733(11-05 ✅ ⇒ 开纸面臂):HL 现货多 + 永续空收已实现资金费;B = 过去 7 天费率为正才开、周一换。按名义记;起点 11-05。
+    Book("carry_hl", "④", "资金费套息(HL 现货多 + 永续空;过去 7 天费率为正才开,周一换)",
+         "永续多头为杠杆付资金费,空方按名义收取;与 BTC 未来 30 天收益不相关(S-733 (c))",
+         "carry_hl_daily", "arms", arm="carry_b", accounting="own",
+         caveat="按名义本金记;资本口径 ÷ (1 + 保证金率)。2025 年以来年化只有 2–6%(S-733 逐期)"),
     Book("causal_paper", "④", "因果多空(资金费率)", "资金费率与持仓结构的多空",
          "causal_paper_nav", "plain", nav_from_returns=True, stamp="valuation_next_day"),
     Book("scalable_book", "④", "可扩展多空组合", "多策略多空",
