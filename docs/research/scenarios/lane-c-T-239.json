@@ -41,6 +41,36 @@
       "lo": 0,
       "prob": 0.25,
       "horizon_d": "2027-03-15"
+    },
+    {
+      "id": "T-239-5",
+      "scenario": "T-239 补充件 · ⓪ 相位机制分解(shift 到底在量什么)",
+      "statement": "从 2026-11-05 起第一个 ≥ 20% 的 BTC 回撤段里,⓪ v1 相位(cycle_vector_daily 的 phase=turning)亮的天数为 0 天(机制读数:崩塌是水位塌、不是搬家;两段真实崩塌的 shift_pct 天花板 0.7298 / 0.7449 都卡在 0.75 门槛之下)",
+      "variable": "manual",
+      "op": "lt",
+      "lo": 1,
+      "prob": 0.75,
+      "horizon_d": "2027-03-15"
+    },
+    {
+      "id": "T-239-6",
+      "scenario": "T-239 补充件 · ⓪ 相位机制分解(shift 到底在量什么)",
+      "statement": "同一段(第一个 ≥ 20% 的 BTC 回撤)里,恶化分 deterioration ≤ −0.5 的天数 ≥ 25 天(历史两段真实崩塌分别是 45 天 / 44 天)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 24,
+      "prob": 0.7,
+      "horizon_d": "2027-03-15"
+    },
+    {
+      "id": "T-239-7",
+      "scenario": "T-239 补充件 · ⓪ 相位机制分解(shift 到底在量什么)",
+      "statement": "同一段里,taker_buy 是恶化分最大贡献者的日子占比 > 50%(崩塌段读数:2021-11→2022-06 是 41/45、2025-10→2026-02 是 40/44)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0.5,
+      "prob": 0.65,
+      "horizon_d": "2027-03-15"
     }
   ]
 }
