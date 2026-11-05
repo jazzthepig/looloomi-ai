@@ -32,7 +32,7 @@ CODE_REF = "agent_judgment v1 (11-05, S-725)"
 LOOP_NAME = "_agent_judgment_loop"
 PREFIX = "A"
 TEMPERATURE = 0.2
-MAX_TOKENS = 4000           # 11-05:推理模型先想再答,1,400 不够它把 JSON 写完
+MAX_TOKENS = 12000          # 11-05:推理模型先想再答;4,000 时 10:15 那轮整段都是没写完的思考(剥掉后为空)
 NEWS_HOURS = 48
 NEWS_MAX = 12
 _BANNED_ZH = re.compile(r"(买入|卖出|加仓|减仓|建仓|清仓|抄底|止盈|止损|目标价|满仓|梭哈|建议.{0,4}(买|卖|持有))")
@@ -144,7 +144,8 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     if not got:
         # 模型不通 / 答非所问 ≠「没事可做」:记 refused + 原因进 loop_attempt(skipped 会被记成 ok,原因就看不见了)
         why = (llm.LAST_ERROR or {}).get("why") or ("模型没回" if not text else
-                                                   "回的不是三档概率 JSON:" + re.sub(r"\s+", " ", llm._THINK.sub("", text))[-160:])
+                                                   ("思考段没写完就用完了 token(max_tokens 不够)" if "<think" in text.lower() and "</think>" not in text.lower()
+                                                    else "回的不是三档概率 JSON:" + re.sub(r"\s+", " ", llm._THINK.sub("", text))[-160:]))
         return {"ok": False, "refused": True, "status": "refused", "why": f"{d}:{why}"}
     sub = await submit(scenario_entries(d, float(close), got["probs"], prefix=PREFIX), author, now)
     ids = list(sub.get("ids") or [])
