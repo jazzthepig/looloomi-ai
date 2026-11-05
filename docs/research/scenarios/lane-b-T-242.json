@@ -1,0 +1,49 @@
+{
+  "task": "T-242",
+  "lane": "lane-b",
+  "created": "2026-11-05",
+  "as_of": "2026-11-05",
+  "note": "机器可核命题;概率是主观先验(写于结果算出之前),到期按 Brier 结算。命题只描述可查的事实,不含收益承诺。",
+  "propositions": [
+    {
+      "id": "t242-p1",
+      "statement": "在 2020-01-01 → 2026-10-31 的全样本上,flush(拥挤多头被洗)事件后 30 天的相对篮子的超额收益中位 > 0。",
+      "probability": 0.45,
+      "resolution": "机械判定:读 docs/research/t242_results.json → results.flush.30.full.excess.median,取值 > 0 记 1,≤ 0 记 0(文件缺失或该键为 null 记 0)。",
+      "resolves_by": "2026-12-05",
+      "basis": "先验:行为型均值回归在永续上从未量过;Tom 的「强制平仓是非信息性流量 ⇒ 之后回补」给了方向,但 §5c 要求同时报尾巴(负偏度)。同类证据(R94 方向性 beta、R82 制度门控)在我们的历史上都不成立,所以不给高于 0.5 的先验。"
+    },
+    {
+      "id": "t242-p2",
+      "statement": "在 2020-01-01 → 2026-10-31 的全样本上,squeeze(拥挤空头被挤)事件后 30 天的超额收益中位 > 0。",
+      "probability": 0.50,
+      "resolution": "机械判定:读 docs/research/t242_results.json → results.squeeze.30.full.excess.median,取值 > 0 记 1,≤ 0 记 0(缺失或 null 记 0)。",
+      "resolves_by": "2026-12-05",
+      "basis": "先验:比 flush 略高一点——空头被挤是供给冲击(逆着拥挤方向),回补的驱动来自空头回补而非新多头进场,基率上更可能;但同样从未量过,且逼空常常是「涨完了才逼空」(此时前向是负的)。"
+    },
+    {
+      "id": "t242-p3",
+      "statement": "两类事件里至少一类,其事件日期的前 5 个日期占该类事件总数的比例 > 10%(事件不是均匀铺开的)。",
+      "probability": 0.55,
+      "resolution": "机械判定:读 docs/research/t242_results.json → concentration.flush.top5_share 与 concentration.squeeze.top5_share,取两者最大值 > 0.10 记 1,否则记 0(缺失记 0)。",
+      "resolves_by": "2026-12-05",
+      "basis": "先验:拥挤平仓天然成簇(2020-03、2021-05、2022-05、2024-01 那类去杠杆日会同时打到很多合约),所以聚集度大概率 > 10%;给 0.55 是因为去重窗口只有 10 天、单日触发合约数有限。"
+    },
+    {
+      "id": "t242-p4",
+      "statement": "至少有一类(flush 或 squeeze)的 30 天超额最差 10% 均值为负(收益分布左偏、尾部亏损存在)。",
+      "probability": 0.80,
+      "resolution": "机械判定:读 docs/research/t242_results.json → results.flush.30.full.excess.worst10_mean 与 results.squeeze.30.full.excess.worst10_mean,取两者最小值 < 0 记 1,否则记 0(缺失记 0)。",
+      "resolves_by": "2026-12-05",
+      "basis": "先验:高、几乎肯定成立——§5c 明说均值回归是负偏度,而且样本里有「崩盘当天被扫」的事件(那是趋势延续的起点,不是回补);这条是本次登记里最该被记住的尾巴。"
+    },
+    {
+      "id": "t242-p5",
+      "statement": "flush 与 squeeze 的事件数都不少于 30 例(样本量足以让「随机日期对照」的零分布有区分度)。",
+      "probability": 0.60,
+      "resolution": "机械判定:读 docs/research/t242_results.json → events.flush.n 与 events.squeeze.n,两者都 ≥ 30 记 1,否则记 0(缺失记 0)。",
+      "resolves_by": "2026-12-05",
+      "basis": "先验:913 个永续、6.5 年日线,三个条件同时命中(资金费极端分位 + 2ATR 反向 + 3 倍量)每年几十例的量级是合理预期;但 2020-01 前没有资金费数据、且「前 180 天不打分」会砍掉每个合约的头半年,所以给 0.60。"
+    }
+  ]
+}

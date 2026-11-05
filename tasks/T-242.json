@@ -1,0 +1,28 @@
+{
+  "id": "T-242",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-05",
+  "title": "行为型 setup 登记表第一批(S-726):拥挤多头被洗(crowding flush)与拥挤空头被挤(squeeze)—— 2020 起全部 Binance 永续上的每一次,事件后 1 / 7 / 30 天相对时点等权永续篮的收益分布、偏度与最差一成;只报基率,不写交易规则",
+  "source": "TRADER_TOM_DOCTRINE §6:「recurring-setup 登记表:每个 setup 一个写明的假设 + 在**全部**历史实例上量的基率;优先因是行为的:拥挤平仓 / 逼空、投降」—— 从没量过。§5c:均值回归是负偏度,登记时必须同时报尾巴(skew ≠ ruin)。Jazz 11-04/05:灵活交易、Tom 原则、不做机械海龟。数据(lane 可读):perp_bv_daily(o/h/l/c/qv/tbqv,2019-12 起 593 个有历史的合约,含死币;宇宙 perp_bv_pairs.kind='coin' 或 kind 为空且 dead_from 有值)· v_funding_daily(binance_perp 日均资金费,2020-01 起,259 个符号;11-05 起 lane 可读)· deriv_metrics_daily(OI / 头部账户多空比,2022-H2 起才密,只作副口径)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-242.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读。预注册(S-726 原文,照抄进报告开头)再算,只算一次,不扫参数。① 事件定义(写死):**flush** = 合约 s 在 d 日:(a) 前 7 日均资金费年化(日均费率 × 3 × 365)在该合约自己扩张历史的 ≥ 90 分位(拥挤多头,只用 ≤ d−1 的历史,前 180 天不打分);(b) d 日收盘收益 ≤ −2 × ATR14 / 收盘(ATR 用 ≤ d−1);(c) d 日 qv ≥ 3 × 前 20 日均 qv。**squeeze** = 镜像:资金费 ≤ 10 分位、收益 ≥ +2 × ATR14 / 收盘、qv ≥ 3 × 均量。同一合约 10 天内只计第一次。② 前向:d+1 开盘 → d+1/d+7/d+30 收盘的收益,减同期时点等权篮(当天有价且已上市 ≥ 30 天的全部 coin 合约,篮大小逐事件报;用 apparatus.long_return 逐位自检 200 个样本);做空方向不算,只报分布。③ 报(每类):n(按年)、超额均值 / 中位 / 胜率、偏度、最差 10% 均值、最好 10% 均值;随机日期对照(同一合约、随机 d、保持年份分布,1,000 次,种子 726,只用 apparatus.null_distribution)的分位;两半 2020-01 → 2022-12 / 2023-01 → 2026-10;信号日挪一天再判一次(S-665)。④ 副口径(只报):deriv_metrics_daily 有 OI 的事件,d 日 OI 变化 ≤ −10%(真的被平)与否分开报。⑤ 「登记」标记(不是规则):30 天超额中位 > 0、两半同号、随机分位 ≥ 0.95、挪一天不翻号 ⇒ 记为 setup 候选;同时写清尾巴(最差 10%)。⑥ 诚实:两类 × 三期限 × 两半 = 12 次比较;事件可能聚在少数崩盘日(按日期报聚集度:前 5 个日期占事件数的比例)。纪律:不改代码、不做 DDL、不入库;零分布 / 盈亏只用 src/data/evaluation/apparatus.py;翻页带 order=;探针脚本改同一个文件再跑;长脚本 nohup 后台、下一轮收;步数过半先落文件;交付附 docs/research/scenarios/lane-b-T-242.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-242_crowding_setups.md(预注册在前;两类 × 三期限 × 两半的表 + 聚集度 + 尾巴)+ docs/research/t242_crowding_setups.py + t242_results.json;卡 notes 写 n、30 天超额中位 / 分位 / 两半 / 挪一天、最差 10%,以及登记与否;in_review,推 lane-b/T-242。"
+  },
+  "prior_value": "Tom 的「fade the crowd」在我们这里只以 MVRV 投降买(V2,台账 5c)出现过一次;永续上的拥挤平仓 / 逼空从没量过基率。",
+  "notes": "11-05 首轮(lane-b):**没交出数字**,交的是「预注册 + 可执行的一整条 + 报告骨架 + 数据缓存」。已落地:① 预注册(S-726 原文)照抄在 docs/research/T-242_crowding_setups.md 开头;② 脚本 docs/research/t242_crowding_setups.py(事件定义照卡写死,零分布/盈亏只用 src/data/evaluation/apparatus.py,没有自写零分布);③ 数据已抓全落缓存 /Volumes/CometCloudAI/cometcloud-local/research/t242/cache/(perp_bv_daily 668,222 行 = T-238 同查询同串缓存、2026-11-05T03:09Z;v_funding_daily 349,014 行;perp_bv_pairs 913 行;deriv_metrics_daily 在抓);④ 场景文件 docs/research/scenarios/lane-b-T-242.json(5 条,写于结果算出之前,到期按 Brier 结算)。**卡住**:11-05 15:4x 跑 docs/research/t242_run.py(等资金费→分析→抓 deriv→再分析)退出码 1,结果文件没落地;本轮上下文到顶(107k)读不到 run.log,没有再跑。**下一轮第一件事**:tail /Volumes/CometCloudAI/cometcloud-local/research/t242/run.log 拿 traceback(别重跑整条管线),修好后 python3 docs/research/t242_crowding_setups.py 单跑一遍(约 4-6 分钟),数字填进报告 §4,再按 acceptance ⑤ 写「登记与否」,status 改 in_review。**可疑点(改过但没验证)**:percentile 的 O(n²) 矩阵(每合约 2500² float32)、dpos 改成 ns 整数键、null_stats 的候选偏移改成元素偏移、load_cached 的 csv.gz 旁路缓存。**没有先写数字再补口径**:结果文件不存在,报告 §4 留空。",
+  "verified": null
+}
