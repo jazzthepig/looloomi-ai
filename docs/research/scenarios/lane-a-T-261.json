@@ -1,0 +1,56 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T-261-1",
+      "scenario": "T-261 S-737 状态地图复算",
+      "statement": "2026-12-01 时 BTC(ohlcv_daily 收盘)高于 2026-11-04 的收盘 80466.5(S5 状态当天水平)",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 80466.5,
+      "prob": 0.52,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-261-2",
+      "scenario": "T-261 S-737 状态地图复算",
+      "statement": "2026-12-01 时 BTC(ohlcv_daily 收盘)低于 2026-11-04 的收盘 80466.5",
+      "variable": "close:BTC",
+      "op": "lt",
+      "hi": 80466.5,
+      "prob": 0.45,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-261-3",
+      "scenario": "T-261 S-737 状态地图复算",
+      "statement": "2026-12-01 时 BTC 30 天 90% 看跌的真实报价占现货 ≥ 0.92%(本卡的 DVOL 平值 BS 估算水平;T-257 抄录的真实价是 0.89%)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0.92,
+      "prob": 0.5,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-261-4",
+      "scenario": "T-261 S-737 状态地图复算",
+      "statement": "2026-12-01 时,S-737 冻结规格(k-means 种子 737、13 特征、k=6、训练期 2021-03→2023-12)给 2026-11-04 打的标仍与 S5 中心最近(今天在 S5)",
+      "variable": "manual",
+      "op": "between",
+      "lo": 1,
+      "hi": 1,
+      "prob": 0.6,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-261-5",
+      "scenario": "T-261 S-737 状态地图复算",
+      "statement": "2026-12-01 时 BTC 30 天 90% 看跌的真实报价占现货 ≥ 1.59%(DVOL + 9 个波动点的保守定价)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 1.59,
+      "prob": 0.28,
+      "horizon_d": "2026-12-01"
+    }
+  ]
+}
