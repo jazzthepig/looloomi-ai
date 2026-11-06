@@ -120,3 +120,9 @@ def test_fallback_key_is_used_on_quota_hit(monkeypatch):
     assert llm.quota_hit(429, None) and llm.quota_hit(200, {"base_resp": {"status_code": 1002}})
     assert llm.quota_hit(200, {"base_resp": {"status_code": 1008}}) and not llm.quota_hit(200, {"base_resp": {"status_code": 0}})
     assert not llm.quota_hit(401, None)
+
+
+def test_rpm_limit_cools_down_minutes_not_hours():
+    from src.data.vector import text_vectors as tv
+    assert tv.cooldown_for("base_resp 1002: rate limit exceeded(RPM)") == tv.RPM_COOLDOWN_S <= 30 * 60
+    assert tv.cooldown_for("base_resp 1008: insufficient balance") == tv.COOLDOWN_S

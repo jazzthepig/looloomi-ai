@@ -29,7 +29,8 @@ LOOP_NAME = "_text_vectors_loop"
 MODEL = (os.environ.get("TEXT_EMBED_MODEL") or "embo-01").strip()
 BATCH = 16
 MAX_PER_RUN = 128              # 11-06:MiniMax 额度是 5 小时窗口、与 lane / agent 臂共用(Jazz)—— 嵌入排最后,每轮少取
-COOLDOWN_S = 5 * 3600        # 撞到 1002 ⇒ 这一窗口内不再调,等额度重置
+COOLDOWN_S = 5 * 3600        # 撞到额度(1008 / 非 RPM 的 1002)⇒ 这一窗口内不再调,等额度重置
+RPM_COOLDOWN_S = 15 * 60     # 11-06 09:31:「rate limit exceeded(RPM)」是每分钟的限,不是 5 小时的额度 —— 让 15 分钟就够
 _COOLDOWN_UNTIL = {"t": 0.0}
 PAUSE_S = 4.0                # 11-05 15:44 第一轮:base_resp 1002「rate limit exceeded(RPM)」—— 每批之间停一下
 RETRY_WAITS = (20.0,)   # 撞到 1002 再等这么久重试;还不行 ⇒ refused,下一轮接着嵌
@@ -72,6 +73,11 @@ def parse_vectors(data: Any, n: int) -> tuple[Optional[list[list[float]]], Optio
 
 def vec_literal(v: list[float]) -> str:
     return "[" + ",".join(f"{x:.7g}" for x in v) + "]"
+
+
+def cooldown_for(err: Optional[str]) -> float:
+    """纯函数。每分钟限(RPM)⇒ 15 分钟;额度用完 ⇒ 5 小时。"""
+    return RPM_COOLDOWN_S if err and "RPM" in err else COOLDOWN_S
 
 
 def rate_limited(err: Optional[str]) -> bool:
@@ -125,7 +131,7 @@ async def run_once(max_items: int = MAX_PER_RUN) -> dict[str, Any]:
     from src.data.style.header import _read_all
     import time
     if time.time() < _COOLDOWN_UNTIL["t"]:
-        return {"ok": True, "status": "skipped", "why": f"MiniMax 额度窗口未重置,{(_COOLDOWN_UNTIL['t'] - time.time()) / 3600:.1f} 小时后再嵌"}
+        return {"ok": True, "status": "skipped", "why": f"MiniMax 限速 / 额度未重置,{(_COOLDOWN_UNTIL['t'] - time.time()) / 60:.0f} 分钟后再嵌"}
     todo = await _read_all(TODO_VIEW, {"select": "source,item_id,title,body,kind,published_at", "order": "published_at.desc.nullslast",
                                        "limit": str(max_items)})
     items = [(r, text_for(r)) for r in todo]
@@ -137,8 +143,8 @@ async def run_once(max_items: int = MAX_PER_RUN) -> dict[str, Any]:
         chunk = items[i:i + BATCH]
         vecs, err = await embed([t for _, t in chunk], "db")
         if err:
-            if rate_limited(err):
-                _COOLDOWN_UNTIL["t"] = time.time() + COOLDOWN_S      # 共用额度(后备 key 也撞墙 / 没配):让出整个窗口
+            if rate_limited(err):                                 # 共用额度(后备 key 也撞墙 / 没配):让出窗口
+                _COOLDOWN_UNTIL["t"] = time.time() + cooldown_for(err)
             return {"ok": False, "refused": True, "status": "refused", "written": written,
                     "why": f"嵌入失败(已写 {written} 条):{err}"}
         dim = len(vecs[0])
