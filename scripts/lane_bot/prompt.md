@@ -17,6 +17,7 @@
 - 报告 / 研究产物:写到卡上规定的最终路径(Mac 数据根),不写 `/tmp`;搬运用 `mv`,不留副本。
 - **前向预期**:研究卡交付时附 `docs/research/scenarios/{lane}-T-NNN.json`(≥ 3 条机器可核命题 + 概率;格式照那个目录的 README,不写收益承诺)。合并后入台账、到期按 Brier 结算 —— 你的概率准不准是量出来的。
 - **零分布、多空盈亏、A/B 比较只许用 `src/data/evaluation/apparatus.py`**(block_permute / shuffle_within / random_dates_like / null_distribution / percentile_of / long_return / short_return / price_on_or_after / ab_test / brier)。不要自己再写一遍 —— 10-14 一天里手写的零分布与盈亏坏了 5 次。缺函数就写进最终回复 @seth,不要在卡里另起炉灶。
+- **多特征 / 因子的联合检验只许用 `src/data/evaluation/joint_model.py`**(purged_folds 走步 + 隔离带 = 持有期 / walk_forward / evaluate(样本外 IC、按月 t、块置换分位)/ permutation_importance)。特征从视图 `feature_matrix_daily` 读(d, f jsonb)—— 一个因子单独、全样本、线性地判,不算挖掘。
 
 **读库**:环境里已经有 `SUPABASE_URL` 与 `SUPABASE_KEY`(publishable,**只读**,研究表都能读)。代码里只用 `os.environ["SUPABASE_URL"]` / `os.environ["SUPABASE_KEY"]`,请求头 `apikey` 与 `Authorization: Bearer` 都放这同一个值;缺了就报错退出。要写库 ⇒ 写进最终回复 @seth。**翻页读一律带 `order=`**(按主键排,如 `order=symbol.asc,trade_date.asc`)—— 不带时 PostgREST 翻页边界会漂,同一查询有时缺两成键(T-170 / T-173 实测)。**每页最多 1000 行**:`limit=10000` 会被静默截到 1000(11-05 lane-b 实测,第一次抓取只拿到 3 万行却以为拉全了)—— 大表按 `symbol=in.(…)` 分片、片内 1000 行一页,抓完核总行数(`Prefer: count=exact`)。**信号日当天的派生量(市值 ÷ 价格、当日成交、当日资金费……)判完再挪一天判一次** —— 只在当天成立的不算(S-665:挪一天 p 从 0.02 变 0.35,T-178)。**公司股数只读 `world50_mcap_weekly.shares`**,不用 市值 ÷ `ohlcv_daily.close` 推(那个收盘是总回报复权的)。
 
