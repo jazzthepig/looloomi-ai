@@ -74,10 +74,14 @@ def git(*args: str, cwd: Path = ROOT) -> tuple[int, str]:
 
 
 def notify(title: str, text: str) -> None:
+    """通知是锦上添花,不能挡队列:osascript 偶尔不返回(11-06 07:59 起整队卡住 20+ 分钟,日志停在最后一个 ✗),所以限时、吞错。"""
     if sys.platform == "darwin":
         safe = text.replace('"', "'")[:200]
-        subprocess.run(["osascript", "-e", f'display notification "{safe}" with title "{title}"'],
-                       capture_output=True)
+        try:
+            subprocess.run(["osascript", "-e", f'display notification "{safe}" with title "{title}"'],
+                           capture_output=True, timeout=15)
+        except Exception:  # noqa: BLE001 —— 通知失败只丢通知
+            pass
 
 
 
