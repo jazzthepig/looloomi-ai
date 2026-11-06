@@ -123,6 +123,21 @@ FRED_SERIES: dict[str, tuple[str, float, int]] = {
     "RRPONTSYD": ("fed_rrp", 1.0, 1),               # 十亿美元
 }
 NET_LIQUIDITY_SERIES = "fed_net_liquidity"
+#: 11-06(T-258 前三:状态面板没有信用轴):高收益债利差与 3 个月 VIX(期限结构 = VIX3M − VIX,MOVE 拿不到时的替身)。
+#: 与上面三条不同,**这两条按可得日入库**(观测日 + 1:BAML / CBOE 次日在 FRED 上可得),feature_matrix 直接读,不用再挪。
+#: 单独一组:净流动性要求 FRED_SERIES 三条齐全,信用这两条读不到不能挡它。
+CREDIT_SERIES: dict[str, tuple[str, float, int]] = {
+    "BAMLH0A0HYM2": ("hy_oas", 1.0, 1),             # ICE BofA 美国高收益债期权调整利差,百分点
+    "VXVCLS": ("vix3m", 1.0, 1),                    # CBOE 3 个月 VIX
+    "USEPUINDXD": ("epu", 1.0, 1),                  # 11-06 政治维度(Jazz「政治事件必须的」):Baker-Bloom-Davis 每日经济政策不确定性(新闻计数),1985 →
+}
+
+
+def credit_rows(fred_id: str, obs: list[tuple[str, float]], since: str = MACRO_HISTORY_START) -> list[dict]:
+    """纯函数。FRED 观测 → macro_daily 行,d = 观测日 + 发布滞后(可得日)。"""
+    series, k, lag = CREDIT_SERIES[fred_id]
+    return [{"series": series, "d": (date.fromisoformat(d) + timedelta(days=lag)).isoformat(), "value": v * k, "source": "fred"}
+            for d, v in obs if d >= since and v == v]
 
 
 def fred_rows(fred_id: str, obs: list[tuple[str, float]], since: str = MACRO_HISTORY_START) -> list[dict]:
@@ -162,7 +177,15 @@ async def _fed(today: date) -> dict[str, Any]:
         obs[fid] = await get_fred_series(fid, MACRO_HISTORY_START)
         rows += fred_rows(fid, obs[fid])
     net = net_liquidity_rows(obs, MACRO_HISTORY_START, today.isoformat())
+    credit_err = []
+    for fid in CREDIT_SERIES:                                             # 信用两条单独取:读不到只记下,不挡净流动性
+        try:
+            rows += credit_rows(fid, await get_fred_series(fid, MACRO_HISTORY_START))
+        except Exception as e:                                            # noqa: BLE001
+            credit_err.append(f"{fid}: {type(e).__name__}")
     err = await _upsert(MACRO_TABLE, rows + net, "series,d") if net else "fed_net_liquidity: 0 行"
+    if credit_err:
+        err = "; ".join(x for x in (err, *credit_err) if x)
     return {"rows": len(rows) + len(net), "error": err, "last": net[-1]["d"] if net else None,
             "last_value_bn": net[-1]["value"] if net else None}
 

@@ -31,3 +31,11 @@ def test_a_missing_component_means_no_row():
     obs = _obs()
     obs["WTREGEN"] = []
     assert ci.net_liquidity_rows(obs, "2026-09-01", "2026-09-12") == []
+
+
+def test_credit_series_are_stored_on_their_availability_date_and_kept_apart():
+    """11-06(T-258):HY 利差 / VIX3M 按可得日(观测日 + 1)入库;不进 FRED_SERIES(净流动性要三条齐全,信用读不到不能挡它)。"""
+    from src.data.market import cis_inputs as ci
+    rows = ci.credit_rows("BAMLH0A0HYM2", [("2026-11-04", 3.12), ("2026-11-05", float("nan"))], since="2026-01-01")
+    assert rows == [{"series": "hy_oas", "d": "2026-11-05", "value": 3.12, "source": "fred"}]
+    assert not set(ci.CREDIT_SERIES) & set(ci.FRED_SERIES)
