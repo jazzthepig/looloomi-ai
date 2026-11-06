@@ -1,0 +1,57 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T-259-1",
+      "author": "lane-a",
+      "scenario": "T-259 国库 BTC 净买入因子(S-738)",
+      "statement": "ohlcv_daily(source=binance_hist, symbol=BTC)在 2026-12-14 的 close 高于 2026-11-05 的 close(76088)。",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 76088,
+      "hi": null,
+      "prob": 0.5,
+      "horizon_d": "2026-12-14",
+      "basis": "本卡实测:国库净买入对之后 30 天 BTC 收益 Spearman −0.040(p 双侧 0.72)⇒ 该因子对方向没有信息量,不给任何方向先验;样本内无条件 30 天平均收益 +4.44% 略偏正,但那不是因子带来的,故只取中性 0.50。"
+    },
+    {
+      "id": "T-259-2",
+      "author": "lane-a",
+      "scenario": "T-259 国库 BTC 净买入因子(S-738)",
+      "statement": "state_daily(entity=panel, feature=breadth_above_ma50)在 2026-12-14 的 value 高于 2026-11-05 的 0.0416666666666667。",
+      "variable": "state:breadth_above_ma50",
+      "op": "gt",
+      "lo": 0.0416666666666667,
+      "hi": null,
+      "prob": 0.5,
+      "horizon_d": "2026-12-14",
+      "basis": "本卡实测:TB 与过去 30 天涨幅只有 +0.068 的弱相关 ⇒ 机构在弱市里也照计划买,宽度不是本卡能推断的量;当前 4.17%(24 名里 1 名在 50 日线上)处在极低分位,均值回复方向略偏上但样本只有 5 周,取中性 0.50。"
+    },
+    {
+      "id": "T-259-3",
+      "author": "lane-a",
+      "scenario": "T-259 国库 BTC 净买入因子(S-738)",
+      "statement": "macro_daily(series=fed_balance_sheet)在 2026-12-14 的 value(取 2026-12-14 当天或之前 7 天内最近一个值)高于 2026-11-04 的 6748.145。",
+      "variable": "macro:fed_balance_sheet",
+      "op": "gt",
+      "lo": 6748.145,
+      "hi": null,
+      "prob": 0.55,
+      "horizon_d": "2026-12-14",
+      "basis": "慢变量、周频:11-04 值 6748.145 高于 10-28 的 6745.635(两周 +2.51B,+0.037%);以这个斜率外推,一个多月后更高的先验略偏正,但只有两个观测点支撑,故只取 0.55(不给 0.6 以上)。"
+    },
+    {
+      "id": "T-259-4",
+      "author": "lane-a",
+      "scenario": "T-259 国库 BTC 净买入因子(S-738)",
+      "statement": "到 2026-12-14,treasury_decisions 里 coin_id='bitcoin' 且 decision_date > '2026-11-05' 的行数 >= 18。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 18,
+      "hi": null,
+      "prob": 0.6,
+      "horizon_d": "2026-12-14",
+      "basis": "本卡实测:2026 年到 11-05 共 175 行 / 310 天 ≈ 0.56 行每天;11-06→12-14 共 38 天,期望约 21 行,取 18(略低于期望)作阈值;国库披露节奏稳定(2025 全年 384 行、2026 至今 175 行),故给 0.6。人工结算:SELECT count(*) FROM treasury_decisions WHERE coin_id='bitcoin' AND decision_date > '2026-11-05' 于 2026-12-14 取值 >=18 记 1,<18 记 0。"
+    }
+  ]
+}
