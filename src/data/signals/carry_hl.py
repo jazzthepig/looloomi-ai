@@ -18,6 +18,12 @@
             原四臂一行不动,留档对照。基差不记(S-748 实测全样本拖累 0.068pp/yr,可忽略;写明不是忘了)。
     **向 Jazz 提「④ 小额真钱」用的是这两条臂,不是原四条。**
 
+## 借贷基准臂(S-749,11-06)
+
+    stable_lend   同一笔钱放稳定币借贷:当日 ret = `feature_matrix_daily.stable_lend_apy_7d` / 100 / 365,起点 11-06。
+                  ④ 什么都不做 = 借出去,不是 0。比较时套息取**资本口径**(名义 × 0.75)对它;S-749 回看 2026H1 借贷赢
+                  (2.98% 对 2.09%),最近 13 周套息赢(6.78% 对 3.54%)⇒ 不提真钱、每月复核 —— 这一条臂就是复核用的尺。
+
 ## 读之前先知道
 
 S-733 全样本 B 净 12.2%/yr 是 2024 撑的;2025 6.3%、2026H1 1.9%。前向期望按最近的写。
@@ -33,7 +39,9 @@ import numpy as np
 TABLE = "carry_hl_daily"
 WRITES_TABLES = (TABLE,)
 WRITES_COLUMNS = {TABLE: ("d", "arm", "ret", "nav", "n_names", "n_on", "switches", "inception", "code_ref")}
-CODE_REF = "carry_hl v1.3 (11-06, S-733;+ carry_b_spot;+ carry_b_top S-735;+ 真实成本臂 S-748)"
+CODE_REF = "carry_hl v1.4 (11-06, S-733;+ carry_b_spot;+ carry_b_top S-735;+ 真实成本臂 S-748;+ 借贷基准 S-749)"
+LEND_ARM = "stable_lend"
+LEND_KEY = "stable_lend_apy_7d"
 LOOP_NAME = "_carry_hl_loop"
 ARMS = ("carry_a", "carry_b", "carry_b_spot", "carry_b_top", "carry_b_top_rc", "carry_b_spot_rc")
 #: 真实成本臂 → 它照抄的那条臂(规则一样,只换成本与起点)
@@ -142,6 +150,20 @@ def path(days: list[dt.date], F: np.ndarray, arm: str, inception: dt.date = INCE
     return out
 
 
+def lend_path(apy: dict[str, float], inception: dt.date, through: dt.date) -> list[dict]:
+    """纯函数。{d: 借贷年化 %} → 借贷基准臂逐日记账;起点那天 NAV = 1;缺值的那天记 0 收益并照写(不外推,n_on = 0 标出来)。"""
+    nav, out = 1.0, [{"d": inception.isoformat(), "arm": LEND_ARM, "ret": 0.0, "nav": 1.0, "n_names": 0, "n_on": 0, "switches": 0}]
+    d = inception + dt.timedelta(days=1)
+    while d <= through:
+        v = apy.get(d.isoformat())
+        r = 0.0 if v is None else float(v) / 100 / 365
+        nav *= 1.0 + r
+        out.append({"d": d.isoformat(), "arm": LEND_ARM, "ret": round(r, 8), "nav": round(nav, 8), "n_names": 0,
+                    "n_on": 0 if v is None else 1, "switches": 0})
+        d += dt.timedelta(days=1)
+    return out
+
+
 async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     from src.api.store import supabase_upsert_table
     from src.data.market.hl_funding_hourly import DAILY_VIEW, coins
@@ -168,6 +190,11 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         if inc > through:
             continue
         out += [r | {"inception": inc.isoformat(), "code_ref": CODE_REF} for r in path(days, F[:, cols[arm]], arm, inc, c)]
+    if through >= INCEPTION_RC:
+        fm = await _read_all("feature_matrix_daily", {"select": "d,f", "d": f"gte.{INCEPTION_RC}", "order": "d.asc"})
+        apy = {str(r["d"])[:10]: (r.get("f") or {}).get(LEND_KEY) for r in fm}
+        out += [r | {"inception": INCEPTION_RC.isoformat(), "code_ref": CODE_REF}
+                for r in lend_path({k: v for k, v in apy.items() if v is not None}, INCEPTION_RC, through)]
     w = await supabase_upsert_table(TABLE, out, on_conflict="d,arm")
     if not w:
         return {"ok": False, "why": f"写 {TABLE} 失败:{(getattr(w, 'why', '') or '')[:200]}"}

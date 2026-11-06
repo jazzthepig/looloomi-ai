@@ -164,3 +164,11 @@ def test_real_cost_arms_copy_the_rule_change_only_cost_and_start():
     assert p[1]["n_on"] == 2 and abs(p[1]["ret"] - ((0.0004 + 0.0003) / 2 - ch.COST_REAL)) < 1e-12, "同一条规则,成本按 15.5bp"
     old = ch.path(days, F, "carry_b_top")
     assert old[0]["d"] == "2026-11-05" and abs(old[1]["ret"] - ((0.0004 + 0.0003) / 2 - ch.COST)) < 1e-12, "原臂不动"
+
+
+def test_lending_benchmark_arm_accrues_the_apy_and_marks_missing_days():
+    """S-749:④ 的「什么都不做」= 稳定币借贷,不是 0。缺值的那天记 0 收益、n_on = 0,不外推。"""
+    p = ch.lend_path({"2026-11-07": 3.65, "2026-11-09": 7.3}, dt.date(2026, 11, 6), dt.date(2026, 11, 9))
+    assert [r["d"] for r in p] == ["2026-11-06", "2026-11-07", "2026-11-08", "2026-11-09"] and p[0]["nav"] == 1.0
+    assert abs(p[1]["ret"] - 0.0001) < 1e-12 and p[2]["ret"] == 0.0 and p[2]["n_on"] == 0 and abs(p[3]["ret"] - 0.0002) < 1e-12
+    assert all(r["arm"] == ch.LEND_ARM for r in p) and set(p[0]) <= set(ch.WRITES_COLUMNS[ch.TABLE])
