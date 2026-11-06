@@ -210,18 +210,45 @@ def _pillar_of(asset: dict, K: str):
 #: 30 秒窗口里开火**(部署后约 3 分钟)—— Supabase 的熔断在这一刻打开,风格表头、regime 指纹、L3、面板映射
 #: 几乎每次部署后都报一轮「读不到 / 写入失败」,20 分钟后自己好。上限放到 900 秒,同值的再错开几秒:
 #: 任一 30 秒窗口最多 9 个,最慢的 17 分钟内跑第一轮。
-_BOOT_DELAY_CAP_S = 900
+#:
+#: **11-06:900 + 原值/30 那版又被循环数量追上了。** 117 个循环,原值最大 15000 → 第一轮在 23 分钟;
+#: 而合并密集的日子一个构建只活 15–18 分钟(loop_attempt.build 实测 6 个构建)。
+#: 原值 > 900 的 40 个循环 —— 期权面、稳定币发行方、状态图、政治强度、交易所储备……——
+#: **一整个上午一次都没跑**,表上 0 行,看起来像「写入端坏了」。
+#: 现在:原值 ≤ 300 的头部原样(S-482 校准过的次序与间隔);其余按原值**排名**均匀铺进
+#: 330–780 秒 —— 次序不变、每个循环一个独立时间槽,最慢 13 分钟开火。
+_BOOT_DELAY_CAP_S = 780
+_BOOT_FLOOR_S = 300
 _BOOT_SEQ = __import__("itertools").count()
+_BOOT_WANTS = sorted(
+    w for w in (int(x) for x in __import__("re").findall(r"_boot_delay\((\d+)\)", open(__file__, encoding="utf-8").read()))
+    if w > _BOOT_FLOOR_S)
+_BOOT_TAKEN: dict = {}
+
+
+def _boot_slot(want_s: float, k: int, seq: int, wants: list = None) -> float:
+    """纯函数:原值 `want_s` 的第 `k` 个调用者、全局第 `seq` 个调用 → 启动延迟秒数。"""
+    import bisect
+    w = float(want_s)
+    if w <= _BOOT_FLOOR_S:
+        return w + (seq % 7) * 4.0
+    ws = _BOOT_WANTS if wants is None else wants
+    lo, hi = bisect.bisect_left(ws, w), bisect.bisect_right(ws, w)
+    i = min(lo + k, hi - 1) if hi > lo else lo
+    i = max(0, min(i, len(ws) - 1))
+    start = _BOOT_FLOOR_S + 30.0
+    return start + i * (_BOOT_DELAY_CAP_S - start) / max(len(ws) - 1, 1)
 
 
 def _boot_delay(want_s: float) -> float:
-    """封顶到 `_BOOT_DELAY_CAP_S`,**保持原有的先后次序**,同值的循环再错开 0–24 秒。
+    """**保持原有的先后次序**,最慢不超过 `_BOOT_DELAY_CAP_S`。
 
     次序是有意义的(`_track_record_loop` 要排在 `_outcome_tracker_loop` 之后),
-    所以不能一律改成同一个数。相邻两档原值至少差 30 秒,错开量最多 24 秒,不会颠倒次序。
+    所以不能一律改成同一个数。头部(≤ 300 秒)同值的错开 0–24 秒;其余每个循环一个时间槽。
     """
-    base = min(float(want_s), _BOOT_DELAY_CAP_S) + (float(want_s) / 3600.0) * 120.0
-    return base + (next(_BOOT_SEQ) % 7) * 4.0
+    k = _BOOT_TAKEN.get(float(want_s), 0)
+    _BOOT_TAKEN[float(want_s)] = k + 1
+    return _boot_slot(want_s, k, next(_BOOT_SEQ))
 
 
 async def _hourly_t2_snapshot_loop():
@@ -2673,6 +2700,222 @@ async def _options_surface_loop():
 async def _start_options_surface_loop():
     _asyncio.create_task(_options_surface_loop())
     print("[OPT-SURF] ✅ Deribit option surface + hedge prices scheduled (hourly)")
+
+
+async def _stablecoin_issuers_loop():
+    """稳定币按发行方的流通量(`src/data/market/stablecoin_issuers.py`):每 6 小时一轮,DeFiLlama 每个发行方一次请求;首轮整段回填。"""
+    await _asyncio.sleep(_boot_delay(13800))
+    while True:
+        try:
+            from src.data.market.stablecoin_issuers import run_once as _sc_run
+            r = await _sc_run()
+            await _iteration_result("_stablecoin_issuers_loop", {**r, "ok": bool(r.get("ok")), "why": r.get("why")})
+            await _beat("_stablecoin_issuers_loop", ok=bool(r.get("ok")), detail={"written": r.get("written"), "full": r.get("full")},
+                        error=None if r.get("ok") else str(r.get("why"))[:200])
+        except Exception as _e:
+            print(f"[STABLE-ISS] ⚠️  pass FAILED: {_e}")
+            await _beat("_stablecoin_issuers_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_stablecoin_issuers_loop", _e)
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_stablecoin_issuers_loop():
+    _asyncio.create_task(_stablecoin_issuers_loop())
+    print("[STABLE-ISS] ✅ stablecoin supply by issuer scheduled (6-hourly)")
+
+
+async def _state_map_loop():
+    """S-737 前向记录(`src/data/state/state_map.py`):每 6 小时一轮,冻结 k-means 给当天状态打标;S5 的日子记保护性多头纸面票。"""
+    await _asyncio.sleep(_boot_delay(14100))
+    while True:
+        try:
+            from src.data.state.state_map import run_once as _smap_run
+            r = await _smap_run()
+            await _iteration_result("_state_map_loop", {**r, "ok": bool(r.get("ok")), "refused": bool(r.get("refused")), "why": r.get("why")})
+            await _beat("_state_map_loop", ok=bool(r.get("ok")) and not r.get("refused"), refused=bool(r.get("refused")),
+                        detail={"state": r.get("state"), "opened": r.get("opened")}, error=None if r.get("ok") else str(r.get("why"))[:200])
+        except Exception as _e:
+            print(f"[STATE-MAP] ⚠️  pass FAILED: {_e}")
+            await _beat("_state_map_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_state_map_loop", _e)
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_state_map_loop():
+    _asyncio.create_task(_state_map_loop())
+    print("[STATE-MAP] ✅ frozen state map + S5 protected-long paper tickets scheduled (6-hourly)")
+
+
+async def _cex_reserves_loop():
+    """交易所储备 / 净流入 / 杠杆(`src/data/market/cex_reserves.py`):每 6 小时一轮,DeFiLlama /cexs 一次请求;当天覆盖。"""
+    await _asyncio.sleep(_boot_delay(14400))
+    while True:
+        try:
+            from src.data.market.cex_reserves import run_once as _cex_run
+            r = await _cex_run()
+            await _iteration_result("_cex_reserves_loop", {**r, "ok": bool(r.get("ok")), "refused": bool(r.get("refused")), "why": r.get("why")})
+            await _beat("_cex_reserves_loop", ok=bool(r.get("ok")) and not r.get("refused"), refused=bool(r.get("refused")),
+                        detail={"written": r.get("written")}, error=None if r.get("ok") else str(r.get("why"))[:200])
+        except Exception as _e:
+            print(f"[CEX-RES] ⚠️  pass FAILED: {_e}")
+            await _beat("_cex_reserves_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_cex_reserves_loop", _e)
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_cex_reserves_loop():
+    _asyncio.create_task(_cex_reserves_loop())
+    print("[CEX-RES] ✅ exchange reserves / flows / leverage scheduled (6-hourly)")
+
+
+async def _political_intensity_loop():
+    """政治 / 地缘强度(`src/data/market/political_intensity.py`):每 12 小时一轮 —— GPR 日表一个文件 + GDELT 每个主题一次请求(首轮整段 2017 →)。"""
+    await _asyncio.sleep(_boot_delay(14700))
+    while True:
+        try:
+            from src.data.market.political_intensity import run_once as _pol_run
+            r = await _pol_run()
+            await _iteration_result("_political_intensity_loop", {**r, "ok": bool(r.get("ok")), "why": r.get("why")})
+            await _beat("_political_intensity_loop", ok=bool(r.get("ok")), detail={"gpr": r.get("gpr"), "gdelt": r.get("gdelt")},
+                        error=None if r.get("ok") else str(r.get("why"))[:200])
+        except Exception as _e:
+            print(f"[POLITICAL] ⚠️  pass FAILED: {_e}")
+            await _beat("_political_intensity_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_political_intensity_loop", _e)
+        await _asyncio.sleep(12 * 3600)
+
+
+@app.on_event("startup")
+async def _start_political_intensity_loop():
+    _asyncio.create_task(_political_intensity_loop())
+    print("[POLITICAL] ✅ GPR + GDELT political intensity scheduled (12-hourly)")
+
+
+async def _derivatives_market_loop():
+    """全市场永续持仓 / 基差(`src/data/market/derivatives_market.py`,CoinGecko Analyst /derivatives 一次请求):每 6 小时一轮。"""
+    await _asyncio.sleep(_boot_delay(15000))
+    while True:
+        try:
+            from src.data.market.derivatives_market import run_once as _dm_run
+            r = await _dm_run()
+            await _iteration_result("_derivatives_market_loop", {**r, "ok": bool(r.get("ok")), "refused": bool(r.get("refused")), "why": r.get("why")})
+            await _beat("_derivatives_market_loop", ok=bool(r.get("ok")) and not r.get("refused"), refused=bool(r.get("refused")),
+                        detail={"written": r.get("written")}, error=None if r.get("ok") else str(r.get("why"))[:200])
+        except Exception as _e:
+            print(f"[DERIV-MKT] ⚠️  pass FAILED: {_e}")
+            await _beat("_derivatives_market_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_derivatives_market_loop", _e)
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_derivatives_market_loop():
+    _asyncio.create_task(_derivatives_market_loop())
+    print("[DERIV-MKT] ✅ market-wide perp OI / basis (CoinGecko /derivatives) scheduled (6-hourly)")
+
+
+async def _exchange_volume_loop():
+    """各场所日成交量(`src/data/market/exchange_volume.py`,CoinGecko Analyst,BTC 计价,2021 起回填):有积压时每小时一轮,补齐后每 6 小时。"""
+    await _asyncio.sleep(_boot_delay(15150))
+    while True:
+        r = {}
+        try:
+            from src.data.market.exchange_volume import run_once as _ev_run
+            r = await _ev_run()
+            await _iteration_result("_exchange_volume_loop", {**r, "ok": bool(r.get("ok")), "refused": bool(r.get("refused")), "why": r.get("why")})
+            await _beat("_exchange_volume_loop", ok=bool(r.get("ok")) and not r.get("refused"), refused=bool(r.get("refused")),
+                        detail={"calls": r.get("calls"), "written": r.get("written"), "backlog": r.get("backlog")},
+                        error=None if r.get("ok") else str(r.get("why"))[:200])
+        except Exception as _e:
+            print(f"[EX-VOL] ⚠️  pass FAILED: {_e}")
+            await _beat("_exchange_volume_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_exchange_volume_loop", _e)
+        await _asyncio.sleep(3600 if r.get("backlog") else 6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_exchange_volume_loop():
+    _asyncio.create_task(_exchange_volume_loop())
+    print("[EX-VOL] ✅ per-venue daily volume (CoinGecko volume_chart/range) scheduled")
+
+
+async def _token_holders_loop():
+    """代币持有人数历史(`src/data/market/token_holders.py`,CoinGecko Analyst holders_chart,本链):有积压每小时,补齐后每 6 小时。"""
+    await _asyncio.sleep(_boot_delay(15200))
+    while True:
+        r = {}
+        try:
+            from src.data.market.token_holders import run_once as _th_run
+            r = await _th_run()
+            await _iteration_result("_token_holders_loop", {**r, "ok": bool(r.get("ok")), "refused": bool(r.get("refused")), "why": r.get("why")})
+            await _beat("_token_holders_loop", ok=bool(r.get("ok")) and not r.get("refused"), refused=bool(r.get("refused")),
+                        detail={"calls": r.get("calls"), "written": r.get("written"), "in_scope": r.get("in_scope")},
+                        error=None if r.get("ok") else str(r.get("why"))[:200])
+        except Exception as _e:
+            print(f"[HOLDERS] ⚠️  pass FAILED: {_e}")
+            await _beat("_token_holders_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_token_holders_loop", _e)
+        await _asyncio.sleep(3600 if r.get("backlog") else 6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_token_holders_loop():
+    _asyncio.create_task(_token_holders_loop())
+    print("[HOLDERS] ✅ token holder-count history (CoinGecko holders_chart) scheduled")
+
+
+async def _cg_supply_loop():
+    """供给拆分 + 新币(`src/data/market/cg_supply.py`,CoinGecko Analyst supply_breakdown / list/new):每 12 小时一轮(当天覆盖)。"""
+    await _asyncio.sleep(_boot_delay(15250))
+    while True:
+        try:
+            from src.data.market.cg_supply import run_once as _cs_run
+            from src.data.market.cg_categories import run_once as _cc_run
+            r = await _cs_run()
+            rc = await _cc_run()                                          # 分类快照(ephemeral → persisted),同一轮
+            r = {**r, "categories": rc.get("written"), "ok": bool(r.get("ok")) and bool(rc.get("ok")),
+                 "why": f"{r.get('why')} · 分类 {rc.get('why')}"}
+            await _iteration_result("_cg_supply_loop", {**r, "ok": bool(r.get("ok")), "refused": bool(r.get("refused")), "why": r.get("why")})
+            await _beat("_cg_supply_loop", ok=bool(r.get("ok")) and not r.get("refused"), refused=bool(r.get("refused")),
+                        detail={"supply_rows": r.get("supply_rows"), "new_coins_seen": r.get("new_coins_seen")},
+                        error=None if r.get("ok") else str(r.get("why"))[:200])
+        except Exception as _e:
+            print(f"[CG-SUPPLY] ⚠️  pass FAILED: {_e}")
+            await _beat("_cg_supply_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_cg_supply_loop", _e)
+        await _asyncio.sleep(12 * 3600)
+
+
+@app.on_event("startup")
+async def _start_cg_supply_loop():
+    _asyncio.create_task(_cg_supply_loop())
+    print("[CG-SUPPLY] ✅ supply breakdown + new listings (CoinGecko Analyst) scheduled (12-hourly)")
+
+
+async def _feature_matrix_loop():
+    """融合特征矩阵(`src/data/state/feature_matrix.py`):每小时并发刷新物化视图 feature_matrix_daily(实时视图 ~3 秒,读者读副本)。"""
+    await _asyncio.sleep(_boot_delay(15300))
+    while True:
+        try:
+            from src.data.state.feature_matrix import run_once as _fm_run
+            r = await _fm_run()
+            await _iteration_result("_feature_matrix_loop", {**r, "ok": bool(r.get("ok")), "why": r.get("why")})
+            await _beat("_feature_matrix_loop", ok=bool(r.get("ok")), detail={"rows": r.get("rows"), "keys": r.get("keys")},
+                        error=None if r.get("ok") else str(r.get("why"))[:200])
+        except Exception as _e:
+            print(f"[FEAT-MATRIX] ⚠️  pass FAILED: {_e}")
+            await _beat("_feature_matrix_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_feature_matrix_loop", _e)
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_feature_matrix_loop():
+    _asyncio.create_task(_feature_matrix_loop())
+    print("[FEAT-MATRIX] ✅ fused feature matrix refresh scheduled (hourly)")
 
 
 async def _issuer_decisions_loop():

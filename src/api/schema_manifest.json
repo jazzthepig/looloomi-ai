@@ -18,8 +18,11 @@
     "book_vectors",
     "carry_hl_daily",
     "causal_paper_nav",
+    "cex_reserves_daily",
+    "cg_category_daily",
     "cg_coin_map",
     "cg_coin_mcap_daily",
+    "cg_new_coins",
     "chain_activity_daily",
     "channel_categories",
     "channel_series_daily",
@@ -31,6 +34,7 @@
     "cis_standard_outcomes",
     "cis_tilt_daily",
     "cis_v2_daily",
+    "coin_supply_daily",
     "combined_book_nav",
     "core_cap_daily",
     "core_variants_daily",
@@ -40,10 +44,12 @@
     "decision_outcomes",
     "deriv_metrics_daily",
     "deriv_vol_daily",
+    "derivatives_market_daily",
     "dingge_paper_nav",
     "entity_vectors",
     "equity_fundamentals_q",
     "events",
+    "exchange_volume_daily",
     "execution_intents",
     "execution_outcomes",
     "execution_quality_daily",
@@ -93,10 +99,12 @@
     "perp_cg_map",
     "pod_aggregator_nav",
     "pod_aggregator_state",
+    "political_intensity_daily",
     "portfolio_layer_daily",
     "portfolio_targets_daily",
     "prediction_markets",
     "price_source_agreement_daily",
+    "protected_long_paper",
     "protocol_revenue_daily",
     "protocol_tvl_daily",
     "r_money_daily",
@@ -117,13 +125,16 @@
     "signal_journal",
     "social_daily",
     "stable_lending_daily",
+    "stablecoin_issuer_daily",
     "state_daily",
+    "state_map_daily",
     "style_index_daily",
     "style_index_pit_daily",
     "style_membership",
     "style_pit_coverage_daily",
     "style_universe_broad",
     "text_vectors",
+    "token_holders_daily",
     "tokenization_tilt_daily",
     "trade_results",
     "treasury_decisions",
@@ -215,6 +226,48 @@
       "top_longs",
       "top_shorts"
     ],
+    "cex_reserves_daily": [
+      "clean_assets_usd",
+      "d",
+      "deriv_volume_usd",
+      "exchange",
+      "fetched_at",
+      "inflow_1m_usd",
+      "inflow_1w_usd",
+      "inflow_24h_usd",
+      "leverage",
+      "oi_usd",
+      "spot_volume_usd",
+      "total_assets_usd"
+    ],
+    "cg_category_daily": [
+      "category_id",
+      "d",
+      "fetched_at",
+      "market_cap",
+      "mcap_change_24h_pct",
+      "name",
+      "top3",
+      "volume_24h"
+    ],
+    "cg_new_coins": [
+      "activated_at",
+      "coin_id",
+      "first_seen_at",
+      "name",
+      "symbol"
+    ],
+    "coin_supply_daily": [
+      "anomaly",
+      "cg_updated_at",
+      "circulating_supply",
+      "coin_id",
+      "d",
+      "fetched_at",
+      "n_wallets",
+      "non_circulating_supply",
+      "total_supply"
+    ],
     "combined_book_nav": [
       "cost",
       "daily_return",
@@ -272,6 +325,17 @@
       "dvol_open",
       "source"
     ],
+    "derivatives_market_daily": [
+      "basis_oiw_pct",
+      "d",
+      "fetched_at",
+      "n_markets",
+      "oi_usd",
+      "symbol",
+      "top_funding_raw",
+      "top_market",
+      "volume_24h_usd"
+    ],
     "dingge_paper_nav": [
       "closed_today",
       "closed_trades",
@@ -301,6 +365,13 @@
       "title",
       "ts",
       "url"
+    ],
+    "exchange_volume_daily": [
+      "d",
+      "exchange",
+      "fetched_at",
+      "kind",
+      "volume_btc"
     ],
     "exposure_decision_daily": [
       "bucket",
@@ -420,6 +491,12 @@
       "recorded_at",
       "source"
     ],
+    "macro_daily": [
+      "d",
+      "series",
+      "source",
+      "value"
+    ],
     "nav_exceptions": [
       "action",
       "actor",
@@ -438,6 +515,10 @@
       "currency",
       "d",
       "fetched_at",
+      "gamma_pin_strike",
+      "gex_call_usd_1pct",
+      "gex_net_usd_1pct",
+      "gex_put_usd_1pct",
       "n_options",
       "pc_oi_ratio",
       "pc_vol_ratio",
@@ -447,6 +528,12 @@
       "spot",
       "term_slope",
       "total_oi_usd"
+    ],
+    "political_intensity_daily": [
+      "d",
+      "source",
+      "topic",
+      "value"
     ],
     "portfolio_targets_daily": [
       "book",
@@ -478,6 +565,21 @@
       "venue",
       "volume_24h"
     ],
+    "protected_long_paper": [
+      "code_ref",
+      "entry_d",
+      "entry_px",
+      "exit_px",
+      "expiry_d",
+      "put_cost_pct",
+      "put_source",
+      "ret_protected",
+      "ret_spot",
+      "state",
+      "status",
+      "strike",
+      "ticket_id"
+    ],
     "scalable_book_nav": [
       "daily_return",
       "funding_pnl",
@@ -493,6 +595,19 @@
       "top_longs",
       "top_shorts"
     ],
+    "stablecoin_issuer_daily": [
+      "circulating_usd",
+      "coin",
+      "d",
+      "source"
+    ],
+    "state_map_daily": [
+      "code_ref",
+      "d",
+      "dist",
+      "features",
+      "state"
+    ],
     "text_vectors": [
       "dim",
       "embedding",
@@ -501,6 +616,15 @@
       "published_at",
       "source",
       "text"
+    ],
+    "token_holders_daily": [
+      "address",
+      "coin_id",
+      "d",
+      "fetched_at",
+      "granularity",
+      "holders",
+      "network"
     ],
     "treatment_daily": [
       "code_ref",
@@ -622,6 +746,7 @@
     "r_tickets_nav_paper",
     "r_tickets_scan",
     "refresh_depth_divergence",
+    "refresh_feature_matrix",
     "refresh_regime_daily",
     "resolve_depth_divergence"
   ]
