@@ -65,6 +65,7 @@
 | open | T-251 | lane-b | R-v2 名义合计上限 30% vs 40% 的回放(Jazz 11-05「4. 更灵活,40%?」;只报,Jazz 定是否改 R_V2_GROSS_CAP_FRAC) | 报告 docs/research/T-251_rv2_gross_cap_30_vs_40.md + docs/research/t251_gross_cap.py + t251_results.json;卡 notes 写三档对照表;in_review,推 lane-b/T-251。 | 上限 30% 是 Jazz 10-29 给的;40% 的代价没量过。 |  |
 | open | T-246 | lane-c | R-v2 的宇宙能不能写成一条按时点的规则(S-731):在全部 coin 永续(含死币,perp_bv_daily)上,「上市满 365 天 且 30 日均成交额 ≥ 2,000 万美元」—— 对照现行的 257 名面板宇宙(今天的幸存者名单)与无门槛全宇宙;原因 = 薄盘口的新合约上的突破多半是做出来的 | 报告 docs/research/T-246_rv2_pit_universe.md(预注册在前)+ docs/research/t246_rv2_pit_universe.py + t246_results.json;卡 notes 写三个宇宙的票数 / 总 R / Calmar / 两半 / 08-08 后,以及判;in_review,推 lane-c/T-246。 | R-v2 的宇宙一直是一份名单;从没量过一条按时点的准入规则能不能接替它。 |  |
 | open | T-269 | lane-c | S-746「政治不明朗 × 流动性收缩」触发时买 30 天 90% 看跌 —— 对冲盈亏 vs 随机对照,判据照台账写死 | 报告 docs/research/T-269_political_liquidity_hedge.md + t269_hedge.py + t269_results.json;卡 notes 写 (a)–(d);in_review,推 lane-c/T-269。 | 对冲条件里从没有政治维度(11-06 才入库);S-736 / S-737 的对冲都没过稳健。 |  |
+| open | T-271 | lane-c | S-748 ④ 套息真实成本检查:HL 实测手续费(现货 7bp / 永续 4.5bp / 滑点 2bp)+ 进出场基差 + 每周 / 两周 / 每月换仓 —— 判据照台账写死 | 报告 docs/research/T-271_carry_real_costs.md + t271_carry_costs.py + t271_results.json;卡 notes 写 (a)–(d);in_review,推 lane-c/T-271。 | ④ 套息是唯一过了留出的收益来源,但纸面成本比真钱实测低一截、没算基差;落地前必须知道真实口径下还剩多少。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -272,4 +273,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 18 · claimed 7 · blocked 4 · in_review 47 · done 190 · dropped 3
+open 19 · claimed 7 · blocked 4 · in_review 47 · done 190 · dropped 3

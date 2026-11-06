@@ -1,0 +1,28 @@
+{
+  "id": "T-271",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-06",
+  "title": "S-748 ④ 套息真实成本检查:HL 实测手续费(现货 7bp / 永续 4.5bp / 滑点 2bp)+ 进出场基差 + 每周 / 两周 / 每月换仓 —— 判据照台账写死",
+  "source": "REFUTATION_LEDGER S-748(先读;成本 / 基差 / 频率 / (a)–(d) 一字不改)与 S-733 / S-735 的口径。数据:HL 小时费率 hl_funding_hourly(或 Mac 数据根 _data/hyperliquid_funding/)、Binance 同名永续 perp_bv_daily、现货 ohlcv_daily(source = binance_hist)。复用 src/research/validation/s733_hl_carry.py 与 lane-a T-253 的脚本口径;统计只用 src/data/evaluation/apparatus.py。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-271.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 先复现 S-735 原口径的数(与台账差 ≤ 0.1pp),再换真实成本。② (a)–(d) 原始数字;基差缺失次数。③ 副项只报不判。④ 只算、不改代码、不入库;先落文件再跑。附 docs/research/scenarios/lane-c-T-271.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-271_carry_real_costs.md + t271_carry_costs.py + t271_results.json;卡 notes 写 (a)–(d);in_review,推 lane-c/T-271。"
+  },
+  "prior_value": "④ 套息是唯一过了留出的收益来源,但纸面成本比真钱实测低一截、没算基差;落地前必须知道真实口径下还剩多少。",
+  "notes": "",
+  "verified": null
+}
