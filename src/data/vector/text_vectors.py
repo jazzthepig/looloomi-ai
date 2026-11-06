@@ -28,9 +28,11 @@ NEAREST_RPC = "text_vectors_nearest"
 LOOP_NAME = "_text_vectors_loop"
 MODEL = (os.environ.get("TEXT_EMBED_MODEL") or "embo-01").strip()
 BATCH = 16
-MAX_PER_RUN = 512
+MAX_PER_RUN = 128              # 11-06:MiniMax 额度是 5 小时窗口、与 lane / agent 臂共用(Jazz)—— 嵌入排最后,每轮少取
+COOLDOWN_S = 5 * 3600        # 撞到 1002 ⇒ 这一窗口内不再调,等额度重置
+_COOLDOWN_UNTIL = {"t": 0.0}
 PAUSE_S = 4.0                # 11-05 15:44 第一轮:base_resp 1002「rate limit exceeded(RPM)」—— 每批之间停一下
-RETRY_WAITS = (20.0, 60.0)   # 撞到 1002 再等这么久重试;还不行 ⇒ refused,下一轮接着嵌
+RETRY_WAITS = (20.0,)   # 撞到 1002 再等这么久重试;还不行 ⇒ refused,下一轮接着嵌
 TIMEOUT_S = 60.0
 TEXT_MAX = 600
 
@@ -79,7 +81,11 @@ def rate_limited(err: Optional[str]) -> bool:
 async def embed(texts: list[str], kind: str = "db", waits: tuple[float, ...] = RETRY_WAITS) -> tuple[Optional[list[list[float]]], Optional[str]]:
     """MiniMax 嵌入,撞到频率限制按 `waits` 重试。"""
     import asyncio
+
+    from src.data.narrative import llm_narrator as llm
     vecs, err = await _embed_once(texts, kind)
+    if rate_limited(err) and llm._FB_KEY:            # 11-06:主 key 窗口用完 ⇒ 按量付费的后备 key(Jazz 备的),不等
+        return await _embed_once(texts, kind, fallback=True)
     for w in waits:
         if not rate_limited(err):
             break
@@ -88,17 +94,18 @@ async def embed(texts: list[str], kind: str = "db", waits: tuple[float, ...] = R
     return vecs, err
 
 
-async def _embed_once(texts: list[str], kind: str = "db") -> tuple[Optional[list[list[float]]], Optional[str]]:
-    """MiniMax 嵌入一次。kind = db(入库)/ query(查询)。"""
+async def _embed_once(texts: list[str], kind: str = "db", fallback: bool = False) -> tuple[Optional[list[list[float]]], Optional[str]]:
+    """MiniMax 嵌入一次。kind = db(入库)/ query(查询);fallback ⇒ 用后备 key。"""
     import httpx
 
     from src.data.narrative import llm_narrator as llm
-    if not llm._BASE:
+    base, key = llm.credentials(fallback)
+    if not base:
         return None, "LLM_BASE_URL 未配"
-    url = f"{llm._BASE}/embeddings"
+    url = f"{base}/embeddings"
     gid = (os.environ.get("MINIMAX_GROUP_ID") or "").strip()
     params = {"GroupId": gid} if gid else None
-    headers = {"Content-Type": "application/json", **({"Authorization": f"Bearer {llm._KEY}"} if llm._KEY else {})}
+    headers = {"Content-Type": "application/json", **({"Authorization": f"Bearer {key}"} if key else {})}
     try:
         async with httpx.AsyncClient(timeout=TIMEOUT_S) as cli:
             r = await cli.post(url, params=params, headers=headers, content=json.dumps({"model": MODEL, "texts": texts, "type": kind}))
@@ -116,6 +123,9 @@ async def _embed_once(texts: list[str], kind: str = "db") -> tuple[Optional[list
 async def run_once(max_items: int = MAX_PER_RUN) -> dict[str, Any]:
     from src.api.store import supabase_upsert_table
     from src.data.style.header import _read_all
+    import time
+    if time.time() < _COOLDOWN_UNTIL["t"]:
+        return {"ok": True, "status": "skipped", "why": f"MiniMax 额度窗口未重置,{(_COOLDOWN_UNTIL['t'] - time.time()) / 3600:.1f} 小时后再嵌"}
     todo = await _read_all(TODO_VIEW, {"select": "source,item_id,title,body,kind,published_at", "order": "published_at.desc.nullslast",
                                        "limit": str(max_items)})
     items = [(r, text_for(r)) for r in todo]
@@ -127,6 +137,8 @@ async def run_once(max_items: int = MAX_PER_RUN) -> dict[str, Any]:
         chunk = items[i:i + BATCH]
         vecs, err = await embed([t for _, t in chunk], "db")
         if err:
+            if rate_limited(err):
+                _COOLDOWN_UNTIL["t"] = time.time() + COOLDOWN_S      # 共用额度(后备 key 也撞墙 / 没配):让出整个窗口
             return {"ok": False, "refused": True, "status": "refused", "written": written,
                     "why": f"嵌入失败(已写 {written} 条):{err}"}
         dim = len(vecs[0])

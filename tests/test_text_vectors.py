@@ -74,6 +74,8 @@ def test_embed_retries_on_rate_limit_then_gives_up(monkeypatch):
         calls.append(kind)
         return (None, "base_resp 1002: rate limit exceeded(RPM)") if len(calls) < 3 else ([[1.0]], None)
 
+    from src.data.narrative import llm_narrator as llm
+    monkeypatch.setattr(llm, "_FB_KEY", "")
     monkeypatch.setattr(tv, "_embed_once", once)
     v, e = asyncio.run(tv.embed(["a"], waits=(0, 0)))
     assert e is None and v == [[1.0]] and len(calls) == 3
@@ -85,3 +87,36 @@ def test_embed_retries_on_rate_limit_then_gives_up(monkeypatch):
 
 async def _err():
     return None, "base_resp 1002: rate limit exceeded(RPM)"
+
+
+def test_rate_limit_backs_off_for_the_whole_quota_window(monkeypatch):
+    async def read_all(table, params):
+        return [{"source": "events", "item_id": "e1", "title": "t", "kind": "news"}]
+
+    async def embed(texts, kind="db"):
+        return None, "base_resp 1002: rate limit exceeded(RPM)"
+
+    import src.data.style.header as header
+    monkeypatch.setattr(header, "_read_all", read_all)
+    monkeypatch.setattr(tv, "embed", embed)
+    monkeypatch.setitem(tv._COOLDOWN_UNTIL, "t", 0.0)
+    assert asyncio.run(tv.run_once())["refused"]
+    r = asyncio.run(tv.run_once())
+    assert r["status"] == "skipped" and "额度" in r["why"], "撞到 1002 后整个窗口不再调(额度与 lane 共用)"
+
+
+def test_fallback_key_is_used_on_quota_hit(monkeypatch):
+    from src.data.narrative import llm_narrator as llm
+    calls = []
+
+    async def once(texts, kind="db", fallback=False):
+        calls.append(fallback)
+        return ([[1.0]], None) if fallback else (None, "base_resp 1002: rate limit exceeded(RPM)")
+
+    monkeypatch.setattr(llm, "_FB_KEY", "x")
+    monkeypatch.setattr(tv, "_embed_once", once)
+    v, e = asyncio.run(tv.embed(["a"], waits=(0,)))
+    assert v == [[1.0]] and calls == [False, True]
+    assert llm.quota_hit(429, None) and llm.quota_hit(200, {"base_resp": {"status_code": 1002}})
+    assert llm.quota_hit(200, {"base_resp": {"status_code": 1008}}) and not llm.quota_hit(200, {"base_resp": {"status_code": 0}})
+    assert not llm.quota_hit(401, None)
