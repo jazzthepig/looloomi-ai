@@ -1,0 +1,20 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {"id": "T-258-1", "scenario": "T-258 缺的维度,哪里有数(只查不接)· 免费源的可用性",
+     "statement": "到 2026-12-31,DeFiLlama /cexs(一次请求覆盖全部交易所)仍返回 200,且 Binance 的 leverage(oi ÷ currentTvl)落在 0.15–0.40 之间(2026-11-06 实测 0.24970750)",
+     "variable": "manual", "op": "between", "lo": 0.15, "hi": 0.40, "prob": 0.55, "horizon_d": "2026-12-31"},
+    {"id": "T-258-2", "scenario": "T-258 缺的维度,哪里有数(只查不接)· 免费源的可用性",
+     "statement": "到 2026-12-31,Farside 的 BTC ETF 页最新一行(合计净流入)仍为负(2026-11-03/04/05 实测合计 −52.6 / +74.6 / −430.2 US$m)",
+     "variable": "manual", "op": "lt", "hi": 0, "prob": 0.55, "horizon_d": "2026-12-31"},
+    {"id": "T-258-3", "scenario": "T-258 缺的维度,哪里有数(只查不接)· 面板状态输入的前向",
+     "statement": "2026-12-01 时 BTC 收盘价高于 70000(2026-11-06 实测:Hyperliquid markPx 75523.0、CoinGecko 75405;只判价位,不判方向)",
+     "variable": "close:BTC", "op": "gt", "lo": 70000, "prob": 0.62, "horizon_d": "2026-12-01"},
+    {"id": "T-258-4", "scenario": "T-258 缺的维度,哪里有数(只查不接)· 面板状态输入的前向",
+     "statement": "2026-12-01 时面板的 30 日稳定币供应变化(stable_supply_30d)仍为负(2026-11-05 实测 −0.0402352786445492)",
+     "variable": "state:stable_supply_30d", "op": "lt", "hi": 0, "prob": 0.55, "horizon_d": "2026-12-01"},
+    {"id": "T-258-5", "scenario": "T-258 缺的维度,哪里有数(只查不接)· 面板状态输入的前向",
+     "statement": "2026-12-01 时 macro_daily 的 fed_net_liquidity 高于 2026-11-06 的值 5790.845",
+     "variable": "macro:fed_net_liquidity", "op": "gt", "lo": 5790.845, "prob": 0.52, "horizon_d": "2026-12-01"}
+  ]
+}
