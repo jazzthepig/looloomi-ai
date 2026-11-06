@@ -100,6 +100,39 @@ with st as (
            'venue:onchain_perp_share30', sum(v30) filter (where exchange in ('hyperliquid', 'aster', 'lighter')) / nullif(sum(v30) filter (where kind = 'deriv'), 0),
            'venue:cme_share_deriv30', sum(v30) filter (where exchange = 'cme_futures') / nullif(sum(v30) filter (where kind = 'deriv'), 0))) f
   from evw where n30 = 30 group by d
+), hb as (
+  -- 持有人数广度(holders_chart 周一快照,2024-10 起):4 周增长为正的币占比、增长中位数;|ln| > 1 视为数据跳变丢掉;≥ 30 个币才出数
+  select a.d, jsonb_build_object(
+           'holders:breadth_4w', avg(case when a.holders > b.holders then 1.0 else 0.0 end),
+           'holders:median_growth_4w', percentile_cont(0.5) within group (order by ln(a.holders::float / b.holders)),
+           'holders:n_coins', count(*)) f
+  from public.token_holders_daily a
+  join public.token_holders_daily b on b.coin_id = a.coin_id and b.d = a.d - 28
+  where extract(isodow from a.d) = 1 and b.holders > 0 and abs(ln(a.holders::float / b.holders)) <= 1
+  group by a.d having count(*) >= 30
+), hbf as (
+  select s.d, h.f, h.d src_d, count(h.f) over (order by s.d) grp from (select distinct d from public.state_daily where entity = 'panel') s
+  left join hb h on h.d = s.d
+), hbff as (
+  -- 周频沿用到下一个周一,最多 10 天(写入端停了就断,不无限延续旧值)
+  select d, case when d - first_value(src_d) over w <= 10 then first_value(f) over w end f
+  from hbf window w as (partition by grp order by d)
+), fwd as (
+  -- 11-06 起才有的前向维度(CoinGecko Analyst):锁仓占比中位数、7 天新币数、分类 24h 上涨占比
+  select z.d, jsonb_strip_nulls(jsonb_build_object(
+           'supply:locked_share_median', (select percentile_cont(0.5) within group (order by non_circulating_supply / total_supply)
+                                          from public.coin_supply_daily c where c.d = z.d and c.total_supply > 0 and c.non_circulating_supply is not null),
+           'listings:new_coins_7d', (select count(*) from public.cg_new_coins n
+                                     where n.activated_at > (z.d - 7)::timestamptz and n.activated_at <= (z.d + 1)::timestamptz),
+           'cat:share_up_24h', (select avg(case when mcap_change_24h_pct > 0 then 1.0 else 0.0 end) from public.cg_category_daily g where g.d = z.d))) f
+  from (select distinct d from public.coin_supply_daily union select distinct d from public.cg_category_daily) z
+), scc as (
+  -- 稳定币按链 30 天增长(干火药放在哪:Tron ≈ 亚洲散户 USDT,Ethereum ≈ 机构 / DeFi,Solana / Base / Arbitrum ≈ 链上投机)
+  select a.d, jsonb_object_agg('stablechain:' || lower(a.chain) || '_30d', a.circulating_usd / b.circulating_usd - 1) f
+  from public.stablecoin_chain_daily a
+  join public.stablecoin_chain_daily b on b.chain = a.chain and b.d = a.d - 30
+  where b.circulating_usd > 0
+  group by a.d
 ), pol as (
   select d, jsonb_object_agg('pol:' || topic, value) f from public.political_intensity_daily group by d
 ), px as (
@@ -126,10 +159,12 @@ with st as (
 )
 select st.d,
        st.f || coalesce(mc.f, '{}'::jsonb) || coalesce(cy.f, '{}'::jsonb) || coalesce(dvp.f, '{}'::jsonb) || coalesce(op.f, '{}'::jsonb) || coalesce(sc.f, '{}'::jsonb) || coalesce(xc.f, '{}'::jsonb) || coalesce(cx.f, '{}'::jsonb) || coalesce(pol.f, '{}'::jsonb) || coalesce(dm.f, '{}'::jsonb)
-          || coalesce(sty.f, '{}'::jsonb) || coalesce(chn.f, '{}'::jsonb) || coalesce(pos.f, '{}'::jsonb) || coalesce(chl.f, '{}'::jsonb) || coalesce(ven.f, '{}'::jsonb) f,
+          || coalesce(sty.f, '{}'::jsonb) || coalesce(chn.f, '{}'::jsonb) || coalesce(pos.f, '{}'::jsonb) || coalesce(chl.f, '{}'::jsonb) || coalesce(ven.f, '{}'::jsonb)
+          || coalesce(hbff.f, '{}'::jsonb) || coalesce(fwd.f, '{}'::jsonb) || coalesce(scc.f, '{}'::jsonb) f,
        jsonb_build_object('state', st.f is not null, 'macro', mc.f is not null, 'cycle', cy.f is not null,
                           'dvol', dvp.f is not null, 'options', op.f is not null, 'stable_issuers', sc.f is not null, 'xasset', xc.f is not null, 'cex', cx.f is not null, 'political', pol.f is not null, 'derivatives', dm.f is not null,
-                          'style', sty.f is not null, 'chain', chn.f is not null, 'positioning', pos.f is not null, 'channel', chl.f is not null, 'venue', ven.f is not null) has
+                          'style', sty.f is not null, 'chain', chn.f is not null, 'positioning', pos.f is not null, 'channel', chl.f is not null, 'venue', ven.f is not null,
+                          'holders', hbff.f is not null, 'cg_forward', fwd.f is not null, 'stable_chains', scc.f is not null) has
 from st
 left join mc on mc.d = st.d
 left join cy on cy.d = st.d
@@ -144,7 +179,10 @@ left join sty on sty.d = st.d
 left join chn on chn.d = st.d
 left join pos on pos.d = st.d
 left join chl on chl.d = st.d
-left join ven on ven.d = st.d;
+left join ven on ven.d = st.d
+left join hbff on hbff.d = st.d
+left join fwd on fwd.d = st.d
+left join scc on scc.d = st.d;
 
 -- 11-06 (second pass): fuse what we already had but never joined — PIT style indices since 2020
 -- (style_index_pit_daily: sector/tier 30d log return minus majors, plus equal-minus-cap breadth),

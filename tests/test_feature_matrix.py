@@ -25,7 +25,8 @@ def test_migration_fuses_existing_dimensions_and_materializes():
     sql = (ROOT / "migrations/2026-11-06_feature_matrix_daily.sql").read_text(encoding="utf-8")
     for src in ("style_index_pit_daily", "chain_activity_daily", "deriv_metrics_daily", "channel_series_daily"):
         assert f"public.{src}" in sql, src
-    for key in ("'style:", "'chain:fees_30v30'", "'pos:btc_smart_minus_crowd'", "'channel:'"):
+    for key in ("'style:", "'chain:fees_30v30'", "'pos:btc_smart_minus_crowd'", "'channel:'", "'venue:coinbase_share_spot30'",
+                "'holders:breadth_4w'", "'supply:locked_share_median'", "'listings:new_coins_7d'", "'cat:share_up_24h'", "'stablechain:'"):
         assert key in sql, key
     assert "create materialized view if not exists public.feature_matrix_daily" in sql
     assert "refresh materialized view concurrently public.feature_matrix_daily" in sql
