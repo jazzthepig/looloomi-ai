@@ -1,0 +1,28 @@
+{
+  "id": "T-260",
+  "owner": "lane-c",
+  "status": "in_review",
+  "created": "2026-11-06",
+  "title": "S-739 第一次「放在一起」:feature_matrix_daily 全部维度的联合模型(Ridge + 梯度提升)对 BTC 之后 30 天收益,走步 + 隔离带样本外 —— 只用 src/data/evaluation/joint_model.py",
+  "source": "REFUTATION_LEDGER S-739(先读,折数 / 隔离带 / 模型超参 / 判据一字不改)。框架 src/data/evaluation/joint_model.py(purged_folds / walk_forward / evaluate / permutation_importance);特征视图 feature_matrix_daily(d, f jsonb,翻页 order=d.asc、每页 1000 行)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-260.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 特征表展开成矩阵(列 = 全部出现过的键,写明每列的起止日与缺值率;前向才有的期权面 / 预测市场列在 2026-11 前全空 ⇒ 去掉并写明)。② 两模型 × 两目标的样本外 IC、按月 t、分位、逐折 IC。③ (a)–(d) 逐条判(只用 30 天)。④ 置换重要性前 10(两模型各一份),写成人话(这一维是什么、高时预测涨还是跌)。⑤ 不重写任何 IC / 零分布 / 走步 —— 只调 joint_model。⑥ 只算、不改代码、不入库;长脚本 nohup。交付附 docs/research/scenarios/lane-c-T-260.json(≥ 3 条,例如 12 月底时模型给的 30 天方向)。",
+    "expect": "报告 docs/research/T-260_joint_model_v1.md + t260_joint.py + t260_results.json;卡 notes 写判据与前 10 维;in_review,推 lane-c/T-260。"
+  },
+  "prior_value": "所有特征都是一个一个、全样本、线性地判过;从没有放在一个模型里。",
+  "notes": "❌ S-739 判据不通过(只用 30 天目标):Ridge 合并样本外 IC −0.0287 / 块置换分位 0.378;HGB IC 0.0156 / 分位 0.572 ⇒ (a) IC ≥ 0.10 与 (b) 分位 ≥ 0.95 两条都不过;(c) 按月 t 2.97 / 3.98 与 (d) 折 4–6 IC 0.167 / 0.082 两条过 ⇒ 两个模型各自 ❌,不授权进 ③、不动钱。7 天目标只报:Ridge IC 0.0399 / 分位 0.745 / t 4.48;HGB −0.0673 / 0.109 / t 2.44。\n样本:feature_matrix_daily 2021-03-24 → 2026-11-04,2,051 行 × 38 列(视图出现过的全部键;前向列 0 —— 视图里根本没有 opt:* 与预测市场键,期权面 2026-11-06 才进视图),perp_bv_daily(symbol=BTC) 2,051 行;数据指纹 sha256 2e70fb37…(同一份代码相隔约 10 分钟的两次运行 IC −0.005 → −0.0287、且视图多出 2 个 xasset: 列 ⇒ 特征表是活的,点估计会晃,判 ❌ 是稳的)。\n前 10 维(置换重要性,30 天):Ridge —— macro:total_mcap 0.1071、mom_200 0.0302、breadth_above_ma50 0.0159、spy_ret_21 0.0135、stable_lend_apy_7d 0.0088、macro:total_volume 0.0073、regime_coverage_30d 0.0039、mom_20 0.0029、dvol:btc_pct_1y 0.0027、macro:fng 0.0014;HGB —— macro:total_mcap 0.0618、xasset:btc_qqq_corr60 0.0203、mom_200 0.0173、stable_lend_apy_7d 0.0168、vratio_30_180 0.0087、macro:fng 0.0086、mom_20 0.0081、spy_ret_21 0.0072、dist_200 0.0058、style_rel_majors_30d 0.0058。人话:两个模型的头号特征都是全市场总市值(周期位置),第二梯队是 200 日动量 / 广度 / 标普 21 日 —— 读的是「市场处在周期哪一段」,波动分位(dvol:btc_pct_1y)几乎没进模型;另有 4 个维度打乱后 IC 反而更高(最差 xasset:btc_qqq_corr60 −0.0253、cycle:deterioration −0.0230)⇒ 被用坏了。\n必须一起读的副项诊断:同一模型折内 IC 0.38–0.64(去线性时间趋势后仍 0.16–0.53、每折过块置换零分布),但样本外预测的水平逐折漂移(折 1 预测均值 +0.30 → 折 3 −0.44)⇒ 折内排序能力是真的、跨时段不可比也是真的,合并 IC 因此被抹成 ≈ 0;按 S-737 六类状态拆 IC 没有一个状态撑得起(S1 Ridge 0.149 / HGB 0.300,S2 两个都是负,S0/S3 样本太少);两模型样本外预测相关 0.714。\n产物:报告 docs/research/T-260_joint_model_v1.md,数值 docs/research/t260_results.json,脚本 docs/research/t260_joint.py(只 import joint_model.py —— 它还没合进 main,脚本从 Seth 的工作区 /Users/sbb/Projects/looloomi-ai/src/data/evaluation/joint_model.py 读,一个字没改),情景 docs/research/scenarios/lane-c-T-260.json(6 条,3 条自动结算)。\n要 @seth:① joint_model.py 何时合进 main(脚本现在靠工作区路径 import);② 「预测值跟什么比」要不要另立预注册(折内有效、跨折无效 ⇒ 也许该改成跟自己历史分位比而不是绝对值);③ 特征视图两小时内变了两列 —— 要不要给联合模型一张冻结的特征清单或快照表,否则复算对不上。",
+  "verified": null
+}

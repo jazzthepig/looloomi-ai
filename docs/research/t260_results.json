@@ -1,0 +1,1517 @@
+{
+ "meta": {
+  "card": "T-260",
+  "prereg": "S-739",
+  "generated_utc": "2026-11-06T06:54:01.568220+00:00",
+  "joint_model_source": "/Users/sbb/Projects/looloomi-ai/src/data/evaluation/joint_model.py",
+  "spec": {
+   "n_folds": 6,
+   "min_train": 365,
+   "embargo": "= 持有期",
+   "ridge_alpha": 10.0,
+   "hgb": {
+    "max_depth": 3,
+    "learning_rate": 0.05,
+    "max_iter": 300,
+    "random_state": 739
+   },
+   "n_null": 1000,
+   "block": 20,
+   "seed": 739,
+   "start": "2021-03-24",
+   "cut_for_forward_only": "2026-11-01"
+  }
+ },
+ "data": {
+  "feature_rows_in_window": 2053,
+  "feature_rows_before_start": 813,
+  "price_rows_btc": 2051,
+  "rows_joined": 2051,
+  "date_min": "2021-03-24",
+  "date_max": "2026-11-04",
+  "price_date_min": "2021-03-24",
+  "price_date_max": "2026-11-04",
+  "n_keys": 38,
+  "n_kept": 38,
+  "n_dropped": 0
+ },
+ "columns": [
+  {
+   "name": "breadth_above_ma50",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "cycle:deterioration",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "cycle:shift_pct",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "cycle:turning",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "dist_200",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "dvol:btc",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "dvol:btc_pct_1y",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "funding_7d_ann",
+   "n_present": 56,
+   "n_rows": 2051,
+   "missing_rate": 0.9727,
+   "first": "2026-09-09",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "funding_7d_ann_binance",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "macro:fed_balance_sheet",
+   "n_present": 293,
+   "n_rows": 2051,
+   "missing_rate": 0.8571,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "macro:fed_net_liquidity",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "macro:fed_rrp",
+   "n_present": 1402,
+   "n_rows": 2051,
+   "missing_rate": 0.3164,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "macro:fed_tga",
+   "n_present": 293,
+   "n_rows": 2051,
+   "missing_rate": 0.8571,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "macro:fng",
+   "n_present": 2050,
+   "n_rows": 2051,
+   "missing_rate": 0.0005,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "macro:total_mcap",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "macro:total_volume",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "macro:vix",
+   "n_present": 1447,
+   "n_rows": 2051,
+   "missing_rate": 0.2945,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "mom_20",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "mom_200",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "mom_60",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "oi_chg_30d",
+   "n_present": 8,
+   "n_rows": 2051,
+   "missing_rate": 0.9961,
+   "first": "2026-10-27",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "regime_coverage_30d",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "regime_share_30d:EASING",
+   "n_present": 501,
+   "n_rows": 2051,
+   "missing_rate": 0.7557,
+   "first": "2025-05-22",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "regime_share_30d:NEUTRAL",
+   "n_present": 501,
+   "n_rows": 2051,
+   "missing_rate": 0.7557,
+   "first": "2025-05-22",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "regime_share_30d:RISK_OFF",
+   "n_present": 501,
+   "n_rows": 2051,
+   "missing_rate": 0.7557,
+   "first": "2025-05-22",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "regime_share_30d:RISK_ON",
+   "n_present": 501,
+   "n_rows": 2051,
+   "missing_rate": 0.7557,
+   "first": "2025-05-22",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "regime_share_30d:STAGFLATION",
+   "n_present": 501,
+   "n_rows": 2051,
+   "missing_rate": 0.7557,
+   "first": "2025-05-22",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "regime_share_30d:TIGHTENING",
+   "n_present": 501,
+   "n_rows": 2051,
+   "missing_rate": 0.7557,
+   "first": "2025-05-22",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "spy_ret_21",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "stable_lend_apy_7d",
+   "n_present": 1363,
+   "n_rows": 2051,
+   "missing_rate": 0.3354,
+   "first": "2023-02-10",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "stable_supply_30d",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "style_rel_majors_30d",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "taker_buy_share_30d",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "vol_30",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "vol_pct_3y",
+   "n_present": 1940,
+   "n_rows": 2051,
+   "missing_rate": 0.0541,
+   "first": "2021-07-13",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "vratio_30_180",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "xasset:btc_qqq_corr60",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  },
+  {
+   "name": "xasset:btc_uup_corr60",
+   "n_present": 2051,
+   "n_rows": 2051,
+   "missing_rate": 0.0,
+   "first": "2021-03-24",
+   "last": "2026-11-04",
+   "forward_only": false
+  }
+ ],
+ "kept_columns": [
+  "breadth_above_ma50",
+  "cycle:deterioration",
+  "cycle:shift_pct",
+  "cycle:turning",
+  "dist_200",
+  "dvol:btc",
+  "dvol:btc_pct_1y",
+  "funding_7d_ann",
+  "funding_7d_ann_binance",
+  "macro:fed_balance_sheet",
+  "macro:fed_net_liquidity",
+  "macro:fed_rrp",
+  "macro:fed_tga",
+  "macro:fng",
+  "macro:total_mcap",
+  "macro:total_volume",
+  "macro:vix",
+  "mom_20",
+  "mom_200",
+  "mom_60",
+  "oi_chg_30d",
+  "regime_coverage_30d",
+  "regime_share_30d:EASING",
+  "regime_share_30d:NEUTRAL",
+  "regime_share_30d:RISK_OFF",
+  "regime_share_30d:RISK_ON",
+  "regime_share_30d:STAGFLATION",
+  "regime_share_30d:TIGHTENING",
+  "spy_ret_21",
+  "stable_lend_apy_7d",
+  "stable_supply_30d",
+  "style_rel_majors_30d",
+  "taker_buy_share_30d",
+  "vol_30",
+  "vol_pct_3y",
+  "vratio_30_180",
+  "xasset:btc_qqq_corr60",
+  "xasset:btc_uup_corr60"
+ ],
+ "dropped_columns": [],
+ "results": {
+  "h30": {
+   "h": 30,
+   "n": 2021,
+   "n_folds": 6,
+   "date_min": "2021-03-24",
+   "date_max": "2026-10-04",
+   "folds": [
+    {
+     "k": 1,
+     "train_n": 365,
+     "test_n": 271,
+     "test_start": "2022-04-23",
+     "test_end": "2023-01-18"
+    },
+    {
+     "k": 2,
+     "train_n": 636,
+     "test_n": 271,
+     "test_start": "2023-01-19",
+     "test_end": "2023-10-16"
+    },
+    {
+     "k": 3,
+     "train_n": 907,
+     "test_n": 271,
+     "test_start": "2023-10-17",
+     "test_end": "2024-07-13"
+    },
+    {
+     "k": 4,
+     "train_n": 1178,
+     "test_n": 271,
+     "test_start": "2024-07-14",
+     "test_end": "2025-04-10"
+    },
+    {
+     "k": 5,
+     "train_n": 1449,
+     "test_n": 271,
+     "test_start": "2025-04-11",
+     "test_end": "2026-01-06"
+    },
+    {
+     "k": 6,
+     "train_n": 1720,
+     "test_n": 271,
+     "test_start": "2026-01-07",
+     "test_end": "2026-10-04"
+    }
+   ],
+   "models": {
+    "ridge": {
+     "n": 1626,
+     "ic": -0.0287,
+     "n_months": 54,
+     "mean_ic": 0.2001,
+     "t": 2.97,
+     "null_p95": 0.1585,
+     "pctile": 0.378,
+     "per_fold_ic": [
+      {
+       "fold": 1,
+       "n": 271,
+       "ic": 0.6444,
+       "test_start": "2022-04-23",
+       "test_end": "2023-01-18"
+      },
+      {
+       "fold": 2,
+       "n": 271,
+       "ic": -0.3577,
+       "test_start": "2023-01-19",
+       "test_end": "2023-10-16"
+      },
+      {
+       "fold": 3,
+       "n": 271,
+       "ic": 0.6096,
+       "test_start": "2023-10-17",
+       "test_end": "2024-07-13"
+      },
+      {
+       "fold": 4,
+       "n": 271,
+       "ic": 0.3805,
+       "test_start": "2024-07-14",
+       "test_end": "2025-04-10"
+      },
+      {
+       "fold": 5,
+       "n": 271,
+       "ic": 0.6016,
+       "test_start": "2025-04-11",
+       "test_end": "2026-01-06"
+      },
+      {
+       "fold": 6,
+       "n": 271,
+       "ic": 0.5645,
+       "test_start": "2026-01-07",
+       "test_end": "2026-10-04"
+      }
+     ],
+     "late_folds_4_6_ic": 0.1671,
+     "late_folds_4_6_n": 813,
+     "diag": {
+      "per_fold": [
+       {
+        "fold": 1,
+        "test_start": "2022-04-23",
+        "test_end": "2023-01-18",
+        "ic_raw": 0.6444,
+        "ic_detrended": 0.4731,
+        "null_p95": 0.3303,
+        "pctile": 1.0,
+        "oof_mean": 0.2971,
+        "oof_std": 0.1514,
+        "y_mean": -0.0439
+       },
+       {
+        "fold": 2,
+        "test_start": "2023-01-19",
+        "test_end": "2023-10-16",
+        "ic_raw": -0.3577,
+        "ic_detrended": -0.3827,
+        "null_p95": 0.3696,
+        "pctile": 0.056,
+        "oof_mean": -0.0955,
+        "oof_std": 0.1405,
+        "y_mean": 0.0438
+       },
+       {
+        "fold": 3,
+        "test_start": "2023-10-17",
+        "test_end": "2024-07-13",
+        "ic_raw": 0.6096,
+        "ic_detrended": 0.4847,
+        "null_p95": 0.3767,
+        "pctile": 0.998,
+        "oof_mean": -0.4381,
+        "oof_std": 0.23,
+        "y_mean": 0.0687
+       },
+       {
+        "fold": 4,
+        "test_start": "2024-07-14",
+        "test_end": "2025-04-10",
+        "ic_raw": 0.3805,
+        "ic_detrended": 0.4304,
+        "null_p95": 0.4012,
+        "pctile": 0.943,
+        "oof_mean": -0.3761,
+        "oof_std": 0.23,
+        "y_mean": 0.0415
+       },
+       {
+        "fold": 5,
+        "test_start": "2025-04-11",
+        "test_end": "2026-01-06",
+        "ic_raw": 0.6016,
+        "ic_detrended": 0.4673,
+        "null_p95": 0.3274,
+        "pctile": 1.0,
+        "oof_mean": -0.1311,
+        "oof_std": 0.0921,
+        "y_mean": -0.0058
+       },
+       {
+        "fold": 6,
+        "test_start": "2026-01-07",
+        "test_end": "2026-10-04",
+        "ic_raw": 0.5645,
+        "ic_detrended": 0.5302,
+        "null_p95": 0.3257,
+        "pctile": 0.999,
+        "oof_mean": 0.1095,
+        "oof_std": 0.0817,
+        "y_mean": -0.0077
+       }
+      ],
+      "pooled_ic_demeaned_within_fold": 0.4178,
+      "pooled_ic_detrended_within_fold": 0.3213
+     }
+    },
+    "hgb": {
+     "n": 1626,
+     "ic": 0.0156,
+     "n_months": 54,
+     "mean_ic": 0.24,
+     "t": 3.978,
+     "null_p95": 0.1431,
+     "pctile": 0.572,
+     "per_fold_ic": [
+      {
+       "fold": 1,
+       "n": 271,
+       "ic": 0.5318,
+       "test_start": "2022-04-23",
+       "test_end": "2023-01-18"
+      },
+      {
+       "fold": 2,
+       "n": 271,
+       "ic": 0.0139,
+       "test_start": "2023-01-19",
+       "test_end": "2023-10-16"
+      },
+      {
+       "fold": 3,
+       "n": 271,
+       "ic": 0.3962,
+       "test_start": "2023-10-17",
+       "test_end": "2024-07-13"
+      },
+      {
+       "fold": 4,
+       "n": 271,
+       "ic": 0.0383,
+       "test_start": "2024-07-14",
+       "test_end": "2025-04-10"
+      },
+      {
+       "fold": 5,
+       "n": 271,
+       "ic": 0.3493,
+       "test_start": "2025-04-11",
+       "test_end": "2026-01-06"
+      },
+      {
+       "fold": 6,
+       "n": 271,
+       "ic": 0.0324,
+       "test_start": "2026-01-07",
+       "test_end": "2026-10-04"
+      }
+     ],
+     "late_folds_4_6_ic": 0.0818,
+     "late_folds_4_6_n": 813,
+     "diag": {
+      "per_fold": [
+       {
+        "fold": 1,
+        "test_start": "2022-04-23",
+        "test_end": "2023-01-18",
+        "ic_raw": 0.5318,
+        "ic_detrended": 0.4925,
+        "null_p95": 0.323,
+        "pctile": 0.999,
+        "oof_mean": 0.0619,
+        "oof_std": 0.0859,
+        "y_mean": -0.0439
+       },
+       {
+        "fold": 2,
+        "test_start": "2023-01-19",
+        "test_end": "2023-10-16",
+        "ic_raw": 0.0139,
+        "ic_detrended": -0.1005,
+        "null_p95": 0.3626,
+        "pctile": 0.548,
+        "oof_mean": -0.022,
+        "oof_std": 0.1124,
+        "y_mean": 0.0438
+       },
+       {
+        "fold": 3,
+        "test_start": "2023-10-17",
+        "test_end": "2024-07-13",
+        "ic_raw": 0.3962,
+        "ic_detrended": 0.2615,
+        "null_p95": 0.3466,
+        "pctile": 0.974,
+        "oof_mean": -0.1491,
+        "oof_std": 0.0865,
+        "y_mean": 0.0687
+       },
+       {
+        "fold": 4,
+        "test_start": "2024-07-14",
+        "test_end": "2025-04-10",
+        "ic_raw": 0.0383,
+        "ic_detrended": -0.0051,
+        "null_p95": 0.3537,
+        "pctile": 0.587,
+        "oof_mean": -0.0384,
+        "oof_std": 0.0824,
+        "y_mean": 0.0415
+       },
+       {
+        "fold": 5,
+        "test_start": "2025-04-11",
+        "test_end": "2026-01-06",
+        "ic_raw": 0.3493,
+        "ic_detrended": 0.3295,
+        "null_p95": 0.3003,
+        "pctile": 0.979,
+        "oof_mean": -0.0238,
+        "oof_std": 0.0472,
+        "y_mean": -0.0058
+       },
+       {
+        "fold": 6,
+        "test_start": "2026-01-07",
+        "test_end": "2026-10-04",
+        "ic_raw": 0.0324,
+        "ic_detrended": 0.2838,
+        "null_p95": 0.3355,
+        "pctile": 0.568,
+        "oof_mean": 0.0915,
+        "oof_std": 0.0664,
+        "y_mean": -0.0077
+       }
+      ],
+      "pooled_ic_demeaned_within_fold": 0.1812,
+      "pooled_ic_detrended_within_fold": 0.1832
+     }
+    }
+   },
+   "criteria": [
+    {
+     "model": "ridge",
+     "a_ic_ge_0.10": false,
+     "b_pctile_ge_0.95": false,
+     "c_monthly_t_ge_2.0": true,
+     "d_late_folds_ic_gt_0": true,
+     "pass": false
+    },
+    {
+     "model": "hgb",
+     "a_ic_ge_0.10": false,
+     "b_pctile_ge_0.95": false,
+     "c_monthly_t_ge_2.0": true,
+     "d_late_folds_ic_gt_0": true,
+     "pass": false
+    }
+   ],
+   "verdict": "❌"
+  },
+  "h7": {
+   "h": 7,
+   "n": 2044,
+   "n_folds": 6,
+   "date_min": "2021-03-24",
+   "date_max": "2026-10-27",
+   "folds": [
+    {
+     "k": 1,
+     "train_n": 365,
+     "test_n": 278,
+     "test_start": "2022-03-31",
+     "test_end": "2023-01-02"
+    },
+    {
+     "k": 2,
+     "train_n": 643,
+     "test_n": 278,
+     "test_start": "2023-01-03",
+     "test_end": "2023-10-07"
+    },
+    {
+     "k": 3,
+     "train_n": 921,
+     "test_n": 278,
+     "test_start": "2023-10-08",
+     "test_end": "2024-07-11"
+    },
+    {
+     "k": 4,
+     "train_n": 1199,
+     "test_n": 278,
+     "test_start": "2024-07-12",
+     "test_end": "2025-04-15"
+    },
+    {
+     "k": 5,
+     "train_n": 1477,
+     "test_n": 278,
+     "test_start": "2025-04-16",
+     "test_end": "2026-01-18"
+    },
+    {
+     "k": 6,
+     "train_n": 1755,
+     "test_n": 282,
+     "test_start": "2026-01-19",
+     "test_end": "2026-10-27"
+    }
+   ],
+   "models": {
+    "ridge": {
+     "n": 1672,
+     "ic": 0.0399,
+     "n_months": 55,
+     "mean_ic": 0.2216,
+     "t": 4.48,
+     "null_p95": 0.0942,
+     "pctile": 0.745,
+     "per_fold_ic": [
+      {
+       "fold": 1,
+       "n": 278,
+       "ic": 0.3652,
+       "test_start": "2022-03-31",
+       "test_end": "2023-01-02"
+      },
+      {
+       "fold": 2,
+       "n": 278,
+       "ic": 0.1557,
+       "test_start": "2023-01-03",
+       "test_end": "2023-10-07"
+      },
+      {
+       "fold": 3,
+       "n": 278,
+       "ic": 0.3636,
+       "test_start": "2023-10-08",
+       "test_end": "2024-07-11"
+      },
+      {
+       "fold": 4,
+       "n": 278,
+       "ic": 0.2183,
+       "test_start": "2024-07-12",
+       "test_end": "2025-04-15"
+      },
+      {
+       "fold": 5,
+       "n": 278,
+       "ic": 0.2959,
+       "test_start": "2025-04-16",
+       "test_end": "2026-01-18"
+      },
+      {
+       "fold": 6,
+       "n": 282,
+       "ic": 0.36,
+       "test_start": "2026-01-19",
+       "test_end": "2026-10-27"
+      }
+     ],
+     "late_folds_4_6_ic": 0.0554,
+     "late_folds_4_6_n": 838,
+     "diag": {
+      "per_fold": [
+       {
+        "fold": 1,
+        "test_start": "2022-03-31",
+        "test_end": "2023-01-02",
+        "ic_raw": 0.3652,
+        "ic_detrended": 0.2438,
+        "null_p95": 0.201,
+        "pctile": 0.999,
+        "oof_mean": 0.1835,
+        "oof_std": 0.0914,
+        "y_mean": -0.0249
+       },
+       {
+        "fold": 2,
+        "test_start": "2023-01-03",
+        "test_end": "2023-10-07",
+        "ic_raw": 0.1557,
+        "ic_detrended": 0.0879,
+        "null_p95": 0.2553,
+        "pctile": 0.849,
+        "oof_mean": -0.0591,
+        "oof_std": 0.0744,
+        "y_mean": 0.0119
+       },
+       {
+        "fold": 3,
+        "test_start": "2023-10-08",
+        "test_end": "2024-07-11",
+        "ic_raw": 0.3636,
+        "ic_detrended": 0.2247,
+        "null_p95": 0.2335,
+        "pctile": 0.998,
+        "oof_mean": -0.0639,
+        "oof_std": 0.0752,
+        "y_mean": 0.0208
+       },
+       {
+        "fold": 4,
+        "test_start": "2024-07-12",
+        "test_end": "2025-04-15",
+        "ic_raw": 0.2183,
+        "ic_detrended": 0.1588,
+        "null_p95": 0.1996,
+        "pctile": 0.964,
+        "oof_mean": -0.1575,
+        "oof_std": 0.0732,
+        "y_mean": 0.0083
+       },
+       {
+        "fold": 5,
+        "test_start": "2025-04-16",
+        "test_end": "2026-01-18",
+        "ic_raw": 0.2959,
+        "ic_detrended": 0.2528,
+        "null_p95": 0.1942,
+        "pctile": 0.999,
+        "oof_mean": -0.0591,
+        "oof_std": 0.0341,
+        "y_mean": 0.0009
+       },
+       {
+        "fold": 6,
+        "test_start": "2026-01-19",
+        "test_end": "2026-10-27",
+        "ic_raw": 0.36,
+        "ic_detrended": 0.3479,
+        "null_p95": 0.2456,
+        "pctile": 0.996,
+        "oof_mean": 0.0682,
+        "oof_std": 0.037,
+        "y_mean": -0.0034
+       }
+      ],
+      "pooled_ic_demeaned_within_fold": 0.3056,
+      "pooled_ic_detrended_within_fold": 0.2036
+     }
+    },
+    "hgb": {
+     "n": 1672,
+     "ic": -0.0673,
+     "n_months": 55,
+     "mean_ic": 0.1282,
+     "t": 2.443,
+     "null_p95": 0.0874,
+     "pctile": 0.109,
+     "per_fold_ic": [
+      {
+       "fold": 1,
+       "n": 278,
+       "ic": 0.1761,
+       "test_start": "2022-03-31",
+       "test_end": "2023-01-02"
+      },
+      {
+       "fold": 2,
+       "n": 278,
+       "ic": -0.1282,
+       "test_start": "2023-01-03",
+       "test_end": "2023-10-07"
+      },
+      {
+       "fold": 3,
+       "n": 278,
+       "ic": -0.1803,
+       "test_start": "2023-10-08",
+       "test_end": "2024-07-11"
+      },
+      {
+       "fold": 4,
+       "n": 278,
+       "ic": 0.0899,
+       "test_start": "2024-07-12",
+       "test_end": "2025-04-15"
+      },
+      {
+       "fold": 5,
+       "n": 278,
+       "ic": 0.1104,
+       "test_start": "2025-04-16",
+       "test_end": "2026-01-18"
+      },
+      {
+       "fold": 6,
+       "n": 282,
+       "ic": 0.0146,
+       "test_start": "2026-01-19",
+       "test_end": "2026-10-27"
+      }
+     ],
+     "late_folds_4_6_ic": 0.0567,
+     "late_folds_4_6_n": 838,
+     "diag": {
+      "per_fold": [
+       {
+        "fold": 1,
+        "test_start": "2022-03-31",
+        "test_end": "2023-01-02",
+        "ic_raw": 0.1761,
+        "ic_detrended": 0.1555,
+        "null_p95": 0.189,
+        "pctile": 0.938,
+        "oof_mean": 0.0845,
+        "oof_std": 0.0349,
+        "y_mean": -0.0249
+       },
+       {
+        "fold": 2,
+        "test_start": "2023-01-03",
+        "test_end": "2023-10-07",
+        "ic_raw": -0.1282,
+        "ic_detrended": -0.0168,
+        "null_p95": 0.2015,
+        "pctile": 0.214,
+        "oof_mean": -0.0578,
+        "oof_std": 0.0401,
+        "y_mean": 0.0119
+       },
+       {
+        "fold": 3,
+        "test_start": "2023-10-08",
+        "test_end": "2024-07-11",
+        "ic_raw": -0.1803,
+        "ic_detrended": 0.0135,
+        "null_p95": 0.2244,
+        "pctile": 0.081,
+        "oof_mean": -0.0154,
+        "oof_std": 0.0327,
+        "y_mean": 0.0208
+       },
+       {
+        "fold": 4,
+        "test_start": "2024-07-12",
+        "test_end": "2025-04-15",
+        "ic_raw": 0.0899,
+        "ic_detrended": 0.0658,
+        "null_p95": 0.2222,
+        "pctile": 0.734,
+        "oof_mean": -0.0446,
+        "oof_std": 0.0461,
+        "y_mean": 0.0083
+       },
+       {
+        "fold": 5,
+        "test_start": "2025-04-16",
+        "test_end": "2026-01-18",
+        "ic_raw": 0.1104,
+        "ic_detrended": 0.1731,
+        "null_p95": 0.164,
+        "pctile": 0.87,
+        "oof_mean": -0.0348,
+        "oof_std": 0.0308,
+        "y_mean": 0.0009
+       },
+       {
+        "fold": 6,
+        "test_start": "2026-01-19",
+        "test_end": "2026-10-27",
+        "ic_raw": 0.0146,
+        "ic_detrended": -0.028,
+        "null_p95": 0.2039,
+        "pctile": 0.571,
+        "oof_mean": -0.0211,
+        "oof_std": 0.048,
+        "y_mean": -0.0034
+       }
+      ],
+      "pooled_ic_demeaned_within_fold": 0.0084,
+      "pooled_ic_detrended_within_fold": 0.0486
+     }
+    }
+   }
+  }
+ },
+ "side": {
+  "model_corr_h30": 0.7143,
+  "model_corr_h7": 0.6187,
+  "perm_importance_h30_ridge": [
+   {
+    "feature": "macro:total_mcap",
+    "ic_drop": 0.1071
+   },
+   {
+    "feature": "mom_200",
+    "ic_drop": 0.0302
+   },
+   {
+    "feature": "breadth_above_ma50",
+    "ic_drop": 0.0159
+   },
+   {
+    "feature": "spy_ret_21",
+    "ic_drop": 0.0135
+   },
+   {
+    "feature": "stable_lend_apy_7d",
+    "ic_drop": 0.0088
+   },
+   {
+    "feature": "macro:total_volume",
+    "ic_drop": 0.0073
+   },
+   {
+    "feature": "regime_coverage_30d",
+    "ic_drop": 0.0039
+   },
+   {
+    "feature": "mom_20",
+    "ic_drop": 0.0029
+   },
+   {
+    "feature": "dvol:btc_pct_1y",
+    "ic_drop": 0.0027
+   },
+   {
+    "feature": "macro:fng",
+    "ic_drop": 0.0014
+   }
+  ],
+  "perm_importance_h30_ridge_all": [
+   {
+    "feature": "macro:total_mcap",
+    "ic_drop": 0.1071
+   },
+   {
+    "feature": "mom_200",
+    "ic_drop": 0.0302
+   },
+   {
+    "feature": "breadth_above_ma50",
+    "ic_drop": 0.0159
+   },
+   {
+    "feature": "spy_ret_21",
+    "ic_drop": 0.0135
+   },
+   {
+    "feature": "stable_lend_apy_7d",
+    "ic_drop": 0.0088
+   },
+   {
+    "feature": "macro:total_volume",
+    "ic_drop": 0.0073
+   },
+   {
+    "feature": "regime_coverage_30d",
+    "ic_drop": 0.0039
+   },
+   {
+    "feature": "mom_20",
+    "ic_drop": 0.0029
+   },
+   {
+    "feature": "dvol:btc_pct_1y",
+    "ic_drop": 0.0027
+   },
+   {
+    "feature": "macro:fng",
+    "ic_drop": 0.0014
+   },
+   {
+    "feature": "macro:fed_tga",
+    "ic_drop": 0.0002
+   },
+   {
+    "feature": "regime_share_30d:RISK_OFF",
+    "ic_drop": 0.0001
+   },
+   {
+    "feature": "funding_7d_ann",
+    "ic_drop": 0.0
+   },
+   {
+    "feature": "oi_chg_30d",
+    "ic_drop": 0.0
+   },
+   {
+    "feature": "regime_share_30d:NEUTRAL",
+    "ic_drop": 0.0
+   },
+   {
+    "feature": "regime_share_30d:TIGHTENING",
+    "ic_drop": 0.0
+   },
+   {
+    "feature": "xasset:btc_uup_corr60",
+    "ic_drop": -0.0002
+   },
+   {
+    "feature": "macro:fed_balance_sheet",
+    "ic_drop": -0.0005
+   },
+   {
+    "feature": "regime_share_30d:STAGFLATION",
+    "ic_drop": -0.001
+   },
+   {
+    "feature": "regime_share_30d:RISK_ON",
+    "ic_drop": -0.0011
+   },
+   {
+    "feature": "vol_30",
+    "ic_drop": -0.0011
+   },
+   {
+    "feature": "vol_pct_3y",
+    "ic_drop": -0.0011
+   },
+   {
+    "feature": "dist_200",
+    "ic_drop": -0.0013
+   },
+   {
+    "feature": "mom_60",
+    "ic_drop": -0.0019
+   },
+   {
+    "feature": "macro:fed_rrp",
+    "ic_drop": -0.0021
+   },
+   {
+    "feature": "macro:fed_net_liquidity",
+    "ic_drop": -0.0026
+   },
+   {
+    "feature": "cycle:turning",
+    "ic_drop": -0.0032
+   },
+   {
+    "feature": "regime_share_30d:EASING",
+    "ic_drop": -0.0033
+   },
+   {
+    "feature": "macro:vix",
+    "ic_drop": -0.0042
+   },
+   {
+    "feature": "taker_buy_share_30d",
+    "ic_drop": -0.0044
+   },
+   {
+    "feature": "cycle:shift_pct",
+    "ic_drop": -0.005
+   },
+   {
+    "feature": "funding_7d_ann_binance",
+    "ic_drop": -0.0055
+   },
+   {
+    "feature": "style_rel_majors_30d",
+    "ic_drop": -0.006
+   },
+   {
+    "feature": "dvol:btc",
+    "ic_drop": -0.0069
+   },
+   {
+    "feature": "vratio_30_180",
+    "ic_drop": -0.0193
+   },
+   {
+    "feature": "stable_supply_30d",
+    "ic_drop": -0.0205
+   },
+   {
+    "feature": "cycle:deterioration",
+    "ic_drop": -0.023
+   },
+   {
+    "feature": "xasset:btc_qqq_corr60",
+    "ic_drop": -0.0253
+   }
+  ],
+  "perm_importance_h30_hgb": [
+   {
+    "feature": "macro:total_mcap",
+    "ic_drop": 0.0618
+   },
+   {
+    "feature": "xasset:btc_qqq_corr60",
+    "ic_drop": 0.0203
+   },
+   {
+    "feature": "mom_200",
+    "ic_drop": 0.0173
+   },
+   {
+    "feature": "stable_lend_apy_7d",
+    "ic_drop": 0.0168
+   },
+   {
+    "feature": "vratio_30_180",
+    "ic_drop": 0.0087
+   },
+   {
+    "feature": "macro:fng",
+    "ic_drop": 0.0086
+   },
+   {
+    "feature": "mom_20",
+    "ic_drop": 0.0081
+   },
+   {
+    "feature": "spy_ret_21",
+    "ic_drop": 0.0072
+   },
+   {
+    "feature": "dist_200",
+    "ic_drop": 0.0058
+   },
+   {
+    "feature": "style_rel_majors_30d",
+    "ic_drop": 0.0058
+   }
+  ],
+  "perm_importance_h30_hgb_all": [
+   {
+    "feature": "macro:total_mcap",
+    "ic_drop": 0.0618
+   },
+   {
+    "feature": "xasset:btc_qqq_corr60",
+    "ic_drop": 0.0203
+   },
+   {
+    "feature": "mom_200",
+    "ic_drop": 0.0173
+   },
+   {
+    "feature": "stable_lend_apy_7d",
+    "ic_drop": 0.0168
+   },
+   {
+    "feature": "vratio_30_180",
+    "ic_drop": 0.0087
+   },
+   {
+    "feature": "macro:fng",
+    "ic_drop": 0.0086
+   },
+   {
+    "feature": "mom_20",
+    "ic_drop": 0.0081
+   },
+   {
+    "feature": "spy_ret_21",
+    "ic_drop": 0.0072
+   },
+   {
+    "feature": "dist_200",
+    "ic_drop": 0.0058
+   },
+   {
+    "feature": "style_rel_majors_30d",
+    "ic_drop": 0.0058
+   },
+   {
+    "feature": "taker_buy_share_30d",
+    "ic_drop": 0.0041
+   },
+   {
+    "feature": "mom_60",
+    "ic_drop": 0.0022
+   },
+   {
+    "feature": "vol_pct_3y",
+    "ic_drop": 0.0022
+   },
+   {
+    "feature": "macro:fed_rrp",
+    "ic_drop": 0.0009
+   },
+   {
+    "feature": "macro:fed_balance_sheet",
+    "ic_drop": 0.0005
+   },
+   {
+    "feature": "macro:vix",
+    "ic_drop": 0.0004
+   },
+   {
+    "feature": "funding_7d_ann",
+    "ic_drop": 0.0
+   },
+   {
+    "feature": "macro:fed_tga",
+    "ic_drop": -0.0
+   },
+   {
+    "feature": "oi_chg_30d",
+    "ic_drop": 0.0
+   },
+   {
+    "feature": "regime_coverage_30d",
+    "ic_drop": 0.0
+   },
+   {
+    "feature": "regime_share_30d:EASING",
+    "ic_drop": 0.0
+   },
+   {
+    "feature": "regime_share_30d:NEUTRAL",
+    "ic_drop": 0.0
+   },
+   {
+    "feature": "regime_share_30d:RISK_OFF",
+    "ic_drop": 0.0
+   },
+   {
+    "feature": "regime_share_30d:RISK_ON",
+    "ic_drop": 0.0
+   },
+   {
+    "feature": "regime_share_30d:STAGFLATION",
+    "ic_drop": 0.0
+   },
+   {
+    "feature": "regime_share_30d:TIGHTENING",
+    "ic_drop": 0.0
+   },
+   {
+    "feature": "cycle:turning",
+    "ic_drop": -0.0002
+   },
+   {
+    "feature": "breadth_above_ma50",
+    "ic_drop": -0.0006
+   },
+   {
+    "feature": "funding_7d_ann_binance",
+    "ic_drop": -0.0022
+   },
+   {
+    "feature": "stable_supply_30d",
+    "ic_drop": -0.0025
+   },
+   {
+    "feature": "dvol:btc",
+    "ic_drop": -0.0029
+   },
+   {
+    "feature": "cycle:deterioration",
+    "ic_drop": -0.003
+   },
+   {
+    "feature": "macro:total_volume",
+    "ic_drop": -0.0035
+   },
+   {
+    "feature": "cycle:shift_pct",
+    "ic_drop": -0.0055
+   },
+   {
+    "feature": "xasset:btc_uup_corr60",
+    "ic_drop": -0.0056
+   },
+   {
+    "feature": "vol_30",
+    "ic_drop": -0.0111
+   },
+   {
+    "feature": "dvol:btc_pct_1y",
+    "ic_drop": -0.0192
+   },
+   {
+    "feature": "macro:fed_net_liquidity",
+    "ic_drop": -0.0242
+   }
+  ],
+  "state_note": "align_worst=0.008 · src=/Users/sbb/Projects/looloomi-ai/src/data/state/state_map.py",
+  "state_ic_h30": [
+   {
+    "state": 0,
+    "n": 24,
+    "ic_ridge": null,
+    "ic_hgb": null
+   },
+   {
+    "state": 1,
+    "n": 181,
+    "ic_ridge": 0.1488,
+    "ic_hgb": 0.2995
+   },
+   {
+    "state": 2,
+    "n": 559,
+    "ic_ridge": -0.061,
+    "ic_hgb": -0.097
+   },
+   {
+    "state": 3,
+    "n": 39,
+    "ic_ridge": null,
+    "ic_hgb": null
+   },
+   {
+    "state": 4,
+    "n": 348,
+    "ic_ridge": 0.0189,
+    "ic_hgb": 0.2345
+   },
+   {
+    "state": 5,
+    "n": 274,
+    "ic_ridge": -0.059,
+    "ic_hgb": 0.1419
+   }
+  ]
+ }
+}

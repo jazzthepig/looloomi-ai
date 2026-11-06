@@ -1,0 +1,78 @@
+{
+  "author": "lane-c",
+  "note": "T-260(S-739 联合模型)前向预期。概率是作者自估,到期按 Brier 结算;写的是可核的量,不是收益承诺。背景:本轮实测 —— 特征表 38 列全部放进一个模型,30 天目标的合并样本外 IC:Ridge −0.0287 / HGB 0.0156(判据要求 ≥ 0.10),块置换分位 0.378 / 0.572(要求 ≥ 0.95)⇒ S-739 判 ❌;但折内 IC 0.38–0.64、去时间趋势后仍留 0.16–0.53,合并 IC 近 0 是因为样本外预测的水平逐折漂移(折间不可比)。基率(2021-03-24→2026-10-04,n=2021):30 天前瞻收益 > 0 占 51.86%;breadth_above_ma50 > 0 占 92.05%、≤ 0.25 占 45.98%;macro:vix > 25 占 12.65%。报告 docs/research/T-260_joint_model_v1.md,数值 docs/research/t260_results.json,脚本 docs/research/t260_joint.py。条目 1–3 自动结算(close / state / macro),条目 4–6 人工核。",
+  "entries": [
+    {
+      "id": "T-260-1",
+      "scenario": "T-260 判 ❌ 的稳定性 · 合并样本外 IC 仍然不过线",
+      "statement": "2027-11-06 之前重跑 docs/research/t260_joint.py(同一份冻结口径:6 折走步、隔离带=持有期、Ridge alpha=10 / HGB seed 739、零分布 1000×块长 20×种子 739),30 天目标的**合并样本外 IC** 仍 < 0.10 **且**块置换分位仍 < 0.95(本轮:Ridge −0.0287 / 分位 0.378;HGB 0.0156 / 分位 0.572)",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 0.10,
+      "prob": 0.8,
+      "horizon_d": "2027-11-06",
+      "check": "python3 docs/research/t260_joint.py → results.json 的 results.h30.models.{ridge,hgb}.ic < 0.10 且 .pctile < 0.95(两个模型都是)",
+      "current_reading": {
+        "2026-11-06": "Ridge ic=−0.0287 / pctile=0.378;HGB ic=0.0156 / pctile=0.572 ⇒ (a)(b) 两条都不过,判 ❌"
+      }
+    },
+    {
+      "id": "T-260-2",
+      "scenario": "T-260 判 ❌ 的稳定性 · 折内有效、跨折无效的结构还在",
+      "statement": "2027-11-06 之前重跑同一脚本,Ridge 的**折内去时间趋势 IC**(每折 6 折的均值)仍 ≥ 0.20 **且**合并样本外 IC 仍 < 0.10 —— 即「在一段时间内排得准、跨时段不可比」不是这一个月的数据巧合",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0.20,
+      "prob": 0.55,
+      "horizon_d": "2027-11-06",
+      "check": "python3 docs/research/t260_joint.py → results.json 的 results.h30.models.ridge.diag.per_fold[*].ic_detrended 的均值 ≥ 0.20,且 results.h30.models.ridge.ic < 0.10",
+      "current_reading": {
+        "2026-11-06": "Ridge 逐折去趋势 IC:0.4731 / −0.3827 / 0.4847 / 0.4304 / 0.4673 / 0.5302(均值 0.3338,去掉最差的折 2 后 0.4771);合并 IC −0.0287"
+      }
+    },
+    {
+      "id": "T-260-3",
+      "scenario": "T-260 数据健康 · 特征表还会继续长,近空维度仍不可用于训练",
+      "statement": "2027-11-06 之前,`feature_matrix_daily` 里 `oi_chg_30d` 的历史覆盖率仍 < 50%(本轮:2,051 天里只有 8 天有值,2026-10-27 起),且视图的列数仍 ≥ 38(本轮 38 列,两次相隔 10 分钟的运行之间多出 2 个 xasset: 列)⇒ 「特征表在长、但新维度没有回填」这个状态没变",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 0.5,
+      "prob": 0.65,
+      "horizon_d": "2027-11-06",
+      "check": "python3 docs/research/t260_joint.py --probe → 每列的 present / n_rows;oi_chg_30d 的覆盖率 < 0.5 且 n_keys ≥ 38"
+    },
+    {
+      "id": "T-260-4",
+      "scenario": "T-260 市场面 · 广度会从今天的极低位(4.2%)回到「有币站在 50 日线上」",
+      "statement": "2026-12-15 时 state_daily(entity=panel) 的 breadth_above_ma50 > 0(样本内基率 92.05%;2026-11-04 只有 0.0417)",
+      "variable": "state:breadth_above_ma50",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.9,
+      "horizon_d": "2026-12-15",
+      "check": "select breadth_above_ma50 from state_daily where entity='panel' and d='2026-12-15'"
+    },
+    {
+      "id": "T-260-5",
+      "scenario": "T-260 市场面 · 宏观不紧张(VIX 仍在 25 以下)",
+      "statement": "2026-12-15 时 macro_daily 的 vix ≤ 25(样本内基率 87.35%;2026-11-04 为 16.61)",
+      "variable": "macro:vix",
+      "op": "lt",
+      "hi": 25,
+      "prob": 0.85,
+      "horizon_d": "2026-12-15",
+      "check": "select value from macro_daily where series='vix' and d='2026-12-15'"
+    },
+    {
+      "id": "T-260-6",
+      "scenario": "T-260 市场面 · BTC 一个月后的水平(以 2026-11-05 收盘为锚)",
+      "statement": "2026-12-15 时 ohlcv_daily(source='binance_hist', symbol='BTC') 的收盘 > 76088(2026-11-05 收盘;样本内 30 天前瞻收益 > 0 的基率 51.86%)",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 76088,
+      "prob": 0.5,
+      "horizon_d": "2026-12-15",
+      "check": "select close from ohlcv_daily where source='binance_hist' and symbol='BTC' and trade_date='2026-12-15'"
+    }
+  ]
+}
