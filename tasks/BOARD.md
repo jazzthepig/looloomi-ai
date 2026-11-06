@@ -11,6 +11,7 @@
 | in_review | T-250 | lane-a | S-733 盲复算 + HL 现货子集:④ 资金费套息在 HL 已实现小时费率上(2023-06 → 2026-07-20)按 S-707 判据五条;另列 ① 24 名里 HL 有现货的名字并在那个子集上重算 | 报告 docs/research/T-250_s733_blind_recompute.md + docs/research/t250_carry.py + t250_results.json;卡 notes 写逐项对照表与 HL 现货子集的数;in_review,推 lane-a/T-250。 | S-733 只有 Seth 一个人算过。 |  |
 | in_review | T-252 | lane-a | 崩盘夜的空头腿(只报不判,先描述):③ 规则判 0 倍(全现金)时,另加一条 BTC 永续空腿(④、与 ③ 分开记账)在 2020-07 → 昨天的大跌段里赚不赚钱、扣资金费后是否为正、Calmar 与「只是空仓」比 —— Jazz 11-05 夜问「我们的策略没有开空或者对冲吗」 | 报告 docs/research/T-252_crash_short_leg.md + docs/research/t252_short_leg.py + t252_results.json;卡 notes 写三种定义的对照表与随机对照分位;in_review,推 lane-a/T-252。 | ④ 没有择时空腿;③ 规则判 0 时账户就是现金。 |  |
 | in_review | T-253 | lane-a | S-735:④ 套息只做过去 30 天费率最高的一半名字,对照 S-733 规则 B(全部 22 名)—— 判据照台账写死 | 报告 docs/research/T-253_carry_top_half.md + t253_carry_top.py + t253_results.json;卡 notes 写 (a)–(d) 原始数字与判定;in_review,推 lane-a/T-253。 | S-733 规则 B 全部 22 名:净 12.19%/yr,2025 6.3%,2026H1 1.9%。 |  |
+| in_review | T-256 | lane-a | S-736 战术空单回放:流动性变差(⓪ turning / 恶化分扩张 20 分位)+ DVOL 一年分位 ≥ 0.70 + BTC 在 20 日均线下 才开;止盈 2.5 ATR 到价即撤、浮盈 +1R 后保本、止损 1.5 ATR、15 根时间止损 —— 判据照台账写死(Jazz 11-06:T-252 的长期空腿问错了问题) | 报告 docs/research/T-256_tactical_short.md + t256_tactical_short.py + t256_results.json;卡 notes 写票表摘要与判据;in_review,推 lane-a/T-256。 | T-252:长期开着的空腿三种定义全亏(−64% / −8% / −46%);条件 + 止盈 + 保本的票从没测过。 |  |
 | in_review | T-215 | lane-b | T-213 报告返工:5 日块对齐敏感性 + 撤回清单与正文 md:333 同步 | 报告更新 + 复跑脚本两次输出一致;卡片 notes:各对齐下的区间与被降级的句子清单。 | 头条数字会被 Jazz 用来选 SPYX vs Ondo;量级随对齐变 2–3 倍而无人说明。 |  |
 | in_review | T-216 | lane-b | T-005 预注册台账返工(lane-a 交叉复核 F1/F3/F2/F5):按实际代码重算样本量与判据 | 台账更新;卡片 notes:改前改后三个数与 β 带分布。 | 预注册里的样本量比实际宽 3 倍,会让后续裁决显得比实际更有把握。 |  |
 | in_review | T-219 | lane-b | 轨道公司股权进宇宙的第一份研究:风险画像、与 ① / BTC 的关系、执行场所逐家判断 —— 先描述,再预注册一条假设 | 报告 docs/research/T-219_rail_equities.md(开头风险画像表 + 场所表,末尾 M- 预注册与结果);卡片 notes 写关键数;in_review,推 lane-b/T-219。 | 宇宙里没有任何轨道公司;V / MA / BLK / IBKR / SCHW 只作为 World50 候选在池子里,从没按『轨道』看过。 |  |
@@ -257,4 +258,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 13 · claimed 7 · blocked 4 · in_review 37 · done 190 · dropped 3
+open 13 · claimed 7 · blocked 4 · in_review 38 · done 190 · dropped 3
