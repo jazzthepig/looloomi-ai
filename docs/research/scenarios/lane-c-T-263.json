@@ -1,0 +1,95 @@
+{
+  "author": "lane-c",
+  "note": "T-263(S-741 联合模型 v2)前向预期。概率是作者自估,到期按 Brier 结算;写的是可核的量,不是收益承诺。背景:本轮实测 —— 把样本外预测换成「相对自身过去 90 个样本外预测的 z」(时点可得),Ridge 在 30 天目标上把 S-739 的 ❌ 翻成 ✅:合并样本外 IC 0.1756(要求 ≥ 0.10)、块置换分位 0.986(要求 ≥ 0.95)、按月 t 2.478(要求 ≥ 2.0,53 个月)、折 4–6 IC 0.165(要求 > 0)、同一 z 变换作用在「BTC 过去 30 天收益」上的朴素基线 IC 0.0715 ⇒ 差值 0.1041(要求 ≥ 0.05)。HGB 没过(a 0.0736 / b 0.799 / d −0.0498 / e 0.0021)。消融:只加 z 不加新维度 Ridge IC 0.085(不过),只加新维度不加 z Ridge IC 0.032(不过)⇒ 两样都要。基率(2021-03-24→2026-11-05,可用 2,022 天):30 天前瞻收益 > 0 占 51.83%;breadth_above_ma50 > 0 占 92.06%(2026-11-05 只有 0.0417);macro:vix > 25 占 12.71%(2026-11-05 为 28.18)。报告 docs/research/T-263_joint_model_v2.md,数值 docs/research/t263_results.json,脚本 docs/research/t263_joint_v2.py。条目 1–4 人工核(重跑同一脚本对新的数据),条目 5–7 自动结算(close / state / macro)。",
+  "entries": [
+    {
+      "id": "T-263-1",
+      "scenario": "T-263 判 ✅ 的稳定性 · z 变换本身能撑住",
+      "statement": "2027-11-06 之前重跑 docs/research/t263_joint_v2.py(同一份冻结口径:6 折走步、隔离带=持有期、Ridge alpha=10 / HGB max_depth 3·lr 0.05·300 iters·种子 739、零分布 1000×块长 20×种子 741、z = 过去 90 个样本外预测的标准化·不足 60 不出分),30 天目标上 **Ridge 的 z 分数合并样本外 IC 仍 > 0.10**(本轮 0.1756;样本外有分的日子 1,567 天)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0.10,
+      "prob": 0.55,
+      "horizon_d": "2027-11-06",
+      "check": "python3 docs/research/t263_joint_v2.py → t263_results.json 的 criteria_30d[model=ridge].a_ic > 0.10",
+      "current_reading": {
+        "2026-11-06": "Ridge a_ic=0.1756(阈值 0.10)⇒ 过;同一模型去掉 z 之后 raw_no_z.ic=见 results.h30.models.ridge.raw_no_z.ic"
+      }
+    },
+    {
+      "id": "T-263-2",
+      "scenario": "T-263 判 ✅ 的稳定性 · 整套 (a)–(e) 仍全过",
+      "statement": "2027-11-06 之前重跑同一脚本,30 天目标上**至少一个模型把 (a)–(e) 五条全部满足**(本轮:Ridge 全过;IC 0.1756 / 分位 0.986 / t 2.478 / 折 4–6 IC 0.165 / 胜朴素基线 0.1041。分位与 t 的余量薄:0.986 vs 0.95、2.478 vs 2.0)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0.5,
+      "prob": 0.40,
+      "horizon_d": "2027-11-06",
+      "check": "python3 docs/research/t263_joint_v2.py → t263_results.json 的 criteria_30d[*].pass 全为 true 的至少一条;verdict == \"✅\"",
+      "current_reading": {
+        "2026-11-06": "verdict=✅;ridge.pass=true、hgb.pass=false"
+      }
+    },
+    {
+      "id": "T-263-3",
+      "scenario": "T-263 消融的稳定性 · 新维度是真需要的",
+      "statement": "2027-11-06 之前重跑同一脚本,**去掉 21 个新维度(风格 / 链上 / 持仓结构 / 渠道)后,Ridge 的 z 分数合并样本外 IC 仍 < 0.10**(本轮 0.085,分位 0.839 —— 只加 z 不加新维度是不过的;加新维度不加 z 也不过,Ridge 0.032)",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 0.10,
+      "prob": 0.55,
+      "horizon_d": "2027-11-06",
+      "check": "python3 docs/research/t263_joint_v2.py → t263_results.json 的 ablation_h30.A1_z_only_no_new_dims.ridge.ic < 0.10(且 A2_new_dims_no_z.ridge.ic < 0.10)",
+      "current_reading": {
+        "2026-11-06": "A1(只加 z,38 列)ridge ic=0.085 / 分位 0.839;A2(全 59 列,不加 z)ridge ic=0.032 / 分位 0.645 ⇒ 单独都不够,合起来才过"
+      }
+    },
+    {
+      "id": "T-263-4",
+      "scenario": "T-263 的基线 · 「过去 30 天收益」这个朴素信号本身还有效",
+      "statement": "2027-11-06 之前重跑同一脚本,**同一 z 变换作用在「BTC 过去 30 天收益」上的朴素基线 IC 仍 > 0.05**(本轮 0.0715;它是 (e) 的对照,也是 T-263 唯一赢下来的那个对手)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0.05,
+      "prob": 0.40,
+      "horizon_d": "2027-11-06",
+      "check": "python3 docs/research/t263_joint_v2.py → t263_results.json 的 results.h30.models.ridge.vs_naive_baseline[baseline_variant=A_daily_grid].ic_baseline > 0.05",
+      "current_reading": {
+        "2026-11-06": "朴素基线 ic=0.0715(日网格 A)/ 0.0725(样本外格 B);模型 0.1756 ⇒ 差 0.1041 / 0.1031,都 ≥ 0.05"
+      }
+    },
+    {
+      "id": "T-263-5",
+      "scenario": "T-263 市场面 · 广度会从今天的极低位(4.2%)回到「有币站在 50 日线上」",
+      "statement": "2026-12-15 时 state_daily(entity=panel) 的 breadth_above_ma50 > 0(样本内基率 92.06%;2026-11-05 只有 0.0417)",
+      "variable": "state:breadth_above_ma50",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.85,
+      "horizon_d": "2026-12-15",
+      "check": "select breadth_above_ma50 from state_daily where entity='panel' and d='2026-12-15'"
+    },
+    {
+      "id": "T-263-6",
+      "scenario": "T-263 市场面 · 宏观紧张会缓解(VIX 从 28.18 回到 25 以下)",
+      "statement": "2026-12-15 时 macro_daily 的 vix ≤ 25(样本内基率 87.29% ≤ 25;2026-11-05 为 28.18 —— 已经越线,所以比 T-260 那条更不确定)",
+      "variable": "macro:vix",
+      "op": "lt",
+      "hi": 25,
+      "prob": 0.75,
+      "horizon_d": "2026-12-15",
+      "check": "select value from macro_daily where series='vix' and d='2026-12-15'"
+    },
+    {
+      "id": "T-263-7",
+      "scenario": "T-263 市场面 · BTC 一个月后的水平(以 2026-11-05 收盘为锚)",
+      "statement": "2026-12-15 时 ohlcv_daily(source='binance_hist', symbol='BTC') 的收盘 > 76088(2026-11-05 收盘;样本内 30 天前瞻收益 > 0 的基率 51.83%)",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 76088,
+      "prob": 0.5,
+      "horizon_d": "2026-12-15",
+      "check": "select close from ohlcv_daily where source='binance_hist' and symbol='BTC' and trade_date='2026-12-15'"
+    }
+  ]
+}
