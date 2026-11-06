@@ -68,13 +68,15 @@ _FAIL: list[str] = []
 INGEST_STATE: dict[str, str] = {
     "/coins/markets": "persisted",
     "/global": "ephemeral",
-    "/coins/categories": "ephemeral",
+    # 11-06:src/data/market/cg_categories.py → cg_category_daily(全部 ~600 个分类,每 12 小时)
+    "/coins/categories": "persisted",
     # S-266 已接:src/data/rwa/collect.py → 本地 rwa.db(rwa_daily +
     # rwa_panel_daily)。判据是**落库产生历史**,而这条路径产生历史 ⇒ persisted。
     "/rwas/markets": "persisted",
     "/rwas/issuers/list": "persisted",
     "/global/market_cap_chart": "ephemeral",
-    "/exchanges/{id}/volume_chart": "unwired",
+    # 11-06:src/data/market/exchange_volume.py → exchange_volume_daily(/volume_chart/range,2021 起回填)
+    "/exchanges/{id}/volume_chart": "persisted",
 }
 
 #: 尚未落库的端点 + 用途。**只能减。**
@@ -87,14 +89,6 @@ UNWIRED_BUDGET: dict[str, str] = {
         "总市值 + BTC 主导率,一次调用。ephemeral:读了给页面,不落库,"
         "所以主导率没有历史 —— 而「TradFi 边际流进加密」这类论点要看的是主导率的"
         "轨迹,不是它此刻的值。",
-    "/exchanges/{id}/volume_chart":
-        "场所成交量历史。2026-09-01 的篮子测算显示场所/流动性层在 beta 走平的"
-        "五周里 +9.0pp —— 那是价格证据,这个端点是它的成交量对照。待接。",
-    "/coins/categories":
-        "分类市值+成交量 = 叙事层读数。S-205(2026-08-23)点名过它。"
-        "⚠️ 我在本文件初版写「至今仍未接」—— **错的,没核**:"
-        "`data_layer.py:1662` 一直在调。真实状态是 ephemeral:只取 ~16 家 VC 组合、"
-        "10 分钟 TTL、从不落库。所以叙事层没有历史,不是因为拿不到。",
 }
 
 

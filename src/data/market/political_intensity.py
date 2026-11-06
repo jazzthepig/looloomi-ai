@@ -1,0 +1,129 @@
+"""政治 / 地缘强度(Jazz 11-06「政治事件必须的,而且来源很多」)—— 三个免费、有长历史、按时点可得的来源,进状态面板。
+
+- **GPR 日度地缘政治风险指数**(Caldara & Iacoviello,美联储;报纸文章计数,1985 →):一个 xls 文件一次下载。
+  `GPRD` 总指数、`GPRD_ACT`(已发生的行动)、`GPRD_THREAT`(威胁)。按可得日入库:DAY + `GPR_LAG_DAYS`(更新有几天滞后)。
+- **GDELT DOC 2.0 新闻量强度**(全球新闻里匹配某主题的文章占比,2017 →):每个主题一次请求,返回整段日序列。
+  主题写死在 `TOPICS`;按可得日 = 日期 + 1 入库。GDELT 限速严(实测连续请求 429)⇒ 每个主题之间停 `GDELT_PAUSE_S` 秒。
+- **经济政策不确定性 EPU**(FRED USEPUINDXD)走 `cis_inputs.CREDIT_SERIES`;**Polymarket 政治 / 地缘市场**走 `prediction_markets.TAGS`。
+
+只记、不进敞口;是否有信息量由 lane 用 `joint_model.py` 判。表:GPR 进 `macro_daily`(series gpr / gpr_act / gpr_threat),
+GDELT 进 `political_intensity_daily`(d, topic)。判活:`select topic, max(d), count(*) from political_intensity_daily group by 1`。
+"""
+from __future__ import annotations
+
+import datetime as dt
+import io
+from typing import Any, Callable, Optional
+
+TABLE = "political_intensity_daily"
+MACRO_TABLE = "macro_daily"
+WRITES_TABLES = (TABLE, MACRO_TABLE)
+WRITES_COLUMNS = {TABLE: ("d", "topic", "value", "source"), MACRO_TABLE: ("series", "d", "value", "source")}
+LOOP_NAME = "_political_intensity_loop"
+GPR_URL = "https://www.matteoiacoviello.com/gpr_files/data_gpr_daily_recent.xls"
+GPR_LAG_DAYS = 5
+GPR_COLS = {"GPRD": "gpr", "GPRD_ACT": "gpr_act", "GPRD_THREAT": "gpr_threat"}
+GDELT_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
+GDELT_START = "20170101000000"
+GDELT_PAUSE_S = 30.0
+TOPICS = {
+    "conflict": "(war OR airstrike OR invasion OR missile)",
+    "sanctions": "sanctions",
+    "trade_war": "(tariff OR tariffs OR \"trade war\")",
+    "election_unrest": "(election OR coup OR impeachment OR protest)",
+    "crypto_policy": "(crypto OR bitcoin OR stablecoin) (SEC OR regulation OR ban OR bill)",
+}
+
+
+def gpr_rows(df) -> list[dict]:
+    """纯函数。GPR 日表 → macro_daily 行(可得日 = DAY + GPR_LAG_DAYS)。"""
+    out = []
+    for _, r in df.iterrows():
+        try:
+            day = dt.datetime.strptime(str(int(r["DAY"])), "%Y%m%d").date()
+        except (KeyError, TypeError, ValueError):
+            continue
+        avail = (day + dt.timedelta(days=GPR_LAG_DAYS)).isoformat()
+        for col, name in GPR_COLS.items():
+            v = r.get(col)
+            try:
+                v = float(v)
+            except (TypeError, ValueError):
+                continue
+            if v == v:
+                out.append({"series": name, "d": avail, "value": round(v, 4), "source": "gpr_caldara_iacoviello"})
+    return out
+
+
+def gdelt_rows(payload: Any, topic: str) -> list[dict]:
+    """纯函数。DOC timelinevol → 行(可得日 = 日期 + 1)。"""
+    out = []
+    try:
+        data = payload["timeline"][0]["data"]
+    except (KeyError, IndexError, TypeError):
+        return out
+    for x in data:
+        try:
+            day = dt.datetime.strptime(str(x["date"])[:8], "%Y%m%d").date()
+            v = float(x["value"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        out.append({"d": (day + dt.timedelta(days=1)).isoformat(), "topic": topic, "value": round(v, 5), "source": "gdelt_doc_timelinevol"})
+    return out
+
+
+def _get_bytes(url: str) -> bytes:
+    import urllib.request
+    req = urllib.request.Request(url, headers={"User-Agent": "cometcloud-research/1.0"})
+    with urllib.request.urlopen(req, timeout=60) as r:
+        return r.read()
+
+
+async def run_once(now: Optional[dt.datetime] = None, get: Optional[Callable[[str], bytes]] = None,
+                   pause_s: float = GDELT_PAUSE_S) -> dict[str, Any]:
+    import asyncio
+    import json
+    import urllib.parse
+
+    from src.api.store import supabase_upsert_table
+    from src.data.market.source_policy import assert_bulk_source
+    from src.data.style.header import _read_all
+    assert_bulk_source(len(TOPICS), "gdelt", job="political intensity (one timeline request per topic)")
+    get = get or _get_bytes
+    now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
+    out: dict[str, Any] = {"gpr": 0, "gdelt": {}, "failed": {}}
+    # GPR:一个文件
+    try:
+        import pandas as pd
+        df = pd.read_excel(io.BytesIO(await asyncio.to_thread(get, GPR_URL)))
+        rows = gpr_rows(df)
+        for i in range(0, len(rows), 1000):
+            if not await supabase_upsert_table(MACRO_TABLE, rows[i:i + 1000], on_conflict="series,d"):
+                raise RuntimeError("写 macro_daily 失败")
+        out["gpr"] = len(rows)
+    except Exception as e:                                                # noqa: BLE001 —— 一个源不通不挡其余
+        out["failed"]["gpr"] = f"{type(e).__name__}: {str(e)[:120]}"
+    # GDELT:每个主题一次;库里有就只取最近 14 天
+    last: dict[str, str] = {}
+    for r in await _read_all(TABLE, {"select": "topic,d", "order": "d.desc", "limit": "50"}):
+        last.setdefault(r["topic"], str(r["d"])[:10])             # 降序 ⇒ 第一次出现的就是最新
+    for k, (topic, q) in enumerate(TOPICS.items()):
+        start = GDELT_START
+        if topic in last:
+            start = (dt.date.fromisoformat(last[topic]) - dt.timedelta(days=15)).strftime("%Y%m%d000000")
+        url = GDELT_URL + "?" + urllib.parse.urlencode({"query": q, "mode": "timelinevol", "format": "json", "startdatetime": start,
+                                                        "enddatetime": now.strftime("%Y%m%d000000")})
+        try:
+            rows = gdelt_rows(json.loads(await asyncio.to_thread(get, url)), topic)
+            for i in range(0, len(rows), 1000):
+                if not await supabase_upsert_table(TABLE, rows[i:i + 1000], on_conflict="d,topic"):
+                    raise RuntimeError(f"写 {TABLE} 失败")
+            out["gdelt"][topic] = len(rows)
+        except Exception as e:                                            # noqa: BLE001
+            out["failed"][topic] = f"{type(e).__name__}: {str(e)[:120]}"
+        if k < len(TOPICS) - 1:
+            await asyncio.sleep(pause_s)
+    ok = not out["failed"]
+    return {"ok": ok, **out, "failed": out["failed"] or None,
+            "why": f"GPR {out['gpr']} 行 · GDELT " + ", ".join(f"{t} {n}" for t, n in out["gdelt"].items())
+                   + (f" · 不通:{', '.join(out['failed'])}" if out["failed"] else "")}

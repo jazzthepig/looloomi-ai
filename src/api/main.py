@@ -2895,6 +2895,30 @@ async def _start_cg_supply_loop():
     print("[CG-SUPPLY] ✅ supply breakdown + new listings (CoinGecko Analyst) scheduled (12-hourly)")
 
 
+async def _joint_forecast_loop():
+    """S-741 联合模型 v2 前向记分(`src/data/state/joint_forecast.py`;T-263 ✅):每 6 小时一轮,每天一行,预测永不重算;只作 ③ 的描述输入。"""
+    await _asyncio.sleep(_boot_delay(15350))
+    while True:
+        try:
+            from src.data.state.joint_forecast import run_once as _jf_run
+            r = await _jf_run()
+            await _iteration_result("_joint_forecast_loop", {**r, "ok": bool(r.get("ok")), "refused": bool(r.get("refused")), "why": r.get("why")})
+            await _beat("_joint_forecast_loop", ok=bool(r.get("ok")) and not r.get("refused"), refused=bool(r.get("refused")),
+                        detail={"latest_d": r.get("latest_d"), "z": r.get("z"), "forward_ic": r.get("forward_ic")},
+                        error=None if r.get("ok") else str(r.get("why"))[:200])
+        except Exception as _e:
+            print(f"[JOINT-FC] ⚠️  pass FAILED: {_e}")
+            await _beat("_joint_forecast_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_joint_forecast_loop", _e)
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_joint_forecast_loop():
+    _asyncio.create_task(_joint_forecast_loop())
+    print("[JOINT-FC] ✅ S-741 joint-model forward record scheduled (6-hourly)")
+
+
 async def _feature_matrix_loop():
     """融合特征矩阵(`src/data/state/feature_matrix.py`):每小时并发刷新物化视图 feature_matrix_daily(实时视图 ~3 秒,读者读副本)。"""
     await _asyncio.sleep(_boot_delay(15300))

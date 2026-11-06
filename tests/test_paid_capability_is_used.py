@@ -54,16 +54,8 @@ SELF = Path(__file__).name
 NOT_WIRED_YET: dict[str, str] = {
     "/coins/top_gainers_losers":
         "横截面极值 —— ②层 tilt 用得上,但 ① 还没落地,接了没有消费者",
-    "/coins/list/new":
-        "新上币 —— 叙事萌芽观测点,但没有对应的研究问题在等它",
-    "/exchanges/{id}/volume_chart/range":
-        "场所成交量 —— 需要先有「场所 infra 被买」这个假设的判据",
     "/onchain/.../tokens/{addr}/trades":
         "成交分类原料 —— 需要 pattern recognition 先立起来(Jazz 09-02)",
-    "/onchain/.../tokens/{addr}/top_holders":
-        "持有人结构 —— **下一个该接的**,S-291 的链上侧对应物",
-    "/onchain/.../tokens/{addr}/holders_chart":
-        "持有人历史 —— 同上,与 top_holders 一起接",
     # ⚠️ 这条原本写「同上批次」。**「同上」是指针,而指针会断** ——
     # 有人重排字典或只读到这一条时,它什么也没说(当天第二次学到这条)。
     "/onchain/.../top_traders":
@@ -84,6 +76,16 @@ NOT_WIRED_BUDGET = len(NOT_WIRED_YET)
 #: 证明它的是 `deep_walk.FLOOR = 2013`。
 #: **一个匹配不到就报「未接入」的守卫,会把已接入的说成没接。**
 LABEL_PROOFS: dict[str, tuple] = {
+    # 11-06:链上路径里夹着 {network} / {address},最后两段拼不出来 ⇒ 用证明指针。
+    "/onchain/.../tokens/{addr}/top_holders": (
+        "src/data/market/data_layer.py", "/top_holders",
+        "T-004(10-06):get_cg_top_holders → holder_provider 的集中度(D3),原先误登记为未接"),
+    "/coins/list/new": (
+        "src/data/market/cg_supply.py", '"/coins/list/new"',
+        "11-06:cg_new_coins —— 每 12 小时一次快照,first_seen_at 不覆盖;新币上线速度 = 注意力被摊薄的速度"),
+    "/onchain/.../tokens/{addr}/holders_chart": (
+        "src/data/market/token_holders.py", "/holders_chart",
+        "11-06:token_holders_daily —— days=max 周频历史 + days=30 日频,本链、826 币时点宇宙"),
     "coin_history_depth": (
         "src/data/market/deep_walk.py", "FLOOR",
         "S-258/S-269:日线深度 from 2013 —— `FLOOR = dt.date(2013, 1, 1)` "

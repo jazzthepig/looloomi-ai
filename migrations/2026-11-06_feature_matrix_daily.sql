@@ -3,7 +3,7 @@
 -- writer and liveness check; this only joins. Point-in-time as far as each source is (state_daily / cycle are
 -- computed as of d; macro_daily d is the availability date; DVOL percentile uses only the 365 days up to d).
 -- Missing = absent key, never 0. Forward-only sources (options surface, prediction markets) appear from 2026-11-06.
-create or replace view public.feature_matrix_daily with (security_invoker = true) as
+create or replace view public.feature_matrix_daily_live with (security_invoker = true) as
 with st as (
   select d, jsonb_object_agg(feature, value) f from public.state_daily where entity = 'panel' and value is not null group by d
 ), mc as (
@@ -43,6 +43,63 @@ with st as (
   from public.derivatives_market_daily x
   left join public.macro_daily m on m.series = 'total_mcap' and m.d = x.d
   group by x.d
+), sl as (
+  select a.d, a.style, a.weighting, ln(a.level / b.level) r30
+  from public.style_index_pit_daily a
+  join public.style_index_pit_daily b on b.style = a.style and b.weighting = a.weighting and b.dimension = a.dimension and b.d = a.d - 30
+  where a.level > 0 and b.level > 0
+), sty as (
+  select a.d, jsonb_strip_nulls(coalesce(jsonb_object_agg('style:' || a.style || '_rel30', a.r30 - m.r30) filter (where a.weighting = 'cap' and a.style <> 'majors'), '{}'::jsonb)
+         || jsonb_build_object('style:app_eq_minus_cap_30', max(a.r30) filter (where a.style = 'app' and a.weighting = 'equal')
+                                                          - max(a.r30) filter (where a.style = 'app' and a.weighting = 'cap'))) f
+  from sl a join sl m on m.d = a.d and m.style = 'majors' and m.weighting = 'cap'
+  group by a.d
+), ca as (
+  select chain, d, sum(fees_usd) over w fee30, sum(dex_volume_usd) over w dex30, count(fees_usd) over w nf, count(dex_volume_usd) over w nd, tvl_usd
+  from public.chain_activity_daily window w as (partition by chain order by d rows between 29 preceding and current row)
+), cb as (
+  select a.d, sum(a.fee30) filter (where a.nf = 30 and b.nf = 30) f1, sum(b.fee30) filter (where a.nf = 30 and b.nf = 30) f0,
+         sum(a.dex30) filter (where a.nd = 30 and b.nd = 30) x1, sum(b.dex30) filter (where a.nd = 30 and b.nd = 30) x0,
+         sum(a.tvl_usd) filter (where a.tvl_usd > 0 and b.tvl_usd > 0) t1, sum(b.tvl_usd) filter (where a.tvl_usd > 0 and b.tvl_usd > 0) t0,
+         sum(a.dex30) filter (where a.nd = 30) / 30.0 dex_day
+  from ca a join ca b on b.chain = a.chain and b.d = a.d - 30
+  group by a.d
+), chn as (
+  select cb.d, jsonb_strip_nulls(jsonb_build_object('chain:fees_30v30', ln(f1 / nullif(f0, 0)), 'chain:dex_30v30', ln(x1 / nullif(x0, 0)),
+         'chain:tvl_30d', ln(t1 / nullif(t0, 0)), 'chain:dex_to_total_vol', dex_day / nullif(m.value, 0))) f
+  from cb left join public.macro_daily m on m.series = 'total_volume' and m.d = cb.d
+  where f0 > 0 or x0 > 0 or t0 > 0
+), pos as (
+  select d, jsonb_strip_nulls(jsonb_build_object(
+           'pos:btc_top_pos_ln', ln(max(top_pos_ratio_close) filter (where symbol = 'BTC' and top_pos_ratio_close > 0)),
+           'pos:btc_crowd_ln', ln(max(global_acct_ratio_close) filter (where symbol = 'BTC' and global_acct_ratio_close > 0)),
+           'pos:btc_smart_minus_crowd', ln(max(top_pos_ratio_close) filter (where symbol = 'BTC' and top_pos_ratio_close > 0))
+                                      - ln(max(global_acct_ratio_close) filter (where symbol = 'BTC' and global_acct_ratio_close > 0)),
+           'pos:alt_crowd_median_ln', percentile_cont(0.5) within group (order by ln(global_acct_ratio_close))
+                                      filter (where symbol not in ('BTC', 'ETH') and global_acct_ratio_close > 0),
+           'pos:alt_smart_minus_crowd_median', percentile_cont(0.5) within group (order by ln(top_pos_ratio_close) - ln(global_acct_ratio_close))
+                                      filter (where symbol not in ('BTC', 'ETH') and global_acct_ratio_close > 0 and top_pos_ratio_close > 0),
+           'pos:alt_taker_median_ln', percentile_cont(0.5) within group (order by ln(taker_ratio_mean))
+                                      filter (where symbol not in ('BTC', 'ETH') and taker_ratio_mean > 0),
+           'pos:n_symbols', count(*) filter (where global_acct_ratio_close > 0))) f
+  from public.deriv_metrics_daily where source = 'binance_vision_metrics' group by d
+), chl as (
+  select a.d, jsonb_object_agg('channel:' || a.channel || '_30d', ln(a.mcap / b.mcap)) f
+  from public.channel_series_daily a
+  join public.channel_series_daily b on b.channel = a.channel and b.category_id = a.category_id and b.d = a.d - 30
+  where a.category_id = '*' and a.channel in ('rwa', 'tokenized') and a.mcap > 0 and b.mcap > 0
+  group by a.d
+), evw as (
+  select d, exchange, kind, sum(volume_btc) over w v30, count(*) over w n30
+  from public.exchange_volume_daily window w as (partition by exchange order by d rows between 29 preceding and current row)
+), ven as (
+  select d, jsonb_strip_nulls(jsonb_build_object(
+           'venue:coinbase_share_spot30', sum(v30) filter (where exchange = 'gdax') / nullif(sum(v30) filter (where kind = 'spot'), 0),
+           'venue:korea_share_spot30', sum(v30) filter (where exchange in ('upbit', 'bithumb')) / nullif(sum(v30) filter (where kind = 'spot'), 0),
+           'venue:deriv_to_spot30', sum(v30) filter (where kind = 'deriv') / nullif(sum(v30) filter (where kind = 'spot'), 0),
+           'venue:onchain_perp_share30', sum(v30) filter (where exchange in ('hyperliquid', 'aster', 'lighter')) / nullif(sum(v30) filter (where kind = 'deriv'), 0),
+           'venue:cme_share_deriv30', sum(v30) filter (where exchange = 'cme_futures') / nullif(sum(v30) filter (where kind = 'deriv'), 0))) f
+  from evw where n30 = 30 group by d
 ), pol as (
   select d, jsonb_object_agg('pol:' || topic, value) f from public.political_intensity_daily group by d
 ), px as (
@@ -68,9 +125,11 @@ with st as (
   select d, first_value(f) over (partition by grp order by d) f from xf
 )
 select st.d,
-       st.f || coalesce(mc.f, '{}'::jsonb) || coalesce(cy.f, '{}'::jsonb) || coalesce(dvp.f, '{}'::jsonb) || coalesce(op.f, '{}'::jsonb) || coalesce(sc.f, '{}'::jsonb) || coalesce(xc.f, '{}'::jsonb) || coalesce(cx.f, '{}'::jsonb) || coalesce(pol.f, '{}'::jsonb) || coalesce(dm.f, '{}'::jsonb) f,
+       st.f || coalesce(mc.f, '{}'::jsonb) || coalesce(cy.f, '{}'::jsonb) || coalesce(dvp.f, '{}'::jsonb) || coalesce(op.f, '{}'::jsonb) || coalesce(sc.f, '{}'::jsonb) || coalesce(xc.f, '{}'::jsonb) || coalesce(cx.f, '{}'::jsonb) || coalesce(pol.f, '{}'::jsonb) || coalesce(dm.f, '{}'::jsonb)
+          || coalesce(sty.f, '{}'::jsonb) || coalesce(chn.f, '{}'::jsonb) || coalesce(pos.f, '{}'::jsonb) || coalesce(chl.f, '{}'::jsonb) || coalesce(ven.f, '{}'::jsonb) f,
        jsonb_build_object('state', st.f is not null, 'macro', mc.f is not null, 'cycle', cy.f is not null,
-                          'dvol', dvp.f is not null, 'options', op.f is not null, 'stable_issuers', sc.f is not null, 'xasset', xc.f is not null, 'cex', cx.f is not null, 'political', pol.f is not null, 'derivatives', dm.f is not null) has
+                          'dvol', dvp.f is not null, 'options', op.f is not null, 'stable_issuers', sc.f is not null, 'xasset', xc.f is not null, 'cex', cx.f is not null, 'political', pol.f is not null, 'derivatives', dm.f is not null,
+                          'style', sty.f is not null, 'chain', chn.f is not null, 'positioning', pos.f is not null, 'channel', chl.f is not null, 'venue', ven.f is not null) has
 from st
 left join mc on mc.d = st.d
 left join cy on cy.d = st.d
@@ -80,5 +139,36 @@ left join sc on sc.d = st.d
 left join xff xc on xc.d = st.d
 left join cx on cx.d = st.d
 left join pol on pol.d = st.d
-left join dm on dm.d = st.d;
-grant select on public.feature_matrix_daily to anon;
+left join dm on dm.d = st.d
+left join sty on sty.d = st.d
+left join chn on chn.d = st.d
+left join pos on pos.d = st.d
+left join chl on chl.d = st.d
+left join ven on ven.d = st.d;
+
+-- 11-06 (second pass): fuse what we already had but never joined — PIT style indices since 2020
+-- (style_index_pit_daily: sector/tier 30d log return minus majors, plus equal-minus-cap breadth),
+-- chain activity (69 chains: fees / DEX volume 30d vs prior 30d over chains present in both windows,
+-- TVL 30d, DEX ÷ total volume), Binance positioning (top-trader vs all-account long/short ratios, BTC and
+-- alt medians, since 2020-09), channel mcaps (RWA / tokenized, current constituents backfilled ⇒
+-- survivorship-biased, flagged here). The live view is ~3 s, so readers get a materialized copy,
+-- refreshed by refresh_feature_matrix() (hourly loop + before the state map reads it).
+grant select on public.feature_matrix_daily_live to service_role;
+do $$ begin
+  if exists (select 1 from pg_class c join pg_namespace n on n.oid = c.relnamespace
+             where n.nspname = 'public' and c.relname = 'feature_matrix_daily' and c.relkind = 'v') then
+    drop view public.feature_matrix_daily;
+  end if;
+end $$;
+create materialized view if not exists public.feature_matrix_daily as select * from public.feature_matrix_daily_live;
+create unique index if not exists feature_matrix_daily_d_uq on public.feature_matrix_daily (d);
+grant select on public.feature_matrix_daily to anon, authenticated, service_role;
+
+create or replace function public.refresh_feature_matrix() returns integer
+language plpgsql security definer set search_path = public, pg_temp as $$
+begin
+  refresh materialized view concurrently public.feature_matrix_daily;
+  return (select count(*) from public.feature_matrix_daily);
+end $$;
+revoke all on function public.refresh_feature_matrix() from public, anon, authenticated;
+grant execute on function public.refresh_feature_matrix() to service_role;

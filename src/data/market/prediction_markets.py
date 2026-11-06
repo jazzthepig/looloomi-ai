@@ -28,7 +28,7 @@ WRITES_COLUMNS = {TABLE: ("d", "venue", "market_id", "tag", "event_slug", "event
 LOOP_NAME = "_prediction_markets_loop"
 VENUE = "polymarket"
 BASE = "https://gamma-api.polymarket.com"
-TAGS = ("crypto", "fed-rates", "economy")
+TAGS = ("crypto", "fed-rates", "economy", "politics", "geopolitics")   # 11-06 + 政治 / 地缘(Jazz「政治事件必须的」),5 页 < 批量阈值 6
 EVENTS_PER_TAG = 15
 
 

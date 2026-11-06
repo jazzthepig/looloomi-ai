@@ -79,6 +79,7 @@
     "issuer_fundamentals_quarterly",
     "j_tickets",
     "j_tickets_state",
+    "joint_forecast_daily",
     "live_account_daily",
     "loop_attempt",
     "macro_briefs",
@@ -467,6 +468,19 @@
       "last_d",
       "last_result",
       "last_run_at"
+    ],
+    "joint_forecast_daily": [
+      "code_ref",
+      "computed_at",
+      "d",
+      "features_hash",
+      "fwd_ret_30d",
+      "kind",
+      "model",
+      "n_hist",
+      "n_train",
+      "pred",
+      "z"
     ],
     "live_account_daily": [
       "account_mode",
