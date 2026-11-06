@@ -1,0 +1,3271 @@
+{
+ "task": "T-267",
+ "ledger": "S-744",
+ "seed": 740,
+ "seed_flip": 744,
+ "n_null": 1000,
+ "n_flip": 10000,
+ "generated_at": "2026-11-06",
+ "funnel_1_events": {
+  "perp_listing_total": 818,
+  "kept_after_title_filter": 467,
+  "dropped_by_rule": {
+   "not_a_launch": 68,
+   "not_perpetual": 29,
+   "coin_margined": 50,
+   "tradfi_equity_index": 51,
+   "roundup": 5,
+   "leverage_tier_update": 3,
+   "spot_listing": 1,
+   "busd_margined": 14,
+   "relaunch": 1,
+   "convert_to_standard": 109,
+   "copy_trading_add": 14,
+   "pre_ipo": 6
+  },
+  "token_events": 297,
+  "ticker_provenance": {
+   "title_parsed": 42,
+   "symbols_field": 255
+  }
+ },
+ "funnel_2_mapping": {
+  "distinct_symbols": 294,
+  "mapped_symbols": 129,
+  "unmapped_symbols": 165,
+  "unmapped_list": [
+   {
+    "symbol": "WLFI",
+    "events": 2
+   },
+   {
+    "symbol": "AIA",
+    "events": 2
+   },
+   {
+    "symbol": "SXP",
+    "events": 1
+   },
+   {
+    "symbol": "LEND",
+    "events": 1
+   },
+   {
+    "symbol": "NEIRO",
+    "events": 1
+   },
+   {
+    "symbol": "1MBABYDOGE",
+    "events": 1
+   },
+   {
+    "symbol": "CATI",
+    "events": 1
+   },
+   {
+    "symbol": "HMSTR",
+    "events": 1
+   },
+   {
+    "symbol": "FIDA",
+    "events": 1
+   },
+   {
+    "symbol": "COS",
+    "events": 1
+   },
+   {
+    "symbol": "1000CAT",
+    "events": 1
+   },
+   {
+    "symbol": "GOAT",
+    "events": 1
+   },
+   {
+    "symbol": "MOODENG",
+    "events": 1
+   },
+   {
+    "symbol": "SAFE",
+    "events": 1
+   },
+   {
+    "symbol": "SANTOS",
+    "events": 1
+   },
+   {
+    "symbol": "TROY",
+    "events": 1
+   },
+   {
+    "symbol": "1000000MOG",
+    "events": 1
+   },
+   {
+    "symbol": "DRIFT",
+    "events": 1
+   },
+   {
+    "symbol": "SWELL",
+    "events": 1
+   },
+   {
+    "symbol": "SLERF",
+    "events": 1
+   },
+   {
+    "symbol": "SCRT",
+    "events": 1
+   },
+   {
+    "symbol": "1000WHY",
+    "events": 1
+   },
+   {
+    "symbol": "1000CHEEMS",
+    "events": 1
+   },
+   {
+    "symbol": "CHILLGUY",
+    "events": 1
+   },
+   {
+    "symbol": "KAIA",
+    "events": 1
+   },
+   {
+    "symbol": "RAYSOL",
+    "events": 1
+   },
+   {
+    "symbol": "KOMA",
+    "events": 1
+   },
+   {
+    "symbol": "MOCA",
+    "events": 1
+   },
+   {
+    "symbol": "KMNO",
+    "events": 1
+   },
+   {
+    "symbol": "HIVE",
+    "events": 1
+   },
+   {
+    "symbol": "DEXE",
+    "events": 1
+   },
+   {
+    "symbol": "GRIFFAIN",
+    "events": 1
+   },
+   {
+    "symbol": "ZEREBRO",
+    "events": 1
+   },
+   {
+    "symbol": "ALCH",
+    "events": 1
+   },
+   {
+    "symbol": "SWARMS",
+    "events": 1
+   },
+   {
+    "symbol": "SONIC",
+    "events": 1
+   },
+   {
+    "symbol": "AVAAI",
+    "events": 1
+   },
+   {
+    "symbol": "VTHO",
+    "events": 1
+   },
+   {
+    "symbol": "VINE",
+    "events": 1
+   },
+   {
+    "symbol": "GPS",
+    "events": 1
+   },
+   {
+    "symbol": "SHELL",
+    "events": 1
+   },
+   {
+    "symbol": "BMT",
+    "events": 1
+   },
+   {
+    "symbol": "BR",
+    "events": 1
+   },
+   {
+    "symbol": "JELLYJELLY",
+    "events": 1
+   },
+   {
+    "symbol": "MAVIA",
+    "events": 1
+   },
+   {
+    "symbol": "BABY",
+    "events": 1
+   },
+   {
+    "symbol": "PROMPT",
+    "events": 1
+   },
+   {
+    "symbol": "INIT",
+    "events": 1
+   },
+   {
+    "symbol": "AERGO",
+    "events": 1
+   },
+   {
+    "symbol": "BANK",
+    "events": 1
+   },
+   {
+    "symbol": "DEEP",
+    "events": 1
+   },
+   {
+    "symbol": "MEMEFI",
+    "events": 1
+   },
+   {
+    "symbol": "FIS",
+    "events": 1
+   },
+   {
+    "symbol": "PUNDIX",
+    "events": 1
+   },
+   {
+    "symbol": "CTK",
+    "events": 1
+   },
+   {
+    "symbol": "AIOT",
+    "events": 1
+   },
+   {
+    "symbol": "DOLO",
+    "events": 1
+   },
+   {
+    "symbol": "HAEDAL",
+    "events": 1
+   },
+   {
+    "symbol": "SXT",
+    "events": 1
+   },
+   {
+    "symbol": "ASR",
+    "events": 1
+   },
+   {
+    "symbol": "ALPINE",
+    "events": 1
+   },
+   {
+    "symbol": "MILK",
+    "events": 1
+   },
+   {
+    "symbol": "SKYAI",
+    "events": 1
+   },
+   {
+    "symbol": "CVC",
+    "events": 1
+   },
+   {
+    "symbol": "AGT",
+    "events": 1
+   },
+   {
+    "symbol": "1000000BOB",
+    "events": 1
+   },
+   {
+    "symbol": "LA",
+    "events": 1
+   },
+   {
+    "symbol": "SQD",
+    "events": 1
+   },
+   {
+    "symbol": "MYX",
+    "events": 1
+   },
+   {
+    "symbol": "NEWT",
+    "events": 1
+   },
+   {
+    "symbol": "IDOL",
+    "events": 1
+   },
+   {
+    "symbol": "CROSS",
+    "events": 1
+   },
+   {
+    "symbol": "AIN",
+    "events": 1
+   },
+   {
+    "symbol": "VELVET",
+    "events": 1
+   },
+   {
+    "symbol": "CVX",
+    "events": 1
+   },
+   {
+    "symbol": "SLP",
+    "events": 1
+   },
+   {
+    "symbol": "ESPORTS",
+    "events": 1
+   },
+   {
+    "symbol": "CARV",
+    "events": 1
+   },
+   {
+    "symbol": "XNY",
+    "events": 1
+   },
+   {
+    "symbol": "BIO",
+    "events": 1
+   },
+   {
+    "symbol": "SOMI",
+    "events": 1
+   },
+   {
+    "symbol": "BAS",
+    "events": 1
+   },
+   {
+    "symbol": "ARIA",
+    "events": 1
+   },
+   {
+    "symbol": "TAKE",
+    "events": 1
+   },
+   {
+    "symbol": "FLOCK",
+    "events": 1
+   },
+   {
+    "symbol": "XPIN",
+    "events": 1
+   },
+   {
+    "symbol": "STBL",
+    "events": 1
+   },
+   {
+    "symbol": "TRADOOR",
+    "events": 1
+   },
+   {
+    "symbol": "FLUID",
+    "events": 1
+   },
+   {
+    "symbol": "ORDER",
+    "events": 1
+   },
+   {
+    "symbol": "GIGGLE",
+    "events": 1
+   },
+   {
+    "symbol": "MON",
+    "events": 1
+   },
+   {
+    "symbol": "YB",
+    "events": 1
+   },
+   {
+    "symbol": "MET",
+    "events": 1
+   },
+   {
+    "symbol": "LAB",
+    "events": 1
+   },
+   {
+    "symbol": "RIVER",
+    "events": 1
+   },
+   {
+    "symbol": "CLANKER",
+    "events": 1
+   },
+   {
+    "symbol": "BEAT",
+    "events": 1
+   },
+   {
+    "symbol": "IRYS",
+    "events": 1
+   },
+   {
+    "symbol": "POWER",
+    "events": 1
+   },
+   {
+    "symbol": "WET",
+    "events": 1
+   },
+   {
+    "symbol": "CYS",
+    "events": 1
+   },
+   {
+    "symbol": "RAVE",
+    "events": 1
+   },
+   {
+    "symbol": "GUA",
+    "events": 1
+   },
+   {
+    "symbol": "BREV",
+    "events": 1
+   },
+   {
+    "symbol": "COLLECT",
+    "events": 1
+   },
+   {
+    "symbol": "MAGMA",
+    "events": 1
+   },
+   {
+    "symbol": "XAG",
+    "events": 1
+   },
+   {
+    "symbol": "ZAMA",
+    "events": 1
+   },
+   {
+    "symbol": "FOGO",
+    "events": 1
+   },
+   {
+    "symbol": "SPORTFUN",
+    "events": 1
+   },
+   {
+    "symbol": "ACU",
+    "events": 1
+   },
+   {
+    "symbol": "SKR",
+    "events": 1
+   },
+   {
+    "symbol": "SPACE",
+    "events": 1
+   },
+   {
+    "symbol": "FIGHT",
+    "events": 1
+   },
+   {
+    "symbol": "BIRB",
+    "events": 1
+   },
+   {
+    "symbol": "GWEI",
+    "events": 1
+   },
+   {
+    "symbol": "XPT",
+    "events": 1
+   },
+   {
+    "symbol": "XPD",
+    "events": 1
+   },
+   {
+    "symbol": "INX",
+    "events": 1
+   },
+   {
+    "symbol": "TRIA",
+    "events": 1
+   },
+   {
+    "symbol": "ESP",
+    "events": 1
+   },
+   {
+    "symbol": "OPN",
+    "events": 1
+   },
+   {
+    "symbol": "ROBO",
+    "events": 1
+   },
+   {
+    "symbol": "KAT",
+    "events": 1
+   },
+   {
+    "symbol": "COPPER",
+    "events": 1
+   },
+   {
+    "symbol": "EDGE",
+    "events": 1
+   },
+   {
+    "symbol": "BSB",
+    "events": 1
+   },
+   {
+    "symbol": "BASED",
+    "events": 1
+   },
+   {
+    "symbol": "CL",
+    "events": 1
+   },
+   {
+    "symbol": "BZ",
+    "events": 1
+   },
+   {
+    "symbol": "NATGAS",
+    "events": 1
+   },
+   {
+    "symbol": "QQQ",
+    "events": 1
+   },
+   {
+    "symbol": "SPY",
+    "events": 1
+   },
+   {
+    "symbol": "AAPL",
+    "events": 1
+   },
+   {
+    "symbol": "TSM",
+    "events": 1
+   },
+   {
+    "symbol": "GENIUS",
+    "events": 1
+   },
+   {
+    "symbol": "CHIP",
+    "events": 1
+   },
+   {
+    "symbol": "MSFT",
+    "events": 1
+   },
+   {
+    "symbol": "AVGO",
+    "events": 1
+   },
+   {
+    "symbol": "BABA",
+    "events": 1
+   },
+   {
+    "symbol": "OPG",
+    "events": 1
+   },
+   {
+    "symbol": "AIGENSYN",
+    "events": 1
+   },
+   {
+    "symbol": "AMD",
+    "events": 1
+   },
+   {
+    "symbol": "QCOM",
+    "events": 1
+   },
+   {
+    "symbol": "USAR",
+    "events": 1
+   },
+   {
+    "symbol": "BILL",
+    "events": 1
+   },
+   {
+    "symbol": "PHAROS",
+    "events": 1
+   },
+   {
+    "symbol": "STAR",
+    "events": 1
+   },
+   {
+    "symbol": "SLX",
+    "events": 1
+   },
+   {
+    "symbol": "ZEST",
+    "events": 1
+   },
+   {
+    "symbol": "ARX",
+    "events": 1
+   },
+   {
+    "symbol": "CAP",
+    "events": 1
+   },
+   {
+    "symbol": "DATAIP",
+    "events": 1
+   },
+   {
+    "symbol": "SKHY",
+    "events": 1
+   },
+   {
+    "symbol": "POPMART",
+    "events": 1
+   },
+   {
+    "symbol": "GRVT",
+    "events": 1
+   },
+   {
+    "symbol": "GIGADEV",
+    "events": 1
+   },
+   {
+    "symbol": "DOS",
+    "events": 1
+   },
+   {
+    "symbol": "UNITREE",
+    "events": 1
+   },
+   {
+    "symbol": "HK0625",
+    "events": 1
+   },
+   {
+    "symbol": "GPRO",
+    "events": 1
+   },
+   {
+    "symbol": "PONS",
+    "events": 1
+   },
+   {
+    "symbol": "CT",
+    "events": 1
+   },
+   {
+    "symbol": "PREDICT",
+    "events": 1
+   }
+  ],
+  "symbols_with_multiple_coin_ids": {},
+  "note": "cg_coin_map 用发布版 publishable key 读不到(HTTP 401 permission denied);映射取自 asset_mcap_daily 的 (symbol, coin_id) 对"
+ },
+ "price_source": {
+  "table_used": "asset_mcap_daily",
+  "table_preregistered": "cg_coin_mcap_daily",
+  "deviation_reason": "cg_coin_map 发布版 key 401;cg_coin_mcap_daily 无 bitcoin/ethereum/solana 等主流币(HTTP 200、*/0),无法提供卡上要求的『BTC 同源』基准;asset_mcap_daily 是同一上游 source=coingecko_pro_market_chart、带 symbol 主键、含 bitcoin 全历史",
+  "coins_pulled": 129,
+  "rows_total": 194592,
+  "btc_coin_id": "bitcoin",
+  "btc_rows": 4328,
+  "btc_first": "2014-12-31",
+  "btc_last": "2026-11-05",
+  "crosscheck_cg_coin_mcap_daily": {
+   "coins_probed": 21,
+   "coins_present_in_cg_table": 3,
+   "pairs": 6754,
+   "mismatches": 0
+  },
+  "poa_selfcheck": {
+   "pairs": 630,
+   "mismatches": 0
+  }
+ },
+ "funnel_3_sample": {
+  "window_2020": 2,
+  "kept": 80,
+  "cg_lt_60d": 48,
+  "no_cg_coin_id": 167
+ },
+ "sample_by_year": {
+  "2020": 29,
+  "2021": 1,
+  "2024": 19,
+  "2025": 30,
+  "2026": 1
+ },
+ "main": {
+  "entry_on_d": {
+   "h30": {
+    "n": 80,
+    "median_pct": -15.019928330022145,
+    "mean_pct": -12.083351092401058,
+    "p25_pct": -33.04585681907937,
+    "p75_pct": 8.445557403921976,
+    "min_pct": -174.47541631482443,
+    "max_pct": 109.39135173966422,
+    "frac_negative": 0.6625,
+    "frac_le_-3": 0.6375
+   },
+   "h60": {
+    "n": 80,
+    "median_pct": -26.55130922585337,
+    "mean_pct": -31.28441254112427,
+    "p25_pct": -57.203515986173926,
+    "p75_pct": -3.156812702275813,
+    "min_pct": -257.80822036690455,
+    "max_pct": 108.15708473226557,
+    "frac_negative": 0.7875,
+    "frac_le_-3": 0.75
+   }
+  },
+  "entry_on_d_plus_1": {
+   "h30": {
+    "n": 80,
+    "median_pct": -16.025543220048437,
+    "mean_pct": -13.253123059523904,
+    "p25_pct": -32.317445006919314,
+    "p75_pct": 7.421819751252342,
+    "min_pct": -171.6396324211553,
+    "max_pct": 114.78755475750675,
+    "frac_negative": 0.6625,
+    "frac_le_-3": 0.65
+   },
+   "h60": {
+    "n": 80,
+    "median_pct": -26.925527603087872,
+    "mean_pct": -31.27166845064548,
+    "p25_pct": -49.899399372570606,
+    "p75_pct": -4.217124226612963,
+    "min_pct": -256.0531763809226,
+    "max_pct": 103.65310621015126,
+    "frac_negative": 0.8,
+    "frac_le_-3": 0.75
+   }
+  }
+ },
+ "s740_criteria": {
+  "entry_on_d": {
+   "label": "entry on d",
+   "a": {
+    "n": 80,
+    "median_pct": -15.019928330022145,
+    "mean_pct": -12.083351092401058,
+    "pass": true
+   },
+   "halves": [
+    {
+     "window": "2020-01→2022-12",
+     "n": 30,
+     "median_pct": -5.973620778969188,
+     "mean_pct": 1.7376856148328796
+    },
+    {
+     "window": "2023-01→9999-12",
+     "n": 50,
+     "median_pct": -24.146026627673653,
+     "mean_pct": -20.37597311674142
+    }
+   ],
+   "c": {
+    "same_sign": true,
+    "sign": -1,
+    "half2_sign": -1
+   },
+   "d": {
+    "n_excluded": 37,
+    "n_kept": 43,
+    "median_all_pct": -15.019928330022145,
+    "median_kept_pct": -14.567109994523953,
+    "mean_kept_pct": -10.616023888524198,
+    "same_sign": true
+   }
+  },
+  "entry_on_d_plus_1": {
+   "label": "entry on d+1",
+   "a": {
+    "n": 80,
+    "median_pct": -16.025543220048437,
+    "mean_pct": -13.253123059523904,
+    "pass": true
+   },
+   "halves": [
+    {
+     "window": "2020-01→2022-12",
+     "n": 30,
+     "median_pct": -5.827735163082864,
+     "mean_pct": 1.4530124945641032
+    },
+    {
+     "window": "2023-01→9999-12",
+     "n": 50,
+     "median_pct": -18.358686487078106,
+     "mean_pct": -22.07680439197671
+    }
+   ],
+   "c": {
+    "same_sign": true,
+    "sign": -1,
+    "half2_sign": -1
+   },
+   "d": {
+    "n_excluded": 37,
+    "n_kept": 43,
+    "median_all_pct": -16.025543220048437,
+    "median_kept_pct": -15.235993315864263,
+    "mean_kept_pct": -9.821772523538307,
+    "same_sign": true
+   }
+  }
+ },
+ "s740_null_control": {
+  "entry_on_d": {
+   "h30": {
+    "actual_median_pct": -15.019928330022145,
+    "n_null": 1000,
+    "null_p05_pct": -11.557948565675494,
+    "null_p50_pct": -5.699384689623889,
+    "null_mean_pct": -5.729465606743337,
+    "percentile_of_actual": 0.004,
+    "pass_le_p05": true,
+    "tokens_without_eligible_dates": 0,
+    "median_eligible_dates_per_token": 2196.0
+   },
+   "h60": {
+    "actual_median_pct": -26.55130922585337,
+    "n_null": 1000,
+    "null_p05_pct": -16.946378997908905,
+    "null_p50_pct": -9.104726325372072,
+    "null_mean_pct": -8.994210055120995,
+    "percentile_of_actual": 0.0,
+    "pass_le_p05": true,
+    "tokens_without_eligible_dates": 0,
+    "median_eligible_dates_per_token": 2166.0
+   }
+  },
+  "entry_on_d_plus_1": {
+   "h30": {
+    "actual_median_pct": -16.025543220048437,
+    "n_null": 1000,
+    "null_p05_pct": -11.14421710327016,
+    "null_p50_pct": -5.48552899483878,
+    "null_mean_pct": -5.526962066827908,
+    "percentile_of_actual": 0.0,
+    "pass_le_p05": true,
+    "tokens_without_eligible_dates": 0,
+    "median_eligible_dates_per_token": 2195.0
+   },
+   "h60": {
+    "actual_median_pct": -26.925527603087872,
+    "n_null": 1000,
+    "null_p05_pct": -17.106114948466278,
+    "null_p50_pct": -9.376268584087297,
+    "null_mean_pct": -8.9033055122966,
+    "percentile_of_actual": 0.0,
+    "pass_le_p05": true,
+    "tokens_without_eligible_dates": 0,
+    "median_eligible_dates_per_token": 2165.0
+   }
+  }
+ },
+ "mechanism": {
+  "entry_on_d": {
+   "n_events_total": 80,
+   "n_entered": 48,
+   "n_excluded_lt20_controls": 32,
+   "excluded_detail": [
+    {
+     "sym": "ETC",
+     "d": "2020-01-15",
+     "n_controls": 3,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "XMR",
+     "d": "2020-02-02",
+     "n_controls": 6,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "DASH",
+     "d": "2020-02-03",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "ZEC",
+     "d": "2020-02-04",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "THETA",
+     "d": "2020-05-26",
+     "n_controls": 1,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "ZIL",
+     "d": "2020-06-17",
+     "n_controls": 8,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "DOGE",
+     "d": "2020-07-09",
+     "n_controls": 7,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "KAVA",
+     "d": "2020-07-27",
+     "n_controls": 4,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "BAND",
+     "d": "2020-07-28",
+     "n_controls": 3,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "BTC",
+     "d": "2021-01-11",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "MYRO",
+     "d": "2024-03-05",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "DIA",
+     "d": "2024-10-02",
+     "n_controls": 3,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "PONKE",
+     "d": "2024-11-04",
+     "n_controls": 13,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "DEGEN",
+     "d": "2024-11-15",
+     "n_controls": 2,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "VIRTUAL",
+     "d": "2024-12-10",
+     "n_controls": 3,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "DEGO",
+     "d": "2024-12-13",
+     "n_controls": 13,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "LUMIA",
+     "d": "2024-12-18",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "FARTCOIN",
+     "d": "2024-12-20",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "PHA",
+     "d": "2024-12-30",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "DF",
+     "d": "2024-12-30",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "AI16Z",
+     "d": "2025-01-02",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "COOKIE",
+     "d": "2025-01-07",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "PIPPIN",
+     "d": "2025-01-24",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "PLUME",
+     "d": "2025-03-21",
+     "n_controls": 18,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "FUN",
+     "d": "2025-03-31",
+     "n_controls": 6,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "HYPE",
+     "d": "2025-05-30",
+     "n_controls": 5,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "PORT3",
+     "d": "2025-06-03",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "ZORA",
+     "d": "2025-07-25",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "TAG",
+     "d": "2025-07-25",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "CUDIS",
+     "d": "2025-08-20",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "ZEC",
+     "d": "2025-11-19",
+     "n_controls": 2,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "BTW",
+     "d": "2026-06-04",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    }
+   ],
+   "controls_per_event": {
+    "n": 80,
+    "median_pct": 47.5,
+    "mean_pct": 72.9625,
+    "p25_pct": 3.0,
+    "p75_pct": 111.5,
+    "min_pct": 0.0,
+    "max_pct": 570.0,
+    "frac_negative": 0.0,
+    "frac_le_-3": 0.0
+   },
+   "n_controls_total": 5837,
+   "event_excess": {
+    "n": 48,
+    "median_pct": -13.82854441811313,
+    "mean_pct": -11.064240789572029,
+    "p25_pct": -32.17181905877714,
+    "p75_pct": 5.7270307665274,
+    "min_pct": -64.13187763774773,
+    "max_pct": 49.16436922240857,
+    "frac_negative": 0.6875,
+    "frac_le_-3": 0.6666666666666666
+   },
+   "matched_control_excess": {
+    "n": 48,
+    "median_pct": -4.408015645487596,
+    "mean_pct": -3.156535804286463,
+    "p25_pct": -9.434250287910153,
+    "p75_pct": 1.4495829768753326,
+    "min_pct": -63.725479397873755,
+    "max_pct": 66.69264459480496,
+    "frac_negative": 0.6875,
+    "frac_le_-3": 0.5625
+   },
+   "matched_diff": {
+    "n": 48,
+    "median_pct": -14.503502348006215,
+    "mean_pct": -7.907704985285567,
+    "p25_pct": -27.500867160883253,
+    "p75_pct": 12.226318601154793,
+    "min_pct": -103.16735168056886,
+    "max_pct": 53.783721859243606,
+    "frac_negative": 0.6875,
+    "frac_le_-3": 0.6041666666666666
+   },
+   "a": {
+    "median_pct": -14.503502348006215,
+    "mean_pct": -7.907704985285567,
+    "threshold_pct": -3.0,
+    "pass": true
+   },
+   "b": {
+    "n_flip": 10000,
+    "statistic": "median of sign-flipped matched diffs",
+    "observed_median_pct": -14.503502348006215,
+    "null_p05_pct": -9.90820568554969,
+    "null_p50_pct": 0.07858280981597118,
+    "one_sided_p": 0.02145,
+    "pass": true
+   },
+   "halves": [
+    {
+     "window": "2020-01→2022-12",
+     "n": 20,
+     "median_pct": 0.1002617528709289,
+     "mean_pct": 4.107359492199582,
+     "frac_negative": 0.5
+    },
+    {
+     "window": "2023-01→9999-12",
+     "n": 28,
+     "median_pct": -17.833585543517813,
+     "mean_pct": -16.489893897774962,
+     "frac_negative": 0.8214285714285714
+    }
+   ],
+   "exploratory_pre30_split": {
+    "pre30>0": {
+     "n": 33,
+     "matched_diff_median_pct": -16.999482944497824,
+     "matched_diff_mean_pct": -7.8178226050424,
+     "matched_diff_frac_negative": 0.6363636363636364,
+     "raw_event_ex30_median_pct": -14.567109994523953
+    },
+    "pre30<=0": {
+     "n": 15,
+     "matched_diff_median_pct": -5.506912127650154,
+     "matched_diff_mean_pct": -8.105446221820538,
+     "matched_diff_frac_negative": 0.8,
+     "raw_event_ex30_median_pct": -13.08997884170231
+    }
+   },
+   "c": {
+    "same_sign": false,
+    "sign": 1,
+    "half2_sign": -1,
+    "pass": false
+   },
+   "d": {
+    "n_entered": 48,
+    "threshold": 40,
+    "pass": true
+   },
+   "all_pass": false,
+   "per_event": [
+    {
+     "sym": "XRP",
+     "coin": "ripple",
+     "d": "2020-01-06",
+     "pre30_ret_pct": -13.854412398877914,
+     "event_ex30_pct": 1.8412469662114157,
+     "control_ex30_mean_pct": -1.728512659449975,
+     "matched_diff_pct": 3.569759625661391,
+     "n_controls": 191
+    },
+    {
+     "sym": "EOS",
+     "coin": "eos",
+     "d": "2020-01-07",
+     "pre30_ret_pct": 4.654596358536467,
+     "event_ex30_pct": 29.4700923198026,
+     "control_ex30_mean_pct": -10.259345410207994,
+     "matched_diff_pct": 39.729437730010595,
+     "n_controls": 185
+    },
+    {
+     "sym": "LTC",
+     "coin": "litecoin",
+     "d": "2020-01-08",
+     "pre30_ret_pct": 1.8242446993410155,
+     "event_ex30_pct": 29.709146288683442,
+     "control_ex30_mean_pct": 0.43450807789132895,
+     "matched_diff_pct": 29.274638210792116,
+     "n_controls": 165
+    },
+    {
+     "sym": "TRX",
+     "coin": "tron",
+     "d": "2020-01-14",
+     "pre30_ret_pct": 5.761090846067929,
+     "event_ex30_pct": 20.71133907527432,
+     "control_ex30_mean_pct": -7.0400348948831954,
+     "matched_diff_pct": 27.751373970157516,
+     "n_controls": 215
+    },
+    {
+     "sym": "LINK",
+     "coin": "chainlink",
+     "d": "2020-01-16",
+     "pre30_ret_pct": 21.997920073223742,
+     "event_ex30_pct": 42.38232398227922,
+     "control_ex30_mean_pct": -6.904205847430944,
+     "matched_diff_pct": 49.28652982971016,
+     "n_controls": 101
+    },
+    {
+     "sym": "XLM",
+     "coin": "stellar",
+     "d": "2020-01-19",
+     "pre30_ret_pct": 35.6135069972338,
+     "event_ex30_pct": 8.123357393947181,
+     "control_ex30_mean_pct": -18.494628135809805,
+     "matched_diff_pct": 26.617985529756982,
+     "n_controls": 78
+    },
+    {
+     "sym": "ADA",
+     "coin": "cardano",
+     "d": "2020-01-30",
+     "pre30_ret_pct": 58.78476653385745,
+     "event_ex30_pct": -5.734647766224395,
+     "control_ex30_mean_pct": 13.126962405722779,
+     "matched_diff_pct": -18.861610171947174,
+     "n_controls": 69
+    },
+    {
+     "sym": "XTZ",
+     "coin": "tezos",
+     "d": "2020-02-05",
+     "pre30_ret_pct": 53.71914731463661,
+     "event_ex30_pct": 44.444969049291,
+     "control_ex30_mean_pct": -9.338752809952613,
+     "matched_diff_pct": 53.783721859243606,
+     "n_controls": 36
+    },
+    {
+     "sym": "ATOM",
+     "coin": "cosmos",
+     "d": "2020-02-06",
+     "pre30_ret_pct": 5.028929785707947,
+     "event_ex30_pct": -14.567109994523953,
+     "control_ex30_mean_pct": 0.889360701432326,
+     "matched_diff_pct": -15.456470695956279,
+     "n_controls": 166
+    },
+    {
+     "sym": "BNB",
+     "coin": "binancecoin",
+     "d": "2020-02-07",
+     "pre30_ret_pct": 37.24511255987664,
+     "event_ex30_pct": -7.162073889745507,
+     "control_ex30_mean_pct": 11.32123211407438,
+     "matched_diff_pct": -18.483306003819887,
+     "n_controls": 110
+    },
+    {
+     "sym": "ONT",
+     "coin": "ontology",
+     "d": "2020-02-10",
+     "pre30_ret_pct": 61.67091200481867,
+     "event_ex30_pct": -28.573336915701976,
+     "control_ex30_mean_pct": -2.422519596748568,
+     "matched_diff_pct": -26.150817318953408,
+     "n_controls": 24
+    },
+    {
+     "sym": "BAT",
+     "coin": "basic-attention-token",
+     "d": "2020-02-12",
+     "pre30_ret_pct": 53.38155792141652,
+     "event_ex30_pct": -20.149648935518716,
+     "control_ex30_mean_pct": 11.935997894975149,
+     "matched_diff_pct": -32.085646830493864,
+     "n_controls": 50
+    },
+    {
+     "sym": "VET",
+     "coin": "vechain",
+     "d": "2020-02-13",
+     "pre30_ret_pct": 38.25860083170818,
+     "event_ex30_pct": -44.2022449398152,
+     "control_ex30_mean_pct": -0.6932326202959497,
+     "matched_diff_pct": -43.50901231951926,
+     "n_controls": 89
+    },
+    {
+     "sym": "NEO",
+     "coin": "neo",
+     "d": "2020-02-16",
+     "pre30_ret_pct": 32.700720120129475,
+     "event_ex30_pct": -32.86579455314163,
+     "control_ex30_mean_pct": -1.8935453611099176,
+     "matched_diff_pct": -30.972249192031718,
+     "n_controls": 135
+    },
+    {
+     "sym": "QTUM",
+     "coin": "qtum",
+     "d": "2020-02-19",
+     "pre30_ret_pct": 36.3453954564791,
+     "event_ex30_pct": -24.837653779731795,
+     "control_ex30_mean_pct": -7.8381708352339725,
+     "matched_diff_pct": -16.999482944497824,
+     "n_controls": 113
+    },
+    {
+     "sym": "IOST",
+     "coin": "iostoken",
+     "d": "2020-02-20",
+     "pre30_ret_pct": 16.262431477715445,
+     "event_ex30_pct": -15.472746665520337,
+     "control_ex30_mean_pct": -0.7752412129571368,
+     "matched_diff_pct": -14.6975054525632,
+     "n_controls": 154
+    },
+    {
+     "sym": "ALGO",
+     "coin": "algorand",
+     "d": "2020-06-15",
+     "pre30_ret_pct": 20.867988935689773,
+     "event_ex30_pct": 27.24384935060953,
+     "control_ex30_mean_pct": 4.264099176977126,
+     "matched_diff_pct": 22.9797501736324,
+     "n_controls": 83
+    },
+    {
+     "sym": "ZRX",
+     "coin": "0x",
+     "d": "2020-06-23",
+     "pre30_ret_pct": 8.28020812773591,
+     "event_ex30_pct": 7.660149280605406,
+     "control_ex30_mean_pct": -0.3213240816498114,
+     "matched_diff_pct": 7.981473362255217,
+     "n_controls": 101
+    },
+    {
+     "sym": "OMG",
+     "coin": "omisego",
+     "d": "2020-07-01",
+     "pre30_ret_pct": -2.5571529858111397,
+     "event_ex30_pct": -13.08997884170231,
+     "control_ex30_mean_pct": -9.720742721782777,
+     "matched_diff_pct": -3.369236119919533,
+     "n_controls": 114
+    },
+    {
+     "sym": "RLC",
+     "coin": "iexec-rlc",
+     "d": "2020-07-30",
+     "pre30_ret_pct": 76.41286854787617,
+     "event_ex30_pct": 26.286771444073608,
+     "control_ex30_mean_pct": -15.47108515840021,
+     "matched_diff_pct": 41.75785660247382,
+     "n_controls": 29
+    },
+    {
+     "sym": "METIS",
+     "coin": "metis-token",
+     "d": "2024-03-12",
+     "pre30_ret_pct": 56.06747058222481,
+     "event_ex30_pct": -39.1799767160405,
+     "control_ex30_mean_pct": 24.9309371649787,
+     "matched_diff_pct": -64.1109138810192,
+     "n_controls": 28
+    },
+    {
+     "sym": "KDA",
+     "coin": "kadena",
+     "d": "2024-09-18",
+     "pre30_ret_pct": 12.854405556674209,
+     "event_ex30_pct": -23.29399509914955,
+     "control_ex30_mean_pct": 8.568138853912838,
+     "matched_diff_pct": -31.862133953062393,
+     "n_controls": 84
+    },
+    {
+     "sym": "FIO",
+     "coin": "fio-protocol",
+     "d": "2024-09-20",
+     "pre30_ret_pct": 29.122922515495553,
+     "event_ex30_pct": -41.31989680493738,
+     "control_ex30_mean_pct": -3.7676033161912583,
+     "matched_diff_pct": -37.552293488746116,
+     "n_controls": 85
+    },
+    {
+     "sym": "GHST",
+     "coin": "aavegotchi",
+     "d": "2024-09-23",
+     "pre30_ret_pct": -12.15879650644911,
+     "event_ex30_pct": -22.862172258861097,
+     "control_ex30_mean_pct": -17.67824286904983,
+     "matched_diff_pct": -5.183929389811268,
+     "n_controls": 168
+    },
+    {
+     "sym": "LOKA",
+     "coin": "league-of-kingdoms",
+     "d": "2024-09-24",
+     "pre30_ret_pct": 23.06658887585231,
+     "event_ex30_pct": -37.85449116006616,
+     "control_ex30_mean_pct": -8.407687470930819,
+     "matched_diff_pct": -29.446803689135344,
+     "n_controls": 61
+    },
+    {
+     "sym": "AKT",
+     "coin": "akash-network",
+     "d": "2024-11-18",
+     "pre30_ret_pct": 30.296221041822413,
+     "event_ex30_pct": -26.99341556130784,
+     "control_ex30_mean_pct": -6.77681437452833,
+     "matched_diff_pct": -20.216601186779513,
+     "n_controls": 51
+    },
+    {
+     "sym": "AERO",
+     "coin": "aerodrome-finance",
+     "d": "2024-12-04",
+     "pre30_ret_pct": 50.03707753967013,
+     "event_ex30_pct": -9.888202683171844,
+     "control_ex30_mean_pct": 9.742406171065161,
+     "matched_diff_pct": -19.630608854237007,
+     "n_controls": 48
+    },
+    {
+     "sym": "SPX",
+     "coin": "spx6900",
+     "d": "2024-12-10",
+     "pre30_ret_pct": -20.55832186772245,
+     "event_ex30_pct": 49.16436922240857,
+     "control_ex30_mean_pct": 1.1188938802360782,
+     "matched_diff_pct": 48.04547534217249,
+     "n_controls": 85
+    },
+    {
+     "sym": "CGPT",
+     "coin": "chaingpt",
+     "d": "2024-12-20",
+     "pre30_ret_pct": 27.266233128872997,
+     "event_ex30_pct": 17.726908488336367,
+     "control_ex30_mean_pct": -7.246648247179589,
+     "matched_diff_pct": 24.973556735515956,
+     "n_controls": 45
+    },
+    {
+     "sym": "PROM",
+     "coin": "prometeus",
+     "d": "2025-01-15",
+     "pre30_ret_pct": 14.87150819975902,
+     "event_ex30_pct": -32.15882730284446,
+     "control_ex30_mean_pct": -5.306605651378565,
+     "matched_diff_pct": -26.85222165146589,
+     "n_controls": 122
+    },
+    {
+     "sym": "VIC",
+     "coin": "tomochain",
+     "d": "2025-03-12",
+     "pre30_ret_pct": -9.968866546310418,
+     "event_ex30_pct": -64.13187763774773,
+     "control_ex30_mean_pct": -11.608035497430839,
+     "matched_diff_pct": -52.5238421403169,
+     "n_controls": 208
+    },
+    {
+     "sym": "PAXG",
+     "coin": "pax-gold",
+     "d": "2025-03-27",
+     "pre30_ret_pct": 1.2468065597910805,
+     "event_ex30_pct": -0.11094090882531465,
+     "control_ex30_mean_pct": 2.4416502667930957,
+     "matched_diff_pct": -2.5525911756184105,
+     "n_controls": 570
+    },
+    {
+     "sym": "MLN",
+     "coin": "melon",
+     "d": "2025-03-31",
+     "pre30_ret_pct": -7.940226442505239,
+     "event_ex30_pct": -48.859156114291956,
+     "control_ex30_mean_pct": -5.735418996437999,
+     "matched_diff_pct": -43.12373711785396,
+     "n_controls": 302
+    },
+    {
+     "sym": "ATH",
+     "coin": "aethir",
+     "d": "2025-04-02",
+     "pre30_ret_pct": -24.15212371891684,
+     "event_ex30_pct": 2.3281415888042,
+     "control_ex30_mean_pct": -12.810593215020685,
+     "matched_diff_pct": 15.138734803824885,
+     "n_controls": 111
+    },
+    {
+     "sym": "FORTH",
+     "coin": "ampleforth-governance-token",
+     "d": "2025-04-08",
+     "pre30_ret_pct": -22.43187956733851,
+     "event_ex30_pct": -37.71677100041825,
+     "control_ex30_mean_pct": -18.53196449253033,
+     "matched_diff_pct": -19.184806507887917,
+     "n_controls": 175
+    },
+    {
+     "sym": "XCN",
+     "coin": "chain-2",
+     "d": "2025-04-11",
+     "pre30_ret_pct": 19.184323353894904,
+     "event_ex30_pct": -36.47470708576388,
+     "control_ex30_mean_pct": 66.69264459480496,
+     "matched_diff_pct": -103.16735168056886,
+     "n_controls": 47
+    },
+    {
+     "sym": "JST",
+     "coin": "just",
+     "d": "2025-04-28",
+     "pre30_ret_pct": 25.869976696388907,
+     "event_ex30_pct": -26.147187564553654,
+     "control_ex30_mean_pct": 14.334448874903297,
+     "matched_diff_pct": -40.48163643945695,
+     "n_controls": 73
+    },
+    {
+     "sym": "ZKJ",
+     "coin": "polyhedra-network",
+     "d": "2025-05-13",
+     "pre30_ret_pct": -4.6662338118363405,
+     "event_ex30_pct": -6.895641434574334,
+     "control_ex30_mean_pct": -6.641834054164099,
+     "matched_diff_pct": -0.2538073804102356,
+     "n_controls": 219
+    },
+    {
+     "sym": "MERL",
+     "coin": "merlin-chain",
+     "d": "2025-05-28",
+     "pre30_ret_pct": 23.46073988299706,
+     "event_ex30_pct": -45.509855081465844,
+     "control_ex30_mean_pct": -10.808631476114321,
+     "matched_diff_pct": -34.70122360535152,
+     "n_controls": 74
+    },
+    {
+     "sym": "PUFFER",
+     "coin": "puffer-finance",
+     "d": "2025-06-03",
+     "pre30_ret_pct": -14.090614609497932,
+     "event_ex30_pct": -33.58604361689255,
+     "control_ex30_mean_pct": -28.0791314892424,
+     "matched_diff_pct": -5.506912127650154,
+     "n_controls": 127
+    },
+    {
+     "sym": "TAIKO",
+     "coin": "taiko",
+     "d": "2025-06-11",
+     "pre30_ret_pct": -32.46837967858711,
+     "event_ex30_pct": -32.21079432657519,
+     "control_ex30_mean_pct": -11.155920964448223,
+     "matched_diff_pct": -21.054873362126962,
+     "n_controls": 182
+    },
+    {
+     "sym": "AAVE",
+     "coin": "aave",
+     "d": "2025-06-16",
+     "pre30_ret_pct": 18.38919561715784,
+     "event_ex30_pct": 5.232329162669267,
+     "control_ex30_mean_pct": 5.654754460017037,
+     "matched_diff_pct": -0.4224252973477699,
+     "n_controls": 99
+    },
+    {
+     "sym": "UNI",
+     "coin": "uniswap",
+     "d": "2025-06-16",
+     "pre30_ret_pct": 17.67682935251631,
+     "event_ex30_pct": 7.211135578101797,
+     "control_ex30_mean_pct": -4.044377622162964,
+     "matched_diff_pct": 11.25551320026476,
+     "n_controls": 102
+    },
+    {
+     "sym": "OL",
+     "coin": "open-loot",
+     "d": "2025-06-25",
+     "pre30_ret_pct": -49.6947223288914,
+     "event_ex30_pct": -7.470710718598737,
+     "control_ex30_mean_pct": -7.374068957820444,
+     "matched_diff_pct": -0.09664176077829323,
+     "n_controls": 105
+    },
+    {
+     "sym": "ZRC",
+     "coin": "zircuit",
+     "d": "2025-07-29",
+     "pre30_ret_pct": 26.55123275729736,
+     "event_ex30_pct": -28.892556735514468,
+     "control_ex30_mean_pct": -63.725479397873755,
+     "matched_diff_pct": 34.83292266235928,
+     "n_controls": 20
+    },
+    {
+     "sym": "USELESS",
+     "coin": "useless-3",
+     "d": "2025-08-15",
+     "pre30_ret_pct": -27.91962878330414,
+     "event_ex30_pct": -12.017667038426902,
+     "control_ex30_mean_pct": -4.7716536688122275,
+     "matched_diff_pct": -7.246013369614674,
+     "n_controls": 44
+    },
+    {
+     "sym": "SKY",
+     "coin": "sky",
+     "d": "2025-09-09",
+     "pre30_ret_pct": -19.409153914949606,
+     "event_ex30_pct": -12.217340262233217,
+     "control_ex30_mean_pct": 4.2650243169144915,
+     "matched_diff_pct": -16.48236457914771,
+     "n_controls": 132
+    },
+    {
+     "sym": "TOSHI",
+     "coin": "toshi",
+     "d": "2025-09-17",
+     "pre30_ret_pct": -13.930783262191893,
+     "event_ex30_pct": -18.172223696668656,
+     "control_ex30_mean_pct": -3.862724453219431,
+     "matched_diff_pct": -14.309499243449226,
+     "n_controls": 165
+    }
+   ]
+  },
+  "entry_on_d_plus_1": {
+   "n_events_total": 80,
+   "n_entered": 48,
+   "n_excluded_lt20_controls": 32,
+   "excluded_detail": [
+    {
+     "sym": "ETC",
+     "d": "2020-01-15",
+     "n_controls": 3,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "XMR",
+     "d": "2020-02-02",
+     "n_controls": 6,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "DASH",
+     "d": "2020-02-03",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "ZEC",
+     "d": "2020-02-04",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "THETA",
+     "d": "2020-05-26",
+     "n_controls": 1,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "ZIL",
+     "d": "2020-06-17",
+     "n_controls": 8,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "DOGE",
+     "d": "2020-07-09",
+     "n_controls": 7,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "KAVA",
+     "d": "2020-07-27",
+     "n_controls": 4,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "BAND",
+     "d": "2020-07-28",
+     "n_controls": 3,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "BTC",
+     "d": "2021-01-11",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "MYRO",
+     "d": "2024-03-05",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "DIA",
+     "d": "2024-10-02",
+     "n_controls": 3,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "PONKE",
+     "d": "2024-11-04",
+     "n_controls": 13,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "DEGEN",
+     "d": "2024-11-15",
+     "n_controls": 2,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "VIRTUAL",
+     "d": "2024-12-10",
+     "n_controls": 3,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "DEGO",
+     "d": "2024-12-13",
+     "n_controls": 13,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "LUMIA",
+     "d": "2024-12-18",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "FARTCOIN",
+     "d": "2024-12-20",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "PHA",
+     "d": "2024-12-30",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "DF",
+     "d": "2024-12-30",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "AI16Z",
+     "d": "2025-01-02",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "COOKIE",
+     "d": "2025-01-07",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "PIPPIN",
+     "d": "2025-01-24",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "PLUME",
+     "d": "2025-03-21",
+     "n_controls": 18,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "FUN",
+     "d": "2025-03-31",
+     "n_controls": 6,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "HYPE",
+     "d": "2025-05-30",
+     "n_controls": 5,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "PORT3",
+     "d": "2025-06-03",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "ZORA",
+     "d": "2025-07-25",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "TAG",
+     "d": "2025-07-25",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "CUDIS",
+     "d": "2025-08-20",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "ZEC",
+     "d": "2025-11-19",
+     "n_controls": 2,
+     "why": "lt20_controls"
+    },
+    {
+     "sym": "BTW",
+     "d": "2026-06-04",
+     "n_controls": 0,
+     "why": "lt20_controls"
+    }
+   ],
+   "controls_per_event": {
+    "n": 80,
+    "median_pct": 47.5,
+    "mean_pct": 72.9625,
+    "p25_pct": 3.0,
+    "p75_pct": 111.5,
+    "min_pct": 0.0,
+    "max_pct": 570.0,
+    "frac_negative": 0.0,
+    "frac_le_-3": 0.0
+   },
+   "n_controls_total": 5837,
+   "event_excess": {
+    "n": 48,
+    "median_pct": -16.946603891487616,
+    "mean_pct": -10.612427695474597,
+    "p25_pct": -28.587357956393234,
+    "p75_pct": 5.0695732367802515,
+    "min_pct": -58.52355968656951,
+    "max_pct": 45.04078993046415,
+    "frac_negative": 0.6875,
+    "frac_le_-3": 0.6875
+   },
+   "matched_control_excess": {
+    "n": 48,
+    "median_pct": -4.408015645487596,
+    "mean_pct": -3.156535804286463,
+    "p25_pct": -9.434250287910153,
+    "p75_pct": 1.4495829768753326,
+    "min_pct": -63.725479397873755,
+    "max_pct": 66.69264459480496,
+    "frac_negative": 0.6875,
+    "frac_le_-3": 0.5625
+   },
+   "matched_diff": {
+    "n": 48,
+    "median_pct": -10.796292870912803,
+    "mean_pct": -7.455891891188135,
+    "p25_pct": -26.5933040033227,
+    "p75_pct": 11.37433486007762,
+    "min_pct": -98.97785870361773,
+    "max_pct": 51.001195867283855,
+    "frac_negative": 0.6666666666666666,
+    "frac_le_-3": 0.5833333333333334
+   },
+   "a": {
+    "median_pct": -10.796292870912803,
+    "mean_pct": -7.455891891188135,
+    "threshold_pct": -3.0,
+    "pass": true
+   },
+   "b": {
+    "n_flip": 10000,
+    "statistic": "median of sign-flipped matched diffs",
+    "observed_median_pct": -10.796292870912803,
+    "null_p05_pct": -9.259092846582389,
+    "null_p50_pct": 0.05935486445468249,
+    "one_sided_p": 0.02705,
+    "pass": true
+   },
+   "halves": [
+    {
+     "window": "2020-01→2022-12",
+     "n": 20,
+     "median_pct": 4.272948449032885,
+     "mean_pct": 3.4606221707167153,
+     "frac_negative": 0.5
+    },
+    {
+     "window": "2023-01→9999-12",
+     "n": 28,
+     "median_pct": -15.857191630054214,
+     "mean_pct": -15.253401935405883,
+     "frac_negative": 0.7857142857142857
+    }
+   ],
+   "exploratory_pre30_split": {
+    "pre30>0": {
+     "n": 33,
+     "matched_diff_median_pct": -17.775760118168797,
+     "matched_diff_mean_pct": -8.592089135573927,
+     "matched_diff_frac_negative": 0.6363636363636364,
+     "raw_event_ex30_median_pct": -17.078114658742614
+    },
+    "pre30<=0": {
+     "n": 15,
+     "matched_diff_median_pct": -4.689886574946561,
+     "matched_diff_mean_pct": -4.956257953539391,
+     "matched_diff_frac_negative": 0.7333333333333333,
+     "raw_event_ex30_median_pct": -15.235993315864263
+    }
+   },
+   "c": {
+    "same_sign": false,
+    "sign": 1,
+    "half2_sign": -1,
+    "pass": false
+   },
+   "d": {
+    "n_entered": 48,
+    "threshold": 40,
+    "pass": true
+   },
+   "all_pass": false,
+   "per_event": [
+    {
+     "sym": "XRP",
+     "coin": "ripple",
+     "d": "2020-01-06",
+     "pre30_ret_pct": -13.854412398877914,
+     "event_ex30_pct": 9.550431768470222,
+     "control_ex30_mean_pct": -1.728512659449975,
+     "matched_diff_pct": 11.278944427920196,
+     "n_controls": 191
+    },
+    {
+     "sym": "EOS",
+     "coin": "eos",
+     "d": "2020-01-07",
+     "pre30_ret_pct": 4.654596358536467,
+     "event_ex30_pct": 30.72296458666346,
+     "control_ex30_mean_pct": -10.259345410207994,
+     "matched_diff_pct": 40.98230999687145,
+     "n_controls": 185
+    },
+    {
+     "sym": "LTC",
+     "coin": "litecoin",
+     "d": "2020-01-08",
+     "pre30_ret_pct": 1.8242446993410155,
+     "event_ex30_pct": 30.22702436104471,
+     "control_ex30_mean_pct": 0.43450807789132895,
+     "matched_diff_pct": 29.792516283153383,
+     "n_controls": 165
+    },
+    {
+     "sym": "TRX",
+     "coin": "tron",
+     "d": "2020-01-14",
+     "pre30_ret_pct": 5.761090846067929,
+     "event_ex30_pct": 25.876234728522807,
+     "control_ex30_mean_pct": -7.0400348948831954,
+     "matched_diff_pct": 32.916269623406,
+     "n_controls": 215
+    },
+    {
+     "sym": "LINK",
+     "coin": "chainlink",
+     "d": "2020-01-16",
+     "pre30_ret_pct": 21.997920073223742,
+     "event_ex30_pct": 39.45233502268698,
+     "control_ex30_mean_pct": -6.904205847430944,
+     "matched_diff_pct": 46.356540870117925,
+     "n_controls": 101
+    },
+    {
+     "sym": "XLM",
+     "coin": "stellar",
+     "d": "2020-01-19",
+     "pre30_ret_pct": 35.6135069972338,
+     "event_ex30_pct": 0.636046834910603,
+     "control_ex30_mean_pct": -18.494628135809805,
+     "matched_diff_pct": 19.130674970720406,
+     "n_controls": 78
+    },
+    {
+     "sym": "ADA",
+     "coin": "cardano",
+     "d": "2020-01-30",
+     "pre30_ret_pct": 58.78476653385745,
+     "event_ex30_pct": -6.580712804095537,
+     "control_ex30_mean_pct": 13.126962405722779,
+     "matched_diff_pct": -19.707675209818316,
+     "n_controls": 69
+    },
+    {
+     "sym": "XTZ",
+     "coin": "tezos",
+     "d": "2020-02-05",
+     "pre30_ret_pct": 53.71914731463661,
+     "event_ex30_pct": 41.66244305733124,
+     "control_ex30_mean_pct": -9.338752809952613,
+     "matched_diff_pct": 51.001195867283855,
+     "n_controls": 36
+    },
+    {
+     "sym": "ATOM",
+     "coin": "cosmos",
+     "d": "2020-02-06",
+     "pre30_ret_pct": 5.028929785707947,
+     "event_ex30_pct": -24.915893156621728,
+     "control_ex30_mean_pct": 0.889360701432326,
+     "matched_diff_pct": -25.80525385805405,
+     "n_controls": 166
+    },
+    {
+     "sym": "BNB",
+     "coin": "binancecoin",
+     "d": "2020-02-07",
+     "pre30_ret_pct": 37.24511255987664,
+     "event_ex30_pct": -5.0747575220701915,
+     "control_ex30_mean_pct": 11.32123211407438,
+     "matched_diff_pct": -16.39598963614457,
+     "n_controls": 110
+    },
+    {
+     "sym": "ONT",
+     "coin": "ontology",
+     "d": "2020-02-10",
+     "pre30_ret_pct": 61.67091200481867,
+     "event_ex30_pct": -42.59321367967982,
+     "control_ex30_mean_pct": -2.422519596748568,
+     "matched_diff_pct": -40.17069408293125,
+     "n_controls": 24
+    },
+    {
+     "sym": "BAT",
+     "coin": "basic-attention-token",
+     "d": "2020-02-12",
+     "pre30_ret_pct": 53.38155792141652,
+     "event_ex30_pct": -18.08123354599135,
+     "control_ex30_mean_pct": 11.935997894975149,
+     "matched_diff_pct": -30.017231440966498,
+     "n_controls": 50
+    },
+    {
+     "sym": "VET",
+     "coin": "vechain",
+     "d": "2020-02-13",
+     "pre30_ret_pct": 38.25860083170818,
+     "event_ex30_pct": -51.176380358406746,
+     "control_ex30_mean_pct": -0.6932326202959497,
+     "matched_diff_pct": -50.4831477381108,
+     "n_controls": 89
+    },
+    {
+     "sym": "NEO",
+     "coin": "neo",
+     "d": "2020-02-16",
+     "pre30_ret_pct": 32.700720120129475,
+     "event_ex30_pct": -37.5137444626595,
+     "control_ex30_mean_pct": -1.8935453611099176,
+     "matched_diff_pct": -35.62019910154959,
+     "n_controls": 135
+    },
+    {
+     "sym": "QTUM",
+     "coin": "qtum",
+     "d": "2020-02-19",
+     "pre30_ret_pct": 36.3453954564791,
+     "event_ex30_pct": -22.215796126404104,
+     "control_ex30_mean_pct": -7.8381708352339725,
+     "matched_diff_pct": -14.377625291170132,
+     "n_controls": 113
+    },
+    {
+     "sym": "IOST",
+     "coin": "iostoken",
+     "d": "2020-02-20",
+     "pre30_ret_pct": 16.262431477715445,
+     "event_ex30_pct": -24.310947320360988,
+     "control_ex30_mean_pct": -0.7752412129571368,
+     "matched_diff_pct": -23.53570610740385,
+     "n_controls": 154
+    },
+    {
+     "sym": "ALGO",
+     "coin": "algorand",
+     "d": "2020-06-15",
+     "pre30_ret_pct": 20.867988935689773,
+     "event_ex30_pct": 45.04078993046415,
+     "control_ex30_mean_pct": 4.264099176977126,
+     "matched_diff_pct": 40.776690753487024,
+     "n_controls": 83
+    },
+    {
+     "sym": "ZRX",
+     "coin": "0x",
+     "d": "2020-06-23",
+     "pre30_ret_pct": 8.28020812773591,
+     "event_ex30_pct": 9.19040718199636,
+     "control_ex30_mean_pct": -0.3213240816498114,
+     "matched_diff_pct": 9.51173126364617,
+     "n_controls": 101
+    },
+    {
+     "sym": "OMG",
+     "coin": "omisego",
+     "d": "2020-07-01",
+     "pre30_ret_pct": -2.5571529858111397,
+     "event_ex30_pct": -10.686577087363178,
+     "control_ex30_mean_pct": -9.720742721782777,
+     "matched_diff_pct": -0.9658343655804008,
+     "n_controls": 114
+    },
+    {
+     "sym": "RLC",
+     "coin": "iexec-rlc",
+     "d": "2020-07-30",
+     "pre30_ret_pct": 76.41286854787617,
+     "event_ex30_pct": 29.07384103105714,
+     "control_ex30_mean_pct": -15.47108515840021,
+     "matched_diff_pct": 44.54492618945735,
+     "n_controls": 29
+    },
+    {
+     "sym": "METIS",
+     "coin": "metis-token",
+     "d": "2024-03-12",
+     "pre30_ret_pct": 56.06747058222481,
+     "event_ex30_pct": -58.52355968656951,
+     "control_ex30_mean_pct": 24.9309371649787,
+     "matched_diff_pct": -83.45449685154821,
+     "n_controls": 28
+    },
+    {
+     "sym": "KDA",
+     "coin": "kadena",
+     "d": "2024-09-18",
+     "pre30_ret_pct": 12.854405556674209,
+     "event_ex30_pct": -17.078114658742614,
+     "control_ex30_mean_pct": 8.568138853912838,
+     "matched_diff_pct": -25.646253512655452,
+     "n_controls": 84
+    },
+    {
+     "sym": "FIO",
+     "coin": "fio-protocol",
+     "d": "2024-09-20",
+     "pre30_ret_pct": 29.122922515495553,
+     "event_ex30_pct": -27.828120006379066,
+     "control_ex30_mean_pct": -3.7676033161912583,
+     "matched_diff_pct": -24.060516690187804,
+     "n_controls": 85
+    },
+    {
+     "sym": "GHST",
+     "coin": "aavegotchi",
+     "d": "2024-09-23",
+     "pre30_ret_pct": -12.15879650644911,
+     "event_ex30_pct": -18.190603540351688,
+     "control_ex30_mean_pct": -17.67824286904983,
+     "matched_diff_pct": -0.5123606713018591,
+     "n_controls": 168
+    },
+    {
+     "sym": "LOKA",
+     "coin": "league-of-kingdoms",
+     "d": "2024-09-24",
+     "pre30_ret_pct": 23.06658887585231,
+     "event_ex30_pct": -39.02043138808294,
+     "control_ex30_mean_pct": -8.407687470930819,
+     "matched_diff_pct": -30.612743917152123,
+     "n_controls": 61
+    },
+    {
+     "sym": "AKT",
+     "coin": "akash-network",
+     "d": "2024-11-18",
+     "pre30_ret_pct": 30.296221041822413,
+     "event_ex30_pct": -33.477532501925786,
+     "control_ex30_mean_pct": -6.77681437452833,
+     "matched_diff_pct": -26.70071812739746,
+     "n_controls": 51
+    },
+    {
+     "sym": "AERO",
+     "coin": "aerodrome-finance",
+     "d": "2024-12-04",
+     "pre30_ret_pct": 50.03707753967013,
+     "event_ex30_pct": -16.815093124232618,
+     "control_ex30_mean_pct": 9.742406171065161,
+     "matched_diff_pct": -26.557499295297777,
+     "n_controls": 48
+    },
+    {
+     "sym": "SPX",
+     "coin": "spx6900",
+     "d": "2024-12-10",
+     "pre30_ret_pct": -20.55832186772245,
+     "event_ex30_pct": 44.263661808756396,
+     "control_ex30_mean_pct": 1.1188938802360782,
+     "matched_diff_pct": 43.14476792852032,
+     "n_controls": 85
+    },
+    {
+     "sym": "CGPT",
+     "coin": "chaingpt",
+     "d": "2024-12-20",
+     "pre30_ret_pct": 27.266233128872997,
+     "event_ex30_pct": 4.413857909370306,
+     "control_ex30_mean_pct": -7.246648247179589,
+     "matched_diff_pct": 11.660506156549896,
+     "n_controls": 45
+    },
+    {
+     "sym": "PROM",
+     "coin": "prometeus",
+     "d": "2025-01-15",
+     "pre30_ret_pct": 14.87150819975902,
+     "event_ex30_pct": -23.082365769547362,
+     "control_ex30_mean_pct": -5.306605651378565,
+     "matched_diff_pct": -17.775760118168797,
+     "n_controls": 122
+    },
+    {
+     "sym": "VIC",
+     "coin": "tomochain",
+     "d": "2025-03-12",
+     "pre30_ret_pct": -9.968866546310418,
+     "event_ex30_pct": -42.50965203370335,
+     "control_ex30_mean_pct": -11.608035497430839,
+     "matched_diff_pct": -30.901616536272513,
+     "n_controls": 208
+    },
+    {
+     "sym": "PAXG",
+     "coin": "pax-gold",
+     "d": "2025-03-27",
+     "pre30_ret_pct": 1.2468065597910805,
+     "event_ex30_pct": -3.8383161518532147,
+     "control_ex30_mean_pct": 2.4416502667930957,
+     "matched_diff_pct": -6.2799664186463104,
+     "n_controls": 570
+    },
+    {
+     "sym": "MLN",
+     "coin": "melon",
+     "d": "2025-03-31",
+     "pre30_ret_pct": -7.940226442505239,
+     "event_ex30_pct": -30.86507180643573,
+     "control_ex30_mean_pct": -5.735418996437999,
+     "matched_diff_pct": -25.129652809997733,
+     "n_controls": 302
+    },
+    {
+     "sym": "ATH",
+     "coin": "aethir",
+     "d": "2025-04-02",
+     "pre30_ret_pct": -24.15212371891684,
+     "event_ex30_pct": -12.954575421074288,
+     "control_ex30_mean_pct": -12.810593215020685,
+     "matched_diff_pct": -0.1439822060536028,
+     "n_controls": 111
+    },
+    {
+     "sym": "FORTH",
+     "coin": "ampleforth-governance-token",
+     "d": "2025-04-08",
+     "pre30_ret_pct": -22.43187956733851,
+     "event_ex30_pct": -25.254976526140695,
+     "control_ex30_mean_pct": -18.53196449253033,
+     "matched_diff_pct": -6.723012033610362,
+     "n_controls": 175
+    },
+    {
+     "sym": "XCN",
+     "coin": "chain-2",
+     "d": "2025-04-11",
+     "pre30_ret_pct": 19.184323353894904,
+     "event_ex30_pct": -32.28521410881277,
+     "control_ex30_mean_pct": 66.69264459480496,
+     "matched_diff_pct": -98.97785870361773,
+     "n_controls": 47
+    },
+    {
+     "sym": "JST",
+     "coin": "just",
+     "d": "2025-04-28",
+     "pre30_ret_pct": 25.869976696388907,
+     "event_ex30_pct": -19.509440452627864,
+     "control_ex30_mean_pct": 14.334448874903297,
+     "matched_diff_pct": -33.843889327531166,
+     "n_controls": 73
+    },
+    {
+     "sym": "ZKJ",
+     "coin": "polyhedra-network",
+     "d": "2025-05-13",
+     "pre30_ret_pct": -4.6662338118363405,
+     "event_ex30_pct": -4.419632016229637,
+     "control_ex30_mean_pct": -6.641834054164099,
+     "matched_diff_pct": 2.222202037934462,
+     "n_controls": 219
+    },
+    {
+     "sym": "MERL",
+     "coin": "merlin-chain",
+     "d": "2025-05-28",
+     "pre30_ret_pct": 23.46073988299706,
+     "event_ex30_pct": -45.867856932992865,
+     "control_ex30_mean_pct": -10.808631476114321,
+     "matched_diff_pct": -35.059225456878536,
+     "n_controls": 74
+    },
+    {
+     "sym": "PUFFER",
+     "coin": "puffer-finance",
+     "d": "2025-06-03",
+     "pre30_ret_pct": -14.090614609497932,
+     "event_ex30_pct": -32.76901806418896,
+     "control_ex30_mean_pct": -28.0791314892424,
+     "matched_diff_pct": -4.689886574946561,
+     "n_controls": 127
+    },
+    {
+     "sym": "TAIKO",
+     "coin": "taiko",
+     "d": "2025-06-11",
+     "pre30_ret_pct": -32.46837967858711,
+     "event_ex30_pct": -25.09454410638785,
+     "control_ex30_mean_pct": -11.155920964448223,
+     "matched_diff_pct": -13.938623141939626,
+     "n_controls": 182
+    },
+    {
+     "sym": "AAVE",
+     "coin": "aave",
+     "d": "2025-06-16",
+     "pre30_ret_pct": 18.38919561715784,
+     "event_ex30_pct": 5.39206252505407,
+     "control_ex30_mean_pct": 5.654754460017037,
+     "matched_diff_pct": -0.2626919349629678,
+     "n_controls": 99
+    },
+    {
+     "sym": "UNI",
+     "coin": "uniswap",
+     "d": "2025-06-16",
+     "pre30_ret_pct": 17.67682935251631,
+     "event_ex30_pct": 4.962076807355645,
+     "control_ex30_mean_pct": -4.044377622162964,
+     "matched_diff_pct": 9.006454429518609,
+     "n_controls": 102
+    },
+    {
+     "sym": "OL",
+     "coin": "open-loot",
+     "d": "2025-06-25",
+     "pre30_ret_pct": -49.6947223288914,
+     "event_ex30_pct": 7.202203239065801,
+     "control_ex30_mean_pct": -7.374068957820444,
+     "matched_diff_pct": 14.576272196886245,
+     "n_controls": 105
+    },
+    {
+     "sym": "ZRC",
+     "coin": "zircuit",
+     "d": "2025-07-29",
+     "pre30_ret_pct": 26.55123275729736,
+     "event_ex30_pct": -17.599094455832038,
+     "control_ex30_mean_pct": -63.725479397873755,
+     "matched_diff_pct": 46.12638494204172,
+     "n_controls": 20
+    },
+    {
+     "sym": "USELESS",
+     "coin": "useless-3",
+     "d": "2025-08-15",
+     "pre30_ret_pct": -27.91962878330414,
+     "event_ex30_pct": -40.177760990796926,
+     "control_ex30_mean_pct": -4.7716536688122275,
+     "matched_diff_pct": -35.4061073219847,
+     "n_controls": 44
+    },
+    {
+     "sym": "SKY",
+     "coin": "sky",
+     "d": "2025-09-09",
+     "pre30_ret_pct": -19.409153914949606,
+     "event_ex30_pct": -15.235993315864263,
+     "control_ex30_mean_pct": 4.2650243169144915,
+     "matched_diff_pct": -19.501017632778755,
+     "n_controls": 132
+    },
+    {
+     "sym": "TOSHI",
+     "coin": "toshi",
+     "d": "2025-09-17",
+     "pre30_ret_pct": -13.930783262191893,
+     "event_ex30_pct": -11.516687053105407,
+     "control_ex30_mean_pct": -3.862724453219431,
+     "matched_diff_pct": -7.6539625998859755,
+     "n_controls": 165
+    }
+   ]
+  }
+ },
+ "mcap_tertiles": {
+  "entry_on_d": [
+   {
+    "bucket": "小",
+    "n": 27,
+    "median_pct": -28.892556735514468,
+    "mean_pct": -18.29493962002411,
+    "mcap_lo": null,
+    "mcap_hi": 144133316.20527616
+   },
+   {
+    "bucket": "中",
+    "n": 26,
+    "median_pct": -21.038308741092482,
+    "mean_pct": -17.48219801682062,
+    "mcap_lo": 144133316.20527616,
+    "mcap_hi": 648285465.5783203
+   },
+   {
+    "bucket": "大",
+    "n": 27,
+    "median_pct": 0.0,
+    "mean_pct": -0.6728729338554651,
+    "mcap_lo": 648285465.5783203,
+    "mcap_hi": null
+   }
+  ],
+  "entry_on_d_plus_1": [
+   {
+    "bucket": "小",
+    "n": 27,
+    "median_pct": -18.835507544876045,
+    "mean_pct": -16.84479122522001,
+    "mcap_lo": null,
+    "mcap_hi": 144133316.20527616
+   },
+   {
+    "bucket": "中",
+    "n": 26,
+    "median_pct": -18.795336999309605,
+    "mean_pct": -19.912417996063933,
+    "mcap_lo": 144133316.20527616,
+    "mcap_hi": 648285465.5783203
+   },
+   {
+    "bucket": "大",
+    "n": 27,
+    "median_pct": 0.0,
+    "mean_pct": -3.248800510492954,
+    "mcap_lo": 648285465.5783203,
+    "mcap_hi": null
+   }
+  ]
+ },
+ "funding": {
+  "entry_on_d": {
+   "n": 53,
+   "spearman_funding7_vs_ex30": 0.3658280922431866,
+   "funding_mean": 6.289218710691837e-05,
+   "funding_median": 9.945476190476205e-05
+  },
+  "entry_on_d_plus_1": {
+   "n": 53,
+   "spearman_funding7_vs_ex30": 0.18053539751652958,
+   "funding_mean": 6.289218710691837e-05,
+   "funding_median": 9.945476190476205e-05
+  }
+ },
+ "events_detail": [
+  {
+   "sym": "XRP",
+   "coin": "ripple",
+   "d": "2020-01-06",
+   "ex30_pct": 1.8412469662114157,
+   "ex60_pct": -5.6894824669323,
+   "pre30_ret_pct": -13.854412398877914,
+   "mcap_pre": 8399662198.68384
+  },
+  {
+   "sym": "EOS",
+   "coin": "eos",
+   "d": "2020-01-07",
+   "ex30_pct": 29.4700923198026,
+   "ex60_pct": 15.701654274425342,
+   "pre30_ret_pct": 4.654596358536467,
+   "mcap_pre": 2729712866.78047
+  },
+  {
+   "sym": "LTC",
+   "coin": "litecoin",
+   "d": "2020-01-08",
+   "ex30_pct": 29.709146288683442,
+   "ex60_pct": 12.007310311370913,
+   "pre30_ret_pct": 1.8242446993410155,
+   "mcap_pre": 2955399045.01693
+  },
+  {
+   "sym": "TRX",
+   "coin": "tron",
+   "d": "2020-01-14",
+   "ex30_pct": 20.71133907527432,
+   "ex60_pct": -1.273297246321825,
+   "pre30_ret_pct": 5.761090846067929,
+   "mcap_pre": 967852573.727974
+  },
+  {
+   "sym": "ETC",
+   "coin": "ethereum-classic",
+   "d": "2020-01-15",
+   "ex30_pct": 25.129746587199342,
+   "ex60_pct": 4.088378797965742,
+   "pre30_ret_pct": 76.72689749142873,
+   "mcap_pre": 795762553.031098
+  },
+  {
+   "sym": "LINK",
+   "coin": "chainlink",
+   "d": "2020-01-16",
+   "ex30_pct": 42.38232398227922,
+   "ex60_pct": 22.2342928360608,
+   "pre30_ret_pct": 21.997920073223742,
+   "mcap_pre": 875522734.212635
+  },
+  {
+   "sym": "XLM",
+   "coin": "stellar",
+   "d": "2020-01-19",
+   "ex30_pct": 8.123357393947181,
+   "ex60_pct": -2.751658165687698,
+   "pre30_ret_pct": 35.6135069972338,
+   "mcap_pre": 1227571399.93527
+  },
+  {
+   "sym": "ADA",
+   "coin": "cardano",
+   "d": "2020-01-30",
+   "ex30_pct": -5.734647766224395,
+   "ex60_pct": -22.816233841365534,
+   "pre30_ret_pct": 58.78476653385745,
+   "mcap_pre": 1654796552.27001
+  },
+  {
+   "sym": "XMR",
+   "coin": "monero",
+   "d": "2020-02-02",
+   "ex30_pct": -6.2125937917139815,
+   "ex60_pct": -6.8072933138122576,
+   "pre30_ret_pct": 61.14358734066923,
+   "mcap_pre": 1273622368.49131
+  },
+  {
+   "sym": "DASH",
+   "coin": "dash",
+   "d": "2020-02-03",
+   "ex30_pct": -21.960912458341493,
+   "ex60_pct": -21.042657100445318,
+   "pre30_ret_pct": 160.66936165347238,
+   "mcap_pre": 1064481050.01607
+  },
+  {
+   "sym": "ZEC",
+   "coin": "zcash",
+   "d": "2020-02-04",
+   "ex30_pct": -19.865766520659626,
+   "ex60_pct": -37.022120021463564,
+   "pre30_ret_pct": 118.55349240039992,
+   "mcap_pre": 577891904.546397
+  },
+  {
+   "sym": "XTZ",
+   "coin": "tezos",
+   "d": "2020-02-05",
+   "ex30_pct": 44.444969049291,
+   "ex60_pct": 10.198082228447754,
+   "pre30_ret_pct": 53.71914731463661,
+   "mcap_pre": 1344960670.66061
+  },
+  {
+   "sym": "ATOM",
+   "coin": "cosmos",
+   "d": "2020-02-06",
+   "ex30_pct": -14.567109994523953,
+   "ex60_pct": -35.232722233392465,
+   "pre30_ret_pct": 5.028929785707947,
+   "mcap_pre": 829351265.4278
+  },
+  {
+   "sym": "BNB",
+   "coin": "binancecoin",
+   "d": "2020-02-07",
+   "ex30_pct": -7.162073889745507,
+   "ex60_pct": -9.91684481309229,
+   "pre30_ret_pct": 37.24511255987664,
+   "mcap_pre": 3162557390.44267
+  },
+  {
+   "sym": "ONT",
+   "coin": "ontology",
+   "d": "2020-02-10",
+   "ex30_pct": -28.573336915701976,
+   "ex60_pct": -50.61182154973377,
+   "pre30_ret_pct": 61.67091200481867,
+   "mcap_pre": 579740862.180219
+  },
+  {
+   "sym": "BAT",
+   "coin": "basic-attention-token",
+   "d": "2020-02-12",
+   "ex30_pct": -20.149648935518716,
+   "ex60_pct": -24.367859365644488,
+   "pre30_ret_pct": 53.38155792141652,
+   "mcap_pre": 416781387.558752
+  },
+  {
+   "sym": "VET",
+   "coin": "vechain",
+   "d": "2020-02-13",
+   "ex30_pct": -44.2022449398152,
+   "ex60_pct": -37.117596387128366,
+   "pre30_ret_pct": 38.25860083170818,
+   "mcap_pre": 470833687.9976
+  },
+  {
+   "sym": "NEO",
+   "coin": "neo",
+   "d": "2020-02-16",
+   "ex30_pct": -32.86579455314163,
+   "ex60_pct": -32.15977735383546,
+   "pre30_ret_pct": 32.700720120129475,
+   "mcap_pre": 1056575907.16862
+  },
+  {
+   "sym": "QTUM",
+   "coin": "qtum",
+   "d": "2020-02-19",
+   "ex30_pct": -24.837653779731795,
+   "ex60_pct": -26.514217616298037,
+   "pre30_ret_pct": 36.3453954564791,
+   "mcap_pre": 254291745.303455
+  },
+  {
+   "sym": "IOST",
+   "coin": "iostoken",
+   "d": "2020-02-20",
+   "ex30_pct": -15.472746665520337,
+   "ex60_pct": -36.32429517067389,
+   "pre30_ret_pct": 16.262431477715445,
+   "mcap_pre": 74926842.2889563
+  },
+  {
+   "sym": "THETA",
+   "coin": "theta-token",
+   "d": "2020-05-26",
+   "ex30_pct": -61.118165734143595,
+   "ex60_pct": -56.69576372319208,
+   "pre30_ret_pct": 232.11362698655594,
+   "mcap_pre": 351649272.354219
+  },
+  {
+   "sym": "ALGO",
+   "coin": "algorand",
+   "d": "2020-06-15",
+   "ex30_pct": 27.24384935060953,
+   "ex60_pct": 81.68305938326552,
+   "pre30_ret_pct": 20.867988935689773,
+   "mcap_pre": 186372184.40974
+  },
+  {
+   "sym": "ZIL",
+   "coin": "zilliqa",
+   "d": "2020-06-17",
+   "ex30_pct": -21.92696854666625,
+   "ex60_pct": -10.167080055394006,
+   "pre30_ret_pct": 136.7854913642759,
+   "mcap_pre": 265988906.9452
+  },
+  {
+   "sym": "ZRX",
+   "coin": "0x",
+   "d": "2020-06-23",
+   "ex30_pct": 7.660149280605406,
+   "ex60_pct": 50.17415514118069,
+   "pre30_ret_pct": 8.28020812773591,
+   "mcap_pre": 247983061.790955
+  },
+  {
+   "sym": "OMG",
+   "coin": "omisego",
+   "d": "2020-07-01",
+   "ex30_pct": -13.08997884170231,
+   "ex60_pct": 108.15708473226557,
+   "pre30_ret_pct": -2.5571529858111397,
+   "mcap_pre": 206054175.570944
+  },
+  {
+   "sym": "DOGE",
+   "coin": "dogecoin",
+   "d": "2020-07-09",
+   "ex30_pct": -45.275674360548386,
+   "ex60_pct": -53.733228806932395,
+   "pre30_ret_pct": 83.87167261375753,
+   "mcap_pre": 594339744.703795
+  },
+  {
+   "sym": "KAVA",
+   "coin": "kava",
+   "d": "2020-07-27",
+   "ex30_pct": 62.75154266104427,
+   "ex60_pct": 4.85416278349502,
+   "pre30_ret_pct": 112.46147776568525,
+   "mcap_pre": 63143515.222908
+  },
+  {
+   "sym": "BAND",
+   "coin": "band-protocol",
+   "d": "2020-07-28",
+   "ex30_pct": 109.39135173966422,
+   "ex60_pct": 59.993128872558884,
+   "pre30_ret_pct": 213.7203822686411,
+   "mcap_pre": 67351972.8496196
+  },
+  {
+   "sym": "RLC",
+   "coin": "iexec-rlc",
+   "d": "2020-07-30",
+   "ex30_pct": 26.286771444073608,
+   "ex60_pct": -22.875984912832394,
+   "pre30_ret_pct": 76.41286854787617,
+   "mcap_pre": 77048246.4931644
+  },
+  {
+   "sym": "BTC",
+   "coin": "bitcoin",
+   "d": "2021-01-11",
+   "ex30_pct": 0.0,
+   "ex60_pct": 0.0,
+   "pre30_ret_pct": 112.9908170238143,
+   "mcap_pre": 714078952009.024
+  },
+  {
+   "sym": "MYRO",
+   "coin": "myro",
+   "d": "2024-03-05",
+   "ex30_pct": -32.45709286786555,
+   "ex60_pct": -60.6328642852028,
+   "pre30_ret_pct": 162.83161682810135,
+   "mcap_pre": 167682938.294587
+  },
+  {
+   "sym": "METIS",
+   "coin": "metis-token",
+   "d": "2024-03-12",
+   "ex30_pct": -39.1799767160405,
+   "ex60_pct": -66.07426200927952,
+   "pre30_ret_pct": 56.06747058222481,
+   "mcap_pre": 717597429.529089
+  },
+  {
+   "sym": "KDA",
+   "coin": "kadena",
+   "d": "2024-09-18",
+   "ex30_pct": -23.29399509914955,
+   "ex60_pct": -43.71759721586582,
+   "pre30_ret_pct": 12.854405556674209,
+   "mcap_pre": 150493496.71874
+  },
+  {
+   "sym": "FIO",
+   "coin": "fio-protocol",
+   "d": "2024-09-20",
+   "ex30_pct": -41.31989680493738,
+   "ex60_pct": -70.20363830274827,
+   "pre30_ret_pct": 29.122922515495553,
+   "mcap_pre": 19958669.8920298
+  },
+  {
+   "sym": "GHST",
+   "coin": "aavegotchi",
+   "d": "2024-09-23",
+   "ex30_pct": -22.862172258861097,
+   "ex60_pct": -58.93120521153234,
+   "pre30_ret_pct": -12.15879650644911,
+   "mcap_pre": 46791179.6858071
+  },
+  {
+   "sym": "LOKA",
+   "coin": "league-of-kingdoms",
+   "d": "2024-09-24",
+   "ex30_pct": -37.85449116006616,
+   "ex60_pct": -60.90940008501138,
+   "pre30_ret_pct": 23.06658887585231,
+   "mcap_pre": 26428185.1196368
+  },
+  {
+   "sym": "DIA",
+   "coin": "dia-data",
+   "d": "2024-10-02",
+   "ex30_pct": 12.164675896690385,
+   "ex60_pct": -22.94093131126371,
+   "pre30_ret_pct": 143.42205664684684,
+   "mcap_pre": 90307610.0650844
+  },
+  {
+   "sym": "PONKE",
+   "coin": "ponke",
+   "d": "2024-11-04",
+   "ex30_pct": -4.110153832841573,
+   "ex60_pct": -42.65461523440856,
+   "pre30_ret_pct": 55.85729340738696,
+   "mcap_pre": 254444374.866006
+  },
+  {
+   "sym": "DEGEN",
+   "coin": "degen-base",
+   "d": "2024-11-15",
+   "ex30_pct": -65.16130267111184,
+   "ex60_pct": -111.3991645571047,
+   "pre30_ret_pct": 170.6502242964943,
+   "mcap_pre": 445287954.526921
+  },
+  {
+   "sym": "AKT",
+   "coin": "akash-network",
+   "d": "2024-11-18",
+   "ex30_pct": -26.99341556130784,
+   "ex60_pct": -29.455396993304895,
+   "pre30_ret_pct": 30.296221041822413,
+   "mcap_pre": 800446303.365925
+  },
+  {
+   "sym": "AERO",
+   "coin": "aerodrome-finance",
+   "d": "2024-12-04",
+   "ex30_pct": -9.888202683171844,
+   "ex60_pct": -71.4548450185761,
+   "pre30_ret_pct": 50.03707753967013,
+   "mcap_pre": 1133206044.23684
+  },
+  {
+   "sym": "VIRTUAL",
+   "coin": "virtual-protocol",
+   "d": "2024-12-10",
+   "ex30_pct": 74.13783703429701,
+   "ex60_pct": -22.779708287586576,
+   "pre30_ret_pct": 354.55060139253396,
+   "mcap_pre": 1547277924.23216
+  },
+  {
+   "sym": "SPX",
+   "coin": "spx6900",
+   "d": "2024-12-10",
+   "ex30_pct": 49.16436922240857,
+   "ex60_pct": -5.763363317541685,
+   "pre30_ret_pct": -20.55832186772245,
+   "mcap_pre": 572902129.470575
+  },
+  {
+   "sym": "DEGO",
+   "coin": "dego-finance",
+   "d": "2024-12-13",
+   "ex30_pct": -30.421178779200304,
+   "ex60_pct": -72.71252531653154,
+   "pre30_ret_pct": 58.7169011932805,
+   "mcap_pre": 64984943.2696099
+  },
+  {
+   "sym": "LUMIA",
+   "coin": "lumia",
+   "d": "2024-12-18",
+   "ex30_pct": -34.2464209479958,
+   "ex60_pct": -105.99824185484499,
+   "pre30_ret_pct": 88.27713927202194,
+   "mcap_pre": 145386685.791738
+  },
+  {
+   "sym": "FARTCOIN",
+   "coin": "fartcoin",
+   "d": "2024-12-20",
+   "ex30_pct": 66.68816532901573,
+   "ex60_pct": -115.81033999488636,
+   "pre30_ret_pct": 295.52702713660517,
+   "mcap_pre": 1092979187.98287
+  },
+  {
+   "sym": "CGPT",
+   "coin": "chaingpt",
+   "d": "2024-12-20",
+   "ex30_pct": 17.726908488336367,
+   "ex60_pct": -53.89598555304208,
+   "pre30_ret_pct": 27.266233128872997,
+   "mcap_pre": 128226862.139468
+  },
+  {
+   "sym": "PHA",
+   "coin": "pha",
+   "d": "2024-12-30",
+   "ex30_pct": -86.89029083629859,
+   "ex60_pct": -89.28031740028968,
+   "pre30_ret_pct": 185.14524637171803,
+   "mcap_pre": 375312451.828718
+  },
+  {
+   "sym": "DF",
+   "coin": "dforce-token",
+   "d": "2024-12-30",
+   "ex30_pct": -24.998058156197754,
+   "ex60_pct": -11.722481432152277,
+   "pre30_ret_pct": 124.40781829735369,
+   "mcap_pre": 92653925.6880191
+  },
+  {
+   "sym": "AI16Z",
+   "coin": "ai16z",
+   "d": "2025-01-02",
+   "ex30_pct": -174.47541631482443,
+   "ex60_pct": -187.70234501977066,
+   "pre30_ret_pct": 557.5830266196446,
+   "mcap_pre": 2387127248.23493
+  },
+  {
+   "sym": "COOKIE",
+   "coin": "cookie",
+   "d": "2025-01-07",
+   "ex30_pct": -137.3582027878582,
+   "ex60_pct": -120.46647967154075,
+   "pre30_ret_pct": 639.3174358922658,
+   "mcap_pre": 108638456.295196
+  },
+  {
+   "sym": "PROM",
+   "coin": "prometeus",
+   "d": "2025-01-15",
+   "ex30_pct": -32.15882730284446,
+   "ex60_pct": -6.714562767816027,
+   "pre30_ret_pct": 14.87150819975902,
+   "mcap_pre": 142814874.371537
+  },
+  {
+   "sym": "PIPPIN",
+   "coin": "pippin",
+   "d": "2025-01-24",
+   "ex30_pct": -145.16295120194445,
+   "ex60_pct": -156.55050928487674,
+   "pre30_ret_pct": 1071.880909047751,
+   "mcap_pre": 143506705.67126
+  },
+  {
+   "sym": "VIC",
+   "coin": "tomochain",
+   "d": "2025-03-12",
+   "ex30_pct": -64.13187763774773,
+   "ex60_pct": -59.41134313508771,
+   "pre30_ret_pct": -9.968866546310418,
+   "mcap_pre": 30910227.3680891
+  },
+  {
+   "sym": "PLUME",
+   "coin": "plume",
+   "d": "2025-03-21",
+   "ex30_pct": -15.565525740574282,
+   "ex60_pct": -38.45306506718432,
+   "pre30_ret_pct": 35.97695432294372,
+   "mcap_pre": 387738512.710531
+  },
+  {
+   "sym": "PAXG",
+   "coin": "pax-gold",
+   "d": "2025-03-27",
+   "ex30_pct": -0.11094090882531465,
+   "ex60_pct": -13.306023225563617,
+   "pre30_ret_pct": 1.2468065597910805,
+   "mcap_pre": 655195483.300574
+  },
+  {
+   "sym": "FUN",
+   "coin": "funfair",
+   "d": "2025-03-31",
+   "ex30_pct": -1.2876195997178652,
+   "ex60_pct": -67.54411996277481,
+   "pre30_ret_pct": 124.10789721944053,
+   "mcap_pre": 62926825.5754468
+  },
+  {
+   "sym": "MLN",
+   "coin": "melon",
+   "d": "2025-03-31",
+   "ex30_pct": -48.859156114291956,
+   "ex60_pct": -60.98199791829991,
+   "pre30_ret_pct": -7.940226442505239,
+   "mcap_pre": 32779607.9097174
+  },
+  {
+   "sym": "ATH",
+   "coin": "aethir",
+   "d": "2025-04-02",
+   "ex30_pct": 2.3281415888042,
+   "ex60_pct": 26.883404576616897,
+   "pre30_ret_pct": -24.15212371891684,
+   "mcap_pre": 240717141.83664
+  },
+  {
+   "sym": "FORTH",
+   "coin": "ampleforth-governance-token",
+   "d": "2025-04-08",
+   "ex30_pct": -37.71677100041825,
+   "ex60_pct": -51.01848058281646,
+   "pre30_ret_pct": -22.43187956733851,
+   "mcap_pre": 25668016.0386204
+  },
+  {
+   "sym": "XCN",
+   "coin": "chain-2",
+   "d": "2025-04-11",
+   "ex30_pct": -36.47470708576388,
+   "ex60_pct": -56.88715442839873,
+   "pre30_ret_pct": 19.184323353894904,
+   "mcap_pre": 542838032.515476
+  },
+  {
+   "sym": "JST",
+   "coin": "just",
+   "d": "2025-04-28",
+   "ex30_pct": -26.147187564553654,
+   "ex60_pct": -29.330157251656036,
+   "pre30_ret_pct": 25.869976696388907,
+   "mcap_pre": 386242918.07672
+  },
+  {
+   "sym": "ZKJ",
+   "coin": "polyhedra-network",
+   "d": "2025-05-13",
+   "ex30_pct": -6.895641434574334,
+   "ex60_pct": -257.80822036690455,
+   "pre30_ret_pct": -4.6662338118363405,
+   "mcap_pre": 634463792.330226
+  },
+  {
+   "sym": "MERL",
+   "coin": "merlin-chain",
+   "d": "2025-05-28",
+   "ex30_pct": -45.509855081465844,
+   "ex60_pct": -22.80912159453888,
+   "pre30_ret_pct": 23.46073988299706,
+   "mcap_pre": 87463897.0803905
+  },
+  {
+   "sym": "HYPE",
+   "coin": "hyperliquid",
+   "d": "2025-05-30",
+   "ex30_pct": 15.869427485046506,
+   "ex60_pct": 16.3206657630277,
+   "pre30_ret_pct": 69.96927730821712,
+   "mcap_pre": 10520381938.8444
+  },
+  {
+   "sym": "PUFFER",
+   "coin": "puffer-finance",
+   "d": "2025-06-03",
+   "ex30_pct": -33.58604361689255,
+   "ex60_pct": -26.58840083540871,
+   "pre30_ret_pct": -14.090614609497932,
+   "mcap_pre": 35188866.3821912
+  },
+  {
+   "sym": "PORT3",
+   "coin": "port3-network",
+   "d": "2025-06-03",
+   "ex30_pct": -39.34246021857762,
+   "ex60_pct": -57.19648980516627,
+   "pre30_ret_pct": 181.5036410310669,
+   "mcap_pre": 31721936.9269861
+  },
+  {
+   "sym": "TAIKO",
+   "coin": "taiko",
+   "d": "2025-06-11",
+   "ex30_pct": -32.21079432657519,
+   "ex60_pct": -22.086012601475712,
+   "pre30_ret_pct": -32.46837967858711,
+   "mcap_pre": 73246298.1795934
+  },
+  {
+   "sym": "AAVE",
+   "coin": "aave",
+   "d": "2025-06-16",
+   "ex30_pct": 5.232329162669267,
+   "ex60_pct": -1.127999226267065,
+   "pre30_ret_pct": 18.38919561715784,
+   "mcap_pre": 4158590125.40382
+  },
+  {
+   "sym": "UNI",
+   "coin": "uniswap",
+   "d": "2025-06-16",
+   "ex30_pct": 7.211135578101797,
+   "ex60_pct": 26.857152589578725,
+   "pre30_ret_pct": 17.67682935251631,
+   "mcap_pre": 4309420437.32967
+  },
+  {
+   "sym": "OL",
+   "coin": "open-loot",
+   "d": "2025-06-25",
+   "ex30_pct": -7.470710718598737,
+   "ex60_pct": -3.2918642144718513,
+   "pre30_ret_pct": -49.6947223288914,
+   "mcap_pre": 19334222.5609366
+  },
+  {
+   "sym": "ZORA",
+   "coin": "zora",
+   "d": "2025-07-25",
+   "ex30_pct": 99.53798951054866,
+   "ex60_pct": 34.561884693193356,
+   "pre30_ret_pct": 447.4088138307587,
+   "mcap_pre": 151985352.42779
+  },
+  {
+   "sym": "TAG",
+   "coin": "tagger",
+   "d": "2025-07-25",
+   "ex30_pct": 37.55360885272583,
+   "ex60_pct": -20.77245259949507,
+   "pre30_ret_pct": 221.37164464693737,
+   "mcap_pre": 75151422.3613271
+  },
+  {
+   "sym": "ZRC",
+   "coin": "zircuit",
+   "d": "2025-07-29",
+   "ex30_pct": -28.892556735514468,
+   "ex60_pct": -54.391436488704436,
+   "pre30_ret_pct": 26.55123275729736,
+   "mcap_pre": 85136012.8266468
+  },
+  {
+   "sym": "USELESS",
+   "coin": "useless-3",
+   "d": "2025-08-15",
+   "ex30_pct": -12.017667038426902,
+   "ex60_pct": 37.288805409896455,
+   "pre30_ret_pct": -27.91962878330414,
+   "mcap_pre": 251917429.085983
+  },
+  {
+   "sym": "CUDIS",
+   "coin": "cudis",
+   "d": "2025-08-20",
+   "ex30_pct": 9.412157433846359,
+   "ex60_pct": -54.50999198205471,
+   "pre30_ret_pct": 52.4352319164997,
+   "mcap_pre": 26102384.553609
+  },
+  {
+   "sym": "SKY",
+   "coin": "sky",
+   "d": "2025-09-09",
+   "ex30_pct": -12.217340262233217,
+   "ex60_pct": -21.2139831329491,
+   "pre30_ret_pct": -19.409153914949606,
+   "mcap_pre": 1648075766.31445
+  },
+  {
+   "sym": "TOSHI",
+   "coin": "toshi",
+   "d": "2025-09-17",
+   "ex30_pct": -18.172223696668656,
+   "ex60_pct": -57.22459452919688,
+   "pre30_ret_pct": -13.930783262191893,
+   "mcap_pre": 253900928.881575
+  },
+  {
+   "sym": "ZEC",
+   "coin": "zcash",
+   "d": "2025-11-19",
+   "ex30_pct": -37.75026056582226,
+   "ex60_pct": -63.014950727249385,
+   "pre30_ret_pct": 165.0302567536388,
+   "mcap_pre": 10220964896.2335
+  },
+  {
+   "sym": "BTW",
+   "coin": "bitway",
+   "d": "2026-06-04",
+   "ex30_pct": 57.365983910198395,
+   "ex60_pct": 106.10234826172884,
+   "pre30_ret_pct": -27.317824731350417,
+   "mcap_pre": 27114523.0527052
+  }
+ ]
+}
