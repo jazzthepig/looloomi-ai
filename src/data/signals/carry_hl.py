@@ -11,6 +11,13 @@
     口径    **按名义本金**。资本口径 = 名义 ÷ (1 + 保证金率);基差盈亏不记(S-707 同)
     起点    2026-11-05 收盘(决定在 11-05 做出);第一天前向收益是 11-06;NAV 在起点 = 1
 
+## 真实成本臂(S-748 ✅,11-06 —— 「纸面账的成本口径改成真实口径」)
+
+    carry_b_top_rc / carry_b_spot_rc   同 carry_b_top / carry_b_spot,成本换成**真实口径**:现货 taker 7bp + 永续 taker 4.5bp
+            + 每腿滑点 2bp = 15.5bp / 次(开、关各一次)。改了一项 ⇒ 新起点 2026-11-06 收盘(第一天前向收益 11-07);
+            原四臂一行不动,留档对照。基差不记(S-748 实测全样本拖累 0.068pp/yr,可忽略;写明不是忘了)。
+    **向 Jazz 提「④ 小额真钱」用的是这两条臂,不是原四条。**
+
 ## 读之前先知道
 
 S-733 全样本 B 净 12.2%/yr 是 2024 撑的;2025 6.3%、2026H1 1.9%。前向期望按最近的写。
@@ -26,14 +33,18 @@ import numpy as np
 TABLE = "carry_hl_daily"
 WRITES_TABLES = (TABLE,)
 WRITES_COLUMNS = {TABLE: ("d", "arm", "ret", "nav", "n_names", "n_on", "switches", "inception", "code_ref")}
-CODE_REF = "carry_hl v1.2 (11-06, S-733;+ carry_b_spot;+ carry_b_top S-735)"
+CODE_REF = "carry_hl v1.3 (11-06, S-733;+ carry_b_spot;+ carry_b_top S-735;+ 真实成本臂 S-748)"
 LOOP_NAME = "_carry_hl_loop"
-ARMS = ("carry_a", "carry_b", "carry_b_spot", "carry_b_top")
+ARMS = ("carry_a", "carry_b", "carry_b_spot", "carry_b_top", "carry_b_top_rc", "carry_b_spot_rc")
+#: 真实成本臂 → 它照抄的那条臂(规则一样,只换成本与起点)
+BASE_ARM = {"carry_b_top_rc": "carry_b_top", "carry_b_spot_rc": "carry_b_spot"}
 #: ① 24 名里 HL 现货有对应代币的(lane-a T-250,HL info spotMeta,11-05):UBTC / UETH / USOL / BNB0 / XRP1 / UDOGE / UAVAX / LINK0 / TRX0 / AAVE0
 HL_SPOT_NAMES = ("BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "AVAX", "LINK", "TRX", "AAVE")
 INCEPTION = dt.date(2026, 11, 5)
 WARMUP_DAYS = 45                  # carry_b_top 要过去 30 天的排名
 COST = 0.0004 + 0.00035
+COST_REAL = 0.0007 + 0.00045 + 2 * 0.0002      # S-748:HL 现货 taker 7bp(10-30 真钱实测)+ 永续 taker 4.5bp + 每腿滑点 2bp
+INCEPTION_RC = dt.date(2026, 11, 6)
 MIN_HOURS = 20
 MIN_COVERAGE = 0.8
 
@@ -82,6 +93,7 @@ def top_half(F: np.ndarray, i: int) -> np.ndarray:
 
 def _decide(F: np.ndarray, i: int, arm: str) -> tuple[np.ndarray, np.ndarray]:
     """(持有, 计入分母的名字)。carry_b_top:持有 = 规则 B ∧ 选中,分母 = 选中;其余臂分母 = 全部。"""
+    arm = BASE_ARM.get(arm, arm)
     on = rule_b(F, i)
     if arm == "carry_b_top":
         sel = top_half(F, i)
@@ -89,10 +101,11 @@ def _decide(F: np.ndarray, i: int, arm: str) -> tuple[np.ndarray, np.ndarray]:
     return on, np.ones(F.shape[1], bool)
 
 
-def path(days: list[dt.date], F: np.ndarray, arm: str, inception: dt.date = INCEPTION) -> list[dict]:
+def path(days: list[dt.date], F: np.ndarray, arm: str, inception: dt.date = INCEPTION, cost: float = COST) -> list[dict]:
     """纯函数。从起点起逐日记账:起点那天收盘建仓(成本记在第一天前向收益上),NAV 在起点 = 1。carry_b_spot 由调用方传子集列。"""
     avail = ~np.isnan(F)
     Fz = np.nan_to_num(F)
+    unit_cost = cost
     k0 = days.index(inception)
     if arm == "carry_a":
         on = np.ones(F.shape[1], bool)
@@ -112,7 +125,7 @@ def path(days: list[dt.date], F: np.ndarray, arm: str, inception: dt.date = INCE
             ch = pending != held
             if arm == "carry_a":
                 ch = pending & ~held
-            cost[ch] = COST
+            cost[ch] = unit_cost
             switches += int(ch.sum())
             held = pending
             members = pend_members
@@ -147,8 +160,14 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         return {"ok": False, "refused": True, "status": "refused",
                 "why": f"{through} 只有 {have_last}/{len(names)} 名有完整的已实现费率(hl_funding_hourly 还在回填或断了)"}
     spot = [j for j, n in enumerate(names) if n in HL_SPOT_NAMES]
-    cols = {"carry_a": slice(None), "carry_b": slice(None), "carry_b_spot": spot, "carry_b_top": slice(None)}
-    out = [r | {"inception": INCEPTION.isoformat(), "code_ref": CODE_REF} for arm in ARMS for r in path(days, F[:, cols[arm]], arm)]
+    cols = {"carry_a": slice(None), "carry_b": slice(None), "carry_b_spot": spot, "carry_b_top": slice(None),
+            "carry_b_top_rc": slice(None), "carry_b_spot_rc": spot}
+    out = []
+    for arm in ARMS:
+        inc, c = (INCEPTION_RC, COST_REAL) if arm in BASE_ARM else (INCEPTION, COST)
+        if inc > through:
+            continue
+        out += [r | {"inception": inc.isoformat(), "code_ref": CODE_REF} for r in path(days, F[:, cols[arm]], arm, inc, c)]
     w = await supabase_upsert_table(TABLE, out, on_conflict="d,arm")
     if not w:
         return {"ok": False, "why": f"写 {TABLE} 失败:{(getattr(w, 'why', '') or '')[:200]}"}

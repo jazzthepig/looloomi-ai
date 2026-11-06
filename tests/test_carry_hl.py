@@ -148,3 +148,19 @@ def test_top_half_arm_selects_by_trailing_30d_and_uses_selected_denominator():
     p = ch.path(days, F, "carry_b_top")
     assert p[1]["n_on"] == 2 and abs(p[1]["ret"] - ((0.0004 + 0.0003) / 2 - ch.COST)) < 1e-12, "分母 = 选中的 2 名(读法 (i))"
     assert abs(p[2]["ret"] - 0.00035) < 1e-12
+
+
+def test_real_cost_arms_copy_the_rule_change_only_cost_and_start():
+    """S-748 ✅(11-06):纸面账成本改真实口径 = 新起点的两条臂;原四臂不动。"""
+    assert abs(ch.COST_REAL - 0.00155) < 1e-12 and ch.INCEPTION_RC == dt.date(2026, 11, 6)
+    assert {"carry_b_top_rc", "carry_b_spot_rc"} <= set(ch.ARMS) and ch.BASE_ARM["carry_b_top_rc"] == "carry_b_top"
+    d0 = ch.INCEPTION - dt.timedelta(days=ch.WARMUP_DAYS)
+    names = ("AAA", "BBB", "CCC", "DDD")
+    rate = {"AAA": 0.0004, "BBB": 0.0003, "CCC": 0.0001, "DDD": 0.00005}
+    rows = _rows(names, d0, ch.WARMUP_DAYS + 5, lambda c, i: rate[c])
+    days, F = ch.matrix(rows, names, d0, ch.INCEPTION + dt.timedelta(days=4))
+    p = ch.path(days, F, "carry_b_top_rc", ch.INCEPTION_RC, ch.COST_REAL)
+    assert p[0]["d"] == "2026-11-06" and p[0]["nav"] == 1.0, "新起点"
+    assert p[1]["n_on"] == 2 and abs(p[1]["ret"] - ((0.0004 + 0.0003) / 2 - ch.COST_REAL)) < 1e-12, "同一条规则,成本按 15.5bp"
+    old = ch.path(days, F, "carry_b_top")
+    assert old[0]["d"] == "2026-11-05" and abs(old[1]["ret"] - ((0.0004 + 0.0003) / 2 - ch.COST)) < 1e-12, "原臂不动"
