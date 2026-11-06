@@ -1,0 +1,28 @@
+{
+  "id": "T-260",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-06",
+  "title": "S-739 第一次「放在一起」:feature_matrix_daily 全部维度的联合模型(Ridge + 梯度提升)对 BTC 之后 30 天收益,走步 + 隔离带样本外 —— 只用 src/data/evaluation/joint_model.py",
+  "source": "REFUTATION_LEDGER S-739(先读,折数 / 隔离带 / 模型超参 / 判据一字不改)。框架 src/data/evaluation/joint_model.py(purged_folds / walk_forward / evaluate / permutation_importance);特征视图 feature_matrix_daily(d, f jsonb,翻页 order=d.asc、每页 1000 行)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-260.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 特征表展开成矩阵(列 = 全部出现过的键,写明每列的起止日与缺值率;前向才有的期权面 / 预测市场列在 2026-11 前全空 ⇒ 去掉并写明)。② 两模型 × 两目标的样本外 IC、按月 t、分位、逐折 IC。③ (a)–(d) 逐条判(只用 30 天)。④ 置换重要性前 10(两模型各一份),写成人话(这一维是什么、高时预测涨还是跌)。⑤ 不重写任何 IC / 零分布 / 走步 —— 只调 joint_model。⑥ 只算、不改代码、不入库;长脚本 nohup。交付附 docs/research/scenarios/lane-c-T-260.json(≥ 3 条,例如 12 月底时模型给的 30 天方向)。",
+    "expect": "报告 docs/research/T-260_joint_model_v1.md + t260_joint.py + t260_results.json;卡 notes 写判据与前 10 维;in_review,推 lane-c/T-260。"
+  },
+  "prior_value": "所有特征都是一个一个、全样本、线性地判过;从没有放在一个模型里。",
+  "notes": "",
+  "verified": null
+}

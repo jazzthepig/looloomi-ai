@@ -1,0 +1,28 @@
+{
+  "id": "T-261",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-06",
+  "title": "T-257 盲复算 + 稳健性(只报不判):S-737 的 13 特征 k-means 状态地图自己重写一遍;再看唯一过 BH 的 S5 × 「BTC + 30 天 90% 看跌」在 k = 5 / 7、去掉 VIX、看跌加偏斜(+9 个波动点)时还在不在",
+  "source": "REFUTATION_LEDGER S-737 及其结果段(lane-b T-257)。**先不要读** docs/research/t257_state_action_map.py 与 t257_results.json —— 盲复算,从台账口径段自己写;写完再对照。特征视图 feature_matrix_daily;价 perp_bv_daily BTCUSDT;DVOL deriv_vol_daily。框架:多特征检验只用 src/data/evaluation/joint_model.py,零分布 / ab_test 只用 apparatus.py。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-261.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 照 S-737(13 特征,去掉 oi_chg_30d)复算 6 类、6 动作、训练 / 留出、BH(q 0.10,30 格):逐格与 T-257 对照,差 > 0.5pp 的逐条找原因。② 稳健性(只报):k = 5 / 7(同种子);去掉 macro:vix;A4 / A6 的看跌按 DVOL + 9 个波动点定价(今天 Deribit 实测偏斜);A6 改成 60 天看跌。每种变体报「S5 对应的那一类(按中心最近)× A6」的留出均值、p05、p、是否仍过 BH。③ 今天(最新一天)在各变体下落在哪一类。④ 只算、不改代码、不入库。交付附 docs/research/scenarios/lane-a-T-261.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-261_state_map_recompute.md + t261_recompute.py + t261_results.json;卡 notes 写对照表与稳健性表;in_review,推 lane-a/T-261。"
+  },
+  "prior_value": "S-737 只有 lane-b 一个人算过;S5 × A6 只在一个规格下成立。",
+  "notes": "",
+  "verified": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "T-259",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-06",
+  "title": "S-738:国库 BTC 净买入(按时点可得日)对之后 30 天 BTC —— 是因还是影(对过去 30 天收益取残差),判据照台账写死",
+  "source": "REFUTATION_LEDGER S-738(先读,可得日规则 / 信号 / 判据一字不改)。数据:treasury_decisions(entity_id, coin_id, decision_date, decision_type, holding_net_change, transaction_value_usd …)、treasury_entities(识别 Strategy)、asset_mcap_daily(BTC 成交额 / 市值,source=coingecko_pro_market_chart)、perp_bv_daily 或 asset_mcap_daily 的 BTC 价。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-259.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 先报数据体检:每年条数 / 金额、decision_date 落在季末 / 月末的比例(决定可得日规则会不会吃掉大部分样本)、Strategy 占比。② (a)–(d) 逐条报数并判;零分布只用 apparatus.py。③ 敏感度:统一 +7 天可得日、除以市值两版(只报)。④ 副:反身性方向、卖出单独、ETH。⑤ 可得日规则写断言(信号日之后才可得的决定不进信号)。⑥ 只算、不改代码、不入库。交付附 docs/research/scenarios/lane-a-T-259.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-259_treasury_flow.md + t259_treasury_flow.py + t259_results.json;卡 notes 写 (a)–(d) 原始数字与判定;in_review,推 lane-a/T-259。"
+  },
+  "prior_value": "国库决定只做了采集与结果结算(decision_outcomes),从没当成时间序列因子测过。",
+  "notes": "",
+  "verified": null
+}

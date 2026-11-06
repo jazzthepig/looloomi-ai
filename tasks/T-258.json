@@ -1,0 +1,28 @@
+{
+  "id": "T-258",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-06",
+  "title": "缺的维度,哪里有数(只查不接):ETF 资金流(IBIT / FBTC …)、交易所稳定币余额与净流入、高收益债利差 / MOVE、BTC 与纳指 / 美元的滚动相关、持仓量 ÷ 市值杠杆率、政治 / 事件强度 —— 每项给:来源、免费与否、历史从哪天起、按时点可得的发布时间、一次请求能拿多少(批量还是逐个)",
+  "source": "Jazz 11-06「决定不了,可能是矢量不足,要加维度」。现有维度看视图 feature_matrix_daily(f 的键);已有的不用再查。接数据是 Seth 的口(规则 3b),本卡只出可行性表;免费源的多资产逐个调取需要 Jazz 批例外(source_policy.FREE_BULK_EXCEPTIONS),表里标出来。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-258.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 每个维度至少两个候选来源,逐项填:URL / 端点、是否要 key 与价格、历史起点、频率、发布时滞(决定按时点可用的那一天)、一次请求的覆盖面(批量 / 逐个)、我们已有的 key 能不能用(CoinGecko Pro / EODHD / FRED / DeFiLlama / Deribit)。② 每个来源用一次真实请求验证(只取 1–2 行,不落库),写下实际返回的字段名。③ 给一个优先级:哪三个维度最可能让 S-737 的状态分得更开(说理由,不跑回测)。④ 不改代码、不入库、不打印 key。交付附 docs/research/scenarios/lane-c-T-258.json(≥ 2 条)。",
+    "expect": "报告 docs/research/T-258_dimension_sources.md(一张表 + 优先级);卡 notes 写前三个;in_review,推 lane-c/T-258。"
+  },
+  "prior_value": "缺的维度只有一个口头清单。",
+  "notes": "",
+  "verified": null
+}
