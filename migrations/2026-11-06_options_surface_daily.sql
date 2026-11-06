@@ -11,3 +11,7 @@ alter table public.options_surface_daily enable row level security;
 grant select on public.options_surface_daily to anon;
 drop policy if exists lane_read on public.options_surface_daily;
 create policy lane_read on public.options_surface_daily for select to anon using (true);
+alter table public.options_surface_daily add column if not exists gex_net_usd_1pct double precision;
+alter table public.options_surface_daily add column if not exists gex_call_usd_1pct double precision;
+alter table public.options_surface_daily add column if not exists gex_put_usd_1pct double precision;
+alter table public.options_surface_daily add column if not exists gamma_pin_strike double precision;

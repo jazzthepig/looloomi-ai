@@ -2,7 +2,7 @@
 
 Deribit 公开 `get_book_summary_by_currency`(一次返回一个币的全部期权)→ 每天一行特征,进 `options_surface_daily`:
 期限结构(ATM 隐含波动 7 / 30 / 90 天)、30 天偏斜(90% 看跌 − 110% 看涨的隐含波动)、看跌 / 看涨持仓与成交比、
-以及**对冲本身的价格**:30 天 90% 看跌期权、90 / 80 看跌价差各占现货的百分比 —— 「要不要对冲」的另一半是「对冲多贵」。
+做市商伽马敞口(GEX,约定下的估计)、以及**对冲本身的价格**:30 天 90% 看跌期权、90 / 80 看跌价差各占现货的百分比 —— 「要不要对冲」的另一半是「对冲多贵」。
 
 ## 纪律
 
@@ -20,7 +20,8 @@ from typing import Any, Callable, Optional
 TABLE = "options_surface_daily"
 WRITES_TABLES = (TABLE,)
 COLS = ("d", "currency", "spot", "atm_iv_7d", "atm_iv_30d", "atm_iv_90d", "term_slope", "skew_30d", "pc_oi_ratio",
-        "pc_vol_ratio", "put90_30d_cost_pct", "put_spread_90_80_30d_cost_pct", "total_oi_usd", "n_options", "fetched_at")
+        "pc_vol_ratio", "put90_30d_cost_pct", "put_spread_90_80_30d_cost_pct", "total_oi_usd", "n_options",
+        "gex_net_usd_1pct", "gex_call_usd_1pct", "gex_put_usd_1pct", "gamma_pin_strike", "fetched_at")
 WRITES_COLUMNS = {TABLE: COLS}
 LOOP_NAME = "_options_surface_loop"
 API = "https://www.deribit.com/api/v2/public/get_book_summary_by_currency"
@@ -99,6 +100,28 @@ def features(rows: list[dict], today: dt.date) -> dict[str, Any]:
         a, b = px_at(e30, 0.90), px_at(e30, 0.80)
         out["put90_30d_cost_pct"] = round(a * 100, 3) if a is not None else None
         out["put_spread_90_80_30d_cost_pct"] = round((a - b) * 100, 3) if a is not None and b is not None else None
+    # 做市商伽马敞口(GEX,11-06 原因层「被迫交易的人」):常用约定 —— 做市商对客户的看涨净多、看跌净空,
+    # 看涨伽马记正、看跌记负;单位 = 现货动 1% 时做市商要对冲的美元。正 ⇒ 做市商逆势对冲(压波动);负 ⇒ 顺势(放大)。
+    # 只是约定下的估计(不知道真实的做市商持仓方向),记下来当维度,不当结论。
+    import math
+    gc = gp = 0.0
+    by_k: dict[float, float] = {}
+    for o in opts:
+        if not o["iv"] or o["iv"] <= 0 or not o["oi"]:
+            continue
+        T, sig, S, K = o["days"] / 365.0, o["iv"] / 100.0, o["F"], o["k"]
+        d1 = (math.log(S / K) + 0.5 * sig * sig * T) / (sig * math.sqrt(T))
+        g = math.exp(-0.5 * d1 * d1) / math.sqrt(2 * math.pi) / (S * sig * math.sqrt(T))
+        usd = g * o["oi"] * S * S * 0.01
+        if o["t"] == "C":
+            gc += usd
+        else:
+            gp += usd
+        by_k[K] = by_k.get(K, 0.0) + usd
+    if gc or gp:
+        out["gex_call_usd_1pct"], out["gex_put_usd_1pct"] = round(gc, 0), round(-gp, 0)
+        out["gex_net_usd_1pct"] = round(gc - gp, 0)
+        out["gamma_pin_strike"] = max(by_k, key=by_k.get) if by_k else None
     poi = sum(o["oi"] for o in opts if o["t"] == "P")
     coi = sum(o["oi"] for o in opts if o["t"] == "C")
     pv = sum(o["vol"] for o in opts if o["t"] == "P")
