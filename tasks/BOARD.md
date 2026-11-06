@@ -57,6 +57,7 @@
 | open | T-246 | lane-c | R-v2 的宇宙能不能写成一条按时点的规则(S-731):在全部 coin 永续(含死币,perp_bv_daily)上,「上市满 365 天 且 30 日均成交额 ≥ 2,000 万美元」—— 对照现行的 257 名面板宇宙(今天的幸存者名单)与无门槛全宇宙;原因 = 薄盘口的新合约上的突破多半是做出来的 | 报告 docs/research/T-246_rv2_pit_universe.md(预注册在前)+ docs/research/t246_rv2_pit_universe.py + t246_results.json;卡 notes 写三个宇宙的票数 / 总 R / Calmar / 两半 / 08-08 后,以及判;in_review,推 lane-c/T-246。 | R-v2 的宇宙一直是一份名单;从没量过一条按时点的准入规则能不能接替它。 |  |
 | open | T-258 | lane-c | 缺的维度,哪里有数(只查不接):ETF 资金流(IBIT / FBTC …)、交易所稳定币余额与净流入、高收益债利差 / MOVE、BTC 与纳指 / 美元的滚动相关、持仓量 ÷ 市值杠杆率、政治 / 事件强度 —— 每项给:来源、免费与否、历史从哪天起、按时点可得的发布时间、一次请求能拿多少(批量还是逐个) | 报告 docs/research/T-258_dimension_sources.md(一张表 + 优先级);卡 notes 写前三个;in_review,推 lane-c/T-258。 | 缺的维度只有一个口头清单。 |  |
 | open | T-260 | lane-c | S-739 第一次「放在一起」:feature_matrix_daily 全部维度的联合模型(Ridge + 梯度提升)对 BTC 之后 30 天收益,走步 + 隔离带样本外 —— 只用 src/data/evaluation/joint_model.py | 报告 docs/research/T-260_joint_model_v1.md + t260_joint.py + t260_results.json;卡 notes 写判据与前 10 维;in_review,推 lane-c/T-260。 | 所有特征都是一个一个、全样本、线性地判过;从没有放在一个模型里。 |  |
+| open | T-263 | lane-c | S-741 联合模型 v2:样本外预测换成「相对自身过去 90 个预测的 z」(时点可得),加 11-06 新并进来的风格 / 链上 / 持仓结构 / 渠道维度;必须胜过「过去 30 天收益」朴素基线 | 报告 docs/research/T-263_joint_model_v2.md + t263_joint_v2.py + t263_results.json;卡 notes 写 (a)–(e) 原始数字;in_review,推 lane-c/T-263。 | v1 段内排序真、段间不可比;新并进来约 20 维(2020 起有历史)从没进过模型。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -264,4 +265,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 19 · claimed 7 · blocked 4 · in_review 38 · done 190 · dropped 3
+open 20 · claimed 7 · blocked 4 · in_review 38 · done 190 · dropped 3

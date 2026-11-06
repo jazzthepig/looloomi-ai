@@ -1,0 +1,28 @@
+{
+  "id": "T-263",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-06",
+  "title": "S-741 联合模型 v2:样本外预测换成「相对自身过去 90 个预测的 z」(时点可得),加 11-06 新并进来的风格 / 链上 / 持仓结构 / 渠道维度;必须胜过「过去 30 天收益」朴素基线",
+  "source": "REFUTATION_LEDGER S-741(先读,判据 (a)–(e) 一字不改)与 S-739 结果段;你自己的 T-260 报告与 t260_joint.py(复用,别重写 IC / 零分布 / 走步 —— 只调 src/data/evaluation/joint_model.py)。特征 feature_matrix_daily 现在是物化视图(每小时刷新),跑前取一次、算指纹、中途不重读。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-263.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 报告开头:数据指纹 + 列清单(每列起止日 / 缺值率;venue:* 若回填未完成写明缺)。② z 变换严格按 S-741:过去 90 个样本外预测,不足 60 个当天不出分。③ 两模型 × 30 / 7 天:合并 IC、按月 t、分位、逐折 IC。④ (a)–(e) 逐条判(只用 30 天);(e) 的朴素基线 = 同一 z 变换作用在 BTC 过去 30 天对数收益上。⑤ 消融两格 + 六状态拆 IC(副)。⑥ 置换重要性前 10 写成人话。只算、不改代码、不入库;长脚本 nohup。附 docs/research/scenarios/lane-c-T-263.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-263_joint_model_v2.md + t263_joint_v2.py + t263_results.json;卡 notes 写 (a)–(e) 原始数字;in_review,推 lane-c/T-263。"
+  },
+  "prior_value": "v1 段内排序真、段间不可比;新并进来约 20 维(2020 起有历史)从没进过模型。",
+  "notes": "",
+  "verified": null
+}
