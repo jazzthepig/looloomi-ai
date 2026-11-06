@@ -1,0 +1,20 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {"id": "T-256-1", "scenario": "T-256 战术空单(S-736 条件 + 止盈 + 保本)",
+     "statement": "BTC 收盘价(ohlcv_daily)在 2026-12-11 高于 2026-11-05 的收盘 76005 —— 回放显示该触发条件没有方向性(实际值落在随机对照的 36 百分位)",
+     "variable": "close:BTC", "op": "gt", "lo": 76005, "prob": 0.5, "horizon_d": "2026-12-11"},
+    {"id": "T-256-2", "scenario": "T-256 战术空单(S-736 条件 + 止盈 + 保本)",
+     "statement": "7 日年化资金费(state_daily panel,binance)2026-12-11 仍为正 —— 空腿收租的前提;2026-11-05 为 0.0723",
+     "variable": "state:funding_7d_ann_binance", "op": "gt", "lo": 0, "prob": 0.62, "horizon_d": "2026-12-11"},
+    {"id": "T-256-3", "scenario": "T-256 战术空单(S-736 条件 + 止盈 + 保本)",
+     "statement": "① 面板距 200 日线(state dist_200)2026-12-11 仍为正 —— 2026-11-05 为 +0.0379",
+     "variable": "state:dist_200", "op": "gt", "lo": 0, "prob": 0.52, "horizon_d": "2026-12-11"},
+    {"id": "T-256-4", "scenario": "T-256 战术空单(S-736 条件 + 止盈 + 保本)",
+     "statement": "站上 50 日均线的成员比例(state breadth_above_ma50)2026-12-11 低于 2026-11-05 的 4.17%",
+     "variable": "state:breadth_above_ma50", "op": "lt", "lo": 0.0416666666666667, "prob": 0.5, "horizon_d": "2026-12-11"},
+    {"id": "T-256-5", "scenario": "T-256 战术空单(S-736 条件 + 止盈 + 保本)",
+     "statement": "30 日未平仓量变化(state oi_chg_30d)2026-12-11 转正 —— 2026-11-05 为 −0.1614",
+     "variable": "state:oi_chg_30d", "op": "gt", "lo": 0, "prob": 0.4, "horizon_d": "2026-12-11"}
+  ]
+}
