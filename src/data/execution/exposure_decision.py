@@ -176,6 +176,11 @@ def rationale(d: str, exposure: Optional[float], bucket: str, probs: dict, n: in
     dv, dvp = _f(inputs.get("dvol_btc")), _f(inputs.get("dvol_btc_pct_1y"))
     if dv is not None:
         parts.append(f"隐含波动率 DVOL {dv:.0f}" + (f"(一年分位 {dvp:.0%})" if dvp is not None else "") + "。")
+    jz = _f(inputs.get("joint_z"))
+    if jz is not None:
+        parts.append(f"联合模型 v2(S-741,59 维):今天的读数相对它自己近 90 次的位置 z = {jz:+.2f}"
+                     + (f"({inputs['joint_d']})" if inputs.get("joint_d") else "")
+                     + "。研究口径过了预注册,实盘口径(每天重训)复核时置换分位与按月 t 未过,独立复算未完成 —— 只作参考,不进规则。")
     sell, buy = _f(inputs.get("liq_sell_5pct")), _f(inputs.get("liq_buy_15pct"))
     if sell is not None or buy is not None:
         parts.append("强平地图(头部账户对永续 ±2% 深度):"
@@ -336,6 +341,12 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         inputs["dvol_btc"], inputs["dvol_btc_pct_1y"] = dv.get("dvol"), dv.get("pct_1y")
     except Exception:                                                     # noqa: BLE001 —— 波动率读不到不挡决定
         inputs["dvol_btc"], inputs["dvol_btc_pct_1y"] = None, None
+    try:
+        from src.data.state.joint_forecast import latest as _joint
+        jz = await _joint()                                               # S-741 ✅ · Jazz 11-06「yes」:只作描述,不进规则、不动钱
+        inputs["joint_z"], inputs["joint_d"] = jz.get("z"), (str(jz.get("d") or "")[:10] or None)
+    except Exception:                                                     # noqa: BLE001
+        inputs["joint_z"], inputs["joint_d"] = None, None
     inputs["events_7d"] = await _events_7d(d)
     inputs["btc_close"] = closes[d]
     inputs["probs_uncond"], inputs["n_uncond"], inputs["bucket_today"] = p_unc, n_unc, bucket

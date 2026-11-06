@@ -236,3 +236,15 @@ def test_pgvector_string_is_parsed():
     from src.data.execution import exposure_decision as ed
     assert ed.parse_vec("[0.28559154,0.479505,-0.9392035]") == [0.2856, 0.4795, -0.9392]
     assert ed.parse_vec([1, 2]) == [1.0, 2.0] and ed.parse_vec("not a vector") == [] and ed.parse_vec(None) == []
+
+
+def test_joint_model_z_is_described_not_ruled():
+    """Jazz 11-06「yes」:S-741 的 z 进 ③ 的描述;不改敞口、不进规则。"""
+    from src.data.execution import exposure_decision as ed
+    probs = {"down": 0.2, "flat": 0.5, "up": 0.3}
+    base = {"mom_200": 0.05, "funding_7d_ann": 0.1, "oi_chg_30d": 0.0, "breadth_above_ma50": 0.4}
+    t = ed.rationale("2026-11-05", 0.0, "down|RISK_OFF", probs, 100, "bucket", {**base, "joint_z": -0.2, "joint_d": "2026-11-05"}, None)
+    assert "z = -0.20" in t and "不进规则" in t and "未过" in t, "证据状态要跟着数字一起说"
+    assert "联合模型" not in ed.rationale("2026-11-05", 0.0, "down|RISK_OFF", probs, 100, "bucket", base, None)
+    import inspect
+    assert "joint" not in inspect.getsource(ed.rule_exposure) and "joint" not in inspect.getsource(ed.flag_for), "z 不进规则 / 分歧标记"
