@@ -1,0 +1,28 @@
+{
+  "id": "T-265",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-06",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-265.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "notes": "",
+  "verified": null,
+  "title": "S-743 持有人数增长(采用面,对过去 4 周收益与市值取残差)对之后 4 周相对 BTC 的超额,横截面周频 —— 判据照台账写死",
+  "source": "REFUTATION_LEDGER S-743(先读,(a)–(d) 一字不改)。数据 token_holders_daily(CoinGecko holders_chart,本链;Beta)、cg_coin_mcap_daily(价格 / 市值 / 时点宇宙)、token_holders_coverage 视图看覆盖。",
+  "acceptance": {
+    "check": "① 先查前提:token_holders_coverage 里 n_weekly ≥ 52 的币数;< 80 ⇒ 停(回填还没完),在卡 notes 写覆盖数,不跑。② 宇宙 / 特征 / 残差 / 丢跳变 严格按台账。③ (a)–(d) 原始数字;周 IC 的 Newey-West t。④ 副项只报不判。⑤ 只算、不改代码、不入库;长脚本 nohup。附 docs/research/scenarios/lane-a-T-265.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-265_holder_growth.md + t265_holders.py + t265_results.json;卡 notes 写 (a)–(d);in_review,推 lane-a/T-265。"
+  },
+  "prior_value": "持有人数历史 11-06 才接入;采用面的横截面因子从没测过(只有前 50 大持有人集中度的快照)。"
+}

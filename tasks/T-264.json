@@ -1,0 +1,28 @@
+{
+  "id": "T-264",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-06",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-264.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "notes": "",
+  "verified": null,
+  "title": "S-742「谁在买」:Coinbase 现货占比 / 韩国现货占比 / 衍生品 ÷ 现货 对 BTC 与山寨之后 30 天 —— 循环平移零分布,判据照台账写死",
+  "source": "REFUTATION_LEDGER S-742(先读;5 个检验、BH、(a)–(d) 一字不改)。数据 exchange_volume_daily(场所日成交量,BTC 计价)与 feature_matrix_daily 的 venue:* 键;BTC 价 perp_bv_daily(symbol = BTC);山寨 = ① 面板除 BTC/ETH(cg_coin_mcap_daily 价格)。",
+  "acceptance": {
+    "check": "① 先查前提:gdax / binance / upbit / binance_futures 2021-03 起逐日覆盖率;任一缺 > 5% ⇒ 停,在卡 notes 写覆盖表,不跑。② F1–F3 严格按台账(只用 ≤ d 的数据)。③ 5 个检验的 IC、零分布分位、两段、控制过去 30 天收益后的符号;BH q = 0.10。④ 副项只报不判。⑤ 只算、不改代码、不入库;长脚本 nohup。附 docs/research/scenarios/lane-a-T-264.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-264_venue_shares.md + t264_venue.py + t264_results.json;卡 notes 写 5 个检验的原始数字;in_review,推 lane-a/T-264。"
+  },
+  "prior_value": "「谁在买」从没测过;场所份额 11-06 才开始回填(2021 起)。"
+}
