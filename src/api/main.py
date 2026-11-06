@@ -2785,7 +2785,7 @@ async def _political_intensity_loop():
             print(f"[POLITICAL] ⚠️  pass FAILED: {_e}")
             await _beat("_political_intensity_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _iteration_error("_political_intensity_loop", _e)
-        await _asyncio.sleep(12 * 3600)
+        await _asyncio.sleep(3 * 3600)                # 11-06:GDELT 每轮只做 2 个主题,轮转补齐
 
 
 @app.on_event("startup")

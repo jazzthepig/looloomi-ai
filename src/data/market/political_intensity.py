@@ -3,7 +3,7 @@
 - **GPR 日度地缘政治风险指数**(Caldara & Iacoviello,美联储;报纸文章计数,1985 →):一个 xls 文件一次下载。
   `GPRD` 总指数、`GPRD_ACT`(已发生的行动)、`GPRD_THREAT`(威胁)。按可得日入库:DAY + `GPR_LAG_DAYS`(更新有几天滞后)。
 - **GDELT DOC 2.0 新闻量强度**(全球新闻里匹配某主题的文章占比,2017 →):每个主题一次请求,返回整段日序列。
-  主题写死在 `TOPICS`;按可得日 = 日期 + 1 入库。GDELT 限速严(实测连续请求 429)⇒ 每个主题之间停 `GDELT_PAUSE_S` 秒。
+  主题写死在 `TOPICS`;按可得日 = 日期 + 1 入库。GDELT 限速严(实测连续请求 429,Railway 共用出口 IP 更甚)⇒ 每轮只做 `GDELT_PER_ROUND` 个最旧的主题、之间停 `GDELT_PAUSE_S` 秒。
 - **经济政策不确定性 EPU**(FRED USEPUINDXD)走 `cis_inputs.CREDIT_SERIES`;**Polymarket 政治 / 地缘市场**走 `prediction_markets.TAGS`。
 
 只记、不进敞口;是否有信息量由 lane 用 `joint_model.py` 判。表:GPR 进 `macro_daily`(series gpr / gpr_act / gpr_threat),
@@ -55,7 +55,15 @@ def gpr_rows(df) -> list[dict]:
     return out
 
 
-GDELT_THROTTLE_WAITS = (20.0, 60.0, 120.0)
+GDELT_THROTTLE_WAITS = (30.0, 90.0, 180.0)
+GDELT_PER_ROUND = 2
+
+
+def due_topics(last: dict[str, str], today: dt.date) -> list[str]:
+    """纯函数。没有行的主题排最前,其次最久没更新的;最新可得日(= 今天 + 1)已在库的跳过;最多 GDELT_PER_ROUND 个。"""
+    stale = [t for t in TOPICS if t not in last or dt.date.fromisoformat(last[t]) < today]
+    stale.sort(key=lambda t: (t in last, last.get(t, "")))
+    return stale[:GDELT_PER_ROUND]
 
 
 def throttled(body: Any) -> bool:
@@ -112,11 +120,16 @@ async def run_once(now: Optional[dt.datetime] = None, get: Optional[Callable[[st
         out["gpr"] = len(rows)
     except Exception as e:                                                # noqa: BLE001 —— 一个源不通不挡其余
         out["failed"]["gpr"] = f"{type(e).__name__}: {str(e)[:120]}"
-    # GDELT:每个主题一次;库里有就只取最近 14 天
+    # GDELT:每个主题一次;库里有就只取最近 15 天。11-06:Railway 出口 IP 被 GDELT 按 429 限速,一轮 5 个主题总有 4 个拿不到
+    # ⇒ 每轮只做最久没更新的 GDELT_PER_ROUND 个(没有行的排最前),已经到最新可得日的跳过;循环 3 小时一轮,轮转补齐。
+    from src.data.vector.market_state_writer import _sb_get
     last: dict[str, str] = {}
-    for r in await _read_all(TABLE, {"select": "topic,d", "order": "d.desc", "limit": "50"}):
-        last.setdefault(r["topic"], str(r["d"])[:10])             # 降序 ⇒ 第一次出现的就是最新
-    for k, (topic, q) in enumerate(TOPICS.items()):
+    for topic in TOPICS:
+        rd = await _sb_get(TABLE, {"select": "d", "topic": f"eq.{topic}", "order": "d.desc", "limit": "1"})
+        if rd.ok and rd.rows:
+            last[topic] = str(rd.rows[0]["d"])[:10]
+    todo = due_topics(last, now.date())
+    for k, (topic, q) in enumerate((t, TOPICS[t]) for t in todo):
         start = GDELT_START
         if topic in last:
             start = (dt.date.fromisoformat(last[topic]) - dt.timedelta(days=15)).strftime("%Y%m%d000000")
@@ -138,7 +151,7 @@ async def run_once(now: Optional[dt.datetime] = None, get: Optional[Callable[[st
             out["gdelt"][topic] = len(rows)
         except Exception as e:                                            # noqa: BLE001
             out["failed"][topic] = f"{type(e).__name__}: {str(e)[:120]}"
-        if k < len(TOPICS) - 1:
+        if k < len(todo) - 1:
             await asyncio.sleep(pause_s)
     ok = not out["failed"]
     return {"ok": ok, **out, "failed": out["failed"] or None,
