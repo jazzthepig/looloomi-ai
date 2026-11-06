@@ -129,7 +129,10 @@ def zscores(comps: dict[str, dict[str, float]]) -> list[dict]:
 
 async def latest() -> dict[str, Any]:
     from src.data.style.header import _read_all
-    rows = await _read_all(TABLE, {"select": "d,deterioration,shift,shift_pct,phase", "order": "d.desc", "limit": "1"})
+    # 11-06:最新一行常常是「分量还没到齐」(deterioration / phase 为空)—— 取最近一条打过分的,并带上它的日期,
+    # 否则 ③ 的决定读到的 ⓪ 是空的(11-05 的 inputs.cycle_phase = null)。
+    rows = await _read_all(TABLE, {"select": "d,deterioration,shift,shift_pct,phase", "deterioration": "not.is.null",
+                                   "order": "d.desc", "limit": "1"})
     return rows[0] if rows else {}
 
 

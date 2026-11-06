@@ -230,6 +230,21 @@ async def _history() -> tuple[dict[str, str], dict[str, float]]:
     return buckets, closes
 
 
+def parse_vec(v) -> list[float]:
+    """纯函数。pgvector 经 PostgREST 回来是字符串 "[0.1,0.2,…]",不是列表。
+    11-03 → 11-05 近邻臂每天都在这里抛 ValueError(逐字符 float('[')),knn_n = 0,情景台账里的「近邻臂」三天都退回了无条件频率。"""
+    if isinstance(v, str):
+        import json
+        try:
+            v = json.loads(v)
+        except ValueError:
+            return []
+    try:
+        return [round(float(x), 4) for x in (v or [])]
+    except (TypeError, ValueError):
+        return []
+
+
 async def _vectors() -> dict[str, list[float]]:
     """`market_state_vectors` 的 24 维 z 分数(按 d);一天内缓存在 Redis(2,500 × 24 个数)。"""
     from src.api.store import redis_get_key_status, redis_set_key
@@ -238,7 +253,8 @@ async def _vectors() -> dict[str, list[float]]:
     if cached and cached.get("vectors"):
         return cached["vectors"]
     rows = await _read_all("market_state_vectors", {"select": "d,vec", "order": "d.asc"})
-    vectors = {str(r["d"])[:10]: [round(float(x), 4) for x in (r.get("vec") or [])] for r in rows if r.get("vec")}
+    vectors = {str(r["d"])[:10]: parse_vec(r.get("vec")) for r in rows if r.get("vec")}
+    vectors = {k: v for k, v in vectors.items() if v}
     await redis_set_key(VEC_KEY, {"vectors": vectors}, ttl=20 * 3600)
     return vectors
 
@@ -311,6 +327,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         from src.data.state.cycle_vector import latest as _cycle
         cy = await _cycle()
         inputs["cycle_phase"], inputs["cycle_deterioration"], inputs["cycle_shift_pct"] = cy.get("phase"), cy.get("deterioration"), cy.get("shift_pct")
+        inputs["cycle_d"] = str(cy.get("d") or "")[:10] or None
     except Exception:                                                     # noqa: BLE001
         inputs["cycle_phase"] = None
     try:

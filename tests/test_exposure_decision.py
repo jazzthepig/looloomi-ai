@@ -229,3 +229,10 @@ def test_knn_uses_the_latest_vector_within_three_days(monkeypatch):
     monkeypatch.setattr(notify, "telegram_configured", lambda: False)
     r = asyncio.run(x.run_once(now))
     assert r["ok"] and up[0]["inputs"]["knn_vector_d"] == "2026-11-02" and up[0]["inputs"]["probs_knn"] and x.AUTHOR_KNN in subs
+
+
+def test_pgvector_string_is_parsed():
+    """11-06:pgvector 经 PostgREST 是字符串;按列表逐个 float 会在 '[' 上抛错,近邻臂三天 knn_n = 0。"""
+    from src.data.execution import exposure_decision as ed
+    assert ed.parse_vec("[0.28559154,0.479505,-0.9392035]") == [0.2856, 0.4795, -0.9392]
+    assert ed.parse_vec([1, 2]) == [1.0, 2.0] and ed.parse_vec("not a vector") == [] and ed.parse_vec(None) == []
