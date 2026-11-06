@@ -1,0 +1,17 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {"id": "T-223-1", "scenario": "T-223 第二族 G5:稳定币供给 30 天变化(state:stable_supply_30d)到 2026-12-05 仍为负(收缩未结束)",
+     "variable": "state:stable_supply_30d", "op": "lt", "hi": 0.0, "prob": 0.62, "horizon_d": "2026-12-05"},
+    {"id": "T-223-2", "scenario": "T-223 第二族 G5:2026-12-05 时稳定币供给 30 天变化仍在 −1% 以下(收缩幅度 > 1%)",
+     "variable": "state:stable_supply_30d", "op": "lt", "hi": -0.01, "prob": 0.50, "horizon_d": "2026-12-05"},
+    {"id": "T-223-3", "scenario": "T-223 第二族 G5:2026-12-05 时稳定币供给 30 天变化没有深到 −6% 以下(没有急缩)",
+     "variable": "state:stable_supply_30d", "op": "gt", "lo": -0.06, "prob": 0.75, "horizon_d": "2026-12-05"},
+    {"id": "T-223-4", "scenario": "T-223 前向期风险偏好:2026-12-05 的 VIX 仍在 30 以下",
+     "variable": "macro:vix", "op": "lt", "hi": 30.0, "prob": 0.85, "horizon_d": "2026-12-05"},
+    {"id": "T-223-5", "scenario": "T-223 前向期情绪:2026-12-05 的恐惧贪婪指数仍在 25 以上",
+     "variable": "macro:fng", "op": "gt", "lo": 25.0, "prob": 0.80, "horizon_d": "2026-12-05"},
+    {"id": "T-223-6", "scenario": "T-223 前向期宏观状态:2026-12-05 时面板 30 日窗口内 RISK_ON 占比不到一半",
+     "variable": "state:regime_share_30d:RISK_ON", "op": "lt", "hi": 0.5, "prob": 0.80, "horizon_d": "2026-12-05"}
+  ]
+}
