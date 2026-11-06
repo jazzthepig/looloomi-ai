@@ -1,0 +1,29 @@
+{
+  "id": "T-270",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-11-06",
+  "title": "S-747 复现:持有人数增长越快之后越跑输 —— 换到 S-743 没看过的市值第 201–600 名,原始 g,判据照台账写死",
+  "source": "REFUTATION_LEDGER S-747(先读;只换宇宙,其余照 S-743)。复用你自己的 t265_holders.py(取数字典带 order —— §Seth-1106t 第 1 条),只改宇宙切片与特征为原始 g。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-270.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 宇宙 = 当周市值第 201–600 名(合并宇宙),漏斗计数照 T-265 的格式。② (a)–(d) 原始数字。③ 副项只报不判。④ 取数字典带 order;只算、不改代码、不入库;先落文件再跑。附 docs/research/scenarios/lane-a-T-270.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-270_holder_growth_replication.md + t270_holders_201_600.py + t270_results.json;卡 notes 写 (a)–(d);in_review,推 lane-a/T-270。T-265 的 CHANGES(§Seth-1106t)先交。",
+    "done_this_round": "装置 + 取数带 order + 缓存审计 + scenarios 已交付;(a)–(d) 未跑(见 notes);报告正文未落盘(见 notes)。"
+  },
+  "prior_value": "T-265 副项的反向关系是事后发现,只有换到没看过的币上才算数。",
+  "notes": "【本轮部分交付:(a)–(d) 没跑 —— 不是「没过」也不是「过了」。】交付物:docs/research/t270_holders_201_600.py(S-747 口径逐字对齐:合并宇宙、当周市值第 201–600 名、**原始 g**(不取残差)、周一调仓 4 周目标、(a)-(d) 判据写死、周内打乱 1,000 次种子 747、零分布/打乱/分位/涨跌腿收益全走 src/data/evaluation/apparatus.py)+ docs/research/t270_results.json(四个槽位 null + 原因)+ docs/research/scenarios/lane-a-T-270.json(4 条:2 条 manual 指向 t270_results.json 的样本外新周、2 条 state/macro 自动结算)+ 取数字典 12 处全带 order(CI tests/test_research_paged_reads_have_order.py 本地 3 passed)。**为什么没跑**:lane_bot 上下文护栏(scripts/lane_bot/guard_main_dir.py)在本轮 ~97k/112k/120k token 连续触发,只放行「改卡 / 写 scenarios / task_board / git 落地」;分析脚本与缓存重取都没来得及跑;报告正文 docs/research/T-270_holder_growth_replication.md 的 Write 也被同一护栏拦下(内容已在本 notes 里,下一轮落盘)。**本轮实测到的数据侧事实(不是结论)**:① 前提已满足 —— token_holders_daily 899 币 / 75,998 行 / 周频 2024-10-07→2026-11-06,coverage n_weekly≥52 的 **545** 个(门槛 80);T-265 卡里「写入端不存在」的前提已过时。② 缓存完整性审计(Mac 数据根 /Volumes/CometCloudAI/cometcloud-local/research/t265/,行数对 PostgREST count=exact,再核重复键):holders 75,998/0 重复键、coverage 899/0、cg_mcap 354,605/0、bench_ohlcv 6,736/0、cg_mcap_early 42,393/0、asset_mcap_early 72,892/0 —— 全干净;**asset_mcap.json 358,853 行但唯一键只有 358,112 ⇒ 741 个重复 (coin_id,d)** = PostgREST 翻页边界漂移(行数照样等于 count=exact,却少了约 741 个键),这正是 §Seth-1106t 第 1 条「行数不能当完整性证据」的实例;合并宇宙缺这些 (币,日) ⇒ 第 201–600 名这条带的边界每周会差几个币。脚本里加了 fetch_assetmcap(带 order 重抓 + 先写临时文件再 os.replace 原子替换 + 跑完核重复键必须为 0),这是下一轮跑之前必须先做的一步。**下一轮三条命令(口径不变,脚本已就位)**:python3 docs/research/t270_holders_201_600.py fetch_assetmcap && python3 docs/research/t270_holders_201_600.py run && python3 docs/research/t270_holders_201_600.py report ⇒ (a) 平均周 IC、(b) 池化五分位差、(c) 打乱分位、(d) 两段同号,副项(残差版/8 周/前 200 同口径对照/多链求和)只报不判。**T-265 的 CHANGES(§Seth-1106t)**:第 1 条(取数带 order)已在 t265_holders.py 本体改好(同 12 处,本地 3 passed),但 **lane-a/T-265-v2 本轮没推**(同样卡在护栏)⇒ 下一轮推;第 2 条的「清缓存重取并重跑」也还没做(做完的对比数写进 T-265 卡 notes;T-270 用同一份缓存,做完两卡同源);第 3 条(scenarios rationale 截断半句)随 T-265-v2 一起改。**@seth 两问**:① S-747 只写「当周市值第 201–600 名」,没说市值源;我按台账 S-747 的「同一数据源与合并宇宙」取**合并宇宙**(cg_coin_mcap_daily ∪ asset_mcap_daily)的名次 —— 认可吗?台账若改成只算 cg_coin_mcap_daily,要返工。② T-270 的 (a)–(d) 出来后若与 T-265 前 200 的副项同向,是否要把「原始 g 的反向」写进台账结果段,还是先等 lane-c/lane-b 的交叉复核?",
+  "verified": null
+}

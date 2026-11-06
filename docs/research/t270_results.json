@@ -1,0 +1,62 @@
+{
+  "task_id": "T-270",
+  "prereg": "REFUTATION_LEDGER S-747 (2026-11-06 14:45 UTC)",
+  "status": "NOT_RUN_THIS_ROUND",
+  "reason": "上下文护栏(lane_bot guard_main_dir.py)在 ~97k token 触发,本轮被要求降落:只允许写卡、写 scenarios、task_board、git 落地。分析脚本(t270_holders_201_600.py run)与缓存重取(fetch_assetmcap)本轮都没来得及跑。",
+  "how_to_fill": "python3 docs/research/t270_holders_201_600.py fetch_assetmcap && python3 docs/research/t270_holders_201_600.py run && python3 docs/research/t270_holders_201_600.py report",
+  "script": "docs/research/t270_holders_201_600.py",
+  "spec": {
+    "universe": "当周(周一)合并宇宙(cg_coin_mcap_daily ∪ asset_mcap_daily)市值第 201-600 名",
+    "feature_main": "原始 g = ln(H_t / H_{t-28}),|g| > 1 丢弃",
+    "feature_secondary": "g_res = g 对「过去 4 周对数收益」与「ln 市值」的每周单独横截面秩回归残差",
+    "result": "t -> t+28 相对 BTC 的对数超额(BTC 基准 = ohlcv_daily source=binance_hist)",
+    "filters": ["上市满 26 周", "去稳定币/包装/质押(相对 BTC/ETH/USD 的 90 天波动 < 1%)", "t-28 与 t 的持有人点相差 <= 7 天"],
+    "seed": 747,
+    "criteria": {
+      "a": "平均周截面 Spearman IC < 0 且 NW(4 阶)t <= -2.0",
+      "b": "g 最高五分之一减最低五分之一的平均 4 周超额 <= -1.0%",
+      "c": "周内打乱 g(1,000 次,种子 747)实际均值 IC 分位 <= 0.05",
+      "d": "两段(按周数对半)同号"
+    }
+  },
+  "a_b_c_d": {
+    "raw_g_band_201_600": {
+      "a_mean_weekly_ic": null,
+      "a_nw_t_4lag": null,
+      "b_spread_pooled_log_excess": null,
+      "c_null_percentile": null,
+      "d_same_sign": null,
+      "reasons": {
+        "a_mean_weekly_ic": "NOT_RUN:分析未跑(上下文护栏)",
+        "a_nw_t_4lag": "NOT_RUN:分析未跑(上下文护栏)",
+        "b_spread_pooled_log_excess": "NOT_RUN:分析未跑(上下文护栏)",
+        "c_null_percentile": "NOT_RUN:分析未跑(上下文护栏)",
+        "d_same_sign": "NOT_RUN:分析未跑(上下文护栏)"
+      }
+    }
+  },
+  "verdict": {
+    "a_ic_lt_0_and_t_le_-2": null,
+    "b_spread_le_-1pct": null,
+    "c_null_pct_le_0.05": null,
+    "d_halves_same_sign": null,
+    "all_pass": null
+  },
+  "cache_audit": {
+    "note": "本轮实测(2026-11-06 22:4x ~ 2026-11-07,Mac 数据根 /Volumes/CometCloudAI/cometcloud-local/research/t265/):行数 == PostgREST count=exact 且核过重复键。",
+    "holders.json": {"rows": 75998, "unique_keys": 75998, "dup_keys": 0, "fetched_utc": "2026-11-06 22:42"},
+    "coverage.json": {"coins": 899, "n_weekly_ge_52": 545, "n_weekly_ge_26": 639, "dup_keys": 0, "fetched_utc": "2026-11-06 22:42"},
+    "cg_mcap.json": {"rows": 354605, "unique_keys": 354605, "dup_keys": 0, "fetched_utc": "2026-11-06 19:20"},
+    "asset_mcap.json": {"rows": 358853, "unique_keys": 358112, "dup_keys": 741, "fetched_utc": "2026-11-06 19:27", "status": "STALE — 翻页边界漂移(重复键),须用 fetch_assetmcap 重取"},
+    "bench_ohlcv.json": {"rows": 6736, "unique_keys": 6736, "dup_keys": 0},
+    "cg_mcap_early.json": {"rows": 42393, "unique_keys": 42393, "dup_keys": 0, "fetched_utc": "2026-11-06 22:43"},
+    "asset_mcap_early.json": {"rows": 72892, "unique_keys": 72892, "dup_keys": 0, "fetched_utc": "2026-11-06 22:43"}
+  },
+  "secondary": {
+    "residual_g_band_201_600": "NOT_RUN:分析未跑",
+    "raw_g_top200_control": "NOT_RUN:分析未跑(对照:复述 T-265 的原始 g)",
+    "by_network": "NOT_RUN:分析未跑",
+    "target_8w": "NOT_RUN:分析未跑",
+    "holders_summed_over_chains": "NOT_RUN:分析未跑"
+  }
+}
