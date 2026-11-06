@@ -51,6 +51,26 @@ _BASE  = normalize_base(os.environ.get("NARRATIVE_LLM_BASE_URL") or os.environ.g
 _KEY   = (os.environ.get("NARRATIVE_LLM_API_KEY") or os.environ.get("LLM_API_KEY") or "").strip()
 _MODEL = (os.environ.get("NARRATIVE_LLM_MODEL") or os.environ.get("LLM_MODEL") or "MiniMax-Text-01").strip()
 _TIMEOUT = float(os.environ.get("NARRATIVE_LLM_TIMEOUT", "45"))
+#: 11-06(Jazz):主 key 是 5 小时窗口的套餐、与 lane 的挖掘共用,挖得多就会用完 —— 另备一把按量付费的后备 key。
+#: 只在主 key 撞到额度(HTTP 429 / base_resp 1002 限速 / 1008 余额)时用;没配就和以前一样。base 不配 ⇒ 与主 key 同一个端点。
+_FB_KEY = (os.environ.get("LLM_FALLBACK_API_KEY") or "").strip()
+_FB_BASE = normalize_base(os.environ.get("LLM_FALLBACK_BASE_URL") or "") or _BASE
+_QUOTA_CODES = {1002, 1008}
+
+
+def quota_hit(status: int, data) -> bool:
+    """纯函数。这次回复是不是「额度 / 限速」(换后备 key 有用),而不是请求本身错了。"""
+    if status == 429:
+        return True
+    try:
+        return int(((data or {}).get("base_resp") or {}).get("status_code") or 0) in _QUOTA_CODES
+    except (TypeError, ValueError, AttributeError):
+        return False
+
+
+def credentials(fallback: bool = False) -> tuple[str, str]:
+    """(base, key)。fallback=True 且配了后备 key ⇒ 后备;否则主。"""
+    return (_FB_BASE, _FB_KEY) if fallback and _FB_KEY else (_BASE, _KEY)
 
 # Compliance: if the model emits any of these (whole-word), we DROP its output and fall
 # back to templates. Positioning language only — no advice, no buy/sell. (Mirrors the
@@ -112,15 +132,21 @@ async def _chat(messages: list, temperature: float = 0.4, max_tokens: int = 1400
     if not _BASE:
         _note("LLM_BASE_URL 未配")
         return None
-    url = f"{_BASE}/chat/completions"
-    headers = {"Content-Type": "application/json"}
-    if _KEY:
-        headers["Authorization"] = f"Bearer {_KEY}"
     payload = {"model": _MODEL, "messages": messages, "temperature": temperature,
                "max_tokens": int(max_tokens), "stream": False}
     try:
         async with httpx.AsyncClient(timeout=timeout or _TIMEOUT) as cli:   # 推理模型长回复按调用方给的时限(agent 臂 300 秒)
-            r = await cli.post(url, headers=headers, content=json.dumps(payload))
+            for fb in ((False, True) if _FB_KEY else (False,)):
+                base, key = credentials(fb)
+                headers = {"Content-Type": "application/json", **({"Authorization": f"Bearer {key}"} if key else {})}
+                r = await cli.post(f"{base}/chat/completions", headers=headers, content=json.dumps(payload))
+                try:
+                    body = r.json() if r.status_code in (200, 429) else None
+                except ValueError:
+                    body = None
+                if not quota_hit(r.status_code, body):
+                    break
+                _logger.warning(f"[NARRATOR] LLM quota hit on {'fallback' if fb else 'primary'} key")
             if r.status_code != 200:
                 _logger.warning(f"[NARRATOR] LLM {r.status_code}: {r.text[:200]}")
                 _note(f"HTTP {r.status_code}: {r.text[:160]}")
