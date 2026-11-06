@@ -1,0 +1,28 @@
+{
+  "id": "T-257",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-06",
+  "title": "S-737 状态 × 动作地图:训练期(2021-03 → 2023-12)k-means 6 类状态(14 个特征,写死),每类里 持有 / 空仓 / 战术空单 / 30 天 90% 看跌 / 90-80 看跌价差 / 保护性多头 的结果,留出期(2024 →)复核 + BH 多重检验 —— Jazz 11-06「全时间段亏 ≠ 特殊时间亏」",
+  "source": "REFUTATION_LEDGER S-737(先读,特征表 / k / 种子 / 动作 / 判据一字不改)。数据:视图 feature_matrix_daily(d, f jsonb, has jsonb;每页 1000 行带 order=d.asc)、perp_bv_daily BTCUSDT(ATR 与出场用 h/l/c)、deriv_vol_daily(BTC DVOL,期权估价)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-257.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 拟合只碰训练期(写断言);留出期只做分配。② 6 × 6 的格子表(训练 / 留出各一份):样本日、独立段数、均值、中位、p05、胜率;A2 是 0。③ 判据逐格:训练均值 > 0、留出均值 > 0、ab_test 对 A2 的 p 值、BH 校正后的结论;A6 对 A1 的 p05 改善与均值代价。④ 每类状态的中心用原始单位写成人话(例如「广度 < 10%、DVOL 高位、资金费为正」)。⑤ 今天落在哪一类 + 该类动作表。⑥ 期权估算的偏差方向写明。⑦ 只算、不改代码、不入库;零分布 / ab_test 只用 apparatus.py;长脚本 nohup。交付附 docs/research/scenarios/lane-b-T-257.json(≥ 3 条,例如「今天这类状态下 A1 的 30 天结果 > 0」)。",
+    "expect": "报告 docs/research/T-257_state_action_map.md + t257_state_action_map.py + t257_results.json(含 6 个中心、每格数字、今天的类别);卡 notes 写过了 BH 的格子;in_review,推 lane-b/T-257。"
+  },
+  "prior_value": "所有动作都只在全时间段上判过(T-252);没有一次按状态拆。",
+  "notes": "",
+  "verified": null
+}
