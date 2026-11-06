@@ -1,53 +1,71 @@
 {
+  "author": "lane-a",
   "task_id": "T-266",
-  "lane": "lane-a",
-  "s741": "S-741 联合模型 v2 盲复算 + 稳健性(只报不判)",
+  "scenario": "T-266 / S-741 联合模型 v2 的稳健性:实盘口径、z 窗口、逐族去维度之后,还过不过 S-741 的 (a)(b)",
   "created_utc": "2026-11-06",
-  "author": "Minimax-A (lane-a)",
-  "status": "open_partial",
-  "compliance": "全部为可机器核验的命题,不含收益承诺、不含买卖语言;只为 S-741 的描述输入口径服务,不动钱。",
-  "how_to_settle": "在 Mac 上跑 `python3 -u docs/research/t266_recompute.py`(脚本已提交,见 docs/research/t266_recompute.py)后,按各条的 check 字段从 docs/research/t266_results.json 取数;到期按 Brier 结算。",
-  "scenarios": [
+  "compliance": "全部是可机器核验的命题,不含收益承诺、不含买卖语言;只描述模型口径的统计性质,不动钱。",
+  "how_to_settle": "T-266-1 / T-266-2 / T-266-3 为 manual(人工结算):重跑 `python3 -u docs/research/t266_recompute.py --keys-json docs/research/t266_keys_t263.json --out docs/research/t266_results.json --tag t263-59keys`,把样本起点推到 2026-10-06 之后(新数据),按各条 check 字段从 results.json 取数。T-266-4 / T-266-5 由 scenario_ledger 自动结算(state_daily / macro_daily)。",
+  "entries": [
     {
-      "id": "t266-s1",
-      "proposition": "把 21 个新维度列(style:*/chain:*/pos:*/channel:*)换成 21 列标准正态噪声(20 个种子)后,Ridge 的 z 合并样本外 IC 的均值 < 0.10(即 S-741 的判据 (a) 在噪声对照下不再成立)。",
-      "probability": 0.45,
-      "rationale": "S-741 结果段记的消融是「只加 z 不加新维度 0.085 / 只加新维度不加 z 0.032」—— 两样单独都不够 ⇒ 新维度是必要件 ⇒ 换成噪声后 IC 应显著低于 0.1756;但 Ridge 在 71 列上有富余自由度,噪声也可能被拟合出假信号,故不给更高概率。",
-      "check": "t266_results.json → results.robustness.noise_replacement_of_new_dims.ic_mean < 0.10",
-      "resolve_by": "2026-11-13"
+      "id": "T-266-1",
+      "scenario": "T-266 / S-741 联合模型 v2 的稳健性:实盘口径、z 窗口、逐族去维度之后,还过不过 S-741 的 (a)(b)",
+      "statement": "实盘口径(每天扩张重训、隔离带 30、z 窗口 90/最少历史 60)的 z 合并样本外 IC,在 2026-10-06 之后的新数据上仍 ≥ 0.10(即 S-741 判据 (a) 在实盘节奏上继续成立)。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0.1,
+      "prob": 0.55,
+      "horizon_d": "2026-12-28",
+      "rationale": "本轮实测实盘口径 IC 0.131(1,567 天,与 Seth 09:43 UTC 的『实盘口径第一眼』完全一致),刚好高于 0.10 一截;但同一配置下 (b) 块置换分位 0.943、(c) 按月 t 1.088 都不过 ⇒ 余量薄、且 2023 年以后那段历史上明显弱(0.071),所以只给 0.55 —— 不是「实盘口径已站住」,也不是「已经塌了」。",
+      "check": "docs/research/t266_results.json → results.robustness.live_expanding_daily_retrain.a_ic(样本起点 2026-10-06 之后重算)> 0.10 ⇒ 命题成立"
     },
     {
-      "id": "t266-s2",
-      "proposition": "实盘口径(每天扩张重训、隔离带 30、z 窗口 90/最少历史 60)的 z 合并样本外 IC 与 6 折走步口径的 IC 相差 < 0.05。",
-      "probability": 0.70,
-      "rationale": "两者的特征、目标、z 变换全同,只差重训节奏(每天一次 vs 每折一次);生产 joint_forecast_daily 的 backfill 段(2022-04-23 → 2026-11-05,1657 行)已经是这个口径,可以直接对。",
-      "check": "t266_results.json → results.robustness.live_expanding_daily_retrain.a_ic 与 results.base_ridge.a_ic 之差 < 0.05",
-      "resolve_by": "2026-11-13"
+      "id": "T-266-2",
+      "scenario": "T-266 / S-741 联合模型 v2 的稳健性:实盘口径、z 窗口、逐族去维度之后,还过不过 S-741 的 (a)(b)",
+      "statement": "z 窗口 120(最少历史 80)相对 z 窗口 90 的 IC 优势,在 2026-10-06 之后的新数据上仍然存在(窗口 120 的 IC 仍高于窗口 90)。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0.0,
+      "prob": 0.6,
+      "rationale": "本轮 z 窗口 60 / 90 / 120 的 IC 是 0.1446 / 0.1756 / 0.2441 —— 窗口是最大的自由旋钮,窗口越宽 IC 越高。这既可能是真信号(更长的自身历史分位更稳),也可能是同一个过拟合旋钮(窗口由台账文字定,不是数据定的);而且窗口 60 时 (b)(c) 刚好翻面(0.946 / 1.999)说明这条曲线在阈值附近很陡。给 0.60,略高于抛硬币。",
+      "check": "docs/research/t266_results.json → results.robustness.z_window_120.a_ic − results.base_ridge.a_ic > 0 ⇒ 命题成立",
+      "horizon_d": "2026-12-28"
     },
     {
-      "id": "t266-s3",
-      "proposition": "E1(z 对过去 30 天收益做秩回归取残差后)的 IC 仍 ≥ 0.05 且同号。",
-      "probability": 0.55,
-      "rationale": "台账记 z 与过去 30 天收益自相关 −0.26(天然反动量)⇒ 正交化会削掉一部分信息;但 z 的信息源不止动量一项(style/chain/pos/channel 族),故不是必跌。",
-      "check": "t266_results.json → results.base_ridge.e1_ic_after_orthogonalisation ≥ 0.05",
-      "resolve_by": "2026-11-13"
+      "id": "T-266-3",
+      "scenario": "T-266 / S-741 联合模型 v2 的稳健性:实盘口径、z 窗口、逐族去维度之后,还过不过 S-741 的 (a)(b)",
+      "statement": "去掉 pos 族(5 列)之后,S-741 的 (e)(胜过朴素基线 ≥ +0.05)在新数据上依然不成立 —— 即 pos 族仍是被 (e) 依赖的那一族的必要件。",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 0.05,
+      "prob": 0.55,
+      "rationale": "本轮逐族去掉:pos 族去掉后 (e) 从 0.1031 掉到 0.0402(< 0.05)且 (b)(c) 也翻面;style 族去掉后 IC 反而升到 0.2081 ⇒ 族的贡献很不均匀。pos 族的必要性在样本内是明确的,但它是 21 列里的一小块、且 (e) 本身依赖朴素基线(0.0725),所以给 0.55。",
+      "check": "docs/research/t266_results.json → results.robustness.drop_pos.e_diff < 0.05(样本起点 2026-10-06 之后重算)⇒ 命题成立",
+      "horizon_d": "2026-12-28"
     },
     {
-      "id": "t266-s4",
-      "proposition": "T-263 用的 59 列 = 今天 feature_matrix_daily 的 71 列去掉 12 列,且这 12 列全部来自 2026-11-06 18:02 JST 那两个 commit(0f2d2ae3 / 1bd18c38)引入的维度(state_map 的 regime_share_30d:*、stablecoin_issuer、political_intensity、derivatives_market、options_surface)。",
-      "probability": 0.60,
-      "rationale": "T-263 跑完(08:47 UTC = 17:47 JST)到 18:02 JST 之间有两个 commit 改了特征视图;今天 71 列里有 6 个 regime_share_30d:*、3 个 stable:*/pol:conflict/derivatives、2 个 dvol:* 正好落在这个窗口;但有些键是数据后到而不是视图后改,12 列的确切归属没核完。",
-      "check": "docs/research/t266_results.json → data.keys_added_since_this_set 恰好 12 项,且每一项都能对上一个 18:02 JST commit 引入的维度族",
-      "resolve_by": "2026-11-13"
+      "id": "T-266-4",
+      "scenario": "T-266 / S-741 联合模型 v2 的稳健性:实盘口径、z 窗口、逐族去维度之后,还过不过 S-741 的 (a)(b)",
+      "statement": "面板距 200 日线(state_daily entity=panel, feature=dist_200)2026-12-14 仍为正 —— 2026-11-06 为 +0.0693;S-741 的 z 能不能继续兑现,需要一个不是熊市的环境。",
+      "variable": "state:dist_200",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.52,
+      "horizon_d": "2026-12-14",
+      "rationale": "这一条是市场状态,不是 T-266 的结论;当前 F&G 28(恐慌)、面板广度 0,熊市一侧的证据多一点,但 dist_200 仍在 200 日线上方,近一年的漂移常在 ±0.07 附近来回 ⇒ 接近抛硬币,给 0.52。",
+      "check": "state_daily(entity=panel, feature=dist_200, d=2026-12-14) > 0 ⇒ 命题成立"
     },
     {
-      "id": "t266-s5",
-      "proposition": "α = 3 与 α = 30 两个变体下,S-741 的 (a)(b)(d)(e) 四条仍然全部成立(逐族去掉 style/chain/pos/channel 之后仍成立)。",
-      "probability": 0.50,
-      "rationale": "Ridge 对 α 通常不敏感,但 S-741 的余量本就不宽((b) 0.986 对 0.95、(c) 2.48 对 2.0),一次小扰动就可能翻面;逐族去掉任一新维度又会少 4–8 列,方向未知。",
-      "check": "t266_results.json → results.robustness.alpha_3 / alpha_30 / drop_style / drop_chain / drop_pos / drop_channel 各块的 a_ic ≥ 0.10、b_pctile ≥ 0.95、d_ic_folds_4_6 > 0、e_diff ≥ 0.05",
-      "resolve_by": "2026-11-13"
+      "id": "T-266-5",
+      "scenario": "T-266 / S-741 联合模型 v2 的稳健性:实盘口径、z 窗口、逐族去维度之后,还过不过 S-741 的 (a)(b)",
+      "statement": "恐惧贪婪指数(macro_daily series=fng)2026-12-14 高于 50 —— 2026-11-06 为 28;实盘口径的 z 在恐慌段(2023 年后那段历史上 IC 掉到 0.071)明显更弱,环境是重要的一块。",
+      "variable": "macro:fng",
+      "op": "gt",
+      "lo": 50,
+      "prob": 0.42,
+      "horizon_d": "2026-12-14",
+      "rationale": "同 T-266-4,是市场状态不是结论;F&G 今天 28(恐慌),一个月内回到 50 以上不算罕见但也不占优 ⇒ 0.42,略低于抛硬币。",
+      "check": "macro_daily(series=fng, d<=2026-12-14)的最近值 > 50 ⇒ 命题成立"
     }
   ],
-  "notes": "本轮(T-266)只交付了脚本 + 已核口径/数据事实;上面的命题要等脚本在 Mac 上跑完才结算。概率是先验,到期按 Brier 记。"
+  "notes": "上一轮分支上那版草稿(格式不符合 scenario_ledger 的 schema、命题是本轮自己结果的反向复述)已被本文件替换 —— 它从未合进 main、也从未入账,不存在被结算的历史。上面 5 条全部是前向命题:概率是在本轮实测值上下的先验,到期按 Brier 记。"
 }
