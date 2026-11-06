@@ -55,6 +55,15 @@ def gpr_rows(df) -> list[dict]:
     return out
 
 
+GDELT_THROTTLE_WAITS = (20.0, 60.0, 120.0)
+
+
+def throttled(body: Any) -> bool:
+    """纯函数。GDELT 限速时回的不是 JSON 而是一段「Please limit requests to one every 5 seconds…」。"""
+    head = (body[:200].decode("utf-8", "ignore") if isinstance(body, (bytes, bytearray)) else str(body or "")[:200]).lstrip()
+    return head.startswith("Please limit") or "limit requests" in head
+
+
 def gdelt_rows(payload: Any, topic: str) -> list[dict]:
     """纯函数。DOC timelinevol → 行(可得日 = 日期 + 1)。"""
     out = []
@@ -114,7 +123,15 @@ async def run_once(now: Optional[dt.datetime] = None, get: Optional[Callable[[st
         url = GDELT_URL + "?" + urllib.parse.urlencode({"query": q, "mode": "timelinevol", "format": "json", "startdatetime": start,
                                                         "enddatetime": now.strftime("%Y%m%d000000")})
         try:
-            rows = gdelt_rows(json.loads(await asyncio.to_thread(get, url)), topic)
+            body = await asyncio.to_thread(get, url)
+            for wait in GDELT_THROTTLE_WAITS:                             # 11-06:Railway 出口 IP 共用,首轮 5 个主题 4 个拿到限速文本
+                if not throttled(body):
+                    break
+                await asyncio.sleep(wait if pause_s else 0)
+                body = await asyncio.to_thread(get, url)
+            if throttled(body):
+                raise RuntimeError("GDELT 限速(重试后仍是限速文本)")
+            rows = gdelt_rows(json.loads(body), topic)
             for i in range(0, len(rows), 1000):
                 if not await supabase_upsert_table(TABLE, rows[i:i + 1000], on_conflict="d,topic"):
                     raise RuntimeError(f"写 {TABLE} 失败")

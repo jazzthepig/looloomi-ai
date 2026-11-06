@@ -63,3 +63,32 @@ def test_wiring():
     from src.data.market import cis_inputs as ci
     from src.data.market import prediction_markets as pm
     assert "USEPUINDXD" in ci.CREDIT_SERIES and "politics" in pm.TAGS and len(pm.TAGS) <= 6
+
+
+def test_gdelt_throttle_is_retried_not_parsed():
+    assert pi.throttled(b"Please limit requests to one every 5 seconds or contact ...") and not pi.throttled(b'{"timeline": []}')
+    import asyncio
+    calls = []
+    payload = b'{"timeline": [{"data": [{"date": "20261104T000000Z", "value": 8.0}]}]}'
+
+    def get(url):
+        calls.append(url)
+        if "gpr" in url.lower() or url.endswith(".xls"):
+            raise RuntimeError("no xls in test")
+        return b"Please limit requests to one every 5 seconds" if len(calls) % 2 == 0 else payload
+
+    async def ups(t, rows, on_conflict=None):
+        return True
+
+    async def read(t, p):
+        return []
+
+    import src.api.store as store
+    import src.data.style.header as hdr
+    orig = (store.supabase_upsert_table, hdr._read_all)
+    store.supabase_upsert_table, hdr._read_all = ups, read
+    try:
+        r = asyncio.run(pi.run_once(get=get, pause_s=0))
+    finally:
+        store.supabase_upsert_table, hdr._read_all = orig
+    assert set(r["gdelt"]) == set(pi.TOPICS), r
