@@ -366,6 +366,7 @@ def main() -> None:
         return {"n_null": N_NULL, "seed": SEED,
                 "null_p05": float(np.percentile(null, 5)), "null_p50": float(np.percentile(null, 50)),
                 "null_p95": p95, "null_min": float(null.min()), "null_max": float(null.max()),
+                "null_mean": float(null.mean()), "null_sd": float(null.std(ddof=1)),
                 "actual": actual, "actual_percentile": percentile_of(actual, null),
                 "pass": bool(actual >= p95)}
 
@@ -384,6 +385,68 @@ def main() -> None:
                 "d_n_ge15": bool(len(tickets) >= 15)}
     all_pass = all(verdicts.values())
     print(f"  判据 {verdicts} ⇒ {'✅ 通过' if all_pass else '❌ 未通过'}")
+
+    # ── 检出力(§Seth-1106v:报告里请顺带写检出力) ──────────────────────────
+    # **后算的设计灵敏度**,不是新检验:只回答「这个设计能检出多大的真效应」,
+    # 不改 (a)–(d) 的任何判定。零分布仍是 (b) 那一条(apparatus 出的 1,000 次抽样),这里只做算术。
+    print("== 检出力(设计灵敏度;不改 (a)–(d)) ==")
+    Z80, Z95 = 0.8416212335729143, 1.6448536269514722     # 正态分位:80% 功效 / 95% 单尾
+    n_tk = len(pnls)
+    arr = np.asarray(pnls, dtype=float)
+    tk_sd = float(arr.std(ddof=1)) if n_tk > 1 else float("nan")
+    tk_se = float(tk_sd / math.sqrt(n_tk)) if n_tk > 1 else float("nan")
+    m0, s0, p95 = ctrl.get("null_mean"), ctrl.get("null_sd"), ctrl.get("null_p95")
+    power: dict = {
+        "note": "后算的设计灵敏度(不改 (a)–(d) 判定);零分布复用 (b) 的 1,000 次抽样",
+        "n_tickets": n_tk,
+        "ticket_mean_pct": a_mean,
+        "ticket_sd_pct": tk_sd,
+        "ticket_se_pct": tk_se,
+        "ticket_t_stat": (a_mean / tk_se) if tk_se and tk_se > 0 else None,
+        "ticket_onesided_p_normal": None,
+        "mdes80_one_sample_t_pct": (Z95 + Z80) * tk_se if tk_se == tk_se else None,
+        "null_mean_pct": m0,
+        "null_sd_pct": s0,
+        "noise_floor_sd_pct": s0,
+    }
+    if tk_se == tk_se and tk_se > 0:
+        # 单样本检验:观测均值离 0 有几个标准误(正态近似;n=24 时 t 分布略宽)
+        power["ticket_onesided_p_normal"] = 0.5 * (1.0 - math.erf((a_mean / tk_se) / math.sqrt(2.0)))
+    if m0 is not None and s0 is not None and s0 > 0 and p95 is not None:
+        gap = p95 - m0                       # 零分布 95 分位与均值的距离
+        gamma = gap / s0                    # 零分布形状(正态应 ≈ 1.645)
+        delta_mdes = gap + Z80 * s0          # (b) 的最小可检出真效应 δ(80% 功效、单尾 5%)
+        delta_obs = a_mean - m0              # 观测到的(触发 − 随机)差
+        achieved = 0.5 * (1.0 + math.erf((delta_obs - gap) / (s0 * math.sqrt(2.0))))
+        n_need = (n_tk * ((gamma + Z80) * s0 / delta_obs) ** 2) if delta_obs > 0 else float("inf")
+        # 票的日历节奏:首末票相距多少天 ⇒ 平均几天出一张票
+        span_days = (d2date(tickets[-1]["d"]) - d2date(tickets[0]["d"])).days if n_tk > 1 else 0
+        days_per_ticket = span_days / max(1, n_tk - 1) if n_tk > 1 else float("nan")
+        # 样本本身最多能出多少张票(合格日 ÷ 不重叠下限)
+        max_tickets = len(eligible) // (HOLD_DAYS + 1)
+        power.update({
+            "null_p95_minus_mean_pct": gap,
+            "null_shape_gamma": gamma,
+            "delta_mdes80_pct": delta_mdes,          # (b) 能检出的最小真效应
+            "delta_observed_pct": delta_obs,         # 观测到的真效应(点估计)
+            "achieved_power_at_observed": achieved,  # 把点估计代回去的已达功效
+            "observed_below_mdes": bool(delta_obs < delta_mdes),
+            "n_tickets_needed_for_observed": n_need,
+            "max_tickets_possible_in_sample": max_tickets,
+            "sample_days": len(eligible),
+            "calendar_span_days": span_days,
+            "days_per_ticket_observed": days_per_ticket,
+            "calendar_days_needed_for_observed": n_need * days_per_ticket if n_need == n_need else None,
+            "calendar_years_needed_for_observed": (n_need * days_per_ticket / 365.25) if n_need == n_need else None,
+            "n_tickets_needed_for_half_mdes": (n_tk * ((gamma + Z80) * s0 / (delta_mdes / 2.0)) ** 2),
+            "trigger_rate": len(trig_days) / len(eligible) if eligible else None,
+            "tickets_per_year": {y: sum(1 for tk in tickets if tk["d"][:4] == y)
+                                 for y in sorted({tk["d"][:4] for tk in tickets})},
+        })
+        print(f"  噪声地板 s0={s0:.4f}% | (b) 最小可检出 δ={delta_mdes:.4f}% | "
+              f"观测 δ={delta_obs:.4f}% | 已达功效 {achieved:.3f}")
+        print(f"  要 80% 功效检出观测效应需 {n_need:.0f} 张票(样本最多 {max_tickets} 张);"
+              f"按观测节奏 {days_per_ticket:.1f} 天/票 ⇒ {n_need * days_per_ticket / 365.25:.1f} 年历史")
 
     # ── 副项(只报不判) ──────────────────────────────────────────────────────
     print("== 副项(只报不判) ==")
@@ -601,6 +664,7 @@ def main() -> None:
                   "null_p05": ctrl.get("null_p05"), "null_p50": ctrl.get("null_p50"),
                   "null_p95": ctrl.get("null_p95"), "null_min": ctrl.get("null_min"),
                   "null_max": ctrl.get("null_max"),
+                  "null_mean": ctrl.get("null_mean"), "null_sd": ctrl.get("null_sd"),
                   "actual": a_mean, "actual_percentile": b_pct, "pass": b_pass,
                   "error": ctrl.get("error")},
             "c": {"seg1": {"range": list(SEG1), "n": len(seg1), "mean_pnl_pct": float(np.mean(seg1)) if seg1 else None},
@@ -610,6 +674,7 @@ def main() -> None:
             "all_pass": all_pass,
         },
         "sub_items": sub,
+        "power": power,
         "current_state": cur,
     }
     out_json = OUT / "t269_results.json"

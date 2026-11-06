@@ -1,7 +1,7 @@
 {
   "task": "T-269",
   "ledger": "S-746",
-  "run_at": "2026-11-07T00:03:15",
+  "run_at": "2026-11-07T00:37:51",
   "sample": {
     "lo": "2021-03-24",
     "hi": "2026-10-06",
@@ -697,6 +697,8 @@
       "null_p95": 1.246597010109427,
       "null_min": -2.794031848242632,
       "null_max": 2.7797716806367885,
+      "null_mean": -0.2962765245618963,
+      "null_sd": 0.8824835279979646,
       "actual": 1.1500933156561146,
       "actual_percentile": 0.943,
       "pass": false,
@@ -1026,12 +1028,50 @@
           "null_p95": 1.246597010109427,
           "null_min": -2.794031848242632,
           "null_max": 2.7797716806367885,
+          "null_mean": -0.2962765245618963,
+          "null_sd": 0.8824835279979646,
           "actual": 1.322835819536847,
           "actual_percentile": 0.958,
           "pass": true
         },
         "note": "主口径是下一张 ≥ d+31(到期日之后);本变体允许到期日当天就开下一张"
       }
+    }
+  },
+  "power": {
+    "note": "后算的设计灵敏度(不改 (a)–(d) 判定);零分布复用 (b) 的 1,000 次抽样",
+    "n_tickets": 24,
+    "ticket_mean_pct": 1.1500933156561146,
+    "ticket_sd_pct": 5.722624545643656,
+    "ticket_se_pct": 1.1681258438627817,
+    "ticket_t_stat": 0.9845628548487235,
+    "ticket_onesided_p_normal": 0.1624194214508421,
+    "mdes80_one_sample_t_pct": 2.9045155446936413,
+    "null_mean_pct": -0.2962765245618963,
+    "null_sd_pct": 0.8824835279979646,
+    "noise_floor_sd_pct": 0.8824835279979646,
+    "null_p95_minus_mean_pct": 1.5428735346713234,
+    "null_shape_gamma": 1.7483312557363473,
+    "delta_mdes80_pct": 2.2855904101127478,
+    "delta_observed_pct": 1.446369840218011,
+    "achieved_power_at_observed": 0.45646059331644895,
+    "observed_below_mdes": true,
+    "n_tickets_needed_for_observed": 59.930698219718415,
+    "max_tickets_possible_in_sample": 65,
+    "sample_days": 2022,
+    "calendar_span_days": 1880,
+    "days_per_ticket_observed": 81.73913043478261,
+    "calendar_days_needed_for_observed": 4898.683158829157,
+    "calendar_years_needed_for_observed": 13.411863542311176,
+    "n_tickets_needed_for_half_mdes": 96.00000000000004,
+    "trigger_rate": 0.20029673590504452,
+    "tickets_per_year": {
+      "2021": 3,
+      "2022": 8,
+      "2023": 1,
+      "2024": 3,
+      "2025": 3,
+      "2026": 6
     }
   },
   "current_state": [
