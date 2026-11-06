@@ -9,7 +9,7 @@
 所以按 d 收盘使用不会看见未来;代价是最多晚一天。**口径:** CoinGecko 的场所量(BTC),含它的清洗;只比份额,不比绝对值。
 
 **取法:** 每个场所每轮:先补最新一段(1 次);再从已有最早日往回走 30 天一段,直到 2021-01-01 或某段为空
-(场所当时还不存在 —— 下一轮会再试一次,一个场所一次请求,可以接受)。每轮最多 `MAX_CALLS` 次;有积压时循环每小时一轮。
+(场所当时还不存在 —— 下一轮会再试一次,一个场所一次请求,可以接受)。每轮最多 `MAX_CALLS` 次(450);有积压时循环每小时一轮。
 判活:`select exchange, min(d), max(d), count(*) from exchange_volume_daily group by 1 order by 1`。
 """
 from __future__ import annotations
@@ -29,7 +29,7 @@ DERIV = ("binance_futures", "bybit", "okex_swap", "hyperliquid", "bitget_futures
          "huobi_dm", "aster", "lighter")
 START = dt.date(2021, 1, 1)
 CHUNK_DAYS = 30            # 端点要求 from–to 在 31 天以内
-MAX_CALLS = 240
+MAX_CALLS = 450            # 11-06:Analyst 每分钟 500 次;回补约 2,000 次一次性,450/轮 ≈ 4 轮补完
 PAUSE_S = 0.15
 
 
