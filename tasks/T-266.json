@@ -1,0 +1,28 @@
+{
+  "id": "T-266",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-06",
+  "title": "S-741 盲复算 + 稳健性(只报不判):只看台账文字重写联合模型 v2;再看 Ridge 的 ✅ 在 α 3 / 30、z 窗口 60 / 120、逐族去掉新维度、21 列随机噪声替换新维度、每天扩张重训(实盘口径)下还在不在",
+  "source": "REFUTATION_LEDGER S-741 预注册段 + S-741 结果段;**先不读** lane-c 的 t263_joint_v2.py,自己按台账写完、出数之后再对照 docs/research/T-263_joint_model_v2.md 与 t263_results.json。框架只用 src/data/evaluation/joint_model.py。特征 feature_matrix_daily(物化,先算指纹;与 b9986ac…62dce 不同就写明差在哪几列,只用 T-263 那 59 列)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-266.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 盲复算:Ridge / HGB × 30 天的 (a)–(e) 原始数字,与 T-263 逐条对照(差 > 0.01 的写原因)。② 稳健性(各自报 (a)(b)(d)(e)):α = 3 / 30;z 窗口 60 / 120(最少历史按比例 40 / 80);逐族去掉 style / chain / pos / channel;把 21 个新列换成 21 列标准正态噪声(20 个种子,报 IC 的分布)—— 回答 E6「新维度是不是只是多给了拟合噪声的机会」;实盘口径 = 每天扩张重训、隔离带 30(joint_forecast_daily 用的就是这个),报它的 z 合并 IC。③ E1:z 与过去 30 天收益正交化之后(对过去 30 天收益做秩回归取残差)的 IC。④ 只报不判:不改 S-741 的判;写清楚哪些变体下还过 (a)(b)。只算、不改代码、不入库;长脚本 nohup。附 docs/research/scenarios/lane-a-T-266.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-266_joint_v2_recompute.md + t266_recompute.py + t266_results.json;卡 notes 写对照表与稳健性表;in_review,推 lane-a/T-266。"
+  },
+  "prior_value": "S-741 是第一个过了预注册的联合模型,只有 lane-c 一个人算过;余量不宽。T-264 / T-265 要等回填,这张可以先做。",
+  "notes": "",
+  "verified": null
+}
