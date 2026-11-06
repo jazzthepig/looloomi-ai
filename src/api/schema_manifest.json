@@ -126,6 +126,7 @@
     "signal_journal",
     "social_daily",
     "stable_lending_daily",
+    "stablecoin_chain_daily",
     "stablecoin_issuer_daily",
     "state_daily",
     "state_map_daily",
@@ -608,6 +609,12 @@
       "state",
       "top_longs",
       "top_shorts"
+    ],
+    "stablecoin_chain_daily": [
+      "chain",
+      "circulating_usd",
+      "d",
+      "source"
     ],
     "stablecoin_issuer_daily": [
       "circulating_usd",

@@ -2919,6 +2919,29 @@ async def _start_joint_forecast_loop():
     print("[JOINT-FC] ✅ S-741 joint-model forward record scheduled (6-hourly)")
 
 
+async def _stablecoin_chains_loop():
+    """稳定币按链(`src/data/market/stablecoin_chains.py`,DeFiLlama):每 6 小时一次全链快照;表空时每链回填一次。"""
+    await _asyncio.sleep(_boot_delay(15400))
+    while True:
+        try:
+            from src.data.market.stablecoin_chains import run_once as _scc_run
+            r = await _scc_run()
+            await _iteration_result("_stablecoin_chains_loop", {**r, "ok": bool(r.get("ok")), "why": r.get("why")})
+            await _beat("_stablecoin_chains_loop", ok=bool(r.get("ok")), detail={"written": r.get("written")},
+                        error=None if r.get("ok") else str(r.get("why"))[:200])
+        except Exception as _e:
+            print(f"[STABLE-CHAIN] ⚠️  pass FAILED: {_e}")
+            await _beat("_stablecoin_chains_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_stablecoin_chains_loop", _e)
+        await _asyncio.sleep(6 * 3600)
+
+
+@app.on_event("startup")
+async def _start_stablecoin_chains_loop():
+    _asyncio.create_task(_stablecoin_chains_loop())
+    print("[STABLE-CHAIN] ✅ stablecoin supply by chain scheduled (6-hourly)")
+
+
 async def _feature_matrix_loop():
     """融合特征矩阵(`src/data/state/feature_matrix.py`):每小时并发刷新物化视图 feature_matrix_daily(实时视图 ~3 秒,读者读副本)。"""
     await _asyncio.sleep(_boot_delay(15300))
