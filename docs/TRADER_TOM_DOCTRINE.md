@@ -256,3 +256,18 @@ size we have earned the right to carry**.
 ---
 
 *Extract the physics of crowd behavior, not the swagger of one trader. Build things that feel alive.*
+
+## 12. The short side is a ticket, never a position (Jazz, 2026-11-06)
+
+*"Only a fool holds a short open for the long run like a long-only book. Turtle-style trend-following on the short
+side loses money 100% of the time."* T-252 (11-05) broke this: it held a BTC short on every day ③ sat at 0 — months at a
+time, no target, no breakeven — and measured −64 % / −8 % / −46 %. That number says nothing about tactical shorting;
+it only confirms the rule below.
+
+- A short (or hedge) exists **only while its reason exists**: a named condition (marginal liquidity deteriorating,
+  political / macro uncertainty), not a regime label held for weeks.
+- Every short is a **ticket with an exit written before entry**: profit target taken on touch, stop moved to breakeven
+  once the ticket is up ≥ 1R, hard stop, time stop. Profit is not left open for the next squeeze to take back.
+- A short test without a target, a breakeven rule and a time stop is **malformed** — reject the card, don't run it.
+- "Never lose money" cannot be promised (stops fill, gaps jump them); what the rule must deliver, and what tests check,
+  is a loss bounded near −1R and no winner turned into a loser. First pre-registration in this form: S-736 (T-256).
