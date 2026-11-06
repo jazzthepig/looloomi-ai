@@ -37,3 +37,33 @@ def test_wiring():
     main = (ROOT / "src/api/main.py").read_text(encoding="utf-8")
     assert "async def _feature_matrix_loop" in main
     assert fm.RPC in json.loads((ROOT / "src/api/schema_manifest.json").read_text(encoding="utf-8"))["rpc_functions"]
+
+
+def test_refresh_gets_a_long_timeout_and_a_failed_call_says_so(monkeypatch):
+    """11-06:刷新 9–12 s,共享客户端 10 s 放弃 ⇒ 「没返回行数」。现在给 60 s;调用失败要说是调用失败。"""
+    import asyncio
+    import datetime as dt
+
+    import src.api.store as store
+    import src.data.vector.market_state_writer as msw
+    from src.data.state import feature_matrix as fm
+    seen = {}
+
+    class R:
+        def __init__(self, ok, value=None, why=""):
+            self.ok, self.value, self.why, self.rows, self.reason = ok, value, why, [{"d": "2026-11-05", "f": {"a": 1}}], ""
+
+    async def rpc(fn, payload=None, *, timeout=None):
+        seen["t"] = timeout
+        return R(seen.get("fail") is None, 1990, "no response from Supabase after retries")
+
+    async def get(t, p):
+        return R(True)
+    monkeypatch.setattr(store, "supabase_rpc_write", rpc)
+    monkeypatch.setattr(msw, "_sb_get", get)
+    now = dt.datetime(2026, 11, 6, 12, tzinfo=dt.timezone.utc)
+    out = asyncio.run(fm.run_once(now))
+    assert seen["t"] == fm.REFRESH_TIMEOUT_S >= 30 and out["ok"] and out["rows"] == 1990
+    seen["fail"] = True
+    out = asyncio.run(fm.run_once(now))
+    assert out["ok"] is False and "调用失败" in out["why"]

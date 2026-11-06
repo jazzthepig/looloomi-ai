@@ -9,11 +9,11 @@
     "migrations/",
     "src/data/signals/forward_record_keeper.py",
     "tests/",
-    "tasks/T-231.json"
+    "tasks/T-231.json",
+    "src/api/main.py"
   ],
   "forbidden_paths": [
     "Shadow/",
-    "src/api/",
     "paper_trading/",
     "PROJECT_STATE.md",
     "PROJECT_STATE_LOG.md"
@@ -23,6 +23,6 @@
     "expect": "迁移 + 测试 + 前后对比表;卡 notes 写最大耗时前后值、逐行差异数、恢复后第一条 ok 的时间。DDL 的应用要走 Seth 交互轮次(定时轮次只读,不应用)。"
   },
   "prior_value": "写端熄火 4 天且在加重(每天 error 10→17→19);『自首日起连续、无回填』这句对外话没有机械保证。",
-  "notes": "11-04 定时复盘开卡。未应用任何 DDL。同族待查(只读):只有 refresh_depth_divergence / resolve_depth_divergence 两个函数设了 statement_timeout,后者均值 33ms、最大 196ms,安全。_forward_return_backfill_loop 的 73 次无原因 error 不一定同源,修复后再看。",
+  "notes": "11-04 定时复盘开卡。未应用任何 DDL。同族待查(只读):只有 refresh_depth_divergence / resolve_depth_divergence 两个函数设了 statement_timeout,后者均值 33ms、最大 196ms,安全。_forward_return_backfill_loop 的 73 次无原因 error 不一定同源,修复后再看。 | 2026-11-06 16:10 UTC(Seth 交互轮次):① DDL 已应用(migrations/2026-11-06_refresh_depth_divergence_bounded.sql,只加 trade_date > v_d − 200)。逐行比对:p_date 11-05 210/210 行、08-20 321/321 行,depth_z / px20 / hist / 有无值差异 0。② 耗时:同一查询 9,154 ms → 816 ms;应用后整函数 980 ms(旧:pg_stat_statements 410 次均值 8,291 ms、最大 29,350 ms)。③ 真正的失败机制:共享客户端 10 s 放弃并重试(每次重试再跑一遍函数),服务端其实写完了 —— depth_divergence_log 每天都有行,loop 却 10-31 16:04 后 0 次 ok;keeper 现在给 45 s,超时单独写「client timeout, not a refusal」。④ detail 加 written_day / recomputed_days(写的是已有那天 ⇒ 记为重算)。⑤ 待部署后 24 h 内 ≥ 1 条 ok。 **另一个发现(不在本卡范围):depth_divergence_log 自 09-30 起 0 行 is_measured** —— 面板价源换成 coingecko_pro_ohlc(无成交量),binance_hist(135 名有量)被函数的来源过滤排除;S-172 的前向观察实际上停了 5 周,且全仓没有读这张表的地方。要复活得换量源 = 新规则版本 + 预注册,另开卡。 卡范围修正:验收 ④ 要 loop_attempt.detail 带 recomputed_days,而 detail 在 src/api/main.py 里拼 —— 原卡把 src/api/ 列为禁区,两者自相矛盾;只放开 main.py 一个文件(+2 行)。",
   "verified": null
 }

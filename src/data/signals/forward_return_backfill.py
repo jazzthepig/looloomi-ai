@@ -86,6 +86,8 @@ async def backfill_forward_returns(horizon: int = HORIZON_DAYS) -> dict[str, Any
         "trusted_sources": list(TRUSTED_SOURCES),
         "elapsed_s": round((datetime.now(timezone.utc) - started).total_seconds(), 2),
     }
+    if not r.ok:                                   # 11-06:24 小时 26 次 error、reason 全是空的 —— 原因在 r.why 里,之前没往外带
+        out["reason"] = f"exec_backfill_forward_returns: {(r.why or '')[:200]}"
     _log.info("[FWD] filled %s rows (horizon %sd)", filled, horizon)
     return out
 
