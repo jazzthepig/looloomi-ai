@@ -1,0 +1,4089 @@
+{
+ "task": "T-253",
+ "ledger": "S-735",
+ "generated_utc": "2026-11-06T03:40:17+00:00",
+ "window": {
+  "start": "2023-06-08",
+  "end": "2026-07-20",
+  "days": 1139,
+  "note": "2023-06-01~06-07 当日 <20 小时档,按 S-733 丢弃;门控周一与 S-733 同(从 06-05 起)"
+ },
+ "panel": [
+  "BTC",
+  "ETH",
+  "SOL",
+  "BNB",
+  "XRP",
+  "DOGE",
+  "ADA",
+  "AVAX",
+  "LINK",
+  "DOT",
+  "LTC",
+  "TRX",
+  "ATOM",
+  "NEAR",
+  "APT",
+  "ARB",
+  "OP",
+  "SUI",
+  "UNI",
+  "AAVE",
+  "INJ",
+  "FIL",
+  "ETC",
+  "BCH"
+ ],
+ "panel_with_funding": [
+  "BTC",
+  "ETH",
+  "SOL",
+  "BNB",
+  "XRP",
+  "DOGE",
+  "AVAX",
+  "LINK",
+  "DOT",
+  "TRX",
+  "ATOM",
+  "NEAR",
+  "APT",
+  "ARB",
+  "OP",
+  "SUI",
+  "UNI",
+  "AAVE",
+  "INJ",
+  "FIL",
+  "ETC",
+  "BCH"
+ ],
+ "caliber": {
+  "min_bars_per_day": 20,
+  "fee_bps_per_switch": 7.5,
+  "top_n": 11,
+  "lookback_days": 30,
+  "switch_definition": "该名「在选中名单且开仓」状态相对上周变化(开/关/被踢出名单各记 1 次)",
+  "primary_slot_base": "selected_present —— 选中且当日有费率的 11 个槽位等权(S-733「当日有费率的名字等权」套到选中名单)",
+  "sensitivity_slot_bases": [
+   "fixed_11",
+   "panel_22",
+   "open_selected"
+  ]
+ },
+ "leakage_assertion": {
+  "mondays_checked": 164,
+  "method": "poison every rate on/after the signal day → selection must be unchanged"
+ },
+ "control_rule_b": {
+  "days": 1139,
+  "years": 3.1205,
+  "total_pct": 46.58552374431445,
+  "arith_ann_pct": 12.2633785108428,
+  "compound_ann_pct": 13.038132502870624,
+  "gross_ann_pct": 12.862338297230332,
+  "fee_ann_pct": 0.5989597863875303,
+  "fee_total_pct": 1.8690827306723206,
+  "max_dd_pct": -0.2672791156020371,
+  "switches": 532,
+  "switches_per_year": 170.4828797190518
+ },
+ "control_rule_b_full_window": {
+  "days": 1146,
+  "years": 3.1397,
+  "total_pct": 46.58552374431445,
+  "arith_ann_pct": 12.188471312259992,
+  "compound_ann_pct": 12.953544845357445,
+  "gross_ann_pct": 12.783772531016883,
+  "fee_ann_pct": 0.5953012187568908,
+  "fee_total_pct": 1.8690827306723203,
+  "max_dd_pct": -0.2672791156020371,
+  "switches": 532,
+  "switches_per_year": 169.4415357766143
+ },
+ "control_rule_a_full_window": {
+  "days": 1146,
+  "years": 3.1397,
+  "total_pct": 32.42700552903114,
+  "arith_ann_pct": 8.954952144695214,
+  "compound_ann_pct": 9.357715088135944,
+  "gross_ann_pct": 8.992762147544973,
+  "fee_ann_pct": 0.03781000284975868,
+  "fee_total_pct": 0.1187130500433519,
+  "max_dd_pct": -8.080057908491845,
+  "switches": 22,
+  "switches_per_year": 7.006980802792321
+ },
+ "arm_top_half": {
+  "days": 1139,
+  "years": 3.1205,
+  "total_pct": 64.23162409103735,
+  "arith_ann_pct": 15.910207041132573,
+  "compound_ann_pct": 17.23155802657437,
+  "gross_ann_pct": 16.85628214688722,
+  "fee_ann_pct": 0.9460751057546491,
+  "fee_total_pct": 2.952272727272727,
+  "max_dd_pct": -0.43498996476352136,
+  "switches": 433,
+  "switches_per_year": 138.75768217734856
+ },
+ "arm_top_half_variants": {
+  "selected_present": {
+   "days": 1139,
+   "years": 3.1205,
+   "total_pct": 64.23162409103735,
+   "arith_ann_pct": 15.910207041132573,
+   "compound_ann_pct": 17.23155802657437,
+   "gross_ann_pct": 16.85628214688722,
+   "fee_ann_pct": 0.9460751057546491,
+   "fee_total_pct": 2.952272727272727,
+   "max_dd_pct": -0.43498996476352136,
+   "switches": 433,
+   "switches_per_year": 138.75768217734856,
+   "ann_diff_vs_control_pp": 3.6468285302897723,
+   "note": "主口径"
+  },
+  "fixed_11": {
+   "days": 1139,
+   "years": 3.1205,
+   "total_pct": 64.23162409103735,
+   "arith_ann_pct": 15.910207041132573,
+   "compound_ann_pct": 17.23155802657437,
+   "gross_ann_pct": 16.85628214688722,
+   "fee_ann_pct": 0.9460751057546491,
+   "fee_total_pct": 2.952272727272727,
+   "max_dd_pct": -0.43498996476352136,
+   "switches": 433,
+   "switches_per_year": 138.75768217734856,
+   "ann_diff_vs_control_pp": 3.6468285302897723,
+   "note": "固定 11 槽位(名单里有名字当日没数据则空转)"
+  },
+  "panel_22": {
+   "days": 1139,
+   "years": 3.1205,
+   "total_pct": 28.828709174311705,
+   "arith_ann_pct": 8.120761925310997,
+   "compound_ann_pct": 8.456172794050998,
+   "gross_ann_pct": 8.611507119177237,
+   "fee_ann_pct": 0.4907451938662398,
+   "fee_total_pct": 1.5313939063387592,
+   "max_dd_pct": -0.2672791156020371,
+   "switches": 433,
+   "switches_per_year": 138.75768217734856,
+   "ann_diff_vs_control_pp": -4.142616585531803,
+   "note": "另一种读法:22 个槽位,只在 11 个上交易,另外 11 个的钱闲置"
+  },
+  "open_selected": {
+   "days": 1139,
+   "years": 3.1205,
+   "total_pct": 67.66303263314346,
+   "arith_ann_pct": 16.574083022844164,
+   "compound_ann_pct": 18.010977127289497,
+   "gross_ann_pct": 17.91969443056872,
+   "fee_ann_pct": 1.3456114077245553,
+   "fee_total_pct": 4.199044913419914,
+   "max_dd_pct": -1.3709193979079326,
+   "switches": 433,
+   "switches_per_year": 138.75768217734856,
+   "ann_diff_vs_control_pp": 4.310704512001363,
+   "note": "钱在当日选中且开仓的名之间重新分配"
+  }
+ },
+ "per_period": {
+  "control_rule_b": {
+   "2023H2": {
+    "days": 207,
+    "total_pct": 9.043241748842348,
+    "arith_ann_pct": 15.277443203831037,
+    "compound_ann_pct": 16.492326871827313,
+    "max_dd_pct": -0.2672791156020371,
+    "diff_total_pp": 2.801366278947812,
+    "diff_arith_ann_pp": 4.480548870060048
+   },
+   "2024": {
+    "days": 366,
+    "total_pct": 24.78244696992508,
+    "arith_ann_pct": 22.09588222677625,
+    "compound_ann_pct": 24.70698609469606,
+    "max_dd_pct": -0.03442399715055666,
+    "diff_total_pp": 7.114874532001373,
+    "diff_arith_ann_pp": 5.538014307649984
+   },
+   "2025": {
+    "days": 365,
+    "total_pct": 6.456744775638679,
+    "arith_ann_pct": 6.258283363636363,
+    "compound_ann_pct": 6.456744775638579,
+    "max_dd_pct": -0.1855746979845363,
+    "diff_total_pp": 2.2644357840150473,
+    "diff_arith_ann_pp": 2.1054180590909093
+   },
+   "2026H1": {
+    "days": 181,
+    "total_pct": 0.9204940082121239,
+    "arith_ann_pct": 1.8479663298091413,
+    "compound_ann_pct": 1.8649301769049886,
+    "max_dd_pct": -0.059667085398174,
+    "diff_total_pp": 1.0502146966807517,
+    "diff_arith_ann_pp": 2.0879833909593164
+   },
+   "2026-07-01..20": {
+    "days": 20,
+    "total_pct": 0.27352471644598575,
+    "arith_ann_pct": 4.985457611704545,
+    "compound_ann_pct": 5.11135390413433,
+    "max_dd_pct": -0.011226190909086053,
+    "diff_total_pp": 0.14553773719330515,
+    "diff_arith_ann_pp": 2.647412898295455
+   }
+  },
+  "arm_top_half": {
+   "2023H2": {
+    "days": 207,
+    "total_pct": 11.84460802779016,
+    "arith_ann_pct": 19.757992073891085,
+    "compound_ann_pct": 21.821009149915938,
+    "max_dd_pct": -0.43498996476352136
+   },
+   "2024": {
+    "days": 366,
+    "total_pct": 31.897321501926452,
+    "arith_ann_pct": 27.633896534426235,
+    "compound_ann_pct": 31.79758806927653,
+    "max_dd_pct": -0.018211982727256437
+   },
+   "2025": {
+    "days": 365,
+    "total_pct": 8.721180559653726,
+    "arith_ann_pct": 8.363701422727273,
+    "compound_ann_pct": 8.721180559653519,
+    "max_dd_pct": -0.1387481756659703
+   },
+   "2026H1": {
+    "days": 181,
+    "total_pct": 1.9707087048928755,
+    "arith_ann_pct": 3.9359497207684577,
+    "compound_ann_pct": 4.013893224932419,
+    "max_dd_pct": -0.05861041087085184
+   },
+   "2026-07-01..20": {
+    "days": 20,
+    "total_pct": 0.4190624536392909,
+    "arith_ann_pct": 7.63287051,
+    "compound_ann_pct": 7.9306922712113925,
+    "max_dd_pct": -0.0038664318181669266
+   }
+  }
+ },
+ "ab_test": {
+  "ret_a": "control_rule_b",
+  "ret_b": "arm_top_half(selected_present)",
+  "mean_block": 20.0,
+  "n_boot": 2000,
+  "seed": 735,
+  "n_days": 1139,
+  "years": 3.12,
+  "cum_a": 0.4658552374431445,
+  "cum_b": 0.6423162409103734,
+  "log_diff_total": 0.1136687354771671,
+  "ratio_b_over_a": 1.1203809209530304,
+  "ci95_log_diff": [
+   0.07751092755247144,
+   0.1604564266646563
+  ],
+  "p_b_le_a": 0.0,
+  "p_b_ge_a": 1.0,
+  "se_log_diff": 0.02117937629307306,
+  "mde_log_diff_total": 0.05266198671431232,
+  "mde_log_diff_per_year": 0.01687587809545566,
+  "underpowered": false,
+  "verdict": "B > A"
+ },
+ "ab_test_by_slot_base": {
+  "selected_present": {
+   "p_one_sided_B_gt_A": 0.0,
+   "p_one_sided_B_lt_A": 1.0,
+   "ci95_log_diff": [
+    0.07751092755247144,
+    0.1604564266646563
+   ],
+   "verdict": "B > A"
+  },
+  "fixed_11": {
+   "p_one_sided_B_gt_A": 0.0,
+   "p_one_sided_B_lt_A": 1.0,
+   "ci95_log_diff": [
+    0.07751092755247144,
+    0.1604564266646563
+   ],
+   "verdict": "B > A"
+  },
+  "panel_22": {
+   "p_one_sided_B_gt_A": 1.0,
+   "p_one_sided_B_lt_A": 0.0,
+   "ci95_log_diff": [
+    -0.2010046282392233,
+    -0.06764018368415992
+   ],
+   "verdict": "B < A"
+  },
+  "open_selected": {
+   "p_one_sided_B_gt_A": 0.0,
+   "p_one_sided_B_lt_A": 1.0,
+   "ci95_log_diff": [
+    0.08629083456218492,
+    0.18747777787934722
+   ],
+   "verdict": "B > A"
+  }
+ },
+ "criteria": {
+  "a": {
+   "ann_diff_pp_arith": 3.6468285302897723,
+   "ann_diff_pp_compound": 4.193425523703745,
+   "threshold_pp": 2.0,
+   "p_one_sided_B_gt_A": 0.0,
+   "p_one_sided_B_lt_A": 1.0,
+   "ab_verdict": "B > A",
+   "ci95_log_diff": [
+    0.07751092755247144,
+    0.1604564266646563
+   ],
+   "verdict": true
+  },
+  "b": {
+   "window": "2025-01-01 → 2026-07-20",
+   "days": 566,
+   "control_total_pct": 7.730538587087052,
+   "top_total_pct": 11.328346714855385,
+   "diff_total_pp": 3.5978081277683334,
+   "diff_daily_sum_pp": 3.285892721363636,
+   "verdict": true
+  },
+  "c": {
+   "longest_neg_segment": {
+    "symbol": "BNB",
+    "days": 11,
+    "cum_pct": -0.6077487099999999,
+    "start": "2023-08-10",
+    "end": "2023-09-10"
+   },
+   "worst_neg_segment": {
+    "symbol": "BNB",
+    "days": 5,
+    "cum_pct": -0.76674793,
+    "start": "2023-07-05",
+    "end": "2023-07-09"
+   },
+   "control_longest": {
+    "symbol": "UNI",
+    "days": 17,
+    "cum_pct": -0.4904760599999999,
+    "start": "2025-03-20",
+    "end": "2025-04-19"
+   },
+   "control_worst": {
+    "symbol": "ATOM",
+    "days": 4,
+    "cum_pct": -1.43694548,
+    "start": "2025-10-10",
+    "end": "2025-12-29"
+   },
+   "verdict": true
+  },
+  "d": {
+   "control_switches": 532,
+   "top_switches": 433,
+   "control_per_year": 170.48549911873098,
+   "top_per_year": 138.75981413235058,
+   "ratio": 0.8139097744360901,
+   "control_switches_per_slot_per_year": 7.749340869033227,
+   "top_switches_per_slot_per_year": 12.614528557486416,
+   "note_per_slot": "判据按台账写死的「年化切换次数」判(总数);每槽位的换手另列",
+   "verdict": true
+  },
+  "all_pass": true,
+  "note_slot_base": "判据按主口径 selected_present 判;台账没写死「等权」的分母,panel_22 读法下 (a) 结构上不可能达成(见脚本头注)"
+ },
+ "selection": {
+  "weeks": 164,
+  "avg_names_swapped_per_week": 1.0858895705521472,
+  "max_names_swapped_in_a_week": 3,
+  "weeks_with_change": 122,
+  "pool_size_min": 0,
+  "avg_cut_mean": 0.00023732129944109217,
+  "detail": [
+   {
+    "monday": "2023-06-05",
+    "pool_size": 0,
+    "selected": [],
+    "cut_mean": null,
+    "first_mean": null,
+    "min_valid_days": null
+   },
+   {
+    "monday": "2023-06-12",
+    "pool_size": 12,
+    "selected": [
+     "ETH",
+     "BTC",
+     "ARB",
+     "OP",
+     "AVAX",
+     "LINK",
+     "DOGE",
+     "BNB",
+     "ATOM",
+     "SOL",
+     "SUI"
+    ],
+    "cut_mean": -0.0032277966500000002,
+    "first_mean": 0.0013350224,
+    "min_valid_days": 4
+   },
+   {
+    "monday": "2023-06-19",
+    "pool_size": 13,
+    "selected": [
+     "ETH",
+     "BTC",
+     "ARB",
+     "OP",
+     "LINK",
+     "DOGE",
+     "SOL",
+     "ATOM",
+     "AVAX",
+     "XRP",
+     "BNB"
+    ],
+    "cut_mean": -0.0025011500636363637,
+    "first_mean": 0.0011395260181818181,
+    "min_valid_days": 1
+   },
+   {
+    "monday": "2023-06-26",
+    "pool_size": 13,
+    "selected": [
+     "ETH",
+     "BTC",
+     "ARB",
+     "OP",
+     "SOL",
+     "LINK",
+     "DOGE",
+     "XRP",
+     "BNB",
+     "AVAX",
+     "ATOM"
+    ],
+    "cut_mean": -0.001837533611111111,
+    "first_mean": 0.0009707301277777779,
+    "min_valid_days": 8
+   },
+   {
+    "monday": "2023-07-03",
+    "pool_size": 15,
+    "selected": [
+     "ETH",
+     "BTC",
+     "ARB",
+     "SOL",
+     "OP",
+     "BNB",
+     "APT",
+     "LINK",
+     "DOGE",
+     "XRP",
+     "AVAX"
+    ],
+    "cut_mean": -0.001669128564,
+    "first_mean": 0.001100484272,
+    "min_valid_days": 3
+   },
+   {
+    "monday": "2023-07-10",
+    "pool_size": 15,
+    "selected": [
+     "ETH",
+     "BTC",
+     "SOL",
+     "ARB",
+     "OP",
+     "BNB",
+     "LINK",
+     "APT",
+     "XRP",
+     "DOGE",
+     "AVAX"
+    ],
+    "cut_mean": -0.0016467783099999998,
+    "first_mean": 0.0010569450466666667,
+    "min_valid_days": 10
+   },
+   {
+    "monday": "2023-07-17",
+    "pool_size": 15,
+    "selected": [
+     "ETH",
+     "BTC",
+     "SOL",
+     "ARB",
+     "OP",
+     "BNB",
+     "APT",
+     "LINK",
+     "XRP",
+     "DOGE",
+     "AVAX"
+    ],
+    "cut_mean": -0.0012415530966666667,
+    "first_mean": 0.0009001289966666667,
+    "min_valid_days": 17
+   },
+   {
+    "monday": "2023-07-24",
+    "pool_size": 16,
+    "selected": [
+     "ETH",
+     "SOL",
+     "BTC",
+     "OP",
+     "ARB",
+     "AAVE",
+     "LINK",
+     "BNB",
+     "XRP",
+     "AVAX",
+     "APT"
+    ],
+    "cut_mean": -0.00070287965,
+    "first_mean": 0.0008003314366666666,
+    "min_valid_days": 6
+   },
+   {
+    "monday": "2023-07-31",
+    "pool_size": 16,
+    "selected": [
+     "SOL",
+     "OP",
+     "BTC",
+     "ETH",
+     "ARB",
+     "AAVE",
+     "LINK",
+     "XRP",
+     "BNB",
+     "AVAX",
+     "SUI"
+    ],
+    "cut_mean": -0.0005687966366666668,
+    "first_mean": 0.0007688977666666667,
+    "min_valid_days": 13
+   },
+   {
+    "monday": "2023-08-07",
+    "pool_size": 16,
+    "selected": [
+     "OP",
+     "SOL",
+     "ETH",
+     "ARB",
+     "BTC",
+     "LINK",
+     "XRP",
+     "AVAX",
+     "DOGE",
+     "BNB",
+     "AAVE"
+    ],
+    "cut_mean": -0.00035106208,
+    "first_mean": 0.0005115849633333334,
+    "min_valid_days": 20
+   },
+   {
+    "monday": "2023-08-14",
+    "pool_size": 18,
+    "selected": [
+     "OP",
+     "ARB",
+     "ETH",
+     "SOL",
+     "UNI",
+     "LINK",
+     "BTC",
+     "XRP",
+     "DOGE",
+     "BNB",
+     "SUI"
+    ],
+    "cut_mean": -0.00018649734333333335,
+    "first_mean": 0.0003362611199999999,
+    "min_valid_days": 2
+   },
+   {
+    "monday": "2023-08-21",
+    "pool_size": 18,
+    "selected": [
+     "ARB",
+     "ETH",
+     "OP",
+     "LINK",
+     "SOL",
+     "BTC",
+     "XRP",
+     "BNB",
+     "DOGE",
+     "SUI",
+     "AAVE"
+    ],
+    "cut_mean": -0.00042383145666666667,
+    "first_mean": 6.303561666666669e-05,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2023-08-28",
+    "pool_size": 18,
+    "selected": [
+     "ETH",
+     "ARB",
+     "LINK",
+     "OP",
+     "BTC",
+     "SOL",
+     "XRP",
+     "DOGE",
+     "AAVE",
+     "BNB",
+     "TRX"
+    ],
+    "cut_mean": -0.0006089169190476191,
+    "first_mean": -1.164419333333331e-05,
+    "min_valid_days": 21
+   },
+   {
+    "monday": "2023-09-04",
+    "pool_size": 18,
+    "selected": [
+     "ETH",
+     "BTC",
+     "ARB",
+     "LINK",
+     "OP",
+     "SOL",
+     "AAVE",
+     "DOGE",
+     "XRP",
+     "BNB",
+     "TRX"
+    ],
+    "cut_mean": -0.0006913183857142857,
+    "first_mean": -1.435434666666664e-05,
+    "min_valid_days": 28
+   },
+   {
+    "monday": "2023-09-11",
+    "pool_size": 18,
+    "selected": [
+     "ETH",
+     "BTC",
+     "LINK",
+     "ARB",
+     "DOGE",
+     "BNB",
+     "XRP",
+     "OP",
+     "SOL",
+     "TRX",
+     "AAVE"
+    ],
+    "cut_mean": -0.0007494035033333333,
+    "first_mean": -2.4268699999999657e-06,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2023-09-18",
+    "pool_size": 19,
+    "selected": [
+     "ETH",
+     "BTC",
+     "BNB",
+     "LINK",
+     "DOGE",
+     "ARB",
+     "XRP",
+     "SOL",
+     "TRX",
+     "AAVE",
+     "OP"
+    ],
+    "cut_mean": -0.0008972648166666666,
+    "first_mean": 1.1476246666666693e-05,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2023-09-25",
+    "pool_size": 19,
+    "selected": [
+     "ETH",
+     "BNB",
+     "BTC",
+     "LINK",
+     "DOGE",
+     "ARB",
+     "SOL",
+     "XRP",
+     "OP",
+     "AAVE",
+     "ATOM"
+    ],
+    "cut_mean": -0.0008943887766666666,
+    "first_mean": 0.00017671642000000002,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2023-10-02",
+    "pool_size": 19,
+    "selected": [
+     "ETH",
+     "BTC",
+     "BNB",
+     "LINK",
+     "DOGE",
+     "ARB",
+     "SOL",
+     "XRP",
+     "SUI",
+     "ATOM",
+     "AAVE"
+    ],
+    "cut_mean": -0.0006970411366666667,
+    "first_mean": 0.00021376971000000003,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2023-10-09",
+    "pool_size": 19,
+    "selected": [
+     "ETH",
+     "BTC",
+     "BNB",
+     "ARB",
+     "DOGE",
+     "LINK",
+     "XRP",
+     "SUI",
+     "SOL",
+     "AAVE",
+     "ATOM"
+    ],
+    "cut_mean": -0.0005496282333333334,
+    "first_mean": 0.00018977674333333334,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2023-10-16",
+    "pool_size": 19,
+    "selected": [
+     "ETH",
+     "BNB",
+     "BTC",
+     "ARB",
+     "XRP",
+     "LINK",
+     "DOGE",
+     "SUI",
+     "AVAX",
+     "OP",
+     "SOL"
+    ],
+    "cut_mean": -0.00038828924999999997,
+    "first_mean": 0.00021687492666666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2023-10-23",
+    "pool_size": 19,
+    "selected": [
+     "BNB",
+     "BTC",
+     "ETH",
+     "ARB",
+     "XRP",
+     "DOGE",
+     "AVAX",
+     "SUI",
+     "SOL",
+     "LINK",
+     "OP"
+    ],
+    "cut_mean": -0.00031806509666666667,
+    "first_mean": 0.0002806937766666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2023-10-30",
+    "pool_size": 19,
+    "selected": [
+     "BTC",
+     "BNB",
+     "ARB",
+     "ETH",
+     "DOGE",
+     "XRP",
+     "SUI",
+     "AVAX",
+     "OP",
+     "SOL",
+     "LINK"
+    ],
+    "cut_mean": -0.00027426815666666666,
+    "first_mean": 0.0004628748166666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2023-11-06",
+    "pool_size": 20,
+    "selected": [
+     "NEAR",
+     "ARB",
+     "BTC",
+     "DOGE",
+     "ETH",
+     "BNB",
+     "SUI",
+     "LINK",
+     "XRP",
+     "SOL",
+     "AVAX"
+    ],
+    "cut_mean": 0.00011683553333333338,
+    "first_mean": 0.0029458345,
+    "min_valid_days": 4
+   },
+   {
+    "monday": "2023-11-13",
+    "pool_size": 20,
+    "selected": [
+     "NEAR",
+     "DOGE",
+     "SUI",
+     "ARB",
+     "LINK",
+     "BTC",
+     "ETH",
+     "SOL",
+     "OP",
+     "AVAX",
+     "UNI"
+    ],
+    "cut_mean": 0.0006766616566666665,
+    "first_mean": 0.0017797869272727271,
+    "min_valid_days": 11
+   },
+   {
+    "monday": "2023-11-20",
+    "pool_size": 21,
+    "selected": [
+     "SUI",
+     "DOGE",
+     "NEAR",
+     "LINK",
+     "ARB",
+     "FIL",
+     "OP",
+     "ETH",
+     "INJ",
+     "SOL",
+     "AVAX"
+    ],
+    "cut_mean": 0.0010263611533333334,
+    "first_mean": 0.0017462755366666667,
+    "min_valid_days": 6
+   },
+   {
+    "monday": "2023-11-27",
+    "pool_size": 21,
+    "selected": [
+     "DOGE",
+     "LINK",
+     "SUI",
+     "NEAR",
+     "AVAX",
+     "ARB",
+     "OP",
+     "INJ",
+     "SOL",
+     "ETH",
+     "UNI"
+    ],
+    "cut_mean": 0.0011760765566666666,
+    "first_mean": 0.0019332973666666667,
+    "min_valid_days": 25
+   },
+   {
+    "monday": "2023-12-04",
+    "pool_size": 21,
+    "selected": [
+     "DOGE",
+     "LINK",
+     "INJ",
+     "SUI",
+     "AVAX",
+     "SOL",
+     "NEAR",
+     "ARB",
+     "OP",
+     "UNI",
+     "ETH"
+    ],
+    "cut_mean": 0.0011609583999999998,
+    "first_mean": 0.0021602505999999996,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2023-12-11",
+    "pool_size": 21,
+    "selected": [
+     "DOGE",
+     "INJ",
+     "LINK",
+     "AVAX",
+     "NEAR",
+     "SOL",
+     "SUI",
+     "OP",
+     "UNI",
+     "ARB",
+     "FIL"
+    ],
+    "cut_mean": 0.0011963557740740742,
+    "first_mean": 0.0026801679700000003,
+    "min_valid_days": 27
+   },
+   {
+    "monday": "2023-12-18",
+    "pool_size": 21,
+    "selected": [
+     "DOGE",
+     "INJ",
+     "NEAR",
+     "LINK",
+     "AVAX",
+     "SOL",
+     "UNI",
+     "DOT",
+     "FIL",
+     "AAVE",
+     "OP"
+    ],
+    "cut_mean": 0.0010637670600000002,
+    "first_mean": 0.0023650619866666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2023-12-25",
+    "pool_size": 21,
+    "selected": [
+     "INJ",
+     "DOGE",
+     "NEAR",
+     "LINK",
+     "AVAX",
+     "DOT",
+     "ATOM",
+     "SOL",
+     "UNI",
+     "OP",
+     "SUI"
+    ],
+    "cut_mean": 0.0014697386266666669,
+    "first_mean": 0.002724373693333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-01-01",
+    "pool_size": 21,
+    "selected": [
+     "INJ",
+     "NEAR",
+     "DOGE",
+     "DOT",
+     "UNI",
+     "SOL",
+     "OP",
+     "SUI",
+     "ATOM",
+     "FIL",
+     "LINK"
+    ],
+    "cut_mean": 0.001984173673333333,
+    "first_mean": 0.0031837227033333334,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-01-08",
+    "pool_size": 21,
+    "selected": [
+     "INJ",
+     "DOT",
+     "NEAR",
+     "SOL",
+     "SUI",
+     "ATOM",
+     "OP",
+     "UNI",
+     "FIL",
+     "DOGE",
+     "LINK"
+    ],
+    "cut_mean": 0.0018250731466666668,
+    "first_mean": 0.0029455026633333336,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-01-15",
+    "pool_size": 22,
+    "selected": [
+     "INJ",
+     "DOT",
+     "NEAR",
+     "OP",
+     "SOL",
+     "FIL",
+     "SUI",
+     "LINK",
+     "ATOM",
+     "UNI",
+     "ARB"
+    ],
+    "cut_mean": 0.0014093618499999999,
+    "first_mean": 0.0022708435366666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-01-22",
+    "pool_size": 22,
+    "selected": [
+     "INJ",
+     "SOL",
+     "FIL",
+     "SUI",
+     "DOT",
+     "OP",
+     "LINK",
+     "ARB",
+     "NEAR",
+     "BTC",
+     "UNI"
+    ],
+    "cut_mean": 0.00122434356,
+    "first_mean": 0.0020541222033333335,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-01-29",
+    "pool_size": 22,
+    "selected": [
+     "INJ",
+     "SOL",
+     "FIL",
+     "SUI",
+     "LINK",
+     "BTC",
+     "DOGE",
+     "OP",
+     "DOT",
+     "ETH",
+     "NEAR"
+    ],
+    "cut_mean": 0.0006736656233333332,
+    "first_mean": 0.0012553528766666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-02-05",
+    "pool_size": 22,
+    "selected": [
+     "INJ",
+     "SOL",
+     "DOGE",
+     "LINK",
+     "BTC",
+     "ETH",
+     "OP",
+     "SUI",
+     "AAVE",
+     "FIL",
+     "ETC"
+    ],
+    "cut_mean": 0.0003521998083333333,
+    "first_mean": 0.0007932588399999999,
+    "min_valid_days": 24
+   },
+   {
+    "monday": "2024-02-12",
+    "pool_size": 22,
+    "selected": [
+     "INJ",
+     "DOGE",
+     "SOL",
+     "NEAR",
+     "SUI",
+     "AAVE",
+     "LINK",
+     "OP",
+     "ETC",
+     "ATOM",
+     "ETH"
+    ],
+    "cut_mean": 0.00043495866,
+    "first_mean": 0.0010203307333333334,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-02-19",
+    "pool_size": 22,
+    "selected": [
+     "INJ",
+     "DOGE",
+     "NEAR",
+     "AAVE",
+     "FIL",
+     "SUI",
+     "LINK",
+     "ETC",
+     "OP",
+     "SOL",
+     "ATOM"
+    ],
+    "cut_mean": 0.0006533253099999999,
+    "first_mean": 0.0013907369433333332,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-02-26",
+    "pool_size": 22,
+    "selected": [
+     "INJ",
+     "NEAR",
+     "FIL",
+     "DOGE",
+     "AAVE",
+     "LINK",
+     "SUI",
+     "ETC",
+     "SOL",
+     "APT",
+     "UNI"
+    ],
+    "cut_mean": 0.0009223794599999999,
+    "first_mean": 0.0016639068366666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-03-04",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "INJ",
+     "FIL",
+     "NEAR",
+     "SUI",
+     "AAVE",
+     "LINK",
+     "SOL",
+     "ETC",
+     "APT",
+     "AVAX"
+    ],
+    "cut_mean": 0.0015483282,
+    "first_mean": 0.0025869736766666665,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-03-11",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "INJ",
+     "FIL",
+     "NEAR",
+     "SUI",
+     "AAVE",
+     "LINK",
+     "APT",
+     "AVAX",
+     "SOL",
+     "ETC"
+    ],
+    "cut_mean": 0.0021344298966666665,
+    "first_mean": 0.0037028856966666666,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-03-18",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "FIL",
+     "INJ",
+     "NEAR",
+     "SUI",
+     "SOL",
+     "APT",
+     "AAVE",
+     "LINK",
+     "ETC",
+     "AVAX"
+    ],
+    "cut_mean": 0.00221126481,
+    "first_mean": 0.003709301626666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-03-25",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "NEAR",
+     "FIL",
+     "INJ",
+     "SUI",
+     "OP",
+     "APT",
+     "SOL",
+     "LINK",
+     "AVAX",
+     "AAVE"
+    ],
+    "cut_mean": 0.0022983024699999998,
+    "first_mean": 0.0036763933166666664,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-04-01",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "NEAR",
+     "FIL",
+     "INJ",
+     "OP",
+     "AVAX",
+     "SUI",
+     "APT",
+     "AAVE",
+     "ETC",
+     "SOL"
+    ],
+    "cut_mean": 0.0021922090866666665,
+    "first_mean": 0.0034105923299999996,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-04-08",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "DOGE",
+     "FIL",
+     "OP",
+     "INJ",
+     "AAVE",
+     "AVAX",
+     "APT",
+     "ETC",
+     "LINK",
+     "SOL"
+    ],
+    "cut_mean": 0.0015464339566666667,
+    "first_mean": 0.00241132903,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-04-15",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "OP",
+     "FIL",
+     "NEAR",
+     "AAVE",
+     "APT",
+     "AVAX",
+     "ETC",
+     "ARB",
+     "INJ",
+     "LINK"
+    ],
+    "cut_mean": 0.00105210642,
+    "first_mean": 0.0016715420666666666,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-04-22",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "FIL",
+     "NEAR",
+     "AAVE",
+     "ARB",
+     "AVAX",
+     "OP",
+     "SOL",
+     "APT",
+     "INJ",
+     "ETC"
+    ],
+    "cut_mean": 0.0009271438733333333,
+    "first_mean": 0.0014778588733333332,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-04-29",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "ARB",
+     "SOL",
+     "FIL",
+     "AAVE",
+     "NEAR",
+     "BTC",
+     "AVAX",
+     "ETC",
+     "APT",
+     "UNI"
+    ],
+    "cut_mean": 0.0005414347399999999,
+    "first_mean": 0.0009804592066666666,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-05-06",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "ARB",
+     "SOL",
+     "BTC",
+     "APT",
+     "AAVE",
+     "ETC",
+     "UNI",
+     "NEAR",
+     "FIL",
+     "AVAX"
+    ],
+    "cut_mean": 0.00030074549666666666,
+    "first_mean": 0.0007072987566666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-05-13",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "ARB",
+     "SOL",
+     "ETC",
+     "APT",
+     "BTC",
+     "NEAR",
+     "UNI",
+     "LINK",
+     "FIL",
+     "AAVE"
+    ],
+    "cut_mean": 0.00022151965666666664,
+    "first_mean": 0.0005285383533333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-05-20",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "NEAR",
+     "APT",
+     "ETC",
+     "ARB",
+     "AAVE",
+     "BTC",
+     "SOL",
+     "UNI",
+     "LINK",
+     "ETH"
+    ],
+    "cut_mean": 0.00023144115333333332,
+    "first_mean": 0.0005029087233333334,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-05-27",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "NEAR",
+     "ETC",
+     "ETH",
+     "APT",
+     "AAVE",
+     "LINK",
+     "BTC",
+     "SOL",
+     "UNI",
+     "ARB"
+    ],
+    "cut_mean": 0.00030184632,
+    "first_mean": 0.0006851431766666666,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-06-03",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "NEAR",
+     "ETH",
+     "APT",
+     "SOL",
+     "BTC",
+     "ETC",
+     "AAVE",
+     "LINK",
+     "UNI",
+     "ARB"
+    ],
+    "cut_mean": 0.00037085521666666666,
+    "first_mean": 0.0007881571999999999,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-06-10",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "ETH",
+     "NEAR",
+     "APT",
+     "SOL",
+     "AAVE",
+     "BTC",
+     "LINK",
+     "ARB",
+     "BNB",
+     "ETC"
+    ],
+    "cut_mean": 0.0004102859366666667,
+    "first_mean": 0.00082561613,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-06-17",
+    "pool_size": 22,
+    "selected": [
+     "ETH",
+     "DOGE",
+     "SOL",
+     "APT",
+     "BNB",
+     "AAVE",
+     "BTC",
+     "LINK",
+     "ARB",
+     "NEAR",
+     "INJ"
+    ],
+    "cut_mean": 0.00042009591000000005,
+    "first_mean": 0.0008205158366666668,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-06-24",
+    "pool_size": 22,
+    "selected": [
+     "ETH",
+     "BTC",
+     "AAVE",
+     "APT",
+     "SOL",
+     "DOGE",
+     "ARB",
+     "LINK",
+     "INJ",
+     "UNI",
+     "BNB"
+    ],
+    "cut_mean": 0.0003921762033333333,
+    "first_mean": 0.0006818268133333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-07-01",
+    "pool_size": 22,
+    "selected": [
+     "ETH",
+     "APT",
+     "AAVE",
+     "BTC",
+     "ARB",
+     "SOL",
+     "DOGE",
+     "OP",
+     "LINK",
+     "UNI",
+     "FIL"
+    ],
+    "cut_mean": 0.00034382737666666666,
+    "first_mean": 0.0006124673433333332,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-07-08",
+    "pool_size": 22,
+    "selected": [
+     "APT",
+     "AAVE",
+     "ETH",
+     "ARB",
+     "BTC",
+     "OP",
+     "UNI",
+     "SOL",
+     "FIL",
+     "XRP",
+     "LINK"
+    ],
+    "cut_mean": 0.00023032031333333332,
+    "first_mean": 0.00054136356,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-07-15",
+    "pool_size": 22,
+    "selected": [
+     "APT",
+     "AAVE",
+     "ETH",
+     "OP",
+     "ARB",
+     "UNI",
+     "BTC",
+     "LINK",
+     "XRP",
+     "SOL",
+     "FIL"
+    ],
+    "cut_mean": 0.00021355043,
+    "first_mean": 0.0005714504966666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-07-22",
+    "pool_size": 22,
+    "selected": [
+     "APT",
+     "AAVE",
+     "ETH",
+     "ARB",
+     "SOL",
+     "OP",
+     "UNI",
+     "BTC",
+     "DOGE",
+     "LINK",
+     "XRP"
+    ],
+    "cut_mean": 0.00023540247,
+    "first_mean": 0.0006540231666666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-07-29",
+    "pool_size": 22,
+    "selected": [
+     "APT",
+     "SOL",
+     "AAVE",
+     "ETH",
+     "OP",
+     "LINK",
+     "ARB",
+     "BTC",
+     "DOGE",
+     "UNI",
+     "ETC"
+    ],
+    "cut_mean": 0.00023637861666666668,
+    "first_mean": 0.0006269524533333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-08-05",
+    "pool_size": 22,
+    "selected": [
+     "APT",
+     "SOL",
+     "ETH",
+     "BTC",
+     "AAVE",
+     "DOGE",
+     "LINK",
+     "ARB",
+     "OP",
+     "UNI",
+     "ETC"
+    ],
+    "cut_mean": 0.00026911322999999997,
+    "first_mean": 0.0005382562700000001,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-08-12",
+    "pool_size": 22,
+    "selected": [
+     "APT",
+     "BTC",
+     "SOL",
+     "ETH",
+     "DOGE",
+     "AAVE",
+     "LINK",
+     "ETC",
+     "FIL",
+     "OP",
+     "UNI"
+    ],
+    "cut_mean": 0.00023710699,
+    "first_mean": 0.00040510269333333336,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-08-19",
+    "pool_size": 22,
+    "selected": [
+     "BTC",
+     "APT",
+     "SOL",
+     "AAVE",
+     "DOGE",
+     "ETC",
+     "LINK",
+     "FIL",
+     "ETH",
+     "OP",
+     "UNI"
+    ],
+    "cut_mean": 0.00020521583666666669,
+    "first_mean": 0.00038547502999999997,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-08-26",
+    "pool_size": 22,
+    "selected": [
+     "BTC",
+     "AAVE",
+     "ETC",
+     "FIL",
+     "APT",
+     "LINK",
+     "DOGE",
+     "OP",
+     "UNI",
+     "XRP",
+     "ETH"
+    ],
+    "cut_mean": 0.00016730545000000002,
+    "first_mean": 0.00035307213666666666,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-09-02",
+    "pool_size": 22,
+    "selected": [
+     "BTC",
+     "AAVE",
+     "FIL",
+     "ETC",
+     "DOGE",
+     "LINK",
+     "XRP",
+     "APT",
+     "OP",
+     "BNB",
+     "NEAR"
+    ],
+    "cut_mean": 0.00014447547333333333,
+    "first_mean": 0.00031273648,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-09-09",
+    "pool_size": 22,
+    "selected": [
+     "BTC",
+     "AAVE",
+     "APT",
+     "LINK",
+     "FIL",
+     "XRP",
+     "BNB",
+     "DOGE",
+     "ETC",
+     "NEAR",
+     "OP"
+    ],
+    "cut_mean": 0.00017776590333333335,
+    "first_mean": 0.0003079041266666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-09-16",
+    "pool_size": 22,
+    "selected": [
+     "BTC",
+     "APT",
+     "AAVE",
+     "NEAR",
+     "LINK",
+     "FIL",
+     "BNB",
+     "XRP",
+     "DOGE",
+     "DOT",
+     "OP"
+    ],
+    "cut_mean": 0.00019416204333333334,
+    "first_mean": 0.0002858306766666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-09-23",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "APT",
+     "BTC",
+     "LINK",
+     "UNI",
+     "XRP",
+     "DOT",
+     "FIL",
+     "AAVE",
+     "BNB",
+     "DOGE"
+    ],
+    "cut_mean": 0.00022962540333333335,
+    "first_mean": 0.0003171175233333334,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-09-30",
+    "pool_size": 22,
+    "selected": [
+     "UNI",
+     "APT",
+     "DOT",
+     "XRP",
+     "NEAR",
+     "BTC",
+     "DOGE",
+     "LINK",
+     "AAVE",
+     "FIL",
+     "BNB"
+    ],
+    "cut_mean": 0.00024808964666666667,
+    "first_mean": 0.00045592905999999997,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-10-07",
+    "pool_size": 22,
+    "selected": [
+     "APT",
+     "UNI",
+     "ATOM",
+     "DOT",
+     "SOL",
+     "DOGE",
+     "BTC",
+     "XRP",
+     "NEAR",
+     "LINK",
+     "AAVE"
+    ],
+    "cut_mean": 0.0003164771233333333,
+    "first_mean": 0.0005637759333333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-10-14",
+    "pool_size": 22,
+    "selected": [
+     "UNI",
+     "APT",
+     "DOGE",
+     "DOT",
+     "SOL",
+     "AAVE",
+     "ATOM",
+     "BTC",
+     "NEAR",
+     "INJ",
+     "LINK"
+    ],
+    "cut_mean": 0.00032973101999999997,
+    "first_mean": 0.0006345418866666666,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-10-21",
+    "pool_size": 22,
+    "selected": [
+     "APT",
+     "DOGE",
+     "UNI",
+     "AAVE",
+     "SOL",
+     "DOT",
+     "ATOM",
+     "BTC",
+     "NEAR",
+     "INJ",
+     "LINK"
+    ],
+    "cut_mean": 0.00032973101999999997,
+    "first_mean": 0.0006611533033333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-10-28",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "APT",
+     "UNI",
+     "SOL",
+     "AAVE",
+     "ATOM",
+     "BTC",
+     "DOT",
+     "LINK",
+     "XRP",
+     "INJ"
+    ],
+    "cut_mean": 0.00029479099333333335,
+    "first_mean": 0.0006610764599999999,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-11-04",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "APT",
+     "SOL",
+     "UNI",
+     "AAVE",
+     "BTC",
+     "DOT",
+     "LINK",
+     "ATOM",
+     "INJ",
+     "NEAR"
+    ],
+    "cut_mean": 0.0002812129266666666,
+    "first_mean": 0.0006624009866666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-11-11",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "SOL",
+     "APT",
+     "UNI",
+     "AAVE",
+     "NEAR",
+     "BTC",
+     "BNB",
+     "LINK",
+     "ETH",
+     "DOT"
+    ],
+    "cut_mean": 0.0003856966399999999,
+    "first_mean": 0.0008763761366666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-11-18",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "SOL",
+     "AAVE",
+     "NEAR",
+     "APT",
+     "UNI",
+     "DOT",
+     "BTC",
+     "BNB",
+     "ETH",
+     "LINK"
+    ],
+    "cut_mean": 0.0005942383199999999,
+    "first_mean": 0.00110476088,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-11-25",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "SOL",
+     "AAVE",
+     "APT",
+     "NEAR",
+     "BNB",
+     "ETH",
+     "UNI",
+     "LINK",
+     "BTC",
+     "XRP"
+    ],
+    "cut_mean": 0.0008141415566666666,
+    "first_mean": 0.0014693465833333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-12-02",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "NEAR",
+     "APT",
+     "AAVE",
+     "SOL",
+     "UNI",
+     "OP",
+     "ETH",
+     "BNB",
+     "XRP",
+     "LINK"
+    ],
+    "cut_mean": 0.00103572193,
+    "first_mean": 0.0016350449966666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-12-09",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "APT",
+     "NEAR",
+     "AAVE",
+     "ETC",
+     "UNI",
+     "AVAX",
+     "FIL",
+     "SOL",
+     "LINK",
+     "OP"
+    ],
+    "cut_mean": 0.0014276324566666668,
+    "first_mean": 0.00199917257,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-12-16",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "APT",
+     "AAVE",
+     "LINK",
+     "ETC",
+     "UNI",
+     "NEAR",
+     "ARB",
+     "FIL",
+     "AVAX",
+     "INJ"
+    ],
+    "cut_mean": 0.0012316935300000001,
+    "first_mean": 0.00169715103,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-12-23",
+    "pool_size": 22,
+    "selected": [
+     "LINK",
+     "AAVE",
+     "ETC",
+     "UNI",
+     "DOGE",
+     "APT",
+     "ARB",
+     "NEAR",
+     "AVAX",
+     "FIL",
+     "INJ"
+    ],
+    "cut_mean": 0.0011408169766666666,
+    "first_mean": 0.0014145323033333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2024-12-30",
+    "pool_size": 22,
+    "selected": [
+     "LINK",
+     "AAVE",
+     "ETC",
+     "UNI",
+     "FIL",
+     "ARB",
+     "INJ",
+     "NEAR",
+     "AVAX",
+     "DOGE",
+     "ETH"
+    ],
+    "cut_mean": 0.0008779972699999999,
+    "first_mean": 0.0011804694966666665,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-01-06",
+    "pool_size": 22,
+    "selected": [
+     "AAVE",
+     "LINK",
+     "UNI",
+     "XRP",
+     "ETC",
+     "ARB",
+     "BTC",
+     "ETH",
+     "NEAR",
+     "INJ",
+     "FIL"
+    ],
+    "cut_mean": 0.0005496480566666666,
+    "first_mean": 0.0009249258466666666,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-01-13",
+    "pool_size": 22,
+    "selected": [
+     "AAVE",
+     "UNI",
+     "XRP",
+     "LINK",
+     "BTC",
+     "NEAR",
+     "FIL",
+     "ETH",
+     "SOL",
+     "INJ",
+     "ETC"
+    ],
+    "cut_mean": 0.0003161165433333333,
+    "first_mean": 0.0007202333499999999,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-01-20",
+    "pool_size": 22,
+    "selected": [
+     "AAVE",
+     "UNI",
+     "XRP",
+     "BTC",
+     "LINK",
+     "NEAR",
+     "FIL",
+     "ARB",
+     "SOL",
+     "ETH",
+     "BCH"
+    ],
+    "cut_mean": 0.0003142919066666666,
+    "first_mean": 0.0006373284133333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-01-27",
+    "pool_size": 22,
+    "selected": [
+     "AAVE",
+     "UNI",
+     "XRP",
+     "SUI",
+     "BTC",
+     "ARB",
+     "DOGE",
+     "NEAR",
+     "LINK",
+     "ETH",
+     "OP"
+    ],
+    "cut_mean": 0.00032590509,
+    "first_mean": 0.0006084763166666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-02-03",
+    "pool_size": 22,
+    "selected": [
+     "UNI",
+     "AAVE",
+     "XRP",
+     "SUI",
+     "BTC",
+     "ARB",
+     "LINK",
+     "NEAR",
+     "FIL",
+     "ETH",
+     "OP"
+    ],
+    "cut_mean": 0.0002975427466666666,
+    "first_mean": 0.0005224971500000001,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-02-10",
+    "pool_size": 22,
+    "selected": [
+     "XRP",
+     "BTC",
+     "AAVE",
+     "UNI",
+     "LINK",
+     "ETH",
+     "SUI",
+     "NEAR",
+     "FIL",
+     "ARB",
+     "BCH"
+    ],
+    "cut_mean": 0.00022667458666666667,
+    "first_mean": 0.0004494441166666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-02-17",
+    "pool_size": 22,
+    "selected": [
+     "BTC",
+     "XRP",
+     "AAVE",
+     "LINK",
+     "UNI",
+     "NEAR",
+     "ETH",
+     "FIL",
+     "ARB",
+     "AVAX",
+     "SUI"
+    ],
+    "cut_mean": 0.0002035054466666667,
+    "first_mean": 0.00040507134,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-02-24",
+    "pool_size": 22,
+    "selected": [
+     "BTC",
+     "NEAR",
+     "XRP",
+     "LINK",
+     "AAVE",
+     "ETH",
+     "FIL",
+     "AVAX",
+     "UNI",
+     "BCH",
+     "DOGE"
+    ],
+    "cut_mean": 0.00012476956666666666,
+    "first_mean": 0.0003031781733333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-03-03",
+    "pool_size": 22,
+    "selected": [
+     "BTC",
+     "XRP",
+     "AAVE",
+     "LINK",
+     "NEAR",
+     "AVAX",
+     "ETH",
+     "FIL",
+     "UNI",
+     "DOGE",
+     "BCH"
+    ],
+    "cut_mean": 0.00011309626000000002,
+    "first_mean": 0.0002777707233333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-03-10",
+    "pool_size": 22,
+    "selected": [
+     "AAVE",
+     "BTC",
+     "LINK",
+     "UNI",
+     "FIL",
+     "AVAX",
+     "DOGE",
+     "NEAR",
+     "XRP",
+     "DOT",
+     "ETH"
+    ],
+    "cut_mean": 0.00010553488333333336,
+    "first_mean": 0.00030568603333333327,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-03-17",
+    "pool_size": 22,
+    "selected": [
+     "AAVE",
+     "BTC",
+     "FIL",
+     "LINK",
+     "UNI",
+     "DOGE",
+     "NEAR",
+     "INJ",
+     "AVAX",
+     "DOT",
+     "ETH"
+    ],
+    "cut_mean": 4.911681666666668e-05,
+    "first_mean": 0.00028395046999999996,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-03-24",
+    "pool_size": 22,
+    "selected": [
+     "AAVE",
+     "FIL",
+     "LINK",
+     "BTC",
+     "OP",
+     "AVAX",
+     "DOGE",
+     "NEAR",
+     "DOT",
+     "INJ",
+     "BCH"
+    ],
+    "cut_mean": 5.920707000000003e-05,
+    "first_mean": 0.00027153405666666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-03-31",
+    "pool_size": 22,
+    "selected": [
+     "AAVE",
+     "FIL",
+     "LINK",
+     "OP",
+     "NEAR",
+     "ETC",
+     "DOGE",
+     "BTC",
+     "AVAX",
+     "DOT",
+     "ETH"
+    ],
+    "cut_mean": 5.066201333333335e-05,
+    "first_mean": 0.00024958959,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-04-07",
+    "pool_size": 22,
+    "selected": [
+     "AAVE",
+     "FIL",
+     "NEAR",
+     "LINK",
+     "BTC",
+     "APT",
+     "OP",
+     "BCH",
+     "ETC",
+     "DOGE",
+     "ETH"
+    ],
+    "cut_mean": 2.239809666666668e-05,
+    "first_mean": 0.00023168065666666666,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-04-14",
+    "pool_size": 22,
+    "selected": [
+     "AAVE",
+     "FIL",
+     "LINK",
+     "NEAR",
+     "BTC",
+     "APT",
+     "OP",
+     "DOGE",
+     "BCH",
+     "DOT",
+     "ETC"
+    ],
+    "cut_mean": -1.4837229999999984e-05,
+    "first_mean": 0.00025361113,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-04-21",
+    "pool_size": 22,
+    "selected": [
+     "AAVE",
+     "FIL",
+     "NEAR",
+     "LINK",
+     "TRX",
+     "BTC",
+     "DOGE",
+     "APT",
+     "SUI",
+     "ETH",
+     "OP"
+    ],
+    "cut_mean": -6.509260333333332e-05,
+    "first_mean": 0.00024478553666666664,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-04-28",
+    "pool_size": 22,
+    "selected": [
+     "FIL",
+     "AAVE",
+     "NEAR",
+     "TRX",
+     "LINK",
+     "BTC",
+     "DOGE",
+     "BCH",
+     "ETH",
+     "OP",
+     "UNI"
+    ],
+    "cut_mean": -0.00013515002666666666,
+    "first_mean": 0.00023472283,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-05-05",
+    "pool_size": 22,
+    "selected": [
+     "AAVE",
+     "TRX",
+     "FIL",
+     "NEAR",
+     "BTC",
+     "LINK",
+     "DOGE",
+     "UNI",
+     "ETH",
+     "XRP",
+     "SOL"
+    ],
+    "cut_mean": -0.00010360456999999996,
+    "first_mean": 0.00024420256333333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-05-12",
+    "pool_size": 22,
+    "selected": [
+     "TRX",
+     "NEAR",
+     "AAVE",
+     "FIL",
+     "DOGE",
+     "BTC",
+     "UNI",
+     "LINK",
+     "XRP",
+     "ETH",
+     "SOL"
+    ],
+    "cut_mean": 8.176880000000004e-05,
+    "first_mean": 0.000410316,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-05-19",
+    "pool_size": 22,
+    "selected": [
+     "TRX",
+     "NEAR",
+     "UNI",
+     "XRP",
+     "AAVE",
+     "DOGE",
+     "BTC",
+     "LINK",
+     "FIL",
+     "SOL",
+     "ETH"
+    ],
+    "cut_mean": 0.0001947232966666667,
+    "first_mean": 0.0004631609866666666,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-05-26",
+    "pool_size": 22,
+    "selected": [
+     "TRX",
+     "XRP",
+     "UNI",
+     "NEAR",
+     "AAVE",
+     "DOGE",
+     "BTC",
+     "LINK",
+     "SOL",
+     "AVAX",
+     "SUI"
+    ],
+    "cut_mean": 0.00027842967,
+    "first_mean": 0.0005067308399999999,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-06-02",
+    "pool_size": 22,
+    "selected": [
+     "TRX",
+     "XRP",
+     "AAVE",
+     "UNI",
+     "BTC",
+     "NEAR",
+     "DOGE",
+     "AVAX",
+     "SUI",
+     "LINK",
+     "ETH"
+    ],
+    "cut_mean": 0.00034913263,
+    "first_mean": 0.0004983482033333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-06-09",
+    "pool_size": 22,
+    "selected": [
+     "XRP",
+     "TRX",
+     "SUI",
+     "UNI",
+     "AAVE",
+     "NEAR",
+     "DOGE",
+     "BTC",
+     "LINK",
+     "ARB",
+     "ETH"
+    ],
+    "cut_mean": 0.00036311578,
+    "first_mean": 0.00050581575,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-06-16",
+    "pool_size": 22,
+    "selected": [
+     "AAVE",
+     "XRP",
+     "DOGE",
+     "BTC",
+     "UNI",
+     "LINK",
+     "SUI",
+     "NEAR",
+     "ETH",
+     "TRX",
+     "AVAX"
+    ],
+    "cut_mean": 0.00029176195666666665,
+    "first_mean": 0.00045860239666666665,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-06-23",
+    "pool_size": 22,
+    "selected": [
+     "AAVE",
+     "UNI",
+     "LINK",
+     "NEAR",
+     "XRP",
+     "TRX",
+     "BTC",
+     "ETC",
+     "DOGE",
+     "ETH",
+     "SUI"
+    ],
+    "cut_mean": 0.00024153044333333331,
+    "first_mean": 0.0004042588633333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-06-30",
+    "pool_size": 22,
+    "selected": [
+     "AAVE",
+     "UNI",
+     "LINK",
+     "TRX",
+     "NEAR",
+     "BTC",
+     "XRP",
+     "DOGE",
+     "SUI",
+     "ETH",
+     "FIL"
+    ],
+    "cut_mean": 0.00019562369000000003,
+    "first_mean": 0.0003699316933333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-07-07",
+    "pool_size": 22,
+    "selected": [
+     "AAVE",
+     "UNI",
+     "LINK",
+     "BTC",
+     "XRP",
+     "TRX",
+     "DOGE",
+     "SUI",
+     "NEAR",
+     "FIL",
+     "ETH"
+    ],
+    "cut_mean": 0.00016910901666666666,
+    "first_mean": 0.00035717903,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-07-14",
+    "pool_size": 22,
+    "selected": [
+     "AAVE",
+     "XRP",
+     "UNI",
+     "LINK",
+     "BTC",
+     "DOGE",
+     "TRX",
+     "ARB",
+     "FIL",
+     "SUI",
+     "ETH"
+    ],
+    "cut_mean": 0.00018566301,
+    "first_mean": 0.0003752381033333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-07-21",
+    "pool_size": 22,
+    "selected": [
+     "XRP",
+     "DOGE",
+     "AAVE",
+     "LINK",
+     "ARB",
+     "SUI",
+     "BTC",
+     "UNI",
+     "ETH",
+     "SOL",
+     "TRX"
+    ],
+    "cut_mean": 0.0002977847933333334,
+    "first_mean": 0.00056433972,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-07-28",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "XRP",
+     "SUI",
+     "ARB",
+     "AAVE",
+     "LINK",
+     "ETH",
+     "SOL",
+     "BTC",
+     "BNB",
+     "UNI"
+    ],
+    "cut_mean": 0.00047439175666666667,
+    "first_mean": 0.0007200824333333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-08-04",
+    "pool_size": 22,
+    "selected": [
+     "DOGE",
+     "XRP",
+     "SUI",
+     "AAVE",
+     "LINK",
+     "ARB",
+     "BNB",
+     "ETH",
+     "SOL",
+     "BTC",
+     "UNI"
+    ],
+    "cut_mean": 0.00048682201666666667,
+    "first_mean": 0.00071939249,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-08-11",
+    "pool_size": 22,
+    "selected": [
+     "LINK",
+     "DOGE",
+     "AAVE",
+     "SUI",
+     "XRP",
+     "BNB",
+     "ARB",
+     "SOL",
+     "ETH",
+     "AVAX",
+     "BTC"
+    ],
+    "cut_mean": 0.00050971831,
+    "first_mean": 0.0006950796466666666,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-08-18",
+    "pool_size": 22,
+    "selected": [
+     "LINK",
+     "AVAX",
+     "AAVE",
+     "SUI",
+     "BNB",
+     "DOGE",
+     "ETH",
+     "SOL",
+     "BCH",
+     "INJ",
+     "UNI"
+    ],
+    "cut_mean": 0.0004575470166666666,
+    "first_mean": 0.0005967162033333334,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-08-25",
+    "pool_size": 22,
+    "selected": [
+     "LINK",
+     "AAVE",
+     "AVAX",
+     "ETH",
+     "SUI",
+     "UNI",
+     "SOL",
+     "BCH",
+     "BNB",
+     "BTC",
+     "TRX"
+    ],
+    "cut_mean": 0.00033989446333333327,
+    "first_mean": 0.0005204075066666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-09-01",
+    "pool_size": 22,
+    "selected": [
+     "LINK",
+     "AVAX",
+     "AAVE",
+     "UNI",
+     "BCH",
+     "ARB",
+     "ETH",
+     "SOL",
+     "INJ",
+     "BTC",
+     "ETC"
+    ],
+    "cut_mean": 0.00031037772666666665,
+    "first_mean": 0.0004925371066666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-09-08",
+    "pool_size": 22,
+    "selected": [
+     "LINK",
+     "AVAX",
+     "BCH",
+     "ARB",
+     "UNI",
+     "SOL",
+     "AAVE",
+     "BTC",
+     "ETH",
+     "NEAR",
+     "ETC"
+    ],
+    "cut_mean": 0.00031691619999999995,
+    "first_mean": 0.00048241136666666673,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-09-15",
+    "pool_size": 22,
+    "selected": [
+     "AVAX",
+     "ARB",
+     "LINK",
+     "DOGE",
+     "UNI",
+     "BCH",
+     "NEAR",
+     "SOL",
+     "INJ",
+     "ETC",
+     "APT"
+    ],
+    "cut_mean": 0.0002951730833333333,
+    "first_mean": 0.00044523604666666674,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-09-22",
+    "pool_size": 22,
+    "selected": [
+     "AVAX",
+     "UNI",
+     "NEAR",
+     "ARB",
+     "DOGE",
+     "LINK",
+     "SOL",
+     "APT",
+     "BCH",
+     "INJ",
+     "BTC"
+    ],
+    "cut_mean": 0.00030516573,
+    "first_mean": 0.0005417711666666666,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-09-29",
+    "pool_size": 22,
+    "selected": [
+     "AVAX",
+     "UNI",
+     "NEAR",
+     "DOGE",
+     "ARB",
+     "APT",
+     "LINK",
+     "BCH",
+     "INJ",
+     "FIL",
+     "SUI"
+    ],
+    "cut_mean": 0.0002994465066666667,
+    "first_mean": 0.0005664457333333334,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-10-06",
+    "pool_size": 22,
+    "selected": [
+     "AVAX",
+     "UNI",
+     "NEAR",
+     "DOGE",
+     "ARB",
+     "XRP",
+     "INJ",
+     "LINK",
+     "FIL",
+     "SUI",
+     "DOT"
+    ],
+    "cut_mean": 0.00029364930666666666,
+    "first_mean": 0.0006074984366666666,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-10-13",
+    "pool_size": 22,
+    "selected": [
+     "UNI",
+     "AVAX",
+     "NEAR",
+     "AAVE",
+     "LINK",
+     "ARB",
+     "DOGE",
+     "BTC",
+     "INJ",
+     "SUI",
+     "BNB"
+    ],
+    "cut_mean": 0.00026894374666666665,
+    "first_mean": 0.00058687462,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-10-20",
+    "pool_size": 22,
+    "selected": [
+     "UNI",
+     "AAVE",
+     "LINK",
+     "TRX",
+     "BTC",
+     "ARB",
+     "NEAR",
+     "XRP",
+     "SUI",
+     "INJ",
+     "ETH"
+    ],
+    "cut_mean": 0.00017012068,
+    "first_mean": 0.00048695709,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-10-27",
+    "pool_size": 22,
+    "selected": [
+     "UNI",
+     "AAVE",
+     "LINK",
+     "BTC",
+     "ARB",
+     "TRX",
+     "ETH",
+     "SUI",
+     "XRP",
+     "NEAR",
+     "INJ"
+    ],
+    "cut_mean": 8.441292333333333e-05,
+    "first_mean": 0.00043095084333333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-11-03",
+    "pool_size": 22,
+    "selected": [
+     "AAVE",
+     "LINK",
+     "UNI",
+     "BTC",
+     "ETH",
+     "ARB",
+     "SUI",
+     "TRX",
+     "XRP",
+     "NEAR",
+     "BNB"
+    ],
+    "cut_mean": 4.187709999999998e-05,
+    "first_mean": 0.0003588143533333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-11-10",
+    "pool_size": 22,
+    "selected": [
+     "LINK",
+     "AAVE",
+     "UNI",
+     "BTC",
+     "ETH",
+     "SUI",
+     "NEAR",
+     "XRP",
+     "ARB",
+     "TRX",
+     "BNB"
+    ],
+    "cut_mean": -3.333692333333334e-05,
+    "first_mean": 0.00028708888666666664,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-11-17",
+    "pool_size": 22,
+    "selected": [
+     "UNI",
+     "AAVE",
+     "LINK",
+     "BTC",
+     "ETH",
+     "XRP",
+     "NEAR",
+     "SUI",
+     "DOGE",
+     "SOL",
+     "ARB"
+    ],
+    "cut_mean": 4.186251333333335e-05,
+    "first_mean": 0.00035135974,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-11-24",
+    "pool_size": 22,
+    "selected": [
+     "UNI",
+     "AAVE",
+     "BTC",
+     "LINK",
+     "ETH",
+     "XRP",
+     "NEAR",
+     "DOGE",
+     "SUI",
+     "ARB",
+     "BNB"
+    ],
+    "cut_mean": 7.276289666666666e-05,
+    "first_mean": 0.0003602419666666666,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-12-01",
+    "pool_size": 22,
+    "selected": [
+     "UNI",
+     "AAVE",
+     "LINK",
+     "BTC",
+     "XRP",
+     "ETH",
+     "NEAR",
+     "DOGE",
+     "SUI",
+     "BNB",
+     "ARB"
+    ],
+    "cut_mean": 0.00010235719000000002,
+    "first_mean": 0.0003753867933333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-12-08",
+    "pool_size": 22,
+    "selected": [
+     "UNI",
+     "XRP",
+     "AAVE",
+     "LINK",
+     "DOGE",
+     "ETH",
+     "NEAR",
+     "BTC",
+     "TRX",
+     "ARB",
+     "BNB"
+    ],
+    "cut_mean": 0.00016698255666666668,
+    "first_mean": 0.0003781749033333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-12-15",
+    "pool_size": 22,
+    "selected": [
+     "XRP",
+     "UNI",
+     "AAVE",
+     "LINK",
+     "ETH",
+     "DOGE",
+     "NEAR",
+     "BNB",
+     "SUI",
+     "BTC",
+     "ARB"
+    ],
+    "cut_mean": 0.00014627868000000003,
+    "first_mean": 0.00030916574999999996,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-12-22",
+    "pool_size": 22,
+    "selected": [
+     "UNI",
+     "ETH",
+     "AAVE",
+     "LINK",
+     "XRP",
+     "NEAR",
+     "DOGE",
+     "BTC",
+     "BNB",
+     "SUI",
+     "ARB"
+    ],
+    "cut_mean": 0.00012667603333333337,
+    "first_mean": 0.00026527943,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2025-12-29",
+    "pool_size": 22,
+    "selected": [
+     "UNI",
+     "LINK",
+     "AAVE",
+     "ETH",
+     "XRP",
+     "NEAR",
+     "BTC",
+     "SUI",
+     "SOL",
+     "ARB",
+     "TRX"
+    ],
+    "cut_mean": 0.00012149947000000002,
+    "first_mean": 0.0002716289033333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-01-05",
+    "pool_size": 22,
+    "selected": [
+     "UNI",
+     "LINK",
+     "AAVE",
+     "ETH",
+     "NEAR",
+     "XRP",
+     "BTC",
+     "SOL",
+     "SUI",
+     "ARB",
+     "TRX"
+    ],
+    "cut_mean": 0.00015525118333333335,
+    "first_mean": 0.00027191891,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-01-12",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "LINK",
+     "UNI",
+     "AAVE",
+     "ETH",
+     "BTC",
+     "XRP",
+     "SOL",
+     "ARB",
+     "TRX",
+     "SUI"
+    ],
+    "cut_mean": 0.00016593507000000002,
+    "first_mean": 0.0002809719766666666,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-01-19",
+    "pool_size": 22,
+    "selected": [
+     "LINK",
+     "NEAR",
+     "UNI",
+     "AAVE",
+     "BTC",
+     "ETH",
+     "ARB",
+     "XRP",
+     "SOL",
+     "BNB",
+     "INJ"
+    ],
+    "cut_mean": 0.00020751394,
+    "first_mean": 0.0002901807733333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-01-26",
+    "pool_size": 22,
+    "selected": [
+     "LINK",
+     "AAVE",
+     "NEAR",
+     "ARB",
+     "DOGE",
+     "XRP",
+     "ETH",
+     "UNI",
+     "BTC",
+     "BNB",
+     "SUI"
+    ],
+    "cut_mean": 0.00020079809,
+    "first_mean": 0.00026329760333333334,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-02-02",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "ARB",
+     "LINK",
+     "BTC",
+     "AAVE",
+     "ETH",
+     "SUI",
+     "UNI",
+     "INJ",
+     "BNB",
+     "DOGE"
+    ],
+    "cut_mean": 0.00011952625999999998,
+    "first_mean": 0.00023352219666666668,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-02-09",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "LINK",
+     "UNI",
+     "INJ",
+     "AAVE",
+     "ARB",
+     "SUI",
+     "BTC",
+     "ETH",
+     "BNB",
+     "DOGE"
+    ],
+    "cut_mean": 3.1855209999999993e-05,
+    "first_mean": 0.00019569931333333334,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-02-16",
+    "pool_size": 22,
+    "selected": [
+     "LINK",
+     "NEAR",
+     "AAVE",
+     "INJ",
+     "UNI",
+     "BTC",
+     "SUI",
+     "ARB",
+     "ETH",
+     "BCH",
+     "BNB"
+    ],
+    "cut_mean": 1.4773333333333372e-06,
+    "first_mean": 0.00017739732333333337,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-02-23",
+    "pool_size": 22,
+    "selected": [
+     "LINK",
+     "NEAR",
+     "BCH",
+     "AAVE",
+     "BTC",
+     "ETH",
+     "SUI",
+     "AVAX",
+     "UNI",
+     "ARB",
+     "BNB"
+    ],
+    "cut_mean": -1.7851403333333335e-05,
+    "first_mean": 0.00018819820333333334,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-03-02",
+    "pool_size": 22,
+    "selected": [
+     "LINK",
+     "NEAR",
+     "AAVE",
+     "BCH",
+     "AVAX",
+     "BTC",
+     "ETH",
+     "UNI",
+     "SUI",
+     "FIL",
+     "ETC"
+    ],
+    "cut_mean": -5.6292033333333095e-06,
+    "first_mean": 0.00022403823333333334,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-03-09",
+    "pool_size": 22,
+    "selected": [
+     "LINK",
+     "AVAX",
+     "NEAR",
+     "AAVE",
+     "BCH",
+     "ETH",
+     "TRX",
+     "BTC",
+     "FIL",
+     "BNB",
+     "SUI"
+    ],
+    "cut_mean": 5.254600000000013e-06,
+    "first_mean": 0.0002488995866666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-03-16",
+    "pool_size": 22,
+    "selected": [
+     "LINK",
+     "AVAX",
+     "NEAR",
+     "AAVE",
+     "ETH",
+     "BNB",
+     "TRX",
+     "ETC",
+     "BCH",
+     "BTC",
+     "UNI"
+    ],
+    "cut_mean": 4.029566333333334e-05,
+    "first_mean": 0.00024028161000000001,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-03-23",
+    "pool_size": 22,
+    "selected": [
+     "LINK",
+     "AVAX",
+     "NEAR",
+     "AAVE",
+     "UNI",
+     "TRX",
+     "ETH",
+     "BNB",
+     "BCH",
+     "ETC",
+     "FIL"
+    ],
+    "cut_mean": 3.206216666666675e-06,
+    "first_mean": 0.00024326350333333336,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-03-30",
+    "pool_size": 22,
+    "selected": [
+     "LINK",
+     "NEAR",
+     "AVAX",
+     "UNI",
+     "AAVE",
+     "TRX",
+     "ETH",
+     "BNB",
+     "BTC",
+     "SUI",
+     "DOGE"
+    ],
+    "cut_mean": -5.516802666666666e-05,
+    "first_mean": 0.00024063719,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-04-06",
+    "pool_size": 22,
+    "selected": [
+     "LINK",
+     "AVAX",
+     "NEAR",
+     "AAVE",
+     "UNI",
+     "TRX",
+     "BNB",
+     "ETH",
+     "DOGE",
+     "BTC",
+     "BCH"
+    ],
+    "cut_mean": -3.196888666666666e-05,
+    "first_mean": 0.0002471166633333333,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-04-13",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "LINK",
+     "AVAX",
+     "AAVE",
+     "UNI",
+     "TRX",
+     "ETH",
+     "DOGE",
+     "BNB",
+     "FIL",
+     "BTC"
+    ],
+    "cut_mean": 3.0409760000000016e-05,
+    "first_mean": 0.00032612607666666666,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-04-20",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "LINK",
+     "AAVE",
+     "AVAX",
+     "UNI",
+     "BNB",
+     "TRX",
+     "DOGE",
+     "FIL",
+     "ETC",
+     "BCH"
+    ],
+    "cut_mean": 1.1436663333333354e-05,
+    "first_mean": 0.0003208059666666666,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-04-27",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "AAVE",
+     "LINK",
+     "AVAX",
+     "BNB",
+     "UNI",
+     "FIL",
+     "DOGE",
+     "ETC",
+     "BCH",
+     "ATOM"
+    ],
+    "cut_mean": 7.771761666666668e-05,
+    "first_mean": 0.00032262273666666663,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-05-04",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "AAVE",
+     "FIL",
+     "LINK",
+     "AVAX",
+     "BNB",
+     "DOGE",
+     "UNI",
+     "ATOM",
+     "ETC",
+     "BCH"
+    ],
+    "cut_mean": 0.00013556218666666668,
+    "first_mean": 0.0003143998,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-05-11",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "AAVE",
+     "FIL",
+     "LINK",
+     "DOGE",
+     "AVAX",
+     "UNI",
+     "BNB",
+     "ETC",
+     "BCH",
+     "ATOM"
+    ],
+    "cut_mean": 7.850962e-05,
+    "first_mean": 0.00037090489000000005,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-05-18",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "AAVE",
+     "FIL",
+     "LINK",
+     "DOGE",
+     "AVAX",
+     "UNI",
+     "BNB",
+     "ETC",
+     "BCH",
+     "DOT"
+    ],
+    "cut_mean": 0.0001015754,
+    "first_mean": 0.00031237798000000006,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-05-25",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "AAVE",
+     "LINK",
+     "FIL",
+     "AVAX",
+     "DOGE",
+     "BNB",
+     "DOT",
+     "UNI",
+     "ETH",
+     "ETC"
+    ],
+    "cut_mean": 0.00015844879666666666,
+    "first_mean": 0.0003609222400000001,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-06-01",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "LINK",
+     "FIL",
+     "AVAX",
+     "AAVE",
+     "DOGE",
+     "ETH",
+     "BNB",
+     "UNI",
+     "DOT",
+     "ARB"
+    ],
+    "cut_mean": 0.0001280070566666667,
+    "first_mean": 0.00039619943666666677,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-06-08",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "LINK",
+     "AAVE",
+     "AVAX",
+     "FIL",
+     "ETH",
+     "BNB",
+     "UNI",
+     "ARB",
+     "DOGE",
+     "BTC"
+    ],
+    "cut_mean": 0.00011804062000000002,
+    "first_mean": 0.00033534827666666675,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-06-15",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "LINK",
+     "AAVE",
+     "UNI",
+     "BNB",
+     "ETH",
+     "BTC",
+     "DOGE",
+     "SUI",
+     "ARB",
+     "FIL"
+    ],
+    "cut_mean": 9.857554666666667e-05,
+    "first_mean": 0.00031176652000000003,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-06-22",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "LINK",
+     "UNI",
+     "AAVE",
+     "ETH",
+     "BNB",
+     "BTC",
+     "DOGE",
+     "SUI",
+     "ARB",
+     "FIL"
+    ],
+    "cut_mean": 3.9156353333333345e-05,
+    "first_mean": 0.00030450201,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-06-29",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "UNI",
+     "LINK",
+     "AAVE",
+     "BTC",
+     "SUI",
+     "BNB",
+     "ETH",
+     "DOGE",
+     "ARB",
+     "FIL"
+    ],
+    "cut_mean": -4.453238666666667e-05,
+    "first_mean": 0.0002801022566666667,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-07-06",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "UNI",
+     "LINK",
+     "AAVE",
+     "SUI",
+     "BTC",
+     "BNB",
+     "ETH",
+     "DOGE",
+     "BCH",
+     "ARB"
+    ],
+    "cut_mean": 6.25279e-06,
+    "first_mean": 0.00028412965,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-07-13",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "UNI",
+     "AAVE",
+     "LINK",
+     "SUI",
+     "BTC",
+     "ETH",
+     "BNB",
+     "SOL",
+     "DOGE",
+     "ETC"
+    ],
+    "cut_mean": 8.52020566666667e-05,
+    "first_mean": 0.00030966526,
+    "min_valid_days": 30
+   },
+   {
+    "monday": "2026-07-20",
+    "pool_size": 22,
+    "selected": [
+     "NEAR",
+     "UNI",
+     "AAVE",
+     "LINK",
+     "SUI",
+     "BTC",
+     "ETH",
+     "BNB",
+     "SOL",
+     "ETC",
+     "AVAX"
+    ],
+    "cut_mean": 0.00011706255000000001,
+    "first_mean": 0.00031590079666666664,
+    "min_valid_days": 30
+   }
+  ]
+ },
+ "per_name": [
+  {
+   "symbol": "BTC",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 19,
+   "top_switches": 29,
+   "ctrl_days_held": 1030,
+   "top_days_held": 785,
+   "weeks_selected": 126
+  },
+  {
+   "symbol": "ETH",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 15,
+   "top_switches": 29,
+   "ctrl_days_held": 1044,
+   "top_days_held": 743,
+   "weeks_selected": 117
+  },
+  {
+   "symbol": "SOL",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 27,
+   "top_switches": 19,
+   "ctrl_days_held": 827,
+   "top_days_held": 554,
+   "weeks_selected": 95
+  },
+  {
+   "symbol": "BNB",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 37,
+   "top_switches": 27,
+   "ctrl_days_held": 785,
+   "top_days_held": 393,
+   "weeks_selected": 73
+  },
+  {
+   "symbol": "XRP",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 23,
+   "top_switches": 24,
+   "ctrl_days_held": 834,
+   "top_days_held": 413,
+   "weeks_selected": 75
+  },
+  {
+   "symbol": "DOGE",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 19,
+   "top_switches": 24,
+   "ctrl_days_held": 918,
+   "top_days_held": 770,
+   "weeks_selected": 133
+  },
+  {
+   "symbol": "ADA",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 0,
+   "top_switches": 0,
+   "ctrl_days_held": 0,
+   "top_days_held": 0,
+   "weeks_selected": 0
+  },
+  {
+   "symbol": "AVAX",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 29,
+   "top_switches": 21,
+   "ctrl_days_held": 771,
+   "top_days_held": 407,
+   "weeks_selected": 71
+  },
+  {
+   "symbol": "LINK",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 9,
+   "top_switches": 13,
+   "ctrl_days_held": 1023,
+   "top_days_held": 995,
+   "weeks_selected": 159
+  },
+  {
+   "symbol": "DOT",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 27,
+   "top_switches": 10,
+   "ctrl_days_held": 722,
+   "top_days_held": 154,
+   "weeks_selected": 26
+  },
+  {
+   "symbol": "LTC",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 0,
+   "top_switches": 0,
+   "ctrl_days_held": 0,
+   "top_days_held": 0,
+   "weeks_selected": 0
+  },
+  {
+   "symbol": "TRX",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 38,
+   "top_switches": 12,
+   "ctrl_days_held": 707,
+   "top_days_held": 189,
+   "weeks_selected": 34
+  },
+  {
+   "symbol": "ATOM",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 30,
+   "top_switches": 8,
+   "ctrl_days_held": 602,
+   "top_days_held": 91,
+   "weeks_selected": 20
+  },
+  {
+   "symbol": "NEAR",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 11,
+   "top_switches": 13,
+   "ctrl_days_held": 946,
+   "top_days_held": 813,
+   "weeks_selected": 122
+  },
+  {
+   "symbol": "APT",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 25,
+   "top_switches": 8,
+   "ctrl_days_held": 617,
+   "top_days_held": 322,
+   "weeks_selected": 54
+  },
+  {
+   "symbol": "ARB",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 35,
+   "top_switches": 30,
+   "ctrl_days_held": 848,
+   "top_days_held": 518,
+   "weeks_selected": 93
+  },
+  {
+   "symbol": "OP",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 26,
+   "top_switches": 20,
+   "ctrl_days_held": 749,
+   "top_days_held": 308,
+   "weeks_selected": 61
+  },
+  {
+   "symbol": "SUI",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 39,
+   "top_switches": 25,
+   "ctrl_days_held": 820,
+   "top_days_held": 456,
+   "weeks_selected": 78
+  },
+  {
+   "symbol": "UNI",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 13,
+   "top_switches": 21,
+   "ctrl_days_held": 939,
+   "top_days_held": 785,
+   "weeks_selected": 117
+  },
+  {
+   "symbol": "AAVE",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 1,
+   "top_switches": 5,
+   "ctrl_days_held": 995,
+   "top_days_held": 876,
+   "weeks_selected": 137
+  },
+  {
+   "symbol": "INJ",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 25,
+   "top_switches": 20,
+   "ctrl_days_held": 750,
+   "top_days_held": 315,
+   "weeks_selected": 49
+  },
+  {
+   "symbol": "FIL",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 19,
+   "top_switches": 28,
+   "ctrl_days_held": 841,
+   "top_days_held": 518,
+   "weeks_selected": 76
+  },
+  {
+   "symbol": "ETC",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 25,
+   "top_switches": 21,
+   "ctrl_days_held": 701,
+   "top_days_held": 316,
+   "weeks_selected": 49
+  },
+  {
+   "symbol": "BCH",
+   "ctrl_gross_pct": 40.137543343959855,
+   "top_gross_pct": 578.60920279,
+   "ctrl_switches": 40,
+   "top_switches": 26,
+   "ctrl_days_held": 595,
+   "top_days_held": 168,
+   "weeks_selected": 28
+  }
+ ],
+ "exploratory_dropped_by_selection": {
+  "name_days": 7175,
+  "dropped_gross_ann_pp": 4.199948306325325,
+  "control_gross_ann_pp": 12.862338297230332,
+  "share_of_control_gross": 0.3265306983279787,
+  "note": "控制臂开着、处理臂名单没选中的名-日,占控制臂毛收益的比例"
+ },
+ "exploratory_per_slot_funding": {
+  "control_pct_per_slot_ann": 12.862338297230332,
+  "top_pct_per_slot_ann": 16.85628214688722,
+  "note": "每槽位年化毛费率:控制臂 = 22 槽位等权;处理臂 = 11 个选中槽位等权"
+ },
+ "mechanism_check": {
+  "weeks_measured": 162,
+  "mean_spearman_sig_vs_next_week": 0.599544882391411,
+  "median_spearman": 0.6420101637492942,
+  "frac_weeks_rho_positive": 0.9938271604938271,
+  "frac_top11_with_positive_next_week_funding": 0.8580246913580247,
+  "note": "signal = 过去 30 天日费率均值(周一决策);outcome = 该周 [m, m+6] 实际日费率均值",
+  "mean_funding_per_nameday_selected_open": 0.000531370376333915,
+  "mean_funding_per_nameday_all_open": 0.0004799292980790522,
+  "mean_funding_per_nameday_all_present": 0.0002717171440209761
+ },
+ "fee_sensitivity": {
+  "gross_gap_pp_per_yr": 3.99394384965689,
+  "fee_gap_pp_per_yr_at_7_5bp": 0.34711531936711887,
+  "breakeven_fee_multiple": 11.5061007878848,
+  "note": "费用放大到几倍时两臂净差归零(= 毛差 / 费差)"
+ },
+ "edge_attribution": {
+  "per_name": [
+   {
+    "symbol": "BTC",
+    "weeks_selected": 126,
+    "days_held": 785
+   },
+   {
+    "symbol": "ETH",
+    "weeks_selected": 117,
+    "days_held": 743
+   },
+   {
+    "symbol": "SOL",
+    "weeks_selected": 95,
+    "days_held": 554
+   },
+   {
+    "symbol": "BNB",
+    "weeks_selected": 73,
+    "days_held": 393
+   },
+   {
+    "symbol": "XRP",
+    "weeks_selected": 75,
+    "days_held": 413
+   },
+   {
+    "symbol": "DOGE",
+    "weeks_selected": 133,
+    "days_held": 770
+   },
+   {
+    "symbol": "ADA",
+    "weeks_selected": 0,
+    "days_held": 0
+   },
+   {
+    "symbol": "AVAX",
+    "weeks_selected": 71,
+    "days_held": 407
+   },
+   {
+    "symbol": "LINK",
+    "weeks_selected": 159,
+    "days_held": 995
+   },
+   {
+    "symbol": "DOT",
+    "weeks_selected": 26,
+    "days_held": 154
+   },
+   {
+    "symbol": "LTC",
+    "weeks_selected": 0,
+    "days_held": 0
+   },
+   {
+    "symbol": "TRX",
+    "weeks_selected": 34,
+    "days_held": 189
+   },
+   {
+    "symbol": "ATOM",
+    "weeks_selected": 20,
+    "days_held": 91
+   },
+   {
+    "symbol": "NEAR",
+    "weeks_selected": 122,
+    "days_held": 813
+   },
+   {
+    "symbol": "APT",
+    "weeks_selected": 54,
+    "days_held": 322
+   },
+   {
+    "symbol": "ARB",
+    "weeks_selected": 93,
+    "days_held": 518
+   },
+   {
+    "symbol": "OP",
+    "weeks_selected": 61,
+    "days_held": 308
+   },
+   {
+    "symbol": "SUI",
+    "weeks_selected": 78,
+    "days_held": 456
+   },
+   {
+    "symbol": "UNI",
+    "weeks_selected": 117,
+    "days_held": 785
+   },
+   {
+    "symbol": "AAVE",
+    "weeks_selected": 137,
+    "days_held": 876
+   },
+   {
+    "symbol": "INJ",
+    "weeks_selected": 49,
+    "days_held": 315
+   },
+   {
+    "symbol": "FIL",
+    "weeks_selected": 76,
+    "days_held": 518
+   },
+   {
+    "symbol": "ETC",
+    "weeks_selected": 49,
+    "days_held": 316
+   },
+   {
+    "symbol": "BCH",
+    "weeks_selected": 28,
+    "days_held": 168
+   }
+  ],
+  "top5_by_days_held": [
+   "LINK",
+   "AAVE",
+   "NEAR",
+   "BTC",
+   "UNI"
+  ],
+  "note": "每名在名单里的周数 / 实际持仓日"
+ }
+}
