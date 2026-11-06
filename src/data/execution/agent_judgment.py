@@ -28,7 +28,7 @@ TABLE = "agent_judgment_daily"
 WRITES_TABLES = (TABLE,)
 WRITES_COLUMNS = {"agent_judgment_daily": ("d", "author", "model", "probs", "rationale", "drivers", "change_mind", "dossier_hash",
                                            "scenario_ids", "code_ref")}
-CODE_REF = "agent_judgment v1 (11-05, S-725)"
+CODE_REF = "agent_judgment v2 (11-06:档案加融合特征 / 期权面与做市商伽马 / 预测市场 / 国库净买入)"
 LOOP_NAME = "_agent_judgment_loop"
 PREFIX = "A"
 TEMPERATURE = 0.2
@@ -41,7 +41,8 @@ _BANNED_ZH = re.compile(r"(买入|卖出|加仓|减仓|建仓|清仓|抄底|止�
 _SYSTEM = (
     "You are the forecasting desk of a crypto fund-of-funds. Each day you receive a point-in-time dossier: market state, "
     "historical base rates, nearest historical analogues and what followed them, liquidation map, implied volatility, "
-    "recent events and news headlines. Your ONLY job is a calibrated probability forecast for ONE question: "
+    "the full daily feature matrix, the BTC option surface (skew, term structure, dealer gamma, hedge prices), "
+    "prediction-market prices on BTC levels, corporate-treasury BTC flows, recent events and news headlines. Your ONLY job is a calibrated probability forecast for ONE question: "
     "where will BTC close 30 days after the dossier date, relative to the dossier close — down more than 10%, within ±10%, "
     "or up more than 10%. You are scored by Brier score against two mechanical arms (base rate, nearest neighbours). "
     "Deviate from the base rates only where the dossier gives you a concrete reason; say which reason. "
@@ -58,7 +59,7 @@ _INSTRUCTION = (
 )
 
 
-def dossier(decision: dict, news: list[dict]) -> dict:
+def dossier(decision: dict, news: list[dict], extra: Optional[dict] = None) -> dict:
     """纯函数。③ 决定行 + 新闻 → 交给模型的档案(只放已落表的字段;不放规则敞口,免得它去猜规则)。"""
     inp = dict(decision.get("inputs") or {})
     keep = ("mom_200", "dist_200", "funding_7d_ann", "oi_chg_30d", "breadth_above_ma50", "liq_sell_5pct", "liq_buy_15pct",
@@ -68,7 +69,8 @@ def dossier(decision: dict, news: list[dict]) -> dict:
     return {"date": str(decision.get("d"))[:10], "question": "BTC close 30 days later vs this close: <-10% / within ±10% / >+10%",
             "state": {k: inp.get(k) for k in keep if inp.get(k) is not None},
             "base_rate_same_state": {"probs": decision.get("probs"), "bucket": decision.get("bucket"), "n_days": decision.get("n_bucket")},
-            "news_48h": [{"t": str(n.get("published_at") or "")[:16], "title": str(n.get("title") or "")[:160]} for n in news[:NEWS_MAX]]}
+            "news_48h": [{"t": str(n.get("published_at") or "")[:16], "title": str(n.get("title") or "")[:160]} for n in news[:NEWS_MAX]],
+            **(extra or {})}
 
 
 def dossier_hash(doc: dict) -> str:
@@ -102,8 +104,11 @@ def comply(s: Any) -> Optional[str]:
     return c[:800]
 
 
+AUTHOR_VERSION = "v2"     # 11-06 档案变了 ⇒ 新作者,和 v1 的 Brier 分开记
+
+
 def author_for(model: str) -> str:
-    return "ai:" + re.sub(r"[^A-Za-z0-9_.\-]", "-", (model or "unknown").strip())[:40]
+    return "ai:" + re.sub(r"[^A-Za-z0-9_.\-]", "-", (model or "unknown").strip())[:40] + ":" + AUTHOR_VERSION
 
 
 async def _news(now: dt.datetime) -> list[dict]:
@@ -115,6 +120,49 @@ async def _news(now: dt.datetime) -> list[dict]:
     except Exception:                                                     # noqa: BLE001 —— 新闻读不到不挡判断
         return []
     return rows
+
+
+async def _extra(d: str) -> dict:
+    """11-06(Jazz「把特征和因子放在一起」):档案加四块 —— 融合特征表当天那一行、期权面(偏斜 / 期限 / 做市商伽马 / 对冲价格)、
+    预测市场里 BTC 相关的价格事件、国库(上市公司)过去 28 天的 BTC 净买入。每块读不到就不放(不放 ≠ 0)。"""
+    from src.data.style.header import _read_all
+    out: dict = {}
+    try:
+        from src.data.vector.market_state_writer import _sb_get              # _read_all 会把 limit 改成 1000 —— 这里只要一行
+        rd = await _sb_get("feature_matrix_daily", {"select": "d,f", "d": f"lte.{d}", "order": "d.desc", "limit": "1"})
+        fm = rd.rows if rd.ok else None
+        if fm:
+            out["feature_matrix"] = {"d": str(fm[0]["d"])[:10], "f": {k: (round(v, 4) if isinstance(v, float) else v) for k, v in (fm[0].get("f") or {}).items()}}
+    except Exception:                                                     # noqa: BLE001
+        pass
+    try:
+        op = await _read_all("options_surface_daily", {"select": "d,atm_iv_7d,atm_iv_30d,atm_iv_90d,skew_30d,pc_oi_ratio,pc_vol_ratio,"
+                                                                  "put90_30d_cost_pct,put_spread_90_80_30d_cost_pct,gex_net_usd_1pct,gamma_pin_strike,spot",
+                                                         "currency": "eq.BTC", "d": f"lte.{d}", "order": "d.desc", "limit": "1"})
+        if op:
+            out["options_btc"] = op[0]
+    except Exception:                                                     # noqa: BLE001
+        pass
+    try:
+        pm = await _read_all("prediction_markets", {"select": "event_title,item,p_yes,end_date,volume_24h", "tag": "eq.crypto",
+                                                    "d": f"lte.{d}", "order": "d.desc,volume_24h.desc.nullslast", "limit": "40"})
+        btc = [r for r in pm if "bitcoin" in str(r.get("event_title") or "").lower()][:15]
+        if btc:
+            out["prediction_markets_btc"] = btc
+    except Exception:                                                     # noqa: BLE001
+        pass
+    try:
+        d0 = (dt.date.fromisoformat(d) - dt.timedelta(days=28)).isoformat()
+        td = await _read_all("treasury_decisions", {"select": "decision_type,transaction_value_usd", "coin_id": "eq.bitcoin",
+                                                    "decision_date": f"gt.{d0}", "order": "decision_date.asc"})
+        if td:
+            buy = sum(float(r.get("transaction_value_usd") or 0) for r in td if r.get("decision_type") == "buy")
+            sell = sum(float(r.get("transaction_value_usd") or 0) for r in td if r.get("decision_type") == "sell")
+            out["treasury_btc_28d_usd"] = {"buy": round(buy), "sell": round(sell), "n": len(td),
+                                           "note": "decision_date 口径(季末日期可能是季报披露,未按可得日修正 —— S-738 在测)"}
+    except Exception:                                                     # noqa: BLE001
+        pass
+    return out
 
 
 async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
@@ -137,7 +185,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         return {"ok": True, "status": "skipped", "why": f"{d} 的决定里没有 BTC 收盘"}
     if not llm.configured():
         return {"ok": False, "refused": True, "status": "refused", "why": "LLM_BASE_URL 未配"}
-    doc = dossier(dec[0], await _news(now))
+    doc = dossier(dec[0], await _news(now), await _extra(d))
     text = await llm._chat([{"role": "system", "content": _SYSTEM},
                             {"role": "user", "content": _INSTRUCTION + json.dumps(doc, ensure_ascii=False, default=str)}],
                            temperature=TEMPERATURE, max_tokens=MAX_TOKENS, timeout=TIMEOUT_S)

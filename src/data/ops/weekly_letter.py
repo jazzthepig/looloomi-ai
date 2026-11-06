@@ -197,7 +197,7 @@ def compose(week_end: str, live: dict, panel_ret: Optional[float], decisions: li
 _PUBLIC_AUTHORS = (
     (re.compile(r"seth:exposure-knn"), "近邻臂(机械)"),
     (re.compile(r"seth:exposure"), "基率臂(机械)"),
-    (re.compile(r"\bai:[A-Za-z0-9_.\-]+"), "AI 判断臂"),
+    (re.compile(r"\bai:[A-Za-z0-9_.:\-]+"), "AI 判断臂"),
     (re.compile(r"\bseth[:\-][a-z\-]+"), "研究团队"),
     (re.compile(r"\blane-([abc])\b"), lambda m: f"研究组 {m.group(1).upper()}"),
     (re.compile(r"\bjazz\b"), "Jazz"),
