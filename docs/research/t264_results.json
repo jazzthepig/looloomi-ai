@@ -1,0 +1,41 @@
+{
+  "card": "T-264",
+  "ledger": "S-742",
+  "seed": 742,
+  "n_null": 1000,
+  "min_shift": 60,
+  "bh_q": 0.1,
+  "sample_start": "2021-03-01",
+  "premise": {
+    "start": "2021-03-01",
+    "venues_required": [
+      "gdax",
+      "binance",
+      "upbit",
+      "binance_futures"
+    ],
+    "table_rows": 0,
+    "table_date_range": null,
+    "table_exchanges": [],
+    "table_kinds": {},
+    "venue_coverage": {},
+    "all_required_ok": false,
+    "why_empty": "exchange_volume_daily 读出来 0 行(表空,或该 key 无 SELECT 权限)",
+    "fmd_rows": 2866,
+    "fmd_range": [
+      "2019-01-01",
+      "2026-11-05"
+    ],
+    "fmd_venue_keys": {},
+    "fmd_has_venue_true": 0,
+    "fmd_feature_counts": {
+      "venue:coinbase_share_spot30": 0,
+      "venue:korea_share_spot30": 0,
+      "venue:deriv_to_spot30": 0
+    },
+    "features_available": false
+  },
+  "ran": false,
+  "status": "STOPPED_PRECONDITION",
+  "stop_reason": "exchange_volume_daily 四个场所自 2021-03-01 起的逐日覆盖不足 95%"
+}
