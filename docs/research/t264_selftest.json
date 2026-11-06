@@ -1,0 +1,55 @@
+{
+  "selftest": {
+    "signal": {
+      "code": "SELF-signal",
+      "feature": "F1",
+      "expect": "+",
+      "n_obs": 1740,
+      "ic": 0.329,
+      "null_pct_in_expected_direction": 1.0,
+      "p_one_sided": 0.0,
+      "null_abs_q95": 0.227,
+      "segments": {
+        "seg1_2021-03_to_2023-06": 0.1578,
+        "seg2_2023-07_on": 0.1242
+      },
+      "ic_resid": 0.3291,
+      "checks": {
+        "a_ic_sign_and_size": true,
+        "b_null_pct": true,
+        "c_both_segments_same_sign": true,
+        "d_resid_same_sign": true
+      },
+      "verdict_pre_bh": "PASS",
+      "p_for_bh": 0.0,
+      "bh_q": 0.0,
+      "verdict": "PASS"
+    },
+    "noise": {
+      "code": "SELF-noise",
+      "feature": "F1",
+      "expect": "+",
+      "n_obs": 1740,
+      "ic": -0.0004,
+      "null_pct_in_expected_direction": 0.495,
+      "p_one_sided": 0.505,
+      "null_abs_q95": 0.0516,
+      "segments": {
+        "seg1_2021-03_to_2023-06": -0.0241,
+        "seg2_2023-07_on": 0.0219
+      },
+      "ic_resid": 0.0,
+      "checks": {
+        "a_ic_sign_and_size": false,
+        "b_null_pct": false,
+        "c_both_segments_same_sign": false,
+        "d_resid_same_sign": true
+      },
+      "verdict_pre_bh": "FAIL",
+      "p_for_bh": 0.505,
+      "bh_q": 0.505,
+      "verdict": "FAIL"
+    },
+    "ok": true
+  }
+}
