@@ -195,6 +195,7 @@ def compose(week_end: str, live: dict, panel_ret: Optional[float], decisions: li
 
 #: 11-05(Jazz:周信发到他的社群)—— 社群版只换叫法、去掉内部编号与表名,数字一个不改。
 _PUBLIC_AUTHORS = (
+    (re.compile(r"seth:exposure-knn-fused"), "融合近邻臂(机械)"),
     (re.compile(r"seth:exposure-knn"), "近邻臂(机械)"),
     (re.compile(r"seth:exposure"), "基率臂(机械)"),
     (re.compile(r"\bai:[A-Za-z0-9_.:\-]+"), "AI 判断臂"),

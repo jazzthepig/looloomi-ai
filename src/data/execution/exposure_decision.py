@@ -28,7 +28,7 @@ TABLE = "exposure_decision_daily"
 WRITES_TABLES = (TABLE,)
 WRITES_COLUMNS = {"exposure_decision_daily": ("d", "sleeve", "rule_exposure", "mult_arm", "mult_m", "inputs", "bucket", "probs",
                                               "n_bucket", "flag", "rationale", "scenario_ids", "posted_at", "code_ref")}
-CODE_REF = "exposure_decision v1.1 (11-05: + probs_window 描述臂)"
+CODE_REF = "exposure_decision v1.2 (11-06: + probs_knn_fused 融合近邻臂、联合模型 z 描述)"
 AUTHOR = "seth:exposure"
 SLEEVE = "crypto_core"
 HORIZON_D = 30
@@ -194,7 +194,11 @@ def rationale(d: str, exposure: Optional[float], bucket: str, probs: dict, n: in
     pk = inputs.get("probs_knn")
     if pk and inputs.get("knn_segments"):
         parts.append(f"近邻基率({KNN_K} 个最相似的历史交易日、约 {inputs['knn_segments']} 段):{pk['down']:.0%} / {pk['flat']:.0%} / {pk['up']:.0%}。")
-    parts.append("这些命题已写进情景台账,到期公开结算;两种基率各记各的分。")
+    pf = inputs.get("probs_knn_fused")
+    if pf and inputs.get("knn_fused_segments"):
+        parts.append(f"融合近邻基率(56 维融合状态、按时点 z;{inputs.get('knn_fused_n')} 个最相似的历史日、约 {inputs['knn_fused_segments']} 段):"
+                     f"{pf['down']:.0%} / {pf['flat']:.0%} / {pf['up']:.0%}。")
+    parts.append("这些命题已写进情景台账,到期公开结算;每种基率各记各的分。")
     if flag:
         parts.append("⚑ " + flag + "(规则不变;偏离只经预注册与编号)。")
     return " ".join(parts)
@@ -370,6 +374,15 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
             wd, (wr["probs"] if wr["n"] else None), wr["n"], wr["segments"], wr["matches"]
     except Exception as e:                                                # noqa: BLE001
         inputs["probs_window"], inputs["window_error"] = None, f"{type(e).__name__}: {str(e)[:120]}"
+    try:                                                                  # 11-06:第四条描述臂 —— 融合特征表(56 维、按时点 z)上的近邻;只报不动钱(S-745)
+        from src.data.state.fused_knn import load_vectors as _fv, rates as _fr
+        fr = _fr(await _fv(), fwd, d)
+        inputs["probs_knn_fused"], inputs["knn_fused_n"], inputs["knn_fused_segments"], inputs["knn_fused_d"] = \
+            fr["probs"], fr["n"], fr["segments"], fr["vector_d"]
+        if fr.get("why"):
+            inputs["knn_fused_error"] = fr["why"]
+    except Exception as e:                                                # noqa: BLE001
+        inputs["probs_knn_fused"], inputs["knn_fused_error"] = None, f"{type(e).__name__}: {str(e)[:120]}"
     flag = flag_for(exposure, probs)
     text = rationale(d, exposure, bucket, probs, n, used, inputs, flag)
     sub = await submit(scenario_entries(d, closes[d], probs), AUTHOR, now)
@@ -377,6 +390,11 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     if pk and kn:
         sub2 = await submit(scenario_entries(d, closes[d], pk, prefix="K"), AUTHOR_KNN, now)
         ids += list(sub2.get("ids") or [])
+    pf = inputs.get("probs_knn_fused")
+    if pf:
+        from src.data.state.fused_knn import AUTHOR as AUTHOR_KNN_FUSED
+        sub3 = await submit(scenario_entries(d, closes[d], pf, prefix="F"), AUTHOR_KNN_FUSED, now)
+        ids += list(sub3.get("ids") or [])
     row = {"d": d, "sleeve": SLEEVE, "rule_exposure": exposure, "mult_arm": MULT_ARM, "mult_m": _f(mult[0].get("m")) if mult else None,
            "inputs": inputs, "bucket": used, "probs": probs, "n_bucket": n, "flag": flag, "rationale": text, "scenario_ids": ids,
            "posted_at": None, "code_ref": CODE_REF}
