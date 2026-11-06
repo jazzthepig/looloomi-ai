@@ -1,0 +1,28 @@
+{
+  "id": "T-267",
+  "owner": "lane-b",
+  "status": "in_review",
+  "created": "2026-11-06",
+  "title": "S-744 永续上线之后的跑输:做空供给 vs 上线前追高的均值回归 —— 按「之前 30 天收益」匹配的对照日 + 换 CoinGecko 价格源扩宇宙;判据照台账写死",
+  "source": "REFUTATION_LEDGER S-744(先读;机制检验 (a)–(d) 一字不改)与你自己的 T-262 报告 / t262_perp_listing.py(标题过滤口径照用)。价格 cg_coin_mcap_daily(coin_id, d, price),代币映射 cg_coin_map(symbol → coin_id);events.symbols 11-06 修过解析(仍为空的照 T-262 从标题解析)。零分布 / 翻转检验只用 src/data/evaluation/apparatus.py。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-267.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 样本漏斗(公告 → 过滤 → 事件 → 有 CG 价且上线前 ≥ 60 天 → 匹配对照日 ≥ 20 的);映射不到的代币列名单。② 机制检验 (a)–(d) 原始数字(匹配后差的中位数、翻转检验 p、两段、进入事件数)。③ 副项:S-740 原判据在新价格源上的数字、市值三分位、资金费关系 —— 只报不判。④ 只算、不改代码、不入库;长脚本 nohup。附 docs/research/scenarios/lane-b-T-267.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-267_perp_listing_mechanism.md + t267_mechanism.py + t267_results.json;卡 notes 写 (a)–(d);in_review,推 lane-b/T-267。"
+  },
+  "prior_value": "S-740 判据全过但 n = 46 且机制没分开;扩宇宙与机制诊断是评审轮点名的下一件事。",
+  "notes": "S-744 机制四判据(主,entry d):(a) 匹配后差中位 −14.50%(均值 −7.91%,n=48)✅ ≤ −3%;(b) 事件间符号翻转检验 10,000 次、种子 744,统计量=翻转后中位数,单侧 p = 0.02145(零分布 p05 −9.91%、p50 +0.08%)✅;(c) 两段 2020–2022(n=20)中位 +0.10%/均值 +4.11% vs 2023+(n=28)中位 −17.83%/均值 −16.49% ⇒ 异号 ❌;(d) 进入检验 48/80 ✅(32 个因对照日 < 20 退出,几乎全是 2020 年早期币)⇒ 不全过 ⇒ 按预注册记「跑输可由追高回归解释」,S-740 前向记录照旧但不再写「做空供给」。S-665 挪一天:(a) −10.80%(b) p = 0.02705(c) +4.27% vs −15.86% 仍异号(d) 48。① 漏斗:818 条公告 → 标题过滤后 467 → 展开 297 个(代币,上线日)事件(symbols 字段 255 / 标题解析 42)→ 映射不到 CG id 167 个(165 个代码,名单在 t267_results.json → funnel_2_mapping.unmapped_list)→ 上线前 < 60 天 CG 价 48 → 2020 窗口前 2 → 样本 80(按年 2020:29 2021:1 2024:19 2025:30 2026:1;比 S-740 的 46 扩了 34,主要是 2024/2025)。② 价格源换表(请 @seth 确认):cg_coin_map 用发布版 publishable key 读不到(HTTP 401 permission denied);cg_coin_mcap_daily 里没有 bitcoin/ethereum/solana/elrond-erd-2(HTTP 200、content-range */0)⇒ 给不出卡上自己要求的「BTC 同源」基准 ⇒ 改用同上游 source=coingecko_pro_market_chart、带 symbol 主键、含 bitcoin 全历史(4,328 行 2014-12-31→2026-11-05)的 asset_mcap_daily;对拍:两表共有的 3 个 coin_id 上 6,754 个 (coin_id,d) 对价格不一致 0 对;poa_fast vs apparatus.price_on_or_after 630 对 0 不一致;129 个 coin_id 全部取到价(合计 194,592 行)。③ 副项:S-740 原判据在新宇宙全过 —— (a) h30 中位 −15.02%/均值 −12.08%(n=80);(b) 同代币同年份随机日期对照 1,000 次种子 740:实际 −15.02% vs 对照 p05 −11.56%(对照中位 −5.70%)⇒ 0.004 分位,h60 0.000 分位;(c) 两段 −5.97%(n=30)/−24.15%(n=50)同号;(d) 去掉 37 个追高(>50%)剩 43 个中位 −14.57% 同号;h60 中位 −26.55%。市值三分位与上线后 7 天资金费关系的数值已算完在 docs/research/t267_results.json → mcap_tertiles / funding,本轮上下文上限触发前未抄进报告正文 ⇒ 本卡唯一缺口,下一轮补进报告 §4(数据已在仓库,不必重跑)。④ 产物:docs/research/T-267_perp_listing_mechanism.md + t267_mechanism.py + t267_results.json + scenarios/lane-b-T-267.json(5 条,3 条前向 + 2 条自动结算基线);缓存 /Volumes/CometCloudAI/cometcloud-local/research/t267_cache/,日志 …/t267_run.log;只算、不改代码、不入库。",
+  "verified": null
+}
