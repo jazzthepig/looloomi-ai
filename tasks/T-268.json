@@ -1,0 +1,28 @@
+{
+  "id": "T-268",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-06",
+  "title": "S-745 融合状态近邻臂 vs 原近邻臂 vs 基率臂:2022-06 → 2026-10 时点重放,三档 Brier + 配对块自助 —— 判据照台账写死",
+  "source": "REFUTATION_LEDGER S-745(先读;(a)–(d) 一字不改)。生产函数:src/data/state/fused_knn.py(pit_vectors / rates)、src/data/execution/exposure_decision.py(knn_rates / base_rates / forward_returns / outcome_bin)。数据:feature_matrix_daily(物化)、market_state_vectors(d, vec)、BTC 收盘 perp_bv_daily symbol = BTC。零分布 / 自助只用 src/data/evaluation/apparatus.py。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-268.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 每天三臂都只用 ≤ d 的信息(融合向量本身就是时点的;原近邻用 d 之前 3 天内最近的向量、排除最近 31 天;基率用 forward_returns 只取 < d)。② (a)–(d) 原始数字 + 每臂 Brier / 技能。③ 副项只报不判。④ 只算、不改代码、不入库;先落文件再跑(上下文护栏)。附 docs/research/scenarios/lane-c-T-268.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-268_fused_knn_brier.md + t268_replay.py + t268_results.json;卡 notes 写 (a)–(d);in_review,推 lane-c/T-268。"
+  },
+  "prior_value": "③ 的近邻描述一直只看 24 维;30 个新维度进了融合表却没进任何决定的描述。",
+  "notes": "",
+  "verified": null
+}

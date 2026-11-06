@@ -62,6 +62,7 @@
 | open | T-242 | lane-b | 行为型 setup 登记表第一批(S-726):拥挤多头被洗(crowding flush)与拥挤空头被挤(squeeze)—— 2020 起全部 Binance 永续上的每一次,事件后 1 / 7 / 30 天相对时点等权永续篮的收益分布、偏度与最差一成;只报基率,不写交易规则 | 报告 docs/research/T-242_crowding_setups.md(预注册在前;两类 × 三期限 × 两半的表 + 聚集度 + 尾巴)+ docs/research/t242_crowding_setups.py + t242_results.json;卡 notes 写 n、30 天超额中位 / 分位 / 两半 / 挪一天、最差 10%,以及登记与否;in_review,推 lane-b/T-242。 | Tom 的「fade the crowd」在我们这里只以 MVRV 投降买(V2,台账 5c)出现过一次;永续上的拥挤平仓 / 逼空从没量过基率。 |  |
 | open | T-251 | lane-b | R-v2 名义合计上限 30% vs 40% 的回放(Jazz 11-05「4. 更灵活,40%?」;只报,Jazz 定是否改 R_V2_GROSS_CAP_FRAC) | 报告 docs/research/T-251_rv2_gross_cap_30_vs_40.md + docs/research/t251_gross_cap.py + t251_results.json;卡 notes 写三档对照表;in_review,推 lane-b/T-251。 | 上限 30% 是 Jazz 10-29 给的;40% 的代价没量过。 |  |
 | open | T-246 | lane-c | R-v2 的宇宙能不能写成一条按时点的规则(S-731):在全部 coin 永续(含死币,perp_bv_daily)上,「上市满 365 天 且 30 日均成交额 ≥ 2,000 万美元」—— 对照现行的 257 名面板宇宙(今天的幸存者名单)与无门槛全宇宙;原因 = 薄盘口的新合约上的突破多半是做出来的 | 报告 docs/research/T-246_rv2_pit_universe.md(预注册在前)+ docs/research/t246_rv2_pit_universe.py + t246_results.json;卡 notes 写三个宇宙的票数 / 总 R / Calmar / 两半 / 08-08 后,以及判;in_review,推 lane-c/T-246。 | R-v2 的宇宙一直是一份名单;从没量过一条按时点的准入规则能不能接替它。 |  |
+| open | T-268 | lane-c | S-745 融合状态近邻臂 vs 原近邻臂 vs 基率臂:2022-06 → 2026-10 时点重放,三档 Brier + 配对块自助 —— 判据照台账写死 | 报告 docs/research/T-268_fused_knn_brier.md + t268_replay.py + t268_results.json;卡 notes 写 (a)–(d);in_review,推 lane-c/T-268。 | ③ 的近邻描述一直只看 24 维;30 个新维度进了融合表却没进任何决定的描述。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -269,4 +270,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 17 · claimed 7 · blocked 4 · in_review 45 · done 190 · dropped 3
+open 18 · claimed 7 · blocked 4 · in_review 45 · done 190 · dropped 3
