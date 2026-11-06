@@ -1,0 +1,28 @@
+{
+  "id": "T-254",
+  "owner": "lane-b",
+  "status": "in_review",
+  "created": "2026-11-06",
+  "title": "R-v2 的 R 从哪种市场里来(只报不判):T-251 回放的全部票按开票日的 ③ 敞口(0 / 1)、⓪ phase、majors 200 日线上 / 下、DVOL 一年分位(三档)分组,报每组的票数、R 合计 / 均值 / 中位、胜率、最大连亏 —— 为将来的闸门预注册准备基率,真钱上限刚改到 40%",
+  "source": "Jazz 11-05 夜定 R-v2 名义上限 40%(8f982807)。T-251 的回放脚本与缓存 docs/research/t251_gross_cap.py、/Volumes/CometCloudAI/cometcloud-local/research/t251_cache/(不要重抓)。③ 敞口历史:exposure_decision_daily 只有 3 行 ⇒ 照 T-252 的做法用 src/data/signals/tom.trade_path 本地复算(只 import)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-254.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 票集 = T-251 40% 档实际成交的票(写明张数);每张票的分组变量只用开票日 d 收盘可知的值,判完再挪一天判一次(S-665)。② 四个分组变量各一张表 + 一张 ③ × majors 200 日线的交叉表。③ 每组 n < 15 的格子标 thin。④ 零信号对照:分组标签在票之间随机置换 1,000 次(apparatus.null_distribution,种子 254),报每组 R 均值的分位。⑤ 只报不判;不改代码、不入库;长脚本 nohup。交付附 docs/research/scenarios/lane-b-T-254.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-254_rv2_regime_buckets.md + t254_buckets.py + t254_results.json;卡 notes 写四张表的摘要;in_review,推 lane-b/T-254。"
+  },
+  "prior_value": "R-v2 的票从没按市场状态拆过。",
+  "notes": "T-254 交付(只报不判:不改代码、不入库、不动上限)。报告 docs/research/T-254_rv2_regime_buckets.md + 脚本 docs/research/t254_buckets.py + 结果 docs/research/t254_results.json;情景 docs/research/scenarios/lane-b-T-254.json(6 条)。\n【票集】T-251 回放(窗口 2020-07-01→2026-11-04),40% 名义上限档**实际成交 145 张**(全部票 779;30% 档 147)。与 T-251 results 的 tickets_taken=145 一致。③ 敞口用生产核 tom.trade_path 本地复算(T-252 口径),与已落表 exposure_decision_daily **3/3 逐日相符**。\n【先看这条】145 张票 R 合计 +54.33、均值 +0.375,但**中位 −0.610、胜率 32.4%**;**前 3 张票占 R 合计 87.3%**(最大 DOGE:2024-10-18 R=16.06;MANA/LRC 2021-10-28 各 ≈15.90/15.45),去掉最大 3 张后均值只剩 +0.049 ⇒ 票集基率是**中位为负**,均值靠右尾撑。任何以组均值为口径的读数必须同时看中位与置换分位。\n【四张表 · 开票日 d 收盘】(n | R 合计 | R 均值 | R 中位 | 胜率 | 最大连亏 | 均值置换分位)\n- ③ 敞口 0:n=14 thin,−0.978,−0.070,−0.608,28.6%,4,p=0.38 ; 1:n=131,+55.31,+0.422,−0.622,32.8%,11,p=0.62\n- ⓪ phase none:n=15,−5.77,−0.385,−0.746,20.0%,7,p=0.13 ; normal:n=114,+53.37,+0.468,−0.636,32.5%,11,p=0.75 ; turning:n=16,+6.74,+0.421,−0.431,43.8%,2,p=0.59\n- majors 200 日线:**退化** —— above:n=145,+0.375,p=—(单组);below:n=0。它同时是 R-v2 的信号闸门(sig_at 要求 gate_open),票 100% 在上方,该格没有区分度。补一张离 200 日线距离分档:near_above(0~5%) n=10 thin,+31.55,+3.156,+1.933,70.0%,2,p=0.99 ; far_above(>5%) n=135,+22.78,+0.169,−0.650,29.6%,11,p=0.005\n- DVOL 一年分位 mid:n=20,+26.26,+1.313,+0.252,65.0%,3,p=0.91(中位分位 1.00);low:n=62,−5.68,−0.092,−0.692,27.4%,10,p=0.06;high:n=24,−2.10,−0.088,−0.649,25.0%,7,p=0.22;insufficient_history(2022-03 前,不满 252 日)n=24,+41.63,+1.735,−0.548,33.3%,5,p=0.99(中位分位仅 0.68 ⇒ 显著性全由右尾驱动);no_dvol_history(2021-03-24 前)n=15,−5.77,−0.385,−0.746,20.0%,7,p=0.13\n【交叉表 ③ × majors 200】0|above n=14 −0.070 ; 1|above n=131 +0.422(第二维退化)。另附 ③ × majors 距离:0|far n=14 −0.070 ; 1|far n=121 +0.196 ; 1|near n=10 +3.156。\n【S-665 挪一天(entry 日)】只有两条在挪一天后才分化:③ 敞口 0 组 n=17 −8.05/−0.474/p=0.063、1 组 n=128 +62.39/+0.487/p=0.916(开票日当天 p=0.38/0.62 不显著);DVOL mid n=24 +27.81/+1.159/54.2%/p=0.911(中位分位 0.996)、low n=59 −11.76/−0.199/p=0.019。反向:phase=turning 挪一天后翻转(+0.421→−0.089)⇒ 不稳定;maj_dist near_above 从 n=10 掉到 n=7、中位分位 1.00→0.706 ⇒ thin,不能当结论。\n【零信号对照】apparatus.null_distribution:标签在 145 张票之间随机置换 1,000 次,基种子 254(每组 254+组序),报均值分位与中位分位两列。⚠️ 第一版置换有 bug(标签没真正打乱 ⇒ 全部 NoOpNull),已修并重跑,上列是修后的数。\n【口径】分组变量只用开票日 d 收盘可知值;③ 敞口=0/1 由 clip[0,1] 的复算值判;DVOL 用 Deribit 30d,开票日在过去 252 个交易日的百分位切三档;major 距离用与 load_gate 同源的 level/MA200。\n【需 @seth】① ③ 敞口=0 组(挪一天口径 n=17,p=0.063)是本卡唯一接近显著的分组结果,但 n 小、中位分位 0.153 不显著 —— 是否另立卡预注册「③ 判 0 时不出手」?② majors 200 日线在票集上无区分度(退化),要它的基率得另查闸门关着的日子(不在本卡数据范围)。③ 中位为负这一事实本身可能比任何分组都重要,建议下一张卡专查「R-v2 票集的中位为何为负」。",
+  "verified": null
+}

@@ -22,6 +22,7 @@
 | in_review | T-238 | lane-b | R-v2 在同质永续序列上重验(S-719):`binance_um_hist`(存档 + 11-05 起续写)上用 s677 生成器按固定规则重生成票,与 770 张缓存逐票对比(2026-08-08 前应基本一致),重报 S-638 的钱曲线与 S-677 的 OOS 切片;顺带报 2026-10-19 → 昨天这段在永续序列上的信号数 | 报告 docs/research/T-238_rv2_um_revalidation.md(预注册在前)+ docs/research/t238_rv2_um.py + t238_results.json;卡 notes 写三组票数、总 R、钱曲线三数、S-677 切片、10-19 起的信号数与判;in_review,推 lane-b/T-238。 | R-v2 的全部验证数字(S-610 / S-638 / S-677)在 10-21 缓存上;切换源后这些数字是否仍成立,今天没有答案。 |  |
 | in_review | T-244 | lane-b | R-v2 的止损是不是被猎了(S-728):被止损出场的票里,多少是「插针打掉、几天内收回、之后走到 +1R / +2R」;盘中止损 vs 收盘止损(+ −4 ATR 灾难线)在同一批票上对照 —— Jazz「机械交易会成为交易所和做市商的提款机」的第一个可量的版本 | 报告 docs/research/T-244_stop_hunt.md(预注册在前)+ docs/research/t244_stop_hunt.py + t244_results.json;卡 notes 写止损出场 n、被猎占比与错过的 R、规则 C 对原规则的四个数与判;in_review,推 lane-b/T-244。 | R-v2 的止损只比过距离(S-620 / S-621),没比过触发方式;被猎的比例从没人数过。 |  |
 | in_review | T-247 | lane-b | 收盘止损的 +23% R 能不能变成钱(S-732):规则 C(收盘判止损 + −4 ATR 灾难线)配**占坑中性**的名额 —— cap = round(10 × C 的平均持有根数 / 原规则的平均持有根数),其余全同;对照原规则 cap 10 与 C cap 10 | 报告 docs/research/T-247_close_stop_slots.md(预注册在前)+ docs/research/t247_close_stop_slots.py + t247_results.json;卡 notes 写 hold_A / hold_C / cap_C、三条钱曲线的四个数与判;in_review,推 lane-b/T-247。 | S-728 证明了插针扫止损是真的、C 的 R 多 23%,但没有回答它能不能变成钱。 |  |
+| in_review | T-254 | lane-b | R-v2 的 R 从哪种市场里来(只报不判):T-251 回放的全部票按开票日的 ③ 敞口(0 / 1)、⓪ phase、majors 200 日线上 / 下、DVOL 一年分位(三档)分组,报每组的票数、R 合计 / 均值 / 中位、胜率、最大连亏 —— 为将来的闸门预注册准备基率,真钱上限刚改到 40% | 报告 docs/research/T-254_rv2_regime_buckets.md + t254_buckets.py + t254_results.json;卡 notes 写四张表的摘要;in_review,推 lane-b/T-254。 | R-v2 的票从没按市场状态拆过。 |  |
 | in_review(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | in_review | T-220 | lane-c | 治理的领先信号:解锁前团队 / 基金会钱包流向、出事后的处理、营销强度 —— 先查能不能量(数据源可行性),再写预注册草稿 | 报告 docs/research/T-220_governance_leading_signals.md(开头可行性表);卡片 notes 写:免费源够不够、事件个数、两条草稿是否可在现有数据上跑;in_review,推 lane-c/T-220。 | 治理只量了滞后的一半(S-661 价值捕获比、S-587 质量);领先的行为信号一个都没有,不知道现有数据能不能量。 |  |
 | in_review | T-224 | lane-c | ② 倾斜在更宽的面板上:按时点前 50 大(含死币)的 ①,压低 S-691 五因子合成最差五分之一的权重 —— S-694 在 24 名上 ❌,问宽到 50 名「躲开」信号够不够用 | 报告 docs/research/T-224_tilt_pit50.md(预注册段在前);卡 notes 写基线年化 / 倾斜超额 / 随机对照分位 / 两段符号;scenarios/lane-c-T-224.json;in_review,推 lane-c/T-224。 | ② 只在 24 名上试过一次(S-694 ❌);宽面板上「躲开最差档」的倾斜没有任何回放。 |  |
@@ -255,4 +256,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 13 · claimed 7 · blocked 4 · in_review 35 · done 190 · dropped 3
+open 13 · claimed 7 · blocked 4 · in_review 36 · done 190 · dropped 3

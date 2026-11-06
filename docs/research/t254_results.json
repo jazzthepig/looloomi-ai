@@ -1,0 +1,1260 @@
+{
+ "as_of": "2026-11-06",
+ "ticket_set": {
+  "source": "T-251 回放(t251_gross_cap.scan + simulate)",
+  "window": [
+   "2020-07-01",
+   "2026-11-04"
+  ],
+  "cap_frac": 0.4,
+  "n_tickets_total": 779,
+  "n_tickets_taken_40pct": 145,
+  "n_tickets_with_r": 145,
+  "n_tickets_total_30pct": 147
+ },
+ "exposure_reconstruction": {
+  "method": "src.data.signals.tom.trade_path(bear='rally', exit_mode='l20', vol=True),clip[0,1],BTC/ETH 各 0.5",
+  "price_source": "asset_mcap_daily.price(T-252 缓存)",
+  "validation": [
+   {
+    "d": "2026-11-02",
+    "published": 0.0,
+    "recon_full": 0.0,
+    "recon_live": 0.0,
+    "match_full": true,
+    "match_live": true
+   },
+   {
+    "d": "2026-11-03",
+    "published": 0.0,
+    "recon_full": 0.0,
+    "recon_live": 0.0,
+    "match_full": true,
+    "match_live": true
+   },
+   {
+    "d": "2026-11-04",
+    "published": 0.0,
+    "recon_full": 0.0,
+    "recon_live": 0.0,
+    "match_full": true,
+    "match_live": true
+   }
+  ],
+  "sensitivity": "主口径 exp_full(2019 起);exp_live(2024-01-01 起)见 vars.exp3_live"
+ },
+ "basis_base": {
+  "basis": "开票日 d 收盘(信号日)",
+  "n_tickets": 145,
+  "vars": {
+   "exp3": {
+    "label": "③ 敞口(0/1)",
+    "groups": {
+     "0": {
+      "n": 14,
+      "sum_r": -0.9776,
+      "mean_r": -0.0698,
+      "med_r": -0.6077,
+      "win_pct": 28.6,
+      "max_losing_streak": 4,
+      "r_dist": {
+       "min": -1.0223,
+       "p25": -1.0177,
+       "p75": 0.0389,
+       "max": 5.1126
+      },
+      "thin": true
+     },
+     "1": {
+      "n": 131,
+      "sum_r": 55.3106,
+      "mean_r": 0.4222,
+      "med_r": -0.6224,
+      "win_pct": 32.8,
+      "max_losing_streak": 11,
+      "r_dist": {
+       "min": -1.0427,
+       "p25": -1.022,
+       "p75": 0.22,
+       "max": 16.065
+      },
+      "thin": false
+     }
+    },
+    "null": {
+     "0": {
+      "mean": {
+       "null_pct": 0.38,
+       "null_mean": 0.3606,
+       "null_sd": 0.7729,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.546,
+       "null_mean": -0.5775,
+       "null_sd": 0.3259,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "1": {
+      "mean": {
+       "null_pct": 0.624,
+       "null_mean": 0.3777,
+       "null_sd": 0.0815,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.192,
+       "null_mean": -0.6169,
+       "null_sd": 0.0215,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     }
+    }
+   },
+   "exp3_live": {
+    "label": "③ 敞口(2024 起口径,敏感度)",
+    "groups": {
+     "0": {
+      "n": 1,
+      "sum_r": -1.0213,
+      "mean_r": -1.0213,
+      "med_r": -1.0213,
+      "win_pct": 0.0,
+      "max_losing_streak": 1,
+      "r_dist": {
+       "min": -1.0213,
+       "p25": -1.0213,
+       "p75": -1.0213,
+       "max": -1.0213
+      },
+      "thin": true
+     },
+     "1": {
+      "n": 50,
+      "sum_r": 16.0073,
+      "mean_r": 0.3201,
+      "med_r": -0.6138,
+      "win_pct": 26.0,
+      "max_losing_streak": 11,
+      "r_dist": {
+       "min": -1.0274,
+       "p25": -1.019,
+       "p75": 0.0486,
+       "max": 16.065
+      },
+      "thin": false
+     },
+     "na": {
+      "n": 94,
+      "sum_r": 39.3471,
+      "mean_r": 0.4186,
+      "med_r": -0.6077,
+      "win_pct": 36.2,
+      "max_losing_streak": 8,
+      "r_dist": {
+       "min": -1.0427,
+       "p25": -1.0224,
+       "p75": 0.3454,
+       "max": 15.9042
+      },
+      "thin": false
+     }
+    },
+    "null": {
+     "0": {
+      "mean": {
+       "null_pct": null,
+       "note": "组内 n<2 —— 置换不改变该组统计量(必然 NoOpNull)"
+      },
+      "median": {
+       "null_pct": null,
+       "note": "组内 n<2 —— 置换不改变该组统计量(必然 NoOpNull)"
+      }
+     },
+     "1": {
+      "mean": {
+       "null_pct": 0.462,
+       "null_mean": 0.3656,
+       "null_sd": 0.3558,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.525,
+       "null_mean": -0.605,
+       "null_sd": 0.1277,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "na": {
+      "mean": {
+       "null_pct": 0.57,
+       "null_mean": 0.3745,
+       "null_sd": 0.1839,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.592,
+       "null_mean": -0.6162,
+       "null_sd": 0.0533,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     }
+    }
+   },
+   "phase": {
+    "label": "⓪ phase",
+    "groups": {
+     "none": {
+      "n": 15,
+      "sum_r": -5.7713,
+      "mean_r": -0.3848,
+      "med_r": -0.7457,
+      "win_pct": 20.0,
+      "max_losing_streak": 7,
+      "r_dist": {
+       "min": -1.028,
+       "p25": -1.0237,
+       "p75": -0.0881,
+       "max": 2.7548
+      },
+      "thin": false
+     },
+     "normal": {
+      "n": 114,
+      "sum_r": 53.3677,
+      "mean_r": 0.4681,
+      "med_r": -0.6361,
+      "win_pct": 32.5,
+      "max_losing_streak": 11,
+      "r_dist": {
+       "min": -1.0427,
+       "p25": -1.0212,
+       "p75": 0.3415,
+       "max": 16.065
+      },
+      "thin": false
+     },
+     "turning": {
+      "n": 16,
+      "sum_r": 6.7367,
+      "mean_r": 0.421,
+      "med_r": -0.4305,
+      "win_pct": 43.8,
+      "max_losing_streak": 2,
+      "r_dist": {
+       "min": -1.0256,
+       "p25": -1.0191,
+       "p75": 0.2267,
+       "max": 7.9027
+      },
+      "thin": false
+     }
+    },
+    "null": {
+     "none": {
+      "mean": {
+       "null_pct": 0.129,
+       "null_mean": 0.3717,
+       "null_sd": 0.7353,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.231,
+       "null_mean": -0.583,
+       "null_sd": 0.3099,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "normal": {
+      "mean": {
+       "null_pct": 0.746,
+       "null_mean": 0.3739,
+       "null_sd": 0.1327,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.26,
+       "null_mean": -0.6181,
+       "null_sd": 0.035,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "turning": {
+      "mean": {
+       "null_pct": 0.585,
+       "null_mean": 0.3489,
+       "null_sd": 0.6842,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.712,
+       "null_mean": -0.5695,
+       "null_sd": 0.2918,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     }
+    }
+   },
+   "maj200": {
+    "label": "majors 200 日线",
+    "groups": {
+     "above": {
+      "n": 145,
+      "sum_r": 54.3331,
+      "mean_r": 0.3747,
+      "med_r": -0.6102,
+      "win_pct": 32.4,
+      "max_losing_streak": 11,
+      "r_dist": {
+       "min": -1.0427,
+       "p25": -1.0213,
+       "p75": 0.2145,
+       "max": 16.065
+      },
+      "thin": false
+     }
+    },
+    "null": {
+     "above": {
+      "mean": {
+       "null_pct": null,
+       "note": "NoOpNull:零分布没有方差(全部 ≈ np.float64(0.3747108255864634),跨度 2.8e-16)—— 打乱没有改变任何东西"
+      },
+      "median": {
+       "null_pct": null,
+       "note": "NoOpNull:零分布没有方差(全部 ≈ np.float64(-0.6102405972935093),跨度 0.0e+00)—— 打乱没有改变任何东西"
+      }
+     }
+    }
+   },
+   "dvol": {
+    "label": "DVOL 一年分位(三档)",
+    "groups": {
+     "high": {
+      "n": 24,
+      "sum_r": -2.1047,
+      "mean_r": -0.0877,
+      "med_r": -0.649,
+      "win_pct": 25.0,
+      "max_losing_streak": 7,
+      "r_dist": {
+       "min": -1.0274,
+       "p25": -1.0188,
+       "p75": -0.0769,
+       "max": 3.8409
+      },
+      "thin": false
+     },
+     "insufficient_history": {
+      "n": 24,
+      "sum_r": 41.6308,
+      "mean_r": 1.7346,
+      "med_r": -0.5484,
+      "win_pct": 33.3,
+      "max_losing_streak": 5,
+      "r_dist": {
+       "min": -1.0297,
+       "p25": -1.0217,
+       "p75": 1.2987,
+       "max": 15.9042
+      },
+      "thin": false
+     },
+     "low": {
+      "n": 62,
+      "sum_r": -5.6813,
+      "mean_r": -0.0916,
+      "med_r": -0.6924,
+      "win_pct": 27.4,
+      "max_losing_streak": 10,
+      "r_dist": {
+       "min": -1.0427,
+       "p25": -1.0221,
+       "p75": 0.1049,
+       "max": 10.9636
+      },
+      "thin": false
+     },
+     "mid": {
+      "n": 20,
+      "sum_r": 26.2596,
+      "mean_r": 1.313,
+      "med_r": 0.2522,
+      "win_pct": 65.0,
+      "max_losing_streak": 3,
+      "r_dist": {
+       "min": -1.0228,
+       "p25": -0.8903,
+       "p75": 0.9967,
+       "max": 16.065
+      },
+      "thin": false
+     },
+     "no_dvol_history": {
+      "n": 15,
+      "sum_r": -5.7713,
+      "mean_r": -0.3848,
+      "med_r": -0.7457,
+      "win_pct": 20.0,
+      "max_losing_streak": 7,
+      "r_dist": {
+       "min": -1.028,
+       "p25": -1.0237,
+       "p75": -0.0881,
+       "max": 2.7548
+      },
+      "thin": false
+     }
+    },
+    "null": {
+     "high": {
+      "mean": {
+       "null_pct": 0.215,
+       "null_mean": 0.3841,
+       "null_sd": 0.5408,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.441,
+       "null_mean": -0.604,
+       "null_sd": 0.2281,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "insufficient_history": {
+      "mean": {
+       "null_pct": 0.986,
+       "null_mean": 0.3841,
+       "null_sd": 0.5408,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.68,
+       "null_mean": -0.604,
+       "null_sd": 0.2281,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "low": {
+      "mean": {
+       "null_pct": 0.06,
+       "null_mean": 0.3737,
+       "null_sd": 0.2961,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.176,
+       "null_mean": -0.6131,
+       "null_sd": 0.103,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "mid": {
+      "mean": {
+       "null_pct": 0.91,
+       "null_mean": 0.3634,
+       "null_sd": 0.618,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 1.0,
+       "null_mean": -0.5864,
+       "null_sd": 0.2539,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "no_dvol_history": {
+      "mean": {
+       "null_pct": 0.129,
+       "null_mean": 0.3717,
+       "null_sd": 0.7353,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.231,
+       "null_mean": -0.583,
+       "null_sd": 0.3099,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     }
+    }
+   },
+   "maj_dist": {
+    "label": "majors 离 200 日线的距离(补充档)",
+    "groups": {
+     "far_above(>5%)": {
+      "n": 135,
+      "sum_r": 22.7784,
+      "mean_r": 0.1687,
+      "med_r": -0.6498,
+      "win_pct": 29.6,
+      "max_losing_streak": 11,
+      "r_dist": {
+       "min": -1.0427,
+       "p25": -1.0212,
+       "p75": 0.1288,
+       "max": 15.9042
+      },
+      "thin": false
+     },
+     "near_above(0~5%)": {
+      "n": 10,
+      "sum_r": 31.5546,
+      "mean_r": 3.1555,
+      "med_r": 1.9334,
+      "win_pct": 70.0,
+      "max_losing_streak": 2,
+      "r_dist": {
+       "min": -1.0274,
+       "p25": -0.746,
+       "p75": 3.6022,
+       "max": 16.065
+      },
+      "thin": true
+     }
+    },
+    "null": {
+     "far_above(>5%)": {
+      "mean": {
+       "null_pct": 0.005,
+       "null_mean": 0.376,
+       "null_sd": 0.0659,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.064,
+       "null_mean": -0.6175,
+       "null_sd": 0.0181,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "near_above(0~5%)": {
+      "mean": {
+       "null_pct": 0.992,
+       "null_mean": 0.3282,
+       "null_sd": 0.893,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 1.0,
+       "null_mean": -0.5612,
+       "null_sd": 0.3642,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     }
+    }
+   }
+  },
+  "cross_exp3_x_maj200": {
+   "0|above": {
+    "n": 14,
+    "sum_r": -0.9776,
+    "mean_r": -0.0698,
+    "med_r": -0.6077,
+    "win_pct": 28.6,
+    "max_losing_streak": 4,
+    "r_dist": {
+     "min": -1.0223,
+     "p25": -1.0177,
+     "p75": 0.0389,
+     "max": 5.1126
+    }
+   },
+   "1|above": {
+    "n": 131,
+    "sum_r": 55.3106,
+    "mean_r": 0.4222,
+    "med_r": -0.6224,
+    "win_pct": 32.8,
+    "max_losing_streak": 11,
+    "r_dist": {
+     "min": -1.0427,
+     "p25": -1.022,
+     "p75": 0.22,
+     "max": 16.065
+    }
+   }
+  },
+  "cross_exp3_x_maj_dist": {
+   "0|far_above(>5%)": {
+    "n": 14,
+    "sum_r": -0.9776,
+    "mean_r": -0.0698,
+    "med_r": -0.6077,
+    "win_pct": 28.6,
+    "max_losing_streak": 4,
+    "r_dist": {
+     "min": -1.0223,
+     "p25": -1.0177,
+     "p75": 0.0389,
+     "max": 5.1126
+    }
+   },
+   "1|far_above(>5%)": {
+    "n": 121,
+    "sum_r": 23.756,
+    "mean_r": 0.1963,
+    "med_r": -0.6516,
+    "win_pct": 29.8,
+    "max_losing_streak": 11,
+    "r_dist": {
+     "min": -1.0427,
+     "p25": -1.0223,
+     "p75": 0.1206,
+     "max": 15.9042
+    }
+   },
+   "1|near_above(0~5%)": {
+    "n": 10,
+    "sum_r": 31.5546,
+    "mean_r": 3.1555,
+    "med_r": 1.9334,
+    "win_pct": 70.0,
+    "max_losing_streak": 2,
+    "r_dist": {
+     "min": -1.0274,
+     "p25": -0.746,
+     "p75": 3.6022,
+     "max": 16.065
+    }
+   }
+  }
+ },
+ "basis_shift1": {
+  "basis": "挪一天(entry 日)—— S-665",
+  "n_tickets": 145,
+  "vars": {
+   "exp3": {
+    "label": "③ 敞口(0/1)",
+    "groups": {
+     "0": {
+      "n": 17,
+      "sum_r": -8.0531,
+      "mean_r": -0.4737,
+      "med_r": -0.8256,
+      "win_pct": 23.5,
+      "max_losing_streak": 7,
+      "r_dist": {
+       "min": -1.0223,
+       "p25": -1.0184,
+       "p75": -0.3688,
+       "max": 1.1181
+      },
+      "thin": false
+     },
+     "1": {
+      "n": 128,
+      "sum_r": 62.3862,
+      "mean_r": 0.4874,
+      "med_r": -0.6032,
+      "win_pct": 33.6,
+      "max_losing_streak": 10,
+      "r_dist": {
+       "min": -1.0427,
+       "p25": -1.0223,
+       "p75": 0.2267,
+       "max": 16.065
+      },
+      "thin": false
+     }
+    },
+    "null": {
+     "0": {
+      "mean": {
+       "null_pct": 0.063,
+       "null_mean": 0.3632,
+       "null_sd": 0.6534,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.153,
+       "null_mean": -0.5686,
+       "null_sd": 0.2998,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "1": {
+      "mean": {
+       "null_pct": 0.916,
+       "null_mean": 0.3787,
+       "null_sd": 0.0892,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.832,
+       "null_mean": -0.6179,
+       "null_sd": 0.0236,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     }
+    }
+   },
+   "exp3_live": {
+    "label": "③ 敞口(2024 起口径,敏感度)",
+    "groups": {
+     "0": {
+      "n": 3,
+      "sum_r": -2.3031,
+      "mean_r": -0.7677,
+      "med_r": -0.9129,
+      "win_pct": 0.0,
+      "max_losing_streak": 3,
+      "r_dist": {
+       "min": -1.0213,
+       "p25": -0.9671,
+       "p75": -0.6409,
+       "max": -0.3688
+      },
+      "thin": true
+     },
+     "1": {
+      "n": 49,
+      "sum_r": 16.2702,
+      "mean_r": 0.332,
+      "med_r": -0.6224,
+      "win_pct": 26.5,
+      "max_losing_streak": 10,
+      "r_dist": {
+       "min": -1.0274,
+       "p25": -1.0191,
+       "p75": 0.1011,
+       "max": 16.065
+      },
+      "thin": false
+     },
+     "na": {
+      "n": 93,
+      "sum_r": 40.366,
+      "mean_r": 0.434,
+      "med_r": -0.6052,
+      "win_pct": 36.6,
+      "max_losing_streak": 8,
+      "r_dist": {
+       "min": -1.0427,
+       "p25": -1.0224,
+       "p75": 0.3838,
+       "max": 15.9042
+      },
+      "thin": false
+     }
+    },
+    "null": {
+     "0": {
+      "mean": {
+       "null_pct": 0.182,
+       "null_mean": 0.3155,
+       "null_sd": 1.6706,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.328,
+       "null_mean": -0.3572,
+       "null_sd": 0.9796,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "1": {
+      "mean": {
+       "null_pct": 0.48,
+       "null_mean": 0.3637,
+       "null_sd": 0.3342,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.441,
+       "null_mean": -0.6069,
+       "null_sd": 0.1334,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "na": {
+      "mean": {
+       "null_pct": 0.624,
+       "null_mean": 0.3742,
+       "null_sd": 0.183,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.72,
+       "null_mean": -0.6174,
+       "null_sd": 0.055,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     }
+    }
+   },
+   "phase": {
+    "label": "⓪ phase",
+    "groups": {
+     "none": {
+      "n": 15,
+      "sum_r": -5.7713,
+      "mean_r": -0.3848,
+      "med_r": -0.7457,
+      "win_pct": 20.0,
+      "max_losing_streak": 7,
+      "r_dist": {
+       "min": -1.028,
+       "p25": -1.0237,
+       "p75": -0.0881,
+       "max": 2.7548
+      },
+      "thin": false
+     },
+     "normal": {
+      "n": 116,
+      "sum_r": 61.3512,
+      "mean_r": 0.5289,
+      "med_r": -0.6163,
+      "win_pct": 33.6,
+      "max_losing_streak": 11,
+      "r_dist": {
+       "min": -1.0427,
+       "p25": -1.0211,
+       "p75": 0.4083,
+       "max": 16.065
+      },
+      "thin": false
+     },
+     "turning": {
+      "n": 14,
+      "sum_r": -1.2468,
+      "mean_r": -0.0891,
+      "med_r": -0.6053,
+      "win_pct": 35.7,
+      "max_losing_streak": 3,
+      "r_dist": {
+       "min": -1.0256,
+       "p25": -1.0198,
+       "p75": 0.173,
+       "max": 5.1126
+      },
+      "thin": true
+     }
+    },
+    "null": {
+     "none": {
+      "mean": {
+       "null_pct": 0.129,
+       "null_mean": 0.3717,
+       "null_sd": 0.7353,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.231,
+       "null_mean": -0.583,
+       "null_sd": 0.3099,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "normal": {
+      "mean": {
+       "null_pct": 0.904,
+       "null_mean": 0.3687,
+       "null_sd": 0.1269,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.389,
+       "null_mean": -0.6189,
+       "null_sd": 0.0347,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "turning": {
+      "mean": {
+       "null_pct": 0.37,
+       "null_mean": 0.3606,
+       "null_sd": 0.7729,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.554,
+       "null_mean": -0.5775,
+       "null_sd": 0.3259,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     }
+    }
+   },
+   "maj200": {
+    "label": "majors 200 日线",
+    "groups": {
+     "above": {
+      "n": 145,
+      "sum_r": 54.3331,
+      "mean_r": 0.3747,
+      "med_r": -0.6102,
+      "win_pct": 32.4,
+      "max_losing_streak": 11,
+      "r_dist": {
+       "min": -1.0427,
+       "p25": -1.0213,
+       "p75": 0.2145,
+       "max": 16.065
+      },
+      "thin": false
+     }
+    },
+    "null": {
+     "above": {
+      "mean": {
+       "null_pct": null,
+       "note": "NoOpNull:零分布没有方差(全部 ≈ np.float64(0.3747108255864634),跨度 2.8e-16)—— 打乱没有改变任何东西"
+      },
+      "median": {
+       "null_pct": null,
+       "note": "NoOpNull:零分布没有方差(全部 ≈ np.float64(-0.6102405972935093),跨度 0.0e+00)—— 打乱没有改变任何东西"
+      }
+     }
+    }
+   },
+   "dvol": {
+    "label": "DVOL 一年分位(三档)",
+    "groups": {
+     "high": {
+      "n": 24,
+      "sum_r": 1.4009,
+      "mean_r": 0.0584,
+      "med_r": -0.6117,
+      "win_pct": 33.3,
+      "max_losing_streak": 6,
+      "r_dist": {
+       "min": -1.0267,
+       "p25": -1.0176,
+       "p75": 0.4014,
+       "max": 3.8409
+      },
+      "thin": false
+     },
+     "insufficient_history": {
+      "n": 23,
+      "sum_r": 42.6492,
+      "mean_r": 1.8543,
+      "med_r": -0.5363,
+      "win_pct": 34.8,
+      "max_losing_streak": 5,
+      "r_dist": {
+       "min": -1.0297,
+       "p25": -1.0221,
+       "p75": 1.3502,
+       "max": 15.9042
+      },
+      "thin": false
+     },
+     "low": {
+      "n": 59,
+      "sum_r": -11.7607,
+      "mean_r": -0.1993,
+      "med_r": -0.736,
+      "win_pct": 25.4,
+      "max_losing_streak": 10,
+      "r_dist": {
+       "min": -1.0427,
+       "p25": -1.0218,
+       "p75": -0.0469,
+       "max": 10.9636
+      },
+      "thin": false
+     },
+     "mid": {
+      "n": 24,
+      "sum_r": 27.8149,
+      "mean_r": 1.159,
+      "med_r": 0.1007,
+      "win_pct": 54.2,
+      "max_losing_streak": 5,
+      "r_dist": {
+       "min": -1.0274,
+       "p25": -1.0168,
+       "p75": 0.9187,
+       "max": 16.065
+      },
+      "thin": false
+     },
+     "no_dvol_history": {
+      "n": 15,
+      "sum_r": -5.7713,
+      "mean_r": -0.3848,
+      "med_r": -0.7457,
+      "win_pct": 20.0,
+      "max_losing_streak": 7,
+      "r_dist": {
+       "min": -1.028,
+       "p25": -1.0237,
+       "p75": -0.0881,
+       "max": 2.7548
+      },
+      "thin": false
+     }
+    },
+    "null": {
+     "high": {
+      "mean": {
+       "null_pct": 0.301,
+       "null_mean": 0.3841,
+       "null_sd": 0.5408,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.54,
+       "null_mean": -0.604,
+       "null_sd": 0.2281,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "insufficient_history": {
+      "mean": {
+       "null_pct": 0.989,
+       "null_mean": 0.3561,
+       "null_sd": 0.5612,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.687,
+       "null_mean": -0.584,
+       "null_sd": 0.246,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "low": {
+      "mean": {
+       "null_pct": 0.019,
+       "null_mean": 0.3748,
+       "null_sd": 0.2966,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.068,
+       "null_mean": -0.6127,
+       "null_sd": 0.1107,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "mid": {
+      "mean": {
+       "null_pct": 0.911,
+       "null_mean": 0.3841,
+       "null_sd": 0.5408,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.996,
+       "null_mean": -0.604,
+       "null_sd": 0.2281,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "no_dvol_history": {
+      "mean": {
+       "null_pct": 0.129,
+       "null_mean": 0.3717,
+       "null_sd": 0.7353,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.231,
+       "null_mean": -0.583,
+       "null_sd": 0.3099,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     }
+    }
+   },
+   "maj_dist": {
+    "label": "majors 离 200 日线的距离(补充档)",
+    "groups": {
+     "far_above(>5%)": {
+      "n": 138,
+      "sum_r": 33.7253,
+      "mean_r": 0.2444,
+      "med_r": -0.6163,
+      "win_pct": 31.9,
+      "max_losing_streak": 11,
+      "r_dist": {
+       "min": -1.0427,
+       "p25": -1.0212,
+       "p75": 0.2002,
+       "max": 15.9042
+      },
+      "thin": false
+     },
+     "near_above(0~5%)": {
+      "n": 7,
+      "sum_r": 20.6078,
+      "mean_r": 2.944,
+      "med_r": -0.3688,
+      "win_pct": 42.9,
+      "max_losing_streak": 3,
+      "r_dist": {
+       "min": -1.0274,
+       "p25": -1.0222,
+       "p75": 3.9917,
+       "max": 16.065
+      },
+      "thin": true
+     }
+    },
+    "null": {
+     "far_above(>5%)": {
+      "mean": {
+       "null_pct": 0.032,
+       "null_mean": 0.3725,
+       "null_sd": 0.0575,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.246,
+       "null_mean": -0.6173,
+       "null_sd": 0.0146,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     },
+     "near_above(0~5%)": {
+      "mean": {
+       "null_pct": 0.971,
+       "null_mean": 0.3922,
+       "null_sd": 1.1157,
+       "note": "置换标签 1000 次(mean);分位 ≥ 0.95 = 该组mean高于 95% 的置换结果"
+      },
+      "median": {
+       "null_pct": 0.706,
+       "null_mean": -0.5244,
+       "null_sd": 0.4738,
+       "note": "置换标签 1000 次(median);分位 ≥ 0.95 = 该组median高于 95% 的置换结果"
+      }
+     }
+    }
+   }
+  },
+  "cross_exp3_x_maj200": {
+   "0|above": {
+    "n": 17,
+    "sum_r": -8.0531,
+    "mean_r": -0.4737,
+    "med_r": -0.8256,
+    "win_pct": 23.5,
+    "max_losing_streak": 7,
+    "r_dist": {
+     "min": -1.0223,
+     "p25": -1.0184,
+     "p75": -0.3688,
+     "max": 1.1181
+    }
+   },
+   "1|above": {
+    "n": 128,
+    "sum_r": 62.3862,
+    "mean_r": 0.4874,
+    "med_r": -0.6032,
+    "win_pct": 33.6,
+    "max_losing_streak": 10,
+    "r_dist": {
+     "min": -1.0427,
+     "p25": -1.0223,
+     "p75": 0.2267,
+     "max": 16.065
+    }
+   }
+  },
+  "cross_exp3_x_maj_dist": {
+   "0|far_above(>5%)": {
+    "n": 16,
+    "sum_r": -7.6843,
+    "mean_r": -0.4803,
+    "med_r": -0.8693,
+    "win_pct": 25.0,
+    "max_losing_streak": 6,
+    "r_dist": {
+     "min": -1.0223,
+     "p25": -1.0186,
+     "p75": -0.2953,
+     "max": 1.1181
+    }
+   },
+   "0|near_above(0~5%)": {
+    "n": 1,
+    "sum_r": -0.3688,
+    "mean_r": -0.3688,
+    "med_r": -0.3688,
+    "win_pct": 0.0,
+    "max_losing_streak": 1,
+    "r_dist": {
+     "min": -0.3688,
+     "p25": -0.3688,
+     "p75": -0.3688,
+     "max": -0.3688
+    }
+   },
+   "1|far_above(>5%)": {
+    "n": 122,
+    "sum_r": 41.4096,
+    "mean_r": 0.3394,
+    "med_r": -0.6032,
+    "win_pct": 32.8,
+    "max_losing_streak": 10,
+    "r_dist": {
+     "min": -1.0427,
+     "p25": -1.0221,
+     "p75": 0.2228,
+     "max": 15.9042
+    }
+   },
+   "1|near_above(0~5%)": {
+    "n": 6,
+    "sum_r": 20.9766,
+    "mean_r": 3.4961,
+    "med_r": -0.4704,
+    "win_pct": 50.0,
+    "max_losing_streak": 2,
+    "r_dist": {
+     "min": -1.0274,
+     "p25": -1.0225,
+     "p75": 5.9472,
+     "max": 16.065
+    }
+   }
+  }
+ },
+ "thin_rule": "n < 15 的格子标 thin",
+ "null_rule": "分组标签在 145 张票之间随机置换 1000 次,基种子 254(每组 seed=254+组序)",
+ "robustness": {
+  "n": 145,
+  "sum_r": 54.3331,
+  "mean_r": 0.3747,
+  "median_r": -0.6102,
+  "max_r": 16.065,
+  "p95_r": 3.8471,
+  "mean_r_ex_top1": 0.2658,
+  "mean_r_ex_top3": 0.0487,
+  "share_of_sum_from_top3": 0.8728,
+  "top3_tickets": [
+   {
+    "tid": "DOGE:2024-10-18",
+    "signal_d": "2024-10-18",
+    "r": 16.06496408765193,
+    "exp3": "1",
+    "phase": "normal",
+    "dvol": "mid"
+   },
+   {
+    "tid": "MANA:2021-10-28",
+    "signal_d": "2021-10-28",
+    "r": 15.90419467099613,
+    "exp3": "1",
+    "phase": "normal",
+    "dvol": "insufficient_history"
+   },
+   {
+    "tid": "LRC:2021-10-28",
+    "signal_d": "2021-10-28",
+    "r": 15.453673425932783,
+    "exp3": "1",
+    "phase": "normal",
+    "dvol": "insufficient_history"
+   }
+  ],
+  "note": "R 的右尾(少数大赢家)对均值的影响;均值分位与中位分位并列看"
+ }
+}
