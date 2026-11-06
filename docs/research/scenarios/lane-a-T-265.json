@@ -1,0 +1,21 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {"id": "T-265-1", "scenario": "T-265 / S-743 持有人数增长因子 · 回填时间线",
+     "statement": "到 2026-12-15,supabase token_holders_coverage 里 n_weekly >= 52 的币数仍 < 80(人工结算:填该币数 x,x < 80 即为真)。2026-11-06 实测:token_holders_daily 0 行、token_holders_coverage 0 行、n_weekly>=52 的币数 = 0 —— 按卡 acceptance ① 这一轮没跑 (a)-(d),检验装置已冻结待用。",
+     "variable": "manual", "op": "lt", "hi": 80, "prob": 0.45, "horizon_d": "2026-12-15",
+     "base_rate": "回填要 CoinGecko Analyst(Beta)的 holders_chart 周频历史;表与视图 2026-11-06 已建好但 0 行,写入端本轮没看到 ⇒ 一个月的先验取 0.45(不到一半,但不乐观)"},
+    {"id": "T-265-2", "scenario": "T-265 / S-743 检验期内基准水平",
+     "statement": "BTC 收盘价(ohlcv_daily)2026-12-04 仍 >= 70000 —— 2026-11-05 为 76005(两个源:coingecko_pro_ohlc 76005 / binance_hist 76088),2026-11-04 为 80444 / 80504。",
+     "variable": "close:BTC", "op": "gt", "lo": 70000, "prob": 0.62, "horizon_d": "2026-12-04"},
+    {"id": "T-265-3", "scenario": "T-265 / S-743 检验期内宏观风险带",
+     "statement": "VIX(macro_daily)2026-12-04 仍 < 30 —— 2026-11-05 为 28.18(11-04 为 16.61、11-03 为 20.83,波动在放大)。",
+     "variable": "macro:vix", "op": "lt", "hi": 30, "prob": 0.7, "horizon_d": "2026-12-04"},
+    {"id": "T-265-4", "scenario": "T-265 / S-743 检验期内情绪",
+     "statement": "恐惧贪婪指数(macro_daily fng)2026-12-04 仍 > 30 —— 2026-11-06 为 28、2026-11-05 为 50、2026-11-04 为 34。",
+     "variable": "macro:fng", "op": "gt", "lo": 30, "prob": 0.55, "horizon_d": "2026-12-04"},
+    {"id": "T-265-5", "scenario": "T-265 / S-743 检验期内面板广度",
+     "statement": "面板站上 50 日均线的比例(state_daily breadth_above_ma50)2026-12-04 仍 > 0 —— 2026-11-05 为 0.0417(24 名里 1 个),2026-11-03 为 0。",
+     "variable": "state:breadth_above_ma50", "op": "gt", "lo": 0, "prob": 0.5, "horizon_d": "2026-12-04"}
+  ]
+}

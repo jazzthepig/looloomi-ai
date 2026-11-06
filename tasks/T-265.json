@@ -1,0 +1,28 @@
+{
+  "id": "T-265",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-11-06",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-265.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "notes": "前提未满足 ⇒ 按 acceptance ① 停,(a)-(d) 本轮**没跑**。实测(2026-11-06 ~09:05 UTC,publishable key):token_holders_daily **0 行**、token_holders_coverage **0 行**、其中 n_weekly>=52 的币数 = **0**(< 80 门槛)⇒ 覆盖数 = 0。0 行是真空不是权限挡(migration 2026-11-06_token_holders_daily.sql:RLS 已开但有 lane_read policy for anon using(true);PGRST205 hint 确认表/视图都在 public)。(a) 均值 IC=未跑 (b) 五分位差=未跑 (c) 置换分位=未跑 (d) 两段同号=未跑 —— t265_results.json 里四个槽位是 null + reasons。交付的是**冻结的检验装置**:docs/research/t265_holders.py(台账 (a)-(d) 一字不改逐条实现;零分布/打乱/分位/价格取值全走 src/data/evaluation/apparatus.py:shuffle_within+null_distribution+percentile_of+price_on_or_after,种子 743×1000)。机器自检(合成面板,验通路不是证据):planted IC +0.5280/t 50.50/置换分位 1.000;null IC -0.0090/分位 0.259;ret_only IC -0.0000122(秩回归确实剥掉了「过去 4 周收益」这一支)⇒ all_checks_pass=true。顺带查到的数据侧事实:**cg_coin_mcap_daily 里没有 BTC**(无 coin_id='bitcoin',只有 wrapped/bridged),所以「相对 BTC 的超额」只能 BTC 取 ohlcv_daily(2026-11-05 收 76005 coingecko_pro_ohlc / 76088 binance_hist;ETH 2235.73)——台账没写死 BTC 源,这是实现选择,要 @seth 认一下;cg_coin_mcap_coins(804 币)可直接供「当周市值前 200」,cg_coin_map 对 anon 401 读不了但不需要它(holders.coin_id 与 cg_coin_mcap_daily.coin_id 同命名空间);cg_coin_mcap_daily 单源 coingecko_pro_market_chart,497,674 行/416,843 行 mcap 非空,2019-12-31→2026-11-05。还差:**回填写入端不存在** —— 仓库 src/scripts/migrations 无 token_holders_daily 写入端,Mac 根全树 grep 也无命中 ⇒ 要 @seth 指认写入端并排期。前提一过的跑法(不改代码):python3 docs/research/t265_holders.py fetch && python3 docs/research/t265_holders.py run ⇒ (a)-(d)+副项写进 docs/research/t265_results.json。缓存落 Mac 数据根 /Volumes/CometCloudAI/cometcloud-local/research/t265/(逐币抓取进度在 fetchfast.log;offset 分页在 40 万行上退化,逐币抓更快)。产物:docs/research/T-265_holder_growth.md + t265_holders.py + t265_results.json + scenarios/lane-a-T-265.json(5 条,含 1 条回填时间线 manual + 4 条自动结算)。",
+  "verified": null,
+  "title": "S-743 持有人数增长(采用面,对过去 4 周收益与市值取残差)对之后 4 周相对 BTC 的超额,横截面周频 —— 判据照台账写死",
+  "source": "REFUTATION_LEDGER S-743(先读,(a)–(d) 一字不改)。数据 token_holders_daily(CoinGecko holders_chart,本链;Beta)、cg_coin_mcap_daily(价格 / 市值 / 时点宇宙)、token_holders_coverage 视图看覆盖。",
+  "acceptance": {
+    "check": "① 先查前提:token_holders_coverage 里 n_weekly ≥ 52 的币数;< 80 ⇒ 停(回填还没完),在卡 notes 写覆盖数,不跑。② 宇宙 / 特征 / 残差 / 丢跳变 严格按台账。③ (a)–(d) 原始数字;周 IC 的 Newey-West t。④ 副项只报不判。⑤ 只算、不改代码、不入库;长脚本 nohup。附 docs/research/scenarios/lane-a-T-265.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-265_holder_growth.md + t265_holders.py + t265_results.json;卡 notes 写 (a)–(d);in_review,推 lane-a/T-265。"
+  },
+  "prior_value": "持有人数历史 11-06 才接入;采用面的横截面因子从没测过(只有前 50 大持有人集中度的快照)。"
+}

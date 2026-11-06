@@ -1,0 +1,87 @@
+{
+  "task": "T-265",
+  "ledger": "S-743",
+  "ran_at_utc": "2026-11-06T09:20:00Z",
+  "status": "STOPPED_PRECONDITION",
+  "gate": {
+    "checked_at_utc": "2026-11-06T09:05:00Z",
+    "source": "supabase public.token_holders_coverage (view), public.token_holders_daily (table)",
+    "token_holders_daily_rows": 0,
+    "token_holders_coverage_rows": 0,
+    "n_weekly_ge_52": 0,
+    "threshold_coins": 80,
+    "threshold_weeks": 52,
+    "pass_precondition": false,
+    "note": "表与视图都在 public schema 里(PGRST205 hint 确认),RLS 已开但有 lane_read policy for anon using(true) ⇒ 0 行是真空,不是权限挡住"
+  },
+  "criteria": {"a": null, "b": null, "c": null, "d": null},
+  "criteria_reason": "前提未满足(token_holders_daily 0 行):按卡 acceptance ① 停,不跑 (a)-(d)",
+  "harness": {
+    "script": "docs/research/t265_holders.py",
+    "stages": ["cover", "fetch", "fetchfast", "selftest", "run", "report", "universe", "scen", "sources", "misc", "probe", "schema"],
+    "rerun_command": "python3 docs/research/t265_holders.py run",
+    "apparatus_used": ["shuffle_within", "null_distribution", "percentile_of", "price_on_or_after"],
+    "prereg_params": {
+      "n_top_mcap": 200,
+      "min_listing_weeks": 26,
+      "hold_lookback_d": 28,
+      "max_stale_d": 7,
+      "jump_abs_g": 1.0,
+      "fwd_d": 28,
+      "vol_window_d": 90,
+      "vol_exclude": 0.01,
+      "nw_lag": 4,
+      "n_perm": 1000,
+      "perm_seed": 743
+    }
+  },
+  "selftest": {
+    "note": "合成面板的机器自检 —— 验代码通路,不是证据",
+    "planted": {
+      "mean_ic": 0.5279621848739494,
+      "ic_t_newey_west": 50.49813216039254,
+      "quintile_spread_pct": 5.485383471846249,
+      "perm_percentile": 1.0,
+      "verdict": {"a": true, "b_log": true, "b_pct": true, "c": true, "d": true}
+    },
+    "null": {
+      "mean_ic": -0.008963643308563099,
+      "ic_t_newey_west": -0.8413042347617565,
+      "quintile_spread_pct": -0.05051039863148952,
+      "perm_percentile": 0.259,
+      "verdict": {"a": false, "b_log": false, "b_pct": false, "c": false, "d": false}
+    },
+    "ret_only": {
+      "mean_ic": -1.2153621779290372e-05,
+      "ic_t_newey_west": -0.0053464330472960675,
+      "quintile_spread_pct": 2.3654888549787794,
+      "perm_percentile": 0.497
+    },
+    "checks": {
+      "planted_ic_positive": true,
+      "planted_t_ge_2": true,
+      "planted_perm_ge_095": true,
+      "planted_split_half_same_sign": true,
+      "null_ic_near_zero": true,
+      "null_perm_not_significant": true,
+      "ret_only_resid_drops_signal": true
+    },
+    "all_checks_pass": true
+  },
+  "price_side_facts": {
+    "cg_coin_mcap_daily": {
+      "rows": 497674,
+      "rows_mcap_not_null": 416843,
+      "d_min": "2019-12-31",
+      "d_max": "2026-11-05",
+      "sources": ["coingecko_pro_market_chart"]
+    },
+    "cg_coin_mcap_coins_coins": 804,
+    "btc_in_cg_coin_mcap_daily": false,
+    "btc_close_2026_11_05": {"coingecko_pro_ohlc": 76005, "binance_hist": 76088},
+    "btc_close_2026_11_04": {"coingecko_pro_ohlc": 80444, "binance_hist": 80504},
+    "eth_close_2026_11_05": 2235.73,
+    "cg_coin_map_readable_by_anon": false,
+    "note": "价格侧抓数缓存 /Volumes/CometCloudAI/cometcloud-local/research/t265/(本轮墙钟内没跑完逐币抓取,价格侧诊断未纳入本文件)"
+  }
+}
