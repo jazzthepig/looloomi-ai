@@ -1,0 +1,28 @@
+{
+  "id": "T-255",
+  "owner": "lane-c",
+  "status": "in_review",
+  "created": "2026-11-06",
+  "title": "S-734 的后续(只报不判):支柱截面 IC 分时段(2023-24 / 2025-26)与按 regime(majors 200 日线上 / 下)拆开稳不稳 —— 尤其传统资产 O 的负 IC(t −2.07)与加密 O 的正 IC(t 2.51)",
+  "source": "S-734 ❌(T-249,合并 788ddab4):乘数不加东西,但支柱本身有截面信息。复用你的 docs/research/t249_ic.py 与 t249_results.json 的数据层(不要重抓)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-255.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 同 T-249 的月末截面、组内 Spearman、成熟期过滤(d′ + 30 ≤ 截面日)。② 每(组,支柱)报两段各自的 IC 均值 / t / n,以及 majors 200 日线上 / 下两种 regime 的 IC;符号翻转的格子单列。③ 零信号对照:截面内名字与超额的对应随机打乱 1,000 次(种子 255),报每格的分位。④ 只报不判;任何「可以改权重」的结论都写成待预注册的假设,不写成建议。交付附 docs/research/scenarios/lane-c-T-255.json(≥ 3 条,例如 2026-12 月末截面的符号)。",
+    "expect": "报告 docs/research/T-255_pillar_ic_stability.md + t255_ic_split.py + t255_results.json;卡 notes 写翻转格子与分位;in_review,推 lane-c/T-255。"
+  },
+  "prior_value": "只有全样本 IC(S-734 副)。",
+  "notes": "口径同 T-249(数据层复用 _cache/t249 原始行,未重抓;alpha 用生产函数 outcome_rows 本地重算;组内 Spearman;成熟期过滤)。自检:重算的全样本 IC 与 t249_results.json 的 full_sample_ic 10/10 格逐项一致(mismatches=0)⇒ 下面的数是重算并对上了,不是抄的。regime=majors cap 风格指数复原水平 vs 自身 200 日均线(读法同 multiplier.py::_majors_gate),另加组内基准 BTC/SPY 的 200 日线作补充。零信号对照 1000 次种子 255(apparatus.shuffle_within + null_distribution + percentile_of);零分布均值 ±0.0008、sd 0.025–0.033、无 NoOpNull。\n\n【卡上点名的两件事】① 加密 O 的正 IC 不是全样本性质:全样本 +0.1105(t 2.51,pct .999),但 2023-24 只有 +0.0571(t 0.94,pct .889),2025-26 才 +0.1689(t 2.67,pct 1.000);两种 regime 同号同量级(majors 上 +0.1042 pct .991 / 下 +0.1225 pct .994;2025-26 内 上 +0.1566 pct .995 / 下 +0.1791 pct .998)⇒ 不是符号翻转,是强度随时间搬家。② 传统 O 的负 IC 是 2023-24 的性质:全样本 −0.0938(t −2.07,pct .000),P1 −0.1543(t −2.89,pct .000)→ P2 −0.0277(t −0.38,pct .248);负 IC 住在 majors 线上(P1maj上 −0.1765 n20 t −3.17 pct .000;线下 4 个月 −0.0435),2025-26 两种 regime 都≈0(上 −0.0583 pct .150 / 下 −0.0022 pct .480);最近 12 个月逐月均值≈0.00。⇒ t −2.07 是历史平均,不是当下状态(as-of 24 月 IC̄ tradfi O −0.0860、t −1.27)。\n\n【符号翻转 22 处】信息量够的 13 处:crypto A p1 +0.0212→p2 −0.1069(pct .004);crypto M p1 +0.0583→p2 −0.0337、p1maj上 +0.0550→p2maj上 −0.1224(pct .031);crypto S p1 +0.0384→p2 −0.0770(pct .032)、p1maj上 +0.0024→p2maj上 −0.1811(pct .003)、majors 上 −0.0587→下 +0.0618;crypto A/S 基准上→下;tradfi A majors 上 −0.1354(pct .000)→下 +0.0294、tradfi M 上 +0.1634(pct 1.000)→下 −0.0074、tradfi S 上 +0.0060→下 −0.0954(pct .011)、tradfi S p1maj上 +0.0126→p2maj上 −0.0073。薄样本 6 处(至少一侧 n=4)、机械 3 处(full↔子集混合)。\n\n【限制(必须一起读)】majors 上/下与 2023-24/2025-26 严重混淆(P1 上 20/下 4,P2 上 10/下 12)⇒ regime 效应与时段效应在本样本里分不开;110 格多重比较(Bonferroni 0.000455,仍 18 格);tradfi 基准(SPY)线下只有 4 个月 ⇒ tradfi M +0.3168 / O −0.3273 / A −0.1895 那几格是噪声。只报不判:报告 §8 登记 H1–H4 待预注册假设,未做任何权重、乘数或策略改动。\n\n产物:docs/research/T-255_pillar_ic_stability.md + docs/research/t255_ic_split.py + docs/research/t255_results.json + docs/research/scenarios/lane-c-T-255.json(6 条,含 2 条自动结算 close:SPY / close:BTC;已过 scenario_ledger.validate)。复现:python3 docs/research/t255_ic_split.py --nperm 1000(23 秒,只读,不写库)。",
+  "verified": null
+}
