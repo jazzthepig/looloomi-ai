@@ -1,21 +1,62 @@
 {
   "author": "lane-a",
+  "task_id": "T-265",
+  "scenario": "T-265 / S-743 持有人数增长(采用面)→ 之后 4 周相对 BTC 的超额,横截面周频",
+  "created_utc": "2026-11-06",
+  "compliance": "全部是可机器核验的命题,不含收益承诺、不含买卖语言;只描述采用面与相对表现的关系,不动钱。",
+  "how_to_settle": "T-265-1 / T-265-2 为 manual(人工结算):读 docs/research/t265_results.json → a_b_c_d.g_res 与 secondary.raw_g,取样本最后一周(2026-10-05)之后的新周(IC 均值、(b) 差)。T-265-3 / T-265-4 由 scenario_ledger 自动结算(state_daily / macro_daily)。",
   "entries": [
-    {"id": "T-265-1", "scenario": "T-265 / S-743 持有人数增长因子 · 回填时间线",
-     "statement": "到 2026-12-15,supabase token_holders_coverage 里 n_weekly >= 52 的币数仍 < 80(人工结算:填该币数 x,x < 80 即为真)。2026-11-06 实测:token_holders_daily 0 行、token_holders_coverage 0 行、n_weekly>=52 的币数 = 0 —— 按卡 acceptance ① 这一轮没跑 (a)-(d),检验装置已冻结待用。",
-     "variable": "manual", "op": "lt", "hi": 80, "prob": 0.45, "horizon_d": "2026-12-15",
-     "base_rate": "回填要 CoinGecko Analyst(Beta)的 holders_chart 周频历史;表与视图 2026-11-06 已建好但 0 行,写入端本轮没看到 ⇒ 一个月的先验取 0.45(不到一半,但不乐观)"},
-    {"id": "T-265-2", "scenario": "T-265 / S-743 检验期内基准水平",
-     "statement": "BTC 收盘价(ohlcv_daily)2026-12-04 仍 >= 70000 —— 2026-11-05 为 76005(两个源:coingecko_pro_ohlc 76005 / binance_hist 76088),2026-11-04 为 80444 / 80504。",
-     "variable": "close:BTC", "op": "gt", "lo": 70000, "prob": 0.62, "horizon_d": "2026-12-04"},
-    {"id": "T-265-3", "scenario": "T-265 / S-743 检验期内宏观风险带",
-     "statement": "VIX(macro_daily)2026-12-04 仍 < 30 —— 2026-11-05 为 28.18(11-04 为 16.61、11-03 为 20.83,波动在放大)。",
-     "variable": "macro:vix", "op": "lt", "hi": 30, "prob": 0.7, "horizon_d": "2026-12-04"},
-    {"id": "T-265-4", "scenario": "T-265 / S-743 检验期内情绪",
-     "statement": "恐惧贪婪指数(macro_daily fng)2026-12-04 仍 > 30 —— 2026-11-06 为 28、2026-11-05 为 50、2026-11-04 为 34。",
-     "variable": "macro:fng", "op": "gt", "lo": 30, "prob": 0.55, "horizon_d": "2026-12-04"},
-    {"id": "T-265-5", "scenario": "T-265 / S-743 检验期内面板广度",
-     "statement": "面板站上 50 日均线的比例(state_daily breadth_above_ma50)2026-12-04 仍 > 0 —— 2026-11-05 为 0.0417(24 名里 1 个),2026-11-03 为 0。",
-     "variable": "state:breadth_above_ma50", "op": "gt", "lo": 0, "prob": 0.5, "horizon_d": "2026-12-04"}
-  ]
+    {
+      "id": "T-265-1",
+      "scenario": "T-265 / S-743 持有人数增长(采用面)→ 之后 4 周相对 BTC 的超额,横截面周频",
+      "statement": "在 T-265 样本之外的新周(2026-11-09 起),g_res(对过去 4 周收益与 ln 市值取秩回归残差后的持有人数增长)与 4 周相对 BTC 对数超额的横截面 Spearman IC 的均值 < 0(即增长越快、相对越差这个方向延续)。",
+      "variable": "manual",
+      "op": "between",
+      "lo": 0,
+      "hi": 1,
+      "prob": 0.55,
+      "horizon_d": "2026-12-28",
+      "rationale": "本轮(2026-11-06,前提满足后补跑,101 周 / 每周 69-95 币)的最终数:主检验 g_res 平均周 IC -0.002963、Newey-West(4 阶)t -0.0908、(b) 池化 4 周对数超额 +0.8346%、零分布分位 0.404、两半 -0.034958 / +0.028406 不同号 => (a)-(d) 四条全不过(S-743 ❌)。未残差化的原始 g 显著反向:IC -0.03808、t -1.635、分位 0.000、两半同号(负)。 主检验 IC 几乎为零(t -0.09,方向不定),但未残差化的原始 g 显著反向(-0.0381 / t -1.635 / 分位 0.000),",
+      "check": "docs/research/t265_results.json → a_b_c_d.g_res.ic_series 里 2026-11-09 之后的周;IC 均值 < 0 ⇒ 命题成立"
+    },
+    {
+      "id": "T-265-2",
+      "scenario": "T-265 / S-743 持有人数增长(采用面)→ 之后 4 周相对 BTC 的超额,横截面周频",
+      "statement": "同一段新周(2026-11-09 起),按 g_res 排序的前五分之一减后五分之一的平均 4 周相对 BTC 对数超额 < 0。",
+      "variable": "manual",
+      "op": "between",
+      "lo": 0,
+      "hi": 1,
+      "prob": 0.45,
+      "horizon_d": "2026-12-28",
+      "rationale": "本轮(2026-11-06,前提满足后补跑,101 周 / 每周 69-95 币)的最终数:主检验 g_res 平均周 IC -0.002963、Newey-West(4 阶)t -0.0908、(b) 池化 4 周对数超额 +0.8346%、零分布分位 0.404、两半 -0.034958 / +0.028406 不同号 => (a)-(d) 四条全不过(S-743 ❌)。未残差化的原始 g 显著反向:IC -0.03808、t -1.635、分位 0.000、两半同号(负)。 (b) 的池化差在样本内是**正的**(+0.8346%),而 IC 近乎零 ⇒ 关系非线性(尾部与中部不同向),",
+      "check": "docs/research/t265_results.json → a_b_c_d.g_res.b_spread_pooled_log_excess 在 2026-11-09 之后的新周上 < 0 ⇒ 命题成立"
+    },
+    {
+      "id": "T-265-3",
+      "scenario": "T-265 / S-743 持有人数增长(采用面)→ 之后 4 周相对 BTC 的超额,横截面周频",
+      "statement": "面板距 200 日线(state_daily entity=panel,feature=dist_200)2026-12-14 仍为正 —— 2026-11-06 为 +0.0693;S-743 的横截面采用面信号要能兑现,需要不是一个熊市。",
+      "variable": "state:dist_200",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.52,
+      "horizon_d": "2026-12-14",
+      "rationale": "这一条是市场状态,不是 T-265 的结论;当前 F&G 28、面板广度 0,熊市一侧的证据多一点,但 dist_200 仍在 200 日线上方,近一年的漂移常常在 ±0.07 附近来回 ⇒ 接近抛硬币,给 0.52。",
+      "check": "state_daily(entity=panel, feature=dist_200, d=2026-12-14) > 0 ⇒ 命题成立"
+    },
+    {
+      "id": "T-265-4",
+      "scenario": "T-265 / S-743 持有人数增长(采用面)→ 之后 4 周相对 BTC 的超额,横截面周频",
+      "statement": "恐惧贪婪指数(macro_daily series=fng)2026-12-14 高于 50 —— 2026-11-06 为 28、2026-11-05 为 50;采用面(持有人数)这类慢变量在恐慌里通常先被证伪。",
+      "variable": "macro:fng",
+      "op": "gt",
+      "lo": 50,
+      "prob": 0.42,
+      "horizon_d": "2026-12-14",
+      "rationale": "同 T-265-3,是市场状态不是结论;F&G 今天 28(恐慌),一个月内回到 50 以上不算罕见但也不占优 ⇒ 0.42,略低于抛硬币。",
+      "check": "macro_daily(series=fng, d<=2026-12-14)的最近值 > 50 ⇒ 命题成立"
+    }
+  ],
+  "notes": "本轮 T-265 只交到「部分交付」:脚本 + 口径 + 一版**不完整宇宙**的数字(asset_mcap_daily 主表没抓完,合并宇宙少约 360 个币)。上面的概率是在这版数字上下的先验,补跑后数字可能变;命题本身写的是**样本之外的新周**,所以补跑不会改写它。到期按 Brier 结算。",
+  "note_final_run": "2026-11-06 前提满足后补跑的最终数已并入各条 rationale(prob 已据此下调)。"
 }
