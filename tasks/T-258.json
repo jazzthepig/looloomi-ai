@@ -1,0 +1,28 @@
+{
+  "id": "T-258",
+  "owner": "lane-c",
+  "status": "in_review",
+  "created": "2026-11-06",
+  "title": "缺的维度,哪里有数(只查不接):ETF 资金流(IBIT / FBTC …)、交易所稳定币余额与净流入、高收益债利差 / MOVE、BTC 与纳指 / 美元的滚动相关、持仓量 ÷ 市值杠杆率、政治 / 事件强度 —— 每项给:来源、免费与否、历史从哪天起、按时点可得的发布时间、一次请求能拿多少(批量还是逐个)",
+  "source": "Jazz 11-06「决定不了,可能是矢量不足,要加维度」。现有维度看视图 feature_matrix_daily(f 的键);已有的不用再查。接数据是 Seth 的口(规则 3b),本卡只出可行性表;免费源的多资产逐个调取需要 Jazz 批例外(source_policy.FREE_BULK_EXCEPTIONS),表里标出来。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-258.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 每个维度至少两个候选来源,逐项填:URL / 端点、是否要 key 与价格、历史起点、频率、发布时滞(决定按时点可用的那一天)、一次请求的覆盖面(批量 / 逐个)、我们已有的 key 能不能用(CoinGecko Pro / EODHD / FRED / DeFiLlama / Deribit)。② 每个来源用一次真实请求验证(只取 1–2 行,不落库),写下实际返回的字段名。③ 给一个优先级:哪三个维度最可能让 S-737 的状态分得更开(说理由,不跑回测)。④ 不改代码、不入库、不打印 key。交付附 docs/research/scenarios/lane-c-T-258.json(≥ 2 条)。",
+    "expect": "报告 docs/research/T-258_dimension_sources.md(一张表 + 优先级);卡 notes 写前三个;in_review,推 lane-c/T-258。"
+  },
+  "prior_value": "缺的维度只有一个口头清单。",
+  "notes": "✅ 六维可行性表:docs/research/T-258_dimension_sources.md(每维 ≥2 候选源 + 一次真实请求验证 + 抄实际返回的字段名;没改代码、没入库、没打印 key)。\n前三个(理由见报告第三节,不跑回测):① HY 信用利差 —— FRED 免密钥 CSV fredgraph.csv?id=BAMLH0A0HYM2,1996 起 ⇒ 训练期(2021-03→2023-12)全覆盖,面板现在完全没有信用轴(只有 macro:vix);② BTC×纳指/美元滚动相关 —— 用现有 ohlcv_daily(QQQ 2015-01-02→2026-11-05、UUP 2015-07-13→、BTC 2015-07-14→),零接入当天可算;③ 交易所级杠杆率+净流入 —— DeFiLlama /cexs 一次请求覆盖全部交易所(leverage = oi ÷ currentTvl),但无历史 ⇒ 只能进留出期。ETF 流排第 4:Farside 只有 2024-01-11 起(实测 724 个交易日行)⇒ 进不了训练期。\n实测要点(2026-11-06,urllib,一次请求取 1-2 行):DeFiLlama /cexs 200,字段 currentTvl/cleanAssetsTvl/inflows_24h/1w/1m/spotVolume/oi/derivVolume/leverage(Binance currentTvl 127,018,953,685.92、oi 31,717,585,440.46、leverage 0.2497075、inflows_1m −7,747,145,366.47;OKX leverage 0.2957847);/stablecoincharts/Ethereum 200(字段 date/totalCirculating/totalCirculatingUSD/totalMintedUSD,起点 2017-11-27);Farside BTC 页 200(首行 11 Jan 2024,末三日合计 −52.6/+74.6/−430.2 US$m);HL metaAndAssetCtxs 200 一次 235 永续(universe: szDecimals/name/maxLeverage/marginTableId;ctx: openInterest/markPx/oraclePx/prevDayPx/funding/dayNtlVlm/premium,实测 BTC openInterest 40,692.0975、markPx 75,523.0);Binance fapi /fapi/v1/openInterest 与 /futures/data/openInterestHist 均 200(字段 sumOpenInterest/sumOpenInterestValue/CMCCirculatingSupply);GDELT 批量档 200(覆盖 2015-02-18 起,export zip 无表头 61 列)+ DOC API 200(限速 5s/请求);Nasdaq ETF 200 但只有价量没有流;CoinGecko /api/v3/etfs 404 ⇒ 没有 ETF 端点。\n未验成(需 @seth 在生产复验):本机 FRED 三个 host(fred/api/alfred)全部 read timeout 45-90s(我们代码里已在用免密钥 fredgraph.csv,源本身没问题);本机这把 COINGECKO_API_KEY 在 pro-api 主机上 401(三种认证形式,httpbin 对照证明头发出去了)⇒ 生产 Analyst key 需复验一次;SoSoValue / CryptoQuant 本机 DNS 不解析(未下结论);CoinGlass 无 key 一律 500;CBOE MOVE_History.csv / quotes/MOVE.json 403 ⇒ 真 MOVE 指数拿不到,只能 FRED 免密钥组合(VIX+VIX3M+HY OAS);Yahoo query1 403。\n要 @seth / @jazz 拍板:① 交易所级口径接受 DeFiLlama「总资产+全资产净流入」,还是坚持要稳定币专用交易所余额(要付费源);② ETF 流只做留出期还是等历史;③ 政治事件强度(GDELT)要不要占一个状态维度(建议先做零信号对照)。\n接数据的合规提醒:Farside/DeFiLlama /cexs/FRED CSV/HL metaAndAssetCtxs/GDELT 都是「一次请求覆盖全部对象」⇒ 不需要 FREE_BULK_EXCEPTIONS;只有 Binance openInterestHist(逐 symbol)、Nasdaq ETF 历史(逐基金)、CryptoQuant(逐资产)才需要按 hl_funding_hourly 的样式登记例外。建议给 source_policy.BULK_ENDPOINTS['defillama'] 补 /cexs(src/ 改动,不在本卡 allowed_paths)。",
+  "verified": null
+}
