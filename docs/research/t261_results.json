@@ -1,0 +1,1585 @@
+{
+  "meta": {
+    "card": "T-261",
+    "seed": 737,
+    "features_base": [
+      "mom_20",
+      "mom_60",
+      "mom_200",
+      "dist_200",
+      "vol_30",
+      "vratio_30_180",
+      "breadth_above_ma50",
+      "funding_7d_ann_binance",
+      "taker_buy_share_30d",
+      "stable_supply_30d",
+      "cycle:deterioration",
+      "dvol:btc_pct_1y",
+      "macro:vix"
+    ],
+    "features_no_vix": [
+      "mom_20",
+      "mom_60",
+      "mom_200",
+      "dist_200",
+      "vol_30",
+      "vratio_30_180",
+      "breadth_above_ma50",
+      "funding_7d_ann_binance",
+      "taker_buy_share_30d",
+      "stable_supply_30d",
+      "cycle:deterioration",
+      "dvol:btc_pct_1y"
+    ],
+    "train": [
+      "2021-03-01",
+      "2023-12-31"
+    ],
+    "holdout_start": "2024-01-01",
+    "panel_rows": 2866,
+    "panel_first": "2019-01-01",
+    "panel_last": "2026-11-05",
+    "dvol_rows": 2054,
+    "perp_btc_rows": 2500,
+    "perp_first": "2019-12-31",
+    "perp_last": "2026-11-04",
+    "feature_coverage": {
+      "mom_20": 2846,
+      "mom_60": 2806,
+      "mom_200": 2666,
+      "dist_200": 2687,
+      "vol_30": 2841,
+      "vratio_30_180": 2866,
+      "breadth_above_ma50": 2866,
+      "funding_7d_ann_binance": 2497,
+      "taker_buy_share_30d": 2111,
+      "stable_supply_30d": 2472,
+      "cycle:deterioration": 2106,
+      "dvol:btc_pct_1y": 2053,
+      "macro:vix": 2009,
+      "oi_chg_30d": 10
+    }
+  },
+  "base": {
+    "anchor": {
+      "date": "2026-11-04",
+      "cluster": 5
+    },
+    "anchor_cluster": 5,
+    "last_matured": "2026-10-02",
+    "days": {
+      "train_feature": 710,
+      "train_action": 710,
+      "hold_feature": 738,
+      "hold_action": 715
+    },
+    "cells": [
+      {
+        "cluster": 0,
+        "action": "A1",
+        "train_mean": -0.099653,
+        "train_n": 24,
+        "hold_mean": null,
+        "hold_p05": null,
+        "hold_n": 0,
+        "p_b_le_a": null,
+        "verdict": null,
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 0,
+        "action": "A3",
+        "train_mean": 0.041893,
+        "train_n": 24,
+        "hold_mean": null,
+        "hold_p05": null,
+        "hold_n": 0,
+        "p_b_le_a": null,
+        "verdict": null,
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 0,
+        "action": "A4",
+        "train_mean": -0.046848,
+        "train_n": 24,
+        "hold_mean": null,
+        "hold_p05": null,
+        "hold_n": 0,
+        "p_b_le_a": null,
+        "verdict": null,
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 0,
+        "action": "A5",
+        "train_mean": -0.009206,
+        "train_n": 24,
+        "hold_mean": null,
+        "hold_p05": null,
+        "hold_n": 0,
+        "p_b_le_a": null,
+        "verdict": null,
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 0,
+        "action": "A6",
+        "train_mean": -0.146501,
+        "train_n": 24,
+        "hold_mean": null,
+        "hold_p05": null,
+        "hold_n": 0,
+        "p_b_le_a": null,
+        "verdict": null,
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 1,
+        "action": "A1",
+        "train_mean": 0.016277,
+        "train_n": 89,
+        "hold_mean": 0.005676,
+        "hold_p05": -0.128232,
+        "hold_n": 92,
+        "p_b_le_a": 0.4355,
+        "verdict": "分不开",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 1,
+        "action": "A3",
+        "train_mean": -0.002405,
+        "train_n": 89,
+        "hold_mean": -0.022662,
+        "hold_p05": -0.096045,
+        "hold_n": 92,
+        "p_b_le_a": 0.988,
+        "verdict": "B < A",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 1,
+        "action": "A4",
+        "train_mean": -0.00403,
+        "train_n": 89,
+        "hold_mean": -0.017299,
+        "hold_p05": -0.029195,
+        "hold_n": 92,
+        "p_b_le_a": 1.0,
+        "verdict": "B < A",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 1,
+        "action": "A5",
+        "train_mean": -0.006111,
+        "train_n": 89,
+        "hold_mean": -0.012618,
+        "hold_p05": -0.021018,
+        "hold_n": 92,
+        "p_b_le_a": 1.0,
+        "verdict": "B < A",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 1,
+        "action": "A6",
+        "train_mean": 0.012246,
+        "train_n": 89,
+        "hold_mean": -0.011623,
+        "hold_p05": -0.117947,
+        "hold_n": 92,
+        "p_b_le_a": 0.919,
+        "verdict": "分不开",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 2,
+        "action": "A1",
+        "train_mean": 0.011701,
+        "train_n": 228,
+        "hold_mean": 0.035931,
+        "hold_p05": -0.199049,
+        "hold_n": 331,
+        "p_b_le_a": 0.227,
+        "verdict": "分不开",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 2,
+        "action": "A3",
+        "train_mean": -0.008592,
+        "train_n": 228,
+        "hold_mean": -0.005389,
+        "hold_p05": -0.067656,
+        "hold_n": 331,
+        "p_b_le_a": 0.8985,
+        "verdict": "分不开",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 2,
+        "action": "A4",
+        "train_mean": -0.020041,
+        "train_n": 228,
+        "hold_mean": -0.00772,
+        "hold_p05": -0.038364,
+        "hold_n": 331,
+        "p_b_le_a": 0.8755,
+        "verdict": "分不开",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 2,
+        "action": "A5",
+        "train_mean": -0.009166,
+        "train_n": 228,
+        "hold_mean": -0.005899,
+        "hold_p05": -0.025042,
+        "hold_n": 331,
+        "p_b_le_a": 0.8965,
+        "verdict": "分不开",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 2,
+        "action": "A6",
+        "train_mean": -0.008339,
+        "train_n": 228,
+        "hold_mean": 0.028212,
+        "hold_p05": -0.121894,
+        "hold_n": 331,
+        "p_b_le_a": 0.262,
+        "verdict": "分不开",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 3,
+        "action": "A1",
+        "train_mean": -0.208409,
+        "train_n": 39,
+        "hold_mean": null,
+        "hold_p05": null,
+        "hold_n": 0,
+        "p_b_le_a": null,
+        "verdict": null,
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 3,
+        "action": "A3",
+        "train_mean": 0.03633,
+        "train_n": 39,
+        "hold_mean": null,
+        "hold_p05": null,
+        "hold_n": 0,
+        "p_b_le_a": null,
+        "verdict": null,
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 3,
+        "action": "A4",
+        "train_mean": 0.080218,
+        "train_n": 39,
+        "hold_mean": null,
+        "hold_p05": null,
+        "hold_n": 0,
+        "p_b_le_a": null,
+        "verdict": null,
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 3,
+        "action": "A5",
+        "train_mean": 0.035916,
+        "train_n": 39,
+        "hold_mean": null,
+        "hold_p05": null,
+        "hold_n": 0,
+        "p_b_le_a": null,
+        "verdict": null,
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 3,
+        "action": "A6",
+        "train_mean": -0.128192,
+        "train_n": 39,
+        "hold_mean": null,
+        "hold_p05": null,
+        "hold_n": 0,
+        "p_b_le_a": null,
+        "verdict": null,
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 4,
+        "action": "A1",
+        "train_mean": 0.042425,
+        "train_n": 136,
+        "hold_mean": 0.005601,
+        "hold_p05": -0.19424,
+        "hold_n": 212,
+        "p_b_le_a": 0.5095,
+        "verdict": "分不开",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 4,
+        "action": "A3",
+        "train_mean": -0.001043,
+        "train_n": 136,
+        "hold_mean": 0.006319,
+        "hold_p05": -0.065133,
+        "hold_n": 212,
+        "p_b_le_a": 0.283,
+        "verdict": "分不开",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 4,
+        "action": "A4",
+        "train_mean": -0.00749,
+        "train_n": 136,
+        "hold_mean": -0.000515,
+        "hold_p05": -0.023798,
+        "hold_n": 212,
+        "p_b_le_a": 0.592,
+        "verdict": "分不开",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 4,
+        "action": "A5",
+        "train_mean": -0.005342,
+        "train_n": 136,
+        "hold_mean": 0.001216,
+        "hold_p05": -0.018238,
+        "hold_n": 212,
+        "p_b_le_a": 0.474,
+        "verdict": "分不开",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 4,
+        "action": "A6",
+        "train_mean": 0.034935,
+        "train_n": 136,
+        "hold_mean": 0.005085,
+        "hold_p05": -0.119987,
+        "hold_n": 212,
+        "p_b_le_a": 0.4865,
+        "verdict": "分不开",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 5,
+        "action": "A1",
+        "train_mean": 0.026605,
+        "train_n": 194,
+        "hold_mean": 0.088851,
+        "hold_p05": -0.240443,
+        "hold_n": 80,
+        "p_b_le_a": 0.0175,
+        "verdict": "B > A",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 5,
+        "action": "A3",
+        "train_mean": -0.001923,
+        "train_n": 194,
+        "hold_mean": -0.01294,
+        "hold_p05": -0.072115,
+        "hold_n": 80,
+        "p_b_le_a": 0.947,
+        "verdict": "分不开",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 5,
+        "action": "A4",
+        "train_mean": -0.011507,
+        "train_n": 194,
+        "hold_mean": -0.002209,
+        "hold_p05": -0.025897,
+        "hold_n": 80,
+        "p_b_le_a": 0.702,
+        "verdict": "分不开",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 5,
+        "action": "A5",
+        "train_mean": -0.004489,
+        "train_n": 194,
+        "hold_mean": -0.003067,
+        "hold_p05": -0.019356,
+        "hold_n": 80,
+        "p_b_le_a": 0.7425,
+        "verdict": "分不开",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      {
+        "cluster": 5,
+        "action": "A6",
+        "train_mean": 0.015098,
+        "train_n": 194,
+        "hold_mean": 0.086642,
+        "hold_p05": -0.114284,
+        "hold_n": 80,
+        "p_b_le_a": 0.002,
+        "verdict": "B > A",
+        "bh_reject": true,
+        "conditional_edge": true
+      }
+    ],
+    "a6_vs_a1": [
+      {
+        "A1": {
+          "hold_mean": null,
+          "hold_p05": null,
+          "n": 0
+        },
+        "A6": {
+          "hold_mean": null,
+          "hold_p05": null,
+          "n": 0
+        }
+      },
+      {
+        "A1": {
+          "hold_mean": 0.005675817192316206,
+          "hold_p05": -0.12823197438374237,
+          "n": 92
+        },
+        "A6": {
+          "hold_mean": -0.011623178210572054,
+          "hold_p05": -0.11794657692059742,
+          "n": 92
+        },
+        "p05_improve": 0.010285397463144955,
+        "mean_loss": 0.017298995402888262,
+        "protect_pays": false
+      },
+      {
+        "A1": {
+          "hold_mean": 0.03593112511145133,
+          "hold_p05": -0.19904869372574913,
+          "n": 331
+        },
+        "A6": {
+          "hold_mean": 0.028211542618215322,
+          "hold_p05": -0.12189397315433562,
+          "n": 331
+        },
+        "p05_improve": 0.07715472057141351,
+        "mean_loss": 0.007719582493236007,
+        "protect_pays": true
+      },
+      {
+        "A1": {
+          "hold_mean": null,
+          "hold_p05": null,
+          "n": 0
+        },
+        "A6": {
+          "hold_mean": null,
+          "hold_p05": null,
+          "n": 0
+        }
+      },
+      {
+        "A1": {
+          "hold_mean": 0.005600671617216509,
+          "hold_p05": -0.19423954884162556,
+          "n": 212
+        },
+        "A6": {
+          "hold_mean": 0.005085422114116853,
+          "hold_p05": -0.1199870603428947,
+          "n": 212
+        },
+        "p05_improve": 0.07425248849873085,
+        "mean_loss": 0.0005152495030996554,
+        "protect_pays": true
+      },
+      {
+        "A1": {
+          "hold_mean": 0.08885100945284403,
+          "hold_p05": -0.24044272732659666,
+          "n": 80
+        },
+        "A6": {
+          "hold_mean": 0.08664226616408477,
+          "hold_p05": -0.11428412567899333,
+          "n": 80
+        },
+        "p05_improve": 0.12615860164760334,
+        "mean_loss": 0.0022087432887592656,
+        "protect_pays": true
+      }
+    ],
+    "per_cluster": [
+      {
+        "cluster": 0,
+        "period": "train",
+        "n_days": 24,
+        "n_segments": 1
+      },
+      {
+        "cluster": 0,
+        "period": "hold",
+        "n_days": 0,
+        "n_segments": 0
+      },
+      {
+        "cluster": 1,
+        "period": "train",
+        "n_days": 89,
+        "n_segments": 5
+      },
+      {
+        "cluster": 1,
+        "period": "hold",
+        "n_days": 92,
+        "n_segments": 6
+      },
+      {
+        "cluster": 2,
+        "period": "train",
+        "n_days": 228,
+        "n_segments": 6
+      },
+      {
+        "cluster": 2,
+        "period": "hold",
+        "n_days": 341,
+        "n_segments": 8
+      },
+      {
+        "cluster": 3,
+        "period": "train",
+        "n_days": 39,
+        "n_segments": 1
+      },
+      {
+        "cluster": 3,
+        "period": "hold",
+        "n_days": 0,
+        "n_segments": 0
+      },
+      {
+        "cluster": 4,
+        "period": "train",
+        "n_days": 136,
+        "n_segments": 3
+      },
+      {
+        "cluster": 4,
+        "period": "hold",
+        "n_days": 219,
+        "n_segments": 6
+      },
+      {
+        "cluster": 5,
+        "period": "train",
+        "n_days": 194,
+        "n_segments": 6
+      },
+      {
+        "cluster": 5,
+        "period": "hold",
+        "n_days": 86,
+        "n_segments": 12
+      }
+    ],
+    "centers": [
+      [
+        -1.2535118321424763,
+        -0.5167320225429336,
+        1.687453890399231,
+        0.45344894402737457,
+        3.3575000508071384,
+        1.502513557758226,
+        -0.922947152828835,
+        0.018771173907777043,
+        -0.8557672891844997,
+        2.5859350082948147,
+        -0.7895569823174382,
+        1.6937550123139966,
+        -0.502606379865816
+      ],
+      [
+        -1.1704695276692247,
+        -1.4302171881214996,
+        -0.4149509351247255,
+        -1.0526747697437184,
+        1.028432002252478,
+        0.31061670014488674,
+        -1.0230879373895723,
+        -0.8470641533696447,
+        -0.40349848769151575,
+        -0.5088260407882469,
+        -1.3679544870741218,
+        0.8950824826342206,
+        0.8152756272563736
+      ],
+      [
+        0.8673625046637032,
+        0.7715304526421408,
+        -0.15240570141964915,
+        0.33622817796584303,
+        -0.3065055995314671,
+        0.1848207655628835,
+        1.09300150713611,
+        0.22717887950606516,
+        0.6540436189587264,
+        -0.13449441755849012,
+        0.9293899873250376,
+        0.21021688675036967,
+        -0.4602322155272605
+      ],
+      [
+        0.9359019151276088,
+        1.6660498890682498,
+        3.548412093293834,
+        3.022787866476229,
+        0.4316056292723645,
+        0.9604163717343422,
+        1.0184235532716757,
+        2.236331255431982,
+        -0.040769355944121136,
+        2.8793302005630643,
+        1.1143959266487469,
+        0.8600163209984963,
+        -0.341452487083061
+      ],
+      [
+        -0.20933988834537093,
+        -0.35302142483789956,
+        -0.13586333347738688,
+        -0.05980233608023374,
+        -0.9306178525793726,
+        -1.3058977223105956,
+        -0.433400836658814,
+        -0.09903252831827186,
+        -1.430552623539148,
+        -0.39972123407787524,
+        -0.689429906964562,
+        -0.8608945789545712,
+        -0.8618950866952735
+      ],
+      [
+        -0.3687243763110837,
+        -0.274139571207586,
+        -0.4573732912646191,
+        -0.5340739887182447,
+        0.03868162722940067,
+        0.176811883964796,
+        -0.601931908883835,
+        -0.26086122763831526,
+        0.5333659634305998,
+        -0.2270308523348173,
+        -0.10774522668563832,
+        -0.43660250108343224,
+        0.9019090011235777
+      ]
+    ],
+    "raw_centers": {
+      "0": {
+        "mom_20": -0.18345136172527626,
+        "mom_60": -0.11022658843831655,
+        "mom_200": 2.512347138572131,
+        "dist_200": 0.1862359753517422,
+        "vol_30": 1.5123107075483366,
+        "vratio_30_180": 1.4887471880504934,
+        "breadth_above_ma50": 0.08958333333333351,
+        "funding_7d_ann_binance": 0.05101515053571433,
+        "taker_buy_share_30d": 0.4903401528921837,
+        "stable_supply_30d": 0.21133381260768785,
+        "cycle:deterioration": -0.3560291666666666,
+        "dvol:btc_pct_1y": 0.7895028726877795,
+        "macro:vix": 17.859583333333333
+      },
+      "1": {
+        "mom_20": -0.17065016916657946,
+        "mom_60": -0.36689502639101923,
+        "mom_200": -0.12872134525967277,
+        "dist_200": -0.3211920794308089,
+        "vol_30": 0.9094781705432524,
+        "vratio_30_180": 1.070634230659983,
+        "breadth_above_ma50": 0.052541466024612016,
+        "funding_7d_ann_binance": -0.1775806685508991,
+        "taker_buy_share_30d": 0.4926693745790409,
+        "stable_supply_30d": -0.00727698986658646,
+        "cycle:deterioration": -0.5370955056179774,
+        "dvol:btc_pct_1y": 0.566664400444634,
+        "macro:vix": 24.767977528089887
+      },
+      "2": {
+        "mom_20": 0.14348706984244836,
+        "mom_60": 0.2517457014668081,
+        "mom_200": 0.20109141672631867,
+        "dist_200": 0.14674313372202488,
+        "vol_30": 0.5639563547567643,
+        "vratio_30_180": 1.0265054875562343,
+        "breadth_above_ma50": 0.8352785372522213,
+        "funding_7d_ann_binance": 0.10603846578320804,
+        "taker_buy_share_30d": 0.4981158037853956,
+        "stable_supply_30d": 0.019165418851851072,
+        "cycle:deterioration": 0.1820842105263158,
+        "dvol:btc_pct_1y": 0.37557932188328813,
+        "macro:vix": 18.08171052631579
+      },
+      "3": {
+        "mom_20": 0.15405260263652712,
+        "mom_60": 0.5030852033189316,
+        "mom_200": 4.850107212048143,
+        "dist_200": 1.0518718056454734,
+        "vol_30": 0.7550016378380721,
+        "vratio_30_180": 1.2985815238038567,
+        "breadth_above_ma50": 0.8076923076923079,
+        "funding_7d_ann_binance": 0.6364901793772891,
+        "taker_buy_share_30d": 0.49453745957038214,
+        "stable_supply_30d": 0.23205895338805918,
+        "cycle:deterioration": 0.24000000000000005,
+        "dvol:btc_pct_1y": 0.5568805533784665,
+        "macro:vix": 18.704358974358975
+      },
+      "4": {
+        "mom_20": -0.02248947366446295,
+        "mom_60": -0.06422765493331434,
+        "mom_200": 0.2218721560443852,
+        "dist_200": 0.013316515749341673,
+        "vol_30": 0.40241741942410775,
+        "vratio_30_180": 0.5035670205066887,
+        "breadth_above_ma50": 0.270665494458653,
+        "funding_7d_ann_binance": 0.01991289245798321,
+        "taker_buy_share_30d": 0.4873799609407451,
+        "stable_supply_30d": 0.0004300637541839805,
+        "cycle:deterioration": -0.3246845588235294,
+        "dvol:btc_pct_1y": 0.07672737224191889,
+        "macro:vix": 15.976176470588237
+      },
+      "5": {
+        "mom_20": -0.047059017275521836,
+        "mom_60": -0.04206365827849949,
+        "mom_200": -0.18201286478567041,
+        "dist_200": -0.1464703197782928,
+        "vol_30": 0.6533011430205237,
+        "vratio_30_180": 1.0236960018620844,
+        "breadth_above_ma50": 0.2083262024095732,
+        "funding_7d_ann_binance": -0.022812742437407912,
+        "taker_buy_share_30d": 0.49749430389098037,
+        "stable_supply_30d": 0.012628738331539189,
+        "cycle:deterioration": -0.142589175257732,
+        "dvol:btc_pct_1y": 0.19510955630875185,
+        "macro:vix": 25.222113402061858
+      }
+    },
+    "features": [
+      "mom_20",
+      "mom_60",
+      "mom_200",
+      "dist_200",
+      "vol_30",
+      "vratio_30_180",
+      "breadth_above_ma50",
+      "funding_7d_ann_binance",
+      "taker_buy_share_30d",
+      "stable_supply_30d",
+      "cycle:deterioration",
+      "dvol:btc_pct_1y",
+      "macro:vix"
+    ],
+    "n_train": 710,
+    "passed_bh": [
+      {
+        "cluster": 5,
+        "action": "A6",
+        "train_mean": 0.015098,
+        "train_n": 194,
+        "hold_mean": 0.086642,
+        "hold_p05": -0.114284,
+        "hold_n": 80,
+        "p_b_le_a": 0.002,
+        "verdict": "B > A",
+        "bh_reject": true,
+        "conditional_edge": true
+      }
+    ],
+    "today_put_quote": {
+      "asof": "2026-11-04",
+      "entry_date": null,
+      "basis": "close_proxy(d)",
+      "spot": 80466.5,
+      "dvol": 38.06,
+      "dvol_flat": {
+        "put90_pct_spot": 0.9196,
+        "put80_pct_spot": 0.0733,
+        "spread_net_credit_pct_spot": 0.8463
+      },
+      "dvol_plus_9": {
+        "put90_pct_spot": 1.5888,
+        "put80_pct_spot": 0.2463,
+        "spread_net_credit_pct_spot": 1.3426
+      }
+    }
+  },
+  "variants": {
+    "k5": {
+      "spec": {
+        "name": "k5",
+        "features": [
+          "mom_20",
+          "mom_60",
+          "mom_200",
+          "dist_200",
+          "vol_30",
+          "vratio_30_180",
+          "breadth_above_ma50",
+          "funding_7d_ann_binance",
+          "taker_buy_share_30d",
+          "stable_supply_30d",
+          "cycle:deterioration",
+          "dvol:btc_pct_1y",
+          "macro:vix"
+        ],
+        "k": 5,
+        "horizon": 30,
+        "vol_add": 0.0,
+        "put_tenor": 30
+      },
+      "match_cluster": 1,
+      "anchor": {
+        "date": "2026-11-04",
+        "cluster": 0
+      },
+      "anchor_cluster": 0,
+      "a6_at_match": {
+        "cluster": 1,
+        "action": "A6",
+        "train_mean": 0.013585,
+        "train_n": 259,
+        "hold_mean": 0.025683,
+        "hold_p05": -0.118944,
+        "hold_n": 139,
+        "p_b_le_a": 0.09,
+        "verdict": "分不开",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      "passed_bh": [],
+      "passed_conditional_edge": [],
+      "a6_vs_a1_at_match": {
+        "A1": {
+          "hold_mean": 0.04257874976450218,
+          "hold_p05": -0.12911563812631582,
+          "n": 139
+        },
+        "A6": {
+          "hold_mean": 0.025682894718866173,
+          "hold_p05": -0.11894432321345257,
+          "n": 139
+        },
+        "p05_improve": 0.010171314912863258,
+        "mean_loss": 0.01689585504563601,
+        "protect_pays": false
+      },
+      "per_cluster": [
+        {
+          "cluster": 0,
+          "period": "train",
+          "n_days": 250,
+          "n_segments": 6
+        },
+        {
+          "cluster": 0,
+          "period": "hold",
+          "n_days": 364,
+          "n_segments": 8
+        },
+        {
+          "cluster": 1,
+          "period": "train",
+          "n_days": 259,
+          "n_segments": 4
+        },
+        {
+          "cluster": 1,
+          "period": "hold",
+          "n_days": 143,
+          "n_segments": 7
+        },
+        {
+          "cluster": 2,
+          "period": "train",
+          "n_days": 135,
+          "n_segments": 2
+        },
+        {
+          "cluster": 2,
+          "period": "hold",
+          "n_days": 230,
+          "n_segments": 6
+        },
+        {
+          "cluster": 3,
+          "period": "train",
+          "n_days": 39,
+          "n_segments": 1
+        },
+        {
+          "cluster": 3,
+          "period": "hold",
+          "n_days": 1,
+          "n_segments": 1
+        },
+        {
+          "cluster": 4,
+          "period": "train",
+          "n_days": 27,
+          "n_segments": 1
+        },
+        {
+          "cluster": 4,
+          "period": "hold",
+          "n_days": 0,
+          "n_segments": 0
+        }
+      ],
+      "days": {
+        "train_feature": 710,
+        "hold_feature": 738
+      },
+      "n_cells": 25
+    },
+    "k7": {
+      "spec": {
+        "name": "k7",
+        "features": [
+          "mom_20",
+          "mom_60",
+          "mom_200",
+          "dist_200",
+          "vol_30",
+          "vratio_30_180",
+          "breadth_above_ma50",
+          "funding_7d_ann_binance",
+          "taker_buy_share_30d",
+          "stable_supply_30d",
+          "cycle:deterioration",
+          "dvol:btc_pct_1y",
+          "macro:vix"
+        ],
+        "k": 7,
+        "horizon": 30,
+        "vol_add": 0.0,
+        "put_tenor": 30
+      },
+      "match_cluster": 1,
+      "anchor": {
+        "date": "2026-11-04",
+        "cluster": 1
+      },
+      "anchor_cluster": 1,
+      "a6_at_match": {
+        "cluster": 1,
+        "action": "A6",
+        "train_mean": 0.015522,
+        "train_n": 191,
+        "hold_mean": 0.098544,
+        "hold_p05": -0.109723,
+        "hold_n": 69,
+        "p_b_le_a": 0.0005,
+        "verdict": "B > A",
+        "bh_reject": true,
+        "conditional_edge": true
+      },
+      "passed_bh": [
+        {
+          "cluster": 1,
+          "action": "A6",
+          "train_mean": 0.015522,
+          "train_n": 191,
+          "hold_mean": 0.098544,
+          "hold_p05": -0.109723,
+          "hold_n": 69,
+          "p_b_le_a": 0.0005,
+          "verdict": "B > A",
+          "bh_reject": true,
+          "conditional_edge": true
+        }
+      ],
+      "passed_conditional_edge": [
+        {
+          "cluster": 1,
+          "action": "A6",
+          "train_mean": 0.015522,
+          "train_n": 191,
+          "hold_mean": 0.098544,
+          "hold_p05": -0.109723,
+          "hold_n": 69,
+          "p_b_le_a": 0.0005,
+          "verdict": "B > A",
+          "bh_reject": true,
+          "conditional_edge": true
+        }
+      ],
+      "a6_vs_a1_at_match": {
+        "A1": {
+          "hold_mean": 0.09974705874795893,
+          "hold_p05": -0.24290583125945153,
+          "n": 69
+        },
+        "A6": {
+          "hold_mean": 0.0985437043480234,
+          "hold_p05": -0.10972276105786803,
+          "n": 69
+        },
+        "p05_improve": 0.1331830702015835,
+        "mean_loss": 0.0012033543999355328,
+        "protect_pays": true
+      },
+      "per_cluster": [
+        {
+          "cluster": 0,
+          "period": "train",
+          "n_days": 137,
+          "n_segments": 3
+        },
+        {
+          "cluster": 0,
+          "period": "hold",
+          "n_days": 214,
+          "n_segments": 6
+        },
+        {
+          "cluster": 1,
+          "period": "train",
+          "n_days": 191,
+          "n_segments": 7
+        },
+        {
+          "cluster": 1,
+          "period": "hold",
+          "n_days": 75,
+          "n_segments": 10
+        },
+        {
+          "cluster": 2,
+          "period": "train",
+          "n_days": 39,
+          "n_segments": 1
+        },
+        {
+          "cluster": 2,
+          "period": "hold",
+          "n_days": 0,
+          "n_segments": 0
+        },
+        {
+          "cluster": 3,
+          "period": "train",
+          "n_days": 90,
+          "n_segments": 5
+        },
+        {
+          "cluster": 3,
+          "period": "hold",
+          "n_days": 108,
+          "n_segments": 6
+        },
+        {
+          "cluster": 4,
+          "period": "train",
+          "n_days": 224,
+          "n_segments": 6
+        },
+        {
+          "cluster": 4,
+          "period": "hold",
+          "n_days": 341,
+          "n_segments": 8
+        },
+        {
+          "cluster": 5,
+          "period": "train",
+          "n_days": 5,
+          "n_segments": 1
+        },
+        {
+          "cluster": 5,
+          "period": "hold",
+          "n_days": 0,
+          "n_segments": 0
+        },
+        {
+          "cluster": 6,
+          "period": "train",
+          "n_days": 24,
+          "n_segments": 1
+        },
+        {
+          "cluster": 6,
+          "period": "hold",
+          "n_days": 0,
+          "n_segments": 0
+        }
+      ],
+      "days": {
+        "train_feature": 710,
+        "hold_feature": 738
+      },
+      "n_cells": 35
+    },
+    "no_vix": {
+      "spec": {
+        "name": "no_vix",
+        "features": [
+          "mom_20",
+          "mom_60",
+          "mom_200",
+          "dist_200",
+          "vol_30",
+          "vratio_30_180",
+          "breadth_above_ma50",
+          "funding_7d_ann_binance",
+          "taker_buy_share_30d",
+          "stable_supply_30d",
+          "cycle:deterioration",
+          "dvol:btc_pct_1y"
+        ],
+        "k": 6,
+        "horizon": 30,
+        "vol_add": 0.0,
+        "put_tenor": 30
+      },
+      "match_cluster": 5,
+      "anchor": {
+        "date": "2026-11-04",
+        "cluster": 5
+      },
+      "anchor_cluster": 5,
+      "a6_at_match": {
+        "cluster": 5,
+        "action": "A6",
+        "train_mean": 0.012065,
+        "train_n": 310,
+        "hold_mean": 0.048719,
+        "hold_p05": -0.121343,
+        "hold_n": 330,
+        "p_b_le_a": 0.028,
+        "verdict": "B > A",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      "passed_bh": [],
+      "passed_conditional_edge": [],
+      "a6_vs_a1_at_match": {
+        "A1": {
+          "hold_mean": 0.05372571701024627,
+          "hold_p05": -0.18433720792826871,
+          "n": 330
+        },
+        "A6": {
+          "hold_mean": 0.04871945230678463,
+          "hold_p05": -0.12134252741897662,
+          "n": 330
+        },
+        "p05_improve": 0.06299468050929209,
+        "mean_loss": 0.0050062647034616395,
+        "protect_pays": true
+      },
+      "per_cluster": [
+        {
+          "cluster": 0,
+          "period": "train",
+          "n_days": 160,
+          "n_segments": 1
+        },
+        {
+          "cluster": 0,
+          "period": "hold",
+          "n_days": 136,
+          "n_segments": 9
+        },
+        {
+          "cluster": 1,
+          "period": "train",
+          "n_days": 342,
+          "n_segments": 6
+        },
+        {
+          "cluster": 1,
+          "period": "hold",
+          "n_days": 436,
+          "n_segments": 8
+        },
+        {
+          "cluster": 2,
+          "period": "train",
+          "n_days": 56,
+          "n_segments": 1
+        },
+        {
+          "cluster": 2,
+          "period": "hold",
+          "n_days": 0,
+          "n_segments": 0
+        },
+        {
+          "cluster": 3,
+          "period": "train",
+          "n_days": 112,
+          "n_segments": 5
+        },
+        {
+          "cluster": 3,
+          "period": "hold",
+          "n_days": 124,
+          "n_segments": 7
+        },
+        {
+          "cluster": 4,
+          "period": "train",
+          "n_days": 33,
+          "n_segments": 1
+        },
+        {
+          "cluster": 4,
+          "period": "hold",
+          "n_days": 0,
+          "n_segments": 0
+        },
+        {
+          "cluster": 5,
+          "period": "train",
+          "n_days": 310,
+          "n_segments": 6
+        },
+        {
+          "cluster": 5,
+          "period": "hold",
+          "n_days": 343,
+          "n_segments": 9
+        }
+      ],
+      "days": {
+        "train_feature": 1013,
+        "hold_feature": 1039
+      },
+      "n_cells": 30
+    },
+    "vol_plus_9": {
+      "spec": {
+        "name": "vol_plus_9",
+        "features": [
+          "mom_20",
+          "mom_60",
+          "mom_200",
+          "dist_200",
+          "vol_30",
+          "vratio_30_180",
+          "breadth_above_ma50",
+          "funding_7d_ann_binance",
+          "taker_buy_share_30d",
+          "stable_supply_30d",
+          "cycle:deterioration",
+          "dvol:btc_pct_1y",
+          "macro:vix"
+        ],
+        "k": 6,
+        "horizon": 30,
+        "vol_add": 9.0,
+        "put_tenor": 30
+      },
+      "match_cluster": 5,
+      "anchor": {
+        "date": "2026-11-04",
+        "cluster": 5
+      },
+      "anchor_cluster": 5,
+      "a6_at_match": {
+        "cluster": 5,
+        "action": "A6",
+        "train_mean": 0.006563,
+        "train_n": 194,
+        "hold_mean": 0.079073,
+        "hold_p05": -0.121666,
+        "hold_n": 80,
+        "p_b_le_a": 0.0035,
+        "verdict": "B > A",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      "passed_bh": [],
+      "passed_conditional_edge": [],
+      "a6_vs_a1_at_match": {
+        "A1": {
+          "hold_mean": 0.08885100945284403,
+          "hold_p05": -0.24044272732659666,
+          "n": 80
+        },
+        "A6": {
+          "hold_mean": 0.07907269588449378,
+          "hold_p05": -0.12166638891977877,
+          "n": 80
+        },
+        "p05_improve": 0.1187763384068179,
+        "mean_loss": 0.009778313568350253,
+        "protect_pays": true
+      },
+      "per_cluster": [
+        {
+          "cluster": 0,
+          "period": "train",
+          "n_days": 24,
+          "n_segments": 1
+        },
+        {
+          "cluster": 0,
+          "period": "hold",
+          "n_days": 0,
+          "n_segments": 0
+        },
+        {
+          "cluster": 1,
+          "period": "train",
+          "n_days": 89,
+          "n_segments": 5
+        },
+        {
+          "cluster": 1,
+          "period": "hold",
+          "n_days": 92,
+          "n_segments": 6
+        },
+        {
+          "cluster": 2,
+          "period": "train",
+          "n_days": 228,
+          "n_segments": 6
+        },
+        {
+          "cluster": 2,
+          "period": "hold",
+          "n_days": 341,
+          "n_segments": 8
+        },
+        {
+          "cluster": 3,
+          "period": "train",
+          "n_days": 39,
+          "n_segments": 1
+        },
+        {
+          "cluster": 3,
+          "period": "hold",
+          "n_days": 0,
+          "n_segments": 0
+        },
+        {
+          "cluster": 4,
+          "period": "train",
+          "n_days": 136,
+          "n_segments": 3
+        },
+        {
+          "cluster": 4,
+          "period": "hold",
+          "n_days": 219,
+          "n_segments": 6
+        },
+        {
+          "cluster": 5,
+          "period": "train",
+          "n_days": 194,
+          "n_segments": 6
+        },
+        {
+          "cluster": 5,
+          "period": "hold",
+          "n_days": 86,
+          "n_segments": 12
+        }
+      ],
+      "days": {
+        "train_feature": 710,
+        "hold_feature": 738
+      },
+      "n_cells": 30
+    },
+    "put_60d": {
+      "spec": {
+        "name": "put_60d",
+        "features": [
+          "mom_20",
+          "mom_60",
+          "mom_200",
+          "dist_200",
+          "vol_30",
+          "vratio_30_180",
+          "breadth_above_ma50",
+          "funding_7d_ann_binance",
+          "taker_buy_share_30d",
+          "stable_supply_30d",
+          "cycle:deterioration",
+          "dvol:btc_pct_1y",
+          "macro:vix"
+        ],
+        "k": 6,
+        "horizon": 60,
+        "vol_add": 0.0,
+        "put_tenor": 60
+      },
+      "match_cluster": 5,
+      "anchor": {
+        "date": "2026-11-04",
+        "cluster": 5
+      },
+      "anchor_cluster": 5,
+      "a6_at_match": {
+        "cluster": 5,
+        "action": "A6",
+        "train_mean": -0.017182,
+        "train_n": 194,
+        "hold_mean": 0.083741,
+        "hold_p05": -0.13578,
+        "hold_n": 80,
+        "p_b_le_a": 0.0115,
+        "verdict": "B > A",
+        "bh_reject": false,
+        "conditional_edge": false
+      },
+      "passed_bh": [],
+      "passed_conditional_edge": [],
+      "a6_vs_a1_at_match": {
+        "A1": {
+          "hold_mean": 0.09906200230957882,
+          "hold_p05": -0.22070290371574824,
+          "n": 80
+        },
+        "A6": {
+          "hold_mean": 0.08374076709621459,
+          "hold_p05": -0.1357797268418245,
+          "n": 80
+        },
+        "p05_improve": 0.08492317687392376,
+        "mean_loss": 0.015321235213364232,
+        "protect_pays": true
+      },
+      "per_cluster": [
+        {
+          "cluster": 0,
+          "period": "train",
+          "n_days": 24,
+          "n_segments": 1
+        },
+        {
+          "cluster": 0,
+          "period": "hold",
+          "n_days": 0,
+          "n_segments": 0
+        },
+        {
+          "cluster": 1,
+          "period": "train",
+          "n_days": 89,
+          "n_segments": 5
+        },
+        {
+          "cluster": 1,
+          "period": "hold",
+          "n_days": 92,
+          "n_segments": 6
+        },
+        {
+          "cluster": 2,
+          "period": "train",
+          "n_days": 228,
+          "n_segments": 6
+        },
+        {
+          "cluster": 2,
+          "period": "hold",
+          "n_days": 341,
+          "n_segments": 8
+        },
+        {
+          "cluster": 3,
+          "period": "train",
+          "n_days": 39,
+          "n_segments": 1
+        },
+        {
+          "cluster": 3,
+          "period": "hold",
+          "n_days": 0,
+          "n_segments": 0
+        },
+        {
+          "cluster": 4,
+          "period": "train",
+          "n_days": 136,
+          "n_segments": 3
+        },
+        {
+          "cluster": 4,
+          "period": "hold",
+          "n_days": 219,
+          "n_segments": 6
+        },
+        {
+          "cluster": 5,
+          "period": "train",
+          "n_days": 194,
+          "n_segments": 6
+        },
+        {
+          "cluster": 5,
+          "period": "hold",
+          "n_days": 86,
+          "n_segments": 12
+        }
+      ],
+      "days": {
+        "train_feature": 710,
+        "hold_feature": 738
+      },
+      "n_cells": 30
+    }
+  }
+}

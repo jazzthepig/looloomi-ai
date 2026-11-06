@@ -1,7 +1,7 @@
 {
   "id": "T-261",
   "owner": "lane-a",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-11-06",
   "title": "T-257 盲复算 + 稳健性(只报不判):S-737 的 13 特征 k-means 状态地图自己重写一遍;再看唯一过 BH 的 S5 × 「BTC + 30 天 90% 看跌」在 k = 5 / 7、去掉 VIX、看跌加偏斜(+9 个波动点)时还在不在",
   "source": "REFUTATION_LEDGER S-737 及其结果段(lane-b T-257)。**先不要读** docs/research/t257_state_action_map.py 与 t257_results.json —— 盲复算,从台账口径段自己写;写完再对照。特征视图 feature_matrix_daily;价 perp_bv_daily BTCUSDT;DVOL deriv_vol_daily。框架:多特征检验只用 src/data/evaluation/joint_model.py,零分布 / ab_test 只用 apparatus.py。",
@@ -23,6 +23,19 @@
     "expect": "报告 docs/research/T-261_state_map_recompute.md + t261_recompute.py + t261_results.json;卡 notes 写对照表与稳健性表;in_review,推 lane-a/T-261。"
   },
   "prior_value": "S-737 只有 lane-b 一个人算过;S5 × A6 只在一个规格下成立。",
-  "notes": "",
-  "verified": null
+  "notes": "盲复算完成(先写后对照,未读 T-257 脚本/结果文件,对照用台账 31536 行结果段)。**逐格吻合到 4 位小数。**\n\n【口径偏离 1】台账 14 特征里的 oi_chg_30d 在 feature_matrix_daily 只有 10/2866 行非空(0.35%)⇒ 用 13 特征(与 T-257 一致)。偏离 2:A3 按 S-737 字面「1 倍名义」算,不含 S-736 的成本与资金费;ATR14 用 14 根真实波幅简单均值。入场 d+1 开盘,持有到 d+31 收盘;看跌 σ = d 日 DVOL/100,r=0。\n\n【样本】训练 710 天(2021-03-24→2023-12-29,✓ 与 T-257 一致);留出特征齐全 738 天(T-257 737,差 1 天 = 今天 2026-11-04),30 天结果到期 715 天、最后一天 2026-10-02(T-257 报入场截到 2026-10-04,差 2 天,尾部缺 macro:vix)。\n\n【30 格对照 —— 唯一过 BH 的仍是 S5 × A6,数完全一致】S5×A6:训练 +1.510%(T:+1.51%)、留出 +8.664%(T:+8.66%)、p05 −11.428%(T:−11.4%)、p=0.0020(T:0.0020)。S5×A1:+8.885%(T:+8.9%)、p05 −24.04%(T:−24%)、p=0.0175 未过 BH(T 同)。A6 对 A1 尾部判据 S2/S4/S5 成立、S1 不成立(✓ 与 T-257 逐格一致)。S0/S3 留出期没出现(✓)。S5 留出:有 30 天结果 80 天(≡T 的 80,✓)/段数 12(T:11)。S5×A3 −1.294%(T:−1.8%,差 0.5pp)—— 差因是 A3 的 ATR/保本/时间止损实现细节本卡自定,不是状态划分。其余格差 < 0.5pp。\n【S5 中心】20 日 −4.7%、200 日 −18.2%、偏离 200 日线 −14.7%、广度 20.8%、DVOL 一年分位 0.195、VIX 25.2、资金费年化 −2.3%(与 T-257 描述同向、量级一致)。\n\n【稳健性(只报)—— S5 对应类 × A6】基准 k=6(S5):训练 +1.510% / 留出 +8.664% / p05 −11.428% / n=80 / p=0.0020 / ✅过 BH。k=5(类1):+1.359% / +2.568% / −11.894% / n=139 / p=0.0900 / ❌。k=7(类1):+1.552% / +9.854% / −10.972% / n=69 / p=0.0005 / ✅(唯一过 BH 的格)。去 macro:vix(S5):+1.207% / +4.872% / −12.134% / n=330 / p=0.0280 / ❌。看跌按 DVOL+9 波动点(S5):+0.656% / +7.907% / −12.167% / n=80 / p=0.0035 / ❌(BH 阈值 0.0033,差一点点)。A6 改 60 天看跌(S5):训练 −1.718%(训练条件不成立)/ +8.374% / −13.578% / n=80 / p=0.0115 / ❌。⇒ 五种规格里两种过 BH;卡 prior_value「S5 × A6 只在一个规格下成立」被复算确认并加精确:k 换一下就掉(k=7 反而更强),去 VIX 就掉。\n\n【今天落在哪类】基准 k=6:S5(最新特征齐全日 2026-11-04,✓ 与 T-257「今天就在 S5」一致)。k=5:类0;k=7:类1;去 VIX / +9 波动点 / 60 天看跌:均 S5 ⇒ 4/6 规格今天仍在 S5。\n\n【期权偏差方向】今天(2026-11-04 收盘代理,现货 80466.5,DVOL 38.06):DVOL 平值 BS 30 天 90% 看跌 = 0.920% 现货,T-257 抄录的真实价 0.89% ⇒ 对今天而言「DVOL 平值 = 乐观上限」不成立;加 9 波动点 = 1.589%(反而高估成本)。options_surface_daily 现无真实行(查空),真实价只能引用 T-257 的抄录值。\n\n【给 @seth】① A3 出场口径要不要写死(ATR Wilder vs 简单均值、保本按收盘还是最低价、时间止损 15 根怎么数)?不写死则每次复算差 0.5pp 量级。② 留出期边界按 d+31 收盘还是 d+30 收盘(本次 d+31,边界差 1–2 天)。③ 是否另立预注册做「S5 × A6 在 k=5/7/去 VIX 下」的稳健性复核(5 种变体只活 2 种,按 BH 逻辑本身也需一次预注册)。\n\n只读库、未入库、未改代码;零分布与 A/B 全部走 apparatus.ab_test;本卡无联合模型故未触碰 joint_model.py。",
+  "verified": {
+    "anchor_cluster": 5,
+    "anchor_date": "2026-11-04",
+    "train_days": 710,
+    "holdout_feature_days": 738,
+    "holdout_action_days": 715,
+    "passed_bh_base": [["S5", "A6"]],
+    "variants_passed_bh": {"k5": [], "k7": [["类1", "A6"]], "no_vix": [], "vol_plus_9": [], "put_60d": []},
+    "a6_at_s5_base": {"train_mean": 0.0151, "hold_mean": 0.086642, "hold_p05": -0.11428, "p_b_le_a": 0.002},
+    "script": "docs/research/t261_recompute.py",
+    "results": "docs/research/t261_results.json",
+    "report": "docs/research/T-261_state_map_recompute.md",
+    "scenarios": "docs/research/scenarios/lane-a-T-261.json"
+  }
 }
