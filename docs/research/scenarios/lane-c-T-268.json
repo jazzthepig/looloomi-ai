@@ -1,0 +1,67 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {
+      "id": "T-268-1",
+      "scenario": "T-268 S-745 融合近邻臂 vs 原近邻臂",
+      "statement": "2026-12-15 时 BTC(ohlcv_daily 收盘)高于 2026-11-05 的收盘 76088",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 76088,
+      "prob": 0.5,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-268-2",
+      "scenario": "T-268 S-745 融合近邻臂 vs 原近邻臂",
+      "statement": "2026-12-15 时 state_daily(eq.panel)的 mom_200 大于 0(2026-11-05 为 +0.0349)",
+      "variable": "state:mom_200",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.55,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-268-3",
+      "scenario": "T-268 S-745 融合近邻臂 vs 原近邻臂",
+      "statement": "2026-12-15 时 state_daily(eq.panel)的 breadth_above_ma50 ≥ 0.20(2026-11-05 只有 0.0417)",
+      "variable": "state:breadth_above_ma50",
+      "op": "gt",
+      "lo": 0.2,
+      "prob": 0.45,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-268-4",
+      "scenario": "T-268 S-745 融合近邻臂 vs 原近邻臂",
+      "statement": "2026-11 → 2027-03 的前向样本里,融合臂与原近邻臂的日均三档 Brier 差 ≤ 0(融合臂不比原臂差;本次重放的 95% 区间是 [-0.0066, +0.0061],分不开)",
+      "variable": "manual",
+      "op": "between",
+      "lo": -0.0001,
+      "hi": 0.0001,
+      "prob": 0.5,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-268-5",
+      "scenario": "T-268 S-745 融合近邻臂 vs 原近邻臂",
+      "statement": "2026-11 之后任一天,原近邻臂(market_state_vectors 24 维)top-150 近邻里全零热身向量的占比为 0(2024-02-25 起实测已是 0)",
+      "variable": "manual",
+      "op": "between",
+      "lo": 0,
+      "hi": 0,
+      "prob": 0.95,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-268-6",
+      "scenario": "T-268 S-745 融合近邻臂 vs 原近邻臂",
+      "statement": "2026-11 → 2027-03 期间,融合臂每日三档概率与时点无条件频率的平均偏离 ≥ 0.05(本次重放实测 0.0533,原近邻臂 0.0517,基率臂 0.0246)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0.05,
+      "prob": 0.6,
+      "horizon_d": "2026-12-15"
+    }
+  ]
+}
