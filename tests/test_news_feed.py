@@ -199,3 +199,18 @@ def test_reasoning_model_thinking_never_reaches_the_channel(monkeypatch):
     assert out and "think" not in out.lower() and "Circle filed." in out
     monkeypatch.setattr(ln, "_chat", chat_cut)
     assert asyncio.run(nf.llm_post(it, {})) is None
+
+
+def test_coingecko_news_and_insights_parse_with_coin_tags():
+    now = dt.datetime(2026, 11, 6, tzinfo=dt.timezone.utc)
+    cmap = {"bitcoin": "BTC", "wrapped-solana": "SOL"}
+    news = nf.cg_news_items([{"title": "Fed holds; bitcoin steadies", "url": "https://x.example/a", "posted_at": "2026-11-06T01:00:00Z",
+                              "type": "news", "source_name": "Crypto Briefing", "related_coin_ids": ["bitcoin", "unknown-coin"]},
+                             {"title": "How options work", "url": "https://x.example/g", "type": "guide", "related_coin_ids": ["bitcoin"]},
+                             {"title": "", "url": "https://x.example/b"}], now, cmap)
+    assert len(news) == 1 and news[0]["cg_hits"] == ["BTC"] and news[0]["source"].startswith(nf.CG_NEWS_SOURCE)
+    ins = nf.cg_insight_items([{"title": "Solana memecoin launches surge", "description": "Rising launches.", "posted_at": "2026-06-15T03:56:19Z",
+                                "related_coin_ids": ["wrapped-solana"]},
+                               {"title": "no coin", "posted_at": "2026-06-15T03:56:19Z", "related_coin_ids": []}], now, cmap)
+    assert len(ins) == 1 and ins[0]["cg_hits"] == ["SOL"] and ins[0]["link"] == "https://www.coingecko.com/en/coins/wrapped-solana"
+    assert ins[0]["id"] != nf.item_id(ins[0]["link"]), "同一币的多条洞察不能因为链接相同而互相覆盖"

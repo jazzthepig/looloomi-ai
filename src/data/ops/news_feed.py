@@ -183,12 +183,73 @@ async def llm_post(it: dict, facts: dict[str, dict]) -> Optional[str]:
             f'{html.escape(it["source"])} · <a href="{html.escape(it["link"])}">原文</a>')
 
 
+CG_NEWS_SOURCE = "CoinGecko News"
+CG_INSIGHTS_SOURCE = "CoinGecko Insights"
+CG_PER_PAGE = 20
+
+
+def cg_news_items(rows: Any, now: dt.datetime, coin_sym: dict[str, str]) -> list[dict]:
+    """纯函数。CoinGecko Analyst `/news` 的行 → 标准化条目。CG 已经替每条打了 `related_coin_ids`,映射成我们的符号放进 `cg_hits`。"""
+    out = []
+    for r in rows if isinstance(rows, list) else []:
+        link, title = str(r.get("url") or "").strip(), str(r.get("title") or "").strip()
+        if not link or not title or (r.get("type") or "news") != "news":
+            continue
+        out.append({"id": item_id(link), "source": f"{CG_NEWS_SOURCE} · {str(r.get('source_name') or '?')[:40]}", "title": title[:300],
+                    "link": link[:500], "published_at": r.get("posted_at") or None, "fetched_at": now.isoformat(), "summary_raw": "",
+                    "cg_hits": sorted({coin_sym[c] for c in (r.get("related_coin_ids") or []) if c in coin_sym})})
+    return out
+
+
+def cg_insight_items(rows: Any, now: dt.datetime, coin_sym: dict[str, str]) -> list[dict]:
+    """纯函数。`/insights` 没有原文链接 ⇒ 链接取 CoinGecko 上该币的页面(真实页面,不编),id 用标题 + 时间。"""
+    out = []
+    for r in rows if isinstance(rows, list) else []:
+        title, posted = str(r.get("title") or "").strip(), str(r.get("posted_at") or "")
+        ids = [c for c in (r.get("related_coin_ids") or []) if c]
+        if not title or not posted or not ids:
+            continue
+        out.append({"id": item_id(f"cg-insight:{title}|{posted}"), "source": CG_INSIGHTS_SOURCE, "title": title[:300],
+                    "link": f"https://www.coingecko.com/en/coins/{ids[0]}"[:500], "published_at": posted, "fetched_at": now.isoformat(),
+                    "summary_raw": clean_summary(str(r.get("description") or ""))[:600],
+                    "cg_hits": sorted({coin_sym[c] for c in ids if c in coin_sym})})
+    return out
+
+
+async def fetch_cg(now: dt.datetime) -> tuple[list[dict], list[str]]:
+    """CoinGecko Analyst 的新闻 + 洞察(Jazz 11-06「先把 Analyst API 用足」;政治 / 宏观新闻源要多)。每轮 2 次请求。"""
+    from src.data.market.data_layer import CG_API_KEY, CG_PRO_BASE, _cg_headers, _get_cg_client
+    if not CG_API_KEY:
+        return [], [CG_NEWS_SOURCE, CG_INSIGHTS_SOURCE]
+    coin_sym: dict[str, str] = {}
+    try:
+        from src.data.style.header import _read_all
+        for r in await _read_all("cg_coin_map", {"select": "symbol,coin_id"}):
+            if r.get("coin_id") and r.get("symbol"):
+                coin_sym.setdefault(r["coin_id"], r["symbol"])
+    except Exception:                                                     # noqa: BLE001 —— 映射读不到:条目照收,只是没有 CG 标签
+        pass
+    items, failed = [], []
+    client = _get_cg_client()
+    for path, src, parse in (("/news", CG_NEWS_SOURCE, cg_news_items), ("/insights", CG_INSIGHTS_SOURCE, cg_insight_items)):
+        try:
+            r = await client.get(f"{CG_PRO_BASE}{path}", headers=_cg_headers(), params={"per_page": str(CG_PER_PAGE), "page": "1"}, timeout=30)
+            r.raise_for_status()
+            got = parse(r.json(), now, coin_sym)
+        except Exception:                                                 # noqa: BLE001
+            got = []
+        if not got:
+            failed.append(src)
+        items.extend(got)
+    return items, failed
+
+
 async def fetch_items(now: dt.datetime) -> tuple[list[dict], list[str]]:
     """取所有源 → 标准化条目;→ (条目, 取不到的源)。"""
     import httpx
     from src.backend.macro_events_scraper import _RSS_FEEDS, _fetch_rss
     feeds = list(_RSS_FEEDS) + EXTRA_FEEDS
-    items, failed = [], []
+    items, failed = await fetch_cg(now)
     async with httpx.AsyncClient(headers={"User-Agent": "CometCloud-feed/1.0"}) as client:
         for feed in feeds:
             try:
@@ -252,6 +313,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     skipped = 0
     for it in new:
         hits, macro = relevance(it["title"], it["summary_raw"])
+        hits = sorted(set(hits) | set(it.get("cg_hits") or []))          # CoinGecko 打的币标签 ∪ 我们自己认出的名字
         it["hits"] = hits
         it["score"] = score(hits, macro, it["source"]) if it["dup_of"] is None else 0
         if it["score"] >= MIN_SCORE and unpostable(it["title"], it["summary_raw"]):
