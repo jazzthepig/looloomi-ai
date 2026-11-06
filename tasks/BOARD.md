@@ -42,6 +42,7 @@
 | in_review | T-249 | lane-c | IC 乘数层的新喂料与走步验证(S-734):时点重建的支柱 × 30 天超额,月末截面、组内 Spearman、月聚类 t;乘上去的总分是否比不乘的 IC 高 | 报告 docs/research/T-249_ic_multiplier_walkforward.md + docs/research/t249_ic.py + t249_results.json;卡 notes 写 (a)–(d) 的原始数字与判据逐条是否满足;in_review,推 lane-c/T-249。 | 乘数恒为 1(S-702:没有一个因子过 |r| > 0.10;纸面平仓喂料 372 样本)。 |  |
 | in_review | T-255 | lane-c | S-734 的后续(只报不判):支柱截面 IC 分时段(2023-24 / 2025-26)与按 regime(majors 200 日线上 / 下)拆开稳不稳 —— 尤其传统资产 O 的负 IC(t −2.07)与加密 O 的正 IC(t 2.51) | 报告 docs/research/T-255_pillar_ic_stability.md + t255_ic_split.py + t255_results.json;卡 notes 写翻转格子与分位;in_review,推 lane-c/T-255。 | 只有全样本 IC(S-734 副)。 |  |
 | in_review | T-258 | lane-c | 缺的维度,哪里有数(只查不接):ETF 资金流(IBIT / FBTC …)、交易所稳定币余额与净流入、高收益债利差 / MOVE、BTC 与纳指 / 美元的滚动相关、持仓量 ÷ 市值杠杆率、政治 / 事件强度 —— 每项给:来源、免费与否、历史从哪天起、按时点可得的发布时间、一次请求能拿多少(批量还是逐个) | 报告 docs/research/T-258_dimension_sources.md(一张表 + 优先级);卡 notes 写前三个;in_review,推 lane-c/T-258。 | 缺的维度只有一个口头清单。 |  |
+| in_review | T-260 | lane-c | S-739 第一次「放在一起」:feature_matrix_daily 全部维度的联合模型(Ridge + 梯度提升)对 BTC 之后 30 天收益,走步 + 隔离带样本外 —— 只用 src/data/evaluation/joint_model.py | 报告 docs/research/T-260_joint_model_v1.md + t260_joint.py + t260_results.json;卡 notes 写判据与前 10 维;in_review,推 lane-c/T-260。 | 所有特征都是一个一个、全样本、线性地判过;从没有放在一个模型里。 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 | claimed | T-094 | seth | 状态层往前补一个周期 + 矢量库按时点:state_daily 2019 起、FNG 2018 起;market_state_vectors 改扩张窗口 z、13 个空维补或删 | S-570 / T-093 的情景格子在 2019–2022 多一轮牛熊;S-521 类的匹配不再读到未来。 | state_daily 2023-01 起(一个周期);FNG 2021-06 起;market_state_vectors 24 维里 13 维恒空、全史一次 z(看未来)。 |  |
@@ -60,7 +61,6 @@
 | open | T-262 | lane-b | S-740 永续上线 = 做空供给冲击:现货先有的代币,Binance 上线 USDT 永续之后 30 / 60 天相对 BTC 是否跑输 —— 随机日期对照,判据照台账写死 | 报告 docs/research/T-262_perp_listing_short_supply.md + t262_perp_listing.py + t262_results.json;卡 notes 写 (a)–(d) 原始数字;in_review,推 lane-b/T-262。 | 永续上线的影响从没测过(T-227 / T-233 测的是现货上币)。 |  |
 | open | T-267 | lane-b | S-744 永续上线之后的跑输:做空供给 vs 上线前追高的均值回归 —— 按「之前 30 天收益」匹配的对照日 + 换 CoinGecko 价格源扩宇宙;判据照台账写死 | 报告 docs/research/T-267_perp_listing_mechanism.md + t267_mechanism.py + t267_results.json;卡 notes 写 (a)–(d);in_review,推 lane-b/T-267。 | S-740 判据全过但 n = 46 且机制没分开;扩宇宙与机制诊断是评审轮点名的下一件事。 |  |
 | open | T-246 | lane-c | R-v2 的宇宙能不能写成一条按时点的规则(S-731):在全部 coin 永续(含死币,perp_bv_daily)上,「上市满 365 天 且 30 日均成交额 ≥ 2,000 万美元」—— 对照现行的 257 名面板宇宙(今天的幸存者名单)与无门槛全宇宙;原因 = 薄盘口的新合约上的突破多半是做出来的 | 报告 docs/research/T-246_rv2_pit_universe.md(预注册在前)+ docs/research/t246_rv2_pit_universe.py + t246_results.json;卡 notes 写三个宇宙的票数 / 总 R / Calmar / 两半 / 08-08 后,以及判;in_review,推 lane-c/T-246。 | R-v2 的宇宙一直是一份名单;从没量过一条按时点的准入规则能不能接替它。 |  |
-| open | T-260 | lane-c | S-739 第一次「放在一起」:feature_matrix_daily 全部维度的联合模型(Ridge + 梯度提升)对 BTC 之后 30 天收益,走步 + 隔离带样本外 —— 只用 src/data/evaluation/joint_model.py | 报告 docs/research/T-260_joint_model_v1.md + t260_joint.py + t260_results.json;卡 notes 写判据与前 10 维;in_review,推 lane-c/T-260。 | 所有特征都是一个一个、全样本、线性地判过;从没有放在一个模型里。 |  |
 | open | T-263 | lane-c | S-741 联合模型 v2:样本外预测换成「相对自身过去 90 个预测的 z」(时点可得),加 11-06 新并进来的风格 / 链上 / 持仓结构 / 渠道维度;必须胜过「过去 30 天收益」朴素基线 | 报告 docs/research/T-263_joint_model_v2.md + t263_joint_v2.py + t263_results.json;卡 notes 写 (a)–(e) 原始数字;in_review,推 lane-c/T-263。 | v1 段内排序真、段间不可比;新并进来约 20 维(2020 起有历史)从没进过模型。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
@@ -269,4 +269,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 22 · claimed 7 · blocked 4 · in_review 40 · done 190 · dropped 3
+open 21 · claimed 7 · blocked 4 · in_review 41 · done 190 · dropped 3
