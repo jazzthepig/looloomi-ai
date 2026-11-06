@@ -138,7 +138,7 @@ def plan(ds: list[str], X: np.ndarray, y: np.ndarray, have: dict[str, dict], tod
             pred, n_train = predict_at(X, y, i)
             if pred is None:
                 continue
-            kind = "live" if dt.date.fromisoformat(d) >= today - dt.timedelta(days=2) else "backfill"
+            kind = "live" if dt.date.fromisoformat(d) >= today - dt.timedelta(days=1) else "backfill"   # 特征 d 日的行在 d+1 才齐 ⇒ 当天或次日算的才是前向
         rows.append({"d": d, "model": MODEL, "kind": kind, "pred": round(pred, 6), "n_train": n_train,
                      "fwd_ret_30d": None if math.isnan(y[i]) else round(float(y[i]), 6),
                      "features_hash": FEATURES_HASH, "code_ref": CODE_REF, "computed_at": (old or {}).get("computed_at") or stamp})
