@@ -67,10 +67,21 @@ def test_run_once_samples_once_per_slot(monkeypatch):
     monkeypatch.setattr(hdr, "_read_all", read_all)
     monkeypatch.setattr(store, "supabase_insert_table", ins)
     monkeypatch.setattr(vd, "perp_coins", coins)
-    monkeypatch.setattr(vd, "sample_sync", lambda c, cs, at: ([{"venue": "hyperliquid_perp", "symbol": "BTC"}], []))
+    import src.data.market.hyperliquid_collector as hc
+    seen = {}
+
+    async def snap():
+        return {"ok": True, "assets": {"BTC": {"day_notional_volume": 4e9}}}
+    monkeypatch.setattr(hc, "venue_snapshot", snap)
+
+    def sample(c, cs, at, pa=None):
+        seen["pa"] = pa
+        return [{"venue": "hyperliquid_perp", "symbol": "BTC", "day_ntl_vlm_usd": 4e9}], []
+    monkeypatch.setattr(vd, "sample_sync", sample)
     now = dt.datetime(2026, 11, 2, 8, 30, tzinfo=dt.timezone.utc)
     r = asyncio.run(vd.run_once(now))
-    assert r["ok"] and r["written"] == 1 and r["slot"].startswith("2026-11-02T08:00")
+    assert r["ok"] and r["written"] == 1 and r["slot"].startswith("2026-11-02T08:00") and r["with_volume"] == 1
+    assert seen["pa"] == {"BTC": {"day_notional_volume": 4e9}}, "永续成交来自同一时点的一次 metaAndAssetCtxs"
     assert asyncio.run(vd.run_once(now))["status"] == "skipped"
 
 
@@ -89,3 +100,66 @@ def test_every_weighted_book_is_in_the_capacity_report():
     """11-02:cis_tilt 被同一行的行尾注释吞掉,容量报告少了一本账、没有任何报错。"""
     from src.data.accounting.capacity import WEIGHTED_BOOKS
     assert set(WEIGHTED_BOOKS) == {"core_cap", "cis_tilt", "beta_plus_w", "beta_plus_m", "tokenization_tilt"}
+
+
+def test_perp_flow_reads_the_one_request_snapshot_and_never_writes_zero_for_missing():
+    assets = {"BTC": {"day_notional_volume": 4.0e9, "open_interest": 30_000.0, "mark": 100_000.0},
+              "KPEPE": {"day_notional_volume": None, "open_interest": None, "mark": 0.01}}
+    assert vd.perp_flow(assets, "BTC") == (4.0e9, 3.0e9)
+    assert vd.perp_flow(assets, "kPEPE") == (None, None), "HL 名字大小写不一致(kPEPE)⇒ 按大写找;缺值不写 0"
+    assert vd.perp_flow(None, "BTC") == (None, None)
+
+
+def test_sample_rows_carry_venue_volume_spot_from_ctx_perp_from_snapshot():
+    class P:
+        name, day_ntl_vlm = "@142", 7.2e7
+
+    class Fx:
+        def __init__(self, *a):
+            pass
+
+        def find_pair_by_token(self, tok):
+            return P() if tok == "UBTC" else None
+
+    class C:
+        def spot_meta(self):
+            return {}
+
+        def spot_meta_and_asset_ctxs(self):
+            return []
+
+        def l2_book(self, ex, n_sig_figs=None):
+            return _book([(99.0, 100)], [(101.0, 100)])
+
+    import src.data.venues.hl_spot as hs
+    orig = hs.HlSpotFixture
+    hs.HlSpotFixture = Fx
+    try:
+        rows, failed = vd.sample_sync(C(), ["ETH"], "t", {"ETH": {"day_notional_volume": 1.1e9, "open_interest": 1000.0, "mark": 3000.0}})
+    finally:
+        hs.HlSpotFixture = orig
+    by = {(r["venue"], r["symbol"]): r for r in rows}
+    assert by[("hyperliquid_spot", "BTC")]["day_ntl_vlm_usd"] == 7.2e7 and by[("hyperliquid_spot", "BTC")]["open_interest_usd"] is None
+    assert by[("hyperliquid_perp", "ETH")]["day_ntl_vlm_usd"] == 1.1e9 and by[("hyperliquid_perp", "ETH")]["open_interest_usd"] == 3.0e6
+    assert all(set(r) <= set(vd.WRITES_COLUMNS[vd.TABLE]) for r in rows), "写的列都在 WRITES_COLUMNS 里"
+
+
+def test_venue_flow_capacity_is_the_market_formula_with_venue_volume():
+    from src.api.contracts.fund import BUILD_DAYS, PARTICIPATION_RATE
+    from src.data.accounting.capacity import book_venue, market_to_venue
+    rows = [{"venue": "hyperliquid_spot", "symbol": "BTC", "depth_2pct_bid_usd": 4e6, "depth_2pct_ask_usd": 3e6,
+             "depth_1pct_bid_usd": 2e6, "depth_1pct_ask_usd": 2e6, "spread_bps": 1, "covered_bid_pct": 3, "covered_ask_pct": 3,
+             "day_ntl_vlm_usd": v} for v in (6e7, 7e7, 8e7, None)]
+    cap = vd.venue_capacity(rows, 0.05)["BTC"]
+    assert cap["venue_adv_usd"] == 7e7 and cap["n_volume_snapshots"] == 3, "中位数只用有成交的快照"
+    assert cap["venue_flow_capacity_aum_usd"] == round(7e7 * PARTICIPATION_RATE * BUILD_DAYS / 0.05)
+    r = book_venue({"BTC": 0.7, "ETH": 0.3}, {"BTC": cap, "ETH": {"depth_2pct_min_usd": 1e6, "venue": "hyperliquid_spot"}})
+    assert r["venue_flow_binding"]["symbol"] == "BTC" and r["missing_venue_volume"] == ["ETH"], "缺场所成交的持仓单列,不当成无限"
+    assert r["venue_flow_capacity_aum_usd"] == round(7e7 * PARTICIPATION_RATE * BUILD_DAYS / 0.7)
+    assert market_to_venue(3.5e10, cap) == 500.0 and market_to_venue(None, cap) is None and market_to_venue(1e9, {}) is None
+
+
+def test_volume_columns_are_in_a_migration():
+    from pathlib import Path
+    mig = (Path(__file__).resolve().parents[1] / "migrations/2026-11-06_venue_depth_volume.sql").read_text(encoding="utf-8")
+    assert "day_ntl_vlm_usd" in mig and "open_interest_usd" in mig
