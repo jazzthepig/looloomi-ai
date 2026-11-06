@@ -2652,6 +2652,29 @@ async def _start_prediction_markets_loop():
     print("[PRED-MKT] ✅ prediction-market priors scheduled (hourly)")
 
 
+async def _options_surface_loop():
+    """期权面 + 对冲价格(`src/data/market/options_surface.py`):每小时一轮,Deribit 每币一次批量请求 → options_surface_daily(当天覆盖)。"""
+    await _asyncio.sleep(_boot_delay(13500))
+    while True:
+        try:
+            from src.data.market.options_surface import run_once as _os_run
+            r = await _os_run()
+            await _iteration_result("_options_surface_loop", {**r, "ok": bool(r.get("ok")), "refused": bool(r.get("refused")), "why": r.get("why")})
+            await _beat("_options_surface_loop", ok=bool(r.get("ok")) and not r.get("refused"), refused=bool(r.get("refused")),
+                        detail={"written": r.get("written")}, error=None if r.get("ok") else str(r.get("why"))[:200])
+        except Exception as _e:
+            print(f"[OPT-SURF] ⚠️  pass FAILED: {_e}")
+            await _beat("_options_surface_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_options_surface_loop", _e)
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_options_surface_loop():
+    _asyncio.create_task(_options_surface_loop())
+    print("[OPT-SURF] ✅ Deribit option surface + hedge prices scheduled (hourly)")
+
+
 async def _issuer_decisions_loop():
     """发行方 / 决策层(`src/data/entity/issuers.py`,11-04):每 6 小时同步登记表、从基本面 / 事件 / 待遇表派生决策流。"""
     await _asyncio.sleep(_boot_delay(10200))

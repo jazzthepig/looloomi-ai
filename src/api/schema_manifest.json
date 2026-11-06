@@ -86,6 +86,7 @@
     "ohlcv_daily",
     "oi_lev_snapshot_daily",
     "open_interest_history",
+    "options_surface_daily",
     "overlays",
     "perp_bv_daily",
     "perp_bv_pairs",
@@ -429,6 +430,23 @@
       "mark_date",
       "reason",
       "symbol"
+    ],
+    "options_surface_daily": [
+      "atm_iv_30d",
+      "atm_iv_7d",
+      "atm_iv_90d",
+      "currency",
+      "d",
+      "fetched_at",
+      "n_options",
+      "pc_oi_ratio",
+      "pc_vol_ratio",
+      "put90_30d_cost_pct",
+      "put_spread_90_80_30d_cost_pct",
+      "skew_30d",
+      "spot",
+      "term_slope",
+      "total_oi_usd"
     ],
     "portfolio_targets_daily": [
       "book",
