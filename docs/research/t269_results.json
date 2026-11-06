@@ -1,7 +1,7 @@
 {
   "task": "T-269",
   "ledger": "S-746",
-  "run_at": "2026-11-07T00:37:51",
+  "run_at": "2026-11-07T00:47:43",
   "sample": {
     "lo": "2021-03-24",
     "hi": "2026-10-06",
@@ -1072,6 +1072,14 @@
       "2024": 3,
       "2025": 3,
       "2026": 6
+    },
+    "alt_scale_trigger_se": {
+      "note": "触发端抽样噪声改用 24 票自身 SE(而非零分布 SD);与主尺量并报,结论不变",
+      "se_pct": 1.1681258438627817,
+      "delta_mdes80_pct": 2.525993048351519,
+      "achieved_power_at_observed": 0.46707918478172833,
+      "n_tickets_needed_for_observed": 73.20096884610446,
+      "n_needed_vs_sample_max": true
     }
   },
   "current_state": [

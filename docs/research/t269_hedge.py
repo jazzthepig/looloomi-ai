@@ -443,6 +443,20 @@ def main() -> None:
             "tickets_per_year": {y: sum(1 for tk in tickets if tk["d"][:4] == y)
                                  for y in sorted({tk["d"][:4] for tk in tickets})},
         })
+        # 稳健性:触发端的抽样噪声其实该用 24 票自身的 SE,而不是零分布的 SD。
+        # (b) 的比较对象(p95_null)来自零分布,触发端的噪声来自票 —— 两把尺量都报,结论不变。
+        if tk_se == tk_se and tk_se > 0 and delta_obs > 0:
+            delta_mdes_alt = gap + Z80 * tk_se
+            achieved_alt = 0.5 * (1.0 + math.erf((delta_obs - gap) / (tk_se * math.sqrt(2.0))))
+            n_need_alt = n_tk * ((gap + Z80 * tk_se) / delta_obs) ** 2
+            power["alt_scale_trigger_se"] = {
+                "note": "触发端抽样噪声改用 24 票自身 SE(而非零分布 SD);与主尺量并报,结论不变",
+                "se_pct": tk_se,
+                "delta_mdes80_pct": delta_mdes_alt,
+                "achieved_power_at_observed": achieved_alt,
+                "n_tickets_needed_for_observed": n_need_alt,
+                "n_needed_vs_sample_max": bool(n_need_alt > len(eligible) // (HOLD_DAYS + 1)),
+            }
         print(f"  噪声地板 s0={s0:.4f}% | (b) 最小可检出 δ={delta_mdes:.4f}% | "
               f"观测 δ={delta_obs:.4f}% | 已达功效 {achieved:.3f}")
         print(f"  要 80% 功效检出观测效应需 {n_need:.0f} 张票(样本最多 {max_tickets} 张);"
