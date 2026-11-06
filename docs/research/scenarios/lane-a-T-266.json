@@ -1,0 +1,53 @@
+{
+  "task_id": "T-266",
+  "lane": "lane-a",
+  "s741": "S-741 联合模型 v2 盲复算 + 稳健性(只报不判)",
+  "created_utc": "2026-11-06",
+  "author": "Minimax-A (lane-a)",
+  "status": "open_partial",
+  "compliance": "全部为可机器核验的命题,不含收益承诺、不含买卖语言;只为 S-741 的描述输入口径服务,不动钱。",
+  "how_to_settle": "在 Mac 上跑 `python3 -u docs/research/t266_recompute.py`(脚本已提交,见 docs/research/t266_recompute.py)后,按各条的 check 字段从 docs/research/t266_results.json 取数;到期按 Brier 结算。",
+  "scenarios": [
+    {
+      "id": "t266-s1",
+      "proposition": "把 21 个新维度列(style:*/chain:*/pos:*/channel:*)换成 21 列标准正态噪声(20 个种子)后,Ridge 的 z 合并样本外 IC 的均值 < 0.10(即 S-741 的判据 (a) 在噪声对照下不再成立)。",
+      "probability": 0.45,
+      "rationale": "S-741 结果段记的消融是「只加 z 不加新维度 0.085 / 只加新维度不加 z 0.032」—— 两样单独都不够 ⇒ 新维度是必要件 ⇒ 换成噪声后 IC 应显著低于 0.1756;但 Ridge 在 71 列上有富余自由度,噪声也可能被拟合出假信号,故不给更高概率。",
+      "check": "t266_results.json → results.robustness.noise_replacement_of_new_dims.ic_mean < 0.10",
+      "resolve_by": "2026-11-13"
+    },
+    {
+      "id": "t266-s2",
+      "proposition": "实盘口径(每天扩张重训、隔离带 30、z 窗口 90/最少历史 60)的 z 合并样本外 IC 与 6 折走步口径的 IC 相差 < 0.05。",
+      "probability": 0.70,
+      "rationale": "两者的特征、目标、z 变换全同,只差重训节奏(每天一次 vs 每折一次);生产 joint_forecast_daily 的 backfill 段(2022-04-23 → 2026-11-05,1657 行)已经是这个口径,可以直接对。",
+      "check": "t266_results.json → results.robustness.live_expanding_daily_retrain.a_ic 与 results.base_ridge.a_ic 之差 < 0.05",
+      "resolve_by": "2026-11-13"
+    },
+    {
+      "id": "t266-s3",
+      "proposition": "E1(z 对过去 30 天收益做秩回归取残差后)的 IC 仍 ≥ 0.05 且同号。",
+      "probability": 0.55,
+      "rationale": "台账记 z 与过去 30 天收益自相关 −0.26(天然反动量)⇒ 正交化会削掉一部分信息;但 z 的信息源不止动量一项(style/chain/pos/channel 族),故不是必跌。",
+      "check": "t266_results.json → results.base_ridge.e1_ic_after_orthogonalisation ≥ 0.05",
+      "resolve_by": "2026-11-13"
+    },
+    {
+      "id": "t266-s4",
+      "proposition": "T-263 用的 59 列 = 今天 feature_matrix_daily 的 71 列去掉 12 列,且这 12 列全部来自 2026-11-06 18:02 JST 那两个 commit(0f2d2ae3 / 1bd18c38)引入的维度(state_map 的 regime_share_30d:*、stablecoin_issuer、political_intensity、derivatives_market、options_surface)。",
+      "probability": 0.60,
+      "rationale": "T-263 跑完(08:47 UTC = 17:47 JST)到 18:02 JST 之间有两个 commit 改了特征视图;今天 71 列里有 6 个 regime_share_30d:*、3 个 stable:*/pol:conflict/derivatives、2 个 dvol:* 正好落在这个窗口;但有些键是数据后到而不是视图后改,12 列的确切归属没核完。",
+      "check": "docs/research/t266_results.json → data.keys_added_since_this_set 恰好 12 项,且每一项都能对上一个 18:02 JST commit 引入的维度族",
+      "resolve_by": "2026-11-13"
+    },
+    {
+      "id": "t266-s5",
+      "proposition": "α = 3 与 α = 30 两个变体下,S-741 的 (a)(b)(d)(e) 四条仍然全部成立(逐族去掉 style/chain/pos/channel 之后仍成立)。",
+      "probability": 0.50,
+      "rationale": "Ridge 对 α 通常不敏感,但 S-741 的余量本就不宽((b) 0.986 对 0.95、(c) 2.48 对 2.0),一次小扰动就可能翻面;逐族去掉任一新维度又会少 4–8 列,方向未知。",
+      "check": "t266_results.json → results.robustness.alpha_3 / alpha_30 / drop_style / drop_chain / drop_pos / drop_channel 各块的 a_ic ≥ 0.10、b_pctile ≥ 0.95、d_ic_folds_4_6 > 0、e_diff ≥ 0.05",
+      "resolve_by": "2026-11-13"
+    }
+  ],
+  "notes": "本轮(T-266)只交付了脚本 + 已核口径/数据事实;上面的命题要等脚本在 Mac 上跑完才结算。概率是先验,到期按 Brier 记。"
+}
