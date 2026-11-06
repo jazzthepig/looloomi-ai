@@ -44,6 +44,18 @@ _SYM = r"[A-Z0-9]{2,10}"
 _PAREN = re.compile(r"\((" + _SYM + r")\)")
 _LIST_AFTER = re.compile(r"(?:Will (?:List|Delist|Remove)|Removal of|Adds?)\s+(.+?)(?:\s+on\s+\d{4}|\s*\(\d{4}| - \d{4}|$)", re.IGNORECASE)
 _PERP = re.compile(r"\b(" + _SYM + r")USDT\b")
+#: 11-06(lane-b T-262 查出 perp_listing 818 条里 453 条 symbols 为空):Binance 标题的另外几种写法 ——
+#: 「USDⓈ-M OXT Perpetual」「UNI USDT-Margined Perpetual」「XMR/USDT Perpetual」「DOGSUSD COIN-M」「ZK and ZRO Perpetual」、
+#: 「COCOS, IQ, PHA & TWT Enabled on …Margin」「Binance Margin to Delist ANC and MIR on …」「Add WTC(Walton) on August 27」。
+_SYMLIST = r"(" + _SYM + r"(?:\s*(?:,|&|and)\s*" + _SYM + r")*)"
+_PERP_AFTER_M = re.compile(r"(?:USDⓈ-M|USDⓈ-Margined|USDC-Margined|USDT-Margined|Coin-Margined|COIN-Margined|COIN-M)\s+"
+                           + _SYMLIST + r"\s+Perpetual")
+_PERP_BEFORE_M = re.compile(r"\b(" + _SYM + r")\s+(?:USDT|USDC|USDⓈ|Coin|COIN)-(?:Margined|M)\b")
+_PERP_SLASH = re.compile(r"\b(" + _SYM + r")/USD[TC]?\b")
+_PERP_COINM = re.compile(r"\b(" + _SYM + r")USD\s+(?:COIN|Coin)-M")
+_ENABLED = re.compile(r"^" + _SYMLIST + r"\s+(?:Enabled|Added)\b")
+_TO_DELIST = re.compile(r"\bto (?:Delist|List|Remove)\s+" + _SYMLIST + r"\s+(?:on|from)\b")
+_ADD_WORD = re.compile(r"\bAdds?\s+(" + _SYM + r")\s*\(")
 _NOISE = {"USDT", "USDC", "USD", "BTC", "ETH", "BNB", "MARGIN", "SPOT", "FUTURES", "PERPETUAL", "CONTRACT", "ALPHA", "AND",
           "USDⓈ", "TRADING", "PAIRS", "MULTIPLE", "TRADFI", "LOAN"}
 
@@ -63,9 +75,16 @@ def symbols_from_title(title: str) -> list[str]:
     """纯函数。Binance 公告标题 → 代币列表(大写,去噪;解析不出 ⇒ [])。"""
     t = title or ""
     out: list[str] = []
+    out += _ADD_WORD.findall(t)                                         # 「Add WTC(Walton)」—— 括号里是名字不是代码
     out += _PAREN.findall(t)
     if "Perpetual" in t or "Futures" in t:
         out += _PERP.findall(t)
+        for grp in _PERP_AFTER_M.findall(t):
+            out += re.split(r"\s*(?:,|&|\band\b)\s*", grp)
+        out += _PERP_BEFORE_M.findall(t) + _PERP_SLASH.findall(t) + _PERP_COINM.findall(t)
+    for rx in (_ENABLED, _TO_DELIST):
+        for grp in rx.findall(t):
+            out += re.split(r"\s*(?:,|&|\band\b)\s*", grp)
     m = _LIST_AFTER.search(t)
     if m and not out:
         chunk = re.sub(r"\(.*?\)", "", m.group(1))
@@ -76,7 +95,7 @@ def symbols_from_title(title: str) -> list[str]:
     seen, res = set(), []
     for s in out:
         s = s.upper()
-        if s in _NOISE or s in seen or s.isdigit():
+        if s in _NOISE or s in seen or s.isdigit() or (s.endswith("USD") and s[:-3] in out):   # 「DOGSUSD COIN-M」⇒ DOGS
             continue
         seen.add(s)
         res.append(s)
@@ -214,5 +233,30 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     kinds: dict[str, int] = {}
     for r in rows:
         kinds[r["kind"]] = kinds.get(r["kind"], 0) + 1
+    repair_error = None
+    try:
+        repaired = await repair_symbols(_read_all, supabase_upsert_table)
+    except Exception as e:                                                # noqa: BLE001 —— 补代币是附带的,不影响本轮判活
+        repaired, repair_error = 0, f"{type(e).__name__}: {str(e)[:120]}"
     return {"ok": not errors or written > 0, "written": written, "kinds": kinds, "errors": errors, "backfill": backfill,
-            "why": f"写 {written} 条 {kinds}" + (f";回填 {backfill}" if backfill else "") + (f";错 {errors}" if errors else "")}
+            "repaired": repaired, "repair_error": repair_error,
+            "why": f"写 {written} 条 {kinds}" + (f";回填 {backfill}" if backfill else "") + (f";补代币 {repaired} 条" if repaired else "")
+                   + (f";错 {errors}" if errors else "")}
+
+
+REPAIR_BATCH = 1000
+
+
+async def repair_symbols(read, upsert) -> int:
+    """已入库、symbols 为空的 Binance 公告用新解析器重读标题(11-06:lane-b T-262 查出 perp_listing 818 条里 453 条为空)。
+    只补能解析出代币的;解析不出的(「Notice of Removal of Spot Trading Pairs - 日期」这类,代币在正文里)原样留空。幂等。"""
+    rows = await read(TABLE, {"select": "id,ts,kind,source,symbols,title,url,payload", "source": "eq.binance",
+                              "symbols": "eq.[]", "order": "ts.asc", "limit": str(REPAIR_BATCH)})
+    fixed = []
+    for r in rows[:REPAIR_BATCH]:
+        syms = symbols_from_title(r.get("title") or "")
+        if syms:
+            fixed.append({**{k: r.get(k) for k in WRITES_COLUMNS[TABLE]}, "symbols": syms})
+    if fixed and not await upsert(TABLE, fixed, on_conflict="id"):
+        raise RuntimeError("repair upsert failed")
+    return len(fixed)

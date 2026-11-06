@@ -116,3 +116,37 @@ def test_loop_and_migration_are_wired():
     mig = (ROOT / "migrations/2026-11-02_events.sql").read_text(encoding="utf-8")
     for col in ev.WRITES_COLUMNS["events"]:
         assert col in mig, col
+
+
+def test_title_variants_11_06():
+    """lane-b T-262:perp_listing 818 条里 453 条 symbols 空 —— 这些写法以前认不出。"""
+    f = ev.symbols_from_title
+    assert f("Binance Futures Will Launch USDⓈ-M OXT Perpetual Contract With Up to 20x Leverage") == ["OXT"]
+    assert f("Binance Futures Will Launch UNI USDT-Margined Perpetual Contract With Up to 50x Leverage") == ["UNI"]
+    assert f("Binance Futures Will Launch XMR/USDT Perpetual Contract With Up to 75x Leverage") == ["XMR"]
+    assert f("Binance Futures Will Launch DOGSUSD COIN-M Perpetual Contract with up to 20x Leverage") == ["DOGS"]
+    assert f("Binance Futures Will Launch USDⓈ-M ZK and ZRO Perpetual Contracts") == ["ZK", "ZRO"]
+    assert f("Binance Futures Will Launch USDC-Margined 1000SHIB Perpetual Contract With Up to 50x Leverage") == ["1000SHIB"]
+    assert f("COCOS, IQ, PHA, PROM, TVK & TWT Enabled on Binance Isolated Margin") == ["COCOS", "IQ", "PHA", "PROM", "TVK", "TWT"]
+    assert f("Binance Margin to Delist ANC and MIR on Cross Margin and Isolated Margin") == ["ANC", "MIR"]
+    assert f("Binance Will Add WTC(Walton) on August 27") == ["WTC"]
+    assert f("Binance Futures Will List Coin-Margined Quarterly 0624 Futures Contracts") == []
+
+
+def test_repair_symbols_only_fills_what_it_can_parse():
+    rows = [{"id": "a", "ts": "2024-01-01T00:00:00Z", "kind": "perp_listing", "source": "binance", "symbols": [], "url": "u", "payload": {},
+             "title": "Binance Futures Will Launch USDⓈ-M OXT Perpetual Contract With Up to 20x Leverage"},
+            {"id": "b", "ts": "2024-01-02T00:00:00Z", "kind": "delisting", "source": "binance", "symbols": [], "url": "u", "payload": {},
+             "title": "Notice of Removal of Spot Trading Pairs - 2024-07-06"}]
+    out = []
+
+    async def read(t, p):
+        assert p["symbols"] == "eq.[]" and p["source"] == "eq.binance"
+        return rows
+
+    async def up(t, r, on_conflict=None):
+        out.extend(r)
+        return True
+
+    n = asyncio.run(ev.repair_symbols(read, up))
+    assert n == 1 and out[0]["id"] == "a" and out[0]["symbols"] == ["OXT"] and set(out[0]) == set(ev.WRITES_COLUMNS[ev.TABLE])
