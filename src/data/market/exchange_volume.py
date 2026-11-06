@@ -90,10 +90,11 @@ async def run_once(now: Optional[dt.datetime] = None, fetch=None, bounds=None, u
 
         async def fetch(ex: str, a: dt.date, b: dt.date):
             f = int(dt.datetime(a.year, a.month, a.day, tzinfo=dt.timezone.utc).timestamp())
-            t = int(dt.datetime(b.year, b.month, b.day, 23, 59, 59, tzinfo=dt.timezone.utc).timestamp())
+            t = min(int(dt.datetime(b.year, b.month, b.day, 23, 59, 59, tzinfo=dt.timezone.utc).timestamp()), int(now.timestamp()))
             r = await _get_cg_client().get(f"{CG_PRO_BASE}/exchanges/{ex}/volume_chart/range", headers=_cg_headers(),
                                            params={"from": str(f), "to": str(t)}, timeout=30)
-            r.raise_for_status()
+            if r.status_code != 200:                                      # 11-06 首轮 26 次全错、原因没留下 ⇒ 状态码 + 正文开头进 why
+                raise RuntimeError(f"HTTP {r.status_code} {r.text[:160]}")
             return r.json()
     if upsert is None:
         from src.api.store import supabase_upsert_table as upsert
@@ -109,7 +110,7 @@ async def run_once(now: Optional[dt.datetime] = None, fetch=None, bounds=None, u
             try:
                 rows = parse(await fetch(ex, a, b), ex, now.isoformat())
             except Exception as e:                                        # noqa: BLE001
-                errors.append(f"{ex} {a}: {type(e).__name__}")
+                errors.append(f"{ex} {a}: {type(e).__name__}: {str(e)[:200]}")
                 break
             if rows:
                 if not await upsert(TABLE, rows, on_conflict="d,exchange"):
@@ -124,4 +125,4 @@ async def run_once(now: Optional[dt.datetime] = None, fetch=None, bounds=None, u
             break
     ok = written > 0 or (calls > 0 and not errors)
     return {"ok": ok, "calls": calls, "written": written, "backlog": backlog, "errors": errors[:8],
-            "why": f"{calls} 次请求 · 写 {written} 行" + (" · 还有积压" if backlog else "") + (f" · 错 {len(errors)}" if errors else "")}
+            "why": f"{calls} 次请求 · 写 {written} 行" + (" · 还有积压" if backlog else "") + (f" · 错 {len(errors)}:{errors[0]}" if errors else "")}
