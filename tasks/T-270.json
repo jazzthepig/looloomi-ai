@@ -1,0 +1,28 @@
+{
+  "id": "T-270",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-06",
+  "title": "S-747 复现:持有人数增长越快之后越跑输 —— 换到 S-743 没看过的市值第 201–600 名,原始 g,判据照台账写死",
+  "source": "REFUTATION_LEDGER S-747(先读;只换宇宙,其余照 S-743)。复用你自己的 t265_holders.py(取数字典带 order —— §Seth-1106t 第 1 条),只改宇宙切片与特征为原始 g。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-270.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 宇宙 = 当周市值第 201–600 名(合并宇宙),漏斗计数照 T-265 的格式。② (a)–(d) 原始数字。③ 副项只报不判。④ 取数字典带 order;只算、不改代码、不入库;先落文件再跑。附 docs/research/scenarios/lane-a-T-270.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-270_holder_growth_replication.md + t270_holders_201_600.py + t270_results.json;卡 notes 写 (a)–(d);in_review,推 lane-a/T-270。T-265 的 CHANGES(§Seth-1106t)先交。"
+  },
+  "prior_value": "T-265 副项的反向关系是事后发现,只有换到没看过的币上才算数。",
+  "notes": "",
+  "verified": null
+}
