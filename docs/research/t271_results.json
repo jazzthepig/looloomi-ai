@@ -1,0 +1,1683 @@
+{
+ "task": "T-271",
+ "ledger": "S-748",
+ "generated_utc": "2026-11-06T16:24:55+00:00",
+ "cost_model": {
+  "spot_taker_bps": 7.0,
+  "perp_taker_bps": 4.5,
+  "slippage_bps_per_leg": 2.0,
+  "real_fee_bps_per_switch": 15.5,
+  "orig_fee_bps_per_switch": 7.5,
+  "basis_rule": "开仓付 (永续−现货)/现货、平仓收当日值;缺任一记 0 并计数"
+ },
+ "window": {
+  "start": "2023-06-08",
+  "end": "2026-07-20"
+ },
+ "panel": [
+  "BTC",
+  "ETH",
+  "SOL",
+  "BNB",
+  "XRP",
+  "DOGE",
+  "ADA",
+  "AVAX",
+  "LINK",
+  "DOT",
+  "LTC",
+  "TRX",
+  "ATOM",
+  "NEAR",
+  "APT",
+  "ARB",
+  "OP",
+  "SUI",
+  "UNI",
+  "AAVE",
+  "INJ",
+  "FIL",
+  "ETC",
+  "BCH"
+ ],
+ "panel_with_funding": [
+  "BTC",
+  "ETH",
+  "SOL",
+  "BNB",
+  "XRP",
+  "DOGE",
+  "AVAX",
+  "LINK",
+  "DOT",
+  "TRX",
+  "ATOM",
+  "NEAR",
+  "APT",
+  "ARB",
+  "OP",
+  "SUI",
+  "UNI",
+  "AAVE",
+  "INJ",
+  "FIL",
+  "ETC",
+  "BCH"
+ ],
+ "window_days": 1139,
+ "price_coverage": {
+  "perp_bv_daily": {
+   "BTC": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "ETH": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "SOL": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "BNB": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "XRP": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "DOGE": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "AVAX": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "LINK": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "DOT": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "TRX": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "ATOM": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "NEAR": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "APT": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "ARB": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "OP": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "SUI": {
+    "rows": 1175,
+    "count_exact": 1175,
+    "pages": 2,
+    "first": "2023-05-03",
+    "last": "2026-07-20"
+   },
+   "UNI": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "AAVE": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "INJ": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "FIL": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "ETC": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "BCH": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   }
+  },
+  "ohlcv_daily_binance_hist": {
+   "BTC": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "ETH": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "SOL": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "BNB": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "XRP": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "DOGE": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "AVAX": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "LINK": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "DOT": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "TRX": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "ATOM": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "NEAR": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "APT": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "ARB": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "OP": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "SUI": {
+    "rows": 1175,
+    "count_exact": 1175,
+    "pages": 2,
+    "first": "2023-05-03",
+    "last": "2026-07-20"
+   },
+   "UNI": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "AAVE": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "INJ": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "FIL": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "ETC": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   },
+   "BCH": {
+    "rows": 1177,
+    "count_exact": 1177,
+    "pages": 2,
+    "first": "2023-05-01",
+    "last": "2026-07-20"
+   }
+  },
+  "symbols_with_both": 22
+ },
+ "basis_diagnostics": {
+  "per_symbol": {
+   "BTC": {
+    "n": 1177,
+    "mean_bp": -2.8604330057047074,
+    "p5_bp": -6.032957825156215,
+    "p95_bp": 6.656428238919184
+   },
+   "ETH": {
+    "n": 1177,
+    "mean_bp": -2.761595404808183,
+    "p5_bp": -6.033850334465755,
+    "p95_bp": 7.116892217404384
+   },
+   "SOL": {
+    "n": 1177,
+    "mean_bp": -3.1025033864769895,
+    "p5_bp": -8.122277191169877,
+    "p95_bp": 7.859198583130169
+   },
+   "BNB": {
+    "n": 1177,
+    "mean_bp": 0.7441550281859699,
+    "p5_bp": -9.341998375304216,
+    "p95_bp": 8.323524466117446
+   },
+   "XRP": {
+    "n": 1177,
+    "mean_bp": -3.148946915053592,
+    "p5_bp": -8.191349934470116,
+    "p95_bp": 8.134049129655848
+   },
+   "DOGE": {
+    "n": 1177,
+    "mean_bp": -3.131650722666875,
+    "p5_bp": -8.03912373551343,
+    "p95_bp": 7.947667665220945
+   },
+   "AVAX": {
+    "n": 1177,
+    "mean_bp": -3.1088193898616856,
+    "p5_bp": -11.847463902258434,
+    "p95_bp": 8.795074758136819
+   },
+   "LINK": {
+    "n": 1177,
+    "mean_bp": -2.9131306904725096,
+    "p5_bp": -11.299435028248347,
+    "p95_bp": 9.835528113218231
+   },
+   "DOT": {
+    "n": 1177,
+    "mean_bp": -4.18428979343022,
+    "p5_bp": -13.458950201884265,
+    "p95_bp": 9.08907291456306
+   },
+   "TRX": {
+    "n": 1177,
+    "mean_bp": -3.8219890583646112,
+    "p5_bp": -10.779961953075679,
+    "p95_bp": 7.92141951837902
+   },
+   "ATOM": {
+    "n": 1177,
+    "mean_bp": -5.914808422643343,
+    "p5_bp": -13.953488372093553,
+    "p95_bp": 7.436326454732195
+   },
+   "NEAR": {
+    "n": 1177,
+    "mean_bp": -4.165229260185824,
+    "p5_bp": -15.037593984962419,
+    "p95_bp": 10.178117048346442
+   },
+   "APT": {
+    "n": 1177,
+    "mean_bp": -4.028479326990499,
+    "p5_bp": -15.586034912719255,
+    "p95_bp": 10.236030828516052
+   },
+   "ARB": {
+    "n": 1177,
+    "mean_bp": -3.193514832106707,
+    "p5_bp": -10.752688172042573,
+    "p95_bp": 9.517217511681094
+   },
+   "OP": {
+    "n": 1177,
+    "mean_bp": -2.95664974918045,
+    "p5_bp": -14.265335235378044,
+    "p95_bp": 9.927200529451072
+   },
+   "SUI": {
+    "n": 1175,
+    "mean_bp": -3.281462434670527,
+    "p5_bp": -9.620009620010697,
+    "p95_bp": 9.571209800919199
+   },
+   "UNI": {
+    "n": 1177,
+    "mean_bp": -3.4985272180201443,
+    "p5_bp": -10.172939979653,
+    "p95_bp": 10.092669052207551
+   },
+   "AAVE": {
+    "n": 1177,
+    "mean_bp": -3.7838494408996546,
+    "p5_bp": -10.070493454178443,
+    "p95_bp": 8.52424080980421
+   },
+   "INJ": {
+    "n": 1177,
+    "mean_bp": -3.866771827182798,
+    "p5_bp": -13.368983957220152,
+    "p95_bp": 10.679079956186849
+   },
+   "FIL": {
+    "n": 1177,
+    "mean_bp": -3.791301344263945,
+    "p5_bp": -15.228426395938817,
+    "p95_bp": 9.995002498751743
+   },
+   "ETC": {
+    "n": 1177,
+    "mean_bp": -3.2832242036039734,
+    "p5_bp": -12.56830601092879,
+    "p95_bp": 10.416666666665652
+   },
+   "BCH": {
+    "n": 1177,
+    "mean_bp": -5.5150935018120935,
+    "p5_bp": -12.47920133111528,
+    "p95_bp": 5.310947404487671
+   }
+  },
+  "overall": {
+   "n": 25892,
+   "mean_bp": -3.4349261668732343,
+   "p5_bp": -11.663597298955404,
+   "p95_bp": 8.814455707358691,
+   "abs_mean_bp": 5.990516927652521
+  },
+  "note": "基差 = (Binance 永续收盘 − 现货收盘)/现货收盘"
+ },
+ "reproduce_orig_cost": {
+  "weekly": {
+   "rule_b_all": {
+    "days": 1139,
+    "years": 3.1205,
+    "total_pct": 46.58552374431445,
+    "arith_ann_pct": 12.2633785108428,
+    "compound_ann_pct": 13.038132502870624,
+    "gross_ann_pct": 12.862338297230332,
+    "fee_ann_pct": 0.5989597863875303,
+    "fee_total_pct": 1.8690827306723206,
+    "max_dd_pct": -0.2672791156020371,
+    "switches": 532,
+    "switches_per_year": 170.4828797190518,
+    "basis_ann_pct": 0.0,
+    "basis_total_pct": 0.0,
+    "net_total_pct": 46.58552374431445,
+    "label": "orig/weekly/rule_b_all"
+   },
+   "carry_b_top": {
+    "days": 1139,
+    "years": 3.1205,
+    "total_pct": 64.23162409103735,
+    "arith_ann_pct": 15.910207041132573,
+    "compound_ann_pct": 17.23155802657437,
+    "gross_ann_pct": 16.85628214688722,
+    "fee_ann_pct": 0.9460751057546491,
+    "fee_total_pct": 2.952272727272727,
+    "max_dd_pct": -0.43498996476352136,
+    "switches": 433,
+    "switches_per_year": 138.75768217734856,
+    "basis_ann_pct": 0.0,
+    "basis_total_pct": 0.0,
+    "net_total_pct": 64.23162409103735,
+    "label": "orig/weekly/carry_b_top"
+   }
+  },
+  "biweekly": {
+   "rule_b_all": {
+    "days": 1139,
+    "years": 3.1205,
+    "total_pct": 44.822963254231155,
+    "arith_ann_pct": 11.875629911344484,
+    "compound_ann_pct": 12.600781900748892,
+    "gross_ann_pct": 12.271294632123642,
+    "fee_ann_pct": 0.3956647207791592,
+    "fee_total_pct": 1.2346907314177051,
+    "max_dd_pct": -0.4393932034045034,
+    "switches": 350,
+    "switches_per_year": 112.15978928884986,
+    "basis_ann_pct": 0.0,
+    "basis_total_pct": 0.0,
+    "net_total_pct": 44.822963254231155,
+    "label": "orig/biweekly/rule_b_all"
+   },
+   "carry_b_top": {
+    "days": 1139,
+    "years": 3.1205,
+    "total_pct": 64.00806554445741,
+    "arith_ann_pct": 15.86640408477532,
+    "compound_ann_pct": 17.18039583499631,
+    "gross_ann_pct": 16.537177889548246,
+    "fee_ann_pct": 0.6707738047729269,
+    "fee_total_pct": 2.0931818181818183,
+    "max_dd_pct": -0.29301060293692727,
+    "switches": 307,
+    "switches_per_year": 98.3801580333626,
+    "basis_ann_pct": 0.0,
+    "basis_total_pct": 0.0,
+    "net_total_pct": 64.00806554445741,
+    "label": "orig/biweekly/carry_b_top"
+   }
+  },
+  "monthly": {
+   "rule_b_all": {
+    "days": 1139,
+    "years": 3.1205,
+    "total_pct": 42.26132066606485,
+    "arith_ann_pct": 11.303326344909058,
+    "compound_ann_pct": 11.958656406266787,
+    "gross_ann_pct": 11.543184579319012,
+    "fee_ann_pct": 0.23985823440995344,
+    "fee_total_pct": 0.7484891205285943,
+    "max_dd_pct": -0.41281917469313534,
+    "switches": 212,
+    "switches_per_year": 67.9367866549605,
+    "basis_ann_pct": 0.0,
+    "basis_total_pct": 0.0,
+    "net_total_pct": 42.26132066606485,
+    "label": "orig/monthly/rule_b_all"
+   },
+   "carry_b_top": {
+    "days": 1139,
+    "years": 3.1205,
+    "total_pct": 61.37724345658893,
+    "arith_ann_pct": 15.34792907297071,
+    "compound_ann_pct": 16.574731060532088,
+    "gross_ann_pct": 15.83516867708915,
+    "fee_ann_pct": 0.4872396041184452,
+    "fee_total_pct": 1.5204545454545453,
+    "max_dd_pct": -0.5958049191578496,
+    "switches": 223,
+    "switches_per_year": 71.46180860403864,
+    "basis_ann_pct": 0.0,
+    "basis_total_pct": 0.0,
+    "net_total_pct": 61.37724345658893,
+    "label": "orig/monthly/carry_b_top"
+   }
+  }
+ },
+ "reproduce_check": {
+  "note": "S-735/T-253 台账数:处理臂 15.910%/yr、控制臂 12.263%/yr、切换 433 / 532",
+  "carry_b_top": {
+   "mine_arith_ann_pct": 15.910207041132573,
+   "ledger_arith_ann_pct": 15.910207041132573,
+   "diff_pp": 0.0,
+   "mine_switches": 433,
+   "ledger_switches": 433,
+   "ok_0p1pp": true
+  },
+  "rule_b_all": {
+   "mine_arith_ann_pct": 12.2633785108428,
+   "ledger_arith_ann_pct": 12.2633785108428,
+   "diff_pp": 0.0,
+   "mine_switches": 532,
+   "ledger_switches": 532,
+   "ok_0p1pp": true
+  }
+ },
+ "real_cost": {
+  "weekly": {
+   "rule_b_all": {
+    "days": 1139,
+    "years": 3.1205,
+    "total_pct": 43.4244263597977,
+    "arith_ann_pct": 11.56483456401389,
+    "compound_ann_pct": 12.251177074972986,
+    "gross_ann_pct": 12.862338297230332,
+    "fee_ann_pct": 1.237850225200896,
+    "fee_total_pct": 3.862770976722796,
+    "max_dd_pct": -0.3864941623304863,
+    "switches": 532,
+    "switches_per_year": 170.4828797190518,
+    "basis_ann_pct": -0.05965350801554347,
+    "basis_total_pct": -0.1861516318622028,
+    "net_total_pct": 43.4244263597977,
+    "label": "real/weekly/rule_b_all"
+   },
+   "carry_b_top": {
+    "days": 1139,
+    "years": 3.1205,
+    "total_pct": 58.80260145644321,
+    "arith_ann_pct": 14.832929888306792,
+    "compound_ann_pct": 15.975468540379122,
+    "gross_ann_pct": 16.85628214688722,
+    "fee_ann_pct": 1.955221885226275,
+    "fee_total_pct": 6.101363636363636,
+    "max_dd_pct": -0.6292984483601716,
+    "switches": 433,
+    "switches_per_year": 138.75768217734856,
+    "basis_ann_pct": -0.06813037335415532,
+    "basis_total_pct": -0.21260409657639154,
+    "net_total_pct": 58.80260145644321,
+    "label": "real/weekly/carry_b_top"
+   },
+   "rule_b_all_b_window": {
+    "days": 566,
+    "years": 1.5507,
+    "total_pct": 6.2890005710597165,
+    "arith_ann_pct": 3.934420161381416,
+    "compound_ann_pct": 4.0115797707606315,
+    "gross_ann_pct": 5.565800167398812,
+    "fee_ann_pct": 1.5765760520398326,
+    "fee_total_pct": 2.444772727272727,
+    "max_dd_pct": -0.34636855775294073,
+    "switches": 532,
+    "switches_per_year": 343.0742049469965,
+    "basis_ann_pct": -0.05480395397756248,
+    "basis_total_pct": -0.084983665620001,
+    "net_total_pct": 6.2890005710597165,
+    "label": "real/weekly/rule_b_all/b"
+   },
+   "carry_b_top_b_window": {
+    "days": 566,
+    "years": 1.5507,
+    "total_pct": 9.261062048005535,
+    "arith_ann_pct": 5.713492677658639,
+    "compound_ann_pct": 5.877928850453129,
+    "gross_ann_pct": 7.999171798666881,
+    "fee_ann_pct": 2.2262889495663347,
+    "fee_total_pct": 3.4522727272727276,
+    "max_dd_pct": -0.2538955322653913,
+    "switches": 433,
+    "switches_per_year": 279.23144876325085,
+    "basis_ann_pct": -0.059390171441907495,
+    "basis_total_pct": -0.09209544393457436,
+    "net_total_pct": 9.261062048005535,
+    "label": "real/weekly/carry_b_top/b"
+   },
+   "basis_missing_events": 0,
+   "basis_missing_events_rule_b": 0,
+   "basis_missing_detail": [],
+   "per_period_carry_b_top": {
+    "2023H2": {
+     "days": 207,
+     "total_pct": 11.125705171678222,
+     "arith_ann_pct": 18.620731103125713,
+     "compound_ann_pct": 20.443696114431354,
+     "gross_ann_pct": 20.68371671157225,
+     "fee_ann_pct": 1.9131642512077291,
+     "basis_ann_pct": -0.14982135723880124,
+     "max_dd_pct": -0.6292984483601716
+    },
+    "2024": {
+     "days": 366,
+     "total_pct": 30.790941202477885,
+     "arith_ann_pct": 26.793385106228477,
+     "compound_ann_pct": 30.695052294745096,
+     "gross_ann_pct": 28.38864690700447,
+     "fee_ann_pct": 1.559817436661699,
+     "basis_ann_pct": -0.03544436411429347,
+     "max_dd_pct": -0.06509739427776884
+    },
+    "2025": {
+     "days": 365,
+     "total_pct": 7.464104225024249,
+     "arith_ann_pct": 7.200977992992261,
+     "compound_ann_pct": 7.464104225024193,
+     "gross_ann_pct": 9.43415596818182,
+     "fee_ann_pct": 2.212272727272727,
+     "basis_ann_pct": -0.0209052479168308,
+     "max_dd_pct": -0.25231897996396135
+    },
+    "2026H1": {
+     "days": 181,
+     "total_pct": 1.3188027714351742,
+     "arith_ann_pct": 2.6430194017314115,
+     "compound_ann_pct": 2.6772926514930573,
+     "gross_ann_pct": 5.008400750401807,
+     "fee_ann_pct": 2.2163987945755896,
+     "basis_ann_pct": -0.14898255409480649,
+     "max_dd_pct": -0.2538955322653469
+    },
+    "2026-07-01..20": {
+     "days": 20,
+     "total_pct": 0.34874499604528203,
+     "arith_ann_pct": 6.354668819961451,
+     "compound_ann_pct": 6.559703473243639,
+     "gross_ann_pct": 8.87718869181818,
+     "fee_ann_pct": 2.571590909090909,
+     "basis_ann_pct": 0.04907103723417841,
+     "max_dd_pct": -0.043704771122465846
+    }
+   },
+   "per_period_rule_b_all": {
+    "2023H2": {
+     "days": 207,
+     "total_pct": 8.637892066684705,
+     "arith_ann_pct": 14.62070764235,
+     "compound_ann_pct": 15.729836834712142,
+     "gross_ann_pct": 15.801719830065153,
+     "fee_ann_pct": 1.0835050275505054,
+     "basis_ann_pct": -0.09750716016464919,
+     "max_dd_pct": -0.3864941623304863
+    },
+    "2024": {
+     "days": 366,
+     "total_pct": 24.209115126694915,
+     "arith_ann_pct": 21.636552664217195,
+     "compound_ann_pct": 24.13556290878036,
+     "gross_ann_pct": 22.48361863654135,
+     "fee_ann_pct": 0.8013219135145364,
+     "basis_ann_pct": -0.045744058809620965,
+     "max_dd_pct": -0.10700378492715101
+    },
+    "2025": {
+     "days": 365,
+     "total_pct": 5.6619900746651135,
+     "arith_ann_pct": 5.5091090539096035,
+     "compound_ann_pct": 5.661990074665124,
+     "gross_ann_pct": 6.919646999999999,
+     "fee_ann_pct": 1.366818181818182,
+     "basis_ann_pct": -0.04371976427221408,
+     "max_dd_pct": -0.34636855775294073
+    },
+    "2026H1": {
+     "days": 181,
+     "total_pct": 0.3540838327373834,
+     "arith_ann_pct": 0.7132753938293899,
+     "compound_ann_pct": 0.7153215798901158,
+     "gross_ann_pct": 2.8172970681315923,
+     "fee_ann_pct": 2.0032835258663986,
+     "basis_ann_pct": -0.10073814843580356,
+     "max_dd_pct": -0.21839887811588854
+    },
+    "2026-07-01..20": {
+     "days": 20,
+     "total_pct": 0.2384833273663587,
+     "arith_ann_pct": 4.347708019087821,
+     "compound_ann_pct": 4.443011463195101,
+     "gross_ann_pct": 5.732048520795455,
+     "fee_ann_pct": 1.5429545454545457,
+     "basis_ann_pct": 0.1586140437469115,
+     "max_dd_pct": -0.0394045110308161
+    }
+   }
+  },
+  "biweekly": {
+   "rule_b_all": {
+    "days": 1139,
+    "years": 3.1205,
+    "total_pct": 42.75060687118196,
+    "arith_ann_pct": 11.413846779466015,
+    "compound_ann_pct": 12.081909014781633,
+    "gross_ann_pct": 12.271294632123642,
+    "fee_ann_pct": 0.8177070896102624,
+    "fee_total_pct": 2.551694178263257,
+    "max_dd_pct": -0.5188355593670257,
+    "switches": 350,
+    "switches_per_year": 112.15978928884986,
+    "basis_ann_pct": -0.03974076304736656,
+    "basis_total_pct": -0.12401295646835757,
+    "net_total_pct": 42.75060687118196,
+    "label": "real/biweekly/rule_b_all"
+   },
+   "carry_b_top": {
+    "days": 1139,
+    "years": 3.1205,
+    "total_pct": 60.2316759726129,
+    "arith_ann_pct": 15.119921637260925,
+    "compound_ann_pct": 16.308902065506903,
+    "gross_ann_pct": 16.537177889548246,
+    "fee_ann_pct": 1.3862658631973817,
+    "fee_total_pct": 4.32590909090909,
+    "max_dd_pct": -0.3927780036298345,
+    "switches": 307,
+    "switches_per_year": 98.3801580333626,
+    "basis_ann_pct": -0.030990389089941,
+    "basis_total_pct": -0.09670699499573371,
+    "net_total_pct": 60.2316759726129,
+    "label": "real/biweekly/carry_b_top"
+   },
+   "rule_b_all_b_window": {
+    "days": 566,
+    "years": 1.5507,
+    "total_pct": 6.621810192673272,
+    "arith_ann_pct": 4.136058182262483,
+    "compound_ann_pct": 4.221485596344365,
+    "gross_ann_pct": 5.13226799808866,
+    "fee_ann_pct": 0.9677541760359781,
+    "fee_total_pct": 1.500681818181818,
+    "max_dd_pct": -0.39992299608682114,
+    "switches": 350,
+    "switches_per_year": 225.7067137809187,
+    "basis_ann_pct": -0.02845563979019973,
+    "basis_total_pct": -0.04412573183904944,
+    "net_total_pct": 6.621810192673272,
+    "label": "real/biweekly/rule_b_all/b"
+   },
+   "carry_b_top_b_window": {
+    "days": 566,
+    "years": 1.5507,
+    "total_pct": 10.099051649007071,
+    "arith_ann_pct": 6.206075286522905,
+    "compound_ann_pct": 6.400885014528157,
+    "gross_ann_pct": 7.706344379545454,
+    "fee_ann_pct": 1.4993374558303887,
+    "fee_total_pct": 2.325,
+    "max_dd_pct": -0.2920255640253666,
+    "switches": 307,
+    "switches_per_year": 197.97703180212014,
+    "basis_ann_pct": -0.0009316371921611127,
+    "basis_total_pct": -0.0014446757555155883,
+    "net_total_pct": 10.099051649007071,
+    "label": "real/biweekly/carry_b_top/b"
+   },
+   "basis_missing_events": 0,
+   "basis_missing_events_rule_b": 0,
+   "basis_missing_detail": [],
+   "per_period_carry_b_top": {
+    "2023H2": {
+     "days": 207,
+     "total_pct": 11.546024405933988,
+     "arith_ann_pct": 19.286360670859512,
+     "compound_ann_pct": 21.248143417425492,
+     "gross_ann_pct": 20.550321751734742,
+     "fee_ann_pct": 1.118083003952569,
+     "basis_ann_pct": -0.1458780769226578,
+     "max_dd_pct": -0.3927780036298345
+    },
+    "2024": {
+     "days": 366,
+     "total_pct": 30.47001156407547,
+     "arith_ann_pct": 26.548293644263143,
+     "compound_ann_pct": 30.37523308586976,
+     "gross_ann_pct": 27.92387457585693,
+     "fee_ann_pct": 1.3630837059115746,
+     "basis_ann_pct": -0.012497225682211592,
+     "max_dd_pct": -0.10696837626172906
+    },
+    "2025": {
+     "days": 365,
+     "total_pct": 7.800327825367534,
+     "arith_ann_pct": 7.513247868966802,
+     "compound_ann_pct": 7.8003278253675035,
+     "gross_ann_pct": 9.035660871818182,
+     "fee_ann_pct": 1.5218181818181817,
+     "basis_ann_pct": -0.0005948210331979526,
+     "max_dd_pct": -0.2920255640253666
+    },
+    "2026H1": {
+     "days": 181,
+     "total_pct": 1.7596658746148557,
+     "arith_ann_pct": 3.518366489720591,
+     "compound_ann_pct": 3.5802388765447946,
+     "gross_ann_pct": 4.875970542943246,
+     "fee_ann_pct": 1.363937719738825,
+     "basis_ann_pct": 0.006333666516171132,
+     "max_dd_pct": -0.08626536961395814
+    },
+    "2026-07-01..20": {
+     "days": 20,
+     "total_pct": 0.36627921820745907,
+     "arith_ann_pct": 6.673940267982719,
+     "compound_ann_pct": 6.900021590847416,
+     "gross_ann_pct": 9.061201616818181,
+     "fee_ann_pct": 2.3144318181818178,
+     "basis_ann_pct": -0.0728295306536456,
+     "max_dd_pct": -0.07543134937585405
+    }
+   },
+   "per_period_rule_b_all": {
+    "2023H2": {
+     "days": 207,
+     "total_pct": 7.847456854934346,
+     "arith_ann_pct": 13.332736769800386,
+     "compound_ann_pct": 14.249213825600005,
+     "gross_ann_pct": 14.235034504012592,
+     "fee_ann_pct": 0.8339449283783283,
+     "basis_ann_pct": -0.06835280583387814,
+     "max_dd_pct": -0.5188355593670257
+    },
+    "2024": {
+     "days": 366,
+     "total_pct": 24.142933388710876,
+     "arith_ann_pct": 21.583295189351226,
+     "compound_ann_pct": 24.06960103058713,
+     "gross_ann_pct": 22.20078895284165,
+     "fee_ann_pct": 0.5764833640858231,
+     "basis_ann_pct": -0.04101039940460298,
+     "max_dd_pct": -0.16575740935194094
+    },
+    "2025": {
+     "days": 365,
+     "total_pct": 5.902513002881745,
+     "arith_ann_pct": 5.736462110170387,
+     "compound_ann_pct": 5.90251300288176,
+     "gross_ann_pct": 6.64835292590909,
+     "fee_ann_pct": 0.8877272727272727,
+     "basis_ann_pct": -0.024163543011430873,
+     "max_dd_pct": -0.31384955080981936
+    },
+    "2026H1": {
+     "days": 181,
+     "total_pct": 0.481556401745301,
+     "arith_ann_pct": 0.9694278293432232,
+     "compound_ann_pct": 0.9734714025272151,
+     "gross_ann_pct": 2.143237635434455,
+     "fee_ann_pct": 1.0939917127071823,
+     "basis_ann_pct": -0.07981809338404983,
+     "max_dd_pct": -0.3999229960867545
+    },
+    "2026-07-01..20": {
+     "days": 20,
+     "total_pct": 0.1967032744550914,
+     "arith_ann_pct": 3.586691191862521,
+     "compound_ann_pct": 3.6513924759039584,
+     "gross_ann_pct": 4.514442847386364,
+     "fee_ann_pct": 1.2857954545454544,
+     "basis_ann_pct": 0.35804379902161226,
+     "max_dd_pct": -0.03442413942470468
+    }
+   }
+  },
+  "monthly": {
+   "rule_b_all": {
+    "days": 1139,
+    "years": 3.1205,
+    "total_pct": 40.98912752757498,
+    "arith_ann_pct": 11.015550376776599,
+    "compound_ann_pct": 11.636833284855697,
+    "gross_ann_pct": 11.543184579319012,
+    "fee_ann_pct": 0.49570701778057025,
+    "fee_total_pct": 1.5468775157590946,
+    "max_dd_pct": -0.4857691200255587,
+    "switches": 212,
+    "switches_per_year": 67.9367866549605,
+    "basis_ann_pct": -0.03192718476184293,
+    "basis_total_pct": -0.09963031080476466,
+    "net_total_pct": 40.98912752757498,
+    "label": "real/monthly/rule_b_all"
+   },
+   "carry_b_top": {
+    "days": 1139,
+    "years": 3.1205,
+    "total_pct": 58.77333246135432,
+    "arith_ann_pct": 14.826757065530302,
+    "compound_ann_pct": 15.968618191749439,
+    "gross_ann_pct": 15.83516867708915,
+    "fee_ann_pct": 1.0069618485114533,
+    "fee_total_pct": 3.1422727272727267,
+    "max_dd_pct": -0.6794384772883855,
+    "switches": 223,
+    "switches_per_year": 71.46180860403864,
+    "basis_ann_pct": -0.0014497630473974566,
+    "basis_total_pct": -0.004524055098590967,
+    "net_total_pct": 58.77333246135432,
+    "label": "real/monthly/carry_b_top"
+   },
+   "rule_b_all_b_window": {
+    "days": 566,
+    "years": 1.5507,
+    "total_pct": 6.2889502131284845,
+    "arith_ann_pct": 3.9343597253943394,
+    "compound_ann_pct": 4.011547991944053,
+    "gross_ann_pct": 4.636041179918888,
+    "fee_ann_pct": 0.6633432380340507,
+    "fee_total_pct": 1.0286363636363636,
+    "max_dd_pct": -0.4857691200255698,
+    "switches": 212,
+    "switches_per_year": 136.7137809187279,
+    "basis_ann_pct": -0.038338216490498046,
+    "basis_total_pct": -0.05945049461266272,
+    "net_total_pct": 6.2889502131284845,
+    "label": "real/monthly/rule_b_all/b"
+   },
+   "carry_b_top_b_window": {
+    "days": 566,
+    "years": 1.5507,
+    "total_pct": 9.782312542205664,
+    "arith_ann_pct": 6.020251436389466,
+    "compound_ann_pct": 6.203387396828641,
+    "gross_ann_pct": 7.030626220438483,
+    "fee_ann_pct": 1.0268189849020237,
+    "fee_total_pct": 1.5922727272727273,
+    "max_dd_pct": -0.6794384772883855,
+    "switches": 223,
+    "switches_per_year": 143.80742049469964,
+    "basis_ann_pct": 0.016444200853005644,
+    "basis_total_pct": 0.02549977447342793,
+    "net_total_pct": 9.782312542205664,
+    "label": "real/monthly/carry_b_top/b"
+   },
+   "basis_missing_events": 0,
+   "basis_missing_events_rule_b": 0,
+   "basis_missing_detail": [],
+   "per_period_carry_b_top": {
+    "2023H2": {
+     "days": 207,
+     "total_pct": 10.928107127815343,
+     "arith_ann_pct": 18.306068620124133,
+     "compound_ann_pct": 20.066315277453263,
+     "gross_ann_pct": 19.11279825136144,
+     "fee_ann_pct": 0.7702349582784365,
+     "basis_ann_pct": -0.036494672958872904,
+     "max_dd_pct": -0.5232435994172002
+    },
+    "2024": {
+     "days": 366,
+     "total_pct": 30.377780365145497,
+     "arith_ann_pct": 26.47775349802427,
+     "compound_ann_pct": 30.283320613227716,
+     "gross_ann_pct": 27.597195203291104,
+     "fee_ann_pct": 1.110140337804272,
+     "basis_ann_pct": -0.009301367462568867,
+     "max_dd_pct": -0.14358319501608374
+    },
+    "2025": {
+     "days": 365,
+     "total_pct": 7.417325763942519,
+     "arith_ann_pct": 7.157294323610549,
+     "compound_ann_pct": 7.417325763942451,
+     "gross_ann_pct": 8.23027534090909,
+     "fee_ann_pct": 1.0709090909090908,
+     "basis_ann_pct": -0.0020719263894507555,
+     "max_dd_pct": -0.6794384772883855
+    },
+    "2026H1": {
+     "days": 181,
+     "total_pct": 1.7364711192094286,
+     "arith_ann_pct": 3.4723956256073127,
+     "compound_ann_pct": 3.532633609727198,
+     "gross_ann_pct": 4.369045790858865,
+     "fee_ann_pct": 0.9377071823204418,
+     "basis_ann_pct": 0.04105701706889007,
+     "max_dd_pct": -0.19936008150961415
+    },
+    "2026-07-01..20": {
+     "days": 20,
+     "total_pct": 0.45726945998654345,
+     "arith_ann_pct": 8.32731383218317,
+     "compound_ann_pct": 8.68259292056004,
+     "gross_ann_pct": 9.224332659545455,
+     "fee_ann_pct": 1.0286363636363638,
+     "basis_ann_pct": 0.13161753627408068,
+     "max_dd_pct": -0.021187473840533766
+    }
+   },
+   "per_period_rule_b_all": {
+    "2023H2": {
+     "days": 207,
+     "total_pct": 6.174476844871373,
+     "arith_ann_pct": 10.57366024778836,
+     "compound_ann_pct": 11.142690326945903,
+     "gross_ann_pct": 11.247298604997093,
+     "fee_ann_pct": 0.6280745392063088,
+     "basis_ann_pct": -0.045563818002421194,
+     "max_dd_pct": -0.46520465488414375
+    },
+    "2024": {
+     "days": 366,
+     "total_pct": 24.933059503190705,
+     "arith_ann_pct": 22.216165582740867,
+     "compound_ann_pct": 24.85709603839701,
+     "gross_ann_pct": 22.392068625070674,
+     "fee_ann_pct": 0.1616027074018877,
+     "basis_ann_pct": -0.014300334927912623,
+     "max_dd_pct": -0.0722297630415758
+    },
+    "2025": {
+     "days": 365,
+     "total_pct": 5.715804613893836,
+     "arith_ann_pct": 5.559884702760877,
+     "compound_ann_pct": 5.715804613893938,
+     "gross_ann_pct": 6.191669968181818,
+     "fee_ann_pct": 0.6059090909090908,
+     "basis_ann_pct": -0.02587617451184853,
+     "max_dd_pct": -0.4857691200255698
+    },
+    "2026H1": {
+     "days": 181,
+     "total_pct": 0.3588534901672428,
+     "arith_ann_pct": 0.7230986087620448,
+     "compound_ann_pct": 0.7249748056325833,
+     "gross_ann_pct": 1.6432648042440985,
+     "fee_ann_pct": 0.8524610748367655,
+     "basis_ann_pct": -0.0677051206452883,
+     "max_dd_pct": -0.45813517623304323
+    },
+    "2026-07-01..20": {
+     "days": 20,
+     "total_pct": 0.18264803731427834,
+     "arith_ann_pct": 3.3304419939772725,
+     "compound_ann_pct": 3.386361039673713,
+     "gross_ann_pct": 3.3304419939772725,
+     "fee_ann_pct": 0.0,
+     "basis_ann_pct": 0.0,
+     "max_dd_pct": 0.0
+    }
+   }
+  }
+ },
+ "criteria": {
+  "a": {
+   "arm": "carry_b_top / 真实成本 / 每周换仓",
+   "window": "全样本",
+   "net_ann_pct": 14.832929888306792,
+   "net_compound_ann_pct": 15.975468540379122,
+   "gross_ann_pct": 16.85628214688722,
+   "fee_ann_pct": 1.955221885226275,
+   "basis_ann_pct": -0.06813037335415532,
+   "threshold_pct": 6.0,
+   "verdict": true
+  },
+  "b": {
+   "arm": "carry_b_top / 真实成本 / 每周换仓",
+   "window": "2025-01-01 → 2026-07-20",
+   "net_ann_pct": 5.713492677658639,
+   "net_compound_ann_pct": 5.877928850453129,
+   "gross_ann_pct": 7.999171798666881,
+   "fee_ann_pct": 2.2262889495663347,
+   "basis_ann_pct": -0.059390171441907495,
+   "threshold_pct": 3.0,
+   "verdict": true
+  },
+  "c": {
+   "arm": "carry_b_top / 真实成本 / 每周换仓",
+   "reading": "逐名口径",
+   "longest_neg_segment": {
+    "symbol": "BNB",
+    "days": 11,
+    "cum_pct": -0.5231018698513052,
+    "start": "2023-08-10",
+    "end": "2023-09-10"
+   },
+   "worst_neg_segment": {
+    "symbol": "BNB",
+    "days": 5,
+    "cum_pct": -0.76674793,
+    "start": "2023-07-05",
+    "end": "2023-07-09"
+   },
+   "threshold_pct": 5.0,
+   "verdict": true
+  },
+  "d": {
+   "arm": "carry_b_top / 真实成本",
+   "ann_by_freq_pp": {
+    "weekly": 14.832929888306792,
+    "biweekly": 15.119921637260925,
+    "monthly": 14.826757065530302
+   },
+   "best_freq": "biweekly",
+   "best_minus_weekly_pp": 0.28699174895413293,
+   "threshold_pp": 2.0,
+   "verdict": true
+  },
+  "all_pass": true
+ },
+ "hl_spot_10_subset": {
+  "names": [
+   "BTC",
+   "ETH",
+   "SOL",
+   "BNB",
+   "XRP",
+   "DOGE",
+   "AVAX",
+   "LINK",
+   "TRX",
+   "AAVE"
+  ],
+  "by_freq": {
+   "weekly": {
+    "rule_b_all_10": {
+     "days": 1139,
+     "years": 3.1205,
+     "total_pct": 47.37421144995827,
+     "arith_ann_pct": 12.434855493095203,
+     "compound_ann_pct": 13.232675600543619,
+     "gross_ann_pct": 13.543549087060654,
+     "fee_ann_pct": 1.09054921471076,
+     "fee_total_pct": 3.403111111111111,
+     "max_dd_pct": -0.4516926629010598,
+     "switches": 217,
+     "switches_per_year": 69.53906935908692,
+     "basis_ann_pct": -0.01814437925468963,
+     "basis_total_pct": -0.05662040540025065,
+     "net_total_pct": 47.37421144995827,
+     "label": "hl10/weekly/rule_b_all"
+    },
+    "carry_b_top_5of10": {
+     "days": 1139,
+     "years": 3.1205,
+     "total_pct": 64.56758239618715,
+     "arith_ann_pct": 15.975832411377628,
+     "compound_ann_pct": 17.308354390064284,
+     "gross_ann_pct": 17.8335098076295,
+     "fee_ann_pct": 1.8576865671641791,
+     "fee_total_pct": 5.797000000000001,
+     "max_dd_pct": -0.459479111629979,
+     "switches": 187,
+     "switches_per_year": 59.92537313432836,
+     "basis_ann_pct": 9.170912306941636e-06,
+     "basis_total_pct": 2.8618271555086363e-05,
+     "net_total_pct": 64.56758239618715,
+     "label": "hl10/weekly/top5"
+    },
+    "rule_b_all_10_b_window": {
+     "days": 566,
+     "years": 1.5507,
+     "total_pct": 9.167910194451585,
+     "arith_ann_pct": 5.658162792401302,
+     "compound_ann_pct": 5.819708647005006,
+     "gross_ann_pct": 6.946730317120142,
+     "fee_ann_pct": 1.289430212014134,
+     "fee_total_pct": 1.9994999999999998,
+     "max_dd_pct": -0.23481488614377488,
+     "switches": 217,
+     "switches_per_year": 139.93816254416961,
+     "basis_ann_pct": 0.0008626872952948509,
+     "basis_total_pct": 0.001337756189416125,
+     "net_total_pct": 9.167910194451585,
+     "label": "hl10/weekly/rule_b_all/b"
+    },
+    "carry_b_top_5of10_b_window": {
+     "days": 566,
+     "years": 1.5507,
+     "total_pct": 12.084424280621837,
+     "arith_ann_pct": 7.3590379584799095,
+     "compound_ann_pct": 7.634269753936818,
+     "gross_ann_pct": 9.204770213462897,
+     "fee_ann_pct": 1.8591784452296818,
+     "fee_total_pct": 2.883,
+     "max_dd_pct": -0.2685289050538553,
+     "switches": 187,
+     "switches_per_year": 120.59187279151944,
+     "basis_ann_pct": 0.013446190246694273,
+     "basis_total_pct": 0.020850804601723172,
+     "net_total_pct": 12.084424280621837,
+     "label": "hl10/weekly/top5/b"
+    }
+   },
+   "biweekly": {
+    "rule_b_all_10": {
+     "days": 1139,
+     "years": 3.1205,
+     "total_pct": 46.69156949489654,
+     "arith_ann_pct": 12.285906592912472,
+     "compound_ann_pct": 13.064331796378447,
+     "gross_ann_pct": 13.046836169135325,
+     "fee_ann_pct": 0.7417500731635936,
+     "fee_total_pct": 2.314666666666666,
+     "max_dd_pct": -0.6365113444045334,
+     "switches": 147,
+     "switches_per_year": 47.10711150131694,
+     "basis_ann_pct": -0.019179503059263976,
+     "basis_total_pct": -0.059850558861648404,
+     "net_total_pct": 46.69156949489654,
+     "label": "hl10/biweekly/rule_b_all"
+    },
+    "carry_b_top_5of10": {
+     "days": 1139,
+     "years": 3.1205,
+     "total_pct": 65.20177943697394,
+     "arith_ann_pct": 16.098735442780377,
+     "compound_ann_pct": 17.45303495613686,
+     "gross_ann_pct": 17.370115920597016,
+     "fee_ann_pct": 1.281505706760316,
+     "fee_total_pct": 3.9989999999999997,
+     "max_dd_pct": -0.4224981226658042,
+     "switches": 129,
+     "switches_per_year": 41.33889376646181,
+     "basis_ann_pct": 0.01012522894367372,
+     "basis_total_pct": 0.03159626237491608,
+     "net_total_pct": 65.20177943697394,
+     "label": "hl10/biweekly/top5"
+    },
+    "rule_b_all_10_b_window": {
+     "days": 566,
+     "years": 1.5507,
+     "total_pct": 9.665109090544165,
+     "arith_ann_pct": 5.951164589143941,
+     "compound_ann_pct": 6.130255777810412,
+     "gross_ann_pct": 6.756404182517668,
+     "fee_ann_pct": 0.7896510600706712,
+     "fee_total_pct": 1.2245,
+     "max_dd_pct": -0.23830041706990324,
+     "switches": 147,
+     "switches_per_year": 94.79681978798587,
+     "basis_ann_pct": -0.01558853330305681,
+     "basis_total_pct": -0.02417290369734289,
+     "net_total_pct": 9.665109090544165,
+     "label": "hl10/biweekly/rule_b_all/b"
+    },
+    "carry_b_top_5of10_b_window": {
+     "days": 566,
+     "years": 1.5507,
+     "total_pct": 12.39455227988186,
+     "arith_ann_pct": 7.537264327675426,
+     "compound_ann_pct": 7.826229231674198,
+     "gross_ann_pct": 8.85009389409894,
+     "fee_ann_pct": 1.3194169611307422,
+     "fee_total_pct": 2.0460000000000003,
+     "max_dd_pct": -0.4224981226658153,
+     "switches": 129,
+     "switches_per_year": 83.18904593639576,
+     "basis_ann_pct": 0.006587394707229193,
+     "basis_total_pct": 0.010214973710388282,
+     "net_total_pct": 12.39455227988186,
+     "label": "hl10/biweekly/top5/b"
+    }
+   },
+   "monthly": {
+    "rule_b_all_10": {
+     "days": 1139,
+     "years": 3.1205,
+     "total_pct": 44.648200206784836,
+     "arith_ann_pct": 11.835790288443265,
+     "compound_ann_pct": 12.557220596193574,
+     "gross_ann_pct": 12.290015696978708,
+     "fee_ann_pct": 0.44372549019607843,
+     "fee_total_pct": 1.3846666666666667,
+     "max_dd_pct": -0.6528714587349493,
+     "switches": 88,
+     "switches_per_year": 28.20017559262511,
+     "basis_ann_pct": -0.010499918339363527,
+     "basis_total_pct": -0.032765498598726184,
+     "net_total_pct": 44.648200206784836,
+     "label": "hl10/monthly/rule_b_all"
+    },
+    "carry_b_top_5of10": {
+     "days": 1139,
+     "years": 3.1205,
+     "total_pct": 64.47837318200698,
+     "arith_ann_pct": 15.958462600249677,
+     "compound_ann_pct": 17.287972544116805,
+     "gross_ann_pct": 16.97620920883231,
+     "fee_ann_pct": 1.023217734855136,
+     "fee_total_pct": 3.193,
+     "max_dd_pct": -0.45368103280369887,
+     "switches": 103,
+     "switches_per_year": 33.00702370500439,
+     "basis_ann_pct": 0.005471126272504397,
+     "basis_total_pct": 0.017072911847623315,
+     "net_total_pct": 64.47837318200698,
+     "label": "hl10/monthly/top5"
+    },
+    "rule_b_all_10_b_window": {
+     "days": 566,
+     "years": 1.5507,
+     "total_pct": 9.638746145185955,
+     "arith_ann_pct": 5.935571379448926,
+     "compound_ann_pct": 6.113802226944731,
+     "gross_ann_pct": 6.446224349575972,
+     "fee_ann_pct": 0.4997791519434629,
+     "fee_total_pct": 0.775,
+     "max_dd_pct": -0.4055608011633627,
+     "switches": 88,
+     "switches_per_year": 56.74911660777385,
+     "basis_ann_pct": -0.010873818183581822,
+     "basis_total_pct": -0.01686186600522551,
+     "net_total_pct": 9.638746145185955,
+     "label": "hl10/monthly/rule_b_all/b"
+    },
+    "carry_b_top_5of10_b_window": {
+     "days": 566,
+     "years": 1.5507,
+     "total_pct": 11.602525358684366,
+     "arith_ann_pct": 7.081155023960563,
+     "compound_ann_pct": 7.335614776989341,
+     "gross_ann_pct": 8.294662422173145,
+     "fee_ann_pct": 1.1994699646643112,
+     "fee_total_pct": 1.86,
+     "max_dd_pct": -0.45368103280368777,
+     "switches": 103,
+     "switches_per_year": 66.42226148409894,
+     "basis_ann_pct": -0.014037433548271078,
+     "basis_total_pct": -0.021767636680332686,
+     "net_total_pct": 11.602525358684366,
+     "label": "hl10/monthly/top5/b"
+    }
+   }
+  }
+ },
+ "extras": {
+  "cost_double_31bp": {
+   "days": 1139,
+   "years": 3.1205,
+   "total_pct": 49.3995470506489,
+   "arith_ann_pct": 12.877708003080516,
+   "compound_ann_pct": 13.729038477256793,
+   "gross_ann_pct": 16.85628214688722,
+   "fee_ann_pct": 3.91044377045255,
+   "fee_total_pct": 12.202727272727271,
+   "max_dd_pct": -1.0263473014779256,
+   "switches": 433,
+   "switches_per_year": 138.75768217734856,
+   "basis_ann_pct": -0.06813037335415532,
+   "basis_total_pct": -0.21260409657639154,
+   "net_total_pct": 49.3995470506489,
+   "label": "real/weekly/top/cost_x2"
+  },
+  "basis_sign_flipped": {
+   "days": 1139,
+   "years": 3.1205,
+   "total_pct": 59.47919032641222,
+   "arith_ann_pct": 14.969190635015101,
+   "compound_ann_pct": 16.133584191759788,
+   "gross_ann_pct": 16.85628214688722,
+   "fee_ann_pct": 1.955221885226275,
+   "fee_total_pct": 6.101363636363636,
+   "max_dd_pct": -0.5894845819248262,
+   "switches": 433,
+   "switches_per_year": 138.75768217734856,
+   "basis_ann_pct": 0.06813037335415532,
+   "basis_total_pct": 0.21260409657639154,
+   "net_total_pct": 59.47919032641222,
+   "label": "real/weekly/top/basis_econ"
+  },
+  "basis_only_note": "基差符号翻转 = 台账字面口径的相反读法(开仓收 b、平仓付 b),只报不判",
+  "capital_basis_x075": {
+   "note": "1/3 保证金 ⇒ 名义回报 × 0.75 才是资本口径(S-733 结果里的读法)",
+   "carry_b_top_real_weekly_ann_pct": 11.124697416230093,
+   "carry_b_top_real_weekly_b_window_ann_pct": 4.285119508243979
+  },
+  "basis_component_ann_pp": {
+   "with_basis_ann_pct": 14.832929888306792,
+   "without_basis_ann_pct": 14.901060261660948,
+   "note": "去掉基差后的净(费不变)与含基差之差"
+  },
+  "basis_at_switch_days": {
+   "n": 433,
+   "mean_bp": -3.1413550178915943,
+   "abs_mean_bp": 5.78185009544303,
+   "p5_bp": -10.869565217392177,
+   "p95_bp": 9.298998569385189,
+   "note": "每次切换(开或平)当日的价格基差水平(永续−现货)/现货"
+  }
+ },
+ "per_name_real_weekly_top": [
+  {
+   "symbol": "DOGE",
+   "gross_pct": 56.664240639999996,
+   "switches": 24,
+   "basis_pct": 3.5151395543016855,
+   "days_held": 770
+  },
+  {
+   "symbol": "DOT",
+   "gross_pct": 54.08686381000001,
+   "switches": 13,
+   "basis_pct": 2.0121217362755837,
+   "days_held": 995
+  },
+  {
+   "symbol": "ARB",
+   "gross_pct": 50.54563532,
+   "switches": 13,
+   "basis_pct": 1.7236210101201994,
+   "days_held": 813
+  },
+  {
+   "symbol": "FIL",
+   "gross_pct": 46.037731300000004,
+   "switches": 5,
+   "basis_pct": 0.84682676105949,
+   "days_held": 876
+  },
+  {
+   "symbol": "SOL",
+   "gross_pct": 42.88197863999999,
+   "switches": 19,
+   "basis_pct": 2.8256828111289978,
+   "days_held": 554
+  },
+  {
+   "symbol": "INJ",
+   "gross_pct": 36.74778372,
+   "switches": 21,
+   "basis_pct": 3.327883561802722,
+   "days_held": 785
+  },
+  {
+   "symbol": "ETC",
+   "gross_pct": 33.172139089999995,
+   "switches": 20,
+   "basis_pct": 3.0568021175896214,
+   "days_held": 315
+  },
+  {
+   "symbol": "AAVE",
+   "gross_pct": 29.10574065,
+   "switches": 25,
+   "basis_pct": 3.6694439357347064,
+   "days_held": 456
+  },
+  {
+   "symbol": "ETH",
+   "gross_pct": 28.12405787,
+   "switches": 29,
+   "basis_pct": 4.487780323786691,
+   "days_held": 743
+  },
+  {
+   "symbol": "BCH",
+   "gross_pct": 27.0617033,
+   "switches": 28,
+   "basis_pct": 4.040995606988595,
+   "days_held": 518
+  },
+  {
+   "symbol": "BTC",
+   "gross_pct": 26.85593356,
+   "switches": 29,
+   "basis_pct": 4.770754388383251,
+   "days_held": 785
+  },
+  {
+   "symbol": "OP",
+   "gross_pct": 25.06417491,
+   "switches": 8,
+   "basis_pct": 0.8985635595745137,
+   "days_held": 322
+  },
+  {
+   "symbol": "LINK",
+   "gross_pct": 24.19526228,
+   "switches": 21,
+   "basis_pct": 3.2739043796735032,
+   "days_held": 407
+  },
+  {
+   "symbol": "UNI",
+   "gross_pct": 19.438538480000002,
+   "switches": 20,
+   "basis_pct": 2.774830250281377,
+   "days_held": 308
+  },
+  {
+   "symbol": "SUI",
+   "gross_pct": 18.065681640000005,
+   "switches": 30,
+   "basis_pct": 4.3577005217043485,
+   "days_held": 518
+  },
+  {
+   "symbol": "XRP",
+   "gross_pct": 13.964479599999999,
+   "switches": 24,
+   "basis_pct": 3.5489861278199184,
+   "days_held": 413
+  },
+  {
+   "symbol": "BNB",
+   "gross_pct": 10.207689749999998,
+   "switches": 27,
+   "basis_pct": 3.992605948008063,
+   "days_held": 393
+  },
+  {
+   "symbol": "TRX",
+   "gross_pct": 10.006180279999999,
+   "switches": 10,
+   "basis_pct": 1.5587107422588715,
+   "days_held": 154
+  },
+  {
+   "symbol": "APT",
+   "gross_pct": 4.586288390000001,
+   "switches": 8,
+   "basis_pct": 1.2108654687527969,
+   "days_held": 91
+  },
+  {
+   "symbol": "NEAR",
+   "gross_pct": 4.4655738,
+   "switches": 12,
+   "basis_pct": 1.929075039587222,
+   "days_held": 189
+  },
+  {
+   "symbol": "AVAX",
+   "gross_pct": 0.0,
+   "switches": 0,
+   "basis_pct": 0.0,
+   "days_held": 0
+  },
+  {
+   "symbol": "ATOM",
+   "gross_pct": 0.0,
+   "switches": 0,
+   "basis_pct": 0.0,
+   "days_held": 0
+  }
+ ]
+}
