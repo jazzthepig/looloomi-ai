@@ -1,0 +1,1056 @@
+{
+ "task": "T-262",
+ "ledger": "S-740",
+ "seed": 740,
+ "n_null": 1000,
+ "generated_at": "2026-11-06T07:27:39.208418Z",
+ "listing_day_source": {
+  "events_total": 818,
+  "payload_has_launch_date_field": 0,
+  "title_paren_date_equals_ts": 163,
+  "used": "事件 ts 的 UTC 日(库里没有公告上线日字段)"
+ },
+ "title_filter": {
+  "kept_announcements": 467,
+  "dropped": {
+   "not_a_launch": 68,
+   "not_perpetual": 29,
+   "coin_margined": 50,
+   "tradfi_equity_index": 51,
+   "roundup": 5,
+   "leverage_tier_update": 3,
+   "spot_listing": 1,
+   "busd_margined": 14,
+   "relaunch": 1,
+   "convert_to_standard": 109,
+   "copy_trading_add": 14,
+   "pre_ipo": 6
+  },
+  "drop_examples": {
+   "not_a_launch": [
+    "Binance Futures Increases Maximum Leverage on XTZ/USDT Contract to 75x",
+    "BTCUSD Quarterly Futures Contracts Launched on Binance Futures",
+    "DOT USDT-Margined Perpetual Contract Listing Delayed to 2020/08/22"
+   ],
+   "not_perpetual": [
+    "Binance Futures Will Launch ADAUSD Quarterly 0925 Futures Contract With Up to 75x Leverage",
+    "Binance Futures Will Launch LINKUSD Quarterly 0925 Futures Contract With Up to 75x Leverage",
+    "Binance Futures Will Launch ETHUSD Quarterly 0925 Futures Contract With Up to 75x Leverage"
+   ],
+   "coin_margined": [
+    "Binance Futures Will Launch ETH/USD Coin-Margined Perpetual Contract With Up to 75x Leverage",
+    "Binance Futures Will Launch LINK/USD Coin-Margined Perpetual Contract With Up to 75x Leverage",
+    "Binance Futures Will Launch BNB/USD Coin-Margined Perpetual Contract With Up to 50x Leverage"
+   ],
+   "tradfi_equity_index": [
+    "Binance Futures Launches DEFI Composite Index Perpetual Contract With Up to 50x Leverage",
+    "Binance Futures Launches DOTECO (Polkadot Ecosystem) Composite Index Perpetual Contract with Up",
+    "Binance Futures Will Launch USDⓈ-M Binance Football Fan Token Index Perpetual Contracts with Up"
+   ],
+   "roundup": [
+    "Binance Futures: New Listings This Week",
+    "Binance Futures: New Listings This Week (2021-03-15)",
+    "Binance Futures: New Listings This Week (2021-03-22)"
+   ],
+   "leverage_tier_update": [
+    "Updates to Maximum Leverage and Margin Tiers of Binance Futures Contracts",
+    "New Listings This Week and Updates on Leverage and Margin Tiers of Binance Futures Contracts",
+    "Binance Futures Will Update the Leverage & Margin Tiers of USDⓈ-M MTLUSDT Perpetual Contract"
+   ],
+   "spot_listing": [
+    "Binance Will List Perpetual Protocol (PERP) in the Innovation Zone"
+   ],
+   "busd_margined": [
+    "Binance Futures Will Launch BUSD-Margined AVAX Perpetual Contracts with Up to 20X Leverage",
+    "Binance Futures Will Launch Multiple BUSD-Margined Perpetual Contracts with Up to 20X Leverage",
+    "Binance Futures Will Launch BUSD-Margined ANC Perpetual Contracts with Up to 20X Leverage"
+   ],
+   "relaunch": [
+    "Binance Futures to Relaunch USDⓈ-M BNX Perpetual Contracts with Up to 20X Leverage"
+   ],
+   "convert_to_standard": [
+    "Binance Adds Xai (XAI) on Earn, Convert, Margin, Futures & Auto-Invest",
+    "Binance Adds Manta (MANTA) on Earn, Convert, Margin & Futures",
+    "Binance Adds AltLayer (ALT) on Earn, Convert, Margin & Futures"
+   ],
+   "copy_trading_add": [
+    "Binance Futures Copy Trading Adds New USDⓈ-M Contracts (2024-04-30)",
+    "Binance Futures Copy Trading Adds New USDⓈ-M Contracts (2024-05-14)",
+    "Binance Futures Copy Trading Adds New USDⓈ-M Contracts (2024-06-11)"
+   ],
+   "pre_ipo": [
+    "Binance Futures Will Launch USDⓈ-Margined SPCXUSDT USDⓈ-Margined Perpetual Contract Pre-IPO Tra",
+    "Binance Futures Will Launch OPENAIUSDT USDⓈ-Margined Perpetual Contract Pre-IPO Trading (2026-0",
+    "Binance Futures Will Launch QNTXUSDT USDⓈ-Margined Perpetual Contract Pre-IPO Trading (2026-05-"
+   ]
+  }
+ },
+ "expansion": {
+  "announcements_kept": 467,
+  "token_events": 297,
+  "ticker_provenance": {
+   "title_parsed": 42,
+   "symbols_field": 255
+  },
+  "n_announcements_symbol_field_mismatch": 3,
+  "mismatch_examples": [
+   {
+    "d": "2024-03-05",
+    "field": [
+     "MYRO"
+    ],
+    "parsed": [
+     "MYRO",
+     "1000PEPE"
+    ],
+    "title": "Binance Futures Will Launch MYROUSDT and 1000PEPEUSDC Perpetual Contracts With Up to 50x L"
+   },
+   {
+    "d": "2024-03-12",
+    "field": [
+     "METIS"
+    ],
+    "parsed": [
+     "METIS",
+     "WLD"
+    ],
+    "title": "Binance Futures Will Launch METISUSDT and WLDUSDC Perpetual Contracts With Up to 75x Lever"
+   },
+   {
+    "d": "2025-07-23",
+    "field": [
+     "CVX",
+     "SLP"
+    ],
+    "parsed": [
+     "PENGU",
+     "CVX",
+     "SLP"
+    ],
+    "title": "Binance Futures Will Launch USDⓈ-Margined PENGUUSDC, CVXUSDT and SLPUSDT Perpetual Contrac"
+   }
+  ]
+ },
+ "funnel": {
+  "window_2020": 2,
+  "kept": 46,
+  "no_spot_data": 221,
+  "spot_lt_60d": 28
+ },
+ "sample_by_year": {
+  "2020": 28,
+  "2021": 1,
+  "2024": 9,
+  "2025": 8
+ },
+ "listing_day_crosscheck": {
+  "perp_bv_first_minus_d": {
+   "n": 46,
+   "median_days": 1.0,
+   "mean_days": -128.2173913043478,
+   "same_day": 15,
+   "before_d": 4,
+   "after_d": 27,
+   "min": -2114,
+   "max": 3
+  },
+  "rows": [
+   {
+    "sym": "XRP",
+    "d": "2020-01-06",
+    "perp_bv_first": "2020-01-06",
+    "funding_first": "2020-01-06"
+   },
+   {
+    "sym": "LTC",
+    "d": "2020-01-08",
+    "perp_bv_first": "2020-01-09",
+    "funding_first": "2020-01-09"
+   },
+   {
+    "sym": "TRX",
+    "d": "2020-01-14",
+    "perp_bv_first": "2020-01-15",
+    "funding_first": "2020-01-15"
+   },
+   {
+    "sym": "ETC",
+    "d": "2020-01-15",
+    "perp_bv_first": "2020-01-16",
+    "funding_first": "2020-01-16"
+   },
+   {
+    "sym": "LINK",
+    "d": "2020-01-16",
+    "perp_bv_first": "2020-01-17",
+    "funding_first": "2020-01-17"
+   },
+   {
+    "sym": "XLM",
+    "d": "2020-01-19",
+    "perp_bv_first": "2020-01-20",
+    "funding_first": "2020-01-19"
+   },
+   {
+    "sym": "ADA",
+    "d": "2020-01-30",
+    "perp_bv_first": "2020-01-31",
+    "funding_first": "2020-01-19"
+   },
+   {
+    "sym": "XMR",
+    "d": "2020-02-02",
+    "perp_bv_first": "2020-02-03",
+    "funding_first": "2020-02-01"
+   },
+   {
+    "sym": "DASH",
+    "d": "2020-02-03",
+    "perp_bv_first": "2020-02-04",
+    "funding_first": "2020-02-04"
+   },
+   {
+    "sym": "ZEC",
+    "d": "2020-02-04",
+    "perp_bv_first": "2020-02-05",
+    "funding_first": "2020-02-04"
+   },
+   {
+    "sym": "XTZ",
+    "d": "2020-02-05",
+    "perp_bv_first": "2020-02-06",
+    "funding_first": "2020-02-04"
+   },
+   {
+    "sym": "ATOM",
+    "d": "2020-02-06",
+    "perp_bv_first": "2020-02-07",
+    "funding_first": "2020-02-06"
+   },
+   {
+    "sym": "BNB",
+    "d": "2020-02-07",
+    "perp_bv_first": "2020-02-10",
+    "funding_first": "2020-02-10"
+   },
+   {
+    "sym": "ONT",
+    "d": "2020-02-10",
+    "perp_bv_first": "2020-02-11",
+    "funding_first": "2020-02-11"
+   },
+   {
+    "sym": "BAT",
+    "d": "2020-02-12",
+    "perp_bv_first": "2020-02-13",
+    "funding_first": "2020-02-13"
+   },
+   {
+    "sym": "VET",
+    "d": "2020-02-13",
+    "perp_bv_first": "2020-02-14",
+    "funding_first": "2020-02-14"
+   },
+   {
+    "sym": "NEO",
+    "d": "2020-02-16",
+    "perp_bv_first": "2020-02-17",
+    "funding_first": "2020-02-17"
+   },
+   {
+    "sym": "QTUM",
+    "d": "2020-02-19",
+    "perp_bv_first": "2020-02-20",
+    "funding_first": "2020-03-01"
+   },
+   {
+    "sym": "IOST",
+    "d": "2020-02-20",
+    "perp_bv_first": "2020-02-21",
+    "funding_first": "2020-02-21"
+   },
+   {
+    "sym": "THETA",
+    "d": "2020-05-26",
+    "perp_bv_first": "2020-05-27",
+    "funding_first": "2020-05-26"
+   },
+   {
+    "sym": "ALGO",
+    "d": "2020-06-15",
+    "perp_bv_first": "2020-06-16",
+    "funding_first": "2020-06-01"
+   },
+   {
+    "sym": "ZIL",
+    "d": "2020-06-17",
+    "perp_bv_first": "2020-06-18",
+    "funding_first": "2020-06-17"
+   },
+   {
+    "sym": "ZRX",
+    "d": "2020-06-23",
+    "perp_bv_first": "2020-06-24",
+    "funding_first": "2020-06-24"
+   },
+   {
+    "sym": "OMG",
+    "d": "2020-07-01",
+    "perp_bv_first": "2020-07-02",
+    "funding_first": "2020-07-01"
+   },
+   {
+    "sym": "DOGE",
+    "d": "2020-07-09",
+    "perp_bv_first": "2020-07-10",
+    "funding_first": "2020-07-10"
+   },
+   {
+    "sym": "KAVA",
+    "d": "2020-07-27",
+    "perp_bv_first": "2020-07-28",
+    "funding_first": "2020-07-28"
+   },
+   {
+    "sym": "BAND",
+    "d": "2020-07-28",
+    "perp_bv_first": "2020-07-29",
+    "funding_first": "2020-07-29"
+   },
+   {
+    "sym": "RLC",
+    "d": "2020-07-30",
+    "perp_bv_first": "2020-07-31",
+    "funding_first": "2020-07-31"
+   },
+   {
+    "sym": "BTC",
+    "d": "2021-01-11",
+    "perp_bv_first": "2019-12-31",
+    "funding_first": "2020-01-01"
+   },
+   {
+    "sym": "KDA",
+    "d": "2024-09-18",
+    "perp_bv_first": "2024-09-18",
+    "funding_first": "2024-09-18"
+   },
+   {
+    "sym": "FIO",
+    "d": "2024-09-20",
+    "perp_bv_first": "2024-09-20",
+    "funding_first": "2024-09-20"
+   },
+   {
+    "sym": "GHST",
+    "d": "2024-09-23",
+    "perp_bv_first": "2024-09-23",
+    "funding_first": "2024-09-23"
+   },
+   {
+    "sym": "LOKA",
+    "d": "2024-09-24",
+    "perp_bv_first": "2024-09-24",
+    "funding_first": "2024-09-24"
+   },
+   {
+    "sym": "REI",
+    "d": "2024-09-27",
+    "perp_bv_first": "2024-09-27",
+    "funding_first": "2024-09-27"
+   },
+   {
+    "sym": "COS",
+    "d": "2024-09-30",
+    "perp_bv_first": "2024-09-30",
+    "funding_first": "2024-09-30"
+   },
+   {
+    "sym": "TROY",
+    "d": "2024-10-31",
+    "perp_bv_first": "2024-10-31",
+    "funding_first": "2024-10-31"
+   },
+   {
+    "sym": "DEGO",
+    "d": "2024-12-13",
+    "perp_bv_first": "2024-12-13",
+    "funding_first": "2024-12-13"
+   },
+   {
+    "sym": "DF",
+    "d": "2024-12-30",
+    "perp_bv_first": "2024-12-30",
+    "funding_first": "2024-12-30"
+   },
+   {
+    "sym": "VIC",
+    "d": "2025-03-12",
+    "perp_bv_first": "2025-03-12",
+    "funding_first": "2025-03-12"
+   },
+   {
+    "sym": "FUN",
+    "d": "2025-03-31",
+    "perp_bv_first": "2025-03-31",
+    "funding_first": "2025-03-31"
+   },
+   {
+    "sym": "MLN",
+    "d": "2025-03-31",
+    "perp_bv_first": "2025-03-31",
+    "funding_first": "2025-03-31"
+   },
+   {
+    "sym": "FORTH",
+    "d": "2025-04-08",
+    "perp_bv_first": "2025-04-08",
+    "funding_first": "2025-04-08"
+   },
+   {
+    "sym": "FIS",
+    "d": "2025-04-25",
+    "perp_bv_first": "2025-04-25",
+    "funding_first": "2025-04-25"
+   },
+   {
+    "sym": "AAVE",
+    "d": "2025-06-16",
+    "perp_bv_first": "2020-10-16",
+    "funding_first": "2020-10-16"
+   },
+   {
+    "sym": "UNI",
+    "d": "2025-06-16",
+    "perp_bv_first": "2020-09-18",
+    "funding_first": "2020-09-17"
+   },
+   {
+    "sym": "ZEC",
+    "d": "2025-11-19",
+    "perp_bv_first": "2020-02-05",
+    "funding_first": "2020-02-04"
+   }
+  ]
+ },
+ "poa_selfcheck": {
+  "pairs_checked": 1840,
+  "mismatches": 0
+ },
+ "n_with_excess": {
+  "entry_on_d": 46,
+  "entry_on_d_plus_1": 46
+ },
+ "main": {
+  "entry_on_d": {
+   "h30": {
+    "n": 46,
+    "median_pct": -17.42049250094986,
+    "mean_pct": -9.114980319362962,
+    "p25_pct": -29.711895747848914,
+    "p75_pct": 6.84170384191943,
+    "min_pct": -63.97758609710872,
+    "max_pct": 110.07881000056034,
+    "frac_negative": 0.6739130434782609,
+    "frac_le_-3": 0.6304347826086957
+   },
+   "h60": {
+    "n": 46,
+    "median_pct": -23.562525138337648,
+    "mean_pct": -18.429312503615918,
+    "p25_pct": -51.469586276535594,
+    "p75_pct": 2.903863290648771,
+    "min_pct": -92.47130306335363,
+    "max_pct": 108.29657490285838,
+    "frac_negative": 0.717391304347826,
+    "frac_le_-3": 0.6521739130434783
+   }
+  },
+  "entry_on_d_plus_1": {
+   "h30": {
+    "n": 46,
+    "median_pct": -17.67546374420047,
+    "mean_pct": -7.211289759461457,
+    "p25_pct": -25.27318145769113,
+    "p75_pct": 7.811783654297247,
+    "min_pct": -53.32922173005078,
+    "max_pct": 114.95936576672379,
+    "frac_negative": 0.6521739130434783,
+    "frac_le_-3": 0.6521739130434783
+   },
+   "h60": {
+    "n": 46,
+    "median_pct": -19.08923853549548,
+    "mean_pct": -14.739340576871495,
+    "p25_pct": -41.01518825471979,
+    "p75_pct": -0.30855584266997715,
+    "min_pct": -101.43569748373089,
+    "max_pct": 103.49563108276605,
+    "frac_negative": 0.7391304347826086,
+    "frac_le_-3": 0.6956521739130435
+   }
+  }
+ },
+ "criteria": {
+  "entry_on_d": {
+   "label": "entry on d",
+   "a": {
+    "n": 46,
+    "median_pct": -17.42049250094986,
+    "mean_pct": -9.114980319362962,
+    "pass": true
+   },
+   "halves": [
+    {
+     "window": "2020-01→2022-12",
+     "n": 29,
+     "median_pct": -6.573417089764301,
+     "mean_pct": 0.6329829074286207
+    },
+    {
+     "window": "2023-01→9999-12",
+     "n": 17,
+     "median_pct": -24.748081183774588,
+     "mean_pct": -25.743858765066253
+    }
+   ],
+   "c": {
+    "same_sign": true,
+    "sign": -1,
+    "half2_sign": -1
+   },
+   "d": {
+    "n_excluded": 20,
+    "n_kept": 26,
+    "median_all_pct": -17.42049250094986,
+    "median_kept_pct": -17.42049250094986,
+    "mean_kept_pct": -13.937628100342431,
+    "same_sign": true
+   }
+  },
+  "entry_on_d_plus_1": {
+   "label": "entry on d+1",
+   "a": {
+    "n": 46,
+    "median_pct": -17.67546374420047,
+    "mean_pct": -7.211289759461457,
+    "pass": true
+   },
+   "halves": [
+    {
+     "window": "2020-01→2022-12",
+     "n": 29,
+     "median_pct": -7.512783655299647,
+     "mean_pct": 0.7251616777371942
+    },
+    {
+     "window": "2023-01→9999-12",
+     "n": 17,
+     "median_pct": -20.773078023455152,
+     "mean_pct": -20.74994221115328
+    }
+   ],
+   "c": {
+    "same_sign": true,
+    "sign": -1,
+    "half2_sign": -1
+   },
+   "d": {
+    "n_excluded": 20,
+    "n_kept": 26,
+    "median_all_pct": -17.67546374420047,
+    "median_kept_pct": -19.107235883991493,
+    "mean_kept_pct": -11.090748273667359,
+    "same_sign": true
+   }
+  }
+ },
+ "null_control": {
+  "entry_on_d": {
+   "h30": {
+    "actual_median_pct": -17.42049250094986,
+    "n_null": 1000,
+    "null_p05_pct": -13.292937855007699,
+    "null_p50_pct": -7.028518351032217,
+    "null_mean_pct": -6.79677806327856,
+    "percentile_of_actual": 0.001,
+    "pass_le_p05": true,
+    "tokens_without_eligible_dates": 0,
+    "median_eligible_dates_per_token": 2410.0
+   },
+   "h60": {
+    "actual_median_pct": -23.562525138337648,
+    "n_null": 1000,
+    "null_p05_pct": -21.224468441313796,
+    "null_p50_pct": -10.914625160859366,
+    "null_mean_pct": -11.055237153382958,
+    "percentile_of_actual": 0.023,
+    "pass_le_p05": true,
+    "tokens_without_eligible_dates": 0,
+    "median_eligible_dates_per_token": 2380.0
+   }
+  },
+  "entry_on_d_plus_1": {
+   "h30": {
+    "actual_median_pct": -17.67546374420047,
+    "n_null": 1000,
+    "null_p05_pct": -13.292937855007699,
+    "null_p50_pct": -7.028518351032217,
+    "null_mean_pct": -6.79677806327856,
+    "percentile_of_actual": 0.001,
+    "pass_le_p05": true,
+    "tokens_without_eligible_dates": 0,
+    "median_eligible_dates_per_token": 2410.0
+   },
+   "h60": {
+    "actual_median_pct": -19.08923853549548,
+    "n_null": 1000,
+    "null_p05_pct": -21.224468441313796,
+    "null_p50_pct": -10.914625160859366,
+    "null_mean_pct": -11.055237153382958,
+    "percentile_of_actual": 0.091,
+    "pass_le_p05": false,
+    "tokens_without_eligible_dates": 0,
+    "median_eligible_dates_per_token": 2380.0
+   }
+  }
+ },
+ "mcap_tertiles": {
+  "entry_on_d": [
+   {
+    "bucket": "小",
+    "n": 14,
+    "median_pct": -23.723951375922542,
+    "mean_pct": -10.669515285074436,
+    "mcap_lo": null,
+    "mcap_hi": 174412131.50400823
+   },
+   {
+    "bucket": "中",
+    "n": 14,
+    "median_pct": -20.578035849071334,
+    "mean_pct": -13.787109265750994,
+    "mcap_lo": 174412131.50400823,
+    "mcap_hi": 906300609.2255547
+   },
+   {
+    "bucket": "大",
+    "n": 14,
+    "median_pct": 0.23867062600617384,
+    "mean_pct": 0.20377386874142756,
+    "mcap_lo": 906300609.2255547,
+    "mcap_hi": null
+   }
+  ],
+  "entry_on_d_plus_1": [
+   {
+    "bucket": "小",
+    "n": 14,
+    "median_pct": -21.630800616456952,
+    "mean_pct": -7.194213651390773,
+    "mcap_lo": null,
+    "mcap_hi": 174412131.50400823
+   },
+   {
+    "bucket": "中",
+    "n": 14,
+    "median_pct": -20.49488607226272,
+    "mean_pct": -11.645601316263164,
+    "mcap_lo": 174412131.50400823,
+    "mcap_hi": 906300609.2255547
+   },
+   {
+    "bucket": "大",
+    "n": 14,
+    "median_pct": 0.34549911001649225,
+    "mean_pct": 0.004222176277244146,
+    "mcap_lo": 906300609.2255547,
+    "mcap_hi": null
+   }
+  ]
+ },
+ "funding": {
+  "entry_on_d": {
+   "n": 45,
+   "spearman_funding7_vs_ex30": 0.4540184453227932,
+   "funding_mean": 7.711350714285727e-05,
+   "funding_median": 0.00010000000000000002
+  },
+  "entry_on_d_plus_1": {
+   "n": 45,
+   "spearman_funding7_vs_ex30": 0.29077733860342553,
+   "funding_mean": 7.711350714285727e-05,
+   "funding_median": 0.00010000000000000002
+  }
+ },
+ "events_detail": [
+  {
+   "sym": "XRP",
+   "d": "2020-01-06",
+   "ex30_pct": 0.47734125201234767,
+   "ex60_pct": -7.0348126288635475,
+   "pre30_ret_pct": -13.71861971081344,
+   "mcap_pre": 8399662198.68384
+  },
+  {
+   "sym": "LTC",
+   "d": "2020-01-08",
+   "ex30_pct": 29.633302238279533,
+   "ex60_pct": 12.023348169474508,
+   "pre30_ret_pct": 1.6242317822651398,
+   "mcap_pre": 2955399045.01693
+  },
+  {
+   "sym": "TRX",
+   "d": "2020-01-14",
+   "ex30_pct": 20.53083021415182,
+   "ex60_pct": -1.1760166386375115,
+   "pre30_ret_pct": 5.856832971800441,
+   "mcap_pre": 967852573.727974
+  },
+  {
+   "sym": "ETC",
+   "d": "2020-01-15",
+   "ex30_pct": 24.809766478879258,
+   "ex60_pct": 3.871817720865028,
+   "pre30_ret_pct": 78.40813537944082,
+   "mcap_pre": 795762553.031098
+  },
+  {
+   "sym": "LINK",
+   "d": "2020-01-16",
+   "ex30_pct": 42.352677689969866,
+   "ex60_pct": 21.552847317352853,
+   "pre30_ret_pct": 21.27487215837174,
+   "mcap_pre": 875522734.212635
+  },
+  {
+   "sym": "XLM",
+   "d": "2020-01-19",
+   "ex30_pct": 8.071446773606208,
+   "ex60_pct": -2.812348745240606,
+   "pre30_ret_pct": 36.06992697499447,
+   "mcap_pre": 1227571399.93527
+  },
+  {
+   "sym": "ADA",
+   "d": "2020-01-30",
+   "ex30_pct": -6.573417089764301,
+   "ex60_pct": -24.11245660421561,
+   "pre30_ret_pct": 59.360047846889955,
+   "mcap_pre": 1654796552.27001
+  },
+  {
+   "sym": "XMR",
+   "d": "2020-02-02",
+   "ex30_pct": -6.484073583995542,
+   "ex60_pct": -7.176502369311766,
+   "pre30_ret_pct": 60.92307692307693,
+   "mcap_pre": 1273622368.49131
+  },
+  {
+   "sym": "DASH",
+   "d": "2020-02-03",
+   "ex30_pct": -22.332991275546853,
+   "ex60_pct": -21.524379766804564,
+   "pre30_ret_pct": 160.22313296903462,
+   "mcap_pre": 1064481050.01607
+  },
+  {
+   "sym": "ZEC",
+   "d": "2020-02-04",
+   "ex30_pct": -20.042170234603827,
+   "ex60_pct": -37.31543338052745,
+   "pre30_ret_pct": 119.0571715145436,
+   "mcap_pre": 577891904.546397
+  },
+  {
+   "sym": "XTZ",
+   "d": "2020-02-05",
+   "ex30_pct": 44.376964567633415,
+   "ex60_pct": 9.721008105916296,
+   "pre30_ret_pct": 53.288162614587485,
+   "mcap_pre": 1344960670.66061
+  },
+  {
+   "sym": "ATOM",
+   "d": "2020-02-06",
+   "ex30_pct": -14.277087093872376,
+   "ex60_pct": -35.772169645696486,
+   "pre30_ret_pct": 5.327171004621745,
+   "mcap_pre": 829351265.4278
+  },
+  {
+   "sym": "BNB",
+   "d": "2020-02-07",
+   "ex30_pct": -6.641769627952346,
+   "ex60_pct": -9.383293045441299,
+   "pre30_ret_pct": 37.5760520815305,
+   "mcap_pre": 3162557390.44267
+  },
+  {
+   "sym": "ONT",
+   "d": "2020-02-10",
+   "ex30_pct": -28.96362050037181,
+   "ex60_pct": -50.86341540923881,
+   "pre30_ret_pct": 62.18887908208295,
+   "mcap_pre": 579740862.180219
+  },
+  {
+   "sym": "BAT",
+   "d": "2020-02-12",
+   "ex30_pct": -21.11390146353884,
+   "ex60_pct": -23.617631211896867,
+   "pre30_ret_pct": 53.89064143007361,
+   "mcap_pre": 416781387.558752
+  },
+  {
+   "sym": "VET",
+   "d": "2020-02-13",
+   "ex30_pct": -47.064441259546186,
+   "ex60_pct": -40.05554045541946,
+   "pre30_ret_pct": 38.15424449787312,
+   "mcap_pre": 470833687.9976
+  },
+  {
+   "sym": "NEO",
+   "d": "2020-02-16",
+   "ex30_pct": -33.11448880857686,
+   "ex60_pct": -31.857139998068373,
+   "pre30_ret_pct": 34.211693727264645,
+   "mcap_pre": 1056575907.16862
+  },
+  {
+   "sym": "QTUM",
+   "d": "2020-02-19",
+   "ex30_pct": -24.93686838946911,
+   "ex60_pct": -26.50995177819484,
+   "pre30_ret_pct": 36.664940445365076,
+   "mcap_pre": 254291745.303455
+  },
+  {
+   "sym": "IOST",
+   "d": "2020-02-20",
+   "ex30_pct": -15.039597998443288,
+   "ex60_pct": -36.64467340768322,
+   "pre30_ret_pct": 15.700167816520594,
+   "mcap_pre": 74926842.2889563
+  },
+  {
+   "sym": "THETA",
+   "d": "2020-05-26",
+   "ex30_pct": -57.82035147596498,
+   "ex60_pct": -53.577057089292225,
+   "pre30_ret_pct": 230.74618481415595,
+   "mcap_pre": 351649272.354219
+  },
+  {
+   "sym": "ALGO",
+   "d": "2020-06-15",
+   "ex30_pct": 26.42114544096857,
+   "ex60_pct": 81.46913505439923,
+   "pre30_ret_pct": 21.30208333333332,
+   "mcap_pre": 186372184.40974
+  },
+  {
+   "sym": "ZIL",
+   "d": "2020-06-17",
+   "ex30_pct": -21.915174542760525,
+   "ex60_pct": -10.797102112490409,
+   "pre30_ret_pct": 137.71266540642716,
+   "mcap_pre": 265988906.9452
+  },
+  {
+   "sym": "ZRX",
+   "d": "2020-06-23",
+   "ex30_pct": 7.253655746719612,
+   "ex60_pct": 49.76504814276284,
+   "pre30_ret_pct": 8.61434702636419,
+   "mcap_pre": 247983061.790955
+  },
+  {
+   "sym": "OMG",
+   "d": "2020-07-01",
+   "ex30_pct": -12.813570973713878,
+   "ex60_pct": 108.29657490285838,
+   "pre30_ret_pct": -2.6788674491081466,
+   "mcap_pre": 206054175.570944
+  },
+  {
+   "sym": "DOGE",
+   "d": "2020-07-09",
+   "ex30_pct": -44.909589143209686,
+   "ex60_pct": -54.51041904425898,
+   "pre30_ret_pct": 84.81734274412473,
+   "mcap_pre": 594339744.703795
+  },
+  {
+   "sym": "KAVA",
+   "d": "2020-07-27",
+   "ex30_pct": 62.52495866966038,
+   "ex60_pct": 4.707333893255524,
+   "pre30_ret_pct": 113.37299771167051,
+   "mcap_pre": 63143515.222908
+  },
+  {
+   "sym": "BAND",
+   "d": "2020-07-28",
+   "ex30_pct": 110.07881000056034,
+   "ex60_pct": 59.81643416966037,
+   "pre30_ret_pct": 215.04450186620733,
+   "mcap_pre": 67351972.8496196
+  },
+  {
+   "sym": "RLC",
+   "d": "2020-07-30",
+   "ex30_pct": 25.86871870431905,
+   "ex60_pct": -23.50741906477843,
+   "pre30_ret_pct": 76.68602775088738,
+   "mcap_pre": 77048246.4931644
+  },
+  {
+   "sym": "BTC",
+   "d": "2021-01-11",
+   "ex30_pct": 0.0,
+   "ex60_pct": 0.0,
+   "pre30_ret_pct": 111.51553793696114,
+   "mcap_pre": 714078952009.024
+  },
+  {
+   "sym": "KDA",
+   "d": "2024-09-18",
+   "ex30_pct": -22.699821568070494,
+   "ex60_pct": -43.16404195433431,
+   "pre30_ret_pct": 13.015184381778733,
+   "mcap_pre": 150493496.71874
+  },
+  {
+   "sym": "FIO",
+   "d": "2024-09-20",
+   "ex30_pct": -41.20620157798204,
+   "ex60_pct": -69.6449501148732,
+   "pre30_ret_pct": 29.304713019132045,
+   "mcap_pre": 19958669.8920298
+  },
+  {
+   "sym": "GHST",
+   "d": "2024-09-23",
+   "ex30_pct": -22.66904856450211,
+   "ex60_pct": -58.60420775707408,
+   "pre30_ret_pct": -11.82692307692308,
+   "mcap_pre": 46791179.6858071
+  },
+  {
+   "sym": "LOKA",
+   "d": "2024-09-24",
+   "ex30_pct": -38.50367179317775,
+   "ex60_pct": -61.09658398497997,
+   "pre30_ret_pct": 23.2620320855615,
+   "mcap_pre": 26428185.1196368
+  },
+  {
+   "sym": "REI",
+   "d": "2024-09-27",
+   "ex30_pct": -19.80138700345643,
+   "ex60_pct": -40.02912649500392,
+   "pre30_ret_pct": 4.319916724496897,
+   "mcap_pre": null
+  },
+  {
+   "sym": "COS",
+   "d": "2024-09-30",
+   "ex30_pct": -22.82922428646192,
+   "ex60_pct": 7.49968043074195,
+   "pre30_ret_pct": 6.120488541237834,
+   "mcap_pre": null
+  },
+  {
+   "sym": "TROY",
+   "d": "2024-10-31",
+   "ex30_pct": -0.8337295509965148,
+   "ex60_pct": 14.615681541716347,
+   "pre30_ret_pct": 127.42040285899935,
+   "mcap_pre": null
+  },
+  {
+   "sym": "DEGO",
+   "d": "2024-12-13",
+   "ex30_pct": -29.961320830341286,
+   "ex60_pct": -72.13467428857405,
+   "pre30_ret_pct": 59.55806783144912,
+   "mcap_pre": 64984943.2696099
+  },
+  {
+   "sym": "DF",
+   "d": "2024-12-30",
+   "ex30_pct": -24.748081183774588,
+   "ex60_pct": -11.265512066522803,
+   "pre30_ret_pct": 121.93828351012534,
+   "mcap_pre": 92653925.6880191
+  },
+  {
+   "sym": "VIC",
+   "d": "2025-03-12",
+   "ex30_pct": -63.97758609710872,
+   "ex60_pct": -59.43599132301047,
+   "pre30_ret_pct": -10.206221600838871,
+   "mcap_pre": 30910227.3680891
+  },
+  {
+   "sym": "FUN",
+   "d": "2025-03-31",
+   "ex30_pct": -0.8365672225878986,
+   "ex60_pct": -66.90351022381321,
+   "pre30_ret_pct": 122.97601199400302,
+   "mcap_pre": 62926825.5754468
+  },
+  {
+   "sym": "MLN",
+   "d": "2025-03-31",
+   "ex30_pct": -49.409794277546425,
+   "ex60_pct": -62.11097348024802,
+   "pre30_ret_pct": -8.249158249158251,
+   "mcap_pre": 32779607.9097174
+  },
+  {
+   "sym": "FORTH",
+   "d": "2025-04-08",
+   "ex30_pct": -38.79401025204725,
+   "ex60_pct": -51.67164323230119,
+   "pre30_ret_pct": -22.130013831258655,
+   "mcap_pre": 25668016.0386204
+  },
+  {
+   "sym": "FIS",
+   "d": "2025-04-25",
+   "ex30_pct": -36.28484430060537,
+   "ex60_pct": -92.47130306335363,
+   "pre30_ret_pct": -0.05621135469364713,
+   "mcap_pre": null
+  },
+  {
+   "sym": "AAVE",
+   "d": "2025-06-16",
+   "ex30_pct": 5.60584812751889,
+   "ex60_pct": -0.7606530355608501,
+   "pre30_ret_pct": 19.044938955753764,
+   "mcap_pre": 4158590125.40382
+  },
+  {
+   "sym": "UNI",
+   "d": "2025-06-16",
+   "ex30_pct": 7.338835780402558,
+   "ex60_pct": 27.043909106702195,
+   "pre30_ret_pct": 18.169848584595137,
+   "mcap_pre": 4309420437.32967
+  },
+  {
+   "sym": "ZEC",
+   "d": "2025-11-19",
+   "ex30_pct": -38.034994405388886,
+   "ex60_pct": -60.59026030632767,
+   "pre30_ret_pct": 165.19913474996818,
+   "mcap_pre": 10220964896.2335
+  }
+ ]
+}

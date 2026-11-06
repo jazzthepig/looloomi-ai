@@ -1,0 +1,28 @@
+{
+  "id": "T-262",
+  "owner": "lane-b",
+  "status": "in_review",
+  "created": "2026-11-06",
+  "title": "S-740 永续上线 = 做空供给冲击:现货先有的代币,Binance 上线 USDT 永续之后 30 / 60 天相对 BTC 是否跑输 —— 随机日期对照,判据照台账写死",
+  "source": "REFUTATION_LEDGER S-740(先读,样本 / 上线日 / 判据一字不改)。数据:events(kind = 'perp_listing',ts / symbols / payload)、ohlcv_daily source = 'binance_hist'(现货收盘,注意 S-698:它是现货)、perp_bv_daily(上线后资金费请用 v_funding_daily)。零分布只用 apparatus.random_dates_like + null_distribution + percentile_of。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-262.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 样本体检:perp_listing 总数、满足「上线前 ≥ 60 天已有现货」的条数、每年条数、上线日来源(公告 / ts)。② (a)–(d) 逐条报数并判;随机日期 = 同代币、同年份、不在上线日前后 30 天内。③ 副:60 天、市值三分位、上线后 7 天资金费与超额的 Spearman。④ 信号日当天的派生量判完再挪一天判一次(S-665)。⑤ 只算、不改代码、不入库。交付附 docs/research/scenarios/lane-b-T-262.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-262_perp_listing_short_supply.md + t262_perp_listing.py + t262_results.json;卡 notes 写 (a)–(d) 原始数字;in_review,推 lane-b/T-262。"
+  },
+  "prior_value": "永续上线的影响从没测过(T-227 / T-233 测的是现货上币)。",
+  "notes": "①样本体检:perp_listing 总数 818(source 全 binance,ts 2019-11-29→2026-10-29);标题过滤(真「上线一个 USDT 永续」)后 467 条公告,丢掉 351(Convert→标准永续 109 / 不是上线措辞 68 / TradFi-股票-指数永续 51 / 币本位 50 / 标题无 perpetual contract 29 / BUSD 计价 14 / Copy Trading 加合约 14 / Pre-IPO 6 / 每周汇总 5 / 保证金档位 3 / 现货上 Innovation Zone 1 / Relaunch 1);展开 297 个(代币,上线日)事件 —— events.symbols 在 818 条里 453 条是空的,代币代码由脚本从标题解析(255 条来自 symbols 字段、42 条来自标题);漏斗:窗口前 2 / 无现货数据 221 / 现货不足 60 天 28 / **留下 46**;每年条数 2020=28, 2021=1, 2022=0, 2023=0, 2024=9, 2025=8;上线日来源:payload 只有 {scope,catalog,article_id} 无上线日字段 ⇒ 818/818 用事件 ts 的 UTC 日(标题括号日期与 ts 是否逐条一致见 results.json listing_day_source.title_paren_date_equals_ts);交叉核对 perp_bv_daily 首根K线 − d 中位 +1 天(同日 15 / 晚 27 / 早 4)。②判据(主口径:入场=d 收盘,基准=同源 BTC 现货收盘,对数超额;n=46):(a) 30 天中位 **−17.42%** ≤ −3% 且均值 **−9.11%** < 0 ⇒ ✅;(b) 零信号对照(同代币同年份、避开上线日前后 30 天,apparatus.random_dates_like 1,000 次种子 740):实际中位 −17.42% vs 对照 p05 **−13.29%**(对照中位 −7.03%、均值 −6.80%),实际值分位 **0.001** ⇒ ✅;60 天:实际 −23.56% vs p05 −21.22%、分位 0.023 ⇒ ✅;(c) 两段:2020-01→2022-12 n=29 中位 **−6.57%**(均值 **+0.63%**)、2023-01→ n=17 中位 **−24.75%**(均值 −25.74%)⇒ 同号 ✅(量级差 3.8 倍,第一段均值是正的);(d) 去掉上线前 30 天涨超 50% 的 20 个(46→26):中位 **−19.11%**、均值 −13.94% ⇒ 同号 ✅。**四判据全过,但这是「上线后比同代币同年随机日更差」,不是机制证据**:n=46 且一半是 2020 首波,2022–2023 是空档,且「跑输=空头供给」与「跑输=追高后均值回归」没分开 —— 「上线前涨幅 实际 vs 随机日期」这个诊断本轮未跑(上下文到顶),脚本里已留位置,是交付后第一件事。③副:60 天中位 −23.56%;上线前市值三分位(小 ≤1.74 亿 n=14 中位 −23.72% / 中 n=14 −20.58% / 大 ≥9.06 亿 n=14 **+0.24%** ⇒ 效应集中在中小市值);上线后前 7 天资金费均值 vs 30 天超额 Spearman **+0.454**(n=45,挪一天 +0.291)⇒ 方向与「空头拥挤所以跌」相反。④S-665 挪一天:入场 d+1 ⇒ 30 天中位 −17.68%(对照分位 0.001)、60 天 −19.09%,结论不变。⑤只算,不改代码,不入库。产物:docs/research/T-262_perp_listing_short_supply.md + docs/research/t262_perp_listing.py + docs/research/t262_results.json + docs/research/scenarios/lane-b-T-262.json(5 条)。零分布/分位全用 src/data/evaluation/apparatus.py;price_on_or_after 是 O(n) 扫描进不了 1,000 次抽样循环,脚本写了等价 bisect 版 poa_fast 并与 apparatus 原函数对拍 1,840 对 / 0 条不一致(判据与事件主表仍用原函数)。缓存 /Volumes/CometCloudAI/cometcloud-local/research/t262_cache/。",
+  "verified": null
+}
