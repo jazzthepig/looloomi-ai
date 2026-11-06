@@ -26,13 +26,13 @@ import numpy as np
 TABLE = "carry_hl_daily"
 WRITES_TABLES = (TABLE,)
 WRITES_COLUMNS = {TABLE: ("d", "arm", "ret", "nav", "n_names", "n_on", "switches", "inception", "code_ref")}
-CODE_REF = "carry_hl v1.1 (11-05, S-733;+ carry_b_spot)"
+CODE_REF = "carry_hl v1.2 (11-06, S-733;+ carry_b_spot;+ carry_b_top S-735)"
 LOOP_NAME = "_carry_hl_loop"
-ARMS = ("carry_a", "carry_b", "carry_b_spot")
+ARMS = ("carry_a", "carry_b", "carry_b_spot", "carry_b_top")
 #: ① 24 名里 HL 现货有对应代币的(lane-a T-250,HL info spotMeta,11-05):UBTC / UETH / USOL / BNB0 / XRP1 / UDOGE / UAVAX / LINK0 / TRX0 / AAVE0
 HL_SPOT_NAMES = ("BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "AVAX", "LINK", "TRX", "AAVE")
 INCEPTION = dt.date(2026, 11, 5)
-WARMUP_DAYS = 21
+WARMUP_DAYS = 45                  # carry_b_top 要过去 30 天的排名
 COST = 0.0004 + 0.00035
 MIN_HOURS = 20
 MIN_COVERAGE = 0.8
@@ -62,6 +62,33 @@ def rule_b(F: np.ndarray, i: int) -> np.ndarray:
     return (cnt >= 5) & (np.nan_to_num(mu) > 0)
 
 
+TOP_LOOKBACK = 30
+
+
+def top_half(F: np.ndarray, i: int) -> np.ndarray:
+    """纯函数。第 i 天(周一)按过去 30 天(i−30 … i−1)日费率均值排名,取前一半(并列按列序 = 代码字母序);没数的名字不入选。
+    S-735 / T-253 ✅(Seth 11-06 裁定分母 = 选中的名字,读法 (i))。"""
+    w = F[max(0, i - TOP_LOOKBACK):i]
+    with np.errstate(all="ignore"):
+        mu = np.nanmean(w, 0) if len(w) else np.full(F.shape[1], np.nan)
+    ok = ~np.isnan(mu)
+    sel = np.zeros(F.shape[1], bool)
+    n = int(ok.sum()) // 2
+    if n:
+        order = sorted((j for j in range(F.shape[1]) if ok[j]), key=lambda j: (-mu[j], j))
+        sel[order[:n]] = True
+    return sel
+
+
+def _decide(F: np.ndarray, i: int, arm: str) -> tuple[np.ndarray, np.ndarray]:
+    """(持有, 计入分母的名字)。carry_b_top:持有 = 规则 B ∧ 选中,分母 = 选中;其余臂分母 = 全部。"""
+    on = rule_b(F, i)
+    if arm == "carry_b_top":
+        sel = top_half(F, i)
+        return on & sel, sel
+    return on, np.ones(F.shape[1], bool)
+
+
 def path(days: list[dt.date], F: np.ndarray, arm: str, inception: dt.date = INCEPTION) -> list[dict]:
     """纯函数。从起点起逐日记账:起点那天收盘建仓(成本记在第一天前向收益上),NAV 在起点 = 1。carry_b_spot 由调用方传子集列。"""
     avail = ~np.isnan(F)
@@ -71,7 +98,10 @@ def path(days: list[dt.date], F: np.ndarray, arm: str, inception: dt.date = INCE
         on = np.ones(F.shape[1], bool)
     else:
         last_mon = max(i for i in range(k0 + 1) if days[i].weekday() == 0)
-        on = rule_b(F, last_mon)
+        on, members = _decide(F, last_mon, arm)
+    if arm == "carry_a":
+        members = np.ones(F.shape[1], bool)
+    pend_members = members
     held = np.zeros(F.shape[1], bool)               # 起点前空仓
     nav, out, switches = 1.0, [{"d": inception.isoformat(), "arm": arm, "ret": 0.0, "nav": 1.0, "n_names": int(avail[k0].sum()),
                                 "n_on": int((on & avail[k0]).sum()), "switches": 0}], 0
@@ -85,14 +115,17 @@ def path(days: list[dt.date], F: np.ndarray, arm: str, inception: dt.date = INCE
             cost[ch] = COST
             switches += int(ch.sum())
             held = pending
+            members = pend_members
             pending = None
-        n = int(avail[i].sum())
-        r = float(np.mean(np.where(held, Fz[i], 0.0)[avail[i]] - cost[avail[i]])) if n else 0.0
+        m = avail[i] & members
+        n = int(m.sum())
+        # 收益 = 分母内名字的费率之和 − 当天全部开 / 关成本(含刚被挤出选中名单的那几个)÷ 分母名数
+        r = float((np.where(held, Fz[i], 0.0)[m].sum() - cost.sum()) / n) if n else 0.0
         nav *= 1.0 + r
         out.append({"d": days[i].isoformat(), "arm": arm, "ret": round(r, 8), "nav": round(nav, 8), "n_names": n,
                     "n_on": int((held & avail[i]).sum()), "switches": switches})
         if arm != "carry_a" and days[i].weekday() == 6:   # 周日收盘决定 ⇒ 周一生效(= 周一看过去 7 天)
-            pending = rule_b(F, i + 1)
+            pending, pend_members = _decide(F, i + 1, arm)
     return out
 
 
@@ -114,7 +147,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         return {"ok": False, "refused": True, "status": "refused",
                 "why": f"{through} 只有 {have_last}/{len(names)} 名有完整的已实现费率(hl_funding_hourly 还在回填或断了)"}
     spot = [j for j, n in enumerate(names) if n in HL_SPOT_NAMES]
-    cols = {"carry_a": slice(None), "carry_b": slice(None), "carry_b_spot": spot}
+    cols = {"carry_a": slice(None), "carry_b": slice(None), "carry_b_spot": spot, "carry_b_top": slice(None)}
     out = [r | {"inception": INCEPTION.isoformat(), "code_ref": CODE_REF} for arm in ARMS for r in path(days, F[:, cols[arm]], arm)]
     w = await supabase_upsert_table(TABLE, out, on_conflict="d,arm")
     if not w:

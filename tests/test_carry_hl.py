@@ -134,3 +134,17 @@ def test_daily_cadence_and_registered_exception():
         sp.assert_free_bulk_exception("hl_funding_hourly", "hyperliquid", n_assets=25)
     with pytest.raises(sp.SourcePolicyError):
         sp.assert_free_bulk_exception("panel_bars", "hyperliquid", n_assets=24)
+
+
+def test_top_half_arm_selects_by_trailing_30d_and_uses_selected_denominator():
+    d0 = ch.INCEPTION - dt.timedelta(days=ch.WARMUP_DAYS)
+    names = ("AAA", "BBB", "CCC", "DDD")
+    rate = {"AAA": 0.0004, "BBB": 0.0003, "CCC": 0.0001, "DDD": 0.00005}
+    rows = _rows(names, d0, ch.WARMUP_DAYS + 4, lambda c, i: rate[c])
+    days, F = ch.matrix(rows, names, d0, ch.INCEPTION + dt.timedelta(days=3))
+    k = days.index(ch.INCEPTION)
+    last_mon = max(i for i in range(k + 1) if days[i].weekday() == 0)
+    assert ch.top_half(F, last_mon).tolist() == [True, True, False, False]
+    p = ch.path(days, F, "carry_b_top")
+    assert p[1]["n_on"] == 2 and abs(p[1]["ret"] - ((0.0004 + 0.0003) / 2 - ch.COST)) < 1e-12, "分母 = 选中的 2 名(读法 (i))"
+    assert abs(p[2]["ret"] - 0.00035) < 1e-12
