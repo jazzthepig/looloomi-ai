@@ -1,0 +1,28 @@
+{
+  "id": "T-267",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-06",
+  "title": "S-744 永续上线之后的跑输:做空供给 vs 上线前追高的均值回归 —— 按「之前 30 天收益」匹配的对照日 + 换 CoinGecko 价格源扩宇宙;判据照台账写死",
+  "source": "REFUTATION_LEDGER S-744(先读;机制检验 (a)–(d) 一字不改)与你自己的 T-262 报告 / t262_perp_listing.py(标题过滤口径照用)。价格 cg_coin_mcap_daily(coin_id, d, price),代币映射 cg_coin_map(symbol → coin_id);events.symbols 11-06 修过解析(仍为空的照 T-262 从标题解析)。零分布 / 翻转检验只用 src/data/evaluation/apparatus.py。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-267.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 样本漏斗(公告 → 过滤 → 事件 → 有 CG 价且上线前 ≥ 60 天 → 匹配对照日 ≥ 20 的);映射不到的代币列名单。② 机制检验 (a)–(d) 原始数字(匹配后差的中位数、翻转检验 p、两段、进入事件数)。③ 副项:S-740 原判据在新价格源上的数字、市值三分位、资金费关系 —— 只报不判。④ 只算、不改代码、不入库;长脚本 nohup。附 docs/research/scenarios/lane-b-T-267.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-267_perp_listing_mechanism.md + t267_mechanism.py + t267_results.json;卡 notes 写 (a)–(d);in_review,推 lane-b/T-267。"
+  },
+  "prior_value": "S-740 判据全过但 n = 46 且机制没分开;扩宇宙与机制诊断是评审轮点名的下一件事。",
+  "notes": "",
+  "verified": null
+}
