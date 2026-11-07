@@ -1,0 +1,28 @@
+{
+  "id": "T-279",
+  "owner": "lane-b",
+  "status": "in_review",
+  "created": "2026-11-07",
+  "title": "S-758 S-740 复现:用补全后的代号映射(818 条全解析)重跑「永续上线 = 做空供给冲击」,判据一字不改",
+  "source": "REFUTATION_LEDGER S-740(判据原文)与 S-758、S-756 结果段。映射:你 T-277 补全后的解析(t277_rv2_perp_listing.py 那套,原样搬);样本 / 价格 / 窗口 / 对照 / 种子 740 照 S-740(T-262 脚本口径)。统计只用 src/data/evaluation/apparatus.py。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-279.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 818 条逐条重新解析、落文件(新旧映射对照,标出旧解析器漏掉的),先于取价格。② S-740 (a)–(d) 原始数字;旧 46 个子集与新增部分分开的中位数。③ 只算、不改代码、不入库。附 docs/research/scenarios/lane-b-T-279.json(≥ 3 条)。④ 报告 .md 必须落盘(T-277 被上下文守卫拦了,这次先写报告骨架再跑)。",
+    "expect": "报告 docs/research/T-279_perp_listing_replication.md + t279_replication.py + t279_results.json;in_review,推 lane-b/T-279。"
+  },
+  "prior_value": "S-740 ✅ 建在 30% 的事件上(解析器漏 571 / 818);S-751 之后上线 / 下架这一族要么站得住、要么撤。",
+  "notes": "2026-11-07 lane-b。脚本 docs/research/t279_replication.py = S-740 的 t262_perp_listing.py 逐字复制,只换「事件→代币映射」+ 加对照/报告;判据 (a)–(d)、零分布、种子 740、价格与窗口一字未动。\n\n【已测】公告 818 条(source=binance);S-740 原标题规则保留 467 条;旧映射(今天的 events.symbols + 旧标题解析)映射 676/818,新映射(现字段 + T-277 的 v2 解析)710/818;样本:新映射 n=142,旧映射 n=138(漏斗 no_spot_data 327 / spot_lt_60d 92 / window_2020 2);poa_fast 与 apparatus.price_on_or_after 对拍 2,400 对 0 不一致;子集切分(按「今天的旧映射」切)旧 n=138 中位 −21.88%(均值 −16.76%,76.1% 为负,60 天中位 −32.06%)/ 只有 v2 才解析出来 n=4 中位 −22.83%(均值 −20.43%,4/4 为负,60 天 −36.08%)。\n\n【关键发现,比数字要紧】events.symbols 这一列在 T-262 跑完之后被回填过:2026-11-06 快照里 818 条只有 365 条有 symbols,今天有 671 条(307 条公告的 symbols 变了,标题一字未改)。⇒ (a) 今天按 S-740 的旧口径重跑得 138 而不是 46 —— S-740 的 ✅ 建立在 2026-11-06 的库状态上,不是一个今天可复现的量;(b) S-758 字面要求的「旧 46 个子集」必须按 11-06 快照切,不能按今天的 events.symbols 切 —— 我这一版切的是后者。\n\n【未完成,下一轮收,不要重跑脚本】① t279_results.json(判据 (a)–(d) + 零分布 + 报告正文)由脚本末尾写;进程 2026-11-07 19:07 起在后台跑,日志 /Volumes/CometCloudAI/cometcloud-local/research/t279/run.log,价格缓存 t279_cache/(含 11-06 的 bhs_px 快照)。若本提交里没有 t279_results.json,就是脚本还在跑 —— 下一轮看 run.log 尾部与产物时间戳即可,不要重跑。②「旧 46 子集」的严格口径:拿 11-06 快照(research/t262_perp_events.json)join 结果表 events_detail 切分,一个 join 就行,本轮被上下文守卫拦住没做。③ T-277 的报告 .md 同因被拦,本轮未补。\n\n【产物】docs/research/t279_replication.py · docs/research/t279_event_symbol_map.json(818 条逐条新旧映射对照,取价格之前落盘)· docs/research/T-279_perp_listing_replication.md(骨架先落盘,脚本末尾填数)· docs/research/scenarios/lane-b-T-279.json(5 条前向命题)。",
+  "verified": null
+}
