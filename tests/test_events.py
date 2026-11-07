@@ -164,3 +164,59 @@ def test_monitoring_tag_notices_only_from_catalog_49():
     rows = ev.parse_binance(payload, 49)
     assert len(rows) == 1 and rows[0]["kind"] == "monitoring_tag" and rows[0]["symbols"] == ["AMP", "BIFI", "BOND"]
     assert 49 in ev.BINANCE_CATALOGS
+
+
+def test_notice_backfill_does_not_stop_on_a_page_without_tags(monkeypatch):
+    """11-07 第一轮:catalog 49 第 2 页没有监控标签 ⇒ 解析出 0 行 ⇒ 被当成翻到底、标 done,回填永远停了。判断翻到底要看文章数。"""
+    import src.api.store as store
+    import src.data.style.header as hdr
+    import src.data.venues.hl_spot as hl
+    redis = {}
+
+    async def read_all(t, params):
+        return []
+
+    async def ups(t, rows, on_conflict):
+        return True
+
+    async def rget(key):
+        return redis.get(key), "hit" if key in redis else "miss"
+
+    async def rset(key, data, ttl=7200):
+        redis[key] = data
+        return True
+
+    class R:
+        def __init__(self, body):
+            self.status_code, self._b = 200, body
+
+        def json(self):
+            return self._b
+
+    class C:
+        def __init__(self, *a, **k):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *a):
+            return False
+
+        async def get(self, url, params=None):
+            if params["catalogId"] != 49:
+                return R({"data": {"catalogs": [{"total": 0, "articles": []}]}})
+            p = params["pageNo"]
+            title = "Binance Will Add Monitoring Tag on FOO (2024-01-01)" if p == 4 else f"Binance News {p}"
+            return R({"data": {"catalogs": [{"total": 2000, "articles": [{"id": p, "code": f"n{p}", "title": title, "releaseDate": 1704067200000}]}]}})
+    import httpx
+    monkeypatch.setattr(httpx, "AsyncClient", C)
+    monkeypatch.setattr(hdr, "_read_all", read_all)
+    monkeypatch.setattr(store, "supabase_upsert_table", ups)
+    monkeypatch.setattr(store, "redis_get_key_status", rget)
+    monkeypatch.setattr(store, "redis_set_key", rset)
+    monkeypatch.setattr(hl.HlSpotClient, "spot_meta", lambda self: {"tokens": []})
+    r = asyncio.run(ev.run_once(NOW))
+    assert r["kinds"].get("monitoring_tag") == 1, "第 4 页的标签被翻到"
+    assert r["backfill"]["49"]["done"] is False and r["backfill"]["49"]["next_page"] == 2 + ev.BACKFILL_PAGES
+    assert any(k.endswith(":v2") for k in redis), "catalog 49 换了新键(旧键在第一轮被误标 done)"

@@ -142,6 +142,11 @@ def monitoring_tag(title: str) -> tuple[Optional[str], list[str]]:
     return kind, syms
 
 
+def n_articles(payload: dict) -> int:
+    """纯函数。CMS 返回里的文章数(判断翻到底用它,不用解析后的行数)。"""
+    return sum(len(c.get("articles") or []) for c in ((payload or {}).get("data") or {}).get("catalogs") or [])
+
+
 def parse_binance(payload: dict, catalog_id: int) -> list[dict]:
     """纯函数。CMS 返回 → 事件行。catalog 49 只留监控标签公告。"""
     kind = BINANCE_CATALOGS.get(catalog_id, "notice")
@@ -220,7 +225,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
                 j = r.json()
                 rows += parse_binance(j, cat)
                 total = int((((j.get("data") or {}).get("catalogs") or [{}])[0].get("total")) or 0)
-                key = BF_KEY.format(cat=cat)
+                key = BF_KEY.format(cat=cat) + (":v2" if BINANCE_CATALOGS[cat] == "notice" else "")   # 11-07 第一轮误标 done
                 st, _s = await redis_get_key_status(key)
                 page = int((st or {}).get("next_page") or 2)
                 done = bool((st or {}).get("done"))
@@ -230,12 +235,13 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
                     if rr.status_code != 200:
                         errors.append(f"binance {cat} p{page}: HTTP {rr.status_code}")
                         break
-                    got = parse_binance(rr.json(), cat)
+                    jj = rr.json()
+                    got = parse_binance(jj, cat)
                     rows += got
                     fetched += 1
                     page += 1
-                    if not got:
-                        done = True
+                    if not n_articles(jj):                  # 11-07:看文章数,不看解析出的行数 —— catalog 49 只留监控标签,
+                        done = True                          # 一页没有标签不等于翻到底(第一轮就因此在第 2 页停了)
                     await asyncio.sleep(0.5)
                 if (page - 1) * PAGE >= total:
                     done = True
