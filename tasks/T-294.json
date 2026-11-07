@@ -23,6 +23,6 @@
     "expect": "报告 docs/research/T-294_flow_diffusion.md + t294_diffusion.py + t294_results.json + docs/research/scenarios/lane-a-T-294.json(≥ 3 条);卡 notes 写 C1–C3 与 R1 的 IC(e)、IC(s)、差、NW t、两半、打乱分位与判定;in_review,推 lane-a/T-294。"
   },
   "prior_value": "HIGH_DIM_ONTOLOGY §1 / §3 的核心命题(beta+ 是时间向量,edge = lag)第一次有真实的按币流量数据可测;S-81 07-23 起一直卡在「等数据」。",
-  "notes": "",
+  "notes": "本轮只交付一半:数据拉齐 + 脚本就绪 + 报告与情景文件;判定格未产出(上下文闸在跑脚本前拦下,93k/110k)。status 保持 open,下一轮第一件事跑完再改 in_review。\n已落地:docs/research/t294_pull.py(拉数)、docs/research/t294_diffusion.py(分析,性能坑已修)、docs/research/T-294_flow_diffusion.md(预注册原文照抄 + 口径 + 缺口)、docs/research/scenarios/lane-a-T-294.json(6 条)。数据落 .t294_cache/(未入 git)。\n已测(可核):asset_flow_daily 周一切片 33,585 行 / 258 币 / 2022-06-06→2026-11-02 / 224 个有数据的周一,无重复 (symbol,d);缺值 q_doi7 360、q_turn 848、q_mom7 84、vec 1,459、x7 97、x30 402。perp_bv_daily(USDT)313,906 行 / 258 币 / 2022-10-01→2026-11-06 / 1,497 天,无重复键。研究周 = 200(2023-01-02 → 2026-10-26;x7 已到期的最后一个周一);场规模每周 92–195 币。\n缺口(下一轮,约 3 分钟):python3 docs/research/t294_diffusion.py → docs/research/t294_results.json;再把 C1–C3 与 R1 的 IC(e)、IC(s)、IC(p)、差 IC(e)−IC(s)、NW t(滞后1)、两半、周内打乱分位(种子775)、判定填进本 notes,status 改 in_review。\n性能坑已修(给下一轮):apparatus.shuffle_within 在 3 万元素的平坦数组上按 200 组逐组比较,单次约 0.5s,1000 次 × 8 组 = 数十分钟;改成逐周调用(等价,RNG 消耗次数相同 ⇒ 种子 775 的零分布逐位相同);sp() 换 rankdata+corrcoef(同义,快 10 倍)。\n@ seth: apparatus.py 里没有 NW t 函数,本轮用仓库既有 src/research/narrative/activation_z_pit.nw_tstat(Bartlett 权重),没另写一份;建议收编进 apparatus.py。",
   "verified": null
 }
