@@ -1,0 +1,20 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {"id": "T-293-1", "scenario": "T-293 S-774 资金面 11 维几何",
+     "statement": "BTC 收盘价(close:BTC)在 2026-12-15 仍高于 75000(2026-11-06 为 75776,广度仅 4%)",
+     "variable": "close:BTC", "op": "gt", "lo": 75000, "prob": 0.45, "horizon_d": "2026-12-15"},
+    {"id": "T-293-2", "scenario": "T-293 S-774 资金面 11 维几何",
+     "statement": "Binance 全市场 7 日年化资金费(state:funding_7d_ann_binance)在 2026-12-15 仍 > 0(2026-11-06 为 +7.54%)",
+     "variable": "state:funding_7d_ann_binance", "op": "gt", "lo": 0, "prob": 0.6, "horizon_d": "2026-12-15"},
+    {"id": "T-293-3", "scenario": "T-293 S-774 资金面 11 维几何",
+     "statement": "样本外再验:2026-11-09 → 2026-12-07 的 5 个周一里,R 臂(11 维 Ridge)预测的最高五分位组 x30 中位 ≥ 0(本轮样本内周均 Q5−Q1 = +4.27%)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.55, "horizon_d": "2026-12-15"},
+    {"id": "T-293-4", "scenario": "T-293 S-774 资金面 11 维几何",
+     "statement": "到 2026-12-15,S-774 仍留在 REFUTATION_LEDGER 里、判定不被撤销(哪怕 ✅ 也只开前向记录、不动钱)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.85, "horizon_d": "2026-12-15"},
+    {"id": "T-293-5", "scenario": "T-293 S-774 资金面 11 维几何",
+     "statement": "到 2026-12-15,没有因本轮 ✅ 而把 S-774 的 11 维 / k=100 直接接进实盘敞口(仍需另立预注册 + 回放)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.8, "horizon_d": "2026-12-15"}
+  ]
+}

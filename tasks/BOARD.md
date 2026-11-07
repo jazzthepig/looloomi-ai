@@ -51,6 +51,7 @@
 | in_review | T-263 | lane-c | S-741 联合模型 v2:样本外预测换成「相对自身过去 90 个预测的 z」(时点可得),加 11-06 新并进来的风格 / 链上 / 持仓结构 / 渠道维度;必须胜过「过去 30 天收益」朴素基线 | 报告 docs/research/T-263_joint_model_v2.md + t263_joint_v2.py + t263_results.json;卡 notes 写 (a)–(e) 原始数字;in_review,推 lane-c/T-263。 | v1 段内排序真、段间不可比;新并进来约 20 维(2020 起有历史)从没进过模型。 |  |
 | in_review | T-268 | lane-c | S-745 融合状态近邻臂 vs 原近邻臂 vs 基率臂:2022-06 → 2026-10 时点重放,三档 Brier + 配对块自助 —— 判据照台账写死 | 报告 docs/research/T-268_fused_knn_brier.md + t268_replay.py + t268_results.json;卡 notes 写 (a)–(d);in_review,推 lane-c/T-268。 | ③ 的近邻描述一直只看 24 维;30 个新维度进了融合表却没进任何决定的描述。 |  |
 | in_review | T-271 | lane-c | S-748 ④ 套息真实成本检查:HL 实测手续费(现货 7bp / 永续 4.5bp / 滑点 2bp)+ 进出场基差 + 每周 / 两周 / 每月换仓 —— 判据照台账写死 | 报告 docs/research/T-271_carry_real_costs.md + t271_carry_costs.py + t271_results.json;卡 notes 写 (a)–(d);in_review,推 lane-c/T-271。 | ④ 套息是唯一过了留出的收益来源,但纸面成本比真钱实测低一截、没算基差;落地前必须知道真实口径下还剩多少。 |  |
+| in_review | T-293 | lane-c | S-774 按币资金面空间(asset_flow_daily,11 维)的横截面排序力:近邻臂 / Ridge 臂 对 只用 mom30 的基线,走步样本外 | 报告 docs/research/T-293_asset_flow_ic.md + t293_asset_flow.py + t293_results.json + docs/research/scenarios/lane-c-T-293.json(≥ 3 条);卡 notes 写 K / R / B 的 IC 均值、NW t、两半、打乱分位、最低五分位 x30 与判定;in_review,推 lane-c/T-293。 | 高维族:Asset 空间第一次有「因」的维度(资金费 / 杠杆 / 散户 / 大户分歧 / 主动买卖 / 成交暴增 + 价格相位)。单维的拥挤量都不过;这里检验组合的几何。 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 | claimed | T-094 | seth | 状态层往前补一个周期 + 矢量库按时点:state_daily 2019 起、FNG 2018 起;market_state_vectors 改扩张窗口 z、13 个空维补或删 | S-570 / T-093 的情景格子在 2019–2022 多一轮牛熊;S-521 类的匹配不再读到未来。 | state_daily 2023-01 起(一个周期);FNG 2021-06 起;market_state_vectors 24 维里 13 维恒空、全史一次 z(看未来)。 |  |
@@ -286,4 +287,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 13 · claimed 7 · blocked 5 · in_review 49 · done 206 · dropped 3
+open 13 · claimed 7 · blocked 5 · in_review 50 · done 206 · dropped 3
