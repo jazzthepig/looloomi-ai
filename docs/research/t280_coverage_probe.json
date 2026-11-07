@@ -1,0 +1,83 @@
+{
+ "task": "T-280",
+ "ledger": "S-759",
+ "run_utc": "2026-11-07",
+ "missing_symbols_checked": 60,
+ "missing_present_in_asset_mcap_daily": [],
+ "missing_present_in_ohlcv_daily": [
+  "1000LUNC",
+  "1000SHIB",
+  "CVX",
+  "DEFI",
+  "LUNA2",
+  "MEMEFI",
+  "NEIROETH",
+  "SLERF",
+  "STPT"
+ ],
+ "note": "缺价代号在两张价格表里都没有行 ⇒ 缺的是「表里没有这个代号」,不是抓取漏页。",
+ "asset_mcap_daily_universe": {
+  "distinct_symbols": 0,
+  "total_rows": 756980,
+  "pages_scanned": 400,
+  "min_date": "2014-12-31",
+  "max_date": "2026-11-06",
+  "has_BTC": false
+ },
+ "ohlcv_daily_universe": {
+  "distinct_symbols": 0,
+  "total_rows": 1532023,
+  "pages_scanned": 400,
+  "min_date": "2015-01-01",
+  "max_date": "2026-11-06",
+  "has_BTC": false
+ },
+ "delisting_watch_rows": 164,
+ "delisting_watch_sample": [
+  {
+   "symbol": "RENBTC",
+   "announced_at": "2022-04-04T09:58:00.853+00:00",
+   "d0": "2022-04-04",
+   "title": "Binance Will Delist HEGIC, RENBTC and SUSD on 2022-04-11",
+   "kind": "backfill",
+   "excess_7d": null,
+   "excess_30d": null,
+   "ret_30d": null,
+   "btc_30d": null,
+   "price_source": null,
+   "code_ref": "delisting_watch v1 (11-07, S-751 / T-272)",
+   "settled_at": null,
+   "created_at": "2026-11-07T05:36:18.455464+00:00"
+  },
+  {
+   "symbol": "SUSD",
+   "announced_at": "2022-04-04T09:58:00.853+00:00",
+   "d0": "2022-04-04",
+   "title": "Binance Will Delist HEGIC, RENBTC and SUSD on 2022-04-11",
+   "kind": "backfill",
+   "excess_7d": null,
+   "excess_30d": null,
+   "ret_30d": null,
+   "btc_30d": null,
+   "price_source": null,
+   "code_ref": "delisting_watch v1 (11-07, S-751 / T-272)",
+   "settled_at": null,
+   "created_at": "2026-11-07T05:36:18.455464+00:00"
+  }
+ ],
+ "delisting_watch_columns": [
+  "announced_at",
+  "btc_30d",
+  "code_ref",
+  "created_at",
+  "d0",
+  "excess_30d",
+  "excess_7d",
+  "kind",
+  "price_source",
+  "ret_30d",
+  "settled_at",
+  "symbol",
+  "title"
+ ]
+}
