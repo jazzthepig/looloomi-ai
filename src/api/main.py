@@ -2951,6 +2951,12 @@ async def _delisting_watch_loop():
         try:
             from src.data.signals.delisting_watch import run_once as _dw_run
             r = await _dw_run()
+            try:                                   # 11-07:上币 / 上永续的前向记录(S-763 / S-758)跟下架同一个节拍
+                from src.data.signals.event_watch import run_once as _ew_run
+                _ew = await _ew_run()
+                r = {**r, "why": f"{r.get('why')} | 上币 / 上永续:{_ew.get('why')}"}
+            except Exception as _ee:               # noqa: BLE001 —— 上币记录出错不挡下架名单
+                r = {**r, "why": f"{r.get('why')} | 上币 / 上永续出错:{type(_ee).__name__}: {str(_ee)[:120]}"}
             await _iteration_result("_delisting_watch_loop", {**r, "ok": bool(r.get("ok")), "why": r.get("why")})
             await _beat("_delisting_watch_loop", ok=bool(r.get("ok")), detail={"written": r.get("written"), "watch": r.get("watch")},
                         error=None if r.get("ok") else str(r.get("why"))[:200])
@@ -2965,6 +2971,39 @@ async def _delisting_watch_loop():
 async def _start_delisting_watch_loop():
     _asyncio.create_task(_delisting_watch_loop())
     print("[DELIST-WATCH] ✅ Binance delisting watchlist + forward record scheduled (6-hourly)")
+
+
+async def _retail_flow_loop():
+    """散户资金的痕迹(11-07 对手盘族):Upbit KRW 日线 / 市场标签 / 交易公告(`korea_retail.py`)+ 散户投机手续费(`degen_activity.py`,
+    一天一次)。每小时。两步互不挡:韩国那步出错,手续费照取;反之亦然。"""
+    await _asyncio.sleep(_boot_delay(15470))
+    while True:
+        try:
+            from src.data.market.korea_retail import run_once as _kr_run
+            r = await _kr_run()
+            try:
+                from src.data.market.degen_activity import run_once as _dg_run
+                _dg = await _dg_run()
+                r = {**r, "degen": {k: _dg.get(k) for k in ("ok", "rows", "protocols", "skipped")},
+                     "why": f"{r.get('why')} | 投机手续费:{_dg.get('why')}"}
+            except Exception as _de:               # noqa: BLE001 —— 手续费出错不挡韩国那步
+                r = {**r, "why": f"{r.get('why')} | 投机手续费出错:{type(_de).__name__}: {str(_de)[:120]}"}
+            await _iteration_result("_retail_flow_loop", {**r, "ok": bool(r.get("ok")), "why": r.get("why")})
+            await _beat("_retail_flow_loop", ok=bool(r.get("ok")),
+                        detail={"candle_rows": r.get("candle_rows"), "backfill": r.get("backfill"), "notices": r.get("notices"),
+                                "degen": r.get("degen")},
+                        error=None if r.get("ok") else str(r.get("why"))[:200])
+        except Exception as _e:
+            print(f"[RETAIL-FLOW] ⚠️  pass FAILED: {_e}")
+            await _beat("_retail_flow_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+            await _iteration_error("_retail_flow_loop", _e)
+        await _asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def _start_retail_flow_loop():
+    _asyncio.create_task(_retail_flow_loop())
+    print("[RETAIL-FLOW] ✅ Upbit daily + market flags + notices, degen fees scheduled (hourly)")
 
 
 async def _feature_matrix_loop():

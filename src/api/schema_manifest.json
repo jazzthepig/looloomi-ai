@@ -14,6 +14,7 @@
     "beta_core_nav_size",
     "beta_core_nav_size_meta",
     "beta_plus_daily",
+    "binance_event_watch",
     "book_style_exposure_daily",
     "book_vectors",
     "carry_hl_daily",
@@ -145,6 +146,8 @@
     "treatment_daily",
     "treatment_tilt_daily",
     "two_layer_paper_nav",
+    "upbit_daily",
+    "upbit_market_event_daily",
     "vault_nav_tick",
     "vc_funding_rounds",
     "venue_depth_snapshots",
@@ -156,7 +159,8 @@
     "world50_mcap_weekly",
     "world50_onchain_forms",
     "world50_revenue",
-    "write_log"
+    "write_log",
+    "degen_fees_daily"
   ],
   "write_columns": {
     "agent_judgment_daily": [
@@ -192,6 +196,19 @@
       "regime",
       "top_weights",
       "vol_target_scalar"
+    ],
+    "binance_event_watch": [
+      "announced_at",
+      "code_ref",
+      "cohort",
+      "d0",
+      "excess_30d",
+      "excess_90d",
+      "kind",
+      "price_source",
+      "settled_at",
+      "symbol",
+      "title"
     ],
     "book_vectors": [
       "book_id",
@@ -770,6 +787,33 @@
       "revenue",
       "tag",
       "unit"
+    ],
+    "upbit_daily": [
+      "c",
+      "d",
+      "h",
+      "l",
+      "market",
+      "o",
+      "symbol",
+      "vol_base",
+      "vol_krw"
+    ],
+    "upbit_market_event_daily": [
+      "caution",
+      "d",
+      "last_seen_at",
+      "market",
+      "n_caution",
+      "symbol",
+      "warning"
+    ],
+    "degen_fees_daily": [
+      "category",
+      "d",
+      "fees_usd",
+      "name",
+      "slug"
     ]
   },
   "rpc_functions": [
