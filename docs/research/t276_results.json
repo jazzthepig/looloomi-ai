@@ -1,0 +1,852 @@
+{
+  "meta": {
+    "task": "T-276",
+    "prereg": "S-755",
+    "names": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "BNB",
+      "XRP",
+      "DOGE",
+      "AVAX",
+      "LINK",
+      "DOT",
+      "TRX",
+      "ATOM",
+      "NEAR",
+      "APT",
+      "ARB",
+      "OP",
+      "SUI",
+      "UNI",
+      "AAVE",
+      "INJ",
+      "FIL",
+      "ETC",
+      "BCH"
+    ],
+    "n_names": 22,
+    "d0": "2023-05-12",
+    "d1": "2026-11-05",
+    "start": "2023-06-12",
+    "cut_hourly_to": "2026-07-20",
+    "hourly_rows": 25288,
+    "hl_sb_rows": 2398,
+    "binance_days": 47571,
+    "binance_partial_days": 19,
+    "cap": 0.75,
+    "cost_s749_bp": 15.5,
+    "cost_s755_spot_bp": 12.000000000000002,
+    "cost_s755_perp_bp": {
+      "binance_perp": 7.0,
+      "hyperliquid": 6.5
+    },
+    "lend_days": 1285
+  },
+  "a0_s749_reproduce": {
+    "table": [
+      {
+        "interval": "全样本 2023-06-12 → 2026-11-05",
+        "start": "2023-06-12",
+        "end": "2026-11-05",
+        "days": 1243,
+        "nominal": 14.4732,
+        "capital": 10.8549,
+        "lend": 4.6315
+      },
+      {
+        "interval": "2023-06 → 2024-12",
+        "start": "2023-06-12",
+        "end": "2024-12-31",
+        "days": 569,
+        "nominal": 24.3207,
+        "capital": 18.2405,
+        "lend": 5.8489
+      },
+      {
+        "interval": "2025-01 → 2026-11-05",
+        "start": "2025-01-01",
+        "end": "2026-11-05",
+        "days": 674,
+        "nominal": 6.1598,
+        "capital": 4.6198,
+        "lend": 3.6037
+      },
+      {
+        "interval": "2026H1",
+        "start": "2026-01-01",
+        "end": "2026-06-30",
+        "days": 181,
+        "nominal": 2.792,
+        "capital": 2.094,
+        "lend": 2.9775
+      },
+      {
+        "interval": "2023H2",
+        "start": "2023-07-01",
+        "end": "2023-12-31",
+        "days": 184,
+        "nominal": 21.4876,
+        "capital": 16.1157,
+        "lend": 4.7793
+      },
+      {
+        "interval": "2024H1",
+        "start": "2024-01-01",
+        "end": "2024-06-30",
+        "days": 182,
+        "nominal": 35.6466,
+        "capital": 26.735,
+        "lend": 7.5158
+      },
+      {
+        "interval": "2024H2",
+        "start": "2024-07-01",
+        "end": "2024-12-31",
+        "days": 184,
+        "nominal": 17.9021,
+        "capital": 13.4266,
+        "lend": 5.6469
+      },
+      {
+        "interval": "2025H1",
+        "start": "2025-01-01",
+        "end": "2025-06-30",
+        "days": 181,
+        "nominal": 5.4764,
+        "capital": 4.1073,
+        "lend": 4.1389
+      },
+      {
+        "interval": "2025H2",
+        "start": "2025-07-01",
+        "end": "2025-12-31",
+        "days": 184,
+        "nominal": 8.9389,
+        "capital": 6.7042,
+        "lend": 3.8822
+      },
+      {
+        "interval": "2026-07 → 11-05",
+        "start": "2026-07-01",
+        "end": "2026-11-05",
+        "days": 128,
+        "nominal": 7.8933,
+        "capital": 5.92,
+        "lend": 3.3321
+      }
+    ],
+    "gross_table": [
+      {
+        "interval": "全样本 2023-06-12 → 2026-11-05",
+        "start": "2023-06-12",
+        "end": "2026-11-05",
+        "days": 1243,
+        "nominal": 16.4678,
+        "capital": 12.3508,
+        "lend": 4.6315
+      },
+      {
+        "interval": "2023-06 → 2024-12",
+        "start": "2023-06-12",
+        "end": "2024-12-31",
+        "days": 569,
+        "nominal": 26.156,
+        "capital": 19.617,
+        "lend": 5.8489
+      },
+      {
+        "interval": "2025-01 → 2026-11-05",
+        "start": "2025-01-01",
+        "end": "2026-11-05",
+        "days": 674,
+        "nominal": 8.2888,
+        "capital": 6.2166,
+        "lend": 3.6037
+      },
+      {
+        "interval": "2026H1",
+        "start": "2026-01-01",
+        "end": "2026-06-30",
+        "days": 181,
+        "nominal": 5.0084,
+        "capital": 3.7563,
+        "lend": 2.9775
+      },
+      {
+        "interval": "2023H2",
+        "start": "2023-07-01",
+        "end": "2023-12-31",
+        "days": 184,
+        "nominal": 23.863,
+        "capital": 17.8972,
+        "lend": 4.7793
+      },
+      {
+        "interval": "2024H1",
+        "start": "2024-01-01",
+        "end": "2024-06-30",
+        "days": 182,
+        "nominal": 37.2122,
+        "capital": 27.9091,
+        "lend": 7.5158
+      },
+      {
+        "interval": "2024H2",
+        "start": "2024-07-01",
+        "end": "2024-12-31",
+        "days": 184,
+        "nominal": 19.5513,
+        "capital": 14.6635,
+        "lend": 5.6469
+      },
+      {
+        "interval": "2025H1",
+        "start": "2025-01-01",
+        "end": "2025-06-30",
+        "days": 181,
+        "nominal": 7.9486,
+        "capital": 5.9614,
+        "lend": 4.1389
+      },
+      {
+        "interval": "2025H2",
+        "start": "2025-07-01",
+        "end": "2025-12-31",
+        "days": 184,
+        "nominal": 10.8955,
+        "capital": 8.1716,
+        "lend": 3.8822
+      },
+      {
+        "interval": "2026-07 → 11-05",
+        "start": "2026-07-01",
+        "end": "2026-11-05",
+        "days": 128,
+        "nominal": 9.6613,
+        "capital": 7.246,
+        "lend": 3.3321
+      }
+    ],
+    "check": {
+      "full_sample_capital_pct": 10.8549,
+      "target": 10.86,
+      "diff_pp": -0.0051,
+      "h1_2026_capital_pct": 2.094,
+      "target_h1": 2.09,
+      "diff_pp_h1": 0.004,
+      "within_0p15pp": true
+    }
+  },
+  "selfcheck_path_vs_carry_hl": {
+    "n_days": 1243,
+    "max_abs_daily_diff": 4.999999999970306e-09,
+    "pass": false
+  },
+  "a1_hl_only_s755_cost": {
+    "table": [
+      {
+        "interval": "全样本 2023-06-12 → 2026-11-05",
+        "start": "2023-06-12",
+        "end": "2026-11-05",
+        "days": 1243,
+        "nominal": 14.0871,
+        "capital": 10.5654,
+        "lend": 4.6315
+      },
+      {
+        "interval": "2023-06 → 2024-12",
+        "start": "2023-06-12",
+        "end": "2024-12-31",
+        "days": 569,
+        "nominal": 23.9655,
+        "capital": 17.9741,
+        "lend": 5.8489
+      },
+      {
+        "interval": "2025-01 → 2026-11-05",
+        "start": "2025-01-01",
+        "end": "2026-11-05",
+        "days": 674,
+        "nominal": 5.7477,
+        "capital": 4.3108,
+        "lend": 3.6037
+      },
+      {
+        "interval": "2026H1",
+        "start": "2026-01-01",
+        "end": "2026-06-30",
+        "days": 181,
+        "nominal": 2.363,
+        "capital": 1.7723,
+        "lend": 2.9775
+      },
+      {
+        "interval": "2023H2",
+        "start": "2023-07-01",
+        "end": "2023-12-31",
+        "days": 184,
+        "nominal": 21.0279,
+        "capital": 15.7709,
+        "lend": 4.7793
+      },
+      {
+        "interval": "2024H1",
+        "start": "2024-01-01",
+        "end": "2024-06-30",
+        "days": 182,
+        "nominal": 35.3436,
+        "capital": 26.5077,
+        "lend": 7.5158
+      },
+      {
+        "interval": "2024H2",
+        "start": "2024-07-01",
+        "end": "2024-12-31",
+        "days": 184,
+        "nominal": 17.5829,
+        "capital": 13.1872,
+        "lend": 5.6469
+      },
+      {
+        "interval": "2025H1",
+        "start": "2025-01-01",
+        "end": "2025-06-30",
+        "days": 181,
+        "nominal": 4.9979,
+        "capital": 3.7485,
+        "lend": 4.1389
+      },
+      {
+        "interval": "2025H2",
+        "start": "2025-07-01",
+        "end": "2025-12-31",
+        "days": 184,
+        "nominal": 8.5602,
+        "capital": 6.4201,
+        "lend": 3.8822
+      },
+      {
+        "interval": "2026-07 → 11-05",
+        "start": "2026-07-01",
+        "end": "2026-11-05",
+        "days": 128,
+        "nominal": 7.5511,
+        "capital": 5.6633,
+        "lend": 3.3321
+      }
+    ],
+    "gross_table": [
+      {
+        "interval": "全样本 2023-06-12 → 2026-11-05",
+        "start": "2023-06-12",
+        "end": "2026-11-05",
+        "days": 1243,
+        "nominal": 15.6313,
+        "capital": 11.7235,
+        "lend": 4.6315
+      },
+      {
+        "interval": "2023-06 → 2024-12",
+        "start": "2023-06-12",
+        "end": "2024-12-31",
+        "days": 569,
+        "nominal": 25.3864,
+        "capital": 19.0398,
+        "lend": 5.8489
+      },
+      {
+        "interval": "2025-01 → 2026-11-05",
+        "start": "2025-01-01",
+        "end": "2026-11-05",
+        "days": 674,
+        "nominal": 7.396,
+        "capital": 5.547,
+        "lend": 3.6037
+      },
+      {
+        "interval": "2026H1",
+        "start": "2026-01-01",
+        "end": "2026-06-30",
+        "days": 181,
+        "nominal": 4.0789,
+        "capital": 3.0592,
+        "lend": 2.9775
+      },
+      {
+        "interval": "2023H2",
+        "start": "2023-07-01",
+        "end": "2023-12-31",
+        "days": 184,
+        "nominal": 22.8669,
+        "capital": 17.1502,
+        "lend": 4.7793
+      },
+      {
+        "interval": "2024H1",
+        "start": "2024-01-01",
+        "end": "2024-06-30",
+        "days": 182,
+        "nominal": 36.5557,
+        "capital": 27.4167,
+        "lend": 7.5158
+      },
+      {
+        "interval": "2024H2",
+        "start": "2024-07-01",
+        "end": "2024-12-31",
+        "days": 184,
+        "nominal": 18.8597,
+        "capital": 14.1448,
+        "lend": 5.6469
+      },
+      {
+        "interval": "2025H1",
+        "start": "2025-01-01",
+        "end": "2025-06-30",
+        "days": 181,
+        "nominal": 6.9119,
+        "capital": 5.1839,
+        "lend": 4.1389
+      },
+      {
+        "interval": "2025H2",
+        "start": "2025-07-01",
+        "end": "2025-12-31",
+        "days": 184,
+        "nominal": 10.075,
+        "capital": 7.5562,
+        "lend": 3.8822
+      },
+      {
+        "interval": "2026-07 → 11-05",
+        "start": "2026-07-01",
+        "end": "2026-11-05",
+        "days": 128,
+        "nominal": 8.9199,
+        "capital": 6.6899,
+        "lend": 3.3321
+      }
+    ],
+    "events": {
+      "venue_switch": 0,
+      "open": 238,
+      "close": 227,
+      "spot_touch": 465,
+      "basis_binance": 0,
+      "basis_hl_zero": 465,
+      "basis_missing_zero": 0,
+      "weeks_binance": 0,
+      "weeks_total": 178,
+      "name_weeks_binance": 0,
+      "name_weeks_total": 1888
+    }
+  },
+  "a2_cross_venue": {
+    "table": [
+      {
+        "interval": "全样本 2023-06-12 → 2026-11-05",
+        "start": "2023-06-12",
+        "end": "2026-11-05",
+        "days": 1243,
+        "nominal": 13.8371,
+        "capital": 10.3778,
+        "lend": 4.6315
+      },
+      {
+        "interval": "2023-06 → 2024-12",
+        "start": "2023-06-12",
+        "end": "2024-12-31",
+        "days": 569,
+        "nominal": 24.1916,
+        "capital": 18.1437,
+        "lend": 5.8489
+      },
+      {
+        "interval": "2025-01 → 2026-11-05",
+        "start": "2025-01-01",
+        "end": "2026-11-05",
+        "days": 674,
+        "nominal": 5.0957,
+        "capital": 3.8217,
+        "lend": 3.6037
+      },
+      {
+        "interval": "2026H1",
+        "start": "2026-01-01",
+        "end": "2026-06-30",
+        "days": 181,
+        "nominal": 1.8835,
+        "capital": 1.4126,
+        "lend": 2.9775
+      },
+      {
+        "interval": "2023H2",
+        "start": "2023-07-01",
+        "end": "2023-12-31",
+        "days": 184,
+        "nominal": 22.949,
+        "capital": 17.2117,
+        "lend": 4.7793
+      },
+      {
+        "interval": "2024H1",
+        "start": "2024-01-01",
+        "end": "2024-06-30",
+        "days": 182,
+        "nominal": 34.6246,
+        "capital": 25.9685,
+        "lend": 7.5158
+      },
+      {
+        "interval": "2024H2",
+        "start": "2024-07-01",
+        "end": "2024-12-31",
+        "days": 184,
+        "nominal": 17.0281,
+        "capital": 12.7711,
+        "lend": 5.6469
+      },
+      {
+        "interval": "2025H1",
+        "start": "2025-01-01",
+        "end": "2025-06-30",
+        "days": 181,
+        "nominal": 4.716,
+        "capital": 3.537,
+        "lend": 4.1389
+      },
+      {
+        "interval": "2025H2",
+        "start": "2025-07-01",
+        "end": "2025-12-31",
+        "days": 184,
+        "nominal": 7.308,
+        "capital": 5.481,
+        "lend": 3.8822
+      },
+      {
+        "interval": "2026-07 → 11-05",
+        "start": "2026-07-01",
+        "end": "2026-11-05",
+        "days": 128,
+        "nominal": 6.9945,
+        "capital": 5.2459,
+        "lend": 3.3321
+      }
+    ],
+    "gross_table": [
+      {
+        "interval": "全样本 2023-06-12 → 2026-11-05",
+        "start": "2023-06-12",
+        "end": "2026-11-05",
+        "days": 1243,
+        "nominal": 15.1856,
+        "capital": 11.3892,
+        "lend": 4.6315
+      },
+      {
+        "interval": "2023-06 → 2024-12",
+        "start": "2023-06-12",
+        "end": "2024-12-31",
+        "days": 569,
+        "nominal": 25.3674,
+        "capital": 19.0255,
+        "lend": 5.8489
+      },
+      {
+        "interval": "2025-01 → 2026-11-05",
+        "start": "2025-01-01",
+        "end": "2026-11-05",
+        "days": 674,
+        "nominal": 6.5901,
+        "capital": 4.9426,
+        "lend": 3.6037
+      },
+      {
+        "interval": "2026H1",
+        "start": "2026-01-01",
+        "end": "2026-06-30",
+        "days": 181,
+        "nominal": 3.2757,
+        "capital": 2.4567,
+        "lend": 2.9775
+      },
+      {
+        "interval": "2023H2",
+        "start": "2023-07-01",
+        "end": "2023-12-31",
+        "days": 184,
+        "nominal": 24.2488,
+        "capital": 18.1866,
+        "lend": 4.7793
+      },
+      {
+        "interval": "2024H1",
+        "start": "2024-01-01",
+        "end": "2024-06-30",
+        "days": 182,
+        "nominal": 35.6642,
+        "capital": 26.7481,
+        "lend": 7.5158
+      },
+      {
+        "interval": "2024H2",
+        "start": "2024-07-01",
+        "end": "2024-12-31",
+        "days": 184,
+        "nominal": 18.236,
+        "capital": 13.677,
+        "lend": 5.6469
+      },
+      {
+        "interval": "2025H1",
+        "start": "2025-01-01",
+        "end": "2025-06-30",
+        "days": 181,
+        "nominal": 6.4521,
+        "capital": 4.8391,
+        "lend": 4.1389
+      },
+      {
+        "interval": "2025H2",
+        "start": "2025-07-01",
+        "end": "2025-12-31",
+        "days": 184,
+        "nominal": 8.8157,
+        "capital": 6.6118,
+        "lend": 3.8822
+      },
+      {
+        "interval": "2026-07 → 11-05",
+        "start": "2026-07-01",
+        "end": "2026-11-05",
+        "days": 128,
+        "nominal": 8.2726,
+        "capital": 6.2045,
+        "lend": 3.3321
+      }
+    ],
+    "events": {
+      "venue_switch": 196,
+      "open": 422,
+      "close": 411,
+      "spot_touch": 441,
+      "basis_binance": 299,
+      "basis_hl_zero": 534,
+      "basis_missing_zero": 0,
+      "weeks_binance": 1161,
+      "weeks_total": 178,
+      "name_weeks_binance": 362,
+      "name_weeks_total": 1958
+    }
+  },
+  "verdict": {
+    "a_full_sample_vs_a0": {
+      "a2_capital_pct": 10.3778,
+      "a0_capital_pct": 10.8549,
+      "threshold_pct": 12.8549,
+      "target_from_ledger_pct": 12.86,
+      "pass": false
+    },
+    "b_2026h1_vs_lend": {
+      "a2_capital_pct": 1.4126,
+      "lend_pct": 2.9775,
+      "ledger_lend_pct": 2.98,
+      "pass": false
+    },
+    "c_two_segments_vs_a0": {
+      "seg1_2023_06_to_2024_12": {
+        "a2": 18.1437,
+        "a0": 18.2405,
+        "pass": false
+      },
+      "seg2_2025_01_to_2026_11": {
+        "a2": 3.8217,
+        "a0": 4.6198,
+        "pass": false
+      },
+      "pass": false
+    },
+    "d_cost_drag": {
+      "venue_switches": 196,
+      "years": 3.403,
+      "switches_per_year": 57.6,
+      "gross_a0": 12.3508,
+      "gross_a2": 11.3892,
+      "net_a0": 10.8549,
+      "net_a2": 10.3778,
+      "drag_a0_pp": 1.4959,
+      "drag_a2_pp": 1.0114,
+      "gross_increment_vs_a0_pp": -0.9616,
+      "extra_drag_vs_a0_pp": -0.4845,
+      "gross_increment_vs_a1_pp": -0.3343,
+      "extra_drag_vs_a1_pp": -0.1467,
+      "pass_relative_vs_a0": false,
+      "pass_total_vs_a0": false
+    },
+    "same_cost_comparison_vs_a1": {
+      "full_sample": {
+        "a2": 10.3778,
+        "a1": 10.5654,
+        "a2_wins": false
+      },
+      "2026H1": {
+        "a2": 1.4126,
+        "a1": 1.7723,
+        "a2_wins": false
+      },
+      "seg1": {
+        "a2": 18.1437,
+        "a1": 17.9741,
+        "a2_wins": true
+      },
+      "seg2": {
+        "a2": 3.8217,
+        "a1": 4.3108,
+        "a2_wins": false
+      }
+    },
+    "all_pass": false
+  },
+  "side_items": {
+    "binance_only_arm": {
+      "table": [
+        {
+          "interval": "全样本 2023-06-12 → 2026-11-05",
+          "start": "2023-06-12",
+          "end": "2026-11-05",
+          "days": 1243,
+          "nominal": 5.1467,
+          "capital": 3.86,
+          "lend": 4.6315
+        },
+        {
+          "interval": "2023-06 → 2024-12",
+          "start": "2023-06-12",
+          "end": "2024-12-31",
+          "days": 569,
+          "nominal": 10.5687,
+          "capital": 7.9265,
+          "lend": 5.8489
+        },
+        {
+          "interval": "2025-01 → 2026-11-05",
+          "start": "2025-01-01",
+          "end": "2026-11-05",
+          "days": 674,
+          "nominal": 0.5694,
+          "capital": 0.427,
+          "lend": 3.6037
+        },
+        {
+          "interval": "2026H1",
+          "start": "2026-01-01",
+          "end": "2026-06-30",
+          "days": 181,
+          "nominal": -1.8374,
+          "capital": -1.3781,
+          "lend": 2.9775
+        },
+        {
+          "interval": "2023H2",
+          "start": "2023-07-01",
+          "end": "2023-12-31",
+          "days": 184,
+          "nominal": 8.8999,
+          "capital": 6.6749,
+          "lend": 4.7793
+        },
+        {
+          "interval": "2024H1",
+          "start": "2024-01-01",
+          "end": "2024-06-30",
+          "days": 182,
+          "nominal": 17.3059,
+          "capital": 12.9795,
+          "lend": 7.5158
+        },
+        {
+          "interval": "2024H2",
+          "start": "2024-07-01",
+          "end": "2024-12-31",
+          "days": 184,
+          "nominal": 6.3086,
+          "capital": 4.7315,
+          "lend": 5.6469
+        },
+        {
+          "interval": "2025H1",
+          "start": "2025-01-01",
+          "end": "2025-06-30",
+          "days": 181,
+          "nominal": 0.2872,
+          "capital": 0.2154,
+          "lend": 4.1389
+        },
+        {
+          "interval": "2025H2",
+          "start": "2025-07-01",
+          "end": "2025-12-31",
+          "days": 184,
+          "nominal": 1.7085,
+          "capital": 1.2814,
+          "lend": 3.8822
+        },
+        {
+          "interval": "2026-07 → 11-05",
+          "start": "2026-07-01",
+          "end": "2026-11-05",
+          "days": 128,
+          "nominal": 2.7342,
+          "capital": 2.0506,
+          "lend": 3.3321
+        }
+      ],
+      "events": {
+        "venue_switch": 0,
+        "open": 264,
+        "close": 253,
+        "spot_touch": 517,
+        "basis_binance": 517,
+        "basis_hl_zero": 0,
+        "basis_missing_zero": 0,
+        "weeks_binance": 3916,
+        "weeks_total": 178,
+        "name_weeks_binance": 1958,
+        "name_weeks_total": 1958
+      }
+    },
+    "venue_share": {
+      "weeks_all_names_on_binance": 1161,
+      "weeks_total": 178,
+      "share_names_on_binance": 6.5225,
+      "selected_name_weeks_on_binance": 362,
+      "selected_name_weeks_total": 1958,
+      "share_selected_on_binance": 0.1849
+    },
+    "events_a2": {
+      "venue_switch": 196,
+      "open": 422,
+      "close": 411,
+      "spot_touch": 441,
+      "basis_binance": 299,
+      "basis_hl_zero": 534,
+      "basis_missing_zero": 0,
+      "weeks_binance": 1161,
+      "weeks_total": 178,
+      "name_weeks_binance": 362,
+      "name_weeks_total": 1958
+    },
+    "rate_diff_distribution": {
+      "n_cells": 26594,
+      "mean_bp_per_day": -1.3479,
+      "median_bp_per_day": -0.8752,
+      "p10_bp": -6.1987,
+      "p90_bp": 3.3527,
+      "share_binance_higher": 0.2991,
+      "share_hl_higher": 0.6558
+    }
+  }
+}

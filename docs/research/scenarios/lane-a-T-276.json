@@ -1,0 +1,45 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T-276-1",
+      "scenario": "T-276 ④ 跨所套息(S-755)",
+      "statement": "HL 侧的 7 日年化资金费(state_daily / funding_7d_ann)在 2026-12-01 仍为正。T-276 实测:HL 费率在 26,594 个名字-日里有 65.58% 高于 Binance(中位高 0.875bp/日),但 2026H1 压缩期资本口径只有 2.09%/yr,压缩是结构性的、不是场所性的。",
+      "variable": "state:funding_7d_ann",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.72,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-276-2",
+      "scenario": "T-276 ④ 跨所套息(S-755)",
+      "statement": "Binance 永续口径的 7 日年化资金费(state_daily / funding_7d_ann_binance)在 2026-12-01 仍为正。T-276 实测:Binance 的费率系统性低于 HL(名字-日均值低 1.348bp),Binance-only 的 2026H1 资本口径是负的(-1.38%),所以这条比 HL 侧那条难。",
+      "variable": "state:funding_7d_ann_binance",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.55,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-276-3",
+      "scenario": "T-276 ④ 跨所套息(S-755)",
+      "statement": "carry_hl_daily 的 carry_b_top 臂(过去 30 天费率前一半 11 名、真实成本)NAV 在 2026-12-31 时 > 1.005。T-276 复现 S-749:2026-07→11-05 资本口径 5.92%/yr、最近 13 周 6.78%/yr,最近一段在加速。",
+      "variable": "state:carry_b_top",
+      "op": "gt",
+      "lo": 1.005,
+      "prob": 0.55,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-276-4",
+      "scenario": "T-276 ④ 跨所套息(S-755)",
+      "statement": "Binance 永续口径的 7 日年化资金费(state_daily / funding_7d_ann_binance)在 2026-12-01 低于 10%(仍是压缩,没有重新放大)。T-276 实测:Binance-only 套息 2026H1 资本口径 -1.38%,压缩比 HL 侧更重。",
+      "variable": "state:funding_7d_ann_binance",
+      "op": "lt",
+      "hi": 0.1,
+      "prob": 0.62,
+      "horizon_d": "2026-12-01"
+    }
+  ]
+}
