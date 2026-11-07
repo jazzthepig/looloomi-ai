@@ -1,0 +1,714 @@
+{
+ "base_rate": 0.018501387604070305,
+ "n_obs": 10810,
+ "n_marked": 1106,
+ "n_marked_result_true": 60,
+ "precision": 0.054249547920433995,
+ "recall": 0.2537313432835821,
+ "recall_detail": [
+  {
+   "symbol": "A2Z",
+   "announced": "2026-03-18",
+   "last_month_end": "2026-02-28",
+   "marked": false,
+   "pct": 0.11475409836065574,
+   "L": 214041.0575
+  },
+  {
+   "symbol": "ACX",
+   "announced": "2026-08-03",
+   "last_month_end": "2026-07-31",
+   "marked": false,
+   "pct": 0.12837837837837837,
+   "L": 136159.5365
+  },
+  {
+   "symbol": "ALPACA",
+   "announced": "2025-04-24",
+   "last_month_end": "2025-03-31",
+   "marked": false,
+   "pct": 0.4527363184079602,
+   "L": 2116152.1
+  },
+  {
+   "symbol": "ALPHA",
+   "announced": "2025-06-26",
+   "last_month_end": "2025-05-31",
+   "marked": false,
+   "pct": 0.54,
+   "L": 3462770.9
+  },
+  {
+   "symbol": "AMB",
+   "announced": "2025-02-17",
+   "last_month_end": "2025-01-31",
+   "marked": false,
+   "pct": 0.13725490196078433,
+   "L": 1637399.82
+  },
+  {
+   "symbol": "ATA",
+   "announced": "2026-05-13",
+   "last_month_end": "2026-04-30",
+   "marked": true,
+   "pct": 0.018867924528301886,
+   "L": 114883.49
+  },
+  {
+   "symbol": "BADGER",
+   "announced": "2025-04-08",
+   "last_month_end": "2025-03-31",
+   "marked": false,
+   "pct": 0.3383084577114428,
+   "L": 1561804.15
+  },
+  {
+   "symbol": "BAKE",
+   "announced": "2025-09-03",
+   "last_month_end": "2025-08-31",
+   "marked": false,
+   "pct": 0.2647058823529412,
+   "L": 1235949.19
+  },
+  {
+   "symbol": "BAL",
+   "announced": "2025-04-08",
+   "last_month_end": "2025-03-31",
+   "marked": true,
+   "pct": 0.0,
+   "L": 333033.6225
+  },
+  {
+   "symbol": "BLZ",
+   "announced": "2024-12-18",
+   "last_month_end": "2024-11-30",
+   "marked": false,
+   "pct": 0.13551401869158877,
+   "L": 2703440.0999999996
+  },
+  {
+   "symbol": "BOND",
+   "announced": "2024-07-08",
+   "last_month_end": "2024-06-30",
+   "marked": false,
+   "pct": 0.2358490566037736,
+   "L": 1462254.9249999998
+  },
+  {
+   "symbol": "BSW",
+   "announced": "2025-06-26",
+   "last_month_end": "2025-05-31",
+   "marked": false,
+   "pct": 0.63,
+   "L": 4757995.550000001
+  },
+  {
+   "symbol": "CHESS",
+   "announced": "2026-02-02",
+   "last_month_end": "2026-01-31",
+   "marked": false,
+   "pct": 0.13440860215053763,
+   "L": 326176.69700000004
+  },
+  {
+   "symbol": "COMBO",
+   "announced": "2025-03-21",
+   "last_month_end": "2025-02-28",
+   "marked": false,
+   "pct": 0.1691542288557214,
+   "L": 1205182.8025
+  },
+  {
+   "symbol": "COS",
+   "announced": "2026-06-05",
+   "last_month_end": "2026-05-31",
+   "marked": false,
+   "pct": 0.3741935483870968,
+   "L": 535123.584
+  },
+  {
+   "symbol": "D",
+   "announced": "2026-06-05",
+   "last_month_end": "2026-05-31",
+   "marked": false,
+   "pct": 0.6,
+   "L": 1601095.2650000001
+  },
+  {
+   "symbol": "DEGO",
+   "announced": "2026-04-17",
+   "last_month_end": "2026-03-31",
+   "marked": false,
+   "pct": 0.8176795580110497,
+   "L": 4769725.7700000005
+  },
+  {
+   "symbol": "DENT",
+   "announced": "2026-04-17",
+   "last_month_end": "2026-03-31",
+   "marked": false,
+   "pct": 0.6464088397790055,
+   "L": 1240097.925
+  },
+  {
+   "symbol": "DF",
+   "announced": "2026-02-02",
+   "last_month_end": "2026-01-31",
+   "marked": true,
+   "pct": 0.0,
+   "L": 133126.751
+  },
+  {
+   "symbol": "FIO",
+   "announced": "2026-04-09",
+   "last_month_end": "2026-03-31",
+   "marked": false,
+   "pct": 0.4530386740331492,
+   "L": 611114.071
+  },
+  {
+   "symbol": "FIS",
+   "announced": "2025-12-03",
+   "last_month_end": "2025-11-30",
+   "marked": false,
+   "pct": 0.4322916666666667,
+   "L": 1288922.995
+  },
+  {
+   "symbol": "FLM",
+   "announced": "2025-10-29",
+   "last_month_end": "2025-09-30",
+   "marked": true,
+   "pct": 0.0707070707070707,
+   "L": 491266.695
+  },
+  {
+   "symbol": "FORTH",
+   "announced": "2026-03-18",
+   "last_month_end": "2026-02-28",
+   "marked": true,
+   "pct": 0.060109289617486336,
+   "L": 147387.67849999998
+  },
+  {
+   "symbol": "FUN",
+   "announced": "2026-04-09",
+   "last_month_end": "2026-03-31",
+   "marked": false,
+   "pct": 0.3314917127071823,
+   "L": 439001.241
+  },
+  {
+   "symbol": "GHST",
+   "announced": "2026-02-02",
+   "last_month_end": "2026-01-31",
+   "marked": true,
+   "pct": 0.04838709677419355,
+   "L": 191594.995
+  },
+  {
+   "symbol": "HFT",
+   "announced": "2026-08-03",
+   "last_month_end": "2026-07-31",
+   "marked": false,
+   "pct": 0.2635135135135135,
+   "L": 238955.51999999996
+  },
+  {
+   "symbol": "HIFI",
+   "announced": "2025-09-03",
+   "last_month_end": "2025-08-31",
+   "marked": false,
+   "pct": 0.21568627450980393,
+   "L": 1108198.65
+  },
+  {
+   "symbol": "HIGH",
+   "announced": "2026-06-05",
+   "last_month_end": "2026-05-31",
+   "marked": false,
+   "pct": 0.5419354838709678,
+   "L": 1097465.455
+  },
+  {
+   "symbol": "HOOK",
+   "announced": "2026-03-18",
+   "last_month_end": "2026-02-28",
+   "marked": false,
+   "pct": 0.12021857923497267,
+   "L": 232301.116
+  },
+  {
+   "symbol": "ICX",
+   "announced": "2026-08-20",
+   "last_month_end": "2026-07-31",
+   "marked": true,
+   "pct": 0.006756756756756757,
+   "L": 41208.58
+  },
+  {
+   "symbol": "IDEX",
+   "announced": "2026-03-18",
+   "last_month_end": "2026-02-28",
+   "marked": false,
+   "pct": 0.19672131147540983,
+   "L": 328758.147
+  },
+  {
+   "symbol": "KDA",
+   "announced": "2025-10-29",
+   "last_month_end": "2025-09-30",
+   "marked": false,
+   "pct": 0.4393939393939394,
+   "L": 1625588.1855000001
+  },
+  {
+   "symbol": "KEY",
+   "announced": "2024-11-26",
+   "last_month_end": "2024-10-31",
+   "marked": false,
+   "pct": 0.37209302325581395,
+   "L": 1837609.9115
+  },
+  {
+   "symbol": "LEVER",
+   "announced": "2025-06-26",
+   "last_month_end": "2025-05-31",
+   "marked": false,
+   "pct": 0.235,
+   "L": 1349392.46
+  },
+  {
+   "symbol": "LINA",
+   "announced": "2025-03-21",
+   "last_month_end": "2025-02-28",
+   "marked": false,
+   "pct": 0.22388059701492538,
+   "L": 1593906.5150000001
+  },
+  {
+   "symbol": "LOOM",
+   "announced": "2024-08-12",
+   "last_month_end": "2024-07-31",
+   "marked": false,
+   "pct": 0.14218009478672985,
+   "L": 835426.105
+  },
+  {
+   "symbol": "LRC",
+   "announced": "2026-03-18",
+   "last_month_end": "2026-02-28",
+   "marked": false,
+   "pct": 0.3551912568306011,
+   "L": 568541.66
+  },
+  {
+   "symbol": "MBOX",
+   "announced": "2026-06-05",
+   "last_month_end": "2026-05-31",
+   "marked": false,
+   "pct": 0.4129032258064516,
+   "L": 614212.285
+  },
+  {
+   "symbol": "MDT",
+   "announced": "2026-04-09",
+   "last_month_end": "2026-03-31",
+   "marked": true,
+   "pct": 0.06629834254143646,
+   "L": 203184.68700000003
+  },
+  {
+   "symbol": "MLN",
+   "announced": "2026-05-13",
+   "last_month_end": "2026-04-30",
+   "marked": true,
+   "pct": 0.08176100628930817,
+   "L": 224382.472
+  },
+  {
+   "symbol": "NFP",
+   "announced": "2026-06-26",
+   "last_month_end": "2026-05-31",
+   "marked": false,
+   "pct": 0.38064516129032255,
+   "L": 536260.833
+  },
+  {
+   "symbol": "NKN",
+   "announced": "2026-02-02",
+   "last_month_end": "2026-01-31",
+   "marked": true,
+   "pct": 0.010752688172043012,
+   "L": 141343.104
+  },
+  {
+   "symbol": "NTRN",
+   "announced": "2026-03-18",
+   "last_month_end": "2026-02-28",
+   "marked": false,
+   "pct": 0.24043715846994534,
+   "L": 369963.31499999994
+  },
+  {
+   "symbol": "NULS",
+   "announced": "2025-04-08",
+   "last_month_end": "2025-03-31",
+   "marked": true,
+   "pct": 0.09950248756218906,
+   "L": 731172.133
+  },
+  {
+   "symbol": "OMG",
+   "announced": "2024-06-03",
+   "last_month_end": "2024-05-31",
+   "marked": false,
+   "pct": 0.10377358490566038,
+   "L": 1367314.3
+  },
+  {
+   "symbol": "OXT",
+   "announced": "2026-04-09",
+   "last_month_end": "2026-03-31",
+   "marked": true,
+   "pct": 0.03314917127071823,
+   "L": 135372.91100000002
+  },
+  {
+   "symbol": "PERP",
+   "announced": "2025-10-29",
+   "last_month_end": "2025-09-30",
+   "marked": false,
+   "pct": 0.14646464646464646,
+   "L": 694998.5985
+  },
+  {
+   "symbol": "PHB",
+   "announced": "2026-05-13",
+   "last_month_end": "2026-04-30",
+   "marked": false,
+   "pct": 0.42138364779874216,
+   "L": 698742.1799999999
+  },
+  {
+   "symbol": "QUICK",
+   "announced": "2026-10-14",
+   "last_month_end": "2026-09-30",
+   "marked": true,
+   "pct": 0.0,
+   "L": 68807.5433
+  },
+  {
+   "symbol": "RDNT",
+   "announced": "2026-03-18",
+   "last_month_end": "2026-02-28",
+   "marked": true,
+   "pct": 0.07650273224043716,
+   "L": 168983.9865
+  },
+  {
+   "symbol": "REEF",
+   "announced": "2024-08-12",
+   "last_month_end": "2024-07-31",
+   "marked": false,
+   "pct": 0.26066350710900477,
+   "L": 1263806.091
+  },
+  {
+   "symbol": "REI",
+   "announced": "2025-12-03",
+   "last_month_end": "2025-11-30",
+   "marked": false,
+   "pct": 0.109375,
+   "L": 426286.349
+  },
+  {
+   "symbol": "REN",
+   "announced": "2024-11-26",
+   "last_month_end": "2024-10-31",
+   "marked": true,
+   "pct": 0.027906976744186046,
+   "L": 611811.351
+  },
+  {
+   "symbol": "SNT",
+   "announced": "2025-04-08",
+   "last_month_end": "2025-03-31",
+   "marked": false,
+   "pct": 0.11442786069651742,
+   "L": 740428.632
+  },
+  {
+   "symbol": "STMX",
+   "announced": "2025-02-17",
+   "last_month_end": "2025-01-31",
+   "marked": false,
+   "pct": 0.38235294117647056,
+   "L": 3170853.675
+  },
+  {
+   "symbol": "STORJ",
+   "announced": "2026-08-20",
+   "last_month_end": "2026-07-31",
+   "marked": false,
+   "pct": 0.35135135135135137,
+   "L": 317518.814
+  },
+  {
+   "symbol": "SYS",
+   "announced": "2026-05-13",
+   "last_month_end": "2026-04-30",
+   "marked": true,
+   "pct": 0.0880503144654088,
+   "L": 233538.4295
+  },
+  {
+   "symbol": "TROY",
+   "announced": "2025-04-08",
+   "last_month_end": "2025-03-31",
+   "marked": false,
+   "pct": 0.472636815920398,
+   "L": 2195135.6550000003
+  },
+  {
+   "symbol": "TRU",
+   "announced": "2026-04-17",
+   "last_month_end": "2026-03-31",
+   "marked": false,
+   "pct": 0.23756906077348067,
+   "L": 387902.425
+  },
+  {
+   "symbol": "UNFI",
+   "announced": "2024-10-23",
+   "last_month_end": "2024-09-30",
+   "marked": false,
+   "pct": 0.2837209302325581,
+   "L": 1498484.9679999999
+  },
+  {
+   "symbol": "VANRY",
+   "announced": "2026-08-03",
+   "last_month_end": "2026-07-31",
+   "marked": false,
+   "pct": 0.7905405405405406,
+   "L": 4317110.9775
+  },
+  {
+   "symbol": "VIC",
+   "announced": "2026-08-03",
+   "last_month_end": "2026-07-31",
+   "marked": false,
+   "pct": 0.34459459459459457,
+   "L": 309866.202
+  },
+  {
+   "symbol": "VIDT",
+   "announced": "2025-04-08",
+   "last_month_end": "2025-03-31",
+   "marked": false,
+   "pct": 0.6069651741293532,
+   "L": 3637228.6099999994
+  },
+  {
+   "symbol": "VOXEL",
+   "announced": "2025-12-03",
+   "last_month_end": "2025-11-30",
+   "marked": false,
+   "pct": 0.14583333333333334,
+   "L": 469494.48
+  },
+  {
+   "symbol": "WAVES",
+   "announced": "2024-06-03",
+   "last_month_end": "2024-05-31",
+   "marked": false,
+   "pct": 0.4056603773584906,
+   "L": 2810484.215
+  },
+  {
+   "symbol": "XEM",
+   "announced": "2024-06-03",
+   "last_month_end": "2024-05-31",
+   "marked": true,
+   "pct": 0.014150943396226415,
+   "L": 946599.568
+  },
+  {
+   "symbol": "XMR",
+   "announced": "2024-02-06",
+   "last_month_end": "2024-01-31",
+   "marked": false,
+   "pct": 0.7658536585365854,
+   "L": 14603401.715
+  }
+ ],
+ "criteria": {
+  "a_precision_vs_base": {
+   "precision": 0.054249547920433995,
+   "base_rate": 0.018501387604070305,
+   "mult": 2.9321880650994574,
+   "threshold": 5.0,
+   "pass": false
+  },
+  "b_recall": {
+   "recall": 0.2537313432835821,
+   "numerator": 17,
+   "denominator": 67,
+   "threshold": 0.4,
+   "pass": false
+  },
+  "c_segments": {
+   "seg1": {
+    "window": "2022-01\u21922024-03",
+    "n_obs": 4915,
+    "n_marked": 502,
+    "n_result_true": 6,
+    "base_rate": 0.0012207527975584944,
+    "precision": 0.00199203187250996,
+    "mult_vs_base": 1.6318061088977425,
+    "pass": false
+   },
+   "seg2": {
+    "window": "2024-04\u21922026-10",
+    "n_obs": 5895,
+    "n_marked": 604,
+    "n_result_true": 194,
+    "base_rate": 0.032909245122985584,
+    "precision": 0.09768211920529801,
+    "mult_vs_base": 2.968227282037277,
+    "pass": false
+   }
+  },
+  "d_excess_median": {
+   "median_excess": -0.15871718023193687,
+   "n": 1010,
+   "threshold": -0.1,
+   "pass": true
+  }
+ },
+ "all_pass": false,
+ "marked_not_delisted_excess_median": -0.1569322720021088,
+ "marked_not_delisted_n": 1003,
+ "coverage": {
+  "n_codes_binance_hist": 262,
+  "n_delisting_watch": 164,
+  "delisting_d0_min": "2022-03-01",
+  "delisting_d0_max": "2026-10-14",
+  "delisting_with_binance_hist": 67,
+  "ohlcv_rows": 446541,
+  "first_trade_date": "2017-08-17",
+  "last_trade_date": "2026-11-06",
+  "months": 58,
+  "ann_year_all": [
+   [
+    "2022",
+    26
+   ],
+   [
+    "2023",
+    16
+   ],
+   [
+    "2024",
+    33
+   ],
+   [
+    "2025",
+    41
+   ],
+   [
+    "2026",
+    48
+   ]
+  ],
+  "ann_year_with_binance_hist": [
+   [
+    "2024",
+    11
+   ],
+   [
+    "2025",
+    22
+   ],
+   [
+    "2026",
+    34
+   ]
+  ],
+  "prior_bars_before_announce": {
+   "min": 231,
+   "max": 2990,
+   "median": 1627,
+   "n_ge_180": 67
+  }
+ },
+ "universe_sample": [
+  "1000LUNC",
+  "1000SHIB",
+  "1000WHY",
+  "1000X",
+  "1000XEC",
+  "1INCH",
+  "42",
+  "A2Z",
+  "AAVE",
+  "ACH"
+ ],
+ "monthly_counts_file": "docs/research/t275_monthly_counts.csv",
+ "prereg": "S-754",
+ "as_of": "2026-11-07",
+ "secondary": {
+  "auc_L_pooled": 0.7936196983977379,
+  "auc_L_mean_per_month": 0.7303879339513422,
+  "auc_L_months_scored": 34,
+  "thr_20pct": {
+   "n_marked": 2186,
+   "precision": 0.046203110704483075,
+   "mult_vs_base": 2.49727813357731
+  },
+  "thr_5pct": {
+   "n_marked": 566,
+   "precision": 0.06713780918727916,
+   "mult_vs_base": 3.6287985865724384
+  },
+  "n_with_mom30": 10808,
+  "auc_mom30": 0.3913084464555053,
+  "auc_mom30_neg": 0.6086915535444947,
+  "n_with_trend": 10810,
+  "auc_trend": 0.4207483506126296,
+  "auc_trend_neg": 0.5792516493873704,
+  "auc_combined_L_mom_trend": 0.6873953619909502,
+  "n_combined": 10808,
+  "null_random_dates": {
+   "actual_median_excess": -0.15871718023193687,
+   "null_median": -0.18921460548414432,
+   "percentile_of_actual": 0.9995,
+   "n": 2000,
+   "seed": 754,
+   "pre_ann_only": false,
+   "note": "\u968f\u673a\u65e5\u671f\u5bf9\u7167:\u540c\u4ee3\u53f7\u3001\u540c\u5e74\u91cc\u7684\u53e6\u4e00\u4e2a\u6708\u672b"
+  },
+  "null_random_dates_pre_ann": {
+   "actual_median_excess": -0.15871718023193687,
+   "null_median": -0.19102559044882872,
+   "percentile_of_actual": 1.0,
+   "n": 2000,
+   "seed": 754,
+   "pre_ann_only": true,
+   "note": "\u968f\u673a\u65e5\u671f\u5bf9\u7167:\u540c\u4ee3\u53f7\u3001\u540c\u5e74\u91cc\u7684\u53e6\u4e00\u4e2a\u6708\u672b"
+  }
+ },
+ "recall_variants": {
+  "any_month_end_within_90d_before": {
+   "num": 28,
+   "den": 67,
+   "recall": 0.417910447761194
+  },
+  "any_month_end_ever_before": {
+   "num": 52,
+   "den": 67,
+   "recall": 0.7761194029850746
+  }
+ }
+}
