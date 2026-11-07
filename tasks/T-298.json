@@ -1,0 +1,28 @@
+{
+  "id": "T-298",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-11-07",
+  "title": "S-778 「因」的扩散在控制住价格扩散之后还剩不剩:每周截面回归 x7 ~ e(R1) + e(C1) + e(C3) + 各自的 s,Fama–MacBeth",
+  "source": "REFUTATION_LEDGER S-775 结果段与 S-778(grep)。你自己的 docs/research/t294_diffusion.py 与 .t294_cache(不重拉)。NW t 用 src/data/evaluation/apparatus.py 的 newey_west_t(在排提交;没落地就用 activation_z_pit.nw_tstat,同式)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-298.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "预注册(S-778 原文)照抄进报告开头,只算一次。复用 t294 的场与 e / s;每周截面把 x7 与六个量都换成当周截面秩并居中,OLS 取系数;Fama–MacBeth 均值、NW t(滞后 1)、两半。判只判 e(C1) 与 e(C3)(BH 两条)。只报:x30 同一回归;去掉 s 的版本;加 e(C2) 之后的系数。纪律:只算、不改代码、不入库;长计算 nohup;只打印要报的格。",
+    "expect": "报告 docs/research/T-298_diffusion_vs_price.md + t298_fmb.py + t298_results.json + scenarios/lane-a-T-298.json(≥ 3 条);in_review,推 lane-a/T-298。"
+  },
+  "prior_value": "S-775 字面过了两条,但价格扩散(反射对照)最强 —— 这一卡决定 C1 / C3 是「因」还是领先—滞后的影子。",
+  "notes": "判:C1 ❌、C3 ❌(控制住 R1 之后「因」的扩散不剩东西;不开前向记录)。主规格 main_x7(带 s,200 周 2023-01-02→2026-10-26,每周样本中位数 169):e(R1) 系数 +0.06856 / NW t +1.40 / h1 +0.06529 / h2 +0.07134 / 零分布单侧 p 0.044;e(C1) +0.07526 / t +1.11 / h1 −0.05758 / h2 +0.18843 / p 0.058;e(C3) −0.00468 / t −0.08 / h1 +0.01615 / h2 −0.02242 / p 0.549。两条都不满足「均值>0 ∧ t≥2 ∧ 两半同号」,BH(零分布 p 与 NW p 两种口径)也不过 ⇒ ❌。只报三格:① x30(197 周)e(C1) +0.04231/t +0.78(两半 +0.06054/+0.02633,p 0.176)、e(C3) +0.01799/t +0.27(p 0.353)—— 同样不过;② 去掉 s:e(C3) +0.02508/t +2.55/两半 +0.01982/+0.02955(字面过三条)、e(C1) +0.00530/t +0.73、e(R1) +0.04124/t +3.58 —— 但见下条机制,这条不是「邻居先动」;③ 加 e(C2):e(C2) −0.06393/t −1.44/h1 +0.06104/h2 −0.17040(p 0.977 ⇒ 负向单侧 p≈0.023 但两半反号)⇒ C2 的反向不独立于 R1;e(C1) +0.09767/t +1.38、e(C3) −0.03737/t −0.64。探索性机制(需另立预注册、新数据上过零信号对照):该场上 e ≈ −0.47·s + 常数(水平 corr(e,s) = −0.988/−0.984/−0.981,R² 0.96–0.98;平均出度 10.0、最大边权重份额 0.107 ≈ 1/10 ⇒ W ≈ 逐行平均,p ≈ 0.5·s + 常数)⇒ S-775 的 diff = IC(e) − IC(s) > 0 等价于 IC(s) < 0(S-775:IC(e)+IC(s) = C1 +0.0014、C3 +0.0006、R1 +0.0020、C2 −0.0089)⇒ S-775 给 C1/C3 的 ✅ 读的是「自身水平与之后 7 天负相关」,不是「邻居先动、之后补涨」。待 Seth 审:要不要改写 S-775 结果段、要不要另立「不均匀权重的稀疏场 + 纯噪声源零信号对照」的卡。产物:docs/research/T-298_diffusion_vs_price.md + t298_fmb.py + t298_results.json + scenarios/lane-a-T-298.json(4 条)。数据:复用 .t294_cache,未重拉;NW t 用 activation_z_pit.nw_tstat(apparatus.newey_west_t 未进 origin/main,脚本内 try/except 自动切换);零分布只用 apparatus 的 shuffle_within/null_distribution/percentile_of(每周内打乱 y,1000 次,种子 778)。",
+  "verified": null
+}
