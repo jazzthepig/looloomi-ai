@@ -1029,13 +1029,14 @@ async def refresh_ai_briefing() -> dict:
     """Background job: assemble facts → LLM writes prose → cache to Redis `signal:ai_briefing`.
     Called by the startup loop AND on-demand via /internal/refresh-briefing. No-op (returns
     skipped) when no LLM endpoint is configured, so the feed simply uses templates."""
-    from src.data.narrative.llm_narrator import compose_ai_briefing, configured
+    from src.data.narrative.llm_narrator import LAST_COMPOSE_WHY, compose_ai_briefing, configured
     if not configured():
         return {"status": "skipped", "reason": "no LLM endpoint (NARRATIVE_LLM_BASE_URL / LLM_BASE_URL unset)"}
     b = await assemble_briefing()
     ai = await compose_ai_briefing(b["ai_facts"])
     if not ai:
-        return {"status": "unavailable", "reason": "model returned no compliant narrative; feed uses templates"}
+        return {"status": "unavailable",
+                "reason": f"model returned no compliant narrative; feed uses templates — {LAST_COMPOSE_WHY.get('why') or 'no reason recorded'}"}
     ai["_ts"] = int(time.time())
     try:
         from src.api.store import redis_set_key
