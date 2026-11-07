@@ -1,0 +1,28 @@
+{
+  "id": "T-296",
+  "owner": "lane-c",
+  "status": "in_review",
+  "created": "2026-11-07",
+  "title": "S-776 S-774 的力量从哪来:6 个「因」维 / 5 个价格相位维 / 全部 11 维,三个 Ridge 走步对比",
+  "source": "REFUTATION_LEDGER S-774 结果段与 S-776(grep,只读这两条)。你自己的 docs/research/t293_asset_flow.py 与 worktree 里的缓存(_t293_asset_flow.jsonl,不必重拉)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-296.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "预注册(S-776 原文)照抄进报告开头,只算一次。复用 t293 的走步与缓存;三个模型 F(fund7 / doi7 / crowd / smart / taker7 / turn)/ P(mom7 / mom30 / vol30 / vratio / dd90)/ A(全部,复算应与 S-774 的 R 一致到 1e-6,先报这个自检)。判只判 F:IC 均值、NW t(滞后 5)、两半、周内打乱分位(1,000 次,种子 776)、IC(A) − IC(P) 的配对 NW t。只报:各子集最低五分位、市值三档、F 里逐一去掉一维的 IC。纪律:只算、不改代码、不入库;长计算 nohup 后台;只打印要报的格。",
+    "expect": "报告 docs/research/T-296_flow_vs_phase.md + t296_ablation.py + t296_results.json + scenarios/lane-c-T-296.json(≥ 3 条);in_review,推 lane-c/T-296。"
+  },
+  "prior_value": "S-774 R ✅ 但单维最强的是 vol30(低波动异象)。这一卡决定这个空间是「因」的几何,还是老异象的新包装。",
+  "notes": "【主检验完成 · 判 F ❌ ⇒ S-774 的力量来自价格相位】产物:docs/research/T-296_flow_vs_phase.md(S-776 原文照抄在开头)+ docs/research/t296_ablation.py + docs/research/t296_results.json + docs/research/scenarios/lane-c-T-296.json(5 条)。数据:复用 t293 缓存 docs/research/_t293_asset_flow.jsonl(224,759 行有 vec,未重拉);自检 vec 与 2q−1 最大差 2.98e-08 ⇒ 维序对上。样本:197 个周一,2023-01-02 → 2026-10-05(与 S-774 同)。【自检(先报)】A(11 维)与 S-774 的 R 臂逐项一致:|ΔIC| = 0.0、|ΔNW t| = 0.0、|Δ最低五分位| = 0.0、两半逐项相同(0.028834929106088803 / 0.16355435942306473)⇒ 满足 1e-6(实测恰好 0)。F(6 因维 fund7/doi7/crowd/smart/taker7/turn):IC 0.0124、NW t(滞后5) 0.77、正比例 55.3%、两半 0.0416/−0.0132、周内打乱分位(种子 776,1000 次)0.986、最低五分位 x30 −0.14%、Q5−Q1 +0.54%。P(5 相位维 mom7/mom30/vol30/vratio/dd90):IC 0.1118、NW t 5.12、正比例 75.6%、两半 0.0266/0.1865、打乱分位 1.000、最低五分位 x30 −2.48%、Q5−Q1 +4.61%。A(= S-774 R):IC 0.1006、t 4.99、正比例 72.6%、两半 0.0288/0.1636、打乱分位 1.000、最低五分位 −2.07%、Q5−Q1 +4.27%。【判定(只判 F)】(a) IC>0 ✓ 但 NW t 0.77 < 2 ✗;(b) 两半都 > 0 ✗(后半 −0.0132);(c) 打乱分位 0.986 ≥ 0.95 ✓;(d) IC(A) − IC(P) = −0.0112 < 0、配对 NW t −1.23 ✗ ⇒ ❌。配对差:IC(F) − IC(P) = −0.0994(t −3.58)、IC(F) − IC(A) = −0.0882(t −3.90)。【只报项】F 里逐一去掉一维:taker7 是唯一在扛的(去掉后 IC 0.0032、t 0.24),crowd/smart/turn 是拖累(去掉后 F 的 IC 升到 0.0164/0.0144/0.0151),全部 t < 1.1;市值三档 F 0.0573/0.0368/0.0143、P 0.1203/0.0998/0.0505、A 0.1264/0.0934/0.0464(三个模型都偏小市值)。【诚实】① P(5 维)比 A(11 维)还好 —— 加「因」维不但没加东西、还稀释了(Ridge 收缩被噪声维拖累),比「力量全来自相位」更进一步;② F 的 IC 均值为正且过周内打乱(0.986)但 NW t 只 0.77,因为两半符号相反 —— 周内打乱零分布不跨行情段,与 NW 答的不是同一个问题(不是事后放宽判据);③ 「最低五分位跑输」也主要来自相位维(F −0.14% vs P −2.48%);④ 力量的时间形状(2024-10 之后)完全由相位维决定。按预注册 ❌ 分支:如实写「S-774 的力量来自价格相位」;前向记录 asset_flow_forecast_daily 照开(它仍是一个过了的排序),但叙述改掉;不动钱。试验计数:高维族 +1。缓存(未入库,复用):docs/research/_t293_asset_flow.jsonl、_t293_mcap.jsonl。",
+  "verified": null
+}
