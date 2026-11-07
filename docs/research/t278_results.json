@@ -1,0 +1,613 @@
+{
+ "task": "T-278",
+ "ledger": "S-757",
+ "generated_at": "2026-11-07T09:45:37.471034+00:00",
+ "window": {
+  "d_from": "2020-07-01",
+  "d_to": "2026-11-06",
+  "cap_frac": 0.4,
+  "equity0": 630.0
+ },
+ "universe_n": 257,
+ "tickets_scanned": 779,
+ "stopped": "only 0 bars on 2026-11-05 (previous day 257)",
+ "hole_days": 6,
+ "delist": {
+  "table_rows": 164,
+  "events_rows": 368,
+  "will_delist_notices": 39,
+  "parsed_tokens": 164,
+  "cross_check": {
+   "only_in_table": [],
+   "only_in_events": [],
+   "date_mismatch": []
+  }
+ },
+ "baseline": {
+  "n": 145,
+  "r": {
+   "n": 145,
+   "sum_r": 54.3331,
+   "mean_r": 0.3747,
+   "win_pct": 32.4
+  },
+  "curve": {
+   "total_return": 0.19853696611473914,
+   "cagr": 0.029707333255682533,
+   "max_dd": -0.23545847960096922,
+   "calmar": 0.12616803313275216,
+   "end_equity": 755.0782886522857,
+   "n_days": 2258,
+   "worst_month": "2025-02",
+   "worst_month_ret": -0.06204974052268886,
+   "n_months": 75
+  },
+  "taken": 145
+ },
+ "rule": {
+  "n": 145,
+  "r": {
+   "n": 145,
+   "sum_r": 54.3331,
+   "mean_r": 0.3747,
+   "win_pct": 32.4
+  },
+  "curve": {
+   "total_return": 0.19853696611473914,
+   "cagr": 0.029707333255682533,
+   "max_dd": -0.23545847960096922,
+   "calmar": 0.12616803313275216,
+   "end_equity": 755.0782886522857,
+   "n_days": 2258,
+   "worst_month": "2025-02",
+   "worst_month_ret": -0.06204974052268886,
+   "n_months": 75
+  },
+  "taken": 145,
+  "dropped_candidates": 4,
+  "forced_candidates": 0
+ },
+ "delta": {
+  "sum_r": 0.0,
+  "calmar_base": 0.12616803313275216,
+  "calmar_rule": 0.12616803313275216,
+  "total_return_base": 0.19853696611473914,
+  "total_return_rule": 0.19853696611473914,
+  "cagr_base": 0.029707333255682533,
+  "cagr_rule": 0.029707333255682533,
+  "max_dd_base": -0.23545847960096922,
+  "max_dd_rule": -0.23545847960096922,
+  "end_equity_base": 755.0782886522857,
+  "end_equity_rule": 755.0782886522857
+ },
+ "class1_already_on_list": {
+  "n": 0,
+  "n_candidates": 4,
+  "r": {
+   "n": 0,
+   "sum_r": 0.0,
+   "mean_r": null,
+   "win_pct": null
+  },
+  "rule_r": {
+   "n": 0,
+   "sum_r": 0.0,
+   "mean_r": null,
+   "win_pct": null
+  },
+  "tickets": []
+ },
+ "class2_announced_while_held": {
+  "n": 0,
+  "n_candidates": 0,
+  "r": {
+   "n": 0,
+   "sum_r": 0.0,
+   "mean_r": null,
+   "win_pct": null
+  },
+  "rule_r": {
+   "n": 0,
+   "sum_r": 0.0,
+   "mean_r": null,
+   "win_pct": null
+  },
+  "detail": [],
+  "tickets": []
+ },
+ "boundary_announced_on_exit_day": [],
+ "sensitivity_entry_day_half_open": {
+  "note": "台账字面:开票日 = 进场日,窗口 [d−365, d)",
+  "class1_n": 4,
+  "class2_n": 0,
+  "class1_ledger_n": 0,
+  "class2_ledger_n": 0,
+  "class1_symbols": [
+   "LOOM",
+   "XEM",
+   "OMG",
+   "LOOM"
+  ],
+  "class2_symbols": [],
+  "base_n": 145,
+  "base_sum_r": 54.3331,
+  "rule_n": 145,
+  "rule_sum_r": 54.3331,
+  "rule_curve": {
+   "total_return": 0.19853696611473914,
+   "cagr": 0.029707333255682533,
+   "max_dd": -0.23545847960096922,
+   "calmar": 0.12616803313275216,
+   "end_equity": 755.0782886522857,
+   "n_days": 2258,
+   "worst_month": "2025-02",
+   "worst_month_ret": -0.06204974052268886,
+   "n_months": 75
+  }
+ },
+ "sensitivity_any_announcement": {
+  "note": "探索性:若名单记全部公告(表的实现只留第一次),规则会多挡多少",
+  "class1_n": 4,
+  "class2_n": 0,
+  "class1_ledger_n": 0,
+  "class2_ledger_n": 0,
+  "class1_symbols": [
+   "LOOM",
+   "XEM",
+   "OMG",
+   "LOOM"
+  ],
+  "class2_symbols": [],
+  "base_sum_r": 54.3331,
+  "rule_sum_r": 54.3331,
+  "rule_curve": {
+   "total_return": 0.19853696611473914,
+   "cagr": 0.029707333255682533,
+   "max_dd": -0.23545847960096922,
+   "calmar": 0.12616803313275216,
+   "end_equity": 755.0782886522857,
+   "n_days": 2258,
+   "worst_month": "2025-02",
+   "worst_month_ret": -0.06204974052268886,
+   "n_months": 75
+  }
+ },
+ "ledger_window_2022_2026": {
+  "note": "只统计进场日在 2022-02-17 → 2026-10-14 的票(台账窗口)",
+  "base": {
+   "n": 106,
+   "sum_r": 18.4736,
+   "mean_r": 0.1743,
+   "win_pct": 34.0
+  },
+  "rule": {
+   "n": 106,
+   "sum_r": 18.4736,
+   "mean_r": 0.1743,
+   "win_pct": 34.0
+  }
+ },
+ "universe_coverage": {
+  "universe_n": 257,
+  "on_list_n": 66,
+  "on_list_with_ticket": [
+   "ALPHA",
+   "ATA",
+   "BAKE",
+   "BLZ",
+   "FIO",
+   "FLM",
+   "ICX",
+   "LEVER",
+   "LRC",
+   "NKN",
+   "RDNT",
+   "STMX",
+   "STORJ",
+   "TRU",
+   "XEM"
+  ],
+  "rows": [
+   {
+    "symbol": "A2Z",
+    "list_key": "A2Z",
+    "announced": "2026-03-18",
+    "n_ann": 1
+   },
+   {
+    "symbol": "ACX",
+    "list_key": "ACX",
+    "announced": "2026-08-03",
+    "n_ann": 1
+   },
+   {
+    "symbol": "ALPACA",
+    "list_key": "ALPACA",
+    "announced": "2025-04-24",
+    "n_ann": 1
+   },
+   {
+    "symbol": "ALPHA",
+    "list_key": "ALPHA",
+    "announced": "2025-06-26",
+    "n_ann": 1
+   },
+   {
+    "symbol": "AMB",
+    "list_key": "AMB",
+    "announced": "2025-02-17",
+    "n_ann": 1
+   },
+   {
+    "symbol": "ATA",
+    "list_key": "ATA",
+    "announced": "2026-05-13",
+    "n_ann": 1
+   },
+   {
+    "symbol": "BADGER",
+    "list_key": "BADGER",
+    "announced": "2025-04-08",
+    "n_ann": 1
+   },
+   {
+    "symbol": "BAKE",
+    "list_key": "BAKE",
+    "announced": "2025-09-03",
+    "n_ann": 1
+   },
+   {
+    "symbol": "BAL",
+    "list_key": "BAL",
+    "announced": "2025-04-08",
+    "n_ann": 1
+   },
+   {
+    "symbol": "BLZ",
+    "list_key": "BLZ",
+    "announced": "2024-12-18",
+    "n_ann": 1
+   },
+   {
+    "symbol": "BOND",
+    "list_key": "BOND",
+    "announced": "2024-07-08",
+    "n_ann": 1
+   },
+   {
+    "symbol": "BSW",
+    "list_key": "BSW",
+    "announced": "2025-06-26",
+    "n_ann": 1
+   },
+   {
+    "symbol": "CHESS",
+    "list_key": "CHESS",
+    "announced": "2026-02-02",
+    "n_ann": 1
+   },
+   {
+    "symbol": "COMBO",
+    "list_key": "COMBO",
+    "announced": "2025-03-21",
+    "n_ann": 1
+   },
+   {
+    "symbol": "COS",
+    "list_key": "COS",
+    "announced": "2026-06-05",
+    "n_ann": 1
+   },
+   {
+    "symbol": "D",
+    "list_key": "D",
+    "announced": "2026-06-05",
+    "n_ann": 1
+   },
+   {
+    "symbol": "DEGO",
+    "list_key": "DEGO",
+    "announced": "2026-04-17",
+    "n_ann": 1
+   },
+   {
+    "symbol": "DENT",
+    "list_key": "DENT",
+    "announced": "2026-04-17",
+    "n_ann": 1
+   },
+   {
+    "symbol": "DF",
+    "list_key": "DF",
+    "announced": "2026-02-02",
+    "n_ann": 1
+   },
+   {
+    "symbol": "FIO",
+    "list_key": "FIO",
+    "announced": "2026-04-09",
+    "n_ann": 1
+   },
+   {
+    "symbol": "FIS",
+    "list_key": "FIS",
+    "announced": "2025-12-03",
+    "n_ann": 1
+   },
+   {
+    "symbol": "FLM",
+    "list_key": "FLM",
+    "announced": "2025-10-29",
+    "n_ann": 1
+   },
+   {
+    "symbol": "FORTH",
+    "list_key": "FORTH",
+    "announced": "2026-03-18",
+    "n_ann": 1
+   },
+   {
+    "symbol": "FUN",
+    "list_key": "FUN",
+    "announced": "2026-04-09",
+    "n_ann": 1
+   },
+   {
+    "symbol": "GHST",
+    "list_key": "GHST",
+    "announced": "2026-02-02",
+    "n_ann": 1
+   },
+   {
+    "symbol": "HFT",
+    "list_key": "HFT",
+    "announced": "2026-08-03",
+    "n_ann": 1
+   },
+   {
+    "symbol": "HIFI",
+    "list_key": "HIFI",
+    "announced": "2025-09-03",
+    "n_ann": 1
+   },
+   {
+    "symbol": "HIGH",
+    "list_key": "HIGH",
+    "announced": "2026-06-05",
+    "n_ann": 1
+   },
+   {
+    "symbol": "HOOK",
+    "list_key": "HOOK",
+    "announced": "2026-03-18",
+    "n_ann": 1
+   },
+   {
+    "symbol": "ICX",
+    "list_key": "ICX",
+    "announced": "2026-08-20",
+    "n_ann": 1
+   },
+   {
+    "symbol": "IDEX",
+    "list_key": "IDEX",
+    "announced": "2026-03-18",
+    "n_ann": 1
+   },
+   {
+    "symbol": "KDA",
+    "list_key": "KDA",
+    "announced": "2025-10-29",
+    "n_ann": 1
+   },
+   {
+    "symbol": "KEY",
+    "list_key": "KEY",
+    "announced": "2024-11-26",
+    "n_ann": 1
+   },
+   {
+    "symbol": "LEVER",
+    "list_key": "LEVER",
+    "announced": "2025-06-26",
+    "n_ann": 1
+   },
+   {
+    "symbol": "LINA",
+    "list_key": "LINA",
+    "announced": "2025-03-21",
+    "n_ann": 1
+   },
+   {
+    "symbol": "LOOM",
+    "list_key": "LOOM",
+    "announced": "2024-08-12",
+    "n_ann": 1
+   },
+   {
+    "symbol": "LRC",
+    "list_key": "LRC",
+    "announced": "2026-03-18",
+    "n_ann": 1
+   },
+   {
+    "symbol": "MBOX",
+    "list_key": "MBOX",
+    "announced": "2026-06-05",
+    "n_ann": 1
+   },
+   {
+    "symbol": "MLN",
+    "list_key": "MLN",
+    "announced": "2026-05-13",
+    "n_ann": 1
+   },
+   {
+    "symbol": "NFP",
+    "list_key": "NFP",
+    "announced": "2026-06-26",
+    "n_ann": 1
+   },
+   {
+    "symbol": "NKN",
+    "list_key": "NKN",
+    "announced": "2026-02-02",
+    "n_ann": 1
+   },
+   {
+    "symbol": "NTRN",
+    "list_key": "NTRN",
+    "announced": "2026-03-18",
+    "n_ann": 1
+   },
+   {
+    "symbol": "NULS",
+    "list_key": "NULS",
+    "announced": "2025-04-08",
+    "n_ann": 1
+   },
+   {
+    "symbol": "OMG",
+    "list_key": "OMG",
+    "announced": "2024-06-03",
+    "n_ann": 1
+   },
+   {
+    "symbol": "OXT",
+    "list_key": "OXT",
+    "announced": "2026-04-09",
+    "n_ann": 1
+   },
+   {
+    "symbol": "PERP",
+    "list_key": "PERP",
+    "announced": "2025-10-29",
+    "n_ann": 1
+   },
+   {
+    "symbol": "PHB",
+    "list_key": "PHB",
+    "announced": "2026-05-13",
+    "n_ann": 1
+   },
+   {
+    "symbol": "QUICK",
+    "list_key": "QUICK",
+    "announced": "2026-10-14",
+    "n_ann": 1
+   },
+   {
+    "symbol": "RDNT",
+    "list_key": "RDNT",
+    "announced": "2026-03-18",
+    "n_ann": 1
+   },
+   {
+    "symbol": "REEF",
+    "list_key": "REEF",
+    "announced": "2024-08-12",
+    "n_ann": 1
+   },
+   {
+    "symbol": "REI",
+    "list_key": "REI",
+    "announced": "2025-12-03",
+    "n_ann": 1
+   },
+   {
+    "symbol": "REN",
+    "list_key": "REN",
+    "announced": "2024-11-26",
+    "n_ann": 1
+   },
+   {
+    "symbol": "SNT",
+    "list_key": "SNT",
+    "announced": "2025-04-08",
+    "n_ann": 1
+   },
+   {
+    "symbol": "STMX",
+    "list_key": "STMX",
+    "announced": "2025-02-17",
+    "n_ann": 1
+   },
+   {
+    "symbol": "STORJ",
+    "list_key": "STORJ",
+    "announced": "2026-08-20",
+    "n_ann": 1
+   },
+   {
+    "symbol": "SYS",
+    "list_key": "SYS",
+    "announced": "2026-05-13",
+    "n_ann": 1
+   },
+   {
+    "symbol": "TROY",
+    "list_key": "TROY",
+    "announced": "2025-04-08",
+    "n_ann": 1
+   },
+   {
+    "symbol": "TRU",
+    "list_key": "TRU",
+    "announced": "2026-04-17",
+    "n_ann": 1
+   },
+   {
+    "symbol": "UNFI",
+    "list_key": "UNFI",
+    "announced": "2024-10-23",
+    "n_ann": 1
+   },
+   {
+    "symbol": "VANRY",
+    "list_key": "VANRY",
+    "announced": "2026-08-03",
+    "n_ann": 1
+   },
+   {
+    "symbol": "VIC",
+    "list_key": "VIC",
+    "announced": "2026-08-03",
+    "n_ann": 1
+   },
+   {
+    "symbol": "VIDT",
+    "list_key": "VIDT",
+    "announced": "2025-04-08",
+    "n_ann": 1
+   },
+   {
+    "symbol": "VOXEL",
+    "list_key": "VOXEL",
+    "announced": "2025-12-03",
+    "n_ann": 1
+   },
+   {
+    "symbol": "WAVES",
+    "list_key": "WAVES",
+    "announced": "2024-06-03",
+    "n_ann": 1
+   },
+   {
+    "symbol": "XEM",
+    "list_key": "XEM",
+    "announced": "2024-06-03",
+    "n_ann": 1
+   },
+   {
+    "symbol": "XMR",
+    "list_key": "XMR",
+    "announced": "2024-02-06",
+    "n_ann": 1
+   }
+  ]
+ },
+ "ledger_composition_change": {
+  "dropped": [],
+  "added": []
+ }
+}
