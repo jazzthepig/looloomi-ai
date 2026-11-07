@@ -34,7 +34,8 @@ WRITES_TABLES = (TABLE,)
 WRITES_COLUMNS = {"events": ("id", "ts", "kind", "source", "symbols", "title", "url", "payload")}
 LOOP_NAME = "_events_loop"
 BINANCE_CMS = "https://www.binance.com/bapi/composite/v1/public/cms/article/list/query"
-BINANCE_CATALOGS = {48: "listing", 161: "delisting"}
+BINANCE_CATALOGS = {48: "listing", 161: "delisting", 49: "notice"}
+#: 11-07:catalog 49(Latest Binance News,4,484 篇)里只留「监控标签」公告 —— 下架的前一步(S-753);其余新闻不进事件表
 BINANCE_ARTICLE = "https://www.binance.com/en/support/announcement/{code}"
 HL_SEEN_KEY = "events:hl_spot_tokens_seen"
 BF_KEY = "events:binance_backfill:{cat}"
@@ -118,8 +119,31 @@ def binance_scope(title: str) -> str:
     return "spot"
 
 
+_MON_TAG = re.compile(r"monitoring\s+tag", re.IGNORECASE)
+_MON_STOP = {"ON", "TO", "AND", "THE", "FOR", "OF"}
+
+
+def monitoring_tag(title: str) -> tuple[Optional[str], list[str]]:
+    """纯函数。监控标签公告 → (kind, 代币);不是 ⇒ (None, [])。
+    标题写法各异(on X, Y and Z / to Include X & Y / on Tokens: X, Y),通用解析器会漏 —— 这里只取「Monitoring Tag」之后、
+    日期之外的全大写代号。"""
+    t = str(title or "")
+    m = _MON_TAG.search(t)
+    if not m:
+        return None, []
+    kind = "monitoring_tag_removed" if re.search(r"\bremov", t, re.IGNORECASE) else "monitoring_tag"
+    seg = re.sub(r"\(?\d{4}-\d{2}-\d{2}\)?", " ", t[m.end():])
+    syms, seen = [], set()
+    for s in re.findall(r"\b[A-Z0-9]{2,12}\b", seg):
+        if s.isdigit() or s in _MON_STOP or s in seen:
+            continue
+        seen.add(s)
+        syms.append(s)
+    return kind, syms
+
+
 def parse_binance(payload: dict, catalog_id: int) -> list[dict]:
-    """纯函数。CMS 返回 → 事件行。"""
+    """纯函数。CMS 返回 → 事件行。catalog 49 只留监控标签公告。"""
     kind = BINANCE_CATALOGS.get(catalog_id, "notice")
     out = []
     for cat in ((payload or {}).get("data") or {}).get("catalogs") or []:
@@ -127,8 +151,14 @@ def parse_binance(payload: dict, catalog_id: int) -> list[dict]:
             code, title = str(a.get("code") or ""), str(a.get("title") or "")
             if not code or not title:
                 continue
+            if kind == "notice":
+                k, syms = monitoring_tag(title)
+                if k is None:
+                    continue
+            else:
+                k, syms = binance_kind(title, kind), symbols_from_title(title)
             out.append({"id": event_id("binance", code), "ts": _ts_ms(a.get("releaseDate")) or dt.datetime.now(dt.timezone.utc).isoformat(),
-                        "kind": binance_kind(title, kind), "source": "binance", "symbols": symbols_from_title(title),
+                        "kind": k, "source": "binance", "symbols": syms,
                         "title": title[:300], "url": BINANCE_ARTICLE.format(code=code),
                         "payload": {"article_id": a.get("id"), "catalog": catalog_id, "scope": binance_scope(title)}})
     return out

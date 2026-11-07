@@ -101,7 +101,7 @@ def test_run_once_writes_all_three_writers_and_reports_errors(monkeypatch):
     monkeypatch.setattr(store, "redis_set_key", rset)
     monkeypatch.setattr(hl.HlSpotClient, "spot_meta", lambda self: {"tokens": [{"name": "USDC"}, {"name": "UBTC"}]})
     r = asyncio.run(ev.run_once(NOW))
-    assert r["ok"] and r["written"] == 4 and r["kinds"] == {"news": 1, "listing": 3} and r["errors"] == ["binance 161: HTTP 503"]
+    assert r["ok"] and r["written"] == 4 and r["kinds"] == {"news": 1, "listing": 3} and r["errors"] == ["binance 161: HTTP 503", "binance 49: HTTP 503"]
     assert r["backfill"]["48"]["done"] is True, "第 4 页空 ⇒ 回填完"
     assert redis[ev.HL_SEEN_KEY]["names"] == ["UBTC", "USDC"], "第一轮登记 HL 代币"
     monkeypatch.setattr(hl.HlSpotClient, "spot_meta", lambda self: {"tokens": [{"name": "USDC"}, {"name": "UBTC"}, {"name": "NEWT"}]})
@@ -150,3 +150,17 @@ def test_repair_symbols_only_fills_what_it_can_parse():
 
     n = asyncio.run(ev.repair_symbols(read, up))
     assert n == 1 and out[0]["id"] == "a" and out[0]["symbols"] == ["OXT"] and set(out[0]) == set(ev.WRITES_COLUMNS[ev.TABLE])
+
+
+def test_monitoring_tag_notices_only_from_catalog_49():
+    """11-07(S-753):Latest Binance News 里只留「监控标签」公告 —— 下架的前一步;通用解析器会漏代号,专用解析。"""
+    assert ev.monitoring_tag("Binance Will Extend the Monitoring Tag to Include BICO & CVC on 2026-10-09") == ("monitoring_tag", ["BICO", "CVC"])
+    assert ev.monitoring_tag("Binance Will Add Monitoring Tag on ALPACA, PDA, WAVES and WRX (2024-12-06)")[1] == ["ALPACA", "PDA", "WAVES", "WRX"]
+    assert ev.monitoring_tag("Binance Will Remove the Monitoring Tag on ZEC (2025-01-10)") == ("monitoring_tag_removed", ["ZEC"])
+    assert ev.monitoring_tag("Binance Will List FOO") == (None, [])
+    payload = {"data": {"catalogs": [{"articles": [
+        {"code": "a1", "title": "Binance Will Add Monitoring Tag on Tokens: AMP, BIFI, BOND (2024-08-13)", "releaseDate": 1723500000000},
+        {"code": "a2", "title": "Binance Launches a New Earn Product", "releaseDate": 1723500000000}]}]}}
+    rows = ev.parse_binance(payload, 49)
+    assert len(rows) == 1 and rows[0]["kind"] == "monitoring_tag" and rows[0]["symbols"] == ["AMP", "BIFI", "BOND"]
+    assert 49 in ev.BINANCE_CATALOGS
