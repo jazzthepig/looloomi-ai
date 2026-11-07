@@ -314,6 +314,8 @@ def test_loader_reads_the_book_state_and_signal_day_closes(monkeypatch):
             return []                                              # 没有 Jazz ⓪ 判断 ⇒ 系统默认
         if table == "oi_lev_snapshot_daily":
             return []                                              # S-690 快照没有;10-21 的窗口早过了 ⇒ 不过滤照常进
+        if table == "delisting_watch":
+            return []                                              # S-751 硬规则名单:空
         raise AssertionError(table)
     monkeypatch.setattr(hdr, "_read_all", fake)
     monkeypatch.delenv("R_V2_RISK_FRAC", raising=False)

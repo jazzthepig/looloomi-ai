@@ -64,3 +64,55 @@ def test_wiring():
     assert "async def _delisting_watch_loop" in (ROOT / "src/api/main.py").read_text(encoding="utf-8")
     mig = (ROOT / "migrations/2026-11-07_delisting_watch.sql").read_text(encoding="utf-8")
     assert all(c in mig for c in dw.WRITES_COLUMNS[dw.TABLE])
+
+
+def test_hard_rule_plan_filter_skips_new_and_forces_exit():
+    """Jazz 11-07:Binance 宣布整币下架 ⇒ 不开新票、已有持仓当天开盘出场;1000 前缀也认。"""
+    now = dt.datetime(2026, 11, 7, tzinfo=dt.timezone.utc)
+    excl = dw.exclusion_set([{"symbol": "STORJ", "announced_at": "2026-08-20T00:00:00+00:00"},
+                             {"symbol": "PEPE", "announced_at": "2026-10-01T00:00:00+00:00"},
+                             {"symbol": "OLD", "announced_at": "2024-01-01T00:00:00+00:00"}], now)
+    assert excl == {"STORJ", "PEPE"}, "窗口 365 天:更早的代号可能已被新币复用"
+    plan = {"ready": True, "enter": [{"ticket_id": "a", "symbol": "STORJ"}, {"ticket_id": "b", "symbol": "UNI"}],
+            "hold": [{"ticket_id": "c", "symbol": "1000PEPE"}, {"ticket_id": "d", "symbol": "SOL"}], "exit": []}
+    out = dw.apply_to_plan(plan, excl)
+    assert [e["symbol"] for e in out["enter"]] == ["UNI"] and [e["symbol"] for e in out["skipped_delist"]] == ["STORJ"]
+    assert [h["symbol"] for h in out["hold"]] == ["SOL"]
+    assert out["exit"] == [{"ticket_id": "c", "symbol": "1000PEPE", "why": "binance_delisting", "at": "today_open"}]
+    assert out["delist_filter"]["forced_exit"] == ["1000PEPE"]
+
+
+def test_plan_fails_closed_when_the_list_is_unreadable(monkeypatch):
+    import src.data.style.header as hdr
+    from src.data.execution import ticket_plan as tpm
+    asof = "2026-11-06"
+
+    async def fake(table, params):
+        if table == "r_tickets_paper":
+            return [{"ticket_id": "X:1", "symbol": "STORJ", "signal_d": asof, "status": "pending", "atr14": 0.4},
+                    {"ticket_id": "Y:1", "symbol": "UNI", "signal_d": asof, "status": "pending", "atr14": 0.4}]
+        if table == "r_tickets_state":
+            return [{"last_d": asof}]
+        if table == "ohlcv_daily":
+            return [{"symbol": s, "trade_date": asof, "close": 8.0} for s in ("STORJ", "UNI")]
+        if table == "delisting_watch":
+            if fake.fail:
+                raise RuntimeError("delisting_watch 读不到")
+            return [{"symbol": "STORJ", "announced_at": "2026-08-20T00:00:00+00:00"}]
+        if table in ("regime_calls", "j_tickets", "oi_lev_snapshot_daily"):
+            return []
+        raise AssertionError(table)
+    fake.fail = False
+    monkeypatch.setattr(hdr, "_read_all", fake)
+    monkeypatch.delenv("R_V2_RISK_FRAC", raising=False)
+    p = asyncio.run(tpm.load_ticket_plan(asof))
+    assert [e["symbol"] for e in p["enter"]] == ["UNI"] and p["delist_filter"]["skipped"] == ["STORJ"]
+    fake.fail = True
+    p = asyncio.run(tpm.load_ticket_plan(asof))
+    assert p["enter"] == [] and p["delist_filter"]["status"] == "read_error", "读不到名单 ⇒ 不开新票"
+
+
+def test_long_book_panels_are_checked():
+    assert dw.panel_conflicts({"STORJ", "XMR"}) == {}, "11-07:面板与全部下架代币零交集"
+    hit = dw.panel_conflicts({"ONDO"})
+    assert hit and all(v == ["ONDO"] for v in hit.values())

@@ -9,8 +9,11 @@
 
 ## 这个模块做两件事(都不动钱)
 
-1. **观察名单** `watchlist()`:过去 `WATCH_DAYS` 天里被 Binance 宣布整币下架的代币。② 面板卫生规则的**候选**输入 ——
-   真正让账本剔除它们要 Jazz 拍(R-v2 是真钱账本)。
+1. **观察名单** `watchlist()`:过去 `WATCH_DAYS` 天里被 Binance 宣布整币下架的代币。
+   **Jazz 11-07 拍成硬规则(「下架对一个代币是致命的」):** 过去 `EXCLUDE_DAYS` 天里被宣布整币下架的代币 ——
+   R-v2 计划(`ticket_plan.load_ticket_plan` → `apply_to_plan`)不开新票、已有持仓移到出场;多头账本的面板若出现这些名字,
+   本循环记 error 并写明哪本账、哪个名字(面板是 24–25 个大币,11-07 与全部 164 个下架代币零交集)。
+   窗口取 365 天而不是永久:代号会被新币复用(T-272 见过 DATA)。
 2. **前向记录**:`FORWARD_FROM` 起的每一条新公告,到期后补 7 / 30 天相对 BTC 的超额(`kind = forward`);之前的只作回填对照
    (`kind = backfill`,不算前向证据)。口径与 T-272 一字不差:d0 = 公告时刻所在的 UTC 日(`asset_mcap_daily` 的 d 是当日收盘,
    在公告之后),价取 d0 当天或之后 3 天内最近的收盘,超额 = 代币简单收益 − BTC 简单收益。
@@ -32,6 +35,7 @@ LOOP_NAME = "_delisting_watch_loop"
 CODE_REF = "delisting_watch v1 (11-07, S-751 / T-272)"
 FORWARD_FROM = dt.datetime(2026, 11, 7, tzinfo=dt.timezone.utc)
 WATCH_DAYS = 90
+EXCLUDE_DAYS = 365
 MAX_GAP_DAYS = 3
 PRICE_TABLE = "asset_mcap_daily"
 
@@ -119,6 +123,60 @@ def watchlist(rows: list[dict], now: dt.datetime, days: int = WATCH_DAYS) -> lis
                    for r in rows if _ts(r["announced_at"]) >= cut], key=lambda r: r["announced_at"], reverse=True)
 
 
+def exclusion_set(rows: list[dict], now: dt.datetime, days: int = EXCLUDE_DAYS) -> set[str]:
+    """纯函数。过去 days 天里被宣布整币下架的代币(硬规则的名单)。"""
+    cut = now - dt.timedelta(days=days)
+    return {str(r["symbol"]).upper() for r in rows if r.get("symbol") and _ts(r["announced_at"]) >= cut}
+
+
+def is_excluded(symbol: str, excl: set[str]) -> bool:
+    """纯函数。R-v2 的代号可能带 1000 前缀(1000PEPE)。"""
+    s = str(symbol or "").upper()
+    return s in excl or (s.startswith("1000") and s[4:] in excl)
+
+
+def apply_to_plan(plan: dict[str, Any], excl: set[str]) -> dict[str, Any]:
+    """纯函数。R-v2 计划 + 名单 → 新票里的剔除到 `skipped_delist`,持有里的移到 `exit`(当天开盘出)。"""
+    enter, skipped = [], []
+    for e in plan.get("enter") or []:
+        (skipped if is_excluded(e.get("symbol"), excl) else enter).append(e)
+    hold, forced = [], []
+    for h in plan.get("hold") or []:
+        if is_excluded(h.get("symbol"), excl):
+            forced.append({"ticket_id": h.get("ticket_id"), "symbol": h.get("symbol"), "why": "binance_delisting", "at": "today_open"})
+        else:
+            hold.append(h)
+    return {**plan, "enter": enter, "hold": hold, "exit": list(plan.get("exit") or []) + forced,
+            "skipped_delist": [{**x, "why": "Binance 整币下架公告(S-751 硬规则)"} for x in skipped],
+            "delist_filter": {"status": "ok", "n_names": len(excl), "skipped": [x.get("symbol") for x in skipped],
+                              "forced_exit": [x["symbol"] for x in forced]}}
+
+
+async def excluded_symbols(now: Optional[dt.datetime] = None) -> set[str]:
+    """硬规则名单。**读不到就抛** —— 调用方 fail closed(不开新票),不能把「读不到」当成「名单是空的」。"""
+    from src.data.style.header import _read_all              # 读不到会抛(传输失败 ≠ 0 行)
+    now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
+    cut = (now - dt.timedelta(days=EXCLUDE_DAYS)).isoformat()
+    rows = await _read_all(TABLE, {"select": "symbol,announced_at", "announced_at": f"gte.{cut}"})
+    return exclusion_set(rows or [], now)
+
+
+def panel_conflicts(excl: set[str]) -> dict[str, list[str]]:
+    """多头账本面板里出现了名单上的名字 ⇒ {账本: [名字]}(硬规则要求剔除;面板是静态的,出现就要人改)。"""
+    import importlib
+    out = {}
+    for m in ("core_cap", "cis_tilt", "beta_plus_momentum", "tokenization_tilt", "treatment_tilt"):
+        try:
+            mod = importlib.import_module(f"src.data.signals.{m}")
+            uni = mod.panel_universe() if hasattr(mod, "panel_universe") else ()
+        except Exception:                                              # noqa: BLE001
+            continue
+        hit = sorted(s for s in uni if is_excluded(s, excl))
+        if hit:
+            out[m] = hit
+    return out
+
+
 async def run_once(now: Optional[dt.datetime] = None, read=None, upsert=None) -> dict[str, Any]:
     now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
     if read is None:
@@ -147,6 +205,10 @@ async def run_once(now: Optional[dt.datetime] = None, read=None, upsert=None) ->
             return {"ok": False, "why": f"写 {TABLE} 失败"}
     fwd = [r for r in out if r["kind"] == "forward"]
     w = watchlist(out, now)
+    conflicts = panel_conflicts(exclusion_set(out, now))
+    if conflicts:
+        return {"ok": False, "written": len(out), "panel_conflicts": conflicts,
+                "why": f"硬规则冲突(S-751):多头账本面板里有 Binance 宣布下架的名字 {conflicts} —— 要从面板剔除"}
     return {"ok": True, "written": len(out), "forward": len(fwd), "settled_30d": sum(r["excess_30d"] is not None for r in out),
             "watch": [x["symbol"] for x in w][:20],
             "why": f"{len(out)} 个代币(前向 {len(fwd)})· 30 天已结算 {sum(r['excess_30d'] is not None for r in out)} · 观察名单 {len(w)}"}

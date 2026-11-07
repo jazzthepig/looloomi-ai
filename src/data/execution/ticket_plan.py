@@ -151,6 +151,16 @@ async def load_ticket_plan(asof: str, risk_frac: Optional[float] = None,
             plan.update({"enter": kept, "skipped_oi": skipped, "oi_filter": info})
     else:
         plan["oi_filter"] = {"status": "nothing_to_enter"}
+    # Jazz 11-07(S-751 硬规则):Binance 宣布整币下架的代币 ⇒ 不开新票、已有持仓当天开盘出场。
+    # **读不到名单 ⇒ 这一轮不开新票(fail closed)**,持有照常 —— 「读不到」不能当成「名单是空的」。
+    from src.data.signals.delisting_watch import apply_to_plan, excluded_symbols
+    try:
+        excl = await excluded_symbols(now)
+    except Exception as e:                                       # noqa: BLE001
+        plan.update({"skipped_delist": [{**x, "why": "下架名单读不到 —— 这一轮不开新票"} for x in plan.get("enter") or []],
+                     "enter": [], "delist_filter": {"status": "read_error", "why": f"{type(e).__name__}: {str(e)[:200]}"}})
+    else:
+        plan = apply_to_plan(plan, excl)
     # Jazz ⓪(regime_call):off / flat 挡新票、flat 平所有、信心档位放大每票风险、战场上的 J 票。
     # **读不到判断 ⇒ 不开不平(fail closed)**:一条「off」被当成「没有判断」,就会在 Jazz 说别进的时候进场。
     from src.data.execution.regime_call import governing_call, overlay, read_calls, read_j_tickets
