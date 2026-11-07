@@ -1,0 +1,48 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T-298-1",
+      "scenario": "T-298 S-778 控制住价格扩散 R1 之后,C1 / C3 的「因」扩散还剩不剩",
+      "statement": "2026-12-08 时,REFUTATION_LEDGER 的 S-778 结论段被记为「C1 ❌ / C3 ❌」(控制住 R1 后系数均值>0、NW t≥2、两半同号三条未同时成立),即按预注册收卷、不开前向记录",
+      "variable": "manual",
+      "op": "between",
+      "lo": 1,
+      "hi": 1,
+      "prob": 0.85,
+      "horizon_d": "2026-12-08"
+    },
+    {
+      "id": "T-298-2",
+      "scenario": "T-298 S-778 的机制读数(探索性:该场上 e ≈ −0.47·s)",
+      "statement": "2026-12-08 时,S-775 结果段被补写为「字面 ✅ 来自自身水平(IC(s)<0)的镜像,不是邻居先动」这条改读 —— 判据 diff = IC(e) − IC(s) > 0 在该场等价于 IC(s) < 0",
+      "variable": "manual",
+      "op": "between",
+      "lo": 1,
+      "hi": 1,
+      "prob": 0.6,
+      "horizon_d": "2026-12-08"
+    },
+    {
+      "id": "T-298-3",
+      "scenario": "T-298 S-778 之后的下一步(换场 + 零信号对照)",
+      "statement": "2026-12-08 时,下一张高维卡的预注册里出现「不均匀权重的稀疏场 + 纯噪声源的零信号对照」这一组合(否则 e 的读法无法脱离自身水平的镜像)",
+      "variable": "manual",
+      "op": "between",
+      "lo": 1,
+      "hi": 1,
+      "prob": 0.5,
+      "horizon_d": "2026-12-08"
+    },
+    {
+      "id": "T-298-4",
+      "scenario": "T-298 S-778 结算窗口的市场可交易性前提",
+      "statement": "2026-12-08 时,BTC(ohlcv_daily 收盘)价格为正(自动结算的市场可交易性前提)",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.97,
+      "horizon_d": "2026-12-08"
+    }
+  ]
+}
