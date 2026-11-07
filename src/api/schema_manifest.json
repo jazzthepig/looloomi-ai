@@ -160,7 +160,9 @@
     "world50_onchain_forms",
     "world50_revenue",
     "write_log",
-    "degen_fees_daily"
+    "degen_fees_daily",
+    "attention_watch",
+    "asset_flow_forecast_daily"
   ],
   "write_columns": {
     "agent_judgment_daily": [
@@ -814,6 +816,28 @@
       "fees_usd",
       "name",
       "slug"
+    ],
+    "attention_watch": [
+      "basket_n",
+      "code_ref",
+      "cohort",
+      "d",
+      "excess_30d",
+      "excess_7d",
+      "settled_at",
+      "symbol",
+      "z"
+    ],
+    "asset_flow_forecast_daily": [
+      "code_ref",
+      "d",
+      "model",
+      "n_train",
+      "pct",
+      "pred",
+      "settled_at",
+      "symbol",
+      "x30"
     ]
   },
   "rpc_functions": [
@@ -828,6 +852,7 @@
     "refresh_depth_divergence",
     "refresh_feature_matrix",
     "refresh_regime_daily",
-    "resolve_depth_divergence"
+    "resolve_depth_divergence",
+    "refresh_asset_flow"
   ]
 }
