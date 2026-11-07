@@ -112,8 +112,16 @@ async def refresh(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     n = r.value[0] if isinstance(r.value, list) and r.value else r.value
     if isinstance(n, dict):
         n = next(iter(n.values()), None)
-    return {"ok": bool(n), "rows": n, "latest_before": vmax, "source_latest": smax,
-            "why": f"按币资金面空间刷新:{n} 行(上游最新 {smax})"}
+    out = {"ok": bool(n), "rows": n, "latest_before": vmax, "source_latest": smax,
+           "why": f"按币资金面空间刷新:{n} 行(上游最新 {smax})"}
+    try:                                   # 11-07:S-774 R ✅ 的前向记录(周一预测 + 到期结算);出错不挡刷新
+        from src.data.state.asset_flow_forecast import run_once as _fc_run
+        fc = await _fc_run(now)
+        out["forecast"] = {k: fc.get(k) for k in ("ok", "forecast_d", "n", "settled")}
+        out["why"] = f"{out['why']} | 前向预测:{fc.get('why')}"
+    except Exception as e:                 # noqa: BLE001
+        out["why"] = f"{out['why']} | 前向预测出错:{type(e).__name__}: {str(e)[:120]}"
+    return out
 
 
 async def analogs(symbol: str, d: Optional[str] = None, k: int = K_DEFAULT, horizon: int = HORIZON_DEFAULT) -> dict[str, Any]:
