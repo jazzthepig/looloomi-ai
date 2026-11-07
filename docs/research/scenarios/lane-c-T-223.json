@@ -1,0 +1,29 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {"id": "T-223-1", "scenario": "T-223 前向记录 · 稳定币供给",
+     "statement": "2026-12-01 时 state_daily(panel)的 stable_supply_30d(稳定币供给 30 天变化)为正",
+     "variable": "state:stable_supply_30d", "op": "gt", "lo": 0, "prob": 0.55, "horizon_d": "2026-12-01"},
+    {"id": "T-223-2", "scenario": "T-223 前向记录 · 资金费",
+     "statement": "2026-12-01 时 state_daily(panel)的 funding_7d_ann(7 天年化资金费)为正",
+     "variable": "state:funding_7d_ann", "op": "gt", "lo": 0, "prob": 0.6, "horizon_d": "2026-12-01"},
+    {"id": "T-223-3", "scenario": "T-223 前向记录 · 波动",
+     "statement": "2026-12-01 时 macro_daily 的 vix 低于 20",
+     "variable": "macro:vix", "op": "lt", "hi": 20, "prob": 0.6, "horizon_d": "2026-12-01"},
+    {"id": "T-223-4", "scenario": "T-223 前向 · 第 2 个前向月",
+     "statement": "2026-11 信号月(信号日 11-01 起,y 在 12-01 前后到期)的五因子里,至少 4 个仍与 S-691 留出段同号",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.6, "horizon_d": "2026-12-08"},
+    {"id": "T-223-5", "scenario": "T-223 前向 · F3",
+     "statement": "2026-11 信号月的 F3(ΔOI30)偏 IC 仍为负(留出段 20/21 月同号,2026-10 月 7/7 天同号)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.65, "horizon_d": "2026-12-08"},
+    {"id": "T-223-6", "scenario": "T-223 第二族 · G1",
+     "statement": "2026-11 信号月的 protocol_revenue_daily 覆盖到信号日 ⇒ G1(协议收入/市值)那个月能算出因子值(仍不是发现段→留出段的普查)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.8, "horizon_d": "2026-12-08"},
+    {"id": "T-223-7", "scenario": "T-223 第二族 · G5(稳定币供给)前向",
+     "statement": "2026-12-01 时 state_daily(panel) 的 stable_supply_30d 仍为负(2026-10 已转负 −0.0084、11-06 为 −0.0375 且仍在下行)",
+     "variable": "state:stable_supply_30d", "op": "lt", "hi": 0, "prob": 0.7, "horizon_d": "2026-12-08"},
+    {"id": "T-223-8", "scenario": "T-223 第二族 · G5(稳定币供给)前向",
+     "statement": "2026-11-30 时 state_daily(panel) 的 stable_supply_30d 月内均值连续第 3 个月为负(2026-08 −0.0045 / 09 +0.0081 / 10 −0.0084)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.8, "horizon_d": "2026-12-08"}
+  ]
+}
