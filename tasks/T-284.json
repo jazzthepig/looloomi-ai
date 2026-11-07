@@ -1,7 +1,7 @@
 {
   "id": "T-284",
   "owner": "lane-a",
-  "status": "claimed",
+  "status": "in_review",
   "created": "2026-11-07",
   "title": "S-763 S-708 复现:用真实上币公告日(events 1,474 条)而不是 binance_hist 第一根日线,重跑「开闸是高位」,判据一字不改",
   "source": "REFUTATION_LEDGER S-708(判据原文)与 S-763。事件 events(source = binance,kind = listing,payload.scope = spot);基准 / 对照照 S-708(lane-b T-233 的口径);价格 asset_mcap_daily(主)/ coingecko_pro_ohlc(副)。统计只用 src/data/evaluation/apparatus.py。",
@@ -23,6 +23,6 @@
     "expect": "报告 docs/research/T-284_listing_replication.md + t284_listing.py + t284_results.json;in_review,推 lane-a/T-284。"
   },
   "prior_value": "S-708 ✅ 建在代理事件上;S-758 刚证明补全事件后结论会变。事件族要拿去做 ② / ④,先在真公告日上站住。",
-  "notes": "部分交付(上下文守卫拦在取价阶段,主判据未算,不得引用任何收益数字)。已测得:events source=binance&kind=listing = 1,474 行(scope: spot 1,172 / margin 300 / alpha 2);events.symbols 非空 966;按 S-763 规则纳入 703 条唯一代号事件(代号来源: field 792 条事件 + 标题解析 380 条事件),排除 1,052 条 = no_symbol 380 + dup_within_90d 370 + scope_margin 300 + scope_alpha 2;纳入年代 2017 35 · 2018 64 · 2019 41 · 2020 123 · 2021 128 · 2022 55 · 2023 41 · 2024 58 · 2025 86 · 2026 72;未解析(no_symbol)年代 2017 68 · 2018 6 · 2019 22 · 2020 52 · 2021 14 · 2022 8 · 2023 32 · 2024 66 · 2025 56 · 2026 56。价格表行数:asset_mcap_daily 756,980(2014-12-31→2026-11-06)、ohlcv_daily/coingecko_pro_ohlc 104,670(2019-12-31→)、ohlcv_daily/binance_hist 446,541(2017-08-17→)。未算:30 天超额中位、随机日对照分位(种子 708)、两段(2017–2022/2023–2026)、与代理事件的日期差分布、PIT 篮逐位自检、代理事件校准 —— t284_results.json 未生成。已落盘:docs/research/t284_listing.py(事件清单/取价/PIT 篮/随机日对照/判据一次跑完,--events|--prices|--titles|--refresh)、docs/research/t284_events.json(纳入 703 + 排除 1,052 逐条)、docs/research/T-284_listing_replication.md(§4 明写未算)、docs/research/scenarios/lane-a-T-284.json(5 条)。取价缓存 docs/research/t284_cache/(大 JSON,不入库)。下一轮:python3 docs/research/t284_listing.py(缓存命中即秒级,否则重取约 3–4 分钟)→ 填报告 §3/§4 → 按标题类别分层另报『已上市代币新交易对 / 分发公告』(不改主口径)→ status 改 in_review → task_board + preflight + 提交。",
+  "notes": "完成(2026-11-07)。主判据已算:主臂 asset_mcap_daily(真实公告日、703 纳入 → 480 无价 → 205 可算):d+1→d+30 相对同期 PIT 等权加密篮的超额中位数 = −21.398%(绝对中位 −19.623%,均值 −16.131%,胜率 0.239,q25 −42.877/q75 −1.542);随机日对照(同一符号随机起点、1,000 次、种子 708,apparatus.null_distribution)中位 −9.511%、p05 −12.045%,实际值分位 0.000 ⇒ 判据(中位数<0 且分位≤0.05)✅ CONFIRMED。PIT 篮逐位自检:单名 max|diff| 0.0、篮均值 max|diff| 0.0、nb 不一致 0 次。两段:2017–2022 n=139 中位 −20.591%(胜率 0.252)· 2023–2026 n=66 中位 −24.568%(胜率 0.212);S-708 三段 2017–2020 −21.692% / 2021–2022 −20.534% / 2023–2026 −24.568%,全负。副臂 binance_hist n=139 中位 −16.659% 分位 0.000 ✅;副臂 coingecko_pro_ohlc 仅 n=7(该源 2019-12 起)覆盖不足、不作证据。校准臂(S-708 代理事件、binance_hist 首现日)n=262 中位 −17.909% vs S-708 公布 −18.03%(差 0.12pp)⇒ 机器与基准复现无误。副指标:主臂 d+1→d+90 n=203 超额中位 −34.492%;公告前 d−30→d n=139 绝对中位 +41.006%、75.0% 为正(公告前已涨)。与 S-708 代理事件的日期差(真实公告日 − 首现日):可配对 196 条,中位 0 天、均值 −14.60 天,q25 −7/q75 0/q90 +399,负 44.9%、零 40.8%、>30 天 13.8%(尾部来自 binance_hist 2017-08-17 起点与代号复用)。预注册情景 5 条已随附(lane-a-T-284.json,写在算之前);事后核对 T-284-1/2/3 命中、T-284-4 未命中(日期差中位是 0 不是负)。产物:docs/research/T-284_listing_replication.md(§4 已填)、t284_results.json、t284_events.json、t284_listing.py;取价缓存 docs/research/t284_cache/(不入库)。下一轮(可选):按标题类别分层另报『真新上币 / 已上市代币新交易对 / 分发公告』,主口径不动 —— 事件族里混着非新上币公告,是样本稀释源。",
   "verified": null
 }

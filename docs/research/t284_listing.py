@@ -46,6 +46,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CACHE = os.path.join(HERE, "t284_cache")
 OUT_EVENTS = os.path.join(HERE, "t284_events.json")
 OUT_RESULTS = os.path.join(HERE, "t284_results.json")
+OUT_STRATA = os.path.join(HERE, "t284_strata.json")
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 
 SUPA_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
@@ -280,12 +281,14 @@ class Series:
         self.dates = rec["dates"]
         self.closes = rec["closes"]
         self._cl = [apparatus._price(c) for c in self.closes]
+        # 预建 datetime64 索引(原来每次 price() 都重建 —— 随机日对照 1,000×700 次调用太慢;
+        # 语义完全不变:同样的 searchsorted(side="left"))
+        self._ds64 = np.array(self.dates, dtype="datetime64[D]") if self.dates else None
 
     def price(self, d: str, max_gap: int = MAXGAP):
         if not self.dates:
             return None
-        i = int(np.searchsorted(np.array(self.dates, dtype="datetime64[D]"),
-                                np.datetime64(d, "D"), side="left"))
+        i = int(np.searchsorted(self._ds64, np.datetime64(d, "D"), side="left"))
         if i >= len(self.dates):
             return None
         j = i
@@ -567,13 +570,15 @@ def proxy_events(series: dict) -> list[dict]:
 # ── 主流程 ────────────────────────────────────────────────────────────────
 def run_arm(name: str, series: dict, basket: PitBasket, evs: list[dict],
             maxgap: int = MAXGAP, with_control: bool = True) -> dict:
-    rows = windows(series, basket, evs, maxgap=maxgap)
+    # series 是 {symbol: {dates, closes, asset_class}} 原始记录;windows/control 需要 Series 对象
+    ser_map = {s: Series(v) for s, v in series.items()}
+    rows = windows(ser_map, basket, evs, maxgap=maxgap)
     no_px = [r for r in rows if not r.get("has_price_10d")]
     kept = [r for r in rows if r.get("has_price_10d")]
     out = {"arm": name, "price_source": name,
            "basket_symbols": len(basket.syms),
            "events_in": len(evs), "events_no_price_10d": len(no_px),
-           "fwd30": judge(kept, "fwd30", series, basket, label=f"{name}/fwd30") if with_control else
+           "fwd30": judge(kept, "fwd30", ser_map, basket, label=f"{name}/fwd30") if with_control else
                     summarize(kept, "fwd30"),
            "fwd90_副": summarize(kept, "fwd90"),
            "pre30_副": summarize_abs(kept, "pre30"),
@@ -593,6 +598,49 @@ def summarize_abs(rows: list[dict], field: str) -> dict:
     return {"n": len(vals), "median_pct": round(100 * float(np.median(vals)), 3),
             "mean_pct": round(100 * float(np.mean(vals)), 3),
             "win_rate": round(float(np.mean([v > 0 for v in vals])), 3)}
+
+
+# ── 探索性:按标题类别分层(主口径不动) ─────────────────────────────────────
+TITLE_PATTERNS = [
+    ("分发/空投", re.compile(r"distribution|airdrop|launchpad|claim|redeem", re.I)),
+    ("新交易对", re.compile(r"trading pair|trading market|opens? .{0,40}trading"
+                            r"|add .{0,30}pairs?|new pair", re.I)),
+    ("上币/新增", re.compile(r"will (list|add|support)|lists?|listing"
+                             r"|new (coin|asset|token)|launch", re.I)),
+]
+
+
+def classify_title(title: str) -> str:
+    """标题粗分类(关键词;探索性用,不参与主判据)。"""
+    for name, p in TITLE_PATTERNS:
+        if p.search(title or ""):
+            return name
+    return "其他/无法归类"
+
+
+def title_strata(events: list[dict], rows: list[dict]) -> dict:
+    """按标题类别分层报超额(探索性):rows 需含 symbol / d / fwd30_rel_pct。"""
+    key = {(r["symbol"], r["d"]): r.get("fwd30_rel_pct") for r in rows
+           if r.get("fwd30_rel_pct") is not None}
+    buckets = collections.defaultdict(list)
+    allc = collections.Counter()
+    for e in events:
+        c = classify_title(e.get("title"))
+        allc[c] += 1
+        v = key.get((e["symbol"], e["d"]))
+        if v is not None:
+            buckets[c].append(v)
+    out = {"note": "探索性:关键词分类;主判据未改;各层没有独立零分布对照,"
+                   "不做多重比较校正",
+           "all_events_by_class": dict(allc),
+           "classes": {}}
+    for c, vals in sorted(buckets.items(), key=lambda kv: -len(kv[1])):
+        # rows 里的 fwd30_rel_pct 已经是百分数(×100),这里不再乘
+        out["classes"][c] = {"n": len(vals),
+                             "median_rel_pct": round(float(np.median(vals)), 3),
+                             "mean_rel_pct": round(float(np.mean(vals)), 3),
+                             "win_rate_rel": round(float(np.mean([x > 0 for x in vals])), 3)}
+    return out
 
 
 def gap_distribution(events: list[dict], series_bh: dict) -> dict:
@@ -624,12 +672,26 @@ def main():
     ap.add_argument("--events", action="store_true")
     ap.add_argument("--titles", action="store_true")
     ap.add_argument("--prices", action="store_true")
+    ap.add_argument("--strata", action="store_true")
     ap.add_argument("--refresh", action="store_true")
     ap.add_argument("--out", default=OUT_RESULTS)
     args = ap.parse_args()
 
     if args.probe:
         probe()
+        return
+
+    if args.strata:
+        # 只重算标题分层(读已落盘的事件清单与结果,不取价、不重算主判据)
+        with open(OUT_EVENTS) as f:
+            evs = json.load(f)["events"]
+        with open(OUT_RESULTS) as f:
+            res = json.load(f)
+        rows = res["arms"]["asset_mcap_daily"]["rows_sample"]
+        st = title_strata(evs, rows)
+        with open(OUT_STRATA, "w") as f:
+            json.dump(st, f, ensure_ascii=False, indent=1)
+        print(json.dumps(st, ensure_ascii=False, indent=1))
         return
 
     # ① 事件清单先落文件(在取价之前)
@@ -681,6 +743,8 @@ def main():
              "bench_pct": None if r.get("fwd30_bench") is None else round(100 * r["fwd30_bench"], 3),
              "nb": r.get("fwd30_nb"), "sym_source": r.get("sym_source")}
             for r in rows if r.get("has_price_10d")]
+        if name == "asset_mcap_daily":
+            main_rows = results["arms"][name]["rows_sample"]
         print(f"[arm:{name}] fwd30 n={arm['fwd30']['n']} "
               f"median_rel={arm['fwd30'].get('median_rel_pct')}% "
               f"pct={arm['fwd30'].get('control_percentile')} "
@@ -698,6 +762,12 @@ def main():
 
     # ⑤ 日期差分布(真实公告日 vs S-708 代理事件)
     results["gap_vs_proxy"] = gap_distribution(events, series_bh)
+
+    # ⑥ 探索性:按标题类别分层(主口径不动)
+    results["title_strata"] = title_strata(events, main_rows)
+    with open(OUT_STRATA, "w") as f:
+        json.dump(results["title_strata"], f, ensure_ascii=False, indent=1)
+    print(f"[strata] {json.dumps(results['title_strata']['classes'], ensure_ascii=False)}")
 
     with open(args.out, "w") as f:
         json.dump(results, f, ensure_ascii=False, indent=1)

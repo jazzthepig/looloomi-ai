@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-07T11:15:14.381792+00:00",
+ "generated_at": "2026-11-07T11:44:02.681063+00:00",
  "rule": "events(source=binance, kind=listing, payload.scope=spot);代号 = events.symbols,空则 src/data/market/events.py:symbols_from_title;同一代号 90 天内重复取第一条;d = ts 的 UTC 日",
  "counts": {
   "events_rows_total": 1474,
