@@ -1,0 +1,28 @@
+{
+  "id": "T-295",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-07",
+  "title": "squeeze / flush 前向记录的 SQL 内核:把 t242 的 detect() 写成一个 Postgres 函数提案,在历史上逐事件复现 218 + 20 个事件",
+  "source": "REFUTATION_LEDGER S-726 / S-768 结果段(grep)。你自己的 docs/research/t242_crowding_setups.py(build_panels + detect,已合并)与 t289_events.json。先例:r_tickets_scan(研究 SQL 与函数 2024 年逐笔一致 266 张)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-295.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 写 docs/research/t295_crowding_events.sql:一个 `create or replace function public.crowding_events(p_from date, p_to date)` 提案(只是文件,不执行 DDL),返回 (kind, symbol, d, fund_pct, ret, atr_thr, qv_mult),口径与 detect() 逐项相同:资金费 = v_funding_daily.funding_rate × 3 × 365 的 d−7…d−1 均值(7 天缺一天 ⇒ 空)、扩张分位 =(严格更早的样本里 #更小 + 0.5 × #相等)/ 更早样本数、ATR14 用 ≤ d−1、qv ≥ 3 × 前 20 日均、合约年龄 ≥ MIN_AGE_DAYS、同合约同类 10 天去重、宇宙 = perp_bv_pairs kind = 'coin' 或(kind 为空且 dead_from 非空)。② 不执行函数也能验:用同样的 SQL 写成一个只读 select(CTE 版)经 PostgREST 跑不了的话,就用 python 把 detect() 的中间量(f7 / pct / atr / qv20)对 20 个事件逐格打印,写清 SQL 每一步对应 python 哪一行。③ 报:SQL 提案里任何与 detect() 可能不一致的边角(NaN 在窗口里、上市首日、去重以日历天还是以根计)。纪律:只写文件、不做 DDL、不入库;省着用上下文。",
+    "expect": "docs/research/t295_crowding_events.sql + T-295_crowding_sql.md(一页:逐项对照表 + 边角清单)+ scenarios/lane-b-T-295.json;in_review,推 lane-b/T-295。Seth 应用函数后在库里对 2020 → 2026-10 逐事件对账(218 / 20 全中才接前向表)。"
+  },
+  "prior_value": "S-768:squeeze 的反向读数经住了挪一天(30 天中位 −12.7%,分位 0.000),但作为 R-v2 过滤没有用武之地 ⇒ 下一步是前向记录(同 event_watch)。前向记录必须与研究同一个定义,所以先把定义写成一个可对账的内核。",
+  "notes": "",
+  "verified": null
+}
