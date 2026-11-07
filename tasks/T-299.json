@@ -1,0 +1,28 @@
+{
+  "id": "T-299",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-07",
+  "title": "S-779 相关币之间的领先—滞后(邻居 7 日动量减自己 ⇒ 之后 7 天)在 2020–2022 留出段复验",
+  "source": "REFUTATION_LEDGER S-779 与 S-775 结果段(grep)。你的 t294_diffusion.py(场与扩散只换数据段)。数据:perp_bv_daily(2019-10 起,含死币)、perp_bv_pairs。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-299.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "预注册(S-779 原文)照抄进报告开头,只算一次。只用 2020-01-06 → 2022-12-26 的周一;宇宙与 x7 按 S-779 写死(含死币,停更取最后收盘);场与 α / k 与 S-775 一字不改。报 IC(e, x7) 均值、NW t(滞后 1)、两段、打乱分位;只报 x30、IC(s)、市值三档、换手成本粗估。纪律:只算、不改代码、不入库;先把 perp_bv_daily 2019-10 → 2023-01 拉成本地文件(翻页带 order=)再算;只打印要报的格。",
+    "expect": "报告 docs/research/T-299_leadlag_holdout.md + t299_leadlag.py + t299_results.json + scenarios/lane-a-T-299.json(≥ 3 条);in_review,推 lane-a/T-299。"
+  },
+  "prior_value": "S-775 的反射对照最强,但那是看完数据才知道的;2020–22 是它没碰过的段。站住 ⇒ ② 倾斜第一次有一个过了留出的候选。",
+  "notes": "排在 T-298 之后。",
+  "verified": null
+}
