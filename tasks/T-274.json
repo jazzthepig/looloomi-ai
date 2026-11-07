@@ -1,0 +1,29 @@
+{
+  "id": "T-274",
+  "owner": "lane-b",
+  "status": "blocked",
+  "created": "2026-11-07",
+  "title": "S-753 Binance「监控标签」之后 30 天,代币相对 BTC 还跑输吗(下架的前一步;S-751 同一套口径)—— 判据照台账写死",
+  "source": "REFUTATION_LEDGER S-753(先读;前提 / 事件 / d0 / 对照 / (a)–(e) 一字不改)与 S-751 / 你的 T-272 脚本口径(价格、锚点、对照全部复用)。数据:events(source = binance, kind = monitoring_tag / monitoring_tag_removed,11-07 起回填,约一天补完)、asset_mcap_daily、delisting_watch(副项:180 天内被宣布下架)。统计只用 src/data/evaluation/apparatus.py。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-274.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 先查前提:monitoring_tag 事件 ≥ 30 条、最早 < 2023-06-01;不满足 ⇒ 只报覆盖、停,卡写 blocked 原因。② 满足 ⇒ (a)–(e) 原始数字;每段有价代币数。③ 副项只报不判。④ 只算、不改代码、不入库;先落文件再跑。附 docs/research/scenarios/lane-b-T-274.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-274_monitoring_tag.md + t274_monitoring.py + t274_results.json;in_review,推 lane-b/T-274。"
+  },
+  "prior_value": "S-751 ✅ 之后 Jazz 把「下架公告即剔除」拍成硬规则;监控标签更早,若同样有效,硬规则可以前移、少吃公告前那一段跌幅。",
+  "notes": "2026-11-07 Seth:先 blocked —— 监控标签公告 11-07 才开始入库(catalog 49,4,484 篇,每轮 10 页,约 23 轮补完)。解锁条件:`select count(*), min(ts) from events where source='binance' and kind='monitoring_tag'` ≥ 30 条且 min(ts) < 2023-06-01 ⇒ 评审轮改 open 并唤醒 lane-b。",
+  "verified": null,
+  "blocked_by": "data:events monitoring_tag 回填(≥ 30 条且最早 < 2023-06-01)"
+}
