@@ -1,0 +1,6714 @@
+{
+ "generated_at": "2026-11-07T23:37:11.711377+00:00",
+ "task": "T-291",
+ "ledger": "S-770",
+ "rule": "events(source=upbit, kind=listing, payload.krw=true);每个代号第一次 KRW 上币;d = ts 的 UTC 日;krw 为空的单列只报;delisting / warning 同口径只报不判",
+ "counts": {
+  "listing_rows": 371,
+  "listing_symbol_rows_krw_true": 242,
+  "listing_symbol_rows_krw_null": 58,
+  "listing_symbol_rows_krw_false": 155,
+  "listing_krw_events_kept": 232,
+  "listing_krw_dup_symbol_dropped": 10,
+  "listing_krw_null_symbol_rows": 58,
+  "listing_krw_null_events_kept": 58,
+  "delisting_rows": 66,
+  "delisting_symbol_rows": 65,
+  "delisting_events_kept": 64,
+  "warning_rows": 90,
+  "warning_symbol_rows": 98,
+  "warning_events_kept": 94,
+  "sym_source_field": 232,
+  "sym_source_title": 0
+ },
+ "arms": {
+  "listing_krw": [
+   {
+    "event_id": "ac3507492499cf9f90ee0929",
+    "ts": "2017-11-07T05:33:32+00:00",
+    "d": "2017-11-07",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ETH",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "ETH/KRW 상장 및 전체 거래 오픈 안내",
+    "url": "https://upbit.com/service_center/notice?id=41"
+   },
+   {
+    "event_id": "39ebf39f35418defcaecb045",
+    "ts": "2017-11-09T07:09:37+00:00",
+    "d": "2017-11-09",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ETC",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "이더리움클래식(ETC/KRW) 상장",
+    "url": "https://upbit.com/service_center/notice?id=47"
+   },
+   {
+    "event_id": "42693671b92cca18e1076d25",
+    "ts": "2017-11-10T13:15:52+00:00",
+    "d": "2017-11-10",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BCC",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "비트코인캐시(BCC/KRW) 상장",
+    "url": "https://upbit.com/service_center/notice?id=51"
+   },
+   {
+    "event_id": "fa4163342679bb970619709a",
+    "ts": "2017-11-10T07:17:34+00:00",
+    "d": "2017-11-10",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "XEM",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "뉴이코노미무브먼트(XEM/KRW) 상장",
+    "url": "https://upbit.com/service_center/notice?id=50"
+   },
+   {
+    "event_id": "4ff421245afb7692efe9e02e",
+    "ts": "2021-10-15T04:00:01+00:00",
+    "d": "2021-10-15",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "MATIC",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (SOL, MATIC, NU)",
+    "url": "https://upbit.com/service_center/notice?id=2217"
+   },
+   {
+    "event_id": "4ff421245afb7692efe9e02e",
+    "ts": "2021-10-15T04:00:01+00:00",
+    "d": "2021-10-15",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "NU",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (SOL, MATIC, NU)",
+    "url": "https://upbit.com/service_center/notice?id=2217"
+   },
+   {
+    "event_id": "4ff421245afb7692efe9e02e",
+    "ts": "2021-10-15T04:00:01+00:00",
+    "d": "2021-10-15",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SOL",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (SOL, MATIC, NU)",
+    "url": "https://upbit.com/service_center/notice?id=2217"
+   },
+   {
+    "event_id": "10a0a5813208de38d06f9234",
+    "ts": "2021-10-27T06:00:13+00:00",
+    "d": "2021-10-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "1INCH",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (1INCH, AAVE, MASK)",
+    "url": "https://upbit.com/service_center/notice?id=2239"
+   },
+   {
+    "event_id": "10a0a5813208de38d06f9234",
+    "ts": "2021-10-27T06:00:13+00:00",
+    "d": "2021-10-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "AAVE",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (1INCH, AAVE, MASK)",
+    "url": "https://upbit.com/service_center/notice?id=2239"
+   },
+   {
+    "event_id": "10a0a5813208de38d06f9234",
+    "ts": "2021-10-27T06:00:13+00:00",
+    "d": "2021-10-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "MASK",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (1INCH, AAVE, MASK)",
+    "url": "https://upbit.com/service_center/notice?id=2239"
+   },
+   {
+    "event_id": "56252a0079384f239a29665c",
+    "ts": "2021-11-18T04:25:01+00:00",
+    "d": "2021-11-18",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ALGO",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (ALGO, AUDIO)",
+    "url": "https://upbit.com/service_center/notice?id=2268"
+   },
+   {
+    "event_id": "56252a0079384f239a29665c",
+    "ts": "2021-11-18T04:25:01+00:00",
+    "d": "2021-11-18",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "AUDIO",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (ALGO, AUDIO)",
+    "url": "https://upbit.com/service_center/notice?id=2268"
+   },
+   {
+    "event_id": "d58272d45af7ce9f76654f9d",
+    "ts": "2021-12-15T04:00:03+00:00",
+    "d": "2021-12-15",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "NEAR",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (NEAR, YGG)",
+    "url": "https://upbit.com/service_center/notice?id=2327"
+   },
+   {
+    "event_id": "d58272d45af7ce9f76654f9d",
+    "ts": "2021-12-15T04:00:03+00:00",
+    "d": "2021-12-15",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "YGG",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (NEAR, YGG)",
+    "url": "https://upbit.com/service_center/notice?id=2327"
+   },
+   {
+    "event_id": "1ae22de57fd7f218c4aea4f5",
+    "ts": "2022-01-11T04:18:47+00:00",
+    "d": "2022-01-11",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "WEMIX",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (WEMIX) (입금 지원 개시 안내)",
+    "url": "https://upbit.com/service_center/notice?id=2374"
+   },
+   {
+    "event_id": "3869e44c50af3e1279fb9327",
+    "ts": "2022-02-08T04:00:23+00:00",
+    "d": "2022-02-08",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "AVAX",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (AVAX, IMX) (거래지원 개시 시점 연장 안내)",
+    "url": "https://upbit.com/service_center/notice?id=2429"
+   },
+   {
+    "event_id": "3869e44c50af3e1279fb9327",
+    "ts": "2022-02-08T04:00:23+00:00",
+    "d": "2022-02-08",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "IMX",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (AVAX, IMX) (거래지원 개시 시점 연장 안내)",
+    "url": "https://upbit.com/service_center/notice?id=2429"
+   },
+   {
+    "event_id": "eb211459e11b2c2004f19676",
+    "ts": "2022-03-17T02:00:01+00:00",
+    "d": "2022-03-17",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "CELO",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "KRW 마켓 디지털 자산 추가 (CELO)",
+    "url": "https://upbit.com/service_center/notice?id=2507"
+   },
+   {
+    "event_id": "f125f84cf3500cd09c149225",
+    "ts": "2022-05-04T01:00:01+00:00",
+    "d": "2022-05-04",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "GMT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (GMT)",
+    "url": "https://upbit.com/service_center/notice?id=2628"
+   },
+   {
+    "event_id": "1f6fdf4835e9cb8f7175352d",
+    "ts": "2022-10-18T01:10:00+00:00",
+    "d": "2022-10-18",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "APT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (APT) (정상화 안내)",
+    "url": "https://upbit.com/service_center/notice?id=3042"
+   },
+   {
+    "event_id": "5d52596e90093ada91f4afb1",
+    "ts": "2023-01-18T01:00:16+00:00",
+    "d": "2023-01-18",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "GAL",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (SHIB, GAL)",
+    "url": "https://upbit.com/service_center/notice?id=3266"
+   },
+   {
+    "event_id": "5d52596e90093ada91f4afb1",
+    "ts": "2023-01-18T01:00:16+00:00",
+    "d": "2023-01-18",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SHIB",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (SHIB, GAL)",
+    "url": "https://upbit.com/service_center/notice?id=3266"
+   },
+   {
+    "event_id": "365d38cdd1872ef76bb750ac",
+    "ts": "2023-03-07T00:30:08+00:00",
+    "d": "2023-03-07",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ACS",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (MASK, ACS)",
+    "url": "https://upbit.com/service_center/notice?id=3362"
+   },
+   {
+    "event_id": "32d95d7a9eb1b907bf4b2025",
+    "ts": "2023-03-30T01:00:00+00:00",
+    "d": "2023-03-30",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ARB",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (ARB)",
+    "url": "https://upbit.com/service_center/notice?id=3420"
+   },
+   {
+    "event_id": "4ffdb8a3b0f7ba1a395e9340",
+    "ts": "2023-04-27T01:00:17+00:00",
+    "d": "2023-04-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "EGLD",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (EGLD)",
+    "url": "https://upbit.com/service_center/notice?id=3487"
+   },
+   {
+    "event_id": "fd3018e400c9aaaf69fe00a0",
+    "ts": "2023-05-03T01:10:18+00:00",
+    "d": "2023-05-03",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SUI",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (SUI) (매도 주문 제한 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=3502"
+   },
+   {
+    "event_id": "ee50046d233a0af824a2181f",
+    "ts": "2023-06-01T04:30:02+00:00",
+    "d": "2023-06-01",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "GRT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "KRW 마켓 디지털 자산 추가 (GRT)",
+    "url": "https://upbit.com/service_center/notice?id=3550"
+   },
+   {
+    "event_id": "9be123cebc2653b245f79b88",
+    "ts": "2023-06-27T05:00:00+00:00",
+    "d": "2023-06-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BLUR",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "KRW 마켓 디지털 자산 추가 (BLUR)",
+    "url": "https://upbit.com/service_center/notice?id=3596"
+   },
+   {
+    "event_id": "2772a480a9d9600589dce74f",
+    "ts": "2023-08-14T09:30:03+00:00",
+    "d": "2023-08-14",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SEI",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (SEI) (매도 주문 제한 기준 가격 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=3683"
+   },
+   {
+    "event_id": "91d003ba568578c7bbef608a",
+    "ts": "2023-10-24T04:25:01+00:00",
+    "d": "2023-10-24",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "MINA",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "KRW 마켓 디지털 자산 추가 (MINA)",
+    "url": "https://upbit.com/service_center/notice?id=3797"
+   },
+   {
+    "event_id": "8145ed6eadc5b1be21a924fe",
+    "ts": "2023-12-12T08:00:20+00:00",
+    "d": "2023-12-12",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "CTC",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "KRW 마켓 디지털 자산 추가 (CTC)",
+    "url": "https://upbit.com/service_center/notice?id=3920"
+   },
+   {
+    "event_id": "4199364564bef7962efe00b5",
+    "ts": "2023-12-18T07:30:00+00:00",
+    "d": "2023-12-18",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ASTR",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "KRW 마켓 디지털 자산 추가 (ASTR) (거래지원 개시 시점 연기 안내)",
+    "url": "https://upbit.com/service_center/notice?id=3934"
+   },
+   {
+    "event_id": "3758437ff315c7922df5c6c7",
+    "ts": "2024-02-07T04:13:10+00:00",
+    "d": "2024-02-07",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ID",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "KRW 마켓 디지털 자산 추가 (ID)",
+    "url": "https://upbit.com/service_center/notice?id=4032"
+   },
+   {
+    "event_id": "e34bcbe83b67ffd7ec279706",
+    "ts": "2024-02-27T02:45:08+00:00",
+    "d": "2024-02-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ALT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (ALT, PYTH)",
+    "url": "https://upbit.com/service_center/notice?id=4070"
+   },
+   {
+    "event_id": "e34bcbe83b67ffd7ec279706",
+    "ts": "2024-02-27T02:45:08+00:00",
+    "d": "2024-02-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "PYTH",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (ALT, PYTH)",
+    "url": "https://upbit.com/service_center/notice?id=4070"
+   },
+   {
+    "event_id": "7306a631e26cf6c57fca5af6",
+    "ts": "2024-03-27T05:13:24+00:00",
+    "d": "2024-03-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "MNT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "KRW, BTC, USDT 마켓 디지털 자산 추가 (MNT, POKT) (POKT 거래지원 개시 시점 연기 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4133"
+   },
+   {
+    "event_id": "7306a631e26cf6c57fca5af6",
+    "ts": "2024-03-27T05:13:24+00:00",
+    "d": "2024-03-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "POKT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "KRW, BTC, USDT 마켓 디지털 자산 추가 (MNT, POKT) (POKT 거래지원 개시 시점 연기 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4133"
+   },
+   {
+    "event_id": "95e139e63a2c3d1849f41a86",
+    "ts": "2024-04-23T05:32:10+00:00",
+    "d": "2024-04-23",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "AKT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "빅타임(BIGTIME), 아카시네트워크(AKT) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (AKT 거래지원 개시 시점 연기 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4172"
+   },
+   {
+    "event_id": "95e139e63a2c3d1849f41a86",
+    "ts": "2024-04-23T05:32:10+00:00",
+    "d": "2024-04-23",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BIGTIME",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "빅타임(BIGTIME), 아카시네트워크(AKT) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (AKT 거래지원 개시 시점 연기 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4172"
+   },
+   {
+    "event_id": "081062cb30e0be075d81ba7e",
+    "ts": "2024-05-03T05:36:10+00:00",
+    "d": "2024-05-03",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "OMNI",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "제타체인(ZETA), 옴니네트워크(OMNI) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=4192"
+   },
+   {
+    "event_id": "081062cb30e0be075d81ba7e",
+    "ts": "2024-05-03T05:36:10+00:00",
+    "d": "2024-05-03",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ZETA",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "제타체인(ZETA), 옴니네트워크(OMNI) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=4192"
+   },
+   {
+    "event_id": "d67d4a8cadd34148f8ca06cc",
+    "ts": "2024-05-29T09:15:13+00:00",
+    "d": "2024-05-29",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "AUCTION",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "바운스토큰(AUCTION) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=4253"
+   },
+   {
+    "event_id": "f03c1f4b7192710c3ca8e72d",
+    "ts": "2024-05-30T07:29:55+00:00",
+    "d": "2024-05-30",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "STG",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "스타게이트파이낸스(STG) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=4257"
+   },
+   {
+    "event_id": "d0bce8d96da31046a0f5c3b2",
+    "ts": "2024-05-31T06:28:25+00:00",
+    "d": "2024-05-31",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BEAM",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "빔(BEAM) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4261"
+   },
+   {
+    "event_id": "ba7f2fc08c743a870019b975",
+    "ts": "2024-06-05T09:34:51+00:00",
+    "d": "2024-06-05",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "TAIKO",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "타이코(TAIKO) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4268"
+   },
+   {
+    "event_id": "a38328073a35df6ff6709932",
+    "ts": "2024-06-14T03:06:53+00:00",
+    "d": "2024-06-14",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ONDO",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "온도파이낸스(ONDO) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=4288"
+   },
+   {
+    "event_id": "406d9ca99167389d063d6a84",
+    "ts": "2024-06-20T06:02:42+00:00",
+    "d": "2024-06-20",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ZRO",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "레이어제로(ZRO) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 연기 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4307"
+   },
+   {
+    "event_id": "492d7149f101622c34af41b1",
+    "ts": "2024-06-24T09:23:05+00:00",
+    "d": "2024-06-24",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BLAST",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "블라스트(BLAST) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 주문 제한 기준 가격 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4317"
+   },
+   {
+    "event_id": "b6392cebd7830bb55a16aace",
+    "ts": "2024-07-04T06:42:18+00:00",
+    "d": "2024-07-04",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "JUP",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "주피터(JUP) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 연기 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4346"
+   },
+   {
+    "event_id": "a552f39314fd8f5cf533c1f6",
+    "ts": "2024-07-09T08:40:30+00:00",
+    "d": "2024-07-09",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ENS",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "이더리움네임서비스(ENS) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=4355"
+   },
+   {
+    "event_id": "ae6754309760dc35b0fcba9b",
+    "ts": "2024-08-06T06:32:55+00:00",
+    "d": "2024-08-06",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "PENDLE",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "펜들(PENDLE) 신규 거래지원 안내 (KRW, BTC 마켓) (가상자산 정보 제공 강화에 관한 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4419"
+   },
+   {
+    "event_id": "71175232f9f3eac586cf8932",
+    "ts": "2024-08-14T02:21:07+00:00",
+    "d": "2024-08-14",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ATH",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "에이셔(ATH) 신규 거래지원 안내 (KRW, BTC 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=4434"
+   },
+   {
+    "event_id": "f9c7545db45994959cd6e6ca",
+    "ts": "2024-08-30T00:17:01+00:00",
+    "d": "2024-08-30",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "USDC",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "유에스디코인(USDC) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=4465"
+   },
+   {
+    "event_id": "de32a9b594b58814c1ffea28",
+    "ts": "2024-09-03T10:04:34+00:00",
+    "d": "2024-09-03",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "UXLINK",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "유엑스링크(UXLINK) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=4477"
+   },
+   {
+    "event_id": "a451e11091f334be23ae21ca",
+    "ts": "2024-09-13T04:36:18+00:00",
+    "d": "2024-09-13",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "CKB",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "너보스(CKB) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 연기 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4496"
+   },
+   {
+    "event_id": "9b74dea32ea234d55a52f0b8",
+    "ts": "2024-10-15T03:06:17+00:00",
+    "d": "2024-10-15",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "CARV",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "카브(CARV) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=4557"
+   },
+   {
+    "event_id": "bbc4ea13f4ac6d753e150d2c",
+    "ts": "2024-10-17T08:47:53+00:00",
+    "d": "2024-10-17",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "INJ",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "인젝티브(INJ) KRW, USDT 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=4562"
+   },
+   {
+    "event_id": "ba61b93e0bfb0a97357d3258",
+    "ts": "2024-10-21T06:25:01+00:00",
+    "d": "2024-10-21",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "MEW",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "캣인어독스월드(MEW) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=4569"
+   },
+   {
+    "event_id": "8a81e70c68aff770f8e87e66",
+    "ts": "2024-10-22T06:37:26+00:00",
+    "d": "2024-10-22",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "UNI",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "유니스왑(UNI) KRW, USDT 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=4575"
+   },
+   {
+    "event_id": "52cb46948299539b382ad12f",
+    "ts": "2024-10-24T06:32:30+00:00",
+    "d": "2024-10-24",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SAFE",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "세이프(SAFE) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=4581"
+   },
+   {
+    "event_id": "8d65759d18b0108e0f193ef9",
+    "ts": "2024-11-08T05:44:59+00:00",
+    "d": "2024-11-08",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "DRIFT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "드리프트(DRIFT) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=4625"
+   },
+   {
+    "event_id": "bc6e55319f2680a0f9cab2b7",
+    "ts": "2024-11-13T06:20:00+00:00",
+    "d": "2024-11-13",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "AGLD",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "어드벤처골드(AGLD) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=4641"
+   },
+   {
+    "event_id": "9ae25e8de38b04912816ba9a",
+    "ts": "2024-11-14T01:52:34+00:00",
+    "d": "2024-11-14",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "PEPE",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "페페(PEPE) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=4642"
+   },
+   {
+    "event_id": "4010f01b21a85a28a3d74a08",
+    "ts": "2024-11-20T02:55:38+00:00",
+    "d": "2024-11-20",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BONK",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "봉크(BONK) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=4656"
+   },
+   {
+    "event_id": "64b23de0dc2c16fe5818c778",
+    "ts": "2024-12-05T03:05:57+00:00",
+    "d": "2024-12-05",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "RENDER",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "렌더토큰(RENDER) KRW, USDT 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=4696"
+   },
+   {
+    "event_id": "cb26df470cef8c117089b6dc",
+    "ts": "2024-12-09T05:04:18+00:00",
+    "d": "2024-12-09",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "MOVE",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "무브먼트(MOVE) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4706"
+   },
+   {
+    "event_id": "d6a7717ba04032bbbca5783e",
+    "ts": "2024-12-10T09:24:15+00:00",
+    "d": "2024-12-10",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ME",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "매직에덴(ME) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매수 대기 기간 연장 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4713"
+   },
+   {
+    "event_id": "b10f62390d3df3c50ce3cc4b",
+    "ts": "2024-12-16T01:56:48+00:00",
+    "d": "2024-12-16",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "MOCA",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "모카버스(MOCA) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (명칭 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4723"
+   },
+   {
+    "event_id": "db9ad6a2ac4b3ff93a1b409b",
+    "ts": "2024-12-16T08:11:35+00:00",
+    "d": "2024-12-16",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "VANA",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "바나(VANA) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매수 대기 기간 연장 및 최저 매도가 기준 가격 추가 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4729"
+   },
+   {
+    "event_id": "1fdd40c99bd06ec7e365ab71",
+    "ts": "2025-01-07T07:31:24+00:00",
+    "d": "2025-01-07",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SONIC",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "소닉SVM(SONIC) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 및 매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4778"
+   },
+   {
+    "event_id": "0f4b49abc68e7695ff167775",
+    "ts": "2025-01-21T10:00:01+00:00",
+    "d": "2025-01-21",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "VTHO",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "비토르토큰(VTHO) 신규 거래지원 안내 (KRW, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=4811"
+   },
+   {
+    "event_id": "40965859eec3eccb5051844e",
+    "ts": "2025-01-23T09:36:04+00:00",
+    "d": "2025-01-23",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ANIME",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "애니메코인(ANIME) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 및 매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4822"
+   },
+   {
+    "event_id": "8a816f1e9c7dc737025413f8",
+    "ts": "2025-01-31T08:17:39+00:00",
+    "d": "2025-01-31",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "VIRTUAL",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "버추얼프로토콜(VIRTUAL) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=4836"
+   },
+   {
+    "event_id": "e5a284fe791b660619518fed",
+    "ts": "2025-02-06T04:56:42+00:00",
+    "d": "2025-02-06",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BERA",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "베라체인(BERA) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 및 매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4849"
+   },
+   {
+    "event_id": "e8c7a69ad2e71a000f8f4e34",
+    "ts": "2025-02-11T07:21:13+00:00",
+    "d": "2025-02-11",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "LAYER",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "솔레이어(LAYER) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 및 매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4863"
+   },
+   {
+    "event_id": "5bdeac30f4da31949d4a4b09",
+    "ts": "2025-02-13T06:24:06+00:00",
+    "d": "2025-02-13",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "TRUMP",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "오피셜트럼프(TRUMP) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=4870"
+   },
+   {
+    "event_id": "0e0d4fe1038692ac9e021ce3",
+    "ts": "2025-02-21T05:00:00+00:00",
+    "d": "2025-02-21",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "JTO",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "지토(JTO) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=4894"
+   },
+   {
+    "event_id": "473123d008857c8b0b60c8a3",
+    "ts": "2025-02-25T08:39:55+00:00",
+    "d": "2025-02-25",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "COW",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "카우프로토콜(COW) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=4906"
+   },
+   {
+    "event_id": "0ce2b124fea1b5f4966ee666",
+    "ts": "2025-03-05T02:47:19+00:00",
+    "d": "2025-03-05",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "KAITO",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "카이토(KAITO) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=4928"
+   },
+   {
+    "event_id": "856250de7e1f336b9a4aa8a8",
+    "ts": "2025-03-11T06:15:05+00:00",
+    "d": "2025-03-11",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ARKM",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "아캄(ARKM) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=4944"
+   },
+   {
+    "event_id": "082e4724b1f6ca42f10118e2",
+    "ts": "2025-03-21T04:57:29+00:00",
+    "d": "2025-03-21",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ORCA",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "오르카(ORCA) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=4973"
+   },
+   {
+    "event_id": "f85657325a52f079f65d20af",
+    "ts": "2025-03-27T06:55:55+00:00",
+    "d": "2025-03-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "WAL",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "월러스(WAL) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 및 매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4992"
+   },
+   {
+    "event_id": "5623fdc91237a5f0b77e52dc",
+    "ts": "2025-04-01T07:05:00+00:00",
+    "d": "2025-04-01",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "COMP",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "컴파운드(COMP) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5007"
+   },
+   {
+    "event_id": "519bf71cc224fbf17054c3cf",
+    "ts": "2025-04-04T07:04:42+00:00",
+    "d": "2025-04-04",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "FIL",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "파일코인(FIL) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5015"
+   },
+   {
+    "event_id": "f27bf57d0ff5d9ee559eedc2",
+    "ts": "2025-04-16T05:39:10+00:00",
+    "d": "2025-04-16",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "WCT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "월렛커넥트(WCT) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5041"
+   },
+   {
+    "event_id": "225a627be79a21cb2caf57f9",
+    "ts": "2025-04-22T04:58:32+00:00",
+    "d": "2025-04-22",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "DEEP",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "딥북(DEEP) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5055"
+   },
+   {
+    "event_id": "9996599b6c22f12f1d3131e6",
+    "ts": "2025-04-29T06:25:02+00:00",
+    "d": "2025-04-29",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SIGN",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "사인(SIGN) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5076"
+   },
+   {
+    "event_id": "f78ab72060d37929e267302f",
+    "ts": "2025-05-08T07:26:15+00:00",
+    "d": "2025-05-08",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "IO",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "셀레스티아(TIA)(KRW, BTC, USDT 마켓), 아이오넷(IO)(BTC, USDT 마켓) 신규 거래지원 안내 (주문 타입 제한 관련 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5100"
+   },
+   {
+    "event_id": "f78ab72060d37929e267302f",
+    "ts": "2025-05-08T07:26:15+00:00",
+    "d": "2025-05-08",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "TIA",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "셀레스티아(TIA)(KRW, BTC, USDT 마켓), 아이오넷(IO)(BTC, USDT 마켓) 신규 거래지원 안내 (주문 타입 제한 관련 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5100"
+   },
+   {
+    "event_id": "7931ca625eb51a5ad86a3d9b",
+    "ts": "2025-05-09T06:00:00+00:00",
+    "d": "2025-05-09",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "PENGU",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "펏지펭귄(PENGU) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5104"
+   },
+   {
+    "event_id": "ee2457ad48e75b3e9768a35d",
+    "ts": "2025-05-14T01:48:42+00:00",
+    "d": "2025-05-14",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "NXPC",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "넥스페이스(NXPC) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5118"
+   },
+   {
+    "event_id": "1197ad5b1132cc5c15cf0590",
+    "ts": "2025-05-21T02:45:29+00:00",
+    "d": "2025-05-21",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "OM",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "만트라(OM) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5144"
+   },
+   {
+    "event_id": "855649acb66957c46c0ff696",
+    "ts": "2025-05-27T08:02:01+00:00",
+    "d": "2025-05-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SOPH",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "소폰(SOPH) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 및 매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5171"
+   },
+   {
+    "event_id": "73c9f20cffa3bca839e104c5",
+    "ts": "2025-05-30T03:15:00+00:00",
+    "d": "2025-05-30",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "LPT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "라이브피어(LPT)(KRW, USDT 마켓), 포켓네트워크(POKT)(KRW 마켓) 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5183"
+   },
+   {
+    "event_id": "74360243a242682372ae10e1",
+    "ts": "2025-06-05T07:03:21+00:00",
+    "d": "2025-06-05",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "RVN",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "레이븐코인(RVN) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5204"
+   },
+   {
+    "event_id": "0472b5575166b27e86545cd6",
+    "ts": "2025-06-10T04:41:12+00:00",
+    "d": "2025-06-10",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "AXL",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "엑셀라(AXL) KRW, USDT 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5218"
+   },
+   {
+    "event_id": "bbd8538d97fe5b04ae68473b",
+    "ts": "2025-06-19T00:35:03+00:00",
+    "d": "2025-06-19",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "RAY",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "레이디움(RAY) KRW, USDT 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5248"
+   },
+   {
+    "event_id": "a8847476e06531772fbd35c1",
+    "ts": "2025-06-24T07:25:53+00:00",
+    "d": "2025-06-24",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "NEWT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "뉴턴프로토콜(NEWT) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5268"
+   },
+   {
+    "event_id": "24303b044cc5b1d4fe73f401",
+    "ts": "2025-06-26T02:40:04+00:00",
+    "d": "2025-06-26",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SAHARA",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "사하라에이아이(SAHARA) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5272"
+   },
+   {
+    "event_id": "8ee623d3f4c75366cede98e9",
+    "ts": "2025-07-03T04:47:01+00:00",
+    "d": "2025-07-03",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "MOODENG",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "무뎅(MOODENG) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5285"
+   },
+   {
+    "event_id": "3742e22ff4e525048d534711",
+    "ts": "2025-07-10T03:30:01+00:00",
+    "d": "2025-07-10",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "HYPER",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "하이퍼레인(HYPER) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5305"
+   },
+   {
+    "event_id": "3f8618b73318cb56c87b171a",
+    "ts": "2025-07-11T04:42:59+00:00",
+    "d": "2025-07-11",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ENA",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "에테나(ENA) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5314"
+   },
+   {
+    "event_id": "9c1d0bda26b0539607b289c0",
+    "ts": "2025-07-17T09:01:37+00:00",
+    "d": "2025-07-17",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ERA",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "칼데라(ERA) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5333"
+   },
+   {
+    "event_id": "f30e096580d19be811586060",
+    "ts": "2025-07-25T02:19:50+00:00",
+    "d": "2025-07-25",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SYRUP",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "메이플파이낸스(SYRUP) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5363"
+   },
+   {
+    "event_id": "954e23d98fce08083e233ddf",
+    "ts": "2025-07-28T04:24:25+00:00",
+    "d": "2025-07-28",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "OP",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "옵티미즘(OP) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5368"
+   },
+   {
+    "event_id": "0031a839815c74027fa788e3",
+    "ts": "2025-08-06T03:21:00+00:00",
+    "d": "2025-08-06",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "PROVE",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "서싱트(PROVE) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5394"
+   },
+   {
+    "event_id": "b4ea57d6c1b1c0b87cd60eaf",
+    "ts": "2025-08-08T02:09:39+00:00",
+    "d": "2025-08-08",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "IP",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "스토리(IP) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5397"
+   },
+   {
+    "event_id": "869b24c95077be3bf34ef595",
+    "ts": "2025-08-12T07:30:00+00:00",
+    "d": "2025-08-12",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "CYBER",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "사이버(CYBER) KRW, USDT 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5409"
+   },
+   {
+    "event_id": "10e8625f511aed493bbb450f",
+    "ts": "2025-08-19T07:30:00+00:00",
+    "d": "2025-08-19",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "API3",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "에이피아이쓰리(API3) KRW, USDT 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5429"
+   },
+   {
+    "event_id": "7e75ae5d06d59698b42792c4",
+    "ts": "2025-08-22T00:30:00+00:00",
+    "d": "2025-08-22",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "AERO",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "에어로드롬파이낸스(AERO) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5442"
+   },
+   {
+    "event_id": "21b489d2a64e03edc6c176e0",
+    "ts": "2025-08-28T05:00:00+00:00",
+    "d": "2025-08-28",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "TREE",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "트리하우스(TREE) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5456"
+   },
+   {
+    "event_id": "92975e295e95d7b4449fbe6e",
+    "ts": "2025-09-01T04:09:11+00:00",
+    "d": "2025-09-01",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "USD1",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "월드리버티파이낸셜유에스디(USD1) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5463"
+   },
+   {
+    "event_id": "483995a3998d828c81fd6b16",
+    "ts": "2025-09-01T04:09:10+00:00",
+    "d": "2025-09-01",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "WLFI",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "월드리버티파이낸셜(WLFI) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5462"
+   },
+   {
+    "event_id": "facb585eebcbd85c6af0bcc9",
+    "ts": "2025-09-05T07:45:00+00:00",
+    "d": "2025-09-05",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "RED",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "레드스톤(RED) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5486"
+   },
+   {
+    "event_id": "c5d09351498e1af74196f17f",
+    "ts": "2025-09-09T02:40:00+00:00",
+    "d": "2025-09-09",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "FLOCK",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "플록(FLOCK) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5494"
+   },
+   {
+    "event_id": "80e7feb008539df6ce247585",
+    "ts": "2025-09-09T10:21:09+00:00",
+    "d": "2025-09-09",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "WLD",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "월드코인(WLD) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5497"
+   },
+   {
+    "event_id": "8172c27d9b7cd6f389bc604e",
+    "ts": "2025-09-10T07:40:05+00:00",
+    "d": "2025-09-10",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "LINEA",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "리네아(LINEA) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5503"
+   },
+   {
+    "event_id": "5fcaa485b3800ff7d503d72a",
+    "ts": "2025-09-10T04:22:36+00:00",
+    "d": "2025-09-10",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "OPEN",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "오픈렛저(OPEN) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5498"
+   },
+   {
+    "event_id": "ead69dfc10c331cef084bd26",
+    "ts": "2025-09-11T09:23:45+00:00",
+    "d": "2025-09-11",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "HOLO",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "홀로월드에이아이(HOLO) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5508"
+   },
+   {
+    "event_id": "14d7faa0eb9e118d070f769a",
+    "ts": "2025-09-11T10:15:27+00:00",
+    "d": "2025-09-11",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "PUMP",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "펌프펀(PUMP) 신규 거래지원 안내 (KRW, USDT 마켓) (거래지원 개시 시점 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5509"
+   },
+   {
+    "event_id": "b284a5f611e75344b09ed9ba",
+    "ts": "2025-09-15T02:30:00+00:00",
+    "d": "2025-09-15",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "AVNT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "아반티스(AVNT) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5519"
+   },
+   {
+    "event_id": "377feafa60e757961d0a07d0",
+    "ts": "2025-09-15T09:25:00+00:00",
+    "d": "2025-09-15",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ZKC",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "바운드리스(ZKC) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5522"
+   },
+   {
+    "event_id": "a189726acaff1e4947da7436",
+    "ts": "2025-09-17T02:30:22+00:00",
+    "d": "2025-09-17",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "TOSHI",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "토시(TOSHI) 신규 거래지원 안내 (KRW, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5526"
+   },
+   {
+    "event_id": "879864d57cc92eee376ec447",
+    "ts": "2025-09-18T09:50:06+00:00",
+    "d": "2025-09-18",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BARD",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "롬바드(BARD) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (유통량 계획표 수정 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5536"
+   },
+   {
+    "event_id": "2e9543519c5a09aaeaa7e08c",
+    "ts": "2025-09-18T10:02:31+00:00",
+    "d": "2025-09-18",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "LA",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "라그랑주(LA) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5537"
+   },
+   {
+    "event_id": "43e8c5c9027782ad063160e5",
+    "ts": "2025-09-22T04:50:00+00:00",
+    "d": "2025-09-22",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "0G",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "제로지(0G) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 및 매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5551"
+   },
+   {
+    "event_id": "80af25dfbb7b8b2ee7b05f55",
+    "ts": "2025-09-22T02:30:00+00:00",
+    "d": "2025-09-22",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SUN",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "썬(SUN) KRW, USDT 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5549"
+   },
+   {
+    "event_id": "69374f8f746a745bedae2f78",
+    "ts": "2025-09-24T08:10:00+00:00",
+    "d": "2025-09-24",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "FLUID",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "플루이드(FLUID) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5570"
+   },
+   {
+    "event_id": "5e5c7695f5849963f3548569",
+    "ts": "2025-09-25T01:57:18+00:00",
+    "d": "2025-09-25",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "XPL",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "플라즈마(XPL) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5572"
+   },
+   {
+    "event_id": "040824a9fbdff49ca5918bb5",
+    "ts": "2025-09-26T09:31:16+00:00",
+    "d": "2025-09-26",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "MIRA",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "미라네트워크(MIRA) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5585"
+   },
+   {
+    "event_id": "6b267cd780d3f210f68bb7e5",
+    "ts": "2025-09-29T09:34:32+00:00",
+    "d": "2025-09-29",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "FF",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "팔콘파이낸스(FF) 신규 거래지원 안내 (KRW, USDT 마켓) (매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5592"
+   },
+   {
+    "event_id": "c0590ef7e9a85e5cf4c3cad9",
+    "ts": "2025-09-29T08:53:51+00:00",
+    "d": "2025-09-29",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SUPER",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "슈퍼버스(SUPER) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5589"
+   },
+   {
+    "event_id": "924d470f433afc1673a84491",
+    "ts": "2025-10-01T04:26:21+00:00",
+    "d": "2025-10-01",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SOMI",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "솜니아(SOMI) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5599"
+   },
+   {
+    "event_id": "8a529dca6c53502fb495fd25",
+    "ts": "2025-10-02T00:15:30+00:00",
+    "d": "2025-10-02",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "2Z",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "더블제로(2Z) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5606"
+   },
+   {
+    "event_id": "c6ac3c65ee94d042b74892dc",
+    "ts": "2025-10-07T04:35:00+00:00",
+    "d": "2025-10-07",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "DOOD",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "두들즈(DOOD) 신규 거래지원 안내 (KRW, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5624"
+   },
+   {
+    "event_id": "3362f4337117164c4f99be8e",
+    "ts": "2025-10-10T06:00:00+00:00",
+    "d": "2025-10-10",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "IN",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "인피닛(IN) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5628"
+   },
+   {
+    "event_id": "c2c3b0a7aa0ed2dfb68992bd",
+    "ts": "2025-10-17T09:00:06+00:00",
+    "d": "2025-10-17",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ZBT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "제로베이스(ZBT) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5654"
+   },
+   {
+    "event_id": "592ba1cf69cc9ed3969c3060",
+    "ts": "2025-10-17T02:30:00+00:00",
+    "d": "2025-10-17",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ZORA",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "조라(ZORA) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5648"
+   },
+   {
+    "event_id": "e0f41e0f561b66c33ca34d32",
+    "ts": "2025-10-20T06:35:00+00:00",
+    "d": "2025-10-20",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BIO",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "바이오프로토콜(BIO) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5662"
+   },
+   {
+    "event_id": "7b3734f40fb12133a932b609",
+    "ts": "2025-10-22T05:20:00+00:00",
+    "d": "2025-10-22",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "CPOOL",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "클리어풀(CPOOL) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5671"
+   },
+   {
+    "event_id": "fc7917a6fce317ad2d78ceb5",
+    "ts": "2025-10-24T06:15:00+00:00",
+    "d": "2025-10-24",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ORDER",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "오덜리(ORDER) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5681"
+   },
+   {
+    "event_id": "45dfcda9ad2f1ede743c529e",
+    "ts": "2025-10-28T07:00:00+00:00",
+    "d": "2025-10-28",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "KERNEL",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "커널다오(KERNEL) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5693"
+   },
+   {
+    "event_id": "89b53d6f2c1c946230c4514a",
+    "ts": "2025-10-29T06:30:56+00:00",
+    "d": "2025-10-29",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ENSO",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "엔소(ENSO) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5697"
+   },
+   {
+    "event_id": "3b08cc483bc529e65fe3e7cd",
+    "ts": "2025-11-03T08:11:21+00:00",
+    "d": "2025-11-03",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "KITE",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "카이트(KITE) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5716"
+   },
+   {
+    "event_id": "49e16a2a05e6aa54a2ce1323",
+    "ts": "2025-11-05T05:47:59+00:00",
+    "d": "2025-11-05",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "MMT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "모멘텀(MMT) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5724"
+   },
+   {
+    "event_id": "6b526032f82e443976646c2d",
+    "ts": "2025-11-05T08:44:16+00:00",
+    "d": "2025-11-05",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "TRUST",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "인튜이션(TRUST) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5727"
+   },
+   {
+    "event_id": "d642ae809999ec0a5c72efba",
+    "ts": "2025-11-18T06:20:00+00:00",
+    "d": "2025-11-18",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "MET2",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "메테오라(MET2) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5769"
+   },
+   {
+    "event_id": "9c5d1b2b06eb906e2cd104f4",
+    "ts": "2025-11-24T09:01:33+00:00",
+    "d": "2025-11-24",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "MON",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "모나드(MON) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5790"
+   },
+   {
+    "event_id": "6c687789b33b8f69b74cacc7",
+    "ts": "2025-11-26T05:30:02+00:00",
+    "d": "2025-11-26",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "PLUME",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "플룸(PLUME) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=5796"
+   },
+   {
+    "event_id": "75b9de91bfde0372ad72bb2b",
+    "ts": "2025-12-15T07:00:00+00:00",
+    "d": "2025-12-15",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "WET",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "휴미디파이(WET) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (추가 안내)",
+    "url": "https://upbit.com/service_center/notice?id=5860"
+   },
+   {
+    "event_id": "1dec033d9177db1c961f32ff",
+    "ts": "2025-12-26T06:19:43+00:00",
+    "d": "2025-12-26",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ZKP",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "지케이패스(ZKP) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5885"
+   },
+   {
+    "event_id": "735605c6a185f869ea4e250a",
+    "ts": "2026-01-01T04:00:00+00:00",
+    "d": "2026-01-01",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "XAUT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "테더골드(XAUT) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5900"
+   },
+   {
+    "event_id": "79a7a4422607307f9b02dc77",
+    "ts": "2026-01-06T07:30:15+00:00",
+    "d": "2026-01-06",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ZK",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "지케이싱크(ZK) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5913"
+   },
+   {
+    "event_id": "af50f3c009a251e56d38b1ff",
+    "ts": "2026-01-07T02:20:01+00:00",
+    "d": "2026-01-07",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BREV",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "브레비스(BREV) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5914"
+   },
+   {
+    "event_id": "40f8765030d8c5be2a14006e",
+    "ts": "2026-01-14T06:55:47+00:00",
+    "d": "2026-01-14",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "USDE",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "유에스디이(USDE) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5934"
+   },
+   {
+    "event_id": "50a26613b3d662447e16af68",
+    "ts": "2026-01-22T05:30:00+00:00",
+    "d": "2026-01-22",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ELSA",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "헤이엘사(ELSA) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5953"
+   },
+   {
+    "event_id": "b62c179701ced91e2a330135",
+    "ts": "2026-01-29T06:15:07+00:00",
+    "d": "2026-01-29",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SENT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "센티언트(SENT) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5973"
+   },
+   {
+    "event_id": "c64884f53f3bd8bac9716b44",
+    "ts": "2026-02-03T07:00:00+00:00",
+    "d": "2026-02-03",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BIRB",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "문버드(BIRB) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=5990"
+   },
+   {
+    "event_id": "f86d2e23b436ea2ff1926c87",
+    "ts": "2026-02-16T05:00:00+00:00",
+    "d": "2026-02-16",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "TAO",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "비트텐서(TAO) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6021"
+   },
+   {
+    "event_id": "c5ced81eed4e2db28c2dd19a",
+    "ts": "2026-02-20T05:00:00+00:00",
+    "d": "2026-02-20",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "AZTEC",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "아즈텍(AZTEC) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6025"
+   },
+   {
+    "event_id": "d9aa2ed819a2eccb8f16e45b",
+    "ts": "2026-02-24T06:04:04+00:00",
+    "d": "2026-02-24",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ESP",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "에스프레소(ESP) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6038"
+   },
+   {
+    "event_id": "cb290544570062e16e0cbc6b",
+    "ts": "2026-02-24T05:00:00+00:00",
+    "d": "2026-02-24",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SKR",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "시커(SKR) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6037"
+   },
+   {
+    "event_id": "00d7fc51f0e887f940ba9a3d",
+    "ts": "2026-02-26T03:00:00+00:00",
+    "d": "2026-02-26",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "CFG",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "센트리퓨즈(CFG) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6043"
+   },
+   {
+    "event_id": "29a71fe9021382120644f090",
+    "ts": "2026-03-04T05:50:00+00:00",
+    "d": "2026-03-04",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "EDGE",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "디피니티브(EDGE) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6057"
+   },
+   {
+    "event_id": "420409a4c7dbbcc0da77ee8f",
+    "ts": "2026-03-11T06:00:00+00:00",
+    "d": "2026-03-11",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ICP",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "인터넷컴퓨터(ICP) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6069"
+   },
+   {
+    "event_id": "9d94ffa779a49410b67cc6aa",
+    "ts": "2026-03-19T02:50:00+00:00",
+    "d": "2026-03-19",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ETHFI",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "이더파이(ETHFI) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=6079"
+   },
+   {
+    "event_id": "927e207e4856e877d4c19fdf",
+    "ts": "2026-03-26T08:07:50+00:00",
+    "d": "2026-03-26",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "KAT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "카타나(KAT) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (명칭 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6097"
+   },
+   {
+    "event_id": "5101ec785aee916e6cf7f25f",
+    "ts": "2026-03-31T02:30:01+00:00",
+    "d": "2026-03-31",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SKY",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "스카이프로토콜(SKY), 유에스디에스(USDS) KRW, USDT 마켓 디지털 자산 추가 (USDS 거래지원 개시 시점 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6102"
+   },
+   {
+    "event_id": "5101ec785aee916e6cf7f25f",
+    "ts": "2026-03-31T02:30:01+00:00",
+    "d": "2026-03-31",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "USDS",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "스카이프로토콜(SKY), 유에스디에스(USDS) KRW, USDT 마켓 디지털 자산 추가 (USDS 거래지원 개시 시점 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6102"
+   },
+   {
+    "event_id": "c15626933934b20445c5f897",
+    "ts": "2026-04-14T05:00:00+00:00",
+    "d": "2026-04-14",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "CC",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "캔톤(CC) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (입출금 서비스 개시 안내 및 거래지원 개시 시점 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6144"
+   },
+   {
+    "event_id": "e953beb1ef69646d3bc34330",
+    "ts": "2026-04-14T07:48:40+00:00",
+    "d": "2026-04-14",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ZAMA",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "자마(ZAMA) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6146"
+   },
+   {
+    "event_id": "78f609bff1f1d55b58ffcf35",
+    "ts": "2026-04-17T05:00:02+00:00",
+    "d": "2026-04-17",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SOON",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "쑨(SOON) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=6150"
+   },
+   {
+    "event_id": "7dae6d128c909fdd6cf51598",
+    "ts": "2026-04-20T05:00:00+00:00",
+    "d": "2026-04-20",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "PIEVERSE",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "파이버스(PIEVERSE) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6154"
+   },
+   {
+    "event_id": "21ea7f88ea33762401fb33bb",
+    "ts": "2026-04-21T06:16:24+00:00",
+    "d": "2026-04-21",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "CHIP",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "유에스디에이아이(CHIP) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6158"
+   },
+   {
+    "event_id": "36227993a92c3f28b971f3d9",
+    "ts": "2026-04-23T02:20:00+00:00",
+    "d": "2026-04-23",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SPK",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "스파크(SPK) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=6162"
+   },
+   {
+    "event_id": "f66305b04fa388ca348e5b21",
+    "ts": "2026-04-27T06:30:00+00:00",
+    "d": "2026-04-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "PRL",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "펄(PRL) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (유통량 이슈에 대한 소명 및 거래지원 개시 시점 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6173"
+   },
+   {
+    "event_id": "894894b9ab213a5b70fc55d6",
+    "ts": "2026-04-27T05:00:00+00:00",
+    "d": "2026-04-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "XCN",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "오닉스코인(XCN) 신규 거래지원 안내 (KRW, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6171"
+   },
+   {
+    "event_id": "471996f061207f14f15788e2",
+    "ts": "2026-04-29T02:23:31+00:00",
+    "d": "2026-04-29",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BLEND",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "플루언트(BLEND) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6178"
+   },
+   {
+    "event_id": "d86114bd61cb5d7d65fd9afa",
+    "ts": "2026-04-30T02:30:06+00:00",
+    "d": "2026-04-30",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "MEGA",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "메가이더(MEGA) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6184"
+   },
+   {
+    "event_id": "428f76953d0fb6a6f24e66d2",
+    "ts": "2026-05-06T05:00:00+00:00",
+    "d": "2026-05-06",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "WIF",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "도그위프햇(WIF) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6197"
+   },
+   {
+    "event_id": "52573b836643e64edb22d68a",
+    "ts": "2026-05-07T03:50:00+00:00",
+    "d": "2026-05-07",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "B3",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "비쓰리(B3) KRW 마켓 디지털 자산 추가 (거래지원 개시 시점 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6201"
+   },
+   {
+    "event_id": "57d4b2113d592ffcb902174c",
+    "ts": "2026-05-08T09:30:00+00:00",
+    "d": "2026-05-08",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "PROS",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "파로스(PROS) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6207"
+   },
+   {
+    "event_id": "dba20ea066d0f8836f0eda7e",
+    "ts": "2026-05-12T05:00:00+00:00",
+    "d": "2026-05-12",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "VVV",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "베니스토큰(VVV) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6215"
+   },
+   {
+    "event_id": "a3b2673c4f8e80c50f60a278",
+    "ts": "2026-05-13T09:27:21+00:00",
+    "d": "2026-05-13",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "UP2",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "슈퍼폼(UP2) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 일정 정정 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6218"
+   },
+   {
+    "event_id": "646c317168ea7a58122153e9",
+    "ts": "2026-05-15T08:41:07+00:00",
+    "d": "2026-05-15",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "IRYS",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "아이리스(IRYS) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6222"
+   },
+   {
+    "event_id": "68c5bf37bbddeed81921fbb2",
+    "ts": "2026-05-18T05:07:21+00:00",
+    "d": "2026-05-18",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "TRAC",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "오리진트레일(TRAC) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6226"
+   },
+   {
+    "event_id": "be6944d01485a8b96cb5f7a0",
+    "ts": "2026-06-01T02:45:00+00:00",
+    "d": "2026-06-01",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SLX",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "솔스티스(SLX) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 추가 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6258"
+   },
+   {
+    "event_id": "d6c61476cbc07107ba8971f5",
+    "ts": "2026-06-05T09:30:00+00:00",
+    "d": "2026-06-05",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BABY",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "바빌론(BABY) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=6274"
+   },
+   {
+    "event_id": "583a0f14797a7f6fa58c792f",
+    "ts": "2026-06-16T02:12:26+00:00",
+    "d": "2026-06-16",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SPX",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "에스피엑스6900(SPX) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6294"
+   },
+   {
+    "event_id": "66ac92ba724e0edd21b14371",
+    "ts": "2026-06-19T09:00:02+00:00",
+    "d": "2026-06-19",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "RE",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "리(RE) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6303"
+   },
+   {
+    "event_id": "f7bb5c407b3f10bfddb309f3",
+    "ts": "2026-06-23T02:00:00+00:00",
+    "d": "2026-06-23",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ARX",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "아르키움(ARX) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6314"
+   },
+   {
+    "event_id": "3981de9fff9e00a42e55d9c7",
+    "ts": "2026-06-30T03:00:55+00:00",
+    "d": "2026-06-30",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "AI",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "젠신(AI) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6335"
+   },
+   {
+    "event_id": "dd23c00182de8c8c72e75198",
+    "ts": "2026-07-07T04:39:48+00:00",
+    "d": "2026-07-07",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "OPG",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "오픈그라디언트(OPG) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=6360"
+   },
+   {
+    "event_id": "581c865f854a9585cdface78",
+    "ts": "2026-07-14T05:15:02+00:00",
+    "d": "2026-07-14",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "DRV",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "디라이브(DRV) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6383"
+   },
+   {
+    "event_id": "68ec25487c8f969e2d12b923",
+    "ts": "2026-07-25T07:40:28+00:00",
+    "d": "2026-07-25",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "MORPHO",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "모포(MORPHO) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=6411"
+   },
+   {
+    "event_id": "c88dd57e339f42c54b402b48",
+    "ts": "2026-07-26T00:56:01+00:00",
+    "d": "2026-07-26",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "EUL",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "오일러(EUL) KRW 마켓 디지털 자산 추가 (거래지원 개시 시점 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6414"
+   },
+   {
+    "event_id": "97210e4b571460977cd81cfd",
+    "ts": "2026-07-27T03:22:21+00:00",
+    "d": "2026-07-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "GEOD",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "지오드넷(GEOD) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 추가 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6415"
+   },
+   {
+    "event_id": "8fcee2cb8aab77cf9da80c1b",
+    "ts": "2026-07-28T02:34:20+00:00",
+    "d": "2026-07-28",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "RLUSD",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "리플유에스디(RLUSD) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6418"
+   },
+   {
+    "event_id": "53e62d662d2dc7b04b611de7",
+    "ts": "2026-07-29T04:16:28+00:00",
+    "d": "2026-07-29",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "META2",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "메타다오(META2) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6420"
+   },
+   {
+    "event_id": "535bb70522c8546988fc17e8",
+    "ts": "2026-07-30T01:10:14+00:00",
+    "d": "2026-07-30",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "USDG",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "글로벌달러(USDG) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 추가 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6424"
+   },
+   {
+    "event_id": "7428a17630af506dd18681e6",
+    "ts": "2026-07-31T05:00:07+00:00",
+    "d": "2026-07-31",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "CFX",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "콘플럭스(CFX) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6428"
+   },
+   {
+    "event_id": "8a2e59834747736727e7a28a",
+    "ts": "2026-08-04T04:30:17+00:00",
+    "d": "2026-08-04",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "HOME",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "디파이앱(HOME) 신규 거래지원 안내 (KRW, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6437"
+   },
+   {
+    "event_id": "6b9054b5e5894c6c4fd4b95f",
+    "ts": "2026-08-04T10:00:04+00:00",
+    "d": "2026-08-04",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "QUID",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "스퀴드(QUID) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6440"
+   },
+   {
+    "event_id": "49e3d1da77d97475d3846e65",
+    "ts": "2026-08-05T04:42:31+00:00",
+    "d": "2026-08-05",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "GRVT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "그래비티토큰(GRVT) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6441"
+   },
+   {
+    "event_id": "187b86621e80308a4382a378",
+    "ts": "2026-08-06T01:55:15+00:00",
+    "d": "2026-08-06",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "CAP",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "캡(CAP) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6446"
+   },
+   {
+    "event_id": "f438438ab3fe81fbcc3e9d36",
+    "ts": "2026-08-07T02:55:16+00:00",
+    "d": "2026-08-07",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BSB",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "블록스트리트(BSB) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6451"
+   },
+   {
+    "event_id": "cc57675b7724dd1b00c9852c",
+    "ts": "2026-08-07T02:09:45+00:00",
+    "d": "2026-08-07",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "KMNO",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "카미노파이낸스(KMNO) KRW 마켓 디지털 자산 추가 (거래지원 개시 시점 추가 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6450"
+   },
+   {
+    "event_id": "aca4d90626d6b20b840b4908",
+    "ts": "2026-08-11T02:30:36+00:00",
+    "d": "2026-08-11",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "DOS",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "댑오에스(DOS) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 추가 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6463"
+   },
+   {
+    "event_id": "8956b7e3b55ead1a801c688c",
+    "ts": "2026-08-12T02:11:38+00:00",
+    "d": "2026-08-12",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "PROM",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "프롬(PROM) KRW, USDT 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=6466"
+   },
+   {
+    "event_id": "554599dd7f26fab1b57aae75",
+    "ts": "2026-08-21T02:22:40+00:00",
+    "d": "2026-08-21",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "CRV",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "커브(CRV) KRW, USDT 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=6490"
+   },
+   {
+    "event_id": "9a584da33fc0ccb2eb6a63a2",
+    "ts": "2026-08-23T01:14:09+00:00",
+    "d": "2026-08-23",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "FOLD",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "인터폴드(FOLD) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6503"
+   },
+   {
+    "event_id": "d20f589ff5f6163d8753f27b",
+    "ts": "2026-08-24T02:34:42+00:00",
+    "d": "2026-08-24",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "LIT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "라이터(LIT) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=6504"
+   },
+   {
+    "event_id": "3b7b9e4eeecc89a04b99f323",
+    "ts": "2026-08-26T10:32:15+00:00",
+    "d": "2026-08-26",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "NCT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "폴리스웜(NCT) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=6518"
+   },
+   {
+    "event_id": "dcee648ea1ece52c6956a1f5",
+    "ts": "2026-08-28T01:49:45+00:00",
+    "d": "2026-08-28",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "EURC",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "이유알코인(EURC) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6526"
+   },
+   {
+    "event_id": "fd1b35d94f55781cfb0c4b6e",
+    "ts": "2026-09-08T03:21:44+00:00",
+    "d": "2026-09-08",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "CP",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "클러스터프로토콜(CP) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6555"
+   },
+   {
+    "event_id": "085c29fa7676fe11531702af",
+    "ts": "2026-09-10T04:40:00+00:00",
+    "d": "2026-09-10",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BFC",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "바이프로스트(BFC) KRW, USDT 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=6561"
+   },
+   {
+    "event_id": "b93c8523e4cc08d73e1a2e27",
+    "ts": "2026-09-17T00:48:01+00:00",
+    "d": "2026-09-17",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "JPYC",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "페이팔유에스디(PYUSD), 제이피와이코인(JPYC) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (JPYC 거래지원 개시 시점 추가 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6580"
+   },
+   {
+    "event_id": "b93c8523e4cc08d73e1a2e27",
+    "ts": "2026-09-17T00:48:01+00:00",
+    "d": "2026-09-17",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "PYUSD",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "페이팔유에스디(PYUSD), 제이피와이코인(JPYC) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (JPYC 거래지원 개시 시점 추가 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6580"
+   },
+   {
+    "event_id": "7f6d855c58aa604a4819f229",
+    "ts": "2026-09-28T05:27:04+00:00",
+    "d": "2026-09-28",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "CASHCAT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "캐시캣(CASHCAT) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6618"
+   },
+   {
+    "event_id": "54196d6217ffd7e01104037a",
+    "ts": "2026-10-02T04:37:21+00:00",
+    "d": "2026-10-02",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "POD",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "돌핀(POD) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6635"
+   },
+   {
+    "event_id": "64f225e317bca309e3321800",
+    "ts": "2026-10-06T11:36:26+00:00",
+    "d": "2026-10-06",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "NMR",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "뉴메레르(NMR) KRW, USDT 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=6642"
+   },
+   {
+    "event_id": "aabfa64fc349200c969ce066",
+    "ts": "2026-10-08T02:37:41+00:00",
+    "d": "2026-10-08",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "PONS",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "폰즈(PONS) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6644"
+   },
+   {
+    "event_id": "ec33137c1dd5156f9a873ec7",
+    "ts": "2026-10-09T08:06:46+00:00",
+    "d": "2026-10-09",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "KAIA",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "카이아(KAIA) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (KAIA/BTC 초기 매수 제한 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6645"
+   },
+   {
+    "event_id": "55f85345b43be177eb4054aa",
+    "ts": "2026-10-12T10:00:00+00:00",
+    "d": "2026-10-12",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "GTC",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "깃코인(GTC) KRW, USDT 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=6653"
+   },
+   {
+    "event_id": "63398c52be440cbd039fa597",
+    "ts": "2026-10-12T04:54:09+00:00",
+    "d": "2026-10-12",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "RSR",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "USDT"
+    ],
+    "title": "리저브라이트(RSR) KRW, USDT 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=6651"
+   },
+   {
+    "event_id": "3fa09fb10f7d3a301304a5c5",
+    "ts": "2026-10-15T04:40:00+00:00",
+    "d": "2026-10-15",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "PUFFER",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "퍼퍼(PUFFER) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=6659"
+   },
+   {
+    "event_id": "a0e0cc150ede794702122f6a",
+    "ts": "2026-10-19T07:40:00+00:00",
+    "d": "2026-10-19",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "CT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "콘크리트(CT) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6675"
+   },
+   {
+    "event_id": "8e2e8566a83d9b267327e86d",
+    "ts": "2026-10-20T09:00:00+00:00",
+    "d": "2026-10-20",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "MPLX",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "메타플렉스(MPLX) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=6680"
+   },
+   {
+    "event_id": "da10cf13627d39de5d6cc683",
+    "ts": "2026-10-21T11:00:00+00:00",
+    "d": "2026-10-21",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "AXIS",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "액시스로보틱스(AXIS) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (매도 최저가 기준 가격 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6687"
+   },
+   {
+    "event_id": "06394d2fc01446c4d0bf6531",
+    "ts": "2026-10-24T02:35:00+00:00",
+    "d": "2026-10-24",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BMT",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "버블맵스(BMT) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=6700"
+   },
+   {
+    "event_id": "0ecfd68045b61b527da8a318",
+    "ts": "2026-10-27T07:30:00+00:00",
+    "d": "2026-10-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "NIL",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW"
+    ],
+    "title": "닐리온(NIL) KRW 마켓 디지털 자산 추가",
+    "url": "https://upbit.com/service_center/notice?id=6714"
+   },
+   {
+    "event_id": "45bfc16fa7787d224c419717",
+    "ts": "2026-11-05T06:03:03+00:00",
+    "d": "2026-11-05",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "CARDS",
+    "sym_source": "field",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC",
+     "USDT"
+    ],
+    "title": "콜렉터크립트(CARDS) 신규 거래지원 안내 (KRW, BTC, USDT 마켓)",
+    "url": "https://upbit.com/service_center/notice?id=6739"
+   }
+  ],
+  "listing_krw_null": [
+   {
+    "event_id": "50bf7a415afcd404954e3971",
+    "ts": "2017-10-27T14:33:33+00:00",
+    "d": "2017-10-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SBD",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "스팀달러(SBD), 블록틱스(TIX) 상장 안내",
+    "url": "https://upbit.com/service_center/notice?id=28"
+   },
+   {
+    "event_id": "50bf7a415afcd404954e3971",
+    "ts": "2017-10-27T14:33:33+00:00",
+    "d": "2017-10-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "TIX",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "스팀달러(SBD), 블록틱스(TIX) 상장 안내",
+    "url": "https://upbit.com/service_center/notice?id=28"
+   },
+   {
+    "event_id": "9d776fa62971d9e4d393fb27",
+    "ts": "2017-11-07T10:43:19+00:00",
+    "d": "2017-11-07",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "RCN",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "리피오크레딧네트워크(RCN) 상장",
+    "url": "https://upbit.com/service_center/notice?id=43"
+   },
+   {
+    "event_id": "fa9c69314e79f01e1abf4a8b",
+    "ts": "2017-11-09T02:59:43+00:00",
+    "d": "2017-11-09",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "VIB",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "바이버레이트(VIB) 상장",
+    "url": "https://upbit.com/service_center/notice?id=45"
+   },
+   {
+    "event_id": "f77088dbf95d8b836ff51358",
+    "ts": "2017-11-14T05:15:51+00:00",
+    "d": "2017-11-14",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "MER",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "파워렛저(POWR), 머큐리(MER) 상장 안내",
+    "url": "https://upbit.com/service_center/notice?id=58"
+   },
+   {
+    "event_id": "f77088dbf95d8b836ff51358",
+    "ts": "2017-11-14T05:15:51+00:00",
+    "d": "2017-11-14",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "POWR",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "파워렛저(POWR), 머큐리(MER) 상장 안내",
+    "url": "https://upbit.com/service_center/notice?id=58"
+   },
+   {
+    "event_id": "7c2e09c6923cb188b7c55425",
+    "ts": "2018-03-22T09:22:49+00:00",
+    "d": "2018-03-22",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "EOS",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (이오스 EOS)",
+    "url": "https://upbit.com/service_center/notice?id=289"
+   },
+   {
+    "event_id": "acc7cff045735c5299b64bca",
+    "ts": "2018-03-23T01:15:15+00:00",
+    "d": "2018-03-23",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ICX",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (아이콘 ICX)",
+    "url": "https://upbit.com/service_center/notice?id=291"
+   },
+   {
+    "event_id": "53971ceb481170d7236e7508",
+    "ts": "2018-03-23T13:24:23+00:00",
+    "d": "2018-03-23",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "STORM",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (스톰 STORM)",
+    "url": "https://upbit.com/service_center/notice?id=293"
+   },
+   {
+    "event_id": "e36564fe0165f7f508b94537",
+    "ts": "2018-04-05T07:29:46+00:00",
+    "d": "2018-04-05",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "TRX",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (트론 TRX)",
+    "url": "https://upbit.com/service_center/notice?id=307"
+   },
+   {
+    "event_id": "ce0143eee46f3150d78963e1",
+    "ts": "2018-04-13T08:57:58+00:00",
+    "d": "2018-04-13",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "GNT",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (골렘 GNT)",
+    "url": "https://upbit.com/service_center/notice?id=324"
+   },
+   {
+    "event_id": "058248d0c7df3647eab76e7a",
+    "ts": "2018-04-19T05:37:51+00:00",
+    "d": "2018-04-19",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "MCO",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (모나코 MCO)",
+    "url": "https://upbit.com/service_center/notice?id=331"
+   },
+   {
+    "event_id": "c52904c3de6a8d9977027329",
+    "ts": "2018-04-27T09:25:28+00:00",
+    "d": "2018-04-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "GTO",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (기프토 GTO)",
+    "url": "https://upbit.com/service_center/notice?id=351"
+   },
+   {
+    "event_id": "80cbbcbbee8ccc97631c3d8e",
+    "ts": "2018-05-03T02:24:28+00:00",
+    "d": "2018-05-03",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ONT",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (온톨로지 ONT)",
+    "url": "https://upbit.com/service_center/notice?id=359"
+   },
+   {
+    "event_id": "56ccca53775a36defa9a4899",
+    "ts": "2018-05-10T04:58:02+00:00",
+    "d": "2018-05-10",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ZIL",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (질리카 ZIL)",
+    "url": "https://upbit.com/service_center/notice?id=369"
+   },
+   {
+    "event_id": "f5691bbe7f6cfa75d16cd016",
+    "ts": "2018-05-30T06:11:27+00:00",
+    "d": "2018-05-30",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "POLY",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (폴리매쓰 POLY, 제로엑스 ZRX)",
+    "url": "https://upbit.com/service_center/notice?id=387"
+   },
+   {
+    "event_id": "f5691bbe7f6cfa75d16cd016",
+    "ts": "2018-05-30T06:11:27+00:00",
+    "d": "2018-05-30",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ZRX",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (폴리매쓰 POLY, 제로엑스 ZRX)",
+    "url": "https://upbit.com/service_center/notice?id=387"
+   },
+   {
+    "event_id": "b29b4fa5410ed398a77436cd",
+    "ts": "2018-06-07T08:36:16+00:00",
+    "d": "2018-06-07",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SRN",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (시린토큰 SRN)",
+    "url": "https://upbit.com/service_center/notice?id=391"
+   },
+   {
+    "event_id": "55cf86346fea2e1b925d577f",
+    "ts": "2018-06-12T09:11:18+00:00",
+    "d": "2018-06-12",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "LOOM",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (룸네트워크 LOOM)",
+    "url": "https://upbit.com/service_center/notice?id=396"
+   },
+   {
+    "event_id": "9aaf9935a82d69a6a3711d1e",
+    "ts": "2018-07-23T09:41:13+00:00",
+    "d": "2018-07-23",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ADT",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (베이직어텐션토큰 BAT, 애드엑스 ADX, 애드토큰 ADT)",
+    "url": "https://upbit.com/service_center/notice?id=472"
+   },
+   {
+    "event_id": "9aaf9935a82d69a6a3711d1e",
+    "ts": "2018-07-23T09:41:13+00:00",
+    "d": "2018-07-23",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ADX",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (베이직어텐션토큰 BAT, 애드엑스 ADX, 애드토큰 ADT)",
+    "url": "https://upbit.com/service_center/notice?id=472"
+   },
+   {
+    "event_id": "9aaf9935a82d69a6a3711d1e",
+    "ts": "2018-07-23T09:41:13+00:00",
+    "d": "2018-07-23",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BAT",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (베이직어텐션토큰 BAT, 애드엑스 ADX, 애드토큰 ADT)",
+    "url": "https://upbit.com/service_center/notice?id=472"
+   },
+   {
+    "event_id": "4ffb8a2e1f30bd7c8da2924a",
+    "ts": "2018-07-25T03:16:03+00:00",
+    "d": "2018-07-25",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "IOST",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (아이오에스티 IOST)",
+    "url": "https://upbit.com/service_center/notice?id=476"
+   },
+   {
+    "event_id": "bbbc1dde90ab6f896d82897c",
+    "ts": "2018-07-27T05:41:11+00:00",
+    "d": "2018-07-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "DMT",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (리퍼리움 RFR, 디마켓 DMT)",
+    "url": "https://upbit.com/service_center/notice?id=480"
+   },
+   {
+    "event_id": "bbbc1dde90ab6f896d82897c",
+    "ts": "2018-07-27T05:41:11+00:00",
+    "d": "2018-07-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "RFR",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (리퍼리움 RFR, 디마켓 DMT)",
+    "url": "https://upbit.com/service_center/notice?id=480"
+   },
+   {
+    "event_id": "19cd919510e24db48cd881e3",
+    "ts": "2018-08-02T09:37:09+00:00",
+    "d": "2018-08-02",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "CVC",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 시빅(CVC), 에브리피디아(IQ)",
+    "url": "https://upbit.com/service_center/notice?id=485"
+   },
+   {
+    "event_id": "19cd919510e24db48cd881e3",
+    "ts": "2018-08-02T09:37:09+00:00",
+    "d": "2018-08-02",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "IQ",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 시빅(CVC), 에브리피디아(IQ)",
+    "url": "https://upbit.com/service_center/notice?id=485"
+   },
+   {
+    "event_id": "556a7d593d080c04caf85d08",
+    "ts": "2018-08-04T02:06:21+00:00",
+    "d": "2018-08-04",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "IOTA",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (아이오타 IOTA)",
+    "url": "https://upbit.com/service_center/notice?id=493"
+   },
+   {
+    "event_id": "652b36e18be490343bce272a",
+    "ts": "2018-08-07T09:06:15+00:00",
+    "d": "2018-08-07",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "OST",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (오에스티 OST)",
+    "url": "https://upbit.com/service_center/notice?id=496"
+   },
+   {
+    "event_id": "82c89ee9c888ce6d9e2bc39a",
+    "ts": "2018-09-28T03:32:14+00:00",
+    "d": "2018-09-28",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "GAS",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 : (가스 GAS, 온톨로지가스 ONG)",
+    "url": "https://upbit.com/service_center/notice?id=559"
+   },
+   {
+    "event_id": "82c89ee9c888ce6d9e2bc39a",
+    "ts": "2018-09-28T03:32:14+00:00",
+    "d": "2018-09-28",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ONG",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 : (가스 GAS, 온톨로지가스 ONG)",
+    "url": "https://upbit.com/service_center/notice?id=559"
+   },
+   {
+    "event_id": "ee8deaf97fb520ca7056ce79",
+    "ts": "2018-11-16T13:18:53+00:00",
+    "d": "2018-11-16",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BSV",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "비트코인에스브이(BSV) 지급 및 원화마켓 상장 (완료)",
+    "url": "https://upbit.com/service_center/notice?id=622"
+   },
+   {
+    "event_id": "7e4eb5de33062cebaa1e38d0",
+    "ts": "2019-01-24T11:36:12+00:00",
+    "d": "2019-01-24",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "CPT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "콘텐츠프로토콜토큰 (CPT) 입금 지원 및 원화마켓 상장 예고",
+    "url": "https://upbit.com/service_center/notice?id=690"
+   },
+   {
+    "event_id": "5ac62d6e13b8abb585e00cd1",
+    "ts": "2019-03-22T08:47:35+00:00",
+    "d": "2019-03-22",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "TFUEL",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 : (쎄타퓨엘 TFUEL)",
+    "url": "https://upbit.com/service_center/notice?id=766"
+   },
+   {
+    "event_id": "a9d9482ca7d33eeeb4783919",
+    "ts": "2019-05-03T08:40:42+00:00",
+    "d": "2019-05-03",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "ATOM",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 : 코스모스(ATOM)",
+    "url": "https://upbit.com/service_center/notice?id=831"
+   },
+   {
+    "event_id": "1159533ee2d3423c25c02006",
+    "ts": "2019-06-05T10:55:47+00:00",
+    "d": "2019-06-05",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SOLVE",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 신규 상장 (솔브케어 SOLVE)",
+    "url": "https://upbit.com/service_center/notice?id=866"
+   },
+   {
+    "event_id": "4d14d8a8b1e466796f906880",
+    "ts": "2019-09-17T08:30:51+00:00",
+    "d": "2019-09-17",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "HBAR",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화마켓 신규 상장 (헤데라해시그래프 HBAR)",
+    "url": "https://upbit.com/service_center/notice?id=992"
+   },
+   {
+    "event_id": "3485a33ea69f25a1c8da4fca",
+    "ts": "2020-07-14T06:51:27+00:00",
+    "d": "2020-07-14",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "DKA",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화마켓 신규 상장 (디카르고 DKA)",
+    "url": "https://upbit.com/service_center/notice?id=1375"
+   },
+   {
+    "event_id": "1f84e9e818a2ef89dfd11f4b",
+    "ts": "2020-07-21T07:10:45+00:00",
+    "d": "2020-07-21",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "HIVE",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화마켓 신규 상장 (하이브 HIVE)",
+    "url": "https://upbit.com/service_center/notice?id=1384"
+   },
+   {
+    "event_id": "9c04a3224250583ee65e6f93",
+    "ts": "2020-07-27T07:20:35+00:00",
+    "d": "2020-07-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "AHT",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화마켓 신규 상장 (아하토큰 AHT)",
+    "url": "https://upbit.com/service_center/notice?id=1398"
+   },
+   {
+    "event_id": "fda22903a912495288e67657",
+    "ts": "2020-07-30T07:30:36+00:00",
+    "d": "2020-07-30",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SPND",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화마켓 신규 상장 (스펜드코인 SPND)",
+    "url": "https://upbit.com/service_center/notice?id=1403"
+   },
+   {
+    "event_id": "89312f7564630108f25ac851",
+    "ts": "2020-08-05T04:59:33+00:00",
+    "d": "2020-08-05",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BORA",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화마켓 신규 상장 (보라 BORA)",
+    "url": "https://upbit.com/service_center/notice?id=1415"
+   },
+   {
+    "event_id": "2b3949ef3fc0187462c7b923",
+    "ts": "2020-08-14T07:00:33+00:00",
+    "d": "2020-08-14",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "JST",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화마켓 신규 상장 (저스트 JST)",
+    "url": "https://upbit.com/service_center/notice?id=1433"
+   },
+   {
+    "event_id": "32c539cb16dd1ea3c2a243f8",
+    "ts": "2020-09-11T07:00:33+00:00",
+    "d": "2020-09-11",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "LAMB",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화마켓 신규 상장 (람다 LAMB)",
+    "url": "https://upbit.com/service_center/notice?id=1486"
+   },
+   {
+    "event_id": "0308d7b216fb5c42a422bcf9",
+    "ts": "2020-09-15T07:50:33+00:00",
+    "d": "2020-09-15",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "HUNT",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화마켓 신규 상장 (헌트 HUNT)",
+    "url": "https://upbit.com/service_center/notice?id=1490"
+   },
+   {
+    "event_id": "e4671c5d08c839c9e676ef55",
+    "ts": "2020-10-05T07:31:19+00:00",
+    "d": "2020-10-05",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "DOT",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화마켓 신규 상장 (폴카닷 DOT)",
+    "url": "https://upbit.com/service_center/notice?id=1522"
+   },
+   {
+    "event_id": "97efed4197d3c2cb9452d226",
+    "ts": "2020-10-30T09:00:32+00:00",
+    "d": "2020-10-30",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "PCI",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화마켓 신규 상장 (페이코인 PCI)",
+    "url": "https://upbit.com/service_center/notice?id=1558"
+   },
+   {
+    "event_id": "f007a602e44ca02dc137fbf0",
+    "ts": "2020-11-19T07:30:32+00:00",
+    "d": "2020-11-19",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "BCHA",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 디지털 자산 추가 (비트코인캐시에이비씨 BCHA)",
+    "url": "https://upbit.com/service_center/notice?id=1599"
+   },
+   {
+    "event_id": "a775705a4fdcfe17c24a8945",
+    "ts": "2020-12-02T05:00:31+00:00",
+    "d": "2020-12-02",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "META",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 디지털 자산 추가 (메타디움 META)",
+    "url": "https://upbit.com/service_center/notice?id=1637"
+   },
+   {
+    "event_id": "099b0948959b4bfdbc9db7d3",
+    "ts": "2020-12-03T07:30:30+00:00",
+    "d": "2020-12-03",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "OBSR",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 디지털 자산 추가 (옵저버 OBSR)",
+    "url": "https://upbit.com/service_center/notice?id=1639"
+   },
+   {
+    "event_id": "8ec4e4ea9c423d06b58ab4de",
+    "ts": "2020-12-11T02:31:51+00:00",
+    "d": "2020-12-11",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "LBC",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 디지털 자산 추가 (엘비알와이크레딧 LBC)",
+    "url": "https://upbit.com/service_center/notice?id=1656"
+   },
+   {
+    "event_id": "618d7349a05ce908357426f6",
+    "ts": "2021-01-21T08:00:02+00:00",
+    "d": "2021-01-21",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "SAND",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화마켓 신규 상장 (샌드박스 SAND)",
+    "url": "https://upbit.com/service_center/notice?id=1740"
+   },
+   {
+    "event_id": "e5dd6bbab737b74d423ffa8a",
+    "ts": "2021-01-27T09:00:03+00:00",
+    "d": "2021-01-27",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "HUM",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 디지털 자산 추가 (휴먼스케이프 HUM)",
+    "url": "https://upbit.com/service_center/notice?id=1747"
+   },
+   {
+    "event_id": "d0316b69650f9c12637691fd",
+    "ts": "2021-02-24T06:00:02+00:00",
+    "d": "2021-02-24",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "DOGE",
+    "sym_source": "title",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 디지털 자산 추가 (도지코인 DOGE) (완료)",
+    "url": "https://upbit.com/service_center/notice?id=1803"
+   },
+   {
+    "event_id": "7f137493c7c01bebcebbfd6b",
+    "ts": "2021-04-05T06:25:09+00:00",
+    "d": "2021-04-05",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "AXS",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 디지털 자산 추가 (AXS, STX, FLOW, DAWN)",
+    "url": "https://upbit.com/service_center/notice?id=1882"
+   },
+   {
+    "event_id": "7f137493c7c01bebcebbfd6b",
+    "ts": "2021-04-05T06:25:09+00:00",
+    "d": "2021-04-05",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "DAWN",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 디지털 자산 추가 (AXS, STX, FLOW, DAWN)",
+    "url": "https://upbit.com/service_center/notice?id=1882"
+   },
+   {
+    "event_id": "7f137493c7c01bebcebbfd6b",
+    "ts": "2021-04-05T06:25:09+00:00",
+    "d": "2021-04-05",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "FLOW",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 디지털 자산 추가 (AXS, STX, FLOW, DAWN)",
+    "url": "https://upbit.com/service_center/notice?id=1882"
+   },
+   {
+    "event_id": "7f137493c7c01bebcebbfd6b",
+    "ts": "2021-04-05T06:25:09+00:00",
+    "d": "2021-04-05",
+    "kind": "listing",
+    "arm": "listing",
+    "symbol": "STX",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "원화 마켓 디지털 자산 추가 (AXS, STX, FLOW, DAWN)",
+    "url": "https://upbit.com/service_center/notice?id=1882"
+   }
+  ],
+  "delisting": [
+   {
+    "event_id": "8da29f202f86a4a168235064",
+    "ts": "2018-01-06T02:38:46+00:00",
+    "d": "2018-01-06",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "DGD",
+    "sym_source": "field",
+    "krw": false,
+    "markets": [
+     "BTC"
+    ],
+    "title": "DGD/BTC, DGD/ETH, MTL/BTC, MTL/ETH 거래지원 종료 안내",
+    "url": "https://upbit.com/service_center/notice?id=218"
+   },
+   {
+    "event_id": "8da29f202f86a4a168235064",
+    "ts": "2018-01-06T02:38:46+00:00",
+    "d": "2018-01-06",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "MTL",
+    "sym_source": "field",
+    "krw": false,
+    "markets": [
+     "BTC"
+    ],
+    "title": "DGD/BTC, DGD/ETH, MTL/BTC, MTL/ETH 거래지원 종료 안내",
+    "url": "https://upbit.com/service_center/notice?id=218"
+   },
+   {
+    "event_id": "1b2c566b85af363eb95eea9e",
+    "ts": "2018-01-14T02:17:05+00:00",
+    "d": "2018-01-14",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "MYST",
+    "sym_source": "field",
+    "krw": false,
+    "markets": [
+     "BTC"
+    ],
+    "title": "MYST/BTC, MYST/ETH 거래지원 종료 안내",
+    "url": "https://upbit.com/service_center/notice?id=234"
+   },
+   {
+    "event_id": "c6e668efa55655a0275ab4ba",
+    "ts": "2020-02-19T05:00:09+00:00",
+    "d": "2020-02-19",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "CPT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "콘텐츠프로토콜토큰(CPT) 사업 종료에 따른 거래지원 종료 안내",
+    "url": "https://upbit.com/service_center/notice?id=1154"
+   },
+   {
+    "event_id": "0d1ce8bb43096e7f02cc4389",
+    "ts": "2021-06-27T03:00:02+00:00",
+    "d": "2021-06-27",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "EMC2",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "24종 디지털 자산 거래지원 종료 안내 (코모도(KMD) 외 22종, 2021.06.28(월) 12:00 / 아인스타이늄(EMC2), 2021.07.03(토) 12:00)",
+    "url": "https://upbit.com/service_center/notice?id=2031"
+   },
+   {
+    "event_id": "0d1ce8bb43096e7f02cc4389",
+    "ts": "2021-06-27T03:00:02+00:00",
+    "d": "2021-06-27",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "KMD",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "24종 디지털 자산 거래지원 종료 안내 (코모도(KMD) 외 22종, 2021.06.28(월) 12:00 / 아인스타이늄(EMC2), 2021.07.03(토) 12:00)",
+    "url": "https://upbit.com/service_center/notice?id=2031"
+   },
+   {
+    "event_id": "52226b29d59e2c077c89b111",
+    "ts": "2022-05-13T08:40:00+00:00",
+    "d": "2022-05-13",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "LUNA",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "루나(LUNA) 거래지원 종료 안내 (05/20 12:00)",
+    "url": "https://upbit.com/service_center/notice?id=2653"
+   },
+   {
+    "event_id": "4da6df624eed4b3b6505eed9",
+    "ts": "2022-06-08T07:00:00+00:00",
+    "d": "2022-06-08",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "LTC",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "라이트코인(LTC) 거래지원 종료 안내 (06/20 11:00)",
+    "url": "https://upbit.com/service_center/notice?id=2714"
+   },
+   {
+    "event_id": "cc860eb9a349aab0cac37990",
+    "ts": "2022-11-24T10:40:42+00:00",
+    "d": "2022-11-24",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "WEMIX",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "위믹스(WEMIX) 거래지원 종료 안내 (12/08 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=3149"
+   },
+   {
+    "event_id": "c30ecd798b2bbc1db122eb13",
+    "ts": "2023-03-02T06:00:03+00:00",
+    "d": "2023-03-02",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "NU",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "누사이퍼(NU) 거래지원 종료 안내 (04/02 12:00)",
+    "url": "https://upbit.com/service_center/notice?id=3350"
+   },
+   {
+    "event_id": "baaa9ed153e567c30b0320cb",
+    "ts": "2023-03-31T07:00:00+00:00",
+    "d": "2023-03-31",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "PCI",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "페이코인(PCI) 거래지원 종료 안내 (04/14 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=3422"
+   },
+   {
+    "event_id": "d4da2b1216887863f4fa4a7b",
+    "ts": "2023-04-12T05:00:00+00:00",
+    "d": "2023-04-12",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "OMG",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "오미세고(OMG), 세럼(SRM) 거래지원 종료 안내 (04/26 14:00)",
+    "url": "https://upbit.com/service_center/notice?id=3445"
+   },
+   {
+    "event_id": "d4da2b1216887863f4fa4a7b",
+    "ts": "2023-04-12T05:00:00+00:00",
+    "d": "2023-04-12",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "SRM",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "오미세고(OMG), 세럼(SRM) 거래지원 종료 안내 (04/26 14:00)",
+    "url": "https://upbit.com/service_center/notice?id=3445"
+   },
+   {
+    "event_id": "94fcb7fae9ac0670f8c94d65",
+    "ts": "2023-04-14T07:00:00+00:00",
+    "d": "2023-04-14",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "BASIC",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "베이직(BASIC) 거래지원 종료 안내 (04/28 16:00)",
+    "url": "https://upbit.com/service_center/notice?id=3456"
+   },
+   {
+    "event_id": "db6db156bd2e81b683eeb168",
+    "ts": "2023-06-29T05:00:00+00:00",
+    "d": "2023-06-29",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "REP",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "어거(REP) 거래지원 종료 안내 (07/13 14:00)",
+    "url": "https://upbit.com/service_center/notice?id=3598"
+   },
+   {
+    "event_id": "3dd1c2ad3b5e1f2b96705c6d",
+    "ts": "2023-09-12T07:00:00+00:00",
+    "d": "2023-09-12",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "DAWN",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "던프로토콜(DAWN), 리퍼리움(RFR), 마로(MARO) 거래지원 종료 안내 (09/26 16:00)",
+    "url": "https://upbit.com/service_center/notice?id=3729"
+   },
+   {
+    "event_id": "3dd1c2ad3b5e1f2b96705c6d",
+    "ts": "2023-09-12T07:00:00+00:00",
+    "d": "2023-09-12",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "MARO",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "던프로토콜(DAWN), 리퍼리움(RFR), 마로(MARO) 거래지원 종료 안내 (09/26 16:00)",
+    "url": "https://upbit.com/service_center/notice?id=3729"
+   },
+   {
+    "event_id": "3dd1c2ad3b5e1f2b96705c6d",
+    "ts": "2023-09-12T07:00:00+00:00",
+    "d": "2023-09-12",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "RFR",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "던프로토콜(DAWN), 리퍼리움(RFR), 마로(MARO) 거래지원 종료 안내 (09/26 16:00)",
+    "url": "https://upbit.com/service_center/notice?id=3729"
+   },
+   {
+    "event_id": "12a70978c5eb992389a8f80a",
+    "ts": "2023-10-06T07:00:00+00:00",
+    "d": "2023-10-06",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "LINA",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "리니어파이낸스(LINA) 거래지원 종료 안내 (10/20 16:00)",
+    "url": "https://upbit.com/service_center/notice?id=3766"
+   },
+   {
+    "event_id": "2251976a43fee2c1f01ddbb7",
+    "ts": "2024-02-27T06:00:01+00:00",
+    "d": "2024-02-27",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "SSX",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "썸씽(SSX) 거래지원 종료 안내 (3/12 15:00) (출금 재개 안내)",
+    "url": "https://upbit.com/service_center/notice?id=4072"
+   },
+   {
+    "event_id": "9e4f4f5cf0441d8f3995002b",
+    "ts": "2024-03-11T05:00:00+00:00",
+    "d": "2024-03-11",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "PDA",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "플레이댑(PDA) 거래지원 종료 안내 (3/25 14:00)",
+    "url": "https://upbit.com/service_center/notice?id=4093"
+   },
+   {
+    "event_id": "d56ba163508ea53bfb68a3d9",
+    "ts": "2024-11-11T10:00:00+00:00",
+    "d": "2024-11-11",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "FOR",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "포튜브(FOR) 거래지원 종료 안내 (12/11 19:00)",
+    "url": "https://upbit.com/service_center/notice?id=4633"
+   },
+   {
+    "event_id": "966176c4d12ed84298610d69",
+    "ts": "2024-12-24T05:30:01+00:00",
+    "d": "2024-12-24",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "BTG",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "비트코인골드(BTG) 거래지원 종료 안내 (1/23 14:30)",
+    "url": "https://upbit.com/service_center/notice?id=4749"
+   },
+   {
+    "event_id": "7f87b91ba9312b6b72803361",
+    "ts": "2024-12-30T09:00:00+00:00",
+    "d": "2024-12-30",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "DAD",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "다드(DAD) 거래지원 종료 안내 (1/31 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=4762"
+   },
+   {
+    "event_id": "81d0233c95d304df8dc07555",
+    "ts": "2025-01-13T08:00:05+00:00",
+    "d": "2025-01-13",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "SBD",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "스팀달러(SBD) 거래지원 종료 안내 (2/12 17:00)",
+    "url": "https://upbit.com/service_center/notice?id=4790"
+   },
+   {
+    "event_id": "38e331914655e2b70241f9fa",
+    "ts": "2025-01-24T08:00:00+00:00",
+    "d": "2025-01-24",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "SOLVE",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "솔브케어(SOLVE) 거래지원 종료 안내 (2/24 17:00)",
+    "url": "https://upbit.com/service_center/notice?id=4827"
+   },
+   {
+    "event_id": "dc326a99c51b93c07eb316cf",
+    "ts": "2025-04-01T06:00:00+00:00",
+    "d": "2025-04-01",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "LOOM",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "룸네트워크(LOOM) 거래지원 종료 안내 (5/7 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=5004"
+   },
+   {
+    "event_id": "d607bef10b5d3692591aefaa",
+    "ts": "2025-04-11T08:00:00+00:00",
+    "d": "2025-04-11",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "HIFI",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "하이파이(HIFI) 거래지원 종료 안내 (5/12 17:00)",
+    "url": "https://upbit.com/service_center/notice?id=5031"
+   },
+   {
+    "event_id": "d0c5de630b89a0ee61431651",
+    "ts": "2025-06-02T10:30:02+00:00",
+    "d": "2025-06-02",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "STMX",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "스톰엑스(STMX) 거래지원 종료 안내 (7/3 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=5195"
+   },
+   {
+    "event_id": "1c65978550b74c3f3177395d",
+    "ts": "2025-06-02T10:30:04+00:00",
+    "d": "2025-06-02",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "XEM",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "넴(XEM) 거래지원 종료 안내 (7/3 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=5196"
+   },
+   {
+    "event_id": "19380fbc84259a9aec3cee92",
+    "ts": "2025-07-21T09:20:01+00:00",
+    "d": "2025-07-21",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "STRIKE",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "스트라이크(STRIKE) 거래지원 종료 안내 (8/21 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=5346"
+   },
+   {
+    "event_id": "d75d43d1552fb189acee8894",
+    "ts": "2025-07-23T09:00:00+00:00",
+    "d": "2025-07-23",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "QTCON",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "퀴즈톡(QTCON) 거래지원 종료 안내 (8/25 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=5359"
+   },
+   {
+    "event_id": "804ad511c8fea1a6d8e0e1e4",
+    "ts": "2025-07-28T09:00:00+00:00",
+    "d": "2025-07-28",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "PUNDIAI",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "펀디에이아이(PUNDIAI) 거래지원 종료 안내 (8/28 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=5371"
+   },
+   {
+    "event_id": "30fbf1865a0b5f218e8433d8",
+    "ts": "2025-10-02T04:00:00+00:00",
+    "d": "2025-10-02",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "UXLINK",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "유엑스링크(UXLINK) 거래지원 종료 안내 (11/3 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=5608"
+   },
+   {
+    "event_id": "72f294a84ddfd1b206972abb",
+    "ts": "2025-11-21T08:00:00+00:00",
+    "d": "2025-11-21",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "RLY",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "랠리(RLY) 거래지원 종료 안내 (12/22 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=5782"
+   },
+   {
+    "event_id": "ab460f1323bb2ab8976b90e4",
+    "ts": "2025-12-16T08:00:26+00:00",
+    "d": "2025-12-16",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "GRS",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "그로스톨코인(GRS) 거래지원 종료 안내 (1/16 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=5863"
+   },
+   {
+    "event_id": "8bcc33ce182b9f9857d1352a",
+    "ts": "2026-01-30T06:00:00+00:00",
+    "d": "2026-01-30",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "GO",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "고체인(GO) 거래지원 종료 안내 (3/3 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=5978"
+   },
+   {
+    "event_id": "96a91d464a2ae331e4cb9cb2",
+    "ts": "2026-02-10T07:30:19+00:00",
+    "d": "2026-02-10",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "OAS",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "오아시스(OAS) 거래지원 종료 안내 (3/13 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6009"
+   },
+   {
+    "event_id": "6e81a1420c945c675404c95e",
+    "ts": "2026-02-10T07:00:00+00:00",
+    "d": "2026-02-10",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "SXP",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "솔라(SXP) 거래지원 종료 안내 (3/13 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6008"
+   },
+   {
+    "event_id": "f7e83d79535b481fe8226e0c",
+    "ts": "2026-02-12T09:00:04+00:00",
+    "d": "2026-02-12",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "FLOW",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "플로우(FLOW) 거래지원 종료 안내 (3/16 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6017"
+   },
+   {
+    "event_id": "c84cbe1c7b508499f2df25fc",
+    "ts": "2026-02-13T05:00:00+00:00",
+    "d": "2026-02-13",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "LRC",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "루프링(LRC) 거래지원 종료 안내 (3/16 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6018"
+   },
+   {
+    "event_id": "ad193af1cd2608509e538d28",
+    "ts": "2026-02-26T06:00:00+00:00",
+    "d": "2026-02-26",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "DENT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "덴트(DENT) 거래지원 종료 안내(3/30 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6045"
+   },
+   {
+    "event_id": "6fb36077c71ab35df2426bab",
+    "ts": "2026-02-27T06:00:00+00:00",
+    "d": "2026-02-27",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "NOM",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "노미나(NOM) 거래지원 종료 안내(3/30 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6047"
+   },
+   {
+    "event_id": "927cdceaa67341cad617dd0f",
+    "ts": "2026-04-16T08:00:00+00:00",
+    "d": "2026-04-16",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "NAP",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "나폴리(NAP) 거래지원 종료 안내(5/18 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6148"
+   },
+   {
+    "event_id": "704f251744c5d3da2adc93cb",
+    "ts": "2026-04-24T08:00:00+00:00",
+    "d": "2026-04-24",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "RESOLV",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "리졸브(RESOLV) 거래지원 종료 안내 (5/26 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6167"
+   },
+   {
+    "event_id": "2e9cbc3138bc6105751b1070",
+    "ts": "2026-04-30T08:10:00+00:00",
+    "d": "2026-04-30",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "DRIFT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "드리프트(DRIFT) 거래지원 종료 안내 (6/1 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6188"
+   },
+   {
+    "event_id": "1bb536072c10551ad220195a",
+    "ts": "2026-05-14T06:00:00+00:00",
+    "d": "2026-05-14",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "NKN",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "엔케이엔(NKN) 거래지원 종료 안내 (6/15 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6219"
+   },
+   {
+    "event_id": "56b1fd4c795eafc090a34a44",
+    "ts": "2026-05-29T07:30:00+00:00",
+    "d": "2026-05-29",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "OXT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "오키드(OXT) 거래지원 종료 안내 (6/29 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6254"
+   },
+   {
+    "event_id": "e0c56d4e6f0a1a3d102d7334",
+    "ts": "2026-07-03T08:00:00+00:00",
+    "d": "2026-07-03",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "AERGO",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "아르고(AERGO) 거래지원 종료 안내 (8/3 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6351"
+   },
+   {
+    "event_id": "ed81a71481f2126442e3e475",
+    "ts": "2026-07-03T08:00:02+00:00",
+    "d": "2026-07-03",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "AQT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "알파쿼크(AQT) 거래지원 종료 안내 (8/3 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6352"
+   },
+   {
+    "event_id": "310f87eb6d6d5d567c3e336e",
+    "ts": "2026-07-16T08:00:00+00:00",
+    "d": "2026-07-16",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "SPURS",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "토트넘홋스퍼(SPURS) 거래지원 종료 안내 (8/18 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6388"
+   },
+   {
+    "event_id": "c237a9f57a806b5222dc3810",
+    "ts": "2026-08-07T07:00:00+00:00",
+    "d": "2026-08-07",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "BONK",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "봉크(BONK) 거래지원 종료 안내 (9/7 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6455"
+   },
+   {
+    "event_id": "3e9365eadbe5e33689aa818b",
+    "ts": "2026-08-14T07:00:05+00:00",
+    "d": "2026-08-14",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "JASMY",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "재스미코인(JASMY) 거래지원 종료 안내(9/14 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6476"
+   },
+   {
+    "event_id": "633bb5c66659dae93de9964d",
+    "ts": "2026-08-14T07:00:06+00:00",
+    "d": "2026-08-14",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "STORJ",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "스토리지(STORJ) 거래지원 종료 안내 (9/14 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6477"
+   },
+   {
+    "event_id": "718813b4bf9302c223240c67",
+    "ts": "2026-08-14T07:00:04+00:00",
+    "d": "2026-08-14",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "TT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "썬더코어(TT) 거래지원 종료 안내 (거래지원 종료 일정 변경 안내)",
+    "url": "https://upbit.com/service_center/notice?id=6475"
+   },
+   {
+    "event_id": "bf10deec52bff36d1e53ff3d",
+    "ts": "2026-08-27T09:19:21+00:00",
+    "d": "2026-08-27",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "TT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "ThunderCore 네트워크 종료에 따른 썬더코어(TT) 출금 중단(종료) 및 거래지원 종료 예정일 변경 안내 (09/01 09:00 ~)",
+    "url": "https://upbit.com/service_center/notice?id=6522"
+   },
+   {
+    "event_id": "59df98a190809386df11da94",
+    "ts": "2026-08-28T07:00:00+00:00",
+    "d": "2026-08-28",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "SNX",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "신세틱스(SNX) 거래지원 종료 안내 (9/28 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6529"
+   },
+   {
+    "event_id": "de6d6c74e66ca98ca4e4c153",
+    "ts": "2026-09-10T09:30:01+00:00",
+    "d": "2026-09-10",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "RVN",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "레이븐코인(RVN) 거래지원 종료 안내 (10/12 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6562"
+   },
+   {
+    "event_id": "78ecd27401070fb33ef3e22b",
+    "ts": "2026-09-18T07:30:00+00:00",
+    "d": "2026-09-18",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "ICX",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "아이콘(ICX) 거래지원 종료 안내 (10/19 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6591"
+   },
+   {
+    "event_id": "16e265caba808217afecae7b",
+    "ts": "2026-10-14T07:00:41+00:00",
+    "d": "2026-10-14",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "BLAST",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "블라스트(BLAST) 거래지원 종료 및 네트워크 전환에 따른 출금 일시 중단 안내",
+    "url": "https://upbit.com/service_center/notice?id=6658"
+   },
+   {
+    "event_id": "8ab78f4d519aac45bee1bd8a",
+    "ts": "2026-10-15T07:00:00+00:00",
+    "d": "2026-10-15",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "SOPH",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "소폰(SOPH) 거래지원 종료 안내 (11/16 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6662"
+   },
+   {
+    "event_id": "7c28546d5bb1233019e95710",
+    "ts": "2026-10-16T07:30:04+00:00",
+    "d": "2026-10-16",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "ZIL",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "질리카(ZIL) 거래지원 종료 안내 (11/16 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6669"
+   },
+   {
+    "event_id": "2ac5adbdbd5876dd9213bcd3",
+    "ts": "2026-10-30T07:00:00+00:00",
+    "d": "2026-10-30",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "BLUR",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "블러(BLUR) 거래지원 종료 안내 (11/30 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6721"
+   },
+   {
+    "event_id": "d06cb155969b3df5e604ef4e",
+    "ts": "2026-11-06T06:00:00+00:00",
+    "d": "2026-11-06",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "DNT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "디스트릭트0x(DNT) 거래지원 종료 안내 (12/7 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6743"
+   },
+   {
+    "event_id": "9f5eb3f14b882087ad8dcf9b",
+    "ts": "2026-11-06T06:00:02+00:00",
+    "d": "2026-11-06",
+    "kind": "delisting",
+    "arm": "delisting",
+    "symbol": "HBD",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "하이브달러(HBD) 거래지원 종료 안내 (12/7 15:00)",
+    "url": "https://upbit.com/service_center/notice?id=6744"
+   }
+  ],
+  "warning": [
+   {
+    "event_id": "bbce209e302f8b3db0e0f1e4",
+    "ts": "2019-02-22T07:35:12+00:00",
+    "d": "2019-02-22",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "SALT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "블록틱스(TIX), 살루스(SLS), 솔트(SALT), 윙스다오(WINGS) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=726"
+   },
+   {
+    "event_id": "bbce209e302f8b3db0e0f1e4",
+    "ts": "2019-02-22T07:35:12+00:00",
+    "d": "2019-02-22",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "SLS",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "블록틱스(TIX), 살루스(SLS), 솔트(SALT), 윙스다오(WINGS) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=726"
+   },
+   {
+    "event_id": "bbce209e302f8b3db0e0f1e4",
+    "ts": "2019-02-22T07:35:12+00:00",
+    "d": "2019-02-22",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "TIX",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "블록틱스(TIX), 살루스(SLS), 솔트(SALT), 윙스다오(WINGS) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=726"
+   },
+   {
+    "event_id": "bbce209e302f8b3db0e0f1e4",
+    "ts": "2019-02-22T07:35:12+00:00",
+    "d": "2019-02-22",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "WINGS",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "블록틱스(TIX), 살루스(SLS), 솔트(SALT), 윙스다오(WINGS) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=726"
+   },
+   {
+    "event_id": "063cc494a3a318c5e255f407",
+    "ts": "2019-07-19T08:44:22+00:00",
+    "d": "2019-07-19",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "MER",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "머큐리(MER), 뫼비우스(MOBI) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=923"
+   },
+   {
+    "event_id": "063cc494a3a318c5e255f407",
+    "ts": "2019-07-19T08:44:22+00:00",
+    "d": "2019-07-19",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "MOBI",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "머큐리(MER), 뫼비우스(MOBI) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=923"
+   },
+   {
+    "event_id": "3ec904bb3b9d154474393f89",
+    "ts": "2019-08-14T07:14:56+00:00",
+    "d": "2019-08-14",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "EDG",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "스피어(SPHR), 엣지리스(EDG), 구피(GUP) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=950"
+   },
+   {
+    "event_id": "3ec904bb3b9d154474393f89",
+    "ts": "2019-08-14T07:14:56+00:00",
+    "d": "2019-08-14",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "GUP",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "스피어(SPHR), 엣지리스(EDG), 구피(GUP) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=950"
+   },
+   {
+    "event_id": "3ec904bb3b9d154474393f89",
+    "ts": "2019-08-14T07:14:56+00:00",
+    "d": "2019-08-14",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "SPHR",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "스피어(SPHR), 엣지리스(EDG), 구피(GUP) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=950"
+   },
+   {
+    "event_id": "06e1fb3e32f3d5332ad52b35",
+    "ts": "2019-09-09T08:03:18+00:00",
+    "d": "2019-09-09",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "DASH",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "모네로(XMR), 대시(DASH), 지캐시(ZEC), 헤이븐(XHV), 비트튜브(TUBE), 피벡스(PIVX) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=984"
+   },
+   {
+    "event_id": "06e1fb3e32f3d5332ad52b35",
+    "ts": "2019-09-09T08:03:18+00:00",
+    "d": "2019-09-09",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "PIVX",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "모네로(XMR), 대시(DASH), 지캐시(ZEC), 헤이븐(XHV), 비트튜브(TUBE), 피벡스(PIVX) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=984"
+   },
+   {
+    "event_id": "06e1fb3e32f3d5332ad52b35",
+    "ts": "2019-09-09T08:03:18+00:00",
+    "d": "2019-09-09",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "TUBE",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "모네로(XMR), 대시(DASH), 지캐시(ZEC), 헤이븐(XHV), 비트튜브(TUBE), 피벡스(PIVX) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=984"
+   },
+   {
+    "event_id": "06e1fb3e32f3d5332ad52b35",
+    "ts": "2019-09-09T08:03:18+00:00",
+    "d": "2019-09-09",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "XHV",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "모네로(XMR), 대시(DASH), 지캐시(ZEC), 헤이븐(XHV), 비트튜브(TUBE), 피벡스(PIVX) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=984"
+   },
+   {
+    "event_id": "06e1fb3e32f3d5332ad52b35",
+    "ts": "2019-09-09T08:03:18+00:00",
+    "d": "2019-09-09",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "XMR",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "모네로(XMR), 대시(DASH), 지캐시(ZEC), 헤이븐(XHV), 비트튜브(TUBE), 피벡스(PIVX) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=984"
+   },
+   {
+    "event_id": "06e1fb3e32f3d5332ad52b35",
+    "ts": "2019-09-09T08:03:18+00:00",
+    "d": "2019-09-09",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "ZEC",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "모네로(XMR), 대시(DASH), 지캐시(ZEC), 헤이븐(XHV), 비트튜브(TUBE), 피벡스(PIVX) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=984"
+   },
+   {
+    "event_id": "9881cef6c94154f95becfc8a",
+    "ts": "2020-03-18T01:00:34+00:00",
+    "d": "2020-03-18",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "ADT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "애드토큰(ADT), 뱅크엑스(BKX), 시베리안체르보네츠(SIB) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=1188"
+   },
+   {
+    "event_id": "9881cef6c94154f95becfc8a",
+    "ts": "2020-03-18T01:00:34+00:00",
+    "d": "2020-03-18",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "BKX",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "애드토큰(ADT), 뱅크엑스(BKX), 시베리안체르보네츠(SIB) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=1188"
+   },
+   {
+    "event_id": "9881cef6c94154f95becfc8a",
+    "ts": "2020-03-18T01:00:34+00:00",
+    "d": "2020-03-18",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "SIB",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "애드토큰(ADT), 뱅크엑스(BKX), 시베리안체르보네츠(SIB) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=1188"
+   },
+   {
+    "event_id": "b8d4d74bdd5ddb94d823c246",
+    "ts": "2020-05-08T10:24:09+00:00",
+    "d": "2020-05-08",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "RFR",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "리퍼리움(RFR) 유의 종목 지정 안내 (기간 연장)",
+    "url": "https://upbit.com/service_center/notice?id=1267"
+   },
+   {
+    "event_id": "e308c528badd155c26cdc2ff",
+    "ts": "2020-05-21T09:10:24+00:00",
+    "d": "2020-05-21",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "HYDRO",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "하이드로(HYDRO) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=1285"
+   },
+   {
+    "event_id": "c8f8e89bcddbc98aa141ea8b",
+    "ts": "2020-06-30T06:00:04+00:00",
+    "d": "2020-06-30",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "COSM",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "코스모코인(COSM) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=1350"
+   },
+   {
+    "event_id": "19858c57b6cf1297fc31e339",
+    "ts": "2020-11-09T07:10:04+00:00",
+    "d": "2020-11-09",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "LBA",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "디지털 자산 유의종목 지정 안내 Cred(LBA)",
+    "url": "https://upbit.com/service_center/notice?id=1578"
+   },
+   {
+    "event_id": "db4d43f55eadb47dd41eaf5a",
+    "ts": "2020-12-18T09:03:08+00:00",
+    "d": "2020-12-18",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "DCR",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "디지털 자산 유의종목 지정 안내 디크레드(DCR)",
+    "url": "https://upbit.com/service_center/notice?id=1679"
+   },
+   {
+    "event_id": "346433ca24a4a3c1299cf5d0",
+    "ts": "2021-03-17T04:31:17+00:00",
+    "d": "2021-03-17",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "GOM2",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "고머니2(GOM2) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=1840"
+   },
+   {
+    "event_id": "39243612c05e016a805e059b",
+    "ts": "2021-06-18T09:26:26+00:00",
+    "d": "2021-06-18",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "BASIC",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "24종 디지털 자산 거래지원 종료, 베이직(BASIC) 유의종목 지정 유지 안내 (iOS 관련 추가 안내)",
+    "url": "https://upbit.com/service_center/notice?id=2022"
+   },
+   {
+    "event_id": "4701ddb2e77456b23268e7d0",
+    "ts": "2022-03-02T03:30:02+00:00",
+    "d": "2022-03-02",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "NU",
+    "sym_source": "title",
+    "krw": true,
+    "markets": [
+     "KRW",
+     "BTC"
+    ],
+    "title": "KRW, BTC 마켓 디지털 자산 추가 (T) 및 이에 따른 NU 유의 종목 지정 안내 (NU <> T 스왑 사이트 추가 안내)",
+    "url": "https://upbit.com/service_center/notice?id=2474"
+   },
+   {
+    "event_id": "66c186cc605fac4e25b20d2c",
+    "ts": "2022-05-23T09:30:02+00:00",
+    "d": "2022-05-23",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "LTC",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "라이트코인(LTC) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=2682"
+   },
+   {
+    "event_id": "1ce741d9e22b92bca3858128",
+    "ts": "2022-06-09T08:00:02+00:00",
+    "d": "2022-06-09",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "MBL",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "무비블록(MBL) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=2716"
+   },
+   {
+    "event_id": "14927f56706cad6d0337b411",
+    "ts": "2022-10-27T07:00:02+00:00",
+    "d": "2022-10-27",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "WEMIX",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "위믹스(WEMIX) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=3069"
+   },
+   {
+    "event_id": "13f3df311a800d674797d811",
+    "ts": "2022-11-02T16:00:01+00:00",
+    "d": "2022-11-02",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "KAVA",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "카바(KAVA) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=3089"
+   },
+   {
+    "event_id": "d3c097169bade5bf46439c08",
+    "ts": "2022-12-08T09:00:00+00:00",
+    "d": "2022-12-08",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "WAVES",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "웨이브(WAVES) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=3185"
+   },
+   {
+    "event_id": "66d9bf0b6f8a437824a452bd",
+    "ts": "2023-01-06T13:33:52+00:00",
+    "d": "2023-01-06",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "PCI",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "페이코인(PCI) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=3253"
+   },
+   {
+    "event_id": "d776a2589a7ba67af85697f1",
+    "ts": "2023-02-01T07:30:01+00:00",
+    "d": "2023-02-01",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "RLY",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "랠리(RLY) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=3290"
+   },
+   {
+    "event_id": "cafb713fd2dd139946031ae4",
+    "ts": "2023-03-24T06:00:02+00:00",
+    "d": "2023-03-24",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "BASIC",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "베이직(BASIC) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=3408"
+   },
+   {
+    "event_id": "fd7d7a2cea88a6d01400acfb",
+    "ts": "2023-03-29T07:00:01+00:00",
+    "d": "2023-03-29",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "OMG",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "오미세고(OMG), 세럼(SRM) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=3419"
+   },
+   {
+    "event_id": "fd7d7a2cea88a6d01400acfb",
+    "ts": "2023-03-29T07:00:01+00:00",
+    "d": "2023-03-29",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "SRM",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "오미세고(OMG), 세럼(SRM) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=3419"
+   },
+   {
+    "event_id": "467905ee75d3a006cbf744eb",
+    "ts": "2023-06-15T02:00:00+00:00",
+    "d": "2023-06-15",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "REP",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "어거(REP) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=3573"
+   },
+   {
+    "event_id": "9ea80f1edb5d44ca77f69a35",
+    "ts": "2023-08-29T08:00:01+00:00",
+    "d": "2023-08-29",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "DAWN",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "던프로토콜(DAWN), 리퍼리움(RFR), 마로(MARO) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=3707"
+   },
+   {
+    "event_id": "9ea80f1edb5d44ca77f69a35",
+    "ts": "2023-08-29T08:00:01+00:00",
+    "d": "2023-08-29",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "MARO",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "던프로토콜(DAWN), 리퍼리움(RFR), 마로(MARO) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=3707"
+   },
+   {
+    "event_id": "9ea80f1edb5d44ca77f69a35",
+    "ts": "2023-08-29T08:00:01+00:00",
+    "d": "2023-08-29",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "RFR",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "던프로토콜(DAWN), 리퍼리움(RFR), 마로(MARO) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=3707"
+   },
+   {
+    "event_id": "e314b8d9d8e2eefbc3fb7a9e",
+    "ts": "2023-09-12T09:00:00+00:00",
+    "d": "2023-09-12",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "ENJ",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "엔진코인(ENJ) 메인넷 전환 및 유의 종목 지정에 따른 입출금 중단 안내",
+    "url": "https://upbit.com/service_center/notice?id=3730"
+   },
+   {
+    "event_id": "113edf96882f5cfdcd367884",
+    "ts": "2023-09-22T08:50:00+00:00",
+    "d": "2023-09-22",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "LINA",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "리니어파이낸스(LINA) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=3746"
+   },
+   {
+    "event_id": "e9d8bd206ef9711de9106ffb",
+    "ts": "2024-01-29T07:00:00+00:00",
+    "d": "2024-01-29",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "SSX",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "썸씽(SSX) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=4013"
+   },
+   {
+    "event_id": "fd14efb8b39bbde07fc65349",
+    "ts": "2024-02-13T09:00:00+00:00",
+    "d": "2024-02-13",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "PLA",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "플레이댑(PLA) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=4043"
+   },
+   {
+    "event_id": "432423aa53b8105337015953",
+    "ts": "2024-10-29T10:00:00+00:00",
+    "d": "2024-10-29",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "FOR",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "포튜브(FOR) 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=4604"
+   },
+   {
+    "event_id": "47d21586d02800946f8c380d",
+    "ts": "2024-12-10T03:00:00+00:00",
+    "d": "2024-12-10",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "BTG",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "다드(DAD), 비트코인골드(BTG) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=4710"
+   },
+   {
+    "event_id": "47d21586d02800946f8c380d",
+    "ts": "2024-12-10T03:00:00+00:00",
+    "d": "2024-12-10",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "DAD",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "다드(DAD), 비트코인골드(BTG) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=4710"
+   },
+   {
+    "event_id": "d663c4f8d5a2b503d5fd50dd",
+    "ts": "2024-12-30T09:15:00+00:00",
+    "d": "2024-12-30",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "SBD",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "스팀달러(SBD) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=4763"
+   },
+   {
+    "event_id": "58c7b249bd3433bed3957b69",
+    "ts": "2025-01-10T11:00:00+00:00",
+    "d": "2025-01-10",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "SOLVE",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "솔브케어(SOLVE) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=4787"
+   },
+   {
+    "event_id": "20759903232b5789f9d5bd9a",
+    "ts": "2025-03-18T06:30:00+00:00",
+    "d": "2025-03-18",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "LOOM",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "룸네트워크(LOOM) 거래 유의 종목 지정 안내 ",
+    "url": "https://upbit.com/service_center/notice?id=4957"
+   },
+   {
+    "event_id": "e12466f49181f01b521d5ffd",
+    "ts": "2025-03-28T06:00:10+00:00",
+    "d": "2025-03-28",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "HIFI",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "하이파이(HIFI) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=4995"
+   },
+   {
+    "event_id": "e3ef4d6e6feb70a42cfdc362",
+    "ts": "2025-04-24T06:00:00+00:00",
+    "d": "2025-04-24",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "SNX",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "신세틱스(SNX) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=5063"
+   },
+   {
+    "event_id": "ceabafd359b0914bd8b1e43a",
+    "ts": "2025-05-19T06:00:00+00:00",
+    "d": "2025-05-19",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "STMX",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "스톰엑스(STMX) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=5133"
+   },
+   {
+    "event_id": "39202b41eab87e4c1401fd7c",
+    "ts": "2025-05-19T06:00:01+00:00",
+    "d": "2025-05-19",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "XEM",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "넴(XEM) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=5134"
+   },
+   {
+    "event_id": "12288cf62e35a228adfee273",
+    "ts": "2025-07-04T07:00:00+00:00",
+    "d": "2025-07-04",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "STRIKE",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "스트라이크(STRIKE) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=5291"
+   },
+   {
+    "event_id": "25ce32034c89ee6343df2308",
+    "ts": "2025-07-10T08:00:00+00:00",
+    "d": "2025-07-10",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "QTCON",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "퀴즈톡(QTCON) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=5309"
+   },
+   {
+    "event_id": "5eb39a8843b35ecd501acb3a",
+    "ts": "2025-07-14T09:00:01+00:00",
+    "d": "2025-07-14",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "PUNDIAI",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "펀디에이아이(PUNDIAI) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=5320"
+   },
+   {
+    "event_id": "2087ff123ddaa1bb1c5b5109",
+    "ts": "2025-09-23T03:00:00+00:00",
+    "d": "2025-09-23",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "UXLINK",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "유엑스링크(UXLINK) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=5560"
+   },
+   {
+    "event_id": "841fd188ceb213c96b026846",
+    "ts": "2025-10-02T12:30:00+00:00",
+    "d": "2025-10-02",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "ZKC",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "바운드리스(ZKC) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=5617"
+   },
+   {
+    "event_id": "93dad76f4d696999e6b61794",
+    "ts": "2025-11-07T08:00:02+00:00",
+    "d": "2025-11-07",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "RLY",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "랠리(RLY) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=5740"
+   },
+   {
+    "event_id": "f9927f3094d01d2fdbad2fc5",
+    "ts": "2025-12-02T02:00:03+00:00",
+    "d": "2025-12-02",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "GRS",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "그로스톨코인(GRS) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=5814"
+   },
+   {
+    "event_id": "d29d3cde879e6e2ea275abd3",
+    "ts": "2025-12-29T05:00:00+00:00",
+    "d": "2025-12-29",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "FLOW",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "플로우(FLOW) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=5892"
+   },
+   {
+    "event_id": "b4c3ad8ed053be2bf132663d",
+    "ts": "2026-01-16T05:00:02+00:00",
+    "d": "2026-01-16",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "GO",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "고체인(GO) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=5940"
+   },
+   {
+    "event_id": "56297c7b0b6e3db5cf3af3cd",
+    "ts": "2026-01-16T05:00:01+00:00",
+    "d": "2026-01-16",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "NAP",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "나폴리(NAP) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=5939"
+   },
+   {
+    "event_id": "d18bb540a4e1c43ae2bcd23b",
+    "ts": "2026-01-26T09:00:00+00:00",
+    "d": "2026-01-26",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "OAS",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "오아시스(OAS) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=5965"
+   },
+   {
+    "event_id": "6f87e2448db746cf365ffcf9",
+    "ts": "2026-01-26T11:00:00+00:00",
+    "d": "2026-01-26",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "SXP",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "솔라(SXP) 거래 유의 종목 지정 안내 ",
+    "url": "https://upbit.com/service_center/notice?id=5966"
+   },
+   {
+    "event_id": "912d497aa21778e385f5dac8",
+    "ts": "2026-01-30T05:00:00+00:00",
+    "d": "2026-01-30",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "LRC",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "루프링(LRC) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=5976"
+   },
+   {
+    "event_id": "420fd4d60ea7a4b75f5e77b0",
+    "ts": "2026-02-10T04:30:00+00:00",
+    "d": "2026-02-10",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "DENT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "덴트(DENT) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6007"
+   },
+   {
+    "event_id": "faa4746c6580a299741d03ab",
+    "ts": "2026-02-12T07:00:31+00:00",
+    "d": "2026-02-12",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "NOM",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "노미나(NOM) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6016"
+   },
+   {
+    "event_id": "581194f8380333ad95b47209",
+    "ts": "2026-02-23T06:30:00+00:00",
+    "d": "2026-02-23",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "IOTX",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "아이오텍스(IOTX) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6031"
+   },
+   {
+    "event_id": "472cb69dc22f18fb135d7cc7",
+    "ts": "2026-03-23T06:00:00+00:00",
+    "d": "2026-03-23",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "RESOLV",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "리졸브(RESOLV) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6084"
+   },
+   {
+    "event_id": "0beb2cc07b43c5eeca9cb142",
+    "ts": "2026-04-02T05:00:00+00:00",
+    "d": "2026-04-02",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "DRIFT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "드리프트(DRIFT) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6114"
+   },
+   {
+    "event_id": "fa63195ef6e6695635d144a4",
+    "ts": "2026-04-13T09:00:01+00:00",
+    "d": "2026-04-13",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "DOT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "폴카닷(DOT)  거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6143"
+   },
+   {
+    "event_id": "1dfd76491651e86d0328e026",
+    "ts": "2026-04-16T08:30:00+00:00",
+    "d": "2026-04-16",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "SPURS",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "토트넘홋스퍼(SPURS) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6149"
+   },
+   {
+    "event_id": "81d10c6db6c104ffbaf6fc9e",
+    "ts": "2026-04-20T08:00:00+00:00",
+    "d": "2026-04-20",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "KERNEL",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "커널다오(KERNEL) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6156"
+   },
+   {
+    "event_id": "492d9ba84c9d667397e80cf1",
+    "ts": "2026-04-30T07:50:00+00:00",
+    "d": "2026-04-30",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "NKN",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "엔케이엔(NKN) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6186"
+   },
+   {
+    "event_id": "546dbf73adbcbe21dac8e23f",
+    "ts": "2026-05-12T06:00:00+00:00",
+    "d": "2026-05-12",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "OXT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "오키드(OXT) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6216"
+   },
+   {
+    "event_id": "87d79a9f3ccba17ac8006421",
+    "ts": "2026-06-18T07:30:00+00:00",
+    "d": "2026-06-18",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "AERGO",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "아르고(AERGO) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6297"
+   },
+   {
+    "event_id": "4b4533d0197d086b9a9ab2ea",
+    "ts": "2026-06-18T07:30:01+00:00",
+    "d": "2026-06-18",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "AQT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "알파쿼크(AQT) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6298"
+   },
+   {
+    "event_id": "6dccae518c889620fd30e1e6",
+    "ts": "2026-06-22T05:00:00+00:00",
+    "d": "2026-06-22",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "TAIKO",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "타이코(TAIKO) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6311"
+   },
+   {
+    "event_id": "84df1fb28721f04cd6eb7bba",
+    "ts": "2026-07-07T07:30:00+00:00",
+    "d": "2026-07-07",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "BONK",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "봉크(BONK) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6362"
+   },
+   {
+    "event_id": "eb5ea376c1c6f6afb7674160",
+    "ts": "2026-07-22T10:00:00+00:00",
+    "d": "2026-07-22",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "ZIL",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "질리카(ZIL) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6403"
+   },
+   {
+    "event_id": "e1e03d8b4efb3979c2327077",
+    "ts": "2026-07-28T09:00:00+00:00",
+    "d": "2026-07-28",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "STORJ",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "스토리지(STORJ) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6419"
+   },
+   {
+    "event_id": "aeeb4a90100a5dd5cc5d7773",
+    "ts": "2026-07-31T07:30:02+00:00",
+    "d": "2026-07-31",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "JASMY",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "재스미코인(JASMY) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6431"
+   },
+   {
+    "event_id": "c537cc8c795539c260e45e4a",
+    "ts": "2026-07-31T07:30:01+00:00",
+    "d": "2026-07-31",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "TT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "썬더코어(TT) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6430"
+   },
+   {
+    "event_id": "13abc8cdbc640f82e5320837",
+    "ts": "2026-08-07T07:30:00+00:00",
+    "d": "2026-08-07",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "SNX",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "신세틱스(SNX) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6456"
+   },
+   {
+    "event_id": "8aad98e5178fead6e54fd068",
+    "ts": "2026-08-11T06:00:00+00:00",
+    "d": "2026-08-11",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "RVN",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "레이븐코인(RVN) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6465"
+   },
+   {
+    "event_id": "5131242f52b05a56c5eb5285",
+    "ts": "2026-08-21T08:00:01+00:00",
+    "d": "2026-08-21",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "MANTRA",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "만트라(MANTRA) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6493"
+   },
+   {
+    "event_id": "09ff4b490d554b93afe2f5c3",
+    "ts": "2026-08-24T06:00:02+00:00",
+    "d": "2026-08-24",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "SAND",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "샌드박스(SAND) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6508"
+   },
+   {
+    "event_id": "c570a6644bfbcc660bd4162c",
+    "ts": "2026-08-28T07:30:00+00:00",
+    "d": "2026-08-28",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "ICX",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "아이콘(ICX) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6530"
+   },
+   {
+    "event_id": "ed72ef3c16ef164f37c6de48",
+    "ts": "2026-09-01T08:02:57+00:00",
+    "d": "2026-09-01",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "INJ",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "인젝티브(INJ) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6540"
+   },
+   {
+    "event_id": "237c1d1963745c4809f728c7",
+    "ts": "2026-09-21T07:00:00+00:00",
+    "d": "2026-09-21",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "EGLD",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "멀티버스엑스(EGLD) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6600"
+   },
+   {
+    "event_id": "7e7cd7bf625c564de11fb57e",
+    "ts": "2026-09-22T06:00:08+00:00",
+    "d": "2026-09-22",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "SOPH",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "소폰(SOPH) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6604"
+   },
+   {
+    "event_id": "7b018c7826cd7feee5ebf500",
+    "ts": "2026-10-02T16:30:00+00:00",
+    "d": "2026-10-02",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "BLAST",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "블라스트(BLAST) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6637"
+   },
+   {
+    "event_id": "44addd69a02cb7df89668bbd",
+    "ts": "2026-10-13T06:00:03+00:00",
+    "d": "2026-10-13",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "BLUR",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "블러(BLUR) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6656"
+   },
+   {
+    "event_id": "74a6d97c3a4dbdfa58ad6963",
+    "ts": "2026-10-16T07:00:00+00:00",
+    "d": "2026-10-16",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "DNT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "디스트릭트0x(DNT) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6666"
+   },
+   {
+    "event_id": "ff93dfcdfbeb424c1e31d4da",
+    "ts": "2026-10-16T07:00:01+00:00",
+    "d": "2026-10-16",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "HBD",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "하이브달러(HBD) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6667"
+   },
+   {
+    "event_id": "f23ec4130290fa41ed70ebac",
+    "ts": "2026-10-26T05:00:00+00:00",
+    "d": "2026-10-26",
+    "kind": "warning",
+    "arm": "warning",
+    "symbol": "INIT",
+    "sym_source": "field",
+    "krw": null,
+    "markets": [],
+    "title": "이니시아(INIT) 거래 유의 종목 지정 안내",
+    "url": "https://upbit.com/service_center/notice?id=6708"
+   }
+  ]
+ }
+}
