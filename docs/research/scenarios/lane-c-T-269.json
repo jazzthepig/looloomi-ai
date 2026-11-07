@@ -1,0 +1,88 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {
+      "id": "T-269-1",
+      "scenario": "T-269 S-746 政治×流动性触发的对冲",
+      "statement": "2026-12-07 时,state_daily(entity=panel, feature=stable_supply_30d) 仍为负(2026-11-05 为 −0.0402)",
+      "variable": "state:stable_supply_30d",
+      "op": "lt",
+      "hi": 0,
+      "prob": 0.78,
+      "horizon_d": "2026-12-07"
+    },
+    {
+      "id": "T-269-2",
+      "scenario": "T-269 S-746 政治×流动性触发的对冲",
+      "statement": "2026-12-07 时,macro:fed_net_liquidity 低于 2026-11-06 的 5790.845",
+      "variable": "macro:fed_net_liquidity",
+      "op": "lt",
+      "hi": 5790.845,
+      "prob": 0.5,
+      "horizon_d": "2026-12-07"
+    },
+    {
+      "id": "T-269-3",
+      "scenario": "T-269 S-746 政治×流动性触发的对冲",
+      "statement": "2026-12-07 时,BTC(ohlcv_daily binance_hist 收盘)高于 2026-11-05 的 76088",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 76088,
+      "prob": 0.5,
+      "horizon_d": "2026-12-07"
+    },
+    {
+      "id": "T-269-4",
+      "scenario": "T-269 S-746 政治×流动性触发的对冲",
+      "statement": "2026-12-07 时,BTC(ohlcv_daily binance_hist 收盘)低于 2026-11-05 的 76088",
+      "variable": "close:BTC",
+      "op": "lt",
+      "hi": 76088,
+      "prob": 0.5,
+      "horizon_d": "2026-12-07"
+    },
+    {
+      "id": "T-269-5",
+      "scenario": "T-269 S-746 政治×流动性触发的对冲",
+      "statement": "2026-12-07 时,macro:gpr 的日值高于 2026-11-07 的 97.6678",
+      "variable": "macro:gpr",
+      "op": "gt",
+      "lo": 97.6678,
+      "prob": 0.45,
+      "horizon_d": "2026-12-07"
+    },
+    {
+      "id": "T-269-6",
+      "scenario": "T-269 S-746 政治×流动性触发的对冲",
+      "statement": "2026-12-07 之前的 30 天里,S-746 的触发日(G_d ≥ 0.80 且 L_d 成立)至少出现 1 次",
+      "variable": "manual",
+      "op": "between",
+      "lo": 1,
+      "hi": 1,
+      "prob": 0.46,
+      "horizon_d": "2026-12-07"
+    },
+    {
+      "id": "T-269-7",
+      "scenario": "T-269 S-746 政治×流动性触发的对冲",
+      "statement": "2026-12-07 时,S-746 的触发条件成立(G_d ≥ 0.80 且 L_d 成立;2026-11-05 的 G_d = 0.738、L 两支都成立)",
+      "variable": "manual",
+      "op": "between",
+      "lo": 1,
+      "hi": 1,
+      "prob": 0.4,
+      "horizon_d": "2026-12-07"
+    },
+    {
+      "id": "T-269-8",
+      "scenario": "T-269 S-746 政治×流动性触发的对冲",
+      "statement": "2026-12-07 时,按当日 DVOL 定价的 BTC 30 天 90% 看跌权利金占现货 ≥ 1.0%(2026-11-05 为 1.219%)",
+      "variable": "manual",
+      "op": "between",
+      "lo": 1.0,
+      "hi": 999,
+      "prob": 0.7,
+      "horizon_d": "2026-12-07"
+    }
+  ]
+}
