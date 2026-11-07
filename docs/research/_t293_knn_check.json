@@ -1,0 +1,168 @@
+{
+  "n_pairs": 20,
+  "mean_overlap_pct": 1.0,
+  "min_overlap_pct": 1.0,
+  "all_ge_95pct": true,
+  "pairs": [
+    {
+      "symbol": "AAVE",
+      "d": "2023-01-02",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "JASMY",
+      "d": "2023-03-06",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "T",
+      "d": "2023-05-08",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "BNB",
+      "d": "2023-07-10",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "LDO",
+      "d": "2023-09-11",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "TRB",
+      "d": "2023-11-13",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "ATA",
+      "d": "2024-01-15",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "ICX",
+      "d": "2024-03-18",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "STMX",
+      "d": "2024-05-20",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "BOND",
+      "d": "2024-07-22",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "LOOM",
+      "d": "2024-09-23",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "MASK",
+      "d": "2024-11-25",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "UXLINK",
+      "d": "2025-01-27",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "DUSK",
+      "d": "2025-03-31",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "ONDO",
+      "d": "2025-06-02",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "TLM",
+      "d": "2025-08-04",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "XVS",
+      "d": "2025-10-06",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "LPT",
+      "d": "2025-12-08",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "SEI",
+      "d": "2026-02-09",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    },
+    {
+      "symbol": "APT",
+      "d": "2026-04-13",
+      "n_local": 100,
+      "n_rpc": 100,
+      "overlap": 100,
+      "overlap_pct": 1.0
+    }
+  ]
+}
