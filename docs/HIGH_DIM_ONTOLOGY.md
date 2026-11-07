@@ -69,12 +69,15 @@ VDB 不是缓存,是**本体论的几何基底** —— 内核六对象全部向
 | 空间 | 维度/形态 | 状态(2026-11-05) | 表 / 查询 |
 |---|---|---|---|
 | Asset (CIS v2) | 27d, dense 核 + NaN 尾 | ✅ live (pgvector) | `asset_embeddings` + kNN RPC |
+| **Asset · 资金面(因)** | 11d 截面百分位(资金费 / 新开杠杆 / 散户多空 / 大户 − 散户 / 主动买卖 / 成交暴增 + 价格相位),每 (币, 日) | ✅ 11-07(2022-06 起,~23.5 万行) | `asset_flow_daily` · `asset_flow_knn()` · `/internal/asset-flow`(S-774 排序力、S-775 扩散「因」检验中) |
 | Regime / 市场态 | 状态向量 | ✅ live | `market_state_vectors`(T-094 按时点补到 2019) |
 | Strategy | 每本账的回报 × 状态向量 | ✅ live(S-717) | `book_vectors` · `/internal/book-vectors`(相似 / 缩放 / 未覆盖) |
 | Entity/Decision | 季度 × 发行方(待遇 / 决策 / 结果) | ✅ live(S-722) | `entity_vectors` · `/internal/entity-vectors` |
 | 时序窗口 | 60 天 17 维形状,步长 5 | ✅ live(S-721) | `window_vectors` · `/internal/window-knn`(只描述,不进敞口) |
 | Outcome | 决策 → 7 / 30 / 90 天超额 | ✅ live(S-714) | `decision_outcomes` · `/internal/decision-outcomes` |
-| Text/News | MiniMax `embo-01`,`dim` 列标维数 | 🟡 11-05 上线,首轮撞限速 | `text_vectors` · `text_vectors_nearest` · `/internal/text-knn` |
+| Text/News | Railway 本机 ONNX `bge-small-en-v1.5`(384 维;11-07 起,MiniMax 账户没有嵌入额度) | ✅ 11-07(~5,200 条:events + feed_items) | `text_vectors` · `text_vectors_nearest` · `/internal/text-knn` |
+
+**11-07 的读法:** Asset 空间第一次有「因」的维度 —— 按币的资金面(`asset_flow_daily`)。它解开了 S-81 一直卡着的那一半:「扩散因而不是扩散反射」需要真实的按币流量,现在有了(S-775:邻居的新开杠杆 / 主动买 / 成交暴增先动、自己没动的币之后是否跑赢,以 7 日动量的扩散作反射对照)。同时 S-774 问这 11 维组合起来有没有横截面排序力。两条都只描述,过了也先开前向记录。
 
 **11-05 的读法:** 七个空间都有表、有写入端、有查询口。还差的是**跨空间的边**(叙事 → 资产、窗口 → 结果)被某个决定真正用上 ——
 今天所有空间只描述、不动钱;任何一条边要进敞口,另立预注册(S-721 / S-725 的纪律)。
