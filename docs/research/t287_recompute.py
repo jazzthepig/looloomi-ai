@@ -45,13 +45,22 @@ HDRS = {
     "Authorization": f"Bearer {KEY}",
     "Accept": "application/json",
 }
+# 每张表的默认排序(翻页必须带 order=)
+DEFAULT_ORDER = {
+    "events": "ts.asc,id.asc",
+    "asset_mcap_daily": "symbol.asc,d.asc",
+    "ohlcv_daily": "symbol.asc,trade_date.asc",
+}
 
 
-def rest(path: str, params: dict | None = None, prefer_count: bool = False):
+def rest(path: str, params: dict | None = None, prefer_count: bool = False, order: str | None = None):
     q = dict(params or {})
+    order = order or DEFAULT_ORDER.get(path, "id.asc")
     url = f"{BASE}/rest/v1/{path}"
     if q:
         url += "?" + urllib.parse.urlencode(q, safe=",()")
+    # 翻页必须带 order=(PostgREST 不带 order 时翻页边界会漂,11-05 实测)
+    url += ("&" if q else "?") + "order=" + urllib.parse.quote(order, safe=",.")
     h = dict(HDRS)
     if prefer_count:
         h["Prefer"] = "count=exact"
@@ -73,8 +82,8 @@ def paged(path: str, params: dict, page_size: int = 1000, order: str = "id.asc")
     total = None
     while True:
         p = dict(params)
-        p.update({"limit": page_size, "offset": offset, "order": order})
-        chunk, cr = rest(path, p, prefer_count=True)
+        p.update({"limit": page_size, "offset": offset})
+        chunk, cr = rest(path, p, prefer_count=True, order=order)
         if total is None:
             total = int(cr.split("/")[-1]) if cr else None
         if not chunk:
