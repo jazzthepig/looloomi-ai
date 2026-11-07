@@ -1,0 +1,1501 @@
+{
+  "generated_at_utc": "2026-11-06",
+  "prereg": "S-738",
+  "health_btc": {
+    "rows_total": 768,
+    "rows_with_amount": 768,
+    "rows_null_amount": 0,
+    "exact_duplicate_rows": 0,
+    "buy_usd_total": 76505803815.08,
+    "sell_usd_total": 1758028537.0,
+    "usd_total": 78263832352.08,
+    "n_distinct_entities": 67,
+    "top_entities_by_usd": [
+      {
+        "entity": "strategy",
+        "rows": 125,
+        "usd": 65285308281.0,
+        "usd_pct": 83.42
+      },
+      {
+        "entity": "metaplanet",
+        "rows": 55,
+        "usd": 4078159727.3100004,
+        "usd_pct": 5.21
+      },
+      {
+        "entity": "strive",
+        "rows": 41,
+        "usd": 3787563500.78,
+        "usd_pct": 4.84
+      },
+      {
+        "entity": "tesla",
+        "rows": 4,
+        "usd": 2711000000.0,
+        "usd_pct": 3.46
+      },
+      {
+        "entity": "block",
+        "rows": 12,
+        "usd": 272700000.0,
+        "usd_pct": 0.35
+      },
+      {
+        "entity": "gemini-space-station",
+        "rows": 3,
+        "usd": 263746000.0,
+        "usd_pct": 0.34
+      },
+      {
+        "entity": "sequans-communications-s-a",
+        "rows": 14,
+        "usd": 231247689.0,
+        "usd_pct": 0.3
+      },
+      {
+        "entity": "microcloud-hologram",
+        "rows": 1,
+        "usd": 197652000.0,
+        "usd_pct": 0.25
+      }
+    ],
+    "by_year": {
+      "2018": {
+        "rows": 1,
+        "buy_rows": 1,
+        "sell_rows": 0,
+        "buy_usd": 0.0,
+        "sell_usd": 0.0,
+        "null_amt_rows": 0,
+        "n_entities": 1,
+        "entities": [
+          "digitalx"
+        ]
+      },
+      "2019": {
+        "rows": 1,
+        "buy_rows": 1,
+        "sell_rows": 0,
+        "buy_usd": 0.0,
+        "sell_usd": 0.0,
+        "null_amt_rows": 0,
+        "n_entities": 1,
+        "entities": [
+          "hive-digital-technologies"
+        ]
+      },
+      "2020": {
+        "rows": 11,
+        "buy_rows": 11,
+        "sell_rows": 0,
+        "buy_usd": 1175000000.0,
+        "sell_usd": 0.0,
+        "null_amt_rows": 0,
+        "n_entities": 5,
+        "entities": [
+          "bit-digital",
+          "block",
+          "coinbase-global",
+          "hive-digital-technologies",
+          "strategy"
+        ]
+      },
+      "2021": {
+        "rows": 31,
+        "buy_rows": 29,
+        "sell_rows": 2,
+        "buy_usd": 4374755147.0,
+        "sell_usd": 150000000.0,
+        "null_amt_rows": 0,
+        "n_entities": 11,
+        "entities": [
+          "aker-asa",
+          "bit-digital",
+          "bitcoin-group-se",
+          "block",
+          "coinbase-global",
+          "core-scientific",
+          "hive-digital-technologies",
+          "mercadolibre",
+          "net-holding-a-s",
+          "strategy",
+          "tesla"
+        ]
+      },
+      "2022": {
+        "rows": 34,
+        "buy_rows": 25,
+        "sell_rows": 9,
+        "buy_usd": 287172838.0,
+        "sell_usd": 1015509836.0,
+        "null_amt_rows": 0,
+        "n_entities": 13,
+        "entities": [
+          "bigg-digital-assets",
+          "bit-digital",
+          "bitcoin-group-se",
+          "cleanspark",
+          "coinbase-global",
+          "core-scientific",
+          "dmg-blockchain-solutions",
+          "hive-digital-technologies",
+          "lm-funding-america",
+          "neptune-digital-assets",
+          "net-holding-a-s",
+          "strategy",
+          "tesla"
+        ]
+      },
+      "2023": {
+        "rows": 23,
+        "buy_rows": 19,
+        "sell_rows": 4,
+        "buy_usd": 1925927205.0,
+        "sell_usd": 18092694.0,
+        "null_amt_rows": 0,
+        "n_entities": 12,
+        "entities": [
+          "aker-asa",
+          "canaan",
+          "cleanspark",
+          "coinbase-global",
+          "coinsilium",
+          "core-scientific",
+          "exodus-movement",
+          "hive-digital-technologies",
+          "lm-funding-america",
+          "neptune-digital-assets",
+          "next-technology-holding",
+          "strategy"
+        ]
+      },
+      "2024": {
+        "rows": 108,
+        "buy_rows": 96,
+        "sell_rows": 12,
+        "buy_usd": 22361432380.0,
+        "sell_usd": 0.0,
+        "null_amt_rows": 0,
+        "n_entities": 25,
+        "entities": [
+          "bigg-digital-assets",
+          "bit-digital",
+          "bitcoin-depot",
+          "bitfufu",
+          "block",
+          "canaan",
+          "cango",
+          "cleanspark",
+          "coinbase-global",
+          "core-scientific",
+          "defi-technologies",
+          "digitalx",
+          "dmg-blockchain-solutions",
+          "exodus-movement",
+          "hive-digital-technologies",
+          "lm-funding-america",
+          "metaplanet",
+          "nano-labs",
+          "neptune-digital-assets",
+          "phoenix-digital-assets",
+          "phunware",
+          "remixpoint",
+          "strategy",
+          "tesla",
+          "wemade"
+        ]
+      },
+      "2025": {
+        "rows": 384,
+        "buy_rows": 351,
+        "sell_rows": 33,
+        "buy_usd": 28842954374.910007,
+        "sell_usd": 134607488.0,
+        "null_amt_rows": 0,
+        "n_entities": 59,
+        "entities": [
+          "alliance-resource-partners-l-p",
+          "american-bitcoin",
+          "b-hodl",
+          "bit-digital",
+          "bitcoin-depot",
+          "bitcoin-group-se",
+          "bitcoin-standard-treasury-company",
+          "bitcoin-treasury-capital",
+          "bitfufu",
+          "block",
+          "blue-star-capital",
+          "btcs-s-a",
+          "bullish",
+          "canaan",
+          "cango",
+          "cimg",
+          "cleanspark",
+          "coinbase-global",
+          "coinsilium",
+          "consensus-mining-seigniorage",
+          "convano",
+          "core-scientific",
+          "defi-technologies",
+          "digipowerx",
+          "digitalx",
+          "dmg-blockchain-solutions",
+          "exodus-movement",
+          "figma",
+          "figure-technology-solutions",
+          "gemini-space-station",
+          "hive-digital-technologies",
+          "hyperscale-data",
+          "ipower",
+          "k33-ab",
+          "lion-group-holding",
+          "lm-funding-america",
+          "matador-technologies",
+          "mercadolibre",
+          "metaplanet",
+          "microcloud-hologram",
+          "nano-labs",
+          "neptune-digital-assets",
+          "next-technology-holding",
+          "oranjebtc",
+          "prenetics",
+          "quantum-solutions",
+          "remixpoint",
+          "s-science-company",
+          "satsuma-technology",
+          "sequans-communications-s-a",
+          "sixty-six-capital",
+          "strategy",
+          "strive",
+          "treasury",
+          "usbc",
+          "vaultz-capital",
+          "virtu-financial",
+          "yueda-digital-holding",
+          "zooz"
+        ]
+      },
+      "2026": {
+        "rows": 175,
+        "buy_rows": 155,
+        "sell_rows": 20,
+        "buy_usd": 17538561870.17,
+        "sell_usd": 439818519.0,
+        "null_amt_rows": 0,
+        "n_entities": 27,
+        "entities": [
+          "american-bitcoin",
+          "bitcoin-treasury-capital",
+          "bitfufu",
+          "block",
+          "btcs-s-a",
+          "bullish",
+          "canaan",
+          "cango",
+          "cleanspark",
+          "coinbase-global",
+          "core-scientific",
+          "digitalx",
+          "dmg-blockchain-solutions",
+          "exodus-movement",
+          "hive-digital-technologies",
+          "hyperscale-data",
+          "ionic-digital",
+          "lm-funding-america",
+          "metaplanet",
+          "neptune-digital-assets",
+          "oranjebtc",
+          "quantum-solutions",
+          "remixpoint",
+          "satsuma-technology",
+          "sequans-communications-s-a",
+          "strategy",
+          "strive"
+        ]
+      }
+    },
+    "decision_date_class": {
+      "quarter_end": {
+        "n": 132,
+        "pct": 17.19
+      },
+      "month_end": {
+        "n": 66,
+        "pct": 8.59
+      },
+      "other": {
+        "n": 570,
+        "pct": 74.22
+      }
+    },
+    "delay_days_hist": {
+      "1": 570,
+      "5": 66,
+      "45": 132
+    },
+    "strategy": {
+      "rows": 125,
+      "row_pct": 16.28,
+      "usd": 65285308281.0,
+      "usd_pct": 83.42
+    },
+    "market": {
+      "symbol": "BTC",
+      "n_days": 4328,
+      "first": "2014-12-31",
+      "last": "2026-11-05"
+    }
+  },
+  "health_eth": {
+    "rows_total": 122,
+    "rows_with_amount": 122,
+    "rows_null_amount": 0,
+    "exact_duplicate_rows": 0,
+    "buy_usd_total": 2664551945.4800005,
+    "sell_usd_total": 49265942.4,
+    "usd_total": 2713817887.8800006,
+    "n_distinct_entities": 21,
+    "top_entities_by_usd": [
+      {
+        "entity": "sharplink",
+        "rows": 21,
+        "usd": 2180663404.0,
+        "usd_pct": 80.35
+      },
+      {
+        "entity": "bit-digital",
+        "rows": 9,
+        "usd": 267871331.07,
+        "usd_pct": 9.87
+      },
+      {
+        "entity": "the-ether-machine",
+        "rows": 4,
+        "usd": 96997505.00999999,
+        "usd_pct": 3.57
+      },
+      {
+        "entity": "gemini-space-station",
+        "rows": 3,
+        "usd": 46347000.0,
+        "usd_pct": 1.71
+      },
+      {
+        "entity": "quantum-solutions",
+        "rows": 24,
+        "usd": 28649164.63,
+        "usd_pct": 1.06
+      },
+      {
+        "entity": "btcs",
+        "rows": 9,
+        "usd": 26536468.0,
+        "usd_pct": 0.98
+      },
+      {
+        "entity": "intchains",
+        "rows": 7,
+        "usd": 20706534.7,
+        "usd_pct": 0.76
+      },
+      {
+        "entity": "def-consulting",
+        "rows": 6,
+        "usd": 18965213.35,
+        "usd_pct": 0.7
+      }
+    ],
+    "by_year": {
+      "2024": {
+        "rows": 7,
+        "buy_rows": 7,
+        "sell_rows": 0,
+        "buy_usd": 29905436.7,
+        "sell_usd": 0.0,
+        "null_amt_rows": 0,
+        "n_entities": 3,
+        "entities": [
+          "btcs",
+          "intchains",
+          "phunware"
+        ]
+      },
+      "2025": {
+        "rows": 87,
+        "buy_rows": 82,
+        "sell_rows": 5,
+        "buy_usd": 2601255345.6000004,
+        "sell_usd": 37271331.07,
+        "null_amt_rows": 0,
+        "n_entities": 19,
+        "entities": [
+          "bit-digital",
+          "blue-star-capital",
+          "btc-digital",
+          "btcs",
+          "bullish",
+          "canaan",
+          "coinbase-global",
+          "cosmos-health",
+          "def-consulting",
+          "defi-technologies",
+          "digipowerx",
+          "exodus-movement",
+          "gemini-space-station",
+          "intchains",
+          "ipower",
+          "quantum-solutions",
+          "sharplink",
+          "the-ether-machine",
+          "yueda-digital-holding"
+        ]
+      },
+      "2026": {
+        "rows": 28,
+        "buy_rows": 20,
+        "sell_rows": 8,
+        "buy_usd": 33391163.18,
+        "sell_usd": 11994611.329999998,
+        "null_amt_rows": 0,
+        "n_entities": 8,
+        "entities": [
+          "bit-digital",
+          "bullish",
+          "canaan",
+          "coinbase-global",
+          "exodus-movement",
+          "quantum-solutions",
+          "remixpoint",
+          "sharplink"
+        ]
+      }
+    },
+    "decision_date_class": {
+      "quarter_end": {
+        "n": 25,
+        "pct": 20.49
+      },
+      "month_end": {
+        "n": 12,
+        "pct": 9.84
+      },
+      "other": {
+        "n": 85,
+        "pct": 69.67
+      }
+    },
+    "delay_days_hist": {
+      "1": 85,
+      "5": 12,
+      "45": 25
+    },
+    "strategy": {
+      "rows": 0,
+      "row_pct": 0.0,
+      "usd": 0,
+      "usd_pct": 0.0
+    },
+    "market": {
+      "symbol": "ETH",
+      "n_days": 4109,
+      "first": "2015-08-06",
+      "last": "2026-11-05"
+    }
+  },
+  "main": {
+    "label": "主口径(预注册原样)",
+    "mode": "prereg",
+    "denom": "volume",
+    "asof_shift": 0,
+    "exclude_entity": null,
+    "flow": "net",
+    "n_weeks": 323,
+    "first_signal": "2020-08-03",
+    "last_signal": "2026-10-05",
+    "weeks_with_zero_tb": 63,
+    "tb_mean": 0.021179936898754737,
+    "tb_sd": 0.034689547546378464,
+    "fwd30_mean_pct": 4.437903386993328,
+    "spearman": -0.04032953026001323,
+    "perm": {
+      "rho": -0.04032953026001323,
+      "p_two_sided": 0.72,
+      "p_one_sided_high": 0.64,
+      "percentile": 0.36,
+      "null_n": 1000,
+      "null_mean": -0.002588432326680828,
+      "null_sd": 0.10285154094086105
+    },
+    "resid": {
+      "n": 323,
+      "rho_vs_past30": 0.06783686414653463,
+      "spearman_resid_vs_fwd30": -0.13046362709843665,
+      "perm": {
+        "rho": -0.13046362709843665,
+        "p_two_sided": 0.21,
+        "p_one_sided_high": 0.895,
+        "percentile": 0.105,
+        "null_n": 1000,
+        "null_mean": -0.0012665861157582796,
+        "null_sd": 0.10255164529610235
+      }
+    },
+    "segments": {
+      "2020-08→2023-12": {
+        "n": 178,
+        "rho": 0.19126053748731295,
+        "perm": {
+          "rho": 0.19126053748731295,
+          "p_two_sided": 0.1160000000000001,
+          "p_one_sided_high": 0.05800000000000005,
+          "percentile": 0.942,
+          "null_n": 1000,
+          "null_mean": 0.0004945916610543688,
+          "null_sd": 0.11987468539504886
+        }
+      },
+      "2024-01→": {
+        "n": 145,
+        "rho": -0.2005085833293102,
+        "perm": {
+          "rho": -0.2005085833293102,
+          "p_two_sided": 0.166,
+          "p_one_sided_high": 0.917,
+          "percentile": 0.083,
+          "null_n": 1000,
+          "null_mean": -4.8500427100152343e-05,
+          "null_sd": 0.14272387161426958
+        }
+      }
+    },
+    "assertions": [
+      {
+        "name": "季末 +45 天",
+        "ok": true,
+        "detail": "2024-05-15"
+      },
+      {
+        "name": "月末(非季末)+5 天",
+        "ok": true,
+        "detail": "2024-02-05"
+      },
+      {
+        "name": "普通日 +1 天",
+        "ok": true,
+        "detail": "2024-01-16"
+      },
+      {
+        "name": "季末优先于月末(06-30)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "进入信号的每条决定都满足 (d−28, d]",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "窗口内每条可得决定都进了信号(不多不少)",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "可得日晚于信号日的决定不进该信号",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "每条决定只在可得日后的 28 天窗口内出现",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "分母的 30 天窗口全在 asof 之前(含 asof)",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "算不出之后 30 天收益的行都在样本最后 30 天内",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "TB=0 的行净额确实是 0",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "窗口内没有决定的行净额为 0",
+        "ok": true,
+        "detail": "[]"
+      }
+    ]
+  },
+  "ex_strategy": {
+    "label": "去掉 Strategy(MSTR)",
+    "mode": "prereg",
+    "denom": "volume",
+    "asof_shift": 0,
+    "exclude_entity": "strategy",
+    "flow": "net",
+    "n_weeks": 323,
+    "first_signal": "2020-08-03",
+    "last_signal": "2026-10-05",
+    "weeks_with_zero_tb": 147,
+    "tb_mean": 0.0025162695548234847,
+    "tb_sd": 0.007641412643978025,
+    "fwd30_mean_pct": 4.437903386993328,
+    "spearman": -0.004632300964039315,
+    "perm": {
+      "rho": -0.004632300964039315,
+      "p_two_sided": 0.998,
+      "p_one_sided_high": 0.499,
+      "percentile": 0.501,
+      "null_n": 1000,
+      "null_mean": 3.424647380724455e-05,
+      "null_sd": 0.10616520797662998
+    },
+    "resid": {
+      "n": 323,
+      "rho_vs_past30": 0.021578365451953407,
+      "spearman_resid_vs_fwd30": -0.024819793160081222,
+      "perm": {
+        "rho": -0.024819793160081222,
+        "p_two_sided": 0.796,
+        "p_one_sided_high": 0.602,
+        "percentile": 0.398,
+        "null_n": 1000,
+        "null_mean": 0.0020128005435583853,
+        "null_sd": 0.10012513564413376
+      }
+    },
+    "segments": {
+      "2020-08→2023-12": {
+        "n": 178,
+        "rho": 0.13845928802176896,
+        "perm": {
+          "rho": 0.13845928802176896,
+          "p_two_sided": 0.262,
+          "p_one_sided_high": 0.131,
+          "percentile": 0.869,
+          "null_n": 1000,
+          "null_mean": -0.000759135443212683,
+          "null_sd": 0.12622443467981628
+        }
+      },
+      "2024-01→": {
+        "n": 145,
+        "rho": -0.13174298977182214,
+        "perm": {
+          "rho": -0.13174298977182214,
+          "p_two_sided": 0.41,
+          "p_one_sided_high": 0.795,
+          "percentile": 0.205,
+          "null_n": 1000,
+          "null_mean": -0.0037634730394582876,
+          "null_sd": 0.15178428270550773
+        }
+      }
+    },
+    "assertions": [
+      {
+        "name": "季末 +45 天",
+        "ok": true,
+        "detail": "2024-05-15"
+      },
+      {
+        "name": "月末(非季末)+5 天",
+        "ok": true,
+        "detail": "2024-02-05"
+      },
+      {
+        "name": "普通日 +1 天",
+        "ok": true,
+        "detail": "2024-01-16"
+      },
+      {
+        "name": "季末优先于月末(06-30)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "进入信号的每条决定都满足 (d−28, d]",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "窗口内每条可得决定都进了信号(不多不少)",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "可得日晚于信号日的决定不进该信号",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "每条决定只在可得日后的 28 天窗口内出现",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "分母的 30 天窗口全在 asof 之前(含 asof)",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "算不出之后 30 天收益的行都在样本最后 30 天内",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "TB=0 的行净额确实是 0",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "窗口内没有决定的行净额为 0",
+        "ok": true,
+        "detail": "[]"
+      }
+    ]
+  },
+  "sens_flat7": {
+    "label": "敏感度:统一 +7 天可得日",
+    "mode": "flat7",
+    "denom": "volume",
+    "asof_shift": 0,
+    "exclude_entity": null,
+    "flow": "net",
+    "n_weeks": 323,
+    "first_signal": "2020-08-03",
+    "last_signal": "2026-10-05",
+    "weeks_with_zero_tb": 76,
+    "tb_mean": 0.021122816902436982,
+    "tb_sd": 0.032552403437460534,
+    "fwd30_mean_pct": 4.437903386993328,
+    "spearman": -0.033567643261686896,
+    "perm": {
+      "rho": -0.033567643261686896,
+      "p_two_sided": 0.76,
+      "p_one_sided_high": 0.62,
+      "percentile": 0.38,
+      "null_n": 1000,
+      "null_mean": -0.0013982665917820442,
+      "null_sd": 0.10425063312961096
+    },
+    "resid": {
+      "n": 323,
+      "rho_vs_past30": 0.036110285376818374,
+      "spearman_resid_vs_fwd30": -0.07345267117780242,
+      "perm": {
+        "rho": -0.07345267117780242,
+        "p_two_sided": 0.474,
+        "p_one_sided_high": 0.763,
+        "percentile": 0.237,
+        "null_n": 1000,
+        "null_mean": 5.714271470093202e-05,
+        "null_sd": 0.10251546863151717
+      }
+    },
+    "segments": {
+      "2020-08→2023-12": {
+        "n": 178,
+        "rho": 0.17444742303354044
+      },
+      "2024-01→": {
+        "n": 145,
+        "rho": -0.13827404453754014
+      }
+    },
+    "assertions": [
+      {
+        "name": "统一 +7 天(敏感度口径)",
+        "ok": true,
+        "detail": "2024-04-07"
+      },
+      {
+        "name": "进入信号的每条决定都满足 (d−28, d]",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "窗口内每条可得决定都进了信号(不多不少)",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "可得日晚于信号日的决定不进该信号",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "每条决定只在可得日后的 28 天窗口内出现",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "分母的 30 天窗口全在 asof 之前(含 asof)",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "算不出之后 30 天收益的行都在样本最后 30 天内",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "TB=0 的行净额确实是 0",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "窗口内没有决定的行净额为 0",
+        "ok": true,
+        "detail": "[]"
+      }
+    ]
+  },
+  "sens_mcap": {
+    "label": "敏感度:除以 BTC 市值",
+    "mode": "prereg",
+    "denom": "mcap",
+    "asof_shift": 0,
+    "exclude_entity": null,
+    "flow": "net",
+    "n_weeks": 323,
+    "first_signal": "2020-08-03",
+    "last_signal": "2026-10-05",
+    "weeks_with_zero_tb": 63,
+    "tb_mean": 0.0005886462406625164,
+    "tb_sd": 0.0010911237526799009,
+    "fwd30_mean_pct": 4.437903386993328,
+    "spearman": -0.004912560057906265,
+    "perm": {
+      "rho": -0.004912560057906265,
+      "p_two_sided": 0.968,
+      "p_one_sided_high": 0.516,
+      "percentile": 0.484,
+      "null_n": 1000,
+      "null_mean": -0.0018036594358238841,
+      "null_sd": 0.0998970657810445
+    },
+    "resid": {
+      "n": 323,
+      "rho_vs_past30": 0.10119359015671991,
+      "spearman_resid_vs_fwd30": -0.09598057377031667,
+      "perm": {
+        "rho": -0.09598057377031667,
+        "p_two_sided": 0.356,
+        "p_one_sided_high": 0.8220000000000001,
+        "percentile": 0.178,
+        "null_n": 1000,
+        "null_mean": -0.0006420106817199294,
+        "null_sd": 0.09849315972189185
+      }
+    },
+    "segments": {
+      "2020-08→2023-12": {
+        "n": 178,
+        "rho": 0.22899059927393187
+      },
+      "2024-01→": {
+        "n": 145,
+        "rho": -0.2178956774370426
+      }
+    },
+    "assertions": [
+      {
+        "name": "季末 +45 天",
+        "ok": true,
+        "detail": "2024-05-15"
+      },
+      {
+        "name": "月末(非季末)+5 天",
+        "ok": true,
+        "detail": "2024-02-05"
+      },
+      {
+        "name": "普通日 +1 天",
+        "ok": true,
+        "detail": "2024-01-16"
+      },
+      {
+        "name": "季末优先于月末(06-30)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "进入信号的每条决定都满足 (d−28, d]",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "窗口内每条可得决定都进了信号(不多不少)",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "可得日晚于信号日的决定不进该信号",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "每条决定只在可得日后的 28 天窗口内出现",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "分母的 30 天窗口全在 asof 之前(含 asof)",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "算不出之后 30 天收益的行都在样本最后 30 天内",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "TB=0 的行净额确实是 0",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "窗口内没有决定的行净额为 0",
+        "ok": true,
+        "detail": "[]"
+      }
+    ]
+  },
+  "sens_full_range": {
+    "label": "敏感度:样本从 2018-06 起(数据边界)",
+    "mode": "prereg",
+    "denom": "volume",
+    "asof_shift": 0,
+    "exclude_entity": null,
+    "flow": "net",
+    "n_weeks": 436,
+    "first_signal": "2018-06-04",
+    "last_signal": "2026-10-05",
+    "weeks_with_zero_tb": 176,
+    "tb_mean": 0.01569064132637105,
+    "tb_sd": 0.03125852027002017,
+    "fwd30_mean_pct": 4.462365721759605,
+    "spearman": -0.015986990899145726,
+    "perm": {
+      "rho": -0.015986990899145726,
+      "p_two_sided": 0.896,
+      "p_one_sided_high": 0.552,
+      "percentile": 0.448,
+      "null_n": 1000,
+      "null_mean": -0.004364919921647683,
+      "null_sd": 0.09627578051189249
+    },
+    "resid": {
+      "n": 436,
+      "rho_vs_past30": 0.06397560085123051,
+      "spearman_resid_vs_fwd30": -0.09116238597263417,
+      "perm": {
+        "rho": -0.09116238597263417,
+        "p_two_sided": 0.358,
+        "p_one_sided_high": 0.821,
+        "percentile": 0.179,
+        "null_n": 1000,
+        "null_mean": -0.0038648676627403354,
+        "null_sd": 0.09121604693979239
+      }
+    },
+    "segments": {
+      "2020-08→2023-12": {
+        "n": 178,
+        "rho": 0.19126053748731295
+      },
+      "2024-01→": {
+        "n": 145,
+        "rho": -0.2005085833293102
+      }
+    },
+    "assertions": [
+      {
+        "name": "季末 +45 天",
+        "ok": true,
+        "detail": "2024-05-15"
+      },
+      {
+        "name": "月末(非季末)+5 天",
+        "ok": true,
+        "detail": "2024-02-05"
+      },
+      {
+        "name": "普通日 +1 天",
+        "ok": true,
+        "detail": "2024-01-16"
+      },
+      {
+        "name": "季末优先于月末(06-30)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "进入信号的每条决定都满足 (d−28, d]",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "窗口内每条可得决定都进了信号(不多不少)",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "可得日晚于信号日的决定不进该信号",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "每条决定只在可得日后的 28 天窗口内出现",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "分母的 30 天窗口全在 asof 之前(含 asof)",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "算不出之后 30 天收益的行都在样本最后 30 天内",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "TB=0 的行净额确实是 0",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "窗口内没有决定的行净额为 0",
+        "ok": true,
+        "detail": "[]"
+      }
+    ]
+  },
+  "sens_shift1": {
+    "label": "稳健性:信息整体挪一天",
+    "mode": "prereg",
+    "denom": "volume",
+    "asof_shift": 1,
+    "exclude_entity": null,
+    "flow": "net",
+    "n_weeks": 323,
+    "first_signal": "2020-08-03",
+    "last_signal": "2026-10-05",
+    "weeks_with_zero_tb": 60,
+    "tb_mean": 0.02153229787926617,
+    "tb_sd": 0.0355159103588331,
+    "fwd30_mean_pct": 4.437903386993328,
+    "spearman": -0.04182305283829513,
+    "perm": {
+      "rho": -0.04182305283829513,
+      "p_two_sided": 0.722,
+      "p_one_sided_high": 0.639,
+      "percentile": 0.361,
+      "null_n": 1000,
+      "null_mean": -0.003915332277923374,
+      "null_sd": 0.1022678917806106
+    },
+    "resid": {
+      "n": 323,
+      "rho_vs_past30": 0.060663057574650035,
+      "spearman_resid_vs_fwd30": -0.12371081155574358,
+      "perm": {
+        "rho": -0.12371081155574358,
+        "p_two_sided": 0.256,
+        "p_one_sided_high": 0.872,
+        "percentile": 0.128,
+        "null_n": 1000,
+        "null_mean": -0.002968945167693317,
+        "null_sd": 0.10162321124689554
+      }
+    },
+    "segments": {
+      "2020-08→2023-12": {
+        "n": 178,
+        "rho": 0.1947970614349401
+      },
+      "2024-01→": {
+        "n": 145,
+        "rho": -0.22634713567777193
+      }
+    },
+    "assertions": [
+      {
+        "name": "季末 +45 天",
+        "ok": true,
+        "detail": "2024-05-15"
+      },
+      {
+        "name": "月末(非季末)+5 天",
+        "ok": true,
+        "detail": "2024-02-05"
+      },
+      {
+        "name": "普通日 +1 天",
+        "ok": true,
+        "detail": "2024-01-16"
+      },
+      {
+        "name": "季末优先于月末(06-30)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "进入信号的每条决定都满足 (d−28, d]",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "窗口内每条可得决定都进了信号(不多不少)",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "可得日晚于信号日的决定不进该信号",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "每条决定只在可得日后的 28 天窗口内出现",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "分母的 30 天窗口全在 asof 之前(含 asof)",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "算不出之后 30 天收益的行都在样本最后 30 天内",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "TB=0 的行净额确实是 0",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "窗口内没有决定的行净额为 0",
+        "ok": true,
+        "detail": "[]"
+      }
+    ]
+  },
+  "sub_sell_only": {
+    "label": "副:卖出单独",
+    "mode": "prereg",
+    "denom": "volume",
+    "asof_shift": 0,
+    "exclude_entity": null,
+    "flow": "sell",
+    "n_weeks": 323,
+    "first_signal": "2020-08-03",
+    "last_signal": "2026-10-05",
+    "weeks_with_zero_tb": 267,
+    "tb_mean": 0.0006864697545645459,
+    "tb_sd": 0.003912053169422593,
+    "fwd30_mean_pct": 4.437903386993328,
+    "spearman": -0.0646380481848891,
+    "perm": {
+      "rho": -0.0646380481848891,
+      "p_two_sided": 0.502,
+      "p_one_sided_high": 0.749,
+      "percentile": 0.251,
+      "null_n": 1000,
+      "null_mean": 0.0011345934590244837,
+      "null_sd": 0.10020533373170486
+    },
+    "resid": {
+      "n": 323,
+      "rho_vs_past30": -0.11323952935795664,
+      "spearman_resid_vs_fwd30": 0.06622979728377494,
+      "perm": {
+        "rho": 0.06622979728377494,
+        "p_two_sided": 0.512,
+        "p_one_sided_high": 0.256,
+        "percentile": 0.744,
+        "null_n": 1000,
+        "null_mean": 0.0008989908701848384,
+        "null_sd": 0.09414481599884134
+      }
+    },
+    "segments": {
+      "2020-08→2023-12": {
+        "n": 178,
+        "rho": -0.058838435630473127
+      },
+      "2024-01→": {
+        "n": 145,
+        "rho": -0.009322461046075446
+      }
+    },
+    "assertions": [
+      {
+        "name": "季末 +45 天",
+        "ok": true,
+        "detail": "2024-05-15"
+      },
+      {
+        "name": "月末(非季末)+5 天",
+        "ok": true,
+        "detail": "2024-02-05"
+      },
+      {
+        "name": "普通日 +1 天",
+        "ok": true,
+        "detail": "2024-01-16"
+      },
+      {
+        "name": "季末优先于月末(06-30)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "进入信号的每条决定都满足 (d−28, d]",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "窗口内每条可得决定都进了信号(不多不少)",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "可得日晚于信号日的决定不进该信号",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "每条决定只在可得日后的 28 天窗口内出现",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "分母的 30 天窗口全在 asof 之前(含 asof)",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "算不出之后 30 天收益的行都在样本最后 30 天内",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "TB=0 的行净额确实是 0",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "窗口内没有决定的行净额为 0",
+        "ok": true,
+        "detail": "[]"
+      }
+    ]
+  },
+  "sub_reflexivity": {
+    "n": 327,
+    "spearman_past30_vs_next4w_tb": 0.11791870355818497,
+    "perm": {
+      "rho": 0.11791870355818497,
+      "p_two_sided": 0.248,
+      "p_one_sided_high": 0.124,
+      "percentile": 0.876,
+      "null_n": 1000,
+      "null_mean": -0.0017743398182572636,
+      "null_sd": 0.10093366098166576
+    }
+  },
+  "sub_eth": {
+    "label": "副:ETH 国库(2024 起)",
+    "mode": "prereg",
+    "denom": "volume",
+    "asof_shift": 0,
+    "exclude_entity": null,
+    "flow": "net",
+    "n_weeks": 145,
+    "first_signal": "2024-01-01",
+    "last_signal": "2026-10-05",
+    "weeks_with_zero_tb": 61,
+    "tb_mean": 0.002375869815030958,
+    "tb_sd": 0.006562511538564013,
+    "fwd30_mean_pct": 2.2552644229721768,
+    "spearman": -0.040568378040918264,
+    "perm": {
+      "rho": -0.040568378040918264,
+      "p_two_sided": 0.87,
+      "p_one_sided_high": 0.565,
+      "percentile": 0.435,
+      "null_n": 1000,
+      "null_mean": -0.012058763181206033,
+      "null_sd": 0.1520585265542349
+    },
+    "resid": {
+      "n": 145,
+      "rho_vs_past30": 0.08618581089802343,
+      "spearman_resid_vs_fwd30": 0.022677531097464964,
+      "perm": {
+        "rho": 0.022677531097464964,
+        "p_two_sided": 0.8640000000000001,
+        "p_one_sided_high": 0.43200000000000005,
+        "percentile": 0.568,
+        "null_n": 1000,
+        "null_mean": -0.003952192568099512,
+        "null_sd": 0.1480131609084255
+      }
+    },
+    "segments": {
+      "2020-08→2023-12": {
+        "n": 0,
+        "rho": null,
+        "note": "n<8"
+      },
+      "2024-01→": {
+        "n": 145,
+        "rho": -0.040568378040918264
+      }
+    },
+    "assertions": [
+      {
+        "name": "季末 +45 天",
+        "ok": true,
+        "detail": "2024-05-15"
+      },
+      {
+        "name": "月末(非季末)+5 天",
+        "ok": true,
+        "detail": "2024-02-05"
+      },
+      {
+        "name": "普通日 +1 天",
+        "ok": true,
+        "detail": "2024-01-16"
+      },
+      {
+        "name": "季末优先于月末(06-30)",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "进入信号的每条决定都满足 (d−28, d]",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "窗口内每条可得决定都进了信号(不多不少)",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "可得日晚于信号日的决定不进该信号",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "每条决定只在可得日后的 28 天窗口内出现",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "分母的 30 天窗口全在 asof 之前(含 asof)",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "算不出之后 30 天收益的行都在样本最后 30 天内",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "TB=0 的行净额确实是 0",
+        "ok": true,
+        "detail": "[]"
+      },
+      {
+        "name": "窗口内没有决定的行净额为 0",
+        "ok": true,
+        "detail": "[]"
+      }
+    ]
+  },
+  "scenario_keys": {
+    "breadth": [
+      {
+        "d": "2026-11-05",
+        "value": 0.0416666666666667
+      },
+      {
+        "d": "2026-11-04",
+        "value": 0.0416666666666667
+      }
+    ],
+    "fed": [
+      {
+        "d": "2026-11-04",
+        "value": 6748.145
+      },
+      {
+        "d": "2026-10-28",
+        "value": 6745.635
+      },
+      {
+        "d": "2026-10-21",
+        "value": 6753.604
+      },
+      {
+        "d": "2026-10-14",
+        "value": 6755.639
+      },
+      {
+        "d": "2026-10-07",
+        "value": 6747.56
+      },
+      {
+        "d": "2026-09-30",
+        "value": 6743.031
+      },
+      {
+        "d": "2026-09-23",
+        "value": 6747.704
+      },
+      {
+        "d": "2026-09-16",
+        "value": 6746.548
+      },
+      {
+        "d": "2026-09-09",
+        "value": 6740.619
+      },
+      {
+        "d": "2026-09-02",
+        "value": 6737.204
+      },
+      {
+        "d": "2026-08-26",
+        "value": 6730.912
+      },
+      {
+        "d": "2026-08-19",
+        "value": 6745.699
+      }
+    ],
+    "btc_close": [
+      {
+        "trade_date": "2026-11-05",
+        "close": 76088
+      },
+      {
+        "trade_date": "2026-11-04",
+        "close": 80504
+      }
+    ]
+  }
+}
