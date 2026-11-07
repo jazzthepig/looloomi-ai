@@ -1,0 +1,2798 @@
+{
+ "n_events": 368,
+ "n_included_events": 39,
+ "n_tokens_raw": 164,
+ "n_tokens_unique": 164,
+ "reasons": {
+  "excluded_pair_removal": 193,
+  "included": 39,
+  "excluded_leveraged_token": 5,
+  "excluded_margin_or_loan": 109,
+  "excluded_staking_only": 1,
+  "excluded_earn": 2,
+  "excluded_options": 2,
+  "excluded_other": 6,
+  "excluded_alpha": 11
+ },
+ "rows": [
+  {
+   "id": "467fa7998b83f0ae11bb1561",
+   "ts": "2022-02-17T03:47:56.026+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-02-24",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "c6f0357598a3ab5cf2e71e27",
+   "ts": "2022-02-22T01:57:59.687+00:00",
+   "title": "Notice of Removal of AXS/BIDR Trading Pair - 2022-02-25",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "3ffc1eae34fe5fa7e6c360ab",
+   "ts": "2022-03-01T03:02:29.93+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-03-03",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "62fd9e10e312887027edda44",
+   "ts": "2022-03-01T03:59:30.632+00:00",
+   "title": "Binance Will Delist BCD, CND, MTH, NCASH and YOYO on 2022-03-08",
+   "reason": "included",
+   "tokens": [
+    "BCD",
+    "CND",
+    "MTH",
+    "NCASH",
+    "YOYO"
+   ]
+  },
+  {
+   "id": "3f2c033476411b5d3df63f9e",
+   "ts": "2022-03-08T02:09:46.426+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-03-10",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "0eb235533a9c5bdfe29640cc",
+   "ts": "2022-03-11T01:58:47.03+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-03-18",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "4ed05fc6c539d745d9605b8c",
+   "ts": "2022-03-24T07:45:04.072+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-04-01",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "364137dc1676aa68792c7044",
+   "ts": "2022-04-04T09:58:00.853+00:00",
+   "title": "Binance Will Delist HEGIC, RENBTC and SUSD on 2022-04-11",
+   "reason": "included",
+   "tokens": [
+    "HEGIC",
+    "RENBTC",
+    "SUSD"
+   ]
+  },
+  {
+   "id": "0384f380584ac98e916f4b9f",
+   "ts": "2022-04-07T09:05:06.941+00:00",
+   "title": "Binance to Delist and Cease Redemption for XTZUP, XTZDOWN, LTCUP & LTCDOWN Leveraged Tokens (2022-04-07)",
+   "reason": "excluded_leveraged_token",
+   "tokens": []
+  },
+  {
+   "id": "8a7028fe3209043a7fe21b03",
+   "ts": "2022-04-19T02:00:03.777+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-04-21",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "0d3051cd3f9cdc921ad55fcf",
+   "ts": "2022-04-26T02:00:02.498+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-04-28",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "1b7dc9b5bf0a0c7f3cb65675",
+   "ts": "2022-05-10T02:00:02.556+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-05-12",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "13f7ad9f0cd74da855c43ff3",
+   "ts": "2022-05-12T02:00:02.285+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-05-19",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "f92a73194ea96444c83a8a74",
+   "ts": "2022-05-12T10:59:20.901+00:00",
+   "title": "Binance Margin to Delist LUNA on Cross Margin and Isolated Margin",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "9569934734d38d15fc1746fe",
+   "ts": "2022-05-13T00:28:45.571+00:00",
+   "title": "Notice of Removal of Trading Pairs and Updates on Tick Size for Spot Trading Pair - 2022-05-13",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "ef76060531c04aa1bf55d596",
+   "ts": "2022-05-13T06:50:09.208+00:00",
+   "title": "Binance Margin to Delist ANC and MIR on Cross Margin and Isolated Margin",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "5d3144ec6cc43d24376a2fd1",
+   "ts": "2022-05-13T13:16:01.674+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-05-14",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "52c6c8319ab1648046e90397",
+   "ts": "2022-05-19T02:00:01.555+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-05-26",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "66312263e4317f96f16abcc7",
+   "ts": "2022-05-31T02:00:01.938+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-06-02",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "883e84877ca548787843bc03",
+   "ts": "2022-06-07T02:00:02.69+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-06-09",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "6970350115bfed19ad1ef397",
+   "ts": "2022-06-09T03:05:04.185+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-06-16",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "45620937f9e5bcf63aa2c733",
+   "ts": "2022-06-30T04:01:33.806+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-07-07",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "6008911ca70e19d11f2f48fa",
+   "ts": "2022-07-01T06:49:41.71+00:00",
+   "title": "Binance Will Delist GRS, NAS and GO on 2022-07-08",
+   "reason": "included",
+   "tokens": [
+    "GRS",
+    "NAS",
+    "GO"
+   ]
+  },
+  {
+   "id": "a73c0124b619e397d7e5d0e3",
+   "ts": "2022-07-08T09:38:23.633+00:00",
+   "title": "Binance Staking to Delist EZ, TRU, VITE, ANC & MIR",
+   "reason": "excluded_staking_only",
+   "tokens": []
+  },
+  {
+   "id": "91b9d5cf48adfffff43ca5b6",
+   "ts": "2022-08-04T05:33:17.638+00:00",
+   "title": "Binance Will Delist EZ, QSP, BRD, NXS, NAV, MDA and SPARTA on 2022-08-11",
+   "reason": "included",
+   "tokens": [
+    "EZ",
+    "QSP",
+    "BRD",
+    "NXS",
+    "NAV",
+    "MDA",
+    "SPARTA"
+   ]
+  },
+  {
+   "id": "3f452e6bc6abf1930da848cb",
+   "ts": "2022-09-12T07:00:01.479+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-09-16",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "be0d8da57072434eac0fedb7",
+   "ts": "2022-09-15T08:05:20.786+00:00",
+   "title": "Binance Margin Will Delist TCT on Isolated Margin",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "6b64405ac2f4fcaf09115322",
+   "ts": "2022-10-06T04:00:26.479+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-10-14",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "670804f37b7630ab619bc37b",
+   "ts": "2022-10-13T04:00:28.184+00:00",
+   "title": "Binance Will Delist DNT, NBS, BTG and TCT on 2022-10-24",
+   "reason": "included",
+   "tokens": [
+    "DNT",
+    "NBS",
+    "BTG",
+    "TCT"
+   ]
+  },
+  {
+   "id": "b1cac580a99a73fd4b3744a0",
+   "ts": "2022-11-08T11:00:04.536+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-11-18",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "5a24b839d003476a672a442b",
+   "ts": "2022-11-14T04:55:26.864+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-11-15",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "46490ce22db23966443b205e",
+   "ts": "2022-11-17T01:58:36.774+00:00",
+   "title": "Binance Will Delist SRM and RAY Margin Pairs and Binance Earn Products",
+   "reason": "excluded_earn",
+   "tokens": []
+  },
+  {
+   "id": "220dcb53f41f46ab80564bd9",
+   "ts": "2022-11-18T10:00:25.978+00:00",
+   "title": "Binance Margin Will Delist GTO, TRIBE & More Margin Pairs on Cross Margin & Isolated Margin",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "251bf144c3424027482da720",
+   "ts": "2022-11-22T07:21:09.372+00:00",
+   "title": "Binance Will Delist Multiple American-Style Daily Options",
+   "reason": "excluded_options",
+   "tokens": []
+  },
+  {
+   "id": "c84a4a9ffc052963befc2a23",
+   "ts": "2022-11-25T05:00:05.367+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-11-28",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "27e51bed8a390b9a7feabbac",
+   "ts": "2022-11-28T06:45:22.401+00:00",
+   "title": "Binance Margin Will Delist CVC & More Margin Pairs on Cross Margin & Isolated Margin",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "a736f19e1220f7d4e305c252",
+   "ts": "2022-11-30T03:45:05.243+00:00",
+   "title": "Binance Will Delist All American-Style Daily Options",
+   "reason": "excluded_options",
+   "tokens": []
+  },
+  {
+   "id": "523c7c5290a58af656cb306d",
+   "ts": "2022-12-06T11:23:46.754+00:00",
+   "title": "Binance Margin Will Delist ACA and More Margin Pairs on Cross Margin & Isolated Margin",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "7483f81bd4ed00ba1a79b609",
+   "ts": "2022-12-07T03:05:04.52+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-12-09",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "ee23275ea65cfbfc152b8893",
+   "ts": "2022-12-08T11:02:51.715+00:00",
+   "title": "Binance Margin Will Delist BNX, TORN and More Margin Pairs on Cross Margin & Isolated Margin",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "50437ce7890757664635e15f",
+   "ts": "2022-12-15T04:00:04.887+00:00",
+   "title": "Binance Will Delist MITH, TRIBE, REP and BTCST on 2022-12-22",
+   "reason": "included",
+   "tokens": [
+    "MITH",
+    "TRIBE",
+    "REP",
+    "BTCST"
+   ]
+  },
+  {
+   "id": "b13edcb9e12648b653f19252",
+   "ts": "2022-12-15T06:20:21.101+00:00",
+   "title": "Binance Margin Will Delist CHESS, CVP and More Tokens as Borrowable Assets From Cross Margin",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "650874d7e8c2608092a52907",
+   "ts": "2022-12-21T09:14:43.784+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-12-27",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "9f536ec123081872bb7bdc8c",
+   "ts": "2022-12-22T11:59:56.824+00:00",
+   "title": "Binance Margin Will Delist FET, FORTH, KEY, MBOX, WIN as Borrowable Assets From Cross Margin and AION, BTS From Isolated Margin",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "4a272e71f3e9254328bc3c97",
+   "ts": "2022-12-28T02:10:12.555+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2022-12-30",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "a72d17e2508056b724a5603a",
+   "ts": "2022-12-29T05:15:31.854+00:00",
+   "title": "Binance Margin Will Delist ATA, DEXE, HIGH, STPT & WAN as Borrowable Assets From Cross Margin",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "335b462b6968fef142a1149c",
+   "ts": "2023-01-04T03:00:27.284+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-01-06",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "94d386ac93da72f3041255c7",
+   "ts": "2023-01-05T08:25:26.372+00:00",
+   "title": "Binance Margin Will Delist AGLD, DATA, ERN, FIO & TROY as Borrowable Assets From Cross Margin and KEY From Isolated Margin",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "b373b75d87d8c2312be99a6b",
+   "ts": "2023-01-13T06:45:09.526+00:00",
+   "title": "Binance Margin Will Delist FLM, KMD as Borrowable Assets From Cross Margin and COCOS, CREAM, SCRT From Isolated Margin",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "d974df64ee25b7b46e97d830",
+   "ts": "2023-01-19T04:00:06.617+00:00",
+   "title": "Binance Will Delist BEAM on 2023-01-26",
+   "reason": "included",
+   "tokens": [
+    "BEAM"
+   ]
+  },
+  {
+   "id": "0849d6efbd9d7c2d471332a6",
+   "ts": "2023-01-19T07:10:26.735+00:00",
+   "title": "Binance Margin Will Delist NEXO, POLS, QUICK as Borrowable Assets From Cross Margin and ALCX, NEXO, POLS, TOMO Trading Pairs From Isolated Margin",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "50317054b3856cdb48a1426f",
+   "ts": "2023-01-25T05:10:21.071+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-01-27",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "e4ea88e208d6dc0d5074be1e",
+   "ts": "2023-01-27T06:10:03.614+00:00",
+   "title": "Binance Margin Will Delist JST, SNM, SUN as Borrowable Assets From Cross Margin",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "cf2ceb21f258b9a555a91eff",
+   "ts": "2023-02-07T06:00:21.021+00:00",
+   "title": "Binance Margin Will Delist FIO, GNO, IRIS, MLN, WTC Trading Pairs From Isolated Margin",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "eb02ba47f79d636e2dc0ccaf",
+   "ts": "2023-02-08T04:20:28.03+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-02-10",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "3eadd86e56bd8a568f74a796",
+   "ts": "2023-02-20T04:03:05.355+00:00",
+   "title": "Binance Will Delist AION, MIR, ANC on 2023-02-27",
+   "reason": "included",
+   "tokens": [
+    "AION",
+    "MIR",
+    "ANC"
+   ]
+  },
+  {
+   "id": "fd6bde110b218c89539741aa",
+   "ts": "2023-02-22T11:00:03.612+00:00",
+   "title": "Binance Margin Will Delist LOOM, STRAX as Borrowable Assets From Cross Margin and OG From Isolated Margin",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "2450c119590672364e4f7197",
+   "ts": "2023-02-28T02:00:04.336+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-03-02",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "172c8b6be10011c173a11a0a",
+   "ts": "2023-03-14T02:00:04.801+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-03-16",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "0fb38d817dd3238ba6a3c2b2",
+   "ts": "2023-03-17T07:01:15.726+00:00",
+   "title": "Binance Will Delist HNT and WABI on 2023-03-24",
+   "reason": "included",
+   "tokens": [
+    "HNT",
+    "WABI"
+   ]
+  },
+  {
+   "id": "961bf575a434b356ab1f9339",
+   "ts": "2023-03-22T05:10:03.177+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-03-24",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "cfd63c1d2ccd463382ff5e6d",
+   "ts": "2023-03-27T07:00:03.355+00:00",
+   "title": "Binance Margin Will Delist NEBL as a Borrowable Asset From Cross Margin and DCR, NEBL, XVG From Isolated Margin",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "541eb0b4fc4c351adc8a7b18",
+   "ts": "2023-04-04T08:30:04.561+00:00",
+   "title": "Binance Margin Will Delist SNM From Isolated Margin",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "be6bc1f3375961a5ca1bf0d9",
+   "ts": "2023-04-05T02:05:30.406+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-04-07",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "863e1b1eca058510d16cc8e7",
+   "ts": "2023-04-11T07:00:22.114+00:00",
+   "title": "Binance Will Delist QLC, NEBL and AUTO on 2023-04-18",
+   "reason": "included",
+   "tokens": [
+    "QLC",
+    "NEBL",
+    "AUTO"
+   ]
+  },
+  {
+   "id": "462a2313026baf2d015e4e54",
+   "ts": "2023-04-27T06:45:03.228+00:00",
+   "title": "Binance to Delist and Cease Redemption for TRXUP, TRXDOWN, DOTUP, DOTDOWN, LINKUP & LINKDOWN Leveraged Tokens (2023-04-27)",
+   "reason": "excluded_leveraged_token",
+   "tokens": []
+  },
+  {
+   "id": "a00a20b5fbf843042adfed47",
+   "ts": "2023-05-02T03:00:04.484+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-05-04",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "5942c7500759545312208c42",
+   "ts": "2023-05-09T08:01:43.518+00:00",
+   "title": "Binance Margin Will Delist the WRX/BTC Isolated Margin Pair",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "3b4eb27246bee14517ab52e2",
+   "ts": "2023-05-09T09:00:03.457+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-05-11",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "7ffe24727bf8eceea7cc2c72",
+   "ts": "2023-05-16T08:05:28.377+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-05-18",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "fcb784bb4437471395a11b2b",
+   "ts": "2023-05-17T05:00:31.912+00:00",
+   "title": "Binance Margin Will Delist the JASMY/BTC Cross Margin Pair and AMP/BTC, JASMY/BTC, STMX/BTC Isolated Margin Pairs",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "16621947de5a890619595121",
+   "ts": "2023-05-24T03:45:04.672+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-05-26",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "4fff4de78082566491d1bbd4",
+   "ts": "2023-05-26T08:00:01.922+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-06-01",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "e8173c86f535b1f89246595d",
+   "ts": "2023-06-12T06:20:03.118+00:00",
+   "title": "Binance Margin Will Delist the BNT/BUSD, CVX/BTC, POLS/BUSD, POWR/BUSD, STPT/BUSD & STRAX/BUSD Isolated Margin Pairs",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "471313ad97c29f0b83a12fea",
+   "ts": "2023-06-12T07:30:13.494+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-06-14",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "2aad473772bd5184c3359091",
+   "ts": "2023-06-15T07:50:12.709+00:00",
+   "title": "Binance Margin Will Delist MBL/BUSD, PUNDIX/BUSD Cross Margin Pairs and FARM/BUSD, LSK/BUSD, MBL/BUSD, PLA/BUSD, PUNDIX/BUSD, SC/BUSD Isolated Margin Pairs",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "c75a6afad61496ffdd5986f1",
+   "ts": "2023-07-03T08:25:04.022+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-07-05",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "0f4088b5a4938b627f8c62ac",
+   "ts": "2023-07-07T04:10:03.727+00:00",
+   "title": "Binance Margin Will Delist the ATA/BUSD, FORTH/BUSD, JST/BUSD, QTUM/BUSD, SUN/BUSD, ZEN/BUSD & ZRX/BUSD Isolated Margin Pairs",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "5a2a80baa3c9288cf21edb5c",
+   "ts": "2023-07-11T06:15:13.799+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-07-13",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "1da9e78aaf9b8b373c5ab1a5",
+   "ts": "2023-07-11T09:00:07.256+00:00",
+   "title": "Binance to Delist and Cease Redemption for XRPUP and XRPDOWN Leveraged Tokens (2023-07-25)",
+   "reason": "excluded_leveraged_token",
+   "tokens": []
+  },
+  {
+   "id": "4101f26878d5d1827e0336cb",
+   "ts": "2023-07-14T07:00:01.849+00:00",
+   "title": "Binance Margin Will Delist the ALCX/BUSD, ALPACA/BUSD, CVX/BUSD, DOCK/BUSD, LOOM/BUSD, MC/BUSD, MOB/BUSD & TROY/BUSD Isolated Margin Pairs",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "d384834147138594fdfdc3bc",
+   "ts": "2023-07-19T10:00:08.223+00:00",
+   "title": "Binance Margin Will Delist the OGN/BUSD, OSMO/BUSD, REI/BUSD and SPELL/BUSD Cross Margin & Isolated Margin Pairs",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "e16d2e8628cc4794af1c332c",
+   "ts": "2023-07-24T08:45:03.587+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-07-26",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "16a7123f6e1645ac8306436e",
+   "ts": "2023-07-25T02:30:04.237+00:00",
+   "title": "Binance Margin Will Delist the CKB/BUSD, CTK/BUSD, ELF/BUSD, FOR/BUSD, PERP/BUSD, SKL/BUSD & UNFI/BUSD Isolated Margin Pairs",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "7e81b9577b92574a97dd9e0a",
+   "ts": "2023-08-02T03:05:24.325+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-08-04",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "78a1e187cd77439f6b2a54d9",
+   "ts": "2023-08-08T03:10:07.277+00:00",
+   "title": "Binance Margin Will Delist the ASTR/BUSD, AUDIO/BUSD, BAT/BUSD, BSW/BUSD, NMR/BUSD, PEOPLE/BUSD and RSR/BUSD Cross Margin & Isolated Margin Pairs",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "557e1e15ac32eb82351eec57",
+   "ts": "2023-08-09T04:53:26.728+00:00",
+   "title": "Binance to Cease ADAUP & ADADOWN Trading and Subscription Services (2023-08-09)",
+   "reason": "excluded_leveraged_token",
+   "tokens": []
+  },
+  {
+   "id": "292b166596db375d6a20ffe9",
+   "ts": "2023-08-15T02:05:13.766+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-08-17",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "17e904101f07b2828ebcd7f0",
+   "ts": "2023-08-15T07:01:08.922+00:00",
+   "title": "Binance Will Delist SNM, SRM and YFII on 2023-08-22",
+   "reason": "included",
+   "tokens": [
+    "SNM",
+    "SRM",
+    "YFII"
+   ]
+  },
+  {
+   "id": "164af7b44a51bb36ac2ae8e1",
+   "ts": "2023-08-16T03:05:38.357+00:00",
+   "title": "Binance Margin Will Delist the EPX/BUSD, GAL/BUSD, GMX/BUSD, HIVE/BUSD, KLAY/BUSD, RAD/BUSD and TVK/BUSD Cross Margin & Isolated Margin Pairs",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "ee6d5c6da6bc78df16496ae8",
+   "ts": "2023-08-16T08:35:36.844+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-08-18",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "a9a41b489b0576942830c49e",
+   "ts": "2023-08-23T08:00:21.501+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-08-25",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "990a37a1e8a8d7bf7688d1e7",
+   "ts": "2023-08-30T06:00:03.152+00:00",
+   "title": "Binance Margin Will Delist the AMB/BUSD, DASH/BUSD, FIDA/BUSD, HARD/BUSD, HOT/BUSD, IOST/BTC, NULS/BUSD, PORTO/BUSD and REQ/BUSD Cross Margin & Isolated Margin Pairs",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "6756a43b3c7ab36475637d46",
+   "ts": "2023-08-30T08:15:09.241+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-09-01",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "8957efe3da698e989c02c09c",
+   "ts": "2023-09-01T07:09:42.147+00:00",
+   "title": "Binance Margin Will Delist ALPHA/BUSD, ANT/BUSD, BAL/BUSD, COS/BTC, DGB/BUSD, FIRO/BUSD, OOKI/BUSD, QI/BTC, RVN/BUSD & TWT/BUSD Isolated Margin Pairs",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "4ef49f3eb4dd2076cb400aa5",
+   "ts": "2023-09-06T05:00:05.685+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-09-08",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "efdafe4264108eaedc31c9c8",
+   "ts": "2023-09-13T03:25:03.511+00:00",
+   "title": "Notice of Removal of Cross Margin & Isolated Margin Trading Pairs - 2023-09-21",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "be7bb2d0fab8cbe86c582e7f",
+   "ts": "2023-09-13T09:00:03.887+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-09-15",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "9bc7f5e4b7e968bce2d198fe",
+   "ts": "2023-09-20T08:20:03.507+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-09-22",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "98d890be1d1087bb38047351",
+   "ts": "2023-09-21T06:10:03.853+00:00",
+   "title": "Notice of Removal of Isolated Margin Trading Pairs - 2023-09-28",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "b4e753e9ca72fd373ae3d63d",
+   "ts": "2023-09-27T04:00:08.875+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-09-29",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "b0f19b20a22b0a1bf7709773",
+   "ts": "2023-09-29T03:04:12.169+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2023-10-06",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "1fb7f4ab32362e265af5596b",
+   "ts": "2023-10-04T04:10:04.027+00:00",
+   "title": "Notice of Removal of Isolated Margin Trading Pairs - 2023-10-12",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "2977231345e359e00ea1646a",
+   "ts": "2023-10-04T07:05:03.35+00:00",
+   "title": "Notice of Removal of Trading Pairs - 2023-10-06",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "1c0561d7b83e5123d0c478f7",
+   "ts": "2023-10-11T06:20:36.739+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2023-10-19",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "8c84ce018de594eca055dd18",
+   "ts": "2023-10-11T08:25:05.932+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2023-10-13",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "e3ba0f7cb1a13f154f244b30",
+   "ts": "2023-10-18T06:15:03.004+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2023-10-26",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "bae9ff579541832d1e6b3b5a",
+   "ts": "2023-10-18T09:00:03.151+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2023-10-20",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "7d21abbab18e2ff62213138f",
+   "ts": "2023-10-18T10:00:40.905+00:00",
+   "title": "Binance to Delist and Cease Redemption for ADAUP and ADADOWN Leveraged Tokens (2023-11-01)",
+   "reason": "excluded_leveraged_token",
+   "tokens": []
+  },
+  {
+   "id": "53d2d6025ba6fd5734f2ed79",
+   "ts": "2023-10-25T02:00:03.478+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2023-11-02",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "d21f4c860df17d61ca5760ca",
+   "ts": "2023-10-25T06:40:12.581+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2023-10-27",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "ffa8386a2e261637c39b974d",
+   "ts": "2023-11-01T04:10:04.132+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2023-11-09",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "124ee4b538ae95d2913a6e8e",
+   "ts": "2023-11-01T08:20:51.668+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2023-11-03",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "7c3e4909919940e16333a192",
+   "ts": "2023-11-08T05:54:21.67+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2023-11-10",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "558f4bc3e15f34cdb7edebc5",
+   "ts": "2023-11-15T07:15:03.062+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2023-11-17",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "b60df1c5a69ccbec2d517feb",
+   "ts": "2023-11-15T09:00:19.825+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2023-11-23",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "1e1d1b4f94dbf6dd1c1697f8",
+   "ts": "2023-11-17T06:00:06.435+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2023-11-20",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "a4d052eeb4d6389ac0f93f66",
+   "ts": "2023-11-21T03:15:04.32+00:00",
+   "title": "Notice of Removal of SOLBUSD Margin Trading Pair - 2023-11-30",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "8c11e2b483a9b4787acbd681",
+   "ts": "2023-11-22T04:50:34.679+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2023-11-24",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "41cbb85346e775d4467a72e7",
+   "ts": "2023-11-23T04:15:23.504+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2023-12-07",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "85ce93416ef7f9e9873a8adb",
+   "ts": "2023-11-27T06:00:26.207+00:00",
+   "title": "Binance Will Delist BTS, PERL, TORN, WTC on 2023-12-07",
+   "reason": "included",
+   "tokens": [
+    "BTS",
+    "PERL",
+    "TORN",
+    "WTC"
+   ]
+  },
+  {
+   "id": "a8460a2627729449d4054fb1",
+   "ts": "2023-12-22T09:35:04.546+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2023-12-29",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "e7270c54d00e454c7f122140",
+   "ts": "2023-12-27T06:25:03.224+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2023-12-29",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "f43c66a6efd54dcf387bf412",
+   "ts": "2024-01-03T09:05:06.024+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-01-05",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "97a551795e799100cbf4a56e",
+   "ts": "2024-01-10T07:50:05.01+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-01-12",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "e0878d722a5f1ecf2fbe63e5",
+   "ts": "2024-01-16T10:25:25.138+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-01-19",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "c01b09d8a1f6320649696b9a",
+   "ts": "2024-01-24T07:55:08.91+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-01-26",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "7e2f6bc85e55907805c0a0d4",
+   "ts": "2024-01-31T05:30:03.694+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-02-02",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "353f43f2a73c0dfd90230c9b",
+   "ts": "2024-02-06T07:00:12.575+00:00",
+   "title": "Binance Will Delist ANT, MULTI, VAI, XMR on 2024-02-20",
+   "reason": "included",
+   "tokens": [
+    "ANT",
+    "MULTI",
+    "VAI",
+    "XMR"
+   ]
+  },
+  {
+   "id": "8bd6168003e291d9c2fa5d26",
+   "ts": "2024-02-07T03:15:04.155+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2024-02-16",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "052b1a05f0af853d7115ffc7",
+   "ts": "2024-02-07T08:10:03.373+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-02-09",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "b985d27f3f8724048a43414c",
+   "ts": "2024-02-28T05:35:27.711+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-03-01",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "b1de6d5ab4a4f37c0afeaf59",
+   "ts": "2024-03-06T02:30:03.976+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2024-03-15",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "452570231be09928ca0a90e7",
+   "ts": "2024-03-06T05:25:04.796+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-03-08",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "a8129c2a52f3d52d8b4b2976",
+   "ts": "2024-03-13T07:40:32.769+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-03-15",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "88b51df140f2ef278af55545",
+   "ts": "2024-03-20T06:00:07.471+00:00",
+   "title": "Binance Will Delist DREP, MOB, PNT on 2024-04-03",
+   "reason": "included",
+   "tokens": [
+    "DREP",
+    "MOB",
+    "PNT"
+   ]
+  },
+  {
+   "id": "52ad3e66a86e86066d355193",
+   "ts": "2024-03-27T07:34:15.486+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-03-29",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "6d569b0da0449e5b106c283a",
+   "ts": "2024-04-03T03:00:46.4+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-04-05",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "4d8f97fb74697241e42e9de3",
+   "ts": "2024-04-10T07:00:05.683+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-04-12",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "eeb792e19f478597db4cd1db",
+   "ts": "2024-04-24T07:00:11.075+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-04-26",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "fe1c6f7cb67b4b478d50a353",
+   "ts": "2024-05-08T01:55:09.91+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-05-10",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "db989478daa0976e64b738f7",
+   "ts": "2024-05-15T07:00:05.799+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-05-17",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "590bd122059c7a889461bf90",
+   "ts": "2024-05-22T03:00:01.136+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2024-05-31",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "8566d631c8719d594399e51a",
+   "ts": "2024-05-22T05:00:02.528+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-05-24",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "d63978ee760def7e6ba7f1e7",
+   "ts": "2024-05-29T04:00:13.943+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-05-31",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "53aa5ede09ca062f61396d9d",
+   "ts": "2024-06-03T03:00:20.294+00:00",
+   "title": "Binance Will Delist OMG, WAVES, WNXM, XEM on 2024-06-17",
+   "reason": "included",
+   "tokens": [
+    "OMG",
+    "WAVES",
+    "WNXM",
+    "XEM"
+   ]
+  },
+  {
+   "id": "505cd025f6baec46abe2284d",
+   "ts": "2024-06-05T05:30:02.267+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-06-07",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "17b4c74968be549fec9a6930",
+   "ts": "2024-06-12T05:00:01.265+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-06-14",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "3e404c5c7b8c1d722600edd1",
+   "ts": "2024-06-18T06:00:01.882+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2024-06-19",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "5166a84737585a0e9a616d5e",
+   "ts": "2024-06-19T06:00:01.796+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-06-21",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "76aafa3de4a8f58ad094ed93",
+   "ts": "2024-06-26T06:52:34.496+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-06-28",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "3d728ccf3fa8694b62e081fe",
+   "ts": "2024-07-03T05:00:03.754+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-07-05",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "378f1ed0fd3ef1ffe871a805",
+   "ts": "2024-07-05T04:00:07.987+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2024-07-08",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "42dab878bb6597cd6173bb2e",
+   "ts": "2024-07-05T07:12:27.091+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-07-06",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "7bae9ed8737f8e647a50e0d0",
+   "ts": "2024-07-08T07:01:09.631+00:00",
+   "title": "Binance Will Delist BOND, DOCK, MDX, POLS on 2024-07-22",
+   "reason": "included",
+   "tokens": [
+    "BOND",
+    "DOCK",
+    "MDX",
+    "POLS"
+   ]
+  },
+  {
+   "id": "6c68b514d59891cf87fa5a66",
+   "ts": "2024-07-09T04:00:01.416+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2024-07-17",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "07da08f4d778a2549dcd257d",
+   "ts": "2024-07-10T08:55:39.503+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-07-12",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "2bd25fc09132dd11b33f777e",
+   "ts": "2024-07-11T02:00:02.463+00:00",
+   "title": "Binance Margin Will Delist TUSD from Cross and Isolated Margin - 2024-07-24",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "ebe26b703121019a024a37fd",
+   "ts": "2024-07-17T05:00:08.338+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-07-19",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "f0839e2572b64181efeb5c29",
+   "ts": "2024-07-24T06:00:09.034+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-07-26",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "d8cbd24c2b55443bdd064a7e",
+   "ts": "2024-07-31T07:00:08.662+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-08-02",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "b8ab879d0b5f71e97cf3e56b",
+   "ts": "2024-08-12T07:00:11.329+00:00",
+   "title": "Binance Will Delist CVP, EPX, FOR, LOOM, REEF, VGX on 2024-08-26",
+   "reason": "included",
+   "tokens": [
+    "CVP",
+    "EPX",
+    "FOR",
+    "LOOM",
+    "REEF",
+    "VGX"
+   ]
+  },
+  {
+   "id": "9707569535dcd7b926c791a2",
+   "ts": "2024-08-14T04:00:07.883+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2024-08-22",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "665a8d4d039c0a63358f0bff",
+   "ts": "2024-08-14T05:00:08.432+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-08-16",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "cb7b55c6c3f1e259cde30bda",
+   "ts": "2024-08-21T07:00:02.529+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-08-23",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "c52883da336c732868a0cbe6",
+   "ts": "2024-08-28T07:00:03.826+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-08-30",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "45d82a88a85d6cbbf6f863f0",
+   "ts": "2024-09-11T07:00:10.024+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-09-13",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "25004a7a14da7fdcbf362fda",
+   "ts": "2024-09-17T04:30:12.323+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2024-09-24",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "bca2a8ffcc96db836f58fa48",
+   "ts": "2024-09-18T07:00:08.272+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-09-20",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "6e41d5334be70e5f75c35d8e",
+   "ts": "2024-09-25T07:00:06.169+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-09-27",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "acc8e04f02ffe3cacf3d0a55",
+   "ts": "2024-10-02T07:00:03.528+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-10-04",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "e614f8c957354baab6028b3f",
+   "ts": "2024-10-09T07:30:05.581+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-10-11",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "30c37f4ee4206daab0d19c01",
+   "ts": "2024-10-23T06:30:08.538+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-10-25",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "241cf438d0408a934bea538c",
+   "ts": "2024-10-23T07:00:37.062+00:00",
+   "title": "Binance Will Delist IDRT, KP3R, OOKI, UNFI on 2024-11-06",
+   "reason": "included",
+   "tokens": [
+    "IDRT",
+    "KP3R",
+    "OOKI",
+    "UNFI"
+   ]
+  },
+  {
+   "id": "564cf278d2032fa1ff463f65",
+   "ts": "2024-11-06T02:00:04.449+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2024-11-14",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "ba891149f33363d221011626",
+   "ts": "2024-11-06T07:00:16.575+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-11-08",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "8f460717a7c6407dd470d2f0",
+   "ts": "2024-11-20T02:00:16.813+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2024-11-27",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "ddcae2794b57645ec34bb34a",
+   "ts": "2024-11-20T07:00:01.462+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-11-22",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "4eb9ff34ad7ecc69bffb9687",
+   "ts": "2024-11-26T08:30:14.278+00:00",
+   "title": "Binance Will Delist GFT, IRIS, KEY, OAX, REN on 2024-12-10",
+   "reason": "included",
+   "tokens": [
+    "GFT",
+    "IRIS",
+    "KEY",
+    "OAX",
+    "REN"
+   ]
+  },
+  {
+   "id": "e009408f932cd6d8c07663ac",
+   "ts": "2024-11-29T14:10:33.223+00:00",
+   "title": "Suspension of Gifto (GFT) Deposits and Update on the Delisting Date (2024-12-03)",
+   "reason": "excluded_other",
+   "tokens": []
+  },
+  {
+   "id": "0a211d41e3d914417d999bd5",
+   "ts": "2024-12-03T03:00:13.524+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2024-12-11",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "b1f3bf008e26b1d05ceeb355",
+   "ts": "2024-12-04T07:00:01.811+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-12-06",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "7ea7a0ffa81360feff2d5a42",
+   "ts": "2024-12-11T07:00:01.363+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-12-13",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "3323b4beaa3fe22fa6dcb1a9",
+   "ts": "2024-12-18T04:00:22.735+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-12-20",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "2c4bbf629c1f77046d9bba7f",
+   "ts": "2024-12-18T08:01:12.939+00:00",
+   "title": "Binance Will Delist AKRO, BLZ, WRX on 2024-12-25",
+   "reason": "included",
+   "tokens": [
+    "AKRO",
+    "BLZ",
+    "WRX"
+   ]
+  },
+  {
+   "id": "623d3ce93c8b855511eef95f",
+   "ts": "2024-12-24T06:00:04.422+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2024-12-27",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "e748a28e2b53759eaf5546c1",
+   "ts": "2025-01-03T05:00:04.764+00:00",
+   "title": "Notice on Delisting of Binance Loans (Flexible Rate) Loanable Assets - 2025-01-03",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "25993ce0b47a6901adeb83ab",
+   "ts": "2025-01-08T02:00:11.67+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2025-01-16",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "fe6b1a624e96b84fd5522962",
+   "ts": "2025-01-08T07:00:04.48+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-01-10",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "d8253a4a09860982a16a74cf",
+   "ts": "2025-01-14T08:00:04.362+00:00",
+   "title": "Notice on Delisting of Binance Loans (Flexible Rate) Loanable Assets - 2025-01-15",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "793768b37645da5ca06119c6",
+   "ts": "2025-01-15T07:00:13.729+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-01-17",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "cc4f02bed7062072e757b8e4",
+   "ts": "2025-02-04T07:00:01.494+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-02-06",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "98ecbe22e0e671e79ef00580",
+   "ts": "2025-02-11T02:00:06.765+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2025-02-17",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "d581b16d11401f71a649cbfa",
+   "ts": "2025-02-12T07:00:28.506+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-02-14",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "36ffa1d4500ae13c9a72be06",
+   "ts": "2025-02-17T07:00:24.287+00:00",
+   "title": "Binance Will Delist AMB, CLV, STMX, VITE on 2025-02-24",
+   "reason": "included",
+   "tokens": [
+    "AMB",
+    "CLV",
+    "STMX",
+    "VITE"
+   ]
+  },
+  {
+   "id": "c484a3140dec8ec04fdd1aef",
+   "ts": "2025-02-19T04:00:08.036+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-02-21",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "fe77661f5be524ed549232dc",
+   "ts": "2025-02-20T05:00:06.855+00:00",
+   "title": "Binance Earn: Notice on Removal of Dual Investment Token Pairs - 2025-02-21",
+   "reason": "excluded_earn",
+   "tokens": []
+  },
+  {
+   "id": "37fbf8fdeb07cdd7f47c3f71",
+   "ts": "2025-02-26T05:00:19.347+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-02-28",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "a07c14eb6dcb553377ca640e",
+   "ts": "2025-03-04T04:00:08.105+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2025-03-11",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "5273a0f2455a5b489e1aed31",
+   "ts": "2025-03-05T02:00:01.767+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-03-07",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "e9736de0dba1149c298ced87",
+   "ts": "2025-03-12T09:00:11.825+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-03-14",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "3dc812723389a792edd0555d",
+   "ts": "2025-03-18T03:00:15.394+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2025-03-25",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "69133eab909d6f21af065e36",
+   "ts": "2025-03-19T04:00:10.621+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-03-21",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "f6b5e6c3109de76657498dd1",
+   "ts": "2025-03-21T05:50:20.352+00:00",
+   "title": "Binance Will Delist AERGO, AST, BURGER, COMBO, LINA on 2025-03-28",
+   "reason": "included",
+   "tokens": [
+    "AERGO",
+    "AST",
+    "BURGER",
+    "COMBO",
+    "LINA"
+   ]
+  },
+  {
+   "id": "7f57d09b82e72c97fcf10ff8",
+   "ts": "2025-03-26T07:00:01.256+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-03-28 & 2025-03-31",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "de064d593167a04e97607e2b",
+   "ts": "2025-04-08T06:00:07.355+00:00",
+   "title": "Binance Announced the First Batch of Vote to Delist Results and Will Delist BADGER, BAL, BETA, CREAM, CTXC, ELF, FIRO, HARD, NULS, PROS, SNT, TROY, UFT, VIDT on 2025-04-16",
+   "reason": "included",
+   "tokens": [
+    "BADGER",
+    "BAL",
+    "BETA",
+    "CREAM",
+    "CTXC",
+    "ELF",
+    "FIRO",
+    "HARD",
+    "NULS",
+    "PROS",
+    "SNT",
+    "TROY",
+    "UFT",
+    "VIDT"
+   ]
+  },
+  {
+   "id": "39c0c330f824b9d555bc4b3d",
+   "ts": "2025-04-09T07:00:05.065+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-04-11",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "86835c52e5b760a713eaf60d",
+   "ts": "2025-04-15T07:30:04.341+00:00",
+   "title": "Notice of Removal of Spot Trading Pair - 2025-04-15",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "b5b672ec91591e4d2c9b3d7c",
+   "ts": "2025-04-16T07:00:03.31+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-04-18",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "a42f66c8a12b01a2fb2137f4",
+   "ts": "2025-04-24T04:00:05.257+00:00",
+   "title": "Binance Will Delist ALPACA, PDA, VIB, WING on 2025-05-02",
+   "reason": "included",
+   "tokens": [
+    "ALPACA",
+    "PDA",
+    "VIB",
+    "WING"
+   ]
+  },
+  {
+   "id": "04ef14b056dbcf4b5bc1d19d",
+   "ts": "2025-04-25T04:00:07.9+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2025-05-07",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "1578a8c9048845a83e99160f",
+   "ts": "2025-05-07T07:00:02.379+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-05-09",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "40d6f798da5249ecd8821b57",
+   "ts": "2025-05-21T05:00:09.907+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-05-23",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "d1ab3aff782dde27c6672fa5",
+   "ts": "2025-06-04T06:30:02.608+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-06-06",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "e5a991579db0d5751b471a0e",
+   "ts": "2025-06-16T08:00:01.439+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2025-06-18",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "600dd01b6cdec5c726811180",
+   "ts": "2025-06-18T05:00:04.319+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-06-20",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "2a2e82507f5c63f0512eccc8",
+   "ts": "2025-06-23T05:00:01.773+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2025-06-25",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "31d9d65a8f80a9b25750058c",
+   "ts": "2025-06-25T06:00:06.996+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-06-27",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "29874dcba59811c726a63763",
+   "ts": "2025-06-26T07:00:09.887+00:00",
+   "title": "Binance Will Delist ALPHA, BSW, KMD, LEVER, LTO on 2025-07-04",
+   "reason": "included",
+   "tokens": [
+    "ALPHA",
+    "BSW",
+    "KMD",
+    "LEVER",
+    "LTO"
+   ]
+  },
+  {
+   "id": "04983a4d4b1504c082ea12b8",
+   "ts": "2025-07-02T03:00:04.968+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-07-04",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "83df3ca469cf8363e97d162d",
+   "ts": "2025-07-23T08:00:31.403+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-07-25",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "ace0fc30a6a86360e0be1f63",
+   "ts": "2025-07-30T03:00:10.68+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-08-01",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "a20a0039192767c03f836b2d",
+   "ts": "2025-08-04T03:00:13.308+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2025-08-08",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "a51ce90b3946344ce9cec0c3",
+   "ts": "2025-08-06T03:00:11.273+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-08-08",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "6d93cdff7c6a7d163b3ece50",
+   "ts": "2025-08-13T04:00:11.582+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-08-15",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "1f07f93ab6b55c64f189d741",
+   "ts": "2025-08-20T03:00:22.496+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-08-22",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "56ec4ac48a2ff08e4b7df6e6",
+   "ts": "2025-08-27T08:00:37.167+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-08-29",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "c42982c7961af0ce586ee4d6",
+   "ts": "2025-09-03T02:59:54.55+00:00",
+   "title": "Binance Will Delist BAKE, HIFI, SLF on 2025-09-17",
+   "reason": "included",
+   "tokens": [
+    "BAKE",
+    "HIFI",
+    "SLF"
+   ]
+  },
+  {
+   "id": "6f27e4e2fbbff696d6edd9a2",
+   "ts": "2025-09-03T07:00:01.292+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-09-05",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "eafaf302a1969d3b1339bdf0",
+   "ts": "2025-09-10T07:00:04.389+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-09-12",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "6858e82e8d84ea8aa9082dfa",
+   "ts": "2025-09-17T06:30:02.108+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-09-19",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "8926bfde4f063c3869549591",
+   "ts": "2025-09-24T02:00:00.745+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-09-26",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "bc775b30228f16f44e47ad83",
+   "ts": "2025-09-30T08:30:30.976+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2025-10-02",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "3d7de2916df36fbda54d4c12",
+   "ts": "2025-10-01T07:00:18.652+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-10-03",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "a4466ea92333f3e1dda71d72",
+   "ts": "2025-10-08T07:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-10-10",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "72b1abfb87c74cdb0a386d6f",
+   "ts": "2025-10-14T14:22:46.406+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2025-10-16",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "87bee2ea1ce9e4cedde626b5",
+   "ts": "2025-10-15T07:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-10-17",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "1b912da239f54b7466ab638f",
+   "ts": "2025-10-22T01:00:05.512+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2025-10-23",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "a072702e6a62025c73e99419",
+   "ts": "2025-10-22T07:15:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-10-24",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "5fe8c7e36c621a8e95a893b9",
+   "ts": "2025-10-29T03:00:04.123+00:00",
+   "title": "Binance Will Delist FLM, KDA, PERP on 2025-11-12",
+   "reason": "included",
+   "tokens": [
+    "FLM",
+    "KDA",
+    "PERP"
+   ]
+  },
+  {
+   "id": "b541462b31a7a69701654705",
+   "ts": "2025-10-29T06:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-10-31",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "b613d9e08554f18529636731",
+   "ts": "2025-11-04T11:00:01.22+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2025-11-04",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "763a3aa6d0b0212aeddbc1d8",
+   "ts": "2025-11-05T03:45:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-11-07",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "aaf1ba0f85ef920008b45e70",
+   "ts": "2025-11-12T07:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-11-14",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "bbcdc1f33b15372d8aa891fe",
+   "ts": "2025-11-19T07:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-11-21",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "f4fc109ca7fbfd9138fc7fa3",
+   "ts": "2025-11-26T07:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-11-28",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "062fd20a7fa1fd30ad0f6399",
+   "ts": "2025-11-28T02:00:01.173+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2025-12-04",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "c238d52e276ddfffb5ddde20",
+   "ts": "2025-12-03T03:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-12-05",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "287abbbdaf38fa6e8a8bd304",
+   "ts": "2025-12-03T05:00:06.158+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2025-12-04",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "1e10d7d04cb23cbef3cc8ae7",
+   "ts": "2025-12-03T06:29:56.38+00:00",
+   "title": "Binance Will Delist FIS, REI, VOXEL on 2025-12-17",
+   "reason": "included",
+   "tokens": [
+    "FIS",
+    "REI",
+    "VOXEL"
+   ]
+  },
+  {
+   "id": "0869c601bb51aa552b45845a",
+   "ts": "2025-12-04T05:00:04.295+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2025-12-11",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "f348dc70c9ece349b4d257b7",
+   "ts": "2025-12-10T03:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-12-12",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "eb68471aed95cbd3fd2c7aec",
+   "ts": "2025-12-16T05:00:01.65+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2025-12-23",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "1df37d85b1a9dabc7b1d129d",
+   "ts": "2025-12-17T07:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-12-19",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "1fb08412548407815f4aa9d5",
+   "ts": "2025-12-19T07:00:01.801+00:00",
+   "title": "Binance Alpha Will Remove BUZZ, DARK, FROG, GORK, MIRAI, PERRY, RFC, SNAI, TERMINUS (2025-12-19)",
+   "reason": "excluded_alpha",
+   "tokens": []
+  },
+  {
+   "id": "d14add1d872b884f15831f17",
+   "ts": "2025-12-23T04:00:17.232+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2025-12-30",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "808ffc8d5b068afdabae8c98",
+   "ts": "2025-12-24T07:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2025-12-26",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "c965c9380d9bdbac95566a29",
+   "ts": "2025-12-30T05:00:01.41+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-01-06",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "fe194a39b6e35b95f3ef0a50",
+   "ts": "2025-12-31T03:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-01-02",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "863432b7bcbb5319ff0ade28",
+   "ts": "2026-01-01T10:00:01.307+00:00",
+   "title": "Notice of Removal of Spot Trading Pair (BTC/RON) - 2026-01-02",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "c554bee40865d7448213ab50",
+   "ts": "2026-01-02T10:03:31.827+00:00",
+   "title": "Upcoming Changes to RON Spot Trading on Binance",
+   "reason": "excluded_other",
+   "tokens": []
+  },
+  {
+   "id": "8ba4e221a2f93669c4ae4d5c",
+   "ts": "2026-01-02T12:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-01-03",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "66173a64376b105a13c970e2",
+   "ts": "2026-01-02T13:00:01.334+00:00",
+   "title": "Notice of Removal of Margin Trading Pair - 2026-01-03",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "84bf1bdb8aae1949f13c95e3",
+   "ts": "2026-01-08T05:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-01-09",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "cbe361671026428aad4145bc",
+   "ts": "2026-01-12T10:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-01-13",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "109a32bbf20b82be15475d56",
+   "ts": "2026-01-13T04:00:01.133+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-01-15",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "6c0040d8efda8499eb335d0a",
+   "ts": "2026-01-15T02:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-01-16",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "d8dbbbf128fd3ee1485ffd8b",
+   "ts": "2026-01-19T07:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-01-20",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "7f793be0a6f66a1b305ea64f",
+   "ts": "2026-01-20T02:00:01.997+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-01-23",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "5acf18f7c068d401c32f6739",
+   "ts": "2026-01-22T03:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-01-23",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "d251549f699ea20c4121354d",
+   "ts": "2026-01-26T07:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-01-27",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "5da5a95f4f03be98c8e113ce",
+   "ts": "2026-01-27T04:30:13.713+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-01-30",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "55b44bef11948b7c9819df20",
+   "ts": "2026-01-29T06:00:19.39+00:00",
+   "title": "Binance Alpha Will Remove WIZARD, SHOGGOTH, G, FWOG, UFD, BRIC, UPTOP, PORT3, XNAP, MORE, BOMB, BOOST (2026-01-29)",
+   "reason": "excluded_alpha",
+   "tokens": []
+  },
+  {
+   "id": "ae191be53bbf652f5ac19166",
+   "ts": "2026-01-29T08:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-01-30",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "7185859f93fcbcb8ffa0290d",
+   "ts": "2026-02-02T08:59:52.762+00:00",
+   "title": "Binance Will Delist ACA, CHESS, DATA, DF, GHST, NKN on 2026-02-13",
+   "reason": "included",
+   "tokens": [
+    "ACA",
+    "CHESS",
+    "DATA",
+    "DF",
+    "GHST",
+    "NKN"
+   ]
+  },
+  {
+   "id": "722fbcbec2e848b516163983",
+   "ts": "2026-02-02T09:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-02-03",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "dbee7f10f17ff8766533ea28",
+   "ts": "2026-02-03T04:00:01.874+00:00",
+   "title": "Upcoming Changes to CZK Spot Trading on Binance",
+   "reason": "excluded_other",
+   "tokens": []
+  },
+  {
+   "id": "fc769f35088c457c53fe08ab",
+   "ts": "2026-02-03T05:30:08.931+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-02-06",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "39cbedf16a6853960601678c",
+   "ts": "2026-02-05T08:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-02-06",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "cfeb76be7450324edd56a758",
+   "ts": "2026-02-09T07:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-02-10",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "e1a40360f4744229eab7cd40",
+   "ts": "2026-02-10T03:00:12.774+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-02-13",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "c4eca0c2955938f11a1f4e9a",
+   "ts": "2026-02-12T07:45:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-02-13",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "16ca5c6f652b778bf89a2f32",
+   "ts": "2026-02-24T01:00:00+00:00",
+   "title": "Notice of Removal of Margin Token and Trading Pairs - 2026-02-26",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "29a3cc39ee9df79a3ff7bf2c",
+   "ts": "2026-02-25T06:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-02-27",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "5c5d6fc069005dc23648bc07",
+   "ts": "2026-03-03T05:00:15.211+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-03-05",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "9b8c9b73e83c478153c6d07b",
+   "ts": "2026-03-03T09:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-03-06",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "5202d70153076cd51708d9d9",
+   "ts": "2026-03-10T05:00:01.491+00:00",
+   "title": "Binance Margin Will Delist ARDR on 2026-03-12",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "78d8a7e99e09579e47733350",
+   "ts": "2026-03-10T08:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-03-13",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "2e1d3b1d16ba353631b3145c",
+   "ts": "2026-03-12T12:00:09.568+00:00",
+   "title": "Binance Alpha Will Remove MIRROR, SHARDS, FST, DGC, COA, ULTI, TGT, AGON, BNB Card, AFT, PFVS, SGC, RDO, ELDE, MILK, TAT, BOT, SSS, SUBHUB, PLANCK, OOOO (2026-03-12)",
+   "reason": "excluded_alpha",
+   "tokens": []
+  },
+  {
+   "id": "87f91cf02eb5cd5da3ca7093",
+   "ts": "2026-03-13T02:00:04.369+00:00",
+   "title": "Binance VIP Loan Will Delist TUSD and ALCX from Eligible Collateral Asset List - 2026-03-30",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "5581379bd02ff3ce25980557",
+   "ts": "2026-03-18T07:45:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-03-20",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "fe10e792a0c1d6e73e77ce2a",
+   "ts": "2026-03-18T09:00:08.667+00:00",
+   "title": "Binance Will Delist A2Z, FORTH, HOOK, IDEX, LRC, NTRN, RDNT, SXP on 2026-04-01",
+   "reason": "included",
+   "tokens": [
+    "A2Z",
+    "FORTH",
+    "HOOK",
+    "IDEX",
+    "LRC",
+    "NTRN",
+    "RDNT",
+    "SXP"
+   ]
+  },
+  {
+   "id": "a03486e0bb87b67659f136c8",
+   "ts": "2026-03-24T03:00:14.174+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-03-27",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "33fe4b5121ef7799732dee58",
+   "ts": "2026-03-25T06:45:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-03-27",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "83aec354cae14ad63fe72c00",
+   "ts": "2026-03-26T03:00:03.206+00:00",
+   "title": "Binance Margin Will Delist UTK on 2026-03-30",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "6fe77d5a13e0dffd7bebc1d1",
+   "ts": "2026-03-31T07:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-04-02",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "e6e38568db560536c11f917c",
+   "ts": "2026-04-07T08:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-04-10",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "fcc50579df77cd10386face9",
+   "ts": "2026-04-07T09:00:07.906+00:00",
+   "title": "Binance Margin Will Delist WAN on 2026-04-10",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "5b14043cf5a964c2a82eadb9",
+   "ts": "2026-04-09T06:00:05.744+00:00",
+   "title": "Binance Will Delist BIFI, FIO, FUN, MDT, OXT, WAN on 2026-04-23",
+   "reason": "included",
+   "tokens": [
+    "BIFI",
+    "FIO",
+    "FUN",
+    "MDT",
+    "OXT",
+    "WAN"
+   ]
+  },
+  {
+   "id": "a9eb45fcc50f86ed42a398ca",
+   "ts": "2026-04-14T02:00:01.137+00:00",
+   "title": "Binance Will Delist UTK and Support Rebranding and Airdrop Plan on Binance Alpha",
+   "reason": "excluded_alpha",
+   "tokens": []
+  },
+  {
+   "id": "cb31722ccfb1b0c896592a14",
+   "ts": "2026-04-14T03:30:01.903+00:00",
+   "title": "Binance Margin And Loan Will Delist BAR, PIVX, XVG on 2026-04-17",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "110ad0407d68e2eca598431c",
+   "ts": "2026-04-15T10:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-04-17",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "9ef7c7a5857617f69d90a816",
+   "ts": "2026-04-17T09:00:06.263+00:00",
+   "title": "Binance Will Delist DEGO, DENT, TRU on 2026-04-28",
+   "reason": "included",
+   "tokens": [
+    "DEGO",
+    "DENT",
+    "TRU"
+   ]
+  },
+  {
+   "id": "da0cd32f7ae51da1310963c0",
+   "ts": "2026-04-21T05:00:05.017+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-04-24",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "549960c23086bcd95e0a85fa",
+   "ts": "2026-04-21T07:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-04-24",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "9cba2a12dde4fba28a0d2d58",
+   "ts": "2026-04-28T05:00:06.771+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-05-01",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "fff1b732dfa986b075be2446",
+   "ts": "2026-04-28T09:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-05-01",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "cfb095882e3e02fae9f3e6db",
+   "ts": "2026-04-30T09:33:15.547+00:00",
+   "title": "Binance Alpha Will Remove REX, XO, TANSSI, DARKSTAR, YALA, RCADE, RDAC, SKATE, OVL, SLAY, Ghibli (SOL), Ghibli (BSC), PHY, VLR, SVSA, WBAI, EDGEN, FAIR3, MM, BUBB, AICELL, XLAB, SIGHT (2026-04-30)",
+   "reason": "excluded_alpha",
+   "tokens": []
+  },
+  {
+   "id": "79ccb533c1623bbd5e698c92",
+   "ts": "2026-05-05T08:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-05-08",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "7b167b257d9d676f9f09356b",
+   "ts": "2026-05-11T07:00:03.295+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-05-15",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "9a694d01af3c5a51a8f70974",
+   "ts": "2026-05-12T04:45:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-05-15",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "bfab50494e6a051b200d9f91",
+   "ts": "2026-05-13T08:00:04.681+00:00",
+   "title": "Binance Will Delist ATA, FARM, MLN, PHB, SYS on 2026-05-27",
+   "reason": "included",
+   "tokens": [
+    "ATA",
+    "FARM",
+    "MLN",
+    "PHB",
+    "SYS"
+   ]
+  },
+  {
+   "id": "d43b17d9c0765781c1364604",
+   "ts": "2026-05-14T06:00:02.917+00:00",
+   "title": "Binance Alpha Will Remove PRAI, COMMON, PINGPONG, TAKER, JANITOR, GATA, KLINK, CORL, SWTCH, ARIAIP, LONG, ZKWASM, GORILLA, ECHO, LITKEY, FIR, GM, DELABS, DONKEY, WHY (2026-05-14)",
+   "reason": "excluded_alpha",
+   "tokens": []
+  },
+  {
+   "id": "7d50c8b3bad585effae2b78b",
+   "ts": "2026-05-19T03:00:08.915+00:00",
+   "title": "Binance Margin And Binance Loans Will Delist AEUR and AI on 2026-05-22",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "3d556b8ddda459bf1327c90e",
+   "ts": "2026-05-19T08:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-05-22",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "701ae415e6d225fc90e6bd66",
+   "ts": "2026-05-25T11:00:02.381+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-05-29",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "e801d1a3c399fa74454d5cb6",
+   "ts": "2026-05-26T08:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-05-29",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "53e09288b7e8b18391f60275",
+   "ts": "2026-05-29T06:00:02.285+00:00",
+   "title": "Binance Alpha Will Remove DIGI, K, SKI, JOJO, PLAYSOLANA, 恶俗企鹅, PAL, TYCOON, HIPPO, LN, BNBXBT, BOOM  (2026-05-29)",
+   "reason": "excluded_alpha",
+   "tokens": []
+  },
+  {
+   "id": "dabb3d15d463b87759827c3c",
+   "ts": "2026-06-01T09:30:05.389+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-06-05",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "3628271828ebb0a634f4d456",
+   "ts": "2026-06-02T05:15:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-06-05",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "e4361d5dea0817282983d456",
+   "ts": "2026-06-05T03:00:01.333+00:00",
+   "title": "Binance Will Cease Support for Selected Stocks on 2026-06-05",
+   "reason": "excluded_other",
+   "tokens": []
+  },
+  {
+   "id": "c81415f304935fe70c00c445",
+   "ts": "2026-06-05T07:00:07.472+00:00",
+   "title": "Binance Will Delist COS, D, HIGH, MBOX on 2026-06-19",
+   "reason": "included",
+   "tokens": [
+    "COS",
+    "D",
+    "HIGH",
+    "MBOX"
+   ]
+  },
+  {
+   "id": "e275a1b55430e20cf62d2a3a",
+   "ts": "2026-06-08T10:00:04.311+00:00",
+   "title": "Binance Margin And Loan Will Delist XNO, IQ, QUICK, DGB on 2026-06-12",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "7863c55f41053ded6f8662df",
+   "ts": "2026-06-09T08:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-06-12",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "cec6d79e8bb6ac1c47c4be3c",
+   "ts": "2026-06-15T11:00:02.097+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-06-19",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "dfd0ef2f1a3aa521cbe3ab35",
+   "ts": "2026-06-16T09:15:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-06-19",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "75ea6afb17aa51d98a9f2394",
+   "ts": "2026-06-18T07:00:18.693+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include ACT, BLUR, PIVX & QKC on 2026-06-18",
+   "reason": "excluded_other",
+   "tokens": []
+  },
+  {
+   "id": "c106bd5b80fc38ca59be29c8",
+   "ts": "2026-06-22T09:00:11.009+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-06-26",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "33010259b41b735b8e6f3530",
+   "ts": "2026-06-23T08:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-06-26",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "3533f38eef334d4f2eb34354",
+   "ts": "2026-06-26T09:00:15.053+00:00",
+   "title": "Binance Will Delist ALCX, ARDR, NFP, POND on 2026-07-10",
+   "reason": "included",
+   "tokens": [
+    "ALCX",
+    "ARDR",
+    "NFP",
+    "POND"
+   ]
+  },
+  {
+   "id": "dbaa34ae20a4522387007278",
+   "ts": "2026-06-29T07:00:08.506+00:00",
+   "title": "Binance Margin And Loan Will Delist HOT, THE on 2026-07-03",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "23bc264501699a45e93f8829",
+   "ts": "2026-06-30T07:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-07-03",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "5729c403ea4425c0a5db95c7",
+   "ts": "2026-06-30T10:30:10.266+00:00",
+   "title": "Binance Alpha Will Remove TTD, OIK, LUNAI, TOWN, VINU, PUP, CYPR, DGRAM (2026-06-30)",
+   "reason": "excluded_alpha",
+   "tokens": []
+  },
+  {
+   "id": "af453d236e5e0e25c86df95f",
+   "ts": "2026-07-01T08:30:11.19+00:00",
+   "title": "Updated Notice of Removal of Spot Trading Pairs - 2026-07-01",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "5fabd7b82ee3a61777f83104",
+   "ts": "2026-07-06T10:00:01.595+00:00",
+   "title": "Binance Margin And Loan Will Delist TST & IOTX on 2026-07-10",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "18d93f79b2bcb660ebb10256",
+   "ts": "2026-07-07T09:15:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-07-10",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "532a4c7664d37c5f4e0e90de",
+   "ts": "2026-07-13T10:00:10.276+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-07-17",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "8aae77cfe513ca6e985d800e",
+   "ts": "2026-07-14T07:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-07-17",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "62a5b98f083920de4fa295d2",
+   "ts": "2026-07-20T09:00:05.34+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-07-24",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "aefa7a031f5fd6a7eaf64f92",
+   "ts": "2026-07-21T07:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-07-24",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "4949232778e35f99920b02b7",
+   "ts": "2026-07-27T10:00:14.098+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-07-30",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "86bdf1f2aac3247a5ab256ca",
+   "ts": "2026-07-28T07:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-07-31",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "f39bfc917fcd93cffb9ef62e",
+   "ts": "2026-07-30T02:00:06.252+00:00",
+   "title": "Notice Regarding the Removal of AEUR and Conversion of AEUR to EUR",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "8b734988730b3075b8caa67c",
+   "ts": "2026-08-03T03:30:10.683+00:00",
+   "title": "Binance Will Delist ACX, HFT, PIVX, PYR, VANRY, VIC on 2026-08-17",
+   "reason": "included",
+   "tokens": [
+    "ACX",
+    "HFT",
+    "PIVX",
+    "PYR",
+    "VANRY",
+    "VIC"
+   ]
+  },
+  {
+   "id": "7620071fbd8d02e7076f4056",
+   "ts": "2026-08-04T09:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-08-07",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "f01008d2f18bfcace155e2f2",
+   "ts": "2026-08-10T10:00:04.147+00:00",
+   "title": "Binance Margin And Loan Will Delist BTTC & POWR on 2026-08-14",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "99a9eecc59c1754d1e18485e",
+   "ts": "2026-08-11T07:45:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-08-14",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "ae2a5f4a191731efd637859b",
+   "ts": "2026-08-17T10:00:13.377+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-08-21",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "9b35bc553ea00a15b41732ea",
+   "ts": "2026-08-18T08:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-08-21",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "7c51aa6d79edf0cb26701010",
+   "ts": "2026-08-20T06:00:06.608+00:00",
+   "title": "Binance Will Delist ICX, SCRT, STORJ on 2026-09-03",
+   "reason": "included",
+   "tokens": [
+    "ICX",
+    "SCRT",
+    "STORJ"
+   ]
+  },
+  {
+   "id": "09670601ecbebb35a3e8a900",
+   "ts": "2026-08-31T10:00:03.2+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-09-03",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "7c9a8be48ba3a075e473401d",
+   "ts": "2026-09-04T08:30:02.234+00:00",
+   "title": "Binance Alpha Will Remove MTP, BDXN, TALE, BOS, MAIGA, TIMI, SAROS, U (Union), SERAPH, RVV, AIAV, PENGUIN, ODOS, SN3 (2026-09-04)",
+   "reason": "excluded_alpha",
+   "tokens": []
+  },
+  {
+   "id": "76aaa92cecbaf1d6ce50d89f",
+   "ts": "2026-09-08T10:15:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-09-11",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "5f9d4e0f2f84c2f0c63c4e84",
+   "ts": "2026-09-08T10:30:08.75+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs and Collateral - 2026-09-11",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "72ea8f100b31ee3afd264ca9",
+   "ts": "2026-09-10T06:00:12.727+00:00",
+   "title": "Binance Will Delist USDP on 2026-09-24",
+   "reason": "included",
+   "tokens": [
+    "USDP"
+   ]
+  },
+  {
+   "id": "182611458daa393a7811db93",
+   "ts": "2026-09-15T10:00:15.716+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-09-18",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "309302da148d644c89cca783",
+   "ts": "2026-09-16T05:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-09-18",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "0d6d0f2f50cc7ed759d3ec72",
+   "ts": "2026-09-22T06:00:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-09-25",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "5219e17e7279e5a546ead0d9",
+   "ts": "2026-09-22T08:00:01.264+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-09-25",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "2f9c6fe30296816e384ff6cf",
+   "ts": "2026-09-23T07:00:00+00:00",
+   "title": "Binance Will Close UAH Deposits and Withdrawals via Fiat Trade UAH and Delist USDT/UAH Spot Trading Pair",
+   "reason": "excluded_other",
+   "tokens": []
+  },
+  {
+   "id": "f2a35a8a714a792197a68d56",
+   "ts": "2026-09-29T08:00:01.341+00:00",
+   "title": "Binance Margin And Loans Token Delist on 2026-10-02",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "ff710671e1a169d9d203ead6",
+   "ts": "2026-09-29T09:15:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-10-02",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "af178930b4eb4577dc864ce0",
+   "ts": "2026-10-09T08:00:05.136+00:00",
+   "title": "Binance Alpha Will Remove SUP, CUDIS, PYTHIA, BLUM, KIN, DN, GAIA, STRIKE, CDL, KO, VRA, EPT, SLX (SLIMEX), CAI (2026-10-09)",
+   "reason": "excluded_alpha",
+   "tokens": []
+  },
+  {
+   "id": "35af4845744ff6f70a7a3973",
+   "ts": "2026-10-14T06:00:08.049+00:00",
+   "title": "Binance Will Delist EPIC, QUICK on 2026-10-28",
+   "reason": "included",
+   "tokens": [
+    "EPIC",
+    "QUICK"
+   ]
+  },
+  {
+   "id": "dcfe160ede556195187debca",
+   "ts": "2026-10-20T08:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-10-23",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  },
+  {
+   "id": "d1740dfde083745f2942853b",
+   "ts": "2026-10-23T09:30:08.273+00:00",
+   "title": "Binance Alpha Will Remove PTB, AA, OWL, DORA, ELIZAOS, MEMES, 哭哭马  (2026-10-23)",
+   "reason": "excluded_alpha",
+   "tokens": []
+  },
+  {
+   "id": "2d3ed2e1c3d8991fae82072b",
+   "ts": "2026-10-27T08:00:09.176+00:00",
+   "title": "Notice of Removal of Margin Trading Pairs - 2026-10-30",
+   "reason": "excluded_margin_or_loan",
+   "tokens": []
+  },
+  {
+   "id": "7df7482abefdf6fc48000d9c",
+   "ts": "2026-10-27T08:30:00+00:00",
+   "title": "Notice of Removal of Spot Trading Pairs - 2026-10-30",
+   "reason": "excluded_pair_removal",
+   "tokens": []
+  }
+ ]
+}

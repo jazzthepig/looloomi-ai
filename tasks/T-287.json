@@ -1,0 +1,41 @@
+{
+  "id": "T-287",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-11-07",
+  "title": "S-766 S-751 盲复算(Jazz 硬规则的依据):只看台账文字,自己筛整币下架、自己取价、自己做对照",
+  "source": "REFUTATION_LEDGER S-751(预注册 + 结果段)与 S-766。不看 docs/research/t272_delisting.py 与 src/data/signals/delisting_watch.py。数据:events(source = binance,kind = delisting,368 条)、asset_mcap_daily、BTC 同源。统计只用 src/data/evaluation/apparatus.py。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-287.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 368 条筛选结果落文件。② 纳入代币数、有价数、30 天超额中位 / 为负比例 / 对照分位,与台账逐项对照(纳入 / 有价差 ≤ 10%,中位差 ≤ 3pp)。③ 对不上就写出差在哪一步。④ 只算、不改代码、不入库;省着用上下文。",
+    "expect": "报告 docs/research/T-287_s751_blind_recompute.md + t287_recompute.py + t287_results.json;in_review,推 lane-a/T-287。"
+  },
+  "prior_value": "S-751 已是真钱硬规则,只有 lane-b 一个人算过(delisting_watch 复现的那次照抄了它的筛选,不算独立)。",
+  "notes": "盲复算完成(只读台账 S-751 预注册/结果段 + S-766;未读 t272_delisting.py / delisting_watch.py / t272_screening.json)。自己写标题正则筛 368 条 kind=delisting → 纳入 39 条整币下架公告 → 164 个代币(零重复);排除逐条理由落 t287_screening.json(pair_removal 193 / margin_or_loan 109 / alpha 11 / other 6 / leveraged 5 / earn 2 / options 2 / staking 1)。取价 asset_mcap_daily(d0 = 公告 UTC 日收盘,price_on_or_after max_gap 3),超额 = 代币 − BTC 同源;对照 = 同代币 [d0−365, d0−60] 随机日 × 200(种子 20261107),统计全用 src/data/evaluation/apparatus.py。对照台账:纳入公告 39=39 / 纳入代币 164=164 / 有价可算 53=53(无价 111=111) / (a) 30 天超额中位 −37.711% vs 台账 −37.7%(差 0.01pp) / (b) 为负 81.1% vs 81.1% / (c) 对照分位 0.000 vs 0.000(零分布中位 −6.223%,p05 −11.591%) / (d) 2022-23 −2.680%(n=1) vs −2.7%、2024-26 −38.036%(n=52) vs −37.7%(差 0.34pp),同号 / (e) 53 ≥ 40。副:公告前 30 天 −34.396%(台账 −34.4%)、公告当天 −23.733%(−23.7%)、7 天 −13.647%;交叉源 ohlcv_daily:coingecko_pro_ohlc n=32(台账 32)中位 −55.033%(−54.3%)为负 84.4%(84%)。五条判据 (a)(b)(c)(d)(e) 判定全部不变 ⇒ S-751 ✅ 不变,Jazz「公告即剔除」硬规则有第二人独立复算。探索性(需另立预注册):公告前市值三分位 小 −78.77% / 中 −29.89% / 大 −21.55%(小市值段更狠);164 个代币里 111 个(67.7%)在 asset_mcap_daily 无行情 ⇒ 可见的 53 个是能活到被跟踪的那批。产物:docs/research/T-287_s751_blind_recompute.md + t287_recompute.py + t287_results.json + t287_screening.json + scenarios/lane-a-T-287.json。",
+  "verified": {
+    "n_included_events": 39,
+    "n_tokens": 164,
+    "n_priced": 53,
+    "median30": -0.377109,
+    "neg_frac": 0.811321,
+    "pctl": 0.0,
+    "seg_2022_2023": -0.026797,
+    "seg_2024_2026": -0.380358,
+    "cross_source_n": 32,
+    "cross_source_median": -0.550334,
+    "ledger_delta_median_pp": 0.011,
+    "verdict_unchanged": true
+  }
+}
