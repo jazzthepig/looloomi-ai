@@ -400,7 +400,30 @@ def do_commit_batch(jobs: list[dict]) -> list[dict]:
     return res
 
 
+def reload_job(jf: Path, job: Optional[dict]) -> Optional[dict]:
+    """快照之后改过的任务以文件为准;文件已经不在(撤掉 / 被别的任务取代)⇒ None。
+
+    11-07:一轮开始时 `batches()` 一次读入所有任务,之后改过的 paths / message 在成批提交里不生效(单个任务的
+    `process()` 本来就重读)—— 1100h 按旧 paths 提交、删掉的 1251 照样被执行并报 validate 失败。"""
+    if not jf.exists():
+        return None
+    try:
+        return json.loads(jf.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001 — 读不出就用快照里的那份
+        return job
+
+
 def process_batch(items: list[tuple[Path, dict]]) -> None:
+    fresh = []
+    for jf, job in items:
+        j = reload_job(jf, job)
+        if j is None:
+            log(f"· {jf.stem} 已不在队列(撤掉或被取代)—— 跳过")
+            continue
+        fresh.append((jf, j))
+    items = fresh
+    if not items:
+        return
     jobs = []
     for jf, job in items:
         job.setdefault("id", jf.stem)
@@ -510,6 +533,9 @@ def _load(job_file: Path) -> Optional[dict]:
 
 
 def process(job_file: Path) -> None:
+    if not job_file.exists():
+        log(f"· {job_file.stem} 已不在队列(撤掉或被取代)—— 跳过")
+        return
     try:
         job = json.loads(job_file.read_text(encoding="utf-8"))
     except Exception as e:  # noqa: BLE001
