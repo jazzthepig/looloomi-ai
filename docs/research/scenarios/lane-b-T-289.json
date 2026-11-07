@@ -1,0 +1,134 @@
+{
+  "format": "lane-b-scenarios-v1",
+  "task": "T-289",
+  "lane": "lane-b",
+  "created": "2026-11-07",
+  "pre_registered": "S-768 (REFUTATION_LEDGER, 2026-11-07 12:48 UTC)",
+  "claim_family": "对手盘族 +1(S-768 试验计数)",
+  "note": "前向预期;到期按 Brier 结算。每条都写清:量什么、从哪张表取、窗口、阈值、怎么判真。概率在预注册时写定,脚本跑完不回头改;结算读 t289_results.json 里 settle 字段指名的路径(脚本已跑,读数在 docs/research/t289_results.json;报告 docs/research/T-289_squeeze_exclusion.md)。",
+  "unit_of_measurement": "squeeze 事件(拥挤空头被挤:资金费分位 ≤ 0.10 且当日 ≥ +2×ATR14 且当日量 ≥ 3×前 20 日均量,定义照抄 S-726)",
+  "propositions": [
+    {
+      "id": "T289-P1",
+      "statement": "挪一天口径下,squeeze 事件进场(d+2 开盘)到 d+31 收盘的 30 天超额中位 < 0",
+      "metric": "excess_return_median_30d",
+      "source": "perp_bv_daily(perp 永续 OHLCV)+ 事件当日截面等权篮",
+      "window": "事件日 d;进场 d+2 开盘;出场 d+31 收盘",
+      "threshold": "median < 0",
+      "settle": "t289_results.json results.squeeze.30.1.full.excess.median",
+      "probability": 0.75
+    },
+    {
+      "id": "T289-P2",
+      "statement": "同上的实际中位在随机日零分布里的分位 ≤ 0.05(随机日同代号、同年,1,000 次,种子 726)",
+      "metric": "null_percentile_of_actual_median",
+      "source": "apparatus.null_distribution + apparatus.percentile_of",
+      "window": "同上",
+      "threshold": "pctile <= 0.05",
+      "settle": "t289_results.json results.squeeze.30.1.null.full.null_median_pctl",
+      "probability": 0.8
+    },
+    {
+      "id": "T289-P3",
+      "statement": "两半(2020-01-01→2022-12-31 / 2023-01-01→2026-10-31)挪一天口径的 30 天超额中位都 < 0",
+      "metric": "excess_return_median_30d_by_half",
+      "source": "同上",
+      "window": "同上,按事件日中点分两半",
+      "threshold": "H1 median < 0 AND H2 median < 0",
+      "settle": "t289_results.json results.squeeze.30.1.H1.excess.median / .H2.excess.median",
+      "probability": 0.7
+    },
+    {
+      "id": "T289-P4",
+      "statement": "d 日 OI 变化 ≤ −10% 的事件组与其余组的 30 天超额中位同号(不翻号)",
+      "metric": "sign_agreement_of_group_medians",
+      "source": "deriv_metrics_daily(symbol,d,oi_close),按事件符号补取,翻页带 order=",
+      "window": "事件日 d 的 oi_close(d) 与 oi_close(d−1);分组后 30 天超额(原口径 d+1→d+30)",
+      "threshold": "sign(down10_median) == sign(other_median)",
+      "settle": "t289_results.json oi_sub.squeeze.0.down10_excess.median / .other_excess.median",
+      "probability": 0.65
+    },
+    {
+      "id": "T289-P5",
+      "statement": "规则 S(squeeze 后 30 天内不开新票)不降低 R-v2 全书 R,且不使最大回撤变差",
+      "metric": "book_end_equity_and_mdd",
+      "source": "docs/research/t197_results.json tickets.A + t159.nav(f=1%,cap=10,复利,到 2026-09-30)",
+      "window": "全书;两半同报",
+      "threshold": "rule_S.end >= full.end AND rule_S.mdd >= full.mdd",
+      "settle": "t289_results.json rv2.book.rule_S_R_not_lower / .rule_S_mdd_not_worse",
+      "probability": 0.5
+    },
+    {
+      "id": "T289-P6",
+      "statement": "被规则 S 挡掉的票(同币、进场日在 squeeze 事件 d+1…d+30 内)平均 R 低于其余票",
+      "metric": "mean_r_blocked_minus_rest",
+      "source": "t197_results.json tickets.A 的 r;A/B 用 apparatus.block_permute + null_distribution",
+      "window": "票的进场日;块 ≈ 一个月,2,000 次,种子 768",
+      "threshold": "blocked_mean_r < rest_mean_r",
+      "settle": "t289_results.json rv2.blocked_mean_r / .rest_mean_r / .block_boot.p_le_0",
+      "probability": 0.65
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "T289-P1",
+      "statement": "挪一天口径下,squeeze 事件进场(d+2 开盘)到 d+31 收盘的 30 天超额中位 < 0",
+      "metric": "excess_return_median_30d",
+      "source": "perp_bv_daily + 当日截面等权篮",
+      "window": "事件日 d;进场 d+2 开盘;出场 d+31 收盘",
+      "threshold": "median < 0",
+      "settle": "t289_results.json results.squeeze.30.1.full.excess.median",
+      "probability": 0.75
+    },
+    {
+      "id": "T289-P2",
+      "statement": "实际中位在随机日零分布里的分位 ≤ 0.05(1,000 次,种子 726)",
+      "metric": "null_percentile_of_actual_median",
+      "source": "apparatus.null_distribution + percentile_of",
+      "window": "同上",
+      "threshold": "pctile <= 0.05",
+      "settle": "t289_results.json results.squeeze.30.1.null.full.null_median_pctl",
+      "probability": 0.8
+    },
+    {
+      "id": "T289-P3",
+      "statement": "两半的 30 天超额中位都 < 0(2020–22 / 2023–26)",
+      "metric": "excess_return_median_30d_by_half",
+      "source": "同上",
+      "window": "同上,按事件日中点分两半",
+      "threshold": "H1 median < 0 AND H2 median < 0",
+      "settle": "t289_results.json results.squeeze.30.1.H1.excess.median / .H2.excess.median",
+      "probability": 0.7
+    },
+    {
+      "id": "T289-P4",
+      "statement": "d 日 OI 变化 ≤ −10% 组与其余组的 30 天超额中位同号",
+      "metric": "sign_agreement_of_group_medians",
+      "source": "deriv_metrics_daily,按事件符号补取,翻页带 order=",
+      "window": "oi_close(d) vs oi_close(d−1);分组后 30 天超额(原口径)",
+      "threshold": "sign(down10_median) == sign(other_median)",
+      "settle": "t289_results.json oi_sub.squeeze.0.down10_excess.median / .other_excess.median",
+      "probability": 0.65
+    },
+    {
+      "id": "T289-P5",
+      "statement": "规则 S 不降低 R-v2 全书 R,且不使最大回撤变差",
+      "metric": "book_end_equity_and_mdd",
+      "source": "t197_results.json tickets.A + t159.nav(f=1%,cap=10,复利,到 2026-09-30)",
+      "window": "全书;两半同报",
+      "threshold": "rule_S.end >= full.end AND rule_S.mdd >= full.mdd",
+      "settle": "t289_results.json rv2.book.rule_S_R_not_lower / .rule_S_mdd_not_worse",
+      "probability": 0.5
+    },
+    {
+      "id": "T289-P6",
+      "statement": "被挡票平均 R 低于其余票",
+      "metric": "mean_r_blocked_minus_rest",
+      "source": "t197_results.json tickets.A 的 r;apparatus.block_permute + null_distribution",
+      "window": "按进场日排序;块 ≈ 一个月,2,000 次,种子 768",
+      "threshold": "blocked_mean_r < rest_mean_r",
+      "settle": "t289_results.json rv2.blocked_mean_r / .rest_mean_r / .block_boot.p_le_0",
+      "probability": 0.65
+    }
+  ]
+}
