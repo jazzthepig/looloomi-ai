@@ -1,0 +1,28 @@
+{
+  "id": "T-280",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-07",
+  "title": "S-759 Binance USDT 永续下架公告之后 30 天,代币相对 BTC 跑输吗(R-v2 交易的是永续)—— 判据照台账写死",
+  "source": "REFUTATION_LEDGER S-759(先读)与 S-751(价格 / d0 / 对照口径全部复用 lane-b T-272 的 t272_delisting.py)。事件:events(source = binance,kind = perp_delisting,78 条);映射:T-277 补全解析 ∪ T-272 extract_perp_symbols;已在 delisting_watch(整币下架)名单的代号另列。统计只用 src/data/evaluation/apparatus.py。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-280.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 78 条逐条解析、纳入 / 排除理由落文件,先于取价格。② (a)–(e) 原始数字;每段有价代币数。③ 副项只报不判(公告前 30 天、公告当天、7 天)。④ 只算、不改代码、不入库。附 docs/research/scenarios/lane-a-T-280.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-280_perp_delisting.md + t280_perp_delisting.py + t280_results.json;in_review,推 lane-a/T-280。"
+  },
+  "prior_value": "Jazz 11-07 的硬规则只管整币下架;R-v2 在永续上开票,永续下架若同样致命,规则该扩。",
+  "notes": "",
+  "verified": null
+}
