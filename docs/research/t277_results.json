@@ -1,0 +1,1948 @@
+{
+ "task": "T-277",
+ "ledger": "S-756",
+ "seed": 756,
+ "n_perm": 5000,
+ "window": [
+  "2020-07-01",
+  "2026-10-31"
+ ],
+ "cap_frac": 0.4,
+ "generated_at": "2026-11-07T09:24:39.969612+00:00",
+ "events": {
+  "announcements": 818,
+  "token_events": {
+   "usdt": 521,
+   "clean": 547,
+   "literal": 822
+  },
+  "title_rule_drops": {
+   "usdt": {
+    "not_a_launch": 68,
+    "not_perpetual": 29,
+    "coin_margined": 50,
+    "tradfi_equity_index": 51,
+    "not_usdt_perp": 18,
+    "roundup": 5,
+    "leverage_tier_update": 3,
+    "spot_listing": 1,
+    "busd_margined": 14,
+    "no_ticker": 13,
+    "relaunch": 1,
+    "convert_to_standard": 109,
+    "copy_trading_add": 14,
+    "pre_ipo": 6
+   },
+   "clean": {
+    "not_a_launch": 68,
+    "not_perpetual": 29,
+    "coin_margined": 50,
+    "tradfi_equity_index": 51,
+    "roundup": 5,
+    "leverage_tier_update": 3,
+    "spot_listing": 1,
+    "busd_margined": 14,
+    "no_ticker": 17,
+    "relaunch": 1,
+    "convert_to_standard": 109,
+    "copy_trading_add": 14,
+    "pre_ipo": 6
+   },
+   "literal": {
+    "no_ticker": 122
+   }
+  },
+  "note": "主口径 usdt = S-740 标题规则 ∧ USDT 永续;clean = S-740 标题规则;literal = 整表 kind=perp_listing(含 COIN-M / 季度 / 层级调整等)。三种分组口径都出 (a)–(e),不挑结果。"
+ },
+ "replay": {
+  "scan_stopped": null,
+  "hole_days": [
+   "2022-02-26",
+   "2022-02-27",
+   "2022-02-28",
+   "2022-04-01",
+   "2022-04-02",
+   "2026-10-28"
+  ],
+  "tickets_scanned": 778,
+  "tickets_taken": 145,
+  "tickets_with_r": 145,
+  "symbols": 257,
+  "gate_days": 2500,
+  "window": [
+   "2020-07-01",
+   "2026-10-31"
+  ],
+  "note": "票 = T251.scan + T251.simulate(40% 档) 里真正成交且有 R 的票"
+ },
+ "variants": {
+  "usdt/signal_d": {
+   "group": {
+    "n_a": 0,
+    "n_b": 145,
+    "n_total": 145,
+    "mean_a": null,
+    "mean_b": 0.37471082558646346,
+    "diff_a_minus_b": null,
+    "a": {
+     "n": 0
+    },
+    "b": {
+     "n": 145,
+     "sum_r": 54.3331,
+     "mean_r": 0.3747,
+     "med_r": -0.6102,
+     "min": -1.0427,
+     "max": 16.065,
+     "win_pct": 32.4
+    }
+   },
+   "perm": {
+    "actual_diff": null,
+    "null_mean": null,
+    "null_p05": null,
+    "null_p95": null,
+    "pct_of_actual": null,
+    "n_perm": 5000,
+    "seed": 756,
+    "n_a": 0,
+    "n_total": 145,
+    "note": "组为空(n_A=0, n_total=145)⇒ 置换不适用"
+   },
+   "segments": {
+    "seg1": {
+     "label": "2020-07-01 → 2023-07-01",
+     "n_a": 0,
+     "n_b": 73,
+     "n_total": 73,
+     "mean_a": null,
+     "mean_b": 0.5104072280538127,
+     "diff_a_minus_b": null,
+     "a": {
+      "n": 0
+     },
+     "b": {
+      "n": 73,
+      "sum_r": 37.2597,
+      "mean_r": 0.5104,
+      "med_r": -0.6498,
+      "min": -1.0427,
+      "max": 15.9042,
+      "win_pct": 34.2
+     }
+    },
+    "seg2": {
+     "label": "2023-07-01 → 2026-10-31",
+     "n_a": 0,
+     "n_b": 72,
+     "n_total": 72,
+     "mean_a": null,
+     "mean_b": 0.2371297508626233,
+     "diff_a_minus_b": null,
+     "a": {
+      "n": 0
+     },
+     "b": {
+      "n": 72,
+      "sum_r": 17.0733,
+      "mean_r": 0.2371,
+      "med_r": -0.6052,
+      "min": -1.0274,
+      "max": 16.065,
+      "win_pct": 30.6
+     }
+    },
+    "diff_seg1": null,
+    "diff_seg2": null,
+    "same_sign": null
+   },
+   "judge": {
+    "checks": {
+     "a": null,
+     "b": null,
+     "c": null,
+     "d": false,
+     "e": null
+    },
+    "all_pass": false,
+    "failed": [
+     "d"
+    ],
+    "undecidable": [
+     "a",
+     "b",
+     "c",
+     "e"
+    ]
+   }
+  },
+  "usdt/entry_d": {
+   "group": {
+    "n_a": 0,
+    "n_b": 145,
+    "n_total": 145,
+    "mean_a": null,
+    "mean_b": 0.37471082558646346,
+    "diff_a_minus_b": null,
+    "a": {
+     "n": 0
+    },
+    "b": {
+     "n": 145,
+     "sum_r": 54.3331,
+     "mean_r": 0.3747,
+     "med_r": -0.6102,
+     "min": -1.0427,
+     "max": 16.065,
+     "win_pct": 32.4
+    }
+   },
+   "perm": {
+    "actual_diff": null,
+    "null_mean": null,
+    "null_p05": null,
+    "null_p95": null,
+    "pct_of_actual": null,
+    "n_perm": 5000,
+    "seed": 756,
+    "n_a": 0,
+    "n_total": 145,
+    "note": "组为空(n_A=0, n_total=145)⇒ 置换不适用"
+   },
+   "segments": {
+    "seg1": {
+     "label": "2020-07-01 → 2023-07-01",
+     "n_a": 0,
+     "n_b": 72,
+     "n_total": 72,
+     "mean_a": null,
+     "mean_b": 0.5317242013174065,
+     "diff_a_minus_b": null,
+     "a": {
+      "n": 0
+     },
+     "b": {
+      "n": 72,
+      "sum_r": 38.2841,
+      "mean_r": 0.5317,
+      "med_r": -0.6102,
+      "min": -1.0427,
+      "max": 15.9042,
+      "win_pct": 34.7
+     }
+    },
+    "seg2": {
+     "label": "2023-07-01 → 2026-10-31",
+     "n_a": 0,
+     "n_b": 73,
+     "n_total": 73,
+     "mean_a": null,
+     "mean_b": 0.21984831801621818,
+     "diff_a_minus_b": null,
+     "a": {
+      "n": 0
+     },
+     "b": {
+      "n": 73,
+      "sum_r": 16.0489,
+      "mean_r": 0.2198,
+      "med_r": -0.6053,
+      "min": -1.0274,
+      "max": 16.065,
+      "win_pct": 30.1
+     }
+    },
+    "diff_seg1": null,
+    "diff_seg2": null,
+    "same_sign": null
+   },
+   "judge": {
+    "checks": {
+     "a": null,
+     "b": null,
+     "c": null,
+     "d": false,
+     "e": null
+    },
+    "all_pass": false,
+    "failed": [
+     "d"
+    ],
+    "undecidable": [
+     "a",
+     "b",
+     "c",
+     "e"
+    ]
+   }
+  },
+  "clean/signal_d": {
+   "group": {
+    "n_a": 1,
+    "n_b": 144,
+    "n_total": 145,
+    "mean_a": 3.564666914391811,
+    "mean_b": 0.3525583527475374,
+    "diff_a_minus_b": 3.2121085616442735,
+    "a": {
+     "n": 1,
+     "sum_r": 3.5647,
+     "mean_r": 3.5647,
+     "med_r": 3.5647,
+     "min": 3.5647,
+     "max": 3.5647,
+     "win_pct": 100.0
+    },
+    "b": {
+     "n": 144,
+     "sum_r": 50.7684,
+     "mean_r": 0.3526,
+     "med_r": -0.6102,
+     "min": -1.0427,
+     "max": 16.065,
+     "win_pct": 31.9
+    }
+   },
+   "perm": {
+    "actual_diff": 3.2121085616442735,
+    "null_mean": -0.02777772060338493,
+    "null_p05": -1.412475335769541,
+    "null_p95": 3.4980767701430113,
+    "pct_of_actual": 0.9278,
+    "n_perm": 5000,
+    "seed": 756,
+    "n_a": 1,
+    "n_total": 145
+   },
+   "segments": {
+    "seg1": {
+     "label": "2020-07-01 → 2023-07-01",
+     "n_a": 0,
+     "n_b": 73,
+     "n_total": 73,
+     "mean_a": null,
+     "mean_b": 0.5104072280538127,
+     "diff_a_minus_b": null,
+     "a": {
+      "n": 0
+     },
+     "b": {
+      "n": 73,
+      "sum_r": 37.2597,
+      "mean_r": 0.5104,
+      "med_r": -0.6498,
+      "min": -1.0427,
+      "max": 15.9042,
+      "win_pct": 34.2
+     }
+    },
+    "seg2": {
+     "label": "2023-07-01 → 2026-10-31",
+     "n_a": 1,
+     "n_b": 71,
+     "n_total": 72,
+     "mean_a": 3.564666914391811,
+     "mean_b": 0.1902630302495362,
+     "diff_a_minus_b": 3.374403884142275,
+     "a": {
+      "n": 1,
+      "sum_r": 3.5647,
+      "mean_r": 3.5647,
+      "med_r": 3.5647,
+      "min": 3.5647,
+      "max": 3.5647,
+      "win_pct": 100.0
+     },
+     "b": {
+      "n": 71,
+      "sum_r": 13.5087,
+      "mean_r": 0.1903,
+      "med_r": -0.6053,
+      "min": -1.0274,
+      "max": 16.065,
+      "win_pct": 29.6
+     }
+    },
+    "diff_seg1": null,
+    "diff_seg2": 3.374403884142275,
+    "same_sign": null
+   },
+   "judge": {
+    "checks": {
+     "a": false,
+     "b": false,
+     "c": false,
+     "d": false,
+     "e": null
+    },
+    "all_pass": false,
+    "failed": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "undecidable": [
+     "e"
+    ]
+   }
+  },
+  "clean/entry_d": {
+   "group": {
+    "n_a": 1,
+    "n_b": 144,
+    "n_total": 145,
+    "mean_a": 3.564666914391811,
+    "mean_b": 0.3525583527475374,
+    "diff_a_minus_b": 3.2121085616442735,
+    "a": {
+     "n": 1,
+     "sum_r": 3.5647,
+     "mean_r": 3.5647,
+     "med_r": 3.5647,
+     "min": 3.5647,
+     "max": 3.5647,
+     "win_pct": 100.0
+    },
+    "b": {
+     "n": 144,
+     "sum_r": 50.7684,
+     "mean_r": 0.3526,
+     "med_r": -0.6102,
+     "min": -1.0427,
+     "max": 16.065,
+     "win_pct": 31.9
+    }
+   },
+   "perm": {
+    "actual_diff": 3.2121085616442735,
+    "null_mean": -0.02777772060338493,
+    "null_p05": -1.412475335769541,
+    "null_p95": 3.4980767701430113,
+    "pct_of_actual": 0.9278,
+    "n_perm": 5000,
+    "seed": 756,
+    "n_a": 1,
+    "n_total": 145
+   },
+   "segments": {
+    "seg1": {
+     "label": "2020-07-01 → 2023-07-01",
+     "n_a": 0,
+     "n_b": 72,
+     "n_total": 72,
+     "mean_a": null,
+     "mean_b": 0.5317242013174065,
+     "diff_a_minus_b": null,
+     "a": {
+      "n": 0
+     },
+     "b": {
+      "n": 72,
+      "sum_r": 38.2841,
+      "mean_r": 0.5317,
+      "med_r": -0.6102,
+      "min": -1.0427,
+      "max": 15.9042,
+      "win_pct": 34.7
+     }
+    },
+    "seg2": {
+     "label": "2023-07-01 → 2026-10-31",
+     "n_a": 1,
+     "n_b": 72,
+     "n_total": 73,
+     "mean_a": 3.564666914391811,
+     "mean_b": 0.17339250417766827,
+     "diff_a_minus_b": 3.3912744102141428,
+     "a": {
+      "n": 1,
+      "sum_r": 3.5647,
+      "mean_r": 3.5647,
+      "med_r": 3.5647,
+      "min": 3.5647,
+      "max": 3.5647,
+      "win_pct": 100.0
+     },
+     "b": {
+      "n": 72,
+      "sum_r": 12.4843,
+      "mean_r": 0.1734,
+      "med_r": -0.6053,
+      "min": -1.0274,
+      "max": 16.065,
+      "win_pct": 29.2
+     }
+    },
+    "diff_seg1": null,
+    "diff_seg2": 3.3912744102141428,
+    "same_sign": null
+   },
+   "judge": {
+    "checks": {
+     "a": false,
+     "b": false,
+     "c": false,
+     "d": false,
+     "e": null
+    },
+    "all_pass": false,
+    "failed": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "undecidable": [
+     "e"
+    ]
+   }
+  },
+  "literal/signal_d": {
+   "group": {
+    "n_a": 4,
+    "n_b": 141,
+    "n_total": 145,
+    "mean_a": 1.515027381661568,
+    "mean_b": 0.3423614197403612,
+    "diff_a_minus_b": 1.1726659619212068,
+    "a": {
+     "n": 4,
+     "sum_r": 6.0601,
+     "mean_r": 1.515,
+     "med_r": 2.6716,
+     "min": -0.0973,
+     "max": 3.5647,
+     "win_pct": 50.0
+    },
+    "b": {
+     "n": 141,
+     "sum_r": 48.273,
+     "mean_r": 0.3424,
+     "med_r": -0.6498,
+     "min": -1.0427,
+     "max": 16.065,
+     "win_pct": 31.9
+    }
+   },
+   "perm": {
+    "actual_diff": 1.1726659619212068,
+    "null_mean": 0.006473488241504411,
+    "null_p05": -1.318669502073758,
+    "null_p95": 3.4430953462294234,
+    "pct_of_actual": 0.8402,
+    "n_perm": 5000,
+    "seed": 756,
+    "n_a": 4,
+    "n_total": 145
+   },
+   "segments": {
+    "seg1": {
+     "label": "2020-07-01 → 2023-07-01",
+     "n_a": 3,
+     "n_b": 70,
+     "n_total": 73,
+     "mean_a": 0.8318142040848203,
+     "mean_b": 0.4966326433667694,
+     "diff_a_minus_b": 0.33518156071805094,
+     "a": {
+      "n": 3,
+      "sum_r": 2.4954,
+      "mean_r": 0.8318,
+      "med_r": -0.0788,
+      "min": -0.0973,
+      "max": 2.6716,
+      "win_pct": 33.3
+     },
+     "b": {
+      "n": 70,
+      "sum_r": 34.7643,
+      "mean_r": 0.4966,
+      "med_r": -0.6516,
+      "min": -1.0427,
+      "max": 15.9042,
+      "win_pct": 34.3
+     }
+    },
+    "seg2": {
+     "label": "2023-07-01 → 2026-10-31",
+     "n_a": 1,
+     "n_b": 71,
+     "n_total": 72,
+     "mean_a": 3.564666914391811,
+     "mean_b": 0.1902630302495362,
+     "diff_a_minus_b": 3.374403884142275,
+     "a": {
+      "n": 1,
+      "sum_r": 3.5647,
+      "mean_r": 3.5647,
+      "med_r": 3.5647,
+      "min": 3.5647,
+      "max": 3.5647,
+      "win_pct": 100.0
+     },
+     "b": {
+      "n": 71,
+      "sum_r": 13.5087,
+      "mean_r": 0.1903,
+      "med_r": -0.6053,
+      "min": -1.0274,
+      "max": 16.065,
+      "win_pct": 29.6
+     }
+    },
+    "diff_seg1": 0.33518156071805094,
+    "diff_seg2": 3.374403884142275,
+    "same_sign": true
+   },
+   "judge": {
+    "checks": {
+     "a": false,
+     "b": false,
+     "c": false,
+     "d": false,
+     "e": true
+    },
+    "all_pass": false,
+    "failed": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "undecidable": []
+   }
+  },
+  "literal/entry_d": {
+   "group": {
+    "n_a": 4,
+    "n_b": 141,
+    "n_total": 145,
+    "mean_a": 1.515027381661568,
+    "mean_b": 0.3423614197403612,
+    "diff_a_minus_b": 1.1726659619212068,
+    "a": {
+     "n": 4,
+     "sum_r": 6.0601,
+     "mean_r": 1.515,
+     "med_r": 2.6716,
+     "min": -0.0973,
+     "max": 3.5647,
+     "win_pct": 50.0
+    },
+    "b": {
+     "n": 141,
+     "sum_r": 48.273,
+     "mean_r": 0.3424,
+     "med_r": -0.6498,
+     "min": -1.0427,
+     "max": 16.065,
+     "win_pct": 31.9
+    }
+   },
+   "perm": {
+    "actual_diff": 1.1726659619212068,
+    "null_mean": 0.006473488241504411,
+    "null_p05": -1.318669502073758,
+    "null_p95": 3.4430953462294234,
+    "pct_of_actual": 0.8402,
+    "n_perm": 5000,
+    "seed": 756,
+    "n_a": 4,
+    "n_total": 145
+   },
+   "segments": {
+    "seg1": {
+     "label": "2020-07-01 → 2023-07-01",
+     "n_a": 3,
+     "n_b": 69,
+     "n_total": 72,
+     "mean_a": 0.8318142040848203,
+     "mean_b": 0.5186768098927365,
+     "diff_a_minus_b": 0.31313739419208386,
+     "a": {
+      "n": 3,
+      "sum_r": 2.4954,
+      "mean_r": 0.8318,
+      "med_r": -0.0788,
+      "min": -0.0973,
+      "max": 2.6716,
+      "win_pct": 33.3
+     },
+     "b": {
+      "n": 69,
+      "sum_r": 35.7887,
+      "mean_r": 0.5187,
+      "med_r": -0.6516,
+      "min": -1.0427,
+      "max": 15.9042,
+      "win_pct": 34.8
+     }
+    },
+    "seg2": {
+     "label": "2023-07-01 → 2026-10-31",
+     "n_a": 1,
+     "n_b": 72,
+     "n_total": 73,
+     "mean_a": 3.564666914391811,
+     "mean_b": 0.17339250417766827,
+     "diff_a_minus_b": 3.3912744102141428,
+     "a": {
+      "n": 1,
+      "sum_r": 3.5647,
+      "mean_r": 3.5647,
+      "med_r": 3.5647,
+      "min": 3.5647,
+      "max": 3.5647,
+      "win_pct": 100.0
+     },
+     "b": {
+      "n": 72,
+      "sum_r": 12.4843,
+      "mean_r": 0.1734,
+      "med_r": -0.6053,
+      "min": -1.0274,
+      "max": 16.065,
+      "win_pct": 29.2
+     }
+    },
+    "diff_seg1": 0.31313739419208386,
+    "diff_seg2": 3.3912744102141428,
+    "same_sign": true
+   },
+   "judge": {
+    "checks": {
+     "a": false,
+     "b": false,
+     "c": false,
+     "d": false,
+     "e": true
+    },
+    "all_pass": false,
+    "failed": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "undecidable": []
+   }
+  }
+ },
+ "primary": "usdt/signal_d",
+ "primary_tickets": [
+  {
+   "tid": "LTC:2020-08-17",
+   "sym": "LTC",
+   "d": "2020-08-17",
+   "r": -0.7457,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "BCH:2020-10-14",
+   "sym": "BCH",
+   "d": "2020-10-14",
+   "r": -0.0973,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "LTC:2020-10-21",
+   "sym": "LTC",
+   "d": "2020-10-21",
+   "r": 2.7548,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "BCH:2020-11-21",
+   "sym": "BCH",
+   "d": "2020-11-21",
+   "r": -1.0267,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "DASH:2020-11-21",
+   "sym": "DASH",
+   "d": "2020-11-21",
+   "r": 0.0001,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ETC:2020-11-21",
+   "sym": "ETC",
+   "d": "2020-11-21",
+   "r": -1.0263,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "QTUM:2020-11-21",
+   "sym": "QTUM",
+   "d": "2020-11-21",
+   "r": -1.028,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "VET:2020-11-21",
+   "sym": "VET",
+   "d": "2020-11-21",
+   "r": 0.4983,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "BAT:2020-11-23",
+   "sym": "BAT",
+   "d": "2020-11-23",
+   "r": -1.0237,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ONT:2020-11-24",
+   "sym": "ONT",
+   "d": "2020-11-24",
+   "r": -1.0237,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "XTZ:2020-11-24",
+   "sym": "XTZ",
+   "d": "2020-11-24",
+   "r": -1.0229,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "BCH:2021-01-03",
+   "sym": "BCH",
+   "d": "2021-01-03",
+   "r": -0.0788,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ATOM:2021-01-06",
+   "sym": "ATOM",
+   "d": "2021-01-06",
+   "r": -0.5631,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "XTZ:2021-01-06",
+   "sym": "XTZ",
+   "d": "2021-01-06",
+   "r": -0.3698,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "DASH:2021-01-10",
+   "sym": "DASH",
+   "d": "2021-01-10",
+   "r": -1.0185,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "XRP:2021-04-05",
+   "sym": "XRP",
+   "d": "2021-04-05",
+   "r": 1.2473,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ETC:2021-04-06",
+   "sym": "ETC",
+   "d": "2021-04-06",
+   "r": 13.008,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "YFI:2021-04-08",
+   "sym": "YFI",
+   "d": "2021-04-08",
+   "r": -0.2618,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ADA:2021-08-10",
+   "sym": "ADA",
+   "d": "2021-08-10",
+   "r": 3.7638,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "TRX:2021-08-11",
+   "sym": "TRX",
+   "d": "2021-08-11",
+   "r": -0.0732,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ALGO:2021-08-20",
+   "sym": "ALGO",
+   "d": "2021-08-20",
+   "r": 2.2238,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "LTC:2021-09-03",
+   "sym": "LTC",
+   "d": "2021-09-03",
+   "r": -1.0268,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "BCH:2021-09-06",
+   "sym": "BCH",
+   "d": "2021-09-06",
+   "r": -1.029,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "THETA:2021-09-06",
+   "sym": "THETA",
+   "d": "2021-09-06",
+   "r": -1.0213,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "XLM:2021-09-06",
+   "sym": "XLM",
+   "d": "2021-09-06",
+   "r": -1.0274,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "OCEAN:2021-10-21",
+   "sym": "OCEAN",
+   "d": "2021-10-21",
+   "r": -0.6516,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "VET:2021-10-21",
+   "sym": "VET",
+   "d": "2021-10-21",
+   "r": 0.6029,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ZEC:2021-10-22",
+   "sym": "ZEC",
+   "d": "2021-10-22",
+   "r": -1.0297,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "GRT:2021-10-25",
+   "sym": "GRT",
+   "d": "2021-10-25",
+   "r": -0.1109,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "NEAR:2021-10-25",
+   "sym": "NEAR",
+   "d": "2021-10-25",
+   "r": -1.0229,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "DOGE:2021-10-28",
+   "sym": "DOGE",
+   "d": "2021-10-28",
+   "r": -0.5363,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "LRC:2021-10-28",
+   "sym": "LRC",
+   "d": "2021-10-28",
+   "r": 15.4537,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "MANA:2021-10-28",
+   "sym": "MANA",
+   "d": "2021-10-28",
+   "r": 15.9042,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "BAT:2021-10-29",
+   "sym": "BAT",
+   "d": "2021-10-29",
+   "r": 1.4532,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "FLM:2021-11-07",
+   "sym": "FLM",
+   "d": "2021-11-07",
+   "r": -0.5606,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "TRX:2021-11-15",
+   "sym": "TRX",
+   "d": "2021-11-15",
+   "r": -1.0268,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "STMX:2021-11-25",
+   "sym": "STMX",
+   "d": "2021-11-25",
+   "r": -0.6102,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "SC:2021-11-26",
+   "sym": "SC",
+   "d": "2021-11-26",
+   "r": -1.0192,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "RSR:2021-11-29",
+   "sym": "RSR",
+   "d": "2021-11-29",
+   "r": -1.0184,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "BTC:2023-01-13",
+   "sym": "BTC",
+   "d": "2023-01-13",
+   "r": 2.6716,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "FTM:2023-01-13",
+   "sym": "FTM",
+   "d": "2023-01-13",
+   "r": 3.8487,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "OP:2023-01-13",
+   "sym": "OP",
+   "d": "2023-01-13",
+   "r": 2.8627,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "AAVE:2023-01-14",
+   "sym": "AAVE",
+   "d": "2023-01-14",
+   "r": 0.4816,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ATOM:2023-01-14",
+   "sym": "ATOM",
+   "d": "2023-01-14",
+   "r": 0.3838,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ATA:2023-01-31",
+   "sym": "ATA",
+   "d": "2023-01-31",
+   "r": 1.1342,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "MKR:2023-02-07",
+   "sym": "MKR",
+   "d": "2023-02-07",
+   "r": -1.0274,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ZEN:2023-02-15",
+   "sym": "ZEN",
+   "d": "2023-02-15",
+   "r": -0.6833,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "DOT:2023-02-17",
+   "sym": "DOT",
+   "d": "2023-02-17",
+   "r": -0.6498,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ICP:2023-02-17",
+   "sym": "ICP",
+   "d": "2023-02-17",
+   "r": -1.0223,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "KLAY:2023-02-17",
+   "sym": "KLAY",
+   "d": "2023-02-17",
+   "r": -0.736,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "MKR:2023-03-01",
+   "sym": "MKR",
+   "d": "2023-03-01",
+   "r": -0.803,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ZRX:2023-03-01",
+   "sym": "ZRX",
+   "d": "2023-03-01",
+   "r": -0.8245,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "SNX:2023-03-05",
+   "sym": "SNX",
+   "d": "2023-03-05",
+   "r": -0.6711,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "BTC:2023-03-17",
+   "sym": "BTC",
+   "d": "2023-03-17",
+   "r": 0.1206,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "XRP:2023-03-21",
+   "sym": "XRP",
+   "d": "2023-03-21",
+   "r": 0.5354,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ICX:2023-04-01",
+   "sym": "ICX",
+   "d": "2023-04-01",
+   "r": 0.5536,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "DOGE:2023-04-03",
+   "sym": "DOGE",
+   "d": "2023-04-03",
+   "r": -0.7225,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ONT:2023-04-06",
+   "sym": "ONT",
+   "d": "2023-04-06",
+   "r": -1.025,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "NKN:2023-04-09",
+   "sym": "NKN",
+   "d": "2023-04-09",
+   "r": -1.0261,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "WOO:2023-04-12",
+   "sym": "WOO",
+   "d": "2023-04-12",
+   "r": 0.1062,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "AVAX:2023-04-17",
+   "sym": "AVAX",
+   "d": "2023-04-17",
+   "r": -1.0394,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ATA:2023-04-18",
+   "sym": "ATA",
+   "d": "2023-04-18",
+   "r": -1.0308,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ZIL:2023-04-18",
+   "sym": "ZIL",
+   "d": "2023-04-18",
+   "r": -1.0364,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ALPHA:2023-04-29",
+   "sym": "ALPHA",
+   "d": "2023-04-29",
+   "r": -1.0157,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ARPA:2023-05-12",
+   "sym": "ARPA",
+   "d": "2023-05-12",
+   "r": 1.1181,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "KAVA:2023-05-14",
+   "sym": "KAVA",
+   "d": "2023-05-14",
+   "r": 0.1371,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "XRP:2023-05-30",
+   "sym": "XRP",
+   "d": "2023-05-30",
+   "r": -1.0427,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "NKN:2023-06-02",
+   "sym": "NKN",
+   "d": "2023-06-02",
+   "r": -1.0195,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "OCEAN:2023-06-02",
+   "sym": "OCEAN",
+   "d": "2023-06-02",
+   "r": -1.0255,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "MKR:2023-06-19",
+   "sym": "MKR",
+   "d": "2023-06-19",
+   "r": 5.1126,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "SFP:2023-06-19",
+   "sym": "SFP",
+   "d": "2023-06-19",
+   "r": -0.2557,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "BTC:2023-06-21",
+   "sym": "BTC",
+   "d": "2023-06-21",
+   "r": 0.0155,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "1000XEC:2023-06-30",
+   "sym": "1000XEC",
+   "d": "2023-06-30",
+   "r": -1.0244,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "CELO:2023-07-03",
+   "sym": "CELO",
+   "d": "2023-07-03",
+   "r": -1.0201,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "LINK:2023-07-13",
+   "sym": "LINK",
+   "d": "2023-07-13",
+   "r": 0.2301,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "STG:2023-07-13",
+   "sym": "STG",
+   "d": "2023-07-13",
+   "r": -0.7407,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "XRP:2023-07-13",
+   "sym": "XRP",
+   "d": "2023-07-13",
+   "r": -1.0256,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "STMX:2023-07-21",
+   "sym": "STMX",
+   "d": "2023-07-21",
+   "r": 0.2255,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "1000SHIB:2023-08-05",
+   "sym": "1000SHIB",
+   "d": "2023-08-05",
+   "r": -0.6052,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "LPT:2023-08-11",
+   "sym": "LPT",
+   "d": "2023-08-11",
+   "r": 0.4878,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "BLZ:2023-08-13",
+   "sym": "BLZ",
+   "d": "2023-08-13",
+   "r": -1.0223,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "SOL:2023-10-20",
+   "sym": "SOL",
+   "d": "2023-10-20",
+   "r": 7.9027,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "STX:2023-10-20",
+   "sym": "STX",
+   "d": "2023-10-20",
+   "r": 0.0808,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "AAVE:2023-10-22",
+   "sym": "AAVE",
+   "d": "2023-10-22",
+   "r": 1.1952,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "RLC:2023-11-16",
+   "sym": "RLC",
+   "d": "2023-11-16",
+   "r": 0.2145,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "CHR:2023-11-20",
+   "sym": "CHR",
+   "d": "2023-11-20",
+   "r": -0.6757,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "SPELL:2023-11-24",
+   "sym": "SPELL",
+   "d": "2023-11-24",
+   "r": -0.2388,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "BAKE:2023-11-28",
+   "sym": "BAKE",
+   "d": "2023-11-28",
+   "r": 0.9623,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "APT:2023-12-12",
+   "sym": "APT",
+   "d": "2023-12-12",
+   "r": -1.0225,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ARB:2023-12-12",
+   "sym": "ARB",
+   "d": "2023-12-12",
+   "r": -0.708,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "FIL:2023-12-16",
+   "sym": "FIL",
+   "d": "2023-12-16",
+   "r": 0.1436,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "LPT:2023-12-17",
+   "sym": "LPT",
+   "d": "2023-12-17",
+   "r": -0.255,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "LEVER:2023-12-20",
+   "sym": "LEVER",
+   "d": "2023-12-20",
+   "r": -1.0224,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "BAND:2023-12-31",
+   "sym": "BAND",
+   "d": "2023-12-31",
+   "r": -1.0189,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ENS:2024-01-03",
+   "sym": "ENS",
+   "d": "2024-01-03",
+   "r": 1.4951,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "RDNT:2024-01-04",
+   "sym": "RDNT",
+   "d": "2024-01-04",
+   "r": -0.6224,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "MASK:2024-01-06",
+   "sym": "MASK",
+   "d": "2024-01-06",
+   "r": -1.0176,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ETC:2024-01-10",
+   "sym": "ETC",
+   "d": "2024-01-10",
+   "r": -0.7163,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "CHZ:2024-01-16",
+   "sym": "CHZ",
+   "d": "2024-01-16",
+   "r": -0.1504,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "DUSK:2024-01-24",
+   "sym": "DUSK",
+   "d": "2024-01-24",
+   "r": 1.1,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "XEM:2024-01-24",
+   "sym": "XEM",
+   "d": "2024-01-24",
+   "r": -1.0158,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ID:2024-02-07",
+   "sym": "ID",
+   "d": "2024-02-07",
+   "r": 0.8582,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "COTI:2024-02-09",
+   "sym": "COTI",
+   "d": "2024-02-09",
+   "r": -1.0225,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "C98:2024-02-13",
+   "sym": "C98",
+   "d": "2024-02-13",
+   "r": 2.1424,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ACH:2024-02-19",
+   "sym": "ACH",
+   "d": "2024-02-19",
+   "r": 3.8409,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "DOGE:2024-02-27",
+   "sym": "DOGE",
+   "d": "2024-02-27",
+   "r": 3.5647,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ENS:2024-03-05",
+   "sym": "ENS",
+   "d": "2024-03-05",
+   "r": -0.3473,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "T:2024-03-26",
+   "sym": "T",
+   "d": "2024-03-26",
+   "r": -1.0191,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "MASK:2024-03-29",
+   "sym": "MASK",
+   "d": "2024-03-29",
+   "r": -0.6011,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "LQTY:2024-03-31",
+   "sym": "LQTY",
+   "d": "2024-03-31",
+   "r": -1.0177,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "API3:2024-05-23",
+   "sym": "API3",
+   "d": "2024-05-23",
+   "r": -0.1092,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "OGN:2024-05-24",
+   "sym": "OGN",
+   "d": "2024-05-24",
+   "r": -1.027,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "TRU:2024-05-24",
+   "sym": "TRU",
+   "d": "2024-05-24",
+   "r": 1.232,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "POLYX:2024-06-10",
+   "sym": "POLYX",
+   "d": "2024-06-10",
+   "r": -1.0212,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "BAKE:2024-06-12",
+   "sym": "BAKE",
+   "d": "2024-06-12",
+   "r": -0.4394,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ENS:2024-07-01",
+   "sym": "ENS",
+   "d": "2024-07-01",
+   "r": -0.8256,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "STORJ:2024-10-15",
+   "sym": "STORJ",
+   "d": "2024-10-15",
+   "r": -1.0274,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "DOGE:2024-10-18",
+   "sym": "DOGE",
+   "d": "2024-10-18",
+   "r": 16.065,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ALICE:2024-10-20",
+   "sym": "ALICE",
+   "d": "2024-10-20",
+   "r": -1.0228,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "APE:2024-10-20",
+   "sym": "APE",
+   "d": "2024-10-20",
+   "r": -1.0217,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "RUNE:2024-10-28",
+   "sym": "RUNE",
+   "d": "2024-10-28",
+   "r": -0.8485,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "MASK:2024-10-29",
+   "sym": "MASK",
+   "d": "2024-10-29",
+   "r": -1.0267,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "UNI:2024-11-06",
+   "sym": "UNI",
+   "d": "2024-11-06",
+   "r": 3.2285,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ADA:2024-11-07",
+   "sym": "ADA",
+   "d": "2024-11-07",
+   "r": 10.9636,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ACH:2025-01-27",
+   "sym": "ACH",
+   "d": "2025-01-27",
+   "r": -1.0188,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "LDO:2025-01-31",
+   "sym": "LDO",
+   "d": "2025-01-31",
+   "r": -0.6053,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "QNT:2025-05-08",
+   "sym": "QNT",
+   "d": "2025-05-08",
+   "r": -0.1497,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "PENDLE:2025-05-20",
+   "sym": "PENDLE",
+   "d": "2025-05-20",
+   "r": -0.4701,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "QNT:2025-05-26",
+   "sym": "QNT",
+   "d": "2025-05-26",
+   "r": 0.1101,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ICX:2025-06-04",
+   "sym": "ICX",
+   "d": "2025-06-04",
+   "r": -0.3688,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "SEI:2025-06-24",
+   "sym": "SEI",
+   "d": "2025-06-24",
+   "r": -1.0213,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "NEIROETH:2025-07-10",
+   "sym": "NEIROETH",
+   "d": "2025-07-10",
+   "r": 0.1574,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "1INCH:2025-07-11",
+   "sym": "1INCH",
+   "d": "2025-07-11",
+   "r": -0.4949,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "PENDLE:2025-08-07",
+   "sym": "PENDLE",
+   "d": "2025-08-07",
+   "r": 0.1011,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "FIO:2025-08-08",
+   "sym": "FIO",
+   "d": "2025-08-08",
+   "r": -1.0224,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ARB:2025-08-13",
+   "sym": "ARB",
+   "d": "2025-08-13",
+   "r": -1.0235,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "CTSI:2025-08-16",
+   "sym": "CTSI",
+   "d": "2025-08-16",
+   "r": -1.0185,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "AAVE:2025-08-23",
+   "sym": "AAVE",
+   "d": "2025-08-23",
+   "r": -0.7015,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ONT:2025-08-25",
+   "sym": "ONT",
+   "d": "2025-08-25",
+   "r": -1.0211,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "RLC:2025-08-27",
+   "sym": "RLC",
+   "d": "2025-08-27",
+   "r": -1.0198,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "LRC:2025-08-31",
+   "sym": "LRC",
+   "d": "2025-08-31",
+   "r": -0.5303,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "JOE:2025-09-18",
+   "sym": "JOE",
+   "d": "2025-09-18",
+   "r": -1.0255,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "GMX:2025-09-24",
+   "sym": "GMX",
+   "d": "2025-09-24",
+   "r": -0.9129,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "CHZ:2025-10-01",
+   "sym": "CHZ",
+   "d": "2025-10-01",
+   "r": -0.5528,
+   "grp": false,
+   "listing_d": null
+  },
+  {
+   "tid": "ALICE:2025-10-09",
+   "sym": "ALICE",
+   "d": "2025-10-09",
+   "r": -1.0162,
+   "grp": false,
+   "listing_d": null
+  }
+ ],
+ "secondary": {
+  "window_30d": {
+   "n_a": 0,
+   "n_b": 145,
+   "n_total": 145,
+   "mean_a": null,
+   "mean_b": 0.37471082558646346,
+   "diff_a_minus_b": null,
+   "a": {
+    "n": 0
+   },
+   "b": {
+    "n": 145,
+    "sum_r": 54.3331,
+    "mean_r": 0.3747,
+    "med_r": -0.6102,
+    "min": -1.0427,
+    "max": 16.065,
+    "win_pct": 32.4
+   },
+   "perm": {
+    "actual_diff": null,
+    "null_mean": null,
+    "null_p05": null,
+    "null_p95": null,
+    "pct_of_actual": null,
+    "n_perm": 5000,
+    "seed": 756,
+    "n_a": 0,
+    "n_total": 145,
+    "note": "组为空(n_A=0, n_total=145)⇒ 置换不适用"
+   }
+  },
+  "winrate_maxR": {
+   "a": {
+    "n": 0
+   },
+   "b": {
+    "n": 145,
+    "sum_r": 54.3331,
+    "mean_r": 0.3747,
+    "med_r": -0.6102,
+    "min": -1.0427,
+    "max": 16.065,
+    "win_pct": 32.4
+   }
+  },
+  "hit_symbols": {
+   "n_symbols": 0,
+   "top": [],
+   "n_tickets": 0
+  }
+ }
+}

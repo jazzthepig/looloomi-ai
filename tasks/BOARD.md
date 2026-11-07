@@ -30,6 +30,7 @@
 | in_review | T-257 | lane-b | S-737 状态 × 动作地图:训练期(2021-03 → 2023-12)k-means 6 类状态(14 个特征,写死),每类里 持有 / 空仓 / 战术空单 / 30 天 90% 看跌 / 90-80 看跌价差 / 保护性多头 的结果,留出期(2024 →)复核 + BH 多重检验 —— Jazz 11-06「全时间段亏 ≠ 特殊时间亏」 | 报告 docs/research/T-257_state_action_map.md + t257_state_action_map.py + t257_results.json(含 6 个中心、每格数字、今天的类别);卡 notes 写过了 BH 的格子;in_review,推 lane-b/T-257。 | 所有动作都只在全时间段上判过(T-252);没有一次按状态拆。 |  |
 | in_review | T-262 | lane-b | S-740 永续上线 = 做空供给冲击:现货先有的代币,Binance 上线 USDT 永续之后 30 / 60 天相对 BTC 是否跑输 —— 随机日期对照,判据照台账写死 | 报告 docs/research/T-262_perp_listing_short_supply.md + t262_perp_listing.py + t262_results.json;卡 notes 写 (a)–(d) 原始数字;in_review,推 lane-b/T-262。 | 永续上线的影响从没测过(T-227 / T-233 测的是现货上币)。 |  |
 | in_review | T-267 | lane-b | S-744 永续上线之后的跑输:做空供给 vs 上线前追高的均值回归 —— 按「之前 30 天收益」匹配的对照日 + 换 CoinGecko 价格源扩宇宙;判据照台账写死 | 报告 docs/research/T-267_perp_listing_mechanism.md + t267_mechanism.py + t267_results.json;卡 notes 写 (a)–(d);in_review,推 lane-b/T-267。 | S-740 判据全过但 n = 46 且机制没分开;扩宇宙与机制诊断是评审轮点名的下一件事。 |  |
+| in_review | T-277 | lane-b | S-756 R-v2 票:开票前 60 天内刚上过 Binance USDT 永续的名字,票是不是更差(S-740 做空供给冲击落到真钱账本)—— 判据照台账写死 | 报告 docs/research/T-277_rv2_after_perp_listing.md + t277_rv2_perp_listing.py + t277_results.json;in_review,推 lane-b/T-277。 | S-740:刚上 Binance 永续的代币之后 30 天中位跑输 17%;R-v2 是真钱多头突破票,若突破落在这个窗口里更容易失败,是一条可以直接用的过滤。 |  |
 | in_review(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | in_review | T-220 | lane-c | 治理的领先信号:解锁前团队 / 基金会钱包流向、出事后的处理、营销强度 —— 先查能不能量(数据源可行性),再写预注册草稿 | 报告 docs/research/T-220_governance_leading_signals.md(开头可行性表);卡片 notes 写:免费源够不够、事件个数、两条草稿是否可在现有数据上跑;in_review,推 lane-c/T-220。 | 治理只量了滞后的一半(S-661 价值捕获比、S-587 质量);领先的行为信号一个都没有,不知道现有数据能不能量。 |  |
 | in_review | T-224 | lane-c | ② 倾斜在更宽的面板上:按时点前 50 大(含死币)的 ①,压低 S-691 五因子合成最差五分之一的权重 —— S-694 在 24 名上 ❌,问宽到 50 名「躲开」信号够不够用 | 报告 docs/research/T-224_tilt_pit50.md(预注册段在前);卡 notes 写基线年化 / 倾斜超额 / 随机对照分位 / 两段符号;scenarios/lane-c-T-224.json;in_review,推 lane-c/T-224。 | ② 只在 24 名上试过一次(S-694 ❌);宽面板上「躲开最差档」的倾斜没有任何回放。 |  |
@@ -68,7 +69,6 @@
 | open | T-246 | lane-c | R-v2 的宇宙能不能写成一条按时点的规则(S-731):在全部 coin 永续(含死币,perp_bv_daily)上,「上市满 365 天 且 30 日均成交额 ≥ 2,000 万美元」—— 对照现行的 257 名面板宇宙(今天的幸存者名单)与无门槛全宇宙;原因 = 薄盘口的新合约上的突破多半是做出来的 | 报告 docs/research/T-246_rv2_pit_universe.md(预注册在前)+ docs/research/t246_rv2_pit_universe.py + t246_results.json;卡 notes 写三个宇宙的票数 / 总 R / Calmar / 两半 / 08-08 后,以及判;in_review,推 lane-c/T-246。 | R-v2 的宇宙一直是一份名单;从没量过一条按时点的准入规则能不能接替它。 |  |
 | open | T-269 | lane-c | S-746「政治不明朗 × 流动性收缩」触发时买 30 天 90% 看跌 —— 对冲盈亏 vs 随机对照,判据照台账写死 | 报告 docs/research/T-269_political_liquidity_hedge.md + t269_hedge.py + t269_results.json;卡 notes 写 (a)–(d);in_review,推 lane-c/T-269。 | 对冲条件里从没有政治维度(11-06 才入库);S-736 / S-737 的对冲都没过稳健。 |  |
 | open | T-273 | lane-c | S-752 盲复算 S-749(④ 套息 vs 稳定币借贷)与 S-750(按过去 4 周切换)—— 只看台账文字,决定「提不提真钱」的数要有第二个人算过 | 报告 docs/research/T-273_carry_vs_lending_recompute.md + t273_recompute.py + t273_results.json;in_review,推 lane-c/T-273。 | S-749 决定了现在不向 Jazz 提 ④ 小额真钱;S-750 决定了不加切换臂 —— 都只有 Seth 一个人算过。 |  |
-| open | T-275 | lane-c | S-754 下架之前能不能先看见:Binance 现货成交额排名掉到底部 10% 的名字,之后 90 天被宣布下架的概率与跑输 —— 判据照台账写死 | 报告 docs/research/T-275_delisting_early_warning.md + t275_early_warning.py + t275_results.json;in_review,推 lane-c/T-275。 | Jazz 11-07 把 Binance 下架公告拍成硬规则;公告前 30 天已跌 34%。若成交额排名能提前看见,规则可以前移到预警。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -277,4 +277,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 20 · claimed 7 · blocked 5 · in_review 49 · done 190 · dropped 3
+open 19 · claimed 7 · blocked 5 · in_review 50 · done 190 · dropped 3
