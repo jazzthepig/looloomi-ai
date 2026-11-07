@@ -1,0 +1,68 @@
+{
+  "author": "lane-b",
+  "note": "T-286(S-765:Binance 成交占比变化 Δs → 之后 4 周相对 BTC)的前向预期。概率是作者自估,到期按 Brier 结算;写的是可核的量,不是收益承诺。第 1–3 条是本卡主判据在新数据(2026-11 之后新增的周)上的复现预期 —— 判据文件 docs/research/T-286_binance_volume_share.md;第 4–5 条是自动结算的市场基线。",
+  "entries": [
+    {
+      "id": "T-286-1",
+      "scenario": "T-286 主臂:Δs(份额变化)→ 4 周相对 BTC 超额",
+      "statement": "在 2026-11 之后新增的周里,每周截面 Spearman IC(Δs, 4 周相对 BTC 超额)的均值仍 > 0",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "hi": 0,
+      "prob": 0.45,
+      "horizon_d": "2027-01-31",
+      "check": "重跑 docs/research/t286_share.py run(数据延到 2027-01),读 main.mean_weekly_ic > 0",
+      "current_reading": {"2026-11-07": "本轮跑完前写下;先验 0.45 —— S-742 的场所份额横截面版本 5 条全不过,S-751/S-754 的事件级版本成立,横截面上噪声更大"}
+    },
+    {
+      "id": "T-286-2",
+      "scenario": "T-286 判据 (b):五分位差",
+      "statement": "在 2026-11 之后新增的周里,Δs 最高五分之一减最低五分之一的平均 4 周相对 BTC 超额仍 ≥ +1.5%",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0.015,
+      "hi": 0,
+      "prob": 0.35,
+      "horizon_d": "2027-01-31",
+      "check": "重跑 docs/research/t286_share.py run,读 main.b_spread_pooled_excess ≥ 0.015",
+      "current_reading": {"2026-11-07": "先验 0.35 —— 与 T-286-1 同源但更严(幅度门槛)"}
+    },
+    {
+      "id": "T-286-3",
+      "scenario": "T-286 判据 (c):周内打乱零分布",
+      "statement": "在 2026-11 之后新增的周里,实际平均 IC 在「每周内打乱 Δs(种子 765,1,000 次)」零分布中的分位仍 ≥ 0.95",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0.95,
+      "hi": 1,
+      "prob": 0.35,
+      "horizon_d": "2027-01-31",
+      "check": "重跑 docs/research/t286_share.py run,读 main.c_null_percentile ≥ 0.95",
+      "current_reading": {"2026-11-07": "先验 0.35 —— 横截面 IC 在周频上的检出力本来就低(方法学注记:≈53 个独立段)"}
+    },
+    {
+      "id": "T-286-4",
+      "scenario": "市场基线(自动结算)",
+      "statement": "BTC 在 2026-12-15 的收盘高于 70000",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 70000,
+      "prob": 0.6,
+      "horizon_d": "2026-12-15",
+      "current_reading": {"2026-11-06": 75775.28}
+    },
+    {
+      "id": "T-286-5",
+      "scenario": "宏观基线(自动结算)",
+      "statement": "恐惧与贪婪指数在 2026-12-15 落在 25–75 的中性区间内",
+      "variable": "macro:fng",
+      "op": "between",
+      "lo": 25,
+      "hi": 75,
+      "prob": 0.7,
+      "horizon_d": "2026-12-15",
+      "current_reading": {"note": "按 F&G 的历史基率给概率"}
+    }
+  ]
+}
