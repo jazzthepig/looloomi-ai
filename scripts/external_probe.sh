@@ -127,7 +127,8 @@ PUSH=${PUSH:--1}
 # ourselves added, correctly) and then fell back to /internal/loop-health, which
 # coupled this fast tripwire to an 8–25 s sweep and made the probe time out. A
 # tripwire that depends on a slow watchdog is not a tripwire.
-OHLCV_D=$(curl -sm 15 "$BASE/internal/data-freshness" 2>/dev/null \
+# 11-07:这个端点长到了 7–15 秒(producers / by_source / loops 都在里面),15 秒超时 ⇒ 读不到 ⇒ 报 ohlcv=-1d 的假警报;给 30 秒。
+OHLCV_D=$(curl -sm 30 "$BASE/internal/data-freshness" 2>/dev/null \
   | python3 -c 'import sys,json
 try:
     d=json.load(sys.stdin).get("ohlcv_daily",{})
