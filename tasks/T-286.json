@@ -1,0 +1,32 @@
+{
+  "id": "T-286",
+  "owner": "lane-b",
+  "status": "done",
+  "created": "2026-11-07",
+  "title": "S-765 Binance 在一个币的成交里占比下降(量往别处走),之后 4 周相对 BTC 跑输吗 —— 横截面周频,判据照台账写死",
+  "source": "REFUTATION_LEDGER S-765(先读;宇宙 / 特征 Δs / 目标 / (a)–(d) 一字不改)。数据:ohlcv_daily(source = binance_hist,close × volume)、asset_mcap_daily(volume、mcap、price)、BTC 同源。统计只用 src/data/evaluation/apparatus.py(NW t、周内打乱)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-286.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 每周截面的代号数、丢弃格数先落文件。② (a)–(d) 原始数字。③ 副项只报不判。④ 只算、不改代码、不入库;报告 .md 先写骨架。附 docs/research/scenarios/lane-b-T-286.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-286_binance_volume_share.md + t286_share.py + t286_results.json;in_review,推 lane-b/T-286。"
+  },
+  "prior_value": "下架之前成交先塌(S-751 / S-754);成交从 Binance 往别处迁移是「谁在交易」的横截面读数,S-742 的全市场版本没过。",
+  "notes": "❌ S-765 不通过:(a) IC 均值 −0.0296、NW(4)t = −2.990(279 周,2021-06-07→2026-10-05,每周有效格 77–129)❌;(b) 最高五分之一减最低五分之一平均 4 周超额 −1.142%(合并 n=6,090/6,090)❌;(c) 每周内打乱 Δs(1,000 次,种子 765)分位 0.000(零分布均值 +0.00005、sd 0.00555)❌;(d) 两段 139 周 −0.0284 / 140 周 −0.0309 同号(都是负)✅字面。**方向与预注册相反**:Binance 成交占比上升的币之后 4 周相对 BTC 跑输,迁出的反而跑赢。副项(只报不判):水平 s30 的 IC −0.0638(t −3.638,五分位差 +0.652% ⇒ 非单调);8 周目标 IC −0.0223(t −1.973,4 周后基本消散);只看市值 51–200:IC −0.0369(t −3.142);价格源交叉核对(binance_hist 收盘,30,812 格):IC −0.0282(t −2.803,分位 0.000)⇒ 不是价格源造成的。数据:asset_mcap_daily d≥2021-04-01 共 650,062 行 / 487 代号,ohlcv_daily(binance_hist) 389,109 行 / 262 代号,282 个周一、有效记录 31,050;丢弃:binance 日线<60 天 21,458、CG 成交为 0 3,525、s30>1 86、无前向价 238、CG 天数<25 4。**还差**:脚本已实现但本轮未取回的三条探索性诊断(入场前 4 周超额与 Δs 的 IC、把 Δs 对过去超额残差化后的前向 IC、五分位画像)—— 产物在 /Volumes/CometCloudAI/cometcloud-local/research/t286/run2.log 与 t286_results.json 的 exploratory 块,下一轮先读这两处、不要重跑;**在拿到之前不要把本卡读成「Binance 份额是反向指标」**(可能只是短周期反转的伪装)。另:origin/main 未带 tasks/T-286.json(Seth 在主仓工作树里),本分支按主仓那份带过来并更新 status/notes。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-07T12:20:54Z",
+    "value": "S-765 ❌ (reversed, t −2.99) in ledger"
+  }
+}
