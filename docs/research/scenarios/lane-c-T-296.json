@@ -1,0 +1,20 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {"id": "T-296-1", "scenario": "T-296 S-776 因维 vs 相位维",
+     "statement": "T-296 里唯一在扛「因」维的是 taker7(主动买卖);其市场级对应量 state_daily:taker_buy_share_30d 到 2026-12-15 仍高于 0.50(2026-11-02 为 0.5029)",
+     "variable": "state:taker_buy_share_30d", "op": "gt", "lo": 0.5, "prob": 0.55, "horizon_d": "2026-12-15"},
+    {"id": "T-296-2", "scenario": "T-296 S-776 因维 vs 相位维",
+     "statement": "「新开杠杆」维 doi7 的市场级对应量 state_daily:oi_chg_30d 到 2026-12-15 仍为负(2026-11-03 为 −0.1152,即杠杆总量仍在收缩)",
+     "variable": "state:oi_chg_30d", "op": "lt", "hi": 0.0, "prob": 0.55, "horizon_d": "2026-12-15"},
+    {"id": "T-296-3", "scenario": "T-296 S-776 因维 vs 相位维",
+     "statement": "「资金费」维 fund7 的市场级对应量 state_daily:funding_7d_ann 到 2026-12-15 仍为正(2026-11-03 为 +0.0934)",
+     "variable": "state:funding_7d_ann", "op": "gt", "lo": 0.0, "prob": 0.6, "horizon_d": "2026-12-15"},
+    {"id": "T-296-4", "scenario": "T-296 S-776 因维 vs 相位维",
+     "statement": "到 2026-12-15,前向记录 asset_flow_forecast_daily 已开,且其中不含只有 6 个「因」维的 F 预测 —— 按 S-776 的 ❌ 分支照开 A(11 维),叙述改成「力量来自价格相位」",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.6, "horizon_d": "2026-12-15"},
+    {"id": "T-296-5", "scenario": "T-296 S-776 因维 vs 相位维",
+     "statement": "到 2026-12-15,台账里 S-774(R ✅ 四条全过)与 S-776(F ❌)两条结论都保留原判据、没有被事后放宽或撤销",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.85, "horizon_d": "2026-12-15"}
+  ]
+}
