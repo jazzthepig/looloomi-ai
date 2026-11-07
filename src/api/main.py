@@ -2957,6 +2957,12 @@ async def _delisting_watch_loop():
                 r = {**r, "why": f"{r.get('why')} | 上币 / 上永续:{_ew.get('why')}"}
             except Exception as _ee:               # noqa: BLE001 —— 上币记录出错不挡下架名单
                 r = {**r, "why": f"{r.get('why')} | 上币 / 上永续出错:{type(_ee).__name__}: {str(_ee)[:120]}"}
+            try:                                   # 11-07:S-769 B 的前向记录(社交量尖峰),同一节拍;出错不挡下架名单
+                from src.data.signals.attention_watch import run_once as _aw_run
+                _aw = await _aw_run()
+                r = {**r, "why": f"{r.get('why')} | 注意力尖峰:{_aw.get('why')}"}
+            except Exception as _ae:               # noqa: BLE001
+                r = {**r, "why": f"{r.get('why')} | 注意力尖峰出错:{type(_ae).__name__}: {str(_ae)[:120]}"}
             await _iteration_result("_delisting_watch_loop", {**r, "ok": bool(r.get("ok")), "why": r.get("why")})
             await _beat("_delisting_watch_loop", ok=bool(r.get("ok")), detail={"written": r.get("written"), "watch": r.get("watch")},
                         error=None if r.get("ok") else str(r.get("why"))[:200])
@@ -3335,6 +3341,16 @@ async def _public_cache_warm_loop():
     await _asyncio.sleep(_boot_delay(120))
     import httpx as _hx
     _port = os.environ.get("PORT", "8000")
+    # 11-07:每次部署后的第一轮都是前 5 个接口 ConnectError、后 4 个 200 —— 120 秒时 uvicorn 还没开始接请求(启动钩子没跑完),
+    # 于是 loop_attempt 只在部署后记一条 error,简报每天把它当成「新报错」。先等回环上的 /health 应答(最多 5 分钟),再预热。
+    async with _hx.AsyncClient(timeout=5) as _c0:
+        for _ in range(60):
+            try:
+                if (await _c0.get(f"http://127.0.0.1:{_port}/health")).status_code < 500:
+                    break
+            except Exception:                                   # noqa: BLE001 —— 还没监听
+                pass
+            await _asyncio.sleep(5)
     _n = 0
     while True:
         _fail: list = []
@@ -5259,6 +5275,20 @@ try:
     from src.mcp.cometcloud_mcp import mcp as _cometcloud_mcp
 
     app.mount("/mcp", _cometcloud_mcp.streamable_http_app())   # modern (primary)
+
+    class _McpNoSlash:
+        """11-07:挂载点是 /mcp/,不带斜杠的 /mcp 落到 SPA 的 GET 路由 ⇒ POST 405(源站实测)。对外写的 URL 不带斜杠,
+        所以在路由之前把这一个路径改成带斜杠的(纯 ASGI,不缓冲流式响应)。"""
+
+        def __init__(self, inner):
+            self.inner = inner
+
+        async def __call__(self, scope, receive, send):
+            if scope.get("type") == "http" and scope.get("path") == "/mcp":
+                scope = {**scope, "path": "/mcp/", "raw_path": b"/mcp/"}
+            await self.inner(scope, receive, send)
+
+    app.add_middleware(_McpNoSlash)
     app.mount("/mcp-sse", _cometcloud_mcp.sse_app())           # legacy back-compat
 
     @app.on_event("startup")

@@ -1,0 +1,57 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T-290-1",
+      "scenario": "T-290 / S-769 前向记录(B 臂:社交量 z≥3 事件)",
+      "statement": "前向队列(2026-11-08 之后新入库的 B 臂注意力事件)30 天超额中位数 < 0(单位:百分比)",
+      "variable": "manual",
+      "op": "lt",
+      "lo": -1000,
+      "hi": 0,
+      "prob": 0.7,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-290-2",
+      "scenario": "T-290 / S-769 前向记录(B 臂:社交量 z≥3 事件)",
+      "statement": "前向队列里 30 天超额 < 0 的事件占比 > 60%(单位:百分比)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 60,
+      "prob": 0.65,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-290-3",
+      "scenario": "T-290 / S-769 前向记录(尖峰阈值有没有牙)",
+      "statement": "前向队列里 z≥3 事件的 30 天超额中位数 ≤ (z 在 1 到 3 之间的事件的 30 天超额中位数) − 3(单位:百分点)",
+      "variable": "manual",
+      "op": "lt",
+      "lo": -1000,
+      "hi": -3,
+      "prob": 0.55,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-290-4",
+      "scenario": "T-290 / S-769 前向样本供给条件(情绪)",
+      "statement": "2026-12-31 的 Fear & Greed(macro_daily / fng)> 40(今日 2026-11-07 为 25)",
+      "variable": "macro:fng",
+      "op": "gt",
+      "lo": 40,
+      "prob": 0.45,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-290-5",
+      "scenario": "T-290 / S-769 前向样本供给条件(注意力/活跃度周期)",
+      "statement": "2026-12-31 的 vratio_30_180(state_daily / panel)> 1.0(30 日成交额 ÷ 180 日均额;2026-11-06 为 0.9986)",
+      "variable": "state:vratio_30_180",
+      "op": "gt",
+      "lo": 1.0,
+      "prob": 0.5,
+      "horizon_d": "2026-12-31"
+    }
+  ]
+}

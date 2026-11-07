@@ -236,3 +236,20 @@ def ab_test(ret_a: Sequence[float], ret_b: Sequence[float], *, mean_block: float
         "mean_block": mean_block,
         "n_boot": n_boot,
     }
+
+
+def newey_west_t(x: Sequence[float], lags: int = 5) -> tuple[Optional[float], Optional[float], Optional[float]]:
+    """均值的 Newey–West t(Bartlett 权重 1 − l/(L+1),方差除以 n)。→ (t, 均值, 标准误);少于 lags + 2 个有限值 ⇒ (None, None, None)。
+
+    11-07:S-774 / T-265 的各卡在自己的脚本里各写了一份(同一写法);挪到这里,之后的卡只用这一份。
+    重叠的目标(30 天窗口、周频)必须用 NW;滞后按重叠长度定(周频 30 天 ⇒ 5)。"""
+    a = np.asarray([v for v in x if v is not None and np.isfinite(v)], dtype=float)
+    n = len(a)
+    if n < lags + 2:
+        return None, None, None
+    d = a - a.mean()
+    var = float(d @ d) / n
+    for lag in range(1, lags + 1):
+        var += 2.0 * (1.0 - lag / (lags + 1.0)) * float(d[lag:] @ d[:-lag]) / n
+    se = float(np.sqrt(max(var, 1e-24) / n))
+    return float(a.mean() / se), float(a.mean()), se

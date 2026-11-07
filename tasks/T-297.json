@@ -1,0 +1,33 @@
+{
+  "id": "T-297",
+  "owner": "lane-b",
+  "status": "done",
+  "created": "2026-11-07",
+  "title": "S-777 squeeze 事件集纠错复算:f7 为空不算事件、零成交合约不算事件,重跑 S-768 ①(wo 0 / 1)",
+  "source": "REFUTATION_LEDGER S-777、S-768 结果段(grep)。你自己的 t289_squeeze.py / t242_crowding_setups.py 与 T-295 的边角清单(E 编号)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-297.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "预注册(S-777 原文)照抄进报告开头,只算一次。只加两条守卫(f7 为空 ⇒ 不是事件;ATR14 ≤ 0 或 20 日均 qv ≤ 0 ⇒ 不是事件),其余与 S-768 ① 一字不改;报 wo = 0 / 1 的 1 / 7 / 30 天中位、随机分位、两半,事件数,以及被剔掉那批的单独中位。顺带复跑 t295_event_audit.py,确认 SQL 语义复算回到 218 / 20(或写清差在哪)并补交 t295_audit.json。纪律:只算、不改代码、不入库;省着用上下文。",
+    "expect": "docs/research/T-297_squeeze_clean.md + t297_clean.py + t297_results.json + scenarios/lane-b-T-297.json;in_review,推 lane-b/T-297。"
+  },
+  "prior_value": "T-295 查出 S-726 / S-768 的 squeeze 事件里约 14% 是资金费缺失被当成最低分位、另有零成交合约恒真命中。干净事件集上读数还站不站,决定 T-295 前向记录用哪个定义。",
+  "notes": "只加两条守卫(f7 为空 ⇒ 不是事件;ATR14 ≤ 0 或 20 日均 qv ≤ 0 ⇒ 不是事件),其余与 S-768 ① 一字不改。底稿 = t289_squeeze.py(lane-b/T-289)加一个 guards 开关,guards=False 即原口径,同一次运行里对账。事件集:squeeze legacy 218 → clean 185(剔 33、新增 0);flush 20 → 16(剔 4)。被剔的 33 条全在 TLM(25)+ ICP(8),2022-06-02 → 2023-02-25;归因:f7 为空 33/33、ATR≤0 32、20 日均 qv≤0 32 ⇒ 守卫①单独就剔掉全部 33 条(ICP 资金费数据从 2022-09-01 起、TLM 从 2023-03-01 起,被剔事件全在各自起点之前)。干净集读数(超额 = 事件 − 时点等权永续篮):squeeze wo=0 的 1/7/30 天中位 −2.62%/−8.57%/−15.38%,随机分位 0.000/0.000/0.000,两半 30 天 −4.62%(2020-2022,n=38)/−16.25%(2023-2026,n=147);wo=1 −2.08%/−5.16%/−13.99%,分位 0.000×3,两半 30 天 −7.44%/−14.23%。flush clean n=16,两半反号(H1 +7.90% / H2 −4.00%),不登记。被剔掉那批(33 条)单独中位:30 天 wo=0 +0.80% / wo=1 +4.20%(H1 +4.76%/+6.47%;H2 −28.02%/−21.53%,n=6)⇒ 伪事件是在稀释负读数、不是造出它;clean 比 legacy 更负(30 天 −14.33%→−15.38%、−12.70%→−13.99%)。判(S-777 预注册):wo=1 的 30 天中位 < 0 ✅、分位 ≤0.05 ✅(0.000)、两半都 < 0 ✅ ⇒「squeeze 反向读数」在干净事件集上仍成立;S-768 结果段「现象站住」不作废;T-295 的前向记录按修正后的定义建(clean n=185)。自检:legacy 复算与 T-289 那次跑逐位相同(218/216/212、−1.91%/−6.98%/−14.33% 等);long_return 自检 max_abs_diff 0.0。诚实提醒:中位为负但均值为正(+6.59%/+3.59%),分布右偏,逐事件为负的比例 70.8%/72.4%;H1 只 38 条,两半强度不对称。没做(下一轮):t295_event_audit.py 的 SQL 语义复跑与 t295_audit.json(本轮按指令推迟);已量出 SQL 提案的合约级「资金费观测 < 9 整行 continue」抓不到这 33 条(ICP/TLM 合约级观测 1491/1310),必须改成按事件日判 f7 IS NULL,否则 SQL 会回到 218 而不是 185。交付:docs/research/T-297_squeeze_clean.md + t297_clean.py + t297_results.json + t297_events.json + t297_show.py + t297_run.log + scenarios/lane-b-T-297.json(4 条:3 条自动结算 + 1 条 manual)。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-07T18:05Z",
+    "value": "S-777 ✅:干净集 185 条,wo 1 中位 −13.99%、分位 0.000、两半同负;但均值 +3.6% / +6.6%(右尾)——排除的期望值不一定为正",
+    "ledger": "S-777 结果"
+  }
+}

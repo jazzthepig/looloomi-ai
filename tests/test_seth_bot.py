@@ -254,3 +254,15 @@ if __name__ == "__main__":
             fn()
             print(f"  ✓ {name}")
     print("\n✅ passed")
+
+
+def test_a_job_edited_or_removed_after_the_snapshot_is_read_from_the_file(tmp_path):
+    """11-07:成批提交用的是一轮开始时读入的任务 —— 之后改的 paths 不生效、删掉的任务照样执行。"""
+    import json as _json
+    from scripts.seth_bot import seth_bot as sb
+    jf = tmp_path / "20261107-0001-x.json"
+    jf.write_text(_json.dumps({"id": "x", "by": "seth", "op": "commit", "paths": ["a"]}), encoding="utf-8")
+    snap = {"id": "x", "by": "seth", "op": "commit", "paths": ["old"]}
+    assert sb.reload_job(jf, snap)["paths"] == ["a"], "文件为准"
+    jf.unlink()
+    assert sb.reload_job(jf, snap) is None, "文件没了 ⇒ 跳过,不执行"

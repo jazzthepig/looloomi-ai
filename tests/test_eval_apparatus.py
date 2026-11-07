@@ -170,3 +170,19 @@ def test_random_dates_like_keeps_key_and_year_and_marks_missing():
     assert all(d[2][1] == "2023-01-01" for d in draws), "同层没有 ⇒ 退到该键全部"
     assert all(d[3][1] is None and d[4][1] is None for d in draws)
     assert {d[0][1] for d in draws} == {"2021-01-05", "2021-06-01"}, "真的在抽"
+
+
+def test_newey_west_t_matches_the_lane_copy_and_handles_short_input():
+    import numpy as np
+    from src.data.evaluation import apparatus as ap
+    rng = np.random.default_rng(774)
+    x = rng.normal(0.05, 0.2, 200)
+    # lane-c t293 的 _nw_t 原样(对照)
+    d = x - x.mean(); var = float((d @ d) / len(x))
+    for l in range(1, 6):
+        var += 2.0 * (1.0 - l / 6.0) * float((d[l:] @ d[:-l]) / len(x))
+    want = x.mean() / np.sqrt(var / len(x))
+    t, m, se = ap.newey_west_t(list(x), 5)
+    assert abs(t - want) < 1e-9 and abs(m - x.mean()) < 1e-12
+    assert ap.newey_west_t([0.1, 0.2], 5) == (None, None, None)
+    assert ap.newey_west_t([0.1] * 3 + [float("nan")] * 10, 1)[0] is not None

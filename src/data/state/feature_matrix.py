@@ -53,4 +53,13 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     rows = rd.rows or []
     latest = rows[0]["d"] if rows else None
     keys = len(rows[0].get("f") or {}) if rows else None
-    return verdict(int(n) if isinstance(n, (int, float)) else None, latest, keys, now.date())
+    out = verdict(int(n) if isinstance(n, (int, float)) else None, latest, keys, now.date())
+    # 11-07:按币的那一层(`asset_flow_daily`)跟市场层同一个循环 —— 上游 metrics 有新的一天才刷(~40 s);它出错不挡市场层的判活
+    try:
+        from src.data.state.asset_flow import refresh as _af_refresh
+        af = await _af_refresh(now)
+    except Exception as e:                                                # noqa: BLE001
+        af = {"ok": False, "why": f"{type(e).__name__}: {str(e)[:120]}"}
+    out["asset_flow"] = {k: af.get(k) for k in ("ok", "rows", "skipped", "latest", "source_latest")}
+    out["why"] = f"{out.get('why')} | 按币:{af.get('why')}"
+    return out

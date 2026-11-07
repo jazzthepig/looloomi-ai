@@ -41,7 +41,9 @@ PLAN_VIEW = "deriv_metrics_plan"
 WRITES_TABLES = (TABLE,)
 KIND = "metrics"
 SOURCE = "binance_vision_metrics"
-BUDGET = 6000
+#: 11-07:每轮的解析(CSV → 日特征)原来在事件循环里同步跑 —— 6,000 个档在一轮里会把整个进程的循环卡住几分钟(探针 502)。
+#: 解析挪进线程(`asyncio.to_thread`),预算减半。
+BUDGET = 3000
 CONCURRENCY = 16
 FINAL_AFTER_DAYS = 3
 BACKFILL_CHUNK = 20
@@ -151,7 +153,7 @@ async def _fetch_one(sym: str, day: str, today: date, sem: asyncio.Semaphore) ->
         final = date.fromisoformat(day) <= today - timedelta(days=FINAL_AFTER_DAYS)
         return (absent_row(sym, day) if final else None), None
     try:
-        return daily_features(sym, day, parse_metrics_zip(blob)), None
+        return await asyncio.to_thread(lambda: daily_features(sym, day, parse_metrics_zip(blob))), None
     except Exception as e:                                           # noqa: BLE001
         return None, f"{sym} {day}: parse {type(e).__name__}: {str(e)[:120]}"
 

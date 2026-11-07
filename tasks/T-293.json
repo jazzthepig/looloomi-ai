@@ -1,7 +1,7 @@
 {
   "id": "T-293",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-11-07",
   "title": "S-774 按币资金面空间(asset_flow_daily,11 维)的横截面排序力:近邻臂 / Ridge 臂 对 只用 mom30 的基线,走步样本外",
   "source": "REFUTATION_LEDGER S-774(只读这一条;grep)。数据:asset_flow_daily(物化视图,anon 可读;列 symbol, d, n_cs, 11 个原始维, q_* 百分位, vec(11 维,字符串 '[…]'), x7, x30)。近邻函数 asset_flow_knn(p_symbol, p_d, p_k, p_h)(RPC,只用于抽查)。说明见 src/data/state/asset_flow.py 的模块头(只读)。",
@@ -23,6 +23,11 @@
     "expect": "报告 docs/research/T-293_asset_flow_ic.md + t293_asset_flow.py + t293_results.json + docs/research/scenarios/lane-c-T-293.json(≥ 3 条);卡 notes 写 K / R / B 的 IC 均值、NW t、两半、打乱分位、最低五分位 x30 与判定;in_review,推 lane-c/T-293。"
   },
   "prior_value": "高维族:Asset 空间第一次有「因」的维度(资金费 / 杠杆 / 散户 / 大户分歧 / 主动买卖 / 成交暴增 + 价格相位)。单维的拥挤量都不过;这里检验组合的几何。",
-  "notes": "",
-  "verified": null
+  "notes": "【主检验完成 · R 臂四条判据全过 ✅,K 臂 3/4 ❌】产物:docs/research/T-293_asset_flow_ic.md(报告,S-774 原文照抄在开头)+ docs/research/t293_asset_flow.py(fetch/mcap/check/run 一个文件)+ docs/research/t293_results.json + docs/research/scenarios/lane-c-T-293.json(5 条)。数据:一次拉全表 asset_flow_daily,max(d)=2026-11-06,count=exact 234,953 行、实拉 234,953、重复 0(order=symbol.asc,d.asc + Range 每页 1000);其中 vec 非空 224,759 行;自检 vec 与 2q−1 最大差 2.98e-08 ⇒ 维序对上。样本:197 个周一,2023-01-02 → 2026-10-05(末周 = 最后一个 x30 已到期者)。前置闸门:本地 numpy 复现 asset_flow_knn(欧氏、d'<t−30 且 x30 非空、k=100),20 个 (币,周一) 与 RPC 对照重合 20/20 = 100%(门槛 ≥95% 过)。K(近邻):IC 0.0675、NW t(滞后5) 5.41、正比例 68.0%、两半 0.0180/0.1108、打乱分位(种子 774,1000 次)1.000、最低五分位 x30 −1.62%(周均)、Q5−Q1 +3.10%;判定 3/4 ❌ —— 挂在 (b) IC−B 均值 +0.0182 但 NW t 仅 0.84 < 1.5。R(Ridge 11 维 alpha 10):IC 0.1006、NW t 4.99、正比例 72.6%、两半 0.0288/0.1636、打乱分位 1.000、最低五分位 x30 −2.07%、Q5−Q1 +4.27%、IC−B +0.0514 且 NW t 1.84 ⇒ (a)(b)(c)(d) 全过 ✅。B 基线(Ridge 只用 mom30,符号自学):IC 0.0492、t 2.79、两半 0.0614/0.0386、最低五分位 −1.36%。只报项:每维单独 IC(vol30 −0.1531 最强反转、dd90 +0.0558、taker7 +0.0212、crowd +0.0144、mom30 −0.0492、其余 −0.006~−0.028);K 的 k=30 → 0.0565、k=300 → 0.0801;近邻独立簇(币×月)中位 51;n_cs 三档 K IC 0.0880/0.0436/0.0726;市值三档 K 0.0447/0.0633/0.0372、R 0.1264/0.0934/0.0464(信号偏小市值)。诚实:R 的正 IC 靠 Ridge 自己翻符号(单维几乎全为负),不是「资金面高→之后好」的因果读法;力量集中在 2024-10 之后(两半 0.029 vs 0.164);宇宙是幸存者;30 天窗口重叠已用 NW t。✅ 只开前向记录、不动钱;「最低五分位不进多头书」按预注册只是只报项,要用需另立预注册 + 回放。缓存(未入库):docs/research/_t293_asset_flow.jsonl、_t293_mcap.jsonl、_t293_knn_check.json、_t293_fetch_meta.json。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-07T15:58Z",
+    "value": "S-774:R 臂 ✅(IC 0.101、t 4.99、两半 0.029/0.164、胜基线 +0.051)/ K 臂 ❌(胜基线 t 0.84);单维最强是 vol30 ⇒ S-776 拆因与相位",
+    "ledger": "S-774 结果"
+  }
 }

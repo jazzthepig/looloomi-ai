@@ -120,6 +120,10 @@ def est_tokens(text: str) -> int:
     rest = _CJK.sub("", text)
     return int(cjk * 1.1 + len(_WORD.findall(rest)) * 1.3 + len(_OTHER.findall(rest)) * 0.55 + len(_WS.findall(rest)) * 0.2)
 READ_MAX_LINES = 400
+#: 11-07:lane-a 一次 Read 了一个 5.2 MB 的单行 JSON —— 行数是 1,行数门槛放行,整份进了上下文(38 步就 Prompt too long)。
+#: 按字节再拦一道:大于这个数、又是「长行」文件(平均每行 > READ_LONG_LINE 字符)⇒ 带不带 limit 都拦。
+READ_MAX_BYTES = 200_000
+READ_LONG_LINE = 2_000
 SMALL_WRITE = 8_000
 _GIT = r"git\s+(?:-C\s+\S+\s+)?"
 _LANDING_BASH = re.compile(
@@ -181,17 +185,39 @@ def landing_verdict(tool: str, inp: dict, used: int, soft: int = SOFT_CHARS, har
 
 def read_too_long(inp: dict, max_lines: int = READ_MAX_LINES) -> str | None:
     """Read 不带 limit 且文件行数 > max_lines ⇒ 理由。文件读不到 ⇒ None。"""
-    if inp.get("limit"):
-        return None
     path = str(inp.get("file_path") or "")
     try:
+        size = os.path.getsize(path)
         with open(path, "rb") as f:
             n = sum(1 for _ in f)
     except OSError:
         return None
+    if size > READ_MAX_BYTES and size / max(n, 1) > READ_LONG_LINE:
+        return (f"拦下:{path.rsplit('/', 1)[-1]} 有 {size // 1000} KB 却只有 {n} 行(长行 / 单行 JSON)—— limit 按行截,截不住。"
+                f"用 python 打印你要的那几个键或前几条:`python3 -c \"import json;d=json.load(open('…'));print(list(d)[:20])\"`。")
+    if inp.get("limit"):
+        return None
     if n > max_lines:
         return (f"拦下:{path.rsplit('/', 1)[-1]} 有 {n} 行,整份读进上下文是「Prompt is too long」的主因。"
                 f"先 `grep -n <关键词>` 定位,再 Read 带 offset + limit(≤ {max_lines // 2})。")
+    return None
+
+
+_CAT_ONE = re.compile(r"^\s*(?:cat|less|more)\s+([^\s|;&<>]+)\s*$")
+
+
+def cat_too_big(cmd: str) -> str | None:
+    """`cat 一个大文件`(不接管道)⇒ 理由。和 Read 同一个门槛:整份进上下文。"""
+    m = _CAT_ONE.match(cmd or "")
+    if not m:
+        return None
+    try:
+        size = os.path.getsize(os.path.expanduser(m.group(1)))
+    except OSError:
+        return None
+    if size > READ_MAX_BYTES:
+        return (f"拦下:cat {m.group(1).rsplit('/', 1)[-1]}({size // 1000} KB)会整份进上下文。"
+                f"用 head / tail / grep,或 python 只打印要的字段。")
     return None
 
 
@@ -234,7 +260,8 @@ def main() -> int:
     else:
         why = (verdict(tool, inp, cwd)
                or landing_verdict(tool, inp, transcript_chars(str(ev.get("transcript_path") or "")))
-               or (read_too_long(inp) if tool == "Read" else None))
+               or (read_too_long(inp) if tool == "Read" else None)
+               or (cat_too_big(str(inp.get("command") or "")) if tool == "Bash" else None))
     if why:
         print(why, file=sys.stderr)
         return 2

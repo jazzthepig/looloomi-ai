@@ -439,6 +439,17 @@ async def window_knn_read(x_internal_token: str = Header(None), d: str = ""):
     return {"ok": True, **(await query(d or None))}
 
 
+@router.get("/internal/asset-flow")
+async def asset_flow_read(x_internal_token: str = Header(None), symbol: str = "", d: str = "", k: int = 100, h: int = 30):
+    """11-07:按币的资金面空间。这个币(默认最新一天)在截面里最极端的三维 + 历史上资金面最像的 (币, 日) 之后 h 天的超额分布
+    (只在结果已到期的行里找;描述,不是建议;宇宙是幸存者)。"""
+    require_internal_token(x_internal_token)
+    if not symbol:
+        return {"ok": False, "why": "要 symbol"}
+    from src.data.state.asset_flow import analogs
+    return await analogs(symbol, d or None, k=max(10, min(k, 500)), horizon=7 if h <= 7 else 30)
+
+
 @router.get("/internal/book-vectors")
 async def book_vectors_read(x_internal_token: str = Header(None), book: str = ""):
     """11-04:Strategy 空间。最新一天每本账的稀疏向量;book 给了就附共享维余弦最近的三本;uncovered = 没有一本账在里面挣钱的天气桶。"""
