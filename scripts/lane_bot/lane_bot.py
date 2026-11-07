@@ -275,6 +275,20 @@ DEFAULT_BUDGET = {"window_h": 5, "calls_per_window": 4500, "weekly_calls": 0, "r
                   "min_turns": 30}
 
 
+#: 11-07:MiniMax 的 5 小时额度是**按档重置**的(Jazz:「rate just refreshed」),而这里按滚动窗口记 —— 重置之后,
+#: 重置前的调用还在滚动窗口里,lane 被白白挡住一两个小时。Jazz / Seth 知道刚重置时写这个文件(ISO UTC 时刻),
+#: 重置时刻之前的调用不再计入。撞 429 的自校准照旧,是这条的安全网。写法:`date -u +%FT%TZ > .lane_bot/quota_reset_at`
+RESET_AT = BOT / "quota_reset_at"
+
+
+def reset_at() -> Optional[dt.datetime]:
+    try:
+        t = dt.datetime.fromisoformat(RESET_AT.read_text().strip().replace("Z", "+00:00"))
+        return t if t.tzinfo else t.replace(tzinfo=dt.timezone.utc)
+    except (OSError, ValueError):
+        return None
+
+
 def observed_cap() -> int:
     try:
         return int(float(OBSERVED_CAP.read_text().strip()))
@@ -317,9 +331,13 @@ def calls_since(usage: list[dict], at: dt.datetime, hours: float, backend: str =
                if r.get("backend", "primary") == backend and dt.datetime.fromisoformat(r["end"]) >= lo)
 
 
-def budget_turns(cfg: dict, usage: list[dict], at: dt.datetime, *, woken: bool, backend: str = "primary") -> tuple[int, str]:
-    """纯函数。这一轮最多给几步、为什么(0 = 不醒)。备用后端不限(它的额度我们不知道,撞了再停)。"""
+def budget_turns(cfg: dict, usage: list[dict], at: dt.datetime, *, woken: bool, backend: str = "primary",
+                 reset: Optional[dt.datetime] = None) -> tuple[int, str]:
+    """纯函数。这一轮最多给几步、为什么(0 = 不醒)。备用后端不限(它的额度我们不知道,撞了再停)。
+    reset = 额度最近一次重置的时刻(`quota_reset_at`):之前开始的调用不计。"""
     b = {**DEFAULT_BUDGET, **(cfg.get("budget") or {})}
+    if reset is not None and reset <= at:
+        usage = [r for r in usage if dt.datetime.fromisoformat(r.get("start") or r["end"]) >= reset]
     cap, hours = effective_cap(int(b["calls_per_window"]), int(b.get("observed") or 0)), float(b["window_h"])
     if backend != "primary" or cap <= 0:
         return int(cfg["max_turns"]), "不按额度限"
@@ -468,6 +486,12 @@ def run_lane(lane: str, cfg: dict, reason: str, dry: bool = False, task: str = "
     fb_settings = {"ANTHROPIC_BASE_URL": fb["LANE_FB_URL"], "ANTHROPIC_AUTH_TOKEN": fb["LANE_FB_TOKEN"],
                    "ANTHROPIC_MODEL": fb["LANE_FB_MODEL"], "ANTHROPIC_SMALL_FAST_MODEL": fb["LANE_FB_MODEL"]} if fb else None
     ctx = int(lc.get("ctx_tokens") or 115_000)      # 该 lane 实测溢出的估算 token(S-705);软 0.80×、硬 0.95×
+    if dry:
+        # 11-07:--dry-run 以前也会写 guard_settings-<lane>.json —— 从沙盒跑一次,文件里的钩子路径就成了沙盒路径,
+        # 正在跑的 lane 的 Claude Code 热加载设置 ⇒ 每个工具调用都被一个不存在的钩子拦下(lane-c 23:03 整轮零交付)。
+        # 干跑只报会怎么起,不碰任何文件。
+        return {"lane": lane, "reason": reason, "cwd": cwd, "argv": launch_argv(cfg), "tools": ALLOWED_TOOLS,
+                "turns": turns, "backend": backend}
     env = dict(os.environ, LANE_CWD=cwd, LANE_CMD=cfg.get("command", "claude"),
                LANE_CTX_SOFT=str(int(ctx * 0.80)), LANE_CTX_HARD=str(int(ctx * 0.95)),
                LANE_PROMPT=build_prompt(lane, lc, reason, task), LANE_TURNS=str(turns),
@@ -475,9 +499,6 @@ def run_lane(lane: str, cfg: dict, reason: str, dry: bool = False, task: str = "
                LANE_DATA=data_root(wt),
                LANE_SETTINGS=str(guard_settings(lane, (wt, str(ROOT), data_root(wt)), fb_settings)),
                **lane_db_env(), **fb)
-    if dry:
-        return {"lane": lane, "reason": reason, "cwd": cwd, "argv": launch_argv(cfg), "tools": ALLOWED_TOOLS,
-                "turns": turns, "backend": backend}
     RUNS.mkdir(parents=True, exist_ok=True)
     started = now()
     p = subprocess.Popen(launch_argv(cfg), env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
@@ -669,7 +690,7 @@ def main() -> int:
                              today=today, at=at, busy=(cwd in busy or locked))
         turns = int(cfg["max_turns"])
         if go:
-            turns, bwhy = budget_turns(cfg, usage, at, woken=wake.exists(), backend=backend)
+            turns, bwhy = budget_turns(cfg, usage, at, woken=wake.exists(), backend=backend, reset=reset_at())
             if turns <= 0:
                 go, why = False, f"额度:{bwhy}"
             else:

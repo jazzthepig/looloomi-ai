@@ -151,9 +151,11 @@ def test_guard_blocks_main_dir_git_writes_and_file_writes() -> None:
     assert verdict("Edit", {"file_path": f"{L}/scripts/verify_rotation_alive.sh"}) is None
 
 
-def test_every_launch_installs_the_guard() -> None:
+def test_every_launch_installs_the_guard(tmp_path, monkeypatch) -> None:
     import json as _json
+    import scripts.lane_bot.lane_bot as _lb
     from scripts.lane_bot.lane_bot import guard_settings
+    monkeypatch.setattr(_lb, "BOT", tmp_path)       # 11-07:写进真的 .lane_bot/ 会把沙盒路径带给正在跑的 lane
     assert '--settings "$LANE_SETTINGS"' in _LAUNCH
     assert '--add-dir "$LANE_WORKTREE"' in _LAUNCH and '--add-dir "$LANE_MAIN"' in _LAUNCH, \
         "10-08:装了 --settings 之后 lane-c 只剩 cwd 可读,连自己的 worktree 都打不开"
@@ -300,9 +302,11 @@ def test_guard_blocks_reading_env_files_and_printing_keys():
         assert verdict("Bash", {"command": cmd}) is None, cmd
 
 
-def test_guard_hook_also_sees_read_tools():
+def test_guard_hook_also_sees_read_tools(tmp_path, monkeypatch):
     import json
+    import scripts.lane_bot.lane_bot as _lb
     from scripts.lane_bot.lane_bot import guard_settings
+    monkeypatch.setattr(_lb, "BOT", tmp_path)
     hook = json.loads(guard_settings().read_text(encoding="utf-8"))["hooks"]["PreToolUse"][0]
     assert "Read" in hook["matcher"] and "Grep" in hook["matcher"]
 
@@ -463,3 +467,34 @@ def test_cat_of_a_big_file_is_blocked(tmp_path):
     small = tmp_path / "s.txt"
     small.write_text("ok", encoding="utf-8")
     assert g.cat_too_big(f"cat {small}") is None
+
+
+def test_calls_before_a_quota_reset_do_not_count():
+    """11-07:MiniMax 的额度按档重置,lane_bot 按滚动窗口记 —— 重置后被白挡一两个小时。quota_reset_at 之前的调用不计。"""
+    import sys as _sys
+    import datetime as _dt
+    _sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "lane_bot"))
+    import lane_bot as lb
+    cfg = {"max_turns": 120, "budget": {"calls_per_window": 4500, "observed": 2426}}
+    at = _dt.datetime(2026, 11, 7, 18, 40, tzinfo=_dt.timezone.utc)
+    u = [{"start": "2026-11-07T17:00:00+00:00", "end": "2026-11-07T17:30:00+00:00", "calls": 2100, "backend": "primary"}]
+    assert lb.budget_turns(cfg, u, at, woken=True)[0] == 0
+    assert lb.budget_turns(cfg, u, at, woken=True, reset=_dt.datetime(2026, 11, 7, 18, 35, tzinfo=_dt.timezone.utc))[0] == 120
+    assert lb.budget_turns(cfg, u, at, woken=True, reset=_dt.datetime(2026, 11, 7, 19, 0, tzinfo=_dt.timezone.utc))[0] == 0, "未来的重置时刻不算"
+
+
+def test_dry_run_writes_no_settings_file(tmp_path, monkeypatch):
+    """11-07:沙盒里跑 --dry-run 把 guard_settings-lane-c.json 的钩子路径改成了沙盒路径,正在跑的 lane 热加载后整轮被拦。"""
+    import sys as _sys
+    _sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "lane_bot"))
+    import lane_bot as lb
+    monkeypatch.setattr(lb, "BOT", tmp_path)
+    cfg = {"max_turns": 10, "command": "claude",
+           "lanes": {"lane-z": {"name": "Z", "cwd": str(tmp_path), "worktree": str(tmp_path)}}}
+    try:
+        out = lb.run_lane("lane-z", cfg, "test", dry=True, task="x")
+    except Exception:          # 拼 prompt 需要的仓库文件在测试里不一定齐 —— 关键是不写文件
+        out = None
+    assert not list(tmp_path.glob("guard_settings*.json")), "干跑不许写设置文件"
+    if out:
+        assert out["lane"] == "lane-z"
