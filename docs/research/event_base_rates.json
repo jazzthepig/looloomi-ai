@@ -1,0 +1,445 @@
+{
+ "task": "T-288",
+ "ledger": "S-767",
+ "title_zh": "事件基率表:整币下架 / 永续上线 / 现货上币",
+ "title_en": "Event base rates: full-coin delisting / perp launch / spot listing",
+ "kind": "只报不判(report-only)的整理表;不新增检验、不改任何既有判定、不入库。",
+ "generated_from": [
+  "docs/research/t272_results.json (T-272 / S-751)",
+  "docs/research/t279_results.json (T-279 / S-758)",
+  "docs/research/t284_results.json (T-284 / S-763)",
+  "docs/research/t285_results.json (T-285 / S-764)"
+ ],
+ "conventions": {
+  "excess_return": "相对基准(现货上币族为 T-284 口径的相对基准;下架族为相对 BTC;永续族为 T-279 自身基准)超额,单位为百分数。",
+  "quantile_method": "线性插值分位(numpy 'linear' 默认法)。",
+  "control_random_day": "同一标的随机起点 d 的随机日对照,报其中位数与 5 分位。",
+  "n_definitions": "n = 有价可算超额的事件/代币数,各族口径不同,已在各条 source 里写明。"
+ },
+ "families": {
+  "delisting_spot_full": {
+   "label_zh": "整币下架(现货全币种)",
+   "label_en": "Full-coin spot delisting",
+   "source": {
+    "card": "T-272",
+    "ledger": "S-751",
+    "file": "docs/research/t272_results.json",
+    "price_arm": "mcap(主口径); ohlc 为副臂 n=32 中位 -54.25%"
+   },
+   "n": 53,
+   "exc30": {
+    "n": 53,
+    "median_pct": -37.711,
+    "p10_pct": -90.937,
+    "p25_pct": -63.431,
+    "p75_pct": -17.339,
+    "p90_pct": 29.319,
+    "min_pct": -123.432,
+    "max_pct": 230.194,
+    "pct_negative": 0.8113
+   },
+   "exc90": null,
+   "exc90_note": "T-272 结果文件只落盘 30 天口径(ret30)与 7 天/公告日跳空;90 天未落盘,本轮不重算(见 EVENT_BASE_RATES.md 缺口)。",
+   "control_random_day": {
+    "median_pct": -8.68,
+    "p05_pct": -13.201,
+    "p95_pct": -3.466,
+    "n_draws": 200,
+    "percentile_of_actual": 0.0
+   },
+   "strata": {
+    "by_pre_event_gain_tercile": [
+     {
+      "bucket": "低",
+      "n": 17,
+      "strat_lo": -86.16,
+      "strat_hi": -47.361,
+      "strat_unit": "pct",
+      "median_exc_pct": -58.761,
+      "pct_negative": 0.8235
+     },
+     {
+      "bucket": "中",
+      "n": 18,
+      "strat_lo": -46.073,
+      "strat_hi": -30.87,
+      "strat_unit": "pct",
+      "median_exc_pct": -28.19,
+      "pct_negative": 0.8333
+     },
+     {
+      "bucket": "高",
+      "n": 18,
+      "strat_lo": -28.491,
+      "strat_hi": 5385.68,
+      "strat_unit": "pct",
+      "median_exc_pct": -33.24,
+      "pct_negative": 0.7778
+     }
+    ],
+    "by_mcap_tercile": [
+     {
+      "bucket": "低",
+      "n": 16,
+      "mcap_lo": 4210489.96711615,
+      "mcap_hi": 10119882.4339326,
+      "median_exc_pct": -55.812
+     },
+     {
+      "bucket": "中",
+      "n": 16,
+      "mcap_lo": 10524906.0164768,
+      "mcap_hi": 21139955.377967,
+      "median_exc_pct": -30.896
+     },
+     {
+      "bucket": "高",
+      "n": 18,
+      "mcap_lo": 21784950.7319828,
+      "mcap_hi": 2994691167.7457,
+      "median_exc_pct": -20.973
+     }
+    ]
+   },
+   "pre_event_gain_strata_note": "分层变量为公告前 30 天该币自身涨幅(pre30_tok,原始收益,非相对 BTC);市值分层沿用 T-272 自带三分位(mcap)。",
+   "extra": {
+    "exc7_median_pct": -13.647,
+    "pre30_excess_median_pct": -34.396,
+    "announce_day_jump_median_pct": -23.733,
+    "perp_delisting_subset": {
+     "n_computable": 7,
+     "median_exc30_pct": -48.436,
+     "pct_negative": 1.0
+    },
+    "segments": {
+     "2022-2023": {
+      "n": 1,
+      "median_exc30_pct": -2.68
+     },
+     "2024-2026": {
+      "n": 52,
+      "median_exc30_pct": -37.711
+     }
+    }
+   }
+  },
+  "perp_launch": {
+   "label_zh": "永续合约上线",
+   "label_en": "Perpetual futures launch",
+   "source": {
+    "card": "T-279",
+    "ledger": "S-758",
+    "file": "docs/research/t279_results.json",
+    "entry_convention": "entry on d(主口径),d+1 为稳健性副本"
+   },
+   "n": 142,
+   "exc30": {
+    "n": 142,
+    "median_pct": -21.878,
+    "p10_pct": -48.85,
+    "p25_pct": -36.299,
+    "p75_pct": -2.306,
+    "p90_pct": 26.366,
+    "min_pct": -144.996,
+    "max_pct": 110.079,
+    "pct_negative": 0.7676
+   },
+   "exc60": {
+    "n": 142,
+    "median_pct": -32.059,
+    "p10_pct": -71.886,
+    "p25_pct": -55.026,
+    "p75_pct": -7.253,
+    "p90_pct": 17.763,
+    "min_pct": -142.919,
+    "max_pct": 273.229,
+    "pct_negative": 0.7958
+   },
+   "exc90": null,
+   "exc90_note": "T-279 只落盘 30/60 天;90 天未落盘,本轮不重算(见 EVENT_BASE_RATES.md 缺口)。",
+   "control_random_day": {
+    "median_pct": -6.162,
+    "p05_pct": -9.598,
+    "n_draws": 1000,
+    "percentile_of_actual": 0.0
+   },
+   "strata": {
+    "by_pre_event_gain_tercile": [
+     {
+      "bucket": "低",
+      "n": 47,
+      "strat_lo": -38.209,
+      "strat_hi": 20.756,
+      "strat_unit": "pct",
+      "median_exc_pct": -19.801,
+      "pct_negative": 0.7872
+     },
+     {
+      "bucket": "中",
+      "n": 47,
+      "strat_lo": 21.275,
+      "strat_hi": 84.817,
+      "strat_unit": "pct",
+      "median_exc_pct": -26.205,
+      "pct_negative": 0.7447
+     },
+     {
+      "bucket": "高",
+      "n": 48,
+      "strat_lo": 86.937,
+      "strat_hi": 1100.289,
+      "strat_unit": "pct",
+      "median_exc_pct": -21.878,
+      "pct_negative": 0.7708
+     }
+    ],
+    "by_mcap_tercile": [
+     {
+      "bucket": "小",
+      "n": 40,
+      "mcap_lo": null,
+      "mcap_hi": 152435355.00253457,
+      "median_exc_pct": -22.684,
+      "pct_negative": 0.75,
+      "_recomputed_n": 40
+     },
+     {
+      "bucket": "中",
+      "n": 39,
+      "mcap_lo": 152435355.00253457,
+      "mcap_hi": 839313724.8762876,
+      "median_exc_pct": -21.114,
+      "pct_negative": 0.7436,
+      "_recomputed_n": 39
+     },
+     {
+      "bucket": "大",
+      "n": 40,
+      "mcap_lo": 839313724.8762876,
+      "mcap_hi": null,
+      "median_exc_pct": -13.996,
+      "pct_negative": 0.725,
+      "_recomputed_n": 40
+     }
+    ]
+   },
+   "pre_event_gain_strata_note": "分层变量为公告前 30 天该币自身涨幅(pre30_ret_pct);市值分层沿用 T-279 自带三分位(mcap_pre)。",
+   "robustness": {
+    "entry_on_d_plus_1_exc30_median_pct": -19.492,
+    "halves": [
+     {
+      "window": "2020-01→2022-12",
+      "n": 69,
+      "median_exc30_pct": -15.04
+     },
+     {
+      "window": "2023-01→9999-12",
+      "n": 73,
+      "median_exc30_pct": -24.311
+     }
+    ],
+    "blind_recompute_T285": {
+     "card": "T-285",
+     "ledger": "S-764",
+     "primary_reading": "B_db_symbols",
+     "note": "S-764 是 S-758 的盲复算;主读法 B(db 代号)与合并信息一致(n=143、中位 -20.9%),A/C 为另两种取数口径。",
+     "readings": {
+      "A_own_title_parser": {
+       "n": 89,
+       "median_30d_pct": -24.311,
+       "mean_30d_pct": -22.403,
+       "pct_negative": 0.809,
+       "exc30": {
+        "n": 89,
+        "median_pct": -24.311,
+        "p10_pct": -56.15,
+        "p25_pct": -38.386,
+        "p75_pct": -4.158,
+        "p90_pct": 15.562,
+        "min_pct": -144.996,
+        "max_pct": 86.319,
+        "pct_negative": 0.809
+       },
+       "control_random_day_median_pct": -6.593,
+       "control_random_day_p05_pct": -11.03,
+       "percentile_of_actual": 0.0,
+       "segments": {
+        "seg_2020_2022": {
+         "n": 32,
+         "median_pct": -18.237
+        },
+        "seg_2023_plus": {
+         "n": 57,
+         "median_pct": -25.54
+        }
+       }
+      },
+      "C_own_parser_same_announcement_rule": {
+       "n": 119,
+       "median_30d_pct": -21.841,
+       "mean_30d_pct": -16.853,
+       "pct_negative": null,
+       "exc30": null,
+       "control_random_day_median_pct": -6.135,
+       "control_random_day_p05_pct": -10.087,
+       "percentile_of_actual": 0.0,
+       "segments": {
+        "seg_2020_2022": {
+         "n": 62,
+         "median_pct": -13.545
+        },
+        "seg_2023_plus": {
+         "n": 57,
+         "median_pct": -25.54
+        }
+       }
+      },
+      "B_db_symbols": {
+       "n": 143,
+       "median_30d_pct": -20.919,
+       "mean_30d_pct": -15.454,
+       "pct_negative": 0.7622,
+       "exc30": {
+        "n": 143,
+        "median_pct": -20.919,
+        "p10_pct": -48.736,
+        "p25_pct": -32.959,
+        "p75_pct": -1.291,
+        "p90_pct": 28.991,
+        "min_pct": -144.996,
+        "max_pct": 110.079,
+        "pct_negative": 0.7622
+       },
+       "control_random_day_median_pct": -5.653,
+       "control_random_day_p05_pct": -9.164,
+       "percentile_of_actual": 0.0,
+       "segments": {
+        "seg_2020_2022": {
+         "n": 78,
+         "median_pct": -13.545
+        },
+        "seg_2023_plus": {
+         "n": 65,
+         "median_pct": -24.748
+        }
+       }
+      }
+     },
+     "ledger_reference_to_S758": {
+      "n": 142,
+      "median_30d_pct": -21.9,
+      "null_p05_pct": -9.6,
+      "sub_mcap_terciles_pct": {
+       "small": -22.7,
+       "mid": -21.1,
+       "large": -14.0
+      }
+     }
+    }
+   },
+   "extra": {
+    "funding7_vs_ex30_spearman": 0.35098976719245717,
+    "n_with_funding": 139
+   }
+  },
+  "spot_listing": {
+   "label_zh": "现货上币",
+   "label_en": "Spot listing",
+   "source": {
+    "card": "T-284",
+    "ledger": "S-763",
+    "file": "docs/research/t284_results.json",
+    "arm": "asset_mcap_daily(主臂);另两臂 coingecko_pro_ohlc / binance_hist 结果同文件",
+    "event_universe": "kept_events=703(events 行 1474,去掉 90 天内重复与无代号)"
+   },
+   "n": 205,
+   "exc30": {
+    "n": 205,
+    "median_pct": -21.398,
+    "mean_pct": -16.131,
+    "p25_pct": -42.877,
+    "p75_pct": -1.542,
+    "pct_negative": 0.761,
+    "p10_pct": null,
+    "p90_pct": null,
+    "_source": "t284_results.json arms.asset_mcap_daily.fwd30(相对基准超额)"
+   },
+   "exc90": {
+    "n": 203,
+    "median_pct": -34.492,
+    "p25_pct": -63.839,
+    "p75_pct": -5.773,
+    "pct_negative": 0.773,
+    "p10_pct": null,
+    "p90_pct": null,
+    "_source": "t284_results.json arms.asset_mcap_daily.fwd90_副(相对基准超额,副项)"
+   },
+   "control_random_day": {
+    "median_pct": -9.511,
+    "p05_pct": -12.045,
+    "n_draws": 1000,
+    "percentile_of_actual": 0.0
+   },
+   "strata": {
+    "by_pre_event_gain_tercile": null,
+    "by_mcap_tercile": null
+   },
+   "pre_event_gain_strata_note": "T-284 落盘的是聚合量(pre30_副:中位 +41.0%,胜率 74.8%)与分市值时代的 fwd30/fwd90;逐事件字段仅落盘代号与日期,未落盘前涨幅/市值,故两张分层表本轮无法从结果文件复算。",
+   "extra": {
+    "pre30_median_pct": 41.006,
+    "pre30_win_rate": 0.748,
+    "pre30_n": 139,
+    "fwd30_median_abs_pct": -19.623,
+    "fwd90_median_abs_pct": -25.637,
+    "gap_vs_proxy_events": {
+     "n": 196,
+     "median_days": 0.0,
+     "pct_negative": 0.449,
+     "pct_gt_30": 0.1378
+    }
+   }
+  }
+ },
+ "gaps": [
+  "整币下架族与永续上线族的 90 天超额未在已合并结果文件里落盘(T-272 只到 30 天;T-279 只到 30/60 天);本轮按「不新增检验」原则留空,下一轮可按各自脚本口径重算。",
+  "现货上币族的两张分层表无法从已合并结果文件复算(T-284 只落盘聚合量与代号/日期,未落盘逐事件前涨幅与市值)。"
+ ],
+ "self_check": [
+  {
+   "label": "T272 delisting exc30 median",
+   "recomputed": -37.711,
+   "from_file": -37.711,
+   "ok": true
+  },
+  {
+   "label": "T272 delisting pct_negative",
+   "recomputed": 0.8113,
+   "from_file": 0.8113,
+   "ok": true
+  },
+  {
+   "label": "T279 perp exc30 median",
+   "recomputed": -21.878,
+   "from_file": -21.878,
+   "ok": true
+  },
+  {
+   "label": "T279 perp frac_negative",
+   "recomputed": 0.7676,
+   "from_file": 0.7676,
+   "ok": true
+  },
+  {
+   "label": "T285 A_own_title_parser exc30 median",
+   "recomputed": -24.311,
+   "from_file": -24.311,
+   "ok": true
+  },
+  {
+   "label": "T285 B_db_symbols exc30 median",
+   "recomputed": -20.919,
+   "from_file": -20.919,
+   "ok": true
+  }
+ ]
+}
