@@ -1,7 +1,7 @@
 {
   "id": "T-269",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-11-06",
   "title": "S-746「政治不明朗 × 流动性收缩」触发时买 30 天 90% 看跌 —— 对冲盈亏 vs 随机对照,判据照台账写死",
   "source": "REFUTATION_LEDGER S-746(先读;触发 / 定价 / (a)–(d) 一字不改)。数据:macro_daily(series = gpr / epu / fed_net_liquidity;d 已是可得日)、state_daily(entity = panel, feature = stable_supply_30d)、deriv_vol_daily(currency = BTC, dvol_close)、perp_bv_daily(symbol = BTC)。随机对照只用 src/data/evaluation/apparatus.py。可参考 lane-b T-257 / lane-a T-261 的看跌定价写法(同口径)。",
@@ -24,5 +24,9 @@
   },
   "prior_value": "对冲条件里从没有政治维度(11-06 才入库);S-736 / S-737 的对冲都没过稳健。",
   "notes": "",
-  "verified": null
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-07T09:45:00Z",
+    "value": "merged 531552de; S-746 24-ticket design, (b) not met, power section added; result in ledger"
+  }
 }

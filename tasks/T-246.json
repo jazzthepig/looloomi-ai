@@ -1,7 +1,7 @@
 {
   "id": "T-246",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-11-05",
   "title": "R-v2 的宇宙能不能写成一条按时点的规则(S-731):在全部 coin 永续(含死币,perp_bv_daily)上,「上市满 365 天 且 30 日均成交额 ≥ 2,000 万美元」—— 对照现行的 257 名面板宇宙(今天的幸存者名单)与无门槛全宇宙;原因 = 薄盘口的新合约上的突破多半是做出来的",
   "source": "S-730 / T-238 v2:全部 coin 永续上 R-v2 是 960 张 / 0.32R,2026-08 后扩出来的 123 张合计 −24.9R、10-19 → 11-03 的 8 张全亏(新上的小永续);现行宇宙 = binance_hist 面板 ∩ coin 永续(257 名)是一份**今天的名单**,不是规则(S-684:幸存者偏差)。MEMORY:准入 ADV > ~$15M(S-112)。Jazz:机械交易是做市商的提款机 —— 薄盘口最容易被做出突破。数据:perp_bv_daily(o/h/l/c/qv,2019-12 起,含死币)、perp_bv_pairs(first_d / dead_from / kind)。票生成器复用 lane-b 的 docs/research/t238_rv2_um.py(宇宙开关)或 s677 生成器。",
@@ -24,5 +24,9 @@
   },
   "prior_value": "R-v2 的宇宙一直是一份名单;从没量过一条按时点的准入规则能不能接替它。",
   "notes": "",
-  "verified": null
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-07T09:45:00Z",
+    "value": "merged dd7cad92; S-731 result already in ledger; report/script/results on main"
+  }
 }
