@@ -1,18 +1,14 @@
 {
-  "format": "lane-b-scenarios-v1",
   "author": "lane-b",
-  "task": "T-295",
-  "created": "2026-11-08",
-  "pre_registered": "T-295 卡 acceptance(S-726 / S-768 口径)",
-  "note": "前向预期;到期按 Brier 结算。写下之后不改:要改观点就加新条目。manual 条目由人工判定(判定依据与数据路径写在 statement 里);state 条目自动结算。所有命题都是【可核的量】,不含收益承诺。",
+  "note": "前向预期;到期按 Brier 结算。写下之后不改:要改观点就加新条目(新 id)。manual 条目由人工判定(判定依据与数据路径写在 statement 里);state 条目自动结算。所有命题都是【可核的量】,不含收益承诺。★本文件在本分支合并前改过一次:S-777(2026-11-07 16:26 UTC)把事件集改成干净定义,函数默认口径(p_clean = true)由 218/20 变 185/16,所以 T-295-1 的计数目标与新增的 T-295-6 / T-295-7 按干净口径写;**概率一律没动**(0.85 / 0.6 / 0.7 / 0.5 / 0.7 仍是预注册时的值),改的只是被检验的计数目标;旧口径的 T-295-2 / T-295-3 保留(p_clean = false 时复现 218/20)。台账在合并那天才入账,故此刻改不算改已入账的条目。",
   "entries": [
     {
       "id": "T-295-1",
-      "scenario": "T-295 SQL 内核 · squeeze 计数不低于参考",
-      "statement": "Seth 把 public.crowding_events 应用到库里后,在 2019-12-31 → 2026-11-04 窗口返回的 squeeze 事件条数 ≥ 218(参考:t289_results.json 的 218)",
+      "scenario": "T-295 SQL 内核 · 干净口径的 squeeze 计数",
+      "statement": "Seth 把 public.crowding_events 应用到库里后,在 2019-12-31 → 2026-11-04 窗口用默认口径(p_clean = true,S-777 干净定义)返回的 squeeze 事件条数 ≥ 185(参考:t295_audit.json 的 reference.clean_squeeze = 185)",
       "variable": "manual",
       "op": "between",
-      "lo": 218,
+      "lo": 185,
       "hi": 400,
       "prob": 0.85,
       "horizon_d": "2026-12-08"
@@ -20,7 +16,7 @@
     {
       "id": "T-295-2",
       "scenario": "T-295 SQL 内核 · 与参考逐条一致",
-      "statement": "同一窗口内,SQL 返回的 (kind, symbol, d) 与 docs/research/t289_events.json 的 218 squeeze + 20 flush 逐条相同(不多不少)。判定依据:应用后跑 select kind, symbol, d from public.crowding_events(date '2019-12-31', date '2026-11-04') order by kind, d, symbol 并与 t289_events.json 做集合差",
+      "statement": "同一窗口内,旧口径(p_clean = false)SQL 返回的 (kind, symbol, d) 与 docs/research/t289_events.json 的 218 squeeze + 20 flush 逐条相同(不多不少)。判定依据:跑 select kind, symbol, d from public.crowding_events(date '2019-12-31', date '2026-11-04', false) order by kind, d, symbol 并与 t289_events.json 做集合差",
       "variable": "manual",
       "op": "between",
       "lo": 0,
@@ -30,8 +26,8 @@
     },
     {
       "id": "T-295-3",
-      "scenario": "T-295 SQL 内核 · flush 计数",
-      "statement": "同一窗口内,SQL 返回的 flush 事件条数 = 20(参考:t289_results.json)",
+      "scenario": "T-295 SQL 内核 · 旧口径的 flush 计数",
+      "statement": "同一窗口内,旧口径(p_clean = false)返回的 flush 事件条数 = 20(参考:t289_results.json)",
       "variable": "manual",
       "op": "between",
       "lo": 20,
@@ -58,6 +54,28 @@
       "lo": 1,
       "hi": 100000,
       "prob": 0.7,
+      "horizon_d": "2026-12-08"
+    },
+    {
+      "id": "T-295-6",
+      "scenario": "T-295 SQL 内核 · 干净口径的 flush 计数",
+      "statement": "同一窗口内,干净口径(p_clean = true)返回的 flush 事件条数 = 16(参考:t295_audit.json 的 reference.clean_flush = 16)",
+      "variable": "manual",
+      "op": "between",
+      "lo": 16,
+      "hi": 16,
+      "prob": 0.85,
+      "horizon_d": "2026-12-08"
+    },
+    {
+      "id": "T-295-7",
+      "scenario": "T-295 SQL 内核 · S-777 的伪事件在库里不再出现",
+      "statement": "干净口径返回的事件里,「d 日 f7 为空」与「ATR14 ≤ 0 或 20 日均 qv ≤ 0」的条数都为 0(旧口径里这两类共 33 条 f7 为空 + 36 条零价差零成交合约命中)",
+      "variable": "manual",
+      "op": "between",
+      "lo": 0,
+      "hi": 0,
+      "prob": 0.9,
       "horizon_d": "2026-12-08"
     }
   ]
