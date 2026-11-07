@@ -1,0 +1,847 @@
+{
+  "meta": {
+    "task": "T-273",
+    "prereg": "S-752",
+    "names": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "BNB",
+      "XRP",
+      "DOGE",
+      "AVAX",
+      "LINK",
+      "DOT",
+      "TRX",
+      "ATOM",
+      "NEAR",
+      "APT",
+      "ARB",
+      "OP",
+      "SUI",
+      "UNI",
+      "AAVE",
+      "INJ",
+      "FIL",
+      "ETC",
+      "BCH"
+    ],
+    "n_names": 22,
+    "d0": "2023-05-12",
+    "d1": "2026-11-05",
+    "cut_hourly_to": "2026-07-20",
+    "hourly_rows": 25288,
+    "sb_rows": 26916,
+    "hourly_max_d": "2026-08-23",
+    "overlap_days": 25288,
+    "overlap_max_abs_rate_sum_diff": 1.0842021724855044e-18,
+    "overlap_n_hours_mismatch_days": 0,
+    "lend_days": 1285,
+    "lend_min": "2023-05-01",
+    "lend_max": "2026-11-05",
+    "cost_real_bp": 15.5,
+    "cap": 0.75
+  },
+  "s749": {
+    "ledger_assembly": [
+      {
+        "interval": "2023H2",
+        "start": "2023-07-01",
+        "end": "2023-12-31",
+        "days": 184,
+        "carry_nominal": 21.4876,
+        "carry_capital": 16.1157,
+        "lend": 4.7793,
+        "winner": "carry",
+        "gap_pp": 11.3365
+      },
+      {
+        "interval": "2024H1",
+        "start": "2024-01-01",
+        "end": "2024-06-30",
+        "days": 182,
+        "carry_nominal": 35.6466,
+        "carry_capital": 26.735,
+        "lend": 7.5158,
+        "winner": "carry",
+        "gap_pp": 19.2191
+      },
+      {
+        "interval": "2024H2",
+        "start": "2024-07-01",
+        "end": "2024-12-31",
+        "days": 184,
+        "carry_nominal": 17.9021,
+        "carry_capital": 13.4266,
+        "lend": 5.6469,
+        "winner": "carry",
+        "gap_pp": 7.7797
+      },
+      {
+        "interval": "2025H1",
+        "start": "2025-01-01",
+        "end": "2025-06-30",
+        "days": 181,
+        "carry_nominal": 5.4764,
+        "carry_capital": 4.1073,
+        "lend": 4.1389,
+        "winner": "lend",
+        "gap_pp": -0.0316
+      },
+      {
+        "interval": "2025H2",
+        "start": "2025-07-01",
+        "end": "2025-12-31",
+        "days": 184,
+        "carry_nominal": 8.9389,
+        "carry_capital": 6.7042,
+        "lend": 3.8822,
+        "winner": "carry",
+        "gap_pp": 2.8219
+      },
+      {
+        "interval": "2026H1",
+        "start": "2026-01-01",
+        "end": "2026-06-30",
+        "days": 181,
+        "carry_nominal": 2.792,
+        "carry_capital": 2.094,
+        "lend": 2.9775,
+        "winner": "lend",
+        "gap_pp": -0.8835
+      },
+      {
+        "interval": "2026-07 → 11-05",
+        "start": "2026-07-01",
+        "end": "2026-11-05",
+        "days": 128,
+        "carry_nominal": 7.8933,
+        "carry_capital": 5.92,
+        "lend": 3.3321,
+        "winner": "carry",
+        "gap_pp": 2.5879
+      },
+      {
+        "interval": "最近 13 周(91 天)",
+        "start": "2026-08-07",
+        "end": "2026-11-05",
+        "days": 91,
+        "carry_nominal": 9.0354,
+        "carry_capital": 6.7766,
+        "lend": 3.536,
+        "winner": "carry",
+        "gap_pp": 3.2406
+      },
+      {
+        "interval": "最近 13 周(92 天)",
+        "start": "2026-08-06",
+        "end": "2026-11-05",
+        "days": 92,
+        "carry_nominal": 8.9781,
+        "carry_capital": 6.7335,
+        "lend": 3.5291,
+        "winner": "carry",
+        "gap_pp": 3.2044
+      },
+      {
+        "interval": "全样本(起 2023-06-12)",
+        "start": "2023-06-12",
+        "end": "2026-11-05",
+        "days": 1243,
+        "carry_nominal": 14.4732,
+        "carry_capital": 10.8549,
+        "lend": 4.6315,
+        "winner": "carry",
+        "gap_pp": 6.2234
+      },
+      {
+        "interval": "全样本(起 2023-07-01)",
+        "start": "2023-07-01",
+        "end": "2026-11-05",
+        "days": 1224,
+        "carry_nominal": 14.6136,
+        "carry_capital": 10.9602,
+        "lend": 4.6693,
+        "winner": "carry",
+        "gap_pp": 6.291
+      }
+    ],
+    "all_supabase": [
+      {
+        "interval": "2023H2",
+        "start": "2023-07-01",
+        "end": "2023-12-31",
+        "days": 184,
+        "carry_nominal": 21.4876,
+        "carry_capital": 16.1157,
+        "lend": 4.7793,
+        "winner": "carry",
+        "gap_pp": 11.3365
+      },
+      {
+        "interval": "2024H1",
+        "start": "2024-01-01",
+        "end": "2024-06-30",
+        "days": 182,
+        "carry_nominal": 35.6466,
+        "carry_capital": 26.735,
+        "lend": 7.5158,
+        "winner": "carry",
+        "gap_pp": 19.2191
+      },
+      {
+        "interval": "2024H2",
+        "start": "2024-07-01",
+        "end": "2024-12-31",
+        "days": 184,
+        "carry_nominal": 17.9021,
+        "carry_capital": 13.4266,
+        "lend": 5.6469,
+        "winner": "carry",
+        "gap_pp": 7.7797
+      },
+      {
+        "interval": "2025H1",
+        "start": "2025-01-01",
+        "end": "2025-06-30",
+        "days": 181,
+        "carry_nominal": 5.4764,
+        "carry_capital": 4.1073,
+        "lend": 4.1389,
+        "winner": "lend",
+        "gap_pp": -0.0316
+      },
+      {
+        "interval": "2025H2",
+        "start": "2025-07-01",
+        "end": "2025-12-31",
+        "days": 184,
+        "carry_nominal": 8.9389,
+        "carry_capital": 6.7042,
+        "lend": 3.8822,
+        "winner": "carry",
+        "gap_pp": 2.8219
+      },
+      {
+        "interval": "2026H1",
+        "start": "2026-01-01",
+        "end": "2026-06-30",
+        "days": 181,
+        "carry_nominal": 2.792,
+        "carry_capital": 2.094,
+        "lend": 2.9775,
+        "winner": "lend",
+        "gap_pp": -0.8835
+      },
+      {
+        "interval": "2026-07 → 11-05",
+        "start": "2026-07-01",
+        "end": "2026-11-05",
+        "days": 128,
+        "carry_nominal": 7.8933,
+        "carry_capital": 5.92,
+        "lend": 3.3321,
+        "winner": "carry",
+        "gap_pp": 2.5879
+      },
+      {
+        "interval": "最近 13 周(91 天)",
+        "start": "2026-08-07",
+        "end": "2026-11-05",
+        "days": 91,
+        "carry_nominal": 9.0354,
+        "carry_capital": 6.7766,
+        "lend": 3.536,
+        "winner": "carry",
+        "gap_pp": 3.2406
+      },
+      {
+        "interval": "最近 13 周(92 天)",
+        "start": "2026-08-06",
+        "end": "2026-11-05",
+        "days": 92,
+        "carry_nominal": 8.9781,
+        "carry_capital": 6.7335,
+        "lend": 3.5291,
+        "winner": "carry",
+        "gap_pp": 3.2044
+      },
+      {
+        "interval": "全样本(起 2023-06-12)",
+        "start": "2023-06-12",
+        "end": "2026-11-05",
+        "days": 1243,
+        "carry_nominal": 14.4732,
+        "carry_capital": 10.8549,
+        "lend": 4.6315,
+        "winner": "carry",
+        "gap_pp": 6.2234
+      },
+      {
+        "interval": "全样本(起 2023-07-01)",
+        "start": "2023-07-01",
+        "end": "2026-11-05",
+        "days": 1224,
+        "carry_nominal": 14.6136,
+        "carry_capital": 10.9602,
+        "lend": 4.6693,
+        "winner": "carry",
+        "gap_pp": 6.291
+      }
+    ],
+    "all_hourly": [
+      {
+        "interval": "2023H2",
+        "start": "2023-07-01",
+        "end": "2023-12-31",
+        "days": 184,
+        "carry_nominal": 21.4876,
+        "carry_capital": 16.1157,
+        "lend": 4.7793,
+        "winner": "carry",
+        "gap_pp": 11.3365
+      },
+      {
+        "interval": "2024H1",
+        "start": "2024-01-01",
+        "end": "2024-06-30",
+        "days": 182,
+        "carry_nominal": 35.6466,
+        "carry_capital": 26.735,
+        "lend": 7.5158,
+        "winner": "carry",
+        "gap_pp": 19.2191
+      },
+      {
+        "interval": "2024H2",
+        "start": "2024-07-01",
+        "end": "2024-12-31",
+        "days": 184,
+        "carry_nominal": 17.9021,
+        "carry_capital": 13.4266,
+        "lend": 5.6469,
+        "winner": "carry",
+        "gap_pp": 7.7797
+      },
+      {
+        "interval": "2025H1",
+        "start": "2025-01-01",
+        "end": "2025-06-30",
+        "days": 181,
+        "carry_nominal": 5.4764,
+        "carry_capital": 4.1073,
+        "lend": 4.1389,
+        "winner": "lend",
+        "gap_pp": -0.0316
+      },
+      {
+        "interval": "2025H2",
+        "start": "2025-07-01",
+        "end": "2025-12-31",
+        "days": 184,
+        "carry_nominal": 8.9389,
+        "carry_capital": 6.7042,
+        "lend": 3.8822,
+        "winner": "carry",
+        "gap_pp": 2.8219
+      },
+      {
+        "interval": "2026H1",
+        "start": "2026-01-01",
+        "end": "2026-06-30",
+        "days": 181,
+        "carry_nominal": 2.792,
+        "carry_capital": 2.094,
+        "lend": 2.9775,
+        "winner": "lend",
+        "gap_pp": -0.8835
+      },
+      {
+        "interval": "2026-07 → 11-05",
+        "start": "2026-07-01",
+        "end": "2026-11-05",
+        "days": 128,
+        "carry_nominal": 7.8933,
+        "carry_capital": 5.92,
+        "lend": 3.3321,
+        "winner": "carry",
+        "gap_pp": 2.5879
+      },
+      {
+        "interval": "最近 13 周(91 天)",
+        "start": "2026-08-07",
+        "end": "2026-11-05",
+        "days": 91,
+        "carry_nominal": 9.0354,
+        "carry_capital": 6.7766,
+        "lend": 3.536,
+        "winner": "carry",
+        "gap_pp": 3.2406
+      },
+      {
+        "interval": "最近 13 周(92 天)",
+        "start": "2026-08-06",
+        "end": "2026-11-05",
+        "days": 92,
+        "carry_nominal": 8.9781,
+        "carry_capital": 6.7335,
+        "lend": 3.5291,
+        "winner": "carry",
+        "gap_pp": 3.2044
+      },
+      {
+        "interval": "全样本(起 2023-06-12)",
+        "start": "2023-06-12",
+        "end": "2026-11-05",
+        "days": 1243,
+        "carry_nominal": 14.4732,
+        "carry_capital": 10.8549,
+        "lend": 4.6315,
+        "winner": "carry",
+        "gap_pp": 6.2234
+      },
+      {
+        "interval": "全样本(起 2023-07-01)",
+        "start": "2023-07-01",
+        "end": "2026-11-05",
+        "days": 1224,
+        "carry_nominal": 14.6136,
+        "carry_capital": 10.9602,
+        "lend": 4.6693,
+        "winner": "carry",
+        "gap_pp": 6.291
+      }
+    ],
+    "verdict": {
+      "a_2026H1_carry_gt_lend": false,
+      "b_last13w_carry_gt_lend": true,
+      "verdict": "不提真钱"
+    }
+  },
+  "s750": {
+    "prev28": {
+      "table": [
+        {
+          "interval": "全样本 2023-07-10 → 2026-11-05",
+          "days": 1215,
+          "switch": 10.9097,
+          "always_carry_capital": 10.9797,
+          "always_lend": 4.6875
+        },
+        {
+          "interval": "2025-01 → 2026-11-05",
+          "days": 674,
+          "switch": 4.6006,
+          "always_carry_capital": 4.6198,
+          "always_lend": 3.6037
+        },
+        {
+          "interval": "2026H1",
+          "days": 181,
+          "switch": 2.2944,
+          "always_carry_capital": 2.094,
+          "always_lend": 2.9775
+        },
+        {
+          "interval": "2023H2",
+          "days": 175,
+          "switch": 17.3139,
+          "always_carry_capital": 16.516,
+          "always_lend": 4.9114
+        },
+        {
+          "interval": "2024H1",
+          "days": 182,
+          "switch": 26.1443,
+          "always_carry_capital": 26.735,
+          "always_lend": 7.5158
+        },
+        {
+          "interval": "2024H2",
+          "days": 184,
+          "switch": 12.8606,
+          "always_carry_capital": 13.4266,
+          "always_lend": 5.6469
+        },
+        {
+          "interval": "2025H1",
+          "days": 181,
+          "switch": 4.812,
+          "always_carry_capital": 4.1073,
+          "always_lend": 4.1389
+        },
+        {
+          "interval": "2025H2",
+          "days": 184,
+          "switch": 6.3288,
+          "always_carry_capital": 6.7042,
+          "always_lend": 3.8822
+        },
+        {
+          "interval": "2026-07 → 11-05",
+          "days": 128,
+          "switch": 5.0783,
+          "always_carry_capital": 5.92,
+          "always_lend": 3.3321
+        }
+      ],
+      "weeks": 174,
+      "carry_weeks": 120,
+      "switches": 15,
+      "pattern_2026": "CCCCCLLLLLLLLLLLLLLLCCCLLLLCCCCCCCCCCCCCCCCL"
+    },
+    "incl28": {
+      "table": [
+        {
+          "interval": "全样本 2023-07-10 → 2026-11-05",
+          "days": 1215,
+          "switch": 10.9462,
+          "always_carry_capital": 10.9797,
+          "always_lend": 4.6875
+        },
+        {
+          "interval": "2025-01 → 2026-11-05",
+          "days": 674,
+          "switch": 4.4713,
+          "always_carry_capital": 4.6198,
+          "always_lend": 3.6037
+        },
+        {
+          "interval": "2026H1",
+          "days": 181,
+          "switch": 2.3838,
+          "always_carry_capital": 2.094,
+          "always_lend": 2.9775
+        },
+        {
+          "interval": "2023H2",
+          "days": 175,
+          "switch": 17.3139,
+          "always_carry_capital": 16.516,
+          "always_lend": 4.9114
+        },
+        {
+          "interval": "2024H1",
+          "days": 182,
+          "switch": 26.735,
+          "always_carry_capital": 26.735,
+          "always_lend": 7.5158
+        },
+        {
+          "interval": "2024H2",
+          "days": 184,
+          "switch": 12.9911,
+          "always_carry_capital": 13.4266,
+          "always_lend": 5.6469
+        },
+        {
+          "interval": "2025H1",
+          "days": 181,
+          "switch": 4.241,
+          "always_carry_capital": 4.1073,
+          "always_lend": 4.1389
+        },
+        {
+          "interval": "2025H2",
+          "days": 184,
+          "switch": 6.3288,
+          "always_carry_capital": 6.7042,
+          "always_lend": 3.8822
+        },
+        {
+          "interval": "2026-07 → 11-05",
+          "days": 128,
+          "switch": 5.0783,
+          "always_carry_capital": 5.92,
+          "always_lend": 3.3321
+        }
+      ],
+      "weeks": 174,
+      "carry_weeks": 120,
+      "switches": 15,
+      "pattern_2026": "CCCCLLLLLLLLLLLLLLLLCCCLLLLCCCCCCCCCCCCCCCCL"
+    }
+  },
+  "s750_sb": {
+    "prev28": {
+      "table": [
+        {
+          "interval": "全样本 2023-07-10 → 2026-11-05",
+          "days": 1215,
+          "switch": 10.9097,
+          "always_carry_capital": 10.9797,
+          "always_lend": 4.6875
+        },
+        {
+          "interval": "2025-01 → 2026-11-05",
+          "days": 674,
+          "switch": 4.6006,
+          "always_carry_capital": 4.6198,
+          "always_lend": 3.6037
+        },
+        {
+          "interval": "2026H1",
+          "days": 181,
+          "switch": 2.2944,
+          "always_carry_capital": 2.094,
+          "always_lend": 2.9775
+        },
+        {
+          "interval": "2023H2",
+          "days": 175,
+          "switch": 17.3139,
+          "always_carry_capital": 16.516,
+          "always_lend": 4.9114
+        },
+        {
+          "interval": "2024H1",
+          "days": 182,
+          "switch": 26.1443,
+          "always_carry_capital": 26.735,
+          "always_lend": 7.5158
+        },
+        {
+          "interval": "2024H2",
+          "days": 184,
+          "switch": 12.8606,
+          "always_carry_capital": 13.4266,
+          "always_lend": 5.6469
+        },
+        {
+          "interval": "2025H1",
+          "days": 181,
+          "switch": 4.812,
+          "always_carry_capital": 4.1073,
+          "always_lend": 4.1389
+        },
+        {
+          "interval": "2025H2",
+          "days": 184,
+          "switch": 6.3288,
+          "always_carry_capital": 6.7042,
+          "always_lend": 3.8822
+        },
+        {
+          "interval": "2026-07 → 11-05",
+          "days": 128,
+          "switch": 5.0783,
+          "always_carry_capital": 5.92,
+          "always_lend": 3.3321
+        }
+      ],
+      "weeks": 174,
+      "carry_weeks": 120,
+      "switches": 15,
+      "pattern_2026": "CCCCCLLLLLLLLLLLLLLLCCCLLLLCCCCCCCCCCCCCCCCL"
+    },
+    "incl28": {
+      "table": [
+        {
+          "interval": "全样本 2023-07-10 → 2026-11-05",
+          "days": 1215,
+          "switch": 10.9462,
+          "always_carry_capital": 10.9797,
+          "always_lend": 4.6875
+        },
+        {
+          "interval": "2025-01 → 2026-11-05",
+          "days": 674,
+          "switch": 4.4713,
+          "always_carry_capital": 4.6198,
+          "always_lend": 3.6037
+        },
+        {
+          "interval": "2026H1",
+          "days": 181,
+          "switch": 2.3838,
+          "always_carry_capital": 2.094,
+          "always_lend": 2.9775
+        },
+        {
+          "interval": "2023H2",
+          "days": 175,
+          "switch": 17.3139,
+          "always_carry_capital": 16.516,
+          "always_lend": 4.9114
+        },
+        {
+          "interval": "2024H1",
+          "days": 182,
+          "switch": 26.735,
+          "always_carry_capital": 26.735,
+          "always_lend": 7.5158
+        },
+        {
+          "interval": "2024H2",
+          "days": 184,
+          "switch": 12.9911,
+          "always_carry_capital": 13.4266,
+          "always_lend": 5.6469
+        },
+        {
+          "interval": "2025H1",
+          "days": 181,
+          "switch": 4.241,
+          "always_carry_capital": 4.1073,
+          "always_lend": 4.1389
+        },
+        {
+          "interval": "2025H2",
+          "days": 184,
+          "switch": 6.3288,
+          "always_carry_capital": 6.7042,
+          "always_lend": 3.8822
+        },
+        {
+          "interval": "2026-07 → 11-05",
+          "days": 128,
+          "switch": 5.0783,
+          "always_carry_capital": 5.92,
+          "always_lend": 3.3321
+        }
+      ],
+      "weeks": 174,
+      "carry_weeks": 120,
+      "switches": 15,
+      "pattern_2026": "CCCCLLLLLLLLLLLLLLLLCCCLLLLCCCCCCCCCCCCCCCCL"
+    }
+  },
+  "extras": {
+    "name_order_sensitivity": {
+      "panel_order_capital_pct": [
+        16.1157,
+        26.735,
+        13.4266,
+        4.1073,
+        6.7042,
+        2.094,
+        5.92,
+        6.7766,
+        6.7335,
+        10.8549,
+        10.9602
+      ],
+      "alpha_order_capital_pct": [
+        16.1157,
+        26.735,
+        13.4266,
+        4.1073,
+        6.7042,
+        2.094,
+        5.92,
+        6.7766,
+        6.7335,
+        10.8549,
+        10.9602
+      ],
+      "max_abs_diff_pp": 0.0
+    },
+    "s749_side_items": {
+      "2023H2": {
+        "carry_capital": 16.1157,
+        "carry_capital_idle_lend": 17.5542,
+        "carry_capital_old_cost": 17.0352,
+        "lend": 4.7793
+      },
+      "2024H1": {
+        "carry_capital": 26.735,
+        "carry_capital_idle_lend": 26.8259,
+        "carry_capital_old_cost": 27.341,
+        "lend": 7.5158
+      },
+      "2024H2": {
+        "carry_capital": 13.4266,
+        "carry_capital_idle_lend": 13.507,
+        "carry_capital_old_cost": 14.065,
+        "lend": 5.6469
+      },
+      "2025H1": {
+        "carry_capital": 4.1073,
+        "carry_capital_idle_lend": 4.3644,
+        "carry_capital_old_cost": 5.0643,
+        "lend": 4.1389
+      },
+      "2025H2": {
+        "carry_capital": 6.7042,
+        "carry_capital_idle_lend": 6.895,
+        "carry_capital_old_cost": 7.4616,
+        "lend": 3.8822
+      },
+      "2026H1": {
+        "carry_capital": 2.094,
+        "carry_capital_idle_lend": 2.326,
+        "carry_capital_old_cost": 2.952,
+        "lend": 2.9775
+      },
+      "2026-07 → 11-05": {
+        "carry_capital": 5.92,
+        "carry_capital_idle_lend": 5.9579,
+        "carry_capital_old_cost": 6.6044,
+        "lend": 3.3321
+      },
+      "最近 13 周(91 天)": {
+        "carry_capital": 6.7766,
+        "carry_capital_idle_lend": 6.7766,
+        "carry_capital_old_cost": 7.3892,
+        "lend": 3.536
+      },
+      "最近 13 周(92 天)": {
+        "carry_capital": 6.7335,
+        "carry_capital_idle_lend": 6.7335,
+        "carry_capital_old_cost": 7.3395,
+        "lend": 3.5291
+      },
+      "全样本(起 2023-06-12)": {
+        "carry_capital": 10.8549,
+        "carry_capital_idle_lend": 11.2224,
+        "carry_capital_old_cost": 11.627,
+        "lend": 4.6315
+      },
+      "全样本(起 2023-07-01)": {
+        "carry_capital": 10.9602,
+        "carry_capital_idle_lend": 11.3071,
+        "carry_capital_old_cost": 11.7383,
+        "lend": 4.6693
+      }
+    },
+    "s749_halfyear_wins": [
+      {
+        "interval": "2023H2",
+        "winner": "carry",
+        "gap_pp": 11.3364
+      },
+      {
+        "interval": "2024H1",
+        "winner": "carry",
+        "gap_pp": 19.2192
+      },
+      {
+        "interval": "2024H2",
+        "winner": "carry",
+        "gap_pp": 7.7797
+      },
+      {
+        "interval": "2025H1",
+        "winner": "lend",
+        "gap_pp": -0.0316
+      },
+      {
+        "interval": "2025H2",
+        "winner": "carry",
+        "gap_pp": 2.822
+      },
+      {
+        "interval": "2026H1",
+        "winner": "lend",
+        "gap_pp": -0.8835
+      },
+      {
+        "interval": "2026-07 → 11-05",
+        "winner": "carry",
+        "gap_pp": 2.5879
+      }
+    ],
+    "s749_carry_wins": 5,
+    "s749_lend_wins": 2
+  }
+}
