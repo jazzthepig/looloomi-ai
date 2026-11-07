@@ -42,6 +42,7 @@
     "crowd_clock_log",
     "cycle_vector_daily",
     "decision_outcomes",
+    "delisting_watch",
     "deriv_metrics_daily",
     "deriv_vol_daily",
     "derivatives_market_daily",
@@ -317,6 +318,20 @@
       "settled_at",
       "source",
       "symbol"
+    ],
+    "delisting_watch": [
+      "announced_at",
+      "btc_30d",
+      "code_ref",
+      "d0",
+      "excess_30d",
+      "excess_7d",
+      "kind",
+      "price_source",
+      "ret_30d",
+      "settled_at",
+      "symbol",
+      "title"
     ],
     "deriv_vol_daily": [
       "currency",
