@@ -1,7 +1,7 @@
 {
   "id": "T-264",
   "owner": "lane-a",
-  "status": "open",
+  "status": "done",
   "created": "2026-11-06",
   "allowed_paths": [
     "docs/research/",
@@ -16,56 +16,11 @@
     "scripts/",
     "migrations/"
   ],
-  "notes": "【Seth 1106 重开:本卡的前提在合并时已变(或将变)满足,装置已合并;补跑见 SYNC §Seth-1106o。】\n【结论:前提不成立 ⇒ 5 个检验一个都没跑(卡 acceptance ① 的停机分支)。】交付的是覆盖表 + 一次跑完的预注册实现 + 机器自测;数据落行后一条命令重跑。\n\n【① 前提覆盖表 —— exchange_volume_daily 读出来 0 行】列名已探明:d / exchange / kind / volume_btc(用错列名报错反查)。`Prefer: count=exact` ⇒ Content-Range `*/0`;select=d,exchange,kind,volume_btc ⇒ []。四个场所自 2021-03-01 起的逐日覆盖:gdax 0 天、binance 0 天、upbit 0 天、binance_futures 0 天 ⇒ 覆盖率全 0.00%、缺 100%(任一缺 > 5% ⇒ 停,不跑)。视图侧同样为空:feature_matrix_daily 2,866 行(2019-01-01→2026-11-05)里 `venue:*` 键 **0 个**、has.venue=true **0/2866** 行,三个预注册键(venue:coinbase_share_spot30 / venue:korea_share_spot30 / venue:deriv_to_spot30)行数均为 0。\n【不是我的 key 读不到】同一把 publishable key 在同一个库读得到:feature_matrix_daily 2,866 行 · ohlcv_daily 1,531,626 行 · cg_coin_mcap_daily 497,674 行 · perp_bv_daily / macro_daily / state_daily 正常。外部佐证:MINIMAX_SYNC(11-06)记 `venue:*`「回填中(还不能用)」,来源 exchange_volume_daily 2021 起、约 8 轮。\n\n【② 顺带查出:卡写的数据口径有一处不对】卡写「山寨价格用 cg_coin_mcap_daily」—— 实测该表**没有 ① 面板 24 名里的任何一个主币**:coin_id=in.(bitcoin,ethereum,solana,binance-coin,ripple,litecoin,dogecoin,cardano,avalanche-2,aptos,sui,polkadot,uniswap,filecoin,cosmos,near-protocol,arbitrum,optimism,ethereum-classic,bitcoin-cash,tron) ⇒ **0 行**;那张表装的是新币/包装/跨链宇宙(wrapped-bitcoin、usd-coin-ethereum-bridged、magic-internet-money-arbitrum…)。面板现货收盘只能取 ohlcv_daily(source=binance_hist,与 core_cap.PRICE_SOURCE 一致),覆盖 24/24:BTC 2015-07-14→2026-11-05(7,806 行)· ETH 2015-08-07→ · SOL 2020-04-11→ · AAVE 2020-10-03→ · APT 2022-10-19→ · ARB 2023-03-23→ · SUI 2023-05-03→(每个 symbol 首末日都探过,全到 2026-11-05)。\n\n【③ 已交付的实现(数据到位即跑)】`python3 docs/research/t264_venue.py`:阶段 0 前提(四场所覆盖 + venue:* 键清点,不成立就写 t264_results.json 并退出)→ 阶段 1 特征(F1 = coinbase_share_spot30 − 自己过去 180 天均值;F2 = korea_share_spot30 过去 365 天分位;F3 = deriv_to_spot30 过去 365 天分位,只用 ≤ d)→ 阶段 2 结果(BTC 永续 perp_bv_daily symbol=BTC 的 d→d+30 对数收益与 d→d+30 最大回撤;山寨等权 = ① 面板除 BTC/ETH 的 22 名,减 BTC 的 30 天对数超额)→ 阶段 3 五个检验 + BH(q=0.10,跨 5 个)+ 副项(7 天只报;venue:onchain_perp_share30 只描述走势不测)。T1 F1→BTC 收益(+);T2 F2→BTC 收益(−);T3 F2→山寨超额(−);T4 F3→BTC 最大回撤(更深);T5 F3→BTC 收益(台账没写方向 ⇒ 双侧)。每条要 (a)|IC|≥0.10 且同号 (b)循环平移零分布(≥60 天、1,000 次、种子 742)分位 ≥0.95 (c)两段 2021-03→2023-06 / 2023-07→ 同号 (d)控制 BTC 过去 30 天收益后同号,四条全过 + BH 才算 PASS。\n【机器自测(不碰市场数据)】注入信号:IC **+0.329**、分位 **1.000**、BH q **0.000** ⇒ PASS;纯噪声:IC −0.0004、分位 0.495、q 0.505 ⇒ FAIL。⇒ 零分布这条路没坏(10-14「打乱是空操作⇒所有检验都过」的坑被挡住)。\n\n【口径偏离,逐条写明】① 山寨价改 ohlcv_daily(理由见上);② T5 台账未写方向 ⇒ 双侧判(|IC| 对 |零分布|),两段/残差只要求与全样本同号;③ 山寨等权在两端都有价的名字不足 22 名里的 80%(≥18 名)时该日记缺失;④ ohlcv_daily 同一 symbol 有多来源(BTC 7,806 行 ≈ 2 来源×4,100 天)⇒ 只取 binance_hist 并同日去重;⑤ 控制变量用永续 BTC 的过去 30 天对数收益(只用 ≤ d);⑥ 山寨超额里减的 BTC 用 ohlcv_daily 现货(与山寨同源);⑦ apparatus.py 里**没有「循环平移」算子**,平移写在脚本内,机器与分位仍走 apparatus.null_distribution / percentile_of(见给 @seth 第 1 条)。\n\n【给 @seth】① apparatus 是否要统一加「循环平移」算子(S-742 明写这个零分布;每卡各写一遍正是 10-14 的病根);② 卡 T-264 的数据口径要改:山寨价格不是 cg_coin_mcap_daily(无主币),是 ohlcv_daily(binance_hist);③ 回填完成后叫醒 lane-a 重跑(脚本与参数都在本分支),或授权我下轮重跑;④ 本卡没有 REFUTATION_LEDGER.md 权限,结果段没写进台账(跑完再请 Seth 抄)。\n\n只读库、未入库、未改生产代码;零分布与分位只走 src/data/evaluation/apparatus.py;本卡无联合模型故未触碰 joint_model.py。",
+  "notes": "【2026-11-07 v2:5 个检验全部跑完 ⇒ 0/5 通过。S-742 在预注册口径下没有拿到证据。】\n【本轮唯一改动】t264_venue.py premise() 里一处键反了:`needed = {v: vkeys.get(k, 0) for k, v in FEATURE_KEYS.items()}` —— FEATURE_KEYS 是 {\"F1\": \"venue:coinbase_share_spot30\", ...},k 是 \"F1\",vkeys 计的是 venue:* 键名 ⇒ vkeys.get(\"F1\") 恒为 0 ⇒ features_available=false 把 5 个检验挡住。改成 `{v: vkeys.get(v, 0) for v in FEATURE_KEYS.values()}` 后 features_available=true,特征走 feature_matrix_daily.f['venue:*'],**不走** derived_from_raw 退化路径。\n\n【前提(卡 acceptance ①)过了】exchange_volume_daily 46,159 行 · 2021-01-01→2026-11-06 · 24 交易所;自 2021-03-01 逐日覆盖:gdax 2136 天 / binance 2136 / upbit 2127(缺 9 天,2025-03-09..13)/ binance_futures 2136,expected 2077 ⇒ coverage 全 ≥ 1.024 ⇒ all_required_ok=true。feature_matrix_daily 2,866 行(2019-01-01→2026-11-05):三个预注册键键名各 2,106 行、**值非 null 各 2,106**、JSON null 0(2021-01-30→2026-11-05);例 11-05 venue:coinbase_share_spot30=0.068774 / korea_share_spot30=0.065255 / deriv_to_spot30=5.772584。has.venue 未 select。\n\n【5 个检验的原始数字(判据一字未改;零分布=循环平移 ≥60 天 / 1,000 次 / 种子 742;BH q=0.10 跨 5 个)】\nT1 F1→BTC 永续 30 天对数收益(预期正):n=2062 **IC +0.0292** · 分位 0.545 · 一侧 p 0.455 · seg1 +0.2219 / seg2 **−0.1514** · 控制后 +0.0309 ⇒ (a)(b)(c) 败 · BH q 0.85333 ⇒ FAIL\nT2 F2→BTC 永续 30 天对数收益(预期**负**):n=2016 **IC +0.1474** · 分位 0.042 · 一侧 p 0.958 · seg1 +0.1699 / seg2 +0.0939 · 控制后 **+0.1159** ⇒ (a)(b)(c)(d) 全败(符号反向) · BH q 0.958 ⇒ FAIL\nT3 F2→山寨等权减 BTC 30 天对数超额(预期负):n=2016 **IC +0.0058** · 分位 0.488 · 一侧 p 0.512 · seg1 −0.0379 / seg2 +0.0199 · 控制后 −0.0848 ⇒ (a)(b)(c) 败 · BH q 0.85333 ⇒ FAIL\nT4 F3→BTC 30 天最大回撤(预期更深=更负):n=2016 **IC +0.1707** · 分位 0.098 · 一侧 p 0.902 · seg1 +0.2912 / seg2 +0.1498 · 控制后 **+0.1766** ⇒ (a)(b)(c)(d) 全败(符号反向) · BH q 0.958 ⇒ FAIL\nT5 F3→BTC 永续 30 天对数收益(台账未写方向⇒双侧):n=2016 **IC +0.1264** · 分位 0.755 · 一侧 p 0.245 · seg1 +0.2256 / seg2 +0.0787 · 控制后 +0.1294 ⇒ (a)(c)(d) 过、(b) 败 · BH q 0.85333 ⇒ FAIL\n**family_pass_count = 0/5**。副项(只报不判):7 天 F1→BTC +0.0040 / F2→BTC +0.0555 / F2→山寨 +0.0220;venue:onchain_perp_share30 0.001193(2023-09-08)→0.089539(2026-11-05),1,153 天结构性上行。数据指纹 e050e2f93cce65a0。\n\n【T2/T4 的符号反转不是实现 bug —— 四条独立复核】① scipy.stats.spearmanr 独立重算(不碰脚本 rankdata/pearson):T1 +0.0306 / T2 **+0.1491** / T3 +0.0048 / T4 **+0.1692** / T5 +0.1265,与主跑一致到 ±0.002;② 符号约定核对:mdd30 n=2075 mean −0.0872 min −0.4306 max +0.1545 ⇒ 负数、更负=更深,T4 的正 IC 就是「F3 高 ⇒ 回撤更浅」;③ 严格窗口敏感性(365 天分位要求满 365 个有效值、180 天均值满 180 个,F2/F3 起点推到 2022-01-29):T2 仍 **+0.1327**、T4 仍 **+0.1088**、T1 变 −0.0089、T5 衰减 +0.0351 ⇒ 符号不依赖窗口口径;④ 零分布换写法(先压缩有效子序列再循环滚动):T2 分位 0.0400(主跑 0.042)/ T4 0.0720 / T5 0.7400 ⇒ 结论不变。\n【事后翻方向也救不回来】5 条方向全翻后单侧 p = 0.545 / **0.042** / 0.488 / 0.098 / 0.755 ⇒ BH q = 0.68125 / **0.21** / 0.68125 / 0.245 / 0.755 ⇒ **仍无一条过 q=0.10** ⇒ 「预注册方向写错」不是失败原因。\n【趋势混淆诊断】F2/F3 与日期序号 Spearman:F2 −0.6737、F3 +0.6880、F1 −0.2860;结果变量 btc_ret30 +0.0587 / btc_mdd30 +0.2186 / alt_exc30 −0.0825。特征与结果**都**对时间取秩回归残差后的偏 IC:T2 **+0.1341**、T4 **+0.1468**、T5 +0.1174、T1 +0.0249、T3 −0.0007 ⇒ 方向反转不是纯日历影子。\n\n【口径偏离】① 山寨价用 ohlcv_daily(binance_hist,同日去重)—— 卡写的 cg_coin_mcap_daily 里**没有 ① 面板任何一个主币**(实测 0 行);② T5 台账未写方向 ⇒ 双侧判(|IC| 对 |零分布|),两段/残差只要求与全样本同号;③ 山寨等权在两端都有价的名字不足 22 名里的 80%(≥18 名)时该日记缺失(实测最低 0.818);④ 控制变量用永续 BTC 过去 30 天对数收益(只用 ≤ d);⑤ 山寨超额里减的 BTC 用 ohlcv_daily 现货;⑥ F2/F3 的 365 天分位在窗口内有效值 < 91 时留空 ⇒ 实际样本从 2021-04-30 起(台账写 2021-03-01),严格窗口版本已作敏感性对照;⑦ 「循环平移」算子写在脚本内(np.roll),机器与分位仍走 apparatus.null_distribution / percentile_of。\n\n【探索性 —— 需另立预注册、在新数据上过零信号对照】① T2 反向读数(韩国现货占比高 ⇒ 之后 30 天 BTC 收益更高,反向单侧 p=0.042)与 T4 反向读数(衍生品占比高 ⇒ 回撤更浅)在家族 BH 下都过不了(q 0.21 / 0.245),不构成本卡改判;② F3(衍生品÷现货 365 天分位)对**山寨 30 天超额** IC **+0.2294**、控制时间后 +0.2409 —— 这条不在 S-742 的 5 个检验里;③ 场所份额的**原始水平**对结果几乎无 IC(+0.0009 / −0.0240 / +0.0128 / +0.2964 / +0.1448),效应几乎全部来自「份额相对自身历史的位置」⇒ 若另立预注册,应把「水平」与「历史位置」分开,并预注册双向 + BH;④ 台账未写方向的检验(T5)应写死方向,否则事后翻方向污染家族口径。\n\n【给 @seth】① 结果段请抄进 REFUTATION_LEDGER.md 的 S-742(本卡无台账权限);② apparatus 是否要统一加「循环平移」算子(S-742 明写这个零分布;每卡各写一遍正是 10-14「手写零分布」的病根);③ 卡 T-264 的数据口径要改:山寨价格不是 cg_coin_mcap_daily(无主币),是 ohlcv_daily(binance_hist);④ 若要继续这一族,建议另立 S-号(方向按 §探索性 ③ 的口径预注册),并在新数据上重跑。\n\n只读库、未入库、未改生产代码;零分布与分位只走 src/data/evaluation/apparatus.py;本卡无联合模型故未触碰 joint_model.py。报告 docs/research/T-264_venue_shares.md(上一版「前提不成立」已归档为 T-264_venue_shares_v1_premise_failed.md)。\n【Seth 1106 重开:本卡的前提在合并时已变(或将变)满足,装置已合并;补跑见 SYNC §Seth-1106o。】\n【结论:前提不成立 ⇒ 5 个检验一个都没跑(卡 acceptance ① 的停机分支)。】交付的是覆盖表 + 一次跑完的预注册实现 + 机器自测;数据落行后一条命令重跑。\n\n【① 前提覆盖表 —— exchange_volume_daily 读出来 0 行】列名已探明:d / exchange / kind / volume_btc(用错列名报错反查)。`Prefer: count=exact` ⇒ Content-Range `*/0`;select=d,exchange,kind,volume_btc ⇒ []。四个场所自 2021-03-01 起的逐日覆盖:gdax 0 天、binance 0 天、upbit 0 天、binance_futures 0 天 ⇒ 覆盖率全 0.00%、缺 100%(任一缺 > 5% ⇒ 停,不跑)。视图侧同样为空:feature_matrix_daily 2,866 行(2019-01-01→2026-11-05)里 `venue:*` 键 **0 个**、has.venue=true **0/2866** 行,三个预注册键(venue:coinbase_share_spot30 / venue:korea_share_spot30 / venue:deriv_to_spot30)行数均为 0。\n【不是我的 key 读不到】同一把 publishable key 在同一个库读得到:feature_matrix_daily 2,866 行 · ohlcv_daily 1,531,626 行 · cg_coin_mcap_daily 497,674 行 · perp_bv_daily / macro_daily / state_daily 正常。外部佐证:MINIMAX_SYNC(11-06)记 `venue:*`「回填中(还不能用)」,来源 exchange_volume_daily 2021 起、约 8 轮。\n\n【② 顺带查出:卡写的数据口径有一处不对】卡写「山寨价格用 cg_coin_mcap_daily」—— 实测该表**没有 ① 面板 24 名里的任何一个主币**:coin_id=in.(bitcoin,ethereum,solana,binance-coin,ripple,litecoin,dogecoin,cardano,avalanche-2,aptos,sui,polkadot,uniswap,filecoin,cosmos,near-protocol,arbitrum,optimism,ethereum-classic,bitcoin-cash,tron) ⇒ **0 行**;那张表装的是新币/包装/跨链宇宙(wrapped-bitcoin、usd-coin-ethereum-bridged、magic-internet-money-arbitrum…)。面板现货收盘只能取 ohlcv_daily(source=binance_hist,与 core_cap.PRICE_SOURCE 一致),覆盖 24/24:BTC 2015-07-14→2026-11-05(7,806 行)· ETH 2015-08-07→ · SOL 2020-04-11→ · AAVE 2020-10-03→ · APT 2022-10-19→ · ARB 2023-03-23→ · SUI 2023-05-03→(每个 symbol 首末日都探过,全到 2026-11-05)。\n\n【③ 已交付的实现(数据到位即跑)】`python3 docs/research/t264_venue.py`:阶段 0 前提(四场所覆盖 + venue:* 键清点,不成立就写 t264_results.json 并退出)→ 阶段 1 特征(F1 = coinbase_share_spot30 − 自己过去 180 天均值;F2 = korea_share_spot30 过去 365 天分位;F3 = deriv_to_spot30 过去 365 天分位,只用 ≤ d)→ 阶段 2 结果(BTC 永续 perp_bv_daily symbol=BTC 的 d→d+30 对数收益与 d→d+30 最大回撤;山寨等权 = ① 面板除 BTC/ETH 的 22 名,减 BTC 的 30 天对数超额)→ 阶段 3 五个检验 + BH(q=0.10,跨 5 个)+ 副项(7 天只报;venue:onchain_perp_share30 只描述走势不测)。T1 F1→BTC 收益(+);T2 F2→BTC 收益(−);T3 F2→山寨超额(−);T4 F3→BTC 最大回撤(更深);T5 F3→BTC 收益(台账没写方向 ⇒ 双侧)。每条要 (a)|IC|≥0.10 且同号 (b)循环平移零分布(≥60 天、1,000 次、种子 742)分位 ≥0.95 (c)两段 2021-03→2023-06 / 2023-07→ 同号 (d)控制 BTC 过去 30 天收益后同号,四条全过 + BH 才算 PASS。\n【机器自测(不碰市场数据)】注入信号:IC **+0.329**、分位 **1.000**、BH q **0.000** ⇒ PASS;纯噪声:IC −0.0004、分位 0.495、q 0.505 ⇒ FAIL。⇒ 零分布这条路没坏(10-14「打乱是空操作⇒所有检验都过」的坑被挡住)。\n\n【口径偏离,逐条写明】① 山寨价改 ohlcv_daily(理由见上);② T5 台账未写方向 ⇒ 双侧判(|IC| 对 |零分布|),两段/残差只要求与全样本同号;③ 山寨等权在两端都有价的名字不足 22 名里的 80%(≥18 名)时该日记缺失;④ ohlcv_daily 同一 symbol 有多来源(BTC 7,806 行 ≈ 2 来源×4,100 天)⇒ 只取 binance_hist 并同日去重;⑤ 控制变量用永续 BTC 的过去 30 天对数收益(只用 ≤ d);⑥ 山寨超额里减的 BTC 用 ohlcv_daily 现货(与山寨同源);⑦ apparatus.py 里**没有「循环平移」算子**,平移写在脚本内,机器与分位仍走 apparatus.null_distribution / percentile_of(见给 @seth 第 1 条)。\n\n【给 @seth】① apparatus 是否要统一加「循环平移」算子(S-742 明写这个零分布;每卡各写一遍正是 10-14 的病根);② 卡 T-264 的数据口径要改:山寨价格不是 cg_coin_mcap_daily(无主币),是 ohlcv_daily(binance_hist);③ 回填完成后叫醒 lane-a 重跑(脚本与参数都在本分支),或授权我下轮重跑;④ 本卡没有 REFUTATION_LEDGER.md 权限,结果段没写进台账(跑完再请 Seth 抄)。\n\n只读库、未入库、未改生产代码;零分布与分位只走 src/data/evaluation/apparatus.py;本卡无联合模型故未触碰 joint_model.py。",
   "verified": {
-    "status": "STOPPED_PRECONDITION",
-    "ran_tests": false,
-    "exchange_volume_daily_rows": 0,
-    "exchange_volume_daily_content_range": "*/0",
-    "exchange_volume_daily_columns": [
-      "d",
-      "exchange",
-      "kind",
-      "volume_btc"
-    ],
-    "venue_coverage_since_2021_03_01": {
-      "gdax": 0.0,
-      "binance": 0.0,
-      "upbit": 0.0,
-      "binance_futures": 0.0
-    },
-    "fmd_rows": 2866,
-    "fmd_range": [
-      "2019-01-01",
-      "2026-11-05"
-    ],
-    "fmd_venue_keys": 0,
-    "fmd_has_venue_true": 0,
-    "feature_key_rows": {
-      "venue:coinbase_share_spot30": 0,
-      "venue:korea_share_spot30": 0,
-      "venue:deriv_to_spot30": 0
-    },
-    "cg_coin_mcap_daily_main_coins": 0,
-    "ohlcv_daily_panel_coverage": "24/24",
-    "selftest_signal": {
-      "ic": 0.329,
-      "pct": 1.0,
-      "bh_q": 0.0,
-      "verdict": "PASS"
-    },
-    "selftest_noise": {
-      "ic": -0.0004,
-      "pct": 0.495,
-      "bh_q": 0.505,
-      "verdict": "FAIL"
-    },
-    "script": "docs/research/t264_venue.py",
-    "probe": "docs/research/t264_probe.py",
-    "results": "docs/research/t264_results.json",
-    "selftest_results": "docs/research/t264_selftest.json",
-    "report": "docs/research/T-264_venue_shares.md",
-    "scenarios": "docs/research/scenarios/lane-a-T-264.json"
+    "by": "seth",
+    "at": "2026-11-07T10:08:20Z",
+    "value": "S-742 ❌ 0/5 in ledger; merged 635e315d"
   },
   "title": "S-742「谁在买」:Coinbase 现货占比 / 韩国现货占比 / 衍生品 ÷ 现货 对 BTC 与山寨之后 30 天 —— 循环平移零分布,判据照台账写死",
   "source": "REFUTATION_LEDGER S-742(先读;5 个检验、BH、(a)–(d) 一字不改)。数据 exchange_volume_daily(场所日成交量,BTC 计价)与 feature_matrix_daily 的 venue:* 键;BTC 价 perp_bv_daily(symbol = BTC);山寨 = ① 面板除 BTC/ETH(cg_coin_mcap_daily 价格)。",
