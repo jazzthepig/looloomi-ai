@@ -1,0 +1,17 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {"id": "T-297-1", "scenario": "T-297 squeeze 反向读数(干净事件集,S-777 修正定义)的前向记录",
+     "statement": "按修正定义(两条守卫)记录的下一个 squeeze 事件,其信号日 +30 天的相对时点等权永续篮超额 < 0(干净事件集 n=185 上 wo=1 的 30 天超额中位 −13.99%,72.4% 的事件为负)",
+     "variable": "manual", "op": "lt", "hi": 0, "prob": 0.7, "horizon_d": "2026-12-15"},
+    {"id": "T-297-2", "scenario": "T-297 被守卫剔掉的空壳合约(ICP)后续",
+     "statement": "ICP 收盘价 2026-12-15 低于 2.20(2026-11-06 收 2.43;被剔掉的 8 条 ICP 事件全在 2022-09-01 资金费数据起点之前)",
+     "variable": "close:ICP", "op": "lt", "hi": 2.2, "prob": 0.42, "horizon_d": "2026-12-15"},
+    {"id": "T-297-3", "scenario": "T-297 被守卫剔掉的空壳合约(TLM)后续",
+     "statement": "TLM 收盘价 2026-12-15 低于 0.00090(2026-11-06 收 0.001097;被剔掉的 25 条 TLM 事件全在 2023-03-01 资金费数据起点之前)",
+     "variable": "close:TLM", "op": "lt", "hi": 0.0009, "prob": 0.4, "horizon_d": "2026-12-15"},
+    {"id": "T-297-4", "scenario": "T-297 squeeze 现象成立的环境前提(拥挤空头需要资金费环境)",
+     "statement": "面板 7 日年化资金费 state:funding_7d_ann 在 2026-12-15 仍 > 0(2026-11-06 为 +0.1008,前 5 日 +0.090…+0.101)",
+     "variable": "state:funding_7d_ann", "op": "gt", "lo": 0, "prob": 0.6, "horizon_d": "2026-12-15"}
+  ]
+}
