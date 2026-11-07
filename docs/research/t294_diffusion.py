@@ -220,6 +220,9 @@ def main():
     rows_out = []
     raw_store = {lbl: [] for lbl, _ in SOURCES}
     hand_checks = []
+    hc_done = set()
+    # 手算对照抽三个**不同的**周一(样本首 / 中 / 尾),每周手算一个币的 p
+    HC_WEEKS = {0, len(weeks) // 3, 2 * len(weeks) // 3}
 
     for wi, (d, syms, u_t, x7n) in enumerate(weeks):
         t = dt.date.fromisoformat(d)
@@ -300,14 +303,16 @@ def main():
             rec["src"][label] = cell
             raw_store[label].append((d, list(e_l), list(tgt7), list(tgt30)))
 
-            # 手算对照(抽 3 个周一手算一个币的 p)
-            if len(hand_checks) < 3 and wi % max(1, len(weeks) // 3) == 0 and src:
+            # 手算对照(抽 3 个不同的周一,每周手算一个币的 p,与 propagate 输出对照)
+            if wi in HC_WEEKS and wi not in hc_done and src:
                 pick = sorted(src)[len(src) // 2]
                 hc = manual_p(pick, src, gk[K_MAIN], K_MAIN, ALPHA)
                 hc["d"] = d
                 hc["symbol"] = pick
+                hc["src_label"] = label
                 hc["p_propagate"] = p_main.get(pick)
                 hc["abs_diff"] = abs(hc["p_manual"] - hc["p_propagate"])
+                hc_done.add(wi)
                 hand_checks.append(hc)
         rows_out.append(rec)
         if wi % 20 == 0:
@@ -320,7 +325,7 @@ def main():
             c = r["src"].get(label)
             if not c:
                 continue
-            v = c.get("ic_e_%s" % tgt)
+            v = c.get(key)
             if v is not None and np.isfinite(v):
                 out.append((r["d"], float(v)))
         return out
@@ -362,7 +367,7 @@ def main():
         m_d = mean_fin([v for _, v in diff])
         t_d = nw([v for _, v in diff], 1)
         h1 = halves(e7)
-        h2 = halves(diff)
+        hd = halves(diff)
 
         # 周内打乱零分布(1000 次,种子 775):每周内打乱 e 的归属,重算每周 IC,取均值
         log("shuffle %s x7 ..." % label)
@@ -375,8 +380,8 @@ def main():
             "mean_ic_s_x7": m_s, "mean_ic_p_x7": m_p,
             "mean_diff_e_minus_s_x7": m_d, "nw_t_diff_lag1": t_d,
             "half1_mean_ic_e_x7": h1[0], "half1_n": h1[2],
-            "half2_mean_ic_e_x7": h2[0], "half2_n": h2[2],
-            "half1_mean_diff": halves(diff)[0], "half2_mean_diff": halves(diff)[1],
+            "half2_mean_ic_e_x7": h1[1], "half2_n": h1[3],
+            "half1_mean_diff": hd[0], "half2_mean_diff": hd[1],
             "mean_ic_e_x30": mean_fin([v for _, v in e30]),
             "nw_t_e_x30_lag4": nw([v for _, v in e30], 4),
             "mean_ic_s_x30": mean_fin([v for _, v in series_key(label, "ic_s_x30")]),
