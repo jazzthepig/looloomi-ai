@@ -18,6 +18,12 @@
      "variable": "manual", "op": "gt", "lo": 0, "prob": 0.65, "horizon_d": "2026-12-08"},
     {"id": "T-223-6", "scenario": "T-223 第二族 · G1",
      "statement": "2026-11 信号月的 protocol_revenue_daily 覆盖到信号日 ⇒ G1(协议收入/市值)那个月能算出因子值(仍不是发现段→留出段的普查)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.8, "horizon_d": "2026-12-08"},
+    {"id": "T-223-7", "scenario": "T-223 第二族 · G5(稳定币供给)前向",
+     "statement": "2026-12-01 时 state_daily(panel) 的 stable_supply_30d 仍为负(2026-10 已转负 −0.0084、11-06 为 −0.0375 且仍在下行)",
+     "variable": "state:stable_supply_30d", "op": "lt", "hi": 0, "prob": 0.7, "horizon_d": "2026-12-08"},
+    {"id": "T-223-8", "scenario": "T-223 第二族 · G5(稳定币供给)前向",
+     "statement": "2026-11-30 时 state_daily(panel) 的 stable_supply_30d 月内均值连续第 3 个月为负(2026-08 −0.0045 / 09 +0.0081 / 10 −0.0084)",
      "variable": "manual", "op": "gt", "lo": 0, "prob": 0.8, "horizon_d": "2026-12-08"}
   ]
 }

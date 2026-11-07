@@ -27,8 +27,15 @@ OUT = HERE / "t223_family2.json"
 
 
 def count(path, params):
+    """表存在与否的探针:404 / 400(表不存在、无权限)⇒ -1,不抛。"""
     from t223_run import _count
-    return _count(path, params)
+    import urllib.error
+    try:
+        return _count(path, params)
+    except urllib.error.HTTPError as e:
+        if e.code in (400, 404):
+            return -1
+        raise
 
 
 def g5_series() -> pd.DataFrame:
@@ -166,12 +173,26 @@ def main() -> None:
         nw1 = newey_west_t(agr.tolist(), lags=1)
         agree = float((agr > 0).mean()) if len(agr) else float("nan")
         ols = ols_slope(t["F"].to_numpy(), t["uni_mean_y"].to_numpy())
+        # 稳健性(只报、不改判定):把因子整体往前挪一个月(F_{m-1} 配 R_m)—— 月内同期对齐 vs 事前一月
+        lag = t.sort_values("m").copy()
+        lag["F_prev"] = lag["F"].shift(1)
+        lag = lag.dropna(subset=["F_prev"])
+        lag1 = None
+        if len(lag) >= 8:
+            med_l = float(lag["F_prev"].median())
+            lag["s"] = np.where(lag["F_prev"] > med_l, 1.0, -1.0)
+            lag = lag[lag["uni_mean_y"] != 0]
+            agr_l = (lag["s"] * np.sign(lag["uni_mean_y"])).to_numpy()
+            lag1 = {"n_months": int(len(lag)), "F_prev_median": med_l,
+                    "nw_t_lag5": newey_west_t(agr_l.tolist(), lags=5)[0],
+                    "sign_agree_rate": float((agr_l > 0).mean()) if len(agr_l) else None}
         g5["segments"][seg] = {
             "months": f"{a}..{b}", "n_months": int(len(t)), "F_median": med,
             "nw_t_lag5": nw5[0], "nw_t_lag2": nw2[0], "nw_t_lag1": nw1[0],
             "mean_agreement": float(np.mean(agr)) if len(agr) else None,
             "sign_agree_rate": agree,
             "ols_R_on_F": ols,
+            "lag1_Fprev": lag1,
             "table": rows,
         }
     disc = g5["segments"].get("discovery", {})

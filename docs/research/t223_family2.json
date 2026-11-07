@@ -1,0 +1,682 @@
+{
+ "card": "T-223",
+ "part": "B 第二族",
+ "prereg": "docs/research/T-223_factor_family_2.md §1",
+ "generated_at": "2026-11-07T20:20:28.618681+00:00",
+ "factors": {
+  "G1": {
+   "source": "protocol_revenue_daily",
+   "table_min_d": "2026-10-21",
+   "table_max_d": "2026-11-06",
+   "table_n_days": 17,
+   "row_counts": {
+    "all": 36381,
+    "discovery_2023-01..2024-11": 0,
+    "holdout_2025-01..2026-09": 0,
+    "forward_2026-10-01..2026-10-07": 0,
+    "holders_24h_gt0": 4134,
+    "gecko_id_notnull": 3807
+   },
+   "readable": false,
+   "verdict": "读不到",
+   "why": "该表最早 2026-10-21、最晚 2026-11-06(共 17 天);发现段(2023-01 → 2024-11)与留出段(2025-01 → 2026-09)落在数据区间之外 ⇒ 两段里都没有 G1/G2/G3 的因子值。按预注册不替换、不缩短段。",
+   "note": "口径所需的 protocol↔token 对应靠 gecko_id;表里 gecko_id 非空的行 3807 行。"
+  },
+  "G2": {
+   "source": "protocol_revenue_daily",
+   "table_min_d": "2026-10-21",
+   "table_max_d": "2026-11-06",
+   "table_n_days": 17,
+   "row_counts": {
+    "all": 36381,
+    "discovery_2023-01..2024-11": 0,
+    "holdout_2025-01..2026-09": 0,
+    "forward_2026-10-01..2026-10-07": 0,
+    "holders_24h_gt0": 4134,
+    "gecko_id_notnull": 3807
+   },
+   "readable": false,
+   "verdict": "读不到",
+   "why": "该表最早 2026-10-21、最晚 2026-11-06(共 17 天);发现段(2023-01 → 2024-11)与留出段(2025-01 → 2026-09)落在数据区间之外 ⇒ 两段里都没有 G1/G2/G3 的因子值。按预注册不替换、不缩短段。"
+  },
+  "G3": {
+   "source": "protocol_revenue_daily",
+   "table_min_d": "2026-10-21",
+   "table_max_d": "2026-11-06",
+   "table_n_days": 17,
+   "row_counts": {
+    "all": 36381,
+    "discovery_2023-01..2024-11": 0,
+    "holdout_2025-01..2026-09": 0,
+    "forward_2026-10-01..2026-10-07": 0,
+    "holders_24h_gt0": 4134,
+    "gecko_id_notnull": 3807
+   },
+   "readable": false,
+   "verdict": "读不到",
+   "why": "该表最早 2026-10-21、最晚 2026-11-06(共 17 天);发现段(2023-01 → 2024-11)与留出段(2025-01 → 2026-09)落在数据区间之外 ⇒ 两段里都没有 G1/G2/G3 的因子值。按预注册不替换、不缩短段。",
+   "note": "holders_24h>0 的行 4134 行;样本里 holders 与 revenue 是两列独立量(holders 是持币人数,不是持币人分到的收入),「holders 对 total 的占比」这个口径在表里拼不出来。"
+  },
+  "G4": {
+   "source": "asset_mcap_daily / cg_coin_mcap_daily + 供给源",
+   "readable": false,
+   "verdict": "读不到",
+   "why": "库里没有完全稀释供给(FDV)源:候选供给表全部不存在(404/0 行);asset_mcap_daily 与 cg_coin_mcap_daily 只有 price 与 mcap(可推出流通量 = mcap ÷ price,但那是流通量不是完全稀释量);feature_matrix_daily 的特征键里也没有 fdv。按预注册:拼不出 ⇒ 写「读不到」,不拿流通量顶替。",
+   "candidate_supply_tables": {
+    "fdv_daily": -1,
+    "coin_supply": -1,
+    "cg_supply": -1,
+    "supply_daily": -1,
+    "circulating_supply": -1,
+    "token_supply": -1,
+    "coin_unlocks": -1,
+    "unlock_calendar": -1,
+    "cg_coins": -1,
+    "coin_registry": -1,
+    "registry_coins": -1
+   },
+   "feature_matrix_keys": [
+    "breadth_above_ma50",
+    "cat:share_up_24h",
+    "cex:inflow_1m_pct",
+    "cex:inflow_1w_pct",
+    "cex:leverage",
+    "chain:dex_30v30",
+    "chain:dex_to_total_vol",
+    "chain:fees_30v30",
+    "chain:tvl_30d",
+    "channel:rwa_30d",
+    "channel:tokenized_30d",
+    "cycle:deterioration",
+    "cycle:shift_pct",
+    "cycle:turning",
+    "deriv:alt_oi_share",
+    "deriv:btc_basis_pct",
+    "deriv:oi_to_mcap",
+    "dist_200",
+    "dvol:btc",
+    "dvol:btc_pct_1y",
+    "funding_7d_ann",
+    "funding_7d_ann_binance",
+    "holders:breadth_4w",
+    "holders:median_growth_4w",
+    "holders:n_coins",
+    "listings:new_coins_7d",
+    "macro:epu",
+    "macro:fed_balance_sheet",
+    "macro:fed_net_liquidity",
+    "macro:fed_rrp",
+    "macro:fed_tga",
+    "macro:fng",
+    "macro:gpr",
+    "macro:gpr_act",
+    "macro:gpr_threat",
+    "macro:hy_oas",
+    "macro:total_mcap",
+    "macro:total_volume",
+    "macro:vix",
+    "macro:vix3m",
+    "mom_20",
+    "mom_200",
+    "mom_60",
+    "oi_chg_30d",
+    "opt:atm_iv_30d",
+    "opt:gamma_pin_dist",
+    "opt:gex_net_usd_1pct",
+    "opt:pc_oi",
+    "opt:pc_vol",
+    "opt:put90_30d_cost_pct",
+    "opt:put_spread_90_80_cost_pct",
+    "opt:skew_30d",
+    "opt:term_slope",
+    "pol:conflict",
+    "pol:crypto_policy",
+    "pol:election_unrest",
+    "pol:sanctions",
+    "pol:trade_war",
+    "pos:alt_crowd_median_ln",
+    "pos:alt_smart_minus_crowd_median",
+    "pos:alt_taker_median_ln",
+    "pos:btc_crowd_ln",
+    "pos:btc_smart_minus_crowd",
+    "pos:btc_top_pos_ln",
+    "pos:n_symbols",
+    "regime_coverage_30d",
+    "regime_share_30d:EASING",
+    "regime_share_30d:NEUTRAL",
+    "regime_share_30d:RISK_OFF",
+    "regime_share_30d:RISK_ON",
+    "regime_share_30d:STAGFLATION",
+    "regime_share_30d:TIGHTENING",
+    "spy_ret_21",
+    "stable:DAI_30d",
+    "stable:USDC_30d",
+    "stable:USDS_30d",
+    "stable:USDT_30d",
+    "stable:USDe_30d",
+    "stable_lend_apy_7d",
+    "stable_supply_30d",
+    "stablechain:arbitrum_30d",
+    "stablechain:base_30d",
+    "stablechain:bsc_30d",
+    "stablechain:ethereum_30d",
+    "stablechain:solana_30d",
+    "stablechain:tron_30d",
+    "style:ai_rel30",
+    "style:app_eq_minus_cap_30",
+    "style:app_rel30",
+    "style:defi_rel30",
+    "style:infra_tokenization_rel30",
+    "style:meme_rel30",
+    "style:second_l1_l2_rel30",
+    "style:top_l1_rel30",
+    "style_rel_majors_30d",
+    "supply:locked_share_median",
+    "taker_buy_share_30d",
+    "venue:coinbase_share_spot30",
+    "venue:deriv_to_spot30",
+    "venue:korea_share_spot30",
+    "venue:onchain_perp_share30",
+    "vol_30",
+    "vol_pct_3y",
+    "vratio_30_180",
+    "xasset:btc_qqq_corr60",
+    "xasset:btc_uup_corr60"
+   ],
+   "asset_mcap_rows": 756980,
+   "cg_coin_mcap_rows": 499356
+  },
+  "G5": {
+   "source": "state_daily(entity='panel', feature='stable_supply_30d')",
+   "definition": "F_m = 该月该特征的月内均值(观测 ≥ 10 天);R_m = 宇宙均值 y 的月内平均",
+   "series_range": [
+    "2020-01-30",
+    "2026-11-06"
+   ],
+   "series_n": 2473,
+   "segments": {
+    "discovery": {
+     "months": "2023-01..2024-11",
+     "n_months": 23,
+     "F_median": 0.013415453792141067,
+     "nw_t_lag5": 1.4584641700650376,
+     "nw_t_lag2": 1.2283259363962522,
+     "nw_t_lag1": 1.2206444858324432,
+     "mean_agreement": 0.21739130434782608,
+     "sign_agree_rate": 0.6086956521739131,
+     "ols_R_on_F": {
+      "n": 23,
+      "slope": 1.3742627279370492,
+      "intercept": -0.03837526958070955,
+      "se": 1.083886382156461,
+      "t": 1.2679029375780753,
+      "corr": 0.26666068503438367
+     },
+     "lag1_Fprev": {
+      "n_months": 22,
+      "F_prev_median": 0.011517253836402383,
+      "nw_t_lag5": -0.4637320275384578,
+      "sign_agree_rate": 0.45454545454545453
+     },
+     "table": [
+      {
+       "m": "2023-01",
+       "F": 0.002575,
+       "R_uni": 0.2218,
+       "R_btc": 0.169468,
+       "s": -1,
+       "a": -1
+      },
+      {
+       "m": "2023-02",
+       "F": 0.009619,
+       "R_uni": -0.138632,
+       "R_btc": 0.078443,
+       "s": -1,
+       "a": 1
+      },
+      {
+       "m": "2023-03",
+       "F": 0.019543,
+       "R_uni": -0.113908,
+       "R_btc": 0.161504,
+       "s": 1,
+       "a": -1
+      },
+      {
+       "m": "2023-04",
+       "F": -0.007522,
+       "R_uni": -0.104763,
+       "R_btc": -0.045436,
+       "s": -1,
+       "a": 1
+      },
+      {
+       "m": "2023-05",
+       "F": -0.001386,
+       "R_uni": -0.154182,
+       "R_btc": 0.010123,
+       "s": -1,
+       "a": 1
+      },
+      {
+       "m": "2023-06",
+       "F": -0.006351,
+       "R_uni": -0.024219,
+       "R_btc": 0.089931,
+       "s": -1,
+       "a": 1
+      },
+      {
+       "m": "2023-07",
+       "F": -0.008786,
+       "R_uni": -0.011834,
+       "R_btc": -0.070294,
+       "s": -1,
+       "a": 1
+      },
+      {
+       "m": "2023-08",
+       "F": -0.012969,
+       "R_uni": 0.011562,
+       "R_btc": -0.052447,
+       "s": -1,
+       "a": -1
+      },
+      {
+       "m": "2023-09",
+       "F": -0.002151,
+       "R_uni": -0.061712,
+       "R_btc": 0.124315,
+       "s": -1,
+       "a": 1
+      },
+      {
+       "m": "2023-10",
+       "F": 0.001286,
+       "R_uni": 0.068149,
+       "R_btc": 0.237056,
+       "s": -1,
+       "a": -1
+      },
+      {
+       "m": "2023-11",
+       "F": 0.022606,
+       "R_uni": 0.0756,
+       "R_btc": 0.163425,
+       "s": 1,
+       "a": 1
+      },
+      {
+       "m": "2023-12",
+       "F": 0.033312,
+       "R_uni": 0.038002,
+       "R_btc": 0.009785,
+       "s": 1,
+       "a": 1
+      },
+      {
+       "m": "2024-01",
+       "F": 0.041521,
+       "R_uni": -0.036922,
+       "R_btc": 0.170889,
+       "s": 1,
+       "a": -1
+      },
+      {
+       "m": "2024-02",
+       "F": 0.039656,
+       "R_uni": 0.150766,
+       "R_btc": 0.370554,
+       "s": 1,
+       "a": 1
+      },
+      {
+       "m": "2024-03",
+       "F": 0.066905,
+       "R_uni": -0.098857,
+       "R_btc": -0.021794,
+       "s": 1,
+       "a": -1
+      },
+      {
+       "m": "2024-04",
+       "F": 0.057152,
+       "R_uni": -0.06526,
+       "R_btc": -0.007111,
+       "s": 1,
+       "a": -1
+      },
+      {
+       "m": "2024-05",
+       "F": 0.020875,
+       "R_uni": -0.10755,
+       "R_btc": 0.015361,
+       "s": 1,
+       "a": -1
+      },
+      {
+       "m": "2024-06",
+       "F": 0.004996,
+       "R_uni": -0.098045,
+       "R_btc": -0.042794,
+       "s": -1,
+       "a": 1
+      },
+      {
+       "m": "2024-07",
+       "F": 0.013415,
+       "R_uni": -0.092331,
+       "R_btc": -0.039564,
+       "s": -1,
+       "a": 1
+      },
+      {
+       "m": "2024-08",
+       "F": 0.025503,
+       "R_uni": 0.044225,
+       "R_btc": 0.007867,
+       "s": 1,
+       "a": 1
+      },
+      {
+       "m": "2024-09",
+       "F": 0.022496,
+       "R_uni": -0.041418,
+       "R_btc": 0.08487,
+       "s": 1,
+       "a": -1
+      },
+      {
+       "m": "2024-10",
+       "F": 0.003854,
+       "R_uni": -0.103538,
+       "R_btc": 0.308329,
+       "s": -1,
+       "a": 1
+      },
+      {
+       "m": "2024-11",
+       "F": 0.060127,
+       "R_uni": 0.318766,
+       "R_btc": 0.154642,
+       "s": 1,
+       "a": 1
+      }
+     ]
+    },
+    "holdout": {
+     "months": "2025-01..2026-09",
+     "n_months": 21,
+     "F_median": 0.01819633790456061,
+     "nw_t_lag5": -0.7937253933193773,
+     "nw_t_lag2": -0.725721692194944,
+     "nw_t_lag1": -0.6640783086353597,
+     "mean_agreement": -0.14285714285714285,
+     "sign_agree_rate": 0.42857142857142855,
+     "ols_R_on_F": {
+      "n": 21,
+      "slope": -1.3337267408708344,
+      "intercept": -0.023586510913419866,
+      "se": 0.9391176601326097,
+      "t": -1.420191310940211,
+      "corr": -0.30978620491924497
+     },
+     "lag1_Fprev": {
+      "n_months": 20,
+      "F_prev_median": 0.018713119349229392,
+      "nw_t_lag5": -0.9393364366277243,
+      "sign_agree_rate": 0.4
+     },
+     "table": [
+      {
+       "m": "2025-01",
+       "F": 0.029796,
+       "R_uni": -0.224152,
+       "R_btc": -0.046151,
+       "s": 1,
+       "a": -1
+      },
+      {
+       "m": "2025-02",
+       "F": 0.06274,
+       "R_uni": -0.091056,
+       "R_btc": -0.107952,
+       "s": 1,
+       "a": -1
+      },
+      {
+       "m": "2025-03",
+       "F": 0.0237,
+       "R_uni": -0.125245,
+       "R_btc": 0.015878,
+       "s": 1,
+       "a": -1
+      },
+      {
+       "m": "2025-04",
+       "F": 0.01923,
+       "R_uni": 0.003034,
+       "R_btc": 0.200757,
+       "s": 1,
+       "a": 1
+      },
+      {
+       "m": "2025-05",
+       "F": 0.029488,
+       "R_uni": -0.173537,
+       "R_btc": 0.022829,
+       "s": 1,
+       "a": -1
+      },
+      {
+       "m": "2025-06",
+       "F": 0.022071,
+       "R_uni": 0.032454,
+       "R_btc": 0.090368,
+       "s": 1,
+       "a": 1
+      },
+      {
+       "m": "2025-07",
+       "F": 0.032884,
+       "R_uni": 0.04386,
+       "R_btc": -0.000966,
+       "s": 1,
+       "a": 1
+      },
+      {
+       "m": "2025-08",
+       "F": 0.038233,
+       "R_uni": -0.026015,
+       "R_btc": -0.01514,
+       "s": 1,
+       "a": -1
+      },
+      {
+       "m": "2025-09",
+       "F": 0.047228,
+       "R_uni": -0.173504,
+       "R_btc": 0.010375,
+       "s": 1,
+       "a": -1
+      },
+      {
+       "m": "2025-10",
+       "F": 0.049001,
+       "R_uni": -0.049435,
+       "R_btc": -0.152844,
+       "s": 1,
+       "a": -1
+      },
+      {
+       "m": "2025-11",
+       "F": 0.01115,
+       "R_uni": -0.126347,
+       "R_btc": -0.071004,
+       "s": -1,
+       "a": 1
+      },
+      {
+       "m": "2025-12",
+       "F": 0.016457,
+       "R_uni": 0.119457,
+       "R_btc": 0.021465,
+       "s": -1,
+       "a": -1
+      },
+      {
+       "m": "2026-01",
+       "F": -0.010895,
+       "R_uni": 0.033841,
+       "R_btc": -0.236557,
+       "s": -1,
+       "a": -1
+      },
+      {
+       "m": "2026-02",
+       "F": -0.013638,
+       "R_uni": -0.055787,
+       "R_btc": 0.015706,
+       "s": -1,
+       "a": 1
+      },
+      {
+       "m": "2026-03",
+       "F": 0.018196,
+       "R_uni": -0.178611,
+       "R_btc": 0.059162,
+       "s": -1,
+       "a": 1
+      },
+      {
+       "m": "2026-04",
+       "F": 0.007412,
+       "R_uni": 0.000554,
+       "R_btc": 0.064196,
+       "s": -1,
+       "a": -1
+      },
+      {
+       "m": "2026-05",
+       "F": 0.008363,
+       "R_uni": -0.022867,
+       "R_btc": -0.187278,
+       "s": -1,
+       "a": 1
+      },
+      {
+       "m": "2026-06",
+       "F": -0.019081,
+       "R_uni": -0.05627,
+       "R_btc": 0.016271,
+       "s": -1,
+       "a": 1
+      },
+      {
+       "m": "2026-07",
+       "F": -0.016028,
+       "R_uni": -0.072559,
+       "R_btc": 0.079587,
+       "s": -1,
+       "a": 1
+      },
+      {
+       "m": "2026-08",
+       "F": -0.004531,
+       "R_uni": 0.099419,
+       "R_btc": 0.164143,
+       "s": -1,
+       "a": -1
+      },
+      {
+       "m": "2026-09",
+       "F": 0.008089,
+       "R_uni": 0.067489,
+       "R_btc": 0.024802,
+       "s": -1,
+       "a": -1
+      }
+     ]
+    }
+   },
+   "verdict": "未过发现段(|NW t| < 3)⇒ 不进短名单,不判 ✅/❌",
+   "shortlisted_in_discovery": false
+  },
+  "G6": {
+   "source": "state_daily / 链上流表",
+   "readable": false,
+   "verdict": "读不到",
+   "why": "state_daily 只有 entity='panel' 一个实体、23 个特征,里面没有交易所净流入;候选的净流入表全部不存在。asset_flow_daily 是按币的 11 维资金面(crowd/dd90/doi7/fund7/mom30/mom7/taker7/turn/vol30/vratio 等),不是交易所净流入 —— 不替换。",
+   "state_daily_features": [
+    "breadth_above_ma50"
+   ],
+   "candidate_tables": {
+    "exchange_netflow_daily": -1,
+    "exchange_flows_daily": -1,
+    "exchange_balance_daily": -1,
+    "exchange_reserve_daily": -1,
+    "netflow_daily": -1,
+    "flows_daily": -1,
+    "flow_daily": -1,
+    "onchain_flows_daily": -1,
+    "chain_flow_daily": -1,
+    "exchange_inflow_daily": -1
+   }
+  }
+ },
+ "rev_sample_head": [
+  {
+   "d": "2026-10-21",
+   "name": "1inch",
+   "gecko_id": "1inch",
+   "revenue_24h": "186",
+   "revenue_30d": "12196.44",
+   "holders_24h": "0",
+   "holders_30d": "0"
+  },
+  {
+   "d": "2026-10-21",
+   "name": "3F",
+   "gecko_id": NaN,
+   "revenue_24h": "395",
+   "revenue_30d": "4539.49",
+   "holders_24h": "0",
+   "holders_30d": "0"
+  },
+  {
+   "d": "2026-10-21",
+   "name": "40 Acres",
+   "gecko_id": NaN,
+   "revenue_24h": "511",
+   "revenue_30d": "3594",
+   "holders_24h": "0",
+   "holders_30d": "0"
+  },
+  {
+   "d": "2026-10-21",
+   "name": "7.exchange",
+   "gecko_id": NaN,
+   "revenue_24h": "0",
+   "revenue_30d": "0.51",
+   "holders_24h": "0",
+   "holders_30d": "0"
+  },
+  {
+   "d": "2026-10-21",
+   "name": "9mm",
+   "gecko_id": NaN,
+   "revenue_24h": "5.34",
+   "revenue_30d": "13775.77",
+   "holders_24h": "2.67",
+   "holders_30d": "6884.61"
+  }
+ ],
+ "readable_cross_sectional_factors": 0,
+ "trial_count": {
+  "family": "第二族(链上 / 发行方)",
+  "cross_sectional_added": 6,
+  "time_series_added": 1,
+  "note": "G1–G6 共 6 个(G5 为时间序列,单列);读不到的也计入试验计数"
+ }
+}

@@ -111,6 +111,10 @@ def pull(path: str, params: list[tuple[str, str]], order: str, tag: str) -> pd.D
     total = _count(path, ordered)
     if total < 0:
         sys.exit(f"{tag}: 服务端计数失败")
+    # 服务端 count=exact 忽略 limit(数的是过滤后的全集),行号要按 limit 封顶,否则请求越界返回 416
+    for p, v in ordered:
+        if p == "limit" and v.isdigit():
+            total = min(total, int(v))
     ranges = [(i, min(i + PAGE - 1, total - 1)) for i in range(0, total, PAGE)]
     with ThreadPoolExecutor(max_workers=6) as ex:
         bodies = list(ex.map(lambda r: _http(path, ordered, rng=f"{r[0]}-{r[1]}"), ranges))
