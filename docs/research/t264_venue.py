@@ -318,7 +318,7 @@ def premise(venue_rows: list[dict], fmd: list[dict]) -> dict:
     rep["fmd_range"] = [fmd[0]["d"], fmd[-1]["d"]] if fmd else None
     rep["fmd_venue_keys"] = dict(sorted(vkeys.items()))
     rep["fmd_has_venue_true"] = has_venue
-    needed = {v: vkeys.get(k, 0) for k, v in FEATURE_KEYS.items()}
+    needed = {v: vkeys.get(v, 0) for v in FEATURE_KEYS.values()}
     rep["fmd_feature_counts"] = needed
     rep["features_available"] = all(c > 0 for c in needed.values())
     return rep
