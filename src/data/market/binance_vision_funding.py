@@ -41,9 +41,13 @@ ABSENT_TABLE = "funding_vision_absent"
 WRITES_TABLES = (TABLE, ABSENT_TABLE)
 KIND = "fundingRate"
 VENUE = "binance_perp"
-BUDGET = 2000
+#: 11-07:宽宇宙的第一轮一次解析了 2,000 个月档(33 万行)、整批撞外键 —— 预算降到 400(约 6 万行),解析挪进线程。
+BUDGET = 400
 CONCURRENCY = 16
 FAIL_REFUSE_FRACTION = 0.5
+#: 11-07:月档在月末之后几天才上传。2026-10 那批在 11-01 取 ⇒ 404 ⇒ 225 个名字被记成「那个月没有文件」、永不再取
+#: (GMXUSDT 2026-10 11-07 实测 200)。月末之后这么多天以内的 404 不记缺档,下一轮重试。
+ABSENT_GRACE_DAYS = 10
 _HOUR_MS = 3_600_000
 
 #: 月档的表头(2020 年起的档都是这一套);旧格式 / 无表头的档按位置读:第一列时间、最后一列费率。
@@ -113,12 +117,28 @@ async def _fetch_one(sym: str, month: str, sem: asyncio.Semaphore) -> tuple[Opti
     if blob is None:
         return None, {"symbol": sym, "month": f"{month}-01"}, None
     try:
-        rows = funding_rows(sym, parse_funding_zip(blob))
+        rows = await asyncio.to_thread(lambda: funding_rows(sym, parse_funding_zip(blob)))
     except Exception as e:                                           # noqa: BLE001
         return None, None, f"{sym} {month}: parse {type(e).__name__}: {str(e)[:120]}"
     if not rows:
         return None, {"symbol": sym, "month": f"{month}-01"}, None   # 有文件但没有一行可读 —— 同「没有」
     return rows, None, None
+
+
+def can_mark_absent(month: str, today) -> bool:
+    """纯函数。'YYYY-MM' 的月末 + ABSENT_GRACE_DAYS 天已经过去 ⇒ 404 才算「没有文件」;否则只是还没上传。"""
+    from datetime import date, timedelta
+    y, m = int(month[:4]), int(month[5:7])
+    first_next = date(y + (m == 12), m % 12 + 1, 1)
+    return today >= first_next + timedelta(days=ABSENT_GRACE_DAYS)
+
+
+async def _known_assets(read) -> Optional[set[str]]:
+    """assets 里登记过的 asset_id;读不到 ⇒ None(不滤,让外键自己说话)。"""
+    try:
+        return {str(r["asset_id"]) for r in await read("assets", {"select": "asset_id", "order": "asset_id.asc"})}
+    except Exception:                                                # noqa: BLE001
+        return None
 
 
 def _dedupe(rows: list[dict]) -> list[dict]:
@@ -142,9 +162,19 @@ async def run_once(budget: int = BUDGET) -> dict[str, Any]:
     sem = asyncio.Semaphore(CONCURRENCY)
     res = await asyncio.gather(*[_fetch_one(s, m, sem) for s, m in tasks])
     rows = _dedupe([r for got, _, _ in res if got for r in got])
-    absent = [a for _, a, _ in res if a]
+    # 11-07:funding_history.asset_id → assets 外键。不在 assets 里的名字(未登记的永续)整批 upsert 会一起失败 ——
+    # 先按名字滤掉、报个数,其余照写;登记由 migrations 做,这里不偷偷建 assets 行。
+    known = await _known_assets(_read_all)
+    unknown = sorted({r["symbol"] for r in rows if known is not None and r["asset_id"] not in known})
+    if unknown:
+        rows = [r for r in rows if r["asset_id"] in known]
+    today = datetime.now(timezone.utc).date()
+    absent_all = [a for _, a, _ in res if a]
+    absent = [a for a in absent_all if can_mark_absent(str(a["month"])[:7], today)]
     errors = [e for _, _, e in res if e]
     detail = {"planned": len(tasks), "backlog": len(cov), "rows": len(rows), "absent": len(absent),
+              "not_yet_published": len(absent_all) - len(absent), "skipped_not_in_assets": unknown[:20],
+              "n_skipped_not_in_assets": len(unknown),
               "errors": len(errors), "error_sample": errors[:3],
               "oldest": min(m for _, m in tasks), "newest": max(m for _, m in tasks)}
     if len(errors) > FAIL_REFUSE_FRACTION * len(tasks):

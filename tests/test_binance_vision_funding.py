@@ -100,3 +100,29 @@ def test_main_runs_it_inside_the_vision_loop_with_its_own_attempt_name():
     body = src.split("async def _binance_vision_loop", 1)[1].split("\nasync def ", 1)[0]
     assert "binance_vision_funding import run_once" in body
     assert body.count('"_binance_vision_funding"') >= 2, "成功与异常两条路都要记 loop_attempt"
+
+
+def test_a_404_right_after_month_end_is_not_recorded_as_absent():
+    """11-07:2026-10 的月档 11-01 取时还没上传 ⇒ 225 个名字被永久记成缺档。月末 + 宽限之前的 404 只是「还没发布」。"""
+    from datetime import date
+    from src.data.market import binance_vision_funding as bvf
+    assert bvf.can_mark_absent("2026-10", date(2026, 11, 1)) is False
+    assert bvf.can_mark_absent("2026-10", date(2026, 11, 10)) is False
+    assert bvf.can_mark_absent("2026-10", date(2026, 11, 11)) is True
+    assert bvf.can_mark_absent("2026-12", date(2027, 1, 11)) is True
+
+
+def test_known_assets_reader_is_none_when_unreadable():
+    """读不到 assets ⇒ None(不滤);读到 ⇒ 集合。外键失败会拖垮整批,所以先滤未登记的名字。"""
+    import asyncio
+    from src.data.market import binance_vision_funding as bvf
+
+    async def ok(table, params):
+        assert table == "assets" and params.get("order")
+        return [{"asset_id": "BTC"}, {"asset_id": "ETH"}]
+
+    async def bad(table, params):
+        raise RuntimeError("down")
+    assert asyncio.run(bvf._known_assets(ok)) == {"BTC", "ETH"}
+    assert asyncio.run(bvf._known_assets(bad)) is None
+    assert bvf.BUDGET <= 500, "宽宇宙下一轮 2,000 个月档 = 33 万行,把事件循环卡住过一次"
