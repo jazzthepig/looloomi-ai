@@ -1,0 +1,56 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T-280-1",
+      "scenario": "T-280 S-759 Binance 永续下架后 30 天相对 BTC 超额",
+      "statement": "2026-12-08 时,R-v2 的开票硬规则**没有**新增「Binance 永续下架」这一条(S-759 五条判据在口径 A/B × 主源/合并源下全部 FAIL)",
+      "variable": "manual",
+      "op": "between",
+      "lo": 1,
+      "hi": 1,
+      "prob": 0.8,
+      "horizon_d": "2026-12-08"
+    },
+    {
+      "id": "T-280-2",
+      "scenario": "T-280 S-759 Binance 永续下架后 30 天相对 BTC 超额",
+      "statement": "2026-12-08 时,2026-11-07 之后新公告的 Binance 永续下架事件里,被下架代币公告后 30 天相对 BTC 的超额中位 > −10%(本卡主样本 −8.22%,零分布中位 −7.58% ⇒ 判据 (a) 继续不成立)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": -0.1,
+      "prob": 0.6,
+      "horizon_d": "2026-12-08"
+    },
+    {
+      "id": "T-280-3",
+      "scenario": "T-280 S-759 Binance 永续下架后 30 天相对 BTC 超额",
+      "statement": "2026-12-08 时,同批新事件里「同时伴随现货整币下架」的子样本,30 天相对 BTC 超额中位 ≤ −10%(本卡该子样本 −28.59%,对照分位 0.000 ⇒ 效应集中在这一层)",
+      "variable": "manual",
+      "op": "lt",
+      "hi": -0.1,
+      "prob": 0.7,
+      "horizon_d": "2026-12-08"
+    },
+    {
+      "id": "T-280-4",
+      "scenario": "T-280 S-759 Binance 永续下架后 30 天相对 BTC 超额",
+      "statement": "2026-12-08 时 BOND(ohlcv_daily 收盘)低于 2026-11-06 的收盘 0.00931835 —— BOND 是「整币下架 + 永续一起下架」那批(S-751 重叠,公告后 30 天超额 −65.1%),属于真死的一类,继续阴跌",
+      "variable": "close:BOND",
+      "op": "lt",
+      "hi": 0.00931835,
+      "prob": 0.6,
+      "horizon_d": "2026-12-08"
+    },
+    {
+      "id": "T-280-5",
+      "scenario": "T-280 S-759 Binance 永续下架后 30 天相对 BTC 超额",
+      "statement": "2026-12-08 时 CVX(ohlcv_daily 收盘)低于 2026-11-05 的收盘 212.93 —— CVX 的永续 2023-03-13 被下架但现货还在,本卡说这类事件没有方向性(对照分位 0.31)⇒ 概率接近五成",
+      "variable": "close:CVX",
+      "op": "lt",
+      "hi": 212.93,
+      "prob": 0.5,
+      "horizon_d": "2026-12-08"
+    }
+  ]
+}

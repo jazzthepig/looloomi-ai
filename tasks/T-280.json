@@ -1,0 +1,31 @@
+{
+  "id": "T-280",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-11-07",
+  "title": "S-759 Binance USDT 永续下架公告之后 30 天,代币相对 BTC 跑输吗(R-v2 交易的是永续)—— 判据照台账写死",
+  "source": "REFUTATION_LEDGER S-759(先读)与 S-751(价格 / d0 / 对照口径全部复用 lane-b T-272 的 t272_delisting.py)。事件:events(source = binance,kind = perp_delisting,78 条);映射:T-277 补全解析 ∪ T-272 extract_perp_symbols;已在 delisting_watch(整币下架)名单的代号另列。统计只用 src/data/evaluation/apparatus.py。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-280.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 78 条逐条解析、纳入 / 排除理由落文件,先于取价。② (a)–(e) 原始数字;每段有价代币数。③ 副项只报不判(公告前 30 天、公告当天、7 天)。④ 只算、不改代码、不入库。附 docs/research/scenarios/lane-a-T-280.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-280_perp_delisting.md + t280_perp_delisting.py + t280_results.json;in_review,推 lane-a/T-280。"
+  },
+  "prior_value": "Jazz 11-07 的硬规则只管整币下架;R-v2 在永续上开票,永续下架若同样致命,规则该扩。",
+  "notes": "FAIL(S-759 五条判据全不满足)。事件:events(source=binance,kind=perp_delisting) 全表 78 条 → 纳入 54 / 排除 24(multiple 12、COIN-M 7、无法枚举 2、延期 2、暂停 1),逐条解析落 t280_screening.json(先于取价)。口径A(台账映射字面,含 BUSD 计价)=98 代号/有价 38/可算 37:30 天超额中位 −8.22%、为负 86.5%、对照分位 0.44、early n=18 −10.23% / late n=19 −8.10% ⇒ (a)(c) 败,(b)(d)(e) 过 ⇒ FAIL。口径B(USDT 永续)=35/16/15:中位 −8.77%、为负 86.7%、对照分位 0.75、early n=7 / late n=8 ⇒ (a)(c)(d)(e) 败 ⇒ FAIL。合并价格源(asset_mcap_daily + ohlcv_daily 补缺)重算:A 46 可算中位 −9.19% pctl 0.335;B 21 可算中位 −15.24% pctl 0.35 ⇒ 仍 FAIL。另列(不进主样本)S-751 整币下架重叠:A 24/14 中位 −28.59% 为负 92.9% pctl 0.000;B 21/12 中位 −25.03% pctl 0.015 ⇒ 效应集中在「现货整币下架」那一层,永续下架本身没有增量。副项(只报不判):公告当天跳空 A −0.29% / B −1.52%;公告前 30 天 A −4.65% / B −7.42%;7 天 A −4.14% / B −11.28%。覆盖率:60/98 在 asset_mcap_daily 无行(逐个 count=exact 复查命中 0);其中 9 个在 ohlcv_daily 有行(上一轮 source 过滤漏掉,已补)。产物:docs/research/T-280_perp_delisting.md + t280_perp_delisting.py + t280_results.json + t280_screening.json + t280_coverage_probe.json + t280_ohlcv_fill.json + scenarios/lane-a-T-280.json(5 条)。t280_price_cache.json(34MB)故意不提交,脚本可重生成。只算、不改代码、不入库。",
+  "verified": {
+    "value": "S-759 FAIL:主样本两口径 × 两价格源下 (a)(c) 均不满足;重叠 S-751 子样本对照分位 0.000/0.015(效应在整币下架那一层)",
+    "at": "2026-11-07"
+  }
+}

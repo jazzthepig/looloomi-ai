@@ -1,0 +1,3778 @@
+{
+ "task": "T-280",
+ "ledger": "S-759",
+ "run_utc": "2026-11-07",
+ "primary_source": "asset_mcap_daily",
+ "samples": {
+  "A_card_literal": {
+   "sample": "A_card_literal",
+   "n_symbols": 98,
+   "n_tokens_with_price": 38,
+   "n_exc30_computable": 37,
+   "median_exc30": -0.08221574802972864,
+   "pct_negative_exc30": 0.8648648648648649,
+   "n_negative": 32,
+   "segments": {
+    "early": {
+     "n": 18,
+     "median": -0.10229696421113532,
+     "d0_range": [
+      "2022-05-09",
+      "2023-07-20"
+     ]
+    },
+    "late": {
+     "n": 19,
+     "median": -0.0809987002202952,
+     "d0_range": [
+      "2023-07-27",
+      "2026-06-25"
+     ]
+    }
+   },
+   "control": {
+    "n_samples": 200,
+    "null_median_q": {
+     "q05": -0.1410253860517947,
+     "q50": -0.07578434137584089,
+     "q95": -0.020982089826640182
+    },
+    "percentile_of_actual": 0.44,
+    "n_draws_used": 200
+   },
+   "per_token": {
+    "1000BTTC": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist 1000BTTC and YFII USDT-Margined Contracts",
+     "ts": "2022-04-04T05:21:50.096+00:00"
+    },
+    "1000LUNC": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M 1000LUNCBUSD Perpetual Contract",
+     "ts": "2023-06-01T09:15:06.427+00:00"
+    },
+    "1000LUNCB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M 1000LUNCBUSD Perpetual Contract",
+     "ts": "2023-06-01T09:15:06.427+00:00"
+    },
+    "1000SHIB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M 1000SHIBBUSD Perpetual Contract",
+     "ts": "2023-05-25T09:45:04.026+00:00"
+    },
+    "1000SHIBB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M 1000SHIBBUSD Perpetual Contract",
+     "ts": "2023-05-25T09:45:04.026+00:00"
+    },
+    "1000X": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M MYROUSDT and 1000XUSDT Perpetual Contracts (2025-11-14)",
+     "ts": "2025-11-10T13:45:00.002+00:00",
+     "d0": "2025-11-10",
+     "token": {
+      "m1": 0.00238643911434051,
+      "m30": 0.00228083508829158,
+      "d0": 0.00245656137709339,
+      "p7": 0.00159094220639553,
+      "p30": 0.00193080678373119
+     },
+     "btc": {
+      "m1": 104610.22853608,
+      "m30": 110655.26975977,
+      "d0": 105951.495999879,
+      "p7": 92100.3645236067,
+      "p30": 91986.581072138
+     },
+     "ret30": -0.08221574802972864,
+     "ret30_tok": -0.21402054036373164,
+     "ret30_btc": -0.131804792334003,
+     "ret7": -0.22163938767809777,
+     "ret7_tok": -0.35237025981498693,
+     "ret7_btc": -0.13073087213688916,
+     "jump": 0.016562066960856603,
+     "jump_tok": 0.02938363787766618,
+     "jump_btc": 0.012821570916809577,
+     "pre30": 0.11955307220721001,
+     "pre30_tok": 0.07704471476429031,
+     "pre30_btc": -0.0425083574429197
+    },
+    "ADA": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M ADABUSD and MATICBUSD Perpetual Contract",
+     "ts": "2023-08-10T09:00:04.905+00:00",
+     "d0": "2023-08-10",
+     "token": {
+      "m1": 0.301163740576288,
+      "m30": 0.292649263235301,
+      "d0": 0.296088824715836,
+      "p7": 0.25583460523234,
+      "p30": 0.253230314496992
+     },
+     "btc": {
+      "m1": 29561.6730349413,
+      "m30": 30620.2065447477,
+      "d0": 29428.9120680382,
+      "p7": 26646.4544758273,
+      "p30": 25889.6716388809
+     },
+     "ret30": -0.024484768113752664,
+     "ret30_tok": -0.14474882751814888,
+     "ret30_btc": -0.12026405940439622,
+     "ret7": -0.041404752011081625,
+     "ret7_tok": -0.13595318743329476,
+     "ret7_btc": -0.09454843542221314,
+     "jump": -0.01236003596065971,
+     "jump_tok": -0.01685101882033002,
+     "jump_btc": -0.004490982859670312,
+     "pre30": 0.050658687889915566,
+     "pre30_tok": 0.011753186878073363,
+     "pre30_btc": -0.0389055010118422
+    },
+    "ADAB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M ADABUSD and MATICBUSD Perpetual Contract",
+     "ts": "2023-08-10T09:00:04.905+00:00"
+    },
+    "AGIX": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M AGIXBUSD Perpetual Contract",
+     "ts": "2023-07-11T10:45:03.374+00:00",
+     "d0": "2023-07-11",
+     "token": {
+      "m1": 0.227415644512146,
+      "m30": 0.200155635333092,
+      "d0": 0.227103898086789,
+      "p7": 0.234615804474872,
+      "p30": 0.210173767175614
+     },
+     "btc": {
+      "m1": 30405.3989826654,
+      "m30": 25924.2916590131,
+      "d0": 30620.2065447477,
+      "p7": 29855.3475398709,
+      "p30": 29428.9120680382
+     },
+     "ret30": -0.035642452826911586,
+     "ret30_tok": -0.07454795383875379,
+     "ret30_btc": -0.0389055010118422,
+     "ret7": 0.05805585691051596,
+     "ret7_tok": 0.033076959274438655,
+     "ret7_btc": -0.024978897636077302,
+     "jump": -0.008435605783551625,
+     "jump_tok": -0.0013708222493916677,
+     "jump_btc": 0.007064783534159957,
+     "pre30": -0.046503021155294144,
+     "pre30_tok": 0.13463654275259662,
+     "pre30_btc": 0.18113956390789077
+    },
+    "AGIXB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M AGIXBUSD Perpetual Contract",
+     "ts": "2023-07-11T10:45:03.374+00:00"
+    },
+    "AIA": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist AIAUSDT USDⓈ-M Perpetual Contract (2025-12-11)",
+     "ts": "2025-12-11T11:43:46.582+00:00"
+    },
+    "AMBB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M AMBBUSD, LEVERBUSD and TLMBUSD Perpetual Contracts",
+     "ts": "2023-03-31T09:05:07.407+00:00"
+    },
+    "ANCB": {
+     "status": "no_price_source",
+     "title": "Notice on Updating Leverage & Margin Tiers, and Delisting USDⓈ-M ANCBUSD and AUCTIONBUSD Perpetual Contracts",
+     "ts": "2022-12-13T06:27:29.285+00:00"
+    },
+    "APE": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M APEBUSD Perpetual Contract",
+     "ts": "2023-05-12T06:55:32.167+00:00",
+     "d0": "2023-05-12",
+     "token": {
+      "m1": 3.22025729679228,
+      "m30": 4.4914043946216,
+      "d0": 3.31423615311958,
+      "p7": 3.42555596590047,
+      "p30": 2.35644577957092
+     },
+     "btc": {
+      "m1": 26992.0439783355,
+      "m30": 29908.1717969497,
+      "d0": 26795.214825574,
+      "p7": 26876.3575275414,
+      "p30": 25924.2916590131
+     },
+     "ret30": -0.2564898597964287,
+     "ret30_tok": -0.288992796318127,
+     "ret30_btc": -0.032502936521698333,
+     "ret7": 0.03056012336130909,
+     "ret7_tok": 0.03358837681983173,
+     "ret7_btc": 0.003028253458522645,
+     "jump": 0.036475765652618786,
+     "jump_tok": 0.029183648282052888,
+     "jump_btc": -0.007292117370565898,
+     "pre30": -0.15800974980788263,
+     "pre30_tok": -0.2620935765462722,
+     "pre30_btc": -0.10408382673838956
+    },
+    "APEB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M APEBUSD Perpetual Contract",
+     "ts": "2023-05-12T06:55:32.167+00:00"
+    },
+    "APT": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M APTBUSD and FTMBUSD Perpetual Contracts",
+     "ts": "2023-07-27T09:45:03.03+00:00",
+     "d0": "2023-07-27",
+     "token": {
+      "m1": 7.02060916927303,
+      "m30": 7.42298605235294,
+      "d0": 7.0686789958437,
+      "p7": 6.76333299547955,
+      "p30": 5.72613595518919
+     },
+     "btc": {
+      "m1": 29351.6508500752,
+      "m30": 30677.0268116684,
+      "d0": 29201.2363568216,
+      "p7": 29172.6076117407,
+      "p30": 26002.1232955326
+     },
+     "ret30": -0.0803743932023151,
+     "ret30_tok": -0.1899284210591412,
+     "ret30_btc": -0.10955402785682611,
+     "ret7": -0.042216643767038375,
+     "ret7_tok": -0.04319703873152114,
+     "ret7_btc": -0.000980394964482767,
+     "jump": 0.011971526213516603,
+     "jump_tok": 0.006846959489079207,
+     "jump_btc": -0.005124566724437396,
+     "pre30": 0.00037628103962217274,
+     "pre30_tok": -0.04773106860370979,
+     "pre30_btc": -0.048107349643331965
+    },
+    "APTB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M APTBUSD and FTMBUSD Perpetual Contracts",
+     "ts": "2023-07-27T09:45:03.03+00:00"
+    },
+    "AUCTION": {
+     "status": "no_price_source",
+     "title": "Notice on Updating Leverage & Margin Tiers, and Delisting USDⓈ-M ANCBUSD and AUCTIONBUSD Perpetual Contracts",
+     "ts": "2022-12-13T06:27:29.285+00:00"
+    },
+    "AUCTIONB": {
+     "status": "no_price_source",
+     "title": "Notice on Updating Leverage & Margin Tiers, and Delisting USDⓈ-M ANCBUSD and AUCTIONBUSD Perpetual Contracts",
+     "ts": "2022-12-13T06:27:29.285+00:00"
+    },
+    "AUDIO": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M IDEXUSDT, SLPUSDT, GLMRUSDT, MDTUSDT and AUDIOUSDT Perpetual Contracts",
+     "ts": "2024-05-08T05:00:26.574+00:00"
+    },
+    "AVAX": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M GMTBUSD, NEARBUSD and AVAXBUSD Perpetual Contracts",
+     "ts": "2023-04-14T10:01:49.865+00:00",
+     "d0": "2023-04-14",
+     "token": {
+      "m1": 18.8554267060533,
+      "m30": 15.63006995812,
+      "d0": 19.2432973304741,
+      "p7": 16.9478819516213,
+      "p30": 15.0360641513257
+     },
+     "btc": {
+      "m1": 30428.9458617094,
+      "m30": 24417.0137725294,
+      "d0": 30479.1179374651,
+      "p7": 27285.4675952857,
+      "p30": 26933.2770312815
+     },
+     "ret30": -0.10229696421113532,
+     "ret30_tok": -0.21863369395045074,
+     "ret30_btc": -0.11633672973931541,
+     "ret7": -0.014502304061460913,
+     "ret7_tok": -0.11928389087548574,
+     "ret7_btc": -0.10478158681402483,
+     "jump": 0.01892194158366478,
+     "jump_tok": 0.020570768854373256,
+     "jump_btc": 0.001648827270708475,
+     "pre30": -0.017102232329994305,
+     "pre30_tok": 0.23117154190835776,
+     "pre30_btc": 0.24827377423835206
+    },
+    "AVAXB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M GMTBUSD, NEARBUSD and AVAXBUSD Perpetual Contracts",
+     "ts": "2023-04-14T10:01:49.865+00:00"
+    },
+    "BLUEBIRD": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M FOOTBALLUSDT and BLUEBIRDUSDT Perpetual Contracts",
+     "ts": "2024-03-19T05:05:02.006+00:00"
+    },
+    "CTK": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M ANTUSDT, DGBUSDT and CTKUSDT Perpetual Contracts",
+     "ts": "2024-03-25T04:40:12.437+00:00"
+    },
+    "CVC": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of CVCUSDT Perpetual Futures Contract",
+     "ts": "2022-11-28T03:30:27.75+00:00"
+    },
+    "CVX": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M CVXBUSD, GALBUSD and WAVESBUSD Perpetual Contracts",
+     "ts": "2023-03-13T06:15:17.686+00:00"
+    },
+    "CVXB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M CVXBUSD, GALBUSD and WAVESBUSD Perpetual Contracts",
+     "ts": "2023-03-13T06:15:17.686+00:00"
+    },
+    "DEFI": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDⓈ-M DEFIUSDT and MEMEFI Perpetual Contracts (2025-08-11)",
+     "ts": "2025-08-06T07:30:06.291+00:00"
+    },
+    "DGB": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M ANTUSDT, DGBUSDT and CTKUSDT Perpetual Contracts",
+     "ts": "2024-03-25T04:40:12.437+00:00",
+     "d0": "2024-03-25",
+     "token": {
+      "m1": 0.0144586037344023,
+      "m30": 0.0102882781430849,
+      "d0": 0.0147599123459462,
+      "p7": 0.0194043156001225,
+      "p30": 0.0122622483417065
+     },
+     "btc": {
+      "m1": 67232.2562952548,
+      "m30": 51558.0379994315,
+      "d0": 69946.1580781235,
+      "p7": 69674.2953759885,
+      "p30": 64246.8833728822
+     },
+     "ret30": -0.08773855065076941,
+     "ret30_tok": -0.1692194334016951,
+     "ret30_btc": -0.08148088275092569,
+     "ret7": 0.318550078206127,
+     "ret7_tok": 0.3146633357515758,
+     "ret7_btc": -0.0038867424545512286,
+     "jump": -0.01952666835344896,
+     "jump_tok": 0.020839398954338728,
+     "jump_btc": 0.04036606730778769,
+     "pre30": 0.07798492636178689,
+     "pre30_tok": 0.4346338756273651,
+     "pre30_btc": 0.3566489492655782
+    },
+    "DODO": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist AKRO and DODO USDT-Margined Contracts",
+     "ts": "2022-05-18T10:59:25.804+00:00"
+    },
+    "DODOB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M TRXBUSD and DODOBUSD Perpetual Contracts",
+     "ts": "2023-08-03T09:30:03.469+00:00"
+    },
+    "DOGE": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M LTCBUSD and DOGEBUSD Perpetual Contracts",
+     "ts": "2023-08-17T10:05:04.608+00:00",
+     "d0": "2023-08-17",
+     "token": {
+      "m1": 0.0671960622208324,
+      "m30": 0.068649149232675,
+      "d0": 0.0611237584135774,
+      "p7": 0.0629385957450813,
+      "p30": 0.0621164055268379
+     },
+     "btc": {
+      "m1": 28704.2016990882,
+      "m30": 29855.3475398709,
+      "d0": 26646.4544758273,
+      "p7": 26137.9879840917,
+      "p30": 26554.0427701375
+     },
+     "ret30": 0.019708023054918034,
+     "ret30_tok": 0.016239955444886434,
+     "ret30_btc": -0.0034680676100316,
+     "ret7": 0.04877315013122385,
+     "ret7_tok": 0.029691193385463777,
+     "ret7_btc": -0.019081956745760076,
+     "jump": -0.018678944764551675,
+     "jump_tok": -0.09036695911285753,
+     "jump_btc": -0.07168801434830585,
+     "pre30": -0.002139685220627241,
+     "pre30_tok": -0.10962103541285739,
+     "pre30_btc": -0.10748135019223015
+    },
+    "DOGEB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M LTCBUSD and DOGEBUSD Perpetual Contracts",
+     "ts": "2023-08-17T10:05:04.608+00:00"
+    },
+    "DOT": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M DOTBUSD Perpetual Contract",
+     "ts": "2023-05-05T01:50:12.529+00:00",
+     "d0": "2023-05-05",
+     "token": {
+      "m1": 5.67263820170713,
+      "m30": 6.40690265580253,
+      "d0": 5.85102422525168,
+      "p7": 5.34336647195735,
+      "p30": 5.32304985372824
+     },
+     "btc": {
+      "m1": 28855.8492297548,
+      "m30": 28185.5099687492,
+      "d0": 29524.3648115322,
+      "p7": 26795.214825574,
+      "p30": 27126.0416982418
+     },
+     "ret30": -0.009004233666295547,
+     "ret30_tok": -0.090236230649127,
+     "ret30_btc": -0.08123199698283146,
+     "ret7": 0.0056733001720469245,
+     "ret7_tok": -0.08676391239390113,
+     "ret7_btc": -0.09243721256594806,
+     "jump": 0.008279327804019188,
+     "jump_tok": 0.03144674791543478,
+     "jump_btc": 0.023167420111415593,
+     "pre30": -0.13426395786523704,
+     "pre30_tok": -0.08676242802712297,
+     "pre30_btc": 0.047501529838114065
+    },
+    "DOTB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M DOTBUSD Perpetual Contract",
+     "ts": "2023-05-05T01:50:12.529+00:00"
+    },
+    "ETC": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M ETCBUSD Perpetual Contract",
+     "ts": "2023-04-21T10:00:24.769+00:00",
+     "d0": "2023-04-21",
+     "token": {
+      "m1": 20.0797175530868,
+      "m30": 20.1669598187509,
+      "d0": 19.3415423187598,
+      "p7": 19.7660066599584,
+      "p30": 17.9378784530366
+     },
+     "btc": {
+      "m1": 28236.4723310163,
+      "m30": 27436.0475091352,
+      "d0": 27285.4675952857,
+      "p7": 29335.6234204559,
+      "p30": 26749.2678808209
+     },
+     "ret30": -0.052921012820049684,
+     "ret30_tok": -0.07257248892513368,
+     "ret30_btc": -0.019651476105083998,
+     "ret7": -0.05319154632619516,
+     "ret7_tok": 0.021945733913210308,
+     "ret7_btc": 0.07513728023940547,
+     "jump": -0.003082219646369455,
+     "jump_tok": -0.036762231957467195,
+     "jump_btc": -0.03368001231109774,
+     "pre30": -0.03544080167687569,
+     "pre30_tok": -0.040929198422046786,
+     "pre30_btc": -0.005488396745171098
+    },
+    "ETCB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M ETCBUSD Perpetual Contract",
+     "ts": "2023-04-21T10:00:24.769+00:00"
+    },
+    "FIL": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M FILBUSD Perpetual Contract",
+     "ts": "2023-04-28T10:45:06.662+00:00",
+     "d0": "2023-04-28",
+     "token": {
+      "m1": 5.39537106425982,
+      "m30": 5.72850166099687,
+      "d0": 5.50922048995897,
+      "p7": 5.26934085103844,
+      "p30": 4.66499662617706
+     },
+     "btc": {
+      "m1": 29487.5922779004,
+      "m30": 28360.9849141623,
+      "d0": 29335.6234204559,
+      "p7": 29524.3648115322,
+      "p30": 28096.1135474649
+     },
+     "ret30": -0.11098563143092566,
+     "ret30_tok": -0.15323835110984962,
+     "ret30_btc": -0.04225271967892397,
+     "ret7": -0.04997534786926594,
+     "ret7_tok": -0.04354148456351159,
+     "ret7_btc": 0.00643386330575435,
+     "jump": 0.02625496957047002,
+     "jump_tok": 0.021101315246566665,
+     "jump_btc": -0.005153654323903356,
+     "pre30": -0.07264444238873813,
+     "pre30_tok": -0.03827897485496068,
+     "pre30_btc": 0.03436546753377745
+    },
+    "FILB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M FILBUSD Perpetual Contract",
+     "ts": "2023-04-28T10:45:06.662+00:00"
+    },
+    "FOOTBALL": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M FOOTBALLUSDT and BLUEBIRDUSDT Perpetual Contracts",
+     "ts": "2024-03-19T05:05:02.006+00:00"
+    },
+    "FTM": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M APTBUSD and FTMBUSD Perpetual Contracts",
+     "ts": "2023-07-27T09:45:03.03+00:00",
+     "d0": "2023-07-27",
+     "token": {
+      "m1": 0.245245813970489,
+      "m30": 0.313012691363192,
+      "d0": 0.2454649855875,
+      "p7": 0.233828432395116,
+      "p30": 0.200379239732434
+     },
+     "btc": {
+      "m1": 29351.6508500752,
+      "m30": 30677.0268116684,
+      "d0": 29201.2363568216,
+      "p7": 29172.6076117407,
+      "p30": 26002.1232955326
+     },
+     "ret30": -0.07412082803822961,
+     "ret30_tok": -0.18367485589505572,
+     "ret30_btc": -0.10955402785682611,
+     "ret7": -0.04642576834036849,
+     "ret7_tok": -0.047406163304851257,
+     "ret7_btc": -0.000980394964482767,
+     "jump": 0.006018248102572454,
+     "jump_tok": 0.0008936813781350583,
+     "jump_btc": -0.005124566724437396,
+     "pre30": -0.167691266960733,
+     "pre30_tok": -0.21579861660406496,
+     "pre30_btc": -0.048107349643331965
+    },
+    "FTMB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M APTBUSD and FTMBUSD Perpetual Contracts",
+     "ts": "2023-07-27T09:45:03.03+00:00"
+    },
+    "FTT": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist FTTBUSD USDT-Margined Contract",
+     "ts": "2022-05-09T04:25:02.529+00:00",
+     "d0": "2022-05-09",
+     "token": {
+      "m1": 33.8557014548209,
+      "m30": 45.6766763507077,
+      "d0": 31.1726873356801,
+      "p7": 31.8145543629927,
+      "p30": 28.1296969378264
+     },
+     "btc": {
+      "m1": 34070.3121975796,
+      "m30": 42806.9449338659,
+      "d0": 31168.6837284306,
+      "p7": 29923.6069936397,
+      "p30": 30233.6622447931
+     },
+     "ret30": -0.06761845035411007,
+     "ret30_tok": -0.09761719819294212,
+     "ret30_btc": -0.02999874783883205,
+     "ret7": 0.06053708720979101,
+     "ret7_tok": 0.02059068634027983,
+     "ret7_btc": -0.03994640086951118,
+     "jump": 0.005917373630934253,
+     "jump_tok": -0.07924851661163124,
+     "jump_btc": -0.08516589024256549,
+     "pre30": -0.04565812353296517,
+     "pre30_tok": -0.317535998102517,
+     "pre30_btc": -0.2718778745695518
+    },
+    "FTTB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist FTTBUSD USDT-Margined Contract",
+     "ts": "2022-05-09T04:25:02.529+00:00"
+    },
+    "GAL": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M CVXBUSD, GALBUSD and WAVESBUSD Perpetual Contracts",
+     "ts": "2023-03-13T06:15:17.686+00:00"
+    },
+    "GALA": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M LDOBUSD and GALABUSD Perpetual Contracts",
+     "ts": "2023-07-20T08:00:07.07+00:00",
+     "d0": "2023-07-20",
+     "token": {
+      "m1": 0.0257610174104439,
+      "m30": 0.0242087842875163,
+      "d0": 0.0263476040063411,
+      "p7": 0.0236606198566921,
+      "p30": 0.0200803384197028
+     },
+     "btc": {
+      "m1": 29925.8261356529,
+      "m30": 28334.4562548754,
+      "d0": 29793.9047970563,
+      "p7": 29201.2363568216,
+      "p30": 26088.7587956856
+     },
+     "ret30": -0.1135093261179515,
+     "ret30_tok": -0.23786852061120822,
+     "ret30_btc": -0.12435919449325672,
+     "ret7": -0.08208983479266052,
+     "ret7_tok": -0.10198210619084458,
+     "ret7_btc": -0.019892271398184058,
+     "jump": 0.02717859670590128,
+     "jump_tok": 0.022770319454051835,
+     "jump_btc": -0.004408277251849446,
+     "pre30": 0.036841003443846,
+     "pre30_tok": 0.08834891060298822,
+     "pre30_btc": 0.05150790715914222
+    },
+    "GALAB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M LDOBUSD and GALABUSD Perpetual Contracts",
+     "ts": "2023-07-20T08:00:07.07+00:00"
+    },
+    "GALB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M CVXBUSD, GALBUSD and WAVESBUSD Perpetual Contracts",
+     "ts": "2023-03-13T06:15:17.686+00:00"
+    },
+    "GLMR": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M IDEXUSDT, SLPUSDT, GLMRUSDT, MDTUSDT and AUDIOUSDT Perpetual Contracts",
+     "ts": "2024-05-08T05:00:26.574+00:00",
+     "d0": "2024-05-08",
+     "token": {
+      "m1": 0.288514647373222,
+      "m30": 0.480192244300782,
+      "d0": 0.288228134414332,
+      "p7": 0.271793485269063,
+      "p30": 0.312816758097998
+     },
+     "btc": {
+      "m1": 62332.7333593829,
+      "m30": 71629.128829518,
+      "d0": 61188.1710927935,
+      "p7": 66228.7733761401,
+      "p30": 69338.8214750874
+     },
+     "ret30": -0.047896719295154044,
+     "ret30_tok": 0.08530958899494379,
+     "ret30_btc": 0.13320630829009783,
+     "ret7": -0.13939829165252815,
+     "ret7_tok": -0.05701958685838748,
+     "ret7_btc": 0.08237870479414067,
+     "jump": 0.01736907614566474,
+     "jump_tok": -0.000993062090603014,
+     "jump_btc": -0.018362138236267755,
+     "pre30": -0.2540009881581874,
+     "pre30_tok": -0.39976511941789683,
+     "pre30_btc": -0.14576413125970944
+    },
+    "GMT": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M GMTBUSD, NEARBUSD and AVAXBUSD Perpetual Contracts",
+     "ts": "2023-04-14T10:01:49.865+00:00",
+     "d0": "2023-04-14",
+     "token": {
+      "m1": 0.383540432955692,
+      "m30": 0.36898414745773,
+      "d0": 0.402058908462915,
+      "p7": 0.332822848697805,
+      "p30": 0.270629141162967
+     },
+     "btc": {
+      "m1": 30428.9458617094,
+      "m30": 24417.0137725294,
+      "d0": 30479.1179374651,
+      "p7": 27285.4675952857,
+      "p30": 26933.2770312815
+     },
+     "ret30": -0.21055508768716202,
+     "ret30_tok": -0.32689181742647744,
+     "ret30_btc": -0.11633672973931541,
+     "ret7": -0.06742218310069192,
+     "ret7_tok": -0.17220376991471675,
+     "ret7_btc": -0.10478158681402483,
+     "jump": 0.04663415391204029,
+     "jump_tok": 0.04828298118274876,
+     "jump_btc": 0.001648827270708475,
+     "pre30": -0.15863642468535,
+     "pre30_tok": 0.08963734955300207,
+     "pre30_btc": 0.24827377423835206
+    },
+    "GMTB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M GMTBUSD, NEARBUSD and AVAXBUSD Perpetual Contracts",
+     "ts": "2023-04-14T10:01:49.865+00:00"
+    },
+    "ICP": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist TLM and ICP USDT-Margined Contracts",
+     "ts": "2022-06-02T10:18:15.432+00:00",
+     "d0": "2022-06-02",
+     "token": {
+      "m1": 7.62278913451245,
+      "m30": 12.8299559037151,
+      "d0": 9.39409710072535,
+      "p7": 6.38882169842951,
+      "p30": 5.24637976359754
+     },
+     "btc": {
+      "m1": 29822.0722900913,
+      "m30": 37758.496107734,
+      "d0": 30447.3511291637,
+      "p7": 30097.0798489628,
+      "p30": 19261.5474772323
+     },
+     "ret30": -0.07414195556205816,
+     "ret30_tok": -0.44152378803999703,
+     "ret30_btc": -0.3673818324779389,
+     "ret7": -0.30840688041280817,
+     "ret7_tok": -0.3199110430808505,
+     "ret7_btc": -0.011504162668042328,
+     "jump": 0.21140307815685366,
+     "jump_tok": 0.2323700596928806,
+     "jump_btc": 0.02096698153602694,
+     "pre30": -0.074170599913436,
+     "pre30_tok": -0.26779973592854256,
+     "pre30_btc": -0.19362913601510656
+    },
+    "ICPB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M ICPBUSD and LUNA2BUSD Perpetual Contracts",
+     "ts": "2023-03-20T07:20:06.814+00:00"
+    },
+    "IP": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-Margined IPUSDT and IPUSDC Perpetual Contracts (2026-06-28)",
+     "ts": "2026-06-25T17:00:06.669+00:00",
+     "d0": "2026-06-25",
+     "token": {
+      "m1": 0.331022499163038,
+      "m30": 0.478690579070444,
+      "d0": 0.382633342942737,
+      "p7": 0.304325055568951,
+      "p30": 0.266810356179065
+     },
+     "btc": {
+      "m1": 60989.5735215213,
+      "m30": 75851.1040956177,
+      "d0": 59726.7365348085,
+      "p7": 61490.2144847166,
+      "p30": 64318.2452012031
+     },
+     "ret30": -0.3795749347829681,
+     "ret30_tok": -0.30269967032383127,
+     "ret30_btc": 0.07687526445913684,
+     "ret7": -0.23418197476873182,
+     "ret7_tok": -0.20465620369499582,
+     "ret7_btc": 0.029525771073735996,
+     "jump": 0.17661918622392658,
+     "jump_tok": 0.155913401385684,
+     "jump_btc": -0.02070578483824259,
+     "pre30": 0.011912554439052259,
+     "pre30_tok": -0.20066665258847982,
+     "pre30_btc": -0.21257920702753208
+    },
+    "LDO": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M LDOBUSD and GALABUSD Perpetual Contracts",
+     "ts": "2023-07-20T08:00:07.07+00:00",
+     "d0": "2023-07-20",
+     "token": {
+      "m1": 2.08528501416878,
+      "m30": 1.85825478741992,
+      "d0": 2.05456810660406,
+      "p7": 1.91408372710487,
+      "p30": 1.65098718697213
+     },
+     "btc": {
+      "m1": 29925.8261356529,
+      "m30": 28334.4562548754,
+      "d0": 29793.9047970563,
+      "p7": 29201.2363568216,
+      "p30": 26088.7587956856
+     },
+     "ret30": -0.0720718307595386,
+     "ret30_tok": -0.19643102525279532,
+     "ret30_btc": -0.12435919449325672,
+     "ret7": -0.048484327580271214,
+     "ret7_tok": -0.06837659897845527,
+     "ret7_btc": -0.019892271398184058,
+     "jump": -0.010322038918846421,
+     "jump_tok": -0.014730316170695867,
+     "jump_btc": -0.004408277251849446,
+     "pre30": 0.05413601234702514,
+     "pre30_tok": 0.10564391950616736,
+     "pre30_btc": 0.05150790715914222
+    },
+    "LDOB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M LDOBUSD and GALABUSD Perpetual Contracts",
+     "ts": "2023-07-20T08:00:07.07+00:00"
+    },
+    "LEVERB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M AMBBUSD, LEVERBUSD and TLMBUSD Perpetual Contracts",
+     "ts": "2023-03-31T09:05:07.407+00:00"
+    },
+    "LINK": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M LINKBUSD Perpetual Contract",
+     "ts": "2023-05-19T04:30:16.021+00:00",
+     "d0": "2023-05-19",
+     "token": {
+      "m1": 6.53483762826568,
+      "m30": 7.76706191660212,
+      "d0": 6.50646377078006,
+      "p7": 6.34824915865804,
+      "p30": 5.15954241454238
+     },
+     "btc": {
+      "m1": 26846.8654227603,
+      "m30": 28855.520636195,
+      "d0": 26876.3575275414,
+      "p7": 26718.9116237334,
+      "p30": 26340.291385597
+     },
+     "ret30": -0.18706717157696906,
+     "ret30_tok": -0.2070128112119185,
+     "ret30_btc": -0.01994563963494944,
+     "ret7": -0.018458372238642107,
+     "ret7_tok": -0.024316528562342565,
+     "ret7_btc": -0.005858156323700459,
+     "jump": -0.00544046830207523,
+     "jump_tok": -0.004341937642473592,
+     "jump_btc": 0.0010985306596016375,
+     "pre30": -0.09371179862264956,
+     "pre30_tok": -0.1623005145777875,
+     "pre30_btc": -0.06858871595513794
+    },
+    "LINKB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M LINKBUSD Perpetual Contract",
+     "ts": "2023-05-19T04:30:16.021+00:00"
+    },
+    "LTC": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M LTCBUSD and DOGEBUSD Perpetual Contracts",
+     "ts": "2023-08-17T10:05:04.608+00:00",
+     "d0": "2023-08-17",
+     "token": {
+      "m1": 74.4883822984328,
+      "m30": 91.5321720389038,
+      "d0": 64.9652939724151,
+      "p7": 64.8461439151449,
+      "p30": 65.3417665945448
+     },
+     "btc": {
+      "m1": 28704.2016990882,
+      "m30": 29855.3475398709,
+      "d0": 26646.4544758273,
+      "p7": 26137.9879840917,
+      "p30": 26554.0427701375
+     },
+     "ret30": 0.009263048269852137,
+     "ret30_tok": 0.005794980659820537,
+     "ret30_btc": -0.0034680676100316,
+     "ret7": 0.017247899667210076,
+     "ret7_tok": -0.0018340570785499999,
+     "ret7_btc": -0.019081956745760076,
+     "jump": -0.05615861128875088,
+     "jump_tok": -0.12784662563705673,
+     "jump_btc": -0.07168801434830585,
+     "pre30": -0.18276499133670254,
+     "pre30_tok": -0.2902463415289327,
+     "pre30_btc": -0.10748135019223015
+    },
+    "LTCB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M LTCBUSD and DOGEBUSD Perpetual Contracts",
+     "ts": "2023-08-17T10:05:04.608+00:00"
+    },
+    "LUNA": {
+     "status": "ok",
+     "title": "Binance Futures to Delist Coin-Margined LUNA Perpetual Contracts and Update the Leverage & Margin Tiers for USDT-Margined LUNA Perpetual Contracts",
+     "ts": "2022-05-12T04:50:09.976+00:00",
+     "d0": "2022-05-12",
+     "token": {
+      "m1": null,
+      "m30": null,
+      "d0": null,
+      "p7": null,
+      "p30": 2.6218621126873
+     },
+     "btc": {
+      "m1": 29132.3234225726,
+      "m30": 40101.0511241918,
+      "d0": 29126.1159768601,
+      "p7": 30289.3108771731,
+      "p30": 28432.4889317672
+     },
+     "ret30": null,
+     "ret30_tok": null,
+     "ret30_btc": -0.02381460836192395,
+     "ret7": null,
+     "ret7_tok": null,
+     "ret7_btc": 0.03993649208968075,
+     "jump": null,
+     "jump_tok": null,
+     "jump_btc": -0.00021307760532729425,
+     "pre30": null,
+     "pre30_tok": null,
+     "pre30_btc": -0.2736819818847801
+    },
+    "LUNA2": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M ICPBUSD and LUNA2BUSD Perpetual Contracts",
+     "ts": "2023-03-20T07:20:06.814+00:00"
+    },
+    "LUNA2B": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M ICPBUSD and LUNA2BUSD Perpetual Contracts",
+     "ts": "2023-03-20T07:20:06.814+00:00"
+    },
+    "MATIC": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M ADABUSD and MATICBUSD Perpetual Contract",
+     "ts": "2023-08-10T09:00:04.905+00:00",
+     "d0": "2023-08-10",
+     "token": {
+      "m1": 0.689838655188407,
+      "m30": 0.742360324179715,
+      "d0": 0.684713655280341,
+      "p7": 0.573273315097454,
+      "p30": 0.539412675555988
+     },
+     "btc": {
+      "m1": 29561.6730349413,
+      "m30": 30620.2065447477,
+      "d0": 29428.9120680382,
+      "p7": 26646.4544758273,
+      "p30": 25889.6716388809
+     },
+     "ret30": -0.09194286622623493,
+     "ret30_tok": -0.21220692563063115,
+     "ret30_btc": -0.12026405940439622,
+     "ret7": -0.06820622752847705,
+     "ret7_tok": -0.1627546629506902,
+     "ret7_btc": -0.09454843542221314,
+     "jump": -0.002938290448689429,
+     "jump_tok": -0.007429273308359741,
+     "jump_btc": -0.004490982859670312,
+     "pre30": -0.038747718081017735,
+     "pre30_tok": -0.07765321909285994,
+     "pre30_btc": -0.0389055010118422
+    },
+    "MATICB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M ADABUSD and MATICBUSD Perpetual Contract",
+     "ts": "2023-08-10T09:00:04.905+00:00"
+    },
+    "MAVIA": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDⓈ-M MAVIAUSDT, OMGUSDT, and BONDUSDT Perpetual Contracts (2024-12-16)",
+     "ts": "2024-12-06T03:00:04.185+00:00"
+    },
+    "MBL": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M STPTUSDT, SNTUSDT, MBLUSDT, RADUSDT and CVXUSDT Perpetual Contracts",
+     "ts": "2024-05-06T05:00:17.942+00:00"
+    },
+    "MEMEFI": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDⓈ-M DEFIUSDT and MEMEFI Perpetual Contracts (2025-08-11)",
+     "ts": "2025-08-06T07:30:06.291+00:00"
+    },
+    "MITO": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist PTBUSDT and MITOUSDT USDⓈ-M Perpetual Contracts (2026-10-23)",
+     "ts": "2026-10-21T09:30:01.882+00:00"
+    },
+    "MYRO": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M MYROUSDT and 1000XUSDT Perpetual Contracts (2025-11-14)",
+     "ts": "2025-11-10T13:45:00.002+00:00",
+     "d0": "2025-11-10",
+     "token": {
+      "m1": 0.0148358753864294,
+      "m30": 0.0127208247562498,
+      "d0": 0.0143030752809298,
+      "p7": 0.00853702163139663,
+      "p30": 0.00670895963156372
+     },
+     "btc": {
+      "m1": 104610.22853608,
+      "m30": 110655.26975977,
+      "d0": 105951.495999879,
+      "p7": 92100.3645236067,
+      "p30": 91986.581072138
+     },
+     "ret30": -0.39913806437397137,
+     "ret30_tok": -0.5309428567079744,
+     "ret30_btc": -0.131804792334003,
+     "ret7": -0.2724029670047543,
+     "ret7_tok": -0.40313383914164347,
+     "ret7_btc": -0.13073087213688916,
+     "jump": -0.04873452459306926,
+     "jump_tok": -0.035912953676259685,
+     "jump_btc": 0.012821570916809577,
+     "pre30": 0.16689105707115215,
+     "pre30_tok": 0.12438269962823245,
+     "pre30_btc": -0.0425083574429197
+    },
+    "NEAR": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M GMTBUSD, NEARBUSD and AVAXBUSD Perpetual Contracts",
+     "ts": "2023-04-14T10:01:49.865+00:00",
+     "d0": "2023-04-14",
+     "token": {
+      "m1": 2.20587139050181,
+      "m30": 1.93316433078049,
+      "d0": 2.22204769199355,
+      "p7": 1.92737218106693,
+      "p30": 1.65789335534764
+     },
+     "btc": {
+      "m1": 30428.9458617094,
+      "m30": 24417.0137725294,
+      "d0": 30479.1179374651,
+      "p7": 27285.4675952857,
+      "p30": 26933.2770312815
+     },
+     "ret30": -0.1375526618694527,
+     "ret30_tok": -0.2538893916087681,
+     "ret30_btc": -0.11633672973931541,
+     "ret7": -0.027832808452283087,
+     "ret7_tok": -0.13261439526630792,
+     "ret7_btc": -0.10478158681402483,
+     "jump": 0.00568446584936777,
+     "jump_tok": 0.007333293120076245,
+     "jump_btc": 0.001648827270708475,
+     "pre30": -0.098838283104276,
+     "pre30_tok": 0.14943549113407606,
+     "pre30_btc": 0.24827377423835206
+    },
+    "NEARB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M GMTBUSD, NEARBUSD and AVAXBUSD Perpetual Contracts",
+     "ts": "2023-04-14T10:01:49.865+00:00"
+    },
+    "NEIROETH": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDⓈ-M NEIROETHUSDT Perpetual Contract (2025-09-26)",
+     "ts": "2025-09-22T07:30:02.61+00:00"
+    },
+    "ORBS": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M XEMUSDT, ORBSUSDT and LOOMUSDT Perpetual Contracts (2024-12-09)",
+     "ts": "2024-11-29T04:00:01.809+00:00",
+     "d0": "2024-11-29",
+     "token": {
+      "m1": 0.0353574563807689,
+      "m30": 0.0256268142173973,
+      "d0": 0.0355072855368344,
+      "p7": 0.0375697505120684,
+      "p30": 0.0273475194164126
+     },
+     "btc": {
+      "m1": 95648.6184701647,
+      "m30": 72342.9109200164,
+      "d0": 97508.5860726266,
+      "p7": 99928.0552148145,
+      "p30": 93467.1470591109
+     },
+     "ret30": -0.18835839800808007,
+     "ret30_tok": -0.2298054046389172,
+     "ret30_btc": -0.04144700663083711,
+     "ret7": 0.03327280117503628,
+     "ret7_tok": 0.05808568422090299,
+     "ret7_btc": 0.024812883045866707,
+     "jump": -0.01520828393928264,
+     "jump_tok": 0.004237554716945091,
+     "jump_btc": 0.019445838656227732,
+     "pre30": 0.03768557292030961,
+     "pre30_tok": 0.38555207196724206,
+     "pre30_btc": 0.34786649904693245
+    },
+    "PHBB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M PHBBUSD, SANDBUSD and UNIBUSD Perpetual Contracts",
+     "ts": "2023-04-06T10:15:03.366+00:00"
+    },
+    "PORT3": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M PORT3USDT Perpetual Contract (2025-11-23)",
+     "ts": "2025-11-23T05:57:34.108+00:00",
+     "d0": "2025-11-23",
+     "token": {
+      "m1": 0.00818147225743424,
+      "m30": 0.041394778310984,
+      "d0": 5.21702696186341e-21,
+      "p7": 0.0043791067178043,
+      "p30": 0.00231447062019249
+     },
+     "btc": {
+      "m1": 84675.5076485621,
+      "m30": 111030.183378648,
+      "d0": 86740.1177387617,
+      "p7": 90359.8687316973,
+      "p30": 87496.1466923918
+     },
+     "ret30": 4.4363784912581914e+17,
+     "ret30_tok": 4.4363784912581914e+17,
+     "ret30_btc": 0.008716024065208883,
+     "ret7": 8.393874039401509e+17,
+     "ret7_tok": 8.393874039401509e+17,
+     "ret7_btc": 0.041730990080476094,
+     "jump": -1.0243826124877642,
+     "jump_tok": -1.0,
+     "jump_btc": 0.024382612487764188,
+     "pre30": -0.7812300682504549,
+     "pre30_tok": -1.0,
+     "pre30_btc": -0.21876993174954507
+    },
+    "PTB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist PTBUSDT and MITOUSDT USDⓈ-M Perpetual Contracts (2026-10-23)",
+     "ts": "2026-10-21T09:30:01.882+00:00"
+    },
+    "RAD": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M STPTUSDT, SNTUSDT, MBLUSDT, RADUSDT and CVXUSDT Perpetual Contracts",
+     "ts": "2024-05-06T05:00:17.942+00:00",
+     "d0": "2024-05-06",
+     "token": {
+      "m1": 1.78751762116458,
+      "m30": 2.6222311631586,
+      "d0": 1.70564550747998,
+      "p7": 1.72993298110057,
+      "p30": 1.8114264048029
+     },
+     "btc": {
+      "m1": 64028.1839885979,
+      "m30": 68896.1330392832,
+      "d0": 63159.4137703426,
+      "p7": 62904.918271802,
+      "p30": 71054.1443984153
+     },
+     "ret30": -0.06297879311046573,
+     "ret30_tok": 0.06201810215488868,
+     "ret30_btc": 0.1249968952653544,
+     "ret7": 0.018268876696650893,
+     "ret7_tok": 0.014239461549354182,
+     "ret7_btc": -0.004029415147296711,
+     "jump": -0.03223357015686057,
+     "jump_tok": -0.04580212956516749,
+     "jump_btc": -0.013568559408306924,
+     "pre30": -0.26627798422800897,
+     "pre30_tok": -0.3495441853320628,
+     "pre30_btc": -0.0832662011040538
+    },
+    "RAY": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist RAYUSDT and SRMUSDT Perpetual Futures Contracts",
+     "ts": "2022-11-14T07:00:04.88+00:00",
+     "d0": "2022-11-14",
+     "token": {
+      "m1": 0.187220292709929,
+      "m30": 0.474953533227733,
+      "d0": 0.241178385957887,
+      "p7": 0.270984720057187,
+      "p30": 0.195333625287582
+     },
+     "btc": {
+      "m1": 16335.2916239063,
+      "m30": 19077.7924416829,
+      "d0": 16632.6099640646,
+      "p7": 15794.3276049145,
+      "p30": 17819.9788658397
+     },
+     "ret30": -0.2614745309399408,
+     "ret30_tok": -0.19008652242290947,
+     "ret30_btc": 0.07138800851703131,
+     "ret7": 0.17398618632620122,
+     "ret7_tok": 0.12358625745386909,
+     "ret7_btc": -0.050399928872332134,
+     "jump": 0.2700054542047181,
+     "jump_tok": 0.2882064356749956,
+     "jump_btc": 0.01820098147027749,
+     "pre30": -0.36403730767998776,
+     "pre30_tok": -0.492206354758823,
+     "pre30_btc": -0.12816904707883525
+    },
+    "RVV": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M RVVUSDT and YALAUSDT Perpetual Contracts (2026-02-10)",
+     "ts": "2026-02-05T07:14:19.503+00:00",
+     "d0": "2026-02-05",
+     "token": {
+      "m1": 0.00284114575714337,
+      "m30": 0.00410203640130969,
+      "d0": 0.00174363898220859,
+      "p7": 0.000449341316290837,
+      "p30": 0.000380259014096592
+     },
+     "btc": {
+      "m1": 73059.1798671369,
+      "m30": 93649.6319764084,
+      "d0": 62778.2175663543,
+      "p7": 66258.5295494744,
+      "p30": 67339.6744005657
+     },
+     "ret30": -0.8545762952954152,
+     "ret30_tok": -0.7819164299625059,
+     "ret30_btc": 0.07265986533290936,
+     "ret7": -0.7977350262613294,
+     "ret7_tok": -0.7422968166714898,
+     "ret7_btc": 0.05543820958983958,
+     "jump": -0.24556918443005615,
+     "jump_tok": -0.38629020428655103,
+     "jump_btc": -0.14072101985649488,
+     "pre30": -0.24528531731716563,
+     "pre30_tok": -0.574933322958352,
+     "pre30_btc": -0.32964800564118635
+    },
+    "SAND": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M PHBBUSD, SANDBUSD and UNIBUSD Perpetual Contracts",
+     "ts": "2023-04-06T10:15:03.366+00:00",
+     "d0": "2023-04-06",
+     "token": {
+      "m1": 0.658209217472289,
+      "m30": 0.611433669932916,
+      "d0": 0.639049131625349,
+      "p7": 0.667148934006195,
+      "p30": 0.551158502321627
+     },
+     "btc": {
+      "m1": 28185.5099687492,
+      "m30": 22201.8091536349,
+      "d0": 28043.6401775861,
+      "p7": 30428.9458617094,
+      "p30": 28894.8807258562
+     },
+     "ret30": -0.16788758497278766,
+     "ret30_tok": -0.13753344610637708,
+     "ret30_btc": 0.030354138866410585,
+     "ret7": -0.041085650155674,
+     "ret7_tok": 0.043971270736848256,
+     "ret7_btc": 0.08505692089252226,
+     "jump": -0.024075985889119966,
+     "jump_tok": -0.029109415879224776,
+     "jump_btc": -0.00503342999010481,
+     "pre30": -0.21795900062663387,
+     "pre30_tok": 0.045165098113525426,
+     "pre30_btc": 0.2631240987401593
+    },
+    "SANDB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M PHBBUSD, SANDBUSD and UNIBUSD Perpetual Contracts",
+     "ts": "2023-04-06T10:15:03.366+00:00"
+    },
+    "SC": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDT-Margined SC Perpetual Contract",
+     "ts": "2022-06-10T10:02:22.935+00:00",
+     "d0": "2022-06-10",
+     "token": {
+      "m1": 0.00536112652123009,
+      "m30": 0.00449600014173343,
+      "d0": 0.00494494179111129,
+      "p7": 0.00361591282228482,
+      "p30": 0.00412617128136014
+     },
+     "btc": {
+      "m1": 30097.0798489628,
+      "m30": 29132.3234225726,
+      "d0": 29099.9749251096,
+      "p7": 20470.3011517194,
+      "p30": 20867.4039802789
+     },
+     "ret30": 0.11732908105669726,
+     "ret30_tok": -0.1655773807535853,
+     "ret30_btc": -0.28290646181028256,
+     "ret7": 0.027787277452862802,
+     "ret7_tok": -0.26876534142736463,
+     "ret7_btc": -0.29655261888022744,
+     "jump": -0.04450046571153943,
+     "jump_tok": -0.07763008921179282,
+     "jump_btc": -0.03312962350025339,
+     "pre30": 0.10096396537059904,
+     "pre30_tok": 0.09985356655366373,
+     "pre30_btc": -0.0011103988169353096
+    },
+    "SLERF": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDⓈ-M SLERFUSDT and COIN-M CHZUSD Perpetual Contracts (2025-10-20 & 2025-10-21)",
+     "ts": "2025-10-18T03:58:50.952+00:00"
+    },
+    "SLP": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M IDEXUSDT, SLPUSDT, GLMRUSDT, MDTUSDT and AUDIOUSDT Perpetual Contracts",
+     "ts": "2024-05-08T05:00:26.574+00:00"
+    },
+    "SOL": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M SOLBUSD Perpetual Contract",
+     "ts": "2023-08-21T11:20:03.287+00:00",
+     "d0": "2023-08-21",
+     "token": {
+      "m1": 21.7752860827031,
+      "m30": 24.5316193465651,
+      "d0": 21.2053151087245,
+      "p7": 20.5490385306378,
+      "p30": 20.2974364240102
+     },
+     "btc": {
+      "m1": 26193.3102061566,
+      "m30": 29809.6316646749,
+      "d0": 26127.653373796,
+      "p7": 26109.6931553882,
+      "p30": 27125.3369793223
+     },
+     "ret30": -0.0809987002202952,
+     "ret30_tok": -0.04281373231472374,
+     "ret30_btc": 0.038184967905571465,
+     "ret7": -0.03026128047622234,
+     "ret7_tok": -0.030948683135422317,
+     "ret7_btc": -0.000687402659199976,
+     "jump": -0.023668505377714144,
+     "jump_tok": -0.02617513137663674,
+     "jump_btc": -0.002506625998922596,
+     "pre30": -0.012076129430035998,
+     "pre30_tok": -0.13559252615365358,
+     "pre30_btc": -0.12351639672361758
+    },
+    "SOLB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M SOLBUSD Perpetual Contract",
+     "ts": "2023-08-21T11:20:03.287+00:00"
+    },
+    "STPT": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M STPTUSDT, SNTUSDT, MBLUSDT, RADUSDT and CVXUSDT Perpetual Contracts",
+     "ts": "2024-05-06T05:00:17.942+00:00"
+    },
+    "TLM": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist TLM and ICP USDT-Margined Contracts",
+     "ts": "2022-06-02T10:18:15.432+00:00",
+     "d0": "2022-06-02",
+     "token": {
+      "m1": 0.033235638536503,
+      "m30": 0.0742496722525849,
+      "d0": 0.0382932880507246,
+      "p7": 0.0352108087465085,
+      "p30": 0.0241295730204845
+     },
+     "btc": {
+      "m1": 29822.0722900913,
+      "m30": 37758.496107734,
+      "d0": 30447.3511291637,
+      "p7": 30097.0798489628,
+      "p30": 19261.5474772323
+     },
+     "ret30": -0.0024927787457920125,
+     "ret30_tok": -0.3698746112237309,
+     "ret30_btc": -0.3673818324779389,
+     "ret7": -0.0689924324567468,
+     "ret7_tok": -0.08049659512478913,
+     "ret7_btc": -0.011504162668042328,
+     "jump": 0.1312085064921853,
+     "jump_tok": 0.15217548802821224,
+     "jump_btc": 0.02096698153602694,
+     "pre30": -0.2906340682660211,
+     "pre30_tok": -0.4842632042811277,
+     "pre30_btc": -0.19362913601510656
+    },
+    "TLMB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M AMBBUSD, LEVERBUSD and TLMBUSD Perpetual Contracts",
+     "ts": "2023-03-31T09:05:07.407+00:00"
+    },
+    "TRX": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M TRXBUSD and DODOBUSD Perpetual Contracts",
+     "ts": "2023-08-03T09:30:03.469+00:00",
+     "d0": "2023-08-03",
+     "token": {
+      "m1": 0.0764420210654602,
+      "m30": 0.0770166026078215,
+      "d0": 0.0771286022582934,
+      "p7": 0.0772765365691306,
+      "p30": 0.0770143414449806
+     },
+     "btc": {
+      "m1": 29153.0185611272,
+      "m30": 30763.6003338961,
+      "d0": 29172.6076117407,
+      "p7": 29428.9120680382,
+      "p30": 25868.1038063374
+     },
+     "ret30": 0.11179276811931049,
+     "ret30_tok": -0.0014814324383860544,
+     "ret30_btc": -0.11327420055769655,
+     "ret7": -0.006867770369878734,
+     "ret7_tok": 0.0019180214149581154,
+     "ret7_btc": 0.00878579178483685,
+     "jump": 0.0083097857375094,
+     "jump_tok": 0.008981724753787557,
+     "jump_btc": 0.0006719390162781558,
+     "pre30": 0.053170954427107064,
+     "pre30_tok": 0.0014542273572131226,
+     "pre30_btc": -0.05171672706989394
+    },
+    "TRXB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M TRXBUSD and DODOBUSD Perpetual Contracts",
+     "ts": "2023-08-03T09:30:03.469+00:00"
+    },
+    "UNI": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M PHBBUSD, SANDBUSD and UNIBUSD Perpetual Contracts",
+     "ts": "2023-04-06T10:15:03.366+00:00",
+     "d0": "2023-04-06",
+     "token": {
+      "m1": 6.22719955394366,
+      "m30": 6.42683823696202,
+      "d0": 6.07245938027636,
+      "p7": 6.21316117303103,
+      "p30": 5.28598091455648
+     },
+     "btc": {
+      "m1": 28185.5099687492,
+      "m30": 22201.8091536349,
+      "d0": 28043.6401775861,
+      "p7": 30428.9458617094,
+      "p30": 28894.8807258562
+     },
+     "ret30": -0.15986977931258628,
+     "ret30_tok": -0.1295156404461757,
+     "ret30_btc": 0.030354138866410585,
+     "ret7": -0.06188644185866066,
+     "ret7_tok": 0.023170479033861602,
+     "ret7_btc": 0.08505692089252226,
+     "jump": -0.019815649010311076,
+     "jump_tok": -0.024849079000415886,
+     "jump_btc": -0.00503342999010481,
+     "pre30": -0.3182645649568997,
+     "pre30_tok": -0.0551404662167404,
+     "pre30_btc": 0.2631240987401593
+    },
+    "UNIB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M PHBBUSD, SANDBUSD and UNIBUSD Perpetual Contracts",
+     "ts": "2023-04-06T10:15:03.366+00:00"
+    },
+    "UXLINK": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M UXLINKUSDT Perpetual Contract (2025-09-26)",
+     "ts": "2025-09-24T12:00:05.98+00:00",
+     "d0": "2025-09-24",
+     "token": {
+      "m1": 0.0790051058305845,
+      "m30": 0.302239768333538,
+      "d0": 0.145000968551644,
+      "p7": 0.135823826449229,
+      "p30": 0.119978395609086
+     },
+     "btc": {
+      "m1": 112002.46136593,
+      "m30": 110100.281956306,
+      "d0": 113317.162689492,
+      "p7": 118930.955114161,
+      "p30": 111030.183378648
+     },
+     "ret30": -0.15238620703052375,
+     "ret30_tok": -0.1725683158705651,
+     "ret30_btc": -0.020182108840041346,
+     "ret7": -0.11283074355173406,
+     "ret7_tok": -0.06329021243155653,
+     "ret7_btc": 0.04954053112017753,
+     "jump": 0.823598532193516,
+     "jump_tok": 0.8353366789050125,
+     "jump_btc": 0.011738146711496533,
+     "pre30": -0.549462970417834,
+     "pre30_tok": -0.5202452365843944,
+     "pre30_btc": 0.02921773383343962
+    },
+    "WAVESB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M CVXBUSD, GALBUSD and WAVESBUSD Perpetual Contracts",
+     "ts": "2023-03-13T06:15:17.686+00:00"
+    },
+    "YALA": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M RVVUSDT and YALAUSDT Perpetual Contracts (2026-02-10)",
+     "ts": "2026-02-05T07:14:19.503+00:00",
+     "d0": "2026-02-05",
+     "token": {
+      "m1": 0.0368317749473662,
+      "m30": 0.0221575860925298,
+      "d0": 0.0166008371927997,
+      "p7": 0.00140655578579814,
+      "p30": 0.00100050729144282
+     },
+     "btc": {
+      "m1": 73059.1798671369,
+      "m30": 93649.6319764084,
+      "d0": 62778.2175663543,
+      "p7": 66258.5295494744,
+      "p30": 67339.6744005657
+     },
+     "ret30": -1.0123913812906244,
+     "ret30_tok": -0.939731515957715,
+     "ret30_btc": 0.07265986533290936,
+     "ret7": -0.9707102064498409,
+     "ret7_tok": -0.9152719968600013,
+     "ret7_btc": 0.05543820958983958,
+     "jump": -0.4085584483059047,
+     "jump_tok": -0.5492794681623996,
+     "jump_btc": -0.14072101985649488,
+     "pre30": 0.07886487084820004,
+     "pre30_tok": -0.2507831347929863,
+     "pre30_btc": -0.32964800564118635
+    }
+   },
+   "criteria": {
+    "(a) 30天超额中位数 ≤ −10%": {
+     "value": -0.08221574802972864,
+     "pass": false
+    },
+    "(b) ≥65% 事件超额为负": {
+     "value": 0.8648648648648649,
+     "pass": true
+    },
+    "(c) 对照分位 ≤ 0.05": {
+     "value": 0.44,
+     "pass": false
+    },
+    "(d) 有价代币 ≥ 25": {
+     "value": 37,
+     "pass": true,
+     "n_tokens_with_price": 38
+    },
+    "(e) 按事件日期对半分两段:中位同号且每段 ≥ 8": {
+     "value": {
+      "early": {
+       "n": 18,
+       "median": -0.10229696421113532
+      },
+      "late": {
+       "n": 19,
+       "median": -0.0809987002202952
+      }
+     },
+     "pass": true
+    }
+   },
+   "verdict": "FAIL"
+  },
+  "B_usdt_only": {
+   "sample": "B_usdt_only",
+   "n_symbols": 35,
+   "n_tokens_with_price": 16,
+   "n_exc30_computable": 15,
+   "median_exc30": -0.08773855065076941,
+   "pct_negative_exc30": 0.8666666666666667,
+   "n_negative": 13,
+   "segments": {
+    "early": {
+     "n": 7,
+     "median": -0.06297879311046573,
+     "d0_range": [
+      "2022-06-02",
+      "2024-05-08"
+     ]
+    },
+    "late": {
+     "n": 8,
+     "median": -0.18835839800808007,
+     "d0_range": [
+      "2024-11-29",
+      "2026-06-25"
+     ]
+    }
+   },
+   "control": {
+    "n_samples": 200,
+    "null_median_q": {
+     "q05": -0.2206186346894501,
+     "q50": -0.12977319843742186,
+     "q95": -0.019073188762269044
+    },
+    "percentile_of_actual": 0.75,
+    "n_draws_used": 200
+   },
+   "per_token": {
+    "1000BTTC": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist 1000BTTC and YFII USDT-Margined Contracts",
+     "ts": "2022-04-04T05:21:50.096+00:00"
+    },
+    "1000X": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M MYROUSDT and 1000XUSDT Perpetual Contracts (2025-11-14)",
+     "ts": "2025-11-10T13:45:00.002+00:00",
+     "d0": "2025-11-10",
+     "token": {
+      "m1": 0.00238643911434051,
+      "m30": 0.00228083508829158,
+      "d0": 0.00245656137709339,
+      "p7": 0.00159094220639553,
+      "p30": 0.00193080678373119
+     },
+     "btc": {
+      "m1": 104610.22853608,
+      "m30": 110655.26975977,
+      "d0": 105951.495999879,
+      "p7": 92100.3645236067,
+      "p30": 91986.581072138
+     },
+     "ret30": -0.08221574802972864,
+     "ret30_tok": -0.21402054036373164,
+     "ret30_btc": -0.131804792334003,
+     "ret7": -0.22163938767809777,
+     "ret7_tok": -0.35237025981498693,
+     "ret7_btc": -0.13073087213688916,
+     "jump": 0.016562066960856603,
+     "jump_tok": 0.02938363787766618,
+     "jump_btc": 0.012821570916809577,
+     "pre30": 0.11955307220721001,
+     "pre30_tok": 0.07704471476429031,
+     "pre30_btc": -0.0425083574429197
+    },
+    "AIA": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist AIAUSDT USDⓈ-M Perpetual Contract (2025-12-11)",
+     "ts": "2025-12-11T11:43:46.582+00:00"
+    },
+    "AUDIO": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M IDEXUSDT, SLPUSDT, GLMRUSDT, MDTUSDT and AUDIOUSDT Perpetual Contracts",
+     "ts": "2024-05-08T05:00:26.574+00:00"
+    },
+    "BLUEBIRD": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M FOOTBALLUSDT and BLUEBIRDUSDT Perpetual Contracts",
+     "ts": "2024-03-19T05:05:02.006+00:00"
+    },
+    "CTK": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M ANTUSDT, DGBUSDT and CTKUSDT Perpetual Contracts",
+     "ts": "2024-03-25T04:40:12.437+00:00"
+    },
+    "CVC": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of CVCUSDT Perpetual Futures Contract",
+     "ts": "2022-11-28T03:30:27.75+00:00"
+    },
+    "CVX": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M STPTUSDT, SNTUSDT, MBLUSDT, RADUSDT and CVXUSDT Perpetual Contracts",
+     "ts": "2024-05-06T05:00:17.942+00:00"
+    },
+    "DEFI": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDⓈ-M DEFIUSDT and MEMEFI Perpetual Contracts (2025-08-11)",
+     "ts": "2025-08-06T07:30:06.291+00:00"
+    },
+    "DGB": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M ANTUSDT, DGBUSDT and CTKUSDT Perpetual Contracts",
+     "ts": "2024-03-25T04:40:12.437+00:00",
+     "d0": "2024-03-25",
+     "token": {
+      "m1": 0.0144586037344023,
+      "m30": 0.0102882781430849,
+      "d0": 0.0147599123459462,
+      "p7": 0.0194043156001225,
+      "p30": 0.0122622483417065
+     },
+     "btc": {
+      "m1": 67232.2562952548,
+      "m30": 51558.0379994315,
+      "d0": 69946.1580781235,
+      "p7": 69674.2953759885,
+      "p30": 64246.8833728822
+     },
+     "ret30": -0.08773855065076941,
+     "ret30_tok": -0.1692194334016951,
+     "ret30_btc": -0.08148088275092569,
+     "ret7": 0.318550078206127,
+     "ret7_tok": 0.3146633357515758,
+     "ret7_btc": -0.0038867424545512286,
+     "jump": -0.01952666835344896,
+     "jump_tok": 0.020839398954338728,
+     "jump_btc": 0.04036606730778769,
+     "pre30": 0.07798492636178689,
+     "pre30_tok": 0.4346338756273651,
+     "pre30_btc": 0.3566489492655782
+    },
+    "DODO": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist AKRO and DODO USDT-Margined Contracts",
+     "ts": "2022-05-18T10:59:25.804+00:00"
+    },
+    "FOOTBALL": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M FOOTBALLUSDT and BLUEBIRDUSDT Perpetual Contracts",
+     "ts": "2024-03-19T05:05:02.006+00:00"
+    },
+    "GLMR": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M IDEXUSDT, SLPUSDT, GLMRUSDT, MDTUSDT and AUDIOUSDT Perpetual Contracts",
+     "ts": "2024-05-08T05:00:26.574+00:00",
+     "d0": "2024-05-08",
+     "token": {
+      "m1": 0.288514647373222,
+      "m30": 0.480192244300782,
+      "d0": 0.288228134414332,
+      "p7": 0.271793485269063,
+      "p30": 0.312816758097998
+     },
+     "btc": {
+      "m1": 62332.7333593829,
+      "m30": 71629.128829518,
+      "d0": 61188.1710927935,
+      "p7": 66228.7733761401,
+      "p30": 69338.8214750874
+     },
+     "ret30": -0.047896719295154044,
+     "ret30_tok": 0.08530958899494379,
+     "ret30_btc": 0.13320630829009783,
+     "ret7": -0.13939829165252815,
+     "ret7_tok": -0.05701958685838748,
+     "ret7_btc": 0.08237870479414067,
+     "jump": 0.01736907614566474,
+     "jump_tok": -0.000993062090603014,
+     "jump_btc": -0.018362138236267755,
+     "pre30": -0.2540009881581874,
+     "pre30_tok": -0.39976511941789683,
+     "pre30_btc": -0.14576413125970944
+    },
+    "ICP": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist TLM and ICP USDT-Margined Contracts",
+     "ts": "2022-06-02T10:18:15.432+00:00",
+     "d0": "2022-06-02",
+     "token": {
+      "m1": 7.62278913451245,
+      "m30": 12.8299559037151,
+      "d0": 9.39409710072535,
+      "p7": 6.38882169842951,
+      "p30": 5.24637976359754
+     },
+     "btc": {
+      "m1": 29822.0722900913,
+      "m30": 37758.496107734,
+      "d0": 30447.3511291637,
+      "p7": 30097.0798489628,
+      "p30": 19261.5474772323
+     },
+     "ret30": -0.07414195556205816,
+     "ret30_tok": -0.44152378803999703,
+     "ret30_btc": -0.3673818324779389,
+     "ret7": -0.30840688041280817,
+     "ret7_tok": -0.3199110430808505,
+     "ret7_btc": -0.011504162668042328,
+     "jump": 0.21140307815685366,
+     "jump_tok": 0.2323700596928806,
+     "jump_btc": 0.02096698153602694,
+     "pre30": -0.074170599913436,
+     "pre30_tok": -0.26779973592854256,
+     "pre30_btc": -0.19362913601510656
+    },
+    "IP": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-Margined IPUSDT and IPUSDC Perpetual Contracts (2026-06-28)",
+     "ts": "2026-06-25T17:00:06.669+00:00",
+     "d0": "2026-06-25",
+     "token": {
+      "m1": 0.331022499163038,
+      "m30": 0.478690579070444,
+      "d0": 0.382633342942737,
+      "p7": 0.304325055568951,
+      "p30": 0.266810356179065
+     },
+     "btc": {
+      "m1": 60989.5735215213,
+      "m30": 75851.1040956177,
+      "d0": 59726.7365348085,
+      "p7": 61490.2144847166,
+      "p30": 64318.2452012031
+     },
+     "ret30": -0.3795749347829681,
+     "ret30_tok": -0.30269967032383127,
+     "ret30_btc": 0.07687526445913684,
+     "ret7": -0.23418197476873182,
+     "ret7_tok": -0.20465620369499582,
+     "ret7_btc": 0.029525771073735996,
+     "jump": 0.17661918622392658,
+     "jump_tok": 0.155913401385684,
+     "jump_btc": -0.02070578483824259,
+     "pre30": 0.011912554439052259,
+     "pre30_tok": -0.20066665258847982,
+     "pre30_btc": -0.21257920702753208
+    },
+    "LUNA": {
+     "status": "ok",
+     "title": "Binance Futures to Delist Coin-Margined LUNA Perpetual Contracts and Update the Leverage & Margin Tiers for USDT-Margined LUNA Perpetual Contracts",
+     "ts": "2022-05-12T04:50:09.976+00:00",
+     "d0": "2022-05-12",
+     "token": {
+      "m1": null,
+      "m30": null,
+      "d0": null,
+      "p7": null,
+      "p30": 2.6218621126873
+     },
+     "btc": {
+      "m1": 29132.3234225726,
+      "m30": 40101.0511241918,
+      "d0": 29126.1159768601,
+      "p7": 30289.3108771731,
+      "p30": 28432.4889317672
+     },
+     "ret30": null,
+     "ret30_tok": null,
+     "ret30_btc": -0.02381460836192395,
+     "ret7": null,
+     "ret7_tok": null,
+     "ret7_btc": 0.03993649208968075,
+     "jump": null,
+     "jump_tok": null,
+     "jump_btc": -0.00021307760532729425,
+     "pre30": null,
+     "pre30_tok": null,
+     "pre30_btc": -0.2736819818847801
+    },
+    "MAVIA": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDⓈ-M MAVIAUSDT, OMGUSDT, and BONDUSDT Perpetual Contracts (2024-12-16)",
+     "ts": "2024-12-06T03:00:04.185+00:00"
+    },
+    "MBL": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M STPTUSDT, SNTUSDT, MBLUSDT, RADUSDT and CVXUSDT Perpetual Contracts",
+     "ts": "2024-05-06T05:00:17.942+00:00"
+    },
+    "MEMEFI": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDⓈ-M DEFIUSDT and MEMEFI Perpetual Contracts (2025-08-11)",
+     "ts": "2025-08-06T07:30:06.291+00:00"
+    },
+    "MITO": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist PTBUSDT and MITOUSDT USDⓈ-M Perpetual Contracts (2026-10-23)",
+     "ts": "2026-10-21T09:30:01.882+00:00"
+    },
+    "MYRO": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M MYROUSDT and 1000XUSDT Perpetual Contracts (2025-11-14)",
+     "ts": "2025-11-10T13:45:00.002+00:00",
+     "d0": "2025-11-10",
+     "token": {
+      "m1": 0.0148358753864294,
+      "m30": 0.0127208247562498,
+      "d0": 0.0143030752809298,
+      "p7": 0.00853702163139663,
+      "p30": 0.00670895963156372
+     },
+     "btc": {
+      "m1": 104610.22853608,
+      "m30": 110655.26975977,
+      "d0": 105951.495999879,
+      "p7": 92100.3645236067,
+      "p30": 91986.581072138
+     },
+     "ret30": -0.39913806437397137,
+     "ret30_tok": -0.5309428567079744,
+     "ret30_btc": -0.131804792334003,
+     "ret7": -0.2724029670047543,
+     "ret7_tok": -0.40313383914164347,
+     "ret7_btc": -0.13073087213688916,
+     "jump": -0.04873452459306926,
+     "jump_tok": -0.035912953676259685,
+     "jump_btc": 0.012821570916809577,
+     "pre30": 0.16689105707115215,
+     "pre30_tok": 0.12438269962823245,
+     "pre30_btc": -0.0425083574429197
+    },
+    "NEIROETH": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDⓈ-M NEIROETHUSDT Perpetual Contract (2025-09-26)",
+     "ts": "2025-09-22T07:30:02.61+00:00"
+    },
+    "ORBS": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M XEMUSDT, ORBSUSDT and LOOMUSDT Perpetual Contracts (2024-12-09)",
+     "ts": "2024-11-29T04:00:01.809+00:00",
+     "d0": "2024-11-29",
+     "token": {
+      "m1": 0.0353574563807689,
+      "m30": 0.0256268142173973,
+      "d0": 0.0355072855368344,
+      "p7": 0.0375697505120684,
+      "p30": 0.0273475194164126
+     },
+     "btc": {
+      "m1": 95648.6184701647,
+      "m30": 72342.9109200164,
+      "d0": 97508.5860726266,
+      "p7": 99928.0552148145,
+      "p30": 93467.1470591109
+     },
+     "ret30": -0.18835839800808007,
+     "ret30_tok": -0.2298054046389172,
+     "ret30_btc": -0.04144700663083711,
+     "ret7": 0.03327280117503628,
+     "ret7_tok": 0.05808568422090299,
+     "ret7_btc": 0.024812883045866707,
+     "jump": -0.01520828393928264,
+     "jump_tok": 0.004237554716945091,
+     "jump_btc": 0.019445838656227732,
+     "pre30": 0.03768557292030961,
+     "pre30_tok": 0.38555207196724206,
+     "pre30_btc": 0.34786649904693245
+    },
+    "PORT3": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M PORT3USDT Perpetual Contract (2025-11-23)",
+     "ts": "2025-11-23T05:57:34.108+00:00",
+     "d0": "2025-11-23",
+     "token": {
+      "m1": 0.00818147225743424,
+      "m30": 0.041394778310984,
+      "d0": 5.21702696186341e-21,
+      "p7": 0.0043791067178043,
+      "p30": 0.00231447062019249
+     },
+     "btc": {
+      "m1": 84675.5076485621,
+      "m30": 111030.183378648,
+      "d0": 86740.1177387617,
+      "p7": 90359.8687316973,
+      "p30": 87496.1466923918
+     },
+     "ret30": 4.4363784912581914e+17,
+     "ret30_tok": 4.4363784912581914e+17,
+     "ret30_btc": 0.008716024065208883,
+     "ret7": 8.393874039401509e+17,
+     "ret7_tok": 8.393874039401509e+17,
+     "ret7_btc": 0.041730990080476094,
+     "jump": -1.0243826124877642,
+     "jump_tok": -1.0,
+     "jump_btc": 0.024382612487764188,
+     "pre30": -0.7812300682504549,
+     "pre30_tok": -1.0,
+     "pre30_btc": -0.21876993174954507
+    },
+    "PTB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist PTBUSDT and MITOUSDT USDⓈ-M Perpetual Contracts (2026-10-23)",
+     "ts": "2026-10-21T09:30:01.882+00:00"
+    },
+    "RAD": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M STPTUSDT, SNTUSDT, MBLUSDT, RADUSDT and CVXUSDT Perpetual Contracts",
+     "ts": "2024-05-06T05:00:17.942+00:00",
+     "d0": "2024-05-06",
+     "token": {
+      "m1": 1.78751762116458,
+      "m30": 2.6222311631586,
+      "d0": 1.70564550747998,
+      "p7": 1.72993298110057,
+      "p30": 1.8114264048029
+     },
+     "btc": {
+      "m1": 64028.1839885979,
+      "m30": 68896.1330392832,
+      "d0": 63159.4137703426,
+      "p7": 62904.918271802,
+      "p30": 71054.1443984153
+     },
+     "ret30": -0.06297879311046573,
+     "ret30_tok": 0.06201810215488868,
+     "ret30_btc": 0.1249968952653544,
+     "ret7": 0.018268876696650893,
+     "ret7_tok": 0.014239461549354182,
+     "ret7_btc": -0.004029415147296711,
+     "jump": -0.03223357015686057,
+     "jump_tok": -0.04580212956516749,
+     "jump_btc": -0.013568559408306924,
+     "pre30": -0.26627798422800897,
+     "pre30_tok": -0.3495441853320628,
+     "pre30_btc": -0.0832662011040538
+    },
+    "RAY": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist RAYUSDT and SRMUSDT Perpetual Futures Contracts",
+     "ts": "2022-11-14T07:00:04.88+00:00",
+     "d0": "2022-11-14",
+     "token": {
+      "m1": 0.187220292709929,
+      "m30": 0.474953533227733,
+      "d0": 0.241178385957887,
+      "p7": 0.270984720057187,
+      "p30": 0.195333625287582
+     },
+     "btc": {
+      "m1": 16335.2916239063,
+      "m30": 19077.7924416829,
+      "d0": 16632.6099640646,
+      "p7": 15794.3276049145,
+      "p30": 17819.9788658397
+     },
+     "ret30": -0.2614745309399408,
+     "ret30_tok": -0.19008652242290947,
+     "ret30_btc": 0.07138800851703131,
+     "ret7": 0.17398618632620122,
+     "ret7_tok": 0.12358625745386909,
+     "ret7_btc": -0.050399928872332134,
+     "jump": 0.2700054542047181,
+     "jump_tok": 0.2882064356749956,
+     "jump_btc": 0.01820098147027749,
+     "pre30": -0.36403730767998776,
+     "pre30_tok": -0.492206354758823,
+     "pre30_btc": -0.12816904707883525
+    },
+    "RVV": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M RVVUSDT and YALAUSDT Perpetual Contracts (2026-02-10)",
+     "ts": "2026-02-05T07:14:19.503+00:00",
+     "d0": "2026-02-05",
+     "token": {
+      "m1": 0.00284114575714337,
+      "m30": 0.00410203640130969,
+      "d0": 0.00174363898220859,
+      "p7": 0.000449341316290837,
+      "p30": 0.000380259014096592
+     },
+     "btc": {
+      "m1": 73059.1798671369,
+      "m30": 93649.6319764084,
+      "d0": 62778.2175663543,
+      "p7": 66258.5295494744,
+      "p30": 67339.6744005657
+     },
+     "ret30": -0.8545762952954152,
+     "ret30_tok": -0.7819164299625059,
+     "ret30_btc": 0.07265986533290936,
+     "ret7": -0.7977350262613294,
+     "ret7_tok": -0.7422968166714898,
+     "ret7_btc": 0.05543820958983958,
+     "jump": -0.24556918443005615,
+     "jump_tok": -0.38629020428655103,
+     "jump_btc": -0.14072101985649488,
+     "pre30": -0.24528531731716563,
+     "pre30_tok": -0.574933322958352,
+     "pre30_btc": -0.32964800564118635
+    },
+    "SC": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDT-Margined SC Perpetual Contract",
+     "ts": "2022-06-10T10:02:22.935+00:00",
+     "d0": "2022-06-10",
+     "token": {
+      "m1": 0.00536112652123009,
+      "m30": 0.00449600014173343,
+      "d0": 0.00494494179111129,
+      "p7": 0.00361591282228482,
+      "p30": 0.00412617128136014
+     },
+     "btc": {
+      "m1": 30097.0798489628,
+      "m30": 29132.3234225726,
+      "d0": 29099.9749251096,
+      "p7": 20470.3011517194,
+      "p30": 20867.4039802789
+     },
+     "ret30": 0.11732908105669726,
+     "ret30_tok": -0.1655773807535853,
+     "ret30_btc": -0.28290646181028256,
+     "ret7": 0.027787277452862802,
+     "ret7_tok": -0.26876534142736463,
+     "ret7_btc": -0.29655261888022744,
+     "jump": -0.04450046571153943,
+     "jump_tok": -0.07763008921179282,
+     "jump_btc": -0.03312962350025339,
+     "pre30": 0.10096396537059904,
+     "pre30_tok": 0.09985356655366373,
+     "pre30_btc": -0.0011103988169353096
+    },
+    "SLERF": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDⓈ-M SLERFUSDT and COIN-M CHZUSD Perpetual Contracts (2025-10-20 & 2025-10-21)",
+     "ts": "2025-10-18T03:58:50.952+00:00"
+    },
+    "SLP": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M IDEXUSDT, SLPUSDT, GLMRUSDT, MDTUSDT and AUDIOUSDT Perpetual Contracts",
+     "ts": "2024-05-08T05:00:26.574+00:00"
+    },
+    "STPT": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M STPTUSDT, SNTUSDT, MBLUSDT, RADUSDT and CVXUSDT Perpetual Contracts",
+     "ts": "2024-05-06T05:00:17.942+00:00"
+    },
+    "TLM": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist TLM and ICP USDT-Margined Contracts",
+     "ts": "2022-06-02T10:18:15.432+00:00",
+     "d0": "2022-06-02",
+     "token": {
+      "m1": 0.033235638536503,
+      "m30": 0.0742496722525849,
+      "d0": 0.0382932880507246,
+      "p7": 0.0352108087465085,
+      "p30": 0.0241295730204845
+     },
+     "btc": {
+      "m1": 29822.0722900913,
+      "m30": 37758.496107734,
+      "d0": 30447.3511291637,
+      "p7": 30097.0798489628,
+      "p30": 19261.5474772323
+     },
+     "ret30": -0.0024927787457920125,
+     "ret30_tok": -0.3698746112237309,
+     "ret30_btc": -0.3673818324779389,
+     "ret7": -0.0689924324567468,
+     "ret7_tok": -0.08049659512478913,
+     "ret7_btc": -0.011504162668042328,
+     "jump": 0.1312085064921853,
+     "jump_tok": 0.15217548802821224,
+     "jump_btc": 0.02096698153602694,
+     "pre30": -0.2906340682660211,
+     "pre30_tok": -0.4842632042811277,
+     "pre30_btc": -0.19362913601510656
+    },
+    "UXLINK": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M UXLINKUSDT Perpetual Contract (2025-09-26)",
+     "ts": "2025-09-24T12:00:05.98+00:00",
+     "d0": "2025-09-24",
+     "token": {
+      "m1": 0.0790051058305845,
+      "m30": 0.302239768333538,
+      "d0": 0.145000968551644,
+      "p7": 0.135823826449229,
+      "p30": 0.119978395609086
+     },
+     "btc": {
+      "m1": 112002.46136593,
+      "m30": 110100.281956306,
+      "d0": 113317.162689492,
+      "p7": 118930.955114161,
+      "p30": 111030.183378648
+     },
+     "ret30": -0.15238620703052375,
+     "ret30_tok": -0.1725683158705651,
+     "ret30_btc": -0.020182108840041346,
+     "ret7": -0.11283074355173406,
+     "ret7_tok": -0.06329021243155653,
+     "ret7_btc": 0.04954053112017753,
+     "jump": 0.823598532193516,
+     "jump_tok": 0.8353366789050125,
+     "jump_btc": 0.011738146711496533,
+     "pre30": -0.549462970417834,
+     "pre30_tok": -0.5202452365843944,
+     "pre30_btc": 0.02921773383343962
+    },
+    "YALA": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M RVVUSDT and YALAUSDT Perpetual Contracts (2026-02-10)",
+     "ts": "2026-02-05T07:14:19.503+00:00",
+     "d0": "2026-02-05",
+     "token": {
+      "m1": 0.0368317749473662,
+      "m30": 0.0221575860925298,
+      "d0": 0.0166008371927997,
+      "p7": 0.00140655578579814,
+      "p30": 0.00100050729144282
+     },
+     "btc": {
+      "m1": 73059.1798671369,
+      "m30": 93649.6319764084,
+      "d0": 62778.2175663543,
+      "p7": 66258.5295494744,
+      "p30": 67339.6744005657
+     },
+     "ret30": -1.0123913812906244,
+     "ret30_tok": -0.939731515957715,
+     "ret30_btc": 0.07265986533290936,
+     "ret7": -0.9707102064498409,
+     "ret7_tok": -0.9152719968600013,
+     "ret7_btc": 0.05543820958983958,
+     "jump": -0.4085584483059047,
+     "jump_tok": -0.5492794681623996,
+     "jump_btc": -0.14072101985649488,
+     "pre30": 0.07886487084820004,
+     "pre30_tok": -0.2507831347929863,
+     "pre30_btc": -0.32964800564118635
+    }
+   },
+   "criteria": {
+    "(a) 30天超额中位数 ≤ −10%": {
+     "value": -0.08773855065076941,
+     "pass": false
+    },
+    "(b) ≥65% 事件超额为负": {
+     "value": 0.8666666666666667,
+     "pass": true
+    },
+    "(c) 对照分位 ≤ 0.05": {
+     "value": 0.75,
+     "pass": false
+    },
+    "(d) 有价代币 ≥ 25": {
+     "value": 15,
+     "pass": false,
+     "n_tokens_with_price": 16
+    },
+    "(e) 按事件日期对半分两段:中位同号且每段 ≥ 8": {
+     "value": {
+      "early": {
+       "n": 7,
+       "median": -0.06297879311046573
+      },
+      "late": {
+       "n": 8,
+       "median": -0.18835839800808007
+      }
+     },
+     "pass": false
+    }
+   },
+   "verdict": "FAIL"
+  }
+ },
+ "also_in_s751": {
+  "A": {
+   "sample": "A_also_in_s751",
+   "n_symbols": 24,
+   "n_tokens_with_price": 14,
+   "n_exc30_computable": 14,
+   "median_exc30": -0.28585871751550307,
+   "pct_negative_exc30": 0.9285714285714286,
+   "n_negative": 13,
+   "segments": {
+    "early": {
+     "n": 7,
+     "median": -0.2503416647903046,
+     "d0_range": [
+      "2022-08-17",
+      "2024-11-29"
+     ]
+    },
+    "late": {
+     "n": 7,
+     "median": -0.48435533150541843,
+     "d0_range": [
+      "2024-11-29",
+      "2025-09-29"
+     ]
+    }
+   },
+   "control": {
+    "n_samples": 200,
+    "null_median_q": {
+     "q05": -0.17292044947356533,
+     "q50": -0.09680867475612887,
+     "q95": 0.02898579423079073
+    },
+    "percentile_of_actual": 0.0,
+    "n_draws_used": 200
+   },
+   "per_token": {
+    "AERGO": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDⓈ-M AERGOUSDT Perpetual Contract (2026-07-24)",
+     "ts": "2026-07-21T14:15:14.244+00:00"
+    },
+    "AKRO": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist AKRO and DODO USDT-Margined Contracts",
+     "ts": "2022-05-18T10:59:25.804+00:00"
+    },
+    "ALPHA": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M ALPHAUSDT Perpetual Contract (2025-09-23)",
+     "ts": "2025-09-17T08:45:27.976+00:00",
+     "d0": "2025-09-17",
+     "token": {
+      "m1": 0.016696225426384,
+      "m30": 0.0153813684741336,
+      "d0": 0.0222378090620566,
+      "p7": 0.0177798216932381,
+      "p30": 0.00956696561301474
+     },
+     "btc": {
+      "m1": 116797.002059919,
+      "m30": 116315.118790014,
+      "d0": 116430.931702079,
+      "p7": 113317.162689492,
+      "p30": 106483.891436376
+     },
+     "ret30": -0.48435533150541843,
+     "ret30_tok": -0.5697883012522833,
+     "ret30_btc": -0.08543296974686487,
+     "ret7": -0.17372533502615795,
+     "ret7_tok": -0.20046882120347764,
+     "ret7_btc": -0.026743486177319697,
+     "jump": 0.3350406181656139,
+     "jump_tok": 0.3319063736954331,
+     "jump_btc": -0.003134244470180847,
+     "pre30": 0.4447670337105569,
+     "pre30_tok": 0.44576271607128315,
+     "pre30_btc": 0.0009956823607262244
+    },
+    "AMB": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M AMBBUSD, LEVERBUSD and TLMBUSD Perpetual Contracts",
+     "ts": "2023-03-31T09:05:07.407+00:00"
+    },
+    "ANC": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDT-Margined ANC Perpetual Contract",
+     "ts": "2022-05-13T02:27:22.5+00:00"
+    },
+    "ANT": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M ANTUSDT, DGBUSDT and CTKUSDT Perpetual Contracts",
+     "ts": "2024-03-25T04:40:12.437+00:00"
+    },
+    "BAKE": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M HIFIUSDT and BAKEUSDT Perpetual Contracts (2025-10-03)",
+     "ts": "2025-09-29T11:45:19.511+00:00",
+     "d0": "2025-09-29",
+     "token": {
+      "m1": 0.0450939134897319,
+      "m30": 0.0798852235112045,
+      "d0": 0.0375494372279743,
+      "p7": 0.0194858433550034,
+      "p30": 0.0116448136117059
+     },
+     "btc": {
+      "m1": 112179.398829769,
+      "m30": 108836.235936767,
+      "d0": 114327.171338048,
+      "p7": 124739.810888114,
+      "p30": 110026.087620204
+     },
+     "ret30": -0.6522596400749756,
+     "ret30_tok": -0.6898804756777945,
+     "ret30_btc": -0.037620835602818925,
+     "ret7": -0.5721391982572641,
+     "ret7_tok": -0.4810616405061201,
+     "ret7_btc": 0.09107755775114401,
+     "jump": -0.18645173917799562,
+     "jump_tok": -0.16730586631110467,
+     "jump_btc": 0.019145872866890956,
+     "pre30": -0.5804090154297669,
+     "pre30_tok": -0.5299576620361123,
+     "pre30_btc": 0.050451353393654585
+    },
+    "BLZ": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDT-Margined BLZ Perpetual Contract",
+     "ts": "2022-08-17T09:55:27.229+00:00",
+     "d0": "2022-08-17",
+     "token": {
+      "m1": 0.0943358351088529,
+      "m30": 0.0991776744878532,
+      "d0": 0.0853068138964224,
+      "p7": 0.124036013353497,
+      "p30": 0.0837421752933803
+     },
+     "btc": {
+      "m1": 23898.4435447213,
+      "m30": 22441.0526351197,
+      "d0": 23372.8500590442,
+      "p7": 21393.1118164286,
+      "p30": 19763.9943672818
+     },
+     "ret30": 0.13606244111970045,
+     "ret30_tok": -0.018341308643197718,
+     "ret30_btc": -0.15440374976289817,
+     "ret7": 0.5387013722646256,
+     "ret7_tok": 0.4539988974866498,
+     "ret7_btc": -0.08470247477797577,
+     "jump": -0.07371867597678794,
+     "jump_tok": -0.09571146746103465,
+     "jump_btc": -0.02199279148424671,
+     "pre30": -0.18138070130518713,
+     "pre30_tok": -0.139858699682756,
+     "pre30_btc": 0.04152200162243114
+    },
+    "BOND": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M MAVIAUSDT, OMGUSDT, and BONDUSDT Perpetual Contracts (2024-12-16)",
+     "ts": "2024-12-06T03:00:04.185+00:00",
+     "d0": "2024-12-06",
+     "token": {
+      "m1": 1.68870808768035,
+      "m30": 1.50724058555709,
+      "d0": 1.5536679431488,
+      "p7": 1.10598206439964,
+      "p30": 0.518191989913702
+     },
+     "btc": {
+      "m1": 97071.7947513146,
+      "m30": 75640.3926009892,
+      "d0": 99928.0552148145,
+      "p7": 101365.758291539,
+      "p30": 98349.7614561032
+     },
+     "ret30": -0.6506775523774566,
+     "ret30_tok": -0.6664718531403251,
+     "ret30_btc": -0.015794300762868474,
+     "ret7": -0.30253510385810933,
+     "ret7_tok": -0.2881477221199792,
+     "ret7_btc": 0.014387381738130145,
+     "jump": -0.10939074677343141,
+     "jump_tok": -0.07996654100060852,
+     "jump_btc": 0.029424205772822898,
+     "pre30": -0.2902909356485237,
+     "pre30_tok": 0.03080288444764112,
+     "pre30_btc": 0.32109382009616483
+    },
+    "BSW": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDⓈ-M BSWUSDT Perpetual Contract (2025-09-15)",
+     "ts": "2025-09-10T10:14:43.992+00:00"
+    },
+    "BTS": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDT-Margined BTS Perpetual Contract",
+     "ts": "2022-08-09T02:59:19.306+00:00"
+    },
+    "HIFI": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M HIFIUSDT and BAKEUSDT Perpetual Contracts (2025-10-03)",
+     "ts": "2025-09-29T11:45:19.511+00:00",
+     "d0": "2025-09-29",
+     "token": {
+      "m1": 0.140382432281628,
+      "m30": 0.0944264910136566,
+      "d0": 0.116184236294281,
+      "p7": 0.0915538622827982,
+      "p30": 0.048739705603235
+     },
+     "btc": {
+      "m1": 112179.398829769,
+      "m30": 108836.235936767,
+      "d0": 114327.171338048,
+      "p7": 124739.810888114,
+      "p30": 110026.087620204
+     },
+     "ret30": -0.5428755625506874,
+     "ret30_tok": -0.5804963981535063,
+     "ret30_btc": -0.037620835602818925,
+     "ret7": -0.30307166983616873,
+     "ret7_tok": -0.21199411208502472,
+     "ret7_btc": 0.09107755775114401,
+     "jump": -0.19151926456594504,
+     "jump_tok": -0.17237339169905408,
+     "jump_btc": 0.019145872866890956,
+     "pre30": 0.17996857481777973,
+     "pre30_tok": 0.2304199282114343,
+     "pre30_btc": 0.050451353393654585
+    },
+    "IDEX": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M IDEXUSDT, SLPUSDT, GLMRUSDT, MDTUSDT and AUDIOUSDT Perpetual Contracts",
+     "ts": "2024-05-08T05:00:26.574+00:00",
+     "d0": "2024-05-08",
+     "token": {
+      "m1": 0.0651191140363961,
+      "m30": 0.0910999709556015,
+      "d0": 0.0657227168636963,
+      "p7": 0.058764131781729,
+      "p30": 0.055492758485246
+     },
+     "btc": {
+      "m1": 62332.7333593829,
+      "m30": 71629.128829518,
+      "d0": 61188.1710927935,
+      "p7": 66228.7733761401,
+      "p30": 69338.8214750874
+     },
+     "ret30": -0.2888596176270569,
+     "ret30_tok": -0.1556533093369591,
+     "ret30_btc": 0.13320630829009783,
+     "ret7": -0.1882566327623172,
+     "ret7_tok": -0.10587792796817652,
+     "ret7_btc": 0.08237870479414067,
+     "jump": 0.027631349530555793,
+     "jump_tok": 0.009269211294288038,
+     "jump_btc": -0.018362138236267755,
+     "pre30": -0.1328007664642763,
+     "pre30_tok": -0.27856489772398574,
+     "pre30_btc": -0.14576413125970944
+    },
+    "LEVER": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M AMBBUSD, LEVERBUSD and TLMBUSD Perpetual Contracts",
+     "ts": "2023-03-31T09:05:07.407+00:00"
+    },
+    "LOOM": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M XEMUSDT, ORBSUSDT and LOOMUSDT Perpetual Contracts (2024-12-09)",
+     "ts": "2024-11-29T04:00:01.809+00:00",
+     "d0": "2024-11-29",
+     "token": {
+      "m1": 0.0770759874454319,
+      "m30": 0.0515746848681791,
+      "d0": 0.077381656722438,
+      "p7": 0.0784186909119099,
+      "p30": 0.059551512556509
+     },
+     "btc": {
+      "m1": 95648.6184701647,
+      "m30": 72342.9109200164,
+      "d0": 97508.5860726266,
+      "p7": 99928.0552148145,
+      "p30": 93467.1470591109
+     },
+     "ret30": -0.18897122064858585,
+     "ret30_tok": -0.23041822727942296,
+     "ret30_btc": -0.04144700663083711,
+     "ret7": -0.011411332427848198,
+     "ret7_tok": 0.01340155061801851,
+     "ret7_btc": 0.024812883045866707,
+     "jump": -0.015480021452490833,
+     "jump_tok": 0.003965817203736899,
+     "jump_btc": 0.019445838656227732,
+     "pre30": 0.15251410279716082,
+     "pre30_tok": 0.5003806018440933,
+     "pre30_btc": 0.34786649904693245
+    },
+    "MDT": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M IDEXUSDT, SLPUSDT, GLMRUSDT, MDTUSDT and AUDIOUSDT Perpetual Contracts",
+     "ts": "2024-05-08T05:00:26.574+00:00",
+     "d0": "2024-05-08",
+     "token": {
+      "m1": 0.0728768004140887,
+      "m30": 0.112545297679715,
+      "d0": 0.0666776935905848,
+      "p7": 0.0626654700905844,
+      "p30": 0.0588673781812401
+     },
+     "btc": {
+      "m1": 62332.7333593829,
+      "m30": 71629.128829518,
+      "d0": 61188.1710927935,
+      "p7": 66228.7733761401,
+      "p30": 69338.8214750874
+     },
+     "ret30": -0.2503416647903046,
+     "ret30_tok": -0.11713535650020679,
+     "ret30_btc": 0.13320630829009783,
+     "ret7": -0.14255210438165944,
+     "ret7_tok": -0.06017339958751877,
+     "ret7_btc": 0.08237870479414067,
+     "jump": -0.06670069092582964,
+     "jump_tok": -0.0850628291620974,
+     "jump_btc": -0.018362138236267755,
+     "pre30": -0.26178380752367436,
+     "pre30_tok": -0.4075479387833838,
+     "pre30_btc": -0.14576413125970944
+    },
+    "OMG": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M MAVIAUSDT, OMGUSDT, and BONDUSDT Perpetual Contracts (2024-12-16)",
+     "ts": "2024-12-06T03:00:04.185+00:00",
+     "d0": "2024-12-06",
+     "token": {
+      "m1": 0.585787404483132,
+      "m30": 0.249812460126746,
+      "d0": 0.598189574490919,
+      "p7": 0.477758054195087,
+      "p30": 0.358669067077733
+     },
+     "btc": {
+      "m1": 97071.7947513146,
+      "m30": 75640.3926009892,
+      "d0": 99928.0552148145,
+      "p7": 101365.758291539,
+      "p30": 98349.7614561032
+     },
+     "ret30": -0.3846147294630873,
+     "ret30_tok": -0.40040903022595575,
+     "ret30_btc": -0.015794300762868474,
+     "ret7": -0.21571406048929964,
+     "ret7_tok": -0.2013266787511695,
+     "ret7_btc": 0.014387381738130145,
+     "jump": -0.008252412195714376,
+     "jump_tok": 0.021171793577108522,
+     "jump_btc": 0.029424205772822898,
+     "pre30": 1.0734607757291148,
+     "pre30_tok": 1.3945545958252796,
+     "pre30_btc": 0.32109382009616483
+    },
+    "PHB": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M PHBBUSD, SANDBUSD and UNIBUSD Perpetual Contracts",
+     "ts": "2023-04-06T10:15:03.366+00:00",
+     "d0": "2023-04-06",
+     "token": {
+      "m1": 1.12050040501475,
+      "m30": 1.16219285253236,
+      "d0": 1.08064192261414,
+      "p7": 1.09423386246476,
+      "p30": 0.756024564332981
+     },
+     "btc": {
+      "m1": 28185.5099687492,
+      "m30": 22201.8091536349,
+      "d0": 28043.6401775861,
+      "p7": 30428.9458617094,
+      "p30": 28894.8807258562
+     },
+     "ret30": -0.3307472214296794,
+     "ret30_tok": -0.3003930825632688,
+     "ret30_btc": 0.030354138866410585,
+     "ret7": -0.07247926721632547,
+     "ret7_tok": 0.012577653676196787,
+     "ret7_btc": 0.08505692089252226,
+     "jump": -0.030538607487280434,
+     "jump_tok": -0.03557203747738524,
+     "jump_btc": -0.00503342999010481,
+     "pre30": -0.3332939760892797,
+     "pre30_tok": -0.07016987734912039,
+     "pre30_btc": 0.2631240987401593
+    },
+    "REEF": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M REEFUSDT Perpetual Contract (2025-01-22)",
+     "ts": "2025-01-15T08:00:06.723+00:00",
+     "d0": "2025-01-15",
+     "token": {
+      "m1": 0.00100299724841787,
+      "m30": 0.00139400246733962,
+      "d0": 0.000994671098546188,
+      "p7": 0.0009379742737827,
+      "p30": 0.000775372422725649
+     },
+     "btc": {
+      "m1": 96535.2600542657,
+      "m30": 106090.348247644,
+      "d0": 100554.74910519,
+      "p7": 103610.288472095,
+      "p30": 97525.5643283225
+     },
+     "ret30": -0.19034882659010266,
+     "ret30_tok": -0.22047355768260102,
+     "ret30_btc": -0.030124731092498358,
+     "ret7": -0.08738739825174047,
+     "ret7_tok": -0.05700057521160129,
+     "ret7_btc": 0.030386823040139177,
+     "jump": -0.04993879128612655,
+     "jump_tok": -0.008301268906585446,
+     "jump_btc": 0.0416375223795411,
+     "pre30": -0.23428572973471884,
+     "pre30_tok": -0.28646388951917334,
+     "pre30_btc": -0.0521781597844545
+    },
+    "SNT": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M STPTUSDT, SNTUSDT, MBLUSDT, RADUSDT and CVXUSDT Perpetual Contracts",
+     "ts": "2024-05-06T05:00:17.942+00:00",
+     "d0": "2024-05-06",
+     "token": {
+      "m1": 0.0411134815216014,
+      "m30": 0.0450515935397823,
+      "d0": 0.0389310482074492,
+      "p7": 0.0364182317439816,
+      "p30": 0.0355086907468351
+     },
+     "btc": {
+      "m1": 64028.1839885979,
+      "m30": 68896.1330392832,
+      "d0": 63159.4137703426,
+      "p7": 62904.918271802,
+      "p30": 71054.1443984153
+     },
+     "ret30": -0.21290507185432306,
+     "ret30_tok": -0.08790817658896866,
+     "ret30_btc": 0.1249968952653544,
+     "ret7": -0.06051589198334428,
+     "ret7_tok": -0.064545307130641,
+     "ret7_btc": -0.004029415147296711,
+     "jump": -0.039514595639156824,
+     "jump_tok": -0.05308315504746375,
+     "jump_btc": -0.013568559408306924,
+     "pre30": -0.05259015494089769,
+     "pre30_tok": -0.1358563560449515,
+     "pre30_btc": -0.0832662011040538
+    },
+    "SRM": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist RAYUSDT and SRMUSDT Perpetual Futures Contracts",
+     "ts": "2022-11-14T07:00:04.88+00:00"
+    },
+    "WAVES": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M CVXBUSD, GALBUSD and WAVESBUSD Perpetual Contracts",
+     "ts": "2023-03-13T06:15:17.686+00:00",
+     "d0": "2023-03-13",
+     "token": {
+      "m1": 2.11754506337132,
+      "m30": 2.42602955452695,
+      "d0": 2.25482897918166,
+      "p7": 2.20544501025119,
+      "p30": 2.14190435004814
+     },
+     "btc": {
+      "m1": 22191.5613689198,
+      "m30": 21889.5791306439,
+      "d0": 24201.9071541889,
+      "p7": 27960.9616971579,
+      "p30": 29908.1717969497
+     },
+     "ret30": -0.28585871751550307,
+     "ret30_tok": -0.05008123905454831,
+     "ret30_btc": 0.23577747846095476,
+     "ret7": -0.17722201735738585,
+     "ret7_tok": -0.021901425512276584,
+     "ret7_btc": 0.15532059184510927,
+     "jump": -0.02575891321569035,
+     "jump_tok": 0.0648316383840124,
+     "jump_btc": 0.09059055159970275,
+     "pre30": -0.1762042352749128,
+     "pre30_tok": -0.07056821505980049,
+     "pre30_btc": 0.10563602021511231
+    },
+    "XEM": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M XEMUSDT, ORBSUSDT and LOOMUSDT Perpetual Contracts (2024-12-09)",
+     "ts": "2024-11-29T04:00:01.809+00:00",
+     "d0": "2024-11-29",
+     "token": {
+      "m1": 0.0276951971793029,
+      "m30": 0.0166853347441118,
+      "d0": 0.0291104717078592,
+      "p7": 0.0378700655534183,
+      "p30": 0.0250648914411195
+     },
+     "btc": {
+      "m1": 95648.6184701647,
+      "m30": 72342.9109200164,
+      "d0": 97508.5860726266,
+      "p7": 99928.0552148145,
+      "p30": 93467.1470591109
+     },
+     "ret30": -0.09752636031901829,
+     "ret30_tok": -0.1389733669498554,
+     "ret30_btc": -0.04144700663083711,
+     "ret7": 0.2760958048471638,
+     "ret7_tok": 0.3009086878930305,
+     "ret7_btc": 0.024812883045866707,
+     "jump": 0.03165596500285428,
+     "jump_tok": 0.05110180365908201,
+     "jump_btc": 0.019445838656227732,
+     "pre30": 0.3968076207295492,
+     "pre30_tok": 0.7446741197764817,
+     "pre30_btc": 0.34786649904693245
+    },
+    "YFII": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist 1000BTTC and YFII USDT-Margined Contracts",
+     "ts": "2022-04-04T05:21:50.096+00:00"
+    }
+   }
+  },
+  "B": {
+   "sample": "B_also_in_s751",
+   "n_symbols": 21,
+   "n_tokens_with_price": 12,
+   "n_exc30_computable": 12,
+   "median_exc30": -0.2503416647903046,
+   "pct_negative_exc30": 0.9166666666666666,
+   "n_negative": 11,
+   "segments": {
+    "early": {
+     "n": 6,
+     "median": -0.18897122064858585,
+     "d0_range": [
+      "2022-08-17",
+      "2024-11-29"
+     ]
+    },
+    "late": {
+     "n": 6,
+     "median": -0.48435533150541843,
+     "d0_range": [
+      "2024-12-06",
+      "2025-09-29"
+     ]
+    }
+   },
+   "control": {
+    "n_samples": 200,
+    "null_median_q": {
+     "q05": -0.1983447485543567,
+     "q50": -0.09345254742589815,
+     "q95": 0.043088639958702935
+    },
+    "percentile_of_actual": 0.015,
+    "n_draws_used": 200
+   },
+   "per_token": {
+    "AERGO": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDⓈ-M AERGOUSDT Perpetual Contract (2026-07-24)",
+     "ts": "2026-07-21T14:15:14.244+00:00"
+    },
+    "AKRO": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist AKRO and DODO USDT-Margined Contracts",
+     "ts": "2022-05-18T10:59:25.804+00:00"
+    },
+    "ALPHA": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M ALPHAUSDT Perpetual Contract (2025-09-23)",
+     "ts": "2025-09-17T08:45:27.976+00:00",
+     "d0": "2025-09-17",
+     "token": {
+      "m1": 0.016696225426384,
+      "m30": 0.0153813684741336,
+      "d0": 0.0222378090620566,
+      "p7": 0.0177798216932381,
+      "p30": 0.00956696561301474
+     },
+     "btc": {
+      "m1": 116797.002059919,
+      "m30": 116315.118790014,
+      "d0": 116430.931702079,
+      "p7": 113317.162689492,
+      "p30": 106483.891436376
+     },
+     "ret30": -0.48435533150541843,
+     "ret30_tok": -0.5697883012522833,
+     "ret30_btc": -0.08543296974686487,
+     "ret7": -0.17372533502615795,
+     "ret7_tok": -0.20046882120347764,
+     "ret7_btc": -0.026743486177319697,
+     "jump": 0.3350406181656139,
+     "jump_tok": 0.3319063736954331,
+     "jump_btc": -0.003134244470180847,
+     "pre30": 0.4447670337105569,
+     "pre30_tok": 0.44576271607128315,
+     "pre30_btc": 0.0009956823607262244
+    },
+    "ANC": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDT-Margined ANC Perpetual Contract",
+     "ts": "2022-05-13T02:27:22.5+00:00"
+    },
+    "ANT": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M ANTUSDT, DGBUSDT and CTKUSDT Perpetual Contracts",
+     "ts": "2024-03-25T04:40:12.437+00:00"
+    },
+    "BAKE": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M HIFIUSDT and BAKEUSDT Perpetual Contracts (2025-10-03)",
+     "ts": "2025-09-29T11:45:19.511+00:00",
+     "d0": "2025-09-29",
+     "token": {
+      "m1": 0.0450939134897319,
+      "m30": 0.0798852235112045,
+      "d0": 0.0375494372279743,
+      "p7": 0.0194858433550034,
+      "p30": 0.0116448136117059
+     },
+     "btc": {
+      "m1": 112179.398829769,
+      "m30": 108836.235936767,
+      "d0": 114327.171338048,
+      "p7": 124739.810888114,
+      "p30": 110026.087620204
+     },
+     "ret30": -0.6522596400749756,
+     "ret30_tok": -0.6898804756777945,
+     "ret30_btc": -0.037620835602818925,
+     "ret7": -0.5721391982572641,
+     "ret7_tok": -0.4810616405061201,
+     "ret7_btc": 0.09107755775114401,
+     "jump": -0.18645173917799562,
+     "jump_tok": -0.16730586631110467,
+     "jump_btc": 0.019145872866890956,
+     "pre30": -0.5804090154297669,
+     "pre30_tok": -0.5299576620361123,
+     "pre30_btc": 0.050451353393654585
+    },
+    "BLZ": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDT-Margined BLZ Perpetual Contract",
+     "ts": "2022-08-17T09:55:27.229+00:00",
+     "d0": "2022-08-17",
+     "token": {
+      "m1": 0.0943358351088529,
+      "m30": 0.0991776744878532,
+      "d0": 0.0853068138964224,
+      "p7": 0.124036013353497,
+      "p30": 0.0837421752933803
+     },
+     "btc": {
+      "m1": 23898.4435447213,
+      "m30": 22441.0526351197,
+      "d0": 23372.8500590442,
+      "p7": 21393.1118164286,
+      "p30": 19763.9943672818
+     },
+     "ret30": 0.13606244111970045,
+     "ret30_tok": -0.018341308643197718,
+     "ret30_btc": -0.15440374976289817,
+     "ret7": 0.5387013722646256,
+     "ret7_tok": 0.4539988974866498,
+     "ret7_btc": -0.08470247477797577,
+     "jump": -0.07371867597678794,
+     "jump_tok": -0.09571146746103465,
+     "jump_btc": -0.02199279148424671,
+     "pre30": -0.18138070130518713,
+     "pre30_tok": -0.139858699682756,
+     "pre30_btc": 0.04152200162243114
+    },
+    "BOND": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M MAVIAUSDT, OMGUSDT, and BONDUSDT Perpetual Contracts (2024-12-16)",
+     "ts": "2024-12-06T03:00:04.185+00:00",
+     "d0": "2024-12-06",
+     "token": {
+      "m1": 1.68870808768035,
+      "m30": 1.50724058555709,
+      "d0": 1.5536679431488,
+      "p7": 1.10598206439964,
+      "p30": 0.518191989913702
+     },
+     "btc": {
+      "m1": 97071.7947513146,
+      "m30": 75640.3926009892,
+      "d0": 99928.0552148145,
+      "p7": 101365.758291539,
+      "p30": 98349.7614561032
+     },
+     "ret30": -0.6506775523774566,
+     "ret30_tok": -0.6664718531403251,
+     "ret30_btc": -0.015794300762868474,
+     "ret7": -0.30253510385810933,
+     "ret7_tok": -0.2881477221199792,
+     "ret7_btc": 0.014387381738130145,
+     "jump": -0.10939074677343141,
+     "jump_tok": -0.07996654100060852,
+     "jump_btc": 0.029424205772822898,
+     "pre30": -0.2902909356485237,
+     "pre30_tok": 0.03080288444764112,
+     "pre30_btc": 0.32109382009616483
+    },
+    "BSW": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDⓈ-M BSWUSDT Perpetual Contract (2025-09-15)",
+     "ts": "2025-09-10T10:14:43.992+00:00"
+    },
+    "BTS": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDT-Margined BTS Perpetual Contract",
+     "ts": "2022-08-09T02:59:19.306+00:00"
+    },
+    "HIFI": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M HIFIUSDT and BAKEUSDT Perpetual Contracts (2025-10-03)",
+     "ts": "2025-09-29T11:45:19.511+00:00",
+     "d0": "2025-09-29",
+     "token": {
+      "m1": 0.140382432281628,
+      "m30": 0.0944264910136566,
+      "d0": 0.116184236294281,
+      "p7": 0.0915538622827982,
+      "p30": 0.048739705603235
+     },
+     "btc": {
+      "m1": 112179.398829769,
+      "m30": 108836.235936767,
+      "d0": 114327.171338048,
+      "p7": 124739.810888114,
+      "p30": 110026.087620204
+     },
+     "ret30": -0.5428755625506874,
+     "ret30_tok": -0.5804963981535063,
+     "ret30_btc": -0.037620835602818925,
+     "ret7": -0.30307166983616873,
+     "ret7_tok": -0.21199411208502472,
+     "ret7_btc": 0.09107755775114401,
+     "jump": -0.19151926456594504,
+     "jump_tok": -0.17237339169905408,
+     "jump_btc": 0.019145872866890956,
+     "pre30": 0.17996857481777973,
+     "pre30_tok": 0.2304199282114343,
+     "pre30_btc": 0.050451353393654585
+    },
+    "IDEX": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M IDEXUSDT, SLPUSDT, GLMRUSDT, MDTUSDT and AUDIOUSDT Perpetual Contracts",
+     "ts": "2024-05-08T05:00:26.574+00:00",
+     "d0": "2024-05-08",
+     "token": {
+      "m1": 0.0651191140363961,
+      "m30": 0.0910999709556015,
+      "d0": 0.0657227168636963,
+      "p7": 0.058764131781729,
+      "p30": 0.055492758485246
+     },
+     "btc": {
+      "m1": 62332.7333593829,
+      "m30": 71629.128829518,
+      "d0": 61188.1710927935,
+      "p7": 66228.7733761401,
+      "p30": 69338.8214750874
+     },
+     "ret30": -0.2888596176270569,
+     "ret30_tok": -0.1556533093369591,
+     "ret30_btc": 0.13320630829009783,
+     "ret7": -0.1882566327623172,
+     "ret7_tok": -0.10587792796817652,
+     "ret7_btc": 0.08237870479414067,
+     "jump": 0.027631349530555793,
+     "jump_tok": 0.009269211294288038,
+     "jump_btc": -0.018362138236267755,
+     "pre30": -0.1328007664642763,
+     "pre30_tok": -0.27856489772398574,
+     "pre30_btc": -0.14576413125970944
+    },
+    "LEVER": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist USDⓈ-M LEVERUSDT Perpetual Contract (2025-09-03)",
+     "ts": "2025-08-29T11:00:12.48+00:00"
+    },
+    "LOOM": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M XEMUSDT, ORBSUSDT and LOOMUSDT Perpetual Contracts (2024-12-09)",
+     "ts": "2024-11-29T04:00:01.809+00:00",
+     "d0": "2024-11-29",
+     "token": {
+      "m1": 0.0770759874454319,
+      "m30": 0.0515746848681791,
+      "d0": 0.077381656722438,
+      "p7": 0.0784186909119099,
+      "p30": 0.059551512556509
+     },
+     "btc": {
+      "m1": 95648.6184701647,
+      "m30": 72342.9109200164,
+      "d0": 97508.5860726266,
+      "p7": 99928.0552148145,
+      "p30": 93467.1470591109
+     },
+     "ret30": -0.18897122064858585,
+     "ret30_tok": -0.23041822727942296,
+     "ret30_btc": -0.04144700663083711,
+     "ret7": -0.011411332427848198,
+     "ret7_tok": 0.01340155061801851,
+     "ret7_btc": 0.024812883045866707,
+     "jump": -0.015480021452490833,
+     "jump_tok": 0.003965817203736899,
+     "jump_btc": 0.019445838656227732,
+     "pre30": 0.15251410279716082,
+     "pre30_tok": 0.5003806018440933,
+     "pre30_btc": 0.34786649904693245
+    },
+    "MDT": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M IDEXUSDT, SLPUSDT, GLMRUSDT, MDTUSDT and AUDIOUSDT Perpetual Contracts",
+     "ts": "2024-05-08T05:00:26.574+00:00",
+     "d0": "2024-05-08",
+     "token": {
+      "m1": 0.0728768004140887,
+      "m30": 0.112545297679715,
+      "d0": 0.0666776935905848,
+      "p7": 0.0626654700905844,
+      "p30": 0.0588673781812401
+     },
+     "btc": {
+      "m1": 62332.7333593829,
+      "m30": 71629.128829518,
+      "d0": 61188.1710927935,
+      "p7": 66228.7733761401,
+      "p30": 69338.8214750874
+     },
+     "ret30": -0.2503416647903046,
+     "ret30_tok": -0.11713535650020679,
+     "ret30_btc": 0.13320630829009783,
+     "ret7": -0.14255210438165944,
+     "ret7_tok": -0.06017339958751877,
+     "ret7_btc": 0.08237870479414067,
+     "jump": -0.06670069092582964,
+     "jump_tok": -0.0850628291620974,
+     "jump_btc": -0.018362138236267755,
+     "pre30": -0.26178380752367436,
+     "pre30_tok": -0.4075479387833838,
+     "pre30_btc": -0.14576413125970944
+    },
+    "OMG": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M MAVIAUSDT, OMGUSDT, and BONDUSDT Perpetual Contracts (2024-12-16)",
+     "ts": "2024-12-06T03:00:04.185+00:00",
+     "d0": "2024-12-06",
+     "token": {
+      "m1": 0.585787404483132,
+      "m30": 0.249812460126746,
+      "d0": 0.598189574490919,
+      "p7": 0.477758054195087,
+      "p30": 0.358669067077733
+     },
+     "btc": {
+      "m1": 97071.7947513146,
+      "m30": 75640.3926009892,
+      "d0": 99928.0552148145,
+      "p7": 101365.758291539,
+      "p30": 98349.7614561032
+     },
+     "ret30": -0.3846147294630873,
+     "ret30_tok": -0.40040903022595575,
+     "ret30_btc": -0.015794300762868474,
+     "ret7": -0.21571406048929964,
+     "ret7_tok": -0.2013266787511695,
+     "ret7_btc": 0.014387381738130145,
+     "jump": -0.008252412195714376,
+     "jump_tok": 0.021171793577108522,
+     "jump_btc": 0.029424205772822898,
+     "pre30": 1.0734607757291148,
+     "pre30_tok": 1.3945545958252796,
+     "pre30_btc": 0.32109382009616483
+    },
+    "REEF": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M REEFUSDT Perpetual Contract (2025-01-22)",
+     "ts": "2025-01-15T08:00:06.723+00:00",
+     "d0": "2025-01-15",
+     "token": {
+      "m1": 0.00100299724841787,
+      "m30": 0.00139400246733962,
+      "d0": 0.000994671098546188,
+      "p7": 0.0009379742737827,
+      "p30": 0.000775372422725649
+     },
+     "btc": {
+      "m1": 96535.2600542657,
+      "m30": 106090.348247644,
+      "d0": 100554.74910519,
+      "p7": 103610.288472095,
+      "p30": 97525.5643283225
+     },
+     "ret30": -0.19034882659010266,
+     "ret30_tok": -0.22047355768260102,
+     "ret30_btc": -0.030124731092498358,
+     "ret7": -0.08738739825174047,
+     "ret7_tok": -0.05700057521160129,
+     "ret7_btc": 0.030386823040139177,
+     "jump": -0.04993879128612655,
+     "jump_tok": -0.008301268906585446,
+     "jump_btc": 0.0416375223795411,
+     "pre30": -0.23428572973471884,
+     "pre30_tok": -0.28646388951917334,
+     "pre30_btc": -0.0521781597844545
+    },
+    "SNT": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist and Update the Leverage & Margin Tiers of USDⓈ-M STPTUSDT, SNTUSDT, MBLUSDT, RADUSDT and CVXUSDT Perpetual Contracts",
+     "ts": "2024-05-06T05:00:17.942+00:00",
+     "d0": "2024-05-06",
+     "token": {
+      "m1": 0.0411134815216014,
+      "m30": 0.0450515935397823,
+      "d0": 0.0389310482074492,
+      "p7": 0.0364182317439816,
+      "p30": 0.0355086907468351
+     },
+     "btc": {
+      "m1": 64028.1839885979,
+      "m30": 68896.1330392832,
+      "d0": 63159.4137703426,
+      "p7": 62904.918271802,
+      "p30": 71054.1443984153
+     },
+     "ret30": -0.21290507185432306,
+     "ret30_tok": -0.08790817658896866,
+     "ret30_btc": 0.1249968952653544,
+     "ret7": -0.06051589198334428,
+     "ret7_tok": -0.064545307130641,
+     "ret7_btc": -0.004029415147296711,
+     "jump": -0.039514595639156824,
+     "jump_tok": -0.05308315504746375,
+     "jump_btc": -0.013568559408306924,
+     "pre30": -0.05259015494089769,
+     "pre30_tok": -0.1358563560449515,
+     "pre30_btc": -0.0832662011040538
+    },
+    "SRM": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist RAYUSDT and SRMUSDT Perpetual Futures Contracts",
+     "ts": "2022-11-14T07:00:04.88+00:00"
+    },
+    "XEM": {
+     "status": "ok",
+     "title": "Binance Futures Will Delist USDⓈ-M XEMUSDT, ORBSUSDT and LOOMUSDT Perpetual Contracts (2024-12-09)",
+     "ts": "2024-11-29T04:00:01.809+00:00",
+     "d0": "2024-11-29",
+     "token": {
+      "m1": 0.0276951971793029,
+      "m30": 0.0166853347441118,
+      "d0": 0.0291104717078592,
+      "p7": 0.0378700655534183,
+      "p30": 0.0250648914411195
+     },
+     "btc": {
+      "m1": 95648.6184701647,
+      "m30": 72342.9109200164,
+      "d0": 97508.5860726266,
+      "p7": 99928.0552148145,
+      "p30": 93467.1470591109
+     },
+     "ret30": -0.09752636031901829,
+     "ret30_tok": -0.1389733669498554,
+     "ret30_btc": -0.04144700663083711,
+     "ret7": 0.2760958048471638,
+     "ret7_tok": 0.3009086878930305,
+     "ret7_btc": 0.024812883045866707,
+     "jump": 0.03165596500285428,
+     "jump_tok": 0.05110180365908201,
+     "jump_btc": 0.019445838656227732,
+     "pre30": 0.3968076207295492,
+     "pre30_tok": 0.7446741197764817,
+     "pre30_btc": 0.34786649904693245
+    },
+    "YFII": {
+     "status": "no_price_source",
+     "title": "Binance Futures Will Delist 1000BTTC and YFII USDT-Margined Contracts",
+     "ts": "2022-04-04T05:21:50.096+00:00"
+    }
+   }
+  }
+ },
+ "cross_source_ohlc": {
+  "A_card_literal": {
+   "sample": "A_card_literal_ohlc",
+   "n_symbols": 98,
+   "n_tokens_with_price": 35,
+   "n_exc30_computable": 6,
+   "median_exc30": -0.5594910540118703,
+   "pct_negative_exc30": 1.0,
+   "n_negative": 6,
+   "segments": {
+    "early": {
+     "n": 3,
+     "median": -0.40118714263447885,
+     "d0_range": [
+      "2025-09-24",
+      "2025-11-10"
+     ]
+    },
+    "late": {
+     "n": 3,
+     "median": -0.8542639414189303,
+     "d0_range": [
+      "2025-11-23",
+      "2026-02-05"
+     ]
+    }
+   },
+   "control": {
+    "n_samples": 200,
+    "null_median_q": {
+     "q05": -0.39673223226322374,
+     "q50": -0.25878695962530307,
+     "q95": -0.15748141000926363
+    },
+    "percentile_of_actual": 0.0,
+    "n_draws_used": 200
+   },
+   "d0_min": "2022-05-09"
+  },
+  "B_usdt_only": {
+   "sample": "B_usdt_only_ohlc",
+   "n_symbols": 35,
+   "n_tokens_with_price": 14,
+   "n_exc30_computable": 6,
+   "median_exc30": -0.5594910540118703,
+   "pct_negative_exc30": 1.0,
+   "n_negative": 6,
+   "segments": {
+    "early": {
+     "n": 3,
+     "median": -0.40118714263447885,
+     "d0_range": [
+      "2025-09-24",
+      "2025-11-10"
+     ]
+    },
+    "late": {
+     "n": 3,
+     "median": -0.8542639414189303,
+     "d0_range": [
+      "2025-11-23",
+      "2026-02-05"
+     ]
+    }
+   },
+   "control": {
+    "n_samples": 200,
+    "null_median_q": {
+     "q05": -0.39673223226322374,
+     "q50": -0.25878695962530307,
+     "q95": -0.15748141000926363
+    },
+    "percentile_of_actual": 0.0,
+    "n_draws_used": 200
+   },
+   "d0_min": "2022-06-02"
+  }
+ },
+ "union_source": {
+  "A_card_literal": {
+   "sample": "A_card_literal_union",
+   "n_symbols": 98,
+   "n_tokens_with_price": 47,
+   "n_exc30_computable": 46,
+   "median_exc30": -0.09194286622623493,
+   "pct_negative_exc30": 0.8478260869565217,
+   "n_negative": 39,
+   "segments": {
+    "early": {
+     "n": 23,
+     "median": -0.10769609519493994,
+     "d0_range": [
+      "2022-05-09",
+      "2023-07-27"
+     ]
+    },
+    "late": {
+     "n": 23,
+     "median": -0.08221574802972864,
+     "d0_range": [
+      "2023-07-27",
+      "2026-06-25"
+     ]
+    }
+   },
+   "control": {
+    "n_samples": 200,
+    "null_median_q": {
+     "q05": -0.13587193344181703,
+     "q50": -0.07944165126829572,
+     "q95": -0.01802795670782742
+    },
+    "percentile_of_actual": 0.335,
+    "n_draws_used": 200
+   },
+   "criteria": {
+    "(a) 30天超额中位数 ≤ −10%": {
+     "value": -0.09194286622623493,
+     "pass": false
+    },
+    "(b) ≥65% 事件超额为负": {
+     "value": 0.8478260869565217,
+     "pass": true
+    },
+    "(c) 对照分位 ≤ 0.05": {
+     "value": 0.335,
+     "pass": false
+    },
+    "(d) 有价代币 ≥ 25": {
+     "value": 46,
+     "pass": true,
+     "n_tokens_with_price": 47
+    },
+    "(e) 按事件日期对半分两段:中位同号且每段 ≥ 8": {
+     "value": {
+      "early": {
+       "n": 23,
+       "median": -0.10769609519493994
+      },
+      "late": {
+       "n": 23,
+       "median": -0.08221574802972864
+      }
+     },
+     "pass": true
+    }
+   },
+   "verdict": "FAIL"
+  },
+  "B_usdt_only": {
+   "sample": "B_usdt_only_union",
+   "n_symbols": 35,
+   "n_tokens_with_price": 22,
+   "n_exc30_computable": 21,
+   "median_exc30": -0.15238620703052375,
+   "pct_negative_exc30": 0.8095238095238095,
+   "n_negative": 17,
+   "segments": {
+    "early": {
+     "n": 10,
+     "median": -0.07414195556205816,
+     "d0_range": [
+      "2022-06-02",
+      "2024-11-29"
+     ]
+    },
+    "late": {
+     "n": 11,
+     "median": -0.3448985664627169,
+     "d0_range": [
+      "2025-08-06",
+      "2026-06-25"
+     ]
+    }
+   },
+   "control": {
+    "n_samples": 200,
+    "null_median_q": {
+     "q05": -0.20936913311974648,
+     "q50": -0.13035877295890363,
+     "q95": -0.0409417902950705
+    },
+    "percentile_of_actual": 0.35,
+    "n_draws_used": 200
+   },
+   "criteria": {
+    "(a) 30天超额中位数 ≤ −10%": {
+     "value": -0.15238620703052375,
+     "pass": true
+    },
+    "(b) ≥65% 事件超额为负": {
+     "value": 0.8095238095238095,
+     "pass": true
+    },
+    "(c) 对照分位 ≤ 0.05": {
+     "value": 0.35,
+     "pass": false
+    },
+    "(d) 有价代币 ≥ 25": {
+     "value": 21,
+     "pass": false,
+     "n_tokens_with_price": 22
+    },
+    "(e) 按事件日期对半分两段:中位同号且每段 ≥ 8": {
+     "value": {
+      "early": {
+       "n": 10,
+       "median": -0.07414195556205816
+      },
+      "late": {
+       "n": 11,
+       "median": -0.3448985664627169
+      }
+     },
+     "pass": true
+    }
+   },
+   "verdict": "FAIL"
+  },
+  "note": "敏感性:价格源 = asset_mcap_daily(主)∪ ohlcv_daily(补);口径与台账一致,只多补了几行价格 —— 仍按台账判据判一次,只作参照。"
+ },
+ "coverage": {
+  "A": {
+   "n_symbols": 98,
+   "n_with_price": 38,
+   "n_exc30_computable": 37,
+   "symbols_no_price_source": [
+    "1000BTTC",
+    "1000LUNC",
+    "1000LUNCB",
+    "1000SHIB",
+    "1000SHIBB",
+    "ADAB",
+    "AGIXB",
+    "AIA",
+    "AMBB",
+    "ANCB",
+    "APEB",
+    "APTB",
+    "AUCTION",
+    "AUCTIONB",
+    "AUDIO",
+    "AVAXB",
+    "BLUEBIRD",
+    "CTK",
+    "CVC",
+    "CVX",
+    "CVXB",
+    "DEFI",
+    "DODO",
+    "DODOB",
+    "DOGEB",
+    "DOTB",
+    "ETCB",
+    "FILB",
+    "FOOTBALL",
+    "FTMB",
+    "FTTB",
+    "GAL",
+    "GALAB",
+    "GALB",
+    "GMTB",
+    "ICPB",
+    "LDOB",
+    "LEVERB",
+    "LINKB",
+    "LTCB",
+    "LUNA2",
+    "LUNA2B",
+    "MATICB",
+    "MAVIA",
+    "MBL",
+    "MEMEFI",
+    "MITO",
+    "NEARB",
+    "NEIROETH",
+    "PHBB",
+    "PTB",
+    "SANDB",
+    "SLERF",
+    "SLP",
+    "SOLB",
+    "STPT",
+    "TLMB",
+    "TRXB",
+    "UNIB",
+    "WAVESB"
+   ],
+   "symbols_price_but_no_30d_forward": [
+    "LUNA"
+   ],
+   "d0_min": "2022-05-09",
+   "d0_max": "2026-06-25"
+  },
+  "B": {
+   "n_symbols": 35,
+   "n_with_price": 16,
+   "n_exc30_computable": 15,
+   "symbols_no_price_source": [
+    "1000BTTC",
+    "AIA",
+    "AUDIO",
+    "BLUEBIRD",
+    "CTK",
+    "CVC",
+    "CVX",
+    "DEFI",
+    "DODO",
+    "FOOTBALL",
+    "MAVIA",
+    "MBL",
+    "MEMEFI",
+    "MITO",
+    "NEIROETH",
+    "PTB",
+    "SLERF",
+    "SLP",
+    "STPT"
+   ],
+   "symbols_price_but_no_30d_forward": [
+    "LUNA"
+   ],
+   "d0_min": "2022-05-12",
+   "d0_max": "2026-06-25"
+  }
+ },
+ "secondary": {
+  "note": "副项只报不判(口径 B 主样本)",
+  "pre30_exc": {
+   "n": 15,
+   "median": -0.074170599913436,
+   "pct_negative": 0.5333333333333333
+  },
+  "announce_day_jump": {
+   "n": 15,
+   "median": -0.01520828393928264,
+   "pct_negative": 0.5333333333333333
+  },
+  "exc7": {
+   "n": 15,
+   "median": -0.11283074355173406,
+   "pct_negative": 0.6
+  },
+  "A_口径副项": {
+   "pre30_exc": {
+    "n": 37,
+    "median": -0.046503021155294144,
+    "pct_negative": 0.6756756756756757
+   },
+   "announce_day_jump": {
+    "n": 37,
+    "median": -0.002938290448689429,
+    "pct_negative": 0.5135135135135135
+   },
+   "exc7": {
+    "n": 37,
+    "median": -0.041404752011081625,
+    "pct_negative": 0.6756756756756757
+   }
+  },
+  "underlying_alias_sample": {
+   "note": "事后敏感性:代号读成现货代号后的同一套统计;口径变了 ⇒ 只报不判(S-759 判据不作数)",
+   "A": {
+    "sample": "A_underlying_alias",
+    "n_symbols": 39,
+    "n_tokens_with_price": 39,
+    "n_exc30_computable": 38,
+    "median_exc30": -0.08773855065076941,
+    "pct_negative_exc30": 0.868421052631579,
+    "n_negative": 33,
+    "segments": {
+     "early": {
+      "n": 19,
+      "median": -0.1135093261179515,
+      "d0_range": [
+       "2022-05-09",
+       "2023-07-20"
+      ]
+     },
+     "late": {
+      "n": 19,
+      "median": -0.0803743932023151,
+      "d0_range": [
+       "2023-07-20",
+       "2026-06-25"
+      ]
+     }
+    },
+    "control": {
+     "n_samples": 200,
+     "null_median_q": {
+      "q05": -0.12171064395504283,
+      "q50": -0.07219074829921457,
+      "q95": -0.018044038272284846
+     },
+     "percentile_of_actual": 0.31,
+     "n_draws_used": 200
+    },
+    "contract_of_base": {
+     "FTT": "FTT",
+     "LUNA": "LUNA",
+     "ICP": "ICP",
+     "TLM": "TLM",
+     "SC": "SC",
+     "RAY": "RAY",
+     "WAVES": "WAVESB",
+     "PHB": "PHBB",
+     "SAND": "SAND",
+     "UNI": "UNI",
+     "AVAX": "AVAX",
+     "GMT": "GMT",
+     "NEAR": "NEAR",
+     "ETC": "ETC",
+     "FIL": "FIL",
+     "DOT": "DOT",
+     "APE": "APE",
+     "LINK": "LINK",
+     "AGIX": "AGIX",
+     "GALA": "GALA",
+     "LDO": "LDO",
+     "APT": "APT",
+     "FTM": "FTM",
+     "TRX": "TRX",
+     "ADA": "ADA",
+     "MATIC": "MATIC",
+     "DOGE": "DOGE",
+     "LTC": "LTC",
+     "SOL": "SOL",
+     "DGB": "DGB",
+     "RAD": "RAD",
+     "GLMR": "GLMR",
+     "ORBS": "ORBS",
+     "UXLINK": "UXLINK",
+     "MYRO": "MYRO",
+     "PORT3": "PORT3",
+     "RVV": "RVV",
+     "YALA": "YALA",
+     "IP": "IP"
+    }
+   },
+   "B": {
+    "sample": "B_underlying_alias",
+    "n_symbols": 15,
+    "n_tokens_with_price": 15,
+    "n_exc30_computable": 14,
+    "median_exc30": -0.08773855065076941,
+    "pct_negative_exc30": 0.8571428571428571,
+    "n_negative": 12,
+    "segments": {
+     "early": {
+      "n": 7,
+      "median": -0.06297879311046573,
+      "d0_range": [
+       "2022-06-02",
+       "2024-05-08"
+      ]
+     },
+     "late": {
+      "n": 7,
+      "median": -0.3795749347829681,
+      "d0_range": [
+       "2024-11-29",
+       "2026-06-25"
+      ]
+     }
+    },
+    "control": {
+     "n_samples": 200,
+     "null_median_q": {
+      "q05": -0.20875898050832264,
+      "q50": -0.10680103530151586,
+      "q95": -0.012222099159394206
+     },
+     "percentile_of_actual": 0.605,
+     "n_draws_used": 200
+    },
+    "contract_of_base": {
+     "LUNA": "LUNA",
+     "ICP": "ICP",
+     "TLM": "TLM",
+     "SC": "SC",
+     "RAY": "RAY",
+     "DGB": "DGB",
+     "RAD": "RAD",
+     "GLMR": "GLMR",
+     "ORBS": "ORBS",
+     "UXLINK": "UXLINK",
+     "MYRO": "MYRO",
+     "PORT3": "PORT3",
+     "RVV": "RVV",
+     "YALA": "YALA",
+     "IP": "IP"
+    }
+   }
+  }
+ }
+}
