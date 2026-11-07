@@ -15,6 +15,7 @@
 | in_review | T-261 | lane-a | T-257 盲复算 + 稳健性(只报不判):S-737 的 13 特征 k-means 状态地图自己重写一遍;再看唯一过 BH 的 S5 × 「BTC + 30 天 90% 看跌」在 k = 5 / 7、去掉 VIX、看跌加偏斜(+9 个波动点)时还在不在 | 报告 docs/research/T-261_state_map_recompute.md + t261_recompute.py + t261_results.json;卡 notes 写对照表与稳健性表;in_review,推 lane-a/T-261。 | S-737 只有 lane-b 一个人算过;S5 × A6 只在一个规格下成立。 | None @ None |
 | in_review | T-265 | lane-a | S-743 持有人数增长(采用面,对过去 4 周收益与市值取残差)对之后 4 周相对 BTC 的超额,横截面周频 —— 判据照台账写死 | 报告 docs/research/T-265_holder_growth.md + t265_holders.py + t265_results.json;卡 notes 写 (a)–(d);in_review,推 lane-a/T-265。 | 持有人数历史 11-06 才接入;采用面的横截面因子从没测过(只有前 50 大持有人集中度的快照)。 |  |
 | in_review | T-266 | lane-a | S-741 盲复算 + 稳健性(只报不判):只看台账文字重写联合模型 v2;再看 Ridge 的 ✅ 在 α 3 / 30、z 窗口 60 / 120、逐族去掉新维度、21 列随机噪声替换新维度、每天扩张重训(实盘口径)下还在不在 | 报告 docs/research/T-266_joint_v2_recompute.md + t266_recompute.py + t266_results.json;卡 notes 写对照表与稳健性表;in_review,推 lane-a/T-266。 | S-741 是第一个过了预注册的联合模型,只有 lane-c 一个人算过;余量不宽。T-264 / T-265 要等回填,这张可以先做。 |  |
+| in_review | T-299 | lane-a | S-779 相关币之间的领先—滞后(邻居 7 日动量减自己 ⇒ 之后 7 天)在 2020–2022 留出段复验 | 报告 docs/research/T-299_leadlag_holdout.md + t299_leadlag.py + t299_results.json + scenarios/lane-a-T-299.json(≥ 3 条);in_review,推 lane-a/T-299。 | S-775 的反射对照最强,但那是看完数据才知道的;2020–22 是它没碰过的段。站住 ⇒ ② 倾斜第一次有一个过了留出的候选。 |  |
 | in_review | T-215 | lane-b | T-213 报告返工:5 日块对齐敏感性 + 撤回清单与正文 md:333 同步 | 报告更新 + 复跑脚本两次输出一致;卡片 notes:各对齐下的区间与被降级的句子清单。 | 头条数字会被 Jazz 用来选 SPYX vs Ondo;量级随对齐变 2–3 倍而无人说明。 |  |
 | in_review | T-216 | lane-b | T-005 预注册台账返工(lane-a 交叉复核 F1/F3/F2/F5):按实际代码重算样本量与判据 | 台账更新;卡片 notes:改前改后三个数与 β 带分布。 | 预注册里的样本量比实际宽 3 倍,会让后续裁决显得比实际更有把握。 |  |
 | in_review | T-219 | lane-b | 轨道公司股权进宇宙的第一份研究:风险画像、与 ① / BTC 的关系、执行场所逐家判断 —— 先描述,再预注册一条假设 | 报告 docs/research/T-219_rail_equities.md(开头风险画像表 + 场所表,末尾 M- 预注册与结果);卡片 notes 写关键数;in_review,推 lane-b/T-219。 | 宇宙里没有任何轨道公司;V / MA / BLK / IBKR / SCHW 只作为 World50 候选在池子里,从没按『轨道』看过。 |  |
@@ -300,4 +301,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 11 · claimed 8 · blocked 7 · in_review 49 · done 219 · dropped 3
+open 11 · claimed 8 · blocked 7 · in_review 50 · done 219 · dropped 3
