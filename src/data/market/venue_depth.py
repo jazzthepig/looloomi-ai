@@ -16,6 +16,10 @@ S-544 的容量按全市场报告成交额(CoinGecko 聚合)× 10% 参与率算:
 - 名字:真钱在用的现货 UBTC / UETH / XAUT0 / SPYX;永续 = CIS 加密 25 个里在 HL 上市的 + R-v2 账本里 pending / open 的票。
 - 容量(与 T-085 同一个式子):场所容量 = 7 天中位数的 min(买盘, 卖盘) ±2% 深度 ÷ 单名仓位比例(5%)。
   **冰山看不见,所以这是下限**;全市场口径是上限。两列并排,不合成一个数。
+- **场所成交(11-06,验收 ②):** 同一批顺带记 HL 的 `dayNtlVlm`(滚动 24h 美元名义额)与永续未平仓额 ——
+  永续来自一次 `metaAndAssetCtxs`(全部名字一次请求,`hyperliquid_collector.venue_snapshot`),现货来自本来就在调的
+  `spotMetaAndAssetCtxs`。于是场所口径多一个**与全市场口径同一个式子**的数:场所日成交中位 × 参与率 × 建仓天数 ÷ 权重
+  (`venue_flow_capacity_aum_usd`)—— 一次吃进的深度是下限,五天按场所成交慢慢建是中间值,全市场成交是上限。
 
 判活:`select fetched_utc, count(*) from venue_depth_snapshots group by 1 order by 1 desc limit 3`(每 8 小时一批)。
 """
@@ -29,8 +33,9 @@ TABLE = "venue_depth_snapshots"
 WRITES_TABLES = (TABLE,)
 WRITES_COLUMNS = {TABLE: ("fetched_utc", "venue", "symbol", "ex_symbol", "mid", "spread_bps",
                           "depth_1pct_bid_usd", "depth_1pct_ask_usd", "depth_2pct_bid_usd", "depth_2pct_ask_usd",
-                          "covered_bid_pct", "covered_ask_pct", "granularity", "code_ref")}
-CODE_REF = "venue_depth v1 (11-02)"
+                          "covered_bid_pct", "covered_ask_pct", "granularity", "code_ref", "day_ntl_vlm_usd",
+                          "open_interest_usd")}
+CODE_REF = "venue_depth v1.1 (11-06: + 场所 24h 成交 / 未平仓额)"
 SLOTS_UTC = (0, 8, 16)
 BANDS = (0.01, 0.02)
 SPOT_TOKENS = {"BTC": "UBTC", "ETH": "UETH", "XAUT0": "XAUT0", "SPYX": "SPYX"}
@@ -101,18 +106,29 @@ def measure(fine: Any, coarse: Any = None) -> Optional[dict[str, Any]]:
     return out
 
 
-def sample_sync(client: Any, perp_coins: list[str], fetched_utc: str) -> tuple[list[dict], list[str]]:
-    """同步(由调用方放进线程)。HL 现货四个 + 永续若干 → 行;读不到的名字写进第二个返回值,不写 0。"""
+def perp_flow(assets: Any, coin: str) -> tuple[Optional[float], Optional[float]]:
+    """纯函数。`venue_snapshot()["assets"]` → (24h 名义成交额, 未平仓额 = 张数 × 标记价)。读不到 ⇒ None,不写 0。"""
+    a = (assets or {}).get(str(coin).upper()) or {}
+    vol, oi, mark = _f(a.get("day_notional_volume")), _f(a.get("open_interest")), _f(a.get("mark"))
+    return (vol if vol is not None and vol >= 0 else None,
+            round(oi * mark, 2) if oi is not None and mark is not None and oi >= 0 and mark > 0 else None)
+
+
+def sample_sync(client: Any, perp_coins: list[str], fetched_utc: str,
+                perp_assets: Optional[dict] = None) -> tuple[list[dict], list[str]]:
+    """同步(由调用方放进线程)。HL 现货四个 + 永续若干 → 行;读不到的名字写进第二个返回值,不写 0。
+    `perp_assets` = 同一时点的 `venue_snapshot()["assets"]`(场所成交 / 未平仓额);没有 ⇒ 这两列空着,深度照采。"""
     from src.data.venues.hl_spot import HlSpotFixture
     fx = HlSpotFixture(client.spot_meta(), client.spot_meta_and_asset_ctxs(), {}, {})
     targets = []
     for sym, tok in SPOT_TOKENS.items():
         pair = fx.find_pair_by_token(tok)
         if pair is not None:
-            targets.append(("hyperliquid_spot", sym, pair.name))
-    targets += [("hyperliquid_perp", c, c) for c in perp_coins]
+            vol = _f(getattr(pair, "day_ntl_vlm", None))
+            targets.append(("hyperliquid_spot", sym, pair.name, vol if vol is not None and vol >= 0 else None, None))
+    targets += [("hyperliquid_perp", c, c, *perp_flow(perp_assets, c)) for c in perp_coins]
     rows, failed = [], []
-    for venue, sym, ex in targets:
+    for venue, sym, ex, vol, oi_usd in targets:
         try:
             fine = client.l2_book(ex)
             m = measure(fine)
@@ -124,12 +140,14 @@ def sample_sync(client: Any, perp_coins: list[str], fetched_utc: str) -> tuple[l
         if m is None:
             failed.append(f"{venue}:{sym}:空盘口")
             continue
-        rows.append({"fetched_utc": fetched_utc, "venue": venue, "symbol": sym, "ex_symbol": ex, **m, "code_ref": CODE_REF})
+        rows.append({"fetched_utc": fetched_utc, "venue": venue, "symbol": sym, "ex_symbol": ex, **m, "code_ref": CODE_REF,
+                     "day_ntl_vlm_usd": vol, "open_interest_usd": oi_usd})
     return rows, failed
 
 
 def venue_capacity(rows: list[dict], position_pct: float) -> dict[str, dict[str, Any]]:
-    """纯函数。每个 (场所, 名字) 最近 MEDIAN_DAYS 天的中位深度 → 场所容量(下限)。"""
+    """纯函数。每个 (场所, 名字) 最近 MEDIAN_DAYS 天的中位深度 → 场所容量(下限);有场所成交 ⇒ 再给五天建仓口径。"""
+    from src.data.accounting.capacity import capacity_aum
     by: dict[tuple[str, str], list[dict]] = {}
     for r in rows:
         by.setdefault((r["venue"], r["symbol"]), []).append(r)
@@ -141,10 +159,16 @@ def venue_capacity(rows: list[dict], position_pct: float) -> dict[str, dict[str,
         d1 = [med("depth_1pct_bid_usd"), med("depth_1pct_ask_usd")]
         d2 = [med("depth_2pct_bid_usd"), med("depth_2pct_ask_usd")]
         min2 = min(d2) if None not in d2 else None
+        vadv = med("day_ntl_vlm_usd")
+        flow = capacity_aum(position_pct, vadv) if vadv else None
         cur = out.get(sym)
         row = {"venue": venue, "n_snapshots": len(rs), "depth_1pct_min_usd": min(d1) if None not in d1 else None,
                "depth_2pct_min_usd": min2, "median_spread_bps": med("spread_bps"),
                "venue_capacity_aum_usd": None if min2 is None else round(min2 / position_pct, 0),
+               "venue_adv_usd": None if vadv is None else round(vadv, 0),
+               "n_volume_snapshots": sum(1 for r in rs if _f(r.get("day_ntl_vlm_usd")) is not None),
+               "venue_flow_capacity_aum_usd": None if flow is None else round(flow, 0),
+               "median_oi_usd": med("open_interest_usd"),
                "lower_bound": any((_f(r.get("covered_bid_pct")) or 0) < 2 or (_f(r.get("covered_ask_pct")) or 0) < 2 for r in rs)}
         # 同一个名字现货、永续都有 ⇒ 两个都留,容量取现货(① 只持现货)
         if cur is None or venue == "hyperliquid_spot":
@@ -179,11 +203,18 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     if have:
         return {"ok": True, "status": "skipped", "why": f"{slot:%Y-%m-%d %H}:00 这一批已采"}
     coins = await perp_coins()
-    rows, failed = await asyncio.to_thread(sample_sync, HlSpotClient(), coins, now.isoformat())
+    from src.data.market.hyperliquid_collector import venue_snapshot
+    try:
+        snap = await venue_snapshot()                                    # 一次 metaAndAssetCtxs:全部永续的 24h 成交 / 未平仓
+        perp_assets = snap.get("assets") if snap.get("ok") else None
+    except Exception:                                                    # noqa: BLE001 — 成交读不到不挡深度
+        perp_assets = None
+    rows, failed = await asyncio.to_thread(sample_sync, HlSpotClient(), coins, now.isoformat(), perp_assets)
     if not rows:
         return {"ok": False, "why": f"一个名字都没采到:{failed[:6]}"}
     w = await supabase_insert_table(TABLE, rows)
     if not w.ok:
         return {"ok": False, "why": f"写 {TABLE} 失败:{(w.why or '')[:200]}"}
-    return {"ok": True, "written": len(rows), "failed": failed, "slot": slot.isoformat(),
-            "why": f"{slot:%Y-%m-%d %H}:00 采 {len(rows)} 个(读不到 {len(failed)})"}
+    nv = sum(1 for r in rows if r.get("day_ntl_vlm_usd") is not None)
+    return {"ok": True, "written": len(rows), "with_volume": nv, "failed": failed, "slot": slot.isoformat(),
+            "why": f"{slot:%Y-%m-%d %H}:00 采 {len(rows)} 个(带场所成交 {nv};读不到 {len(failed)})"}

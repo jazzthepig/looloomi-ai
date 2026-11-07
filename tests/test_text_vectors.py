@@ -75,6 +75,7 @@ def test_embed_retries_on_rate_limit_then_gives_up(monkeypatch):
         return (None, "base_resp 1002: rate limit exceeded(RPM)") if len(calls) < 3 else ([[1.0]], None)
 
     from src.data.narrative import llm_narrator as llm
+    monkeypatch.setattr(tv, "BACKEND", "minimax")
     monkeypatch.setattr(llm, "_FB_KEY", "")
     monkeypatch.setattr(tv, "_embed_once", once)
     v, e = asyncio.run(tv.embed(["a"], waits=(0, 0)))
@@ -113,6 +114,7 @@ def test_fallback_key_is_used_on_quota_hit(monkeypatch):
         calls.append(fallback)
         return ([[1.0]], None) if fallback else (None, "base_resp 1002: rate limit exceeded(RPM)")
 
+    monkeypatch.setattr(tv, "BACKEND", "minimax")
     monkeypatch.setattr(llm, "_FB_KEY", "x")
     monkeypatch.setattr(tv, "_embed_once", once)
     v, e = asyncio.run(tv.embed(["a"], waits=(0,)))
@@ -126,3 +128,44 @@ def test_rpm_limit_cools_down_minutes_not_hours():
     from src.data.vector import text_vectors as tv
     assert tv.cooldown_for("base_resp 1002: rate limit exceeded(RPM)") == tv.RPM_COOLDOWN_S <= 30 * 60
     assert tv.cooldown_for("base_resp 1008: insufficient balance") == tv.COOLDOWN_S
+
+
+def test_local_backend_is_the_default_and_never_calls_minimax(monkeypatch):
+    """11-07:MiniMax 账户的限速表里没有嵌入模型(0 RPM)⇒ 默认在本机跑 ONNX;query 走检索前缀,入库走 passage;每轮用完放掉模型。"""
+    import importlib
+    import os
+    monkeypatch.delenv("TEXT_EMBED_BACKEND", raising=False)
+    monkeypatch.delenv("TEXT_EMBED_MODEL", raising=False)
+    fresh = importlib.reload(tv)
+    assert fresh.BACKEND == "local" and fresh.MODEL == "bge-small-en-v1.5" and fresh.LOCAL_MODELS[fresh.MODEL] == "BAAI/bge-small-en-v1.5"
+    assert fresh.MAX_PER_RUN >= 1000 and fresh.PAUSE_S == 0
+    seen = []
+
+    class Fake:
+        def passage_embed(self, texts):
+            seen.append(("db", len(texts)))
+            return iter([[0.5, 0.5]] * len(texts))
+
+        def query_embed(self, texts):
+            seen.append(("query", len(texts)))
+            return iter([[1.0, 0.0]] * len(texts))
+
+    async def no_minimax(*a, **k):
+        raise AssertionError("local 后端不该调 MiniMax")
+    monkeypatch.setattr(fresh, "_embed_once", no_minimax)
+    monkeypatch.setitem(fresh._LOCAL, "m", Fake())
+    v, e = asyncio.run(fresh.embed(["a", "b"], "db"))
+    assert e is None and v == [[0.5, 0.5], [0.5, 0.5]]
+    v, e = asyncio.run(fresh.embed(["q"], "query"))
+    assert v == [[1.0, 0.0]] and seen == [("db", 2), ("query", 1)]
+    fresh.release_local()
+    assert fresh._LOCAL["m"] is None, "用完放掉,不常驻 API 进程"
+
+
+def test_local_failure_is_a_reason_not_a_crash(monkeypatch):
+    def boom(texts, kind):
+        raise RuntimeError("model download failed")
+    monkeypatch.setattr(tv, "BACKEND", "local")
+    monkeypatch.setattr(tv, "_local_sync", boom)
+    v, e = asyncio.run(tv.embed(["a"]))
+    assert v is None and "本地嵌入失败" in e and not tv.rate_limited(e), "本地失败不触发 MiniMax 的冷却"

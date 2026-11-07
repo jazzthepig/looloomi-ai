@@ -1,0 +1,28 @@
+{
+  "id": "T-273",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-07",
+  "title": "S-752 盲复算 S-749(④ 套息 vs 稳定币借贷)与 S-750(按过去 4 周切换)—— 只看台账文字,决定「提不提真钱」的数要有第二个人算过",
+  "source": "REFUTATION_LEDGER S-749 / S-750 正文(含补记与时间更正)与 S-752。可调用 src/data/signals/carry_hl.py 的 path / matrix(公用内核);数据:Mac 数据根 _data/hyperliquid_funding/*_funding_1h.csv(2026-07-20 前)+ hl_funding_daily(之后),22 名;借贷 feature_matrix_daily.stable_lend_apy_7d。不看 Seth 的临时脚本。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-273.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① S-749 表每个区间(套息名义 / 资本口径 / 借贷)与台账差 ≤ 0.15pp;② S-750 表(切换 / 一直套息 / 一直借贷)差 ≤ 0.2pp;③ 判定不变;对不上就写出差在哪一步。④ 只算、不改代码、不入库。",
+    "expect": "报告 docs/research/T-273_carry_vs_lending_recompute.md + t273_recompute.py + t273_results.json;in_review,推 lane-c/T-273。"
+  },
+  "prior_value": "S-749 决定了现在不向 Jazz 提 ④ 小额真钱;S-750 决定了不加切换臂 —— 都只有 Seth 一个人算过。",
+  "notes": "",
+  "verified": null
+}

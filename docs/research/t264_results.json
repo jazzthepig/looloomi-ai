@@ -14,28 +14,343 @@
       "upbit",
       "binance_futures"
     ],
-    "table_rows": 0,
-    "table_date_range": null,
-    "table_exchanges": [],
-    "table_kinds": {},
-    "venue_coverage": {},
-    "all_required_ok": false,
-    "why_empty": "exchange_volume_daily 读出来 0 行(表空,或该 key 无 SELECT 权限)",
+    "table_rows": 46159,
+    "table_date_range": [
+      "2021-01-01",
+      "2026-11-06"
+    ],
+    "table_exchanges": [
+      "aster",
+      "binance",
+      "binance_futures",
+      "bitget",
+      "bitget_futures",
+      "bithumb",
+      "bitstamp",
+      "bybit",
+      "bybit_spot",
+      "crypto_com",
+      "deribit",
+      "gate",
+      "gate_futures",
+      "gdax",
+      "huobi",
+      "huobi_dm",
+      "hyperliquid",
+      "kraken",
+      "kucoin",
+      "lighter",
+      "mxc",
+      "okex",
+      "okex_swap",
+      "upbit"
+    ],
+    "table_kinds": {
+      "aster": [
+        "deriv"
+      ],
+      "binance": [
+        "spot"
+      ],
+      "binance_futures": [
+        "deriv"
+      ],
+      "bitget": [
+        "spot"
+      ],
+      "bitget_futures": [
+        "deriv"
+      ],
+      "bithumb": [
+        "spot"
+      ],
+      "bitstamp": [
+        "spot"
+      ],
+      "bybit": [
+        "deriv"
+      ],
+      "bybit_spot": [
+        "spot"
+      ],
+      "crypto_com": [
+        "spot"
+      ],
+      "deribit": [
+        "deriv"
+      ],
+      "gate": [
+        "spot"
+      ],
+      "gate_futures": [
+        "deriv"
+      ],
+      "gdax": [
+        "spot"
+      ],
+      "huobi": [
+        "spot"
+      ],
+      "huobi_dm": [
+        "deriv"
+      ],
+      "hyperliquid": [
+        "deriv"
+      ],
+      "kraken": [
+        "spot"
+      ],
+      "kucoin": [
+        "spot"
+      ],
+      "lighter": [
+        "deriv"
+      ],
+      "mxc": [
+        "spot"
+      ],
+      "okex": [
+        "spot"
+      ],
+      "okex_swap": [
+        "deriv"
+      ],
+      "upbit": [
+        "spot"
+      ]
+    },
+    "expected_days": 2077,
+    "last_day": "2026-11-06",
+    "venue_coverage": {
+      "gdax": {
+        "days_present": 2136,
+        "expected": 2077,
+        "coverage": 1.028406,
+        "missing_days": 0,
+        "missing_examples": []
+      },
+      "binance": {
+        "days_present": 2136,
+        "expected": 2077,
+        "coverage": 1.028406,
+        "missing_days": 0,
+        "missing_examples": []
+      },
+      "upbit": {
+        "days_present": 2127,
+        "expected": 2077,
+        "coverage": 1.024073,
+        "missing_days": 9,
+        "missing_examples": [
+          "2025-03-09",
+          "2025-03-10",
+          "2025-03-11",
+          "2025-03-12",
+          "2025-03-13"
+        ]
+      },
+      "binance_futures": {
+        "days_present": 2136,
+        "expected": 2077,
+        "coverage": 1.028406,
+        "missing_days": 0,
+        "missing_examples": []
+      }
+    },
+    "all_required_ok": true,
     "fmd_rows": 2866,
     "fmd_range": [
       "2019-01-01",
       "2026-11-05"
     ],
-    "fmd_venue_keys": {},
+    "fmd_venue_keys": {
+      "venue:coinbase_share_spot30": 2106,
+      "venue:deriv_to_spot30": 2106,
+      "venue:korea_share_spot30": 2106,
+      "venue:onchain_perp_share30": 1153
+    },
     "fmd_has_venue_true": 0,
     "fmd_feature_counts": {
-      "venue:coinbase_share_spot30": 0,
-      "venue:korea_share_spot30": 0,
-      "venue:deriv_to_spot30": 0
+      "venue:coinbase_share_spot30": 2106,
+      "venue:korea_share_spot30": 2106,
+      "venue:deriv_to_spot30": 2106
     },
-    "features_available": false
+    "features_available": true
   },
-  "ran": false,
-  "status": "STOPPED_PRECONDITION",
-  "stop_reason": "exchange_volume_daily 四个场所自 2021-03-01 起的逐日覆盖不足 95%"
+  "ran": true,
+  "feature_source": "feature_matrix_daily.f['venue:*']",
+  "outcome_coverage": {
+    "btc_ret30_days": 2471,
+    "btc_mdd30_days": 2471,
+    "alt_exc30_days": 2177,
+    "btc_perp_range": [
+      "2019-12-31",
+      "2026-11-05"
+    ],
+    "alt_names_min_coverage": 0.8,
+    "alt_exc_coverage_min": 0.8181818181818182
+  },
+  "tests": [
+    {
+      "code": "T1",
+      "feature": "F1",
+      "expect": "+",
+      "n_obs": 2062,
+      "ic": 0.0292,
+      "null_pct_in_expected_direction": 0.545,
+      "p_one_sided": 0.455,
+      "null_abs_q95": 0.2726,
+      "segments": {
+        "seg1_2021-03_to_2023-06": 0.2219,
+        "seg2_2023-07_on": -0.1514
+      },
+      "ic_resid": 0.0309,
+      "checks": {
+        "a_ic_sign_and_size": false,
+        "b_null_pct": false,
+        "c_both_segments_same_sign": false,
+        "d_resid_same_sign": true
+      },
+      "verdict_pre_bh": "FAIL",
+      "p_for_bh": 0.455,
+      "description": "F1 → BTC 永续 30 天对数收益(预期正)",
+      "bh_q": 0.85333,
+      "verdict": "FAIL"
+    },
+    {
+      "code": "T2",
+      "feature": "F2",
+      "expect": "-",
+      "n_obs": 2016,
+      "ic": 0.1474,
+      "null_pct_in_expected_direction": 0.042,
+      "p_one_sided": 0.958,
+      "null_abs_q95": 0.202,
+      "segments": {
+        "seg1_2021-03_to_2023-06": 0.1699,
+        "seg2_2023-07_on": 0.0939
+      },
+      "ic_resid": 0.1159,
+      "checks": {
+        "a_ic_sign_and_size": false,
+        "b_null_pct": false,
+        "c_both_segments_same_sign": false,
+        "d_resid_same_sign": false
+      },
+      "verdict_pre_bh": "FAIL",
+      "p_for_bh": 0.958,
+      "description": "F2 → BTC 永续 30 天对数收益(预期负)",
+      "bh_q": 0.958,
+      "verdict": "FAIL"
+    },
+    {
+      "code": "T3",
+      "feature": "F2",
+      "expect": "-",
+      "n_obs": 2016,
+      "ic": 0.0058,
+      "null_pct_in_expected_direction": 0.488,
+      "p_one_sided": 0.512,
+      "null_abs_q95": 0.1525,
+      "segments": {
+        "seg1_2021-03_to_2023-06": -0.0379,
+        "seg2_2023-07_on": 0.0199
+      },
+      "ic_resid": -0.0848,
+      "checks": {
+        "a_ic_sign_and_size": false,
+        "b_null_pct": false,
+        "c_both_segments_same_sign": false,
+        "d_resid_same_sign": true
+      },
+      "verdict_pre_bh": "FAIL",
+      "p_for_bh": 0.512,
+      "description": "F2 → 山寨等权减 BTC 的 30 天对数超额(预期负)",
+      "bh_q": 0.85333,
+      "verdict": "FAIL"
+    },
+    {
+      "code": "T4",
+      "feature": "F3",
+      "expect": "-",
+      "n_obs": 2016,
+      "ic": 0.1707,
+      "null_pct_in_expected_direction": 0.098,
+      "p_one_sided": 0.902,
+      "null_abs_q95": 0.2318,
+      "segments": {
+        "seg1_2021-03_to_2023-06": 0.2912,
+        "seg2_2023-07_on": 0.1498
+      },
+      "ic_resid": 0.1766,
+      "checks": {
+        "a_ic_sign_and_size": false,
+        "b_null_pct": false,
+        "c_both_segments_same_sign": false,
+        "d_resid_same_sign": false
+      },
+      "verdict_pre_bh": "FAIL",
+      "p_for_bh": 0.902,
+      "description": "F3 → BTC 30 天最大回撤(预期更深=更负)",
+      "bh_q": 0.958,
+      "verdict": "FAIL"
+    },
+    {
+      "code": "T5",
+      "feature": "F3",
+      "expect": "0",
+      "n_obs": 2016,
+      "ic": 0.1264,
+      "null_pct_in_expected_direction": 0.755,
+      "p_one_sided": 0.245,
+      "null_abs_q95": 0.2337,
+      "segments": {
+        "seg1_2021-03_to_2023-06": 0.2256,
+        "seg2_2023-07_on": 0.0787
+      },
+      "ic_resid": 0.1294,
+      "checks": {
+        "a_ic_sign_and_size": true,
+        "b_null_pct": false,
+        "c_both_segments_same_sign": true,
+        "d_resid_same_sign": true
+      },
+      "verdict_pre_bh": "FAIL",
+      "p_for_bh": 0.245,
+      "description": "F3 → BTC 永续 30 天对数收益(台账未写方向 ⇒ 双侧)",
+      "bh_q": 0.85333,
+      "verdict": "FAIL"
+    }
+  ],
+  "status": "RAN",
+  "family_pass_count": 0,
+  "secondary_7d": [
+    {
+      "code": "S1",
+      "description": "F1 → BTC 7 天对数收益",
+      "ic": 0.004,
+      "n_obs": 2062
+    },
+    {
+      "code": "S2",
+      "description": "F2 → BTC 7 天对数收益",
+      "ic": 0.0555,
+      "n_obs": 2016
+    },
+    {
+      "code": "S3",
+      "description": "F2 → 山寨 7 天超额",
+      "ic": 0.022,
+      "n_obs": 2016
+    }
+  ],
+  "secondary_onchain_perp_share": {
+    "n_days": 1153,
+    "first": "2023-09-08",
+    "last": "2026-11-05",
+    "first_value": 0.001193,
+    "last_value": 0.089539,
+    "note": "只描述走势,不测(台账:结构性趋势,没有周期)"
+  },
+  "fingerprint": "e050e2f93cce65a0"
 }

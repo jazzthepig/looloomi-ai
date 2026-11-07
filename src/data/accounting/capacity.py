@@ -9,6 +9,8 @@ Jazz 10-12:「AUM 先解决 30M,之后再达到 500M。我们需要定好设计�
 - 成交额是全市场报告值(CoinGecko 聚合 / EODHD),我们能下单的场所的深度更低;场所检查另列。
 - **场所口径(T-082 B,11-02):** `venue_depth_snapshots`(HL 现货 / 永续 ±2% 深度,7 天中位,min(买, 卖))÷ 仓位比例
   = 一次吃进 ±2% 以内能建的最大规模 —— 冰山看不见,是**下限**;全市场口径是上限。两列并排,不合成一个数。
+- **场所成交口径(11-06):** 同一个式子换成场所自己的 24h 成交(`venue_depth_snapshots.day_ntl_vlm_usd`,7 天中位)
+  = 在**我们真下单的场所**按 10% 参与率五天建满的最大规模 —— 与全市场口径只差成交额来源,两者之比就是 T-082 验收 ④ 要的「差几倍」。
 """
 from __future__ import annotations
 
@@ -97,8 +99,9 @@ async def _adv() -> dict[str, float]:
 
 
 def book_venue(weights: Mapping[str, float], vcap: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
-    """纯函数。账本的场所口径:每个持仓 ±2% 深度(min 边)÷ 权重,取最小;没有深度数据的持仓单列(不当成无限深)。"""
-    caps, missing = [], []
+    """纯函数。账本的场所口径:每个持仓 ±2% 深度(min 边)÷ 权重,取最小;没有深度数据的持仓单列(不当成无限深)。
+    有场所成交的持仓再按「场所日成交 × 参与率 × 建仓天数 ÷ 权重」取最小(`venue_flow_*`);缺成交的持仓同样单列。"""
+    caps, flows, missing, missing_vol = [], [], [], []
     for sym, w in weights.items():
         if not w or w <= 0:
             continue
@@ -106,14 +109,32 @@ def book_venue(weights: Mapping[str, float], vcap: Mapping[str, Mapping[str, Any
         d2 = v.get("depth_2pct_min_usd")
         if not d2:
             missing.append(sym)
-            continue
-        caps.append((d2 / w, sym, w, v.get("venue")))
-    if not caps:
-        return {"venue_capacity_aum_usd": None, "venue_binding": None, "missing_depth": missing}
-    cap, sym, w, venue = min(caps)
-    return {"venue_capacity_aum_usd": round(cap, 0), "venue_binding": {"symbol": sym, "weight": w, "venue": venue},
-            "venue_ok_at_target": cap >= TARGET_AUM_USD, "venue_ok_at_design": cap >= DESIGN_AUM_USD,
-            "missing_depth": missing}
+        else:
+            caps.append((d2 / w, sym, w, v.get("venue")))
+        f = capacity_aum(w, v.get("venue_adv_usd"))
+        if f is None:
+            missing_vol.append(sym)
+        else:
+            flows.append((f, sym, w, v.get("venue")))
+    out: dict[str, Any] = {"venue_capacity_aum_usd": None, "venue_binding": None, "missing_depth": missing,
+                           "venue_flow_capacity_aum_usd": None, "venue_flow_binding": None, "missing_venue_volume": missing_vol}
+    if caps:
+        cap, sym, w, venue = min(caps)
+        out |= {"venue_capacity_aum_usd": round(cap, 0), "venue_binding": {"symbol": sym, "weight": w, "venue": venue},
+                "venue_ok_at_target": cap >= TARGET_AUM_USD, "venue_ok_at_design": cap >= DESIGN_AUM_USD}
+    if flows:
+        cap, sym, w, venue = min(flows)
+        out |= {"venue_flow_capacity_aum_usd": round(cap, 0), "venue_flow_binding": {"symbol": sym, "weight": w, "venue": venue},
+                "venue_flow_ok_at_target": cap >= TARGET_AUM_USD, "venue_flow_ok_at_design": cap >= DESIGN_AUM_USD}
+    return out
+
+
+def market_to_venue(adv: Optional[float], v: Optional[Mapping[str, Any]]) -> Optional[float]:
+    """纯函数。全市场报告成交 ÷ 我们下单场所的成交 = 全市场口径把容量放大了几倍(验收 ④)。任一边缺 ⇒ None。"""
+    va = (v or {}).get("venue_adv_usd")
+    if not adv or not va or adv <= 0 or va <= 0:
+        return None
+    return round(adv / va, 2)
 
 
 async def _venue_capacity() -> dict[str, dict[str, Any]]:
@@ -121,7 +142,8 @@ async def _venue_capacity() -> dict[str, dict[str, Any]]:
     from src.data.style.header import _read_all
     since = (datetime.now(timezone.utc) - timedelta(days=MEDIAN_DAYS)).isoformat()
     rows = await _read_all(TABLE, {"select": "venue,symbol,spread_bps,depth_1pct_bid_usd,depth_1pct_ask_usd,depth_2pct_bid_usd,"
-                                             "depth_2pct_ask_usd,covered_bid_pct,covered_ask_pct", "fetched_utc": f"gte.{since}"})
+                                             "depth_2pct_ask_usd,covered_bid_pct,covered_ask_pct,day_ntl_vlm_usd,open_interest_usd",
+                                   "fetched_utc": f"gte.{since}"})
     return venue_capacity(rows, SATELLITE_POSITION_PCT)
 
 
@@ -134,7 +156,9 @@ async def report() -> dict[str, Any]:
         vwhy = None
     except Exception as e:                                               # noqa: BLE001 — 场所口径读不到不挡全市场口径
         vcap, vwhy = {}, f"{type(e).__name__}: {str(e)[:120]}"
-    assets = [asset_row(s, c.get("class"), adv.get(s)) | {"venue": vcap.get(s.upper())} for s, c in ASSETS_CONFIG.items()]
+    assets = [asset_row(s, c.get("class"), adv.get(s)) | {"venue": vcap.get(s.upper()),
+                                                          "market_to_venue_volume_x": market_to_venue(adv.get(s), vcap.get(s.upper()))}
+              for s, c in ASSETS_CONFIG.items()]
     books = []
     for bid, (table, arm) in WEIGHTED_BOOKS.items():
         rd = await _sb_get(table, {"select": "d,weights", "arm": f"eq.{arm}", "weights": "not.is.null",
@@ -157,11 +181,16 @@ async def report() -> dict[str, Any]:
                         "venue": "venue view: order-book depth within ±2% of mid on the venue we execute on (Hyperliquid "
                                  "spot first, perps otherwise), 7-day median of the thinner side, divided by the position "
                                  "weight = the largest book that fills in one pass within 2%. Hidden size is not visible, so "
-                                 "this is a lower bound; the volume view is an upper bound." + (f" Unreadable now: {vwhy}" if vwhy else "")},
+                                 "this is a lower bound; the volume view is an upper bound." + (f" Unreadable now: {vwhy}" if vwhy else ""),
+                        "venue_flow": "same formula as the volume view, but with the 24h volume on the venue we execute on "
+                                      "(7-day median of snapshots) instead of the volume reported across all venues; "
+                                      "market_to_venue_volume_x = reported volume / venue volume"},
         "summary": {"assets_ok_at_target": sum(a["ok_at_target"] for a in assets),
                     "assets_ok_at_design": sum(a["ok_at_design"] for a in assets), "assets": len(assets),
                     "books_ok_at_design": [b["book"] for b in books if b.get("ok_at_design")],
-                    "books_not_ok_at_design": [b["book"] for b in books if b.get("capacity_aum_usd") and not b.get("ok_at_design")]},
+                    "books_not_ok_at_design": [b["book"] for b in books if b.get("capacity_aum_usd") and not b.get("ok_at_design")],
+                    "books_venue_flow_ok_at_target": [b["book"] for b in books if b.get("venue_flow_ok_at_target")],
+                    "books_venue_flow_ok_at_design": [b["book"] for b in books if b.get("venue_flow_ok_at_design")]},
         "books": books,
         "assets": sorted(assets, key=lambda a: (a["capacity_aum_usd"] is None, a["capacity_aum_usd"] or 0)),
     }

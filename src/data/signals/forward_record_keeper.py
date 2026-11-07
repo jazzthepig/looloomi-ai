@@ -79,17 +79,41 @@ async def _page(key: str, text: str) -> bool:
     return ok
 
 
+REFRESH_TIMEOUT_S = 45.0
+
+
+async def _latest_logged_day() -> str | None:
+    """depth_divergence_log 最新的 d(读不到 ⇒ None,不挡写)。"""
+    try:
+        from src.data.vector.market_state_writer import _sb_get
+        rd = await _sb_get("depth_divergence_log", {"select": "d", "order": "d.desc", "limit": "1"})
+        return str(rd.rows[0]["d"])[:10] if rd.ok and rd.rows else None
+    except Exception:                                      # noqa: BLE001
+        return None
+
+
 async def refresh_depth_divergence_log() -> dict[str, Any]:
     """Job 1: write today's observations, then resolve anything 20 days due."""
     from src.api.store import supabase_rpc_write
 
-    out: dict[str, Any] = {"written": None, "resolved": None, "problems": []}
+    out: dict[str, Any] = {"written": None, "resolved": None, "problems": [], "written_day": None, "recomputed_days": []}
 
-    r1 = await supabase_rpc_write("refresh_depth_divergence", {})
+    # T-231(11-06):函数实测 8.3 s 均值 / 29.4 s 最大,共享客户端 10 s 就放弃并**重试** —— 每次重试再跑一遍函数,
+    # 服务端其实写完了(depth_divergence_log 每天都有行),这里却记 error:10-31 之后 0 次 ok。
+    # SQL 侧已给扫描加下界(9.2 s → 0.8 s);这里再给足 45 s(< 2 × statement_timeout),超时单独说是超时。
+    before = await _latest_logged_day()
+    r1 = await supabase_rpc_write("refresh_depth_divergence", {}, timeout=REFRESH_TIMEOUT_S)
     if r1.ok:
         out["written"] = r1.value
+    elif "no response" in (r1.why or ""):
+        out["problems"].append(f"refresh: no response within {REFRESH_TIMEOUT_S:.0f}s (client timeout, not a refusal) — "
+                               f"the SQL may still have finished; check max(d) of depth_divergence_log")
     else:
         out["problems"].append(f"refresh: {r1.why}")
+    after = await _latest_logged_day()
+    out["written_day"] = after
+    if isinstance(out["written"], int) and out["written"] > 0 and after is not None and after == before:
+        out["recomputed_days"] = [after]          # 写的是已有的那天(重算覆盖),不是新的一天 —— 记录里分开说
 
     r2 = await supabase_rpc_write("resolve_depth_divergence", {})
     if r2.ok:
@@ -138,12 +162,12 @@ async def refresh_depth_divergence_log() -> dict[str, Any]:
     elif w == 0:
         out["problems"].append(
             "refresh wrote 0 rows — the panel has no data for the target date")
-    elif not isinstance(w, int):
+    elif not isinstance(w, int) and r1.ok:          # 调用本身失败时上面已写原因;None 不再落到这个兜底(T-231 ③)
         out["problems"].append(
             f"refresh returned {type(w).__name__} {w!r}, not an int — the SQL "
             f"contract says this is a row count or a negative refusal code. "
             f"Unrecognised is NOT success.")
-    elif w < 0:
+    elif isinstance(w, int) and w < 0:
         out["problems"].append(
             f"refresh REFUSED with unrecognised code {w} — the SQL side added a "
             f"refusal this file has not been taught. Treating it as a problem on "

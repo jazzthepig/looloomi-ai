@@ -488,6 +488,8 @@ async def _forward_record_loop():
                 f"problems={str((r.get('depth_divergence') or {}).get('problems'))[:200]}",
                 detail={"ok":                 _ok,
                         "depth_written":      _w,
+                        "written_day":        (r.get("depth_divergence") or {}).get("written_day"),
+                        "recomputed_days":    (r.get("depth_divergence") or {}).get("recomputed_days"),
                         "forward_verdict":    _rec.get("verdict"),
                         "pit_verdict":        _pit.get("verdict"),
                         "pit_lag_days":       _pit.get("lag_days"),

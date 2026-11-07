@@ -1,0 +1,28 @@
+{
+  "id": "T-272",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-07",
+  "title": "S-751 Binance 下架公告之后 30 天,代币在别的场所还继续跑输吗(公告后,不是公告当天那一跳)—— 判据照台账写死",
+  "source": "REFUTATION_LEDGER S-751(先读;事件筛选 / d0 / 价格源 / 对照 / (a)–(e) 一字不改)。数据:events(source = binance, kind = delisting / perp_delisting)、asset_mcap_daily / ohlcv_daily(source = coingecko_pro_ohlc)、BTC 同源收盘。统计只用 src/data/evaluation/apparatus.py。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-272.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 先写「整个代币下架」的筛选规则并对全部 368 条标题跑一遍,把纳入 / 排除清单落文件,**之后**才取价格。② (a)–(e) 原始数字;有价 / 无价的代币数。③ 副项只报不判。④ 只算、不改代码、不入库;先落文件再跑。附 docs/research/scenarios/lane-b-T-272.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-272_binance_delisting.md + t272_delisting.py + t272_results.json;卡 notes 写 (a)–(e);in_review,推 lane-b/T-272。"
+  },
+  "prior_value": "下架公告是交易所层面的被迫卖出,事件库里有 368 条、从没量过;若公告后还持续跑输,是 ② 的面板卫生规则,也是 ④ 空票的候选。",
+  "notes": "",
+  "verified": null
+}

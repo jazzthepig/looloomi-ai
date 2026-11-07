@@ -31,11 +31,18 @@ def verdict(n_rows: Optional[int], latest: Optional[str], n_keys: Optional[int],
             "why": f"{n_rows} 天 · 最新 {latest[:10]} 有 {n_keys} 个键"}
 
 
+REFRESH_TIMEOUT_S = 60.0
+
+
 async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
-    from src.api.store import supabase_rpc
+    from src.api.store import supabase_rpc_write
     from src.data.vector.market_state_writer import _sb_get
     now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
-    n = await supabase_rpc(RPC)
+    # 11-06:两个物化视图一起刷,实测均值 9.2 s、最大 12.2 s;共享客户端 10 s 就放弃 ⇒ 24 小时里 4 次「没返回行数」(其实刷完了)
+    r = await supabase_rpc_write(RPC, {}, timeout=REFRESH_TIMEOUT_S)
+    if not r.ok:
+        return {"ok": False, "why": f"{RPC} 调用失败(客户端 {REFRESH_TIMEOUT_S:.0f} s):{(r.why or '')[:160]}"}
+    n = r.value
     if isinstance(n, list):
         n = n[0] if n else None
     if isinstance(n, dict):

@@ -18,6 +18,25 @@
      "variable": "close:BTC", "op": "gt", "lo": 75000, "prob": 0.50, "horizon_d": "2026-12-01"},
     {"id": "T-264-6", "scenario": "T-264 区间参照量 · 买盘占比",
      "statement": "2026-12-01 时 panel 的 taker_buy_share_30d 高于 0.50(2026-11-05 为 0.5036;这是今天能读到的『谁在买』的代理量,不是场所份额)",
-     "variable": "state:taker_buy_share_30d", "op": "gt", "lo": 0.50, "prob": 0.55, "horizon_d": "2026-12-01"}
+     "variable": "state:taker_buy_share_30d", "op": "gt", "lo": 0.50, "prob": 0.55, "horizon_d": "2026-12-01"},
+
+    {"id": "T-264-7", "scenario": "S-742 v2 实跑 · T2 反向读数是否在新窗口仍然成立",
+     "statement": "S-742 五检验实跑后:T2(F2 韩国现货份额 365 天分位 → BTC 永续 30 天对数收益)实测 IC +0.1474,方向与台账预注册的『负』相反,反向单侧 p=0.042。若日后在新的前向窗口(2026-11-06 之后)重跑,同一构造下该 IC 仍为正且 |IC| ≥ 0.10 —— 属探索性读数的确认,不是本卡改判",
+     "variable": "manual", "op": "gt", "lo": 0.10, "prob": 0.45, "horizon_d": "2027-02-28"},
+    {"id": "T-264-8", "scenario": "S-742 v2 实跑 · T4 回撤方向(更浅而非更深)",
+     "statement": "S-742 五检验实跑后:T4(F3 衍生品÷现货 365 天分位 → BTC 30 天最大回撤)实测 IC +0.1707,方向与台账预注册的『更深』相反。若日后在新的前向窗口重跑,同一构造下 F3 与回撤的秩相关仍为正(高杠杆占比 ⇒ 更浅回撤),则台账该条方向应重写 —— 探索性,需另立预注册",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.45, "horizon_d": "2027-02-28"},
+    {"id": "T-264-9", "scenario": "T-264 v2 · 场所份额水平继续下行",
+     "statement": "2026-12-31 时 venue:coinbase_share_spot30 低于 0.0688(2026-11-05 值,自 2021-01-30 的 0.0878 持续下行;只判水平,不判方向含义)",
+     "variable": "manual", "op": "lt", "hi": 0.0688, "prob": 0.60, "horizon_d": "2026-12-31"},
+    {"id": "T-264-10", "scenario": "T-264 v2 · 衍生品占比仍在 5 以上",
+     "statement": "2026-12-31 时 venue:deriv_to_spot30 高于 5(2026-11-05 值 5.7726,自 2021-01-30 的 2.4606 单调上行;只判水平)",
+     "variable": "manual", "op": "gt", "lo": 5, "prob": 0.65, "horizon_d": "2026-12-31"},
+    {"id": "T-264-11", "scenario": "T-264 v2 · 区间参照量 · BTC 价位(第二读数)",
+     "statement": "2026-12-31 时 BTC(binance_hist,ohlcv_daily)收盘价高于 70000(2026-11-05 收 76088;只判价位,不判方向)",
+     "variable": "close:BTC", "op": "gt", "lo": 70000, "prob": 0.50, "horizon_d": "2026-12-31"},
+    {"id": "T-264-12", "scenario": "T-264 v2 · 区间参照量 · 链上永续份额(副项,只描述)",
+     "statement": "2026-12-31 时 venue:onchain_perp_share30 高于 0.0895(2026-11-05 值,自 2023-09-08 的 0.0012 结构性上行;台账写明此项只描述走势不测)",
+     "variable": "manual", "op": "gt", "lo": 0.0895, "prob": 0.65, "horizon_d": "2026-12-31"}
   ]
 }

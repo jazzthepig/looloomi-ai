@@ -1,0 +1,571 @@
+{
+  "card": "T-268",
+  "prereg": "S-745",
+  "spec": {
+    "start": "2022-06-01",
+    "end": "2026-10-05",
+    "split": "2024-07-01",
+    "block": 60,
+    "n_boot": 2000,
+    "seed": 745,
+    "horizon_d": 30,
+    "bands": [
+      -0.1,
+      0.1
+    ],
+    "brier_def": "三档 one-vs-rest 二元 Brier 的平均(每档用 apparatus.brier)",
+    "pit_rule": "每天 d 只用 x + 30 ≤ d 的历史日(含无条件频率)",
+    "close_source_primary": "perp_bv_daily symbol=eq.BTC",
+    "close_source_secondary": "ohlcv_daily symbol=eq.BTC source=eq.binance_hist",
+    "fused_ks": [
+      100,
+      150,
+      250
+    ],
+    "orig_ks": [
+      100,
+      150,
+      250
+    ]
+  },
+  "data": {
+    "fm_rows": 2866,
+    "msv_rows": 2532,
+    "msv_days": 2532,
+    "perp_days": 2501,
+    "spot_days": 3368,
+    "state_daily_rows": 31526,
+    "bucket_days": 2866,
+    "fused_vector_days": 2866,
+    "perp_range": [
+      "2019-12-31",
+      "2026-11-05"
+    ],
+    "msv_zero_vec_rows": 179
+  },
+  "primary": {
+    "n_common": 1587,
+    "brier_fused": 0.20657675509346776,
+    "brier_orig": 0.20674807582440666,
+    "brier_base": 0.20679780550304558,
+    "brier_clim_pit": 0.2063848828709495,
+    "skill_fused": -0.0009296815728419006,
+    "skill_orig": -0.0017597846722341437,
+    "skill_base": -0.0020007406858102428,
+    "a_fused_lt_orig": true,
+    "a_fused_lt_base": true,
+    "d_skill_fused_gt_0": false,
+    "brier_by_cat": {
+      "fused": {
+        "down": 0.1461741071203529,
+        "flat": 0.26361572400756145,
+        "up": 0.20994043415248897
+      },
+      "orig": {
+        "down": 0.14376517265280403,
+        "flat": 0.26644530245746695,
+        "up": 0.21003375236294897
+      },
+      "base": {
+        "down": 0.14272369817265282,
+        "flat": 0.26672714240705736,
+        "up": 0.21094257592942656
+      },
+      "clim": {
+        "down": 0.1422975276252043,
+        "flat": 0.2689800092768201,
+        "up": 0.20787711171082413
+      }
+    },
+    "b_paired_block_bootstrap": {
+      "n": 1587,
+      "block": 60,
+      "n_boot": 2000,
+      "seed": 745,
+      "mean_diff": -0.00017132073093887774,
+      "ci95": [
+        -0.0066141470541902945,
+        0.00612349029090527
+      ],
+      "p_mean_le_0": 0.516
+    },
+    "b_permutation_null": {
+      "why": "零分布没有方差(全部 ≈ np.float64(-0.00017132073093887858),跨度 7.8e-18)—— 打乱没有改变任何东西"
+    },
+    "c_segments": {
+      "2022-06-01 → 2024-07-01": {
+        "n": 761,
+        "brier_fused": 0.22081872098116515,
+        "brier_orig": 0.21880360096364435,
+        "brier_base": 0.21696843889618922,
+        "brier_clim": 0.2148860142474472,
+        "fused_le_orig": false,
+        "skill_fused": -0.027608621968697733,
+        "skill_orig": -0.01823099902484082
+      },
+      "2024-07-01 →": {
+        "n": 826,
+        "brier_fused": 0.19345552502017757,
+        "brier_orig": 0.19564123002421308,
+        "brier_base": 0.1974275246166263,
+        "brier_clim": 0.19855272672383725,
+        "fused_le_orig": true,
+        "skill_fused": 0.025671778916183108,
+        "skill_orig": 0.014663594641405875
+      }
+    },
+    "c_all_segments_fused_le_orig": false
+  },
+  "secondary": {
+    "K_variants": {
+      "K=100": {
+        "n_common": 1587,
+        "brier_fused": 0.207805875026255,
+        "brier_orig": 0.20843944948540225,
+        "brier_base": 0.20679780550304558,
+        "brier_clim": 0.2063848828709495,
+        "skill_fused": -0.006885156197191211,
+        "skill_orig": -0.009955024737627882,
+        "skill_base": -0.0020007406858102428,
+        "fused_lt_orig": true,
+        "paired_block_bootstrap": {
+          "n": 1587,
+          "block": 60,
+          "n_boot": 2000,
+          "seed": 745,
+          "mean_diff": -0.000633574459147239,
+          "ci95": [
+            -0.007807408648393196,
+            0.006335273214660783
+          ],
+          "p_mean_le_0": 0.5665
+        },
+        "paired_block_bootstrap_b30": {
+          "n": 1587,
+          "block": 30,
+          "n_boot": 2000,
+          "seed": 745,
+          "mean_diff": -0.000633574459147239,
+          "ci95": [
+            -0.008424907823986558,
+            0.0065237939403486565
+          ],
+          "p_mean_le_0": 0.5625
+        },
+        "paired_block_bootstrap_b90": {
+          "n": 1587,
+          "block": 90,
+          "n_boot": 2000,
+          "seed": 745,
+          "mean_diff": -0.000633574459147239,
+          "ci95": [
+            -0.007178707309388784,
+            0.0059345849401386255
+          ],
+          "p_mean_le_0": 0.5825
+        }
+      },
+      "K=250": {
+        "n_common": 1484,
+        "brier_fused": 0.20290051325247083,
+        "brier_orig": 0.20426742991913746,
+        "brier_base": 0.2048470487421384,
+        "brier_clim": 0.20429445227510354,
+        "skill_fused": 0.006823185882481209,
+        "skill_orig": 0.0001322716092637677,
+        "skill_base": -0.0027049019730145396,
+        "fused_lt_orig": true,
+        "paired_block_bootstrap": {
+          "n": 1484,
+          "block": 60,
+          "n_boot": 2000,
+          "seed": 745,
+          "mean_diff": -0.0013669166666666667,
+          "ci95": [
+            -0.007775737747079964,
+            0.004659656951931708
+          ],
+          "p_mean_le_0": 0.644
+        },
+        "paired_block_bootstrap_b30": {
+          "n": 1484,
+          "block": 30,
+          "n_boot": 2000,
+          "seed": 745,
+          "mean_diff": -0.0013669166666666667,
+          "ci95": [
+            -0.008467125774932615,
+            0.005097474736073673
+          ],
+          "p_mean_le_0": 0.662
+        },
+        "paired_block_bootstrap_b90": {
+          "n": 1484,
+          "block": 90,
+          "n_boot": 2000,
+          "seed": 745,
+          "mean_diff": -0.0013669166666666667,
+          "ci95": [
+            -0.007711354481132075,
+            0.004748842525831084
+          ],
+          "p_mean_le_0": 0.6555
+        }
+      }
+    },
+    "block_lengths": {
+      "30": {
+        "n": 1587,
+        "block": 30,
+        "n_boot": 2000,
+        "seed": 745,
+        "mean_diff": -0.00017132073093887774,
+        "ci95": [
+          -0.00718316965448435,
+          0.006428566152068891
+        ],
+        "p_mean_le_0": 0.5255
+      },
+      "60": {
+        "n": 1587,
+        "block": 60,
+        "n_boot": 2000,
+        "seed": 745,
+        "mean_diff": -0.00017132073093887774,
+        "ci95": [
+          -0.0066141470541902945,
+          0.00612349029090527
+        ],
+        "p_mean_le_0": 0.516
+      },
+      "90": {
+        "n": 1587,
+        "block": 90,
+        "n_boot": 2000,
+        "seed": 745,
+        "mean_diff": -0.00017132073093887774,
+        "ci95": [
+          -0.0061874708097038435,
+          0.005410089083175801
+        ],
+        "p_mean_le_0": 0.52
+      }
+    },
+    "s737_six_states": {
+      "train_days": 710,
+      "train_range": [
+        "2021-03-24",
+        "2023-12-29"
+      ],
+      "spec": {
+        "features": [
+          "mom_20",
+          "mom_60",
+          "mom_200",
+          "dist_200",
+          "vol_30",
+          "vratio_30_180",
+          "breadth_above_ma50",
+          "funding_7d_ann_binance",
+          "taker_buy_share_30d",
+          "stable_supply_30d",
+          "cycle:deterioration",
+          "dvol:btc_pct_1y",
+          "macro:vix"
+        ],
+        "k": 6,
+        "seed": 737,
+        "n_init": 20,
+        "train_window": [
+          "2021-03-01",
+          "2023-12-31"
+        ]
+      },
+      "states": {
+        "S2": {
+          "n": 136,
+          "brier_fused": 0.16825374264705883,
+          "brier_orig": 0.18943086274509804,
+          "brier_base": 0.1889169387254902,
+          "brier_clim": 0.1894068421417062
+        },
+        "S3": {
+          "n": 474,
+          "brier_fused": 0.20253358720112516,
+          "brier_orig": 0.19342972503516176,
+          "brier_base": 0.19649670745428974,
+          "brier_clim": 0.20064888088034571
+        },
+        "S5": {
+          "n": 330,
+          "brier_fused": 0.20748466767676768,
+          "brier_orig": 0.2135064777777778,
+          "brier_base": 0.21204898383838386,
+          "brier_clim": 0.2112194339293968
+        },
+        "S6": {
+          "n": 184,
+          "brier_fused": 0.2377234710144928,
+          "brier_orig": 0.2317253442028986,
+          "brier_base": 0.23334583152173913,
+          "brier_clim": 0.22228526073266863
+        }
+      }
+    },
+    "spot_source": {
+      "n_common": 1588,
+      "brier_fused": 0.2067280375734677,
+      "brier_orig": 0.20632331842989085,
+      "brier_base": 0.20725945151133499,
+      "brier_clim_pit": 0.20775859532234486,
+      "skill_fused": 0.004960361554612103,
+      "skill_orig": 0.0069083875457818245,
+      "skill_base": 0.002402518221859551,
+      "a_fused_lt_orig": false,
+      "a_fused_lt_base": true,
+      "d_skill_fused_gt_0": true
+    },
+    "orig_production_variant": {
+      "note": "acceptance ① 要求原近邻臂排除最近 31 天;生产 knn_rates 没有这个开关(它只靠 fwd 的可得性)。这里是另一口径的对照:近邻 ≤ d−30、不额外排除。",
+      "brier_fused": 0.20657675509346776,
+      "brier_orig_prod": 0.20680175047258978,
+      "brier_clim": 0.2063848828709495,
+      "skill_fused": -0.0009296815728419006,
+      "skill_orig_prod": -0.0020198553103376593,
+      "fused_lt_orig": true,
+      "paired_block_bootstrap": {
+        "n": 1587,
+        "block": 60,
+        "n_boot": 2000,
+        "seed": 745,
+        "mean_diff": -0.00022499537912203257,
+        "ci95": [
+          -0.006707376554295316,
+          0.006110010937828183
+        ],
+        "p_mean_le_0": 0.521
+      }
+    }
+  },
+  "diagnostics": {
+    "replay_days_requested": 1588,
+    "days_with_label": 1587,
+    "days_common_all_three": 1587,
+    "fused_missing_days": 0,
+    "fused_missing_reasons": {},
+    "fused_vec_lag_days": {
+      "0": 1587,
+      "1": 0,
+      "2": 0,
+      "3": 0
+    },
+    "orig_vec_lag_days": {
+      "0": 1587,
+      "1": 0,
+      "2": 0,
+      "3": 0
+    },
+    "orig_fallback_unconditional_days": 0,
+    "base_fallback_all_days": 403,
+    "outcome_mix_common": {
+      "down": 260,
+      "flat": 898,
+      "up": 429
+    },
+    "mean_fwd_days_in_clim": 1647.0044108380591,
+    "fwd_pairs_available": 2471,
+    "msv_zero_vec_rows": 179,
+    "fused_prob_mean": {
+      "down": 0.23959924385633272,
+      "flat": 0.4461474480151229,
+      "up": 0.3142539382482672
+    },
+    "fused_mean_abs_dev_from_clim": 0.053302883819718004,
+    "orig_prob_mean": {
+      "down": 0.24240390674228102,
+      "flat": 0.42778008821676117,
+      "up": 0.3298166351606805
+    },
+    "orig_mean_abs_dev_from_clim": 0.05165990469615981,
+    "base_mean_abs_dev_from_clim": 0.024623290643991765,
+    "sample_days": [
+      {
+        "d": "2022-06-01",
+        "y": "down",
+        "clim": {
+          "down": 0.24355971896955503,
+          "flat": 0.32903981264637,
+          "up": 0.4274004683840749
+        },
+        "fused": {
+          "down": 0.283,
+          "flat": 0.324,
+          "up": 0.393
+        },
+        "orig": {
+          "down": 0.227,
+          "flat": 0.343,
+          "up": 0.43
+        },
+        "base": {
+          "down": 0.285,
+          "flat": 0.278,
+          "up": 0.437
+        },
+        "orig_n": 150,
+        "orig_segs": 4,
+        "base_n": 189,
+        "base_used": "down|NEUTRAL",
+        "fused_vecd": "2022-06-01"
+      },
+      {
+        "d": "2023-04-14",
+        "y": "down",
+        "clim": {
+          "down": 0.2578992314261315,
+          "flat": 0.35354397950469685,
+          "up": 0.3885567890691716
+        },
+        "fused": {
+          "down": 0.286,
+          "flat": 0.35,
+          "up": 0.364
+        },
+        "orig": {
+          "down": 0.216,
+          "flat": 0.394,
+          "up": 0.391
+        },
+        "base": {
+          "down": 0.221,
+          "flat": 0.366,
+          "up": 0.412
+        },
+        "orig_n": 150,
+        "orig_segs": 5,
+        "base_n": 702,
+        "base_used": "up|NEUTRAL",
+        "fused_vecd": "2023-04-14"
+      },
+      {
+        "d": "2024-02-25",
+        "y": "up",
+        "clim": {
+          "down": 0.22513440860215053,
+          "flat": 0.3958333333333333,
+          "up": 0.3790322580645161
+        },
+        "fused": {
+          "down": 0.153,
+          "flat": 0.471,
+          "up": 0.376
+        },
+        "orig": {
+          "down": 0.156,
+          "flat": 0.511,
+          "up": 0.333
+        },
+        "base": {
+          "down": 0.195,
+          "flat": 0.418,
+          "up": 0.388
+        },
+        "orig_n": 150,
+        "orig_segs": 7,
+        "base_n": 964,
+        "base_used": "up|NEUTRAL",
+        "fused_vecd": "2024-02-25"
+      },
+      {
+        "d": "2025-01-07",
+        "y": "flat",
+        "clim": {
+          "down": 0.2027700831024931,
+          "flat": 0.4232686980609418,
+          "up": 0.3739612188365651
+        },
+        "fused": {
+          "down": 0.156,
+          "flat": 0.507,
+          "up": 0.337
+        },
+        "orig": {
+          "down": 0.135,
+          "flat": 0.462,
+          "up": 0.402
+        },
+        "base": {
+          "down": 0.178,
+          "flat": 0.459,
+          "up": 0.363
+        },
+        "orig_n": 150,
+        "orig_segs": 8,
+        "base_n": 1220,
+        "base_used": "up|NEUTRAL",
+        "fused_vecd": "2025-01-07"
+      },
+      {
+        "d": "2025-11-20",
+        "y": "flat",
+        "clim": {
+          "down": 0.19180018850141375,
+          "flat": 0.46182846371347785,
+          "up": 0.34637134778510836
+        },
+        "fused": {
+          "down": 0.142,
+          "flat": 0.605,
+          "up": 0.253
+        },
+        "orig": {
+          "down": 0.18,
+          "flat": 0.473,
+          "up": 0.347
+        },
+        "base": {
+          "down": 0.192,
+          "flat": 0.462,
+          "up": 0.346
+        },
+        "orig_n": 150,
+        "orig_segs": 8,
+        "base_n": 2122,
+        "base_used": "all",
+        "fused_vecd": "2025-11-20"
+      }
+    ],
+    "orig_zero_vector_neighbors": [
+      {
+        "d": "2022-06-01",
+        "n_cand": 853,
+        "near_zero_vec": 38,
+        "near_mean_dist": 4.7729383622299935
+      },
+      {
+        "d": "2023-04-14",
+        "n_cand": 1170,
+        "near_zero_vec": 53,
+        "near_mean_dist": 2.543856327608147
+      },
+      {
+        "d": "2024-02-25",
+        "n_cand": 1487,
+        "near_zero_vec": 0,
+        "near_mean_dist": 2.336516478561403
+      },
+      {
+        "d": "2025-01-07",
+        "n_cand": 1804,
+        "near_zero_vec": 0,
+        "near_mean_dist": 3.3798958823975798
+      },
+      {
+        "d": "2025-11-20",
+        "n_cand": 2121,
+        "near_zero_vec": 0,
+        "near_mean_dist": 3.6953699739244765
+      }
+    ]
+  }
+}

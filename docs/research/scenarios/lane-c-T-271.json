@@ -1,0 +1,17 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {"id": "T-271-1", "scenario": "T-271 ④ 套息真实成本(S-748 口径:15.5bp/次 + 进出场基差)",
+     "statement": "carry_b_top 臂 NAV 在 2026-12-31 时 > 1.005",
+     "variable": "state:carry_b_top", "op": "gt", "lo": 1.005, "prob": 0.55, "horizon_d": "2026-12-31"},
+    {"id": "T-271-2", "scenario": "T-271 ④ 套息真实成本(S-748 口径:15.5bp/次 + 进出场基差)",
+     "statement": "carry_b_top 臂 NAV 在 2027-01-31 时 > 1.01",
+     "variable": "state:carry_b_top", "op": "gt", "lo": 1.01, "prob": 0.45, "horizon_d": "2027-01-31"},
+    {"id": "T-271-3", "scenario": "T-271 ④ 套息真实成本(S-748 口径:15.5bp/次 + 进出场基差)",
+     "statement": "BTC 永续 8 小时资金费 30 日均值在 2026-12-01 仍为正",
+     "variable": "state:funding_btc_30d", "op": "gt", "lo": 0, "prob": 0.62, "horizon_d": "2026-12-01"},
+    {"id": "T-271-4", "scenario": "T-271 ④ 套息真实成本(S-748 口径:15.5bp/次 + 进出场基差)",
+     "statement": "carry_b 臂(全部 22 名规则 B)NAV 在 2026-12-31 时 > 1.005",
+     "variable": "state:carry_b", "op": "gt", "lo": 1.005, "prob": 0.52, "horizon_d": "2026-12-31"}
+  ]
+}

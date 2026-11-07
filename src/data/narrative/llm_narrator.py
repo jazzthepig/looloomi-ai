@@ -116,6 +116,13 @@ def configured() -> bool:
 
 #: 11-02:模型为什么没答(状态码 / 异常 / 未配),留给 `GET /internal/news-feed` 看 —— Railway 日志这边读不到。
 LAST_ERROR: dict = {"at": None, "why": None, "model": _MODEL, "base": _BASE[:40] if _BASE else None}
+#: 11-07:最近一次成功调用的收尾(finish_reason = length ⇒ 被 max_tokens 截断,JSON 不完整)与长度
+LAST_CALL: dict = {"finish_reason": None, "chars": None}
+#: 11-07:compose_ai_briefing 最近一次没出结果的原因(简报循环 24 小时 37 次 refused,原因只有一句「no compliant narrative」)
+LAST_COMPOSE_WHY: dict = {"why": None}
+#: 推理模型先想再答:简报 6–8 个条目 + 思考段,45 秒的默认时限与 4,000 token 都不够(agent 臂同理给了 300 秒 / 12k)
+BRIEFING_TIMEOUT_S = 180.0
+BRIEFING_MAX_TOKENS = 8000
 
 
 _SECRET = re.compile(r"[A-Za-z0-9_\-]{16,}")          # 任何像 token 的长串都抹掉;Bearer 之后整段不留
@@ -153,7 +160,10 @@ async def _chat(messages: list, temperature: float = 0.4, max_tokens: int = 1400
                 return None
             data = r.json()
             _note(None)
-            return (data.get("choices") or [{}])[0].get("message", {}).get("content")
+            ch = (data.get("choices") or [{}])[0]
+            content = ch.get("message", {}).get("content")
+            LAST_CALL.update(finish_reason=ch.get("finish_reason"), chars=len(content or ""))
+            return content
     except Exception as e:
         _logger.warning(f"[NARRATOR] LLM call failed: {e}")
         _note(f"{type(e).__name__}: {str(e)[:160]}")
@@ -211,14 +221,20 @@ async def compose_ai_briefing(facts: dict) -> dict | None:
     items = facts.get("items") or []
     if not items:
         return None
+    LAST_COMPOSE_WHY["why"] = None
     raw = await _chat(
         [{"role": "system", "content": _SYSTEM},
          {"role": "user", "content": _INSTRUCTION + json.dumps(facts, ensure_ascii=False)}],
-        max_tokens=4000,                                                 # 11-05:推理模型先想再答
+        max_tokens=BRIEFING_MAX_TOKENS, timeout=BRIEFING_TIMEOUT_S,      # 11-05 / 11-07:推理模型先想再答
     )
+    if raw is None:
+        LAST_COMPOSE_WHY["why"] = f"no response: {LAST_ERROR.get('why')}"
+        return None
     parsed = _extract_json(raw or "")
     if not parsed or not isinstance(parsed.get("items"), dict):
-        _logger.warning("[NARRATOR] no usable JSON from model — falling back to templates")
+        LAST_COMPOSE_WHY["why"] = (f"no usable JSON (finish_reason={LAST_CALL.get('finish_reason')}, "
+                                   f"{LAST_CALL.get('chars')} chars)")
+        _logger.warning(f"[NARRATOR] {LAST_COMPOSE_WHY['why']} — falling back to templates")
         return None
 
     out_items: dict = {}
@@ -228,6 +244,9 @@ async def compose_ai_briefing(facts: dict) -> dict | None:
         if cleaned:
             out_items[iid] = cleaned
     if not out_items:               # everything got rejected/empty — no AI value, use templates
+        hits = sorted({m.group(0).lower() for v in parsed["items"].values() if isinstance(v, str) for m in _BANNED.finditer(v)})
+        LAST_COMPOSE_WHY["why"] = (f"all {len(items)} items empty or rejected by the compliance filter"
+                                   + (f" (words: {', '.join(hits[:6])})" if hits else ""))
         return None
     headline = _clean(parsed.get("headline") or "")
     return {"headline": headline, "items": out_items,
