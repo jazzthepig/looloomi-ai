@@ -1,0 +1,28 @@
+{
+  "id": "T-293",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-07",
+  "title": "S-774 按币资金面空间(asset_flow_daily,11 维)的横截面排序力:近邻臂 / Ridge 臂 对 只用 mom30 的基线,走步样本外",
+  "source": "REFUTATION_LEDGER S-774(只读这一条;grep)。数据:asset_flow_daily(物化视图,anon 可读;列 symbol, d, n_cs, 11 个原始维, q_* 百分位, vec(11 维,字符串 '[…]'), x7, x30)。近邻函数 asset_flow_knn(p_symbol, p_d, p_k, p_h)(RPC,只用于抽查)。说明见 src/data/state/asset_flow.py 的模块头(只读)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-293.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "预注册(S-774 原文)照抄进报告开头,只算一次。① 一次拉全表(select=symbol,d,vec,x30,q_mom30,n_cs + 11 个 q_*;翻页带 order=symbol.asc,d.asc)落本地文件,之后只读文件。② 近邻在本地用 numpy 复现 asset_flow_knn:欧氏距离、只用 d' < t − 30 且 x30 非空的行、k = 100;**先抽 20 个 (币, 周一) 与 RPC 对照**,近邻集合重合 ≥ 95% 才往下(写进报告)。③ Ridge 臂 / mom30 基线走步(每个周一只用 d' < t − 30 训练,alpha 10)。④ 报 S-774 列的全部指标与判定;只报项照列。零分布 / NW 只用 src/data/evaluation/apparatus.py。纪律:只算、不改代码、不做 DDL、不入库;脚本改同一个文件再跑;长计算 nohup 后台、下一轮收;步数过半先落文件;省着用上下文(不整读台账)。",
+    "expect": "报告 docs/research/T-293_asset_flow_ic.md + t293_asset_flow.py + t293_results.json + docs/research/scenarios/lane-c-T-293.json(≥ 3 条);卡 notes 写 K / R / B 的 IC 均值、NW t、两半、打乱分位、最低五分位 x30 与判定;in_review,推 lane-c/T-293。"
+  },
+  "prior_value": "高维族:Asset 空间第一次有「因」的维度(资金费 / 杠杆 / 散户 / 大户分歧 / 主动买卖 / 成交暴增 + 价格相位)。单维的拥挤量都不过;这里检验组合的几何。",
+  "notes": "",
+  "verified": null
+}

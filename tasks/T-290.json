@@ -1,0 +1,28 @@
+{
+  "id": "T-290",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-07",
+  "title": "S-769 散户注意力尖峰之后:CoinGecko 热搜新上榜、Santiment 社交量暴增的币,7 / 30 天相对篮子跑输吗",
+  "source": "REFUTATION_LEDGER S-769。数据:trending_log(2026-06-26 起,recorded_at 一天多次;按 UTC 日折成「当天在榜」)、social_daily(source = santiment,metric = social_volume_total / sentiment_weighted_total,2025-10-20 → 2026-10-08)、asset_mcap_daily(价与市值,d = 当日收盘)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-290.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "预注册(S-769 原文)照抄进报告开头,只算一次。A 热搜:连续 7 天不在榜后第一次上榜的日 = d;B 社交量:z(对自身前 90 天,≥ 60 个观测)≥ 3,同代号 30 天去重;C 情绪 z ≤ −3 只报。进场 d+1 收盘 → +7 / +30 收盘;超额 = 代币 − 时点等权篮(当天有价、市值 ≥ 2,000 万);随机日对照同代号同季度 1,000 次,种子 769。报 n、中位、为负比例、分位、按日期中点两半、最差 / 最好 10%、无价个数;代号映射(trending 的 coingecko_id / santiment slug → asset_mcap_daily)的命中率。判照 S-769(A、B 各自,BH)。纪律:只算、不改代码、不做 DDL、不入库;零分布 / 盈亏只用 src/data/evaluation/apparatus.py;翻页带 order=;事件清单先落文件再取价;探针脚本改同一个文件再跑;步数过半先落文件;省着用上下文(读台账只读本条与引用条,grep 不整读)。",
+    "expect": "报告 docs/research/T-290_attention_spikes.md + t290_attention.py + t290_results.json + scenarios/lane-a-T-290.json(≥ 3 条);in_review,推 lane-a/T-290。"
+  },
+  "prior_value": "对手盘族第二条:散户买「看见的」。两段数据都短 ⇒ 过了也只是前向记录立项。",
+  "notes": "",
+  "verified": null
+}

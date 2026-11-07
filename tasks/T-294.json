@@ -1,0 +1,28 @@
+{
+  "id": "T-294",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-07",
+  "title": "S-775 S-81 的正确形态:扩散按币的资金流(新开杠杆 / 主动买 / 成交暴增)而不是价格反射 —— 邻居先动、自己没动的币之后 7 天跑赢吗",
+  "source": "REFUTATION_LEDGER S-775 与 S-81(只读这两条;grep)。代码只用 src/data/vector/propagation.py 的 build_similarity_graph / propagate / entanglement_delta(只读,不改)。数据:asset_flow_daily(q_doi7 / q_taker7 / q_turn / q_mom7 / x7 / x30 / vec)、perp_bv_daily(USDT 永续日收盘,算 90 天相关)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-294.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "预注册(S-775 原文)照抄进报告开头,只算一次。① 两张表各拉一次落本地文件(翻页带 order=),之后只读文件。② 每个周一建场(90 天去均值收益,≥ 60 天重叠,k 10,min_sim 0.10)、四个源(C1 doi7 / C2 taker7 / C3 turn / R1 mom7,居中百分位)、α 0.5 扩散、e = p − s。③ 报 S-775 列的全部指标与判定(C1–C3 BH,主目标 x7);只报项照列(x30、R1、p 单独、k / α 敏感、资金面向量做场)。④ 抽 3 个周一手算一个币的 p 与 propagate 输出对照。零分布 / NW 只用 src/data/evaluation/apparatus.py。纪律:只算、不改代码、不做 DDL、不入库;长计算 nohup 后台、下一轮收;步数过半先落文件;省着用上下文。",
+    "expect": "报告 docs/research/T-294_flow_diffusion.md + t294_diffusion.py + t294_results.json + docs/research/scenarios/lane-a-T-294.json(≥ 3 条);卡 notes 写 C1–C3 与 R1 的 IC(e)、IC(s)、差、NW t、两半、打乱分位与判定;in_review,推 lane-a/T-294。"
+  },
+  "prior_value": "HIGH_DIM_ONTOLOGY §1 / §3 的核心命题(beta+ 是时间向量,edge = lag)第一次有真实的按币流量数据可测;S-81 07-23 起一直卡在「等数据」。",
+  "notes": "",
+  "verified": null
+}

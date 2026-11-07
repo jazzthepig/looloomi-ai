@@ -1,0 +1,29 @@
+{
+  "id": "T-291",
+  "owner": "lane-c",
+  "status": "blocked",
+  "blocked_by": "data:events source=upbit 公告回填完(kind=listing ≥ 200 条且 min(ts) < 2018-06-01;_korea_retail_loop 每轮 5 页,约 9 轮)",
+  "created": "2026-11-07",
+  "title": "S-770 韩国散户的上币狂热:Upbit KRW 上币公告之后 30 天,全球价相对篮子跑输吗(对照 S-763 Binance);另报 Upbit 下架 / 유의 종목 지정",
+  "source": "REFUTATION_LEDGER S-770、S-763(Binance 版,只读结果段)。数据:events(source = upbit;payload.krw;kind = listing / delisting / warning / warning_extend / warning_lift / caution_urge)、asset_mcap_daily、ohlcv_daily(binance_hist,判断公告时是否已在 Binance 现货)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-291.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "预注册(S-770 原文)照抄进报告开头,只算一次。事件 = 每个代号第一次 KRW 上币(payload.krw = true;krw 为空的单列只报);d = 公告 UTC 日;d+1 收盘 → +30 收盘,全球价;超额 = 代币 − 时点等权篮;随机日同代号同年 1,000 次,种子 770;两段 2017–2021 / 2022–2026;分组只报:公告时已在 Binance 现货与否、前 30 天涨幅三分位;报无价个数。另报(不判)delisting 与 warning 同口径。纪律:只算、不改代码、不做 DDL、不入库;零分布 / 盈亏只用 src/data/evaluation/apparatus.py;翻页带 order=;事件清单先落文件再取价;探针脚本改同一个文件再跑;步数过半先落文件;省着用上下文(读台账只读本条与引用条,grep 不整读)。",
+    "expect": "报告 docs/research/T-291_upbit_listing.md + t291_upbit.py + t291_results.json + scenarios/lane-c-T-291.json(≥ 3 条);in_review,推 lane-c/T-291。"
+  },
+  "prior_value": "对手盘族第三条;S-763 是 Binance 的版本(上币后 30 天 −21.4%)。韩国是散户为主的所,如果「开闸是高位」在散户所更强,那是因果方向的证据。",
+  "notes": "",
+  "verified": null
+}
