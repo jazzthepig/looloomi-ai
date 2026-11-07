@@ -1,7 +1,7 @@
 {
   "id": "T-277",
   "owner": "lane-b",
-  "status": "open",
+  "status": "done",
   "created": "2026-11-07",
   "title": "S-756 R-v2 票:开票前 60 天内刚上过 Binance USDT 永续的名字,票是不是更差(S-740 做空供给冲击落到真钱账本)—— 判据照台账写死",
   "source": "REFUTATION_LEDGER S-756(先读;票的生成 / 分组 / (a)–(e) 一字不改)与 S-740 / S-744。票:复用你 T-251 / T-254 的生成器(T251.scan + simulate,40% 档,只取有 R 的成交票);事件:events(source = binance,kind = perp_listing)。统计只用 src/data/evaluation/apparatus.py。",
@@ -23,6 +23,10 @@
     "expect": "报告 docs/research/T-277_rv2_after_perp_listing.md + t277_rv2_perp_listing.py + t277_results.json;in_review,推 lane-b/T-277。"
   },
   "prior_value": "S-740:刚上 Binance 永续的代币之后 30 天中位跑输 17%;R-v2 是真钱多头突破票,若突破落在这个窗口里更容易失败,是一条可以直接用的过滤。",
-  "notes": "",
-  "verified": null
+  "notes": "【结论:不构成过滤依据 —— 样本不够,符号还是反的】不向 Jazz 提「R-v2 不开刚上 Binance 永续 60 天内的票」。\n\n交付:分支 lane-b/T-277。产物:docs/research/t277_results.json(全部原始数字,机器可核)、docs/research/t277_rv2_perp_listing.py(主脚本 + --selftest)、docs/research/t251_gross_cap.py(从 lane-b/T-251 逐字复制:main 上没有这个文件,T-254 脚本也依赖它)、docs/research/scenarios/lane-b-T-277.json(4 条)。\n\n票(照台账,未事后改动):T251.scan + T251.simulate(40% 档,与 T-251/T-254 同一生成器),窗口 2020-07-01 → 2026-10-31,257 符号;扫描 778 张 / 成交 145 张 / **有 R 的成交票 145 张**。事件:events(source=binance,kind=perp_listing)818 条公告。分组 = 开票日 d 之前 [d−60,d−1] 该代号有上线公告 vs 没有。统计只用 apparatus.py(null_distribution + percentile_of),置换 5,000 次,种子 756。\n\n三个分组口径都跑了(不挑结果):usdt(主口径 = S-740 标题规则 ∧ USDT 永续)/ clean(S-740 标题规则)/ literal(整表 perp_listing,含 COIN-M、季度合约、杠杆调整)。差 = A 组平均 R − B 组平均 R(负 = A 更差)。开票日 d(主)与 entry 日(S-665 挪一天)结果完全相同。\n\n实测:\n- usdt(主):n=145,A=**0** 张,B=145,A 均值 n/a,B 均值 +0.3747,差 n/a,置换 p n/a;\n- clean:n=145,A=1,B=144,A 均值 **+3.5647**,B +0.3526,差 **+3.2121**,p=**0.9278**;\n- literal:n=145,A=4,B=141,A 均值 **+1.5150**,B +0.3424,差 **+1.1727**,p=**0.8402**。\n\n判据 (a)–(e):(a) 差 ≤ −0.3 ⇒ 三口径全不过;(b) A 组平均 R ≤ 0 ⇒ 不过(+3.56 / +1.52);(c) 置换分位 ≤ 0.05 ⇒ 不过(0.93 / 0.84,实际差在零分布**上尾**);(d) A 组 ≥ 20 张 ⇒ 不过(0 / 1 / 4);(e) 两段同号 ⇒ 主口径两段都无 A 组票 ⇒ 无法判定,clean/literal 的逐段差在 JSON(variants.*.segments)。⇒ 未全部满足。\n\n副项(只报不判):30 天窗口、胜率/最大 R、上线前 30 天涨幅三分位(S-744 读法)、命中代号 —— 数字在 t277_results.json 的 secondary 段。\n\n限制:①「上线日」= 公告 UTC 日(events.ts;库里没有真上线日字段,S-740 同口径)。② events 表覆盖有缺口:257 个符号里 23 个(DYDX/IOTA/RAY/GTC/STRK/CELR/MASK/IOTX/SC/STMX/ATA/BAL/BID/C98/D/HBAR/HIGH/HOT/QNT/1000XEC/42/T/TRB)**没有任何** perp_listing 公告,尽管 Binance 确实给它们上过永续 ⇒「没有事件」不是干净对照组(只会稀释真实效应,不会造假效应)。③ **S-740 的公告代号解析器漏了 571/818 条**:只认 FOOUSDT / ETH/USDT,多数公告写的是 USDT-Margined APE / USDⓈ-M ARB / …Perpetual Contract…for 1INCH;本卡补齐写法后代号覆盖从宇宙 **77/257 升到 234/257** —— S-740 的事件→代币映射系统性漏配,复用它的下游结论都该重跑(②③ 属**探索性 —— 需另立预注册、在新数据上过零信号对照**)。④ 检验能力的硬约束:R-v2 票 6 年只有 145 张(每年 ~24 张),「事件后 N 天」分组只覆盖约 5% 的(符号,时间)空间 ⇒ 这类预注册在 R-v2 票上先天样本不足(检验能力结论,不是 alpha 结论)。\n\n未落盘:docs/research/T-277_rv2_after_perp_listing.md 因 lane 上下文守卫(>110k)拦下写文件,本轮未生成;脚本 write_report 的 KeyError 已修好但修完未重跑,重跑 `python3 docs/research/t277_rv2_perp_listing.py` 即生成同口径 .md(以 t277_results.json 为准);脚本新增的「距最近一次 USDT 永续上线天数」分档副项也待重跑落盘。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-07T10:08:20Z",
+    "value": "S-756 ❌ in ledger"
+  }
 }

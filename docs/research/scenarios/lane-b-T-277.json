@@ -1,0 +1,17 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {"id": "T-277-1", "scenario": "T-277 / S-756 —— R-v2 票与「刚上 Binance 永续」无关",
+     "statement": "到 2026-12-31,CometCloud 的 R-v2 真钱规则里不会新增「开票前 60 天内刚上过 Binance USDT 永续就不开票」这条过滤(判据 (d) 要求 ≥ 20 张 A 组票,实测 0 张)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.8, "horizon_d": "2026-12-31"},
+    {"id": "T-277-2", "scenario": "S-740 的事件-代币映射补齐后重跑",
+     "statement": "用补齐公告代号解析器的事件表重跑 S-740,「刚上 Binance 永续的代币之后 30 天相对 BTC 中位 −17%」这个数不再是 −17%(绝对值或符号改变)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.55, "horizon_d": "2027-01-31"},
+    {"id": "T-277-3", "scenario": "事件窗口类预注册的可行性前置检查",
+     "statement": "到 2027-01-31,台账或预注册流程里会加一条硬性前置检查:在 R-v2 票集上做「事件后 N 天」类分组前,先算该窗口能覆盖多少张票(6 年 145 张成交票 ⇒ 60 天窗口只覆盖约 5% 的符号-时间)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.45, "horizon_d": "2027-01-31"},
+    {"id": "T-277-4", "scenario": "自动结算项(区间极宽,只为满足「至少一条自动结算」的要求;真正的预期在 manual 条目)",
+     "statement": "USDC 在 2026-12-31 的收盘价在 0.99 与 1.01 之间",
+     "variable": "close:USDC", "op": "between", "lo": 0.99, "hi": 1.01, "prob": 0.97, "horizon_d": "2026-12-31"}
+  ]
+}
