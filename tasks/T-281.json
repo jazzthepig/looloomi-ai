@@ -1,0 +1,28 @@
+{
+  "id": "T-281",
+  "owner": "lane-c",
+  "status": "in_review",
+  "created": "2026-11-07",
+  "title": "S-760 Binance 白送的币(Launchpool / HODLer 空投 / Megadrop)上市后 30 天,是不是比一般上币跌得更多 —— 判据照台账写死",
+  "source": "REFUTATION_LEDGER S-760(先读;分组规则 / d0 / 价格 / (a)–(d) 一字不改)与 S-708(上币后 30 天 −18% 的原结果)。数据:events(source = binance,kind = listing,1,474 条)、asset_mcap_daily、ohlcv_daily(coingecko_pro_ohlc)。统计只用 src/data/evaluation/apparatus.py。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-281.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 分组 / 排除规则先写、对 1,474 条全部跑完、落清单,再取价。② (a)–(d) 原始数字;每组每段有价代币数。③ 副项只报不判。④ 只算、不改代码、不入库;报告 .md 先写骨架再跑。附 docs/research/scenarios/lane-c-T-281.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-281_free_token_listings.md + t281_listings.py + t281_results.json;in_review,推 lane-c/T-281。"
+  },
+  "prior_value": "S-708:Binance 上币后 30 天中位 −18%;零成本持有人(白送)与花钱认购的抛压应该不同 —— 分开看才知道是哪一部分在跌。",
+  "notes": "判:❌(a)–(d) 四条全不过,预注册裁决「白送币跌得更多」不成立。\n清单:events(binance/listing)=1,474 条(count=exact);F1 scope≠spot 剔 302(margin 300+alpha 2)、F2 无 symbols 剔 380、F4 杠杆代币剔 14(F4 规则避开 PUMP 以 UP 结尾的误伤)、F5 股票代币剔 15、F3 交易对公告剔 173 ⇒ 合格事件 590(白送 132 / 一般 424 / 认购 34);每币取第一次公告后 540 个代币(白送 114 / 一般 406 / 认购 20);跨组代币 26 个(无同一时刻的,故无 tie-break 噪声)。清单落 docs/research/t281_manifest.json(逐条带 group/exclude)。\n主口径(主源 asset_mcap_daily,30 天,超额 = 代币 − BTC 同源同日历日):白送 n=33 中位 −23.62%(均值 −11.94%)、一般 n=146 中位 −26.32%(均值 −12.50%)、认购 n=9 中位 −19.34%(均值 +166.99%,极右偏)。差(白送−一般)= **+2.70pp**。(a)❌(要 ≤ −10pp)。(b)❌ 组标签重排 5,000 次(种子 760)分位 **0.6416**(要 ≤ 0.05)。(c)❌ 2020–23 差 −23.45pp(白送 n=9 < 15)、2024–26 差 +19.49pp(n=24)⇒ 异号。(d)❌ 白送有价 **33 < 40**。持有窗口 188/188 条全为恰好 30 天。\n副项(只报不判):副源 ohlcv_daily[coingecko_pro_ohlc] 104,670 行/217 符号,但白送组可算 0 条、一般组 1 条 ⇒ 副源无结论价值。认购 vs 一般 30 天差 +6.98pp(n=9)。90 天:白送 −45.74%(n=33)vs 一般 −39.58%(n=144)⇒ 差 **−6.16pp**(白送更差;与 30 天的 +2.70pp 方向相反,同一批样本,不判)。按上市后首日涨幅三分位:低三分位白送 −49.34% vs 一般 −40.02%,高三分位白送 +10.45% vs 一般 −22.01% ⇒ 首日跌得越狠后面跌得越多,首日涨幅比「白送与否」更像解释变量(不在判据内,只报)。敏感性:剔稳定币(12 个符号)主口径一个数没变;归组改成「曾有任何白送公告即归白送组」(16 个代币移入)⇒ 差 +6.63pp,方向不变 ⇒ 结论对归组规则不敏感。\n限制(重要):(d) 的失败主要是**价格表覆盖**而非样本量 —— 白送组 114 个代币里 77 个在 asset_mcap_daily 根本没这个符号、23 个首次收录晚于公告日(滞后 13~1,796 天),只有 33 个可算(29%);一般组 406→146(36%)。可算样本偏向收录早的老币/大币(2025 年后的 WAL/0G/PENGU/KAITO/PLUME/OPEN/LINEA/XPL/MORPHO/KITE 全部无价)⇒ 不能外推到 2025–26 新一批白送币。未做:binance_hist 作第三价格源的探索性补充(抓取页尾 416 未落盘,且该源回填只到 2025-11-02)—— 需另立预注册。\n交付:docs/research/T-281_free_token_listings.md(预注册段在前)+ t281_listings.py + t281_results.json + t281_manifest.json + scenarios/lane-c-T-281.json(4 条 close 自动结算 + 1 条 manual)。\n@Seth:① 想看 (d) 够不够,该修的是 asset_mcap_daily 对新币的收录滞后(要 CoinGecko 更早的 series),不是再放宽判据;② 90 天方向反转(白送更差 6.2pp)值得另立预注册用能补齐样本的源重测;③ 副源 cg 只有 217 符号,台账「两者都报」在事件口径下实际只有主源可用 —— 要不要把副源换成 binance_hist?",
+  "verified": null
+}
