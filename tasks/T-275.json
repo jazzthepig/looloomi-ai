@@ -1,0 +1,28 @@
+{
+  "id": "T-275",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-07",
+  "title": "S-754 下架之前能不能先看见:Binance 现货成交额排名掉到底部 10% 的名字,之后 90 天被宣布下架的概率与跑输 —— 判据照台账写死",
+  "source": "REFUTATION_LEDGER S-754(先读;宇宙 / 月末 / 特征 / 标记 / (a)–(d) 一字不改)。数据:ohlcv_daily(source = binance_hist,262 个代号含停更的)、delisting_watch(公告时刻)、BTC 同源收盘。统计只用 src/data/evaluation/apparatus.py。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-275.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 每个月末截面的代号数、标记数、结果为真数先落文件,再算判据。② (a)–(d) 原始数字;两段各自的精度与基率。③ 副项只报不判。④ 只算、不改代码、不入库。附 docs/research/scenarios/lane-c-T-275.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-275_delisting_early_warning.md + t275_early_warning.py + t275_results.json;in_review,推 lane-c/T-275。"
+  },
+  "prior_value": "Jazz 11-07 把 Binance 下架公告拍成硬规则;公告前 30 天已跌 34%。若成交额排名能提前看见,规则可以前移到预警。",
+  "notes": "",
+  "verified": null
+}

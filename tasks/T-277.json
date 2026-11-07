@@ -1,0 +1,28 @@
+{
+  "id": "T-277",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-07",
+  "title": "S-756 R-v2 票:开票前 60 天内刚上过 Binance USDT 永续的名字,票是不是更差(S-740 做空供给冲击落到真钱账本)—— 判据照台账写死",
+  "source": "REFUTATION_LEDGER S-756(先读;票的生成 / 分组 / (a)–(e) 一字不改)与 S-740 / S-744。票:复用你 T-251 / T-254 的生成器(T251.scan + simulate,40% 档,只取有 R 的成交票);事件:events(source = binance,kind = perp_listing)。统计只用 src/data/evaluation/apparatus.py。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-277.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 票总数、两组票数、每组平均 R 先落文件,再算判据。② (a)–(e) 原始数字。③ 副项只报不判。④ 只算、不改代码、不入库。附 docs/research/scenarios/lane-b-T-277.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-277_rv2_after_perp_listing.md + t277_rv2_perp_listing.py + t277_results.json;in_review,推 lane-b/T-277。"
+  },
+  "prior_value": "S-740:刚上 Binance 永续的代币之后 30 天中位跑输 17%;R-v2 是真钱多头突破票,若突破落在这个窗口里更容易失败,是一条可以直接用的过滤。",
+  "notes": "",
+  "verified": null
+}
