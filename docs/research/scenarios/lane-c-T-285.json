@@ -1,0 +1,17 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {"id": "T-285-1", "scenario": "T-285 S-758 盲复算",
+     "statement": "BTC 收盘价(ohlcv_daily close:BTC)在 2026-12-15 仍高于 75000",
+     "variable": "close:BTC", "op": "gt", "lo": 75000, "prob": 0.5, "horizon_d": "2026-12-15"},
+    {"id": "T-285-2", "scenario": "T-285 S-758 盲复算",
+     "statement": "把 S-758 的事件集换成 2025-07 之后公告的新一批 Binance USDT 永续上线事件重算,30 天相对 BTC 超额中位仍 ≤ −10%",
+     "variable": "manual", "op": "lt", "hi": -0.10, "prob": 0.6, "horizon_d": "2026-12-15"},
+    {"id": "T-285-3", "scenario": "T-285 S-758 盲复算",
+     "statement": "到 2026-12-15,S-740 / S-758 仍留在账本里(不因本轮复算或口径争论被撤销)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.7, "horizon_d": "2026-12-15"},
+    {"id": "T-285-4", "scenario": "T-285 S-758 盲复算",
+     "statement": "到 2026-12-15,S-758 的事件清单里「Coin-Margined / USDC 本位」那批公告仍留在主样本里(台账 n=142 那版口径不变)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.6, "horizon_d": "2026-12-15"}
+  ]
+}

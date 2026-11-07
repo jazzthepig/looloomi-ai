@@ -236,6 +236,7 @@
 | done | T-275 | lane-c | S-754 下架之前能不能先看见:Binance 现货成交额排名掉到底部 10% 的名字,之后 90 天被宣布下架的概率与跑输 —— 判据照台账写死 | 报告 docs/research/T-275_delisting_early_warning.md + t275_early_warning.py + t275_results.json;in_review,推 lane-c/T-275。 | Jazz 11-07 把 Binance 下架公告拍成硬规则;公告前 30 天已跌 34%。若成交额排名能提前看见,规则可以前移到预警。 | S-754 ❌ in ledger @ 2026-11-07T10:08:20Z |
 | done | T-278 | lane-c | S-757 硬规则回看(只报不判):「Binance 整币下架即剔除」如果一直在,R-v2 回放账本会差多少 | 报告 docs/research/T-278_delisting_rule_retro.md + t278_retro.py + t278_results.json;in_review,推 lane-c/T-278。 | 硬规则已接进真钱计划;它在历史上会挡掉哪些票、代价 / 收益是多少,要有一个基线。 | S-757 result in ledger (rule blocks 0 of 145 replay tickets) @ 2026-11-07T10:21:04Z |
 | done | T-281 | lane-c | S-760 Binance 白送的币(Launchpool / HODLer 空投 / Megadrop)上市后 30 天,是不是比一般上币跌得更多 —— 判据照台账写死 | 报告 docs/research/T-281_free_token_listings.md + t281_listings.py + t281_results.json;in_review,推 lane-c/T-281。 | S-708:Binance 上币后 30 天中位 −18%;零成本持有人(白送)与花钱认购的抛压应该不同 —— 分开看才知道是哪一部分在跌。 | S-760 ❌ in ledger @ 2026-11-07T11:04:40Z |
+| done | T-285 | lane-c | S-764 S-758 盲复算:只看台账文字,自己解析 818 条永续上线公告、自己取价、自己做对照 | 报告 docs/research/T-285_s758_blind_recompute.md + t285_recompute.py + t285_results.json;in_review,推 lane-c/T-285。 | S-758 是事件族第二个站住的结论,要喂 ② 描述和 ④ 空票 —— 进账本之前要第二个人算过。 | S-764 ✅ (S-758 recompute matches) in ledger @ 2026-11-07T12:00:50Z |
 | done | T-004 | seth | 恢复持币集中度写入(holder_concentration_history) | 今天(UTC)有行,source = cg_onchain_top_holders | 2026-08-31 | holder_concentration_history:2026-10-06 与 10-07 各 8 行(8/8 代币),source = cg_onchain_top_holders;_holder_refresh_loop 10-07 01:45 UTC ok「8 tokens」。top-10 占比:ONDO 0.680 / PENDLE 0.675 / UNI 0.585 / MKR 0.517 / LDO 0.499 / ARB 0.465 / AAVE 0.441 / LINK 0.315。 @ 2026-10-07T02:20Z |
 | done | T-008 | seth | Railway 侧:新闻事件表 + mac_writes 白名单 | 201 且 write_log 有行 | 无 | POST /internal/mac-write/narrative-events(rows=[{event_id,date,event_type,narrative_tag,description,related_assets,source_round}])→ 200 verdict=ok n_written=1 n_rejected=0;write_log id=26527 outcome=ok writer=src.api.routers.mac_writes.mac_write;narrative_events 表里 verify 行落成功 @ 2026-09-26T02:01:00Z |
 | done | T-012 | seth | HL 采集器加持仓量(OI) | > 200 个币 | 0(没有存) | open_interest_history 03:00 UTC 一轮写入 234 个币(判据 >200) @ 2026-09-27 |
@@ -285,4 +286,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 14 · claimed 7 · blocked 5 · in_review 49 · done 204 · dropped 3
+open 14 · claimed 7 · blocked 5 · in_review 49 · done 205 · dropped 3

@@ -1,0 +1,32 @@
+{
+  "id": "T-285",
+  "owner": "lane-c",
+  "status": "done",
+  "created": "2026-11-07",
+  "title": "S-764 S-758 盲复算:只看台账文字,自己解析 818 条永续上线公告、自己取价、自己做对照",
+  "source": "REFUTATION_LEDGER S-740(判据)、S-756 / S-758 结果段与 S-764。不看 lane-b 的 t277 / t279 脚本。数据:events(kind = perp_listing)、ohlcv_daily(binance_hist)、BTC 同源。统计只用 src/data/evaluation/apparatus.py。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-285.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 818 条解析清单落文件。② 主口径 n、30 天超额中位、(a)–(d) 判定,与台账逐项对照(n 差 ≤ 5%、中位差 ≤ 1.5pp)。③ 对不上就写出差在哪一步。④ 只算、不改代码、不入库。",
+    "expect": "报告 docs/research/T-285_s758_blind_recompute.md + t285_recompute.py + t285_results.json;in_review,推 lane-c/T-285。"
+  },
+  "prior_value": "S-758 是事件族第二个站住的结论,要喂 ② 描述和 ④ 空票 —— 进账本之前要第二个人算过。",
+  "notes": "复算吻合(S-758 站得住)。【解析】818 条 perp_listing 公告逐条落盘 docs/research/t285_parse_list.json(先于取价);我自己写的标题正则解析器抽出 723 个代号 / 615 条公告(公告类型:上新 749 / 季度·交割 42 / 杠杆调整 21 / 周报 6;保证金标记:USDT 475 / 无标记 276 / Coin-M 40 / BUSD 14 / USDC 13);77 条公告标题里的日期与事件 ts 不同(上线日取标题日期)。【主口径 B:判据一字不改,事件→代号用库里 events.symbols】n=143(台账 142,+0.7% ✅)、30 天超额中位 −20.92%(台账 −21.9%,差 0.98pp ✅)、均值 −15.45%(台账 −16.9%);(a) 中位≤−3% 且均值<0 ✅;(b) 随机日对照 p05 −9.16%(台账 −9.6%)/ 实际分位 0.000 ✅;(c) 2020–2022 n=78 −13.55% / 2023→ n=65 −24.75% 同号 ✅;(d) 去掉上线前 30 天涨超 50% 的那批后丢 79 留 64 −18.49% 同号 ✅;副 60 天 −31.27%(台账 −32.1%)。(a)–(d) 判定与台账逐条不变。【盲对照 C:映射换成我自己的解析器,不看 lane-b 脚本】n=119、中位 −21.84%(差 0.06pp)、均值 −16.85%、p05 −10.09%/分位 0.000、两段同号、(d) 丢 70 留 49 −20.57%、60 天 −31.27% ⇒ 统计量全部落在台账 ±1pp 内,只有 n 差 −16.2%。【③ 差在哪一步】24 个事件落在 Coin-Margined(20)/USDC-Margined(7)/无保证金标记的旧写法(27)这三类公告上:我的解析器只在标题出现「USDT-Margined / USDⓈ-M」时取代号,台账口径把这些公告也算了进去 —— S-740 文字只写「kind=perp_listing(Binance USDT 永续)」,没写死只要 USDT 本位,这是台账该补的一句口径。附带发现:binance_hist 只有 262 个符号且用交易所上架名(1000LUNC/1000000BOB),裸代号要先对齐倍率前缀名才有价(不对齐会静默丢 28 个事件)。【未做】市值三分位副项、上线后 7 天资金费相关(台账 −22.7/−21.1/−14.0 与 Spearman +0.35)本轮没复算,不报数。【纪律】只算,未改 src/、未入库、未动别的 lane 的卡。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-07T12:00:50Z",
+    "value": "S-764 ✅ (S-758 recompute matches) in ledger"
+  }
+}
