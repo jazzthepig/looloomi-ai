@@ -1,0 +1,20 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {"id": "T-281-1", "scenario": "T-281 / S-760 白送组(Launchpool/HODLer 空投/Megadrop)代币的后续价位",
+     "statement": "TLM 在 2027-02-01 的收盘价 < 0.0006588(2026-11-06 收盘 0.001098 的 0.6 倍)",
+     "variable": "close:TLM", "op": "lt", "hi": 0.0006588, "prob": 0.55, "horizon_d": "2027-02-01"},
+    {"id": "T-281-2", "scenario": "T-281 / S-760 白送组(Launchpool/HODLer 空投/Megadrop)代币的后续价位",
+     "statement": "ALICE 在 2027-02-01 的收盘价 < 0.098(2026-11-06 收盘 0.1225 的 0.8 倍)",
+     "variable": "close:ALICE", "op": "lt", "hi": 0.098, "prob": 0.55, "horizon_d": "2027-02-01"},
+    {"id": "T-281-3", "scenario": "T-281 / S-760 白送组(Launchpool/HODLer 空投/Megadrop)代币的后续价位",
+     "statement": "SUI 在 2027-02-01 的收盘价 < 0.73874(2026-11-06 收盘 0.8691 的 0.85 倍)",
+     "variable": "close:SUI", "op": "lt", "hi": 0.73874, "prob": 0.52, "horizon_d": "2027-02-01"},
+    {"id": "T-281-4", "scenario": "T-281 / S-760 白送组(Launchpool/HODLer 空投/Megadrop)代币的后续价位",
+     "statement": "ENA 在 2027-02-01 的收盘价 < 0.1637(2026-11-06 收盘 0.1637 的 1.0 倍)",
+     "variable": "close:ENA", "op": "lt", "hi": 0.1637, "prob": 0.45, "horizon_d": "2027-02-01"},
+    {"id": "T-281-5", "scenario": "T-281 / S-760 白送 vs 一般上币的 30 天超额差在新样本上会不会复活",
+     "statement": "未来 40 个新的 Binance 上币事件里,白送组 30 天超额中位比一般组低 ≥ 10pp",
+     "variable": "manual", "op": "lt", "hi": -0.10, "prob": 0.25, "horizon_d": "2027-02-01"}
+  ]
+}
