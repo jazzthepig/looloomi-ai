@@ -1,0 +1,35 @@
+{
+ "note": "探索性:关键词分类;主判据未改;各层没有独立零分布对照,不做多重比较校正",
+ "all_events_by_class": {
+  "上币/新增": 448,
+  "新交易对": 150,
+  "其他/无法归类": 15,
+  "分发/空投": 90
+ },
+ "classes": {
+  "上币/新增": {
+   "n": 145,
+   "median_rel_pct": -24.836,
+   "mean_rel_pct": -17.546,
+   "win_rate_rel": 0.214
+  },
+  "新交易对": {
+   "n": 38,
+   "median_rel_pct": -8.663,
+   "mean_rel_pct": -4.84,
+   "win_rate_rel": 0.395
+  },
+  "分发/空投": {
+   "n": 19,
+   "median_rel_pct": -16.044,
+   "mean_rel_pct": -22.862,
+   "win_rate_rel": 0.158
+  },
+  "其他/无法归类": {
+   "n": 3,
+   "median_rel_pct": -23.557,
+   "mean_rel_pct": -48.156,
+   "win_rate_rel": 0.0
+  }
+ }
+}

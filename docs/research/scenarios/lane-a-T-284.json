@@ -1,0 +1,59 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T-284-1",
+      "scenario": "T-284 S-763 复现(真实 Binance 现货上币公告日)",
+      "statement": "主臂(asset_mcap_daily 价格、真实公告日、PIT 加密篮基准):上币公告后 d+1→d+30 的相对超额中位数 < 0(单位:百分比)",
+      "variable": "manual",
+      "op": "lt",
+      "lo": -1000,
+      "hi": 0,
+      "prob": 0.75,
+      "horizon_d": "2026-12-08"
+    },
+    {
+      "id": "T-284-2",
+      "scenario": "T-284 S-763 复现(真实 Binance 现货上币公告日)",
+      "statement": "主臂 30 天超额中位数在随机日对照(同一符号、随机起点、1,000 次、种子 708)里的分位 ≤ 0.05 —— 即 S-763 的判据给出 ✅",
+      "variable": "manual",
+      "op": "lt",
+      "lo": 0.0,
+      "hi": 0.05,
+      "prob": 0.6,
+      "horizon_d": "2026-12-08"
+    },
+    {
+      "id": "T-284-3",
+      "scenario": "T-284 S-763 复现(真实 Binance 现货上币公告日)",
+      "statement": "2023–2026 段(真实公告日子样本)的 30 天超额中位数 < 0(单位:百分比)",
+      "variable": "manual",
+      "op": "lt",
+      "lo": -1000,
+      "hi": 0,
+      "prob": 0.7,
+      "horizon_d": "2026-12-08"
+    },
+    {
+      "id": "T-284-4",
+      "scenario": "T-284 S-763 复现(真实 Binance 现货上币公告日)",
+      "statement": "真实公告日减去 S-708 代理事件日(binance_hist 首现日)的日期差中位数 < 0(天)—— 即公告通常早于 Binance 首根日线",
+      "variable": "manual",
+      "op": "lt",
+      "lo": -3000,
+      "hi": 0,
+      "prob": 0.85,
+      "horizon_d": "2026-12-08"
+    },
+    {
+      "id": "T-284-5",
+      "scenario": "T-284 S-763 复现(真实 Binance 现货上币公告日)",
+      "statement": "2026-12-08 的 BTC 收盘价为正(自动结算的市场可交易性前提)",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.97,
+      "horizon_d": "2026-12-08"
+    }
+  ]
+}
