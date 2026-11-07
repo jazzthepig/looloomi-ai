@@ -13,6 +13,17 @@
 - 维数写进 `dim`;换模型 ⇒ 新的 (source, item_id, model) 行,旧的不覆盖。
 
 判活:`select source, model, dim, count(*) from text_vectors group by 1, 2, 3`;待嵌数看视图 `text_vectors_todo`。
+
+## 11-07:默认改成在 Railway 本机跑 ONNX 小模型(`TEXT_EMBED_BACKEND=local`)
+
+MiniMax 控制台的「Rate limits」表(11-07 Jazz 让看的)只列了文本 / 语音 / 音色 / 视频 / 音乐五类模型,**没有嵌入** ——
+这个账户的 embo-01 是 0 RPM,所以从 11-05 起每一次都是 1002「rate limit exceeded(RPM)」,额度刷新了也一样,等不来。
+改用 `fastembed`(Qdrant 的 ONNX 推理,不带 torch):`BAAI/bge-small-en-v1.5`,384 维、模型 67MB;沙盒实测整个进程
+峰值 303MB、128 条约 1 秒(2 线程)。待嵌的 4,743 条里 99.5% 是英文 ⇒ 先用英文小模型;中文源多起来再换多语种模型
+(换模型 = 新的 model 行,旧的不覆盖)。
+**内存纪律:** 模型每轮用完就释放(`release_local`),不常驻 API 进程;推理放线程里、1 个线程,不抢事件循环。
+模型文件第一次用时从 Hugging Face 下到 `FASTEMBED_CACHE_PATH`(默认 /tmp,部署后会重下一次,67MB)。
+`TEXT_EMBED_BACKEND=minimax` 仍可切回 embo-01(配额哪天开了再说)。
 """
 from __future__ import annotations
 
@@ -26,13 +37,20 @@ WRITES_COLUMNS = {TABLE: ("source", "item_id", "model", "dim", "embedding", "tex
 TODO_VIEW = "text_vectors_todo"
 NEAREST_RPC = "text_vectors_nearest"
 LOOP_NAME = "_text_vectors_loop"
-MODEL = (os.environ.get("TEXT_EMBED_MODEL") or "embo-01").strip()
-BATCH = 16
-MAX_PER_RUN = 128              # 11-06:MiniMax 额度是 5 小时窗口、与 lane / agent 臂共用(Jazz)—— 嵌入排最后,每轮少取
+BACKEND = (os.environ.get("TEXT_EMBED_BACKEND") or "local").strip().lower()
+#: model 列里存的短名 → fastembed 的全名
+LOCAL_MODELS = {"bge-small-en-v1.5": "BAAI/bge-small-en-v1.5",
+                "paraphrase-multilingual-MiniLM-L12-v2": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"}
+MODEL = (os.environ.get("TEXT_EMBED_MODEL") or ("bge-small-en-v1.5" if BACKEND == "local" else "embo-01")).strip()
+LOCAL_THREADS = 1
+CACHE_DIR = (os.environ.get("FASTEMBED_CACHE_PATH") or "/tmp/fastembed_cache").strip()
+_LOCAL: dict[str, Any] = {"m": None}
+BATCH = 64 if BACKEND == "local" else 16
+MAX_PER_RUN = 1500 if BACKEND == "local" else 128   # MiniMax:额度是 5 小时窗口、与 lane / agent 臂共用 —— 嵌入排最后,每轮少取
 COOLDOWN_S = 5 * 3600        # 撞到额度(1008 / 非 RPM 的 1002)⇒ 这一窗口内不再调,等额度重置
 RPM_COOLDOWN_S = 15 * 60     # 11-06 09:31:「rate limit exceeded(RPM)」是每分钟的限,不是 5 小时的额度 —— 让 15 分钟就够
 _COOLDOWN_UNTIL = {"t": 0.0}
-PAUSE_S = 4.0                # 11-05 15:44 第一轮:base_resp 1002「rate limit exceeded(RPM)」—— 每批之间停一下
+PAUSE_S = 0.0 if BACKEND == "local" else 4.0   # MiniMax 11-05:1002「rate limit exceeded(RPM)」—— 每批之间停一下
 RETRY_WAITS = (20.0,)   # 撞到 1002 再等这么久重试;还不行 ⇒ refused,下一轮接着嵌
 TIMEOUT_S = 60.0
 TEXT_MAX = 600
@@ -84,9 +102,40 @@ def rate_limited(err: Optional[str]) -> bool:
     return bool(err) and ("1002" in err or "rate limit" in err.lower() or "HTTP 429" in err)
 
 
-async def embed(texts: list[str], kind: str = "db", waits: tuple[float, ...] = RETRY_WAITS) -> tuple[Optional[list[list[float]]], Optional[str]]:
-    """MiniMax 嵌入,撞到频率限制按 `waits` 重试。"""
+def _local_sync(texts: list[str], kind: str) -> list[list[float]]:
+    """同步(放线程里跑)。fastembed;query ⇒ 带 bge 的检索前缀(query_embed),入库 ⇒ passage_embed。"""
+    m = _LOCAL["m"]
+    if m is None:
+        from fastembed import TextEmbedding
+        m = TextEmbedding(LOCAL_MODELS.get(MODEL, MODEL), threads=LOCAL_THREADS, cache_dir=CACHE_DIR)
+        _LOCAL["m"] = m
+    it = m.query_embed(texts) if kind == "query" else m.passage_embed(texts)
+    return [[float(x) for x in v] for v in it]
+
+
+def release_local() -> None:
+    """每轮用完放掉模型(不常驻 API 进程)。"""
+    _LOCAL["m"] = None
+    import gc
+    gc.collect()
+
+
+async def _embed_local(texts: list[str], kind: str = "db") -> tuple[Optional[list[list[float]]], Optional[str]]:
     import asyncio
+    try:
+        vecs = await asyncio.to_thread(_local_sync, texts, kind)
+    except ImportError as e:
+        return None, f"fastembed 没装:{e}"
+    except Exception as e:                                                # noqa: BLE001
+        return None, f"本地嵌入失败 {type(e).__name__}: {str(e)[:160]}"
+    return parse_vectors({"vectors": vecs}, len(texts))
+
+
+async def embed(texts: list[str], kind: str = "db", waits: tuple[float, ...] = RETRY_WAITS) -> tuple[Optional[list[list[float]]], Optional[str]]:
+    """BACKEND = local ⇒ 本机 ONNX;minimax ⇒ MiniMax 嵌入,撞到频率限制按 `waits` 重试。"""
+    import asyncio
+    if BACKEND == "local":
+        return await _embed_local(texts, kind)
 
     from src.data.narrative import llm_narrator as llm
     vecs, err = await _embed_once(texts, kind)
@@ -127,6 +176,14 @@ async def _embed_once(texts: list[str], kind: str = "db", fallback: bool = False
 
 
 async def run_once(max_items: int = MAX_PER_RUN) -> dict[str, Any]:
+    try:
+        return await _run_once(max_items)
+    finally:
+        if BACKEND == "local":
+            release_local()
+
+
+async def _run_once(max_items: int = MAX_PER_RUN) -> dict[str, Any]:
     from src.api.store import supabase_upsert_table
     from src.data.style.header import _read_all
     import time
@@ -164,6 +221,8 @@ async def nearest(q: str, k: int = 10, source: Optional[str] = None) -> dict[str
     """问题 → 最近的 k 条新闻 / 事件(余弦距离)。"""
     from src.api.store import supabase_rpc
     vecs, err = await embed([q[:TEXT_MAX]], "query")
+    if BACKEND == "local":
+        release_local()
     if err:
         return {"ok": False, "why": err}
     rows = await supabase_rpc(NEAREST_RPC, {"q": vec_literal(vecs[0]), "k": int(max(1, min(k, 50))), "src": source, "mdl": MODEL})

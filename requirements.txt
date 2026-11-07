@@ -31,3 +31,6 @@ statsmodels>=0.14.0
 # `python -m pip install -r requirements.txt` to set up `venv/`
 nautilus_trader>=1.229
 xlrd>=2.0.1
+# Text vectors (VDB 文字空间, 11-07): local ONNX embeddings — MiniMax account has no embeddings quota (0 RPM).
+# fastembed = onnxruntime + tokenizers, no torch; model BAAI/bge-small-en-v1.5 (67MB) downloaded on first use, released after each run.
+fastembed>=0.7,<0.10
