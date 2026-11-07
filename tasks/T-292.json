@@ -1,8 +1,7 @@
 {
   "id": "T-292",
-  "owner": "lane-b",
-  "status": "blocked",
-  "blocked_by": "data:upbit_daily 回填完(count(distinct market) ≥ 250 且 KRW-BTC min(d) ≤ 2018-01-01)",
+  "owner": "lane-a",
+  "status": "open",
   "created": "2026-11-07",
   "title": "S-771 按币的韩国溢价与韩国成交份额:韩国人对一个币多付钱 / 多交易时,之后 4 周相对 BTC 跑输吗(横截面)",
   "source": "REFUTATION_LEDGER S-771、S-737(全市场韩国份额,只读结果段)。数据:upbit_daily(KRW 日线,UTC 切日)、ohlcv_daily binance_hist(全球价与成交)、asset_mcap_daily(备用价与市值)、KRW-USDT(upbit_daily 里,USDKRW 代理)。",
@@ -21,9 +20,9 @@
   ],
   "acceptance": {
     "check": "预注册(S-771 原文)照抄进报告开头,只算一次。每周一:P_i = ln(KRW_i / USD_i) − ln(KRW_BTC / USD_BTC) 的过去 7 天中位;S_i = Upbit KRW 成交额 / (全球成交额 × USDKRW) 的过去 7 天和(KRW-USDT 上市前的周不算 S);截面:两边有价、Binance 现货在、市值 ≥ 2,000 万;目标 4 周相对 BTC 超额。报 IC 均值、NW t、五分位差、周内打乱分位(1,000 次,种子 771)、两段 2021–2023 / 2024–2026;最低五分位单独报(幸存者偏差方向相反,只报)。代号映射命中率。判照 S-771(P、S 各自,BH)。纪律:只算、不改代码、不做 DDL、不入库;零分布 / 盈亏只用 src/data/evaluation/apparatus.py;翻页带 order=;事件清单先落文件再取价;探针脚本改同一个文件再跑;步数过半先落文件;省着用上下文(读台账只读本条与引用条,grep 不整读)。",
-    "expect": "报告 docs/research/T-292_korea_premium.md + t292_korea.py + t292_results.json + scenarios/lane-b-T-292.json(≥ 3 条);in_review,推 lane-b/T-292。"
+    "expect": "报告 docs/research/T-292_korea_premium.md + t292_korea.py + t292_results.json + scenarios/lane-a-T-292.json(≥ 3 条);in_review,推 lane-a/T-292。"
   },
   "prior_value": "对手盘族第四条,第一次用按币的散户数据。S-737 / S-765 的全市场、按场所份额版本都不过或方向反。",
-  "notes": "",
+  "notes": "2026-11-07T23:02Z Seth:数据已到(Upbit 公告 371 条上币、最早 2017-10-27;upbit_daily 300 个市场、KRW-BTC 起 2017-09-25)—— 解锁。 改派 lane-a(lane-b 排满)。",
   "verified": null
 }
