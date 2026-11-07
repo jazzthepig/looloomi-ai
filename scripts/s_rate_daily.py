@@ -60,6 +60,12 @@ _DATE_TRAILING_RE = re.compile(r"\((\d{4}-\d{2}-\d{2})\)\s*$")
 _DATE_AUTHOR_TRAILER_RE = re.compile(
     r"\([^()]*?(\d{4}-\d{2}-\d{2})(?:[,)]+[^)]*)?\)"
 )
+# Date form 2b (11-07): author-then-date in parens followed by a TIME and full-width punctuation —
+# `(Seth,2026-11-07 12:48 UTC;…)`. Most 2026-10/11 headings are written this way; form 2 requires `)` or `,`
+# right after the date, so they fell through to the body scan
+# and took the first ISO date in the body (S-774 → 2023-01-02 from its sample window, S-769 → 2026-06-26 from
+# its data's start date) — enough misdated entries to tip the freshness check in test_s_rate_daily.
+_DATE_AUTHOR_TRAILER_FW_RE = re.compile("[(\uff08]([^()\uff08\uff09]*?)(\\d{4}-\\d{2}-\\d{2})")
 # Date form 3: body line `**日期** YYYY-MM-DD` OR `**日期:** YYYY-MM-DD`
 # (the legacy colon variant — S-151/S-153/S-162 use this). `\*+` instead of
 # `\*?` because `**日期:**` has TWO asterisks after the colon — the
@@ -119,6 +125,9 @@ def _extract_date(heading_line: str, body_slice: str) -> str | None:
     m = _DATE_AUTHOR_TRAILER_RE.search(heading_line)
     if m:
         return m.group(1)
+    m = _DATE_AUTHOR_TRAILER_FW_RE.search(heading_line)
+    if m:
+        return m.group(2)
     m = _DATE_BODY_RE.search(body_slice)
     if m:
         return m.group(1)
