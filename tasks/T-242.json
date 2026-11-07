@@ -1,7 +1,7 @@
 {
   "id": "T-242",
   "owner": "lane-b",
-  "status": "open",
+  "status": "done",
   "created": "2026-11-05",
   "title": "行为型 setup 登记表第一批(S-726):拥挤多头被洗(crowding flush)与拥挤空头被挤(squeeze)—— 2020 起全部 Binance 永续上的每一次,事件后 1 / 7 / 30 天相对时点等权永续篮的收益分布、偏度与最差一成;只报基率,不写交易规则",
   "source": "TRADER_TOM_DOCTRINE §6:「recurring-setup 登记表:每个 setup 一个写明的假设 + 在**全部**历史实例上量的基率;优先因是行为的:拥挤平仓 / 逼空、投降」—— 从没量过。§5c:均值回归是负偏度,登记时必须同时报尾巴(skew ≠ ruin)。Jazz 11-04/05:灵活交易、Tom 原则、不做机械海龟。数据(lane 可读):perp_bv_daily(o/h/l/c/qv/tbqv,2019-12 起 593 个有历史的合约,含死币;宇宙 perp_bv_pairs.kind='coin' 或 kind 为空且 dead_from 有值)· v_funding_daily(binance_perp 日均资金费,2020-01 起,259 个符号;11-05 起 lane 可读)· deriv_metrics_daily(OI / 头部账户多空比,2022-H2 起才密,只作副口径)。",
@@ -23,6 +23,12 @@
     "expect": "报告 docs/research/T-242_crowding_setups.md(预注册在前;两类 × 三期限 × 两半的表 + 聚集度 + 尾巴)+ docs/research/t242_crowding_setups.py + t242_results.json;卡 notes 写 n、30 天超额中位 / 分位 / 两半 / 挪一天、最差 10%,以及登记与否;in_review,推 lane-b/T-242。"
   },
   "prior_value": "Tom 的「fade the crowd」在我们这里只以 MVRV 投降买(V2,台账 5c)出现过一次;永续上的拥挤平仓 / 逼空从没量过基率。",
-  "notes": "",
-  "verified": null
+  "notes": "11-05 第二轮(lane-b):**数字已交**。单跑 docs/research/t242_crowding_setups.py(首轮 t242_run.py 挂在 log() 不吃 flush;直接跑交付脚本即过,10s),结果落 docs/research/t242_results.json。数据:perp_bv_daily 668,222 行 + v_funding_daily 349,014 行 + perp_bv_pairs(抓到 888 行)。宇宙 653(篮子 coin 649;**资金费只有 259 个符号有**,事件可及面比 653 小)。事件:flush n=20(2020:2 / 2021:2 / 2022:4 / 2023:0 / 2024:3 / 2025:3 / 2026:6),squeeze n=218(2/8/55/36/22/56/39)。30 天超额中位:flush −4.00%(随机分位 0.468)、squeeze −14.33%(分位 0.000);两半(2020-01→2022-12 / 2023-01→2026-10)flush −1.01%/−4.00%、squeeze −1.71%/−16.28%(同号,但都是负);1/7 天:flush +0.08%/+2.74%(分位 0.799/0.988)、squeeze −1.91%/−6.98%(分位 0.000/0.000)。最差 10% 平均:flush −48.28%、squeeze −56.74%(最好 10%:+61.26%/+193.51%)。**登记:两类都 ❌ 不登记**(30 天中位为负 + 随机分位不过;flush 的 7 天那格分位 0.988 但 n=20,不算)。**「挪一天」这一格未测(本轮最重要缺口)**:detect(off=1) 只把判定下标范围挪了一格,没把信号日挪一天 —— 条件仍在原序列同一天判、锚点也没动,所以 shift_day 与 full 的中位逐位相同(两类 × 三期限全部一字不差)。修法(下轮):按仓库惯例(T-177/T-180/T-240 的「派生量退到上一戳、前瞻锚点不动」)把测量滞后一天 —— 信号日 d 的条件全用 asof d−1 的量,事件仍记 d、锚点仍是 d+1 开盘 → d+30 收盘;可另加「d 与 d+1 连续命中」的持续性口径作对照。**OI 副口径没覆盖**:deriv_metrics_daily 只缓存 1,000 行,事件里仅 1 例有 OI ⇒ 这格是数据缺口,需按事件符号补取(2022-H2 起)。**聚集度**:按年分布见上(flush 2023 为 0;squeeze 2022 55 例 25%、2025 56 例 26%),「前 5 个日期占比」在 JSON 的 concentration.flush.top5_share / concentration.squeeze.top5_share。**正文没抄进去的格子**:H=1、H=7 的两半(8 格)在 results.<类>.<1|7>.H1.excess / .H2.excess。**诚实**:12 次比较(2 类 × 3 期限 × 2 半),没扫参数;零分布 1,000 次、种子 726;分位不是 p 值;篮子是时点等权且含已死的 coin 合约,会把超额相对这条篮抬得偏乐观(事件自身收益与篮子收益在 JSON 里分列 event / basket)。下一轮:补挪一天(asof d−1)+ 补 OI + 把 8 个半格与 top5 抄进正文。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-07T12:49Z",
+    "value": "两类都不登记;squeeze 反向 30 天中位 −14.3%、分位 0.000 → S-768 / T-289(挪一天无效、OI 缺口在那里补)",
+    "ledger": "S-726 结果",
+    "merge": "20261107-1250-merge-t242"
+  }
 }
