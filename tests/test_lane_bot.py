@@ -435,3 +435,31 @@ def test_failed_rounds_are_not_success_and_the_last_words_are_kept():
     wt = "/Users/sbb/Projects/looloomi-ai-lane-c"
     assert landing_verdict("Read", {"file_path": f"{wt}/tasks/T-226.json"}, HARD_CHARS) is None
     assert landing_verdict("Read", {"file_path": f"{wt}/docs/research/T-226_wallet_sets.md"}, HARD_CHARS) is not None
+
+
+def test_read_guard_blocks_a_huge_single_line_file_even_with_limit(tmp_path):
+    """11-07:5.2 MB 的单行 JSON 过了行数门槛(1 行)整份进了上下文。按字节 + 平均行长再拦。"""
+    import sys as _sys
+    _sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "lane_bot"))
+    import guard_main_dir as g
+    blob = tmp_path / "big.json"
+    blob.write_text("[" + ",".join('{"i": %d, "x": "%s"}' % (i, "y" * 40) for i in range(8000)) + "]", encoding="utf-8")
+    assert g.read_too_long({"file_path": str(blob)}) is not None
+    assert g.read_too_long({"file_path": str(blob), "limit": 50}) is not None, "limit 按行截,单行文件截不住"
+    tall = tmp_path / "tall.txt"
+    tall.write_text("\n".join("row %d" % i for i in range(1000)), encoding="utf-8")
+    assert g.read_too_long({"file_path": str(tall)}) is not None
+    assert g.read_too_long({"file_path": str(tall), "limit": 100}) is None
+
+
+def test_cat_of_a_big_file_is_blocked(tmp_path):
+    import sys as _sys
+    _sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "lane_bot"))
+    import guard_main_dir as g
+    big = tmp_path / "r.json"
+    big.write_text("x" * 300_000, encoding="utf-8")
+    assert g.cat_too_big(f"cat {big}") is not None
+    assert g.cat_too_big(f"cat {big} | head -5") is None, "接了管道的放行"
+    small = tmp_path / "s.txt"
+    small.write_text("ok", encoding="utf-8")
+    assert g.cat_too_big(f"cat {small}") is None
