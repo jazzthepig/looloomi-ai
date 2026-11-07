@@ -1,0 +1,31 @@
+{
+  "id": "T-272",
+  "owner": "lane-b",
+  "status": "in_review",
+  "created": "2026-11-07",
+  "title": "S-751 Binance 下架公告之后 30 天,代币在别的场所还继续跑输吗(公告后,不是公告当天那一跳)—— 判据照台账写死",
+  "source": "REFUTATION_LEDGER S-751(先读;事件筛选 / d0 / 价格源 / 对照 / (a)–(e) 一字不改)。数据:events(source = binance, kind = delisting / perp_delisting)、asset_mcap_daily / ohlcv_daily(source = coingecko_pro_ohlc)、BTC 同源收盘。统计只用 src/data/evaluation/apparatus.py。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-272.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "① 先写「整个代币下架」的筛选规则并对全部 368 条标题跑一遍,把纳入 / 排除清单落文件,**之后**才取价格。② (a)–(e) 原始数字;有价 / 无价的代币数。③ 副项只报不判。④ 只算、不改代码、不入库;先落文件再跑。附 docs/research/scenarios/lane-b-T-272.json(≥ 3 条)。",
+    "expect": "报告 docs/research/T-272_binance_delisting.md + t272_delisting.py + t272_results.json;卡 notes 写 (a)–(e);in_review,推 lane-b/T-272。"
+  },
+  "prior_value": "下架公告是交易所层面的被迫卖出,事件库里有 368 条、从没量过;若公告后还持续跑输,是 ② 的面板卫生规则,也是 ④ 空票的候选。",
+  "notes": "判据 (a)-(e) 全过 ⇒ ✅ 公告之后仍持续跑输(主源 asset_mcap_daily, n=53 个有价可算代币): (a) 30天超额中位数 -37.71%(≤-10% ✓); (b) 81.13% 为负(≥65% ✓); (c) 对照分位 0.000(≤0.05 ✓, 200 次随机日抽样 q05=-13.20%/q50=-8.68%/q95=-3.47%); (d) 2022-23 -2.68% vs 2024-26 -37.71% 同号(✓ 但 2022-23 段 n=1,形式通过、实质无样本); (e) 53 ≥ 40 ✓。 有价 53 / 无价 111(共 164 个代币,下架后 CoinGecko 不再跟价 ⇒ -37.7% 是下界不是总体估计)。 副项(只报不判): 公告前30天超额中位 -34.40%、公告当天那一跳 -23.73%、7天 -13.65%、市值三分位 低 -55.81%/中 -30.90%/高 -20.97%、perp_delisting 同口径 -48.44%(7/7 负)。 ⇒ 跌幅大头在公告之前,『公告后继续跑输』成立但更像坏币持续性而非公告的因果效应(可作 ② 面板卫生规则,不可作因果/交易结论)。 交叉核对源 ohlcv_daily(coingecko_pro_ohlc): 32 个可算,中位 -54.25%,84.38% 负,分位 0.000 —— 同向。 敏感性: 剔除绝对值最大3个 → -30.90%/80.0%;剔除 ticker 复用样本 DATA(→ story-2)→ -37.71%/80.8%,均不改变结论。 产物: docs/research/T-272_binance_delisting.md + t272_delisting.py + t272_screening.json(368 条逐条判定) + t272_results.json + scenarios/lane-b-T-272.json。 未改生产代码、未入库;统计全部走 src/data/evaluation/apparatus.py。",
+  "verified": {
+    "value": "PASS_announced_after; median_exc30=-0.3771, pct_neg=0.8113, control_pct=0.0, n=53 ((a)-(e) 全过)",
+    "at": "lane-b 2026-11-07"
+  }
+}

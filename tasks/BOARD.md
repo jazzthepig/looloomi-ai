@@ -30,6 +30,7 @@
 | in_review | T-257 | lane-b | S-737 状态 × 动作地图:训练期(2021-03 → 2023-12)k-means 6 类状态(14 个特征,写死),每类里 持有 / 空仓 / 战术空单 / 30 天 90% 看跌 / 90-80 看跌价差 / 保护性多头 的结果,留出期(2024 →)复核 + BH 多重检验 —— Jazz 11-06「全时间段亏 ≠ 特殊时间亏」 | 报告 docs/research/T-257_state_action_map.md + t257_state_action_map.py + t257_results.json(含 6 个中心、每格数字、今天的类别);卡 notes 写过了 BH 的格子;in_review,推 lane-b/T-257。 | 所有动作都只在全时间段上判过(T-252);没有一次按状态拆。 |  |
 | in_review | T-262 | lane-b | S-740 永续上线 = 做空供给冲击:现货先有的代币,Binance 上线 USDT 永续之后 30 / 60 天相对 BTC 是否跑输 —— 随机日期对照,判据照台账写死 | 报告 docs/research/T-262_perp_listing_short_supply.md + t262_perp_listing.py + t262_results.json;卡 notes 写 (a)–(d) 原始数字;in_review,推 lane-b/T-262。 | 永续上线的影响从没测过(T-227 / T-233 测的是现货上币)。 |  |
 | in_review | T-267 | lane-b | S-744 永续上线之后的跑输:做空供给 vs 上线前追高的均值回归 —— 按「之前 30 天收益」匹配的对照日 + 换 CoinGecko 价格源扩宇宙;判据照台账写死 | 报告 docs/research/T-267_perp_listing_mechanism.md + t267_mechanism.py + t267_results.json;卡 notes 写 (a)–(d);in_review,推 lane-b/T-267。 | S-740 判据全过但 n = 46 且机制没分开;扩宇宙与机制诊断是评审轮点名的下一件事。 |  |
+| in_review | T-272 | lane-b | S-751 Binance 下架公告之后 30 天,代币在别的场所还继续跑输吗(公告后,不是公告当天那一跳)—— 判据照台账写死 | 报告 docs/research/T-272_binance_delisting.md + t272_delisting.py + t272_results.json;卡 notes 写 (a)–(e);in_review,推 lane-b/T-272。 | 下架公告是交易所层面的被迫卖出,事件库里有 368 条、从没量过;若公告后还持续跑输,是 ② 的面板卫生规则,也是 ④ 空票的候选。 | PASS_announced_after; median_exc30=-0.3771, pct_neg=0.8113, control_pct=0.0, n=53 ((a)-(e) 全过) @ lane-b 2026-11-07 |
 | in_review(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | in_review | T-220 | lane-c | 治理的领先信号:解锁前团队 / 基金会钱包流向、出事后的处理、营销强度 —— 先查能不能量(数据源可行性),再写预注册草稿 | 报告 docs/research/T-220_governance_leading_signals.md(开头可行性表);卡片 notes 写:免费源够不够、事件个数、两条草稿是否可在现有数据上跑;in_review,推 lane-c/T-220。 | 治理只量了滞后的一半(S-661 价值捕获比、S-587 质量);领先的行为信号一个都没有,不知道现有数据能不能量。 |  |
 | in_review | T-224 | lane-c | ② 倾斜在更宽的面板上:按时点前 50 大(含死币)的 ①,压低 S-691 五因子合成最差五分之一的权重 —— S-694 在 24 名上 ❌,问宽到 50 名「躲开」信号够不够用 | 报告 docs/research/T-224_tilt_pit50.md(预注册段在前);卡 notes 写基线年化 / 倾斜超额 / 随机对照分位 / 两段符号;scenarios/lane-c-T-224.json;in_review,推 lane-c/T-224。 | ② 只在 24 名上试过一次(S-694 ❌);宽面板上「躲开最差档」的倾斜没有任何回放。 |  |
@@ -273,4 +274,4 @@
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 
-open 17 · claimed 7 · blocked 4 · in_review 49 · done 190 · dropped 3
+open 17 · claimed 7 · blocked 4 · in_review 50 · done 190 · dropped 3
