@@ -1,7 +1,7 @@
 {
   "id": "T-291",
   "owner": "lane-c",
-  "status": "open",
+  "status": "done",
   "created": "2026-11-07",
   "title": "S-770 韩国散户的上币狂热:Upbit KRW 上币公告之后 30 天,全球价相对篮子跑输吗(对照 S-763 Binance);另报 Upbit 下架 / 유의 종목 지정",
   "source": "REFUTATION_LEDGER S-770、S-763(Binance 版,只读结果段)。数据:events(source = upbit;payload.krw;kind = listing / delisting / warning / warning_extend / warning_lift / caution_urge)、asset_mcap_daily、ohlcv_daily(binance_hist,判断公告时是否已在 Binance 现货)。",
@@ -23,6 +23,11 @@
     "expect": "报告 docs/research/T-291_upbit_listing.md + t291_upbit.py + t291_results.json + scenarios/lane-c-T-291.json(≥ 3 条);in_review,推 lane-c/T-291。"
   },
   "prior_value": "对手盘族第三条;S-763 是 Binance 的版本(上币后 30 天 −21.4%)。韩国是散户为主的所,如果「开闸是高位」在散户所更强,那是因果方向的证据。",
-  "notes": "2026-11-07T23:02Z Seth:数据已到(Upbit 公告 371 条上币、最早 2017-10-27;upbit_daily 300 个市场、KRW-BTC 起 2017-09-25)—— 解锁。",
-  "verified": null
+  "notes": "2026-11-08 lane-c 交付:判据三条全过 ⇒ ✅。Upbit KRW 首次上币(events source=upbit kind=listing payload.krw=true,每个代号第一次)232 个事件,其中全球价 asset_mcap_daily 有完整 30 天窗口的 n=106;30 天超额(全球价 d+1 收盘→d+30 收盘,减时点等权篮)中位 −20.7%、均值 −623.4%(等权篮无界,被少数微盘币 10^5–10^7 倍伪影跳点打爆;10% 截尾均值 −18.7%)、p10 −56.5% / p90 +15.2%、为负 75.5%;随机日对照(同代号同一年,1000 次,种子 770)中位 −11.2%,实测中位落在对照 0.000 分位;两段 2017–2021 −17.6%(n=8)/ 2022–2026 −21.4%(n=98)同号。分组(只报):公告时不在 Binance 现货更差(−23.7%,n=65 vs −18.4%,n=41);公告前 30 天涨幅三分位单调(−9.0% / −11.4% / −31.9%)。另报不判:下架 n=18 中位 −29.3%、유의 종목 지정 n=32 中位 −20.1%、krw 为空的 58 个公告(单列只报)有价 10 个中位 −40.8%。诚实:232 个事件里 122 个公告后 10 天内无全球价;2018–2020 的 KRW 上币公告几乎全落在 krw=null 桶里,故第一段只有 8 个有价事件;❗与 S-763(Binance)对照:中位几乎相同(−20.7% vs −21.4%)而事件效应幅度反而小(9.5pp vs 11.9pp)——「散户所更强」未获支持,差别在基线(对照 −11.2% vs −9.5%)。✅ 的后续(进 event_watch 前向记录)要写库,本卡纪律是不入库,留给 Seth。产物:docs/research/T-291_upbit_listing.md + t291_upbit.py + t291_events.csv + t291_events.json + t291_results.json + scenarios/lane-c-T-291.json(5 条前向命题,2 条自动结算)。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-07T23:57:00Z",
+    "value": "S-770 ✅:Upbit KRW 首次上币 30 天超额中位 −20.7%(n 106)、对照分位 0.000、两段同号;事件效应 9.5pp 小于 Binance 11.9pp ⇒「散户所更强」不成立。前向记录进 binance_event_watch(upbit_krw_listing);解析器 v2 修了 2018–2020 的 krw 为空;S-782 预注册重量。",
+    "ledger": "S-770 结果 / S-782"
+  }
 }

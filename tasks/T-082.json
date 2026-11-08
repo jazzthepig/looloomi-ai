@@ -1,9 +1,14 @@
 {
   "id": "T-082",
   "owner": "seth",
-  "status": "open",
+  "status": "done",
   "created": "2026-10-12",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-08T00:02:00Z",
+    "value": "①②③④ 齐:HL 深度 + 成交快照每 8 小时(20 个)、/api/v1/fund/capacity 场所口径并排、两个口径差 ①/BTC 869×、① 在 HL 只能装 $6–21M",
+    "ledger": "T-082 ④ 7 天报告"
+  },
   "title": "可交易规模由数据定:按我们实际能下单的场所深度(订单簿 ±1% 深度 / 场所成交)算每个名字、每本账的容量,替代全市场报告成交额",
   "source": "Jazz 10-12「数据定可交易规模这个我们设成待办」(S-544 容量报告的口径边界)",
   "allowed_paths": [
@@ -23,5 +28,5 @@
     "expect": "每个名字 / 每本账在 $30M 与 $500M 下能否在 5 天内建满,按我们真能成交的深度说,不按 CoinGecko 聚合成交额说"
   },
   "prior_value": "S-544 容量按 30 日全市场报告成交额中位数 × 10% 参与率:$30M 下 58/58 名通过,$500M 下 50/58;tokenization_tilt 被 POLYX(日成交 $0.6M)卡在 ≈ $9M。聚合成交额含不能下单的场所与刷量,实际可成交深度更低,没量过。",
-  "notes": "2026-10-12 开卡,Jazz 定为待办。先查现有采集:binance 小时线已有 taker 量,HL 只有 4 个流动币的现货。 | 2026-10-13:A 部分(场所覆盖 + 深度一周采样)拆给 lane-c = T-085;B 部分(入库表 + 采样循环 + 容量接口加场所口径)Seth 在 T-085 报告之后做。 | 2026-11-02(Seth):B 部分落地 —— `venue_depth_snapshots` + `_venue_depth_loop`(UTC 00/08/16,HL 现货 4 个 + 永续 CIS∩HL)+ `/api/v1/fund/capacity` 每个名字 / 每本账加 `venue` 口径(7 天中位 min 边 ±2% ÷ 权重,下限)。场所 = 我们真在下单的 HL;CEX 多场所(T-085 那 5 个)没接 —— 我们不在那里下单,且 Railway 打 Binance 是 451。第一眼(11-01 18:00 UTC 单次):HL 现货 BTC ±2% 买盘 $3.9M、ETH $0.96M、XAUT0 $36k、SPYX $67k;永续 BTC $162M。④(两个口径差多少倍写进 ledger)等 7 天中位。 | 2026-11-06(Seth):验收 ②「场所成交」补上 —— 快照带 HL `dayNtlVlm`(永续一次 metaAndAssetCtxs,现货本来就调的 spotMetaAndAssetCtxs)与未平仓额;容量接口每个名字加 venue_adv_usd / venue_flow_capacity_aum_usd / market_to_venue_volume_x,每本账加 venue_flow_*。第一眼(11-06 16:00 UTC 一次):HL 现货 UBTC $72M vs 全市场 $26.9B(≈ 370×)、UETH $22.6M vs $11.0B(≈ 490×);永续 BTC $4.0B(≈ 7×)、ETH $1.1B(≈ 10×)。第一批带成交的快照 11-07 00:00 UTC;11-08 的报告里成交只有约 6 个快照,写明。"
+  "notes": "2026-10-12 开卡,Jazz 定为待办。先查现有采集:binance 小时线已有 taker 量,HL 只有 4 个流动币的现货。 | 2026-10-13:A 部分(场所覆盖 + 深度一周采样)拆给 lane-c = T-085;B 部分(入库表 + 采样循环 + 容量接口加场所口径)Seth 在 T-085 报告之后做。 | 2026-11-02(Seth):B 部分落地 —— `venue_depth_snapshots` + `_venue_depth_loop`(UTC 00/08/16,HL 现货 4 个 + 永续 CIS∩HL)+ `/api/v1/fund/capacity` 每个名字 / 每本账加 `venue` 口径(7 天中位 min 边 ±2% ÷ 权重,下限)。场所 = 我们真在下单的 HL;CEX 多场所(T-085 那 5 个)没接 —— 我们不在那里下单,且 Railway 打 Binance 是 451。第一眼(11-01 18:00 UTC 单次):HL 现货 BTC ±2% 买盘 $3.9M、ETH $0.96M、XAUT0 $36k、SPYX $67k;永续 BTC $162M。④(两个口径差多少倍写进 ledger)等 7 天中位。 | 2026-11-06(Seth):验收 ②「场所成交」补上 —— 快照带 HL `dayNtlVlm`(永续一次 metaAndAssetCtxs,现货本来就调的 spotMetaAndAssetCtxs)与未平仓额;容量接口每个名字加 venue_adv_usd / venue_flow_capacity_aum_usd / market_to_venue_volume_x,每本账加 venue_flow_*。第一眼(11-06 16:00 UTC 一次):HL 现货 UBTC $72M vs 全市场 $26.9B(≈ 370×)、UETH $22.6M vs $11.0B(≈ 490×);永续 BTC $4.0B(≈ 7×)、ETH $1.1B(≈ 10×)。第一批带成交的快照 11-07 00:00 UTC;11-08 的报告里成交只有约 6 个快照,写明。 | 2026-11-08 00:02 UTC(Seth):④ 7 天报告入账(台账「T-082 ④ 7 天报告」):① core_cap 市场口径 $8.84B vs HL 场所深度 $5.8M / 场所成交 $21.5M,卡在 BTC(HL 现货 24h $31M,市场 869×);7 / 24 名 HL 无深度。⇒ ① 的现货执行场所要 Jazz 定。"
 }
