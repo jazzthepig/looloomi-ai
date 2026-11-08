@@ -35,7 +35,7 @@ import datetime as dt
 import re
 from typing import Any, Iterable, Optional
 
-from src.data.execution.ticket_plan import DEFAULT_CAP, TICKET_SLEEVE_FOR_MODE, taken_ids
+from src.data.execution.ticket_plan import DEFAULT_CAP, TICKET_SLEEVE_FOR_MODE, cap_on, taken_ids
 
 REF = re.compile(r"^r_v2:(?P<tid>(?:J:)?[^:]+:\d{4}-\d{2}-\d{2}):(?P<act>[a-z_]+)(?::(?P<why>.*))?$")
 EXIT_ACTS = ("exit", "stop_backup", "stop_trigger", "stop_virtual")
@@ -109,7 +109,8 @@ def reconcile(paper: Iterable[dict], intents: Iterable[dict], outcomes: Iterable
     by_id = {r["ticket_id"]: r for r in rows}
     # J 票(Jazz ⓪ 的战场票,ticket_id 以 J: 开头)不走 R-v2 的满额先到先得:人选了就是要进
     jazz = {r["ticket_id"] for r in rows if str(r["ticket_id"]).startswith("J:")}
-    taken = (taken_ids([r for r in rows if r["ticket_id"] not in jazz], cap, a + dt.timedelta(days=1)) if a else set()) | jazz
+    taken = (taken_ids([r for r in rows if r["ticket_id"] not in jazz], cap_on if cap == DEFAULT_CAP else cap,
+                       a + dt.timedelta(days=1)) if a else set()) | jazz
     outs = {o["intent_id"]: o for o in outcomes if o.get("intent_id")}
     acts: dict[str, dict[str, list]] = {}
     orphans: list[dict] = []
