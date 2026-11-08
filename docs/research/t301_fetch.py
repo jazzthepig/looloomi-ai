@@ -32,7 +32,12 @@ SU = os.environ["SUPABASE_URL"].rstrip("/")
 SK = os.environ["SUPABASE_KEY"]
 HDR = {"apikey": SK, "Authorization": "Bearer " + SK, "Prefer": "count=exact"}
 
-CACHE = "/Volumes/CometCloudAI/cometcloud-local/research/t301/cache"
+# 缓存目录:默认值取自 Mac 数据根(可用 --cache / $COMETCLOUD_LOCAL_ROOT 覆盖)——
+# T-307 改:原来写死绝对路径,换个 checkout / 换个机器就跑不动了。
+DEFAULT_CACHE = os.path.join(
+    os.environ.get("COMETCLOUD_LOCAL_ROOT", "/Volumes/CometCloudAI/cometcloud-local"),
+    "research", "t301", "cache")
+CACHE = DEFAULT_CACHE
 PAGE = 1000
 WORKERS = 8
 
@@ -146,13 +151,17 @@ def fetch_by_symbol(path, select, symbols, out_jsonl, workers=WORKERS):
 
 
 def main():
+    global CACHE
     ap = argparse.ArgumentParser()
     ap.add_argument("--probe", action="store_true")
     ap.add_argument("--dates", action="store_true")
     ap.add_argument("--funding", action="store_true")
     ap.add_argument("--rest", action="store_true")
     ap.add_argument("--funding-tail", action="store_true")
+    ap.add_argument("--cache", default=DEFAULT_CACHE,
+                    help="缓存目录(默认 $COMETCLOUD_LOCAL_ROOT/research/t301/cache)")
     args = ap.parse_args()
+    CACHE = args.cache
     os.makedirs(CACHE, exist_ok=True)
 
     if args.funding_tail:

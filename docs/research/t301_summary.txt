@@ -1,0 +1,20 @@
+T-301 复算运行摘要(机器读数见 t301_results.json)
+cache: /Volumes/CometCloudAI/cometcloud-local/research/t301/cache
+=== T-301 recompute ===
+cache: /Volumes/CometCloudAI/cometcloud-local/research/t301/cache
+loaded: pbv=669125 fund=590360 pairs=913 cw=410
+panels: pbv 669125 rows / 888 symbols / 2019-12-31 .. 2026-11-04
+panels built 4s
+universe(uni)=653  coin=649
+events(guards=True): squeeze=351 flush=60 | (guards=False) squeeze=411 flush=64
+reconcile: mine(backfill)=411  db(backfill)=410  mine(forward-cohort)=0
+events csv written: /Users/sbb/Projects/looloomi-ai-lane-b/docs/research/t301_events.csv
+forward matrix built: 2471/2500 dates mature+entry-capable
+event forward csv written
+squeeze events=351  matured(with excess)=341
+x30 vs db: n=397  max|diff|=4.458e-02  median|diff|=3.608e-16  exact(<=1e-9)=249
+reconcile: common=410 only_mine=1 only_db=0
+reference bar-basis median -0.1632 (n=341)
+null candidates per event: min=198 max=366
+null: median pct=0.0 (null med -0.0500) | mean pct=0.024 (null med 0.0459)
+results written: /Users/sbb/Projects/looloomi-ai-lane-b/docs/research/t301_results.json (8s)

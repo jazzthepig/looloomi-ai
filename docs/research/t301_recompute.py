@@ -28,9 +28,14 @@ import pandas as pd
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 HERE = os.path.dirname(os.path.abspath(__file__))
-CACHE = "/Volumes/CometCloudAI/cometcloud-local/research/t301/cache"
+# 缓存目录:参数优先,其次环境变量 COMETCLOUD_LOCAL_ROOT,最后是 Mac 数据根的默认值。
+# (T-307 改:原来写死绝对路径,换个 checkout / 换个机器就跑不动了。)
+DEFAULT_CACHE = os.path.join(
+    os.environ.get("COMETCLOUD_LOCAL_ROOT", "/Volumes/CometCloudAI/cometcloud-local"),
+    "research", "t301", "cache")
 OUT_JSON = os.path.join(HERE, "t301_results.json")
 OUT_CSV = os.path.join(HERE, "t301_events.csv")
+OUT_SUM = os.path.join(HERE, "t301_summary.txt")
 
 # 参考实现(自己的 S-777 交付:build_panels / detect(guards=True) / forward / null_stats)
 _spec = importlib.util.spec_from_file_location("t297_clean", os.path.join(HERE, "t297_clean.py"))
@@ -54,12 +59,16 @@ NULL_SEED = 783
 HALVES = {"H1": ("-inf", "2022-12-31"), "H2": ("2023-01-01", "+inf")}
 
 
+LOG_LINES = []
+
+
 def log(*a):
     print(*a, flush=True)
+    LOG_LINES.append(" ".join(str(x) for x in a))
 
 
-def load_cache(name):
-    p = os.path.join(CACHE, name)
+def load_cache(name, cache=None):
+    p = os.path.join(cache or CACHE, name)
     with open(p) as f:
         return json.load(f)
 
@@ -74,12 +83,19 @@ def build_pbv_df(rows):
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--cache", default=DEFAULT_CACHE,
+                    help="缓存目录(默认 $COMETCLOUD_LOCAL_ROOT/research/t301/cache)")
+    args = ap.parse_args()
+    CACHE = args.cache
     t0 = time.time()
     log("=== T-301 recompute ===")
-    pbv_rows = load_cache("perp_bv_daily.json")["rows"]
-    fund_rows = load_cache("v_funding_daily.json")["rows"]
-    pair_rows = load_cache("perp_bv_pairs.json")["rows"]
-    cw_rows = load_cache("crowding_watch_backfill.json")["rows"]
+    log("cache: %s" % CACHE)
+    pbv_rows = load_cache("perp_bv_daily.json", CACHE)["rows"]
+    fund_rows = load_cache("v_funding_daily.json", CACHE)["rows"]
+    pair_rows = load_cache("perp_bv_pairs.json", CACHE)["rows"]
+    cw_rows = load_cache("crowding_watch_backfill.json", CACHE)["rows"]
     log("loaded: pbv=%d fund=%d pairs=%d cw=%d" % (len(pbv_rows), len(fund_rows), len(pair_rows), len(cw_rows)))
 
     pbv = build_pbv_df(pbv_rows)
@@ -381,6 +397,14 @@ def main():
     with open(OUT_JSON, "w") as f:
         json.dump(res, f, indent=2, ensure_ascii=False, default=str)
     log("results written: %s (%.0fs)" % (OUT_JSON, time.time() - t0))
+
+    # 摘要落盘到**被跟踪**的路径(T-307 改:原来只有 *.log,被 .gitignore 吃掉,
+    # 报告 §4 指的日志在仓库里根本不存在)。*.log 在 .gitignore 里,所以用 .txt。
+    with open(OUT_SUM, "w") as f:
+        f.write("T-301 复算运行摘要(机器读数见 t301_results.json)\n")
+        f.write("cache: %s\n" % CACHE)
+        f.write("\n".join(LOG_LINES) + "\n")
+    log("summary written: %s" % OUT_SUM)
 
 
 if __name__ == "__main__":
