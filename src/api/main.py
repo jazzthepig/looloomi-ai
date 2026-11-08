@@ -2963,6 +2963,12 @@ async def _delisting_watch_loop():
                 r = {**r, "why": f"{r.get('why')} | 注意力尖峰:{_aw.get('why')}"}
             except Exception as _ae:               # noqa: BLE001
                 r = {**r, "why": f"{r.get('why')} | 注意力尖峰出错:{type(_ae).__name__}: {str(_ae)[:120]}"}
+            try:                                   # 11-08:S-777 / S-781 squeeze 与 flush 的前向记录,一天一次(内核扫全史 ~30 秒);出错不挡下架名单
+                from src.data.signals.crowding_watch import run_once as _cw_run
+                _cw = await _cw_run()
+                r = {**r, "why": f"{r.get('why')} | 拥挤事件:{_cw.get('why')}"}
+            except Exception as _ce:               # noqa: BLE001
+                r = {**r, "why": f"{r.get('why')} | 拥挤事件出错:{type(_ce).__name__}: {str(_ce)[:120]}"}
             await _iteration_result("_delisting_watch_loop", {**r, "ok": bool(r.get("ok")), "why": r.get("why")})
             await _beat("_delisting_watch_loop", ok=bool(r.get("ok")), detail={"written": r.get("written"), "watch": r.get("watch")},
                         error=None if r.get("ok") else str(r.get("why"))[:200])
@@ -2994,6 +3000,12 @@ async def _retail_flow_loop():
                      "why": f"{r.get('why')} | 投机手续费:{_dg.get('why')}"}
             except Exception as _de:               # noqa: BLE001 —— 手续费出错不挡韩国那步
                 r = {**r, "why": f"{r.get('why')} | 投机手续费出错:{type(_de).__name__}: {str(_de)[:120]}"}
+            try:                                   # 11-08:S-771 P 的前向记录(按币韩国溢价),一天一次;出错不挡日线
+                from src.data.signals.korea_premium_watch import run_once as _kp_run
+                _kp = await _kp_run()
+                r = {**r, "why": f"{r.get('why')} | 韩国溢价:{_kp.get('why')}"}
+            except Exception as _ke:               # noqa: BLE001
+                r = {**r, "why": f"{r.get('why')} | 韩国溢价出错:{type(_ke).__name__}: {str(_ke)[:120]}"}
             await _iteration_result("_retail_flow_loop", {**r, "ok": bool(r.get("ok")), "why": r.get("why")})
             await _beat("_retail_flow_loop", ok=bool(r.get("ok")),
                         detail={"candle_rows": r.get("candle_rows"), "backfill": r.get("backfill"), "notices": r.get("notices"),

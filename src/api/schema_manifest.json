@@ -162,7 +162,9 @@
     "write_log",
     "degen_fees_daily",
     "attention_watch",
-    "asset_flow_forecast_daily"
+    "asset_flow_forecast_daily",
+    "crowding_watch",
+    "korea_premium_watch"
   ],
   "write_columns": {
     "agent_judgment_daily": [
@@ -838,6 +840,35 @@
       "settled_at",
       "symbol",
       "x30"
+    ],
+    "crowding_watch": [
+      "atr_thr",
+      "basket_n",
+      "code_ref",
+      "cohort",
+      "d",
+      "fund_pct",
+      "kind",
+      "qv_mult",
+      "ret",
+      "settled_at",
+      "symbol",
+      "x1",
+      "x30",
+      "x7"
+    ],
+    "korea_premium_watch": [
+      "code_ref",
+      "cohort",
+      "d",
+      "mcap",
+      "n_cs",
+      "n_days",
+      "p7",
+      "q",
+      "settled_at",
+      "symbol",
+      "x28"
     ]
   },
   "rpc_functions": [
@@ -853,6 +884,8 @@
     "refresh_feature_matrix",
     "refresh_regime_daily",
     "resolve_depth_divergence",
-    "refresh_asset_flow"
+    "refresh_asset_flow",
+    "crowding_watch_rows",
+    "korea_premium_rows"
   ]
 }
