@@ -46,5 +46,14 @@ async def submit(body: dict) -> dict[str, Any]:
     res = await supabase_insert_table(TABLE, [row])
     if not res.ok:
         return {"ok": False, "problems": [f"写入失败:{res.why}"]}
-    return {"ok": True, "row": row,
-            "note": "当天的前向锚会把这条一起挂到比特币时间戳上(/api/v1/proof/anchors)。"}
+    crowd = None
+    try:                                   # 11-08:提交一个名字时顺手给出它身上正在走的对手盘事件(只描述;读不到不挡提交)
+        from src.data.signals.crowd_map import active
+        cm = await active(symbol=row["asset"].split()[0], days=30)
+        crowd = {"events": [{k: e.get(k) for k in ("kind", "d", "age_days", "so_far_30d")} | {"base": e["base"]}
+                            for e in cm.get("events") or []], "missing": cm.get("missing")}
+    except Exception as e:                 # noqa: BLE001
+        crowd = {"error": f"{type(e).__name__}"}
+    return {"ok": True, "row": row, "crowd": crowd,
+            "note": "当天的前向锚会把这条一起挂到比特币时间戳上(/api/v1/proof/anchors)。"
+                    " crowd = 这个名字最近 30 天的对手盘事件与台账基率(描述,不是建议)。"}

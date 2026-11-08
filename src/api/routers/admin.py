@@ -450,6 +450,15 @@ async def asset_flow_read(x_internal_token: str = Header(None), symbol: str = ""
     return await analogs(symbol, d or None, k=max(10, min(k, 500)), horizon=7 if h <= 7 else 30)
 
 
+@router.get("/internal/crowd-map")
+async def crowd_map_read(x_internal_token: str = Header(None), symbol: str = "", days: int = 30):
+    """11-08:对手盘地图。最近 days 天里的下架 / 上币 / 上永续 / Upbit 韩元上币 / squeeze / flush / 社交量尖峰,
+    每类附台账基率(之后 30 天超额中位与基准)。可只看一个币。只描述,不进敞口。"""
+    require_internal_token(x_internal_token)
+    from src.data.signals.crowd_map import active
+    return await active(symbol=symbol, days=days)
+
+
 @router.get("/internal/book-vectors")
 async def book_vectors_read(x_internal_token: str = Header(None), book: str = ""):
     """11-04:Strategy 空间。最新一天每本账的稀疏向量;book 给了就附共享维余弦最近的三本;uncovered = 没有一本账在里面挣钱的天气桶。"""
