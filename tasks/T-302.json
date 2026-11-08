@@ -1,0 +1,28 @@
+{
+  "id": "T-302",
+  "owner": "lane-c",
+  "status": "in_review",
+  "created": "2026-11-08",
+  "title": "S-784 S-771 盲复算:按币韩国溢价 P / 韩国份额 S 对之后 4 周相对 BTC(只读台账原文,自己实现)",
+  "source": "REFUTATION_LEDGER S-771 原文(预注册段)与 S-784;**不要读** docs/research/t292_korea.py 与 T-292 报告 / 结果段。数据:可复用 /Volumes/CometCloudAI/cometcloud-local/research/_cache/t292/ 的拉数缓存(upbit_daily.jsonl / ohlcv_binance_hist.csv / mcap.jsonl;只读),不够再从库里拉。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-302.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-771 原文 + S-784 原文照抄进报告开头,只算一次。自己写 docs/research/t302_korea_blind.py:每周一 P_i(7 天中位,扣 BTC 自身溢价)、S_i(7 天和,USDKRW 用 Upbit KRW-USDT 收盘,上市前的周不算 S);截面规则照 S-771;y = 之后 4 周相对 BTC。报 P / S 各自:周 IC 均值 + NW t(apparatus.newey_west_t)、市值加权 Q5 − Q1 毛 / 扣 20 bps 净、周内打乱分位(1,000 次,种子 784)、块自助 p(4 周块 2,000 次,种子 784,p = 抽样差 ≥ 0 的比例)、两段同号。除中位外报均值与 p10 / p90。零分布只用 apparatus;翻页带 order=;步数过半先落文件。",
+    "expect": "docs/research/T-302_korea_blind.md + t302_results.json + scenarios/lane-c-T-302.json(≥ 3 条前向命题,author = lane-c);in_review,推 lane-c/T-302。"
+  },
+  "prior_value": "S-771 P 是韩国散户「多付钱」第一次在横截面上过了金额判据;但零分布代码是看过第一轮数字后修的 ⇒ 没有独立实现之前不算数。",
+  "notes": "2026-11-08T00:22:33Z Seth 开卡(lane-c 空闲;T-300 在等部署)。| 2026-11-08 lane-c 交付(盲复算;未打开 t292_korea.py / T-292_korea_premium.md / t292_results.json;所有数字在读台账 S-771 结果段之前算完落盘,事后 grep 只看到结果段标题行「P 字面 ✅ 四条全过;S ❌(第四条不可判)」)。口径:每周一 2020-12-07→2026-10-05 共 305 周,截面中位 55 个币(30–80),市值≥2,000 万美元,全球价 Binance 现货收盘没有则 asset_mcap_daily,入场/出场同源,目标 = 之后 4 周相对 BTC;零分布/NW t/块自助全部用 apparatus(shuffle_within / null_distribution / percentile_of / stationary_bootstrap_index / newey_west_t),种子 784。【P 字面口径(先取 7 日中位价再取比)= 台账原句读法】周 IC 均值 +0.00504(中位 −0.00170,p10 −0.1858,p90 +0.1953)、Pearson +0.00080、NW t +0.517(lags4 +0.526)、市值加权 Q5−Q1 毛均值 +0.00347(中位 +0.00225,p10 −0.1617,p90 +0.1546,t +0.327)/ 扣 20 bps 净 +0.00147、周内打乱分位 0.749(零分布均值 −0.00011 sd 0.0081)、块自助 p≥0 = 0.7185、两段 2021–2023 +0.00967(t +0.687)/ 2024–2026 −0.00625(t −0.543)异号 ⇒ S-784 四条(IC 差<0.005、t 同号且|t|≥2、打乱≤0.05、块自助 p≤0.05)全不吻合 ⇒ P 在字面口径下未复现。【唯一能让 P 全过的口径 = B:7 日「对数比」的中位】IC −0.02502(t −2.165)、Pearson −0.00031(t −0.02,效应只在秩上)、价差 −0.02512(t −2.605,净 −0.02712)、打乱分位 0.001、块自助 p 0.0095、两段 −0.04303(t −2.233)/ −0.00509(t −0.453)同号 ⇒ S-771 的 P ✅ 是「过去 7 天中位」落点依赖的(挂在价格上 vs 挂在 P 上,结论相反)。其余口径不改变 P 结论:目标改用 Upbit 韩元价 IC +0.00137、含 BTC +0.00625、Binance 上市不看时点 +0.00441、截面放开到非 Binance 现货 +0.00144。【S(韩国成交份额)】USDKRW 代理(Upbit KRW-USDT)在库内只有 2024-06-07 起 883 行(直查库确认)⇒ S 只有 121 周、2021–2023 段为空 ⇒ 第四条结构性不可判;前三条全过:周 IC 均值 −0.07592(中位 −0.08229,p10 −0.3290,p90 +0.1998;Pearson −0.08293 t −3.653)、NW t −2.463(lags4 −2.497)、市值加权 Q5−Q1 毛 −0.02883(中位 −0.03602,p10 −0.1922,p90 +0.1261,t −1.668)/ 净 −0.03083、打乱分位 0.000 / 0.002、块自助 p 0.0015 / 0.0375。S 稳健性:含 BTC 更强(IC −0.08746 t −2.954)、全球成交额改全场所口径更强(IC −0.10675 t −3.171;价差 −0.05606 t −3.086),但截面放开到非 Binance 现货的币时弱到不显著(IC −0.04742 t −1.900;价差 +0.00298)⇒ S 的强度依赖「截面限于 Binance 现货在」。只报不判(台账明写):字面口径 P 下最低五分位(韩国折价)之后 4 周相对 BTC 均值 −3.83%(中位 −4.50%,p10 −19.0%,p90 +13.7%,t −3.05),同期最高五分位 −3.48%。诚实:299 个 Upbit 市场数据全部延到 2026-11-06(下架币完全不在样本内)⇒ 溢价那一侧被低估(保守),折价那一侧方向相反 ⇒ 只报不判;S 只有一个市场周期。结论:建议 S-771 的 P ✅ 改记「口径依赖 —— 未在字面口径下复现」,并在 S-771 原文写死「过去 7 天中位」的落点;S 与台账一致(❌ 第四条不可判)。产物:docs/research/T-302_korea_blind.md + t302_korea_blind.py + t302_results.json + scenarios/lane-c-T-302.json(5 条前向命题,1 条自动结算)。",
+  "verified": null
+}
