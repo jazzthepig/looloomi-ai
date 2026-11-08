@@ -1,0 +1,10 @@
+{
+  "max_d": "2026-11-07",
+  "total_expected": 378222,
+  "n_pulled": 378222,
+  "n_unique": 378222,
+  "fetch_started_utc": "2026-11-08T16:02:51Z",
+  "fetched_at_utc": "2026-11-08T16:14:15Z",
+  "seconds": 684.1,
+  "cache_file": "_t312_asset_flow.jsonl"
+}
