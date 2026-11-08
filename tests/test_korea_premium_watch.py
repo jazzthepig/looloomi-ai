@@ -18,13 +18,14 @@ def test_rows_cohort_and_settlement():
     assert all(set(r) == set(kp.WRITES_COLUMNS[kp.TABLE]) for r in rows)
 
 
-def test_backfill_walks_back_a_year_at_a_time_and_stops():
-    today = dt.date(2026, 11, 17)
-    a, b = kp.backfill_window(today, None)
-    assert b == today - dt.timedelta(days=kp.RECENT_D + 1) and (b - a).days == kp.CHUNK_D
-    a2, b2 = kp.backfill_window(today, "2021-06-07")
-    assert a2 == kp.HISTORY_FROM and b2 == dt.date(2021, 6, 6), "最后一段截在 HISTORY_FROM"
-    assert kp.backfill_window(today, "2021-01-04") is None
+def test_backfill_chunks_walk_back_and_stop_and_never_hit_the_row_cap():
+    c = kp.chunks(dt.date(2026, 9, 26))
+    assert len(c) == kp.MAX_CHUNKS and c[0][1] == dt.date(2026, 9, 26) and (c[0][1] - c[0][0]).days == kp.CHUNK_D - 1
+    assert all(c[i][0] - dt.timedelta(days=1) == c[i + 1][1] for i in range(len(c) - 1)), "段与段首尾相接,不漏天"
+    tail = kp.chunks(dt.date(2021, 2, 1))
+    assert tail[-1][0] == kp.HISTORY_FROM and kp.chunks(dt.date(2021, 1, 3)) == []
+    assert (kp.CHUNK_D // 7 + 1) * 90 < kp.PAGE_MAX, "一段最多 9 个周一 × 90 个币,必须在 PostgREST 上限之下"
+    assert kp.truncated([{}] * 1000) and not kp.truncated([{}] * 999)
 
 
 def test_wiring():

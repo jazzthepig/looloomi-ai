@@ -87,7 +87,10 @@ async def run_once(now: Optional[dt.datetime] = None, *, force: bool = False) ->
     r = await supabase_rpc_write(RPC, {"p_from": p_from.isoformat()}, timeout=RPC_TIMEOUT_S)
     if not r.ok:
         return {"ok": False, "why": f"{RPC} 失败(客户端 {RPC_TIMEOUT_S:.0f} s):{(r.why or '')[:160]}"}
-    rows = to_rows(r.value if isinstance(r.value, list) else [], now)
+    raw = r.value if isinstance(r.value, list) else []
+    if len(raw) >= 1000:                   # PostgREST 单次最多回 1,000 行;回满 = 被截(korea_premium_watch 11-08 首轮踩过)
+        return {"ok": False, "why": f"{RPC}(自 {p_from})回了 {len(raw)} 行 = 上限,被截了 —— 要分段"}
+    rows = to_rows(raw, now)
     for i in range(0, len(rows), 500):
         if not await supabase_upsert_table(TABLE, rows[i:i + 500], on_conflict="kind,symbol,d"):
             return {"ok": False, "why": f"写 {TABLE} 失败(第 {i} 行起)"}

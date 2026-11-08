@@ -11,7 +11,8 @@ S-771(lane-a T-292):每周一按币的韩国溢价(扣掉 BTC 自己的溢价)�
 
 - P_i = ln(Upbit KRW 收盘_i / Binance 现货收盘_i) − ln(同上_BTC),周一 t 往前 7 天中位(≥ 5 天);截面 = 当天 Binance 现货有价、市值 ≥ 2,000 万。
 - q = 截面五分位(5 = 多付最多);结果 x28 = t+1 收盘 → t+29 收盘相对 BTC,到期才有、没价空着。
-- 每天一次:重算最近 `RECENT_D` 天(把到期的结算掉);历史按年一段段往回补(一轮一年),补到 `HISTORY_FROM`。
+- 每天一次:重算最近 `RECENT_D` 天(把到期的结算掉);历史按 8 周一段往回补(一轮 8 段,Redis 游标),补到 `HISTORY_FROM`。
+  **每段必须 < 1,000 行**(PostgREST 单次上限;回满 1,000 行 ⇒ 当成被截、整轮报错,不写半段)。
 - cohort:t ≥ `FORWARD_FROM` = forward;之前 = backfill(S-771 的样本,只作对照)。
 
 判活:`select cohort, count(distinct d), count(*), count(x28), max(d) from korea_premium_watch group by 1`。
@@ -29,7 +30,10 @@ CODE_REF = "korea_premium_watch v1 (11-08, S-771 读法 B;前向判 S-786)"
 FORWARD_FROM = dt.date(2026, 11, 9)
 HISTORY_FROM = dt.date(2021, 1, 4)
 RECENT_D = 42
-CHUNK_D = 365
+CHUNK_D = 56            # 8 个周一 × ≤ 90 个币 < 1,000 行(PostgREST 的单次上限)
+MAX_CHUNKS = 8          # 一轮补 8 段 ≈ 一年;约 6 轮补到 2021-01
+PAGE_MAX = 1000
+CURSOR_KEY = "korea_premium_watch:backfill_cursor:v2"   # v2:v1 一年一段被截,游标重新从最近往回全部重写一遍
 RPC_TIMEOUT_S = 150.0
 DONE_KEY = "korea_premium_watch:{d}"
 
@@ -61,17 +65,23 @@ def to_rows(raw: list[dict], now: dt.datetime) -> list[dict]:
     return out
 
 
-def backfill_window(today: dt.date, oldest: Optional[str]) -> Optional[tuple[dt.date, dt.date]]:
-    """纯函数。下一段要补的历史:表空 ⇒ 最近窗口之前的一年;已有 ⇒ 最早一行之前的一年;补到 HISTORY_FROM 为止(⇒ None)。"""
-    end = (dt.date.fromisoformat(oldest[:10]) if oldest else today - dt.timedelta(days=RECENT_D)) - dt.timedelta(days=1)
-    if end < HISTORY_FROM:
-        return None
-    return max(HISTORY_FROM, end - dt.timedelta(days=CHUNK_D)), end
+def chunks(cursor: dt.date, n: int = MAX_CHUNKS) -> list[tuple[dt.date, dt.date]]:
+    """纯函数。从游标往回切 n 段(每段 CHUNK_D 天,截在 HISTORY_FROM);游标已过 HISTORY_FROM ⇒ []。"""
+    out, end = [], cursor
+    while end >= HISTORY_FROM and len(out) < n:
+        a = max(HISTORY_FROM, end - dt.timedelta(days=CHUNK_D - 1))
+        out.append((a, end))
+        end = a - dt.timedelta(days=1)
+    return out
+
+
+def truncated(rows: list) -> bool:
+    """纯函数。PostgREST 一次最多回 1,000 行(11-08 首轮就被截了:一年一段 ≈ 3,900 行只回来 1,000,中间留了 37 周的洞)。"""
+    return len(rows or []) >= PAGE_MAX
 
 
 async def run_once(now: Optional[dt.datetime] = None, *, force: bool = False) -> dict[str, Any]:
     from src.api.store import redis_get_key_status, redis_set_key, supabase_rpc_write, supabase_upsert_table
-    from src.data.vector.market_state_writer import _sb_get
     now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
     today = now.date()
     key = DONE_KEY.format(d=today.isoformat())
@@ -79,27 +89,30 @@ async def run_once(now: Optional[dt.datetime] = None, *, force: bool = False) ->
         st, _ = await redis_get_key_status(key)
         if st == "hit":
             return {"ok": True, "skipped": True, "why": f"今天({today})已经跑过"}
-    old = await _sb_get(TABLE, {"select": "d", "order": "d.asc", "limit": "1"})
-    if not old.ok:
-        return {"ok": False, "why": f"读 {TABLE} 失败:{(old.why or '')[:120]}"}
-    windows = [(today - dt.timedelta(days=RECENT_D), today)]
-    bf = backfill_window(today, (old.rows or [{}])[0].get("d") if old.rows else None)
-    if bf:
-        windows.append(bf)
+    cur, _cst = await redis_get_key_status(CURSOR_KEY)
+    cursor = dt.date.fromisoformat(cur["next_end"]) if cur and cur.get("next_end") else today - dt.timedelta(days=RECENT_D + 1)
+    bfs = chunks(cursor)
+    windows = [(today - dt.timedelta(days=RECENT_D), today)] + bfs
     written, settled, fwd = 0, 0, 0
     for a, b in windows:
         r = await supabase_rpc_write(RPC, {"p_from": a.isoformat(), "p_to": b.isoformat()}, timeout=RPC_TIMEOUT_S)
         if not r.ok:
             return {"ok": False, "why": f"{RPC}({a} → {b}) 失败:{(r.why or '')[:160]}", "written": written}
-        rows = to_rows(r.value if isinstance(r.value, list) else [], now)
+        raw = r.value if isinstance(r.value, list) else []
+        if truncated(raw):
+            return {"ok": False, "why": f"{RPC}({a} → {b}) 回了 {len(raw)} 行 = 上限,被截了 —— 段要再切短", "written": written}
+        rows = to_rows(raw, now)
         for i in range(0, len(rows), 500):
             if not await supabase_upsert_table(TABLE, rows[i:i + 500], on_conflict="d,symbol"):
                 return {"ok": False, "why": f"写 {TABLE} 失败({a} → {b},第 {i} 行起)", "written": written}
         written += len(rows)
         settled += sum(1 for x in rows if x["x28"] is not None)
         fwd += sum(1 for x in rows if x["cohort"] == "forward")
+        if (a, b) in bfs:                     # 每补完一段就推游标(中途失败,下一轮从没补的那段接着来)
+            await redis_set_key(CURSOR_KEY, {"next_end": (a - dt.timedelta(days=1)).isoformat(), "at": now.isoformat()},
+                                ttl=400 * 86400)
     await redis_set_key(key, {"at": now.isoformat(), "rows": written}, ttl=2 * 86400)
+    span = f"回补 {bfs[-1][0]} → {bfs[0][1]}" if bfs else f"历史已补到 {HISTORY_FROM}"
     return {"ok": True, "written": written, "settled": settled, "forward": fwd,
-            "backfill": [bf[0].isoformat(), bf[1].isoformat()] if bf else "done",
-            "why": f"韩国溢价 {written} 行(前向 {fwd},已结算 {settled});回补 {bf[0]} → {bf[1]}" if bf
-                   else f"韩国溢价 {written} 行(前向 {fwd},已结算 {settled});历史已补到 {HISTORY_FROM}"}
+            "backfill": [bfs[-1][0].isoformat(), bfs[0][1].isoformat()] if bfs else "done",
+            "why": f"韩国溢价 {written} 行(前向 {fwd},已结算 {settled});{span}"}
