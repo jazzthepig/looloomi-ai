@@ -1,0 +1,28 @@
+{
+  "id": "T-312",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-08",
+  "title": "S-791 在今天的 asset_flow 快照上重算 S-774 R / S-776 P(只报),给明天开始的前向记录重定基率;结果带快照指纹",
+  "source": "REFUTATION_LEDGER S-791;docs/research/t293_asset_flow.py、t296_ablation.py、你的 t311_event_dims.py(P 臂已在今天的快照上跑过)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-312.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-791 原文照抄进报告开头。框架一字不改,只换快照:报 R(11 维)与 P(5 维相位)的周 IC 均值、NW t(滞后 5)、两半、最低五分位 x30 均值与中位、Q5 − Q1;JSON 写快照指纹(行数、币数、首末日期、拉取时间)。只报不判;不要 Read 大文件;步数过半先落文件。",
+    "expect": "docs/research/T-312_rebaseline.md + t312_results.json + scenarios/lane-a-T-312.json(≥ 2 条前向命题,author = lane-a);in_review,推 lane-a/T-312。"
+  },
+  "prior_value": "前向记录 asset_flow_forecast_daily 明天出第一个预测;旁边的历史基率要与它同一个快照,否则前向与历史没法比。",
+  "notes": "2026-11-08T15:56:17Z Seth 开卡。",
+  "verified": null
+}

@@ -1,7 +1,7 @@
 {
   "id": "T-309",
   "owner": "lane-b",
-  "status": "blocked",
+  "status": "open",
   "created": "2026-11-08",
   "title": "S-789 S-753 在逐句解析之后重量:打上监控标签的代号 80 → 137(你自己的 t274_monitoring.py,只换事件)",
   "source": "REFUTATION_LEDGER S-789(预注册)与 S-753 原文;docs/research/t274_monitoring.py;src/data/market/events.py 的 monitoring_tag_changes(只读,import 它切句)。",
@@ -23,7 +23,6 @@
     "expect": "docs/research/T-309_tag_sentence_recompute.md + t309_results.json + scenarios/lane-b-T-309.json(≥ 3 条前向命题,author = lane-b);in_review,推 lane-b/T-309。"
   },
   "prior_value": "硬规则已按 Jazz 11-08 前移到「打标签」;它的证据 S-753 建在漏了 43 次打上的事件集上。这张卡让证据与规则用同一个解析器。",
-  "notes": "2026-11-08T14:50:47Z Seth 开卡:blocked 到解析器 v2 部署(seth_bot 20261108-1500)—— lane 要 import 生产解析器,main 上得先有它。",
-  "blocked_by": "deploy:events.monitoring_tag_changes(20261108-1500-tag-hard-rule 合进 main)",
+  "notes": "2026-11-08T14:50:47Z Seth 开卡:blocked 到解析器 v2 部署(seth_bot 20261108-1500)—— lane 要 import 生产解析器,main 上得先有它。 | 2026-11-08T15:54:45Z Seth:解锁 —— events.monitoring_tag_changes 已在 main(9e7a4bf6)。",
   "verified": null
 }
