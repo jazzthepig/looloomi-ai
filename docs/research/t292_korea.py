@@ -138,19 +138,53 @@ b_exit = usd_c[exit_i, BTC]
 b_ret = b_exit / b_entry - 1.0
 X = (usd_c[exit_i] / usd_c[entry_i] - 1.0) - b_ret[:, None]
 MC = mcap_ff[t_idx]
-MC[~has_binance[None, :]] = np.nan
+MC[:, ~has_binance] = np.nan
 
 week_dates = [dates[t] for t in t_idx]
 
+# ── 伪影审计(lane-c 在 T-291 踩到:asset_mcap_daily 有币价格跳 10^5 倍)──────
+# 审计三样:① 信号窗 7 日单币收益 |r| > 10 ② 目标 4 周单币收益 |r| > 10
+#          ③ 信号日市值相对 7 天前的跳变 > 1e4(市值伪影)
+r7 = np.full((D, S), np.nan)
+r7[7:] = usd_c[7:] / usd_c[:-7] - 1.0
+mr7 = np.full((D, S), np.nan)
+with np.errstate(divide="ignore", invalid="ignore"):
+    mr7[7:] = mcap[7:] / mcap[:-7]
+
+EXCLUDE = np.zeros((W, S), dtype=bool)      # 伪影格子(稳健性变体里剔掉)
+ext_7d, ext_x, ext_mc = [], [], []
+for w, t in enumerate(t_idx):
+    m = np.isfinite(P[w]) | np.isfinite(S_share[w])
+    for j in np.flatnonzero(m):
+        r = r7[t, j]
+        x = X[w, j]
+        q = mr7[t, j]
+        bad = False
+        if np.isfinite(r) and abs(r) > 10:
+            ext_7d.append({"week": week_dates[w], "symbol": syms[j], "r7": float(r)})
+            bad = True
+        if np.isfinite(x) and abs(x) > 10:
+            ext_x.append({"week": week_dates[w], "symbol": syms[j], "x4w": float(x)})
+            bad = True
+        if np.isfinite(q) and (q > 1e4 or q < 1e-4):
+            ext_mc.append({"week": week_dates[w], "symbol": syms[j], "mcap_ratio_7d": float(q)})
+            bad = True
+        if bad:
+            EXCLUDE[w, j] = True
+X_CLIP = np.clip(X, -10.0, 10.0)
+
 # ── 每个信号:逐周 IC / 五分位 ───────────────────────────────────────────────
-def week_stats(sig):
+def week_stats(sig, X_=None, MC_=None, exclude=False):
+    X_ = X if X_ is None else X_
+    MC_ = MC if MC_ is None else MC_
     ic, n_cs, sp_eq, sp_dollar, q1_dollar, q5_dollar = [], [], [], [], [], []
     for w in range(W):
-        m = np.isfinite(sig[w]) & np.isfinite(X[w]) & np.isfinite(MC[w]) & (MC[w] >= MCAP_MIN)
+        m = (np.isfinite(sig[w]) & np.isfinite(X_[w]) & np.isfinite(MC_[w])
+             & (MC_[w] >= MCAP_MIN) & (~EXCLUDE[w] if exclude else True))
         n = int(m.sum())
         if n < 5:
             continue
-        v, x, mcv = sig[w][m], X[w][m], MC[w][m]
+        v, x, mcv = sig[w][m], X_[w][m], MC_[w][m]
         rv, rx = rankdata(v), rankdata(x)
         ic.append(float(np.corrcoef(rv, rx)[0, 1]))
         n_cs.append(n)
@@ -170,7 +204,13 @@ def week_stats(sig):
 
 
 def block_boot_p(series, actual=None, mean_block=BOOT_BLOCK, n_boot=N_BOOT, seed=SEED):
-    """平稳块自助的单侧分位(实际值在零分布里的分位)。"""
+    """平稳块自助的单侧 p = **抽样差 ≥ 0 的比例**(台账 S-690 族的约定)。
+
+    ⚠️ 2026-11-08 修:上一轮写的是「实际值在零分布里的分位」。那条零分布是**原始序列**的自助分布,
+    中心就在实际均值上,分位恒 ≈ 0.5(本卡实测 0.501 / 0.493)—— 那是退化量,不是检验,会让
+    「净成本后 < 0」这一条对任何信号都判 ❌。现按项目约定改成尾概率;旧口径的数字仍留在
+    `degenerate_pct_of_actual` 里备查。
+    """
     s = np.asarray(series, dtype=float)
     s = s[np.isfinite(s)]
     if s.size < 10:
@@ -185,18 +225,29 @@ def block_boot_p(series, actual=None, mean_block=BOOT_BLOCK, n_boot=N_BOOT, seed
         null = null_distribution(one, n_boot, seed, actual=act)
     except Exception as e:
         return None, str(e)
-    return percentile_of(act, null), None
+    null = np.asarray(null, dtype=float)
+    null = null[np.isfinite(null)]
+    return {
+        "p_ge0": float((null >= 0).mean()),
+        "p_le0": float((null <= 0).mean()),
+        "null_median": float(np.median(null)),
+        "null_sd": float(null.std(ddof=1)) if null.size > 1 else None,
+        "degenerate_pct_of_actual": percentile_of(act, null),
+    }, None
 
 
 def shuffle_null(sig):
     """周内打乱:每周一在**当周有效截面内**打乱信号值,重算 IC 与金额五分位差。"""
     packed_v, packed_w, slices, xs, mcs = [], [], [], [], []
+    n_packed = 0
     for w in range(W):
         m = np.isfinite(sig[w]) & np.isfinite(X[w]) & np.isfinite(MC[w]) & (MC[w] >= MCAP_MIN)
         idx = np.flatnonzero(m)
         if idx.size < 5:
             continue
-        slices.append((len(packed_v), len(packed_v) + idx.size))
+        # ⚠️ 2026-11-08 修:上一轮用 len(packed_v)(=已装的**周**数)当元素偏移,切片整体错位
+        slices.append((n_packed, n_packed + idx.size))
+        n_packed += idx.size
         packed_v.append(sig[w][idx])
         packed_w.append(np.full(idx.size, w))
         xs.append(X[w][idx])
@@ -233,6 +284,33 @@ def shuffle_null(sig):
         ic_null.append(float(np.mean(ics)))
         sp_null.append(float(np.mean(sps)))
     return np.array(ic_null), np.array(sp_null)
+
+
+def size_ic():
+    """探索性:市值秩与目标的 IC(小市值是否本来就跑输)。只报,不判。"""
+    out = []
+    for w in range(W):
+        m = np.isfinite(X[w]) & np.isfinite(MC[w]) & (MC[w] >= MCAP_MIN)
+        if int(m.sum()) < 5:
+            continue
+        out.append(float(np.corrcoef(rankdata(MC[w][m]), rankdata(X[w][m]))[0, 1]))
+    return np.array(out)
+
+
+def partial_ic(sig):
+    """探索性:信号与目标的**秩偏相关**(控制市值秩)—— 信号是不是只是「小市值的代理」。只报,不判。"""
+    out = []
+    for w in range(W):
+        m = (np.isfinite(sig[w]) & np.isfinite(X[w]) & np.isfinite(MC[w]) & (MC[w] >= MCAP_MIN))
+        if int(m.sum()) < 6:
+            continue
+        rv, rx, rc = rankdata(sig[w][m]), rankdata(X[w][m]), rankdata(MC[w][m])
+        r_vx = float(np.corrcoef(rv, rx)[0, 1])
+        r_vc = float(np.corrcoef(rv, rc)[0, 1])
+        r_xc = float(np.corrcoef(rx, rc)[0, 1])
+        den = np.sqrt(max((1 - r_vc ** 2) * (1 - r_xc ** 2), 1e-12))
+        out.append((r_vx - r_vc * r_xc) / den)
+    return np.array(out)
 
 
 def summarize(name, sig):
@@ -276,15 +354,26 @@ def summarize(name, sig):
     net = st["sp_dollar"] - COST_RT
     p_net, err2 = block_boot_p(net)
     out["sp_dollar_net20bp_mean"] = float(net.mean()) if net.size else None
-    out["boot_p_gross"] = p_gross
-    out["boot_p_net20bp"] = p_net
+    out["boot_p_gross"] = p_gross["p_ge0"] if p_gross else None
+    out["boot_p_net20bp"] = p_net["p_ge0"] if p_net else None
+    out["boot_detail_gross"] = p_gross
+    out["boot_detail_net20bp"] = p_net
     if err or err2:
         out["boot_err"] = err or err2
     # 只报:最低五分位(按金额加权)
     t, m, se = newey_west_t(st["q1_dollar"], lags=5)
     out["q1_dollar_report_only"] = {"mean": m, "nw_t": t, "n": int(st["q1_dollar"].size)}
+    t, m, se = newey_west_t(st["q5_dollar"], lags=5)
+    out["q5_dollar_report_only"] = {"mean": m, "nw_t": t, "n": int(st["q5_dollar"].size)}
     t, m, se = newey_west_t(st["sp_eq"], lags=5)
     out["sp_eq_detail"] = {"mean": m, "nw_t": t}
+    # 探索性(不判):市值是不是代理变量
+    sz = size_ic()
+    t, m, se = newey_west_t(sz, lags=5)
+    out["size_ic_report_only"] = {"mean": m, "nw_t": t, "n": int(sz.size)}
+    pc = partial_ic(sig)
+    t, m, se = newey_west_t(pc, lags=5)
+    out["partial_ic_controlling_mcap"] = {"mean": m, "nw_t": t, "n": int(pc.size)}
     out["_series"] = st
     return out
 
@@ -336,6 +425,37 @@ for name, sig in [("P_premium", P), ("S_share", S_share)]:
         "halves_same_sign": bool(half_ok),
         "pass_all": bool(ic_ok and sp_ok and sh_ok and half_ok),
     }
+
+# ── 伪影稳健性:截断重算一次(不改主判)──────────────────────────────────────
+def core_stats(sig, Xv, exclude):
+    st = week_stats(sig, X_=Xv, exclude=exclude)
+    t, m, se = newey_west_t(st["ic"], lags=5)
+    tg, mg, seg = newey_west_t(st["sp_dollar"], lags=5)
+    return {
+        "weeks": int(st["ic"].size),
+        "ic_mean": m, "ic_nw_t": t,
+        "sp_dollar_mean": mg, "sp_dollar_nw_t": tg,
+        "sp_dollar_net20bp_mean": float((st["sp_dollar"] - COST_RT).mean()),
+        "q1_dollar_mean": float(np.mean(st["q1_dollar"])),
+    }
+
+
+res["artifact_audit"] = {
+    "n_excluded_cells": int(EXCLUDE.sum()),
+    "n_r7_abs_gt10": len(ext_7d),
+    "n_x4w_abs_gt10": len(ext_x),
+    "n_mcap_ratio_7d_outside_1e4": len(ext_mc),
+    "examples_r7": ext_7d[:20],
+    "examples_x4w": ext_x[:20],
+    "examples_mcap": ext_mc[:20],
+}
+res["robustness"] = {
+    "note": "伪影稳健性,只报,不改主判",
+    "clip_x_abs10_keep_cells": {
+        n: core_stats(s, X_CLIP, exclude=False) for n, s in [("P_premium", P), ("S_share", S_share)]},
+    "drop_artifact_cells": {
+        n: core_stats(s, X, exclude=True) for n, s in [("P_premium", P), ("S_share", S_share)]},
+}
 
 RES.write_text(json.dumps(res, indent=1, ensure_ascii=False, default=float))
 print(json.dumps({k: v for k, v in res.items() if k not in ("P_premium", "S_share")}, indent=1, ensure_ascii=False, default=float))
