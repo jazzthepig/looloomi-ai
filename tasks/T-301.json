@@ -1,0 +1,29 @@
+{
+  "id": "T-301",
+  "owner": "lane-b",
+  "status": "blocked",
+  "created": "2026-11-08",
+  "title": "S-783 S-781 盲复算 + crowding_events() 在今天的数据上的逐事件对账(你的 t289 参考实现 vs 库里的 crowding_watch)",
+  "source": "REFUTATION_LEDGER S-783(预注册);只读 S-726 / S-777 的口径段,**不读 S-781 的结果段**。你自己的 docs/research/t289_squeeze.py(guards=True)。数据:perp_bv_daily、v_funding_daily、perp_bv_pairs、crowding_watch(anon 可读)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-301.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "预注册(S-783 原文)照抄进报告开头,只算一次。① 重拉三张表(d ≤ 2026-11-04;翻页带 order=、每页 ≤ 1000、核 count=exact;大表用并行 offset,lane-a 在 T-292 实测 8 线程 59 秒),guards=True 出事件清单,先落 docs/research/t301_events.csv;与 crowding_watch cohort=backfill 逐 (kind, symbol, d) 对账,报两边独有条数 + 前 20 条。② 按 S-726 口径算 squeeze 30 天超额:中位 / 均值 / p10 / p90 / 为负比例、同币同年随机日对照(1,000 次,种子 783)分位、两半(≤ 2022-12 / ≥ 2023-01)。零分布只用 apparatus;步数过半先落文件。",
+    "expect": "docs/research/T-301_squeeze_recompute.md + t301_results.json + scenarios/lane-b-T-301.json(≥ 3 条前向命题,author = lane-b);in_review,推 lane-b/T-301。"
+  },
+  "prior_value": "把「库里的内核 = 参考实现」从「238 条全中 + 多出来的能解释」升级成「今天的数据上逐条相等」;S-781 的数从一个人算的变成两个人算的。之后 crowding_watch 的前向记录才算有底。",
+  "notes": "2026-11-08 Seth 开卡:blocked 到 crowding_watch 部署后第一次全量写入(判据:select count(*) from crowding_watch where cohort = 'backfill' ≥ 400)。",
+  "blocked_by": "deploy:crowding_watch 首次全量写入",
+  "verified": null
+}

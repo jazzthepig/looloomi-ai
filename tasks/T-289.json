@@ -1,7 +1,7 @@
 {
   "id": "T-289",
   "owner": "lane-b",
-  "status": "open",
+  "status": "done",
   "created": "2026-11-07",
   "title": "S-768 S-726 squeeze 反向读数(被挤上去的币 30 天中位 −14.3%)做成 ② 排除规则之前:修「挪一天」、补 OI、在 R-v2 票上回放",
   "source": "REFUTATION_LEDGER S-726(预注册 + 结果段)与 S-768;你自己的 docs/research/t242_crowding_setups.py 与 t242_results.json(lane-b/T-242 分支,已排合并)。数据:perp_bv_daily、v_funding_daily、perp_bv_pairs、deriv_metrics_daily(按事件符号补取 OI)、r_tickets_paper 或 S-690 的缓存票。",
@@ -23,6 +23,11 @@
     "expect": "报告 docs/research/T-289_squeeze_exclusion.md + t289_squeeze.py + t289_results.json + docs/research/scenarios/lane-b-T-289.json(≥ 3 条);卡 notes 写 ①②③ 的数与判;in_review,推 lane-b/T-289。"
   },
   "prior_value": "S-726 squeeze n 218、30 天中位 −14.3%、随机分位 0.000、两半同负;但「挪一天」那格脚本里没生效、OI 只覆盖 1 例。对手盘族(Jazz 11-07:疯狂与绝望的散户是对手盘)第一条。",
-  "notes": "",
-  "verified": null
+  "notes": "本轮跑完,①②③ 都有测得值。分支 lane-b/T-289;报告 docs/research/T-289_squeeze_exclusion.md;产物 t289_squeeze.py / t289_results.json / t289_events.json / t289_show.py;前向预期 docs/research/scenarios/lane-b-T-289.json(6 条,概率预注册写定未改)。数据 perp_bv_daily 668,222 行(→2026-11-04)+ v_funding_daily 349,014;事件 squeeze 218(190 个日期)/ flush 20;long_return 自检 n=120 max_abs_diff 0.0。① 挪一天(信号日 d+1、进场 d+2 开盘 → d+31 收盘,事件定义一字未改)30 天超额中位 −12.70%(n=213)、随机日分位 0.000;原口径 −14.33%(n=212)分位 0.000;1 天 −1.68%、7 天 −5.30%(分位均 0.000);两半 2020–22 −2.45%(n=63)/ 2023–26 −14.29%(n=150)都负 ⇒ ① ✅。flush 30 天分位 0.468(原)/0.176(挪)⇒ 不成立。② OI(deriv_metrics_daily 按事件代号补取,127 代号 129 查 472 行,翻页带 order=):有 OI 的事件 174/218;OI 掉 ≥10% 组 n=8 中位 −16.39%(原)/−12.22%(挪),其余 n=166 中位 −15.23%/−13.74% ⇒ 同负,② ✅(flush 翻号但该条已死)。③ R-v2 回放:票源用 docs/research/t197_results.json tickets.A 956 张(库里 r_tickets_paper 0 行,预注册写的 S-690 653 张不可得,已在报告 §6 记);被挡 11 张(≥10 张 ⇒ 适用,离「不适用」只差 1 张);被挡平均 R −0.2997 vs 其余 +0.3399;月块置换(块 12 张≈一个月,2,000 次,种子 768)零分布中位 −0.2729、66.15% 的抽样 ≤0 ⇒ 观测值不极端,不显著;规则 S 全书 end 4.9537→4.9885(R 不降)但 mdd −36.94%→−37.04%(变差 0.10pp)⇒ ③ ❌。两半:H1(2020–22)72=72 逐位相同(无票被挡),H2 884→873、end 3.1236→3.1456。判定 pass_123=False ⇒ 不进 ② 排除规则候选(只差 ③ 的 0.10pp 回撤;要不要放宽判据 / 是否按「探索仓卫生项」入册需 Jazz 拍,本卡不自改判据)。另:复核确认 T-242 的 detect(off=+1) 是空操作(与 off=0 逐位相同),真正的「挪一天」只能落在前向窗口上。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-07T16:04Z",
+    "value": "S-768 ❌(③ 回撤差 0.10pp);① 挪一天 −12.70% / 分位 0.000 ✅、② OI 同号 ✅ —— 现象站住、规则无用武之地,下一步前向记录(T-295)",
+    "ledger": "S-768 结果"
+  }
 }

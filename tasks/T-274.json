@@ -1,7 +1,7 @@
 {
   "id": "T-274",
   "owner": "lane-b",
-  "status": "blocked",
+  "status": "done",
   "created": "2026-11-07",
   "title": "S-753 Binance「监控标签」之后 30 天,代币相对 BTC 还跑输吗(下架的前一步;S-751 同一套口径)—— 判据照台账写死",
   "source": "REFUTATION_LEDGER S-753(先读;前提 / 事件 / d0 / 对照 / (a)–(e) 一字不改)与 S-751 / 你的 T-272 脚本口径(价格、锚点、对照全部复用)。数据:events(source = binance, kind = monitoring_tag / monitoring_tag_removed,11-07 起回填,约一天补完)、asset_mcap_daily、delisting_watch(副项:180 天内被宣布下架)。统计只用 src/data/evaluation/apparatus.py。",
@@ -23,7 +23,12 @@
     "expect": "报告 docs/research/T-274_monitoring_tag.md + t274_monitoring.py + t274_results.json;in_review,推 lane-b/T-274。"
   },
   "prior_value": "S-751 ✅ 之后 Jazz 把「下架公告即剔除」拍成硬规则;监控标签更早,若同样有效,硬规则可以前移、少吃公告前那一段跌幅。",
-  "notes": "2026-11-07 Seth:先 blocked —— 监控标签公告 11-07 才开始入库(catalog 49,4,484 篇,每轮 10 页,约 23 轮补完)。解锁条件:`select count(*), min(ts) from events where source='binance' and kind='monitoring_tag'` ≥ 30 条且 min(ts) < 2023-06-01 ⇒ 评审轮改 open 并唤醒 lane-b。",
-  "verified": null,
-  "blocked_by": "data:events monitoring_tag 回填(≥ 30 条且最早 < 2023-06-01)"
+  "notes": "2026-11-07 Seth:先 blocked —— 监控标签公告 11-07 才开始入库(catalog 49,4,484 篇,每轮 10 页,约 23 轮补完)。解锁条件:`select count(*), min(ts) from events where source='binance' and kind='monitoring_tag'` ≥ 30 条且 min(ts) < 2023-06-01 ⇒ 评审轮改 open 并唤醒 lane-b。 | 2026-11-08T00:16:13Z Seth:解锁(前提更正:监控标签 2023-07-26 才推出,库里最早一条就是那天,「最早 < 2023-06-01」是错的前提;按『每个代币取第一次』读作代币数 = 80 ≥ 30 ✓)。 | 2026-11-08 lane-b:✅ 判据 (a)–(e) 全过。前提:首次打标签代币 80 个(≥30 ✓);最早 monitoring_tag 事件 2023-07-26 = 标签推出日 ✓;最早一个代币首次打标签 2023-10-04。事件集 = events(source=binance, kind=monitoring_tag) 18 条公告 / 80 个代币行 / 80 个代币(解析用仓库 canonical `src/data/market/events.py::monitoring_tag`;清单 docs/research/t274_events.csv,先落文件再取价)。主口径 asset_mcap_daily:有价 36/80、可算 n=36;(a) 30 天超额中位 −18.28%(要 ≤−5%)✅、均值 −21.43%、p10 −70.57%、p90 +18.59%;(b) 80.6% 为负(29/36,要 ≥60%)✅;(c) 同代币 [d0−365,d0−60] 随机 200 日对照(种子 20261108)分位 0.010(要 ≤0.05)✅,零分布 q05 −15.14%/q50 −8.96%/q95 −1.86%;(d) 按事件日期对半分两段 早段 n=18 中位 −15.69%(2023-10-04→2026-01-02)/ 晚段 n=18 中位 −20.80%(2026-03-13→2026-09-04),同号且各 ≥10 ✅;(e) 有价 36 ≥ 30 ✅。交叉核对源 ohlcv_daily(coingecko_pro_ohlc,可算 18):中位 −19.40%、88.9% 为负、分位 0.025(方向一致;该源样本量不满足 (d)(e),只作方向核对)。敏感性:去掉最负 1/2/3/5 个后中位 −18.65/−19.28/−19.90/−20.35% ⇒ 不是极端值撑起来的。副项(只报):① 打标签后 180 天内被宣布整币下架 45/80 = 56.25%(任何时候 54/80 = 67.5%);② 标签被移除后 30 天:8 个代币 5 个可算,中位 −24.27%、80% 为负;③ 标签前市值三分位:小 n=11 中位 −45.47% / 中 n=11 −19.90% / 大 n=12 −14.64%;④ 标签前 30 天超额中位已 −13.19%(83.3% 为负)、公告当天跳空 −9.23%、后 7 天 −7.07% ⇒ 标签是滞后的;⑤ 把硬规则从『下架公告即剔除』前移到『打标签即剔除』实际吃到的一段:28 个有价且后来被下架的代币,打标签→公告 中位 62 天(均值 94),该段超额中位 −41.39%、均值 −43.68%、89.3% 为负(全部可算)。诚实:① 2023-07-26 推出公告本身标题里没有代币列表 ⇒ 入库 symbols 为空 ⇒ 当初被打『高波动/高风险』标签的原始一批不在样本里(样本 = 后来被『Extend … to Include』逐批加进来的 80 个),补进来很可能让效应更负,但那是口径变更,须另立预注册;② 价格覆盖 36/80,缺失的 44 个里有 23 个在 180 天内被下架 ⇒ 幸存者偏差,真值大概率比 −18.28% 更负。结论只支持『向 Jazz 提硬规则前移』,动真钱规则仍由 Jazz 拍。产物:docs/research/T-274_monitoring_tag.md + t274_monitoring.py + t274_results.json + t274_events.csv + t274_screening.json + scenarios/lane-b-T-274.json(5 条)。只算、不入库、不改代码。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-08T00:41:50Z",
+    "value": "S-753 ✅ (a)–(e) 全过:30 天相对 BTC 中位 −18.3%(n 36)、对照分位 0.010、两段同号;56% 在 180 天内被下架;打标签→下架公告中位 62 天、那段 −41%。后果:向 Jazz 提硬规则前移(Jazz 拍)。",
+    "ledger": "S-753 结果"
+  },
+  "blocked_by": null
 }

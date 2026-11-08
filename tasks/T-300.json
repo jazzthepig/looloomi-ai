@@ -1,0 +1,29 @@
+{
+  "id": "T-300",
+  "owner": "lane-c",
+  "status": "blocked",
+  "created": "2026-11-08",
+  "title": "S-782 S-770 在解析器 v2 之后重量:补回的 2018–2020 Upbit KRW 上币 + 剔掉 asset_mcap_daily 的跳价伪影",
+  "source": "REFUTATION_LEDGER S-782(预注册)、S-770 结果段;你自己的 docs/research/t291_upbit.py(口径逐字照它)。数据:events(source = upbit,payload.parser = 'v2-2026-11-08' 的行已按新解析器重写)、asset_mcap_daily。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-300.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "预注册(S-782 原文)照抄进报告开头,只算一次。复用 t291_upbit.py:同一篮、同一对照、种子 770;事件 = 重写后 payload.krw = true 的每个代号第一次。篮子剔掉 asset_mcap_daily 单日价格比 > 100 或 < 0.01 的币日(这条规则也报一次不剔的结果)。判只看 2017–2021 段:中位 < 0 且分位 ≤ 0.05;全样本三条判据重报;报新增事件数(相对 T-291 的 232 / 106)、按年分布。除中位外报均值与 p10 / p90。纪律同 T-291:只算、不入库、不改代码;零分布只用 apparatus;翻页带 order=;事件清单先落文件。",
+    "expect": "docs/research/T-300_upbit_listing_v2.md + t300_results.json + scenarios/lane-c-T-300.json(≥ 3 条前向命题,author = lane-c);in_review,推 lane-c/T-300。"
+  },
+  "prior_value": "S-770 的两段同号靠第一段 n 8 撑着;解析器 v1 漏了 2018–2020 的 KRW 上币。补回之后早期段站不站,决定「上币 = 高位」是不是只有 2022 之后才成立。",
+  "notes": "2026-11-08 Seth 开卡:blocked 到解析器 v2 部署并跑过一次重写(判据:select count(*) from events where source = 'upbit' and payload->>'parser' = 'v2-2026-11-08' > 0)。",
+  "blocked_by": "deploy:korea_retail parser v2 + 已入库公告重写一次",
+  "verified": null
+}
