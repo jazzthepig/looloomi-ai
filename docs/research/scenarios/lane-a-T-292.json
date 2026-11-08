@@ -1,0 +1,26 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {"id": "T-292-1", "scenario": "T-292 韩国溢价(S--771)的市场上下文",
+     "statement": "面板站上 50 日均线的成员比例(state:breadth_above_ma50)2026-12-05 高于 2026-11-04 的 4.17% —— 极弱宽度的一个月回归",
+     "variable": "state:breadth_above_ma50", "op": "gt", "lo": 0.0416666666666667, "prob": 0.70, "horizon_d": "2026-12-05"},
+    {"id": "T-292-2", "scenario": "T-292 韩国溢价(S-771)的市场上下文",
+     "statement": "BTC 收盘价(ohlcv_daily)2026-12-05 仍高于 80,504(2026-11-04 的参考位)",
+     "variable": "close:BTC", "op": "gt", "lo": 80504, "prob": 0.55, "horizon_d": "2026-12-05"},
+    {"id": "T-292-3", "scenario": "T-292 韩国溢价(S-771)的机制是否还在",
+     "statement": "2026-12-05 之前,Upbit 上仍在交易的 KRW 市场数量仍 ≥ 285 个(2026-11-06 实测 300 个)",
+     "variable": "manual", "op": "gt", "lo": 285, "prob": 0.90, "horizon_d": "2026-12-05"},
+    {"id": "T-292-4", "scenario": "T-292 韩国溢价(S-771)的前向存续",
+     "statement": "2026-12-05 之前的四周里,「韩国溢价最高五分位 − 最低五分位」的按市值加权四周相对 BTC 超额落在 −100% 与 0 之间(即为负)",
+     "variable": "manual", "op": "between", "lo": -1.0, "hi": 0.0, "prob": 0.42, "horizon_d": "2026-12-05"},
+    {"id": "T-292-5", "scenario": "T-292 韩国溢价(S-771)的前向存续(看过结果后的同题再答)",
+     "statement": "2026-12-05 之前的四周里,「韩国溢价最高五分位 − 最低五分位」的按市值加权四周相对 BTC 超额落在 −100% 与 0 之间(即为负)",
+     "variable": "manual", "op": "between", "lo": -1.0, "hi": 0.0, "prob": 0.62, "horizon_d": "2026-12-05"},
+    {"id": "T-292-6", "scenario": "T-292 韩国溢价(S-771)的市场上下文(后验)",
+     "statement": "ETH 收盘价(ohlcv_daily)2026-12-05 高于 2,238.67(2026-11-06 实测参考位)",
+     "variable": "close:ETH", "op": "gt", "lo": 2238.67, "prob": 0.52, "horizon_d": "2026-12-05"},
+    {"id": "T-292-7", "scenario": "T-292 韩国溢价(S-771)的机制是否还在(后验)",
+     "statement": "2026-12-05 之前,Upbit KRW-USDT 市场仍每日有报价(S 的 USDKRW 代理存续;2024-06-07 起 883 天无缺口)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.85, "horizon_d": "2026-12-05"}
+  ]
+}
