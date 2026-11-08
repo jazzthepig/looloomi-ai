@@ -1,7 +1,7 @@
 {
   "id": "T-300",
   "owner": "lane-c",
-  "status": "blocked",
+  "status": "done",
   "created": "2026-11-08",
   "title": "S-782 S-770 在解析器 v2 之后重量:补回的 2018–2020 Upbit KRW 上币 + 剔掉 asset_mcap_daily 的跳价伪影",
   "source": "REFUTATION_LEDGER S-782(预注册)、S-770 结果段;你自己的 docs/research/t291_upbit.py(口径逐字照它)。数据:events(source = upbit,payload.parser = 'v2-2026-11-08' 的行已按新解析器重写)、asset_mcap_daily。",
@@ -23,7 +23,11 @@
     "expect": "docs/research/T-300_upbit_listing_v2.md + t300_results.json + scenarios/lane-c-T-300.json(≥ 3 条前向命题,author = lane-c);in_review,推 lane-c/T-300。"
   },
   "prior_value": "S-770 的两段同号靠第一段 n 8 撑着;解析器 v1 漏了 2018–2020 的 KRW 上币。补回之后早期段站不站,决定「上币 = 高位」是不是只有 2022 之后才成立。",
-  "notes": "2026-11-08 Seth 开卡:blocked 到解析器 v2 部署并跑过一次重写(判据:select count(*) from events where source = 'upbit' and payload->>'parser' = 'v2-2026-11-08' > 0)。",
-  "blocked_by": "deploy:korea_retail parser v2 + 已入库公告重写一次",
-  "verified": null
+  "notes": "2026-11-08 lane-c 交付:主判 CONFIRMED —— 2017–2021 段(补回事件后 n=19,原 n=8)30 天相对等权篮超额中位 −26.7%、该段随机日对照分位 0.029 ≤ 0.05 ⇒「早期段也站住」;全样本三条判据也全过(中位 −21.9%、分位 0.000、两段同号 −26.7% / −21.4%)。事件数 232 → 285(+53:2018=26 / 2019=5 / 2020=15 / 2021=7,消失 0),有价 n 106 → 117;按年 事件/有价:2017 4/1、2018 26/0、2019 5/3、2020 15/3、2021 17/12、2022 6/5、2023 12/8、2024 37/21、2025 82/38、2026 81/26。篮子剔掉单日价格比 >100 或 <0.01 的币日(主口径剔 186 个币日 / 23 个代号)后:均值 −35.8%(不剔 −568.3%,纯伪影)、中位 −21.9%、p10 −52.3% / p90 +16.0%、为负 77.8%;不剔版本的中位/分位/两段与剔的完全相同 ⇒ 判据对过滤实现不敏感(三种实现都 CONFIRMED)。诚实:2018 补回的 26 个事件一个有价都没有 ⇒ 补回的是事件清单不是可判样本,「早期段」的实证基础是 2019–2021;S-782 的篮规没写死剔一个还是剔一段(无上限链式剔会把 SUN/PAAL 剔掉 88%/97% 的历史),本次主口径加了「连续剔最多 10 个」上限(实现细节,记在报告里)。只算、不入库;不改 S-770 的结论。产物:docs/research/T-300_upbit_listing_v2.md + t300_results.json + t300_events.csv/json + scenarios/lane-c-T-300.json(6 条前向命题)。 | 2026-11-08 Seth 开卡:blocked 到解析器 v2 部署并跑过一次重写(判据:select count(*) from events where source = 'upbit' and payload->>'parser' = 'v2-2026-11-08' > 0)。 | 2026-11-08T02:49:16Z Seth:解锁 —— 解析器 v2 已部署并重写一次(82 条公告;listing 里 krw 为空 58 → 4,krw = true 279 条公告)。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-08T03:05:47Z",
+    "value": "S-782:事件 232 → 285、有价 106 → 117;2017–2021 段 n 19 中位 −26.8%、对照分位 0.029 ⇒ 早期段站住;全样本中位 −21.9%、分位 0.000;伪影只动均值。",
+    "ledger": "S-782 结果"
+  }
 }

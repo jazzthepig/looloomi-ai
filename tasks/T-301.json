@@ -1,7 +1,7 @@
 {
   "id": "T-301",
   "owner": "lane-b",
-  "status": "blocked",
+  "status": "open",
   "created": "2026-11-08",
   "title": "S-783 S-781 盲复算 + crowding_events() 在今天的数据上的逐事件对账(你的 t289 参考实现 vs 库里的 crowding_watch)",
   "source": "REFUTATION_LEDGER S-783(预注册);只读 S-726 / S-777 的口径段,**不读 S-781 的结果段**。你自己的 docs/research/t289_squeeze.py(guards=True)。数据:perp_bv_daily、v_funding_daily、perp_bv_pairs、crowding_watch(anon 可读)。",
@@ -23,7 +23,6 @@
     "expect": "docs/research/T-301_squeeze_recompute.md + t301_results.json + scenarios/lane-b-T-301.json(≥ 3 条前向命题,author = lane-b);in_review,推 lane-b/T-301。"
   },
   "prior_value": "把「库里的内核 = 参考实现」从「238 条全中 + 多出来的能解释」升级成「今天的数据上逐条相等」;S-781 的数从一个人算的变成两个人算的。之后 crowding_watch 的前向记录才算有底。",
-  "notes": "2026-11-08 Seth 开卡:blocked 到 crowding_watch 部署后第一次全量写入(判据:select count(*) from crowding_watch where cohort = 'backfill' ≥ 400)。",
-  "blocked_by": "deploy:crowding_watch 首次全量写入",
+  "notes": "2026-11-08 Seth 开卡:blocked 到 crowding_watch 部署后第一次全量写入(判据:select count(*) from crowding_watch where cohort = 'backfill' ≥ 400)。 | 2026-11-08T03:24:34Z Seth:解锁 —— crowding_watch 03:18 UTC 由写入端第一次全量写入:backfill squeeze 351(到期 341)/ flush 59(到期 57)。",
   "verified": null
 }
