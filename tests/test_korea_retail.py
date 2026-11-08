@@ -80,3 +80,15 @@ def test_reparse_only_returns_changed_rows_with_full_columns():
     r = out[0]
     assert r["symbols"] == ["EOS"] and r["payload"]["krw"] is True and r["payload"]["notice_id"] == 1
     assert r["payload"]["parser"] == PARSER_VERSION and r["ts"] and r["kind"] == "listing", "upsert 要整行(非空列)"
+
+
+def test_usdkrw_rows_and_wiring():
+    """11-08:全市场韩国溢价要韩元汇率;KRW-USDT 2024-06 才有,EODHD USDKRW.FOREX 从 2017 起。"""
+    from pathlib import Path
+    from src.data.market.korea_retail import FX_SERIES, WRITES_COLUMNS, fx_rows
+    rows = fx_rows([{"date": "2017-08-31", "close": 1125.0}, {"date": "2017-09-01", "close": 1128.5},
+                    {"date": "2017-09-04", "close": None}, {"date": "2017-09-05", "close": 0}])
+    assert rows == [{"series": FX_SERIES, "d": "2017-09-01", "value": 1128.5, "source": "eodhd"}]
+    assert set(rows[0]) == set(WRITES_COLUMNS["macro_daily"])
+    mig = (Path(__file__).resolve().parents[1] / "migrations/2026-11-08_kimchi_premium_daily.sql").read_text(encoding="utf-8")
+    assert "create or replace view public.kimchi_premium_daily with (security_invoker = true)" in mig and f"series = '{FX_SERIES}'" in mig
