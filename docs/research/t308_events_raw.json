@@ -1,0 +1,603 @@
+{
+ "task": "T-308",
+ "fetched_at": "2026-11-08T13:13:59.248500+00:00",
+ "content_range_total": 27,
+ "n_rows": 27,
+ "rows": [
+  {
+   "id": "d1c0f0020393e6aa50b3b949",
+   "ts": "2023-07-26T03:00:04.342+00:00",
+   "kind": "monitoring_tag",
+   "source": "binance",
+   "symbols": [],
+   "title": "Introducing Seed Tags & Monitoring Tags for Tokens with High Volatility and Risks",
+   "url": "https://www.binance.com/en/support/announcement/b0f241491d0e4d75aa2f8752b7bf8af5",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 171442
+   },
+   "recorded_at": "2026-11-07T12:18:55.719162+00:00"
+  },
+  {
+   "id": "bea681905a1d63eda903752a",
+   "ts": "2023-10-04T06:00:16.946+00:00",
+   "kind": "monitoring_tag",
+   "source": "binance",
+   "symbols": [
+    "BETA",
+    "BOND",
+    "WTC",
+    "XEM"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include BETA, BOND, WTC and XEM on 2023-10-04",
+   "url": "https://www.binance.com/en/support/announcement/1eb7ee7c825d480f98b85b56a13b4c29",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 178710
+   },
+   "recorded_at": "2026-11-07T12:18:55.719162+00:00"
+  },
+  {
+   "id": "9dd348329c3a2554602aaaa5",
+   "ts": "2024-01-04T07:00:09.013+00:00",
+   "kind": "monitoring_tag_removed",
+   "source": "binance",
+   "symbols": [
+    "ANT",
+    "FIRO",
+    "KP3R",
+    "MDX",
+    "MOB",
+    "REEF",
+    "VAI",
+    "XMR",
+    "ZEC",
+    "ZEN",
+    "GMX",
+    "SUSHI"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04",
+   "url": "https://www.binance.com/en/support/announcement/fd710b5e647c480ab9fe2d87e3cd4b39",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 187808
+   },
+   "recorded_at": "2026-11-07T11:58:46.586348+00:00"
+  },
+  {
+   "id": "a740aba4e5a6191ae2ba7292",
+   "ts": "2024-04-03T06:00:16.944+00:00",
+   "kind": "monitoring_tag",
+   "source": "binance",
+   "symbols": [
+    "EPX",
+    "UNFI",
+    "WAVES",
+    "WNXM"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include EPX, FOR, UNFI, WAVES & WNXM on 2024-04-03",
+   "url": "https://www.binance.com/en/support/announcement/b869da2d645f41dab50227335703a741",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 196405
+   },
+   "recorded_at": "2026-11-07T11:58:46.586348+00:00"
+  },
+  {
+   "id": "505cc4d796788af80607dbc2",
+   "ts": "2024-07-01T07:00:03.584+00:00",
+   "kind": "monitoring_tag_removed",
+   "source": "binance",
+   "symbols": [
+    "BAL",
+    "CTXC",
+    "CVP",
+    "CVX",
+    "DOCK",
+    "HARD",
+    "IRIS",
+    "MBL",
+    "POLS",
+    "SNT",
+    "SUN",
+    "MLN",
+    "ZEN"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01",
+   "url": "https://www.binance.com/en/support/announcement/782b121c462b499487dc8f20e0edc6b2",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 204276
+   },
+   "recorded_at": "2026-11-07T11:40:06.432282+00:00"
+  },
+  {
+   "id": "2e77adada5764b953fee066d",
+   "ts": "2024-10-03T07:00:05.269+00:00",
+   "kind": "monitoring_tag_removed",
+   "source": "binance",
+   "symbols": [
+    "BLZ",
+    "CLV",
+    "KEY",
+    "PROS",
+    "VITE",
+    "PENDLE",
+    "SEI"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include BLZ, CLV, KEY, PROS & VITE and Remove the Seed Tag for PENDLE & SEI on 2024-10-03",
+   "url": "https://www.binance.com/en/support/announcement/2178333b0324406088737cf07436ba43",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 213156
+   },
+   "recorded_at": "2026-11-07T11:23:15.498548+00:00"
+  },
+  {
+   "id": "ec87daf909c901e2cb895ff6",
+   "ts": "2025-01-02T09:00:19.305+00:00",
+   "kind": "monitoring_tag_removed",
+   "source": "binance",
+   "symbols": [
+    "STMX",
+    "TROY",
+    "CVX",
+    "SUN",
+    "ARKM",
+    "BLUR",
+    "JTO",
+    "TIA"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include STMX & TROY, Remove the Monitoring Tag for CVX & SUN, and Remove the Seed Tag for ARKM, BLUR, JTO & TIA on 2025-01-02",
+   "url": "https://www.binance.com/en/support/announcement/00ae3dd0e47746f0a118c9ea3172dde3",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 222258
+   },
+   "recorded_at": "2026-11-07T11:23:15.498548+00:00"
+  },
+  {
+   "id": "82c0cca8c233f80a47152b3a",
+   "ts": "2025-03-04T08:01:22.062+00:00",
+   "kind": "monitoring_tag",
+   "source": "binance",
+   "symbols": [
+    "AERGO",
+    "ALPACA",
+    "AST",
+    "BADGER",
+    "BURGER",
+    "COMBO",
+    "NULS",
+    "STPT",
+    "UFT",
+    "VIDT"
+   ],
+   "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04",
+   "url": "https://www.binance.com/en/support/announcement/d0a0b3c398264e9eb460f0e64324453c",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 227923
+   },
+   "recorded_at": "2026-11-07T11:07:16.344242+00:00"
+  },
+  {
+   "id": "93c4f5c93107aef099238353",
+   "ts": "2025-03-07T09:00:45.829+00:00",
+   "kind": "monitoring_tag",
+   "source": "binance",
+   "symbols": [
+    "GPS"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to GPS on 2025-03-07",
+   "url": "https://www.binance.com/en/support/announcement/79167fa2f976432eaab191563887ffd1",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 228477
+   },
+   "recorded_at": "2026-11-07T11:07:16.344242+00:00"
+  },
+  {
+   "id": "a4c8dcb6323cf01faa8b8cfa",
+   "ts": "2025-04-03T07:00:36.245+00:00",
+   "kind": "monitoring_tag_removed",
+   "source": "binance",
+   "symbols": [
+    "ARDR",
+    "BSW",
+    "FLM",
+    "LTO",
+    "NKN",
+    "PDA",
+    "PERP",
+    "VIB",
+    "VOXEL",
+    "WING",
+    "JUP",
+    "STRK",
+    "TON"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03",
+   "url": "https://www.binance.com/en/support/announcement/5efec0c8ac784f74beb742b88fba8f02",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 231948
+   },
+   "recorded_at": "2026-11-07T11:07:16.344242+00:00"
+  },
+  {
+   "id": "90e6543ffc144b73524c5a46",
+   "ts": "2025-05-07T08:00:33.736+00:00",
+   "kind": "monitoring_tag",
+   "source": "binance",
+   "symbols": [
+    "ALPHA",
+    "HIFI",
+    "LEVER",
+    "MOVE",
+    "PORTAL",
+    "REI"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07",
+   "url": "https://www.binance.com/en/support/announcement/514e8ba0fef0462b97a8ce1506dc474d",
+   "payload": {
+    "scope": "alpha",
+    "catalog": 49,
+    "article_id": 235664
+   },
+   "recorded_at": "2026-11-07T11:07:16.344242+00:00"
+  },
+  {
+   "id": "0310afdfe323e35ca7ea87bf",
+   "ts": "2025-06-05T05:00:18.433+00:00",
+   "kind": "monitoring_tag",
+   "source": "binance",
+   "symbols": [
+    "BIFI",
+    "FIS",
+    "KMD",
+    "MDT"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include BIFI, FIS, KMD & MDT on 2025-06-05",
+   "url": "https://www.binance.com/en/support/announcement/74103b430fbe40438e59a5c0e1b5b201",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 238293
+   },
+   "recorded_at": "2026-11-07T11:07:16.344242+00:00"
+  },
+  {
+   "id": "1d114310c0d9d8a948af0c0e",
+   "ts": "2025-07-07T03:29:57.414+00:00",
+   "kind": "monitoring_tag",
+   "source": "binance",
+   "symbols": [
+    "BAKE",
+    "IDEX",
+    "SLF"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include BAKE, IDEX & SLF on 2025-07-07",
+   "url": "https://www.binance.com/en/support/announcement/d542f33541414ba5b1289b8812d452de",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 240548
+   },
+   "recorded_at": "2026-11-07T10:51:56.144517+00:00"
+  },
+  {
+   "id": "aff5d542790d1fae40561ac7",
+   "ts": "2025-07-09T01:59:56.407+00:00",
+   "kind": "monitoring_tag_removed",
+   "source": "binance",
+   "symbols": [
+    "ZEC",
+    "ENA",
+    "PYTH",
+    "TAO"
+   ],
+   "title": "Binance Will Remove the Monitoring Tag for ZEC and the Seed Tag for ENA, PYTH, TAO & W on 2025-07-09",
+   "url": "https://www.binance.com/en/support/announcement/c2536e8b6ed44c7ba4f62c249dbde9bb",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 240714
+   },
+   "recorded_at": "2026-11-07T10:51:56.144517+00:00"
+  },
+  {
+   "id": "9fd997ed4f007e9336bbdfe5",
+   "ts": "2025-10-09T02:29:52.334+00:00",
+   "kind": "monitoring_tag_removed",
+   "source": "binance",
+   "symbols": [
+    "WAN",
+    "GPS",
+    "MBL",
+    "BERA",
+    "BIO",
+    "ZK",
+    "ZRO"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include WAN, Remove the Monitoring Tag for GPS & MBL, and Remove the Seed Tag for BERA, BIO, ZK & ZRO on 2025-10-09",
+   "url": "https://www.binance.com/en/support/announcement/13bbf79fa3da4919a6388fe86125c533",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 251838
+   },
+   "recorded_at": "2026-11-07T10:51:56.144517+00:00"
+  },
+  {
+   "id": "17d5a938d13e185344321bc9",
+   "ts": "2025-12-01T04:30:24.832+00:00",
+   "kind": "monitoring_tag",
+   "source": "binance",
+   "symbols": [
+    "CHESS",
+    "DENT",
+    "DF",
+    "GHST",
+    "SXP"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include CHESS, DENT, DF, GHST & SXP on 2025-12-01",
+   "url": "https://www.binance.com/en/support/announcement/aec9353b427f4b1ab42415e770e2eb5a",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 258239
+   },
+   "recorded_at": "2026-11-07T10:30:09.162547+00:00"
+  },
+  {
+   "id": "ecb66504e90d7153d66cf665",
+   "ts": "2026-01-02T10:59:57.739+00:00",
+   "kind": "monitoring_tag",
+   "source": "binance",
+   "symbols": [
+    "ACA",
+    "DATA",
+    "FLOW"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include ACA, D, DATA & FLOW on 2026-01-02",
+   "url": "https://www.binance.com/en/support/announcement/b15c2beb81b94e7a846f905b267ce546",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 261359
+   },
+   "recorded_at": "2026-11-07T10:30:09.162547+00:00"
+  },
+  {
+   "id": "1541553381ea171b91876925",
+   "ts": "2026-03-06T08:29:56.086+00:00",
+   "kind": "monitoring_tag_removed",
+   "source": "binance",
+   "symbols": [
+    "COS",
+    "DEGO",
+    "FORTH",
+    "FUN",
+    "HOOK",
+    "LRC",
+    "MBOX",
+    "OXT",
+    "WIF",
+    "FLOW",
+    "ONDO",
+    "VIRTUAL"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06",
+   "url": "https://www.binance.com/en/support/announcement/e56e5e6b33ad493c98a71189643ade4f",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 267451
+   },
+   "recorded_at": "2026-11-07T10:30:09.162547+00:00"
+  },
+  {
+   "id": "ab602d5903e71b6737c14eed",
+   "ts": "2026-03-13T09:00:23.06+00:00",
+   "kind": "monitoring_tag",
+   "source": "binance",
+   "symbols": [
+    "ATA",
+    "A2Z",
+    "FIO",
+    "GTC",
+    "NTRN",
+    "PHB",
+    "QI",
+    "RDNT"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13",
+   "url": "https://www.binance.com/en/support/announcement/2448b786202948bea67d4cd66f66d208",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 268263
+   },
+   "recorded_at": "2026-11-07T10:30:09.162547+00:00"
+  },
+  {
+   "id": "069d99e2099ee4b7636adabe",
+   "ts": "2026-04-14T02:30:06.111+00:00",
+   "kind": "monitoring_tag_removed",
+   "source": "binance",
+   "symbols": [
+    "FARM",
+    "HIGH",
+    "MLN",
+    "RESOLV",
+    "SYS",
+    "TRU",
+    "VELODROME",
+    "XAUT"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include FARM, HIGH, MLN, RESOLV, SYS, TRU & VELODROME, Remove the Seed Tag for XAUT on 2026-04-14",
+   "url": "https://www.binance.com/en/support/announcement/f2286b6232434b31927ccd3e7187afd3",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 271103
+   },
+   "recorded_at": "2026-11-07T10:30:09.162547+00:00"
+  },
+  {
+   "id": "f50e5c614111cba6a5ed877a",
+   "ts": "2026-04-30T07:00:05.981+00:00",
+   "kind": "monitoring_tag",
+   "source": "binance",
+   "symbols": [
+    "NFP",
+    "NOM",
+    "POND",
+    "QUICK",
+    "VIC"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include NFP, NOM, POND, QUICK & VIC on 2026-04-30",
+   "url": "https://www.binance.com/en/support/announcement/629b1970537e45b8801427d3de49a25b",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 272871
+   },
+   "recorded_at": "2026-11-07T10:30:09.162547+00:00"
+  },
+  {
+   "id": "1e3cd8445c071e149e184c9f",
+   "ts": "2026-05-22T08:00:04.004+00:00",
+   "kind": "monitoring_tag",
+   "source": "binance",
+   "symbols": [
+    "ALCX",
+    "COOKIE",
+    "DODO",
+    "EPIC",
+    "HEI",
+    "HFT",
+    "STORJ",
+    "SYN",
+    "TLM"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22",
+   "url": "https://www.binance.com/en/support/announcement/ca0f3a3ff83243b79102b4561c8ccdc2",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 274815
+   },
+   "recorded_at": "2026-11-07T10:12:03.76851+00:00"
+  },
+  {
+   "id": "a9d1800c1fa100c7fd32af47",
+   "ts": "2026-07-03T06:00:11.367+00:00",
+   "kind": "monitoring_tag",
+   "source": "binance",
+   "symbols": [
+    "AEUR",
+    "PYR",
+    "SCRT",
+    "VANRY"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include AEUR, PYR, SCRT & VANRY on 2026-07-03",
+   "url": "https://www.binance.com/en/support/announcement/999c897add924d01a8b10c26b316690c",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 279016
+   },
+   "recorded_at": "2026-11-07T10:12:03.76851+00:00"
+  },
+  {
+   "id": "d26584fe0bf2e0588650d16c",
+   "ts": "2026-07-24T03:00:06.343+00:00",
+   "kind": "monitoring_tag",
+   "source": "binance",
+   "symbols": [
+    "ACX",
+    "LSK",
+    "STX"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include ACX, LSK & STX on 2026-07-24",
+   "url": "https://www.binance.com/en/support/announcement/12056a79b7f545a3aa03fa5031f77b16",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 280882
+   },
+   "recorded_at": "2026-11-07T10:12:03.76851+00:00"
+  },
+  {
+   "id": "6fd47bc7928d6219ad7114bc",
+   "ts": "2026-08-11T09:00:12.289+00:00",
+   "kind": "monitoring_tag",
+   "source": "binance",
+   "symbols": [
+    "GLMR",
+    "ICX",
+    "MOVR",
+    "RARE",
+    "SOPH"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include GLMR, ICX, MOVR, RARE & SOPH on 2026-08-11",
+   "url": "https://www.binance.com/en/support/announcement/1ec3ae2e21274a92858aa8cf58ae6c3a",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 282044
+   },
+   "recorded_at": "2026-11-07T10:12:03.76851+00:00"
+  },
+  {
+   "id": "a71cf1e79d94273edc65057a",
+   "ts": "2026-09-04T08:00:06.5+00:00",
+   "kind": "monitoring_tag",
+   "source": "binance",
+   "symbols": [
+    "AVA",
+    "GNS",
+    "SCR",
+    "TOWNS"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include AVA, GNS, SCR & TOWNS on 2026-09-04",
+   "url": "https://www.binance.com/en/support/announcement/59c847eea19149369c3bf4b01edfa6df",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 283791
+   },
+   "recorded_at": "2026-11-07T10:12:03.76851+00:00"
+  },
+  {
+   "id": "30794204a1de8e431aad5c17",
+   "ts": "2026-10-09T07:00:14.078+00:00",
+   "kind": "monitoring_tag",
+   "source": "binance",
+   "symbols": [
+    "BICO",
+    "CVC"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include BICO & CVC on 2026-10-09",
+   "url": "https://www.binance.com/en/support/announcement/0dfee98051814fccb9f18ce49b8425bb",
+   "payload": {
+    "scope": "spot",
+    "catalog": 49,
+    "article_id": 286353
+   },
+   "recorded_at": "2026-11-07T10:12:03.76851+00:00"
+  }
+ ]
+}
