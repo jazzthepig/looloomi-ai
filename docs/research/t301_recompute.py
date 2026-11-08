@@ -116,6 +116,22 @@ def main():
     log("events(guards=True): squeeze=%d flush=%d | (guards=False) squeeze=%d flush=%d" %
         (len(ev["squeeze"]), len(ev["flush"]), len(ev_legacy["squeeze"]), len(ev_legacy["flush"])))
 
+    # 逐事件的检测输入(只报不改口径):fund_pct = 7 日资金费分位、ret = 当日收益、
+    # atr_thr = ATR_K×ATR14/前收盘、qv_mult = qv 门槛倍数(常量)。
+    def ev_detail(e):
+        i, j = e["sym_i"], e["bar"]
+        c = pan["C"][i]
+        atr = pan["atr"][i]
+        thr = t297.ATR_K * atr / np.roll(c, 1)
+        ret = pan["ret"][i][j]
+        return {"fund_pct": float(pan["pct"][i][j]),
+                "ret": float(ret) if ret is not None else float("nan"),
+                "atr_thr": float(thr[j]), "qv_mult": float(t297.QV_MULT),
+                "qv": float(pan["QV"][i][j]), "qv20": float(pan["qv20"][i][j]),
+                "atr14": float(atr[j]), "f7": float(pan["f7"][i][j]),
+                "pctl_hi": float(t297.PCTL_HI), "pctl_lo": float(t297.PCTL_LO),
+                "dedupe_days": float(t297.DEDUPE_DAYS)}
+
     mine = {}
     for kindname in ("squeeze", "flush"):
         for e in ev[kindname]:
@@ -180,12 +196,12 @@ def main():
     with np.errstate(all="ignore"):
         basket_coin = np.nanmean(np.where(coin_mask[None, :], ex_ret, np.nan), axis=1)
 
-    axis_pos = {int(d): k for k, d in enumerate(alld)}
+    axis_pos = {pd.Timestamp(d).value: k for k, d in enumerate(alld)}
 
     def event_excess(kindname, sym, dstr):
         """返回 (超额, 代币收益, 篮子收益, 篮子 n, 是否到期)。"""
-        d = pd.Timestamp(dstr).to_datetime64()
-        k = axis_pos.get(int(d))
+        d = pd.Timestamp(dstr)
+        k = axis_pos.get(d.value)
         if k is None:
             return (np.nan,) * 5
         i = pan["sidx"].get(sym)
@@ -198,8 +214,8 @@ def main():
         return (ev_ret - bk, ev_ret, bk, int(basket_n[k]), True)
 
     def event_excess_coin(sym, dstr):
-        d = pd.Timestamp(dstr).to_datetime64()
-        k = axis_pos.get(int(d))
+        d = pd.Timestamp(dstr)
+        k = axis_pos.get(d.value)
         if k is None:
             return (np.nan,) * 4
         i = pan["sidx"].get(sym)
@@ -222,7 +238,7 @@ def main():
             rows.append({"kind": kindname, "symbol": sym, "d": e["d"], "exc": exc, "ev_ret": evr,
                          "basket": bk, "basket_n": bn, "exc_coin": exc_c,
                          "db_x30": (r or {}).get("x30"), "db_basket_n": (r or {}).get("basket_n"),
-                         "in_db": r is not None})
+                         "in_db": r is not None, **ev_detail(e)})
     import csv as _csv
     with open(os.path.join(HERE, "t301_event_forward.csv"), "w", newline="") as f:
         w = _csv.DictWriter(f, fieldnames=list(rows[0].keys()))
@@ -258,7 +274,13 @@ def main():
     def halves(x, darr):
         out = {}
         for hk, (a, b) in HALVES.items():
-            m = (darr >= a) & (darr <= b)
+            # "-inf" / "+inf" 是哨兵(照抄 HALVES 常数),不是字面字符串比较——
+            # 否则 "+inf" < "2026-07-13"(ASCII '+' < '2')会把 H2 全部判成空。
+            m = np.ones(len(darr), dtype=bool)
+            if a != "-inf":
+                m &= (darr >= a)
+            if b != "+inf":
+                m &= (darr <= b)
             out[hk] = stats(np.asarray(x)[m])
         return out
 
@@ -311,8 +333,12 @@ def main():
 
     # ── 零分布:同币同年随机日,1,000 次,种子 783(只用 apparatus)──────────
     # 候选:同合约、同一年、已到期、且该合约在 d'+1 有开盘价
+    # 掩码对齐:零分布与实际值必须用同一批事件(已到期 / x30 有值)——
+    # 否则零分布按 351 个事件抽、实际值只有 341 个,分位不可比。
+    matured_keys = set(zip(sq_mat["symbol"], sq_mat["d"]))
+    sq_matured = [e for e in sq_sorted if (syms[e["sym_i"]], e["d"]) in matured_keys]
     cands = []
-    for e in sq_sorted:
+    for e in sq_matured:
         sym = syms[e["sym_i"]]
         i = pan["sidx"][sym]
         y = int(e["d"][:4])
@@ -333,7 +359,7 @@ def main():
             if len(c) == 0:
                 return np.nan
             k = c[int(rng.integers(0, len(c)))]
-            vals[t] = ex_ret[k, pan["sidx"][syms[sq_sorted[t]["sym_i"]]]] - basket[k]
+            vals[t] = ex_ret[k, pan["sidx"][syms[sq_matured[t]["sym_i"]]]] - basket[k]
         return vals
 
     n_median = null_distribution(lambda rng: float(np.median(draw(rng))), N_NULL, NULL_SEED)

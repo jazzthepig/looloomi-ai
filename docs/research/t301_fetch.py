@@ -151,7 +151,21 @@ def main():
     ap.add_argument("--dates", action="store_true")
     ap.add_argument("--funding", action="store_true")
     ap.add_argument("--rest", action="store_true")
+    ap.add_argument("--funding-tail", action="store_true")
     args = ap.parse_args()
+    os.makedirs(CACHE, exist_ok=True)
+
+    if args.funding_tail:
+        # 资金费尾巴:d > D_TO(与 perp_bv_daily 的尾巴同两天)——
+        # k_fund = 该合约面板里有资金费观测的天数,缺尾巴会与库内内核的 k_fund 不一致。
+        rows = fetch_paged("v_funding_daily",
+                           {"select": "symbol,d,funding_rate", "d": "gt.%s" % D_TO,
+                            "order": "symbol.asc,d.asc"},
+                           os.path.join(CACHE, "v_funding_daily_tail.json"), workers=2)
+        ds = sorted(set(str(r["d"])[:10] for r in rows))
+        log("funding tail rows=%d dates=%s symbols=%d"
+            % (len(rows), ds, len(set(r["symbol"] for r in rows))))
+        return
     os.makedirs(CACHE, exist_ok=True)
 
     if args.rest:
