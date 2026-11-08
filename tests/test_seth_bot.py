@@ -266,3 +266,21 @@ def test_a_job_edited_or_removed_after_the_snapshot_is_read_from_the_file(tmp_pa
     assert sb.reload_job(jf, snap)["paths"] == ["a"], "文件为准"
     jf.unlink()
     assert sb.reload_job(jf, snap) is None, "文件没了 ⇒ 跳过,不执行"
+
+
+
+def test_preflight_runs_a_snapshot_of_the_script(tmp_path, monkeypatch):
+    """11-08:边跑边改 preflight.sh 会让 bash 读错位(它不是一次读完整个文件)。必须把内容读进内存、用 bash -c 跑,$0 仍是脚本路径。"""
+    import subprocess as _sp
+    from scripts.seth_bot import seth_bot as sb
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "scripts" / "preflight.sh").write_text('cd "$(dirname "$0")/.."; echo "PREFLIGHT PASSED $PWD"\n', encoding="utf-8")
+    seen, real_run = {}, _sp.run
+
+    def fake_run(cmd, **kw):
+        seen["cmd"], seen["cwd"] = cmd, kw.get("cwd")
+        return real_run(cmd, **kw)
+    monkeypatch.setattr(sb.subprocess, "run", fake_run)
+    ok, out = sb.preflight(tmp_path)
+    assert seen["cmd"][:2] == ["bash", "-c"] and seen["cmd"][3] == "scripts/preflight.sh", seen["cmd"][:2]
+    assert ok and str(tmp_path.resolve()) in out, out
