@@ -1,0 +1,29 @@
+{
+  "id": "T-309",
+  "owner": "lane-b",
+  "status": "blocked",
+  "created": "2026-11-08",
+  "title": "S-789 S-753 在逐句解析之后重量:打上监控标签的代号 80 → 137(你自己的 t274_monitoring.py,只换事件)",
+  "source": "REFUTATION_LEDGER S-789(预注册)与 S-753 原文;docs/research/t274_monitoring.py;src/data/market/events.py 的 monitoring_tag_changes(只读,import 它切句)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-309.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-789 原文照抄进报告开头,只算一次。事件 = 每个代号第一次出现在某条公告 monitoring_tag_changes(title)['add'] 里(2023-07-26 起;从 events 现读 title,翻页带 order=),先落 docs/research/t309_events.csv。其余口径一字不改照 t274_monitoring.py。报新旧事件集差异、有价个数、(a)–(e) 逐条、新增那批单独的中位;除中位外报均值与 p10 / p90。只算、不入库、不改代码;步数过半先落文件;**不要 Read 大文件**(上两轮都是读文件撑爆上下文)。",
+    "expect": "docs/research/T-309_tag_sentence_recompute.md + t309_results.json + scenarios/lane-b-T-309.json(≥ 3 条前向命题,author = lane-b);in_review,推 lane-b/T-309。"
+  },
+  "prior_value": "硬规则已按 Jazz 11-08 前移到「打标签」;它的证据 S-753 建在漏了 43 次打上的事件集上。这张卡让证据与规则用同一个解析器。",
+  "notes": "2026-11-08T14:50:47Z Seth 开卡:blocked 到解析器 v2 部署(seth_bot 20261108-1500)—— lane 要 import 生产解析器,main 上得先有它。",
+  "blocked_by": "deploy:events.monitoring_tag_changes(20261108-1500-tag-hard-rule 合进 main)",
+  "verified": null
+}
