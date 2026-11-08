@@ -1,0 +1,67 @@
+{
+  "author": "lane-b",
+  "note": "T-274 前向预期(基于 S-753 台账的预注册检验结果:打 Binance 监控标签后 30 天相对 BTC 超额中位 −18.28%,n=36,对照分位 0.010,判据 (a)–(e) 全过)。概率是作者自估,到期按 Brier 结算;写的是可核的量,不是收益承诺。第 1–4 条是同族判据在前向新事件上的复现(前向队列 = 2026-11-08 之后新入库的 monitoring_tag 事件);第 5 条是自动结算的基线。",
+  "entries": [
+    {
+      "id": "T-274-1",
+      "scenario": "T-274 / S-753 前向记录(B 臂:监控标签事件)",
+      "statement": "前向队列(2026-11-08 之后新入库的 Binance monitoring_tag 事件)打标签后 30 天相对 BTC 的超额中位数 < 0(单位:百分比)",
+      "variable": "manual",
+      "op": "lt",
+      "lo": -1000,
+      "hi": 0,
+      "prob": 0.7,
+      "horizon_d": "2027-02-28",
+      "check": "跑 docs/research/t274_monitoring.py screen/prices/stats,只取 2026-11-08 之后的事件:主口径 exc30 的中位数 < 0"
+    },
+    {
+      "id": "T-274-2",
+      "scenario": "T-274 / S-753 前向记录(B 臂:监控标签事件)",
+      "statement": "前向队列里 30 天超额为负的事件占比 > 60%(单位:百分比)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 60,
+      "hi": 100,
+      "prob": 0.65,
+      "horizon_d": "2027-02-28",
+      "check": "同上,取 pct_negative_exc30 > 60"
+    },
+    {
+      "id": "T-274-3",
+      "scenario": "T-274 / S-753 前向记录(B 臂:监控标签事件)",
+      "statement": "前向队列里 30 天超额中位数 ≤ −5%(本卡判据 (a) 在新事件上复现;单位:百分比)",
+      "variable": "manual",
+      "op": "lt",
+      "lo": -1000,
+      "hi": -5,
+      "prob": 0.55,
+      "horizon_d": "2027-02-28",
+      "check": "同上,取 median_exc30 ≤ −5"
+    },
+    {
+      "id": "T-274-4",
+      "scenario": "T-274 / S-753 前向记录(标签提前了多少)",
+      "statement": "前向队列里『打标签日 → 下架公告日』的中位间隔 ≥ 40 天(单位:天)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 40,
+      "hi": 1000,
+      "prob": 0.6,
+      "horizon_d": "2027-02-28",
+      "check": "跑 t274_monitoring.py stats 的 secondary.rule_advance_gain,只取 2026-11-08 之后的事件:days_gained 的中位数 ≥ 40"
+    },
+    {
+      "id": "T-274-5",
+      "scenario": "T-274 宏观基线自动结算项(情绪)",
+      "statement": "恐惧与贪婪指数在 2027-03-31 落在 25–75 的中性区间内",
+      "variable": "macro:fng",
+      "op": "between",
+      "lo": 25,
+      "hi": 75,
+      "prob": 0.65,
+      "horizon_d": "2027-03-31",
+      "check": "macro_daily(series=fng) 在 2027-03-31 的 value 落在 [25, 75]",
+      "current_reading": {"2026-11-08": "无技能基线 0.65(历史上落在中性区间约七成),用来标定这条 lane 的校准"}
+    }
+  ]
+}
