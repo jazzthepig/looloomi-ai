@@ -1,0 +1,799 @@
+{
+ "task": "T-274",
+ "ledger": "S-753",
+ "run_utc": "2026-11-08",
+ "screen_rule": {
+  "events": "events where source=binance and kind=monitoring_tag(不含 monitoring_tag_removed)",
+  "symbol_parser": "src/data/market/events.py::monitoring_tag(canonical)",
+  "one_event_per_token": "同一代币多次公告取最早一次(ts)",
+  "d0": "公告 ts 的 UTC 日期(asset_mcap_daily 的 d 是当日收盘)"
+ },
+ "precondition": {
+  "n_tokens_first_tag": 80,
+  "n_tokens_ge_30": true,
+  "earliest_event_date": "2023-07-26",
+  "earliest_is_tag_launch_day": true,
+  "earliest_token_first_tag": "2023-10-04",
+  "pass": true
+ },
+ "launch_announcements_no_symbols": [
+  {
+   "id": "d1c0f0020393e6aa50b3b949",
+   "ts": "2023-07-26T03:00:04.342+00:00",
+   "title": "Introducing Seed Tags & Monitoring Tags for Tokens with High Volatility and Risks",
+   "kind": "monitoring_tag",
+   "symbols": [],
+   "n_symbols": 0
+  }
+ ],
+ "announcements": [
+  {
+   "id": "d1c0f0020393e6aa50b3b949",
+   "ts": "2023-07-26T03:00:04.342+00:00",
+   "title": "Introducing Seed Tags & Monitoring Tags for Tokens with High Volatility and Risks",
+   "kind": "monitoring_tag",
+   "symbols": [],
+   "n_symbols": 0
+  },
+  {
+   "id": "bea681905a1d63eda903752a",
+   "ts": "2023-10-04T06:00:16.946+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include BETA, BOND, WTC and XEM on 2023-10-04",
+   "kind": "monitoring_tag",
+   "symbols": [
+    "BETA",
+    "BOND",
+    "WTC",
+    "XEM"
+   ],
+   "n_symbols": 4
+  },
+  {
+   "id": "a740aba4e5a6191ae2ba7292",
+   "ts": "2024-04-03T06:00:16.944+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include EPX, FOR, UNFI, WAVES & WNXM on 2024-04-03",
+   "kind": "monitoring_tag",
+   "symbols": [
+    "EPX",
+    "UNFI",
+    "WAVES",
+    "WNXM"
+   ],
+   "n_symbols": 4
+  },
+  {
+   "id": "82c0cca8c233f80a47152b3a",
+   "ts": "2025-03-04T08:01:22.062+00:00",
+   "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04",
+   "kind": "monitoring_tag",
+   "symbols": [
+    "AERGO",
+    "ALPACA",
+    "AST",
+    "BADGER",
+    "BURGER",
+    "COMBO",
+    "NULS",
+    "STPT",
+    "UFT",
+    "VIDT"
+   ],
+   "n_symbols": 10
+  },
+  {
+   "id": "93c4f5c93107aef099238353",
+   "ts": "2025-03-07T09:00:45.829+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to GPS on 2025-03-07",
+   "kind": "monitoring_tag",
+   "symbols": [
+    "GPS"
+   ],
+   "n_symbols": 1
+  },
+  {
+   "id": "90e6543ffc144b73524c5a46",
+   "ts": "2025-05-07T08:00:33.736+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07",
+   "kind": "monitoring_tag",
+   "symbols": [
+    "ALPHA",
+    "HIFI",
+    "LEVER",
+    "MOVE",
+    "PORTAL",
+    "REI"
+   ],
+   "n_symbols": 6
+  },
+  {
+   "id": "0310afdfe323e35ca7ea87bf",
+   "ts": "2025-06-05T05:00:18.433+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include BIFI, FIS, KMD & MDT on 2025-06-05",
+   "kind": "monitoring_tag",
+   "symbols": [
+    "BIFI",
+    "FIS",
+    "KMD",
+    "MDT"
+   ],
+   "n_symbols": 4
+  },
+  {
+   "id": "1d114310c0d9d8a948af0c0e",
+   "ts": "2025-07-07T03:29:57.414+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include BAKE, IDEX & SLF on 2025-07-07",
+   "kind": "monitoring_tag",
+   "symbols": [
+    "BAKE",
+    "IDEX",
+    "SLF"
+   ],
+   "n_symbols": 3
+  },
+  {
+   "id": "17d5a938d13e185344321bc9",
+   "ts": "2025-12-01T04:30:24.832+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include CHESS, DENT, DF, GHST & SXP on 2025-12-01",
+   "kind": "monitoring_tag",
+   "symbols": [
+    "CHESS",
+    "DENT",
+    "DF",
+    "GHST",
+    "SXP"
+   ],
+   "n_symbols": 5
+  },
+  {
+   "id": "ecb66504e90d7153d66cf665",
+   "ts": "2026-01-02T10:59:57.739+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include ACA, D, DATA & FLOW on 2026-01-02",
+   "kind": "monitoring_tag",
+   "symbols": [
+    "ACA",
+    "DATA",
+    "FLOW"
+   ],
+   "n_symbols": 3
+  },
+  {
+   "id": "ab602d5903e71b6737c14eed",
+   "ts": "2026-03-13T09:00:23.06+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13",
+   "kind": "monitoring_tag",
+   "symbols": [
+    "ATA",
+    "A2Z",
+    "FIO",
+    "GTC",
+    "NTRN",
+    "PHB",
+    "QI",
+    "RDNT"
+   ],
+   "n_symbols": 8
+  },
+  {
+   "id": "f50e5c614111cba6a5ed877a",
+   "ts": "2026-04-30T07:00:05.981+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include NFP, NOM, POND, QUICK & VIC on 2026-04-30",
+   "kind": "monitoring_tag",
+   "symbols": [
+    "NFP",
+    "NOM",
+    "POND",
+    "QUICK",
+    "VIC"
+   ],
+   "n_symbols": 5
+  },
+  {
+   "id": "1e3cd8445c071e149e184c9f",
+   "ts": "2026-05-22T08:00:04.004+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22",
+   "kind": "monitoring_tag",
+   "symbols": [
+    "ALCX",
+    "COOKIE",
+    "DODO",
+    "EPIC",
+    "HEI",
+    "HFT",
+    "STORJ",
+    "SYN",
+    "TLM"
+   ],
+   "n_symbols": 9
+  },
+  {
+   "id": "a9d1800c1fa100c7fd32af47",
+   "ts": "2026-07-03T06:00:11.367+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include AEUR, PYR, SCRT & VANRY on 2026-07-03",
+   "kind": "monitoring_tag",
+   "symbols": [
+    "AEUR",
+    "PYR",
+    "SCRT",
+    "VANRY"
+   ],
+   "n_symbols": 4
+  },
+  {
+   "id": "d26584fe0bf2e0588650d16c",
+   "ts": "2026-07-24T03:00:06.343+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include ACX, LSK & STX on 2026-07-24",
+   "kind": "monitoring_tag",
+   "symbols": [
+    "ACX",
+    "LSK",
+    "STX"
+   ],
+   "n_symbols": 3
+  },
+  {
+   "id": "6fd47bc7928d6219ad7114bc",
+   "ts": "2026-08-11T09:00:12.289+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include GLMR, ICX, MOVR, RARE & SOPH on 2026-08-11",
+   "kind": "monitoring_tag",
+   "symbols": [
+    "GLMR",
+    "ICX",
+    "MOVR",
+    "RARE",
+    "SOPH"
+   ],
+   "n_symbols": 5
+  },
+  {
+   "id": "a71cf1e79d94273edc65057a",
+   "ts": "2026-09-04T08:00:06.5+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include AVA, GNS, SCR & TOWNS on 2026-09-04",
+   "kind": "monitoring_tag",
+   "symbols": [
+    "AVA",
+    "GNS",
+    "SCR",
+    "TOWNS"
+   ],
+   "n_symbols": 4
+  },
+  {
+   "id": "30794204a1de8e431aad5c17",
+   "ts": "2026-10-09T07:00:14.078+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include BICO & CVC on 2026-10-09",
+   "kind": "monitoring_tag",
+   "symbols": [
+    "BICO",
+    "CVC"
+   ],
+   "n_symbols": 2
+  }
+ ],
+ "removed_monitoring_tag_announcements": [
+  {
+   "id": "1541553381ea171b91876925",
+   "ts": "2026-03-06T08:29:56.086+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06",
+   "symbols": [
+    "FLOW"
+   ]
+  },
+  {
+   "id": "505cc4d796788af80607dbc2",
+   "ts": "2024-07-01T07:00:03.584+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01",
+   "symbols": [
+    "MLN",
+    "ZEN"
+   ]
+  },
+  {
+   "id": "9fd997ed4f007e9336bbdfe5",
+   "ts": "2025-10-09T02:29:52.334+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include WAN, Remove the Monitoring Tag for GPS & MBL, and Remove the Seed Tag for BERA, BIO, ZK & ZRO on 2025-10-09",
+   "symbols": [
+    "GPS",
+    "MBL"
+   ]
+  },
+  {
+   "id": "aff5d542790d1fae40561ac7",
+   "ts": "2025-07-09T01:59:56.407+00:00",
+   "title": "Binance Will Remove the Monitoring Tag for ZEC and the Seed Tag for ENA, PYTH, TAO & W on 2025-07-09",
+   "symbols": [
+    "ZEC"
+   ]
+  },
+  {
+   "id": "ec87daf909c901e2cb895ff6",
+   "ts": "2025-01-02T09:00:19.305+00:00",
+   "title": "Binance Will Extend the Monitoring Tag to Include STMX & TROY, Remove the Monitoring Tag for CVX & SUN, and Remove the Seed Tag for ARKM, BLUR, JTO & TIA on 2025-01-02",
+   "symbols": [
+    "CVX",
+    "SUN"
+   ]
+  }
+ ],
+ "tokens": {
+  "A2Z": {
+   "ts": "2026-03-13T09:00:23.06+00:00",
+   "d0": "2026-03-13",
+   "id": "ab602d5903e71b6737c14eed",
+   "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13"
+  },
+  "ACA": {
+   "ts": "2026-01-02T10:59:57.739+00:00",
+   "d0": "2026-01-02",
+   "id": "ecb66504e90d7153d66cf665",
+   "title": "Binance Will Extend the Monitoring Tag to Include ACA, D, DATA & FLOW on 2026-01-02"
+  },
+  "ACX": {
+   "ts": "2026-07-24T03:00:06.343+00:00",
+   "d0": "2026-07-24",
+   "id": "d26584fe0bf2e0588650d16c",
+   "title": "Binance Will Extend the Monitoring Tag to Include ACX, LSK & STX on 2026-07-24"
+  },
+  "AERGO": {
+   "ts": "2025-03-04T08:01:22.062+00:00",
+   "d0": "2025-03-04",
+   "id": "82c0cca8c233f80a47152b3a",
+   "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+  },
+  "AEUR": {
+   "ts": "2026-07-03T06:00:11.367+00:00",
+   "d0": "2026-07-03",
+   "id": "a9d1800c1fa100c7fd32af47",
+   "title": "Binance Will Extend the Monitoring Tag to Include AEUR, PYR, SCRT & VANRY on 2026-07-03"
+  },
+  "ALCX": {
+   "ts": "2026-05-22T08:00:04.004+00:00",
+   "d0": "2026-05-22",
+   "id": "1e3cd8445c071e149e184c9f",
+   "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+  },
+  "ALPACA": {
+   "ts": "2025-03-04T08:01:22.062+00:00",
+   "d0": "2025-03-04",
+   "id": "82c0cca8c233f80a47152b3a",
+   "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+  },
+  "ALPHA": {
+   "ts": "2025-05-07T08:00:33.736+00:00",
+   "d0": "2025-05-07",
+   "id": "90e6543ffc144b73524c5a46",
+   "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07"
+  },
+  "AST": {
+   "ts": "2025-03-04T08:01:22.062+00:00",
+   "d0": "2025-03-04",
+   "id": "82c0cca8c233f80a47152b3a",
+   "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+  },
+  "ATA": {
+   "ts": "2026-03-13T09:00:23.06+00:00",
+   "d0": "2026-03-13",
+   "id": "ab602d5903e71b6737c14eed",
+   "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13"
+  },
+  "AVA": {
+   "ts": "2026-09-04T08:00:06.5+00:00",
+   "d0": "2026-09-04",
+   "id": "a71cf1e79d94273edc65057a",
+   "title": "Binance Will Extend the Monitoring Tag to Include AVA, GNS, SCR & TOWNS on 2026-09-04"
+  },
+  "BADGER": {
+   "ts": "2025-03-04T08:01:22.062+00:00",
+   "d0": "2025-03-04",
+   "id": "82c0cca8c233f80a47152b3a",
+   "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+  },
+  "BAKE": {
+   "ts": "2025-07-07T03:29:57.414+00:00",
+   "d0": "2025-07-07",
+   "id": "1d114310c0d9d8a948af0c0e",
+   "title": "Binance Will Extend the Monitoring Tag to Include BAKE, IDEX & SLF on 2025-07-07"
+  },
+  "BETA": {
+   "ts": "2023-10-04T06:00:16.946+00:00",
+   "d0": "2023-10-04",
+   "id": "bea681905a1d63eda903752a",
+   "title": "Binance Will Extend the Monitoring Tag to Include BETA, BOND, WTC and XEM on 2023-10-04"
+  },
+  "BICO": {
+   "ts": "2026-10-09T07:00:14.078+00:00",
+   "d0": "2026-10-09",
+   "id": "30794204a1de8e431aad5c17",
+   "title": "Binance Will Extend the Monitoring Tag to Include BICO & CVC on 2026-10-09"
+  },
+  "BIFI": {
+   "ts": "2025-06-05T05:00:18.433+00:00",
+   "d0": "2025-06-05",
+   "id": "0310afdfe323e35ca7ea87bf",
+   "title": "Binance Will Extend the Monitoring Tag to Include BIFI, FIS, KMD & MDT on 2025-06-05"
+  },
+  "BOND": {
+   "ts": "2023-10-04T06:00:16.946+00:00",
+   "d0": "2023-10-04",
+   "id": "bea681905a1d63eda903752a",
+   "title": "Binance Will Extend the Monitoring Tag to Include BETA, BOND, WTC and XEM on 2023-10-04"
+  },
+  "BURGER": {
+   "ts": "2025-03-04T08:01:22.062+00:00",
+   "d0": "2025-03-04",
+   "id": "82c0cca8c233f80a47152b3a",
+   "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+  },
+  "CHESS": {
+   "ts": "2025-12-01T04:30:24.832+00:00",
+   "d0": "2025-12-01",
+   "id": "17d5a938d13e185344321bc9",
+   "title": "Binance Will Extend the Monitoring Tag to Include CHESS, DENT, DF, GHST & SXP on 2025-12-01"
+  },
+  "COMBO": {
+   "ts": "2025-03-04T08:01:22.062+00:00",
+   "d0": "2025-03-04",
+   "id": "82c0cca8c233f80a47152b3a",
+   "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+  },
+  "COOKIE": {
+   "ts": "2026-05-22T08:00:04.004+00:00",
+   "d0": "2026-05-22",
+   "id": "1e3cd8445c071e149e184c9f",
+   "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+  },
+  "CVC": {
+   "ts": "2026-10-09T07:00:14.078+00:00",
+   "d0": "2026-10-09",
+   "id": "30794204a1de8e431aad5c17",
+   "title": "Binance Will Extend the Monitoring Tag to Include BICO & CVC on 2026-10-09"
+  },
+  "DATA": {
+   "ts": "2026-01-02T10:59:57.739+00:00",
+   "d0": "2026-01-02",
+   "id": "ecb66504e90d7153d66cf665",
+   "title": "Binance Will Extend the Monitoring Tag to Include ACA, D, DATA & FLOW on 2026-01-02"
+  },
+  "DENT": {
+   "ts": "2025-12-01T04:30:24.832+00:00",
+   "d0": "2025-12-01",
+   "id": "17d5a938d13e185344321bc9",
+   "title": "Binance Will Extend the Monitoring Tag to Include CHESS, DENT, DF, GHST & SXP on 2025-12-01"
+  },
+  "DF": {
+   "ts": "2025-12-01T04:30:24.832+00:00",
+   "d0": "2025-12-01",
+   "id": "17d5a938d13e185344321bc9",
+   "title": "Binance Will Extend the Monitoring Tag to Include CHESS, DENT, DF, GHST & SXP on 2025-12-01"
+  },
+  "DODO": {
+   "ts": "2026-05-22T08:00:04.004+00:00",
+   "d0": "2026-05-22",
+   "id": "1e3cd8445c071e149e184c9f",
+   "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+  },
+  "EPIC": {
+   "ts": "2026-05-22T08:00:04.004+00:00",
+   "d0": "2026-05-22",
+   "id": "1e3cd8445c071e149e184c9f",
+   "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+  },
+  "EPX": {
+   "ts": "2024-04-03T06:00:16.944+00:00",
+   "d0": "2024-04-03",
+   "id": "a740aba4e5a6191ae2ba7292",
+   "title": "Binance Will Extend the Monitoring Tag to Include EPX, FOR, UNFI, WAVES & WNXM on 2024-04-03"
+  },
+  "FIO": {
+   "ts": "2026-03-13T09:00:23.06+00:00",
+   "d0": "2026-03-13",
+   "id": "ab602d5903e71b6737c14eed",
+   "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13"
+  },
+  "FIS": {
+   "ts": "2025-06-05T05:00:18.433+00:00",
+   "d0": "2025-06-05",
+   "id": "0310afdfe323e35ca7ea87bf",
+   "title": "Binance Will Extend the Monitoring Tag to Include BIFI, FIS, KMD & MDT on 2025-06-05"
+  },
+  "FLOW": {
+   "ts": "2026-01-02T10:59:57.739+00:00",
+   "d0": "2026-01-02",
+   "id": "ecb66504e90d7153d66cf665",
+   "title": "Binance Will Extend the Monitoring Tag to Include ACA, D, DATA & FLOW on 2026-01-02"
+  },
+  "GHST": {
+   "ts": "2025-12-01T04:30:24.832+00:00",
+   "d0": "2025-12-01",
+   "id": "17d5a938d13e185344321bc9",
+   "title": "Binance Will Extend the Monitoring Tag to Include CHESS, DENT, DF, GHST & SXP on 2025-12-01"
+  },
+  "GLMR": {
+   "ts": "2026-08-11T09:00:12.289+00:00",
+   "d0": "2026-08-11",
+   "id": "6fd47bc7928d6219ad7114bc",
+   "title": "Binance Will Extend the Monitoring Tag to Include GLMR, ICX, MOVR, RARE & SOPH on 2026-08-11"
+  },
+  "GNS": {
+   "ts": "2026-09-04T08:00:06.5+00:00",
+   "d0": "2026-09-04",
+   "id": "a71cf1e79d94273edc65057a",
+   "title": "Binance Will Extend the Monitoring Tag to Include AVA, GNS, SCR & TOWNS on 2026-09-04"
+  },
+  "GPS": {
+   "ts": "2025-03-07T09:00:45.829+00:00",
+   "d0": "2025-03-07",
+   "id": "93c4f5c93107aef099238353",
+   "title": "Binance Will Extend the Monitoring Tag to GPS on 2025-03-07"
+  },
+  "GTC": {
+   "ts": "2026-03-13T09:00:23.06+00:00",
+   "d0": "2026-03-13",
+   "id": "ab602d5903e71b6737c14eed",
+   "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13"
+  },
+  "HEI": {
+   "ts": "2026-05-22T08:00:04.004+00:00",
+   "d0": "2026-05-22",
+   "id": "1e3cd8445c071e149e184c9f",
+   "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+  },
+  "HFT": {
+   "ts": "2026-05-22T08:00:04.004+00:00",
+   "d0": "2026-05-22",
+   "id": "1e3cd8445c071e149e184c9f",
+   "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+  },
+  "HIFI": {
+   "ts": "2025-05-07T08:00:33.736+00:00",
+   "d0": "2025-05-07",
+   "id": "90e6543ffc144b73524c5a46",
+   "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07"
+  },
+  "ICX": {
+   "ts": "2026-08-11T09:00:12.289+00:00",
+   "d0": "2026-08-11",
+   "id": "6fd47bc7928d6219ad7114bc",
+   "title": "Binance Will Extend the Monitoring Tag to Include GLMR, ICX, MOVR, RARE & SOPH on 2026-08-11"
+  },
+  "IDEX": {
+   "ts": "2025-07-07T03:29:57.414+00:00",
+   "d0": "2025-07-07",
+   "id": "1d114310c0d9d8a948af0c0e",
+   "title": "Binance Will Extend the Monitoring Tag to Include BAKE, IDEX & SLF on 2025-07-07"
+  },
+  "KMD": {
+   "ts": "2025-06-05T05:00:18.433+00:00",
+   "d0": "2025-06-05",
+   "id": "0310afdfe323e35ca7ea87bf",
+   "title": "Binance Will Extend the Monitoring Tag to Include BIFI, FIS, KMD & MDT on 2025-06-05"
+  },
+  "LEVER": {
+   "ts": "2025-05-07T08:00:33.736+00:00",
+   "d0": "2025-05-07",
+   "id": "90e6543ffc144b73524c5a46",
+   "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07"
+  },
+  "LSK": {
+   "ts": "2026-07-24T03:00:06.343+00:00",
+   "d0": "2026-07-24",
+   "id": "d26584fe0bf2e0588650d16c",
+   "title": "Binance Will Extend the Monitoring Tag to Include ACX, LSK & STX on 2026-07-24"
+  },
+  "MDT": {
+   "ts": "2025-06-05T05:00:18.433+00:00",
+   "d0": "2025-06-05",
+   "id": "0310afdfe323e35ca7ea87bf",
+   "title": "Binance Will Extend the Monitoring Tag to Include BIFI, FIS, KMD & MDT on 2025-06-05"
+  },
+  "MOVE": {
+   "ts": "2025-05-07T08:00:33.736+00:00",
+   "d0": "2025-05-07",
+   "id": "90e6543ffc144b73524c5a46",
+   "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07"
+  },
+  "MOVR": {
+   "ts": "2026-08-11T09:00:12.289+00:00",
+   "d0": "2026-08-11",
+   "id": "6fd47bc7928d6219ad7114bc",
+   "title": "Binance Will Extend the Monitoring Tag to Include GLMR, ICX, MOVR, RARE & SOPH on 2026-08-11"
+  },
+  "NFP": {
+   "ts": "2026-04-30T07:00:05.981+00:00",
+   "d0": "2026-04-30",
+   "id": "f50e5c614111cba6a5ed877a",
+   "title": "Binance Will Extend the Monitoring Tag to Include NFP, NOM, POND, QUICK & VIC on 2026-04-30"
+  },
+  "NOM": {
+   "ts": "2026-04-30T07:00:05.981+00:00",
+   "d0": "2026-04-30",
+   "id": "f50e5c614111cba6a5ed877a",
+   "title": "Binance Will Extend the Monitoring Tag to Include NFP, NOM, POND, QUICK & VIC on 2026-04-30"
+  },
+  "NTRN": {
+   "ts": "2026-03-13T09:00:23.06+00:00",
+   "d0": "2026-03-13",
+   "id": "ab602d5903e71b6737c14eed",
+   "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13"
+  },
+  "NULS": {
+   "ts": "2025-03-04T08:01:22.062+00:00",
+   "d0": "2025-03-04",
+   "id": "82c0cca8c233f80a47152b3a",
+   "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+  },
+  "PHB": {
+   "ts": "2026-03-13T09:00:23.06+00:00",
+   "d0": "2026-03-13",
+   "id": "ab602d5903e71b6737c14eed",
+   "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13"
+  },
+  "POND": {
+   "ts": "2026-04-30T07:00:05.981+00:00",
+   "d0": "2026-04-30",
+   "id": "f50e5c614111cba6a5ed877a",
+   "title": "Binance Will Extend the Monitoring Tag to Include NFP, NOM, POND, QUICK & VIC on 2026-04-30"
+  },
+  "PORTAL": {
+   "ts": "2025-05-07T08:00:33.736+00:00",
+   "d0": "2025-05-07",
+   "id": "90e6543ffc144b73524c5a46",
+   "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07"
+  },
+  "PYR": {
+   "ts": "2026-07-03T06:00:11.367+00:00",
+   "d0": "2026-07-03",
+   "id": "a9d1800c1fa100c7fd32af47",
+   "title": "Binance Will Extend the Monitoring Tag to Include AEUR, PYR, SCRT & VANRY on 2026-07-03"
+  },
+  "QI": {
+   "ts": "2026-03-13T09:00:23.06+00:00",
+   "d0": "2026-03-13",
+   "id": "ab602d5903e71b6737c14eed",
+   "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13"
+  },
+  "QUICK": {
+   "ts": "2026-04-30T07:00:05.981+00:00",
+   "d0": "2026-04-30",
+   "id": "f50e5c614111cba6a5ed877a",
+   "title": "Binance Will Extend the Monitoring Tag to Include NFP, NOM, POND, QUICK & VIC on 2026-04-30"
+  },
+  "RARE": {
+   "ts": "2026-08-11T09:00:12.289+00:00",
+   "d0": "2026-08-11",
+   "id": "6fd47bc7928d6219ad7114bc",
+   "title": "Binance Will Extend the Monitoring Tag to Include GLMR, ICX, MOVR, RARE & SOPH on 2026-08-11"
+  },
+  "RDNT": {
+   "ts": "2026-03-13T09:00:23.06+00:00",
+   "d0": "2026-03-13",
+   "id": "ab602d5903e71b6737c14eed",
+   "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13"
+  },
+  "REI": {
+   "ts": "2025-05-07T08:00:33.736+00:00",
+   "d0": "2025-05-07",
+   "id": "90e6543ffc144b73524c5a46",
+   "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07"
+  },
+  "SCR": {
+   "ts": "2026-09-04T08:00:06.5+00:00",
+   "d0": "2026-09-04",
+   "id": "a71cf1e79d94273edc65057a",
+   "title": "Binance Will Extend the Monitoring Tag to Include AVA, GNS, SCR & TOWNS on 2026-09-04"
+  },
+  "SCRT": {
+   "ts": "2026-07-03T06:00:11.367+00:00",
+   "d0": "2026-07-03",
+   "id": "a9d1800c1fa100c7fd32af47",
+   "title": "Binance Will Extend the Monitoring Tag to Include AEUR, PYR, SCRT & VANRY on 2026-07-03"
+  },
+  "SLF": {
+   "ts": "2025-07-07T03:29:57.414+00:00",
+   "d0": "2025-07-07",
+   "id": "1d114310c0d9d8a948af0c0e",
+   "title": "Binance Will Extend the Monitoring Tag to Include BAKE, IDEX & SLF on 2025-07-07"
+  },
+  "SOPH": {
+   "ts": "2026-08-11T09:00:12.289+00:00",
+   "d0": "2026-08-11",
+   "id": "6fd47bc7928d6219ad7114bc",
+   "title": "Binance Will Extend the Monitoring Tag to Include GLMR, ICX, MOVR, RARE & SOPH on 2026-08-11"
+  },
+  "STORJ": {
+   "ts": "2026-05-22T08:00:04.004+00:00",
+   "d0": "2026-05-22",
+   "id": "1e3cd8445c071e149e184c9f",
+   "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+  },
+  "STPT": {
+   "ts": "2025-03-04T08:01:22.062+00:00",
+   "d0": "2025-03-04",
+   "id": "82c0cca8c233f80a47152b3a",
+   "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+  },
+  "STX": {
+   "ts": "2026-07-24T03:00:06.343+00:00",
+   "d0": "2026-07-24",
+   "id": "d26584fe0bf2e0588650d16c",
+   "title": "Binance Will Extend the Monitoring Tag to Include ACX, LSK & STX on 2026-07-24"
+  },
+  "SXP": {
+   "ts": "2025-12-01T04:30:24.832+00:00",
+   "d0": "2025-12-01",
+   "id": "17d5a938d13e185344321bc9",
+   "title": "Binance Will Extend the Monitoring Tag to Include CHESS, DENT, DF, GHST & SXP on 2025-12-01"
+  },
+  "SYN": {
+   "ts": "2026-05-22T08:00:04.004+00:00",
+   "d0": "2026-05-22",
+   "id": "1e3cd8445c071e149e184c9f",
+   "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+  },
+  "TLM": {
+   "ts": "2026-05-22T08:00:04.004+00:00",
+   "d0": "2026-05-22",
+   "id": "1e3cd8445c071e149e184c9f",
+   "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+  },
+  "TOWNS": {
+   "ts": "2026-09-04T08:00:06.5+00:00",
+   "d0": "2026-09-04",
+   "id": "a71cf1e79d94273edc65057a",
+   "title": "Binance Will Extend the Monitoring Tag to Include AVA, GNS, SCR & TOWNS on 2026-09-04"
+  },
+  "UFT": {
+   "ts": "2025-03-04T08:01:22.062+00:00",
+   "d0": "2025-03-04",
+   "id": "82c0cca8c233f80a47152b3a",
+   "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+  },
+  "UNFI": {
+   "ts": "2024-04-03T06:00:16.944+00:00",
+   "d0": "2024-04-03",
+   "id": "a740aba4e5a6191ae2ba7292",
+   "title": "Binance Will Extend the Monitoring Tag to Include EPX, FOR, UNFI, WAVES & WNXM on 2024-04-03"
+  },
+  "VANRY": {
+   "ts": "2026-07-03T06:00:11.367+00:00",
+   "d0": "2026-07-03",
+   "id": "a9d1800c1fa100c7fd32af47",
+   "title": "Binance Will Extend the Monitoring Tag to Include AEUR, PYR, SCRT & VANRY on 2026-07-03"
+  },
+  "VIC": {
+   "ts": "2026-04-30T07:00:05.981+00:00",
+   "d0": "2026-04-30",
+   "id": "f50e5c614111cba6a5ed877a",
+   "title": "Binance Will Extend the Monitoring Tag to Include NFP, NOM, POND, QUICK & VIC on 2026-04-30"
+  },
+  "VIDT": {
+   "ts": "2025-03-04T08:01:22.062+00:00",
+   "d0": "2025-03-04",
+   "id": "82c0cca8c233f80a47152b3a",
+   "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+  },
+  "WAVES": {
+   "ts": "2024-04-03T06:00:16.944+00:00",
+   "d0": "2024-04-03",
+   "id": "a740aba4e5a6191ae2ba7292",
+   "title": "Binance Will Extend the Monitoring Tag to Include EPX, FOR, UNFI, WAVES & WNXM on 2024-04-03"
+  },
+  "WNXM": {
+   "ts": "2024-04-03T06:00:16.944+00:00",
+   "d0": "2024-04-03",
+   "id": "a740aba4e5a6191ae2ba7292",
+   "title": "Binance Will Extend the Monitoring Tag to Include EPX, FOR, UNFI, WAVES & WNXM on 2024-04-03"
+  },
+  "WTC": {
+   "ts": "2023-10-04T06:00:16.946+00:00",
+   "d0": "2023-10-04",
+   "id": "bea681905a1d63eda903752a",
+   "title": "Binance Will Extend the Monitoring Tag to Include BETA, BOND, WTC and XEM on 2023-10-04"
+  },
+  "XEM": {
+   "ts": "2023-10-04T06:00:16.946+00:00",
+   "d0": "2023-10-04",
+   "id": "bea681905a1d63eda903752a",
+   "title": "Binance Will Extend the Monitoring Tag to Include BETA, BOND, WTC and XEM on 2023-10-04"
+  }
+ }
+}
