@@ -1,7 +1,7 @@
 {
   "id": "T-301",
   "owner": "lane-b",
-  "status": "open",
+  "status": "done",
   "created": "2026-11-08",
   "title": "S-783 S-781 盲复算 + crowding_events() 在今天的数据上的逐事件对账(你的 t289 参考实现 vs 库里的 crowding_watch)",
   "source": "REFUTATION_LEDGER S-783(预注册);只读 S-726 / S-777 的口径段,**不读 S-781 的结果段**。你自己的 docs/research/t289_squeeze.py(guards=True)。数据:perp_bv_daily、v_funding_daily、perp_bv_pairs、crowding_watch(anon 可读)。",
@@ -23,6 +23,11 @@
     "expect": "docs/research/T-301_squeeze_recompute.md + t301_results.json + scenarios/lane-b-T-301.json(≥ 3 条前向命题,author = lane-b);in_review,推 lane-b/T-301。"
   },
   "prior_value": "把「库里的内核 = 参考实现」从「238 条全中 + 多出来的能解释」升级成「今天的数据上逐条相等」;S-781 的数从一个人算的变成两个人算的。之后 crowding_watch 的前向记录才算有底。",
-  "notes": "2026-11-08 Seth 开卡:blocked 到 crowding_watch 部署后第一次全量写入(判据:select count(*) from crowding_watch where cohort = 'backfill' ≥ 400)。 | 2026-11-08T03:24:34Z Seth:解锁 —— crowding_watch 03:18 UTC 由写入端第一次全量写入:backfill squeeze 351(到期 341)/ flush 59(到期 57)。",
-  "verified": null
+  "notes": "2026-11-08 Seth 开卡:blocked 到 crowding_watch 部署后第一次全量写入(判据:select count(*) from crowding_watch where cohort = 'backfill' ≥ 400)。 | 2026-11-08T03:24:34Z Seth:解锁 —— crowding_watch 03:18 UTC 由写入端第一次全量写入:backfill squeeze 351(到期 341)/ flush 59(到期 57)。 | 2026-11-08 lane-b 交付(复算跑通,第一次出数):① 事件对账 —— 我方 guards=True 411(squeeze 351 + flush 60)vs 库内 backfill 410(squeeze 351 + flush 59):common=410、**只我方 1 条**=flush LUMIA 2026-07-13、**只库内 0 条**;guards=False 411/64;含尾面板与截到 11-04 对账数无差别。判据①「两边独有都=0」**未过**(那条独有事件 fund_pct=0.90035 vs 门槛 0.90,只差 0.00035 ⇒ 刀刃事件;crowding_watch 全表里 LUMIA 只有 2025-10-10 flush 与 2025-11-07 squeeze 两行,不在任何 cohort)。② 30 天超额(S-726 口径,已到期 n=341):中位 **−16.35%**、均值 −1.02%、p10 −45.31% / p90 +26.30%、为负 73.9%、min −115.75% / max +2571.30%(新币首月 ⇒ 均值不可直接引用)。同币同年随机日对照(1,000 次,种子 783):**中位分位 0.000**、均值分位 0.024 ⇒ 判据②的分位部分**过**。两半:H1(≤2022-12,n=38)中位 −4.76% / 均值 +3.97%;H2(≥2023-01,n=303)中位 −16.53% / 均值 −1.65% ⇒ 中位同号、**均值异号**。副口径交叉对照:参考实现 bar 口径中位 −16.32%(差 0.04pp)。③ x30 逐条自检**没全等**:397 条可比里 249 条 ≤1e-9 精确、**148 条差 >1e-6**、max 4.46e-02、basket_n 410 行里 154 行不等 ⇒ 篮子成分/时点口径不同(我的=事件日已到期计数,库内=进场日有开盘价计数);「逐事件清单等价」成立,「逐条数值等价」不成立。④ 脚本修三处机械错(零分布掩码对齐 351→341、axis_pos 键类型、HALVES 的 \"+inf\" 哨兵),口径未动。污染声明沿用上一轮:grep 时见过 S-781 结果段的标题数字 ⇒ 判据②按「事后一致」记,不记「盲测中」;本轮仍不读 S-781 结果段,故「与 S-781 的中位差 <1pp」一栏不填。报告 §4、机器读数 t301_results.json、逐事件 CSV 都在 docs/research/。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-08T04:42:54Z",
+    "value": "S-783:squeeze 351/351 逐条相同,flush 差 1 条(LUMIA 07-13,参考实现浮点平局 0.90035 vs 库 0.89948,库的平局处理是对的);统计与 S-781 逐位一致但非盲(污染已自报)。",
+    "ledger": "S-783 结果"
+  }
 }

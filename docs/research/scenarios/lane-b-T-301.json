@@ -1,0 +1,48 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {
+      "id": "T-301-1",
+      "scenario": "T-301 内核等价性的前向检验",
+      "statement": "2026-11-09 起 crowding_watch 前向 cohort 新增的事件上,库内 crowding_events()(p_clean=true)与参考实现 t289_squeeze.py 家族 detect(guards=True)逐 (kind, symbol, d) 相等 —— 两边独有条数 = 0",
+      "variable": "manual",
+      "op": "between",
+      "lo": 1,
+      "hi": 1,
+      "prob": 0.8,
+      "horizon_d": "2026-12-08"
+    },
+    {
+      "id": "T-301-2",
+      "scenario": "T-301 前向第一批 squeeze 事件的 30 天超额符号",
+      "statement": "2026-11-09 起第一个满 30 天的前向 cohort squeeze 事件,其 30 天超额(代币 − 同一进出窗口的时点等权永续篮)为负",
+      "variable": "manual",
+      "op": "between",
+      "lo": 1,
+      "hi": 1,
+      "prob": 0.6,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-301-3",
+      "scenario": "T-301 主题的宏观底色:拥挤在多头一侧还是空头一侧",
+      "statement": "BTC 30 日均资金费(state:funding_btc_30d)在 2026-12-08 仍为正 —— 资金费为正 ⇒ 拥挤在多头一侧 ⇒ squeeze(资金费分位 ≤ 0.10)的母体更稀",
+      "variable": "state:funding_btc_30d",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.6,
+      "horizon_d": "2026-12-08"
+    },
+    {
+      "id": "T-301-4",
+      "scenario": "T-301 的下游:前向记录本身在长起来",
+      "statement": "到 2026-12-08,crowding_watch 的 forward cohort 累计行数 ≥ 30(前向记录确实在逐日累积,不是空表)",
+      "variable": "manual",
+      "op": "between",
+      "lo": 1,
+      "hi": 1,
+      "prob": 0.9,
+      "horizon_d": "2026-12-08"
+    }
+  ]
+}

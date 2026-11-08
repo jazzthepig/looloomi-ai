@@ -1,0 +1,822 @@
+source,kind,symbol,d,note
+mine,flush,1000000MOG,2026-08-22,guards=True
+mine,flush,1000WHY,2026-01-12,guards=True
+mine,flush,AGLD,2024-03-05,guards=True
+mine,flush,ANIME,2025-10-10,guards=True
+mine,flush,APR,2026-08-13,guards=True
+mine,flush,ATA,2026-05-13,guards=True
+mine,flush,AVAAI,2025-10-10,guards=True
+mine,flush,AVAAI,2026-04-19,guards=True
+mine,flush,AVAAI,2026-08-21,guards=True
+mine,flush,BABY,2026-08-12,guards=True
+mine,flush,BCH,2020-08-02,guards=True
+mine,flush,BLUAI,2026-05-19,guards=True
+mine,flush,BLUAI,2026-08-11,guards=True
+mine,flush,BNB,2020-09-03,guards=True
+mine,flush,BNB,2021-02-20,guards=True
+mine,flush,BR,2025-12-14,guards=True
+mine,flush,BSW,2025-08-23,guards=True
+mine,flush,CHESS,2026-02-06,guards=True
+mine,flush,DAM,2026-04-28,guards=True
+mine,flush,DEGO,2025-09-09,guards=True
+mine,flush,DEGO,2025-09-27,guards=True
+mine,flush,DOGE,2021-04-17,guards=True
+mine,flush,ESPORTS,2026-06-13,guards=True
+mine,flush,FHE,2026-01-21,guards=True
+mine,flush,G,2026-09-20,guards=True
+mine,flush,GRIFFAIN,2026-09-13,guards=True
+mine,flush,GRIFFAIN,2026-10-07,guards=True
+mine,flush,HANA,2026-08-19,guards=True
+mine,flush,HOLO,2026-06-05,guards=True
+mine,flush,IN,2026-06-30,guards=True
+mine,flush,INX,2026-09-28,guards=True
+mine,flush,JELLYJELLY,2025-11-01,guards=True
+mine,flush,KEY,2024-03-16,guards=True
+mine,flush,LUMIA,2025-10-10,guards=True
+mine,flush,LUMIA,2026-07-13,guards=True
+mine,flush,MITO,2026-10-21,guards=True
+mine,flush,MLN,2026-05-13,guards=True
+mine,flush,MMT,2026-07-31,guards=True
+mine,flush,MOVE,2025-10-10,guards=True
+mine,flush,MUBARAK,2026-09-23,guards=True
+mine,flush,NAORIS,2026-05-01,guards=True
+mine,flush,OL,2026-03-22,guards=True
+mine,flush,SAGA,2026-09-25,guards=True
+mine,flush,SAHARA,2026-06-09,guards=True
+mine,flush,SCRT,2026-08-14,guards=True
+mine,flush,SIREN,2026-02-08,guards=True
+mine,flush,SOLV,2025-10-10,guards=True
+mine,flush,SOON,2026-07-29,guards=True
+mine,flush,SOPH,2026-10-15,guards=True
+mine,flush,SPELL,2024-02-23,guards=True
+mine,flush,SPK,2026-08-24,guards=True
+mine,flush,SUSHI,2024-12-09,guards=True
+mine,flush,SWARMS,2025-10-10,guards=True
+mine,flush,TA,2026-03-28,guards=True
+mine,flush,TUT,2026-08-10,guards=True
+mine,flush,US,2026-09-29,guards=True
+mine,flush,USELESS,2026-05-13,guards=True
+mine,flush,USUAL,2025-10-10,guards=True
+mine,flush,XAN,2026-08-10,guards=True
+mine,flush,XAN,2026-09-08,guards=True
+mine,squeeze,1000LUNC,2024-08-10,guards=True
+mine,squeeze,1000LUNC,2025-12-05,guards=True
+mine,squeeze,1000PEPE,2026-03-16,guards=True
+mine,squeeze,1000PEPE,2026-08-20,guards=True
+mine,squeeze,1000RATS,2024-06-22,guards=True
+mine,squeeze,1000XEC,2026-07-17,guards=True
+mine,squeeze,4,2026-07-26,guards=True
+mine,squeeze,ACE,2026-08-06,guards=True
+mine,squeeze,ACH,2025-04-14,guards=True
+mine,squeeze,ACT,2025-05-12,guards=True
+mine,squeeze,ADA,2022-10-25,guards=True
+mine,squeeze,AGLD,2024-11-13,guards=True
+mine,squeeze,AGLD,2024-12-21,guards=True
+mine,squeeze,AGT,2026-04-06,guards=True
+mine,squeeze,AIXBT,2026-03-03,guards=True
+mine,squeeze,AKE,2026-09-02,guards=True
+mine,squeeze,ALGO,2023-07-13,guards=True
+mine,squeeze,ALGO,2026-03-31,guards=True
+mine,squeeze,ALICE,2024-06-03,guards=True
+mine,squeeze,ALPACA,2025-04-19,guards=True
+mine,squeeze,ALPACA,2025-04-30,guards=True
+mine,squeeze,ALPHA,2023-01-03,guards=True
+mine,squeeze,ANIME,2025-12-22,guards=True
+mine,squeeze,API3,2025-03-22,guards=True
+mine,squeeze,API3,2025-08-19,guards=True
+mine,squeeze,AR,2025-11-06,guards=True
+mine,squeeze,ARB,2025-05-10,guards=True
+mine,squeeze,ARB,2026-07-09,guards=True
+mine,squeeze,ARB,2026-08-19,guards=True
+mine,squeeze,ARK,2025-04-12,guards=True
+mine,squeeze,ARK,2026-09-14,guards=True
+mine,squeeze,ARPA,2023-03-17,guards=True
+mine,squeeze,ARPA,2023-05-12,guards=True
+mine,squeeze,ARPA,2023-05-24,guards=True
+mine,squeeze,ARPA,2026-02-22,guards=True
+mine,squeeze,AUCTION,2025-03-11,guards=True
+mine,squeeze,AVA,2026-10-17,guards=True
+mine,squeeze,AXS,2021-07-03,guards=True
+mine,squeeze,AXS,2021-07-23,guards=True
+mine,squeeze,AXS,2026-01-16,guards=True
+mine,squeeze,B,2026-01-03,guards=True
+mine,squeeze,BANANA,2025-12-24,guards=True
+mine,squeeze,BANANAS31,2025-11-16,guards=True
+mine,squeeze,BANANAS31,2025-11-26,guards=True
+mine,squeeze,BAND,2022-11-04,guards=True
+mine,squeeze,BAND,2025-08-22,guards=True
+mine,squeeze,BAT,2025-10-12,guards=True
+mine,squeeze,BAT,2026-10-13,guards=True
+mine,squeeze,BB,2025-08-07,guards=True
+mine,squeeze,BB,2025-08-22,guards=True
+mine,squeeze,BCH,2023-06-30,guards=True
+mine,squeeze,BEAMX,2024-05-20,guards=True
+mine,squeeze,BEAMX,2025-05-01,guards=True
+mine,squeeze,BEL,2022-05-29,guards=True
+mine,squeeze,BEL,2023-04-17,guards=True
+mine,squeeze,BERA,2026-02-11,guards=True
+mine,squeeze,BICO,2026-08-04,guards=True
+mine,squeeze,BIGTIME,2024-09-12,guards=True
+mine,squeeze,BIO,2025-08-22,guards=True
+mine,squeeze,BIRB,2026-10-23,guards=True
+mine,squeeze,BLUR,2026-04-19,guards=True
+mine,squeeze,BLZ,2022-08-24,guards=True
+mine,squeeze,BLZ,2023-08-16,guards=True
+mine,squeeze,BMT,2026-10-22,guards=True
+mine,squeeze,BNB,2023-12-26,guards=True
+mine,squeeze,BNB,2024-02-15,guards=True
+mine,squeeze,BNX,2023-07-13,guards=True
+mine,squeeze,BOME,2025-05-09,guards=True
+mine,squeeze,BOME,2026-01-02,guards=True
+mine,squeeze,BR,2026-10-19,guards=True
+mine,squeeze,BRETT,2025-12-02,guards=True
+mine,squeeze,BSW,2025-04-24,guards=True
+mine,squeeze,BTC,2023-10-23,guards=True
+mine,squeeze,BULLA,2026-01-30,guards=True
+mine,squeeze,BULLA,2026-10-26,guards=True
+mine,squeeze,CAKE,2025-02-12,guards=True
+mine,squeeze,CAKE,2025-03-17,guards=True
+mine,squeeze,CATI,2025-05-12,guards=True
+mine,squeeze,CATI,2025-08-27,guards=True
+mine,squeeze,CELO,2022-11-27,guards=True
+mine,squeeze,CFX,2026-04-16,guards=True
+mine,squeeze,CGPT,2026-05-15,guards=True
+mine,squeeze,CKB,2024-02-14,guards=True
+mine,squeeze,CKB,2024-09-15,guards=True
+mine,squeeze,COMP,2023-06-29,guards=True
+mine,squeeze,COS,2026-03-08,guards=True
+mine,squeeze,COTI,2021-09-23,guards=True
+mine,squeeze,COTI,2024-02-26,guards=True
+mine,squeeze,COTI,2026-07-29,guards=True
+mine,squeeze,CROSS,2026-09-17,guards=True
+mine,squeeze,CTK,2025-06-29,guards=True
+mine,squeeze,CVC,2025-12-05,guards=True
+mine,squeeze,D,2026-04-01,guards=True
+mine,squeeze,DAM,2026-02-24,guards=True
+mine,squeeze,DAR,2024-07-17,guards=True
+mine,squeeze,DASH,2021-07-19,guards=True
+mine,squeeze,DASH,2025-11-01,guards=True
+mine,squeeze,DASH,2026-01-13,guards=True
+mine,squeeze,DASH,2026-04-10,guards=True
+mine,squeeze,DEGO,2026-03-08,guards=True
+mine,squeeze,DENT,2026-02-24,guards=True
+mine,squeeze,DEXE,2026-08-28,guards=True
+mine,squeeze,DGB,2022-12-14,guards=True
+mine,squeeze,DIA,2025-07-20,guards=True
+mine,squeeze,DODOX,2026-07-12,guards=True
+mine,squeeze,DODOX,2026-08-05,guards=True
+mine,squeeze,DOGS,2026-01-04,guards=True
+mine,squeeze,DOGS,2026-03-09,guards=True
+mine,squeeze,DOGS,2026-05-07,guards=True
+mine,squeeze,DOT,2026-02-25,guards=True
+mine,squeeze,DUSK,2025-11-07,guards=True
+mine,squeeze,DUSK,2026-01-12,guards=True
+mine,squeeze,DUSK,2026-03-24,guards=True
+mine,squeeze,EDEN,2026-05-19,guards=True
+mine,squeeze,EDU,2024-07-05,guards=True
+mine,squeeze,EDU,2026-04-20,guards=True
+mine,squeeze,EGLD,2025-12-05,guards=True
+mine,squeeze,EIGEN,2025-05-08,guards=True
+mine,squeeze,ENJ,2026-03-18,guards=True
+mine,squeeze,ENJ,2026-04-08,guards=True
+mine,squeeze,EPIC,2025-12-22,guards=True
+mine,squeeze,ESPORTS,2026-05-20,guards=True
+mine,squeeze,ETC,2021-06-29,guards=True
+mine,squeeze,ETC,2025-11-07,guards=True
+mine,squeeze,EUL,2026-07-26,guards=True
+mine,squeeze,FF,2026-04-10,guards=True
+mine,squeeze,FIDA,2025-06-30,guards=True
+mine,squeeze,FIDA,2026-05-20,guards=True
+mine,squeeze,FIL,2025-11-06,guards=True
+mine,squeeze,FIL,2026-01-01,guards=True
+mine,squeeze,FLM,2025-04-25,guards=True
+mine,squeeze,FLOCK,2026-09-04,guards=True
+mine,squeeze,FLOW,2026-03-06,guards=True
+mine,squeeze,FORM,2026-03-03,guards=True
+mine,squeeze,GALA,2023-01-08,guards=True
+mine,squeeze,GAS,2025-04-09,guards=True
+mine,squeeze,GAS,2026-04-03,guards=True
+mine,squeeze,GMT,2024-12-27,guards=True
+mine,squeeze,GMT,2025-04-19,guards=True
+mine,squeeze,GPS,2026-02-09,guards=True
+mine,squeeze,GRT,2025-11-07,guards=True
+mine,squeeze,GTC,2021-12-24,guards=True
+mine,squeeze,GTC,2026-03-12,guards=True
+mine,squeeze,GTC,2026-10-04,guards=True
+mine,squeeze,GUN,2026-01-14,guards=True
+mine,squeeze,HEI,2026-06-25,guards=True
+mine,squeeze,HFT,2025-06-29,guards=True
+mine,squeeze,HFT,2025-08-09,guards=True
+mine,squeeze,HFT,2025-09-02,guards=True
+mine,squeeze,HIGH,2023-08-07,guards=True
+mine,squeeze,HIGH,2025-04-19,guards=True
+mine,squeeze,HOME,2026-05-19,guards=True
+mine,squeeze,HOME,2026-05-31,guards=True
+mine,squeeze,HOOK,2024-07-26,guards=True
+mine,squeeze,HOOK,2025-07-02,guards=True
+mine,squeeze,HOT,2026-06-27,guards=True
+mine,squeeze,ICP,2023-02-17,guards=True
+mine,squeeze,ICP,2024-09-10,guards=True
+mine,squeeze,ICX,2023-04-04,guards=True
+mine,squeeze,ID,2024-02-09,guards=True
+mine,squeeze,ID,2025-08-28,guards=True
+mine,squeeze,ID,2026-01-10,guards=True
+mine,squeeze,ILV,2025-11-08,guards=True
+mine,squeeze,ILV,2026-04-10,guards=True
+mine,squeeze,INIT,2026-02-15,guards=True
+mine,squeeze,INJ,2023-04-14,guards=True
+mine,squeeze,IO,2025-05-08,guards=True
+mine,squeeze,IOTA,2023-12-02,guards=True
+mine,squeeze,JELLYJELLY,2025-12-12,guards=True
+mine,squeeze,JTO,2026-02-17,guards=True
+mine,squeeze,JTO,2026-05-07,guards=True
+mine,squeeze,KAIA,2025-06-11,guards=True
+mine,squeeze,KAIA,2026-01-23,guards=True
+mine,squeeze,KSM,2025-11-08,guards=True
+mine,squeeze,LA,2026-07-23,guards=True
+mine,squeeze,LAB,2026-06-01,guards=True
+mine,squeeze,LAB,2026-07-04,guards=True
+mine,squeeze,LAYER,2025-11-22,guards=True
+mine,squeeze,LINA,2023-05-29,guards=True
+mine,squeeze,LINK,2020-08-08,guards=True
+mine,squeeze,LPT,2023-08-11,guards=True
+mine,squeeze,LPT,2024-02-17,guards=True
+mine,squeeze,LPT,2025-04-22,guards=True
+mine,squeeze,LPT,2025-05-30,guards=True
+mine,squeeze,LQTY,2025-06-23,guards=True
+mine,squeeze,LRC,2021-06-27,guards=True
+mine,squeeze,LSK,2026-09-12,guards=True
+mine,squeeze,LUMIA,2025-11-07,guards=True
+mine,squeeze,LUNA2,2023-12-04,guards=True
+mine,squeeze,LUNA2,2025-12-05,guards=True
+mine,squeeze,MAGIC,2025-04-21,guards=True
+mine,squeeze,MAGIC,2025-07-08,guards=True
+mine,squeeze,MAGIC,2025-08-04,guards=True
+mine,squeeze,MASK,2022-11-02,guards=True
+mine,squeeze,MEME,2025-04-18,guards=True
+mine,squeeze,MEME,2025-08-20,guards=True
+mine,squeeze,MEME,2025-11-07,guards=True
+mine,squeeze,METIS,2025-05-09,guards=True
+mine,squeeze,METIS,2025-12-24,guards=True
+mine,squeeze,MEW,2025-03-26,guards=True
+mine,squeeze,MINA,2023-10-23,guards=True
+mine,squeeze,MINA,2025-11-01,guards=True
+mine,squeeze,MINA,2026-09-09,guards=True
+mine,squeeze,MOODENG,2025-05-08,guards=True
+mine,squeeze,MOODENG,2025-12-06,guards=True
+mine,squeeze,MOVR,2026-04-23,guards=True
+mine,squeeze,MTL,2022-04-17,guards=True
+mine,squeeze,MTL,2024-06-24,guards=True
+mine,squeeze,MYRO,2025-04-23,guards=True
+mine,squeeze,NAORIS,2026-02-18,guards=True
+mine,squeeze,NEIRO,2025-05-09,guards=True
+mine,squeeze,NEO,2026-08-20,guards=True
+mine,squeeze,NIL,2025-12-26,guards=True
+mine,squeeze,NKN,2022-07-15,guards=True
+mine,squeeze,NKN,2025-04-20,guards=True
+mine,squeeze,NMR,2025-11-20,guards=True
+mine,squeeze,NOT,2026-05-07,guards=True
+mine,squeeze,OGN,2022-03-14,guards=True
+mine,squeeze,OGN,2022-05-31,guards=True
+mine,squeeze,OGN,2026-10-08,guards=True
+mine,squeeze,OMG,2021-11-04,guards=True
+mine,squeeze,OMNI,2025-07-29,guards=True
+mine,squeeze,OMNI,2025-09-10,guards=True
+mine,squeeze,ONE,2026-09-19,guards=True
+mine,squeeze,ONG,2026-03-30,guards=True
+mine,squeeze,ONG,2026-08-26,guards=True
+mine,squeeze,ONT,2025-12-27,guards=True
+mine,squeeze,ONT,2026-03-30,guards=True
+mine,squeeze,ONT,2026-08-26,guards=True
+mine,squeeze,ORDI,2025-11-07,guards=True
+mine,squeeze,PARTI,2025-11-24,guards=True
+mine,squeeze,PAXG,2026-01-28,guards=True
+mine,squeeze,PEOPLE,2025-05-09,guards=True
+mine,squeeze,PERP,2025-04-20,guards=True
+mine,squeeze,PHA,2026-03-03,guards=True
+mine,squeeze,PIPPIN,2025-11-24,guards=True
+mine,squeeze,PIXEL,2025-04-21,guards=True
+mine,squeeze,PIXEL,2026-03-11,guards=True
+mine,squeeze,POLYX,2026-04-04,guards=True
+mine,squeeze,PORTAL,2025-07-11,guards=True
+mine,squeeze,PORTAL,2026-05-31,guards=True
+mine,squeeze,PROM,2026-07-19,guards=True
+mine,squeeze,PROM,2026-08-12,guards=True
+mine,squeeze,PUMP,2026-08-20,guards=True
+mine,squeeze,PYTH,2024-05-20,guards=True
+mine,squeeze,PYTH,2025-05-09,guards=True
+mine,squeeze,QTUM,2025-08-24,guards=True
+mine,squeeze,RAD,2024-01-19,guards=True
+mine,squeeze,RARE,2025-03-10,guards=True
+mine,squeeze,RDNT,2024-09-02,guards=True
+mine,squeeze,RDNT,2024-11-06,guards=True
+mine,squeeze,RED,2025-09-05,guards=True
+mine,squeeze,REN,2022-12-26,guards=True
+mine,squeeze,RENDER,2025-11-07,guards=True
+mine,squeeze,REZ,2025-02-26,guards=True
+mine,squeeze,REZ,2025-03-30,guards=True
+mine,squeeze,RIF,2026-07-23,guards=True
+mine,squeeze,RLC,2022-07-01,guards=True
+mine,squeeze,RLC,2024-01-21,guards=True
+mine,squeeze,RLC,2026-10-08,guards=True
+mine,squeeze,ROSE,2025-11-06,guards=True
+mine,squeeze,ROSE,2026-01-21,guards=True
+mine,squeeze,RPL,2026-07-04,guards=True
+mine,squeeze,RUNE,2022-03-01,guards=True
+mine,squeeze,RVN,2022-07-18,guards=True
+mine,squeeze,RVN,2022-09-09,guards=True
+mine,squeeze,RVN,2025-06-09,guards=True
+mine,squeeze,SEI,2025-06-23,guards=True
+mine,squeeze,SFP,2022-11-14,guards=True
+mine,squeeze,SIREN,2026-03-22,guards=True
+mine,squeeze,SKL,2025-08-14,guards=True
+mine,squeeze,SKYAI,2026-08-03,guards=True
+mine,squeeze,SLP,2025-11-07,guards=True
+mine,squeeze,SNX,2022-06-20,guards=True
+mine,squeeze,SOL,2023-01-03,guards=True
+mine,squeeze,SOLV,2026-04-02,guards=True
+mine,squeeze,SONIC,2026-02-11,guards=True
+mine,squeeze,SOPH,2026-10-30,guards=True
+mine,squeeze,SPELL,2023-09-15,guards=True
+mine,squeeze,SPELL,2025-01-26,guards=True
+mine,squeeze,SSV,2025-05-10,guards=True
+mine,squeeze,STEEM,2024-12-28,guards=True
+mine,squeeze,STEEM,2026-02-26,guards=True
+mine,squeeze,STG,2024-12-29,guards=True
+mine,squeeze,STMX,2023-07-22,guards=True
+mine,squeeze,STO,2026-01-17,guards=True
+mine,squeeze,STORJ,2022-06-23,guards=True
+mine,squeeze,STRK,2025-11-07,guards=True
+mine,squeeze,SUPER,2025-09-29,guards=True
+mine,squeeze,SYN,2025-04-24,guards=True
+mine,squeeze,SYN,2026-01-30,guards=True
+mine,squeeze,SYN,2026-06-17,guards=True
+mine,squeeze,T,2026-07-12,guards=True
+mine,squeeze,TAG,2026-10-26,guards=True
+mine,squeeze,TAIKO,2026-07-01,guards=True
+mine,squeeze,THE,2025-09-21,guards=True
+mine,squeeze,TLM,2023-09-05,guards=True
+mine,squeeze,TLM,2023-10-16,guards=True
+mine,squeeze,TNSR,2025-11-19,guards=True
+mine,squeeze,TRB,2022-05-30,guards=True
+mine,squeeze,TRB,2023-09-07,guards=True
+mine,squeeze,TRB,2023-10-25,guards=True
+mine,squeeze,TRU,2024-09-13,guards=True
+mine,squeeze,TRUMP,2026-03-13,guards=True
+mine,squeeze,TRX,2024-11-12,guards=True
+mine,squeeze,TST,2026-04-13,guards=True
+mine,squeeze,TST,2026-05-04,guards=True
+mine,squeeze,TST,2026-08-08,guards=True
+mine,squeeze,TURBO,2025-04-23,guards=True
+mine,squeeze,TURBO,2025-11-27,guards=True
+mine,squeeze,TURBO,2026-03-12,guards=True
+mine,squeeze,TUT,2026-08-08,guards=True
+mine,squeeze,UB,2026-05-01,guards=True
+mine,squeeze,UMA,2024-01-21,guards=True
+mine,squeeze,UMA,2025-06-09,guards=True
+mine,squeeze,UNFI,2022-05-29,guards=True
+mine,squeeze,UNFI,2023-09-03,guards=True
+mine,squeeze,USELESS,2026-09-03,guards=True
+mine,squeeze,VANRY,2026-01-18,guards=True
+mine,squeeze,VANRY,2026-07-05,guards=True
+mine,squeeze,VIC,2026-06-01,guards=True
+mine,squeeze,VIDT,2025-03-28,guards=True
+mine,squeeze,VINE,2025-10-12,guards=True
+mine,squeeze,VIRTUAL,2025-10-25,guards=True
+mine,squeeze,VOXEL,2025-04-19,guards=True
+mine,squeeze,VVV,2026-02-15,guards=True
+mine,squeeze,W,2025-03-23,guards=True
+mine,squeeze,WAVES,2022-03-01,guards=True
+mine,squeeze,WAVES,2022-03-29,guards=True
+mine,squeeze,WAVES,2022-05-30,guards=True
+mine,squeeze,WIF,2026-01-04,guards=True
+mine,squeeze,XEM,2024-07-29,guards=True
+mine,squeeze,XLM,2025-07-09,guards=True
+mine,squeeze,XPIN,2026-04-07,guards=True
+mine,squeeze,XRP,2022-02-07,guards=True
+mine,squeeze,XRP,2022-09-22,guards=True
+mine,squeeze,XRP,2026-02-06,guards=True
+mine,squeeze,XTZ,2025-11-06,guards=True
+mine,squeeze,XVG,2024-12-03,guards=True
+mine,squeeze,YGG,2026-02-21,guards=True
+mine,squeeze,ZEC,2022-03-08,guards=True
+mine,squeeze,ZEN,2024-07-05,guards=True
+mine,squeeze,ZEN,2025-11-01,guards=True
+mine,squeeze,ZEN,2026-01-13,guards=True
+mine,squeeze,ZETA,2024-09-18,guards=True
+mine,squeeze,ZIL,2020-12-26,guards=True
+mine,squeeze,ZIL,2022-03-30,guards=True
+mine,squeeze,ZIL,2026-07-28,guards=True
+mine,squeeze,ZK,2025-11-01,guards=True
+mine,squeeze,ZRO,2025-03-21,guards=True
+mine,squeeze,ZRX,2025-12-30,guards=True
+db,flush,1000000MOG,2026-08-22,crowding_watch backfill
+db,flush,1000WHY,2026-01-12,crowding_watch backfill
+db,flush,AGLD,2024-03-05,crowding_watch backfill
+db,flush,ANIME,2025-10-10,crowding_watch backfill
+db,flush,APR,2026-08-13,crowding_watch backfill
+db,flush,ATA,2026-05-13,crowding_watch backfill
+db,flush,AVAAI,2025-10-10,crowding_watch backfill
+db,flush,AVAAI,2026-04-19,crowding_watch backfill
+db,flush,AVAAI,2026-08-21,crowding_watch backfill
+db,flush,BABY,2026-08-12,crowding_watch backfill
+db,flush,BCH,2020-08-02,crowding_watch backfill
+db,flush,BLUAI,2026-05-19,crowding_watch backfill
+db,flush,BLUAI,2026-08-11,crowding_watch backfill
+db,flush,BNB,2020-09-03,crowding_watch backfill
+db,flush,BNB,2021-02-20,crowding_watch backfill
+db,flush,BR,2025-12-14,crowding_watch backfill
+db,flush,BSW,2025-08-23,crowding_watch backfill
+db,flush,CHESS,2026-02-06,crowding_watch backfill
+db,flush,DAM,2026-04-28,crowding_watch backfill
+db,flush,DEGO,2025-09-09,crowding_watch backfill
+db,flush,DEGO,2025-09-27,crowding_watch backfill
+db,flush,DOGE,2021-04-17,crowding_watch backfill
+db,flush,ESPORTS,2026-06-13,crowding_watch backfill
+db,flush,FHE,2026-01-21,crowding_watch backfill
+db,flush,G,2026-09-20,crowding_watch backfill
+db,flush,GRIFFAIN,2026-09-13,crowding_watch backfill
+db,flush,GRIFFAIN,2026-10-07,crowding_watch backfill
+db,flush,HANA,2026-08-19,crowding_watch backfill
+db,flush,HOLO,2026-06-05,crowding_watch backfill
+db,flush,IN,2026-06-30,crowding_watch backfill
+db,flush,INX,2026-09-28,crowding_watch backfill
+db,flush,JELLYJELLY,2025-11-01,crowding_watch backfill
+db,flush,KEY,2024-03-16,crowding_watch backfill
+db,flush,LUMIA,2025-10-10,crowding_watch backfill
+db,flush,MITO,2026-10-21,crowding_watch backfill
+db,flush,MLN,2026-05-13,crowding_watch backfill
+db,flush,MMT,2026-07-31,crowding_watch backfill
+db,flush,MOVE,2025-10-10,crowding_watch backfill
+db,flush,MUBARAK,2026-09-23,crowding_watch backfill
+db,flush,NAORIS,2026-05-01,crowding_watch backfill
+db,flush,OL,2026-03-22,crowding_watch backfill
+db,flush,SAGA,2026-09-25,crowding_watch backfill
+db,flush,SAHARA,2026-06-09,crowding_watch backfill
+db,flush,SCRT,2026-08-14,crowding_watch backfill
+db,flush,SIREN,2026-02-08,crowding_watch backfill
+db,flush,SOLV,2025-10-10,crowding_watch backfill
+db,flush,SOON,2026-07-29,crowding_watch backfill
+db,flush,SOPH,2026-10-15,crowding_watch backfill
+db,flush,SPELL,2024-02-23,crowding_watch backfill
+db,flush,SPK,2026-08-24,crowding_watch backfill
+db,flush,SUSHI,2024-12-09,crowding_watch backfill
+db,flush,SWARMS,2025-10-10,crowding_watch backfill
+db,flush,TA,2026-03-28,crowding_watch backfill
+db,flush,TUT,2026-08-10,crowding_watch backfill
+db,flush,US,2026-09-29,crowding_watch backfill
+db,flush,USELESS,2026-05-13,crowding_watch backfill
+db,flush,USUAL,2025-10-10,crowding_watch backfill
+db,flush,XAN,2026-08-10,crowding_watch backfill
+db,flush,XAN,2026-09-08,crowding_watch backfill
+db,squeeze,1000LUNC,2024-08-10,crowding_watch backfill
+db,squeeze,1000LUNC,2025-12-05,crowding_watch backfill
+db,squeeze,1000PEPE,2026-03-16,crowding_watch backfill
+db,squeeze,1000PEPE,2026-08-20,crowding_watch backfill
+db,squeeze,1000RATS,2024-06-22,crowding_watch backfill
+db,squeeze,1000XEC,2026-07-17,crowding_watch backfill
+db,squeeze,4,2026-07-26,crowding_watch backfill
+db,squeeze,ACE,2026-08-06,crowding_watch backfill
+db,squeeze,ACH,2025-04-14,crowding_watch backfill
+db,squeeze,ACT,2025-05-12,crowding_watch backfill
+db,squeeze,ADA,2022-10-25,crowding_watch backfill
+db,squeeze,AGLD,2024-11-13,crowding_watch backfill
+db,squeeze,AGLD,2024-12-21,crowding_watch backfill
+db,squeeze,AGT,2026-04-06,crowding_watch backfill
+db,squeeze,AIXBT,2026-03-03,crowding_watch backfill
+db,squeeze,AKE,2026-09-02,crowding_watch backfill
+db,squeeze,ALGO,2023-07-13,crowding_watch backfill
+db,squeeze,ALGO,2026-03-31,crowding_watch backfill
+db,squeeze,ALICE,2024-06-03,crowding_watch backfill
+db,squeeze,ALPACA,2025-04-19,crowding_watch backfill
+db,squeeze,ALPACA,2025-04-30,crowding_watch backfill
+db,squeeze,ALPHA,2023-01-03,crowding_watch backfill
+db,squeeze,ANIME,2025-12-22,crowding_watch backfill
+db,squeeze,API3,2025-03-22,crowding_watch backfill
+db,squeeze,API3,2025-08-19,crowding_watch backfill
+db,squeeze,AR,2025-11-06,crowding_watch backfill
+db,squeeze,ARB,2025-05-10,crowding_watch backfill
+db,squeeze,ARB,2026-07-09,crowding_watch backfill
+db,squeeze,ARB,2026-08-19,crowding_watch backfill
+db,squeeze,ARK,2025-04-12,crowding_watch backfill
+db,squeeze,ARK,2026-09-14,crowding_watch backfill
+db,squeeze,ARPA,2023-03-17,crowding_watch backfill
+db,squeeze,ARPA,2023-05-12,crowding_watch backfill
+db,squeeze,ARPA,2023-05-24,crowding_watch backfill
+db,squeeze,ARPA,2026-02-22,crowding_watch backfill
+db,squeeze,AUCTION,2025-03-11,crowding_watch backfill
+db,squeeze,AVA,2026-10-17,crowding_watch backfill
+db,squeeze,AXS,2021-07-03,crowding_watch backfill
+db,squeeze,AXS,2021-07-23,crowding_watch backfill
+db,squeeze,AXS,2026-01-16,crowding_watch backfill
+db,squeeze,B,2026-01-03,crowding_watch backfill
+db,squeeze,BANANA,2025-12-24,crowding_watch backfill
+db,squeeze,BANANAS31,2025-11-16,crowding_watch backfill
+db,squeeze,BANANAS31,2025-11-26,crowding_watch backfill
+db,squeeze,BAND,2022-11-04,crowding_watch backfill
+db,squeeze,BAND,2025-08-22,crowding_watch backfill
+db,squeeze,BAT,2025-10-12,crowding_watch backfill
+db,squeeze,BAT,2026-10-13,crowding_watch backfill
+db,squeeze,BB,2025-08-07,crowding_watch backfill
+db,squeeze,BB,2025-08-22,crowding_watch backfill
+db,squeeze,BCH,2023-06-30,crowding_watch backfill
+db,squeeze,BEAMX,2024-05-20,crowding_watch backfill
+db,squeeze,BEAMX,2025-05-01,crowding_watch backfill
+db,squeeze,BEL,2022-05-29,crowding_watch backfill
+db,squeeze,BEL,2023-04-17,crowding_watch backfill
+db,squeeze,BERA,2026-02-11,crowding_watch backfill
+db,squeeze,BICO,2026-08-04,crowding_watch backfill
+db,squeeze,BIGTIME,2024-09-12,crowding_watch backfill
+db,squeeze,BIO,2025-08-22,crowding_watch backfill
+db,squeeze,BIRB,2026-10-23,crowding_watch backfill
+db,squeeze,BLUR,2026-04-19,crowding_watch backfill
+db,squeeze,BLZ,2022-08-24,crowding_watch backfill
+db,squeeze,BLZ,2023-08-16,crowding_watch backfill
+db,squeeze,BMT,2026-10-22,crowding_watch backfill
+db,squeeze,BNB,2023-12-26,crowding_watch backfill
+db,squeeze,BNB,2024-02-15,crowding_watch backfill
+db,squeeze,BNX,2023-07-13,crowding_watch backfill
+db,squeeze,BOME,2025-05-09,crowding_watch backfill
+db,squeeze,BOME,2026-01-02,crowding_watch backfill
+db,squeeze,BR,2026-10-19,crowding_watch backfill
+db,squeeze,BRETT,2025-12-02,crowding_watch backfill
+db,squeeze,BSW,2025-04-24,crowding_watch backfill
+db,squeeze,BTC,2023-10-23,crowding_watch backfill
+db,squeeze,BULLA,2026-01-30,crowding_watch backfill
+db,squeeze,BULLA,2026-10-26,crowding_watch backfill
+db,squeeze,CAKE,2025-02-12,crowding_watch backfill
+db,squeeze,CAKE,2025-03-17,crowding_watch backfill
+db,squeeze,CATI,2025-05-12,crowding_watch backfill
+db,squeeze,CATI,2025-08-27,crowding_watch backfill
+db,squeeze,CELO,2022-11-27,crowding_watch backfill
+db,squeeze,CFX,2026-04-16,crowding_watch backfill
+db,squeeze,CGPT,2026-05-15,crowding_watch backfill
+db,squeeze,CKB,2024-02-14,crowding_watch backfill
+db,squeeze,CKB,2024-09-15,crowding_watch backfill
+db,squeeze,COMP,2023-06-29,crowding_watch backfill
+db,squeeze,COS,2026-03-08,crowding_watch backfill
+db,squeeze,COTI,2021-09-23,crowding_watch backfill
+db,squeeze,COTI,2024-02-26,crowding_watch backfill
+db,squeeze,COTI,2026-07-29,crowding_watch backfill
+db,squeeze,CROSS,2026-09-17,crowding_watch backfill
+db,squeeze,CTK,2025-06-29,crowding_watch backfill
+db,squeeze,CVC,2025-12-05,crowding_watch backfill
+db,squeeze,D,2026-04-01,crowding_watch backfill
+db,squeeze,DAM,2026-02-24,crowding_watch backfill
+db,squeeze,DAR,2024-07-17,crowding_watch backfill
+db,squeeze,DASH,2021-07-19,crowding_watch backfill
+db,squeeze,DASH,2025-11-01,crowding_watch backfill
+db,squeeze,DASH,2026-01-13,crowding_watch backfill
+db,squeeze,DASH,2026-04-10,crowding_watch backfill
+db,squeeze,DEGO,2026-03-08,crowding_watch backfill
+db,squeeze,DENT,2026-02-24,crowding_watch backfill
+db,squeeze,DEXE,2026-08-28,crowding_watch backfill
+db,squeeze,DGB,2022-12-14,crowding_watch backfill
+db,squeeze,DIA,2025-07-20,crowding_watch backfill
+db,squeeze,DODOX,2026-07-12,crowding_watch backfill
+db,squeeze,DODOX,2026-08-05,crowding_watch backfill
+db,squeeze,DOGS,2026-01-04,crowding_watch backfill
+db,squeeze,DOGS,2026-03-09,crowding_watch backfill
+db,squeeze,DOGS,2026-05-07,crowding_watch backfill
+db,squeeze,DOT,2026-02-25,crowding_watch backfill
+db,squeeze,DUSK,2025-11-07,crowding_watch backfill
+db,squeeze,DUSK,2026-01-12,crowding_watch backfill
+db,squeeze,DUSK,2026-03-24,crowding_watch backfill
+db,squeeze,EDEN,2026-05-19,crowding_watch backfill
+db,squeeze,EDU,2024-07-05,crowding_watch backfill
+db,squeeze,EDU,2026-04-20,crowding_watch backfill
+db,squeeze,EGLD,2025-12-05,crowding_watch backfill
+db,squeeze,EIGEN,2025-05-08,crowding_watch backfill
+db,squeeze,ENJ,2026-03-18,crowding_watch backfill
+db,squeeze,ENJ,2026-04-08,crowding_watch backfill
+db,squeeze,EPIC,2025-12-22,crowding_watch backfill
+db,squeeze,ESPORTS,2026-05-20,crowding_watch backfill
+db,squeeze,ETC,2021-06-29,crowding_watch backfill
+db,squeeze,ETC,2025-11-07,crowding_watch backfill
+db,squeeze,EUL,2026-07-26,crowding_watch backfill
+db,squeeze,FF,2026-04-10,crowding_watch backfill
+db,squeeze,FIDA,2025-06-30,crowding_watch backfill
+db,squeeze,FIDA,2026-05-20,crowding_watch backfill
+db,squeeze,FIL,2025-11-06,crowding_watch backfill
+db,squeeze,FIL,2026-01-01,crowding_watch backfill
+db,squeeze,FLM,2025-04-25,crowding_watch backfill
+db,squeeze,FLOCK,2026-09-04,crowding_watch backfill
+db,squeeze,FLOW,2026-03-06,crowding_watch backfill
+db,squeeze,FORM,2026-03-03,crowding_watch backfill
+db,squeeze,GALA,2023-01-08,crowding_watch backfill
+db,squeeze,GAS,2025-04-09,crowding_watch backfill
+db,squeeze,GAS,2026-04-03,crowding_watch backfill
+db,squeeze,GMT,2024-12-27,crowding_watch backfill
+db,squeeze,GMT,2025-04-19,crowding_watch backfill
+db,squeeze,GPS,2026-02-09,crowding_watch backfill
+db,squeeze,GRT,2025-11-07,crowding_watch backfill
+db,squeeze,GTC,2021-12-24,crowding_watch backfill
+db,squeeze,GTC,2026-03-12,crowding_watch backfill
+db,squeeze,GTC,2026-10-04,crowding_watch backfill
+db,squeeze,GUN,2026-01-14,crowding_watch backfill
+db,squeeze,HEI,2026-06-25,crowding_watch backfill
+db,squeeze,HFT,2025-06-29,crowding_watch backfill
+db,squeeze,HFT,2025-08-09,crowding_watch backfill
+db,squeeze,HFT,2025-09-02,crowding_watch backfill
+db,squeeze,HIGH,2023-08-07,crowding_watch backfill
+db,squeeze,HIGH,2025-04-19,crowding_watch backfill
+db,squeeze,HOME,2026-05-19,crowding_watch backfill
+db,squeeze,HOME,2026-05-31,crowding_watch backfill
+db,squeeze,HOOK,2024-07-26,crowding_watch backfill
+db,squeeze,HOOK,2025-07-02,crowding_watch backfill
+db,squeeze,HOT,2026-06-27,crowding_watch backfill
+db,squeeze,ICP,2023-02-17,crowding_watch backfill
+db,squeeze,ICP,2024-09-10,crowding_watch backfill
+db,squeeze,ICX,2023-04-04,crowding_watch backfill
+db,squeeze,ID,2024-02-09,crowding_watch backfill
+db,squeeze,ID,2025-08-28,crowding_watch backfill
+db,squeeze,ID,2026-01-10,crowding_watch backfill
+db,squeeze,ILV,2025-11-08,crowding_watch backfill
+db,squeeze,ILV,2026-04-10,crowding_watch backfill
+db,squeeze,INIT,2026-02-15,crowding_watch backfill
+db,squeeze,INJ,2023-04-14,crowding_watch backfill
+db,squeeze,IO,2025-05-08,crowding_watch backfill
+db,squeeze,IOTA,2023-12-02,crowding_watch backfill
+db,squeeze,JELLYJELLY,2025-12-12,crowding_watch backfill
+db,squeeze,JTO,2026-02-17,crowding_watch backfill
+db,squeeze,JTO,2026-05-07,crowding_watch backfill
+db,squeeze,KAIA,2025-06-11,crowding_watch backfill
+db,squeeze,KAIA,2026-01-23,crowding_watch backfill
+db,squeeze,KSM,2025-11-08,crowding_watch backfill
+db,squeeze,LA,2026-07-23,crowding_watch backfill
+db,squeeze,LAB,2026-06-01,crowding_watch backfill
+db,squeeze,LAB,2026-07-04,crowding_watch backfill
+db,squeeze,LAYER,2025-11-22,crowding_watch backfill
+db,squeeze,LINA,2023-05-29,crowding_watch backfill
+db,squeeze,LINK,2020-08-08,crowding_watch backfill
+db,squeeze,LPT,2023-08-11,crowding_watch backfill
+db,squeeze,LPT,2024-02-17,crowding_watch backfill
+db,squeeze,LPT,2025-04-22,crowding_watch backfill
+db,squeeze,LPT,2025-05-30,crowding_watch backfill
+db,squeeze,LQTY,2025-06-23,crowding_watch backfill
+db,squeeze,LRC,2021-06-27,crowding_watch backfill
+db,squeeze,LSK,2026-09-12,crowding_watch backfill
+db,squeeze,LUMIA,2025-11-07,crowding_watch backfill
+db,squeeze,LUNA2,2023-12-04,crowding_watch backfill
+db,squeeze,LUNA2,2025-12-05,crowding_watch backfill
+db,squeeze,MAGIC,2025-04-21,crowding_watch backfill
+db,squeeze,MAGIC,2025-07-08,crowding_watch backfill
+db,squeeze,MAGIC,2025-08-04,crowding_watch backfill
+db,squeeze,MASK,2022-11-02,crowding_watch backfill
+db,squeeze,MEME,2025-04-18,crowding_watch backfill
+db,squeeze,MEME,2025-08-20,crowding_watch backfill
+db,squeeze,MEME,2025-11-07,crowding_watch backfill
+db,squeeze,METIS,2025-05-09,crowding_watch backfill
+db,squeeze,METIS,2025-12-24,crowding_watch backfill
+db,squeeze,MEW,2025-03-26,crowding_watch backfill
+db,squeeze,MINA,2023-10-23,crowding_watch backfill
+db,squeeze,MINA,2025-11-01,crowding_watch backfill
+db,squeeze,MINA,2026-09-09,crowding_watch backfill
+db,squeeze,MOODENG,2025-05-08,crowding_watch backfill
+db,squeeze,MOODENG,2025-12-06,crowding_watch backfill
+db,squeeze,MOVR,2026-04-23,crowding_watch backfill
+db,squeeze,MTL,2022-04-17,crowding_watch backfill
+db,squeeze,MTL,2024-06-24,crowding_watch backfill
+db,squeeze,MYRO,2025-04-23,crowding_watch backfill
+db,squeeze,NAORIS,2026-02-18,crowding_watch backfill
+db,squeeze,NEIRO,2025-05-09,crowding_watch backfill
+db,squeeze,NEO,2026-08-20,crowding_watch backfill
+db,squeeze,NIL,2025-12-26,crowding_watch backfill
+db,squeeze,NKN,2022-07-15,crowding_watch backfill
+db,squeeze,NKN,2025-04-20,crowding_watch backfill
+db,squeeze,NMR,2025-11-20,crowding_watch backfill
+db,squeeze,NOT,2026-05-07,crowding_watch backfill
+db,squeeze,OGN,2022-03-14,crowding_watch backfill
+db,squeeze,OGN,2022-05-31,crowding_watch backfill
+db,squeeze,OGN,2026-10-08,crowding_watch backfill
+db,squeeze,OMG,2021-11-04,crowding_watch backfill
+db,squeeze,OMNI,2025-07-29,crowding_watch backfill
+db,squeeze,OMNI,2025-09-10,crowding_watch backfill
+db,squeeze,ONE,2026-09-19,crowding_watch backfill
+db,squeeze,ONG,2026-03-30,crowding_watch backfill
+db,squeeze,ONG,2026-08-26,crowding_watch backfill
+db,squeeze,ONT,2025-12-27,crowding_watch backfill
+db,squeeze,ONT,2026-03-30,crowding_watch backfill
+db,squeeze,ONT,2026-08-26,crowding_watch backfill
+db,squeeze,ORDI,2025-11-07,crowding_watch backfill
+db,squeeze,PARTI,2025-11-24,crowding_watch backfill
+db,squeeze,PAXG,2026-01-28,crowding_watch backfill
+db,squeeze,PEOPLE,2025-05-09,crowding_watch backfill
+db,squeeze,PERP,2025-04-20,crowding_watch backfill
+db,squeeze,PHA,2026-03-03,crowding_watch backfill
+db,squeeze,PIPPIN,2025-11-24,crowding_watch backfill
+db,squeeze,PIXEL,2025-04-21,crowding_watch backfill
+db,squeeze,PIXEL,2026-03-11,crowding_watch backfill
+db,squeeze,POLYX,2026-04-04,crowding_watch backfill
+db,squeeze,PORTAL,2025-07-11,crowding_watch backfill
+db,squeeze,PORTAL,2026-05-31,crowding_watch backfill
+db,squeeze,PROM,2026-07-19,crowding_watch backfill
+db,squeeze,PROM,2026-08-12,crowding_watch backfill
+db,squeeze,PUMP,2026-08-20,crowding_watch backfill
+db,squeeze,PYTH,2024-05-20,crowding_watch backfill
+db,squeeze,PYTH,2025-05-09,crowding_watch backfill
+db,squeeze,QTUM,2025-08-24,crowding_watch backfill
+db,squeeze,RAD,2024-01-19,crowding_watch backfill
+db,squeeze,RARE,2025-03-10,crowding_watch backfill
+db,squeeze,RDNT,2024-09-02,crowding_watch backfill
+db,squeeze,RDNT,2024-11-06,crowding_watch backfill
+db,squeeze,RED,2025-09-05,crowding_watch backfill
+db,squeeze,REN,2022-12-26,crowding_watch backfill
+db,squeeze,RENDER,2025-11-07,crowding_watch backfill
+db,squeeze,REZ,2025-02-26,crowding_watch backfill
+db,squeeze,REZ,2025-03-30,crowding_watch backfill
+db,squeeze,RIF,2026-07-23,crowding_watch backfill
+db,squeeze,RLC,2022-07-01,crowding_watch backfill
+db,squeeze,RLC,2024-01-21,crowding_watch backfill
+db,squeeze,RLC,2026-10-08,crowding_watch backfill
+db,squeeze,ROSE,2025-11-06,crowding_watch backfill
+db,squeeze,ROSE,2026-01-21,crowding_watch backfill
+db,squeeze,RPL,2026-07-04,crowding_watch backfill
+db,squeeze,RUNE,2022-03-01,crowding_watch backfill
+db,squeeze,RVN,2022-07-18,crowding_watch backfill
+db,squeeze,RVN,2022-09-09,crowding_watch backfill
+db,squeeze,RVN,2025-06-09,crowding_watch backfill
+db,squeeze,SEI,2025-06-23,crowding_watch backfill
+db,squeeze,SFP,2022-11-14,crowding_watch backfill
+db,squeeze,SIREN,2026-03-22,crowding_watch backfill
+db,squeeze,SKL,2025-08-14,crowding_watch backfill
+db,squeeze,SKYAI,2026-08-03,crowding_watch backfill
+db,squeeze,SLP,2025-11-07,crowding_watch backfill
+db,squeeze,SNX,2022-06-20,crowding_watch backfill
+db,squeeze,SOL,2023-01-03,crowding_watch backfill
+db,squeeze,SOLV,2026-04-02,crowding_watch backfill
+db,squeeze,SONIC,2026-02-11,crowding_watch backfill
+db,squeeze,SOPH,2026-10-30,crowding_watch backfill
+db,squeeze,SPELL,2023-09-15,crowding_watch backfill
+db,squeeze,SPELL,2025-01-26,crowding_watch backfill
+db,squeeze,SSV,2025-05-10,crowding_watch backfill
+db,squeeze,STEEM,2024-12-28,crowding_watch backfill
+db,squeeze,STEEM,2026-02-26,crowding_watch backfill
+db,squeeze,STG,2024-12-29,crowding_watch backfill
+db,squeeze,STMX,2023-07-22,crowding_watch backfill
+db,squeeze,STO,2026-01-17,crowding_watch backfill
+db,squeeze,STORJ,2022-06-23,crowding_watch backfill
+db,squeeze,STRK,2025-11-07,crowding_watch backfill
+db,squeeze,SUPER,2025-09-29,crowding_watch backfill
+db,squeeze,SYN,2025-04-24,crowding_watch backfill
+db,squeeze,SYN,2026-01-30,crowding_watch backfill
+db,squeeze,SYN,2026-06-17,crowding_watch backfill
+db,squeeze,T,2026-07-12,crowding_watch backfill
+db,squeeze,TAG,2026-10-26,crowding_watch backfill
+db,squeeze,TAIKO,2026-07-01,crowding_watch backfill
+db,squeeze,THE,2025-09-21,crowding_watch backfill
+db,squeeze,TLM,2023-09-05,crowding_watch backfill
+db,squeeze,TLM,2023-10-16,crowding_watch backfill
+db,squeeze,TNSR,2025-11-19,crowding_watch backfill
+db,squeeze,TRB,2022-05-30,crowding_watch backfill
+db,squeeze,TRB,2023-09-07,crowding_watch backfill
+db,squeeze,TRB,2023-10-25,crowding_watch backfill
+db,squeeze,TRU,2024-09-13,crowding_watch backfill
+db,squeeze,TRUMP,2026-03-13,crowding_watch backfill
+db,squeeze,TRX,2024-11-12,crowding_watch backfill
+db,squeeze,TST,2026-04-13,crowding_watch backfill
+db,squeeze,TST,2026-05-04,crowding_watch backfill
+db,squeeze,TST,2026-08-08,crowding_watch backfill
+db,squeeze,TURBO,2025-04-23,crowding_watch backfill
+db,squeeze,TURBO,2025-11-27,crowding_watch backfill
+db,squeeze,TURBO,2026-03-12,crowding_watch backfill
+db,squeeze,TUT,2026-08-08,crowding_watch backfill
+db,squeeze,UB,2026-05-01,crowding_watch backfill
+db,squeeze,UMA,2024-01-21,crowding_watch backfill
+db,squeeze,UMA,2025-06-09,crowding_watch backfill
+db,squeeze,UNFI,2022-05-29,crowding_watch backfill
+db,squeeze,UNFI,2023-09-03,crowding_watch backfill
+db,squeeze,USELESS,2026-09-03,crowding_watch backfill
+db,squeeze,VANRY,2026-01-18,crowding_watch backfill
+db,squeeze,VANRY,2026-07-05,crowding_watch backfill
+db,squeeze,VIC,2026-06-01,crowding_watch backfill
+db,squeeze,VIDT,2025-03-28,crowding_watch backfill
+db,squeeze,VINE,2025-10-12,crowding_watch backfill
+db,squeeze,VIRTUAL,2025-10-25,crowding_watch backfill
+db,squeeze,VOXEL,2025-04-19,crowding_watch backfill
+db,squeeze,VVV,2026-02-15,crowding_watch backfill
+db,squeeze,W,2025-03-23,crowding_watch backfill
+db,squeeze,WAVES,2022-03-01,crowding_watch backfill
+db,squeeze,WAVES,2022-03-29,crowding_watch backfill
+db,squeeze,WAVES,2022-05-30,crowding_watch backfill
+db,squeeze,WIF,2026-01-04,crowding_watch backfill
+db,squeeze,XEM,2024-07-29,crowding_watch backfill
+db,squeeze,XLM,2025-07-09,crowding_watch backfill
+db,squeeze,XPIN,2026-04-07,crowding_watch backfill
+db,squeeze,XRP,2022-02-07,crowding_watch backfill
+db,squeeze,XRP,2022-09-22,crowding_watch backfill
+db,squeeze,XRP,2026-02-06,crowding_watch backfill
+db,squeeze,XTZ,2025-11-06,crowding_watch backfill
+db,squeeze,XVG,2024-12-03,crowding_watch backfill
+db,squeeze,YGG,2026-02-21,crowding_watch backfill
+db,squeeze,ZEC,2022-03-08,crowding_watch backfill
+db,squeeze,ZEN,2024-07-05,crowding_watch backfill
+db,squeeze,ZEN,2025-11-01,crowding_watch backfill
+db,squeeze,ZEN,2026-01-13,crowding_watch backfill
+db,squeeze,ZETA,2024-09-18,crowding_watch backfill
+db,squeeze,ZIL,2020-12-26,crowding_watch backfill
+db,squeeze,ZIL,2022-03-30,crowding_watch backfill
+db,squeeze,ZIL,2026-07-28,crowding_watch backfill
+db,squeeze,ZK,2025-11-01,crowding_watch backfill
+db,squeeze,ZRO,2025-03-21,crowding_watch backfill
+db,squeeze,ZRX,2025-12-30,crowding_watch backfill
