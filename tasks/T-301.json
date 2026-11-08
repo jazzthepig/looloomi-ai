@@ -1,0 +1,31 @@
+{
+  "id": "T-301",
+  "owner": "lane-b",
+  "status": "claimed",
+  "created": "2026-11-08",
+  "title": "S-783 S-781 盲复算 + crowding_events() 在今天的数据上的逐事件对账(你的 t289 参考实现 vs 库里的 crowding_watch)",
+  "source": "REFUTATION_LEDGER S-783(预注册);只读 S-726 / S-777 的口径段,**不读 S-781 的结果段**。你自己的 docs/research/t289_squeeze.py(guards=True)。数据:perp_bv_daily、v_funding_daily、perp_bv_pairs、crowding_watch(anon 可读)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-301.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "预注册(S-783 原文)照抄进报告开头,只算一次。① 重拉三张表(d ≤ 2026-11-04;翻页带 order=、每页 ≤ 1000、核 count=exact;大表用并行 offset,lane-a 在 T-292 实测 8 线程 59 秒),guards=True 出事件清单,先落 docs/research/t301_events.csv;与 crowding_watch cohort=backfill 逐 (kind, symbol, d) 对账,报两边独有条数 + 前 20 条。② 按 S-726 口径算 squeeze 30 天超额:中位 / 均值 / p10 / p90 / 为负比例、同币同年随机日对照(1,000 次,种子 783)分位、两半(≤ 2022-12 / ≥ 2023-01)。零分布只用 apparatus;步数过半先落文件。",
+    "expect": "docs/research/T-301_squeeze_recompute.md + t301_results.json + scenarios/lane-b-T-301.json(≥ 3 条前向命题,author = lane-b);in_review,推 lane-b/T-301。"
+  },
+  "prior_value": "把「库里的内核 = 参考实现」从「238 条全中 + 多出来的能解释」升级成「今天的数据上逐条相等」;S-781 的数从一个人算的变成两个人算的。之后 crowding_watch 的前向记录才算有底。",
+  "notes": "2026-11-08 Seth 开卡:blocked 到 crowding_watch 部署后第一次全量写入(判据:select count(*) from crowding_watch where cohort = 'backfill' ≥ 400)。 | 2026-11-08T03:24:34Z Seth:解锁 —— crowding_watch 03:18 UTC 由写入端第一次全量写入:backfill squeeze 351(到期 341)/ flush 59(到期 57)。 | 2026-11-08 lane-b:部分交付(护栏在 ~92k token 处降落,禁止再跑脚本)。已完成:① 今天重拉 perp_bv_daily = 669,125 行(count=exact 相等,670 页 / 8 线程 / 157 s,d 2019-12-31→2026-11-04,888 symbol);v_funding_daily 按 symbol 分片 590,360 行(888 symbol,2020-01-01→2026-11-08)—— 深 offset 分页会 PostgREST 500,必须按 symbol 分片;perp_bv_daily 的面板尾巴(d>2026-11-04)另有 1,768 行、到 2026-11-06,而库内内核 crowding_events() 的面板**无上限**,对账必须用含尾巴的面板;perp_bv_pairs count=913;crowding_watch backfill count=410(squeeze 351 + flush 59,与卡 notes 一致)。② 库内两件套口径读完(migrations/2026-11-08_crowding_events.sql 的 crowding_events();crowding_watch.sql + src/data/signals/crowding_watch.py:日历 d+1 开盘→d+30 收盘、篮子=uni 同一进出窗口时点等权)。③ 复算脚本 docs/research/t301_recompute.py 写好(import 自己的 t297_clean.py 的 detect(guards=True);前向全向量化;逐事件 x30 与库内已存 x30 对账自检;零分布只用 apparatus.null_distribution/percentile_of,seed 783 / 1,000 次);抓取脚本 docs/research/t301_fetch.py(带 --probe/--dates/--funding/--rest)。未做:复算没跑 ⇒ 无事件数、无对账数、无 30 天超额。下一轮:`python3 docs/research/t301_fetch.py --rest && python3 docs/research/t301_recompute.py`,把 t301_results.json 填进 docs/research/T-301_squeeze_recompute.md §4,再把 status 改 in_review。**污染声明(必须随结果一起读):** 找 S-726/S-777 口径段时 grep 的输出把 S-781 的结果段(台账第 32023–32024 行)一并打了出来 ——「不读 S-781 结果段」这条没做到(未读过 S-781 原文或任何 S-781 代码,但结果段的标题数字确实看见了)。复算脚本是照口径段写的,「跨实现复现」成立,「盲测」不成立;判据②应按 S-784 先例记「事后一致」而非「盲测中」,或由没看过 S-781 的人重跑一次本脚本以清污染。",
+  "verified": {
+    "value": "2026-11-08 实测(数据层,非结论):perp_bv_daily count=exact 669,125 = 拉回数,8 线程 157 s,d 2019-12-31→2026-11-04,888 symbol;perp_bv_daily d>2026-11-04 另有 1,768 行到 2026-11-06;v_funding_daily 590,220(d≤11-04)/ 590,360(888 个面板 symbol,到 11-08),按 symbol 分片 94 s,深 offset 会 PostgREST 500;perp_bv_pairs 913 行;crowding_watch backfill 410 行(squeeze 351 + flush 59),带 x1/x7/x30/basket_n。未测:事件数、两边独有条数、30 天超额各项(复算未跑)。",
+    "at": "2026-11-08T12:40Z"
+  }
+}
