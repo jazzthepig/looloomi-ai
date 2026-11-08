@@ -1,0 +1,31 @@
+{
+  "id": "T-306",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-11-08",
+  "title": "core_cap_daily / state_daily 是整表重算(14 天只有 1 个 computed_at)—— 加『首次写入时间』列,让『当日写入 / 事后重算』在表里可见",
+  "source": "11-08 复盘只读查询:core_cap_daily(cap_a1_u,10-25→11-07)14 行 computed_at 去重 = 1(11-08 10:30:53);state_daily(dist_200)14 行去重 = 1;而 cis_tilt_daily 14 行去重 = 14、live_account_daily 10 行去重 = 10(逐日追加)。= 对外基准 ① 与状态层是每次整表覆盖,upsert 不留首次写入时间。11-04 复盘开发者视角的『as-of 不可证』在这两张表上成立;_forward_record_loop 的写端已在 11-06 修好(73 次 ok),这是另一层。",
+  "allowed_paths": [
+    "src/data/",
+    "src/api/",
+    "tests/",
+    "migrations/",
+    "docs/",
+    "tasks/T-306.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "githooks/"
+  ],
+  "acceptance": {
+    "check": "先读 _anchor_loop 是否已对这两张表做日锚(若已有哈希锚,则只需把锚的位置写进 /internal 文档,本卡可关)。否则:加列 first_written_at(默认 now(),upsert 的 DO UPDATE 不覆盖),回填 = NULL(诚实:无法证明);新写入的日子有值。DDL 只在 Seth 交互轮次应用。测试:同一 (d,arm) 二次 upsert 不改 first_written_at。",
+    "expect": "migrations/2026-11-XX_first_written_at.sql + 测试;卡 notes 写应用时间与两表的 NULL / 非 NULL 行数;verified 由 Seth 跑查询后写。"
+  },
+  "prior_value": "『自首日起连续、没有回填』是对外叙事的一句话;今天它在 ① 和状态层上没有机械保证。",
+  "notes": "2026-11-08 Seth 定时复盘开卡(未应用任何 DDL)。",
+  "verified": null
+}

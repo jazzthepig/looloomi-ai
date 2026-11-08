@@ -1,0 +1,29 @@
+{
+  "id": "T-305",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-08",
+  "title": "真钱基线 v1(X1V + 现金腿 + SPYX/XAUT0 腿)在下跌格子里的回放:对 ① 的总收益与最大回撤,对随机进出场的分位 —— 只报不判",
+  "source": "11-08 复盘:BTC 75,868 贴着 30 日低点、离 200 日线 +3.6%,波动分位 0.05→0.14,S2(破线)权重抬到 50%。真钱账户 54% USDC / 27% SPYX / 19% XAUT0、加密 β = 0,唯一的风险规则 X1V 不在 rr_matrix_daily 里,没被和 ① 在同一批格子里量过(11-04 复盘 §7-2,Jazz 未答要/不要;这是只读研究,不动钱,Seth 直接开)。11-05 一天 BTC −5.5%、SPYX −5.0%、XAUT0 +0.7%:真钱里的『分散腿』在唯一一次压力日同向。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-305.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/api/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "src/",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读 SELECT。预注册(先写后算,只算一次,不扫参数):基线 v1 = (a) X1V:BTC 收盘突破前 20 日最高收盘则次日进场、收盘跌破 200 日均线或自进场价回落 9% 则次日出场,空仓期持现金(收益 0);按 docs/research/T-146_drag_turnover.md 与 T-157 里的 X1V 定义核对,有出入先报出入、以那两份为准。(b) 真钱非加密腿:SPY 与 GLD 日线(ohlcv_daily source=eodhd,覆盖不足则注明起点)按 27% / 19% 常数权重、其余现金。账户 = 30% X1V 腿 + 27% SPY + 19% GLD + 24% 现金,日再平衡到这些权重(与 DECISIONS 11-05 的『每票风险 0.5%』无关,只复现『30% 加密腿』)。区间 2021-07-13 → 2026-11-07。报:账户与 ① (core_cap 回放或可得最长的 ① 序列,说明起点) 的总收益、年化、最大回撤、回撤持续天数;再按 rr_matrix 的 trend_vol 格(state_daily + 自算,说明口径)分格报;再报『BTC 距 200 日线 0~10% 之上且广度 ≤ 0.10』之后 28 天内账户相对 ① 的回撤差(簇首日,< 8 簇只报不判)。压力表:SPY 21 日 ≤ −5% 的所有日子之后 21 天,SPY 腿 / GLD 腿 / 账户的收益 p10 / p50 / p90,并单列 2022-01→2022-06、2025 年 3~4 月。零信号对照:同样的进场次数与持有天数,随机日期块抽样 1,000 次(src/data/evaluation/apparatus.py,种子 305),报 X1V 腿总收益与最大回撤落在第几分位。附:去掉最好 5 天与去掉最差 5 天的账户收益(只报不判)。纪律:只读,不改代码、不做 DDL、不入库;翻页带 order=;探针脚本改同一个文件再跑;交付附 docs/research/scenarios/lane-c-T-305.json(≥ 3 条前向命题,至少一条 state: 或 close: 自动结算,horizon 留 ≥ 7 天余量)。结果里还看到了什么(探索性)单列一节。",
+    "expect": "docs/research/T-305_live_baseline_replay.md(预注册口径在前)+ 脚本 + 结果 json;卡 notes 写账户 vs ① 的总收益 / 最大回撤、X1V 腿的随机分位、压力表三个数;in_review,推 lane-c/T-305。"
+  },
+  "prior_value": "4 个月的评估层只量了 ②③④;真钱里唯一在用的规则没被量过。S2 若成立,Jazz 要拍板的『账户该不该多做点什么』现在没有任何一个数可看。",
+  "notes": "2026-11-08 Seth 定时复盘开卡。lane-c 待办;不需要 Jazz 拍板。",
+  "verified": null
+}

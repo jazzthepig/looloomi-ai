@@ -52,12 +52,12 @@
 | in_review | T-268 | lane-c | S-745 融合状态近邻臂 vs 原近邻臂 vs 基率臂:2022-06 → 2026-10 时点重放,三档 Brier + 配对块自助 —— 判据照台账写死 | 报告 docs/research/T-268_fused_knn_brier.md + t268_replay.py + t268_results.json;卡 notes 写 (a)–(d);in_review,推 lane-c/T-268。 | ③ 的近邻描述一直只看 24 维;30 个新维度进了融合表却没进任何决定的描述。 |  |
 | in_review | T-271 | lane-c | S-748 ④ 套息真实成本检查:HL 实测手续费(现货 7bp / 永续 4.5bp / 滑点 2bp)+ 进出场基差 + 每周 / 两周 / 每月换仓 —— 判据照台账写死 | 报告 docs/research/T-271_carry_real_costs.md + t271_carry_costs.py + t271_results.json;卡 notes 写 (a)–(d);in_review,推 lane-c/T-271。 | ④ 套息是唯一过了留出的收益来源,但纸面成本比真钱实测低一截、没算基差;落地前必须知道真实口径下还剩多少。 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
-| claimed | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 | claimed | T-094 | seth | 状态层往前补一个周期 + 矢量库按时点:state_daily 2019 起、FNG 2018 起;market_state_vectors 改扩张窗口 z、13 个空维补或删 | S-570 / T-093 的情景格子在 2019–2022 多一轮牛熊;S-521 类的匹配不再读到未来。 | state_daily 2023-01 起(一个周期);FNG 2021-06 起;market_state_vectors 24 维里 13 维恒空、全史一次 z(看未来)。 |  |
 | claimed | T-096 | seth | 前向判断记录:每周一按情景卡 + 当周新闻摘要请本地 Qwen 9B / 27B 判断,先锚定、后看结果 | 新闻层(历史上测不了的那一层)从今天起有可验证的前向记录;T-095 的历史结论与它对照。 | 没有任何 LLM 判断的前向记录;narrative_events 新闻 2026-09-28 起、约 150 条 / 天,没有消费者。 |  |
 | claimed | T-098 | seth | World50 的数据:候选池(全球前 ~150 大资产)的复权价格与历史流通市值 + 贵金属口径 + 每个候选的链上形式映射与跟踪误差 | 大类 ① 候选可以用日频全收益回放;知道哪些资产今天在链上真的买得到、买多少。 | eodhd 只有 2022-08 起、未复权;yfinance 2015 起但 06-18 后停更、未复权(SHY 九年价格持平,票息全丢)。链上形式从没系统量过。 |  |
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
 | claimed | T-231 | seth | 前向记录写端恢复:refresh_depth_divergence 逼近 statement_timeout 30s —— 给 ohlcv_daily 扫描加下界,并让『重算补的日子』在记录里可见 | 迁移 + 测试 + 前后对比表;卡 notes 写最大耗时前后值、逐行差异数、恢复后第一条 ok 的时间。DDL 的应用要走 Seth 交互轮次(定时轮次只读,不应用)。 | 写端熄火 4 天且在加重(每天 error 10→17→19);『自首日起连续、无回填』这句对外话没有机械保证。 |  |
+| open | T-305 | lane-c | 真钱基线 v1(X1V + 现金腿 + SPYX/XAUT0 腿)在下跌格子里的回放:对 ① 的总收益与最大回撤,对随机进出场的分位 —— 只报不判 | docs/research/T-305_live_baseline_replay.md(预注册口径在前)+ 脚本 + 结果 json;卡 notes 写账户 vs ① 的总收益 / 最大回撤、X1V 腿的随机分位、压力表三个数;in_review,推 lane-c/T-305。 | 4 个月的评估层只量了 ②③④;真钱里唯一在用的规则没被量过。S2 若成立,Jazz 要拍板的『账户该不该多做点什么』现在没有任何一个数可看。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -66,6 +66,7 @@
 | open | T-065 | seth | 加密度:小时线恢复并扩面(现在 10 个币、08-08 起停更);CIS 历史往前补(现在 2025-05 起) | 小时线覆盖 ① 的 24 个名字、最新一根在 2 小时内、有调度和判活;CIS 历史用重建脚本补到 2024-01(标 source=reconstructed,与实时推送分开) | 小时线 10 币、止于 2026-08-08;CIS 历史 76 币、起于 2025-05-03 |  |
 | open | T-069 | seth | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
 | open | T-221 | seth | 强平地图的数据管:东京主机记的头部账户持仓(T-130,每 15 分钟)送进库 + 按价格冲击算被迫卖出 / 深度 | 表每小时有行;地图每天一行;lane-a 下一张卡可以在它上面做回放。 | 主机 10 月起每 15 分钟记 200 个头部账户持仓,只在主机硬盘上,没有消费者。 |  |
+| open | T-306 | seth | core_cap_daily / state_daily 是整表重算(14 天只有 1 个 computed_at)—— 加『首次写入时间』列,让『当日写入 / 事后重算』在表里可见 | migrations/2026-11-XX_first_written_at.sql + 测试;卡 notes 写应用时间与两表的 NULL / 非 NULL 行数;verified 由 Seth 跑查询后写。 | 『自首日起连续、没有回填』是对外叙事的一句话;今天它在 ① 和状态层上没有机械保证。 |  |
 | blocked(等 Jazz 10-19「留在待办,先不买那个数据,在我们现有的数据源想办法」) | T-132 | jazz | (待办,暂不买)Hyperliquid 历史盘口:官方 S3 存档 / Hydromancer Reservoir,按流量付费 | 有报价再决定 | 突破那一刻的 HL 盘口历史 —— 能直接回测「盘口失衡筛假突破」,不用等主机自录几周 |  |
 | blocked(等 jazz: portfolio_layer_daily / allocation_daily 对 publishable key 不可读(42501,lane 实测)。给 lane 开读权限 = 公开 key 也能读到配置与组合层 —— 开不开是 Jazz 的决定;不开就由 Seth 用 service 端导出一份快照给 lane) | T-089 | lane-a | 完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改 | 从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。 |  |
 | blocked(等 jazz: 删除 ~/.config/cometcloud/.env(key 文件只经 Jazz 的手);其余部分 lane-c 已交(cb30023)) | T-036 | lane-c | Mac 只留一份 env:canonical=/Volumes/CometCloudAI/cometcloud-local/.env(§Seth-1006g);~/.config/cometcloud/.env 孤儿由 Jazz 删;Python 日志改 UTC | 一次轮换只动 Railway + 1 个文件;轮换后 1h 内 mac_mini 简报与 T1 推送都有新行 | 三份 env(仓库 .env / cometcloud-local/.env / ~/.config/cometcloud/.env),09-28 轮换漏改第三份 |  |
@@ -305,5 +306,6 @@
 | dropped | T-117 | lane-a | S-597:篮子里的 Trader Tom —— 让赢家跑(不调回等权)、砍跌 25% 的输家把钱给赢家;World50 与加密前 15 各一套 | 脚本 docs/research/t117_s597_baskets.py + _reports/absorb_input/T-117_s597.md;卡改 in_review,推 lane-a/T-117。 | Trader Tom 方向的第一批证据;预注册在台账,lane 只实现不改。 |  |
 | dropped | T-010 | lane-c | Mac 上的 key 统一到 ~/.config/cometcloud/.env(chmod 600),plist 不放 key | = 0 | 2 个 plist 硬写 key |  |
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
+| dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 8 · claimed 7 · blocked 4 · in_review 49 · done 232 · dropped 3
+open 10 · claimed 6 · blocked 4 · in_review 49 · done 232 · dropped 4
