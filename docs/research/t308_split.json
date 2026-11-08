@@ -1,0 +1,852 @@
+{
+ "task": "T-308",
+ "stage": "split",
+ "whitelist": [
+  "A2Z",
+  "ACA",
+  "ACX",
+  "AERGO",
+  "AEUR",
+  "ALCX",
+  "ALPACA",
+  "ALPHA",
+  "ANT",
+  "ARDR",
+  "ARKM",
+  "AST",
+  "ATA",
+  "AVA",
+  "BADGER",
+  "BAKE",
+  "BAL",
+  "BERA",
+  "BETA",
+  "BICO",
+  "BIFI",
+  "BIO",
+  "BLUR",
+  "BLZ",
+  "BOND",
+  "BSW",
+  "BURGER",
+  "CHESS",
+  "CLV",
+  "COMBO",
+  "COOKIE",
+  "COS",
+  "CTXC",
+  "CVC",
+  "CVP",
+  "CVX",
+  "DATA",
+  "DEGO",
+  "DENT",
+  "DF",
+  "DOCK",
+  "DODO",
+  "ENA",
+  "EPIC",
+  "EPX",
+  "FARM",
+  "FIO",
+  "FIRO",
+  "FIS",
+  "FLM",
+  "FLOW",
+  "FORTH",
+  "FUN",
+  "GHST",
+  "GLMR",
+  "GMX",
+  "GNS",
+  "GPS",
+  "GTC",
+  "HARD",
+  "HEI",
+  "HFT",
+  "HIFI",
+  "HIGH",
+  "HOOK",
+  "ICX",
+  "IDEX",
+  "IRIS",
+  "JTO",
+  "JUP",
+  "KEY",
+  "KMD",
+  "KP3R",
+  "LEVER",
+  "LRC",
+  "LSK",
+  "LTO",
+  "MBL",
+  "MBOX",
+  "MDT",
+  "MDX",
+  "MLN",
+  "MOB",
+  "MOVE",
+  "MOVR",
+  "NFP",
+  "NKN",
+  "NOM",
+  "NTRN",
+  "NULS",
+  "ONDO",
+  "OXT",
+  "PDA",
+  "PENDLE",
+  "PERP",
+  "PHB",
+  "POLS",
+  "POND",
+  "PORTAL",
+  "PROS",
+  "PYR",
+  "PYTH",
+  "QI",
+  "QUICK",
+  "RARE",
+  "RDNT",
+  "REEF",
+  "REI",
+  "RESOLV",
+  "SCR",
+  "SCRT",
+  "SEI",
+  "SLF",
+  "SNT",
+  "SOPH",
+  "STMX",
+  "STORJ",
+  "STPT",
+  "STRK",
+  "STX",
+  "SUN",
+  "SUSHI",
+  "SXP",
+  "SYN",
+  "SYS",
+  "TAO",
+  "TIA",
+  "TLM",
+  "TON",
+  "TOWNS",
+  "TROY",
+  "TRU",
+  "UFT",
+  "UNFI",
+  "VAI",
+  "VANRY",
+  "VELODROME",
+  "VIB",
+  "VIC",
+  "VIDT",
+  "VIRTUAL",
+  "VITE",
+  "VOXEL",
+  "WAN",
+  "WAVES",
+  "WIF",
+  "WING",
+  "WNXM",
+  "WTC",
+  "XAUT",
+  "XEM",
+  "XMR",
+  "ZEC",
+  "ZEN",
+  "ZK",
+  "ZRO"
+ ],
+ "rows": [
+  {
+   "ts": "2023-07-26T03:00:04.342+00:00",
+   "id": "d1c0f0020393e6aa50b3b949",
+   "kind": "monitoring_tag",
+   "db_symbols": [],
+   "title": "Introducing Seed Tags & Monitoring Tags for Tokens with High Volatility and Risks",
+   "add": [],
+   "rem_mon": [],
+   "rem_seed": [],
+   "other": []
+  },
+  {
+   "ts": "2023-10-04T06:00:16.946+00:00",
+   "id": "bea681905a1d63eda903752a",
+   "kind": "monitoring_tag",
+   "db_symbols": [
+    "BETA",
+    "BOND",
+    "WTC",
+    "XEM"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include BETA, BOND, WTC and XEM on 2023-10-04",
+   "add": [
+    "BETA",
+    "BOND",
+    "WTC",
+    "XEM"
+   ],
+   "rem_mon": [],
+   "rem_seed": [],
+   "other": []
+  },
+  {
+   "ts": "2024-01-04T07:00:09.013+00:00",
+   "id": "9dd348329c3a2554602aaaa5",
+   "kind": "monitoring_tag_removed",
+   "db_symbols": [
+    "ANT",
+    "FIRO",
+    "GMX",
+    "KP3R",
+    "MDX",
+    "MOB",
+    "REEF",
+    "SUSHI",
+    "VAI",
+    "XMR",
+    "ZEC",
+    "ZEN"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04",
+   "add": [
+    "ANT",
+    "FIRO",
+    "KP3R",
+    "MDX",
+    "MOB",
+    "REEF",
+    "VAI",
+    "XMR",
+    "ZEC",
+    "ZEN"
+   ],
+   "rem_mon": [],
+   "rem_seed": [
+    "GMX",
+    "SUSHI"
+   ],
+   "other": []
+  },
+  {
+   "ts": "2024-04-03T06:00:16.944+00:00",
+   "id": "a740aba4e5a6191ae2ba7292",
+   "kind": "monitoring_tag",
+   "db_symbols": [
+    "EPX",
+    "UNFI",
+    "WAVES",
+    "WNXM"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include EPX, FOR, UNFI, WAVES & WNXM on 2024-04-03",
+   "add": [
+    "EPX",
+    "UNFI",
+    "WAVES",
+    "WNXM"
+   ],
+   "rem_mon": [],
+   "rem_seed": [],
+   "other": []
+  },
+  {
+   "ts": "2024-07-01T07:00:03.584+00:00",
+   "id": "505cc4d796788af80607dbc2",
+   "kind": "monitoring_tag_removed",
+   "db_symbols": [
+    "BAL",
+    "CTXC",
+    "CVP",
+    "CVX",
+    "DOCK",
+    "HARD",
+    "IRIS",
+    "MBL",
+    "MLN",
+    "POLS",
+    "SNT",
+    "SUN",
+    "ZEN"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01",
+   "add": [
+    "BAL",
+    "CTXC",
+    "CVP",
+    "CVX",
+    "DOCK",
+    "HARD",
+    "IRIS",
+    "MBL",
+    "POLS",
+    "SNT",
+    "SUN"
+   ],
+   "rem_mon": [
+    "MLN",
+    "ZEN"
+   ],
+   "rem_seed": [],
+   "other": []
+  },
+  {
+   "ts": "2024-10-03T07:00:05.269+00:00",
+   "id": "2e77adada5764b953fee066d",
+   "kind": "monitoring_tag_removed",
+   "db_symbols": [
+    "BLZ",
+    "CLV",
+    "KEY",
+    "PENDLE",
+    "PROS",
+    "SEI",
+    "VITE"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include BLZ, CLV, KEY, PROS & VITE and Remove the Seed Tag for PENDLE & SEI on 2024-10-03",
+   "add": [
+    "BLZ",
+    "CLV",
+    "KEY",
+    "PROS",
+    "VITE"
+   ],
+   "rem_mon": [],
+   "rem_seed": [
+    "PENDLE",
+    "SEI"
+   ],
+   "other": []
+  },
+  {
+   "ts": "2025-01-02T09:00:19.305+00:00",
+   "id": "ec87daf909c901e2cb895ff6",
+   "kind": "monitoring_tag_removed",
+   "db_symbols": [
+    "ARKM",
+    "BLUR",
+    "CVX",
+    "JTO",
+    "STMX",
+    "SUN",
+    "TIA",
+    "TROY"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include STMX & TROY, Remove the Monitoring Tag for CVX & SUN, and Remove the Seed Tag for ARKM, BLUR, JTO & TIA on 2025-01-02",
+   "add": [
+    "STMX",
+    "TROY"
+   ],
+   "rem_mon": [
+    "CVX",
+    "SUN"
+   ],
+   "rem_seed": [
+    "ARKM",
+    "BLUR",
+    "JTO",
+    "TIA"
+   ],
+   "other": []
+  },
+  {
+   "ts": "2025-03-04T08:01:22.062+00:00",
+   "id": "82c0cca8c233f80a47152b3a",
+   "kind": "monitoring_tag",
+   "db_symbols": [
+    "AERGO",
+    "ALPACA",
+    "AST",
+    "BADGER",
+    "BURGER",
+    "COMBO",
+    "NULS",
+    "STPT",
+    "UFT",
+    "VIDT"
+   ],
+   "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04",
+   "add": [
+    "AERGO",
+    "ALPACA",
+    "AST",
+    "BADGER",
+    "BURGER",
+    "COMBO",
+    "NULS",
+    "STPT",
+    "UFT",
+    "VIDT"
+   ],
+   "rem_mon": [],
+   "rem_seed": [],
+   "other": []
+  },
+  {
+   "ts": "2025-03-07T09:00:45.829+00:00",
+   "id": "93c4f5c93107aef099238353",
+   "kind": "monitoring_tag",
+   "db_symbols": [
+    "GPS"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to GPS on 2025-03-07",
+   "add": [
+    "GPS"
+   ],
+   "rem_mon": [],
+   "rem_seed": [],
+   "other": []
+  },
+  {
+   "ts": "2025-04-03T07:00:36.245+00:00",
+   "id": "a4c8dcb6323cf01faa8b8cfa",
+   "kind": "monitoring_tag_removed",
+   "db_symbols": [
+    "ARDR",
+    "BSW",
+    "FLM",
+    "JUP",
+    "LTO",
+    "NKN",
+    "PDA",
+    "PERP",
+    "STRK",
+    "TON",
+    "VIB",
+    "VOXEL",
+    "WING"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03",
+   "add": [
+    "ARDR",
+    "BSW",
+    "FLM",
+    "LTO",
+    "NKN",
+    "PDA",
+    "PERP",
+    "VIB",
+    "VOXEL",
+    "WING"
+   ],
+   "rem_mon": [],
+   "rem_seed": [
+    "JUP",
+    "STRK",
+    "TON"
+   ],
+   "other": []
+  },
+  {
+   "ts": "2025-05-07T08:00:33.736+00:00",
+   "id": "90e6543ffc144b73524c5a46",
+   "kind": "monitoring_tag",
+   "db_symbols": [
+    "ALPHA",
+    "HIFI",
+    "LEVER",
+    "MOVE",
+    "PORTAL",
+    "REI"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07",
+   "add": [
+    "ALPHA",
+    "HIFI",
+    "LEVER",
+    "MOVE",
+    "PORTAL",
+    "REI"
+   ],
+   "rem_mon": [],
+   "rem_seed": [],
+   "other": []
+  },
+  {
+   "ts": "2025-06-05T05:00:18.433+00:00",
+   "id": "0310afdfe323e35ca7ea87bf",
+   "kind": "monitoring_tag",
+   "db_symbols": [
+    "BIFI",
+    "FIS",
+    "KMD",
+    "MDT"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include BIFI, FIS, KMD & MDT on 2025-06-05",
+   "add": [
+    "BIFI",
+    "FIS",
+    "KMD",
+    "MDT"
+   ],
+   "rem_mon": [],
+   "rem_seed": [],
+   "other": []
+  },
+  {
+   "ts": "2025-07-07T03:29:57.414+00:00",
+   "id": "1d114310c0d9d8a948af0c0e",
+   "kind": "monitoring_tag",
+   "db_symbols": [
+    "BAKE",
+    "IDEX",
+    "SLF"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include BAKE, IDEX & SLF on 2025-07-07",
+   "add": [
+    "BAKE",
+    "IDEX",
+    "SLF"
+   ],
+   "rem_mon": [],
+   "rem_seed": [],
+   "other": []
+  },
+  {
+   "ts": "2025-07-09T01:59:56.407+00:00",
+   "id": "aff5d542790d1fae40561ac7",
+   "kind": "monitoring_tag_removed",
+   "db_symbols": [
+    "ENA",
+    "PYTH",
+    "TAO",
+    "ZEC"
+   ],
+   "title": "Binance Will Remove the Monitoring Tag for ZEC and the Seed Tag for ENA, PYTH, TAO & W on 2025-07-09",
+   "add": [],
+   "rem_mon": [
+    "ZEC"
+   ],
+   "rem_seed": [
+    "ENA",
+    "PYTH",
+    "TAO"
+   ],
+   "other": []
+  },
+  {
+   "ts": "2025-10-09T02:29:52.334+00:00",
+   "id": "9fd997ed4f007e9336bbdfe5",
+   "kind": "monitoring_tag_removed",
+   "db_symbols": [
+    "BERA",
+    "BIO",
+    "GPS",
+    "MBL",
+    "WAN",
+    "ZK",
+    "ZRO"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include WAN, Remove the Monitoring Tag for GPS & MBL, and Remove the Seed Tag for BERA, BIO, ZK & ZRO on 2025-10-09",
+   "add": [
+    "WAN"
+   ],
+   "rem_mon": [
+    "GPS",
+    "MBL"
+   ],
+   "rem_seed": [
+    "BERA",
+    "BIO",
+    "ZK",
+    "ZRO"
+   ],
+   "other": []
+  },
+  {
+   "ts": "2025-12-01T04:30:24.832+00:00",
+   "id": "17d5a938d13e185344321bc9",
+   "kind": "monitoring_tag",
+   "db_symbols": [
+    "CHESS",
+    "DENT",
+    "DF",
+    "GHST",
+    "SXP"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include CHESS, DENT, DF, GHST & SXP on 2025-12-01",
+   "add": [
+    "CHESS",
+    "DENT",
+    "DF",
+    "GHST",
+    "SXP"
+   ],
+   "rem_mon": [],
+   "rem_seed": [],
+   "other": []
+  },
+  {
+   "ts": "2026-01-02T10:59:57.739+00:00",
+   "id": "ecb66504e90d7153d66cf665",
+   "kind": "monitoring_tag",
+   "db_symbols": [
+    "ACA",
+    "DATA",
+    "FLOW"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include ACA, D, DATA & FLOW on 2026-01-02",
+   "add": [
+    "ACA",
+    "DATA",
+    "FLOW"
+   ],
+   "rem_mon": [],
+   "rem_seed": [],
+   "other": []
+  },
+  {
+   "ts": "2026-03-06T08:29:56.086+00:00",
+   "id": "1541553381ea171b91876925",
+   "kind": "monitoring_tag_removed",
+   "db_symbols": [
+    "COS",
+    "DEGO",
+    "FLOW",
+    "FORTH",
+    "FUN",
+    "HOOK",
+    "LRC",
+    "MBOX",
+    "ONDO",
+    "OXT",
+    "VIRTUAL",
+    "WIF"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06",
+   "add": [
+    "COS",
+    "DEGO",
+    "FORTH",
+    "FUN",
+    "HOOK",
+    "LRC",
+    "MBOX",
+    "OXT",
+    "WIF"
+   ],
+   "rem_mon": [
+    "FLOW"
+   ],
+   "rem_seed": [
+    "ONDO",
+    "VIRTUAL"
+   ],
+   "other": []
+  },
+  {
+   "ts": "2026-03-13T09:00:23.06+00:00",
+   "id": "ab602d5903e71b6737c14eed",
+   "kind": "monitoring_tag",
+   "db_symbols": [
+    "A2Z",
+    "ATA",
+    "FIO",
+    "GTC",
+    "NTRN",
+    "PHB",
+    "QI",
+    "RDNT"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13",
+   "add": [
+    "ATA",
+    "A2Z",
+    "FIO",
+    "GTC",
+    "NTRN",
+    "PHB",
+    "QI",
+    "RDNT"
+   ],
+   "rem_mon": [],
+   "rem_seed": [],
+   "other": []
+  },
+  {
+   "ts": "2026-04-14T02:30:06.111+00:00",
+   "id": "069d99e2099ee4b7636adabe",
+   "kind": "monitoring_tag_removed",
+   "db_symbols": [
+    "FARM",
+    "HIGH",
+    "MLN",
+    "RESOLV",
+    "SYS",
+    "TRU",
+    "VELODROME",
+    "XAUT"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include FARM, HIGH, MLN, RESOLV, SYS, TRU & VELODROME, Remove the Seed Tag for XAUT on 2026-04-14",
+   "add": [
+    "FARM",
+    "MLN",
+    "RESOLV",
+    "SYS",
+    "TRU",
+    "VELODROME"
+   ],
+   "rem_mon": [],
+   "rem_seed": [
+    "XAUT"
+   ],
+   "other": []
+  },
+  {
+   "ts": "2026-04-30T07:00:05.981+00:00",
+   "id": "f50e5c614111cba6a5ed877a",
+   "kind": "monitoring_tag",
+   "db_symbols": [
+    "NFP",
+    "NOM",
+    "POND",
+    "QUICK",
+    "VIC"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include NFP, NOM, POND, QUICK & VIC on 2026-04-30",
+   "add": [
+    "NFP",
+    "NOM",
+    "POND",
+    "QUICK",
+    "VIC"
+   ],
+   "rem_mon": [],
+   "rem_seed": [],
+   "other": []
+  },
+  {
+   "ts": "2026-05-22T08:00:04.004+00:00",
+   "id": "1e3cd8445c071e149e184c9f",
+   "kind": "monitoring_tag",
+   "db_symbols": [
+    "ALCX",
+    "COOKIE",
+    "DODO",
+    "EPIC",
+    "HEI",
+    "HFT",
+    "STORJ",
+    "SYN",
+    "TLM"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22",
+   "add": [
+    "ALCX",
+    "COOKIE",
+    "DODO",
+    "EPIC",
+    "HEI",
+    "HFT",
+    "STORJ",
+    "SYN",
+    "TLM"
+   ],
+   "rem_mon": [],
+   "rem_seed": [],
+   "other": []
+  },
+  {
+   "ts": "2026-07-03T06:00:11.367+00:00",
+   "id": "a9d1800c1fa100c7fd32af47",
+   "kind": "monitoring_tag",
+   "db_symbols": [
+    "AEUR",
+    "PYR",
+    "SCRT",
+    "VANRY"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include AEUR, PYR, SCRT & VANRY on 2026-07-03",
+   "add": [
+    "AEUR",
+    "PYR",
+    "SCRT",
+    "VANRY"
+   ],
+   "rem_mon": [],
+   "rem_seed": [],
+   "other": []
+  },
+  {
+   "ts": "2026-07-24T03:00:06.343+00:00",
+   "id": "d26584fe0bf2e0588650d16c",
+   "kind": "monitoring_tag",
+   "db_symbols": [
+    "ACX",
+    "LSK",
+    "STX"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include ACX, LSK & STX on 2026-07-24",
+   "add": [
+    "ACX",
+    "LSK",
+    "STX"
+   ],
+   "rem_mon": [],
+   "rem_seed": [],
+   "other": []
+  },
+  {
+   "ts": "2026-08-11T09:00:12.289+00:00",
+   "id": "6fd47bc7928d6219ad7114bc",
+   "kind": "monitoring_tag",
+   "db_symbols": [
+    "GLMR",
+    "ICX",
+    "MOVR",
+    "RARE",
+    "SOPH"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include GLMR, ICX, MOVR, RARE & SOPH on 2026-08-11",
+   "add": [
+    "GLMR",
+    "ICX",
+    "MOVR",
+    "RARE",
+    "SOPH"
+   ],
+   "rem_mon": [],
+   "rem_seed": [],
+   "other": []
+  },
+  {
+   "ts": "2026-09-04T08:00:06.5+00:00",
+   "id": "a71cf1e79d94273edc65057a",
+   "kind": "monitoring_tag",
+   "db_symbols": [
+    "AVA",
+    "GNS",
+    "SCR",
+    "TOWNS"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include AVA, GNS, SCR & TOWNS on 2026-09-04",
+   "add": [
+    "AVA",
+    "GNS",
+    "SCR",
+    "TOWNS"
+   ],
+   "rem_mon": [],
+   "rem_seed": [],
+   "other": []
+  },
+  {
+   "ts": "2026-10-09T07:00:14.078+00:00",
+   "id": "30794204a1de8e431aad5c17",
+   "kind": "monitoring_tag",
+   "db_symbols": [
+    "BICO",
+    "CVC"
+   ],
+   "title": "Binance Will Extend the Monitoring Tag to Include BICO & CVC on 2026-10-09",
+   "add": [
+    "BICO",
+    "CVC"
+   ],
+   "rem_mon": [],
+   "rem_seed": [],
+   "other": []
+  }
+ ]
+}
