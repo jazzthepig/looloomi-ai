@@ -14,6 +14,10 @@
    R-v2 计划(`ticket_plan.load_ticket_plan` → `apply_to_plan`)不开新票、已有持仓移到出场;多头账本的面板若出现这些名字,
    本循环记 error 并写明哪本账、哪个名字(面板是 24–25 个大币,11-07 与全部 164 个下架代币零交集)。
    窗口取 365 天而不是永久:代号会被新币复用(T-272 见过 DATA)。
+   **Jazz 11-08 前移到「打标签」(S-753 ✅ + S-785:打标签之后 30 天中位 −18.3%、打标签 → 下架公告中位 62 天那段 −41%;
+   在 R-v2 回放账本上历史代价 ≈ 0):** 此刻挂着 Binance **监控标签**的代币同样不开新票、已有持仓当天开盘出场。
+   「此刻挂着」= 按公告标题逐句走状态机(`events.monitoring_tag_changes`:打上 / 移除监控标签;种子标签那一支不进状态机,
+   T-308 查出 v1 按整行判会把 43 次「打上」记成「移除」);标签被移除就不再排除。读不到同样 fail closed。
 2. **前向记录**:`FORWARD_FROM` 起的每一条新公告,到期后补 7 / 30 天相对 BTC 的超额(`kind = forward`);之前的只作回填对照
    (`kind = backfill`,不算前向证据)。口径与 T-272 一字不差:d0 = 公告时刻所在的 UTC 日(`asset_mcap_daily` 的 d 是当日收盘,
    在公告之后),价取 d0 当天或之后 3 天内最近的收盘,超额 = 代币简单收益 − BTC 简单收益。
@@ -32,7 +36,7 @@ WRITES_TABLES = (TABLE,)
 WRITES_COLUMNS = {TABLE: ("symbol", "announced_at", "d0", "title", "kind", "excess_7d", "excess_30d",
                           "ret_30d", "btc_30d", "price_source", "code_ref", "settled_at")}
 LOOP_NAME = "_delisting_watch_loop"
-CODE_REF = "delisting_watch v1 (11-07, S-751 / T-272)"
+CODE_REF = "delisting_watch v2 (11-08, S-751 / T-272 + 监控标签前移 S-753)"
 FORWARD_FROM = dt.datetime(2026, 11, 7, tzinfo=dt.timezone.utc)
 WATCH_DAYS = 90
 EXCLUDE_DAYS = 365
@@ -129,36 +133,74 @@ def exclusion_set(rows: list[dict], now: dt.datetime, days: int = EXCLUDE_DAYS) 
     return {str(r["symbol"]).upper() for r in rows if r.get("symbol") and _ts(r["announced_at"]) >= cut}
 
 
+def active_tags(rows: list[dict]) -> dict[str, str]:
+    """纯函数。监控标签公告(ts, title)→ {此刻挂着标签的代号: 这一段打上的那天}。按时间逐句走:打上 ⇒ 开(已开着不改日子),
+    移除 ⇒ 关;种子标签不算。"""
+    from src.data.market.events import monitoring_tag_changes
+    on: dict[str, str] = {}
+    for r in sorted(rows or [], key=lambda r: str(r.get("ts") or "")):
+        d = str(r.get("ts") or "")[:10]
+        ch = monitoring_tag_changes(r.get("title") or "")
+        for sym in ch["add"]:
+            on.setdefault(sym.upper(), d)
+        for sym in ch["rem_mon"]:
+            on.pop(sym.upper(), None)
+    return on
+
+
 def is_excluded(symbol: str, excl: set[str]) -> bool:
     """纯函数。R-v2 的代号可能带 1000 前缀(1000PEPE)。"""
     s = str(symbol or "").upper()
     return s in excl or (s.startswith("1000") and s[4:] in excl)
 
 
-def apply_to_plan(plan: dict[str, Any], excl: set[str]) -> dict[str, Any]:
-    """纯函数。R-v2 计划 + 名单 → 新票里的剔除到 `skipped_delist`,持有里的移到 `exit`(当天开盘出)。"""
+REASON_DELIST = "binance_delisting"
+REASON_TAG = "binance_monitoring_tag"
+_WHY = {REASON_DELIST: "Binance 整币下架公告(S-751 硬规则)", REASON_TAG: "Binance 监控标签(Jazz 11-08 硬规则前移,S-753)"}
+
+
+def _reason(symbol: str, reasons: Optional[dict[str, str]]) -> str:
+    s = str(symbol or "").upper()
+    r = reasons or {}
+    return r.get(s) or (r.get(s[4:]) if s.startswith("1000") else None) or REASON_DELIST
+
+
+def apply_to_plan(plan: dict[str, Any], excl: set[str], reasons: Optional[dict[str, str]] = None) -> dict[str, Any]:
+    """纯函数。R-v2 计划 + 名单 → 新票里的剔除到 `skipped_delist`,持有里的移到 `exit`(当天开盘出)。
+    reasons = {代号: binance_delisting / binance_monitoring_tag};没给 ⇒ 都按下架记(旧调用)。"""
     enter, skipped = [], []
     for e in plan.get("enter") or []:
         (skipped if is_excluded(e.get("symbol"), excl) else enter).append(e)
     hold, forced = [], []
     for h in plan.get("hold") or []:
         if is_excluded(h.get("symbol"), excl):
-            forced.append({"ticket_id": h.get("ticket_id"), "symbol": h.get("symbol"), "why": "binance_delisting", "at": "today_open"})
+            forced.append({"ticket_id": h.get("ticket_id"), "symbol": h.get("symbol"), "why": _reason(h.get("symbol"), reasons),
+                           "at": "today_open"})
         else:
             hold.append(h)
+    n_tag = sum(1 for v in (reasons or {}).values() if v == REASON_TAG)
     return {**plan, "enter": enter, "hold": hold, "exit": list(plan.get("exit") or []) + forced,
-            "skipped_delist": [{**x, "why": "Binance 整币下架公告(S-751 硬规则)"} for x in skipped],
-            "delist_filter": {"status": "ok", "n_names": len(excl), "skipped": [x.get("symbol") for x in skipped],
+            "skipped_delist": [{**x, "why": _WHY[_reason(x.get("symbol"), reasons)]} for x in skipped],
+            "delist_filter": {"status": "ok", "n_names": len(excl), "n_tagged": n_tag, "skipped": [x.get("symbol") for x in skipped],
                               "forced_exit": [x["symbol"] for x in forced]}}
 
 
-async def excluded_symbols(now: Optional[dt.datetime] = None) -> set[str]:
-    """硬规则名单。**读不到就抛** —— 调用方 fail closed(不开新票),不能把「读不到」当成「名单是空的」。"""
+async def excluded_with_reasons(now: Optional[dt.datetime] = None) -> dict[str, str]:
+    """硬规则名单 {代号: 原因}:过去 365 天整币下架 ∪ 此刻挂着监控标签(Jazz 11-08)。**任何一张读不到就抛** —— 调用方 fail closed。"""
     from src.data.style.header import _read_all              # 读不到会抛(传输失败 ≠ 0 行)
     now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
     cut = (now - dt.timedelta(days=EXCLUDE_DAYS)).isoformat()
-    rows = await _read_all(TABLE, {"select": "symbol,announced_at", "announced_at": f"gte.{cut}"})
-    return exclusion_set(rows or [], now)
+    rows = await _read_all(TABLE, {"select": "symbol,announced_at", "announced_at": f"gte.{cut}", "order": "announced_at.asc"})
+    tags = await _read_all("events", {"select": "ts,title", "source": "eq.binance",
+                                      "kind": "in.(monitoring_tag,monitoring_tag_removed)", "order": "ts.asc"})
+    out = {s: REASON_TAG for s in active_tags(tags or [])}
+    out.update({s: REASON_DELIST for s in exclusion_set(rows or [], now)})     # 两样都有 ⇒ 记下架(更重)
+    return out
+
+
+async def excluded_symbols(now: Optional[dt.datetime] = None) -> set[str]:
+    """硬规则名单(集合)。**读不到就抛** —— 调用方 fail closed(不开新票),不能把「读不到」当成「名单是空的」。"""
+    return set(await excluded_with_reasons(now))
 
 
 def panel_conflicts(excl: set[str]) -> dict[str, list[str]]:
@@ -205,10 +247,15 @@ async def run_once(now: Optional[dt.datetime] = None, read=None, upsert=None) ->
             return {"ok": False, "why": f"写 {TABLE} 失败"}
     fwd = [r for r in out if r["kind"] == "forward"]
     w = watchlist(out, now)
-    conflicts = panel_conflicts(exclusion_set(out, now))
+    tags = await read("events", {"select": "ts,title", "source": "eq.binance",
+                                 "kind": "in.(monitoring_tag,monitoring_tag_removed)", "order": "ts.asc"})
+    tagged = active_tags(tags or [])
+    conflicts = panel_conflicts(exclusion_set(out, now) | set(tagged))
     if conflicts:
         return {"ok": False, "written": len(out), "panel_conflicts": conflicts,
-                "why": f"硬规则冲突(S-751):多头账本面板里有 Binance 宣布下架的名字 {conflicts} —— 要从面板剔除"}
+                "why": f"硬规则冲突(S-751 / 11-08 监控标签):多头账本面板里有 Binance 宣布下架或挂着监控标签的名字 {conflicts} —— 要从面板剔除"}
     return {"ok": True, "written": len(out), "forward": len(fwd), "settled_30d": sum(r["excess_30d"] is not None for r in out),
             "watch": [x["symbol"] for x in w][:20],
-            "why": f"{len(out)} 个代币(前向 {len(fwd)})· 30 天已结算 {sum(r['excess_30d'] is not None for r in out)} · 观察名单 {len(w)}"}
+            "tagged": sorted(tagged)[:40],
+            "why": f"{len(out)} 个代币(前向 {len(fwd)})· 30 天已结算 {sum(r['excess_30d'] is not None for r in out)} · 观察名单 {len(w)}"
+                   f" · 挂着监控标签 {len(tagged)}"}

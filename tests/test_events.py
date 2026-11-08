@@ -220,3 +220,30 @@ def test_notice_backfill_does_not_stop_on_a_page_without_tags(monkeypatch):
     assert r["kinds"].get("monitoring_tag") == 1, "第 4 页的标签被翻到"
     assert r["backfill"]["49"]["done"] is False and r["backfill"]["49"]["next_page"] == 2 + ev.BACKFILL_PAGES
     assert any(k.endswith(":v2") for k in redis), "catalog 49 换了新键(旧键在第一轮被误标 done)"
+
+
+def test_monitoring_tag_titles_are_split_into_sentences():
+    """11-08(T-308):一条标题几句话 —— 打上监控标签 / 移除监控标签 / 移除种子标签分开;v1 整行判「移除」漏了 43 次打上。
+    FOR(ForTube)、HIGH(Highstreet)、D(原 DAR)是真代号,不当停用词。"""
+    from src.data.market import events as ev
+    t = ("Binance Will Extend the Monitoring Tag to Include STMX & TROY, Remove the Monitoring Tag for CVX & SUN, "
+         "and Remove the Seed Tag for ARKM, BLUR, JTO & TIA on 2025-01-02")
+    assert ev.monitoring_tag_changes(t) == {"add": ["STMX", "TROY"], "rem_mon": ["CVX", "SUN"], "rem_seed": ["ARKM", "BLUR", "JTO", "TIA"]}
+    assert ev.monitoring_tag(t)[0] == "monitoring_tag", "有打上就是 monitoring_tag(v1 判成 removed)"
+    assert ev.monitoring_tag_changes("Binance Will Remove the Monitoring Tag for ZEC and the Seed Tag for ENA, PYTH, TAO & W on 2025-07-09") == \
+        {"add": [], "rem_mon": ["ZEC"], "rem_seed": ["ENA", "PYTH", "TAO", "W"]}, "Seed 沿用前面的 Remove"
+    assert ev.monitoring_tag_changes("Binance Will Extend the Monitoring Tag to Include ACA, D, DATA & FLOW on 2026-01-02")["add"] == ["ACA", "D", "DATA", "FLOW"]
+    assert "FOR" in ev.monitoring_tag_changes("Binance Will Extend the Monitoring Tag to Include EPX, FOR, UNFI, WAVES & WNXM on 2024-04-03")["add"]
+    assert ev.monitoring_tag_changes("Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to "
+                                     "Include AERGO, ALPACA on 2025-03-04") == {"add": ["AERGO", "ALPACA"], "rem_mon": [], "rem_seed": []}
+
+
+def test_retag_rewrites_only_changed_monitoring_rows():
+    from src.data.market import events as ev
+    t = "Binance Will Extend the Monitoring Tag to Include STMX & TROY, Remove the Monitoring Tag for CVX & SUN on 2025-01-02"
+    rows = [{"id": "x", "ts": "2025-01-02T00:00:00Z", "kind": "monitoring_tag_removed", "source": "binance", "symbols": ["STMX", "TROY", "CVX", "SUN"],
+             "title": t, "url": "u", "payload": {"catalog": 49}}]
+    out = ev.retag_rows(rows)
+    assert len(out) == 1 and out[0]["kind"] == "monitoring_tag" and out[0]["payload"]["tag_changes"]["rem_mon"] == ["CVX", "SUN"]
+    assert out[0]["payload"]["catalog"] == 49, "payload 的其他键保留"
+    assert ev.retag_rows(out) == [], "幂等"

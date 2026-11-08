@@ -314,6 +314,8 @@ def test_loader_reads_the_book_state_and_signal_day_closes(monkeypatch):
             return []                                              # 没有 Jazz ⓪ 判断 ⇒ 系统默认
         if table == "oi_lev_snapshot_daily":
             return []                                              # S-690 快照没有;10-21 的窗口早过了 ⇒ 不过滤照常进
+        if table == "events":                  # 11-08:监控标签名单(硬规则前移)也在计划里读
+            return []
         if table == "delisting_watch":
             return []                                              # S-751 硬规则名单:空
         raise AssertionError(table)
@@ -533,3 +535,16 @@ def test_crypto_gross_ceiling_counts_x1v_spot_together_with_ticket_notional():
     # 现货读不到按 0 ⇒ 余地 900,只收紧不放大(策略层 gross_cap_frac 仍在)
     act1 = tickets.ticket_actions({**tplan, "gross_cap_frac": 0.3, "crypto_gross_cap_frac": 0.9}, {}, {}, mids, szd, 1000.0, set())
     assert act1["gross_limit_usd"] == 300.0 and len(act1["entries"]) == 1
+
+
+def test_slot_cap_is_14_from_2026_11_09_and_history_keeps_10():
+    """Jazz 11-08「make it work」+ S-788(T-310):名额让位于 40% 名义上限 ⇒ 14;之前进场的票按当时的 10 张对账。"""
+    import datetime as _dt
+    from src.data.execution import ticket_plan as tpm
+    assert tpm.DEFAULT_CAP == 14 and tpm.cap_on(_dt.date(2026, 11, 8)) == 10 and tpm.cap_on(_dt.date(2026, 11, 9)) == 14
+    old = [{"ticket_id": f"O{i}", "symbol": f"S{i:02d}", "signal_d": "2026-11-01", "status": "open", "entry_d": "2026-11-02"} for i in range(12)]
+    assert len(tpm.taken_ids(old, tpm.cap_on, _dt.date(2026, 11, 9))) == 10, "11-02 进场的那批按 10 张"
+    new = [{"ticket_id": f"N{i}", "symbol": f"T{i:02d}", "signal_d": "2026-11-09", "status": "pending"} for i in range(16)]
+    assert len(tpm.taken_ids(new, tpm.cap_on, _dt.date(2026, 11, 10))) == 14, "11-10 进场按 14 张"
+    plan = tpm.make_ticket_plan([], "2026-11-09", "2026-11-09", {})
+    assert plan["cap"] == 14 and plan["gross_cap_frac"] <= 0.40

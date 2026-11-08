@@ -99,6 +99,8 @@ def test_plan_fails_closed_when_the_list_is_unreadable(monkeypatch):
             if fake.fail:
                 raise RuntimeError("delisting_watch 读不到")
             return [{"symbol": "STORJ", "announced_at": "2026-08-20T00:00:00+00:00"}]
+        if table == "events":
+            return [{"ts": "2026-10-09T00:00:00Z", "title": "Binance Will Extend the Monitoring Tag to Include BICO & CVC on 2026-10-09"}]
         if table in ("regime_calls", "j_tickets", "oi_lev_snapshot_daily"):
             return []
         raise AssertionError(table)
@@ -116,3 +118,22 @@ def test_long_book_panels_are_checked():
     assert dw.panel_conflicts({"STORJ", "XMR"}) == {}, "11-07:面板与全部下架代币零交集"
     hit = dw.panel_conflicts({"ONDO"})
     assert hit and all(v == ["ONDO"] for v in hit.values())
+
+
+
+def test_monitoring_tag_is_part_of_the_hard_rule_and_follows_sentences():
+    """Jazz 11-08:硬规则前移到「打标签」。状态按句子走(T-308):种子标签那一支不算,移除之后不再排除,再打上又排除。"""
+    rows = [{"ts": "2024-01-04T00:00:00Z", "title": "Binance Will Extend the Monitoring Tag to Include AAA, BBB and Remove the Seed Tag for CCC (2024-01-04)"},
+            {"ts": "2024-07-01T00:00:00Z", "title": "Binance Will Remove the Monitoring Tag on BBB (2024-07-01)"},
+            {"ts": "2025-01-02T00:00:00Z", "title": "Binance Will Remove the Monitoring Tag for AAA and the Seed Tag for DDD"},
+            {"ts": "2026-04-14T00:00:00Z", "title": "Binance Will Extend the Monitoring Tag to Include AAA & EEE on 2026-04-14"}]
+    on = dw.active_tags(rows)
+    assert on == {"AAA": "2026-04-14", "EEE": "2026-04-14"}, on
+    plan = {"ready": True, "enter": [{"ticket_id": "a", "symbol": "EEE"}, {"ticket_id": "b", "symbol": "BBB"}],
+            "hold": [{"ticket_id": "c", "symbol": "1000AAA"}], "exit": []}
+    reasons = {s: dw.REASON_TAG for s in on}
+    out = dw.apply_to_plan(plan, set(reasons), reasons)
+    assert [e["symbol"] for e in out["enter"]] == ["BBB"], "标签已移除 ⇒ 照常"
+    assert out["skipped_delist"][0]["why"].startswith("Binance 监控标签")
+    assert out["exit"] == [{"ticket_id": "c", "symbol": "1000AAA", "why": "binance_monitoring_tag", "at": "today_open"}]
+    assert out["delist_filter"]["n_tagged"] == 2

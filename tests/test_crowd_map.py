@@ -40,7 +40,7 @@ def test_unreadable_table_is_reported_not_silenced():
     async def read(table, params):
         assert "order" in params
         if table == "events":
-            return [{"ts": "2026-10-01T00:00:00Z", "kind": "monitoring_tag", "symbols": ["BAR"]}]   # 别的币 ⇒ 过滤掉
+            return [{"ts": "2026-10-01T00:00:00Z", "title": "Binance Will Extend the Monitoring Tag to Include BAR on 2026-10-01"}]   # 别的币 ⇒ 过滤掉
         assert params["symbol"] == "eq.FOO"
         if table == "attention_watch":
             raise RuntimeError("boom")
@@ -52,9 +52,9 @@ def test_unreadable_table_is_reported_not_silenced():
 
 
 def test_monitoring_tags_are_current_state_not_a_window():
-    rows = [{"ts": "2024-01-01T00:00:00Z", "kind": "monitoring_tag", "symbols": ["AAA", "BBB"]},
-            {"ts": "2024-06-01T00:00:00Z", "kind": "monitoring_tag_removed", "symbols": ["BBB"]},
-            {"ts": "2025-01-01T00:00:00Z", "kind": "monitoring_tag", "symbols": ["AAA", "CCC"]}]
+    rows = [{"ts": "2024-01-01T00:00:00Z", "title": "Binance Will Add Monitoring Tag on AAA, BBB (2024-01-01)"},
+            {"ts": "2024-06-01T00:00:00Z", "title": "Binance Will Remove the Monitoring Tag on BBB (2024-06-01)"},
+            {"ts": "2025-01-01T00:00:00Z", "title": "Binance Will Extend the Monitoring Tag to Include AAA, CCC and Remove the Seed Tag for DDD"}]
     ev = cm.active_tags(rows, NOW.date())
-    assert [(e["symbol"], e["d"]) for e in ev] == [("AAA", "2024-01-01"), ("CCC", "2025-01-01")], "移除的不算;记第一次打上的日子"
+    assert [(e["symbol"], e["d"]) for e in ev] == [("AAA", "2024-01-01"), ("CCC", "2025-01-01")], "移除的不算;种子标签不算;记这一段打上的日子"
     assert ev[0]["base"]["ledger"] == "S-753"

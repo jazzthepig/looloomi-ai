@@ -31,7 +31,19 @@ from typing import Any, Iterable, Optional
 RULE_VERSION = "r_v2_k2.5_gate200"
 STOP_ATR = 2.5
 DEFAULT_RISK_FRAC = 0.005          # Jazz 10-21 真钱:每票风险 0.5% 净值(f★ = 1% 的一半,S-638)
-DEFAULT_CAP = 10
+DEFAULT_CAP = 14
+#: Jazz 11-08「make it work」+ S-788 护栏过(T-310,回放 956 张):名额 10 张时 40% 名义上限一次都没咬合(10 张 ≈ 29%),
+#: 名额让位于名义上限 ⇒ 14。回放:总收益 +38% → +64%、最大回撤 −26.6% → −25.7%、Calmar 0.20 → 0.33,名义上限挡掉 114 张;
+#: 最差单月 −4.7% → −8.2%(护栏没写这一条,已报 Jazz)。**按进场日取名额**:之前的票按 10 张对账,不回头改历史。
+CAP_HISTORY = ((dt.date(2026, 11, 9), 14), (dt.date(2000, 1, 1), 10))
+
+
+def cap_on(d: dt.date) -> int:
+    """进场日 d 当时生效的名额(按 CAP_HISTORY;最新的在前)。"""
+    for start, c in CAP_HISTORY:
+        if d >= start:
+            return c
+    return CAP_HISTORY[-1][1]
 #: Jazz 10-21:策略是 0–1 倍的底层参考,杠杆只在组合 / 选择层选,最多 5 倍。R-v2 这一腿的组合杠杆 L:
 #: 每票风险 = 净值 × L × risk_frac,名义合计 ≤ 净值 × L。默认 1(不加);改它是 Jazz 的决定(Railway 环境变量)。
 MAX_PORTFOLIO_LEVERAGE = 5.0
@@ -45,9 +57,10 @@ def _d(x: Any) -> Optional[dt.date]:
     return x if isinstance(x, dt.date) else dt.date.fromisoformat(str(x)[:10])
 
 
-def taken_ids(rows: Iterable[dict], cap: int, pending_entry: dt.date) -> set[str]:
+def taken_ids(rows: Iterable[dict], cap: Any, pending_entry: dt.date) -> set[str]:
     """纯函数。与 `r_tickets_nav` 同一条占位规则:按进场日走,已占位 = 已取 ∧ 进场早于 d ∧ (未出场 ∨ 出场 ≥ d);
-    同一天按 (信号日, 名字) 先到先得。`pending` 的票按 `pending_entry`(asof + 1)进场。"""
+    同一天按 (信号日, 名字) 先到先得。`pending` 的票按 `pending_entry`(asof + 1)进场。
+    cap = 整数(回放 / 模拟器)或「进场日 → 名额」的函数(真钱计划与对账用 `cap_on`:名额改过,历史按当时的算)。"""
     tk = []
     for r in rows:
         st = r.get("status")
@@ -63,7 +76,7 @@ def taken_ids(rows: Iterable[dict], cap: int, pending_entry: dt.date) -> set[str
         occ = sum(1 for t in taken.values() if t["e"] < e and (t["x"] is None or t["x"] >= e))
         k = 0
         for t in sorted((t for t in tk if t["e"] == e), key=lambda t: (t["signal_d"] or dt.date.min, t["symbol"])):
-            if occ + k < cap:
+            if occ + k < (cap(e) if callable(cap) else cap):
                 taken[t["id"]] = t
                 k += 1
     return set(taken)
@@ -85,7 +98,7 @@ def make_ticket_plan(rows: list[dict], last_d: Optional[str], asof: str, closes:
     if not last_d or _d(last_d) < a:
         return {**base, "ready": False, "why": f"r_tickets_scan 还没推进到 {asof}(last_d = {last_d})",
                 "enter": [], "hold": [], "exit": [], "skipped_cap": []}
-    taken = taken_ids(rows, cap, a + dt.timedelta(days=1))
+    taken = taken_ids(rows, cap_on if cap == DEFAULT_CAP else cap, a + dt.timedelta(days=1))
     enter, skipped, hold, exit_ = [], [], [], []
     for r in sorted(rows, key=lambda r: (str(r.get("signal_d")), r.get("symbol"))):
         st, tid = r.get("status"), r.get("ticket_id")
@@ -152,15 +165,16 @@ async def load_ticket_plan(asof: str, risk_frac: Optional[float] = None,
     else:
         plan["oi_filter"] = {"status": "nothing_to_enter"}
     # Jazz 11-07(S-751 硬规则):Binance 宣布整币下架的代币 ⇒ 不开新票、已有持仓当天开盘出场。
+    # Jazz 11-08:前移到「打标签」—— 此刻挂着 Binance 监控标签的代币同样处理(S-753)。
     # **读不到名单 ⇒ 这一轮不开新票(fail closed)**,持有照常 —— 「读不到」不能当成「名单是空的」。
-    from src.data.signals.delisting_watch import apply_to_plan, excluded_symbols
+    from src.data.signals.delisting_watch import apply_to_plan, excluded_with_reasons
     try:
-        excl = await excluded_symbols(now)
+        reasons = await excluded_with_reasons(now)
     except Exception as e:                                       # noqa: BLE001
-        plan.update({"skipped_delist": [{**x, "why": "下架名单读不到 —— 这一轮不开新票"} for x in plan.get("enter") or []],
+        plan.update({"skipped_delist": [{**x, "why": "下架 / 监控标签名单读不到 —— 这一轮不开新票"} for x in plan.get("enter") or []],
                      "enter": [], "delist_filter": {"status": "read_error", "why": f"{type(e).__name__}: {str(e)[:200]}"}})
     else:
-        plan = apply_to_plan(plan, excl)
+        plan = apply_to_plan(plan, set(reasons), reasons)
     # Jazz ⓪(regime_call):off / flat 挡新票、flat 平所有、信心档位放大每票风险、战场上的 J 票。
     # **读不到判断 ⇒ 不开不平(fail closed)**:一条「off」被当成「没有判断」,就会在 Jazz 说别进的时候进场。
     from src.data.execution.regime_call import governing_call, overlay, read_calls, read_j_tickets

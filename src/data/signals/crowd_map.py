@@ -77,19 +77,10 @@ def to_events(table: str, rows: list[dict], today: dt.date) -> list[dict]:
 
 
 def active_tags(rows: list[dict], today: dt.date) -> list[dict]:
-    """纯函数。Binance 监控标签:按时间走一遍,打上 ⇒ 记第一次的日子,移除 ⇒ 去掉;剩下的 = 此刻还在标签上的币。"""
-    on: dict[str, str] = {}
-    for r in sorted(rows or [], key=lambda r: str(r.get("ts"))):
-        d = str(r.get("ts") or "")[:10]
-        syms = r.get("symbols") if isinstance(r.get("symbols"), list) else []
-        for s in syms:
-            s = str(s).upper()
-            if r.get("kind") == "monitoring_tag":
-                on.setdefault(s, d)
-            elif r.get("kind") == "monitoring_tag_removed":
-                on.pop(s, None)
+    """纯函数。Binance 监控标签此刻挂着的币(与硬规则同一个状态机:`delisting_watch.active_tags`,按标题逐句走 —— T-308)。"""
+    from src.data.signals.delisting_watch import active_tags as _on
     return [{"symbol": s, "kind": "monitoring_tag", "d": d, "age_days": (today - dt.date.fromisoformat(d)).days,
-             "so_far_30d": None, "base": BASE_RATES["monitoring_tag"]} for s, d in sorted(on.items()) if len(d) == 10]
+             "so_far_30d": None, "base": BASE_RATES["monitoring_tag"]} for s, d in sorted(_on(rows).items()) if len(d) == 10]
 
 
 def summarize(events: list[dict]) -> dict[str, Any]:
@@ -126,7 +117,7 @@ async def active(now: Optional[dt.datetime] = None, days: int = DAYS_DEFAULT, sy
             continue
         events += to_events(table, rows or [], now.date())
     try:                                             # 11-08 S-753 ✅:监控标签不按「最近 N 天」,按「此刻还在标签上」
-        tags = await read("events", {"select": "ts,kind,symbols", "source": "eq.binance",
+        tags = await read("events", {"select": "ts,title", "source": "eq.binance",
                                      "kind": "in.(monitoring_tag,monitoring_tag_removed)", "order": "ts.asc"})
         events += [e for e in active_tags(tags or [], now.date()) if not sym or e["symbol"] == sym]
     except Exception as e:                           # noqa: BLE001

@@ -120,6 +120,8 @@ def _fake(snap, fail=False):
             if fail:
                 raise RuntimeError("oi_lev_snapshot_daily 读不到")
             return snap if params.get("d", "").startswith("eq.") else []
+        if table == "events":                  # 11-08:监控标签名单(硬规则前移)也在计划里读
+            return []
         if table == "delisting_watch":
             return []
         if table in ("regime_calls", "j_tickets"):

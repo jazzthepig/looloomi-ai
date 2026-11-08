@@ -121,25 +121,50 @@ def binance_scope(title: str) -> str:
 
 _MON_TAG = re.compile(r"monitoring\s+tag", re.IGNORECASE)
 _MON_STOP = {"ON", "TO", "AND", "THE", "FOR", "OF"}
+# 11-08(lane-a T-308 / lane-c 交叉复核):一条标题常常是几句话 ——「Extend the Monitoring Tag to Include A … and Remove the Seed
+# Tag for B」。v1 按整行判「有 remov 就是移除」,43 次新增被记成移除、54 个代号漏掉。按「(the) 监控 / 种子标签」切句,
+# 动词取句首左边最近的那个(承前:「Remove the Monitoring Tag for ZEC and the Seed Tag for ENA」里 Seed 沿用 Remove)。
+_TAG_REF = re.compile(r"\b(?:the\s+)?(?P<which>monitoring|seed)\s+tags?\b", re.IGNORECASE)
+_TAG_VERB = re.compile(r"\b(?P<verb>extend|add|include|remove|update|change)\w*\b", re.IGNORECASE)
+# 标题是 Title Case,只有代号是全大写 —— 停用词只挡全大写的套话;FOR(ForTube)、HIGH(Highstreet)、D(原 DAR)都是真代号,不进来。
+_TAG_STOP = {"USDT", "USDC", "BINANCE", "A", "I"}
+
+
+def monitoring_tag_changes(title: str) -> dict[str, list[str]]:
+    """纯函数。监控标签公告标题 → {add: 打上监控标签, rem_mon: 移除监控标签, rem_seed: 移除种子标签(与监控标签状态无关)}。"""
+    t = str(title or "")
+    refs = list(_TAG_REF.finditer(t))
+    out: dict[str, list[str]] = {"add": [], "rem_mon": [], "rem_seed": []}
+    last_verb = None
+    for i, m in enumerate(refs):
+        end = refs[i + 1].start() if i + 1 < len(refs) else len(t)
+        start = refs[i - 1].end() if i > 0 else 0
+        vs = list(_TAG_VERB.finditer(t, start, m.start()))
+        verb = vs[-1].group("verb").lower() if vs else last_verb
+        last_verb = verb or last_verb
+        seg = re.sub(r"\(?\d{4}-\d{2}-\d{2}\)?", " ", t[m.end():end])
+        toks = [x for x in re.findall(r"\b[A-Z0-9]{1,12}\b", seg) if not x.isdigit() and x not in _TAG_STOP]
+        if m.group("which").lower() == "seed":
+            out["rem_seed"] += toks if verb == "remove" else []
+        elif verb in ("extend", "add", "include", "update"):
+            out["add"] += toks
+        elif verb == "remove":
+            out["rem_mon"] += toks
+    return {k: list(dict.fromkeys(v)) for k, v in out.items()}
 
 
 def monitoring_tag(title: str) -> tuple[Optional[str], list[str]]:
-    """纯函数。监控标签公告 → (kind, 代币);不是 ⇒ (None, [])。
-    标题写法各异(on X, Y and Z / to Include X & Y / on Tokens: X, Y),通用解析器会漏 —— 这里只取「Monitoring Tag」之后、
-    日期之外的全大写代号。"""
+    """纯函数。监控标签公告 → (kind, 代币);不是 ⇒ (None, [])。kind 看句子:有新增 ⇒ monitoring_tag;只有移除 ⇒ monitoring_tag_removed。
+    逐句的变化在 `monitoring_tag_changes`(入库时放进 payload.tag_changes,硬规则与 crowd_map 都按它走状态机)。"""
     t = str(title or "")
-    m = _MON_TAG.search(t)
-    if not m:
+    if not _MON_TAG.search(t):
         return None, []
+    ch = monitoring_tag_changes(t)
+    if ch["add"] or ch["rem_mon"] or ch["rem_seed"]:
+        kind = "monitoring_tag" if ch["add"] else "monitoring_tag_removed"
+        return kind, list(dict.fromkeys(ch["add"] + ch["rem_mon"] + ch["rem_seed"]))
     kind = "monitoring_tag_removed" if re.search(r"\bremov", t, re.IGNORECASE) else "monitoring_tag"
-    seg = re.sub(r"\(?\d{4}-\d{2}-\d{2}\)?", " ", t[m.end():])
-    syms, seen = [], set()
-    for s in re.findall(r"\b[A-Z0-9]{2,12}\b", seg):
-        if s.isdigit() or s in _MON_STOP or s in seen:
-            continue
-        seen.add(s)
-        syms.append(s)
-    return kind, syms
+    return kind, []
 
 
 def n_articles(payload: dict) -> int:
@@ -165,7 +190,8 @@ def parse_binance(payload: dict, catalog_id: int) -> list[dict]:
             out.append({"id": event_id("binance", code), "ts": _ts_ms(a.get("releaseDate")) or dt.datetime.now(dt.timezone.utc).isoformat(),
                         "kind": k, "source": "binance", "symbols": syms,
                         "title": title[:300], "url": BINANCE_ARTICLE.format(code=code),
-                        "payload": {"article_id": a.get("id"), "catalog": catalog_id, "scope": binance_scope(title)}})
+                        "payload": {"article_id": a.get("id"), "catalog": catalog_id, "scope": binance_scope(title),
+                                    **({"tag_changes": monitoring_tag_changes(title)} if kind == "notice" else {})}})
     return out
 
 
@@ -272,6 +298,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     repair_error = None
     try:
         repaired = await repair_symbols(_read_all, supabase_upsert_table)
+        repaired += await retag_monitoring(_read_all, supabase_upsert_table)
     except Exception as e:                                                # noqa: BLE001 —— 补代币是附带的,不影响本轮判活
         repaired, repair_error = 0, f"{type(e).__name__}: {str(e)[:120]}"
     return {"ok": not errors or written > 0, "written": written, "kinds": kinds, "errors": errors, "backfill": backfill,
@@ -281,6 +308,34 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
 
 
 REPAIR_BATCH = 1000
+TAG_PARSER_VERSION = "v2-2026-11-08"
+
+
+def retag_rows(rows: list[dict]) -> list[dict]:
+    """纯函数。已入库的监控标签公告 → 按逐句解析器重算 kind / symbols / payload.tag_changes;只返回变了的行(整行)。"""
+    out = []
+    for r in rows or []:
+        title = r.get("title") or ""
+        kind, syms = monitoring_tag(title)
+        if kind is None:
+            continue
+        ch = monitoring_tag_changes(title)
+        pl = dict(r.get("payload") or {})
+        if r.get("kind") == kind and list(r.get("symbols") or []) == syms and pl.get("tag_changes") == ch:
+            continue
+        pl.update({"tag_changes": ch, "tag_parser": TAG_PARSER_VERSION})
+        out.append({**{k: r.get(k) for k in WRITES_COLUMNS[TABLE]}, "kind": kind, "symbols": syms, "payload": pl})
+    return out
+
+
+async def retag_monitoring(read, upsert) -> int:
+    """11-08:监控标签公告按逐句解析器重写一遍(v1 整行判,43 次「打上」被记成「移除」)。幂等:没变的不写。"""
+    rows = await read(TABLE, {"select": "id,ts,kind,source,symbols,title,url,payload", "source": "eq.binance",
+                              "kind": "in.(monitoring_tag,monitoring_tag_removed)", "order": "ts.asc"})
+    fixed = retag_rows(rows or [])
+    if fixed and not await upsert(TABLE, fixed, on_conflict="id"):
+        raise RuntimeError("retag upsert failed")
+    return len(fixed)
 
 
 async def repair_symbols(read, upsert) -> int:
