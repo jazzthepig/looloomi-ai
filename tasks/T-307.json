@@ -1,0 +1,29 @@
+{
+  "id": "T-307",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-08",
+  "verified": null,
+  "title": "T-301 补三张表(剂量-反应 × 两臂并列 × 1/7/30 日)+ 把复现路径放进仓库 —— lane-a 11-08 交叉复核返工",
+  "source": "§A-auto-1108-1217(lane-a 复核 T-301,已 merge 59d158c4):①报告漏了 squeeze 臂内资金费分位的剂量-反应(≤0.02 n=108 −18.15% … 0.08-0.10 n=46 −11.94%);②flush 臂从未与 squeeze 并列(中位差置换分位 0.197);③只报 30 天,库内 x1/x7 已存;④内核≡参考实现只在 squeeze 臂成立,flush 差 0.65–1.31pp;⑤报告 §4 指向的 t301_run.log 被 gitignore、脚本硬编码 lane-b 路径。Seth 抽查数字来源在已交付 CSV 与库,不必重拉。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-307.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "src/api/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读。不改 T-301 已发布的数,只补。(1)报告 §4.2 三张表:剂量-反应(squeeze 臂 fund_pct 四档,中位超额 + n + 随机日分位)、两臂并列(squeeze/flush 的 x1/x7/x30 中位 + n,两臂中位差的置换分位,种子 301)、x1/x7/x30 时间形状;flush 臂内核 vs 参考实现的 0.65–1.31pp 差原样报,不当已复现。(2)复现:把 §4 用的数落成 docs/research/ 下被跟踪的文件(摘要日志可小,不要 gitignored 路径);脚本里的硬编码目录改成参数或相对路径。(3)台账建议行写『跨实现逐位一致(squeeze),盲测未做成』,不是『复现』。预注册常量不改;结果里还看到了什么(探索性)单列一节。",
+    "expect": "docs/research/T-301_*.md 增补节 + 脚本/摘要日志入库;卡 notes 写三张表的头一行数;in_review,推 lane-b/T-307。"
+  },
+  "prior_value": "T-301 的 −16% 会被当成『拥挤 squeeze 的效应』对外引用,但同表里 flush 同量级、且 2/3 超额在第一周实现 —— 读法不同,规则的触发窗口也不同。",
+  "notes": "2026-11-08 Seth 定时复盘开卡(采纳 lane-a 复核 ①–⑤;不需要 Jazz 拍板)。flush 臂是否另立预注册核实现差:等本卡三张表出来再定。"
+}

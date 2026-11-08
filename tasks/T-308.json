@@ -1,0 +1,29 @@
+{
+  "id": "T-308",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-08",
+  "verified": null,
+  "title": "T-303 按标题分句重跑(监控标签新增 / 监控标签移除 / 种子标签移除分开)—— lane-c 11-08 交叉复核返工",
+  "source": "§C-auto-1108-1219(lane-c 复核 T-303,已 merge bcde995c):事件表一行一个 kind + 一坨 symbols,『Extend the Monitoring Tag to Include X … and Remove the Seed Tag for Y』被整行判 removed;t303_tags.csv 156 个代号 76 个 n_tag_events=0,其中 54 个是真·监控标签新增被错判。lane-c 同生成器同缓存复算:class-1 候选 4→12,账内被挡 1→3,口径 A ΔR +1.0158→+2.904;§三主表(口径 B)不变。另:tag_d 存的是计划日不是实际打标签日;缺 67 张票的亏损占比基线;与 T-278 账本(145/54.3331)并排缺口径映射。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-308.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "src/api/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读,只算不判。不改 src/data/market/events.py、不改入库字段(解析层是否修是流水线动作,Seth 另议)。(1)在分析脚本里按标题分句(三类事件分开)重建『在标签上』状态机,重跑口径 A/B;先自己复现 lane-c 的 4→12 / 1→3 / +2.904(其复算脚本在 Mac 数据根 _lane_c_t303_recheck.py,可读),对不上就报差异。(2)tag_d 改存实际打标签日。(3)补零信号基线:67 张票的亏损占比,随机挡 3 张的期望;(4)补口径映射表 T-303(155/110.0372, 67/19.4042) ↔ T-278(145/54.3331)。(5)报告 §七.2 的『几乎零交集』按修正后 9 个代号重写。票<10 仍写『无检出力』。结果里还看到了什么(探索性)单列;『事件表把三类语义压成一列』单列为建议另立预注册,不在本卡做。",
+    "expect": "docs/research/T-303_*.md 修订版 + 脚本 + 结果 json;卡 notes 写修正后 class-1 候选数 / 被挡数 / ΔR;in_review,推 lane-a/T-308。"
+  },
+  "prior_value": "S-785『打标签即剔除无检出力』的结论在被错判的名单上得出;修正后被挡数 1→3 仍 <10,结论方向大概不变,但数要对。",
+  "notes": "2026-11-08 Seth 定时复盘开卡(采纳 lane-c 复核 (1)–(4);不需要 Jazz 拍板)。解析层 events.py 的行级 kind 混语义:先不动,等本卡数出来再定是否另开流水线卡。"
+}
