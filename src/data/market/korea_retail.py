@@ -56,6 +56,8 @@ CANDLE_SLEEP_S = 0.22           # ≤ 5 次 / 秒
 NOTICE_SLEEP_S = 3.0
 BF_KEY = "korea:upbit_candles_backfill"
 NOTICE_BF_KEY = "korea:upbit_notice_backfill"
+PARSER_VERSION = "v2-2026-11-08"   # 改了 notice_markets / notice_symbols ⇒ 改这里,已入库的公告会按新解析器重写一遍
+PARSER_KEY = "korea:upbit_notice_parser"
 DAILY_KEY = "korea:upbit_daily_refresh:{d}"
 
 _CODE = r"[A-Z0-9]{2,12}"
@@ -134,6 +136,8 @@ def notice_markets(title: str) -> list[str]:
     out: list[str] = []
     for grp in re.findall(r"((?:(?:KRW|BTC|USDT|ETH)\s*,\s*)*(?:KRW|BTC|USDT|ETH))\s*마켓", t):
         out += [x.strip() for x in grp.split(",")]
+    if re.search(r"원화\s*마켓", t):                              # 11-08:2017–2020 的标题写「원화 마켓」(= KRW),v1 读成「不知道」
+        out.append("KRW")
     for _a, b in re.findall(r"\b(" + _CODE + r")/(KRW|BTC|USDT)\b", t):
         out.append(b)
     seen, res = set(), []
@@ -145,7 +149,8 @@ def notice_markets(title: str) -> list[str]:
 
 
 def notice_symbols(title: str) -> list[str]:
-    """纯函数。标题里的代币代号:括号里逗号分隔的全大写代码;市场名(KRW / BTC / USDT 后跟「마켓」)不算;「(ETH/KRW)」取 ETH。"""
+    """纯函数。标题里的代币代号:括号里逗号分隔的全大写代码;市场名(KRW / BTC / USDT 后跟「마켓」)不算;「(ETH/KRW)」取 ETH;
+    「(이오스 EOS, 아이콘 ICX)」= 韩文名 + 代号,取代号(每一段都要以韩文名开头,免得把「(입금 오픈 12:00~)」读成代号)。"""
     t = str(title or "")
     out: list[str] = []
     for grp in re.findall(r"\(([^()]*)\)", t):
@@ -159,6 +164,8 @@ def notice_symbols(title: str) -> list[str]:
         parts = [p.strip() for p in g.split(",")]
         if parts and all(re.fullmatch(_CODE, p) for p in parts):
             out += [p for p in parts if not (p in _MARKETS and len(parts) > 1 and all(q in _MARKETS for q in parts))]
+        elif parts and all(re.fullmatch(r"[^\s,()]*[가-힣][^\s,()]*(?:\s+[^\s,()]+)*\s+" + _CODE, p) for p in parts):
+            out += [p.rsplit(None, 1)[1] for p in parts]           # 11-08:2018–2020 写「(이오스 EOS)」= 韩文名 + 空格 + 代号
     if not out:                                                   # 2017 的「ETH/KRW 상장 …」没有括号
         out += [a for a, _b in re.findall(r"\b(" + _CODE + r")/(KRW|BTC|USDT)\b", t)]
     seen, res = set(), []
@@ -189,6 +196,22 @@ def parse_notices(payload: dict) -> list[dict]:
                     "symbols": notice_symbols(title), "title": title[:300], "url": NOTICE_URL.format(id=nid),
                     "payload": {"notice_id": nid, "markets": mk, "krw": ("KRW" in mk) if mk else None,   # 标题没写市场 ⇒ 不知道
                                 "category": n.get("category")}})
+    return out
+
+
+def reparse(rows: list[dict]) -> list[dict]:
+    """纯函数。已入库的 Upbit 公告 → 按当前解析器重算 symbols / markets / krw;只返回变了的行(整行,upsert 要非空列)。"""
+    out = []
+    for r in rows or []:
+        title = str(r.get("title") or "")
+        mk = notice_markets(title)
+        syms = notice_symbols(title)
+        pl = dict(r.get("payload") or {})
+        krw = ("KRW" in mk) if mk else None
+        if syms == list(r.get("symbols") or []) and pl.get("markets") == mk and pl.get("krw") == krw:
+            continue
+        pl.update({"markets": mk, "krw": krw, "parser": PARSER_VERSION})
+        out.append({k: r.get(k) for k in ("id", "ts", "kind", "source", "title", "url")} | {"symbols": syms, "payload": pl})
     return out
 
 
@@ -332,6 +355,22 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         for n in notices:
             kinds[n["kind"]] = kinds.get(n["kind"], 0) + 1
         out["notices"] = {"written": len(notices), "kinds": kinds, "next_page": page, "done": ndone}
+        pst, _ = await redis_get_key_status(PARSER_KEY)
+        if (pst or {}).get("version") != PARSER_VERSION:                  # 解析器升级 ⇒ 已入库的公告重写一遍(一次)
+            from src.data.style.header import _read_all
+            have = await _read_all("events", {"select": "id,ts,kind,source,symbols,title,url,payload", "source": "eq.upbit",
+                                              "order": "id.asc"})
+            fix = reparse(have or [])
+            okw = True
+            for i in range(0, len(fix), 200):
+                if not await supabase_upsert_table("events", fix[i:i + 200], on_conflict="id"):
+                    errors.append("重写 events 失败")
+                    okw = False
+                    break
+            if okw and have:
+                await redis_set_key(PARSER_KEY, {"version": PARSER_VERSION, "rewritten": len(fix), "of": len(have),
+                                                 "at": now.isoformat()}, ttl=400 * 86400)
+            out["reparsed"] = {"of": len(have or []), "rewritten": len(fix), "ok": okw}
     ok = bool(markets) and not any("写 " in e for e in errors)
     flagged = out.get("flagged") or []
     return {"ok": ok, **out, "errors": errors[:20],

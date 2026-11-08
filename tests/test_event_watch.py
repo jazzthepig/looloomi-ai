@@ -58,3 +58,20 @@ def test_wiring():
     assert "from src.data.signals.event_watch import run_once" in main
     mig = (ROOT / "migrations/2026-11-07_binance_event_watch.sql").read_text(encoding="utf-8")
     assert all(c in mig for c in ew.WRITES_COLUMNS[ew.TABLE])
+
+
+def test_upbit_krw_first_listing_is_recorded_separately():
+    """11-08 S-770 ✅:Upbit 只记 KRW 上币(krw = true),每个代号第一次;BTC / USDT 市场与 krw 不明的不记;前向从 11-08 起。"""
+    ev = [{"ts": "2026-11-08T03:00:00+00:00", "kind": "listing", "source": "upbit", "title": "KRW 마켓 디지털 자산 추가 (FOO)",
+           "symbols": ["FOO"], "payload": {"krw": True}},
+          {"ts": "2026-11-07T03:00:00+00:00", "kind": "listing", "source": "upbit", "title": "BTC 마켓 디지털 자산 추가 (FOO)",
+           "symbols": ["FOO"], "payload": {"krw": False}},
+          {"ts": "2026-11-05T03:00:00+00:00", "kind": "listing", "source": "upbit", "title": "KRW 마켓 디지털 자산 추가 (BAR)",
+           "symbols": ["BAR"], "payload": {"krw": True}},
+          {"ts": "2018-03-22T03:00:00+00:00", "kind": "listing", "source": "upbit", "title": "x", "symbols": ["BAZ"], "payload": {"krw": None}},
+          {"ts": "2026-11-08T03:00:00+00:00", "kind": "listing", "title": "Binance Will List FOO", "symbols": ["FOO"], "payload": {"scope": "spot"}}]
+    e = {(x["kind"], x["symbol"]): x for x in ew.entries(ev)}
+    assert set(e) == {(ew.UPBIT_KIND, "FOO"), (ew.UPBIT_KIND, "BAR"), ("listing", "FOO")}, "同一个代号在两个所各记一条"
+    assert e[(ew.UPBIT_KIND, "FOO")]["cohort"] == "forward" and e[(ew.UPBIT_KIND, "BAR")]["cohort"] == "backfill"
+    mig = (ROOT / "migrations/2026-11-08_event_watch_upbit.sql").read_text(encoding="utf-8")
+    assert all(f"'{k}'" in mig for k in ew.KINDS), "表的 kind 约束要认得每一类"

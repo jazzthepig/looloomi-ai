@@ -56,3 +56,27 @@ def test_parse_notices_converts_kst_to_utc_and_unknown_market_is_none():
     rows = k.parse_notices(p)
     assert len(rows) == 2 and rows[0]["ts"].startswith("2026-11-05T06:03:03") and rows[0]["source"] == "upbit"
     assert rows[0]["payload"]["krw"] is True and rows[1]["payload"]["krw"] is None, "标题没写市场 ⇒ 不知道,不是 False"
+
+
+def test_parser_v2_reads_2018_2020_titles():
+    """11-08(lane-c T-291 发现):2018–2020 的标题写「원화 마켓」与「(이오스 EOS)」,v1 两样都读不出 ⇒ 那三年的 KRW 上币全落在「不知道」。"""
+    from src.data.market.korea_retail import notice_markets, notice_symbols
+    assert notice_markets("원화 마켓 신규 상장 (이오스 EOS)") == ["KRW"] and notice_symbols("원화 마켓 신규 상장 (이오스 EOS)") == ["EOS"]
+    assert notice_symbols("원화 마켓 신규 상장 (폴리매쓰 POLY, 제로엑스 ZRX)") == ["POLY", "ZRX"]
+    assert notice_markets("원화마켓 신규 상장 (디카르고 DKA)") == ["KRW"]
+    assert notice_symbols("리퍼리움(RFR) 유의 종목 지정 해제 안내 (입금 오픈 12/04 12:00~)") == ["RFR"], "时间不是代号"
+    assert notice_symbols("디지털 자산 유의종목 지정 안내 (17종)") == []
+    assert notice_markets("[거래] KRW, USDT 마켓 디지털 자산 추가 (ABC, DEF)") == ["KRW", "USDT"], "v1 的写法不变"
+
+
+def test_reparse_only_returns_changed_rows_with_full_columns():
+    from src.data.market.korea_retail import PARSER_VERSION, reparse
+    rows = [{"id": "a", "ts": "2018-03-22T01:00:00+00:00", "kind": "listing", "source": "upbit", "url": "u",
+             "title": "원화 마켓 신규 상장 (이오스 EOS)", "symbols": [], "payload": {"notice_id": 1, "markets": [], "krw": None}},
+            {"id": "b", "ts": "2026-11-05T01:00:00+00:00", "kind": "listing", "source": "upbit", "url": "u",
+             "title": "[거래] KRW 마켓 디지털 자산 추가 (ABC)", "symbols": ["ABC"], "payload": {"notice_id": 2, "markets": ["KRW"], "krw": True}}]
+    out = reparse(rows)
+    assert [r["id"] for r in out] == ["a"], "没变的不重写"
+    r = out[0]
+    assert r["symbols"] == ["EOS"] and r["payload"]["krw"] is True and r["payload"]["notice_id"] == 1
+    assert r["payload"]["parser"] == PARSER_VERSION and r["ts"] and r["kind"] == "listing", "upsert 要整行(非空列)"
