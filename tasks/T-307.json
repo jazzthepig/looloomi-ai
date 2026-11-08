@@ -1,7 +1,7 @@
 {
   "id": "T-307",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-11-08",
   "verified": null,
   "title": "T-301 补三张表(剂量-反应 × 两臂并列 × 1/7/30 日)+ 把复现路径放进仓库 —— lane-a 11-08 交叉复核返工",
@@ -25,5 +25,5 @@
     "expect": "docs/research/T-301_*.md 增补节 + 脚本/摘要日志入库;卡 notes 写三张表的头一行数;in_review,推 lane-b/T-307。"
   },
   "prior_value": "T-301 的 −16% 会被当成『拥挤 squeeze 的效应』对外引用,但同表里 flush 同量级、且 2/3 超额在第一周实现 —— 读法不同,规则的触发窗口也不同。",
-  "notes": "2026-11-08 Seth 定时复盘开卡(采纳 lane-a 复核 ①–⑤;不需要 Jazz 拍板)。flush 臂是否另立预注册核实现差:等本卡三张表出来再定。"
+  "notes": "2026-11-08 lane-b 交付。口径全沿用 T-301(检测 t297_clean.detect(guards=True)、前向 d+1 开盘→d+H 收盘、内核 uni 篮子);新增的只有三个分组与置换检验(种子 301 / 1000 次);T-301 原 seed=783 的数一个没动(重跑 t301_recompute.py,§4.1–4.4 逐位不变,只 generated_at 变了)。产物(全被跟踪):docs/research/t307_tables.py、t307_results.json、t307_summary.txt、t307_event_forward.csv、t301_summary.txt;报告新增 §4.5。\n① 剂量-反应(squeeze 臂 x30,按 7 日资金费分位四档):≤0.02 n=108 中位 −18.15%(随机日分位 0.000)|0.02-0.05 n=104 −18.33%(0.000)|0.05-0.08 n=83 −15.06%(0.000)|0.08-0.10 n=46 −11.94%(0.002)。\n② 两臂并列(置换分位,种子 301,库内值):x1 squeeze 351/−3.26% vs flush 59/−2.20%,中位差 −1.07pp,分位 0.277;x7 squeeze 351/−10.39% vs flush 59/−3.79%,差 −6.59pp,分位 0.010;x30 squeeze 341/−16.35% vs flush 57/−14.11%,差 −2.24pp,分位 0.285 ⇒ 只有第 7 天分得开,1 天与 30 天分不开(参考实现口径同样:x7 0.012 / x30 0.201 / x1 0.273)。\n③ 时间形状(库内):squeeze x1 −3.26% / x7 −10.39% / x30 −16.35%,x7÷x30(同号)中位 0.69,30 天为负且 7 天也为负 84.9%(n=251);flush −2.20% / −3.79% / −14.11%,比值 0.47,71.8%(n=39)⇒ flush 的坏消息更晚(第 2–4 周)。\n④ 内核 vs 参考实现:日历口径两臂 30 天中位差 0.00pp;参考实现自带 forward(bar 口径)flush 臂 30 天中位差 +1.32pp(与 lane-a 的 1.31pp 上限对上)、x7 −1.45pp、x1 +0.13pp,squeeze 同口径 ≤0.18pp ⇒ squeeze 臂只能说「中位逐位一致」,flush 臂 1.32pp 原样报、**不算复现**;逐条逐位相同 squeeze 212/341、flush 37/56(差来自篮子成分口径,§4.4)。\n复现路径入库:缓存目录改 --cache 参数(默认 $COMETCLOUD_LOCAL_ROOT/research/t301/cache),运行摘要从被 gitignore 的 *.log 改落被跟踪的 docs/research/t301_summary.txt;报告 §4 指针已改。台账建议行(报告 §4.5):跨实现逐位一致(squeeze),盲测未做成 —— 不是「复现」。前向预期 docs/research/scenarios/lane-b-T-307.json(5 条,3 条自动结算,scenario_ledger validator 全过)。\n探索性(需另立预注册、在新数据上过零信号对照):两臂差是 7 日现象而非 30 日;剂量-反应非严格单调(中间档比最极端档还差 0.18pp);flush 臂 n 小(59/57/56)限制置换分位分辨率;两臂逐条差异率相近(38% vs 34%)⇒ 内核与参考实现的分歧来自篮子口径,不是臂特有。"
 }

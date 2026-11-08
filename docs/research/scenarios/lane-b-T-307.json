@@ -1,0 +1,58 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {
+      "id": "T-307-1",
+      "scenario": "T-307 两臂 7 日差在前向 cohort 上重现",
+      "statement": "2026-11-09 起 crowding_watch 前向 cohort 新增的事件里(两臂合计 ≥ 30 条已到期、其中 squeeze ≥ 15 条),squeeze 臂的 7 天超额中位比 flush 臂至少低 2pp(更负)—— 样本内表 2 的 7 日差是 −6.6pp(置换分位 0.010),1 日与 30 日都不可分",
+      "variable": "manual",
+      "op": "between",
+      "lo": 1,
+      "hi": 1,
+      "prob": 0.6,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-307-2",
+      "scenario": "T-307 30 天尺度上两臂是否重新可分",
+      "statement": "到 2026-12-15 凑齐的下一批 flush 事件(≥ 20 条已到期)上,flush 臂 30 天超额中位与 squeeze 臂的差 ≥ 5pp(即 30 天尺度上两臂可分)—— 样本内是 −2.2pp(库内)/ −3.6pp(参考实现),置换分位 0.20–0.28,分不开",
+      "variable": "manual",
+      "op": "between",
+      "lo": 1,
+      "hi": 1,
+      "prob": 0.3,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-307-3",
+      "scenario": "T-307 主题的宏观底色:拥挤在多头一侧还是空头一侧",
+      "statement": "state:funding_7d_ann(全市场 7 日均资金费年化)在 2026-12-08 仍为正 —— 资金费为正 ⇒ 拥挤在多头一侧 ⇒ squeeze(资金费分位 ≤ 0.10,样本内 341 条)的母体更稀;2026-11-07 读数 +9.75%",
+      "variable": "state:funding_7d_ann",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.65,
+      "horizon_d": "2026-12-08"
+    },
+    {
+      "id": "T-307-4",
+      "scenario": "T-307 母体的杠杆底色:去杠杆是否继续",
+      "statement": "state:oi_chg_30d(全市场未平仓量 30 日变化)在 2026-12-08 仍为负 —— 2026-11-07 读数 −12.7%;去杠杆继续 ⇒ 拥挤事件的两条臂(资金费分位极低 / 极高)都更稀,样本量涨不上去",
+      "variable": "state:oi_chg_30d",
+      "op": "lt",
+      "hi": 0,
+      "prob": 0.6,
+      "horizon_d": "2026-12-08"
+    },
+    {
+      "id": "T-307-5",
+      "scenario": "T-307 前向记录本身在长起来",
+      "statement": "到 2026-12-08,crowding_watch 的 forward cohort 累计行数 ≥ 20(前向记录确实在逐日累积,不是空表)",
+      "variable": "manual",
+      "op": "between",
+      "lo": 1,
+      "hi": 1,
+      "prob": 0.85,
+      "horizon_d": "2026-12-08"
+    }
+  ]
+}

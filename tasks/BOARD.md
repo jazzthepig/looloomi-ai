@@ -30,6 +30,7 @@
 | in_review | T-257 | lane-b | S-737 状态 × 动作地图:训练期(2021-03 → 2023-12)k-means 6 类状态(14 个特征,写死),每类里 持有 / 空仓 / 战术空单 / 30 天 90% 看跌 / 90-80 看跌价差 / 保护性多头 的结果,留出期(2024 →)复核 + BH 多重检验 —— Jazz 11-06「全时间段亏 ≠ 特殊时间亏」 | 报告 docs/research/T-257_state_action_map.md + t257_state_action_map.py + t257_results.json(含 6 个中心、每格数字、今天的类别);卡 notes 写过了 BH 的格子;in_review,推 lane-b/T-257。 | 所有动作都只在全时间段上判过(T-252);没有一次按状态拆。 |  |
 | in_review | T-262 | lane-b | S-740 永续上线 = 做空供给冲击:现货先有的代币,Binance 上线 USDT 永续之后 30 / 60 天相对 BTC 是否跑输 —— 随机日期对照,判据照台账写死 | 报告 docs/research/T-262_perp_listing_short_supply.md + t262_perp_listing.py + t262_results.json;卡 notes 写 (a)–(d) 原始数字;in_review,推 lane-b/T-262。 | 永续上线的影响从没测过(T-227 / T-233 测的是现货上币)。 |  |
 | in_review | T-267 | lane-b | S-744 永续上线之后的跑输:做空供给 vs 上线前追高的均值回归 —— 按「之前 30 天收益」匹配的对照日 + 换 CoinGecko 价格源扩宇宙;判据照台账写死 | 报告 docs/research/T-267_perp_listing_mechanism.md + t267_mechanism.py + t267_results.json;卡 notes 写 (a)–(d);in_review,推 lane-b/T-267。 | S-740 判据全过但 n = 46 且机制没分开;扩宇宙与机制诊断是评审轮点名的下一件事。 |  |
+| in_review | T-307 | lane-b | T-301 补三张表(剂量-反应 × 两臂并列 × 1/7/30 日)+ 把复现路径放进仓库 —— lane-a 11-08 交叉复核返工 | docs/research/T-301_*.md 增补节 + 脚本/摘要日志入库;卡 notes 写三张表的头一行数;in_review,推 lane-b/T-307。 | T-301 的 −16% 会被当成『拥挤 squeeze 的效应』对外引用,但同表里 flush 同量级、且 2/3 超额在第一周实现 —— 读法不同,规则的触发窗口也不同。 |  |
 | in_review(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | in_review | T-220 | lane-c | 治理的领先信号:解锁前团队 / 基金会钱包流向、出事后的处理、营销强度 —— 先查能不能量(数据源可行性),再写预注册草稿 | 报告 docs/research/T-220_governance_leading_signals.md(开头可行性表);卡片 notes 写:免费源够不够、事件个数、两条草稿是否可在现有数据上跑;in_review,推 lane-c/T-220。 | 治理只量了滞后的一半(S-661 价值捕获比、S-587 质量);领先的行为信号一个都没有,不知道现有数据能不能量。 |  |
 | in_review | T-224 | lane-c | ② 倾斜在更宽的面板上:按时点前 50 大(含死币)的 ①,压低 S-691 五因子合成最差五分之一的权重 —— S-694 在 24 名上 ❌,问宽到 50 名「躲开」信号够不够用 | 报告 docs/research/T-224_tilt_pit50.md(预注册段在前);卡 notes 写基线年化 / 倾斜超额 / 随机对照分位 / 两段符号;scenarios/lane-c-T-224.json;in_review,推 lane-c/T-224。 | ② 只在 24 名上试过一次(S-694 ❌);宽面板上「躲开最差档」的倾斜没有任何回放。 |  |
@@ -58,7 +59,6 @@
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
 | claimed | T-231 | seth | 前向记录写端恢复:refresh_depth_divergence 逼近 statement_timeout 30s —— 给 ohlcv_daily 扫描加下界,并让『重算补的日子』在记录里可见 | 迁移 + 测试 + 前后对比表;卡 notes 写最大耗时前后值、逐行差异数、恢复后第一条 ok 的时间。DDL 的应用要走 Seth 交互轮次(定时轮次只读,不应用)。 | 写端熄火 4 天且在加重(每天 error 10→17→19);『自首日起连续、无回填』这句对外话没有机械保证。 |  |
 | open | T-308 | lane-a | T-303 按标题分句重跑(监控标签新增 / 监控标签移除 / 种子标签移除分开)—— lane-c 11-08 交叉复核返工 | docs/research/T-303_*.md 修订版 + 脚本 + 结果 json;卡 notes 写修正后 class-1 候选数 / 被挡数 / ΔR;in_review,推 lane-a/T-308。 | S-785『打标签即剔除无检出力』的结论在被错判的名单上得出;修正后被挡数 1→3 仍 <10,结论方向大概不变,但数要对。 |  |
-| open | T-307 | lane-b | T-301 补三张表(剂量-反应 × 两臂并列 × 1/7/30 日)+ 把复现路径放进仓库 —— lane-a 11-08 交叉复核返工 | docs/research/T-301_*.md 增补节 + 脚本/摘要日志入库;卡 notes 写三张表的头一行数;in_review,推 lane-b/T-307。 | T-301 的 −16% 会被当成『拥挤 squeeze 的效应』对外引用,但同表里 flush 同量级、且 2/3 超额在第一周实现 —— 读法不同,规则的触发窗口也不同。 |  |
 | open | T-305 | lane-c | 真钱基线 v1(X1V + 现金腿 + SPYX/XAUT0 腿)在下跌格子里的回放:对 ① 的总收益与最大回撤,对随机进出场的分位 —— 只报不判 | docs/research/T-305_live_baseline_replay.md(预注册口径在前)+ 脚本 + 结果 json;卡 notes 写账户 vs ① 的总收益 / 最大回撤、X1V 腿的随机分位、压力表三个数;in_review,推 lane-c/T-305。 | 4 个月的评估层只量了 ②③④;真钱里唯一在用的规则没被量过。S2 若成立,Jazz 要拍板的『账户该不该多做点什么』现在没有任何一个数可看。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
@@ -310,4 +310,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 12 · claimed 6 · blocked 4 · in_review 49 · done 232 · dropped 4
+open 11 · claimed 6 · blocked 4 · in_review 50 · done 232 · dropped 4

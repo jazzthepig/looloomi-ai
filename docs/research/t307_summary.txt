@@ -1,0 +1,76 @@
+T-307 三张表 —— 摘要(机器读数见 t307_results.json,逐事件见 t307_event_forward.csv)
+生成: 2026-11-08T12:53:43Z   缓存: /Volumes/CometCloudAI/cometcloud-local/research/t301/cache
+口径: 检测 t297_clean.detect(guards=True);前向 d+1 开盘 → d+H 收盘;篮子 = 内核 uni 同一进出窗口时点等权
+新增量: 种子 301 / 1000 次;剂量四档 ≤0.02/0.02-0.05/0.05-0.08/0.08-0.10;T-301 原 seed=783 的数未动
+
+[表1] 剂量-反应(squeeze 臂,x30 超额;随机日对照分位,种子 301)
+  ≤0.02     n=108  参考中位=-18.15%   库内中位=-18.15%   随机日分位=0.0
+  0.02-0.05 n=104  参考中位=-18.33%   库内中位=-18.35%   随机日分位=0.0
+  0.05-0.08 n=83   参考中位=-15.06%   库内中位=-15.06%   随机日分位=0.0
+  0.08-0.10 n=46   参考中位=-11.94%   库内中位=-11.94%   随机日分位=0.002
+
+[表2] 两臂并列
+  [db] H=1  squeeze n=351  中位=-3.26%    | flush n=59   中位=-2.20%    | 中位差=-1.07pp | 置换分位=0.2765
+  [db] H=7  squeeze n=351  中位=-10.39%   | flush n=59   中位=-3.79%    | 中位差=-6.59pp | 置换分位=0.01
+  [db] H=30  squeeze n=341  中位=-16.35%   | flush n=57   中位=-14.11%   | 中位差=-2.24pp | 置换分位=0.2845
+  [mine] H=1  squeeze n=351  中位=-3.30%    | flush n=60   中位=-2.24%    | 中位差=-1.06pp | 置换分位=0.273
+  [mine] H=7  squeeze n=350  中位=-10.43%   | flush n=60   中位=-4.12%    | 中位差=-6.31pp | 置换分位=0.012
+  [mine] H=30  squeeze n=341  中位=-16.35%   | flush n=57   中位=-12.80%   | 中位差=-3.55pp | 置换分位=0.2005
+
+[表3] 时间形状(x1/x7/x30 中位)
+  [db] squeeze x1=-3.26%    x7=-10.39%   x30=-16.35%   | x7/x30(同号)中位=0.69 | 30天为负且7天也为负=84.9%(n=251)
+  [db] flush   x1=-2.20%    x7=-3.79%    x30=-14.11%   | x7/x30(同号)中位=0.47 | 30天为负且7天也为负=71.8%(n=39)
+  [mine] squeeze x1=-3.30%    x7=-10.43%   x30=-16.35%   | x7/x30(同号)中位=0.69 | 30天为负且7天也为负=84.5%(n=252)
+  [mine] flush   x1=-2.24%    x7=-4.12%    x30=-12.80%   | x7/x30(同号)中位=0.48 | 30天为负且7天也为负=71.8%(n=39)
+
+[表4] 库内内核 vs 参考实现
+  squeeze H=1  n=351  库内中位=-3.26%    参考中位=-3.30%    中位差=+0.032pp | 逐位相同=267/351 | max|diff|=0.0020
+  squeeze H=7  n=350  库内中位=-10.36%   参考中位=-10.43%   中位差=+0.065pp | 逐位相同=258/350 | max|diff|=0.0108
+  squeeze H=30 n=341  库内中位=-16.35%   参考中位=-16.35%   中位差=+0.000pp | 逐位相同=212/341 | max|diff|=0.0446
+  flush   H=1  n=59   库内中位=-2.20%    参考中位=-2.15%    中位差=-0.050pp | 逐位相同=43/59 | max|diff|=0.0030
+  flush   H=7  n=59   库内中位=-3.79%    参考中位=-4.11%    中位差=+0.317pp | 逐位相同=43/59 | max|diff|=0.0130
+  flush   H=30 n=56   库内中位=-13.46%   参考中位=-13.46%   中位差=-0.000pp | 逐位相同=37/56 | max|diff|=0.0219
+
+[表4b] 参考实现自带的 forward(bar 口径 + coin 篮子)vs 库内内核
+  squeeze H=1  n=351  库内中位=-3.26%    参考中位=-3.21%    中位差=-0.049pp | 逐位相同=0/351 | 中位|diff|=0.0005 max|diff|=0.0180
+  squeeze H=7  n=350  库内中位=-10.36%   参考中位=-10.54%   中位差=+0.180pp | 逐位相同=0/350 | 中位|diff|=0.0013 max|diff|=0.1270
+  squeeze H=30 n=341  库内中位=-16.35%   参考中位=-16.32%   中位差=-0.038pp | 逐位相同=0/341 | 中位|diff|=0.0026 max|diff|=0.0864
+  flush   H=1  n=59   库内中位=-2.20%    参考中位=-2.32%    中位差=+0.128pp | 逐位相同=0/59 | 中位|diff|=0.0003 max|diff|=0.0096
+  flush   H=7  n=59   库内中位=-3.79%    参考中位=-2.34%    中位差=-1.452pp | 逐位相同=0/59 | 中位|diff|=0.0007 max|diff|=0.1086
+  flush   H=30 n=56   库内中位=-13.46%   参考中位=-14.78%   中位差=+1.322pp | 逐位相同=0/56 | 中位|diff|=0.0016 max|diff|=0.0674
+
+log:
+  === T-307 三张表 ===
+  cache: /Volumes/CometCloudAI/cometcloud-local/research/t301/cache
+  loaded: pbv=669125 fund=590360 pairs=913 cw=410
+  panels built 4s
+  universe(uni)=653
+  events(guards=True): squeeze=351 flush=60
+  forward matrix H=1 built
+  forward matrix H=7 built
+  forward matrix H=30 built
+  events(backfill): squeeze=351 flush=60  (in_db: 410)
+  event csv written: /Users/sbb/Projects/looloomi-ai-lane-b/docs/research/t307_event_forward.csv
+  dose ≤0.02: n_mine=108 median=-18.15% | db median=-18.15% | null pctl=0.0
+  dose 0.02-0.05: n_mine=104 median=-18.33% | db median=-18.35% | null pctl=0.0
+  dose 0.05-0.08: n_mine=83 median=-15.06% | db median=-15.06% | null pctl=0.0
+  dose 0.08-0.10: n_mine=46 median=-11.94% | db median=-11.94% | null pctl=0.002
+  arms[db] H=1: sq n=351 med=-3.26% | fl n=59 med=-2.20% | diff=-1.07pp | perm pctl=0.2765
+  arms[db] H=7: sq n=351 med=-10.39% | fl n=59 med=-3.79% | diff=-6.59pp | perm pctl=0.01
+  arms[db] H=30: sq n=341 med=-16.35% | fl n=57 med=-14.11% | diff=-2.24pp | perm pctl=0.2845
+  arms[mine] H=1: sq n=351 med=-3.30% | fl n=60 med=-2.24% | diff=-1.06pp | perm pctl=0.273
+  arms[mine] H=7: sq n=350 med=-10.43% | fl n=60 med=-4.12% | diff=-6.31pp | perm pctl=0.012
+  arms[mine] H=30: sq n=341 med=-16.35% | fl n=57 med=-12.80% | diff=-3.55pp | perm pctl=0.2005
+  kernel-vs-ref squeeze H=1: n=351 med_db=-3.26% med_mine=-3.30% diff=0.03pp | bit-identical 267 | max|diff|=0.0020
+  kernel-vs-ref squeeze H=7: n=350 med_db=-10.36% med_mine=-10.43% diff=0.07pp | bit-identical 258 | max|diff|=0.0108
+  kernel-vs-ref squeeze H=30: n=341 med_db=-16.35% med_mine=-16.35% diff=0.00pp | bit-identical 212 | max|diff|=0.0446
+  kernel-vs-ref flush H=1: n=59 med_db=-2.20% med_mine=-2.15% diff=-0.05pp | bit-identical 43 | max|diff|=0.0030
+  kernel-vs-ref flush H=7: n=59 med_db=-3.79% med_mine=-4.11% diff=0.32pp | bit-identical 43 | max|diff|=0.0130
+  kernel-vs-ref flush H=30: n=56 med_db=-13.46% med_mine=-13.46% diff=-0.00pp | bit-identical 37 | max|diff|=0.0219
+  bar-ref vs db squeeze H=1: n=351 med_db=-3.26% med_ref=-3.21% diff=-0.05pp | med|diff|=0.0005 max|diff|=0.0180
+  bar-ref vs db squeeze H=7: n=350 med_db=-10.36% med_ref=-10.54% diff=0.18pp | med|diff|=0.0013 max|diff|=0.1270
+  bar-ref vs db squeeze H=30: n=341 med_db=-16.35% med_ref=-16.32% diff=-0.04pp | med|diff|=0.0026 max|diff|=0.0864
+  bar-ref vs db flush H=1: n=59 med_db=-2.20% med_ref=-2.32% diff=0.13pp | med|diff|=0.0003 max|diff|=0.0096
+  bar-ref vs db flush H=7: n=59 med_db=-3.79% med_ref=-2.34% diff=-1.45pp | med|diff|=0.0007 max|diff|=0.1086
+  bar-ref vs db flush H=30: n=56 med_db=-13.46% med_ref=-14.78% diff=1.32pp | med|diff|=0.0016 max|diff|=0.0674
+  results written: /Users/sbb/Projects/looloomi-ai-lane-b/docs/research/t307_results.json (51s)
