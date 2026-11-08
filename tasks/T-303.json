@@ -1,0 +1,28 @@
+{
+  "id": "T-303",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-11-08",
+  "title": "S-785「打标签即剔除」回看:R-v2 回放账本在 2023-07 → 2026-10 如果排除监控标签上的币,差多少(只报不判,给 Jazz 拍板用)",
+  "source": "REFUTATION_LEDGER S-785(预注册)、S-757 原文与结果段(同一个生成器、同一个做法);S-753 结果段只读事件定义。数据:events(source = binance,kind ∈ monitoring_tag / monitoring_tag_removed)、R-v2 回放票(S-757 / T-278 用的生成器与票文件)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-303.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-785 原文照抄进报告开头,只算一次。复用 S-757 / T-278 的票生成与重算 R 的做法(lane-c 的 docs/research/t278_*);标签名单从 events 现读(翻页带 order=),先落 docs/research/t303_tags.csv。报两类票数、原 R / 规则下 R / 差值;账本 2023-07 → 2026-10 总 R、最大回撤、Calmar:无规则 / 只下架规则 / 下架 + 标签两条。票 < 10 张写「无检出力」。只算、不入库、不改代码;步数过半先落文件。",
+    "expect": "docs/research/T-303_tag_rule_lookback.md + t303_results.json + scenarios/lane-a-T-303.json(≥ 3 条前向命题,author = lane-a);in_review,推 lane-a/T-303。"
+  },
+  "prior_value": "S-753 ✅ 的后果是向 Jazz 提「打标签即剔除」。他拍板需要两件事:历史效应(S-753 已有)和这条规则在我们自己的账本上会挡多少、挡掉的是赚的还是亏的票(本卡)。",
+  "notes": "2026-11-08T00:53:43Z Seth 开卡。| 2026-11-08 lane-a 完成(只报不判)。口径 B(与 S-757/T-278 同做法:全书 2020-07 起,窗口=进场日 2023-07-26→2026-10-14):无规则 67 票/总 R 19.4042/总回报 +13.12%/最大回撤 −23.55%/Calmar 0.1655;只下架(S-757)= 无规则【逐位相同,0 张票被挡】;只标签(S-785)66 票/20.4200/+13.70%/−23.50%/0.1728;下架+标签 = 只标签。差值:挡 1 张、总 R +1.0158、Calmar +0.0073。① 开票时已在标签上:4 个候选(原 R 合计 +3.5026,3 胜 1 负),账本里只有 XEM 2024-01-24 那一张(R −1.0158,亏的);② 持有期间被打标签:0 张。被挡成交票 1 张 < 10 ⇒【无检出力】。口径 A(窗口内独立起账 equity0=630):无规则 155 票/110.0372/+51.01%/−21.02%/0.6503,只标签 154 票/111.053/+51.55%/−20.99%/0.6574,只下架=无规则,下架+标签=只标签 —— 规则效应两个口径逐位相同(−1 张/+1.0158)。敏感性:开票日=进场日口径,①4/②0,结果逐位相同。名单:events 27 行(Content-Range 总数 27 ✓),156 个代号,与生产解析器(标题重解析)kind/symbols 零分歧。产物:docs/research/T-303_tag_rule_lookback.md + t303_retro.py + t303_results.json + t303_tags.csv + scenarios/lane-a-T-303.json(5 条前向命题)。探索性:① 候选层挡掉的 3 张里 2 张是赚的(+0.60/+2.89);② 4 个候选全是 XEM×3+STX×1(标签池与 R-v2 候选池几乎零交集);③ 「持有期间打标签」历史上一次都没触发。",
+  "verified": null
+}
