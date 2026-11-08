@@ -134,7 +134,11 @@ def failure_digest(out: str) -> str:
 def preflight(cwd: Path) -> tuple[bool, str]:
     env = dict(os.environ, PREFLIGHT_ONLINE="1")     # 线上 schema-drift 只在这道门上跑(lane 与 CI 跳过)
     env.pop("INTERNAL_TOKEN", None)
-    p = subprocess.run(["bash", "scripts/preflight.sh"], cwd=cwd, capture_output=True, text=True,
+    # 11-08:bash 是边执行边读脚本的 —— 跑到一半有人往 preflight.sh 里加了一行注册,后面的字节整体错位,
+    # 01:04 那一批三个提交全红在「books: command not found」。先把整份读进内存再交给 bash -c($0 照旧是脚本路径,
+    # 脚本第 18 行靠它 cd 回仓库根),跑的过程中文件怎么改都不影响这一轮。
+    script = (cwd / "scripts" / "preflight.sh").read_text(encoding="utf-8")
+    p = subprocess.run(["bash", "-c", script, "scripts/preflight.sh"], cwd=cwd, capture_output=True, text=True,
                        timeout=2400, env=env)
     out = p.stdout + p.stderr
     return p.returncode == 0 and "PREFLIGHT PASSED" in out, out

@@ -1,0 +1,21 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {"id": "T-291-1", "scenario": "T-291 Upbit KRW 上币公告后的相对表现",
+     "statement": "下一批(2026-11 之后公告、到 2027-02-28 已满 30 天)的 Upbit KRW 首次上币事件,其 30 天相对等权篮超额的中位数仍为负(本次测得 −20.7%,同代号同年的随机日对照中位 −11.2%)",
+     "variable": "manual", "op": "between", "lo": -100.0, "hi": 0.0, "prob": 0.75, "horizon_d": "2027-02-28"},
+    {"id": "T-291-2", "scenario": "T-291 Upbit KRW 上币公告后的相对表现",
+     "statement": "该事件效应(事件超额中位 − 随机日对照中位)的幅度仍在 0 至 15 个百分点之间(本次原始篮口径 9.5pp;剔除篮成分伪影后约 4~6pp)",
+     "variable": "manual", "op": "between", "lo": 0.0, "hi": 15.0, "prob": 0.7, "horizon_d": "2027-02-28"},
+    {"id": "T-291-3", "scenario": "T-291 Upbit KRW 上币公告后的相对表现",
+     "statement": "下一批事件里,公告时尚未在 Binance 现货的代币,其 30 天超额中位比公告时已在 Binance 现货的一组更低 0 至 30 个百分点(本次 −23.7% vs −18.4%,差 5.2pp)",
+     "variable": "manual", "op": "between", "lo": 0.0, "hi": 30.0, "prob": 0.6, "horizon_d": "2027-02-28"},
+    {"id": "T-291-4", "scenario": "T-291 Upbit KRW 上币公告后的相对表现",
+     "statement": "面板宽度在 2026-12-31 回升到 0.10 以上(2026-11-06 读数 0.0417,处于极低位;宽度回升意味着「全民狂热」的背景条件缓解,下一批上币事件的超额可能因此变弱)",
+     "variable": "state:breadth_above_ma50", "op": "gt", "lo": 0.1, "prob": 0.55, "horizon_d": "2026-12-31"},
+    {"id": "T-291-5", "scenario": "T-291 Upbit KRW 上币公告后的相对表现",
+     "statement": "BTC 在 2026-12-31 的收盘不低于 2026-11-06 的 75,844(本次事件发生时市场背景很弱:面板宽度 0.0417、mom_20 −7.1%、随机日对照中位 −11.2%,但本条只是背景体检,不是方向判断,概率按 0.5 给)",
+     "variable": "close:BTC", "op": "gt", "lo": 75844, "prob": 0.5, "horizon_d": "2026-12-31"}
+  ],
+  "note": "T-291 的前三条是对已落盘结果的方向性断言(人工结算,按 T-291_upbit_listing.md 的表逐条核对,本次测得的数值已写在 statement 里);第四条是 README 要求的那条自动结算项(state_daily panel 的 breadth_above_ma50,2026-11-06 读数 0.0417),第五条是自动结算的 BTC 收盘。不含收益承诺。"
+}

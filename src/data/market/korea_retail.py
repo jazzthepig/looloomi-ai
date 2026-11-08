@@ -35,11 +35,16 @@ from typing import Any, Optional
 
 DAILY_TABLE = "upbit_daily"
 EVENT_TABLE = "upbit_market_event_daily"
-WRITES_TABLES = (DAILY_TABLE, EVENT_TABLE, "events")
+FX_TABLE = "macro_daily"
+FX_SERIES = "usdkrw"            # 11-08:韩元汇率(EODHD USDKRW.FOREX 日收盘),全市场韩国溢价的分母;KRW-USDT 2024-06 才有
+FX_FROM = "2017-09-01"
+FX_KEY = "korea:usdkrw:{d}"
+WRITES_TABLES = (DAILY_TABLE, EVENT_TABLE, "events", FX_TABLE)
 WRITES_COLUMNS = {
     DAILY_TABLE: ("market", "symbol", "d", "o", "h", "l", "c", "vol_base", "vol_krw"),
     EVENT_TABLE: ("d", "market", "symbol", "warning", "caution", "n_caution", "last_seen_at"),
     "events": ("id", "ts", "kind", "source", "symbols", "title", "url", "payload"),
+    FX_TABLE: ("series", "d", "value", "source"),
 }
 LOOP_NAME = "_retail_flow_loop"
 CODE_REF = "korea_retail v1 (11-07)"
@@ -56,6 +61,8 @@ CANDLE_SLEEP_S = 0.22           # ≤ 5 次 / 秒
 NOTICE_SLEEP_S = 3.0
 BF_KEY = "korea:upbit_candles_backfill"
 NOTICE_BF_KEY = "korea:upbit_notice_backfill"
+PARSER_VERSION = "v2-2026-11-08"   # 改了 notice_markets / notice_symbols ⇒ 改这里,已入库的公告会按新解析器重写一遍
+PARSER_KEY = "korea:upbit_notice_parser"
 DAILY_KEY = "korea:upbit_daily_refresh:{d}"
 
 _CODE = r"[A-Z0-9]{2,12}"
@@ -134,6 +141,8 @@ def notice_markets(title: str) -> list[str]:
     out: list[str] = []
     for grp in re.findall(r"((?:(?:KRW|BTC|USDT|ETH)\s*,\s*)*(?:KRW|BTC|USDT|ETH))\s*마켓", t):
         out += [x.strip() for x in grp.split(",")]
+    if re.search(r"원화\s*마켓", t):                              # 11-08:2017–2020 的标题写「원화 마켓」(= KRW),v1 读成「不知道」
+        out.append("KRW")
     for _a, b in re.findall(r"\b(" + _CODE + r")/(KRW|BTC|USDT)\b", t):
         out.append(b)
     seen, res = set(), []
@@ -145,7 +154,8 @@ def notice_markets(title: str) -> list[str]:
 
 
 def notice_symbols(title: str) -> list[str]:
-    """纯函数。标题里的代币代号:括号里逗号分隔的全大写代码;市场名(KRW / BTC / USDT 后跟「마켓」)不算;「(ETH/KRW)」取 ETH。"""
+    """纯函数。标题里的代币代号:括号里逗号分隔的全大写代码;市场名(KRW / BTC / USDT 后跟「마켓」)不算;「(ETH/KRW)」取 ETH;
+    「(이오스 EOS, 아이콘 ICX)」= 韩文名 + 代号,取代号(每一段都要以韩文名开头,免得把「(입금 오픈 12:00~)」读成代号)。"""
     t = str(title or "")
     out: list[str] = []
     for grp in re.findall(r"\(([^()]*)\)", t):
@@ -159,6 +169,8 @@ def notice_symbols(title: str) -> list[str]:
         parts = [p.strip() for p in g.split(",")]
         if parts and all(re.fullmatch(_CODE, p) for p in parts):
             out += [p for p in parts if not (p in _MARKETS and len(parts) > 1 and all(q in _MARKETS for q in parts))]
+        elif parts and all(re.fullmatch(r"[^\s,()]*[가-힣][^\s,()]*(?:\s+[^\s,()]+)*\s+" + _CODE, p) for p in parts):
+            out += [p.rsplit(None, 1)[1] for p in parts]           # 11-08:2018–2020 写「(이오스 EOS)」= 韩文名 + 空格 + 代号
     if not out:                                                   # 2017 的「ETH/KRW 상장 …」没有括号
         out += [a for a, _b in re.findall(r"\b(" + _CODE + r")/(KRW|BTC|USDT)\b", t)]
     seen, res = set(), []
@@ -189,6 +201,36 @@ def parse_notices(payload: dict) -> list[dict]:
                     "symbols": notice_symbols(title), "title": title[:300], "url": NOTICE_URL.format(id=nid),
                     "payload": {"notice_id": nid, "markets": mk, "krw": ("KRW" in mk) if mk else None,   # 标题没写市场 ⇒ 不知道
                                 "category": n.get("category")}})
+    return out
+
+
+def fx_rows(raw: list[dict], since: str = FX_FROM) -> list[dict]:
+    """纯函数。EODHD 日线 → macro_daily 行(d = 当日收盘日;收盘 ≤ 0 或缺的丢掉)。"""
+    out = []
+    for r in raw or []:
+        d, c = str(r.get("date") or "")[:10], r.get("close")
+        try:
+            c = float(c)
+        except (TypeError, ValueError):
+            continue
+        if len(d) == 10 and d >= since and c > 0:
+            out.append({"series": FX_SERIES, "d": d, "value": c, "source": "eodhd"})
+    return out
+
+
+def reparse(rows: list[dict]) -> list[dict]:
+    """纯函数。已入库的 Upbit 公告 → 按当前解析器重算 symbols / markets / krw;只返回变了的行(整行,upsert 要非空列)。"""
+    out = []
+    for r in rows or []:
+        title = str(r.get("title") or "")
+        mk = notice_markets(title)
+        syms = notice_symbols(title)
+        pl = dict(r.get("payload") or {})
+        krw = ("KRW" in mk) if mk else None
+        if syms == list(r.get("symbols") or []) and pl.get("markets") == mk and pl.get("krw") == krw:
+            continue
+        pl.update({"markets": mk, "krw": krw, "parser": PARSER_VERSION})
+        out.append({k: r.get(k) for k in ("id", "ts", "kind", "source", "title", "url")} | {"symbols": syms, "payload": pl})
     return out
 
 
@@ -332,6 +374,44 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         for n in notices:
             kinds[n["kind"]] = kinds.get(n["kind"], 0) + 1
         out["notices"] = {"written": len(notices), "kinds": kinds, "next_page": page, "done": ndone}
+        pst, _ = await redis_get_key_status(PARSER_KEY)
+        if (pst or {}).get("version") != PARSER_VERSION:                  # 解析器升级 ⇒ 已入库的公告重写一遍(一次)
+            from src.data.style.header import _read_all
+            have = await _read_all("events", {"select": "id,ts,kind,source,symbols,title,url,payload", "source": "eq.upbit",
+                                              "order": "id.asc"})
+            fix = reparse(have or [])
+            okw = True
+            for i in range(0, len(fix), 200):
+                if not await supabase_upsert_table("events", fix[i:i + 200], on_conflict="id"):
+                    errors.append("重写 events 失败")
+                    okw = False
+                    break
+            if okw and have:
+                await redis_set_key(PARSER_KEY, {"version": PARSER_VERSION, "rewritten": len(fix), "of": len(have),
+                                                 "at": now.isoformat()}, ttl=400 * 86400)
+            out["reparsed"] = {"of": len(have or []), "rewritten": len(fix), "ok": okw}
+    # 4. 韩元汇率(一天一次):全市场韩国溢价 = ln(KRW-BTC ÷ (BTC/USDT × USDKRW)) 的分母(视图 kimchi_premium_daily)
+    fst, _f = await redis_get_key_status(FX_KEY.format(d=now.date().isoformat()))
+    if not fst:
+        try:
+            from src.data.market.data_layer import get_eodhd_eod_range
+            from src.data.vector.market_state_writer import _sb_get
+            last = await _sb_get(FX_TABLE, {"select": "d", "series": f"eq.{FX_SERIES}", "order": "d.desc", "limit": "1"})
+            frm = FX_FROM
+            if last.ok and last.rows:
+                frm = (dt.date.fromisoformat(str(last.rows[0]["d"])[:10]) - dt.timedelta(days=10)).isoformat()
+            fx = fx_rows(await get_eodhd_eod_range("USDKRW", "FOREX", frm))
+            okfx = True
+            for i in range(0, len(fx), 1000):
+                if not await supabase_upsert_table(FX_TABLE, fx[i:i + 1000], on_conflict="series,d"):
+                    errors.append(f"写 {FX_TABLE}(usdkrw)失败")
+                    okfx = False
+                    break
+            if okfx and fx:
+                await redis_set_key(FX_KEY.format(d=now.date().isoformat()), {"rows": len(fx), "last": fx[-1]["d"]}, ttl=2 * 86400)
+            out["usdkrw"] = {"rows": len(fx), "from": frm, "last": fx[-1]["d"] if fx else None}
+        except Exception as e:                                            # noqa: BLE001 —— 汇率读不到不挡日线
+            errors.append(f"usdkrw: {type(e).__name__}: {str(e)[:80]}")
     ok = bool(markets) and not any("写 " in e for e in errors)
     flagged = out.get("flagged") or []
     return {"ok": ok, **out, "errors": errors[:20],

@@ -34,3 +34,10 @@ def test_knn_function_is_point_in_time_and_vector_order_matches_dims():
     body = sql[sql.index("then array["):sql.index("]::real[]::vector(11)")]
     order = [t.strip().split("*q_")[1].split("-")[0] for t in body.replace("then array[", "").split(",")]
     assert tuple(order) == af.DIMS, "向量维的次序必须和 DIMS 一致(解释近邻时按它读)"
+
+
+def test_analogs_carry_the_crowd_events():
+    """11-08:/internal/asset-flow 的输出要带上这个币身上的对手盘事件(crowd_map),否则那六张前向记录表没有读者。"""
+    from pathlib import Path
+    src = (Path(__file__).resolve().parents[1] / "src/data/state/asset_flow.py").read_text(encoding="utf-8")
+    assert "from src.data.signals.crowd_map import active" in src and '"crowd": crowd' in src

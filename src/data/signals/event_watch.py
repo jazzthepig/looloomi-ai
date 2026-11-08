@@ -16,6 +16,10 @@
 - d0 = 公告时刻所在 UTC 日;价取 d0 当天或之后最近的收盘(上币常在公告后才开盘,最多等 `LISTING_GAP_DAYS` 天);超额 = 代币 − BTC 的简单收益。
   没价就空着,不写 0(新币在 `asset_mcap_daily` 收录有滞后 —— S-763 的 703 条里 480 条无价)。
 
+- **Upbit KRW 首次上币(S-770,11-08 加):** `events` source = upbit、kind = listing、payload.krw = true,每个代号第一次;记成
+  kind = `upbit_krw_listing`,口径同上(超额对 BTC;S-770 本身对 PIT 篮,中位 −20.7%、对照分位 0.000)。前向 = 2026-11-08 起。
+  表名还叫 binance_event_watch(历史原因);Upbit 的行只靠 kind 区分。
+
 判活:`select kind, cohort, count(*), count(excess_30d) from binance_event_watch group by 1, 2`。
 """
 from __future__ import annotations
@@ -27,9 +31,14 @@ TABLE = "binance_event_watch"
 WRITES_TABLES = (TABLE,)
 WRITES_COLUMNS = {TABLE: ("kind", "symbol", "announced_at", "d0", "title", "cohort", "excess_30d", "excess_90d",
                           "price_source", "code_ref", "settled_at")}
-CODE_REF = "event_watch v1 (11-07, S-763 / S-758)"
+CODE_REF = "event_watch v2 (11-08, S-763 / S-758 / S-770)"
 FORWARD_FROM = dt.datetime(2026, 11, 7, tzinfo=dt.timezone.utc)
-KINDS = ("listing", "perp_listing")
+#: 11-08 S-770 ✅(lane-c T-291):Upbit KRW 首次上币 30 天相对 PIT 篮中位 −20.7%、对照分位 0.000 —— 同一张表、同一个做法记下来。
+#: S-770 用到的公告止于 2026-11-05;交付在 11-07 23:19 UTC ⇒ 那之后的公告才算前向。
+UPBIT_KIND = "upbit_krw_listing"
+UPBIT_FORWARD_FROM = dt.datetime(2026, 11, 8, tzinfo=dt.timezone.utc)
+KINDS = ("listing", "perp_listing", UPBIT_KIND)
+SOURCES = ("binance", "upbit")
 LISTING_GAP_DAYS = 10
 HORIZONS = ((30, "excess_30d"), (90, "excess_90d"))
 PRICE_TABLE = "asset_mcap_daily"
@@ -40,8 +49,16 @@ def _ts(v: Any) -> dt.datetime:
     return t if t.tzinfo else t.replace(tzinfo=dt.timezone.utc)
 
 
+def record_kind(row: dict) -> Optional[str]:
+    """纯函数。这条公告记成哪一类(None = 不记)。没写 source 的按 Binance(v1 的行没有这一列)。"""
+    pl = row.get("payload") if isinstance(row.get("payload"), dict) else {}
+    if str(row.get("source") or "binance") == "upbit":
+        return UPBIT_KIND if row.get("kind") == "listing" and pl.get("krw") is True else None
+    return row.get("kind") if keep(row) else None
+
+
 def keep(row: dict) -> bool:
-    """纯函数。这条公告进不进记录(口径见模块头)。"""
+    """纯函数。这条 Binance 公告进不进记录(口径见模块头)。"""
     kind, title = row.get("kind"), str(row.get("title") or "")
     scope = str(((row.get("payload") or {}) if isinstance(row.get("payload"), dict) else {}).get("scope") or "")
     if kind == "listing":
@@ -56,16 +73,18 @@ def entries(events: list[dict]) -> list[dict]:
     """纯函数。events → 每个 (类别, 代号) 第一次公告。"""
     seen: dict[tuple[str, str], dict] = {}
     for e in sorted(events, key=lambda e: str(e.get("ts"))):
-        if not keep(e):
+        kind = record_kind(e)
+        if kind is None:
             continue
         ts = _ts(e["ts"])
+        cut = UPBIT_FORWARD_FROM if kind == UPBIT_KIND else FORWARD_FROM
         syms = e.get("symbols") or []
         for s in syms if isinstance(syms, list) else []:
             s = str(s).upper()
-            if not s or (e["kind"], s) in seen:
+            if not s or (kind, s) in seen:
                 continue
-            seen[(e["kind"], s)] = {"kind": e["kind"], "symbol": s, "announced_at": ts.isoformat(), "d0": ts.date().isoformat(),
-                                    "title": str(e.get("title") or "")[:300], "cohort": "forward" if ts >= FORWARD_FROM else "backfill"}
+            seen[(kind, s)] = {"kind": kind, "symbol": s, "announced_at": ts.isoformat(), "d0": ts.date().isoformat(),
+                               "title": str(e.get("title") or "")[:300], "cohort": "forward" if ts >= cut else "backfill"}
     return list(seen.values())
 
 
@@ -100,8 +119,8 @@ async def run_once(now: Optional[dt.datetime] = None, read=None, upsert=None) ->
         from src.data.style.header import _read_all as read
     if upsert is None:
         from src.api.store import supabase_upsert_table as upsert
-    ev = await read("events", {"select": "ts,kind,title,symbols,payload", "source": "eq.binance",
-                               "kind": f"in.({','.join(KINDS)})", "order": "ts.asc"})
+    ev = await read("events", {"select": "ts,kind,source,title,symbols,payload", "source": f"in.({','.join(SOURCES)})",
+                               "kind": "in.(listing,perp_listing)", "order": "ts.asc"})
     ents = entries(ev or [])
     if not ents:
         return {"ok": False, "refused": True, "why": f"events 里没有可记录的上币 / 上永续公告({len(ev or [])} 条)"}
@@ -125,4 +144,5 @@ async def run_once(now: Optional[dt.datetime] = None, read=None, upsert=None) ->
     fwd = sum(1 for r in out if r["cohort"] == "forward")
     settled = sum(1 for r in out if r["excess_30d"] is not None)
     return {"ok": True, "written": len(out), "by_kind": by, "forward": fwd, "settled_30d": settled,
-            "why": f"{len(out)} 个(上币 {by['listing']} / 上永续 {by['perp_listing']};前向 {fwd})· 30 天已结算 {settled}"}
+            "why": f"{len(out)} 个(上币 {by['listing']} / 上永续 {by['perp_listing']} / Upbit KRW {by[UPBIT_KIND]};前向 {fwd})"
+                   f"· 30 天已结算 {settled}"}

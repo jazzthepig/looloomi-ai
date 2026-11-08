@@ -1,0 +1,28 @@
+{
+  "id": "T-304",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-08",
+  "title": "S-787(只报不判)全市场韩国溢价(泡菜溢价)与之后 30 / 90 天的 BTC 与面板:五分位、顶点先后、折价段",
+  "source": "REFUTATION_LEDGER S-787(登记原文);S-773 的写法作参照(同一类「只报不判」)。数据:kimchi_premium_daily(视图,anon 可读;2017-09 起)、ohlcv_daily binance_hist(BTC)、S-690 面板(docs/research/ 里 S-690 / s691 用的面板定义)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-304.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-787 原文照抄进报告开头,只算一次。K = prem 的 7 日均值;K_z = 相对前 365 天的 z(≥ 180 天才算)。报 K_z 五分位 × {BTC、S-690 面板} 之后 30 / 90 天收益与 90 天内最大回撤;K 顶点段(> 前 365 天 95 分位的连续段)起止与 BTC 顶点的先后天数;K < 0 连续段之后 30 / 90 天。块置换(30 天块、1,000 次、种子 787)给分位,不给判定。除中位外报均值与 p10 / p90。零分布只用 apparatus;翻页带 order=;只算、不入库。",
+    "expect": "docs/research/T-304_kimchi_premium.md + t304_results.json + scenarios/lane-c-T-304.json(≥ 3 条前向命题,author = lane-c);in_review,推 lane-c/T-304。"
+  },
+  "prior_value": "韩国散户在整个市场层面多付钱 = 最直接的「疯狂」读数之一;2017-09 起有完整的日序列(USDKRW 今天才入库)。只报,作为 ③ 的背景量与 AI 判断臂的档案项。",
+  "notes": "2026-11-08T04:00:13Z Seth 开卡:usdkrw 2,441 行(2017-09-01 → 2026-11-06)已入库,kimchi_premium_daily 3,331 天。Seth 没看过任何一天的值(登记时写明)。",
+  "verified": null
+}

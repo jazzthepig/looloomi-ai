@@ -1,0 +1,539 @@
+{
+ "task": "T-303",
+ "ledger": "S-785",
+ "generated_at": "2026-11-08T01:02:49.031511+00:00",
+ "prereg": "**写死:** 票 = S-757 同一个生成器(R-v2 规则 r_v2_k2.5_gate200,40% 档,有 R 的成交票),2023-07-26 → 2026-10。「在标签上」= 开票日 d 之前已有 `events` source = binance、kind = monitoring_tag 含该代号,且之后没有 monitoring_tag_removed(1000 前缀与 S-751 同口径)。两类:① 开票日在标签上 ⇒ 不开;② 持有期间被打上标签 ⇒ 次日开盘平(用次日开盘价重算这张票的 R)。报:两类各多少张、原 R 合计、规则下 R 合计、差值;整个账本 2023-07 → 2026-10 的总 R、最大回撤、Calmar 有 / 没有两版;再叠加 S-757 的下架规则一版(两条都在)。**只报不判。** 票不足 10 张就写「无检出力」。",
+ "window": {
+  "win_from": "2023-07-26",
+  "win_to": "2026-10-14",
+  "full_from": "2020-07-01",
+  "cap_frac": 0.4,
+  "equity0": 630.0
+ },
+ "universe_n": 257,
+ "last_bar": "2026-11-04",
+ "tags": {
+  "events_rows": 27,
+  "content_range_total": 27,
+  "symbols": 156,
+  "csv": "t303_tags.csv",
+  "cross_check": {
+   "kind_mismatch": [],
+   "sym_mismatch": [],
+   "parse_empty": [
+    {
+     "ts": "2023-07-26T03:00:04.342+00:00",
+     "title": "Introducing Seed Tags & Monitoring Tags for Tokens with High Volatility and Risks"
+    }
+   ],
+   "n": 27
+  },
+  "on_list_now": [
+   "A2Z",
+   "ACA",
+   "ACX",
+   "AERGO",
+   "AEUR",
+   "ALCX",
+   "ALPACA",
+   "ALPHA",
+   "AST",
+   "ATA",
+   "AVA",
+   "BADGER",
+   "BAKE",
+   "BETA",
+   "BICO",
+   "BIFI",
+   "BOND",
+   "BURGER",
+   "CHESS",
+   "COMBO",
+   "COOKIE",
+   "CVC",
+   "DATA",
+   "DENT",
+   "DF",
+   "DODO",
+   "EPIC",
+   "EPX",
+   "FIO",
+   "FIS",
+   "GHST",
+   "GLMR",
+   "GNS",
+   "GTC",
+   "HEI",
+   "HFT",
+   "HIFI",
+   "ICX",
+   "IDEX",
+   "KMD",
+   "LEVER",
+   "LSK",
+   "MDT",
+   "MOVE",
+   "MOVR",
+   "NFP",
+   "NOM",
+   "NTRN",
+   "NULS",
+   "PHB",
+   "POND",
+   "PORTAL",
+   "PYR",
+   "QI",
+   "QUICK",
+   "RARE",
+   "RDNT",
+   "REI",
+   "SCR",
+   "SCRT",
+   "SLF",
+   "SOPH",
+   "STORJ",
+   "STPT",
+   "STX",
+   "SXP",
+   "SYN",
+   "TLM",
+   "TOWNS",
+   "UFT",
+   "UNFI",
+   "VANRY",
+   "VIC",
+   "VIDT",
+   "WAVES",
+   "WNXM",
+   "WTC",
+   "XEM"
+  ]
+ },
+ "delist": {
+  "table_rows": 164,
+  "table_range": "0-163/*",
+  "events_rows": 368,
+  "events_range": "0-367/*",
+  "will_delist_notices": 39,
+  "parsed_tokens": 164
+ },
+ "book_window": {
+  "note": "口径 A:窗口内独立起账(2023-07-26 起,equity0=630);四版同一生成器、同一 40% 档",
+  "baseline": {
+   "n": 155,
+   "r": {
+    "n": 155,
+    "sum_r": 110.0372,
+    "mean_r": 0.7099,
+    "win_pct": 33.5
+   },
+   "taken": 158,
+   "curve": {
+    "total_return": 0.5100502753775968,
+    "cagr": 0.13670807919156958,
+    "max_dd": -0.21023818156218554,
+    "calmar": 0.6502533373136754,
+    "end_equity": 951.3316734878861,
+    "n_days": 1174,
+    "worst_month": "2024-06",
+    "worst_month_ret": -0.05459848259760347,
+    "n_months": 40
+   }
+  },
+  "tag_only": {
+   "n": 154,
+   "r": {
+    "n": 154,
+    "sum_r": 111.053,
+    "mean_r": 0.7211,
+    "win_pct": 33.8
+   },
+   "taken": 157,
+   "curve": {
+    "total_return": 0.5155167794273019,
+    "cagr": 0.13798584438464223,
+    "max_dd": -0.20988976122985326,
+    "calmar": 0.6574205600888362,
+    "end_equity": 954.7755710392001,
+    "n_days": 1174,
+    "worst_month": "2024-06",
+    "worst_month_ret": -0.054579400564492064,
+    "n_months": 40
+   }
+  },
+  "delist_only": {
+   "n": 155,
+   "r": {
+    "n": 155,
+    "sum_r": 110.0372,
+    "mean_r": 0.7099,
+    "win_pct": 33.5
+   },
+   "taken": 158,
+   "curve": {
+    "total_return": 0.5100502753775968,
+    "cagr": 0.13670807919156958,
+    "max_dd": -0.21023818156218554,
+    "calmar": 0.6502533373136754,
+    "end_equity": 951.3316734878861,
+    "n_days": 1174,
+    "worst_month": "2024-06",
+    "worst_month_ret": -0.05459848259760347,
+    "n_months": 40
+   }
+  },
+  "both": {
+   "n": 154,
+   "r": {
+    "n": 154,
+    "sum_r": 111.053,
+    "mean_r": 0.7211,
+    "win_pct": 33.8
+   },
+   "taken": 157,
+   "curve": {
+    "total_return": 0.5155167794273019,
+    "cagr": 0.13798584438464223,
+    "max_dd": -0.20988976122985326,
+    "calmar": 0.6574205600888362,
+    "end_equity": 954.7755710392001,
+    "n_days": 1174,
+    "worst_month": "2024-06",
+    "worst_month_ret": -0.054579400564492064,
+    "n_months": 40
+   }
+  },
+  "delta": {
+   "tag_only": {
+    "sum_r_delta": 1.0158,
+    "n_delta": -1,
+    "calmar_delta": 0.0072,
+    "max_dd_delta": 0.0003
+   },
+   "delist_only": {
+    "sum_r_delta": 0.0,
+    "n_delta": 0,
+    "calmar_delta": 0.0,
+    "max_dd_delta": 0.0
+   },
+   "both": {
+    "sum_r_delta": 1.0158,
+    "n_delta": -1,
+    "calmar_delta": 0.0072,
+    "max_dd_delta": 0.0003
+   }
+  }
+ },
+ "class1_already_tagged": {
+  "n_candidates": 4,
+  "n_ledger": 1,
+  "r": {
+   "n": 4,
+   "sum_r": 3.5026,
+   "mean_r": 0.8756,
+   "win_pct": 75.0
+  },
+  "rule_r": {
+   "n": 0,
+   "sum_r": 0.0,
+   "mean_r": null,
+   "win_pct": null
+  },
+  "rows": [
+   {
+    "symbol": "XEM",
+    "signal_d": "2023-10-30",
+    "entry_d": "2023-10-31",
+    "exit_d": "2023-11-22",
+    "exit_reason": "sma20",
+    "tag_d": "2023-10-30",
+    "entry_px": 0.0309,
+    "stop_px": 0.02711428571428629,
+    "exit_px": 0.0333,
+    "r_orig": 0.6013,
+    "r_rule": null,
+    "rule_exit_d": null,
+    "rule_exit_px": null,
+    "in_ledger": false
+   },
+   {
+    "symbol": "XEM",
+    "signal_d": "2024-01-24",
+    "entry_d": "2024-01-25",
+    "exit_d": "2024-01-28",
+    "exit_reason": "stop",
+    "tag_d": "2024-01-24",
+    "entry_px": 0.0501,
+    "stop_px": 0.037403571428571834,
+    "exit_px": 0.037403571428571834,
+    "r_orig": -1.0158,
+    "r_rule": null,
+    "rule_exit_d": null,
+    "rule_exit_px": null,
+    "in_ledger": true
+   },
+   {
+    "symbol": "XEM",
+    "signal_d": "2024-11-17",
+    "entry_d": "2024-11-18",
+    "exit_d": "2024-12-17",
+    "exit_reason": "sma20",
+    "tag_d": "2024-11-17",
+    "entry_px": 0.0217,
+    "stop_px": 0.01753928571428621,
+    "exit_px": 0.0338,
+    "r_orig": 2.8873,
+    "r_rule": null,
+    "rule_exit_d": null,
+    "rule_exit_px": null,
+    "in_ledger": false
+   },
+   {
+    "symbol": "STX",
+    "signal_d": "2026-08-22",
+    "entry_d": "2026-08-23",
+    "exit_d": "2026-09-11",
+    "exit_reason": "sma20",
+    "tag_d": "2026-08-22",
+    "entry_px": 0.2196,
+    "stop_px": 0.18792142857143007,
+    "exit_px": 0.2531,
+    "r_orig": 1.0298,
+    "r_rule": null,
+    "rule_exit_d": null,
+    "rule_exit_px": null,
+    "in_ledger": false
+   }
+  ]
+ },
+ "class2_tagged_while_held": {
+  "n_candidates": 0,
+  "n_ledger": 0,
+  "r": {
+   "n": 0,
+   "sum_r": 0.0,
+   "mean_r": null,
+   "win_pct": null
+  },
+  "rule_r": {
+   "n": 0,
+   "sum_r": 0.0,
+   "mean_r": null,
+   "win_pct": null
+  },
+  "detail": [],
+  "rows": []
+ },
+ "sensitivity_entry_day": {
+  "note": "台账字面:开票日 = 进场日(主口径用信号日,生产语义:计划生成时看名单)",
+  "class1_n": 4,
+  "class2_n": 0,
+  "class1_ledger_n": 1,
+  "class2_ledger_n": 0,
+  "class1_symbols": [
+   "XEM",
+   "XEM",
+   "XEM",
+   "STX"
+  ],
+  "class2_symbols": [],
+  "rule_n": 154,
+  "rule_sum_r": 111.053,
+  "rule_curve": {
+   "total_return": 0.5155167794273019,
+   "cagr": 0.13798584438464223,
+   "max_dd": -0.20988976122985326,
+   "calmar": 0.6574205600888362,
+   "end_equity": 954.7755710392001,
+   "n_days": 1174,
+   "worst_month": "2024-06",
+   "worst_month_ret": -0.054579400564492064,
+   "n_months": 40
+  }
+ },
+ "sensitivity_full_book": {
+  "note": "口径 B:全书从 2020-07-01 起(实盘账本轨迹),窗口 = 进场日落在 2023-07-26 → 2026-10-14 的子账本;标签规则在 2023-07-26 之前天然不生效(标签制度那天才推出)",
+  "tickets_scanned": 778,
+  "stopped": null,
+  "books": {
+   "baseline": {
+    "n": 67,
+    "r": {
+     "n": 67,
+     "sum_r": 19.4042,
+     "mean_r": 0.2896,
+     "win_pct": 29.9
+    },
+    "window_curve": {
+     "total_return": 0.13121465724401116,
+     "cagr": 0.03897445883661188,
+     "max_dd": -0.23545847960096922,
+     "calmar": 0.16552582392726642,
+     "end_equity": 760.0731506522858,
+     "n_days": 1177,
+     "worst_month": "2025-02",
+     "worst_month_ret": -0.06204974052268886,
+     "n_months": 40
+    },
+    "book_n": 145
+   },
+   "tag_only": {
+    "n": 66,
+    "r": {
+     "n": 66,
+     "sum_r": 20.42,
+     "mean_r": 0.3094,
+     "win_pct": 30.3
+    },
+    "window_curve": {
+     "total_return": 0.13699667961276796,
+     "cagr": 0.04061842102485769,
+     "max_dd": -0.23503450874671883,
+     "calmar": 0.17281896705912866,
+     "end_equity": 763.9581427100002,
+     "n_days": 1177,
+     "worst_month": "2025-02",
+     "worst_month_ret": -0.06179007064197939,
+     "n_months": 40
+    },
+    "book_n": 144
+   },
+   "delist_only": {
+    "n": 67,
+    "r": {
+     "n": 67,
+     "sum_r": 19.4042,
+     "mean_r": 0.2896,
+     "win_pct": 29.9
+    },
+    "window_curve": {
+     "total_return": 0.13121465724401116,
+     "cagr": 0.03897445883661188,
+     "max_dd": -0.23545847960096922,
+     "calmar": 0.16552582392726642,
+     "end_equity": 760.0731506522858,
+     "n_days": 1177,
+     "worst_month": "2025-02",
+     "worst_month_ret": -0.06204974052268886,
+     "n_months": 40
+    },
+    "book_n": 145
+   },
+   "both": {
+    "n": 66,
+    "r": {
+     "n": 66,
+     "sum_r": 20.42,
+     "mean_r": 0.3094,
+     "win_pct": 30.3
+    },
+    "window_curve": {
+     "total_return": 0.13699667961276796,
+     "cagr": 0.04061842102485769,
+     "max_dd": -0.23503450874671883,
+     "calmar": 0.17281896705912866,
+     "end_equity": 763.9581427100002,
+     "n_days": 1177,
+     "worst_month": "2025-02",
+     "worst_month_ret": -0.06179007064197939,
+     "n_months": 40
+    },
+    "book_n": 144
+   }
+  }
+ },
+ "caveats": [
+  "只报不判:本卡不给结论,只给 Jazz 拍板用的数。",
+  "被剔除的票腾出的持仓名额与本金会改变后续成交 ⇒ 规则版的账本与原账本不是同一批票(逐位相同才说明规则没 bites)。",
+  "票生成器不会因规则重扫信号:被剔除的票所在代号,后面若还有信号,仍按原生成器的口径参与(与 T-278 同一简化)。",
+  "② 的次日开盘可能低于止损价 ⇒ 重算 R 用开盘价(跳空止损同路径),不会先假设止损成交。",
+  "窗口内独立起账(口径 A)与全书轨迹(口径 B)都给;两者数字不同是正常的(起点净值与占用不同)。"
+ ],
+ "composition_change_window": {
+  "dropped": [
+   {
+    "tid": "XEM:2024-01-24",
+    "symbol": "XEM",
+    "entry_d": "2024-01-25",
+    "exit_d": "2024-01-28",
+    "exit_reason": "stop",
+    "r": -1.0158
+   }
+  ],
+  "added": [],
+  "dropped_sum_r": -1.0158,
+  "added_sum_r": 0
+ },
+ "composition_change_full_book": {
+  "dropped": [
+   {
+    "tid": "XEM:2024-01-24",
+    "symbol": "XEM",
+    "entry_d": "2024-01-25",
+    "exit_d": "2024-01-28",
+    "exit_reason": "stop",
+    "r": -1.0158
+   }
+  ],
+  "added": [],
+  "dropped_sum_r": -1.0158,
+  "added_sum_r": 0
+ },
+ "admission_diagnostics": {
+  "note": "为什么两个口径票数不同:入场被 $10 最小名义 / 持仓上限 / 总名义上限各挡掉多少",
+  "window_A": {
+   "book": {
+    "taken": 158,
+    "blocked_gross": 141,
+    "blocked_cap": 301,
+    "blocked_min": 1,
+    "blocked_coin": 4,
+    "equity_min": 611.2,
+    "equity_max": 1014.75
+   },
+   "tag_book": {
+    "taken": 157,
+    "blocked_gross": 140,
+    "blocked_cap": 299,
+    "blocked_min": 1,
+    "blocked_coin": 4,
+    "equity_min": 611.2,
+    "equity_max": 1018.19
+   },
+   "scanned": 605,
+   "stop_frac_pct": {
+    "n": 605,
+    "p10": 11.99,
+    "p50": 17.0,
+    "p90": 23.29
+   }
+  },
+  "full_B_window": {
+   "book": {
+    "taken": 145,
+    "blocked_gross": 0,
+    "blocked_cap": 622,
+    "blocked_min": 2,
+    "blocked_coin": 9,
+    "equity_min": 609.59,
+    "equity_max": 962.5
+   },
+   "tag_book": {
+    "taken": 144,
+    "blocked_gross": 0,
+    "blocked_cap": 619,
+    "blocked_min": 2,
+    "blocked_coin": 9,
+    "equity_min": 609.59,
+    "equity_max": 967.04
+   },
+   "scanned": 605,
+   "stop_frac_pct": {
+    "n": 605,
+    "p10": 11.99,
+    "p50": 17.0,
+    "p90": 23.29
+   }
+  }
+ }
+}
