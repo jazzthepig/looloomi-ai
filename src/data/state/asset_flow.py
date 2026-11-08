@@ -139,6 +139,16 @@ async def analogs(symbol: str, d: Optional[str] = None, k: int = K_DEFAULT, hori
     if row.get("vec") is None:
         return {"ok": False, "why": f"{sym} @ {row['d']} 有缺维,没有向量", "row": {k2: row.get(k2) for k2 in ("d",) + DIMS}}
     nb = await supabase_rpc(RPC_KNN, {"p_symbol": sym, "p_d": row["d"], "p_k": int(k), "p_h": int(horizon)}) or []
+    crowd = None
+    try:                                   # 11-08:同一个币身上正在走的对手盘事件(下架 / 标签 / 上币 / squeeze / 尖峰)+ 台账基率
+        from src.data.signals.crowd_map import active as _crowd
+        cm = await _crowd(symbol=sym, days=30)
+        crowd = {"kinds": sorted({e["kind"] for e in cm.get("events") or []}),
+                 "events": [{k2: e.get(k2) for k2 in ("kind", "d", "age_days")} | {"base_median_30d": e["base"]["median_30d"],
+                            "vs": e["base"]["vs"], "ledger": e["base"]["ledger"]} for e in (cm.get("events") or [])[:10]],
+                 "missing": cm.get("missing")}
+    except Exception as e:                 # noqa: BLE001 —— 读不到不挡近邻
+        crowd = {"error": type(e).__name__}
     return {"ok": bool(nb), "symbol": sym, "d": row["d"], "n_cs": row.get("n_cs"), "extremes": extremes(row),
-            "analogs": summarize(nb, horizon), "nearest": nb[:10], "horizon": horizon,
-            "caveat": "只描述;宇宙是幸存者(死币不在);近邻扎堆,看 clusters 不看 n"}
+            "analogs": summarize(nb, horizon), "nearest": nb[:10], "horizon": horizon, "crowd": crowd,
+            "caveat": "只描述;宇宙是幸存者(死币不在);近邻扎堆,看 clusters 不看 n;crowd 的基率是台账的历史中位,不是信号"}
