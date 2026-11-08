@@ -70,12 +70,15 @@ VDB 不是缓存,是**本体论的几何基底** —— 内核六对象全部向
 |---|---|---|---|
 | Asset (CIS v2) | 27d, dense 核 + NaN 尾 | ✅ live (pgvector) | `asset_embeddings` + kNN RPC |
 | **Asset · 资金面(因)** | 11d 截面百分位(资金费 / 新开杠杆 / 散户多空 / 大户 − 散户 / 主动买卖 / 成交暴增 + 价格相位),每 (币, 日) | ✅ 11-07(2022-06 起,~23.5 万行) | `asset_flow_daily` · `asset_flow_knn()` · `/internal/asset-flow`(S-774 排序力、S-775 扩散「因」检验中) |
+| **Asset · 交易所的决定(事件)** | 每 (币, 日) 6 个 0/1:上币 / 上永续 / Upbit 韩元上币(≤ 90 天)· 挂着监控标签 · 30 天内被挤空头 · 365 天内宣布下架 | 🟡 11-08 读面已有(`crowd_map`、`/internal/crowd-map`);进不进模型看 S-790(T-311) | `binance_event_watch` · `crowding_watch` · `delisting_watch` · `events`(逐句标签) |
 | Regime / 市场态 | 状态向量 | ✅ live | `market_state_vectors`(T-094 按时点补到 2019) |
 | Strategy | 每本账的回报 × 状态向量 | ✅ live(S-717) | `book_vectors` · `/internal/book-vectors`(相似 / 缩放 / 未覆盖) |
 | Entity/Decision | 季度 × 发行方(待遇 / 决策 / 结果) | ✅ live(S-722) | `entity_vectors` · `/internal/entity-vectors` |
 | 时序窗口 | 60 天 17 维形状,步长 5 | ✅ live(S-721) | `window_vectors` · `/internal/window-knn`(只描述,不进敞口) |
 | Outcome | 决策 → 7 / 30 / 90 天超额 | ✅ live(S-714) | `decision_outcomes` · `/internal/decision-outcomes` |
 | Text/News | Railway 本机 ONNX `bge-small-en-v1.5`(384 维;11-07 起,MiniMax 账户没有嵌入额度) | ✅ 11-07(~5,200 条:events + feed_items) | `text_vectors` · `text_vectors_nearest` · `/internal/text-knn` |
+
+**11-08 的读法:** 按币的人群流量(散户多空、资金费、杠杆)在节点层和扩散层都没有信息(S-776 / S-778),但**一个实体的决定**有:交易所上币 / 打标签 / 下架、以及被挤空头,单独都量出之后 30 天跑输 16–38%(S-751 / S-753 / S-763 / S-770 / S-781),其中下架与监控标签已是真钱硬规则。这正是本体论说的「离因更近」—— 决定是因,价格与流量是它的影。S-790 问的是:把这些决定当成 Asset 空间的维,在价格相位之上还多不多给信息(主判在最低五分位,② 的排除用法)。
 
 **11-07 的读法:** Asset 空间第一次有「因」的维度 —— 按币的资金面(`asset_flow_daily`)。它解开了 S-81 一直卡着的那一半:「扩散因而不是扩散反射」需要真实的按币流量,现在有了(S-775:邻居的新开杠杆 / 主动买 / 成交暴增先动、自己没动的币之后是否跑赢,以 7 日动量的扩散作反射对照)。同时 S-774 问这 11 维组合起来有没有横截面排序力。两条都只描述,过了也先开前向记录。
 
