@@ -1,0 +1,28 @@
+{
+  "id": "T-311",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-11-08",
+  "title": "S-790 高维:交易所决定 + 被挤空头作为事件维,在价格相位(S-776 P)之上有没有排序力 —— 主判在最低五分位",
+  "source": "REFUTATION_LEDGER S-790(预注册)、S-774 / S-776 原文;docs/research/t293_asset_flow.py、t296_ablation.py(框架照抄);数据:asset_flow_daily、binance_event_watch、crowding_watch、delisting_watch、events(监控标签,用 src/data/market/events.monitoring_tag_changes 切句 —— 合进 main 之后可 import)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-311.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-790 原文照抄进报告开头,只算一次。先复现 S-776 的 P(IC 0.112 ± 0.002),对不上就停、报差异。再建 6 个事件维(t 当天收盘已知;先落 docs/research/t311_events_dims.csv:每周一每币的 6 个 0/1),跑 E。报主判(最低五分位 x30 均值差、NW t、两半)、金额判据、副判(IC 差)、每维单独边际、每周被标记的币数。零分布 / NW t 只用 apparatus;翻页带 order=;步数过半先落文件;不要 Read 大文件。",
+    "expect": "docs/research/T-311_event_dims.md + t311_results.json + scenarios/lane-a-T-311.json(≥ 3 条前向命题,author = lane-a);in_review,推 lane-a/T-311。"
+  },
+  "prior_value": "Entity / Decision 是本体论里最深的一层;交易所的决定单独都站住了,但从没进过截面模型。这张卡回答「它们是不是 Asset 空间缺的那几维」。",
+  "notes": "2026-11-09 lane-a 跑完。产物(分支 lane-a/T-311):docs/research/T-311_event_dims.md + t311_results.json + t311_events_dims.csv + t311_event_dims.py;前向预期 docs/research/scenarios/lane-a-T-311.json(5 条)。口径照 S-790:E = P(S-776 的 mom7/mom30/vol30/vratio/dd90)+ 6 个事件维(①Binance 现货上币≤90d ②Binance 永续≤90d ③Upbit KRW≤90d ④当日挂 Binance 监控标签(逐句状态机)⑤squeeze≤30d ⑥下架公告≤365d),0/1 → ±1;样本 197 周(2023-01-02→2026-10-05),356,203 行 / 636 币;零分布与 NW t 只走 apparatus。★自检没过(卡上写死「对不上就停、报差异」):P 臂 IC 0.096286 vs S-776 的 0.111847,|Δ|=0.0156 > ±0.002。诊断:同一张表同口径的有 vec 行数从 224,759(11-08 03:51 抓)涨到 356,203(+58.5%),单日币数 130(2023-01-02)→304(2026-07-06);vec 是逐日横截面百分位,宇宙变大 ⇒ 基线漂移,而非框架改动(P 臂与 t296_ablation.py 逐行相同)。有意思的分叉:P 的排名变弱(IC −14% 相对)但尾部水平几乎没动(最低五分位 −0.024774 → −0.024947)。脚本里已加 data_refresh_diagnostic(单维 IC 对照 t293_results.json + A 臂对照 S-774 的 R)与 arms.A,但本轮上下文守卫先落地没跑到 —— 交付的 t311_results.json 是加这两块之前那版脚本的产物(核心 P / E / 各判据数字不受影响,重跑会多出这三块),审时请知。★主判 ❌(最低五分位差:均值<0、NW t≤−2、两半都<0 未同时成立);金额判据 ❌。⇒ 按 S-790 写死的后果分支:事件维不进模型,事件继续只作硬规则与描述;「事件维进 Asset 空间向量」这条另立实现的路不开。副判 / 每维边际 / 稀疏度的逐项数值在 t311_results.json(arms.E、primary_bottom_quintile、money_criterion、secondary_ic_diff、per_dim_marginal、sparsity)—— 本轮上下文守卫在读 JSON 之前落地,报告正文未誊抄这些数,审时以 JSON 为准。偏离披露三条:①事件维在每个交易日都算(走步训练集是全日频行,只有评估是周频;CSV 仍按每周一 × 每币落)②① ② ③ 用 binance_event_watch.d0(= 公告日,上市日晚于公告日)③监控标签用本地切句副本(生产的 events.monitoring_tag_changes 在本轮跑时还没合进 main;脚本先试 import 生产,失败才用本地副本 —— 与 Seth 2026-11-08 待合并版本逐字一致,生产若在合并前再改必须删副本重跑)。",
+  "verified": null
+}
