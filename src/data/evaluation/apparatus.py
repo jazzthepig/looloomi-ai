@@ -135,8 +135,24 @@ def null_distribution(fn: Callable[[np.random.Generator], float], n: int, seed: 
     return null
 
 
+def circular_shift(seq: Sequence[Any], rng: np.random.Generator, block: int = 1) -> np.ndarray:
+    """整条序列循环平移一个随机偏移(偏移是 `block` 的整数倍,不为 0)。保留全部自相关,只拆开它与另一条序列的对齐。
+
+    11-09 S-793:预注册写了「循环块置换」,盲复算读出两种实现 —— 这个(整体循环平移,p 0.014)与
+    `block_permute`(块序随机置换,p 0.075)。两者是不同的零假设:预注册必须写函数名,不写描述。"""
+    arr = np.asarray(seq, dtype=object if not np.issubdtype(np.asarray(seq).dtype, np.number) else None)
+    if block < 1:
+        raise ValueError("block must be ≥ 1")
+    k = len(arr) // block
+    if k < 2:
+        raise ValueError("序列太短:至少要两个块才能平移")
+    return np.roll(arr, block * int(rng.integers(1, k)))
+
+
 def percentile_of(actual: Optional[float], null: Sequence[float]) -> Optional[float]:
-    """实际值在零分布里的中秩分位:(严格小于的个数 + 相等个数 / 2)/ n。空零分布或实际值不可算 ⇒ None。"""
+    """实际值在零分布里的中秩分位:(严格小于的个数 + 相等个数 / 2)/ n。空零分布或实际值不可算 ⇒ None。
+
+    ⚠️ 这是**分位**,不是 p 值(T-313 指出):「实际值偏大才算显著」时 p 不是它,是 `p_upper`。"""
     if actual is None or not math.isfinite(actual):
         return None
     arr = np.asarray(null, dtype=float)
@@ -144,6 +160,62 @@ def percentile_of(actual: Optional[float], null: Sequence[float]) -> Optional[fl
     if arr.size == 0:
         return None
     return float(((arr < actual).sum() + 0.5 * (arr == actual).sum()) / arr.size)
+
+
+def _p_tail(actual: Optional[float], null: Sequence[float], upper: bool) -> Optional[float]:
+    if actual is None or not math.isfinite(actual):
+        return None
+    arr = np.asarray(null, dtype=float)
+    arr = arr[np.isfinite(arr)]
+    if arr.size == 0:
+        return None
+    hits = (arr >= actual).sum() if upper else (arr <= actual).sum()
+    return float((1 + hits) / (1 + arr.size))
+
+
+def p_upper(actual: Optional[float], null: Sequence[float]) -> Optional[float]:
+    """单侧 p(实际值偏大才算显著):(1 + 零分布 ≥ 实际值的个数)/(1 + n)。加 1 让 p 永远不为 0 —— 1,000 次抽样最小 ≈ 0.001。"""
+    return _p_tail(actual, null, upper=True)
+
+
+def p_lower(actual: Optional[float], null: Sequence[float]) -> Optional[float]:
+    """单侧 p(实际值偏小才算显著):(1 + 零分布 ≤ 实际值的个数)/(1 + n)。"""
+    return _p_tail(actual, null, upper=False)
+
+
+# ── 快照指纹 ──────────────────────────────────────────────────────────────────
+
+def _canon(v: Any) -> Any:
+    if v is None:
+        return None
+    if isinstance(v, (bool, np.bool_)):
+        return bool(v)
+    if isinstance(v, (int, np.integer)):
+        return int(v)
+    if isinstance(v, (float, np.floating)):
+        x = float(v)
+        return None if not math.isfinite(x) else format(x, ".12g")
+    if isinstance(v, (list, tuple, np.ndarray)):
+        return [_canon(x) for x in list(v)]
+    return str(v)
+
+
+def content_fingerprint(rows: Sequence[dict], fields: Sequence[str]) -> dict[str, Any]:
+    """数据的**内容**指纹:只取 `fields`、浮点统一成 12 位有效数字、NaN / inf / None 一律记 null、按内容排序后 sha256。
+
+    11-09(C 道复核 T-312):S-791 的指纹哈希的是缓存**文件字节** —— 同一份数据换一次抓取(行序、浮点尾数、JSON 空格)
+    就是新 id,两份逻辑相同的缓存给出了 `b43df6f8…` 与 `bf52601c…`。前向记录要与历史基率「同一快照」,比的必须是内容。
+    返回 {n, fields, sha256};结果 JSON 里原样写出。"""
+    import hashlib
+    import json as _json
+    keys = list(fields)
+    lines = sorted(_json.dumps([_canon(r.get(k)) for k in keys], ensure_ascii=False, separators=(",", ":")) for r in rows)
+    h = hashlib.sha256()
+    h.update(_json.dumps(keys, ensure_ascii=False).encode("utf-8"))
+    for ln in lines:
+        h.update(b"\n")
+        h.update(ln.encode("utf-8"))
+    return {"n": len(lines), "fields": keys, "sha256": h.hexdigest()}
 
 
 # ── 打分与切分 ────────────────────────────────────────────────────────────────

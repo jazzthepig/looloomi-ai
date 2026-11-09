@@ -186,3 +186,45 @@ def test_newey_west_t_matches_the_lane_copy_and_handles_short_input():
     assert abs(t - want) < 1e-9 and abs(m - x.mean()) < 1e-12
     assert ap.newey_west_t([0.1, 0.2], 5) == (None, None, None)
     assert ap.newey_west_t([0.1] * 3 + [float("nan")] * 10, 1)[0] is not None
+
+
+def test_circular_shift_keeps_order_and_never_returns_identity():
+    """11-09 S-793:「循环块置换」两种读法 —— 整体平移保留全部自相关、只拆对齐;偏移不为 0、是块长的整数倍。"""
+    import numpy as np
+    from src.data.evaluation.apparatus import block_permute, circular_shift
+    x = np.arange(40)
+    rng = np.random.default_rng(793)
+    for _ in range(200):
+        y = circular_shift(x, rng, block=8)
+        k = int(np.flatnonzero(y == 0)[0])
+        assert k % 8 == 0 and k != 0, "偏移是块长的整数倍且不为 0"
+        assert np.array_equal(np.roll(y, -k), x), "整体平移:相邻关系一个不丢"
+    bp = block_permute(x, 8, np.random.default_rng(1))
+    assert sorted(bp.tolist()) == x.tolist()
+    with pytest.raises(ValueError):
+        circular_shift(np.arange(5), rng, block=8)
+
+
+def test_p_upper_is_not_the_percentile_and_is_never_zero():
+    """11-09 T-313:`percentile_of` 是分位不是 p;偏大才显著时 p = p_upper,且加 1 后不为 0。"""
+    from src.data.evaluation.apparatus import p_lower, p_upper, percentile_of
+    null = list(range(1000))
+    assert percentile_of(990.0, null) == 0.9905, "中秩分位:990 个严格小于 + 半个相等"
+    assert abs(p_upper(990.0, null) - 11 / 1001) < 1e-12
+    assert p_upper(5000.0, null) == 1 / 1001, "比零分布全部都大,p 也不是 0"
+    assert abs(p_lower(9.0, null) - 11 / 1001) < 1e-12
+    assert p_upper(None, null) is None and p_upper(1.0, []) is None
+
+
+def test_content_fingerprint_ignores_row_order_and_float_noise_but_not_content():
+    """11-09(C 道复核 T-312):同一份数据换次抓取不能换 id;内容变一个值必须换 id。"""
+    from src.data.evaluation.apparatus import content_fingerprint
+    a = [{"symbol": "BTC", "d": "2026-11-02", "vec": [0.1, 0.2], "x30": 0.0123456789012345, "junk": 1},
+         {"symbol": "ETH", "d": "2026-11-02", "vec": [0.3, None], "x30": float("nan")}]
+    b = [dict(a[1], x30=None), dict(a[0], x30=0.01234567890123451, junk=2)]
+    f = ["symbol", "d", "vec", "x30"]
+    fa, fb = content_fingerprint(a, f), content_fingerprint(b, f)
+    assert fa == fb and fa["n"] == 2, "行序、浮点尾数、NaN vs None、不在 fields 里的列都不改 id"
+    c = [dict(a[0], x30=0.0124), a[1]]
+    assert content_fingerprint(c, f)["sha256"] != fa["sha256"]
+    assert content_fingerprint(a, ["symbol", "d"])["sha256"] != fa["sha256"], "选的列不同 ⇒ 不同 id"
