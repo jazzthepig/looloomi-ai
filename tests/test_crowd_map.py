@@ -57,4 +57,4 @@ def test_monitoring_tags_are_current_state_not_a_window():
             {"ts": "2025-01-01T00:00:00Z", "title": "Binance Will Extend the Monitoring Tag to Include AAA, CCC and Remove the Seed Tag for DDD"}]
     ev = cm.active_tags(rows, NOW.date())
     assert [(e["symbol"], e["d"]) for e in ev] == [("AAA", "2024-01-01"), ("CCC", "2025-01-01")], "移除的不算;种子标签不算;记这一段打上的日子"
-    assert ev[0]["base"]["ledger"] == "S-753"
+    assert ev[0]["base"]["ledger"] == "S-753 / S-789" and ev[0]["base"]["n"] == 60, "S-789:逐句解析后的事件集重量"
