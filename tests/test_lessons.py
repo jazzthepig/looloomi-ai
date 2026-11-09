@@ -281,7 +281,9 @@ def _tests_blob() -> str:
 def _live_reachable(lessons: set[int]) -> set[int]:
     """Lessons cited by tests/ or PROJECT_STATE.md — these are the live ones."""
     tests = _tests_blob()
-    state = _read(ROOT / "PROJECT_STATE.md")
+    # 11-09:状态头里写了 VI 色值(`#6366f1` / `#818cf8`),子串匹配把它们读成 Lesson #63 / #81 「被引用」,整批提交被拦。
+    # 色值不是引用 —— 先去掉 6 位十六进制色值再查。
+    state = re.sub(r"#[0-9a-fA-F]{6}\b", "", _read(ROOT / "PROJECT_STATE.md"))
     return {n for n in lessons if f"#{n}" in tests or f"#{n}" in state}
 
 
