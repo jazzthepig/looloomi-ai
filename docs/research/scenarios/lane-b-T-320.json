@@ -1,0 +1,55 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {
+      "id": "T-320-1",
+      "scenario": "S-797 影子臂前向 · 天气基率(面板在 200 日线之上)",
+      "statement": "2027-01-31 面板的 dist_200 > 0(① 篮子站在 200 日线之上)",
+      "variable": "state:dist_200",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.58,
+      "horizon_d": "2027-01-31"
+    },
+    {
+      "id": "T-320-2",
+      "scenario": "S-797 影子臂前向 · 天气基率(波动比在 1 以上 = 热)",
+      "statement": "2027-01-31 面板的 vratio_30_180 > 1.0(热)",
+      "variable": "state:vratio_30_180",
+      "op": "gt",
+      "lo": 1.0,
+      "prob": 0.45,
+      "horizon_d": "2027-01-31"
+    },
+    {
+      "id": "T-320-3",
+      "scenario": "S-797 影子臂前向 · 天气基率(面板跌破 200 日线)",
+      "statement": "2027-04-30 面板的 dist_200 < 0(① 篮子跌破 200 日线)",
+      "variable": "state:dist_200",
+      "op": "lt",
+      "hi": 0,
+      "prob": 0.42,
+      "horizon_d": "2027-04-30"
+    },
+    {
+      "id": "T-320-4",
+      "scenario": "S-797 RB 影子臂 · 机械行为",
+      "statement": "2027-03-31 之前 RB 影子臂最近一次调仓的目标权重里 crypto < 0.30(波动倒数把预算从波动最高的腿挪走)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.70,
+      "horizon_d": "2027-03-31"
+    },
+    {
+      "id": "T-320-5",
+      "scenario": "S-797 STYLE 影子臂 · 冻结表是否落地并开始倾斜",
+      "statement": "2027-03-31 之前冻结风格表已进 forward_books.STYLE_TABLE_FROZEN(非 None),且 STYLE 影子臂最近一次调仓权重 ≠ T25_K 的常数权重",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.70,
+      "horizon_d": "2027-03-31"
+    }
+  ]
+}
