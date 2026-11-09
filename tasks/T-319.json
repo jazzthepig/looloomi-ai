@@ -1,0 +1,33 @@
+{
+  "id": "T-319",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-11-10",
+  "title": "S-798 固定宇宙(每周市值前 150)重算 S-791 的 P:后半段更强是市场态还是宇宙扩张 —— 只报不判",
+  "source": "REFUTATION_LEDGER S-798(`grep -n \"^## S-798\" -A 6 REFUTATION_LEDGER.md`,原文照抄进报告开头);你的 docs/research/t312_rebaseline.py(框架一字不改,只加过滤);asset_mcap_daily(只读,翻页带 order=)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-319.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-798 原文照抄进报告开头;框架一字不改只加市值前 150 过滤;先用不过滤复现 S-791 的 P IC 0.096286 作自检,对不上先停。报全期 / 两半 IC、NW t、最低五分位均值与中位、每周币数;内容指纹用 apparatus.content_fingerprint。只读、不入库、不改代码;不要 Read 大文件。",
+    "expect": "docs/research/T-319_fixed_universe.md + t319_fixed_universe.py + t319_results.json;in_review,推 lane-a/T-319。"
+  },
+  "prior_value": "前向记录 asset_flow_forecast_daily 的基率怎么读,取决于后半段的强是市场态还是宇宙规模。",
+  "notes": "2026-11-09T16:15:00Z Seth 开卡。 | 2026-11-09T16:51:25Z Seth 审:自检逐位通过;S-798 结果入台账。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-09T16:51:25Z",
+    "value": "固定宇宙 P IC 0.0603(t 2.39),两半 −0.0085 / +0.1205 ⇒ 市场态;最低五分位在前 150 里 +1.45%(全宇宙 −2.49%)⇒ 尾部跑输是小币性质。",
+    "ledger": "S-798 结果"
+  }
+}
