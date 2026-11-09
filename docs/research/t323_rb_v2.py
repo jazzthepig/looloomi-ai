@@ -892,8 +892,9 @@ def build_report(R: dict) -> str:
     A("W1 里原 RB 相对 T25_K 的 +5.80pp 优势,RBv2 只保住 +3.64pp(约 63%),"
       "而 `ab_test(RB → RBv2)` 的 p(RBv2 ≥ RB) = "
       f"{_num(W1r['ab_test']['rb_to_rbv2'].get('p_b_ge_a'), 4)}(W1)——"
-      "在崩盘段,给加密腿加天花板**在 5% 水平上显著地让结果变差**"
-      "(W2 同一对比 p = " + _num(W2r['ab_test']['rb_to_rbv2'].get('p_b_ge_a'), 4) + ",分不开)。"
+      "在崩盘段,给加密腿加天花板**在这份检验的 5% 水平上让结果变差**"
+      "(该检验同时被标 `underpowered=True`:309 天的分辨力不足,这个 p 只能当方向看,不能当定论;"
+      "W2 同一对比 p = " + _num(W2r['ab_test']['rb_to_rbv2'].get('p_b_ge_a'), 4) + ",分不开)。"
       "换句话说:RBv2 站得住(对 T25_K 全过),但它不是「更好的 RB」,它是**把结构陷阱修掉、代价是收益端让一点**的 RB。")
     A("")
 
