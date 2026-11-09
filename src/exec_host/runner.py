@@ -1088,12 +1088,14 @@ class Executor:
         pos = liqmap.latest_positions(liqmap.read_records(DEFAULT_REC_DIR, days), int(time.time() * 1000))
         if not pos:
             return None
-        rows = liqmap.buckets(pos, self.venue.perp_mids())
-        if not rows:
+        mids = self.venue.perp_mids()
+        rows = liqmap.buckets(pos, mids)
+        prow = liqmap.positioning(pos, mids)          # 11-09 S-794:不分强平距离的完整持仓(谁押了什么),同一批快照
+        if not rows and not prow:
             return None
         payload = {"mode": self.cfg.mode, "kind": "liqmap", "host": self.cfg.host,
-                   "detail": {"rows": rows, "n_positions": len(pos), "n_accounts": len({p["address"] for p in pos}),
-                              "at": now.isoformat()}}
+                   "detail": {"rows": rows, "positioning": prow, "n_positions": len(pos),
+                              "n_accounts": len({p["address"] for p in pos}), "at": now.isoformat()}}
         self.outbox.put(payload)
         return payload
 

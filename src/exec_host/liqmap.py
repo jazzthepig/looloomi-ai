@@ -77,6 +77,36 @@ def buckets(positions: list[dict], mids: dict[str, float]) -> list[dict]:
             if c in keep]
 
 
+POS_TOP_COINS = 40
+
+
+def positioning(positions: list[dict], mids: dict[str, float], top: int = POS_TOP_COINS) -> list[dict]:
+    """纯函数(11-09,S-794)。头部账户最近一轮的**全部**仓位 → 每个币的多 / 空名义额、仓位数、持有它的账户数。
+
+    与 `buckets` 的区别:`buckets` 只收强平价在 20% 以内的仓位(那是强平风险,不是持仓);这里不分距离,
+    是「谁押了什么」的完整一面。**不送地址**:账户只计数。现价没有的币不算;只取多 + 空名义额前 `top` 的币。"""
+    agg: dict[str, dict[str, Any]] = {}
+    for p in positions:
+        coin, szi = p.get("coin"), _f(p.get("szi"))
+        mark = _f(mids.get(coin)) if coin else None
+        if not coin or not szi or not mark or mark <= 0:
+            continue
+        a = agg.setdefault(coin, {"long_usd": 0.0, "short_usd": 0.0, "n_long": 0, "n_short": 0, "acct": set()})
+        notional = abs(szi) * mark
+        if szi > 0:
+            a["long_usd"] += notional
+            a["n_long"] += 1
+        else:
+            a["short_usd"] += notional
+            a["n_short"] += 1
+        if p.get("address"):
+            a["acct"].add(p["address"])
+    keep = sorted(agg, key=lambda c: -(agg[c]["long_usd"] + agg[c]["short_usd"]))[:max(0, int(top))]
+    return [{"coin": c, "long_usd": round(agg[c]["long_usd"], 2), "short_usd": round(agg[c]["short_usd"], 2),
+             "n_long": agg[c]["n_long"], "n_short": agg[c]["n_short"], "n_accounts": len(agg[c]["acct"]),
+             "mark": mids.get(c)} for c in sorted(keep)]
+
+
 def read_records(rec_dir: Path, days: list[str]) -> list[dict]:
     """主机本地 whales 文件(gzip JSONL);读不到的那天跳过。"""
     out: list[dict] = []

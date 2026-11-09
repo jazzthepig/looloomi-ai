@@ -74,6 +74,7 @@
     "hl_book_daily",
     "hl_funding_hourly",
     "hl_liq_map_hourly",
+    "hl_whale_positioning_hourly",
     "holder_concentration_history",
     "interpretation_validation_runs",
     "issuer_decisions",

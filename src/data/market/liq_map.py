@@ -12,9 +12,13 @@ import datetime as dt
 from typing import Any, Optional
 
 TABLE = "hl_liq_map_hourly"
-WRITES_TABLES = (TABLE,)
-WRITES_COLUMNS = {TABLE: ("ts", "coin", "side", "band", "band_lo", "band_hi", "notional_usd", "n_positions", "mark")}
+POS_TABLE = "hl_whale_positioning_hourly"     # 11-09 S-794:同一批快照的完整持仓(不分强平距离)
+WRITES_TABLES = (TABLE, POS_TABLE)
+WRITES_COLUMNS = {TABLE: ("ts", "coin", "side", "band", "band_lo", "band_hi", "notional_usd", "n_positions", "mark"),
+                  POS_TABLE: ("ts", "coin", "long_usd", "short_usd", "n_long", "n_short", "n_accounts", "mark",
+                              "snapshot_accounts")}
 MAX_ROWS = 400
+MAX_POS_ROWS = 100
 
 
 def _f(x: Any) -> Optional[float]:
@@ -55,6 +59,49 @@ def clean(rows: list, at: Any) -> tuple[list[dict], list[str]]:
                     "band_lo": lo, "band_hi": hi, "notional_usd": round(n, 2),
                     "n_positions": int(_f(r.get("n_positions")) or 0), "mark": _f(r.get("mark"))})
     return (out, bad) if not bad else ([], bad)
+
+
+def clean_positioning(rows: list, at: Any, snapshot_accounts: Any = None) -> tuple[list[dict], list[str]]:
+    """纯函数(11-09,S-794)。主机送来的每币持仓汇总 → 表行;有问题整批拒。带地址的行拒收(只收汇总)。"""
+    bad: list[str] = []
+    try:
+        ts = dt.datetime.fromisoformat(str(at).replace("Z", "+00:00")).astimezone(dt.timezone.utc)
+    except (TypeError, ValueError):
+        return [], ["detail.at 不是时间"]
+    ts = ts.replace(minute=0, second=0, microsecond=0)
+    if not isinstance(rows, list) or len(rows) > MAX_POS_ROWS:
+        return [], [f"positioning 要是列表、最多 {MAX_POS_ROWS} 行"]
+    snap = _f(snapshot_accounts)
+    out, seen = [], set()
+    for k, r in enumerate(rows):
+        coin = str((r or {}).get("coin") or "").strip() if isinstance(r, dict) else ""
+        if not coin or coin in seen:
+            bad.append(f"positioning[{k}] 缺币名或重复")
+            continue
+        if "address" in r or "user" in r or "addresses" in r:
+            bad.append(f"positioning[{k}] 带了地址 —— 只收汇总")
+            continue
+        lu, su = _f(r.get("long_usd")), _f(r.get("short_usd"))
+        if lu is None or su is None or lu < 0 or su < 0:
+            bad.append(f"positioning[{k}] 名义额不对")
+            continue
+        seen.add(coin)
+        out.append({"ts": ts.isoformat(), "coin": coin[:20], "long_usd": round(lu, 2), "short_usd": round(su, 2),
+                    "n_long": int(_f(r.get("n_long")) or 0), "n_short": int(_f(r.get("n_short")) or 0),
+                    "n_accounts": int(_f(r.get("n_accounts")) or 0), "mark": _f(r.get("mark")),
+                    "snapshot_accounts": int(snap) if snap is not None else None})
+    return (out, bad) if not bad else ([], bad)
+
+
+async def write_positioning(rows: list, at: Any, snapshot_accounts: Any = None) -> dict[str, Any]:
+    from src.api.store import supabase_upsert_table
+    out, bad = clean_positioning(rows, at, snapshot_accounts)
+    if bad:
+        return {"ok": False, "bad": bad[:10]}
+    if not out:
+        return {"ok": True, "written": 0}
+    w = await supabase_upsert_table(POS_TABLE, out, on_conflict="ts,coin")
+    return {"ok": bool(w), "written": len(out) if w else 0, **({} if w else {"why": (getattr(w, "why", "") or "")[:200]})}
 
 
 async def write_rows(rows: list, at: Any) -> dict[str, Any]:

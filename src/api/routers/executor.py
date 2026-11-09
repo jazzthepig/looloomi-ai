@@ -168,7 +168,15 @@ async def executor_report(body: Any = Body(...),
         if not lm.get("ok"):
             raise HTTPException(422 if lm.get("bad") else 502, lm)
         written["liq_rows"] = lm["written"]
-        clean["detail"] = {k: v for k, v in (clean.get("detail") or {}).items() if k != "rows"}
+        # 11-09 S-794:同一批快照的完整持仓。写不进去不拒整批(强平地图照写,主机发件箱不重送),原因记进心跳表
+        det = clean.get("detail") or {}
+        if det.get("positioning"):
+            from src.data.market.liq_map import write_positioning
+            wp = await write_positioning(det.get("positioning") or [], det.get("at"), det.get("n_accounts"))
+            written["pos_rows"] = wp.get("written", 0)
+            if not wp.get("ok"):
+                det["positioning_error"] = wp.get("bad") or wp.get("why")
+        clean["detail"] = {k: v for k, v in det.items() if k not in ("rows", "positioning")}
     detail = {**(clean.get("detail") or {}), "mode": clean["mode"], "kind": clean["kind"], "book": clean.get("book") or "x1v",
               "host": clean.get("host"), "asof": clean.get("asof"), **{f"{k}_written": v for k, v in written.items()}}
     outcome = "error" if clean["kind"] == "error" or (clean.get("detail") or {}).get("errors") else "ok"
