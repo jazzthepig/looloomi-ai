@@ -19,6 +19,8 @@ ALLOW = {
     "docs/research/T-090_check.py", "docs/research/T-090_modify.py", "docs/research/T-093_run.py",  # 已归档的旧卡
 }
 URL_RE = re.compile(r"""["']([a-z_0-9]+)\?select=""")
+# 11-09:URL 字符串后面以位置参数传排序串(`_paged("t?select=…", "d.asc")`)也算带了 order —— t313 的合并因此被误拦
+POS_ORDER_RE = re.compile(r""",\s*["'][a-z_][a-z0-9_]*\.(?:asc|desc)(?:\.nulls(?:first|last))?["']""")
 
 
 def _pages(src: str) -> bool:
@@ -34,7 +36,8 @@ def violations(path: Path) -> list[int]:
     for i, line in enumerate(lines):
         if URL_RE.search(line):
             window = " ".join(lines[i:i + 4])
-            if "order=" not in window and '"order"' not in window and "'order'" not in window:
+            if ("order=" not in window and '"order"' not in window and "'order'" not in window
+                    and not POS_ORDER_RE.search(window)):
                 out.append(i + 1)
     try:
         tree = ast.parse(src)

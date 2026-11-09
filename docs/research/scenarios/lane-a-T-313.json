@@ -1,0 +1,45 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T-313-1",
+      "scenario": "T-313 态读 P 排序的强弱(判定 ❌)",
+      "statement": "市场宽度(breadth_above_ma50,2026-11-08 = 0.0417)在 2026-12-13 高于该值",
+      "variable": "state:breadth_above_ma50",
+      "op": "gt",
+      "lo": 0.041667,
+      "prob": 0.46,
+      "horizon_d": "2026-12-13"
+    },
+    {
+      "id": "T-313-2",
+      "scenario": "T-313 态读 P 排序的强弱(判定 ❌)",
+      "statement": "风格相对强弱(style_rel_majors_30d,2026-11-08 = 0.1176)在 2026-12-13 高于该值",
+      "variable": "state:style_rel_majors_30d",
+      "op": "gt",
+      "lo": 0.117647,
+      "prob": 0.53,
+      "horizon_d": "2026-12-13"
+    },
+    {
+      "id": "T-313-3",
+      "scenario": "T-313 态读 P 排序的强弱(判定 ❌)",
+      "statement": "BTC 收盘(2026-11-08 = 74851.40)在 2026-12-13 高于该值",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 74851.4,
+      "prob": 0.55,
+      "horizon_d": "2026-12-13"
+    },
+    {
+      "id": "T-313-4",
+      "scenario": "T-313 态读 P 排序的强弱(判定 ❌)",
+      "statement": "从 2026-11-16 起的前 6 个判定周上(最后一周 2026-12-21,实现 IC 到 2027-01-21 才齐),S-793 kNN 臂的周度 Spearman(kNN 预测, 实现 IC)仍 < 0.20",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 0.2,
+      "prob": 0.55,
+      "horizon_d": "2027-01-26"
+    }
+  ]
+}
