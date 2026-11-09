@@ -1,0 +1,33 @@
+{
+  "id": "T-320",
+  "owner": "lane-b",
+  "status": "done",
+  "created": "2026-11-10",
+  "title": "S-797 盲复算:只读台账 S-797 原文,独立装配三条腿与天气、跑 T25_K / RB / STYLE 与 (i)–(v) —— 不读 lane-c 的 t318_* / T-318_*",
+  "source": "REFUTATION_LEDGER S-797 原文(唯一口径来源;`grep -n \"^## S-797\" -A 14 REFUTATION_LEDGER.md`);核 src/data/universe/flex_alloc.py(import,一字不改);crypto 腿规则 forward_books.TOM_ARMS['CORE_X1V'] + signals/tom.py。禁读:docs/research/t318_*、T-318_*、lane-c/T-318 分支。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-320.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读 S-797 原文,自己装配腿与天气(文件名 t320_*);凡原文没写清、你不得不自己定的地方,逐条列进「口径歧义」一节并报换读法后结论变不变(本卡最重要的产出)。只算一次;先落 t320_legs.csv;(i)–(v) 逐臂逐条。只读、不入库、不改代码。",
+    "expect": "docs/research/T-320_blind_replication.md(口径歧义在前)+ t320_blind.py + t320_results.json;in_review,推 lane-b/T-320。"
+  },
+  "prior_value": "S-797 决定第 7b 段的边能不能接进真钱;两份独立实现对上,才拿去给 Jazz 拍。",
+  "notes": "2026-11-09T16:15:00Z Seth 开卡。与 C 道 T-318 并行;交付前不看对方。\n2026-11-10 lane-b 交付(分支 lane-b/T-320)。盲复算结论:**RB 与 STYLE 都 ❌,真钱 T25 不动**(原文「不过 ⇒ ❌」)。共同日期 961 天(2023-01-03→2026-10-30),空跑 252 共同日 ⇒ NAV 709 天(2024-01-04→2026-10-30)。\nT25_K(对照):总收益 +53.78% / CAGR 16.48% / 波动 15.73% / 最大回撤 −8.86% / Calmar 1.859 / 最差月 −5.94%(2026-03)。\nRB:+65.03% / 19.43% / 15.25% / −9.49% / Calmar 2.047 ⇒ (i)❌(2.047<1.15×1.859=2.138) (ii)✅ (iii)✅(差 0.63pp) (iv)✅(前半 4.201/3.359、后半 1.299/0.549) (v)❌(ab_test p(臂≤K)=0.2145>0.10,verdict「分不开」,underpowered)。\nSTYLE:+41.42% / 13.07% / 17.45% / −11.94% / Calmar 1.094 ⇒ (i)❌ (ii)❌ (iii)❌(差 3.08pp) (iv)❌(2.280/3.359、0.062/0.549) (v)❌(p=0.864)。\n对照:① 持有面板 +49.51%(回撤 −56.75%);crypto 腿 CORE_X1V +35.32%(回撤 −40.80%);mix_nav 版 T25 同窗口 +52.16%(记账时点差 1.6pp)。\n口径歧义 14 条(A1–A14),实测 8 个换读法变体(V0–V7):**没有任一变体让任一臂全过**,RB 的 (v) 在所有变体里 p∈[0.185,0.352] ⇒ 结论不因口径而变。\n⚠ 给 @seth:核 src/data/universe/flex_alloc.py **至今不在 git 里**(只在主目录未跟踪工作副本)—— 本分支按字节复制到 docs/research/t320_flex_alloc_core.py(sha256 6c7fa4c4…,运行时核对),请把它提交进 main,否则 lane-c 与前向影子臂拿不到这个核。本卡文件在分支上是从主目录带过来的(Seth 合并时用主目录的卡覆盖)。 | 2026-11-09T16:56:13Z Seth 审并合并。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-09T16:56:13Z",
+    "value": "S-797 盲复算与 C 道逐位一致;14 条口径歧义、8 个变体无一让任一臂全过。",
+    "ledger": "S-797 结果"
+  }
+}
