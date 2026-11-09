@@ -1,0 +1,28 @@
+{
+  "id": "T-314",
+  "owner": "lane-c",
+  "status": "in_review",
+  "created": "2026-11-09",
+  "title": "S-793 盲复算:只读台账 S-793 原文,独立实现 kNN 臂 / 惯性臂与 (a)–(d) —— 不读 lane-a 的 t313_* 任何文件",
+  "source": "REFUTATION_LEDGER S-793 原文(唯一口径来源);IC 序列:docs/research/t312_results.json(main 上还没有就 `git show origin/lane-a/T-312:docs/research/t312_results.json`)的 weekly_ic;状态:market_state_vectors.vec_full(只读 SELECT,翻页带 order=d.asc)。 禁读:docs/research/t313_*、T-313_*、lane-a/T-313 分支。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-314.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读 S-793 原文,自己写实现(文件名 t314_*)。凡是原文没写清、你不得不自己定的地方,逐条列进报告「口径歧义」一节(这是本卡最重要的产出,S-784 就是这样查出 S-771 的含糊)。其余同 T-313:只算一次、先落 t314_state.csv、两份快照指纹、(a)–(d) 逐条。",
+    "expect": "docs/research/T-314_blind_replication.md(口径歧义一节在前)+ t314_blind.py + t314_results.json;in_review,推 lane-c/T-314。不需要 scenarios(复算不出新命题)。"
+  },
+  "prior_value": "S-771 / S-784 教训:预注册的含糊只有独立实现才查得出;两边数字对上,S-793 的结论才算立住。",
+  "notes": "2026-11-09 lane-c 交付(S-793 盲复算;只读台账 S-793 原文,未读 lane-a 的 t313_*/T-313*/lane-a/T-313 分支任何文件)。\n判定区间 167 周(2023-07-31 → 2026-10-05),出自 197 周 IC 序列;前 30 周被「35 天闸 + 26 候选」吃掉。\n(a) Spearman(kNN 预测, 实现 P-IC) = 0.246895 ≥ 0.20 ✅;块置换单边 p(apparatus.block_permute, block=8, n=1000, seed=793) = 0.014 ≤ 0.05 ✅ —— 但同一句原文的另两种读法:p = 0.075(块粒度循环移位)❌ / 0.032(整段循环移位)。(a) 的通过压在置换读法上,是本卡最重要的口径歧义(报告 §0 #1)。\n(b) 每周回归 实现 IC ~ 常数 + kNN + 惯性(OLS,Newey–West lag 5;自写 NW 与 statsmodels 差 6.2e-15):kNN 系数 0.473478,t = 1.794440 < 2.0 ❌(带小样本修正 1.778249,仍不过);惯性系数 −0.047262(t = −0.131);R² = 0.051373。\n(c) 两半 Spearman:前半 84 周(→2025-03-03)0.300638 / 后半 83 周(→2026-10-05)0.046493 ⇒ 后半 < 0.10 ❌。\n(d) kNN 预测中位以上 83 周 P_bottom_quintile_x30 均值 −4.5135%(中位 −3.7035%、p10 −13.4422%、p90 +4.0541%)vs 以下 84 周 −1.7218%(中位 −1.2191%、p10 −8.2997%、p90 +3.4002%);均值差 −2.792pp ≤ −1.0pp ✅。\n⇒ 全过才 ✅、(a) 或 (b) 不过 ⇒ ❌:本条 ❌(b)(c) 不过)。状态读不出 P 排序力的强弱,② 倾斜按常数,OVERRIDE 层这条路在 P 上收卷。\n两份快照指纹:IC 文件 sha256 4ab725a7d93765ad8cb9c2dfb8daaacafcaef4d87b3d92a5b35b60fe5763fffb;台账写的 bf52601c… = 该 JSON 内 snapshot_fingerprint.cache_sha256(底层数据缓存 _t312_asset_flow.jsonl),前缀一致 ✅。状态表 2535 行,d 2019-12-01→2026-11-08,zscore_pass 唯一 tag binance_hist:pit25:expanding180:20261109T091402Z,按 (d, vec_full) 排序后 sha256 7a93ca901b59c85033452f583b6b6295762602e6329172875721172d8944fda5。\n口径歧义 14 条见报告 §0:只有 #1(置换读法)会改结论,其余 13 条实测不改变任何判据的通过/不通过;其中 #13:vec_full 名义 24 维、2023 起恒只有 16 维非 null ⇒「共有实测维 ≥ 8」一次都没咬合。\n探索性(需另立预注册、在新数据上过零信号对照):E1 态与 P-IC 的水平共变、而非提前给出排序强弱(去趋势残差相关是可预注册的新命题);E2 kNN 预测与惯性预测 Pearson 仅 0.537、惯性系数近 0 ⇒ t 被残差自相关吃掉而非共线性;E3 k=5/10/20 的 Spearman 0.189/0.247/0.283 单调上升;E4 另 8 维未测 ⇒ 跨空间边目前只建在 16 维上;E5 前 30 周被闸吃掉,两半切分正好把最早期切在前半。\n产物:docs/research/T-314_blind_replication.md + t314_blind.py + t314_state.csv(197 行)+ t314_results.json。无 scenarios(卡面写明复算不出新命题)。只读:无写库、无 DDL;抓取带 order=d.asc、每页 ≤ 1000 行并核过 Content-Range 总数。\n注:本分支上的 tasks/T-314.json 是从主目录逐字复制(Seth 那份尚未进 main)+ status/notes;合并时主目录那份(未跟踪)会挡快进,按你的说明以主目录的卡为准。",
+  "verified": null
+}
