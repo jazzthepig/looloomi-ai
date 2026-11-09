@@ -20,16 +20,19 @@ def test_weather_is_four_buckets_and_unknown_stays_unknown():
 
 def test_budget_bounds_and_cash_remainder():
     w = fa.clip_to_budget({"crypto": 1.5, "equity": 0.9, "gold": 0.0})
-    assert w["crypto"] <= 0.90 + 1e-12 and sum(w.values()) <= 1.0 + 1e-12
-    w2 = fa.clip_to_budget({"crypto": 0.1, "equity": 0.3, "gold": 0.2})
-    assert w2 == {"crypto": 0.1, "equity": 0.3, "gold": 0.2}, "预算内不动"
+    assert w["crypto"] <= 0.40 + 1e-12 and sum(w.values()) <= 1.0 + 1e-12
+    w2 = fa.clip_to_budget({"crypto": 0.25, "equity": 0.3, "gold": 0.2})
+    assert w2 == {"crypto": 0.25, "equity": 0.3, "gold": 0.2}, "预算内不动"
+    assert fa.clip_to_budget({"crypto": 0.63, "equity": 0.3, "gold": 0.2})["crypto"] == 0.40, \
+        "S-801:空仓腿的权重陷阱 —— 加密也只许 ±10pp(46–63% 那几次会被截到 40%)"
+    assert fa.clip_to_budget({"crypto": 0.0, "equity": 0.3, "gold": 0.2})["crypto"] == 0.20
 
 
 def test_rb_falls_back_to_base_without_history_and_cuts_crypto_when_it_gets_wild():
     legs = _legs(30)
     rets = pd.concat(legs, axis=1).pct_change().iloc[1:]
     assert fa.rb_weights(rets) == fa.BASE_T25, "不足 MIN_OBS ⇒ 原样"
-    calm = pd.concat(_legs(200, crypto_sig=0.02), axis=1).pct_change().iloc[1:]
+    calm = pd.concat(_legs(200, crypto_sig=0.009), axis=1).pct_change().iloc[1:]
     wild = pd.concat(_legs(200, crypto_sig=0.08), axis=1).pct_change().iloc[1:]
     wc, ww = fa.rb_weights(calm), fa.rb_weights(wild)
     assert ww["crypto"] < wc["crypto"], "加密腿波动变大 ⇒ 权重变小(同一事前风险)"
