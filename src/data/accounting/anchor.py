@@ -98,9 +98,14 @@ def ots_file(digest_hex: str, calendar_response: bytes) -> bytes:
     return OTS_MAGIC + OTS_VERSION + OTS_SHA256 + bytes.fromhex(digest_hex) + calendar_response
 
 
+#: 11-09:不按日写的来源 —— World50 / 灵活组合的净值只记工作日、由每周一次的任务补写。按「前一天有、这一天没有 ⇒ 等」,
+#: 每个周六、每个周任务还没跑的日子都会让锚空等到 UTC 22 点(锚因此总像「晚一天」)。它们有行就锚进去,没有就不等。
+NOT_DAILY = frozenset({"world50_book_nav", "forward_book_nav"})
+
+
 def waiting_for(prev: dict, cur: dict) -> list[str]:
-    """纯函数。前一天有行、这一天没有的来源。"""
-    return sorted(t for t, rows in prev["sources"].items() if rows and not cur["sources"].get(t))
+    """纯函数。前一天有行、这一天没有的来源(不按日写的来源不等)。"""
+    return sorted(t for t, rows in prev["sources"].items() if rows and not cur["sources"].get(t) and t not in NOT_DAILY)
 
 
 def forward_rows(rows: list[dict]) -> list[dict]:

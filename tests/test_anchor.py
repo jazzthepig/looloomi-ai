@@ -82,3 +82,11 @@ def test_anchor_day_is_the_frozen_day() -> None:
     from src.data.accounting.forward_lock import FINAL_LAG_DAYS
     assert FINAL_LAG_DAYS == 2
     assert "timedelta(days=FINAL_LAG_DAYS)" in inspect.getsource(anchor.run_once)
+
+
+def test_weekday_and_weekly_sources_never_hold_the_anchor():
+    """11-09:World50 / 灵活组合净值只记工作日、每周补写 —— 周六它没有行不是「还没记完」,锚不该等到 UTC 22 点。"""
+    from src.data.accounting.anchor import NOT_DAILY
+    prev = {"sources": {"world50_book_nav": [{"arm": "a"}], "forward_book_nav": [{"book": "b", "arm": "a"}], "portfolio_layer_daily": [{"arm": "x"}]}}
+    cur = {"sources": {"world50_book_nav": [], "forward_book_nav": [], "portfolio_layer_daily": []}}
+    assert waiting_for(prev, cur) == ["portfolio_layer_daily"] and {"world50_book_nav", "forward_book_nav"} <= NOT_DAILY
