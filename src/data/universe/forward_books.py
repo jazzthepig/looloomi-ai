@@ -48,6 +48,13 @@ FLEX_X1V_ARMS = {"T25": ({"crypto": 0.30, "equity": 0.30, "gold": 0.20}, "CORE_X
                  "H_T25": ({"crypto": 0.10, "equity": 0.30, "gold": 0.20}, "CORE_H")}
 FLEX_REB_DAYS = 21
 RULE_FLEX_X1V = "flex_x1v_v1:S-604(加密 ① X1V / ACWI / XAUUSD / 现金,21 个交易日再平衡,10bp)"
+#: S-797(11-10,Jazz「根据风格矢量和对应应用策略优化之前跑过的组合,没通就打通」):第 7b 段的第一条边 —— 天气 → 风格矢量 → 权重。
+#: 三条影子臂,都不动钱;同一个核 `flex_alloc.dynamic_mix_nav`(回放用同一个):T25_K = 常数 T25(同一记账,作对照)、
+#: RB_T25 = 风险预算(波动倒数、与 T25 同事前风险)、STYLE_T25 = 风格矢量(此刻天气下有优势的腿 ±10pp)。
+#: 腿的历史只从前向起算 ⇒ RB 要 40 个共同日才离开 T25;STYLE 读回放末端**冻结**的风格表,研究落地前为 None(= T25)。
+FLEX_DYN_ARMS = ("T25_K", "RB_T25", "STYLE_T25")
+STYLE_TABLE_FROZEN: Optional[dict] = None
+RULE_FLEX_DYN = "flex_dyn_v1:S-797(同腿;21 个共同日调仓;T25_K 常数 / RB 波动倒数同风险 / STYLE 冻结风格表 ±10pp;偏离预算 加密 0–0.9、股金 ±10pp)"
 RULE_TOM = "tom_trader_v2:S-600 / S-601(多头 >200 日线且破 20 日高,盈利加仓到 1.3;跌破即平;F 空仓 / FB 反弹 0.5 +15% 止盈 / S50 开空 −20% 止盈 / X1V 破 20 日低即平 + 波动率缩放)"
 WRITES_TABLES = ("forward_book_holdings", "forward_book_nav")
 WRITES_COLUMNS = {
@@ -268,11 +275,46 @@ async def run_flex_x1v(cutoff: str) -> dict[str, Any]:
                 rows_n.append({"book": "flex_x1v", "arm": arm, "d": ds, "nav": float(v),
                                "ret": (float(v) / prev - 1) if prev else None, "as_of": TOM_START, "rule": RULE_FLEX_X1V})
             prev = float(v)
+    dyn = await _flex_dynamic_rows(tnav.get(FLEX_X1V_ARMS["T25"][1]), tf, have, cutoff)
+    rows_n += dyn["rows"]
+    notes += dyn["notes"]
     if rows_n:
         wr = await supabase_upsert_table("forward_book_nav", rows_n, on_conflict="book,arm,d")
         if not wr.ok:
             return {"ok": False, "why": f"写 forward_book_nav 失败:{(wr.why or '')[:160]}"}
-    return {"ok": True, "nav_written": len(rows_n), **({"notes": notes} if notes else {})}
+    return {"ok": True, "nav_written": len(rows_n), "dyn_weights": dyn["weights"], **({"notes": notes} if notes else {})}
+
+
+async def _flex_dynamic_rows(crypto_nav: Optional[dict], tf: dict, have: dict, cutoff: str) -> dict[str, Any]:
+    """S-797 三条影子臂(T25_K / RB_T25 / STYLE_T25)的 NAV 行;只追加没写过的天。天气取 `state_daily` 面板(与 `book_vectors` 同口径)。"""
+    import pandas as pd
+    from src.data.universe import flex_alloc as fa
+    out: dict[str, Any] = {"rows": [], "notes": [], "weights": {}}
+    if not crypto_nav or tf["equity"].empty or tf["gold"].empty:
+        out["notes"].append("S-797 影子臂:腿还没有前向数据")
+        return out
+    legs = {"crypto": pd.Series({pd.Timestamp(d): v for d, v in crypto_nav.items()}), "equity": tf["equity"], "gold": tf["gold"]}
+    st = await _get_all(f"state_daily?select=d,feature,value&entity=eq.panel&feature=in.(dist_200,vratio_30_180)&d=gte.{TOM_START}&order=d")
+    by: dict[str, dict] = {}
+    for r in st:
+        by.setdefault(str(r["d"])[:10], {})[r["feature"]] = r.get("value")
+    weather = {d: fa.weather_of(v.get("dist_200"), v.get("vratio_30_180")) for d, v in by.items()}
+    fns = {"T25_K": lambda hist, d: fa.BASE_T25,
+           "RB_T25": lambda hist, d: fa.rb_weights(hist),
+           "STYLE_T25": lambda hist, d: fa.style_weights(STYLE_TABLE_FROZEN, weather.get(d.date().isoformat()))}
+    for arm in FLEX_DYN_ARMS:
+        nav, log = fa.dynamic_mix_nav(legs, fns[arm], reb=FLEX_REB_DAYS, cost=COST_CRYPTO)
+        nav = nav[nav.index <= pd.Timestamp(cutoff)]
+        out["weights"][arm] = log[-1] if log else None
+        done = sorted(d for (a, d) in have if a == arm)
+        prev = None
+        for d, v in nav.items():
+            ds = d.date().isoformat()
+            if not (done and ds <= done[-1]):
+                out["rows"].append({"book": "flex_x1v", "arm": arm, "d": ds, "nav": float(v),
+                                    "ret": (float(v) / prev - 1) if prev else None, "as_of": TOM_START, "rule": RULE_FLEX_DYN})
+            prev = float(v)
+    return out
 
 
 async def run_tom_trader(cutoff: str) -> dict[str, Any]:

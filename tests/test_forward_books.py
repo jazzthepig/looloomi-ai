@@ -201,3 +201,38 @@ def test_flex_tradfi_legs_refresh_only_when_behind_the_last_weekday(monkeypatch)
     calls.clear()
     asyncio.run(fb._flex_tradfi_legs("2026-10-18"))
     assert calls == [], "腿已到最后一个工作日 ⇒ 不再取"
+
+
+def test_s797_shadow_arms_run_through_the_same_kernel_and_append_only(monkeypatch):
+    """11-10 S-797:灵活组合多三条影子臂(T25_K / RB_T25 / STYLE_T25),同一个核;腿历史不够 ⇒ RB = T25;
+    没有冻结风格表 ⇒ STYLE = T25;已写过的天不重写。"""
+    import numpy as np
+    import pandas as pd
+    days = [d.date().isoformat() for d in pd.bdate_range("2026-10-16", periods=30)]
+    rng = np.random.default_rng(797)
+    cn = np.cumprod(1 + rng.normal(0, 0.03, 30))
+    crypto = {d: float(v) for d, v in zip(days, cn)}
+    tf = {"equity": pd.Series({pd.Timestamp(d): 100 + i for i, d in enumerate(days)}),
+          "gold": pd.Series({pd.Timestamp(d): 50 + 0.5 * i for i, d in enumerate(days)})}
+
+    async def get_all(tail):
+        assert tail.startswith("state_daily?") and "order=" in tail
+        return [{"d": d, "feature": "dist_200", "value": 0.05} for d in days] + \
+               [{"d": d, "feature": "vratio_30_180", "value": 0.9} for d in days]
+    monkeypatch.setattr(fb, "_get_all", get_all)
+    out = asyncio.run(fb._flex_dynamic_rows(crypto, tf, {}, days[-1]))
+    by = {}
+    for r in out["rows"]:
+        by.setdefault(r["arm"], []).append(r)
+    assert set(by) == set(fb.FLEX_DYN_ARMS) and all(len(v) == 30 for v in by.values())
+    navs = {a: [r["nav"] for r in v] for a, v in by.items()}
+    assert navs["RB_T25"] == navs["T25_K"] and navs["STYLE_T25"] == navs["T25_K"], "历史不够 / 没有冻结表 ⇒ 与常数臂逐日相同"
+    assert out["weights"]["RB_T25"]["crypto"] == 0.30
+    have = {(r["arm"], r["d"]): r["nav"] for r in out["rows"] if r["d"] <= days[20]}
+    again = asyncio.run(fb._flex_dynamic_rows(crypto, tf, have, days[-1]))
+    assert {r["d"] for r in again["rows"]} == set(days[21:]), "只追加没写过的天"
+    monkeypatch.setattr(fb, "STYLE_TABLE_FROZEN", {"crypto": {"all": 0.0, "up_cold": 0.01}, "equity": {"all": 0.0, "up_cold": -0.01},
+                                                   "gold": {"all": 0.0}})
+    tilted = asyncio.run(fb._flex_dynamic_rows(crypto, tf, {}, days[-1]))
+    assert tilted["weights"]["STYLE_T25"]["crypto"] == 0.40 and tilted["weights"]["STYLE_T25"]["equity"] == 0.20, \
+        "冻结表一放进来,STYLE 就按此刻天气(up_cold)倾斜"
