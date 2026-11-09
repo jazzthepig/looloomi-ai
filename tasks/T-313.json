@@ -1,0 +1,33 @@
+{
+  "id": "T-313",
+  "owner": "lane-a",
+  "status": "done",
+  "created": "2026-11-09",
+  "title": "S-793 高维跨空间边:Regime 态(market_state_vectors)能否在 IC 惯性之上提前读出 P 排序的强弱 —— 只算一次",
+  "source": "REFUTATION_LEDGER S-793(预注册,原文照抄进报告开头);IC 序列:docs/research/t312_results.json(main 上还没有就 `git show origin/lane-a/T-312:docs/research/t312_results.json`)的 weekly_ic;状态:market_state_vectors.vec_full(只读 SELECT,翻页带 order=d.asc)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-313.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-793 原文照抄进报告开头;口径一字不改,只算一次,不扫参数(k=5/20 只作描述)。先落 docs/research/t313_state.csv(周一 t、取到的状态日、实测维数、24 维值)再算;结果 JSON 带两份快照指纹(IC 文件 sha256 + 状态表行数/zscore_pass/sha256)。报 (a)–(d) 逐条的数、两臂预测与实现 IC 的逐周序列、判定区间起止与周数、(d) 两组的均值/中位/p10/p90。只读、不入库、不改代码;步数过半先落文件;不要 Read 大文件。",
+    "expect": "docs/research/T-313_state_to_ic.md + t313_state_to_ic.py + t313_results.json + scenarios/lane-a-T-313.json(≥ 3 条前向命题,至少一条 state: 或 close: 自动结算);in_review,推 lane-a/T-313。"
+  },
+  "prior_value": "OVERRIDE 层(风格周期)第一次有可检验的形态;过了 ⇒ ② 倾斜随态伸缩有了依据,不过 ⇒ 倾斜按常数,不再假装择时。",
+  "notes": "2026-11-09T12:59:38Z Seth 开卡。C 道 T-314 同时盲复算(只读 S-793 原文),两边交付前不要互看。\n\n2026-11-09 lane-a 交付(只读:不改代码、不入库、不动 src/)。口径照 S-793 预注册原文,只算一次,不扫参数(k=5/20 只作描述)。\n\n快照指纹:\n- IC:docs/research/t312_results.json(不重算),sha256 4ab725a7…,197 周 2023-01-02→2026-10-05。\n- 状态:market_state_vectors,2,535 行,2019-12-01→2026-11-08,zscore_pass 全表同一串 binance_hist:pit25:expanding180:20261109T091402Z;按 (d, vec_full) 排序 sha256 4ddc9f00…。\n- 197/197 周命中**周一当天**(回填 0 次,不补 0);判定区间内实测维数 16 维 × 152 周、21 维 × 45 周;「共有维 < 8」的剔除中位 0 次/周(门槛空转)。\n\n判定区间:两臂都有预测 167 周,2023-07-31 → 2026-10-05;前半 84 周(→2025-03-03)、后半 83 周(2025-03-10→)。\n\n判定(全过才 ✅):\n(a) ✅ Spearman(kNN 预测, 实现 IC) = 0.2469 ≥ 0.20;块置换(8 周块、1,000 次、种子 793)上尾 p = 0.020(零分布 mean 0.0006、sd 0.1189、q05 −0.1944、q95 0.2029)。注意:装置 percentile_of 返回的是分位不是 p,正方向取上尾 p = 1 − 分位(同族先例 _t270_view.py 负向判据用「分位 ≤ 0.05」)。\n(b) ❌ OLS(实现 IC ~ 常数 + kNN 预测 + 惯性预测)、HAC(Newey–West 滞后 5):kNN 系数 0.47348、t = 1.794 < 2.0;惯性系数 −0.04726、t = −0.131;R² = 0.0514;n = 167。\n(c) ❌ 前半 ρ = 0.3006 / 后半 ρ = 0.0465(同号,但后半 < 0.10)。\n(d) ✅ kNN 预测 ≥ 中位组(n=84)P_bottom_quintile_x30:均值 −4.4908%、中位 −3.6926%、p10 −13.4420%、p90 +4.0330%;< 中位组(n=83):均值 −1.7112%、中位 −1.2027%、p10 −8.3712%、p90 +3.4310%;差 −2.7796pp ≤ −1.0pp(块自助 CI95 [−6.72pp, +0.60pp],含 0 —— (d) 是阈值判据不是检验)。\n\n判定 **❌**((a)(d) 过、(b)(c) 不过)。按预注册「(a) 或 (b) 不过 ⇒ ❌」执行:态读不出 P 排序力的强弱 ⇒ ② 的倾斜按常数开,OVERRIDE 层这条路在 P 上收卷,不开前向记录。\n\n探索性(不进判定):① 随机抽 10 个合格候选作对照 Spearman 0.1087(p=0.149)vs 按距离 0.2469 —— 态的几何确实带信息但增量不够;② 10 个近邻年龄中位 203 天 vs 合格候选池 434 天 —— kNN 里混着「近期 IC」分量,惯性臂吃掉的正是这块;③ k=5 → 0.1894、k=20 → 0.2828,0.20 这条线很脆;④ 8 维门槛在本样本上不承重。\n\n交付:docs/research/T-313_state_to_ic.md(开头逐字照抄 S-793 原文)+ t313_state_to_ic.py + t313_results.json(含两份快照指纹与逐周序列)+ t313_state.csv + scenarios/lane-a-T-313.json(4 条,3 条自动结算,概率取历史基率 P(x[t+35 日] > x[t]),不用手感)。 | 2026-11-09T14:14:28Z Seth 审:两份独立实现逐位一致;S-793 结果已入台账;合并。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-09T14:14:28Z",
+    "value": "S-793 ❌:(a) ρ 0.247 ✅、(b) kNN 在惯性之上 NW t 1.79 ❌、(c) 两半 0.301 / 0.046 ❌、(d) −2.78pp ✅;与 C 道盲复算逐位一致。",
+    "ledger": "S-793 结果"
+  }
+}
