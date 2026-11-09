@@ -1,0 +1,3166 @@
+{
+  "per_week": [
+    {
+      "week": "2024-01-01",
+      "n": 188,
+      "pos": 4,
+      "ref": 18500,
+      "ref_pos": 9
+    },
+    {
+      "week": "2024-01-08",
+      "n": 186,
+      "pos": 0,
+      "ref": 18680,
+      "ref_pos": 13
+    },
+    {
+      "week": "2024-01-15",
+      "n": 190,
+      "pos": 0,
+      "ref": 18862,
+      "ref_pos": 17
+    },
+    {
+      "week": "2024-01-22",
+      "n": 194,
+      "pos": 0,
+      "ref": 19046,
+      "ref_pos": 21
+    },
+    {
+      "week": "2024-01-29",
+      "n": 197,
+      "pos": 0,
+      "ref": 19230,
+      "ref_pos": 25
+    },
+    {
+      "week": "2024-02-05",
+      "n": 204,
+      "pos": 2,
+      "ref": 19414,
+      "ref_pos": 29
+    },
+    {
+      "week": "2024-02-12",
+      "n": 207,
+      "pos": 2,
+      "ref": 19598,
+      "ref_pos": 33
+    },
+    {
+      "week": "2024-02-19",
+      "n": 211,
+      "pos": 2,
+      "ref": 19784,
+      "ref_pos": 37
+    },
+    {
+      "week": "2024-02-26",
+      "n": 215,
+      "pos": 2,
+      "ref": 19971,
+      "ref_pos": 41
+    },
+    {
+      "week": "2024-03-04",
+      "n": 215,
+      "pos": 2,
+      "ref": 20159,
+      "ref_pos": 45
+    },
+    {
+      "week": "2024-03-11",
+      "n": 217,
+      "pos": 2,
+      "ref": 20345,
+      "ref_pos": 45
+    },
+    {
+      "week": "2024-03-18",
+      "n": 219,
+      "pos": 2,
+      "ref": 20535,
+      "ref_pos": 45
+    },
+    {
+      "week": "2024-03-25",
+      "n": 221,
+      "pos": 2,
+      "ref": 20729,
+      "ref_pos": 45
+    },
+    {
+      "week": "2024-04-01",
+      "n": 221,
+      "pos": 2,
+      "ref": 20926,
+      "ref_pos": 45
+    },
+    {
+      "week": "2024-04-08",
+      "n": 219,
+      "pos": 1,
+      "ref": 21130,
+      "ref_pos": 47
+    },
+    {
+      "week": "2024-04-15",
+      "n": 219,
+      "pos": 1,
+      "ref": 21337,
+      "ref_pos": 49
+    },
+    {
+      "week": "2024-04-22",
+      "n": 222,
+      "pos": 1,
+      "ref": 21548,
+      "ref_pos": 51
+    },
+    {
+      "week": "2024-04-29",
+      "n": 225,
+      "pos": 1,
+      "ref": 21763,
+      "ref_pos": 53
+    },
+    {
+      "week": "2024-05-06",
+      "n": 228,
+      "pos": 4,
+      "ref": 21978,
+      "ref_pos": 55
+    },
+    {
+      "week": "2024-05-13",
+      "n": 229,
+      "pos": 4,
+      "ref": 22195,
+      "ref_pos": 57
+    },
+    {
+      "week": "2024-05-20",
+      "n": 225,
+      "pos": 2,
+      "ref": 22414,
+      "ref_pos": 59
+    },
+    {
+      "week": "2024-05-27",
+      "n": 226,
+      "pos": 2,
+      "ref": 22635,
+      "ref_pos": 61
+    },
+    {
+      "week": "2024-06-03",
+      "n": 229,
+      "pos": 1,
+      "ref": 22856,
+      "ref_pos": 63
+    },
+    {
+      "week": "2024-06-10",
+      "n": 232,
+      "pos": 1,
+      "ref": 23075,
+      "ref_pos": 64
+    },
+    {
+      "week": "2024-06-17",
+      "n": 234,
+      "pos": 2,
+      "ref": 23294,
+      "ref_pos": 65
+    },
+    {
+      "week": "2024-06-24",
+      "n": 234,
+      "pos": 2,
+      "ref": 23516,
+      "ref_pos": 66
+    },
+    {
+      "week": "2024-07-01",
+      "n": 233,
+      "pos": 1,
+      "ref": 23741,
+      "ref_pos": 67
+    },
+    {
+      "week": "2024-07-08",
+      "n": 235,
+      "pos": 1,
+      "ref": 23969,
+      "ref_pos": 71
+    },
+    {
+      "week": "2024-07-15",
+      "n": 237,
+      "pos": 1,
+      "ref": 24198,
+      "ref_pos": 75
+    },
+    {
+      "week": "2024-07-22",
+      "n": 237,
+      "pos": 1,
+      "ref": 24423,
+      "ref_pos": 77
+    },
+    {
+      "week": "2024-07-29",
+      "n": 238,
+      "pos": 1,
+      "ref": 24649,
+      "ref_pos": 79
+    },
+    {
+      "week": "2024-08-05",
+      "n": 238,
+      "pos": 3,
+      "ref": 24878,
+      "ref_pos": 80
+    },
+    {
+      "week": "2024-08-12",
+      "n": 238,
+      "pos": 2,
+      "ref": 25110,
+      "ref_pos": 81
+    },
+    {
+      "week": "2024-08-19",
+      "n": 239,
+      "pos": 2,
+      "ref": 25344,
+      "ref_pos": 83
+    },
+    {
+      "week": "2024-08-26",
+      "n": 239,
+      "pos": 2,
+      "ref": 25578,
+      "ref_pos": 85
+    },
+    {
+      "week": "2024-09-02",
+      "n": 240,
+      "pos": 2,
+      "ref": 25811,
+      "ref_pos": 86
+    },
+    {
+      "week": "2024-09-09",
+      "n": 241,
+      "pos": 2,
+      "ref": 26046,
+      "ref_pos": 87
+    },
+    {
+      "week": "2024-09-16",
+      "n": 243,
+      "pos": 2,
+      "ref": 26283,
+      "ref_pos": 88
+    },
+    {
+      "week": "2024-09-23",
+      "n": 245,
+      "pos": 2,
+      "ref": 26520,
+      "ref_pos": 89
+    },
+    {
+      "week": "2024-09-30",
+      "n": 245,
+      "pos": 3,
+      "ref": 26758,
+      "ref_pos": 90
+    },
+    {
+      "week": "2024-10-07",
+      "n": 243,
+      "pos": 1,
+      "ref": 26996,
+      "ref_pos": 93
+    },
+    {
+      "week": "2024-10-14",
+      "n": 243,
+      "pos": 1,
+      "ref": 27234,
+      "ref_pos": 95
+    },
+    {
+      "week": "2024-10-21",
+      "n": 243,
+      "pos": 1,
+      "ref": 27473,
+      "ref_pos": 97
+    },
+    {
+      "week": "2024-10-28",
+      "n": 243,
+      "pos": 1,
+      "ref": 27712,
+      "ref_pos": 99
+    },
+    {
+      "week": "2024-11-04",
+      "n": 243,
+      "pos": 2,
+      "ref": 27952,
+      "ref_pos": 101
+    },
+    {
+      "week": "2024-11-11",
+      "n": 243,
+      "pos": 2,
+      "ref": 28193,
+      "ref_pos": 103
+    },
+    {
+      "week": "2024-11-18",
+      "n": 250,
+      "pos": 2,
+      "ref": 28436,
+      "ref_pos": 105
+    },
+    {
+      "week": "2024-11-25",
+      "n": 256,
+      "pos": 2,
+      "ref": 28681,
+      "ref_pos": 107
+    },
+    {
+      "week": "2024-12-02",
+      "n": 257,
+      "pos": 1,
+      "ref": 28926,
+      "ref_pos": 110
+    },
+    {
+      "week": "2024-12-09",
+      "n": 261,
+      "pos": 1,
+      "ref": 29169,
+      "ref_pos": 111
+    },
+    {
+      "week": "2024-12-16",
+      "n": 265,
+      "pos": 1,
+      "ref": 29412,
+      "ref_pos": 112
+    },
+    {
+      "week": "2024-12-23",
+      "n": 269,
+      "pos": 2,
+      "ref": 29655,
+      "ref_pos": 113
+    },
+    {
+      "week": "2024-12-30",
+      "n": 273,
+      "pos": 2,
+      "ref": 29898,
+      "ref_pos": 114
+    },
+    {
+      "week": "2025-01-06",
+      "n": 272,
+      "pos": 6,
+      "ref": 30141,
+      "ref_pos": 116
+    },
+    {
+      "week": "2025-01-13",
+      "n": 271,
+      "pos": 6,
+      "ref": 30384,
+      "ref_pos": 118
+    },
+    {
+      "week": "2025-01-20",
+      "n": 273,
+      "pos": 7,
+      "ref": 30634,
+      "ref_pos": 120
+    },
+    {
+      "week": "2025-01-27",
+      "n": 277,
+      "pos": 7,
+      "ref": 30890,
+      "ref_pos": 122
+    },
+    {
+      "week": "2025-02-03",
+      "n": 279,
+      "pos": 12,
+      "ref": 31147,
+      "ref_pos": 123
+    },
+    {
+      "week": "2025-02-10",
+      "n": 287,
+      "pos": 12,
+      "ref": 31408,
+      "ref_pos": 124
+    },
+    {
+      "week": "2025-02-17",
+      "n": 289,
+      "pos": 11,
+      "ref": 31673,
+      "ref_pos": 125
+    },
+    {
+      "week": "2025-02-24",
+      "n": 296,
+      "pos": 11,
+      "ref": 31942,
+      "ref_pos": 127
+    },
+    {
+      "week": "2025-03-03",
+      "n": 298,
+      "pos": 11,
+      "ref": 32215,
+      "ref_pos": 129
+    },
+    {
+      "week": "2025-03-10",
+      "n": 301,
+      "pos": 12,
+      "ref": 32487,
+      "ref_pos": 135
+    },
+    {
+      "week": "2025-03-17",
+      "n": 309,
+      "pos": 12,
+      "ref": 32758,
+      "ref_pos": 141
+    },
+    {
+      "week": "2025-03-24",
+      "n": 313,
+      "pos": 11,
+      "ref": 33031,
+      "ref_pos": 148
+    },
+    {
+      "week": "2025-03-31",
+      "n": 315,
+      "pos": 11,
+      "ref": 33308,
+      "ref_pos": 155
+    },
+    {
+      "week": "2025-04-07",
+      "n": 318,
+      "pos": 6,
+      "ref": 33587,
+      "ref_pos": 167
+    },
+    {
+      "week": "2025-04-14",
+      "n": 320,
+      "pos": 6,
+      "ref": 33874,
+      "ref_pos": 179
+    },
+    {
+      "week": "2025-04-21",
+      "n": 327,
+      "pos": 6,
+      "ref": 34163,
+      "ref_pos": 190
+    },
+    {
+      "week": "2025-04-28",
+      "n": 332,
+      "pos": 6,
+      "ref": 34459,
+      "ref_pos": 201
+    },
+    {
+      "week": "2025-05-05",
+      "n": 332,
+      "pos": 6,
+      "ref": 34757,
+      "ref_pos": 212
+    },
+    {
+      "week": "2025-05-12",
+      "n": 329,
+      "pos": 1,
+      "ref": 35058,
+      "ref_pos": 224
+    },
+    {
+      "week": "2025-05-19",
+      "n": 333,
+      "pos": 1,
+      "ref": 35367,
+      "ref_pos": 236
+    },
+    {
+      "week": "2025-05-26",
+      "n": 334,
+      "pos": 1,
+      "ref": 35680,
+      "ref_pos": 247
+    },
+    {
+      "week": "2025-06-02",
+      "n": 335,
+      "pos": 1,
+      "ref": 35995,
+      "ref_pos": 258
+    },
+    {
+      "week": "2025-06-09",
+      "n": 337,
+      "pos": 1,
+      "ref": 36313,
+      "ref_pos": 264
+    },
+    {
+      "week": "2025-06-16",
+      "n": 342,
+      "pos": 1,
+      "ref": 36633,
+      "ref_pos": 270
+    },
+    {
+      "week": "2025-06-23",
+      "n": 353,
+      "pos": 1,
+      "ref": 36960,
+      "ref_pos": 276
+    },
+    {
+      "week": "2025-06-30",
+      "n": 359,
+      "pos": 1,
+      "ref": 37292,
+      "ref_pos": 282
+    },
+    {
+      "week": "2025-07-07",
+      "n": 360,
+      "pos": 0,
+      "ref": 37624,
+      "ref_pos": 288
+    },
+    {
+      "week": "2025-07-14",
+      "n": 367,
+      "pos": 0,
+      "ref": 37953,
+      "ref_pos": 289
+    },
+    {
+      "week": "2025-07-21",
+      "n": 371,
+      "pos": 0,
+      "ref": 38286,
+      "ref_pos": 290
+    },
+    {
+      "week": "2025-07-28",
+      "n": 375,
+      "pos": 0,
+      "ref": 38620,
+      "ref_pos": 291
+    },
+    {
+      "week": "2025-08-04",
+      "n": 384,
+      "pos": 0,
+      "ref": 38955,
+      "ref_pos": 292
+    },
+    {
+      "week": "2025-08-11",
+      "n": 389,
+      "pos": 0,
+      "ref": 39292,
+      "ref_pos": 293
+    },
+    {
+      "week": "2025-08-18",
+      "n": 391,
+      "pos": 0,
+      "ref": 39634,
+      "ref_pos": 294
+    },
+    {
+      "week": "2025-08-25",
+      "n": 397,
+      "pos": 0,
+      "ref": 39987,
+      "ref_pos": 295
+    },
+    {
+      "week": "2025-09-01",
+      "n": 401,
+      "pos": 1,
+      "ref": 40346,
+      "ref_pos": 296
+    },
+    {
+      "week": "2025-09-08",
+      "n": 408,
+      "pos": 1,
+      "ref": 40706,
+      "ref_pos": 296
+    },
+    {
+      "week": "2025-09-15",
+      "n": 411,
+      "pos": 1,
+      "ref": 41073,
+      "ref_pos": 296
+    },
+    {
+      "week": "2025-09-22",
+      "n": 415,
+      "pos": 1,
+      "ref": 41444,
+      "ref_pos": 296
+    },
+    {
+      "week": "2025-09-29",
+      "n": 413,
+      "pos": 1,
+      "ref": 41819,
+      "ref_pos": 296
+    },
+    {
+      "week": "2025-10-06",
+      "n": 418,
+      "pos": 5,
+      "ref": 42203,
+      "ref_pos": 296
+    },
+    {
+      "week": "2025-10-13",
+      "n": 423,
+      "pos": 5,
+      "ref": 42592,
+      "ref_pos": 296
+    },
+    {
+      "week": "2025-10-20",
+      "n": 425,
+      "pos": 5,
+      "ref": 42983,
+      "ref_pos": 296
+    },
+    {
+      "week": "2025-10-27",
+      "n": 430,
+      "pos": 5,
+      "ref": 43380,
+      "ref_pos": 296
+    },
+    {
+      "week": "2025-11-03",
+      "n": 433,
+      "pos": 6,
+      "ref": 43781,
+      "ref_pos": 297
+    },
+    {
+      "week": "2025-11-10",
+      "n": 437,
+      "pos": 6,
+      "ref": 44189,
+      "ref_pos": 298
+    },
+    {
+      "week": "2025-11-17",
+      "n": 439,
+      "pos": 6,
+      "ref": 44600,
+      "ref_pos": 299
+    },
+    {
+      "week": "2025-11-24",
+      "n": 442,
+      "pos": 6,
+      "ref": 45015,
+      "ref_pos": 300
+    },
+    {
+      "week": "2025-12-01",
+      "n": 442,
+      "pos": 2,
+      "ref": 45428,
+      "ref_pos": 301
+    },
+    {
+      "week": "2025-12-08",
+      "n": 443,
+      "pos": 2,
+      "ref": 45846,
+      "ref_pos": 306
+    },
+    {
+      "week": "2025-12-15",
+      "n": 449,
+      "pos": 2,
+      "ref": 46269,
+      "ref_pos": 311
+    },
+    {
+      "week": "2025-12-22",
+      "n": 454,
+      "pos": 2,
+      "ref": 46694,
+      "ref_pos": 316
+    },
+    {
+      "week": "2025-12-29",
+      "n": 466,
+      "pos": 2,
+      "ref": 47124,
+      "ref_pos": 321
+    },
+    {
+      "week": "2026-01-05",
+      "n": 469,
+      "pos": 9,
+      "ref": 47557,
+      "ref_pos": 327
+    },
+    {
+      "week": "2026-01-12",
+      "n": 476,
+      "pos": 16,
+      "ref": 47994,
+      "ref_pos": 333
+    },
+    {
+      "week": "2026-01-19",
+      "n": 482,
+      "pos": 16,
+      "ref": 48433,
+      "ref_pos": 339
+    },
+    {
+      "week": "2026-01-26",
+      "n": 485,
+      "pos": 16,
+      "ref": 48875,
+      "ref_pos": 345
+    },
+    {
+      "week": "2026-02-02",
+      "n": 484,
+      "pos": 16,
+      "ref": 49317,
+      "ref_pos": 347
+    },
+    {
+      "week": "2026-02-09",
+      "n": 491,
+      "pos": 16,
+      "ref": 49760,
+      "ref_pos": 349
+    },
+    {
+      "week": "2026-02-16",
+      "n": 491,
+      "pos": 22,
+      "ref": 50209,
+      "ref_pos": 351
+    },
+    {
+      "week": "2026-02-23",
+      "n": 494,
+      "pos": 22,
+      "ref": 50663,
+      "ref_pos": 353
+    },
+    {
+      "week": "2026-03-02",
+      "n": 494,
+      "pos": 25,
+      "ref": 51129,
+      "ref_pos": 355
+    },
+    {
+      "week": "2026-03-09",
+      "n": 488,
+      "pos": 16,
+      "ref": 51598,
+      "ref_pos": 364
+    },
+    {
+      "week": "2026-03-16",
+      "n": 484,
+      "pos": 9,
+      "ref": 52074,
+      "ref_pos": 380
+    },
+    {
+      "week": "2026-03-23",
+      "n": 485,
+      "pos": 16,
+      "ref": 52556,
+      "ref_pos": 396
+    },
+    {
+      "week": "2026-03-30",
+      "n": 488,
+      "pos": 16,
+      "ref": 53041,
+      "ref_pos": 412
+    },
+    {
+      "week": "2026-04-06",
+      "n": 488,
+      "pos": 16,
+      "ref": 53525,
+      "ref_pos": 428
+    },
+    {
+      "week": "2026-04-13",
+      "n": 486,
+      "pos": 16,
+      "ref": 54016,
+      "ref_pos": 444
+    },
+    {
+      "week": "2026-04-20",
+      "n": 483,
+      "pos": 10,
+      "ref": 54507,
+      "ref_pos": 466
+    },
+    {
+      "week": "2026-04-27",
+      "n": 487,
+      "pos": 10,
+      "ref": 55001,
+      "ref_pos": 488
+    },
+    {
+      "week": "2026-05-04",
+      "n": 480,
+      "pos": 9,
+      "ref": 55495,
+      "ref_pos": 513
+    },
+    {
+      "week": "2026-05-11",
+      "n": 483,
+      "pos": 9,
+      "ref": 55983,
+      "ref_pos": 529
+    },
+    {
+      "week": "2026-05-18",
+      "n": 483,
+      "pos": 9,
+      "ref": 56467,
+      "ref_pos": 538
+    },
+    {
+      "week": "2026-05-25",
+      "n": 477,
+      "pos": 5,
+      "ref": 56952,
+      "ref_pos": 554
+    },
+    {
+      "week": "2026-06-01",
+      "n": 480,
+      "pos": 5,
+      "ref": 57440,
+      "ref_pos": 570
+    },
+    {
+      "week": "2026-06-08",
+      "n": 480,
+      "pos": 5,
+      "ref": 57928,
+      "ref_pos": 586
+    },
+    {
+      "week": "2026-06-15",
+      "n": 481,
+      "pos": 9,
+      "ref": 58414,
+      "ref_pos": 602
+    },
+    {
+      "week": "2026-06-22",
+      "n": 483,
+      "pos": 9,
+      "ref": 58897,
+      "ref_pos": 612
+    },
+    {
+      "week": "2026-06-29",
+      "n": 484,
+      "pos": 9,
+      "ref": 59384,
+      "ref_pos": 622
+    },
+    {
+      "week": "2026-07-06",
+      "n": 482,
+      "pos": 10,
+      "ref": 59864,
+      "ref_pos": 631
+    },
+    {
+      "week": "2026-07-13",
+      "n": 482,
+      "pos": 10,
+      "ref": 60347,
+      "ref_pos": 640
+    },
+    {
+      "week": "2026-07-20",
+      "n": 485,
+      "pos": 10,
+      "ref": 60830,
+      "ref_pos": 649
+    },
+    {
+      "week": "2026-07-27",
+      "n": 483,
+      "pos": 7,
+      "ref": 61307,
+      "ref_pos": 654
+    },
+    {
+      "week": "2026-08-03",
+      "n": 483,
+      "pos": 7,
+      "ref": 61787,
+      "ref_pos": 659
+    },
+    {
+      "week": "2026-08-10",
+      "n": 484,
+      "pos": 9,
+      "ref": 62267,
+      "ref_pos": 664
+    },
+    {
+      "week": "2026-08-17",
+      "n": 482,
+      "pos": 5,
+      "ref": 62748,
+      "ref_pos": 673
+    },
+    {
+      "week": "2026-08-24",
+      "n": 482,
+      "pos": 5,
+      "ref": 63231,
+      "ref_pos": 682
+    },
+    {
+      "week": "2026-08-31",
+      "n": 484,
+      "pos": 5,
+      "ref": 63715,
+      "ref_pos": 691
+    }
+  ],
+  "events": [
+    {
+      "code": "A2Z",
+      "event_day": "2026-03-13",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-03-13",
+      "delist_d0": "2026-03-18",
+      "matched_symbol": "A2Z",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "ACA",
+      "event_day": "2026-01-02",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-01-02",
+      "delist_d0": "2026-02-02",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "ACX",
+      "event_day": "2026-07-24",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-07-24",
+      "delist_d0": "2026-08-03",
+      "matched_symbol": "ACX",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "AERGO",
+      "event_day": "2025-03-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-03-04",
+      "delist_d0": "2025-03-21",
+      "matched_symbol": "AERGO",
+      "match_rule": "exact",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "AEUR",
+      "event_day": "2026-07-03",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-07-03",
+      "delist_d0": "",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "AION",
+      "event_day": "2023-02-20",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2023-02-20",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "AKRO",
+      "event_day": "2024-12-18",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2024-12-18",
+      "matched_symbol": "AKRO",
+      "match_rule": "exact",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "ALCX",
+      "event_day": "2026-05-22",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-05-22",
+      "delist_d0": "2026-06-26",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "ALPACA",
+      "event_day": "2025-03-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-03-04",
+      "delist_d0": "2025-04-24",
+      "matched_symbol": "ALPACA",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "ALPHA",
+      "event_day": "2025-05-07",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-05-07",
+      "delist_d0": "2025-06-26",
+      "matched_symbol": "ALPHA",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "AMB",
+      "event_day": "2025-02-17",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2025-02-17",
+      "matched_symbol": "AMB",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "ANC",
+      "event_day": "2023-02-20",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2023-02-20",
+      "matched_symbol": "ANC",
+      "match_rule": "exact",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "ANT",
+      "event_day": "2024-01-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-01-04",
+      "delist_d0": "2024-02-06",
+      "matched_symbol": "ANT",
+      "match_rule": "exact",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "ARDR",
+      "event_day": "2025-04-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-04-03",
+      "delist_d0": "2026-06-26",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "AST",
+      "event_day": "2025-03-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-03-04",
+      "delist_d0": "2025-03-21",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "ATA",
+      "event_day": "2026-03-13",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-03-13",
+      "delist_d0": "2026-05-13",
+      "matched_symbol": "ATA",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "AUTO",
+      "event_day": "2023-04-11",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2023-04-11",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "AVA",
+      "event_day": "2026-09-04",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-09-04",
+      "delist_d0": "",
+      "matched_symbol": "AVA",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "BADGER",
+      "event_day": "2025-03-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-03-04",
+      "delist_d0": "2025-04-08",
+      "matched_symbol": "BADGER",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "BAKE",
+      "event_day": "2025-07-07",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-07-07",
+      "delist_d0": "2025-09-03",
+      "matched_symbol": "BAKE",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "BAL",
+      "event_day": "2024-07-01",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-07-01",
+      "delist_d0": "2025-04-08",
+      "matched_symbol": "BAL",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "BCD",
+      "event_day": "2022-03-01",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-03-01",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "BEAM",
+      "event_day": "2023-01-19",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2023-01-19",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "BETA",
+      "event_day": "2023-10-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2023-10-04",
+      "delist_d0": "2025-04-08",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "BICO",
+      "event_day": "2026-10-09",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-10-09",
+      "delist_d0": "",
+      "matched_symbol": "BICO",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "BIFI",
+      "event_day": "2025-06-05",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-06-05",
+      "delist_d0": "2026-04-09",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "BLZ",
+      "event_day": "2024-10-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-10-03",
+      "delist_d0": "2024-12-18",
+      "matched_symbol": "BLZ",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "BOND",
+      "event_day": "2023-10-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2023-10-04",
+      "delist_d0": "2024-07-08",
+      "matched_symbol": "BOND",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "BRD",
+      "event_day": "2022-08-04",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-08-04",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "BSW",
+      "event_day": "2025-04-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-04-03",
+      "delist_d0": "2025-06-26",
+      "matched_symbol": "BSW",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "BTCST",
+      "event_day": "2022-12-15",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-12-15",
+      "matched_symbol": "BTCST",
+      "match_rule": "exact",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "BTG",
+      "event_day": "2022-10-13",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-10-13",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "BTS",
+      "event_day": "2023-11-27",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2023-11-27",
+      "matched_symbol": "BTS",
+      "match_rule": "exact",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "BURGER",
+      "event_day": "2025-03-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-03-04",
+      "delist_d0": "2025-03-21",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "CHESS",
+      "event_day": "2025-12-01",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-12-01",
+      "delist_d0": "2026-02-02",
+      "matched_symbol": "CHESS",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "CLV",
+      "event_day": "2024-10-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-10-03",
+      "delist_d0": "2025-02-17",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "CND",
+      "event_day": "2022-03-01",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-03-01",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "COMBO",
+      "event_day": "2025-03-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-03-04",
+      "delist_d0": "2025-03-21",
+      "matched_symbol": "COMBO",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "COOKIE",
+      "event_day": "2026-05-22",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-05-22",
+      "delist_d0": "",
+      "matched_symbol": "COOKIE",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "COS",
+      "event_day": "2026-03-06",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-03-06",
+      "delist_d0": "2026-06-05",
+      "matched_symbol": "COS",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "CREAM",
+      "event_day": "2025-04-08",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2025-04-08",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "CTXC",
+      "event_day": "2024-07-01",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-07-01",
+      "delist_d0": "2025-04-08",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "CVC",
+      "event_day": "2026-10-09",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-10-09",
+      "delist_d0": "",
+      "matched_symbol": "CVC",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "CVP",
+      "event_day": "2024-07-01",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-07-01",
+      "delist_d0": "2024-08-12",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "CVX",
+      "event_day": "2024-07-01",
+      "source": "monitoring_tag",
+      "tag_d0": "2024-07-01",
+      "delist_d0": "",
+      "matched_symbol": "CVX",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "D",
+      "event_day": "2026-01-02",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-01-02",
+      "delist_d0": "2026-06-05",
+      "matched_symbol": "D",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "DATA",
+      "event_day": "2026-01-02",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-01-02",
+      "delist_d0": "2026-02-02",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "DEGO",
+      "event_day": "2026-03-06",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-03-06",
+      "delist_d0": "2026-04-17",
+      "matched_symbol": "DEGO",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "DENT",
+      "event_day": "2025-12-01",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-12-01",
+      "delist_d0": "2026-04-17",
+      "matched_symbol": "DENT",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "DF",
+      "event_day": "2025-12-01",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-12-01",
+      "delist_d0": "2026-02-02",
+      "matched_symbol": "DF",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "DNT",
+      "event_day": "2022-10-13",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-10-13",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "DOCK",
+      "event_day": "2024-07-01",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-07-01",
+      "delist_d0": "2024-07-08",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "DODO",
+      "event_day": "2026-05-22",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-05-22",
+      "delist_d0": "",
+      "matched_symbol": "DODO",
+      "match_rule": "exact",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "DREP",
+      "event_day": "2024-03-20",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2024-03-20",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "ELF",
+      "event_day": "2025-04-08",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2025-04-08",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "EPIC",
+      "event_day": "2026-05-22",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-05-22",
+      "delist_d0": "2026-10-14",
+      "matched_symbol": "EPIC",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "EPX",
+      "event_day": "2024-04-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-04-03",
+      "delist_d0": "2024-08-12",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "EZ",
+      "event_day": "2022-08-04",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-08-04",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "FARM",
+      "event_day": "2026-04-14",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-04-14",
+      "delist_d0": "2026-05-13",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "FIO",
+      "event_day": "2026-03-13",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-03-13",
+      "delist_d0": "2026-04-09",
+      "matched_symbol": "FIO",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "FIRO",
+      "event_day": "2024-01-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-01-04",
+      "delist_d0": "2025-04-08",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "FIS",
+      "event_day": "2025-06-05",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-06-05",
+      "delist_d0": "2025-12-03",
+      "matched_symbol": "FIS",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "FLM",
+      "event_day": "2025-04-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-04-03",
+      "delist_d0": "2025-10-29",
+      "matched_symbol": "FLM",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "FLOW",
+      "event_day": "2026-01-02",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-01-02",
+      "delist_d0": "",
+      "matched_symbol": "FLOW",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "FOR",
+      "event_day": "2024-04-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-04-03",
+      "delist_d0": "2024-08-12",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "FORTH",
+      "event_day": "2026-03-06",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-03-06",
+      "delist_d0": "2026-03-18",
+      "matched_symbol": "FORTH",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "FUN",
+      "event_day": "2026-03-06",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-03-06",
+      "delist_d0": "2026-04-09",
+      "matched_symbol": "FUN",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "GFT",
+      "event_day": "2024-11-26",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2024-11-26",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "GHST",
+      "event_day": "2025-12-01",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-12-01",
+      "delist_d0": "2026-02-02",
+      "matched_symbol": "GHST",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "GLMR",
+      "event_day": "2026-08-11",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-08-11",
+      "delist_d0": "",
+      "matched_symbol": "GLMR",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "GNS",
+      "event_day": "2026-09-04",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-09-04",
+      "delist_d0": "",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "GO",
+      "event_day": "2022-07-01",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-07-01",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "GPS",
+      "event_day": "2025-03-07",
+      "source": "monitoring_tag",
+      "tag_d0": "2025-03-07",
+      "delist_d0": "",
+      "matched_symbol": "GPS",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "GRS",
+      "event_day": "2022-07-01",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-07-01",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "GTC",
+      "event_day": "2026-03-13",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-03-13",
+      "delist_d0": "",
+      "matched_symbol": "GTC",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "HARD",
+      "event_day": "2024-07-01",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-07-01",
+      "delist_d0": "2025-04-08",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "HEGIC",
+      "event_day": "2022-04-04",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-04-04",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "HEI",
+      "event_day": "2026-05-22",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-05-22",
+      "delist_d0": "",
+      "matched_symbol": "HEI",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "HFT",
+      "event_day": "2026-05-22",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-05-22",
+      "delist_d0": "2026-08-03",
+      "matched_symbol": "HFT",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "HIFI",
+      "event_day": "2025-05-07",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-05-07",
+      "delist_d0": "2025-09-03",
+      "matched_symbol": "HIFI",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "HIGH",
+      "event_day": "2026-04-14",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-04-14",
+      "delist_d0": "2026-06-05",
+      "matched_symbol": "HIGH",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "HNT",
+      "event_day": "2023-03-17",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2023-03-17",
+      "matched_symbol": "HNT",
+      "match_rule": "exact",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "HOOK",
+      "event_day": "2026-03-06",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-03-06",
+      "delist_d0": "2026-03-18",
+      "matched_symbol": "HOOK",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "ICX",
+      "event_day": "2026-08-11",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-08-11",
+      "delist_d0": "2026-08-20",
+      "matched_symbol": "ICX",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "IDEX",
+      "event_day": "2025-07-07",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-07-07",
+      "delist_d0": "2026-03-18",
+      "matched_symbol": "IDEX",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "IDRT",
+      "event_day": "2024-10-23",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2024-10-23",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "IRIS",
+      "event_day": "2024-07-01",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-07-01",
+      "delist_d0": "2024-11-26",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "KDA",
+      "event_day": "2025-10-29",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2025-10-29",
+      "matched_symbol": "KDA",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "KEY",
+      "event_day": "2024-10-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-10-03",
+      "delist_d0": "2024-11-26",
+      "matched_symbol": "KEY",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "KMD",
+      "event_day": "2025-06-05",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-06-05",
+      "delist_d0": "2025-06-26",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "KP3R",
+      "event_day": "2024-01-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-01-04",
+      "delist_d0": "2024-10-23",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "LEVER",
+      "event_day": "2025-05-07",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-05-07",
+      "delist_d0": "2025-06-26",
+      "matched_symbol": "LEVER",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "LINA",
+      "event_day": "2025-03-21",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2025-03-21",
+      "matched_symbol": "LINA",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "LOOM",
+      "event_day": "2024-08-12",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2024-08-12",
+      "matched_symbol": "LOOM",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "LRC",
+      "event_day": "2026-03-06",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-03-06",
+      "delist_d0": "2026-03-18",
+      "matched_symbol": "LRC",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "LSK",
+      "event_day": "2026-07-24",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-07-24",
+      "delist_d0": "",
+      "matched_symbol": "LSK",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "LTO",
+      "event_day": "2025-04-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-04-03",
+      "delist_d0": "2025-06-26",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "MBL",
+      "event_day": "2024-07-01",
+      "source": "monitoring_tag",
+      "tag_d0": "2024-07-01",
+      "delist_d0": "",
+      "matched_symbol": "MBL",
+      "match_rule": "exact",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "MBOX",
+      "event_day": "2026-03-06",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-03-06",
+      "delist_d0": "2026-06-05",
+      "matched_symbol": "MBOX",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "MDA",
+      "event_day": "2022-08-04",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-08-04",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "MDT",
+      "event_day": "2025-06-05",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-06-05",
+      "delist_d0": "2026-04-09",
+      "matched_symbol": "MDT",
+      "match_rule": "exact",
+      "pair_kind": "tradfi",
+      "in_universe": 0
+    },
+    {
+      "code": "MDX",
+      "event_day": "2024-01-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-01-04",
+      "delist_d0": "2024-07-08",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "MIR",
+      "event_day": "2023-02-20",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2023-02-20",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "MITH",
+      "event_day": "2022-12-15",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-12-15",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "MLN",
+      "event_day": "2026-04-14",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-04-14",
+      "delist_d0": "2026-05-13",
+      "matched_symbol": "MLN",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "MOB",
+      "event_day": "2024-01-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-01-04",
+      "delist_d0": "2024-03-20",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "MOVE",
+      "event_day": "2025-05-07",
+      "source": "monitoring_tag",
+      "tag_d0": "2025-05-07",
+      "delist_d0": "",
+      "matched_symbol": "MOVE",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "MOVR",
+      "event_day": "2026-08-11",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-08-11",
+      "delist_d0": "",
+      "matched_symbol": "MOVR",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "MTH",
+      "event_day": "2022-03-01",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-03-01",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "MULTI",
+      "event_day": "2024-02-06",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2024-02-06",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "NAS",
+      "event_day": "2022-07-01",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-07-01",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "NAV",
+      "event_day": "2022-08-04",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-08-04",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "NBS",
+      "event_day": "2022-10-13",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-10-13",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "NCASH",
+      "event_day": "2022-03-01",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-03-01",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "NEBL",
+      "event_day": "2023-04-11",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2023-04-11",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "NFP",
+      "event_day": "2026-04-30",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-04-30",
+      "delist_d0": "2026-06-26",
+      "matched_symbol": "NFP",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "NKN",
+      "event_day": "2025-04-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-04-03",
+      "delist_d0": "2026-02-02",
+      "matched_symbol": "NKN",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "NOM",
+      "event_day": "2026-04-30",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-04-30",
+      "delist_d0": "",
+      "matched_symbol": "NOM",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "NTRN",
+      "event_day": "2026-03-13",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-03-13",
+      "delist_d0": "2026-03-18",
+      "matched_symbol": "NTRN",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "NULS",
+      "event_day": "2025-03-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-03-04",
+      "delist_d0": "2025-04-08",
+      "matched_symbol": "NULS",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "NXS",
+      "event_day": "2022-08-04",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-08-04",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "OAX",
+      "event_day": "2024-11-26",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2024-11-26",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "OMG",
+      "event_day": "2024-06-03",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2024-06-03",
+      "matched_symbol": "OMG",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "OOKI",
+      "event_day": "2024-10-23",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2024-10-23",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "OXT",
+      "event_day": "2026-03-06",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-03-06",
+      "delist_d0": "2026-04-09",
+      "matched_symbol": "OXT",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "PDA",
+      "event_day": "2025-04-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-04-03",
+      "delist_d0": "2025-04-24",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "PERL",
+      "event_day": "2023-11-27",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2023-11-27",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "PERP",
+      "event_day": "2025-04-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-04-03",
+      "delist_d0": "2025-10-29",
+      "matched_symbol": "PERP",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "PHB",
+      "event_day": "2026-03-13",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-03-13",
+      "delist_d0": "2026-05-13",
+      "matched_symbol": "PHB",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "PIVX",
+      "event_day": "2026-08-03",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2026-08-03",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "PNT",
+      "event_day": "2024-03-20",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2024-03-20",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "POLS",
+      "event_day": "2024-07-01",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-07-01",
+      "delist_d0": "2024-07-08",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "POND",
+      "event_day": "2026-04-30",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-04-30",
+      "delist_d0": "2026-06-26",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "PORTAL",
+      "event_day": "2025-05-07",
+      "source": "monitoring_tag",
+      "tag_d0": "2025-05-07",
+      "delist_d0": "",
+      "matched_symbol": "PORTAL",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "PROS",
+      "event_day": "2024-10-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-10-03",
+      "delist_d0": "2025-04-08",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "PYR",
+      "event_day": "2026-07-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-07-03",
+      "delist_d0": "2026-08-03",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "QI",
+      "event_day": "2026-03-13",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-03-13",
+      "delist_d0": "",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "QLC",
+      "event_day": "2023-04-11",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2023-04-11",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "QSP",
+      "event_day": "2022-08-04",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-08-04",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "QUICK",
+      "event_day": "2026-04-30",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-04-30",
+      "delist_d0": "2026-10-14",
+      "matched_symbol": "QUICK",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "RARE",
+      "event_day": "2026-08-11",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-08-11",
+      "delist_d0": "",
+      "matched_symbol": "RARE",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "RDNT",
+      "event_day": "2026-03-13",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-03-13",
+      "delist_d0": "2026-03-18",
+      "matched_symbol": "RDNT",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "REEF",
+      "event_day": "2024-01-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-01-04",
+      "delist_d0": "2024-08-12",
+      "matched_symbol": "REEF",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "REI",
+      "event_day": "2025-05-07",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-05-07",
+      "delist_d0": "2025-12-03",
+      "matched_symbol": "REI",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "REN",
+      "event_day": "2024-11-26",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2024-11-26",
+      "matched_symbol": "REN",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "RENBTC",
+      "event_day": "2022-04-04",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-04-04",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "REP",
+      "event_day": "2022-12-15",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-12-15",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "RESOLV",
+      "event_day": "2026-04-14",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-04-14",
+      "delist_d0": "",
+      "matched_symbol": "RESOLV",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "SCR",
+      "event_day": "2026-09-04",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-09-04",
+      "delist_d0": "",
+      "matched_symbol": "SCR",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "SCRT",
+      "event_day": "2026-07-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-07-03",
+      "delist_d0": "2026-08-20",
+      "matched_symbol": "SCRT",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "SLF",
+      "event_day": "2025-07-07",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-07-07",
+      "delist_d0": "2025-09-03",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "SNM",
+      "event_day": "2023-08-15",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2023-08-15",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "SNT",
+      "event_day": "2024-07-01",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-07-01",
+      "delist_d0": "2025-04-08",
+      "matched_symbol": "SNT",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "SOPH",
+      "event_day": "2026-08-11",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-08-11",
+      "delist_d0": "",
+      "matched_symbol": "SOPH",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "SPARTA",
+      "event_day": "2022-08-04",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-08-04",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "SRM",
+      "event_day": "2023-08-15",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2023-08-15",
+      "matched_symbol": "SRM",
+      "match_rule": "exact",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "STMX",
+      "event_day": "2025-01-02",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-01-02",
+      "delist_d0": "2025-02-17",
+      "matched_symbol": "STMX",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "STORJ",
+      "event_day": "2026-05-22",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-05-22",
+      "delist_d0": "2026-08-20",
+      "matched_symbol": "STORJ",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "STPT",
+      "event_day": "2025-03-04",
+      "source": "monitoring_tag",
+      "tag_d0": "2025-03-04",
+      "delist_d0": "",
+      "matched_symbol": "STPT",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "STX",
+      "event_day": "2026-07-24",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-07-24",
+      "delist_d0": "",
+      "matched_symbol": "STX",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "SUN",
+      "event_day": "2024-07-01",
+      "source": "monitoring_tag",
+      "tag_d0": "2024-07-01",
+      "delist_d0": "",
+      "matched_symbol": "SUN",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "SUSD",
+      "event_day": "2022-04-04",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-04-04",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "SXP",
+      "event_day": "2025-12-01",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-12-01",
+      "delist_d0": "2026-03-18",
+      "matched_symbol": "SXP",
+      "match_rule": "exact",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "SYN",
+      "event_day": "2026-05-22",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-05-22",
+      "delist_d0": "",
+      "matched_symbol": "SYN",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "SYS",
+      "event_day": "2026-04-14",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-04-14",
+      "delist_d0": "2026-05-13",
+      "matched_symbol": "SYS",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "TCT",
+      "event_day": "2022-10-13",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-10-13",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "TLM",
+      "event_day": "2026-05-22",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-05-22",
+      "delist_d0": "",
+      "matched_symbol": "TLM",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "TORN",
+      "event_day": "2023-11-27",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2023-11-27",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "TOWNS",
+      "event_day": "2026-09-04",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-09-04",
+      "delist_d0": "",
+      "matched_symbol": "TOWNS",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "TRIBE",
+      "event_day": "2022-12-15",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-12-15",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "TROY",
+      "event_day": "2025-01-02",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-01-02",
+      "delist_d0": "2025-04-08",
+      "matched_symbol": "TROY",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "TRU",
+      "event_day": "2026-04-14",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-04-14",
+      "delist_d0": "2026-04-17",
+      "matched_symbol": "TRU",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "UFT",
+      "event_day": "2025-03-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-03-04",
+      "delist_d0": "2025-04-08",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "UNFI",
+      "event_day": "2024-04-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-04-03",
+      "delist_d0": "2024-10-23",
+      "matched_symbol": "UNFI",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "USDP",
+      "event_day": "2026-09-10",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2026-09-10",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "VAI",
+      "event_day": "2024-01-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-01-04",
+      "delist_d0": "2024-02-06",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "VANRY",
+      "event_day": "2026-07-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-07-03",
+      "delist_d0": "2026-08-03",
+      "matched_symbol": "VANRY",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "VELODROME",
+      "event_day": "2026-04-14",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-04-14",
+      "delist_d0": "",
+      "matched_symbol": "VELODROME",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "VGX",
+      "event_day": "2024-08-12",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2024-08-12",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "VIB",
+      "event_day": "2025-04-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-04-03",
+      "delist_d0": "2025-04-24",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "VIC",
+      "event_day": "2026-04-30",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2026-04-30",
+      "delist_d0": "2026-08-03",
+      "matched_symbol": "VIC",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "VIDT",
+      "event_day": "2025-03-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-03-04",
+      "delist_d0": "2025-04-08",
+      "matched_symbol": "VIDT",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "VITE",
+      "event_day": "2024-10-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-10-03",
+      "delist_d0": "2025-02-17",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "VOXEL",
+      "event_day": "2025-04-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-04-03",
+      "delist_d0": "2025-12-03",
+      "matched_symbol": "VOXEL",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "WABI",
+      "event_day": "2023-03-17",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2023-03-17",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "WAN",
+      "event_day": "2025-10-09",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-10-09",
+      "delist_d0": "2026-04-09",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "WAVES",
+      "event_day": "2024-04-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-04-03",
+      "delist_d0": "2024-06-03",
+      "matched_symbol": "WAVES",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "WIF",
+      "event_day": "2026-03-06",
+      "source": "monitoring_tag",
+      "tag_d0": "2026-03-06",
+      "delist_d0": "",
+      "matched_symbol": "WIF",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "WING",
+      "event_day": "2025-04-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2025-04-03",
+      "delist_d0": "2025-04-24",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "WNXM",
+      "event_day": "2024-04-03",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-04-03",
+      "delist_d0": "2024-06-03",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "WRX",
+      "event_day": "2024-12-18",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2024-12-18",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "WTC",
+      "event_day": "2023-10-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2023-10-04",
+      "delist_d0": "2023-11-27",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "XEM",
+      "event_day": "2023-10-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2023-10-04",
+      "delist_d0": "2024-06-03",
+      "matched_symbol": "XEM",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "XMR",
+      "event_day": "2024-01-04",
+      "source": "monitoring_tag+delisting_watch",
+      "tag_d0": "2024-01-04",
+      "delist_d0": "2024-02-06",
+      "matched_symbol": "XMR",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "YFII",
+      "event_day": "2023-08-15",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2023-08-15",
+      "matched_symbol": "YFII",
+      "match_rule": "exact",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "YOYO",
+      "event_day": "2022-03-01",
+      "source": "delisting_watch",
+      "tag_d0": "",
+      "delist_d0": "2022-03-01",
+      "matched_symbol": "",
+      "match_rule": "unmatched",
+      "pair_kind": "",
+      "in_universe": 0
+    },
+    {
+      "code": "ZEC",
+      "event_day": "2024-01-04",
+      "source": "monitoring_tag",
+      "tag_d0": "2024-01-04",
+      "delist_d0": "",
+      "matched_symbol": "ZEC",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    },
+    {
+      "code": "ZEN",
+      "event_day": "2024-01-04",
+      "source": "monitoring_tag",
+      "tag_d0": "2024-01-04",
+      "delist_d0": "",
+      "matched_symbol": "ZEN",
+      "match_rule": "exact",
+      "pair_kind": "coin",
+      "in_universe": 1
+    }
+  ],
+  "sample_total": 72417,
+  "universe": 649
+}
