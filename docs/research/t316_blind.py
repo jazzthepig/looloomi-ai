@@ -40,6 +40,7 @@ from src.data.state.window_vectors import window_vector  # noqa: E402
 
 # ── S-795 原文写死的量(改这里就是改预注册) ────────────────────────────────
 K = 50                    # kNN 近邻数
+K_DESC = 100              # 描述性 K(S-795 原文「K = 20 / 100 只作描述」)
 LABEL_H = 60              # 标签窗口 (t, t+60 天]
 JUDGE_START = os.environ.get("T316_JUDGE_START", "2024-01-01")
 JUDGE_END = os.environ.get("T316_JUDGE_END", "2026-08-31")
@@ -275,10 +276,9 @@ def build_samples(price: dict[str, dict[str, tuple[float, float]]],
                 continue
             lnqv = math.log(sum(q30) / 30.0)
             y = 1 if (ed0 is not None and d < ed0 <= (dtv + dt.timedelta(days=LABEL_H)).isoformat()) else 0
-            iso = dtv.isocalendar()
             samples.append({"sym": sym, "d": d, "ord": dtv.toordinal(), "vec": vec,
                             "feat": [mom30, mom60, dd90, vol30, lnqv], "y": y,
-                            "week": f"{iso[0]}-W{iso[1]:02d}"})
+                            "week": d})  # 周一日期;样本只取周一 ⇒ 一个周一键 = 一个 ISO 周
     samples.sort(key=lambda s: (s["ord"], s["sym"]))
     return samples
 
@@ -367,6 +367,8 @@ def main() -> None:
     q_all: list[np.ndarray] = []
     base_all: list[np.ndarray] = []
     score_all: list[np.ndarray] = []
+    s20_all: list[np.ndarray] = []
+    s100_all: list[np.ndarray] = []
     base_by_t: dict[str, np.ndarray] = {}
     knn_by_t: dict[str, np.ndarray] = {}
     for t in mondays:
@@ -380,6 +382,7 @@ def main() -> None:
         Q = V[qrows]
         r2 = (R.astype(np.float64) ** 2).sum(1)
         nb = np.empty((len(qrows), K), dtype=np.int64)
+        nb100 = np.empty((len(qrows), K_DESC), dtype=np.int64)
         qb = 200
         for s0 in range(0, len(qrows), qb):
             blk = Q[s0:s0 + qb].astype(np.float64)
@@ -389,7 +392,15 @@ def main() -> None:
             order = np.argsort(dd, axis=1, kind="stable")
             part = np.take_along_axis(part, order, axis=1)
             nb[s0:s0 + qb] = rrows[part]
+            # 描述性 K(原文「K = 20 / 100 只作描述」):K=100 独立取,K=20 取 K=50 排序的前 20
+            p100 = np.argpartition(d2, K_DESC - 1, axis=1)[:, :K_DESC]
+            d100 = np.take_along_axis(d2, p100, axis=1)
+            o100 = np.argsort(d100, axis=1, kind="stable")
+            p100 = np.take_along_axis(p100, o100, axis=1)
+            nb100[s0:s0 + qb] = rrows[p100]
         score_knn = Y[nb].mean(axis=1)
+        score_knn20 = Y[nb[:, :20]].mean(axis=1)
+        score_knn100 = Y[nb100].mean(axis=1)
 
         # 基线:参照集标准化 → LogisticRegression
         mu = F[rrows].mean(axis=0)
@@ -411,6 +422,8 @@ def main() -> None:
         q_all.append(qrows)
         base_all.append(score_base)
         score_all.append(score_knn)
+        s20_all.append(score_knn20)
+        s100_all.append(score_knn100)
         base_by_t[t] = score_base
         knn_by_t[t] = score_knn
         if len(nb_all) % 20 == 0:
@@ -425,7 +438,10 @@ def main() -> None:
     y_q = Y[q_cat]
     auc_knn = auc(y_q, score_knn)
     auc_base = auc(y_q, score_base_cat)
+    auc_knn20 = auc(y_q, np.concatenate(s20_all))
+    auc_knn100 = auc(y_q, np.concatenate(s100_all))
     log(f"AUC kNN {auc_knn:.4f} / 基线 {auc_base:.4f} / 差 {auc_knn - auc_base:+.4f}")
+    log(f"AUC 描述性 K=20 {auc_knn20:.4f} / K=100 {auc_knn100:.4f}")
 
     # ── (a) 周内打乱标签 ──
     wmap: dict[str, int] = {}
@@ -553,6 +569,8 @@ def main() -> None:
             if not uni:
                 continue
             bench = float(np.mean(uni))
+            n_univ = len(umem)
+            n_bench = len(uni)
             sel_rets: list[float] = []
             nm = 0
             for sy2 in sel:
@@ -566,6 +584,7 @@ def main() -> None:
             if not sel_rets:
                 continue
             per_week.append({"t": t, "n_sel": len(sel), "n_missing": nm, "bench": bench,
+                             "n_univ": n_univ, "n_bench": n_bench,
                              "excess": float(np.mean(sel_rets) - bench)})
         ex = np.asarray([w["excess"] for w in per_week]) if per_week else np.asarray([])
         if len(ex) == 0:
@@ -573,6 +592,9 @@ def main() -> None:
         return {"n_weeks": int(len(ex)), "mean": float(ex.mean()), "median": float(np.median(ex)),
                 "p10": float(np.percentile(ex, 10)), "p90": float(np.percentile(ex, 90)),
                 "n_missing_total": int(sum(w["n_missing"] for w in per_week)),
+                "n_univ_mean": float(np.mean([w.get("n_univ", 0) for w in per_week])),
+                "n_bench_mean": float(np.mean([w.get("n_bench", 0) for w in per_week])),
+                "n_bench_min": int(min(w.get("n_bench", 0) for w in per_week)),
                 "per_week": per_week}
 
     def safe_leg(*a, **kw) -> dict:
@@ -592,14 +614,30 @@ def main() -> None:
     res_a = {"auc_knn": auc_knn, "auc_base": auc_base, "diff": auc_knn - auc_base,
              "p_upper": p_a, "n_null": int(len(null_a)), "null_note": a_null_note,
              "p_upper_weak": p_a_weak, "null_mean": float(np.mean(null_a)) if len(null_a) else None,
-             "null_sd": float(np.std(null_a)) if len(null_a) else None}
+             "null_sd": float(np.std(null_a)) if len(null_a) else None,
+             "descriptive_auc_K20": auc_knn20, "descriptive_auc_K100": auc_knn100,
+             "percentile_of_apparatus": apparatus.percentile_of(auc_knn, null_a.tolist()) if len(null_a) else None}
     res_b = {"diff": auc_knn - auc_base, "ci95_lo": ci_lo, "ci95_hi": ci_hi,
              "ci95_lo_mb4": ci2[0], "ci95_hi_mb4": ci2[1], "n_boot": int(len(diffs))}
+    gap_h1 = (auc_h1 - auc_b_h1) if (auc_h1 is not None and auc_b_h1 is not None) else None
+    gap_h2 = (auc_h2 - auc_b_h2) if (auc_h2 is not None and auc_b_h2 is not None) else None
     res_c = {"auc_h1": auc_h1, "auc_h2": auc_h2, "auc_base_h1": auc_b_h1, "auc_base_h2": auc_b_h2,
              "diff_h1_h2": (auc_h1 - auc_h2) if (auc_h1 is not None and auc_h2 is not None) else None,
              "knn_minus_base_h1": (auc_h1 - auc_b_h1) if (auc_h1 is not None and auc_b_h1 is not None) else None,
              "knn_minus_base_h2": (auc_h2 - auc_b_h2) if (auc_h2 is not None and auc_b_h2 is not None) else None,
-             "n_weeks_h1": half, "n_weeks_h2": len(mondays) - half}
+             "n_weeks_h1": half, "n_weeks_h2": len(mondays) - half,
+             "n_q_h1": int(m1.sum()), "n_q_h2": int(m2.sum()),
+             "n_pos_h1": int(y_q[m1].sum()), "n_pos_h2": int(y_q[m2].sum()),
+             "readings": {
+                 "R1_knn_minus_base_both_halves_gt0": bool(
+                     gap_h1 is not None and gap_h2 is not None and gap_h1 > 0 and gap_h2 > 0),
+                 "R2_auc_h1_gt_auc_h2": bool(auc_h1 is not None and auc_h2 is not None and auc_h1 > auc_h2),
+                 "R3_both_halves_above_pooled": bool(
+                     auc_h1 is not None and auc_h2 is not None and
+                     auc_h1 > auc_knn and auc_h2 > auc_knn),
+                 "R4_halves_differ": bool(auc_h1 is not None and auc_h2 is not None and
+                                         abs(auc_h1 - auc_h2) > 0),
+             }}
     res_d = {"knn_top10": {k: v for k, v in d_main.items() if k != "per_week"},
              "knn_top10_exact_date": {k: v for k, v in d_full_exact.items() if k != "per_week"},
              "knn_top10_universe_sample": {k: v for k, v in d_sample_uni.items() if k != "per_week"},
@@ -615,6 +653,7 @@ def main() -> None:
         "c_knn_beats_base_both_halves": bool(res_c["knn_minus_base_h1"] is not None and
                                              res_c["knn_minus_base_h2"] is not None and
                                              res_c["knn_minus_base_h1"] > 0 and res_c["knn_minus_base_h2"] > 0),
+        "c_readings": res_c["readings"],
         "d_mean_le_m3pp": bool(d_main.get("mean") is not None and d_main["mean"] <= -0.03),
         "d_beats_base_1pp": bool(d_main.get("mean") is not None and d_base.get("mean") is not None and
                                  d_main["mean"] <= d_base["mean"] - 0.01),

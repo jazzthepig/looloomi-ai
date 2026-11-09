@@ -32,6 +32,7 @@
 | in_review | T-262 | lane-b | S-740 永续上线 = 做空供给冲击:现货先有的代币,Binance 上线 USDT 永续之后 30 / 60 天相对 BTC 是否跑输 —— 随机日期对照,判据照台账写死 | 报告 docs/research/T-262_perp_listing_short_supply.md + t262_perp_listing.py + t262_results.json;卡 notes 写 (a)–(d) 原始数字;in_review,推 lane-b/T-262。 | 永续上线的影响从没测过(T-227 / T-233 测的是现货上币)。 |  |
 | in_review | T-267 | lane-b | S-744 永续上线之后的跑输:做空供给 vs 上线前追高的均值回归 —— 按「之前 30 天收益」匹配的对照日 + 换 CoinGecko 价格源扩宇宙;判据照台账写死 | 报告 docs/research/T-267_perp_listing_mechanism.md + t267_mechanism.py + t267_results.json;卡 notes 写 (a)–(d);in_review,推 lane-b/T-267。 | S-740 判据全过但 n = 46 且机制没分开;扩宇宙与机制诊断是评审轮点名的下一件事。 |  |
 | in_review | T-307 | lane-b | T-301 补三张表(剂量-反应 × 两臂并列 × 1/7/30 日)+ 把复现路径放进仓库 —— lane-a 11-08 交叉复核返工 | docs/research/T-301_*.md 增补节 + 脚本/摘要日志入库;卡 notes 写三张表的头一行数;in_review,推 lane-b/T-307。 | T-301 的 −16% 会被当成『拥挤 squeeze 的效应』对外引用,但同表里 flush 同量级、且 2/3 超额在第一周实现 —— 读法不同,规则的触发窗口也不同。 |  |
+| in_review | T-316 | lane-b | S-795 盲复算:只读台账 S-795 原文,独立实现两臂与 (a)–(d) —— 不读 lane-a 的 t315_* / T-315_* 任何文件 | docs/research/T-316_blind_replication.md(口径歧义一节在前)+ t316_blind.py + t316_results.json;in_review,推 lane-b/T-316。不需要 scenarios。 | S-784 / S-793 的教训:预注册的含糊只有独立实现才查得出;两边数字对上,S-795 的结论才算立住。 |  |
 | in_review(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | in_review | T-220 | lane-c | 治理的领先信号:解锁前团队 / 基金会钱包流向、出事后的处理、营销强度 —— 先查能不能量(数据源可行性),再写预注册草稿 | 报告 docs/research/T-220_governance_leading_signals.md(开头可行性表);卡片 notes 写:免费源够不够、事件个数、两条草稿是否可在现有数据上跑;in_review,推 lane-c/T-220。 | 治理只量了滞后的一半(S-661 价值捕获比、S-587 质量);领先的行为信号一个都没有,不知道现有数据能不能量。 |  |
 | in_review | T-224 | lane-c | ② 倾斜在更宽的面板上:按时点前 50 大(含死币)的 ①,压低 S-691 五因子合成最差五分之一的权重 —— S-694 在 24 名上 ❌,问宽到 50 名「躲开」信号够不够用 | 报告 docs/research/T-224_tilt_pit50.md(预注册段在前);卡 notes 写基线年化 / 倾斜超额 / 随机对照分位 / 两段符号;scenarios/lane-c-T-224.json;in_review,推 lane-c/T-224。 | ② 只在 24 名上试过一次(S-694 ❌);宽面板上「躲开最差档」的倾斜没有任何回放。 |  |
@@ -316,4 +317,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 9 · claimed 6 · blocked 4 · in_review 51 · done 239 · dropped 4
+open 9 · claimed 6 · blocked 4 · in_review 52 · done 239 · dropped 4

@@ -1,0 +1,28 @@
+{
+  "id": "T-316",
+  "owner": "lane-b",
+  "status": "in_review",
+  "created": "2026-11-10",
+  "title": "S-795 盲复算:只读台账 S-795 原文,独立实现两臂与 (a)–(d) —— 不读 lane-a 的 t315_* / T-315_* 任何文件",
+  "source": "REFUTATION_LEDGER S-795 原文(唯一口径来源);事件:docs/research/t309_events.csv(main 上)+ delisting_watch;价格:perp_bv_daily / perp_bv_pairs(只读 SELECT,翻页带 order=);形状函数 import src.data.state.window_vectors.window_vector。 禁读:docs/research/t315_*、T-315_*、lane-a/T-315 分支。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-316.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读 S-795 原文,自己写实现(文件名 t316_*)。凡是原文没写清、你不得不自己定的地方,逐条列进报告「口径歧义」一节(本卡最重要的产出)并报每条若换另一种读法结论变不变。其余同 T-315:只算一次、先落事件匹配表、内容指纹、(a)–(d) 逐条。",
+    "expect": "docs/research/T-316_blind_replication.md(口径歧义一节在前)+ t316_blind.py + t316_results.json;in_review,推 lane-b/T-316。不需要 scenarios。"
+  },
+  "prior_value": "S-784 / S-793 的教训:预注册的含糊只有独立实现才查得出;两边数字对上,S-795 的结论才算立住。",
+  "notes": "2026-11-09T15:16:49Z Seth 开卡。与 A 道 T-315 并行;交付前不看对方。 | 2026-11-09T15:45Z lane-b 交付部分 (lane-b/T-316 9f8b4134):实现+事件匹配+14条歧义已交,冒烟窗口 5 周 AUC 0.4809/基线 0.7639;判定区间 (a)–(d) 未跑 —— 不合并,等 lane-b 跑 `python3 docs/research/t316_blind.py` 后推 v2 带完整数字(Seth 15:45)。 | 2026-11-09T15:44:15Z lane-b v2 全量交付 (lane-b/T-316):判定区间 140 个周一只算一次,a-d 全跑完 —— (a) AUC kNN 0.5231 / 基线 0.7064,周内打乱 p=0.0470(弱版 0.0420) => 不过; (b) 差 -0.1833,整周块自助 CI [-0.2156,-0.1500](mb=4 [-0.2321,-0.1273]) => 不过; (c) H1 kNN 0.5186/基线 0.7166、H2 kNN 0.5237/基线 0.7735,四读法 R1-R3 否 R4 是 => 不过; (d) kNN 前 10% 均值 +1.7011pp/中位 -0.3176pp/p10 -6.4802pp/p90 +11.6628pp/140 周/剔除 0,基线前 10% 均值 -0.4821pp => 不过。 描述性 K=20 0.5109 / K=50 0.5231 / K=100 0.5374。结论:四条全过不了 => 按 S-795 原文后果条款,单币形态识别这条路收卷;「认出坏币靠幅度和流动性,不靠形状」。产物:docs/research/T-316_blind_replication.md(口径歧义 18 条在前)+ t316_blind.py + t316_results.json + t316_event_match.csv(先落事件匹配表)+ sha256 指纹。 另:apparatus 上没有 p_upper(S-795 原文允许用 (1+#)/(1+n) 回退,已按原文用)—— 要补该函数请另开卡 @seth(本卡禁改 src/)。",
+  "verified": null
+}
