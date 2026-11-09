@@ -1,0 +1,3274 @@
+{
+  "task": "T-319",
+  "ledger": "S-798",
+  "framework": {
+    "source": "docs/research/t312_rebaseline.py (= t296 / t293 / S-774 / S-776 / S-791)",
+    "params_unchanged": true,
+    "alpha": 10.0,
+    "min_coins_per_week": 20,
+    "last_week": "2026-11-06",
+    "halves_at": [
+      "2023-01-01",
+      "2024-10-01"
+    ],
+    "dims": {
+      "R": [
+        "fund7",
+        "doi7",
+        "crowd",
+        "smart",
+        "taker7",
+        "mom7",
+        "mom30",
+        "vol30",
+        "vratio",
+        "turn",
+        "dd90"
+      ],
+      "P": [
+        "mom7",
+        "mom30",
+        "vol30",
+        "vratio",
+        "dd90"
+      ]
+    },
+    "added_filter": {
+      "top_n_by_mcap": 150,
+      "mcap_source": "asset_mcap_daily",
+      "asof": "当天,没有则往前 ≤ 3 天",
+      "no_mcap": "不进",
+      "fewer_than_top_n": "用全部并报出",
+      "train_rows_filtered": true,
+      "train_filter_key": "训练行自己的日期 d"
+    }
+  },
+  "sample": {
+    "n_weeks": 197,
+    "first": "2023-01-02",
+    "last": "2026-10-05",
+    "n_weeks_unfiltered": 197,
+    "weeks_dropped_by_filter": {
+      "no_rows": 0,
+      "thin": 4,
+      "thin_train": 0
+    }
+  },
+  "self_check": {
+    "vec_vs_2q_minus_1_max_abs_diff": 2.980194091506405e-08,
+    "n_rows_with_vec": 356203,
+    "unfiltered_P_ic_mean": 0.09628629002352945,
+    "unfiltered_P_ic_expected": 0.09628629002352945,
+    "unfiltered_P_ic_delta": 0.0,
+    "passed": true
+  },
+  "arms": {
+    "R": {
+      "n_weeks": 197,
+      "ic_mean": 0.05276447809281047,
+      "nw_t_lag5": 2.293556453364,
+      "nw_se": 0.02300552838602245,
+      "prop_positive": 0.6040609137055838,
+      "q5_minus_q1_x30": 0.01937576082966509,
+      "bottom_quintile_x30": 0.015182202687904399,
+      "bottom_quintile_x30_median": 0.011683839334807657,
+      "bottom_quintile_x30_p25": -0.028699474748102374,
+      "bottom_quintile_x30_p75": 0.057158945700754596,
+      "q5_minus_q1_x30_median": 0.022073506981043427,
+      "halves": [
+        {
+          "half": "2023-01-01 → 2024-10-01",
+          "n_weeks": 92,
+          "ic_mean": -0.013927462619116674,
+          "bottom_quintile_x30": 0.008977897307762628,
+          "bottom_quintile_x30_median": 0.01175277450921241,
+          "q5_minus_q1_x30": -0.008187286140093168
+        },
+        {
+          "half": "2024-10-01 →",
+          "n_weeks": 105,
+          "ic_mean": 0.11119932138326091,
+          "bottom_quintile_x30": 0.020618355973361948,
+          "bottom_quintile_x30_median": 0.011668142602010212,
+          "q5_minus_q1_x30": 0.043526240079358035
+        }
+      ],
+      "halves_both_positive": false,
+      "unfiltered": {
+        "n_weeks": 197,
+        "ic_mean": 0.08783762452467814,
+        "nw_t_lag5": 5.071952861640978,
+        "nw_se": 0.017318304590129646,
+        "prop_positive": 0.7309644670050761,
+        "q5_minus_q1_x30": 0.044232964844714014,
+        "bottom_quintile_x30": -0.02322803815226772,
+        "bottom_quintile_x30_median": -0.021291149421427215,
+        "bottom_quintile_x30_p25": -0.05287194611398182,
+        "bottom_quintile_x30_p75": 0.01585230509056931,
+        "q5_minus_q1_x30_median": 0.038567645744356824,
+        "halves": [
+          {
+            "half": "2023-01-01 → 2024-10-01",
+            "n_weeks": 92,
+            "ic_mean": 0.03666670186925054
+          },
+          {
+            "half": "2024-10-01 →",
+            "n_weeks": 105,
+            "ic_mean": 0.1326730996132433
+          }
+        ],
+        "halves_both_positive": true
+      }
+    },
+    "P": {
+      "n_weeks": 197,
+      "ic_mean": 0.06026534547884253,
+      "nw_t_lag5": 2.3846359489857236,
+      "nw_se": 0.02527234629020655,
+      "prop_positive": 0.5786802030456852,
+      "q5_minus_q1_x30": 0.020536102805598196,
+      "bottom_quintile_x30": 0.01454708258306298,
+      "bottom_quintile_x30_median": 0.0118450551428184,
+      "bottom_quintile_x30_p25": -0.0373427710137973,
+      "bottom_quintile_x30_p75": 0.06444055671292051,
+      "q5_minus_q1_x30_median": 0.00932077110163403,
+      "halves": [
+        {
+          "half": "2023-01-01 → 2024-10-01",
+          "n_weeks": 92,
+          "ic_mean": -0.008470159534120704,
+          "bottom_quintile_x30": 0.007494744880071423,
+          "bottom_quintile_x30_median": 0.011810056924430688,
+          "q5_minus_q1_x30": -0.01193443170457821
+        },
+        {
+          "half": "2024-10-01 →",
+          "n_weeks": 105,
+          "ic_mean": 0.12049074034734368,
+          "bottom_quintile_x30": 0.0207262737133032,
+          "bottom_quintile_x30_median": 0.01548445676864488,
+          "q5_minus_q1_x30": 0.048986475900228955
+        }
+      ],
+      "halves_both_positive": false,
+      "unfiltered": {
+        "n_weeks": 197,
+        "ic_mean": 0.09628629002352945,
+        "nw_t_lag5": 5.103898778108445,
+        "nw_se": 0.01886524286816168,
+        "prop_positive": 0.7614213197969543,
+        "q5_minus_q1_x30": 0.04649195079897924,
+        "bottom_quintile_x30": -0.02494657396023226,
+        "bottom_quintile_x30_median": -0.0140705332942126,
+        "bottom_quintile_x30_p25": -0.05882782979382008,
+        "bottom_quintile_x30_p75": 0.014317278012040208,
+        "q5_minus_q1_x30_median": 0.03210659825469401,
+        "halves": [
+          {
+            "half": "2023-01-01 → 2024-10-01",
+            "n_weeks": 92,
+            "ic_mean": 0.03186840742119673
+          },
+          {
+            "half": "2024-10-01 →",
+            "n_weeks": 105,
+            "ic_mean": 0.15272862525604952
+          }
+        ],
+        "halves_both_positive": true
+      }
+    }
+  },
+  "paired_ic_diff": {
+    "R_minus_P": {
+      "mean": -0.007500867386032061,
+      "nw_t_lag5": -0.9520554943944465,
+      "nw_se": 0.00787860311735607,
+      "n_weeks": 197,
+      "prop_positive": 0.5279187817258884
+    }
+  },
+  "halves_gap": {
+    "P_fixed_universe": 0.1289608998814644,
+    "P_unfiltered": 0.12086021783485279,
+    "R_fixed_universe": 0.1251267840023776,
+    "R_unfiltered": 0.09600639774399276,
+    "read_rule_preregistered": "后半−前半 ≥ 0.05 ⇒ 更像市场态;收到 0.03 以内 ⇒ 主要是宇宙扩张。只报不判:这里只给数与落在哪一档,不下判定。",
+    "lands_in_preregistered_band": "market_state(≥0.05)"
+  },
+  "weekly_coins": {
+    "fixed_universe_n_coins_with_x30": {
+      "mean": 100.0,
+      "median": 99.0,
+      "min": 82.0,
+      "max": 112.0,
+      "p25": 94.0,
+      "p75": 106.0
+    },
+    "fixed_universe_n_symbols_in_top150": {
+      "mean": 150.0,
+      "median": 150.0,
+      "min": 150.0,
+      "max": 150.0
+    },
+    "unfiltered_n_coins_with_x30": {
+      "mean": 249.96446700507613,
+      "median": 247.0,
+      "min": 130.0,
+      "max": 404.0
+    },
+    "weeks_where_mcap_universe_below_top_n": 0,
+    "dates_with_mcap_coverage": 1436,
+    "mcap_coverage_per_flow_date": {
+      "n_mcap_avail_mean": 343.5055710306407,
+      "n_mcap_avail_min": 229,
+      "n_mcap_avail_max": 461,
+      "flow_dates_with_zero_mcap": 0,
+      "flow_dates_with_mcap_below_top_n": 0
+    },
+    "per_week": [
+      {
+        "week": "2023-01-02",
+        "n_coins": 99,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-01-09",
+        "n_coins": 99,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-01-16",
+        "n_coins": 99,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-01-23",
+        "n_coins": 101,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-01-30",
+        "n_coins": 101,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-02-06",
+        "n_coins": 99,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-02-13",
+        "n_coins": 98,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-02-20",
+        "n_coins": 98,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-02-27",
+        "n_coins": 98,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-03-06",
+        "n_coins": 98,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-03-13",
+        "n_coins": 98,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-03-20",
+        "n_coins": 101,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-03-27",
+        "n_coins": 100,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-04-03",
+        "n_coins": 102,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-04-10",
+        "n_coins": 106,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-04-17",
+        "n_coins": 109,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-04-24",
+        "n_coins": 109,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-05-01",
+        "n_coins": 110,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-05-08",
+        "n_coins": 108,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-05-15",
+        "n_coins": 111,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-05-22",
+        "n_coins": 112,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-05-29",
+        "n_coins": 111,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-06-05",
+        "n_coins": 111,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-06-12",
+        "n_coins": 110,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-06-19",
+        "n_coins": 109,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-06-26",
+        "n_coins": 111,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-07-03",
+        "n_coins": 111,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-07-10",
+        "n_coins": 110,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-07-17",
+        "n_coins": 110,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-07-24",
+        "n_coins": 108,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-07-31",
+        "n_coins": 108,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-08-07",
+        "n_coins": 109,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-08-14",
+        "n_coins": 108,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-08-21",
+        "n_coins": 107,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-08-28",
+        "n_coins": 107,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-09-04",
+        "n_coins": 108,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-09-11",
+        "n_coins": 108,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-09-18",
+        "n_coins": 107,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-09-25",
+        "n_coins": 107,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-10-02",
+        "n_coins": 108,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-10-09",
+        "n_coins": 108,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-10-16",
+        "n_coins": 107,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-10-23",
+        "n_coins": 107,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-10-30",
+        "n_coins": 107,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-11-06",
+        "n_coins": 106,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-11-13",
+        "n_coins": 106,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-11-20",
+        "n_coins": 104,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-11-27",
+        "n_coins": 103,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-12-04",
+        "n_coins": 106,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-12-11",
+        "n_coins": 106,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-12-18",
+        "n_coins": 104,
+        "n_universe": 150
+      },
+      {
+        "week": "2023-12-25",
+        "n_coins": 109,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-01-01",
+        "n_coins": 109,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-01-08",
+        "n_coins": 109,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-01-15",
+        "n_coins": 109,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-01-22",
+        "n_coins": 107,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-01-29",
+        "n_coins": 106,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-02-05",
+        "n_coins": 107,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-02-12",
+        "n_coins": 106,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-02-19",
+        "n_coins": 107,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-02-26",
+        "n_coins": 106,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-03-04",
+        "n_coins": 106,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-03-11",
+        "n_coins": 105,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-03-18",
+        "n_coins": 105,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-03-25",
+        "n_coins": 105,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-04-01",
+        "n_coins": 104,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-04-08",
+        "n_coins": 104,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-04-15",
+        "n_coins": 106,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-04-22",
+        "n_coins": 107,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-04-29",
+        "n_coins": 106,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-05-06",
+        "n_coins": 108,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-05-13",
+        "n_coins": 108,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-05-20",
+        "n_coins": 109,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-05-27",
+        "n_coins": 110,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-06-03",
+        "n_coins": 110,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-06-10",
+        "n_coins": 109,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-06-17",
+        "n_coins": 110,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-06-24",
+        "n_coins": 109,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-07-01",
+        "n_coins": 106,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-07-08",
+        "n_coins": 105,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-07-15",
+        "n_coins": 105,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-07-22",
+        "n_coins": 104,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-07-29",
+        "n_coins": 104,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-08-05",
+        "n_coins": 105,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-08-12",
+        "n_coins": 105,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-08-19",
+        "n_coins": 106,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-08-26",
+        "n_coins": 105,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-09-02",
+        "n_coins": 105,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-09-09",
+        "n_coins": 105,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-09-16",
+        "n_coins": 104,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-09-23",
+        "n_coins": 106,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-09-30",
+        "n_coins": 106,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-10-07",
+        "n_coins": 105,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-10-14",
+        "n_coins": 104,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-10-21",
+        "n_coins": 105,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-10-28",
+        "n_coins": 102,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-11-04",
+        "n_coins": 103,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-11-11",
+        "n_coins": 104,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-11-18",
+        "n_coins": 101,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-11-25",
+        "n_coins": 104,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-12-02",
+        "n_coins": 104,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-12-09",
+        "n_coins": 102,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-12-16",
+        "n_coins": 100,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-12-23",
+        "n_coins": 99,
+        "n_universe": 150
+      },
+      {
+        "week": "2024-12-30",
+        "n_coins": 99,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-01-06",
+        "n_coins": 99,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-01-13",
+        "n_coins": 98,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-01-20",
+        "n_coins": 97,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-01-27",
+        "n_coins": 96,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-02-03",
+        "n_coins": 96,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-02-10",
+        "n_coins": 99,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-02-17",
+        "n_coins": 96,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-02-24",
+        "n_coins": 98,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-03-03",
+        "n_coins": 99,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-03-10",
+        "n_coins": 99,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-03-17",
+        "n_coins": 98,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-03-24",
+        "n_coins": 99,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-03-31",
+        "n_coins": 98,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-04-07",
+        "n_coins": 98,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-04-14",
+        "n_coins": 98,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-04-21",
+        "n_coins": 95,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-04-28",
+        "n_coins": 97,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-05-05",
+        "n_coins": 96,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-05-12",
+        "n_coins": 96,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-05-19",
+        "n_coins": 96,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-05-26",
+        "n_coins": 97,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-06-02",
+        "n_coins": 98,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-06-09",
+        "n_coins": 95,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-06-16",
+        "n_coins": 96,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-06-23",
+        "n_coins": 98,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-06-30",
+        "n_coins": 97,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-07-07",
+        "n_coins": 92,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-07-14",
+        "n_coins": 95,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-07-21",
+        "n_coins": 97,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-07-28",
+        "n_coins": 95,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-08-04",
+        "n_coins": 95,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-08-11",
+        "n_coins": 94,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-08-18",
+        "n_coins": 94,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-08-25",
+        "n_coins": 96,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-09-01",
+        "n_coins": 95,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-09-08",
+        "n_coins": 95,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-09-15",
+        "n_coins": 96,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-09-22",
+        "n_coins": 96,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-09-29",
+        "n_coins": 94,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-10-06",
+        "n_coins": 94,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-10-13",
+        "n_coins": 92,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-10-20",
+        "n_coins": 92,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-10-27",
+        "n_coins": 91,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-11-03",
+        "n_coins": 94,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-11-10",
+        "n_coins": 95,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-11-17",
+        "n_coins": 93,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-11-24",
+        "n_coins": 93,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-12-01",
+        "n_coins": 91,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-12-08",
+        "n_coins": 90,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-12-15",
+        "n_coins": 89,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-12-22",
+        "n_coins": 89,
+        "n_universe": 150
+      },
+      {
+        "week": "2025-12-29",
+        "n_coins": 88,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-01-05",
+        "n_coins": 91,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-01-12",
+        "n_coins": 92,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-01-19",
+        "n_coins": 93,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-01-26",
+        "n_coins": 95,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-02-02",
+        "n_coins": 94,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-02-09",
+        "n_coins": 90,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-02-16",
+        "n_coins": 93,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-02-23",
+        "n_coins": 92,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-03-02",
+        "n_coins": 93,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-03-09",
+        "n_coins": 94,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-03-16",
+        "n_coins": 94,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-03-23",
+        "n_coins": 92,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-03-30",
+        "n_coins": 88,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-04-06",
+        "n_coins": 87,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-04-13",
+        "n_coins": 87,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-04-20",
+        "n_coins": 88,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-04-27",
+        "n_coins": 89,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-05-04",
+        "n_coins": 90,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-05-11",
+        "n_coins": 91,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-05-18",
+        "n_coins": 90,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-05-25",
+        "n_coins": 92,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-06-01",
+        "n_coins": 94,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-06-08",
+        "n_coins": 92,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-06-15",
+        "n_coins": 91,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-06-22",
+        "n_coins": 89,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-06-29",
+        "n_coins": 92,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-07-06",
+        "n_coins": 94,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-07-13",
+        "n_coins": 93,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-07-20",
+        "n_coins": 87,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-07-27",
+        "n_coins": 89,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-08-03",
+        "n_coins": 88,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-08-10",
+        "n_coins": 84,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-08-17",
+        "n_coins": 82,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-08-24",
+        "n_coins": 94,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-08-31",
+        "n_coins": 90,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-09-07",
+        "n_coins": 92,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-09-14",
+        "n_coins": 96,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-09-21",
+        "n_coins": 98,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-09-28",
+        "n_coins": 99,
+        "n_universe": 150
+      },
+      {
+        "week": "2026-10-05",
+        "n_coins": 100,
+        "n_universe": 150
+      }
+    ],
+    "per_week_unfiltered": [
+      {
+        "week": "2023-01-02",
+        "n_coins": 130
+      },
+      {
+        "week": "2023-01-09",
+        "n_coins": 130
+      },
+      {
+        "week": "2023-01-16",
+        "n_coins": 130
+      },
+      {
+        "week": "2023-01-23",
+        "n_coins": 130
+      },
+      {
+        "week": "2023-01-30",
+        "n_coins": 130
+      },
+      {
+        "week": "2023-02-06",
+        "n_coins": 130
+      },
+      {
+        "week": "2023-02-13",
+        "n_coins": 130
+      },
+      {
+        "week": "2023-02-20",
+        "n_coins": 130
+      },
+      {
+        "week": "2023-02-27",
+        "n_coins": 130
+      },
+      {
+        "week": "2023-03-06",
+        "n_coins": 130
+      },
+      {
+        "week": "2023-03-13",
+        "n_coins": 133
+      },
+      {
+        "week": "2023-03-20",
+        "n_coins": 134
+      },
+      {
+        "week": "2023-03-27",
+        "n_coins": 136
+      },
+      {
+        "week": "2023-04-03",
+        "n_coins": 137
+      },
+      {
+        "week": "2023-04-10",
+        "n_coins": 142
+      },
+      {
+        "week": "2023-04-17",
+        "n_coins": 146
+      },
+      {
+        "week": "2023-04-24",
+        "n_coins": 148
+      },
+      {
+        "week": "2023-05-01",
+        "n_coins": 150
+      },
+      {
+        "week": "2023-05-08",
+        "n_coins": 150
+      },
+      {
+        "week": "2023-05-15",
+        "n_coins": 152
+      },
+      {
+        "week": "2023-05-22",
+        "n_coins": 156
+      },
+      {
+        "week": "2023-05-29",
+        "n_coins": 158
+      },
+      {
+        "week": "2023-06-05",
+        "n_coins": 161
+      },
+      {
+        "week": "2023-06-12",
+        "n_coins": 161
+      },
+      {
+        "week": "2023-06-19",
+        "n_coins": 163
+      },
+      {
+        "week": "2023-06-26",
+        "n_coins": 167
+      },
+      {
+        "week": "2023-07-03",
+        "n_coins": 168
+      },
+      {
+        "week": "2023-07-10",
+        "n_coins": 168
+      },
+      {
+        "week": "2023-07-17",
+        "n_coins": 169
+      },
+      {
+        "week": "2023-07-24",
+        "n_coins": 170
+      },
+      {
+        "week": "2023-07-31",
+        "n_coins": 170
+      },
+      {
+        "week": "2023-08-07",
+        "n_coins": 170
+      },
+      {
+        "week": "2023-08-14",
+        "n_coins": 170
+      },
+      {
+        "week": "2023-08-21",
+        "n_coins": 171
+      },
+      {
+        "week": "2023-08-28",
+        "n_coins": 170
+      },
+      {
+        "week": "2023-09-04",
+        "n_coins": 171
+      },
+      {
+        "week": "2023-09-11",
+        "n_coins": 171
+      },
+      {
+        "week": "2023-09-18",
+        "n_coins": 174
+      },
+      {
+        "week": "2023-09-25",
+        "n_coins": 174
+      },
+      {
+        "week": "2023-10-02",
+        "n_coins": 177
+      },
+      {
+        "week": "2023-10-09",
+        "n_coins": 179
+      },
+      {
+        "week": "2023-10-16",
+        "n_coins": 179
+      },
+      {
+        "week": "2023-10-23",
+        "n_coins": 179
+      },
+      {
+        "week": "2023-10-30",
+        "n_coins": 179
+      },
+      {
+        "week": "2023-11-06",
+        "n_coins": 180
+      },
+      {
+        "week": "2023-11-13",
+        "n_coins": 181
+      },
+      {
+        "week": "2023-11-20",
+        "n_coins": 183
+      },
+      {
+        "week": "2023-11-27",
+        "n_coins": 183
+      },
+      {
+        "week": "2023-12-04",
+        "n_coins": 187
+      },
+      {
+        "week": "2023-12-11",
+        "n_coins": 190
+      },
+      {
+        "week": "2023-12-18",
+        "n_coins": 187
+      },
+      {
+        "week": "2023-12-25",
+        "n_coins": 196
+      },
+      {
+        "week": "2024-01-01",
+        "n_coins": 197
+      },
+      {
+        "week": "2024-01-08",
+        "n_coins": 199
+      },
+      {
+        "week": "2024-01-15",
+        "n_coins": 200
+      },
+      {
+        "week": "2024-01-22",
+        "n_coins": 201
+      },
+      {
+        "week": "2024-01-29",
+        "n_coins": 200
+      },
+      {
+        "week": "2024-02-05",
+        "n_coins": 205
+      },
+      {
+        "week": "2024-02-12",
+        "n_coins": 205
+      },
+      {
+        "week": "2024-02-19",
+        "n_coins": 206
+      },
+      {
+        "week": "2024-02-26",
+        "n_coins": 207
+      },
+      {
+        "week": "2024-03-04",
+        "n_coins": 207
+      },
+      {
+        "week": "2024-03-11",
+        "n_coins": 208
+      },
+      {
+        "week": "2024-03-18",
+        "n_coins": 208
+      },
+      {
+        "week": "2024-03-25",
+        "n_coins": 208
+      },
+      {
+        "week": "2024-04-01",
+        "n_coins": 207
+      },
+      {
+        "week": "2024-04-08",
+        "n_coins": 208
+      },
+      {
+        "week": "2024-04-15",
+        "n_coins": 210
+      },
+      {
+        "week": "2024-04-22",
+        "n_coins": 212
+      },
+      {
+        "week": "2024-04-29",
+        "n_coins": 213
+      },
+      {
+        "week": "2024-05-06",
+        "n_coins": 217
+      },
+      {
+        "week": "2024-05-13",
+        "n_coins": 216
+      },
+      {
+        "week": "2024-05-20",
+        "n_coins": 211
+      },
+      {
+        "week": "2024-05-27",
+        "n_coins": 213
+      },
+      {
+        "week": "2024-06-03",
+        "n_coins": 213
+      },
+      {
+        "week": "2024-06-10",
+        "n_coins": 215
+      },
+      {
+        "week": "2024-06-17",
+        "n_coins": 215
+      },
+      {
+        "week": "2024-06-24",
+        "n_coins": 215
+      },
+      {
+        "week": "2024-07-01",
+        "n_coins": 211
+      },
+      {
+        "week": "2024-07-08",
+        "n_coins": 214
+      },
+      {
+        "week": "2024-07-15",
+        "n_coins": 209
+      },
+      {
+        "week": "2024-07-22",
+        "n_coins": 214
+      },
+      {
+        "week": "2024-07-29",
+        "n_coins": 214
+      },
+      {
+        "week": "2024-08-05",
+        "n_coins": 215
+      },
+      {
+        "week": "2024-08-12",
+        "n_coins": 215
+      },
+      {
+        "week": "2024-08-19",
+        "n_coins": 215
+      },
+      {
+        "week": "2024-08-26",
+        "n_coins": 214
+      },
+      {
+        "week": "2024-09-02",
+        "n_coins": 214
+      },
+      {
+        "week": "2024-09-09",
+        "n_coins": 216
+      },
+      {
+        "week": "2024-09-16",
+        "n_coins": 212
+      },
+      {
+        "week": "2024-09-23",
+        "n_coins": 218
+      },
+      {
+        "week": "2024-09-30",
+        "n_coins": 219
+      },
+      {
+        "week": "2024-10-07",
+        "n_coins": 222
+      },
+      {
+        "week": "2024-10-14",
+        "n_coins": 230
+      },
+      {
+        "week": "2024-10-21",
+        "n_coins": 232
+      },
+      {
+        "week": "2024-10-28",
+        "n_coins": 235
+      },
+      {
+        "week": "2024-11-04",
+        "n_coins": 238
+      },
+      {
+        "week": "2024-11-11",
+        "n_coins": 244
+      },
+      {
+        "week": "2024-11-18",
+        "n_coins": 248
+      },
+      {
+        "week": "2024-11-25",
+        "n_coins": 251
+      },
+      {
+        "week": "2024-12-02",
+        "n_coins": 251
+      },
+      {
+        "week": "2024-12-09",
+        "n_coins": 247
+      },
+      {
+        "week": "2024-12-16",
+        "n_coins": 247
+      },
+      {
+        "week": "2024-12-23",
+        "n_coins": 248
+      },
+      {
+        "week": "2024-12-30",
+        "n_coins": 254
+      },
+      {
+        "week": "2025-01-06",
+        "n_coins": 259
+      },
+      {
+        "week": "2025-01-13",
+        "n_coins": 262
+      },
+      {
+        "week": "2025-01-20",
+        "n_coins": 264
+      },
+      {
+        "week": "2025-01-27",
+        "n_coins": 268
+      },
+      {
+        "week": "2025-02-03",
+        "n_coins": 271
+      },
+      {
+        "week": "2025-02-10",
+        "n_coins": 275
+      },
+      {
+        "week": "2025-02-17",
+        "n_coins": 279
+      },
+      {
+        "week": "2025-02-24",
+        "n_coins": 277
+      },
+      {
+        "week": "2025-03-03",
+        "n_coins": 285
+      },
+      {
+        "week": "2025-03-10",
+        "n_coins": 287
+      },
+      {
+        "week": "2025-03-17",
+        "n_coins": 285
+      },
+      {
+        "week": "2025-03-24",
+        "n_coins": 284
+      },
+      {
+        "week": "2025-03-31",
+        "n_coins": 288
+      },
+      {
+        "week": "2025-04-07",
+        "n_coins": 296
+      },
+      {
+        "week": "2025-04-14",
+        "n_coins": 287
+      },
+      {
+        "week": "2025-04-21",
+        "n_coins": 278
+      },
+      {
+        "week": "2025-04-28",
+        "n_coins": 290
+      },
+      {
+        "week": "2025-05-05",
+        "n_coins": 291
+      },
+      {
+        "week": "2025-05-12",
+        "n_coins": 309
+      },
+      {
+        "week": "2025-05-19",
+        "n_coins": 311
+      },
+      {
+        "week": "2025-05-26",
+        "n_coins": 315
+      },
+      {
+        "week": "2025-06-02",
+        "n_coins": 315
+      },
+      {
+        "week": "2025-06-09",
+        "n_coins": 301
+      },
+      {
+        "week": "2025-06-16",
+        "n_coins": 314
+      },
+      {
+        "week": "2025-06-23",
+        "n_coins": 309
+      },
+      {
+        "week": "2025-06-30",
+        "n_coins": 303
+      },
+      {
+        "week": "2025-07-07",
+        "n_coins": 313
+      },
+      {
+        "week": "2025-07-14",
+        "n_coins": 347
+      },
+      {
+        "week": "2025-07-21",
+        "n_coins": 354
+      },
+      {
+        "week": "2025-07-28",
+        "n_coins": 357
+      },
+      {
+        "week": "2025-08-04",
+        "n_coins": 349
+      },
+      {
+        "week": "2025-08-11",
+        "n_coins": 360
+      },
+      {
+        "week": "2025-08-18",
+        "n_coins": 367
+      },
+      {
+        "week": "2025-08-25",
+        "n_coins": 364
+      },
+      {
+        "week": "2025-09-01",
+        "n_coins": 338
+      },
+      {
+        "week": "2025-09-08",
+        "n_coins": 317
+      },
+      {
+        "week": "2025-09-15",
+        "n_coins": 360
+      },
+      {
+        "week": "2025-09-22",
+        "n_coins": 355
+      },
+      {
+        "week": "2025-09-29",
+        "n_coins": 330
+      },
+      {
+        "week": "2025-10-06",
+        "n_coins": 332
+      },
+      {
+        "week": "2025-10-13",
+        "n_coins": 381
+      },
+      {
+        "week": "2025-10-20",
+        "n_coins": 367
+      },
+      {
+        "week": "2025-10-27",
+        "n_coins": 334
+      },
+      {
+        "week": "2025-11-03",
+        "n_coins": 356
+      },
+      {
+        "week": "2025-11-10",
+        "n_coins": 368
+      },
+      {
+        "week": "2025-11-17",
+        "n_coins": 358
+      },
+      {
+        "week": "2025-11-24",
+        "n_coins": 367
+      },
+      {
+        "week": "2025-12-01",
+        "n_coins": 339
+      },
+      {
+        "week": "2025-12-08",
+        "n_coins": 335
+      },
+      {
+        "week": "2025-12-15",
+        "n_coins": 316
+      },
+      {
+        "week": "2025-12-22",
+        "n_coins": 305
+      },
+      {
+        "week": "2025-12-29",
+        "n_coins": 301
+      },
+      {
+        "week": "2026-01-05",
+        "n_coins": 347
+      },
+      {
+        "week": "2026-01-12",
+        "n_coins": 340
+      },
+      {
+        "week": "2026-01-19",
+        "n_coins": 350
+      },
+      {
+        "week": "2026-01-26",
+        "n_coins": 318
+      },
+      {
+        "week": "2026-02-02",
+        "n_coins": 349
+      },
+      {
+        "week": "2026-02-09",
+        "n_coins": 336
+      },
+      {
+        "week": "2026-02-16",
+        "n_coins": 308
+      },
+      {
+        "week": "2026-02-23",
+        "n_coins": 293
+      },
+      {
+        "week": "2026-03-02",
+        "n_coins": 316
+      },
+      {
+        "week": "2026-03-09",
+        "n_coins": 311
+      },
+      {
+        "week": "2026-03-16",
+        "n_coins": 330
+      },
+      {
+        "week": "2026-03-23",
+        "n_coins": 315
+      },
+      {
+        "week": "2026-03-30",
+        "n_coins": 268
+      },
+      {
+        "week": "2026-04-06",
+        "n_coins": 315
+      },
+      {
+        "week": "2026-04-13",
+        "n_coins": 328
+      },
+      {
+        "week": "2026-04-20",
+        "n_coins": 391
+      },
+      {
+        "week": "2026-04-27",
+        "n_coins": 351
+      },
+      {
+        "week": "2026-05-04",
+        "n_coins": 314
+      },
+      {
+        "week": "2026-05-11",
+        "n_coins": 371
+      },
+      {
+        "week": "2026-05-18",
+        "n_coins": 366
+      },
+      {
+        "week": "2026-05-25",
+        "n_coins": 323
+      },
+      {
+        "week": "2026-06-01",
+        "n_coins": 327
+      },
+      {
+        "week": "2026-06-08",
+        "n_coins": 358
+      },
+      {
+        "week": "2026-06-15",
+        "n_coins": 311
+      },
+      {
+        "week": "2026-06-22",
+        "n_coins": 305
+      },
+      {
+        "week": "2026-06-29",
+        "n_coins": 320
+      },
+      {
+        "week": "2026-07-06",
+        "n_coins": 304
+      },
+      {
+        "week": "2026-07-13",
+        "n_coins": 288
+      },
+      {
+        "week": "2026-07-20",
+        "n_coins": 268
+      },
+      {
+        "week": "2026-07-27",
+        "n_coins": 271
+      },
+      {
+        "week": "2026-08-03",
+        "n_coins": 254
+      },
+      {
+        "week": "2026-08-10",
+        "n_coins": 277
+      },
+      {
+        "week": "2026-08-17",
+        "n_coins": 271
+      },
+      {
+        "week": "2026-08-24",
+        "n_coins": 352
+      },
+      {
+        "week": "2026-08-31",
+        "n_coins": 311
+      },
+      {
+        "week": "2026-09-07",
+        "n_coins": 304
+      },
+      {
+        "week": "2026-09-14",
+        "n_coins": 340
+      },
+      {
+        "week": "2026-09-21",
+        "n_coins": 359
+      },
+      {
+        "week": "2026-09-28",
+        "n_coins": 404
+      },
+      {
+        "week": "2026-10-05",
+        "n_coins": 353
+      }
+    ],
+    "per_half_mean_coins": {
+      "fixed_h1": 106.03260869565217,
+      "fixed_h2": 94.71428571428571,
+      "unfiltered_h1": 181.58695652173913,
+      "unfiltered_h2": 309.87619047619046
+    }
+  },
+  "weekly_ic": {
+    "weeks": [
+      "2023-01-02",
+      "2023-01-09",
+      "2023-01-16",
+      "2023-01-23",
+      "2023-01-30",
+      "2023-02-06",
+      "2023-02-13",
+      "2023-02-20",
+      "2023-02-27",
+      "2023-03-06",
+      "2023-03-13",
+      "2023-03-20",
+      "2023-03-27",
+      "2023-04-03",
+      "2023-04-10",
+      "2023-04-17",
+      "2023-04-24",
+      "2023-05-01",
+      "2023-05-08",
+      "2023-05-15",
+      "2023-05-22",
+      "2023-05-29",
+      "2023-06-05",
+      "2023-06-12",
+      "2023-06-19",
+      "2023-06-26",
+      "2023-07-03",
+      "2023-07-10",
+      "2023-07-17",
+      "2023-07-24",
+      "2023-07-31",
+      "2023-08-07",
+      "2023-08-14",
+      "2023-08-21",
+      "2023-08-28",
+      "2023-09-04",
+      "2023-09-11",
+      "2023-09-18",
+      "2023-09-25",
+      "2023-10-02",
+      "2023-10-09",
+      "2023-10-16",
+      "2023-10-23",
+      "2023-10-30",
+      "2023-11-06",
+      "2023-11-13",
+      "2023-11-20",
+      "2023-11-27",
+      "2023-12-04",
+      "2023-12-11",
+      "2023-12-18",
+      "2023-12-25",
+      "2024-01-01",
+      "2024-01-08",
+      "2024-01-15",
+      "2024-01-22",
+      "2024-01-29",
+      "2024-02-05",
+      "2024-02-12",
+      "2024-02-19",
+      "2024-02-26",
+      "2024-03-04",
+      "2024-03-11",
+      "2024-03-18",
+      "2024-03-25",
+      "2024-04-01",
+      "2024-04-08",
+      "2024-04-15",
+      "2024-04-22",
+      "2024-04-29",
+      "2024-05-06",
+      "2024-05-13",
+      "2024-05-20",
+      "2024-05-27",
+      "2024-06-03",
+      "2024-06-10",
+      "2024-06-17",
+      "2024-06-24",
+      "2024-07-01",
+      "2024-07-08",
+      "2024-07-15",
+      "2024-07-22",
+      "2024-07-29",
+      "2024-08-05",
+      "2024-08-12",
+      "2024-08-19",
+      "2024-08-26",
+      "2024-09-02",
+      "2024-09-09",
+      "2024-09-16",
+      "2024-09-23",
+      "2024-09-30",
+      "2024-10-07",
+      "2024-10-14",
+      "2024-10-21",
+      "2024-10-28",
+      "2024-11-04",
+      "2024-11-11",
+      "2024-11-18",
+      "2024-11-25",
+      "2024-12-02",
+      "2024-12-09",
+      "2024-12-16",
+      "2024-12-23",
+      "2024-12-30",
+      "2025-01-06",
+      "2025-01-13",
+      "2025-01-20",
+      "2025-01-27",
+      "2025-02-03",
+      "2025-02-10",
+      "2025-02-17",
+      "2025-02-24",
+      "2025-03-03",
+      "2025-03-10",
+      "2025-03-17",
+      "2025-03-24",
+      "2025-03-31",
+      "2025-04-07",
+      "2025-04-14",
+      "2025-04-21",
+      "2025-04-28",
+      "2025-05-05",
+      "2025-05-12",
+      "2025-05-19",
+      "2025-05-26",
+      "2025-06-02",
+      "2025-06-09",
+      "2025-06-16",
+      "2025-06-23",
+      "2025-06-30",
+      "2025-07-07",
+      "2025-07-14",
+      "2025-07-21",
+      "2025-07-28",
+      "2025-08-04",
+      "2025-08-11",
+      "2025-08-18",
+      "2025-08-25",
+      "2025-09-01",
+      "2025-09-08",
+      "2025-09-15",
+      "2025-09-22",
+      "2025-09-29",
+      "2025-10-06",
+      "2025-10-13",
+      "2025-10-20",
+      "2025-10-27",
+      "2025-11-03",
+      "2025-11-10",
+      "2025-11-17",
+      "2025-11-24",
+      "2025-12-01",
+      "2025-12-08",
+      "2025-12-15",
+      "2025-12-22",
+      "2025-12-29",
+      "2026-01-05",
+      "2026-01-12",
+      "2026-01-19",
+      "2026-01-26",
+      "2026-02-02",
+      "2026-02-09",
+      "2026-02-16",
+      "2026-02-23",
+      "2026-03-02",
+      "2026-03-09",
+      "2026-03-16",
+      "2026-03-23",
+      "2026-03-30",
+      "2026-04-06",
+      "2026-04-13",
+      "2026-04-20",
+      "2026-04-27",
+      "2026-05-04",
+      "2026-05-11",
+      "2026-05-18",
+      "2026-05-25",
+      "2026-06-01",
+      "2026-06-08",
+      "2026-06-15",
+      "2026-06-22",
+      "2026-06-29",
+      "2026-07-06",
+      "2026-07-13",
+      "2026-07-20",
+      "2026-07-27",
+      "2026-08-03",
+      "2026-08-10",
+      "2026-08-17",
+      "2026-08-24",
+      "2026-08-31",
+      "2026-09-07",
+      "2026-09-14",
+      "2026-09-21",
+      "2026-09-28",
+      "2026-10-05"
+    ],
+    "R": [
+      0.5204576376004947,
+      0.3523685837971552,
+      0.10043290043290042,
+      -0.0046709376820034945,
+      0.19776354105998833,
+      -0.39870129870129867,
+      -0.2045725506697524,
+      -0.09134262889785714,
+      0.018533749019757854,
+      0.07295551772724085,
+      0.06808459091227868,
+      0.030599883517763538,
+      -0.015469546954695467,
+      -0.16573838994407725,
+      -0.24254225760133008,
+      -0.24454638124362896,
+      -0.15602817162450194,
+      -0.16050763023240086,
+      -0.03671630131374623,
+      -0.3521762021762021,
+      -0.18806163938907303,
+      -0.2732537732537732,
+      -0.09365566865566864,
+      -0.13267362441674369,
+      -0.028431099990733018,
+      -0.06018778518778519,
+      -0.013715338715338716,
+      0.17725131303112954,
+      0.1493722246015824,
+      0.1763316089818705,
+      0.19621404822468014,
+      0.10997127235659347,
+      0.10319433726790325,
+      -0.16012265130586414,
+      -0.05454652324692882,
+      0.070717463583793,
+      0.13930092314727485,
+      -0.023805325339446307,
+      -0.22022375046533044,
+      -0.15562033782045784,
+      -0.0742042737241228,
+      0.07867513078234291,
+      -0.08058543466760712,
+      -0.16068104782617212,
+      -0.17620978915283272,
+      -0.35616293422676776,
+      -0.3152352501867065,
+      -0.16952949962658703,
+      -0.18598382749326148,
+      -0.12902234425775247,
+      0.05883921903339379,
+      0.25309053841163937,
+      0.016819571865443427,
+      0.06257066073579835,
+      0.07730516170883144,
+      0.23206763455396853,
+      0.0954278660855984,
+      0.1574286330061326,
+      0.04846210041061037,
+      -0.18351652657771508,
+      -0.20327480666045292,
+      -0.08894878706199462,
+      0.04907733775658304,
+      0.19454696247149078,
+      -0.014907733775658303,
+      0.2073082257548277,
+      -0.015800704150218715,
+      0.13459455374461549,
+      -0.0016164109798389467,
+      0.050376602765952086,
+      0.10682404946316461,
+      0.12133337144054798,
+      0.07139282735613012,
+      -0.0006176318102923607,
+      0.0672497351396434,
+      0.12883884718747105,
+      0.15620674886729932,
+      -0.0005745528681308499,
+      -0.24598836184094516,
+      0.027482894464026537,
+      0.16660792038150526,
+      0.2899925317401046,
+      0.24257975034674067,
+      -0.05331743727970143,
+      0.25069458843043746,
+      -0.09504496561453007,
+      -0.20471698113207545,
+      -0.40716359112585526,
+      -0.15918515446817333,
+      -0.3335218179878374,
+      -0.08604680454442401,
+      0.1084968637428521,
+      0.036647314949201745,
+      0.11286674490557987,
+      0.18328840970350402,
+      0.07568518131082098,
+      0.09899837455519923,
+      0.17935559586045027,
+      -0.119231217239371,
+      0.1094100074682599,
+      0.02702443187880081,
+      0.0061803439053214285,
+      -0.022394239423942395,
+      0.11666048237476807,
+      0.15841682127396411,
+      0.3368583797155225,
+      0.2756855319447366,
+      0.3309094256259204,
+      0.3882664134563212,
+      0.27634291915355397,
+      0.3488311688311688,
+      0.14289202387411828,
+      0.1731537976015148,
+      0.20857142857142857,
+      -0.04001236858379715,
+      0.034064609911443486,
+      -0.05219542362399505,
+      -0.06059968504740227,
+      -0.08153701968134958,
+      -0.25896881714260206,
+      -0.3027295632698769,
+      -0.14383021249737007,
+      0.16528757460661966,
+      0.17599023331524688,
+      0.30670103092783507,
+      0.4763964864296233,
+      0.3266134945074562,
+      0.4385078387458007,
+      0.05142430819316332,
+      -0.07718888867637025,
+      0.016029349884283606,
+      -0.009786847093999969,
+      -0.13230683090705486,
+      0.08698453608247422,
+      0.17239641657334825,
+      0.22241041433370662,
+      0.36278582523570424,
+      -0.08891377379619261,
+      0.17421323928377647,
+      0.11879899216125421,
+      0.1670212765957447,
+      0.40431361909929464,
+      0.4339392295170917,
+      0.28318462594371996,
+      0.27695697720622764,
+      0.03478569116717784,
+      0.03591079327404713,
+      0.02481286829112916,
+      0.12860600368457176,
+      0.39703247480403137,
+      0.49783653128823363,
+      0.5030885380919697,
+      0.2890746934225195,
+      0.26878215417541257,
+      0.09244126659856998,
+      0.100187265917603,
+      0.11102109823535629,
+      0.3462334766682593,
+      0.1497772914322704,
+      0.2534242487541404,
+      0.16042833146696528,
+      0.2451685149730882,
+      0.12306869160801744,
+      0.12297454567157051,
+      0.07068107208359663,
+      0.1311062039330369,
+      0.14604631000975327,
+      0.07679081024455442,
+      -0.0383613581369542,
+      -0.02028811947448135,
+      -0.13758474885178973,
+      -0.12362397025588684,
+      -0.06199147617202636,
+      0.04746339802519579,
+      -0.01714614973041939,
+      0.22970218187609492,
+      -0.1496892620488126,
+      -0.02600064731902039,
+      -0.022938265361413142,
+      -0.021947197262765283,
+      0.044736422997292566,
+      0.151310861423221,
+      0.2046452845891836,
+      0.13535382725860637,
+      0.24036883411417143,
+      0.08338193482539911,
+      0.047088866189989795,
+      -0.13481384945933572,
+      -0.2192973574972158,
+      -0.20215388466840103,
+      -0.12723332008814073,
+      -0.06442770712433635,
+      0.01690735631829601,
+      -0.023182311448724905,
+      0.17259274843958197,
+      0.17301175015460726,
+      0.32039603960396035
+    ],
+    "P": [
+      0.5374273345701917,
+      0.3204452690166975,
+      0.013432282003710574,
+      -0.04680256260920209,
+      0.16853814793244026,
+      -0.4044279529993815,
+      -0.257234665187537,
+      -0.143073911851526,
+      -0.055244215774407225,
+      0.033873343151693665,
+      0.07517421214033879,
+      0.09594641817122888,
+      0.027314731473147315,
+      -0.05229826237906487,
+      -0.1490540846915384,
+      -0.3434343434343435,
+      -0.21966453526086557,
+      -0.15618871582174332,
+      -0.035182485924147584,
+      -0.3961126711126711,
+      -0.17355724877848774,
+      -0.3041944541944542,
+      -0.09378729378729378,
+      0.0034758695309154027,
+      -0.03168381058289315,
+      -0.16254826254826255,
+      0.10559845559845558,
+      0.2718707030633636,
+      0.25535243333408464,
+      0.15349586060380882,
+      0.22598530966875305,
+      0.03398202205541656,
+      0.019911019653795953,
+      -0.09696506592997513,
+      -0.10160857383569427,
+      -0.022025970066782894,
+      0.02596053997923157,
+      -0.021679499990203573,
+      -0.11020004310429281,
+      -0.043804243238351095,
+      -0.0627054217039641,
+      0.04683673269460609,
+      -0.04414271439487451,
+      -0.08826583592938735,
+      -0.12534448446985919,
+      -0.3582487341612716,
+      -0.34236637149258514,
+      -0.18787066731098717,
+      -0.08629871274907425,
+      -0.09690908632894174,
+      0.11194921583271099,
+      0.39659901769993516,
+      0.21160226114354555,
+      0.13897692521545735,
+      0.12629969418960246,
+      0.30192597817355354,
+      0.08472680555205682,
+      0.28806402946766196,
+      0.09729198680001008,
+      -0.08005642743784165,
+      -0.103912134418218,
+      -0.08018238154016677,
+      0.017385444743935306,
+      0.10283018867924526,
+      -0.07374041053286336,
+      0.13073722394110746,
+      -0.019609516696895344,
+      0.14209134191500616,
+      -0.013205587883775152,
+      0.09735244476912612,
+      0.16554726723636953,
+      0.19772881000695455,
+      -0.010091743119266056,
+      -0.0065054211843202665,
+      -0.004269323535378581,
+      0.029635807617458997,
+      0.14464756666591527,
+      0.05437864887406172,
+      -0.2699095649545306,
+      -0.02111756168359942,
+      0.17793904208998548,
+      0.25259788754934387,
+      0.1235997012696042,
+      -0.08852374041053288,
+      0.17770060128550694,
+      -0.12371211930372572,
+      -0.2572983620153431,
+      -0.4171781049139539,
+      -0.1832158407630106,
+      -0.26856929478288705,
+      -0.01585510240068519,
+      0.08439428672191854,
+      0.0979577026746838,
+      0.22823002240477971,
+      0.32497408252125226,
+      0.3561698831219501,
+      0.2254645696964372,
+      0.2571855329136883,
+      -0.13489807804309842,
+      -0.033287101248266296,
+      -0.1568441267470394,
+      -0.09850665249277642,
+      -0.09333333333333331,
+      0.08965986394557823,
+      0.10799010513296227,
+      0.29966604823747683,
+      0.27237024144240635,
+      0.33627445823690294,
+      0.36405317417254474,
+      0.4282148670645686,
+      0.40623376623376617,
+      0.21367335865436787,
+      0.16846138642898578,
+      0.2029313543599258,
+      -0.02014842300556586,
+      -0.022155066337687837,
+      -0.1391094619666048,
+      -0.26137877831544987,
+      -0.21090985597612988,
+      -0.3882778978507991,
+      -0.35351343784994405,
+      -0.156217126025668,
+      0.15892566467715682,
+      0.1946961475854585,
+      0.3722870320130222,
+      0.5149905322953924,
+      0.41991341991341985,
+      0.4968085106382979,
+      -0.027699403147042865,
+      -0.10042142442731543,
+      0.032781927203871235,
+      0.07260761678713992,
+      -0.03716405375139978,
+      0.13658478855459708,
+      0.28279675251959685,
+      0.23787793952967526,
+      0.28860311382436876,
+      -0.054943467109778564,
+      0.09247151383613673,
+      0.07500000000000001,
+      0.1562569988801792,
+      0.35641616928920233,
+      0.39911828540423216,
+      0.22882635552505148,
+      0.3170104396199834,
+      0.25495121988810626,
+      0.1409151857959712,
+      0.211498646281255,
+      0.213452299245024,
+      0.48197088465845467,
+      0.5371072185252603,
+      0.4856017427113485,
+      0.2806657111004937,
+      0.2179775280898876,
+      0.06382362955396663,
+      0.05915900578821928,
+      0.06667605931457152,
+      0.36980410893454374,
+      0.2110568253625757,
+      0.2043358897078571,
+      0.22488801791713325,
+      0.28942672398222735,
+      0.11406346462526236,
+      0.09996717495747663,
+      0.06342185164064547,
+      0.19838262063203127,
+      0.158747245601994,
+      0.10768341581475996,
+      -0.008137724827766903,
+      -0.09217709837624602,
+      -0.17773565648465406,
+      -0.1532405044834876,
+      -0.07870451903772324,
+      -0.0005107252298263535,
+      -0.0222990492653414,
+      0.20767638158942509,
+      -0.07575420833847799,
+      0.04865681303268961,
+      -0.058945923490951124,
+      -0.023657968959511732,
+      0.040611562350692784,
+      0.12982635342185905,
+      0.2590200823019897,
+      0.15143589928837192,
+      0.24685924024947029,
+      0.1475359043522636,
+      0.009499489274770175,
+      -0.03506392870980241,
+      -0.11829502885491547,
+      -0.1781770887211367,
+      -0.09460679839612758,
+      -0.08487467588591183,
+      0.03825347163355579,
+      -0.06192349430276723,
+      0.18568814592378655,
+      0.16570191713048854,
+      0.30461446144614457
+    ],
+    "R_bottom_quintile_x30": [
+      -0.13051554833677306,
+      -0.03864907925918973,
+      0.009302880376823641,
+      -0.053585539232704385,
+      -0.08155003416116266,
+      0.07252955613238528,
+      0.056094944842857174,
+      0.03386218815892385,
+      0.04136692027222567,
+      0.04870619287334472,
+      0.023893633258111627,
+      0.020601730319536268,
+      0.0010125258685513366,
+      0.009561145005423221,
+      0.048889226181589696,
+      0.058588920366850435,
+      0.012096916046178553,
+      0.03998181678089619,
+      0.011683839334807657,
+      0.09020099245161571,
+      0.047649975124353275,
+      0.0843812409429317,
+      0.06635013005056122,
+      0.042513873404932984,
+      0.026423653016813688,
+      0.00372789973769457,
+      0.02239676838852411,
+      -0.0167882523393687,
+      -0.03252543079198553,
+      -0.04515777156396257,
+      -0.0585348761084782,
+      -0.0315591536270862,
+      -0.01840233758902355,
+      6.179940780190364e-05,
+      -0.08632240568586742,
+      -0.03414371359817233,
+      -0.034684003732869506,
+      -0.015347658751907536,
+      0.02925301889327548,
+      0.085654761801182,
+      0.04332875488482498,
+      -0.00667046580343109,
+      0.032956222003159764,
+      0.006487306656812308,
+      -0.014997156183681307,
+      0.08021677179141676,
+      0.0818505080665706,
+      0.015120073052231073,
+      0.12159413916489425,
+      0.05990153117157494,
+      0.07181140772255028,
+      -0.003958664456532386,
+      0.05581773128829691,
+      0.014668074297599584,
+      0.010960025575262655,
+      -0.05405294195805247,
+      -0.08332103553041663,
+      -0.14141685106314517,
+      -0.10244080688252871,
+      0.12699742365564964,
+      0.07688230449332702,
+      0.0352962387407075,
+      -0.060977199355163485,
+      -0.11847918533003736,
+      -0.004854783639561857,
+      -0.04333012608195438,
+      0.03307289383941632,
+      -0.039172007001973645,
+      -0.003999791743821467,
+      -0.007534384874982137,
+      -0.0786580514157386,
+      -0.05856073302703234,
+      0.011821709683617164,
+      0.09467922950734314,
+      0.06978740317755651,
+      0.0038723852681528206,
+      0.04280062406342748,
+      -0.04132355398305603,
+      0.034018596983825845,
+      -0.008275294667171213,
+      0.004595304063315991,
+      -0.06938754095139861,
+      -0.06151607063857636,
+      -0.005083436454960816,
+      -0.09251369861928271,
+      0.034200091047220445,
+      0.07273129270923423,
+      0.1348449683861585,
+      0.08833204762481259,
+      0.10497029492066204,
+      0.04108288011910585,
+      0.012771353758292605,
+      0.057158945700754596,
+      -0.02022461148563868,
+      -0.010176066837777534,
+      -0.022070910857537058,
+      -0.010334565098011585,
+      0.005515116807466258,
+      0.13660096560958546,
+      -0.05076313114763056,
+      -0.008642749681167862,
+      0.016880923197562663,
+      0.05867949988104364,
+      0.03439799427914691,
+      0.08524114027231544,
+      0.021584094668046467,
+      -0.01920845494643475,
+      0.016181013897864943,
+      -0.03715163657246262,
+      -0.02065543697256364,
+      -0.031111512405648602,
+      -0.02146509127087962,
+      -0.022094298766748927,
+      0.03382186747249464,
+      0.1415332798047396,
+      0.18864742117096125,
+      0.1055204964267583,
+      0.0686595686679225,
+      0.029770676451305343,
+      -0.05950454621079046,
+      0.05348333202406439,
+      0.05691470608077274,
+      0.03979262334984149,
+      0.06384084003787958,
+      0.025325791459315947,
+      -0.016804792431454472,
+      -0.028699474748102374,
+      -0.04983055186493723,
+      -0.03475576112210552,
+      0.04251561522008443,
+      0.05672551669455463,
+      0.10904600418228147,
+      0.03045291858363802,
+      0.026900198172161518,
+      -0.020741569382968273,
+      0.007816400959449183,
+      -0.02626743695630684,
+      0.040741495113737806,
+      0.06600654104814649,
+      0.06962906067738583,
+      -0.05019133385182062,
+      -0.12675137865456304,
+      -0.11809780440427183,
+      0.07220959147933562,
+      0.1496794651237564,
+      0.004046770894414945,
+      0.19300682172342173,
+      0.12591280446753095,
+      -0.02197872130625704,
+      -0.0815281802002104,
+      -0.16510919053251516,
+      -0.09585370957885544,
+      -0.08267178846789598,
+      -0.047382822469685434,
+      -0.02634123181485589,
+      0.03336349830462483,
+      -0.013973626010372402,
+      -0.05167989027880092,
+      -0.018745217374933024,
+      -0.06445406739173276,
+      0.05709606621030455,
+      -0.00028536136759288607,
+      -0.023813232509008058,
+      -0.06319024869178866,
+      -0.09784271340897742,
+      -0.08304185157522537,
+      -0.02684184148958057,
+      -0.12059954894208855,
+      0.021415360084255944,
+      -0.04972342528830324,
+      -0.0029606519747862776,
+      -0.002364309302260175,
+      0.12144809528771085,
+      0.13523500472622113,
+      0.10133173750430327,
+      0.011668142602010212,
+      0.09593516062811953,
+      0.050367756099965966,
+      0.06494592407805308,
+      -0.01182189927753455,
+      -0.03390902641449173,
+      0.05103714983910995,
+      0.08688855578691371,
+      0.06091708068235546,
+      -0.02046837416615932,
+      -0.03519950662364496,
+      0.05925686362748742,
+      0.09758446892936734,
+      0.2289931018916464,
+      0.28256935663838006,
+      0.15725920889597314,
+      0.20138090887696614,
+      0.06407332129294986,
+      0.1156864666727794,
+      0.02979291188056333,
+      0.00753455021603916,
+      -0.15776926302545907
+    ],
+    "P_bottom_quintile_x30": [
+      -0.15639911306200466,
+      -0.05757635315330141,
+      0.07238842418323549,
+      -0.0665595289832371,
+      -0.06343566654586012,
+      0.05649675892751432,
+      0.05845997302296286,
+      0.04360295132153766,
+      0.07326887325690645,
+      0.05234893149120918,
+      -0.004502935550311356,
+      -0.014824269801927071,
+      -0.008732243563770913,
+      0.007659416477074662,
+      0.027150663644499622,
+      0.0728451727410088,
+      0.03848313582668245,
+      0.0368990700430059,
+      0.009218341669451428,
+      0.09477854569308798,
+      0.07003535605774086,
+      0.12911832138453436,
+      0.054627263982354915,
+      0.0371411917135285,
+      0.06070885427621787,
+      0.08392589164254032,
+      -0.005928617347260904,
+      -0.0373427710137973,
+      -0.04522828446103637,
+      -0.04844721085933136,
+      -0.05680196205262888,
+      -0.007350749532709099,
+      -0.028319606870583297,
+      -0.010294263800880098,
+      -0.04422659631183447,
+      -0.043309044823064434,
+      -0.02081717637174151,
+      0.011775058706042976,
+      0.03867256193488889,
+      0.03367451335856312,
+      0.059961309370070784,
+      0.01820397500545152,
+      0.037951378238509394,
+      -0.0009352530425662345,
+      -0.009557278429039532,
+      0.1273381134646729,
+      0.08564164601554838,
+      0.033620781281488696,
+      0.12707159337867108,
+      0.10236549645926386,
+      0.06444055671292051,
+      -0.10262142681389579,
+      -0.02018965442366803,
+      -0.00846023205881243,
+      -0.0007916939567948838,
+      -0.08522449684926775,
+      -0.15809050843617778,
+      -0.17743230349657935,
+      -0.08647447864661978,
+      0.03639215687372287,
+      0.07145548467777754,
+      0.0118450551428184,
+      -0.05165508817627282,
+      -0.07085977786700945,
+      0.014335160845044733,
+      8.311577435249351e-07,
+      0.023964498225683827,
+      -0.10896924526654002,
+      5.6015488098210854e-05,
+      -0.03755667644613471,
+      -0.06563488535019772,
+      -0.07229019057055057,
+      0.028223560574709285,
+      0.09340169407015964,
+      0.04428899352241841,
+      -0.00013264231557609348,
+      0.028667073023330433,
+      -0.047744381864935174,
+      0.03914668641016183,
+      -0.004875126734326669,
+      0.000559669974016183,
+      -0.0639119206039552,
+      -0.05673925838345349,
+      0.013177763871898058,
+      -0.051044977234757,
+      0.04235707606556051,
+      0.07013456057723678,
+      0.10964167856323942,
+      0.08244456598533641,
+      0.08218250879645361,
+      0.059858404029590966,
+      0.018796860882795263,
+      0.021173114247625767,
+      -0.04232717847426317,
+      -0.03413199359507293,
+      -0.060140392256054574,
+      -0.0535060131558589,
+      -0.06601350937036964,
+      0.16425411257234904,
+      0.04235014015069204,
+      0.0899505063805279,
+      0.072802869538295,
+      0.08987956092984986,
+      0.06175193741966725,
+      0.08097327883622181,
+      0.032800677060627705,
+      -0.02989479476458311,
+      -0.031020997754969224,
+      -0.012729850718060072,
+      -0.03686631597372397,
+      -0.08242789587717896,
+      -0.05397706328776125,
+      -0.014017690343932632,
+      0.07647103380255871,
+      0.13901008829842015,
+      0.16403859243346516,
+      0.1622484387671946,
+      0.10310815053415963,
+      0.05305546330281995,
+      0.01548445676864488,
+      0.07601919441502196,
+      0.10147103142902948,
+      -0.006087836107173003,
+      0.06902289858730187,
+      0.04649234950718759,
+      -0.020069281931109084,
+      -0.05091391335312695,
+      -0.04987112867107246,
+      0.02358002000187246,
+      0.07924753955653445,
+      0.03876754638099541,
+      0.04901590104713264,
+      -0.03344878540900578,
+      -0.003768672094359115,
+      -0.02999204966849595,
+      -0.008229848859086068,
+      -0.04408995562487921,
+      0.038481387806388774,
+      0.1010368130504029,
+      0.04845211663788874,
+      -0.011041778690243276,
+      -0.1045632006365915,
+      -0.07524499364382628,
+      0.07315486299556838,
+      0.11516048740583305,
+      0.008308227317733861,
+      0.1337525036182793,
+      0.09500356497612611,
+      -0.05743228916050748,
+      -0.03811241840982447,
+      -0.14336553469555968,
+      -0.09590994891592292,
+      -0.035889222693051774,
+      -0.04681106131240563,
+      -0.005118003454345556,
+      0.03885275177975042,
+      -0.043596499139506695,
+      -0.0947340489810292,
+      -0.08144314611995258,
+      -0.03334036369774701,
+      0.04252157456961386,
+      0.00915497126495175,
+      -0.007726422867618389,
+      -0.0745470997617692,
+      -0.0856910851524232,
+      -0.08449768215558728,
+      -0.08002447632400118,
+      -0.15612719899313954,
+      -0.028387174159850943,
+      -0.01572888200889025,
+      0.003716731807294141,
+      0.006424250653173958,
+      0.114841194173191,
+      0.12014714708071779,
+      0.10540305676373936,
+      0.03993439245448857,
+      0.05527611931491898,
+      0.03162250082190024,
+      0.0642201719553846,
+      0.06884205553853534,
+      0.022938498252526446,
+      0.060440748042855444,
+      0.06784723650594332,
+      0.1022966884481464,
+      -0.016523571641457086,
+      -0.022836029140614778,
+      0.07708478337442932,
+      0.09124815904179312,
+      0.1386174686064367,
+      0.29574201550317986,
+      0.17639454195399296,
+      0.2110631719194259,
+      0.036498243034393495,
+      0.10663853471097606,
+      -0.035507584320014426,
+      0.011578731229521508,
+      -0.15168098131484414
+    ],
+    "P_unfiltered": [
+      0.48119460869327724,
+      0.25941362028704473,
+      0.05193843968919416,
+      0.0018052957161780168,
+      0.1302899124663726,
+      -0.2990318043398107,
+      -0.18107307214354967,
+      -0.10574226057982491,
+      -0.016384219366644363,
+      0.015264444414098239,
+      0.10057028595913121,
+      0.165889849000611,
+      0.2199799627880349,
+      -0.008368025090074113,
+      -0.08797525519131753,
+      -0.2200283419933869,
+      -0.16728178664899662,
+      -0.10210409351526735,
+      0.038755500244455315,
+      -0.34421708732290407,
+      -0.18086010968690233,
+      -0.2061476301381741,
+      -0.08079997699562919,
+      -0.003637566137566138,
+      -0.010737581813445947,
+      -0.15546188174425676,
+      0.055031104317147625,
+      0.26943576920546064,
+      0.2795683954054995,
+      0.24477256489640392,
+      0.18996586488846554,
+      -0.04929989435824159,
+      -0.04589981741684529,
+      -0.28228831106654895,
+      -0.3008909325175103,
+      -0.11186550507595941,
+      0.07226822185422517,
+      0.09982174891084598,
+      0.07636777812580084,
+      0.18344774155572102,
+      0.002531751511727659,
+      0.009421881865545163,
+      0.015897725608352686,
+      -0.026821919527964345,
+      -0.05563751967653323,
+      -0.04166919636532896,
+      -0.14685759714270052,
+      -0.014456854620789049,
+      0.04454064648259004,
+      -0.05001596486854134,
+      0.023656770376460315,
+      0.3437560264246269,
+      0.149113637148445,
+      0.17911527333637886,
+      0.09540388509712744,
+      0.09330870400472883,
+      0.06363609090227257,
+      0.1764747670320792,
+      0.10902341519131924,
+      0.014846921791294739,
+      -0.007262612159192995,
+      0.06317579634379972,
+      0.09535106388653299,
+      0.08874211219748976,
+      -0.004814026553156987,
+      0.047534391877996775,
+      -0.025861057325588216,
+      0.08906000460003953,
+      0.08213800373554932,
+      -0.04001827931085011,
+      -0.07290360161031957,
+      0.022536586527584276,
+      0.07581916429274026,
+      0.09397950034894607,
+      0.20473324872529125,
+      0.08881764833731798,
+      0.25891955855007365,
+      0.14553478712357218,
+      -0.06658192920376593,
+      -0.04038130106437363,
+      0.13711683053788318,
+      0.15830789999724493,
+      0.09607648061811425,
+      0.018076988094375617,
+      0.18061653263783237,
+      0.01749981887995363,
+      -0.06559933388638722,
+      -0.11978841097005856,
+      0.03908358041891424,
+      0.058273813497096316,
+      0.19254240390022637,
+      0.16021341985901497,
+      0.10936124275112075,
+      0.21944871153149106,
+      0.2456058075415778,
+      0.29595180633767,
+      0.24403929253497914,
+      0.17602980475736135,
+      0.007589716315962556,
+      0.07017643710870802,
+      0.08217643710870802,
+      0.11453731162621798,
+      0.12662413159328145,
+      0.16945593527302366,
+      0.2839812019544987,
+      0.42115954441535836,
+      0.29390197073407687,
+      0.2832275694747895,
+      0.2842682110106862,
+      0.2789806574536333,
+      0.27860650298606504,
+      0.1422979588679287,
+      0.05304047454235638,
+      0.23426003203616247,
+      0.15704975918390554,
+      0.15836594835853546,
+      0.0013437515552680037,
+      -0.18982413625421476,
+      -0.16448682889360852,
+      -0.36505263029653273,
+      -0.20457420019498546,
+      -0.029660363340250465,
+      0.15543976352453628,
+      0.3868645291445166,
+      0.39543496126319483,
+      0.4513850335748264,
+      0.286612301939239,
+      0.3646212404567557,
+      -0.0006758007327796301,
+      0.14111550835634767,
+      0.238371340619597,
+      0.21353783124246103,
+      0.06049431931433127,
+      0.1815339919673609,
+      0.20659445750555575,
+      0.24679153669174417,
+      0.2656797763357227,
+      -0.03389389416606299,
+      0.12066638218568478,
+      0.02992391335255635,
+      0.097260259523431,
+      0.15861156336082838,
+      0.12826182001550343,
+      0.0777783250367939,
+      0.16049795655226443,
+      0.2726253734678866,
+      0.2716109504545534,
+      0.3368702691430371,
+      0.2766297720227512,
+      0.30842924055351206,
+      0.28241432425197716,
+      0.10294163344021473,
+      0.003375645697353141,
+      0.0028829334933544427,
+      0.07110018387421256,
+      0.13023862694344346,
+      0.1951248597390597,
+      0.1388854264377198,
+      0.12263926565617556,
+      0.11207559711857708,
+      0.10673476481751441,
+      0.0909286208308044,
+      0.045503407084965176,
+      0.08799902497795827,
+      0.12264123939350859,
+      0.08137584307372273,
+      0.15222447400126066,
+      0.05807299340756948,
+      0.0892126712815256,
+      0.09491554798581338,
+      0.08884755224350484,
+      0.10385390474467475,
+      0.06578531077983034,
+      0.1669144744144744,
+      0.2191344440342222,
+      0.08052954267196508,
+      -0.0868734362102272,
+      -0.03022047873306455,
+      -0.0488865353278962,
+      0.23012180238180457,
+      0.16276519352445085,
+      0.2373627535569879,
+      0.2872011689567281,
+      0.12020476853552481,
+      -0.0008575166077908926,
+      0.12195465594212637,
+      0.20007175071750719,
+      0.2468479222008432,
+      0.45460150479522204,
+      0.3760805380822309,
+      0.17862956212814568,
+      0.27503131657265045,
+      0.24590377501943467,
+      0.26306071213678744,
+      0.15709425604787902,
+      0.13422616041587615,
+      0.11887868457465614
+    ]
+  },
+  "content_fingerprint": {
+    "flow_unfiltered": {
+      "n": 356203,
+      "fields": [
+        "symbol",
+        "d",
+        "vec",
+        "x30"
+      ],
+      "sha256": "3bd3389f5c0f4ad281ad3ea453dd302bf4136abcfdf74a90b3eefc44213010ca",
+      "method": "fallback:mirror_of_main_apparatus.content_fingerprint"
+    },
+    "flow_fixed_universe": {
+      "n": 142954,
+      "fields": [
+        "symbol",
+        "d",
+        "vec",
+        "x30"
+      ],
+      "sha256": "23db8b7427f4c29978af4b23852107ec81ec7d30e745f51697812e0a1a8aecb1",
+      "method": "fallback:mirror_of_main_apparatus.content_fingerprint"
+    },
+    "mcap": {
+      "n": 720709,
+      "fields": [
+        "symbol",
+        "d",
+        "mcap"
+      ],
+      "sha256": "5432e790d8d9d973c4db0d1b2d2a4fe10d9736f79025b1d2a3b20916482d1ec8",
+      "method": "fallback:mirror_of_main_apparatus.content_fingerprint"
+    },
+    "fields": [
+      "symbol",
+      "d",
+      "vec",
+      "x30"
+    ]
+  },
+  "snapshot_fingerprint": {
+    "cache_file": "_t312_asset_flow.jsonl",
+    "rows_total_in_db": 378222,
+    "rows_with_vec": 356203,
+    "n_coins": 636,
+    "first_date": "2022-06-07",
+    "last_date": "2026-11-07",
+    "fetched_at_utc": "2026-11-08T16:14:15Z",
+    "fetch_started_utc": "2026-11-08T16:02:51Z",
+    "fetch_seconds": 684.1,
+    "max_d_in_db": "2026-11-07",
+    "cache_sha256": "bf52601cb5b3dd0a0dbfee04938688baef6a82c689660363a4672f673534533a"
+  },
+  "mcap_snapshot": {
+    "cache_file": "_t319_mcap.jsonl",
+    "rows_used": 720709,
+    "dup_symbol_date": 0,
+    "null_or_bad_mcap": 37099,
+    "n_dates": 4331,
+    "fetched_at_utc": "2026-11-09T16:28:15Z",
+    "fetch_seconds": 540.8,
+    "min_d": "2014-12-31",
+    "max_d": "2026-11-08"
+  }
+}

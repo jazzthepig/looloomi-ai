@@ -1,0 +1,11 @@
+{
+  "min_d": "2014-12-31",
+  "max_d": "2026-11-08",
+  "total_expected": 757808,
+  "n_pulled": 757808,
+  "n_unique": 757808,
+  "fetch_started_utc": "2026-11-09T16:19:14Z",
+  "fetched_at_utc": "2026-11-09T16:28:15Z",
+  "seconds": 540.8,
+  "cache_file": "_t319_mcap.jsonl"
+}
