@@ -70,13 +70,15 @@ VDB 不是缓存,是**本体论的几何基底** —— 内核六对象全部向
 |---|---|---|---|
 | Asset (CIS v2) | 27d, dense 核 + NaN 尾 | ✅ live (pgvector) | `asset_embeddings` + kNN RPC |
 | **Asset · 资金面(因)** | 11d 截面百分位(资金费 / 新开杠杆 / 散户多空 / 大户 − 散户 / 主动买卖 / 成交暴增 + 价格相位),每 (币, 日) | ✅ 11-07(2022-06 起,~23.5 万行) | `asset_flow_daily` · `asset_flow_knn()` · `/internal/asset-flow`(S-774 排序力、S-775 扩散「因」检验中) |
-| **Asset · 交易所的决定(事件)** | 每 (币, 日) 6 个 0/1:上币 / 上永续 / Upbit 韩元上币(≤ 90 天)· 挂着监控标签 · 30 天内被挤空头 · 365 天内宣布下架 | 🟡 11-08 读面已有(`crowd_map`、`/internal/crowd-map`);进不进模型看 S-790(T-311) | `binance_event_watch` · `crowding_watch` · `delisting_watch` · `events`(逐句标签) |
+| **Asset · 交易所的决定(事件)** | 每 (币, 日) 6 个 0/1:上币 / 上永续 / Upbit 韩元上币(≤ 90 天)· 挂着监控标签 · 30 天内被挤空头 · 365 天内宣布下架 | 读面 ✅(`crowd_map`、`/internal/crowd-map`);**作为模型的维 ❌(S-790)**:它们打中的币本来就在价格相位的最低一档 —— 留作硬规则与读面,不进排序 | `binance_event_watch` · `crowding_watch` · `delisting_watch` · `events`(逐句标签) |
 | Regime / 市场态 | 状态向量 | ✅ live | `market_state_vectors`(T-094 按时点补到 2019) |
 | Strategy | 每本账的回报 × 状态向量 | ✅ live(S-717) | `book_vectors` · `/internal/book-vectors`(相似 / 缩放 / 未覆盖) |
 | Entity/Decision | 季度 × 发行方(待遇 / 决策 / 结果) | ✅ live(S-722) | `entity_vectors` · `/internal/entity-vectors` |
 | 时序窗口 | 60 天 17 维形状,步长 5 | ✅ live(S-721) | `window_vectors` · `/internal/window-knn`(只描述,不进敞口) |
 | Outcome | 决策 → 7 / 30 / 90 天超额 | ✅ live(S-714) | `decision_outcomes` · `/internal/decision-outcomes` |
 | Text/News | Railway 本机 ONNX `bge-small-en-v1.5`(384 维;11-07 起,MiniMax 账户没有嵌入额度) | ✅ 11-07(~5,200 条:events + feed_items) | `text_vectors` · `text_vectors_nearest` · `/internal/text-knn` |
+
+**11-09 的读法:** 节点层的两条路都收了 —— 资金面(S-776 / S-778)与交易所的决定(S-790)在价格相位 P 之上都不再多给信息;P 本身站着(S-791 在今天的快照上周 IC 0.096、t 5.1),但力量几乎全在后半段(两半 0.032 / 0.153)。所以下一步不是再给 Asset 加维,而是问**跨空间的边**:Regime 空间(`market_state_vectors`)能不能提前读出 P 的排序此刻强不强(S-793,A 道算、C 道只读原文盲复算)。这是 5b-bis OVERRIDE 层(风格周期)第一次有可检验的形态;判据要求它在 IC 自己的惯性之上还剩东西 —— 否则「态」只是时间趋势的别名。**结果 ❌(两份独立实现逐位一致):** 态读得到一点(ρ 0.25,方向在钱上也对:态说「准」的周最低一档多亏 2.8pp),但在惯性之上 t 1.79、且只活在前半段(0.30 / 0.05)⇒ ② 的倾斜按常数开,OVERRIDE 层在 P 上收卷。**教训:** 节点层(加维)与这一条边(态 → 排序强弱)都收了以后,高维这条线剩下的、没被证伪的,是**离因更近的新数据**(决定、资金去向、谁在买),而不是在同一批价格衍生量上换几何。
 
 **11-08 的读法:** 按币的人群流量(散户多空、资金费、杠杆)在节点层和扩散层都没有信息(S-776 / S-778),但**一个实体的决定**有:交易所上币 / 打标签 / 下架、以及被挤空头,单独都量出之后 30 天跑输 16–38%(S-751 / S-753 / S-763 / S-770 / S-781),其中下架与监控标签已是真钱硬规则。这正是本体论说的「离因更近」—— 决定是因,价格与流量是它的影。S-790 问的是:把这些决定当成 Asset 空间的维,在价格相位之上还多不多给信息(主判在最低五分位,② 的排除用法)。
 
