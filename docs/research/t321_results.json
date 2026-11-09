@@ -1,0 +1,562 @@
+{
+  "card": "T-321",
+  "ledger": "S-799",
+  "kernel": {
+    "source": "repo_src",
+    "path": "/Users/sbb/Projects/looloomi-ai-lane-c/src/data/universe/flex_alloc.py",
+    "sha256": "6c7fa4c4aff1f421df721a3bad76af45622f7fbee3e6c11b41ee9d98ed605e96",
+    "candidates": [
+      "Users/sbb/Projects/looloomi-ai-lane-c/src/data/universe/flex_alloc.py",
+      "Users/sbb/Projects/looloomi-ai/src/data/universe/flex_alloc.py"
+    ]
+  },
+  "s799_text_check": {
+    "ledger_path": "/Users/sbb/Projects/looloomi-ai-lane-c/REFUTATION_LEDGER.md",
+    "match": true,
+    "ledger_lines": 6,
+    "ledger_chars": 940,
+    "embed_chars": 940,
+    "ledger_tail": "2024–26:收益更高、Calmar 差 0.09、p 0.21)与本条(崩盘段少亏)一起提给 Jazz,问要不要让 RB 给真钱 T25 的目标权重;不过 ⇒ RB 在崩盘段也不占优,7b 这条边只留前向影子臂。**试验计数:+1。**",
+    "embed_tail": "2024–26:收益更高、Calmar 差 0.09、p 0.21)与本条(崩盘段少亏)一起提给 Jazz,问要不要让 RB 给真钱 T25 的目标权重;不过 ⇒ RB 在崩盘段也不占优,7b 这条边只留前向影子臂。**试验计数:+1。**"
+  },
+  "kernel_params": {
+    "BASE_T25": {
+      "crypto": 0.3,
+      "equity": 0.3,
+      "gold": 0.2
+    },
+    "BOUNDS": {
+      "crypto": [
+        0.0,
+        0.9
+      ],
+      "equity": [
+        0.2,
+        0.4
+      ],
+      "gold": [
+        0.1,
+        0.3
+      ]
+    },
+    "VOL_WINDOW": 63,
+    "MIN_OBS": 40,
+    "SIGMA_FLOOR": 0.002,
+    "reb": 21,
+    "cost_bp": 20.0,
+    "source": "src/data/universe/flex_alloc.py(main,一字不改;只 import)"
+  },
+  "data_coverage": {
+    "core_cap_pit24": {
+      "name": "① core_variants_daily.cap_pit24",
+      "rows": 536,
+      "d0": "2021-07-13",
+      "d1": "2022-12-30",
+      "span_calendar_days": 536,
+      "business_days": 383,
+      "missing_in_span": 0,
+      "missing_vs_business_days": -153,
+      "daily_series": true,
+      "note": "日历日序列:missing 应为 0"
+    },
+    "core_cap_pit24_table_rows": 536,
+    "core_cap_pit24_null_or_missing_days": 0,
+    "equity_acwi": {
+      "name": "ACWI",
+      "rows": 379,
+      "d0": "2021-07-01",
+      "d1": "2022-12-30",
+      "span_calendar_days": 548,
+      "business_days": 391,
+      "missing_in_span": 169,
+      "missing_vs_business_days": 12,
+      "daily_series": false,
+      "note": "交易日序列:缺的是周末+休市日(missing_vs_business_days ≈ 休市日)"
+    },
+    "gold_xauusd": {
+      "name": "XAUUSD",
+      "rows": 394,
+      "d0": "2021-07-01",
+      "d1": "2022-12-30",
+      "span_calendar_days": 548,
+      "business_days": 391,
+      "missing_in_span": 154,
+      "missing_vs_business_days": -3,
+      "daily_series": false,
+      "note": "交易日序列:缺的是周末+休市日(missing_vs_business_days ≈ 休市日)"
+    },
+    "funding_days": 548,
+    "legs_csv_rows": 372,
+    "common_dates": 372
+  },
+  "interval": {
+    "common_dates_total": 372,
+    "first_common_date": "2021-07-13",
+    "last_common_date": "2022-12-30",
+    "warm_days": 63,
+    "record_start": "2021-10-11",
+    "record_end": "2022-12-30",
+    "n_record_days": 309
+  },
+  "arms": {
+    "T25_K": {
+      "metrics": {
+        "n_days": 309,
+        "d0": "2021-10-11",
+        "d1": "2022-12-30",
+        "total_return": -0.15703944944290982,
+        "cagr": -0.1308322739488873,
+        "vol_ann": 0.1775698926887615,
+        "max_dd": -0.2591092923541678,
+        "dd_peak": "2021-11-08",
+        "dd_trough": "2022-10-14",
+        "calmar": -0.5049308450507327,
+        "worst_month": -0.0901584747955142,
+        "worst_month_end": "2022-01-31",
+        "best_month": 0.03911730029802474,
+        "n_months": 14
+      },
+      "weight_stats": {
+        "crypto": {
+          "mean": 0.29999999999999993,
+          "p25": 0.3,
+          "p50": 0.3,
+          "p75": 0.3,
+          "min": 0.3,
+          "max": 0.3,
+          "n_reb": 15
+        },
+        "equity": {
+          "mean": 0.29999999999999993,
+          "p25": 0.3,
+          "p50": 0.3,
+          "p75": 0.3,
+          "min": 0.3,
+          "max": 0.3,
+          "n_reb": 15
+        },
+        "gold": {
+          "mean": 0.20000000000000007,
+          "p25": 0.2,
+          "p50": 0.2,
+          "p75": 0.2,
+          "min": 0.2,
+          "max": 0.2,
+          "n_reb": 15
+        },
+        "cash": {
+          "mean": 0.2,
+          "p25": 0.19999999999999996,
+          "p50": 0.19999999999999996,
+          "p75": 0.19999999999999996,
+          "min": 0.19999999999999996,
+          "max": 0.19999999999999996,
+          "n_reb": 15
+        }
+      },
+      "rebalance_log": [
+        {
+          "d": "2021-10-11",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2021-11-09",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2021-12-09",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2022-01-10",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2022-02-09",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2022-03-11",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2022-04-11",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2022-05-11",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2022-06-10",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2022-07-13",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2022-08-11",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2022-09-12",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2022-10-11",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2022-11-09",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2022-12-09",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        }
+      ]
+    },
+    "RB_T25": {
+      "metrics": {
+        "n_days": 309,
+        "d0": "2021-10-11",
+        "d1": "2022-12-30",
+        "total_return": -0.09903229215979004,
+        "cagr": -0.08203538029673574,
+        "vol_ann": 0.15615356276492331,
+        "max_dd": -0.19470598623481794,
+        "dd_peak": "2021-11-08",
+        "dd_trough": "2022-10-14",
+        "calmar": -0.42132952295467696,
+        "worst_month": -0.06509573469792584,
+        "worst_month_end": "2022-01-31",
+        "best_month": 0.04900897263510262,
+        "n_months": 14
+      },
+      "weight_stats": {
+        "crypto": {
+          "mean": 0.2616333333333334,
+          "p25": 0.17085,
+          "p50": 0.2346,
+          "p75": 0.27649999999999997,
+          "min": 0.1589,
+          "max": 0.6333,
+          "n_reb": 15
+        },
+        "equity": {
+          "mean": 0.31228000000000006,
+          "p25": 0.2329,
+          "p50": 0.3302,
+          "p75": 0.4,
+          "min": 0.1556,
+          "max": 0.4,
+          "n_reb": 15
+        },
+        "gold": {
+          "mean": 0.2940733333333333,
+          "p25": 0.3,
+          "p50": 0.3,
+          "p75": 0.3,
+          "min": 0.2111,
+          "max": 0.3,
+          "n_reb": 15
+        },
+        "cash": {
+          "mean": 0.13201333333333334,
+          "p25": 0.10554999999999998,
+          "p50": 0.13219999999999998,
+          "p75": 0.17810000000000004,
+          "min": 0.0,
+          "max": 0.21289999999999998,
+          "n_reb": 15
+        }
+      },
+      "rebalance_log": [
+        {
+          "d": "2021-10-11",
+          "crypto": 0.162,
+          "equity": 0.4,
+          "gold": 0.3,
+          "crypto_exposure_g": 1.0
+        },
+        {
+          "d": "2021-11-09",
+          "crypto": 0.1589,
+          "equity": 0.4,
+          "gold": 0.3,
+          "crypto_exposure_g": 1.0
+        },
+        {
+          "d": "2021-12-09",
+          "crypto": 0.1719,
+          "equity": 0.4,
+          "gold": 0.3,
+          "crypto_exposure_g": 1.0
+        },
+        {
+          "d": "2022-01-10",
+          "crypto": 0.1698,
+          "equity": 0.4,
+          "gold": 0.3,
+          "crypto_exposure_g": 1.0
+        },
+        {
+          "d": "2022-02-09",
+          "crypto": 0.1678,
+          "equity": 0.4,
+          "gold": 0.3,
+          "crypto_exposure_g": 1.0
+        },
+        {
+          "d": "2022-03-11",
+          "crypto": 0.2002,
+          "equity": 0.4,
+          "gold": 0.3,
+          "crypto_exposure_g": 0.0
+        },
+        {
+          "d": "2022-04-11",
+          "crypto": 0.2107,
+          "equity": 0.4,
+          "gold": 0.3,
+          "crypto_exposure_g": 0.0
+        },
+        {
+          "d": "2022-05-11",
+          "crypto": 0.2585,
+          "equity": 0.3302,
+          "gold": 0.3,
+          "crypto_exposure_g": 0.0
+        },
+        {
+          "d": "2022-06-10",
+          "crypto": 0.4583,
+          "equity": 0.2065,
+          "gold": 0.3,
+          "crypto_exposure_g": 0.0
+        },
+        {
+          "d": "2022-07-13",
+          "crypto": 0.6333,
+          "equity": 0.1556,
+          "gold": 0.2111,
+          "crypto_exposure_g": 0.0
+        },
+        {
+          "d": "2022-08-11",
+          "crypto": 0.2945,
+          "equity": 0.2249,
+          "gold": 0.3,
+          "crypto_exposure_g": 0.5
+        },
+        {
+          "d": "2022-09-12",
+          "crypto": 0.2446,
+          "equity": 0.2506,
+          "gold": 0.3,
+          "crypto_exposure_g": 0.5
+        },
+        {
+          "d": "2022-10-11",
+          "crypto": 0.2346,
+          "equity": 0.2525,
+          "gold": 0.3,
+          "crypto_exposure_g": 0.0
+        },
+        {
+          "d": "2022-11-09",
+          "crypto": 0.258,
+          "equity": 0.2409,
+          "gold": 0.3,
+          "crypto_exposure_g": 0.0
+        },
+        {
+          "d": "2022-12-09",
+          "crypto": 0.3014,
+          "equity": 0.223,
+          "gold": 0.3,
+          "crypto_exposure_g": 0.0
+        }
+      ]
+    }
+  },
+  "ab_test": {
+    "n_days": 308,
+    "years": 0.84,
+    "cum_a": -0.1570394494429111,
+    "cum_b": -0.09903229215979023,
+    "log_diff_total": 0.06654925619644748,
+    "ratio_b_over_a": 1.0688136084716962,
+    "ci95_log_diff": [
+      -0.023308686476826136,
+      0.16185996262195473
+    ],
+    "p_b_le_a": 0.073,
+    "p_b_ge_a": 0.927,
+    "se_log_diff": 0.04664337082497184,
+    "mde_log_diff_total": 0.11597756896640905,
+    "mde_log_diff_per_year": 0.13744095023616656,
+    "underpowered": true,
+    "verdict": "分不开",
+    "mean_block": 20.0,
+    "n_boot": 2000,
+    "seed": 797,
+    "note": "参数照 S-797 的预注册(mean_block=20, n_boot=2000, seed=797),a=T25_K、b=RB_T25;p_b_le_a = P(RB ≤ T25_K)。只报,不作判据。"
+  },
+  "crypto_leg_exposure": {
+    "warm_days_g_eq_1": 200,
+    "warm_until": "2022-01-28",
+    "after_warm_n": 336,
+    "after_warm_flat_days": 240,
+    "after_warm_flat_first": "2022-02-21",
+    "after_warm_flat_last": "2022-12-30",
+    "after_warm_full_days": 23,
+    "after_warm_min": 0.0,
+    "after_warm_max": 1.0,
+    "g_on_rebalance_dates": {
+      "2021-10-11": 1.0,
+      "2021-11-09": 1.0,
+      "2021-12-09": 1.0,
+      "2022-01-10": 1.0,
+      "2022-02-09": 1.0,
+      "2022-03-11": 0.0,
+      "2022-04-11": 0.0,
+      "2022-05-11": 0.0,
+      "2022-06-10": 0.0,
+      "2022-07-13": 0.0,
+      "2022-08-11": 0.5,
+      "2022-09-12": 0.5,
+      "2022-10-11": 0.0,
+      "2022-11-09": 0.0,
+      "2022-12-09": 0.0
+    }
+  },
+  "judgement": {
+    "a_maxdd_shallower_by_ge_2pp": {
+      "rule": "RB 最大回撤比 T25_K 浅 ≥ 2pp(浅 = 亏损更小)",
+      "rb_max_dd": -0.19470598623481794,
+      "t25k_max_dd": -0.2591092923541678,
+      "gap_pp": 6.440330611934986,
+      "need_pp": 2.0,
+      "pass": true
+    },
+    "b_total_return_ge_t25k_minus_1pp": {
+      "rule": "RB 总收益 ≥ T25_K − 1pp",
+      "rb_total_return": -0.09903229215979004,
+      "t25k_total_return": -0.15703944944290982,
+      "gap_pp": 5.800715728311978,
+      "need_pp": -1.0,
+      "pass": true
+    },
+    "c_worst_month_ge_t25k": {
+      "rule": "RB 最差单月 ≥ T25_K 最差单月",
+      "rb_worst_month": -0.06509573469792584,
+      "rb_worst_month_end": "2022-01-31",
+      "t25k_worst_month": -0.0901584747955142,
+      "t25k_worst_month_end": "2022-01-31",
+      "gap_pp": 2.5062740097588354,
+      "pass": true
+    },
+    "all_pass": true
+  },
+  "baselines": {
+    "core_nav_only_1": {
+      "n_days": 309,
+      "d0": "2021-10-11",
+      "d1": "2022-12-30",
+      "total_return": -0.7115835876823625,
+      "cagr": -0.6395942823561525,
+      "vol_ann": 0.8428650437688768,
+      "max_dd": -0.7773371883620431,
+      "dd_peak": "2021-11-08",
+      "dd_trough": "2022-11-21",
+      "calmar": -0.8228016000416318,
+      "worst_month": -0.3818749232044787,
+      "worst_month_end": "2022-06-30",
+      "best_month": 0.3537720774977062,
+      "n_months": 14
+    },
+    "crypto_leg_only_X1V_on_1": {
+      "n_days": 309,
+      "d0": "2021-10-11",
+      "d1": "2022-12-30",
+      "total_return": -0.41374342173032763,
+      "cagr": -0.3548665882631583,
+      "vol_ann": 0.4550936574674702,
+      "max_dd": -0.5359549775378349,
+      "dd_peak": "2021-11-08",
+      "dd_trough": "2022-12-19",
+      "calmar": -0.6621201465343365,
+      "worst_month": -0.23829078117276214,
+      "worst_month_end": "2022-01-31",
+      "best_month": 0.0752947140936906,
+      "n_months": 14
+    },
+    "equity_close_only_acwi": {
+      "n_days": 309,
+      "d0": "2021-10-11",
+      "d1": "2022-12-30",
+      "total_return": -0.13505842548114622,
+      "cagr": -0.11227266586640894,
+      "vol_ann": 0.2559605891443883,
+      "max_dd": -0.2642371633797813,
+      "dd_peak": "2022-01-03",
+      "dd_trough": "2022-10-12",
+      "calmar": -0.4248935480170982,
+      "worst_month": -0.09394682771932017,
+      "worst_month_end": "2022-09-30",
+      "best_month": 0.08336391879946459,
+      "n_months": 14
+    },
+    "gold_close_only_xauusd": {
+      "n_days": 309,
+      "d0": "2021-10-11",
+      "d1": "2022-12-30",
+      "total_return": 0.03972951090737009,
+      "cagr": 0.0324951308560919,
+      "vol_ann": 0.1756866247736615,
+      "max_dd": -0.20991907075097083,
+      "dd_peak": "2022-03-08",
+      "dd_trough": "2022-09-26",
+      "calmar": 0.1547983741536338,
+      "worst_month": -0.0312750474583422,
+      "worst_month_end": "2022-05-31",
+      "best_month": 0.08286592534535142,
+      "n_months": 14
+    }
+  },
+  "legs_csv": "t321_legs.csv",
+  "core_daily_csv": "t321_core_pit24_daily.csv",
+  "scenarios": "scenarios/lane-c-T-321.json"
+}

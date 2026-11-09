@@ -1,0 +1,53 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {
+      "id": "T-321-1",
+      "author": "lane-c",
+      "scenario": "S-799 RB 留出复验 · 股票腿",
+      "statement": "ACWI 在 2026-12-15 的收盘高于 2026-11-06 的收盘 152.37。T-321 实测:2026-11-06 ACWI = 152.37;崩盘段(记 NAV 区间)里 ACWI 总收益 −13.5%、最大回撤 −26.4% —— 不是三腿里最稳的(黄金才是),45 天里略占优,给 0.52。",
+      "variable": "close:ACWI",
+      "op": "gt",
+      "lo": 152.37,
+      "hi": null,
+      "prob": 0.52,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-321-2",
+      "author": "lane-c",
+      "scenario": "S-799 RB 留出复验 · 黄金腿",
+      "statement": "XAUUSD 在 2026-12-15 的收盘高于 2026-11-08 的收盘 4055.72。T-321 实测:2026-11-08 XAUUSD = 4055.72;黄金腿在 2021-07 → 2022-12 区间承担了主要避险角色(总收益 +4.0%、最大回撤 −21.0%,三腿里最稳),短线回吐的风险与上行相当,给 0.50。",
+      "variable": "close:XAUUSD",
+      "op": "gt",
+      "lo": 4055.72,
+      "hi": null,
+      "prob": 0.5,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-321-3",
+      "author": "lane-c",
+      "scenario": "S-799 RB 留出复验 · 面板天气",
+      "statement": "面板 dist_200 在 2026-12-15 仍 > 0(① 在 200 日线上)。T-321 实测:2026-11-08 dist_200 = 0.0143;面板 45 天内留在 200 日线上方略占优,给 0.58。",
+      "variable": "state:dist_200",
+      "op": "gt",
+      "lo": 0.0,
+      "hi": null,
+      "prob": 0.58,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-321-4",
+      "author": "lane-c",
+      "scenario": "S-799 RB 留出复验 · 前向影子臂",
+      "statement": "到 2027-03-31,前向影子臂(book=flex_x1v)里 RB_T25 的 NAV ≥ T25_K 的 NAV(比值 ≥ 1)。人工结算:取 forward_book_nav 里 book=flex_x1v、arm ∈ {T25_K, RB_T25} 在 2027-03-31 的 nav,比值 = RB_T25 / T25_K。T-321 在 2021-07 → 2022-12 崩盘段上的留出复验判定 = ✅ 全过(a)(b)(c)(回撤差 +6.44pp、总收益差 +5.80pp),先验 0.60。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 1.0,
+      "hi": null,
+      "prob": 0.6,
+      "horizon_d": "2027-03-31"
+    }
+  ]
+}
