@@ -1,0 +1,6146 @@
+{
+ "task": "T-309",
+ "ledger": "S-789",
+ "run_utc": "2026-11-09",
+ "seed": 20261108,
+ "primary_source": "asset_mcap_daily",
+ "precondition": {
+  "n_tokens_first_tag": 137,
+  "n_tokens_ge_30": true,
+  "earliest_event_date": "2023-07-26",
+  "earliest_is_tag_launch_day": true,
+  "earliest_token_first_tag": "2023-10-04",
+  "pass": true
+ },
+ "n_tokens_first_tag": 137,
+ "diff_vs_old": {
+  "n_old": 80,
+  "n_new": 137,
+  "added": [
+   "ANT",
+   "ARDR",
+   "BAL",
+   "BLZ",
+   "BSW",
+   "CLV",
+   "COS",
+   "CTXC",
+   "CVP",
+   "CVX",
+   "D",
+   "DEGO",
+   "DOCK",
+   "FARM",
+   "FIRO",
+   "FLM",
+   "FOR",
+   "FORTH",
+   "FUN",
+   "HARD",
+   "HIGH",
+   "HOOK",
+   "IRIS",
+   "KEY",
+   "KP3R",
+   "LRC",
+   "LTO",
+   "MBL",
+   "MBOX",
+   "MDX",
+   "MLN",
+   "MOB",
+   "NKN",
+   "OXT",
+   "PDA",
+   "PERP",
+   "POLS",
+   "PROS",
+   "REEF",
+   "RESOLV",
+   "SNT",
+   "STMX",
+   "SUN",
+   "SYS",
+   "TROY",
+   "TRU",
+   "VAI",
+   "VELODROME",
+   "VIB",
+   "VITE",
+   "VOXEL",
+   "WAN",
+   "WIF",
+   "WING",
+   "XMR",
+   "ZEC",
+   "ZEN"
+  ],
+  "dropped": [],
+  "d0_changed": [],
+  "old_d0": {
+   "A2Z": "2026-03-13",
+   "ACA": "2026-01-02",
+   "ACX": "2026-07-24",
+   "AERGO": "2025-03-04",
+   "AEUR": "2026-07-03",
+   "ALCX": "2026-05-22",
+   "ALPACA": "2025-03-04",
+   "ALPHA": "2025-05-07",
+   "AST": "2025-03-04",
+   "ATA": "2026-03-13",
+   "AVA": "2026-09-04",
+   "BADGER": "2025-03-04",
+   "BAKE": "2025-07-07",
+   "BETA": "2023-10-04",
+   "BICO": "2026-10-09",
+   "BIFI": "2025-06-05",
+   "BOND": "2023-10-04",
+   "BURGER": "2025-03-04",
+   "CHESS": "2025-12-01",
+   "COMBO": "2025-03-04",
+   "COOKIE": "2026-05-22",
+   "CVC": "2026-10-09",
+   "DATA": "2026-01-02",
+   "DENT": "2025-12-01",
+   "DF": "2025-12-01",
+   "DODO": "2026-05-22",
+   "EPIC": "2026-05-22",
+   "EPX": "2024-04-03",
+   "FIO": "2026-03-13",
+   "FIS": "2025-06-05",
+   "FLOW": "2026-01-02",
+   "GHST": "2025-12-01",
+   "GLMR": "2026-08-11",
+   "GNS": "2026-09-04",
+   "GPS": "2025-03-07",
+   "GTC": "2026-03-13",
+   "HEI": "2026-05-22",
+   "HFT": "2026-05-22",
+   "HIFI": "2025-05-07",
+   "ICX": "2026-08-11",
+   "IDEX": "2025-07-07",
+   "KMD": "2025-06-05",
+   "LEVER": "2025-05-07",
+   "LSK": "2026-07-24",
+   "MDT": "2025-06-05",
+   "MOVE": "2025-05-07",
+   "MOVR": "2026-08-11",
+   "NFP": "2026-04-30",
+   "NOM": "2026-04-30",
+   "NTRN": "2026-03-13",
+   "NULS": "2025-03-04",
+   "PHB": "2026-03-13",
+   "POND": "2026-04-30",
+   "PORTAL": "2025-05-07",
+   "PYR": "2026-07-03",
+   "QI": "2026-03-13",
+   "QUICK": "2026-04-30",
+   "RARE": "2026-08-11",
+   "RDNT": "2026-03-13",
+   "REI": "2025-05-07",
+   "SCR": "2026-09-04",
+   "SCRT": "2026-07-03",
+   "SLF": "2025-07-07",
+   "SOPH": "2026-08-11",
+   "STORJ": "2026-05-22",
+   "STPT": "2025-03-04",
+   "STX": "2026-07-24",
+   "SXP": "2025-12-01",
+   "SYN": "2026-05-22",
+   "TLM": "2026-05-22",
+   "TOWNS": "2026-09-04",
+   "UFT": "2025-03-04",
+   "UNFI": "2024-04-03",
+   "VANRY": "2026-07-03",
+   "VIC": "2026-04-30",
+   "VIDT": "2025-03-04",
+   "WAVES": "2024-04-03",
+   "WNXM": "2024-04-03",
+   "WTC": "2023-10-04",
+   "XEM": "2023-10-04"
+  }
+ },
+ "sources": {
+  "mcap": {
+   "source": "mcap",
+   "n_tokens_total": 137,
+   "n_tokens_with_price": 60,
+   "n_exc30_computable": 60,
+   "exc30": {
+    "n": 60,
+    "median": -0.15779120940191244,
+    "mean": -0.17235260917002748,
+    "p10": -0.6530636728306145,
+    "p90": 0.12137176015702265,
+    "pct_negative": 0.75
+   },
+   "median_exc30": -0.15779120940191244,
+   "pct_negative_exc30": 0.75,
+   "n_negative": 45,
+   "segments": {
+    "early": {
+     "n": 30,
+     "median": -0.12150826108121343,
+     "mean": -0.07400448847924852,
+     "d0_range": [
+      "2023-10-04",
+      "2026-01-02"
+     ]
+    },
+    "late": {
+     "n": 30,
+     "median": -0.2245317346404968,
+     "mean": -0.27070072986080645,
+     "d0_range": [
+      "2026-01-02",
+      "2026-09-04"
+     ]
+    },
+    "boundary_d0": "2026-01-02"
+   },
+   "control": {
+    "n_samples": 200,
+    "seed": 20261108,
+    "null_median_q": {
+     "q05": -0.12388798219308393,
+     "q50": -0.08664318638304233,
+     "q95": -0.045834932084139135
+    },
+    "percentile_of_actual": 0.005,
+    "n_draws_used": 200
+   },
+   "per_token": {
+    "A2Z": {
+     "status": "ok",
+     "ts": "2026-03-13T09:00:23.06+00:00",
+     "d0": "2026-03-13",
+     "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13",
+     "token": {
+      "m1": 0.00139664628312235,
+      "m30": 0.00142351868760921,
+      "d0": 0.0011104624997011,
+      "p7": 0.000500776759059084,
+      "p30": 8.0837500564868e-05
+     },
+     "btc": {
+      "m1": 70417.1938856752,
+      "m30": 67090.5793396472,
+      "d0": 70838.9323019333,
+      "p7": 70526.2891595787,
+      "p30": 70660.6396118034
+     },
+     "ret30": -0.9246868803358741,
+     "ret30_tok": -0.9272037546638209,
+     "ret30_btc": -0.002516874327946783,
+     "ret7": -0.5446242307816173,
+     "ret7_tok": -0.549037667463893,
+     "ret7_btc": -0.004413436682275784,
+     "jump": -0.21089698714477723,
+     "jump_tok": -0.20490784737668588,
+     "jump_btc": 0.005989139768091345,
+     "pre30": -0.275787194849032,
+     "pre30_tok": -0.21991716064780698,
+     "pre30_btc": 0.05587003420122505
+    },
+    "ACA": {
+     "status": "no_price_source",
+     "d0": "2026-01-02",
+     "ts": "2026-01-02T10:59:57.739+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ACA, D, DATA & FLOW on 2026-01-02"
+    },
+    "ACX": {
+     "status": "ok",
+     "ts": "2026-07-24T03:00:06.343+00:00",
+     "d0": "2026-07-24",
+     "title": "Binance Will Extend the Monitoring Tag to Include ACX, LSK & STX on 2026-07-24",
+     "token": {
+      "m1": 0.0413273972477402,
+      "m30": 0.0389763627408094,
+      "d0": 0.0412537029960428,
+      "p7": 0.0418221111602168,
+      "p30": 0.0416263249279759
+     },
+     "btc": {
+      "m1": 65052.4766706774,
+      "m30": 60989.5735215213,
+      "d0": 64092.6473979545,
+      "p7": 62820.08613814,
+      "p30": 77712.3200924702
+     },
+     "ret30": -0.20346731975762555,
+     "ret30_tok": 0.009032448116690128,
+     "ret30_btc": 0.21249976787431568,
+     "ret7": 0.033633382218906105,
+     "ret7_tok": 0.013778354981333951,
+     "ret7_btc": -0.019855027237572154,
+     "jump": 0.0129715107040963,
+     "jump_tok": -0.0017831815358618774,
+     "jump_btc": -0.014754692239958178,
+     "pre30": 0.007549992539926276,
+     "pre30_tok": 0.05842875258467761,
+     "pre30_btc": 0.05087876004475134
+    },
+    "AERGO": {
+     "status": "no_price_source",
+     "d0": "2025-03-04",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+    },
+    "AEUR": {
+     "status": "no_price_source",
+     "d0": "2026-07-03",
+     "ts": "2026-07-03T06:00:11.367+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include AEUR, PYR, SCRT & VANRY on 2026-07-03"
+    },
+    "ALCX": {
+     "status": "no_price_source",
+     "d0": "2026-05-22",
+     "ts": "2026-05-22T08:00:04.004+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+    },
+    "ALPACA": {
+     "status": "no_price_source",
+     "d0": "2025-03-04",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+    },
+    "ALPHA": {
+     "status": "ok",
+     "ts": "2025-05-07T08:00:33.736+00:00",
+     "d0": "2025-05-07",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07",
+     "token": {
+      "m1": 0.0297526457966268,
+      "m30": 0.0282666018284651,
+      "d0": 0.0264555735979705,
+      "p7": 0.0292104841950722,
+      "p30": 0.0240426557117496
+     },
+     "btc": {
+      "m1": 96815.8031321488,
+      "m30": 79146.1855134701,
+      "d0": 97035.8018146733,
+      "p7": 103546.469181822,
+      "p30": 104364.976555907
+     },
+     "ret30": -0.16673703459058076,
+     "ret30_tok": -0.09120640976788352,
+     "ret30_btc": 0.07553062482269723,
+     "ret7": 0.03703794908941749,
+     "ret7_tok": 0.10413346688174019,
+     "ret7_btc": 0.0670955177923227,
+     "jump": -0.11308844359052284,
+     "jump_tok": -0.11081610090051575,
+     "jump_btc": 0.0022723426900070898,
+     "pre30": -0.29010211928718055,
+     "pre30_tok": -0.0640695419097338,
+     "pre30_btc": 0.22603257737744675
+    },
+    "ANT": {
+     "status": "no_price_source",
+     "d0": "2024-01-04",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04"
+    },
+    "ARDR": {
+     "status": "no_price_source",
+     "d0": "2025-04-03",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03"
+    },
+    "AST": {
+     "status": "no_price_source",
+     "d0": "2025-03-04",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+    },
+    "ATA": {
+     "status": "no_price_source",
+     "d0": "2026-03-13",
+     "ts": "2026-03-13T09:00:23.06+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13"
+    },
+    "AVA": {
+     "status": "ok",
+     "ts": "2026-09-04T08:00:06.5+00:00",
+     "d0": "2026-09-04",
+     "title": "Binance Will Extend the Monitoring Tag to Include AVA, GNS, SCR & TOWNS on 2026-09-04",
+     "token": {
+      "m1": 0.00853460705416971,
+      "m30": 0.00847870986112852,
+      "d0": 0.0084827313976583,
+      "p7": 0.00881090965962865,
+      "p30": 0.00961798810819509
+     },
+     "btc": {
+      "m1": 81264.7015303879,
+      "m30": 64608.7053883574,
+      "d0": 79671.2576742016,
+      "p7": 77203.534448056,
+      "p30": 86489.7348268651
+     },
+     "ret30": 0.048248857736832074,
+     "ret30_tok": 0.1338315051270138,
+     "ret30_btc": 0.08558264739018173,
+     "ret7": 0.06966162584561275,
+     "ret7_tok": 0.03868780544683337,
+     "ret7_btc": -0.030973820398779384,
+     "jump": 0.013529797540682398,
+     "jump_tok": -0.006078271229378318,
+     "jump_btc": -0.019608068770060716,
+     "pre30": -0.2326607172061519,
+     "pre30_tok": 0.00047430995937447484,
+     "pre30_btc": 0.23313502716552637
+    },
+    "BADGER": {
+     "status": "no_price_source",
+     "d0": "2025-03-04",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+    },
+    "BAKE": {
+     "status": "ok",
+     "ts": "2025-07-07T03:29:57.414+00:00",
+     "d0": "2025-07-07",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAKE, IDEX & SLF on 2025-07-07",
+     "token": {
+      "m1": 0.0933666675026391,
+      "m30": 0.109515719992363,
+      "d0": 0.0848880548137323,
+      "p7": 0.08838092518127,
+      "p30": 0.0802199331098842
+     },
+     "btc": {
+      "m1": 109222.282031442,
+      "m30": 105665.123627167,
+      "d0": 108294.147897275,
+      "p7": 119849.156796227,
+      "p30": 115013.391408662
+     },
+     "ret30": -0.11703773190554334,
+     "ret30_tok": -0.054991502798494185,
+     "ret30_btc": 0.062046229107049156,
+     "ret7": -0.06555343236125166,
+     "ret7_tok": 0.04114678296259733,
+     "ret7_btc": 0.10670021532384899,
+     "jump": -0.08231218300581977,
+     "jump_tok": -0.09080984590852137,
+     "jump_btc": -0.008497662902701597,
+     "pre30": -0.24975861965348622,
+     "pre30_tok": -0.22487790045436484,
+     "pre30_btc": 0.02488071919912138
+    },
+    "BAL": {
+     "status": "ok",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "d0": "2024-07-01",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01",
+     "token": {
+      "m1": 3.02095006147737,
+      "m30": 4.02007583818988,
+      "d0": 2.60598000013493,
+      "p7": 2.44856243046426,
+      "p30": 2.38373015372372
+     },
+     "btc": {
+      "m1": 62670.8147823052,
+      "m30": 67728.586920622,
+      "d0": 62869.3238114089,
+      "p7": 56705.6445914538,
+      "p30": 64586.8811955584
+     },
+     "ret30": -0.11260403805633301,
+     "ret30_tok": -0.08528455567567772,
+     "ret30_btc": 0.02731948238065529,
+     "ret7": 0.037633249522153744,
+     "ret7_tok": -0.060406284646282504,
+     "ret7_btc": -0.09803953416843625,
+     "jump": -0.14053157933170135,
+     "jump_tok": -0.13736409172533703,
+     "jump_btc": 0.0031674876063643165,
+     "pre30": -0.2800123810232862,
+     "pre30_tok": -0.3517584978425866,
+     "pre30_btc": -0.07174611681930043
+    },
+    "BETA": {
+     "status": "no_price_source",
+     "d0": "2023-10-04",
+     "ts": "2023-10-04T06:00:16.946+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BETA, BOND, WTC and XEM on 2023-10-04"
+    },
+    "BICO": {
+     "status": "no_price_source",
+     "d0": "2026-10-09",
+     "ts": "2026-10-09T07:00:14.078+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BICO & CVC on 2026-10-09"
+    },
+    "BIFI": {
+     "status": "no_price_source",
+     "d0": "2025-06-05",
+     "ts": "2025-06-05T05:00:18.433+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BIFI, FIS, KMD & MDT on 2025-06-05"
+    },
+    "BLZ": {
+     "status": "ok",
+     "ts": "2024-10-03T07:00:05.269+00:00",
+     "d0": "2024-10-03",
+     "title": "Binance Will Extend the Monitoring Tag to Include BLZ, CLV, KEY, PROS & VITE and Remove the Seed Tag for PENDLE & SEI on 2024-10-03",
+     "token": {
+      "m1": 0.117749762395568,
+      "m30": 0.114636875549779,
+      "d0": 0.13019369873545,
+      "p7": 0.112848823990893,
+      "p30": 0.0939616855420199
+     },
+     "btc": {
+      "m1": 60627.0581803984,
+      "m30": 57518.6223662926,
+      "d0": 60749.2342231247,
+      "p7": 60277.5953492784,
+      "p30": 69345.7084388589
+     },
+     "ret30": -0.4198006718879266,
+     "ret30_tok": -0.2782931397244697,
+     "ret30_btc": 0.1415075321634569,
+     "ret7": -0.12545991080831964,
+     "ret7_tok": -0.1332236115343901,
+     "ret7_btc": -0.007763700726070466,
+     "jump": 0.1036659947590346,
+     "jump_tok": 0.10568120127561609,
+     "jump_btc": 0.0020152065165814914,
+     "pre30": 0.07953886312208369,
+     "pre30_tok": 0.13570522670879792,
+     "pre30_btc": 0.05616636358671423
+    },
+    "BOND": {
+     "status": "ok",
+     "ts": "2023-10-04T06:00:16.946+00:00",
+     "d0": "2023-10-04",
+     "title": "Binance Will Extend the Monitoring Tag to Include BETA, BOND, WTC and XEM on 2023-10-04",
+     "token": {
+      "m1": 2.25580339710686,
+      "m30": 2.131441681064,
+      "d0": 2.10250596964672,
+      "p7": 1.67186701505576,
+      "p30": 4.22560959823931
+     },
+     "btc": {
+      "m1": 27426.2811461812,
+      "m30": 25805.1906728902,
+      "d0": 27781.9327396636,
+      "p7": 26878.3328415518,
+      "p30": 34724.5002140395
+     },
+     "ret30": 0.7599016682939852,
+     "ret30_tok": 1.0097967184128045,
+     "ret30_btc": 0.2498950501188193,
+     "ret7": -0.1722970198628927,
+     "ret7_tok": -0.20482175119023305,
+     "ret7_btc": -0.03252473132734035,
+     "jump": -0.08092445670222115,
+     "jump_tok": -0.06795690956789446,
+     "jump_btc": 0.012967547134326685,
+     "pre30": -0.0901781504154947,
+     "pre30_tok": -0.013575652420776296,
+     "pre30_btc": 0.07660249799471841
+    },
+    "BSW": {
+     "status": "no_price_source",
+     "d0": "2025-04-03",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03"
+    },
+    "BURGER": {
+     "status": "no_price_source",
+     "d0": "2025-03-04",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+    },
+    "CHESS": {
+     "status": "ok",
+     "ts": "2025-12-01T04:30:24.832+00:00",
+     "d0": "2025-12-01",
+     "title": "Binance Will Extend the Monitoring Tag to Include CHESS, DENT, DF, GHST & SXP on 2025-12-01",
+     "token": {
+      "m1": 0.103673043184704,
+      "m30": 0.10934495254128,
+      "d0": 0.104025827876998,
+      "p7": 0.103906536627511,
+      "p30": 0.102545462234297
+     },
+     "btc": {
+      "m1": 90359.8687316973,
+      "m30": 110066.941740518,
+      "d0": 86303.897663614,
+      "p7": 90626.0373431212,
+      "p30": 87575.0461596822
+     },
+     "ret30": -0.028959500465950527,
+     "ret30_tok": -0.014230750890552035,
+     "ret30_btc": 0.014728749575398492,
+     "ret7": -0.051227215548878546,
+     "ret7_tok": -0.0011467464563518215,
+     "ret7_btc": 0.050080469092526725,
+     "jump": 0.04828972167930634,
+     "jump_tok": 0.0034028584621124125,
+     "jump_btc": -0.04488686321719393,
+     "pre30": 0.16725092654027507,
+     "pre30_tok": -0.04864536076572823,
+     "pre30_btc": -0.2158962873060033
+    },
+    "CLV": {
+     "status": "no_price_source",
+     "d0": "2024-10-03",
+     "ts": "2024-10-03T07:00:05.269+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BLZ, CLV, KEY, PROS & VITE and Remove the Seed Tag for PENDLE & SEI on 2024-10-03"
+    },
+    "COMBO": {
+     "status": "ok",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "d0": "2025-03-04",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04",
+     "token": {
+      "m1": 0.00162718435399045,
+      "m30": 0.0029684454004391,
+      "d0": 0.195598960748004,
+      "p7": 0.154602642636257,
+      "p30": 0.0108261262196596
+     },
+     "btc": {
+      "m1": 86124.8020367712,
+      "m30": 97652.0286614209,
+      "d0": 87038.9388224031,
+      "p7": 82942.5002437416,
+      "p30": 83208.52796536
+     },
+     "ret30": -0.9006433981521363,
+     "ret30_tok": -0.9446514123681504,
+     "ret30_btc": -0.04400801421601408,
+     "ret7": -0.16252930583725567,
+     "ret7_tok": -0.20959374198600056,
+     "ret7_btc": -0.04706443614874489,
+     "jump": 119.19639273196152,
+     "jump_tok": 119.20700682643853,
+     "jump_btc": 0.010614094477007896,
+     "pre30": 65.00140918627925,
+     "pre30_tok": 64.89272644835256,
+     "pre30_btc": -0.10868273792667948
+    },
+    "COOKIE": {
+     "status": "ok",
+     "ts": "2026-05-22T08:00:04.004+00:00",
+     "d0": "2026-05-22",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22",
+     "token": {
+      "m1": 0.0182881181229141,
+      "m30": 0.0163300649061366,
+      "d0": 0.0144783382169151,
+      "p7": 0.0121572551479274,
+      "p30": 0.00905523927471176
+     },
+     "btc": {
+      "m1": 77550.3830832048,
+      "m30": 78238.8167500862,
+      "d0": 75478.38285863,
+      "p7": 73500.9150762937,
+      "p30": 63255.4852525938
+     },
+     "ret30": -0.21262734448539078,
+     "ret30_tok": -0.3745663943578492,
+     "ret30_btc": -0.16193904987245844,
+     "ret7": -0.13411506277508922,
+     "ret7_tok": -0.160314190358944,
+     "ret7_btc": -0.026199127583854787,
+     "jump": -0.18160183569437394,
+     "jump_tok": -0.2083199529002132,
+     "jump_btc": -0.026718117205839276,
+     "pre30": -0.07811155990307517,
+     "pre30_tok": -0.1133937127540533,
+     "pre30_btc": -0.03528215285097813
+    },
+    "COS": {
+     "status": "no_price_source",
+     "d0": "2026-03-06",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06"
+    },
+    "CTXC": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "CVC": {
+     "status": "no_price_source",
+     "d0": "2026-10-09",
+     "ts": "2026-10-09T07:00:14.078+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BICO & CVC on 2026-10-09"
+    },
+    "CVP": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "CVX": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "D": {
+     "status": "ok",
+     "ts": "2026-01-02T10:59:57.739+00:00",
+     "d0": "2026-01-02",
+     "title": "Binance Will Extend the Monitoring Tag to Include ACA, D, DATA & FLOW on 2026-01-02",
+     "token": {
+      "m1": 0.0145587999306696,
+      "m30": 0.0160795271801504,
+      "d0": 0.013487838032504,
+      "p7": 0.0142146745724957,
+      "p30": 0.0120380278253698
+     },
+     "btc": {
+      "m1": 88764.1262407513,
+      "m30": 93428.5945147846,
+      "d0": 89978.9192036161,
+      "p7": 90551.7136317427,
+      "p30": 76895.5866559308
+     },
+     "ret30": 0.03791423474268085,
+     "ret30_tok": -0.10749018513125219,
+     "ret30_btc": -0.14540441987393304,
+     "ret7": 0.0475224173157518,
+     "ret7_tok": 0.05388829093588732,
+     "ret7_btc": 0.00636587362013552,
+     "jump": -0.08724676821045163,
+     "jump_tok": -0.07356113850493329,
+     "jump_btc": 0.013685629705518343,
+     "pre30": -0.12425631647412239,
+     "pre30_tok": -0.1611794375922787,
+     "pre30_btc": -0.03692312111815632
+    },
+    "DATA": {
+     "status": "ok",
+     "ts": "2026-01-02T10:59:57.739+00:00",
+     "d0": "2026-01-02",
+     "title": "Binance Will Extend the Monitoring Tag to Include ACA, D, DATA & FLOW on 2026-01-02",
+     "token": {
+      "m1": 1.98829444574487,
+      "m30": 2.38384959768212,
+      "d0": 2.10143920575417,
+      "p7": 2.27731251515283,
+      "p30": 1.53114388820185
+     },
+     "btc": {
+      "m1": 88764.1262407513,
+      "m30": 93428.5945147846,
+      "d0": 89978.9192036161,
+      "p7": 90551.7136317427,
+      "p30": 76895.5866559308
+     },
+     "ret30": -0.12597879025688352,
+     "ret30_tok": -0.27138321013081657,
+     "ret30_btc": -0.14540441987393304,
+     "ret7": 0.07732596429603289,
+     "ret7_tok": 0.08369183791616841,
+     "ret7_btc": 0.00636587362013552,
+     "jump": 0.0432198051265511,
+     "jump_tok": 0.056905434832069446,
+     "jump_btc": 0.013685629705518343,
+     "pre30": -0.08154508769944058,
+     "pre30_tok": -0.1184682088175969,
+     "pre30_btc": -0.03692312111815632
+    },
+    "DEGO": {
+     "status": "ok",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "d0": "2026-03-06",
+     "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06",
+     "token": {
+      "m1": 0.669266617182886,
+      "m30": 0.65673395371381,
+      "d0": 0.362937439752884,
+      "p7": 1.05886013083051,
+      "p30": 0.295934884475233
+     },
+     "btc": {
+      "m1": 70868.2181964372,
+      "m30": 73059.1798671369,
+      "d0": 68142.8831238779,
+      "p7": 70838.9323019333,
+      "p30": 69002.038479381
+     },
+     "ret30": -0.19722000357950953,
+     "ret30_tok": -0.18461185851553807,
+     "ret30_btc": 0.012608145063971454,
+     "ret7": 1.8779082133994638,
+     "ret7_tok": 1.9174728613048688,
+     "ret7_btc": 0.03956464790540504,
+     "jump": -0.4192523568429496,
+     "jump_tok": -0.4577087360481533,
+     "jump_btc": -0.03845637920520373,
+     "pre30": -0.3800680406639485,
+     "pre30_tok": -0.4473600189232122,
+     "pre30_btc": -0.0672919782592637
+    },
+    "DENT": {
+     "status": "ok",
+     "ts": "2025-12-01T04:30:24.832+00:00",
+     "d0": "2025-12-01",
+     "title": "Binance Will Extend the Monitoring Tag to Include CHESS, DENT, DF, GHST & SXP on 2025-12-01",
+     "token": {
+      "m1": 0.000341185065538882,
+      "m30": 0.000432099418105766,
+      "d0": 0.000272253376802884,
+      "p7": 0.000250609989008519,
+      "p30": 0.000200600076521235
+     },
+     "btc": {
+      "m1": 90359.8687316973,
+      "m30": 110066.941740518,
+      "d0": 86303.897663614,
+      "p7": 90626.0373431212,
+      "p30": 87575.0461596822
+     },
+     "ret30": -0.2779148342553589,
+     "ret30_tok": -0.2631860846799604,
+     "ret30_btc": 0.014728749575398492,
+     "ret7": -0.12957769351092274,
+     "ret7_tok": -0.07949722441839602,
+     "ret7_btc": 0.050080469092526725,
+     "jump": -0.15714920371066055,
+     "jump_tok": -0.20203606692785447,
+     "jump_btc": -0.04488686321719393,
+     "pre30": -0.154032563798712,
+     "pre30_tok": -0.3699288511047153,
+     "pre30_btc": -0.2158962873060033
+    },
+    "DF": {
+     "status": "ok",
+     "ts": "2025-12-01T04:30:24.832+00:00",
+     "d0": "2025-12-01",
+     "title": "Binance Will Extend the Monitoring Tag to Include CHESS, DENT, DF, GHST & SXP on 2025-12-01",
+     "token": {
+      "m1": 0.0144483142442145,
+      "m30": 0.0177653178087874,
+      "d0": 0.0130832973071503,
+      "p7": 0.0135645480750096,
+      "p30": 0.0113524301982503
+     },
+     "btc": {
+      "m1": 90359.8687316973,
+      "m30": 110066.941740518,
+      "d0": 86303.897663614,
+      "p7": 90626.0373431212,
+      "p30": 87575.0461596822
+     },
+     "ret30": -0.14702468906719957,
+     "ret30_tok": -0.13229593949180107,
+     "ret30_btc": 0.014728749575398492,
+     "ret7": -0.013296869625113672,
+     "ret7_tok": 0.03678359946741305,
+     "ret7_btc": 0.050080469092526725,
+     "jump": -0.04958899839488229,
+     "jump_tok": -0.09447586161207622,
+     "jump_btc": -0.04488686321719393,
+     "pre30": -0.047652079913253265,
+     "pre30_tok": -0.26354836721925656,
+     "pre30_btc": -0.2158962873060033
+    },
+    "DOCK": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "DODO": {
+     "status": "no_price_source",
+     "d0": "2026-05-22",
+     "ts": "2026-05-22T08:00:04.004+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+    },
+    "EPIC": {
+     "status": "no_price_source",
+     "d0": "2026-05-22",
+     "ts": "2026-05-22T08:00:04.004+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+    },
+    "EPX": {
+     "status": "no_price_source",
+     "d0": "2024-04-03",
+     "ts": "2024-04-03T06:00:16.944+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include EPX, FOR, UNFI, WAVES & WNXM on 2024-04-03"
+    },
+    "FARM": {
+     "status": "no_price_source",
+     "d0": "2026-04-14",
+     "ts": "2026-04-14T02:30:06.111+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include FARM, HIGH, MLN, RESOLV, SYS, TRU & VELODROME, Remove the Seed Tag for XAUT on 2026-04-14"
+    },
+    "FIO": {
+     "status": "ok",
+     "ts": "2026-03-13T09:00:23.06+00:00",
+     "d0": "2026-03-13",
+     "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13",
+     "token": {
+      "m1": 0.0131538924165549,
+      "m30": 0.013544425686525,
+      "d0": 0.0107139983357076,
+      "p7": 0.00677253336684696,
+      "p30": 0.00382247284354933
+     },
+     "btc": {
+      "m1": 70417.1938856752,
+      "m30": 67090.5793396472,
+      "d0": 70838.9323019333,
+      "p7": 70526.2891595787,
+      "p30": 70660.6396118034
+     },
+     "ret30": -0.6407094242230061,
+     "ret30_tok": -0.6432262985509529,
+     "ret30_btc": -0.002516874327946783,
+     "ret7": -0.3634664943537904,
+     "ret7_tok": -0.3678799310360662,
+     "ret7_btc": -0.004413436682275784,
+     "jump": -0.1914775110867255,
+     "jump_tok": -0.18548837131863416,
+     "jump_btc": 0.005989139768091345,
+     "pre30": -0.2648436308915092,
+     "pre30_tok": -0.20897359669028415,
+     "pre30_btc": 0.05587003420122505
+    },
+    "FIRO": {
+     "status": "no_price_source",
+     "d0": "2024-01-04",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04"
+    },
+    "FIS": {
+     "status": "no_price_source",
+     "d0": "2025-06-05",
+     "ts": "2025-06-05T05:00:18.433+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BIFI, FIS, KMD & MDT on 2025-06-05"
+    },
+    "FLM": {
+     "status": "ok",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "d0": "2025-04-03",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03",
+     "token": {
+      "m1": 0.0251790030706103,
+      "m30": 0.0342881983117186,
+      "d0": 0.0177467630984386,
+      "p7": 0.0169190375088386,
+      "p30": 0.0368452841323969
+     },
+     "btc": {
+      "m1": 82489.2357333643,
+      "m30": 87038.9388224031,
+      "d0": 83208.52796536,
+      "p7": 79556.4131800269,
+      "p30": 95892.6349530102
+     },
+     "ret30": 0.9237316827288593,
+     "ret30_tok": 1.0761692669261262,
+     "ret30_btc": 0.15243758419726694,
+     "ret7": -0.002749821474054337,
+     "ret7_tok": -0.04664093305402961,
+     "ret7_btc": -0.04389111157997527,
+     "jump": -0.3038959331930857,
+     "jump_tok": -0.295176101743553,
+     "jump_btc": 0.0087198314495327,
+     "pre30": -0.4384155608840714,
+     "pre30_tok": -0.4824235751000855,
+     "pre30_btc": -0.04400801421601408
+    },
+    "FLOW": {
+     "status": "ok",
+     "ts": "2026-01-02T10:59:57.739+00:00",
+     "d0": "2026-01-02",
+     "title": "Binance Will Extend the Monitoring Tag to Include ACA, D, DATA & FLOW on 2026-01-02",
+     "token": {
+      "m1": 0.095640411431396,
+      "m30": 0.235207205523305,
+      "d0": 0.0924382323572593,
+      "p7": 0.117631976729156,
+      "p30": 0.0831093949254299
+     },
+     "btc": {
+      "m1": 88764.1262407513,
+      "m30": 93428.5945147846,
+      "d0": 89978.9192036161,
+      "p7": 90551.7136317427,
+      "p30": 76895.5866559308
+     },
+     "ret30": 0.04448473335531922,
+     "ret30_tok": -0.10091968651861383,
+     "ret30_btc": -0.14540441987393304,
+     "ret7": 0.26618092578778496,
+     "ret7_tok": 0.2725467994079205,
+     "ret7_btc": 0.00636587362013552,
+     "jump": -0.047167073649678426,
+     "jump_tok": -0.03348144394416008,
+     "jump_btc": 0.013685629705518343,
+     "pre30": -0.5700692235610961,
+     "pre30_tok": -0.6069923446792524,
+     "pre30_btc": -0.03692312111815632
+    },
+    "FOR": {
+     "status": "no_price_source",
+     "d0": "2024-04-03",
+     "ts": "2024-04-03T06:00:16.944+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include EPX, FOR, UNFI, WAVES & WNXM on 2024-04-03"
+    },
+    "FORTH": {
+     "status": "ok",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "d0": "2026-03-06",
+     "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06",
+     "token": {
+      "m1": 1.2439008411935,
+      "m30": 1.421704465871,
+      "d0": 0.905078163578319,
+      "p7": 1.18912669424334,
+      "p30": 0.275115172322364
+     },
+     "btc": {
+      "m1": 70868.2181964372,
+      "m30": 73059.1798671369,
+      "d0": 68142.8831238779,
+      "p7": 70838.9323019333,
+      "p30": 69002.038479381
+     },
+     "ret30": -0.7086397328390339,
+     "ret30_tok": -0.6960315877750625,
+     "ret30_btc": 0.012608145063971454,
+     "ret7": 0.2742740260296792,
+     "ret7_tok": 0.31383867393508424,
+     "ret7_btc": 0.03956464790540504,
+     "jump": -0.23393082915948138,
+     "jump_tok": -0.2723872083646851,
+     "jump_btc": -0.03845637920520373,
+     "pre30": -0.2960931799748511,
+     "pre30_tok": -0.36338515823411477,
+     "pre30_btc": -0.0672919782592637
+    },
+    "FUN": {
+     "status": "ok",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "d0": "2026-03-06",
+     "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06",
+     "token": {
+      "m1": 0.00407928604512662,
+      "m30": 0.00315970876306512,
+      "d0": 0.00214358405367323,
+      "p7": 0.00388124431266398,
+      "p30": 0.0022199761091556
+     },
+     "btc": {
+      "m1": 70868.2181964372,
+      "m30": 73059.1798671369,
+      "d0": 68142.8831238779,
+      "p7": 70838.9323019333,
+      "p30": 69002.038479381
+     },
+     "ret30": 0.023029391682705347,
+     "ret30_tok": 0.0356375367466768,
+     "ret30_btc": 0.012608145063971454,
+     "ret7": 0.771068485893621,
+     "ret7_tok": 0.810633133799026,
+     "ret7_btc": 0.03956464790540504,
+     "jump": -0.4360634191222279,
+     "jump_tok": -0.47451979832743163,
+     "jump_btc": -0.03845637920520373,
+     "pre30": -0.25429611279194575,
+     "pre30_tok": -0.32158809105120945,
+     "pre30_btc": -0.0672919782592637
+    },
+    "GHST": {
+     "status": "ok",
+     "ts": "2025-12-01T04:30:24.832+00:00",
+     "d0": "2025-12-01",
+     "title": "Binance Will Extend the Monitoring Tag to Include CHESS, DENT, DF, GHST & SXP on 2025-12-01",
+     "token": {
+      "m1": 0.263802810180441,
+      "m30": 0.305248109523981,
+      "d0": 0.206936487118163,
+      "p7": 0.204695519414725,
+      "p30": 0.168795910004692
+     },
+     "btc": {
+      "m1": 90359.8687316973,
+      "m30": 110066.941740518,
+      "d0": 86303.897663614,
+      "p7": 90626.0373431212,
+      "p30": 87575.0461596822
+     },
+     "ret30": -0.19903929647132768,
+     "ret30_tok": -0.18431054689592918,
+     "ret30_btc": 0.014728749575398492,
+     "ret7": -0.06090972271834283,
+     "ret7_tok": -0.010829253625816104,
+     "ret7_btc": 0.050080469092526725,
+     "jump": -0.17067688693156846,
+     "jump_tok": -0.2155637501487624,
+     "jump_btc": -0.04488686321719393,
+     "pre30": -0.10617490441777189,
+     "pre30_tok": -0.3220711917237752,
+     "pre30_btc": -0.2158962873060033
+    },
+    "GLMR": {
+     "status": "ok",
+     "ts": "2026-08-11T09:00:12.289+00:00",
+     "d0": "2026-08-11",
+     "title": "Binance Will Extend the Monitoring Tag to Include GLMR, ICX, MOVR, RARE & SOPH on 2026-08-11",
+     "token": {
+      "m1": 0.00877041598470002,
+      "m30": 0.00884090693038036,
+      "d0": 0.00774286440879453,
+      "p7": 0.00707330418999119,
+      "p30": 0.00580853571643937
+     },
+     "btc": {
+      "m1": 63915.7121355682,
+      "m30": 63746.655957932,
+      "d0": 63537.5598896477,
+      "p7": 64686.2578256166,
+      "p30": 76554.9866497329
+     },
+     "ret30": -0.4546984770357174,
+     "ret30_tok": -0.24982081439500647,
+     "ret30_btc": 0.20487766264071094,
+     "ret7": -0.10455352348295455,
+     "ret7_tok": -0.08647448585601436,
+     "ret7_btc": 0.018079037626940186,
+     "jump": -0.11124467829529672,
+     "jump_tok": -0.11716109905140781,
+     "jump_btc": -0.005916420756111096,
+     "pre30": -0.12092010235598016,
+     "pre30_tok": -0.12420021274204163,
+     "pre30_btc": -0.0032801103860614633
+    },
+    "GNS": {
+     "status": "no_price_source",
+     "d0": "2026-09-04",
+     "ts": "2026-09-04T08:00:06.5+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include AVA, GNS, SCR & TOWNS on 2026-09-04"
+    },
+    "GPS": {
+     "status": "no_price_source",
+     "d0": "2025-03-07",
+     "ts": "2025-03-07T09:00:45.829+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to GPS on 2025-03-07"
+    },
+    "GTC": {
+     "status": "ok",
+     "ts": "2026-03-13T09:00:23.06+00:00",
+     "d0": "2026-03-13",
+     "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13",
+     "token": {
+      "m1": 0.130036953847395,
+      "m30": 0.278433722590691,
+      "d0": 0.156543885602414,
+      "p7": 0.0838063301601615,
+      "p30": 0.0754144826996273
+     },
+     "btc": {
+      "m1": 70417.1938856752,
+      "m30": 67090.5793396472,
+      "d0": 70838.9323019333,
+      "p7": 70526.2891595787,
+      "p30": 70660.6396118034
+     },
+     "ret30": -0.5157365380655401,
+     "ret30_tok": -0.5182534123934869,
+     "ret30_btc": -0.002516874327946783,
+     "ret7": -0.4602329796395307,
+     "ret7_tok": -0.4646464163218065,
+     "ret7_btc": -0.004413436682275784,
+     "jump": 0.19785239120260667,
+     "jump_tok": 0.20384153097069801,
+     "jump_btc": 0.005989139768091345,
+     "pre30": -0.49363969749542325,
+     "pre30_tok": -0.4377696632941982,
+     "pre30_btc": 0.05587003420122505
+    },
+    "HARD": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "HEI": {
+     "status": "no_price_source",
+     "d0": "2026-05-22",
+     "ts": "2026-05-22T08:00:04.004+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+    },
+    "HFT": {
+     "status": "ok",
+     "ts": "2026-05-22T08:00:04.004+00:00",
+     "d0": "2026-05-22",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22",
+     "token": {
+      "m1": 0.0140861252453777,
+      "m30": 0.0146403165563023,
+      "d0": 0.0120320375351942,
+      "p7": 0.0108205738129513,
+      "p30": 0.00992108719235914
+     },
+     "btc": {
+      "m1": 77550.3830832048,
+      "m30": 78238.8167500862,
+      "d0": 75478.38285863,
+      "p7": 73500.9150762937,
+      "p30": 63255.4852525938
+     },
+     "ret30": -0.01350507890959074,
+     "ret30_tok": -0.17544412878204918,
+     "ret30_btc": -0.16193904987245844,
+     "ret7": -0.07448737033466646,
+     "ret7_tok": -0.10068649791852124,
+     "ret7_btc": -0.026199127583854787,
+     "jump": -0.11910535620517126,
+     "jump_tok": -0.14582347341101054,
+     "jump_btc": -0.026718117205839276,
+     "pre30": -0.1428751302294412,
+     "pre30_tok": -0.17815728308041934,
+     "pre30_btc": -0.03528215285097813
+    },
+    "HIFI": {
+     "status": "ok",
+     "ts": "2025-05-07T08:00:33.736+00:00",
+     "d0": "2025-05-07",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07",
+     "token": {
+      "m1": 0.253248086352261,
+      "m30": 0.176613616182458,
+      "d0": 0.234917886862981,
+      "p7": 0.124253867468281,
+      "p30": 0.0737467565551012
+     },
+     "btc": {
+      "m1": 96815.8031321488,
+      "m30": 79146.1855134701,
+      "d0": 97035.8018146733,
+      "p7": 103546.469181822,
+      "p30": 104364.976555907
+     },
+     "ret30": -0.7616049483240193,
+     "ret30_tok": -0.686074323501322,
+     "ret30_btc": 0.07553062482269723,
+     "ret7": -0.5381708406316017,
+     "ret7_tok": -0.471075322839279,
+     "ret7_btc": 0.0670955177923227,
+     "jump": -0.07465274940227407,
+     "jump_tok": -0.07238040671226698,
+     "jump_btc": 0.0022723426900070898,
+     "pre30": 0.10409072761331561,
+     "pre30_tok": 0.33012330499076237,
+     "pre30_btc": 0.22603257737744675
+    },
+    "HIGH": {
+     "status": "ok",
+     "ts": "2026-04-14T02:30:06.111+00:00",
+     "d0": "2026-04-14",
+     "title": "Binance Will Extend the Monitoring Tag to Include FARM, HIGH, MLN, RESOLV, SYS, TRU & VELODROME, Remove the Seed Tag for XAUT on 2026-04-14",
+     "token": {
+      "m1": 0.123452387801663,
+      "m30": 0.252134727688723,
+      "d0": 0.113082454113489,
+      "p7": 0.293457941959775,
+      "p30": 0.213169159824231
+     },
+     "btc": {
+      "m1": 74481.6414286025,
+      "m30": 72934.2940718683,
+      "d0": 74297.347594998,
+      "p7": 76326.1917024256,
+      "p30": 81059.1159541707
+     },
+     "ret30": 0.7940676815536174,
+     "ret30_tok": 0.8850772340888136,
+     "ret30_btc": 0.09100955253519616,
+     "ret7": 1.5677722672797445,
+     "ret7_tok": 1.5950793539134023,
+     "ret7_btc": 0.027307086633657773,
+     "jump": -0.08152510572240945,
+     "jump_tok": -0.08399945819463783,
+     "jump_btc": -0.0024743524722283805,
+     "pre30": -0.5701886734897905,
+     "pre30_tok": -0.5514998859931077,
+     "pre30_btc": 0.01868878749668279
+    },
+    "HOOK": {
+     "status": "ok",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "d0": "2026-03-06",
+     "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06",
+     "token": {
+      "m1": 0.0447516525861813,
+      "m30": 0.0435837989901298,
+      "d0": 0.0279760195749516,
+      "p7": 0.0370973553706983,
+      "p30": 0.00923191839231448
+     },
+     "btc": {
+      "m1": 70868.2181964372,
+      "m30": 73059.1798671369,
+      "d0": 68142.8831238779,
+      "p7": 70838.9323019333,
+      "p30": 69002.038479381
+     },
+     "ret30": -0.6826141526169437,
+     "ret30_tok": -0.6700060075529722,
+     "ret30_btc": 0.012608145063971454,
+     "ret7": 0.28647658077294147,
+     "ret7_tok": 0.3260412286783465,
+     "ret7_btc": 0.03956464790540504,
+     "jump": -0.33640425815167874,
+     "jump_tok": -0.37486063735688246,
+     "jump_btc": -0.03845637920520373,
+     "pre30": -0.29081768122023255,
+     "pre30_tok": -0.35810965947949625,
+     "pre30_btc": -0.0672919782592637
+    },
+    "ICX": {
+     "status": "ok",
+     "ts": "2026-08-11T09:00:12.289+00:00",
+     "d0": "2026-08-11",
+     "title": "Binance Will Extend the Monitoring Tag to Include GLMR, ICX, MOVR, RARE & SOPH on 2026-08-11",
+     "token": {
+      "m1": 0.0226470892660788,
+      "m30": 0.0241995799051899,
+      "d0": 0.0212917616952478,
+      "p7": 0.0178044439870367,
+      "p30": 0.0121616999640049
+     },
+     "btc": {
+      "m1": 63915.7121355682,
+      "m30": 63746.655957932,
+      "d0": 63537.5598896477,
+      "p7": 64686.2578256166,
+      "p30": 76554.9866497329
+     },
+     "ret30": -0.6336849103416223,
+     "ret30_tok": -0.4288072477009114,
+     "ret30_btc": 0.20487766264071094,
+     "ret7": -0.1818662224604738,
+     "ret7_tok": -0.1637871848335336,
+     "ret7_btc": 0.018079037626940186,
+     "jump": -0.053929131796244256,
+     "jump_tok": -0.05984555255235535,
+     "jump_btc": -0.005916420756111096,
+     "pre30": -0.11687975277414508,
+     "pre30_tok": -0.12015986316020655,
+     "pre30_btc": -0.0032801103860614633
+    },
+    "IDEX": {
+     "status": "ok",
+     "ts": "2025-07-07T03:29:57.414+00:00",
+     "d0": "2025-07-07",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAKE, IDEX & SLF on 2025-07-07",
+     "token": {
+      "m1": 0.0168923775921392,
+      "m30": 0.0230214184641032,
+      "d0": 0.0163085815625098,
+      "p7": 0.0199022976166143,
+      "p30": 0.0269179074953429
+     },
+     "btc": {
+      "m1": 109222.282031442,
+      "m30": 105665.123627167,
+      "d0": 108294.147897275,
+      "p7": 119849.156796227,
+      "p30": 115013.391408662
+     },
+     "ret30": 0.5884901705282102,
+     "ret30_tok": 0.6505363996352593,
+     "ret30_btc": 0.062046229107049156,
+     "ret7": 0.11365714931451665,
+     "ret7_tok": 0.22035736463836564,
+     "ret7_btc": 0.10670021532384899,
+     "jump": -0.026062068339694044,
+     "jump_tok": -0.03455973124239564,
+     "jump_btc": -0.008497662902701597,
+     "pre30": -0.316471652749136,
+     "pre30_tok": -0.29159093355001464,
+     "pre30_btc": 0.02488071919912138
+    },
+    "IRIS": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "KEY": {
+     "status": "no_price_source",
+     "d0": "2024-10-03",
+     "ts": "2024-10-03T07:00:05.269+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BLZ, CLV, KEY, PROS & VITE and Remove the Seed Tag for PENDLE & SEI on 2024-10-03"
+    },
+    "KMD": {
+     "status": "no_price_source",
+     "d0": "2025-06-05",
+     "ts": "2025-06-05T05:00:18.433+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BIFI, FIS, KMD & MDT on 2025-06-05"
+    },
+    "KP3R": {
+     "status": "no_price_source",
+     "d0": "2024-01-04",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04"
+    },
+    "LEVER": {
+     "status": "no_price_source",
+     "d0": "2025-05-07",
+     "ts": "2025-05-07T08:00:33.736+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07"
+    },
+    "LRC": {
+     "status": "ok",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "d0": "2026-03-06",
+     "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06",
+     "token": {
+      "m1": 0.0395811110874817,
+      "m30": 0.0553224393865345,
+      "d0": 0.0376516456245469,
+      "p7": 0.0424299364465821,
+      "p30": 0.0180059703776993
+     },
+     "btc": {
+      "m1": 70868.2181964372,
+      "m30": 73059.1798671369,
+      "d0": 68142.8831238779,
+      "p7": 70838.9323019333,
+      "p30": 69002.038479381
+     },
+     "ret30": -0.5343828223981183,
+     "ret30_tok": -0.5217746773341468,
+     "ret30_btc": 0.012608145063971454,
+     "ret7": 0.08734323999100102,
+     "ret7_tok": 0.12690788789640606,
+     "ret7_btc": 0.03956464790540504,
+     "jump": -0.01029074814729325,
+     "jump_tok": -0.04874712735249698,
+     "jump_btc": -0.03845637920520373,
+     "pre30": -0.2521226021160312,
+     "pre30_tok": -0.3194145803752949,
+     "pre30_btc": -0.0672919782592637
+    },
+    "LSK": {
+     "status": "ok",
+     "ts": "2026-07-24T03:00:06.343+00:00",
+     "d0": "2026-07-24",
+     "title": "Binance Will Extend the Monitoring Tag to Include ACX, LSK & STX on 2026-07-24",
+     "token": {
+      "m1": 0.0858774920111956,
+      "m30": 0.0832567617704161,
+      "d0": 0.0811102350840406,
+      "p7": 0.0725784111923701,
+      "p30": 0.092625695164271
+     },
+     "btc": {
+      "m1": 65052.4766706774,
+      "m30": 60989.5735215213,
+      "d0": 64092.6473979545,
+      "p7": 62820.08613814,
+      "p30": 77712.3200924702
+     },
+     "ret30": -0.07052680887229945,
+     "ret30_tok": 0.14197295900201623,
+     "ret30_btc": 0.21249976787431568,
+     "ret7": -0.08533297872530576,
+     "ret7_tok": -0.10518800596287792,
+     "ret7_btc": -0.019855027237572154,
+     "jump": -0.04075760574999143,
+     "jump_tok": -0.05551229798994961,
+     "jump_btc": -0.014754692239958178,
+     "pre30": -0.07666077030710872,
+     "pre30_tok": -0.02578201026235738,
+     "pre30_btc": 0.05087876004475134
+    },
+    "LTO": {
+     "status": "no_price_source",
+     "d0": "2025-04-03",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03"
+    },
+    "MBL": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "MBOX": {
+     "status": "ok",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "d0": "2026-03-06",
+     "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06",
+     "token": {
+      "m1": 0.0228912254201297,
+      "m30": 0.0270637906573998,
+      "d0": 0.0194758939878245,
+      "p7": 0.0191196082531549,
+      "p30": 0.0128497480966364
+     },
+     "btc": {
+      "m1": 70868.2181964372,
+      "m30": 73059.1798671369,
+      "d0": 68142.8831238779,
+      "p7": 70838.9323019333,
+      "p30": 69002.038479381
+     },
+     "ret30": -0.35283108401252417,
+     "ret30_tok": -0.3402229389485527,
+     "ret30_btc": 0.012608145063971454,
+     "ret7": -0.05785832597185658,
+     "ret7_tok": -0.018293678066451546,
+     "ret7_btc": 0.03956464790540504,
+     "jump": -0.11074189959475433,
+     "jump_tok": -0.14919827879995806,
+     "jump_btc": -0.03845637920520373,
+     "pre30": -0.21307882292045244,
+     "pre30_tok": -0.28037080117971613,
+     "pre30_btc": -0.0672919782592637
+    },
+    "MDT": {
+     "status": "ok",
+     "ts": "2025-06-05T05:00:18.433+00:00",
+     "d0": "2025-06-05",
+     "title": "Binance Will Extend the Monitoring Tag to Include BIFI, FIS, KMD & MDT on 2025-06-05",
+     "token": {
+      "m1": 0.0250528382500288,
+      "m30": 0.0282466036284302,
+      "d0": 0.0198850228277096,
+      "p7": 0.0177144213644324,
+      "p30": 0.0125186560946223
+     },
+     "btc": {
+      "m1": 104803.006535616,
+      "m30": 96815.8031321488,
+      "d0": 101597.840383193,
+      "p7": 105897.584566969,
+      "p30": 108216.016211226
+     },
+     "ret30": -0.435588900277876,
+     "ret30_tok": -0.370447989771595,
+     "ret30_btc": 0.06514091050628101,
+     "ret7": -0.15147882115278388,
+     "ret7_tok": -0.10915760480055814,
+     "ret7_btc": 0.04232121635222574,
+     "jump": -0.1756938758905796,
+     "jump_tok": -0.20627664501499177,
+     "jump_btc": -0.030582769124412157,
+     "pre30": -0.34541389791093813,
+     "pre30_tok": -0.2960207503426949,
+     "pre30_btc": 0.0493931475682432
+    },
+    "MDX": {
+     "status": "no_price_source",
+     "d0": "2024-01-04",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04"
+    },
+    "MLN": {
+     "status": "ok",
+     "ts": "2026-04-14T02:30:06.111+00:00",
+     "d0": "2026-04-14",
+     "title": "Binance Will Extend the Monitoring Tag to Include FARM, HIGH, MLN, RESOLV, SYS, TRU & VELODROME, Remove the Seed Tag for XAUT on 2026-04-14",
+     "token": {
+      "m1": 3.42624688836594,
+      "m30": 4.51928570056368,
+      "d0": 3.31900672370761,
+      "p7": 2.99119478703598,
+      "p30": 2.83633495256957
+     },
+     "btc": {
+      "m1": 74481.6414286025,
+      "m30": 72934.2940718683,
+      "d0": 74297.347594998,
+      "p7": 76326.1917024256,
+      "p30": 81059.1159541707
+     },
+     "ret30": -0.23643612479560283,
+     "ret30_tok": -0.14542657226040667,
+     "ret30_btc": 0.09100955253519616,
+     "ret7": -0.12607517117234668,
+     "ret7_tok": -0.0987680845386889,
+     "ret7_btc": 0.027307086633657773,
+     "jump": -0.028825249731708302,
+     "jump_tok": -0.03129960220393668,
+     "jump_btc": -0.0024743524722283805,
+     "pre30": -0.28427920518290295,
+     "pre30_tok": -0.26559041768622016,
+     "pre30_btc": 0.01868878749668279
+    },
+    "MOB": {
+     "status": "no_price_source",
+     "d0": "2024-01-04",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04"
+    },
+    "MOVE": {
+     "status": "no_price_source",
+     "d0": "2025-05-07",
+     "ts": "2025-05-07T08:00:33.736+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07"
+    },
+    "MOVR": {
+     "status": "no_price_source",
+     "d0": "2026-08-11",
+     "ts": "2026-08-11T09:00:12.289+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include GLMR, ICX, MOVR, RARE & SOPH on 2026-08-11"
+    },
+    "NFP": {
+     "status": "ok",
+     "ts": "2026-04-30T07:00:05.981+00:00",
+     "d0": "2026-04-30",
+     "title": "Binance Will Extend the Monitoring Tag to Include NFP, NOM, POND, QUICK & VIC on 2026-04-30",
+     "token": {
+      "m1": 0.0153255520404378,
+      "m30": 0.013346233384213,
+      "d0": 0.0124687317806906,
+      "p7": 0.0132254902546283,
+      "p30": 0.0116183485465832
+     },
+     "btc": {
+      "m1": 75784.9574362452,
+      "m30": 68107.4745640506,
+      "d0": 76296.7964844269,
+      "p7": 80024.9076723123,
+      "p30": 73820.3038531502
+     },
+     "ret30": -0.03574259008066161,
+     "ret30_tok": -0.06820126128820292,
+     "ret30_btc": -0.03245867120754131,
+     "ret7": 0.011829224722790022,
+     "ret7_tok": 0.060692497621100294,
+     "ret7_btc": 0.04886327289831027,
+     "jump": -0.19316279711330386,
+     "jump_tok": -0.18640896277075258,
+     "jump_btc": 0.006753834342551279,
+     "pre30": -0.18599017040480192,
+     "pre30_tok": -0.06574900784819038,
+     "pre30_btc": 0.12024116255661155
+    },
+    "NKN": {
+     "status": "ok",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "d0": "2025-04-03",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03",
+     "token": {
+      "m1": 0.0369681205112799,
+      "m30": 0.0502183844433602,
+      "d0": 0.027963384649296,
+      "p7": 0.0201804473136384,
+      "p30": 0.0349915384137566
+     },
+     "btc": {
+      "m1": 82489.2357333643,
+      "m30": 87038.9388224031,
+      "d0": 83208.52796536,
+      "p7": 79556.4131800269,
+      "p30": 95892.6349530102
+     },
+     "ret30": 0.09889657483263936,
+     "ret30_tok": 0.2513341590299063,
+     "ret30_btc": 0.15243758419726694,
+     "ret7": -0.23443490057011473,
+     "ret7_tok": -0.27832601215009,
+     "ret7_btc": -0.04389111157997527,
+     "jump": -0.252300942348485,
+     "jump_tok": -0.2435811108989523,
+     "jump_btc": 0.0087198314495327,
+     "pre30": -0.39915637748529487,
+     "pre30_tok": -0.44316439170130895,
+     "pre30_btc": -0.04400801421601408
+    },
+    "NOM": {
+     "status": "no_price_source",
+     "d0": "2026-04-30",
+     "ts": "2026-04-30T07:00:05.981+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include NFP, NOM, POND, QUICK & VIC on 2026-04-30"
+    },
+    "NTRN": {
+     "status": "ok",
+     "ts": "2026-03-13T09:00:23.06+00:00",
+     "d0": "2026-03-13",
+     "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13",
+     "token": {
+      "m1": 0.0220601251133308,
+      "m30": 0.028812298847202,
+      "d0": 0.015533273553367,
+      "p7": 0.00569651918043389,
+      "p30": 0.00244811141847592
+     },
+     "btc": {
+      "m1": 70417.1938856752,
+      "m30": 67090.5793396472,
+      "d0": 70838.9323019333,
+      "p7": 70526.2891595787,
+      "p30": 70660.6396118034
+     },
+     "ret30": -0.8398787797455459,
+     "ret30_tok": -0.8423956540734927,
+     "ret30_btc": -0.002516874327946783,
+     "ret7": -0.6288564493554224,
+     "ret7_tok": -0.6332698860376982,
+     "ret7_btc": -0.004413436682275784,
+     "jump": -0.3018556195107499,
+     "jump_tok": -0.29586647974265856,
+     "jump_btc": 0.005989139768091345,
+     "pre30": -0.5167504854368801,
+     "pre30_tok": -0.460880451235655,
+     "pre30_btc": 0.05587003420122505
+    },
+    "NULS": {
+     "status": "ok",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "d0": "2025-03-04",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04",
+     "token": {
+      "m1": 0.220959248519351,
+      "m30": 0.253173638022341,
+      "d0": 0.156528727092754,
+      "p7": 0.131813894114267,
+      "p30": 0.0932927296709715
+     },
+     "btc": {
+      "m1": 86124.8020367712,
+      "m30": 97652.0286614209,
+      "d0": 87038.9388224031,
+      "p7": 82942.5002437416,
+      "p30": 83208.52796536
+     },
+     "ret30": -0.35998171084136044,
+     "ret30_tok": -0.4039897250573745,
+     "ret30_btc": -0.04400801421601408,
+     "ret7": -0.11082883646339214,
+     "ret7_tok": -0.15789327261213704,
+     "ret7_btc": -0.04706443614874489,
+     "jump": -0.30220868424116687,
+     "jump_tok": -0.291594589764159,
+     "jump_btc": 0.010614094477007896,
+     "pre30": -0.2730509673853194,
+     "pre30_tok": -0.3817337053119989,
+     "pre30_btc": -0.10868273792667948
+    },
+    "OXT": {
+     "status": "ok",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "d0": "2026-03-06",
+     "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06",
+     "token": {
+      "m1": 0.0290946737079713,
+      "m30": 0.0255382250469818,
+      "d0": 0.0218438586752749,
+      "p7": 0.0190318624074236,
+      "p30": 0.0150607905087549
+     },
+     "btc": {
+      "m1": 70868.2181964372,
+      "m30": 73059.1798671369,
+      "d0": 68142.8831238779,
+      "p7": 70838.9323019333,
+      "p30": 69002.038479381
+     },
+     "ret30": -0.3231333259560162,
+     "ret30_tok": -0.3105251808920447,
+     "ret30_btc": 0.012608145063971454,
+     "ret7": -0.16829631155758773,
+     "ret7_tok": -0.1287316636521827,
+     "ret7_btc": 0.03956464790540504,
+     "jump": -0.21075813701430068,
+     "jump_tok": -0.2492145162195044,
+     "jump_btc": -0.03845637920520373,
+     "pre30": -0.07736828551828945,
+     "pre30_tok": -0.14466026377755314,
+     "pre30_btc": -0.0672919782592637
+    },
+    "PDA": {
+     "status": "no_price_source",
+     "d0": "2025-04-03",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03"
+    },
+    "PERP": {
+     "status": "ok",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "d0": "2025-04-03",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03",
+     "token": {
+      "m1": 0.300693796406577,
+      "m30": 0.390471490482351,
+      "d0": 0.242306187516467,
+      "p7": 0.188256813334091,
+      "p30": 0.297662659624241
+     },
+     "btc": {
+      "m1": 82489.2357333643,
+      "m30": 87038.9388224031,
+      "d0": 83208.52796536,
+      "p7": 79556.4131800269,
+      "p30": 95892.6349530102
+     },
+     "ret30": 0.0760191162904662,
+     "ret30_tok": 0.22845670048773314,
+     "ret30_btc": 0.15243758419726694,
+     "ret7": -0.17917118301661983,
+     "ret7_tok": -0.2230622945965951,
+     "ret7_btc": -0.04389111157997527,
+     "jump": -0.20289613168541254,
+     "jump_tok": -0.19417630023587984,
+     "jump_btc": 0.0087198314495327,
+     "pre30": -0.33544428019568506,
+     "pre30_tok": -0.37945229441169914,
+     "pre30_btc": -0.04400801421601408
+    },
+    "PHB": {
+     "status": "ok",
+     "ts": "2026-03-13T09:00:23.06+00:00",
+     "d0": "2026-03-13",
+     "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13",
+     "token": {
+      "m1": 0.226997193524966,
+      "m30": 0.258359695088143,
+      "d0": 0.156164586384313,
+      "p7": 0.119953134008996,
+      "p30": 0.0961252316000288
+     },
+     "btc": {
+      "m1": 70417.1938856752,
+      "m30": 67090.5793396472,
+      "d0": 70838.9323019333,
+      "p7": 70526.2891595787,
+      "p30": 70660.6396118034
+     },
+     "ret30": -0.38194516136387413,
+     "ret30_tok": -0.3844620356918209,
+     "ret30_btc": -0.002516874327946783,
+     "ret7": -0.22746661508696764,
+     "ret7_tok": -0.23188005176924342,
+     "ret7_btc": -0.004413436682275784,
+     "jump": -0.318030914561499,
+     "jump_tok": -0.31204177479340767,
+     "jump_btc": 0.005989139768091345,
+     "pre30": -0.45142363891098725,
+     "pre30_tok": -0.3955536047097622,
+     "pre30_btc": 0.05587003420122505
+    },
+    "POLS": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "POND": {
+     "status": "no_price_source",
+     "d0": "2026-04-30",
+     "ts": "2026-04-30T07:00:05.981+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include NFP, NOM, POND, QUICK & VIC on 2026-04-30"
+    },
+    "PORTAL": {
+     "status": "no_price_source",
+     "d0": "2025-05-07",
+     "ts": "2025-05-07T08:00:33.736+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07"
+    },
+    "PROS": {
+     "status": "no_price_source",
+     "d0": "2024-10-03",
+     "ts": "2024-10-03T07:00:05.269+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BLZ, CLV, KEY, PROS & VITE and Remove the Seed Tag for PENDLE & SEI on 2024-10-03"
+    },
+    "PYR": {
+     "status": "no_price_source",
+     "d0": "2026-07-03",
+     "ts": "2026-07-03T06:00:11.367+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include AEUR, PYR, SCRT & VANRY on 2026-07-03"
+    },
+    "QI": {
+     "status": "no_price_source",
+     "d0": "2026-03-13",
+     "ts": "2026-03-13T09:00:23.06+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13"
+    },
+    "QUICK": {
+     "status": "no_price_source",
+     "d0": "2026-04-30",
+     "ts": "2026-04-30T07:00:05.981+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include NFP, NOM, POND, QUICK & VIC on 2026-04-30"
+    },
+    "RARE": {
+     "status": "no_price_source",
+     "d0": "2026-08-11",
+     "ts": "2026-08-11T09:00:12.289+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include GLMR, ICX, MOVR, RARE & SOPH on 2026-08-11"
+    },
+    "RDNT": {
+     "status": "ok",
+     "ts": "2026-03-13T09:00:23.06+00:00",
+     "d0": "2026-03-13",
+     "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13",
+     "token": {
+      "m1": 0.00681169618414674,
+      "m30": 0.00735669182927347,
+      "d0": 0.00606696163957862,
+      "p7": 0.00407607334078799,
+      "p30": 0.0021094997891242
+     },
+     "btc": {
+      "m1": 70417.1938856752,
+      "m30": 67090.5793396472,
+      "d0": 70838.9323019333,
+      "p7": 70526.2891595787,
+      "p30": 70660.6396118034
+     },
+     "ret30": -0.649780286187689,
+     "ret30_tok": -0.6522971605156358,
+     "ret30_btc": -0.002516874327946783,
+     "ret7": -0.32373900881907847,
+     "ret7_tok": -0.32815244550135425,
+     "ret7_btc": -0.004413436682275784,
+     "jump": -0.11532087219347231,
+     "jump_tok": -0.10933173242538097,
+     "jump_btc": 0.005989139768091345,
+     "pre30": -0.23118391435627028,
+     "pre30_tok": -0.17531388015504523,
+     "pre30_btc": 0.05587003420122505
+    },
+    "REEF": {
+     "status": "ok",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "d0": "2024-01-04",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04",
+     "token": {
+      "m1": 0.00191808708858507,
+      "m30": 0.00191708886372737,
+      "d0": 0.00177672360684447,
+      "p7": 0.00164494357683263,
+      "p30": 0.0014121803800674
+     },
+     "btc": {
+      "m1": 42862.5600086309,
+      "m30": 44081.6747222402,
+      "d0": 44174.1294506493,
+      "p7": 46368.7379692837,
+      "p30": 42990.7520256661
+     },
+     "ret30": -0.17838830459758903,
+     "ret30_tok": -0.20517722923967507,
+     "ret30_btc": -0.026788924642086043,
+     "ret7": -0.12385110266806909,
+     "ret7_tok": -0.0741702476987327,
+     "ret7_btc": 0.049680854969336385,
+     "jump": -0.10429966075660713,
+     "jump_tok": -0.07370024154892807,
+     "jump_btc": 0.030599419207679057,
+     "pre30": -0.07531526949939582,
+     "pre30_tok": -0.07321791886578988,
+     "pre30_btc": 0.0020973506336059433
+    },
+    "REI": {
+     "status": "ok",
+     "ts": "2025-05-07T08:00:33.736+00:00",
+     "d0": "2025-05-07",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07",
+     "token": {
+      "m1": 0.0457023682751288,
+      "m30": 0.0155861576186107,
+      "d0": 0.0433995816861516,
+      "p7": 0.0557398273249625,
+      "p30": 0.0607237855998496
+     },
+     "btc": {
+      "m1": 96815.8031321488,
+      "m30": 79146.1855134701,
+      "d0": 97035.8018146733,
+      "p7": 103546.469181822,
+      "p30": 104364.976555907
+     },
+     "ret30": 0.3236484280764691,
+     "ret30_tok": 0.39917905289916633,
+     "ret30_btc": 0.07553062482269723,
+     "ret7": 0.2172446799554486,
+     "ret7_tok": 0.2843401977477713,
+     "ret7_btc": 0.0670955177923227,
+     "jump": -0.05265893480519901,
+     "jump_tok": -0.05038659211519192,
+     "jump_btc": 0.0022723426900070898,
+     "pre30": 1.558462661803902,
+     "pre30_tok": 1.7844952391813487,
+     "pre30_btc": 0.22603257737744675
+    },
+    "RESOLV": {
+     "status": "no_price_source",
+     "d0": "2026-04-14",
+     "ts": "2026-04-14T02:30:06.111+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include FARM, HIGH, MLN, RESOLV, SYS, TRU & VELODROME, Remove the Seed Tag for XAUT on 2026-04-14"
+    },
+    "SCR": {
+     "status": "no_price_source",
+     "d0": "2026-09-04",
+     "ts": "2026-09-04T08:00:06.5+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include AVA, GNS, SCR & TOWNS on 2026-09-04"
+    },
+    "SCRT": {
+     "status": "no_price_source",
+     "d0": "2026-07-03",
+     "ts": "2026-07-03T06:00:11.367+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include AEUR, PYR, SCRT & VANRY on 2026-07-03"
+    },
+    "SLF": {
+     "status": "no_price_source",
+     "d0": "2025-07-07",
+     "ts": "2025-07-07T03:29:57.414+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAKE, IDEX & SLF on 2025-07-07"
+    },
+    "SNT": {
+     "status": "ok",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "d0": "2024-07-01",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01",
+     "token": {
+      "m1": 0.0268628157763491,
+      "m30": 0.0355643933415234,
+      "d0": 0.0252280320406806,
+      "p7": 0.0208832210878412,
+      "p30": 0.02449153043277
+     },
+     "btc": {
+      "m1": 62670.8147823052,
+      "m30": 67728.586920622,
+      "d0": 62869.3238114089,
+      "p7": 56705.6445914538,
+      "p30": 64586.8811955584
+     },
+     "ret30": -0.05651326201130491,
+     "ret30_tok": -0.02919377963064962,
+     "ret30_btc": 0.02731948238065529,
+     "ret7": -0.07418202262336271,
+     "ret7_tok": -0.17222155679179896,
+     "ret7_btc": -0.09803953416843625,
+     "jump": -0.06402424027440812,
+     "jump_tok": -0.0608567526680438,
+     "jump_btc": 0.0031674876063643165,
+     "pre30": -0.21889180301200806,
+     "pre30_tok": -0.2906379198313085,
+     "pre30_btc": -0.07174611681930043
+    },
+    "SOPH": {
+     "status": "no_price_source",
+     "d0": "2026-08-11",
+     "ts": "2026-08-11T09:00:12.289+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include GLMR, ICX, MOVR, RARE & SOPH on 2026-08-11"
+    },
+    "STMX": {
+     "status": "ok",
+     "ts": "2025-01-02T09:00:19.305+00:00",
+     "d0": "2025-01-02",
+     "title": "Binance Will Extend the Monitoring Tag to Include STMX & TROY, Remove the Monitoring Tag for CVX & SUN, and Remove the Seed Tag for ARKM, BLUR, JTO & TIA on 2025-01-02",
+     "token": {
+      "m1": 0.0060557140916366,
+      "m30": 0.00849640023190207,
+      "d0": 0.0056227040945277,
+      "p7": 0.00627179831545943,
+      "p30": 0.0050813050920106
+     },
+     "btc": {
+      "m1": 94384.7518711429,
+      "m30": 95954.5508888087,
+      "d0": 96897.8977386435,
+      "p7": 92623.6442057452,
+      "p30": 100552.287875264
+     },
+     "ret30": -0.1340018352809218,
+     "ret30_tok": -0.09628801256747921,
+     "ret30_btc": 0.03771382271344259,
+     "ret7": 0.15955254751373193,
+     "ret7_tok": 0.11544164694056391,
+     "ret7_btc": -0.04411090057316802,
+     "jump": -0.09813097488011002,
+     "jump_tok": -0.07150436605105237,
+     "jump_btc": 0.026626608829057652,
+     "pre30": -0.3480563216264899,
+     "pre30_tok": -0.3382251375805353,
+     "pre30_btc": 0.009831184045954622
+    },
+    "STORJ": {
+     "status": "ok",
+     "ts": "2026-05-22T08:00:04.004+00:00",
+     "d0": "2026-05-22",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22",
+     "token": {
+      "m1": 0.11449030520497,
+      "m30": 0.0998089752352627,
+      "d0": 0.103580464608505,
+      "p7": 0.0939264011931692,
+      "p30": 0.0759841642294699
+     },
+     "btc": {
+      "m1": 77550.3830832048,
+      "m30": 78238.8167500862,
+      "d0": 75478.38285863,
+      "p7": 73500.9150762937,
+      "p30": 63255.4852525938
+     },
+     "ret30": -0.10448474426033183,
+     "ret30_tok": -0.26642379413279027,
+     "ret30_btc": -0.16193904987245844,
+     "ret7": -0.06700438769119743,
+     "ret7_tok": -0.09320351527505222,
+     "ret7_btc": -0.026199127583854787,
+     "jump": -0.06857240173315127,
+     "jump_tok": -0.09529051893899054,
+     "jump_btc": -0.026718117205839276,
+     "pre30": 0.07306922925720705,
+     "pre30_tok": 0.037787076406228914,
+     "pre30_btc": -0.03528215285097813
+    },
+    "STPT": {
+     "status": "no_price_source",
+     "d0": "2025-03-04",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+    },
+    "STX": {
+     "status": "ok",
+     "ts": "2026-07-24T03:00:06.343+00:00",
+     "d0": "2026-07-24",
+     "title": "Binance Will Extend the Monitoring Tag to Include ACX, LSK & STX on 2026-07-24",
+     "token": {
+      "m1": 0.164385492150774,
+      "m30": 0.171873108674164,
+      "d0": 0.145147498128044,
+      "p7": 0.137631453716601,
+      "p30": 0.233839284434309
+     },
+     "btc": {
+      "m1": 65052.4766706774,
+      "m30": 60989.5735215213,
+      "d0": 64092.6473979545,
+      "p7": 62820.08613814,
+      "p30": 77712.3200924702
+     },
+     "ret30": 0.398546150588738,
+     "ret30_tok": 0.6110459184630537,
+     "ret30_btc": 0.21249976787431568,
+     "ret7": -0.03192708756548579,
+     "ret7_tok": -0.051782114803057944,
+     "ret7_btc": -0.019855027237572154,
+     "jump": -0.10227506367721817,
+     "jump_tok": -0.11702975591717635,
+     "jump_btc": -0.014754692239958178,
+     "pre30": -0.20637493249594174,
+     "pre30_tok": -0.1554961724511904,
+     "pre30_btc": 0.05087876004475134
+    },
+    "SUN": {
+     "status": "ok",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "d0": "2024-07-01",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01",
+     "token": {
+      "m1": 0.0114880650955977,
+      "m30": 0.0123049900916355,
+      "d0": 0.0115099092069976,
+      "p7": 0.0106040606110191,
+      "p30": 0.010111157110606
+     },
+     "btc": {
+      "m1": 62670.8147823052,
+      "m30": 67728.586920622,
+      "d0": 62869.3238114089,
+      "p7": 56705.6445914538,
+      "p30": 64586.8811955584
+     },
+     "ret30": -0.14884538421324411,
+     "ret30_tok": -0.12152590183258882,
+     "ret30_btc": 0.02731948238065529,
+     "ret7": 0.019337905885584372,
+     "ret7_tok": -0.07870162828285188,
+     "ret7_btc": -0.09803953416843625,
+     "jump": -0.0012660262881940554,
+     "jump_tok": 0.001901461318170261,
+     "jump_btc": 0.0031674876063643165,
+     "pre30": 0.007131608500568265,
+     "pre30_tok": -0.06461450831873217,
+     "pre30_btc": -0.07174611681930043
+    },
+    "SXP": {
+     "status": "no_price_source",
+     "d0": "2025-12-01",
+     "ts": "2025-12-01T04:30:24.832+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include CHESS, DENT, DF, GHST & SXP on 2025-12-01"
+    },
+    "SYN": {
+     "status": "no_price_source",
+     "d0": "2026-05-22",
+     "ts": "2026-05-22T08:00:04.004+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+    },
+    "SYS": {
+     "status": "ok",
+     "ts": "2026-04-14T02:30:06.111+00:00",
+     "d0": "2026-04-14",
+     "title": "Binance Will Extend the Monitoring Tag to Include FARM, HIGH, MLN, RESOLV, SYS, TRU & VELODROME, Remove the Seed Tag for XAUT on 2026-04-14",
+     "token": {
+      "m1": 0.01097188217184,
+      "m30": 0.0308942766827724,
+      "d0": 0.00903075795972819,
+      "p7": 0.0105264351630704,
+      "p30": 0.00574357556282488
+     },
+     "btc": {
+      "m1": 74481.6414286025,
+      "m30": 72934.2940718683,
+      "d0": 74297.347594998,
+      "p7": 76326.1917024256,
+      "p30": 81059.1159541707
+     },
+     "ret30": -0.4550080575955896,
+     "ret30_tok": -0.36399850506039344,
+     "ret30_btc": 0.09100955253519616,
+     "ret7": 0.13831325332142042,
+     "ret7_tok": 0.1656203399550782,
+     "ret7_btc": 0.027307086633657773,
+     "jump": -0.17444371698114425,
+     "jump_tok": -0.17691806945337263,
+     "jump_btc": -0.0024743524722283805,
+     "pre30": -0.726377106195401,
+     "pre30_tok": -0.7076883186987182,
+     "pre30_btc": 0.01868878749668279
+    },
+    "TLM": {
+     "status": "ok",
+     "ts": "2026-05-22T08:00:04.004+00:00",
+     "d0": "2026-05-22",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22",
+     "token": {
+      "m1": 0.00179200076938757,
+      "m30": 0.0017621607981284,
+      "d0": 0.00153184008641818,
+      "p7": 0.00143836194053286,
+      "p30": 0.000998039059580365
+     },
+     "btc": {
+      "m1": 77550.3830832048,
+      "m30": 78238.8167500862,
+      "d0": 75478.38285863,
+      "p7": 73500.9150762937,
+      "p30": 63255.4852525938
+     },
+     "ret30": -0.18653141487818892,
+     "ret30_tok": -0.34847046475064736,
+     "ret30_btc": -0.16193904987245844,
+     "ret7": -0.034824308683500615,
+     "ret7_tok": -0.0610234362673554,
+     "ret7_btc": -0.026199127583854787,
+     "jump": -0.11846077301210511,
+     "jump_tok": -0.1451788902179444,
+     "jump_btc": -0.026718117205839276,
+     "pre30": -0.09542141969180284,
+     "pre30_tok": -0.13070357254278098,
+     "pre30_btc": -0.03528215285097813
+    },
+    "TOWNS": {
+     "status": "no_price_source",
+     "d0": "2026-09-04",
+     "ts": "2026-09-04T08:00:06.5+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include AVA, GNS, SCR & TOWNS on 2026-09-04"
+    },
+    "TROY": {
+     "status": "no_price_source",
+     "d0": "2025-01-02",
+     "ts": "2025-01-02T09:00:19.305+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include STMX & TROY, Remove the Monitoring Tag for CVX & SUN, and Remove the Seed Tag for ARKM, BLUR, JTO & TIA on 2025-01-02"
+    },
+    "TRU": {
+     "status": "no_price_source",
+     "d0": "2026-04-14",
+     "ts": "2026-04-14T02:30:06.111+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include FARM, HIGH, MLN, RESOLV, SYS, TRU & VELODROME, Remove the Seed Tag for XAUT on 2026-04-14"
+    },
+    "UFT": {
+     "status": "no_price_source",
+     "d0": "2025-03-04",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+    },
+    "UNFI": {
+     "status": "ok",
+     "ts": "2024-04-03T06:00:16.944+00:00",
+     "d0": "2024-04-03",
+     "title": "Binance Will Extend the Monitoring Tag to Include EPX, FOR, UNFI, WAVES & WNXM on 2024-04-03",
+     "token": {
+      "m1": 6.58877630773587,
+      "m30": 8.04966314960074,
+      "d0": 6.14295647557554,
+      "p7": 5.41200548470299,
+      "p30": 3.89619359290935
+     },
+     "btc": {
+      "m1": 65449.6665052257,
+      "m30": 68339.6511803685,
+      "d0": 65977.5296346856,
+      "p7": 70602.3535697594,
+      "p30": 62888.5088913045
+     },
+     "ret30": -0.3189268982064656,
+     "ret30_tok": -0.3657461829005859,
+     "ret30_btc": -0.04681928469412033,
+     "ret7": -0.18908705278776639,
+     "ret7_tok": -0.1189900976474143,
+     "ret7_btc": 0.07009695514035208,
+     "jump": -0.07572870202769755,
+     "jump_tok": -0.0676635252644553,
+     "jump_btc": 0.008065176763242254,
+     "pre30": -0.20230344693474167,
+     "pre30_tok": -0.23686788361072875,
+     "pre30_btc": -0.034564436675987076
+    },
+    "VAI": {
+     "status": "no_price_source",
+     "d0": "2024-01-04",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04"
+    },
+    "VANRY": {
+     "status": "no_price_source",
+     "d0": "2026-07-03",
+     "ts": "2026-07-03T06:00:11.367+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include AEUR, PYR, SCRT & VANRY on 2026-07-03"
+    },
+    "VELODROME": {
+     "status": "no_price_source",
+     "d0": "2026-04-14",
+     "ts": "2026-04-14T02:30:06.111+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include FARM, HIGH, MLN, RESOLV, SYS, TRU & VELODROME, Remove the Seed Tag for XAUT on 2026-04-14"
+    },
+    "VIB": {
+     "status": "no_price_source",
+     "d0": "2025-04-03",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03"
+    },
+    "VIC": {
+     "status": "ok",
+     "ts": "2026-04-30T07:00:05.981+00:00",
+     "d0": "2026-04-30",
+     "title": "Binance Will Extend the Monitoring Tag to Include NFP, NOM, POND, QUICK & VIC on 2026-04-30",
+     "token": {
+      "m1": 0.0544160092785079,
+      "m30": 0.042412794038147,
+      "d0": 0.0434359049254406,
+      "p7": 0.0481801080309436,
+      "p30": 0.0417810058174767
+     },
+     "btc": {
+      "m1": 75784.9574362452,
+      "m30": 68107.4745640506,
+      "d0": 76296.7964844269,
+      "p7": 80024.9076723123,
+      "p30": 73820.3038531502
+     },
+     "ret30": -0.005641124590533897,
+     "ret30_tok": -0.03809979579807521,
+     "ret30_btc": -0.03245867120754131,
+     "ret7": 0.060359802196973567,
+     "ret7_tok": 0.10922307509528384,
+     "ret7_btc": 0.04886327289831027,
+     "jump": -0.20853460618985387,
+     "jump_tok": -0.2017807718473026,
+     "jump_btc": 0.006753834342551279,
+     "pre30": -0.0961184677307676,
+     "pre30_tok": 0.02412269482584395,
+     "pre30_btc": 0.12024116255661155
+    },
+    "VIDT": {
+     "status": "no_price_source",
+     "d0": "2025-03-04",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+    },
+    "VITE": {
+     "status": "no_price_source",
+     "d0": "2024-10-03",
+     "ts": "2024-10-03T07:00:05.269+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BLZ, CLV, KEY, PROS & VITE and Remove the Seed Tag for PENDLE & SEI on 2024-10-03"
+    },
+    "VOXEL": {
+     "status": "no_price_source",
+     "d0": "2025-04-03",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03"
+    },
+    "WAN": {
+     "status": "no_price_source",
+     "d0": "2025-10-09",
+     "ts": "2025-10-09T02:29:52.334+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include WAN, Remove the Monitoring Tag for GPS & MBL, and Remove the Seed Tag for BERA, BIO, ZK & ZRO on 2025-10-09"
+    },
+    "WAVES": {
+     "status": "ok",
+     "ts": "2024-04-03T06:00:16.944+00:00",
+     "d0": "2024-04-03",
+     "title": "Binance Will Extend the Monitoring Tag to Include EPX, FOR, UNFI, WAVES & WNXM on 2024-04-03",
+     "token": {
+      "m1": 3.53445717659437,
+      "m30": 3.34197119348766,
+      "d0": 3.12710061389803,
+      "p7": 3.19770232536417,
+      "p30": 2.42041778759219
+     },
+     "btc": {
+      "m1": 65449.6665052257,
+      "m30": 68339.6511803685,
+      "d0": 65977.5296346856,
+      "p7": 70602.3535697594,
+      "p30": 62888.5088913045
+     },
+     "ret30": -0.17916731233607164,
+     "ret30_tok": -0.22598659703019197,
+     "ret30_btc": -0.04681928469412033,
+     "ret7": -0.047519583899926054,
+     "ret7_tok": 0.022577371240426025,
+     "ret7_btc": 0.07009695514035208,
+     "jump": -0.12331811161103368,
+     "jump_tok": -0.11525293484779142,
+     "jump_btc": 0.008065176763242254,
+     "pre30": -0.0297301269660748,
+     "pre30_tok": -0.06429456364206187,
+     "pre30_btc": -0.034564436675987076
+    },
+    "WIF": {
+     "status": "ok",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "d0": "2026-03-06",
+     "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06",
+     "token": {
+      "m1": 0.224979126776057,
+      "m30": 0.255163500903464,
+      "d0": 0.197206323805094,
+      "p7": 0.176701144739863,
+      "p30": 0.186778373122914
+     },
+     "btc": {
+      "m1": 70868.2181964372,
+      "m30": 73059.1798671369,
+      "d0": 68142.8831238779,
+      "p7": 70838.9323019333,
+      "p30": 69002.038479381
+     },
+     "ret30": -0.06548652381457543,
+     "ret30_tok": -0.05287837875060397,
+     "ret30_btc": 0.012608145063971454,
+     "ret7": -0.1435429517933523,
+     "ret7_tok": -0.10397830388794727,
+     "ret7_btc": 0.03956464790540504,
+     "jump": -0.08498975274910814,
+     "jump_tok": -0.12344613195431187,
+     "jump_btc": -0.03845637920520373,
+     "pre30": -0.15984543321674882,
+     "pre30_tok": -0.22713741147601252,
+     "pre30_btc": -0.0672919782592637
+    },
+    "WING": {
+     "status": "no_price_source",
+     "d0": "2025-04-03",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03"
+    },
+    "WNXM": {
+     "status": "no_price_source",
+     "d0": "2024-04-03",
+     "ts": "2024-04-03T06:00:16.944+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include EPX, FOR, UNFI, WAVES & WNXM on 2024-04-03"
+    },
+    "WTC": {
+     "status": "no_price_source",
+     "d0": "2023-10-04",
+     "ts": "2023-10-04T06:00:16.946+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BETA, BOND, WTC and XEM on 2023-10-04"
+    },
+    "XEM": {
+     "status": "ok",
+     "ts": "2023-10-04T06:00:16.946+00:00",
+     "d0": "2023-10-04",
+     "title": "Binance Will Extend the Monitoring Tag to Include BETA, BOND, WTC and XEM on 2023-10-04",
+     "token": {
+      "m1": 0.0259392753958594,
+      "m30": 0.0243353658079323,
+      "d0": 0.0253346309606429,
+      "p7": 0.0247250201378469,
+      "p30": 0.0320386209536153
+     },
+     "btc": {
+      "m1": 27426.2811461812,
+      "m30": 25805.1906728902,
+      "d0": 27781.9327396636,
+      "p7": 26878.3328415518,
+      "p30": 34724.5002140395
+     },
+     "ret30": 0.01472257953550593,
+     "ret30_tok": 0.2646176296543252,
+     "ret30_btc": 0.2498950501188193,
+     "ret7": 0.008462378741939669,
+     "ret7_tok": -0.02406235258540068,
+     "ret7_btc": -0.03252473132734035,
+     "jump": -0.03627754427144858,
+     "jump_tok": -0.023309997137121896,
+     "jump_btc": 0.012967547134326685,
+     "pre30": -0.035540236568392114,
+     "pre30_tok": 0.041062261426326296,
+     "pre30_btc": 0.07660249799471841
+    },
+    "XMR": {
+     "status": "ok",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "d0": "2024-01-04",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04",
+     "token": {
+      "m1": 154.136656694115,
+      "m30": 170.792821165202,
+      "d0": 164.547847988894,
+      "p7": 152.457984509119,
+      "p30": 165.23856906963
+     },
+     "btc": {
+      "m1": 42862.5600086309,
+      "m30": 44081.6747222402,
+      "d0": 44174.1294506493,
+      "p7": 46368.7379692837,
+      "p30": 42990.7520256661
+     },
+     "ret30": 0.030986616007716128,
+     "ret30_tok": 0.004197691365630085,
+     "ret30_btc": -0.026788924642086043,
+     "ret7": -0.12315409468372629,
+     "ret7_tok": -0.0734732397143899,
+     "ret7_btc": 0.049680854969336385,
+     "jump": 0.036945780734214395,
+     "jump_tok": 0.06754519994189345,
+     "jump_btc": 0.030599419207679057,
+     "pre30": -0.03866196227069263,
+     "pre30_tok": -0.036564611637086686,
+     "pre30_btc": 0.0020973506336059433
+    },
+    "ZEC": {
+     "status": "ok",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "d0": "2024-01-04",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04",
+     "token": {
+      "m1": 25.0608177565136,
+      "m30": 31.7005785537575,
+      "d0": 24.1870642061426,
+      "p7": 24.4535847497558,
+      "p30": 22.0679342705151
+     },
+     "btc": {
+      "m1": 42862.5600086309,
+      "m30": 44081.6747222402,
+      "d0": 44174.1294506493,
+      "p7": 46368.7379692837,
+      "p30": 42990.7520256661
+     },
+     "ret30": -0.06082526108820707,
+     "ret30_tok": -0.08761418573029311,
+     "ret30_btc": -0.026788924642086043,
+     "ret7": -0.03866171923042705,
+     "ret7_tok": 0.011019135738909336,
+     "ret7_btc": 0.049680854969336385,
+     "jump": -0.06546474398918589,
+     "jump_tok": -0.034865324781506835,
+     "jump_btc": 0.030599419207679057,
+     "pre30": -0.23911240494479336,
+     "pre30_tok": -0.2370150543111874,
+     "pre30_btc": 0.0020973506336059433
+    },
+    "ZEN": {
+     "status": "ok",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "d0": "2024-01-04",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04",
+     "token": {
+      "m1": 8.04052560445026,
+      "m30": 11.1701262524451,
+      "d0": 7.71280963788229,
+      "p7": 8.40484057459739,
+      "p30": 7.93146125242937
+     },
+     "btc": {
+      "m1": 42862.5600086309,
+      "m30": 44081.6747222402,
+      "d0": 44174.1294506493,
+      "p7": 46368.7379692837,
+      "p30": 42990.7520256661
+     },
+     "ret30": 0.0551380768723122,
+     "ret30_tok": 0.02834915223022616,
+     "ret30_btc": -0.026788924642086043,
+     "ret7": 0.040044027298743456,
+     "ret7_tok": 0.08972488226807984,
+     "ret7_btc": 0.049680854969336385,
+     "jump": -0.07135744706428904,
+     "jump_tok": -0.04075802785660998,
+     "jump_btc": 0.030599419207679057,
+     "pre30": -0.31161190189537125,
+     "pre30_tok": -0.3095145512617653,
+     "pre30_btc": 0.0020973506336059433
+    }
+   },
+   "criteria": {
+    "(a) 30天超额中位数 ≤ −5%": {
+     "value": -0.15779120940191244,
+     "pass": true
+    },
+    "(b) ≥60% 事件超额为负": {
+     "value": 0.75,
+     "pass": true
+    },
+    "(c) 对照分位 ≤ 0.05": {
+     "value": 0.005,
+     "pass": true
+    },
+    "(d) 按事件日期对半分两段,中位同号且每段 ≥ 10 个有价代币": {
+     "value": {
+      "early": {
+       "n": 30,
+       "median": -0.12150826108121343
+      },
+      "late": {
+       "n": 30,
+       "median": -0.2245317346404968
+      }
+     },
+     "pass": true
+    },
+    "(e) 有价代币 ≥ 30": {
+     "value": 60,
+     "pass": true
+    }
+   },
+   "verdict": "PASS"
+  },
+  "ohlc": {
+   "source": "ohlc",
+   "n_tokens_total": 137,
+   "n_tokens_with_price": 35,
+   "n_exc30_computable": 28,
+   "exc30": {
+    "n": 28,
+    "median": -0.2219945885458044,
+    "mean": -0.2970352197736208,
+    "p10": -0.6862537199821456,
+    "p90": 0.02605896457602975,
+    "pct_negative": 0.8571428571428571
+   },
+   "median_exc30": -0.2219945885458044,
+   "pct_negative_exc30": 0.8571428571428571,
+   "n_negative": 24,
+   "segments": {
+    "early": {
+     "n": 14,
+     "median": -0.24041183488379042,
+     "mean": -0.3040869556731417,
+     "d0_range": [
+      "2025-12-01",
+      "2026-03-13"
+     ]
+    },
+    "late": {
+     "n": 14,
+     "median": -0.2219945885458044,
+     "mean": -0.28998348387409983,
+     "d0_range": [
+      "2026-03-13",
+      "2026-08-11"
+     ]
+    },
+    "boundary_d0": "2026-03-13"
+   },
+   "control": {
+    "n_samples": 200,
+    "seed": 20261108,
+    "null_median_q": {
+     "q05": -0.1601763542449236,
+     "q50": -0.10089187863616392,
+     "q95": -0.047569432039494965
+    },
+    "percentile_of_actual": 0.0,
+    "n_draws_used": 200
+   },
+   "per_token": {
+    "A2Z": {
+     "status": "ok",
+     "ts": "2026-03-13T09:00:23.06+00:00",
+     "d0": "2026-03-13",
+     "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13",
+     "token": {
+      "m1": 0.00139645,
+      "m30": 0.00142311,
+      "d0": 0.0011103,
+      "p7": 0.00050022,
+      "p30": 8.092e-05
+     },
+     "btc": {
+      "m1": 70473.0,
+      "m30": 67061.0,
+      "d0": 70892.0,
+      "p7": 70530.0,
+      "p30": 70668.0
+     },
+     "ret30": -0.9239590607852529,
+     "ret30_tok": -0.9271187967216068,
+     "ret30_btc": -0.00315973593635388,
+     "ret7": -0.5443667564056512,
+     "ret7_tok": -0.5494731153742232,
+     "ret7_btc": -0.005106358968571922,
+     "jump": -0.21085799601279087,
+     "jump_tok": -0.20491245658634394,
+     "jump_btc": 0.005945539426446933,
+     "pre30": -0.27693441664081286,
+     "pre30_tok": -0.219807323397348,
+     "pre30_btc": 0.05712709324346488
+    },
+    "ACA": {
+     "status": "no_price_source",
+     "d0": "2026-01-02",
+     "ts": "2026-01-02T10:59:57.739+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ACA, D, DATA & FLOW on 2026-01-02"
+    },
+    "ACX": {
+     "status": "ok",
+     "ts": "2026-07-24T03:00:06.343+00:00",
+     "d0": "2026-07-24",
+     "title": "Binance Will Extend the Monitoring Tag to Include ACX, LSK & STX on 2026-07-24",
+     "token": {
+      "m1": 0.0413132,
+      "m30": 0.0390241,
+      "d0": 0.0412655,
+      "p7": 0.0418221,
+      "p30": 0.0416032
+     },
+     "btc": {
+      "m1": 65053.0,
+      "m30": 60994.0,
+      "d0": 64096.0,
+      "p7": 62820.0,
+      "p30": 77702.0
+     },
+     "ret30": -0.2040917453743898,
+     "ret30_tok": 0.008183591620118502,
+     "ret30_btc": 0.2122753369945083,
+     "ret7": 0.03339590355775679,
+     "ret7_tok": 0.0134882650155701,
+     "ret7_btc": -0.01990763854218669,
+     "jump": 0.013556487075958135,
+     "jump_tok": -0.0011545946573977561,
+     "jump_btc": -0.01471108173335589,
+     "pre30": 0.006578840792852647,
+     "pre30_tok": 0.05743630218249751,
+     "pre30_btc": 0.050857461389644865
+    },
+    "AERGO": {
+     "status": "no_price_source",
+     "d0": "2025-03-04",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+    },
+    "AEUR": {
+     "status": "no_price_source",
+     "d0": "2026-07-03",
+     "ts": "2026-07-03T06:00:11.367+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include AEUR, PYR, SCRT & VANRY on 2026-07-03"
+    },
+    "ALCX": {
+     "status": "no_price_source",
+     "d0": "2026-05-22",
+     "ts": "2026-05-22T08:00:04.004+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+    },
+    "ALPACA": {
+     "status": "no_price_source",
+     "d0": "2025-03-04",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+    },
+    "ALPHA": {
+     "status": "no_price_source",
+     "d0": "2025-05-07",
+     "ts": "2025-05-07T08:00:33.736+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07"
+    },
+    "ANT": {
+     "status": "no_price_source",
+     "d0": "2024-01-04",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04"
+    },
+    "ARDR": {
+     "status": "no_price_source",
+     "d0": "2025-04-03",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03"
+    },
+    "AST": {
+     "status": "no_price_source",
+     "d0": "2025-03-04",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+    },
+    "ATA": {
+     "status": "no_price_source",
+     "d0": "2026-03-13",
+     "ts": "2026-03-13T09:00:23.06+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13"
+    },
+    "AVA": {
+     "status": "no_price_source",
+     "d0": "2026-09-04",
+     "ts": "2026-09-04T08:00:06.5+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include AVA, GNS, SCR & TOWNS on 2026-09-04"
+    },
+    "BADGER": {
+     "status": "no_price_source",
+     "d0": "2025-03-04",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+    },
+    "BAKE": {
+     "status": "ok",
+     "ts": "2025-07-07T03:29:57.414+00:00",
+     "d0": "2025-07-07",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAKE, IDEX & SLF on 2025-07-07",
+     "token": {
+      "m1": null,
+      "m30": null,
+      "d0": null,
+      "p7": null,
+      "p30": null
+     },
+     "btc": {
+      "m1": null,
+      "m30": null,
+      "d0": null,
+      "p7": null,
+      "p30": null
+     },
+     "ret30": null,
+     "ret30_tok": null,
+     "ret30_btc": null,
+     "ret7": null,
+     "ret7_tok": null,
+     "ret7_btc": null,
+     "jump": null,
+     "jump_tok": null,
+     "jump_btc": null,
+     "pre30": null,
+     "pre30_tok": null,
+     "pre30_btc": null
+    },
+    "BAL": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "BETA": {
+     "status": "no_price_source",
+     "d0": "2023-10-04",
+     "ts": "2023-10-04T06:00:16.946+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BETA, BOND, WTC and XEM on 2023-10-04"
+    },
+    "BICO": {
+     "status": "no_price_source",
+     "d0": "2026-10-09",
+     "ts": "2026-10-09T07:00:14.078+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BICO & CVC on 2026-10-09"
+    },
+    "BIFI": {
+     "status": "no_price_source",
+     "d0": "2025-06-05",
+     "ts": "2025-06-05T05:00:18.433+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BIFI, FIS, KMD & MDT on 2025-06-05"
+    },
+    "BLZ": {
+     "status": "no_price_source",
+     "d0": "2024-10-03",
+     "ts": "2024-10-03T07:00:05.269+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BLZ, CLV, KEY, PROS & VITE and Remove the Seed Tag for PENDLE & SEI on 2024-10-03"
+    },
+    "BOND": {
+     "status": "no_price_source",
+     "d0": "2023-10-04",
+     "ts": "2023-10-04T06:00:16.946+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BETA, BOND, WTC and XEM on 2023-10-04"
+    },
+    "BSW": {
+     "status": "no_price_source",
+     "d0": "2025-04-03",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03"
+    },
+    "BURGER": {
+     "status": "no_price_source",
+     "d0": "2025-03-04",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+    },
+    "CHESS": {
+     "status": "ok",
+     "ts": "2025-12-01T04:30:24.832+00:00",
+     "d0": "2025-12-01",
+     "title": "Binance Will Extend the Monitoring Tag to Include CHESS, DENT, DF, GHST & SXP on 2025-12-01",
+     "token": {
+      "m1": 0.103541,
+      "m30": 0.108873,
+      "d0": 0.103892,
+      "p7": 0.103907,
+      "p30": 0.102567
+     },
+     "btc": {
+      "m1": 90406.0,
+      "m30": 110014.0,
+      "d0": 86281.0,
+      "p7": 90618.0,
+      "p30": 87520.0
+     },
+     "ret30": -0.027113684864116472,
+     "ret30_tok": -0.0127536287683363,
+     "ret30_btc": 0.014360056095780172,
+     "ret7": -0.05012161065079446,
+     "ret7_tok": 0.00014438070303768313,
+     "ret7_btc": 0.05026599135383214,
+     "jump": 0.04901746406392571,
+     "jump_tok": 0.003389961464540736,
+     "jump_btc": -0.04562750259938497,
+     "pre30": 0.16997653588246886,
+     "pre30_tok": -0.04575055339707734,
+     "pre30_btc": -0.2157270892795462
+    },
+    "CLV": {
+     "status": "no_price_source",
+     "d0": "2024-10-03",
+     "ts": "2024-10-03T07:00:05.269+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BLZ, CLV, KEY, PROS & VITE and Remove the Seed Tag for PENDLE & SEI on 2024-10-03"
+    },
+    "COMBO": {
+     "status": "no_price_source",
+     "d0": "2025-03-04",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+    },
+    "COOKIE": {
+     "status": "no_price_source",
+     "d0": "2026-05-22",
+     "ts": "2026-05-22T08:00:04.004+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+    },
+    "COS": {
+     "status": "no_price_source",
+     "d0": "2026-03-06",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06"
+    },
+    "CTXC": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "CVC": {
+     "status": "no_price_source",
+     "d0": "2026-10-09",
+     "ts": "2026-10-09T07:00:14.078+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BICO & CVC on 2026-10-09"
+    },
+    "CVP": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "CVX": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "D": {
+     "status": "ok",
+     "ts": "2026-01-02T10:59:57.739+00:00",
+     "d0": "2026-01-02",
+     "title": "Binance Will Extend the Monitoring Tag to Include ACA, D, DATA & FLOW on 2026-01-02",
+     "token": {
+      "m1": 0.0145656,
+      "m30": 0.0160432,
+      "d0": 0.0134914,
+      "p7": 0.0142128,
+      "p30": 0.0119933
+     },
+     "btc": {
+      "m1": 88740.0,
+      "m30": 93619.0,
+      "d0": 89963.0,
+      "p7": 90549.0,
+      "p30": 76961.0
+     },
+     "ret30": 0.033484975276621975,
+     "ret30_tok": -0.11104110766858888,
+     "ret30_btc": -0.14452608294521085,
+     "ret7": 0.04695731110607171,
+     "ret7_tok": 0.053471100108217096,
+     "ret7_btc": 0.006513789002145387,
+     "jump": -0.08753094205904133,
+     "jump_tok": -0.07374910748613162,
+     "jump_btc": 0.013781834572909712,
+     "pre30": -0.12000614142560662,
+     "pre30_tok": -0.15905804328313555,
+     "pre30_btc": -0.03905190185752894
+    },
+    "DATA": {
+     "status": "no_price_source",
+     "d0": "2026-01-02",
+     "ts": "2026-01-02T10:59:57.739+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ACA, D, DATA & FLOW on 2026-01-02"
+    },
+    "DEGO": {
+     "status": "ok",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "d0": "2026-03-06",
+     "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06",
+     "token": {
+      "m1": 0.669446,
+      "m30": 0.656704,
+      "d0": 0.362602,
+      "p7": 1.055,
+      "p30": 0.295689
+     },
+     "btc": {
+      "m1": 70876.0,
+      "m30": 73063.0,
+      "d0": 68155.0,
+      "p7": 70892.0,
+      "p30": 68791.0
+     },
+     "ret30": -0.1938673321467228,
+     "ret30_tok": -0.18453566168967628,
+     "ret30_btc": 0.009331670457046526,
+     "ret7": 1.8693676847969827,
+     "ret7_tok": 1.9095261471254985,
+     "ret7_btc": 0.04015846232851583,
+     "jump": -0.41996412479540013,
+     "jump_tok": -0.4583551175150796,
+     "jump_btc": -0.038390992719679495,
+     "pre30": -0.3806707008667872,
+     "pre30_tok": -0.44784560471688917,
+     "pre30_btc": -0.06717490385010194
+    },
+    "DENT": {
+     "status": "ok",
+     "ts": "2025-12-01T04:30:24.832+00:00",
+     "d0": "2025-12-01",
+     "title": "Binance Will Extend the Monitoring Tag to Include CHESS, DENT, DF, GHST & SXP on 2025-12-01",
+     "token": {
+      "m1": 0.00034224,
+      "m30": 0.00043223,
+      "d0": 0.00027229,
+      "p7": 0.00025045,
+      "p30": 0.00020021
+     },
+     "btc": {
+      "m1": 90406.0,
+      "m30": 110014.0,
+      "d0": 86281.0,
+      "p7": 90618.0,
+      "p30": 87520.0
+     },
+     "ret30": -0.2790778202442983,
+     "ret30_tok": -0.2647177641485181,
+     "ret30_btc": 0.014360056095780172,
+     "ret7": -0.13047459247763404,
+     "ret7_tok": -0.0802086011238019,
+     "ret7_btc": 0.05026599135383214,
+     "jump": -0.15876123045344348,
+     "jump_tok": -0.20438873305282845,
+     "jump_btc": -0.04562750259938497,
+     "pre30": -0.1543073831078401,
+     "pre30_tok": -0.3700344723873863,
+     "pre30_btc": -0.2157270892795462
+    },
+    "DF": {
+     "status": "ok",
+     "ts": "2025-12-01T04:30:24.832+00:00",
+     "d0": "2025-12-01",
+     "title": "Binance Will Extend the Monitoring Tag to Include CHESS, DENT, DF, GHST & SXP on 2025-12-01",
+     "token": {
+      "m1": 0.0145112,
+      "m30": 0.0177197,
+      "d0": 0.0130946,
+      "p7": 0.0135384,
+      "p30": 0.0113495
+     },
+     "btc": {
+      "m1": 90406.0,
+      "m30": 110014.0,
+      "d0": 86281.0,
+      "p7": 90618.0,
+      "p30": 87520.0
+     },
+     "ret30": -0.14762873173306568,
+     "ret30_tok": -0.1332686756372855,
+     "ret30_btc": 0.014360056095780172,
+     "ret7": -0.016374158079047074,
+     "ret7_tok": 0.033891833274785066,
+     "ret7_btc": 0.05026599135383214,
+     "jump": -0.05199364520369132,
+     "jump_tok": -0.09762114780307629,
+     "jump_btc": -0.04562750259938497,
+     "pre30": -0.045287487716678454,
+     "pre30_tok": -0.26101457699622466,
+     "pre30_btc": -0.2157270892795462
+    },
+    "DOCK": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "DODO": {
+     "status": "no_price_source",
+     "d0": "2026-05-22",
+     "ts": "2026-05-22T08:00:04.004+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+    },
+    "EPIC": {
+     "status": "no_price_source",
+     "d0": "2026-05-22",
+     "ts": "2026-05-22T08:00:04.004+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+    },
+    "EPX": {
+     "status": "no_price_source",
+     "d0": "2024-04-03",
+     "ts": "2024-04-03T06:00:16.944+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include EPX, FOR, UNFI, WAVES & WNXM on 2024-04-03"
+    },
+    "FARM": {
+     "status": "no_price_source",
+     "d0": "2026-04-14",
+     "ts": "2026-04-14T02:30:06.111+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include FARM, HIGH, MLN, RESOLV, SYS, TRU & VELODROME, Remove the Seed Tag for XAUT on 2026-04-14"
+    },
+    "FIO": {
+     "status": "ok",
+     "ts": "2026-03-13T09:00:23.06+00:00",
+     "d0": "2026-03-13",
+     "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13",
+     "token": {
+      "m1": 0.0131365,
+      "m30": 0.0135399,
+      "d0": 0.0107548,
+      "p7": 0.00676397,
+      "p30": 0.00382057
+     },
+     "btc": {
+      "m1": 70473.0,
+      "m30": 67061.0,
+      "d0": 70892.0,
+      "p7": 70530.0,
+      "p30": 70668.0
+     },
+     "ret30": -0.6415970238360268,
+     "ret30_tok": -0.6447567597723807,
+     "ret30_btc": -0.00315973593635388,
+     "ret7": -0.3659679520367466,
+     "ret7_tok": -0.3710743110053185,
+     "ret7_btc": -0.005106358968571922,
+     "jump": -0.18724953973094205,
+     "jump_tok": -0.18130400030449512,
+     "jump_btc": 0.005945539426446933,
+     "pre30": -0.2628228517054919,
+     "pre30_tok": -0.20569575846202703,
+     "pre30_btc": 0.05712709324346488
+    },
+    "FIRO": {
+     "status": "no_price_source",
+     "d0": "2024-01-04",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04"
+    },
+    "FIS": {
+     "status": "no_price_source",
+     "d0": "2025-06-05",
+     "ts": "2025-06-05T05:00:18.433+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BIFI, FIS, KMD & MDT on 2025-06-05"
+    },
+    "FLM": {
+     "status": "ok",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "d0": "2025-04-03",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03",
+     "token": {
+      "m1": null,
+      "m30": null,
+      "d0": null,
+      "p7": null,
+      "p30": null
+     },
+     "btc": {
+      "m1": null,
+      "m30": null,
+      "d0": null,
+      "p7": null,
+      "p30": null
+     },
+     "ret30": null,
+     "ret30_tok": null,
+     "ret30_btc": null,
+     "ret7": null,
+     "ret7_tok": null,
+     "ret7_btc": null,
+     "jump": null,
+     "jump_tok": null,
+     "jump_btc": null,
+     "pre30": null,
+     "pre30_tok": null,
+     "pre30_btc": null
+    },
+    "FLOW": {
+     "status": "ok",
+     "ts": "2026-01-02T10:59:57.739+00:00",
+     "d0": "2026-01-02",
+     "title": "Binance Will Extend the Monitoring Tag to Include ACA, D, DATA & FLOW on 2026-01-02",
+     "token": {
+      "m1": 0.096192,
+      "m30": 0.235406,
+      "d0": 0.092948,
+      "p7": 0.117845,
+      "p30": 0.083616
+     },
+     "btc": {
+      "m1": 88740.0,
+      "m30": 93619.0,
+      "d0": 89963.0,
+      "p7": 90549.0,
+      "p30": 76961.0
+     },
+     "ret30": 0.04412585916417189,
+     "ret30_tok": -0.10040022378103897,
+     "ret30_btc": -0.14452608294521085,
+     "ret7": 0.2613456592915242,
+     "ret7_tok": 0.2678594482936696,
+     "ret7_btc": 0.006513789002145387,
+     "jump": -0.04750605280311593,
+     "jump_tok": -0.033724218230206215,
+     "jump_btc": 0.013781834572909712,
+     "pre30": -0.566106845158265,
+     "pre30_tok": -0.605158747015794,
+     "pre30_btc": -0.03905190185752894
+    },
+    "FOR": {
+     "status": "no_price_source",
+     "d0": "2024-04-03",
+     "ts": "2024-04-03T06:00:16.944+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include EPX, FOR, UNFI, WAVES & WNXM on 2024-04-03"
+    },
+    "FORTH": {
+     "status": "ok",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "d0": "2026-03-06",
+     "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06",
+     "token": {
+      "m1": 1.24,
+      "m30": 1.42,
+      "d0": 0.906411,
+      "p7": 1.19,
+      "p30": 0.274675
+     },
+     "btc": {
+      "m1": 70876.0,
+      "m30": 73063.0,
+      "d0": 68155.0,
+      "p7": 70892.0,
+      "p30": 68791.0
+     },
+     "ret30": -0.7062958511653565,
+     "ret30_tok": -0.69696418070831,
+     "ret30_btc": 0.009331670457046526,
+     "ret7": 0.27271174776381524,
+     "ret7_tok": 0.31287021009233107,
+     "ret7_btc": 0.04015846232851583,
+     "jump": -0.2306323943770947,
+     "jump_tok": -0.2690233870967742,
+     "jump_btc": -0.038390992719679495,
+     "pre30": -0.29450749051609526,
+     "pre30_tok": -0.3616823943661972,
+     "pre30_btc": -0.06717490385010194
+    },
+    "FUN": {
+     "status": "ok",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "d0": "2026-03-06",
+     "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06",
+     "token": {
+      "m1": 0.004049,
+      "m30": 0.00314499,
+      "d0": 0.0021417,
+      "p7": 0.00389045,
+      "p30": 0.00221068
+     },
+     "btc": {
+      "m1": 70876.0,
+      "m30": 73063.0,
+      "d0": 68155.0,
+      "p7": 70892.0,
+      "p30": 68791.0
+     },
+     "ret30": 0.022876388561490213,
+     "ret30_tok": 0.03220805901853674,
+     "ret30_btc": 0.009331670457046526,
+     "ret7": 0.7763657941032909,
+     "ret7_tok": 0.8165242564318067,
+     "ret7_btc": 0.04015846232851583,
+     "jump": -0.43266358865843857,
+     "jump_tok": -0.47105458137811806,
+     "jump_btc": -0.038390992719679495,
+     "pre30": -0.2518372392727697,
+     "pre30_tok": -0.3190121431228716,
+     "pre30_btc": -0.06717490385010194
+    },
+    "GHST": {
+     "status": "ok",
+     "ts": "2025-12-01T04:30:24.832+00:00",
+     "d0": "2025-12-01",
+     "title": "Binance Will Extend the Monitoring Tag to Include CHESS, DENT, DF, GHST & SXP on 2025-12-01",
+     "token": {
+      "m1": 0.263908,
+      "m30": 0.304603,
+      "d0": 0.206862,
+      "p7": 0.204577,
+      "p30": 0.168099
+     },
+     "btc": {
+      "m1": 90406.0,
+      "m30": 110014.0,
+      "d0": 86281.0,
+      "p7": 90618.0,
+      "p30": 87520.0
+     },
+     "ret30": -0.20174584952328256,
+     "ret30_tok": -0.1873857934275024,
+     "ret30_btc": 0.014360056095780172,
+     "ret7": -0.0613120027043943,
+     "ret7_tok": -0.011046011350562157,
+     "ret7_btc": 0.05026599135383214,
+     "jump": -0.17053115875229818,
+     "jump_tok": -0.21615866135168316,
+     "jump_btc": -0.04562750259938497,
+     "pre30": -0.10515287578974075,
+     "pre30_tok": -0.32087996506928695,
+     "pre30_btc": -0.2157270892795462
+    },
+    "GLMR": {
+     "status": "ok",
+     "ts": "2026-08-11T09:00:12.289+00:00",
+     "d0": "2026-08-11",
+     "title": "Binance Will Extend the Monitoring Tag to Include GLMR, ICX, MOVR, RARE & SOPH on 2026-08-11",
+     "token": {
+      "m1": 0.00876783,
+      "m30": 0.00885147,
+      "d0": 0.00773969,
+      "p7": 0.0070733,
+      "p30": 0.00580854
+     },
+     "btc": {
+      "m1": 63915.0,
+      "m30": 63747.0,
+      "d0": 63550.0,
+      "p7": 64686.0,
+      "p30": 76555.0
+     },
+     "ret30": -0.4541545915392071,
+     "ret30_tok": -0.24951257737713006,
+     "ret30_btc": 0.20464201416207706,
+     "ret7": -0.10397603612264772,
+     "ret7_tok": -0.08610034768834407,
+     "ret7_btc": 0.01787568843430365,
+     "jump": -0.11155205673559754,
+     "jump_tok": -0.11726276627170018,
+     "jump_btc": -0.005710709536102643,
+     "pre30": -0.12251365421421789,
+     "pre30_tok": -0.12560399572048486,
+     "pre30_btc": -0.0030903415062669692
+    },
+    "GNS": {
+     "status": "no_price_source",
+     "d0": "2026-09-04",
+     "ts": "2026-09-04T08:00:06.5+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include AVA, GNS, SCR & TOWNS on 2026-09-04"
+    },
+    "GPS": {
+     "status": "no_price_source",
+     "d0": "2025-03-07",
+     "ts": "2025-03-07T09:00:45.829+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to GPS on 2025-03-07"
+    },
+    "GTC": {
+     "status": "no_price_source",
+     "d0": "2026-03-13",
+     "ts": "2026-03-13T09:00:23.06+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13"
+    },
+    "HARD": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "HEI": {
+     "status": "no_price_source",
+     "d0": "2026-05-22",
+     "ts": "2026-05-22T08:00:04.004+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+    },
+    "HFT": {
+     "status": "ok",
+     "ts": "2026-05-22T08:00:04.004+00:00",
+     "d0": "2026-05-22",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22",
+     "token": {
+      "m1": 0.0140821,
+      "m30": 0.0146408,
+      "d0": 0.0120397,
+      "p7": 0.0108243,
+      "p30": 0.00992653
+     },
+     "btc": {
+      "m1": 77547.0,
+      "m30": 78210.0,
+      "d0": 75500.0,
+      "p7": 73492.0,
+      "p30": 63252.0
+     },
+     "ret30": -0.013291666251832424,
+     "ret30_tok": -0.1755168318147463,
+     "ret30_btc": -0.1622251655629139,
+     "ret7": -0.07435333271323619,
+     "ret7_tok": -0.10094935920330239,
+     "ret7_btc": -0.026596026490066205,
+     "jump": -0.11863829172698748,
+     "jump_tok": -0.1450351865133751,
+     "jump_btc": -0.026396894786387626,
+     "pre30": -0.14301075629976867,
+     "pre30_tok": -0.17766105677285393,
+     "pre30_btc": -0.03465030047308526
+    },
+    "HIFI": {
+     "status": "ok",
+     "ts": "2025-05-07T08:00:33.736+00:00",
+     "d0": "2025-05-07",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07",
+     "token": {
+      "m1": null,
+      "m30": null,
+      "d0": null,
+      "p7": null,
+      "p30": null
+     },
+     "btc": {
+      "m1": null,
+      "m30": null,
+      "d0": null,
+      "p7": null,
+      "p30": null
+     },
+     "ret30": null,
+     "ret30_tok": null,
+     "ret30_btc": null,
+     "ret7": null,
+     "ret7_tok": null,
+     "ret7_btc": null,
+     "jump": null,
+     "jump_tok": null,
+     "jump_btc": null,
+     "pre30": null,
+     "pre30_tok": null,
+     "pre30_btc": null
+    },
+    "HIGH": {
+     "status": "no_price_source",
+     "d0": "2026-04-14",
+     "ts": "2026-04-14T02:30:06.111+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include FARM, HIGH, MLN, RESOLV, SYS, TRU & VELODROME, Remove the Seed Tag for XAUT on 2026-04-14"
+    },
+    "HOOK": {
+     "status": "ok",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "d0": "2026-03-06",
+     "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06",
+     "token": {
+      "m1": 0.0447794,
+      "m30": 0.0435771,
+      "d0": 0.0279729,
+      "p7": 0.0370678,
+      "p30": 0.0092777
+     },
+     "btc": {
+      "m1": 70876.0,
+      "m30": 73063.0,
+      "d0": 68155.0,
+      "p7": 70892.0,
+      "p30": 68791.0
+     },
+     "ret30": -0.6776642351893409,
+     "ret30_tok": -0.6683325647322944,
+     "ret30_btc": 0.009331670457046526,
+     "ret7": 0.28497407666458097,
+     "ret7_tok": 0.3251325389930968,
+     "ret7_btc": 0.04015846232851583,
+     "jump": -0.3369266756724829,
+     "jump_tok": -0.3753176683921624,
+     "jump_btc": -0.038390992719679495,
+     "pre30": -0.2909076670414903,
+     "pre30_tok": -0.35808257089159223,
+     "pre30_btc": -0.06717490385010194
+    },
+    "ICX": {
+     "status": "ok",
+     "ts": "2026-08-11T09:00:12.289+00:00",
+     "d0": "2026-08-11",
+     "title": "Binance Will Extend the Monitoring Tag to Include GLMR, ICX, MOVR, RARE & SOPH on 2026-08-11",
+     "token": {
+      "m1": 0.0226491,
+      "m30": 0.0241989,
+      "d0": 0.0213196,
+      "p7": 0.0178044,
+      "p30": 0.0121617
+     },
+     "btc": {
+      "m1": 63915.0,
+      "m30": 63747.0,
+      "d0": 63550.0,
+      "p7": 64686.0,
+      "p30": 76555.0
+     },
+     "ret30": -0.6341951014620265,
+     "ret30_tok": -0.42955308729994945,
+     "ret30_btc": 0.20464201416207706,
+     "ret7": -0.18275683066961756,
+     "ret7_tok": -0.16488114223531392,
+     "ret7_btc": 0.01787568843430365,
+     "jump": -0.0529891946543507,
+     "jump_tok": -0.058699904190453345,
+     "jump_btc": -0.005710709536102643,
+     "pre30": -0.11589440573430998,
+     "pre30_tok": -0.11898474724057695,
+     "pre30_btc": -0.0030903415062669692
+    },
+    "IDEX": {
+     "status": "ok",
+     "ts": "2025-07-07T03:29:57.414+00:00",
+     "d0": "2025-07-07",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAKE, IDEX & SLF on 2025-07-07",
+     "token": {
+      "m1": null,
+      "m30": null,
+      "d0": null,
+      "p7": null,
+      "p30": null
+     },
+     "btc": {
+      "m1": null,
+      "m30": null,
+      "d0": null,
+      "p7": null,
+      "p30": null
+     },
+     "ret30": null,
+     "ret30_tok": null,
+     "ret30_btc": null,
+     "ret7": null,
+     "ret7_tok": null,
+     "ret7_btc": null,
+     "jump": null,
+     "jump_tok": null,
+     "jump_btc": null,
+     "pre30": null,
+     "pre30_tok": null,
+     "pre30_btc": null
+    },
+    "IRIS": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "KEY": {
+     "status": "no_price_source",
+     "d0": "2024-10-03",
+     "ts": "2024-10-03T07:00:05.269+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BLZ, CLV, KEY, PROS & VITE and Remove the Seed Tag for PENDLE & SEI on 2024-10-03"
+    },
+    "KMD": {
+     "status": "no_price_source",
+     "d0": "2025-06-05",
+     "ts": "2025-06-05T05:00:18.433+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BIFI, FIS, KMD & MDT on 2025-06-05"
+    },
+    "KP3R": {
+     "status": "no_price_source",
+     "d0": "2024-01-04",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04"
+    },
+    "LEVER": {
+     "status": "no_price_source",
+     "d0": "2025-05-07",
+     "ts": "2025-05-07T08:00:33.736+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07"
+    },
+    "LRC": {
+     "status": "ok",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "d0": "2026-03-06",
+     "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06",
+     "token": {
+      "m1": 0.0395883,
+      "m30": 0.05551,
+      "d0": 0.0376518,
+      "p7": 0.0424356,
+      "p30": 0.0179981
+     },
+     "btc": {
+      "m1": 70876.0,
+      "m30": 73063.0,
+      "d0": 68155.0,
+      "p7": 70892.0,
+      "p30": 68791.0
+     },
+     "ret30": -0.5313173391368972,
+     "ret30_tok": -0.5219856686798506,
+     "ret30_btc": 0.009331670457046526,
+     "ret7": 0.08689522434781827,
+     "ret7_tok": 0.1270536866763341,
+     "ret7_btc": 0.04015846232851583,
+     "jump": -0.01052497487680737,
+     "jump_tok": -0.048915967596486865,
+     "jump_btc": -0.038390992719679495,
+     "pre30": -0.2545364995006456,
+     "pre30_tok": -0.32171140335074755,
+     "pre30_btc": -0.06717490385010194
+    },
+    "LSK": {
+     "status": "no_price_source",
+     "d0": "2026-07-24",
+     "ts": "2026-07-24T03:00:06.343+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ACX, LSK & STX on 2026-07-24"
+    },
+    "LTO": {
+     "status": "no_price_source",
+     "d0": "2025-04-03",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03"
+    },
+    "MBL": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "MBOX": {
+     "status": "ok",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "d0": "2026-03-06",
+     "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06",
+     "token": {
+      "m1": 0.0228931,
+      "m30": 0.0270539,
+      "d0": 0.0194468,
+      "p7": 0.0191687,
+      "p30": 0.0128447
+     },
+     "btc": {
+      "m1": 70876.0,
+      "m30": 73063.0,
+      "d0": 68155.0,
+      "p7": 70892.0,
+      "p30": 68791.0
+     },
+     "ret30": -0.3488271144375471,
+     "ret30_tok": -0.3394954439805006,
+     "ret30_btc": 0.009331670457046526,
+     "ret7": -0.05445901563291555,
+     "ret7_tok": -0.014300553304399721,
+     "ret7_btc": 0.04015846232851583,
+     "jump": -0.11214781591698397,
+     "jump_tok": -0.15053880863666347,
+     "jump_btc": -0.038390992719679495,
+     "pre30": -0.2140082157740557,
+     "pre30_tok": -0.28118311962415765,
+     "pre30_btc": -0.06717490385010194
+    },
+    "MDT": {
+     "status": "ok",
+     "ts": "2025-06-05T05:00:18.433+00:00",
+     "d0": "2025-06-05",
+     "title": "Binance Will Extend the Monitoring Tag to Include BIFI, FIS, KMD & MDT on 2025-06-05",
+     "token": {
+      "m1": null,
+      "m30": null,
+      "d0": null,
+      "p7": null,
+      "p30": null
+     },
+     "btc": {
+      "m1": null,
+      "m30": null,
+      "d0": null,
+      "p7": null,
+      "p30": null
+     },
+     "ret30": null,
+     "ret30_tok": null,
+     "ret30_btc": null,
+     "ret7": null,
+     "ret7_tok": null,
+     "ret7_btc": null,
+     "jump": null,
+     "jump_tok": null,
+     "jump_btc": null,
+     "pre30": null,
+     "pre30_tok": null,
+     "pre30_btc": null
+    },
+    "MDX": {
+     "status": "no_price_source",
+     "d0": "2024-01-04",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04"
+    },
+    "MLN": {
+     "status": "ok",
+     "ts": "2026-04-14T02:30:06.111+00:00",
+     "d0": "2026-04-14",
+     "title": "Binance Will Extend the Monitoring Tag to Include FARM, HIGH, MLN, RESOLV, SYS, TRU & VELODROME, Remove the Seed Tag for XAUT on 2026-04-14",
+     "token": {
+      "m1": 3.43,
+      "m30": 4.51,
+      "d0": 3.32,
+      "p7": 2.99,
+      "p30": 2.83
+     },
+     "btc": {
+      "m1": 74475.0,
+      "m30": 72861.0,
+      "d0": 74198.0,
+      "p7": 76333.0,
+      "p30": 81047.0
+     },
+     "ret30": -0.239897431717219,
+     "ret30_tok": -0.14759036144578308,
+     "ret30_btc": 0.09230707027143592,
+     "ret7": -0.1281719508563377,
+     "ret7_tok": -0.09939759036144569,
+     "ret7_btc": 0.028774360494892015,
+     "jump": -0.028350601929737596,
+     "jump_tok": -0.03206997084548113,
+     "jump_btc": -0.0037193689157435372,
+     "pre30": -0.28220810204748226,
+     "pre30_tok": -0.26385809312638586,
+     "pre30_btc": 0.018350008921096395
+    },
+    "MOB": {
+     "status": "no_price_source",
+     "d0": "2024-01-04",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04"
+    },
+    "MOVE": {
+     "status": "no_price_source",
+     "d0": "2025-05-07",
+     "ts": "2025-05-07T08:00:33.736+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07"
+    },
+    "MOVR": {
+     "status": "no_price_source",
+     "d0": "2026-08-11",
+     "ts": "2026-08-11T09:00:12.289+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include GLMR, ICX, MOVR, RARE & SOPH on 2026-08-11"
+    },
+    "NFP": {
+     "status": "ok",
+     "ts": "2026-04-30T07:00:05.981+00:00",
+     "d0": "2026-04-30",
+     "title": "Binance Will Extend the Monitoring Tag to Include NFP, NOM, POND, QUICK & VIC on 2026-04-30",
+     "token": {
+      "m1": 0.0153273,
+      "m30": 0.0133492,
+      "d0": 0.0124687,
+      "p7": 0.0132259,
+      "p30": 0.011602
+     },
+     "btc": {
+      "m1": 75784.0,
+      "m30": 68215.0,
+      "d0": 76297.0,
+      "p7": 80035.0,
+      "p30": 73776.0
+     },
+     "ret30": -0.03646812491908569,
+     "ret30_tok": -0.06951005317314551,
+     "ret30_btc": -0.03304192825405983,
+     "ret7": 0.01173531106132919,
+     "ret7_tok": 0.060728063069927174,
+     "ret7_btc": 0.048992752008597984,
+     "jump": -0.19327305887081592,
+     "jump_tok": -0.18650381998134058,
+     "jump_btc": 0.0067692388894753375,
+     "pre30": -0.18443734932048905,
+     "pre30_tok": -0.06595900877955241,
+     "pre30_btc": 0.11847834054093664
+    },
+    "NKN": {
+     "status": "ok",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "d0": "2025-04-03",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03",
+     "token": {
+      "m1": null,
+      "m30": null,
+      "d0": null,
+      "p7": null,
+      "p30": null
+     },
+     "btc": {
+      "m1": null,
+      "m30": null,
+      "d0": null,
+      "p7": null,
+      "p30": null
+     },
+     "ret30": null,
+     "ret30_tok": null,
+     "ret30_btc": null,
+     "ret7": null,
+     "ret7_tok": null,
+     "ret7_btc": null,
+     "jump": null,
+     "jump_tok": null,
+     "jump_btc": null,
+     "pre30": null,
+     "pre30_tok": null,
+     "pre30_btc": null
+    },
+    "NOM": {
+     "status": "no_price_source",
+     "d0": "2026-04-30",
+     "ts": "2026-04-30T07:00:05.981+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include NFP, NOM, POND, QUICK & VIC on 2026-04-30"
+    },
+    "NTRN": {
+     "status": "ok",
+     "ts": "2026-03-13T09:00:23.06+00:00",
+     "d0": "2026-03-13",
+     "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13",
+     "token": {
+      "m1": 0.0220867,
+      "m30": 0.0288204,
+      "d0": 0.0155118,
+      "p7": 0.00568762,
+      "p30": 0.00244812
+     },
+     "btc": {
+      "m1": 70473.0,
+      "m30": 67061.0,
+      "d0": 70892.0,
+      "p7": 70530.0,
+      "p30": 70668.0
+     },
+     "ret30": -0.8390171874381095,
+     "ret30_tok": -0.8421769233744634,
+     "ret30_btc": -0.00315973593635388,
+     "ret7": -0.6282295530467971,
+     "ret7_tok": -0.633335912015369,
+     "ret7_btc": -0.005106358968571922,
+     "jump": -0.30363147711745564,
+     "jump_tok": -0.2976859376910087,
+     "jump_btc": 0.005945539426446933,
+     "pre30": -0.518904167815643,
+     "pre30_tok": -0.4617770745721781,
+     "pre30_btc": 0.05712709324346488
+    },
+    "NULS": {
+     "status": "no_price_source",
+     "d0": "2025-03-04",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+    },
+    "OXT": {
+     "status": "ok",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "d0": "2026-03-06",
+     "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06",
+     "token": {
+      "m1": 0.0290912,
+      "m30": 0.025538,
+      "d0": 0.0218161,
+      "p7": 0.0190396,
+      "p30": 0.015034
+     },
+     "btc": {
+      "m1": 70876.0,
+      "m30": 73063.0,
+      "d0": 68155.0,
+      "p7": 70892.0,
+      "p30": 68791.0
+     },
+     "ret30": -0.32020758320038745,
+     "ret30_tok": -0.3108759127433409,
+     "ret30_btc": 0.009331670457046526,
+     "ret7": -0.1674268558543981,
+     "ret7_tok": -0.12726839352588226,
+     "ret7_btc": 0.04015846232851583,
+     "jump": -0.21168806898970338,
+     "jump_tok": -0.2500790617093829,
+     "jump_btc": -0.038390992719679495,
+     "pre30": -0.07856477819234464,
+     "pre30_tok": -0.14573968204244658,
+     "pre30_btc": -0.06717490385010194
+    },
+    "PDA": {
+     "status": "no_price_source",
+     "d0": "2025-04-03",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03"
+    },
+    "PERP": {
+     "status": "no_price_source",
+     "d0": "2025-04-03",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03"
+    },
+    "PHB": {
+     "status": "no_price_source",
+     "d0": "2026-03-13",
+     "ts": "2026-03-13T09:00:23.06+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13"
+    },
+    "POLS": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "POND": {
+     "status": "no_price_source",
+     "d0": "2026-04-30",
+     "ts": "2026-04-30T07:00:05.981+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include NFP, NOM, POND, QUICK & VIC on 2026-04-30"
+    },
+    "PORTAL": {
+     "status": "no_price_source",
+     "d0": "2025-05-07",
+     "ts": "2025-05-07T08:00:33.736+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07"
+    },
+    "PROS": {
+     "status": "no_price_source",
+     "d0": "2024-10-03",
+     "ts": "2024-10-03T07:00:05.269+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BLZ, CLV, KEY, PROS & VITE and Remove the Seed Tag for PENDLE & SEI on 2024-10-03"
+    },
+    "PYR": {
+     "status": "no_price_source",
+     "d0": "2026-07-03",
+     "ts": "2026-07-03T06:00:11.367+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include AEUR, PYR, SCRT & VANRY on 2026-07-03"
+    },
+    "QI": {
+     "status": "no_price_source",
+     "d0": "2026-03-13",
+     "ts": "2026-03-13T09:00:23.06+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13"
+    },
+    "QUICK": {
+     "status": "no_price_source",
+     "d0": "2026-04-30",
+     "ts": "2026-04-30T07:00:05.981+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include NFP, NOM, POND, QUICK & VIC on 2026-04-30"
+    },
+    "RARE": {
+     "status": "no_price_source",
+     "d0": "2026-08-11",
+     "ts": "2026-08-11T09:00:12.289+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include GLMR, ICX, MOVR, RARE & SOPH on 2026-08-11"
+    },
+    "RDNT": {
+     "status": "ok",
+     "ts": "2026-03-13T09:00:23.06+00:00",
+     "d0": "2026-03-13",
+     "title": "Binance Will Extend the Monitoring Tag to Include ATA, A2Z, FIO, GTC, NTRN, PHB, QI & RDNT on 2026-03-13",
+     "token": {
+      "m1": 0.00681441,
+      "m30": 0.00735705,
+      "d0": 0.0060702,
+      "p7": 0.00407827,
+      "p30": 0.0021086
+     },
+     "btc": {
+      "m1": 70473.0,
+      "m30": 67061.0,
+      "d0": 70892.0,
+      "p7": 70530.0,
+      "p30": 70668.0
+     },
+     "ret30": -0.6494711493722026,
+     "ret30_tok": -0.6526308853085565,
+     "ret30_btc": -0.00315973593635388,
+     "ret7": -0.32304263118002285,
+     "ret7_tok": -0.3281489901485948,
+     "ret7_btc": -0.005106358968571922,
+     "jump": -0.11515675507094136,
+     "jump_tok": -0.10921121564449443,
+     "jump_btc": 0.005945539426446933,
+     "pre30": -0.2320409513795384,
+     "pre30_tok": -0.17491385813607352,
+     "pre30_btc": 0.05712709324346488
+    },
+    "REEF": {
+     "status": "no_price_source",
+     "d0": "2024-01-04",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04"
+    },
+    "REI": {
+     "status": "ok",
+     "ts": "2025-05-07T08:00:33.736+00:00",
+     "d0": "2025-05-07",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALPHA, HIFI, LEVER, MOVE, PORTAL & REI on 2025-05-07",
+     "token": {
+      "m1": null,
+      "m30": null,
+      "d0": null,
+      "p7": null,
+      "p30": null
+     },
+     "btc": {
+      "m1": null,
+      "m30": null,
+      "d0": null,
+      "p7": null,
+      "p30": null
+     },
+     "ret30": null,
+     "ret30_tok": null,
+     "ret30_btc": null,
+     "ret7": null,
+     "ret7_tok": null,
+     "ret7_btc": null,
+     "jump": null,
+     "jump_tok": null,
+     "jump_btc": null,
+     "pre30": null,
+     "pre30_tok": null,
+     "pre30_btc": null
+    },
+    "RESOLV": {
+     "status": "no_price_source",
+     "d0": "2026-04-14",
+     "ts": "2026-04-14T02:30:06.111+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include FARM, HIGH, MLN, RESOLV, SYS, TRU & VELODROME, Remove the Seed Tag for XAUT on 2026-04-14"
+    },
+    "SCR": {
+     "status": "no_price_source",
+     "d0": "2026-09-04",
+     "ts": "2026-09-04T08:00:06.5+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include AVA, GNS, SCR & TOWNS on 2026-09-04"
+    },
+    "SCRT": {
+     "status": "no_price_source",
+     "d0": "2026-07-03",
+     "ts": "2026-07-03T06:00:11.367+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include AEUR, PYR, SCRT & VANRY on 2026-07-03"
+    },
+    "SLF": {
+     "status": "no_price_source",
+     "d0": "2025-07-07",
+     "ts": "2025-07-07T03:29:57.414+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAKE, IDEX & SLF on 2025-07-07"
+    },
+    "SNT": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "SOPH": {
+     "status": "no_price_source",
+     "d0": "2026-08-11",
+     "ts": "2026-08-11T09:00:12.289+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include GLMR, ICX, MOVR, RARE & SOPH on 2026-08-11"
+    },
+    "STMX": {
+     "status": "no_price_source",
+     "d0": "2025-01-02",
+     "ts": "2025-01-02T09:00:19.305+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include STMX & TROY, Remove the Monitoring Tag for CVX & SUN, and Remove the Seed Tag for ARKM, BLUR, JTO & TIA on 2025-01-02"
+    },
+    "STORJ": {
+     "status": "ok",
+     "ts": "2026-05-22T08:00:04.004+00:00",
+     "d0": "2026-05-22",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22",
+     "token": {
+      "m1": 0.11444,
+      "m30": 0.09978,
+      "d0": 0.103581,
+      "p7": 0.093805,
+      "p30": 0.075986
+     },
+     "btc": {
+      "m1": 77547.0,
+      "m30": 78210.0,
+      "d0": 75500.0,
+      "p7": 73492.0,
+      "p30": 63252.0
+     },
+     "ret30": -0.1041846972497642,
+     "ret30_tok": -0.2664098628126781,
+     "ret30_btc": -0.1622251655629139,
+     "ret7": -0.06778421699088111,
+     "ret7_tok": -0.09438024348094731,
+     "ret7_btc": -0.026596026490066205,
+     "jump": -0.06849125620976748,
+     "jump_tok": -0.09488815099615511,
+     "jump_btc": -0.026396894786387626,
+     "pre30": 0.0727441068471083,
+     "pre30_tok": 0.03809380637402304,
+     "pre30_btc": -0.03465030047308526
+    },
+    "STPT": {
+     "status": "no_price_source",
+     "d0": "2025-03-04",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+    },
+    "STX": {
+     "status": "ok",
+     "ts": "2026-07-24T03:00:06.343+00:00",
+     "d0": "2026-07-24",
+     "title": "Binance Will Extend the Monitoring Tag to Include ACX, LSK & STX on 2026-07-24",
+     "token": {
+      "m1": 0.16458,
+      "m30": 0.172068,
+      "d0": 0.145264,
+      "p7": 0.137631,
+      "p30": 0.233858
+     },
+     "btc": {
+      "m1": 65053.0,
+      "m30": 60994.0,
+      "d0": 64096.0,
+      "p7": 62820.0,
+      "p30": 77702.0
+     },
+     "ret30": 0.397607359337687,
+     "ret30_tok": 0.6098826963321953,
+     "ret30_btc": 0.2122753369945083,
+     "ret7": -0.03263807133775609,
+     "ret7_tok": -0.05254570987994278,
+     "ret7_btc": -0.01990763854218669,
+     "jump": -0.10265433326239082,
+     "jump_tok": -0.11736541499574671,
+     "jump_btc": -0.01471108173335589,
+     "pre30": -0.2066330849803183,
+     "pre30_tok": -0.15577562359067343,
+     "pre30_btc": 0.050857461389644865
+    },
+    "SUN": {
+     "status": "no_price_source",
+     "d0": "2024-07-01",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BAL, CTXC, CVP, CVX, DOCK, HARD, IRIS, MBL, POLS, SNT & SUN and Remove the Monitoring Tag for MLN & ZEN on 2024-07-01"
+    },
+    "SXP": {
+     "status": "no_price_source",
+     "d0": "2025-12-01",
+     "ts": "2025-12-01T04:30:24.832+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include CHESS, DENT, DF, GHST & SXP on 2025-12-01"
+    },
+    "SYN": {
+     "status": "no_price_source",
+     "d0": "2026-05-22",
+     "ts": "2026-05-22T08:00:04.004+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22"
+    },
+    "SYS": {
+     "status": "ok",
+     "ts": "2026-04-14T02:30:06.111+00:00",
+     "d0": "2026-04-14",
+     "title": "Binance Will Extend the Monitoring Tag to Include FARM, HIGH, MLN, RESOLV, SYS, TRU & VELODROME, Remove the Seed Tag for XAUT on 2026-04-14",
+     "token": {
+      "m1": 0.0109794,
+      "m30": 0.0310163,
+      "d0": 0.00902289,
+      "p7": 0.0105274,
+      "p30": 0.00577573
+     },
+     "btc": {
+      "m1": 74475.0,
+      "m30": 72861.0,
+      "d0": 74198.0,
+      "p7": 76333.0,
+      "p30": 81047.0
+     },
+     "ret30": -0.45218733036548564,
+     "ret30_tok": -0.3598802600940497,
+     "ret30_btc": 0.09230707027143592,
+     "ret7": 0.137969332490393,
+     "ret7_tok": 0.16674369298528502,
+     "ret7_btc": 0.028774360494892015,
+     "jump": -0.1744788932843767,
+     "jump_tok": -0.17819826220012025,
+     "jump_btc": -0.0037193689157435372,
+     "pre30": -0.7274420024857704,
+     "pre30_tok": -0.709091993564674,
+     "pre30_btc": 0.018350008921096395
+    },
+    "TLM": {
+     "status": "ok",
+     "ts": "2026-05-22T08:00:04.004+00:00",
+     "d0": "2026-05-22",
+     "title": "Binance Will Extend the Monitoring Tag to Include ALCX, COOKIE, DODO, EPIC, HEI, HFT, STORJ, SYN & TLM on 2026-05-22",
+     "token": {
+      "m1": 0.00179226,
+      "m30": 0.00176225,
+      "d0": 0.00153159,
+      "p7": 0.00145684,
+      "p30": 0.00099773
+     },
+     "btc": {
+      "m1": 77547.0,
+      "m30": 78210.0,
+      "d0": 75500.0,
+      "p7": 73492.0,
+      "p30": 63252.0
+     },
+     "ret30": -0.18634070389301094,
+     "ret30_tok": -0.3485658694559248,
+     "ret30_btc": -0.1622251655629139,
+     "ret7": -0.022209463229767357,
+     "ret7_tok": -0.04880548971983356,
+     "ret7_btc": -0.026596026490066205,
+     "jump": -0.11904517277077487,
+     "jump_tok": -0.1454420675571625,
+     "jump_btc": -0.026396894786387626,
+     "pre30": -0.09623918739753468,
+     "pre30_tok": -0.13088948787061994,
+     "pre30_btc": -0.03465030047308526
+    },
+    "TOWNS": {
+     "status": "no_price_source",
+     "d0": "2026-09-04",
+     "ts": "2026-09-04T08:00:06.5+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include AVA, GNS, SCR & TOWNS on 2026-09-04"
+    },
+    "TROY": {
+     "status": "no_price_source",
+     "d0": "2025-01-02",
+     "ts": "2025-01-02T09:00:19.305+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include STMX & TROY, Remove the Monitoring Tag for CVX & SUN, and Remove the Seed Tag for ARKM, BLUR, JTO & TIA on 2025-01-02"
+    },
+    "TRU": {
+     "status": "no_price_source",
+     "d0": "2026-04-14",
+     "ts": "2026-04-14T02:30:06.111+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include FARM, HIGH, MLN, RESOLV, SYS, TRU & VELODROME, Remove the Seed Tag for XAUT on 2026-04-14"
+    },
+    "UFT": {
+     "status": "no_price_source",
+     "d0": "2025-03-04",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+    },
+    "UNFI": {
+     "status": "no_price_source",
+     "d0": "2024-04-03",
+     "ts": "2024-04-03T06:00:16.944+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include EPX, FOR, UNFI, WAVES & WNXM on 2024-04-03"
+    },
+    "VAI": {
+     "status": "no_price_source",
+     "d0": "2024-01-04",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04"
+    },
+    "VANRY": {
+     "status": "no_price_source",
+     "d0": "2026-07-03",
+     "ts": "2026-07-03T06:00:11.367+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include AEUR, PYR, SCRT & VANRY on 2026-07-03"
+    },
+    "VELODROME": {
+     "status": "no_price_source",
+     "d0": "2026-04-14",
+     "ts": "2026-04-14T02:30:06.111+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include FARM, HIGH, MLN, RESOLV, SYS, TRU & VELODROME, Remove the Seed Tag for XAUT on 2026-04-14"
+    },
+    "VIB": {
+     "status": "no_price_source",
+     "d0": "2025-04-03",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03"
+    },
+    "VIC": {
+     "status": "ok",
+     "ts": "2026-04-30T07:00:05.981+00:00",
+     "d0": "2026-04-30",
+     "title": "Binance Will Extend the Monitoring Tag to Include NFP, NOM, POND, QUICK & VIC on 2026-04-30",
+     "token": {
+      "m1": 0.054428,
+      "m30": 0.0424482,
+      "d0": 0.0434359,
+      "p7": 0.0481131,
+      "p30": 0.041893
+     },
+     "btc": {
+      "m1": 75784.0,
+      "m30": 68215.0,
+      "d0": 76297.0,
+      "p7": 80035.0,
+      "p30": 73776.0
+     },
+     "ret30": -0.0024793801567247753,
+     "ret30_tok": -0.0355213084107846,
+     "ret30_btc": -0.03304192825405983,
+     "ret7": 0.05868776111533869,
+     "ret7_tok": 0.10768051312393667,
+     "ret7_btc": 0.048992752008597984,
+     "jump": -0.2087259523457845,
+     "jump_tok": -0.20195671345630917,
+     "jump_btc": 0.0067692388894753375,
+     "pre30": -0.09520998051624763,
+     "pre30_tok": 0.023268360024689017,
+     "pre30_btc": 0.11847834054093664
+    },
+    "VIDT": {
+     "status": "no_price_source",
+     "d0": "2025-03-04",
+     "ts": "2025-03-04T08:01:22.062+00:00",
+     "title": "Binance Will Change the Monitoring Tag Inclusion Frequency to Monthly and Extend the Monitoring Tag to Include AERGO, ALPACA, AST, BADGER, BURGER, COMBO, NULS, STPT, UFT & VIDT on 2025-03-04"
+    },
+    "VITE": {
+     "status": "no_price_source",
+     "d0": "2024-10-03",
+     "ts": "2024-10-03T07:00:05.269+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BLZ, CLV, KEY, PROS & VITE and Remove the Seed Tag for PENDLE & SEI on 2024-10-03"
+    },
+    "VOXEL": {
+     "status": "no_price_source",
+     "d0": "2025-04-03",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03"
+    },
+    "WAN": {
+     "status": "no_price_source",
+     "d0": "2025-10-09",
+     "ts": "2025-10-09T02:29:52.334+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include WAN, Remove the Monitoring Tag for GPS & MBL, and Remove the Seed Tag for BERA, BIO, ZK & ZRO on 2025-10-09"
+    },
+    "WAVES": {
+     "status": "no_price_source",
+     "d0": "2024-04-03",
+     "ts": "2024-04-03T06:00:16.944+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include EPX, FOR, UNFI, WAVES & WNXM on 2024-04-03"
+    },
+    "WIF": {
+     "status": "no_price_source",
+     "d0": "2026-03-06",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include COS, DEGO, FORTH, FUN, HOOK, LRC, MBOX, OXT & WIF, Remove the Monitoring Tag for FLOW, and Remove the Seed Tag for ONDO & VIRTUAL on 2026-03-06"
+    },
+    "WING": {
+     "status": "no_price_source",
+     "d0": "2025-04-03",
+     "ts": "2025-04-03T07:00:36.245+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ARDR, BSW, FLM, LTO, NKN, PDA, PERP, VIB, VOXEL & WING, and Remove the Seed Tag for JUP, STRK & TON on 2025-04-03"
+    },
+    "WNXM": {
+     "status": "no_price_source",
+     "d0": "2024-04-03",
+     "ts": "2024-04-03T06:00:16.944+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include EPX, FOR, UNFI, WAVES & WNXM on 2024-04-03"
+    },
+    "WTC": {
+     "status": "no_price_source",
+     "d0": "2023-10-04",
+     "ts": "2023-10-04T06:00:16.946+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BETA, BOND, WTC and XEM on 2023-10-04"
+    },
+    "XEM": {
+     "status": "no_price_source",
+     "d0": "2023-10-04",
+     "ts": "2023-10-04T06:00:16.946+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include BETA, BOND, WTC and XEM on 2023-10-04"
+    },
+    "XMR": {
+     "status": "no_price_source",
+     "d0": "2024-01-04",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04"
+    },
+    "ZEC": {
+     "status": "no_price_source",
+     "d0": "2024-01-04",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04"
+    },
+    "ZEN": {
+     "status": "no_price_source",
+     "d0": "2024-01-04",
+     "ts": "2024-01-04T07:00:09.013+00:00",
+     "title": "Binance Will Extend the Monitoring Tag to Include ANT, FIRO, KP3R, MDX, MOB, REEF, VAI, XMR, ZEC & ZEN, and Remove the Seed Tag for GMX & SUSHI on 2024-01-04"
+    }
+   }
+  }
+ },
+ "verdict": "PASS",
+ "criteria": {
+  "(a) 30天超额中位数 ≤ −5%": {
+   "value": -0.15779120940191244,
+   "pass": true
+  },
+  "(b) ≥60% 事件超额为负": {
+   "value": 0.75,
+   "pass": true
+  },
+  "(c) 对照分位 ≤ 0.05": {
+   "value": 0.005,
+   "pass": true
+  },
+  "(d) 按事件日期对半分两段,中位同号且每段 ≥ 10 个有价代币": {
+   "value": {
+    "early": {
+     "n": 30,
+     "median": -0.12150826108121343
+    },
+    "late": {
+     "n": 30,
+     "median": -0.2245317346404968
+    }
+   },
+   "pass": true
+  },
+  "(e) 有价代币 ≥ 30": {
+   "value": 60,
+   "pass": true
+  }
+ },
+ "subsets": {
+  "note": "同一套口径(主源 asset_mcap_daily)下的分组统计",
+  "new_only": {
+   "n": 24,
+   "median": -0.1233029366686274,
+   "mean": -0.10945613375135181,
+   "p10": -0.5105703929573596,
+   "p90": 0.0920333372699874,
+   "pct_negative": 0.6666666666666666,
+   "n_symbols": 57,
+   "n_no_price": 33,
+   "d0_range": [
+    "2024-01-04",
+    "2026-04-14"
+   ]
+  },
+  "old_only": {
+   "n": 36,
+   "median": -0.18284936360713028,
+   "mean": -0.21428359278247794,
+   "p10": -0.7056926172558542,
+   "p90": 0.18594864290665059,
+   "pct_negative": 0.8055555555555556,
+   "n_symbols": 80,
+   "n_no_price": 44,
+   "d0_range": [
+    "2023-10-04",
+    "2026-09-04"
+   ]
+  },
+  "old_set": {
+   "n": 36,
+   "median": -0.18284936360713028,
+   "mean": -0.21428359278247794,
+   "p10": -0.7056926172558542,
+   "p90": 0.18594864290665059,
+   "pct_negative": 0.8055555555555556,
+   "n_symbols": 80,
+   "n_no_price": 44,
+   "d0_range": [
+    "2023-10-04",
+    "2026-09-04"
+   ]
+  },
+  "all": {
+   "n": 60,
+   "median": -0.15779120940191244,
+   "mean": -0.17235260917002748,
+   "p10": -0.6530636728306145,
+   "p90": 0.12137176015702265,
+   "pct_negative": 0.75,
+   "n_symbols": 137,
+   "n_no_price": 77,
+   "d0_range": [
+    "2023-10-04",
+    "2026-09-04"
+   ]
+  },
+  "new_only_ohlc": {
+   "n": 10,
+   "median": -0.3345173488189673,
+   "mean": -0.34139028535208443,
+   "p10": -0.6805273967869425,
+   "p90": 0.023937247233003386,
+   "pct_negative": 0.8,
+   "n_symbols": 57,
+   "n_no_price": 47,
+   "d0_range": [
+    "2026-01-02",
+    "2026-04-14"
+   ]
+  },
+  "old_set_ohlc": {
+   "n": 18,
+   "median": -0.19404327670814675,
+   "mean": -0.27239351667447426,
+   "p10": -0.7063349607919747,
+   "p90": 0.011502191639544256,
+   "pct_negative": 0.8888888888888888,
+   "n_symbols": 80,
+   "n_no_price": 62,
+   "d0_range": [
+    "2025-12-01",
+    "2026-08-11"
+   ]
+  }
+ },
+ "secondary": {
+  "note": "副项只报不判",
+  "delisting_180d": {
+   "n_tagged": 137,
+   "n_in_delisting_watch_anytime": 103,
+   "pct_delisted_anytime": 0.7518248175182481,
+   "n_delisted_within_180d": 79,
+   "pct_delisted_within_180d": 0.5766423357664233,
+   "symbols_within_180d": [
+    "A2Z",
+    "ACA",
+    "ACX",
+    "AERGO",
+    "ALCX",
+    "ALPACA",
+    "ALPHA",
+    "ANT",
+    "AST",
+    "ATA",
+    "BADGER",
+    "BAKE",
+    "BLZ",
+    "BSW",
+    "BURGER",
+    "CHESS",
+    "CLV",
+    "COMBO",
+    "COS",
+    "CVP",
+    "D",
+    "DATA",
+    "DEGO",
+    "DENT",
+    "DF",
+    "DOCK",
+    "EPIC",
+    "EPX",
+    "FARM",
+    "FIO",
+    "FOR",
+    "FORTH",
+    "FUN",
+    "GHST",
+    "HFT",
+    "HIFI",
+    "HIGH",
+    "HOOK",
+    "ICX",
+    "IRIS",
+    "KEY",
+    "KMD",
+    "LEVER",
+    "LRC",
+    "LTO",
+    "MBOX",
+    "MLN",
+    "MOB",
+    "NFP",
+    "NTRN",
+    "NULS",
+    "OXT",
+    "PDA",
+    "PHB",
+    "POLS",
+    "POND",
+    "PYR",
+    "QUICK",
+    "RDNT",
+    "SCRT",
+    "SLF",
+    "STMX",
+    "STORJ",
+    "SXP",
+    "SYS",
+    "TROY",
+    "TRU",
+    "UFT",
+    "VAI",
+    "VANRY",
+    "VIB",
+    "VIC",
+    "VIDT",
+    "VITE",
+    "WAVES",
+    "WING",
+    "WNXM",
+    "WTC",
+    "XMR"
+   ],
+   "detail": [
+    {
+     "symbol": "A2Z",
+     "d0": "2026-03-13",
+     "announced_at": [
+      "2026-03-18"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "ACA",
+     "d0": "2026-01-02",
+     "announced_at": [
+      "2026-02-02"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "ACX",
+     "d0": "2026-07-24",
+     "announced_at": [
+      "2026-08-03"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "AERGO",
+     "d0": "2025-03-04",
+     "announced_at": [
+      "2025-03-21"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "AEUR",
+     "d0": "2026-07-03",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "ALCX",
+     "d0": "2026-05-22",
+     "announced_at": [
+      "2026-06-26"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "ALPACA",
+     "d0": "2025-03-04",
+     "announced_at": [
+      "2025-04-24"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "ALPHA",
+     "d0": "2025-05-07",
+     "announced_at": [
+      "2025-06-26"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "ANT",
+     "d0": "2024-01-04",
+     "announced_at": [
+      "2024-02-06"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "ARDR",
+     "d0": "2025-04-03",
+     "announced_at": [
+      "2026-06-26"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "AST",
+     "d0": "2025-03-04",
+     "announced_at": [
+      "2025-03-21"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "ATA",
+     "d0": "2026-03-13",
+     "announced_at": [
+      "2026-05-13"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "AVA",
+     "d0": "2026-09-04",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "BADGER",
+     "d0": "2025-03-04",
+     "announced_at": [
+      "2025-04-08"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "BAKE",
+     "d0": "2025-07-07",
+     "announced_at": [
+      "2025-09-03"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "BAL",
+     "d0": "2024-07-01",
+     "announced_at": [
+      "2025-04-08"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "BETA",
+     "d0": "2023-10-04",
+     "announced_at": [
+      "2025-04-08"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "BICO",
+     "d0": "2026-10-09",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "BIFI",
+     "d0": "2025-06-05",
+     "announced_at": [
+      "2026-04-09"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "BLZ",
+     "d0": "2024-10-03",
+     "announced_at": [
+      "2024-12-18"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "BOND",
+     "d0": "2023-10-04",
+     "announced_at": [
+      "2024-07-08"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "BSW",
+     "d0": "2025-04-03",
+     "announced_at": [
+      "2025-06-26"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "BURGER",
+     "d0": "2025-03-04",
+     "announced_at": [
+      "2025-03-21"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "CHESS",
+     "d0": "2025-12-01",
+     "announced_at": [
+      "2026-02-02"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "CLV",
+     "d0": "2024-10-03",
+     "announced_at": [
+      "2025-02-17"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "COMBO",
+     "d0": "2025-03-04",
+     "announced_at": [
+      "2025-03-21"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "COOKIE",
+     "d0": "2026-05-22",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "COS",
+     "d0": "2026-03-06",
+     "announced_at": [
+      "2026-06-05"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "CTXC",
+     "d0": "2024-07-01",
+     "announced_at": [
+      "2025-04-08"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "CVC",
+     "d0": "2026-10-09",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "CVP",
+     "d0": "2024-07-01",
+     "announced_at": [
+      "2024-08-12"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "CVX",
+     "d0": "2024-07-01",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "D",
+     "d0": "2026-01-02",
+     "announced_at": [
+      "2026-06-05"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "DATA",
+     "d0": "2026-01-02",
+     "announced_at": [
+      "2026-02-02"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "DEGO",
+     "d0": "2026-03-06",
+     "announced_at": [
+      "2026-04-17"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "DENT",
+     "d0": "2025-12-01",
+     "announced_at": [
+      "2026-04-17"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "DF",
+     "d0": "2025-12-01",
+     "announced_at": [
+      "2026-02-02"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "DOCK",
+     "d0": "2024-07-01",
+     "announced_at": [
+      "2024-07-08"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "DODO",
+     "d0": "2026-05-22",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "EPIC",
+     "d0": "2026-05-22",
+     "announced_at": [
+      "2026-10-14"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "EPX",
+     "d0": "2024-04-03",
+     "announced_at": [
+      "2024-08-12"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "FARM",
+     "d0": "2026-04-14",
+     "announced_at": [
+      "2026-05-13"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "FIO",
+     "d0": "2026-03-13",
+     "announced_at": [
+      "2026-04-09"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "FIRO",
+     "d0": "2024-01-04",
+     "announced_at": [
+      "2025-04-08"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "FIS",
+     "d0": "2025-06-05",
+     "announced_at": [
+      "2025-12-03"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "FLM",
+     "d0": "2025-04-03",
+     "announced_at": [
+      "2025-10-29"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "FLOW",
+     "d0": "2026-01-02",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "FOR",
+     "d0": "2024-04-03",
+     "announced_at": [
+      "2024-08-12"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "FORTH",
+     "d0": "2026-03-06",
+     "announced_at": [
+      "2026-03-18"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "FUN",
+     "d0": "2026-03-06",
+     "announced_at": [
+      "2026-04-09"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "GHST",
+     "d0": "2025-12-01",
+     "announced_at": [
+      "2026-02-02"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "GLMR",
+     "d0": "2026-08-11",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "GNS",
+     "d0": "2026-09-04",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "GPS",
+     "d0": "2025-03-07",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "GTC",
+     "d0": "2026-03-13",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "HARD",
+     "d0": "2024-07-01",
+     "announced_at": [
+      "2025-04-08"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "HEI",
+     "d0": "2026-05-22",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "HFT",
+     "d0": "2026-05-22",
+     "announced_at": [
+      "2026-08-03"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "HIFI",
+     "d0": "2025-05-07",
+     "announced_at": [
+      "2025-09-03"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "HIGH",
+     "d0": "2026-04-14",
+     "announced_at": [
+      "2026-06-05"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "HOOK",
+     "d0": "2026-03-06",
+     "announced_at": [
+      "2026-03-18"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "ICX",
+     "d0": "2026-08-11",
+     "announced_at": [
+      "2026-08-20"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "IDEX",
+     "d0": "2025-07-07",
+     "announced_at": [
+      "2026-03-18"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "IRIS",
+     "d0": "2024-07-01",
+     "announced_at": [
+      "2024-11-26"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "KEY",
+     "d0": "2024-10-03",
+     "announced_at": [
+      "2024-11-26"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "KMD",
+     "d0": "2025-06-05",
+     "announced_at": [
+      "2025-06-26"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "KP3R",
+     "d0": "2024-01-04",
+     "announced_at": [
+      "2024-10-23"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "LEVER",
+     "d0": "2025-05-07",
+     "announced_at": [
+      "2025-06-26"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "LRC",
+     "d0": "2026-03-06",
+     "announced_at": [
+      "2026-03-18"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "LSK",
+     "d0": "2026-07-24",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "LTO",
+     "d0": "2025-04-03",
+     "announced_at": [
+      "2025-06-26"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "MBL",
+     "d0": "2024-07-01",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "MBOX",
+     "d0": "2026-03-06",
+     "announced_at": [
+      "2026-06-05"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "MDT",
+     "d0": "2025-06-05",
+     "announced_at": [
+      "2026-04-09"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "MDX",
+     "d0": "2024-01-04",
+     "announced_at": [
+      "2024-07-08"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "MLN",
+     "d0": "2026-04-14",
+     "announced_at": [
+      "2026-05-13"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "MOB",
+     "d0": "2024-01-04",
+     "announced_at": [
+      "2024-03-20"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "MOVE",
+     "d0": "2025-05-07",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "MOVR",
+     "d0": "2026-08-11",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "NFP",
+     "d0": "2026-04-30",
+     "announced_at": [
+      "2026-06-26"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "NKN",
+     "d0": "2025-04-03",
+     "announced_at": [
+      "2026-02-02"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "NOM",
+     "d0": "2026-04-30",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "NTRN",
+     "d0": "2026-03-13",
+     "announced_at": [
+      "2026-03-18"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "NULS",
+     "d0": "2025-03-04",
+     "announced_at": [
+      "2025-04-08"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "OXT",
+     "d0": "2026-03-06",
+     "announced_at": [
+      "2026-04-09"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "PDA",
+     "d0": "2025-04-03",
+     "announced_at": [
+      "2025-04-24"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "PERP",
+     "d0": "2025-04-03",
+     "announced_at": [
+      "2025-10-29"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "PHB",
+     "d0": "2026-03-13",
+     "announced_at": [
+      "2026-05-13"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "POLS",
+     "d0": "2024-07-01",
+     "announced_at": [
+      "2024-07-08"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "POND",
+     "d0": "2026-04-30",
+     "announced_at": [
+      "2026-06-26"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "PORTAL",
+     "d0": "2025-05-07",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "PROS",
+     "d0": "2024-10-03",
+     "announced_at": [
+      "2025-04-08"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "PYR",
+     "d0": "2026-07-03",
+     "announced_at": [
+      "2026-08-03"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "QI",
+     "d0": "2026-03-13",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "QUICK",
+     "d0": "2026-04-30",
+     "announced_at": [
+      "2026-10-14"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "RARE",
+     "d0": "2026-08-11",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "RDNT",
+     "d0": "2026-03-13",
+     "announced_at": [
+      "2026-03-18"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "REEF",
+     "d0": "2024-01-04",
+     "announced_at": [
+      "2024-08-12"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "REI",
+     "d0": "2025-05-07",
+     "announced_at": [
+      "2025-12-03"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "RESOLV",
+     "d0": "2026-04-14",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "SCR",
+     "d0": "2026-09-04",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "SCRT",
+     "d0": "2026-07-03",
+     "announced_at": [
+      "2026-08-20"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "SLF",
+     "d0": "2025-07-07",
+     "announced_at": [
+      "2025-09-03"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "SNT",
+     "d0": "2024-07-01",
+     "announced_at": [
+      "2025-04-08"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "SOPH",
+     "d0": "2026-08-11",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "STMX",
+     "d0": "2025-01-02",
+     "announced_at": [
+      "2025-02-17"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "STORJ",
+     "d0": "2026-05-22",
+     "announced_at": [
+      "2026-08-20"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "STPT",
+     "d0": "2025-03-04",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "STX",
+     "d0": "2026-07-24",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "SUN",
+     "d0": "2024-07-01",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "SXP",
+     "d0": "2025-12-01",
+     "announced_at": [
+      "2026-03-18"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "SYN",
+     "d0": "2026-05-22",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "SYS",
+     "d0": "2026-04-14",
+     "announced_at": [
+      "2026-05-13"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "TLM",
+     "d0": "2026-05-22",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "TOWNS",
+     "d0": "2026-09-04",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "TROY",
+     "d0": "2025-01-02",
+     "announced_at": [
+      "2025-04-08"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "TRU",
+     "d0": "2026-04-14",
+     "announced_at": [
+      "2026-04-17"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "UFT",
+     "d0": "2025-03-04",
+     "announced_at": [
+      "2025-04-08"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "UNFI",
+     "d0": "2024-04-03",
+     "announced_at": [
+      "2024-10-23"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "VAI",
+     "d0": "2024-01-04",
+     "announced_at": [
+      "2024-02-06"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "VANRY",
+     "d0": "2026-07-03",
+     "announced_at": [
+      "2026-08-03"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "VELODROME",
+     "d0": "2026-04-14",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "VIB",
+     "d0": "2025-04-03",
+     "announced_at": [
+      "2025-04-24"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "VIC",
+     "d0": "2026-04-30",
+     "announced_at": [
+      "2026-08-03"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "VIDT",
+     "d0": "2025-03-04",
+     "announced_at": [
+      "2025-04-08"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "VITE",
+     "d0": "2024-10-03",
+     "announced_at": [
+      "2025-02-17"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "VOXEL",
+     "d0": "2025-04-03",
+     "announced_at": [
+      "2025-12-03"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "WAN",
+     "d0": "2025-10-09",
+     "announced_at": [
+      "2026-04-09"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "WAVES",
+     "d0": "2024-04-03",
+     "announced_at": [
+      "2024-06-03"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "WIF",
+     "d0": "2026-03-06",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "WING",
+     "d0": "2025-04-03",
+     "announced_at": [
+      "2025-04-24"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "WNXM",
+     "d0": "2024-04-03",
+     "announced_at": [
+      "2024-06-03"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "WTC",
+     "d0": "2023-10-04",
+     "announced_at": [
+      "2023-11-27"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "XEM",
+     "d0": "2023-10-04",
+     "announced_at": [
+      "2024-06-03"
+     ],
+     "within_180d": false
+    },
+    {
+     "symbol": "XMR",
+     "d0": "2024-01-04",
+     "announced_at": [
+      "2024-02-06"
+     ],
+     "within_180d": true
+    },
+    {
+     "symbol": "ZEC",
+     "d0": "2024-01-04",
+     "announced_at": [],
+     "within_180d": false
+    },
+    {
+     "symbol": "ZEN",
+     "d0": "2024-01-04",
+     "announced_at": [],
+     "within_180d": false
+    }
+   ]
+  },
+  "monitoring_tag_removed_30d": {
+   "n_rows": 8,
+   "n_computable": 5,
+   "exc30": {
+    "n": 5,
+    "median": -0.24267463162738212,
+    "mean": -0.1395329333243019,
+    "p10": -0.35309198905320643,
+    "p90": 0.15539839831142865,
+    "pct_negative": 0.8
+   },
+   "rows": [
+    {
+     "symbol": "FLOW",
+     "ts": "2026-03-06T08:29:56.086+00:00",
+     "d0": "2026-03-06",
+     "exc30": -0.40595506328739395,
+     "status": "ok"
+    },
+    {
+     "symbol": "MLN",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "d0": "2024-07-01",
+     "exc30": -0.24267463162738212,
+     "status": "ok"
+    },
+    {
+     "symbol": "ZEN",
+     "ts": "2024-07-01T07:00:03.584+00:00",
+     "d0": "2024-07-01",
+     "exc30": 0.32746717956675964,
+     "status": "ok"
+    },
+    {
+     "symbol": "GPS",
+     "ts": "2025-10-09T02:29:52.334+00:00",
+     "d0": "2025-10-09",
+     "status": "no_price_source"
+    },
+    {
+     "symbol": "MBL",
+     "ts": "2025-10-09T02:29:52.334+00:00",
+     "d0": "2025-10-09",
+     "status": "no_price_source"
+    },
+    {
+     "symbol": "ZEC",
+     "ts": "2025-07-09T01:59:56.407+00:00",
+     "d0": "2025-07-09",
+     "exc30": -0.10270477357156793,
+     "status": "ok"
+    },
+    {
+     "symbol": "CVX",
+     "ts": "2025-01-02T09:00:19.305+00:00",
+     "d0": "2025-01-02",
+     "status": "no_price_source"
+    },
+    {
+     "symbol": "SUN",
+     "ts": "2025-01-02T09:00:19.305+00:00",
+     "d0": "2025-01-02",
+     "exc30": -0.27379737770192514,
+     "status": "ok"
+    }
+   ]
+  },
+  "rule_advance_gain": {
+   "note": "把『下架公告即剔除』前移到『打标签即剔除』,中间这一段的超额(只报,不判)",
+   "n_rows": 48,
+   "n_computable": 48,
+   "exc_tag_to_ann": {
+    "n": 48,
+    "median": -0.4138681335740977,
+    "mean": -0.45260836661379794,
+    "p10": -0.851677369661588,
+    "p90": -0.13318914138108873,
+    "pct_negative": 0.9375
+   },
+   "days_gained": {
+    "n": 48,
+    "median": 61.0,
+    "mean": 99.83333333333333,
+    "p10": 11.4,
+    "p90": 261.2000000000001,
+    "pct_negative": 0.0
+   },
+   "rows": [
+    {
+     "symbol": "A2Z",
+     "tag_d0": "2026-03-13",
+     "announced_at": "2026-03-18",
+     "days_gained": 5,
+     "exc_tag_to_ann": -0.4181805729531566
+    },
+    {
+     "symbol": "ACX",
+     "tag_d0": "2026-07-24",
+     "announced_at": "2026-08-03",
+     "days_gained": 10,
+     "exc_tag_to_ann": 9.329274966163315e-05
+    },
+    {
+     "symbol": "ALPHA",
+     "tag_d0": "2025-05-07",
+     "announced_at": "2025-06-26",
+     "days_gained": 50,
+     "exc_tag_to_ann": -0.5199523710389939
+    },
+    {
+     "symbol": "BAKE",
+     "tag_d0": "2025-07-07",
+     "announced_at": "2025-09-03",
+     "days_gained": 58,
+     "exc_tag_to_ann": -0.4095556941950388
+    },
+    {
+     "symbol": "BAL",
+     "tag_d0": "2024-07-01",
+     "announced_at": "2025-04-08",
+     "days_gained": 281,
+     "exc_tag_to_ann": -0.9148911910783349
+    },
+    {
+     "symbol": "BLZ",
+     "tag_d0": "2024-10-03",
+     "announced_at": "2024-12-18",
+     "days_gained": 76,
+     "exc_tag_to_ann": -1.1235171245333628
+    },
+    {
+     "symbol": "BOND",
+     "tag_d0": "2023-10-04",
+     "announced_at": "2024-07-08",
+     "days_gained": 278,
+     "exc_tag_to_ann": -1.4059301320272952
+    },
+    {
+     "symbol": "CHESS",
+     "tag_d0": "2025-12-01",
+     "announced_at": "2026-02-02",
+     "days_gained": 63,
+     "exc_tag_to_ann": 0.01317647148098633
+    },
+    {
+     "symbol": "COMBO",
+     "tag_d0": "2025-03-04",
+     "announced_at": "2025-03-21",
+     "days_gained": 17,
+     "exc_tag_to_ann": -0.3051485691240087
+    },
+    {
+     "symbol": "D",
+     "tag_d0": "2026-01-02",
+     "announced_at": "2026-06-05",
+     "days_gained": 154,
+     "exc_tag_to_ann": -0.23074960733626937
+    },
+    {
+     "symbol": "DATA",
+     "tag_d0": "2026-01-02",
+     "announced_at": "2026-02-02",
+     "days_gained": 31,
+     "exc_tag_to_ann": -0.12658140680758478
+    },
+    {
+     "symbol": "DEGO",
+     "tag_d0": "2026-03-06",
+     "announced_at": "2026-04-17",
+     "days_gained": 42,
+     "exc_tag_to_ann": -0.5544852555475684
+    },
+    {
+     "symbol": "DENT",
+     "tag_d0": "2025-12-01",
+     "announced_at": "2026-04-17",
+     "days_gained": 137,
+     "exc_tag_to_ann": -0.4647706807303875
+    },
+    {
+     "symbol": "DF",
+     "tag_d0": "2025-12-01",
+     "announced_at": "2026-02-02",
+     "days_gained": 63,
+     "exc_tag_to_ann": -0.42243839416839535
+    },
+    {
+     "symbol": "FIO",
+     "tag_d0": "2026-03-13",
+     "announced_at": "2026-04-09",
+     "days_gained": 27,
+     "exc_tag_to_ann": -0.560521830422924
+    },
+    {
+     "symbol": "FLM",
+     "tag_d0": "2025-04-03",
+     "announced_at": "2025-10-29",
+     "days_gained": 209,
+     "exc_tag_to_ann": -0.29927177088923185
+    },
+    {
+     "symbol": "FORTH",
+     "tag_d0": "2026-03-06",
+     "announced_at": "2026-03-18",
+     "days_gained": 12,
+     "exc_tag_to_ann": -0.3275391668670119
+    },
+    {
+     "symbol": "FUN",
+     "tag_d0": "2026-03-06",
+     "announced_at": "2026-04-09",
+     "days_gained": 34,
+     "exc_tag_to_ann": -0.437808115232157
+    },
+    {
+     "symbol": "GHST",
+     "tag_d0": "2025-12-01",
+     "announced_at": "2026-02-02",
+     "days_gained": 63,
+     "exc_tag_to_ann": -0.2395865454772489
+    },
+    {
+     "symbol": "HFT",
+     "tag_d0": "2026-05-22",
+     "announced_at": "2026-08-03",
+     "days_gained": 73,
+     "exc_tag_to_ann": -0.06487214730890489
+    },
+    {
+     "symbol": "HIFI",
+     "tag_d0": "2025-05-07",
+     "announced_at": "2025-09-03",
+     "days_gained": 119,
+     "exc_tag_to_ann": -0.8688891732637892
+    },
+    {
+     "symbol": "HIGH",
+     "tag_d0": "2026-04-14",
+     "announced_at": "2026-06-05",
+     "days_gained": 52,
+     "exc_tag_to_ann": -0.13602102762687618
+    },
+    {
+     "symbol": "HOOK",
+     "tag_d0": "2026-03-06",
+     "announced_at": "2026-03-18",
+     "days_gained": 12,
+     "exc_tag_to_ann": -0.37882601082054546
+    },
+    {
+     "symbol": "ICX",
+     "tag_d0": "2026-08-11",
+     "announced_at": "2026-08-20",
+     "days_gained": 9,
+     "exc_tag_to_ann": -0.3786493524130182
+    },
+    {
+     "symbol": "IDEX",
+     "tag_d0": "2025-07-07",
+     "announced_at": "2026-03-18",
+     "days_gained": 254,
+     "exc_tag_to_ann": -0.2776857915796911
+    },
+    {
+     "symbol": "LRC",
+     "tag_d0": "2026-03-06",
+     "announced_at": "2026-03-18",
+     "days_gained": 12,
+     "exc_tag_to_ann": -0.29989560195306697
+    },
+    {
+     "symbol": "MBOX",
+     "tag_d0": "2026-03-06",
+     "announced_at": "2026-06-05",
+     "days_gained": 91,
+     "exc_tag_to_ann": -0.42641950389926553
+    },
+    {
+     "symbol": "MDT",
+     "tag_d0": "2025-06-05",
+     "announced_at": "2026-04-09",
+     "days_gained": 308,
+     "exc_tag_to_ann": -0.37418050617826626
+    },
+    {
+     "symbol": "MLN",
+     "tag_d0": "2026-04-14",
+     "announced_at": "2026-05-13",
+     "days_gained": 29,
+     "exc_tag_to_ann": -0.35765405867188593
+    },
+    {
+     "symbol": "NFP",
+     "tag_d0": "2026-04-30",
+     "announced_at": "2026-06-26",
+     "days_gained": 57,
+     "exc_tag_to_ann": -0.3037998535073573
+    },
+    {
+     "symbol": "NKN",
+     "tag_d0": "2025-04-03",
+     "announced_at": "2026-02-02",
+     "days_gained": 305,
+     "exc_tag_to_ann": -0.6151185111938618
+    },
+    {
+     "symbol": "NTRN",
+     "tag_d0": "2026-03-13",
+     "announced_at": "2026-03-18",
+     "days_gained": 5,
+     "exc_tag_to_ann": -0.28073837300823434
+    },
+    {
+     "symbol": "NULS",
+     "tag_d0": "2025-03-04",
+     "announced_at": "2025-04-08",
+     "days_gained": 35,
+     "exc_tag_to_ann": -0.5988132086343075
+    },
+    {
+     "symbol": "OXT",
+     "tag_d0": "2026-03-06",
+     "announced_at": "2026-04-09",
+     "days_gained": 34,
+     "exc_tag_to_ann": -0.48546240110430705
+    },
+    {
+     "symbol": "PERP",
+     "tag_d0": "2025-04-03",
+     "announced_at": "2025-10-29",
+     "days_gained": 209,
+     "exc_tag_to_ann": -0.5509963773402257
+    },
+    {
+     "symbol": "PHB",
+     "tag_d0": "2026-03-13",
+     "announced_at": "2026-05-13",
+     "days_gained": 61,
+     "exc_tag_to_ann": -0.6339596946094922
+    },
+    {
+     "symbol": "RDNT",
+     "tag_d0": "2026-03-13",
+     "announced_at": "2026-03-18",
+     "days_gained": 5,
+     "exc_tag_to_ann": -0.23601595791963614
+    },
+    {
+     "symbol": "REEF",
+     "tag_d0": "2024-01-04",
+     "announced_at": "2024-08-12",
+     "days_gained": 221,
+     "exc_tag_to_ann": -0.8443008824035018
+    },
+    {
+     "symbol": "REI",
+     "tag_d0": "2025-05-07",
+     "announced_at": "2025-12-03",
+     "days_gained": 210,
+     "exc_tag_to_ann": -0.5741738112552319
+    },
+    {
+     "symbol": "SNT",
+     "tag_d0": "2024-07-01",
+     "announced_at": "2025-04-08",
+     "days_gained": 281,
+     "exc_tag_to_ann": -0.5454529469071627
+    },
+    {
+     "symbol": "STMX",
+     "tag_d0": "2025-01-02",
+     "announced_at": "2025-02-17",
+     "days_gained": 46,
+     "exc_tag_to_ann": -0.2866438088211577
+    },
+    {
+     "symbol": "STORJ",
+     "tag_d0": "2026-05-22",
+     "announced_at": "2026-08-20",
+     "days_gained": 90,
+     "exc_tag_to_ann": -0.5747760056261078
+    },
+    {
+     "symbol": "SYS",
+     "tag_d0": "2026-04-14",
+     "announced_at": "2026-05-13",
+     "days_gained": 29,
+     "exc_tag_to_ann": -0.34170050573096067
+    },
+    {
+     "symbol": "UNFI",
+     "tag_d0": "2024-04-03",
+     "announced_at": "2024-10-23",
+     "days_gained": 203,
+     "exc_tag_to_ann": -0.5431547561739876
+    },
+    {
+     "symbol": "VIC",
+     "tag_d0": "2026-04-30",
+     "announced_at": "2026-08-03",
+     "days_gained": 95,
+     "exc_tag_to_ann": 0.37735438604153104
+    },
+    {
+     "symbol": "WAVES",
+     "tag_d0": "2024-04-03",
+     "announced_at": "2024-06-03",
+     "days_gained": 61,
+     "exc_tag_to_ann": -0.53304160965678
+    },
+    {
+     "symbol": "XEM",
+     "tag_d0": "2023-10-04",
+     "announced_at": "2024-06-03",
+     "days_gained": 243,
+     "exc_tag_to_ann": -1.5048255501191234
+    },
+    {
+     "symbol": "XMR",
+     "tag_d0": "2024-01-04",
+     "announced_at": "2024-02-06",
+     "days_gained": 33,
+     "exc_tag_to_ann": -0.3388298915787643
+    }
+   ]
+  },
+  "mcap_tertile": {
+   "low": {
+    "n": 19,
+    "exc30": {
+     "n": 19,
+     "median": -0.23643612479560283,
+     "mean": -0.3575480135429611,
+     "p10": -0.852031703426864,
+     "p90": 0.0030699472761090228,
+     "pct_negative": 0.8947368421052632
+    },
+    "mcap_lo": 78390.8776030138,
+    "mcap_hi": 14309271.1023434
+   },
+   "mid": {
+    "n": 19,
+    "exc30": {
+     "n": 19,
+     "median": -0.16673703459058076,
+     "mean": -0.11677405577665742,
+     "p10": -0.6434707587966866,
+     "p90": 0.622772470081365,
+     "pct_negative": 0.7368421052631579
+    },
+    "mcap_lo": 14450299.798997,
+    "mcap_hi": 37528417.6469381
+   },
+   "high": {
+    "n": 19,
+    "exc30": {
+     "n": 19,
+     "median": -0.06548652381457543,
+     "mean": -0.07601921726467763,
+     "p10": -0.3391016529427578,
+     "p90": 0.10884014711314338,
+     "pct_negative": 0.631578947368421
+    },
+    "mcap_lo": 43235859.9707533,
+    "mcap_hi": 2795898347.92174
+   }
+  },
+  "extras": {
+   "pre30_exc": {
+    "n": 60,
+    "median": -0.2097268777081971,
+    "mean": 0.9051228135125727,
+    "p10": -0.439716368686763,
+    "p90": 0.014101916211654447,
+    "pct_negative": 0.8666666666666667
+   },
+   "announce_day_jump": {
+    "n": 60,
+    "median": -0.1002030192786641,
+    "mean": 1.870524895698844,
+    "p10": -0.3018909259837916,
+    "p90": 0.01587139586003563,
+    "pct_negative": 0.8666666666666667
+   },
+   "exc7": {
+    "n": 60,
+    "median": -0.059384024345099706,
+    "mean": -0.0024961888888631006,
+    "p10": -0.24336531139501108,
+    "p90": 0.2221383045386823,
+    "pct_negative": 0.6333333333333333
+   }
+  }
+ }
+}
