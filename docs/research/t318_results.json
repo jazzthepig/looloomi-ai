@@ -1,0 +1,1333 @@
+{
+  "card": "T-318",
+  "ledger": "S-797",
+  "kernel": {
+    "source": "main_worktree",
+    "path": "/Users/sbb/Projects/looloomi-ai/src/data/universe/flex_alloc.py",
+    "sha256": "6c7fa4c4aff1f421df721a3bad76af45622f7fbee3e6c11b41ee9d98ed605e96",
+    "candidates": [
+      "Users/sbb/Projects/looloomi-ai/src/data/universe/flex_alloc.py",
+      "Users/sbb/Projects/looloomi-ai-lane-c/docs/research/t318_flex_alloc_snapshot.py"
+    ],
+    "snapshot_sha256": "6c7fa4c4aff1f421df721a3bad76af45622f7fbee3e6c11b41ee9d98ed605e96",
+    "snapshot_matches_used": true
+  },
+  "s797_text_check": {
+    "ledger_path": "/Users/sbb/Projects/looloomi-ai-lane-c/REFUTATION_LEDGER.md",
+    "match": true,
+    "ledger_lines": 11,
+    "ledger_chars": 1753,
+    "embed_chars": 1753,
+    "ledger_tail": "先验弱;RB 不预测收益,只是同风险下重新分配,先验相对强但它会在 X1V 空仓时把预算挪给股金(这是设计,不是 bug)。TILT 10pp、窗口 63 天、21 天调仓都在算前写死,不扫。**试验计数:+1(组合层,两臂合记一次)。**",
+    "embed_tail": "先验弱;RB 不预测收益,只是同风险下重新分配,先验相对强但它会在 X1V 空仓时把预算挪给股金(这是设计,不是 bug)。TILT 10pp、窗口 63 天、21 天调仓都在算前写死,不扫。**试验计数:+1(组合层,两臂合记一次)。**"
+  },
+  "data_coverage": {
+    "core_u_replay_1": {
+      "name": "① core_u_replay",
+      "rows": 1407,
+      "d0": "2023-01-02",
+      "d1": "2026-11-08",
+      "span_calendar_days": 1407,
+      "business_days": 1005,
+      "missing_in_span": 0,
+      "missing_vs_business_days": -402,
+      "daily_series": true,
+      "note": "日历日序列:missing 应为 0"
+    },
+    "equity_acwi": {
+      "name": "ACWI",
+      "rows": 2980,
+      "d0": "2015-01-02",
+      "d1": "2026-11-06",
+      "span_calendar_days": 4327,
+      "business_days": 3090,
+      "missing_in_span": 1347,
+      "missing_vs_business_days": 110,
+      "daily_series": false,
+      "note": "交易日序列:缺的是周末+休市日(missing_vs_business_days ≈ 休市日)"
+    },
+    "gold_xauusd": {
+      "name": "XAUUSD",
+      "rows": 3517,
+      "d0": "2015-01-01",
+      "d1": "2026-11-08",
+      "span_calendar_days": 4330,
+      "business_days": 3092,
+      "missing_in_span": 813,
+      "missing_vs_business_days": -425,
+      "daily_series": false,
+      "note": "交易日序列:缺的是周末+休市日(missing_vs_business_days ≈ 休市日)"
+    },
+    "dist_200": {
+      "name": "dist_200",
+      "rows": 2690,
+      "d0": "2019-06-29",
+      "d1": "2026-11-08",
+      "span_calendar_days": 2690,
+      "business_days": 1920,
+      "missing_in_span": 0,
+      "missing_vs_business_days": -770,
+      "daily_series": true,
+      "note": "日历日序列:missing 应为 0"
+    },
+    "vratio_30_180": {
+      "name": "vratio_30_180",
+      "rows": 2869,
+      "d0": "2019-01-01",
+      "d1": "2026-11-08",
+      "span_calendar_days": 2869,
+      "business_days": 2049,
+      "missing_in_span": 0,
+      "missing_vs_business_days": -820,
+      "daily_series": true,
+      "note": "日历日序列:missing 应为 0"
+    },
+    "funding_days": 2505,
+    "legs_csv_rows": 961,
+    "common_dates": 961
+  },
+  "interval": {
+    "common_dates_total": 961,
+    "common_dates_pre_cutoff": 966,
+    "first_common_date": "2023-01-03",
+    "warm_days": 252,
+    "record_start": "2024-01-04",
+    "record_end": "2026-10-30",
+    "n_record_days": 709,
+    "weather_known_days": 966,
+    "weather_dist": {
+      "down_cold": 330,
+      "up_cold": 219,
+      "up_hot": 355,
+      "down_hot": 62
+    },
+    "cutoff": "2026-10-31"
+  },
+  "selfcheck_mix_nav": {
+    "mix_nav_cost_default_bp": 20.0,
+    "reb_days_mix_nav": 21,
+    "n_common_days": 709,
+    "final_dynamic_mix_nav": 1.5378114368150173,
+    "final_mix_nav_20bp": 1.5220908303471101,
+    "final_mix_nav_default_cost": 1.5220908303471101,
+    "abs_nav_diff_max": 0.017377032360001987,
+    "abs_nav_diff_max_date": "2026-08-27",
+    "abs_nav_diff_mean": 0.011098987449777113,
+    "rel_final_diff_20bp": -0.010222713976211772,
+    "rel_final_diff_default_cost": -0.010222713976211772,
+    "note": "两套记账的差是调仓时点差(dynamic_mix_nav 调仓在当日收盘后、目标次日生效;mix_nav 在当日收益前换仓),不是错误。"
+  },
+  "arms": {
+    "T25_K": {
+      "metrics": {
+        "n_days": 709,
+        "d0": "2024-01-04",
+        "d1": "2026-10-30",
+        "total_return": 0.5378114368150173,
+        "cagr": 0.1648714788586414,
+        "vol_ann": 0.1573371152498634,
+        "max_dd": -0.08861185676879046,
+        "dd_peak": "2024-12-16",
+        "dd_trough": "2025-04-08",
+        "calmar": 1.8606029133192699,
+        "worst_month": -0.05943760166043899,
+        "best_month": 0.14438600126723022,
+        "n_months": 33
+      },
+      "halves": {
+        "h1": {
+          "n_days": 354,
+          "d0": "2024-01-04",
+          "d1": "2025-06-03",
+          "total_return": 0.4436432053909647,
+          "cagr": 0.29680144086319693,
+          "vol_ann": 0.17498406610688502,
+          "max_dd": -0.08861185676879046,
+          "dd_peak": "2024-12-16",
+          "dd_trough": "2025-04-08",
+          "calmar": 3.349455159681654,
+          "worst_month": -0.04630279947295768,
+          "best_month": 0.14438600126723022,
+          "n_months": 17
+        },
+        "h2": {
+          "n_days": 355,
+          "d0": "2025-06-04",
+          "d1": "2026-10-30",
+          "total_return": 0.06325130328010564,
+          "cagr": 0.04463474403128043,
+          "vol_ann": 0.13748920071151988,
+          "max_dd": -0.08415643732950373,
+          "dd_peak": "2026-01-28",
+          "dd_trough": "2026-03-30",
+          "calmar": 0.5303782508819713,
+          "worst_month": -0.05943760166043899,
+          "best_month": 0.0694973304870532,
+          "n_months": 16
+        }
+      },
+      "checks": {
+        "i_calmar_ge_1.15x": false,
+        "i_calmar": 1.8606029133192699,
+        "i_calmar_base": 1.8606029133192699,
+        "i_need_calmar": 2.13969335031716,
+        "ii_total_return_ge_base": true,
+        "ii_total_return": 0.5378114368150173,
+        "ii_base_total_return": 0.5378114368150173,
+        "iii_maxdd_not_worse_by_2pp": true,
+        "iii_max_dd": -0.08861185676879046,
+        "iii_base_max_dd": -0.08861185676879046,
+        "iv_half1_calmar_ge": true,
+        "iv_half2_calmar_ge": true,
+        "iv_h1_calmar": 3.349455159681654,
+        "iv_base_h1_calmar": 3.349455159681654,
+        "iv_h2_calmar": 0.5303782508819713,
+        "iv_base_h2_calmar": 0.5303782508819713,
+        "v_ab_p_b_le_a_le_0.10": false,
+        "v_p_b_le_a": 1.0,
+        "v_p_b_ge_a": 1.0,
+        "v_verdict": "分不开",
+        "v_n_days": 708,
+        "v_ratio_b_over_a": 1.0,
+        "v_ci95_log_diff": [
+          0.0,
+          0.0
+        ],
+        "v_underpowered": false,
+        "all_pass": false
+      },
+      "ab_test": {
+        "n_days": 708,
+        "years": 1.94,
+        "cum_a": 0.5378114368150174,
+        "cum_b": 0.5378114368150174,
+        "log_diff_total": 0.0,
+        "ratio_b_over_a": 1.0,
+        "ci95_log_diff": [
+          0.0,
+          0.0
+        ],
+        "p_b_le_a": 1.0,
+        "p_b_ge_a": 1.0,
+        "se_log_diff": 0.0,
+        "mde_log_diff_total": 0.0,
+        "mde_log_diff_per_year": 0.0,
+        "underpowered": false,
+        "verdict": "分不开",
+        "mean_block": 20.0,
+        "n_boot": 2000
+      },
+      "weight_stats": {
+        "crypto": {
+          "mean": 0.30000000000000004,
+          "p25": 0.3,
+          "p50": 0.3,
+          "p75": 0.3,
+          "min": 0.3,
+          "max": 0.3,
+          "n_reb": 34
+        },
+        "equity": {
+          "mean": 0.30000000000000004,
+          "p25": 0.3,
+          "p50": 0.3,
+          "p75": 0.3,
+          "min": 0.3,
+          "max": 0.3,
+          "n_reb": 34
+        },
+        "gold": {
+          "mean": 0.2,
+          "p25": 0.2,
+          "p50": 0.2,
+          "p75": 0.2,
+          "min": 0.2,
+          "max": 0.2,
+          "n_reb": 34
+        }
+      },
+      "rebalance_log": [
+        {
+          "d": "2024-01-04",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2024-02-05",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2024-03-06",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2024-04-05",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2024-05-06",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2024-06-05",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2024-07-08",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2024-08-06",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2024-09-05",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2024-10-04",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2024-11-04",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2024-12-04",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2025-01-06",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2025-02-06",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2025-03-10",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2025-04-08",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2025-05-08",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2025-06-09",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2025-07-10",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2025-08-08",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2025-09-09",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2025-10-08",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2025-11-06",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2025-12-08",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2026-01-08",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2026-02-09",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2026-03-11",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2026-04-10",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2026-05-11",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2026-06-10",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2026-07-13",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2026-08-11",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2026-09-10",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2026-10-09",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        }
+      ]
+    },
+    "RB_T25": {
+      "metrics": {
+        "n_days": 709,
+        "d0": "2024-01-04",
+        "d1": "2026-10-30",
+        "total_return": 0.6503450145386576,
+        "cagr": 0.1944130495743439,
+        "vol_ann": 0.15254845344417267,
+        "max_dd": -0.09490487463147124,
+        "dd_peak": "2026-01-28",
+        "dd_trough": "2026-03-30",
+        "calmar": 2.0485043611224047,
+        "worst_month": -0.06667109452993891,
+        "best_month": 0.11095517997767135,
+        "n_months": 33
+      },
+      "halves": {
+        "h1": {
+          "n_days": 354,
+          "d0": "2024-01-04",
+          "d1": "2025-06-03",
+          "total_return": 0.40217385889613455,
+          "cagr": 0.27032115413932556,
+          "vol_ann": 0.15112416809081972,
+          "max_dd": -0.06446553296081892,
+          "dd_peak": "2024-12-11",
+          "dd_trough": "2025-04-08",
+          "calmar": 4.193266412667716,
+          "worst_month": -0.028154042159938886,
+          "best_month": 0.09436758962485015,
+          "n_months": 17
+        },
+        "h2": {
+          "n_days": 355,
+          "d0": "2025-06-04",
+          "d1": "2026-10-30",
+          "total_return": 0.17529078410797982,
+          "cagr": 0.12187031093011558,
+          "vol_ann": 0.15423313070456443,
+          "max_dd": -0.09490487463147124,
+          "dd_peak": "2026-01-28",
+          "dd_trough": "2026-03-30",
+          "calmar": 1.2841312040435737,
+          "worst_month": -0.06667109452993891,
+          "best_month": 0.11095517997767135,
+          "n_months": 16
+        }
+      },
+      "checks": {
+        "i_calmar_ge_1.15x": false,
+        "i_calmar": 2.0485043611224047,
+        "i_calmar_base": 1.8606029133192699,
+        "i_need_calmar": 2.13969335031716,
+        "ii_total_return_ge_base": true,
+        "ii_total_return": 0.6503450145386576,
+        "ii_base_total_return": 0.5378114368150173,
+        "iii_maxdd_not_worse_by_2pp": true,
+        "iii_max_dd": -0.09490487463147124,
+        "iii_base_max_dd": -0.08861185676879046,
+        "iv_half1_calmar_ge": true,
+        "iv_half2_calmar_ge": true,
+        "iv_h1_calmar": 4.193266412667716,
+        "iv_base_h1_calmar": 3.349455159681654,
+        "iv_h2_calmar": 1.2841312040435737,
+        "iv_base_h2_calmar": 0.5303782508819713,
+        "v_ab_p_b_le_a_le_0.10": false,
+        "v_p_b_le_a": 0.2145,
+        "v_p_b_ge_a": 0.7855,
+        "v_verdict": "分不开",
+        "v_n_days": 708,
+        "v_ratio_b_over_a": 1.073177747953748,
+        "v_ci95_log_diff": [
+          -0.11007174530268533,
+          0.24852537664470425
+        ],
+        "v_underpowered": true,
+        "all_pass": false
+      },
+      "ab_test": {
+        "n_days": 708,
+        "years": 1.94,
+        "cum_a": 0.5378114368150174,
+        "cum_b": 0.650345014538658,
+        "log_diff_total": 0.07062410505857408,
+        "ratio_b_over_a": 1.073177747953748,
+        "ci95_log_diff": [
+          -0.11007174530268533,
+          0.24852537664470425
+        ],
+        "p_b_le_a": 0.2145,
+        "p_b_ge_a": 0.7855,
+        "se_log_diff": 0.09171297744468422,
+        "mde_log_diff_total": 0.22804201280004735,
+        "mde_log_diff_per_year": 0.11756403202262328,
+        "underpowered": true,
+        "verdict": "分不开",
+        "mean_block": 20.0,
+        "n_boot": 2000
+      },
+      "weight_stats": {
+        "crypto": {
+          "mean": 0.27766470588235287,
+          "p25": 0.17507499999999998,
+          "p50": 0.20234999999999997,
+          "p75": 0.350875,
+          "min": 0.154,
+          "max": 0.6549,
+          "n_reb": 34
+        },
+        "equity": {
+          "mean": 0.3545529411764706,
+          "p25": 0.296525,
+          "p50": 0.4,
+          "p75": 0.4,
+          "min": 0.1496,
+          "max": 0.4,
+          "n_reb": 34
+        },
+        "gold": {
+          "mean": 0.25427941176470586,
+          "p25": 0.203625,
+          "p50": 0.3,
+          "p75": 0.3,
+          "min": 0.1309,
+          "max": 0.3,
+          "n_reb": 34
+        }
+      },
+      "rebalance_log": [
+        {
+          "d": "2024-01-04",
+          "crypto": 0.1832,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2024-02-05",
+          "crypto": 0.164,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2024-03-06",
+          "crypto": 0.154,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2024-04-05",
+          "crypto": 0.1612,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2024-05-06",
+          "crypto": 0.165,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2024-06-05",
+          "crypto": 0.1696,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2024-07-08",
+          "crypto": 0.1838,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2024-08-06",
+          "crypto": 0.1959,
+          "equity": 0.4,
+          "gold": 0.294
+        },
+        {
+          "d": "2024-09-05",
+          "crypto": 0.2287,
+          "equity": 0.3194,
+          "gold": 0.2793
+        },
+        {
+          "d": "2024-10-04",
+          "crypto": 0.234,
+          "equity": 0.2889,
+          "gold": 0.3
+        },
+        {
+          "d": "2024-11-04",
+          "crypto": 0.1992,
+          "equity": 0.351,
+          "gold": 0.3
+        },
+        {
+          "d": "2024-12-04",
+          "crypto": 0.1683,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2025-01-06",
+          "crypto": 0.1637,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2025-02-06",
+          "crypto": 0.1674,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2025-03-10",
+          "crypto": 0.1831,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2025-04-08",
+          "crypto": 0.2732,
+          "equity": 0.239,
+          "gold": 0.3
+        },
+        {
+          "d": "2025-05-08",
+          "crypto": 0.6549,
+          "equity": 0.1496,
+          "gold": 0.1955
+        },
+        {
+          "d": "2025-06-09",
+          "crypto": 0.3704,
+          "equity": 0.2327,
+          "gold": 0.2713
+        },
+        {
+          "d": "2025-07-10",
+          "crypto": 0.2923,
+          "equity": 0.2707,
+          "gold": 0.2579
+        },
+        {
+          "d": "2025-08-08",
+          "crypto": 0.2218,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2025-09-09",
+          "crypto": 0.1877,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2025-10-08",
+          "crypto": 0.1737,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2025-11-06",
+          "crypto": 0.1792,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2025-12-08",
+          "crypto": 0.2055,
+          "equity": 0.4,
+          "gold": 0.2326
+        },
+        {
+          "d": "2026-01-08",
+          "crypto": 0.2307,
+          "equity": 0.4,
+          "gold": 0.2023
+        },
+        {
+          "d": "2026-02-09",
+          "crypto": 0.4447,
+          "equity": 0.4,
+          "gold": 0.1331
+        },
+        {
+          "d": "2026-03-11",
+          "crypto": 0.4383,
+          "equity": 0.4,
+          "gold": 0.1309
+        },
+        {
+          "d": "2026-04-10",
+          "crypto": 0.4957,
+          "equity": 0.3609,
+          "gold": 0.1417
+        },
+        {
+          "d": "2026-05-11",
+          "crypto": 0.4773,
+          "equity": 0.282,
+          "gold": 0.1655
+        },
+        {
+          "d": "2026-06-10",
+          "crypto": 0.4792,
+          "equity": 0.2633,
+          "gold": 0.1773
+        },
+        {
+          "d": "2026-07-13",
+          "crypto": 0.5352,
+          "equity": 0.2674,
+          "gold": 0.1745
+        },
+        {
+          "d": "2026-08-11",
+          "crypto": 0.6326,
+          "equity": 0.2299,
+          "gold": 0.1375
+        },
+        {
+          "d": "2026-09-10",
+          "crypto": 0.2304,
+          "equity": 0.4,
+          "gold": 0.2076
+        },
+        {
+          "d": "2026-10-09",
+          "crypto": 0.1967,
+          "equity": 0.4,
+          "gold": 0.2445
+        }
+      ]
+    },
+    "STYLE_T25": {
+      "metrics": {
+        "n_days": 709,
+        "d0": "2024-01-04",
+        "d1": "2026-10-30",
+        "total_return": 0.41418205006640973,
+        "cagr": 0.1307613095269755,
+        "vol_ann": 0.17454431722566754,
+        "max_dd": -0.11940847092316453,
+        "dd_peak": "2024-12-16",
+        "dd_trough": "2025-04-08",
+        "calmar": 1.0950756551527752,
+        "worst_month": -0.058260090748244786,
+        "best_month": 0.1764356763949959,
+        "n_months": 33
+      },
+      "halves": {
+        "h1": {
+          "n_days": 354,
+          "d0": "2024-01-04",
+          "d1": "2025-06-03",
+          "total_return": 0.4027344645611368,
+          "cagr": 0.27068064206557896,
+          "vol_ann": 0.19025382047657416,
+          "max_dd": -0.11940847092316453,
+          "dd_peak": "2024-12-16",
+          "dd_trough": "2025-04-08",
+          "calmar": 2.2668462293579923,
+          "worst_month": -0.05528268548600368,
+          "best_month": 0.1764356763949959,
+          "n_months": 17
+        },
+        "h2": {
+          "n_days": 355,
+          "d0": "2025-06-04",
+          "d1": "2026-10-30",
+          "total_return": 0.005501637688503536,
+          "cagr": 0.003914005600665016,
+          "vol_ann": 0.15732466035316117,
+          "max_dd": -0.09767160907690076,
+          "dd_peak": "2026-01-28",
+          "dd_trough": "2026-10-30",
+          "calmar": 0.0400731147736428,
+          "worst_month": -0.058260090748244786,
+          "best_month": 0.05325854056350332,
+          "n_months": 16
+        }
+      },
+      "checks": {
+        "i_calmar_ge_1.15x": false,
+        "i_calmar": 1.0950756551527752,
+        "i_calmar_base": 1.8606029133192699,
+        "i_need_calmar": 2.13969335031716,
+        "ii_total_return_ge_base": false,
+        "ii_total_return": 0.41418205006640973,
+        "ii_base_total_return": 0.5378114368150173,
+        "iii_maxdd_not_worse_by_2pp": false,
+        "iii_max_dd": -0.11940847092316453,
+        "iii_base_max_dd": -0.08861185676879046,
+        "iv_half1_calmar_ge": false,
+        "iv_half2_calmar_ge": false,
+        "iv_h1_calmar": 2.2668462293579923,
+        "iv_base_h1_calmar": 3.349455159681654,
+        "iv_h2_calmar": 0.0400731147736428,
+        "iv_base_h2_calmar": 0.5303782508819713,
+        "v_ab_p_b_le_a_le_0.10": false,
+        "v_p_b_le_a": 0.864,
+        "v_p_b_ge_a": 0.136,
+        "v_verdict": "分不开",
+        "v_n_days": 708,
+        "v_ratio_b_over_a": 0.9196069272285704,
+        "v_ci95_log_diff": [
+          -0.24849467348334744,
+          0.0776383112779995
+        ],
+        "v_underpowered": true,
+        "all_pass": false
+      },
+      "ab_test": {
+        "n_days": 708,
+        "years": 1.94,
+        "cum_a": 0.5378114368150174,
+        "cum_b": 0.41418205006641107,
+        "log_diff_total": -0.08380895325004883,
+        "ratio_b_over_a": 0.9196069272285704,
+        "ci95_log_diff": [
+          -0.24849467348334744,
+          0.0776383112779995
+        ],
+        "p_b_le_a": 0.864,
+        "p_b_ge_a": 0.136,
+        "se_log_diff": 0.08093557153976662,
+        "mde_log_diff_total": 0.20124426395580267,
+        "mde_log_diff_per_year": 0.10374880839529374,
+        "underpowered": true,
+        "verdict": "分不开",
+        "mean_block": 20.0,
+        "n_boot": 2000
+      },
+      "weight_stats": {
+        "crypto": {
+          "mean": 0.28742352941176474,
+          "p25": 0.2,
+          "p50": 0.3,
+          "p75": 0.3636,
+          "min": 0.2,
+          "max": 0.4,
+          "n_reb": 34
+        },
+        "equity": {
+          "mean": 0.29918823529411764,
+          "p25": 0.2,
+          "p50": 0.3318,
+          "p75": 0.3636,
+          "min": 0.2,
+          "max": 0.4,
+          "n_reb": 34
+        },
+        "gold": {
+          "mean": 0.23100882352941177,
+          "p25": 0.125,
+          "p50": 0.2727,
+          "p75": 0.3,
+          "min": 0.1,
+          "max": 0.3,
+          "n_reb": 34
+        }
+      },
+      "rebalance_log": [
+        {
+          "d": "2024-01-04",
+          "crypto": 0.3636,
+          "equity": 0.3636,
+          "gold": 0.2727
+        },
+        {
+          "d": "2024-02-05",
+          "crypto": 0.4,
+          "equity": 0.4,
+          "gold": 0.1
+        },
+        {
+          "d": "2024-03-06",
+          "crypto": 0.3636,
+          "equity": 0.3636,
+          "gold": 0.2727
+        },
+        {
+          "d": "2024-04-05",
+          "crypto": 0.3636,
+          "equity": 0.3636,
+          "gold": 0.2727
+        },
+        {
+          "d": "2024-05-06",
+          "crypto": 0.3636,
+          "equity": 0.3636,
+          "gold": 0.2727
+        },
+        {
+          "d": "2024-06-05",
+          "crypto": 0.2,
+          "equity": 0.2,
+          "gold": 0.1
+        },
+        {
+          "d": "2024-07-08",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2024-08-06",
+          "crypto": 0.2,
+          "equity": 0.2,
+          "gold": 0.3
+        },
+        {
+          "d": "2024-09-05",
+          "crypto": 0.2,
+          "equity": 0.2,
+          "gold": 0.3
+        },
+        {
+          "d": "2024-10-04",
+          "crypto": 0.2,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2024-11-04",
+          "crypto": 0.2,
+          "equity": 0.2,
+          "gold": 0.3
+        },
+        {
+          "d": "2024-12-04",
+          "crypto": 0.4,
+          "equity": 0.4,
+          "gold": 0.1
+        },
+        {
+          "d": "2025-01-06",
+          "crypto": 0.4,
+          "equity": 0.4,
+          "gold": 0.1
+        },
+        {
+          "d": "2025-02-06",
+          "crypto": 0.3636,
+          "equity": 0.3636,
+          "gold": 0.2727
+        },
+        {
+          "d": "2025-03-10",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2025-04-08",
+          "crypto": 0.2,
+          "equity": 0.2,
+          "gold": 0.3
+        },
+        {
+          "d": "2025-05-08",
+          "crypto": 0.2,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2025-06-09",
+          "crypto": 0.4,
+          "equity": 0.2,
+          "gold": 0.1
+        },
+        {
+          "d": "2025-07-10",
+          "crypto": 0.4,
+          "equity": 0.2,
+          "gold": 0.1
+        },
+        {
+          "d": "2025-08-08",
+          "crypto": 0.3636,
+          "equity": 0.3636,
+          "gold": 0.2727
+        },
+        {
+          "d": "2025-09-09",
+          "crypto": 0.3636,
+          "equity": 0.3636,
+          "gold": 0.2727
+        },
+        {
+          "d": "2025-10-08",
+          "crypto": 0.4,
+          "equity": 0.4,
+          "gold": 0.1
+        },
+        {
+          "d": "2025-11-06",
+          "crypto": 0.3,
+          "equity": 0.3,
+          "gold": 0.2
+        },
+        {
+          "d": "2025-12-08",
+          "crypto": 0.2,
+          "equity": 0.2,
+          "gold": 0.3
+        },
+        {
+          "d": "2026-01-08",
+          "crypto": 0.2,
+          "equity": 0.2,
+          "gold": 0.3
+        },
+        {
+          "d": "2026-02-09",
+          "crypto": 0.2,
+          "equity": 0.2,
+          "gold": 0.3
+        },
+        {
+          "d": "2026-03-11",
+          "crypto": 0.2,
+          "equity": 0.2,
+          "gold": 0.3
+        },
+        {
+          "d": "2026-04-10",
+          "crypto": 0.2,
+          "equity": 0.2,
+          "gold": 0.3
+        },
+        {
+          "d": "2026-05-11",
+          "crypto": 0.2,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2026-06-10",
+          "crypto": 0.2,
+          "equity": 0.2,
+          "gold": 0.1
+        },
+        {
+          "d": "2026-07-13",
+          "crypto": 0.2,
+          "equity": 0.2,
+          "gold": 0.1
+        },
+        {
+          "d": "2026-08-11",
+          "crypto": 0.2,
+          "equity": 0.4,
+          "gold": 0.3
+        },
+        {
+          "d": "2026-09-10",
+          "crypto": 0.3636,
+          "equity": 0.3636,
+          "gold": 0.2727
+        },
+        {
+          "d": "2026-10-09",
+          "crypto": 0.3636,
+          "equity": 0.3636,
+          "gold": 0.2727
+        }
+      ]
+    }
+  },
+  "judgement": {
+    "T25_K": {
+      "i_calmar_ge_1.15x": false,
+      "i_calmar": 1.8606029133192699,
+      "i_calmar_base": 1.8606029133192699,
+      "i_need_calmar": 2.13969335031716,
+      "ii_total_return_ge_base": true,
+      "ii_total_return": 0.5378114368150173,
+      "ii_base_total_return": 0.5378114368150173,
+      "iii_maxdd_not_worse_by_2pp": true,
+      "iii_max_dd": -0.08861185676879046,
+      "iii_base_max_dd": -0.08861185676879046,
+      "iv_half1_calmar_ge": true,
+      "iv_half2_calmar_ge": true,
+      "iv_h1_calmar": 3.349455159681654,
+      "iv_base_h1_calmar": 3.349455159681654,
+      "iv_h2_calmar": 0.5303782508819713,
+      "iv_base_h2_calmar": 0.5303782508819713,
+      "v_ab_p_b_le_a_le_0.10": false,
+      "v_p_b_le_a": 1.0,
+      "v_p_b_ge_a": 1.0,
+      "v_verdict": "分不开",
+      "v_n_days": 708,
+      "v_ratio_b_over_a": 1.0,
+      "v_ci95_log_diff": [
+        0.0,
+        0.0
+      ],
+      "v_underpowered": false,
+      "all_pass": false
+    },
+    "RB_T25": {
+      "i_calmar_ge_1.15x": false,
+      "i_calmar": 2.0485043611224047,
+      "i_calmar_base": 1.8606029133192699,
+      "i_need_calmar": 2.13969335031716,
+      "ii_total_return_ge_base": true,
+      "ii_total_return": 0.6503450145386576,
+      "ii_base_total_return": 0.5378114368150173,
+      "iii_maxdd_not_worse_by_2pp": true,
+      "iii_max_dd": -0.09490487463147124,
+      "iii_base_max_dd": -0.08861185676879046,
+      "iv_half1_calmar_ge": true,
+      "iv_half2_calmar_ge": true,
+      "iv_h1_calmar": 4.193266412667716,
+      "iv_base_h1_calmar": 3.349455159681654,
+      "iv_h2_calmar": 1.2841312040435737,
+      "iv_base_h2_calmar": 0.5303782508819713,
+      "v_ab_p_b_le_a_le_0.10": false,
+      "v_p_b_le_a": 0.2145,
+      "v_p_b_ge_a": 0.7855,
+      "v_verdict": "分不开",
+      "v_n_days": 708,
+      "v_ratio_b_over_a": 1.073177747953748,
+      "v_ci95_log_diff": [
+        -0.11007174530268533,
+        0.24852537664470425
+      ],
+      "v_underpowered": true,
+      "all_pass": false
+    },
+    "STYLE_T25": {
+      "i_calmar_ge_1.15x": false,
+      "i_calmar": 1.0950756551527752,
+      "i_calmar_base": 1.8606029133192699,
+      "i_need_calmar": 2.13969335031716,
+      "ii_total_return_ge_base": false,
+      "ii_total_return": 0.41418205006640973,
+      "ii_base_total_return": 0.5378114368150173,
+      "iii_maxdd_not_worse_by_2pp": false,
+      "iii_max_dd": -0.11940847092316453,
+      "iii_base_max_dd": -0.08861185676879046,
+      "iv_half1_calmar_ge": false,
+      "iv_half2_calmar_ge": false,
+      "iv_h1_calmar": 2.2668462293579923,
+      "iv_base_h1_calmar": 3.349455159681654,
+      "iv_h2_calmar": 0.0400731147736428,
+      "iv_base_h2_calmar": 0.5303782508819713,
+      "v_ab_p_b_le_a_le_0.10": false,
+      "v_p_b_le_a": 0.864,
+      "v_p_b_ge_a": 0.136,
+      "v_verdict": "分不开",
+      "v_n_days": 708,
+      "v_ratio_b_over_a": 0.9196069272285704,
+      "v_ci95_log_diff": [
+        -0.24849467348334744,
+        0.0776383112779995
+      ],
+      "v_underpowered": true,
+      "all_pass": false
+    }
+  },
+  "baselines": {
+    "T25_K": {
+      "metrics": {
+        "n_days": 709,
+        "d0": "2024-01-04",
+        "d1": "2026-10-30",
+        "total_return": 0.5378114368150173,
+        "cagr": 0.1648714788586414,
+        "vol_ann": 0.1573371152498634,
+        "max_dd": -0.08861185676879046,
+        "dd_peak": "2024-12-16",
+        "dd_trough": "2025-04-08",
+        "calmar": 1.8606029133192699,
+        "worst_month": -0.05943760166043899,
+        "best_month": 0.14438600126723022,
+        "n_months": 33
+      },
+      "halves": {
+        "h1": {
+          "n_days": 354,
+          "d0": "2024-01-04",
+          "d1": "2025-06-03",
+          "total_return": 0.4436432053909647,
+          "cagr": 0.29680144086319693,
+          "vol_ann": 0.17498406610688502,
+          "max_dd": -0.08861185676879046,
+          "dd_peak": "2024-12-16",
+          "dd_trough": "2025-04-08",
+          "calmar": 3.349455159681654,
+          "worst_month": -0.04630279947295768,
+          "best_month": 0.14438600126723022,
+          "n_months": 17
+        },
+        "h2": {
+          "n_days": 355,
+          "d0": "2025-06-04",
+          "d1": "2026-10-30",
+          "total_return": 0.06325130328010564,
+          "cagr": 0.04463474403128043,
+          "vol_ann": 0.13748920071151988,
+          "max_dd": -0.08415643732950373,
+          "dd_peak": "2026-01-28",
+          "dd_trough": "2026-03-30",
+          "calmar": 0.5303782508819713,
+          "worst_month": -0.05943760166043899,
+          "best_month": 0.0694973304870532,
+          "n_months": 16
+        }
+      }
+    },
+    "mix_nav_T25_20bp": {
+      "n_days": 709,
+      "d0": "2024-01-04",
+      "d1": "2026-10-30",
+      "total_return": 0.5220908303471101,
+      "cagr": 0.1606347021153849,
+      "vol_ann": 0.15688359455186315,
+      "max_dd": -0.08914691103510997,
+      "dd_peak": "2024-12-16",
+      "dd_trough": "2025-04-08",
+      "calmar": 1.8019099063580553,
+      "worst_month": -0.05921192868040559,
+      "best_month": 0.14096289082499047,
+      "n_months": 33
+    },
+    "mix_nav_T25_default_cost": {
+      "n_days": 709,
+      "d0": "2024-01-04",
+      "d1": "2026-10-30",
+      "total_return": 0.5220908303471101,
+      "cagr": 0.1606347021153849,
+      "vol_ann": 0.15688359455186315,
+      "max_dd": -0.08914691103510997,
+      "dd_peak": "2024-12-16",
+      "dd_trough": "2025-04-08",
+      "calmar": 1.8019099063580553,
+      "worst_month": -0.05921192868040559,
+      "best_month": 0.14096289082499047,
+      "n_months": 33
+    },
+    "crypto_leg_only_X1V_on_1": {
+      "n_days": 709,
+      "d0": "2024-01-04",
+      "d1": "2026-10-30",
+      "total_return": 0.35318875495930446,
+      "cagr": 0.11322054279968774,
+      "vol_ann": 0.3788653988278251,
+      "max_dd": -0.4065327780621898,
+      "dd_peak": "2024-12-16",
+      "dd_trough": "2026-04-08",
+      "calmar": 0.27850286350678394,
+      "worst_month": -0.1332986994897919,
+      "best_month": 0.45004807278448333,
+      "n_months": 33
+    },
+    "core_nav_only_1": {
+      "n_days": 709,
+      "d0": "2024-01-04",
+      "d1": "2026-10-30",
+      "total_return": 0.4950835216848941,
+      "cagr": 0.15328967838160534,
+      "vol_ann": 0.5961050238921548,
+      "max_dd": -0.5675084846771945,
+      "dd_peak": "2025-10-06",
+      "dd_trough": "2026-06-30",
+      "calmar": 0.2701099323101721,
+      "worst_month": -0.22962613966904077,
+      "best_month": 0.44851031474877856,
+      "n_months": 33
+    }
+  },
+  "style_table_file": "t318_style_table.json",
+  "legs_csv": "t318_legs.csv",
+  "scenarios": "scenarios/lane-c-T-318.json"
+}
