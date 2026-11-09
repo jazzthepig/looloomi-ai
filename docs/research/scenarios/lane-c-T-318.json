@@ -1,0 +1,53 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {
+      "id": "T-318-1",
+      "author": "lane-c",
+      "scenario": "S-797 组合层 v2 · 股票腿",
+      "statement": "ACWI 在 2026-12-15 的收盘高于 2026-10-30 的收盘 156.04。T-318 实测:2026-10-30 ACWI = 156.04,2024-01-04→2026-10-30 区间 ACWI 是三腿里最稳的一条;45 天里涨回去略占优,给 0.52。",
+      "variable": "close:ACWI",
+      "op": "gt",
+      "lo": 156.04,
+      "hi": null,
+      "prob": 0.52,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-318-2",
+      "author": "lane-c",
+      "scenario": "S-797 组合层 v2 · 黄金腿",
+      "statement": "XAUUSD 在 2026-12-15 的收盘高于 2026-10-31 的收盘 3875.36。T-318 实测:2026-10-31 XAUUSD = 3875.36(前三个自然日 −3.2%);黄金在回放里是 down_hot 天气里唯一为正的腿,但短线跌得急,给 0.50。",
+      "variable": "close:XAUUSD",
+      "op": "gt",
+      "lo": 3875.36,
+      "hi": null,
+      "prob": 0.5,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-318-3",
+      "author": "lane-c",
+      "scenario": "S-797 组合层 v2 · 天气",
+      "statement": "面板 dist_200 在 2026-12-15 仍 > 0(① 在 200 日线上)。T-318 实测:2026-10-31 dist_200 = 0.0603(>0,当下天气 up_hot);面板 45 天内留在 200 日线上方略占优,给 0.58。",
+      "variable": "state:dist_200",
+      "op": "gt",
+      "lo": 0.0,
+      "hi": null,
+      "prob": 0.58,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-318-4",
+      "author": "lane-c",
+      "scenario": "S-797 组合层 v2 · 前向影子臂",
+      "statement": "到 2027-03-31,前向影子臂(book=flex_x1v)里 RB_T25 与 STYLE_T25 至少有一条的 NAV ≥ T25_K 的 NAV(比值 ≥ 1)。人工结算:取 forward_book_nav 里 book=flex_x1v、arm ∈ {T25_K, RB_T25, STYLE_T25} 在 2027-03-31 的 nav,比值 = max(RB, STYLE) / T25_K。T-318 回放里 RB 赢总收益(p=0.21 分不开)、STYLE 明显输,先验 0.50。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 1.0,
+      "hi": null,
+      "prob": 0.5,
+      "horizon_d": "2027-03-31"
+    }
+  ]
+}
