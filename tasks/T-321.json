@@ -1,0 +1,33 @@
+{
+  "id": "T-321",
+  "owner": "lane-c",
+  "status": "done",
+  "created": "2026-11-10",
+  "title": "S-799 RB 留出复验:2021-07 → 2022-12(S-797 没碰过的崩盘段),核与参数一字不改,对常数 T25",
+  "source": "REFUTATION_LEDGER S-799(`grep -n \"^## S-799\" -A 8 REFUTATION_LEDGER.md`,原文照抄进报告开头);你的 t318_flex_v2.py 的装配方式;① = cap_pit24(你 T-305 用过的同一条);核 src/data/universe/flex_alloc.py(main 上已有,import,一字不改)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-321.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-799 原文照抄进报告开头;核与参数一字不改,只换 ① 的来源与窗口;先落 t321_legs.csv。(a)(b)(c) 逐条报数与判定,另报 Calmar / 波动 / 平均权重 / 调仓权重表 / ab_test p。分支上要有 tasks/T-321.json(没有就从主目录拷,status 改 in_review)。只读、不入库、不改代码;不要 Read 大文件。",
+    "expect": "docs/research/T-321_rb_holdout.md + t321_rb_holdout.py + t321_results.json;in_review,推 lane-c/T-321。"
+  },
+  "prior_value": "RB 在 2024–26 差一点;崩盘段是它最该起作用的地方。过了才有资格把 RB 摆给 Jazz。",
+  "notes": "2026-11-10 lane-c 留出复验做完并交付(分支 lane-c/T-321;只读,未入库,未改 src/)。\n【判定】✅ (a)(b)(c) 全过 ⇒ S-799 的「后果」条款触发:把 S-797(2024–26:RB 收益更高但 Calmar 差 0.09、p 0.21)与本条(崩盘段 RB 少亏)两份证据一起提给 Jazz,问要不要让 RB 给真钱 T25 的目标权重。**S-797 的 ❌ 不因本条改判**;是否接进真钱由 Jazz 拍。\n· (a) RB 最大回撤 −19.47% vs T25_K −25.91% ⇒ 浅 6.44pp(需 ≥ 2pp)✅\n· (b) RB 总收益 −9.90% vs T25_K −15.70%(差 +5.80pp;需 ≥ T25_K − 1pp)✅\n· (c) RB 最差单月 −6.51%(2022-01-31)vs T25_K 最差单月 −9.02%(2022-01-31)✅\n【另报(只报,不参与判定)】Calmar:RB −0.421 vs T25_K −0.505(两个都是负数:两条臂整段亏钱,别读成「RB 会赚钱」);年化波动 15.62% vs 17.76%;CAGR −8.20% vs −13.08%;最好单月 +4.90% vs +3.91%。ab_test(块长 20、2000 次、种子 797,参数照 S-797 预注册,a=T25_K、b=RB_T25):p(RB ≤ T25_K) = 0.0730、p(RB ≥ T25_K) = 0.9270、verdict「分不开」、n = 308、比值 B/A = 1.0688、95% CI(log 差) [−0.0233, 0.1619]、underpowered = True。\n【区间与腿】① = core_variants_daily.arm='eq.cap_pit24'(536 行,2021-07-13→2022-12-30,日历日无缺口,NULL 0 天);三腿共同日期 372 天(2021-07-13→2022-12-30);前 63 个共同日只作历史,记 NAV 2021-10-11→2022-12-30(309 天、14 个月);equity = eodhd ACWI(379 行)、gold = eodhd XAUUSD(394 行);crypto 腿 = tom 核 CORE_X1V('rally',0.0,'l20',vol)作用于 ① 的 NAV + BTC 资金费(1642 行 / 548 天)。\n【核】src/data/universe/flex_alloc.py(main 上已有;本轮 import 仓库那份,sha256 6c7fa4c4aff1f421…,一字未改):dynamic_mix_nav / rb_weights / BASE_T25 / 偏离预算 / reb 21 / cost 20bp 与 S-797 一字不差,只换了 ① 的来源与窗口。S-799 原文照抄进报告开头,与 REFUTATION_LEDGER.md 逐字核对 = True(940 字符 = 940 字符)。\n【自检】T25_K 的常数权重按三条腿单持收益线性加权 ≈ −15.67% vs 实测 −15.70%(差 0.03pp)⇒ 记账对得上。腿表先落 t321_legs.csv,算全部从落好的 CSV 读回;① 的完整日历日序列另落 t321_core_pit24_daily.csv(536 行),免得日收益被共同日筛掉。\n【诚实(报告 §6 详列)】① RB 的差额主要来自「减 crypto + 加黄金」(crypto 30%→均值 0.262、黄金 20%→0.294、股金 30%→0.312、现金 20%→0.132);这个窗口 crypto 腿整段 −41.4%,少拿 crypto 就等于少亏 —— 本条支持「这段少亏」,不支持「RB 更会挑资产」。② 2022-06-10 / 2022-07-13 两次调仓 RB 给 crypto 46%/63% 权重,是因为那两天 crypto 腿敞口 g=0(X1V 空仓、波动近零)被核的 SIGMA_FLOOR=0.002 兜住 —— 核的结构,不是本条改动。③ tom 核内建 WARM=200,① 序列前 200 个日历日 g≡1.0(到 2022-01-27),这段 crypto 腿就是 ① 本身;其后 336 天里 g=0 有 240 天、g=1 有 23 天、其余是 rally 模式 0.40~0.50。④ 记 NAV 309 天只够 15 次调仓,ab_test 自报 underpowered = True。\n【产物】docs/research/{T-321_rb_holdout.md, t321_rb_holdout.py, t321_legs.csv, t321_core_pit24_daily.csv, t321_results.json} + docs/research/scenarios/lane-c-T-321.json(4 条:3 条自动结算 close:ACWI / close:XAUUSD / state:dist_200,1 条 manual)。\n【探索性,不在本卡判定里 —— 需另立预注册、在新数据上过零信号对照】① RB 的「少亏」在这个窗口里有多少可由「常数地少拿 crypto」复现(本卡没有跑这个对照臂,那是新试验);② `SIGMA_FLOOR` 让「腿空仓 ≈ 低风险」被当成加仓信号,这类结构在别的窗口可能是反向陷阱;③ S-799 只给 63 天历史、S-797 给 252 天,两条证据合并解读时这个不对称要说清。 | 2026-11-09T17:19:13Z Seth 审并合并。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-09T17:19:13Z",
+    "value": "S-799 ✅:RB 2022 崩盘段回撤 −19.5% vs −25.9%、收益 −9.9% vs −15.7%、最差月 −6.5% vs −9.0%;两条注意(常数配比对照未做、空仓腿的权重陷阱)。",
+    "ledger": "S-799 结果"
+  }
+}
