@@ -1,0 +1,1133 @@
+{
+ "meta": {
+  "card": "T-317",
+  "lane": "lane-c",
+  "rule": "S-796",
+  "prereg": "REFUTATION_LEDGER.md S-796 (Seth, 2026-11-09 15:33 UTC)",
+  "engine": "docs/research/t251_gross_cap.py(simulate / curve_stats,未改一字)",
+  "assembly": "docs/research/t310_slots.py(load_tickets / load_bars / classify_exits / to_engine_tickets / load_gate / run_cap,未改一字)",
+  "ticket_source": "docs/research/t197_results.json → tickets.A",
+  "n_tickets": 956,
+  "n_symbols": 298,
+  "params": {
+   "risk_frac": 0.005,
+   "equity0": 630.0,
+   "gross_cap": 0.4,
+   "cap_n": 14,
+   "leverage": 1.0,
+   "window_days": 30,
+   "min_blocked": 15,
+   "mean_r_diff_max": -0.3,
+   "boot_n": 10000,
+   "boot_seed": 796,
+   "ci": 0.9875,
+   "dd_tol_pp": 1.0
+  },
+  "open_day_definition": "开票日 e = 票的 signal_d(依 T-235 已核实的口径:entry_px == signal_d 收盘,进场在 d+1 开盘 ⇒ d 是开票日)",
+  "symbol_match": "精确优先;精确没有则去 1000 / 1000000 前缀(S-751 口径)",
+  "event_sources": {
+   "S": "crowding_watch kind=squeeze",
+   "L": "binance_event_watch kind=listing",
+   "P": "binance_event_watch kind=perp_listing",
+   "U": "binance_event_watch kind=upbit_krw_listing"
+  }
+ },
+ "selfcheck": {
+  "ref": {
+   "total_return": 0.6350272262487078,
+   "max_dd": -0.25709663592753196,
+   "calmar": 0.3248861730440124
+  },
+  "got": {
+   "total_return": 0.6350272262487078,
+   "max_dd": -0.25709663592753196,
+   "calmar": 0.3248861730440124,
+   "n_days": 2237,
+   "taken": 208,
+   "max_positions": 14
+  },
+  "match": true
+ },
+ "baseline": {
+  "cap_n": 14,
+  "cap_frac": 0.4,
+  "stats": {
+   "total_return": 0.6350272262487078,
+   "cagr": 0.0835271421489856,
+   "max_dd": -0.25709663592753196,
+   "calmar": 0.3248861730440124,
+   "end_equity": 1030.0671525366859,
+   "n_days": 2237,
+   "worst_month": "2024-06",
+   "worst_month_ret": -0.08145710540312445,
+   "n_months": 74
+  },
+  "taken": 208,
+  "max_positions": 14,
+  "blocked_gross": 114,
+  "blocked_slots": 615,
+  "gross": {
+   "abs_median": 96.98234999999998,
+   "abs_p95": 316.142867,
+   "abs_max": 569.524896,
+   "ratio_median": 0.12183051061134705,
+   "ratio_p95": 0.37744982817575445,
+   "ratio_max": 0.4928774853963733,
+   "ratio_max_minus_cap": 0.0928774853963733,
+   "note": "名义合计 = 持仓名义(当日开盘价盯市)÷ 当时的净值;判定只发生在**建仓那一刻**,所以比值可以超过 cap(ratio_max − cap 就是超出的部分)。"
+  }
+ },
+ "classes": {
+  "S": {
+   "label": "squeeze(crowding_watch.d)",
+   "kind": "squeeze",
+   "table": "crowding_watch",
+   "date_col": "d",
+   "n_events_in_table": 351,
+   "n_symbols_in_table": 240,
+   "n_blocked": 15,
+   "n_blocked_with_r": 14,
+   "coverage": {
+    "n_ticket_symbols_matched": 153,
+    "n_tickets_with_symbol_in_table": 529,
+    "n_tickets_with_event_on_or_before_open": 280,
+    "min_gap_days": 0,
+    "median_gap_days": 330,
+    "n_gap_gt_window": 265,
+    "n_tickets_at_gap_30": 0,
+    "n_tickets_event_on_entry_day": 2,
+    "boundary_note": "改按 entry_d 读时,只有「事件间隔恰好 30 天」与「事件在进场当天」两类票会进出;两者都是 0 ⇒ 被挡票集合与 开票日 口径无关"
+   },
+   "displacement": {
+    "n_taken_base": 208,
+    "n_taken_gated": 208,
+    "n_dropped": 6,
+    "n_added": 6,
+    "dropped_r_stats": {
+     "n": 6,
+     "mean": 11.98641136240146,
+     "median": -0.8001993746091313,
+     "p10": -1.0223025292357901,
+     "p90": 1.1181292209092737,
+     "win_pct": 50.0,
+     "max_r": 73.1563408984679,
+     "min_r": -1.0223025292357901,
+     "sum_r": 71.91846817440876
+    },
+    "added_r_stats": {
+     "n": 6,
+     "mean": -0.847922021281282,
+     "median": -1.0176610733566211,
+     "p10": -1.0255013500956545,
+     "p90": -0.6980679220566554,
+     "win_pct": 0.0,
+     "max_r": -0.40948676906310627,
+     "min_r": -1.0255013500956545,
+     "sum_r": -5.087532127687692
+    },
+    "dropped_is_blocked": 5,
+    "dropped_sample": [
+     {
+      "tid": "ZEC:2025-09-06",
+      "symbol": "ZEC",
+      "open_day": "2025-09-06",
+      "r": 73.1563408984679,
+      "was_blocked": false
+     },
+     {
+      "tid": "ARPA:2023-05-12",
+      "symbol": "ARPA",
+      "open_day": "2023-05-12",
+      "r": 1.1181292209092737,
+      "was_blocked": true
+     },
+     {
+      "tid": "ICP:2023-02-17",
+      "symbol": "ICP",
+      "open_day": "2023-02-17",
+      "r": -1.0223025292357901,
+      "was_blocked": true
+     },
+     {
+      "tid": "SEI:2025-06-24",
+      "symbol": "SEI",
+      "open_day": "2025-06-24",
+      "r": -1.0213469489414695,
+      "was_blocked": true
+     },
+     {
+      "tid": "CATI:2025-08-27",
+      "symbol": "CATI",
+      "open_day": "2025-08-27",
+      "r": -0.8001993746091313,
+      "was_blocked": true
+     },
+     {
+      "tid": "LPT:2023-08-11",
+      "symbol": "LPT",
+      "open_day": "2023-08-11",
+      "r": 0.4878469078179696,
+      "was_blocked": true
+     }
+    ],
+    "added_sample": [
+     {
+      "tid": "AEVO:2025-09-21",
+      "symbol": "AEVO",
+      "open_day": "2025-09-21",
+      "r": -1.0176610733566211
+     },
+     {
+      "tid": "GMX:2025-09-24",
+      "symbol": "GMX",
+      "open_day": "2025-09-24",
+      "r": -0.9129266909680029
+     },
+     {
+      "tid": "JOE:2025-09-18",
+      "symbol": "JOE",
+      "open_day": "2025-09-18",
+      "r": -1.0255013500956545
+     },
+     {
+      "tid": "POL:2025-08-31",
+      "symbol": "POL",
+      "open_day": "2025-08-31",
+      "r": -0.40948676906310627
+     },
+     {
+      "tid": "RSR:2023-02-18",
+      "symbol": "RSR",
+      "open_day": "2023-02-18",
+      "r": -0.6980679220566554
+     },
+     {
+      "tid": "STRK:2025-10-01",
+      "symbol": "STRK",
+      "open_day": "2025-10-01",
+      "r": -1.023888322147651
+     }
+    ]
+   },
+   "leave_one_out": {
+    "tid": "ZEC:2025-09-06",
+    "symbol": "ZEC",
+    "open_day": "2025-09-06",
+    "r": 73.1563408984679,
+    "was_blocked": false,
+    "base_total_without_X": 0.11957865448000038,
+    "gated_total_without_X": 0.12590167210539716,
+    "delta_pp_without_X": 0.6323017625396776,
+    "delta_pp_main": -50.91255541433106,
+    "sign_flip": true
+   },
+   "blocked_r_dist": {
+    "n": 14,
+    "mean": -0.44782971056766,
+    "median": -0.816453047810877,
+    "p10": -1.0255811677249496,
+    "p90": 1.1181292209092737,
+    "win_pct": 21.428571428571427,
+    "max_r": 1.133428143966126,
+    "min_r": -1.0304661584661585,
+    "sum_r": -6.269615947947241
+   },
+   "rest_r_dist": {
+    "n": 894,
+    "mean": 0.3450927648627393,
+    "median": -0.4949110853611432,
+    "p10": -1.0274115428834214,
+    "p90": 2.299650238473768,
+    "win_pct": 35.458612975391496,
+    "max_r": 73.1563408984679,
+    "min_r": -1.0697530956848031,
+    "sum_r": 308.51293178728895
+   },
+   "mean_blocked_r": -0.44782971056766,
+   "mean_rest_r": 0.3450927648627393,
+   "mean_r_diff": -0.7929224754303994,
+   "bootstrap": {
+    "n_boot": 10000,
+    "seed": 796,
+    "ci": 0.9875,
+    "lo_q": 0.006249999999999978,
+    "hi_q": 0.99375,
+    "mean_diff": -0.7930763885491807,
+    "lo": -1.3326046802405909,
+    "hi": -0.16305519696648677
+   },
+   "ledger": {
+    "stats": {
+     "total_return": 0.12590167210539716,
+     "cagr": 0.01953718648204439,
+     "max_dd": -0.333594933084311,
+     "calmar": 0.05856559720919582,
+     "end_equity": 709.3180534264002,
+     "n_days": 2237,
+     "worst_month": "2024-06",
+     "worst_month_ret": -0.08173942394566736,
+     "n_months": 74
+    },
+    "taken": 208,
+    "max_positions": 14,
+    "d_total_return_pp": -50.91255541433106,
+    "d_max_dd_pp": -7.649829715677903,
+    "total_ge_base": false,
+    "dd_not_worse": false
+   },
+   "halves": [
+    {
+     "half": "early",
+     "n_total": 479,
+     "cut": "2024-02-29",
+     "n_blocked": 5,
+     "n_rest": 474,
+     "mean_blocked_r": -0.14508995295305765,
+     "mean_rest_r": 0.4296555372334263,
+     "diff": -0.5747454901864839
+    },
+    {
+     "half": "late",
+     "n_total": 477,
+     "cut": "2024-02-29",
+     "n_blocked": 9,
+     "n_rest": 420,
+     "mean_blocked_r": -0.6160184647979947,
+     "mean_rest_r": 0.24965763604439245,
+     "diff": -0.8656761008423872
+    }
+   ],
+   "half_cut": "2024-02-29",
+   "judgments": {
+    "i_n_blocked_ge_15": true,
+    "ii_mean_r_diff_and_boot": true,
+    "iii_money": false,
+    "iv_halves_same_sign": true
+   },
+   "all_pass": false,
+   "verdict": "❌ 不过 ⇒ 不进规则,只留在 crowd_map"
+  },
+  "L": {
+   "label": "listing(binance_event_watch.d0)",
+   "kind": "listing",
+   "table": "binance_event_watch",
+   "date_col": "d0",
+   "n_events_in_table": 273,
+   "n_symbols_in_table": 273,
+   "n_blocked": 0,
+   "n_blocked_with_r": 0,
+   "coverage": {
+    "n_ticket_symbols_matched": 97,
+    "n_tickets_with_symbol_in_table": 315,
+    "n_tickets_with_event_on_or_before_open": 313,
+    "min_gap_days": 38,
+    "median_gap_days": 948,
+    "n_gap_gt_window": 313,
+    "n_tickets_at_gap_30": 0,
+    "n_tickets_event_on_entry_day": 0,
+    "boundary_note": "改按 entry_d 读时,只有「事件间隔恰好 30 天」与「事件在进场当天」两类票会进出;两者都是 0 ⇒ 被挡票集合与 开票日 口径无关"
+   },
+   "displacement": {
+    "n_taken_base": 208,
+    "n_taken_gated": 208,
+    "n_dropped": 0,
+    "n_added": 0,
+    "dropped_r_stats": {
+     "n": 0
+    },
+    "added_r_stats": {
+     "n": 0
+    },
+    "dropped_is_blocked": 0,
+    "dropped_sample": [],
+    "added_sample": []
+   },
+   "leave_one_out": null,
+   "blocked_r_dist": {
+    "n": 0
+   },
+   "rest_r_dist": {
+    "n": 908,
+    "mean": 0.3328670879287904,
+    "median": -0.4975317431192661,
+    "p10": -1.0273843168957155,
+    "p90": 2.2905700350846794,
+    "win_pct": 35.242290748898675,
+    "max_r": 73.1563408984679,
+    "min_r": -1.0697530956848031,
+    "sum_r": 302.2433158393417
+   },
+   "mean_blocked_r": null,
+   "mean_rest_r": 0.3328670879287904,
+   "mean_r_diff": null,
+   "bootstrap": {
+    "error": "样本不足",
+    "n_blocked": 0,
+    "n_rest": 908
+   },
+   "ledger": {
+    "stats": {
+     "total_return": 0.6350272262487078,
+     "cagr": 0.0835271421489856,
+     "max_dd": -0.25709663592753196,
+     "calmar": 0.3248861730440124,
+     "end_equity": 1030.0671525366859,
+     "n_days": 2237,
+     "worst_month": "2024-06",
+     "worst_month_ret": -0.08145710540312445,
+     "n_months": 74
+    },
+    "taken": 208,
+    "max_positions": 14,
+    "d_total_return_pp": 0.0,
+    "d_max_dd_pp": 0.0,
+    "total_ge_base": true,
+    "dd_not_worse": true
+   },
+   "halves": [
+    {
+     "half": "early",
+     "n_total": 479,
+     "cut": "2024-02-29",
+     "n_blocked": 0,
+     "n_rest": 479,
+     "mean_blocked_r": null,
+     "mean_rest_r": 0.4236561062293921,
+     "diff": null
+    },
+    {
+     "half": "late",
+     "n_total": 477,
+     "cut": "2024-02-29",
+     "n_blocked": 0,
+     "n_rest": 429,
+     "mean_blocked_r": null,
+     "mean_rest_r": 0.23149659896378297,
+     "diff": null
+    }
+   ],
+   "half_cut": "2024-02-29",
+   "judgments": {
+    "i_n_blocked_ge_15": false,
+    "ii_mean_r_diff_and_boot": false,
+    "iii_money": true,
+    "iv_halves_same_sign": false
+   },
+   "all_pass": false,
+   "verdict": "❌ 不过 ⇒ 不进规则,只留在 crowd_map"
+  },
+  "P": {
+   "label": "perp_listing(binance_event_watch.d0)",
+   "kind": "perp_listing",
+   "table": "binance_event_watch",
+   "date_col": "d0",
+   "n_events_in_table": 626,
+   "n_symbols_in_table": 626,
+   "n_blocked": 0,
+   "n_blocked_with_r": 0,
+   "coverage": {
+    "n_ticket_symbols_matched": 259,
+    "n_tickets_with_symbol_in_table": 819,
+    "n_tickets_with_event_on_or_before_open": 818,
+    "min_gap_days": 220,
+    "median_gap_days": 874,
+    "n_gap_gt_window": 818,
+    "n_tickets_at_gap_30": 0,
+    "n_tickets_event_on_entry_day": 0,
+    "boundary_note": "改按 entry_d 读时,只有「事件间隔恰好 30 天」与「事件在进场当天」两类票会进出;两者都是 0 ⇒ 被挡票集合与 开票日 口径无关"
+   },
+   "displacement": {
+    "n_taken_base": 208,
+    "n_taken_gated": 208,
+    "n_dropped": 0,
+    "n_added": 0,
+    "dropped_r_stats": {
+     "n": 0
+    },
+    "added_r_stats": {
+     "n": 0
+    },
+    "dropped_is_blocked": 0,
+    "dropped_sample": [],
+    "added_sample": []
+   },
+   "leave_one_out": null,
+   "blocked_r_dist": {
+    "n": 0
+   },
+   "rest_r_dist": {
+    "n": 908,
+    "mean": 0.3328670879287904,
+    "median": -0.4975317431192661,
+    "p10": -1.0273843168957155,
+    "p90": 2.2905700350846794,
+    "win_pct": 35.242290748898675,
+    "max_r": 73.1563408984679,
+    "min_r": -1.0697530956848031,
+    "sum_r": 302.2433158393417
+   },
+   "mean_blocked_r": null,
+   "mean_rest_r": 0.3328670879287904,
+   "mean_r_diff": null,
+   "bootstrap": {
+    "error": "样本不足",
+    "n_blocked": 0,
+    "n_rest": 908
+   },
+   "ledger": {
+    "stats": {
+     "total_return": 0.6350272262487078,
+     "cagr": 0.0835271421489856,
+     "max_dd": -0.25709663592753196,
+     "calmar": 0.3248861730440124,
+     "end_equity": 1030.0671525366859,
+     "n_days": 2237,
+     "worst_month": "2024-06",
+     "worst_month_ret": -0.08145710540312445,
+     "n_months": 74
+    },
+    "taken": 208,
+    "max_positions": 14,
+    "d_total_return_pp": 0.0,
+    "d_max_dd_pp": 0.0,
+    "total_ge_base": true,
+    "dd_not_worse": true
+   },
+   "halves": [
+    {
+     "half": "early",
+     "n_total": 479,
+     "cut": "2024-02-29",
+     "n_blocked": 0,
+     "n_rest": 479,
+     "mean_blocked_r": null,
+     "mean_rest_r": 0.4236561062293921,
+     "diff": null
+    },
+    {
+     "half": "late",
+     "n_total": 477,
+     "cut": "2024-02-29",
+     "n_blocked": 0,
+     "n_rest": 429,
+     "mean_blocked_r": null,
+     "mean_rest_r": 0.23149659896378297,
+     "diff": null
+    }
+   ],
+   "half_cut": "2024-02-29",
+   "judgments": {
+    "i_n_blocked_ge_15": false,
+    "ii_mean_r_diff_and_boot": false,
+    "iii_money": true,
+    "iv_halves_same_sign": false
+   },
+   "all_pass": false,
+   "verdict": "❌ 不过 ⇒ 不进规则,只留在 crowd_map"
+  },
+  "U": {
+   "label": "upbit_krw_listing(binance_event_watch.d0)",
+   "kind": "upbit_krw_listing",
+   "table": "binance_event_watch",
+   "date_col": "d0",
+   "n_events_in_table": 285,
+   "n_symbols_in_table": 285,
+   "n_blocked": 10,
+   "n_blocked_with_r": 10,
+   "coverage": {
+    "n_ticket_symbols_matched": 116,
+    "n_tickets_with_symbol_in_table": 400,
+    "n_tickets_with_event_on_or_before_open": 300,
+    "min_gap_days": 0,
+    "median_gap_days": 877,
+    "n_gap_gt_window": 290,
+    "n_tickets_at_gap_30": 0,
+    "n_tickets_event_on_entry_day": 1,
+    "boundary_note": "改按 entry_d 读时,只有「事件间隔恰好 30 天」与「事件在进场当天」两类票会进出;两者都是 0 ⇒ 被挡票集合与 开票日 口径无关"
+   },
+   "displacement": {
+    "n_taken_base": 208,
+    "n_taken_gated": 207,
+    "n_dropped": 7,
+    "n_added": 6,
+    "dropped_r_stats": {
+     "n": 7,
+     "mean": 1.1214528663178391,
+     "median": 0.4031722943722942,
+     "p10": -0.005686233373893694,
+     "p90": 3.228511361958012,
+     "win_pct": 71.42857142857143,
+     "max_r": 3.8408913871713204,
+     "min_r": -0.5682550885724209,
+     "sum_r": 7.850170064224875
+    },
+    "added_r_stats": {
+     "n": 6,
+     "mean": 2.5526409066421056,
+     "median": 1.1341614035087715,
+     "p10": 0.062958965956672,
+     "p90": 2.769468633825121,
+     "win_pct": 100.0,
+     "max_r": 9.800961484918792,
+     "min_r": 0.062958965956672,
+     "sum_r": 15.315845439852634
+    },
+    "dropped_is_blocked": 4,
+    "dropped_sample": [
+     {
+      "tid": "ACH:2024-02-19",
+      "symbol": "ACH",
+      "open_day": "2024-02-19",
+      "r": 3.8408913871713204,
+      "was_blocked": false
+     },
+     {
+      "tid": "UNI:2024-11-06",
+      "symbol": "UNI",
+      "open_day": "2024-11-06",
+      "r": 3.228511361958012,
+      "was_blocked": true
+     },
+     {
+      "tid": "ID:2024-02-07",
+      "symbol": "ID",
+      "open_day": "2024-02-07",
+      "r": 0.858190035587188,
+      "was_blocked": true
+     },
+     {
+      "tid": "GTC:2023-02-18",
+      "symbol": "GTC",
+      "open_day": "2023-02-18",
+      "r": -0.5682550885724209,
+      "was_blocked": false
+     },
+     {
+      "tid": "1000SHIB:2023-01-18",
+      "symbol": "1000SHIB",
+      "open_day": "2023-01-18",
+      "r": 0.4031722943722942,
+      "was_blocked": true
+     },
+     {
+      "tid": "MATIC:2021-10-26",
+      "symbol": "MATIC",
+      "open_day": "2021-10-26",
+      "r": 0.09334630708237462,
+      "was_blocked": true
+     },
+     {
+      "tid": "HIGH:2024-02-28",
+      "symbol": "HIGH",
+      "open_day": "2024-02-28",
+      "r": -0.005686233373893694,
+      "was_blocked": false
+     }
+    ],
+    "added_sample": [
+     {
+      "tid": "ANKR:2021-10-31",
+      "symbol": "ANKR",
+      "open_day": "2021-10-31",
+      "r": 0.062958965956672
+     },
+     {
+      "tid": "ATA:2023-01-31",
+      "symbol": "ATA",
+      "open_day": "2023-01-31",
+      "r": 1.1341614035087715
+     },
+     {
+      "tid": "COTI:2024-11-22",
+      "symbol": "COTI",
+      "open_day": "2024-11-22",
+      "r": 0.2609716304464195
+     },
+     {
+      "tid": "JASMY:2024-02-19",
+      "symbol": "JASMY",
+      "open_day": "2024-02-19",
+      "r": 9.800961484918792
+     },
+     {
+      "tid": "JTO:2024-11-07",
+      "symbol": "JTO",
+      "open_day": "2024-11-07",
+      "r": 1.287323321196857
+     },
+     {
+      "tid": "LEVER:2024-02-14",
+      "symbol": "LEVER",
+      "open_day": "2024-02-14",
+      "r": 2.769468633825121
+     }
+    ]
+   },
+   "leave_one_out": {
+    "tid": "JASMY:2024-02-19",
+    "symbol": "JASMY",
+    "open_day": "2024-02-19",
+    "r": 9.800961484918792,
+    "was_blocked": false,
+    "base_total_without_X": 0.6350272262487078,
+    "gated_total_without_X": 0.6198029928132431,
+    "delta_pp_without_X": -1.522423343546464,
+    "delta_pp_main": 7.21152456643086,
+    "sign_flip": true
+   },
+   "blocked_r_dist": {
+    "n": 10,
+    "mean": 0.2779254246913371,
+    "median": 0.09334630708237462,
+    "p10": -1.0234011553663727,
+    "p90": 1.578855915155662,
+    "win_pct": 60.0,
+    "max_r": 3.228511361958012,
+    "min_r": -1.0255811677249496,
+    "sum_r": 2.779254246913371
+   },
+   "rest_r_dist": {
+    "n": 898,
+    "mean": 0.3334789104592743,
+    "median": -0.5119178540524956,
+    "p10": -1.0274115428834214,
+    "p90": 2.2905700350846794,
+    "win_pct": 34.96659242761692,
+    "max_r": 73.1563408984679,
+    "min_r": -1.0697530956848031,
+    "sum_r": 299.4640615924283
+   },
+   "mean_blocked_r": 0.2779254246913371,
+   "mean_rest_r": 0.3334789104592743,
+   "mean_r_diff": -0.05555348576793723,
+   "bootstrap": {
+    "n_boot": 10000,
+    "seed": 796,
+    "ci": 0.9875,
+    "lo_q": 0.006249999999999978,
+    "hi_q": 0.99375,
+    "mean_diff": -0.0513770986219522,
+    "lo": -1.0046839043278528,
+    "hi": 1.1024937563800663
+   },
+   "ledger": {
+    "stats": {
+     "total_return": 0.7071424719130164,
+     "cagr": 0.0911847446243359,
+     "max_dd": -0.2519499323880888,
+     "calmar": 0.36191613055835353,
+     "end_equity": 1075.4997573052003,
+     "n_days": 2237,
+     "worst_month": "2024-06",
+     "worst_month_ret": -0.07965388914710836,
+     "n_months": 74
+    },
+    "taken": 207,
+    "max_positions": 14,
+    "d_total_return_pp": 7.21152456643086,
+    "d_max_dd_pp": 0.5146703539443132,
+    "total_ge_base": true,
+    "dd_not_worse": true
+   },
+   "halves": [
+    {
+     "half": "early",
+     "n_total": 479,
+     "cut": "2024-02-29",
+     "n_blocked": 5,
+     "n_rest": 474,
+     "mean_blocked_r": 0.3815966768945138,
+     "mean_rest_r": 0.4240997710957937,
+     "diff": -0.0425030942012799
+    },
+    {
+     "half": "late",
+     "n_total": 477,
+     "cut": "2024-02-29",
+     "n_blocked": 5,
+     "n_rest": 424,
+     "mean_blocked_r": 0.17425417248816033,
+     "mean_rest_r": 0.2321716275778824,
+     "diff": -0.05791745508972207
+    }
+   ],
+   "half_cut": "2024-02-29",
+   "judgments": {
+    "i_n_blocked_ge_15": false,
+    "ii_mean_r_diff_and_boot": false,
+    "iii_money": true,
+    "iv_halves_same_sign": true
+   },
+   "all_pass": false,
+   "verdict": "❌ 不过 ⇒ 不进规则,只留在 crowd_map"
+  }
+ },
+ "combined": {
+  "n_blocked": 23,
+  "n_blocked_with_r": 22,
+  "blocked_r_dist": {
+   "n": 22,
+   "mean": -0.0749239766135474,
+   "median": -0.7480607403404481,
+   "p10": -1.0234011553663727,
+   "p90": 1.133428143966126,
+   "win_pct": 40.90909090909091,
+   "max_r": 3.228511361958012,
+   "min_r": -1.0304661584661585,
+   "sum_r": -1.6483274854980428
+  },
+  "rest_r_dist": {
+   "n": 886,
+   "mean": 0.34299282542306964,
+   "median": -0.4988044318115904,
+   "p10": -1.0274182381173556,
+   "p90": 2.297732132132131,
+   "win_pct": 35.10158013544018,
+   "max_r": 73.1563408984679,
+   "min_r": -1.0697530956848031,
+   "sum_r": 303.8916433248397
+  },
+  "mean_blocked_r": -0.0749239766135474,
+  "mean_rest_r": 0.34299282542306964,
+  "mean_r_diff": -0.417916802036617,
+  "bootstrap": {
+   "n_boot": 10000,
+   "seed": 796,
+   "ci": 0.9875,
+   "lo_q": 0.006249999999999978,
+   "hi_q": 0.99375,
+   "mean_diff": -0.4189670437117261,
+   "lo": -1.0434400591361064,
+   "hi": 0.2712272629254517
+  },
+  "ledger": {
+   "stats": {
+    "total_return": 0.17354535036943353,
+    "cagr": 0.026455070006016213,
+    "max_dd": -0.32768413669877705,
+    "calmar": 0.08073344737568111,
+    "end_equity": 739.333570732743,
+    "n_days": 2237,
+    "worst_month": "2024-06",
+    "worst_month_ret": -0.07971588055976564,
+    "n_months": 74
+   },
+   "taken": 207,
+   "max_positions": 14,
+   "d_total_return_pp": -46.148187587927424,
+   "d_max_dd_pp": -7.058750077124509
+  },
+  "by_class": {
+   "S": 15,
+   "L": 0,
+   "P": 0,
+   "U": 10
+  },
+  "n_multi_class": 2,
+  "displacement": {
+   "n_dropped": 12,
+   "n_added": 11,
+   "dropped_r_stats": {
+    "n": 12,
+    "mean": 6.694741110600504,
+    "median": 0.4878469078179696,
+    "p10": -1.0213469489414695,
+    "p90": 3.8408913871713204,
+    "win_pct": 66.66666666666667,
+    "max_r": 73.1563408984679,
+    "min_r": -1.0223025292357901,
+    "sum_r": 80.33689332720606
+   },
+   "added_r_stats": {
+    "n": 11,
+    "mean": 0.9933073849292363,
+    "median": 0.062958965956672,
+    "p10": -1.023888322147651,
+    "p90": 2.769468633825121,
+    "win_pct": 54.54545454545455,
+    "max_r": 9.800961484918792,
+    "min_r": -1.0255013500956545,
+    "sum_r": 10.9263812342216
+   }
+  }
+ },
+ "hits": [
+  {
+   "tid": "1000PEPE:2026-08-21",
+   "symbol": "1000PEPE",
+   "open_day": "2026-08-21",
+   "entry_day": "2026-08-22",
+   "event_class": "S",
+   "event_day": "2026-08-20",
+   "r": -1.0304661584661585,
+   "n_events_in_window": 1,
+   "event_days": "2026-08-20"
+  },
+  {
+   "tid": "API3:2025-08-19",
+   "symbol": "API3",
+   "open_day": "2025-08-19",
+   "entry_day": "2025-08-20",
+   "event_class": "S",
+   "event_day": "2025-08-19",
+   "r": -0.816453047810877,
+   "n_events_in_window": 1,
+   "event_days": "2025-08-19"
+  },
+  {
+   "tid": "ARB:2026-09-01",
+   "symbol": "ARB",
+   "open_day": "2026-09-01",
+   "entry_day": "2026-09-02",
+   "event_class": "S",
+   "event_day": "2026-08-19",
+   "r": null,
+   "n_events_in_window": 1,
+   "event_days": "2026-08-19"
+  },
+  {
+   "tid": "ARPA:2023-05-12",
+   "symbol": "ARPA",
+   "open_day": "2023-05-12",
+   "entry_day": "2023-05-13",
+   "event_class": "S",
+   "event_day": "2023-05-12",
+   "r": 1.1181292209092737,
+   "n_events_in_window": 1,
+   "event_days": "2023-05-12"
+  },
+  {
+   "tid": "BAT:2025-10-13",
+   "symbol": "BAT",
+   "open_day": "2025-10-13",
+   "entry_day": "2025-10-14",
+   "event_class": "S",
+   "event_day": "2025-10-12",
+   "r": -0.818896842105263,
+   "n_events_in_window": 1,
+   "event_days": "2025-10-12"
+  },
+  {
+   "tid": "CATI:2025-08-27",
+   "symbol": "CATI",
+   "open_day": "2025-08-27",
+   "entry_day": "2025-08-28",
+   "event_class": "S",
+   "event_day": "2025-08-27",
+   "r": -0.8001993746091313,
+   "n_events_in_window": 1,
+   "event_days": "2025-08-27"
+  },
+  {
+   "tid": "ICP:2023-02-17",
+   "symbol": "ICP",
+   "open_day": "2023-02-17",
+   "entry_day": "2023-02-18",
+   "event_class": "S",
+   "event_day": "2023-02-17",
+   "r": -1.0223025292357901,
+   "n_events_in_window": 1,
+   "event_days": "2023-02-17"
+  },
+  {
+   "tid": "LPT:2023-08-11",
+   "symbol": "LPT",
+   "open_day": "2023-08-11",
+   "entry_day": "2023-08-12",
+   "event_class": "S",
+   "event_day": "2023-08-11",
+   "r": 0.4878469078179696,
+   "n_events_in_window": 1,
+   "event_days": "2023-08-11"
+  },
+  {
+   "tid": "MEME:2025-08-20",
+   "symbol": "MEME",
+   "open_day": "2025-08-20",
+   "entry_day": "2025-08-21",
+   "event_class": "S",
+   "event_day": "2025-08-20",
+   "r": -0.42667551867219927,
+   "n_events_in_window": 1,
+   "event_days": "2025-08-20"
+  },
+  {
+   "tid": "MINA:2023-10-24",
+   "symbol": "MINA",
+   "open_day": "2023-10-24",
+   "entry_day": "2023-10-25",
+   "event_class": "S",
+   "event_day": "2023-10-23",
+   "r": -1.0255811677249496,
+   "n_events_in_window": 1,
+   "event_days": "2023-10-23"
+  },
+  {
+   "tid": "QTUM:2025-08-24",
+   "symbol": "QTUM",
+   "open_day": "2025-08-24",
+   "entry_day": "2025-08-25",
+   "event_class": "S",
+   "event_day": "2025-08-24",
+   "r": -0.7480607403404481,
+   "n_events_in_window": 1,
+   "event_days": "2025-08-24"
+  },
+  {
+   "tid": "SEI:2025-06-24",
+   "symbol": "SEI",
+   "open_day": "2025-06-24",
+   "entry_day": "2025-06-25",
+   "event_class": "S",
+   "event_day": "2025-06-23",
+   "r": -1.0213469489414695,
+   "n_events_in_window": 1,
+   "event_days": "2025-06-23"
+  },
+  {
+   "tid": "THE:2025-09-21",
+   "symbol": "THE",
+   "open_day": "2025-09-21",
+   "entry_day": "2025-09-22",
+   "event_class": "S",
+   "event_day": "2025-09-21",
+   "r": -1.0154956962025317,
+   "n_events_in_window": 1,
+   "event_days": "2025-09-21"
+  },
+  {
+   "tid": "TLM:2023-11-06",
+   "symbol": "TLM",
+   "open_day": "2023-11-06",
+   "entry_day": "2023-11-07",
+   "event_class": "S",
+   "event_day": "2023-10-16",
+   "r": -0.28354219653179186,
+   "n_events_in_window": 1,
+   "event_days": "2023-10-16"
+  },
+  {
+   "tid": "XLM:2025-07-11",
+   "symbol": "XLM",
+   "open_day": "2025-07-11",
+   "entry_day": "2025-07-12",
+   "event_class": "S",
+   "event_day": "2025-07-09",
+   "r": 1.133428143966126,
+   "n_events_in_window": 1,
+   "event_days": "2025-07-09"
+  },
+  {
+   "tid": "1000SHIB:2023-01-18",
+   "symbol": "1000SHIB",
+   "open_day": "2023-01-18",
+   "entry_day": "2023-01-19",
+   "event_class": "U",
+   "event_day": "2023-01-18",
+   "r": 0.4031722943722942,
+   "n_events_in_window": 1,
+   "event_days": "2023-01-18"
+  },
+  {
+   "tid": "API3:2025-08-19",
+   "symbol": "API3",
+   "open_day": "2025-08-19",
+   "entry_day": "2025-08-20",
+   "event_class": "U",
+   "event_day": "2025-08-19",
+   "r": -0.816453047810877,
+   "n_events_in_window": 1,
+   "event_days": "2025-08-19"
+  },
+  {
+   "tid": "ASTR:2023-12-18",
+   "symbol": "ASTR",
+   "open_day": "2023-12-18",
+   "entry_day": "2023-12-19",
+   "event_class": "U",
+   "event_day": "2023-12-18",
+   "r": 1.578855915155662,
+   "n_events_in_window": 1,
+   "event_days": "2023-12-18"
+  },
+  {
+   "tid": "CRV:2026-08-21",
+   "symbol": "CRV",
+   "open_day": "2026-08-21",
+   "entry_day": "2026-08-22",
+   "event_class": "U",
+   "event_day": "2026-08-21",
+   "r": -1.0234011553663727,
+   "n_events_in_window": 1,
+   "event_days": "2026-08-21"
+  },
+  {
+   "tid": "ID:2024-02-07",
+   "symbol": "ID",
+   "open_day": "2024-02-07",
+   "entry_day": "2024-02-08",
+   "event_class": "U",
+   "event_day": "2024-02-07",
+   "r": 0.858190035587188,
+   "n_events_in_window": 1,
+   "event_days": "2024-02-07"
+  },
+  {
+   "tid": "INJ:2024-11-10",
+   "symbol": "INJ",
+   "open_day": "2024-11-10",
+   "entry_day": "2024-11-11",
+   "event_class": "U",
+   "event_day": "2024-10-17",
+   "r": 0.5042708312342571,
+   "n_events_in_window": 1,
+   "event_days": "2024-10-17"
+  },
+  {
+   "tid": "MATIC:2021-10-26",
+   "symbol": "MATIC",
+   "open_day": "2021-10-26",
+   "entry_day": "2021-10-27",
+   "event_class": "U",
+   "event_day": "2021-10-15",
+   "r": 0.09334630708237462,
+   "n_events_in_window": 1,
+   "event_days": "2021-10-15"
+  },
+  {
+   "tid": "MINA:2023-10-24",
+   "symbol": "MINA",
+   "open_day": "2023-10-24",
+   "entry_day": "2023-10-25",
+   "event_class": "U",
+   "event_day": "2023-10-24",
+   "r": -1.0255811677249496,
+   "n_events_in_window": 1,
+   "event_days": "2023-10-24"
+  },
+  {
+   "tid": "STG:2024-05-30",
+   "symbol": "STG",
+   "open_day": "2024-05-30",
+   "entry_day": "2024-05-31",
+   "event_class": "U",
+   "event_day": "2024-05-30",
+   "r": -1.0216571275742177,
+   "n_events_in_window": 1,
+   "event_days": "2024-05-30"
+  },
+  {
+   "tid": "UNI:2024-11-06",
+   "symbol": "UNI",
+   "open_day": "2024-11-06",
+   "entry_day": "2024-11-07",
+   "event_class": "U",
+   "event_day": "2024-10-22",
+   "r": 3.228511361958012,
+   "n_events_in_window": 1,
+   "event_days": "2024-10-22"
+  }
+ ],
+ "hits_n_rows": 25,
+ "hits_n_tickets_union": 23
+}
