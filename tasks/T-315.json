@@ -1,0 +1,33 @@
+{
+  "id": "T-315",
+  "owner": "lane-a",
+  "status": "done",
+  "created": "2026-11-10",
+  "title": "S-795 单币形态识别:「出事之前」(打标签 / 宣布下架)的 60 天形状能否被提前认出,且胜过动量/回撤/波动/成交额基线 —— 只算一次",
+  "source": "REFUTATION_LEDGER S-795(预注册,原文照抄进报告开头;`grep -n \"^## S-795\" -A 22 REFUTATION_LEDGER.md`,不要 Read 整个台账);事件:docs/research/t309_events.csv(main 上)+ delisting_watch;价格:perp_bv_daily / perp_bv_pairs(只读 SELECT,翻页带 order=);形状函数 import src.data.state.window_vectors.window_vector。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-315.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-795 原文照抄进报告开头;口径一字不改,只算一次(K=20/100 只描述)。先落 docs/research/t315_events.csv(事件代号、事件日、来源、永续匹配结果)与 t315_panel 的覆盖统计,再算两臂。结果 JSON 带内容指纹(apparatus.content_fingerprint;main 上没有就按 (symbol,d,c,qv) 排序后 sha256)。报事件匹配个数、每周宇宙大小与正样本数、(a)–(d) 逐条的数、两半、前 10% 两臂的金额分布。只读、不入库、不改代码;步数过半先落文件;不要 Read 大文件;参照集大时用分块向量化或 sklearn NearestNeighbors。",
+    "expect": "docs/research/T-315_shape_before_events.md + t315_shape.py + t315_results.json + scenarios/lane-a-T-315.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-a/T-315。"
+  },
+  "prior_value": "站住的都是事件类形态,但标签是滞后信号(公告前 30 天已 −21%);若形状能提前认出,硬规则可以在公告之前起作用。",
+  "notes": "2026-11-09T15:16:49Z Seth 开卡。B 道 T-316 同时只读原文盲复算;交付前不要互看。 | 2026-11-09T15:45Z lane-a 交付 lane-a/T-315 (2cb60747):S-795 ❌ —(a) AUC 0.5231 p 0.1269;(b) 差 −0.1833 CI[−0.2154,−0.1501];(c) 0.5186/0.5237;(d) 前10% +2.15pp(方向反)。基线 AUC 0.7064。Seth 审:口径与预注册一致,翻页带 order=,标签窗 (t,t+60],参照集 s≤t−60 无前视;合并。 | 2026-11-09T16:14:28Z Seth 审并合并。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-09T16:14:28Z",
+    "value": "S-795 ❌:AUC kNN 0.5231 vs 基线 0.7064(与 B 道盲复算逐位一致);基线认得出但前 10% 不挣钱。",
+    "ledger": "S-795 结果"
+  }
+}

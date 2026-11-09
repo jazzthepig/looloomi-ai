@@ -1,0 +1,33 @@
+{
+  "id": "T-317",
+  "owner": "lane-c",
+  "status": "done",
+  "created": "2026-11-10",
+  "title": "S-796 策略升级:squeeze / 上币 / 上永续 / Upbit 韩元上币之后 30 天不开 R-v2 新票,在 T-310 同一个回放账本上值不值钱 —— 四类各自判",
+  "source": "REFUTATION_LEDGER S-796(预注册,原文照抄进报告开头;`grep -n \"^## S-796\" -A 14 REFUTATION_LEDGER.md`,不要 Read 整个台账);引擎 docs/research/t251_gross_cap.py(一字不改)与你自己的 t310_slots.py 的装配方式;票源 t197 tickets.A;事件表 crowding_watch / binance_event_watch(只读 SELECT,翻页带 order=)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-317.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-796 原文照抄进报告开头;引擎一字不改,cap_n=14,先复现 T-310 的 14 档数(+63.50% / −25.71%)作自检,对不上先停下报差。先落 docs/research/t317_hits.csv(每张被挡票:票 id、代号、开票日、事件类、事件日、原 R)。四类逐条报 (i)–(iv) 的数与判定;另报四类合并一版与每类被挡票的 R 分布(均值/中位/p10/p90/胜率/最大单票 R)。只读、不入库、不改代码;步数过半先落文件;不要 Read 大文件。",
+    "expect": "docs/research/T-317_rv2_event_gates.md + t317_gates.py + t317_results.json + scenarios/lane-c-T-317.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-c/T-317。"
+  },
+  "prior_value": "对手盘族站住的事件第一次接进真钱的开票闸;R-v2 靠右尾挣钱,所以判金额不判胜率。",
+  "notes": "2026-11-10 交付(lane-c,分支 lane-c/T-317)。自检:基准账本复现 T-310 的 cap_n=14 逐位相同 —— 总收益 +63.502723%、最大回撤 −25.709664%、calmar 0.324886、cagr +8.3527%、2237 天、taken 208、maxpos 14(差 < 1e-9);出场原因与 t197 对表 0 张不一致。四类各自判(98.75% Bonferroni 区间;票级自助 10,000 次、种子 796;引擎 t251_gross_cap.py 一字未改,装配 import 本 lane 的 t310_slots.py,cap_n=14):S squeeze 挡 15 张(14 张有 R)⇒(i)过;(ii)票级差 −0.7929、自助区间 [−1.3326, −0.1631] 上沿 < 0 ⇒过;(iv)两半同号 ⇒过;(iii)金额 总收益 −50.91pp、最大回撤恶化 7.65pp ⇒不过 ⇒ ❌ 不进规则。L 上币 挡 0 张(结构上打不着,最小间隔 38 天)⇒(i)(ii)(iv)不过 ⇒ ❌。P 上永续 挡 0 张(最小间隔 220 天)⇒(i)(ii)(iv)不过 ⇒ ❌。U 韩元上币 挡 10 张 ⇒(i)不过(10 < 15);(ii)票级差 −0.0514、自助区间 [−1.0047, +1.1025] 跨零 ⇒不过;(iii)金额 +7.21pp、回撤改善 0.51pp ⇒过;(iv)过 ⇒ ❌。四类合并一版(只报不判):挡 23 张(S 15 / U 10 / 重叠 2),票级差 −0.418、自助 [−1.043, +0.271] 跨零,账本总收益 17.35%(基准 63.50% ⇒ −46.15pp)、回撤 −32.77%(恶化 7.06pp)⇒ ❌。四类都不进规则,全部留在 crowd_map。机制(报告 §五):两类金额判定都是单票 artifact —— S 掉出 6 张(含 ZEC +73.16R)换进 6 张全负;对 |R| 最大的那一张留一后 S 由 −50.91pp 翻成 +0.63pp、U 由 +7.21pp 翻成 −1.52pp。被挡票 R 分布(只报):S n=14 均 −0.448 中位 −0.816 p10 −1.026 p90 +1.118 胜率 21.4% 最大 +1.133R;U n=10 均 +0.278 中位 +0.093 p10 −1.023 p90 +1.579 胜率 60.0% 最大 +3.229R;合并 n=22 均 −0.075 中位 −0.748 p10 −1.023 p90 +1.133 胜率 40.9% 最大 +3.229R。产物:docs/research/T-317_rv2_event_gates.md(含 S-796 原文照抄)+ t317_gates.py + t317_results.json + t317_hits.csv(25 张被挡票)+ scenarios/lane-c-T-317.json(4 条前向命题,含 1 条 close:BTC 自动结算)。独立复核(本轮重取事件表逐行对表):crowding_watch squeeze 351 行、binance_event_watch listing 273 / perp_listing 626 / upbit_krw_listing 285 行,与脚本缓存逐行相同;独立重算命中 S 15 / L 0 / P 0 / U 10,与 t317_hits.csv 的 (symbol, open_day, event_day, event_class) 逐行一致。 | 2026-11-09T16:14:28Z Seth 审并合并。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-09T16:14:28Z",
+    "value": "S-796 ❌ 四类全不过;squeeze 票是坏票但金额由 ZEC +73R 一张决定(留一 +0.6pp);上币类结构上打不着。",
+    "ledger": "S-796 结果"
+  }
+}
