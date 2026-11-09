@@ -220,6 +220,7 @@ def test_s797_shadow_arms_run_through_the_same_kernel_and_append_only(monkeypatc
         return [{"d": d, "feature": "dist_200", "value": 0.05} for d in days] + \
                [{"d": d, "feature": "vratio_30_180", "value": 0.9} for d in days]
     monkeypatch.setattr(fb, "_get_all", get_all)
+    monkeypatch.setattr(fb, "STYLE_TABLE_FROZEN", None)
     out = asyncio.run(fb._flex_dynamic_rows(crypto, tf, {}, days[-1]))
     by = {}
     for r in out["rows"]:
@@ -233,6 +234,21 @@ def test_s797_shadow_arms_run_through_the_same_kernel_and_append_only(monkeypatc
     assert {r["d"] for r in again["rows"]} == set(days[21:]), "只追加没写过的天"
     monkeypatch.setattr(fb, "STYLE_TABLE_FROZEN", {"crypto": {"all": 0.0, "up_cold": 0.01}, "equity": {"all": 0.0, "up_cold": -0.01},
                                                    "gold": {"all": 0.0}})
+    monkeypatch.setattr(fb, "STYLE_FROM", days[21])
     tilted = asyncio.run(fb._flex_dynamic_rows(crypto, tf, {}, days[-1]))
+    t_nav = [r["nav"] for r in tilted["rows"] if r["arm"] == "STYLE_T25"]
+    assert t_nav[:21] == navs["T25_K"][:21], "STYLE_FROM 之前一律 T25 ⇒ 已写的行与重算的路径接得上"
+    assert t_nav[-1] != navs["T25_K"][-1], "生效日那次调仓起才倾斜(当天扣换手成本)"
     assert tilted["weights"]["STYLE_T25"]["crypto"] == 0.40 and tilted["weights"]["STYLE_T25"]["equity"] == 0.20, \
         "冻结表一放进来,STYLE 就按此刻天气(up_cold)倾斜"
+
+
+def test_s797_frozen_style_table_is_the_t318_replay_and_tilts_inside_the_budget():
+    """11-10:S-797 后果条款「无论判定都冻结」—— 表来自 T-318(2023-01-03 → 2026-10-30);四种天气下的权重都在偏离预算里。"""
+    from src.data.universe import flex_alloc as fa
+    t = fb.STYLE_TABLE_FROZEN
+    assert set(t) == set(fa.LEGS) and all("all" in t[k] for k in fa.LEGS)
+    for w in fa.WEATHERS:
+        x = fa.style_weights(t, w)
+        assert all(fa.BOUNDS[k][0] - 1e-9 <= x[k] <= fa.BOUNDS[k][1] + 1e-9 for k in fa.LEGS) and sum(x.values()) <= 1 + 1e-9
+    assert fa.style_weights(t, "down_hot")["gold"] > fa.BASE_T25["gold"], "回放里黄金在「跌 + 热」里最有优势"

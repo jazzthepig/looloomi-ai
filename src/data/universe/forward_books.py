@@ -53,7 +53,15 @@ RULE_FLEX_X1V = "flex_x1v_v1:S-604(加密 ① X1V / ACWI / XAUUSD / 现金,21 �
 #: RB_T25 = 风险预算(波动倒数、与 T25 同事前风险)、STYLE_T25 = 风格矢量(此刻天气下有优势的腿 ±10pp)。
 #: 腿的历史只从前向起算 ⇒ RB 要 40 个共同日才离开 T25;STYLE 读回放末端**冻结**的风格表,研究落地前为 None(= T25)。
 FLEX_DYN_ARMS = ("T25_K", "RB_T25", "STYLE_T25")
-STYLE_TABLE_FROZEN: Optional[dict] = None
+#: S-797 后果条款「无论判定都冻结」:T-318 回放(2023-01-03 → 2026-10-30,961 个共同日)在全部数据上估出的日均收益(小数);
+#: T-320 盲复算到最后一次调仓(10-09)的表逐格同向。回放判 ❌(STYLE 五条全挂),这里只供影子臂前向记 —— 不动钱。
+#: 冻结表从这天起生效(之前的调仓一律 T25)—— 前向是「只追加」的:表要是从开账日起算,重算出的路径会和已写的行接不上缝。
+STYLE_FROM = "2026-11-10"
+STYLE_TABLE_FROZEN: Optional[dict] = {
+    "crypto": {"all": 0.001490420899, "up_cold": 0.002910383629, "up_hot": 0.002812127774, "down_cold": -0.0003781174954, "down_hot": -0.0010664395},
+    "equity": {"all": 0.0007361101855, "up_cold": 0.0007681545143, "up_hot": 0.0008987992108, "down_cold": 0.0008146577755, "down_hot": -0.0007186149443},
+    "gold": {"all": 0.0008611723532, "up_cold": 0.000561456075, "up_hot": 0.0007155140031, "down_cold": 0.001035640862, "down_hot": 0.00180884936},
+}
 RULE_FLEX_DYN = "flex_dyn_v1:S-797(同腿;21 个共同日调仓;T25_K 常数 / RB 波动倒数同风险 / STYLE 冻结风格表 ±10pp;偏离预算 加密 0–0.9、股金 ±10pp)"
 RULE_TOM = "tom_trader_v2:S-600 / S-601(多头 >200 日线且破 20 日高,盈利加仓到 1.3;跌破即平;F 空仓 / FB 反弹 0.5 +15% 止盈 / S50 开空 −20% 止盈 / X1V 破 20 日低即平 + 波动率缩放)"
 WRITES_TABLES = ("forward_book_holdings", "forward_book_nav")
@@ -301,7 +309,8 @@ async def _flex_dynamic_rows(crypto_nav: Optional[dict], tf: dict, have: dict, c
     weather = {d: fa.weather_of(v.get("dist_200"), v.get("vratio_30_180")) for d, v in by.items()}
     fns = {"T25_K": lambda hist, d: fa.BASE_T25,
            "RB_T25": lambda hist, d: fa.rb_weights(hist),
-           "STYLE_T25": lambda hist, d: fa.style_weights(STYLE_TABLE_FROZEN, weather.get(d.date().isoformat()))}
+           "STYLE_T25": lambda hist, d: (fa.style_weights(STYLE_TABLE_FROZEN, weather.get(d.date().isoformat()))
+                                         if d.date().isoformat() >= STYLE_FROM else fa.BASE_T25)}
     for arm in FLEX_DYN_ARMS:
         nav, log = fa.dynamic_mix_nav(legs, fns[arm], reb=FLEX_REB_DAYS, cost=COST_CRYPTO)
         nav = nav[nav.index <= pd.Timestamp(cutoff)]
