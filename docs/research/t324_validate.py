@@ -80,7 +80,12 @@ def main():
     for r in mem:
         mem_by_month.setdefault(r["m"], []).append(r["symbol"])
     syms = sorted({r["symbol"] for r in mem} | set(SURVIVOR))
-    raw = fetch_mcap(syms)
+    raw_cache = HERE / "_t324_mcap_raw.json"
+    if raw_cache.exists():
+        raw = json.loads(raw_cache.read_text())
+    else:
+        raw = fetch_mcap(syms)
+        raw_cache.write_text(json.dumps(raw, ensure_ascii=False))
     df = pd.DataFrame(raw, columns=["symbol", "d", "price", "mcap"])
     df["d"] = pd.to_datetime(df["d"])
     cal = pd.date_range(df["d"].min(), df["d"].max(), freq="D")
@@ -96,7 +101,7 @@ def main():
         if not mems:
             continue
         prev = d - pd.Timedelta(days=1)
-        if prev not in cal.index:
+        if prev not in cal:
             continue
         rr, pm = {}, {}
         for s in mems:
@@ -123,8 +128,49 @@ def main():
 
     arm = fetch_arm()
     db = pd.Series({r["d"]: float(r["ret"]) for r in arm if r.get("ret") is not None}).sort_index()
+    db_nav = pd.Series({r["d"]: float(r["nav"]) for r in arm if r.get("nav") is not None}).sort_index()
+    mine_n = pd.Series({d: n for d, _r, n in out}).sort_index()
     idx = db.index.intersection(mine.index)
     diff = (mine.loc[idx] - db.loc[idx])
+    adiff = diff.abs()
+
+    # ── 差异归因:差在哪些天、占多少、是不是前向冻结行 ─────────────────────────
+    def _bucket(lo, hi):
+        m = (adiff >= lo) & (adiff < hi)
+        return {"lo": lo, "hi": hi, "n": int(m.sum()),
+                "dates": [str(x) for x in adiff.index[m]] if m.sum() <= 12 else None}
+
+    worst = adiff.sort_values(ascending=False).head(8)
+    nav_chk = None
+    try:
+        # 库自己的 nav 与 ret 是否自洽(ret_t == nav_t/nav_{t-1} − 1)
+        navser = db_nav.reindex(db_nav.index).dropna()
+        navret = (navser / navser.shift(1) - 1.0).dropna()
+        j = navret.index.intersection(db.index)
+        if len(j) > 2:
+            dv = (navret.loc[j] - db.loc[j]).abs()
+            nav_chk = {"n": int(len(j)), "max_abs_diff": float(dv.max()),
+                       "n_exact_1e-8": int((dv < 1e-8).sum())}
+    except Exception:
+        pass
+    cum_mine = float((1 + mine.loc[idx]).prod() - 1)
+    cum_db = float((1 + db.loc[idx]).prod() - 1)
+    att = {
+        "inception_forward_lock": "2026-10-30",
+        "n_days_diff_lt_1e-9": int((adiff < 1e-9).sum()),
+        "n_days_diff_lt_1e-6": int((adiff < 1e-6).sum()),
+        "n_days_diff_ge_1e-6": int((adiff >= 1e-6).sum()),
+        "n_days_diff_ge_1e-4": int((adiff >= 1e-4).sum()),
+        "buckets": [_bucket(0.0, 1e-9), _bucket(1e-9, 1e-6), _bucket(1e-6, 1e-4), _bucket(1e-4, 1.0)],
+        "worst8": [{"d": str(i), "abs_diff": float(v), "mine": float(mine.loc[i]),
+                    "db": float(db.loc[i]), "n_members": int(mine_n.get(i, -1))} for i, v in worst.items()],
+        "cum_mine_over_overlap": cum_mine, "cum_db_over_overlap": cum_db,
+        "cum_gap_pp": (cum_mine - cum_db) * 100,
+        "sum_abs_diff": float(adiff.sum()),
+        "lib_nav_selfcheck": nav_chk,
+        "read": ("库里存的是 8 位小数(ret 列),故 <1e-9 的天就是逐位相同;"
+                 "≥1e-4 的天要看是不是前向冻结行(d ≥ inception = 2026-10-30,库冻结、我用今天的市值重算)"),
+    }
     out_json = {
         "panel_check": {
             "n_days_mine": int(len(mine)), "n_days_db": int(len(db)),
@@ -136,7 +182,8 @@ def main():
             "corr": float(np.corrcoef(mine.loc[idx], db.loc[idx])[0, 1]) if len(idx) > 2 else None,
             "n_days_exact_1e-9": int((diff.abs() < 1e-9).sum()),
             "note": "我的重算 vs 库里的 cap_pit24 臂;差 0 = 成员/出处/日历全对",
-        }
+        },
+        "panel_check_attribution": att,
     }
 
     # ── (2) 宇宙 vs 窗口:M52 在两块面板上、同一个窗口 ──────────────────────
@@ -213,6 +260,14 @@ def main():
     print("① 校验: 重算 %d 天 vs 库 %d 天,重叠 %d 天(%s→%s)最大差 %.3g 相关 %.6f" %
           (pc["n_days_mine"], pc["n_days_db"], pc["overlap_days"], pc["overlap_from"], pc["overlap_to"],
            pc["max_abs_diff"] or float("nan"), pc["corr"] or float("nan")), flush=True)
+    at = out_json["panel_check_attribution"]
+    print("   归因: <1e-9 %d 天 / <1e-6 %d 天 / ≥1e-6 %d 天 / ≥1e-4 %d 天;累计 我 %.4f vs 库 %.4f (差 %.4f pp)" %
+          (at["n_days_diff_lt_1e-9"], at["n_days_diff_lt_1e-6"], at["n_days_diff_ge_1e-6"],
+           at["n_days_diff_ge_1e-4"], at["cum_mine_over_overlap"], at["cum_db_over_overlap"],
+           at["cum_gap_pp"]), flush=True)
+    for w in at["worst8"][:4]:
+        print("   差最大: %s |Δ|=%.3g 我 %.8f 库 %.8f 成员 %d" %
+              (w["d"], w["abs_diff"], w["mine"], w["db"], w["n_members"]), flush=True)
     u = out_json["universe_vs_window"]
     print("A 按时点面板: HOLD cum %.4f / M52 cum %.4f ann_ex %+.4f" %
           (a["HOLD"]["cum"], a["M52"]["cum"], a["M52"]["ann_ex_vs_hold"]), flush=True)
