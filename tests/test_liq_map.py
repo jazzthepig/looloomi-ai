@@ -123,3 +123,15 @@ def test_railway_positioning_rejects_addresses_and_does_not_block_the_map(monkey
     assert r["ok"] and r["liq_rows"] == 1 and r["pos_rows"] == 0, "持仓那一半坏了,强平地图照写,整批不拒"
     assert lm.POS_TABLE not in written and written["loop_detail"]["positioning_error"]
     assert "positioning" not in written["loop_detail"] and "rows" not in written["loop_detail"]
+
+
+
+def test_positioning_summary_is_net_direction_with_24h_change():
+    """11-10 S-794 读面:净向 = (多 − 空) / (多 + 空);给 24 小时前那一批就算 Δ;空仓的币不出现。"""
+    now = [{"coin": "BTC", "long_usd": 1e8, "short_usd": 9e8, "n_accounts": 82}, {"coin": "ETH", "long_usd": 3e8, "short_usd": 1e8, "n_accounts": 40},
+           {"coin": "ZZZ", "long_usd": 0, "short_usd": 0, "n_accounts": 0}]
+    prev = [{"coin": "BTC", "long_usd": 5e8, "short_usd": 5e8}]
+    out = {r["coin"]: r for r in lm.positioning_summary(now, prev)}
+    assert set(out) == {"BTC", "ETH"} and out["BTC"]["net"] == -0.8 and out["BTC"]["d_net_24h"] == -0.8
+    assert out["ETH"]["net"] == 0.5 and out["ETH"]["d_net_24h"] is None
+    assert [r["coin"] for r in lm.positioning_summary(now)] == ["BTC", "ETH"], "按总名义额排序"

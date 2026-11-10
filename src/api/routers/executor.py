@@ -300,6 +300,17 @@ async def liq_map_view(x_internal_token: Optional[str] = Header(None, alias="X-I
         raise HTTPException(502, f"{type(e).__name__}: {str(e)[:300]}")
 
 
+@router.get("/internal/whale-positioning")
+async def whale_positioning_view(x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
+    """S-794(11-10):HL 盈利头部账户的完整持仓 —— 每币净向、名义额、账户数、24 小时变化。只描述。"""
+    require_internal_token(x_internal_token)
+    from src.data.market.liq_map import positioning_view
+    try:
+        return await positioning_view()
+    except Exception as e:                                       # noqa: BLE001
+        raise HTTPException(502, f"{type(e).__name__}: {str(e)[:300]}")
+
+
 @router.post("/internal/overlays")
 async def overlays_submit(body: dict = Body(...), x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
     """偏离(`src/data/execution/overlays.py`,Jazz 11-02 规则是零假设):在预算内动真钱的、带编号与退出条件的调整。

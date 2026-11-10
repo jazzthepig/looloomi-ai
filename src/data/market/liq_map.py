@@ -132,3 +132,38 @@ async def latest_view() -> dict[str, Any]:
             depth[r["symbol"]] = {"bid": _f(r.get("depth_2pct_bid_usd")), "ask": _f(r.get("depth_2pct_ask_usd"))}
     return {"ok": True, "ts": ts, "depth_at": dep[0]["fetched_utc"] if dep else None,
             "shocks": shock_table(rows, depth), "rows": rows}
+
+
+def positioning_summary(rows: list[dict], prev: Optional[list[dict]] = None) -> list[dict]:
+    """纯函数(11-10,S-794 的读面)。一小时的头部账户持仓 → 每币净向 n = (多 − 空) / (多 + 空)、总名义额、账户数;
+    给了 prev(24 小时前那一小时)就加 Δn。只描述 —— S-794 是前向登记,2027-05 前不判,不进任何敞口。"""
+    def _n(r: dict) -> Optional[float]:
+        lu, su = _f(r.get("long_usd")) or 0.0, _f(r.get("short_usd")) or 0.0
+        return (lu - su) / (lu + su) if lu + su > 0 else None
+    before = {r["coin"]: _n(r) for r in prev or []}
+    out = []
+    for r in rows or []:
+        n = _n(r)
+        if n is None:
+            continue
+        b = before.get(r["coin"])
+        out.append({"coin": r["coin"], "net": round(n, 4), "gross_usd": round((_f(r.get("long_usd")) or 0) + (_f(r.get("short_usd")) or 0)),
+                    "n_accounts": r.get("n_accounts"), "d_net_24h": round(n - b, 4) if b is not None else None})
+    return sorted(out, key=lambda x: -x["gross_usd"])
+
+
+async def positioning_view() -> dict[str, Any]:
+    """最近一小时 + 24 小时前那一小时的头部账户持仓汇总(`/internal/whale-positioning`)。"""
+    from src.data.style.header import _read_all
+    last = await _read_all(POS_TABLE, {"select": "ts", "order": "ts.desc", "limit": "1"})
+    if not last:
+        return {"ok": True, "ts": None, "why": "还没有持仓汇总(主机每小时随强平地图送一批)"}
+    ts = last[0]["ts"]
+    cols = "coin,long_usd,short_usd,n_long,n_short,n_accounts,snapshot_accounts"
+    rows = await _read_all(POS_TABLE, {"select": cols, "ts": f"eq.{ts}", "order": "coin.asc"})
+    t0 = dt.datetime.fromisoformat(str(ts).replace("Z", "+00:00")) - dt.timedelta(hours=24)
+    prev = await _read_all(POS_TABLE, {"select": cols, "ts": f"eq.{t0.isoformat()}", "order": "coin.asc"})
+    return {"ok": True, "ts": ts, "prev_ts": t0.isoformat() if prev else None,
+            "snapshot_accounts": rows[0].get("snapshot_accounts") if rows else None,
+            "coins": positioning_summary(rows, prev),
+            "caveat": "HL 30 天盈利前 200 账户的真实持仓汇总(不含地址);S-794 前向登记,2027-05 前不判,只描述"}
