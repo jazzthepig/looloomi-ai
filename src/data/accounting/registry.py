@@ -51,9 +51,9 @@ BOOKS: tuple[Book, ...] = (
     Book("beta_core", "②", "等权 + 波动率目标(原 ①,S-473 起为 ② 候选)", "面板内等权 = 风格倾斜;另含 ③ 的波动率目标",
          "beta_core_nav", "plain", filters={"void_reason": "is.null"}, benchmark="core", stamp="valuation_next_day"),
     Book("beta_plus_w", "②", "动量 + 52 周高点倾斜(周频 7 份)", "面板内超配趋势强、接近新高的币(S-428)",
-         "beta_plus_daily", "arms", arm="momentum_52w_w", accounting="shared_kernel", benchmark="arm:panel_hold_w"),
+         "beta_plus_daily", "arms", arm="momentum_52w_w", accounting="shared_kernel", benchmark="core", caveat="11-10 S-803:基准从等权面板(panel_hold)改为 ① 本身(市值加权)—— 对等权的超额主要是规模效应,对 ① 真实持有方式是 −1.06%/年"),
     Book("beta_plus_m", "②", "动量 + 52 周高点倾斜(月频)", "同上,月频",
-         "beta_plus_daily", "arms", arm="momentum_52w_m", accounting="shared_kernel", benchmark="arm:panel_hold_m"),
+         "beta_plus_daily", "arms", arm="momentum_52w_m", accounting="shared_kernel", benchmark="core", caveat="11-10 S-803:基准从等权面板(panel_hold)改为 ① 本身(市值加权)—— 对等权的超额主要是规模效应,对 ① 真实持有方式是 −1.06%/年"),
     # T-051 / T-052(S-491 / S-493):CIS 的本职 = 面板内倾斜。① 权重 × exp(0.5·z_CIS),单币 ≤ 40%,起点 10-06。
     Book("cis_tilt", "②", "CIS 倾斜(① 内按 CIS 超配,k=0.5)", "CIS 的岗位是 ②:在持有的面板内决定超配谁(§5b)",
          "cis_tilt_daily", "arms", arm="cis_a1", accounting="shared_kernel", benchmark="core"),
