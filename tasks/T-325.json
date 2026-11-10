@@ -1,0 +1,28 @@
+{
+  "id": "T-325",
+  "owner": "lane-b",
+  "status": "in_review",
+  "created": "2026-11-10",
+  "title": "S-803 现任 ② 规则(M52)叠在 ① 的市值加权底上,对 ① 臂本身(cap_pit24 市值加权)还挣不挣",
+  "source": "REFUTATION_LEDGER S-803(`grep -n \"^## S-803\" -A 6 REFUTATION_LEDGER.md`,原文照抄)、S-802 与 S-428 原文;lane-a 的 docs/research/t324_p_tilt.py(M52 打分与面板装配可复用,origin/lane-a/T-324);core_variants_daily / core_pit_daily(只读)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-325.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-803 原文照抄进报告开头;先让 CAP 臂与 core_variants_daily 的 cap_pit24 逐日对上(报最大差),对不上先停;(i)–(iv) 逐条报数与判定;另报年化超额 / β / 跟踪误差 / 换手 / BTC 权重平均变化。分支上要有 tasks/T-325.json(从 origin/main 拷,status 改 in_review)。只读、不入库、不改代码;不要 Read 大文件。",
+    "expect": "docs/research/T-325_m52_on_cap.md + t325_m52_on_cap.py + t325_results.json + scenarios/lane-b-T-325.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-b/T-325。"
+  },
+  "prior_value": "② 的超额要对 ① 真实的持有方式算;否则它可能只是规模效应。",
+  "notes": "2026-11-10T05:28:50Z Seth 开卡(卡先进 main 再派)。2026-11-10 lane-b 完成,❌ 判据 3 不过 1 过。自检:CAP 臂(前一日市值加权 + 单币 ≤40% + 日再平衡)与库里 core_variants_daily 的 cap_pit24 逐日对上,1374/1374 天,最大差 5.0e-09(差<1e-9 的天数 1374)。主结果(日程 A = ① 真实的每日再平衡;10bp×换手两臂同扣):CAP 累计 +232.89%、最大回撤 −59.29%、年换手 3.03×;CAP×M52 累计 +227.59%、年化超额(对 CAP) −1.06%/年、β 0.973、跟踪误差 4.12%、年换手 9.48×、最大回撤 −58.89%。判据:(i) ❌ +227.59% < +232.89%(差 −5.29pp);(ii) ❌ apparatus.ab_test(平均块长 20、2000 次、种子 803)p(CAP×M52 ≤ CAP)=0.5985,95% 对数差 [−0.148,+0.115];(iii) ❌ 两半年化超额 前半 −1.91%/年(2023-01-02→2024-11-17)、后半 −0.22%/年(2024-11-18→2026-10-06);(iv) ✅ 回撤浅 0.40pp。敏感性(日程 B = 照 S-802 字面的周频):CAP +234.14%、CAP×M52 +237.43%、超额 −0.41%/年,(i) ✅、(ii) ❌ p=0.4485、(iii) ❌(前半 −1.53%/年、后半 +0.70%/年)、(iv) ✅ ⇒ 也不过(判定不依赖日程)。另报:BTC 平均权重 CAP 40.00%(天天贴着单币上限)→ CAP×M52 46.05%,平均 +6.05pp ⇒ 倾斜主要是放大 BTC、不是选股。探索性分解(非预注册判据):倾斜后仍套 40% 上限 ⇒ 超额 −0.78%/年、BTC 39.60%,即解除上限净贡献 −0.28pp/年,M52 本身的选股在市值底上也是负的。对照 S-802:M52 对**等权** HOLD +3.61%/年 → 对**市值加权** CAP −1.06%/年,只换基准就掉 4.67pp/年 ⇒ S-428 的超额主要是规模效应,② 对 ① 的真实持有方式没有证据。产物:docs/research/T-325_m52_on_cap.md(开头照抄 S-803 原文)+ t325_m52_on_cap.py + t325_results.json + scenarios/lane-b-T-325.json(6 条命题,2 条自动结算:close:BTC、state:dist_200)。只读、未入库、未改生产口径。",
+  "verified": null
+}
