@@ -1,0 +1,28 @@
+{
+  "id": "T-325",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-10",
+  "title": "S-803 现任 ② 规则(M52)叠在 ① 的市值加权底上,对 ① 臂本身(cap_pit24 市值加权)还挣不挣",
+  "source": "REFUTATION_LEDGER S-803(`grep -n \"^## S-803\" -A 6 REFUTATION_LEDGER.md`,原文照抄)、S-802 与 S-428 原文;lane-a 的 docs/research/t324_p_tilt.py(M52 打分与面板装配可复用,origin/lane-a/T-324);core_variants_daily / core_pit_daily(只读)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-325.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-803 原文照抄进报告开头;先让 CAP 臂与 core_variants_daily 的 cap_pit24 逐日对上(报最大差),对不上先停;(i)–(iv) 逐条报数与判定;另报年化超额 / β / 跟踪误差 / 换手 / BTC 权重平均变化。分支上要有 tasks/T-325.json(从 origin/main 拷,status 改 in_review)。只读、不入库、不改代码;不要 Read 大文件。",
+    "expect": "docs/research/T-325_m52_on_cap.md + t325_m52_on_cap.py + t325_results.json + scenarios/lane-b-T-325.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-b/T-325。"
+  },
+  "prior_value": "② 的超额要对 ① 真实的持有方式算;否则它可能只是规模效应。",
+  "notes": "2026-11-10T05:28:50Z Seth 开卡(卡先进 main 再派)。",
+  "verified": null
+}
