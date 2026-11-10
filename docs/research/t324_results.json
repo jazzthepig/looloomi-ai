@@ -1,0 +1,252 @@
+{
+  "task": "T-324",
+  "ledger": "S-802",
+  "framework": {
+    "panel": "core_pit_members(p_n=24) —— 按时点 cap_pit24,每月一个名单",
+    "weight": "w = (1/N)·(1 + k·z),k = 1;z = 居中秩映射到 [-1,1];无分 z = 0",
+    "schedule": "周一收盘出信号、次日收盘成交;成本 10bp × 换手;三臂同日程同成本",
+    "window": [
+      "2023-01-02",
+      "2026-10-05"
+    ],
+    "cost_bp": 10,
+    "P_arm": "t312_rebaseline.py 的 P 臂(Ridge alpha=10,只用 d' < t-30 的行训练,训练集全宇宙)",
+    "M52_arm": "S-428 原文:动量组合(14/28/90 的秩均值)与 52 周高点的秩均值",
+    "ab_test": {
+      "mean_block": 20.0,
+      "n_boot": 2000,
+      "seed": 802
+    }
+  },
+  "self_check": {
+    "ic_mean": 0.09628629002352945,
+    "n_weeks": 197,
+    "first": "2023-01-02",
+    "last": "2026-10-05",
+    "published": 0.09628629002352945,
+    "delta": 0.0,
+    "prop_positive": 0.7614213197969543
+  },
+  "panel_stats": {
+    "n_members_rows": 1104,
+    "n_months": 46,
+    "n_symbols": 54,
+    "avg_panel_size": 24.0,
+    "min_panel_size": 24,
+    "max_panel_size": 24,
+    "member_weeks_without_P_score": 686,
+    "member_weeks_without_M52_score": 58,
+    "price_meta": {
+      "fetched_at_utc": "2026-11-10T05:15:47.498501+00:00",
+      "price_from": "2021-12-01",
+      "price_to": "2026-10-31",
+      "n_rows": 84086,
+      "n_symbols": 54,
+      "seconds": 10.9
+    }
+  },
+  "arms": {
+    "HOLD": {
+      "label": "HOLD",
+      "cum": 0.7706437495759988,
+      "ann": 0.16389952507527905,
+      "mdd": -0.7164289015217309,
+      "ann_ex_vs_hold": 0.0,
+      "te_ann_vs_hold": 0.0,
+      "beta_vs_hold": 0.9999999999999993,
+      "ir_vs_hold": null,
+      "t_weekly_ex": null,
+      "turnover_yr": 3.6691373385725914,
+      "worst_month": -0.28620679763966184,
+      "worst_month_str": "2024-04",
+      "worst_month_ex": 0.0,
+      "hit_month_ex": 0.0,
+      "n_days": 1374
+    },
+    "M52": {
+      "label": "M52",
+      "cum": 1.1474668426072934,
+      "ann": 0.22511121930020006,
+      "mdd": -0.6610246262184902,
+      "ann_ex_vs_hold": 0.036139889019055724,
+      "te_ann_vs_hold": 0.09710168518380212,
+      "beta_vs_hold": 0.9459951991392647,
+      "ir_vs_hold": 0.3721860125356954,
+      "t_weekly_ex": 0.7053750300302611,
+      "turnover_yr": 13.586287568226412,
+      "worst_month": -0.27609514642834176,
+      "worst_month_str": "2024-04",
+      "worst_month_ex": -0.05920700529502658,
+      "hit_month_ex": 0.5217391304347826,
+      "n_days": 1374
+    },
+    "P": {
+      "label": "P",
+      "cum": 0.6364375528909263,
+      "ann": 0.1397822854664399,
+      "mdd": -0.6659447041588928,
+      "ann_ex_vs_hold": -0.036070967483488134,
+      "te_ann_vs_hold": 0.09234855311330104,
+      "beta_vs_hold": 0.9473542672560072,
+      "ir_vs_hold": -0.39059591371435143,
+      "t_weekly_ex": -0.751282797067759,
+      "turnover_yr": 15.302949895799529,
+      "worst_month": -0.3009039231530575,
+      "worst_month_str": "2024-04",
+      "worst_month_ex": -0.07984758890374509,
+      "hit_month_ex": 0.45652173913043476,
+      "n_days": 1374
+    }
+  },
+  "halves": {
+    "h1": {
+      "label": "h1",
+      "n_weeks": 98,
+      "start": "2023-01-02",
+      "end": "2024-11-17",
+      "M52_ann_ex": -0.012895182406678684,
+      "P_ann_ex": -0.08446790022613491,
+      "M52_cum": 1.5149836434118509,
+      "P_cum": 1.1667231002050742,
+      "HOLD_cum": 1.5240814435291608
+    },
+    "h2": {
+      "label": "h2",
+      "n_weeks": 99,
+      "start": "2024-11-18",
+      "end": "2026-10-06",
+      "M52_ann_ex": 0.08503241663250602,
+      "P_ann_ex": 0.01218527650118585,
+      "M52_cum": -0.1461308910566005,
+      "P_cum": -0.24474080110372964,
+      "HOLD_cum": -0.2984997555782929
+    }
+  },
+  "ab_test_P_vs_M52": {
+    "n_days": 1374,
+    "years": 3.76,
+    "cum_a": 1.1474668426073003,
+    "cum_b": 0.6364375528909313,
+    "log_diff_total": -0.2717672794717443,
+    "ratio_b_over_a": 0.7620315808481058,
+    "ci95_log_diff": [
+      -0.7743144991671773,
+      0.2126256294644899
+    ],
+    "p_b_le_a": 0.855,
+    "p_b_ge_a": 0.145,
+    "se_log_diff": 0.2579400693334036,
+    "mde_log_diff_total": 0.6413614979194251,
+    "mde_log_diff_per_year": 0.17037623489125922,
+    "underpowered": true,
+    "verdict": "分不开",
+    "mean_block": 20.0,
+    "n_boot": 2000
+  },
+  "judgments": {
+    "i_P_cum_ge_M52_cum": {
+      "pass": false,
+      "P_cum": 0.6364375528909263,
+      "M52_cum": 1.1474668426072934,
+      "diff": -0.5110292897163671
+    },
+    "ii_ab_p_le_010": {
+      "pass": false,
+      "p_b_le_a": 0.855,
+      "ci95_log_diff": [
+        -0.7743144991671773,
+        0.2126256294644899
+      ],
+      "cum_a_M52": 1.1474668426073003,
+      "cum_b_P": 0.6364375528909313
+    },
+    "iii_both_halves_excess": {
+      "pass": false,
+      "h1": {
+        "label": "h1",
+        "n_weeks": 98,
+        "start": "2023-01-02",
+        "end": "2024-11-17",
+        "M52_ann_ex": -0.012895182406678684,
+        "P_ann_ex": -0.08446790022613491,
+        "M52_cum": 1.5149836434118509,
+        "P_cum": 1.1667231002050742,
+        "HOLD_cum": 1.5240814435291608
+      },
+      "h2": {
+        "label": "h2",
+        "n_weeks": 99,
+        "start": "2024-11-18",
+        "end": "2026-10-06",
+        "M52_ann_ex": 0.08503241663250602,
+        "P_ann_ex": 0.01218527650118585,
+        "M52_cum": -0.1461308910566005,
+        "P_cum": -0.24474080110372964,
+        "HOLD_cum": -0.2984997555782929
+      }
+    },
+    "iv_mdd_not_2pp_deeper": {
+      "pass": true,
+      "P_mdd": -0.6659447041588928,
+      "M52_mdd": -0.6610246262184902,
+      "diff_pp": -0.4920077940402612
+    },
+    "verdict_all_pass": false
+  },
+  "compare_S428_published": {
+    "published": {
+      "ann_ex_pct": 17.3,
+      "t": 3.23,
+      "oos_ann_ex_pct": 10.2,
+      "oos_t": 1.62,
+      "beta": 0.98,
+      "rel_mdd_pct": -14.1,
+      "worst_12m_pct": 0.8,
+      "turnover_yr": 12.8
+    },
+    "recomputed_M52_here": {
+      "ann_ex_pct": 3.6139889019055724,
+      "t_weekly": 0.7053750300302611,
+      "beta": 0.9459951991392647,
+      "mdd_pct": -66.10246262184903,
+      "turnover_yr": 13.586287568226412,
+      "worst_month_pct": -27.609514642834178
+    },
+    "why_differ": [
+      "宇宙:S-428 用今天的幸存者 24 名;这里用按时点 cap_pit24(含死币的时点名单)",
+      "窗口:S-428 是 2020-01-01→2026-09-25;这里是 2023-01-02→2026-10-05",
+      "基准:S-428 的基准 = 合格币等权(≥180 天历史);这里是当周面板全体等权",
+      "S-428 的 mom_combo 用 14/28/90 的秩均值再取秩,52 周高点 = 365 自然日滚动最高(min 180)",
+      "本卡的价格源是 asset_mcap_daily(① 的同一出处),不是 Binance 公共日线"
+    ]
+  },
+  "fingerprints": {
+    "arms_daily": {
+      "n": 4122,
+      "fields": [
+        "d",
+        "arm",
+        "ret"
+      ],
+      "sha256": "cae004b05a3c8fe962d60ff8288f34ce61d7479dd665da3b65801d2b1160e68d"
+    },
+    "members": {
+      "n": 1104,
+      "fields": [
+        "m",
+        "symbol",
+        "rnk"
+      ],
+      "sha256": "920b89d73de1d69278749b9f847f153d6f5586a7a5363a10b486ecb031c96ea5"
+    },
+    "prices": {
+      "n": 84086,
+      "fields": [
+        "symbol",
+        "d",
+        "price"
+      ],
+      "sha256": "1edbebd51f6356d8168cf38042139d327b2fc7565b1634eaa7cd688e1f72aeb0"
+    }
+  }
+}
