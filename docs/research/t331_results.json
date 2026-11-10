@@ -1,0 +1,1124 @@
+{
+  "meta": {
+    "card": "T-331",
+    "ledger": "REFUTATION_LEDGER S-799 / S-801(原文与结果段);S-807 派工",
+    "generated_utc": "2026-11-10T17:28:59Z",
+    "reb": 21,
+    "cost_bp": 20,
+    "year_basis": 365.0,
+    "base_t25": {
+      "crypto": 0.3,
+      "equity": 0.3,
+      "gold": 0.2
+    },
+    "core_copy_sha256": "6c7fa4c4aff1f421df721a3bad76af45622f7fbee3e6c11b41ee9d98ed605e96",
+    "core_src_sha256": "516c24c5d93070203c3f96fa44ca51ff9e18cb72a3540ea2ca9293707f921a8b",
+    "core_copy_bounds_crypto": [
+      0.0,
+      0.9
+    ],
+    "core_src_bounds_crypto": [
+      0.2,
+      0.4
+    ],
+    "bounds_probe": {
+      "default_is_same_object": true,
+      "orig_bounds_crypto": [
+        0.0,
+        0.9
+      ],
+      "inplace_mutation": {
+        "crypto": 0.4,
+        "equity": 0.3,
+        "gold": 0.2
+      },
+      "inplace_effective": true,
+      "restored_inplace": {
+        "crypto": 0.6428571428571429,
+        "equity": 0.2142857142857143,
+        "gold": 0.14285714285714288
+      },
+      "rebinding": {
+        "crypto": 0.6428571428571429,
+        "equity": 0.2142857142857143,
+        "gold": 0.14285714285714288
+      },
+      "rebinding_effective": false,
+      "restored": {
+        "crypto": 0.6428571428571429,
+        "equity": 0.2142857142857143,
+        "gold": 0.14285714285714288
+      },
+      "orig_bounds_crypto_after_restore": [
+        0.0,
+        0.9
+      ]
+    },
+    "vol_window": 63,
+    "min_obs": 40,
+    "sig_floor": 0.002
+  },
+  "windows": {
+    "W1": {
+      "spec": {
+        "core": "cap_pit24",
+        "core_table": "core_variants_daily",
+        "leg_from": "2021-07-13",
+        "warm": 63,
+        "end": "2022-12-30",
+        "ledger": "S-799(W1)/S-801(W1)",
+        "warm_used": 63,
+        "crypto_leg": "x1v"
+      },
+      "n_common": 372,
+      "common_first": "2021-07-13",
+      "common_last": "2022-12-30",
+      "nav_start": "2021-10-11",
+      "core_first": "2021-07-13",
+      "core_last": "2026-11-09",
+      "leg_stats": {
+        "n_days": 446,
+        "flat_days": 240,
+        "flat_frac": 0.5381,
+        "over1_days": 0,
+        "max_g": 1.0
+      },
+      "arms": {
+        "T25_K": {
+          "metrics": {
+            "n_days": 309,
+            "first": "2021-10-11",
+            "last": "2022-12-30",
+            "years": 1.219,
+            "total_return": -0.157039,
+            "cagr": -0.130749,
+            "vol_ann": 0.17757,
+            "max_drawdown": -0.259109,
+            "calmar": -0.5046,
+            "worst_month": -0.090158,
+            "worst_month_key": "2022-01",
+            "weights_mean": {
+              "crypto": 0.3,
+              "equity": 0.3,
+              "gold": 0.2
+            },
+            "weights_min": {
+              "crypto": 0.3,
+              "equity": 0.3,
+              "gold": 0.2
+            },
+            "weights_max": {
+              "crypto": 0.3,
+              "equity": 0.3,
+              "gold": 0.2
+            },
+            "n_rebalances": 15,
+            "first_target": {
+              "crypto": 0.3,
+              "equity": 0.3,
+              "gold": 0.2
+            },
+            "first_target_date": "2021-10-11",
+            "crypto_max": 0.3,
+            "crypto_max_date": "2021-10-11",
+            "cap_bite": 0,
+            "floor_bite": 0,
+            "gold_at_cap": 0,
+            "equity_at_cap": 0,
+            "h1": {
+              "n_days": 155,
+              "first": "2021-10-11",
+              "last": "2022-05-20",
+              "years": 0.605,
+              "total_return": -0.12118,
+              "cagr": -0.192121,
+              "vol_ann": 0.209212,
+              "max_drawdown": -0.210454,
+              "calmar": -0.9129,
+              "worst_month": -0.090158,
+              "worst_month_key": "2022-01"
+            },
+            "h2": {
+              "n_days": 154,
+              "first": "2022-05-23",
+              "last": "2022-12-30",
+              "years": 0.605,
+              "total_return": -0.046238,
+              "cagr": -0.075209,
+              "vol_ann": 0.139602,
+              "max_drawdown": -0.110914,
+              "calmar": -0.6781,
+              "worst_month": -0.054565,
+              "worst_month_key": "2022-09"
+            },
+            "half_calmar": {
+              "h1": -0.9129,
+              "h2": -0.6781
+            },
+            "half_calmar_last": {
+              "h1": -0.9248,
+              "h2": -0.5917
+            }
+          }
+        },
+        "RB": {
+          "metrics": {
+            "n_days": 309,
+            "first": "2021-10-11",
+            "last": "2022-12-30",
+            "years": 1.219,
+            "total_return": -0.099032,
+            "cagr": -0.081982,
+            "vol_ann": 0.156154,
+            "max_drawdown": -0.194706,
+            "calmar": -0.4211,
+            "worst_month": -0.065096,
+            "worst_month_key": "2022-01",
+            "weights_mean": {
+              "crypto": 0.2616,
+              "equity": 0.3123,
+              "gold": 0.2941
+            },
+            "weights_min": {
+              "crypto": 0.1589,
+              "equity": 0.1556,
+              "gold": 0.2111
+            },
+            "weights_max": {
+              "crypto": 0.6333,
+              "equity": 0.4,
+              "gold": 0.3
+            },
+            "n_rebalances": 15,
+            "first_target": {
+              "crypto": 0.162,
+              "equity": 0.4,
+              "gold": 0.3
+            },
+            "first_target_date": "2021-10-11",
+            "crypto_max": 0.6333,
+            "crypto_max_date": "2022-07-13",
+            "cap_bite": 0,
+            "floor_bite": 0,
+            "gold_at_cap": 14,
+            "equity_at_cap": 7,
+            "h1": {
+              "n_days": 155,
+              "first": "2021-10-11",
+              "last": "2022-05-20",
+              "years": 0.605,
+              "total_return": -0.08467,
+              "cagr": -0.135944,
+              "vol_ann": 0.157178,
+              "max_drawdown": -0.159267,
+              "calmar": -0.8536,
+              "worst_month": -0.065096,
+              "worst_month_key": "2022-01"
+            },
+            "h2": {
+              "n_days": 154,
+              "first": "2022-05-23",
+              "last": "2022-12-30",
+              "years": 0.605,
+              "total_return": -0.02214,
+              "cagr": -0.036301,
+              "vol_ann": 0.155671,
+              "max_drawdown": -0.106219,
+              "calmar": -0.3418,
+              "worst_month": -0.049575,
+              "worst_month_key": "2022-09"
+            },
+            "half_calmar": {
+              "h1": -0.8536,
+              "h2": -0.3418
+            },
+            "half_calmar_last": {
+              "h1": -0.8714,
+              "h2": -0.2395
+            }
+          }
+        },
+        "RBv2": {
+          "metrics": {
+            "n_days": 309,
+            "first": "2021-10-11",
+            "last": "2022-12-30",
+            "years": 1.219,
+            "total_return": -0.120663,
+            "cagr": -0.100099,
+            "vol_ann": 0.157706,
+            "max_drawdown": -0.221251,
+            "calmar": -0.4524,
+            "worst_month": -0.072118,
+            "worst_month_key": "2022-01",
+            "weights_mean": {
+              "crypto": 0.2535,
+              "equity": 0.3167,
+              "gold": 0.3
+            },
+            "weights_min": {
+              "crypto": 0.2,
+              "equity": 0.2065,
+              "gold": 0.3
+            },
+            "weights_max": {
+              "crypto": 0.4,
+              "equity": 0.4,
+              "gold": 0.3
+            },
+            "n_rebalances": 15,
+            "first_target": {
+              "crypto": 0.2,
+              "equity": 0.4,
+              "gold": 0.3
+            },
+            "first_target_date": "2021-10-11",
+            "crypto_max": 0.4,
+            "crypto_max_date": "2022-06-10",
+            "cap_bite": 2,
+            "floor_bite": 5,
+            "gold_at_cap": 15,
+            "equity_at_cap": 7,
+            "h1": {
+              "n_days": 155,
+              "first": "2021-10-11",
+              "last": "2022-05-20",
+              "years": 0.605,
+              "total_return": -0.095741,
+              "cagr": -0.153135,
+              "vol_ann": 0.172977,
+              "max_drawdown": -0.177056,
+              "calmar": -0.8649,
+              "worst_month": -0.072118,
+              "worst_month_key": "2022-01"
+            },
+            "h2": {
+              "n_days": 154,
+              "first": "2022-05-23",
+              "last": "2022-12-30",
+              "years": 0.605,
+              "total_return": -0.033933,
+              "cagr": -0.055421,
+              "vol_ann": 0.141304,
+              "max_drawdown": -0.106219,
+              "calmar": -0.5218,
+              "worst_month": -0.049575,
+              "worst_month_key": "2022-09"
+            },
+            "half_calmar": {
+              "h1": -0.8649,
+              "h2": -0.5218
+            },
+            "half_calmar_last": {
+              "h1": -0.8811,
+              "h2": -0.4191
+            }
+          }
+        }
+      }
+    },
+    "W2": {
+      "spec": {
+        "core": "core_u_replay",
+        "core_table": "multiplier_daily",
+        "leg_from": null,
+        "warm": 252,
+        "end": "2026-10-31",
+        "ledger": "S-797/S-801(W2)",
+        "warm_used": 252,
+        "crypto_leg": "x1v"
+      },
+      "n_common": 961,
+      "common_first": "2023-01-03",
+      "common_last": "2026-10-30",
+      "nav_start": "2024-01-04",
+      "core_first": "2023-01-02",
+      "core_last": "2026-11-09",
+      "leg_stats": {
+        "n_days": 1032,
+        "flat_days": 578,
+        "flat_frac": 0.5601,
+        "over1_days": 168,
+        "max_g": 1.3
+      },
+      "arms": {
+        "T25_K": {
+          "metrics": {
+            "n_days": 709,
+            "first": "2024-01-04",
+            "last": "2026-10-30",
+            "years": 2.822,
+            "total_return": 0.537811,
+            "cagr": 0.16475,
+            "vol_ann": 0.157337,
+            "max_drawdown": -0.088612,
+            "calmar": 1.8592,
+            "worst_month": -0.059438,
+            "worst_month_key": "2026-03",
+            "weights_mean": {
+              "crypto": 0.3,
+              "equity": 0.3,
+              "gold": 0.2
+            },
+            "weights_min": {
+              "crypto": 0.3,
+              "equity": 0.3,
+              "gold": 0.2
+            },
+            "weights_max": {
+              "crypto": 0.3,
+              "equity": 0.3,
+              "gold": 0.2
+            },
+            "n_rebalances": 34,
+            "first_target": {
+              "crypto": 0.3,
+              "equity": 0.3,
+              "gold": 0.2
+            },
+            "first_target_date": "2024-01-04",
+            "crypto_max": 0.3,
+            "crypto_max_date": "2024-01-04",
+            "cap_bite": 0,
+            "floor_bite": 0,
+            "gold_at_cap": 0,
+            "equity_at_cap": 0,
+            "h1": {
+              "n_days": 355,
+              "first": "2024-01-04",
+              "last": "2025-06-04",
+              "years": 1.416,
+              "total_return": 0.446329,
+              "cagr": 0.297621,
+              "vol_ann": 0.174738,
+              "max_drawdown": -0.088612,
+              "calmar": 3.3587,
+              "worst_month": -0.046303,
+              "worst_month_key": "2024-04"
+            },
+            "h2": {
+              "n_days": 354,
+              "first": "2025-06-05",
+              "last": "2026-10-30",
+              "years": 1.403,
+              "total_return": 0.065441,
+              "cagr": 0.046226,
+              "vol_ann": 0.137665,
+              "max_drawdown": -0.084156,
+              "calmar": 0.5493,
+              "worst_month": -0.059438,
+              "worst_month_key": "2026-03"
+            },
+            "half_calmar": {
+              "h1": 3.3587,
+              "h2": 0.5493
+            },
+            "half_calmar_last": {
+              "h1": 3.3469,
+              "h2": 0.53
+            }
+          }
+        },
+        "RB": {
+          "metrics": {
+            "n_days": 709,
+            "first": "2024-01-04",
+            "last": "2026-10-30",
+            "years": 2.822,
+            "total_return": 0.650345,
+            "cagr": 0.194268,
+            "vol_ann": 0.152548,
+            "max_drawdown": -0.094905,
+            "calmar": 2.047,
+            "worst_month": -0.066671,
+            "worst_month_key": "2026-03",
+            "weights_mean": {
+              "crypto": 0.2777,
+              "equity": 0.3546,
+              "gold": 0.2543
+            },
+            "weights_min": {
+              "crypto": 0.154,
+              "equity": 0.1496,
+              "gold": 0.1309
+            },
+            "weights_max": {
+              "crypto": 0.6549,
+              "equity": 0.4,
+              "gold": 0.3
+            },
+            "n_rebalances": 34,
+            "first_target": {
+              "crypto": 0.1832,
+              "equity": 0.4,
+              "gold": 0.3
+            },
+            "first_target_date": "2024-01-04",
+            "crypto_max": 0.6549,
+            "crypto_max_date": "2025-05-08",
+            "cap_bite": 0,
+            "floor_bite": 0,
+            "gold_at_cap": 18,
+            "equity_at_cap": 22,
+            "h1": {
+              "n_days": 355,
+              "first": "2024-01-04",
+              "last": "2025-06-04",
+              "years": 1.416,
+              "total_return": 0.404201,
+              "cagr": 0.270822,
+              "vol_ann": 0.150911,
+              "max_drawdown": -0.064466,
+              "calmar": 4.201,
+              "worst_month": -0.028154,
+              "worst_month_key": "2024-04"
+            },
+            "h2": {
+              "n_days": 354,
+              "first": "2025-06-05",
+              "last": "2026-10-30",
+              "years": 1.403,
+              "total_return": 0.177151,
+              "cagr": 0.1233,
+              "vol_ann": 0.154438,
+              "max_drawdown": -0.094905,
+              "calmar": 1.2992,
+              "worst_month": -0.066671,
+              "worst_month_key": "2026-03"
+            },
+            "half_calmar": {
+              "h1": 4.201,
+              "h2": 1.2992
+            },
+            "half_calmar_last": {
+              "h1": 4.19,
+              "h2": 1.2832
+            }
+          }
+        },
+        "RBv2": {
+          "metrics": {
+            "n_days": 709,
+            "first": "2024-01-04",
+            "last": "2026-10-30",
+            "years": 2.822,
+            "total_return": 0.62184,
+            "cagr": 0.186917,
+            "vol_ann": 0.14707,
+            "max_drawdown": -0.092308,
+            "calmar": 2.0249,
+            "worst_month": -0.064093,
+            "worst_month_key": "2026-03",
+            "weights_mean": {
+              "crypto": 0.2614,
+              "equity": 0.3573,
+              "gold": 0.2571
+            },
+            "weights_min": {
+              "crypto": 0.2,
+              "equity": 0.2056,
+              "gold": 0.1309
+            },
+            "weights_max": {
+              "crypto": 0.4,
+              "equity": 0.4,
+              "gold": 0.3
+            },
+            "n_rebalances": 34,
+            "first_target": {
+              "crypto": 0.2,
+              "equity": 0.4,
+              "gold": 0.3
+            },
+            "first_target_date": "2024-01-04",
+            "crypto_max": 0.4,
+            "crypto_max_date": "2025-05-08",
+            "cap_bite": 8,
+            "floor_bite": 17,
+            "gold_at_cap": 18,
+            "equity_at_cap": 22,
+            "h1": {
+              "n_days": 355,
+              "first": "2024-01-04",
+              "last": "2025-06-04",
+              "years": 1.416,
+              "total_return": 0.417629,
+              "cagr": 0.279389,
+              "vol_ann": 0.152913,
+              "max_drawdown": -0.070543,
+              "calmar": 3.9606,
+              "worst_month": -0.033702,
+              "worst_month_key": "2024-04"
+            },
+            "h2": {
+              "n_days": 354,
+              "first": "2025-06-05",
+              "last": "2026-10-30",
+              "years": 1.403,
+              "total_return": 0.146536,
+              "cagr": 0.102394,
+              "vol_ann": 0.141136,
+              "max_drawdown": -0.092308,
+              "calmar": 1.1093,
+              "worst_month": -0.064093,
+              "worst_month_key": "2026-03"
+            },
+            "half_calmar": {
+              "h1": 3.9606,
+              "h2": 1.1093
+            },
+            "half_calmar_last": {
+              "h1": 3.9438,
+              "h2": 1.0886
+            }
+          }
+        }
+      }
+    }
+  },
+  "compare": {
+    "W1": {
+      "rows": [
+        {
+          "arm": "T25_K",
+          "metric": "total_return",
+          "label": "总收益",
+          "mine": -0.157039,
+          "published": -0.157,
+          "delta_pp": -0.0039,
+          "over_tol": false
+        },
+        {
+          "arm": "T25_K",
+          "metric": "max_drawdown",
+          "label": "最大回撤",
+          "mine": -0.259109,
+          "published": -0.2591,
+          "delta_pp": -0.0009,
+          "over_tol": false
+        },
+        {
+          "arm": "T25_K",
+          "metric": "worst_month",
+          "label": "最差月",
+          "mine": -0.090158,
+          "published": -0.0902,
+          "delta_pp": 0.0042,
+          "over_tol": false
+        },
+        {
+          "arm": "T25_K",
+          "metric": "vol_ann",
+          "label": "年化波动",
+          "mine": 0.17757,
+          "published": 0.1776,
+          "delta_pp": -0.003,
+          "over_tol": false
+        },
+        {
+          "arm": "T25_K",
+          "metric": "weights_mean_crypto",
+          "label": "平均权重 crypto",
+          "mine": 0.3,
+          "published": 0.3,
+          "delta_pp": 0.0,
+          "over_tol": false
+        },
+        {
+          "arm": "T25_K",
+          "metric": "weights_mean_equity",
+          "label": "平均权重 equity",
+          "mine": 0.3,
+          "published": 0.3,
+          "delta_pp": 0.0,
+          "over_tol": false
+        },
+        {
+          "arm": "T25_K",
+          "metric": "weights_mean_gold",
+          "label": "平均权重 gold",
+          "mine": 0.2,
+          "published": 0.2,
+          "delta_pp": 0.0,
+          "over_tol": false
+        },
+        {
+          "arm": "RB",
+          "metric": "total_return",
+          "label": "总收益",
+          "mine": -0.099032,
+          "published": -0.099,
+          "delta_pp": -0.0032,
+          "over_tol": false
+        },
+        {
+          "arm": "RB",
+          "metric": "max_drawdown",
+          "label": "最大回撤",
+          "mine": -0.194706,
+          "published": -0.1947,
+          "delta_pp": -0.0006,
+          "over_tol": false
+        },
+        {
+          "arm": "RB",
+          "metric": "worst_month",
+          "label": "最差月",
+          "mine": -0.065096,
+          "published": -0.0651,
+          "delta_pp": 0.0004,
+          "over_tol": false
+        },
+        {
+          "arm": "RB",
+          "metric": "vol_ann",
+          "label": "年化波动",
+          "mine": 0.156154,
+          "published": 0.1562,
+          "delta_pp": -0.0046,
+          "over_tol": false
+        },
+        {
+          "arm": "RB",
+          "metric": "weights_mean_crypto",
+          "label": "平均权重 crypto",
+          "mine": 0.2616,
+          "published": 0.262,
+          "delta_pp": -0.04,
+          "over_tol": false
+        },
+        {
+          "arm": "RB",
+          "metric": "weights_mean_equity",
+          "label": "平均权重 equity",
+          "mine": 0.3123,
+          "published": 0.312,
+          "delta_pp": 0.03,
+          "over_tol": false
+        },
+        {
+          "arm": "RB",
+          "metric": "weights_mean_gold",
+          "label": "平均权重 gold",
+          "mine": 0.2941,
+          "published": 0.294,
+          "delta_pp": 0.01,
+          "over_tol": false
+        },
+        {
+          "arm": "RBv2",
+          "metric": "total_return",
+          "label": "总收益",
+          "mine": -0.120663,
+          "published": -0.1207,
+          "delta_pp": 0.0037,
+          "over_tol": false
+        },
+        {
+          "arm": "RBv2",
+          "metric": "max_drawdown",
+          "label": "最大回撤",
+          "mine": -0.221251,
+          "published": -0.2213,
+          "delta_pp": 0.0049,
+          "over_tol": false
+        },
+        {
+          "arm": "RBv2",
+          "metric": "worst_month",
+          "label": "最差月",
+          "mine": -0.072118,
+          "published": -0.0721,
+          "delta_pp": -0.0018,
+          "over_tol": false
+        },
+        {
+          "arm": "RBv2",
+          "metric": "weights_mean_crypto",
+          "label": "平均权重 crypto",
+          "mine": 0.2535,
+          "published": 0.254,
+          "delta_pp": -0.05,
+          "over_tol": false
+        },
+        {
+          "arm": "RBv2",
+          "metric": "cap_bite",
+          "label": "加密上限咬合",
+          "mine": 2,
+          "published": 2,
+          "published_denominator": 15,
+          "my_denominator": 15,
+          "delta_pp": 0,
+          "over_tol": false
+        },
+        {
+          "arm": "RBv2",
+          "metric": "gold_at_cap",
+          "label": "金腿顶 0.30",
+          "mine": 15,
+          "published": 15,
+          "published_denominator": 15,
+          "my_denominator": 15,
+          "delta_pp": 0,
+          "over_tol": false
+        }
+      ],
+      "n_over_tol": 0
+    },
+    "W2": {
+      "rows": [
+        {
+          "arm": "T25_K",
+          "metric": "total_return",
+          "label": "总收益",
+          "mine": 0.537811,
+          "published": 0.5378,
+          "delta_pp": 0.0011,
+          "over_tol": false
+        },
+        {
+          "arm": "T25_K",
+          "metric": "max_drawdown",
+          "label": "最大回撤",
+          "mine": -0.088612,
+          "published": -0.0886,
+          "delta_pp": -0.0012,
+          "over_tol": false
+        },
+        {
+          "arm": "T25_K",
+          "metric": "half_calmar_h1",
+          "label": "h1 Calmar",
+          "mine": 3.3469,
+          "mine_first_conv": 3.3587,
+          "published": 3.349,
+          "delta_pp": -0.0021,
+          "over_tol": false
+        },
+        {
+          "arm": "T25_K",
+          "metric": "half_calmar_h2",
+          "label": "h2 Calmar",
+          "mine": 0.53,
+          "mine_first_conv": 0.5493,
+          "published": 0.53,
+          "delta_pp": 0.0,
+          "over_tol": false
+        },
+        {
+          "arm": "RB",
+          "metric": "total_return",
+          "label": "总收益",
+          "mine": 0.650345,
+          "published": 0.6503,
+          "delta_pp": 0.0045,
+          "over_tol": false
+        },
+        {
+          "arm": "RB",
+          "metric": "max_drawdown",
+          "label": "最大回撤",
+          "mine": -0.094905,
+          "published": -0.0949,
+          "delta_pp": -0.0005,
+          "over_tol": false
+        },
+        {
+          "arm": "RBv2",
+          "metric": "total_return",
+          "label": "总收益",
+          "mine": 0.62184,
+          "published": 0.6218,
+          "delta_pp": 0.004,
+          "over_tol": false
+        },
+        {
+          "arm": "RBv2",
+          "metric": "max_drawdown",
+          "label": "最大回撤",
+          "mine": -0.092308,
+          "published": -0.0923,
+          "delta_pp": -0.0008,
+          "over_tol": false
+        },
+        {
+          "arm": "RBv2",
+          "metric": "half_calmar_h1",
+          "label": "h1 Calmar",
+          "mine": 3.9438,
+          "mine_first_conv": 3.9606,
+          "published": 3.947,
+          "delta_pp": -0.0032,
+          "over_tol": false
+        },
+        {
+          "arm": "RBv2",
+          "metric": "half_calmar_h2",
+          "label": "h2 Calmar",
+          "mine": 1.0886,
+          "mine_first_conv": 1.1093,
+          "published": 1.089,
+          "delta_pp": -0.0004,
+          "over_tol": false
+        },
+        {
+          "arm": "RBv2",
+          "metric": "weights_mean_crypto",
+          "label": "平均权重 crypto",
+          "mine": 0.2614,
+          "published": 0.261,
+          "delta_pp": 0.04,
+          "over_tol": false
+        },
+        {
+          "arm": "RBv2",
+          "metric": "cap_bite",
+          "label": "加密上限咬合",
+          "mine": 8,
+          "published": 8,
+          "published_denominator": 34,
+          "my_denominator": 34,
+          "delta_pp": 0,
+          "over_tol": false
+        },
+        {
+          "arm": "RBv2",
+          "metric": "floor_bite",
+          "label": "加密下限咬合",
+          "mine": 17,
+          "published": 17,
+          "published_denominator": 34,
+          "my_denominator": 34,
+          "delta_pp": 0,
+          "over_tol": false
+        }
+      ],
+      "n_over_tol": 0
+    }
+  },
+  "variants": {
+    "VA_W1_warm252": {
+      "note": "W1 空跑 252 个共同日(S-797 口径)而非 S-799 的 63 天 ⇒ 窗口整体后移",
+      "nav_start": "2022-07-13",
+      "n_common": 372,
+      "arms": {
+        "T25_K": {
+          "n_days": 120,
+          "first": "2022-07-13",
+          "last": "2022-12-30",
+          "total_return": -0.016329,
+          "max_drawdown": -0.110914,
+          "worst_month": -0.054565,
+          "calmar": -0.3131
+        },
+        "RB": {
+          "n_days": 120,
+          "first": "2022-07-13",
+          "last": "2022-12-30",
+          "total_return": 0.01332,
+          "max_drawdown": -0.106219,
+          "worst_month": -0.049575,
+          "calmar": 0.2713
+        },
+        "RBv2": {
+          "n_days": 120,
+          "first": "2022-07-13",
+          "last": "2022-12-30",
+          "total_return": 0.000494,
+          "max_drawdown": -0.106219,
+          "worst_month": -0.049575,
+          "calmar": 0.01
+        }
+      }
+    },
+    "VB_W2_core_cap_pit24": {
+      "note": "W2 的 ① 换成 `cap_pit24`(与 W1 同一条),窗口保持 2024-01-04 → 2026-10-30 —— 测「两段不是同一条 ①」",
+      "nav_start": "2024-01-04",
+      "n_common": 1969,
+      "common_first": "2019-01-02",
+      "common_last": "2026-10-30",
+      "arms": {
+        "T25_K": {
+          "n_days": 709,
+          "first": "2024-01-04",
+          "last": "2026-10-30",
+          "total_return": 0.510646,
+          "max_drawdown": -0.101053,
+          "worst_month": -0.060184,
+          "calmar": 1.5578,
+          "half_calmar": {
+            "h1": 2.254,
+            "h2": 1.0879
+          },
+          "weights_mean": {
+            "crypto": 0.3,
+            "equity": 0.3,
+            "gold": 0.2
+          },
+          "n_rebalances": 34
+        },
+        "RB": {
+          "n_days": 709,
+          "first": "2024-01-04",
+          "last": "2026-10-30",
+          "total_return": 0.642179,
+          "max_drawdown": -0.095874,
+          "worst_month": -0.065969,
+          "calmar": 2.0044,
+          "half_calmar": {
+            "h1": 3.0154,
+            "h2": 1.7947
+          },
+          "weights_mean": {
+            "crypto": 0.2678,
+            "equity": 0.3555,
+            "gold": 0.2576
+          },
+          "n_rebalances": 34
+        },
+        "RBv2": {
+          "n_days": 709,
+          "first": "2024-01-04",
+          "last": "2026-10-30",
+          "total_return": 0.618485,
+          "max_drawdown": -0.095134,
+          "worst_month": -0.065231,
+          "calmar": 1.9556,
+          "half_calmar": {
+            "h1": 2.9093,
+            "h2": 1.552
+          },
+          "weights_mean": {
+            "crypto": 0.2583,
+            "equity": 0.3581,
+            "gold": 0.2604
+          },
+          "n_rebalances": 34
+        }
+      }
+    },
+    "VC_half_extra_to_last": {
+      "note": "两半切分:多一天给后半(默认多一天给前半)",
+      "W1": {
+        "T25_K": {
+          "h1": -0.9248,
+          "h2": -0.5917
+        },
+        "RB": {
+          "h1": -0.8714,
+          "h2": -0.2395
+        },
+        "RBv2": {
+          "h1": -0.8811,
+          "h2": -0.4191
+        }
+      },
+      "W2": {
+        "T25_K": {
+          "h1": 3.3469,
+          "h2": 0.53
+        },
+        "RB": {
+          "h1": 4.19,
+          "h2": 1.2832
+        },
+        "RBv2": {
+          "h1": 3.9438,
+          "h2": 1.0886
+        }
+      }
+    },
+    "VD_W1_core_full_history": {
+      "note": "W1 的 ① 不切 2021-07-13(cap_pit24 实有 2019-01-02 起的历史)—— X1V 状态机的起点变了,窗口不变",
+      "nav_start": "2021-10-11",
+      "n_common": 1008,
+      "common_first": "2019-01-02",
+      "common_last": "2022-12-30",
+      "leg_stats": {
+        "n_days": 446,
+        "flat_days": 327,
+        "flat_frac": 0.7332,
+        "over1_days": 34,
+        "max_g": 1.2
+      },
+      "arms": {
+        "T25_K": {
+          "n_days": 309,
+          "first": "2021-10-11",
+          "last": "2022-12-30",
+          "total_return": -0.059744,
+          "max_drawdown": -0.178664,
+          "worst_month": -0.054828,
+          "calmar": -0.2758,
+          "weights_mean": {
+            "crypto": 0.3,
+            "equity": 0.3,
+            "gold": 0.2
+          }
+        },
+        "RB": {
+          "n_days": 309,
+          "first": "2021-10-11",
+          "last": "2022-12-30",
+          "total_return": -0.025365,
+          "max_drawdown": -0.132617,
+          "worst_month": -0.049813,
+          "calmar": -0.1572,
+          "weights_mean": {
+            "crypto": 0.2938,
+            "equity": 0.2809,
+            "gold": 0.2941
+          }
+        },
+        "RBv2": {
+          "n_days": 309,
+          "first": "2021-10-11",
+          "last": "2022-12-30",
+          "total_return": -0.037281,
+          "max_drawdown": -0.151133,
+          "worst_month": -0.049813,
+          "calmar": -0.203,
+          "weights_mean": {
+            "crypto": 0.2825,
+            "equity": 0.2853,
+            "gold": 0.3
+          }
+        }
+      }
+    },
+    "VE_cost_zero": {
+      "note": "成本 0(探索性:换手 20bp 的归因,未预注册)",
+      "by_window": {
+        "W1": {
+          "T25_K": {
+            "total_return": -0.156197,
+            "max_drawdown": -0.258441
+          },
+          "RB": {
+            "total_return": -0.095816,
+            "max_drawdown": -0.192065
+          },
+          "RBv2": {
+            "total_return": -0.118761,
+            "max_drawdown": -0.219792
+          }
+        },
+        "W2": {
+          "T25_K": {
+            "total_return": 0.541487,
+            "max_drawdown": -0.088343
+          },
+          "RB": {
+            "total_return": 0.665586,
+            "max_drawdown": -0.094315
+          },
+          "RBv2": {
+            "total_return": 0.631981,
+            "max_drawdown": -0.091788
+          }
+        }
+      }
+    }
+  }
+}
