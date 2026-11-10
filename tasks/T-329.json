@@ -1,0 +1,28 @@
+{
+  "id": "T-329",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-11",
+  "title": "S-805 7b 风险几何第二步:RBv2 之外按事前组合波动收放整体敞口(0.5–1.0,只降不加),W1(2022)与 W2(2024–26)对 RBv2",
+  "source": "REFUTATION_LEDGER S-805(`grep -n \"^## S-805\" -A 6 REFUTATION_LEDGER.md`,原文照抄);lane-c 的 docs/research/t323_rb_v2.py 与 t321_rb_holdout.py(两个窗口的腿装配,origin/main 上);核 src/data/universe/flex_alloc.py(import,一字不改)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-329.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-805 原文照抄进报告开头;先复现 T-323 的 RBv2 两窗口(W1 −12.07% / W2 +62.18%)作自检,对不上先停;g 只用 ≤ d 的数据;(i)–(iv) 逐条报数与判定;另报平均 g、g<1 天数占比、ab_test p、g 与之后 21 天腿间平均相关。分支上要有 tasks/T-329.json(从 origin/main 拷,status 改 in_review)。只读、不入库、不改 src/;不要 Read 大文件。",
+    "expect": "docs/research/T-329_gross_budget.md + t329_gross_budget.py + t329_results.json + scenarios/lane-a-T-329.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-a/T-329。"
+  },
+  "prior_value": "7b 缺的另一半:整体敞口随风险状态收放。过了就是真钱 T25 的下一步。",
+  "notes": "2026-11-10T16:39:07Z Seth 开卡(卡先进 main 再派)。",
+  "verified": null
+}

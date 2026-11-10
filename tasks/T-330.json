@@ -1,0 +1,28 @@
+{
+  "id": "T-330",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-11",
+  "title": "S-806 ③ 的相关性状态:① 面板 30 天平均两两相关高于扩张 80 分位时 ① 敞口降到 0.5,对持有与随机日程",
+  "source": "REFUTATION_LEDGER S-806(`grep -n \"^## S-806\" -A 6 REFUTATION_LEDGER.md`,原文照抄);① 的 NAV 与按时点成员:core_variants_daily(arm cap_pit24)/ core_pit_daily(只读,翻页带 order=);成员日收益用你 T-325 已校验过的取法。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-330.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-806 原文照抄进报告开头;先让 HOLD 与 core_variants_daily 的 cap_pit24 逐日对上(报最大差);ρ̄ 与阈值只用 ≤ d;随机日程用 apparatus.circular_shift(origin/main 上已有);(i)–(iv) 逐条报数与判定;另报 m=0.5 天数占比、平均持续、与 tom_pd13 的重合度。分支上要有 tasks/T-330.json(从 origin/main 拷,status 改 in_review)。只读、不入库、不改代码;不要 Read 大文件。",
+    "expect": "docs/research/T-330_corr_state.md + t330_corr_state.py + t330_results.json + scenarios/lane-b-T-330.json(≥ 3 条前向命题,至少一条 state: 或 close: 自动结算);in_review,推 lane-b/T-330。"
+  },
+  "prior_value": "③ 的第一个「风险几何」输入:分散消失的时候提前降敞口。",
+  "notes": "2026-11-10T16:39:07Z Seth 开卡(卡先进 main 再派)。",
+  "verified": null
+}
