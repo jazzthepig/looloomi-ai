@@ -1,0 +1,28 @@
+{
+  "id": "T-327",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-10",
+  "title": "RBv2 影子臂加一条常数对照臂(20/30/20,建臂日写死),与 flex_x1v:T25_K 并排前向记账",
+  "source": "MINIMAX_SYNC §B-auto-1110-1222 第 3/6 条;REFUTATION_LEDGER S-801(补记);现有影子臂 flex_x1v:T25_K 的建臂代码(grep T25_K)。",
+  "allowed_paths": [
+    "src/",
+    "tests/",
+    "tasks/T-327.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "migrations/",
+    "src/api/schema_manifest.json"
+  ],
+  "acceptance": {
+    "check": "照 T25_K 的建臂方式新增一条常数臂 T20_K(加密 20% / 股 30% / 金 20%·注:与 RBv2 平均权重同量级,其余按 T25_K 的现金处理一字照抄),建臂日与参数写死在代码与测试里,不随 RBv2 变;只新增、不改 T25_K 与 RB_T25 的任何数;改 src/ 必须加测试并在 preflight 注册;只用允许的合规语言;不读 .env。",
+    "expect": "卡 in_review;notes 写建臂日、首个落库行日期与判活命令(只读 SELECT);测试证明 T20_K 权重不随 RBv2 变化;推 lane-c/T-327。"
+  },
+  "prior_value": "前向只有 T25_K(30/30/20)并排;W1 常数 20/30/20 反而比 RBv2 好(C 道复核),只看 T25_K 会把 RBv2 的超额误读成机制功劳。",
+  "notes": "2026-11-10T12:55:00Z Seth 开卡(lane-b 交叉复核 T-323 的 @seth 建议 ②/③;卡先进 main 再派)。",
+  "verified": null
+}

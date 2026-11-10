@@ -1,0 +1,28 @@
+{
+  "id": "T-328",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-10",
+  "title": "BOUNDS 构造扫描 + 带内随机零分布:RBv2 的 W1/W2 通过,有多少来自夹紧(尤其地板),多少来自常数配比 / 随机",
+  "source": "MINIMAX_SYNC §B-auto-1110-1222 第 2–5 条;docs/research/T-323_rb_v2.md 与 t323_legs.csv(只读,不改);flex_alloc.BOUNDS;apparatus.shuffle_within / 随机带内权重。",
+  "allowed_paths": [
+    "docs/research/",
+    "scenarios/",
+    "tasks/T-328.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "migrations/",
+    "src/api/schema_manifest.json"
+  ],
+  "acceptance": {
+    "check": "预注册原文(Seth,2026-11-10):在 W1(2021-07→2022-12)与 W2(2024→2026)上,核与成本一字不改,报:(a) 加密带 floor ∈ {0.15,0.20,0.25} × ceiling ∈ {0.35,0.40,0.45} 的 9 点网格(股、金带同样各扫 ≥3 点,单维扫即可);(b) 带内随机权重零分布 N=200 种子 805,给 RBv2、常数 20/30/20、20/40/30、T25_K 各自的总收益与最大回撤分位;(c) 常数 20/30/20 在两窗的差额与归因(时变 / 配比 / 夹紧);(d) 判据:RBv2 回撤分位 ≤ 0.10 且 W1、W2 同时成立才记「夹紧有可归因的贡献」,否则记「不可归因」。只读、不入库、不改 src/。结果只写事实,台账口径由 Seth 在合并时定。",
+    "expect": "docs/research/T-328_bounds_sweep.md + t328_bounds_sweep.py + t328_results.json + scenarios/lane-b-T-328.json(≥ 3 条前向命题);in_review,推 lane-b/T-328。"
+  },
+  "prior_value": "S-801 ✅ 已落地到真钱 T25 权重;交叉复核测得 W1 RBv2 回撤分位 0.05–0.16、常数 20/30/20 W1 全过且收益更高、加密带 0.25–0.40 / 0.30–0.40 在 W1 即翻 ⇒ 分辨力在地板,从没扫过。",
+  "notes": "2026-11-10T12:55:00Z Seth 开卡(lane-b 交叉复核 T-323 的 @seth 建议 ②/③;卡先进 main 再派)。",
+  "verified": null
+}
