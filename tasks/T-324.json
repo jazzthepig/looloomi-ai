@@ -1,0 +1,28 @@
+{
+  "id": "T-324",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-10",
+  "title": "S-802 ② 面板内倾斜:P(高维价格相位)对现任 S-428(动量 + 52 周高点),① 的 24 名、每周、k=1",
+  "source": "REFUTATION_LEDGER S-802(`grep -n \"^## S-802\" -A 6 REFUTATION_LEDGER.md`,原文照抄)与 S-428 原文(`grep -n \"^## S-428\" -A 30 REFUTATION_LEDGER.md`);你的 docs/research/t312_rebaseline.py(P 臂一字不改);① 成分 = cap_pit24(src/data/signals/core_pit.py 的同一个出处,只读)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-324.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-802 原文照抄进报告开头;先复现 S-791 的 P IC 0.096286 作自检;M52 按 S-428 原文实现并报与 S-428 发表数在重叠区间的差(时点 / 宇宙不同要说清);(i)–(iv) 逐条报数与判定;另报三臂对 HOLD 的年化超额 / β / 跟踪误差 / 换手 / 最差月;结果 JSON 用 apparatus.content_fingerprint。分支上要有 tasks/T-324.json(从主目录拷,status 改 in_review)。只读、不入库、不改代码;不要 Read 大文件。",
+    "expect": "docs/research/T-324_p_tilt.md + t324_p_tilt.py + t324_results.json + scenarios/lane-a-T-324.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-a/T-324。"
+  },
+  "prior_value": "高维唯一站住的 P,第一次落到收益层级 ② 的真问题:在 ① 里换掉现任倾斜规则值不值。",
+  "notes": "2026-11-10T05:05:40Z Seth 开卡(卡先进 main 再派)。",
+  "verified": null
+}
