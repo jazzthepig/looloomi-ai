@@ -1,0 +1,28 @@
+{
+  "id": "T-329",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-11-11",
+  "title": "S-805 7b 风险几何第二步:RBv2 之外按事前组合波动收放整体敞口(0.5–1.0,只降不加),W1(2022)与 W2(2024–26)对 RBv2",
+  "source": "REFUTATION_LEDGER S-805(`grep -n \"^## S-805\" -A 6 REFUTATION_LEDGER.md`,原文照抄);lane-c 的 docs/research/t323_rb_v2.py 与 t321_rb_holdout.py(两个窗口的腿装配,origin/main 上);核 src/data/universe/flex_alloc.py(import,一字不改)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-329.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-805 原文照抄进报告开头;先复现 T-323 的 RBv2 两窗口(W1 −12.07% / W2 +62.18%)作自检,对不上先停;g 只用 ≤ d 的数据;(i)–(iv) 逐条报数与判定;另报平均 g、g<1 天数占比、ab_test p、g 与之后 21 天腿间平均相关。分支上要有 tasks/T-329.json(从 origin/main 拷,status 改 in_review)。只读、不入库、不改 src/;不要 Read 大文件。",
+    "expect": "docs/research/T-329_gross_budget.md + t329_gross_budget.py + t329_results.json + scenarios/lane-a-T-329.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-a/T-329。"
+  },
+  "prior_value": "7b 缺的另一半:整体敞口随风险状态收放。过了就是真钱 T25 的下一步。",
+  "notes": "2026-11-10T16:39:07Z Seth 开卡(卡先进 main 再派)。\n\n2026-11-11 lane-a 执行完毕,S-805 原文逐字核对 match=True(台账块 1022 字 = 嵌入 1022 字)。自检:两窗口 RBv2 逐位复现 T-323(W1 −12.07%,差 +0.004pp;W2 +62.18%,差 +0.004pp;记 NAV 区间 2021-10-11→2022-12-30 与 2024-01-04→2026-10-30 全对);我的记账循环在 g≡1 时与核 flex_alloc.dynamic_mix_nav 的 max|ΔNAV| = 0.00e+00。\n\n判据(全过才 ✅):❌ 不过,2/5 过。\n(i) W1 最大回撤浅 ≥3pp:❌ RBv2 −22.13% → GB −22.05%,只浅 0.08pp。\n(ii) W2 总收益 ≥ RBv2 −3pp:✅ +62.18% → +61.49%(−0.69pp)。\n(iii) W2 Calmar ≥ RBv2:❌ 2.026 → 2.009。\n(iv) 最差单月:❌ W2 −6.41% → −6.44%(更差 0.03pp);W1 −7.21% → −7.21% ✅。\n\n另报:平均 g W1 0.9982 / W2 0.9666;g<1 天数占比 W1 12.9%(40/309)、W2 38.1%(272/714);g 最低 W1 0.9651 / W2 0.8011;g 事件 W1 11 次、W2 61 次;g 换手成本 W1 2.0bp、W2 32.4bp。ab_test(RBv2→GB,mean_block=20/n_boot=2000/seed=797,只报):W1 p(≤)=0.2365 p(≥)=0.7635、W2 p(≤)=0.7195 p(≥)=0.2805,两条都「分不开」。g 与之后 21 天腿间平均相关:W1 corr=+0.485(g<1 的日子之后 ρ̄ 均值 −0.05,g=1 的日子之后 +0.248)、W2 corr=−0.043(0.265 对 0.217)。\n\n机制(为什么不过 —— 是输入测错了,不是这条边被否):σ_ex 是用**腿的**协方差算的,加密腿是 X1V,空仓的日子收益恒为 0、近 63 日波动随之塌陷,于是「风险最大的那条腿已经离场」不会让 σ_ex 抬头。实测 corr(σ_ex, 加密腿近 21 日平仓占比)=W1 −0.70、W2 −0.18;W1 加密腿 51.1% 的日子是平的、σ_ex 最高只到 21.08%(出现在 2022-02-18 的平静段)⇒ 保险在 2022 崩盘段是哑的(平均 g 0.9982);W2 反而降得多(2024-12-19 σ_ex 17.78% ⇒ g 0.80),把收益/Calmar/最差月各赔一点,回撤一点没浅。这是 S-801「空仓腿看起来低风险」在上一层的同一个形状。\n\n敏感性(两个口径自由度都跑了,结论不变):目标式 g 变化(W1 −12.53%/回撤 −22.42%,W2 +59.81%/Calmar 1.959)、σ_ex 每日算(W1 −12.00%,W2 +61.17%/Calmar 2.000)。\n\n产物:docs/research/T-329_gross_budget.md + t329_gross_budget.py + t329_results.json + scenarios/lane-a-T-329.json(4 条,含 close:BTC / close:ACWI 两条自动结算)。只读、未入库、未改 src/。",
+  "verified": null
+}
