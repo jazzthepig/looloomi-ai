@@ -205,6 +205,7 @@
 | done | T-325 | lane-b | S-803 现任 ② 规则(M52)叠在 ① 的市值加权底上,对 ① 臂本身(cap_pit24 市值加权)还挣不挣 | docs/research/T-325_m52_on_cap.md + t325_m52_on_cap.py + t325_results.json + scenarios/lane-b-T-325.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-b/T-325。 | ② 的超额要对 ① 真实的持有方式算;否则它可能只是规模效应。 | S-803 ❌:M52 在市值加权底上 −1.06%/年(对等权 +3.61%);CAP 臂与 cap_pit24 逐日对上 1374/1374。 @ 2026-11-10T06:03:11Z |
 | done | T-326 | lane-b | S-804 ② 候选:① 山寨里少配「韩国人多付钱」的名字(市值底,BTC/ETH 钉住,S-640 同一框架) | docs/research/T-326_korea_premium_tilt.md + t326_korea_tilt.py + t326_results.json + scenarios/lane-b-T-326.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-b/T-326。 | ② keep open(Jazz 11-10):在市值底上只测原因类变量;过了只进前向。 | S-804 ❌:V5 − V0 全程 +0.83pp、留出 −0.58pp、打乱分位 0.755;与 S-640 正交(超额相关 −0.31)。 @ 2026-11-10T10:35:12Z |
 | done | T-330 | lane-b | S-806 ③ 的相关性状态:① 面板 30 天平均两两相关高于扩张 80 分位时 ① 敞口降到 0.5,对持有与随机日程 | docs/research/T-330_corr_state.md + t330_corr_state.py + t330_results.json + scenarios/lane-b-T-330.json(≥ 3 条前向命题,至少一条 state: 或 close: 自动结算);in_review,推 lane-b/T-330。 | ③ 的第一个「风险几何」输入:分散消失的时候提前降敞口。 | S-806 ❌:回撤反深 1.0pp、Calmar 在随机日程中位以下(p 0.65);相关性收敛是迟到信号,降的是反弹。 @ 2026-11-10T17:12:31Z |
+| done | T-331 | lane-b | S-807 盲复算:真钱 T25 的依据 S-799(2022 崩盘段)与 S-801(RBv2 两段)—— 只用你自己 T-320 的装配,不读 C 道的 t321/t322/t323 | docs/research/T-331_blind_rbv2.md + t331_blind_rbv2.py + t331_results.json;in_review,推 lane-b/T-331。不需要 scenarios(复算)。 | 真钱已经按 RBv2 走;它的依据要有第二份独立实现。 | S-807 ✅ 复现(0 条 > 0.1pp);W1 加密腿 2022-04 前未生效,全历史下 RB 少亏 5.80 → 3.44pp;空跑 252 天会翻符号 ⇒ 方向可信,幅度敏感。 @ 2026-11-10T17:45:00Z |
 | done | T-006 | lane-c | Strategy 3/4 按正确问题复核 | 每格都有数字,不是只给一个总 Sharpe | 只用绝对 Sharpe 判为 REFUTED | 交付(探索性,非预注册):BULL×LV 5 个 spec 同向为正,主驱是横截面 alpha 残差,不是某条共有风格;报告 M-208h_style。已合并,作背景,不进任何账本。 @ 2026-10-16 |
 | done | T-007 | lane-c | CG 新闻监听器写入 Supabase(经 Railway mac_writes) | > 0 | 只在 Mac 本地 cis_history.db,13 行 | narrative_events:近 24 小时 154 行,共 1,329 行,最新 2026-10-08 03:37 UTC(lane-c 10-08 00:13 测得 150 / 1,310,一致) @ 2026-10-08T03:58Z |
 | done | T-009 | lane-c | data_quality_score:先修 data_freshness,再算分,随推送落库 | > 0 且 值有区分度(不全相同) | 0(列一直为空) | T1 最近 2h:86/86 行 DQS 非空,取值 {0.70, 0.85}(区分度满足原验收)。注:A′ 口径下 DQS = confidence,目前不带额外信息 —— 是否让它随源时间戳变化是 T-020 的事。 @ 2026-09-29T08:10Z |
@@ -332,4 +333,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 10 · claimed 6 · blocked 4 · in_review 52 · done 253 · dropped 4
+open 10 · claimed 6 · blocked 4 · in_review 52 · done 254 · dropped 4
