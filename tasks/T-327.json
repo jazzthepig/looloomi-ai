@@ -1,0 +1,28 @@
+{
+  "id": "T-327",
+  "owner": "lane-c",
+  "status": "in_review",
+  "created": "2026-11-10",
+  "title": "RBv2 影子臂加一条常数对照臂(20/30/20,建臂日写死),与 flex_x1v:T25_K 并排前向记账",
+  "source": "MINIMAX_SYNC §B-auto-1110-1222 第 3/6 条;REFUTATION_LEDGER S-801(补记);现有影子臂 flex_x1v:T25_K 的建臂代码(grep T25_K)。",
+  "allowed_paths": [
+    "src/",
+    "tests/",
+    "tasks/T-327.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "migrations/",
+    "src/api/schema_manifest.json"
+  ],
+  "acceptance": {
+    "check": "照 T25_K 的建臂方式新增一条常数臂 T20_K(加密 20% / 股 30% / 金 20%·注:与 RBv2 平均权重同量级,其余按 T25_K 的现金处理一字照抄),建臂日与参数写死在代码与测试里,不随 RBv2 变;只新增、不改 T25_K 与 RB_T25 的任何数;改 src/ 必须加测试并在 preflight 注册;只用允许的合规语言;不读 .env。",
+    "expect": "卡 in_review;notes 写建臂日、首个落库行日期与判活命令(只读 SELECT);测试证明 T20_K 权重不随 RBv2 变化;推 lane-c/T-327。"
+  },
+  "prior_value": "前向只有 T25_K(30/30/20)并排;W1 常数 20/30/20 反而比 RBv2 好(C 道复核),只看 T25_K 会把 RBv2 的超额误读成机制功劳。",
+  "notes": "2026-11-10T12:55:00Z Seth 开卡(lane-b 交叉复核 T-323 的 @seth 建议 ②/③;卡先进 main 再派)。\n2026-11-10 lane-c 交付(分支 lane-c/T-327;改 src/data/universe/forward_books.py + tests/test_forward_books.py + 本卡)。\n【做了什么】照 T25_K 的建臂方式新增常数对照臂 **T20_K**:加密 20% / 股 30% / 金 20%(余 30% 是现金、收益 0 —— 现金处理与 T25_K 一字照抄);同一个核 `flex_alloc.dynamic_mix_nav`(reb 21、cost 20bp)、同腿(crypto = CORE_X1V 前向 NAV / equity = ACWI / gold = XAUUSD)、同一条流水线;**权重与建臂日写死**在代码常量 `T20_K_WEIGHTS` / `T20_K_FROM`(不引用 `BASE_T25` / `rb_weights` / `BOUNDS` ⇒ RBv2 以后怎么改都不动)。只新增臂与规则串 `flex_t20k_v1:T-327…`;T25_K、RB_T25、STYLE_T25 的参数与行一个字节没动(测试逐位核对)。\n【建臂日】**2026-10-16**(写死在 `T20_K_FROM`;= flex_x1v 这本账的开账日 `TOM_START`,照 T25_K 的建臂方式)。常数臂没有拟合出来的参数(零自由度),与 T25_K 同起点记账才并排可比;预注册日是 2026-11-10(本卡),两者都写死在代码与测试里。\n【首个落库行日期】**2026-10-16,nav = 1.0**(book=flex_x1v、arm=T20_K、rule=flex_t20k_v1:T-327…)—— 三条腿的第一个共同日(= 加密腿 CORE_X1V 的开账日);之后每个共同日追加一行,与 T25_K 是同一批共同日(加密腿当时若缺行,两条臂一起后移)。\n【判活命令(只读 SELECT)】\n  select arm, min(d) as first_d, max(d) as last_d, count(*) as n, min(nav) as min_nav from forward_book_nav where book='flex_x1v' and arm in ('T25_K','T20_K','RB_T25','STYLE_T25') group by arm order by arm;\n  select d, arm, nav, rule from forward_book_nav where book='flex_x1v' and arm in ('T25_K','T20_K') and d>='2026-10-16' order by d, arm limit 40;\n【自检(pytest tests/test_forward_books.py tests/test_flex_alloc.py → 16 passed)】(a) T20_K 首行 d=2026-10-16、nav=1.0、行带自己的 rule;(b) 现金处理:第二天净值 = 1 + 0.20·r_crypto + 0.30·r_equity + 0.20·r_gold(余 30% 收益 0)实测逐位对上;(c) 与 T25_K 日期逐日相同、净值不同;(d) 换掉 `BASE_T25` 与 `rb_weights`(模拟 RBv2 改)后,T20_K 的净值序列与权重(0.2/0.3/0.2)一行不动;(e) 建臂日挪到第 11 个共同日 ⇒ 早于那天的行一条不写。\n【要 Seth 做 / 回答】本轮 lane 只有 publishable 只读 key:`forward_book_nav` 连读都被挡(实测 42501 permission denied for table forward_book_nav),所以 lane 自己写不了库、也读不回来核 —— 行要由 Mac 上跑着的周更循环(跑合并后的代码)落库。上面两条 SELECT 用有读权限的连接跑一次即可确认(期望:T20_K first_d=2026-10-16、min_nav=1.0、n 与 T25_K 一致)。",
+  "verified": null
+}
