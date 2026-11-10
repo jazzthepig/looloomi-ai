@@ -1,0 +1,28 @@
+{
+  "id": "T-326",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-10",
+  "title": "S-804 ② 候选:① 山寨里少配「韩国人多付钱」的名字(市值底,BTC/ETH 钉住,S-640 同一框架)",
+  "source": "REFUTATION_LEDGER S-804 与 S-640 原文(`grep -n \"^## S-804\\|^## S-640\" -A 6 REFUTATION_LEDGER.md`);你的 docs/research/t155_funding_tilt.py(框架一字不改,只换分数);korea_premium_watch(只读,翻页带 order=)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-326.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-804 原文照抄进报告开头;先复现 S-640 的 V4 − V0(+22.2pp 全程 / +0.21pp 留出)作自检,对不上先停;只换 z 的来源;①②③ 逐条报数与判定;另报每周有 p7 的 ① 山寨个数、分年差、V5 与 V4 的日收益相关。分支上要有 tasks/T-326.json(从 origin/main 拷,status 改 in_review)。只读、不入库、不改代码。",
+    "expect": "docs/research/T-326_korea_premium_tilt.md + t326_korea_tilt.py + t326_results.json + scenarios/lane-b-T-326.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-b/T-326。"
+  },
+  "prior_value": "② keep open(Jazz 11-10):在市值底上只测原因类变量;过了只进前向。",
+  "notes": "2026-11-10T09:57:58Z Seth 开卡(卡先进 main 再派)。",
+  "verified": null
+}
