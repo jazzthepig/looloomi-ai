@@ -62,7 +62,8 @@ except ValueError as _e:                      # 写错了不让整个服务起�
     RV2_GROSS_CAP_FRAC = RV2_GROSS_CAP_DEFAULT
 REBALANCE_TRADING_DAYS = 21
 DRIFT_BAND = 0.05
-RULE = ("t25_live_v1:Jazz 10-29(起始 600 USDC;权重 = forward_books.FLEX_X1V_ARMS['T25'];XAUT / SPYX / USDC+USDY;"
+RULE = ("t25_live_v2:Jazz 10-29 / 11-10(30/30/20 是推荐比例、在带内灵活 —— 每个再平衡日由 RBv2 定权重:加密、股 20–40%,金 10–30%,"
+        "S-801;算不出就沿用上一次、再不行用推荐比例);XAUT / SPYX / USDC+USDY;"
         f"R-v2 名义 ≤ 净值 {RV2_GROSS_CAP_FRAC:.0%}、单票风险不变;21 交易日或偏离 > 5pp 再平衡)")
 
 #: Jazz 11-01:账户的加密总敞口(X1V 现货 + R-v2 永续名义)在策略层各 30%、**组合层流动性充裕时可 ×3 到 0.9**。
@@ -92,10 +93,12 @@ WRITES_COLUMNS = {"portfolio_targets_daily": ("d", "book", "sleeve", "kind", "ta
                                               "instrument", "venue", "executable", "why", "next_rebalance_d", "rule")}
 
 
-def t25_weights() -> dict[str, float]:
-    """纸面 T25 的权重(唯一出处 forward_books)+ 现金 = 1 − 其余。"""
+def t25_weights(override: Optional[dict] = None) -> dict[str, float]:
+    """T25 的权重 + 现金 = 1 − 其余。不给 override = 推荐比例(唯一出处 forward_books);给 = 当期 RBv2 权重(键 crypto / equity / gold)。"""
     from src.data.universe.forward_books import FLEX_X1V_ARMS
     w, _core = FLEX_X1V_ARMS[T25_ARM]
+    if override:
+        w = override
     out = {"crypto_x1v": float(w["crypto"]), "equity": float(w["equity"]), "gold": float(w["gold"])}
     out["cash"] = round(1.0 - sum(out.values()), 10)
     return out
@@ -116,11 +119,13 @@ def next_rebalance(open_d: str, d: str, every: int = REBALANCE_TRADING_DAYS) -> 
 CAPITAL_FALLBACK_USD = T25_CAPITAL_USD
 
 
-def t25_rows(d: str, capital: float = T25_CAPITAL_USD, flow_event: bool = False) -> list[dict[str, Any]]:
-    """纯函数。一天的目标表行:四条 T25 腿(权重)+ R-v2(名义上限)。`flow_event` = 前一天有出入金 ⇒ 当天再平衡。"""
+def t25_rows(d: str, capital: float = T25_CAPITAL_USD, flow_event: bool = False,
+             weights: Optional[dict] = None) -> list[dict[str, Any]]:
+    """纯函数。一天的目标表行:四条 T25 腿(权重)+ R-v2(名义上限)。`flow_event` = 前一天有出入金 ⇒ 当天再平衡。
+    weights = 当期权重(`flex_weights` 给;None = 推荐比例)。"""
     nxt = d if flow_event else next_rebalance(OPEN_DATE, d)
     rows = []
-    for sleeve, w in t25_weights().items():
+    for sleeve, w in t25_weights(weights).items():
         s = SLEEVES[sleeve]
         rows.append({"d": d, "book": BOOK, "sleeve": sleeve, "kind": "weight", "target_w": w,
                      "target_usd": round(w * capital, 2), "capital_usd": capital, "instrument": s["instrument"],
@@ -136,10 +141,11 @@ def t25_rows(d: str, capital: float = T25_CAPITAL_USD, flow_event: bool = False)
 
 
 def plan_fields(d: Optional[str] = None, capital: float = T25_CAPITAL_USD, flow_event: bool = False,
-                capital_source: str = "起始资本 600(还没有真钱快照)") -> dict[str, Any]:
-    """纯函数。随执行器计划下发的那几个数(与表同一个函数)。资本与出入金事件由 `resolve_capital` 给。"""
+                capital_source: str = "起始资本 600(还没有真钱快照)", weights: Optional[dict] = None,
+                weights_source: str = "推荐比例") -> dict[str, Any]:
+    """纯函数。随执行器计划下发的那几个数(与表同一个函数)。资本与出入金事件由 `resolve_capital` 给,权重由 `flex_weights` 给。"""
     d = d or dt.datetime.now(dt.timezone.utc).date().isoformat()
-    rows = {r["sleeve"]: r for r in t25_rows(d, capital, flow_event)}
+    rows = {r["sleeve"]: r for r in t25_rows(d, capital, flow_event, weights)}
     nxt = rows["crypto_x1v"]["next_rebalance_d"]
     return {"book": BOOK, "d": d, "t25_capital_usd": capital, "capital_source": capital_source,
             "x1v_nav_budget_usd": rows["crypto_x1v"]["target_usd"],
@@ -147,6 +153,7 @@ def plan_fields(d: Optional[str] = None, capital: float = T25_CAPITAL_USD, flow_
             # 黄金 / 股票腿(主机 `exec_host/legs.py`):再平衡日回到目标,其余日子只纠偏离 > 带宽 × 资本的腿
             "t25": {"capital_usd": capital, "band": DRIFT_BAND, "rebalance_today": nxt == d, "flow_event": flow_event,
                     "legs": {LEG_SYMBOLS[k]: {"target_usd": rows[k]["target_usd"], "sleeve": k} for k in LEG_SYMBOLS}},
+            "weights": {k: rows[k]["target_w"] for k in ("crypto_x1v", "equity", "gold", "cash")}, "weights_source": weights_source,
             "rule": RULE}
 
 
@@ -176,14 +183,56 @@ async def resolve_capital(d: str) -> tuple[float, bool, str]:
     return capital_from_snapshots(rows, d)
 
 
+_FLEX_LEGS = {"crypto_x1v": "crypto", "equity": "equity", "gold": "gold"}
+
+
+def weights_from_rows(rows: list[dict]) -> Optional[dict[str, float]]:
+    """纯函数。目标表某一天的行 → {crypto, equity, gold};三条腿缺一条 ⇒ None。"""
+    by = {r.get("sleeve"): r.get("target_w") for r in rows or []}
+    if any(by.get(k) is None for k in _FLEX_LEGS):
+        return None
+    return {_FLEX_LEGS[k]: float(by[k]) for k in _FLEX_LEGS}
+
+
+async def flex_weights(d: str, rebalance_today: bool, read=None, leg_returns=None) -> tuple[Optional[dict], str]:
+    """Jazz 11-10:T25 在带内灵活。今天的目标表已写 ⇒ 用表(一个出处);再平衡日 ⇒ RBv2 用截至今天的腿重算;
+    其余日子 ⇒ 沿用最近一次写进表的权重。算不出 / 读不到 ⇒ 沿用上一次,再没有 ⇒ None(= 推荐比例),原因写明。"""
+    from src.data.universe import flex_alloc as fa
+    if read is None:
+        from src.data.style.header import _read_all as read
+    if leg_returns is None:
+        from src.data.universe.forward_books import rb_leg_returns as leg_returns
+    sel = {"select": "d,sleeve,target_w", "book": f"eq.{BOOK}", "sleeve": "in.(crypto_x1v,equity,gold)"}
+    today = weights_from_rows(await read("portfolio_targets_daily", {**sel, "d": f"eq.{d}"}))
+    if today:
+        return today, "今天的目标表"
+    prev_rows = await read("portfolio_targets_daily", {**sel, "d": f"lt.{d}", "order": "d.desc", "limit": "3"})
+    last_d = prev_rows[0]["d"] if prev_rows else None
+    prev = weights_from_rows([r for r in prev_rows if r.get("d") == last_d]) if last_d else None
+    if not rebalance_today:
+        return (prev, f"沿用 {last_d} 的权重") if prev else (None, "推荐比例(表里还没有权重)")
+    try:
+        rets = await leg_returns(d)
+        n = len(rets)
+        w = fa.rb_weights(rets)
+        return w, f"RBv2(截至 {d},{n} 个共同日)" + ("" if n >= fa.MIN_OBS else " —— 历史不足,等于推荐比例")
+    except Exception as e:                                   # noqa: BLE001
+        why = f"RBv2 算不出({type(e).__name__}: {str(e)[:80]})"
+        return (prev, why + f",沿用 {last_d}") if prev else (None, why + ",用推荐比例")
+
+
 async def plan_fields_live(d: Optional[str] = None) -> dict[str, Any]:
-    """`plan_fields` + 真钱资本。快照读不到 ⇒ 用起始 600 并在 capital_source 里写明(不假装读到了)。"""
+    """`plan_fields` + 真钱资本 + 当期权重。快照读不到 ⇒ 用起始 600 并在 capital_source 里写明(不假装读到了)。"""
     d = d or dt.datetime.now(dt.timezone.utc).date().isoformat()
     try:
         cap, flow, src = await resolve_capital(d)
     except Exception as e:                                   # noqa: BLE001
         cap, flow, src = CAPITAL_FALLBACK_USD, False, f"真钱快照读不到({type(e).__name__}),用起始 600"
-    fields = plan_fields(d, cap, flow, src)
+    try:
+        wts, wsrc = await flex_weights(d, flow or next_rebalance(OPEN_DATE, d) == d)
+    except Exception as e:                                   # noqa: BLE001
+        wts, wsrc = None, f"权重读不到({type(e).__name__}),用推荐比例"
+    fields = plan_fields(d, cap, flow, src, wts, wsrc)
     # 11-02(Jazz:规则是零假设,打破是实验):生效的偏离在预算内改额度;读不到偏离 ⇒ 按基线,写明(读不到 ≠ 没有偏离)
     from src.data.execution import overlays
     try:
@@ -218,11 +267,13 @@ async def write_today(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     done = {r.get("sleeve") for r in have or []}
     cap, flow, src = await resolve_capital(d)             # 读不到就抛:目标表宁可晚写,不按猜的资本写
     ov_note = await _write_overlay_daily(d)               # 11-02:基线 vs 偏离后,每天一行(表是基线,偏离另记)
-    rows = [r for r in t25_rows(d, cap, flow) if r["sleeve"] not in done]
+    wts, wsrc = await flex_weights(d, flow or next_rebalance(OPEN_DATE, d) == d)
+    rows = [r for r in t25_rows(d, cap, flow, wts) if r["sleeve"] not in done]
     if not rows:
         return {"ok": True, "d": d, "written": 0, "skipped": "今天的目标已写过", "overlay_daily": ov_note}
     w = await supabase_upsert_table("portfolio_targets_daily", rows, on_conflict="d,book,sleeve")
     if not w:
         return {"ok": False, "d": d, "why": f"写 portfolio_targets_daily 失败:{(getattr(w, 'why', '') or '')[:200]}"}
-    return {"ok": True, "d": d, "written": len(rows), "capital_usd": cap, "capital_source": src,
-            "x1v_nav_budget_usd": plan_fields(d, cap, flow, src)["x1v_nav_budget_usd"], "overlay_daily": ov_note}
+    return {"ok": True, "d": d, "written": len(rows), "capital_usd": cap, "capital_source": src, "weights_source": wsrc,
+            "weights": {r["sleeve"]: r["target_w"] for r in rows if r.get("kind") == "weight"},
+            "x1v_nav_budget_usd": plan_fields(d, cap, flow, src, wts, wsrc)["x1v_nav_budget_usd"], "overlay_daily": ov_note}

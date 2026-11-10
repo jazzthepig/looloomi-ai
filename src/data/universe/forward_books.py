@@ -293,6 +293,29 @@ async def run_flex_x1v(cutoff: str) -> dict[str, Any]:
     return {"ok": True, "nav_written": len(rows_n), "dyn_weights": dyn["weights"], **({"notes": notes} if notes else {})}
 
 
+async def rb_leg_returns(as_of: str, lookback_days: int = 150) -> "Any":
+    """Jazz 11-10(T25 是推荐比例、像保险组合一样在带内灵活)+ S-801:真钱 T25 每个再平衡日由 RBv2 定权重,
+    用的三条腿与研究同口径 —— 加密 = `TOM_ARMS['CORE_X1V']` 规则作用于 ① NAV(与 tom_trader 同一个核,含空仓期),
+    股 = eodhd ACWI,金 = eodhd XAUUSD;只到 as_of,共同日期。返回日收益 DataFrame(列 crypto / equity / gold)。"""
+    import pandas as pd
+    from src.data.signals.tom import trade_path, trade_returns
+    key, bear, size, exit_mode, vol = TOM_ARMS["CORE_X1V"]
+    closes, fund = await tom_inputs(as_of)
+    c = closes.get(key)
+    if c is None or len(c) < 260:
+        raise RuntimeError(f"{key} 收盘不足,算不了加密腿")
+    crypto = trade_returns(c, trade_path(c, bear, size, exit_mode, vol), fund.get(key))
+    start = (pd.Timestamp(as_of) - pd.Timedelta(days=lookback_days)).date().isoformat()
+    legs = {"crypto": crypto}
+    for sym, leg in FLEX_TRADFI:
+        rows = await _get_all(f"ohlcv_daily?select=trade_date,close&source=eq.eodhd&symbol=eq.{sym}"
+                              f"&trade_date=gte.{start}&trade_date=lte.{as_of}&order=trade_date")
+        px = pd.Series({pd.Timestamp(x["trade_date"]): float(x["close"]) for x in rows if x.get("close")}).sort_index()
+        legs[leg] = px.pct_change()
+    df = pd.concat(legs, axis=1).dropna().sort_index()
+    return df[(df.index >= pd.Timestamp(start)) & (df.index <= pd.Timestamp(as_of))]
+
+
 async def _flex_dynamic_rows(crypto_nav: Optional[dict], tf: dict, have: dict, cutoff: str) -> dict[str, Any]:
     """S-797 三条影子臂(T25_K / RB_T25 / STYLE_T25)的 NAV 行;只追加没写过的天。天气取 `state_daily` 面板(与 `book_vectors` 同口径)。"""
     import pandas as pd

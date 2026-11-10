@@ -50,6 +50,8 @@ def test_write_once_per_day(monkeypatch):
             return [{"d": "2026-10-29", "equity_usd": 630.64, "flows_usd": 0}]
         if table == "overlay_daily":                           # 11-02:基线 vs 偏离后的逐日记录(这里当作已写过)
             return [{"d": "2026-10-30"}]
+        if table == "portfolio_targets_daily" and params["d"].startswith("lt."):
+            return []                                          # 11-10:当期权重沿用上一次 —— 开账日之前没有
         assert table == "portfolio_targets_daily" and params["d"] == "eq.2026-10-30"
         return list(have)
 
@@ -64,6 +66,11 @@ def test_write_once_per_day(monkeypatch):
         return Ok()
     monkeypatch.setattr(hdr, "_read_all", read_all)
     monkeypatch.setattr(store, "supabase_upsert_table", upsert)
+    import src.data.universe.forward_books as fb
+
+    async def no_legs(d):
+        raise RuntimeError("测试里不取价")
+    monkeypatch.setattr(fb, "rb_leg_returns", no_legs)
     import datetime as dt
     now = dt.datetime(2026, 10, 30, 0, 20, tzinfo=dt.timezone.utc)
     r = asyncio.run(pl.write_today(now))
@@ -131,3 +138,45 @@ def test_rv2_gross_cap_is_flexible_up_to_40pct_and_refuses_beyond():
     for bad in ("0.41", "0", "-0.1", "x"):
         with pytest.raises(ValueError):
             pt.rv2_gross_cap_frac({"R_V2_GROSS_CAP_FRAC": bad})
+
+
+
+def test_t25_is_flexible_within_bands_rbv2_on_rebalance_days_carried_between(monkeypatch):
+    """Jazz 11-10:30/30/20 是推荐比例,像保险组合一样在带内灵活 —— 再平衡日 RBv2 定权重,其余日子沿用,算不出沿用上一次。"""
+    import numpy as np
+    import pandas as pd
+    from src.data.universe import flex_alloc as fa
+    stored = {"2026-11-27": [{"d": "2026-11-27", "sleeve": "crypto_x1v", "target_w": 0.25},
+                             {"d": "2026-11-27", "sleeve": "equity", "target_w": 0.35},
+                             {"d": "2026-11-27", "sleeve": "gold", "target_w": 0.28}]}
+
+    async def read(table, params):
+        d = params["d"]
+        if d.startswith("eq."):
+            return stored.get(d[3:], [])
+        return [r for k in sorted(stored, reverse=True) if k < d[3:] for r in stored[k]]
+    rng = np.random.default_rng(1110)
+    idx = pd.bdate_range("2026-08-01", periods=80)
+    rets = pd.DataFrame({"crypto": rng.normal(0, 0.05, 80), "equity": rng.normal(0, 0.01, 80), "gold": rng.normal(0, 0.008, 80)}, index=idx)
+
+    async def legs(d):
+        return rets
+
+    async def broken(d):
+        raise RuntimeError("eodhd down")
+    w, why = asyncio.run(pl.flex_weights("2026-11-27", True, read, legs))
+    assert w == {"crypto": 0.25, "equity": 0.35, "gold": 0.28} and why == "今天的目标表", "当天已写 ⇒ 表是唯一出处"
+    w, why = asyncio.run(pl.flex_weights("2026-12-01", False, read, legs))
+    assert w["crypto"] == 0.25 and "沿用 2026-11-27" in why
+    w, why = asyncio.run(pl.flex_weights("2026-12-29", True, read, legs))
+    assert why.startswith("RBv2") and all(fa.BOUNDS[k][0] - 1e-9 <= w[k] <= fa.BOUNDS[k][1] + 1e-9 for k in fa.LEGS)
+    assert w["crypto"] < 0.30, "加密腿波动大 ⇒ 权重低于推荐比例(同一事前风险)"
+    w, why = asyncio.run(pl.flex_weights("2026-12-29", True, read, broken))
+    assert w["gold"] == 0.28 and "算不出" in why and "沿用" in why
+    empty = lambda t, p: asyncio.sleep(0, result=[])
+    w, why = asyncio.run(pl.flex_weights("2026-12-29", True, empty, broken))
+    assert w is None and "推荐比例" in why
+    rows = {r["sleeve"]: r for r in pl.t25_rows("2026-12-29", 1000.0, False, {"crypto": 0.22, "equity": 0.38, "gold": 0.27})}
+    assert rows["crypto_x1v"]["target_usd"] == 220.0 and abs(rows["cash"]["target_w"] - 0.13) < 1e-9
+    f = pl.plan_fields("2026-12-29", 1000.0, False, "x", {"crypto": 0.22, "equity": 0.38, "gold": 0.27}, "RBv2")
+    assert f["x1v_nav_budget_usd"] == 220.0 and f["weights_source"] == "RBv2" and f["t25"]["legs"]["SPYX"]["target_usd"] == 380.0
