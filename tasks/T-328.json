@@ -1,7 +1,7 @@
 {
   "id": "T-328",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-11-10",
   "title": "BOUNDS 构造扫描 + 带内随机零分布:RBv2 的 W1/W2 通过,有多少来自夹紧(尤其地板),多少来自常数配比 / 随机",
   "source": "MINIMAX_SYNC §B-auto-1110-1222 第 2–5 条;docs/research/T-323_rb_v2.md 与 t323_legs.csv(只读,不改);flex_alloc.BOUNDS;apparatus.shuffle_within / 随机带内权重。",
@@ -23,6 +23,6 @@
     "expect": "docs/research/T-328_bounds_sweep.md + t328_bounds_sweep.py + t328_results.json + scenarios/lane-b-T-328.json(≥ 3 条前向命题);in_review,推 lane-b/T-328。"
   },
   "prior_value": "S-801 ✅ 已落地到真钱 T25 权重;交叉复核测得 W1 RBv2 回撤分位 0.05–0.16、常数 20/30/20 W1 全过且收益更高、加密带 0.25–0.40 / 0.30–0.40 在 W1 即翻 ⇒ 分辨力在地板,从没扫过。",
-  "notes": "2026-11-10T12:55:00Z Seth 开卡(lane-b 交叉复核 T-323 的 @seth 建议 ②/③;卡先进 main 再派)。",
+  "notes": "2026-11-10 lane-b 交付。产物(分支 lane-b/T-328):docs/research/T-328_bounds_sweep.md + t328_bounds_sweep.py + t328_results.json + docs/research/scenarios/lane-b-T-328.json(4 条前向命题)。只读复验:src/ 一个字节没动,未入库。自检:T-323/S-801 的 6 个参照数字逐位复现(|差| ≤ 0.005pp);快速模拟 vs 核 max|ΔNAV| = 0;脚本两次跑输出逐字节相同。\n(d) 判定 = 不可归因。RBv2 回撤分位(零分布 N=200/seed 805):W1_card 0.190(A 常数随机)/0.020(B 重抽)/0.000(C 投入对齐)过 0.10,W2 0.425/0.415/0.130 不过 ⇒ 两窗不同时成立 ⇒ 不记「夹紧有可归因的贡献」。\n归因链(RBv2 − 常数 20/30/20,加性,每步只改一件事):W1 配比 +0.52 / 时变 +4.96 / 夹紧 −1.91 = +3.57pp;W1_rec −2.50 / +4.01 / −2.16 = −0.66pp;W2 +14.56 / +2.90 / −2.85 = +14.61pp。夹紧项三窗皆负(−1.91 ~ −2.85pp)⇒ 过 S-801 的是「时变」,不是夹紧。\n(a) 网格:分辨力在地板 —— 加密地板 0.20→0.25,W1 就翻(S-801「回撤比 T25_K 浅 ≥ 2pp」不过:−24.49% vs −25.91% = 1.42pp);天花板 0.35/0.40/0.45 三窗合计只动 ±1pp。反过来金带天花板 0.30→0.40,W2 +62.18%→+68.76%(+6.58pp)—— 比加密地板大一个量级。常数 20/30/20 在 W1_card/W1_rec 全过 S-801 且收益更高、回撤更浅(W1_rec −11.41%/−20.84% vs RBv2 −12.07%/−22.13%)。\n口径核对:本次核 = bfb5765b(S-801 已落地,文件里 crypto BOUNDS 已是 0.20–0.40);T-323 记的 6c7fa4c4… = 1a215e1c(文件里还是 0.0–0.90,运行时改字典)。两版 diff = 一段注释 + 那一行 BOUNDS 常量,无逻辑差异;脚本仍运行时显式设 BOUNDS,自检 6/6 复现 ⇒ 核口径等价。\n基率自测:state_daily(entity=panel) 的 dist_200 有 2691 个非空日(2019-06-29→2026-11-09),其中 >0 占 57.26% ⇒ ≤0 基率 42.74%(情景 1 的 prob 0.43 依此)。\n@Seth:台账口径按卡上「只写事实」,判定词 = 不可归因;建议在 S-801 addendum 旁记一句「RBv2 相对常数臂的优势来自时变,夹紧项为负」。",
   "verified": null
 }
