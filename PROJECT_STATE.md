@@ -83,7 +83,7 @@ Contract + failure-path walkthrough: `docs/AMNESIA_PROTOCOL.md`; enforced by
    VERIFY: `curl -s https://web-production-0cdf76.up.railway.app/api/v1/fund/capacity | python3 -c 'import sys,json;b={x["book"]:x for x in json.load(sys.stdin)["books"]}["core_cap"];print(round(b["capacity_aum_usd"]/1e6), round(b["venue_capacity_aum_usd"]/1e6,1), round(b["venue_flow_capacity_aum_usd"]/1e6,1))'`
    OWNER: Jazz(何时扩、选哪个场所)· Seth(接新场所的深度 / 成交进同一接口)
 
-6. **🟡 收益层级 ② 在 ① 真实持有方式上只剩一个候选,而且族内不显著(S-803,11-10;Jazz「keep open」)。** 等权面板上的 ② 结论大半是规模效应:S-428 对等权 +3.6%/年,叠在 ① 的市值加权底上 −1.06%/年(p 0.60);P 在 ① 里也输(S-802)。市值底上过了回测的只有 **S-640**(BTC / ETH 钉住、山寨里少配资金费拥挤的名字;全程 +22.7pp、留出 +0.8pp,族内第 4 次 ⇒ 不显著),**前向 10-26 起,最早 12-25 判**。β+ 两本账的基准已改成 ① 本身(11-10)。
+6. **🟡 收益层级 ② 在 ① 真实持有方式上只剩一个候选,而且族内不显著(S-803,11-10;Jazz「keep open」)。** 等权面板上的 ② 结论大半是规模效应:S-428 对等权 +3.6%/年,叠在 ① 的市值加权底上 −1.06%/年(p 0.60);P 在 ① 里也输(S-802)。市值底上过了回测的只有 **S-640**(BTC / ETH 钉住、山寨里少配资金费拥挤的名字;全程 +22.7pp、留出 +0.8pp,族内第 4 次 ⇒ 不显著),**前向 10-26 起,最早 12-25 判**。β+ 两本账的基准已改成 ① 本身(11-10)。S-804(韩国溢价,原因类)在市值底上 ❌(留出 −0.58pp、打乱分位 0.755)⇒ **原因类是必要条件、不是充分条件**。
    VERIFY: `grep -n "^### S-803 结果\|^### S-640 结果" REFUTATION_LEDGER.md`;S-640 前向:`select max(d), count(*) from cis_tilt_daily where arm = 'fund_a1_u'`(10-26 起;对照 `cis_a1_u` / ①)。
    OWNER: Seth(② 候选一律在市值底、S-640 同一框架上测)· Jazz(11-10:② keep open)
 
