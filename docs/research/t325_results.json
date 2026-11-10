@@ -1,0 +1,423 @@
+{
+  "task": "T-325",
+  "ledger": "S-803",
+  "framework": {
+    "panel": "core_pit_members(p_n=24) —— 按时点 cap_pit24,每月一个名单(含死币)",
+    "CAP_arm": "core_pit_daily 的权重公式:前一日市值加权、单币 ≤ 40%、每日再平衡(毛收益)",
+    "tilt_arm": "w ∝ cap_i·(1 + k·z_i),k=1,z = M52 居中秩([-1,1]),周一收盘算、周二生效;归一;不设额外上限",
+    "schedule_primary": "日程 A(日频):两臂都用每日再平衡的市值权重;z 每周更新",
+    "schedule_sensitivity": "日程 B(周频):照 S-802 字面,两臂每周一重算、周二成交、持有期内漂移",
+    "window": [
+      "2023-01-02",
+      "2026-10-05"
+    ],
+    "cost_bp": 10,
+    "ab_test": {
+      "mean_block": 20.0,
+      "n_boot": 2000,
+      "seed": 803
+    }
+  },
+  "panel_check": {
+    "n_days_mine": 1374,
+    "n_days_db": 2870,
+    "overlap_days": 1374,
+    "overlap_from": "2023-01-02",
+    "overlap_to": "2026-10-06",
+    "max_abs_diff": 4.995341635130601e-09,
+    "mean_abs_diff": 2.492957017486737e-09,
+    "n_days_exact_1e-9": 272,
+    "corr": 0.9999999999999941,
+    "note": "我的重算(前一日市值加权 + 单币 ≤40% + 日再平衡)vs 库里 core_variants_daily 的 cap_pit24 臂(毛);差 0 = 成员/市值源/日历全对"
+  },
+  "panel_stats": {
+    "n_members_rows": 1272,
+    "n_months": 53,
+    "n_symbols": 58,
+    "avg_panel_size": 24.0,
+    "min_panel_size": 24,
+    "max_panel_size": 24,
+    "member_weeks_without_M52_score": 58,
+    "price_meta": {
+      "fetched_at_utc": "2026-11-10T05:42:57.794041+00:00",
+      "price_from": "2021-11-01",
+      "price_to": "2026-10-31",
+      "n_rows": 92394,
+      "n_symbols": 58,
+      "seconds": 19.0
+    }
+  },
+  "daily": {
+    "arms": {
+      "CAP": {
+        "label": "CAP(cap_pit24 市值加权)",
+        "cum": 2.3288680497600485,
+        "ann": 0.3764071130128037,
+        "mdd": -0.5928747957203143,
+        "ann_ex_vs_bench": 0.0,
+        "te_ann_vs_bench": 0.0,
+        "beta_vs_bench": 0.9999999999999987,
+        "ir_vs_bench": null,
+        "turnover_yr": 3.034326096056294,
+        "worst_month": -0.24882415998480112,
+        "worst_month_str": "2025-02",
+        "hit_month_ex": 0.0,
+        "n_days": 1374
+      },
+      "CAPxM52": {
+        "label": "CAP×M52",
+        "cum": 2.2759376791150845,
+        "ann": 0.3705590375491328,
+        "mdd": -0.5888667099537288,
+        "ann_ex_vs_bench": -0.010636291055350203,
+        "te_ann_vs_bench": 0.04118295865127606,
+        "beta_vs_bench": 0.9724605791768299,
+        "ir_vs_bench": -0.2582692308586876,
+        "turnover_yr": 9.481263985568296,
+        "worst_month": -0.24320570714891732,
+        "worst_month_str": "2025-02",
+        "hit_month_ex": 0.4782608695652174,
+        "n_days": 1374
+      },
+      "CAPxM52_with_cap": {
+        "label": "CAP×M52(仍套 40% 上限)",
+        "cum": 2.268588729117655,
+        "ann": 0.36974160564899616,
+        "mdd": -0.5948307411794295,
+        "ann_ex_vs_bench": -0.007842842981249648,
+        "te_ann_vs_bench": 0.034660427389943106,
+        "beta_vs_bench": 0.9862187212787622,
+        "ir_vs_bench": -0.2262765802918312,
+        "turnover_yr": 8.258014126761157,
+        "worst_month": -0.24737344196439326,
+        "worst_month_str": "2025-02",
+        "hit_month_ex": 0.5652173913043478,
+        "n_days": 1374
+      }
+    },
+    "halves": {
+      "h1": {
+        "start": "2023-01-02",
+        "end": "2024-11-17",
+        "CAP_ann_ex": 0.0,
+        "tilt_ann_ex": -0.019069185071251753,
+        "CAP_cum": 2.727521587301334,
+        "tilt_cum": 2.62143725333487,
+        "w_CAP_ann_ex": 0.0,
+        "w_tilt_ann_ex": -0.015313790832566407,
+        "w_CAP_cum": 2.705324432845445,
+        "w_tilt_cum": 2.6260313511052917
+      },
+      "h2": {
+        "start": "2024-11-18",
+        "end": "2026-10-06",
+        "CAP_ann_ex": 0.0,
+        "tilt_ann_ex": -0.0022279112662390633,
+        "CAP_cum": -0.10694868646754407,
+        "tilt_cum": -0.09540399295932356,
+        "w_CAP_ann_ex": 0.0,
+        "w_tilt_ann_ex": 0.00703485640727938,
+        "w_CAP_cum": -0.09822529356823217,
+        "w_tilt_cum": -0.06941504360549644
+      }
+    },
+    "yearly": {
+      "2023": {
+        "CAP_cum": 1.1226768646295846,
+        "tilt_cum": 1.0966802601829597,
+        "tilt_cap_cum": 1.097355758384961,
+        "tilt_ex_ann": -0.01404512146141974,
+        "tilt_cap_ex_ann": -0.012841059563296854,
+        "n_days": 364
+      },
+      "2024": {
+        "CAP_cum": 0.8946041975967061,
+        "tilt_cum": 0.8466851869875334,
+        "tilt_cap_cum": 0.868465377167801,
+        "tilt_ex_ann": -0.030058357345252466,
+        "tilt_cap_ex_ann": -0.015524801507262891,
+        "n_days": 366
+      },
+      "2025": {
+        "CAP_cum": -0.13872120467773053,
+        "tilt_cum": -0.10321835062295237,
+        "tilt_cap_cum": -0.1082437771415532,
+        "tilt_ex_ann": 0.027712941772437327,
+        "tilt_cap_ex_ann": 0.030043270394333077,
+        "n_days": 365
+      },
+      "2026": {
+        "CAP_cum": -0.03894012792908741,
+        "tilt_cum": -0.05653923013035966,
+        "tilt_cap_cum": -0.06468699565993874,
+        "tilt_ex_ann": -0.030880661851869586,
+        "tilt_cap_ex_ann": -0.04080873447121977,
+        "n_days": 279
+      }
+    },
+    "ab_test": {
+      "n_days": 1374,
+      "years": 3.76,
+      "cum_a": 2.328868049760054,
+      "cum_b": 2.2759376791150823,
+      "log_diff_total": -0.016028178867043816,
+      "ratio_b_over_a": 0.9840995888530979,
+      "ci95_log_diff": [
+        -0.1480008183880098,
+        0.11467819499686988
+      ],
+      "p_b_le_a": 0.5985,
+      "p_b_ge_a": 0.4015,
+      "se_log_diff": 0.06738494960452777,
+      "mde_log_diff_total": 0.16755098316936096,
+      "mde_log_diff_per_year": 0.04450954065270506,
+      "underpowered": true,
+      "verdict": "分不开",
+      "mean_block": 20.0,
+      "n_boot": 2000
+    },
+    "judgments": {
+      "i_cum_ge": {
+        "pass": false,
+        "CAP_cum": 2.3288680497600485,
+        "tilt_cum": 2.2759376791150845,
+        "diff": -0.052930370644963975
+      },
+      "ii_ab_p_le_010": {
+        "pass": false,
+        "p_b_le_a": 0.5985,
+        "ci95_log_diff": [
+          -0.1480008183880098,
+          0.11467819499686988
+        ],
+        "cum_a_CAP": 2.328868049760054,
+        "cum_b_tilt": 2.2759376791150823
+      },
+      "iii_both_halves_ex_pos": {
+        "pass": false,
+        "h1": {
+          "start": "2023-01-02",
+          "end": "2024-11-17",
+          "CAP_ann_ex": 0.0,
+          "tilt_ann_ex": -0.019069185071251753,
+          "CAP_cum": 2.727521587301334,
+          "tilt_cum": 2.62143725333487,
+          "w_CAP_ann_ex": 0.0,
+          "w_tilt_ann_ex": -0.015313790832566407,
+          "w_CAP_cum": 2.705324432845445,
+          "w_tilt_cum": 2.6260313511052917
+        },
+        "h2": {
+          "start": "2024-11-18",
+          "end": "2026-10-06",
+          "CAP_ann_ex": 0.0,
+          "tilt_ann_ex": -0.0022279112662390633,
+          "CAP_cum": -0.10694868646754407,
+          "tilt_cum": -0.09540399295932356,
+          "w_CAP_ann_ex": 0.0,
+          "w_tilt_ann_ex": 0.00703485640727938,
+          "w_CAP_cum": -0.09822529356823217,
+          "w_tilt_cum": -0.06941504360549644
+        }
+      },
+      "iv_mdd_not_2pp_deeper": {
+        "pass": true,
+        "tilt_mdd": -0.5888667099537288,
+        "CAP_mdd": -0.5928747957203143,
+        "diff_pp": 0.4008085766585512
+      },
+      "verdict_all_pass": false
+    },
+    "btc_weight_shift": {
+      "mean_pp": 6.046564438523975,
+      "mean_cap_pct": 39.99999999999999,
+      "mean_tilt_pct": 46.04656443852398,
+      "tilt_cap_mean_pp": -0.3977593781338668,
+      "tilt_cap_mean_pct": 39.60224062186612,
+      "n_days_btc_in_cap": 1374,
+      "n_days_btc_in_tilt": 1374
+    }
+  },
+  "weekly_sensitivity": {
+    "arms": {
+      "CAP": {
+        "label": "CAP(周频)",
+        "cum": 2.34136785266365,
+        "ann": 0.3777781896547392,
+        "mdd": -0.591877175344278,
+        "ann_ex_vs_bench": 0.0,
+        "te_ann_vs_bench": 0.0,
+        "beta_vs_bench": 1.0000000000000007,
+        "ir_vs_bench": null,
+        "turnover_yr": 1.7612089758118699,
+        "worst_month": -0.25034075828500635,
+        "worst_month_str": "2025-02",
+        "hit_month_ex": 0.0,
+        "n_days": 1374
+      },
+      "CAPxM52": {
+        "label": "CAP×M52(周频)",
+        "cum": 2.3743302267534165,
+        "ann": 0.3813757876397108,
+        "mdd": -0.5866905844019628,
+        "ann_ex_vs_bench": -0.004123201821639258,
+        "te_ann_vs_bench": 0.04119708405392807,
+        "beta_vs_bench": 0.9710973826547749,
+        "ir_vs_bench": -0.10008479765805457,
+        "turnover_yr": 6.990375221850223,
+        "worst_month": -0.24410424881671278,
+        "worst_month_str": "2025-02",
+        "hit_month_ex": 0.5217391304347826,
+        "n_days": 1374
+      }
+    },
+    "ab_test": {
+      "n_days": 1374,
+      "years": 3.76,
+      "cum_a": 2.3413678526636414,
+      "cum_b": 2.3743302267534143,
+      "log_diff_total": 0.00981659342112631,
+      "ratio_b_over_a": 1.009864934225514,
+      "ci95_log_diff": [
+        -0.12307091538805029,
+        0.14792539141144181
+      ],
+      "p_b_le_a": 0.4485,
+      "p_b_ge_a": 0.5515,
+      "se_log_diff": 0.06792658061022779,
+      "mde_log_diff_total": 0.16889773504871458,
+      "mde_log_diff_per_year": 0.04486730225093219,
+      "underpowered": true,
+      "verdict": "分不开",
+      "mean_block": 20.0,
+      "n_boot": 2000
+    },
+    "judgments": {
+      "i_cum_ge": {
+        "pass": true,
+        "CAP_cum": 2.34136785266365,
+        "tilt_cum": 2.3743302267534165,
+        "diff": 0.032962374089766655
+      },
+      "ii_ab_p_le_010": {
+        "pass": false,
+        "p_b_le_a": 0.4485,
+        "ci95_log_diff": [
+          -0.12307091538805029,
+          0.14792539141144181
+        ],
+        "cum_a_CAP": 2.3413678526636414,
+        "cum_b_tilt": 2.3743302267534143
+      },
+      "iii_both_halves_ex_pos": {
+        "pass": false,
+        "h1": {
+          "start": "2023-01-02",
+          "end": "2024-11-17",
+          "CAP_ann_ex": 0.0,
+          "tilt_ann_ex": -0.019069185071251753,
+          "CAP_cum": 2.727521587301334,
+          "tilt_cum": 2.62143725333487,
+          "w_CAP_ann_ex": 0.0,
+          "w_tilt_ann_ex": -0.015313790832566407,
+          "w_CAP_cum": 2.705324432845445,
+          "w_tilt_cum": 2.6260313511052917
+        },
+        "h2": {
+          "start": "2024-11-18",
+          "end": "2026-10-06",
+          "CAP_ann_ex": 0.0,
+          "tilt_ann_ex": -0.0022279112662390633,
+          "CAP_cum": -0.10694868646754407,
+          "tilt_cum": -0.09540399295932356,
+          "w_CAP_ann_ex": 0.0,
+          "w_tilt_ann_ex": 0.00703485640727938,
+          "w_CAP_cum": -0.09822529356823217,
+          "w_tilt_cum": -0.06941504360549644
+        }
+      },
+      "iv_mdd_not_2pp_deeper": {
+        "pass": true,
+        "tilt_mdd": -0.5866905844019628,
+        "CAP_mdd": -0.591877175344278,
+        "diff_pp": 0.5186590942315217
+      },
+      "verdict_all_pass": false
+    }
+  },
+  "exploratory_cap_limit_split": {
+    "note": "探索性分解(非预注册判据):CAP×M52 但倾斜后仍套单币 40% 上限",
+    "arms": {
+      "CAPxM52_with_cap": {
+        "label": "CAP×M52(仍套 40% 上限)",
+        "cum": 2.268588729117655,
+        "ann": 0.36974160564899616,
+        "mdd": -0.5948307411794295,
+        "ann_ex_vs_bench": -0.007842842981249648,
+        "te_ann_vs_bench": 0.034660427389943106,
+        "beta_vs_bench": 0.9862187212787622,
+        "ir_vs_bench": -0.2262765802918312,
+        "turnover_yr": 8.258014126761157,
+        "worst_month": -0.24737344196439326,
+        "worst_month_str": "2025-02",
+        "hit_month_ex": 0.5652173913043478,
+        "n_days": 1374
+      }
+    },
+    "ab_test_vs_CAP": {
+      "p_b_le_a": 0.6305,
+      "ci95_log_diff": [
+        -0.12290851855271838,
+        0.08561409450579315
+      ],
+      "cum_a_CAP": 2.328868049760054,
+      "cum_b_tiltcap": 2.268588729117665
+    },
+    "btc_weight": {
+      "mean_pct": 39.60224062186612
+    }
+  },
+  "forward_base_rates": {
+    "dist_200_gt_0_share": 0.5568627450980392,
+    "n_days": 1275,
+    "dist_200_median": 0.04477881015749219,
+    "btc_last_mcap_price": 77520.8863295096,
+    "btc_last_date": "2026-10-31",
+    "btc_ohlcv_last": null,
+    "note": "dist_200 = CAP 臂 nav / 其 200 日均线 − 1(自算,给 scenarios 的概率定基率用;情景文件里的 state:dist_200 由库里的 state_daily 结算,口径可能略有差别"
+  },
+  "compare_S802_published": {
+    "published": {
+      "M52_cum": 1.148,
+      "M52_ann_ex_vs_equalweight_hold": 3.61,
+      "M52_beta": 0.946,
+      "M52_te": 0.097,
+      "M52_mdd": -0.661,
+      "M52_turnover_yr": 13.6,
+      "HOLD_cum": 0.771,
+      "HOLD_mdd": -0.716,
+      "HOLD_turnover_yr": 3.7
+    },
+    "note": "S-802 是对**等权** HOLD 的超额(2023-01-02→2026-10-05);这里是市值加权的 CAP 基准"
+  },
+  "fingerprints": {
+    "arms_daily": {
+      "n": 2748,
+      "fields": [
+        "d",
+        "arm",
+        "ret"
+      ],
+      "sha256": "9184214d108c620b6c5c9f2ab70aa8797294eb42125852ae81cab3cdd5c763e1"
+    },
+    "members": {
+      "n": 1272,
+      "fields": [
+        "m",
+        "symbol",
+        "rnk"
+      ],
+      "sha256": "5cdfb93e70c6bce61a35a0b314981f89d9f473544996dc4643757197a1220e34"
+    }
+  }
+}
