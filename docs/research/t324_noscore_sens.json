@@ -1,0 +1,153 @@
+{
+  "task": "T-324",
+  "purpose": "§Seth-1110a 第 2 条 —— P 臂的 686 个无分成员-周(z=0 拿 1/N)剔除后,判据 (i) 是否变",
+  "window": [
+    "2023-01-02",
+    "2026-10-05"
+  ],
+  "self_check": {
+    "p_cum_reproduced": 0.6364375528909263,
+    "p_cum_published": 0.6364375528909263,
+    "m52_cum_reproduced": 1.1474668426072934,
+    "m52_cum_published": 1.1474668426072934,
+    "ok": true
+  },
+  "dropped": {
+    "n_noscore_member_weeks": 686,
+    "n_weeks_affected": 196,
+    "n_weeks_total": 197,
+    "panel_size_full_mean": 24.0,
+    "panel_size_after_cut_mean": 20.517766497461928,
+    "panel_size_after_cut_min": 18,
+    "dropped_symbols": [
+      "CRO",
+      "GRAM",
+      "HYPE",
+      "KAS",
+      "LEO",
+      "MATIC",
+      "MNT",
+      "OKB",
+      "PEPE",
+      "PI",
+      "RAIN",
+      "RENDER",
+      "SHIB",
+      "TAO"
+    ]
+  },
+  "arms": {
+    "HOLD": {
+      "label": "HOLD",
+      "cum": 0.7706437495759988,
+      "ann": 0.16389952507527905,
+      "mdd": -0.7164289015217309,
+      "ann_ex_vs_hold": 0.0,
+      "te_ann_vs_hold": 0.0,
+      "beta_vs_hold": 0.9999999999999993,
+      "ir_vs_hold": null,
+      "t_weekly_ex": null,
+      "turnover_yr": 3.6691373385725914,
+      "worst_month": -0.28620679763966184,
+      "worst_month_str": "2024-04",
+      "worst_month_ex": 0.0,
+      "hit_month_ex": 0.0,
+      "n_days": 1374
+    },
+    "M52": {
+      "label": "M52",
+      "cum": 1.1474668426072934,
+      "ann": 0.22511121930020006,
+      "mdd": -0.6610246262184902,
+      "ann_ex_vs_hold": 0.036139889019055724,
+      "te_ann_vs_hold": 0.09710168518380212,
+      "beta_vs_hold": 0.9459951991392647,
+      "ir_vs_hold": 0.3721860125356954,
+      "t_weekly_ex": 0.7053750300302611,
+      "turnover_yr": 13.586287568226412,
+      "worst_month": -0.27609514642834176,
+      "worst_month_str": "2024-04",
+      "worst_month_ex": -0.05920700529502658,
+      "hit_month_ex": 0.5217391304347826,
+      "n_days": 1374
+    },
+    "P": {
+      "label": "P",
+      "cum": 0.6364375528909263,
+      "ann": 0.1397822854664399,
+      "mdd": -0.6659447041588928,
+      "ann_ex_vs_hold": -0.036070967483488134,
+      "te_ann_vs_hold": 0.09234855311330104,
+      "beta_vs_hold": 0.9473542672560072,
+      "ir_vs_hold": -0.39059591371435143,
+      "t_weekly_ex": -0.751282797067759,
+      "turnover_yr": 15.302949895799529,
+      "worst_month": -0.3009039231530575,
+      "worst_month_str": "2024-04",
+      "worst_month_ex": -0.07984758890374509,
+      "hit_month_ex": 0.45652173913043476,
+      "n_days": 1374
+    },
+    "P_excl_noscore": {
+      "label": "P_excl_noscore",
+      "cum": 0.8713698834649672,
+      "ann": 0.1811324280499209,
+      "mdd": -0.6193533794257691,
+      "ann_ex_vs_hold": -0.002881783405514783,
+      "te_ann_vs_hold": 0.1225576858277399,
+      "beta_vs_hold": 0.9323318677679929,
+      "ir_vs_hold": -0.023513689786581422,
+      "t_weekly_ex": -0.044023102319673,
+      "turnover_yr": 17.01504036295503,
+      "worst_month": -0.31395602341654294,
+      "worst_month_str": "2024-04",
+      "worst_month_ex": -0.07421356189915648,
+      "hit_month_ex": 0.43478260869565216,
+      "n_days": 1374
+    }
+  },
+  "criterion_i": {
+    "rule": "P cum ≥ M52 cum",
+    "base": {
+      "P": 0.6364375528909263,
+      "M52": 1.1474668426072934,
+      "diff": -0.5110292897163671,
+      "pass": false
+    },
+    "excl": {
+      "P": 0.8713698834649672,
+      "M52": 1.1474668426072934,
+      "diff": -0.2760969591423261,
+      "pass": false
+    },
+    "changed": false,
+    "verdict": "不变(仍不过)"
+  },
+  "ab_test_Pexcl_vs_M52": {
+    "n_days": 1374,
+    "years": 3.76,
+    "cum_a": 1.1474668426073003,
+    "cum_b": 0.8713698834649704,
+    "log_diff_total": -0.13761821408096692,
+    "ratio_b_over_a": 0.8714313284543603,
+    "ci95_log_diff": [
+      -0.6799696108981595,
+      0.39627791598485024
+    ],
+    "p_b_le_a": 0.6945,
+    "p_b_ge_a": 0.3055,
+    "se_log_diff": 0.2779947678984879,
+    "mde_log_diff_total": 0.6912270017369018,
+    "mde_log_diff_per_year": 0.18362289347450447,
+    "underpowered": true,
+    "verdict": "分不开",
+    "mean_block": 20.0,
+    "n_boot": 2000
+  },
+  "ab_test_params": {
+    "mean_block": 20.0,
+    "n_boot": 2000,
+    "seed": 802
+  },
+  "reading": "剔除 = 该周只在该周有 P 分的成员里做倾斜;被剔除的成员当周权重 0(空仓),其余成员的基准权重在有分的子集上重算(仍 1/N)。M52 / HOLD 两臂口径不动,只有 P 臂变。"
+}
