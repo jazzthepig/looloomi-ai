@@ -1,7 +1,7 @@
 {
   "id": "T-326",
   "owner": "lane-b",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-11-10",
   "title": "S-804 ② 候选:① 山寨里少配「韩国人多付钱」的名字(市值底,BTC/ETH 钉住,S-640 同一框架)",
   "source": "REFUTATION_LEDGER S-804 与 S-640 原文(`grep -n \"^## S-804\\|^## S-640\" -A 6 REFUTATION_LEDGER.md`);你的 docs/research/t155_funding_tilt.py(框架一字不改,只换分数);korea_premium_watch(只读,翻页带 order=)。",
@@ -23,6 +23,6 @@
     "expect": "docs/research/T-326_korea_premium_tilt.md + t326_korea_tilt.py + t326_results.json + scenarios/lane-b-T-326.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-b/T-326。"
   },
   "prior_value": "② keep open(Jazz 11-10):在市值底上只测原因类变量;过了只进前向。",
-  "notes": "2026-11-10T09:57:58Z Seth 开卡(卡先进 main 再派)。",
+  "notes": "2026-11-10T09:57:58Z Seth 开卡(卡先进 main 再派)。 | 2026-11-10T10:15:46Z lane-b 完成,❌ 判据 2、3 不过 1 过。自检:先在 S-640 当初的窗口(再平衡日 ≤ 2026-10-19,199 周)上复现 V4 − V0 = 全程 +0.2215 / 留出段 +0.0021,与 S-640 原文 +22.2pp / +0.21pp **逐位对上**(差 0.0000);V0 复现 multiplier_daily.core_u_replay 最大相对差 0.364%(202 天,门槛 1%)。框架一字不改 —— 直接 import docs/research/t155_funding_tilt.py(S-640 的实现),只换 z 的来源。主结果(22 名字面板,BTC/ETH 钉住,202 个周一 2023-01-02→2026-11-09,周一再平衡、周内买入持有、换手 × 10bp):V0 全程 +233.81% / 留出 −26.24%;V5(korea p7 倾斜)全程 +234.64% / 留出 −26.82%;V5 − V0 = 全程 **+0.83pp**、留出段(2025-01-01 起)**−0.58pp**。判据:(i) ✅ +0.83pp > 0;(ii) ❌ −0.58pp ≤ 0;(iii) ❌ 200 次「有 p7 的山寨里打乱 z」(apparatus.shuffle_within,种子 804)分位 **0.755** < 0.95(留出段分位 0.640)。另报(卡上点名):每周有 p7 的 ① 山寨 min 14 / median 16 / mean 15.8 / max 18(共 20 个山寨,整周无 p7 的再平衡日 0 次;BNB/LTC 从没有 p7);分年差 V5−V0 = 2023 +2.01pp · 2024 +2.02pp · 2025 +0.36pp · 2026 +0.19pp(四年都正,但幅度只有随机打乱的 75 分位);V5 对 V4 的相关:原始日收益 +0.9983(无信息量,两条腿都被 ① 的 beta 主导)⇒ 有信息量的超额口径 **−0.3145**(n=1407 天,反向),因子层每周横截面 corr(z_korea, z_funding) 平均 −0.0249(n=202 周,基本正交)⇒ V5 不是 V4 的马甲,但也没挣钱。另报(非判据):把 p7 挪一周(用上一周的 p7,不含当周)的对照 = 全程 −5.27pp / 留出 −0.45pp ⇒ 不是「只在当天成立」;零分布另一口径(全部山寨打乱,= S-640 口径)分位 0.775。产物:docs/research/T-326_korea_premium_tilt.md(开头照抄 S-804 原文)+ t326_korea_tilt.py + t326_results.json + scenarios/lane-b-T-326.json(5 条命题,2 条自动结算:close:BTC、state:dist_200)。只读、未入库、未改生产口径。",
   "verified": null
 }
