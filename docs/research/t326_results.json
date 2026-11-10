@@ -1,0 +1,278 @@
+{
+  "task": "T-326",
+  "ledger": "S-804",
+  "framework": "S-640 一字不改(直接 import t155_funding_tilt);只换 z 的来源",
+  "generated_at": "2026-11-10T10:14:05.582183+00:00",
+  "data_window": {
+    "start": "2023-01-02",
+    "end": "2026-11-09",
+    "n_rebalance": 202,
+    "s640_selfcheck_window_end": "2026-10-19",
+    "s640_selfcheck_n_rebalance": 199
+  },
+  "panel": {
+    "size": 22,
+    "names": [
+      "AAVE",
+      "ADA",
+      "APT",
+      "ATOM",
+      "AVAX",
+      "BCH",
+      "BNB",
+      "BTC",
+      "DOGE",
+      "DOT",
+      "ETC",
+      "ETH",
+      "FIL",
+      "INJ",
+      "LINK",
+      "LTC",
+      "NEAR",
+      "OP",
+      "SOL",
+      "TRX",
+      "UNI",
+      "XRP"
+    ],
+    "alts": [
+      "AAVE",
+      "ADA",
+      "APT",
+      "ATOM",
+      "AVAX",
+      "BCH",
+      "BNB",
+      "DOGE",
+      "DOT",
+      "ETC",
+      "FIL",
+      "INJ",
+      "LINK",
+      "LTC",
+      "NEAR",
+      "OP",
+      "SOL",
+      "TRX",
+      "UNI",
+      "XRP"
+    ],
+    "pinned": [
+      "BTC",
+      "ETH"
+    ]
+  },
+  "v0_check": {
+    "max_relative_diff_pct": 0.364,
+    "n_aligned_days": 202,
+    "v0_total": 2.3381,
+    "v0_total_holdout": -0.2624,
+    "passes_1pct": true
+  },
+  "self_check_s640": {
+    "target_full": 0.2215,
+    "target_holdout": 0.0021,
+    "reproduced_full": 0.2215,
+    "reproduced_holdout": 0.0021,
+    "tol_full": 0.02,
+    "tol_holdout": 0.01,
+    "passes": true
+  },
+  "v4_funding_s640_current_window": {
+    "v4_total": 2.5538,
+    "v0_total": 2.3381,
+    "diff_full": 0.2156,
+    "v4_total_holdout": -0.2576,
+    "v0_total_holdout": -0.2624,
+    "diff_holdout": 0.0048,
+    "turnover_v4": 0.012,
+    "max_dd_v4": -0.5554,
+    "max_dd_v0": -0.5539
+  },
+  "v5_korea_p7": {
+    "z_rule": "z = −(该名字当周 korea_premium_watch.p7 在 ① 山寨横截面里的 z 分数)",
+    "k_def": 0.5,
+    "v5_total": 2.3464,
+    "diff_full": 0.0083,
+    "v5_total_holdout": -0.2682,
+    "diff_holdout": -0.0058,
+    "turnover_v5": 0.0128,
+    "max_dd_v5": -0.5569,
+    "max_dd_v0": -0.5539,
+    "pctile_vs_shuffles_full": 0.755,
+    "pctile_vs_shuffles_holdout": 0.64,
+    "pctile_vs_shuffles_full_allalts_variant": 0.775,
+    "n_shuffles": 200,
+    "seed": 804
+  },
+  "lagged_variant_not_preregistered": {
+    "note": "z 用上一周(周一 t−7)的 p7 —— 挪一周的对照,不是预注册的判据",
+    "diff_full": -0.0527,
+    "diff_holdout": -0.0045
+  },
+  "corr_v5_v4": {
+    "daily": 0.9983,
+    "n_daily": 1407,
+    "daily_lagged": 0.9985,
+    "weekly": 0.9983,
+    "n_weekly": 201,
+    "excess_daily": -0.3145,
+    "n_excess_daily": 1407,
+    "excess_daily_lagged": -0.3225,
+    "note": "原始日收益相关几乎恒为 1(两条腿都 ≈ ① 的 beta,同一面板同一周再平衡);「是不是同一个东西」要看超额口径",
+    "weekly_z_corr_korea_vs_funding_mean": -0.0249,
+    "weekly_z_corr_korea_vs_funding_n": 202
+  },
+  "coverage": {
+    "n_alts": 20,
+    "alts_with_p7_per_week": {
+      "min": 14,
+      "max": 18,
+      "mean": 15.806930693069306,
+      "median": 16.0,
+      "p10": 14.0
+    },
+    "per_symbol_weeks_with_p7": {
+      "AAVE": 202,
+      "ADA": 202,
+      "APT": 202,
+      "ATOM": 202,
+      "AVAX": 202,
+      "BCH": 202,
+      "DOGE": 202,
+      "DOT": 202,
+      "ETC": 202,
+      "FIL": 83,
+      "INJ": 108,
+      "LINK": 202,
+      "NEAR": 202,
+      "OP": 67,
+      "SOL": 202,
+      "TRX": 202,
+      "UNI": 107,
+      "XRP": 202
+    },
+    "alts_never_with_p7": [
+      "BNB",
+      "LTC"
+    ],
+    "n_rebal_without_any_p7": 0
+  },
+  "yearly_v5": [
+    {
+      "year": "2023",
+      "v0_ret": 1.3093874273593902,
+      "vx_ret": 1.3295330907051675,
+      "vx_minus_v0_pp": 0.020145663345777276,
+      "n_rebal": 52
+    },
+    {
+      "year": "2024",
+      "v0_ret": 0.9285061107344412,
+      "vx_ret": 0.9487300207668168,
+      "vx_minus_v0_pp": 0.02022391003237556,
+      "n_rebal": 53
+    },
+    {
+      "year": "2025",
+      "v0_ret": -0.19045600401514529,
+      "vx_ret": -0.1868102024675039,
+      "vx_minus_v0_pp": 0.0036458015476413808,
+      "n_rebal": 52
+    },
+    {
+      "year": "2026",
+      "v0_ret": -0.24592800348210342,
+      "vx_ret": -0.2440627215103246,
+      "vx_minus_v0_pp": 0.0018652819717788205,
+      "n_rebal": 45
+    }
+  ],
+  "yearly_v4": [
+    {
+      "year": "2023",
+      "v0_ret": 1.3093874273593902,
+      "vx_ret": 1.3051373167698297,
+      "vx_minus_v0_pp": -0.004250110589560485,
+      "n_rebal": 52
+    },
+    {
+      "year": "2024",
+      "v0_ret": 0.9285061107344412,
+      "vx_ret": 1.039699286703002,
+      "vx_minus_v0_pp": 0.11119317596856071,
+      "n_rebal": 53
+    },
+    {
+      "year": "2025",
+      "v0_ret": -0.19045600401514529,
+      "vx_ret": -0.14548290648904594,
+      "vx_minus_v0_pp": 0.04497309752609935,
+      "n_rebal": 52
+    },
+    {
+      "year": "2026",
+      "v0_ret": -0.24592800348210342,
+      "vx_ret": -0.1972150550710663,
+      "vx_minus_v0_pp": 0.04871294841103713,
+      "n_rebal": 45
+    }
+  ],
+  "judgement": {
+    "1_full_gt0": true,
+    "2_holdout_gt0": false,
+    "3_pctile_ge_0.95": false,
+    "verdict_pass": false
+  },
+  "completeness": {
+    "ohlcv": {
+      "source": "ohlcv_daily(binance_hist)",
+      "rows_fetched": 30976,
+      "uniq_symbol_date_keys": 30976,
+      "n_symbols": 22,
+      "n_dates": 1408,
+      "expected_symbols_x_dates": 30976,
+      "missing_keys": 0,
+      "date_min": "2023-01-02",
+      "date_max": "2026-11-09",
+      "per_symbol_days_min": 1408,
+      "per_symbol_days_max": 1408,
+      "closes_loaded": 30976,
+      "order_param": "symbol.asc,trade_date.asc",
+      "assert_equal": true
+    },
+    "korea": {
+      "source": "korea_premium_watch",
+      "order_param": "d.asc,symbol.asc",
+      "rows_fetched": 16496,
+      "count_exact": 16496,
+      "uniq_d_symbol_keys": 16496,
+      "n_dates": 306,
+      "cohort_counts": {
+        "backfill": 16422,
+        "forward": 74
+      },
+      "assert_equal": true
+    },
+    "funding": {
+      "source": "funding_history(binance_perp)",
+      "paging": "keyset(symbol,funding_time)",
+      "rows_fetched": 150166,
+      "uniq_symbol_date_keys": 50050,
+      "n_symbols": 22,
+      "n_dates": 2506,
+      "expected_symbols_x_dates": 55132,
+      "missing_keys": 5082,
+      "order_param": "symbol.asc,funding_time.asc",
+      "assert_equal": true,
+      "per_symbol_span": {
+        "checked": 22,
+        "no_holes": true,
+        "symbols_with_holes": []
+      },
+      "assert_basis": "每币自身跨度内无洞(非笛卡尔积 —— funding 起止日逐币不同)"
+    }
+  },
+  "cost_bps": 0.001
+}
