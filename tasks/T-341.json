@@ -1,0 +1,15 @@
+{
+  "id": "T-341",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-11",
+  "title": "真钱唯一规则 X1V 的归因:对「同平均 β 的常数加密腿」—— 账户抗跌是 X1V 的择时还是 70% 非加密配置的结构(T-305 遗留 (c))",
+  "source": "11-11 高维复盘(LP 视角):11-10 ① 面板 dist_200 首次 < 0(−0.34%)、广度 0.042,S2(破线)进行中;真钱账户加密 β = 0、NAV 1.0027,而 ① 自 10-02 起 −11.6%。T-305 已量:账户(口径 A 实盘内核)全窗口 +91.63% / 回撤 −16.93% vs ① +41.25% / −77.73%,但四腿齐全 2022-08-31 起 ① 反超 48.35pp;X1V 腿零信号分位 0.801 / 0.945;lane-c 自己在探索节写了「抗跌是配置结构的机械性质,不是 X1V 的功劳」,Seth 11-09 答「同 β 对照另立预注册再说」。现在 S2 让这个问题有了时效:LP 会问『我用 IBIT+SPY+GLD 常数配比能不能复制你们的真钱』。",
+  "allowed_paths": ["docs/research/", "tasks/T-341.json"],
+  "forbidden_paths": ["Shadow/", "src/", "scripts/", "migrations/", "paper_trading/", "PROJECT_STATE.md", "PROJECT_STATE_LOG.md"],
+  "acceptance": {
+    "check": "只读 SELECT,预注册先写后算、只算一次、不扫参数。复用 T-305 的口径 A(executor.target_weights → tom.trade_path(close,'rally',0.0,exit_mode='l20',vol=True),BTC+ETH 各半,10bp 换手)与 T-305 的 SPY/GLD 腿、现金规则,区间 2021-07-13 → 2026-11-10。对照臂 K:加密腿换成常数权重 w_K × (BTC/ETH 各半,日再平衡,同样 10bp),w_K = 账户口径 A 全窗口实际加密敞口的时间平均(先报这个数);其余三腿与账户完全相同。报:账户 A 与 K 的总收益、年化、最大回撤、Calmar,全窗口与 2021-07→2022-08-30 / 2022-08-31→2026-11-10 两段分报;差(A−K)对「同样进出场次数与持有天数、随机日期、同年分层」1,000 次(apparatus.py,种子 341)的分位;再报 BTC 距 200 日线 0~10% 且广度 ≤ 0.10 的簇首日之后 28 天 A 与 K 的回撤差(沿用 T-305 的 23 簇)。只报不判,不改规则、不改代码、不入库;翻页带 order=。附 docs/research/scenarios/lane-c-T-341.json(≥ 3 条前向命题,至少一条 close: 或 state: 自动结算,horizon ≥ 7 天)。探索性另节。",
+    "expect": "docs/research/T-341_x1v_vs_const_beta.md(预注册在前,开头一张 A / K / ① 三行表)+ docs/research/t341_x1v_vs_const.py + docs/research/t341_results.json;卡 notes 写 w_K、两段 A−K 的总收益与回撤差、随机分位三个数;in_review,推 lane-c/T-341。"
+  },
+  "prior_value": "T-305 只把账户和 ① 比,不能区分『X1V 择时』和『只持 30% 加密』。真钱里唯一的规则至今没有对它自己的结构做过对照;S2 里 Jazz 要回答 LP 的『为什么不直接用常数配比』,现在没有数。"
+}
