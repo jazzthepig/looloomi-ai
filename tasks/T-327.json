@@ -1,7 +1,7 @@
 {
   "id": "T-327",
   "owner": "lane-c",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-11-10",
   "title": "RBv2 影子臂加一条常数对照臂(20/30/20,建臂日写死),与 flex_x1v:T25_K 并排前向记账",
   "source": "MINIMAX_SYNC §B-auto-1110-1222 第 3/6 条;REFUTATION_LEDGER S-801(补记);现有影子臂 flex_x1v:T25_K 的建臂代码(grep T25_K)。",
@@ -24,5 +24,9 @@
   },
   "prior_value": "前向只有 T25_K(30/30/20)并排;W1 常数 20/30/20 反而比 RBv2 好(C 道复核),只看 T25_K 会把 RBv2 的超额误读成机制功劳。",
   "notes": "2026-11-10T12:55:00Z Seth 开卡(lane-b 交叉复核 T-323 的 @seth 建议 ②/③;卡先进 main 再派)。\n\n2026-11-11 lane-c 补交(分支 lane-c/T-327-v2,从最新 origin/main 重建,按 §Seth-1110f)。代码与已审的 origin/lane-c/T-327(commit 07ceb445)逐字节相同:src/data/universe/forward_books.py + tests/test_forward_books.py;上次合并失败只因 tasks/T-327.json add/add + tasks/BOARD.md 冲突,代码内容未被退回(§Seth-1110e)。\n【为什么仍带卡】§Seth-1110f 让不带卡与 BOARD.md,但 scripts/check_pr_scope.py 要求卡 status=in_review(CI 与 Mac 侧执行器同一函数),不带卡 ⇒ 范围检查判『status 是 open』⇒ 合不进去。故本分支带 tasks/T-327.json(status in_review + 本 notes)与重生后的 tasks/BOARD.md;两者若与主仓撞车请用 fixup_paths 覆盖(BOARD.md 本身在执行器的 REGENERATED 名单里,冲突会自动重生)。\n【臂参数(代码常量,写死)】T20_K_WEIGHTS = crypto 0.20 / equity 0.30 / gold 0.20;余 30% 现金收益 0;T20_K_FROM = 2026-10-16(= T25_K 同一起点,测试断言 == TOM_START);规则串 flex_t20k_v1:T-327…;同一个核 flex_alloc.dynamic_mix_nav(reb=21, cost=20bp)、同腿、同流水线;不引用 BASE_T25 / rb_weights / BOUNDS ⇒ RBv2 以后怎么改都不动这条臂。origin/main 原先没有这条臂(该文件里 T20_K 出现 0 次)。\n【前置依赖已在 main】src/data/universe/flex_alloc.py 的 dynamic_mix_nav(..., start: Optional[pd.Timestamp] = None)已支持 start,建臂日靠它;origin/main 自老分支点起没动过 forward_books.py 与 test_forward_books.py ⇒ 代码可干净落到新 main。\n【测试钉住什么】tests/test_forward_books.py 新增 test_t327_t20k_constant_arm_is_pinned_and_survives_rb_v2_changes:① 建臂日当天开账,首行 d=2026-10-16、nav=1.0;② 每行 rule = flex_t20k_v1…;③ 逐日净值 = 1 + 0.20·r_crypto + 0.30·r_equity + 0.20·r_gold(现金收益 0,与 T25_K 一字照抄);④ 与 T25_K 并排、同日起止、净值不同;⑤ monkeypatch 掉 fa.BASE_T25 与 fa.rb_weights 之后 T20_K 的行与权重逐位不变。T25_K / RB_T25 / STYLE_T25 的行未动(老测试逐位核对)。\n【本轮未跑本地 pytest】上下文守卫在 ~120–144k token 拦下 Bash;同一份代码上一轮在 origin/lane-c/T-327 上已过 preflight(§Seth-1110e『代码内容 OK,未退回』,合并 job 失败原因只是卡/看板冲突),CI 在本分支会重跑 preflight 与测试。\n【落库与判活】库里现在还没有 T20_K 的行(代码未合并、周更循环未跑);合并且周更循环跑过之后首行应为 2026-10-16、nav=1.0。判活命令(只读 SELECT,合并后由 Seth 跑):\n  SELECT * FROM forward_book_nav WHERE book='flex_x1v' AND arm='T20_K' ORDER BY d LIMIT 20;  -- 期望首行 d=2026-10-16、nav=1.0\n  SELECT arm, count(*) AS n, min(d) AS first_d, max(d) AS last_d FROM forward_book_nav WHERE book='flex_x1v' GROUP BY arm;  -- 期望 T25_K / RB_T25 / STYLE_T25 / T20_K 四条臂都有行\n【探索性 —— 需另立预注册、在新数据上过零信号对照】T20_K 的加密腿 0.20 比 T25_K 低 10pp、比 RBv2 的 W1/W2 平均 26% 低约 6pp ⇒ 『常数臂 vs RBv2』的差里混着腿配置差,不是纯择时机制的差;要隔离 RB 机制本身,还需要一条与 RBv2 平均权重逐项相同的常数臂(本轮没做)。\n【需要 @seth】① 合并后跑周更循环,再执行上面两条只读 SELECT 确认 T20_K 已有行;② 周更循环要用合并后的代码,否则这条臂不会有行;③ 本卡不附 scenarios/(卡没要求、allowed_paths 也没有 docs/),要登记成前向命题得另开卡;④ 若你的执行器只收 lane-c/T-327 这一个名字(1110f 让开 -v2、1111f 第 4 条说推 lane-c/T-327),说一声,我下一轮按你的名字重推。",
-  "verified": null
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-11T10:50:00Z",
+    "value": "forward_book_nav book=flex_x1v arm=T20_K:18 行,2026-10-16 → 2026-11-10,首行 nav=1.0,rule=flex_t20k_v1:T-327…;与 T25_K 同起止日(各 18 行)、11-10 净值不同(T20_K 0.98975 vs T25_K 0.99336);其余六条臂行数未变(各 18)"
+  }
 }
