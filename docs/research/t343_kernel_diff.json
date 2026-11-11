@@ -1,0 +1,67 @@
+{
+ "card": "T-343",
+ "purpose": "装配(A=生产核) vs 我的核副本(B) 在 L0 上的逐日差;以及 A 重跑是否复现已交付 C",
+ "window": [
+  "2021-10-11",
+  "2026-10-30"
+ ],
+ "n_common_days": 1333,
+ "n_nav_days": 1270,
+ "A_prod_vs_B_copy": {
+  "max_abs_diff_nav": 0.0,
+  "max_rel_diff": 0.0,
+  "n_days_nonzero": 0,
+  "worst_day": "2021-10-11",
+  "identical": true
+ },
+ "A_total_return": 0.541972,
+ "B_total_return": 0.541972,
+ "A_cagr": 0.089451,
+ "B_cagr": 0.089451,
+ "A_max_drawdown": -0.259109,
+ "B_max_drawdown": -0.259109,
+ "n_rebalances": [
+  61,
+  61
+ ],
+ "rebalance_log_equal": true,
+ "C_delivered_L0": {
+  "total_return": 0.541972,
+  "cagr": 0.089451,
+  "max_drawdown": -0.259109,
+  "n_days": 1270
+ },
+ "A_reproduces_C": {
+  "total_return_diff": 0.0,
+  "cagr_diff": 0.0,
+  "max_drawdown_diff": 0.0,
+  "n_days_match": true
+ },
+ "bounds_cannot_touch_L0": {
+  "BASE_T25": {
+   "crypto": 0.3,
+   "equity": 0.3,
+   "gold": 0.2
+  },
+  "BOUNDS": {
+   "crypto": [
+    0.2,
+    0.4
+   ],
+   "equity": [
+    0.2,
+    0.4
+   ],
+   "gold": [
+    0.1,
+    0.3
+   ]
+  },
+  "clip_to_budget(BASE_T25)": {
+   "crypto": 0.3,
+   "equity": 0.3,
+   "gold": 0.2
+  },
+  "unchanged": true
+ }
+}
