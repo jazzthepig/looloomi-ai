@@ -1,0 +1,28 @@
+{
+  "id": "T-342",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-11",
+  "title": "S-815 整合账本:一个账户、一个内核、一个窗口(2021-10 → 2026-10),梯子 L0–L4 量每个开关(R-v2 / RBv2 / 现金计息 / 每票风险 1%)在账户口径上值多少",
+  "source": "REFUTATION_LEDGER S-815(`grep -n \"^## S-815\" -A 8 REFUTATION_LEDGER.md`,原文照抄进报告开头);内核 src/data/universe/flex_alloc.py(origin/main;dynamic_mix_nav 的 cash_ret / overlay_ret,一字不改);腿的装配用你自己的 t321 / t323;R-v2 用你自己的 t310_slots.py + t251_gross_cap.simulate;现金利率 feature_matrix_daily 的 stable_lend_apy_7d(只读,翻页带 order=)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-342.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-815 原文照抄进报告开头;自检三条:① L0 在 S-799 窗口复现 T-321 的 T25_K(−15.70%)② R-v2 曲线复现 T-310 的 cap 14(+63.50% / −25.71%)③ cash_ret / overlay_ret 都不给时与旧内核逐位相同。先落 t342_daily.csv(日期、各腿收盘、现金日利率、R-v2 日收益)。梯子 L0–L4 + L3H + ① 逐臂报总收益 / CAGR / 波动 / 最大回撤 / Calmar / 最差月 / 逐年收益;相邻两级之差单列一张表;L3、L4 的判据逐条报数与判定。只读、不入库、不改代码;不要 Read 大文件;长计算 nohup 后台跑。",
+    "expect": "docs/research/T-342_house_book.md + t342_house_book.py + t342_results.json + t342_daily.csv + scenarios/lane-c-T-342.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-c/T-342。"
+  },
+  "prior_value": "过了检验的部件第一次在同一个账户里合起来量;结果直接决定提给 Jazz 的两个真钱开关(现金收益腿、每票风险)。",
+  "notes": "2026-11-11T13:39:07Z Seth 开卡(卡与内核先进 main 再派)。B 道 T-343 盲复算。",
+  "verified": null
+}

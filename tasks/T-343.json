@@ -1,0 +1,28 @@
+{
+  "id": "T-343",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-11",
+  "title": "S-815 盲复算:只读 S-815 原文,用你自己的装配(T-320 / T-331)独立算梯子 L0–L3 与 L3 的判据 —— 不读 lane-c 的 t342_*",
+  "source": "REFUTATION_LEDGER S-815 原文(唯一口径来源);内核 src/data/universe/flex_alloc.py(import);你自己的 t331_blind_rbv2.py 装配;R-v2 曲线用 docs/research/t251_gross_cap.py 的 simulate + t197 票源(自己装配,不读 t310 / t342);现金利率 feature_matrix_daily。禁读:docs/research/t342_*、T-342_*、lane-c/T-342 分支。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-343.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "口径歧义一节在前(本卡最重要的产出);L0–L3 逐臂报总收益 / 最大回撤 / 逐年收益,L3 的 (i)–(iii) 逐条;与 C 道的数对照留给 Seth。只读、不入库、不改代码;不要 Read 大文件。",
+    "expect": "docs/research/T-343_blind_house_book.md + t343_blind.py + t343_results.json;in_review,推 lane-b/T-343。不需要 scenarios(复算)。"
+  },
+  "prior_value": "要提给 Jazz 动真钱的数,必须有第二份独立实现。",
+  "notes": "2026-11-11T13:39:07Z Seth 开卡。",
+  "verified": null
+}
