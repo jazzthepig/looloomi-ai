@@ -1,7 +1,7 @@
 {
   "id": "T-344",
   "owner": "lane-c",
-  "status": "open",
+  "status": "dropped",
   "created": "2026-11-11",
   "title": "S-816 R-v2 叠加按账户回撤预算定尺寸:f ∈ {0.125%, 0.25%, 0.375%}(两端 0 与 0.5% 重报),找留在 −25% 以内的最大 f",
   "source": "REFUTATION_LEDGER S-816(`grep -n \"^## S-816\" -A 8 REFUTATION_LEDGER.md`,原文照抄进报告开头)。在 T-342 v2 的脚本上加档,不另写账本;内核 src/data/universe/flex_alloc.py 一字不改。",
@@ -23,6 +23,6 @@
     "expect": "docs/research/T-344_overlay_sizing.md + t344_*.py + t344_results.json + scenarios/lane-c-T-344.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-c/T-344。"
   },
   "prior_value": "真钱现在的配置回放回撤 −35%,超出 Jazz 选的 −25% 档;这张卡给出能提给他的每票风险。",
-  "notes": "2026-11-11T14:16:09Z Seth 开卡(S-815 复核之后)。",
+  "notes": "2026-11-11T14:16:09Z Seth 开卡(S-815 复核之后)。 | 2026-11-11T14:39:55Z Seth 撤卡:S-816 的判据(回撤不深于 −25%)被 Jazz 11-11 裁定替换(回本时间才是判据),一档未算。问题换成 S-817(T-345)。lane-c 若已开工,停,不交。",
   "verified": null
 }

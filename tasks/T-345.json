@@ -1,0 +1,28 @@
+{
+  "id": "T-345",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-11",
+  "title": "S-817 盲复算:R-v2 名义上限 × 每票风险 12 格(f 0.5 / 1.0 / 2.0% × 上限 0.40 / 0.80 / 1.20 / 2.00),回本时间 + 去掉 R 最大的一张票",
+  "source": "REFUTATION_LEDGER `## S-817 —` 登记那一节(`grep -n \"^## S-817 —\" -A 6 REFUTATION_LEDGER.md`;**不读「S-817 结果」那一节,不读 docs/research/s817_***)。装配用你自己的 t343_blind.py(L3 = RBv2 + 现金 + 日历日叠加)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-345.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "12 格各报:成交票数、CAGR、最大回撤、最长水下(从高点到净值第一次回到它的日历日数;窗口末未回的写明)、逐年;每格去掉成交票里 t197 的 r 最大的一张重跑,报是哪张、CAGR。按 S-817 的 (i)–(iv) 逐格判。自检:(0.5%, 0.40) 那格 = 你 T-343 的 L3(+168.10% / −34.73%)。只读、不入库;长计算 nohup;不要 Read 大文件。",
+    "expect": "docs/research/T-345_blind_overlay_grid.md + t345_*.py + t345_results.json + scenarios/lane-b-T-345.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-b/T-345。"
+  },
+  "prior_value": "Seth 单份的结论是「12 格没有一格过、R-v2 五年的账户级收益等于一张票」;这是要拿去跟 Jazz 说「不要把系统票开大」的依据,需要第二份。",
+  "notes": "2026-11-11T14:39:55Z Seth 开卡。",
+  "verified": null
+}
