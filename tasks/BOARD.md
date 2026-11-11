@@ -33,6 +33,7 @@
 | in_review | T-267 | lane-b | S-744 永续上线之后的跑输:做空供给 vs 上线前追高的均值回归 —— 按「之前 30 天收益」匹配的对照日 + 换 CoinGecko 价格源扩宇宙;判据照台账写死 | 报告 docs/research/T-267_perp_listing_mechanism.md + t267_mechanism.py + t267_results.json;卡 notes 写 (a)–(d);in_review,推 lane-b/T-267。 | S-740 判据全过但 n = 46 且机制没分开;扩宇宙与机制诊断是评审轮点名的下一件事。 |  |
 | in_review | T-307 | lane-b | T-301 补三张表(剂量-反应 × 两臂并列 × 1/7/30 日)+ 把复现路径放进仓库 —— lane-a 11-08 交叉复核返工 | docs/research/T-301_*.md 增补节 + 脚本/摘要日志入库;卡 notes 写三张表的头一行数;in_review,推 lane-b/T-307。 | T-301 的 −16% 会被当成『拥挤 squeeze 的效应』对外引用,但同表里 flush 同量级、且 2/3 超额在第一周实现 —— 读法不同,规则的触发窗口也不同。 |  |
 | in_review | T-328 | lane-b | BOUNDS 构造扫描 + 带内随机零分布:RBv2 的 W1/W2 通过,有多少来自夹紧(尤其地板),多少来自常数配比 / 随机 | docs/research/T-328_bounds_sweep.md + t328_bounds_sweep.py + t328_results.json + scenarios/lane-b-T-328.json(≥ 3 条前向命题);in_review,推 lane-b/T-328。 | S-801 ✅ 已落地到真钱 T25 权重;交叉复核测得 W1 RBv2 回撤分位 0.05–0.16、常数 20/30/20 W1 全过且收益更高、加密带 0.25–0.40 / 0.30–0.40 在 W1 即翻 ⇒ 分辨力在地板,从没扫过。 |  |
+| in_review | T-333 | lane-b | S-809 情绪过热之后的转弯做空 BTC:恐惧贪婪 + 资金费高位,之后第一次跌破 20 日线开空票(S-736 同一票机械) | docs/research/T-333_euphoria_turn_short.md + t333_euphoria_short.py + t333_results.json + t333_tickets.csv + scenarios/lane-b-T-333.json(≥ 3 条前向命题,至少一条 close: 或 state: 自动结算);in_review,推 lane-b/T-333。 | S-736 在恐惧里做空失败;这条在贪婪见顶转弯时做空 —— 拥挤多头 + 清算链。 | 自检过(S-736 逐位复现 18 张 / 平均净 R −0.3744908562608685 / 信号日逐位一致);总判定 = 只报不判(票数 11 < 15),且 (b)(c)(d) 与 (e) 的 S-736 辅助口径同时为负 ⇒ S-809 不成立,不开 short_euphoria_turn 纸面臂。 @ 2026-11-11T00:00:00Z |
 | in_review(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
 | in_review | T-220 | lane-c | 治理的领先信号:解锁前团队 / 基金会钱包流向、出事后的处理、营销强度 —— 先查能不能量(数据源可行性),再写预注册草稿 | 报告 docs/research/T-220_governance_leading_signals.md(开头可行性表);卡片 notes 写:免费源够不够、事件个数、两条草稿是否可在现有数据上跑;in_review,推 lane-c/T-220。 | 治理只量了滞后的一半(S-661 价值捕获比、S-587 质量);领先的行为信号一个都没有,不知道现有数据能不能量。 |  |
 | in_review | T-224 | lane-c | ② 倾斜在更宽的面板上:按时点前 50 大(含死币)的 ①,压低 S-691 五因子合成最差五分之一的权重 —— S-694 在 24 名上 ❌,问宽到 50 名「躲开」信号够不够用 | 报告 docs/research/T-224_tilt_pit50.md(预注册段在前);卡 notes 写基线年化 / 倾斜超额 / 随机对照分位 / 两段符号;scenarios/lane-c-T-224.json;in_review,推 lane-c/T-224。 | ② 只在 24 名上试过一次(S-694 ❌);宽面板上「躲开最差档」的倾斜没有任何回放。 |  |
@@ -333,4 +334,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 10 · claimed 6 · blocked 4 · in_review 52 · done 254 · dropped 4
+open 10 · claimed 6 · blocked 4 · in_review 53 · done 254 · dropped 4
