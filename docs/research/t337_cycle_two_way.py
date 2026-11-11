@@ -53,6 +53,8 @@ SHORT_ADD_PCTS = (0.10, 0.20)      # 较首笔再涨 +10% / +20% 各加 0.2
 SHORT_MAX = 0.6                    # 空腿最多 0.6 倍
 COLD_ADD = 0.1                      # 过冷:现金每笔买现货 +0.1
 COLD_ADD_PCTS = (-0.10, -0.20)     # 较首笔再跌 −10% / −20% 各 +0.1
+SPOT_CAP_COLD = 1.0                # 过冷最多买到 1.0 倍(现金用完)
+FUND_EVENTS_PER_DAY = 3            # v_funding_daily 每行 n=3 个结算点(8h 费率 → 日 carry = 3×)
 COST_BPS = 7.5                      # 成本 7.5bp × 换手
 HOT_EXIT_MA, HOT_EXIT_DAYS = 50, 90      # 收盘第一次 < 50 日线,或 90 天
 COLD_EXIT_MA, COLD_EXIT_DAYS = 200, 180  # 收盘第一次 > 200 日线,或 180 天
@@ -64,12 +66,16 @@ NULL_N, NULL_SEED = 1000, 813       # 随机日程对照
 
 # 大事件(逐轮表的一栏,事后标注,只给 Jazz 判断;不进规则)。仅标模型有把握的历史事件。
 EVENTS = {
+    "2018-12": "2018 熊市末段(BTC 从 2018-01 高点 3.1 万跌到 12 月底 3.2 千;12-15 见低点)",
     "2020-03": "COVID 崩盘 + 3M 流动性危机 + 美联储无限 QE(3-15 后流动性转向)",
-    "2021-02": "2020-12→2021-02 逼空(BTC 1.9 万→5.2 万);Tesla/ARK 主题;2-23 Tesla 破万亿美元",
+    "2021-01": "2020-12→2021-02 逼空(BTC 1.9 万→5.2 万);Tesla/ARK 主题;扳机扣在 1-20,之后还涨到 4 月 6.4 万",
+    "2021-02": "2020-12→2021-02 逼空(BTC 1.9 万→5.2 万);2-23 Tesla 破万亿美元",
     "2022-05": "Terra/Luna 崩盘(5-19)+ Fed 缩表",
     "2022-06": "3AC/Celsius 破产(6 月)+ Fed 加息 + ETH 暴跌",
+    "2022-07": "熊市末段(3AC 破产 7 月、Celsius 余波);这一轮之后又跌到 11 月,持有到 2023-01 才退",
     "2026-02": "【模型知识不到 2026】需 Jazz 自行标注",
     "2026-03": "【模型知识不到 2026】需 Jazz 自行标注",
+    "2026-07": "【模型知识不到 2026】需 Jazz 自行标注",
 }
 
 
@@ -182,6 +188,26 @@ def dd(nav: list[float]) -> float:
     return m
 
 
+def dd_window(nav: list[float], days: list[str] | None = None) -> dict:
+    """最大回撤发生在哪一段(峰日 → 谷日),用于审计 max_dd 是不是记账假象。"""
+    peak, pi = nav[0], 0
+    best = (0.0, 0, 0)
+    for i, v in enumerate(nav):
+        if v > peak:
+            peak, pi = v, i
+        d = v / peak - 1.0
+        if d < best[0]:
+            best = (d, pi, i)
+    out = {"dd": best[0], "peak_idx": best[1], "trough_idx": best[2],
+           "peak_nav": nav[best[1]], "trough_nav": nav[best[2]],
+           "min_nav": min(nav), "min_nav_idx": int(np.argmin(nav))}
+    if days:
+        out["peak_date"] = days[best[1]]
+        out["trough_date"] = days[best[2]]
+        out["min_nav_date"] = days[out["min_nav_idx"]]
+    return out
+
+
 # ───────────────────────────── 模拟 ─────────────────────────────
 def simulate(rounds: list[dict], ctx: dict) -> dict:
     """按 S-812 动作跑一个臂。rounds = [{kind, trigger}]。返回 NAV 序列与逐轮明细。"""
@@ -191,9 +217,11 @@ def simulate(rounds: list[dict], ctx: dict) -> dict:
     ma50: list[float | None] = ctx["ma50"]
     ma200: list[float | None] = ctx["ma200"]
     close0 = ctx["close0"]
+    base_nav: list[float] = ctx["base_nav"]
 
     spot_units = SPOT_W / close0
     cash = CASH_W
+    min_cash = CASH_W
     legs: list[dict] = []
     nav: list[float] = []
     detail: list[dict] = []
@@ -204,6 +232,32 @@ def simulate(rounds: list[dict], ctx: dict) -> dict:
 
     def cost(notional: float) -> float:
         return abs(notional) * COST_BPS / 1e4
+
+    def nav_at(c: float) -> float:
+        """NAV = 现货市值 + 现金 + 空腿未实现(Σ u×(fill − c))。"""
+        return (cash + sum(lg["units"] * lg["fill"] for lg in legs)
+                + c * (spot_units - sum(lg["units"] for lg in legs)))
+
+    def rebase_spot(c: float, mult: float, r: dict | None = None) -> None:
+        """把现货调到 mult × 当前账户净值,其余留现金(现金不够就只买到上限)。"""
+        nonlocal spot_units, cash
+        target = mult * nav_at(c)
+        delta = target - spot_units * c
+        if abs(delta) < 1e-12:
+            return
+        if delta > 0:
+            spend = min(delta, max(0.0, cash))
+            spot_units += spend / c
+            cash -= spend
+            cst = cost(spend)
+        else:
+            u = (-delta) / c
+            spot_units -= u
+            cash += u * c
+            cst = cost(u * c)
+        cash -= cst
+        if r is not None:
+            r["cost_spot"] += cst
 
     def close_shorts(d: str, c: float, r: dict) -> None:
         """平空:空腿的现金效果 = 已实现盈亏 u×(fill − close)(开仓时的卖出所得已在 unreal 里,
@@ -225,32 +279,41 @@ def simulate(rounds: list[dict], ctx: dict) -> dict:
         if pending is not None:
             kind, trig = pending["kind"], pending["trigger"]
             if kind == "hot":
-                sell_units = HOT_SPOT_TO / close0
+                nav_pre = nav_at(c)                  # 账户净值(动作发生时)
+                target_val = HOT_SPOT_TO * nav_pre   # 现货 0.7 → 0.35(账户口径)
+                sell_val = max(0.0, spot_units * c - target_val)
+                sell_units = sell_val / c
                 spot_units -= sell_units
-                cash += sell_units * c
-                cst = cost(sell_units * c)
+                cash += sell_val
+                cst = cost(sell_val)
                 cash -= cst
                 fill1 = c
-                u = SHORT_FIRST / c
+                n_short = SHORT_FIRST * nav_pre      # 空腿首笔 0.2 倍账户
+                u = n_short / c
                 legs.append({"units": u, "fill": fill1, "open": d})
-                cst_s = cost(u * c)
+                cst_s = cost(n_short)
                 cash -= cst_s
-                b = HOT_SPOT_TO * max(0.0, c / ctx["closes"][days[i - 90]] - 1.0) if i >= 90 else 0.0
+                b = (HOT_SPOT_TO * nav_pre * max(0.0, c / ctx["closes"][days[i - 90]] - 1.0)
+                     if i >= 90 else 0.0)
                 cur = {"kind": "hot", "trigger": trig, "entry": d, "fill1": fill1,
-                       "budget": b, "spot_sold_units": sell_units,
+                       "budget": b, "nav_entry": nav_pre,
+                       "spot_sold_units": sell_units, "spot_sold_value": sell_val,
                        "spot_leg_pnl": 0.0, "short_leg_pnl": 0.0, "funding_pnl": 0.0,
-                       "cost_spot": cst, "cost_short": cst_s, "short_notional": u * c,
+                       "cost_spot": cst, "cost_short": cst_s, "short_notional": n_short,
+                       "short_cap": SHORT_MAX * nav_pre,
                        "adds": [], "exit": None, "exit_reason": None}
                 pend_adds = list(SHORT_ADD_PCTS)
             else:
-                buy_units = COLD_ADD / close0
+                nav_pre = nav_at(c)
+                spend = min(COLD_ADD * nav_pre, max(0.0, cash))   # 现金买现货 +0.1(账户口径)
+                buy_units = spend / c
                 spot_units += buy_units
-                spend = buy_units * c
                 cash -= spend
                 cst = cost(spend)
                 cash -= cst
                 cur = {"kind": "cold", "trigger": trig, "entry": d, "fill1": c,
-                       "spot_bought_units": buy_units, "spot_leg_pnl": 0.0,
+                       "nav_entry": nav_pre, "spot_bought_units": buy_units,
+                       "spot_bought_value": spend, "spot_leg_pnl": 0.0,
                        "funding_pnl": 0.0, "cost_spot": cst, "cost_short": 0.0,
                        "adds": [], "exit": None, "exit_reason": None}
                 pend_adds = list(COLD_ADD_PCTS)
@@ -260,18 +323,26 @@ def simulate(rounds: list[dict], ctx: dict) -> dict:
         if cur is not None:
             if cur["kind"] == "hot":
                 for lvl in list(pend_adds):
-                    if c >= cur["fill1"] * (1 + lvl) and cur["short_notional"] < SHORT_MAX - 1e-12:
-                        u = SHORT_FIRST / c
+                    if c >= cur["fill1"] * (1 + lvl):
+                        n_add = min(SHORT_FIRST * nav_at(c),
+                                    max(0.0, cur["short_cap"] - cur["short_notional"]))
+                        if n_add <= 1e-12:
+                            pend_adds.remove(lvl)
+                            continue
+                        u = n_add / c
                         legs.append({"units": u, "fill": c, "open": d})
-                        cst = cost(u * c)
+                        cst = cost(n_add)
                         cash -= cst
-                        cur["short_notional"] += u * c
+                        cur["short_notional"] += n_add
                         cur["cost_short"] += cst
-                        cur["adds"].append({"date": d, "level": lvl, "units": u, "price": c})
+                        cur["adds"].append({"date": d, "level": lvl, "units": u,
+                                            "price": c, "notional": n_add})
                         pend_adds.remove(lvl)
                 fr = funding.get(d)
-                if fr is not None and cur["short_notional"] > 0:
-                    fp = -fr * cur["short_notional"]
+                if fr is not None and legs:
+                    notional_now = sum(lg["units"] * c for lg in legs)
+                    # 费率为正 = 多头付空头 ⇒ 空腿收 +(每行 n=3 个结算点)×rate×名义
+                    fp = FUND_EVENTS_PER_DAY * fr * notional_now
                     cash += fp
                     cur["funding_pnl"] += fp
                     cur["short_leg_pnl"] += fp
@@ -282,72 +353,63 @@ def simulate(rounds: list[dict], ctx: dict) -> dict:
                     hit_ma = m50 is not None and c < m50
                     if cur["budget"] > 0 and unreal <= -cur["budget"]:
                         close_shorts(d, c, cur)
-                        buy_back = cur["spot_sold_units"]
-                        spot_units += buy_back
-                        cash -= buy_back * c
-                        cst = cost(buy_back * c)
-                        cash -= cst
-                        cur["cost_spot"] += cst
-                        cur["spot_leg_pnl"] = buy_back * (cur["fill1"] - c) - cst
+                        rebase_spot(c, SPOT_W, cur)          # 现货回到 0.7 倍账户净值
                         cur["exit"], cur["exit_reason"] = d, "budget_stop"
+                        cur["delta_vs_base"] = nav_at(c) - base_nav[i]
                         detail.append(cur)
                         cur = None
                     elif hit_ma or days_since >= HOT_EXIT_DAYS:
                         close_shorts(d, c, cur)
-                        buy_back = cur["spot_sold_units"]
-                        spot_units += buy_back
-                        cash -= buy_back * c
-                        cst = cost(buy_back * c)
-                        cash -= cst
-                        cur["cost_spot"] += cst
-                        cur["spot_leg_pnl"] = buy_back * (cur["fill1"] - c) - cst
+                        rebase_spot(c, SPOT_W, cur)
                         cur["exit"], cur["exit_reason"] = d, ("ma50" if hit_ma else "90d")
+                        cur["delta_vs_base"] = nav_at(c) - base_nav[i]
                         detail.append(cur)
                         cur = None
             else:
                 for lvl in list(pend_adds):
                     if c <= cur["fill1"] * (1 + lvl):
-                        want = COLD_ADD / close0
-                        spend = want * c
-                        if spend > cash - 1e-12:
+                        nav_now = nav_at(c)
+                        spend = min(COLD_ADD * nav_now,
+                                    max(0.0, cash),
+                                    max(0.0, SPOT_CAP_COLD * nav_now - spot_units * c))
+                        if spend <= 1e-12:
                             pend_adds.remove(lvl)
                             continue
+                        want = spend / c
                         spot_units += want
                         cash -= spend
                         cst = cost(spend)
                         cash -= cst
                         cur["spot_bought_units"] += want
                         cur["cost_spot"] += cst
-                        cur["adds"].append({"date": d, "level": lvl, "units": want, "price": c})
+                        cur["adds"].append({"date": d, "level": lvl, "units": want,
+                                            "price": c, "notional": spend})
                         pend_adds.remove(lvl)
                 if d > cur["entry"]:
                     m200 = ma200[i]
                     days_since = (dt.date.fromisoformat(d) - dt.date.fromisoformat(cur["entry"])).days
                     hit_ma = m200 is not None and c > m200
                     if hit_ma or days_since >= COLD_EXIT_DAYS:
-                        sell_units = cur["spot_bought_units"]
-                        spot_units -= sell_units
-                        cash += sell_units * c
-                        cst = cost(sell_units * c)
-                        cash -= cst
-                        cur["cost_spot"] += cst
-                        pnl = (COLD_ADD / close0) * (c - cur["fill1"])
+                        rebase_spot(c, SPOT_W, cur)          # 现货回到 0.7 倍账户净值
+                        pnl = cur["spot_bought_units"] * (c - cur["fill1"])
                         for a in cur["adds"]:
                             pnl += a["units"] * (c - a["price"])
                         cur["spot_leg_pnl"] = pnl - cur["cost_spot"]
                         cur["exit"], cur["exit_reason"] = d, ("ma200" if hit_ma else "180d")
+                        cur["delta_vs_base"] = nav_at(c) - base_nav[i]
                         detail.append(cur)
                         cur = None
 
         # 3) NAV
         unreal = sum((lg["fill"] - c) * lg["units"] for lg in legs)
         nav.append(spot_units * c + cash + unreal)
+        min_cash = min(min_cash, cash)
 
         # 4) 排定次日(扳机日 + 1)的入场
         if days[i] in rounds_by_trigger:
             pending = rounds_by_trigger[days[i]]
 
-    return {"nav": nav, "rounds": detail}
+    return {"nav": nav, "rounds": detail, "min_cash": min_cash}
 
 
 def arm_stats(nav: list[float]) -> dict:
@@ -507,15 +569,16 @@ def build_rounds() -> list[dict]:
 rounds = build_rounds()
 print("  轮次 %d 条:%s" % (len(rounds), [(r["kind"], r["trigger"]) for r in rounds]), flush=True)
 
+base_nav = [SPOT_W * c / closes_s[0] + CASH_W for c in closes_s]
 ctx = {"days": days, "closes": closes, "funding": funding, "ma50": ma50, "ma200": ma200,
-       "close0": closes_s[0]}
+       "close0": closes_s[0], "base_nav": base_nav}
 
 print("[3] 模拟…", flush=True)
 res_all = simulate(rounds, ctx)
 hot_only = simulate([r for r in rounds if r["kind"] == "hot"], ctx)
 cold_only = simulate([r for r in rounds if r["kind"] == "cold"], ctx)
 
-hold70_nav = [SPOT_W * c / ctx["close0"] + CASH_W for c in closes_s]
+hold70_nav = base_nav
 hold100_nav = [c / ctx["close0"] for c in closes_s]
 stats = {"HOLD70": arm_stats(hold70_nav), "HOLD100": arm_stats(hold100_nav),
          "HOT": arm_stats(hot_only["nav"]), "COLD": arm_stats(cold_only["nav"]),
@@ -524,6 +587,16 @@ for k, v in stats.items():
     print("  %-7s 收益 %+.2f%%  最大回撤 %+.2f%%  Sharpe %s  期末 NAV %.4f" % (
         k, v["total_return"] * 100, v["max_dd"] * 100,
         ("%+.2f" % v["sharpe"]) if v["sharpe"] is not None else "n/a", v["final_nav"]), flush=True)
+for k, nav in [("HOLD70", hold70_nav), ("HOLD100", hold100_nav), ("HOT", hot_only["nav"]),
+               ("COLD", cold_only["nav"]), ("TWOWAY", res_all["nav"])]:
+    w = dd_window(nav, days)
+    stats[k]["dd_window"] = w
+    print("  %-7s maxDD %.2f%%:峰 %s(%.4f) → 谷 %s(%.4f);min NAV %.4f @ %s" % (
+        k, w["dd"] * 100, w["peak_date"], w["peak_nav"], w["trough_date"], w["trough_nav"],
+        w["min_nav"], w["min_nav_date"]), flush=True)
+for k, res in [("HOT", hot_only), ("COLD", cold_only), ("TWOWAY", res_all)]:
+    stats[k]["min_cash"] = res.get("min_cash")
+    print("  %-7s 最低现金 %.4f(负数 = 记账破口)" % (k, res.get("min_cash")), flush=True)
 
 print("[4] 随机日程对照(circular_shift,1000 次,种子 813)…", flush=True)
 from src.data.evaluation.apparatus import circular_shift, null_distribution, percentile_of  # noqa: E402
@@ -558,33 +631,37 @@ with rounds_csv.open("w", newline="") as fh:
     w = csv.writer(fh)
     w.writerow(["round", "kind", "trigger_date", "entry_date", "exit_date", "exit_reason",
                 "fng_at_trigger", "mvrv_at_trigger", "mvrv_pct_at_trigger", "puell_at_trigger",
-                "puell_pct_at_trigger", "fill1_price", "actions", "spot_leg_pnl",
-                "short_leg_pnl", "funding_pnl", "cost", "round_pnl", "events_nearby"])
+                "puell_pct_at_trigger", "fill1_price", "nav_at_entry", "actions",
+                "spot_leg_pnl", "short_leg_pnl", "funding_pnl", "cost", "round_pnl",
+                "delta_vs_base", "events_nearby"])
     for k, r in enumerate(res_all["rounds"], 1):
         tr = r["trigger"]
         pm, pp = pct_mvrv.get(tr), pct_puell.get(tr)
+        dv = r.get("delta_vs_base", 0.0)
+        short_pnl = r.get("short_leg_pnl", 0.0)
+        spot_pnl = r["spot_leg_pnl"] if r["kind"] == "cold" else dv - short_pnl
         acts = []
         if r["kind"] == "hot":
-            acts.append(f"现货 0.7→0.35;空 0.2@{r['fill1']:.0f}")
+            acts.append(f"现货→0.35(卖 {r.get('spot_sold_value', 0.0):.3f});空 {r['short_notional']:.3f}@{r['fill1']:.0f}")
             for a in r["adds"]:
-                acts.append(f"加空 0.2@{a['price']:.0f}(+{a['level']*100:.0f}%)")
+                acts.append(f"加空 {a['notional']:.3f}@{a['price']:.0f}(+{a['level']*100:.0f}%)")
             acts.append(f"预算 B={r['budget']:.3f}")
         else:
-            acts.append(f"现金买现货 0.1@{r['fill1']:.0f}")
+            acts.append(f"现金买现货 {r.get('spot_bought_value', 0.0):.3f}@{r['fill1']:.0f}")
             for a in r["adds"]:
-                acts.append(f"加现货 0.1@{a['price']:.0f}({a['level']*100:.0f}%)")
+                acts.append(f"加现货 {a['notional']:.3f}@{a['price']:.0f}({a['level']*100:.0f}%)")
         ev = EVENTS.get(tr[:7], "")
-        pnl = r["spot_leg_pnl"] + r.get("short_leg_pnl", 0.0)
         w.writerow([k, r["kind"], tr, r["entry"], r["exit"], r["exit_reason"],
                     round(fng.get(tr), 1) if fng.get(tr) is not None else "",
                     round(mvrv.get(tr), 3) if mvrv.get(tr) is not None else "",
                     round(pm, 1) if pm is not None else "",
                     round(puell.get(tr), 3) if puell.get(tr) is not None else "",
                     round(pp, 1) if pp is not None else "",
-                    round(r["fill1"], 2), "; ".join(acts),
-                    round(r["spot_leg_pnl"], 5), round(r.get("short_leg_pnl", 0.0), 5),
+                    round(r["fill1"], 2), round(r.get("nav_entry", 0.0), 4), "; ".join(acts),
+                    round(spot_pnl, 5), round(short_pnl, 5),
                     round(r.get("funding_pnl", 0.0), 5),
-                    round(r["cost_spot"] + r["cost_short"], 5), round(pnl, 5), ev])
+                    round(r["cost_spot"] + r["cost_short"], 5),
+                    round(spot_pnl + short_pnl, 5), round(dv, 5), ev])
 print("  →", rounds_csv, flush=True)
 
 hot_rs = [r for r in res_all["rounds"] if r["kind"] == "hot"]
@@ -600,23 +677,30 @@ for r in res_all["rounds"]:
     win = [x for x in fng_s[max(0, i - ARM_WIN + 1): i + 1] if x is not None]
     ei = days.index(r["entry"])
     xi = days.index(r["exit"])
-    unreal_at_exit = sum((lg["fill"] - closes[r["exit"]]) * lg["units"]
-                          for lg in [{"fill": r["fill1"], "units": SHORT_FIRST / r["fill1"]}]) \
+    unreal_at_exit = (SHORT_FIRST * r.get("nav_entry", 0.0) / r["fill1"]) * (r["fill1"] - closes[r["exit"]]) \
         if r["kind"] == "hot" else None
+    dv = r.get("delta_vs_base", 0.0)
+    short_pnl = r.get("short_leg_pnl", 0.0)
+    spot_pnl = r["spot_leg_pnl"] if r["kind"] == "cold" else dv - short_pnl
     audit["rounds"].append({
         "kind": r["kind"], "trigger": tr, "entry": r["entry"], "exit": r["exit"],
         "exit_reason": r["exit_reason"], "entry_px": closes[r["entry"]], "exit_px": closes[r["exit"]],
+        "nav_at_entry": r.get("nav_entry"), "delta_vs_base": dv,
         "fng_window_min": min(win) if win else None, "fng_window_max": max(win) if win else None,
         "fng_at_trigger": fng.get(tr), "mvrv_pct": pct_mvrv.get(tr), "puell_pct": pct_puell.get(tr),
         "budget_B": r.get("budget"), "budget_unreal_first_leg_at_exit": unreal_at_exit,
-        "spot_leg_pnl": r["spot_leg_pnl"], "short_leg_pnl": r.get("short_leg_pnl", 0.0),
-        "round_pnl": r["spot_leg_pnl"] + r.get("short_leg_pnl", 0.0),
+        "spot_leg_pnl": spot_pnl, "short_leg_pnl": short_pnl,
+        "round_pnl": spot_pnl + short_pnl,
     })
 sum_round = sum(x["round_pnl"] for x in audit["rounds"])
+sum_delta = sum(x["delta_vs_base"] for x in audit["rounds"])
 audit["nav_reconciliation"] = {
     "twoway_minus_hold70_nav": res_all["nav"][-1] - hold70_nav[-1],
-    "sum_of_round_pnl": sum_round,
-    "abs_diff": abs((res_all["nav"][-1] - hold70_nav[-1]) - sum_round),
+    "sum_of_round_delta_vs_base": sum_delta,
+    "sum_of_round_leg_pnl": sum_round,
+    "note": ("delta_vs_base = 每一轮出场时该臂净值 − HOLD70 净值(账户口径);"
+             "轮与轮之间这笔差额按 0.7/0.3 配置随 BTC 复利放大或缩小,"
+             "所以最终净值差 ≠ 各轮 Δ 之和"),
 }
 print("  fng ≥ 95 天数 %d:%s" % (len(audit["fng_ge_95_days"]), audit["fng_ge_95_days"][:14]), flush=True)
 print("  fng ≤ 10 天数 %d(首 %s 末 %s)" % (len(audit["fng_le_10_days"]),
@@ -628,9 +712,8 @@ for x in audit["rounds"]:
              x["fng_window_min"], x["fng_window_max"],
              ("%.1f" % x["mvrv_pct"]) if x["mvrv_pct"] else "n/a",
              ("%.1f" % x["puell_pct"]) if x["puell_pct"] else "n/a", x["round_pnl"]), flush=True)
-print("  NAV 对账: TWOWAY−HOLD70 = %+.4f;逐轮合计 = %+.4f;差 %+.5f"
-      % (audit["nav_reconciliation"]["twoway_minus_hold70_nav"], sum_round,
-         audit["nav_reconciliation"]["abs_diff"]), flush=True)
+print("  NAV 对账: TWOWAY−HOLD70(期末) = %+.4f;各轮 Δ 合计 = %+.4f;各腿盈亏合计 = %+.4f"
+      % (audit["nav_reconciliation"]["twoway_minus_hold70_nav"], sum_delta, sum_round), flush=True)
 
 results = {
     "task": "T-337", "ledger": "S-813(+11-11 修订)",
