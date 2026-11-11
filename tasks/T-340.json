@@ -1,0 +1,28 @@
+{
+  "id": "T-340",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-11",
+  "title": "S-814 盲复算:只读台账 S-814 原文,自己实现周期位置空间与 (a)–(e) —— 不 import、不读 src/data/state/cycle_space.py 与 lane-a 的 t339_*",
+  "source": "REFUTATION_LEDGER S-814 原文(唯一口径来源;`grep -n \"^## S-814\" -A 12 REFUTATION_LEDGER.md`);数据 macro_daily 五条序列(只读)。禁读:src/data/state/cycle_space.py、tests/test_cycle_space.py、docs/research/t339_*、T-339_*、lane-a/T-339 分支。零分布可用 apparatus。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-340.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只读 S-814 原文自己实现(文件名 t340_*);**口径歧义一节在前**(原文没写清、你不得不自己定的地方逐条列出,并报换读法结论变不变 —— 本卡最重要的产出,也是在审生产内核);(a)–(e) 逐条报数;(d) 逐轮表;先落 t340_weekly.csv。只读、不入库、不改代码。",
+    "expect": "docs/research/T-340_blind_cycle_space.md + t340_blind.py + t340_results.json + t340_weekly.csv;in_review,推 lane-c/T-340。不需要 scenarios(复算)。"
+  },
+  "prior_value": "内核已接进每周记分回路;独立实现对上,内核才算审过。",
+  "notes": "2026-11-11T04:51:01Z Seth 开卡。",
+  "verified": null
+}

@@ -1,0 +1,28 @@
+{
+  "id": "T-339",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-11",
+  "title": "S-814 周期位置空间(高维代替阈值):走步检验 add / trim / hold —— 只调生产内核 src/data/state/cycle_space.py",
+  "source": "REFUTATION_LEDGER S-814(`grep -n \"^## S-814\" -A 12 REFUTATION_LEDGER.md`,原文照抄进报告开头);内核 src/data/state/cycle_space.py(origin/main 上;import,一字不改:features / pit_vectors / read / stance / target_weight);数据 macro_daily 五条序列(只读,翻页带 order=);零分布 apparatus.circular_shift / p_upper。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-339.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-814 原文照抄进报告开头;先落 t339_weekly.csv(周一、8 维 z、近邻数、段数、tilt_excess、stance、实现 fwd180);自检:随机 20 个周一删掉其后的数据重算,读数逐位相同;(a)–(e) 逐条报数与判定;(d) 的逐轮表(每个顶 / 底 ±30 天内各周的 stance)单列;另报单维基线、stance 占比、每年换仓次数、独立区间数、K = 30 / 120。结果 JSON 用 apparatus.content_fingerprint。只读、不入库、不改代码;不要 Read 大文件。",
+    "expect": "docs/research/T-339_cycle_space.md + t339_cycle_space.py + t339_results.json + t339_weekly.csv + scenarios/lane-a-T-339.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-a/T-339。"
+  },
+  "prior_value": "Jazz 11-11:keep in high dimension。阈值规则七年 1 个过热样本;向量空间让四轮周期的每一天都参与。",
+  "notes": "2026-11-11T04:51:01Z Seth 开卡(卡与内核先进 main 再派)。C 道 T-340 盲复算,交付前不互看。",
+  "verified": null
+}
