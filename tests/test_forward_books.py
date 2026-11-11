@@ -225,7 +225,7 @@ def test_s797_shadow_arms_run_through_the_same_kernel_and_append_only(monkeypatc
     by = {}
     for r in out["rows"]:
         by.setdefault(r["arm"], []).append(r)
-    assert set(by) == set(fb.FLEX_DYN_ARMS) and all(len(v) == 30 for v in by.values())
+    assert set(by) == set(fb.FLEX_DYN_ARMS_ALL) and all(len(v) == 30 for v in by.values())
     navs = {a: [r["nav"] for r in v] for a, v in by.items()}
     assert navs["RB_T25"] == navs["T25_K"] and navs["STYLE_T25"] == navs["T25_K"], "历史不够 / 没有冻结表 ⇒ 与常数臂逐日相同"
     assert out["weights"]["RB_T25"]["crypto"] == 0.30
@@ -252,3 +252,65 @@ def test_s797_frozen_style_table_is_the_t318_replay_and_tilts_inside_the_budget(
         x = fa.style_weights(t, w)
         assert all(fa.BOUNDS[k][0] - 1e-9 <= x[k] <= fa.BOUNDS[k][1] + 1e-9 for k in fa.LEGS) and sum(x.values()) <= 1 + 1e-9
     assert fa.style_weights(t, "down_hot")["gold"] > fa.BASE_T25["gold"], "回放里黄金在「跌 + 热」里最有优势"
+
+
+def test_t327_t20k_constant_arm_is_pinned_and_survives_rb_v2_changes(monkeypatch):
+    """T-327:常数对照臂 T20_K(加密 0.20 / 股 0.30 / 金 0.20,余 30% 现金)—— 权重与建臂日写死;
+    RBv2(BASE_T25 / rb_weights / 预算)怎么改,这条臂一行都不动;与 T25_K 同起点、逐日并排。"""
+    import numpy as np
+    import pandas as pd
+    from src.data.universe import flex_alloc as fa
+
+    # 参数与建臂日写死在代码里(这里再钉一遍)
+    assert fb.T20_K_WEIGHTS == {"crypto": 0.20, "equity": 0.30, "gold": 0.20}
+    assert fb.T20_K_FROM == "2026-10-16" == fb.TOM_START, "建臂日写死,且与 T25_K 同一起点(要改就代码与测试一起改)"
+    assert fb.FLEX_DYN_ARMS_ALL[:3] == fb.FLEX_DYN_ARMS and fb.FLEX_DYN_ARMS_ALL[-1] == "T20_K"
+
+    days = [d.date().isoformat() for d in pd.bdate_range("2026-10-16", periods=45)]
+    rng = np.random.default_rng(327)
+    cn = np.cumprod(1 + rng.normal(0, 0.03, len(days)))
+    crypto = {d: float(v) for d, v in zip(days, cn)}
+    eq = pd.Series({pd.Timestamp(d): 100 + i for i, d in enumerate(days)})
+    gd = pd.Series({pd.Timestamp(d): 50 + 0.5 * i for i, d in enumerate(days)})
+    tf = {"equity": eq, "gold": gd}
+
+    async def get_all(tail):
+        assert tail.startswith("state_daily?") and "order=" in tail
+        return []
+    monkeypatch.setattr(fb, "_get_all", get_all)
+
+    out = asyncio.run(fb._flex_dynamic_rows(crypto, tf, {}, days[-1]))
+    by: dict[str, list] = {}
+    for r in out["rows"]:
+        by.setdefault(r["arm"], []).append(r)
+    assert set(by) == set(fb.FLEX_DYN_ARMS_ALL)
+    t20 = by["T20_K"]
+    assert t20[0]["d"] == fb.T20_K_FROM and t20[0]["nav"] == 1.0, "建臂日那天开账,净值 1.0"
+    assert all(r["rule"] == fb.RULE_FLEX_T20K for r in t20), "这条臂的行带自己的规则串"
+    w = out["weights"]["T20_K"]
+    assert (w["crypto"], w["equity"], w["gold"]) == (0.2, 0.3, 0.2), "每次调仓都是同一份常数权重"
+
+    # 现金处理照 T25_K 一字不改:余下 30% 收益 0 ⇒ 第二天净值 = 1 + 0.20·r_crypto + 0.30·r_equity + 0.20·r_gold
+    want = 1 + 0.20 * (cn[1] / cn[0] - 1) + 0.30 * float(eq.iloc[1] / eq.iloc[0] - 1) \
+        + 0.20 * float(gd.iloc[1] / gd.iloc[0] - 1)
+    assert math.isclose(t20[1]["nav"], want, rel_tol=1e-12)
+
+    # 与 T25_K 并排:日期逐日相同(同一起点、同一条腿),净值不同(常数不同)
+    assert [r["d"] for r in by["T25_K"]] == [r["d"] for r in t20]
+    assert [r["nav"] for r in by["T25_K"]] != [r["nav"] for r in t20]
+
+    # RBv2 改了(BASE_T25 与 rb_weights 都动)⇒ T20_K 的行与权重一行都不动
+    base = [r["nav"] for r in t20]
+    monkeypatch.setattr(fa, "BASE_T25", {"crypto": 0.90, "equity": 0.05, "gold": 0.05})
+    monkeypatch.setattr(fa, "rb_weights", lambda hist, base=None: {"crypto": 0.45, "equity": 0.45, "gold": 0.10})
+    out2 = asyncio.run(fb._flex_dynamic_rows(crypto, tf, {}, days[-1]))
+    t20b = [r["nav"] for r in out2["rows"] if r["arm"] == "T20_K"]
+    assert t20b == base, "T20_K 的权重不随 RBv2 变"
+    w2 = out2["weights"]["T20_K"]
+    assert (w2["crypto"], w2["equity"], w2["gold"]) == (0.2, 0.3, 0.2)
+
+    # 建臂日写死:把它挪到第 11 个共同日,这条臂就一条早于那天的行都不写
+    monkeypatch.setattr(fb, "T20_K_FROM", days[10])
+    out3 = asyncio.run(fb._flex_dynamic_rows(crypto, tf, {}, days[-1]))
+    d3 = [r["d"] for r in out3["rows"] if r["arm"] == "T20_K"]
+    assert d3[0] == days[10] and all(d >= days[10] for d in d3)
