@@ -15,6 +15,12 @@ reb = 21、cost = 20bp),只换窗口与开关:
 - R-v2 叠加:`docs/research/t251_gross_cap.py` 的 `simulate`(票源 t197 `tickets.A`、cap_n 14、gross_cap 0.40)
   净值曲线的逐日收益,作 `overlay_ret`;f = 0.5%(L1–L3)与 1.0%(L4)。
 
+**v2(2026-11-11,Seth 退回 v1)**:v1 把 overlay / 现金写成只含**工作日**的 CSV 再喂内核 ⇒
+R-v2 曲线的周末盈亏与周末利息全丢(t251 的曲线本身是**日历日**:`days` 按 `timedelta(days=1)` 逐日走)。
+v2 把两条序列一律改成**日历日**序列(另落 `t342_overlay_calendar.csv`),内核按 (上一个共同日, 当天]
+复利 —— 周末那一格照样进账户。并按 Seth 的四条:① 日历日序列 ② 喂给内核的叠加序列 Π(1+r) = 曲线同区间收益
+(差 < 1e-9)③ 加一臂 L2x = RBv2 不带 R-v2 ④ L1 / L3 各去掉「贡献最大的一张票」重跑一次。
+
 只读、不入库、不改 `src/`。长计算 nohup 后台跑。
 """
 from __future__ import annotations
@@ -347,8 +353,11 @@ def yearly(nav: pd.Series) -> dict:
 
 
 # ── R-v2 叠加(t310_slots + t251_gross_cap.simulate,一字不改)────────────────────
-def build_overlay(risk_frac: float) -> dict:
-    """跑一遍 R-v2 引擎,取净值曲线的逐日收益。"""
+def build_overlay(risk_frac: float, exclude_tid: Optional[str] = None) -> dict:
+    """跑一遍 R-v2 引擎,取净值曲线的逐日收益(曲线日期 = 日历日)。
+
+    v2:可排除一张票(`exclude_tid`)—— 「贡献最大的一张票」那一档要用。
+    """
     if HERE not in sys.path:
         sys.path.insert(0, HERE)
     import t251_gross_cap as T251       # noqa: PLC0415
@@ -363,16 +372,54 @@ def build_overlay(risk_frac: float) -> dict:
                      "n_bad": len(bad), "T251": T251})
         _RV2["gate"] = T310.load_gate()[0]
     T251 = _RV2["T251"]
-    res = T251.simulate(_RV2["tickets"], _RV2["bars"], _RV2["gate"], RV2_GROSS_CAP, equity0=RV2_EQ0,
+    tickets = _RV2["tickets"]
+    if exclude_tid is not None:
+        tickets = [t for t in tickets if str(t.get("tid")) != str(exclude_tid)]
+    res = T251.simulate(tickets, _RV2["bars"], _RV2["gate"], RV2_GROSS_CAP, equity0=RV2_EQ0,
                         risk_frac=risk_frac, cap_n=RV2_CAP_N)
     st = T251.curve_stats(res["curve"], RV2_EQ0)
     curve = pd.Series({pd.Timestamp(r[0]): float(r[1]) for r in res["curve"]}).sort_index()
     dret = curve.pct_change().dropna()
-    log(f"  R-v2 f={risk_frac:.3%} cap_n={RV2_CAP_N} gross_cap={RV2_GROSS_CAP}: "
-        f"总收益 {st['total_return']:+.4%} 最大回撤 {st['max_dd']:+.4%} Calmar {st['calmar']} "
+    log(f"  R-v2 f={risk_frac:.3%} cap_n={RV2_CAP_N} gross_cap={RV2_GROSS_CAP}"
+        + (f" [去掉 {exclude_tid}]" if exclude_tid else "") +
+        f": 总收益 {st['total_return']:+.4%} 最大回撤 {st['max_dd']:+.4%} Calmar {st['calmar']} "
         f"成交 {len(res['taken'])} 张 / 曲线 {len(curve)} 天 {curve.index[0]} → {curve.index[-1]}")
     return {"stats": st, "dret": dret, "curve": curve, "n_taken": len(res["taken"]),
-            "n_exit_mismatch": _RV2["n_bad"], "risk_frac": risk_frac}
+            "taken": res["taken"], "n_exit_mismatch": _RV2["n_bad"], "risk_frac": risk_frac,
+            "exclude_tid": exclude_tid}
+
+
+def _ov_window_return(dret: pd.Series, start: pd.Timestamp, end: pd.Timestamp) -> float:
+    """叠加序列在记账窗口内的复利(与内核吃进去的口径一致:(start, end])。"""
+    x = dret[(dret.index > start) & (dret.index <= end)].dropna()
+    return float((1.0 + x).prod() - 1.0) if len(x) else 0.0
+
+
+def find_top_contributor(ov_base: dict, start: pd.Timestamp, end: pd.Timestamp,
+                          n_cand: int = RV2_DROP_CAND) -> tuple[list[dict], dict | None]:
+    """「贡献最大的一张票」= 把它从票源里拿掉、重跑引擎后,窗口内曲线总收益掉得最多的那张。
+
+    做法:候选 = 基准跑里**成交过**的票,按票自带的 r 从大到小取前 n_cand;
+    每张单独拿掉重跑一次,比窗口内复利(边际贡献,不是单票收益)。
+    """
+    taken = {str(x) for x in ov_base["taken"]}
+    cands = [t for t in _RV2["tickets"] if str(t.get("tid")) in taken]
+    cands.sort(key=lambda t: float(t.get("r") or 0.0), reverse=True)
+    cands = cands[:n_cand]
+    base = _ov_window_return(ov_base["dret"], start, end)
+    rows = []
+    for t in cands:
+        ov = build_overlay(RV2_F_BASE, exclude_tid=str(t.get("tid")))
+        w = _ov_window_return(ov["dret"], start, end)
+        rows.append({"tid": str(t.get("tid")), "symbol": t.get("symbol"), "r": t.get("r"),
+                     "signal_d": t.get("signal_d"), "entry_d": t.get("entry_d"), "exit_d": t.get("exit_d"),
+                     "window_return_without": w, "delta_pp": (w - base) * 100})
+    rows.sort(key=lambda r: r["delta_pp"])          # 拿掉后掉得最多 ⇒ 贡献最大
+    log(f"  候选 {len(rows)} 张(成交票里 r 最大的 {n_cand} 张);基准窗口内叠加复利 {base:+.4%}")
+    for r in rows[:3]:
+        log(f"    去掉 {r['tid']}(r={r['r']}) ⇒ 窗口内叠加复利 {r['window_return_without']:+.4%}"
+            f"(Δ {r['delta_pp']:+.2f}pp)")
+    return rows, (rows[0] if rows else None)
 
 
 _RV2: dict = {"loaded": False}
@@ -387,10 +434,20 @@ ARMS = [
     ("L4", "L3 的 R-v2 f 提到 1.0%(S-638 的 f★)"),
     ("L3H", "L3 但加密腿直接持有 ①(不用 X1V)"),
 ]
+# v2 加的臂(Seth 11-11 退回 v1 的四条里的 ③④,加一个诊断臂)
+ARMS_V2 = [
+    ("L2x", "RBv2 权重、不带 R-v2(Seth v2 加的对照臂)"),
+    ("L1_nt", "L1 去掉「贡献最大的一张票」后重跑"),
+    ("L3_nt", "L3 去掉「贡献最大的一张票」后重跑"),
+    ("L1_x", "L1 把叠加曲线最大单日那一格记 0(诊断,非预注册臂)"),
+    ("L3_x", "L3 把叠加曲线最大单日那一格记 0(诊断,非预注册臂)"),
+]
 REPORT_MD = os.path.join(HERE, "T-342_house_book.md")
 OUT_JSON = os.path.join(HERE, "t342_results.json")
 DAILY_CSV = os.path.join(HERE, "t342_daily.csv")
+CAL_CSV = os.path.join(HERE, "t342_overlay_calendar.csv")   # v2:喂内核的日历日序列(overlay + 现金)
 SCEN_JSON = os.path.join(HERE, "scenarios", "lane-c-T-342.json")
+RV2_DROP_CAND = 12        # v2:找「贡献最大的一张票」的候选张数(按票自带 r 排序取前 N)
 
 
 def main() -> None:
@@ -423,6 +480,15 @@ def main() -> None:
             log(f"  缓存写不了(不影响): {e}")
 
     kinfo = snapshot_kernels()
+    # v2:把 v1 的结果读进来做对照(本脚本跑完会覆盖同一个文件)
+    v1_base = {}
+    if os.path.exists(OUT_JSON):
+        try:
+            _prev = json.load(open(OUT_JSON))
+            v1_base = {k: (v.get("metrics") or {}) for k, v in (_prev.get("arms") or {}).items()}
+            log(f"  v1 对照读入:{len(v1_base)} 条臂(来自 {OUT_JSON})")
+        except Exception as e:  # noqa: BLE001
+            log(f"  v1 结果读不进来(不影响): {e}")
     fa = _load_module(KERNEL_NEW, "flex_alloc_s815")
     fa_old = _load_module(KERNEL_OLD, "flex_alloc_main")
     trade_path, trade_returns, ab_test = load_tom_and_apparatus()
@@ -497,8 +563,24 @@ def main() -> None:
     # ── R-v2 叠加曲线(f 0.5% 与 1.0%)──────────────────────────────────────────
     ov_base = build_overlay(RV2_F_BASE)
     ov_high = build_overlay(RV2_F_HIGH)
-    ov_base_ret = ov_base["dret"]
+    ov_base_ret = ov_base["dret"]        # 曲线日期 = 日历日(t251 的 days 逐日 +1)
     ov_high_ret = ov_high["dret"]
+
+    # ── v2:日历日序列落盘(喂内核的 overlay_ret / cash_ret)────────────────────
+    # v1 的错在这里:R-v2 曲线是日历日,现金利率也是逐日历日,
+    # 但 v1 把两者写进只含工作日的 CSV 再喂内核 ⇒ 周末盈亏、周末利息全丢。
+    cal_union = sorted(set(cash_ret.index) | set(ov_base_ret.index) | set(ov_high_ret.index))
+    cal_idx = pd.DatetimeIndex(cal_union)
+    cal_df = pd.DataFrame(index=cal_idx)
+    cal_df["cash_daily_rate"] = [float(cash_ret.get(d, 0.0)) for d in cal_idx]
+    cal_df["cash_apy_7d_pct"] = [float(apy.get(str(d.date()), float("nan"))) for d in cal_idx]
+    cal_df["rv2_daily_ret_f05"] = [float(ov_base_ret.get(d, float("nan"))) for d in cal_idx]
+    cal_df["rv2_daily_ret_f10"] = [float(ov_high_ret.get(d, float("nan"))) for d in cal_idx]
+    cal_df["is_weekend"] = [int(d.weekday() >= 5) for d in cal_idx]
+    cal_df["is_common_day"] = [int(d in set(df.index)) for d in cal_idx]
+    cal_df.index.name = "date"
+    cal_df.to_csv(CAL_CSV)
+    log(f"  落 {CAL_CSV}({len(cal_df)} 个日历日 {cal_idx[0].date()} → {cal_idx[-1].date()})")
 
     # ── 腿 CSV:先落,再算(下面的算全从落好的 CSV 读回)────────────────────────
     rec = df[df.index >= start]
@@ -525,21 +607,24 @@ def main() -> None:
             ])
     log(f"  落 {DAILY_CSV}({len(df)} 行,记 NAV {len(rec)} 行)")
 
-    # 从落好的 CSV 读回:算只认这份文件
+    # 从落好的 CSV 读回:算只认这两份文件
+    #   t342_daily.csv = 三条腿(共同日 / 工作日);t342_overlay_calendar.csv = overlay + 现金(日历日)
     cdf = pd.read_csv(DAILY_CSV, parse_dates=["date"]).set_index("date").sort_index()
     legs = {"crypto": cdf["crypto_leg_nav_x1v"].astype(float),
             "equity": cdf["equity_close_acwi"].astype(float),
             "gold": cdf["gold_close_xauusd"].astype(float)}
     core_csv = cdf["core_nav_1_cap_pit24"].astype(float)
-    cash_ret = cdf["cash_daily_rate"].astype(float)
-    ov_base_ret = cdf["rv2_daily_ret_f05"].astype(float)
-    ov_high_ret = cdf["rv2_daily_ret_f10"].astype(float)
+    caldf = pd.read_csv(CAL_CSV, parse_dates=["date"]).set_index("date").sort_index()
+    cash_ret = caldf["cash_daily_rate"].astype(float)
+    ov_base_ret = caldf["rv2_daily_ret_f05"].astype(float)
+    ov_high_ret = caldf["rv2_daily_ret_f10"].astype(float)
     df = pd.concat(legs, axis=1).dropna().sort_index()
-    log(f"  从 CSV 读回:{len(df)} 天 {df.index[0].date()} → {df.index[-1].date()}")
-    n_ov = int((ov_base_ret != 0).sum())
-    win_ov = ov_base_ret[ov_base_ret.index >= start]
-    log(f"  R-v2 日收益(读回):非零 {n_ov}/{len(ov_base_ret)} 天;记 NAV 区间内复利 "
-        f"{(1 + win_ov).prod() - 1:+.4%}(f 0.5%)")
+    log(f"  从 CSV 读回:腿 {len(df)} 天 {df.index[0].date()} → {df.index[-1].date()};"
+        f"日历序列 {len(caldf)} 天 {caldf.index[0].date()} → {caldf.index[-1].date()}")
+    n_ov = int((ov_base_ret.fillna(0.0) != 0).sum())
+    win_ov = ov_base_ret[(ov_base_ret.index > start) & (ov_base_ret.index <= end)].dropna()
+    log(f"  R-v2 日收益(日历日读回):非零 {n_ov}/{len(ov_base_ret)} 天;"
+        f"记 NAV 区间内复利 {float((1 + win_ov).prod() - 1):+.4%}(f 0.5%)")
     if n_ov == 0:
         sys.exit("R-v2 叠加读回后全 0 —— 停(索引没对上)。")
 
@@ -559,15 +644,44 @@ def main() -> None:
         "L4": (legs, fn_rb, cash_ret, ov_high_ret),
         "L3H": (legs_h, fn_rb, cash_ret, ov_base_ret),
     }
-    arms, logs = {}, {}
-    for name, (lg, fn, cr, ov) in plan.items():
+
+    def run_arm(lg, fn, cr, ov):
         nav, lg_log = fa.dynamic_mix_nav(lg, fn, reb=REB, cost=COST, start=start,
                                          cash_ret=cr, overlay_ret=ov)
-        nav = nav[nav.index <= pd.Timestamp(WIN_END)]
+        return nav[nav.index <= pd.Timestamp(WIN_END)], lg_log
+
+    arms, logs = {}, {}
+    for name, (lg, fn, cr, ov) in plan.items():
+        nav, lg_log = run_arm(lg, fn, cr, ov)
         arms[name] = nav
         logs[name] = lg_log
         log(f"  臂 {name}: {len(nav)} 天 {nav.index[0].date()} → {nav.index[-1].date()} "
             f"终值 {float(nav.iloc[-1]):.4f} 调仓 {len(lg_log)} 次")
+
+    # ── v2 ①:L2x = RBv2 权重、不带 R-v2(Seth 加的对照臂)─────────────────────
+    arms["L2x"], logs["L2x"] = run_arm(legs, fn_rb, None, None)
+    log(f"  臂 L2x: 终值 {float(arms['L2x'].iloc[-1]):.4f}")
+
+    # ── v2 ②:L1 / L3 去掉「贡献最大的一张票」各重跑一次 ──────────────────────
+    cand_rows, top_tid = find_top_contributor(ov_base, start, end)
+    ov_nt = None
+    if top_tid is not None:
+        ov_nt = build_overlay(RV2_F_BASE, exclude_tid=top_tid["tid"])
+        arms["L1_nt"], logs["L1_nt"] = run_arm(legs, fn_const, None, ov_nt["dret"])
+        arms["L3_nt"], logs["L3_nt"] = run_arm(legs, fn_rb, cash_ret, ov_nt["dret"])
+        log(f"  臂 L1_nt 终值 {float(arms['L1_nt'].iloc[-1]):.4f} / "
+            f"L3_nt 终值 {float(arms['L3_nt'].iloc[-1]):.4f}")
+
+    # ── v2 ③:诊断 —— 叠加曲线最大单日那一格记 0(非预注册臂,只作敏感性)──────
+    win_ov2 = ov_base_ret[(ov_base_ret.index > start) & (ov_base_ret.index <= end)].dropna()
+    top_day = win_ov2.abs().idxmax() if len(win_ov2) else None
+    ov_clean = ov_base_ret.copy()
+    if top_day is not None:
+        ov_clean.loc[top_day] = 0.0
+        arms["L1_x"], logs["L1_x"] = run_arm(legs, fn_const, None, ov_clean)
+        arms["L3_x"], logs["L3_x"] = run_arm(legs, fn_rb, cash_ret, ov_clean)
+        log(f"  臂 L1_x 终值 {float(arms['L1_x'].iloc[-1]):.4f} / "
+            f"L3_x 终值 {float(arms['L3_x'].iloc[-1]):.4f}(去掉 {top_day.date()})")
 
     if args.probe:
         json.dump({"kernel": kinfo, "df_index": [str(x.date()) for x in df.index]},
@@ -614,6 +728,43 @@ def main() -> None:
         f" vs T-310 {t310_14['total_return']*100:.4f}% / {t310_14['max_dd']*100:.4f}%"
         f" → {'✅' if chk2['pass'] else '❌'}")
 
+    # ── 自检 ②b(v2 新增):喂给内核的叠加序列,窗口内 Π(1+r) = 曲线同区间收益 ──────
+    curve_b = ov_base["curve"]
+    c_le = curve_b.index[curve_b.index <= start]
+    t0 = c_le[-1] if len(c_le) else curve_b.index[0]
+    c_end = curve_b.index[-1]
+    fed = ov_base_ret[(ov_base_ret.index > start) & (ov_base_ret.index <= min(end, c_end))].dropna()
+    fed_comp = float((1.0 + fed).prod() - 1.0)
+    curve_comp = float(curve_b.loc[c_end] / curve_b.loc[t0] - 1.0)
+    chk2b = {
+        "what": "喂给内核的 overlay_ret(日历日)在记账窗口内 Π(1+r) = R-v2 曲线同区间收益",
+        "curve_from": str(pd.Timestamp(t0).date()), "curve_to": str(pd.Timestamp(c_end).date()),
+        "n_days_fed": int(len(fed)), "fed_compound": fed_comp, "curve_compound": curve_comp,
+        "diff": fed_comp - curve_comp, "tolerance": 1e-9,
+        "pass": bool(abs(fed_comp - curve_comp) < 1e-9),
+        "note": "记 NAV 起点那一格的叠加收益不进内核(第一格 NAV = 1),所以比的是 (起点, 曲线终点]",
+    }
+    log(f"  自检②b: 喂给内核的叠加序列 Π(1+r) = {fed_comp:+.10f} vs 曲线同区间 {curve_comp:+.10f}"
+        f"(差 {chk2b['diff']:.2e}) → {'✅' if chk2b['pass'] else '❌'}")
+
+    # ── v2 诊断:叠加序列的工作日 / 周末拆分 + 最大单日 ─────────────────────────
+    win_ov3 = ov_base_ret[(ov_base_ret.index > start) & (ov_base_ret.index <= end)].dropna()
+    is_we = pd.Series([int(d.weekday() >= 5) for d in win_ov3.index], index=win_ov3.index)
+    wd_comp = float((1 + win_ov3[is_we == 0]).prod() - 1)
+    we_comp = float((1 + win_ov3[is_we == 1]).prod() - 1)
+    top10 = win_ov3.abs().sort_values(ascending=False).head(10)
+    ov_diag = {
+        "n_days": int(len(win_ov3)), "n_weekend_days": int((is_we == 1).sum()),
+        "weekday_compound": wd_comp, "weekend_compound": we_comp,
+        "all_compound": float((1 + win_ov3).prod() - 1),
+        "top_days": [{"date": str(d.date()), "weekday": int(d.weekday()),
+                      "is_weekend": int(d.weekday() >= 5), "ret": float(win_ov3[d])}
+                     for d in top10.index],
+        "top_day_used": str(pd.Timestamp(top_day).date()) if top_day is not None else None,
+    }
+    log(f"  诊断: 叠加窗口内 {len(win_ov3)} 天(周末 {int((is_we == 1).sum())} 天);"
+        f"工作日复利 {wd_comp:+.4%}、周末复利 {we_comp:+.4%};最大单日 {ov_diag['top_days'][0]}")
+
     # ── 自检 ③:新核(不给 cash/overlay)与旧核逐位相同 ──────────────────────────
     nav_new, log_new = fa.dynamic_mix_nav(legs, fn_const, reb=REB, cost=COST, start=start)
     nav_old, log_old = fa_old.dynamic_mix_nav(legs, fn_const, reb=REB, cost=COST, start=start)
@@ -652,7 +803,12 @@ def main() -> None:
 
     # ── 差表(相邻两级)─────────────────────────────────────────────────────────
     diffs_tbl = []
-    for a, b in (("L0", "L1"), ("L1", "L2"), ("L2", "L3"), ("L3", "L4"), ("L3", "L3H")):
+    pairs = [("L0", "L1"), ("L1", "L2"), ("L2", "L3"), ("L3", "L4"), ("L3", "L3H"),
+             ("L2", "L2x"), ("L1", "L1_nt"), ("L3", "L3_nt"),
+             ("L1", "L1_x"), ("L3", "L3_x")]
+    for a, b in pairs:
+        if a not in met or b not in met:
+            continue
         ma, mb = met[a], met[b]
         row = {"from": a, "to": b,
                "d_total_return_pp": (mb["total_return"] - ma["total_return"]) * 100,
@@ -791,16 +947,26 @@ def main() -> None:
                           "note": "票源到 2026-09-30 为止:窗口最后一个月(10-01 → 10-30)R-v2 贡献为 0"},
         },
         "crypto_leg_exposure": g_stats,
-        "self_checks": {"①": chk1, "②": chk2, "③": chk3},
+        "self_checks": {"①": chk1, "②": chk2, "②b(v2 日历日叠加)": chk2b, "③": chk3},
         "arms": {k: {"metrics": met[k], "yearly": {str(y): v for y, v in yr[k].items()}}
                  for k in list(met.keys())},
-        "arm_defs": {k: v for k, v in ARMS},
+        "arm_defs": {k: v for k, v in ARMS + ARMS_V2},
         "diffs": diffs_tbl,
         "ab_test_L1_vs_L2": ab,
         "judgement": judge,
         "rv2_base": {"stats": ov_base["stats"], "risk_frac": RV2_F_BASE},
         "rv2_high": {"stats": ov_high["stats"], "risk_frac": RV2_F_HIGH},
+        "v2_calendar_fix": {
+            "what": "v1 的错:overlay / 现金写成只含工作日的 CSV 再喂内核 ⇒ 周末盈亏与周末利息全丢",
+            "fix": "两条序列一律日历日(t342_overlay_calendar.csv),内核按 (上一个共同日, 当天] 复利",
+            "curve_axis": "日历日(t251 simulate 的 days 按 timedelta(days=1) 逐日走)",
+            "v1_arms": v1_base,
+        },
+        "overlay_diag": ov_diag,
+        "drop_ticket": {"method": "候选 = 成交票里 r 最大的 N 张,逐张拿掉重跑引擎,比窗口内曲线复利",
+                        "n_cand": RV2_DROP_CAND, "top": top_tid, "candidates": cand_rows},
         "legs_csv": DAILY_CSV,
+        "overlay_calendar_csv": CAL_CSV,
         "scenarios": SCEN_JSON,
         "report_md": REPORT_MD,
     }
@@ -853,6 +1019,11 @@ def write_report(out, met, yr, diffs_tbl, ab, judge, chk1, chk2, chk3, scen, raw
     A.append(f"| ③ 不给 cash_ret / overlay_ret 时与旧核逐位相同 | "
              f"{'✅' if chk3['pass'] else '❌'} {chk3['n_days_new']} 天里逐位不同的值 "
              f"{chk3['n_value_diffs']} 个、调仓日志相同 = {chk3['rebalance_log_same']} |")
+    c2b = out["self_checks"].get("②b(v2 日历日叠加)", {})
+    if c2b:
+        A.append(f"| ②b(v2)喂给内核的叠加序列 Π(1+r) = 曲线同区间收益(差 < 1e-9) | "
+                 f"{'✅' if c2b.get('pass') else '❌'} Π = {c2b.get('fed_compound', float('nan')):+.10f} vs "
+                 f"曲线 {c2b.get('curve_compound', float('nan')):+.10f}(差 {c2b.get('diff', float('nan')):.2e}) |")
     A.append("")
     A.append(f"**核:**新核 `flex_alloc.py` sha256 `{out['kernel']['new']['sha256'][:16]}…`"
              f"(来源 {out['kernel']['new']['source']},带 `cash_ret` / `overlay_ret`);"
@@ -876,14 +1047,15 @@ def write_report(out, met, yr, diffs_tbl, ab, judge, chk1, chk2, chk3, scen, raw
              f"成交 {out['data_coverage']['rv2_curve']['n_taken']} 张,重算出场与 t197 不一致 "
              f"{out['data_coverage']['rv2_curve']['n_exit_mismatch_vs_t197']} 张。"
              f"**票源到 2026-09-30 为止 ⇒ 窗口最后一个月(10-01 → 10-30)R-v2 贡献为 0。**")
-    A.append(f"- 逐日底账:`docs/research/t342_daily.csv`(日期、各腿收盘、现金日利率、R-v2 日收益、逐臂 NAV 底稿)。")
+    A.append(f"- 逐日底账:`docs/research/t342_daily.csv`(日期、三条腿收盘、现金日利率、R-v2 日收益;共同日/工作日)"
+             f" + `docs/research/t342_overlay_calendar.csv`(**日历日**的 overlay 与现金序列 —— 喂内核的就是这份)。")
     A.append("")
 
     A.append("## 2 · 梯子(每臂一整套指标)")
     A.append("")
     A.append("| 臂 | 定义 | 总收益 | CAGR | 波动(年) | 最大回撤 | Calmar | 最差月 | 最好月 |")
     A.append("|---|---|---|---|---|---|---|---|---|")
-    for name, desc in ARMS + [("CORE_1", "cap_pit24 净值(归一到起点)")]:
+    for name, desc in ARMS + ARMS_V2 + [("CORE_1", "cap_pit24 净值(归一到起点)")]:
         m = met[name]
         cal = "—" if m.get("calmar") is None else f"{m['calmar']:.3f}"
         A.append(f"| **{name}** | {desc} | {_pct(m['total_return'])} | {_pct(m['cagr'])} | "
@@ -891,7 +1063,7 @@ def write_report(out, met, yr, diffs_tbl, ab, judge, chk1, chk2, chk3, scen, raw
                  f"{_pct(m['worst_month'])} | {_pct(m['best_month'])} |")
     A.append("")
     A.append("最大回撤的峰/谷:")
-    for name in [a for a, _ in ARMS] + ["CORE_1"]:
+    for name in [a for a, _ in ARMS + ARMS_V2] + ["CORE_1"]:
         m = met[name]
         A.append(f"- {name}:回撤 {m['max_dd'] * 100:.2f}%(峰 {m['dd_peak']} → 谷 {m['dd_trough']})")
     A.append("")
@@ -900,7 +1072,7 @@ def write_report(out, met, yr, diffs_tbl, ab, judge, chk1, chk2, chk3, scen, raw
     A.append("")
     A.append("| 臂 | " + " | ".join(str(y) for y in range(2022, 2027)) + " |")
     A.append("|---|" + "---|" * 5)
-    for name in [a for a, _ in ARMS] + ["CORE_1"]:
+    for name in [a for a, _ in ARMS + ARMS_V2] + ["CORE_1"]:
         A.append(f"| **{name}** | " + " | ".join(_pct(yr[name].get(y)) for y in range(2022, 2027)) + " |")
     A.append("")
 
@@ -909,7 +1081,10 @@ def write_report(out, met, yr, diffs_tbl, ab, judge, chk1, chk2, chk3, scen, raw
     A.append("| 从 → 到 | 开关 | Δ总收益 | ΔCAGR | Δ波动 | Δ最大回撤(正=变浅) | ΔCalmar | Δ最差月 |")
     A.append("|---|---|---|---|---|---|---|---|")
     sw = {"L1": "R-v2 叠加(f 0.5%)", "L2": "RBv2 权重", "L3": "现金计息", "L4": "R-v2 f → 1.0%",
-          "L3H": "加密腿改持 ①(不是开关,是腿的替换)"}
+          "L3H": "加密腿改持 ①(不是开关,是腿的替换)",
+          "L2x": "拿掉 R-v2 叠加(RBv2 那一档里叠加值多少)",
+          "L1_nt": "去掉贡献最大的一张票", "L3_nt": "去掉贡献最大的一张票",
+          "L1_x": "叠加曲线最大单日记 0(诊断)", "L3_x": "叠加曲线最大单日记 0(诊断)"}
     for row in diffs_tbl:
         A.append(f"| {row['from']} → {row['to']} | {sw.get(row['to'], '')} | "
                  f"{_pp(row['d_total_return_pp'])} | {_pp(row['d_cagr_pp'])} | {_pp(row['d_vol_pp'])} | "
@@ -923,6 +1098,71 @@ def write_report(out, met, yr, diffs_tbl, ab, judge, chk1, chk2, chk3, scen, raw
         A.append(f"| {row['from']} → {row['to']} | "
                  + " | ".join(_pp(row[f'd_{y}_pp']) for y in range(2022, 2027)) + " |")
     A.append("")
+
+    A.append("## 4b · v2(Seth 11-11 退回 v1):日历日序列 / L2x / 去掉最大贡献票")
+    A.append("")
+    A.append("**v1 错在哪。** R-v2 曲线(`t251_gross_cap.simulate`)本身是**日历日**(`days` 按 `timedelta(days=1)` 逐日走),"
+             "现金利率也是逐日历日;v1 把两者写进只含**工作日**的 CSV 再喂内核 ⇒ 周末那两格(盈亏与利息)全丢。"
+             "v2 改成日历日序列(另落 `t342_overlay_calendar.csv`),内核按 (上一个共同日, 当天] 复利,周末照样进账户。")
+    A.append("")
+    v1b = (out.get("v2_calendar_fix", {}) or {}).get("v1_arms", {}) or {}
+    if v1b:
+        A.append("| 臂 | v1 总收益 | v2 总收益 | Δ | v1 回撤 | v2 回撤 |")
+        A.append("|---|---|---|---|---|---|")
+        for nm in ("L0", "L1", "L2", "L3", "L4", "L3H"):
+            if nm not in v1b or nm not in met:
+                continue
+            m1, m2 = v1b[nm], met[nm]
+            t1 = m1.get("total_return")
+            d1 = m1.get("max_dd")
+            A.append(f"| {nm} | {_pct(t1)} | {_pct(m2['total_return'])} | "
+                     f"{_pp((m2['total_return'] - t1) * 100) if t1 is not None else '—'} | "
+                     f"{_pct(d1)} | {_pct(m2['max_dd'])} |")
+        A.append("")
+    od = out.get("overlay_diag", {}) or {}
+    if od:
+        A.append(f"**叠加序列的日历日拆分(窗口内 {od.get('n_days')} 天,其中周末 {od.get('n_weekend_days')} 天):**"
+                 f"工作日复利 {_pct(od.get('weekday_compound'))}、周末复利 {_pct(od.get('weekend_compound'))}、"
+                 f"合计 {_pct(od.get('all_compound'))}。")
+        A.append("")
+        A.append("叠加曲线最大的 10 个单日:")
+        A.append("")
+        A.append("| 日期 | 星期 | 周末? | 日收益 |")
+        A.append("|---|---|---|---|")
+        for r in (od.get("top_days") or []):
+            wd = "一二三四五六日"[int(r.get("weekday", 0))]
+            A.append(f"| {r.get('date')} | 星期{wd} | {'是' if r.get('is_weekend') else '否'} | "
+                     f"{float(r.get('ret', 0.0)) * 100:+.2f}% |")
+        A.append("")
+    if "L2x" in met:
+        A.append(f"**L2x(RBv2 权重、不带 R-v2 —— Seth v2 加的对照臂):** 总收益 {_pct(met['L2x']['total_return'])}、"
+                 f"CAGR {_pct(met['L2x']['cagr'])}、回撤 {_pct(met['L2x']['max_dd'])};"
+                 f"L2(RBv2 + R-v2)= {_pct(met['L2']['total_return'])} ⇒ R-v2 叠加在 RBv2 那一档值 "
+                 f"{_pp((met['L2']['total_return'] - met['L2x']['total_return']) * 100)} 总收益、"
+                 f"{_pp((met['L2']['max_dd'] - met['L2x']['max_dd']) * 100)} 回撤。")
+        A.append("")
+    dt = out.get("drop_ticket", {}) or {}
+    top = dt.get("top")
+    if top and "L1_nt" in met:
+        A.append(f"**贡献最大的一张票:** `{top.get('tid')}`({top.get('symbol')},信号 {top.get('signal_d')},"
+                 f"进场 {top.get('entry_d')} → 出场 {top.get('exit_d')},票自带 r={top.get('r')})。"
+                 f"做法:{dt.get('method')};拿掉它以后窗口内叠加复利 {float(top.get('window_return_without', 0)) * 100:+.2f}%"
+                 f"(Δ {float(top.get('delta_pp', 0)):+.2f}pp)。")
+        A.append("")
+        A.append("| 臂 | 有这一张票 | 去掉它 | Δ总收益 | ΔCAGR | Δ回撤 |")
+        A.append("|---|---|---|---|---|---|")
+        for a, b in (("L1", "L1_nt"), ("L3", "L3_nt")):
+            if a in met and b in met:
+                A.append(f"| {a} | {_pct(met[a]['total_return'])} | {_pct(met[b]['total_return'])} | "
+                         f"{_pp((met[b]['total_return'] - met[a]['total_return']) * 100)} | "
+                         f"{_pp((met[b]['cagr'] - met[a]['cagr']) * 100)} | "
+                         f"{_pp((met[b]['max_dd'] - met[a]['max_dd']) * 100)} |")
+        A.append("")
+    if "L1_x" in met:
+        A.append(f"**诊断(非预注册臂):** 把叠加曲线最大单日那一格记 0 之后,L1 = {_pct(met['L1_x']['total_return'])}"
+                 f"(原 {_pct(met['L1']['total_return'])})、L3 = {_pct(met['L3_x']['total_return'])}"
+                 f"(原 {_pct(met['L3']['total_return'])});最大单日 = {od.get('top_day_used')}。")
+        A.append("")
 
     A.append("## 5 · 判据(只判 L3 与 L4)")
     A.append("")
@@ -969,6 +1209,12 @@ def write_report(out, met, yr, diffs_tbl, ab, judge, chk1, chk2, chk3, scen, raw
     A.append("- 现金利率 2023-02-10 之前记 0 —— 那段本来就没有 DeFi 借贷利率的观测;"
              "L0/L1/L2 与 L3/L4 的差别因此只从 2023-02-10 起累积。")
     A.append("- 梯子顺序是「已经决定的 → 还没决定的」,不是按效果挑的;本卡是记账合成,试验计数不计。")
+    A.append("- **v2 与 v1 的差别只有一个来源:周末。** R-v2 曲线是日历日序列,v1 把它压成工作日 ⇒ 周末盈亏全丢;"
+             "v2 按 Seth 的要求改成日历日直喂内核。周末那几格在窗口内的复利见 4b。")
+    A.append("- **叠加曲线的收益集中在少数几天(4b 的表)。** 那一格若是 t251 的估值口径(周末用上一根收盘的兜底价)"
+             "造成的记账跳变,而不是真钱赚到的,那么 L1 / L2 的钱有一大半来自那几格 —— "
+             "L1_x / L3_x 是「把最大单日记 0」的敏感性,**不是预注册臂**,"
+             "**探索性 —— 需另立预注册、在新数据上过零信号对照**。")
     A.append("")
 
     open(REPORT_MD, "w", encoding="utf-8").write("\n".join(A) + "\n")
