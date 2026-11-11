@@ -19,7 +19,7 @@
 
 - 本轮**开始时** `macro_daily` 只有 `btc_mvrv` / `btc_issuance_usd` / `btc_hashrate` / `fng`;内核要的 `btc_price_usd` / `btc_puell` / `btc_hash_30d` **都不在库里**,生产 `cycle_space.load()` 因此直接抛 `btc_price_usd 只有 0 天`(实测)⇒ `/internal/cycle-space` 这条读面当时是死的。
 - 本轮**中途**(11-11 约 17:0x)生产入库把这三条补进了 `macro_daily`(实测 `load()` 现在正常返回 5793 天)。三条的天数与我按生产同一条路本地重建的完全一致(5793 / 5429 / 5757)—— 重建用的是生产抓取器 `get_coinmetrics_btc(["PriceUSD"])` 与生产函数 `btc_cycle.derived_rows`(Puell = 当日发行美元 ÷ 自身 365 日均值;算力 30 天变化 = ln(近 7 日均值 ÷ 30 天前 7 日均值)),**只读、不入库**。脚本已改成优先读库,重跑即用生产值。
-- 核��(`src/data/state/cycle_space.py`)**import,一字不改**:features / pit_vectors / read / stance / target_weight(外加 analogs / episodes / _fwd 同模块纯函数)。零分布、Brier、分位、指纹全走 `apparatus.py`(circular_shift / p_upper / stationary_bootstrap_index / ab_test / brier / content_fingerprint),本脚本没另写零分布。
+- 内核(`src/data/state/cycle_space.py`)**import,一字不改**:features / pit_vectors / read / stance / target_weight(外加 analogs / episodes / _fwd 同模块纯函数)。零分布、Brier、分位、指纹全走 `apparatus.py`(circular_shift / p_upper / stationary_bootstrap_index / ab_test / brier / content_fingerprint),本脚本没另写零分布。
 - 走步样本:**669** 个周一有读数,其中 **643** 个有实现 fwd180,区间 **2014-01-20 → 2026-05-11**(起点由 `ret_365` 的 730 个先验观测卡住:该维 2012-01 才有值,+730 天 ⇒ 2014-01 起才有 z)。独立 180 天区间 **24** 个。
 
 ## 自检(PIT)
