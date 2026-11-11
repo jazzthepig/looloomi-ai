@@ -271,3 +271,11 @@ it only confirms the rule below.
 - A short test without a target, a breakeven rule and a time stop is **malformed** — reject the card, don't run it.
 - "Never lose money" cannot be promised (stops fill, gaps jump them); what the rule must deliver, and what tests check,
   is a loss bounded near −1R and no winner turned into a loser. First pre-registration in this form: S-736 (T-256).
+
+> **Scope note (2026-11-12, after Jazz 11-11 / 11-12 — this section is not the whole short side).** §12 describes the
+> *tactical* short: a ticket. Jazz 11-11 described a second object — the *allocation-level* short: low-frequency,
+> two-way, funded from realised long profits, **held without a price stop** — and on 11-12 said "never short" was never
+> a house rule. So "a short test without a target, a breakeven rule and a time stop is malformed — reject the card"
+> applies to ticket-form tests only; an allocation-level hedge is judged on the whole account (time to recover), not
+> as a standalone ticket. Evidence so far for the held form: T-252 C and S-819 — it earned in 2022 and 2025–26, lost
+> badly in the 2021 V-shaped recovery, about zero over six years. Not forbidden; not yet proven.
