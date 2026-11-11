@@ -1,0 +1,45 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T-339-1",
+      "scenario": "T-339 周期位置空间走步检验后的 BTC 近端位置",
+      "statement": "BTC 2026-12-15 收盘 > 70000",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 70000,
+      "prob": 0.55,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-339-2",
+      "scenario": "T-339 周期位置空间走步检验后的 BTC 中期位置",
+      "statement": "BTC 2027-05-15 收盘 > 95000",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 95000,
+      "prob": 0.42,
+      "horizon_d": "2027-05-15"
+    },
+    {
+      "id": "T-339-3",
+      "scenario": "T-339 周期读数的一维:中长线估值分位",
+      "statement": "btc_mvrv 2026-12-15 > 1.5",
+      "variable": "macro:btc_mvrv",
+      "op": "gt",
+      "lo": 1.5,
+      "prob": 0.5,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-339-4",
+      "scenario": "T-339 周期读数的一维:挖矿收益 vs 算力",
+      "statement": "btc_puell 2027-05-15 > 1.0",
+      "variable": "macro:btc_puell",
+      "op": "gt",
+      "lo": 1.0,
+      "prob": 0.5,
+      "horizon_d": "2027-05-15"
+    }
+  ]
+}
