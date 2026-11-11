@@ -1,7 +1,7 @@
 {
   "id": "T-339",
   "owner": "lane-a",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-11-11",
   "title": "S-814 周期位置空间(高维代替阈值):走步检验 add / trim / hold —— 只调生产内核 src/data/state/cycle_space.py",
   "source": "REFUTATION_LEDGER S-814(`grep -n \"^## S-814\" -A 12 REFUTATION_LEDGER.md`,原文照抄进报告开头);内核 src/data/state/cycle_space.py(origin/main 上;import,一字不改:features / pit_vectors / read / stance / target_weight);数据 macro_daily 五条序列(只读,翻页带 order=);零分布 apparatus.circular_shift / p_upper。",
@@ -24,5 +24,9 @@
   },
   "prior_value": "Jazz 11-11:keep in high dimension。阈值规则七年 1 个过热样本;向量空间让四轮周期的每一天都参与。",
   "notes": "2026-11-11T04:51:01Z Seth 开卡(卡与内核先进 main 再派)。C 道 T-340 盲复算,交付前不互看。| 2026-11-11 lane-a 交付:全过?否 —— (a)–(e) 五条判据全否,空间留作描述臂+记分账(按 S-814 预设的「不过」分支,不代拍配置)。样本:669 个周一有读数 / 643 个有实现 fwd180,2014-01-20→2026-05-11,独立 180 天区间 24 个;PIT 自检随机 20 个周一删后续数据重算 20/20 逐位相同。(a) Spearman(tilt_excess, 实现 fwd180)=+0.0389(阈值 0.20)❌;循环平移 p_upper=0.3217(阈值 0.05)❌。(b) 三档 Brier 收缩后 0.5448 vs 无条件 0.5184(收缩后更差)❌;配对块自助(26 周 ×2000, 种子 814)差 95% 上沿 +0.0784(要求 <0)❌。(c) 配置(周一收盘定、次日收盘生效、10bp×换手、现金 0):+1937% vs HOLD70 +4144%❌;maxDD −69.29% vs −69.77%(只浅 0.48pp,要求 5pp)❌;Calmar 对权重日程循环平移 p_upper=0.953(阈值 0.10)❌。(d) 顶 ±30 天出现 add(2024-03、2025-10)、底 ±30 天出现 trim(2026-06)❌;4 个顶 0 个 trim、4 个底 0 个 add❌(第一个纪元顶 2013-12-04 在样本外,无法判定)。(e) 前半 ρ=−0.0387 / 后半 ρ=+0.1562 异号❌。另报:单维空间 MVRV −0.0503 / dist_200 +0.1527;原始单指标 MVRV 扩张分位 +0.0311 / dist_200 的 z +0.2150(单指标 > 8 维空间);stance add 36 / trim 65 / hold 568 周 = 5.4%/9.7%/84.9%;换仓 101 次 = 7.9 次/年(单年最多 16);K=30 ρ+0.0533(p0.2877)、K=120 ρ+0.0504(p0.3217)。工程发现:本轮开始时 macro_daily 缺 btc_price_usd/btc_puell/btc_hash_30d ⇒ 生产 cycle_space.load() 抛 'btc_price_usd 只有 0 天'(读面当时是死的);中途生产已补齐(现 load() 返回 5793 天,天数与本地按生产函数重建的值一致),脚本已改成优先读库、重跑即用生产值。产物:docs/research/T-339_cycle_space.md + t339_cycle_space.py + t339_results.json(含 apparatus.content_fingerprint) + t339_weekly.csv + scenarios/lane-a-T-339.json(4 条,含 2 条 close 自动结算)。只读、未入库、未改生产代码。",
-  "verified": null
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-11T07:42:00Z",
+    "value": "S-814 ❌(a)–(e) 全否,生产内核走步;(a) ρ = 0.0389,(e) 两半符号与盲复算逐位相同;空间留作描述臂 + 记分账,不进配置。scenarios/lane-a-T-339.json 4 条前向命题(2 条 close 自动结算)。"
+  }
 }
