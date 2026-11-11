@@ -59,8 +59,10 @@
 | claimed | T-098 | seth | World50 的数据:候选池(全球前 ~150 大资产)的复权价格与历史流通市值 + 贵金属口径 + 每个候选的链上形式映射与跟踪误差 | 大类 ① 候选可以用日频全收益回放;知道哪些资产今天在链上真的买得到、买多少。 | eodhd 只有 2022-08 起、未复权;yfinance 2015 起但 06-18 后停更、未复权(SHY 九年价格持平,票息全丢)。链上形式从没系统量过。 |  |
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
 | claimed | T-231 | seth | 前向记录写端恢复:refresh_depth_divergence 逼近 statement_timeout 30s —— 给 ohlcv_daily 扫描加下界,并让『重算补的日子』在记录里可见 | 迁移 + 测试 + 前后对比表;卡 notes 写最大耗时前后值、逐行差异数、恢复后第一条 ok 的时间。DDL 的应用要走 Seth 交互轮次(定时轮次只读,不应用)。 | 写端熄火 4 天且在加重(每天 error 10→17→19);『自首日起连续、无回填』这句对外话没有机械保证。 |  |
+| open | T-347 | lane-a | S-823 重新挖:三态敞口(明显向下 −0.3 / 不明确 +0.3 / 明显向上 +1.0)—— BTC 2012 起全史,8 条规则,发现段选一条,留出段判一次 | docs/research/T-347_three_state_exposure.md + t347_*.py + t347_discovery.json + t347_results.json + scenarios/lane-a-T-347.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-a/T-347。 | Jazz 11-12 定了 ③ 可以做空、可以空仓,但系统里没有一条过检验的「趋势明显」;这张卡是规则改完之后的第一轮重新挖,决定 ③ 的做空一侧能不能从文档走进生产。 |  |
 | open | T-346 | lane-b | S-819 对账与盲复算:闸门关时空大盘(BTC / ETH,s 0.15 / 0.30)—— 登记窗口上的四条判据,加 2020-07 起的全史,并与 T-252 定义 C 逐位对上 | docs/research/T-346_blind_gate_short.md + t346_*.py + t346_results.json + scenarios/lane-b-T-346.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-b/T-346。 | S-819 单份在登记窗口(2021-10 起)过了四条,但 Seth 当天查出同一条规则 T-252 已测过、2020-07 起为负 —— 这张卡要第二份把两个窗口的数都钉死。 |  |
 | open | T-341 | lane-c | 真钱唯一规则 X1V 的归因:对「同平均 β 的常数加密腿」—— 账户抗跌是 X1V 的择时还是 70% 非加密配置的结构(T-305 遗留 (c)) | docs/research/T-341_x1v_vs_const_beta.md(预注册在前,开头一张 A / K / ① 三行表)+ docs/research/t341_x1v_vs_const.py + docs/research/t341_results.json;卡 notes 写 w_K、两段 A−K 的总收益与回撤差、随机分位三个数;in_review,推 lane-c/T-341。 | T-305 只把账户和 ① 比,不能区分『X1V 择时』和『只持 30% 加密』。真钱里唯一的规则至今没有对它自己的结构做过对照;S2 里 Jazz 要回答 LP 的『为什么不直接用常数配比』,现在没有数。 |  |
+| open | T-348 | lane-c | 坟场按新尺子重判:已有的做空 / 对冲票(S-642、S-681 H2–H4、S-736、S-808、S-810)叠到整合账本上,按账户口径的回本时间与年化看,两个窗口 | docs/research/T-348_graveyard_rejudged.md + t348_*.py + t348_results.json + scenarios/lane-c-T-348.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-c/T-348。 | 规则改了之后,哪些旧的 ❌ 是「尺子」造成的、哪些是真的不行,要量出来 —— 否则重新挖只是把同一批东西再否一遍或再信一遍。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -348,4 +350,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 11 · claimed 6 · blocked 4 · in_review 51 · done 268 · dropped 5
+open 13 · claimed 6 · blocked 4 · in_review 51 · done 268 · dropped 5

@@ -1,0 +1,28 @@
+{
+  "id": "T-346",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-11",
+  "title": "S-819 对账与盲复算:闸门关时空大盘(BTC / ETH,s 0.15 / 0.30)—— 登记窗口上的四条判据,加 2020-07 起的全史,并与 T-252 定义 C 逐位对上",
+  "source": "REFUTATION_LEDGER `## S-819 —` 登记那一节(`grep -n \"^## S-819 —\" -A 8 REFUTATION_LEDGER.md`;**不读「S-819 结果」,不读 docs/research/s819_***)。装配用你自己的 t343_blind.py(C0 = L3)。闸门 `t310_slots.load_gate()`;价格 s681/_um_daily.jsonl;资金费 s681/_um_funding.jsonl。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-346.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "先自检日期对齐:majors 指数 d 日收益与 BTC 永续 d 日收益的相关(d、d ± 1 各一个数)。两档 s 各报:账户 CAGR / 最大回撤 / 最长水下 / 逐年;空头叠加自己的总收益、逐年、资金费单列、≥ 10 天各段盈亏、翻转次数;`apparatus.circular_shift`(block 1,500 次,seed 819)+ `apparatus.p_upper`。按登记 (i)–(iv) 逐档判。**必须报的第零件:** 同一条规则 BTC、1 倍、2020-07-01 起,应等于 T-252 定义 C 的 −45.67%(对不上先查自己);再报 BTC / ETH 在 s 1.0 / 0.30 / 0.15、2020-07 起的空头叠加总收益与逐段盈亏。**只报不判的三件:** ① 持仓整体晚 1 / 2 / 3 天时空头叠加的总收益与账户最长水下;② 去掉 2022-01 → 2023-01 那一段之后的空头叠加总收益;③ 空的换成只空 BTC。不改阈值。只读、不入库;长计算 nohup;不要 Read 大文件。",
+    "expect": "docs/research/T-346_blind_gate_short.md + t346_*.py + t346_results.json + scenarios/lane-b-T-346.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-b/T-346。"
+  },
+  "prior_value": "S-819 单份在登记窗口(2021-10 起)过了四条,但 Seth 当天查出同一条规则 T-252 已测过、2020-07 起为负 —— 这张卡要第二份把两个窗口的数都钉死。",
+  "notes": "2026-11-11T15:38:54Z Seth 开卡。 | 2026-11-11T16:01:42Z Seth:见台账「S-819 更正」。本卡不再是「过了之后的盲复算」,是对账:两个窗口、两种尺寸、与 T-252 C 对上。",
+  "verified": null
+}
