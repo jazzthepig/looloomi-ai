@@ -1,0 +1,28 @@
+{
+  "id": "T-332",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-11",
+  "title": "S-808 有止损的反向空票:squeeze 之后做空该币永续(S-736 同一票机械),对同币同年随机进场;裸空为主、对冲 BTC 只报",
+  "source": "REFUTATION_LEDGER S-808(`grep -n \"^## S-808\" -A 8 REFUTATION_LEDGER.md`,原文照抄);票机械 docs/research/t256_tactical_short.py(一字不改,只换事件与标的);事件 crowding_watch(kind = squeeze);价格 perp_bv_daily、资金费 v_funding_daily(只读,翻页带 order=)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-332.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-808 原文照抄进报告开头;先用 t256 的票机械复现 S-736 的 18 张票(平均 R −0.37)作自检;(a)–(e) 逐条报数与判定;逐票表落 t332_tickets.csv(币、事件日、进场、出场、出场原因、R、资金费);对冲版只报。分支上要有 tasks/T-332.json(从 origin/main 拷,status 改 in_review)。只读、不入库、不改代码;不要 Read 大文件。",
+    "expect": "docs/research/T-332_squeeze_fade.md + t332_squeeze_fade.py + t332_results.json + t332_tickets.csv + scenarios/lane-a-T-332.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-a/T-332。"
+  },
+  "prior_value": "对手盘族最强的一条(squeeze 中位 −16%)第一次写成能执行的空票:止损截掉右尾。",
+  "notes": "2026-11-11T00:30:07Z Seth 开卡(Jazz 11-11 做空 / 抓短期机会)。",
+  "verified": null
+}
