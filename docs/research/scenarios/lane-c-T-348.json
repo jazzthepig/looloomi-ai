@@ -1,0 +1,45 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {
+      "id": "T-348-1",
+      "scenario": "T-348 坟场按新尺子重判",
+      "statement": "BTC 日收盘(ohlcv_daily close:BTC)在 2026-12-31 低于 80000",
+      "variable": "close:BTC",
+      "op": "lt",
+      "hi": 80000,
+      "prob": 0.5,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-348-2",
+      "scenario": "T-348 坟场按新尺子重判",
+      "statement": "S-736(T-256 战术空单)按修正后的记账(同日出场即平)重判:账户年化不低于 C0 单独臂(Δ CAGR ≥ 0)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.5,
+      "horizon_d": "2027-01-31"
+    },
+    {
+      "id": "T-348-3",
+      "scenario": "T-348 坟场按新尺子重判",
+      "statement": "S-642(T-159 空头臂)叠到 C0 上后,账户最长水下不比 C0 单独臂更长(Δ 天数 < 0)",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 0,
+      "prob": 0.4,
+      "horizon_d": "2027-01-31"
+    },
+    {
+      "id": "T-348-4",
+      "scenario": "T-348 坟场按新尺子重判",
+      "statement": "① 在 200 日线之上(state_daily panel/dist_200 > 0)",
+      "variable": "state:dist_200",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.5,
+      "horizon_d": "2026-12-31"
+    }
+  ]
+}
