@@ -55,6 +55,11 @@ TIME_STOP_S736 = 15       # S-736 复现用
 RISK_PCT = 0.005          # 每票风险 0.5% 净值
 MAX_NOTIONAL = 0.50       # 名义 ≤ 净值 50%
 COOLDOWN_D = 10           # 同一币 10 天内不叠加(S-808 写死)
+# 数据卫生(不是策略改动):ATR14/进场价 落在带外 ⇒ 该合约当期价格序列无意义(死票 / 换币断档),
+# R 单位会炸成 1e10 量级。**实际侧与随机对照侧共用同一把尺**,两边丢多少都报。
+MIN_ATR_FRAC = 0.005      # ATR14/进场价 < 0.5% ⇒ 票作废
+MAX_ATR_FRAC = 1.0        # ATR14/进场价 > 100% ⇒ 票作废
+DROPS: list[tuple] = []   # 被作废的进场点:(sym, d, atr, entry)
 SEED = 808
 N_NULL = 1000
 ATR_N = 14
@@ -77,6 +82,30 @@ PREREG_808 = """## S-808 — 有止损的反向空票:被挤空头的币(S-781 s
 **两版:** 主 = 裸空;副(只报)= 空该币 + 等名义多 BTC(对冲 β)。
 **判(主版,全过才 ✅):** (a) 票数 ≥ 60;(b) 平均 R > 0 且 `apparatus.ab_test` 对 0 p < 0.05;(c) 随机对照:**同币同年**随机进场日(`apparatus.random_dates_like`,1,000 次,种子 808,同样的票机械),实际平均 R ≥ 对照 95 分位;(d) **对 |R| 最大的一张留一,(b) 仍成立**(S-796 教训);(e) 逐期(2020–21 / 2022 / 2023–24 / 2025–26)报,任一期平均 R < −0.3 ⇒ ❌;最长连亏、最差单票(跳空穿止损)照报。
 **后果:** 全过 ⇒ 开纸面臂 `short_squeeze_fade`(不动钱;动钱由 Jazz 定,且只在 HL 有该永续时可执行);不过 ⇒ squeeze 仍只留在 `crowd_map`。**试验计数:+1(做空族)。**"""
+
+REPORT_HEADER = PREREG_808 + """
+
+## T-332 —— 执行记录(lane-a,2026-11-11)
+
+**票机械(逐字照抄 t256_tactical_short.py 的 `simulate()`,只换事件与标的):**
+d+1 开盘进空 · 止损 = 进场 + 1.5×ATR14(d) · 止盈 = 进场 − 2.5×ATR14(⇒ 目标 +1.67R) ·
+浮盈 +1R 后止损移到进场价(保本) · 同一根 bar 先碰止损 · 时间止损 20 根 ·
+成本 7.5bp × 2 · 资金费按持有期实计(空方收正费率) · 同一币 10 天内不叠加 ·
+名义 ≤ 净值 50%、每票风险 0.5% 净值。
+
+**数据(只读,不入库):** 事件 = `crowding_watch` kind=squeeze(351 个 / 240 合约,
+2020-08-08 → 2026-10-30);价格 `perp_bv_daily`;资金费 `v_funding_daily`;
+随机对照 = `apparatus.random_dates_like`(同币同年随机进场日,1000 次,种子 808,同一套票机械)。
+
+**自检:** 用同一套票机械复现 S-736(t256)的 18 张票、平均净 R −0.3745 —— 一致才算数。
+
+**数据卫生(两侧同一把尺):** ATR14/进场价 落在 [0.5%, 100%] 之外的进场点作废
+(死票 / 换币断档会让 R 单位炸成 1e10 量级)。实际侧与随机对照侧丢多少都照报。
+
+全部数字见 `t332_results.json`,逐票表见 `t332_tickets.csv`。
+
+---
+"""
 
 PREREG_736 = """## S-736 — 战术空单:流动性变差 + 不确定性升高时才开,到目标就撤、浮盈后保本 —— 预注册(Seth,2026-11-06 03:47 UTC)
 **触发(d 日收盘,全部按时点可知,三条同时满足):** ① 流动性变差:⓪ `phase = turning`,或 `deterioration` ≤ 截至 d 的扩张 20 分位(≥ 250 个观测);② 不确定性:BTC DVOL 一年分位 ≥ 0.70(`dvol_btc_pct_1y`);③ 价格确认:BTC 永续收盘 < 20 日均线。已有一张票在场 ⇒ 不叠加。
@@ -242,6 +271,12 @@ def run_tickets(events: list[tuple[str, str]], panels: dict[str, dict], time_sto
         if i is None or i + 1 >= pan["n"]:
             continue
         entry_d = pan["dates"][i + 1]
+        a_px = pan["atr"][i]
+        e_px = pan["o"][i + 1]
+        if (not math.isfinite(a_px) or a_px <= 0 or not math.isfinite(e_px) or e_px <= 0
+                or a_px / e_px < MIN_ATR_FRAC or a_px / e_px > MAX_ATR_FRAC):
+            DROPS.append((sym, d, a_px, e_px))
+            continue
         if global_single:
             if entry_d <= open_until:
                 skipped += 1
@@ -280,7 +315,7 @@ def sleeve_nav(tks: list[dict], panels: dict[str, dict], days: list[str],
         for key, t in list(open_pos.items()):
             if t["exit_d"] == d:
                 pnl = t["notional"] * (t["entry"] - t["exit"]) / t["entry"]
-                fund_cash = t["notional"] * (t["_fund_acc"] + t["_fund"].get(d, 0.0))
+                fund_cash = t["notional"] * sum(t["_fund"].get(x, 0.0) for x in t["_fd"])
                 cash += pnl + fund_cash - t["notional"] * (COST_BPS / 1e4)
                 open_pos.pop(key)
         for t in by_entry.get(d, []):
@@ -288,6 +323,13 @@ def sleeve_nav(tks: list[dict], panels: dict[str, dict], days: list[str],
             t["notional"] = notional
             cash -= notional * (COST_BPS / 1e4)
             t["_fund_acc"] = 0.0
+            if t["exit_d"] <= d:
+                # 同日进出(hold_days == 1):出场价在进场那根 bar 就定下了,直接结算,
+                # 否则这张票永远不会被出场循环关掉,变成一路盯到样本末的「幽灵仓位」。
+                pnl = t["notional"] * (t["entry"] - t["exit"]) / t["entry"]
+                fund_cash = t["notional"] * sum(t["_fund"].get(x, 0.0) for x in t["_fd"])
+                cash += pnl + fund_cash - t["notional"] * (COST_BPS / 1e4)
+                continue
             open_pos[t["_key"]] = t
         unreal = 0.0
         for t in open_pos.values():
@@ -295,7 +337,6 @@ def sleeve_nav(tks: list[dict], panels: dict[str, dict], days: list[str],
             i = pan["idx"][d]
             t["_fund_acc"] = t["_fund_acc"] + t["_fund"].get(d, 0.0)
             unreal += t["notional"] * (t["entry"] - pan["c"][i]) / t["entry"]
-            unreal += t["notional"] * t["_fund_acc"]
         nav.append(cash + unreal)
         detail[d] = {"cash": cash, "unreal": unreal}
         if btc_pan is not None:
@@ -506,11 +547,34 @@ def main() -> None:
     print("[4] 主跑:裸空(时间止损 20 根)…", flush=True)
     ev_sorted = sorted(events, key=lambda x: (x[1], x[0]))
     tickets, skipped = run_tickets(ev_sorted, panels, TIME_STOP_MAIN)
-    print(f"  票 {len(tickets)}(同币 10 天内不叠加,跳过 {skipped})", flush=True)
+    drops_main = len(DROPS)
+    res["data_sanity_drops_main"] = drops_main
+    res["data_sanity_drop_examples"] = [{"symbol": s, "d": d, "atr": a, "entry": e}
+                                        for s, d, a, e in DROPS[:5]]
+    print(f"  票 {len(tickets)}(同币 10 天内不叠加,跳过 {skipped})"
+          f" · 数据卫生作废 {drops_main}", flush=True)
     rs = [t["r_net"] for t in tickets]
     avg_r = float(np.mean(rs)) if rs else None
     all_days = sorted({d for t in tickets for d in t["_fd"]})
     days, nav, navdet = sleeve_nav(tickets, panels, all_days)
+    det = navdet.get("detail", {})
+    res["nav_decomposition"] = {
+        "nav0": float(nav[0]) if len(nav) else None,
+        "nav_end": float(nav[-1]) if len(nav) else None,
+        "final_cash": float(det[days[-1]]["cash"]) if days else None,
+        "final_unreal": float(det[days[-1]]["unreal"]) if days else None,
+        "realized_pnl_sum": float(sum(t["notional"] * (t["entry"] - t["exit"]) / t["entry"]
+                                       for t in tickets)) if tickets else None,
+        "funding_pnl_sum": float(sum(t["notional"] * sum(t["_fund"].get(x, 0.0) for x in t["_fd"])
+                                     for t in tickets)) if tickets else None,
+        "cost_pnl_sum": float(-2 * sum(t["notional"] * (COST_BPS / 1e4)
+                                       for t in tickets)) if tickets else None,
+    }
+    print(f"  NAV 分解:nav0 {nav[0]:.4f} → nav_end {nav[-1]:.4f} · 末现金 "
+          f"{res['nav_decomposition']['final_cash']:.4f} · 末未实现 "
+          f"{res['nav_decomposition']['final_unreal']:.4f} · Σ已实现 "
+          f"{res['nav_decomposition']['realized_pnl_sum']:.4f} · Σ资金费 "
+          f"{res['nav_decomposition']['funding_pnl_sum']:.4f}", flush=True)
     rets = daily_rets(nav)
     ab = ab_test(np.zeros_like(rets), rets, mean_block=20.0, n_boot=2000, seed=SEED)
     summary = {
@@ -541,6 +605,8 @@ def main() -> None:
     keyed = [((sym, d[:4]), d) for sym, d in ev_sorted]
     n_null_tickets: list[int] = []
 
+    null_offenders: list[tuple] = []
+
     def null_draw(rng):
         picks = random_dates_like(keyed, eligible, rng)
         null_events = []
@@ -552,22 +618,37 @@ def main() -> None:
         tk, _ = run_tickets(null_events, panels, TIME_STOP_MAIN)
         n_null_tickets.append(len(tk))
         rr = [t["r_net"] for t in tk]
+        if tk:
+            w = max(tk, key=lambda t: abs(t["r_net"]))
+            null_offenders.append((abs(w["r_net"]), w["symbol"], w["entry_d"], w["entry"],
+                                   w["atr14_d"], w["r_unit"] / w["entry"], w["r_net"]))
         return float(np.mean(rr)) if rr else float("nan")
 
+    drops_before_null = len(DROPS)
     try:
         null = null_distribution(null_draw, N_NULL, SEED, actual=avg_r)
         pctl = percentile_of(avg_r, null)
         null_p95 = float(np.percentile(null, 95))
+        null_median = float(np.median(null))
         null_stats = {"n_null": N_NULL, "null_mean": float(null.mean()),
-                      "null_p95": null_p95, "actual_avg_r_net": avg_r,
+                      "null_median": null_median, "null_p95": null_p95,
+                      "actual_avg_r_net": avg_r, "actual_median_r_net": summary["median_r_net"],
                       "null_pctl_of_actual": pctl,
+                      "null_pctl_of_actual_median": percentile_of(summary["median_r_net"], null),
+                      "null_drops_total": len(DROPS) - drops_before_null,
                       "null_ticket_count_mean": float(np.mean(n_null_tickets)) if n_null_tickets else None,
                       "null_ticket_count_min": int(np.min(n_null_tickets)) if n_null_tickets else None,
                       "null_ticket_count_max": int(np.max(n_null_tickets)) if n_null_tickets else None}
     except NoOpNull as e:
         null_stats = {"error": str(e)}
         pctl, null_p95 = None, None
-    print(f"  随机对照:实际 {avg_r:.4f} vs 对照 p95 {null_p95},分位 {pctl}", flush=True)
+    print(f"  随机对照:实际 {avg_r:.4f} vs 对照 p95 {null_p95},分位 {pctl}"
+          f" · 对照中位 {null_stats.get('null_median')}"
+          f" · 对照作废 {null_stats.get('null_drops_total')}", flush=True)
+    if null_offenders:
+        for o in sorted(null_offenders, reverse=True)[:5]:
+            print(f"    对照极端票 |R|={o[0]:.3f} {o[1]} {o[2]} entry={o[3]:.3e} atr={o[4]:.3e}"
+                  f" r_unit/entry={o[5]:.4f} R={o[6]:.3f}", flush=True)
 
     def leave_one_out():
         if not tickets:
@@ -608,6 +689,7 @@ def main() -> None:
     worst = min(tickets, key=lambda t: t["r_net"]) if tickets else None
     gaps = [t for t in tickets if t["reason"] in ("止损", "保本") and t["exit"] > t["stop"] + 1e-9]
     verdicts["(附) 最长连亏 / 最差单票"] = {
+        "ok": True,
         "max_consecutive_losses": max_consec_losses(tickets),
         "worst_ticket": ({"symbol": worst["symbol"], "event_d": worst["signal_d"],
                           "r_net": worst["r_net"], "entry": worst["entry"], "exit": worst["exit"],
@@ -618,7 +700,7 @@ def main() -> None:
     res["summary"] = summary
     res["verdicts"] = verdicts
     res["leave_one_out"] = loo
-    res["tickets"] = tickets
+    res["tickets"] = [{k: v for k, v in t.items() if k != "_fund"} for t in tickets]
     res["periods"] = per
 
     # ── 副:对冲 BTC(只报) ──
@@ -713,12 +795,29 @@ def main() -> None:
                       else "❌ 未全过(不立臂)")
     # 报告:叙述部分先写好,这里把测得的数**追加**到同一个 md
     md = HERE / "T-332_squeeze_fade.md"
+    if not md.exists():
+        md.write_text(REPORT_HEADER)
+    else:
+        # 重跑幂等:旧的「结果」块整段丢掉,只留叙述部分(第一个结果块标记之前)
+        old = md.read_text()
+        cut = old.find("\n## 结果(脚本自动追加")
+        if cut > 0:
+            md.write_text(old[:cut].rstrip() + "\n")
     lines = ["", "---", "", "## 结果(脚本自动追加;完整数字见 `t332_results.json`)", "",
              f"- 票数 {summary['n_tickets']} · 平均净 R {avg_r:.4f} · 中位 {summary['median_r_net']:.4f}"
              f" · 胜率 {summary['win_rate']:.1%} · 总 {summary['total_r_net']:.2f}R",
              f"- 出场原因 {summary['reasons']}",
              f"- 袖套 {summary['sleeve_total_return']:.2%} · 最大回撤 {summary['sleeve_max_dd']:.2%}"
              f" · ab p(b≤0)={ab.get('p_b_le_a')}",
+             f"- NAV 分解:nav0 {nav[0]:.4f} → nav_end {nav[-1]:.4f} · 末现金 "
+             f"{res['nav_decomposition']['final_cash']:.4f} · 末未实现 "
+             f"{res['nav_decomposition']['final_unreal']:.4f} · Σ已实现 "
+             f"{res['nav_decomposition']['realized_pnl_sum']:.4f} · Σ资金费 "
+             f"{res['nav_decomposition']['funding_pnl_sum']:.4f} · Σ成本 "
+             f"{res['nav_decomposition']['cost_pnl_sum']:.4f}",
+             f"- 数据卫生(ATR/进场价 ∉ [{MIN_ATR_FRAC},{MAX_ATR_FRAC}]):实际侧作废 "
+             f"{res['data_sanity_drops_main']} · 随机对照侧作废 "
+             f"{null_stats.get('null_drops_total')}",
              f"- 自检(S-736 复现):票 {sc['n_tickets']} · 平均净 R {sc['avg_r_net']:.4f}"
              f" ⇒ {'✅ 一致' if sc['ok'] else '❌ 不一致'}",
              f"- 对冲版(只报):裸空 {hedge['sleeve_total_return_naked']:.2%} → 对冲 "
@@ -726,10 +825,10 @@ def main() -> None:
              f"{hedge['beta_to_btc_hedged']}",
              ""]
     for k, v in verdicts.items():
-        lines.append(f"- **{k}** ⇒ {'✅' if v['ok'] else '❌'} "
+        lines.append(f"- **{k}** ⇒ {'✅' if v.get('ok') else '❌'} "
                      f"`{json.dumps(v, ensure_ascii=False, default=str)[:520]}`")
     lines += ["", f"**总判:{res['overall']}**", ""]
-    md.write_text(md.read_text() + "\n".join(lines)) if md.exists() else md.write_text("\n".join(lines))
+    md.write_text(md.read_text() + "\n".join(lines))
     out_json.write_text(json.dumps(res, ensure_ascii=False, indent=2, default=str))
     print(json.dumps({"summary": summary, "verdicts": verdicts, "overall": res["overall"]},
                      ensure_ascii=False, indent=2, default=str))
