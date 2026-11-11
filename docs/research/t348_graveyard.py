@@ -278,15 +278,19 @@ def family_s736() -> dict:
 
     def sleeve(fix_same_day_exit: bool):
         cash, open_t, nav = 1.0, None, []
+        taken: list = []
+        for t in tickets:          # 清掉上一轮的名义标记(每次跑都重算)
+            t.pop("_notional_rebuilt", None)
+            t.pop("_equity_rebuilt", None)
         for d in days:
             i = idx[d]
             if open_t is not None and (d >= open_t["exit_d"] if fix_same_day_exit
                                        else idx[open_t["exit_d"]] == i):
                 t = open_t
-                pnl = t["notional"] * (t["entry"] - t["exit"]) / t["entry"]
-                fund_cash = t["notional"] * sum(t["_fund_day"].get(dd, 0.0)
+                pnl = t["_notional_rebuilt"] * (t["entry"] - t["exit"]) / t["entry"]
+                fund_cash = t["_notional_rebuilt"] * sum(t["_fund_day"].get(dd, 0.0)
                                                 for dd in dates[idx[t["entry_d"]]:i + 1])
-                cash += pnl + fund_cash - t["notional"] * (COST_BPS / 1e4)
+                cash += pnl + fund_cash - t["_notional_rebuilt"] * (COST_BPS / 1e4)
                 open_t = None
             if open_t is None:
                 for t in tickets:
@@ -296,26 +300,27 @@ def family_s736() -> dict:
                         t["_equity_rebuilt"] = cash
                         cash -= notional * (COST_BPS / 1e4)
                         open_t = t
+                        taken.append(t)
                         break
             if fix_same_day_exit and open_t is not None and open_t["exit_d"] <= d:
                 t = open_t
-                pnl = t["notional"] * (t["entry"] - t["exit"]) / t["entry"]
-                fund_cash = t["notional"] * sum(t["_fund_day"].get(dd, 0.0)
+                pnl = t["_notional_rebuilt"] * (t["entry"] - t["exit"]) / t["entry"]
+                fund_cash = t["_notional_rebuilt"] * sum(t["_fund_day"].get(dd, 0.0)
                                                 for dd in dates[idx[t["entry_d"]]:i + 1])
-                cash += pnl + fund_cash - t["notional"] * (COST_BPS / 1e4)
+                cash += pnl + fund_cash - t["_notional_rebuilt"] * (COST_BPS / 1e4)
                 open_t = None
             unreal = 0.0
             if open_t is not None:
                 t = open_t
-                unreal += t["notional"] * (t["entry"] - close[d]) / t["entry"]
-                unreal += t["notional"] * sum(t["_fund_day"].get(dd, 0.0)
+                unreal += t["_notional_rebuilt"] * (t["entry"] - close[d]) / t["entry"]
+                unreal += t["_notional_rebuilt"] * sum(t["_fund_day"].get(dd, 0.0)
                                               for dd in dates[idx[t["entry_d"]]:i + 1])
             nav.append(cash + unreal)
-        return nav
+        return nav, taken
 
-    nav = sleeve(False)
+    nav, taken = sleeve(False)
     # 自检:复刻出来的名义 / 进场净值 与他们自己跑出来的对得上(只对实际成交的票)
-    taken = [t for t in tickets if "_notional_rebuilt" in t]
+    taken = list(taken)
     dnot = max((abs(float(t.get("notional") or 0.0) - float(t["_notional_rebuilt"])) for t in taken),
                default=None)
     deq = max((abs(float(t.get("equity_at_entry") or 0.0) - float(t["_equity_rebuilt"])) for t in taken),
@@ -336,15 +341,33 @@ def family_s736() -> dict:
     # (出场判断在开场判断之前,进场当天开的票当天不会走到出场分支)⇒ 那张票一直占位,
     # 后面的票全被跳过 —— 18 张票只成交 2 张。这是**记账次序**问题,不是选票或规则问题;
     # 诊断变体只把出场判断改成「出场日 ≤ 当天就平」,票与规则一字不动。
-    nav_fix = pd.Series(sleeve(True), index=pd.to_datetime(days))
+    nav_f, taken_fix = sleeve(True)
+    nav_fix = pd.Series(nav_f, index=pd.to_datetime(days))
     m_fix = metrics(nav_fix)
-    n_taken_fix = len([t for t in tickets if t.get("_notional_rebuilt") is not None])
+    n_taken_fix = len(taken_fix)
+    pub_ids = {id(t) for t in taken}
+    fix_ids = {id(t) for t in taken_fix}
+    tickets_detail = []
+    for t in tickets:
+        tickets_detail.append({
+            "symbol": t.get("symbol") or "BTC", "signal_d": t.get("signal_d"),
+            "entry_d": t.get("entry_d"), "exit_d": t.get("exit_d"),
+            "hold_days": t.get("hold_days"), "reason": t.get("reason"),
+            "r_price": t.get("r_price"), "r_fund": t.get("r_fund"), "r_cost": t.get("r_cost"),
+            "r_net": t.get("r_net"),
+            "taken_published": id(t) in pub_ids, "taken_fixed": id(t) in fix_ids,
+            "notional_published": t.get("_notional_rebuilt") if id(t) in pub_ids else None,
+        })
     log(f"  S-736 诊断变体(修正同日出场):成交 {n_taken_fix} 张,袖套总回报 "
         f"{m_fix['total_return']:+.4%} / 最大回撤 {m_fix['max_dd']:+.4%}")
     best = max(tickets, key=lambda t: (t.get("r_net") if t.get("r_net") is not None else -9e9))
     return {"nav": navs, "first_entry": first, "last_exit": max(t["exit_d"] for t in tickets),
             "n_tickets": len(tickets), "n_open_end": 0, "risk_frac": F_FAM, "cap": 1,
             "n_taken": len(taken),
+            "tickets_detail": tickets_detail,
+            "ticket_level_avg_r_net": float(sum(float(t.get("r_net") or 0.0) for t in tickets)
+                                            / max(len(tickets), 1)),
+            "ticket_level_total_r_net": float(sum(float(t.get("r_net") or 0.0) for t in tickets)),
             "published_faithful": {"total_return": m_pub["total_return"], "max_dd": m_pub["max_dd"],
                                    "t342_ref_total_return": -0.1062, "t342_ref_max_dd": -0.2215,
                                    "ref": "T-256_tactical_short.md 第 81 行"},
@@ -357,6 +380,7 @@ def family_s736() -> dict:
             "variant": {"nav": nav_fix, "first_entry": first,
                         "last_exit": max(t["exit_d"] for t in tickets),
                         "n_tickets": len(tickets), "n_taken": n_taken_fix, "risk_frac": F_FAM,
+                        "cap": 1, "best_ticket": best,
                         "note": "诊断:修正「同日出场不平仓」的记账次序;票与规则一字不动"}}
 
 
