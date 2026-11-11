@@ -1,0 +1,1054 @@
+{
+  "task": "T-339",
+  "ledger": "S-814",
+  "lane": "lane-a",
+  "as_of": "2026-11-11T05:52:03+00:00",
+  "kernel": {
+    "file": "src/data/state/cycle_space.py",
+    "code_ref": "cycle_space v1 (11-11, S-814)",
+    "dims": [
+      "mvrv",
+      "puell",
+      "hash_30d",
+      "dist_200",
+      "ret_365",
+      "dd_ath",
+      "vol_90",
+      "fng_30"
+    ],
+    "K": 60,
+    "min_hist": 730,
+    "min_shared": 5,
+    "horizon_d": 180,
+    "shrink_m": 3.0,
+    "tilt_on": 0.25,
+    "min_episodes": 3,
+    "weights": {
+      "add": 1.0,
+      "trim": 0.35,
+      "hold": 0.7
+    },
+    "down": -0.2,
+    "up": 0.25
+  },
+  "data": {
+    "source": "macro_daily + Coin Metrics PriceUSD(缓存)",
+    "series": [
+      "btc_price_usd",
+      "btc_mvrv",
+      "btc_puell",
+      "btc_hash_30d",
+      "fng"
+    ],
+    "n_rows": 20581,
+    "days_per_series": {
+      "btc_price_usd": 5793,
+      "btc_mvrv": 5793,
+      "btc_puell": 5429,
+      "btc_hash_30d": 5757,
+      "fng": 3202
+    },
+    "price_first": "2011-01-01",
+    "price_last": "2026-11-10",
+    "fingerprint": {
+      "n": 25974,
+      "fields": [
+        "series",
+        "d",
+        "value"
+      ],
+      "sha256": "259c7b4d350f0b5d39a81e7ac4db7dd41571576156d32a53496f2d8770e5eb7a"
+    },
+    "fingerprint_macro_daily_raw": {
+      "n": 20581,
+      "fields": [
+        "series",
+        "d",
+        "value"
+      ],
+      "sha256": "eb3901b04e2e6138a68b6dc448cedf066f2921aad33c11101445489bb6a410d7"
+    },
+    "provenance": {
+      "db_series": [
+        "btc_mvrv",
+        "btc_issuance_usd",
+        "btc_hashrate",
+        "fng"
+      ],
+      "derived": [
+        "btc_puell",
+        "btc_hash_30d"
+      ],
+      "price_source": "coinmetrics_community PriceUSD(研究缓存,未入库)",
+      "macro_daily_missing": [
+        "btc_price_usd",
+        "btc_puell",
+        "btc_hash_30d"
+      ]
+    },
+    "cache": [
+      "/Volumes/CometCloudAI/cometcloud-local/research/t339/macro_daily_rows.json",
+      "/Volumes/CometCloudAI/cometcloud-local/research/t339/coinmetrics_price_usd.json"
+    ]
+  },
+  "sample": {
+    "n_mondays_with_read": 669,
+    "n_with_known_fwd180": 643,
+    "first": "2014-01-20",
+    "last": "2026-05-11"
+  },
+  "pit_selfcheck": {
+    "n_checked": 20,
+    "n_identical": 20,
+    "all_identical": true,
+    "dates": [
+      "2014-05-05",
+      "2014-08-11",
+      "2015-08-31",
+      "2016-06-13",
+      "2017-02-20",
+      "2017-09-04",
+      "2017-09-11",
+      "2019-10-21",
+      "2020-08-03",
+      "2020-12-28",
+      "2021-06-07",
+      "2021-11-15",
+      "2023-04-24",
+      "2024-07-29",
+      "2024-08-19",
+      "2024-10-28",
+      "2025-05-05",
+      "2025-09-08",
+      "2025-11-24",
+      "2025-12-01"
+    ],
+    "detail": [
+      {
+        "d": "2014-05-05",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": 0.07836538461538456,
+        "tilt_trunc": 0.07836538461538456
+      },
+      {
+        "d": "2014-08-11",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": 0.10500878734622143,
+        "tilt_trunc": 0.10500878734622143
+      },
+      {
+        "d": "2015-08-31",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": -0.4106719194572117,
+        "tilt_trunc": -0.4106719194572117
+      },
+      {
+        "d": "2016-06-13",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": -0.22390423572744012,
+        "tilt_trunc": -0.22390423572744012
+      },
+      {
+        "d": "2017-02-20",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": 0.07538393145813138,
+        "tilt_trunc": 0.07538393145813138
+      },
+      {
+        "d": "2017-09-04",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": -0.31628284617655744,
+        "tilt_trunc": -0.31628284617655744
+      },
+      {
+        "d": "2017-09-11",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": -0.3337748344370861,
+        "tilt_trunc": -0.3337748344370861
+      },
+      {
+        "d": "2019-10-21",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": 0.15207029104887426,
+        "tilt_trunc": 0.15207029104887426
+      },
+      {
+        "d": "2020-08-03",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": 0.13649909692956047,
+        "tilt_trunc": 0.13649909692956047
+      },
+      {
+        "d": "2020-12-28",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": 0.15624099164024208,
+        "tilt_trunc": 0.15624099164024208
+      },
+      {
+        "d": "2021-06-07",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": -0.3211019283746557,
+        "tilt_trunc": -0.3211019283746557
+      },
+      {
+        "d": "2021-11-15",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": 0.15253231337377998,
+        "tilt_trunc": 0.15253231337377998
+      },
+      {
+        "d": "2023-04-24",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": 0.23812789620018543,
+        "tilt_trunc": 0.23812789620018543
+      },
+      {
+        "d": "2024-07-29",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": 0.16157388028463798,
+        "tilt_trunc": 0.16157388028463798
+      },
+      {
+        "d": "2024-08-19",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": 0.22505383065916518,
+        "tilt_trunc": 0.22505383065916518
+      },
+      {
+        "d": "2024-10-28",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": 0.23408502772643247,
+        "tilt_trunc": 0.23408502772643247
+      },
+      {
+        "d": "2025-05-05",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": 0.21553973902728352,
+        "tilt_trunc": 0.21553973902728352
+      },
+      {
+        "d": "2025-09-08",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": 0.17662037037037032,
+        "tilt_trunc": 0.17662037037037032
+      },
+      {
+        "d": "2025-11-24",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": -0.34128492681999617,
+        "tilt_trunc": -0.34128492681999617
+      },
+      {
+        "d": "2025-12-01",
+        "identical": true,
+        "fields": {
+          "z": true,
+          "n": true,
+          "episodes": true,
+          "tilt_excess": true,
+          "stance": true,
+          "probs": true
+        },
+        "tilt_full": -0.34116362946089596,
+        "tilt_trunc": -0.34116362946089596
+      }
+    ]
+  },
+  "criteria": {
+    "a": {
+      "n_weeks": 643,
+      "spearman": 0.03887596065382915,
+      "p_upper": 0.32167832167832167,
+      "null_n": 1000,
+      "null_q50": -0.005837250848856469,
+      "null_q95": 0.24244185747336294,
+      "judge": {
+        "spearman_ge_020": false,
+        "p_upper_le_005": false
+      }
+    },
+    "b": {
+      "brier3_shrunk": 0.5448308416592612,
+      "brier3_unconditional": 0.5184403162139708,
+      "mean_week_diff_shrunk_minus_base": 0.026390525445290268,
+      "paired_block_boot_q05": -0.025470662784348133,
+      "paired_block_boot_q95": 0.07843252850353707,
+      "paired_block_boot_n": 2000,
+      "paired_block_boot_block_w": 26,
+      "paired_block_boot_seed": 814,
+      "ab_test": {
+        "n_days": 643,
+        "ci95_log_diff": [
+          -36.55244687924807,
+          13.593494629270426
+        ],
+        "p_b_le_a": 0.8075,
+        "p_b_ge_a": 0.1925,
+        "verdict": "分不开",
+        "underpowered": true
+      },
+      "judge": {
+        "brier_shrunk_lt_base": false,
+        "boot_q95_lt_0": false
+      }
+    },
+    "c": {
+      "strategy": {
+        "total_return": 19.372565672562352,
+        "annualized": 0.2652656361853276,
+        "max_drawdown": -0.6928855082861458,
+        "calmar": 27.959259417158897,
+        "calmar_ann": 0.3828419457659937,
+        "cost_paid": 0.03340000000000004,
+        "n_days": 4677,
+        "span_years": 12.810958904109588,
+        "final_equity": 20.372565672562352
+      },
+      "hold70": {
+        "total_return": 41.44374099874048,
+        "annualized": 0.33987459929394603,
+        "max_drawdown": -0.6977478932517813,
+        "calmar": 59.39644017496957,
+        "calmar_ann": 0.4871022937955368,
+        "cost_paid": 0.0,
+        "n_days": 4677,
+        "span_years": 12.810958904109588,
+        "final_equity": 42.44374099874048
+      },
+      "null_calmar": {
+        "n": 1000,
+        "p_upper": 0.9530469530469531,
+        "q50": 50.21724922752867,
+        "q95": 85.7946361505738,
+        "max": 95.90150653319513
+      },
+      "judge": {
+        "total_return_ge_hold70": false,
+        "maxdd_shallower_by_5pp": false,
+        "calmar_p_upper_le_010": false
+      }
+    },
+    "d": {
+      "cycles": [
+        {
+          "epoch_start": "2012-11-28",
+          "epoch_end": "2016-07-09",
+          "top_d": "2013-12-04",
+          "top_close": 1134.93223088837,
+          "top_weeks": [],
+          "bottom_d": "2015-01-14",
+          "bottom_close": 175.637640561075,
+          "bottom_weeks": [
+            {
+              "d": "2014-12-15",
+              "stance": "hold",
+              "tilt": -0.30862869198312237,
+              "episodes": 2
+            },
+            {
+              "d": "2014-12-22",
+              "stance": "hold",
+              "tilt": -0.27005638604773136,
+              "episodes": 1
+            },
+            {
+              "d": "2014-12-29",
+              "stance": "hold",
+              "tilt": -0.35558685446009397,
+              "episodes": 2
+            },
+            {
+              "d": "2015-01-05",
+              "stance": "hold",
+              "tilt": -0.27911802853437095,
+              "episodes": 2
+            },
+            {
+              "d": "2015-01-12",
+              "stance": "hold",
+              "tilt": -0.3093498452012384,
+              "episodes": 2
+            },
+            {
+              "d": "2015-01-19",
+              "stance": "hold",
+              "tilt": -0.2996150885296382,
+              "episodes": 2
+            },
+            {
+              "d": "2015-01-26",
+              "stance": "hold",
+              "tilt": -0.3232465543644717,
+              "episodes": 2
+            },
+            {
+              "d": "2015-02-02",
+              "stance": "hold",
+              "tilt": -0.38024371667936024,
+              "episodes": 2
+            },
+            {
+              "d": "2015-02-09",
+              "stance": "hold",
+              "tilt": -0.3906060606060606,
+              "episodes": 2
+            }
+          ],
+          "top_stances": [],
+          "bottom_stances": [
+            "hold"
+          ],
+          "has_trim_near_top": false,
+          "has_add_near_bottom": false,
+          "has_add_near_top": false,
+          "has_trim_near_bottom": false,
+          "n_top_weeks": 0,
+          "n_bottom_weeks": 9
+        },
+        {
+          "epoch_start": "2016-07-09",
+          "epoch_end": "2020-05-11",
+          "top_d": "2017-12-16",
+          "top_close": 19640.5138834015,
+          "top_weeks": [
+            {
+              "d": "2017-11-20",
+              "stance": "hold",
+              "tilt": 0.041577444682369735,
+              "episodes": 3
+            },
+            {
+              "d": "2017-11-27",
+              "stance": "hold",
+              "tilt": -0.19402220324508962,
+              "episodes": 2
+            },
+            {
+              "d": "2017-12-04",
+              "stance": "hold",
+              "tilt": -0.18130268199233718,
+              "episodes": 2
+            },
+            {
+              "d": "2017-12-11",
+              "stance": "hold",
+              "tilt": -0.22857951329937742,
+              "episodes": 2
+            },
+            {
+              "d": "2017-12-18",
+              "stance": "hold",
+              "tilt": -0.2891860629143745,
+              "episodes": 2
+            },
+            {
+              "d": "2017-12-25",
+              "stance": "hold",
+              "tilt": -0.33645569620253163,
+              "episodes": 2
+            },
+            {
+              "d": "2018-01-01",
+              "stance": "hold",
+              "tilt": -0.47038844481839853,
+              "episodes": 2
+            },
+            {
+              "d": "2018-01-08",
+              "stance": "hold",
+              "tilt": -0.4509843400447427,
+              "episodes": 2
+            },
+            {
+              "d": "2018-01-15",
+              "stance": "hold",
+              "tilt": -0.290568799665412,
+              "episodes": 1
+            }
+          ],
+          "bottom_d": "2018-12-15",
+          "bottom_close": 3185.07404383402,
+          "bottom_weeks": [
+            {
+              "d": "2018-11-19",
+              "stance": "hold",
+              "tilt": -0.32450784241076946,
+              "episodes": 2
+            },
+            {
+              "d": "2018-11-26",
+              "stance": "hold",
+              "tilt": -0.08106060606060606,
+              "episodes": 1
+            },
+            {
+              "d": "2018-12-03",
+              "stance": "hold",
+              "tilt": -0.10097524265880337,
+              "episodes": 1
+            },
+            {
+              "d": "2018-12-10",
+              "stance": "hold",
+              "tilt": -0.0917279411764706,
+              "episodes": 1
+            },
+            {
+              "d": "2018-12-17",
+              "stance": "hold",
+              "tilt": -0.10748533186651987,
+              "episodes": 1
+            },
+            {
+              "d": "2018-12-24",
+              "stance": "hold",
+              "tilt": -0.10241404535479143,
+              "episodes": 1
+            },
+            {
+              "d": "2018-12-31",
+              "stance": "hold",
+              "tilt": -0.05984737930195805,
+              "episodes": 1
+            },
+            {
+              "d": "2019-01-07",
+              "stance": "hold",
+              "tilt": -0.07978529839883552,
+              "episodes": 1
+            },
+            {
+              "d": "2019-01-14",
+              "stance": "hold",
+              "tilt": -0.06639443436176645,
+              "episodes": 1
+            }
+          ],
+          "top_stances": [
+            "hold"
+          ],
+          "bottom_stances": [
+            "hold"
+          ],
+          "has_trim_near_top": false,
+          "has_add_near_bottom": false,
+          "has_add_near_top": false,
+          "has_trim_near_bottom": false,
+          "n_top_weeks": 9,
+          "n_bottom_weeks": 9
+        },
+        {
+          "epoch_start": "2020-05-11",
+          "epoch_end": "2024-04-20",
+          "top_d": "2024-03-13",
+          "top_close": 73081.5759053185,
+          "top_weeks": [
+            {
+              "d": "2024-02-12",
+              "stance": "hold",
+              "tilt": 0.1369983731019524,
+              "episodes": 5
+            },
+            {
+              "d": "2024-02-19",
+              "stance": "hold",
+              "tilt": 0.05800922058231994,
+              "episodes": 4
+            },
+            {
+              "d": "2024-02-26",
+              "stance": "hold",
+              "tilt": -0.1711402207942,
+              "episodes": 4
+            },
+            {
+              "d": "2024-03-04",
+              "stance": "add",
+              "tilt": 0.29141474123659405,
+              "episodes": 3
+            },
+            {
+              "d": "2024-03-11",
+              "stance": "add",
+              "tilt": 0.2909120310478654,
+              "episodes": 3
+            },
+            {
+              "d": "2024-03-18",
+              "stance": "hold",
+              "tilt": 0.2589953354861858,
+              "episodes": 2
+            },
+            {
+              "d": "2024-03-25",
+              "stance": "hold",
+              "tilt": 0.22526225279449708,
+              "episodes": 2
+            },
+            {
+              "d": "2024-04-01",
+              "stance": "hold",
+              "tilt": 0.25153037132431844,
+              "episodes": 2
+            },
+            {
+              "d": "2024-04-08",
+              "stance": "hold",
+              "tilt": 0.23779968566938137,
+              "episodes": 2
+            }
+          ],
+          "bottom_d": "2024-04-17",
+          "bottom_close": 61324.2184286967,
+          "bottom_weeks": [
+            {
+              "d": "2024-03-18",
+              "stance": "hold",
+              "tilt": 0.2589953354861858,
+              "episodes": 2
+            },
+            {
+              "d": "2024-03-25",
+              "stance": "hold",
+              "tilt": 0.22526225279449708,
+              "episodes": 2
+            },
+            {
+              "d": "2024-04-01",
+              "stance": "hold",
+              "tilt": 0.25153037132431844,
+              "episodes": 2
+            },
+            {
+              "d": "2024-04-08",
+              "stance": "hold",
+              "tilt": 0.23779968566938137,
+              "episodes": 2
+            },
+            {
+              "d": "2024-04-15",
+              "stance": "hold",
+              "tilt": 0.0374035237891433,
+              "episodes": 2
+            },
+            {
+              "d": "2024-04-22",
+              "stance": "hold",
+              "tilt": 0.21034188034188034,
+              "episodes": 2
+            },
+            {
+              "d": "2024-04-29",
+              "stance": "hold",
+              "tilt": 0.1791017708555579,
+              "episodes": 3
+            },
+            {
+              "d": "2024-05-06",
+              "stance": "hold",
+              "tilt": 0.16603161076957407,
+              "episodes": 4
+            },
+            {
+              "d": "2024-05-13",
+              "stance": "hold",
+              "tilt": 0.08928191570182642,
+              "episodes": 4
+            }
+          ],
+          "top_stances": [
+            "add",
+            "hold"
+          ],
+          "bottom_stances": [
+            "hold"
+          ],
+          "has_trim_near_top": false,
+          "has_add_near_bottom": false,
+          "has_add_near_top": true,
+          "has_trim_near_bottom": false,
+          "n_top_weeks": 9,
+          "n_bottom_weeks": 9
+        },
+        {
+          "epoch_start": "2024-04-20",
+          "epoch_end": "2026-11-10",
+          "top_d": "2025-10-06",
+          "top_close": 124824.453666861,
+          "top_weeks": [
+            {
+              "d": "2025-09-08",
+              "stance": "hold",
+              "tilt": 0.17662037037037032,
+              "episodes": 3
+            },
+            {
+              "d": "2025-09-15",
+              "stance": "hold",
+              "tilt": 0.20952449752777247,
+              "episodes": 3
+            },
+            {
+              "d": "2025-09-22",
+              "stance": "add",
+              "tilt": 0.2590964473515455,
+              "episodes": 3
+            },
+            {
+              "d": "2025-09-29",
+              "stance": "hold",
+              "tilt": 0.24200288184438035,
+              "episodes": 3
+            },
+            {
+              "d": "2025-10-06",
+              "stance": "hold",
+              "tilt": 0.2082437963673574,
+              "episodes": 3
+            },
+            {
+              "d": "2025-10-13",
+              "stance": "hold",
+              "tilt": 0.19948585297311106,
+              "episodes": 3
+            },
+            {
+              "d": "2025-10-20",
+              "stance": "add",
+              "tilt": 0.2825870646766169,
+              "episodes": 3
+            },
+            {
+              "d": "2025-10-27",
+              "stance": "add",
+              "tilt": 0.25783330148417094,
+              "episodes": 3
+            },
+            {
+              "d": "2025-11-03",
+              "stance": "add",
+              "tilt": 0.2830788804071247,
+              "episodes": 3
+            }
+          ],
+          "bottom_d": "2026-06-30",
+          "bottom_close": 58525.0753614845,
+          "bottom_weeks": [
+            {
+              "d": "2026-06-01",
+              "stance": "trim",
+              "tilt": -0.7030144167758846,
+              "episodes": 4
+            },
+            {
+              "d": "2026-06-08",
+              "stance": "trim",
+              "tilt": -0.32261773868425875,
+              "episodes": 3
+            },
+            {
+              "d": "2026-06-15",
+              "stance": "trim",
+              "tilt": -0.5063750610053684,
+              "episodes": 5
+            },
+            {
+              "d": "2026-06-22",
+              "stance": "trim",
+              "tilt": -0.43758453664777924,
+              "episodes": 3
+            },
+            {
+              "d": "2026-06-29",
+              "stance": "trim",
+              "tilt": -0.5450711938663745,
+              "episodes": 3
+            },
+            {
+              "d": "2026-07-06",
+              "stance": "trim",
+              "tilt": -0.5608933454876938,
+              "episodes": 3
+            },
+            {
+              "d": "2026-07-13",
+              "stance": "trim",
+              "tilt": -0.5542303957271182,
+              "episodes": 5
+            },
+            {
+              "d": "2026-07-20",
+              "stance": "trim",
+              "tilt": -0.5567254652361036,
+              "episodes": 6
+            },
+            {
+              "d": "2026-07-27",
+              "stance": "trim",
+              "tilt": -0.3646325220971062,
+              "episodes": 5
+            }
+          ],
+          "top_stances": [
+            "add",
+            "hold"
+          ],
+          "bottom_stances": [
+            "trim"
+          ],
+          "has_trim_near_top": false,
+          "has_add_near_bottom": false,
+          "has_add_near_top": true,
+          "has_trim_near_bottom": true,
+          "n_top_weeks": 9,
+          "n_bottom_weeks": 9
+        }
+      ],
+      "judge": {
+        "no_add_near_top": false,
+        "no_trim_near_bottom": false,
+        "n_tops_with_trim": 0,
+        "n_bottoms_with_add": 0,
+        "n_tops": 4
+      }
+    },
+    "e": {
+      "split_date": "2020-03-16",
+      "n_first": 321,
+      "n_second": 322,
+      "spearman_first": -0.03869652290009868,
+      "spearman_second": 0.15623739176801626,
+      "judge": {
+        "same_sign": false
+      }
+    }
+  },
+  "extra": {
+    "single_dim_space": {
+      "mvrv_only_rho": -0.05029475142144131,
+      "dist200_only_rho": 0.1527374701418557
+    },
+    "single_predictor": {
+      "mvrv_expansion_pct_rho": 0.031100994216735078,
+      "dist200_z_rho": 0.21500582221991335
+    },
+    "stance_share": {
+      "add": 0.053811659192825115,
+      "trim": 0.09715994020926756,
+      "hold": 0.8490284005979073
+    },
+    "stance_counts": {
+      "add": 36,
+      "trim": 65,
+      "hold": 568
+    },
+    "n_weeks_total": 669,
+    "turnover": {
+      "n_changes": 101,
+      "years": 12.810958904109588,
+      "per_year": 7.883875106929,
+      "max_in_any_year": 16,
+      "by_year": {
+        "2014": 0,
+        "2015": 2,
+        "2016": 0,
+        "2017": 6,
+        "2018": 4,
+        "2019": 12,
+        "2020": 16,
+        "2021": 14,
+        "2022": 10,
+        "2023": 6,
+        "2024": 8,
+        "2025": 12,
+        "2026": 11
+      }
+    },
+    "independent_180d_intervals": 24,
+    "K_sensitivity": {
+      "K=30": {
+        "spearman": 0.05330961262750677,
+        "p_upper": 0.28771228771228774,
+        "stance_share": {
+          "add": 0.029895366218236172,
+          "trim": 0.05680119581464873,
+          "hold": 0.9133034379671151
+        },
+        "n_weeks": 643,
+        "secs": 3.4
+      },
+      "K=120": {
+        "spearman": 0.050362053274359275,
+        "p_upper": 0.32167832167832167,
+        "stance_share": {
+          "add": 0.06726457399103139,
+          "trim": 0.14499252615844543,
+          "hold": 0.7877428998505231
+        },
+        "n_weeks": 643,
+        "secs": 3.5
+      }
+    },
+    "sample_span": {
+      "first_monday": "2014-01-20",
+      "last_monday": "2026-05-11",
+      "span_days": 4494
+    }
+  },
+  "artifacts": {
+    "weekly_csv": "/Users/sbb/Projects/looloomi-ai-lane-a/docs/research/t339_weekly.csv",
+    "results_json": "/Users/sbb/Projects/looloomi-ai-lane-a/docs/research/t339_results.json"
+  }
+}
