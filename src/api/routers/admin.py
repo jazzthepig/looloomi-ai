@@ -471,6 +471,17 @@ async def cycle_space_read(x_internal_token: str = Header(None)):
         raise HTTPException(502, f"{type(e).__name__}: {str(e)[:300]}")
 
 
+@router.get("/internal/spec-account")
+async def spec_account_read(x_internal_token: str = Header(None)):
+    """11-12:投机仓(手动交易的 HL 子账户)记分账。每天一行的收益 / 净值,与核心账户在同一批日期上的比较,离上一个高点多少天。只读。"""
+    require_internal_token(x_internal_token)
+    from src.data.accounting.spec_account import view
+    try:
+        return await view()
+    except Exception as e:                                       # noqa: BLE001 —— 读不到 ≠ 没有
+        raise HTTPException(502, f"{type(e).__name__}: {str(e)[:300]}")
+
+
 @router.get("/internal/book-vectors")
 async def book_vectors_read(x_internal_token: str = Header(None), book: str = ""):
     """11-04:Strategy 空间。最新一天每本账的稀疏向量;book 给了就附共享维余弦最近的三本;uncovered = 没有一本账在里面挣钱的天气桶。"""

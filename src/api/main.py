@@ -2297,6 +2297,14 @@ async def _live_account_loop():
                 await _record_loop_attempt("_live_account_loop", "ok" if r.get("ok") else "error",
                                            reason=str(r.get("why") or "")[:400] or None, detail=r,
                                            writer="src.api.main._live_account_loop")
+            try:                                   # 11-12:投机仓(手动交易的 HL 子账户)记分账,同一轮;没配地址 ⇒ 跳过,失败不挡上面
+                from src.data.accounting.spec_account import run_once as _sp_run
+                _sp = await _sp_run()
+                if not _sp.get("skipped"):
+                    await _record_loop_attempt("_spec_account", "ok" if _sp.get("ok") else "error", reason=str(_sp.get("why") or "")[:300] or None,
+                                               detail={k: _sp.get(k) for k in ("written", "ret", "nav", "n_reads")}, writer="src.data.accounting.spec_account")
+            except Exception as _e2:
+                await _record_loop_attempt("_spec_account", "error", reason=f"{type(_e2).__name__}: {str(_e2)[:300]}", writer="src.data.accounting.spec_account")
         except Exception as _e:
             print(f"[LIVE-ACCT] ⚠️  pass FAILED: {_e}")
             await _beat("_live_account_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")

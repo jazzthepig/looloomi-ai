@@ -128,6 +128,7 @@
     "short_paper_tickets",
     "signal_journal",
     "social_daily",
+    "spec_account_daily",
     "stable_lending_daily",
     "stablecoin_chain_daily",
     "stablecoin_issuer_daily",
@@ -646,6 +647,17 @@
       "state",
       "top_longs",
       "top_shorts"
+    ],
+    "spec_account_daily": [
+      "cum_pnl_usd",
+      "d",
+      "equity_usd",
+      "n_reads",
+      "nav",
+      "note",
+      "read_at",
+      "ret",
+      "rule"
     ],
     "stablecoin_chain_daily": [
       "chain",

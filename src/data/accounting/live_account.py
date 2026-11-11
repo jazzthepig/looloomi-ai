@@ -150,7 +150,7 @@ def _ms(d: str) -> int:
 
 #: 这个文件对 HL 公开接口只读按地址查的这几类(不要 key);`dead_host_guard` 也经这里,不再开一条取数路径(S-302)
 HL_ACCOUNT_INFO_TYPES = frozenset({"userNonFundingLedgerUpdates", "spotClearinghouseState", "clearinghouseState",
-                                   "frontendOpenOrders"})
+                                   "frontendOpenOrders", "portfolio"})
 
 
 async def hl_info(body: dict[str, Any]) -> Any:
