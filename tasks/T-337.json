@@ -1,0 +1,28 @@
+{
+  "id": "T-337",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-11",
+  "title": "S-813(含 11-11 修订)双向配置级反转:恐惧贪婪 ≥ 95 / ≤ 10 武装 + MVRV 或 Puell 在尾部,动量转向才扣扳机;大事件逐轮标注只供参考",
+  "source": "REFUTATION_LEDGER S-812、S-813 与「S-813 修订」原文(grep -n \"^## S-81[23]\" -A 14 REFUTATION_LEDGER.md;**区的定义以修订为准**);REFUTATION_LEDGER S-813 与 S-812 原文(`grep -n \"^## S-813\\|^## S-812\" -A 14 REFUTATION_LEDGER.md`);macro_daily(series btc_mvrv / btc_issuance_usd / fng,只读;**btc_mvrv 等 11-11 才入库,先确认 2011 起有数再开工**);Puell 用 src/data/market/btc_cycle.py 的 puell()(import);价格 perp_bv_daily + binance_hist(2019-09 前)、资金费 v_funding_daily。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-337.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-813 原文照抄进报告开头;先查 macro_daily 里 btc_mvrv / btc_issuance_usd 的起止与行数(不足 2011 起就停下报);分位只用 ≤ d;按修订「只报不判」:逐轮表(武装日、扳机日、动作、各腿盈亏、附近的大事件一栏)为主,(i)–(iv) 的数照报;逐轮表落 t337_rounds.csv;与 S-812 的区逐轮对照(若 lane-c 的 T-336 已在 main 上就读它的 t336_rounds.csv,否则只报自己的)。分支上要有 tasks/T-337.json(从 origin/main 拷,status 改 in_review)。只读、不入库、不改代码。",
+    "expect": "docs/research/T-337_cycle_indicators_two_way.md + t337_cycle_two_way.py + t337_results.json + t337_rounds.csv + scenarios/lane-a-T-337.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-a/T-337。"
+  },
+  "prior_value": "Jazz 的三条中长线指标第一次用全历史、合议、极端区的方式测;S-84 测的是常开闸门。",
+  "notes": "2026-11-11T03:41:31Z Seth 开卡;依赖 20261111-0400-btc-cycle 部署后首轮回填。 | 2026-11-11T03:46:48Z Seth:Jazz 11-11 修订区的定义(fng ≥ 95 / ≤ 10 武装 + 动量转向扳机),算前写进台账。",
+  "verified": null
+}
