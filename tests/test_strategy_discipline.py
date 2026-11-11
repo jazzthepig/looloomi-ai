@@ -255,35 +255,29 @@ def test_stop_added_after_the_fact_is_rejected():
 # ── 决策路径守卫(DECISION_PATH_SPEC,2026-07-27)────────────────────────────
 # Jazz:"每次都走 dummy 路径,系统就等于失效" —— 用代码强制智能资产进入决策,不靠记性。
 DECISION_LAYERS = ("regime", "universe", "weights", "timing")
-INTELLIGENT_SOURCES = {"vdb_cluster", "regime_fingerprint", "risk_meter", "cis_quality", "cis_tilt"}
+#: 11-12(Jazz,S-821):「SHIP 级必须用 CIS / VDB / RiskMeter,纯价格 = 海龟 bot」这道闸去掉。
+#: 它从来只在自测字典上生效(真实模块一律 ship=False),而台账里站住并进了真钱的
+#: (RBv2 逆波动、R-v2 突破 + 200 日闸门、下架硬规则)全是机械的价格 / 风险几何。
+#: Jazz:CIS 是对公众公开的产品,用不用它不是义务。留下的要求只有一条:四层输入如实声明。
 
 
 def validate_decision_inputs(di: dict, ship: bool = False) -> list[str]:
-    """每个策略必须声明四层决策输入。SHIP 级不得在 regime/universe 用价格 fallback。"""
+    """每个策略必须如实声明四层决策输入(来源是什么就写什么;不要求「智能」)。`ship` 保留作兼容,不再改变判定。"""
     problems = []
     for layer in DECISION_LAYERS:
         if layer not in di:
             problems.append(f"DECISION_INPUTS 缺少 '{layer}' 层声明")
-    if ship:
-        for layer in ("regime", "universe"):
-            src = di.get(layer, "")
-            if src not in INTELLIGENT_SOURCES:
-                problems.append(
-                    f"SHIP 级策略在 '{layer}' 层使用了非智能来源 '{src}' —— "
-                    f"必须使用 {sorted(INTELLIGENT_SOURCES)} 之一,或说明为何 CIS/VDB/RiskMeter 帮不上")
+        elif not str(di.get(layer) or "").strip():
+            problems.append(f"DECISION_INPUTS 的 '{layer}' 层是空的 —— 写出实际来源")
     return problems
 
 
-def test_decision_path_requires_intelligence_for_ship():
-    """S-83~S-91 的教训:纯价格产品路径 = 海龟 bot,系统白建。"""
-    dummy = {"regime": "price_proxy", "universe": "liquidity_only",
-             "weights": "equal", "timing": "price/vol"}
-    probs = validate_decision_inputs(dummy, ship=True)
-    assert any("regime" in p for p in probs), "SHIP 用价格代理判相位必须被拦截"
-    assert any("universe" in p for p in probs), "SHIP 不用 CIS 入池必须被拦截"
-    good = {"regime": "risk_meter", "universe": "cis_quality",
-            "weights": "cis_tilt", "timing": "price/vol"}
-    assert not validate_decision_inputs(good, ship=True), "智能路径必须通过"
+def test_decision_path_is_declared_honestly_not_forced_through_our_own_tools():
+    """11-12:纯价格路径只要如实声明就合格;缺层、空声明才是问题。"""
+    price_only = {"regime": "price_proxy", "universe": "liquidity_only", "weights": "inverse_vol", "timing": "price/vol"}
+    assert not validate_decision_inputs(price_only, ship=True), "如实声明的机械路径必须通过(RBv2 / R-v2 就是这样的)"
+    assert not validate_decision_inputs({"regime": "risk_meter", "universe": "cis_quality", "weights": "cis_tilt", "timing": "price/vol"}, ship=True)
+    assert validate_decision_inputs({**price_only, "regime": ""}), "空声明必须报错"
 
 
 def test_decision_path_requires_all_four_layers():
