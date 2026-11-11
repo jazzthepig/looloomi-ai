@@ -1,0 +1,28 @@
+{
+  "id": "T-349",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-11-11",
+  "title": "S-825 盲复算:R-v2 每票风险 0.75 / 1.0 / 1.25 / 1.5% × 名义上限 1.20 / 2.00,按回本时间与年化判,名义占用峰值单列",
+  "source": "REFUTATION_LEDGER `## S-825 —` 登记那一节(`grep -n \"^## S-825 —\" -A 7 REFUTATION_LEDGER.md`;**不读「S-825 结果」,不读 docs/research/s825_***)。C0 的装配:B 道的 docs/research/t343_blind.py(L3 = RBv2 + R-v2 f 0.5% + 现金,日历日序列直喂 `flex_alloc.dynamic_mix_nav`)可以直接 import;R-v2 = `t251_gross_cap.simulate`(票源 t197 tickets.A,cap_n 14)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-349.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "自检:C0 = +168.10% / 最长水下 824 天(对不上先查自己)。8 格各报:成交票数、CAGR、最长水下、最大回撤、最差月、逐年;去掉成交票里 r 最大的一张重跑的 CAGR(只报);`simulate` 返回的 gross_ratio_hist 的峰值与超过 1.0 的天数。按 S-825 的三条逐档判,给出 f★。不改阈值、不加档。只读、不入库;长计算 nohup;不要 Read 大文件。",
+    "expect": "docs/research/T-349_blind_rv2_sizing.md + t349_*.py + t349_results.json + scenarios/lane-a-T-349.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-a/T-349。"
+  },
+  "prior_value": "Seth 单份的结论是要提给 Jazz 改真钱参数的(每票风险与名义上限);动钱之前必须有第二份。",
+  "notes": "2026-11-11T17:07:08Z Seth 开卡。 | 2026-11-12 lane-a 交付(lane-a/T-349)。自检过:C0 总收益 +168.0953%(卡上 +168.10%)、最长水下 824 天(日历天口径;交易日口径 563)、记账起点 2021-10-11、出场原因 956 张 0 张不一致 —— C0 的装配直接 import B 道 docs/research/t343_blind.py,叠加引擎 t251_gross_cap.simulate 一字未改,票源 t197 tickets.A。8 格(f 0.75/1.0/1.25/1.5% × 上限 1.20/2.00)CAGR:0.75% +26.34%(两上限逐位相同)、1.0% +29.94%(同)、1.25% +33.43%(同)、1.5% 上限 1.20 +28.11% vs 2.00 +36.70%(咬合 Δ8.588pp)。最长水下 828/828/831/838 天(阈值 854);回撤(只报)-43.1%/-50.5%/-56.9%/-63.4%/-62.5%;最差月全是 2025-02(-13.1%/-16.4%/-19.2%/-24.3%/-21.9%),C0 的最差月是 2022-01 -9.8%;逐年见 T-349_blind_rv2_sizing.md。只报(去掉成交票里 r 最大的一张 = ZEC@2025-09-06, r=+7315.6%):C0 +12.74%、0.75% +12.71%、1.0% +11.86%、1.25% +11.02%、1.5%(1.20)+0.61%(水下拉到 960 天)、1.5%(2.00)+10.07%。名义占用峰值/超 1 倍天数:0.4929/0(C0)、0.7252/0、0.9086/0、1.0704/24、1.2009/45、1.2192/48。成交票数:208(C0)、165、164、164、178(1.5%/1.20)、164。判:阈值 CAGR ≥ C0+3pp = +24.5428%、水下 ≤ 854、咬合 <1pp ⇒ 0.75/1.0/1.25 三档连续站住,1.5% 因咬合出局 ⇒ f★ = 1.25%。产物 docs/research/T-349_blind_rv2_sizing.md + t349_rv2_sizing.py + t349_results.json + t349_summary.md + scenarios/lane-a-T-349.json(7 条)。诚实边界(报告 §4):卡上写的 `grep -n '^## S-825 —' -A 7` 因登记节正文长于 7 行而越过登记节、看到了「## S-825 结果」的标题与 f=0.75%/1.0% 两行;f=1.25%/1.5% 两行没看到;没读 docs/research/s825_*。我的数与那段一致(C0 CAGR +21.5428% vs +21.56%;f=0.75% 26.34 vs 26.36;f=1.0% 29.94 vs 29.97 —— CAGR 差 0.02~0.03pp,来源没查,不影响任何判据);f★ 两边都是 1.25%。探索性 5 条见报告 §3(最重要:名义上限只管进场不管浮盈放大;f=1.5% 的「咬合」其实是并发仓位 cap_n=14 的选择效应;f★ 的增量与右尾 ZEC 是同一张票)。只读、未入库。",
+  "verified": null
+}
