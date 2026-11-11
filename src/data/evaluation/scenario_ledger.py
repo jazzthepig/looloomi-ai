@@ -27,6 +27,16 @@ A / B / C 交研究卡时,把对结果的前向预期写成 `docs/research/scena
 所以 lane 给的结算日要留足余量(≥ 入账后 7 天)。作者取文件里的 `author`(只认 lane-a/b/c、seth*、jazz、ai:*),
 之后 `calibration` 按作者分开算 Brier:**三个 lane 的「概率说得准不准」从此是量出来的,不是感觉。**
 
+## 人工命题的结算(11-12)—— 之前没有这条路
+
+`variable = manual` 的命题占台账 45%(11-12 实测 628 条里 285 条,首批 11-21 到期),而写入端只结自动的三类 ⇒
+最具体的那一半研究命题永远不会被打分,「按作者的校准」只量得到价格命题。现在:结算记录写成
+`docs/research/scenarios/settlements/*.json`(`{"settled_by": "lane-b", "settlements": [{"id", "observed", "evidence"}]}`),
+随分支进 PR,Seth 合并 = 闸门,部署后入账。三条纪律(`settle_manual`):
+- 结算人只交**观测值 + 证据**(脚本路径 / SQL + 数);成没成由**登记时**的 op / lo / hi 算,不由结算人说;
+- **不结自己的**:结算人与作者不能是同一方(lane-b 不结 lane-b 的;seth 的由 lane 结);
+- 到期之后才能结;结过的不重结(要改 = 另立更正,不覆盖)。
+
 判活:`select count(*) from scenario_ledger` 只增不减;`loop_attempt` 里 `_scenario_ledger_loop` 每小时一条。
 """
 from __future__ import annotations
@@ -48,6 +58,9 @@ LATE_DAYS = 7
 _ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$")
 _AUTHOR = re.compile(r"^(?:lane-[abc]|seth(?:[:-][\w.-]+)?|jazz|ai:[\w.-]+)$")
 SCENARIO_DIR = "docs/research/scenarios"
+SETTLE_DIR = SCENARIO_DIR + "/settlements"
+CODE_REF_MANUAL = "scenario_ledger v1 manual (11-12)"
+MIN_EVIDENCE = 12
 
 
 def _f(x: Any) -> Optional[float]:
@@ -138,6 +151,50 @@ def score(entry: dict, value: Optional[float], today: dt.date) -> Optional[dict]
     return {**base, "observed": value, "outcome": ok, "brier": brier(entry["prob"], ok), "note": None}
 
 
+def party(author: Any) -> str:
+    """纯函数。作者属于哪一方:`seth:cycle-space` → seth,`ai:MiniMax-M3` → ai,`lane-b` → lane-b。"""
+    a = str(author or "").strip()
+    return "seth" if a.startswith("seth") else a.split(":", 1)[0]
+
+
+def settle_manual(entry: Optional[dict], s: dict, settled_by: str, today: dt.date) -> tuple[Optional[dict], Optional[str]]:
+    """纯函数。一条 manual 命题 + 一条结算记录 → (打分行, None) 或 (None, 拒绝理由)。
+    结算人只给观测值与证据;结果由登记时的 op / lo / hi 算。不结自己的;没到期不结。"""
+    sid = str(s.get("id") or "")
+    if not entry:
+        return None, f"{sid}: 台账里没有这条"
+    if str(entry.get("variable")) != "manual":
+        return None, f"{sid}: 不是 manual 命题(自动命题由系统结)"
+    if not _AUTHOR.match(str(settled_by or "")):
+        return None, f"{sid}: settled_by {settled_by!r} 不认"
+    if party(settled_by) == party(entry.get("author")):
+        return None, f"{sid}: {settled_by} 不能结 {entry.get('author')} 自己写的命题"
+    h = dt.date.fromisoformat(str(entry["horizon_d"])[:10])
+    if h >= today:
+        return None, f"{sid}: 结算日 {h} 还没过"
+    x = _f(s.get("observed"))
+    if x is None:
+        return None, f"{sid}: observed 要是一个数"
+    ev = str(s.get("evidence") or "").strip()
+    if len(ev) < MIN_EVIDENCE:
+        return None, f"{sid}: evidence 要写出怎么量的(脚本路径 / SQL + 数)"
+    ok = holds(entry["op"], _f(entry.get("lo")), _f(entry.get("hi")), x)
+    return {"id": sid, "observed": x, "outcome": ok, "brier": brier(float(entry["prob"]), ok),
+            "note": f"人工结算 · {settled_by} · {ev[:300]}", "code_ref": CODE_REF_MANUAL}, None
+
+
+def open_manual(entries: list[dict], scores: dict[str, dict], today: dt.date) -> dict[str, Any]:
+    """纯函数。还没结的 manual 命题,按作者方:已到期几条(该结了)、30 天内到期几条。"""
+    out: dict[str, dict] = {}
+    for e in entries:
+        if str(e.get("variable")) != "manual" or (scores.get(e["id"]) or {}).get("outcome") is not None:
+            continue
+        h = dt.date.fromisoformat(str(e["horizon_d"])[:10])
+        a = out.setdefault(party(e.get("author")), {"overdue": 0, "due_30d": 0, "later": 0})
+        a["overdue" if h < today else "due_30d" if (h - today).days <= 30 else "later"] += 1
+    return out
+
+
 def calibration(entries: list[dict], scores: dict[str, dict]) -> dict[str, Any]:
     """纯函数。按作者:已结算条数、平均 Brier、命中率、五档可靠性(说 X% 的那些,实际成了几成)。"""
     out: dict[str, Any] = {}
@@ -224,6 +281,52 @@ def repo_files(root: Optional[str] = None) -> list[dict]:
     return out
 
 
+def settlement_files(root: Optional[str] = None) -> list[dict]:
+    """纯读。`docs/research/scenarios/settlements/*.json` → [{file, settled_by, settlements, problems}];坏文件只报不抛。"""
+    import json
+    from pathlib import Path
+    base = Path(root) if root else Path(__file__).resolve().parents[3]
+    out = []
+    for f in sorted((base / SETTLE_DIR).glob("*.json")):
+        rec: dict[str, Any] = {"file": f.name, "settled_by": None, "settlements": [], "problems": []}
+        try:
+            j = json.loads(f.read_text(encoding="utf-8"))
+            rec["settled_by"] = str((j or {}).get("settled_by") or "")
+            rec["settlements"] = [x for x in (j.get("settlements") or []) if isinstance(x, dict)]
+        except (OSError, ValueError, AttributeError) as e:
+            rec["problems"].append(f"读不了:{e}")
+        out.append(rec)
+    return out
+
+
+async def apply_settlements(today: dt.date, root: Optional[str] = None) -> dict[str, Any]:
+    """仓库里的人工结算记录 → `scenario_scores`(只写还没结的;被拒的只报)。"""
+    from src.api.store import supabase_upsert_table
+    from src.data.style.header import _read_all
+    files = settlement_files(root)
+    want = {str(x.get("id")) for rec in files for x in rec["settlements"] if x.get("id")}
+    if not want:
+        return {"files": len(files), "settled": 0}
+    entries = {r["id"]: r for r in await _read_all(TABLE, {"select": "id,author,variable,op,lo,hi,prob,horizon_d",
+                                                         "variable": "eq.manual", "order": "id.asc"})}
+    done = {r["id"] for r in await _read_all(SCORES, {"select": "id", "outcome": "not.is.null", "order": "id.asc"})}
+    rows, rejected = {}, []
+    for rec in files:
+        rejected += [f"{rec['file']}: {p}" for p in rec["problems"]]
+        for x in rec["settlements"]:
+            sid = str(x.get("id") or "")
+            if sid in done or sid in rows:
+                continue
+            row, why = settle_manual(entries.get(sid), x, rec["settled_by"], today)
+            if row:
+                rows[sid] = row
+            else:
+                rejected.append(f"{rec['file']}/{why}")
+    if rows and not await supabase_upsert_table(SCORES, list(rows.values()), on_conflict="id"):
+        return {"files": len(files), "settled": 0, "rejected": rejected[:20], "why": f"写 {SCORES} 失败"}
+    return {"files": len(files), "settled": len(rows), "rejected": rejected[:20]}
+
+
 async def ingest_repo(today: dt.date, root: Optional[str] = None) -> dict[str, Any]:
     """仓库里 lane 写的情景文件 → 台账(只写还没入账的 id;过期 / 不合格的只报)。"""
     from src.data.style.header import _read_all
@@ -253,10 +356,12 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     from src.data.style.header import _read_all
     today = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc).date()
     ingested = await ingest_repo(today)
+    manual = await apply_settlements(today)
     due = await _read_all(TABLE, {"select": "id,variable,op,lo,hi,prob,horizon_d", "horizon_d": f"lt.{today.isoformat()}",
                                   "variable": "neq.manual", "order": "horizon_d.asc"})
     if not due:
-        return {"ok": True, "status": "skipped", "ingested": ingested, "why": "没有到期的自动命题"}
+        return {"ok": True, "status": "skipped" if not manual.get("settled") else "ok", "ingested": ingested, "manual": manual,
+                "why": f"没有到期的自动命题;人工结算 {manual.get('settled', 0)} 条"}
     done = {r["id"] for r in await _read_all(SCORES, {"select": "id", "outcome": "not.is.null"})}
     rows, waiting = [], 0
     for e in due:
@@ -272,5 +377,5 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         w = await supabase_upsert_table(SCORES, rows, on_conflict="id")
         if not w:
             return {"ok": False, "why": f"写 {SCORES} 失败:{(getattr(w, 'why', '') or '')[:200]}"}
-    return {"ok": True, "scored": len(rows), "waiting": waiting, "ingested": ingested,
-            "why": f"结算 {len(rows)} 条,等值 {waiting} 条,入账 {ingested.get('written', 0)} 条"}
+    return {"ok": True, "scored": len(rows), "waiting": waiting, "ingested": ingested, "manual": manual,
+            "why": f"结算 {len(rows)} 条,等值 {waiting} 条,入账 {ingested.get('written', 0)} 条,人工结算 {manual.get('settled', 0)} 条"}

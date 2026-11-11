@@ -278,14 +278,15 @@ async def scenarios_submit(body: dict = Body(...), x_internal_token: Optional[st
 async def scenarios_view(x_internal_token: Optional[str] = Header(None, alias="X-Internal-Token")):
     """最近 50 条情景、各自的结算,与按作者的校准(平均 Brier、命中率、五档可靠性)。"""
     require_internal_token(x_internal_token)
-    from src.data.evaluation.scenario_ledger import SCORES, TABLE, calibration
+    from src.data.evaluation.scenario_ledger import SCORES, TABLE, calibration, open_manual
     from src.data.style.header import _read_all
-    try:
-        entries = await _read_all(TABLE, {"select": "*", "order": "written_at.desc", "limit": "500"})
-        scores = {r["id"]: r for r in await _read_all(SCORES, {"select": "*"})}
+    try:                                                         # 11-12:不带 limit —— 原来只读最近 500 条,校准漏掉最早的那批
+        entries = await _read_all(TABLE, {"select": "*", "order": "written_at.desc"})
+        scores = {r["id"]: r for r in await _read_all(SCORES, {"select": "*", "order": "id.asc"})}
     except Exception as e:                                       # noqa: BLE001
         raise HTTPException(502, f"{type(e).__name__}: {str(e)[:300]}")
     return {"ok": True, "n": len(entries), "calibration": calibration(entries, scores),
+            "manual_open": open_manual(entries, scores, dt.datetime.now(dt.timezone.utc).date()),
             "recent": [{**e, "score": scores.get(e["id"])} for e in entries[:50]]}
 
 
