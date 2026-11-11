@@ -16,6 +16,7 @@
 | in_review | T-265 | lane-a | S-743 持有人数增长(采用面,对过去 4 周收益与市值取残差)对之后 4 周相对 BTC 的超额,横截面周频 —— 判据照台账写死 | 报告 docs/research/T-265_holder_growth.md + t265_holders.py + t265_results.json;卡 notes 写 (a)–(d);in_review,推 lane-a/T-265。 | 持有人数历史 11-06 才接入;采用面的横截面因子从没测过(只有前 50 大持有人集中度的快照)。 |  |
 | in_review | T-266 | lane-a | S-741 盲复算 + 稳健性(只报不判):只看台账文字重写联合模型 v2;再看 Ridge 的 ✅ 在 α 3 / 30、z 窗口 60 / 120、逐族去掉新维度、21 列随机噪声替换新维度、每天扩张重训(实盘口径)下还在不在 | 报告 docs/research/T-266_joint_v2_recompute.md + t266_recompute.py + t266_results.json;卡 notes 写对照表与稳健性表;in_review,推 lane-a/T-266。 | S-741 是第一个过了预注册的联合模型,只有 lane-c 一个人算过;余量不宽。T-264 / T-265 要等回填,这张可以先做。 |  |
 | in_review | T-308 | lane-a | T-303 按标题分句重跑(监控标签新增 / 监控标签移除 / 种子标签移除分开)—— lane-c 11-08 交叉复核返工 | docs/research/T-303_*.md 修订版 + 脚本 + 结果 json;卡 notes 写修正后 class-1 候选数 / 被挡数 / ΔR;in_review,推 lane-a/T-308。 | S-785『打标签即剔除无检出力』的结论在被错判的名单上得出;修正后被挡数 1→3 仍 <10,结论方向大概不变,但数要对。 |  |
+| in_review | T-353 | lane-a | S-828 第二台引擎:从零写一台 R-v2 账户引擎(不 import t251 / t352),对同一批票出 C0 与尺寸表 —— 这次要真的独立 | docs/research/T-353_second_engine.md + t353_engine.py + t353_results.json + scenarios/lane-a-T-353.json(≥ 3 条);in_review,推 lane-a/T-353。 | 今晚的教训:三份「一致」的实现 import 的是同一个带 bug 的函数。要提给 Jazz 动真钱参数,得有一台不同的人写的引擎。 |  |
 | in_review | T-215 | lane-b | T-213 报告返工:5 日块对齐敏感性 + 撤回清单与正文 md:333 同步 | 报告更新 + 复跑脚本两次输出一致;卡片 notes:各对齐下的区间与被降级的句子清单。 | 头条数字会被 Jazz 用来选 SPYX vs Ondo;量级随对齐变 2–3 倍而无人说明。 |  |
 | in_review | T-216 | lane-b | T-005 预注册台账返工(lane-a 交叉复核 F1/F3/F2/F5):按实际代码重算样本量与判据 | 台账更新;卡片 notes:改前改后三个数与 β 带分布。 | 预注册里的样本量比实际宽 3 倍,会让后续裁决显得比实际更有把握。 |  |
 | in_review | T-219 | lane-b | 轨道公司股权进宇宙的第一份研究:风险画像、与 ① / BTC 的关系、执行场所逐家判断 —— 先描述,再预注册一条假设 | 报告 docs/research/T-219_rail_equities.md(开头风险画像表 + 场所表,末尾 M- 预注册与结果);卡片 notes 写关键数;in_review,推 lane-b/T-219。 | 宇宙里没有任何轨道公司;V / MA / BLK / IBKR / SCHW 只作为 World50 候选在池子里,从没按『轨道』看过。 |  |
@@ -59,8 +60,6 @@
 | claimed | T-098 | seth | World50 的数据:候选池(全球前 ~150 大资产)的复权价格与历史流通市值 + 贵金属口径 + 每个候选的链上形式映射与跟踪误差 | 大类 ① 候选可以用日频全收益回放;知道哪些资产今天在链上真的买得到、买多少。 | eodhd 只有 2022-08 起、未复权;yfinance 2015 起但 06-18 后停更、未复权(SHY 九年价格持平,票息全丢)。链上形式从没系统量过。 |  |
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
 | claimed | T-231 | seth | 前向记录写端恢复:refresh_depth_divergence 逼近 statement_timeout 30s —— 给 ohlcv_daily 扫描加下界,并让『重算补的日子』在记录里可见 | 迁移 + 测试 + 前后对比表;卡 notes 写最大耗时前后值、逐行差异数、恢复后第一条 ok 的时间。DDL 的应用要走 Seth 交互轮次(定时轮次只读,不应用)。 | 写端熄火 4 天且在加重(每天 error 10→17→19);『自首日起连续、无回填』这句对外话没有机械保证。 |  |
-| open | T-353 | lane-a | S-828 第二台引擎:从零写一台 R-v2 账户引擎(不 import t251 / t352),对同一批票出 C0 与尺寸表 —— 这次要真的独立 | docs/research/T-353_second_engine.md + t353_engine.py + t353_results.json + scenarios/lane-a-T-353.json(≥ 3 条);in_review,推 lane-a/T-353。 | 今晚的教训:三份「一致」的实现 import 的是同一个带 bug 的函数。要提给 Jazz 动真钱参数,得有一台不同的人写的引擎。 |  |
-| open | T-352 | lane-b | S-828 修引擎:t251_gross_cap.simulate 的幽灵仓(同日止损永不出场)—— 修、加不变量测试、重出 T-251 / T-310 的两张表与 C0 | docs/research/T-352_engine_fix.md + t352_engine.py + t352_results.json + scenarios/lane-b-T-352.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-b/T-352。 | 名义上限 40% 与名额 14 这两个真钱参数是拿带 bug 的引擎定的;今晚所有带 R-v2 的账户数字也是。 |  |
 | open | T-341 | lane-c | 真钱唯一规则 X1V 的归因:对「同平均 β 的常数加密腿」—— 账户抗跌是 X1V 的择时还是 70% 非加密配置的结构(T-305 遗留 (c)) | docs/research/T-341_x1v_vs_const_beta.md(预注册在前,开头一张 A / K / ① 三行表)+ docs/research/t341_x1v_vs_const.py + docs/research/t341_results.json;卡 notes 写 w_K、两段 A−K 的总收益与回撤差、随机分位三个数;in_review,推 lane-c/T-341。 | T-305 只把账户和 ① 比,不能区分『X1V 择时』和『只持 30% 加密』。真钱里唯一的规则至今没有对它自己的结构做过对照;S2 里 Jazz 要回答 LP 的『为什么不直接用常数配比』,现在没有数。 |  |
 | open | T-348 | lane-c | 坟场按新尺子重判:已有的做空 / 对冲票(S-642、S-681 H2–H4、S-736、S-808、S-810)叠到整合账本上,按账户口径的回本时间与年化看,两个窗口 | docs/research/T-348_graveyard_rejudged.md + t348_*.py + t348_results.json + scenarios/lane-c-T-348.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-c/T-348。 | 规则改了之后,哪些旧的 ❌ 是「尺子」造成的、哪些是真的不行,要量出来 —— 否则重新挖只是把同一批东西再否一遍或再信一遍。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
@@ -356,4 +355,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 14 · claimed 6 · blocked 4 · in_review 51 · done 273 · dropped 5
+open 12 · claimed 6 · blocked 4 · in_review 52 · done 273 · dropped 5
