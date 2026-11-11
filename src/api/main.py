@@ -1676,6 +1676,16 @@ async def _cis_inputs_loop():
         except Exception as _e:
             print(f"[BTC-CYCLE] ⚠️  {_e}")
             await _record_loop_attempt("_btc_cycle", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}", writer="src.data.market.btc_cycle")
+        try:                                   # 11-11 S-814:周期位置空间的每周情景(decision → scenario → score);读数算不出只记原因
+            from src.data.state.cycle_space import run_once as _cs_run
+            _cs = await _cs_run()
+            print(f"[CYCLE-SPACE] {str(_cs.get('why'))[:160]}")
+            await _record_loop_attempt("_cycle_space", "ok" if _cs.get("ok") else "error", reason=str(_cs.get("why"))[:300] if _cs.get("why") else None,
+                                       detail={k: _cs.get(k) for k in ("d", "stance", "episodes", "tilt_excess", "probs", "written")},
+                                       writer="src.data.state.cycle_space")
+        except Exception as _e:
+            print(f"[CYCLE-SPACE] ⚠️  {_e}")
+            await _record_loop_attempt("_cycle_space", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}", writer="src.data.state.cycle_space")
         # S-536:正式 CIS 在 UTC 收盘后发布,它的输入每天紧跟收盘取(不随部署时刻漂);仍是一天一轮
         await _sleep_until_utc(0, 50)
 

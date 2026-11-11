@@ -459,6 +459,18 @@ async def crowd_map_read(x_internal_token: str = Header(None), symbol: str = "",
     return await active(symbol=symbol, days=days)
 
 
+@router.get("/internal/cycle-space")
+async def cycle_space_read(x_internal_token: str = Header(None)):
+    """11-11 S-814:周期位置空间。今天的 8 维向量(MVRV / Puell / 算力变化 / 离 200 日线 / 365 天收益 / 距高点回撤 / 波动 / 恐惧贪婪)、
+    历史上最像今天的日子之后 180 天的分布、相对无条件频率的倾斜与 add / trim / hold。只描述,不进敞口。"""
+    require_internal_token(x_internal_token)
+    from src.data.state.cycle_space import view
+    try:
+        return await view()
+    except Exception as e:                                       # noqa: BLE001 —— 读不到 ≠ 没有:说出来,不回空
+        raise HTTPException(502, f"{type(e).__name__}: {str(e)[:300]}")
+
+
 @router.get("/internal/book-vectors")
 async def book_vectors_read(x_internal_token: str = Header(None), book: str = ""):
     """11-04:Strategy 空间。最新一天每本账的稀疏向量;book 给了就附共享维余弦最近的三本;uncovered = 没有一本账在里面挣钱的天气桶。"""

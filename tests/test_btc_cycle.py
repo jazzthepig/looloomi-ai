@@ -11,7 +11,8 @@ def test_rows_drop_missing_and_non_positive_never_write_zero():
            {"time": "2026-11-11T00:00:00.000000000Z", "CapMVRVCur": "", "IssTotUSD": "0", "HashRate": "nan"},
            {"time": "bad", "CapMVRVCur": "2"}]
     rows = bc.to_rows(raw)
-    assert {(r["series"], r["d"]) for r in rows} == {("btc_mvrv", "2026-11-10"), ("btc_issuance_usd", "2026-11-10"), ("btc_hashrate", "2026-11-10")}
+    assert {(r["series"], r["d"]) for r in rows} == {("btc_mvrv", "2026-11-10"), ("btc_issuance_usd", "2026-11-10"), ("btc_hashrate", "2026-11-10")}, \
+        "PriceUSD 这两行没给 ⇒ 没有 btc_price_usd 行"
     assert all(r["value"] > 0 and r["source"] == bc.SOURCE for r in rows)
 
 
@@ -60,4 +61,18 @@ def test_first_run_backfills_full_history_then_only_recent(monkeypatch):
     assert r["ok"] and calls[-1] == bc.HISTORY_FROM and len(written) == 3
     have.append({"d": "2026-11-10"})
     asyncio.run(bc.run_once(now))
-    assert calls[-1] == "2026-10-28", "表里有数 ⇒ 只取最近 14 天"
+    assert calls[-1] == "2025-09-17", "派生序列已有 ⇒ 只取 420 天(够重算最近 14 天的 Puell)"
+
+
+def test_derived_series_are_puell_and_hashrate_change_from_the_same_functions():
+    """11-11:派生序列(Puell / 算力 30 天变化)落库后自动成为融合特征表的维;写入端与读的人同一个纯函数。"""
+    import math
+    days = [(dt.date(2025, 1, 1) + dt.timedelta(days=i)).isoformat() for i in range(400)]
+    base = [{"series": "btc_issuance_usd", "d": d, "value": 100.0, "source": "x"} for d in days] + \
+           [{"series": "btc_hashrate", "d": d, "value": 1000.0 * (2.0 if d >= days[380] else 1.0), "source": "x"} for d in days]
+    out = bc.derived_rows(base, days[395])
+    by = {(r["series"], r["d"]): r["value"] for r in out}
+    assert by[("btc_puell", days[399])] == 1.0
+    assert abs(by[("btc_hash_30d", days[399])] - math.log(2.0)) < 1e-12, "近 7 天都在翻倍之后、30 天前的 7 天都在之前"
+    assert all(r["d"] >= days[395] for r in out)
+    assert bc.hash_30d({days[0]: 1.0}, days[0]) is None and bc.derived_rows(base[:300], days[0]) == [], "不满窗口的那天不写(300 天发行不够 365)"

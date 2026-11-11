@@ -11,9 +11,13 @@ S-84(07-27)用过的 MVRV 是免费源 2022-07 起的临时取数,挖矿那条(P
 | `btc_mvrv` | 市值 / 已实现市值 | Coin Metrics 社区 API `CapMVRVCur` |
 | `btc_issuance_usd` | 当日新发行 BTC 的美元价值(矿工的区块奖励收入) | `IssTotUSD` |
 | `btc_hashrate` | 全网算力 | `HashRate` |
+| `btc_price_usd` | 参考价(2011 起;Binance 现货只到 2017-08,周期空间要四轮周期)| `PriceUSD` |
+| `btc_puell` | **Puell 倍数** = 当日矿工收入 ÷ 它自己过去 365 天均值(「对比挖矿收益」)| 由 `puell()` 从上面算 |
+| `btc_hash_30d` | 算力 30 天变化 = ln(近 7 天均值 ÷ 30 天前的 7 天均值)(矿工投降 / 扩张)| 由 `hash_30d()` 算 |
 
-**Puell 倍数**(矿工收入对它自己 365 天均值的倍数 —— 「对比挖矿收益」最常用的读法)不落库,读的时候由 `puell()` 现算
-(纯函数,只用 ≤ d 的数据),避免两份口径。
+两条派生序列只有一个定义(本模块的纯函数,只用 ≤ d 的数据),写入端与读的人用同一个函数。
+`macro_daily` 的每条序列会自动并进融合特征表(`feature_matrix_daily` 的 `macro:<series>` 键)⇒ MVRV / Puell / 算力变化
+从此是市场态向量空间里的维(11-11 Jazz「keep in high dimension」;用法见 `state/cycle_space.py`,S-814)。
 
 ## 口径
 
@@ -25,12 +29,15 @@ d = Coin Metrics 时间戳的 UTC 日期(日度值在当天 00:00 UTC 标记,覆
 from __future__ import annotations
 
 import datetime as dt
+import math
 from typing import Any, Optional
 
 TABLE = "macro_daily"
 WRITES_TABLES = (TABLE,)
 WRITES_COLUMNS = {TABLE: ("series", "d", "value", "source")}
-METRICS = {"CapMVRVCur": "btc_mvrv", "IssTotUSD": "btc_issuance_usd", "HashRate": "btc_hashrate"}
+METRICS = {"CapMVRVCur": "btc_mvrv", "IssTotUSD": "btc_issuance_usd", "HashRate": "btc_hashrate", "PriceUSD": "btc_price_usd"}
+DERIVED = ("btc_puell", "btc_hash_30d")
+DERIVE_LOOKBACK_D = 420         # 派生序列要 365 天历史;日常只取这么多天就够重算最近 RECENT_D 天
 SOURCE = "coinmetrics_community"
 HISTORY_FROM = "2011-01-01"
 RECENT_D = 14
@@ -70,6 +77,34 @@ def puell(issuance: dict[str, float], d: str, window: int = PUELL_WINDOW) -> Opt
     return issuance[d] / m if m > 0 else None
 
 
+def hash_30d(hashrate: dict[str, float], d: str) -> Optional[float]:
+    """纯函数。算力 30 天变化 = ln(截至 d 的 7 天均值 ÷ 截至 d − 30 天的 7 天均值);任一窗口不满 7 天 ⇒ None。只用 ≤ d。"""
+    d0 = dt.date.fromisoformat(d)
+
+    def avg(end: dt.date) -> Optional[float]:
+        vals = [hashrate.get((end - dt.timedelta(days=i)).isoformat()) for i in range(7)]
+        if any(v is None or v <= 0 for v in vals):
+            return None
+        return sum(vals) / 7
+    a, b = avg(d0), avg(d0 - dt.timedelta(days=30))
+    return math.log(a / b) if a and b else None
+
+
+def derived_rows(base: list[dict], since: str) -> list[dict]:
+    """纯函数。原始序列的行 → 派生序列(Puell、算力 30 天变化)在 d ≥ since 的行;算不出的那天不写。"""
+    iss = {r["d"]: r["value"] for r in base if r["series"] == "btc_issuance_usd"}
+    hr = {r["d"]: r["value"] for r in base if r["series"] == "btc_hashrate"}
+    out = []
+    for d in sorted(k for k in set(iss) | set(hr) if k >= since):
+        p = puell(iss, d) if d in iss else None
+        if p is not None and p > 0:
+            out.append({"series": "btc_puell", "d": d, "value": p, "source": SOURCE})
+        h = hash_30d(hr, d) if d in hr else None
+        if h is not None:
+            out.append({"series": "btc_hash_30d", "d": d, "value": h, "source": SOURCE})
+    return out
+
+
 async def run_once(now: Optional[dt.datetime] = None, *, force: bool = False) -> dict[str, Any]:
     from src.api.store import redis_get_key_status, redis_set_key, supabase_upsert_table
     from src.data.market.data_layer import get_coinmetrics_btc
@@ -80,12 +115,16 @@ async def run_once(now: Optional[dt.datetime] = None, *, force: bool = False) ->
         st, _ = await redis_get_key_status(key)
         if st == "hit":
             return {"ok": True, "skipped": True, "why": "今天已经取过"}
-    have = await _sb_get(TABLE, {"select": "d", "series": "eq.btc_mvrv", "order": "d.desc", "limit": "1"})
+    # 以**最晚加进来的那条序列**判断要不要全量:派生序列还没有 ⇒ 全史重取重算(upsert 幂等)
+    have = await _sb_get(TABLE, {"select": "d", "series": f"eq.{DERIVED[0]}", "order": "d.desc", "limit": "1"})
     if not have.ok:
         return {"ok": False, "why": f"读 {TABLE} 失败:{(have.why or '')[:120]}"}
-    start = HISTORY_FROM if not have.rows else (now.date() - dt.timedelta(days=RECENT_D)).isoformat()
-    raw = await get_coinmetrics_btc(list(METRICS), start)
-    rows = to_rows(raw)
+    full = not have.rows
+    start = HISTORY_FROM if full else (now.date() - dt.timedelta(days=RECENT_D)).isoformat()
+    fetch_from = HISTORY_FROM if full else (now.date() - dt.timedelta(days=DERIVE_LOOKBACK_D)).isoformat()
+    raw = await get_coinmetrics_btc(list(METRICS), fetch_from)
+    base = to_rows(raw)
+    rows = [r for r in base if r["d"] >= start] + derived_rows(base, start)
     for i in range(0, len(rows), 1000):
         if not await supabase_upsert_table(TABLE, rows[i:i + 1000], on_conflict="series,d"):
             return {"ok": False, "why": f"写 {TABLE} 失败(第 {i} 行起)"}
