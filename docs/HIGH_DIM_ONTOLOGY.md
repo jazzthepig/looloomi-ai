@@ -72,12 +72,15 @@ VDB 不是缓存,是**本体论的几何基底** —— 内核六对象全部向
 | **Asset · 资金面(因)** | 11d 截面百分位(资金费 / 新开杠杆 / 散户多空 / 大户 − 散户 / 主动买卖 / 成交暴增 + 价格相位),每 (币, 日) | ✅ 11-07(2022-06 起,~23.5 万行) | `asset_flow_daily` · `asset_flow_knn()` · `/internal/asset-flow`(S-774 排序力、S-775 扩散「因」检验中) |
 | **Asset · 交易所的决定(事件)** | 每 (币, 日) 6 个 0/1:上币 / 上永续 / Upbit 韩元上币(≤ 90 天)· 挂着监控标签 · 30 天内被挤空头 · 365 天内宣布下架 | 读面 ✅(`crowd_map`、`/internal/crowd-map`);**作为模型的维 ❌(S-790)**:它们打中的币本来就在价格相位的最低一档 —— 留作硬规则与读面,不进排序 | `binance_event_watch` · `crowding_watch` · `delisting_watch` · `events`(逐句标签) |
 | **Asset · 谁押了什么** | 每 (币, 小时):HL 30 天盈利前 200 账户的多 / 空名义额、仓位数、账户数(不含地址)| ✅ 11-10 起(主机 T-130 → 每小时随强平地图送);S-794 前向登记,2027-05 判 | `hl_whale_positioning_hourly` · `/internal/whale-positioning` |
+| **Regime · 周期位置** | 8 维,2011 起四轮周期:ln MVRV / ln Puell / 算力 30 天变化 / 离 200 日线 / 365 天收益 / 距高点回撤 / 90 天波动 / 恐惧贪婪 30 日均(2018 前这一维不存在,不补 0)| ✅ 11-11:内核 + 读面 + 每周三条 180 天情景进记分账;配置级用法看 S-814(T-339 / T-340)| `state/cycle_space.py` · `/internal/cycle-space` · `scenario_ledger` 作者 `seth:cycle-space` · 数据 `market/btc_cycle` → `macro_daily`(自动并进 `feature_matrix_daily`)|
 | Regime / 市场态 | 状态向量 | ✅ live | `market_state_vectors`(T-094 按时点补到 2019) |
 | Strategy | 每本账的回报 × 状态向量 | ✅ live(S-717) | `book_vectors` · `/internal/book-vectors`(相似 / 缩放 / 未覆盖) |
 | Entity/Decision | 季度 × 发行方(待遇 / 决策 / 结果) | ✅ live(S-722) | `entity_vectors` · `/internal/entity-vectors` |
 | 时序窗口 | 60 天 17 维形状,步长 5 | ✅ live(S-721) | `window_vectors` · `/internal/window-knn`(只描述,不进敞口) |
 | Outcome | 决策 → 7 / 30 / 90 天超额 | ✅ live(S-714) | `decision_outcomes` · `/internal/decision-outcomes` |
 | Text/News | Railway 本机 ONNX `bge-small-en-v1.5`(384 维;11-07 起,MiniMax 账户没有嵌入额度) | ✅ 11-07(~5,200 条:events + feed_items) | `text_vectors` · `text_vectors_nearest` · `/internal/text-knn` |
+
+**11-11(下)的读法 —— 阈值是低维,空间才是高维(Jazz「keep in high dimension」):** 同一天三份阈值规则(S-811 / 812 / 813)都倒在同一个地方:过热在七年里只触发 1 轮,那一轮错了就全错(恐惧贪婪 95 + 跌破 20 日线 = 2021-01 的中途回踩)。阈值把「有多像」压成 0 / 1;向量空间保留分级的相似度,让四轮周期的每一天都参与回答「今天在周期的哪里」。于是把 Jazz 的中长线指标(MVRV、矿工收入、恐惧贪婪)连同价格的周期位置做成一个空间,决定进回路:读数 → 每周情景 → 到期 Brier 记分 → 再看要不要进配置(S-814)。先验要诚实:30 天尺度上市场态近邻与气候态分不开(S-745 ❌);这里换的是尺度(180 天)、维(估值 / 矿工)、历史(2011 起)。
 
 **11-11 的读法:** 风险几何的边界量出来了:**能分,不能择时**。RBv2(三条腿之间按波动分预算)站住并进了真钱;但拿风险状态去收放整体敞口两次都失败 —— 用组合自己的腿协方差算(S-805)是哑的(X1V 离场让加密腿的波动塌陷,2022 崩盘段一点没降),用 ① 内部的平均相关算(S-806)是迟的(降在底部,砍掉反弹,比随机日程还差)。⇒ 高维在这个系统里的位置是**分配器**,不是**择时器**。
 
