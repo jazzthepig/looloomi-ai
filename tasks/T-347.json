@@ -1,0 +1,33 @@
+{
+  "status": "done",
+  "created": "2026-11-11",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-11T17:04:59Z",
+    "value": "S-823 第二份独立实现:发现段同样选出 R6;留出段 R6 +15.47% / R8 +12.39% / 持有 +18.03%,最长水下 1051 / 1063 / 847 天,p_upper 0.086 —— 与 Seth 的一份(+15.71% / +12.62% / +18.26%,1050 / 1062 / 846,0.092)一致;四条判据都过。只报:空头腿去掉 2022 为 −15.7%,账户口径两段都输一直持有。后续 S-824(进整合账本)❌。",
+    "ledger": "S-823 结果 / S-823 第二份 / S-824 结果"
+  },
+  "id": "T-347",
+  "owner": "lane-a",
+  "title": "S-823 重新挖:三态敞口(明显向下 −0.3 / 不明确 +0.3 / 明显向上 +1.0)—— BTC 2012 起全史,8 条规则,发现段选一条,留出段判一次",
+  "source": "REFUTATION_LEDGER `## S-823`(`grep -n \"^## S-823\" -A 9 REFUTATION_LEDGER.md`,原文照抄进报告开头)。价格 = Supabase `macro_daily` 的 series='btc_price_usd'(只读,翻页带 order=d);资金费 = cometcloud-local/research/s681/_um_funding.jsonl 的 BTC;零分布用 `src/data/evaluation/apparatus.circular_shift` 与 `p_upper`(一字不改,只 import)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-347.json"
+  ],
+  "acceptance": {
+    "check": "脚本分两步、落两个文件:① 只读 2012-01-01 → 2020-12-31,算 R1–R8 与持有,按 S-823 的选法选出一条(或「没有」),写 t347_discovery.json(含选了谁、为什么);② 读到 t347_discovery.json 之后才取 2021 以后的数据,只对选出的那条与 R8、持有算留出段,按 (i)–(iv) 逐条判。两段都报:每条规则的 CAGR、最长水下(从高点到净值第一次回到它的日历日数)、最大回撤、三种敞口各占多少天、换手次数;空头腿单列(总收益、逐段、资金费)。自检:R1 在 2020-07-01 之后空头腿按 1 倍折算应与 T-252 定义 C 的方向一致(负)。不改规则、不加规则、不看留出段再回头改选择。只读、不入库;长计算 nohup;不要 Read 大文件。",
+    "expect": "docs/research/T-347_three_state_exposure.md + t347_*.py + t347_discovery.json + t347_results.json + scenarios/lane-a-T-347.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-a/T-347。"
+  },
+  "prior_value": "Jazz 11-12 定了 ③ 可以做空、可以空仓,但系统里没有一条过检验的「趋势明显」;这张卡是规则改完之后的第一轮重新挖,决定 ③ 的做空一侧能不能从文档走进生产。",
+  "notes": "2026-11-11T16:31:00Z Seth 开卡。规则变化见 MINIMAX_SYNC §Seth-1112d。\n2026-11-12 lane-a 两步跑完(脚本 docs/research/t347_step1_discovery.py / t347_step2_holdout.py,共用件 t347_lib.py)。发现段 2012-01-01→2020-12-31(3288 天):候选 R6(最长水下 1113d)、R2(1111d)⇒ 按选法取 **R6**(ΔCAGR −0.80pp;R6 CAGR 153.47% vs R8 154.27%,做空在发现段是负贡献)。留出段 2021-01-01→2026-10-30(2129 天):R6 CAGR 15.47% / 最长水下 1051d / 最大回撤 −64.10% / 换手 75 / 向下 553 天 / 不明确 492 / 向上 1084;R8 CAGR 12.39% / 1063d;一直持有 18.03% / 847d。判定:(i) CAGR 15.47% > R8 12.39% PASS;(ii) 1051 ≤ 1063 PASS;(iii) 空头腿(1 倍)2022 +56.67%(276 天)、2025-11→2026-08 +11.46%(251 天)PASS,2021-05→2021-09 **0 天在场**(V 形护栏挡掉)亏 0.00%;(iv) circular_shift(block 1,500 次,seed 823)实际 +32.02%、零分布均值 −35.44%,p_upper 0.0858 < 0.10 PASS。**四条全过 ⇒ 进 B 道盲复算**(整合账本前不入生产)。诚实边界:两段符号相反(发现段腿 −46.82%、留出段 +32.02%);账户口径两段都输一直持有(153.47% vs 160.32%;15.47% vs 18.03%),赢的是 R8 不是 ①;p_upper 贴着 0.10 的线。产物:docs/research/T-347_three_state_exposure.md、t347_discovery.json、t347_results.json、scenarios/lane-a-T-347.json(6 条)。"
+}

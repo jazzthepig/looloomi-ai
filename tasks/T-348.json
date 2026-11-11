@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-11",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-348",
+  "owner": "lane-c",
+  "title": "坟场按新尺子重判:已有的做空 / 对冲票(S-642、S-681 H2–H4、S-736、S-808、S-810)叠到整合账本上,按账户口径的回本时间与年化看,两个窗口",
+  "source": "REFUTATION_LEDGER `## S-821` 与 `## S-822`(规则怎么改的)。各族的票与曲线用它们自己已有的脚本 / 结果文件重出(t159、s681、t256、t332、t334),**不重新选票、不改规则**。叠加用你的 t342_house_book.py v2 的装配(C0 = RBv2 + R-v2 f 0.5% + 现金;日历日序列直接喂 `flex_alloc.dynamic_mix_nav`)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-348.json"
+  ],
+  "acceptance": {
+    "check": "这是**重判,不是新检验**:当初这些族都是单独对放贷 / 对随机进场判的,Jazz 11-12 定对冲类按账户口径判。每一族:每票风险 0.5% 净值、叠到 C0 上,报账户的 CAGR、最长水下、最大回撤、逐年,与 C0 的差;两个窗口都报 —— 该族票源能覆盖的最早日期起、与 2021-10-11 起。下游自检:喂给内核的叠加序列在窗口内 Π(1+r) = 该族曲线同区间收益(差 < 1e-9)。「去掉最好一张」只报不判。结论只分三类:两个窗口都让最长水下变短且年化不降 / 只在一个窗口 / 都不。**两个窗口结论相反的,明写「窗口依赖」**(S-819 就是这样错的)。不入库;长计算 nohup;不要 Read 大文件;先做 S-642 与 S-736 两族,上下文不够就先交这两族。",
+    "expect": "docs/research/T-348_graveyard_rejudged.md + t348_*.py + t348_results.json + scenarios/lane-c-T-348.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-c/T-348。"
+  },
+  "prior_value": "规则改了之后,哪些旧的 ❌ 是「尺子」造成的、哪些是真的不行,要量出来 —— 否则重新挖只是把同一批东西再否一遍或再信一遍。",
+  "notes": "2026-11-11T16:31:00Z Seth 开卡。T-342 v2 的数还没跑出来的话,先把它跑完(同一个脚本)。"
+}
