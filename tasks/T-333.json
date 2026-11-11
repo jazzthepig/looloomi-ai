@@ -1,0 +1,28 @@
+{
+  "id": "T-333",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-11",
+  "title": "S-809 情绪过热之后的转弯做空 BTC:恐惧贪婪 + 资金费高位,之后第一次跌破 20 日线开空票(S-736 同一票机械)",
+  "source": "REFUTATION_LEDGER S-809(`grep -n \"^## S-809\" -A 8 REFUTATION_LEDGER.md`,原文照抄);票机械 docs/research/t256_tactical_short.py(一字不改);fng 与资金费取法同 docs/research/t187_crash_atlas_crypto.py(macro_series('fng') / v_funding_daily);价格 perp_bv_daily(只读)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-333.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-809 原文照抄进报告开头;先用 t256 复现 S-736 的 18 张票(平均 R −0.37)作自检;过热日与阈值只用 ≤ h 的数据;(a)–(e) 逐条报数与判定(票数 < 15 就写只报不判,仍报全部数);逐票表落 t333_tickets.csv;山寨篮版只报。分支上要有 tasks/T-333.json(从 origin/main 拷,status 改 in_review)。只读、不入库、不改代码。",
+    "expect": "docs/research/T-333_euphoria_turn_short.md + t333_euphoria_short.py + t333_results.json + t333_tickets.csv + scenarios/lane-b-T-333.json(≥ 3 条前向命题,至少一条 close: 或 state: 自动结算);in_review,推 lane-b/T-333。"
+  },
+  "prior_value": "S-736 在恐惧里做空失败;这条在贪婪见顶转弯时做空 —— 拥挤多头 + 清算链。",
+  "notes": "2026-11-11T00:30:07Z Seth 开卡(Jazz 11-11)。",
+  "verified": null
+}
