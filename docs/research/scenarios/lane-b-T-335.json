@@ -4,54 +4,41 @@
     {
       "id": "T-335-1",
       "author": "lane-b",
-      "scenario": "T-335 S-811 Jazz 的做空写法(过热区卖 50% 多头 + 用落袋利润分批加空)",
-      "statement": "BTC 7 日年化资金费(state_daily entity=panel feature=funding_7d_ann_binance)在 2026-12-18 仍低于 0.30 —— S-811 过热区的「拥挤多头」这一半在一个月内不会亮。",
-      "variable": "state:funding_7d_ann_binance",
-      "op": "lt",
-      "lo": null,
-      "hi": 0.3,
-      "prob": 0.85,
+      "scenario": "T-335 S-811 Jazz 的做空写法(过热区卖 50% 多头 + 用利润分批加空)",
+      "statement": "BTC 收盘在 2026-12-18 高于本卡最后一次读数 73727.00 的 5%(≈77413)。",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 77413.35,
+      "hi": null,
+      "prob": 0.55,
       "horizon_d": "2026-12-18",
-      "basis": "沿用 lane-b T-333 卡实测(继承结论,本轮上下文被守卫截断未复核):2025–26 年 BTC 7 日均年化资金费从未达到自身扩张 85 分位(最高比值 0.46 / 0.56,绝对值约 0.11 / 0.10)。要一个月内跳到 0.30 需要新的杠杆进场 —— 概率低。"
+      "basis": "结算源 ohlcv_daily;本卡实测:BTC 从 2019-12 到现在,任意 30 个日历日内收盘涨超 5% 的比例约一半;S-811 的入场在收盘、出场看 MA50,方向是双向的 —— 只给 0.55。"
     },
     {
       "id": "T-335-2",
       "author": "lane-b",
       "scenario": "T-335 S-811 Jazz 的做空写法(过热区卖 50% 多头 + 用利润分批加空)",
-      "statement": "BTC 7 日年化资金费在 2026-12-18 仍为正 —— 空方「收租」的前提成立(S-811 的空腿按持有期实收资金费)。",
-      "variable": "state:funding_7d_ann_binance",
-      "op": "gt",
-      "lo": 0,
-      "hi": null,
-      "prob": 0.6,
+      "statement": "BTC 收盘在 2026-12-18 低于本卡最后一次读数 73727.00 的 5%(≈70041)。",
+      "variable": "close:BTC",
+      "op": "lt",
+      "lo": null,
+      "hi": 70040.65,
+      "prob": 0.45,
       "horizon_d": "2026-12-18",
-      "basis": "继承 T-333 实测:2026 年 BTC 资金费 7 日均年化始终在 0 之上(最低不低于 0)。资金费是慢变量,一个月内翻负的概率不高,但这是方向性判断而非强度判断 —— 只给 0.60。"
+      "basis": "与 T-335-1 互补的两分:同样 ±5% 的带宽,不给方向性优势 —— 本卡样本里 TRIM+SHORT 与 HOLD 的差距落在检出力不足的量级(Δ = +0.12 / 10.48,随机对照分位 0.70)。"
     },
     {
       "id": "T-335-3",
       "author": "lane-b",
       "scenario": "T-335 S-811 Jazz 的做空写法(过热区卖 50% 多头 + 用利润分批加空)",
-      "statement": "恐惧贪婪指数(macro_daily series=fng)在 2026-12-18 低于 75 —— 「极端贪婪」读数在 2026-12-18 之前不出现。",
-      "variable": "macro:fng",
-      "op": "lt",
-      "lo": null,
-      "hi": 75,
-      "prob": 0.85,
-      "horizon_d": "2026-12-18",
-      "basis": "继承 T-333 实测:2026 年 fng 7 日均最高只到自身扩张 85 分位的 1.012 倍(整年没有真正的贪婪段),2026-11-10 原始读数 32。一个月内跳到 ≥75 的概率低。"
-    },
-    {
-      "id": "T-335-4",
-      "author": "lane-b",
-      "scenario": "T-335 S-811 Jazz 的做空写法(过热区卖 50% 多头 + 用利润分批加空)",
-      "statement": "到 2026-12-18 为止没有出现新的 S-811 过热日(收盘/MA200 − 1 ≥ 自身扩张 90 分位 且 资金费年化 7 日均 ≥ 自身扩张 85 分位)—— 人工结算:重跑 docs/research/t335_trim_short.py,看 t335_results.json 里 BTC 的 overheat_run_starts 是否新增。",
+      "statement": "到 2026-12-18 为止没有出现新的 S-811 过热日(收盘/MA200 − 1 ≥ 扩张 90 分位 且 资金费年化 7 日均 ≥ 扩张 85 分位)—— 人工结算:重跑 docs/research/t335_trim_short.py,看 t335_results.json 里 BTC 的 overheat_run_starts。",
       "variable": "manual",
       "op": "gt",
       "lo": 0,
       "hi": null,
       "prob": 0.6,
       "horizon_d": "2026-12-18",
-      "basis": "S-811 的两个分位都要创新高,一个月内同时凑齐的概率低;本卡 T-335 的轮次极少(逐轮表见 t335_rounds.csv),说明这个事件本身稀有。"
+      "basis": "本卡实测:2026 年的过热日数量与最后一段的起止见 t335_results.json;两个分位都要创新高,一个月内同时凑齐的概率低。"
     }
   ]
 }

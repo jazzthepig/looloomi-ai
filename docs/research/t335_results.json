@@ -1,0 +1,312 @@
+{
+  "BTC": {
+    "symbol": "BTC",
+    "bars": 2505,
+    "start": "2019-12-31",
+    "end": "2026-11-09",
+    "n_rounds": 1,
+    "overheat_days": 15,
+    "overheat_run_starts": [
+      "2024-03-01"
+    ],
+    "arms": {
+      "HOLD": {
+        "total_return": 9.47809152872444,
+        "max_dd": -0.766695618320954,
+        "final_nav": 10.47809152872444
+      },
+      "TRIM": {
+        "total_return": 9.366540706287381,
+        "max_dd": -0.766695618320954,
+        "final_nav": 10.366540706287381
+      },
+      "TRIM+SHORT": {
+        "total_return": 9.60179380309431,
+        "max_dd": -0.766695618320954,
+        "final_nav": 10.60179380309431
+      }
+    },
+    "rounds": [
+      {
+        "entry_i": 1522,
+        "exit_i": 1565,
+        "entry_d": "2024-03-01",
+        "exit_d": "2024-04-13",
+        "exit_reason": "ma50",
+        "budget_hit": false,
+        "n_adds": 1,
+        "n_lots": 2,
+        "p_entry": 62430.6,
+        "p_exit": 63939.7,
+        "p90": 39435.0,
+        "gain90": 0.5831266641308481,
+        "budget": 2.531040176823493,
+        "a_pre": 8.684184170260119,
+        "a_after": 8.68092760119627,
+        "short_gross": 0.10675243379184904,
+        "short_funding": 0.1349312943906323,
+        "short_cost": 0.006430631375553316,
+        "short_net": 0.23525309680692805,
+        "long_gross": -0.10495896508554725,
+        "short_ret_lots": [
+          -0.024172441078573526,
+          0.07336185432843789
+        ],
+        "long_ret_trim": 0.024172441078573526,
+        "cash": 0.12370227436987058,
+        "qty": 0.00013910140492418973,
+        "entry_below_ma50": false
+      }
+    ],
+    "null": {
+      "n": 1000,
+      "seed": 811,
+      "actual": 0.12370227436987058,
+      "percentile": 0.698,
+      "null_mean": -0.05631928507657193,
+      "null_std": 0.6389131623477825,
+      "null_p10": -0.33194321240859687,
+      "null_p50": 0.004951928058161137,
+      "null_p90": 0.45837011070364914,
+      "null_max": 1.2264709497111035,
+      "null_min": -4.654072469664472,
+      "frac_ge_actual": 0.302
+    },
+    "judge": {
+      "i_total_return_gt_hold_and_trim": true,
+      "ii_maxdd_not_deeper_than_hold": true,
+      "iii_null_percentile_ge_90": false,
+      "iv_majority_rounds_short_pnl_positive": true,
+      "all_pass": false,
+      "rounds_short_pnl_positive": 1,
+      "rounds_total": 1
+    },
+    "sensitivity": [
+      {
+        "pct_ext": 0.9,
+        "pct_fund": 0.85,
+        "overheat_days": 15,
+        "n_rounds": 1,
+        "delta_ts_hold": 0.12370227436987058,
+        "short_net_sum": 0.23525309680692805,
+        "null_pct": 0.6966666666666667,
+        "null_n": 300
+      },
+      {
+        "pct_ext": 0.9,
+        "pct_fund": 0.8,
+        "overheat_days": 16,
+        "n_rounds": 1,
+        "delta_ts_hold": 0.13773423587391953,
+        "short_net_sum": 0.24530279200133487,
+        "null_pct": 0.6666666666666666,
+        "null_n": 300
+      },
+      {
+        "pct_ext": 0.9,
+        "pct_fund": 0.75,
+        "overheat_days": 16,
+        "n_rounds": 1,
+        "delta_ts_hold": 0.13773423587391953,
+        "short_net_sum": 0.24530279200133487,
+        "null_pct": 0.6666666666666666,
+        "null_n": 300
+      },
+      {
+        "pct_ext": 0.85,
+        "pct_fund": 0.85,
+        "overheat_days": 22,
+        "n_rounds": 1,
+        "delta_ts_hold": -0.007302681063491079,
+        "short_net_sum": 0.18954369882244265,
+        "null_pct": 0.43,
+        "null_n": 300
+      },
+      {
+        "pct_ext": 0.85,
+        "pct_fund": 0.8,
+        "overheat_days": 35,
+        "n_rounds": 2,
+        "delta_ts_hold": 0.18281837823342073,
+        "short_net_sum": 0.29117188358882345,
+        "null_pct": 0.5833333333333334,
+        "null_n": 300
+      },
+      {
+        "pct_ext": 0.85,
+        "pct_fund": 0.75,
+        "overheat_days": 49,
+        "n_rounds": 2,
+        "delta_ts_hold": -0.22773995777411038,
+        "short_net_sum": 0.15851040736707261,
+        "null_pct": 0.31666666666666665,
+        "null_n": 300
+      },
+      {
+        "pct_ext": 0.8,
+        "pct_fund": 0.85,
+        "overheat_days": 26,
+        "n_rounds": 2,
+        "delta_ts_hold": 0.26034032019339826,
+        "short_net_sum": 0.2881210320448362,
+        "null_pct": 0.6933333333333334,
+        "null_n": 300
+      },
+      {
+        "pct_ext": 0.8,
+        "pct_fund": 0.8,
+        "overheat_days": 56,
+        "n_rounds": 3,
+        "delta_ts_hold": -0.4138230563586447,
+        "short_net_sum": 0.2629137829096787,
+        "null_pct": 0.3233333333333333,
+        "null_n": 300
+      },
+      {
+        "pct_ext": 0.8,
+        "pct_fund": 0.75,
+        "overheat_days": 91,
+        "n_rounds": 5,
+        "delta_ts_hold": -1.897811869986981,
+        "short_net_sum": -0.933915936964305,
+        "null_pct": 0.15,
+        "null_n": 300
+      }
+    ]
+  },
+  "ETH": {
+    "symbol": "ETH",
+    "bars": 2505,
+    "start": "2019-12-31",
+    "end": "2026-11-09",
+    "n_rounds": 0,
+    "overheat_days": 0,
+    "overheat_run_starts": [],
+    "arms": {
+      "HOLD": {
+        "total_return": 15.5272614622057,
+        "max_dd": -0.7935130756288558,
+        "final_nav": 16.5272614622057
+      },
+      "TRIM": {
+        "total_return": 15.5272614622057,
+        "max_dd": -0.7935130756288558,
+        "final_nav": 16.5272614622057
+      },
+      "TRIM+SHORT": {
+        "total_return": 15.5272614622057,
+        "max_dd": -0.7935130756288558,
+        "final_nav": 16.5272614622057
+      }
+    },
+    "rounds": [],
+    "null": {
+      "n": 1000,
+      "seed": 811,
+      "actual": 0.0,
+      "percentile": null,
+      "error": "零分布没有方差(全部 ≈ np.float64(0.0),跨度 0.0e+00)—— 打乱没有改变任何东西"
+    },
+    "judge": {
+      "i_total_return_gt_hold_and_trim": false,
+      "ii_maxdd_not_deeper_than_hold": true,
+      "iii_null_percentile_ge_90": false,
+      "iv_majority_rounds_short_pnl_positive": false,
+      "all_pass": false,
+      "rounds_short_pnl_positive": 0,
+      "rounds_total": 0
+    },
+    "sensitivity": [
+      {
+        "pct_ext": 0.9,
+        "pct_fund": 0.85,
+        "overheat_days": 0,
+        "n_rounds": 0,
+        "delta_ts_hold": 0.0,
+        "short_net_sum": 0.0,
+        "null_pct": null,
+        "null_n": 300
+      },
+      {
+        "pct_ext": 0.9,
+        "pct_fund": 0.8,
+        "overheat_days": 0,
+        "n_rounds": 0,
+        "delta_ts_hold": 0.0,
+        "short_net_sum": 0.0,
+        "null_pct": null,
+        "null_n": 300
+      },
+      {
+        "pct_ext": 0.9,
+        "pct_fund": 0.75,
+        "overheat_days": 2,
+        "n_rounds": 1,
+        "delta_ts_hold": 8.764782372272961,
+        "short_net_sum": 2.9463382214830016,
+        "null_pct": 0.9933333333333333,
+        "null_n": 300
+      },
+      {
+        "pct_ext": 0.85,
+        "pct_fund": 0.85,
+        "overheat_days": 13,
+        "n_rounds": 1,
+        "delta_ts_hold": 2.5837199218460114,
+        "short_net_sum": 1.7862810955603954,
+        "null_pct": 0.9366666666666666,
+        "null_n": 300
+      },
+      {
+        "pct_ext": 0.85,
+        "pct_fund": 0.8,
+        "overheat_days": 13,
+        "n_rounds": 1,
+        "delta_ts_hold": 2.5837199218460114,
+        "short_net_sum": 1.7862810955603954,
+        "null_pct": 0.9366666666666666,
+        "null_n": 300
+      },
+      {
+        "pct_ext": 0.85,
+        "pct_fund": 0.75,
+        "overheat_days": 15,
+        "n_rounds": 2,
+        "delta_ts_hold": 11.927666506512658,
+        "short_net_sum": 5.3117835294370845,
+        "null_pct": 0.9966666666666667,
+        "null_n": 300
+      },
+      {
+        "pct_ext": 0.8,
+        "pct_fund": 0.85,
+        "overheat_days": 20,
+        "n_rounds": 2,
+        "delta_ts_hold": 4.022832385617548,
+        "short_net_sum": 3.4789099878480263,
+        "null_pct": 0.96,
+        "null_n": 300
+      },
+      {
+        "pct_ext": 0.8,
+        "pct_fund": 0.8,
+        "overheat_days": 23,
+        "n_rounds": 2,
+        "delta_ts_hold": 4.898830934820509,
+        "short_net_sum": 4.713491628361398,
+        "null_pct": 0.9633333333333334,
+        "null_n": 300
+      },
+      {
+        "pct_ext": 0.8,
+        "pct_fund": 0.75,
+        "overheat_days": 29,
+        "n_rounds": 2,
+        "delta_ts_hold": 3.2704386412389184,
+        "short_net_sum": 3.7218193917036064,
+        "null_pct": 0.88,
+        "null_n": 300
+      }
+    ]
+  }
+}

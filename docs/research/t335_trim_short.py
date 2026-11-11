@@ -184,19 +184,20 @@ class Ctx:
 
 
 # ───────────────────────────── 模拟引擎 ─────────────────────────────
-def _close_shorts(lots: list[dict], p: float, cash: float) -> tuple[float, float]:
-    """全部平空(买回)。返回 (cash, 空头毛盈亏)。lots 不被修改。"""
-    proceeds = sum(l["qty"] * p for l in lots)
-    cash += proceeds - COST * proceeds
+def _close_shorts(lots: list[dict], p: float, cash: float) -> tuple[float, float, float]:
+    """全部平空(买回)。永续空单开仓时没有现金流入,平仓时也不该凭空多出名义本金:
+    账户只拿到「已实现的空头盈亏」=(开仓价 − 平仓价)× 数量。返回 (cash, 毛盈亏, 平仓名义)。"""
     gross = sum((l["px"] - p) * l["qty"] for l in lots)
-    return cash, gross
+    notional = sum(l["qty"] * p for l in lots)
+    return cash + gross, gross, notional
 
 
-def _restore_long(cash: float, qty: float, p: float) -> tuple[float, float]:
-    """把账户买回「1.0 倍」:全额换成 BTC(1.0 = 账户的 1.0 倍)。返回 (qty, 账户值)。"""
-    a_total = cash + qty * p
-    a_end = a_total / (1.0 + COST)
-    return a_end / p, a_end
+def _restore_long(cash: float, qty: float, qty_full: float, p: float) -> tuple[float, float]:
+    """多头买回到 1.0(= 进场前的数量);剩余现金留在账户里 —— 那正是「刚落袋的利润」,
+    也是下一次做空的本钱。返回 (qty, cash)。"""
+    buy = (qty_full - qty) * p
+    cash -= buy * (1.0 + COST)
+    return qty_full, cash
 
 
 def simulate_round(ctx: Ctx, e: int, cash: float, qty: float) -> dict:
@@ -204,6 +205,7 @@ def simulate_round(ctx: Ctx, e: int, cash: float, qty: float) -> dict:
     px, n = ctx.close, ctx.n
     p_e = float(px[e])
     a_pre = qty * p_e + cash
+    qty_full = qty            # 进场前的多头数量(= 1.0 倍 BTC)
 
     # ── 卖 50% 多头 ──
     qty_sold = qty * TRIM_SHARE
@@ -248,28 +250,28 @@ def simulate_round(ctx: Ctx, e: int, cash: float, qty: float) -> dict:
 
         # ① 预算风控(唯一的风控):空头累计浮亏 ≥ B
         if lots and float_pnl <= -budget:
-            cash, gross_short = _close_shorts(lots, p, cash)
-            cost_short += COST * sum(l["qty"] * p for l in lots)
+            cash, gross_short, notional = _close_shorts(lots, p, cash)
+            cost_short += COST * notional
+            cash -= COST * notional
             lots_snapshot = lots
             lots = []
-            qty, a_end = _restore_long(cash, qty, p)
-            cash = 0.0
+            qty, cash = _restore_long(cash, qty, qty_full, p)
             exit_i, exit_reason, budget_hit = d, "budget", True
-            nav[d] = qty * p
+            nav[d] = qty * p + cash
             break
 
         # ② 出场:收盘第一次低于 50 日均线 / 首笔空起 90 天到期
         below_ma50 = bool(np.isfinite(ctx.ma50[d]) and p < ctx.ma50[d])
         if below_ma50 or d >= ts_idx:
-            cash, gross_short = _close_shorts(lots, p, cash)
-            cost_short += COST * sum(l["qty"] * p for l in lots)
+            cash, gross_short, notional = _close_shorts(lots, p, cash)
+            cost_short += COST * notional
+            cash -= COST * notional
             lots_snapshot = lots
             lots = []
-            qty, a_end = _restore_long(cash, qty, p)
-            cash = 0.0
+            qty, cash = _restore_long(cash, qty, qty_full, p)
             exit_i = d
             exit_reason = "ma50" if below_ma50 else "time"
-            nav[d] = qty * p
+            nav[d] = qty * p + cash
             break
 
         # ③ 加空:较第 1 笔再涨 +10% / +20% 各加 0.25 倍
@@ -286,14 +288,14 @@ def simulate_round(ctx: Ctx, e: int, cash: float, qty: float) -> dict:
     if exit_i is None:
         # 数据末端仍持仓:按最后收盘标记并平掉
         p = float(px[n - 1])
-        cash, gross_short = _close_shorts(lots, p, cash)
-        cost_short += COST * sum(l["qty"] * p for l in lots)
+        cash, gross_short, notional = _close_shorts(lots, p, cash)
+        cost_short += COST * notional
+        cash -= COST * notional
         lots_snapshot = lots
         lots = []
-        qty, _ = _restore_long(cash, qty, p)
-        cash = 0.0
+        qty, cash = _restore_long(cash, qty, qty_full, p)
         exit_i, exit_reason = n - 1, "eod"
-        nav[n - 1] = qty * p
+        nav[n - 1] = qty * p + cash
 
     p_exit = float(px[exit_i])
     short_net = gross_short + funding - cost_short
@@ -344,17 +346,19 @@ def run_strategy(ctx: Ctx, overheat: np.ndarray, collect_nav: bool = True) -> di
     nav = np.full(n, np.nan)
     if collect_nav:
         cur_qty = 1.0 / float(px[0])
+        cur_cash = 0.0
         pos = 0
         for rnd in rounds:
             e, x = rnd["entry_i"], rnd["exit_i"]
             for d in range(pos, e):
-                nav[d] = cur_qty * px[d]
+                nav[d] = cur_qty * px[d] + cur_cash
             for d, v in rnd["nav"].items():
                 nav[d] = v
             cur_qty = rnd["qty"]
+            cur_cash = rnd["cash"]
             pos = x + 1
         for d in range(pos, n):
-            nav[d] = cur_qty * px[d]
+            nav[d] = cur_qty * px[d] + cur_cash
     final_nav = float(qty * px[-1] + cash)
     return {"rounds": rounds, "nav": nav, "cash": cash, "qty": qty, "final_nav": final_nav}
 
@@ -369,9 +373,10 @@ def run_trim(ctx: Ctx, round_dates: list[tuple[int, int]]) -> dict:
     marks = []
     prev_end = 0
     for (e, x) in round_dates:
-        for d in range(prev_end, e):          # 轮与轮之间:全仓 BTC
-            nav[d] = qty * px[d]
+        for d in range(prev_end, e):          # 轮与轮之间:全仓 BTC + 轮后剩下的现金
+            nav[d] = qty * px[d] + cash
         p_e = float(px[e])
+        qty_full = qty
         qty_sold = qty * TRIM_SHARE
         proceeds = qty_sold * p_e
         cash += proceeds - COST * proceeds
@@ -379,15 +384,14 @@ def run_trim(ctx: Ctx, round_dates: list[tuple[int, int]]) -> dict:
         for d in range(e, x):                  # 轮内:50% BTC + 50% 现金
             nav[d] = qty * px[d] + cash
         p_x = float(px[x])
-        a_total = cash + qty * p_x
-        a_end = a_total / (1.0 + COST)
-        qty = a_end / p_x
-        cash = 0.0
-        nav[x] = qty * p_x
+        buy = (qty_full - qty) * p_x
+        cash -= buy * (1.0 + COST)
+        qty = qty_full
+        nav[x] = qty * p_x + cash
         prev_end = x + 1
         marks.append({"entry_d": ctx.dates[e], "exit_d": ctx.dates[x]})
     for d in range(prev_end, n):
-        nav[d] = qty * px[d]
+        nav[d] = qty * px[d] + cash
     return {"nav": nav, "final_nav": float(qty * px[-1] + cash), "marks": marks}
 
 
@@ -405,6 +409,35 @@ def total_return(nav: np.ndarray) -> float:
 
 
 # ───────────────────────────── 跑一个品种 ─────────────────────────────
+def sensitivity(ctx: Ctx) -> list[dict]:
+    """探索性(非预注册):把两个分位阈值放宽,看轮次数与 Δ 怎么变。
+    预注册只有 90/85 这一组;这里只用来回答「是不是因为轮次太少才有结论」。"""
+    out = []
+    hold_end = float(hold_nav(ctx)[-1])
+    for pe in (0.90, 0.85, 0.80):
+        for pf in (0.85, 0.80, 0.75):
+            ok = np.isfinite(ctx.pct_ext) & np.isfinite(ctx.pct_fund)
+            mask = ok & (ctx.pct_ext >= pe) & (ctx.pct_fund >= pf)
+            r = run_strategy(ctx, mask, collect_nav=False)
+            delta = r["final_nav"] - hold_end
+
+            def _sim(rng: np.random.Generator) -> float:
+                sh = circular_shift(mask, rng, block=1)
+                return run_strategy(ctx, sh, collect_nav=False)["final_nav"] - hold_end
+
+            try:
+                nul = null_distribution(_sim, 300, SEED)
+                pct = percentile_of(delta, nul)
+            except NoOpNull:
+                pct = None
+            out.append({"pct_ext": pe, "pct_fund": pf,
+                        "overheat_days": int(mask.sum()), "n_rounds": len(r["rounds"]),
+                        "delta_ts_hold": float(delta),
+                        "short_net_sum": float(sum(x["short_net"] for x in r["rounds"])),
+                        "null_pct": pct, "null_n": 300})
+    return out
+
+
 def run_symbol(ctx: Ctx, label: str) -> dict:
     print(f"[{label}] {ctx.sym}: bars={ctx.n} {ctx.dates[0]}→{ctx.dates[-1]} "
           f"(同日重复 {ctx.n_dup})", flush=True)
@@ -475,6 +508,7 @@ def run_symbol(ctx: Ctx, label: str) -> dict:
         "all_pass": bool(j1 and j2 and j3 and j4),
         "rounds_short_pnl_positive": len(pos), "rounds_total": len(res["rounds"]),
     }
+    out["sensitivity"] = sensitivity(ctx)
     print(f"[{label}] 轮次 {out['n_rounds']} · HOLD {a['HOLD']['total_return']:.4f} · "
           f"TRIM {a['TRIM']['total_return']:.4f} · TRIM+SHORT {a['TRIM+SHORT']['total_return']:.4f} · "
           f"Δ={actual:.4f} · 分位 {pct} · 判定 {out['judge']}", flush=True)
@@ -555,8 +589,8 @@ def write_md(results: dict) -> None:
     lines.append("| 预算 B | 0.5 × a_after × max(0, 进场收盘 / 90 天前收盘 − 1);"
                  "**空头累计浮亏 ≥ B ⇒ 当日收盘全部平空 + 多头买回 1.0**;从进场的次日起判 |")
     lines.append("| 出场 | 收盘第一次低于 MA50,或首笔空起 90 个日历日到期;两者动作相同 |")
-    lines.append("| 「多头买回到 1.0」 | 账户**全额换回 BTC**(1.0 = 账户的 1.0 倍)⇒ 这一轮的钱全部留在仓位里,"
-                 "不落现金;TRIM 臂同口径 |")
+    lines.append("| 「多头买回到 1.0」 | 多头买回**进场前的数量**(1.0 倍 BTC);轮后剩下的现金留在账户里"
+                 "—— 那正是「刚落袋的利润」,也是下一次做空的本钱;TRIM 臂同口径 |")
     lines.append("| 成本 | 7.5bp × 每次成交名义(买 + 卖各算一次) |")
     lines.append("| 资金费 | 持有日 (进场日, 平仓日] 实计;空方收正费率(按当日名义 × 当日资金费率) |")
     lines.append("| 轮内检查顺序 | 资金费 → 预算风控 → 出场 → 加空(+10% / +20% 较第 1 笔) |")
@@ -589,6 +623,8 @@ def write_md(results: dict) -> None:
                      f"(iii) 随机对照 ≥ 90 分位:**{'✅' if j['iii_null_percentile_ge_90'] else '❌'}**;"
                      f"(iv) 多数轮次空头盈亏为正:**{'✅' if j['iv_majority_rounds_short_pnl_positive'] else '❌'}**"
                      f"({j['rounds_short_pnl_positive']}/{j['rounds_total']} 轮为正)。")
+        lines.append(f"- **总判定:{'✅ 通过(四条全过)' if j['all_pass'] else '❌ 不通过'}**"
+                     f"(轮次 {r['n_rounds']})。")
         lines.append("")
     if btc:
         lines.append("### 逐轮表(BTC;完整表见 `t335_rounds.csv`)")
@@ -603,11 +639,34 @@ def write_md(results: dict) -> None:
                 f"{rd['short_gross']:+.4f} | {rd['short_funding']:+.4f} | {rd['short_cost']:.4f} | "
                 f"{rd['short_net']:+.4f} | {rd['long_gross']:+.4f} | {rd['budget']:.4f} |")
         lines.append("")
+    sens = btc.get("sensitivity") if btc else None
+    if sens:
+        lines.append("### 2.1 敏感性扫描(**探索性,非预注册**)")
+        lines.append("")
+        lines.append("预注册只写死 90/85 一组阈值,而它只给出 1 轮(BTC)。下表把两个分位放宽,"
+                     "看「轮次太少」是不是结论的唯一来源。零分布 300 次(主检验用 1,000 次)。")
+        lines.append("")
+        lines.append("| 扩展度分位 | 资金费分位 | 过热日 | 轮次 | Δ(TRIM+SHORT − HOLD) | 空头净盈亏合计 | 零分布分位 |")
+        lines.append("|---|---|---|---|---|---|---|")
+        for row in sens:
+            mark = " ←预注册" if row["pct_ext"] == PCT_EXT and row["pct_fund"] == PCT_FUND else ""
+            pstr = "—" if row["null_pct"] is None else f"{row['null_pct']:.3f}"
+            lines.append(
+                f"| {row['pct_ext']:.2f}{mark} | {row['pct_fund']:.2f} | {row['overheat_days']} | "
+                f"{row['n_rounds']} | {row['delta_ts_hold']:+.4f} | {row['short_net_sum']:+.4f} | {pstr} |")
+        lines.append("")
+        lines.append("**这张表不是预注册检验的一部分** —— 它只回答「结论是不是轮次太少的产物」;"
+                     "要用它下结论,必须另立预注册、在新数据上过零信号对照。")
+        lines.append("")
     lines.append("## 3. 诚实与边界")
     lines.append("")
     lines.append("- 轮次极少(见上表),汇总数的检出力很弱 —— **逐轮表比汇总数重要**;"
                  "任何一条判定都只是「在这一小段样本上没有反例」,不是「有效」。")
-    lines.append("- 「多头买回到 1.0 = 全额换回 BTC」是本卡的读法(另一读法:买回原来数量、利润留现金不动)。")
+    lines.append("- 「多头买回到 1.0」= 买回进场前的数量、利润留现金(本卡读法)。"
+                 "另一读法(全额换回 BTC)会让轮后仓位略大于 1.0 倍,结论方向不变、幅度略大。")
+    lines.append("- 永续空单开仓没有现金流入、平仓也没有名义本金流进流出,账户只拿到**已实现盈亏**;"
+                 "第一版脚本把平仓名义当成流入(账户凭空多出约 2 倍名义)时,BTC 的 Δ 被虚报成 +5.0,"
+                 "已修正为 +0.12 量级 —— **修的是记账,不是结论方向**。")
     lines.append("- 随机对照把**整条过热区日程**循环平移;平移后 MA50 / 资金费 / MA200 的可用性"
                  "仍按原日期取(指标本身不重算),这是 S-811 写死的做法。")
     lines.append("- ETH 只报,不判定。")
@@ -615,15 +674,36 @@ def write_md(results: dict) -> None:
     OUT_MD.write_text("\n".join(lines) + "\n")
 
 
+def _last_ohlcv_close(sym: str) -> float | None:
+    """情景结算用的是 ohlcv_daily 的收盘(不是 perp_bv_daily),这里取同源最新值。
+    同一天可能有多个 source,取最低的一条做基准(阈值 ±5% 带宽足够吸收这个差)。"""
+    try:
+        rows = pull("ohlcv_daily", {"select": "trade_date,close", "symbol": f"eq.{sym}",
+                                    "order": "trade_date.desc,recorded_at.desc"})
+    except Exception as exc:  # 只读失败不致命:退回永续收盘并在 basis 里说明
+        print(f"  warn: ohlcv_daily {sym} 取数失败({exc});退回 perp 收盘", flush=True)
+        return None
+    if not rows:
+        return None
+    latest = max(str(r["trade_date"]) for r in rows)
+    vals = [float(r["close"]) for r in rows
+            if str(r["trade_date"]) == latest and r.get("close") is not None]
+    return min(vals) if vals else None
+
+
 def write_scenarios(results: dict) -> None:
     btc = results.get("BTC")
     if not btc:
         return
-    p = CACHE / "perp_BTC.json"
-    if not p.exists():
-        return
-    rows = json.loads(p.read_text())
-    last_close = float(rows[-1]["c"])
+    last_close = _last_ohlcv_close("BTC")
+    src = "ohlcv_daily"
+    if last_close is None:
+        p = CACHE / "perp_BTC.json"
+        if not p.exists():
+            return
+        rows = json.loads(p.read_text())
+        last_close = float(rows[-1]["c"])
+        src = "perp_bv_daily(结算源不同,只作参考)"
     horizon = "2026-12-18"
     entries = [
         {"id": "T-335-1", "author": "lane-b",
@@ -631,7 +711,7 @@ def write_scenarios(results: dict) -> None:
          "statement": f"BTC 收盘在 {horizon} 高于本卡最后一次读数 {last_close:.2f} 的 5%(≈{last_close * 1.05:.0f})。",
          "variable": "close:BTC", "op": "gt", "lo": round(last_close * 1.05, 2), "hi": None,
          "prob": 0.55, "horizon_d": horizon,
-         "basis": "本卡实测:BTC 从 2019-12 到现在,任意 30 个日历日内收盘涨超 5% 的比例约一半;"
+         "basis": f"结算源 {src};本卡实测:BTC 从 2019-12 到现在,任意 30 个日历日内收盘涨超 5% 的比例约一半;"
                   "S-811 的入场在收盘、出场看 MA50,方向是双向的 —— 只给 0.55。"},
         {"id": "T-335-2", "author": "lane-b",
          "scenario": "T-335 S-811 Jazz 的做空写法(过热区卖 50% 多头 + 用利润分批加空)",
@@ -639,7 +719,7 @@ def write_scenarios(results: dict) -> None:
          "variable": "close:BTC", "op": "lt", "lo": None, "hi": round(last_close * 0.95, 2),
          "prob": 0.45, "horizon_d": horizon,
          "basis": "与 T-335-1 互补的两分:同样 ±5% 的带宽,不给方向性优势 —— 本卡样本里 "
-                  "TRIM+SHORT 与 HOLD 的差距落在检出力不足的量级。"},
+                  "TRIM+SHORT 与 HOLD 的差距落在检出力不足的量级(Δ = +0.12 / 10.48,随机对照分位 0.70)。"},
         {"id": "T-335-3", "author": "lane-b",
          "scenario": "T-335 S-811 Jazz 的做空写法(过热区卖 50% 多头 + 用利润分批加空)",
          "statement": "到 2026-12-18 为止没有出现新的 S-811 过热日(收盘/MA200 − 1 ≥ 扩张 90 分位 "

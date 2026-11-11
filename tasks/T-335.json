@@ -1,7 +1,7 @@
 {
   "id": "T-335",
   "owner": "lane-b",
-  "status": "claimed",
+  "status": "in_review",
   "created": "2026-11-11",
   "title": "S-811 Jazz 的做空写法:过热区卖 50% 多头、用利润分批加空(+10% / +20% 各加一笔)、扛单无价格止损、预算 = 落袋利润;对 HOLD 与只减仓",
   "source": "REFUTATION_LEDGER S-811(`grep -n \"^## S-811\" -A 14 REFUTATION_LEDGER.md`,原文照抄);价格 perp_bv_daily、资金费 v_funding_daily(只读,翻页带 order=);过热区的 P2 / 资金费读法可参考 docs/research/t187_crash_atlas_crypto.py 与你 T-333 的取法。",
@@ -23,6 +23,6 @@
     "expect": "docs/research/T-335_trim_and_short.md + t335_trim_short.py + t335_results.json + t335_rounds.csv + scenarios/lane-b-T-335.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-b/T-335。"
   },
   "prior_value": "做空族的裸空 + 紧止损都失败;这条把空头放进组合、用落袋利润扛单 —— Jazz 的实际交易方式。",
-  "notes": "2026-11-11 lane-b 第 1 步(本轮上下文在 ~99k token 被守卫拦下,只能落「脚本 + 卡 claimed」,数字下一轮出):① 已写 docs/research/t335_trim_short.py(取数 perp_bv_daily BTCUSDT/ETHUSDT + v_funding_daily ⇒ 过热区[收盘/MA200−1 ≥ 扩张 90 分位 且 资金费年化 7 日均 ≥ 扩张 85 分位,各 ≥250 观测,只用 ≤d] ⇒ 三臂 HOLD/TRIM/TRIM+SHORT 记账 ⇒ 逐轮表 ⇒ 随机对照[apparatus.circular_shift + null_distribution,1,000 次,种子 811] ⇒ 判定 (i)–(iv) ⇒ 写 T-335_trim_and_short.md / t335_results.json / t335_rounds.csv / scenarios/lane-b-T-335.json);② 取数口径已用探针核实:v_funding_daily.funding_rate = 每个 8h 间隔的均值、n = 当日间隔数(与 funding_history 逐笔对账一致)⇒ 日内合计 = rate×n,年化 = 日内合计×365;perp_bv_daily 无 source 列、BTCUSDT/ETHUSDT 各 2505 行、2019-12-31 起;③ **脚本还没跑**:本轮守卫在 99k token 拦下了运行命令,所以没有 t335_results.json / t335_rounds.csv / 报告,情景文件是手写的 state:/macro:/manual: 版(≥3 条,自动结算走 state/macro),脚本跑完会用带 close: 的版本覆盖它(下一轮把两版合并)。下一轮:先 `nohup python3 docs/research/t335_trim_short.py all > /Volumes/CometCloudAI/cometcloud-local/research/t335/run.log 2>&1 &`(约 3–6 分钟,1000 次零分布),跑完看 run.log 尾巴与产物时间戳(**不要重跑**),核对逐轮表,再把卡改 in_review 并补报告正文。",
+  "notes": "2026-11-11 lane-b 交付。产物:docs/research/T-335_trim_and_short.md + t335_trim_short.py + t335_results.json + t335_rounds.csv + scenarios/lane-b-T-335.json(3 条,2 条 close:BTC 自动结算)。**判定:❌ 不通过**(BTC 轮次 1、ETH 轮次 0)。实测数字(BTC 2019-12-31→2026-11-09,2505 根):HOLD 总收益 9.4781 / TRIM 9.3665 / TRIM+SHORT 9.6018 ⇒ Δ(TS−HOLD)=+0.1237(末值 10.478 → 10.602,≈+1.2%);(i) TS>HOLD 且 >TRIM ✅;(ii) 最大回撤不比 HOLD 深 ✅;(iii) 随机对照(整条过热日程 circular_shift,1000 次,种子 811)实际值分位 **0.698 < 0.90 ❌**;(iv) 空头净盈亏为正的轮次 1/1 ✅(n=1,空转)。逐轮表(BTC,唯一一轮):2024-03-01 进 / 2024-04-13 出(收盘首次 < MA50)/ 未触发预算平仓 / 加空 1 笔(+10%,共 2 笔)/ 进场 62430.6 → 出场 63939.7 / 空头毛盈亏 +0.1068、资金费 +0.1349、成本 0.0064、空头净 +0.2353 / 多头卖出的那一半 −0.1050 / 预算 B=2.5310 / 90 天涨幅 +58.3%。ETH 同口径 **0 轮**(过热日 0 天)⇒ 无从判定,只报。**关键发现(预注册口径本身太紧)**:「收盘/MA200−1 ≥ 扩张 90 分位 且 资金费年化7日均 ≥ 扩张 85 分位」在 2019-12→2026-11 只给出 1 轮(BTC)/0 轮(ETH)—— 扩张分位要求当期近乎创新高,2021-05(BTC ext 分位 0.396)与 2021-11(0.606)都进不去;分位算法已用手算核对(手工分位 == 脚本分位;2024-03-01:128/1324 = 9.7% ⇒ 0.903 ✅)。**探索性敏感性(非预注册,需另立预注册 + 新数据 + 零信号对照)**:放宽阈值后轮次变多而 Δ 反而变差 —— (85/85)1 轮 Δ−0.007 分位 0.43;(85/80)2 轮 +0.183 分位 0.583;(80/85)2 轮 +0.260 分位 0.693;(85/75)2 轮 −0.228 分位 0.317;(80/80)3 轮 −0.414 分位 0.323;(80/75)5 轮 **−1.898** 分位 0.15 ⇒ +0.12 不是稳健模式。**记账修正(重要)**:第一版把永续平仓名义当现金流入(账户凭空多出约 2×名义),BTC 的 Δ 被虚报成 +5.0、零分布均值 +3.14(全是记账假象);按「开仓无现金流入、平仓只结算已实现盈亏」修正后 Δ=+0.1237、零分布分位 0.698 —— **方向没变,幅度从 40 倍缩到 1.2%**。读法写死:「多头买回到 1.0」= 买回进场前数量,轮后利润留现金(下一次做空的本钱),TRIM 臂同口径。只读、未入库、未改代码。试验计数:做空族 +1(S-736/S-808/S-809 之后)。",
   "verified": null
 }
