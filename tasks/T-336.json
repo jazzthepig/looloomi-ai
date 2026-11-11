@@ -1,7 +1,7 @@
 {
   "id": "T-336",
   "owner": "lane-c",
-  "status": "open",
+  "status": "in_review",
   "created": "2026-11-11",
   "title": "S-812 双向配置级反转:0.7 现货 + 0.3 现金为底;过热减现货 + 用利润分批加空(永续),过冷用现金分批加现货;两头扛单无价格止损",
   "source": "REFUTATION_LEDGER S-812(`grep -n \"^## S-812\" -A 14 REFUTATION_LEDGER.md`,原文照抄;过热那一半与 S-811 相同);价格 perp_bv_daily、资金费 v_funding_daily(只读,翻页带 order=);阈值读法可参考 docs/research/t187_crash_atlas_crypto.py。不读 lane-b 的 t335_*(两边独立实现过热那一半,交付后对照)。",
@@ -23,6 +23,6 @@
     "expect": "docs/research/T-336_two_way_reversal.md + t336_two_way.py + t336_results.json + t336_rounds.csv + scenarios/lane-c-T-336.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-c/T-336。"
   },
   "prior_value": "Jazz 的配置级双向写法:一年动几次,抓大方向的反转;多头只用现货,空头只用永续。",
-  "notes": "2026-11-11T03:26:28Z Seth 开卡。",
+  "notes": "2026-11-11T03:26:28Z Seth 开卡。2026-11-11 lane-c 交付(BTC 主口径 ❌ / ETH 同口径 (i) 过、(ii)(iii)(iv) 不过)。样本 2019-12-31→2026-11-09(perp_bv_daily,BTCUSDT/ETHUSDT,2505 天;资金费 v_funding_daily 日额 = rate×n,年化 ×365;阈值 = ≤d 扩张分位、≥250 有效观测;成本 7.5bp×换手;四臂同成本同资金费)。信号:过热 15 天/1 段(2024-03-01…03-15)、过冷 118 天/20 段;ETH 过热 0 天、过冷 317 天;两区重叠 0。四臂(BTC):HOLD70 +663.81% dd 73.33% · HOLD100 +948.52% · HOT +672.45%(1 轮)· COLD +651.21%(4 轮)· TWOWAY +659.85% dd 75.94%(5 轮);ETH:HOLD70 +1087.48% · HOLD100 +1553.89% · HOT=HOLD70(0 轮)· COLD=TWOWAY +1090.44%(12 轮)dd 78.95%。判:(i) BTC −3.97pp ❌ / ETH +2.96pp ✅;(ii) BTC 深 2.61pp、ETH 深 0.50pp ❌;(iii) 实际 BTC −3.97pp、零分布(circular_shift 1000 次种子 812)均值 −5.90pp、p90 +28.29pp、分位 0.383 ❌;ETH 分位 0.43 ❌;(iv) BTC 过热 1/1 正、过冷 2/4 正 ❌;ETH 过热 0 轮、过冷 8/12 正 ❌。逐轮表落 t336_rounds.csv(34 行:BTC 5 轮 + ETH 12 轮 + HOT/COLD 臂;唯一过热轮 2024-03-01→04-13,B=1.2755 未触发预算平空,空头价差 +0.0658/资金费 +0.0791/净 +0.1410,轮权益 +0.2318;最差轮 2022-01-17→07-16 熊市加仓无止损,加仓腿 −0.1799、轮权益 −2.2240)。①(registry.core_nav)同窗口 +864.50%(全历史 +1018.61% dd 77.73%)高于 TWOWAY/HOLD70、低于 HOLD100。口径两处表态:进场=区第一天(S-811 原文);「现货回到 0.7」主口径=回到进场前的单位(units,基仓不再平衡),敏感性=回 0.7 权重(BTC +615.69% / ETH +1318.55%)。产物:docs/research/T-336_two_way_reversal.md + t336_two_way.py + t336_results.json + t336_rounds.csv + scenarios/lane-c-T-336.json(4 条,3 条 close: 自动)。只读、未入库、未改代码。",
   "verified": null
 }
