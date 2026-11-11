@@ -1,0 +1,790 @@
+{
+ "meta": {
+  "card": "T-343",
+  "lane": "lane-b",
+  "ran_utc": "2026-11-11T14:14:46.792259+00:00",
+  "spec_source": "REFUTATION_LEDGER.md ## S-815(\u53ea\u8bfb\u539f\u6587)",
+  "blind_note": "\u672c\u6587\u4ef6\u4e0d\u8bfb lane-c \u7684 t342_* / T-342_*;\u5185\u6838\u7528 src/data/universe/flex_alloc.py,\u53e0\u52a0\u5f15\u64ce\u7528 docs/research/t251_gross_cap.py \u7684 simulate,\u7968\u6e90\u7528 docs/research/t197_results.json \u7684 tickets.A\u3002",
+  "window": [
+   "2021-10-11",
+   "2026-10-30"
+  ],
+  "reb": 21,
+  "cost_bps": 20,
+  "warm_common_days": 63,
+  "leg_from": "2021-07-13",
+  "cash_rate_first": "2023-02-10",
+  "overlay": {
+   "ticket_source": "docs/research/t197_results.json \u2192 tickets.A",
+   "engine": "docs/research/t251_gross_cap.py:simulate(\u672a\u6539\u4e00\u5b57)",
+   "cap_n": 14,
+   "gross_cap": 0.4,
+   "equity0": 630.0,
+   "f_base": 0.005,
+   "f_star": 0.01
+  },
+  "source_hashes": {}
+ },
+ "validation": {
+  "nav_start_computed": "2021-10-11",
+  "nav_start_expected": "2021-10-11",
+  "nav_start_matches": true,
+  "n_common_days": 1333,
+  "common_first": "2021-07-13",
+  "common_last": "2026-10-30",
+  "exit_reason_mismatch": 0,
+  "exit_reason_mismatch_sample": [],
+  "core_first": "2021-07-13",
+  "core_last": "2026-11-10"
+ },
+ "window": {
+  "x1v_exposure": {
+   "n_days": 1846,
+   "flat_days": 949,
+   "flat_frac": 0.5141,
+   "over1_days": 379,
+   "max_g": 1.3
+  }
+ },
+ "cash": {
+  "apy_diag": {
+   "n_rows_with_apy": 1370,
+   "first": "2023-02-10",
+   "last": "2026-11-10",
+   "median_apy": 3.731149,
+   "min_apy": 1.12192,
+   "max_apy": 15.208629,
+   "pct_of_days_with_apy": 1.0
+  },
+  "rule": "stable_lend_apy_7d \u00f7 100 \u00f7 365,\u9010\u65e5\u5386\u65e5;2023-02-10 \u4e4b\u524d\u8bb0 0",
+  "calendar_days": 1936,
+  "n_nonzero_cash_days": 1359,
+  "cash_total_compound_2023_to_end": 0.177953,
+  "mean_apy_used": 4.3991
+ },
+ "overlay": {
+  "f_base": {
+   "risk_frac": 0.005,
+   "cap_n": 14,
+   "gross_cap": 0.4,
+   "equity0": 630.0,
+   "curve_first": "2020-08-16",
+   "curve_last": "2026-09-30",
+   "n_days": 2237,
+   "taken": 208,
+   "blocked_gross": 114,
+   "blocked_cap": 615,
+   "blocked_min": 2,
+   "blocked_coin": 17,
+   "overlay_total_return": 0.635027,
+   "overlay_cagr": 0.083527,
+   "overlay_max_dd": -0.257097,
+   "overlay_worst_month": "2024-06",
+   "overlay_worst_month_ret": -0.081457,
+   "mean_daily_ret": 0.00026302,
+   "ann_vol": 0.177796
+  },
+  "f_star": {
+   "risk_frac": 0.01,
+   "cap_n": 14,
+   "gross_cap": 0.4,
+   "equity0": 630.0,
+   "curve_first": "2020-08-16",
+   "curve_last": "2026-09-30",
+   "n_days": 2237,
+   "taken": 175,
+   "blocked_gross": 702,
+   "blocked_cap": 45,
+   "blocked_min": 0,
+   "blocked_coin": 34,
+   "overlay_total_return": 0.490706,
+   "overlay_cagr": 0.067312,
+   "overlay_max_dd": -0.424653,
+   "overlay_worst_month": "2024-06",
+   "overlay_worst_month_ret": -0.102263,
+   "mean_daily_ret": 0.00025544,
+   "ann_vol": 0.237318
+  },
+  "f_base_big_account": {
+   "risk_frac": 0.005,
+   "cap_n": 14,
+   "gross_cap": 0.4,
+   "equity0": 1000000.0,
+   "curve_first": "2020-08-16",
+   "curve_last": "2026-09-30",
+   "n_days": 2237,
+   "taken": 207,
+   "blocked_gross": 115,
+   "blocked_cap": 617,
+   "blocked_min": 0,
+   "blocked_coin": 17,
+   "overlay_total_return": 0.678102,
+   "overlay_cagr": 0.088134,
+   "overlay_max_dd": -0.255581,
+   "overlay_worst_month": "2024-06",
+   "overlay_worst_month_ret": -0.081927,
+   "mean_daily_ret": 0.00027536,
+   "ann_vol": 0.179276
+  }
+ },
+ "arms": {
+  "L0": {
+   "desc": "T25 \u5e38\u6570\u3001\u73b0\u91d1 0\u3001\u65e0\u53e0\u52a0",
+   "metrics": {
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "total_return": 0.541972,
+    "cagr": 0.089451,
+    "vol_ann": 0.166166,
+    "max_drawdown": -0.259109,
+    "calmar": 0.3452,
+    "worst_month": -0.090158,
+    "worst_month_key": "2022-01",
+    "yearly": {
+     "2021": 0.007604,
+     "2022": -0.163401,
+     "2023": 0.2165,
+     "2024": 0.27645,
+     "2025": 0.163461,
+     "2026": 0.012515
+    },
+    "weights_mean": {
+     "crypto": 0.3,
+     "equity": 0.3,
+     "gold": 0.2
+    },
+    "weights_min": {
+     "crypto": 0.3,
+     "equity": 0.3,
+     "gold": 0.2
+    },
+    "weights_max": {
+     "crypto": 0.3,
+     "equity": 0.3,
+     "gold": 0.2
+    },
+    "n_rebalances": 61,
+    "cash_share_mean": 0.2
+   },
+   "weights_log": [
+    {
+     "d": "2021-10-11",
+     "crypto": 0.3,
+     "equity": 0.3,
+     "gold": 0.2
+    },
+    {
+     "d": "2021-11-09",
+     "crypto": 0.3,
+     "equity": 0.3,
+     "gold": 0.2
+    },
+    {
+     "d": "2021-12-09",
+     "crypto": 0.3,
+     "equity": 0.3,
+     "gold": 0.2
+    },
+    "\u2026",
+    {
+     "d": "2026-08-19",
+     "crypto": 0.3,
+     "equity": 0.3,
+     "gold": 0.2
+    },
+    {
+     "d": "2026-09-18",
+     "crypto": 0.3,
+     "equity": 0.3,
+     "gold": 0.2
+    },
+    {
+     "d": "2026-10-19",
+     "crypto": 0.3,
+     "equity": 0.3,
+     "gold": 0.2
+    }
+   ]
+  },
+  "L1": {
+   "desc": "L0 + R-v2 \u53e0\u52a0(f 0.5%)",
+   "metrics": {
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "total_return": 1.283978,
+    "cagr": 0.177499,
+    "vol_ann": 0.330195,
+    "max_drawdown": -0.388388,
+    "calmar": 0.457,
+    "worst_month": -0.115817,
+    "worst_month_key": "2022-01",
+    "yearly": {
+     "2021": 0.255915,
+     "2022": -0.218364,
+     "2023": 0.251676,
+     "2024": 0.416743,
+     "2025": 0.310048,
+     "2026": 0.001513
+    },
+    "weights_mean": {
+     "crypto": 0.3,
+     "equity": 0.3,
+     "gold": 0.2
+    },
+    "weights_min": {
+     "crypto": 0.3,
+     "equity": 0.3,
+     "gold": 0.2
+    },
+    "weights_max": {
+     "crypto": 0.3,
+     "equity": 0.3,
+     "gold": 0.2
+    },
+    "n_rebalances": 61,
+    "cash_share_mean": 0.2
+   },
+   "weights_log": [
+    {
+     "d": "2021-10-11",
+     "crypto": 0.3,
+     "equity": 0.3,
+     "gold": 0.2
+    },
+    {
+     "d": "2021-11-09",
+     "crypto": 0.3,
+     "equity": 0.3,
+     "gold": 0.2
+    },
+    {
+     "d": "2021-12-09",
+     "crypto": 0.3,
+     "equity": 0.3,
+     "gold": 0.2
+    },
+    "\u2026",
+    {
+     "d": "2026-08-19",
+     "crypto": 0.3,
+     "equity": 0.3,
+     "gold": 0.2
+    },
+    {
+     "d": "2026-09-18",
+     "crypto": 0.3,
+     "equity": 0.3,
+     "gold": 0.2
+    },
+    {
+     "d": "2026-10-19",
+     "crypto": 0.3,
+     "equity": 0.3,
+     "gold": 0.2
+    }
+   ]
+  },
+  "L2": {
+   "desc": "L1 \u6362 RBv2 \u6743\u91cd",
+   "metrics": {
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "total_return": 1.630117,
+    "cagr": 0.210834,
+    "vol_ann": 0.312818,
+    "max_drawdown": -0.348457,
+    "calmar": 0.605,
+    "worst_month": -0.098081,
+    "worst_month_key": "2022-01",
+    "yearly": {
+     "2021": 0.278762,
+     "2022": -0.197983,
+     "2023": 0.27135,
+     "2024": 0.416669,
+     "2025": 0.420477,
+     "2026": 0.002385
+    },
+    "weights_mean": {
+     "crypto": 0.2517,
+     "equity": 0.3488,
+     "gold": 0.2764
+    },
+    "weights_min": {
+     "crypto": 0.2,
+     "equity": 0.2065,
+     "gold": 0.1319
+    },
+    "weights_max": {
+     "crypto": 0.4,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    "n_rebalances": 61,
+    "cash_share_mean": 0.1232
+   },
+   "weights_log": [
+    {
+     "d": "2021-10-11",
+     "crypto": 0.2,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    {
+     "d": "2021-11-09",
+     "crypto": 0.2,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    {
+     "d": "2021-12-09",
+     "crypto": 0.2,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    "\u2026",
+    {
+     "d": "2026-08-19",
+     "crypto": 0.4,
+     "equity": 0.2737,
+     "gold": 0.1524
+    },
+    {
+     "d": "2026-09-18",
+     "crypto": 0.2049,
+     "equity": 0.4,
+     "gold": 0.2337
+    },
+    {
+     "d": "2026-10-19",
+     "crypto": 0.2,
+     "equity": 0.4,
+     "gold": 0.2664
+    }
+   ]
+  },
+  "L3": {
+   "desc": "L2 + \u73b0\u91d1\u8ba1\u606f",
+   "metrics": {
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "total_return": 1.680953,
+    "cagr": 0.215428,
+    "vol_ann": 0.312813,
+    "max_drawdown": -0.347264,
+    "calmar": 0.6204,
+    "worst_month": -0.098081,
+    "worst_month_key": "2022-01",
+    "yearly": {
+     "2021": 0.278762,
+     "2022": -0.197983,
+     "2023": 0.276104,
+     "2024": 0.427769,
+     "2025": 0.426468,
+     "2026": 0.005796
+    },
+    "weights_mean": {
+     "crypto": 0.2517,
+     "equity": 0.3488,
+     "gold": 0.2764
+    },
+    "weights_min": {
+     "crypto": 0.2,
+     "equity": 0.2065,
+     "gold": 0.1319
+    },
+    "weights_max": {
+     "crypto": 0.4,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    "n_rebalances": 61,
+    "cash_share_mean": 0.1232
+   },
+   "weights_log": [
+    {
+     "d": "2021-10-11",
+     "crypto": 0.2,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    {
+     "d": "2021-11-09",
+     "crypto": 0.2,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    {
+     "d": "2021-12-09",
+     "crypto": 0.2,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    "\u2026",
+    {
+     "d": "2026-08-19",
+     "crypto": 0.4,
+     "equity": 0.2737,
+     "gold": 0.1524
+    },
+    {
+     "d": "2026-09-18",
+     "crypto": 0.2049,
+     "equity": 0.4,
+     "gold": 0.2337
+    },
+    {
+     "d": "2026-10-19",
+     "crypto": 0.2,
+     "equity": 0.4,
+     "gold": 0.2664
+    }
+   ]
+  },
+  "L4": {
+   "desc": "L3 \u628a\u53e0\u52a0\u7684 f \u63d0\u5230 1.0%",
+   "metrics": {
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "total_return": 1.179583,
+    "cagr": 0.166651,
+    "vol_ann": 0.364527,
+    "max_drawdown": -0.432594,
+    "calmar": 0.3852,
+    "worst_month": -0.124887,
+    "worst_month_key": "2022-01",
+    "yearly": {
+     "2021": -0.055763,
+     "2022": -0.251246,
+     "2023": 0.330275,
+     "2024": 0.377179,
+     "2025": 0.637832,
+     "2026": 0.027429
+    },
+    "weights_mean": {
+     "crypto": 0.2517,
+     "equity": 0.3488,
+     "gold": 0.2764
+    },
+    "weights_min": {
+     "crypto": 0.2,
+     "equity": 0.2065,
+     "gold": 0.1319
+    },
+    "weights_max": {
+     "crypto": 0.4,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    "n_rebalances": 61,
+    "cash_share_mean": 0.1232
+   },
+   "weights_log": [
+    {
+     "d": "2021-10-11",
+     "crypto": 0.2,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    {
+     "d": "2021-11-09",
+     "crypto": 0.2,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    {
+     "d": "2021-12-09",
+     "crypto": 0.2,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    "\u2026",
+    {
+     "d": "2026-08-19",
+     "crypto": 0.4,
+     "equity": 0.2737,
+     "gold": 0.1524
+    },
+    {
+     "d": "2026-09-18",
+     "crypto": 0.2049,
+     "equity": 0.4,
+     "gold": 0.2337
+    },
+    {
+     "d": "2026-10-19",
+     "crypto": 0.2,
+     "equity": 0.4,
+     "gold": 0.2664
+    }
+   ]
+  },
+  "L3H": {
+   "desc": "L3 \u4f46\u52a0\u5bc6\u817f\u76f4\u63a5\u6301\u6709 \u2460",
+   "metrics": {
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "total_return": 1.644414,
+    "cagr": 0.212133,
+    "vol_ann": 0.360276,
+    "max_drawdown": -0.408009,
+    "calmar": 0.5199,
+    "worst_month": -0.129928,
+    "worst_month_key": "2022-06",
+    "yearly": {
+     "2021": 0.278762,
+     "2022": -0.294995,
+     "2023": 0.379016,
+     "2024": 0.506518,
+     "2025": 0.421949,
+     "2026": -0.007066
+    },
+    "weights_mean": {
+     "crypto": 0.2002,
+     "equity": 0.3997,
+     "gold": 0.2972
+    },
+    "weights_min": {
+     "crypto": 0.2,
+     "equity": 0.3813,
+     "gold": 0.2594
+    },
+    "weights_max": {
+     "crypto": 0.2071,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    "n_rebalances": 61,
+    "cash_share_mean": 0.1029
+   },
+   "weights_log": [
+    {
+     "d": "2021-10-11",
+     "crypto": 0.2,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    {
+     "d": "2021-11-09",
+     "crypto": 0.2,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    {
+     "d": "2021-12-09",
+     "crypto": 0.2,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    "\u2026",
+    {
+     "d": "2026-08-19",
+     "crypto": 0.2,
+     "equity": 0.4,
+     "gold": 0.2887
+    },
+    {
+     "d": "2026-09-18",
+     "crypto": 0.2,
+     "equity": 0.4,
+     "gold": 0.2973
+    },
+    {
+     "d": "2026-10-19",
+     "crypto": 0.2,
+     "equity": 0.4,
+     "gold": 0.3
+    }
+   ]
+  },
+  "CORE_1": {
+   "desc": "\u2460 \u81ea\u5df1(cap_pit24 \u7684 NAV,\u540c\u4e00\u8bb0\u8d26\u8d77\u70b9\u3001\u540c\u4e00\u7ec8\u70b9)",
+   "metrics": {
+    "n_days": 1846,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "total_return": -0.150584,
+    "cagr": -0.031772,
+    "vol_ann": 0.564884,
+    "max_drawdown": -0.777337,
+    "calmar": -0.0409,
+    "worst_month": -0.381875,
+    "worst_month_key": "2022-06",
+    "yearly": {
+     "2021": -0.092231,
+     "2022": -0.682792,
+     "2023": 1.137866,
+     "2024": 0.900834,
+     "2025": -0.136128,
+     "2026": -0.159717
+    }
+   }
+  }
+ },
+ "judgement": {
+  "L3": {
+   "i_maxdd": {
+    "value": -0.347264,
+    "limit": -0.25,
+    "ok": false,
+    "text": "\u5168\u7a97\u53e3\u6700\u5927\u56de\u64a4\u4e0d\u6df1\u4e8e \u221225%"
+   },
+   "ii_cagr": {
+    "L3": 0.215428,
+    "L1": 0.177499,
+    "ok": true,
+    "text": "CAGR \u2265 L1"
+   },
+   "iii_yearly": {
+    "per_year": {
+     "2021": {
+      "L1": 0.255915,
+      "L3": 0.278762,
+      "L4": -0.055763,
+      "L3_minus_L1_pp": 2.285,
+      "L3_ok": true
+     },
+     "2022": {
+      "L1": -0.218364,
+      "L3": -0.197983,
+      "L4": -0.251246,
+      "L3_minus_L1_pp": 2.038,
+      "L3_ok": true
+     },
+     "2023": {
+      "L1": 0.251676,
+      "L3": 0.276104,
+      "L4": 0.330275,
+      "L3_minus_L1_pp": 2.443,
+      "L3_ok": true
+     },
+     "2024": {
+      "L1": 0.416743,
+      "L3": 0.427769,
+      "L4": 0.377179,
+      "L3_minus_L1_pp": 1.103,
+      "L3_ok": true
+     },
+     "2025": {
+      "L1": 0.310048,
+      "L3": 0.426468,
+      "L4": 0.637832,
+      "L3_minus_L1_pp": 11.642,
+      "L3_ok": true
+     },
+     "2026": {
+      "L1": 0.001513,
+      "L3": 0.005796,
+      "L4": 0.027429,
+      "L3_minus_L1_pp": 0.428,
+      "L3_ok": true
+     }
+    },
+    "ok": true,
+    "text": "\u9010\u5e74\u6536\u76ca\u90fd \u2265 L1 \u540c\u5e74 \u2212 1pp"
+   },
+   "pass_all": false
+  },
+  "L4": {
+   "i_maxdd": {
+    "value": -0.432594,
+    "limit": -0.25,
+    "ok": false,
+    "text": "\u5168\u7a97\u53e3\u6700\u5927\u56de\u64a4\u4e0d\u6df1\u4e8e \u221225%"
+   },
+   "pass_all": false
+  }
+ },
+ "deltas": {
+  "L1_vs_L0": {
+   "total_pp": 74.201,
+   "cagr_pp": 8.805,
+   "mdd_delta_pp": -12.928,
+   "per_year_pp": {
+    "2021": 24.831,
+    "2022": -5.496,
+    "2023": 3.518,
+    "2024": 14.029,
+    "2025": 14.659,
+    "2026": -1.1
+   }
+  },
+  "L2_vs_L1": {
+   "total_pp": 34.614,
+   "cagr_pp": 3.334,
+   "mdd_delta_pp": 3.993,
+   "per_year_pp": {
+    "2021": 2.285,
+    "2022": 2.038,
+    "2023": 1.967,
+    "2024": -0.007,
+    "2025": 11.043,
+    "2026": 0.087
+   }
+  },
+  "L3_vs_L2": {
+   "total_pp": 5.084,
+   "cagr_pp": 0.459,
+   "mdd_delta_pp": 0.119,
+   "per_year_pp": {
+    "2021": 0.0,
+    "2022": 0.0,
+    "2023": 0.475,
+    "2024": 1.11,
+    "2025": 0.599,
+    "2026": 0.341
+   }
+  },
+  "L4_vs_L3": {
+   "total_pp": -50.137,
+   "cagr_pp": -4.878,
+   "mdd_delta_pp": -8.533,
+   "per_year_pp": {
+    "2021": -33.453,
+    "2022": -5.326,
+    "2023": 5.417,
+    "2024": -5.059,
+    "2025": 21.136,
+    "2026": 2.163
+   }
+  },
+  "L3H_vs_L4": {
+   "total_pp": 46.483,
+   "cagr_pp": 4.548,
+   "mdd_delta_pp": 2.458,
+   "per_year_pp": {
+    "2021": 33.453,
+    "2022": -4.375,
+    "2023": 4.874,
+    "2024": 12.934,
+    "2025": -21.588,
+    "2026": -3.449
+   }
+  },
+  "CORE_1_vs_L3H": {
+   "total_pp": -179.5,
+   "cagr_pp": -24.39,
+   "mdd_delta_pp": -36.933,
+   "per_year_pp": {
+    "2021": -37.099,
+    "2022": -38.78,
+    "2023": 75.885,
+    "2024": 39.432,
+    "2025": -55.808,
+    "2026": -15.265
+   }
+  }
+ }
+}
