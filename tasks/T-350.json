@@ -1,0 +1,28 @@
+{
+  "status": "in_review",
+  "created": "2026-11-11",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-350",
+  "owner": "lane-b",
+  "title": "S-826 进场时点值多少:R-v2 同一批票,D 收盘进 / D+1 开盘进(现状)/ D+1 收盘进 —— 只报不判",
+  "source": "REFUTATION_LEDGER 的 S-826 登记节:`sed -n '/^## S-826 —/,/^## /p' REFUTATION_LEDGER.md`(取到下一个标题为止,不要用 grep -A)。票源 t197 tickets.A、日线 s681/_um_daily.jsonl;账户装配用你的 t343_blind.py。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-350.json"
+  ],
+  "acceptance": {
+    "check": "三种进场各报:票数、平均 R、R 合计、胜率、R ≥ 10 的张数;止损 = 各自进场价 − 2.5 × ATR14[D],出场规则不变(收盘破 SMA20 次日开盘出、120 根到期)。自检:D+1 开盘那一种的逐票 R 应与 t197 存的 r 一致(差 > 1e-6 的张数报出来)。再按 C0 的装配(f 0.5%、上限 0.40、cap_n 14)各出一条账户曲线,报年化与最长水下。只报不判。只读、不入库;脚本 nohup,结果落文件;不要 Read 大文件。",
+    "expect": "docs/research/T-350_entry_timing.md + t350_*.py + t350_results.json + scenarios/lane-b-T-350.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-b/T-350。"
+  },
+  "prior_value": "「只看日线」作废之后,日内执行值不值得建,先要一个数:早一步 / 晚一步各差多少 R。",
+  "notes": "2026-11-11T17:42:37Z Seth 开卡。\n2026-11-12T17:52Z lane-b 交付(只报不判)。逐票(同一批 956 张 t197 票,已了结 908/908/904):D 收盘进 平均 R 0.3329、ΣR 302.30、胜率 35.13%、R≥10 14 张;D+1 开盘进(现状)0.3329、302.24、35.24%、14 张;D+1 收盘进 0.3760、339.94、35.73%、11 张。成对:D 收盘 vs 现状 平均差 +0.00006 R(Σ +0.06 R,908 张配对);D+1 收盘 vs 现状 +0.0373 R(Σ +33.61 R,902 张配对,58.8% 的票更好,但 R≥10 少 3 张)。自检:现状那一种逐票重算 vs t197 存的 r,956 张里差 >1e-6 的 0 张。账户曲线 C0(f 0.5%、上限 0.40、cap_n 14、起点 630):D 收盘进 年化 12.19% / 水下 −26.18%(318 张进场);D+1 开盘进 8.35% / −25.71%(208 张);D+1 收盘进 12.38% / −20.29%(358 张)—— 三条曲线不可直接比,见报告第五节。机制:Binance 日线连续,close[D] 与 open[D+1] 逐位相同的有 380/956 张(39.75%),中位绝对差 0.78 bp ⇒ 「早一步」买的是几乎同一个价;「晚一步略好」主要来自 44 张「进场当根就被止损打掉」的票(现状 ΣR −45.12 vs D+1 收盘进 −5.15)。**引擎问题(请 Seth 看)**:`t251_gross_cap.simulate` 里「当天开盘出场」在「当天进场」之前跑,进场当日就被止损打掉的票(exit_d=entry_d,现状 44 张、其中 13 张真被进场)永远不出场、永久占仓位 ⇒ 把 cap_n=14 塞满(615 张因满仓被挡)。同一装配去掉这批泄漏票后年化变成 11.48% / 12.72% / 11.99%,差异收敛到 ~1pp ⇒ T-343 基线账户曲线也带这个伤。产物:docs/research/T-350_entry_timing.md + t350_entry_timing.py + t350_results.json + scenarios/lane-b-T-350.json(5 条,3 自动 2 人工)。未跑 preflight(上下文预算耗尽被拦),CI 会跑。"
+}
