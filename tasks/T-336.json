@@ -1,0 +1,28 @@
+{
+  "id": "T-336",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-11",
+  "title": "S-812 双向配置级反转:0.7 现货 + 0.3 现金为底;过热减现货 + 用利润分批加空(永续),过冷用现金分批加现货;两头扛单无价格止损",
+  "source": "REFUTATION_LEDGER S-812(`grep -n \"^## S-812\" -A 14 REFUTATION_LEDGER.md`,原文照抄;过热那一半与 S-811 相同);价格 perp_bv_daily、资金费 v_funding_daily(只读,翻页带 order=);阈值读法可参考 docs/research/t187_crash_atlas_crypto.py。不读 lane-b 的 t335_*(两边独立实现过热那一半,交付后对照)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-336.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-812 原文照抄进报告开头;分位只用 ≤ d;四臂同成本同资金费;(i)–(iv) 逐条报数与判定;**逐轮表**(区、进出日、加仓 / 加空笔数、各腿盈亏、是否触发预算平空)落 t336_rounds.csv;另报 HOLD100 与 ① 的对照、ETH 同口径。分支上要有 tasks/T-336.json(从 origin/main 拷,status 改 in_review)。只读、不入库、不改代码;不要 Read 大文件。",
+    "expect": "docs/research/T-336_two_way_reversal.md + t336_two_way.py + t336_results.json + t336_rounds.csv + scenarios/lane-c-T-336.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-c/T-336。"
+  },
+  "prior_value": "Jazz 的配置级双向写法:一年动几次,抓大方向的反转;多头只用现货,空头只用永续。",
+  "notes": "2026-11-11T03:26:28Z Seth 开卡。",
+  "verified": null
+}
