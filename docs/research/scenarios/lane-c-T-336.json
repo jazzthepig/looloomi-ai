@@ -1,0 +1,17 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {"id": "T-336-1", "scenario": "T-336 双向配置级反转",
+     "statement": "BTC 收盘价在 2027-01-31 站上 100,000",
+     "variable": "close:BTC", "op": "gt", "lo": 100000, "prob": 0.22, "horizon_d": "2027-01-31"},
+    {"id": "T-336-2", "scenario": "T-336 双向配置级反转",
+     "statement": "BTC 收盘价在 2027-01-31 跌破 55,000",
+     "variable": "close:BTC", "op": "lt", "hi": 55000, "prob": 0.17, "horizon_d": "2027-01-31"},
+    {"id": "T-336-3", "scenario": "T-336 双向配置级反转",
+     "statement": "ETH 收盘价在 2027-01-31 站上 3,000",
+     "variable": "close:ETH", "op": "gt", "lo": 3000, "prob": 0.22, "horizon_d": "2027-01-31"},
+    {"id": "T-336-4", "scenario": "T-336 双向配置级反转",
+     "statement": "从 2026-11-11 起 180 天内,BTC 的扩张 90 分位过热区不再触发(当前 0 次;样本内 2021-03 以来只触发过 1 次)",
+     "variable": "manual", "op": "between", "lo": 0, "hi": 0, "prob": 0.9, "horizon_d": "2027-05-10"}
+  ]
+}
