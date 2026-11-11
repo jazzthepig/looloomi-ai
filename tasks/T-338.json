@@ -1,0 +1,29 @@
+{
+  "id": "T-338",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-11",
+  "title": "t256 组合 NAV 三处 bug 的清扫:用 T-332 修好的 sleeve_nav 重算 S-736 的袖套/对冲口径数字,并列出所有引用过 t256 组合净值的结论",
+  "source": "REFUTATION_LEDGER S-736 结果(`grep -n \"^## S-736 结果\" -A 30 REFUTATION_LEDGER.md`)与 S-808 结果里的「工程发现」段;旧实现 docs/research/t256_tactical_short.py(组合 NAV 段:同日进出的票成幽灵仓、资金费在盯市与出场各算一次、随机对照被退化数据污染);修好的实现 docs/research/t332_squeeze_fade.py 的 sleeve_nav() / hedge_leg_nav()。数据只读(perp_bv_daily / v_funding_daily,同 t256)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-338.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/",
+    "REFUTATION_LEDGER.md"
+  ],
+  "acceptance": {
+    "check": "只读、不入库、不改 t256_tactical_short.py(旧数要能复现,新脚本另起 t338_*.py)。(1)自检:新脚本先用 t256 的票机械逐位复现 S-736 的 18 张票(平均净 R −0.3745),不一致就停。(2)用 t332 的 sleeve_nav / hedge_leg_nav(逐字拷入或 import,写明哪一种)重算 T-256 报告 §① 的四个数:单独最大回撤 / 叠加后最大回撤(旧 −76.74% → −76.22%,差 0.52pp)、总收益付出(旧 ~12.7pp)、袖套自身总回报(旧 −10.62%)与自身最大回撤(旧 −22.15%);新旧并列成一张表,每个差异标出是三处 bug 里的哪一处造成的(逐个修、逐个报增量,不只报合计)。(3)NAV 恒等式自检:nav_end = nav0 + Σ已实现 + Σ资金费 − Σ成本 + 末未实现,误差 < 1e-9,报实际误差;末日仍持仓的票数报出(幽灵仓修好后应为真实持仓数)。(4)随机对照:按修好的口径重跑 S-736 的随机对照(种子与次数同 t256),报旧/新分位。(5)清扫:grep docs/research/*.md 与 REFUTATION_LEDGER.md,列出所有引用 t256 组合净值 / 袖套收益 / 对冲口径回撤的结论(文件 + 行号 + 原句),逐条写「受影响 / 不受影响(只用票级 R)」;T-333 的山寨篮版也在清单里核一遍。(6)判词只写事实:S-736 的 ❌ 是否因新数改变(S-736 的判据原文照抄后逐条比对),台账口径由 Seth 合并时定。结果里还看到了什么(探索性)单列一节。",
+    "expect": "docs/research/T-338_t256_nav_sweep.md + t338_nav_sweep.py + t338_results.json(含新旧对照与恒等式误差)+ scenarios/lane-b-T-338.json(≥ 3 条前向命题,至少一条 close: 或 state: 自动结算);分支上 tasks/T-338.json(从 origin/main 拷,status 改 in_review);推 lane-b/T-338。"
+  },
+  "prior_value": "S-808 发现 t256 组合 NAV 有三处 bug;票级 R 不受影响,但 S-736 的「对冲口径回撤只削 0.5pp、付掉 ~12.7pp」用的是坏 NAV。先把旧数修正再谈任何组合层结论。",
+  "notes": "2026-11-11T03:42:18Z Seth 重派:原为 T-334(3f124142),同号被 S-810 卡覆盖(480ae413),内容不变改号 T-338。lane-b 名下另有 T-335(S-811),两张都只读,顺序随意。",
+  "verified": null
+}

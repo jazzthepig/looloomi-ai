@@ -62,6 +62,7 @@
 | claimed | T-231 | seth | 前向记录写端恢复:refresh_depth_divergence 逼近 statement_timeout 30s —— 给 ohlcv_daily 扫描加下界,并让『重算补的日子』在记录里可见 | 迁移 + 测试 + 前后对比表;卡 notes 写最大耗时前后值、逐行差异数、恢复后第一条 ok 的时间。DDL 的应用要走 Seth 交互轮次(定时轮次只读,不应用)。 | 写端熄火 4 天且在加重(每天 error 10→17→19);『自首日起连续、无回填』这句对外话没有机械保证。 |  |
 | open | T-337 | lane-a | S-813(含 11-11 修订)双向配置级反转:恐惧贪婪 ≥ 95 / ≤ 10 武装 + MVRV 或 Puell 在尾部,动量转向才扣扳机;大事件逐轮标注只供参考 | docs/research/T-337_cycle_indicators_two_way.md + t337_cycle_two_way.py + t337_results.json + t337_rounds.csv + scenarios/lane-a-T-337.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-a/T-337。 | Jazz 的三条中长线指标第一次用全历史、合议、极端区的方式测;S-84 测的是常开闸门。 |  |
 | open | T-335 | lane-b | S-811 Jazz 的做空写法:过热区卖 50% 多头、用利润分批加空(+10% / +20% 各加一笔)、扛单无价格止损、预算 = 落袋利润;对 HOLD 与只减仓 | docs/research/T-335_trim_and_short.md + t335_trim_short.py + t335_results.json + t335_rounds.csv + scenarios/lane-b-T-335.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-b/T-335。 | 做空族的裸空 + 紧止损都失败;这条把空头放进组合、用落袋利润扛单 —— Jazz 的实际交易方式。 |  |
+| open | T-338 | lane-b | t256 组合 NAV 三处 bug 的清扫:用 T-332 修好的 sleeve_nav 重算 S-736 的袖套/对冲口径数字,并列出所有引用过 t256 组合净值的结论 | docs/research/T-338_t256_nav_sweep.md + t338_nav_sweep.py + t338_results.json(含新旧对照与恒等式误差)+ scenarios/lane-b-T-338.json(≥ 3 条前向命题,至少一条 close: 或 state: 自动结算);分支上 tasks/T-338.json(从 origin/main 拷,status 改 in_review);推 lane-b/T-338。 | S-808 发现 t256 组合 NAV 有三处 bug;票级 R 不受影响,但 S-736 的「对冲口径回撤只削 0.5pp、付掉 ~12.7pp」用的是坏 NAV。先把旧数修正再谈任何组合层结论。 |  |
 | open | T-327 | lane-c | RBv2 影子臂加一条常数对照臂(20/30/20,建臂日写死),与 flex_x1v:T25_K 并排前向记账 | 卡 in_review;notes 写建臂日、首个落库行日期与判活命令(只读 SELECT);测试证明 T20_K 权重不随 RBv2 变化;推 lane-c/T-327。 | 前向只有 T25_K(30/30/20)并排;W1 常数 20/30/20 反而比 RBv2 好(C 道复核),只看 T25_K 会把 RBv2 的超额误读成机制功劳。 |  |
 | open | T-336 | lane-c | S-812 双向配置级反转:0.7 现货 + 0.3 现金为底;过热减现货 + 用利润分批加空(永续),过冷用现金分批加现货;两头扛单无价格止损 | docs/research/T-336_two_way_reversal.md + t336_two_way.py + t336_results.json + t336_rounds.csv + scenarios/lane-c-T-336.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-c/T-336。 | Jazz 的配置级双向写法:一年动几次,抓大方向的反转;多头只用现货,空头只用永续。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
@@ -339,4 +340,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 13 · claimed 6 · blocked 4 · in_review 52 · done 257 · dropped 4
+open 14 · claimed 6 · blocked 4 · in_review 52 · done 257 · dropped 4

@@ -741,6 +741,28 @@ async def get_fng_history() -> list[dict]:
     return data
 
 
+async def get_coinmetrics_btc(metrics: list[str], start: str, max_pages: int = 20) -> list[dict]:
+    """Coin Metrics 社区 API(免密钥)BTC 日度链上指标 → [{time, <metric>: str}]。翻页跟 next_page_url;
+    非 200 / 空抛错 —— 读不到 ≠ 没有。11-11 Jazz「MVRV / 恐惧贪婪 / 挖矿收益是中长线择时指标」:MVRV、发行美元价值(Puell 的分子)、算力。"""
+    url = "https://community-api.coinmetrics.io/v4/timeseries/asset-metrics"
+    params = {"assets": "btc", "metrics": ",".join(metrics), "start_time": start, "page_size": 10000, "frequency": "1d"}
+    out: list[dict] = []
+    client = _get_misc_client()
+    for _ in range(max_pages):
+        r = await client.get(url, params=params, timeout=60)
+        if r.status_code != 200:
+            raise RuntimeError(f"coinmetrics {','.join(metrics)} HTTP {r.status_code}")
+        j = r.json() or {}
+        out += j.get("data") or []
+        nxt = j.get("next_page_url")
+        if not nxt:
+            break
+        url, params = nxt, None
+    if not out:
+        raise RuntimeError("coinmetrics 返回空")
+    return out
+
+
 async def get_fred_series(series_id: str, start: str) -> list[tuple[str, float]]:
     """FRED 公开 CSV(免密钥:fredgraph.csv)→ [(observation_date, value)]。缺值('.')跳过;非 200 / 空抛错(T-135)。
     一次只取一条序列(多条 id 会返回 zip)。"""

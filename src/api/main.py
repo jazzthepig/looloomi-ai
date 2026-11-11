@@ -1667,6 +1667,15 @@ async def _cis_inputs_loop():
             await _beat("_cis_inputs_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _record_loop_attempt("_cis_inputs_loop", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}",
                                        writer="src.api.main._cis_inputs_loop")
+        try:                                   # 11-11:MVRV / 矿工收入 / 算力(btc_cycle),与恐惧贪婪同一轮,失败不挡上面
+            from src.data.market.btc_cycle import run_once as _bc_run
+            _bc = await _bc_run()
+            print(f"[BTC-CYCLE] {str(_bc.get('why'))[:160]}")
+            await _record_loop_attempt("_btc_cycle", "ok" if _bc.get("ok") else "error", reason=None if _bc.get("ok") else str(_bc.get("why"))[:300],
+                                       detail={k: _bc.get(k) for k in ("rows", "from", "last", "skipped")}, writer="src.data.market.btc_cycle")
+        except Exception as _e:
+            print(f"[BTC-CYCLE] ⚠️  {_e}")
+            await _record_loop_attempt("_btc_cycle", "error", reason=f"{type(_e).__name__}: {str(_e)[:300]}", writer="src.data.market.btc_cycle")
         # S-536:正式 CIS 在 UTC 收盘后发布,它的输入每天紧跟收盘取(不随部署时刻漂);仍是一天一轮
         await _sleep_until_utc(0, 50)
 
