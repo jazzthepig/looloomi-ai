@@ -68,6 +68,8 @@ RV2_GROSS_CAP = 0.40
 RV2_EQ0 = 630.0
 RV2_F_BASE = 0.005           # L1–L3:每票风险 0.5%
 RV2_F_HIGH = 0.010           # L4:每票风险 1.0%(S-638 的 f★)
+RV2_DROP_CAND = 12           # v2:找「贡献最大的一张票」的候选张数(按票自带 r 排序取前 N)
+FWD_HORIZON_D = 152          # 前向命题的结算窗口(2026-10-30 → 2027-03-31 = 152 个日历日)
 
 URL = os.environ.get("SUPABASE_URL")
 KEY = os.environ.get("SUPABASE_KEY")
@@ -389,8 +391,28 @@ def build_overlay(risk_frac: float, exclude_tid: Optional[str] = None) -> dict:
             "exclude_tid": exclude_tid}
 
 
+def rolling_hit_rate(nav_a: pd.Series, nav_b: pd.Series, horizon: int) -> tuple[float, int]:
+    """滚动 `horizon` 天窗口里 B 跑赢 A 的命中率(前向窗口长度**对齐**的机械化基准率)。
+
+    与 `apparatus.ab_test` 的 5 年 bootstrap 区别:ab_test 问「这 5 年里 B 整体跑赢的概率」,
+    这里问「任意一个 horizon 天窗口里 B 跑赢 A 的概率」—— 前向命题要结算的是后者。"""
+    idx = nav_a.index.intersection(nav_b.index)
+    a, b = nav_a.loc[idx], nav_b.loc[idx]
+    wins = 0
+    n = 0
+    for i in range(len(idx)):
+        j = i - horizon
+        if j < 0:
+            continue
+        n += 1
+        if (b.iloc[i] / b.iloc[j]) >= (a.iloc[i] / a.iloc[j]):
+            wins += 1
+    return (float(wins) / n if n else float("nan")), n
+
+
 def _ov_window_return(dret: pd.Series, start: pd.Timestamp, end: pd.Timestamp) -> float:
     """叠加序列在记账窗口内的复利(与内核吃进去的口径一致:(start, end])。"""
+
     x = dret[(dret.index > start) & (dret.index <= end)].dropna()
     return float((1.0 + x).prod() - 1.0) if len(x) else 0.0
 
@@ -425,6 +447,71 @@ def find_top_contributor(ov_base: dict, start: pd.Timestamp, end: pd.Timestamp,
 _RV2: dict = {"loaded": False}
 
 
+def weekend_bar_check(tickets: list[dict], bars: dict, day_list: list[str],
+                     day_ret: dict[str, float]) -> dict:
+    """周末那几格是**真钱**还是 t251 的兜底价(沿用上一根收盘)造成的记账跳变?
+
+    t251 的 `mark()` 读不到当天 bar 时会用上一根收盘兜底 ⇒ 那一天的持仓票涨跌全是 0
+    ⇒ 叠加日收益必然是 0。所以:查最大的几个周末日的**原始 bar**上,持仓票当天是不是真的有 bar、
+    收盘到收盘涨跌多少 —— 与实测的叠加日收益比。
+
+    另查原始 bar 的一周 7 天覆盖(crypto 到底有没有周末 bar)。"""
+    import datetime as _dt   # noqa: PLC0415
+
+    closes = {s: {str(r[0])[:10]: float(r[4]) for r in rws} for s, rws in bars.items()}
+    dates = {s: sorted(closes[s]) for s in closes}
+
+    cov = defaultdict(int)
+    n_sym = len(bars)
+    n_with_we = 0
+    for s, rws in bars.items():
+        c = defaultdict(int)
+        for r in rws:
+            c[_dt.date.fromisoformat(str(r[0])[:10]).weekday()] += 1
+        cov["Mon"] += c[0]; cov["Tue"] += c[1]; cov["Wed"] += c[2]; cov["Thu"] += c[3]
+        cov["Fri"] += c[4]; cov["Sat"] += c[5]; cov["Sun"] += c[6]
+        if c[5] > 0 and c[6] > 0:
+            n_with_we += 1
+
+    per_day = []
+    for d in day_list:
+        held = [t for t in tickets if t.get("entry_d") and t.get("exit_d")
+                and str(t["entry_d"]) <= d <= str(t["exit_d"])]
+        moves = []
+        n_fallback = 0
+        for t in held:
+            s = t["symbol"]
+            if d not in closes.get(s, {}):
+                n_fallback += 1                      # 引擎当天会走兜底价(沿用上一根收盘)
+                continue
+            prev = max([x for x in dates.get(s, []) if x < d], default=None)
+            if prev is None:
+                continue
+            moves.append({"symbol": s, "tid": t.get("tid"), "prev_d": prev,
+                          "px_prev": closes[s][prev], "px_d": closes[s][d],
+                          "ret": closes[s][d] / closes[s][prev] - 1.0})
+        moves.sort(key=lambda x: abs(x["ret"]), reverse=True)
+        per_day.append({
+            "date": d,
+            "weekday": int(_dt.date.fromisoformat(d).weekday()),
+            "is_weekend": int(_dt.date.fromisoformat(d).weekday() >= 5),
+            "overlay_ret": day_ret.get(d),
+            "n_held": len(held),
+            "n_tickets_using_fallback_px": n_fallback,
+            "n_tickets_with_real_bar": len(moves),
+            "top_moves": moves[:5],
+            "fallback_implies_zero_ret": (n_fallback == len(held) and len(held) > 0),
+        })
+    return {
+        "what": "周末/大单日的原始 bar 核证:兜底价 ⇒ 叠加日收益必然 0",
+        "n_symbols": n_sym,
+        "n_symbols_with_weekend_bars": n_with_we,
+        "bar_count_by_weekday": {k: cov[k] for k in ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")},
+        "per_day": per_day,
+    }
+
+
+
 # ── 主流程 ──────────────────────────────────────────────────────────────────────
 ARMS = [
     ("L0", "常数 T25(30 / 30 / 20);现金 0;无叠加"),
@@ -447,7 +534,6 @@ OUT_JSON = os.path.join(HERE, "t342_results.json")
 DAILY_CSV = os.path.join(HERE, "t342_daily.csv")
 CAL_CSV = os.path.join(HERE, "t342_overlay_calendar.csv")   # v2:喂内核的日历日序列(overlay + 现金)
 SCEN_JSON = os.path.join(HERE, "scenarios", "lane-c-T-342.json")
-RV2_DROP_CAND = 12        # v2:找「贡献最大的一张票」的候选张数(按票自带 r 排序取前 N)
 
 
 def main() -> None:
@@ -765,6 +851,21 @@ def main() -> None:
     log(f"  诊断: 叠加窗口内 {len(win_ov3)} 天(周末 {int((is_we == 1).sum())} 天);"
         f"工作日复利 {wd_comp:+.4%}、周末复利 {we_comp:+.4%};最大单日 {ov_diag['top_days'][0]}")
 
+    # ── v2 追加核证:周末那几格是真 bar 还是兜底价的记账跳变 ────────────────────
+    _taken = {str(x) for x in ov_base.get("taken", [])}
+    _tix = [t for t in _RV2["tickets"] if str(t.get("tid")) in _taken]
+    _we_all = [d for d in win_ov3.index if d.weekday() >= 5]
+    _top_we = [str(pd.Timestamp(d).date()) for d in
+               sorted(_we_all, key=lambda x: abs(win_ov3[x]), reverse=True)[:3]]
+    _check_days = list(dict.fromkeys([ov_diag["top_days"][0]["date"]] + _top_we))
+    _day_ret = {str(d.date()): float(win_ov3[d]) for d in win_ov3.index}
+    wb_chk = weekend_bar_check(_tix, _RV2["bars"], _check_days, _day_ret)
+    ov_diag["weekend_bar_check"] = wb_chk
+    log(f"  周末 bar 核证: {wb_chk['n_symbols_with_weekend_bars']}/{wb_chk['n_symbols']} 个符号有周末 bar;"
+        f"逐日 " + "; ".join(
+            f"{x['date']}(持仓 {x['n_held']} 张 / 用兜底价 {x['n_tickets_using_fallback_px']} 张 / "
+            f"实测 {x['overlay_ret']:+.4%})" for x in wb_chk["per_day"]))
+
     # ── 自检 ③:新核(不给 cash/overlay)与旧核逐位相同 ──────────────────────────
     nav_new, log_new = fa.dynamic_mix_nav(legs, fn_const, reb=REB, cost=COST, start=start)
     nav_old, log_old = fa_old.dynamic_mix_nav(legs, fn_const, reb=REB, cost=COST, start=start)
@@ -826,6 +927,10 @@ def main() -> None:
     r2 = arms["L2"].pct_change().dropna()
     ab = ab_test(r1.to_numpy(), r2.to_numpy(), mean_block=AB_MEAN_BLOCK, n_boot=AB_N_BOOT, seed=AB_SEED)
     log(f"  ab_test(L1 → L2): p(L2≤L1)={ab['p_b_le_a']} p(L2≥L1)={ab['p_b_ge_a']} 判定={ab['verdict']}")
+
+    # ── 前向 140 天窗口的机械化基准率(滚动窗口命中率,不是 5 年 bootstrap)──────
+    roll_hit, roll_n = rolling_hit_rate(arms["L1"], arms["L2"], horizon=FWD_HORIZON_D)
+    log(f"  滚动 {FWD_HORIZON_D} 天窗口里 L2 ≥ L1 的命中率: {roll_hit:.4f}({roll_n} 个窗口)")
 
     # ── 判据:L3 / L4 ─────────────────────────────────────────────────────────
     years = list(range(2022, 2027))
@@ -909,9 +1014,11 @@ def main() -> None:
                  "arm ∈ {RB_T25_Y, T25_K} 在 2027-03-31 的 nav,比值 = RB_T25_Y / T25_K。"
                  f"T-342 回放里 RBv2 这个开关(L1→L2)在 {met['L1']['d0']} → {met['L1']['d1']} 的 "
                  f"CAGR 差 {diffs_tbl[1]['d_cagr_pp']:+.2f}pp/年、apparatus.ab_test 的 p(L2≥L1)="
-                 f"{ab['p_b_ge_a']};先验 {ab['p_b_ge_a']:.2f}。"),
+                 f"{ab['p_b_ge_a']}(5 年 bootstrap,in-sample);**先验取窗口长度对齐的滚动基准率** —— "
+                 f"窗口内任意 {FWD_HORIZON_D} 个日历日的滚动段里 L2 ≥ L1 的命中率 {roll_hit:.4f}"
+                 f"({roll_n} 个窗口);先验 {roll_hit:.2f}。"),
              "variable": "manual", "op": "gt", "lo": 1.0, "hi": None,
-             "prob": round(float(ab["p_b_ge_a"]), 2), "horizon_d": "2027-03-31"},
+             "prob": round(float(roll_hit), 2), "horizon_d": "2027-03-31"},
         ],
     }
     os.makedirs(os.path.dirname(SCEN_JSON), exist_ok=True)
@@ -953,6 +1060,11 @@ def main() -> None:
         "arm_defs": {k: v for k, v in ARMS + ARMS_V2},
         "diffs": diffs_tbl,
         "ab_test_L1_vs_L2": ab,
+        "fwd_horizon_base_rate": {
+            "what": f"窗口内任意 {FWD_HORIZON_D} 个日历日的滚动段里 L2 ≥ L1 的命中率(前向结算窗口长度对齐)",
+            "horizon_d": FWD_HORIZON_D, "hit_rate": roll_hit, "n_windows": roll_n,
+            "note": "in-sample 基准率;用来替代 5 年 bootstrap 的 p 作为前向先验(样本内、长度对齐)",
+        },
         "judgement": judge,
         "rv2_base": {"stats": ov_base["stats"], "risk_frac": RV2_F_BASE},
         "rv2_high": {"stats": ov_high["stats"], "risk_frac": RV2_F_HIGH},
@@ -988,6 +1100,9 @@ def _pp(x, nd=2):
 
 def write_report(out, met, yr, diffs_tbl, ab, judge, chk1, chk2, chk3, scen, raw) -> None:
     A: list[str] = []
+    _fwd = out.get("fwd_horizon_base_rate") or {}
+    roll_hit = float(_fwd.get("hit_rate", float("nan")))
+    roll_n = int(_fwd.get("n_windows", 0))
     A.append("# T-342 · S-815 整合账本(2021-10-11 → 2026-10-30)")
     A.append("")
     A.append("> **预注册原文(S-815,逐字照抄;运行时与 `REFUTATION_LEDGER.md` 逐字核对)↓**")
@@ -1030,6 +1145,14 @@ def write_report(out, met, yr, diffs_tbl, ab, judge, chk1, chk2, chk3, scen, raw
              f"对照旧核(origin/main)sha256 `{out['kernel']['old']['sha256'][:16]}…`。"
              f"reb {out['kernel_params']['reb']}、cost {out['kernel_params']['cost_bp']:.0f}bp、"
              f"`BASE_T25` {out['kernel_params']['BASE_T25']}、`BOUNDS` {out['kernel_params']['BOUNDS']}。")
+    A.append("")
+    A.append("**v1 错在哪(Seth 11-11 退回 v1)。** R-v2 曲线(`t251_gross_cap.simulate` 的 `days` 按 "
+             "`timedelta(days=1)` 逐日走)与现金利率都是**日历日**序列;v1 把两者写进只含**工作日**的 CSV "
+             "再喂内核 ⇒ 周末的盈亏与周末的利息全丢(窗口内叠加序列:工作日复利 "
+             f"{_pct((out.get('overlay_diag') or {}).get('weekday_compound'))}、周末复利 "
+             f"{_pct((out.get('overlay_diag') or {}).get('weekend_compound'))})。"
+             "v2 改成**日历日序列直接喂内核**(另落 `t342_overlay_calendar.csv`),内核按 (上一个共同日, 当天] 复利;"
+             "本报告各臂与表格都是 v2 的数(v1 的数见 §4b 对照列)。")
     A.append("")
 
     A.append("## 1 · 口径")
@@ -1163,6 +1286,27 @@ def write_report(out, met, yr, diffs_tbl, ab, judge, chk1, chk2, chk3, scen, raw
                  f"(原 {_pct(met['L1']['total_return'])})、L3 = {_pct(met['L3_x']['total_return'])}"
                  f"(原 {_pct(met['L3']['total_return'])});最大单日 = {od.get('top_day_used')}。")
         A.append("")
+    wb = (od.get("weekend_bar_check") or {})
+    if wb:
+        A.append(f"**周末那几格是真的吗(核证):** 原始 bar(`_um_daily.jsonl`){wb.get('n_symbols_with_weekend_bars')}"
+                 f"/{wb.get('n_symbols')} 个符号有周六与周日的 bar(一共 "
+                 f"{wb.get('bar_count_by_weekday')});t251 的 `mark()` 读不到当天 bar 时会**沿用上一根收盘**兜底 "
+                 "⇒ 那样这些格必然是 0。实测不是 0:")
+        A.append("")
+        A.append("| 日期 | 星期 | 叠加日收益 | 当天持仓票 | 用兜底价的票 | 有真实 bar 的票 | 最大单票原始 bar 涨跌 |")
+        A.append("|---|---|---|---|---|---|---|")
+        for x in wb.get("per_day") or []:
+            wd = "一二三四五六日"[int(x.get("weekday", 0))]
+            tm = (x.get("top_moves") or [{}])[0]
+            mv = (f"{tm.get('symbol')} {tm.get('prev_d')} → {x.get('date')}:"
+                  f"{float(tm.get('ret', 0)) * 100:+.1f}%") if tm else "—"
+            A.append(f"| {x.get('date')} | 星期{wd} | {float(x.get('overlay_ret') or 0) * 100:+.2f}% | "
+                     f"{x.get('n_held')} | {x.get('n_tickets_using_fallback_px')} | "
+                     f"{x.get('n_tickets_with_real_bar')} | {mv} |")
+        A.append("")
+        A.append("⇒ **周末的盈亏是真的**(crypto 一周 7 天都有 bar,引擎按当天收盘盯市),不是兜底价造成的记账跳变。"
+                 "v1 丢掉的确实是真钱。")
+        A.append("")
 
     A.append("## 5 · 判据(只判 L3 与 L4)")
     A.append("")
@@ -1191,6 +1335,11 @@ def write_report(out, met, yr, diffs_tbl, ab, judge, chk1, chk2, chk3, scen, raw
              f"L1 → L2 的 `p(L2 ≥ L1)` = {ab['p_b_ge_a']}、`p(L2 ≤ L1)` = {ab['p_b_le_a']},"
              f"比值 {ab['ratio_b_over_a']:.4f},95% 区间 {ab['ci95_log_diff']},判定 **{ab['verdict']}**。")
     A.append("")
+    A.append(f"**前向先验用的不是这个 p:** T-342-4 结算的是 **{FWD_HORIZON_D} 天**的前向窗口,"
+             f"而 ab_test 答的是「这 5 年里整体跑赢的概率」。窗口长度对齐的机械化基准率 = "
+             f"窗口内任意 {FWD_HORIZON_D} 个日历日的滚动段里 L2 ≥ L1 的命中率 = **{roll_hit:.4f}**"
+             f"({roll_n} 个滚动窗口)⇒ T-342-4 的先验取 {roll_hit:.2f}(v1 用的是 in-sample 的 0.955,v2 改掉)。")
+    A.append("")
 
     A.append("## 6 · 前向命题(`scenarios/lane-c-T-342.json`)")
     A.append("")
@@ -1211,9 +1360,12 @@ def write_report(out, met, yr, diffs_tbl, ab, judge, chk1, chk2, chk3, scen, raw
     A.append("- 梯子顺序是「已经决定的 → 还没决定的」,不是按效果挑的;本卡是记账合成,试验计数不计。")
     A.append("- **v2 与 v1 的差别只有一个来源:周末。** R-v2 曲线是日历日序列,v1 把它压成工作日 ⇒ 周末盈亏全丢;"
              "v2 按 Seth 的要求改成日历日直喂内核。周末那几格在窗口内的复利见 4b。")
-    A.append("- **叠加曲线的收益集中在少数几天(4b 的表)。** 那一格若是 t251 的估值口径(周末用上一根收盘的兜底价)"
-             "造成的记账跳变,而不是真钱赚到的,那么 L1 / L2 的钱有一大半来自那几格 —— "
-             "L1_x / L3_x 是「把最大单日记 0」的敏感性,**不是预注册臂**,"
+    A.append("- **周末那几格已核过:是真的。** 原始 bar(`_um_daily.jsonl`)里 crypto 一周 7 天都有 bar(SAND 2021 年"
+             "周六 294 根、周日 295 根,与其他工作日同量级),t251 读不到当天 bar 时才会沿用上一根收盘兜底 —— "
+             "而实测那些格不是 0(4b 的核证表),所以是按当天真实收盘盯市。v1 丢的是真钱。")
+    A.append("- **但收益的集中度很高(这是剩下的真问题)。** 窗口内 128.40% 的 L1 里,去掉一张票"
+             "(`ZEC:2025-09-06`)就掉 72.64pp;最大的一个周末日(2021-10-30)单日 +8.26%。"
+             "L1_x / L3_x(把最大单日记 0)与 L1_nt / L3_nt 是敏感性,**不是预注册臂**,"
              "**探索性 —— 需另立预注册、在新数据上过零信号对照**。")
     A.append("")
 

@@ -41,12 +41,12 @@
    "id": "T-342-4",
    "author": "lane-c",
    "scenario": "S-815 整合账本 · 前向整合臂",
-   "statement": "到 2027-03-31,前向整合臂(book=flex_x1v、arm=RB_T25_Y = RBv2 + 现金计息)的 NAV ≥ 同 book 下 T25_K 的 NAV(比值 ≥ 1)。人工结算:取 forward_book_nav 里 book=flex_x1v、arm ∈ {RB_T25_Y, T25_K} 在 2027-03-31 的 nav,比值 = RB_T25_Y / T25_K。T-342 回放里 RBv2 这个开关(L1→L2)在 2021-10-11 → 2026-10-30 的 CAGR 差 +3.02pp/年、apparatus.ab_test 的 p(L2≥L1)=0.955;先验 0.95。",
+   "statement": "到 2027-03-31,前向整合臂(book=flex_x1v、arm=RB_T25_Y = RBv2 + 现金计息)的 NAV ≥ 同 book 下 T25_K 的 NAV(比值 ≥ 1)。人工结算:取 forward_book_nav 里 book=flex_x1v、arm ∈ {RB_T25_Y, T25_K} 在 2027-03-31 的 nav,比值 = RB_T25_Y / T25_K。T-342 回放里 RBv2 这个开关(L1→L2)在 2021-10-11 → 2026-10-30 的 CAGR 差 +3.34pp/年、apparatus.ab_test 的 p(L2≥L1)=0.9615(5 年 bootstrap,in-sample);**先验取窗口长度对齐的滚动基准率** —— 窗口内任意 152 个日历日的滚动段里 L2 ≥ L1 的命中率 0.7791(1118 个窗口);先验 0.78。",
    "variable": "manual",
    "op": "gt",
    "lo": 1.0,
    "hi": null,
-   "prob": 0.95,
+   "prob": 0.78,
    "horizon_d": "2027-03-31"
   }
  ]
