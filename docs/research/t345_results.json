@@ -1,0 +1,1332 @@
+{
+ "meta": {
+  "card": "T-345",
+  "lane": "lane-b",
+  "ran_utc": "2026-11-11T15:02:45.982453+00:00",
+  "spec_source": "REFUTATION_LEDGER.md ## S-817(\u53ea\u8bfb\u767b\u8bb0\u8282)",
+  "blind_note": "\u672c\u6587\u4ef6\u4e0d\u8bfb\u300cS-817 \u7ed3\u679c\u300d\u90a3\u4e00\u8282,\u4e0d\u8bfb docs/research/s817_*;\u88c5\u914d = \u6211\u81ea\u5df1\u7684 T-343(t343_blind.py);\u53e0\u52a0\u5f15\u64ce = docs/research/t251_gross_cap.py:simulate(\u672a\u6539\u4e00\u5b57);\u7968\u6e90 = docs/research/t197_results.json \u7684 tickets.A\u3002",
+  "window": [
+   "2021-10-11",
+   "2026-10-30"
+  ],
+  "grid": {
+   "f": [
+    0.005,
+    0.01,
+    0.02
+   ],
+   "cap": [
+    0.4,
+    0.8,
+    1.2,
+    2.0
+   ],
+   "c0": [
+    0.005,
+    0.4
+   ]
+  },
+  "criteria": {
+   "uw_tol_days": 30,
+   "cagr_gain_pp": 3.0,
+   "mdd_floor": -0.5,
+   "i": "\u6700\u957f\u6c34\u4e0b \u2264 C0 + 30 \u5929",
+   "ii": "CAGR \u2265 C0 + 3pp/\u5e74",
+   "iii": "\u53bb\u6389\u5b9e\u73b0 R \u6700\u5927\u7684\u4e00\u5f20\u91cd\u8dd1\u540e CAGR \u2265 C0 \u7684\u5168\u6837\u672c CAGR",
+   "iv": "\u8d26\u6237\u6700\u5927\u56de\u64a4\u4e0d\u6df1\u4e8e \u221250%"
+  },
+  "overlay": {
+   "ticket_source": "docs/research/t197_results.json \u2192 tickets.A",
+   "engine": "docs/research/t251_gross_cap.py:simulate(\u672a\u6539\u4e00\u5b57)",
+   "cap_n": 14,
+   "equity0": 630.0
+  }
+ },
+ "validation": {
+  "nav_start": "2021-10-11",
+  "n_common_days": 1333,
+  "exit_reason_mismatch": 0,
+  "exit_reason_mismatch_sample": [],
+  "c0_total_return": 1.680953,
+  "c0_max_drawdown": -0.347264,
+  "t343_L3_total_return": 1.680953,
+  "t343_L3_max_drawdown": -0.347264,
+  "c0_matches_t343_L3": true,
+  "c0_cagr": 0.215428,
+  "s817_register_c0_cagr": 0.2156,
+  "s817_register_c0_uw_days": 824,
+  "c0_uw_days": 824,
+  "c0_uw_matches_register": true
+ },
+ "cells": {
+  "f5pc_cap0.40": {
+   "f": 0.005,
+   "cap": 0.4,
+   "n_tickets_taken": 208,
+   "n_tickets_source": 956,
+   "overlay": {
+    "total_return": 0.635027,
+    "cagr": 0.083527,
+    "max_dd": -0.257097,
+    "worst_month": "2024-06",
+    "worst_month_ret": -0.081457,
+    "n_days": 2237,
+    "blocked_gross": 114,
+    "blocked_cap": 615,
+    "blocked_min": 2,
+    "blocked_coin": 17,
+    "gross_ratio_max": 0.492877,
+    "days_above_cap": 74
+   },
+   "account": {
+    "total_return": 1.680953,
+    "cagr": 0.215428,
+    "max_drawdown": -0.347264,
+    "calmar": 0.6204,
+    "vol_ann": 0.312813,
+    "worst_month": -0.098081,
+    "worst_month_key": "2022-01",
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "underwater": {
+     "days": 824,
+     "peak_date": "2021-11-24",
+     "recovered_date": "2024-02-26",
+     "recovered": true,
+     "depth_pct": -34.7264
+    }
+   },
+   "yearly": {
+    "2021": 0.278762,
+    "2022": -0.197983,
+    "2023": 0.276104,
+    "2024": 0.427769,
+    "2025": 0.426468,
+    "2026": 0.005796
+   },
+   "drop_max_r": {
+    "tid": "ZEC:2025-09-06",
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "entry_d": "2025-09-07",
+    "exit_d": "2025-11-22",
+    "r": 73.156341,
+    "n_taken_after": 212,
+    "total_return": 0.83323,
+    "cagr": 0.127386,
+    "max_drawdown": -0.347264,
+    "underwater": {
+     "days": 824,
+     "peak_date": "2021-11-24",
+     "recovered_date": "2024-02-26",
+     "recovered": true,
+     "depth_pct": -34.7264
+    },
+    "yearly": {
+     "2021": 0.278762,
+     "2022": -0.197983,
+     "2023": 0.276104,
+     "2024": 0.427769,
+     "2025": -0.011977,
+     "2026": -0.007037
+    },
+    "overlay_total_return": 0.119579,
+    "overlay_cagr": 0.018601
+   },
+   "n_rebalances": 61,
+   "judgement": {
+    "i": {
+     "value": 824,
+     "limit": 854,
+     "ok": true,
+     "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0 + 30 \u5929"
+    },
+    "ii": {
+     "value": 0.215428,
+     "limit": 0.245428,
+     "ok": false,
+     "text": "CAGR \u2265 C0 + 3pp/\u5e74"
+    },
+    "iii": {
+     "value": 0.127386,
+     "limit": 0.215428,
+     "ok": false,
+     "text": "\u53bb\u6389\u5b9e\u73b0 R \u6700\u5927\u7684\u4e00\u5f20\u91cd\u8dd1\u540e CAGR \u2265 C0 \u7684\u5168\u6837\u672c CAGR"
+    },
+    "iv": {
+     "value": -0.347264,
+     "limit": -0.5,
+     "ok": true,
+     "text": "\u8d26\u6237\u6700\u5927\u56de\u64a4\u4e0d\u6df1\u4e8e \u221250%"
+    },
+    "pass_all": false
+   }
+  },
+  "f5pc_cap0.80": {
+   "f": 0.005,
+   "cap": 0.8,
+   "n_tickets_taken": 164,
+   "n_tickets_source": 956,
+   "overlay": {
+    "total_return": 0.666974,
+    "cagr": 0.086954,
+    "max_dd": -0.257208,
+    "worst_month": "2025-02",
+    "worst_month_ret": -0.085086,
+    "n_days": 2237,
+    "blocked_gross": 0,
+    "blocked_cap": 778,
+    "blocked_min": 2,
+    "blocked_coin": 12,
+    "gross_ratio_max": 0.523099,
+    "days_above_cap": 0
+   },
+   "account": {
+    "total_return": 1.727963,
+    "cagr": 0.219615,
+    "max_drawdown": -0.347432,
+    "calmar": 0.6321,
+    "vol_ann": 0.312008,
+    "worst_month": -0.106592,
+    "worst_month_key": "2022-01",
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "underwater": {
+     "days": 825,
+     "peak_date": "2021-11-24",
+     "recovered_date": "2024-02-27",
+     "recovered": true,
+     "depth_pct": -34.7432
+    }
+   },
+   "yearly": {
+    "2021": 0.216337,
+    "2022": -0.211413,
+    "2023": 0.308342,
+    "2024": 0.375093,
+    "2025": 0.549216,
+    "2026": 0.020398
+   },
+   "drop_max_r": {
+    "tid": "ZEC:2025-09-06",
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "entry_d": "2025-09-07",
+    "exit_d": "2025-11-22",
+    "r": 73.156341,
+    "n_taken_after": 165,
+    "total_return": 0.840024,
+    "cagr": 0.128212,
+    "max_drawdown": -0.347432,
+    "underwater": {
+     "days": 825,
+     "peak_date": "2021-11-24",
+     "recovered_date": "2024-02-27",
+     "recovered": true,
+     "depth_pct": -34.7432
+    },
+    "yearly": {
+     "2021": 0.216337,
+     "2022": -0.211413,
+     "2023": 0.308342,
+     "2024": 0.375093,
+     "2025": 0.068634,
+     "2026": -0.002214
+    },
+    "overlay_total_return": 0.12609,
+    "overlay_cagr": 0.019565
+   },
+   "n_rebalances": 61,
+   "judgement": {
+    "i": {
+     "value": 825,
+     "limit": 854,
+     "ok": true,
+     "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0 + 30 \u5929"
+    },
+    "ii": {
+     "value": 0.219615,
+     "limit": 0.245428,
+     "ok": false,
+     "text": "CAGR \u2265 C0 + 3pp/\u5e74"
+    },
+    "iii": {
+     "value": 0.128212,
+     "limit": 0.215428,
+     "ok": false,
+     "text": "\u53bb\u6389\u5b9e\u73b0 R \u6700\u5927\u7684\u4e00\u5f20\u91cd\u8dd1\u540e CAGR \u2265 C0 \u7684\u5168\u6837\u672c CAGR"
+    },
+    "iv": {
+     "value": -0.347432,
+     "limit": -0.5,
+     "ok": true,
+     "text": "\u8d26\u6237\u6700\u5927\u56de\u64a4\u4e0d\u6df1\u4e8e \u221250%"
+    },
+    "pass_all": false
+   }
+  },
+  "f5pc_cap1.20": {
+   "f": 0.005,
+   "cap": 1.2,
+   "n_tickets_taken": 164,
+   "n_tickets_source": 956,
+   "overlay": {
+    "total_return": 0.666974,
+    "cagr": 0.086954,
+    "max_dd": -0.257208,
+    "worst_month": "2025-02",
+    "worst_month_ret": -0.085086,
+    "n_days": 2237,
+    "blocked_gross": 0,
+    "blocked_cap": 778,
+    "blocked_min": 2,
+    "blocked_coin": 12,
+    "gross_ratio_max": 0.523099,
+    "days_above_cap": 0
+   },
+   "account": {
+    "total_return": 1.727963,
+    "cagr": 0.219615,
+    "max_drawdown": -0.347432,
+    "calmar": 0.6321,
+    "vol_ann": 0.312008,
+    "worst_month": -0.106592,
+    "worst_month_key": "2022-01",
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "underwater": {
+     "days": 825,
+     "peak_date": "2021-11-24",
+     "recovered_date": "2024-02-27",
+     "recovered": true,
+     "depth_pct": -34.7432
+    }
+   },
+   "yearly": {
+    "2021": 0.216337,
+    "2022": -0.211413,
+    "2023": 0.308342,
+    "2024": 0.375093,
+    "2025": 0.549216,
+    "2026": 0.020398
+   },
+   "drop_max_r": {
+    "tid": "ZEC:2025-09-06",
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "entry_d": "2025-09-07",
+    "exit_d": "2025-11-22",
+    "r": 73.156341,
+    "n_taken_after": 165,
+    "total_return": 0.840024,
+    "cagr": 0.128212,
+    "max_drawdown": -0.347432,
+    "underwater": {
+     "days": 825,
+     "peak_date": "2021-11-24",
+     "recovered_date": "2024-02-27",
+     "recovered": true,
+     "depth_pct": -34.7432
+    },
+    "yearly": {
+     "2021": 0.216337,
+     "2022": -0.211413,
+     "2023": 0.308342,
+     "2024": 0.375093,
+     "2025": 0.068634,
+     "2026": -0.002214
+    },
+    "overlay_total_return": 0.12609,
+    "overlay_cagr": 0.019565
+   },
+   "n_rebalances": 61,
+   "judgement": {
+    "i": {
+     "value": 825,
+     "limit": 854,
+     "ok": true,
+     "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0 + 30 \u5929"
+    },
+    "ii": {
+     "value": 0.219615,
+     "limit": 0.245428,
+     "ok": false,
+     "text": "CAGR \u2265 C0 + 3pp/\u5e74"
+    },
+    "iii": {
+     "value": 0.128212,
+     "limit": 0.215428,
+     "ok": false,
+     "text": "\u53bb\u6389\u5b9e\u73b0 R \u6700\u5927\u7684\u4e00\u5f20\u91cd\u8dd1\u540e CAGR \u2265 C0 \u7684\u5168\u6837\u672c CAGR"
+    },
+    "iv": {
+     "value": -0.347432,
+     "limit": -0.5,
+     "ok": true,
+     "text": "\u8d26\u6237\u6700\u5927\u56de\u64a4\u4e0d\u6df1\u4e8e \u221250%"
+    },
+    "pass_all": false
+   }
+  },
+  "f5pc_cap2.00": {
+   "f": 0.005,
+   "cap": 2.0,
+   "n_tickets_taken": 164,
+   "n_tickets_source": 956,
+   "overlay": {
+    "total_return": 0.666974,
+    "cagr": 0.086954,
+    "max_dd": -0.257208,
+    "worst_month": "2025-02",
+    "worst_month_ret": -0.085086,
+    "n_days": 2237,
+    "blocked_gross": 0,
+    "blocked_cap": 778,
+    "blocked_min": 2,
+    "blocked_coin": 12,
+    "gross_ratio_max": 0.523099,
+    "days_above_cap": 0
+   },
+   "account": {
+    "total_return": 1.727963,
+    "cagr": 0.219615,
+    "max_drawdown": -0.347432,
+    "calmar": 0.6321,
+    "vol_ann": 0.312008,
+    "worst_month": -0.106592,
+    "worst_month_key": "2022-01",
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "underwater": {
+     "days": 825,
+     "peak_date": "2021-11-24",
+     "recovered_date": "2024-02-27",
+     "recovered": true,
+     "depth_pct": -34.7432
+    }
+   },
+   "yearly": {
+    "2021": 0.216337,
+    "2022": -0.211413,
+    "2023": 0.308342,
+    "2024": 0.375093,
+    "2025": 0.549216,
+    "2026": 0.020398
+   },
+   "drop_max_r": {
+    "tid": "ZEC:2025-09-06",
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "entry_d": "2025-09-07",
+    "exit_d": "2025-11-22",
+    "r": 73.156341,
+    "n_taken_after": 165,
+    "total_return": 0.840024,
+    "cagr": 0.128212,
+    "max_drawdown": -0.347432,
+    "underwater": {
+     "days": 825,
+     "peak_date": "2021-11-24",
+     "recovered_date": "2024-02-27",
+     "recovered": true,
+     "depth_pct": -34.7432
+    },
+    "yearly": {
+     "2021": 0.216337,
+     "2022": -0.211413,
+     "2023": 0.308342,
+     "2024": 0.375093,
+     "2025": 0.068634,
+     "2026": -0.002214
+    },
+    "overlay_total_return": 0.12609,
+    "overlay_cagr": 0.019565
+   },
+   "n_rebalances": 61,
+   "judgement": {
+    "i": {
+     "value": 825,
+     "limit": 854,
+     "ok": true,
+     "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0 + 30 \u5929"
+    },
+    "ii": {
+     "value": 0.219615,
+     "limit": 0.245428,
+     "ok": false,
+     "text": "CAGR \u2265 C0 + 3pp/\u5e74"
+    },
+    "iii": {
+     "value": 0.128212,
+     "limit": 0.215428,
+     "ok": false,
+     "text": "\u53bb\u6389\u5b9e\u73b0 R \u6700\u5927\u7684\u4e00\u5f20\u91cd\u8dd1\u540e CAGR \u2265 C0 \u7684\u5168\u6837\u672c CAGR"
+    },
+    "iv": {
+     "value": -0.347432,
+     "limit": -0.5,
+     "ok": true,
+     "text": "\u8d26\u6237\u6700\u5927\u56de\u64a4\u4e0d\u6df1\u4e8e \u221250%"
+    },
+    "pass_all": false
+   }
+  },
+  "f10pc_cap0.40": {
+   "f": 0.01,
+   "cap": 0.4,
+   "n_tickets_taken": 175,
+   "n_tickets_source": 956,
+   "overlay": {
+    "total_return": 0.490706,
+    "cagr": 0.067312,
+    "max_dd": -0.424653,
+    "worst_month": "2024-06",
+    "worst_month_ret": -0.102263,
+    "n_days": 2237,
+    "blocked_gross": 702,
+    "blocked_cap": 45,
+    "blocked_min": 0,
+    "blocked_coin": 34,
+    "gross_ratio_max": 0.639183,
+    "days_above_cap": 167
+   },
+   "account": {
+    "total_return": 1.179583,
+    "cagr": 0.166651,
+    "max_drawdown": -0.432594,
+    "calmar": 0.3852,
+    "vol_ann": 0.364527,
+    "worst_month": -0.124887,
+    "worst_month_key": "2022-01",
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "underwater": {
+     "days": 853,
+     "peak_date": "2021-11-09",
+     "recovered_date": "2024-03-11",
+     "recovered": true,
+     "depth_pct": -43.2594
+    }
+   },
+   "yearly": {
+    "2021": -0.055763,
+    "2022": -0.251246,
+    "2023": 0.330275,
+    "2024": 0.377179,
+    "2025": 0.637832,
+    "2026": 0.027429
+   },
+   "drop_max_r": {
+    "tid": "ZEC:2025-09-06",
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "entry_d": "2025-09-07",
+    "exit_d": "2025-11-22",
+    "r": 73.156341,
+    "n_taken_after": 180,
+    "total_return": 0.043046,
+    "cagr": 0.008373,
+    "max_drawdown": -0.432594,
+    "underwater": {
+     "days": 853,
+     "peak_date": "2021-11-09",
+     "recovered_date": "2024-03-11",
+     "recovered": true,
+     "depth_pct": -43.2594
+    },
+    "yearly": {
+     "2021": -0.055763,
+     "2022": -0.251246,
+     "2023": 0.330275,
+     "2024": 0.377179,
+     "2025": -0.176349,
+     "2026": -0.022294
+    },
+    "overlay_total_return": -0.284439,
+    "overlay_cagr": -0.053145
+   },
+   "n_rebalances": 61,
+   "judgement": {
+    "i": {
+     "value": 853,
+     "limit": 854,
+     "ok": true,
+     "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0 + 30 \u5929"
+    },
+    "ii": {
+     "value": 0.166651,
+     "limit": 0.245428,
+     "ok": false,
+     "text": "CAGR \u2265 C0 + 3pp/\u5e74"
+    },
+    "iii": {
+     "value": 0.008373,
+     "limit": 0.215428,
+     "ok": false,
+     "text": "\u53bb\u6389\u5b9e\u73b0 R \u6700\u5927\u7684\u4e00\u5f20\u91cd\u8dd1\u540e CAGR \u2265 C0 \u7684\u5168\u6837\u672c CAGR"
+    },
+    "iv": {
+     "value": -0.432594,
+     "limit": -0.5,
+     "ok": true,
+     "text": "\u8d26\u6237\u6700\u5927\u56de\u64a4\u4e0d\u6df1\u4e8e \u221250%"
+    },
+    "pass_all": false
+   }
+  },
+  "f10pc_cap0.80": {
+   "f": 0.01,
+   "cap": 0.8,
+   "n_tickets_taken": 176,
+   "n_tickets_source": 956,
+   "overlay": {
+    "total_return": 1.084043,
+    "cagr": 0.127287,
+    "max_dd": -0.441445,
+    "worst_month": "2025-02",
+    "worst_month_ret": -0.163059,
+    "n_days": 2237,
+    "blocked_gross": 14,
+    "blocked_cap": 752,
+    "blocked_min": 0,
+    "blocked_coin": 14,
+    "gross_ratio_max": 0.826555,
+    "days_above_cap": 17
+   },
+   "account": {
+    "total_return": 2.139548,
+    "cagr": 0.253996,
+    "max_drawdown": -0.50988,
+    "calmar": 0.4981,
+    "vol_ann": 0.482973,
+    "worst_month": -0.17339,
+    "worst_month_key": "2025-02",
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "underwater": {
+     "days": 831,
+     "peak_date": "2021-11-24",
+     "recovered_date": "2024-03-04",
+     "recovered": true,
+     "depth_pct": -50.988
+    }
+   },
+   "yearly": {
+    "2021": 0.450756,
+    "2022": -0.257177,
+    "2023": 0.266689,
+    "2024": 0.352016,
+    "2025": 0.692975,
+    "2026": 0.004811
+   },
+   "drop_max_r": {
+    "tid": "ZEC:2025-09-06",
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "entry_d": "2025-09-07",
+    "exit_d": "2025-11-22",
+    "r": 73.156341,
+    "n_taken_after": 177,
+    "total_return": 0.420299,
+    "cagr": 0.071879,
+    "max_drawdown": -0.50988,
+    "underwater": {
+     "days": 831,
+     "peak_date": "2021-11-24",
+     "recovered_date": "2024-03-04",
+     "recovered": true,
+     "depth_pct": -50.988
+    },
+    "yearly": {
+     "2021": 0.450756,
+     "2022": -0.257177,
+     "2023": 0.266689,
+     "2024": 0.352016,
+     "2025": -0.169978,
+     "2026": -0.072832
+    },
+    "overlay_total_return": -0.052273,
+    "overlay_cagr": -0.008722
+   },
+   "n_rebalances": 61,
+   "judgement": {
+    "i": {
+     "value": 831,
+     "limit": 854,
+     "ok": true,
+     "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0 + 30 \u5929"
+    },
+    "ii": {
+     "value": 0.253996,
+     "limit": 0.245428,
+     "ok": true,
+     "text": "CAGR \u2265 C0 + 3pp/\u5e74"
+    },
+    "iii": {
+     "value": 0.071879,
+     "limit": 0.215428,
+     "ok": false,
+     "text": "\u53bb\u6389\u5b9e\u73b0 R \u6700\u5927\u7684\u4e00\u5f20\u91cd\u8dd1\u540e CAGR \u2265 C0 \u7684\u5168\u6837\u672c CAGR"
+    },
+    "iv": {
+     "value": -0.50988,
+     "limit": -0.5,
+     "ok": false,
+     "text": "\u8d26\u6237\u6700\u5927\u56de\u64a4\u4e0d\u6df1\u4e8e \u221250%"
+    },
+    "pass_all": false
+   }
+  },
+  "f10pc_cap1.20": {
+   "f": 0.01,
+   "cap": 1.2,
+   "n_tickets_taken": 164,
+   "n_tickets_source": 956,
+   "overlay": {
+    "total_return": 1.50407,
+    "cagr": 0.161569,
+    "max_dd": -0.434053,
+    "worst_month": "2025-02",
+    "worst_month_ret": -0.15352,
+    "n_days": 2237,
+    "blocked_gross": 0,
+    "blocked_cap": 780,
+    "blocked_min": 0,
+    "blocked_coin": 12,
+    "gross_ratio_max": 0.908612,
+    "days_above_cap": 0
+   },
+   "account": {
+    "total_return": 2.758502,
+    "cagr": 0.29944,
+    "max_drawdown": -0.505023,
+    "calmar": 0.5929,
+    "vol_ann": 0.478971,
+    "worst_month": -0.163975,
+    "worst_month_key": "2025-02",
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "underwater": {
+     "days": 828,
+     "peak_date": "2021-11-24",
+     "recovered_date": "2024-03-01",
+     "recovered": true,
+     "depth_pct": -50.5023
+    }
+   },
+   "yearly": {
+    "2021": 0.388162,
+    "2022": -0.272586,
+    "2023": 0.368529,
+    "2024": 0.44199,
+    "2025": 0.827715,
+    "2026": 0.031972
+   },
+   "drop_max_r": {
+    "tid": "ZEC:2025-09-06",
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "entry_d": "2025-09-07",
+    "exit_d": "2025-11-22",
+    "r": 73.156341,
+    "n_taken_after": 165,
+    "total_return": 0.761898,
+    "cagr": 0.118569,
+    "max_drawdown": -0.505023,
+    "underwater": {
+     "days": 828,
+     "peak_date": "2021-11-24",
+     "recovered_date": "2024-03-01",
+     "recovered": true,
+     "depth_pct": -50.5023
+    },
+    "yearly": {
+     "2021": 0.388162,
+     "2022": -0.272586,
+     "2023": 0.368529,
+     "2024": 0.44199,
+     "2025": -0.098074,
+     "2026": -0.019671
+    },
+    "overlay_total_return": 0.179299,
+    "overlay_cagr": 0.027275
+   },
+   "n_rebalances": 61,
+   "judgement": {
+    "i": {
+     "value": 828,
+     "limit": 854,
+     "ok": true,
+     "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0 + 30 \u5929"
+    },
+    "ii": {
+     "value": 0.29944,
+     "limit": 0.245428,
+     "ok": true,
+     "text": "CAGR \u2265 C0 + 3pp/\u5e74"
+    },
+    "iii": {
+     "value": 0.118569,
+     "limit": 0.215428,
+     "ok": false,
+     "text": "\u53bb\u6389\u5b9e\u73b0 R \u6700\u5927\u7684\u4e00\u5f20\u91cd\u8dd1\u540e CAGR \u2265 C0 \u7684\u5168\u6837\u672c CAGR"
+    },
+    "iv": {
+     "value": -0.505023,
+     "limit": -0.5,
+     "ok": false,
+     "text": "\u8d26\u6237\u6700\u5927\u56de\u64a4\u4e0d\u6df1\u4e8e \u221250%"
+    },
+    "pass_all": false
+   }
+  },
+  "f10pc_cap2.00": {
+   "f": 0.01,
+   "cap": 2.0,
+   "n_tickets_taken": 164,
+   "n_tickets_source": 956,
+   "overlay": {
+    "total_return": 1.50407,
+    "cagr": 0.161569,
+    "max_dd": -0.434053,
+    "worst_month": "2025-02",
+    "worst_month_ret": -0.15352,
+    "n_days": 2237,
+    "blocked_gross": 0,
+    "blocked_cap": 780,
+    "blocked_min": 0,
+    "blocked_coin": 12,
+    "gross_ratio_max": 0.908612,
+    "days_above_cap": 0
+   },
+   "account": {
+    "total_return": 2.758502,
+    "cagr": 0.29944,
+    "max_drawdown": -0.505023,
+    "calmar": 0.5929,
+    "vol_ann": 0.478971,
+    "worst_month": -0.163975,
+    "worst_month_key": "2025-02",
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "underwater": {
+     "days": 828,
+     "peak_date": "2021-11-24",
+     "recovered_date": "2024-03-01",
+     "recovered": true,
+     "depth_pct": -50.5023
+    }
+   },
+   "yearly": {
+    "2021": 0.388162,
+    "2022": -0.272586,
+    "2023": 0.368529,
+    "2024": 0.44199,
+    "2025": 0.827715,
+    "2026": 0.031972
+   },
+   "drop_max_r": {
+    "tid": "ZEC:2025-09-06",
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "entry_d": "2025-09-07",
+    "exit_d": "2025-11-22",
+    "r": 73.156341,
+    "n_taken_after": 165,
+    "total_return": 0.761898,
+    "cagr": 0.118569,
+    "max_drawdown": -0.505023,
+    "underwater": {
+     "days": 828,
+     "peak_date": "2021-11-24",
+     "recovered_date": "2024-03-01",
+     "recovered": true,
+     "depth_pct": -50.5023
+    },
+    "yearly": {
+     "2021": 0.388162,
+     "2022": -0.272586,
+     "2023": 0.368529,
+     "2024": 0.44199,
+     "2025": -0.098074,
+     "2026": -0.019671
+    },
+    "overlay_total_return": 0.179299,
+    "overlay_cagr": 0.027275
+   },
+   "n_rebalances": 61,
+   "judgement": {
+    "i": {
+     "value": 828,
+     "limit": 854,
+     "ok": true,
+     "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0 + 30 \u5929"
+    },
+    "ii": {
+     "value": 0.29944,
+     "limit": 0.245428,
+     "ok": true,
+     "text": "CAGR \u2265 C0 + 3pp/\u5e74"
+    },
+    "iii": {
+     "value": 0.118569,
+     "limit": 0.215428,
+     "ok": false,
+     "text": "\u53bb\u6389\u5b9e\u73b0 R \u6700\u5927\u7684\u4e00\u5f20\u91cd\u8dd1\u540e CAGR \u2265 C0 \u7684\u5168\u6837\u672c CAGR"
+    },
+    "iv": {
+     "value": -0.505023,
+     "limit": -0.5,
+     "ok": false,
+     "text": "\u8d26\u6237\u6700\u5927\u56de\u64a4\u4e0d\u6df1\u4e8e \u221250%"
+    },
+    "pass_all": false
+   }
+  },
+  "f20pc_cap0.40": {
+   "f": 0.02,
+   "cap": 0.4,
+   "n_tickets_taken": 93,
+   "n_tickets_source": 956,
+   "overlay": {
+    "total_return": 3.060129,
+    "cagr": 0.256876,
+    "max_dd": -0.424402,
+    "worst_month": "2024-06",
+    "worst_month_ret": -0.117646,
+    "n_days": 2237,
+    "blocked_gross": 845,
+    "blocked_cap": 0,
+    "blocked_min": 0,
+    "blocked_coin": 18,
+    "gross_ratio_max": 0.775874,
+    "days_above_cap": 207
+   },
+   "account": {
+    "total_return": 3.667188,
+    "cagr": 0.356315,
+    "max_drawdown": -0.406684,
+    "calmar": 0.8761,
+    "vol_ann": 0.455306,
+    "worst_month": -0.117807,
+    "worst_month_key": "2022-01",
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "underwater": {
+     "days": 775,
+     "peak_date": "2021-11-11",
+     "recovered_date": "2023-12-26",
+     "recovered": true,
+     "depth_pct": -40.6684
+    }
+   },
+   "yearly": {
+    "2021": 0.272214,
+    "2022": -0.232819,
+    "2023": 0.48057,
+    "2024": 0.347507,
+    "2025": 1.249318,
+    "2026": 0.06558
+   },
+   "drop_max_r": {
+    "tid": "ZEC:2025-09-06",
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "entry_d": "2025-09-07",
+    "exit_d": "2025-11-22",
+    "r": 73.156341,
+    "n_taken_after": 98,
+    "total_return": 0.383297,
+    "cagr": 0.066296,
+    "max_drawdown": -0.462843,
+    "underwater": {
+     "days": 963,
+     "peak_date": "2024-03-11",
+     "recovered_date": null,
+     "recovered": false,
+     "depth_pct": -46.2843
+    },
+    "yearly": {
+     "2021": 0.272214,
+     "2022": -0.232819,
+     "2023": 0.48057,
+     "2024": 0.347507,
+     "2025": -0.30611,
+     "2026": 0.023781
+    },
+    "overlay_total_return": 0.205509,
+    "overlay_cagr": 0.030966
+   },
+   "n_rebalances": 61,
+   "judgement": {
+    "i": {
+     "value": 775,
+     "limit": 854,
+     "ok": true,
+     "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0 + 30 \u5929"
+    },
+    "ii": {
+     "value": 0.356315,
+     "limit": 0.245428,
+     "ok": true,
+     "text": "CAGR \u2265 C0 + 3pp/\u5e74"
+    },
+    "iii": {
+     "value": 0.066296,
+     "limit": 0.215428,
+     "ok": false,
+     "text": "\u53bb\u6389\u5b9e\u73b0 R \u6700\u5927\u7684\u4e00\u5f20\u91cd\u8dd1\u540e CAGR \u2265 C0 \u7684\u5168\u6837\u672c CAGR"
+    },
+    "iv": {
+     "value": -0.406684,
+     "limit": -0.5,
+     "ok": true,
+     "text": "\u8d26\u6237\u6700\u5927\u56de\u64a4\u4e0d\u6df1\u4e8e \u221250%"
+    },
+    "pass_all": false
+   }
+  },
+  "f20pc_cap0.80": {
+   "f": 0.02,
+   "cap": 0.8,
+   "n_tickets_taken": 164,
+   "n_tickets_source": 956,
+   "overlay": {
+    "total_return": 0.764145,
+    "cagr": 0.097048,
+    "max_dd": -0.668104,
+    "worst_month": "2024-06",
+    "worst_month_ret": -0.178823,
+    "n_days": 2237,
+    "blocked_gross": 713,
+    "blocked_cap": 45,
+    "blocked_min": 0,
+    "blocked_coin": 34,
+    "gross_ratio_max": 0.899456,
+    "days_above_cap": 111
+   },
+   "account": {
+    "total_return": 1.096054,
+    "cagr": 0.157667,
+    "max_drawdown": -0.653837,
+    "calmar": 0.2411,
+    "vol_ann": 0.58734,
+    "worst_month": -0.185561,
+    "worst_month_key": "2022-01",
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "underwater": {
+     "days": 1121,
+     "peak_date": "2021-11-09",
+     "recovered_date": "2024-12-04",
+     "recovered": true,
+     "depth_pct": -65.3837
+    }
+   },
+   "yearly": {
+    "2021": -0.137391,
+    "2022": -0.377127,
+    "2023": 0.535267,
+    "2024": 0.303471,
+    "2025": 0.880548,
+    "2026": 0.036618
+   },
+   "drop_max_r": {
+    "tid": "ZEC:2025-09-06",
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "entry_d": "2025-09-07",
+    "exit_d": "2025-11-22",
+    "r": 73.156341,
+    "n_taken_after": 165,
+    "total_return": -0.499782,
+    "cagr": -0.128065,
+    "max_drawdown": -0.715032,
+    "underwater": {
+     "days": 1121,
+     "peak_date": "2021-11-09",
+     "recovered_date": "2024-12-04",
+     "recovered": true,
+     "depth_pct": -65.3837
+    },
+    "yearly": {
+     "2021": -0.137391,
+     "2022": -0.377127,
+     "2023": 0.535267,
+     "2024": 0.303471,
+     "2025": -0.449875,
+     "2026": -0.154334
+    },
+    "overlay_total_return": -0.573811,
+    "overlay_cagr": -0.12991
+   },
+   "n_rebalances": 61,
+   "judgement": {
+    "i": {
+     "value": 1121,
+     "limit": 854,
+     "ok": false,
+     "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0 + 30 \u5929"
+    },
+    "ii": {
+     "value": 0.157667,
+     "limit": 0.245428,
+     "ok": false,
+     "text": "CAGR \u2265 C0 + 3pp/\u5e74"
+    },
+    "iii": {
+     "value": -0.128065,
+     "limit": 0.215428,
+     "ok": false,
+     "text": "\u53bb\u6389\u5b9e\u73b0 R \u6700\u5927\u7684\u4e00\u5f20\u91cd\u8dd1\u540e CAGR \u2265 C0 \u7684\u5168\u6837\u672c CAGR"
+    },
+    "iv": {
+     "value": -0.653837,
+     "limit": -0.5,
+     "ok": false,
+     "text": "\u8d26\u6237\u6700\u5927\u56de\u64a4\u4e0d\u6df1\u4e8e \u221250%"
+    },
+    "pass_all": false
+   }
+  },
+  "f20pc_cap1.20": {
+   "f": 0.02,
+   "cap": 1.2,
+   "n_tickets_taken": 173,
+   "n_tickets_source": 956,
+   "overlay": {
+    "total_return": -0.645881,
+    "cagr": -0.155816,
+    "max_dd": -0.892073,
+    "worst_month": "2026-06",
+    "worst_month_ret": -0.344538,
+    "n_days": 2237,
+    "blocked_gross": 437,
+    "blocked_cap": 307,
+    "blocked_min": 0,
+    "blocked_coin": 39,
+    "gross_ratio_max": 1.580938,
+    "days_above_cap": 342
+   },
+   "account": {
+    "total_return": -0.580346,
+    "cagr": -0.157838,
+    "max_drawdown": -0.851874,
+    "calmar": -0.1853,
+    "vol_ann": 0.880753,
+    "worst_month": -0.35697,
+    "worst_month_key": "2026-06",
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "underwater": {
+     "days": 1816,
+     "peak_date": "2021-11-09",
+     "recovered_date": null,
+     "recovered": false,
+     "depth_pct": -85.1874
+    }
+   },
+   "yearly": {
+    "2021": -0.005611,
+    "2022": -0.447639,
+    "2023": 0.347078,
+    "2024": 0.429708,
+    "2025": -0.455334,
+    "2026": -0.271647
+   },
+   "drop_max_r": {
+    "tid": "LRC:2021-10-28",
+    "symbol": "LRC",
+    "signal_d": "2021-10-28",
+    "entry_d": "2021-10-29",
+    "exit_d": "2021-12-01",
+    "r": 15.453673,
+    "n_taken_after": 182,
+    "total_return": 1.108824,
+    "cagr": 0.159059,
+    "max_drawdown": -0.76718,
+    "underwater": {
+     "days": 1448,
+     "peak_date": "2021-11-09",
+     "recovered_date": "2025-10-27",
+     "recovered": true,
+     "depth_pct": -76.718
+    },
+    "yearly": {
+     "2021": -0.190234,
+     "2022": -0.472443,
+     "2023": 0.366646,
+     "2024": 0.576873,
+     "2025": 1.103195,
+     "2026": 0.089129
+    },
+    "overlay_total_return": 0.752253,
+    "overlay_cagr": 0.095838
+   },
+   "n_rebalances": 61,
+   "judgement": {
+    "i": {
+     "value": 1816,
+     "limit": 854,
+     "ok": false,
+     "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0 + 30 \u5929"
+    },
+    "ii": {
+     "value": -0.157838,
+     "limit": 0.245428,
+     "ok": false,
+     "text": "CAGR \u2265 C0 + 3pp/\u5e74"
+    },
+    "iii": {
+     "value": 0.159059,
+     "limit": 0.215428,
+     "ok": false,
+     "text": "\u53bb\u6389\u5b9e\u73b0 R \u6700\u5927\u7684\u4e00\u5f20\u91cd\u8dd1\u540e CAGR \u2265 C0 \u7684\u5168\u6837\u672c CAGR"
+    },
+    "iv": {
+     "value": -0.851874,
+     "limit": -0.5,
+     "ok": false,
+     "text": "\u8d26\u6237\u6700\u5927\u56de\u64a4\u4e0d\u6df1\u4e8e \u221250%"
+    },
+    "pass_all": false
+   }
+  },
+  "f20pc_cap2.00": {
+   "f": 0.02,
+   "cap": 2.0,
+   "n_tickets_taken": 164,
+   "n_tickets_source": 956,
+   "overlay": {
+    "total_return": 3.518798,
+    "cagr": 0.279018,
+    "max_dd": -0.675077,
+    "worst_month": "2025-02",
+    "worst_month_ret": -0.255836,
+    "n_days": 2237,
+    "blocked_gross": 0,
+    "blocked_cap": 780,
+    "blocked_min": 0,
+    "blocked_coin": 12,
+    "gross_ratio_max": 1.654631,
+    "days_above_cap": 0
+   },
+   "account": {
+    "total_return": 4.951571,
+    "cagr": 0.423138,
+    "max_drawdown": -0.721691,
+    "calmar": 0.5863,
+    "vol_ann": 0.778608,
+    "worst_month": -0.265187,
+    "worst_month_key": "2025-02",
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "underwater": {
+     "days": 838,
+     "peak_date": "2021-11-24",
+     "recovered_date": "2024-03-11",
+     "recovered": true,
+     "depth_pct": -72.1691
+    }
+   },
+   "yearly": {
+    "2021": 0.626122,
+    "2022": -0.390811,
+    "2023": 0.463284,
+    "2024": 0.625413,
+    "2025": 1.367402,
+    "2026": 0.066994
+   },
+   "drop_max_r": {
+    "tid": "ZEC:2025-09-06",
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "entry_d": "2025-09-07",
+    "exit_d": "2025-11-22",
+    "r": 73.156341,
+    "n_taken_after": 165,
+    "total_return": 0.444984,
+    "cagr": 0.075539,
+    "max_drawdown": -0.721691,
+    "underwater": {
+     "days": 838,
+     "peak_date": "2021-11-24",
+     "recovered_date": "2024-03-11",
+     "recovered": true,
+     "depth_pct": -72.1691
+    },
+    "yearly": {
+     "2021": 0.626122,
+     "2022": -0.390811,
+     "2023": 0.463284,
+     "2024": 0.625413,
+     "2025": -0.358217,
+     "2026": -0.044398
+    },
+    "overlay_total_return": 0.114401,
+    "overlay_cagr": 0.017831
+   },
+   "n_rebalances": 61,
+   "judgement": {
+    "i": {
+     "value": 838,
+     "limit": 854,
+     "ok": true,
+     "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0 + 30 \u5929"
+    },
+    "ii": {
+     "value": 0.423138,
+     "limit": 0.245428,
+     "ok": true,
+     "text": "CAGR \u2265 C0 + 3pp/\u5e74"
+    },
+    "iii": {
+     "value": 0.075539,
+     "limit": 0.215428,
+     "ok": false,
+     "text": "\u53bb\u6389\u5b9e\u73b0 R \u6700\u5927\u7684\u4e00\u5f20\u91cd\u8dd1\u540e CAGR \u2265 C0 \u7684\u5168\u6837\u672c CAGR"
+    },
+    "iv": {
+     "value": -0.721691,
+     "limit": -0.5,
+     "ok": false,
+     "text": "\u8d26\u6237\u6700\u5927\u56de\u64a4\u4e0d\u6df1\u4e8e \u221250%"
+    },
+    "pass_all": false
+   }
+  }
+ },
+ "judgement": {},
+ "f_star": {
+  "passing_cells": [],
+  "best_cell": null,
+  "best_cagr": null,
+  "adjacent_check": [],
+  "adjacent_ok": false,
+  "rule": "CAGR \u6700\u9ad8\u7684\u8fc7\u683c,\u4e14\u7f51\u683c\u4e0a\u81f3\u5c11\u6709\u4e00\u4e2a\u76f8\u90bb\u683c\u4e5f\u8fc7 (i)(iii)"
+ }
+}
