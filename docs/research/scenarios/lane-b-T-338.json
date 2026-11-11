@@ -1,0 +1,45 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {
+      "id": "T-338-1",
+      "scenario": "T-338 袖套的资金费项方向(BTC 永续 30 日平均资金费)",
+      "statement": "BTC 永续 30 日平均资金费在 2026-12-01 仍为正(空方收正费率 ⇒ T-338 修好口径下的袖套资金费项是正贡献);历史基准率 0.9251(t338_results.json baserates.funding_30d_avg_positive_rate,2021-03→2026-10 的 30 日窗口)",
+      "variable": "state:funding_btc_30d",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.9,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-338-2",
+      "scenario": "T-338 修好口径下袖套自身最大回撤(人工读 t338_results.json)",
+      "statement": "修好口径(18 张票全部进场、幽灵仓修掉)下,袖套自身最大回撤的绝对值仍小于 5 个百分点(实测 4.8929%;旧口径 22.15%)",
+      "variable": "manual",
+      "op": "lt",
+      "lo": 5,
+      "prob": 0.85,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-338-3",
+      "scenario": "T-338 随机对照在 ③ 池口径下的分位(人工读 t338_results.json)",
+      "statement": "把随机对照换到预注册写的 ③ 池(三条全中、69 天)后,实际平均净 R 的分位仍低于 95(实测 85.7 / 64.0)",
+      "variable": "manual",
+      "op": "lt",
+      "lo": 95,
+      "prob": 0.8,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-338-4",
+      "scenario": "T-338 修好口径下袖套付掉的净值(人工读 t338_results.json)",
+      "statement": "修好口径下,战术空袖套付掉的净值(① 期末财富之差)仍小于 0.5 个 NAV 单位(实测 0.3973;旧口径 1.2660)",
+      "variable": "manual",
+      "op": "lt",
+      "lo": 0.5,
+      "prob": 0.75,
+      "horizon_d": "2026-12-01"
+    }
+  ]
+}

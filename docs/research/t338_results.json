@@ -1,0 +1,417 @@
+{
+  "card": "T-338",
+  "generated_utc": "2026-11-11T09:06:25+00:00",
+  "data": {
+    "btc_bars": 2500,
+    "btc_range": [
+      "2019-12-31",
+      "2026-11-04"
+    ],
+    "dvol_range": [
+      "2021-03-24",
+      "2026-10-31"
+    ],
+    "nav_days": 2047,
+    "nav_range": [
+      "2021-03-24",
+      "2026-10-31"
+    ],
+    "signal_days": 69,
+    "price_only_days": 1029,
+    "core_days": 2499,
+    "core_range": [
+      "2020-01-01",
+      "2026-11-04"
+    ]
+  },
+  "self_check": {
+    "n_tickets": 18,
+    "avg_r_net": -0.3744908562608685,
+    "median_r_net": -0.9841310251507414,
+    "win_rate": 0.2222222222222222,
+    "total_r_net": -6.740835412695633,
+    "reasons": {
+      "止盈": 2,
+      "保本": 2,
+      "止损": 10,
+      "时间": 4
+    },
+    "truth_avg_r_net": -0.3744908562608685,
+    "avg_r_net_abs_diff": 0.0,
+    "per_ticket_field_diffs": [],
+    "per_ticket_match": true
+  },
+  "published_reproduction_check": {
+    "published": {
+      "core_maxdd": -0.7673552493950986,
+      "core_total": 10.918865240311325,
+      "combined_maxdd": -0.7621850401948012,
+      "combined_total": 9.652864753607153,
+      "dd_reduction_pp": -0.5170209200297426,
+      "sleeve_total_ret": -0.10621820627876011,
+      "sleeve_maxdd": -0.22150156399328746,
+      "n_days": 2499
+    },
+    "recomputed_v0": {
+      "core_maxdd": -0.7673552493950986,
+      "core_total": 10.918865240311325,
+      "combined_maxdd": -0.7621850401948012,
+      "combined_total": 9.652864753607153,
+      "dd_reduction_pp": -0.5170209200297426,
+      "sleeve_total_ret": -0.10621820627876011,
+      "sleeve_maxdd": -0.22150156399328746,
+      "n_days": 2499
+    },
+    "max_abs_diff": {
+      "core_maxdd": 0.0,
+      "core_total": 0.0,
+      "combined_maxdd": 0.0,
+      "combined_total": 0.0,
+      "dd_reduction_pp": 0.0,
+      "sleeve_total_ret": 0.0,
+      "sleeve_maxdd": 0.0,
+      "n_days": 0.0
+    },
+    "reproduces_published": true
+  },
+  "path_delta": {
+    "b1_ghost_v0_to_v1_max_abs_nav_diff": 0.18581713065965422,
+    "b2_funding_v1_to_v2_max_abs_nav_diff": 0.0002751405480554414,
+    "b2_funding_v1_to_v2_days_differing": 120
+  },
+  "ticket_level": {
+    "avg_r_net": -0.3744908562608685,
+    "median_r_net": -0.9841310251507414,
+    "win_rate": 0.2222222222222222,
+    "total_r_net": -6.740835412695633,
+    "reasons": {
+      "止盈": 2,
+      "保本": 2,
+      "止损": 10,
+      "时间": 4
+    },
+    "funding_r_sum": 0.1750030924369839,
+    "price_r_sum": -6.604832041951238,
+    "cost_r_sum": 0.31100646318137753
+  },
+  "variants": {
+    "v0": {
+      "nav_end": 0.8937817937212399,
+      "sleeve_total_ret": -0.10621820627876011,
+      "sleeve_maxdd": -0.22150156399328746,
+      "accounting": {
+        "nav0": 1.0,
+        "realized_pnl_sum": -0.00017126538674130812,
+        "funding_in_nav": 5.347054445783214e-05,
+        "cost_sum": 0.00010578336412350408,
+        "final_unreal_price": -0.10599462807235314,
+        "final_unreal_funding": 1.024441064141114e-06,
+        "identity_rhs": 0.8937817937212399,
+        "identity_error": 0.0
+      },
+      "n_tickets_entered": 2,
+      "tickets_entered": [
+        "2022-05-11→2022-05-26",
+        "2022-06-12→2022-06-13"
+      ],
+      "open_at_end": [
+        "2022-06-12→2022-06-13"
+      ],
+      "n_open_at_end": 1,
+      "overlay": {
+        "core_maxdd": -0.7673552493950986,
+        "core_total": 10.918865240311325,
+        "combined_maxdd": -0.7621850401948012,
+        "combined_total": 9.652864753607153,
+        "dd_reduction_pp": -0.5170209200297426,
+        "gap_nav_units": 1.266000486704172,
+        "gap_pct_of_core_final": 11.594615913293158,
+        "gap_log": 0.11229361221224732,
+        "n_days": 2499,
+        "hedge_leg_nav_end": 0.03211450837011784,
+        "hedged_sleeve_total_ret": -0.07410369790864224,
+        "hedged_sleeve_maxdd": -0.19696664405309794
+      }
+    },
+    "v1": {
+      "nav_end": 0.9666682913518,
+      "sleeve_total_ret": -0.03333170864820001,
+      "sleeve_maxdd": -0.048928848635239164,
+      "accounting": {
+        "nav0": 1.0,
+        "realized_pnl_sum": -0.032657700306731,
+        "funding_in_nav": 0.0008728256262054919,
+        "cost_sum": 0.001546833967674277,
+        "final_unreal_price": 0.0,
+        "final_unreal_funding": 0.0,
+        "identity_rhs": 0.9666682913518002,
+        "identity_error": -2.220446049250313e-16
+      },
+      "n_tickets_entered": 18,
+      "tickets_entered": [
+        "2022-05-11→2022-05-26",
+        "2022-06-12→2022-06-13",
+        "2022-06-13→2022-06-18",
+        "2022-06-18→2022-07-03",
+        "2022-07-03→2022-07-07",
+        "2024-03-19→2024-03-20",
+        "2024-04-12→2024-04-13",
+        "2024-04-13→2024-04-28",
+        "2024-04-30→2024-05-06",
+        "2024-08-05→2024-08-08",
+        "2024-12-22→2025-01-06",
+        "2025-01-09→2025-01-15",
+        "2025-03-04→2025-03-19",
+        "2025-04-06→2025-04-11",
+        "2025-11-20→2025-12-03",
+        "2026-02-05→2026-02-06",
+        "2026-02-15→2026-02-25",
+        "2026-02-25→2026-03-04"
+      ],
+      "open_at_end": [],
+      "n_open_at_end": 0,
+      "overlay": {
+        "core_maxdd": -0.7673552493950986,
+        "core_total": 10.918865240311325,
+        "combined_maxdd": -0.7648656132151969,
+        "combined_total": 10.521589096704108,
+        "dd_reduction_pp": -0.2489636179901722,
+        "gap_nav_units": 0.3972761436072165,
+        "gap_pct_of_core_final": 3.638438014057669,
+        "gap_log": 0.03389987096833513,
+        "n_days": 2499,
+        "hedge_leg_nav_end": 0.03211450837011784,
+        "hedged_sleeve_total_ret": -0.0012172002780821423,
+        "hedged_sleeve_maxdd": -0.006196331904777863
+      }
+    },
+    "v2": {
+      "nav_end": 0.9666682913518,
+      "sleeve_total_ret": -0.03333170864820001,
+      "sleeve_maxdd": -0.048928848635239164,
+      "accounting": {
+        "nav0": 1.0,
+        "realized_pnl_sum": -0.032657700306731,
+        "funding_in_nav": 0.0008728256262054919,
+        "cost_sum": 0.001546833967674277,
+        "final_unreal_price": 0.0,
+        "final_unreal_funding": 0.0,
+        "identity_rhs": 0.9666682913518002,
+        "identity_error": -2.220446049250313e-16
+      },
+      "n_tickets_entered": 18,
+      "tickets_entered": [
+        "2022-05-11→2022-05-26",
+        "2022-06-12→2022-06-13",
+        "2022-06-13→2022-06-18",
+        "2022-06-18→2022-07-03",
+        "2022-07-03→2022-07-07",
+        "2024-03-19→2024-03-20",
+        "2024-04-12→2024-04-13",
+        "2024-04-13→2024-04-28",
+        "2024-04-30→2024-05-06",
+        "2024-08-05→2024-08-08",
+        "2024-12-22→2025-01-06",
+        "2025-01-09→2025-01-15",
+        "2025-03-04→2025-03-19",
+        "2025-04-06→2025-04-11",
+        "2025-11-20→2025-12-03",
+        "2026-02-05→2026-02-06",
+        "2026-02-15→2026-02-25",
+        "2026-02-25→2026-03-04"
+      ],
+      "open_at_end": [],
+      "n_open_at_end": 0,
+      "overlay": {
+        "core_maxdd": -0.7673552493950986,
+        "core_total": 10.918865240311325,
+        "combined_maxdd": -0.7648656132151969,
+        "combined_total": 10.521589096704107,
+        "dd_reduction_pp": -0.2489636179901722,
+        "gap_nav_units": 0.3972761436072183,
+        "gap_pct_of_core_final": 3.6384380140576855,
+        "gap_log": 0.03389987096833513,
+        "n_days": 2499,
+        "hedge_leg_nav_end": 0.03211450837011784,
+        "hedged_sleeve_total_ret": -0.0012172002780821423,
+        "hedged_sleeve_maxdd": -0.006196815844259462
+      }
+    },
+    "v3_t332_import": {
+      "nav_end": 0.9666682913518,
+      "sleeve_total_ret": -0.03333170864820001,
+      "sleeve_maxdd": -0.048928848635239164,
+      "n_days": 2047,
+      "overlay": {
+        "core_maxdd": -0.7673552493950986,
+        "core_total": 10.918865240311325,
+        "combined_maxdd": -0.7648656132151969,
+        "combined_total": 10.521589096704107,
+        "dd_reduction_pp": -0.2489636179901722,
+        "gap_nav_units": 0.3972761436072183,
+        "gap_pct_of_core_final": 3.6384380140576855,
+        "gap_log": 0.03389987096833513,
+        "n_days": 2499
+      }
+    }
+  },
+  "v2_vs_t332_import_max_abs_diff": 0.0,
+  "null_control": {
+    "old_pool_price_only": {
+      "pool_days": 1029,
+      "n_draws": 1000,
+      "seed": 736,
+      "mean_r_net_actual": -0.3744908562608685,
+      "null_overlap_free_mean": -0.2235872861457999,
+      "null_overlap_free_p95": 0.4127485803789684,
+      "null_overlap_free_pctl_of_actual": 0.364,
+      "null_independent_mean": -0.12957991802938512,
+      "null_independent_p95": 0.25337378674049416,
+      "null_independent_pctl_of_actual": 0.139,
+      "draws_with_fewer_tickets": 1000,
+      "mean_tickets_per_independent_draw": 18.0,
+      "degenerate_tickets_rnet_abs_gt_10": 0
+    },
+    "prereg_pool_cond3": {
+      "pool_days": 69,
+      "n_draws": 1000,
+      "seed": 736,
+      "mean_r_net_actual": -0.3744908562608685,
+      "null_overlap_free_mean": -0.6923613269365242,
+      "null_overlap_free_p95": -0.12579111805571924,
+      "null_overlap_free_pctl_of_actual": 0.857,
+      "null_independent_mean": -0.4237048799042095,
+      "null_independent_p95": -0.18108470649761557,
+      "null_independent_pctl_of_actual": 0.64,
+      "draws_with_fewer_tickets": 1000,
+      "mean_tickets_per_independent_draw": 18.0,
+      "degenerate_tickets_rnet_abs_gt_10": 0
+    },
+    "t256_original": {
+      "pool_days": 1029,
+      "n_draws": 1000,
+      "seed": 736,
+      "mean_r_net_actual": -0.3744908562608685,
+      "null_overlap_free_mean": -0.2235872861457999,
+      "null_overlap_free_p95": 0.4127485803789684,
+      "null_overlap_free_pctl_of_actual": 0.364,
+      "null_independent_mean": -0.12957991802938512,
+      "null_independent_p95": 0.25337378674049416,
+      "null_independent_pctl_of_actual": 0.139
+    }
+  },
+  "judge_b_ab_test_by_nav_path": {
+    "published_t256": {
+      "n_days": 2047,
+      "years": 5.61,
+      "cum_a": 0.0,
+      "cum_b": -0.10621820627875933,
+      "log_diff_total": -0.11229361221224267,
+      "ratio_b_over_a": 0.8937817937212407,
+      "ci95_log_diff": [
+        -0.3981669866473913,
+        0.17858134662425834
+      ],
+      "p_b_le_a": 0.7725,
+      "p_b_ge_a": 0.2275,
+      "se_log_diff": 0.14980690433441868,
+      "mde_log_diff_total": 0.3724911015605137,
+      "mde_log_diff_per_year": 0.06641878459676966,
+      "underpowered": true,
+      "verdict": "分不开",
+      "mean_block": 20.0,
+      "n_boot": 2000
+    },
+    "recomputed": {
+      "v0": {
+        "n_days": 2047,
+        "cum_a": 0.0,
+        "cum_b": -0.10621820627875933,
+        "p_b_le_a": 0.7725,
+        "p_b_ge_a": 0.2275,
+        "ci95_log_diff": [
+          -0.3981669866473913,
+          0.17858134662425834
+        ],
+        "verdict": "分不开",
+        "underpowered": true
+      },
+      "v1": {
+        "n_days": 2047,
+        "cum_a": 0.0,
+        "cum_b": -0.03333170864820075,
+        "p_b_le_a": 0.9525,
+        "p_b_ge_a": 0.0475,
+        "ci95_log_diff": [
+          -0.07610535137141368,
+          0.006987402878457715
+        ],
+        "verdict": "B < A",
+        "underpowered": true
+      },
+      "v2": {
+        "n_days": 2047,
+        "cum_a": 0.0,
+        "cum_b": -0.033331708648200314,
+        "p_b_le_a": 0.9525,
+        "p_b_ge_a": 0.0475,
+        "ci95_log_diff": [
+          -0.0761044007237275,
+          0.006934539457886939
+        ],
+        "verdict": "B < A",
+        "underpowered": true
+      }
+    }
+  },
+  "same_source_ghost_spillover": {
+    "criterion": "源码级:单仓位槽 open_t + 无多仓位表 open_pos ⇒ 与 t256 同实现(幽灵仓版)",
+    "t256": {
+      "file": "docs/research/t256_tactical_short.py",
+      "single_slot_sleeve": true
+    },
+    "t332": {
+      "file": "docs/research/t332_squeeze_fade.py",
+      "single_slot_sleeve": false
+    },
+    "t333": {
+      "file": "docs/research/t333_euphoria_short.py",
+      "single_slot_sleeve": true,
+      "tickets": {
+        "available": true,
+        "n_tickets": 11,
+        "n_same_day_entry_exit": 1,
+        "same_day_rows": [
+          {
+            "symbol": null,
+            "entry_d": "2021-01-21",
+            "exit_d": "2021-01-21",
+            "reason": "保本"
+          }
+        ]
+      },
+      "uses_t332_sleeve": false,
+      "verdict": "幽灵仓会咬:单仓位槽 + 有同日进出票 ⇒ 该臂的 NAV 路径统计量受影响"
+    },
+    "t334": {
+      "file": "docs/research/t334_squeeze_fail.py",
+      "single_slot_sleeve": false,
+      "tickets": {
+        "available": true,
+        "n_tickets": 13,
+        "n_same_day_entry_exit": 0,
+        "same_day_rows": []
+      },
+      "uses_t332_sleeve": true,
+      "verdict": "用 t332 的多仓位 sleeve_nav ⇒ 不受 t256 幽灵仓影响"
+    }
+  },
+  "baserates": {
+    "funding_30d_avg_positive_rate": 0.9251012145748988,
+    "btc_fwd20_band": [
+      -0.05260583635599045,
+      0.09947528395851452
+    ],
+    "btc_fwd20_band_coverage": 0.5
+  }
+}
