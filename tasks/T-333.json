@@ -1,7 +1,7 @@
 {
   "id": "T-333",
   "owner": "lane-b",
-  "status": "open",
+  "status": "done",
   "created": "2026-11-11",
   "title": "S-809 情绪过热之后的转弯做空 BTC:恐惧贪婪 + 资金费高位,之后第一次跌破 20 日线开空票(S-736 同一票机械)",
   "source": "REFUTATION_LEDGER S-809(`grep -n \"^## S-809\" -A 8 REFUTATION_LEDGER.md`,原文照抄);票机械 docs/research/t256_tactical_short.py(一字不改);fng 与资金费取法同 docs/research/t187_crash_atlas_crypto.py(macro_series('fng') / v_funding_daily);价格 perp_bv_daily(只读)。",
@@ -23,6 +23,11 @@
     "expect": "docs/research/T-333_euphoria_turn_short.md + t333_euphoria_short.py + t333_results.json + t333_tickets.csv + scenarios/lane-b-T-333.json(≥ 3 条前向命题,至少一条 close: 或 state: 自动结算);in_review,推 lane-b/T-333。"
   },
   "prior_value": "S-736 在恐惧里做空失败;这条在贪婪见顶转弯时做空 —— 拥挤多头 + 清算链。",
-  "notes": "2026-11-11T00:30:07Z Seth 开卡(Jazz 11-11)。",
-  "verified": null
+  "notes": "2026-11-11 lane-b 交付(S-809)。自检✅:同一套数据与票机械复现 S-736 = 18 张票、平均净 R −0.3744908562608685、信号日逐位一致(reference docs/research/t256_results.json)。触发:过热日 105(2020:13/2021:67/2023:3/2024:22,2022·2025·2026 = 0)→ 触发日(去重)23(9 天由多过热日合并)→ 不叠加后票 11。判据:(a) 11 < 15 ⇒ 只报不判;(b) 平均净 R −0.6397(价格 R −0.6667,中位 −0.9645,胜率 9.1%,总 −7.04R),ab_test(对照臂 0,n=2178 日)p(b≤a)=0.731 ❌;(c) 随机对照(1000 次,种子 809,池 1064 天)主口径均值 −0.1088、90 分位 +0.3585,实际落在 3.7 百分位(独立口径 3.9)❌;(d) 留一(最大 |R| = 2021-04-18 +1.6708)后 −0.8707 ❌;(e) 2020–21 n=7 −0.4457 / 2022 n=0 / 2023–24 n=4 −0.9791 / 2025–26 n=0(原文无数值门槛,已报;按 S-736 同一把尺任一期 < −0.3 ⇒ ❌)。⇒ 不开 short_euphoria_turn 纸面臂。副(只报):山寨等权篮(五板块 equal)同触发做空 n=10、平均 −9.56%(中位 −7.66%、胜率 20%、R 等价 −0.836)⇒ 同向,不是 BTC 特有。机制诊断:2025–26 资金费分量从未触到自身扩张 85 分位(最高比值 0.46/0.56)⇒ 近两年这条规则不可测(不是没 edge,是测不了);2022 熊市 fng 分量也没热。产物:docs/research/T-333_euphoria_turn_short.md、t333_euphoria_short.py、t333_results.json、t333_tickets.csv(11 行)、scenarios/lane-b-T-333.json(5 条,4 条自动结算)。只读、未入库、未改代码;零分布/盈亏/AB 只用 src/data/evaluation/apparatus.py。 | 2026-11-11T00:56:48Z Seth 审并合并。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-11T00:56:48Z",
+    "value": "S-809 只报(11 票):平均 R −0.64、随机对照 3.7 分位;贪婪转弯做空 BTC 与 S-736 同一失败形态。",
+    "ledger": "S-809 结果"
+  }
 }

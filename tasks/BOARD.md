@@ -60,7 +60,6 @@
 | claimed | T-098 | seth | World50 的数据:候选池(全球前 ~150 大资产)的复权价格与历史流通市值 + 贵金属口径 + 每个候选的链上形式映射与跟踪误差 | 大类 ① 候选可以用日频全收益回放;知道哪些资产今天在链上真的买得到、买多少。 | eodhd 只有 2022-08 起、未复权;yfinance 2015 起但 06-18 后停更、未复权(SHY 九年价格持平,票息全丢)。链上形式从没系统量过。 |  |
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
 | claimed | T-231 | seth | 前向记录写端恢复:refresh_depth_divergence 逼近 statement_timeout 30s —— 给 ohlcv_daily 扫描加下界,并让『重算补的日子』在记录里可见 | 迁移 + 测试 + 前后对比表;卡 notes 写最大耗时前后值、逐行差异数、恢复后第一条 ok 的时间。DDL 的应用要走 Seth 交互轮次(定时轮次只读,不应用)。 | 写端熄火 4 天且在加重(每天 error 10→17→19);『自首日起连续、无回填』这句对外话没有机械保证。 |  |
-| open | T-333 | lane-b | S-809 情绪过热之后的转弯做空 BTC:恐惧贪婪 + 资金费高位,之后第一次跌破 20 日线开空票(S-736 同一票机械) | docs/research/T-333_euphoria_turn_short.md + t333_euphoria_short.py + t333_results.json + t333_tickets.csv + scenarios/lane-b-T-333.json(≥ 3 条前向命题,至少一条 close: 或 state: 自动结算);in_review,推 lane-b/T-333。 | S-736 在恐惧里做空失败;这条在贪婪见顶转弯时做空 —— 拥挤多头 + 清算链。 |  |
 | open | T-327 | lane-c | RBv2 影子臂加一条常数对照臂(20/30/20,建臂日写死),与 flex_x1v:T25_K 并排前向记账 | 卡 in_review;notes 写建臂日、首个落库行日期与判活命令(只读 SELECT);测试证明 T20_K 权重不随 RBv2 变化;推 lane-c/T-327。 | 前向只有 T25_K(30/30/20)并排;W1 常数 20/30/20 反而比 RBv2 好(C 道复核),只看 T25_K 会把 RBv2 的超额误读成机制功劳。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
@@ -208,6 +207,7 @@
 | done | T-326 | lane-b | S-804 ② 候选:① 山寨里少配「韩国人多付钱」的名字(市值底,BTC/ETH 钉住,S-640 同一框架) | docs/research/T-326_korea_premium_tilt.md + t326_korea_tilt.py + t326_results.json + scenarios/lane-b-T-326.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-b/T-326。 | ② keep open(Jazz 11-10):在市值底上只测原因类变量;过了只进前向。 | S-804 ❌:V5 − V0 全程 +0.83pp、留出 −0.58pp、打乱分位 0.755;与 S-640 正交(超额相关 −0.31)。 @ 2026-11-10T10:35:12Z |
 | done | T-330 | lane-b | S-806 ③ 的相关性状态:① 面板 30 天平均两两相关高于扩张 80 分位时 ① 敞口降到 0.5,对持有与随机日程 | docs/research/T-330_corr_state.md + t330_corr_state.py + t330_results.json + scenarios/lane-b-T-330.json(≥ 3 条前向命题,至少一条 state: 或 close: 自动结算);in_review,推 lane-b/T-330。 | ③ 的第一个「风险几何」输入:分散消失的时候提前降敞口。 | S-806 ❌:回撤反深 1.0pp、Calmar 在随机日程中位以下(p 0.65);相关性收敛是迟到信号,降的是反弹。 @ 2026-11-10T17:12:31Z |
 | done | T-331 | lane-b | S-807 盲复算:真钱 T25 的依据 S-799(2022 崩盘段)与 S-801(RBv2 两段)—— 只用你自己 T-320 的装配,不读 C 道的 t321/t322/t323 | docs/research/T-331_blind_rbv2.md + t331_blind_rbv2.py + t331_results.json;in_review,推 lane-b/T-331。不需要 scenarios(复算)。 | 真钱已经按 RBv2 走;它的依据要有第二份独立实现。 | S-807 ✅ 复现(0 条 > 0.1pp);W1 加密腿 2022-04 前未生效,全历史下 RB 少亏 5.80 → 3.44pp;空跑 252 天会翻符号 ⇒ 方向可信,幅度敏感。 @ 2026-11-10T17:45:00Z |
+| done | T-333 | lane-b | S-809 情绪过热之后的转弯做空 BTC:恐惧贪婪 + 资金费高位,之后第一次跌破 20 日线开空票(S-736 同一票机械) | docs/research/T-333_euphoria_turn_short.md + t333_euphoria_short.py + t333_results.json + t333_tickets.csv + scenarios/lane-b-T-333.json(≥ 3 条前向命题,至少一条 close: 或 state: 自动结算);in_review,推 lane-b/T-333。 | S-736 在恐惧里做空失败;这条在贪婪见顶转弯时做空 —— 拥挤多头 + 清算链。 | S-809 只报(11 票):平均 R −0.64、随机对照 3.7 分位;贪婪转弯做空 BTC 与 S-736 同一失败形态。 @ 2026-11-11T00:56:48Z |
 | done | T-006 | lane-c | Strategy 3/4 按正确问题复核 | 每格都有数字,不是只给一个总 Sharpe | 只用绝对 Sharpe 判为 REFUTED | 交付(探索性,非预注册):BULL×LV 5 个 spec 同向为正,主驱是横截面 alpha 残差,不是某条共有风格;报告 M-208h_style。已合并,作背景,不进任何账本。 @ 2026-10-16 |
 | done | T-007 | lane-c | CG 新闻监听器写入 Supabase(经 Railway mac_writes) | > 0 | 只在 Mac 本地 cis_history.db,13 行 | narrative_events:近 24 小时 154 行,共 1,329 行,最新 2026-10-08 03:37 UTC(lane-c 10-08 00:13 测得 150 / 1,310,一致) @ 2026-10-08T03:58Z |
 | done | T-009 | lane-c | data_quality_score:先修 data_freshness,再算分,随推送落库 | > 0 且 值有区分度(不全相同) | 0(列一直为空) | T1 最近 2h:86/86 行 DQS 非空,取值 {0.70, 0.85}(区分度满足原验收)。注:A′ 口径下 DQS = confidence,目前不带额外信息 —— 是否让它随源时间戳变化是 T-020 的事。 @ 2026-09-29T08:10Z |
@@ -335,4 +335,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 11 · claimed 6 · blocked 4 · in_review 52 · done 255 · dropped 4
+open 10 · claimed 6 · blocked 4 · in_review 52 · done 256 · dropped 4
