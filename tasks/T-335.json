@@ -1,0 +1,28 @@
+{
+  "id": "T-335",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-11",
+  "title": "S-811 Jazz 的做空写法:过热区卖 50% 多头、用利润分批加空(+10% / +20% 各加一笔)、扛单无价格止损、预算 = 落袋利润;对 HOLD 与只减仓",
+  "source": "REFUTATION_LEDGER S-811(`grep -n \"^## S-811\" -A 14 REFUTATION_LEDGER.md`,原文照抄);价格 perp_bv_daily、资金费 v_funding_daily(只读,翻页带 order=);过热区的 P2 / 资金费读法可参考 docs/research/t187_crash_atlas_crypto.py 与你 T-333 的取法。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-335.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "S-811 原文照抄进报告开头;过热区与分位只用 ≤ d;三臂同成本同资金费;(i)–(iv) 逐条报数与判定;**逐轮表**(进出日、加空笔数、空头盈亏、多头卖出与买回价、是否触发预算平仓)落 t335_rounds.csv;ETH 同口径只报。分支上要有 tasks/T-335.json(从 origin/main 拷,status 改 in_review)。只读、不入库、不改代码;不要 Read 大文件。",
+    "expect": "docs/research/T-335_trim_and_short.md + t335_trim_short.py + t335_results.json + t335_rounds.csv + scenarios/lane-b-T-335.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-b/T-335。"
+  },
+  "prior_value": "做空族的裸空 + 紧止损都失败;这条把空头放进组合、用落袋利润扛单 —— Jazz 的实际交易方式。",
+  "notes": "2026-11-11T03:18:26Z Seth 开卡(卡先进 main 再派)。",
+  "verified": null
+}
