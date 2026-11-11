@@ -52,6 +52,7 @@ RULE_FLEX_X1V = "flex_x1v_v1:S-604(加密 ① X1V / ACWI / XAUUSD / 现金,21 �
 #: 三条影子臂,都不动钱;同一个核 `flex_alloc.dynamic_mix_nav`(回放用同一个):T25_K = 常数 T25(同一记账,作对照)、
 #: RB_T25 = 风险预算(波动倒数、与 T25 同事前风险)、STYLE_T25 = 风格矢量(此刻天气下有优势的腿 ±10pp)。
 #: 腿的历史只从前向起算 ⇒ RB 要 40 个共同日才离开 T25;STYLE 读回放末端**冻结**的风格表,研究落地前为 None(= T25)。
+#: T-327 再加一条常数对照臂 T20_K(见下),四条都在同一条流水线上记。
 FLEX_DYN_ARMS = ("T25_K", "RB_T25", "STYLE_T25")
 #: S-797 后果条款「无论判定都冻结」:T-318 回放(2023-01-03 → 2026-10-30,961 个共同日)在全部数据上估出的日均收益(小数);
 #: T-320 盲复算到最后一次调仓(10-09)的表逐格同向。回放判 ❌(STYLE 五条全挂),这里只供影子臂前向记 —— 不动钱。
@@ -63,6 +64,18 @@ STYLE_TABLE_FROZEN: Optional[dict] = {
     "gold": {"all": 0.0008611723532, "up_cold": 0.000561456075, "up_hot": 0.0007155140031, "down_cold": 0.001035640862, "down_hot": 0.00180884936},
 }
 RULE_FLEX_DYN = "flex_dyn_v1:S-797(同腿;21 个共同日调仓;T25_K 常数 / RB 波动倒数同风险 / STYLE 冻结风格表 ±10pp;偏离预算 加密 0–0.9、股金 ±10pp)"
+#: T-327(11-10 预注册):常数对照臂 **T20_K** —— 加密 20% / 股 30% / 金 20%(余下 30% 是现金,收益 0)。
+#: 为什么要有它:前向只有 T25_K(30/30/20)与 RB_T25 并排;S-800 / S-801 的复核里「常数 20/30/20」
+#: 在 W1 反而比 RBv2 好 —— 只看 T25_K,会把 RB 的超额误读成「机制」的功劳。这条臂把那个常数配比也摆上前向,三条并排。
+#: **权重与建臂日写死在这里**:不引用 `BASE_T25` / `rb_weights` / `BOUNDS`,所以 RBv2 以后怎么改,
+#: 这条臂的权重与起点都不动(前向账本只追加、不改写)。常数臂没有拟合出来的参数(零自由度),
+#: 所以与 T25_K 同起点记账(照 T25_K 的建臂方式)才并排可比;建臂日之后才写,之前不写。
+T20_K_WEIGHTS: dict[str, float] = {"crypto": 0.20, "equity": 0.30, "gold": 0.20}
+T20_K_FROM = "2026-10-16"        # 建臂日:与 T25_K 同一起点(照 T25_K 的建臂方式),写死
+#: 影子臂全集 = S-797 的三条 + T-327 的常数对照臂
+FLEX_DYN_ARMS_ALL = FLEX_DYN_ARMS + ("T20_K",)
+RULE_FLEX_T20K = ("flex_t20k_v1:T-327(建臂日 2026-10-16;常数 加密 0.20 / 股 0.30 / 金 0.20;余 30% 现金收益 0;"
+                  "同腿同核同成本 20bp;21 个共同日调仓;权重写死,不随 RBv2 变)")
 RULE_TOM = "tom_trader_v2:S-600 / S-601(多头 >200 日线且破 20 日高,盈利加仓到 1.3;跌破即平;F 空仓 / FB 反弹 0.5 +15% 止盈 / S50 开空 −20% 止盈 / X1V 破 20 日低即平 + 波动率缩放)"
 WRITES_TABLES = ("forward_book_holdings", "forward_book_nav")
 WRITES_COLUMNS = {
@@ -317,7 +330,8 @@ async def rb_leg_returns(as_of: str, lookback_days: int = 150) -> "Any":
 
 
 async def _flex_dynamic_rows(crypto_nav: Optional[dict], tf: dict, have: dict, cutoff: str) -> dict[str, Any]:
-    """S-797 三条影子臂(T25_K / RB_T25 / STYLE_T25)的 NAV 行;只追加没写过的天。天气取 `state_daily` 面板(与 `book_vectors` 同口径)。"""
+    """S-797 三条影子臂(T25_K / RB_T25 / STYLE_T25)+ T-327 的常数对照臂 T20_K 的 NAV 行;只追加没写过的天。
+    天气取 `state_daily` 面板(与 `book_vectors` 同口径)。T20_K 的权重与建臂日写死在本模块顶上的常量里。"""
     import pandas as pd
     from src.data.universe import flex_alloc as fa
     out: dict[str, Any] = {"rows": [], "notes": [], "weights": {}}
@@ -333,9 +347,14 @@ async def _flex_dynamic_rows(crypto_nav: Optional[dict], tf: dict, have: dict, c
     fns = {"T25_K": lambda hist, d: fa.BASE_T25,
            "RB_T25": lambda hist, d: fa.rb_weights(hist),
            "STYLE_T25": lambda hist, d: (fa.style_weights(STYLE_TABLE_FROZEN, weather.get(d.date().isoformat()))
-                                         if d.date().isoformat() >= STYLE_FROM else fa.BASE_T25)}
-    for arm in FLEX_DYN_ARMS:
-        nav, log = fa.dynamic_mix_nav(legs, fns[arm], reb=FLEX_REB_DAYS, cost=COST_CRYPTO)
+                                         if d.date().isoformat() >= STYLE_FROM else fa.BASE_T25),
+           # T20_K:常数臂,每次都返回同一份写死的权重(复制一份,免得下游改到模块常量)
+           "T20_K": lambda hist, d: dict(T20_K_WEIGHTS)}
+    # 建臂日:只有 T20_K 有(写死);其余三条跟原来一样,从腿的第一个共同日记
+    starts = {"T20_K": pd.Timestamp(T20_K_FROM)}
+    rules = {"T20_K": RULE_FLEX_T20K}
+    for arm in FLEX_DYN_ARMS_ALL:
+        nav, log = fa.dynamic_mix_nav(legs, fns[arm], reb=FLEX_REB_DAYS, cost=COST_CRYPTO, start=starts.get(arm))
         nav = nav[nav.index <= pd.Timestamp(cutoff)]
         out["weights"][arm] = log[-1] if log else None
         done = sorted(d for (a, d) in have if a == arm)
@@ -344,7 +363,8 @@ async def _flex_dynamic_rows(crypto_nav: Optional[dict], tf: dict, have: dict, c
             ds = d.date().isoformat()
             if not (done and ds <= done[-1]):
                 out["rows"].append({"book": "flex_x1v", "arm": arm, "d": ds, "nav": float(v),
-                                    "ret": (float(v) / prev - 1) if prev else None, "as_of": TOM_START, "rule": RULE_FLEX_DYN})
+                                    "ret": (float(v) / prev - 1) if prev else None, "as_of": TOM_START,
+                                    "rule": rules.get(arm, RULE_FLEX_DYN)})
             prev = float(v)
     return out
 
