@@ -1,0 +1,2 @@
+symbol,entry_d,exit_d,exit_reason,budget_hit,n_adds,n_lots,p_entry,p_exit,gain90,budget,short_gross,short_funding,short_cost,short_net,long_gross,a_pre,a_after,entry_below_ma50
+BTC,2024-03-01,2024-04-13,ma50,False,1,2,62430.6000,63939.7000,0.583127,2.531040,0.106752,0.134931,0.006431,0.235253,-0.104959,8.684184,8.680928,False

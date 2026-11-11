@@ -1,0 +1,44 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {
+      "id": "T-335-1",
+      "author": "lane-b",
+      "scenario": "T-335 S-811 Jazz 的做空写法(过热区卖 50% 多头 + 用利润分批加空)",
+      "statement": "BTC 收盘在 2026-12-18 高于本卡最后一次读数 73727.00 的 5%(≈77413)。",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 77413.35,
+      "hi": null,
+      "prob": 0.55,
+      "horizon_d": "2026-12-18",
+      "basis": "结算源 ohlcv_daily;本卡实测:BTC 从 2019-12 到现在,任意 30 个日历日内收盘涨超 5% 的比例约一半;S-811 的入场在收盘、出场看 MA50,方向是双向的 —— 只给 0.55。"
+    },
+    {
+      "id": "T-335-2",
+      "author": "lane-b",
+      "scenario": "T-335 S-811 Jazz 的做空写法(过热区卖 50% 多头 + 用利润分批加空)",
+      "statement": "BTC 收盘在 2026-12-18 低于本卡最后一次读数 73727.00 的 5%(≈70041)。",
+      "variable": "close:BTC",
+      "op": "lt",
+      "lo": null,
+      "hi": 70040.65,
+      "prob": 0.45,
+      "horizon_d": "2026-12-18",
+      "basis": "与 T-335-1 互补的两分:同样 ±5% 的带宽,不给方向性优势 —— 本卡样本里 TRIM+SHORT 与 HOLD 的差距落在检出力不足的量级(Δ = +0.12 / 10.48,随机对照分位 0.70)。"
+    },
+    {
+      "id": "T-335-3",
+      "author": "lane-b",
+      "scenario": "T-335 S-811 Jazz 的做空写法(过热区卖 50% 多头 + 用利润分批加空)",
+      "statement": "到 2026-12-18 为止没有出现新的 S-811 过热日(收盘/MA200 − 1 ≥ 扩张 90 分位 且 资金费年化 7 日均 ≥ 扩张 85 分位)—— 人工结算:重跑 docs/research/t335_trim_short.py,看 t335_results.json 里 BTC 的 overheat_run_starts。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "hi": null,
+      "prob": 0.6,
+      "horizon_d": "2026-12-18",
+      "basis": "本卡实测:2026 年的过热日数量与最后一段的起止见 t335_results.json;两个分位都要创新高,一个月内同时凑齐的概率低。"
+    }
+  ]
+}
