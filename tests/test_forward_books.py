@@ -314,3 +314,36 @@ def test_t327_t20k_constant_arm_is_pinned_and_survives_rb_v2_changes(monkeypatch
     out3 = asyncio.run(fb._flex_dynamic_rows(crypto, tf, {}, days[-1]))
     d3 = [r["d"] for r in out3["rows"] if r["arm"] == "T20_K"]
     assert d3[0] == days[10] and all(d >= days[10] for d in d3)
+
+
+def test_s815_house_arm_pays_interest_on_idle_cash_and_never_writes_a_day_without_its_rate(monkeypatch):
+    """11-11 S-815:整合臂 = RB 的权重 + 现金按借贷利率计息。那天的利率还没出 ⇒ 那天不写;借贷读不到 ⇒ 这条臂不写并说明。"""
+    import numpy as np
+    import pandas as pd
+    days = [d.date().isoformat() for d in pd.bdate_range("2026-10-16", periods=30)]
+    rng = np.random.default_rng(815)
+    crypto = {d: float(v) for d, v in zip(days, np.cumprod(1 + rng.normal(0, 0.02, 30)))}
+    tf = {"equity": pd.Series({pd.Timestamp(d): 100.0 for d in days}), "gold": pd.Series({pd.Timestamp(d): 50.0 for d in days})}
+    cal = [d.date().isoformat() for d in pd.date_range(fb.HOUSE_FROM, days[-3])]          # 最后两个交易日的利率还没写
+
+    async def get_all(tail):
+        if tail.startswith("carry_hl_daily?"):
+            assert "arm=eq.stable_lend" in tail and "order=" in tail
+            return [{"d": d, "ret": 0.0002} for d in cal]
+        return [{"d": d, "feature": "dist_200", "value": 0.05} for d in days] + [{"d": d, "feature": "vratio_30_180", "value": 0.9} for d in days]
+    monkeypatch.setattr(fb, "_get_all", get_all)
+    out = asyncio.run(fb._flex_dynamic_rows(crypto, tf, {}, days[-1]))
+    house = [r for r in out["rows"] if r["arm"] == fb.HOUSE_ARM]
+    rb = {r["d"]: r["nav"] for r in out["rows"] if r["arm"] == "RB_T25"}
+    assert house and house[0]["d"] >= fb.HOUSE_FROM and house[0]["nav"] == 1.0 and house[0]["rule"] == fb.RULE_FLEX_HOUSE
+    assert house[-1]["d"] == days[-3], "利率只到倒数第三天 ⇒ 之后两天不写"
+    d0, d1 = house[0]["d"], house[-1]["d"]
+    assert house[-1]["nav"] > rb[d1] / rb[d0], "同样的权重,多出来的是现金利息"
+
+    async def no_lend(tail):
+        if tail.startswith("carry_hl_daily?"):
+            raise RuntimeError("down")
+        return await get_all(tail)
+    monkeypatch.setattr(fb, "_get_all", no_lend)
+    out2 = asyncio.run(fb._flex_dynamic_rows(crypto, tf, {}, days[-1]))
+    assert not [r for r in out2["rows"] if r["arm"] == fb.HOUSE_ARM] and any(fb.HOUSE_ARM in n for n in out2["notes"])

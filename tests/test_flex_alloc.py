@@ -77,3 +77,22 @@ def test_dynamic_mix_never_sees_the_future_and_matches_constant_compounding():
     assert nav.iloc[-1] == pytest.approx(v, rel=1e-12)
     nav2, _ = fa.dynamic_mix_nav(legs, wf, start=nav.index[50])
     assert nav2.index[0] == nav.index[50] and nav2.iloc[0] == 1.0, "start 之前只作历史"
+
+
+def test_cash_yield_and_overlay_compound_over_calendar_gaps_and_default_to_the_old_ledger():
+    """11-11 S-815:闲置现金的利息与 R-v2 的盈亏按日历日复利进共同日(周末不丢);不给就与原来逐位相同。"""
+    legs = _legs(60)
+    base, _ = fa.dynamic_mix_nav(legs, lambda h, d: fa.BASE_T25, cost=0.0)
+    same, _ = fa.dynamic_mix_nav(legs, lambda h, d: fa.BASE_T25, cost=0.0, cash_ret=pd.Series(dtype=float), overlay_ret=None)
+    assert list(base) == list(same)
+    cal = pd.date_range(base.index[0], base.index[-1], freq="D")
+    flat = {k: pd.Series(1.0, index=v.index) for k, v in legs.items()}           # 三条腿不动 ⇒ 只剩现金利息与叠加层
+    r = 0.0001
+    nav, _ = fa.dynamic_mix_nav(flat, lambda h, d: fa.BASE_T25, cost=0.0, cash_ret=pd.Series(r, index=cal))
+    days = (base.index[-1] - base.index[0]).days
+    assert nav.iloc[-1] == pytest.approx(1 + 0.2 * ((1 + r) ** days - 1), rel=2e-4), "现金 20% × 每个日历日的利息(含周末)"
+    ov = pd.Series(0.0, index=cal)
+    ov.iloc[5] = 0.01
+    nav2, _ = fa.dynamic_mix_nav(flat, lambda h, d: fa.BASE_T25, cost=0.0, overlay_ret=ov)
+    assert nav2.iloc[-1] == pytest.approx(1.01), "叠加层的盈亏直接进账户净值"
+    assert fa._between(ov, cal[4], cal[5]) == pytest.approx(0.01) and fa._between(ov, cal[5], cal[9]) == 0.0

@@ -74,6 +74,12 @@ T20_K_WEIGHTS: dict[str, float] = {"crypto": 0.20, "equity": 0.30, "gold": 0.20}
 T20_K_FROM = "2026-10-16"        # 建臂日:与 T25_K 同一起点(照 T25_K 的建臂方式),写死
 #: 影子臂全集 = S-797 的三条 + T-327 的常数对照臂
 FLEX_DYN_ARMS_ALL = FLEX_DYN_ARMS + ("T20_K",)
+#: S-815(11-11,Jazz「put them up together … so that we can actually make money」):整合账本的第一条前向臂 ——
+#: RBv2 的权重 + **闲置现金按稳定币借贷利率计息**(`carry_hl_daily` 的 stable_lend 臂,S-749 的那把尺;真钱账户 11-10 有 54% 是 0 收益的 USDC)。
+#: 只多一件事:现金不再记 0。借贷那天的数还没写 ⇒ 那天不写(不拿 0 利息顶上,写了就改不了)。R-v2 的叠加在回放里量(T-342),前向等它有净值表。
+HOUSE_ARM = "RB_T25_Y"
+HOUSE_FROM = "2026-11-11"
+RULE_FLEX_HOUSE = "flex_house_v1:S-815(= RB_T25 的权重与调仓;现金余额按 stable_lend 日收益计息,按日历日复利;建臂 2026-11-11)"
 RULE_FLEX_T20K = ("flex_t20k_v1:T-327(建臂日 2026-10-16;常数 加密 0.20 / 股 0.30 / 金 0.20;余 30% 现金收益 0;"
                   "同腿同核同成本 20bp;21 个共同日调仓;权重写死,不随 RBv2 变)")
 RULE_TOM = "tom_trader_v2:S-600 / S-601(多头 >200 日线且破 20 日高,盈利加仓到 1.3;跌破即平;F 空仓 / FB 反弹 0.5 +15% 止盈 / S50 开空 −20% 止盈 / X1V 破 20 日低即平 + 波动率缩放)"
@@ -353,9 +359,26 @@ async def _flex_dynamic_rows(crypto_nav: Optional[dict], tf: dict, have: dict, c
     # 建臂日:只有 T20_K 有(写死);其余三条跟原来一样,从腿的第一个共同日记
     starts = {"T20_K": pd.Timestamp(T20_K_FROM)}
     rules = {"T20_K": RULE_FLEX_T20K}
-    for arm in FLEX_DYN_ARMS_ALL:
-        nav, log = fa.dynamic_mix_nav(legs, fns[arm], reb=FLEX_REB_DAYS, cost=COST_CRYPTO, start=starts.get(arm))
+    # S-815:整合臂 = RB 的权重 + 现金计息。借贷序列读不到 / 还没有 ⇒ 这条臂这一轮不写,说明原因(读不到 ≠ 利息为 0)
+    lend = pd.Series(dtype=float)
+    try:
+        lr = await _get_all(f"carry_hl_daily?select=d,ret&arm=eq.stable_lend&d=gte.{HOUSE_FROM}&order=d")
+        lend = pd.Series({pd.Timestamp(r["d"]): float(r["ret"]) for r in lr if r.get("ret") is not None})
+    except Exception as e:                                       # noqa: BLE001
+        out["notes"].append(f"{HOUSE_ARM}: 借贷序列读不到({type(e).__name__})")
+    arms = list(FLEX_DYN_ARMS_ALL)
+    if not lend.empty:
+        fns[HOUSE_ARM], starts[HOUSE_ARM], rules[HOUSE_ARM] = fns["RB_T25"], pd.Timestamp(HOUSE_FROM), RULE_FLEX_HOUSE
+        arms.append(HOUSE_ARM)
+    elif not any(HOUSE_ARM in n for n in out["notes"]):
+        out["notes"].append(f"{HOUSE_ARM}: {HOUSE_FROM} 起还没有借贷日收益")
+    for arm in arms:
+        house = arm == HOUSE_ARM
+        nav, log = fa.dynamic_mix_nav(legs, fns[arm], reb=FLEX_REB_DAYS, cost=COST_CRYPTO, start=starts.get(arm),
+                                      cash_ret=lend if house else None)
         nav = nav[nav.index <= pd.Timestamp(cutoff)]
+        if house:
+            nav = nav[nav.index <= lend.index.max()]             # 利息还没出的那天先不写
         out["weights"][arm] = log[-1] if log else None
         done = sorted(d for (a, d) in have if a == arm)
         prev = None

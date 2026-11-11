@@ -110,11 +110,24 @@ def style_weights(table: Optional[StyleTable], weather_now: Optional[str], base:
     return clip_to_budget(w)
 
 
+def _between(series: Optional[pd.Series], prev: pd.Timestamp, d: pd.Timestamp) -> float:
+    """(prev, d] 之间逐日收益的复利(周末 / 假日的利息与永续盈亏不丢);没有序列或这段没有值 ⇒ 0。"""
+    if series is None or series.empty:
+        return 0.0
+    x = series[(series.index > prev) & (series.index <= d)].dropna()
+    return float((1.0 + x).prod() - 1.0) if len(x) else 0.0
+
+
 def dynamic_mix_nav(legs: dict[str, pd.Series], weights_fn: Callable[[pd.DataFrame, Any], dict[str, float]],
-                    reb: int = 21, cost: float = 20 / 1e4, start: Optional[pd.Timestamp] = None) -> tuple[pd.Series, list[dict]]:
-    """纯函数。与 `forward_books.mix_nav` 同一套记账(共同日期、权重随涨跌漂移、现金收益 0、换手 × cost),
+                    reb: int = 21, cost: float = 20 / 1e4, start: Optional[pd.Timestamp] = None,
+                    cash_ret: Optional[pd.Series] = None, overlay_ret: Optional[pd.Series] = None) -> tuple[pd.Series, list[dict]]:
+    """纯函数。与 `forward_books.mix_nav` 同一套记账(共同日期、权重随涨跌漂移、换手 × cost),
     区别只在目标权重:每 reb 个共同日期调用 weights_fn(截至当天的日收益, 当天日期) 取新目标 —— **只给它当天及以前的数据**。
-    start = 从哪天起记 NAV(之前的日期只作历史喂给 weights_fn)。返回 (NAV Series, 每次调仓的 {d, 权重})。"""
+    start = 从哪天起记 NAV(之前的日期只作历史喂给 weights_fn)。返回 (NAV Series, 每次调仓的 {d, 权重})。
+
+    11-11(S-815 整合账本):两条可选的日历日收益序列,都按 (上一个共同日, 当天] 复利进当天 ——
+    `cash_ret` = 现金余额(1 − Σ 权重)的日收益(闲置 USDC 放借贷 / 现金等价物;不给 = 0,与原来逐位相同);
+    `overlay_ret` = 叠加在整个账户净值上的日收益(R-v2 单票:永续只占保证金,盈亏直接进账户)。"""
     df = pd.concat({k: v for k, v in legs.items()}, axis=1).dropna().sort_index()
     if df.empty:
         return pd.Series(dtype=float), []
@@ -128,7 +141,8 @@ def dynamic_mix_nav(legs: dict[str, pd.Series], weights_fn: Callable[[pd.DataFra
     nav, out, log = 1.0, {first: 1.0}, [{"d": first.date().isoformat(), **{k: round(float(v), 4) for k, v in tgt.items()}}]
     for i, d in enumerate(idx[1:], start=1):
         row = rets.loc[d, list(LEGS)]
-        g = float((hold * row).sum())
+        prev = idx[i - 1]
+        g = float((hold * row).sum()) + (1.0 - float(hold.sum())) * _between(cash_ret, prev, d) + _between(overlay_ret, prev, d)
         nav *= 1 + g
         hold = hold * (1 + row) / (1 + g)
         if i % reb == 0:
