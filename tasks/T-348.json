@@ -24,5 +24,5 @@
     "expect": "docs/research/T-348_graveyard_rejudged.md + t348_*.py + t348_results.json + scenarios/lane-c-T-348.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-c/T-348。"
   },
   "prior_value": "规则改了之后,哪些旧的 ❌ 是「尺子」造成的、哪些是真的不行,要量出来 —— 否则重新挖只是把同一批东西再否一遍或再信一遍。",
-  "notes": "2026-11-11T16:31:00Z Seth 开卡。T-342 v2 的数还没跑出来的话,先把它跑完(同一个脚本)。"
+  "notes": "2026-11-11T16:31:00Z Seth 开卡。T-342 v2 的数还没跑出来的话,先把它跑完(同一个脚本)。\n2026-11-11T17:55:00Z Seth 审 lane-c/T-348@92f5fcf6:CHANGES(§Seth-1111l)。fam_return_series 先填 1.0 再 ffill ⇒ ffill 不生效,族曲线没有值的日子(收尾后、中间缺口)净值跳回 1.0;H2 全段 -32.03% 而窗口前 -22.30% × 窗口内 +28.57% ≈ 0,对不上。自检② 用同一构造,不会失败。修后全部族重跑再判。"
 }

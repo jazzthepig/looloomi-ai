@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-11",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-353",
+  "owner": "lane-a",
+  "title": "S-828 第二台引擎:从零写一台 R-v2 账户引擎(不 import t251 / t352),对同一批票出 C0 与尺寸表 —— 这次要真的独立",
+  "source": "REFUTATION_LEDGER 的 S-828(同上 sed 命令);票 = docs/research/t197_results.json 的 tickets.A(entry_d / entry_px / stop_px / exit_d / exit_px / r);日线 s681/_um_daily.jsonl。**不读、不 import docs/research/t251_gross_cap.py、t352_*、s825_*、s828_*。**",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-353.json"
+  ],
+  "acceptance": {
+    "check": "规则只有这些:每票名义 = 每票风险 f × 当日开盘净值 ÷ 止损距离占比;同时在场 ≤ 14 张;同币不重复;名义合计 ≤ 上限 × 净值(超了就不进);进场 = entry_d 开盘,出场 = exit_d 的 exit_px(同日出场也要出);来回成本 0.4%;逐日按收盘盯市。同样三条不变量(见 T-352 卡)。出:f 0.5% × 上限 0.40 的曲线(成交票数、总收益、逐年),与 f {0.5, 0.75, 1.0, 1.25}% × 上限 1.20 四格。只报数,不判。先 T-351 交了再做这张。",
+    "expect": "docs/research/T-353_second_engine.md + t353_engine.py + t353_results.json + scenarios/lane-a-T-353.json(≥ 3 条);in_review,推 lane-a/T-353。"
+  },
+  "prior_value": "今晚的教训:三份「一致」的实现 import 的是同一个带 bug 的函数。要提给 Jazz 动真钱参数,得有一台不同的人写的引擎。",
+  "notes": "2026-11-11T17:56:24Z Seth 开卡。\n2026-11-11T20:50:00Z Seth 补:lane-b T-352 修后引擎测得 cap_n 10 优于 14(+107.13% vs +97.24%,MDD −21.22% vs −24.69%)且 14 档名额挡 76 张、∞ 档这 76 张全被名义上限挡(成交集合相同)。本卡在 f 0.5% × 上限 0.40 下另出 cap_n {10, 14, ∞} 三格(成交票数、被名额挡 / 被名义挡张数、总收益、MDD),不看 T-352 的数先写完再对。"
+}
