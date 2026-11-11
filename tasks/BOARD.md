@@ -54,6 +54,7 @@
 | in_review | T-260 | lane-c | S-739 第一次「放在一起」:feature_matrix_daily 全部维度的联合模型(Ridge + 梯度提升)对 BTC 之后 30 天收益,走步 + 隔离带样本外 —— 只用 src/data/evaluation/joint_model.py | 报告 docs/research/T-260_joint_model_v1.md + t260_joint.py + t260_results.json;卡 notes 写判据与前 10 维;in_review,推 lane-c/T-260。 | 所有特征都是一个一个、全样本、线性地判过;从没有放在一个模型里。 |  |
 | in_review | T-263 | lane-c | S-741 联合模型 v2:样本外预测换成「相对自身过去 90 个预测的 z」(时点可得),加 11-06 新并进来的风格 / 链上 / 持仓结构 / 渠道维度;必须胜过「过去 30 天收益」朴素基线 | 报告 docs/research/T-263_joint_model_v2.md + t263_joint_v2.py + t263_results.json;卡 notes 写 (a)–(e) 原始数字;in_review,推 lane-c/T-263。 | v1 段内排序真、段间不可比;新并进来约 20 维(2020 起有历史)从没进过模型。 |  |
 | in_review | T-271 | lane-c | S-748 ④ 套息真实成本检查:HL 实测手续费(现货 7bp / 永续 4.5bp / 滑点 2bp)+ 进出场基差 + 每周 / 两周 / 每月换仓 —— 判据照台账写死 | 报告 docs/research/T-271_carry_real_costs.md + t271_carry_costs.py + t271_results.json;卡 notes 写 (a)–(d);in_review,推 lane-c/T-271。 | ④ 套息是唯一过了留出的收益来源,但纸面成本比真钱实测低一截、没算基差;落地前必须知道真实口径下还剩多少。 |  |
+| in_review | T-340 | lane-c | S-814 盲复算:只读台账 S-814 原文,自己实现周期位置空间与 (a)–(e) —— 不 import、不读 src/data/state/cycle_space.py 与 lane-a 的 t339_* | docs/research/T-340_blind_cycle_space.md + t340_blind.py + t340_results.json + t340_weekly.csv;in_review,推 lane-c/T-340。不需要 scenarios(复算)。 | 内核已接进每周记分回路;独立实现对上,内核才算审过。 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-094 | seth | 状态层往前补一个周期 + 矢量库按时点:state_daily 2019 起、FNG 2018 起;market_state_vectors 改扩张窗口 z、13 个空维补或删 | S-570 / T-093 的情景格子在 2019–2022 多一轮牛熊;S-521 类的匹配不再读到未来。 | state_daily 2023-01 起(一个周期);FNG 2021-06 起;market_state_vectors 24 维里 13 维恒空、全史一次 z(看未来)。 |  |
 | claimed | T-096 | seth | 前向判断记录:每周一按情景卡 + 当周新闻摘要请本地 Qwen 9B / 27B 判断,先锚定、后看结果 | 新闻层(历史上测不了的那一层)从今天起有可验证的前向记录;T-095 的历史结论与它对照。 | 没有任何 LLM 判断的前向记录;narrative_events 新闻 2026-09-28 起、约 150 条 / 天,没有消费者。 |  |
@@ -62,7 +63,6 @@
 | claimed | T-231 | seth | 前向记录写端恢复:refresh_depth_divergence 逼近 statement_timeout 30s —— 给 ohlcv_daily 扫描加下界,并让『重算补的日子』在记录里可见 | 迁移 + 测试 + 前后对比表;卡 notes 写最大耗时前后值、逐行差异数、恢复后第一条 ok 的时间。DDL 的应用要走 Seth 交互轮次(定时轮次只读,不应用)。 | 写端熄火 4 天且在加重(每天 error 10→17→19);『自首日起连续、无回填』这句对外话没有机械保证。 |  |
 | open | T-338 | lane-b | t256 组合 NAV 三处 bug 的清扫:用 T-332 修好的 sleeve_nav 重算 S-736 的袖套/对冲口径数字,并列出所有引用过 t256 组合净值的结论 | docs/research/T-338_t256_nav_sweep.md + t338_nav_sweep.py + t338_results.json(含新旧对照与恒等式误差)+ scenarios/lane-b-T-338.json(≥ 3 条前向命题,至少一条 close: 或 state: 自动结算);分支上 tasks/T-338.json(从 origin/main 拷,status 改 in_review);推 lane-b/T-338。 | S-808 发现 t256 组合 NAV 有三处 bug;票级 R 不受影响,但 S-736 的「对冲口径回撤只削 0.5pp、付掉 ~12.7pp」用的是坏 NAV。先把旧数修正再谈任何组合层结论。 |  |
 | open | T-327 | lane-c | RBv2 影子臂加一条常数对照臂(20/30/20,建臂日写死),与 flex_x1v:T25_K 并排前向记账 | 卡 in_review;notes 写建臂日、首个落库行日期与判活命令(只读 SELECT);测试证明 T20_K 权重不随 RBv2 变化;推 lane-c/T-327。 | 前向只有 T25_K(30/30/20)并排;W1 常数 20/30/20 反而比 RBv2 好(C 道复核),只看 T25_K 会把 RBv2 的超额误读成机制功劳。 |  |
-| open | T-340 | lane-c | S-814 盲复算:只读台账 S-814 原文,自己实现周期位置空间与 (a)–(e) —— 不 import、不读 src/data/state/cycle_space.py 与 lane-a 的 t339_* | docs/research/T-340_blind_cycle_space.md + t340_blind.py + t340_results.json + t340_weekly.csv;in_review,推 lane-c/T-340。不需要 scenarios(复算)。 | 内核已接进每周记分回路;独立实现对上,内核才算审过。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -342,4 +342,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 12 · claimed 6 · blocked 4 · in_review 52 · done 261 · dropped 4
+open 11 · claimed 6 · blocked 4 · in_review 53 · done 261 · dropped 4
