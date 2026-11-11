@@ -1,7 +1,7 @@
 {
   "id": "T-335",
   "owner": "lane-b",
-  "status": "open",
+  "status": "claimed",
   "created": "2026-11-11",
   "title": "S-811 Jazz 的做空写法:过热区卖 50% 多头、用利润分批加空(+10% / +20% 各加一笔)、扛单无价格止损、预算 = 落袋利润;对 HOLD 与只减仓",
   "source": "REFUTATION_LEDGER S-811(`grep -n \"^## S-811\" -A 14 REFUTATION_LEDGER.md`,原文照抄);价格 perp_bv_daily、资金费 v_funding_daily(只读,翻页带 order=);过热区的 P2 / 资金费读法可参考 docs/research/t187_crash_atlas_crypto.py 与你 T-333 的取法。",
@@ -23,6 +23,6 @@
     "expect": "docs/research/T-335_trim_and_short.md + t335_trim_short.py + t335_results.json + t335_rounds.csv + scenarios/lane-b-T-335.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-b/T-335。"
   },
   "prior_value": "做空族的裸空 + 紧止损都失败;这条把空头放进组合、用落袋利润扛单 —— Jazz 的实际交易方式。",
-  "notes": "2026-11-11T03:18:26Z Seth 开卡(卡先进 main 再派)。",
+  "notes": "2026-11-11 lane-b 第 1 步(本轮上下文在 ~99k token 被守卫拦下,只能落「脚本 + 卡 claimed」,数字下一轮出):① 已写 docs/research/t335_trim_short.py(取数 perp_bv_daily BTCUSDT/ETHUSDT + v_funding_daily ⇒ 过热区[收盘/MA200−1 ≥ 扩张 90 分位 且 资金费年化 7 日均 ≥ 扩张 85 分位,各 ≥250 观测,只用 ≤d] ⇒ 三臂 HOLD/TRIM/TRIM+SHORT 记账 ⇒ 逐轮表 ⇒ 随机对照[apparatus.circular_shift + null_distribution,1,000 次,种子 811] ⇒ 判定 (i)–(iv) ⇒ 写 T-335_trim_and_short.md / t335_results.json / t335_rounds.csv / scenarios/lane-b-T-335.json);② 取数口径已用探针核实:v_funding_daily.funding_rate = 每个 8h 间隔的均值、n = 当日间隔数(与 funding_history 逐笔对账一致)⇒ 日内合计 = rate×n,年化 = 日内合计×365;perp_bv_daily 无 source 列、BTCUSDT/ETHUSDT 各 2505 行、2019-12-31 起;③ **脚本还没跑**:本轮守卫在 99k token 拦下了运行命令,所以没有 t335_results.json / t335_rounds.csv / 报告,情景文件是手写的 state:/macro:/manual: 版(≥3 条,自动结算走 state/macro),脚本跑完会用带 close: 的版本覆盖它(下一轮把两版合并)。下一轮:先 `nohup python3 docs/research/t335_trim_short.py all > /Volumes/CometCloudAI/cometcloud-local/research/t335/run.log 2>&1 &`(约 3–6 分钟,1000 次零分布),跑完看 run.log 尾巴与产物时间戳(**不要重跑**),核对逐轮表,再把卡改 in_review 并补报告正文。",
   "verified": null
 }
