@@ -62,6 +62,7 @@
 | open | T-343 | lane-b | S-815 盲复算:只读 S-815 原文,用你自己的装配(T-320 / T-331)独立算梯子 L0–L3 与 L3 的判据 —— 不读 lane-c 的 t342_* | docs/research/T-343_blind_house_book.md + t343_blind.py + t343_results.json;in_review,推 lane-b/T-343。不需要 scenarios(复算)。 | 要提给 Jazz 动真钱的数,必须有第二份独立实现。 |  |
 | open | T-341 | lane-c | 真钱唯一规则 X1V 的归因:对「同平均 β 的常数加密腿」—— 账户抗跌是 X1V 的择时还是 70% 非加密配置的结构(T-305 遗留 (c)) | docs/research/T-341_x1v_vs_const_beta.md(预注册在前,开头一张 A / K / ① 三行表)+ docs/research/t341_x1v_vs_const.py + docs/research/t341_results.json;卡 notes 写 w_K、两段 A−K 的总收益与回撤差、随机分位三个数;in_review,推 lane-c/T-341。 | T-305 只把账户和 ① 比,不能区分『X1V 择时』和『只持 30% 加密』。真钱里唯一的规则至今没有对它自己的结构做过对照;S2 里 Jazz 要回答 LP 的『为什么不直接用常数配比』,现在没有数。 |  |
 | open | T-342 | lane-c | S-815 整合账本:一个账户、一个内核、一个窗口(2021-10 → 2026-10),梯子 L0–L4 量每个开关(R-v2 / RBv2 / 现金计息 / 每票风险 1%)在账户口径上值多少 | docs/research/T-342_house_book.md + t342_house_book.py + t342_results.json + t342_daily.csv + scenarios/lane-c-T-342.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-c/T-342。 | 过了检验的部件第一次在同一个账户里合起来量;结果直接决定提给 Jazz 的两个真钱开关(现金收益腿、每票风险)。 |  |
+| open | T-344 | lane-c | S-816 R-v2 叠加按账户回撤预算定尺寸:f ∈ {0.125%, 0.25%, 0.375%}(两端 0 与 0.5% 重报),找留在 −25% 以内的最大 f | docs/research/T-344_overlay_sizing.md + t344_*.py + t344_results.json + scenarios/lane-c-T-344.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-c/T-344。 | 真钱现在的配置回放回撤 −35%,超出 Jazz 选的 −25% 档;这张卡给出能提给他的每票风险。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -345,4 +346,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 12 · claimed 6 · blocked 4 · in_review 51 · done 265 · dropped 4
+open 13 · claimed 6 · blocked 4 · in_review 51 · done 265 · dropped 4

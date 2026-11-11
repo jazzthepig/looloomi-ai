@@ -23,6 +23,6 @@
     "expect": "docs/research/T-342_house_book.md + t342_house_book.py + t342_results.json + t342_daily.csv + scenarios/lane-c-T-342.json(≥ 3 条前向命题,至少一条 close: 自动结算);in_review,推 lane-c/T-342。"
   },
   "prior_value": "过了检验的部件第一次在同一个账户里合起来量;结果直接决定提给 Jazz 的两个真钱开关(现金收益腿、每票风险)。",
-  "notes": "2026-11-11T13:39:07Z Seth 开卡(卡与内核先进 main 再派)。B 道 T-343 盲复算。",
+  "notes": "2026-11-11T13:39:07Z Seth 开卡(卡与内核先进 main 再派)。B 道 T-343 盲复算。 | 2026-11-11T14:16:09Z Seth 退回 v1(S-815 复核):R-v2 日收益与现金日利率是日历日序列,v1 经只含工作日的 CSV 再喂内核 ⇒ 周末盈亏 / 利息全丢(周六一天占曲线 +47.6%)。v2:① 日历日序列直接喂 dynamic_mix_nav(另落 t342_overlay_calendar.csv);② 下游自检:喂给内核的叠加序列窗口内 Π(1+r) = 曲线同区间收益,差 < 1e-9;③ 加一臂 L2x = RBv2、不带 R-v2;④ L1 / L3 去掉贡献最大的一张票各重跑一次。判据不动。Seth 复核值:L1 +128.40% / −38.84%,L2 +163.01% / −34.85%,L2x +74.86% / −22.13%。",
   "verified": null
 }

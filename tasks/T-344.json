@@ -1,0 +1,28 @@
+{
+  "id": "T-344",
+  "owner": "lane-c",
+  "status": "open",
+  "created": "2026-11-11",
+  "title": "S-816 R-v2 叠加按账户回撤预算定尺寸:f ∈ {0.125%, 0.25%, 0.375%}(两端 0 与 0.5% 重报),找留在 −25% 以内的最大 f",
+  "source": "REFUTATION_LEDGER S-816(`grep -n \"^## S-816\" -A 8 REFUTATION_LEDGER.md`,原文照抄进报告开头)。在 T-342 v2 的脚本上加档,不另写账本;内核 src/data/universe/flex_alloc.py 一字不改。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-344.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "排在 T-342 v2 之后。日历日叠加 / 现金序列直接喂内核;下游自检(喂给内核的叠加序列窗口内 Π(1+r) = 曲线同区间收益,差 < 1e-9)逐档报数。五档(0 / 0.125% / 0.25% / 0.375% / 0.5%)各报总收益 / CAGR / 最大回撤(峰谷日期)/ 逐年 / 成交票数;每档去掉对曲线贡献最大的一张票重跑,报是哪张、CAGR 变多少。按 S-816 三条逐档判,给出 f★ 或「没有」。不改阈值、不加档。只读、不入库;长计算 nohup;不要 Read 大文件。",
+    "expect": "docs/research/T-344_overlay_sizing.md + t344_*.py + t344_results.json + scenarios/lane-c-T-344.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-c/T-344。"
+  },
+  "prior_value": "真钱现在的配置回放回撤 −35%,超出 Jazz 选的 −25% 档;这张卡给出能提给他的每票风险。",
+  "notes": "2026-11-11T14:16:09Z Seth 开卡(S-815 复核之后)。",
+  "verified": null
+}
