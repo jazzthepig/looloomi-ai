@@ -1,0 +1,1341 @@
+{
+ "meta": {
+  "card": "T-346",
+  "lane": "lane-b",
+  "ran_utc": "2026-11-11T16:43:26.547743+00:00",
+  "spec_source": "REFUTATION_LEDGER.md ## S-819 \u767b\u8bb0\u8282(\u53ea\u8bfb)",
+  "blind_caveat": "\u627e\u767b\u8bb0\u8282\u65f6\u540c\u4e00\u6b21 grep \u6ea2\u51fa\u5230\u300cS-819 \u7ed3\u679c\u300d\u8282,\u672c\u4eba\u8bfb\u8fc7\u90a3\u6bb5\u6570\u5b57;\u672c\u6587\u4ef6\u5168\u90e8\u6570\u5b57\u81ea\u7b97\u3001\u4e0d\u5f15\u7528\u5b83,\u4f46\u671f\u671b\u503c\u5df2\u77e5 \u21d2 \u5b58\u5728\u4e8b\u540e\u504f\u5dee\u98ce\u9669\u3002",
+  "flip_cost_bp": 5,
+  "s_list": [
+   0.15,
+   0.3
+  ],
+  "full_start": "2020-07-01",
+  "acc_start": "2021-10-11",
+  "null_iters": 500,
+  "null_seed": 819,
+  "price_src": "/Volumes/CometCloudAI/cometcloud-local/research/s681/_um_daily.jsonl",
+  "funding_src": "/Volumes/CometCloudAI/cometcloud-local/research/s681/_um_funding.jsonl",
+  "gate_src": "t310_slots.load_gate()"
+ },
+ "data": {
+  "gate_diag": {
+   "raw_rows": 2484,
+   "rows": 2484,
+   "d0": "2020-01-01",
+   "d1": "2026-10-19"
+  },
+  "grid_first": "2020-01-01",
+  "grid_last": "2026-09-30",
+  "n_grid": 2465,
+  "missing_gate_days": 0,
+  "px_first": "2020-01-01",
+  "px_last": "2026-09-30",
+  "n_px_btc": 2465,
+  "n_px_eth": 2465,
+  "fund_first": "2020-01-01",
+  "fund_last": "2026-09-30",
+  "gate_closed_days": 938,
+  "gate_flips": 40
+ },
+ "alignment": {
+  "n": 2464,
+  "corr_d0": 0.9824,
+  "corr_d_plus1": -0.0722,
+  "corr_d_minus1": -0.0544,
+  "note": "majors ret[d] \u5bf9 BTC \u6c38\u7eed ret[d] / ret[d\u00b11];d+1 \u63a5\u8fd1 0 \u21d2 \u6ca1\u6709\u524d\u89c6"
+ },
+ "t252_sources": {
+  "px_first": "2019-12-31",
+  "px_last": "2026-11-10",
+  "fu_first": "2020-01-01",
+  "fu_last": "2026-11-11",
+  "st_first": "2020-01-01",
+  "st_last": "2026-11-10",
+  "n_px": 2507,
+  "n_fu": 2507,
+  "n_st": 2506
+ },
+ "gate_equivalence": {
+  "n_common": 2484,
+  "n_diff": 0,
+  "sample_diff": [],
+  "first_diff": null
+ },
+ "t252_reconciliation": {
+  "target_pct": -0.4567,
+  "target_note": "T-252 \u5b9a\u4e49 C:majors \u5728 200 \u65e5\u7ebf\u4e0b \u21d2 1\u00d7 BTC \u6c38\u7eed\u7a7a;2020-07-01\u21922026-11-04;\u62a5 \u221245.67%",
+  "variants": {
+   "V1_\u5e93\u6e90_7.5bp_per_transition(T-252 \u539f\u53e3\u5f84)": {
+    "total": -0.484578,
+    "n_days_active": 938,
+    "n_flips": 40,
+    "cost_total": -0.03,
+    "funding_total": 0.026639,
+    "price_total": -0.482703
+   },
+   "V2_\u5e93\u6e90_5bp_per_transition": {
+    "total": -0.479397,
+    "n_days_active": 938,
+    "n_flips": 40,
+    "cost_total": -0.02,
+    "funding_total": 0.026639,
+    "price_total": -0.482703
+   },
+   "V3_s681\u6e90_7.5bp_per_transition": {
+    "total": -0.456676,
+    "n_days_active": 938,
+    "n_flips": 40,
+    "cost_total": -0.03,
+    "funding_total": 0.079916,
+    "price_total": -0.482703
+   },
+   "V4_s681\u6e90_5bp_per_transition(\u767b\u8bb0\u53e3\u5f84,\u7a97\u53e3\u622a 2026-09-30)": {
+    "total": -0.451215,
+    "n_days_active": 938,
+    "n_flips": 40,
+    "cost_total": -0.02,
+    "funding_total": 0.079916,
+    "price_total": -0.482703
+   }
+  }
+ },
+ "must_report_full_history": {
+  "BTC_ETH_s1.0": {
+   "legs": [
+    "BTC",
+    "ETH"
+   ],
+   "s": 1.0,
+   "total_return": -0.457289,
+   "n_days_active": 938,
+   "n_flips": 40,
+   "funding_sum": 0.067135,
+   "funding_compound": 0.069417,
+   "price_compound": -0.482131,
+   "cost_total": 0.02,
+   "yearly": {
+    "2020": 0.0,
+    "2021": -0.543709,
+    "2022": 0.633163,
+    "2023": -0.212387,
+    "2024": -0.088699,
+    "2025": -0.057556,
+    "2026": 0.076632
+   },
+   "segments_ge10": [
+    {
+     "start": "2021-06-17",
+     "end": "2021-08-06",
+     "days": 51,
+     "pnl": -0.218329,
+     "pnl_price_only": -0.220271,
+     "pnl_funding_only": 0.003136,
+     "pnl_ex_cost": -0.217939
+    },
+    {
+     "start": "2022-01-06",
+     "end": "2023-01-13",
+     "days": 373,
+     "pnl": 0.346742,
+     "pnl_price_only": 0.312964,
+     "pnl_funding_only": 0.026397,
+     "pnl_ex_cost": 0.347401
+    },
+    {
+     "start": "2023-08-18",
+     "end": "2023-10-20",
+     "days": 64,
+     "pnl": -0.043924,
+     "pnl_price_only": -0.046689,
+     "pnl_funding_only": 0.003414,
+     "pnl_ex_cost": -0.043453
+    },
+    {
+     "start": "2024-08-03",
+     "end": "2024-10-14",
+     "days": 73,
+     "pnl": -0.039013,
+     "pnl_price_only": -0.044201,
+     "pnl_funding_only": 0.005949,
+     "pnl_ex_cost": -0.038542
+    },
+    {
+     "start": "2025-03-08",
+     "end": "2025-04-25",
+     "days": 49,
+     "pnl": -0.015428,
+     "pnl_price_only": -0.018637,
+     "pnl_funding_only": 0.003773,
+     "pnl_ex_cost": -0.01493
+    },
+    {
+     "start": "2025-11-04",
+     "end": "2026-08-19",
+     "days": 289,
+     "pnl": 0.263165,
+     "pnl_price_only": 0.240293,
+     "pnl_funding_only": 0.018931,
+     "pnl_ex_cost": 0.263757
+    }
+   ],
+   "n_segments_all": 20
+  },
+  "BTC_ETH_s0.3": {
+   "legs": [
+    "BTC",
+    "ETH"
+   ],
+   "s": 0.3,
+   "total_return": -0.064338,
+   "n_days_active": 938,
+   "n_flips": 40,
+   "funding_sum": 0.02014,
+   "funding_compound": 0.020343,
+   "price_compound": -0.077455,
+   "cost_total": 0.006,
+   "yearly": {
+    "2020": 0.0,
+    "2021": -0.195032,
+    "2022": 0.224937,
+    "2023": -0.066933,
+    "2024": -0.019659,
+    "2025": -0.005034,
+    "2026": 0.042626
+   },
+   "segments_ge10": [
+    {
+     "start": "2021-06-17",
+     "end": "2021-08-06",
+     "days": 51,
+     "pnl": -0.062695,
+     "pnl_price_only": -0.063424,
+     "pnl_funding_only": 0.00094,
+     "pnl_ex_cost": -0.062555
+    },
+    {
+     "start": "2022-01-06",
+     "end": "2023-01-13",
+     "days": 373,
+     "pnl": 0.156752,
+     "pnl_price_only": 0.147927,
+     "pnl_funding_only": 0.00785,
+     "pnl_ex_cost": 0.156924
+    },
+    {
+     "start": "2023-08-18",
+     "end": "2023-10-20",
+     "days": 64,
+     "pnl": -0.011636,
+     "pnl_price_only": -0.012497,
+     "pnl_funding_only": 0.001023,
+     "pnl_ex_cost": -0.011489
+    },
+    {
+     "start": "2024-08-03",
+     "end": "2024-10-14",
+     "days": 73,
+     "pnl": -0.004374,
+     "pnl_price_only": -0.005993,
+     "pnl_funding_only": 0.001781,
+     "pnl_ex_cost": -0.004226
+    },
+    {
+     "start": "2025-03-08",
+     "end": "2025-04-25",
+     "days": 49,
+     "pnl": 0.002069,
+     "pnl_price_only": 0.001088,
+     "pnl_funding_only": 0.001131,
+     "pnl_ex_cost": 0.00222
+    },
+    {
+     "start": "2025-11-04",
+     "end": "2026-08-19",
+     "days": 289,
+     "pnl": 0.098396,
+     "pnl_price_only": 0.092396,
+     "pnl_funding_only": 0.005643,
+     "pnl_ex_cost": 0.098558
+    }
+   ],
+   "n_segments_all": 20
+  },
+  "BTC_ETH_s0.15": {
+   "legs": [
+    "BTC",
+    "ETH"
+   ],
+   "s": 0.15,
+   "total_return": -0.020608,
+   "n_days_active": 938,
+   "n_flips": 40,
+   "funding_sum": 0.01007,
+   "funding_compound": 0.010121,
+   "price_compound": -0.027503,
+   "cost_total": 0.003,
+   "yearly": {
+    "2020": 0.0,
+    "2021": -0.101085,
+    "2022": 0.113415,
+    "2023": -0.033805,
+    "2024": -0.00904,
+    "2025": -0.001174,
+    "2026": 0.023222
+   },
+   "segments_ge10": [
+    {
+     "start": "2021-06-17",
+     "end": "2021-08-06",
+     "days": 51,
+     "pnl": -0.030899,
+     "pnl_price_only": -0.031278,
+     "pnl_funding_only": 0.00047,
+     "pnl_ex_cost": -0.030826
+    },
+    {
+     "start": "2022-01-06",
+     "end": "2023-01-13",
+     "days": 373,
+     "pnl": 0.082048,
+     "pnl_price_only": 0.077909,
+     "pnl_funding_only": 0.003918,
+     "pnl_ex_cost": 0.082129
+    },
+    {
+     "start": "2023-08-18",
+     "end": "2023-10-20",
+     "days": 64,
+     "pnl": -0.005648,
+     "pnl_price_only": -0.006081,
+     "pnl_funding_only": 0.000511,
+     "pnl_ex_cost": -0.005573
+    },
+    {
+     "start": "2024-08-03",
+     "end": "2024-10-14",
+     "days": 73,
+     "pnl": -0.001393,
+     "pnl_price_only": -0.002206,
+     "pnl_funding_only": 0.00089,
+     "pnl_ex_cost": -0.001319
+    },
+    {
+     "start": "2025-03-08",
+     "end": "2025-04-25",
+     "days": 49,
+     "pnl": 0.00175,
+     "pnl_price_only": 0.00126,
+     "pnl_funding_only": 0.000565,
+     "pnl_ex_cost": 0.001826
+    },
+    {
+     "start": "2025-11-04",
+     "end": "2026-08-19",
+     "days": 289,
+     "pnl": 0.050704,
+     "pnl_price_only": 0.04783,
+     "pnl_funding_only": 0.002817,
+     "pnl_ex_cost": 0.050782
+    }
+   ],
+   "n_segments_all": 20
+  },
+  "BTC_only_s1.0": {
+   "legs": [
+    "BTC"
+   ],
+   "s": 1.0,
+   "total_return": -0.451215,
+   "n_days_active": 938,
+   "n_flips": 40,
+   "funding_sum": 0.079916,
+   "funding_compound": 0.083177,
+   "price_compound": -0.482703,
+   "cost_total": 0.02,
+   "yearly": {
+    "2020": 0.0,
+    "2021": -0.472832,
+    "2022": 0.819732,
+    "2023": -0.271607,
+    "2024": -0.159174,
+    "2025": -0.166678,
+    "2026": 0.120884
+   },
+   "segments_ge10": [
+    {
+     "start": "2021-06-17",
+     "end": "2021-08-06",
+     "days": 51,
+     "pnl": -0.170073,
+     "pnl_price_only": -0.168691,
+     "pnl_funding_only": -0.000915,
+     "pnl_ex_cost": -0.169661
+    },
+    {
+     "start": "2022-01-06",
+     "end": "2023-01-13",
+     "days": 373,
+     "pnl": 0.502708,
+     "pnl_price_only": 0.441898,
+     "pnl_funding_only": 0.043142,
+     "pnl_ex_cost": 0.503454
+    },
+    {
+     "start": "2023-08-18",
+     "end": "2023-10-20",
+     "days": 64,
+     "pnl": -0.117057,
+     "pnl_price_only": -0.118874,
+     "pnl_funding_only": 0.002576,
+     "pnl_ex_cost": -0.116624
+    },
+    {
+     "start": "2024-08-03",
+     "end": "2024-10-14",
+     "days": 73,
+     "pnl": -0.118711,
+     "pnl_price_only": -0.121819,
+     "pnl_funding_only": 0.00408,
+     "pnl_ex_cost": -0.118275
+    },
+    {
+     "start": "2025-03-08",
+     "end": "2025-04-25",
+     "days": 49,
+     "pnl": -0.11698,
+     "pnl_price_only": -0.120142,
+     "pnl_funding_only": 0.004076,
+     "pnl_ex_cost": -0.116541
+    },
+    {
+     "start": "2025-11-04",
+     "end": "2026-08-19",
+     "days": 289,
+     "pnl": 0.337659,
+     "pnl_price_only": 0.308889,
+     "pnl_funding_only": 0.022564,
+     "pnl_ex_cost": 0.338298
+    }
+   ],
+   "n_segments_all": 20
+  },
+  "BTC_only_s0.3": {
+   "legs": [
+    "BTC"
+   ],
+   "s": 0.3,
+   "total_return": -0.087557,
+   "n_days_active": 938,
+   "n_flips": 40,
+   "funding_sum": 0.023975,
+   "funding_compound": 0.024263,
+   "price_compound": -0.103745,
+   "cost_total": 0.006,
+   "yearly": {
+    "2020": 0.0,
+    "2021": -0.163,
+    "2022": 0.24831,
+    "2023": -0.088203,
+    "2024": -0.044327,
+    "2025": -0.045021,
+    "2026": 0.049437
+   },
+   "segments_ge10": [
+    {
+     "start": "2021-06-17",
+     "end": "2021-08-06",
+     "days": 51,
+     "pnl": -0.046998,
+     "pnl_price_only": -0.046573,
+     "pnl_funding_only": -0.000274,
+     "pnl_ex_cost": -0.046856
+    },
+    {
+     "start": "2022-01-06",
+     "end": "2023-01-13",
+     "days": 373,
+     "pnl": 0.179571,
+     "pnl_price_only": 0.164936,
+     "pnl_funding_only": 0.012754,
+     "pnl_ex_cost": 0.179748
+    },
+    {
+     "start": "2023-08-18",
+     "end": "2023-10-20",
+     "days": 64,
+     "pnl": -0.034778,
+     "pnl_price_only": -0.035377,
+     "pnl_funding_only": 0.000772,
+     "pnl_ex_cost": -0.034634
+    },
+    {
+     "start": "2024-08-03",
+     "end": "2024-10-14",
+     "days": 73,
+     "pnl": -0.031166,
+     "pnl_price_only": -0.0322,
+     "pnl_funding_only": 0.001222,
+     "pnl_ex_cost": -0.031022
+    },
+    {
+     "start": "2025-03-08",
+     "end": "2025-04-25",
+     "days": 49,
+     "pnl": -0.03237,
+     "pnl_price_only": -0.033407,
+     "pnl_funding_only": 0.001221,
+     "pnl_ex_cost": -0.032225
+    },
+    {
+     "start": "2025-11-04",
+     "end": "2026-08-19",
+     "days": 289,
+     "pnl": 0.109708,
+     "pnl_price_only": 0.102476,
+     "pnl_funding_only": 0.006717,
+     "pnl_ex_cost": 0.109872
+    }
+   ],
+   "n_segments_all": 20
+  },
+  "BTC_only_s0.15": {
+   "legs": [
+    "BTC"
+   ],
+   "s": 0.15,
+   "total_return": -0.035731,
+   "n_days_active": 938,
+   "n_flips": 40,
+   "funding_sum": 0.011987,
+   "funding_compound": 0.012059,
+   "price_compound": -0.044341,
+   "cost_total": 0.003,
+   "yearly": {
+    "2020": 0.0,
+    "2021": -0.083765,
+    "2022": 0.122361,
+    "2023": -0.044844,
+    "2024": -0.021727,
+    "2025": -0.021876,
+    "2026": 0.02596
+   },
+   "segments_ge10": [
+    {
+     "start": "2021-06-17",
+     "end": "2021-08-06",
+     "days": 51,
+     "pnl": -0.022965,
+     "pnl_price_only": -0.022753,
+     "pnl_funding_only": -0.000137,
+     "pnl_ex_cost": -0.022892
+    },
+    {
+     "start": "2022-01-06",
+     "end": "2023-01-13",
+     "days": 373,
+     "pnl": 0.091111,
+     "pnl_price_only": 0.08431,
+     "pnl_funding_only": 0.006357,
+     "pnl_ex_cost": 0.091192
+    },
+    {
+     "start": "2023-08-18",
+     "end": "2023-10-20",
+     "days": 64,
+     "pnl": -0.01734,
+     "pnl_price_only": -0.017645,
+     "pnl_funding_only": 0.000386,
+     "pnl_ex_cost": -0.017266
+    },
+    {
+     "start": "2024-08-03",
+     "end": "2024-10-14",
+     "days": 73,
+     "pnl": -0.015059,
+     "pnl_price_only": -0.015586,
+     "pnl_funding_only": 0.000611,
+     "pnl_ex_cost": -0.014985
+    },
+    {
+     "start": "2025-03-08",
+     "end": "2025-04-25",
+     "days": 49,
+     "pnl": -0.015858,
+     "pnl_price_only": -0.016385,
+     "pnl_funding_only": 0.00061,
+     "pnl_ex_cost": -0.015784
+    },
+    {
+     "start": "2025-11-04",
+     "end": "2026-08-19",
+     "days": 289,
+     "pnl": 0.055328,
+     "pnl_price_only": 0.051882,
+     "pnl_funding_only": 0.003353,
+     "pnl_ex_cost": 0.055406
+    }
+   ],
+   "n_segments_all": 20
+  }
+ },
+ "account": {
+  "C0_full_window": {
+   "n_days": 1270,
+   "first": "2021-10-11",
+   "last": "2026-10-30",
+   "years": 5.055,
+   "total_return": 1.680953,
+   "cagr": 0.215428,
+   "max_drawdown": -0.347264,
+   "vol_ann": 0.312813,
+   "yearly": {
+    "2021": 0.278762,
+    "2022": -0.197983,
+    "2023": 0.276104,
+    "2024": 0.427769,
+    "2025": 0.426468,
+    "2026": 0.005796
+   },
+   "longest_underwater": {
+    "days": 563,
+    "start": "2021-11-26",
+    "end": "2024-02-23",
+    "min_nav": 0.954133
+   }
+  },
+  "C0": {
+   "n_days": 1248,
+   "first": "2021-10-11",
+   "last": "2026-09-30",
+   "years": 4.973,
+   "total_return": 1.784356,
+   "cagr": 0.228669,
+   "max_drawdown": -0.347264,
+   "vol_ann": 0.315107,
+   "yearly": {
+    "2021": 0.278762,
+    "2022": -0.197983,
+    "2023": 0.276104,
+    "2024": 0.427769,
+    "2025": 0.426468,
+    "2026": 0.04459
+   },
+   "longest_underwater": {
+    "days": 563,
+    "start": "2021-11-26",
+    "end": "2024-02-23",
+    "min_nav": 0.954133
+   }
+  },
+  "C0_plus_short_s0.15": {
+   "n_days": 1248,
+   "first": "2021-10-11",
+   "last": "2026-09-30",
+   "years": 4.973,
+   "total_return": 2.120539,
+   "cagr": 0.25716,
+   "max_drawdown": -0.281417,
+   "vol_ann": 0.300375,
+   "yearly": {
+    "2021": 0.278762,
+    "2022": -0.092541,
+    "2023": 0.235437,
+    "2024": 0.417889,
+    "2025": 0.430469,
+    "2026": 0.073179
+   },
+   "longest_underwater": {
+    "days": 523,
+    "start": "2021-11-26",
+    "end": "2023-12-26",
+    "min_nav": 1.050386
+   }
+  },
+  "C0_plus_short_s0.15_full_window_tail0": {
+   "n_days": 1270,
+   "first": "2021-10-11",
+   "last": "2026-10-30",
+   "years": 5.055,
+   "total_return": 2.004651,
+   "cagr": 0.243148,
+   "max_drawdown": -0.281417,
+   "vol_ann": 0.298235,
+   "yearly": {
+    "2021": 0.278762,
+    "2022": -0.092541,
+    "2023": 0.235437,
+    "2024": 0.417889,
+    "2025": 0.430469,
+    "2026": 0.033324
+   },
+   "longest_underwater": {
+    "days": 523,
+    "start": "2021-11-26",
+    "end": "2023-12-26",
+    "min_nav": 1.050386
+   }
+  },
+  "short_s0.15_window": {
+   "total_return": 0.089527,
+   "yearly": {
+    "2021": 0.0,
+    "2022": 0.113415,
+    "2023": -0.033805,
+    "2024": -0.00904,
+    "2025": -0.001174,
+    "2026": 0.023222
+   },
+   "n_flips": 40,
+   "n_days_active": 870
+  },
+  "C0_plus_short_s0.3": {
+   "n_days": 1248,
+   "first": "2021-10-11",
+   "last": "2026-09-30",
+   "years": 4.973,
+   "total_return": 2.423525,
+   "cagr": 0.280807,
+   "max_drawdown": -0.2419,
+   "vol_ann": 0.306549,
+   "yearly": {
+    "2021": 0.278762,
+    "2022": 0.014235,
+    "2023": 0.195497,
+    "2024": 0.405716,
+    "2025": 0.430727,
+    "2026": 0.097849
+   },
+   "longest_underwater": {
+    "days": 296,
+    "start": "2021-11-26",
+    "end": "2023-01-31",
+    "min_nav": 1.147476
+   }
+  },
+  "C0_plus_short_s0.3_full_window_tail0": {
+   "n_days": 1270,
+   "first": "2021-10-11",
+   "last": "2026-10-30",
+   "years": 5.055,
+   "total_return": 2.296384,
+   "cagr": 0.266148,
+   "max_drawdown": -0.2419,
+   "vol_ann": 0.304351,
+   "yearly": {
+    "2021": 0.278762,
+    "2022": 0.014235,
+    "2023": 0.195497,
+    "2024": 0.405716,
+    "2025": 0.430727,
+    "2026": 0.057078
+   },
+   "longest_underwater": {
+    "days": 296,
+    "start": "2021-11-26",
+    "end": "2023-01-31",
+    "min_nav": 1.147476
+   }
+  },
+  "short_s0.3_window": {
+   "total_return": 0.16236,
+   "yearly": {
+    "2021": 0.0,
+    "2022": 0.224937,
+    "2023": -0.066933,
+    "2024": -0.019659,
+    "2025": -0.005034,
+    "2026": 0.042626
+   },
+   "n_flips": 40,
+   "n_days_active": 870
+  }
+ },
+ "null_distribution": {
+  "s0.15": {
+   "actual": 0.089527,
+   "null_median": -0.050787,
+   "null_mean": -0.042513,
+   "null_p05": -0.17429,
+   "null_p95": 0.121784,
+   "p_upper": 0.08982,
+   "percentile_of": 0.912,
+   "n": 500,
+   "variant_window_only": {
+    "actual": 0.089527,
+    "null_median": -0.065639,
+    "p_upper": 0.075848,
+    "percentile_of": 0.926
+   }
+  },
+  "s0.30": {
+   "actual": 0.16236,
+   "null_median": -0.110904,
+   "null_mean": -0.086629,
+   "null_p05": -0.326456,
+   "null_p95": 0.234195,
+   "p_upper": 0.08982,
+   "percentile_of": 0.912,
+   "n": 500,
+   "variant_window_only": {
+    "actual": 0.16236,
+    "null_median": -0.143696,
+    "p_upper": 0.075848,
+    "percentile_of": 0.926
+   }
+  }
+ },
+ "judgement": {
+  "s0.15": {
+   "i_longest_uw": {
+    "c0_days": 563,
+    "new_days": 523,
+    "shorter_by_days": 40,
+    "need_ge_60": false,
+    "text": "\u6700\u957f\u6c34\u4e0b\u6bd4 C0 \u77ed \u2265 60 \u5929",
+    "ok": false
+   },
+   "ii_cagr": {
+    "c0": 0.228669,
+    "new": 0.25716,
+    "delta_pp": 2.849,
+    "text": "CAGR \u2265 C0 \u2212 1.0pp / \u5e74",
+    "ok": true
+   },
+   "iii_not_one_regime": {
+    "yearly": {
+     "2021": 0.0,
+     "2022": 0.113415,
+     "2023": -0.033805,
+     "2024": -0.00904,
+     "2025": -0.001174,
+     "2026": 0.023222
+    },
+    "n_positive_years": 2,
+    "positive_years": [
+     "2022",
+     "2026"
+    ],
+    "n_segments_ge10": 5,
+    "n_segments_positive": 3,
+    "segments": [
+     {
+      "start": "2022-01-06",
+      "end": "2023-01-13",
+      "days": 373,
+      "pnl": 0.082048,
+      "pnl_price_only": 0.077909,
+      "pnl_funding_only": 0.003918,
+      "pnl_ex_cost": 0.082129
+     },
+     {
+      "start": "2023-08-18",
+      "end": "2023-10-20",
+      "days": 64,
+      "pnl": -0.005648,
+      "pnl_price_only": -0.006081,
+      "pnl_funding_only": 0.000511,
+      "pnl_ex_cost": -0.005573
+     },
+     {
+      "start": "2024-08-03",
+      "end": "2024-10-14",
+      "days": 73,
+      "pnl": -0.001393,
+      "pnl_price_only": -0.002206,
+      "pnl_funding_only": 0.00089,
+      "pnl_ex_cost": -0.001319
+     },
+     {
+      "start": "2025-03-08",
+      "end": "2025-04-25",
+      "days": 49,
+      "pnl": 0.00175,
+      "pnl_price_only": 0.00126,
+      "pnl_funding_only": 0.000565,
+      "pnl_ex_cost": 0.001826
+     },
+     {
+      "start": "2025-11-04",
+      "end": "2026-08-19",
+      "days": 289,
+      "pnl": 0.050704,
+      "pnl_price_only": 0.04783,
+      "pnl_funding_only": 0.002817,
+      "pnl_ex_cost": 0.050782
+     }
+    ],
+    "text": "\u22652 \u4e2a\u65e5\u5386\u5e74\u4e3a\u6b63,\u4e14 \u226510 \u5929\u7684\u95f8\u95e8\u5173\u95ed\u6bb5\u8fc7\u534a\u4e3a\u6b63",
+    "ok": true
+   },
+   "iv_p_upper": {
+    "p_upper": 0.08982,
+    "need_lt": 0.1,
+    "ok": true,
+    "actual": 0.089527,
+    "null_median": -0.050787
+   },
+   "pass_all": false
+  },
+  "s0.3": {
+   "i_longest_uw": {
+    "c0_days": 563,
+    "new_days": 296,
+    "shorter_by_days": 267,
+    "need_ge_60": true,
+    "text": "\u6700\u957f\u6c34\u4e0b\u6bd4 C0 \u77ed \u2265 60 \u5929",
+    "ok": true
+   },
+   "ii_cagr": {
+    "c0": 0.228669,
+    "new": 0.280807,
+    "delta_pp": 5.214,
+    "text": "CAGR \u2265 C0 \u2212 1.0pp / \u5e74",
+    "ok": true
+   },
+   "iii_not_one_regime": {
+    "yearly": {
+     "2021": 0.0,
+     "2022": 0.224937,
+     "2023": -0.066933,
+     "2024": -0.019659,
+     "2025": -0.005034,
+     "2026": 0.042626
+    },
+    "n_positive_years": 2,
+    "positive_years": [
+     "2022",
+     "2026"
+    ],
+    "n_segments_ge10": 5,
+    "n_segments_positive": 3,
+    "segments": [
+     {
+      "start": "2022-01-06",
+      "end": "2023-01-13",
+      "days": 373,
+      "pnl": 0.156752,
+      "pnl_price_only": 0.147927,
+      "pnl_funding_only": 0.00785,
+      "pnl_ex_cost": 0.156924
+     },
+     {
+      "start": "2023-08-18",
+      "end": "2023-10-20",
+      "days": 64,
+      "pnl": -0.011636,
+      "pnl_price_only": -0.012497,
+      "pnl_funding_only": 0.001023,
+      "pnl_ex_cost": -0.011489
+     },
+     {
+      "start": "2024-08-03",
+      "end": "2024-10-14",
+      "days": 73,
+      "pnl": -0.004374,
+      "pnl_price_only": -0.005993,
+      "pnl_funding_only": 0.001781,
+      "pnl_ex_cost": -0.004226
+     },
+     {
+      "start": "2025-03-08",
+      "end": "2025-04-25",
+      "days": 49,
+      "pnl": 0.002069,
+      "pnl_price_only": 0.001088,
+      "pnl_funding_only": 0.001131,
+      "pnl_ex_cost": 0.00222
+     },
+     {
+      "start": "2025-11-04",
+      "end": "2026-08-19",
+      "days": 289,
+      "pnl": 0.098396,
+      "pnl_price_only": 0.092396,
+      "pnl_funding_only": 0.005643,
+      "pnl_ex_cost": 0.098558
+     }
+    ],
+    "text": "\u22652 \u4e2a\u65e5\u5386\u5e74\u4e3a\u6b63,\u4e14 \u226510 \u5929\u7684\u95f8\u95e8\u5173\u95ed\u6bb5\u8fc7\u534a\u4e3a\u6b63",
+    "ok": true
+   },
+   "iv_p_upper": {
+    "p_upper": 0.08982,
+    "need_lt": 0.1,
+    "ok": true,
+    "actual": 0.16236,
+    "null_median": -0.110904
+   },
+   "pass_all": true
+  }
+ },
+ "only_report": {
+  "delay_1_2_3_days": {
+   "delay_0d": {
+    "s0.15": {
+     "short_total": 0.089527,
+     "account_longest_uw": {
+      "days": 523,
+      "start": "2021-11-26",
+      "end": "2023-12-26",
+      "min_nav": 1.050386
+     },
+     "account_total": 2.120539
+    },
+    "s0.3": {
+     "short_total": 0.16236,
+     "account_longest_uw": {
+      "days": 296,
+      "start": "2021-11-26",
+      "end": "2023-01-31",
+      "min_nav": 1.147476
+     },
+     "account_total": 2.423525
+    }
+   },
+   "delay_1d": {
+    "s0.15": {
+     "short_total": 0.067113,
+     "account_longest_uw": {
+      "days": 554,
+      "start": "2021-11-26",
+      "end": "2024-02-09",
+      "min_nav": 1.035087
+     },
+     "account_total": 2.059773
+    },
+    "s0.3": {
+     "short_total": 0.114701,
+     "account_longest_uw": {
+      "days": 296,
+      "start": "2021-11-26",
+      "end": "2023-01-31",
+      "min_nav": 1.139468
+     },
+     "account_total": 2.290523
+    }
+   },
+   "delay_2d": {
+    "s0.15": {
+     "short_total": 0.009422,
+     "account_longest_uw": {
+      "days": 556,
+      "start": "2021-11-26",
+      "end": "2024-02-13",
+      "min_nav": 1.028227
+     },
+     "account_total": 1.89579
+    },
+    "s0.3": {
+     "short_total": -0.002999,
+     "account_longest_uw": {
+      "days": 522,
+      "start": "2021-11-26",
+      "end": "2023-12-22",
+      "min_nav": 1.093132
+     },
+     "account_total": 1.946111
+    }
+   },
+   "delay_3d": {
+    "s0.15": {
+     "short_total": -0.045091,
+     "account_longest_uw": {
+      "days": 556,
+      "start": "2021-11-26",
+      "end": "2024-02-13",
+      "min_nav": 1.024379
+     },
+     "account_total": 1.743075
+    },
+    "s0.3": {
+     "short_total": -0.10775,
+     "account_longest_uw": {
+      "days": 523,
+      "start": "2021-11-26",
+      "end": "2023-12-26",
+      "min_nav": 1.084969
+     },
+     "account_total": 1.643803
+    }
+   }
+  },
+  "drop_2022_segment": {
+   "s0.15": {
+    "window_ACC_total_without_2022": -0.021455,
+    "window_FULL_total_without_2022": -0.120372,
+    "window_ACC_total_with_2022": 0.089527,
+    "window_FULL_total_with_2022": -0.020608,
+    "window_FULL_total_truncated_at_2022_01": -0.101085
+   },
+   "s0.3": {
+    "window_ACC_total_without_2022": -0.051086,
+    "window_FULL_total_without_2022": -0.236155,
+    "window_ACC_total_with_2022": 0.16236,
+    "window_FULL_total_with_2022": -0.064338,
+    "window_FULL_total_truncated_at_2022_01": -0.195032
+   }
+  },
+  "btc_only": {
+   "s1.0": {
+    "total_FULL": -0.451215,
+    "total_ACC": 0.041005,
+    "yearly_FULL": {
+     "2020": 0.0,
+     "2021": -0.472832,
+     "2022": 0.819732,
+     "2023": -0.271607,
+     "2024": -0.159174,
+     "2025": -0.166678,
+     "2026": 0.120884
+    },
+    "segments_FULL_ge10": [
+     {
+      "start": "2021-06-17",
+      "end": "2021-08-06",
+      "days": 51,
+      "pnl": -0.170073,
+      "pnl_price_only": -0.168691,
+      "pnl_funding_only": -0.000915,
+      "pnl_ex_cost": -0.169661
+     },
+     {
+      "start": "2022-01-06",
+      "end": "2023-01-13",
+      "days": 373,
+      "pnl": 0.502708,
+      "pnl_price_only": 0.441898,
+      "pnl_funding_only": 0.043142,
+      "pnl_ex_cost": 0.503454
+     },
+     {
+      "start": "2023-08-18",
+      "end": "2023-10-20",
+      "days": 64,
+      "pnl": -0.117057,
+      "pnl_price_only": -0.118874,
+      "pnl_funding_only": 0.002576,
+      "pnl_ex_cost": -0.116624
+     },
+     {
+      "start": "2024-08-03",
+      "end": "2024-10-14",
+      "days": 73,
+      "pnl": -0.118711,
+      "pnl_price_only": -0.121819,
+      "pnl_funding_only": 0.00408,
+      "pnl_ex_cost": -0.118275
+     },
+     {
+      "start": "2025-03-08",
+      "end": "2025-04-25",
+      "days": 49,
+      "pnl": -0.11698,
+      "pnl_price_only": -0.120142,
+      "pnl_funding_only": 0.004076,
+      "pnl_ex_cost": -0.116541
+     },
+     {
+      "start": "2025-11-04",
+      "end": "2026-08-19",
+      "days": 289,
+      "pnl": 0.337659,
+      "pnl_price_only": 0.308889,
+      "pnl_funding_only": 0.022564,
+      "pnl_ex_cost": 0.338298
+     }
+    ],
+    "account_LONGEST_UW": {
+     "days": 314,
+     "start": "2022-11-22",
+     "end": "2024-02-23",
+     "min_nav": 1.413191
+    },
+    "account_total": 2.383212,
+    "n_flips": 40
+   },
+   "s0.3": {
+    "total_FULL": -0.087557,
+    "total_ACC": 0.090135,
+    "yearly_FULL": {
+     "2020": 0.0,
+     "2021": -0.163,
+     "2022": 0.24831,
+     "2023": -0.088203,
+     "2024": -0.044327,
+     "2025": -0.045021,
+     "2026": 0.049437
+    },
+    "segments_FULL_ge10": [
+     {
+      "start": "2021-06-17",
+      "end": "2021-08-06",
+      "days": 51,
+      "pnl": -0.046998,
+      "pnl_price_only": -0.046573,
+      "pnl_funding_only": -0.000274,
+      "pnl_ex_cost": -0.046856
+     },
+     {
+      "start": "2022-01-06",
+      "end": "2023-01-13",
+      "days": 373,
+      "pnl": 0.179571,
+      "pnl_price_only": 0.164936,
+      "pnl_funding_only": 0.012754,
+      "pnl_ex_cost": 0.179748
+     },
+     {
+      "start": "2023-08-18",
+      "end": "2023-10-20",
+      "days": 64,
+      "pnl": -0.034778,
+      "pnl_price_only": -0.035377,
+      "pnl_funding_only": 0.000772,
+      "pnl_ex_cost": -0.034634
+     },
+     {
+      "start": "2024-08-03",
+      "end": "2024-10-14",
+      "days": 73,
+      "pnl": -0.031166,
+      "pnl_price_only": -0.0322,
+      "pnl_funding_only": 0.001222,
+      "pnl_ex_cost": -0.031022
+     },
+     {
+      "start": "2025-03-08",
+      "end": "2025-04-25",
+      "days": 49,
+      "pnl": -0.03237,
+      "pnl_price_only": -0.033407,
+      "pnl_funding_only": 0.001221,
+      "pnl_ex_cost": -0.032225
+     },
+     {
+      "start": "2025-11-04",
+      "end": "2026-08-19",
+      "days": 289,
+      "pnl": 0.109708,
+      "pnl_price_only": 0.102476,
+      "pnl_funding_only": 0.006717,
+      "pnl_ex_cost": 0.109872
+     }
+    ],
+    "account_LONGEST_UW": {
+     "days": 296,
+     "start": "2021-11-26",
+     "end": "2023-01-31",
+     "min_nav": 1.135516
+    },
+    "account_total": 2.181289,
+    "n_flips": 40
+   },
+   "s0.15": {
+    "total_FULL": -0.035731,
+    "total_ACC": 0.052426,
+    "yearly_FULL": {
+     "2020": 0.0,
+     "2021": -0.083765,
+     "2022": 0.122361,
+     "2023": -0.044844,
+     "2024": -0.021727,
+     "2025": -0.021876,
+     "2026": 0.02596
+    },
+    "segments_FULL_ge10": [
+     {
+      "start": "2021-06-17",
+      "end": "2021-08-06",
+      "days": 51,
+      "pnl": -0.022965,
+      "pnl_price_only": -0.022753,
+      "pnl_funding_only": -0.000137,
+      "pnl_ex_cost": -0.022892
+     },
+     {
+      "start": "2022-01-06",
+      "end": "2023-01-13",
+      "days": 373,
+      "pnl": 0.091111,
+      "pnl_price_only": 0.08431,
+      "pnl_funding_only": 0.006357,
+      "pnl_ex_cost": 0.091192
+     },
+     {
+      "start": "2023-08-18",
+      "end": "2023-10-20",
+      "days": 64,
+      "pnl": -0.01734,
+      "pnl_price_only": -0.017645,
+      "pnl_funding_only": 0.000386,
+      "pnl_ex_cost": -0.017266
+     },
+     {
+      "start": "2024-08-03",
+      "end": "2024-10-14",
+      "days": 73,
+      "pnl": -0.015059,
+      "pnl_price_only": -0.015586,
+      "pnl_funding_only": 0.000611,
+      "pnl_ex_cost": -0.014985
+     },
+     {
+      "start": "2025-03-08",
+      "end": "2025-04-25",
+      "days": 49,
+      "pnl": -0.015858,
+      "pnl_price_only": -0.016385,
+      "pnl_funding_only": 0.00061,
+      "pnl_ex_cost": -0.015784
+     },
+     {
+      "start": "2025-11-04",
+      "end": "2026-08-19",
+      "days": 289,
+      "pnl": 0.055328,
+      "pnl_price_only": 0.051882,
+      "pnl_funding_only": 0.003353,
+      "pnl_ex_cost": 0.055406
+     }
+    ],
+    "account_LONGEST_UW": {
+     "days": 554,
+     "start": "2021-11-26",
+     "end": "2024-02-09",
+     "min_nav": 1.04985
+    },
+    "account_total": 2.000432,
+    "n_flips": 40
+   }
+  }
+ },
+ "account_parts": {
+  "nav_start": "2021-10-11",
+  "common_first": "2021-07-13",
+  "common_last": "2026-10-30",
+  "exit_reason_mismatch": 0,
+  "ov_diag": {
+   "risk_frac": 0.005,
+   "cap_n": 14,
+   "gross_cap": 0.4,
+   "equity0": 630.0,
+   "curve_first": "2020-08-16",
+   "curve_last": "2026-09-30",
+   "n_days": 2237,
+   "taken": 208,
+   "blocked_gross": 114,
+   "blocked_cap": 615,
+   "blocked_min": 2,
+   "blocked_coin": 17,
+   "overlay_total_return": 0.635027,
+   "overlay_cagr": 0.083527,
+   "overlay_max_dd": -0.257097,
+   "overlay_worst_month": "2024-06",
+   "overlay_worst_month_ret": -0.081457,
+   "mean_daily_ret": 0.00026302,
+   "ann_vol": 0.177796
+  },
+  "from_cache": true
+ }
+}

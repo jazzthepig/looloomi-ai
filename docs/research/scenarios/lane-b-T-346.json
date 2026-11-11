@@ -1,0 +1,20 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {"id": "T-346-1", "scenario": "T-346 闸门关时空大盘",
+     "statement": "BTC 收盘价(ohlcv_daily)2026-12-05 仍低于 80504",
+     "variable": "close:BTC", "op": "lt", "hi": 80504, "prob": 0.6, "horizon_d": "2026-12-05"},
+    {"id": "T-346-2", "scenario": "T-346 闸门关时空大盘",
+     "statement": "7 日年化资金费(state_daily panel)2026-12-05 仍为正 —— 空腿收租的前提",
+     "variable": "state:funding_7d_ann", "op": "gt", "lo": 0, "prob": 0.6, "horizon_d": "2026-12-05"},
+    {"id": "T-346-3", "scenario": "T-346 闸门关时空大盘",
+     "statement": "① 面板距 200 日线(state dist_200)2026-12-05 仍在 200 日线下 —— 闸门的入场条件",
+     "variable": "state:dist_200", "op": "lt", "hi": 0, "prob": 0.45, "horizon_d": "2026-12-05"},
+    {"id": "T-346-4", "scenario": "T-346 闸门关时空大盘",
+     "statement": "站上 50 日均线的成员比例(state breadth_above_ma50)2026-12-05 低于 30%",
+     "variable": "state:breadth_above_ma50", "op": "lt", "hi": 0.3, "prob": 0.5, "horizon_d": "2026-12-05"},
+    {"id": "T-346-5", "scenario": "T-346 闸门关时空大盘",
+     "statement": "BTC 收盘价(ohlcv_daily)2026-12-05 反弹到 85000 以上 —— 空腿在反弹里回吐的场景",
+     "variable": "close:BTC", "op": "gt", "lo": 85000, "prob": 0.3, "horizon_d": "2026-12-05"}
+  ]
+}
