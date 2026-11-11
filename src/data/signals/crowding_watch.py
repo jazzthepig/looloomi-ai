@@ -77,7 +77,7 @@ async def run_once(now: Optional[dt.datetime] = None, *, force: bool = False) ->
     today = now.date()
     key = DONE_KEY.format(d=today.isoformat())
     if not force:
-        st, _ = await redis_get_key_status(key)
+        _, st = await redis_get_key_status(key)      # 返回 (payload, status) —— 11-11 之前写反了,当日闸从没生效
         if st == "hit":
             return {"ok": True, "skipped": True, "why": f"今天({today})已经跑过"}
     have = await _sb_get(TABLE, {"select": "d", "order": "d.desc", "limit": "1"})

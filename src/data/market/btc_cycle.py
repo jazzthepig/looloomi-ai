@@ -111,15 +111,15 @@ async def run_once(now: Optional[dt.datetime] = None, *, force: bool = False) ->
     from src.data.vector.market_state_writer import _sb_get
     now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
     key = DONE_KEY.format(d=now.date().isoformat())
-    if not force:
-        st, _ = await redis_get_key_status(key)
-        if st == "hit":
-            return {"ok": True, "skipped": True, "why": "今天已经取过"}
     # 以**最晚加进来的那条序列**判断要不要全量:派生序列还没有 ⇒ 全史重取重算(upsert 幂等)
     have = await _sb_get(TABLE, {"select": "d", "series": f"eq.{DERIVED[0]}", "order": "d.desc", "limit": "1"})
     if not have.ok:
         return {"ok": False, "why": f"读 {TABLE} 失败:{(have.why or '')[:120]}"}
     full = not have.rows
+    if not force and not full:                 # 「今天取过」不挡全史回填(加了新序列的那次部署,当天的键可能已占用)
+        _, st = await redis_get_key_status(key)      # 返回 (payload, status) —— 11-11 之前写反了,当日闸从没生效
+        if st == "hit":
+            return {"ok": True, "skipped": True, "why": "今天已经取过"}
     start = HISTORY_FROM if full else (now.date() - dt.timedelta(days=RECENT_D)).isoformat()
     fetch_from = HISTORY_FROM if full else (now.date() - dt.timedelta(days=DERIVE_LOOKBACK_D)).isoformat()
     raw = await get_coinmetrics_btc(list(METRICS), fetch_from)

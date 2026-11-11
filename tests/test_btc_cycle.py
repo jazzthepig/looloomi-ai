@@ -46,7 +46,7 @@ def test_first_run_backfills_full_history_then_only_recent(monkeypatch):
         return True
 
     async def kget(k):
-        return None, None
+        return None, "miss"                    # 真实契约:(payload, status)
 
     async def kset(*a, **k):
         return True
@@ -62,6 +62,15 @@ def test_first_run_backfills_full_history_then_only_recent(monkeypatch):
     have.append({"d": "2026-11-10"})
     asyncio.run(bc.run_once(now))
     assert calls[-1] == "2025-09-17", "派生序列已有 ⇒ 只取 420 天(够重算最近 14 天的 Puell)"
+    n = len(calls)
+
+    async def hit(k):
+        return {"rows": 1}, "hit"
+    monkeypatch.setattr(store, "redis_get_key_status", hit)
+    assert asyncio.run(bc.run_once(now)).get("skipped") and len(calls) == n, "今天取过且派生序列已有 ⇒ 跳过"
+    have.clear()
+    r = asyncio.run(bc.run_once(now))
+    assert not r.get("skipped") and calls[-1] == bc.HISTORY_FROM, "派生序列还没有 ⇒ 「今天取过」不挡全史回填(11-11 部署当天踩过)"
 
 
 def test_derived_series_are_puell_and_hashrate_change_from_the_same_functions():
@@ -76,3 +85,22 @@ def test_derived_series_are_puell_and_hashrate_change_from_the_same_functions():
     assert abs(by[("btc_hash_30d", days[399])] - math.log(2.0)) < 1e-12, "近 7 天都在翻倍之后、30 天前的 7 天都在之前"
     assert all(r["d"] >= days[395] for r in out)
     assert bc.hash_30d({days[0]: 1.0}, days[0]) is None and bc.derived_rows(base[:300], days[0]) == [], "不满窗口的那天不写(300 天发行不够 365)"
+
+
+
+def test_no_caller_compares_the_redis_payload_to_the_status_string():
+    """11-11:`redis_get_key_status` 返回 (payload, status)。三个模块(crowding_watch / korea_premium_watch / btc_cycle)把两个值接反了,
+    `if payload == "hit"` 永远为假 ⇒ 「今天跑过」的闸从没生效,每轮循环都重跑(crowding 每次 ~30 秒全史扫描)。假的测试桩也按错的形状写,所以没红。
+    这里静态查全仓:第一个接收变量不许拿去和状态字符串比。"""
+    import re
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1] / "src"
+    bad = []
+    pat = re.compile(r"^\s*(\w+),\s*\w+\s*=\s*await\s+redis_get_key_status\(")
+    for f in root.rglob("*.py"):
+        lines = f.read_text(encoding="utf-8", errors="replace").splitlines()
+        for i, ln in enumerate(lines):
+            m = pat.match(ln)
+            if m and any(re.search(rf"\b{re.escape(m.group(1))}\s*==\s*[\"'](hit|miss|error|unconfigured)[\"']", x) for x in lines[i + 1:i + 5]):
+                bad.append(f"{f.relative_to(root)}:{i + 1}")
+    assert not bad, f"把 payload 当成 status 比了:{bad}"
