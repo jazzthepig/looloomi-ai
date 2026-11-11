@@ -6,11 +6,11 @@
 零分布 / Brier / 块自助 / 循环平移一律走 `src/data/evaluation/apparatus.py`。
 
 数据(只读):
-  - Supabase `macro_daily`(series 长表):btc_mvrv / btc_hashrate / btc_issuance_usd / fng
-  - Coin Metrics 社区 API(免密钥):PriceUSD —— 台账点名 `macro_daily.btc_price_usd`,
-    但库里**没有这一条**(见报告「口径歧义 §0」),按生产 ETL 的同一来源同一指标取回。
-  - `btc_puell` / `btc_hash_30d` 库里也没有,按 `src/data/market/btc_cycle.py` 的**数据层**定义
-    自己实现(那是取数层,不是被审的周期空间内核)。
+  - Supabase `macro_daily`(series 长表):台账 S-814 点名的五条全在库里 ——
+    `btc_price_usd` / `btc_mvrv` / `btc_puell` / `btc_hash_30d`(2011 起)+ `fng`(2018-02 起);
+    另取 `btc_issuance_usd` / `btc_hashrate` 两条原始量,用来**自己复算** Puell 与算力 30 天变化
+    与库值交叉核对(核对结果写进报告 §0)。
+  - Coin Metrics 社区 API(免密钥):`PriceUSD` / `CapMVRVCur` —— 只作交叉核对,不入计算。
 
 产物(写到仓库 docs/research/):
   - t340_weekly.csv   周度表(先落)
@@ -80,91 +80,139 @@ def _postgrest(path: str) -> str:
         return r.read().decode()
 
 
-def load_macro_daily() -> dict[str, dict[str, float]]:
-    """macro_daily 全表 → {series: {d: value}}。分页 limit=1000(PostgREST 单页上限)。"""
-    cache = CACHE / "macro_daily.jsonl"
-    if cache.exists():
-        rows = [json.loads(ln) for ln in open(cache)]
-    else:
-        rows, off = [], 0
+NEEDED_SERIES = ["btc_price_usd", "btc_mvrv", "btc_puell", "btc_hash_30d",
+                 "btc_issuance_usd", "btc_hashrate", "fng"]
+
+
+def load_macro_daily(series: list[str] | None = None) -> dict[str, dict[str, float]]:
+    """macro_daily 指定序列 → {series: {d: value}}。每条序列单独翻页(limit=1000,PostgREST 单页上限),
+    带 order=d.asc —— 不带 order 时翻页边界会漂(T-170/T-173 实测)。只读。"""
+    series = series or NEEDED_SERIES
+    out: dict[str, dict[str, float]] = {}
+    for name in series:
+        cache = CACHE / f"series_{name}.json"
+        if cache.exists():
+            out[name] = json.load(open(cache))
+            continue
+        d: dict[str, float] = {}
+        off = 0
         while True:
             page = json.loads(_postgrest(
-                f"macro_daily?select=d,series,value&order=series.asc,d.asc&limit=1000&offset={off}"))
+                f"macro_daily?select=d,value&series=eq.{name}&order=d.asc&limit=1000&offset={off}"))
             if not page:
                 break
-            rows.extend(page)
+            for r in page:
+                if r.get("value") is not None:
+                    d[r["d"]] = float(r["value"])
             off += len(page)
             if len(page) < 1000:
                 break
         CACHE.mkdir(parents=True, exist_ok=True)
-        with open(cache, "w") as f:
-            for r in rows:
-                f.write(json.dumps(r, ensure_ascii=False) + "\n")
-    out: dict[str, dict[str, float]] = {}
-    for r in rows:
-        if r.get("value") is None:
-            continue
-        out.setdefault(r["series"], {})[r["d"]] = float(r["value"])
+        json.dump(d, open(cache, "w"))
+        out[name] = d
     return out
 
 
-def load_price() -> pd.Series:
-    """Coin Metrics PriceUSD(BTC,日频)→ {d: close}。"""
+def load_coinmetrics() -> dict:
+    """Coin Metrics 社区 API(免密钥)原始缓存 —— **只作交叉核对**,不入计算。"""
     cache = CACHE / "coinmetrics_raw.json"
     if cache.exists():
-        cm = json.load(open(cache))
-    else:
-        url = ("https://community-api.coinmetrics.io/v4/timeseries/asset-metrics"
-               "?assets=btc&metrics=PriceUSD,CapMVRVCur&start_time=2010-01-01&page_size=10000&frequency=1d")
-        cm, pages = {}, 0
-        while url and pages < 30:
-            req = urllib.request.Request(url, headers={"User-Agent": "lane-c/T-340"})
-            with urllib.request.urlopen(req, timeout=120) as r:
-                j = json.loads(r.read().decode())
-            for row in j.get("data") or []:
-                d = row["time"][:10]
-                v = row.get("PriceUSD")
+        return json.load(open(cache))
+    url = ("https://community-api.coinmetrics.io/v4/timeseries/asset-metrics"
+           "?assets=btc&metrics=PriceUSD,CapMVRVCur&start_time=2010-01-01&page_size=10000&frequency=1d")
+    cm, pages = {}, 0
+    while url and pages < 30:
+        req = urllib.request.Request(url, headers={"User-Agent": "lane-c/T-340"})
+        with urllib.request.urlopen(req, timeout=120) as r:
+            j = json.loads(r.read().decode())
+        for row in j.get("data") or []:
+            d = row["time"][:10]
+            for m in ("PriceUSD", "CapMVRVCur"):
+                v = row.get(m)
                 if v not in (None, ""):
-                    cm.setdefault(d, {})["PriceUSD"] = float(v)
-            url = j.get("next_page_url")
-            pages += 1
-        CACHE.mkdir(parents=True, exist_ok=True)
-        json.dump(cm, open(cache, "w"))
-    s = pd.Series({d: v["PriceUSD"] for d, v in cm.items() if "PriceUSD" in v}, name="price")
+                    cm.setdefault(d, {})[m] = float(v)
+        url = j.get("next_page_url")
+        pages += 1
+    CACHE.mkdir(parents=True, exist_ok=True)
+    json.dump(cm, open(cache, "w"))
+    return cm
+
+
+def load_price(macro: dict[str, dict[str, float]]) -> tuple[pd.Series, str]:
+    """价格:优先 `macro_daily.btc_price_usd`(回填后库里有,台账点名的就是它);没有才现取 Coin Metrics。"""
+    d = macro.get("btc_price_usd") or {}
+    src = "macro_daily.btc_price_usd"
+    if not d:
+        src = "coinmetrics:PriceUSD"
+        cm = load_coinmetrics()
+        d = {k: v["PriceUSD"] for k, v in cm.items() if "PriceUSD" in v}
+    s = pd.Series(d, dtype=float)
     s.index = pd.to_datetime(s.index)
-    return s.sort_index()
+    return s.sort_index(), src
+
+
+def _cmp(a: pd.Series, b: pd.Series) -> dict:
+    """两条同索引序列的一致性(相对误差)。"""
+    j = pd.concat([a.rename("a"), b.rename("b")], axis=1).dropna()
+    if not len(j):
+        return {"n": 0}
+    rel = ((j["a"] - j["b"]).abs() / j["b"].abs().replace(0, np.nan)).dropna()
+    return {"n": int(len(j)),
+            "max_abs": float((j["a"] - j["b"]).abs().max()),
+            "max_rel": float(rel.max()) if len(rel) else None,
+            "p99_rel": float(rel.quantile(0.99)) if len(rel) else None,
+            "exact": int((j["a"] == j["b"]).sum())}
 
 
 # ── 8 维原始值(只用 ≤ d)──────────────────────────────────────────────────────
-def build_raw(macro: dict[str, dict[str, float]], price: pd.Series) -> pd.DataFrame:
-    """逐维原始值。返回按日索引的 DataFrame,列 = DIMS。"""
+def build_raw(macro: dict[str, dict[str, float]], price: pd.Series,
+              *, use_db_derived: bool = True) -> tuple[pd.DataFrame, dict]:
+    """逐维原始值(台账原文:mvrv=ln(MVRV);puell=ln(Puell);hash_30d 原值;dist_200=ln(价÷200 日均价);
+    ret_365=ln(价÷365 天前);dd_ath=价÷至今最高−1;vol_90=90 日对数收益**总体**标准差;fng_30=30 日均值)。
+
+    Puell 与算力 30 天变化:库里(`btc_puell` / `btc_hash_30d`)优先,缺则按
+    「Puell = 当日发行美元 ÷ 最近 365 天(含当天)均值」「算力 30 天变化 = ln(近 7 天均值 ÷ 30 天前的 7 天均值)」
+    自己算;两条都算一遍用于交叉核对。返回 (DataFrame, 核对 dict)。"""
     idx = price.index                       # 日历轴 = 有价格的每一天
     px = price.reindex(idx)
 
     def mapser(d: dict[str, float]) -> pd.Series:
-        s = pd.Series({pd.Timestamp(k): v for k, v in d.items()})
+        s = pd.Series({pd.Timestamp(k): v for k, v in d.items()}, dtype=float)
         return s.reindex(idx)
 
     mvrv_s = mapser(macro.get("btc_mvrv", {}))
     iss_s = mapser(macro.get("btc_issuance_usd", {}))
     hr_s = mapser(macro.get("btc_hashrate", {}))
     fng_s = mapser(macro.get("fng", {}))
+    puell_db = mapser(macro.get("btc_puell", {}))
+    hash_db = mapser(macro.get("btc_hash_30d", {}))
+
+    # —— 自己实现的派生(数据层,不是被审的周期空间内核)——
+    iss_win = iss_s.rolling(365, min_periods=365).mean()                # 含当天的 365 日均值
+    puell_own = iss_s / iss_win
+    hr7 = hr_s.rolling(7, min_periods=7).mean()
+    hr7_30 = hr_s.shift(30).rolling(7, min_periods=7).mean()
+    hash_own = np.log(hr7 / hr7_30)
+
+    xcheck = {"puell_db_vs_own": _cmp(puell_db, puell_own),
+              "hash_30d_db_vs_own": _cmp(hash_db, hash_own)}
+    if use_db_derived:
+        puell_s = puell_db.where(puell_db.notna(), puell_own)
+        hash_s = hash_db.where(hash_db.notna(), hash_own)
+    else:
+        puell_s, hash_s = puell_own, hash_own
 
     out = pd.DataFrame(index=idx)
     out["mvrv"] = np.log(mvrv_s.where(mvrv_s > 0))                       # ln(MVRV)
-    iss_win = iss_s.rolling(365, min_periods=365).mean()                # Puell 365 日均
-    puell = iss_s / iss_win
-    out["puell"] = np.log(puell.where(puell > 0))                        # ln(Puell)
-    hr7 = hr_s.rolling(7, min_periods=7).mean()                         # 算力 30 天变化
-    hr7_30 = hr_s.shift(30).rolling(7, min_periods=7).mean()
-    out["hash_30d"] = np.log(hr7 / hr7_30).where(hr7 > 0)               # 原值(已是 ln)
+    out["puell"] = np.log(puell_s.where(puell_s > 0))                    # ln(Puell)
+    out["hash_30d"] = hash_s                                            # 原值(已是 ln 比值)
     out["dist_200"] = np.log(px / px.rolling(200, min_periods=200).mean()).where(px > 0)
     out["ret_365"] = np.log(px / px.shift(365)).where(px > 0)
     out["dd_ath"] = px / px.cummax() - 1.0
     logret = np.log(px).diff()
     out["vol_90"] = logret.rolling(90, min_periods=90).std(ddof=0)     # 总体标准差
     out["fng_30"] = fng_s.rolling(30, min_periods=20).mean()            # ≥20 观测才有值
-    return out
+    return out, xcheck
 
 
 def zscore(raw: pd.DataFrame, window: int | None = None) -> pd.DataFrame:
@@ -291,8 +339,12 @@ def crit_a(rd: pd.DataFrame, px: pd.Series, dates_index: pd.DatetimeIndex) -> di
         sh = apparatus.circular_shift(pd.Series(realized), rng, block=BLOCK_WEEKS)
         return float(spearmanr(tilt, np.asarray(sh, dtype=float)).statistic)
 
-    null = apparatus.null_distribution(one, N_NULL_A, SEED, actual=rho)
-    p_up = apparatus.p_upper(rho, null)
+    try:
+        null = apparatus.null_distribution(one, N_NULL_A, SEED, actual=rho)
+        p_up = apparatus.p_upper(rho, null)
+    except apparatus.NoOpNull as e:
+        return {"n_weeks": int(n), "spearman": rho, "p_upper": None,
+                "pass_spearman": bool(rho >= SPEARMAN_MIN), "pass_p": None, "why": str(e)}
     return {"n_weeks": int(n), "spearman": rho, "p_upper": p_up,
             "null_mean": float(np.mean(null)), "null_q95": float(np.quantile(null, 0.95)),
             "pass_spearman": bool(rho >= SPEARMAN_MIN),
@@ -316,6 +368,9 @@ def crit_b(rd: pd.DataFrame) -> dict:
                + apparatus.brier(p_mid[ok], y_mid[ok]))
     brier_u = (apparatus.brier(u_up[ok], y_up[ok]) + apparatus.brier(u_dn[ok], y_dn[ok])
                + apparatus.brier(u_mid[ok], y_mid[ok]))
+    if brier_s is None or brier_u is None:
+        return {"n_weeks": int(n), "brier_shrunk": brier_s, "brier_uncond": brier_u,
+                "diff": None, "pass_brier": None, "why": "Brier 不可算"}
     d = ((p_up - y_up) ** 2 + (p_dn - y_dn) ** 2 + (p_mid - y_mid) ** 2
          - (u_up - y_up) ** 2 - (u_dn - y_dn) ** 2 - (u_mid - y_mid) ** 2)[ok]
     n = len(d)
@@ -385,8 +440,12 @@ def crit_c(rd: pd.DataFrame, px: pd.Series, dates_index: pd.DatetimeIndex) -> di
         bt = backtest(rd, px, dates_index, np.asarray(sh, dtype=float))
         return bt["calmar"] if bt["calmar"] is not None else np.nan
 
-    null = apparatus.null_distribution(one, N_NULL_C, SEED, actual=strat["calmar"])
-    p_up = apparatus.p_upper(strat["calmar"], null)
+    try:
+        null = apparatus.null_distribution(one, N_NULL_C, SEED, actual=strat["calmar"])
+        p_up = apparatus.p_upper(strat["calmar"], null)
+    except apparatus.NoOpNull as e:
+        out.update({"calmar_null_p": None, "pass_calmar": None, "why": str(e)})
+        return out
     out.update({"calmar_null_p": p_up, "pass_calmar": bool(p_up is not None and p_up <= ALPHA_C),
                 "calmar_null_mean": float(np.nanmean(null))})
     return out
@@ -479,7 +538,6 @@ def expansion_pct(series: pd.Series, query: pd.DatetimeIndex) -> np.ndarray:
         j = pos.get(q)
         if j is None or j < 2 or not np.isfinite(vals[j]):
             continue
-        lo = np.searchsorted(sorted_vals, vals[j], side="left")       # < 值 的个数(含 NaN 干扰)
         lo = int(np.sum(vals[:j] < vals[j]))
         hi = int(np.sum(vals[:j] <= vals[j]))
         n_prev = int(np.sum(np.isfinite(vals[:j])))
@@ -525,10 +583,19 @@ def _add_realized(rd: pd.DataFrame, px: pd.Series) -> pd.DataFrame:
 def run(outdir: pathlib.Path, variants: dict) -> dict:
     print("[1] 取数(只读)…", flush=True)
     macro = load_macro_daily()
-    price = load_price()
-    print(f"    macro_daily {len(macro)} 条 series; price {price.index[0].date()}..{price.index[-1].date()} n={len(price)}",
-          flush=True)
-    raw = build_raw(macro, price)
+    price, price_src = load_price(macro)
+    print(f"    macro_daily {len(macro)} 条 series; price[{price_src}] "
+          f"{price.index[0].date()}..{price.index[-1].date()} n={len(price)}", flush=True)
+    raw, xcheck = build_raw(macro, price)
+    cm = load_coinmetrics()
+    if cm:
+        cm_px = pd.Series({pd.Timestamp(k): v["PriceUSD"] for k, v in cm.items() if "PriceUSD" in v}).sort_index()
+        xcheck["price_db_vs_coinmetrics"] = _cmp(price, cm_px)
+        cm_mvrv = pd.Series({pd.Timestamp(k): v["CapMVRVCur"] for k, v in cm.items() if "CapMVRVCur" in v}).sort_index()
+        xcheck["mvrv_db_vs_coinmetrics"] = _cmp(
+            pd.Series({pd.Timestamp(k): v for k, v in macro.get("btc_mvrv", {}).items()}, dtype=float).sort_index(),
+            cm_mvrv)
+    print("    交叉核对:", json.dumps(xcheck, ensure_ascii=False), flush=True)
     print("[2] 8 维原始值 + 标准化…", flush=True)
     z_exp = zscore(raw, window=None)
     z_730 = zscore(raw, window=730)
@@ -544,10 +611,13 @@ def run(outdir: pathlib.Path, variants: dict) -> dict:
                                        "w_add": W_ADD, "w_trim": W_TRIM, "w_hold": W_HOLD,
                                        "cost_bps": COST_BPS, "halvings": HALVINGS,
                                        "extreme_window": EXTREME_WINDOW, "spearman_min": SPEARMAN_MIN}},
-              "data": {"price_first": price.index[0].date().isoformat(),
+              "data": {"price_source": price_src,
+                       "price_first": price.index[0].date().isoformat(),
                        "price_last": price.index[-1].date().isoformat(),
                        "price_n": int(len(price)),
-                       "macro_daily_series": sorted(macro)},
+                       "macro_daily_series": sorted(macro),
+                       "macro_daily_counts": {k: len(v) for k, v in macro.items()},
+                       "cross_check": xcheck},
               "variants": {}}
 
     print("[3] 主口径走步…", flush=True)
@@ -585,13 +655,15 @@ def run(outdir: pathlib.Path, variants: dict) -> dict:
         and res["d"]["pass_bottom_no_trim"] and res["d"]["pass_ge2_top_trim"]
         and res["d"]["pass_ge2_bottom_add"] and res["e"]["pass"])
     results["main"] = res
-    print(f"    (a) rho={res['a']['spearman']} p_upper={res['a']['p_upper']}", flush=True)
-    print(f"    (b) brier {res['b']['brier_shrunk']:.5f} vs {res['b']['brier_uncond']:.5f} q95={res['b']['boot_q95']}",
+    print(f"    (a) rho={res['a'].get('spearman')} p_upper={res['a'].get('p_upper')}", flush=True)
+    print(f"    (b) brier {res['b'].get('brier_shrunk')} vs {res['b'].get('brier_uncond')} "
+          f"q95={res['b'].get('boot_q95')}", flush=True)
+    print(f"    (c) strat {res['c']['strategy'].get('total_return')} vs hold70 {res['c']['hold70'].get('total_return')} "
+          f"dd {res['c']['strategy'].get('max_dd')}/{res['c']['hold70'].get('max_dd')} "
+          f"calmar_p={res['c'].get('calmar_null_p')}", flush=True)
+    print(f"    (d) tops_trim={res['d']['n_tops_with_trim']} bots_add={res['d']['n_bottoms_with_add']} "
+          f"no_add_at_top={res['d']['pass_top_no_add']} no_trim_at_bottom={res['d']['pass_bottom_no_trim']}",
           flush=True)
-    print(f"    (c) strat {res['c']['strategy']['total_return']:.3f} vs hold70 {res['c']['hold70']['total_return']:.3f} "
-          f"dd {res['c']['strategy']['max_dd']:.4f}/{res['c']['hold70']['max_dd']:.4f} calmar_p={res['c']['calmar_null_p']}",
-          flush=True)
-    print(f"    (d) {json.dumps(res['d'], ensure_ascii=False)[:400]}", flush=True)
     print(f"    (e) {res['e']}", flush=True)
     print(f"    stance {res['stance_counts']}  换仓/年 {res['turnover_per_year']:.2f}", flush=True)
 
