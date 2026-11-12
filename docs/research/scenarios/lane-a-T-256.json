@@ -12,7 +12,7 @@
      "variable": "state:dist_200", "op": "gt", "lo": 0, "prob": 0.52, "horizon_d": "2026-12-11"},
     {"id": "T-256-4", "scenario": "T-256 战术空单(S-736 条件 + 止盈 + 保本)",
      "statement": "站上 50 日均线的成员比例(state breadth_above_ma50)2026-12-11 低于 2026-11-05 的 4.17%",
-     "variable": "state:breadth_above_ma50", "op": "lt", "lo": 0.0416666666666667, "prob": 0.5, "horizon_d": "2026-12-11"},
+     "variable": "state:breadth_above_ma50", "op": "lt", "hi": 0.0416666666666667, "prob": 0.5, "horizon_d": "2026-12-11"},
     {"id": "T-256-5", "scenario": "T-256 战术空单(S-736 条件 + 止盈 + 保本)",
      "statement": "30 日未平仓量变化(state oi_chg_30d)2026-12-11 转正 —— 2026-11-05 为 −0.1614",
      "variable": "state:oi_chg_30d", "op": "gt", "lo": 0, "prob": 0.4, "horizon_d": "2026-12-11"}
