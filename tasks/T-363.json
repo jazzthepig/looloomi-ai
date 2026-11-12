@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-12",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "notes": "2026-11-12T17:55:00Z Seth 开卡(台账「S-835 更正二」)。同轮:T-359(lane-a@970a6022)CHANGES —— (i) 改对不带候选的账户算、(ii) 统计量改回「S-835 更正」口径,见 §Seth-1113d。",
+  "id": "T-363",
+  "owner": "lane-c",
+  "title": "T-361 准入表按「S-835 更正二」重报 (i):与账户的相关对不带候选的账户算",
+  "source": "台账「S-835 更正二」;你 T-361 的 docs/research/t361_admission_table.py(第 228–294 行:corr(Fw, A) 的 A 是叠加后的账户)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-363.json"
+  ],
+  "acceptance": {
+    "check": "同 T-361 的装配与尺寸,只改 (i):与账户的相关 = 族月贡献 Fw vs 不带族的账户月收益 A_base(全样本 + 压力月,压力月按 A_base 定);与 R-v2 的相关不变。叠加后的相关照报一列、不判。先自检:造一条与 A_base 独立的随机序列、按同一尺寸规则叠上去,新口径相关应 ≈ 0、旧口径应 ≈ 0.316(写进结果 json)。8 族每族一行、两个窗口并排,(i)–(iv) 重判;标出哪些族的结论因口径改变而翻转。只读、不入库;脚本 nohup,结果落文件;取台账用 `sed -n '/^## S-835 更正二/,/^## /p' REFUTATION_LEDGER.md`。",
+    "expect": "docs/research/T-363_*.md + 脚本 + 结果 json(含自检两数)+ scenarios/lane-c-T-363.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-c/T-363。"
+  },
+  "prior_value": "T-361 里 S-642 只挡在 (i)(压力月 +0.75),按旧口径独立候选的相关也有 0.316,所以这一行可能翻。"
+}
