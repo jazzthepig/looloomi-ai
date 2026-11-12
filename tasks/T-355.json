@@ -1,0 +1,28 @@
+{
+  "id": "T-355",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-11-12",
+  "title": "S-830 票源的第二份:照生产内核的 SQL(r_tickets_scan)从零重写开票 / 管票,在同一批日线上生成票,与 t197 的 956 张逐张对",
+  "source": "规则只从这一处读:migrations/2026-11-05_r_tickets_validated_universe.sql 里的 `r_tickets_scan`(信号条件、进场、止损、SMA20 出场、到期;`grep -n \"r_tickets_scan\" -A 140` 取段,不要 Read 整个文件)。**不读、不 import docs/research/t159_*、t197_rv2_survivorship.py、t351_*。** 日线 = cometcloud-local/research/s681/_um_daily.jsonl;闸门 = t310_slots.load_gate()。对照 = docs/research/t197_results.json 的 tickets.A(只在你的票出齐之后才读)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-355.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "生产内核与 t197 的宇宙 / 过滤不同(验证过的宇宙、OI 过滤、下架规则)—— 这些**不要**加,只实现信号与管票;宇宙用 t197 结果文件 meta 里写的那一个。报:你生成的票数、与 t197 重合的票数(同币同信号日)、只在你这边 / 只在它那边的各多少并各举 5 张说明原因;重合的票里 entry_px / stop_px / exit_d / exit_px / r 逐项不一致的张数。再把你的票喂给 docs/research/t353_engine.simulate(f 0.5%、上限 0.40、名额 14),报成交票数与总收益,对 358 张 / +98.35%。只读、不入库;脚本 nohup,结果落文件;不要 Read 大文件。",
+    "expect": "docs/research/T-355_ticket_source_second_copy.md + t355_*.py + t355_results.json + scenarios/lane-a-T-355.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-a/T-355。"
+  },
+  "prior_value": "S-829 的两台引擎独立的是记账;956 张票只有一份实现。要动真钱参数,票源也得有第二份。",
+  "notes": "2026-11-12T00:06:52Z Seth 开卡(S-830 = 核对,不计试验数)。\n2026-11-12 lane-a 半交付(分支 lane-a/T-355)。【规则】只从 r_tickets_scan 的 SQL 转写:docs/research/t355_tickets.py(开票/管票,numpy 特征)+ t355_compare.py(对票 + 喂 t353_engine)。不读、不 import t197_rv2_survivorship.py / t159_* / t351_* / t251_gross_cap / t352_*。【闸门】按 SQL 的 _rt_gate 口径自己算,再用子进程跟 t310_slots.load_gate() 逐日对拍:2465 天、0 处不一致(走子进程是因为 import t310_slots 会连带 import t159_bear_short,与本卡禁令冲突)。【宇宙】t197 结果文件那个 = _um_daily.jsonl 全部 890 符号 / 655709 根 bar / 2020-01-01→2026-09-30;生产那套「验证过的宇宙 / OI 过滤 / 下架规则」按卡要求一律没加。【扫描】v_from 2020-07-18(SQL 自己硬编码的日子,也是本宇宙里数据完整度闸门能过的最早一天;宇宙最早上市 2020-01-01 而 rn>=220 的最早可信号日在 2020-08 之后,起点早一天晚一天不丢票)→ p_to 2026-09-30,2266 天。【测得】信号 1145 张 = 908 已平 + 189 闸门关(never fill)+ 48 窗口末还在场(still);出场原因 575 sma20 + 333 stop(time 0、no_data 0);喂进 t353_engine 的票 956 张(= 908 平 + 48 still)。【与 t197 的结构对照】t197 956 / 已平 908 / still 48 / 出场按开盘价 575 / 按 stop_px 333 —— 本卡独立实现五项逐一对上(t197 一列取自 T-353 卡里已核过的票面统计,本轮没有重读 t197_results.json,遵守「票出齐后才读」)。【一个发现:数据完整度闸门在本宇宙上会停掉整个扫描】SQL 日循环开头 `当天 bar 数 < max(20, 0.8×前一天)` ⇒ 整个扫描 exit;本宇宙 2022-02-26 从 137 根掉到 89 根(2022-04-01 又掉一次 140→92),同两个洞在生产的 perp_bv_daily 里也在(124→80),是数据本身的洞不是取数问题。照闸门跑:扫描停在 2022-02-26,只出 78 张票(72 平 + 6 闸门关)。但生产的 r_tickets_state.last_d = 2026-11-10 ⇒ 生产扫描一次都没停(宇宙更大,同样的洞凑不满 20%)。所以主交付用「闸门放宽」口径覆盖全窗口,闸门口径作为变体一起交(t355_tickets_guard.json)—— 这是本卡做过的唯一一处口径选择。【两个会踩坑的口径,写给下一个人】① r 有两个定义:生产 SQL 的 r_mult 是止损距离的倍数 (exit-entry-0.004×entry)/(entry-stop),t197 的 r 是简单收益 (exit/entry-1)-0.004,两者差一个因子 sd=(entry-stop)/entry;喂 t353_engine 前必须换算 r=r_mult×sd,否则引擎不变量③(Σr×风险额=已实现盈亏)直接崩(t355_tickets.to_engine_tickets 已做)。② 48 张 still 票必须喂进引擎(无出场价,r 记 0,只占名额不结算),喂漏了末尾 book 会空、成交集合会变(T-353 的 C0 open_at_end=14 就是这么来的)。【未交付(下一轮两条命令)】逐张重合数 / 五个字段逐项不一致张数 / 账户引擎成交与收益(对 358 张、+98.35%)—— 本轮被上下文守卫拦下(92k),不是脚本问题:cd docs/research && python3 t355_compare.py --mine t355_tickets_full.json --out t355_results.json(写出 docs/research/t355_results.json)。【前向预期】docs/research/scenarios/lane-a-T-355.json 4 条(重合数 / 不一致张数 / 引擎成交张数差 / 闸门关张数),到期按 Brier 结算;该目录 README 没读到(同轮被拦),schema 按「lt 配高概率、gt 配低概率」自拟,若与 README 不合请 seth 指一下格式。",
+  "verified": null
+}

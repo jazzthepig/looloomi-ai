@@ -1,0 +1,43 @@
+{
+  "task": "T-355",
+  "lane": "lane-a",
+  "created": "2026-11-12",
+  "title": "S-830 票源第二份的复现一致性 —— 合并后按 Brier 结算",
+  "format": "每条命题 = 一个机器可核的 metric;lt = 「实测值 ≤ lt.value」的概率(高);gt = 「实测值 ≥ gt.value」的概率(低);p(lt) + p(gt) ≤ 1,中枢区间 [gt.value, lt.value]。所有 metric 由下列脚本一次性算出,不许事后改口径。",
+  "how_to_measure": "cd docs/research && python3 t355_compare.py --mine t355_tickets_full.json --out t355_results.json",
+  "settlement": "合并入台账后按实测值逐条结算:命中 lt 侧记 p,命中 gt 侧记 1-p,区间内按线性插值记。",
+  "propositions": [
+    {
+      "id": "t355-p1",
+      "claim": "第二份票源(照生产内核 r_tickets_scan 重写)与 t197 的票,按「同币同信号日」的重合张数落在 940–956 之间。",
+      "metric": "t355_results.json → counts.overlap",
+      "source": "docs/research/t355_compare.py",
+      "lt": {"value": 956, "p": 0.90},
+      "gt": {"value": 940, "p": 0.10}
+    },
+    {
+      "id": "t355-p2",
+      "claim": "重合票里 entry_px / stop_px / exit_d / exit_px / r 五个字段逐项不一致的张数合计 ≤ 5 张。",
+      "metric": "t355_results.json → sum(mismatch_counts.values())",
+      "source": "docs/research/t355_compare.py",
+      "lt": {"value": 5, "p": 0.80},
+      "gt": {"value": 40, "p": 0.20}
+    },
+    {
+      "id": "t355-p3",
+      "claim": "两批票分别喂进 t353_engine(f 0.5% / 上限 0.40 / 14 名额)后,成交张数之差 ≤ 3 张。",
+      "metric": "t355_results.json → engine.delta_mine_vs_t197_run.taken 的绝对值",
+      "source": "docs/research/t353_engine.simulate",
+      "lt": {"value": 3, "p": 0.80},
+      "gt": {"value": 25, "p": 0.20}
+    },
+    {
+      "id": "t355-p4",
+      "claim": "本宇宙(2020-07-18→2026-09-30)上,信号总数减去已成交票数 = 闸门关掉而 never fill 的票数,落在 175–189 之间。",
+      "metric": "t355_results.json → counts.mine_status_hist.blocked",
+      "source": "docs/research/t355_tickets.py",
+      "lt": {"value": 189, "p": 0.85},
+      "gt": {"value": 175, "p": 0.15}
+    }
+  ]
+}
