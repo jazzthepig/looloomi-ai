@@ -77,13 +77,12 @@ Built for human LPs and AI agents equally.
 forward track record — the validation apparatus IS the product.** Ambition raises the evidence bar
 (§ALTITUDE). Honesty over optimism; the graveyard is the asset. *Build things that feel alive.*
 
-**⚠️ RETURN HIERARCHY (Jazz — priority order, not a menu; full text `docs/HIGH_DIM_ONTOLOGY.md` §5b):**
-① **capture beta** (long-only hold of the panel — the FoF core; every sleeve's benchmark is
-"hold the panel", NEVER 0) → ② **beta+** (overweight better assets INSIDE the book — CIS's job,
-tilt not L/S) → ③ **beta multiplier** (**0–1x**, never short; leverage only at portfolio layer, **≤5x**, Jazz 10-21) → ④ **pure alpha**
-(neutral/hedged — hardest, LAST). **We built it upside-down:** R76–R94 were all ④ (cross-sectional
-demean discards beta by construction) while ① was never built — **that specification error, not
-luck, is the 15-attempt graveyard.** Default long-only: tilt, don't neutralize. β-adjustment is for
+**⚠️ RETURN HIERARCHY (Jazz — an order of priority, NOT a ban on higher layers; full text `docs/HIGH_DIM_ONTOLOGY.md` §5b):**
+① **capture beta** (long-only hold of the panel — the FoF core; long sleeves benchmark vs
+"hold the panel", never 0; hedges / carry / cash are judged on the whole account, by time to recover) → ② **beta+** (overweight better assets INSIDE the book — CIS's job,
+tilt not L/S) → ③ **exposure** (may be flat or SHORT: clear downtrend → short, unclear → low; leverage only at portfolio layer, **≤5x**) → ④ **pure alpha**
+(neutral/hedged — hardest, LAST). **We built it upside-down:** R76–R94 were all ④ while ① was never built — **that specification error, not
+luck, is the 15-attempt graveyard.** **Long-only = the ①/② product, not a house rule (Jazz 11-12, S-820): shorts go by evidence.** Tilt, don't neutralize. β-adjustment is for
 ATTRIBUTION (R62), never for neutralizing a book. Report total return vs hold-the-panel, then excess.
 
 **The bar:** every claim is guilty until proven with out-of-sample outcomes. Every sleeve needs a
@@ -210,7 +209,6 @@ git push origin main
 
 **EVERY line ends in `&&` except the last.** Bare newline-separated commands are not a gate: the
 shell runs the next line regardless (S-360: preflight printed `🔴 2 FAILED`, the commit landed anyway).
-Trailing `&&` also makes a partial paste wait instead of running half a batch.
 
 **NO TRAILING `#` COMMENTS ON ANY COMMAND LINE. NO INLINE ANNOTATION. EVER.** The template once carried
 them and the example is what gets copied. Explanation goes in prose outside the fence; no blank lines
@@ -244,5 +242,5 @@ ONDO precision (thin borders, no noise) · data always present — skeletons, ne
 ## Weekly strategy review (Sunday/Monday or ad hoc "strategy review")
 
 1h: adversarial reads 30' (rotate lens: trader-agent / LP / competitor / developer) →
-infra-debt check 15' → ONE strategic priority 15'. Output → `WEEKLY_REVIEW.md`. The builder and
-the strategist use different mental OSes; this hour is the structural fix for proximity blindness.
+infra-debt check 15' → ONE strategic priority 15'. Output → `WEEKLY_REVIEW.md`. Builder and strategist
+use different mental OSes.

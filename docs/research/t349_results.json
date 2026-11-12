@@ -1,0 +1,1102 @@
+{
+ "meta": {
+  "card": "T-349",
+  "lane": "lane-a",
+  "ran_utc": "2026-11-11T17:18:08.631625+00:00",
+  "spec_source": "REFUTATION_LEDGER.md ## S-825 \u2014(\u53ea\u8bfb\u767b\u8bb0\u90a3\u4e00\u8282)",
+  "blind_note": "\u672c\u6587\u4ef6\u4e0d\u8bfb `## S-825 \u7ed3\u679c` \u90a3\u4e00\u8282\u3001\u4e0d\u8bfb docs/research/s825_*;C0 \u88c5\u914d\u76f4\u63a5 import B \u9053\u7684 docs/research/t343_blind.py,\u53e0\u52a0\u5f15\u64ce\u7528 docs/research/t251_gross_cap.py:simulate(\u672a\u6539\u4e00\u5b57),\u7968\u6e90 docs/research/t197_results.json \u2192 tickets.A\u3002",
+  "window": [
+   "2021-10-11",
+   "2026-10-30"
+  ],
+  "reb": 21,
+  "cost_bps": 20,
+  "overlay": {
+   "ticket_source": "docs/research/t197_results.json \u2192 tickets.A",
+   "engine": "docs/research/t251_gross_cap.py:simulate",
+   "cap_n": 14,
+   "equity0": 630.0,
+   "c0": {
+    "f": 0.005,
+    "gross_cap": 0.4
+   },
+   "grid": {
+    "f": [
+     0.0075,
+     0.01,
+     0.0125,
+     0.015
+    ],
+    "gross_cap": [
+     1.2,
+     2.0
+    ]
+   }
+  },
+  "criteria": {
+   "uw_tol_days": 30,
+   "cagr_tol_pp": 3.0,
+   "bite_tol_pp": 1.0
+  },
+  "c0_expect": {
+   "total_return": 1.681,
+   "uw_days": 824
+  }
+ },
+ "validation": {
+  "nav_start_computed": "2021-10-11",
+  "nav_start_expected": "2021-10-11",
+  "nav_start_matches": true,
+  "n_common_days": 1333,
+  "common_first": "2021-07-13",
+  "common_last": "2026-10-30",
+  "exit_reason_mismatch": 0,
+  "exit_reason_mismatch_sample": [],
+  "n_tickets": 956
+ },
+ "cells": {
+  "C0": {
+   "key": "C0",
+   "risk_frac": 0.005,
+   "gross_cap": 0.4,
+   "overlay": {
+    "risk_frac": 0.005,
+    "gross_cap": 0.4,
+    "cap_n": 14,
+    "equity0": 630.0,
+    "n_days": 2237,
+    "curve_first": "2020-08-16",
+    "curve_last": "2026-09-30",
+    "taken": 208,
+    "blocked_gross": 114,
+    "blocked_cap": 615,
+    "blocked_min": 2,
+    "blocked_coin": 17,
+    "overlay_total_return": 0.635027,
+    "overlay_cagr": 0.083527,
+    "overlay_max_dd": -0.257097,
+    "gross_ratio_peak": 0.492877,
+    "gross_ratio_days_over_1": 0,
+    "gross_ratio_median": 0.121831
+   },
+   "metrics": {
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "total_return": 1.680953,
+    "cagr": 0.215428,
+    "vol_ann": 0.312813,
+    "max_drawdown": -0.347264,
+    "calmar": 0.6204,
+    "worst_month": -0.098081,
+    "worst_month_key": "2022-01",
+    "uw_cal_days": 824,
+    "uw_trading_days": 563,
+    "uw_peak_date": "2026-09-03",
+    "uw_end_date": "2026-10-30",
+    "yearly": {
+     "2021": 0.278762,
+     "2022": -0.197983,
+     "2023": 0.276104,
+     "2024": 0.427769,
+     "2025": 0.426468,
+     "2026": 0.005796
+    },
+    "weights_mean": {
+     "crypto": 0.2517,
+     "equity": 0.3488,
+     "gold": 0.2764
+    },
+    "weights_max": {
+     "crypto": 0.4,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    "n_rebalances": 61
+   },
+   "selfcheck": {
+    "total_return": 1.680953,
+    "total_expect": 1.681,
+    "total_ok": true,
+    "uw_cal_days": 824,
+    "uw_trading_days": 563,
+    "uw_expect": 824,
+    "uw_ok_cal": true,
+    "uw_ok_trading": false
+   }
+  },
+  "f0.75_cap1.2": {
+   "key": "f0.75_cap1.2",
+   "risk_frac": 0.0075,
+   "gross_cap": 1.2,
+   "overlay": {
+    "risk_frac": 0.0075,
+    "gross_cap": 1.2,
+    "cap_n": 14,
+    "equity0": 630.0,
+    "n_days": 2237,
+    "curve_first": "2020-08-16",
+    "curve_last": "2026-09-30",
+    "taken": 165,
+    "blocked_gross": 0,
+    "blocked_cap": 778,
+    "blocked_min": 1,
+    "blocked_coin": 12,
+    "overlay_total_return": 1.08953,
+    "overlay_cagr": 0.12777,
+    "overlay_max_dd": -0.352321,
+    "gross_ratio_peak": 0.725152,
+    "gross_ratio_days_over_1": 0,
+    "gross_ratio_median": 0.220993
+   },
+   "metrics": {
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "total_return": 2.259956,
+    "cagr": 0.263367,
+    "vol_ann": 0.39636,
+    "max_drawdown": -0.431159,
+    "calmar": 0.6108,
+    "worst_month": -0.130761,
+    "worst_month_key": "2025-02",
+    "uw_cal_days": 828,
+    "uw_trading_days": 567,
+    "uw_peak_date": "2026-09-22",
+    "uw_end_date": "2026-10-30",
+    "yearly": {
+     "2021": 0.302117,
+     "2022": -0.242998,
+     "2023": 0.340647,
+     "2024": 0.424208,
+     "2025": 0.688985,
+     "2026": 0.025536
+    },
+    "weights_mean": {
+     "crypto": 0.2517,
+     "equity": 0.3488,
+     "gold": 0.2764
+    },
+    "weights_max": {
+     "crypto": 0.4,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    "n_rebalances": 61
+   }
+  },
+  "f0.75_cap2": {
+   "key": "f0.75_cap2",
+   "risk_frac": 0.0075,
+   "gross_cap": 2.0,
+   "overlay": {
+    "risk_frac": 0.0075,
+    "gross_cap": 2.0,
+    "cap_n": 14,
+    "equity0": 630.0,
+    "n_days": 2237,
+    "curve_first": "2020-08-16",
+    "curve_last": "2026-09-30",
+    "taken": 165,
+    "blocked_gross": 0,
+    "blocked_cap": 778,
+    "blocked_min": 1,
+    "blocked_coin": 12,
+    "overlay_total_return": 1.08953,
+    "overlay_cagr": 0.12777,
+    "overlay_max_dd": -0.352321,
+    "gross_ratio_peak": 0.725152,
+    "gross_ratio_days_over_1": 0,
+    "gross_ratio_median": 0.220993
+   },
+   "metrics": {
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "total_return": 2.259956,
+    "cagr": 0.263367,
+    "vol_ann": 0.39636,
+    "max_drawdown": -0.431159,
+    "calmar": 0.6108,
+    "worst_month": -0.130761,
+    "worst_month_key": "2025-02",
+    "uw_cal_days": 828,
+    "uw_trading_days": 567,
+    "uw_peak_date": "2026-09-22",
+    "uw_end_date": "2026-10-30",
+    "yearly": {
+     "2021": 0.302117,
+     "2022": -0.242998,
+     "2023": 0.340647,
+     "2024": 0.424208,
+     "2025": 0.688985,
+     "2026": 0.025536
+    },
+    "weights_mean": {
+     "crypto": 0.2517,
+     "equity": 0.3488,
+     "gold": 0.2764
+    },
+    "weights_max": {
+     "crypto": 0.4,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    "n_rebalances": 61
+   }
+  },
+  "f1_cap1.2": {
+   "key": "f1_cap1.2",
+   "risk_frac": 0.01,
+   "gross_cap": 1.2,
+   "overlay": {
+    "risk_frac": 0.01,
+    "gross_cap": 1.2,
+    "cap_n": 14,
+    "equity0": 630.0,
+    "n_days": 2237,
+    "curve_first": "2020-08-16",
+    "curve_last": "2026-09-30",
+    "taken": 164,
+    "blocked_gross": 0,
+    "blocked_cap": 780,
+    "blocked_min": 0,
+    "blocked_coin": 12,
+    "overlay_total_return": 1.50407,
+    "overlay_cagr": 0.161569,
+    "overlay_max_dd": -0.434053,
+    "gross_ratio_peak": 0.908612,
+    "gross_ratio_days_over_1": 0,
+    "gross_ratio_median": 0.275342
+   },
+   "metrics": {
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "total_return": 2.758502,
+    "cagr": 0.29944,
+    "vol_ann": 0.478971,
+    "max_drawdown": -0.505023,
+    "calmar": 0.5929,
+    "worst_month": -0.163975,
+    "worst_month_key": "2025-02",
+    "uw_cal_days": 828,
+    "uw_trading_days": 567,
+    "uw_peak_date": "2026-09-22",
+    "uw_end_date": "2026-10-30",
+    "yearly": {
+     "2021": 0.388162,
+     "2022": -0.272586,
+     "2023": 0.368529,
+     "2024": 0.44199,
+     "2025": 0.827715,
+     "2026": 0.031972
+    },
+    "weights_mean": {
+     "crypto": 0.2517,
+     "equity": 0.3488,
+     "gold": 0.2764
+    },
+    "weights_max": {
+     "crypto": 0.4,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    "n_rebalances": 61
+   }
+  },
+  "f1_cap2": {
+   "key": "f1_cap2",
+   "risk_frac": 0.01,
+   "gross_cap": 2.0,
+   "overlay": {
+    "risk_frac": 0.01,
+    "gross_cap": 2.0,
+    "cap_n": 14,
+    "equity0": 630.0,
+    "n_days": 2237,
+    "curve_first": "2020-08-16",
+    "curve_last": "2026-09-30",
+    "taken": 164,
+    "blocked_gross": 0,
+    "blocked_cap": 780,
+    "blocked_min": 0,
+    "blocked_coin": 12,
+    "overlay_total_return": 1.50407,
+    "overlay_cagr": 0.161569,
+    "overlay_max_dd": -0.434053,
+    "gross_ratio_peak": 0.908612,
+    "gross_ratio_days_over_1": 0,
+    "gross_ratio_median": 0.275342
+   },
+   "metrics": {
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "total_return": 2.758502,
+    "cagr": 0.29944,
+    "vol_ann": 0.478971,
+    "max_drawdown": -0.505023,
+    "calmar": 0.5929,
+    "worst_month": -0.163975,
+    "worst_month_key": "2025-02",
+    "uw_cal_days": 828,
+    "uw_trading_days": 567,
+    "uw_peak_date": "2026-09-22",
+    "uw_end_date": "2026-10-30",
+    "yearly": {
+     "2021": 0.388162,
+     "2022": -0.272586,
+     "2023": 0.368529,
+     "2024": 0.44199,
+     "2025": 0.827715,
+     "2026": 0.031972
+    },
+    "weights_mean": {
+     "crypto": 0.2517,
+     "equity": 0.3488,
+     "gold": 0.2764
+    },
+    "weights_max": {
+     "crypto": 0.4,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    "n_rebalances": 61
+   }
+  },
+  "f1.25_cap1.2": {
+   "key": "f1.25_cap1.2",
+   "risk_frac": 0.0125,
+   "gross_cap": 1.2,
+   "overlay": {
+    "risk_frac": 0.0125,
+    "gross_cap": 1.2,
+    "cap_n": 14,
+    "equity0": 630.0,
+    "n_days": 2237,
+    "curve_first": "2020-08-16",
+    "curve_last": "2026-09-30",
+    "taken": 164,
+    "blocked_gross": 0,
+    "blocked_cap": 780,
+    "blocked_min": 0,
+    "blocked_coin": 12,
+    "overlay_total_return": 1.969055,
+    "overlay_cagr": 0.194304,
+    "overlay_max_dd": -0.504417,
+    "gross_ratio_peak": 1.070429,
+    "gross_ratio_days_over_1": 24,
+    "gross_ratio_median": 0.333311
+   },
+   "metrics": {
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "total_return": 3.296723,
+    "cagr": 0.334304,
+    "vol_ann": 0.556622,
+    "max_drawdown": -0.568617,
+    "calmar": 0.5879,
+    "worst_month": -0.192466,
+    "worst_month_key": "2025-02",
+    "uw_cal_days": 831,
+    "uw_trading_days": 568,
+    "uw_peak_date": "2026-09-22",
+    "uw_end_date": "2026-10-30",
+    "yearly": {
+     "2021": 0.455446,
+     "2022": -0.302302,
+     "2023": 0.395937,
+     "2024": 0.483898,
+     "2025": 0.964673,
+     "2026": 0.039714
+    },
+    "weights_mean": {
+     "crypto": 0.2517,
+     "equity": 0.3488,
+     "gold": 0.2764
+    },
+    "weights_max": {
+     "crypto": 0.4,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    "n_rebalances": 61
+   }
+  },
+  "f1.25_cap2": {
+   "key": "f1.25_cap2",
+   "risk_frac": 0.0125,
+   "gross_cap": 2.0,
+   "overlay": {
+    "risk_frac": 0.0125,
+    "gross_cap": 2.0,
+    "cap_n": 14,
+    "equity0": 630.0,
+    "n_days": 2237,
+    "curve_first": "2020-08-16",
+    "curve_last": "2026-09-30",
+    "taken": 164,
+    "blocked_gross": 0,
+    "blocked_cap": 780,
+    "blocked_min": 0,
+    "blocked_coin": 12,
+    "overlay_total_return": 1.969055,
+    "overlay_cagr": 0.194304,
+    "overlay_max_dd": -0.504417,
+    "gross_ratio_peak": 1.070429,
+    "gross_ratio_days_over_1": 24,
+    "gross_ratio_median": 0.333311
+   },
+   "metrics": {
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "total_return": 3.296723,
+    "cagr": 0.334304,
+    "vol_ann": 0.556622,
+    "max_drawdown": -0.568617,
+    "calmar": 0.5879,
+    "worst_month": -0.192466,
+    "worst_month_key": "2025-02",
+    "uw_cal_days": 831,
+    "uw_trading_days": 568,
+    "uw_peak_date": "2026-09-22",
+    "uw_end_date": "2026-10-30",
+    "yearly": {
+     "2021": 0.455446,
+     "2022": -0.302302,
+     "2023": 0.395937,
+     "2024": 0.483898,
+     "2025": 0.964673,
+     "2026": 0.039714
+    },
+    "weights_mean": {
+     "crypto": 0.2517,
+     "equity": 0.3488,
+     "gold": 0.2764
+    },
+    "weights_max": {
+     "crypto": 0.4,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    "n_rebalances": 61
+   }
+  },
+  "f1.5_cap1.2": {
+   "key": "f1.5_cap1.2",
+   "risk_frac": 0.015,
+   "gross_cap": 1.2,
+   "overlay": {
+    "risk_frac": 0.015,
+    "gross_cap": 1.2,
+    "cap_n": 14,
+    "equity0": 630.0,
+    "n_days": 2237,
+    "curve_first": "2020-08-16",
+    "curve_last": "2026-09-30",
+    "taken": 178,
+    "blocked_gross": 9,
+    "blocked_cap": 755,
+    "blocked_min": 0,
+    "blocked_coin": 14,
+    "overlay_total_return": 1.494906,
+    "overlay_cagr": 0.160875,
+    "overlay_max_dd": -0.578739,
+    "gross_ratio_peak": 1.200853,
+    "gross_ratio_days_over_1": 45,
+    "gross_ratio_median": 0.337236
+   },
+   "metrics": {
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "total_return": 2.498109,
+    "cagr": 0.281114,
+    "vol_ann": 0.653314,
+    "max_drawdown": -0.633683,
+    "calmar": 0.4436,
+    "worst_month": -0.242868,
+    "worst_month_key": "2025-02",
+    "uw_cal_days": 838,
+    "uw_trading_days": 573,
+    "uw_peak_date": "2025-11-07",
+    "uw_end_date": "2026-10-30",
+    "yearly": {
+     "2021": 0.591361,
+     "2022": -0.307481,
+     "2023": 0.249304,
+     "2024": 0.379286,
+     "2025": 0.831577,
+     "2026": 0.005739
+    },
+    "weights_mean": {
+     "crypto": 0.2517,
+     "equity": 0.3488,
+     "gold": 0.2764
+    },
+    "weights_max": {
+     "crypto": 0.4,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    "n_rebalances": 61
+   }
+  },
+  "f1.5_cap2": {
+   "key": "f1.5_cap2",
+   "risk_frac": 0.015,
+   "gross_cap": 2.0,
+   "overlay": {
+    "risk_frac": 0.015,
+    "gross_cap": 2.0,
+    "cap_n": 14,
+    "equity0": 630.0,
+    "n_days": 2237,
+    "curve_first": "2020-08-16",
+    "curve_last": "2026-09-30",
+    "taken": 164,
+    "blocked_gross": 0,
+    "blocked_cap": 780,
+    "blocked_min": 0,
+    "blocked_coin": 12,
+    "overlay_total_return": 2.466499,
+    "overlay_cagr": 0.224874,
+    "overlay_max_dd": -0.567261,
+    "gross_ratio_peak": 1.219227,
+    "gross_ratio_days_over_1": 48,
+    "gross_ratio_median": 0.381498
+   },
+   "metrics": {
+    "n_days": 1270,
+    "first": "2021-10-11",
+    "last": "2026-10-30",
+    "years": 5.055,
+    "total_return": 3.855996,
+    "cagr": 0.366998,
+    "vol_ann": 0.63201,
+    "max_drawdown": -0.625164,
+    "calmar": 0.587,
+    "worst_month": -0.218653,
+    "worst_month_key": "2025-02",
+    "uw_cal_days": 831,
+    "uw_trading_days": 568,
+    "uw_peak_date": "2026-09-25",
+    "uw_end_date": "2026-10-30",
+    "yearly": {
+     "2021": 0.523629,
+     "2022": -0.331347,
+     "2023": 0.420493,
+     "2024": 0.526323,
+     "2025": 1.097307,
+     "2026": 0.048216
+    },
+    "weights_mean": {
+     "crypto": 0.2517,
+     "equity": 0.3488,
+     "gold": 0.2764
+    },
+    "weights_max": {
+     "crypto": 0.4,
+     "equity": 0.4,
+     "gold": 0.3
+    },
+    "n_rebalances": 61
+   }
+  }
+ },
+ "c0": {
+  "key": "C0",
+  "risk_frac": 0.005,
+  "gross_cap": 0.4,
+  "overlay": {
+   "risk_frac": 0.005,
+   "gross_cap": 0.4,
+   "cap_n": 14,
+   "equity0": 630.0,
+   "n_days": 2237,
+   "curve_first": "2020-08-16",
+   "curve_last": "2026-09-30",
+   "taken": 208,
+   "blocked_gross": 114,
+   "blocked_cap": 615,
+   "blocked_min": 2,
+   "blocked_coin": 17,
+   "overlay_total_return": 0.635027,
+   "overlay_cagr": 0.083527,
+   "overlay_max_dd": -0.257097,
+   "gross_ratio_peak": 0.492877,
+   "gross_ratio_days_over_1": 0,
+   "gross_ratio_median": 0.121831
+  },
+  "metrics": {
+   "n_days": 1270,
+   "first": "2021-10-11",
+   "last": "2026-10-30",
+   "years": 5.055,
+   "total_return": 1.680953,
+   "cagr": 0.215428,
+   "vol_ann": 0.312813,
+   "max_drawdown": -0.347264,
+   "calmar": 0.6204,
+   "worst_month": -0.098081,
+   "worst_month_key": "2022-01",
+   "uw_cal_days": 824,
+   "uw_trading_days": 563,
+   "uw_peak_date": "2026-09-03",
+   "uw_end_date": "2026-10-30",
+   "yearly": {
+    "2021": 0.278762,
+    "2022": -0.197983,
+    "2023": 0.276104,
+    "2024": 0.427769,
+    "2025": 0.426468,
+    "2026": 0.005796
+   },
+   "weights_mean": {
+    "crypto": 0.2517,
+    "equity": 0.3488,
+    "gold": 0.2764
+   },
+   "weights_max": {
+    "crypto": 0.4,
+    "equity": 0.4,
+    "gold": 0.3
+   },
+   "n_rebalances": 61
+  },
+  "selfcheck": {
+   "total_return": 1.680953,
+   "total_expect": 1.681,
+   "total_ok": true,
+   "uw_cal_days": 824,
+   "uw_trading_days": 563,
+   "uw_expect": 824,
+   "uw_ok_cal": true,
+   "uw_ok_trading": false
+  }
+ },
+ "judgement": {
+  "c0": {
+   "cagr": 0.215428,
+   "total_return": 1.680953,
+   "uw_cal_days": 824,
+   "uw_trading_days": 563,
+   "uw_ref_used": 824,
+   "uw_ref_kind": "cal",
+   "max_drawdown": -0.347264,
+   "worst_month": -0.098081,
+   "worst_month_key": "2022-01",
+   "yearly": {
+    "2021": 0.278762,
+    "2022": -0.197983,
+    "2023": 0.276104,
+    "2024": 0.427769,
+    "2025": 0.426468,
+    "2026": 0.005796
+   }
+  },
+  "thresholds": {
+   "cagr_thr": 0.245428,
+   "uw_thr": 854
+  },
+  "per_f": {
+   "0.75": {
+    "risk_frac": 0.0075,
+    "cells": {
+     "1.2": {
+      "cagr": 0.263367,
+      "uw_cal_days": 828,
+      "uw_trading_days": 567,
+      "max_drawdown": -0.431159,
+      "worst_month": -0.130761,
+      "worst_month_key": "2025-02",
+      "i_uw": {
+       "value": 828,
+       "thr": 854,
+       "ok": true,
+       "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0+30 \u5929"
+      },
+      "ii_cagr": {
+       "value": 0.263367,
+       "thr": 0.245428,
+       "ok": true,
+       "text": "CAGR \u2265 C0+3.0pp/\u5e74"
+      },
+      "stand": true
+     },
+     "2": {
+      "cagr": 0.263367,
+      "uw_cal_days": 828,
+      "uw_trading_days": 567,
+      "max_drawdown": -0.431159,
+      "worst_month": -0.130761,
+      "worst_month_key": "2025-02",
+      "i_uw": {
+       "value": 828,
+       "thr": 854,
+       "ok": true,
+       "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0+30 \u5929"
+      },
+      "ii_cagr": {
+       "value": 0.263367,
+       "thr": 0.245428,
+       "ok": true,
+       "text": "CAGR \u2265 C0+3.0pp/\u5e74"
+      },
+      "stand": true
+     }
+    },
+    "bite_cagr_diff_pp": 0.0,
+    "iii_bite": {
+     "value_pp": 0.0,
+     "thr_pp": 1.0,
+     "ok": true,
+     "text": "\u540c\u4e00 f \u5728\u4e0a\u9650 1.20 \u4e0e 2.00 \u4e0b CAGR \u5dee < 1pp"
+    },
+    "stand": true
+   },
+   "1": {
+    "risk_frac": 0.01,
+    "cells": {
+     "1.2": {
+      "cagr": 0.29944,
+      "uw_cal_days": 828,
+      "uw_trading_days": 567,
+      "max_drawdown": -0.505023,
+      "worst_month": -0.163975,
+      "worst_month_key": "2025-02",
+      "i_uw": {
+       "value": 828,
+       "thr": 854,
+       "ok": true,
+       "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0+30 \u5929"
+      },
+      "ii_cagr": {
+       "value": 0.29944,
+       "thr": 0.245428,
+       "ok": true,
+       "text": "CAGR \u2265 C0+3.0pp/\u5e74"
+      },
+      "stand": true
+     },
+     "2": {
+      "cagr": 0.29944,
+      "uw_cal_days": 828,
+      "uw_trading_days": 567,
+      "max_drawdown": -0.505023,
+      "worst_month": -0.163975,
+      "worst_month_key": "2025-02",
+      "i_uw": {
+       "value": 828,
+       "thr": 854,
+       "ok": true,
+       "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0+30 \u5929"
+      },
+      "ii_cagr": {
+       "value": 0.29944,
+       "thr": 0.245428,
+       "ok": true,
+       "text": "CAGR \u2265 C0+3.0pp/\u5e74"
+      },
+      "stand": true
+     }
+    },
+    "bite_cagr_diff_pp": 0.0,
+    "iii_bite": {
+     "value_pp": 0.0,
+     "thr_pp": 1.0,
+     "ok": true,
+     "text": "\u540c\u4e00 f \u5728\u4e0a\u9650 1.20 \u4e0e 2.00 \u4e0b CAGR \u5dee < 1pp"
+    },
+    "stand": true
+   },
+   "1.25": {
+    "risk_frac": 0.0125,
+    "cells": {
+     "1.2": {
+      "cagr": 0.334304,
+      "uw_cal_days": 831,
+      "uw_trading_days": 568,
+      "max_drawdown": -0.568617,
+      "worst_month": -0.192466,
+      "worst_month_key": "2025-02",
+      "i_uw": {
+       "value": 831,
+       "thr": 854,
+       "ok": true,
+       "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0+30 \u5929"
+      },
+      "ii_cagr": {
+       "value": 0.334304,
+       "thr": 0.245428,
+       "ok": true,
+       "text": "CAGR \u2265 C0+3.0pp/\u5e74"
+      },
+      "stand": true
+     },
+     "2": {
+      "cagr": 0.334304,
+      "uw_cal_days": 831,
+      "uw_trading_days": 568,
+      "max_drawdown": -0.568617,
+      "worst_month": -0.192466,
+      "worst_month_key": "2025-02",
+      "i_uw": {
+       "value": 831,
+       "thr": 854,
+       "ok": true,
+       "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0+30 \u5929"
+      },
+      "ii_cagr": {
+       "value": 0.334304,
+       "thr": 0.245428,
+       "ok": true,
+       "text": "CAGR \u2265 C0+3.0pp/\u5e74"
+      },
+      "stand": true
+     }
+    },
+    "bite_cagr_diff_pp": 0.0,
+    "iii_bite": {
+     "value_pp": 0.0,
+     "thr_pp": 1.0,
+     "ok": true,
+     "text": "\u540c\u4e00 f \u5728\u4e0a\u9650 1.20 \u4e0e 2.00 \u4e0b CAGR \u5dee < 1pp"
+    },
+    "stand": true
+   },
+   "1.5": {
+    "risk_frac": 0.015,
+    "cells": {
+     "1.2": {
+      "cagr": 0.281114,
+      "uw_cal_days": 838,
+      "uw_trading_days": 573,
+      "max_drawdown": -0.633683,
+      "worst_month": -0.242868,
+      "worst_month_key": "2025-02",
+      "i_uw": {
+       "value": 838,
+       "thr": 854,
+       "ok": true,
+       "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0+30 \u5929"
+      },
+      "ii_cagr": {
+       "value": 0.281114,
+       "thr": 0.245428,
+       "ok": true,
+       "text": "CAGR \u2265 C0+3.0pp/\u5e74"
+      },
+      "stand": true
+     },
+     "2": {
+      "cagr": 0.366998,
+      "uw_cal_days": 831,
+      "uw_trading_days": 568,
+      "max_drawdown": -0.625164,
+      "worst_month": -0.218653,
+      "worst_month_key": "2025-02",
+      "i_uw": {
+       "value": 831,
+       "thr": 854,
+       "ok": true,
+       "text": "\u6700\u957f\u6c34\u4e0b \u2264 C0+30 \u5929"
+      },
+      "ii_cagr": {
+       "value": 0.366998,
+       "thr": 0.245428,
+       "ok": true,
+       "text": "CAGR \u2265 C0+3.0pp/\u5e74"
+      },
+      "stand": true
+     }
+    },
+    "bite_cagr_diff_pp": 8.5884,
+    "iii_bite": {
+     "value_pp": 8.5884,
+     "thr_pp": 1.0,
+     "ok": false,
+     "text": "\u540c\u4e00 f \u5728\u4e0a\u9650 1.20 \u4e0e 2.00 \u4e0b CAGR \u5dee < 1pp"
+    },
+    "stand": false
+   }
+  },
+  "f_star": 0.0125,
+  "f_star_rule": "\u6700\u5927\u7684\u3001\u81ea\u5df1\u7ad9\u4f4f\u4e14\u6240\u6709\u66f4\u5c0f\u7684 f \u4e5f\u90fd\u7ad9\u4f4f\u7684 f(\u8fde\u7eed\u533a\u95f4,\u4e0d\u8981\u5b64\u70b9)"
+ },
+ "drop_max_r": {
+  "f0.75_cap1.2": {
+   "dropped": {
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "tid": "ZEC:2025-09-06",
+    "r": 73.1563408984679
+   },
+   "cagr": 0.12706,
+   "total_return": 0.830547,
+   "uw_cal_days": 828,
+   "uw_trading_days": 567,
+   "max_drawdown": -0.431159,
+   "worst_month": -0.130761,
+   "worst_month_key": "2025-02",
+   "taken_after": 166,
+   "blocked_gross_after": 0,
+   "gross_ratio_peak_after": 0.725152
+  },
+  "f0.75_cap2": {
+   "dropped": {
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "tid": "ZEC:2025-09-06",
+    "r": 73.1563408984679
+   },
+   "cagr": 0.12706,
+   "total_return": 0.830547,
+   "uw_cal_days": 828,
+   "uw_trading_days": 567,
+   "max_drawdown": -0.431159,
+   "worst_month": -0.130761,
+   "worst_month_key": "2025-02",
+   "taken_after": 166,
+   "blocked_gross_after": 0,
+   "gross_ratio_peak_after": 0.725152
+  },
+  "f1_cap1.2": {
+   "dropped": {
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "tid": "ZEC:2025-09-06",
+    "r": 73.1563408984679
+   },
+   "cagr": 0.118569,
+   "total_return": 0.761898,
+   "uw_cal_days": 828,
+   "uw_trading_days": 567,
+   "max_drawdown": -0.505023,
+   "worst_month": -0.163975,
+   "worst_month_key": "2025-02",
+   "taken_after": 165,
+   "blocked_gross_after": 0,
+   "gross_ratio_peak_after": 0.908612
+  },
+  "f1_cap2": {
+   "dropped": {
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "tid": "ZEC:2025-09-06",
+    "r": 73.1563408984679
+   },
+   "cagr": 0.118569,
+   "total_return": 0.761898,
+   "uw_cal_days": 828,
+   "uw_trading_days": 567,
+   "max_drawdown": -0.505023,
+   "worst_month": -0.163975,
+   "worst_month_key": "2025-02",
+   "taken_after": 165,
+   "blocked_gross_after": 0,
+   "gross_ratio_peak_after": 0.908612
+  },
+  "f1.25_cap1.2": {
+   "dropped": {
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "tid": "ZEC:2025-09-06",
+    "r": 73.1563408984679
+   },
+   "cagr": 0.110232,
+   "total_return": 0.696515,
+   "uw_cal_days": 831,
+   "uw_trading_days": 568,
+   "max_drawdown": -0.568617,
+   "worst_month": -0.192466,
+   "worst_month_key": "2025-02",
+   "taken_after": 165,
+   "blocked_gross_after": 0,
+   "gross_ratio_peak_after": 1.070429
+  },
+  "f1.25_cap2": {
+   "dropped": {
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "tid": "ZEC:2025-09-06",
+    "r": 73.1563408984679
+   },
+   "cagr": 0.110232,
+   "total_return": 0.696515,
+   "uw_cal_days": 831,
+   "uw_trading_days": 568,
+   "max_drawdown": -0.568617,
+   "worst_month": -0.192466,
+   "worst_month_key": "2025-02",
+   "taken_after": 165,
+   "blocked_gross_after": 0,
+   "gross_ratio_peak_after": 1.070429
+  },
+  "f1.5_cap1.2": {
+   "dropped": {
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "tid": "ZEC:2025-09-06",
+    "r": 73.1563408984679
+   },
+   "cagr": 0.006128,
+   "total_return": 0.031362,
+   "uw_cal_days": 960,
+   "uw_trading_days": 660,
+   "max_drawdown": -0.674342,
+   "worst_month": -0.242868,
+   "worst_month_key": "2025-02",
+   "taken_after": 179,
+   "blocked_gross_after": 9,
+   "gross_ratio_peak_after": 1.200853
+  },
+  "f1.5_cap2": {
+   "dropped": {
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "tid": "ZEC:2025-09-06",
+    "r": 73.1563408984679
+   },
+   "cagr": 0.10071,
+   "total_return": 0.624233,
+   "uw_cal_days": 831,
+   "uw_trading_days": 568,
+   "max_drawdown": -0.625164,
+   "worst_month": -0.218653,
+   "worst_month_key": "2025-02",
+   "taken_after": 165,
+   "blocked_gross_after": 0,
+   "gross_ratio_peak_after": 1.219227
+  },
+  "C0": {
+   "dropped": {
+    "symbol": "ZEC",
+    "signal_d": "2025-09-06",
+    "tid": "ZEC:2025-09-06",
+    "r": 73.1563408984679
+   },
+   "cagr": 0.127386,
+   "total_return": 0.83323,
+   "uw_cal_days": 824,
+   "uw_trading_days": 563,
+   "max_drawdown": -0.347264,
+   "worst_month": -0.098081,
+   "worst_month_key": "2022-01",
+   "taken_after": 212,
+   "blocked_gross_after": 114,
+   "gross_ratio_peak_after": 0.461399
+  }
+ }
+}

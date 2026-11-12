@@ -1,0 +1,26 @@
+{
+  "id": "T-354",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-11-11",
+  "title": "入库:Binance 现货历史日线含已下架交易对(2017-08 → 2020-12),给 S-827 的宇宙补上死币",
+  "source": "REFUTATION_LEDGER S-827 结果;T-351 报告。入库是 Seth 的通道(CLAUDE.md 3b):走现有的守卫路径,先 `curl /internal/data-coverage` 看已有深度(基线 = 各来源的并集)。",
+  "allowed_paths": [
+    "src/",
+    "scripts/",
+    "tests/",
+    "migrations/",
+    "docs/",
+    "tasks/T-354.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "三件齐(规则 5b):调度或一次性回填脚本 + 判活(每年有多少个符号、其中多少个今天已不在交易)+ 第一批真实数据。2017-09 → 2020-07 当时在交易、之后下架的 USDT / BTC 计价现货对要在;与 binance_hist 现有行重叠的日子逐日对价(差 > 0.5% 的列出)。",
+    "expect": "入库模块 + 测试 + SPINE 一行;S-827 用新宇宙重跑另开卡。"
+  },
+  "prior_value": "R-v2 的尺寸决定赌的是右尾;右尾在 2017 山寨季出现过没有,现在的库答不了。也修掉研究宇宙的幸存者偏差(binance_hist 只有今天还在的 262 个)。",
+  "notes": "2026-11-11T18:11:15Z Seth 开卡,未动工。",
+  "verified": null
+}
