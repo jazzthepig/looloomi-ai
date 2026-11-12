@@ -1,0 +1,148 @@
+[1/6] 装配账户(照抄 s834_diversification_audit.py)…
+      对账:年化 35.7%(目标 35.7)· R-v2 风险占比 0.742(目标 0.742)· 有效来源 2.0
+[2/6] 重出套息日收益序列(carry_hl 生产核 carry_b_top_rc)…
+      宇宙 22 名 · 费率源:小时档 25288 行 + 视图 26784 行 · 口径核对(重叠 25288 格):费率最大差 1.0842021724855044e-18 / 小时数最大差 0
+      套息臂:起点 2023-06-12 → 末 2026-10-30 · 有收益的日子 1217 · 末日 2026-10-30
+[3/6] 定尺寸(自己的风险贡献 = 10%,二分)…
+[4/6] 判据 (i)–(iv)(窗口 A)…
+      A:w=1.6131710102344232 RC=0.1 相关={'months_used': 41, 'carry_vs_account_full': 0.636, 'carry_vs_account_stress': -0.017, 'carry_vs_rv2_full': 0.393, 'carry_vs_rv2_stress': -0.091, 'n_stress_months': 9}
+[5/6] 判据 (i)–(iv)(窗口 B)…
+      B:w=1.6131710102344232 RC=0.0767 相关={'months_used': 41, 'carry_vs_account_full': 0.638, 'carry_vs_account_stress': -0.017, 'carry_vs_rv2_full': 0.396, 'carry_vs_rv2_stress': -0.091, 'n_stress_months': 9}
+[6/6] 写产物: /Users/sbb/Projects/looloomi-ai-lane-a/docs/research/t359_results.json
+{
+ "reconciliation": {
+  "acct_cagr_pct": 35.72,
+  "acct_cagr_target_pct": 35.7,
+  "rv2_risk_share": 0.742,
+  "rv2_risk_share_target": 0.742,
+  "eff_sources": 2.0,
+  "vol_ann_monthly_pct": 36.7,
+  "window": [
+   "2021-10-11",
+   "2026-10-30"
+  ],
+  "months": 61,
+  "ok": true
+ },
+ "verdicts": {
+  "A_candidate_start": {
+   "i_corr_ok": false,
+   "ii_positive": true,
+   "ii_p_upper": 0.936127744510978,
+   "ii_ok": false,
+   "iii_worst20_not_worse": true,
+   "iii_eff_sources_up": true,
+   "iii_ok": true,
+   "all_ok": false
+  },
+  "B_account_start": {
+   "i_corr_ok": false,
+   "ii_positive": true,
+   "ii_p_upper": 0.9241516966067864,
+   "ii_ok": false,
+   "iii_worst20_not_worse": true,
+   "iii_eff_sources_up": true,
+   "iii_ok": true,
+   "all_ok": false
+  }
+ },
+ "same": {
+  "per_criterion": {
+   "i_corr_ok": true,
+   "ii_ok": true,
+   "iii_ok": true,
+   "all_ok": true
+  },
+  "all_same": true,
+  "note": "(iv) 两个窗口结论同向"
+ },
+ "overall": {
+  "admitted": false,
+  "summary": "有条不过 ⇒ 不准入"
+ },
+ "rv2_worst20": {
+  "span": [
+   "2024-03-15",
+   "2024-04-12"
+  ],
+  "rv2_20d_pct": -15.62,
+  "carry_return_pct_in_span": 2.408,
+  "carry_days_with_data_in_span": 20,
+  "note": "R-v2 腿自己最差的 20 个交易日(全账户窗口内)"
+ },
+ "forward": {
+  "rows": 6,
+  "count_exact": 6,
+  "positive_days": 3,
+  "first": "2026-11-06",
+  "last": "2026-11-11",
+  "nav_last": 0.99841007,
+  "note": "前向记录天数(判据 (ii) 的第二条路要 ≥60 天为正)"
+ },
+ "vs_lending": [
+  {
+   "interval": "2023H2",
+   "carry_ann_nominal_pct": 20.942,
+   "carry_ann_capital_x0.75_pct": 15.706,
+   "lend_ann_pct": 4.779,
+   "diff_cap_minus_lend_pp": 10.927,
+   "n_days": 126
+  },
+  {
+   "interval": "2024H1",
+   "carry_ann_nominal_pct": 35.672,
+   "carry_ann_capital_x0.75_pct": 26.754,
+   "lend_ann_pct": 7.516,
+   "diff_cap_minus_lend_pp": 19.238,
+   "n_days": 124
+  },
+  {
+   "interval": "2024H2",
+   "carry_ann_nominal_pct": 17.346,
+   "carry_ann_capital_x0.75_pct": 13.01,
+   "lend_ann_pct": 5.647,
+   "diff_cap_minus_lend_pp": 7.363,
+   "n_days": 128
+  },
+  {
+   "interval": "2025H1",
+   "carry_ann_nominal_pct": 5.054,
+   "carry_ann_capital_x0.75_pct": 3.79,
+   "lend_ann_pct": 4.139,
+   "diff_cap_minus_lend_pp": -0.349,
+   "n_days": 122
+  },
+  {
+   "interval": "2025H2",
+   "carry_ann_nominal_pct": 8.82,
+   "carry_ann_capital_x0.75_pct": 6.615,
+   "lend_ann_pct": 3.882,
+   "diff_cap_minus_lend_pp": 2.733,
+   "n_days": 128
+  },
+  {
+   "interval": "2026H1",
+   "carry_ann_nominal_pct": 2.669,
+   "carry_ann_capital_x0.75_pct": 2.002,
+   "lend_ann_pct": 2.978,
+   "diff_cap_minus_lend_pp": -0.975,
+   "n_days": 123
+  },
+  {
+   "interval": "2026-07+",
+   "carry_ann_nominal_pct": 6.967,
+   "carry_ann_capital_x0.75_pct": 5.226,
+   "lend_ann_pct": 3.279,
+   "diff_cap_minus_lend_pp": 1.946,
+   "n_days": 86
+  },
+  {
+   "interval": "全样本",
+   "carry_ann_nominal_pct": 14.163,
+   "carry_ann_capital_x0.75_pct": 10.622,
+   "lend_ann_pct": 4.633,
+   "diff_cap_minus_lend_pp": 5.989,
+   "n_days": 851
+  }
+ ]
+}

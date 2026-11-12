@@ -360,7 +360,8 @@ def evaluate(wname: str, w_start, w_end, carry_mask_start=None):
     res_w["rc_before"] = {k: round(v, 3) for k, v in rcb.items()}
     res_w["rc_after"] = {k: round(v, 3) for k, v in rca.items()}
     # ── (i) 相关:全样本与压力月;只在套息在场的月份上算
-    sub = m & C.index.to_series().resample("M").last().isin(months_with_carry).values
+    _mc = set(pd.PeriodIndex(months_with_carry, freq="M"))
+    sub = m & C.index.to_period("M").isin(_mc)
     m2 = pd.Series(sub, index=C.index)
     rc_i, am_i, cm_i = rc_curve(w, C["acct"], carry, m2)
     core_m = M(core[m2])
@@ -442,7 +443,8 @@ def evaluate(wname: str, w_start, w_end, carry_mask_start=None):
             "span": best_span,
             "rc_carry": round(rc3, 4),
             "carry_vs_account_full": round(float(c3.corr(am3)), 3),
-            "carry_ann_pct": round(float(MS(carry[m3]).mean() * 365 * 100), 3),
+            "carry_monthly_mean_pct": round(float(MS(carry[m3]).mean() * 100), 4),
+            "carry_ann_pct": round(float(MS(carry[m3]).mean() * 12 * 100), 3),
             "n_stress": int(st3.sum()),
         }
     return res_w
@@ -483,7 +485,16 @@ results["rv2_worst20"] = {
     "rv2_20d_pct": round(rv2_bad[2] * 100, 2),
     "carry_return_pct_in_span": round(float(carry[m20].sum() * 100), 4),
     "carry_days_with_data_in_span": int((carry[m20] != 0).sum()),
-    "note": "套息臂起点 2023-06-12 ⇒ 这 20 天里它没在跑(收益 0);它救不了账户已经发生过的弱点",
+    "note": "R-v2 腿自己最差的 20 个交易日(全账户窗口内)",
+}
+# 卡上点名的那一段(2023-02-08 → 03-08)单独报:那 20 天里套息臂有没有在跑
+_card_named = (C.index >= pd.Timestamp("2023-02-08")) & (C.index <= pd.Timestamp("2023-03-08"))
+results["rv2_worst20_card_named_span"] = {
+    "span": ["2023-02-08", "2023-03-08"],
+    "account_worst20_windowB": results["windows"]["B_account_start"].get("worst20_before"),
+    "carry_return_pct_in_span": round(float(carry[_card_named].sum() * 100), 4),
+    "carry_days_with_data_in_span": int((carry[_card_named] != 0).sum()),
+    "note": "卡上点名的 2023-02-08 → 03-08 是**账户**(窗口 B)最差的 20 日;套息臂 2023-06-12 才起 ⇒ 这 20 天它没在跑(收益 0)",
 }
 # 套息在场的重叠段里,R-v2 最差的 20 天
 m_ov = (C.index >= pd.Timestamp(CARRY_INCEPTION))
