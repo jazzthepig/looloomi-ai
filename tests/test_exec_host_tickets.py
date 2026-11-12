@@ -322,7 +322,7 @@ def test_loader_reads_the_book_state_and_signal_day_closes(monkeypatch):
     monkeypatch.setattr(hdr, "_read_all", fake)
     monkeypatch.delenv("R_V2_RISK_FRAC", raising=False)
     p = asyncio.run(tpm.load_ticket_plan(ASOF))
-    assert p["ready"] and p["risk_frac"] == 0.005 and p["enter"][0]["stop_frac"] == pytest.approx(0.125)
+    assert p["ready"] and p["risk_frac"] == 0.0075 and p["enter"][0]["stop_frac"] == pytest.approx(0.125)
     assert p["oi_filter"]["status"] == "unavailable"
     monkeypatch.setenv("R_V2_RISK_FRAC", "0.05")
     with pytest.raises(ValueError):
@@ -541,10 +541,13 @@ def test_slot_cap_is_14_from_2026_11_09_and_history_keeps_10():
     """Jazz 11-08「make it work」+ S-788(T-310):名额让位于 40% 名义上限 ⇒ 14;之前进场的票按当时的 10 张对账。"""
     import datetime as _dt
     from src.data.execution import ticket_plan as tpm
-    assert tpm.DEFAULT_CAP == 14 and tpm.cap_on(_dt.date(2026, 11, 8)) == 10 and tpm.cap_on(_dt.date(2026, 11, 9)) == 14
+    assert tpm.DEFAULT_CAP == 10 and tpm.cap_on(_dt.date(2026, 11, 8)) == 10 and tpm.cap_on(_dt.date(2026, 11, 9)) == 14
+    assert tpm.cap_on(_dt.date(2026, 11, 12)) == 14 and tpm.cap_on(_dt.date(2026, 11, 13)) == 10, "11-12 S-831:11-13 起进场的票回到 10 张"
     old = [{"ticket_id": f"O{i}", "symbol": f"S{i:02d}", "signal_d": "2026-11-01", "status": "open", "entry_d": "2026-11-02"} for i in range(12)]
     assert len(tpm.taken_ids(old, tpm.cap_on, _dt.date(2026, 11, 9))) == 10, "11-02 进场的那批按 10 张"
     new = [{"ticket_id": f"N{i}", "symbol": f"T{i:02d}", "signal_d": "2026-11-09", "status": "pending"} for i in range(16)]
     assert len(tpm.taken_ids(new, tpm.cap_on, _dt.date(2026, 11, 10))) == 14, "11-10 进场按 14 张"
     plan = tpm.make_ticket_plan([], "2026-11-09", "2026-11-09", {})
-    assert plan["cap"] == 14 and plan["gross_cap_frac"] <= 0.40
+    assert plan["cap"] == 10 and plan["gross_cap_frac"] <= 0.80 and plan["risk_frac"] == 0.0075, "11-12 S-831:10 张 / 80% / 0.75%"
+    newer = [{"ticket_id": f"M{i}", "symbol": f"U{i:02d}", "signal_d": "2026-11-12", "status": "pending"} for i in range(16)]
+    assert len(tpm.taken_ids(newer, tpm.cap_on, _dt.date(2026, 11, 13))) == 10, "11-13 进场按 10 张"

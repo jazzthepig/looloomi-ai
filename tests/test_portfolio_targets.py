@@ -20,9 +20,9 @@ def test_rows_and_plan_fields_are_one_function():
     assert rows["crypto_x1v"]["target_usd"] == 180.0 and rows["gold"]["target_usd"] == 120.0
     assert "XAUT" in rows["gold"]["instrument"]
     assert rows["gold"]["executable"] is pl.LEGS_LIVE and rows["equity"]["executable"] is pl.LEGS_LIVE, "腿是否在跑照实写"
-    assert rows["rv2"]["kind"] == "gross_cap" and rows["rv2"]["target_w"] == 0.40
+    assert rows["rv2"]["kind"] == "gross_cap" and rows["rv2"]["target_w"] == 0.80
     f = pl.plan_fields("2026-10-30")
-    assert f["x1v_nav_budget_usd"] == 180.0 and f["rv2_gross_cap_frac"] == 0.40
+    assert f["x1v_nav_budget_usd"] == 180.0 and f["rv2_gross_cap_frac"] == 0.80
     cols = set(pl.WRITES_COLUMNS["portfolio_targets_daily"])
     assert all(set(r) <= cols for r in rows.values()), "写的列 = 声明的列"
 
@@ -98,7 +98,7 @@ def test_the_host_plan_carries_the_portfolio_caps(monkeypatch):
     monkeypatch.setattr(hp, "read_halt", halt)
     monkeypatch.setattr(hp, "ticket_section", tickets)
     p = asyncio.run(hp.build_host_plan(dt.datetime(2026, 10, 30, 0, 50, tzinfo=dt.timezone.utc)))
-    assert p["portfolio"]["x1v_nav_budget_usd"] == 180.0 and p["portfolio"]["rv2_gross_cap_frac"] == 0.40
+    assert p["portfolio"]["x1v_nav_budget_usd"] == 180.0 and p["portfolio"]["rv2_gross_cap_frac"] == 0.80
 
 
 def test_capital_follows_the_live_snapshot_and_a_deposit_makes_today_a_rebalance_day():
@@ -133,9 +133,9 @@ def test_rv2_gross_cap_is_flexible_up_to_40pct_and_refuses_beyond():
     """Jazz 11-05:探索仓 0–40% 灵活。默认 30%;Railway 的 R_V2_GROSS_CAP_FRAC 可改到 ≤ 40%;写错不悄悄夹到边界。"""
     import pytest
     from src.data.execution import portfolio_targets as pt
-    assert pt.rv2_gross_cap_frac({}) == 0.40 and pt.rv2_gross_cap_frac({"R_V2_GROSS_CAP_FRAC": "0.30"}) == 0.30
+    assert pt.rv2_gross_cap_frac({}) == 0.80 and pt.rv2_gross_cap_frac({"R_V2_GROSS_CAP_FRAC": "0.30"}) == 0.30
     assert pt.rv2_gross_cap_frac({"R_V2_GROSS_CAP_FRAC": " 0.35 "}) == 0.35
-    for bad in ("0.41", "0", "-0.1", "x"):
+    for bad in ("0.81", "0", "-0.1", "x"):
         with pytest.raises(ValueError):
             pt.rv2_gross_cap_frac({"R_V2_GROSS_CAP_FRAC": bad})
 

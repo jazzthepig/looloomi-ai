@@ -38,12 +38,14 @@ BOOK = "t25_live"
 T25_ARM = "T25"
 T25_CAPITAL_USD = 600.0            # Jazz 10-29
 OPEN_DATE = "2026-10-30"           # 第一份目标(拍板之后的第一个 UTC 日)
-RV2_GROSS_CAP_DEFAULT = 0.40       # Jazz 11-05 夜「40%」(T-251:40% 档 Calmar 0.13 vs 30% 档 0.05,且 40% 从未咬合);10-29 起是 30%;单票风险不变
-RV2_GROSS_CAP_MAX = 0.40           # Jazz 11-05:探索仓 0–40% 灵活 —— 上限可到 40%;要放到 40% 由 Jazz 在 Railway 设 R_V2_GROSS_CAP_FRAC
+#: 11-12(S-829 / S-831;Jazz 把这个决定交给 Seth):40% → 80%。之前的 40% 是在带幽灵仓的研究引擎上定的(T-251:「40% 从未咬合」是 bug 的产物,
+#: S-828);修后两台独立引擎都显示 40% 是咬合的。10-29 起 30%,11-05 起 40%。账户的加密总敞口上限(CRYPTO_GROSS_CAP_FRAC = 0.9)不动,主机照守。
+RV2_GROSS_CAP_DEFAULT = 0.80
+RV2_GROSS_CAP_MAX = 0.80           # 环境变量 R_V2_GROSS_CAP_FRAC 可以往下调;超过这个数拒绝出计划
 
 
 def rv2_gross_cap_frac(env: dict | None = None) -> float:
-    """R-v2 名义合计上限(占账户净值)。环境变量 R_V2_GROSS_CAP_FRAC 覆盖默认 0.40;不在 (0, 0.40] ⇒ 抛错(不悄悄夹到边界 ——
+    """R-v2 名义合计上限(占账户净值)。环境变量 R_V2_GROSS_CAP_FRAC 覆盖默认 0.80;不在 (0, 0.80] ⇒ 抛错(不悄悄夹到边界 ——
     写错了的数应该让计划出不来,而不是按另一个数下单)。"""
     import os
     raw = (env if env is not None else os.environ).get("R_V2_GROSS_CAP_FRAC", "").strip()
@@ -135,7 +137,7 @@ def t25_rows(d: str, capital: float = T25_CAPITAL_USD, flow_event: bool = False,
                  "target_usd": None, "capital_usd": capital,
                  "instrument": "HL 永续单票(R-v2,双向;不在 T25 的 100% 里)", "venue": "Hyperliquid 永续",
                  "executable": True,
-                 "why": f"名义合计 ≤ 账户净值 × {RV2_GROSS_CAP_FRAC:.0%}(Jazz 11-05:可到 40%);单票风险 = 账户净值 × 0.5%(不变)",
+                 "why": f"名义合计 ≤ 账户净值 × {RV2_GROSS_CAP_FRAC:.0%}(11-12 S-831;11-05 起是 40%);单票风险见 ticket_plan.DEFAULT_RISK_FRAC",
                  "next_rebalance_d": None, "rule": RULE})
     return rows
 
