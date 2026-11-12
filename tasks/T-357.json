@@ -1,0 +1,28 @@
+{
+  "id": "T-357",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-12",
+  "title": "S-832 右尾在更早的年份出现过吗:R-v2 的规则放到含下架币的 Binance 现货上(2018-03 → 2020-07)",
+  "source": "REFUTATION_LEDGER 的 S-832 登记节:`sed -n '/^## S-832 —/,/^## /p' REFUTATION_LEDGER.md`。数据 = /Volumes/CometCloudAI/cometcloud-local/research/binance_vision/spot_1d.jsonl(一行一个交易对:symbol / pair / quote / bars[[d,o,h,l,c,quote_volume]])。规则用你 T-355 照生产 SQL 写的 docs/research/t355_tickets.py(那份与 t197 逐张对上了)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-357.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "先报宇宙:每年有多少个币过了 rn ≥ 220 与成交额门槛(500 万 / 100 万两档)、其中后来下架的多少。美元序列的拼法照登记(USDT 对优先,否则 BTC 对 × BTCUSDT)。自检:BTC 自己的票与 T-351 里 2019-04-02 那张 +10.1R 对得上。每年:票数、R 合计、平均 R、胜率、R ≥ 5 / ≥ 10 的名字、去掉当年最大一张后的 R 合计;开在后来下架的币上的票数与 R 合计。按 S-832 那一条判。只读、不入库;脚本 nohup,结果落文件;不要 Read 大文件(那份 jsonl 17MB,只能用脚本读)。",
+    "expect": "docs/research/T-357_right_tail_with_delisted.md + t357_*.py + t357_results.json + scenarios/lane-a-T-357.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-a/T-357。"
+  },
+  "prior_value": "R-v2 的真钱尺寸刚开大(S-831),赌的是右尾;右尾在 2018–2020 出现过没有,之前因为库里没有下架币量不了。",
+  "notes": "2026-11-12T05:07:24Z Seth 开卡。",
+  "verified": null
+}

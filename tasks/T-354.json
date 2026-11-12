@@ -1,7 +1,7 @@
 {
   "id": "T-354",
   "owner": "seth",
-  "status": "open",
+  "status": "done",
   "created": "2026-11-11",
   "title": "入库:Binance 现货历史日线含已下架交易对(2017-08 → 2020-12),给 S-827 的宇宙补上死币",
   "source": "REFUTATION_LEDGER S-827 结果;T-351 报告。入库是 Seth 的通道(CLAUDE.md 3b):走现有的守卫路径,先 `curl /internal/data-coverage` 看已有深度(基线 = 各来源的并集)。",
@@ -21,6 +21,11 @@
     "expect": "入库模块 + 测试 + SPINE 一行;S-827 用新宇宙重跑另开卡。"
   },
   "prior_value": "R-v2 的尺寸决定赌的是右尾;右尾在 2017 山寨季出现过没有,现在的库答不了。也修掉研究宇宙的幸存者偏差(binance_hist 只有今天还在的 262 个)。",
-  "notes": "2026-11-11T18:11:15Z Seth 开卡,未动工。",
-  "verified": null
+  "notes": "2026-11-11T18:11:15Z Seth 开卡,未动工。 | 2026-11-12T05:07:24Z 做法改了:不进 ohlcv_daily(新来源会不会被生产的价格路由读到没有把握),落研究目录。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-12T05:07:24Z",
+    "value": "研究目录 cometcloud-local/research/binance_vision/:532 个交易对、256899 根日线(2017-08 → 2020-12,USDT + BTC 计价),304 个之后下架,失败 0。三件:脚本(一次性、可续跑)/ 判活 = manifest.json / 第一批真实数据已落。没有进库(研究缓存,同 s681)。",
+    "ledger": "T-354 交付 / S-832"
+  }
 }
