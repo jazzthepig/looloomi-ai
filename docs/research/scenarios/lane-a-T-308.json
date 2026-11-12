@@ -1,50 +1,38 @@
 {
+  "author": "lane-a",
   "task": "T-308",
-  "owner": "lane-a",
   "created": "2026-11-08",
   "title": "T-303 按标题分句重跑 —— 修正后监控标签名单的前向命题",
   "basis": "docs/research/T-308_tag_sentence_rerun.md",
   "horizon_days": 90,
   "resolves_at": "2027-02-08",
   "settlement": "到期按 Brier 结算(src/data/evaluation/apparatus.py:brier);概率是本卡作者的主观先验,不是模型输出",
-  "scenarios": [
-    {
-      "id": "T308-S1",
-      "claim": "从 2026-11-08 起 90 天内,Binance 监控标签公告里,标题同时含「监控标签新增」与「种子标签移除」两类语义的单行 ≥ 1 行。",
-      "probability": 0.70,
-      "check": "重跑 docs/research/t308_tag_sentence.py raw + split,数新增公告行里 rem_seed 非空且 add 非空的行数;行数 ≥ 1 ⇒ 命题成立。",
-      "support": "历史 27 行公告里 8 行同时含两类语义(2024-01-04 / 2024-07-01 / 2024-10-03 / 2025-01-02 / 2025-04-03 / 2025-07-09 / 2025-10-09 / 2026-03-06 / 2026-04-14 口径下 9 行,其中含真实新增的 8 行)≈ 30%。",
-      "resolution": "2027-02-08"
-    },
-    {
-      "id": "T308-S2",
-      "claim": "若解析层按标题分句修复并回填历史,「被行级口径错判成移除的真·监控标签新增」代号数 ≥ 40 个。",
-      "probability": 0.60,
-      "check": "回填后用分句口径重跑 t308_tag_sentence.py split,数「分句口径有 add 事件、行级口径无」的代号数;≥ 40 ⇒ 成立。",
-      "support": "本卡测得 54 个(行级 80 个有打上事件 vs 分句 134 个)。若解析层已部分回填,该数会下降,故给 40 而非 54。",
-      "resolution": "2027-02-08"
-    },
-    {
-      "id": "T308-S3",
-      "claim": "「打标签即剔除」这条规则在 R-v2 账本上的账内被挡票数,即使名单修正后,在 2027-02-08 之前仍然 < 10 张(检出力仍不足)。",
-      "probability": 0.75,
-      "check": "重跑 t308_tag_sentence.py book(分句名单),看 book_A.sentence.dropped_ledger_n;< 10 ⇒ 成立。",
-      "support": "本卡测得:行级名单挡 1 张、分句名单挡 3 张,都 < 10;S-757 下架规则同形状(ΔR = 0)。",
-      "resolution": "2027-02-08"
-    },
-    {
-      "id": "T308-S4",
-      "claim": "修正后 class-1 候选票(12 张)的原 R 合计仍为正数。",
-      "probability": 0.60,
-      "check": "t308_results.json → book_A.sentence.class1_rows 的 r_orig 求和;> 0 ⇒ 成立。",
-      "support": "行级口径的 4 张候选原 R 合计 +3.5026(3 胜 1 负);分句口径 12 张的逐张合计本轮未复核(下一轮补),故只给 0.60。",
-      "resolution": "2027-02-08"
-    }
-  ],
   "compliance": "全部为定位与覆盖面的描述,不构成买卖建议;信号用语只限 STRONG OUTPERFORM / OUTPERFORM / NEUTRAL / UNDERPERFORM / UNDERWEIGHT。",
-  "caveats": [
-    "本卡只算不判:所有命题都是可核的数量陈述,不含方向性判断。",
-    "S1/S2 依赖未来的公告与流水线动作;S2 若解析层未回填则无法判定(按未成立处理)。",
-    "S3/S4 用的是本卡冻结的账本口径(T251 票生成器 + T-278 规则),口径改动会改变数。"
-  ]
+  "entries": [
+    {"id": "T308-S1", "scenario": "T-303 按标题分句重跑 —— 修正后监控标签名单的前向命题",
+     "statement": "从 2026-11-08 起 90 天内,Binance 监控标签公告里,标题同时含「监控标签新增」与「种子标签移除」两类语义的单行 ≥ 1 行。",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.7, "horizon_d": "2027-02-08",
+     "check": "重跑 docs/research/t308_tag_sentence.py raw + split,数新增公告行里 rem_seed 非空且 add 非空的行数;行数 ≥ 1 ⇒ 命题成立。",
+     "note": "observed = 那个行数(原始 check 的量法);交原始量,不交 0/1 标记",
+     "support": "历史 27 行公告里 8 行同时含两类语义(2024-01-04 / 2024-07-01 / 2024-10-03 / 2025-01-02 / 2025-04-03 / 2025-07-09 / 2025-10-09 / 2026-03-06 / 2026-04-14 口径下 9 行,其中含真实新增的 8 行)≈ 30%。"},
+    {"id": "T308-S2", "scenario": "T-303 按标题分句重跑 —— 修正后监控标签名单的前向命题",
+     "statement": "若解析层按标题分句修复并回填历史,「被行级口径错判成移除的真·监控标签新增」代号数 ≥ 40 个。",
+     "variable": "manual", "op": "gt", "lo": 39, "prob": 0.6, "horizon_d": "2027-02-08",
+     "check": "回填后用分句口径重跑 t308_tag_sentence.py split,数「分句口径有 add 事件、行级口径无」的代号数;≥ 40 ⇒ 成立。",
+     "note": "observed = 那个代号数(原始 check 的量法);交原始量,不交 0/1 标记",
+     "support": "本卡测得 54 个(行级 80 个有打上事件 vs 分句 134 个)。若解析层已部分回填,该数会下降,故给 40 而非 54。"},
+    {"id": "T308-S3", "scenario": "T-303 按标题分句重跑 —— 修正后监控标签名单的前向命题",
+     "statement": "「打标签即剔除」这条规则在 R-v2 账本上的账内被挡票数,即使名单修正后,在 2027-02-08 之前仍然 < 10 张(检出力仍不足)。",
+     "variable": "manual", "op": "lt", "hi": 10, "prob": 0.75, "horizon_d": "2027-02-08",
+     "check": "重跑 t308_tag_sentence.py book(分句名单),看 book_A.sentence.dropped_ledger_n;< 10 ⇒ 成立。",
+     "note": "observed = book_A.sentence.dropped_ledger_n(原始 check 的量法);交原始量,不交 0/1 标记",
+     "support": "本卡测得:行级名单挡 1 张、分句名单挡 3 张,都 < 10;S-757 下架规则同形状(ΔR = 0)。"},
+    {"id": "T308-S4", "scenario": "T-303 按标题分句重跑 —— 修正后监控标签名单的前向命题",
+     "statement": "修正后 class-1 候选票(12 张)的原 R 合计仍为正数。",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.6, "horizon_d": "2027-02-08",
+     "check": "t308_results.json → book_A.sentence.class1_rows 的 r_orig 求和;> 0 ⇒ 成立。",
+     "note": "observed = 那个 r_orig 合计(原始 check 的量法);交原始量,不交 0/1 标记",
+     "support": "行级口径的 4 张候选原 R 合计 +3.5026(3 胜 1 负);分句口径 12 张的逐张合计本轮未复核(下一轮补),故只给 0.60。"}
+  ],
+  "caveats": ["本卡只算不判:所有命题都是可核的数量陈述,不含方向性判断。", "S1/S2 依赖未来的公告与流水线动作;S2 若解析层未回填则无法判定(按未成立处理)。", "S3/S4 用的是本卡冻结的账本口径(T251 票生成器 + T-278 规则),口径改动会改变数。"]
 }

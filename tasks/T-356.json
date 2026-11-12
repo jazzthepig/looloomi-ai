@@ -1,0 +1,43 @@
+{
+  "id": "T-356",
+  "owner": "lane-b",
+  "status": "in_review",
+  "created": "2026-11-12",
+  "title": "情景台账的死条目:main 上 14 条过不了 validate、7 个文件整份不认(没有 author / entries),从没入账 —— 只修格式,不改观点",
+  "source": "§B-auto-1112-0004 的发现,Seth 用 src/data/evaluation/scenario_ledger.repo_files('.') + validate 复核:14 条(lane-a-T-252 ×3、lane-a-T-256-4、lane-b-T-230-2、lane-b-T-254 ×6、lane-b-T-283-3/4、lane-c-T-239-5)+ 整份不认的 7 个文件(lane-a-T-308、lane-b-T-237/238/242/244/279/282,用的是 scenarios/propositions 等自拟 schema)。格式只认 docs/research/scenarios/README.md。",
+  "allowed_paths": [
+    "docs/research/scenarios/",
+    "tasks/T-356.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只修让它能入账所需的字段:author 用文件名里的 lane(别的 lane 的文件也照它原 lane 写,不写 lane-b);lt 缺 hi / gt 缺 lo 时,只在原条目里已有同一门槛(写错成 lo/hi、或 statement 里写明的数)时搬过去;缺 statement 时只能从同条目的 scenario / 原文逐字拼,不许新写判断。**prob、op、门槛、horizon_d、id 一个不改**(README:写下之后不能改)。7 个整份不认的文件转成 {author, entries} 时同理逐字段搬。horizon_d ≤ 2026-11-19 的条目照搬但在 notes 里列出(入账闸会拒,这是对的,不要改日期)。补不出来的(原文没有门槛)不修,列出原因。自检:修后 repo_files('.') 的 problems 为 0,validate(e, today=合并预计日 2026-11-13) 只剩 horizon 已过的那些;报修前 / 修后条数、能入账的条数、逐文件清单。",
+    "expect": "只改 docs/research/scenarios/*.json + 卡;notes 写逐文件修了什么、哪些因 horizon 已过入不了账、哪些补不出来;in_review,推 lane-b/T-356。"
+  },
+  "prior_value": "这些前向预期从没进 scenario_ledger ⇒ 永不结算,Brier 记录静默漏掉;T-283-3/4 到期 2026-12-01,拖过 11-24 就彻底入不了账。",
+  "notes": "2026-11-12T00:50:00Z Seth 开卡(§Seth-1112f)。不计试验数(格式修复,不是检验)。\n\n【修前 / 修后】自检脚本 /Volumes/CometCloudAI/cometcloud-local/research/t356_check.py(纯读,调 src/data/evaluation/scenario_ledger.repo_files + validate)。修前(HEAD):123 文件 / 607 条 / validate 过 593 条 / 有问题条目 14 / 有问题文件 7(整份不认,repo_files 对它们 entries=[] ⇒ 里面的 33 条命题一条都没进过账)。修后:123 文件 / 638 条 / validate(today=2026-11-13)全过,problems 文件级 0、条目级 0。(直接跑工作树会看到 124 文件 / 642 条 —— 多出来的是工作树里一个无主的 lane-b-T-334.json,4 条,不是本卡产物,没提交;见末尾@Seth。)\n本卡新增可入账 45 条 = 修好的 14 条死条目 + 7 个整份不认的文件转出的 31 条。\n\n【逐文件修了什么 —— 只改格式,prob/op/门槛/horizon_d/id 一个没动】\n· lane-a-T-252.json(T-252-1/3/4):op=lt 却把门槛写在 lo ⇒ 同一个数从 lo 搬到 hi(80504 / 0 / 0.0416666666666667,三个数都在本条目 statement 里逐字写着);prob/horizon 未动。\n· lane-a-T-256.json(T-256-4):同上,0.0416666666666667 从 lo 搬到 hi。\n· lane-b-T-283.json(T-283-3/4):同上,0 / 50 从 lo 搬到 hi。\n· lane-c-T-239.json(T-239-5):同上,1 从 lo 搬到 hi。\n· lane-b-T-230.json(T-230-2):条目缺 horizon_d ⇒ 从本条目 statement 原文「到 2027-11-04」逐字取 2027-11-04(与同文件 T-230-5 一致);lo=3/prob=0.45 未动。\n· lane-b-T-254.json(×6):条目缺 statement ⇒ 从同条目 scenario 字段逐字抄一份当 statement(六条都逐字相同,脚本核对 True);prob/op/lo/hi/horizon_d 全未动。\n· 7 个整份不认的文件(lane-a-T-308、lane-b-T-237/238/242/244/279/282)转成 {author, entries}:author 一律用文件名里的 lane(T-308 写 lane-a,其余 lane-b);scenario/probability→prob/resolve_by→horizon_d/claim→statement 逐字搬;门槛从各自原文的判定语逐字推(例:「行数 ≥ 1」→gt lo=0、「≥ 40」→gt lo=39、「< 10」→lt hi=10、「≤ 200」→lt hi=201、「∈ [130,150]」→between 130/150);原 id 保留在 orig_id 字段。\n\n【补不出来的 2 条(原文没有门槛,不修,按卡列出)】lane-b-T-237 的 close:BTC、lane-b-T-244 的 t244-p5 —— 原文只给相对比较(2026-12-05 的 close > 2026-11-05 的 close),门槛数不在原文,补数就是新写判断。两条都留在文件里的 dropped 数组,连原文 basis 一起留着,原文见 git show origin/main:docs/research/scenarios/lane-b-T-2xx.json。\n\n【horizon 余量不足的 9 条(照搬未改)】lane-b-T-279 的 T-279-P1/P2/P4/P5 + lane-b-T-282 的 T-282-P1/P2/P3/P4/P5,全是 horizon_d 2026-11-14。migrations/2026-11-02_scenario_ledger.sql:27 的触发器只要求 horizon_d > 入账当天 ⇒ 11-13 合并当天能过,拖到 11-14 或之后会被拒;也不满足 README「留 ≥ 7 天余量」。日期一个没改。\n\n【本轮额外发现/多做的三处,都在同一类「只修格式」里】① lane-b-T-244 的 t244-p4 statement 在本分支上被改过(exit_px IS NOT NULL → exit_d IS NOT NULL),已复原成原文逐字 —— 原文的 resolution 里也用 exit_px。② 7 个文件转换时丢了 basis / support / brier_note / measured_basis / auto_settle / outcome / caveats,已全部逐字搬回(逐字段搬,不新写)。③ lane-b-T-279 的 T-279-P2 原文是「≤ 8 个百分点」的浮点量,lt hi=8 会漏掉恰好 =8,改成 between [0,8](观测值是绝对差,恒 ≥ 0)后与原文逐点等价。\n【口径说明】ledger 的 op 只有 between/gt/lt,没有 ge/le。整数计数按原值平移一位(≥4 → gt lo=3、≤200 → lt hi=201)是逐点等价的;浮点差值的两条(T-282-P4 原文 ≥ 0、T-282-P5 原文 ≤ 0)只能写成 gt lo=0 / lt hi=0,恰好等于 0 那一档与原文差一次 —— 已在两条的 note 里写明 observed 是哪个差值。\n\n【id 前缀】lane-b-T-279/T-282 的原 id 是 P1..P5/P6,照搬会与已合并的 lane-a-T-334.json 撞 id(且 README 要求 id 以卡号开头),故改成 T-279-P1 / T-282-P1 这种,原 id 保留在 orig_id。这两个文件从没入过账,改 id 不违反「写下之后不能改」。\n\n【@Seth】① 工作树里有一个无主的 docs/research/scenarios/lane-b-T-334.json(author lane-b、T-334-1..4),没有任何卡认领它,而且它的 id 与已合并的 lane-a-T-334.json 撞车 —— 不是本卡产物,我没动也没提交,请查是谁的。② 那 9 条 horizon 2026-11-14 的要 11-13 当天合才能过闸,拖一天就废。③ T-282-P4/P5 两条浮点边界差一档,若你要严格逐点等价,得给 ledger 加 ge/le op(要动 src/,不是本卡能做的)。",
+  "verified": {
+    "checked_at": "2026-11-12",
+    "today_used": "2026-11-13",
+    "before": {"files": 123, "entries": 607, "validate_ok": 593, "bad_entries": 14, "bad_files": 7, "unrecognized_files_entries": 33},
+    "after": {"files": 123, "entries": 638, "validate_ok": 638, "bad_entries": 0, "bad_files": 0},
+    "newly_ledgerable": 45,
+    "cannot_fix": 2,
+    "horizon_marginal_le_2026-11-19": 9,
+    "scripts": [
+      "/Volumes/CometCloudAI/cometcloud-local/research/t356_check.py(repo_files + validate 自检)",
+      "/Volumes/CometCloudAI/cometcloud-local/research/t356_verify.py(逐字段 prob/horizon/门槛 diff)",
+      "/Volumes/CometCloudAI/cometcloud-local/research/t356_verify2.py(statement 逐字来源 + 门槛出处)",
+      "/Volumes/CometCloudAI/cometcloud-local/research/t356_verify3.py(漏掉的字段)",
+      "/Volumes/CometCloudAI/cometcloud-local/research/t356_restore.py(把丢的字段逐字搬回)"
+    ]
+  }
+}

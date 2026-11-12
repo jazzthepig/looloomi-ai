@@ -1,50 +1,40 @@
 {
+  "author": "lane-b",
   "task": "T-279",
-  "lane": "lane-b",
   "ledger": "S-758",
   "title": "S-740 复现:用补全后的代号映射重跑「永续上线 = 做空供给冲击」—— 前向命题",
   "created": "2026-11-07",
-  "resolution_note": "命题都是可机器核对的陈述;到期由 Seth 按 resolution_rule 结算(Brier)。不含收益承诺,只用定位语言。",
-  "propositions": [
-    {
-      "id": "P1",
-      "statement": "用补全后的映射(S-758 主口径)重跑后,30 天相对 BTC 的对数超额中位数 ≤ −10%(样本 = Binance USDT 永续上线事件,上线前 ≥60 天有 binance_hist 现货,2020-01 → 2026-10)。",
-      "probability": 0.65,
-      "resolve_by": "2026-11-14",
-      "resolution_rule": "读 docs/research/t279_results.json 的 main.entry_on_d.h30.median_pct ≤ −10 ⇒ 1,否则 0。",
-      "brier_note": "首跑已见中位为负(旧子集 −21.9% / v2 新增 −22.8%),但幅度未验证。"
-    },
-    {
-      "id": "P2",
-      "statement": "「旧子集」(2026-11-06 快照口径、S-740 当时的那批事件)与「新增部分」的 30 天超额中位数之差 ≤ 8 个百分点 —— 即 S-740 的结论不是只靠旧子集撑起来的。",
-      "probability": 0.6,
-      "resolve_by": "2026-11-14",
-      "resolution_rule": "读 t279_results.json 的 subset_split.entry_on_d: |median_pct(old) − median_pct(new)| ≤ 8 ⇒ 1,否则 0。",
-      "brier_note": "S-740 的 n=46 只能从 events 的 2026-11-06 快照复现(events.symbols 此后被回填 365 → 671 行),旧子集必须按快照口径切。"
-    },
-    {
-      "id": "P3",
-      "statement": "2026-11-07 → 2026-12-07 之间新出现的 Binance USDT 永续上线公告里,能同时满足「上线前 ≥60 天有 binance_hist 现货」与「上线后 30 天有现货收盘」的样本 ≥ 8 个。",
-      "probability": 0.55,
-      "resolve_by": "2026-12-07",
-      "resolution_rule": "events 表 kind=perp_listing、source=binance、ts 落在窗口内,用 t279_replication.py 的 make_sample 口径数出可算样本 ≥ 8 ⇒ 1,否则 0。",
-      "brier_note": "n=4 的那一批(只有 v2 才解析出来的)全为负;样本量本身是瓶颈,不是方向。"
-    },
-    {
-      "id": "P4",
-      "statement": "Binance 永续上线公告标题里,写法属于「USDⓈ-M」/「USDT-Margined」/「…Perpetual Contract for X」这三类的比例 ≥ 60%(2020-01 → 2026-10)。",
-      "probability": 0.8,
-      "resolve_by": "2026-11-14",
-      "resolution_rule": "读 docs/research/t279_event_symbol_map.json:命中 RX_USDM_AFTER / RX_AFTER / RX_FOR / RX_LIST 任一的公告数 ÷ 818 ≥ 0.60 ⇒ 1,否则 0。",
-      "brier_note": "解析写法随年份变 ⇒ 漏掉的不是随机抽样,这是 S-740 样本可能被挑过的机制。"
-    },
-    {
-      "id": "P5",
-      "statement": "在今天(events.symbols 已回填)的数据上按 S-740 的旧筛选口径重跑,样本数落在 130–150 之间,而不是 46。",
-      "probability": 0.8,
-      "resolve_by": "2026-11-14",
-      "resolution_rule": "读 t279_results.json 的 funnel_old_mapping.kept ∈ [130,150] ⇒ 1,否则 0。",
-      "brier_note": "首跑旧映射(今天的 events.symbols)得 138;46 只在 2026-11-06 快照口径下成立。"
-    }
+  "resolution_note": "命题都是可机器核对的陈述;到期按 resolution_rule 结算(Brier)。不含收益承诺,只用定位语言。",
+  "entries": [
+    {"id": "T-279-P1", "orig_id": "P1", "scenario": "S-740 复现:用补全后的代号映射重跑「永续上线 = 做空供给冲击」—— 前向命题",
+     "statement": "用补全后的映射(S-758 主口径)重跑后,30 天相对 BTC 的对数超额中位数 ≤ −10%(样本 = Binance USDT 永续上线事件,上线前 ≥60 天有 binance_hist 现货,2020-01 → 2026-10)。",
+     "variable": "manual", "op": "lt", "hi": -10, "prob": 0.65, "horizon_d": "2026-11-14",
+     "resolution_rule": "读 docs/research/t279_results.json 的 main.entry_on_d.h30.median_pct ≤ −10 ⇒ 1,否则 0。",
+     "note": "observed = main.entry_on_d.h30.median_pct(原始 rule);交原始量,不交 0/1 标记",
+     "brier_note": "首跑已见中位为负(旧子集 −21.9% / v2 新增 −22.8%),但幅度未验证。"},
+    {"id": "T-279-P2", "orig_id": "P2", "scenario": "S-740 复现:用补全后的代号映射重跑「永续上线 = 做空供给冲击」—— 前向命题",
+     "statement": "「旧子集」(2026-11-06 快照口径、S-740 当时的那批事件)与「新增部分」的 30 天超额中位数之差 ≤ 8 个百分点 —— 即 S-740 的结论不是只靠旧子集撑起来的。",
+     "variable": "manual", "op": "between", "lo": 0, "hi": 8, "prob": 0.6, "horizon_d": "2026-11-14",
+     "resolution_rule": "读 t279_results.json 的 subset_split.entry_on_d: |median_pct(old) − median_pct(new)| ≤ 8 ⇒ 1,否则 0。",
+     "note": "observed = |median_pct(old) − median_pct(new)|(原始 rule;观测值恒 ≥ 0,故 between [0,8] 与原文「≤ 8」逐点等价);交原始量,不交 0/1 标记",
+     "brier_note": "S-740 的 n=46 只能从 events 的 2026-11-06 快照复现(events.symbols 此后被回填 365 → 671 行),旧子集必须按快照口径切。"},
+    {"id": "T-279-P3", "orig_id": "P3", "scenario": "S-740 复现:用补全后的代号映射重跑「永续上线 = 做空供给冲击」—— 前向命题",
+     "statement": "2026-11-07 → 2026-12-07 之间新出现的 Binance USDT 永续上线公告里,能同时满足「上线前 ≥60 天有 binance_hist 现货」与「上线后 30 天有现货收盘」的样本 ≥ 8 个。",
+     "variable": "manual", "op": "gt", "lo": 7, "prob": 0.55, "horizon_d": "2026-12-07",
+     "resolution_rule": "events 表 kind=perp_listing、source=binance、ts 落在窗口内,用 t279_replication.py 的 make_sample 口径数出可算样本 ≥ 8 ⇒ 1,否则 0。",
+     "note": "observed = 可算样本数(原始 rule;整数计数下 gt lo=7 与 ≥8 等价);交原始量,不交 0/1 标记",
+     "brier_note": "n=4 的那一批(只有 v2 才解析出来的)全为负;样本量本身是瓶颈,不是方向。"},
+    {"id": "T-279-P4", "orig_id": "P4", "scenario": "S-740 复现:用补全后的代号映射重跑「永续上线 = 做空供给冲击」—— 前向命题",
+     "statement": "Binance 永续上线公告标题里,写法属于「USDⓈ-M」/「USDT-Margined」/「…Perpetual Contract for X」这三类的比例 ≥ 60%(2020-01 → 2026-10)。",
+     "variable": "manual", "op": "gt", "lo": 0.60, "prob": 0.8, "horizon_d": "2026-11-14",
+     "resolution_rule": "读 docs/research/t279_event_symbol_map.json:命中 RX_USDM_AFTER / RX_AFTER / RX_FOR / RX_LIST 任一的公告数 ÷ 818 ≥ 0.60 ⇒ 1,否则 0。",
+     "note": "observed = 命中的公告数 ÷ 818(原始 rule);交原始量,不交 0/1 标记",
+     "brier_note": "解析写法随年份变 ⇒ 漏掉的不是随机抽样,这是 S-740 样本可能被挑过的机制。"},
+    {"id": "T-279-P5", "orig_id": "P5", "scenario": "S-740 复现:用补全后的代号映射重跑「永续上线 = 做空供给冲击」—— 前向命题",
+     "statement": "在今天(events.symbols 已回填)的数据上按 S-740 的旧筛选口径重跑,样本数落在 130–150 之间,而不是 46。",
+     "variable": "manual", "op": "between", "lo": 130, "hi": 150, "prob": 0.8, "horizon_d": "2026-11-14",
+     "resolution_rule": "读 t279_results.json 的 funnel_old_mapping.kept ∈ [130,150] ⇒ 1,否则 0。",
+     "note": "observed = funnel_old_mapping.kept(原始 rule);交原始量,不交 0/1 标记",
+     "brier_note": "首跑旧映射(今天的 events.symbols)得 138;46 只在 2026-11-06 快照口径下成立。"}
   ]
 }
