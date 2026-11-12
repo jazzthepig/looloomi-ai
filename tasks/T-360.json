@@ -11,7 +11,7 @@
     "migrations/"
   ],
   "verified": null,
-  "notes": "2026-11-12T16:33:00Z Seth 开卡。",
+  "notes": "2026-11-12T16:33:00Z Seth 开卡。 || 2026-11-12T18:45:00Z Seth:lane-b@4d174f84 CHANGES —— srs_on_acct 的 shift(1) 在并集日历上取前一加密日,周末仍被丢(矛盾成因);改 reindex 到账户日再取比、加复利自检、全部重跑;规则 A 不加 ticket_account 空腿。见 §Seth-1113e、台账「S-835 更正三」。",
   "id": "T-360",
   "owner": "lane-b",
   "title": "S-835 候选二:吃反转的一类 —— S-569 / S-570 的两个效应做成可交易的序列,干净重跑后按准入标准判",
