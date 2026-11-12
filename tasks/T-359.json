@@ -1,0 +1,28 @@
+{
+  "status": "claimed",
+  "created": "2026-11-12",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "notes": "2026-11-12T16:33:00Z Seth 开卡。|| 2026-11-13 lane-a:本轮交付脚本+判据实现,**复算未跑**(lane 上下文预算到 93k 被守卫切断执行,非脚本问题)。已交付:docs/research/t359_carry_source_admission.py(S-835 四条判据+尺寸二分+两窗口+附报三项)、docs/research/T-359_carry_source_admission.md、docs/research/scenarios/lane-a-T-359.json(5 对成对命题/10 条带概率)。账户装配照抄 s834:RBv2 三腿+现金+R-v2(t352_engine.simulate(fix=True),名额 10/上限 0.80/每票 0.75%),日历日按 flex_alloc._between;脚本内硬对账(年化 ±1pp 于 +35.7%、R-v2 风险占比 ±0.02 于 0.742,不过即退出)。套息臂用生产核 src/data/signals/carry_hl.py 的 carry_b_top_rc(S-748 真实成本 15.5bp/次,起点 2023-06-12):费率=Mac 数据根小时档(2023-05-12→2026-08-24)+Supabase hl_funding_daily 视图补尾,先在重叠段核对两源日聚合是否逐格一致;生产核不含基差(S-748 实测同所基差拖累 −0.068pp/yr),判读须写明。两处口径要说清:(1) (ii) 的字面读法在 apparatus.circular_shift 下退化(平移不改变均值→NoOpNull),脚本两版都跑,给对齐敏感版(统计量=套息在压力月的累计收益,500 次/block 1/种子 20261113);(2) 相关只在套息在场的月份上算,不在场时它是 0,算进去会稀释或伪造。台账已测数(本轮未复算):账户 +35.7%、R-v2 风险占比 0.742、有效来源数 2.0(S-834);套息 14.833%/yr 名义、11.12% 资本口径、2026H1 2.64%/yr(S-748);对借贷逐半年赢 5/7 段、输 2025H1 与 2026H1(S-749)。下一轮一条命令:cd ~/Projects/looloomi-ai-lane-a && nohup python3 docs/research/t359_carry_source_admission.py > docs/research/_t359_run.log 2>&1 & → 读 docs/research/t359_results.json → 填数、改 in_review。附报已实现:套息在 R-v2 最差 20 日(2023-02-08→03-08)的收益(套息 2023-06-12 才起,那 20 天它没在跑⇒收益 0,救不了已发生的弱点;另报重叠段内)、与借贷利率的差(只报)、去掉最好一段(只报不判)。",
+  "id": "T-359",
+  "owner": "lane-a",
+  "title": "S-835 候选一:资金费套息当成一个独立来源,按准入标准判(不是当现金腿判)",
+  "source": "台账 S-835 登记节;套息的日收益序列用你 T-253 / S-748 真实成本臂的脚本重出(HL 已实现费率 + 手续费 + 进出场基差)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-359.json"
+  ],
+  "acceptance": {
+    "check": "账户装配:import docs/research/s834_diversification_audit.py 里的做法(RBv2 + 现金 + R-v2 用 docs/research/t352_engine.simulate(fix=True),名额 10 / 上限 0.80 / 每票 0.75%;日历日序列按 flex_alloc._between 进共同日),先对上账户年化 +35.7%、R-v2 风险占比 0.742。候选的尺寸:调到它自己的风险贡献 = 10%(二分即可)。按 S-835 的 (i)–(iv) 逐条报数、逐条判;两个窗口并排。只读、不入库;脚本 nohup,结果落文件;不要 Read 大文件;取台账用 `sed -n '/^## S-835 —/,/^## /p' REFUTATION_LEDGER.md`。另报:套息臂在 R-v2 最差的 20 个交易日(2023-02-08 → 03-08)里的收益;与借贷利率的差(只报)。",
+    "expect": "docs/research/T-359_*.md + 脚本 + 结果 json + scenarios/lane-a-T-359.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-a/T-359。"
+  },
+  "prior_value": "机构标准要的是不相关的第二个引擎;套息当初是按「每半年赢借贷」否的,按来源从没判过。"
+}
