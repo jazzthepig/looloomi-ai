@@ -1,0 +1,28 @@
+{
+  "id": "T-358",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-12",
+  "title": "T-357 返工:『后来下架』按 last_month_in_archive 重算 + 零信号对照 + 闸门曝光 + 两条反向的情景命题",
+  "source": "§C-auto-1112-1216 的交叉复核,Seth 已核:t357_right_tail.py:278 的 delisted_ever = m['last'] < '2020-12-31',而 bars 只下到 m_until(2020-12),真下架月在每行的 last_month_in_archive(scripts/research/fetch_binance_vision_spot.py:89 months[-1];:145 判活口径 = 停更超过一年)⇒ 2021 之后下架的币全被算成『活』。scenario_ledger.holds('gt',lo,x) 是 x > lo ⇒ T-357-3(『不超过 1 张』配 gt lo 1)与 T-357-4(『不含已下架』配 gt lo 0)方向反了;两条已入账(05:57 UTC),台账只增不改。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-358.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "①『后来下架』= last_month_in_archive 早于取数月减 12 个月(与取数脚本 :145 同口径),重报宇宙表(每年 500 万 / 100 万两档过门槛的币数、其中真死多少)与『开在后来下架的币上的票数与 R 合计』两列;lane-c 复算的是 202 真死 / 138 在市、500 万档 6 张票在死币上 —— 对得上就写对上,对不上写差在哪。② 零信号对照:闸门开着的日子里随机入场、票数与实际相同、同一套出场规则,≥ 500 次,报 R≥10 张数的分布与实际 1 张的分位;③ 每年闸门开的天数(lane-c 实测 884 天里开 333 天、2018 只开 12 天),报告写明唯一那张 R≥10 是闸门重开第一天;④ 报告 §6 与卡 notes 里『2020-12 之后下架的币不在档案里』改正,『66 张票』要么给出处要么改成本卡的数;⑤ T-357-3 / T-357-4 不改原文件,在 scenarios/lane-a-T-358.json 里用新 id 按 statement 原意写对(『不超过 1 张』= lt hi 2;『不含已下架』= lt hi 1),prob 照原样,另至少一条新的机器可核命题;S-832 的 ❌ 判据不变,按新数重写读法 ③。只读、不入库;大文件只用脚本读。",
+    "expect": "docs/research/T-357_right_tail_with_delisted.md(改正)+ t357_*.py / t358_*.py + 结果 json + scenarios/lane-a-T-358.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-a/T-358。"
+  },
+  "prior_value": "S-831 刚把 R-v2 真钱尺寸开大,赌的是右尾;S-832 的『幸存者偏差不大』读法建立在一个反了的定义上,而且右尾密度没有任何基准率。",
+  "verified": null,
+  "notes": "2026-11-12T12:50:00Z Seth 开卡(§Seth-1112i)。"
+}
