@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-12",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "notes": "2026-11-12T16:33:00Z Seth 开卡。",
+  "id": "T-361",
+  "owner": "lane-c",
+  "title": "S-835 准入表:坟场里有曲线的族统一过一遍(S-681 H2 / H4、S-808、S-810、S-642、S-736、World50 回放)",
+  "source": "台账 S-835 登记节;各族曲线用你 T-348 的装配(t348_r3.py),World50 用 docs/research/t099_world50_replay.py 的净值。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-361.json"
+  ],
+  "acceptance": {
+    "check": "账户装配:import docs/research/s834_diversification_audit.py 里的做法(RBv2 + 现金 + R-v2 用 docs/research/t352_engine.simulate(fix=True),名额 10 / 上限 0.80 / 每票 0.75%;日历日序列按 flex_alloc._between 进共同日),先对上账户年化 +35.7%、R-v2 风险占比 0.742。候选的尺寸:调到它自己的风险贡献 = 10%(二分即可)。按 S-835 的 (i)–(iv) 逐条报数、逐条判;两个窗口并排。只读、不入库;脚本 nohup,结果落文件;不要 Read 大文件;取台账用 `sed -n '/^## S-835 —/,/^## /p' REFUTATION_LEDGER.md`。一张表:每族一行,(i)–(iv) 逐条的数与判定,外加它在 2023-02-08 → 03-08 的收益。H4 已知在账户口径上改善回本时间 —— 这里看的是它过不过「来源」的标准(相关、自己为正、两个窗口)。",
+    "expect": "docs/research/T-361_*.md + 脚本 + 结果 json + scenarios/lane-c-T-361.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-c/T-361。"
+  },
+  "prior_value": "把已经量过的东西按新标准排个队,免得重新挖一遍已有的。"
+}

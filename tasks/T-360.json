@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-12",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "notes": "2026-11-12T16:33:00Z Seth 开卡。",
+  "id": "T-360",
+  "owner": "lane-b",
+  "title": "S-835 候选二:吃反转的一类 —— S-569 / S-570 的两个效应做成可交易的序列,干净重跑后按准入标准判",
+  "source": "台账 S-835 登记节、S-569、S-570、S-594(`grep -n \"^## S-569\\|^## S-570\\|^## S-594\" REFUTATION_LEDGER.md` 再用 sed 取段)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-360.json"
+  ],
+  "acceptance": {
+    "check": "账户装配:import docs/research/s834_diversification_audit.py 里的做法(RBv2 + 现金 + R-v2 用 docs/research/t352_engine.simulate(fix=True),名额 10 / 上限 0.80 / 每票 0.75%;日历日序列按 flex_alloc._between 进共同日),先对上账户年化 +35.7%、R-v2 风险占比 0.742。候选的尺寸:调到它自己的风险贡献 = 10%(二分即可)。按 S-835 的 (i)–(iv) 逐条报数、逐条判;两个窗口并排。只读、不入库;脚本 nohup,结果落文件;不要 Read 大文件;取台账用 `sed -n '/^## S-835 —/,/^## /p' REFUTATION_LEDGER.md`。先写清规则(照 S-569 / S-570 原文里量到的两条:山寨 7 日涨幅极端之后相对 BTC 做空一周 / 主流极端下跌之后做多一周),z30 的实现照 S-594 的更正;每条规则一条日收益序列;报每条的票数与逐年。与 R-v2 的相关是这张卡的核心:R-v2 输在假突破成串的那些月,它赚不赚。",
+    "expect": "docs/research/T-360_*.md + 脚本 + 结果 json + scenarios/lane-b-T-360.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-b/T-360。"
+  },
+  "prior_value": "突破策略输在假突破,反转策略赢在假突破 —— 如果这条互补是真的,它就是第二个引擎。"
+}

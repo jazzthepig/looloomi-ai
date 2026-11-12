@@ -1,0 +1,246 @@
+{
+ "window": [
+  "2021-10-11",
+  "2026-10-30"
+ ],
+ "months": 61,
+ "stress_months": 13,
+ "acct": {
+  "cagr": 0.35723917473060895,
+  "vol_ann_monthly": 0.3667899003202226,
+  "worst_month": [
+   "2023-02-28",
+   -0.10516057920998756
+  ]
+ },
+ "corr_full": {
+  "crypto": {
+   "crypto": 1.0,
+   "equity": 0.41,
+   "gold": 0.09,
+   "rv2": 0.35,
+   "cash": 0.27
+  },
+  "equity": {
+   "crypto": 0.41,
+   "equity": 1.0,
+   "gold": 0.31,
+   "rv2": 0.1,
+   "cash": 0.19
+  },
+  "gold": {
+   "crypto": 0.09,
+   "equity": 0.31,
+   "gold": 1.0,
+   "rv2": -0.03,
+   "cash": 0.11
+  },
+  "rv2": {
+   "crypto": 0.35,
+   "equity": 0.1,
+   "gold": -0.03,
+   "rv2": 1.0,
+   "cash": 0.23
+  },
+  "cash": {
+   "crypto": 0.27,
+   "equity": 0.19,
+   "gold": 0.11,
+   "rv2": 0.23,
+   "cash": 1.0
+  }
+ },
+ "corr_stress": {
+  "crypto": {
+   "crypto": 1.0,
+   "equity": -0.05,
+   "gold": -0.15,
+   "rv2": 0.43,
+   "cash": 0.26
+  },
+  "equity": {
+   "crypto": -0.05,
+   "equity": 1.0,
+   "gold": 0.51,
+   "rv2": -0.1,
+   "cash": 0.31
+  },
+  "gold": {
+   "crypto": -0.15,
+   "equity": 0.51,
+   "gold": 1.0,
+   "rv2": 0.12,
+   "cash": 0.15
+  },
+  "rv2": {
+   "crypto": 0.43,
+   "equity": -0.1,
+   "gold": 0.12,
+   "rv2": 1.0,
+   "cash": 0.66
+  },
+  "cash": {
+   "crypto": 0.26,
+   "equity": 0.31,
+   "gold": 0.15,
+   "rv2": 0.66,
+   "cash": 1.0
+  }
+ },
+ "corr_to_core": {
+  "full": {
+   "crypto": 0.74,
+   "equity": 0.45,
+   "gold": 0.11,
+   "rv2": 0.31,
+   "cash": 0.26
+  },
+  "stress": {
+   "crypto": -0.21,
+   "equity": 0.3,
+   "gold": 0.25,
+   "rv2": 0.01,
+   "cash": 0.19
+  }
+ },
+ "risk_contribution": {
+  "full": {
+   "crypto": 0.133,
+   "equity": 0.046,
+   "gold": 0.018,
+   "rv2": 0.742,
+   "cash": 0.001
+  },
+  "stress": {
+   "crypto": 0.142,
+   "equity": 0.073,
+   "gold": 0.084,
+   "rv2": 0.74,
+   "cash": 0.003
+  }
+ },
+ "effective_sources": {
+  "entropy_full": 2.0,
+  "entropy_stress": 2.51,
+  "eig_participation_full": 4.06,
+  "eig_participation_stress": 3.47
+ },
+ "mean_monthly_contribution_pct": {
+  "full": {
+   "crypto": 0.237,
+   "equity": 0.296,
+   "gold": 0.464,
+   "rv2": 1.94,
+   "cash": 0.032
+  },
+  "stress": {
+   "crypto": -1.305,
+   "equity": -0.4,
+   "gold": 0.217,
+   "rv2": 0.231,
+   "cash": 0.015
+  },
+  "acct_full": 3.044,
+  "acct_stress": -1.315,
+  "core_stress": -20.92
+ },
+ "stress_windows": {
+  "2021-11\u21922022-06": {
+   "acct": -5.4,
+   "core": -73.7,
+   "crypto": -9.7,
+   "equity": -7.7,
+   "gold": 0.0,
+   "rv2": 14.1,
+   "cash": 0.0,
+   "gate_short": 26.5,
+   "r6_short": 17.0
+  },
+  "2022-11 (FTX)": {
+   "acct": 3.1,
+   "core": -16.3,
+   "crypto": -1.3,
+   "equity": 2.0,
+   "gold": 2.4,
+   "rv2": 0.0,
+   "cash": 0.0,
+   "gate_short": 4.1,
+   "r6_short": 4.4
+  },
+  "2024-08-01\u219208-05": {
+   "acct": -4.6,
+   "core": -20.6,
+   "crypto": -1.4,
+   "equity": -2.4,
+   "gold": -0.4,
+   "rv2": -0.4,
+   "cash": 0.0,
+   "gate_short": 5.0,
+   "r6_short": 0.0
+  },
+  "2025-02": {
+   "acct": -1.6,
+   "core": -24.9,
+   "crypto": -1.7,
+   "equity": -0.1,
+   "gold": 0.6,
+   "rv2": -0.5,
+   "cash": 0.0,
+   "gate_short": 0.6,
+   "r6_short": 0.0
+  },
+  "worst 20d 2023-02-08\u21922023-03-08": {
+   "acct": -19.4,
+   "core": -9.9,
+   "crypto": -4.4,
+   "equity": -0.9,
+   "gold": -0.9,
+   "rv2": -14.8,
+   "cash": 0.0,
+   "gate_short": 0.0,
+   "r6_short": 0.0
+  }
+ },
+ "all_three_legs_down_months": {
+  "n": 11,
+  "of": 61,
+  "acct_mean_pct": -0.67,
+  "acct_worst_pct": -10.52,
+  "rv2_mean_pct": 2.93
+ },
+ "hedges": {
+  "gate_short": {
+   "total_pct": 14.5,
+   "corr_acct_full": -0.15,
+   "corr_acct_stress": 0.13,
+   "mean_in_stress_pct": 4.75,
+   "mean_outside_pct": -0.93,
+   "corr_sources_full": {
+    "crypto": -0.27,
+    "equity": -0.31,
+    "gold": -0.18,
+    "rv2": -0.02,
+    "cash": -0.09
+   }
+  },
+  "r6_short": {
+   "total_pct": 13.4,
+   "corr_acct_full": -0.16,
+   "corr_acct_stress": -0.01,
+   "mean_in_stress_pct": 3.23,
+   "mean_outside_pct": -0.57,
+   "corr_sources_full": {
+    "crypto": -0.21,
+    "equity": -0.32,
+    "gold": -0.13,
+    "rv2": -0.06,
+    "cash": -0.12
+   }
+  }
+ },
+ "config": {
+  "f": 0.0075,
+  "cap": 0.8,
+  "n": 10
+ }
+}
