@@ -1,0 +1,28 @@
+{
+  "id": "T-355",
+  "owner": "lane-a",
+  "status": "open",
+  "created": "2026-11-12",
+  "title": "S-830 票源的第二份:照生产内核的 SQL(r_tickets_scan)从零重写开票 / 管票,在同一批日线上生成票,与 t197 的 956 张逐张对",
+  "source": "规则只从这一处读:migrations/2026-11-05_r_tickets_validated_universe.sql 里的 `r_tickets_scan`(信号条件、进场、止损、SMA20 出场、到期;`grep -n \"r_tickets_scan\" -A 140` 取段,不要 Read 整个文件)。**不读、不 import docs/research/t159_*、t197_rv2_survivorship.py、t351_*。** 日线 = cometcloud-local/research/s681/_um_daily.jsonl;闸门 = t310_slots.load_gate()。对照 = docs/research/t197_results.json 的 tickets.A(只在你的票出齐之后才读)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-355.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "生产内核与 t197 的宇宙 / 过滤不同(验证过的宇宙、OI 过滤、下架规则)—— 这些**不要**加,只实现信号与管票;宇宙用 t197 结果文件 meta 里写的那一个。报:你生成的票数、与 t197 重合的票数(同币同信号日)、只在你这边 / 只在它那边的各多少并各举 5 张说明原因;重合的票里 entry_px / stop_px / exit_d / exit_px / r 逐项不一致的张数。再把你的票喂给 docs/research/t353_engine.simulate(f 0.5%、上限 0.40、名额 14),报成交票数与总收益,对 358 张 / +98.35%。只读、不入库;脚本 nohup,结果落文件;不要 Read 大文件。",
+    "expect": "docs/research/T-355_ticket_source_second_copy.md + t355_*.py + t355_results.json + scenarios/lane-a-T-355.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-a/T-355。"
+  },
+  "prior_value": "S-829 的两台引擎独立的是记账;956 张票只有一份实现。要动真钱参数,票源也得有第二份。",
+  "notes": "2026-11-12T00:06:52Z Seth 开卡(S-830 = 核对,不计试验数)。",
+  "verified": null
+}
