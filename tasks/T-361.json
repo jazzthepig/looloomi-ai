@@ -1,0 +1,28 @@
+{
+  "status": "in_review",
+  "created": "2026-11-12",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "notes": "2026-11-12T16:33:00Z Seth 开卡。| 2026-11-13 lane-c 交付(in_review)。账户先对上:S-834 口径年化 +35.75%(期望 35.7)、R-v2 风险占比 0.742(期望 0.742)、61 个月(2021-10-12→2026-10-30)、有效来源 2.00、最差 20 日 −19.4%。准入表 8 个族(S-681 H2 / H4、S-808、S-810、S-642、S-736 两版、World50 EW×Mom)逐条判:只有 S-681 H4 四条全过(ρ账户 +0.18/+0.13、ρR-v2 −0.21/−0.22、月贡献 +0.205%、p_upper 0.002、最差 20 日 −19.4%→−8.0%、有效来源 2.00→2.30);S-642 过 (ii)(iii) 但压力月 ρ(账户)=+0.75 不过 (i);World50 ρ(账户)=+0.52、p_upper=1.000 不过 (i)(ii);S-808/S-810/S-736 的月贡献为负,不过 (ii)。产物:docs/research/t361_admission_table.py + t361_results.json + T-361_admission_table.md(每族一行、(i)–(iv) 逐条 + 2023-02-08→03-08 收益)+ T-361_admission_table_notes.md(读表须知)+ t361_world50_panel.py + scenarios/lane-c-T-361.json(4 条)。三处待 @seth 拍板:(a) 尺寸规则 —— 「族占账户风险 10%」按边际方差贡献实现时,这些坟场袖套自身年化波动只有 1%–17%(账户 36.7%),要占 10% 风险得给 33%–98% 资金,叠加后账户年化被家族主导(H4 35.75%→16.99%),(iii) 的「最差 20 日变好」一半是低波稀释的记账效应;改波动份额口径则 w = 0.10×36.7%/σ族(H4 0.22、S-642 0.61、S810/S736_fixed 3.7 不可能)。(b) (ii) 的零分布统计量是我定的(叠加后账户年化 − 原账户年化;apparatus.circular_shift block 1 / 500 次 / 种子 361;p_upper<0.10 = 实际对齐排进前 10%);原始数都在 json 里,换判据不用重跑。(c) (iv) 对 S-681 H2 / H4 / S-808 / World50 是空的(首个进场日早于账户起点,A 窗 = B 窗);S-810 / S-642 / S-736 两窗不同且同向。World50 那一行用 Mac 本地 w50_daily 重建的面板(价格收益,不含股息):EW 13.95% / EW×Mom 15.58%,S-581 私有面板(总收益)是 EW 17.4% / EW×Mom 18.0%,差 2.4–3.5pp/yr,绝对收益不要与 S-581 混用;准入判断不敏感(ρ=+0.52 由账户已有 30% ACWI 股权腿决定)。只读、没入库、没把任何族放进前向影子臂(卡只要求判准入)。本轮试算 8 次(S-835:每个候选 1 次)。",
+  "id": "T-361",
+  "owner": "lane-c",
+  "title": "S-835 准入表:坟场里有曲线的族统一过一遍(S-681 H2 / H4、S-808、S-810、S-642、S-736、World50 回放)",
+  "source": "台账 S-835 登记节;各族曲线用你 T-348 的装配(t348_r3.py),World50 用 docs/research/t099_world50_replay.py 的净值。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-361.json"
+  ],
+  "acceptance": {
+    "check": "账户装配:import docs/research/s834_diversification_audit.py 里的做法(RBv2 + 现金 + R-v2 用 docs/research/t352_engine.simulate(fix=True),名额 10 / 上限 0.80 / 每票 0.75%;日历日序列按 flex_alloc._between 进共同日),先对上账户年化 +35.7%、R-v2 风险占比 0.742。候选的尺寸:调到它自己的风险贡献 = 10%(二分即可)。按 S-835 的 (i)–(iv) 逐条报数、逐条判;两个窗口并排。只读、不入库;脚本 nohup,结果落文件;不要 Read 大文件;取台账用 `sed -n '/^## S-835 —/,/^## /p' REFUTATION_LEDGER.md`。一张表:每族一行,(i)–(iv) 逐条的数与判定,外加它在 2023-02-08 → 03-08 的收益。H4 已知在账户口径上改善回本时间 —— 这里看的是它过不过「来源」的标准(相关、自己为正、两个窗口)。",
+    "expect": "docs/research/T-361_*.md + 脚本 + 结果 json + scenarios/lane-c-T-361.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-c/T-361。"
+  },
+  "prior_value": "把已经量过的东西按新标准排个队,免得重新挖一遍已有的。"
+}

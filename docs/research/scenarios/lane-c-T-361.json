@@ -1,0 +1,45 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {
+      "id": "T-361-1",
+      "scenario": "T-361 S-835 准入表(坟场里有曲线的族)",
+      "statement": "账户主腿(core_nav)到 2026-12-31 仍在 200 日线之上(state_daily 的 dist_200 > 0)",
+      "variable": "state:dist_200",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.58,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-361-2",
+      "scenario": "T-361 S-835 准入表(坟场里有曲线的族)",
+      "statement": "美联储净流动性(macro_daily 的 net_liquidity)到 2026-12-31 仍为正",
+      "variable": "macro:net_liquidity",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.7,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-361-3",
+      "scenario": "T-361 S-835 准入表(坟场里有曲线的族)",
+      "statement": "S-681 H4 族曲线到 2026-12-31 累计仍为正(T-361 里它是唯一四条全过的族;它先转负就要重开准入结论)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.55,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-361-4",
+      "scenario": "T-361 S-835 准入表(坟场里有曲线的族)",
+      "statement": "2026-12-31 复核时,T-361 表里除 S-681 H4 外仍没有第二个族过 (i)–(iv)(要么 (i) 的压力月相关仍 ≥ 0.30,要么 (ii) 自己的月贡献仍不为正)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.75,
+      "horizon_d": "2026-12-31"
+    }
+  ]
+}
