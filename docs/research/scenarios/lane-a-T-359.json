@@ -1,0 +1,148 @@
+{
+  "task": "T-359",
+  "lane": "lane-a",
+  "ledger": "S-835",
+  "generated_utc": "2026-11-13",
+  "topic": "资金费套息按独立来源准入(不是当现金腿判)",
+  "basis": "概率按台账已测数写(S-748 套息真实成本 14.833%/yr 名义、11.12% 资本口径;S-749 逐半年对借贷;S-834 账户 +35.7% / R-v2 风险占比 0.742),不是按本轮复算结果写 —— 本轮复算因 lane 上下文预算未执行。",
+  "resolution": "到期按 Brier 结算;命题的机器读法见每条 check(source 文件 + json_path + 判定式)。",
+  "propositions": [
+    {
+      "id": "T359-p1",
+      "pair": "T359-p1n",
+      "claim": "从 2026-11-06 起的前向记录里,carry_b_top_rc 臂到 2027-02-15 累计净收益 > 0(前向 ≥60 天为正)",
+      "probability": 0.62,
+      "resolve_by": "2027-02-15",
+      "check": {
+        "source": "carry_hl_daily",
+        "filter": "arm=carry_b_top_rc",
+        "op": "nav_last_minus_nav_at_2026_11_06_gt",
+        "value": 0.0
+      },
+      "basis": "S-749:最近 13 周套息资本口径 5.92% > 借贷 3.33%;但 2026H1 输给借贷 0.89pp、2025H1 输 0.03pp;前向期望按最近段写(2026H1 2.64%/yr)。"
+    },
+    {
+      "id": "T359-p1n",
+      "pair": "T359-p1",
+      "claim": "同一前向区间里 carry_b_top_rc 累计净收益 ≤ 0",
+      "probability": 0.38,
+      "resolve_by": "2027-02-15",
+      "check": {
+        "source": "carry_hl_daily",
+        "filter": "arm=carry_b_top_rc",
+        "op": "nav_last_minus_nav_at_2026_11_06_le",
+        "value": 0.0
+      }
+    },
+    {
+      "id": "T359-p2",
+      "pair": "T359-p2n",
+      "claim": "套息月贡献与账户月收益的相关系数(全样本,窗口 A)绝对值 < 0.30 —— 判据 (i) 的前半",
+      "probability": 0.75,
+      "resolve_by": "2027-02-15",
+      "check": {
+        "source": "docs/research/t359_results.json",
+        "json_path": "windows.A_candidate_start.corr.carry_vs_account_full",
+        "op": "abs_lt",
+        "value": 0.30
+      },
+      "basis": "机制:费率由拥挤/基差驱动,与 R-v2 的假突破方向不同步;S-834 已测五个来源两两相关都低(最高 0.41)。"
+    },
+    {
+      "id": "T359-p2n",
+      "pair": "T359-p2",
+      "claim": "同一相关系数绝对值 ≥ 0.30",
+      "probability": 0.25,
+      "resolve_by": "2027-02-15",
+      "check": {
+        "source": "docs/research/t359_results.json",
+        "json_path": "windows.A_candidate_start.corr.carry_vs_account_full",
+        "op": "abs_ge",
+        "value": 0.30
+      }
+    },
+    {
+      "id": "T359-p3",
+      "pair": "T359-p3n",
+      "claim": "把套息加到账户(自己的风险贡献 = 10%)之后,账户最差 20 日不比加之前更差 —— 判据 (iii) 的前半",
+      "probability": 0.60,
+      "resolve_by": "2027-02-15",
+      "check": {
+        "source": "docs/research/t359_results.json",
+        "json_path": "windows.A_candidate_start.worst20_after",
+        "op": "ge_worst20_before",
+        "value": null
+      },
+      "basis": "套息是低波动、机制上与突破不同步的臂;但它自己有连亏段(B、最长负段 −0.5%/11 天),不保证不叠加。"
+    },
+    {
+      "id": "T359-p3n",
+      "pair": "T359-p3",
+      "claim": "同一口径下账户最差 20 日变差",
+      "probability": 0.40,
+      "resolve_by": "2027-02-15",
+      "check": {
+        "source": "docs/research/t359_results.json",
+        "json_path": "windows.A_candidate_start.worst20_after",
+        "op": "lt_worst20_before",
+        "value": null
+      }
+    },
+    {
+      "id": "T359-p4",
+      "pair": "T359-p4n",
+      "claim": "两个窗口(2023-06-12 起 / 2021-10-11 起)结论同向 —— 判据 (iv)",
+      "probability": 0.65,
+      "resolve_by": "2027-02-15",
+      "check": {
+        "source": "docs/research/t359_results.json",
+        "json_path": "window_same_direction.all_same",
+        "op": "eq",
+        "value": true
+      },
+      "basis": "窗口 B 里套息在账户已知最弱点(2023-02-08→03-08)之前就没有数据,结论天然更可能被窗口 A 主导 —— 这是同向的偏方,但也说明 (iv) 在这个候选上偏松。"
+    },
+    {
+      "id": "T359-p4n",
+      "pair": "T359-p4",
+      "claim": "两个窗口结论不同向(窗口依赖)",
+      "probability": 0.35,
+      "resolve_by": "2027-02-15",
+      "check": {
+        "source": "docs/research/t359_results.json",
+        "json_path": "window_same_direction.all_same",
+        "op": "eq",
+        "value": false
+      }
+    },
+    {
+      "id": "T359-p5",
+      "pair": "T359-p5n",
+      "claim": "2026-07-01 → 2026-12-31 这一整半年,套息资本口径(×0.75)年化 > 稳定币借贷利率",
+      "probability": 0.52,
+      "resolve_by": "2027-01-15",
+      "check": {
+        "source": "docs/research/t359_results.json",
+        "json_path": "vs_lending[6].diff_cap_minus_lend_pp",
+        "op": "gt",
+        "value": 0.0
+      },
+      "basis": "S-749 逐半年:套息赢 5 / 7 段;输的两段都是 2025H1(差 0.03pp)与 2026H1(差 0.89pp);最近 13 周赢。"
+    },
+    {
+      "id": "T359-p5n",
+      "pair": "T359-p5",
+      "claim": "同一半年套息资本口径 ≤ 借贷利率",
+      "probability": 0.48,
+      "resolve_by": "2027-01-15",
+      "check": {
+        "source": "docs/research/t359_results.json",
+        "json_path": "vs_lending[6].diff_cap_minus_lend_pp",
+        "op": "le",
+        "value": 0.0
+      }
+    }
+  ],
+  "compliance": "本文件只有定位语言与历史/前向判定,不含任何收益承诺或买卖建议。",
+  "note": "T-359 本轮只交付脚本与判据实现,复算未跑 ⇒ 这些命题的概率是按台账已测数写的先验,不是按本轮结果写的后验;复算跑完后应重估。"
+}
