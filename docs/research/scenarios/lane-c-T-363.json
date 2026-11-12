@@ -1,0 +1,55 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {
+      "id": "T-363-1",
+      "scenario": "T-363 按「S-835 更正二」重报的 S-835 准入表",
+      "statement": "S-642 族曲线到 2026-12-31 累计仍为正(它是本卡口径下唯一翻成「四条全过」的族;它先转负就要重开准入结论)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.6,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-363-2",
+      "scenario": "T-363 按「S-835 更正二」重报的 S-835 准入表",
+      "statement": "2026-12-31 复核时,T-363 表里仍然只有 S-642 一个族过 (i)–(iv);S-681 H4 因 (iv) 是空判(另一窗口不可得)仍不算过",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.72,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-363-3",
+      "scenario": "T-363 按「S-835 更正二」重报的 S-835 准入表",
+      "statement": "S-681 H4 与账户(不带候选)的月度相关在 2026-12-31 复核时仍为负(T-363 量到 -0.34;它是这一轮唯一机制上说得通的分散来源)",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 0,
+      "prob": 0.62,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-363-4",
+      "scenario": "T-363 按「S-835 更正二」重报的 S-835 准入表",
+      "statement": "账户主腿(core_nav)到 2026-12-31 仍在 200 日线之上(state_daily 的 dist_200 > 0)",
+      "variable": "state:dist_200",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.58,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-363-5",
+      "scenario": "T-363 按「S-835 更正二」重报的 S-835 准入表",
+      "statement": "美联储净流动性(macro_daily 的 net_liquidity)到 2026-12-31 仍为正",
+      "variable": "macro:net_liquidity",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.7,
+      "horizon_d": "2026-12-31"
+    }
+  ]
+}

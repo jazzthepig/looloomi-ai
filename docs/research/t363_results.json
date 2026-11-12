@@ -1,0 +1,1807 @@
+{
+ "account": {
+  "cagr": 0.35748136480084436,
+  "months": 61,
+  "risk_contribution": {
+   "crypto": 0.13257800511350062,
+   "equity": 0.04630195414581047,
+   "gold": 0.017828641388341986,
+   "rv2": 0.7422314645401683,
+   "cash": 0.0007871561935487971
+  },
+  "rv2_risk_share": 0.7422314645401683,
+  "eff_sources": 1.9979553253225253,
+  "worst_month": [
+   "2023-02-28",
+   -0.10516057920998756
+  ]
+ },
+ "reconcile": {
+  "cagr_pct": 35.75,
+  "rv2_risk_share": 0.742,
+  "expect_cagr_pct": 35.7,
+  "expect_rv2": 0.742,
+  "cagr_ok": true,
+  "rv2_ok": true
+ },
+ "self_check": {
+  "n_draws": 200,
+  "target_vol_ann": 0.060753223157965025,
+  "n_months": 61,
+  "w_mean": 0.6979245581761885,
+  "w_min": 0.5854349861684847,
+  "w_max": 0.8016446745689085,
+  "new_reading_corr_mean": -0.002562328063206477,
+  "new_reading_corr_sd": 0.13085816339642206,
+  "new_reading_corr_absmean": 0.10564687977409999,
+  "old_reading_corr_mean": 0.31832097566635165,
+  "old_reading_corr_sd": 0.06187757183310307,
+  "target_new": 0.0,
+  "target_old": 0.31622776601683794,
+  "new_ok": true,
+  "old_ok": true
+ },
+ "families": {
+  "S681_H2": {
+   "label": "S-681 H2(pump fade)",
+   "first_entry": "2020-11-07",
+   "meta": {
+    "last_exit": "2026-09-30",
+    "n_tickets": 1706,
+    "risk_frac": 0.005,
+    "note": "\u7167 short_lab_common.money \u7684\u5c3a(t159.nav:f 0.5%/\u7968\u3001cap 10\u3001\u9010\u65e5\u76ef\u5e02)"
+   },
+   "sizing": {
+    "w": 0.709911963729275,
+    "rc_at_w": 0.10000000000000002,
+    "rc_max": 1.0219127969175827,
+    "monotone": false,
+    "reachable": true
+   },
+   "windows": {
+    "A_earliest": {
+     "ok": true,
+     "n_days": 1269,
+     "start": "2021-10-12",
+     "end": "2026-10-30",
+     "months": 61,
+     "stress_months": 13,
+     "stress_months_legacy": 13,
+     "stress_threshold": -0.04236583950410453,
+     "w": 0.709911963729275,
+     "cagr_base": 0.35748136480084436,
+     "cagr_aug": 0.08688468784007952,
+     "dcagr_pp": -27.059667696076485,
+     "p_upper": 0.001996007984031936,
+     "null_mean": 0.08429840299911734,
+     "null_sd": 0.00016929874379760756,
+     "corr_acct_base_full": -0.363211240411977,
+     "corr_acct_base_stress": -0.36531032857332274,
+     "corr_acct_aug_full": 0.17615069588092047,
+     "corr_acct_aug_stress": 0.9121604973335369,
+     "corr_rv2_full": -0.28641984218522387,
+     "corr_rv2_stress": -0.23765173893023245,
+     "corr_acct_base_stress_legacy": -0.2308852125620749,
+     "corr_acct_aug_stress_legacy": 0.6347682023302482,
+     "corr_rv2_stress_legacy": -0.3579974079336972,
+     "mean_monthly_contrib_pct": -0.13559797903609974,
+     "total_contrib_pct": -8.271476721202085,
+     "rc": {
+      "crypto": 0.1027,
+      "equity": 0.0364,
+      "gold": 0.0244,
+      "rv2": 0.7356,
+      "cash": 0.0004,
+      "fam": 0.1
+     },
+     "rc_fam": 0.10000000000000002,
+     "eff_sources": 2.470651642042816,
+     "eff_sources_base": 1.9979553253225253,
+     "worst20_base": -0.1943442494316644,
+     "worst20_aug": -0.06703619692606122,
+     "worst20_delta_pp": 12.730805250560318,
+     "fam_vol_ann": 0.09968933219379486,
+     "fam_cagr": -0.026155658329080733,
+     "judge": {
+      "i_corr_lt_030": true,
+      "i_corr_lt_030_abs": false,
+      "i_corr_lt_030_old_reading": false,
+      "i_flipped": true,
+      "i_flipped_vs_abs": true,
+      "ii_positive_and_p_lt_010": false,
+      "iii_worst20_not_worse": true,
+      "iii_eff_sources_up": true,
+      "iii_ok": true,
+      "pattern": [
+       true,
+       false,
+       true
+      ],
+      "pattern_abs": [
+       false,
+       false,
+       true
+      ],
+      "pattern_old": [
+       false,
+       false,
+       true
+      ]
+     }
+    },
+    "B_2021-10-11": {
+     "ok": true,
+     "n_days": 1269,
+     "start": "2021-10-12",
+     "end": "2026-10-30",
+     "months": 61,
+     "stress_months": 13,
+     "stress_months_legacy": 13,
+     "stress_threshold": -0.04236583950410453,
+     "w": 0.709911963729275,
+     "cagr_base": 0.35748136480084436,
+     "cagr_aug": 0.08688468784007952,
+     "dcagr_pp": -27.059667696076485,
+     "p_upper": 0.001996007984031936,
+     "null_mean": 0.08429840299911734,
+     "null_sd": 0.00016929874379760756,
+     "corr_acct_base_full": -0.363211240411977,
+     "corr_acct_base_stress": -0.36531032857332274,
+     "corr_acct_aug_full": 0.17615069588092047,
+     "corr_acct_aug_stress": 0.9121604973335369,
+     "corr_rv2_full": -0.28641984218522387,
+     "corr_rv2_stress": -0.23765173893023245,
+     "corr_acct_base_stress_legacy": -0.2308852125620749,
+     "corr_acct_aug_stress_legacy": 0.6347682023302482,
+     "corr_rv2_stress_legacy": -0.3579974079336972,
+     "mean_monthly_contrib_pct": -0.13559797903609974,
+     "total_contrib_pct": -8.271476721202085,
+     "rc": {
+      "crypto": 0.1027,
+      "equity": 0.0364,
+      "gold": 0.0244,
+      "rv2": 0.7356,
+      "cash": 0.0004,
+      "fam": 0.1
+     },
+     "rc_fam": 0.10000000000000002,
+     "eff_sources": 2.470651642042816,
+     "eff_sources_base": 1.9979553253225253,
+     "worst20_base": -0.1943442494316644,
+     "worst20_aug": -0.06703619692606122,
+     "worst20_delta_pp": 12.730805250560318,
+     "fam_vol_ann": 0.09968933219379486,
+     "fam_cagr": -0.026155658329080733,
+     "judge": {
+      "i_corr_lt_030": true,
+      "i_corr_lt_030_abs": false,
+      "i_corr_lt_030_old_reading": false,
+      "i_flipped": true,
+      "i_flipped_vs_abs": true,
+      "ii_positive_and_p_lt_010": false,
+      "iii_worst20_not_worse": true,
+      "iii_eff_sources_up": true,
+      "iii_ok": true,
+      "pattern": [
+       true,
+       false,
+       true
+      ],
+      "pattern_abs": [
+       false,
+       false,
+       true
+      ],
+      "pattern_old": [
+       false,
+       false,
+       true
+      ]
+     }
+    }
+   },
+   "pattern_new": {
+    "A_earliest": [
+     true,
+     false,
+     true
+    ],
+    "B_2021-10-11": [
+     true,
+     false,
+     true
+    ]
+   },
+   "pattern_new_abs": {
+    "A_earliest": [
+     false,
+     false,
+     true
+    ],
+    "B_2021-10-11": [
+     false,
+     false,
+     true
+    ]
+   },
+   "pattern_old": {
+    "A_earliest": [
+     false,
+     false,
+     true
+    ],
+    "B_2021-10-11": [
+     false,
+     false,
+     true
+    ]
+   },
+   "i_flipped_any_window": true,
+   "iv_same_direction": true,
+   "iv_window_dependent": false,
+   "iv_degenerate": true,
+   "iv_note": "A=B(\u540c\u7a97\u53e3,\u9000\u5316)",
+   "iv_available": false,
+   "iv_same_direction_old": true,
+   "passes_new": false,
+   "passes_new_abs": false,
+   "passes_old": false,
+   "conclusion_changed": false,
+   "conclusion_changed_abs": false,
+   "feb_window": {
+    "start": "2023-02-08",
+    "end": "2023-03-08",
+    "fam_total_pct": 3.58,
+    "n_days": 20
+   },
+   "standalone": {
+    "start": "2020-11-07",
+    "end": "2026-09-29",
+    "total_pct": -32.0,
+    "cagr_pct": -6.33
+   }
+  },
+  "S681_H4": {
+   "label": "S-681 H4(\u718a\u5e02\u53cd\u5f39\u5931\u8d25)",
+   "first_entry": "2020-09-04",
+   "meta": {
+    "last_exit": "2026-09-30",
+    "n_tickets": 9303,
+    "risk_frac": 0.005,
+    "note": "\u540c\u4e0a"
+   },
+   "sizing": {
+    "w": 0.6076921511819631,
+    "rc_at_w": 0.09999999999999985,
+    "rc_max": 1.017254043761366,
+    "monotone": false,
+    "reachable": true
+   },
+   "windows": {
+    "A_earliest": {
+     "ok": true,
+     "n_days": 1269,
+     "start": "2021-10-12",
+     "end": "2026-10-30",
+     "months": 61,
+     "stress_months": 13,
+     "stress_months_legacy": 13,
+     "stress_threshold": -0.04236583950410453,
+     "w": 0.6076921511819631,
+     "cagr_base": 0.35748136480084436,
+     "cagr_aug": 0.16994871502800124,
+     "dcagr_pp": -18.75326497728431,
+     "p_upper": 0.001996007984031936,
+     "null_mean": 0.1652606783645744,
+     "null_sd": 0.0003428526560936695,
+     "corr_acct_base_full": -0.3439996897007594,
+     "corr_acct_base_stress": 0.09417155805597185,
+     "corr_acct_aug_full": 0.18145179424978164,
+     "corr_acct_aug_stress": 0.95256520856103,
+     "corr_rv2_full": -0.20512979811670828,
+     "corr_rv2_stress": 0.23123786227218124,
+     "corr_acct_base_stress_legacy": -0.4295277339472821,
+     "corr_acct_aug_stress_legacy": 0.13094427985520996,
+     "corr_rv2_stress_legacy": -0.21891717997372565,
+     "mean_monthly_contrib_pct": 0.20516482605081243,
+     "total_contrib_pct": 12.515054389099559,
+     "rc": {
+      "crypto": 0.081,
+      "equity": 0.0261,
+      "gold": 0.0256,
+      "rv2": 0.7629,
+      "cash": 0.0008,
+      "fam": 0.1
+     },
+     "rc_fam": 0.09999999999999985,
+     "eff_sources": 2.3031806947605715,
+     "eff_sources_base": 1.9979553253225253,
+     "worst20_base": -0.1943442494316644,
+     "worst20_aug": -0.07973796060114358,
+     "worst20_delta_pp": 11.460628883052081,
+     "fam_vol_ann": 0.17152320605622906,
+     "fam_cagr": 0.031195704580148087,
+     "judge": {
+      "i_corr_lt_030": true,
+      "i_corr_lt_030_abs": false,
+      "i_corr_lt_030_old_reading": true,
+      "i_flipped": false,
+      "i_flipped_vs_abs": true,
+      "ii_positive_and_p_lt_010": true,
+      "iii_worst20_not_worse": true,
+      "iii_eff_sources_up": true,
+      "iii_ok": true,
+      "pattern": [
+       true,
+       true,
+       true
+      ],
+      "pattern_abs": [
+       false,
+       true,
+       true
+      ],
+      "pattern_old": [
+       true,
+       true,
+       true
+      ]
+     }
+    },
+    "B_2021-10-11": {
+     "ok": true,
+     "n_days": 1269,
+     "start": "2021-10-12",
+     "end": "2026-10-30",
+     "months": 61,
+     "stress_months": 13,
+     "stress_months_legacy": 13,
+     "stress_threshold": -0.04236583950410453,
+     "w": 0.6076921511819631,
+     "cagr_base": 0.35748136480084436,
+     "cagr_aug": 0.16994871502800124,
+     "dcagr_pp": -18.75326497728431,
+     "p_upper": 0.001996007984031936,
+     "null_mean": 0.1652606783645744,
+     "null_sd": 0.0003428526560936695,
+     "corr_acct_base_full": -0.3439996897007594,
+     "corr_acct_base_stress": 0.09417155805597185,
+     "corr_acct_aug_full": 0.18145179424978164,
+     "corr_acct_aug_stress": 0.95256520856103,
+     "corr_rv2_full": -0.20512979811670828,
+     "corr_rv2_stress": 0.23123786227218124,
+     "corr_acct_base_stress_legacy": -0.4295277339472821,
+     "corr_acct_aug_stress_legacy": 0.13094427985520996,
+     "corr_rv2_stress_legacy": -0.21891717997372565,
+     "mean_monthly_contrib_pct": 0.20516482605081243,
+     "total_contrib_pct": 12.515054389099559,
+     "rc": {
+      "crypto": 0.081,
+      "equity": 0.0261,
+      "gold": 0.0256,
+      "rv2": 0.7629,
+      "cash": 0.0008,
+      "fam": 0.1
+     },
+     "rc_fam": 0.09999999999999985,
+     "eff_sources": 2.3031806947605715,
+     "eff_sources_base": 1.9979553253225253,
+     "worst20_base": -0.1943442494316644,
+     "worst20_aug": -0.07973796060114358,
+     "worst20_delta_pp": 11.460628883052081,
+     "fam_vol_ann": 0.17152320605622906,
+     "fam_cagr": 0.031195704580148087,
+     "judge": {
+      "i_corr_lt_030": true,
+      "i_corr_lt_030_abs": false,
+      "i_corr_lt_030_old_reading": true,
+      "i_flipped": false,
+      "i_flipped_vs_abs": true,
+      "ii_positive_and_p_lt_010": true,
+      "iii_worst20_not_worse": true,
+      "iii_eff_sources_up": true,
+      "iii_ok": true,
+      "pattern": [
+       true,
+       true,
+       true
+      ],
+      "pattern_abs": [
+       false,
+       true,
+       true
+      ],
+      "pattern_old": [
+       true,
+       true,
+       true
+      ]
+     }
+    }
+   },
+   "pattern_new": {
+    "A_earliest": [
+     true,
+     true,
+     true
+    ],
+    "B_2021-10-11": [
+     true,
+     true,
+     true
+    ]
+   },
+   "pattern_new_abs": {
+    "A_earliest": [
+     false,
+     true,
+     true
+    ],
+    "B_2021-10-11": [
+     false,
+     true,
+     true
+    ]
+   },
+   "pattern_old": {
+    "A_earliest": [
+     true,
+     true,
+     true
+    ],
+    "B_2021-10-11": [
+     true,
+     true,
+     true
+    ]
+   },
+   "i_flipped_any_window": false,
+   "iv_same_direction": true,
+   "iv_window_dependent": false,
+   "iv_degenerate": true,
+   "iv_note": "A=B(\u540c\u7a97\u53e3,\u9000\u5316)",
+   "iv_available": false,
+   "iv_same_direction_old": true,
+   "passes_new": false,
+   "passes_new_abs": false,
+   "passes_old": false,
+   "conclusion_changed": false,
+   "conclusion_changed_abs": false,
+   "feb_window": {
+    "start": "2023-02-08",
+    "end": "2023-03-08",
+    "fam_total_pct": 2.31,
+    "n_days": 20
+   },
+   "standalone": {
+    "start": "2020-09-04",
+    "end": "2026-09-30",
+    "total_pct": 10.8,
+    "cagr_pct": 1.7
+   }
+  },
+  "S808": {
+   "label": "S-808(\u88ab\u6324\u4e4b\u540e \u00b7 T-332)",
+   "first_entry": "2020-08-09",
+   "meta": {
+    "last_exit": "2026-11-09",
+    "n_tickets": 350,
+    "risk_frac": 0.005,
+    "note": "\u7167 T-332 \u81ea\u5df1\u7684 sleeve_nav(\u591a\u7968\u5e76\u53d1;\u540c\u540d\u65e5\u5df2\u4fee);\u8d44\u91d1\u8d39\u5b9e\u8ba1"
+   },
+   "sizing": {
+    "w": 0.7232233651336679,
+    "rc_at_w": 0.09999999999999988,
+    "rc_max": 1.027417049763823,
+    "monotone": false,
+    "reachable": true
+   },
+   "windows": {
+    "A_earliest": {
+     "ok": true,
+     "n_days": 1269,
+     "start": "2021-10-12",
+     "end": "2026-10-30",
+     "months": 61,
+     "stress_months": 13,
+     "stress_months_legacy": 13,
+     "stress_threshold": -0.04236583950410453,
+     "w": 0.7232233651336679,
+     "cagr_base": 0.35748136480084436,
+     "cagr_aug": 0.02823436057461204,
+     "dcagr_pp": -32.92470042262323,
+     "p_upper": 0.001996007984031936,
+     "null_mean": 0.027732441041464672,
+     "null_sd": 9.546698466317742e-05,
+     "corr_acct_base_full": -0.08402313903807888,
+     "corr_acct_base_stress": 0.02629246114647145,
+     "corr_acct_aug_full": 0.27526161786559983,
+     "corr_acct_aug_stress": 0.8280580986921429,
+     "corr_rv2_full": -0.018035938890354458,
+     "corr_rv2_stress": -0.13888749165344,
+     "corr_acct_base_stress_legacy": -0.10112011907909821,
+     "corr_acct_aug_stress_legacy": 0.35789495009800854,
+     "corr_rv2_stress_legacy": 0.15701054513635523,
+     "mean_monthly_contrib_pct": -0.5515277005078579,
+     "total_contrib_pct": -33.64318973097934,
+     "rc": {
+      "crypto": 0.1236,
+      "equity": 0.0405,
+      "gold": 0.011,
+      "rv2": 0.7275,
+      "cash": 0.0008,
+      "fam": 0.1
+     },
+     "rc_fam": 0.09999999999999988,
+     "eff_sources": 2.4734985857186187,
+     "eff_sources_base": 1.9979553253225253,
+     "worst20_base": -0.1943442494316644,
+     "worst20_aug": -0.060351423131909776,
+     "worst20_delta_pp": 13.399282629975461,
+     "fam_vol_ann": 0.0622015475074557,
+     "fam_cagr": -0.08925842854294186,
+     "judge": {
+      "i_corr_lt_030": true,
+      "i_corr_lt_030_abs": true,
+      "i_corr_lt_030_old_reading": false,
+      "i_flipped": true,
+      "i_flipped_vs_abs": false,
+      "ii_positive_and_p_lt_010": false,
+      "iii_worst20_not_worse": true,
+      "iii_eff_sources_up": true,
+      "iii_ok": true,
+      "pattern": [
+       true,
+       false,
+       true
+      ],
+      "pattern_abs": [
+       true,
+       false,
+       true
+      ],
+      "pattern_old": [
+       false,
+       false,
+       true
+      ]
+     }
+    },
+    "B_2021-10-11": {
+     "ok": true,
+     "n_days": 1269,
+     "start": "2021-10-12",
+     "end": "2026-10-30",
+     "months": 61,
+     "stress_months": 13,
+     "stress_months_legacy": 13,
+     "stress_threshold": -0.04236583950410453,
+     "w": 0.7232233651336679,
+     "cagr_base": 0.35748136480084436,
+     "cagr_aug": 0.02823436057461204,
+     "dcagr_pp": -32.92470042262323,
+     "p_upper": 0.001996007984031936,
+     "null_mean": 0.027732441041464672,
+     "null_sd": 9.546698466317742e-05,
+     "corr_acct_base_full": -0.08402313903807888,
+     "corr_acct_base_stress": 0.02629246114647145,
+     "corr_acct_aug_full": 0.27526161786559983,
+     "corr_acct_aug_stress": 0.8280580986921429,
+     "corr_rv2_full": -0.018035938890354458,
+     "corr_rv2_stress": -0.13888749165344,
+     "corr_acct_base_stress_legacy": -0.10112011907909821,
+     "corr_acct_aug_stress_legacy": 0.35789495009800854,
+     "corr_rv2_stress_legacy": 0.15701054513635523,
+     "mean_monthly_contrib_pct": -0.5515277005078579,
+     "total_contrib_pct": -33.64318973097934,
+     "rc": {
+      "crypto": 0.1236,
+      "equity": 0.0405,
+      "gold": 0.011,
+      "rv2": 0.7275,
+      "cash": 0.0008,
+      "fam": 0.1
+     },
+     "rc_fam": 0.09999999999999988,
+     "eff_sources": 2.4734985857186187,
+     "eff_sources_base": 1.9979553253225253,
+     "worst20_base": -0.1943442494316644,
+     "worst20_aug": -0.060351423131909776,
+     "worst20_delta_pp": 13.399282629975461,
+     "fam_vol_ann": 0.0622015475074557,
+     "fam_cagr": -0.08925842854294186,
+     "judge": {
+      "i_corr_lt_030": true,
+      "i_corr_lt_030_abs": true,
+      "i_corr_lt_030_old_reading": false,
+      "i_flipped": true,
+      "i_flipped_vs_abs": false,
+      "ii_positive_and_p_lt_010": false,
+      "iii_worst20_not_worse": true,
+      "iii_eff_sources_up": true,
+      "iii_ok": true,
+      "pattern": [
+       true,
+       false,
+       true
+      ],
+      "pattern_abs": [
+       true,
+       false,
+       true
+      ],
+      "pattern_old": [
+       false,
+       false,
+       true
+      ]
+     }
+    }
+   },
+   "pattern_new": {
+    "A_earliest": [
+     true,
+     false,
+     true
+    ],
+    "B_2021-10-11": [
+     true,
+     false,
+     true
+    ]
+   },
+   "pattern_new_abs": {
+    "A_earliest": [
+     true,
+     false,
+     true
+    ],
+    "B_2021-10-11": [
+     true,
+     false,
+     true
+    ]
+   },
+   "pattern_old": {
+    "A_earliest": [
+     false,
+     false,
+     true
+    ],
+    "B_2021-10-11": [
+     false,
+     false,
+     true
+    ]
+   },
+   "i_flipped_any_window": true,
+   "iv_same_direction": true,
+   "iv_window_dependent": false,
+   "iv_degenerate": true,
+   "iv_note": "A=B(\u540c\u7a97\u53e3,\u9000\u5316)",
+   "iv_available": false,
+   "iv_same_direction_old": true,
+   "passes_new": false,
+   "passes_new_abs": false,
+   "passes_old": false,
+   "conclusion_changed": false,
+   "conclusion_changed_abs": false,
+   "feb_window": {
+    "start": "2023-02-08",
+    "end": "2023-03-08",
+    "fam_total_pct": -0.5,
+    "n_days": 20
+   },
+   "standalone": {
+    "start": "2020-08-09",
+    "end": "2026-11-09",
+    "total_pct": -38.5,
+    "cagr_pct": -7.49
+   }
+  },
+  "S810": {
+   "label": "S-810(\u88ab\u6324\u4e4b\u540e \u00b7 T-334)",
+   "first_entry": "2023-06-02",
+   "meta": {
+    "last_exit": "2026-09-30",
+    "n_tickets": 13,
+    "risk_frac": 0.005,
+    "note": "\u7167 T-334 \u81ea\u5df1\u7684 build_tickets + T-332 sleeve_nav;\u8d44\u91d1\u8d39\u5b9e\u8ba1"
+   },
+   "sizing": {
+    "w": 0.977201115446374,
+    "rc_at_w": 0.10000000000000056,
+    "rc_max": 1.0171543455347427,
+    "monotone": false,
+    "reachable": true
+   },
+   "windows": {
+    "A_earliest": {
+     "ok": true,
+     "n_days": 857,
+     "start": "2023-06-02",
+     "end": "2026-10-30",
+     "months": 41,
+     "stress_months": 9,
+     "stress_months_legacy": 6,
+     "stress_threshold": -0.03972757325511941,
+     "w": 0.977201115446374,
+     "cagr_base": 0.4929038214239172,
+     "cagr_aug": 0.008987104084521969,
+     "dcagr_pp": -48.391671733939525,
+     "p_upper": 0.013972055888223553,
+     "null_mean": 0.008982642120547989,
+     "null_sd": 1.6136394752529846e-06,
+     "corr_acct_base_full": -0.1414342301990381,
+     "corr_acct_base_stress": -0.5779805848988767,
+     "corr_acct_aug_full": 0.31864893622670176,
+     "corr_acct_aug_stress": 0.9548267586723685,
+     "corr_rv2_full": -0.10927662273861014,
+     "corr_rv2_stress": 0.020428582342534595,
+     "corr_acct_base_stress_legacy": 0.18868413010152593,
+     "corr_acct_aug_stress_legacy": 0.4521223205162001,
+     "corr_rv2_stress_legacy": 0.022291239922713386,
+     "mean_monthly_contrib_pct": -0.011794794935691154,
+     "total_contrib_pct": -0.4835865923633373,
+     "rc": {
+      "crypto": 0.1234,
+      "equity": 0.0383,
+      "gold": 0.0099,
+      "rv2": 0.6945,
+      "cash": 0.0006,
+      "fam": 0.1568
+     },
+     "rc_fam": 0.15681831310649277,
+     "eff_sources": 2.6579950095393254,
+     "eff_sources_base": 2.0002642510524895,
+     "worst20_base": -0.16350353371484705,
+     "worst20_aug": -0.006344836665575615,
+     "worst20_delta_pp": 15.715869704927144,
+     "fam_vol_ann": 0.006659726172770264,
+     "fam_cagr": -0.0014648514002513213,
+     "judge": {
+      "i_corr_lt_030": true,
+      "i_corr_lt_030_abs": false,
+      "i_corr_lt_030_old_reading": false,
+      "i_flipped": true,
+      "i_flipped_vs_abs": true,
+      "ii_positive_and_p_lt_010": false,
+      "iii_worst20_not_worse": true,
+      "iii_eff_sources_up": true,
+      "iii_ok": true,
+      "pattern": [
+       true,
+       false,
+       true
+      ],
+      "pattern_abs": [
+       false,
+       false,
+       true
+      ],
+      "pattern_old": [
+       false,
+       false,
+       true
+      ]
+     }
+    },
+    "B_2021-10-11": {
+     "ok": true,
+     "n_days": 1269,
+     "start": "2021-10-12",
+     "end": "2026-10-30",
+     "months": 61,
+     "stress_months": 13,
+     "stress_months_legacy": 13,
+     "stress_threshold": -0.04236583950410453,
+     "w": 0.977201115446374,
+     "cagr_base": 0.35748136480084436,
+     "cagr_aug": 0.007155188776449606,
+     "dcagr_pp": -35.03261760243947,
+     "p_upper": 0.013972055888223553,
+     "null_mean": 0.0071521792766678525,
+     "null_sd": 1.0883660822806585e-06,
+     "corr_acct_base_full": -0.11914705411708255,
+     "corr_acct_base_stress": 0.03894147037424792,
+     "corr_acct_aug_full": 0.2520685646255007,
+     "corr_acct_aug_stress": 0.7762383587889293,
+     "corr_rv2_full": -0.08897622716057156,
+     "corr_rv2_stress": -0.03148115730845591,
+     "corr_acct_base_stress_legacy": 0.12252913324316346,
+     "corr_acct_aug_stress_legacy": 0.3400686958330051,
+     "corr_rv2_stress_legacy": 0.002059682319136828,
+     "mean_monthly_contrib_pct": -0.007927649055136675,
+     "total_contrib_pct": -0.4835865923633372,
+     "rc": {
+      "crypto": 0.1246,
+      "equity": 0.042,
+      "gold": 0.0176,
+      "rv2": 0.7304,
+      "cash": 0.0005,
+      "fam": 0.1
+     },
+     "rc_fam": 0.10000000000000056,
+     "eff_sources": 2.5310896020924925,
+     "eff_sources_base": 1.9979553253225253,
+     "worst20_base": -0.1943442494316644,
+     "worst20_aug": -0.006344836665575615,
+     "worst20_delta_pp": 18.799941276608877,
+     "fam_vol_ann": 0.005473124377463167,
+     "fam_cagr": -0.0009900426527058581,
+     "judge": {
+      "i_corr_lt_030": true,
+      "i_corr_lt_030_abs": true,
+      "i_corr_lt_030_old_reading": false,
+      "i_flipped": true,
+      "i_flipped_vs_abs": false,
+      "ii_positive_and_p_lt_010": false,
+      "iii_worst20_not_worse": true,
+      "iii_eff_sources_up": true,
+      "iii_ok": true,
+      "pattern": [
+       true,
+       false,
+       true
+      ],
+      "pattern_abs": [
+       true,
+       false,
+       true
+      ],
+      "pattern_old": [
+       false,
+       false,
+       true
+      ]
+     }
+    }
+   },
+   "pattern_new": {
+    "A_earliest": [
+     true,
+     false,
+     true
+    ],
+    "B_2021-10-11": [
+     true,
+     false,
+     true
+    ]
+   },
+   "pattern_new_abs": {
+    "A_earliest": [
+     false,
+     false,
+     true
+    ],
+    "B_2021-10-11": [
+     true,
+     false,
+     true
+    ]
+   },
+   "pattern_old": {
+    "A_earliest": [
+     false,
+     false,
+     true
+    ],
+    "B_2021-10-11": [
+     false,
+     false,
+     true
+    ]
+   },
+   "i_flipped_any_window": true,
+   "iv_same_direction": true,
+   "iv_window_dependent": false,
+   "iv_degenerate": false,
+   "iv_note": "",
+   "iv_available": true,
+   "iv_same_direction_old": true,
+   "passes_new": false,
+   "passes_new_abs": false,
+   "passes_old": false,
+   "conclusion_changed": false,
+   "conclusion_changed_abs": false,
+   "feb_window": {
+    "start": "2023-02-08",
+    "end": "2023-03-08",
+    "fam_total_pct": 0.0,
+    "n_days": 20
+   },
+   "standalone": {
+    "start": "2023-06-02",
+    "end": "2026-09-30",
+    "total_pct": -0.5,
+    "cagr_pct": -0.15
+   }
+  },
+  "S642": {
+   "label": "S-642(\u7a7a\u5934\u81c2 \u00b7 T-159)",
+   "first_entry": "2022-01-21",
+   "meta": {
+    "last_exit": "2026-09-07",
+    "n_tickets": 241,
+    "risk_frac": 0.005,
+    "note": "\u8d44\u91d1\u8d39\u672a\u8ba1(\u7167 T-159 \u81ea\u5df1\u7684 nav() \u53e3\u5f84:\u8d44\u91d1\u8d39\u5355\u5217\u5728 R \u91cc)"
+   },
+   "sizing": {
+    "w": 0.7447007353913706,
+    "rc_at_w": 0.09999999999999992,
+    "rc_max": 1.0207766362364263,
+    "monotone": false,
+    "reachable": true
+   },
+   "windows": {
+    "A_earliest": {
+     "ok": true,
+     "n_days": 1199,
+     "start": "2022-01-21",
+     "end": "2026-10-30",
+     "months": 58,
+     "stress_months": 12,
+     "stress_months_legacy": 12,
+     "stress_threshold": -0.040552885187500255,
+     "w": 0.7447007353913706,
+     "cagr_base": 0.308017914212094,
+     "cagr_aug": 0.08339277967985148,
+     "dcagr_pp": -22.462513453224254,
+     "p_upper": 0.00998003992015968,
+     "null_mean": 0.08316974195958997,
+     "null_sd": 8.754496506752619e-05,
+     "corr_acct_base_full": -0.03447749923725277,
+     "corr_acct_base_stress": -0.11304765630284576,
+     "corr_acct_aug_full": 0.33750598489747596,
+     "corr_acct_aug_stress": 0.2574394342733151,
+     "corr_rv2_full": -0.005306901654636474,
+     "corr_rv2_stress": -0.032718239018298186,
+     "corr_acct_base_stress_legacy": 0.08155767578784617,
+     "corr_acct_aug_stress_legacy": 0.7797429799025573,
+     "corr_rv2_stress_legacy": -0.011246719521669906,
+     "mean_monthly_contrib_pct": 0.02549812154062581,
+     "total_contrib_pct": 1.478891049356297,
+     "rc": {
+      "crypto": 0.1513,
+      "equity": 0.0619,
+      "gold": 0.0199,
+      "rv2": 0.6446,
+      "cash": 0.0011,
+      "fam": 0.127
+     },
+     "rc_fam": 0.12699535801791628,
+     "eff_sources": 2.9690399106476666,
+     "eff_sources_base": 2.2984133065415993,
+     "worst20_base": -0.1943442494316644,
+     "worst20_aug": -0.05259936341465732,
+     "worst20_delta_pp": 14.174488601700707,
+     "fam_vol_ann": 0.06101146684858426,
+     "fam_cagr": 0.002890176397088773,
+     "judge": {
+      "i_corr_lt_030": true,
+      "i_corr_lt_030_abs": true,
+      "i_corr_lt_030_old_reading": false,
+      "i_flipped": true,
+      "i_flipped_vs_abs": false,
+      "ii_positive_and_p_lt_010": true,
+      "iii_worst20_not_worse": true,
+      "iii_eff_sources_up": true,
+      "iii_ok": true,
+      "pattern": [
+       true,
+       true,
+       true
+      ],
+      "pattern_abs": [
+       true,
+       true,
+       true
+      ],
+      "pattern_old": [
+       false,
+       true,
+       true
+      ]
+     }
+    },
+    "B_2021-10-11": {
+     "ok": true,
+     "n_days": 1269,
+     "start": "2021-10-12",
+     "end": "2026-10-30",
+     "months": 61,
+     "stress_months": 13,
+     "stress_months_legacy": 13,
+     "stress_threshold": -0.04236583950410453,
+     "w": 0.7447007353913706,
+     "cagr_base": 0.35748136480084436,
+     "cagr_aug": 0.09425442710396292,
+     "dcagr_pp": -26.322693769688144,
+     "p_upper": 0.00998003992015968,
+     "null_mean": 0.09404149066383269,
+     "null_sd": 8.35805213906977e-05,
+     "corr_acct_base_full": -0.032017229886394,
+     "corr_acct_base_stress": -0.21437521384496028,
+     "corr_acct_aug_full": 0.29872882761552805,
+     "corr_acct_aug_stress": 0.10392938166756913,
+     "corr_rv2_full": -0.005774191606165513,
+     "corr_rv2_stress": 0.04804616226317501,
+     "corr_acct_base_stress_legacy": 0.12428625353594298,
+     "corr_acct_aug_stress_legacy": 0.748423938035528,
+     "corr_rv2_stress_legacy": 0.043048323888745306,
+     "mean_monthly_contrib_pct": 0.024244115563217986,
+     "total_contrib_pct": 1.4788910493562972,
+     "rc": {
+      "crypto": 0.1304,
+      "equity": 0.0449,
+      "gold": 0.0121,
+      "rv2": 0.7146,
+      "cash": 0.0008,
+      "fam": 0.1
+     },
+     "rc_fam": 0.09999999999999992,
+     "eff_sources": 2.54559655643459,
+     "eff_sources_base": 1.9979553253225253,
+     "worst20_base": -0.1943442494316644,
+     "worst20_aug": -0.05259936341465732,
+     "worst20_delta_pp": 14.174488601700707,
+     "fam_vol_ann": 0.05930489880847436,
+     "fam_cagr": 0.00273165896793226,
+     "judge": {
+      "i_corr_lt_030": true,
+      "i_corr_lt_030_abs": true,
+      "i_corr_lt_030_old_reading": false,
+      "i_flipped": true,
+      "i_flipped_vs_abs": false,
+      "ii_positive_and_p_lt_010": true,
+      "iii_worst20_not_worse": true,
+      "iii_eff_sources_up": true,
+      "iii_ok": true,
+      "pattern": [
+       true,
+       true,
+       true
+      ],
+      "pattern_abs": [
+       true,
+       true,
+       true
+      ],
+      "pattern_old": [
+       false,
+       true,
+       true
+      ]
+     }
+    }
+   },
+   "pattern_new": {
+    "A_earliest": [
+     true,
+     true,
+     true
+    ],
+    "B_2021-10-11": [
+     true,
+     true,
+     true
+    ]
+   },
+   "pattern_new_abs": {
+    "A_earliest": [
+     true,
+     true,
+     true
+    ],
+    "B_2021-10-11": [
+     true,
+     true,
+     true
+    ]
+   },
+   "pattern_old": {
+    "A_earliest": [
+     false,
+     true,
+     true
+    ],
+    "B_2021-10-11": [
+     false,
+     true,
+     true
+    ]
+   },
+   "i_flipped_any_window": true,
+   "iv_same_direction": true,
+   "iv_window_dependent": false,
+   "iv_degenerate": false,
+   "iv_note": "",
+   "iv_available": true,
+   "iv_same_direction_old": true,
+   "passes_new": true,
+   "passes_new_abs": true,
+   "passes_old": false,
+   "conclusion_changed": true,
+   "conclusion_changed_abs": true,
+   "feb_window": {
+    "start": "2023-02-08",
+    "end": "2023-03-08",
+    "fam_total_pct": 0.0,
+    "n_days": 20
+   },
+   "standalone": {
+    "start": "2022-01-21",
+    "end": "2026-10-19",
+    "total_pct": 1.8,
+    "cagr_pct": 0.37
+   }
+  },
+  "S736_fixed": {
+   "label": "S-736(\u6218\u672f\u7a7a\u5355 \u00b7 \u8bb0\u8d26\u4fee\u6b63\u7248)",
+   "first_entry": "2022-05-12",
+   "meta": {
+    "last_exit": "2026-03-04",
+    "n_tickets": 18,
+    "risk_frac": 0.005,
+    "note": "\u8bca\u65ad:\u4fee\u6b63\u300c\u540c\u65e5\u51fa\u573a\u4e0d\u5e73\u4ed3\u300d\u7684\u8bb0\u8d26\u6b21\u5e8f;\u7968\u4e0e\u89c4\u5219\u4e00\u5b57\u4e0d\u52a8"
+   },
+   "sizing": {
+    "w": 0.9224469132664384,
+    "rc_at_w": 0.10000000000000026,
+    "rc_max": 1.015705379021474,
+    "monotone": false,
+    "reachable": true
+   },
+   "windows": {
+    "A_earliest": {
+     "ok": true,
+     "n_days": 1122,
+     "start": "2022-05-12",
+     "end": "2026-10-30",
+     "months": 54,
+     "stress_months": 11,
+     "stress_months_legacy": 10,
+     "stress_threshold": -0.04027778121003997,
+     "w": 0.9224469132664384,
+     "cagr_base": 0.35690126681459367,
+     "cagr_aug": 0.020449753847207264,
+     "dcagr_pp": -33.64515129673864,
+     "p_upper": 0.01996007984031936,
+     "null_mean": 0.02043234500127302,
+     "null_sd": 7.495942894117601e-06,
+     "corr_acct_base_full": -0.04635663316583691,
+     "corr_acct_base_stress": 0.1460614223681088,
+     "corr_acct_aug_full": 0.32997210373725794,
+     "corr_acct_aug_stress": 0.8541727343497932,
+     "corr_rv2_full": -0.008877413166460991,
+     "corr_rv2_stress": -0.5095649882687369,
+     "corr_acct_base_stress_legacy": -0.3649926401665659,
+     "corr_acct_aug_stress_legacy": 0.6344174458926409,
+     "corr_rv2_stress_legacy": -0.21953441093757609,
+     "mean_monthly_contrib_pct": -0.05746462523948128,
+     "total_contrib_pct": -3.103089762931989,
+     "rc": {
+      "crypto": 0.156,
+      "equity": 0.0474,
+      "gold": 0.0191,
+      "rv2": 0.6638,
+      "cash": 0.0009,
+      "fam": 0.1283
+     },
+     "rc_fam": 0.1282930068311719,
+     "eff_sources": 2.860588425318212,
+     "eff_sources_base": 2.2405735253551877,
+     "worst20_base": -0.1943442494316644,
+     "worst20_aug": -0.017786633272651065,
+     "worst20_delta_pp": 17.655761615901334,
+     "fam_vol_ann": 0.012994823901771632,
+     "fam_cagr": -0.007558257232809784,
+     "judge": {
+      "i_corr_lt_030": true,
+      "i_corr_lt_030_abs": false,
+      "i_corr_lt_030_old_reading": false,
+      "i_flipped": true,
+      "i_flipped_vs_abs": true,
+      "ii_positive_and_p_lt_010": false,
+      "iii_worst20_not_worse": true,
+      "iii_eff_sources_up": true,
+      "iii_ok": true,
+      "pattern": [
+       true,
+       false,
+       true
+      ],
+      "pattern_abs": [
+       false,
+       false,
+       true
+      ],
+      "pattern_old": [
+       false,
+       false,
+       true
+      ]
+     }
+    },
+    "B_2021-10-11": {
+     "ok": true,
+     "n_days": 1269,
+     "start": "2021-10-12",
+     "end": "2026-10-30",
+     "months": 61,
+     "stress_months": 13,
+     "stress_months_legacy": 13,
+     "stress_threshold": -0.04236583950410453,
+     "w": 0.9224469132664384,
+     "cagr_base": 0.35748136480084436,
+     "cagr_aug": 0.021367430749925642,
+     "dcagr_pp": -33.611393405091874,
+     "p_upper": 0.01996007984031936,
+     "null_mean": 0.02135200948123281,
+     "null_sd": 6.640132898344511e-06,
+     "corr_acct_base_full": -0.03838771956241494,
+     "corr_acct_base_stress": 0.05573749288882662,
+     "corr_acct_aug_full": 0.29202312428462296,
+     "corr_acct_aug_stress": 0.7772725465788203,
+     "corr_rv2_full": 2.9812936042436485e-05,
+     "corr_rv2_stress": -0.35565424177128896,
+     "corr_acct_base_stress_legacy": -0.26941773193605,
+     "corr_acct_aug_stress_legacy": 0.5579333492548053,
+     "corr_rv2_stress_legacy": -0.16551435898629316,
+     "mean_monthly_contrib_pct": -0.050870323982491625,
+     "total_contrib_pct": -3.103089762931989,
+     "rc": {
+      "crypto": 0.1345,
+      "equity": 0.0375,
+      "gold": 0.0133,
+      "rv2": 0.7268,
+      "cash": 0.0007,
+      "fam": 0.1
+     },
+     "rc_fam": 0.10000000000000026,
+     "eff_sources": 2.5058396274514516,
+     "eff_sources_base": 1.9979553253225253,
+     "worst20_base": -0.1943442494316644,
+     "worst20_aug": -0.017786633272651065,
+     "worst20_delta_pp": 17.655761615901334,
+     "fam_vol_ann": 0.012220384902293224,
+     "fam_cagr": -0.006692218125617266,
+     "judge": {
+      "i_corr_lt_030": true,
+      "i_corr_lt_030_abs": false,
+      "i_corr_lt_030_old_reading": false,
+      "i_flipped": true,
+      "i_flipped_vs_abs": true,
+      "ii_positive_and_p_lt_010": false,
+      "iii_worst20_not_worse": true,
+      "iii_eff_sources_up": true,
+      "iii_ok": true,
+      "pattern": [
+       true,
+       false,
+       true
+      ],
+      "pattern_abs": [
+       false,
+       false,
+       true
+      ],
+      "pattern_old": [
+       false,
+       false,
+       true
+      ]
+     }
+    }
+   },
+   "pattern_new": {
+    "A_earliest": [
+     true,
+     false,
+     true
+    ],
+    "B_2021-10-11": [
+     true,
+     false,
+     true
+    ]
+   },
+   "pattern_new_abs": {
+    "A_earliest": [
+     false,
+     false,
+     true
+    ],
+    "B_2021-10-11": [
+     false,
+     false,
+     true
+    ]
+   },
+   "pattern_old": {
+    "A_earliest": [
+     false,
+     false,
+     true
+    ],
+    "B_2021-10-11": [
+     false,
+     false,
+     true
+    ]
+   },
+   "i_flipped_any_window": true,
+   "iv_same_direction": true,
+   "iv_window_dependent": false,
+   "iv_degenerate": false,
+   "iv_note": "",
+   "iv_available": true,
+   "iv_same_direction_old": true,
+   "passes_new": false,
+   "passes_new_abs": false,
+   "passes_old": false,
+   "conclusion_changed": false,
+   "conclusion_changed_abs": false,
+   "feb_window": {
+    "start": "2023-02-08",
+    "end": "2023-03-08",
+    "fam_total_pct": 0.0,
+    "n_days": 20
+   },
+   "standalone": {
+    "start": "2021-03-24",
+    "end": "2026-10-31",
+    "total_pct": -3.3,
+    "cagr_pct": -0.6
+   }
+  },
+  "S736_published": {
+   "label": "S-736(\u6218\u672f\u7a7a\u5355 \u00b7 \u539f\u59cb\u8bb0\u8d26)",
+   "first_entry": "2022-05-12",
+   "meta": {
+    "last_exit": "2026-03-04",
+    "n_tickets": 18,
+    "risk_frac": 0.005,
+    "note": "\u8d44\u91d1\u8d39\u5b9e\u8ba1(\u7167 T-256 \u81ea\u5df1\u7684 sleeve_nav \u53e3\u5f84)"
+   },
+   "sizing": {
+    "w": 0.7349282024156794,
+    "rc_at_w": 0.09999999999999996,
+    "rc_max": 1.0185222930432472,
+    "monotone": false,
+    "reachable": true
+   },
+   "windows": {
+    "A_earliest": {
+     "ok": true,
+     "n_days": 1122,
+     "start": "2022-05-12",
+     "end": "2026-10-30",
+     "months": 54,
+     "stress_months": 11,
+     "stress_months_legacy": 10,
+     "stress_threshold": -0.04027778121003997,
+     "w": 0.7349282024156794,
+     "cagr_base": 0.35690126681459367,
+     "cagr_aug": 0.07755979871811913,
+     "dcagr_pp": -27.93414680964745,
+     "p_upper": 0.001996007984031936,
+     "null_mean": 0.07535824466437302,
+     "null_sd": 0.00014896827043152909,
+     "corr_acct_base_full": -0.41702286998344534,
+     "corr_acct_base_stress": -0.1436437678721873,
+     "corr_acct_aug_full": 0.21209779217576125,
+     "corr_acct_aug_stress": 0.8356435390316229,
+     "corr_rv2_full": -0.2729743207987915,
+     "corr_rv2_stress": -0.2253585707623096,
+     "corr_acct_base_stress_legacy": 0.3631144926248914,
+     "corr_acct_aug_stress_legacy": 0.7906178899974666,
+     "corr_rv2_stress_legacy": 0.4508387521441786,
+     "mean_monthly_contrib_pct": -0.13708043182451793,
+     "total_contrib_pct": -7.402343318523968,
+     "rc": {
+      "crypto": 0.0973,
+      "equity": 0.0454,
+      "gold": 0.0292,
+      "rv2": 0.6951,
+      "cash": 0.0009,
+      "fam": 0.137
+     },
+     "rc_fam": 0.13696670088279686,
+     "eff_sources": 2.7231531364035906,
+     "eff_sources_base": 2.2405735253551877,
+     "worst20_base": -0.1943442494316644,
+     "worst20_aug": -0.05227906798083537,
+     "worst20_delta_pp": 14.206518145082903,
+     "fam_vol_ann": 0.0848847869571763,
+     "fam_cagr": -0.024712068341396498,
+     "judge": {
+      "i_corr_lt_030": true,
+      "i_corr_lt_030_abs": false,
+      "i_corr_lt_030_old_reading": false,
+      "i_flipped": true,
+      "i_flipped_vs_abs": true,
+      "ii_positive_and_p_lt_010": false,
+      "iii_worst20_not_worse": true,
+      "iii_eff_sources_up": true,
+      "iii_ok": true,
+      "pattern": [
+       true,
+       false,
+       true
+      ],
+      "pattern_abs": [
+       false,
+       false,
+       true
+      ],
+      "pattern_old": [
+       false,
+       false,
+       true
+      ]
+     }
+    },
+    "B_2021-10-11": {
+     "ok": true,
+     "n_days": 1269,
+     "start": "2021-10-12",
+     "end": "2026-10-30",
+     "months": 61,
+     "stress_months": 13,
+     "stress_months_legacy": 13,
+     "stress_threshold": -0.04236583950410453,
+     "w": 0.7349282024156794,
+     "cagr_base": 0.35748136480084436,
+     "cagr_aug": 0.07982990559820169,
+     "dcagr_pp": -27.765145920264267,
+     "p_upper": 0.001996007984031936,
+     "null_mean": 0.07787712326899635,
+     "null_sd": 0.00013215079288705445,
+     "corr_acct_base_full": -0.35960463156919475,
+     "corr_acct_base_stress": -0.12703789182325423,
+     "corr_acct_aug_full": 0.18175831447740926,
+     "corr_acct_aug_stress": 0.77543728610152,
+     "corr_rv2_full": -0.21948715610201217,
+     "corr_rv2_stress": -0.1759135188486697,
+     "corr_acct_base_stress_legacy": 0.6041436185118068,
+     "corr_acct_aug_stress_legacy": 0.8716056422829187,
+     "corr_rv2_stress_legacy": 0.5163333640845179,
+     "mean_monthly_contrib_pct": -0.12134989046760604,
+     "total_contrib_pct": -7.402343318523968,
+     "rc": {
+      "crypto": 0.087,
+      "equity": 0.0341,
+      "gold": 0.0195,
+      "rv2": 0.7593,
+      "cash": 0.0006,
+      "fam": 0.1
+     },
+     "rc_fam": 0.09999999999999996,
+     "eff_sources": 2.3357256171466485,
+     "eff_sources_base": 1.9979553253225253,
+     "worst20_base": -0.1943442494316644,
+     "worst20_aug": -0.05227906798083537,
+     "worst20_delta_pp": 14.206518145082903,
+     "fam_vol_ann": 0.07981890188600968,
+     "fam_cagr": -0.02190234234541122,
+     "judge": {
+      "i_corr_lt_030": true,
+      "i_corr_lt_030_abs": false,
+      "i_corr_lt_030_old_reading": false,
+      "i_flipped": true,
+      "i_flipped_vs_abs": true,
+      "ii_positive_and_p_lt_010": false,
+      "iii_worst20_not_worse": true,
+      "iii_eff_sources_up": true,
+      "iii_ok": true,
+      "pattern": [
+       true,
+       false,
+       true
+      ],
+      "pattern_abs": [
+       false,
+       false,
+       true
+      ],
+      "pattern_old": [
+       false,
+       false,
+       true
+      ]
+     }
+    }
+   },
+   "pattern_new": {
+    "A_earliest": [
+     true,
+     false,
+     true
+    ],
+    "B_2021-10-11": [
+     true,
+     false,
+     true
+    ]
+   },
+   "pattern_new_abs": {
+    "A_earliest": [
+     false,
+     false,
+     true
+    ],
+    "B_2021-10-11": [
+     false,
+     false,
+     true
+    ]
+   },
+   "pattern_old": {
+    "A_earliest": [
+     false,
+     false,
+     true
+    ],
+    "B_2021-10-11": [
+     false,
+     false,
+     true
+    ]
+   },
+   "i_flipped_any_window": true,
+   "iv_same_direction": true,
+   "iv_window_dependent": false,
+   "iv_degenerate": false,
+   "iv_note": "",
+   "iv_available": true,
+   "iv_same_direction_old": true,
+   "passes_new": false,
+   "passes_new_abs": false,
+   "passes_old": false,
+   "conclusion_changed": false,
+   "conclusion_changed_abs": false,
+   "feb_window": {
+    "start": "2023-02-08",
+    "end": "2023-03-08",
+    "fam_total_pct": 0.32,
+    "n_days": 20
+   },
+   "standalone": {
+    "start": "2021-03-24",
+    "end": "2026-10-31",
+    "total_pct": -10.6,
+    "cagr_pct": -1.98
+   }
+  },
+  "World50_EWxMom": {
+   "label": "World50 \u56de\u653e(EW\u00d7Mom)",
+   "first_entry": "2016-01-01",
+   "meta": {
+    "note": "\u672c\u673a w50_daily \u91cd\u5efa\u9762\u677f \u00b7 \u4ef7\u683c\u6536\u76ca(\u4e0d\u542b\u80a1\u606f);S-581 \u79c1\u6709\u9762\u677f\u4e3a\u603b\u6536\u76ca,EW 17.4%/EW\u00d7Mom 18.0%"
+   },
+   "sizing": {
+    "w": 0.330830279942368,
+    "rc_at_w": 0.09999999999999999,
+    "rc_max": 1.00577596524795,
+    "monotone": true,
+    "reachable": true
+   },
+   "windows": {
+    "A_earliest": {
+     "ok": true,
+     "n_days": 1269,
+     "start": "2021-10-12",
+     "end": "2026-10-30",
+     "months": 61,
+     "stress_months": 13,
+     "stress_months_legacy": 13,
+     "stress_threshold": -0.04236583950410453,
+     "w": 0.330830279942368,
+     "cagr_base": 0.35748136480084436,
+     "cagr_aug": 0.307529099800965,
+     "dcagr_pp": -4.995226499987937,
+     "p_upper": 0.9960079840319361,
+     "null_mean": 0.3078786026658956,
+     "null_sd": 9.244212612132754e-05,
+     "corr_acct_base_full": 0.36203472195453906,
+     "corr_acct_base_stress": 0.08323903689205349,
+     "corr_acct_aug_full": 0.5235323669472725,
+     "corr_acct_aug_stress": 0.7747718783243224,
+     "corr_rv2_full": 0.14483557795404697,
+     "corr_rv2_stress": -0.7988738077029701,
+     "corr_acct_base_stress_legacy": 0.3497899205401554,
+     "corr_acct_aug_stress_legacy": 0.600851482773041,
+     "corr_rv2_stress_legacy": -0.03900841145919795,
+     "mean_monthly_contrib_pct": 0.43774258614106404,
+     "total_contrib_pct": 26.70229775460491,
+     "rc": {
+      "crypto": 0.1324,
+      "equity": 0.0613,
+      "gold": 0.0197,
+      "rv2": 0.6584,
+      "cash": 0.0008,
+      "fam": 0.1
+     },
+     "rc_fam": 0.09999999999999999,
+     "eff_sources": 2.7975102392347053,
+     "eff_sources_base": 1.9979553253225253,
+     "worst20_base": -0.1943442494316644,
+     "worst20_aug": -0.13473828603365423,
+     "worst20_delta_pp": 5.960596339801016,
+     "fam_vol_ann": 0.04779162909105009,
+     "fam_cagr": 0.17238075331682223,
+     "judge": {
+      "i_corr_lt_030": false,
+      "i_corr_lt_030_abs": false,
+      "i_corr_lt_030_old_reading": false,
+      "i_flipped": false,
+      "i_flipped_vs_abs": false,
+      "ii_positive_and_p_lt_010": false,
+      "iii_worst20_not_worse": true,
+      "iii_eff_sources_up": true,
+      "iii_ok": true,
+      "pattern": [
+       false,
+       false,
+       true
+      ],
+      "pattern_abs": [
+       false,
+       false,
+       true
+      ],
+      "pattern_old": [
+       false,
+       false,
+       true
+      ]
+     }
+    },
+    "B_2021-10-11": {
+     "ok": true,
+     "n_days": 1269,
+     "start": "2021-10-12",
+     "end": "2026-10-30",
+     "months": 61,
+     "stress_months": 13,
+     "stress_months_legacy": 13,
+     "stress_threshold": -0.04236583950410453,
+     "w": 0.330830279942368,
+     "cagr_base": 0.35748136480084436,
+     "cagr_aug": 0.307529099800965,
+     "dcagr_pp": -4.995226499987937,
+     "p_upper": 0.9960079840319361,
+     "null_mean": 0.3078786026658956,
+     "null_sd": 9.244212612132754e-05,
+     "corr_acct_base_full": 0.36203472195453906,
+     "corr_acct_base_stress": 0.08323903689205349,
+     "corr_acct_aug_full": 0.5235323669472725,
+     "corr_acct_aug_stress": 0.7747718783243224,
+     "corr_rv2_full": 0.14483557795404697,
+     "corr_rv2_stress": -0.7988738077029701,
+     "corr_acct_base_stress_legacy": 0.3497899205401554,
+     "corr_acct_aug_stress_legacy": 0.600851482773041,
+     "corr_rv2_stress_legacy": -0.03900841145919795,
+     "mean_monthly_contrib_pct": 0.43774258614106404,
+     "total_contrib_pct": 26.70229775460491,
+     "rc": {
+      "crypto": 0.1324,
+      "equity": 0.0613,
+      "gold": 0.0197,
+      "rv2": 0.6584,
+      "cash": 0.0008,
+      "fam": 0.1
+     },
+     "rc_fam": 0.09999999999999999,
+     "eff_sources": 2.7975102392347053,
+     "eff_sources_base": 1.9979553253225253,
+     "worst20_base": -0.1943442494316644,
+     "worst20_aug": -0.13473828603365423,
+     "worst20_delta_pp": 5.960596339801016,
+     "fam_vol_ann": 0.04779162909105009,
+     "fam_cagr": 0.17238075331682223,
+     "judge": {
+      "i_corr_lt_030": false,
+      "i_corr_lt_030_abs": false,
+      "i_corr_lt_030_old_reading": false,
+      "i_flipped": false,
+      "i_flipped_vs_abs": false,
+      "ii_positive_and_p_lt_010": false,
+      "iii_worst20_not_worse": true,
+      "iii_eff_sources_up": true,
+      "iii_ok": true,
+      "pattern": [
+       false,
+       false,
+       true
+      ],
+      "pattern_abs": [
+       false,
+       false,
+       true
+      ],
+      "pattern_old": [
+       false,
+       false,
+       true
+      ]
+     }
+    }
+   },
+   "pattern_new": {
+    "A_earliest": [
+     false,
+     false,
+     true
+    ],
+    "B_2021-10-11": [
+     false,
+     false,
+     true
+    ]
+   },
+   "pattern_new_abs": {
+    "A_earliest": [
+     false,
+     false,
+     true
+    ],
+    "B_2021-10-11": [
+     false,
+     false,
+     true
+    ]
+   },
+   "pattern_old": {
+    "A_earliest": [
+     false,
+     false,
+     true
+    ],
+    "B_2021-10-11": [
+     false,
+     false,
+     true
+    ]
+   },
+   "i_flipped_any_window": false,
+   "iv_same_direction": true,
+   "iv_window_dependent": false,
+   "iv_degenerate": true,
+   "iv_note": "A=B(\u540c\u7a97\u53e3,\u9000\u5316)",
+   "iv_available": false,
+   "iv_same_direction_old": true,
+   "passes_new": false,
+   "passes_new_abs": false,
+   "passes_old": false,
+   "conclusion_changed": false,
+   "conclusion_changed_abs": false,
+   "feb_window": {
+    "start": "2023-02-08",
+    "end": "2023-03-08",
+    "fam_total_pct": -0.44,
+    "n_days": 20
+   }
+  }
+ },
+ "config": {
+  "f": 0.0075,
+  "cap": 0.8,
+  "n": 10,
+  "target_rc": 0.1,
+  "n_null": 500,
+  "seed": 363,
+  "start": "2021-10-11",
+  "criterion_i_reading": "corr(Fw, A_base)\u2014\u2014 \u65cf\u6708\u8d21\u732e vs \u4e0d\u5e26\u5019\u9009\u7684\u8d26\u6237\u6708\u6536\u76ca;\u538b\u529b\u6708\u6309 A_base \u5728\u672c\u7a97\u5185 20 \u5206\u4f4d\u5b9a",
+  "criterion_i_reading_old": "corr(Fw, A)\u2014\u2014 \u65cf\u6708\u8d21\u732e vs \u53e0\u52a0\u5019\u9009\u540e\u7684\u8d26\u6237\u6708\u6536\u76ca(T-361)"
+ },
+ "crosscheck_t361": {
+  "available": true,
+  "n_compared": 64,
+  "max_abs_diff": 0.0,
+  "pattern_mismatch": [],
+  "pattern_match": true
+ }
+}
