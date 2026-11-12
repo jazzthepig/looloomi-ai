@@ -23,6 +23,6 @@
     "expect": "docs/research/T-355_ticket_source_second_copy.md + t355_*.py + t355_results.json + scenarios/lane-a-T-355.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-a/T-355。"
   },
   "prior_value": "S-829 的两台引擎独立的是记账;956 张票只有一份实现。要动真钱参数,票源也得有第二份。",
-  "notes": "2026-11-12T00:06:52Z Seth 开卡(S-830 = 核对,不计试验数)。",
+  "notes": "2026-11-12T00:06:52Z Seth 开卡(S-830 = 核对,不计试验数)。\n2026-11-12T00:50:00Z Seth 审 lane-a/T-355@2a662fcf:CHANGES(§Seth-1112f)。范围检查红:scenarios/lane-a-T-355.json 的 author 要是 'lane-a'(格式照 docs/research/scenarios/README.md:顶层 {author, entries:[{id, scenario, statement, variable, op, lo/hi, prob, horizon_d}]},用 src/data/evaluation/scenario_ledger.repo_files('.') + validate 自检);t355_results.json 缺(卡的 expect 要它)—— 交付 = 你自己跑完 t355_compare.py,不是 Seth 代跑。结构五项对上收;闸门放宽口径的选择写进报告首屏。",
   "verified": null
 }

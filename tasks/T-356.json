@@ -1,0 +1,28 @@
+{
+  "id": "T-356",
+  "owner": "lane-b",
+  "status": "open",
+  "created": "2026-11-12",
+  "title": "情景台账的死条目:main 上 14 条过不了 validate、7 个文件整份不认(没有 author / entries),从没入账 —— 只修格式,不改观点",
+  "source": "§B-auto-1112-0004 的发现,Seth 用 src/data/evaluation/scenario_ledger.repo_files('.') + validate 复核:14 条(lane-a-T-252 ×3、lane-a-T-256-4、lane-b-T-230-2、lane-b-T-254 ×6、lane-b-T-283-3/4、lane-c-T-239-5)+ 整份不认的 7 个文件(lane-a-T-308、lane-b-T-237/238/242/244/279/282,用的是 scenarios/propositions 等自拟 schema)。格式只认 docs/research/scenarios/README.md。",
+  "allowed_paths": [
+    "docs/research/scenarios/",
+    "tasks/T-356.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "acceptance": {
+    "check": "只修让它能入账所需的字段:author 用文件名里的 lane(别的 lane 的文件也照它原 lane 写,不写 lane-b);lt 缺 hi / gt 缺 lo 时,只在原条目里已有同一门槛(写错成 lo/hi、或 statement 里写明的数)时搬过去;缺 statement 时只能从同条目的 scenario / 原文逐字拼,不许新写判断。**prob、op、门槛、horizon_d、id 一个不改**(README:写下之后不能改)。7 个整份不认的文件转成 {author, entries} 时同理逐字段搬。horizon_d ≤ 2026-11-19 的条目照搬但在 notes 里列出(入账闸会拒,这是对的,不要改日期)。补不出来的(原文没有门槛)不修,列出原因。自检:修后 repo_files('.') 的 problems 为 0,validate(e, today=合并预计日 2026-11-13) 只剩 horizon 已过的那些;报修前 / 修后条数、能入账的条数、逐文件清单。",
+    "expect": "只改 docs/research/scenarios/*.json + 卡;notes 写逐文件修了什么、哪些因 horizon 已过入不了账、哪些补不出来;in_review,推 lane-b/T-356。"
+  },
+  "prior_value": "这些前向预期从没进 scenario_ledger ⇒ 永不结算,Brier 记录静默漏掉;T-283-3/4 到期 2026-12-01,拖过 11-24 就彻底入不了账。",
+  "notes": "2026-11-12T00:50:00Z Seth 开卡(§Seth-1112f)。不计试验数(格式修复,不是检验)。",
+  "verified": null
+}

@@ -60,6 +60,7 @@
 | claimed | T-136 | seth | 组合层:各腿按波动(N)统一换算风险、跨腿相关、总风险与回撤上限、按边际贡献评腿 | 设计文档 + Jazz 拍板 | R 臂单独跑不赢持有 BTC(S-610),值不值得占预算只能在组合层回答;现在各腿各记各的,总风险没人看 |  |
 | claimed | T-231 | seth | 前向记录写端恢复:refresh_depth_divergence 逼近 statement_timeout 30s —— 给 ohlcv_daily 扫描加下界,并让『重算补的日子』在记录里可见 | 迁移 + 测试 + 前后对比表;卡 notes 写最大耗时前后值、逐行差异数、恢复后第一条 ok 的时间。DDL 的应用要走 Seth 交互轮次(定时轮次只读,不应用)。 | 写端熄火 4 天且在加重(每天 error 10→17→19);『自首日起连续、无回填』这句对外话没有机械保证。 |  |
 | open | T-355 | lane-a | S-830 票源的第二份:照生产内核的 SQL(r_tickets_scan)从零重写开票 / 管票,在同一批日线上生成票,与 t197 的 956 张逐张对 | docs/research/T-355_ticket_source_second_copy.md + t355_*.py + t355_results.json + scenarios/lane-a-T-355.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-a/T-355。 | S-829 的两台引擎独立的是记账;956 张票只有一份实现。要动真钱参数,票源也得有第二份。 |  |
+| open | T-356 | lane-b | 情景台账的死条目:main 上 14 条过不了 validate、7 个文件整份不认(没有 author / entries),从没入账 —— 只修格式,不改观点 | 只改 docs/research/scenarios/*.json + 卡;notes 写逐文件修了什么、哪些因 horizon 已过入不了账、哪些补不出来;in_review,推 lane-b/T-356。 | 这些前向预期从没进 scenario_ledger ⇒ 永不结算,Brier 记录静默漏掉;T-283-3/4 到期 2026-12-01,拖过 11-24 就彻底入不了账。 |  |
 | open | T-341 | lane-c | 真钱唯一规则 X1V 的归因:对「同平均 β 的常数加密腿」—— 账户抗跌是 X1V 的择时还是 70% 非加密配置的结构(T-305 遗留 (c)) | docs/research/T-341_x1v_vs_const_beta.md(预注册在前,开头一张 A / K / ① 三行表)+ docs/research/t341_x1v_vs_const.py + docs/research/t341_results.json;卡 notes 写 w_K、两段 A−K 的总收益与回撤差、随机分位三个数;in_review,推 lane-c/T-341。 | T-305 只把账户和 ① 比,不能区分『X1V 择时』和『只持 30% 加密』。真钱里唯一的规则至今没有对它自己的结构做过对照;S2 里 Jazz 要回答 LP 的『为什么不直接用常数配比』,现在没有数。 |  |
 | open | T-348 | lane-c | 坟场按新尺子重判:已有的做空 / 对冲票(S-642、S-681 H2–H4、S-736、S-808、S-810)叠到整合账本上,按账户口径的回本时间与年化看,两个窗口 | docs/research/T-348_graveyard_rejudged.md + t348_*.py + t348_results.json + scenarios/lane-c-T-348.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-c/T-348。 | 规则改了之后,哪些旧的 ❌ 是「尺子」造成的、哪些是真的不行,要量出来 —— 否则重新挖只是把同一批东西再否一遍或再信一遍。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
@@ -357,4 +358,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 13 · claimed 6 · blocked 4 · in_review 51 · done 275 · dropped 5
+open 14 · claimed 6 · blocked 4 · in_review 51 · done 275 · dropped 5
