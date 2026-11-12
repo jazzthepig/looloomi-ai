@@ -1,0 +1,25 @@
+{
+  "id": "T-362",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-11-12",
+  "title": "读价入口的进程内缓存:ohlcv_daily 的整面板分页读取占了数据库最大的一块时间(65.8 万次、合计 17 小时)",
+  "source": "REFUTATION_LEDGER S-836;pg_stat_statements(11-13 实测):`WHERE source = $1 AND trade_date >= $2 ORDER BY …` 两条共 657,830 次、均 91–100 ms。入口 `src/data/vector/market_state_writer.fetch_panel`(被 `market/panel_read.py` 组装成账本读价的唯一入口)。",
+  "allowed_paths": [
+    "src/",
+    "tests/",
+    "docs/",
+    "scripts/",
+    "tasks/T-362.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "设计(已想过,没动手 —— 这是真钱也在用的读价路径,不该无人值守时改):新增 `fetch_panel_cached`,`fetch_panel` 本体不动(有 AST 测试盯着它的查询字典);缓存键 = (来源, 符号集合),存最早热身日的整面板,更晚的起点从里面切;每次调用先做两个轻请求当「新鲜度签名」(最新 trade_date + 最新两天各自的行数,走已有的覆盖索引),签名变了或超过 15 分钟就整面板重读;返回的字典按符号浅拷贝。要量:Railway 进程常驻这份面板多占多少内存;`_executor_dry_run_loop` 在「收盘还没全部落库」之后的重试是否仍在下一轮就看到新行。验收:pg_stat_statements 里那两条的日调用数降一个量级;任何一本账的 NAV 逐日不变。",
+    "expect": "代码 + 测试(签名变化即失效、TTL、切片与直接读逐位相同)+ SPINE 一行 + 上线后 24 小时的调用数对比。"
+  },
+  "prior_value": "数据库是 Small 档;11-11 07:08 UTC 那次断路器打开(9 次连续失败)发生在所有循环同时读的时候。这是最大的一块可省的负载。",
+  "notes": "2026-11-12T16:58:08Z Seth 开卡,未动工。",
+  "verified": null
+}

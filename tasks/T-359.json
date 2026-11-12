@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-12",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "notes": "2026-11-12T16:33:00Z Seth 开卡。",
+  "id": "T-359",
+  "owner": "lane-a",
+  "title": "S-835 候选一:资金费套息当成一个独立来源,按准入标准判(不是当现金腿判)",
+  "source": "台账 S-835 登记节;套息的日收益序列用你 T-253 / S-748 真实成本臂的脚本重出(HL 已实现费率 + 手续费 + 进出场基差)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-359.json"
+  ],
+  "acceptance": {
+    "check": "账户装配:import docs/research/s834_diversification_audit.py 里的做法(RBv2 + 现金 + R-v2 用 docs/research/t352_engine.simulate(fix=True),名额 10 / 上限 0.80 / 每票 0.75%;日历日序列按 flex_alloc._between 进共同日),先对上账户年化 +35.7%、R-v2 风险占比 0.742。候选的尺寸:调到它自己的风险贡献 = 10%(二分即可)。按 S-835 的 (i)–(iv) 逐条报数、逐条判;两个窗口并排。只读、不入库;脚本 nohup,结果落文件;不要 Read 大文件;取台账用 `sed -n '/^## S-835 —/,/^## /p' REFUTATION_LEDGER.md`。另报:套息臂在 R-v2 最差的 20 个交易日(2023-02-08 → 03-08)里的收益;与借贷利率的差(只报)。",
+    "expect": "docs/research/T-359_*.md + 脚本 + 结果 json + scenarios/lane-a-T-359.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-a/T-359。"
+  },
+  "prior_value": "机构标准要的是不相关的第二个引擎;套息当初是按「每半年赢借贷」否的,按来源从没判过。"
+}
