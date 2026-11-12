@@ -1,0 +1,2660 @@
+{
+  "card": "T-348",
+  "part": "第三轮 ①:新 C0(R-v2 用 t353_engine)上各族差值重出",
+  "generated": "lane-c 2026-11-12",
+  "spec": {
+    "engine": "docs/research/t353_engine.py",
+    "f": 0.005,
+    "gross_cap": 0.4,
+    "cap_n": 14,
+    "exits_first": true,
+    "gross_basis": "marked",
+    "account_window": [
+      "2021-10-11",
+      "2026-10-30"
+    ],
+    "expected": {
+      "cagr": 0.264,
+      "longest_uw_d": 762,
+      "max_dd": -0.28
+    }
+  },
+  "base": {
+    "C0_cagr": 0.26399880465780545,
+    "C0_total_return": 2.265550850319178,
+    "C0_max_dd_G": -0.281546951006724,
+    "C0_uw_G": {
+      "length_d": 763,
+      "peak_d": "2021-11-24",
+      "trough_d": "2023-10-03",
+      "recover_d": "2023-12-27",
+      "recovered": true,
+      "depth": -0.281546951006724,
+      "peak_value": 1.4591346521019568,
+      "trough_value": 1.048319739694394,
+      "end_if_open": "2026-10-30",
+      "n_episodes": 27
+    },
+    "C0_recovery_S829": {
+      "mdd": -0.281546951006724,
+      "longest_uw_d": 762,
+      "longest_uw": [
+        "2021-11-24",
+        "2023-12-26",
+        "closed"
+      ],
+      "mdd_peak": "2021-11-24",
+      "mdd_trough": "2023-10-03",
+      "down_d": 678,
+      "up_d": 84
+    },
+    "check_cagr": true,
+    "check_uw": true,
+    "check_mdd": true,
+    "cal_start": "2021-07-13",
+    "cal_end": "2026-10-30"
+  },
+  "families": {
+    "S642": {
+      "meta": {
+        "first_entry": "2022-01-21",
+        "last_exit": "2026-09-07",
+        "n_tickets": 241,
+        "n_open_end": 0,
+        "risk_frac": 0.005,
+        "cap": 10,
+        "best_ticket": {
+          "symbol": "BCH",
+          "signal_d": "2026-05-16",
+          "entry_d": "2026-05-17",
+          "r": 5.584584946236561,
+          "why": "贡献最大的一张(只报不判)"
+        },
+        "note": "资金费未计(照 T-159 自己的 nav() 口径:资金费单列在 R 里)"
+      },
+      "family_standalone": {
+        "n_days": 1733,
+        "d0": "2022-01-21",
+        "d1": "2026-10-19",
+        "total_return": 0.013867517096161075,
+        "cagr": 0.002908558689300955,
+        "vol_ann": 0.05379658864095345,
+        "max_dd": -0.11419265580394755,
+        "dd_peak": "2022-11-09",
+        "dd_trough": "2024-10-15",
+        "calmar": 0.025470628288867668,
+        "worst_month": -0.03966273177984114,
+        "worst_month_end": "2024-07-31",
+        "best_month": 0.04541958089459541,
+        "n_months": 57
+      },
+      "family_standalone_yearly": {
+        "2022": -0.016553100796751874,
+        "2023": -0.014656137153576831,
+        "2024": -0.06917435364681057,
+        "2025": 0.01718571556025461,
+        "2026": 0.1050295314336287
+      },
+      "windows": {
+        "A_earliest": {
+          "start": "2022-01-21",
+          "end": "2026-10-30",
+          "C0": {
+            "metrics": {
+              "n_days": 1199,
+              "d0": "2022-01-21",
+              "d1": "2026-10-30",
+              "total_return": 1.7686450810796783,
+              "cagr": 0.2378790517614351,
+              "vol_ann": 0.28330832181758,
+              "max_dd": -0.2090464529177315,
+              "dd_peak": "2023-02-03",
+              "dd_trough": "2023-10-03",
+              "calmar": 1.1379243629407596,
+              "worst_month": -0.09689737389658692,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2657261066858434,
+              "n_months": 57
+            },
+            "underwater": {
+              "length_d": 350,
+              "peak_d": "2022-02-09",
+              "trough_d": "2022-10-14",
+              "recover_d": "2023-01-25",
+              "recovered": true,
+              "depth": -0.14729322213724316,
+              "peak_value": 1.050550957197418,
+              "trough_value": 0.8958119216924454,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 28
+            },
+            "yearly": {
+              "2022": -0.07198269931779855,
+              "2023": 0.3308480096564881,
+              "2024": 0.5272839548645964,
+              "2025": 0.373515894533738,
+              "2026": 0.06863470754367862
+            }
+          },
+          "C0_plus_family": {
+            "metrics": {
+              "n_days": 1199,
+              "d0": "2022-01-21",
+              "d1": "2026-10-30",
+              "total_return": 1.8203384154995392,
+              "cagr": 0.24268697127233851,
+              "vol_ann": 0.2842889205248041,
+              "max_dd": -0.21085477194511615,
+              "dd_peak": "2023-02-03",
+              "dd_trough": "2023-10-03",
+              "calmar": 1.1509674124686542,
+              "worst_month": -0.0968973738965867,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2657261066858432,
+              "n_months": 57
+            },
+            "underwater": {
+              "length_d": 350,
+              "peak_d": "2022-02-09",
+              "trough_d": "2022-09-26",
+              "recover_d": "2023-01-25",
+              "recovered": true,
+              "depth": -0.1437633079248768,
+              "peak_value": 1.0283941719852907,
+              "trough_value": 0.8805488239700207,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 34
+            },
+            "yearly": {
+              "2022": -0.08388009201933155,
+              "2023": 0.3097731563087758,
+              "2024": 0.42309768306904716,
+              "2025": 0.39734697048298795,
+              "2026": 0.18199012301345063
+            }
+          },
+          "diff": {
+            "cagr_pp": 0.48079195109034245,
+            "max_dd_pp": -0.18083190273846528,
+            "total_return_pp": 5.16933344198609,
+            "underwater_days": 0,
+            "cagr_not_lower": true,
+            "underwater_shorter": false
+          },
+          "selfcheck_family": {
+            "window": [
+              "2022-01-21",
+              "2026-10-30"
+            ],
+            "n_days": 1743,
+            "fed_prod_return": 0.013867517096161075,
+            "curve_return": 0.013867517096161075,
+            "abs_diff": 0.0,
+            "note": "族曲线收益直接取族净值端点(asof),不重建被检序列"
+          }
+        },
+        "B_2021-10-11": {
+          "start": "2021-10-11",
+          "end": "2026-10-30",
+          "C0": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 2.265550850319178,
+              "cagr": 0.26399880465780545,
+              "vol_ann": 0.2948221566982701,
+              "max_dd": -0.281546951006724,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.937672397849908,
+              "worst_month": -0.09689737389658704,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2852957649247785,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 763,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-27",
+              "recovered": true,
+              "depth": -0.281546951006724,
+              "peak_value": 1.4591346521019568,
+              "trough_value": 1.048319739694394,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 27
+            },
+            "yearly": {
+              "2021": 0.27525405247294343,
+              "2022": -0.14168139755331788,
+              "2023": 0.3308480096564881,
+              "2024": 0.5272839548645967,
+              "2025": 0.3735158945337378,
+              "2026": 0.06863470754367884
+            }
+          },
+          "C0_plus_family": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 2.339146300398953,
+              "cagr": 0.2695879443114457,
+              "vol_ann": 0.2955971822244226,
+              "max_dd": -0.29940868419933186,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.9004012192644588,
+              "worst_month": -0.0968973738965867,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2852957649247785,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 769,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2024-01-02",
+              "recovered": true,
+              "depth": -0.29940868419933186,
+              "peak_value": 1.4591346521019568,
+              "trough_value": 1.02225706584646,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 33
+            },
+            "yearly": {
+              "2021": 0.27525405247294343,
+              "2022": -0.14946961537394177,
+              "2023": 0.3097731563087758,
+              "2024": 0.42309768306904716,
+              "2025": 0.3973469704829877,
+              "2026": 0.18199012301345063
+            }
+          },
+          "diff": {
+            "cagr_pp": 0.5589139653640274,
+            "max_dd_pp": -1.7861733192607865,
+            "total_return_pp": 7.35954500797753,
+            "underwater_days": 6,
+            "cagr_not_lower": true,
+            "underwater_shorter": false
+          },
+          "selfcheck_family": {
+            "window": [
+              "2021-10-11",
+              "2026-10-30"
+            ],
+            "n_days": 1845,
+            "fed_prod_return": 0.017590666015192546,
+            "curve_return": 0.017590666015192324,
+            "abs_diff": 2.220446049250313e-16,
+            "note": "族曲线收益直接取族净值端点(asof),不重建被检序列"
+          }
+        }
+      },
+      "conclusion": {
+        "class": "都不",
+        "window_A_pass": false,
+        "window_B_pass": false,
+        "window_dependent": false
+      }
+    },
+    "S736_published": {
+      "meta": {
+        "first_entry": "2022-05-12",
+        "last_exit": "2026-03-04",
+        "n_tickets": 18,
+        "n_open_end": 0,
+        "risk_frac": 0.005,
+        "cap": 1,
+        "n_taken": 2,
+        "tickets_detail": [
+          {
+            "symbol": "BTC",
+            "signal_d": "2022-05-11",
+            "entry_d": "2022-05-12",
+            "exit_d": "2022-05-26",
+            "hold_days": 15,
+            "reason": "时间",
+            "r_price": -0.03425307734826163,
+            "r_fund": 0.010489220678738205,
+            "r_cost": 0.012868314700581775,
+            "r_net": -0.0366321713701052,
+            "taken_published": true,
+            "taken_fixed": true,
+            "notional_published": 0.042894382335272575
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2022-06-12",
+            "entry_d": "2022-06-13",
+            "exit_d": "2022-06-13",
+            "hold_days": 1,
+            "reason": "止盈",
+            "r_price": 1.6666666666666667,
+            "r_fund": 0.00020492574720367137,
+            "r_cost": 0.016579753010005773,
+            "r_net": 1.6502918394038646,
+            "taken_published": true,
+            "taken_fixed": true,
+            "notional_published": 0.055255720827460296
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2022-06-13",
+            "entry_d": "2022-06-14",
+            "exit_d": "2022-06-18",
+            "hold_days": 5,
+            "reason": "止盈",
+            "r_price": 1.6666666666666663,
+            "r_fund": -0.0012590769009697745,
+            "r_cost": 0.012190907251837454,
+            "r_net": 1.6532166825138592,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2022-06-18",
+            "entry_d": "2022-06-19",
+            "exit_d": "2022-07-03",
+            "hold_days": 15,
+            "reason": "时间",
+            "r_price": -0.11314239060378244,
+            "r_fund": 0.006517289965784295,
+            "r_cost": 0.009294392474569018,
+            "r_net": -0.11591949311256716,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2022-07-03",
+            "entry_d": "2022-07-04",
+            "exit_d": "2022-07-07",
+            "hold_days": 4,
+            "reason": "止损",
+            "r_price": -1.0000000000000004,
+            "r_fund": 0.007449038686011439,
+            "r_cost": 0.013345067395634859,
+            "r_net": -1.005896028709624,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2024-03-19",
+            "entry_d": "2024-03-20",
+            "exit_d": "2024-03-20",
+            "hold_days": 1,
+            "reason": "止损",
+            "r_price": -0.9999999999999988,
+            "r_fund": 0.004709297536883245,
+            "r_cost": 0.01596913372968208,
+            "r_net": -1.0112598361927976,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2024-04-12",
+            "entry_d": "2024-04-13",
+            "exit_d": "2024-04-13",
+            "hold_days": 1,
+            "reason": "保本",
+            "r_price": 0.0,
+            "r_fund": 0.0039059216296529493,
+            "r_cost": 0.019529608148264745,
+            "r_net": -0.015623686518611795,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2024-04-13",
+            "entry_d": "2024-04-14",
+            "exit_d": "2024-04-28",
+            "hold_days": 15,
+            "reason": "时间",
+            "r_price": 0.14989631364627254,
+            "r_fund": 0.02203066482887879,
+            "r_cost": 0.016885703533559965,
+            "r_net": 0.15504127494159134,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2024-04-30",
+            "entry_d": "2024-05-01",
+            "exit_d": "2024-05-06",
+            "hold_days": 6,
+            "reason": "止损",
+            "r_price": -0.9999999999999998,
+            "r_fund": 0.010131542371496402,
+            "r_cost": 0.019118041510145175,
+            "r_net": -1.0089864991386486,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2024-08-05",
+            "entry_d": "2024-08-06",
+            "exit_d": "2024-08-08",
+            "hold_days": 3,
+            "reason": "止损",
+            "r_price": -0.9999999999999997,
+            "r_fund": 0.0008720078592400898,
+            "r_cost": 0.016925618385871307,
+            "r_net": -1.016053610526631,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2024-12-22",
+            "entry_d": "2024-12-23",
+            "exit_d": "2025-01-06",
+            "hold_days": 15,
+            "reason": "止损",
+            "r_price": -0.999999999999999,
+            "r_fund": 0.05964395490220392,
+            "r_cost": 0.02200997649406387,
+            "r_net": -0.9623660215918589,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2025-01-09",
+            "entry_d": "2025-01-10",
+            "exit_d": "2025-01-15",
+            "hold_days": 6,
+            "reason": "止损",
+            "r_price": -0.9999999999999997,
+            "r_fund": 0.016122003551490953,
+            "r_cost": 0.02407395033223143,
+            "r_net": -1.00795194678074,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2025-03-04",
+            "entry_d": "2025-03-05",
+            "exit_d": "2025-03-19",
+            "hold_days": 15,
+            "reason": "时间",
+            "r_price": 0.0593337790211986,
+            "r_fund": 0.014730660925140178,
+            "r_cost": 0.017805419460349785,
+            "r_net": 0.05625902048598899,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2025-04-06",
+            "entry_d": "2025-04-07",
+            "exit_d": "2025-04-11",
+            "hold_days": 5,
+            "reason": "止损",
+            "r_price": -1.0000000000000004,
+            "r_fund": 0.008458934180186726,
+            "r_cost": 0.02210099331187419,
+            "r_net": -1.013642059131688,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2025-11-20",
+            "entry_d": "2025-11-21",
+            "exit_d": "2025-12-03",
+            "hold_days": 13,
+            "reason": "止损",
+            "r_price": -1.0000000000000004,
+            "r_fund": 0.010046903737989953,
+            "r_cost": 0.01952396793193968,
+            "r_net": -1.0094770641939501,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2026-02-05",
+            "entry_d": "2026-02-06",
+            "exit_d": "2026-02-06",
+            "hold_days": 1,
+            "reason": "止损",
+            "r_price": -0.9999999999999997,
+            "r_fund": -0.002888352612054772,
+            "r_cost": 0.015062854772041013,
+            "r_net": -1.0179512073840955,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2026-02-15",
+            "entry_d": "2026-02-16",
+            "exit_d": "2026-02-25",
+            "hold_days": 10,
+            "reason": "保本",
+            "r_price": 0.0,
+            "r_fund": 0.004495448540826637,
+            "r_cost": 0.01739410532473483,
+            "r_net": -0.012898656783908193,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2026-02-25",
+            "entry_d": "2026-02-26",
+            "exit_d": "2026-03-04",
+            "hold_days": 7,
+            "reason": "止损",
+            "r_price": -1.000000000000001,
+            "r_fund": -0.0006572931917190312,
+            "r_cost": 0.020328655413990572,
+            "r_net": -1.0209859486057107,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          }
+        ],
+        "ticket_level_avg_r_net": -0.3744908562608684,
+        "ticket_level_total_r_net": -6.740835412695632,
+        "published_faithful": {
+          "total_return": -0.10621820627876011,
+          "max_dd": -0.22150156399328746,
+          "t342_ref_total_return": -0.1062,
+          "t342_ref_max_dd": -0.2215,
+          "ref": "T-256_tactical_short.md 第 81 行"
+        },
+        "best_ticket": {
+          "symbol": "BTC(单一标的)",
+          "signal_d": "2022-06-13",
+          "entry_d": "2022-06-14",
+          "r": 1.6532166825138592,
+          "why": "贡献最大的一张(只报不判)"
+        },
+        "selfcheck": {
+          "notional_max_abs_diff": 0.0,
+          "equity_at_entry_max_abs_diff": 0.0,
+          "funding_sum_max_abs_diff": 0.0
+        },
+        "note": "资金费实计(照 T-256 自己的 sleeve_nav 口径)"
+      },
+      "family_standalone": {
+        "n_days": 2047,
+        "d0": "2021-03-24",
+        "d1": "2026-10-31",
+        "total_return": -0.10621820627876011,
+        "cagr": -0.019837355328526374,
+        "vol_ann": 0.06313530451865136,
+        "max_dd": -0.22150156399328746,
+        "dd_peak": "2022-11-21",
+        "dd_trough": "2025-10-06",
+        "calmar": -0.08955853390329803,
+        "worst_month": -0.05986157998828612,
+        "worst_month_end": "2024-11-30",
+        "best_month": 0.04837484168341022,
+        "n_months": 67
+      },
+      "family_standalone_yearly": {
+        "2021": 0.0,
+        "2022": 0.020633221919663658,
+        "2023": -0.05253211604672603,
+        "2024": -0.11020569242509526,
+        "2025": 0.014361047977999863,
+        "2026": 0.024035750530506217
+      },
+      "windows": {
+        "A_earliest": {
+          "start": "2022-05-12",
+          "end": "2026-10-30",
+          "C0": {
+            "metrics": {
+              "n_days": 1122,
+              "d0": "2022-05-12",
+              "d1": "2026-10-30",
+              "total_return": 1.9246747981188936,
+              "cagr": 0.27148301177756506,
+              "vol_ann": 0.28992739636889986,
+              "max_dd": -0.2090464529177316,
+              "dd_peak": "2023-02-03",
+              "dd_trough": "2023-10-03",
+              "calmar": 1.2986731321597924,
+              "worst_month": -0.09689737389658692,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2657261066858432,
+              "n_months": 53
+            },
+            "underwater": {
+              "length_d": 304,
+              "peak_d": "2023-02-03",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-04",
+              "recovered": true,
+              "depth": -0.2090464529177316,
+              "peak_value": 1.1870360744016144,
+              "trough_value": 0.9388903935625684,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 31
+            },
+            "yearly": {
+              "2022": -0.01968337145433907,
+              "2023": 0.3308480096564881,
+              "2024": 0.5272839548645967,
+              "2025": 0.3735158945337378,
+              "2026": 0.06863470754367862
+            }
+          },
+          "C0_plus_family": {
+            "metrics": {
+              "n_days": 1122,
+              "d0": "2022-05-12",
+              "d1": "2026-10-30",
+              "total_return": 1.6670762028640245,
+              "cagr": 0.24551488128129484,
+              "vol_ann": 0.25798046501670757,
+              "max_dd": -0.2149300743190209,
+              "dd_peak": "2023-02-03",
+              "dd_trough": "2023-10-03",
+              "calmar": 1.142301197536818,
+              "worst_month": -0.09717969244158398,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.22000320777748783,
+              "n_months": 53
+            },
+            "underwater": {
+              "length_d": 308,
+              "peak_d": "2023-02-03",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-08",
+              "recovered": true,
+              "depth": -0.2149300743190209,
+              "peak_value": 1.1972521185062857,
+              "trough_value": 0.9399266316971244,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 34
+            },
+            "yearly": {
+              "2022": 0.0022094356978450413,
+              "2023": 0.26533603914581905,
+              "2024": 0.36837008063481447,
+              "2025": 0.4000844640882619,
+              "2026": 0.09777478985374777
+            }
+          },
+          "diff": {
+            "cagr_pp": -2.5968130496270225,
+            "max_dd_pp": -0.5883621401289285,
+            "total_return_pp": -25.759859525486917,
+            "underwater_days": 4,
+            "cagr_not_lower": false,
+            "underwater_shorter": false
+          },
+          "selfcheck_family": {
+            "window": [
+              "2022-05-12",
+              "2026-10-30"
+            ],
+            "n_days": 1632,
+            "fed_prod_return": -0.10579914347621466,
+            "curve_return": -0.105799143476215,
+            "abs_diff": 3.3306690738754696e-16,
+            "note": "族曲线收益直接取族净值端点(asof),不重建被检序列"
+          }
+        },
+        "B_2021-10-11": {
+          "start": "2021-10-11",
+          "end": "2026-10-30",
+          "C0": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 2.265550850319178,
+              "cagr": 0.26399880465780545,
+              "vol_ann": 0.2948221566982701,
+              "max_dd": -0.281546951006724,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.937672397849908,
+              "worst_month": -0.09689737389658704,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2852957649247785,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 763,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-27",
+              "recovered": true,
+              "depth": -0.281546951006724,
+              "peak_value": 1.4591346521019568,
+              "trough_value": 1.048319739694394,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 27
+            },
+            "yearly": {
+              "2021": 0.27525405247294343,
+              "2022": -0.14168139755331788,
+              "2023": 0.3308480096564881,
+              "2024": 0.5272839548645967,
+              "2025": 0.3735158945337378,
+              "2026": 0.06863470754367884
+            }
+          },
+          "C0_plus_family": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 1.9779880998243482,
+              "cagr": 0.24114160345806113,
+              "vol_ann": 0.2673164529369261,
+              "max_dd": -0.280739654687853,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.8589509869069979,
+              "worst_month": -0.09717969244158398,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2852957649247785,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 819,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2024-02-21",
+              "recovered": true,
+              "depth": -0.280739654687853,
+              "peak_value": 1.4591346521019568,
+              "trough_value": 1.049497693727773,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 27
+            },
+            "yearly": {
+              "2021": 0.27525405247294343,
+              "2022": -0.12249558839844876,
+              "2023": 0.2653360391458188,
+              "2024": 0.36837008063481447,
+              "2025": 0.4000844640882619,
+              "2026": 0.09777478985374799
+            }
+          },
+          "diff": {
+            "cagr_pp": -2.2857201199744326,
+            "max_dd_pp": 0.0807296318870998,
+            "total_return_pp": -28.756275049482973,
+            "underwater_days": 56,
+            "cagr_not_lower": false,
+            "underwater_shorter": false
+          },
+          "selfcheck_family": {
+            "window": [
+              "2021-10-11",
+              "2026-10-30"
+            ],
+            "n_days": 1845,
+            "fed_prod_return": -0.10578139722864177,
+            "curve_return": -0.10578139722863844,
+            "abs_diff": 3.3306690738754696e-15,
+            "note": "族曲线收益直接取族净值端点(asof),不重建被检序列"
+          }
+        }
+      },
+      "conclusion": {
+        "class": "都不",
+        "window_A_pass": false,
+        "window_B_pass": false,
+        "window_dependent": false
+      }
+    },
+    "S736_fixed": {
+      "meta": {
+        "first_entry": "2022-05-12",
+        "last_exit": "2026-03-04",
+        "n_tickets": 18,
+        "n_open_end": 0,
+        "risk_frac": 0.005,
+        "cap": 1,
+        "n_taken": 18,
+        "tickets_detail": [
+          {
+            "symbol": "BTC",
+            "signal_d": "2022-05-11",
+            "entry_d": "2022-05-12",
+            "exit_d": "2022-05-26",
+            "hold_days": 15,
+            "reason": "时间",
+            "r_price": -0.03425307734826163,
+            "r_fund": 0.010489220678738205,
+            "r_cost": 0.012868314700581775,
+            "r_net": -0.0366321713701052,
+            "taken_published": true,
+            "taken_fixed": true,
+            "notional_published": 0.042894382335272575
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2022-06-12",
+            "entry_d": "2022-06-13",
+            "exit_d": "2022-06-13",
+            "hold_days": 1,
+            "reason": "止盈",
+            "r_price": 1.6666666666666667,
+            "r_fund": 0.00020492574720367137,
+            "r_cost": 0.016579753010005773,
+            "r_net": 1.6502918394038646,
+            "taken_published": true,
+            "taken_fixed": true,
+            "notional_published": 0.055255720827460296
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2022-06-13",
+            "entry_d": "2022-06-14",
+            "exit_d": "2022-06-18",
+            "hold_days": 5,
+            "reason": "止盈",
+            "r_price": 1.6666666666666663,
+            "r_fund": -0.0012590769009697745,
+            "r_cost": 0.012190907251837454,
+            "r_net": 1.6532166825138592,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2022-06-18",
+            "entry_d": "2022-06-19",
+            "exit_d": "2022-07-03",
+            "hold_days": 15,
+            "reason": "时间",
+            "r_price": -0.11314239060378244,
+            "r_fund": 0.006517289965784295,
+            "r_cost": 0.009294392474569018,
+            "r_net": -0.11591949311256716,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2022-07-03",
+            "entry_d": "2022-07-04",
+            "exit_d": "2022-07-07",
+            "hold_days": 4,
+            "reason": "止损",
+            "r_price": -1.0000000000000004,
+            "r_fund": 0.007449038686011439,
+            "r_cost": 0.013345067395634859,
+            "r_net": -1.005896028709624,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2024-03-19",
+            "entry_d": "2024-03-20",
+            "exit_d": "2024-03-20",
+            "hold_days": 1,
+            "reason": "止损",
+            "r_price": -0.9999999999999988,
+            "r_fund": 0.004709297536883245,
+            "r_cost": 0.01596913372968208,
+            "r_net": -1.0112598361927976,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2024-04-12",
+            "entry_d": "2024-04-13",
+            "exit_d": "2024-04-13",
+            "hold_days": 1,
+            "reason": "保本",
+            "r_price": 0.0,
+            "r_fund": 0.0039059216296529493,
+            "r_cost": 0.019529608148264745,
+            "r_net": -0.015623686518611795,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2024-04-13",
+            "entry_d": "2024-04-14",
+            "exit_d": "2024-04-28",
+            "hold_days": 15,
+            "reason": "时间",
+            "r_price": 0.14989631364627254,
+            "r_fund": 0.02203066482887879,
+            "r_cost": 0.016885703533559965,
+            "r_net": 0.15504127494159134,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2024-04-30",
+            "entry_d": "2024-05-01",
+            "exit_d": "2024-05-06",
+            "hold_days": 6,
+            "reason": "止损",
+            "r_price": -0.9999999999999998,
+            "r_fund": 0.010131542371496402,
+            "r_cost": 0.019118041510145175,
+            "r_net": -1.0089864991386486,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2024-08-05",
+            "entry_d": "2024-08-06",
+            "exit_d": "2024-08-08",
+            "hold_days": 3,
+            "reason": "止损",
+            "r_price": -0.9999999999999997,
+            "r_fund": 0.0008720078592400898,
+            "r_cost": 0.016925618385871307,
+            "r_net": -1.016053610526631,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2024-12-22",
+            "entry_d": "2024-12-23",
+            "exit_d": "2025-01-06",
+            "hold_days": 15,
+            "reason": "止损",
+            "r_price": -0.999999999999999,
+            "r_fund": 0.05964395490220392,
+            "r_cost": 0.02200997649406387,
+            "r_net": -0.9623660215918589,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2025-01-09",
+            "entry_d": "2025-01-10",
+            "exit_d": "2025-01-15",
+            "hold_days": 6,
+            "reason": "止损",
+            "r_price": -0.9999999999999997,
+            "r_fund": 0.016122003551490953,
+            "r_cost": 0.02407395033223143,
+            "r_net": -1.00795194678074,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2025-03-04",
+            "entry_d": "2025-03-05",
+            "exit_d": "2025-03-19",
+            "hold_days": 15,
+            "reason": "时间",
+            "r_price": 0.0593337790211986,
+            "r_fund": 0.014730660925140178,
+            "r_cost": 0.017805419460349785,
+            "r_net": 0.05625902048598899,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2025-04-06",
+            "entry_d": "2025-04-07",
+            "exit_d": "2025-04-11",
+            "hold_days": 5,
+            "reason": "止损",
+            "r_price": -1.0000000000000004,
+            "r_fund": 0.008458934180186726,
+            "r_cost": 0.02210099331187419,
+            "r_net": -1.013642059131688,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2025-11-20",
+            "entry_d": "2025-11-21",
+            "exit_d": "2025-12-03",
+            "hold_days": 13,
+            "reason": "止损",
+            "r_price": -1.0000000000000004,
+            "r_fund": 0.010046903737989953,
+            "r_cost": 0.01952396793193968,
+            "r_net": -1.0094770641939501,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2026-02-05",
+            "entry_d": "2026-02-06",
+            "exit_d": "2026-02-06",
+            "hold_days": 1,
+            "reason": "止损",
+            "r_price": -0.9999999999999997,
+            "r_fund": -0.002888352612054772,
+            "r_cost": 0.015062854772041013,
+            "r_net": -1.0179512073840955,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2026-02-15",
+            "entry_d": "2026-02-16",
+            "exit_d": "2026-02-25",
+            "hold_days": 10,
+            "reason": "保本",
+            "r_price": 0.0,
+            "r_fund": 0.004495448540826637,
+            "r_cost": 0.01739410532473483,
+            "r_net": -0.012898656783908193,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          },
+          {
+            "symbol": "BTC",
+            "signal_d": "2026-02-25",
+            "entry_d": "2026-02-26",
+            "exit_d": "2026-03-04",
+            "hold_days": 7,
+            "reason": "止损",
+            "r_price": -1.000000000000001,
+            "r_fund": -0.0006572931917190312,
+            "r_cost": 0.020328655413990572,
+            "r_net": -1.0209859486057107,
+            "taken_published": false,
+            "taken_fixed": true,
+            "notional_published": null
+          }
+        ],
+        "ticket_level_avg_r_net": -0.3744908562608684,
+        "ticket_level_total_r_net": -6.740835412695632,
+        "published_faithful": {
+          "total_return": -0.10621820627876011,
+          "max_dd": -0.22150156399328746,
+          "t342_ref_total_return": -0.1062,
+          "t342_ref_max_dd": -0.2215,
+          "ref": "T-256_tactical_short.md 第 81 行"
+        },
+        "best_ticket": {
+          "signal_d": "2022-06-13",
+          "entry_d": "2022-06-14",
+          "exit_d": "2022-06-18",
+          "entry": 22471.4,
+          "exit": 17863.17037118935,
+          "atr14_d": 1843.2918515242611,
+          "r_unit": 2764.937777286392,
+          "stop": 25236.337777286393,
+          "target": 17863.17037118935,
+          "reason": "止盈",
+          "hold_days": 5,
+          "funding_sum": -0.00015492000000000029,
+          "r_price": 1.6666666666666663,
+          "r_fund": -0.0012590769009697745,
+          "r_cost": 0.012190907251837454,
+          "r_net": 1.6532166825138592,
+          "truncated": false,
+          "_fund_day": {
+            "2022-06-14": -0.00011135000000000009,
+            "2022-06-15": -9.98300000000001e-05,
+            "2022-06-16": -4.9160000000000105e-05,
+            "2022-06-17": -6.61599999999999e-05,
+            "2022-06-18": 0.0001715799999999999
+          },
+          "trigger_reason": "det<=p20(-0.7422<=-0.3884)",
+          "dvol_pct_1y": 0.9835616438356164,
+          "dvol_close": 106.0,
+          "_notional_rebuilt": 0.04096416234641323,
+          "_equity_rebuilt": 1.008066786995832
+        },
+        "selfcheck": {
+          "notional_max_abs_diff": 0.0,
+          "equity_at_entry_max_abs_diff": 0.0,
+          "funding_sum_max_abs_diff": 0.0
+        },
+        "note": "诊断:修正「同日出场不平仓」的记账次序;票与规则一字不动"
+      },
+      "family_standalone": {
+        "n_days": 2047,
+        "d0": "2021-03-24",
+        "d1": "2026-10-31",
+        "total_return": -0.03333170864820001,
+        "cagr": -0.006030559480319941,
+        "vol_ann": 0.009855743298377599,
+        "max_dd": -0.048928848635239164,
+        "dd_peak": "2022-06-18",
+        "dd_trough": "2026-03-04",
+        "calmar": -0.1232516122600248,
+        "worst_month": -0.011173550548893352,
+        "worst_month_end": "2025-01-31",
+        "best_month": 0.014992247136784709,
+        "n_months": 67
+      },
+      "family_standalone_yearly": {
+        "2021": 0.0,
+        "2022": 0.010701450058204331,
+        "2023": 0.0,
+        "2024": -0.013076511053896067,
+        "2025": -0.020875478189943286,
+        "2026": -0.010232540403845913
+      },
+      "windows": {
+        "A_earliest": {
+          "start": "2022-05-12",
+          "end": "2026-10-30",
+          "C0": {
+            "metrics": {
+              "n_days": 1122,
+              "d0": "2022-05-12",
+              "d1": "2026-10-30",
+              "total_return": 1.9246747981188936,
+              "cagr": 0.27148301177756506,
+              "vol_ann": 0.28992739636889986,
+              "max_dd": -0.2090464529177316,
+              "dd_peak": "2023-02-03",
+              "dd_trough": "2023-10-03",
+              "calmar": 1.2986731321597924,
+              "worst_month": -0.09689737389658692,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2657261066858432,
+              "n_months": 53
+            },
+            "underwater": {
+              "length_d": 304,
+              "peak_d": "2023-02-03",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-04",
+              "recovered": true,
+              "depth": -0.2090464529177316,
+              "peak_value": 1.1870360744016144,
+              "trough_value": 0.9388903935625684,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 31
+            },
+            "yearly": {
+              "2022": -0.01968337145433907,
+              "2023": 0.3308480096564881,
+              "2024": 0.5272839548645967,
+              "2025": 0.3735158945337378,
+              "2026": 0.06863470754367862
+            }
+          },
+          "C0_plus_family": {
+            "metrics": {
+              "n_days": 1122,
+              "d0": "2022-05-12",
+              "d1": "2026-10-30",
+              "total_return": 1.829419401224285,
+              "cagr": 0.262095408356102,
+              "vol_ann": 0.2890969380939558,
+              "max_dd": -0.20904645291773027,
+              "dd_peak": "2023-02-03",
+              "dd_trough": "2023-10-03",
+              "calmar": 1.2537663504831102,
+              "worst_month": -0.09689737389658615,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2657261066858434,
+              "n_months": 53
+            },
+            "underwater": {
+              "length_d": 304,
+              "peak_d": "2023-02-03",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-04",
+              "recovered": true,
+              "depth": -0.20904645291773027,
+              "peak_value": 1.2001604369350853,
+              "trough_value": 0.9492711546616125,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 32
+            },
+            "yearly": {
+              "2022": -0.00884458474172034,
+              "2023": 0.3308480096564914,
+              "2024": 0.5077812217148217,
+              "2025": 0.3454186226388114,
+              "2026": 0.05738061625310453
+            }
+          },
+          "diff": {
+            "cagr_pp": -0.9387603421463053,
+            "max_dd_pp": 1.3322676295501878e-13,
+            "total_return_pp": -9.52553968946086,
+            "underwater_days": 0,
+            "cagr_not_lower": false,
+            "underwater_shorter": false
+          },
+          "selfcheck_family": {
+            "window": [
+              "2022-05-12",
+              "2026-10-30"
+            ],
+            "n_days": 1632,
+            "fed_prod_return": -0.03335089269868741,
+            "curve_return": -0.03335089269868785,
+            "abs_diff": 4.440892098500626e-16,
+            "note": "族曲线收益直接取族净值端点(asof),不重建被检序列"
+          }
+        },
+        "B_2021-10-11": {
+          "start": "2021-10-11",
+          "end": "2026-10-30",
+          "C0": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 2.265550850319178,
+              "cagr": 0.26399880465780545,
+              "vol_ann": 0.2948221566982701,
+              "max_dd": -0.281546951006724,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.937672397849908,
+              "worst_month": -0.09689737389658704,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2852957649247785,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 763,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-27",
+              "recovered": true,
+              "depth": -0.281546951006724,
+              "peak_value": 1.4591346521019568,
+              "trough_value": 1.048319739694394,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 27
+            },
+            "yearly": {
+              "2021": 0.27525405247294343,
+              "2022": -0.14168139755331788,
+              "2023": 0.3308480096564881,
+              "2024": 0.5272839548645967,
+              "2025": 0.3735158945337378,
+              "2026": 0.06863470754367884
+            }
+          },
+          "C0_plus_family": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 2.159256303666864,
+              "cagr": 0.25574528380857275,
+              "vol_ann": 0.2941001926003908,
+              "max_dd": -0.2735889425071806,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.934779313319143,
+              "worst_month": -0.09689737389658626,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2852957649247785,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 763,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-27",
+              "recovered": true,
+              "depth": -0.2735889425071806,
+              "peak_value": 1.4591346521019568,
+              "trough_value": 1.0599315456577996,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 27
+            },
+            "yearly": {
+              "2021": 0.27525405247294343,
+              "2022": -0.13217415592749837,
+              "2023": 0.3308480096564914,
+              "2024": 0.5077812217148217,
+              "2025": 0.3454186226388114,
+              "2026": 0.05738061625310453
+            }
+          },
+          "diff": {
+            "cagr_pp": -0.8253520849232698,
+            "max_dd_pp": 0.7958008499543423,
+            "total_return_pp": -10.629454665231375,
+            "underwater_days": 0,
+            "cagr_not_lower": false,
+            "underwater_shorter": false
+          },
+          "selfcheck_family": {
+            "window": [
+              "2021-10-11",
+              "2026-10-30"
+            ],
+            "n_days": 1845,
+            "fed_prod_return": -0.03333170864819923,
+            "curve_return": -0.03333170864820001,
+            "abs_diff": 7.771561172376096e-16,
+            "note": "族曲线收益直接取族净值端点(asof),不重建被检序列"
+          }
+        }
+      },
+      "conclusion": {
+        "class": "都不",
+        "window_A_pass": false,
+        "window_B_pass": false,
+        "window_dependent": false
+      }
+    },
+    "S808": {
+      "meta": {
+        "first_entry": "2020-08-09",
+        "last_exit": "2026-11-09",
+        "n_tickets": 350,
+        "n_skipped": 1,
+        "risk_frac": 0.005,
+        "cap": 10,
+        "family_published_ref": {
+          "sleeve_total_return": -0.38236625030925375,
+          "sleeve_max_dd": -0.38575092064165806,
+          "avg_r_net": -0.27493148743437645,
+          "n_tickets": 350,
+          "reasons": {
+            "止盈": 66,
+            "保本": 90,
+            "止损": 177,
+            "时间": 17
+          }
+        },
+        "best_ticket": {
+          "symbol": "BNX",
+          "signal_d": "2023-07-13",
+          "entry_d": "2023-07-14",
+          "r": 1.7002985837986146,
+          "why": "族内 r_net 最大的一张(只报不判)"
+        },
+        "note": "照 T-332 自己的 sleeve_nav(多票并发;同名日已修);资金费实计"
+      },
+      "family_standalone": {
+        "n_days": 789,
+        "d0": "2020-08-09",
+        "d1": "2026-11-09",
+        "total_return": -0.38236625030925375,
+        "cagr": -0.07419459268942397,
+        "vol_ann": 0.07960835476034892,
+        "max_dd": -0.38575092064165806,
+        "dd_peak": "2021-07-26",
+        "dd_trough": "2026-10-25",
+        "calmar": -0.19233808325333013,
+        "worst_month": -0.055648036775131526,
+        "worst_month_end": "2025-04-30",
+        "best_month": 0.01992755971375071,
+        "n_months": 75
+      },
+      "family_standalone_yearly": {
+        "2020": -0.005136383856436555,
+        "2021": -0.010309355342888682,
+        "2022": -0.02892111672570763,
+        "2023": -0.09288710125150657,
+        "2024": -0.015334743175052568,
+        "2025": -0.1008136072345831,
+        "2026": -0.19570788172426834
+      },
+      "windows": {
+        "A_earliest": {
+          "start": "2021-10-11",
+          "end": "2026-10-30",
+          "C0": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 2.265550850319178,
+              "cagr": 0.26399880465780545,
+              "vol_ann": 0.2948221566982701,
+              "max_dd": -0.281546951006724,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.937672397849908,
+              "worst_month": -0.09689737389658704,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2852957649247785,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 763,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-27",
+              "recovered": true,
+              "depth": -0.281546951006724,
+              "peak_value": 1.4591346521019568,
+              "trough_value": 1.048319739694394,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 27
+            },
+            "yearly": {
+              "2021": 0.27525405247294343,
+              "2022": -0.14168139755331788,
+              "2023": 0.3308480096564881,
+              "2024": 0.5272839548645967,
+              "2025": 0.3735158945337378,
+              "2026": 0.06863470754367884
+            }
+          },
+          "C0_plus_family": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 1.0531083584894483,
+              "cagr": 0.15304801037866111,
+              "vol_ann": 0.2917011017143212,
+              "max_dd": -0.3532610631900458,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.4332433611465553,
+              "worst_month": -0.10154532894090329,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.28487378148297915,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 827,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2024-02-29",
+              "recovered": true,
+              "depth": -0.3532610631900458,
+              "peak_value": 1.4586555945345505,
+              "trough_value": 0.9433693683811668,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 18
+            },
+            "yearly": {
+              "2021": 0.26823257376902077,
+              "2022": -0.16686486157502456,
+              "2023": 0.20836524076280916,
+              "2024": 0.5070487838427258,
+              "2025": 0.23983693060231648,
+              "2026": -0.13938797017932347
+            }
+          },
+          "diff": {
+            "cagr_pp": -11.095079427914435,
+            "max_dd_pp": -7.17141121833218,
+            "total_return_pp": -121.24424918297296,
+            "underwater_days": 64,
+            "cagr_not_lower": false,
+            "underwater_shorter": false
+          },
+          "selfcheck_family": {
+            "window": [
+              "2021-10-11",
+              "2026-10-30"
+            ],
+            "n_days": 1845,
+            "fed_prod_return": -0.3762615219746167,
+            "curve_return": -0.37626152197461527,
+            "abs_diff": 1.4432899320127035e-15,
+            "note": "族曲线收益直接取族净值端点(asof),不重建被检序列"
+          }
+        },
+        "B_2021-10-11": {
+          "start": "2021-10-11",
+          "end": "2026-10-30",
+          "C0": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 2.265550850319178,
+              "cagr": 0.26399880465780545,
+              "vol_ann": 0.2948221566982701,
+              "max_dd": -0.281546951006724,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.937672397849908,
+              "worst_month": -0.09689737389658704,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2852957649247785,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 763,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-27",
+              "recovered": true,
+              "depth": -0.281546951006724,
+              "peak_value": 1.4591346521019568,
+              "trough_value": 1.048319739694394,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 27
+            },
+            "yearly": {
+              "2021": 0.27525405247294343,
+              "2022": -0.14168139755331788,
+              "2023": 0.3308480096564881,
+              "2024": 0.5272839548645967,
+              "2025": 0.3735158945337378,
+              "2026": 0.06863470754367884
+            }
+          },
+          "C0_plus_family": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 1.0531083584894483,
+              "cagr": 0.15304801037866111,
+              "vol_ann": 0.2917011017143212,
+              "max_dd": -0.3532610631900458,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.4332433611465553,
+              "worst_month": -0.10154532894090329,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.28487378148297915,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 827,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2024-02-29",
+              "recovered": true,
+              "depth": -0.3532610631900458,
+              "peak_value": 1.4586555945345505,
+              "trough_value": 0.9433693683811668,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 18
+            },
+            "yearly": {
+              "2021": 0.26823257376902077,
+              "2022": -0.16686486157502456,
+              "2023": 0.20836524076280916,
+              "2024": 0.5070487838427258,
+              "2025": 0.23983693060231648,
+              "2026": -0.13938797017932347
+            }
+          },
+          "diff": {
+            "cagr_pp": -11.095079427914435,
+            "max_dd_pp": -7.17141121833218,
+            "total_return_pp": -121.24424918297296,
+            "underwater_days": 64,
+            "cagr_not_lower": false,
+            "underwater_shorter": false
+          },
+          "selfcheck_family": {
+            "window": [
+              "2021-10-11",
+              "2026-10-30"
+            ],
+            "n_days": 1845,
+            "fed_prod_return": -0.3762615219746167,
+            "curve_return": -0.37626152197461527,
+            "abs_diff": 1.4432899320127035e-15,
+            "note": "族曲线收益直接取族净值端点(asof),不重建被检序列"
+          }
+        }
+      },
+      "conclusion": {
+        "class": "都不",
+        "window_A_pass": false,
+        "window_B_pass": false,
+        "window_dependent": false
+      }
+    },
+    "S810": {
+      "meta": {
+        "first_entry": "2023-06-02",
+        "last_exit": "2026-09-30",
+        "n_tickets": 13,
+        "risk_frac": 0.005,
+        "cap": 10,
+        "family_published_ref": {
+          "sleeve_total_return": -0.004988318938005998,
+          "sleeve_max_dd": -0.009783840268168476,
+          "summary": {
+            "n_tickets": 13,
+            "avg_r_net": -0.07479608318927183,
+            "median_r_net": -0.003935692562649811,
+            "avg_r_price": 0.012657680846367045,
+            "avg_r_fund": -0.08576213798860785,
+            "avg_r_cost": 0.0016916260470310523,
+            "win_rate": 0.46153846153846156,
+            "total_r_net": -0.9723490814605338,
+            "reasons": {
+              "止盈": 0,
+              "止损": 2,
+              "时间": 11
+            }
+          },
+          "n_days": 283
+        },
+        "best_ticket": {
+          "symbol": "ALICE",
+          "signal_d": "2024-06-03",
+          "entry_d": "2024-06-11",
+          "r": 0.5221496247593567,
+          "why": "族内 r_net 最大的一张(只报不判)"
+        },
+        "note": "照 T-334 自己的 build_tickets + T-332 sleeve_nav;资金费实计"
+      },
+      "family_standalone": {
+        "n_days": 283,
+        "d0": "2023-06-02",
+        "d1": "2026-09-30",
+        "total_return": -0.004988318938005665,
+        "cagr": -0.0015009636908450696,
+        "vol_ann": 0.012491595597714547,
+        "max_dd": -0.009783840268168476,
+        "dd_peak": "2026-04-03",
+        "dd_trough": "2026-06-26",
+        "calmar": -0.15341253022378384,
+        "worst_month": -0.004912711487917942,
+        "worst_month_end": "2024-03-31",
+        "best_month": 0.001952913417299973,
+        "n_months": 39
+      },
+      "family_standalone_yearly": {
+        "2023": 0.0006423134343545023,
+        "2024": -0.002114352793233021,
+        "2025": 0.002156964802720651,
+        "2026": -0.005664853932230707
+      },
+      "windows": {
+        "A_earliest": {
+          "start": "2023-06-02",
+          "end": "2026-10-30",
+          "C0": {
+            "metrics": {
+              "n_days": 857,
+              "d0": "2023-06-02",
+              "d1": "2026-10-30",
+              "total_return": 1.9268894042634686,
+              "cagr": 0.3700027316056138,
+              "vol_ann": 0.30470650253204223,
+              "max_dd": -0.16175382157332552,
+              "dd_peak": "2024-03-13",
+              "dd_trough": "2024-08-07",
+              "calmar": 2.2874435237864588,
+              "worst_month": -0.06526699890214482,
+              "worst_month_end": "2026-03-31",
+              "best_month": 0.2657261066858434,
+              "n_months": 40
+            },
+            "underwater": {
+              "length_d": 257,
+              "peak_d": "2024-03-13",
+              "trough_d": "2024-08-07",
+              "recover_d": "2024-11-25",
+              "recovered": true,
+              "depth": -0.16175382157332552,
+              "peak_value": 1.9106761651950455,
+              "trough_value": 1.6016169936856803,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 30
+            },
+            "yearly": {
+              "2023": 0.3056403356645103,
+              "2024": 0.5272839548645967,
+              "2025": 0.3735158945337378,
+              "2026": 0.06863470754367862
+            }
+          },
+          "C0_plus_family": {
+            "metrics": {
+              "n_days": 857,
+              "d0": "2023-06-02",
+              "d1": "2026-10-30",
+              "total_return": 1.9127641882183557,
+              "cagr": 0.36806128894497725,
+              "vol_ann": 0.30409902249575554,
+              "max_dd": -0.1609220219683487,
+              "dd_peak": "2025-07-22",
+              "dd_trough": "2025-09-25",
+              "calmar": 2.287202736101403,
+              "worst_month": -0.06452892784565678,
+              "worst_month_end": "2026-03-31",
+              "best_month": 0.2659937519327191,
+              "n_months": 40
+            },
+            "underwater": {
+              "length_d": 257,
+              "peak_d": "2024-03-13",
+              "trough_d": "2024-08-07",
+              "recover_d": "2024-11-25",
+              "recovered": true,
+              "depth": -0.15964378177775385,
+              "peak_value": 1.9032164451315479,
+              "trough_value": 1.5993797742891347,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 30
+            },
+            "yearly": {
+              "2023": 0.3064979014400082,
+              "2024": 0.5241494814748067,
+              "2025": 0.37657162693101043,
+              "2026": 0.0626010320052297
+            }
+          },
+          "diff": {
+            "cagr_pp": -0.1941442660636561,
+            "max_dd_pp": 0.08317996049768128,
+            "total_return_pp": -1.4125216045112854,
+            "underwater_days": 0,
+            "cagr_not_lower": false,
+            "underwater_shorter": false
+          },
+          "selfcheck_family": {
+            "window": [
+              "2023-06-02",
+              "2026-10-30"
+            ],
+            "n_days": 1246,
+            "fed_prod_return": -0.004988318938005332,
+            "curve_return": -0.004988318938005665,
+            "abs_diff": 3.3306690738754696e-16,
+            "note": "族曲线收益直接取族净值端点(asof),不重建被检序列"
+          }
+        },
+        "B_2021-10-11": {
+          "start": "2021-10-11",
+          "end": "2026-10-30",
+          "C0": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 2.265550850319178,
+              "cagr": 0.26399880465780545,
+              "vol_ann": 0.2948221566982701,
+              "max_dd": -0.281546951006724,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.937672397849908,
+              "worst_month": -0.09689737389658704,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2852957649247785,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 763,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-27",
+              "recovered": true,
+              "depth": -0.281546951006724,
+              "peak_value": 1.4591346521019568,
+              "trough_value": 1.048319739694394,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 27
+            },
+            "yearly": {
+              "2021": 0.27525405247294343,
+              "2022": -0.14168139755331788,
+              "2023": 0.3308480096564881,
+              "2024": 0.5272839548645967,
+              "2025": 0.3735158945337378,
+              "2026": 0.06863470754367884
+            }
+          },
+          "C0_plus_family": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 2.2501246519933056,
+              "cagr": 0.26281448960215714,
+              "vol_ann": 0.29439790355196294,
+              "max_dd": -0.281001303251714,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.9352785434120724,
+              "worst_month": -0.09689737389658704,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2852957649247785,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 763,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-27",
+              "recovered": true,
+              "depth": -0.281001303251714,
+              "peak_value": 1.4591346521019568,
+              "trough_value": 1.0491159132415706,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 27
+            },
+            "yearly": {
+              "2021": 0.27525405247294343,
+              "2022": -0.14168139755331788,
+              "2023": 0.33185875660752084,
+              "2024": 0.5241494814748067,
+              "2025": 0.37657162693101043,
+              "2026": 0.06260103200522948
+            }
+          },
+          "diff": {
+            "cagr_pp": -0.11843150556483106,
+            "max_dd_pp": 0.05456477550099814,
+            "total_return_pp": -1.5426198325872331,
+            "underwater_days": 0,
+            "cagr_not_lower": false,
+            "underwater_shorter": false
+          },
+          "selfcheck_family": {
+            "window": [
+              "2021-10-11",
+              "2026-10-30"
+            ],
+            "n_days": 1845,
+            "fed_prod_return": -0.004885635362202656,
+            "curve_return": -0.004885635362202767,
+            "abs_diff": 1.1102230246251565e-16,
+            "note": "族曲线收益直接取族净值端点(asof),不重建被检序列"
+          }
+        }
+      },
+      "conclusion": {
+        "class": "都不",
+        "window_A_pass": false,
+        "window_B_pass": false,
+        "window_dependent": false
+      }
+    },
+    "S681_H2": {
+      "meta": {
+        "first_entry": "2020-11-07",
+        "last_exit": "2026-09-30",
+        "n_tickets": 1706,
+        "risk_frac": 0.005,
+        "cap": 10,
+        "best_ticket": {
+          "symbol": "TAC",
+          "signal_d": "2026-06-29",
+          "entry_d": "2026-06-30",
+          "r": 3.2003312801425516,
+          "why": "族内 r 最大的一张(只报不判)"
+        },
+        "note": "照 short_lab_common.money 的尺(t159.nav:f 0.5%/票、cap 10、逐日盯市)"
+      },
+      "family_standalone": {
+        "n_days": 2153,
+        "d0": "2020-11-07",
+        "d1": "2026-09-29",
+        "total_return": -0.320271737008922,
+        "cagr": -0.06342411072537946,
+        "vol_ann": 0.08794739090751352,
+        "max_dd": -0.33227749966451703,
+        "dd_peak": "2020-11-07",
+        "dd_trough": "2026-06-30",
+        "calmar": -0.19087693506004896,
+        "worst_month": -0.07598391255147607,
+        "worst_month_end": "2021-01-31",
+        "best_month": 0.04987585784118176,
+        "n_months": 70
+      },
+      "family_standalone_yearly": {
+        "2020": -0.025252748283480564,
+        "2021": -0.15757881970962662,
+        "2022": 0.05126911141277346,
+        "2023": -0.003994075131382946,
+        "2024": -0.15632611261704255,
+        "2025": -0.03758618200612163,
+        "2026": -0.026352510957213915
+      },
+      "windows": {
+        "A_earliest": {
+          "start": "2021-10-11",
+          "end": "2026-10-30",
+          "C0": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 2.265550850319178,
+              "cagr": 0.26399880465780545,
+              "vol_ann": 0.2948221566982701,
+              "max_dd": -0.281546951006724,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.937672397849908,
+              "worst_month": -0.09689737389658704,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2852957649247785,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 763,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-27",
+              "recovered": true,
+              "depth": -0.281546951006724,
+              "peak_value": 1.4591346521019568,
+              "trough_value": 1.048319739694394,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 27
+            },
+            "yearly": {
+              "2021": 0.27525405247294343,
+              "2022": -0.14168139755331788,
+              "2023": 0.3308480096564881,
+              "2024": 0.5272839548645967,
+              "2025": 0.3735158945337378,
+              "2026": 0.06863470754367884
+            }
+          },
+          "C0_plus_family": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 1.9254597236464432,
+              "cagr": 0.23677664527742603,
+              "vol_ann": 0.2668050274346926,
+              "max_dd": -0.19141102731573512,
+              "dd_peak": "2024-03-13",
+              "dd_trough": "2024-08-07",
+              "calmar": 1.2370062926774836,
+              "worst_month": -0.0794835401846351,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.29721907851313834,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 435,
+              "peak_d": "2021-11-24",
+              "trough_d": "2022-09-27",
+              "recover_d": "2023-02-02",
+              "recovered": true,
+              "depth": -0.1784978053920382,
+              "peak_value": 1.4345969701502468,
+              "trough_value": 1.1785245593563605,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 39
+            },
+            "yearly": {
+              "2021": 0.34935397007334834,
+              "2022": -0.09377112057203829,
+              "2023": 0.33173895520016927,
+              "2024": 0.2983614396225698,
+              "2025": 0.328604878376312,
+              "2026": 0.041405288860333345
+            }
+          },
+          "diff": {
+            "cagr_pp": -2.722215938037942,
+            "max_dd_pp": 9.013592369098888,
+            "total_return_pp": -34.00911266727347,
+            "underwater_days": -328,
+            "cagr_not_lower": false,
+            "underwater_shorter": true
+          },
+          "selfcheck_family": {
+            "window": [
+              "2021-10-11",
+              "2026-10-30"
+            ],
+            "n_days": 1845,
+            "fed_prod_return": -0.12524113132703263,
+            "curve_return": -0.12524113132703496,
+            "abs_diff": 2.3314683517128287e-15,
+            "note": "族曲线收益直接取族净值端点(asof),不重建被检序列"
+          }
+        },
+        "B_2021-10-11": {
+          "start": "2021-10-11",
+          "end": "2026-10-30",
+          "C0": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 2.265550850319178,
+              "cagr": 0.26399880465780545,
+              "vol_ann": 0.2948221566982701,
+              "max_dd": -0.281546951006724,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.937672397849908,
+              "worst_month": -0.09689737389658704,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2852957649247785,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 763,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-27",
+              "recovered": true,
+              "depth": -0.281546951006724,
+              "peak_value": 1.4591346521019568,
+              "trough_value": 1.048319739694394,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 27
+            },
+            "yearly": {
+              "2021": 0.27525405247294343,
+              "2022": -0.14168139755331788,
+              "2023": 0.3308480096564881,
+              "2024": 0.5272839548645967,
+              "2025": 0.3735158945337378,
+              "2026": 0.06863470754367884
+            }
+          },
+          "C0_plus_family": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 1.9254597236464432,
+              "cagr": 0.23677664527742603,
+              "vol_ann": 0.2668050274346926,
+              "max_dd": -0.19141102731573512,
+              "dd_peak": "2024-03-13",
+              "dd_trough": "2024-08-07",
+              "calmar": 1.2370062926774836,
+              "worst_month": -0.0794835401846351,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.29721907851313834,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 435,
+              "peak_d": "2021-11-24",
+              "trough_d": "2022-09-27",
+              "recover_d": "2023-02-02",
+              "recovered": true,
+              "depth": -0.1784978053920382,
+              "peak_value": 1.4345969701502468,
+              "trough_value": 1.1785245593563605,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 39
+            },
+            "yearly": {
+              "2021": 0.34935397007334834,
+              "2022": -0.09377112057203829,
+              "2023": 0.33173895520016927,
+              "2024": 0.2983614396225698,
+              "2025": 0.328604878376312,
+              "2026": 0.041405288860333345
+            }
+          },
+          "diff": {
+            "cagr_pp": -2.722215938037942,
+            "max_dd_pp": 9.013592369098888,
+            "total_return_pp": -34.00911266727347,
+            "underwater_days": -328,
+            "cagr_not_lower": false,
+            "underwater_shorter": true
+          },
+          "selfcheck_family": {
+            "window": [
+              "2021-10-11",
+              "2026-10-30"
+            ],
+            "n_days": 1845,
+            "fed_prod_return": -0.12524113132703263,
+            "curve_return": -0.12524113132703496,
+            "abs_diff": 2.3314683517128287e-15,
+            "note": "族曲线收益直接取族净值端点(asof),不重建被检序列"
+          }
+        }
+      },
+      "conclusion": {
+        "class": "都不",
+        "window_A_pass": false,
+        "window_B_pass": false,
+        "window_dependent": false
+      }
+    },
+    "S681_H3": {
+      "meta": {
+        "first_entry": "2020-04-26",
+        "last_exit": "2026-09-30",
+        "n_tickets": 3223,
+        "risk_frac": 0.005,
+        "cap": 10,
+        "best_ticket": {
+          "symbol": "TAC",
+          "signal_d": "2026-06-30",
+          "entry_d": "2026-07-01",
+          "r": 3.131105709305502,
+          "why": "族内 r 最大的一张(只报不判)"
+        },
+        "note": "同上;票 = 发现段 + 留出段合并"
+      },
+      "family_standalone": {
+        "n_days": 2349,
+        "d0": "2020-04-26",
+        "d1": "2026-09-30",
+        "total_return": -0.43163461968538197,
+        "cagr": -0.08413727889331402,
+        "vol_ann": 0.08084180738812276,
+        "max_dd": -0.4389021336881831,
+        "dd_peak": "2020-05-11",
+        "dd_trough": "2026-09-22",
+        "calmar": -0.1916994073058873,
+        "worst_month": -0.12119378720243801,
+        "worst_month_end": "2021-01-31",
+        "best_month": 0.03980045867734372,
+        "n_months": 77
+      },
+      "family_standalone_yearly": {
+        "2020": -0.0384358311249019,
+        "2021": -0.317222801056137,
+        "2022": 0.004845268807416758,
+        "2023": 0.010496576063163676,
+        "2024": -0.015150949123161062,
+        "2025": -0.0020965972395966537,
+        "2026": -0.13248274260434645
+      },
+      "windows": {
+        "A_earliest": {
+          "start": "2021-10-11",
+          "end": "2026-10-30",
+          "C0": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 2.265550850319178,
+              "cagr": 0.26399880465780545,
+              "vol_ann": 0.2948221566982701,
+              "max_dd": -0.281546951006724,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.937672397849908,
+              "worst_month": -0.09689737389658704,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2852957649247785,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 763,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-27",
+              "recovered": true,
+              "depth": -0.281546951006724,
+              "peak_value": 1.4591346521019568,
+              "trough_value": 1.048319739694394,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 27
+            },
+            "yearly": {
+              "2021": 0.27525405247294343,
+              "2022": -0.14168139755331788,
+              "2023": 0.3308480096564881,
+              "2024": 0.5272839548645967,
+              "2025": 0.3735158945337378,
+              "2026": 0.06863470754367884
+            }
+          },
+          "C0_plus_family": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 1.7204566826833156,
+              "cagr": 0.21911575745783884,
+              "vol_ann": 0.2741927261119871,
+              "max_dd": -0.27717990149137195,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.7905182023620118,
+              "worst_month": -0.0980831033734163,
+              "worst_month_end": "2026-03-31",
+              "best_month": 0.25219756654167935,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 763,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-27",
+              "recovered": true,
+              "depth": -0.27717990149137195,
+              "peak_value": 1.3896182565614614,
+              "trough_value": 1.0044440050971435,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 27
+            },
+            "yearly": {
+              "2021": 0.2137849447283675,
+              "2022": -0.13740556247165547,
+              "2023": 0.344332604877577,
+              "2024": 0.5145810501509185,
+              "2025": 0.3733690782127226,
+              "2026": -0.0708049238068178
+            }
+          },
+          "diff": {
+            "cagr_pp": -4.488304719996661,
+            "max_dd_pp": 0.43670495153520505,
+            "total_return_pp": -54.50941676358623,
+            "underwater_days": 0,
+            "cagr_not_lower": false,
+            "underwater_shorter": false
+          },
+          "selfcheck_family": {
+            "window": [
+              "2021-10-11",
+              "2026-10-30"
+            ],
+            "n_days": 1845,
+            "fed_prod_return": -0.17614325012792986,
+            "curve_return": -0.17614325012792942,
+            "abs_diff": 4.440892098500626e-16,
+            "note": "族曲线收益直接取族净值端点(asof),不重建被检序列"
+          }
+        },
+        "B_2021-10-11": {
+          "start": "2021-10-11",
+          "end": "2026-10-30",
+          "C0": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 2.265550850319178,
+              "cagr": 0.26399880465780545,
+              "vol_ann": 0.2948221566982701,
+              "max_dd": -0.281546951006724,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.937672397849908,
+              "worst_month": -0.09689737389658704,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2852957649247785,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 763,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-27",
+              "recovered": true,
+              "depth": -0.281546951006724,
+              "peak_value": 1.4591346521019568,
+              "trough_value": 1.048319739694394,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 27
+            },
+            "yearly": {
+              "2021": 0.27525405247294343,
+              "2022": -0.14168139755331788,
+              "2023": 0.3308480096564881,
+              "2024": 0.5272839548645967,
+              "2025": 0.3735158945337378,
+              "2026": 0.06863470754367884
+            }
+          },
+          "C0_plus_family": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 1.7204566826833156,
+              "cagr": 0.21911575745783884,
+              "vol_ann": 0.2741927261119871,
+              "max_dd": -0.27717990149137195,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.7905182023620118,
+              "worst_month": -0.0980831033734163,
+              "worst_month_end": "2026-03-31",
+              "best_month": 0.25219756654167935,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 763,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-27",
+              "recovered": true,
+              "depth": -0.27717990149137195,
+              "peak_value": 1.3896182565614614,
+              "trough_value": 1.0044440050971435,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 27
+            },
+            "yearly": {
+              "2021": 0.2137849447283675,
+              "2022": -0.13740556247165547,
+              "2023": 0.344332604877577,
+              "2024": 0.5145810501509185,
+              "2025": 0.3733690782127226,
+              "2026": -0.0708049238068178
+            }
+          },
+          "diff": {
+            "cagr_pp": -4.488304719996661,
+            "max_dd_pp": 0.43670495153520505,
+            "total_return_pp": -54.50941676358623,
+            "underwater_days": 0,
+            "cagr_not_lower": false,
+            "underwater_shorter": false
+          },
+          "selfcheck_family": {
+            "window": [
+              "2021-10-11",
+              "2026-10-30"
+            ],
+            "n_days": 1845,
+            "fed_prod_return": -0.17614325012792986,
+            "curve_return": -0.17614325012792942,
+            "abs_diff": 4.440892098500626e-16,
+            "note": "族曲线收益直接取族净值端点(asof),不重建被检序列"
+          }
+        }
+      },
+      "conclusion": {
+        "class": "都不",
+        "window_A_pass": false,
+        "window_B_pass": false,
+        "window_dependent": false
+      }
+    },
+    "S681_H4": {
+      "meta": {
+        "first_entry": "2020-09-04",
+        "last_exit": "2026-09-30",
+        "n_tickets": 9303,
+        "risk_frac": 0.005,
+        "cap": 10,
+        "best_ticket": {
+          "symbol": "FET",
+          "signal_d": "2025-09-21",
+          "entry_d": "2025-09-22",
+          "r": 6.09908712568323,
+          "why": "族内 r 最大的一张(只报不判)"
+        },
+        "note": "同上"
+      },
+      "family_standalone": {
+        "n_days": 2218,
+        "d0": "2020-09-04",
+        "d1": "2026-09-30",
+        "total_return": 0.11281490910232983,
+        "cagr": 0.01776652589366501,
+        "vol_ann": 0.13318263234029762,
+        "max_dd": -0.1801043703671168,
+        "dd_peak": "2022-06-18",
+        "dd_trough": "2024-12-11",
+        "calmar": 0.0986457233516905,
+        "worst_month": -0.0935549330701525,
+        "worst_month_end": "2021-10-31",
+        "best_month": 0.09983992793398411,
+        "n_months": 72
+      },
+      "family_standalone_yearly": {
+        "2020": -0.001829797489616647,
+        "2021": -0.07895026358278623,
+        "2022": 0.22300653154585204,
+        "2023": -0.122569228535793,
+        "2024": -0.003535674841377623,
+        "2025": 0.20665586426757399,
+        "2026": -0.06190152157386808
+      },
+      "windows": {
+        "A_earliest": {
+          "start": "2021-10-11",
+          "end": "2026-10-30",
+          "C0": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 2.265550850319178,
+              "cagr": 0.26399880465780545,
+              "vol_ann": 0.2948221566982701,
+              "max_dd": -0.281546951006724,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.937672397849908,
+              "worst_month": -0.09689737389658704,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2852957649247785,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 763,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-27",
+              "recovered": true,
+              "depth": -0.281546951006724,
+              "peak_value": 1.4591346521019568,
+              "trough_value": 1.048319739694394,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 27
+            },
+            "yearly": {
+              "2021": 0.27525405247294343,
+              "2022": -0.14168139755331788,
+              "2023": 0.3308480096564881,
+              "2024": 0.5272839548645967,
+              "2025": 0.3735158945337378,
+              "2026": 0.06863470754367884
+            }
+          },
+          "C0_plus_family": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 2.9584135755859218,
+              "cagr": 0.3130756857281558,
+              "vol_ann": 0.27604871341283077,
+              "max_dd": -0.2388514690258875,
+              "dd_peak": "2023-02-01",
+              "dd_trough": "2023-10-03",
+              "calmar": 1.310754700421054,
+              "worst_month": -0.1317376717696105,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.27722113224195355,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 422,
+              "peak_d": "2021-11-24",
+              "trough_d": "2022-11-03",
+              "recover_d": "2023-01-20",
+              "recovered": true,
+              "depth": -0.13906053129884688,
+              "peak_value": 1.3900505736248843,
+              "trough_value": 1.196749402324341,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 42
+            },
+            "yearly": {
+              "2021": 0.23707927042888133,
+              "2022": 0.06314660619577506,
+              "2023": 0.17379699054651843,
+              "2024": 0.5302446716213787,
+              "2025": 0.6665054777633457,
+              "2026": 0.005471737190410941
+            }
+          },
+          "diff": {
+            "cagr_pp": 4.907688107035035,
+            "max_dd_pp": 4.26954819808365,
+            "total_return_pp": 69.28627252667438,
+            "underwater_days": -341,
+            "cagr_not_lower": true,
+            "underwater_shorter": true
+          },
+          "selfcheck_family": {
+            "window": [
+              "2021-10-11",
+              "2026-10-30"
+            ],
+            "n_days": 1845,
+            "fed_prod_return": 0.167760582796322,
+            "curve_return": 0.1677605827963191,
+            "abs_diff": 2.886579864025407e-15,
+            "note": "族曲线收益直接取族净值端点(asof),不重建被检序列"
+          }
+        },
+        "B_2021-10-11": {
+          "start": "2021-10-11",
+          "end": "2026-10-30",
+          "C0": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 2.265550850319178,
+              "cagr": 0.26399880465780545,
+              "vol_ann": 0.2948221566982701,
+              "max_dd": -0.281546951006724,
+              "dd_peak": "2021-11-24",
+              "dd_trough": "2023-10-03",
+              "calmar": 0.937672397849908,
+              "worst_month": -0.09689737389658704,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.2852957649247785,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 763,
+              "peak_d": "2021-11-24",
+              "trough_d": "2023-10-03",
+              "recover_d": "2023-12-27",
+              "recovered": true,
+              "depth": -0.281546951006724,
+              "peak_value": 1.4591346521019568,
+              "trough_value": 1.048319739694394,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 27
+            },
+            "yearly": {
+              "2021": 0.27525405247294343,
+              "2022": -0.14168139755331788,
+              "2023": 0.3308480096564881,
+              "2024": 0.5272839548645967,
+              "2025": 0.3735158945337378,
+              "2026": 0.06863470754367884
+            }
+          },
+          "C0_plus_family": {
+            "metrics": {
+              "n_days": 1270,
+              "d0": "2021-10-11",
+              "d1": "2026-10-30",
+              "total_return": 2.9584135755859218,
+              "cagr": 0.3130756857281558,
+              "vol_ann": 0.27604871341283077,
+              "max_dd": -0.2388514690258875,
+              "dd_peak": "2023-02-01",
+              "dd_trough": "2023-10-03",
+              "calmar": 1.310754700421054,
+              "worst_month": -0.1317376717696105,
+              "worst_month_end": "2023-02-28",
+              "best_month": 0.27722113224195355,
+              "n_months": 60
+            },
+            "underwater": {
+              "length_d": 422,
+              "peak_d": "2021-11-24",
+              "trough_d": "2022-11-03",
+              "recover_d": "2023-01-20",
+              "recovered": true,
+              "depth": -0.13906053129884688,
+              "peak_value": 1.3900505736248843,
+              "trough_value": 1.196749402324341,
+              "end_if_open": "2026-10-30",
+              "n_episodes": 42
+            },
+            "yearly": {
+              "2021": 0.23707927042888133,
+              "2022": 0.06314660619577506,
+              "2023": 0.17379699054651843,
+              "2024": 0.5302446716213787,
+              "2025": 0.6665054777633457,
+              "2026": 0.005471737190410941
+            }
+          },
+          "diff": {
+            "cagr_pp": 4.907688107035035,
+            "max_dd_pp": 4.26954819808365,
+            "total_return_pp": 69.28627252667438,
+            "underwater_days": -341,
+            "cagr_not_lower": true,
+            "underwater_shorter": true
+          },
+          "selfcheck_family": {
+            "window": [
+              "2021-10-11",
+              "2026-10-30"
+            ],
+            "n_days": 1845,
+            "fed_prod_return": 0.167760582796322,
+            "curve_return": 0.1677605827963191,
+            "abs_diff": 2.886579864025407e-15,
+            "note": "族曲线收益直接取族净值端点(asof),不重建被检序列"
+          }
+        }
+      },
+      "conclusion": {
+        "class": "两个窗口都让最长水下变短且年化不降",
+        "window_A_pass": true,
+        "window_B_pass": true,
+        "window_dependent": false
+      }
+    }
+  }
+}
