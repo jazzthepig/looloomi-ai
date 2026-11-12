@@ -1,0 +1,55 @@
+{
+ "author": "seth:high-dim",
+ "entries": [
+  {
+   "id": "HD-2026-11-12-1",
+   "scenario": "S3 续:反弹失败后的下一段",
+   "statement": "2026-12-10 BTC 收盘低于 66,600(比 11-11 的 74,015 再跌 10% 以上)",
+   "variable": "close:BTC",
+   "op": "lt",
+   "hi": 66600,
+   "prob": 0.25,
+   "horizon_d": "2026-12-10"
+  },
+  {
+   "id": "HD-2026-11-12-2",
+   "scenario": "熊市陷阱:闸门刚关就收回",
+   "statement": "2026-12-10 BTC 收盘高于 81,400(比 11-11 涨 10% 以上)",
+   "variable": "close:BTC",
+   "op": "gt",
+   "lo": 81400,
+   "prob": 0.2,
+   "horizon_d": "2026-12-10"
+  },
+  {
+   "id": "HD-2026-11-12-3",
+   "scenario": "熊市陷阱:闸门刚关就收回",
+   "statement": "2026-12-10 面板 dist_200 > 0(回到 200 日线上方;本底:2020-07 以来 20 次闸门关闭里 14 次不到 10 天就收回)",
+   "variable": "state:dist_200",
+   "op": "gt",
+   "lo": 0.0,
+   "prob": 0.5,
+   "horizon_d": "2026-12-10"
+  },
+  {
+   "id": "HD-2026-11-12-4",
+   "scenario": "广度修复",
+   "statement": "2026-12-10 面板 breadth_above_ma50 > 0.3(11-11 是 0:没有一个币在自己的 50 日线上)",
+   "variable": "state:breadth_above_ma50",
+   "op": "gt",
+   "lo": 0.3,
+   "prob": 0.55,
+   "horizon_d": "2026-12-10"
+  },
+  {
+   "id": "HD-2026-11-12-5",
+   "scenario": "S3 续:反弹失败后的下一段",
+   "statement": "2026-12-10 前后恐惧贪婪低于 20(11-12 是 28)",
+   "variable": "macro:fng",
+   "op": "lt",
+   "hi": 20,
+   "prob": 0.2,
+   "horizon_d": "2026-12-10"
+  }
+ ]
+}
