@@ -1,49 +1,37 @@
 {
+  "author": "lane-b",
   "task": "T-244",
-  "lane": "lane-b",
   "created": "2026-11-05",
   "as_of": "2026-11-05",
   "note": "机器可核命题;概率是主观先验,到期按 Brier 结算。命题只描述可查的事实,不含收益承诺。",
-  "propositions": [
-    {
-      "id": "t244-p1",
-      "statement": "到 2026-12-05,`r_tickets_paper` 里 signal_d >= '2026-11-05' 且 exit_d IS NOT NULL 的票中,止损出场(exit_px <= stop_px * 1.001)的张数 >= 4。",
-      "probability": 0.60,
-      "resolution": "机械判定:SELECT count(*) FROM r_tickets_paper WHERE signal_d >= '2026-11-05' AND exit_px IS NOT NULL AND exit_px <= stop_px * 1.001 于 2026-12-05 取值 >=4 记 1,<4 记 0。",
-      "resolves_by": "2026-12-05",
-      "basis": "本卡实测:历史 770 张多头票里止损出场 284 张(36.9%);2026-11-05 之后约一个月的票量按近半年节奏外推,止损出场 4 张以上是中性先验。"
-    },
-    {
-      "id": "t244-p2",
-      "statement": "到 2026-12-05,`r_tickets_paper` 里 signal_d >= '2026-11-05' 的票(不论是否出场)张数 >= 8。",
-      "probability": 0.55,
-      "resolution": "机械判定:SELECT count(*) FROM r_tickets_paper WHERE signal_d >= '2026-11-05' 于 2026-12-05 取值 >=8 记 1,<8 记 0。",
-      "resolves_by": "2026-12-05",
-      "basis": "本卡实测:770 张票分布在 2020-03→2026-06(约 6.3 年,年均约 122 张);2026-11-05→12-05 一个月按年均节奏约 10 张,但闸门(majors 指数)与宇宙覆盖会放大波动,故先验取 0.55。"
-    },
-    {
-      "id": "t244-p3",
-      "statement": "到 2026-12-05,`r_tickets_paper` 里 signal_d >= '2026-11-05' 且 exit_d IS NOT NULL 的票中,止损出场的占比 <= 45%。",
-      "probability": 0.65,
-      "resolution": "机械判定:a = SELECT count(*) FROM r_tickets_paper WHERE signal_d >= '2026-11-05' AND exit_px IS NOT NULL; b = 同条件加 exit_px <= stop_px*1.001;于 2026-12-05 取 b/a <= 0.45 记 1,>0.45 记 0(a=0 记 0)。",
-      "resolves_by": "2026-12-05",
-      "basis": "本卡实测:历史占比 36.9%(284/770);前向窗口样本小,故把容忍带放宽到 45% 再取先验 0.65。"
-    },
-    {
-      "id": "t244-p4",
-      "statement": "到 2026-12-05,`r_tickets_paper` 里 signal_d >= '2026-11-05' 且 exit_px IS NOT NULL AND exit_px <= stop_px*1.001 的票中,出场当天收盘高于止损价(纯插针,即 low 触到止损但 close > stop_px)的占比 >= 15%。",
-      "probability": 0.55,
-      "resolution": "机械判定:SELECT count(*) FROM r_tickets_paper t JOIN ohlcv_daily d ON d.symbol = t.symbol AND d.trade_date = t.exit_d AND d.source = 'binance_hist' WHERE t.signal_d >= '2026-11-05' AND t.exit_px IS NOT NULL AND t.exit_px <= t.stop_px*1.001 AND d.close > t.stop_px 除以同条件票数;于 2026-12-05 取 >= 0.15 记 1,< 0.15 记 0。",
-      "resolves_by": "2026-12-05",
-      "basis": "本卡实测:止损出场 284 张里纯插针(当日收盘仍高于止损价)204 张(71.9%);本卡进一步收窄到「5 日内收回进场价」的被猎只有 68 张(23.9%),故对「纯插针」这一宽口径给 0.55、对窄口径不给先验。"
-    },
-    {
-      "id": "t244-p5",
-      "statement": "到 2026-12-05,`ohlcv_daily`(source='binance_hist', symbol='BTC')在 2026-12-05 的 close 高于 2026-11-05 的 close。",
-      "probability": 0.55,
-      "resolution": "机械判定:SELECT close FROM ohlcv_daily WHERE source='binance_hist' AND symbol='BTC' AND trade_date IN ('2026-11-05','2026-12-05');于 2026-12-05 取 12-05 的 close > 11-05 的 close 记 1,否则记 0。",
-      "resolves_by": "2026-12-05",
-      "basis": "本卡副报:被猎票的「错过的 R」中位 −0.339R、均值 +0.585R、≥+1R 占 23.9% —— 方向性微弱且右偏;同一区间的 BTC 方向先验取中性略偏正 0.55。"
-    }
+  "dropped": [
+    {"id": "t244-p5", "reason": "原文只给相对比较(2026-12-05 的 close > 2026-11-05 的 close),门槛数不在原文;按 T-356 卡「补不出来的门槛不补」,本条未入账。原文见 git show origin/main:docs/research/scenarios/lane-b-T-244.json",
+     "basis": "本卡副报:被猎票的「错过的 R」中位 −0.339R、均值 +0.585R、≥+1R 占 23.9% —— 方向性微弱且右偏;同一区间的 BTC 方向先验取中性略偏正 0.55。"}
+  ],
+  "entries": [
+    {"id": "t244-p1", "scenario": "T-244",
+     "statement": "到 2026-12-05,`r_tickets_paper` 里 signal_d >= '2026-11-05' 且 exit_d IS NOT NULL 的票中,止损出场(exit_px <= stop_px * 1.001)的张数 >= 4。",
+     "variable": "manual", "op": "gt", "lo": 3, "prob": 0.6, "horizon_d": "2026-12-05",
+     "resolution": "机械判定:SELECT count(*) FROM r_tickets_paper WHERE signal_d >= '2026-11-05' AND exit_px IS NOT NULL AND exit_px <= stop_px * 1.001 于 2026-12-05 取值 >=4 记 1,<4 记 0。",
+     "note": "observed = 止损出场的票数(原始 rule:≥4 记 1;整数计数下 gt lo=3 与 ≥4 等价);交原始量,不交 0/1 标记",
+     "basis": "本卡实测:历史 770 张多头票里止损出场 284 张(36.9%);2026-11-05 之后约一个月的票量按近半年节奏外推,止损出场 4 张以上是中性先验。"},
+    {"id": "t244-p2", "scenario": "T-244",
+     "statement": "到 2026-12-05,`r_tickets_paper` 里 signal_d >= '2026-11-05' 的票(不论是否出场)张数 >= 8。",
+     "variable": "manual", "op": "gt", "lo": 7, "prob": 0.55, "horizon_d": "2026-12-05",
+     "resolution": "机械判定:SELECT count(*) FROM r_tickets_paper WHERE signal_d >= '2026-11-05' 于 2026-12-05 取值 >=8 记 1,<8 记 0。",
+     "note": "observed = signal_d ≥ 2026-11-05 的票数(原始 rule:≥8 记 1;整数计数下 gt lo=7 与 ≥8 等价);交原始量,不交 0/1 标记",
+     "basis": "本卡实测:770 张票分布在 2020-03→2026-06(约 6.3 年,年均约 122 张);2026-11-05→12-05 一个月按年均节奏约 10 张,但闸门(majors 指数)与宇宙覆盖会放大波动,故先验取 0.55。"},
+    {"id": "t244-p3", "scenario": "T-244",
+     "statement": "到 2026-12-05,`r_tickets_paper` 里 signal_d >= '2026-11-05' 且 exit_d IS NOT NULL 的票中,止损出场的占比 <= 45%。",
+     "variable": "manual", "op": "lt", "hi": 0.45, "prob": 0.65, "horizon_d": "2026-12-05",
+     "resolution": "机械判定:a = SELECT count(*) FROM r_tickets_paper WHERE signal_d >= '2026-11-05' AND exit_px IS NOT NULL; b = 同条件加 exit_px <= stop_px*1.001;于 2026-12-05 取 b/a <= 0.45 记 1,>0.45 记 0(a=0 记 0)。",
+     "note": "observed = 止损出场占已出场票的比重 b/a(原始 rule);交原始量,不交 0/1 标记",
+     "basis": "本卡实测:历史占比 36.9%(284/770);前向窗口样本小,故把容忍带放宽到 45% 再取先验 0.65。"},
+    {"id": "t244-p4", "scenario": "T-244",
+     "statement": "到 2026-12-05,`r_tickets_paper` 里 signal_d >= '2026-11-05' 且 exit_px IS NOT NULL AND exit_px <= stop_px*1.001 的票中,出场当天收盘高于止损价(纯插针,即 low 触到止损但 close > stop_px)的占比 >= 15%。",
+     "variable": "manual", "op": "gt", "lo": 0.15, "prob": 0.55, "horizon_d": "2026-12-05",
+     "resolution": "机械判定:SELECT count(*) FROM r_tickets_paper t JOIN ohlcv_daily d ON d.symbol = t.symbol AND d.trade_date = t.exit_d AND d.source = 'binance_hist' WHERE t.signal_d >= '2026-11-05' AND t.exit_px IS NOT NULL AND t.exit_px <= t.stop_px*1.001 AND d.close > t.stop_px 除以同条件票数;于 2026-12-05 取 >= 0.15 记 1,< 0.15 记 0。",
+     "note": "observed = 纯插针票占止损出场票的比重(原始 rule);交原始量,不交 0/1 标记",
+     "basis": "本卡实测:止损出场 284 张里纯插针(当日收盘仍高于止损价)204 张(71.9%);本卡进一步收窄到「5 日内收回进场价」的被猎只有 68 张(23.9%),故对「纯插针」这一宽口径给 0.55、对窄口径不给先验。"}
   ]
 }
