@@ -1,58 +1,101 @@
 {
+  "author": "lane-b",
   "task": "T-282",
-  "lane": "lane-b",
   "ledger": "S-761",
   "title": "S-761 ④ 空票(Binance 永续上线次日开盘做空 + 对冲 BTC)—— 前向命题",
   "created": "2026-11-07",
   "resolution_note": "命题都是可机器核对的陈述;到期按 resolution_rule 结算(Brier)。不含收益承诺,只用定位语言。",
-  "propositions": [
+  "entries": [
     {
-      "id": "P1",
-      "statement": "用 T-282 的主口径(142 事件 / 次日开盘进场 / 30 根日线 / 2.5 ATR 止损 / 扣成本与资金费)重跑,净盈亏中位数 ≥ 0。",
-      "probability": 0.8,
-      "resolve_by": "2026-11-14",
-      "resolution_rule": "读 docs/research/t282_results.json 的 main.median_pct ≥ 0 ⇒ 1,否则 0。",
-      "brier_note": "首跑中位 +16.33%(n=131);但样本含 2023+ 的强单边段,外推须谨慎。"
-    },
-    {
-      "id": "P2",
-      "statement": "T-282 的主口径里,最差 5% 的票平均亏损 ≤ 30%(判据 e 在重跑时仍成立)。",
-      "probability": 0.2,
-      "resolve_by": "2026-11-14",
-      "resolution_rule": "读 docs/research/t282_results.json 的 main.worst5_mean_pct ≥ −30 ⇒ 1,否则 0。",
-      "brier_note": "首跑 −81.23%(ONE −152.6% / BNX −100.6% / BAND −80.3%);挤空的尾巴是这张票的结构性问题,不是噪声。"
-    },
-    {
-      "id": "P3",
-      "statement": "同一批事件里,把 BTC 对冲腿去掉(纯空腿)后的净盈亏均值 ≥ 0。",
-      "probability": 0.85,
-      "resolve_by": "2026-11-14",
-      "resolution_rule": "读 docs/research/t282_results.json 的 sub.no_hedge.mean_pct ≥ 0 ⇒ 1,否则 0。",
-      "brier_note": "首跑 +4.92%;但 2020–2022 段空腿本身是 −1.91%,均值全靠 2023+ 与资金费收成。"
-    },
-    {
-      "id": "P4",
-      "statement": "把持有期改成 60 天(其余规则不变)后,净盈亏均值 ≥ 主口径(30 天)的均值。",
-      "probability": 0.6,
-      "resolve_by": "2026-11-14",
-      "resolution_rule": "读 docs/research/t282_results.json:sub.hold_60.mean_pct ≥ main.mean_pct ⇒ 1,否则 0。",
-      "brier_note": "首跑 hold_60 +19.08% vs 30 天 +9.96%;持有更久尾巴仍在(−79.5%),均值改善可能来自 beta。"
-    },
-    {
-      "id": "P5",
-      "statement": "上线前市值最大的三分位(T-279 的 mcap_pre)的净盈亏均值 ≤ 其余两档的均值 —— 即大市值新币的上线事件不是最好的那批。",
-      "probability": 0.55,
-      "resolve_by": "2026-11-14",
-      "resolution_rule": "读 docs/research/t282_results.json:sub.mcap_terciles.large.mean_pct ≤ (small.mean_pct + mid.mean_pct)/2 ⇒ 1,否则 0。",
-      "brier_note": "首跑 大 +4.32% / 小 +10.52% / 中 +11.62%,方向一致;市值数据有 33 张缺失(mcap_pre = null),样本 n=109。"
-    },
-    {
-      "id": "P6",
+      "id": "T-282-P6",
+      "orig_id": "P6",
+      "scenario": "S-761 ④ 空票(Binance 永续上线次日开盘做空 + 对冲 BTC)—— 前向命题",
       "statement": "2026-11-07 → 2026-12-07 新增的 Binance USDT 永续上线事件里,存在至少 6 个在「上线次日」就有 perp_bv_daily 行情的样本(可进场的比例 ≥ 60%)。",
-      "probability": 0.6,
-      "resolve_by": "2026-12-07",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 5,
+      "prob": 0.6,
+      "horizon_d": "2026-12-07",
       "resolution_rule": "用 docs/research/t282_events.json 的同一口径(events 表 kind=perp_listing、source=binance、ts 在窗口内)统计「d+1 有 perp_bv_daily 行情」的样本数 ≥ 6 ⇒ 1,否则 0。",
+      "note": "observed = 新增事件里 d+1 有 perp_bv_daily 行情的样本数(原始 rule;整数计数下 gt lo=5 与 ≥6 等价);交原始量,不交 0/1 标记",
       "brier_note": "历史上 142 个里 131 个可进场(92%);但 2026 年新币的永续上线节奏与 2020–2022 不同,比例未验证。"
+    }
+  ],
+  "dropped": [
+    {
+      "id": "T-282-P1",
+      "orig_id": "P1",
+      "scenario": "S-761 ④ 空票(Binance 永续上线次日开盘做空 + 对冲 BTC)—— 前向命题",
+      "statement": "用 T-282 的主口径(142 事件 / 次日开盘进场 / 30 根日线 / 2.5 ATR 止损 / 扣成本与资金费)重跑,净盈亏中位数 ≥ 0。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.8,
+      "horizon_d": "2026-11-14",
+      "resolution_rule": "读 docs/research/t282_results.json 的 main.median_pct ≥ 0 ⇒ 1,否则 0。",
+      "note": "observed = main.median_pct(原始 rule);交原始量,不交 0/1 标记",
+      "brier_note": "首跑中位 +16.33%(n=131);但样本含 2023+ 的强单边段,外推须谨慎。",
+      "reason": "known-at-write: 写下时答案已知,不进 Brier 统计(§Seth-1112i ②)。resolution_rule 读的 t282_results.json 的 generated_at 2026-11-07T10:40:59+00:00 早于本命题文件的提交时刻 2026-11-07T19:57:46+09:00(=10:57:46Z),且 brier_note 自陈「首跑 中位 +16.33%(n=131)」。"
+    },
+    {
+      "id": "T-282-P2",
+      "orig_id": "P2",
+      "scenario": "S-761 ④ 空票(Binance 永续上线次日开盘做空 + 对冲 BTC)—— 前向命题",
+      "statement": "T-282 的主口径里,最差 5% 的票平均亏损 ≤ 30%(判据 e 在重跑时仍成立)。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": -30,
+      "prob": 0.2,
+      "horizon_d": "2026-11-14",
+      "resolution_rule": "读 docs/research/t282_results.json 的 main.worst5_mean_pct ≥ −30 ⇒ 1,否则 0。",
+      "note": "observed = main.worst5_mean_pct(原始 rule);交原始量,不交 0/1 标记",
+      "brier_note": "首跑 −81.23%(ONE −152.6% / BNX −100.6% / BAND −80.3%);挤空的尾巴是这张票的结构性问题,不是噪声。",
+      "reason": "known-at-write: 写下时答案已知,不进 Brier 统计(§Seth-1112i ②)。resolution_rule 读的 t282_results.json 的 generated_at 2026-11-07T10:40:59+00:00 早于本命题文件的提交时刻 2026-11-07T19:57:46+09:00(=10:57:46Z),且 brier_note 自陈「首跑 −81.23%(ONE −152.6% / BNX −100.6% / BAND −80.3%)」。"
+    },
+    {
+      "id": "T-282-P3",
+      "orig_id": "P3",
+      "scenario": "S-761 ④ 空票(Binance 永续上线次日开盘做空 + 对冲 BTC)—— 前向命题",
+      "statement": "同一批事件里,把 BTC 对冲腿去掉(纯空腿)后的净盈亏均值 ≥ 0。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.85,
+      "horizon_d": "2026-11-14",
+      "resolution_rule": "读 docs/research/t282_results.json 的 sub.no_hedge.mean_pct ≥ 0 ⇒ 1,否则 0。",
+      "note": "observed = sub.no_hedge.mean_pct(原始 rule);交原始量,不交 0/1 标记",
+      "brier_note": "首跑 +4.92%;但 2020–2022 段空腿本身是 −1.91%,均值全靠 2023+ 与资金费收成。",
+      "reason": "known-at-write: 写下时答案已知,不进 Brier 统计(§Seth-1112i ②)。resolution_rule 读的 t282_results.json 的 generated_at 2026-11-07T10:40:59+00:00 早于本命题文件的提交时刻 2026-11-07T19:57:46+09:00(=10:57:46Z),且 brier_note 自陈「首跑 +4.92%」。"
+    },
+    {
+      "id": "T-282-P4",
+      "orig_id": "P4",
+      "scenario": "S-761 ④ 空票(Binance 永续上线次日开盘做空 + 对冲 BTC)—— 前向命题",
+      "statement": "把持有期改成 60 天(其余规则不变)后,净盈亏均值 ≥ 主口径(30 天)的均值。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.6,
+      "horizon_d": "2026-11-14",
+      "resolution_rule": "读 docs/research/t282_results.json:sub.hold_60.mean_pct ≥ main.mean_pct ⇒ 1,否则 0。",
+      "note": "observed = sub.hold_60.mean_pct − main.mean_pct(原始 rule:60 天均值 ≥ 30 天均值);交原始差值,不交 0/1 标记",
+      "brier_note": "首跑 hold_60 +19.08% vs 30 天 +9.96%;持有更久尾巴仍在(−79.5%),均值改善可能来自 beta。",
+      "reason": "known-at-write: 写下时答案已知,不进 Brier 统计(§Seth-1112i ②)。resolution_rule 读的 t282_results.json 的 generated_at 2026-11-07T10:40:59+00:00 早于本命题文件的提交时刻 2026-11-07T19:57:46+09:00(=10:57:46Z),且 brier_note 自陈「首跑 hold_60 +19.08% vs 30 天 +9.96%」。"
+    },
+    {
+      "id": "T-282-P5",
+      "orig_id": "P5",
+      "scenario": "S-761 ④ 空票(Binance 永续上线次日开盘做空 + 对冲 BTC)—— 前向命题",
+      "statement": "上线前市值最大的三分位(T-279 的 mcap_pre)的净盈亏均值 ≤ 其余两档的均值 —— 即大市值新币的上线事件不是最好的那批。",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 0,
+      "prob": 0.55,
+      "horizon_d": "2026-11-14",
+      "resolution_rule": "读 docs/research/t282_results.json:sub.mcap_terciles.large.mean_pct ≤ (small.mean_pct + mid.mean_pct)/2 ⇒ 1,否则 0。",
+      "note": "observed = sub.mcap_terciles.large.mean_pct − (small.mean_pct + mid.mean_pct)/2(原始 rule);交原始差值,不交 0/1 标记",
+      "brier_note": "首跑 大 +4.32% / 小 +10.52% / 中 +11.62%,方向一致;市值数据有 33 张缺失(mcap_pre = null),样本 n=109。",
+      "reason": "known-at-write: 写下时答案已知,不进 Brier 统计(§Seth-1112i ②)。resolution_rule 读的 t282_results.json 的 generated_at 2026-11-07T10:40:59+00:00 早于本命题文件的提交时刻 2026-11-07T19:57:46+09:00(=10:57:46Z),且 brier_note 自陈「首跑 大 +4.32% / 小 +10.52% / 中 +11.62%」。"
     }
   ]
 }
