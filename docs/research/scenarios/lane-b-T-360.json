@@ -1,0 +1,45 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {
+      "id": "T-360-1",
+      "scenario": "T-360 吃反转的一类(S-835 候选二)",
+      "statement": "2026-12-15,BTC 30 日年化资金费仍为正",
+      "variable": "state:funding_btc_30d",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.65,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-360-2",
+      "scenario": "T-360 吃反转的一类(S-835 候选二)",
+      "statement": "2026-12-15 之前,规则 A(非 BTC 名 30 日涨幅自标准化 z30 ≥ 3,周一取样)触发 ≥ 2 张票",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 2,
+      "prob": 0.9,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-360-3",
+      "scenario": "T-360 吃反转的一类(S-835 候选二)",
+      "statement": "2026-12-15 之前,规则 B(BTC 或 ETH 的 z30 ≤ −2,周一取样)触发 ≤ 1 张票",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 1,
+      "prob": 0.85,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-360-4",
+      "scenario": "T-360 吃反转的一类(S-835 候选二)",
+      "statement": "2026-12-15 之前规则 A 的票里,该名在 t+7 进场后 30 日的相对 BTC 收益为负的比例 ≥ 0.60(无票则按不成立结算)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0.6,
+      "prob": 0.65,
+      "horizon_d": "2026-12-15"
+    }
+  ]
+}
