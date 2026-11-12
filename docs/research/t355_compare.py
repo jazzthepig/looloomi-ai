@@ -80,9 +80,8 @@ def main():
     examples = defaultdict(list)
     for k in sorted(both):
         m, t = my_by_key[k], th_by_key[k]
-        sd_ = ((m["entry_px"] - m["stop_px"]) / m["entry_px"]
-               if m.get("entry_px") and m.get("stop_px") else None)
-        my_r = (m["r_mult"] * sd_) if (m.get("r_mult") is not None and sd_) else None
+        # r 的口径:R 倍数(生产 SQL 的 r_mult),不是简单收益
+        my_r = m.get("r_mult")
         fields = [
             ("entry_d", m.get("entry_d"), t.get("entry_d")),
             ("entry_px", m.get("entry_px"), t.get("entry_px")),
@@ -132,7 +131,8 @@ def main():
         s["label"] = label
         s["skip_reasons"] = dict(res["skip_reasons"])
         s["n_tickets_fed"] = len(tickets)
-        s["by_year"] = {y: v["ret"] for y, v in s["by_year"].items()}
+        s["by_year"] = {y: (v["ret"] if isinstance(v, dict) else v)
+                        for y, v in s["by_year"].items()}
         return s
 
     th_eng = []

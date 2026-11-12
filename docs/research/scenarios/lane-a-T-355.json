@@ -1,43 +1,20 @@
 {
-  "task": "T-355",
-  "lane": "lane-a",
-  "created": "2026-11-12",
-  "title": "S-830 票源第二份的复现一致性 —— 合并后按 Brier 结算",
-  "format": "每条命题 = 一个机器可核的 metric;lt = 「实测值 ≤ lt.value」的概率(高);gt = 「实测值 ≥ gt.value」的概率(低);p(lt) + p(gt) ≤ 1,中枢区间 [gt.value, lt.value]。所有 metric 由下列脚本一次性算出,不许事后改口径。",
-  "how_to_measure": "cd docs/research && python3 t355_compare.py --mine t355_tickets_full.json --out t355_results.json",
-  "settlement": "合并入台账后按实测值逐条结算:命中 lt 侧记 p,命中 gt 侧记 1-p,区间内按线性插值记。",
-  "propositions": [
-    {
-      "id": "t355-p1",
-      "claim": "第二份票源(照生产内核 r_tickets_scan 重写)与 t197 的票,按「同币同信号日」的重合张数落在 940–956 之间。",
-      "metric": "t355_results.json → counts.overlap",
-      "source": "docs/research/t355_compare.py",
-      "lt": {"value": 956, "p": 0.90},
-      "gt": {"value": 940, "p": 0.10}
-    },
-    {
-      "id": "t355-p2",
-      "claim": "重合票里 entry_px / stop_px / exit_d / exit_px / r 五个字段逐项不一致的张数合计 ≤ 5 张。",
-      "metric": "t355_results.json → sum(mismatch_counts.values())",
-      "source": "docs/research/t355_compare.py",
-      "lt": {"value": 5, "p": 0.80},
-      "gt": {"value": 40, "p": 0.20}
-    },
-    {
-      "id": "t355-p3",
-      "claim": "两批票分别喂进 t353_engine(f 0.5% / 上限 0.40 / 14 名额)后,成交张数之差 ≤ 3 张。",
-      "metric": "t355_results.json → engine.delta_mine_vs_t197_run.taken 的绝对值",
-      "source": "docs/research/t353_engine.simulate",
-      "lt": {"value": 3, "p": 0.80},
-      "gt": {"value": 25, "p": 0.20}
-    },
-    {
-      "id": "t355-p4",
-      "claim": "本宇宙(2020-07-18→2026-09-30)上,信号总数减去已成交票数 = 闸门关掉而 never fill 的票数,落在 175–189 之间。",
-      "metric": "t355_results.json → counts.mine_status_hist.blocked",
-      "source": "docs/research/t355_tickets.py",
-      "lt": {"value": 189, "p": 0.85},
-      "gt": {"value": 175, "p": 0.15}
-    }
+  "author": "lane-a",
+  "entries": [
+    {"id": "T-355-1", "scenario": "T-355 票源第二份(照 r_tickets_scan 从零重写,对拍 t197)",
+     "statement": "BTC 在 2026-12-15 或之后最近一根日线收盘落在 67650..80250(近 30 日已实现波动年化 8.5% 的 ±1σ 带)",
+     "variable": "close:BTC", "op": "between", "lo": 67650, "hi": 80250, "prob": 0.65, "horizon_d": "2026-12-15"},
+    {"id": "T-355-2", "scenario": "T-355 票源第二份(照 r_tickets_scan 从零重写,对拍 t197)",
+     "statement": "BTC 在 2026-12-15 或之后最近一根日线收盘跌破 63550(−1.65σ 尾部)",
+     "variable": "close:BTC", "op": "lt", "hi": 63550, "prob": 0.1, "horizon_d": "2026-12-15"},
+    {"id": "T-355-3", "scenario": "T-355 票源第二份(照 r_tickets_scan 从零重写,对拍 t197)",
+     "statement": "panel 的 breadth_above_ma50 在 2026-12-10 时 > 0.25(近 250 天里约 65% 的日子在 0.25 之上;2026-11-11 读数 0.0)",
+     "variable": "state:breadth_above_ma50", "op": "gt", "lo": 0.25, "prob": 0.55, "horizon_d": "2026-12-10"},
+    {"id": "T-355-4", "scenario": "T-355 票源第二份(照 r_tickets_scan 从零重写,对拍 t197)",
+     "statement": "生产表 r_tickets_paper 里 status='closed' 的票,在 2026-12-31 之前累计 ≥ 100 张(生产扫描真的在写票本)",
+     "variable": "manual", "op": "between", "lo": 100, "hi": 100000, "prob": 0.55, "horizon_d": "2026-12-31"},
+    {"id": "T-355-5", "scenario": "T-355 票源第二份(照 r_tickets_scan 从零重写,对拍 t197)",
+     "statement": "第二份票源在同一面板、同一闸门口径下重跑,产出的票数落在 1088..1202(本轮实测 1145)",
+     "variable": "manual", "op": "between", "lo": 1088, "hi": 1202, "prob": 0.85, "horizon_d": "2026-12-31"}
   ]
 }

@@ -331,7 +331,9 @@ def run_scan(bars: dict, gate: dict, v_from: str, p_to: str, enforce_guard: bool
 
 def to_engine_tickets(rows):
     """转成 t353_engine.simulate 吃的样子:
-    r(简单收益)= r_mult × sd(sd = 止损距离占进场价);引擎要的是简单收益。
+    r = R 倍数(= 生产 SQL 的 r_mult),不是简单收益 —— 引擎的不变量③按
+    「已实现盈亏 = Σ(r × 进场时每票风险额)」记账,风险额 = 名义 × sd,
+    所以 r 必须满足 r × sd = (exit/entry − 1) − 0.004,即 r = r_mult。
     still(窗口末还在场的票)没有出场价,r 记 0 —— 它只进 book 占用名额,永不结算。"""
     out = []
     for i, t in enumerate(rows):
@@ -340,7 +342,7 @@ def to_engine_tickets(rows):
         if t["entry_d"] is None:
             continue
         sd = (t["entry_px"] - t["stop_px"]) / t["entry_px"]
-        r_simple = t["r_mult"] * sd if (t["r_mult"] is not None and sd) else 0.0
+        r_r = t["r_mult"] if t["r_mult"] is not None else 0.0
         out.append({
             "tid": i,
             "symbol": t["symbol"],
@@ -349,7 +351,7 @@ def to_engine_tickets(rows):
             "stop_px": t["stop_px"],
             "exit_d": t["exit_d"], "exit_px": t["exit_px"],
             "exit_reason": t["exit_reason"],
-            "r": r_simple, "r_mult": t["r_mult"], "sd": sd,
+            "r": r_r, "r_mult": t["r_mult"], "sd": sd,
             "still": t["status"] == "open",
         })
     return out
