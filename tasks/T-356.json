@@ -20,9 +20,9 @@
   ],
   "acceptance": {
     "check": "只修让它能入账所需的字段:author 用文件名里的 lane(别的 lane 的文件也照它原 lane 写,不写 lane-b);lt 缺 hi / gt 缺 lo 时,只在原条目里已有同一门槛(写错成 lo/hi、或 statement 里写明的数)时搬过去;缺 statement 时只能从同条目的 scenario / 原文逐字拼,不许新写判断。**prob、op、门槛、horizon_d、id 一个不改**(README:写下之后不能改)。7 个整份不认的文件转成 {author, entries} 时同理逐字段搬。horizon_d ≤ 2026-11-19 的条目照搬但在 notes 里列出(入账闸会拒,这是对的,不要改日期)。补不出来的(原文没有门槛)不修,列出原因。自检:修后 repo_files('.') 的 problems 为 0,validate(e, today=合并预计日 2026-11-13) 只剩 horizon 已过的那些;报修前 / 修后条数、能入账的条数、逐文件清单。",
-    "expect": "只改 docs/research/scenarios/*.json + 卡;notes 写逐文件修了什么、哪些因 horizon 已过入不了账、哪些补不出来;in_review,推 lane-b/T-356。"
+    "expect": "只改情景台账目录(docs/research 下的 scenario json)+ 卡;notes 写逐文件修了什么、哪些因 horizon 已过入不了账、哪些补不出来;in_review,推 lane-b/T-356。"
   },
   "prior_value": "这些前向预期从没进 scenario_ledger ⇒ 永不结算,Brier 记录静默漏掉;T-283-3/4 到期 2026-12-01,拖过 11-24 就彻底入不了账。",
-  "notes": "2026-11-12T00:50:00Z Seth 开卡(§Seth-1112f)。不计试验数(格式修复,不是检验)。",
+  "notes": "2026-11-12T00:50:00Z Seth 开卡(§Seth-1112f)。不计试验数(格式修复,不是检验)。\n2026-11-12T02:50:00Z Seth 复核 d530a9f9 → CHANGES(§Seth-1112h):① 与已合并的 T-308-fix 冲突 —— lane-a-T-308.json 以 main 为准(原 id T-308-1..4 保留;分支改成 T308-S* 且把 T-308-2 的 between 改成 gt,两条都违反『id/op 不改』);lane-a-T-252/T-256 与 main 已一致。② 范围检查红只因本卡 expect 写了『scenarios/』触发 S-705 规则 —— Seth 已改 expect 措辞,合并 main 时取 main 的 acceptance。③ ≤/≥ → lt/gt 的边界清单写全:整数计数的平移(≤200→hi 201、≥1→lo 0、≥4→lo 3、≥8→lo 7、≥30→lo 29)逐点等价;实数的 universe:gap_persist(≤−50)、hybrid:persists(≥1.5)、t244-p3(≤0.45)、t244-p4(≥0.15)、T-282 P3/P4(≥0)恰好相等时差一档,notes 列出,不改门槛。其余逐条核过:prob/horizon_d 全部未变,T-230 补的 horizon_d 2027-11-04 来自 statement 原文。9 条 2026-11-14 到期的要 11-13 前合,v2 尽快。",
   "verified": null
 }
