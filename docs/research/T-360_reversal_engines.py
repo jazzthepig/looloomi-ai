@@ -14,7 +14,7 @@
       (S-569 原文测的就是这一格:30 日相对 BTC(t+7) = −16.4,90 日(t+7) = −38.7,跑输比例 0.81。)
   规则 B(主流暴跌 → 做多):BTC / ETH z30 ≤ −2 ⇒ t+7 收盘进场,做多该名,持有 H 天。
       (S-569 原文:BTC 暴跌 9 周 90 日 +10.3%(基准 +6.3);ETH 暴跌 14 周 +19.2%(+6.6)。)
-  H ∈ {7, 30, 90}:7 = 卡面写的「一周」;30 / 90 = S-569 原文测过的窗口。全部报,不许只报好的那个。
+  H ∈ {7, 20, 30, 45, 90}:7 = 卡面写的「一周」;30 / 90 = S-569 原文测过的窗口;20 / 45 = 新加的邻点。全部报,不许只报好的那个。
   成本:单边 10 bp(每条腿的每次成交额变动 10 bp,进场与出场各一次)。资金费另记(见 FUND)。
 
 **账户(照 S-834:RBv2 + 现金 + R-v2 叠加)**:先对上 S-834 的账户年化 +35.7%、R-v2 风险占比 0.742,再叠候选。
@@ -50,10 +50,15 @@ _sp = importlib.util.spec_from_file_location("t352_engine", HERE + "/t352_engine
 E1 = importlib.util.module_from_spec(_sp)
 _sp.loader.exec_module(E1)
 
-OUT = os.path.join(HERE, "T-360_results.json")
+OUT = os.environ.get("T360_OUT") or os.path.join(HERE, "T-360_results.json")
+VERIFY_OUT = os.environ.get("T360_VERIFY_OUT") or os.path.join(HERE, "T-360_verify.json")
 CACHE = HERE + "/T-092_cache.pkl"
 SEED = 20261113
-N_NULL = 200
+N_NULL = int(os.environ.get("T360_N_NULL", 500))
+# 本轮(2026-11-13 返工)只跑子集:持有期档位与规则可由环境变量覆盖,
+#   T360_H_A="20,30,45"  T360_RULE_B=0  T360_N_NULL=50
+H_A = tuple(int(x) for x in os.environ.get("T360_H_A", "7,20,30,45,90").split(","))
+RUN_B = os.environ.get("T360_RULE_B", "1") not in ("0", "false", "False")
 COST_BPS = 10          # 单边 10 bp
 TARGET_RC = 0.10       # 候选自己的风险贡献占账户 10%
 START = pd.Timestamp("2021-10-11")
@@ -458,10 +463,14 @@ def acct_new(w, cand_on_acct):
 def srs_on_acct(srs, acct_idx):
     """把 crypto 日历(7×24)的候选日收益聚到账户日历(工作日)上。
 
-    **口径**:账户腿(equity/gold)的工作日收益是「上个工作日收盘 → 本工作日收盘」,**含周末漂移**;
-    候选序列若用 `srs.reindex(acct_index)` 直接取工作日当天的收益,**周末的盈亏被整段丢掉**
-    ⇒ 候选在账户上的贡献被系统性扭曲(实测:H30 全日历 −44.54% vs 工作日直取 +122.63%)。
-    这里改成「(上一个账户日, 本账户日] 区间内所有 crypto 日的复利」—— 与账户腿同口径。
+    **口径(2026-11-13 更正,Seth §Seth-1113e)**:账户腿(equity/gold)的工作日收益是
+    「上个工作日收盘 → 本工作日收盘」,**含周末漂移**;候选序列必须同口径。
+    上一版写的是 `u = g.index.union(acct_idx); gg / gg.shift(1)` —— 账户日**都是加密日** ⇒ `u` 就是加密日历
+    ⇒ `shift(1)` 取的是**前一个加密日**(周五→周日的单日收益),周末那一段照样被丢 ⇒ 改完数字逐位不变
+    (实测:链式复利 +122.63% vs 候选全日历 −44.54%)。
+    正确做法:`ga = gg.reindex(acct_idx); on_acct = ga / ga.shift(1) − 1`
+    —— 相邻两个**账户日**之间的全部加密日都计入(含周末);
+    首个账户日的基准取它**之前最后一个加密日**的 g(没有 ⇒ 该日记 0)。
     """
     sdt = pd.Series(np.asarray(srs.values, dtype=float),
                     index=pd.to_datetime(pd.Index(srs.index))).sort_index()
@@ -469,8 +478,55 @@ def srs_on_acct(srs, acct_idx):
     g = (1.0 + sdt.fillna(0.0)).cumprod()
     u = g.index.union(acct_idx)
     gg = g.reindex(u).ffill()
-    ratio = (gg / gg.shift(1) - 1.0)
-    return ratio.reindex(acct_idx).fillna(0.0)
+    ga = gg.reindex(acct_idx)              # 账户日上的 g
+    prev = ga.shift(1)                     # 上一个**账户日**的 g
+    first = acct_idx[0]
+    base = g[g.index < first]              # 首个账户日之前最后一个加密日
+    prev.iloc[0] = float(base.iloc[-1]) if len(base) else 1.0
+    ratio = (ga / prev - 1.0).fillna(0.0)
+    # 口径自检(2026-11-13):链式复利必须 == 「末个账户日的 g ÷ 首个账户日的基准 g」。
+    # 不过就抛 —— 周末漂移、基准取错、账户日错位都会在这里露出来
+    #(旧口径实测:链 +122.63% vs 全日历参考 −44.54%)。
+    base_g = float(prev.iloc[0]) if len(prev) else float("nan")
+    end_g = float(ga.iloc[-1]) if len(ga) else float("nan")
+    if bool(ga.notna().all()) and np.isfinite(base_g) and base_g != 0.0 and np.isfinite(end_g):
+        got = float((1.0 + ratio).prod())
+        exp = end_g / base_g
+        if not abs(got - exp) < 1e-9:
+            raise AssertionError(
+                f"srs_on_acct 口径自检失败: chain={got!r} expected={exp!r} "
+                f"(base_g={base_g!r} end_g={end_g!r})")
+    return ratio
+
+
+def chain_selfcheck(srs, acct_idx):
+    """自检:账户日聚合后的**链式复利** == 候选在同一区间的**全日历复利**。
+
+    链式:`(1+on_acct).prod()` = g(末个账户日)/g(基准日)(基准日 = 首个账户日之前最后一个加密日);
+    参考:直接在加密日历上把 (1+r) 连乘一遍,取 (基准日, 末个账户日] 区间的加密日。
+    两者独立算,差 < 1e-9 才算口径对齐 —— 旧口径实测链 +122.63% vs 参考 −44.54% ⇒ 被拦下。
+    """
+    sdt = pd.Series(np.asarray(srs.values, dtype=float),
+                    index=pd.to_datetime(pd.Index(srs.index))).sort_index()
+    sdt = sdt[~sdt.index.duplicated(keep="last")]
+    g = (1.0 + sdt.fillna(0.0)).cumprod()
+    first, last = acct_idx[0], acct_idx[-1]
+    bi = g.index[g.index < first]
+    base_date = bi[-1] if len(bi) else None
+    chain = float((1.0 + srs_on_acct(srs, acct_idx)).prod())
+    if base_date is not None:
+        sel = sdt[(sdt.index > base_date) & (sdt.index <= last)]
+        incl = sdt[(sdt.index >= first) & (sdt.index <= last)]
+    else:
+        sel = sdt[sdt.index <= last]
+        incl = sel
+    ref = float((1.0 + sel).prod()) if len(sel) else 1.0
+    ref_incl = float((1.0 + incl).prod()) if len(incl) else 1.0
+    return {"baseline_date": str(base_date.date()) if base_date is not None else None,
+            "chain_cum": chain, "ref_cum_fullcal": ref, "diff_abs": abs(chain - ref),
+            "ref_cum_incl_first_acct_day": ref_incl,
+            "n_crypto_days_in_ref": int(len(sel)),
+            "pass": bool(abs(chain - ref) < 1e-9)}
 
 
 def rc_of(w, cand_on_acct):
@@ -602,6 +658,8 @@ def evaluate(variant, srs, ev, kind, H, a_lo, a_hi, use_funding=False, skip_null
     # ⚠️ 索引对齐:srs 的索引是**字符串**日期,账户 C.index 是 DatetimeIndex ⇒ 必须先转,
     #    否则 reindex 全是 NaN、fillna(0) 之后候选在账户上是**全零**(上一轮 (i)(iii)(iv) 全空的真凶)。
     on_acct = srs_on_acct(srs, C.index)
+    # 候选在**账户日历**上的链式累计(= 全日历复利,自检见 chain_selfcheck)
+    out["self_chain_cum_pct"] = round(float((1.0 + on_acct).prod() - 1.0) * 100, 2)
     w = bisect_w(on_acct)
     out["w"] = None if w is None else round(w, 6)
     if w is None:
@@ -642,9 +700,11 @@ def evaluate(variant, srs, ev, kind, H, a_lo, a_hi, use_funding=False, skip_null
     cand_m = (w * on_acct).resample("M").sum()
     rv2_m = Cm["rv2"]
     cm_acct = Cm.sum(axis=1)   # 账户(旧口径的贡献和)
-    out["corr_acct_full"] = monthly_corr(cand_m, Amn)
+    # (i) 对**不带候选**的账户算(Seth §Seth-1113e ③):基准是 C["acct"] 的月度复利 Am,
+    #     不是叠加后的账户(那会把候选自己算进相关里)。
+    out["corr_acct_full"] = monthly_corr(cand_m, Am)
     out["corr_rv2_full"] = monthly_corr(cand_m, rv2_m)
-    out["corr_acct_stress"] = monthly_corr(cand_m[stress], Amn[stress])
+    out["corr_acct_stress"] = monthly_corr(cand_m[stress], Am[stress])
     out["corr_rv2_stress"] = monthly_corr(cand_m[stress], rv2_m[stress])
     ok = [out["corr_acct_full"], out["corr_rv2_full"], out["corr_acct_stress"], out["corr_rv2_stress"]]
     out["i_pass"] = bool(all(v is not None and v < 0.30 for v in ok))
@@ -712,10 +772,15 @@ def _mk(name, ev, kind, H, use_funding=False, skip_null=False):
     (i)(ii)(iii) 在**每个窗口上各判一遍**;(iv) = 候选自身在两窗口的结论同号。
     """
     srs, tk = build_book(ev, kind, H, use_funding=use_funding)
+    chk = chain_selfcheck(srs, C.index)
+    print("SELFCHECK", name, json.dumps(chk, ensure_ascii=False), flush=True)
+    if not chk["pass"]:
+        raise SystemExit(f"SELFCHECK FAIL {name}: diff_abs={chk['diff_abs']}")
     w1 = evaluate(name, srs, ev, kind, H, z30_min_date, A1, use_funding=use_funding, skip_null=skip_null)
     w2 = evaluate(name, srs, ev, kind, H, A0, A1, use_funding=use_funding, skip_null=skip_null)
     iv = bool(w1.get("sign_self") is not None and w1.get("sign_self") == w2.get("sign_self"))
     v = {"variant": name, "kind": kind, "H": H, "events": len(ev), "use_funding": use_funding,
+         "selfcheck": chk,
          "window1": w1, "window2": w2, "event_stats": event_stats(tk, kind),
          "iv_same_sign": iv, "iv_pass": iv,
          "all_pass": bool(iv and w1.get("all_pass_123") and w2.get("all_pass_123"))}
@@ -735,11 +800,13 @@ def _mk(name, ev, kind, H, use_funding=False, skip_null=False):
 _SERIES = {}
 
 
-# 本轮只出:规则 A 的判定表(三个持有期 × 两个窗口并排)+ 规则 B 的一句「窗口依赖」。
-for H in (7, 30, 90):
+# 本轮出:规则 A 的判定表(五个持有期 × 两个窗口并排)+ 规则 B 的一句「窗口依赖」。
+# H = 7 / 20 / 30 / 45 / 90:7 = 卡面写的「一周」;30 / 90 = S-569 原文测过的窗口;20 / 45 = 新加的邻点。
+for H in H_A:
     _mk(f"A_all_H{H}", rule_a_events(H), "A", H)
-for H in (7, 30, 90):
-    _mk(f"B_btceth_H{H}", rule_b_events(H), "B", H, skip_null=True)
+if RUN_B:
+    for H in (7, 30, 90):
+        _mk(f"B_btceth_H{H}", rule_b_events(H), "B", H, skip_null=True)
 
 summary = []
 for v in variants:
@@ -757,7 +824,7 @@ for v in variants:
                                            "eig_pr_old", "eig_pr_new", "cand_in_rv2_worst12_months_pct",
                                            "rv2_in_its_worst12_months_pct", "worst20d_window",
                                            "cand_in_worst20d_window_pct", "rv2_in_worst20d_window_pct",
-                                           "window1", "window2", "event_stats", "error")})
+                                           "window1", "window2", "event_stats", "error", "selfcheck")})
     print("VAR", json.dumps(summary[-1], ensure_ascii=False))
 
 out = {"recon": recon, "panel": {"symbols": len(close_by_sym), "z30_first": z30_min_date, "z30_meta": cache.get("z30_meta"),
@@ -772,7 +839,8 @@ print("WROTE", OUT)
 # 极值、哪些日子把复利打成负数、加进去之后账户 CAGR 的独立复算。
 def _verify():
     vv = {}
-    for name in ("A_all_H7", "A_all_H30", "A_all_H90", "B_btceth_H30", "B_btceth_H90"):
+    for name in ("A_all_H7", "A_all_H20", "A_all_H30", "A_all_H45", "A_all_H90",
+                 "B_btceth_H7", "B_btceth_H30", "B_btceth_H90"):
         srs = _SERIES.get(name)
         if srs is None:
             continue
@@ -807,14 +875,58 @@ def _verify():
                "sum_daily_pct": round(float(on.sum()) * 100, 2),
                "cand_min_1_plus_w": None if w is None else round(float(np.min(1 + w * on.values)), 4),
                "report_cagr_new_pct": v["window2"].get("acct_cagr_new_pct"),
-               "report_contrib_pp": v["window2"].get("acct_contrib_pp")}
+               "report_contrib_pp": v["window2"].get("acct_contrib_pp"),
+               "selfcheck": v.get("selfcheck"),
+               "selfcheck_diff_abs": (v.get("selfcheck") or {}).get("diff_abs"),
+               "chain_cum_pct": round(((v.get("selfcheck") or {}).get("chain_cum", 1.0) - 1.0) * 100, 2),
+               "ref_fullcal_cum_pct": round(((v.get("selfcheck") or {}).get("ref_cum_fullcal", 1.0) - 1.0) * 100, 2)}
         vv[name] = rec
         print("VERIFY", name, json.dumps(rec, ensure_ascii=False), flush=True)
-    json.dump(vv, open(os.path.join(HERE, "T-360_verify.json"), "w"), indent=1, ensure_ascii=False, default=str)
-    print("WROTE T-360_verify.json")
+    json.dump(vv, open(VERIFY_OUT, "w"), indent=1, ensure_ascii=False, default=str)
+    print("WROTE", VERIFY_OUT)
 
 
 try:
     _verify()
 except Exception as _e:            # 复核块绝不能把主结果带崩
     print("VERIFY_SKIPPED", repr(_e), flush=True)
+
+
+def _mult_leg_check():
+    """口径对照:同一段候选日收益,在两种记账口径下账户年化各是多少。
+
+    **加法口径(S-834 的账户模型,本卡一切判据都在它上面)**:账户日收益 = 各腿 P&L 之和,
+    候选腿按 `w·r` 每天加进去 ⇒ 账户 NAV 复利。
+    **乘法口径(候选腿自己复利,再乘到账户上)**:账户 NAV = Π(1+base)·Π(1+w·r)。
+    两者不同 ⇒ 说明「候选自己的乘法战绩」与「它加进账户的贡献」是两件事。
+    """
+    rows = []
+    for v in variants:
+        if v.get("kind") != "A":
+            continue
+        srs = _SERIES.get(v["variant"])
+        w = (v.get("window2") or {}).get("w")
+        if srs is None or w is None:
+            continue
+        on = srs_on_acct(srs, C.index)
+        T = (C.index[-1] - C.index[0]).days / 365.25
+        base_nav = float((1.0 + C["acct"]).prod())
+        mult_nav = base_nav * float((1.0 + w * on).prod())
+        rows.append({
+            "variant": v["variant"], "w": round(float(w), 6),
+            "cagr_base_pct": round(float(acct_cagr(C["acct"], A0, A1)) * 100, 2),
+            "cagr_additive_pct": round(float(acct_cagr(acct_new(w, on), A0, A1)) * 100, 2),
+            "cagr_mult_leg_pct": round((mult_nav ** (1.0 / T) - 1.0) * 100, 2),
+            "prod_1_plus_w_r": round(float((1.0 + w * on).prod()), 6),
+            "min_1_plus_w_r": round(float(np.min(1.0 + w * on.values)), 4),
+            "cand_own_cum_pct": round(float((1.0 + on).prod() - 1.0) * 100, 2),
+            "cand_own_arith_sum_pct": round(float(on.sum()) * 100, 2),
+        })
+    print("MULT", json.dumps(rows, ensure_ascii=False), flush=True)
+    return rows
+
+
+try:
+    _mult_leg_check()
+except Exception as _e:            # 同上:诊断块绝不能把主结果带崩
+    print("MULT_SKIPPED", repr(_e), flush=True)

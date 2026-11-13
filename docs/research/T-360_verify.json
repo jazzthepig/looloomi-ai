@@ -1,51 +1,155 @@
 {
  "A_all_H7": {
-  "min_day_ret_pct": -39.22,
+  "diag_srs_n": 3346,
+  "diag_srs_dtype": "object",
+  "diag_srs_first": "2017-08-17",
+  "diag_srs_last": "2026-10-14",
+  "diag_acct_n": 1269,
+  "diag_acct_first": "2021-10-12",
+  "diag_acct_last": "2026-10-30",
+  "diag_srs_in_A0_A1": 1830,
+  "diag_cum_slice_n": 1830,
+  "diag_on_agg_cum_pct": -52.54,
+  "diag_on_reindex_cum_pct": 60.89,
+  "diag_cum_srs_A0_A1_pct": -52.54,
+  "min_day_ret_pct": -37.06,
   "max_day_ret_pct": 63.87,
   "worst5": [
    [
     "2024-10-14",
-    -39.22
+    -37.06
+   ],
+   [
+    "2026-07-20",
+    -34.59
    ],
    [
     "2023-09-26",
     -32.88
    ],
    [
+    "2025-11-03",
+    -29.77
+   ],
+   [
     "2023-09-27",
     -28.09
-   ],
-   [
-    "2024-10-03",
-    -25.17
-   ],
-   [
-    "2025-11-14",
-    -22.08
    ]
   ],
   "days_below_-100pct": 0,
   "days_below_-50pct": 0,
-  "nonzero_days": 421,
-  "w": 0.191851,
+  "nonzero_days": 422,
+  "w": 0.212819,
   "acct_cagr_base_pct": 35.75,
-  "acct_cagr_with_pct": 43.66,
+  "acct_cagr_with_pct": 39.22,
   "base_prod_sign": 1,
   "with_prod_sign": 1,
-  "self_cum_pct": 60.89,
+  "self_cum_pct": -52.54,
   "self_cum_fullcal_pct": -52.54,
-  "sum_daily_pct": 172.99,
-  "cand_min_1_plus_w": 0.9248,
-  "report_cagr_new_pct": 43.66,
-  "report_contrib_pp": 7.9157
+  "sum_daily_pct": 86.5,
+  "cand_min_1_plus_w": 0.9211,
+  "report_cagr_new_pct": 39.22,
+  "report_contrib_pp": 3.4681,
+  "selfcheck": {
+   "baseline_date": "2021-10-11",
+   "chain_cum": 0.47457364546552927,
+   "ref_cum_fullcal": 0.4745736454655295,
+   "diff_abs": 2.220446049250313e-16,
+   "ref_cum_incl_first_acct_day": 0.4745736454655295,
+   "n_crypto_days_in_ref": 1829,
+   "pass": true
+  },
+  "selfcheck_diff_abs": 2.220446049250313e-16,
+  "chain_cum_pct": -52.54,
+  "ref_fullcal_cum_pct": -52.54
+ },
+ "A_all_H20": {
+  "diag_srs_n": 3346,
+  "diag_srs_dtype": "object",
+  "diag_srs_first": "2017-08-17",
+  "diag_srs_last": "2026-10-14",
+  "diag_acct_n": 1269,
+  "diag_acct_first": "2021-10-12",
+  "diag_acct_last": "2026-10-30",
+  "diag_srs_in_A0_A1": 1830,
+  "diag_cum_slice_n": 1830,
+  "diag_on_agg_cum_pct": -27.45,
+  "diag_on_reindex_cum_pct": 181.65,
+  "diag_cum_srs_A0_A1_pct": -27.45,
+  "min_day_ret_pct": -37.13,
+  "max_day_ret_pct": 64.0,
+  "worst5": [
+   [
+    "2024-10-14",
+    -37.13
+   ],
+   [
+    "2026-07-20",
+    -34.59
+   ],
+   [
+    "2024-03-08",
+    -31.97
+   ],
+   [
+    "2025-11-03",
+    -27.51
+   ],
+   [
+    "2024-10-03",
+    -25.17
+   ]
+  ],
+  "days_below_-100pct": 0,
+  "days_below_-50pct": 0,
+  "nonzero_days": 595,
+  "w": 0.269119,
+  "acct_cagr_base_pct": 35.75,
+  "acct_cagr_with_pct": 44.21,
+  "base_prod_sign": 1,
+  "with_prod_sign": 1,
+  "self_cum_pct": -27.45,
+  "self_cum_fullcal_pct": -27.45,
+  "sum_daily_pct": 151.66,
+  "cand_min_1_plus_w": 0.9001,
+  "report_cagr_new_pct": 44.21,
+  "report_contrib_pp": 8.4582,
+  "selfcheck": {
+   "baseline_date": "2021-10-11",
+   "chain_cum": 0.7255230059263156,
+   "ref_cum_fullcal": 0.7255230059263141,
+   "diff_abs": 1.4432899320127035e-15,
+   "ref_cum_incl_first_acct_day": 0.7255230059263141,
+   "n_crypto_days_in_ref": 1829,
+   "pass": true
+  },
+  "selfcheck_diff_abs": 1.4432899320127035e-15,
+  "chain_cum_pct": -27.45,
+  "ref_fullcal_cum_pct": -27.45
  },
  "A_all_H30": {
-  "min_day_ret_pct": -39.22,
+  "diag_srs_n": 3346,
+  "diag_srs_dtype": "object",
+  "diag_srs_first": "2017-08-17",
+  "diag_srs_last": "2026-10-14",
+  "diag_acct_n": 1269,
+  "diag_acct_first": "2021-10-12",
+  "diag_acct_last": "2026-10-30",
+  "diag_srs_in_A0_A1": 1830,
+  "diag_cum_slice_n": 1830,
+  "diag_on_agg_cum_pct": -44.54,
+  "diag_on_reindex_cum_pct": 122.63,
+  "diag_cum_srs_A0_A1_pct": -44.54,
+  "min_day_ret_pct": -37.06,
   "max_day_ret_pct": 64.02,
   "worst5": [
    [
     "2024-10-14",
-    -39.22
+    -37.06
+   ],
+   [
+    "2026-07-20",
+    -34.59
    ],
    [
     "2024-03-08",
@@ -56,80 +160,256 @@
     -29.4
    ],
    [
-    "2024-10-03",
-    -25.17
-   ],
-   [
-    "2026-07-31",
-    -24.8
+    "2025-11-03",
+    -27.07
    ]
   ],
   "days_below_-100pct": 0,
   "days_below_-50pct": 0,
-  "nonzero_days": 679,
-  "w": 0.225396,
+  "nonzero_days": 681,
+  "w": 0.260846,
   "acct_cagr_base_pct": 35.75,
-  "acct_cagr_with_pct": 48.28,
+  "acct_cagr_with_pct": 42.63,
   "base_prod_sign": 1,
   "with_prod_sign": 1,
-  "self_cum_pct": 122.63,
+  "self_cum_pct": -44.54,
   "self_cum_fullcal_pct": -44.54,
-  "sum_daily_pct": 226.63,
-  "cand_min_1_plus_w": 0.9116,
-  "report_cagr_new_pct": 48.28,
-  "report_contrib_pp": 12.5288
+  "sum_daily_pct": 133.83,
+  "cand_min_1_plus_w": 0.9033,
+  "report_cagr_new_pct": 42.63,
+  "report_contrib_pp": 6.8857,
+  "selfcheck": {
+   "baseline_date": "2021-10-11",
+   "chain_cum": 0.5546463551470591,
+   "ref_cum_fullcal": 0.554646355147059,
+   "diff_abs": 1.1102230246251565e-16,
+   "ref_cum_incl_first_acct_day": 0.554646355147059,
+   "n_crypto_days_in_ref": 1829,
+   "pass": true
+  },
+  "selfcheck_diff_abs": 1.1102230246251565e-16,
+  "chain_cum_pct": -44.54,
+  "ref_fullcal_cum_pct": -44.54
  },
- "A_all_H90": {
-  "min_day_ret_pct": -22.4,
-  "max_day_ret_pct": 42.05,
+ "A_all_H45": {
+  "diag_srs_n": 3346,
+  "diag_srs_dtype": "object",
+  "diag_srs_first": "2017-08-17",
+  "diag_srs_last": "2026-10-14",
+  "diag_acct_n": 1269,
+  "diag_acct_first": "2021-10-12",
+  "diag_acct_last": "2026-10-30",
+  "diag_srs_in_A0_A1": 1830,
+  "diag_cum_slice_n": 1830,
+  "diag_on_agg_cum_pct": 63.92,
+  "diag_on_reindex_cum_pct": 400.31,
+  "diag_cum_srs_A0_A1_pct": 63.92,
+  "min_day_ret_pct": -37.06,
+  "max_day_ret_pct": 64.02,
   "worst5": [
    [
     "2024-10-14",
-    -22.4
+    -37.06
    ],
    [
+    "2025-11-03",
+    -27.07
+   ],
+   [
+    "2026-07-31",
+    -24.8
+   ],
+   [
+    "2024-07-08",
+    -21.54
+   ],
+   [
+    "2024-03-08",
+    -20.18
+   ]
+  ],
+  "days_below_-100pct": 0,
+  "days_below_-50pct": 0,
+  "nonzero_days": 767,
+  "w": 0.286669,
+  "acct_cagr_base_pct": 35.75,
+  "acct_cagr_with_pct": 50.76,
+  "base_prod_sign": 1,
+  "with_prod_sign": 1,
+  "self_cum_pct": 63.92,
+  "self_cum_fullcal_pct": 63.92,
+  "sum_daily_pct": 223.19,
+  "cand_min_1_plus_w": 0.8938,
+  "report_cagr_new_pct": 50.76,
+  "report_contrib_pp": 15.0092,
+  "selfcheck": {
+   "baseline_date": "2021-10-11",
+   "chain_cum": 1.6391944260973497,
+   "ref_cum_fullcal": 1.6391944260973503,
+   "diff_abs": 6.661338147750939e-16,
+   "ref_cum_incl_first_acct_day": 1.6391944260973503,
+   "n_crypto_days_in_ref": 1829,
+   "pass": true
+  },
+  "selfcheck_diff_abs": 6.661338147750939e-16,
+  "chain_cum_pct": 63.92,
+  "ref_fullcal_cum_pct": 63.92
+ },
+ "A_all_H90": {
+  "diag_srs_n": 3346,
+  "diag_srs_dtype": "object",
+  "diag_srs_first": "2017-08-17",
+  "diag_srs_last": "2026-10-14",
+  "diag_acct_n": 1269,
+  "diag_acct_first": "2021-10-12",
+  "diag_acct_last": "2026-10-30",
+  "diag_srs_in_A0_A1": 1830,
+  "diag_cum_slice_n": 1830,
+  "diag_on_agg_cum_pct": 182.75,
+  "diag_on_reindex_cum_pct": 219.65,
+  "diag_cum_srs_A0_A1_pct": 182.75,
+  "min_day_ret_pct": -25.5,
+  "max_day_ret_pct": 42.05,
+  "worst5": [
+   [
     "2023-06-20",
-    -20.81
+    -25.5
+   ],
+   [
+    "2025-10-13",
+    -22.06
+   ],
+   [
+    "2025-11-03",
+    -21.57
+   ],
+   [
+    "2024-10-14",
+    -19.9
    ],
    [
     "2026-01-13",
     -19.4
-   ],
-   [
-    "2023-03-17",
-    -19.26
-   ],
-   [
-    "2023-03-14",
-    -18.89
    ]
   ],
   "days_below_-100pct": 0,
   "days_below_-50pct": 0,
   "nonzero_days": 882,
-  "w": 0.244831,
+  "w": 0.355253,
   "acct_cagr_base_pct": 35.75,
-  "acct_cagr_with_pct": 48.89,
+  "acct_cagr_with_pct": 56.17,
   "base_prod_sign": 1,
   "with_prod_sign": 1,
-  "self_cum_pct": 219.65,
+  "self_cum_pct": 182.75,
   "self_cum_fullcal_pct": 182.75,
-  "sum_daily_pct": 207.67,
-  "cand_min_1_plus_w": 0.9452,
-  "report_cagr_new_pct": 48.89,
-  "report_contrib_pp": 13.1459
+  "sum_daily_pct": 231.27,
+  "cand_min_1_plus_w": 0.9094,
+  "report_cagr_new_pct": 56.17,
+  "report_contrib_pp": 20.4198,
+  "selfcheck": {
+   "baseline_date": "2021-10-11",
+   "chain_cum": 2.8274778970338863,
+   "ref_cum_fullcal": 2.827477897033887,
+   "diff_abs": 8.881784197001252e-16,
+   "ref_cum_incl_first_acct_day": 2.827477897033887,
+   "n_crypto_days_in_ref": 1829,
+   "pass": true
+  },
+  "selfcheck_diff_abs": 8.881784197001252e-16,
+  "chain_cum_pct": 182.75,
+  "ref_fullcal_cum_pct": 182.75
  },
- "B_btceth_H30": {
-  "min_day_ret_pct": -1.88,
-  "max_day_ret_pct": 3.6,
+ "B_btceth_H7": {
+  "diag_srs_n": 3346,
+  "diag_srs_dtype": "object",
+  "diag_srs_first": "2017-08-17",
+  "diag_srs_last": "2026-10-14",
+  "diag_acct_n": 1269,
+  "diag_acct_first": "2021-10-12",
+  "diag_acct_last": "2026-10-30",
+  "diag_srs_in_A0_A1": 1830,
+  "diag_cum_slice_n": 1830,
+  "diag_on_agg_cum_pct": 0.62,
+  "diag_on_reindex_cum_pct": 0.97,
+  "diag_cum_srs_A0_A1_pct": 0.62,
+  "min_day_ret_pct": -2.19,
+  "max_day_ret_pct": 2.09,
   "worst5": [
    [
-    "2022-07-25",
-    -1.88
+    "2025-04-07",
+    -2.19
    ],
    [
+    "2025-03-10",
+    -1.95
+   ],
+   [
+    "2024-08-27",
+    -1.25
+   ],
+   [
+    "2022-05-26",
+    -1.15
+   ],
+   [
+    "2025-03-20",
+    -1.02
+   ]
+  ],
+  "days_below_-100pct": 0,
+  "days_below_-50pct": 0,
+  "nonzero_days": 67,
+  "w": null,
+  "acct_cagr_base_pct": 35.75,
+  "acct_cagr_with_pct": null,
+  "base_prod_sign": 1,
+  "with_prod_sign": null,
+  "self_cum_pct": 0.62,
+  "self_cum_fullcal_pct": 0.62,
+  "sum_daily_pct": 0.82,
+  "cand_min_1_plus_w": null,
+  "report_cagr_new_pct": null,
+  "report_contrib_pp": null,
+  "selfcheck": {
+   "baseline_date": "2021-10-11",
+   "chain_cum": 1.006248788542982,
+   "ref_cum_fullcal": 1.0062487885429823,
+   "diff_abs": 2.220446049250313e-16,
+   "ref_cum_incl_first_acct_day": 1.0062487885429823,
+   "n_crypto_days_in_ref": 1829,
+   "pass": true
+  },
+  "selfcheck_diff_abs": 2.220446049250313e-16,
+  "chain_cum_pct": 0.62,
+  "ref_fullcal_cum_pct": 0.62
+ },
+ "B_btceth_H30": {
+  "diag_srs_n": 3346,
+  "diag_srs_dtype": "object",
+  "diag_srs_first": "2017-08-17",
+  "diag_srs_last": "2026-10-14",
+  "diag_acct_n": 1269,
+  "diag_acct_first": "2021-10-12",
+  "diag_acct_last": "2026-10-30",
+  "diag_srs_in_A0_A1": 1830,
+  "diag_cum_slice_n": 1830,
+  "diag_on_agg_cum_pct": 8.51,
+  "diag_on_reindex_cum_pct": 8.73,
+  "diag_cum_srs_A0_A1_pct": 8.51,
+  "min_day_ret_pct": -3.53,
+  "max_day_ret_pct": 4.38,
+  "worst5": [
+   [
     "2022-06-13",
-    -1.78
+    -3.53
+   ],
+   [
+    "2025-03-10",
+    -1.93
+   ],
+   [
+    "2022-07-11",
+    -1.48
    ],
    [
     "2026-03-18",
@@ -138,10 +418,6 @@
    [
     "2022-06-16",
     -1.36
-   ],
-   [
-    "2026-03-06",
-    -1.33
    ]
   ],
   "days_below_-100pct": 0,
@@ -152,17 +428,53 @@
   "acct_cagr_with_pct": null,
   "base_prod_sign": 1,
   "with_prod_sign": null,
-  "self_cum_pct": 8.73,
+  "self_cum_pct": 8.51,
   "self_cum_fullcal_pct": 8.51,
-  "sum_daily_pct": 8.93,
+  "sum_daily_pct": 8.9,
   "cand_min_1_plus_w": null,
   "report_cagr_new_pct": null,
-  "report_contrib_pp": null
+  "report_contrib_pp": null,
+  "selfcheck": {
+   "baseline_date": "2021-10-11",
+   "chain_cum": 1.0851236946201956,
+   "ref_cum_fullcal": 1.0851236946201948,
+   "diff_abs": 8.881784197001252e-16,
+   "ref_cum_incl_first_acct_day": 1.0851236946201948,
+   "n_crypto_days_in_ref": 1829,
+   "pass": true
+  },
+  "selfcheck_diff_abs": 8.881784197001252e-16,
+  "chain_cum_pct": 8.51,
+  "ref_fullcal_cum_pct": 8.51
  },
  "B_btceth_H90": {
-  "min_day_ret_pct": -1.82,
+  "diag_srs_n": 3346,
+  "diag_srs_dtype": "object",
+  "diag_srs_first": "2017-08-17",
+  "diag_srs_last": "2026-10-14",
+  "diag_acct_n": 1269,
+  "diag_acct_first": "2021-10-12",
+  "diag_acct_last": "2026-10-30",
+  "diag_srs_in_A0_A1": 1830,
+  "diag_cum_slice_n": 1830,
+  "diag_on_agg_cum_pct": 7.47,
+  "diag_on_reindex_cum_pct": 11.69,
+  "diag_cum_srs_A0_A1_pct": 7.47,
+  "min_day_ret_pct": -3.53,
   "max_day_ret_pct": 3.87,
   "worst5": [
+   [
+    "2022-06-13",
+    -3.53
+   ],
+   [
+    "2025-04-07",
+    -2.74
+   ],
+   [
+    "2025-03-10",
+    -1.93
+   ],
    [
     "2026-02-05",
     -1.82
@@ -170,33 +482,33 @@
    [
     "2022-08-19",
     -1.82
-   ],
-   [
-    "2022-06-13",
-    -1.78
-   ],
-   [
-    "2025-04-10",
-    -1.61
-   ],
-   [
-    "2025-05-23",
-    -1.6
    ]
   ],
   "days_below_-100pct": 0,
   "days_below_-50pct": 0,
-  "nonzero_days": 386,
+  "nonzero_days": 391,
   "w": null,
   "acct_cagr_base_pct": 35.75,
   "acct_cagr_with_pct": null,
   "base_prod_sign": 1,
   "with_prod_sign": null,
-  "self_cum_pct": 11.69,
+  "self_cum_pct": 7.47,
   "self_cum_fullcal_pct": 7.47,
-  "sum_daily_pct": 11.98,
+  "sum_daily_pct": 8.35,
   "cand_min_1_plus_w": null,
   "report_cagr_new_pct": null,
-  "report_contrib_pp": null
+  "report_contrib_pp": null,
+  "selfcheck": {
+   "baseline_date": "2021-10-11",
+   "chain_cum": 1.0747116584996181,
+   "ref_cum_fullcal": 1.0747116584996177,
+   "diff_abs": 4.440892098500626e-16,
+   "ref_cum_incl_first_acct_day": 1.0747116584996177,
+   "n_crypto_days_in_ref": 1829,
+   "pass": true
+  },
+  "selfcheck_diff_abs": 4.440892098500626e-16,
+  "chain_cum_pct": 7.47,
+  "ref_fullcal_cum_pct": 7.47
  }
 }
