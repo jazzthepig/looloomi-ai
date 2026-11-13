@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 """T-359(S-835):资金费套息当成一个**独立来源**,按准入标准 (i)–(iv) 判 —— 不是当现金腿判。
 
-判据原文(REFUTATION_LEDGER `## S-835`,2026-11-12):
+判据原文(REFUTATION_LEDGER `## S-835`,2026-11-12)+ 台账「更正二 / 更正三」(2026-11-12/13):
   (i) 与账户、与 R-v2 叠加的月度相关,全样本与压力月都 < 0.30;
-  (ii) 它自己的贡献为正,且 `apparatus.circular_shift`(它的日收益序列,block 1,500 次)下 `p_upper` < 0.10,
-       或已有 ≥ 60 天为正的前向记录;
+      **更正二**:「与账户相关」= 候选月贡献 vs **不带候选的账户**月收益 A_base(压力月按 A_base 定);
+      叠加后的相关另列一栏、不判。**更正三**:0.30 是单侧 ρ < 0.30(只挡集中,负相关是分散)。
+  (ii) 它自己的贡献为正,且零分布下 `p_upper` < 0.10,或已有 ≥ 60 天为正的前向记录(本轮:不可得);
+      **统计量(更正)**: 候选日收益循环平移后叠到账户上的账户年化 − 不带候选的账户年化(block 1,200 次)。
   (iii) 加进去之后账户最差 20 日不变差、有效来源数上升;
   (iv) 两个窗口(候选数据能到的最早日期起 / 2021-10-11 起)结论同向。
+
+合成(**更正三**):加候选后的账户 = A_base + w·候选 − w·r_cash(现金供资,付掉那份现金利息;
+  r_cash = S-834 账户的现金腿 C['cash']);w 二分到候选自己的风险贡献 = 10%,
+  w > 1 ⇒「尺寸不可行」并同时报 w = 1 时的数。
 
 账户装配:照抄 `docs/research/s834_diversification_audit.py`(RBv2 + 现金 + R-v2 叠加,
 R-v2 用 `docs/research/t352_engine.py` 的 `simulate(fix=True)`,名额 10 / 名义上限 0.80 / 每票风险 0.75%),
@@ -55,7 +61,7 @@ HDR = {"apikey": KEY, "Authorization": f"Bearer {KEY}", "Prefer": "count=exact"}
 CORR_MAX = 0.30
 RC_TARGET = 0.10
 P_MAX = 0.10
-NULL_N = 500
+NULL_N = 200
 NULL_SEED = 20261113
 
 CARRY_INCEPTION = dt.date(2023, 6, 12)     # carry_b_top_rc 起点(第一个满 30 天排名的周一)
@@ -267,18 +273,34 @@ WINDOWS = {"A_candidate_start": (pd.Timestamp(CARRY_INCEPTION), pd.Timestamp(ACC
            "B_account_start": (ACCT_START, pd.Timestamp(ACCT_END))}
 
 
-def rc_curve(w: float, acct_daily: pd.Series, carry_daily: pd.Series, mask: pd.Series):
-    """给定缩放 w:返回 (风险贡献, 账户月度序列, 套息月度贡献序列)。"""
-    dd = (acct_daily + w * carry_daily)[mask]
+# 台账「S-835 更正三」:加候选后的账户 = A_base + w·候选 − w·r_cash(现金供资,付掉那份现金利息)
+CASH = C["cash"].astype(float)            # S-834 账户的现金腿(日贡献)
+
+
+def compose(base: pd.Series, cand: pd.Series, cash: pd.Series, w: float) -> pd.Series:
+    """加候选后的账户 = A_base + w·候选 − w·r_cash(台账「更正三」的式子)。"""
+    return base + w * cand - w * cash
+
+
+def ann(daily: pd.Series) -> float:
+    """日序列的年化(几何,365.25 天)。"""
+    days = max(1, (daily.index[-1] - daily.index[0]).days)
+    return float((1 + daily).prod() ** (365.25 / days) - 1)
+
+
+def rc_curve(w: float, acct_daily: pd.Series, carry_daily: pd.Series, cash_daily: pd.Series, mask: pd.Series):
+    """给定缩放 w:返回 (候选自己的风险贡献, 叠加后账户月收益, 候选月贡献, 叠加后账户日收益)。"""
+    dd = compose(acct_daily, carry_daily, cash_daily, w)[mask]
     am = M(dd)
     cm = MS(carry_daily[mask]) * w
     rc = float(np.cov(cm, am)[0, 1] / am.var())
-    return rc, am, cm
+    return rc, am, cm, dd
 
 
-def size_carry(acct_daily: pd.Series, carry_daily: pd.Series, mask: pd.Series):
+def size_carry(acct_daily: pd.Series, carry_daily: pd.Series, cash_daily: pd.Series, mask: pd.Series):
+    """二分到候选自己的风险贡献 = 10%(对叠加后的账户)。返回 (w, 网格)。"""
     grid = np.concatenate([np.linspace(0, 1, 21), np.linspace(1, 10, 19), np.linspace(10, 200, 20)])
-    rcs = [(g, rc_curve(float(g), acct_daily, carry_daily, mask)[0]) for g in grid]
+    rcs = [(g, rc_curve(float(g), acct_daily, carry_daily, cash_daily, mask)[0]) for g in grid]
     above = [(g, r) for g, r in rcs if r >= RC_TARGET]
     if not above:
         return None, rcs
@@ -289,7 +311,7 @@ def size_carry(acct_daily: pd.Series, carry_daily: pd.Series, mask: pd.Series):
             break
     for _ in range(80):
         mid = 0.5 * (lo + hi)
-        r = rc_curve(mid, acct_daily, carry_daily, mask)[0]
+        r = rc_curve(mid, acct_daily, carry_daily, cash_daily, mask)[0]
         if r >= RC_TARGET:
             hi = mid
         else:
@@ -307,118 +329,158 @@ def worst20(daily: pd.Series):
 
 def evaluate(wname: str, w_start, w_end, carry_mask_start=None):
     m = (C.index >= w_start) & (C.index <= w_end)
-    acct_d = C["acct"][m]
-    carry_d = carry[m]
-    if carry_mask_start is not None:
-        cm_ = (C.index >= carry_mask_start) & m
-    else:
-        cm_ = m
-    corr_months = (C.index.to_series().resample("M").last() >= carry_mask_start) & m if carry_mask_start else m
-    # 只在套息在场的月份上算相关(套息没在场的月份它是 0,算进去会稀释/伪相关)
-    months_with_carry = MS(carry_d).index[MS(carry_d).abs() > 0]
+    base_full, carry_full, cash_full = C["acct"], carry, CASH
+    aug_full = compose(base_full, carry_full, cash_full, 1.0)     # 占位,尺寸定完再乘 w
+    # 只在套息在场的月份上算(套息没在场的月份它是 0,算进去会稀释/伪相关)
+    months_with_carry = MS(carry_full[m]).index[MS(carry_full[m]).abs() > 0]
     res_w = {"window": [str(pd.Timestamp(w_start).date()), str(pd.Timestamp(w_end).date())],
              "carry_active_from": str(pd.Timestamp(carry_mask_start).date()) if carry_mask_start else None}
-    # ── 尺寸:在窗口 A 上定档(套息有数据的整个区间),其他窗口用同一档
-    w, grid = size_carry(C["acct"], carry, pd.Series(True, index=C.index) & (C.index >= pd.Timestamp(CARRY_INCEPTION)))
-    res_w["size_w"] = w
+    # ── 尺寸:在窗口 A 上定档(套息有数据的整个区间),其他窗口用同一档;w > 1 ⇒ 尺寸不可行
+    maskA = pd.Series(True, index=C.index) & (C.index >= pd.Timestamp(CARRY_INCEPTION))
+    w_req, grid = size_carry(base_full, carry_full, cash_full, maskA)
     res_w["size_grid_sample"] = [[round(float(g), 3), round(float(r), 4)] for g, r in grid[::4]]
-    if w is None:
+    if w_req is None:
         res_w["verdict"] = "不可达:套息的风险贡献在任何缩放下都到不了 10%"
         return res_w
-    # ── 基础账户(窗口内)
-    rc_w, am_w, cm_w = rc_curve(w, C["acct"], carry, m)
-    rc_base, am_base, cm_base = rc_curve(0.0, C["acct"], carry, m)
-    res_w["sizing"] = {"w": round(w, 4), "rc_carry": round(rc_w, 4),
-                       "rc_carry_before": round(rc_base, 4),
-                       "note": "w = 套息日收益在账户上的缩放(= 名义敞口倍数)"}
-    # ── 账户指标:加之前 / 加之后
+    feasible = bool(w_req <= 1.0)
+    w_used = float(w_req) if feasible else 1.0
+    aug_full = compose(base_full, carry_full, cash_full, w_used)
+    rc_at_req = rc_curve(float(w_req), base_full, carry_full, cash_full, maskA)[0]
+    rc_win = rc_curve(w_used, base_full, carry_full, cash_full, m)[0]
+    res_w["sizing"] = {
+        "w_required": round(float(w_req), 4),
+        "rc_carry_at_required": round(rc_at_req, 4),
+        "w_used": round(w_used, 4),
+        "rc_carry_at_used_in_window": round(rc_win, 4),
+        "size_feasible": feasible,
+        "note": ("w = 候选日收益在账户上的缩放(= 名义敞口倍数);命中 10% 风险贡献需 w = "
+                 f"{float(w_req):.4f} > 1 ⇒ **尺寸不可行**,本轮按 w = 1 报数"
+                 if not feasible else
+                 "w = 候选日收益在账户上的缩放(= 名义敞口倍数);命中 10% 风险贡献"),
+    }
+    # ── 账户指标:加之前 / 加之后(A_aug = A_base + w·候选 − w·r_cash)
     def acct_stats(daily):
         am = M(daily)
-        return {"cagr_pct": round(float((1 + daily).prod() ** (365.25 / max(1, (daily.index[-1] - daily.index[0]).days)) - 1) * 100, 2),
+        return {"cagr_pct": round(ann(daily) * 100, 2),
                 "vol_ann_pct": round(float(am.std() * np.sqrt(12)) * 100, 2),
                 "worst20_pct": round(worst20(daily)[2] * 100, 2)}
-    base_daily = C["acct"][m]
-    new_daily = (C["acct"] + w * carry)[m]
+    base_daily = base_full[m]
+    new_daily = aug_full[m]
     res_w["account_before"] = acct_stats(base_daily)
     res_w["account_after"] = acct_stats(new_daily)
     s0b, e0b, v0b = worst20(base_daily)
     s0a, e0a, v0a = worst20(new_daily)
     res_w["worst20_before"] = [str(s0b.date()), str(e0b.date()), round(v0b * 100, 2)]
     res_w["worst20_after"] = [str(s0a.date()), str(e0a.date()), round(v0a * 100, 2)]
-    # ── 有效来源数(风险贡献熵)
-    def rc_map(daily, extra=None):
+    # ── 有效来源数(风险贡献熵);A_aug 里现金腿被抽走 w 份 ⇒ 现金贡献变 (1−w)·cash
+    def rc_map(daily, w_carry=None):
         cm = pd.DataFrame({k: MS(C[k][m]) for k in SRC})
+        if w_carry is not None:
+            cm["cash"] = cm["cash"] * (1.0 - w_carry)
         am = M(daily)
         rc = {k: float(np.cov(cm[k], am)[0, 1] / am.var()) for k in SRC}
-        if extra is not None:
-            rc["carry"] = float(np.cov(extra, am)[0, 1] / am.var())
         return rc, am, cm
     rcb, amb, cmb = rc_map(base_daily)
-    rca, ama, cma = rc_map(new_daily, cm_w)
+    rca, ama, cma = rc_map(new_daily, w_used)
+    rca["carry"] = float(np.cov(MS(carry_full[m]) * w_used, ama)[0, 1] / ama.var())
     res_w["eff_sources_before"] = round(ent(rcb), 2)
     res_w["eff_sources_after"] = round(ent(rca), 2)
     res_w["rc_before"] = {k: round(v, 3) for k, v in rcb.items()}
     res_w["rc_after"] = {k: round(v, 3) for k, v in rca.items()}
-    # ── (i) 相关:全样本与压力月;只在套息在场的月份上算
+    # ── (i) 相关(台账「S-835 更正二」):候选月贡献 vs **不带候选的账户**月收益 A_base;
+    #    压力月按 A_base 定(20 分位);叠加后的相关另列一栏、不判
     _mc = set(pd.PeriodIndex(months_with_carry, freq="M"))
-    sub = m & C.index.to_period("M").isin(_mc)
-    m2 = pd.Series(sub, index=C.index)
-    rc_i, am_i, cm_i = rc_curve(w, C["acct"], carry, m2)
-    core_m = M(core[m2])
-    stress = core_m <= core_m.quantile(0.2)
-    cmv = MS(carry[m2]) * w
+    m2 = pd.Series(m & C.index.to_period("M").isin(_mc), index=C.index)
+    am_base = M(base_full[m2])
+    am_aug = M(aug_full[m2])
+    cmv = MS(carry_full[m2]) * w_used
+    stress = am_base <= am_base.quantile(0.2)
     cm_rv2 = MS(C["rv2"][m2])
+
     def cc(a, b):
         try:
             return round(float(a.corr(b)), 3)
         except Exception:                                     # noqa: BLE001
             return None
     res_w["corr"] = {
-        "months_used": int(len(am_i)),
-        "carry_vs_account_full": cc(cmv, am_i),
-        "carry_vs_account_stress": cc(cmv[stress], am_i[stress]) if stress.sum() > 2 else None,
+        "reading": "corr(w·候选月贡献, A_base 月收益);压力月按 A_base 的 20 分位定",
+        "one_sided": "ρ < 0.30(单侧:负相关是分散,只挡集中)",
+        "months_used": int(len(am_base)),
+        "carry_vs_account_base_full": cc(cmv, am_base),
+        "carry_vs_account_base_stress": cc(cmv[stress], am_base[stress]) if stress.sum() > 2 else None,
+        "carry_vs_account_overlay_full": cc(cmv, am_aug),
+        "carry_vs_account_overlay_stress": cc(cmv[stress], am_aug[stress]) if stress.sum() > 2 else None,
         "carry_vs_rv2_full": cc(cmv, cm_rv2),
         "carry_vs_rv2_stress": cc(cmv[stress], cm_rv2[stress]) if stress.sum() > 2 else None,
         "n_stress_months": int(stress.sum()),
+        "overlay_corr_judged": False,
     }
-    # ── (ii) 它自己的贡献为正 + 零分布
-    cser = carry[m2]
-    cser_nz = cser[cser != 0.0]
-    monthly_carry = MS(cser_nz)
+    # ── (ii) 它自己的贡献为正 + 零分布(台账「更正」口径:
+    #      统计量 = 套息日收益循环平移后叠到账户上的账户年化 − 不带套息的账户年化)
+    cser = carry_full[m2]
+    monthly_carry = MS(cser)
     res_w["own_contribution"] = {
         "months_with_carry": int(len(monthly_carry)),
-        "mean_monthly_contribution_pct": round(float(monthly_carry.mean() * 100), 4),
-        "total_pct": round(float(cser_nz.sum() * 100), 2),
-        "arith_ann_pct_nominal": round(float(cser_nz.mean() * 365 * 100), 3),
-        "arith_ann_pct_capital_x0.75": round(float(cser_nz.mean() * 365 * 100 * 0.75), 3),
-        "positive_months": int((monthly_carry > 0).sum()),
+        "mean_monthly_contribution_pct": round(float(monthly_carry.mean() * w_used * 100), 4),
+        "total_pct": round(float(cser.sum() * w_used * 100), 2),
+        "arith_ann_pct_nominal": round(float(cser.mean() * 365 * 100), 3),
+        "arith_ann_pct_capital_x0.75": round(float(cser.mean() * 365 * 100 * 0.75), 3),
+        "positive_months": int((monthly_carry * w_used > 0).sum()),
+        "note": "w·套息 的月贡献(账户日历口径)",
     }
-    # (ii)-a 字面读法:对套息自身序列做循环平移后算它自己的均值 —— 平移不改变均值 ⇒ 零分布退化
-    literal = {"stat": "mean_daily_return", "note": "循环平移不改变序列均值 ⇒ 零分布退化(apparatus NoOpNull)"}
+    # 字面读法(对套息自身序列做循环平移后比它自己的均值)退化:平移不改变序列均值 ⇒ 不作判据
+    res_w["null_test_literal_note"] = {
+        "stat": "mean_daily_return",
+        "note": "循环平移不改变序列均值 ⇒ 零分布退化(apparatus NoOpNull);本轮不作判据",
+    }
+    # ── 判据用:账户年化差(实际 vs 循环平移后的零分布)
+    base_ann = ann(base_daily)
+    actual_ann_diff = ann(new_daily) - base_ann
+    seg = m & (C.index >= pd.Timestamp(CARRY_INCEPTION))       # 平移段:套息有数据的日历段
+    carry_seg = carry_full[seg]
+
+    def stat_fn(rng):
+        sh = pd.Series(AP.circular_shift(carry_seg.values, rng, block=1), index=carry_seg.index)
+        cand = carry_full.copy()
+        cand.loc[seg] = sh
+        nd = compose(base_full, cand, cash_full, w_used)[m]
+        return float(ann(nd) - base_ann)
+    null, p_up = None, None
     try:
-        null = AP.null_distribution(lambda rng: float(np.mean(AP.circular_shift(cser.values, rng, block=1))),
-                                    NULL_N, NULL_SEED, actual=float(cser_nz.mean()))
-        literal["p_upper"] = AP.p_upper(float(cser_nz.mean()), null)
+        null = AP.null_distribution(stat_fn, NULL_N, NULL_SEED, actual=float(actual_ann_diff))
+        p_up = AP.p_upper(float(actual_ann_diff), null)
     except Exception as e:                                    # noqa: BLE001
-        literal["error"] = f"{type(e).__name__}: {e}"
-    res_w["null_test_literal"] = literal
-    # (ii)-b 对齐敏感版:统计量 = 套息在压力月(① 最差五分之一月)里的累计收益
+        res_w.setdefault("null_test_account_ann", {})["error"] = f"{type(e).__name__}: {e}"
+    res_w["null_test_account_ann"] = {
+        "stat": "套息日收益循环平移后叠到账户上的账户年化 − 不带套息的账户年化",
+        "actual_ann_diff_pp": round(float(actual_ann_diff) * 100, 4),
+        "base_ann_pct": round(base_ann * 100, 4),
+        "aug_ann_pct": round(ann(new_daily) * 100, 4),
+        "null_mean_pp": round(float(np.mean(null)) * 100, 4) if null is not None else None,
+        "null_sd_pp": round(float(np.std(null)) * 100, 4) if null is not None else None,
+        "p_upper": p_up, "n": NULL_N, "seed": NULL_SEED,
+        "shift_segment": [str(carry_seg.index[0].date()), str(carry_seg.index[-1].date())] if len(carry_seg) else None,
+    }
+    # ── 附报(不作判据):自定的「压力月累计收益」统计量
     me = core[m2].resample("M").last()
     me_stress = me[me <= me.quantile(0.2)]
     labels = m2.index.to_period("M").to_timestamp("M")
     sd = pd.Series(labels.isin(me_stress.index), index=m2.index)
     stat_actual = float(cser[sd].sum())
-    def stat_fn(rng):
+
+    def stat_fn2(rng):
         sh = pd.Series(AP.circular_shift(cser.values, rng, block=1), index=cser.index)
         return float(sh[sd].sum())
+    null2, p2 = None, None
     try:
-        null2 = AP.null_distribution(stat_fn, NULL_N, NULL_SEED, actual=stat_actual)
+        null2 = AP.null_distribution(stat_fn2, NULL_N, NULL_SEED, actual=stat_actual)
         p2 = AP.p_upper(stat_actual, null2)
     except Exception as e:                                    # noqa: BLE001
-        null2, p2 = None, None
-        res_w.setdefault("null_test_aligned", {})["error"] = f"{type(e).__name__}: {e}"
-    res_w["null_test_aligned"] = {
-        "stat": "套息在压力月(① 最差五分之一月)里的累计收益",
+        res_w.setdefault("null_test_stress_month_appendix", {})["error"] = f"{type(e).__name__}: {e}"
+    res_w["null_test_stress_month_appendix"] = {
+        "stat": "套息在压力月(core 的最差五分之一月)里的累计收益",
+        "judged": False,
+        "note": "自定统计量,本轮只附报、不作判据(判据用上面的账户年化差)",
         "actual_pct": round(stat_actual * 100, 4),
         "null_mean_pct": round(float(np.mean(null2)) * 100, 4) if null2 is not None else None,
         "null_sd_pct": round(float(np.std(null2)) * 100, 4) if null2 is not None else None,
@@ -435,16 +497,18 @@ def evaluate(wname: str, w_start, w_end, carry_mask_start=None):
     if best_span:
         keep = ~((C.index >= pd.Timestamp(best_span[0])) & (C.index <= pd.Timestamp(best_span[1])))
         m3 = m & keep
-        rc3, am3, cm3 = rc_curve(w, C["acct"], carry, m3)
-        c3 = MS(carry[m3]) * w
+        rc3, am3, cm3, dd3 = rc_curve(w_used, base_full, carry_full, cash_full, m3)
+        c3 = MS(carry_full[m3]) * w_used
+        am_base3 = M(base_full[m3])
         core3 = M(core[m3])
         st3 = core3 <= core3.quantile(0.2)
         res_w["without_best_half_year"] = {
             "span": best_span,
             "rc_carry": round(rc3, 4),
-            "carry_vs_account_full": round(float(c3.corr(am3)), 3),
-            "carry_monthly_mean_pct": round(float(MS(carry[m3]).mean() * 100), 4),
-            "carry_ann_pct": round(float(MS(carry[m3]).mean() * 12 * 100), 3),
+            "carry_vs_account_base_full": round(float(c3.corr(am_base3)), 3),
+            "carry_vs_account_overlay_full": round(float(c3.corr(am3)), 3),
+            "carry_monthly_mean_pct": round(float(MS(carry_full[m3]).mean() * w_used * 100), 4),
+            "carry_ann_pct": round(float(MS(carry_full[m3]).mean() * w_used * 12 * 100), 3),
             "n_stress": int(st3.sum()),
         }
     return res_w
@@ -452,7 +516,16 @@ def evaluate(wname: str, w_start, w_end, carry_mask_start=None):
 
 results = {"task": "T-359", "ledger": "S-835", "generated_utc": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
            "criteria_lines": {"corr_max": CORR_MAX, "rc_target": RC_TARGET, "p_max": P_MAX,
-                              "null": "apparatus.circular_shift(block=1, n=500)"},
+                              "corr_reading": "单侧 ρ < 0.30(只挡集中;负相关是分散)",
+                              "null": f"apparatus.circular_shift(block=1, n={NULL_N}, seed={NULL_SEED})",
+                              "null_stat": "套息日收益循环平移后叠到账户上的账户年化 − 不带套息的账户年化",
+                              "ledger_amendments": "S-835 更正二(i 的读法)/ 更正三(合成式 + 单侧线 + 两条自检)"},
+           "composition": {
+               "formula": "A_aug = A_base + w·候选 − w·r_cash(现金供资,付掉那份现金利息)",
+               "r_cash": "S-834 账户的现金腿 C['cash'](日贡献)",
+               "reading_i": "corr(w·候选月贡献, A_base 月收益);压力月按 A_base 的 20 分位定;叠加后的相关另列一栏、不判",
+               "ledger": "S-835 更正二 / 更正三",
+           },
            "reconciliation": recon,
            "carry_arm": {"universe": list(names), "n_names": len(names),
                          "inception": CARRY_INCEPTION.isoformat(),
@@ -464,16 +537,29 @@ results = {"task": "T-359", "ledger": "S-835", "generated_utc": dt.datetime.now(
                          "days_with_return": int(len(carry_on)),
                          "note": "生产核 carry_hl.path(arm=carry_b_top_rc, cost=COST_REAL=15.5bp/次);不含基差(S-748 量到基差拖累 −0.068pp/yr)"}}
 
+# ── 自检(两条能失败;台账「S-835 更正三」第 2 点)────────────────────────────
+def self_check(case: str, cand: pd.Series, w: float):
+    aug = compose(C["acct"], cand, CASH, w)
+    dmax = float((aug - C["acct"]).abs().max())
+    return {"case": case, "w": w, "max_abs_diff_vs_A_base": dmax, "pass": bool(dmax < 1e-12)}
+
+
+results["self_checks"] = {
+    "w0_equals_base": self_check("w = 0 ⇒ A_aug 逐日 = A_base", carry, 0.0),
+    "candidate_equals_cash_equals_base": self_check("候选恒等于 r_cash ⇒ A_aug 逐日 = A_base", CASH, 1.0),
+    "note": "两条都真跑一遍 compose 再比,不是写死 True;tol = 1e-12",
+}
+
 print("[4/6] 判据 (i)–(iv)(窗口 A)…", flush=True)
 results["windows"] = {}
 results["windows"]["A_candidate_start"] = evaluate("A_candidate_start", *WINDOWS["A_candidate_start"])
-print(f"      A:w={results['windows']['A_candidate_start'].get('size_w')} "
-      f"RC={results['windows']['A_candidate_start'].get('sizing',{}).get('rc_carry')} "
+print(f"      A:w={results['windows']['A_candidate_start'].get('sizing',{}).get('w_used')} "
+      f"RC={results['windows']['A_candidate_start'].get('sizing',{}).get('rc_carry_at_used_in_window')} "
       f"相关={results['windows']['A_candidate_start'].get('corr')}", flush=True)
 print("[5/6] 判据 (i)–(iv)(窗口 B)…", flush=True)
 results["windows"]["B_account_start"] = evaluate("B_account_start", *WINDOWS["B_account_start"])
-print(f"      B:w={results['windows']['B_account_start'].get('size_w')} "
-      f"RC={results['windows']['B_account_start'].get('sizing',{}).get('rc_carry')} "
+print(f"      B:w={results['windows']['B_account_start'].get('sizing',{}).get('w_used')} "
+      f"RC={results['windows']['B_account_start'].get('sizing',{}).get('rc_carry_at_used_in_window')} "
       f"相关={results['windows']['B_account_start'].get('corr')}", flush=True)
 
 # ── 附报 ①:套息臂在 R-v2 最差的 20 个交易日(2023-02-08 → 03-08)里的收益
@@ -506,11 +592,11 @@ results["rv2_worst20_overlap"] = {
     "carry_return_pct_in_span": round(float(carry[m20b].sum() * 100), 4),
     "account_worst20_within_overlap_before": None, "account_worst20_within_overlap_after": None,
 }
-wA = results["windows"]["A_candidate_start"].get("size_w")
+wA = results["windows"]["A_candidate_start"].get("sizing", {}).get("w_used")
 if wA:
     mm = m_ov
     wb = worst20(C["acct"][mm])
-    wa = worst20((C["acct"] + wA * carry)[mm])
+    wa = worst20(compose(C["acct"], carry, CASH, wA)[mm])
     results["rv2_worst20_overlap"]["account_worst20_within_overlap_before"] = [str(wb[0].date()), str(wb[1].date()), round(wb[2] * 100, 2)]
     results["rv2_worst20_overlap"]["account_worst20_within_overlap_after"] = [str(wa[0].date()), str(wa[1].date()), round(wa[2] * 100, 2)]
 
@@ -538,29 +624,38 @@ for lbl, a, b in INTERVALS:
                    "n_days": n})
 results["vs_lending"] = spread
 
-# ── 附报 ③:前向记录(判据 (ii) 的第二条路)
+# ── 附报 ③:前向记录(判据 (ii) 的第二条路:≥60 天为正)—— 不可得
 results["forward_record"] = load_forward_record()
+results["forward_record"]["status"] = "不可得"
+results["forward_record"]["status_note"] = ("登记允许「零分布 p_upper < 0.10」或「≥60 天前向记录」二选一;"
+                                            "生产臂前向记录不足 60 天 ⇒ 这条路不可得 ⇒ 只按 p_upper 判")
 
 # ── 判定汇总(机器可读)
 def verdict(w):
     v = {}
     c = w.get("corr", {})
-    v["i_corr_ok"] = bool(c.get("carry_vs_account_full") is not None and c.get("carry_vs_account_stress") is not None
-                           and abs(c["carry_vs_account_full"]) < CORR_MAX and abs(c["carry_vs_account_stress"]) < CORR_MAX
-                           and abs(c.get("carry_vs_rv2_full") or 0) < CORR_MAX and abs(c.get("carry_vs_rv2_stress") or 0) < CORR_MAX)
+
+    def below(x):
+        """单侧:ρ < 0.30(负相关是分散,只挡集中)。"""
+        return x is not None and float(x) < CORR_MAX
+    v["i_corr_ok"] = bool(below(c.get("carry_vs_account_base_full"))
+                           and below(c.get("carry_vs_account_base_stress"))
+                           and below(c.get("carry_vs_rv2_full"))
+                           and below(c.get("carry_vs_rv2_stress")))
     o = w.get("own_contribution", {})
     pos = bool((o.get("mean_monthly_contribution_pct") or 0) > 0)
-    nt = w.get("null_test_aligned", {})
+    nt = w.get("null_test_account_ann", {})
     p = nt.get("p_upper")
     v["ii_positive"] = pos
     v["ii_p_upper"] = p
-    v["ii_ok"] = bool(pos and ((p is not None and p < P_MAX) or
-                               (results.get("forward_record", {}).get("positive_days", 0) >= 60)))
+    v["ii_forward_path"] = "不可得"
+    v["ii_ok"] = bool(pos and p is not None and p < P_MAX)
     b4, af = w.get("worst20_before"), w.get("worst20_after")
     v["iii_worst20_not_worse"] = bool(b4 and af and af[2] >= b4[2] - 1e-9)
     v["iii_eff_sources_up"] = bool((w.get("eff_sources_after") or 0) >= (w.get("eff_sources_before") or 0))
     v["iii_ok"] = bool(v["iii_worst20_not_worse"] and v["iii_eff_sources_up"])
-    v["all_ok"] = bool(v.get("i_corr_ok") and v.get("ii_ok") and v.get("iii_ok"))
+    v["size_feasible"] = bool(w.get("sizing", {}).get("size_feasible"))
+    v["all_ok"] = bool(v.get("i_corr_ok") and v.get("ii_ok") and v.get("iii_ok") and v.get("size_feasible"))
     return v
 
 
@@ -571,7 +666,10 @@ results["window_same_direction"] = {"per_criterion": same, "all_same": all(same.
                                     "note": "(iv) 两个窗口结论同向"}
 results["overall"] = {
     "admitted": bool(a.get("all_ok") and b.get("all_ok") and results["window_same_direction"]["all_same"]),
-    "summary": "四条全过 ⇒ 进前向影子臂" if (a.get("all_ok") and b.get("all_ok")) else "有条不过 ⇒ 不准入",
+    "summary": ("四条全过且尺寸可行 ⇒ 进前向影子臂" if (a.get("all_ok") and b.get("all_ok"))
+                else "有条不过 / 尺寸不可行 ⇒ 不准入"),
+    "failures_A": [k for k in ("i_corr_ok", "ii_ok", "iii_ok", "size_feasible") if not a.get(k)],
+    "failures_B": [k for k in ("i_corr_ok", "ii_ok", "iii_ok", "size_feasible") if not b.get(k)],
 }
 
 out = HERE / "t359_results.json"

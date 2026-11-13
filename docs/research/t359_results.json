@@ -1,12 +1,21 @@
 {
  "task": "T-359",
  "ledger": "S-835",
- "generated_utc": "2026-11-12T17:02:34+00:00",
+ "generated_utc": "2026-11-13T06:09:32+00:00",
  "criteria_lines": {
   "corr_max": 0.3,
   "rc_target": 0.1,
   "p_max": 0.1,
-  "null": "apparatus.circular_shift(block=1, n=500)"
+  "corr_reading": "单侧 ρ < 0.30(只挡集中;负相关是分散)",
+  "null": "apparatus.circular_shift(block=1, n=200, seed=20261113)",
+  "null_stat": "套息日收益循环平移后叠到账户上的账户年化 − 不带套息的账户年化",
+  "ledger_amendments": "S-835 更正二(i 的读法)/ 更正三(合成式 + 单侧线 + 两条自检)"
+ },
+ "composition": {
+  "formula": "A_aug = A_base + w·候选 − w·r_cash(现金供资,付掉那份现金利息)",
+  "r_cash": "S-834 账户的现金腿 C['cash'](日贡献)",
+  "reading_i": "corr(w·候选月贡献, A_base 月收益);压力月按 A_base 的 20 分位定;叠加后的相关另列一栏、不判",
+  "ledger": "S-835 更正二 / 更正三"
  },
  "reconciliation": {
   "acct_cagr_pct": 35.72,
@@ -52,7 +61,7 @@
   "funding_sources": {
    "mac_hourly_rows": 25288,
    "sb_view_rows": 26784,
-   "sb_view_count_exact": 27070
+   "sb_view_count_exact": 27092
   },
   "overlap_check": {
    "cells": 25288,
@@ -63,6 +72,21 @@
   "days_with_return": 1217,
   "note": "生产核 carry_hl.path(arm=carry_b_top_rc, cost=COST_REAL=15.5bp/次);不含基差(S-748 量到基差拖累 −0.068pp/yr)"
  },
+ "self_checks": {
+  "w0_equals_base": {
+   "case": "w = 0 ⇒ A_aug 逐日 = A_base",
+   "w": 0.0,
+   "max_abs_diff_vs_A_base": 0.0,
+   "pass": true
+  },
+  "candidate_equals_cash_equals_base": {
+   "case": "候选恒等于 r_cash ⇒ A_aug 逐日 = A_base",
+   "w": 1.0,
+   "max_abs_diff_vs_A_base": 3.469446951953614e-18,
+   "pass": true
+  },
+  "note": "两条都真跑一遍 compose 再比,不是写死 True;tol = 1e-12"
+ },
  "windows": {
   "A_candidate_start": {
    "window": [
@@ -70,7 +94,6 @@
     "2026-10-30"
    ],
    "carry_active_from": null,
-   "size_w": 1.6131710102344232,
    "size_grid_sample": [
     [
      0.0,
@@ -90,7 +113,7 @@
     ],
     [
      0.8,
-     0.048
+     0.0479
     ],
     [
      1.0,
@@ -98,46 +121,48 @@
     ],
     [
      2.5,
-     0.1563
+     0.1565
     ],
     [
      4.5,
-     0.2686
+     0.2697
     ],
     [
      6.5,
-     0.3524
+     0.355
     ],
     [
      8.5,
-     0.4096
+     0.4139
     ],
     [
      10.0,
-     0.4384
+     0.4439
     ],
     [
      50.0,
-     0.2456
+     0.2585
     ],
     [
      90.0,
-     0.0764
+     0.0834
     ],
     [
      130.0,
-     0.0228
+     0.0256
     ],
     [
      170.0,
-     0.007
+     0.0081
     ]
    ],
    "sizing": {
-    "w": 1.6132,
-    "rc_carry": 0.1,
-    "rc_carry_before": 0.0,
-    "note": "w = 套息日收益在账户上的缩放(= 名义敞口倍数)"
+    "w_required": 1.6131,
+    "rc_carry_at_required": 0.1,
+    "w_used": 1.0,
+    "rc_carry_at_used_in_window": 0.0606,
+    "size_feasible": false,
+    "note": "w = 候选日收益在账户上的缩放(= 名义敞口倍数);命中 10% 风险贡献需 w = 1.6131 > 1 ⇒ **尺寸不可行**,本轮按 w = 1 报数"
    },
    "account_before": {
     "cagr_pct": 50.32,
@@ -145,9 +170,9 @@
     "worst20_pct": -16.35
    },
    "account_after": {
-    "cagr_pct": 75.73,
-    "vol_ann_pct": 40.66,
-    "worst20_pct": -13.01
+    "cagr_pct": 64.7,
+    "vol_ann_pct": 38.61,
+    "worst20_pct": -14.28
    },
    "worst20_before": [
     "2024-03-15",
@@ -157,10 +182,10 @@
    "worst20_after": [
     "2024-03-15",
     "2024-04-12",
-    -13.01
+    -14.28
    ],
    "eff_sources_before": 2.0,
-   "eff_sources_after": 2.68,
+   "eff_sources_after": 2.45,
    "rc_before": {
     "crypto": 0.144,
     "equity": 0.048,
@@ -169,41 +194,63 @@
     "cash": 0.001
    },
    "rc_after": {
-    "crypto": 0.135,
-    "equity": 0.044,
-    "gold": 0.01,
-    "rv2": 0.63,
-    "cash": 0.001,
-    "carry": 0.1
+    "crypto": 0.14,
+    "equity": 0.046,
+    "gold": 0.011,
+    "rv2": 0.673,
+    "cash": 0.0,
+    "carry": 0.061
    },
    "corr": {
+    "reading": "corr(w·候选月贡献, A_base 月收益);压力月按 A_base 的 20 分位定",
+    "one_sided": "ρ < 0.30(单侧:负相关是分散,只挡集中)",
     "months_used": 41,
-    "carry_vs_account_full": 0.636,
-    "carry_vs_account_stress": -0.017,
+    "carry_vs_account_base_full": 0.508,
+    "carry_vs_account_base_stress": 0.619,
+    "carry_vs_account_overlay_full": 0.591,
+    "carry_vs_account_overlay_stress": 0.816,
     "carry_vs_rv2_full": 0.393,
-    "carry_vs_rv2_stress": -0.091,
-    "n_stress_months": 9
+    "carry_vs_rv2_stress": -0.122,
+    "n_stress_months": 9,
+    "overlay_corr_judged": false
    },
    "own_contribution": {
     "months_with_carry": 41,
     "mean_monthly_contribution_pct": 0.8054,
     "total_pct": 33.02,
-    "arith_ann_pct_nominal": 14.4,
-    "arith_ann_pct_capital_x0.75": 10.8,
-    "positive_months": 35
+    "arith_ann_pct_nominal": 14.163,
+    "arith_ann_pct_capital_x0.75": 10.622,
+    "positive_months": 35,
+    "note": "w·套息 的月贡献(账户日历口径)"
    },
-   "null_test_literal": {
+   "null_test_literal_note": {
     "stat": "mean_daily_return",
-    "note": "循环平移不改变序列均值 ⇒ 零分布退化(apparatus NoOpNull)",
-    "error": "NoOpNull: 零分布没有方差(全部 ≈ np.float64(0.00038802218566392485),跨度 1.1e-19)—— 打乱没有改变任何东西"
+    "note": "循环平移不改变序列均值 ⇒ 零分布退化(apparatus NoOpNull);本轮不作判据"
    },
-   "null_test_aligned": {
-    "stat": "套息在压力月(① 最差五分之一月)里的累计收益",
+   "null_test_account_ann": {
+    "stat": "套息日收益循环平移后叠到账户上的账户年化 − 不带套息的账户年化",
+    "actual_ann_diff_pp": 14.3763,
+    "base_ann_pct": 50.3242,
+    "aug_ann_pct": 64.7005,
+    "null_mean_pp": 14.4608,
+    "null_sd_pp": 0.0191,
+    "p_upper": 1.0,
+    "n": 200,
+    "seed": 20261113,
+    "shift_segment": [
+     "2023-06-12",
+     "2026-10-30"
+    ]
+   },
+   "null_test_stress_month_appendix": {
+    "stat": "套息在压力月(core 的最差五分之一月)里的累计收益",
+    "judged": false,
+    "note": "自定统计量,本轮只附报、不作判据(判据用上面的账户年化差)",
     "actual_pct": 3.6151,
-    "null_mean_pct": 7.41,
-    "null_sd_pct": 2.4025,
-    "p_upper": 0.936127744510978,
-    "n": 500,
+    "null_mean_pct": 7.3715,
+    "null_sd_pct": 2.435,
+    "p_upper": 0.9253731343283582,
+    "n": 200,
     "seed": 20261113
    },
    "drop_best_half_year": [
@@ -215,8 +262,9 @@
      "2024-04-30",
      "2024-10-01"
     ],
-    "rc_carry": 0.1058,
-    "carry_vs_account_full": 0.655,
+    "rc_carry": 0.0644,
+    "carry_vs_account_base_full": 0.527,
+    "carry_vs_account_overlay_full": 0.61,
     "carry_monthly_mean_pct": 0.7237,
     "carry_ann_pct": 8.684,
     "n_stress": 9
@@ -228,7 +276,6 @@
     "2026-10-30"
    ],
    "carry_active_from": null,
-   "size_w": 1.6131710102344232,
    "size_grid_sample": [
     [
      0.0,
@@ -248,7 +295,7 @@
     ],
     [
      0.8,
-     0.048
+     0.0479
     ],
     [
      1.0,
@@ -256,46 +303,48 @@
     ],
     [
      2.5,
-     0.1563
+     0.1565
     ],
     [
      4.5,
-     0.2686
+     0.2697
     ],
     [
      6.5,
-     0.3524
+     0.355
     ],
     [
      8.5,
-     0.4096
+     0.4139
     ],
     [
      10.0,
-     0.4384
+     0.4439
     ],
     [
      50.0,
-     0.2456
+     0.2585
     ],
     [
      90.0,
-     0.0764
+     0.0834
     ],
     [
      130.0,
-     0.0228
+     0.0256
     ],
     [
      170.0,
-     0.007
+     0.0081
     ]
    ],
    "sizing": {
-    "w": 1.6132,
-    "rc_carry": 0.0767,
-    "rc_carry_before": 0.0,
-    "note": "w = 套息日收益在账户上的缩放(= 名义敞口倍数)"
+    "w_required": 1.6131,
+    "rc_carry_at_required": 0.1,
+    "w_used": 1.0,
+    "rc_carry_at_used_in_window": 0.0451,
+    "size_feasible": false,
+    "note": "w = 候选日收益在账户上的缩放(= 名义敞口倍数);命中 10% 风险贡献需 w = 1.6131 > 1 ⇒ **尺寸不可行**,本轮按 w = 1 报数"
    },
    "account_before": {
     "cagr_pct": 35.75,
@@ -303,9 +352,9 @@
     "worst20_pct": -19.43
    },
    "account_after": {
-    "cagr_pct": 50.73,
-    "vol_ann_pct": 40.23,
-    "worst20_pct": -19.43
+    "cagr_pct": 44.3,
+    "vol_ann_pct": 38.7,
+    "worst20_pct": -19.45
    },
    "worst20_before": [
     "2023-02-08",
@@ -315,10 +364,10 @@
    "worst20_after": [
     "2023-02-08",
     "2023-03-08",
-    -19.43
+    -19.45
    ],
    "eff_sources_before": 2.0,
-   "eff_sources_after": 2.58,
+   "eff_sources_after": 2.37,
    "rc_before": {
     "crypto": 0.133,
     "equity": 0.046,
@@ -327,41 +376,63 @@
     "cash": 0.001
    },
    "rc_after": {
-    "crypto": 0.129,
-    "equity": 0.045,
+    "crypto": 0.131,
+    "equity": 0.046,
     "gold": 0.017,
-    "rv2": 0.659,
-    "cash": 0.001,
-    "carry": 0.077
+    "rv2": 0.693,
+    "cash": 0.0,
+    "carry": 0.045
    },
    "corr": {
+    "reading": "corr(w·候选月贡献, A_base 月收益);压力月按 A_base 的 20 分位定",
+    "one_sided": "ρ < 0.30(单侧:负相关是分散,只挡集中)",
     "months_used": 41,
-    "carry_vs_account_full": 0.638,
-    "carry_vs_account_stress": -0.017,
+    "carry_vs_account_base_full": 0.51,
+    "carry_vs_account_base_stress": 0.619,
+    "carry_vs_account_overlay_full": 0.593,
+    "carry_vs_account_overlay_stress": 0.816,
     "carry_vs_rv2_full": 0.396,
-    "carry_vs_rv2_stress": -0.091,
-    "n_stress_months": 9
+    "carry_vs_rv2_stress": -0.122,
+    "n_stress_months": 9,
+    "overlay_corr_judged": false
    },
    "own_contribution": {
     "months_with_carry": 41,
     "mean_monthly_contribution_pct": 0.8054,
     "total_pct": 33.02,
-    "arith_ann_pct_nominal": 14.4,
-    "arith_ann_pct_capital_x0.75": 10.8,
-    "positive_months": 35
+    "arith_ann_pct_nominal": 14.047,
+    "arith_ann_pct_capital_x0.75": 10.535,
+    "positive_months": 35,
+    "note": "w·套息 的月贡献(账户日历口径)"
    },
-   "null_test_literal": {
+   "null_test_literal_note": {
     "stat": "mean_daily_return",
-    "note": "循环平移不改变序列均值 ⇒ 零分布退化(apparatus NoOpNull)",
-    "error": "NoOpNull: 零分布没有方差(全部 ≈ np.float64(0.0003848565034965035),跨度 1.6e-19)—— 打乱没有改变任何东西"
+    "note": "循环平移不改变序列均值 ⇒ 零分布退化(apparatus NoOpNull);本轮不作判据"
    },
-   "null_test_aligned": {
-    "stat": "套息在压力月(① 最差五分之一月)里的累计收益",
+   "null_test_account_ann": {
+    "stat": "套息日收益循环平移后叠到账户上的账户年化 − 不带套息的账户年化",
+    "actual_ann_diff_pp": 8.5501,
+    "base_ann_pct": 35.7481,
+    "aug_ann_pct": 44.2982,
+    "null_mean_pp": 8.5997,
+    "null_sd_pp": 0.0112,
+    "p_upper": 1.0,
+    "n": 200,
+    "seed": 20261113,
+    "shift_segment": [
+     "2023-06-12",
+     "2026-10-30"
+    ]
+   },
+   "null_test_stress_month_appendix": {
+    "stat": "套息在压力月(core 的最差五分之一月)里的累计收益",
+    "judged": false,
+    "note": "自定统计量,本轮只附报、不作判据(判据用上面的账户年化差)",
     "actual_pct": 3.6151,
-    "null_mean_pct": 7.3805,
-    "null_sd_pct": 2.4315,
-    "p_upper": 0.9241516966067864,
-    "n": 500,
+    "null_mean_pct": 7.324,
+    "null_sd_pct": 2.449,
+    "p_upper": 0.9203980099502488,
+    "n": 200,
     "seed": 20261113
    },
    "drop_best_half_year": [
@@ -373,8 +444,9 @@
      "2024-04-30",
      "2024-10-01"
     ],
-    "rc_carry": 0.0796,
-    "carry_vs_account_full": 0.563,
+    "rc_carry": 0.047,
+    "carry_vs_account_base_full": 0.433,
+    "carry_vs_account_overlay_full": 0.515,
     "carry_monthly_mean_pct": 0.4864,
     "carry_ann_pct": 5.837,
     "n_stress": 13
@@ -420,7 +492,7 @@
   "account_worst20_within_overlap_after": [
    "2024-03-15",
    "2024-04-12",
-   -13.01
+   -14.28
   ]
  },
  "vs_lending": [
@@ -490,33 +562,39 @@
   }
  ],
  "forward_record": {
-  "rows": 6,
-  "count_exact": 6,
-  "positive_days": 3,
+  "rows": 7,
+  "count_exact": 7,
+  "positive_days": 4,
   "first": "2026-11-06",
-  "last": "2026-11-11",
-  "nav_last": 0.99841007,
-  "note": "前向记录天数(判据 (ii) 的第二条路要 ≥60 天为正)"
+  "last": "2026-11-12",
+  "nav_last": 0.99849257,
+  "note": "前向记录天数(判据 (ii) 的第二条路要 ≥60 天为正)",
+  "status": "不可得",
+  "status_note": "登记允许「零分布 p_upper < 0.10」或「≥60 天前向记录」二选一;生产臂前向记录不足 60 天 ⇒ 这条路不可得 ⇒ 只按 p_upper 判"
  },
  "verdicts": {
   "A_candidate_start": {
    "i_corr_ok": false,
    "ii_positive": true,
-   "ii_p_upper": 0.936127744510978,
+   "ii_p_upper": 1.0,
+   "ii_forward_path": "不可得",
    "ii_ok": false,
    "iii_worst20_not_worse": true,
    "iii_eff_sources_up": true,
    "iii_ok": true,
+   "size_feasible": false,
    "all_ok": false
   },
   "B_account_start": {
    "i_corr_ok": false,
    "ii_positive": true,
-   "ii_p_upper": 0.9241516966067864,
+   "ii_p_upper": 1.0,
+   "ii_forward_path": "不可得",
    "ii_ok": false,
-   "iii_worst20_not_worse": true,
+   "iii_worst20_not_worse": false,
    "iii_eff_sources_up": true,
-   "iii_ok": true,
+   "iii_ok": false,
+   "size_feasible": false,
    "all_ok": false
   }
  },
@@ -524,14 +602,25 @@
   "per_criterion": {
    "i_corr_ok": true,
    "ii_ok": true,
-   "iii_ok": true,
+   "iii_ok": false,
    "all_ok": true
   },
-  "all_same": true,
+  "all_same": false,
   "note": "(iv) 两个窗口结论同向"
  },
  "overall": {
   "admitted": false,
-  "summary": "有条不过 ⇒ 不准入"
+  "summary": "有条不过 / 尺寸不可行 ⇒ 不准入",
+  "failures_A": [
+   "i_corr_ok",
+   "ii_ok",
+   "size_feasible"
+  ],
+  "failures_B": [
+   "i_corr_ok",
+   "ii_ok",
+   "iii_ok",
+   "size_feasible"
+  ]
  }
 }
