@@ -1,0 +1,8514 @@
+{
+ "card": "T-366",
+ "lane": "lane-b",
+ "ran_utc": "2026-11-13T08:32:10.796090+00:00",
+ "ticket_source": {
+  "file": "docs/research/t197_results.json → tickets.A(与 t310_slots.load_tickets 同源)",
+  "all_tickets": 956,
+  "window_since": "2024-11-01",
+  "n_tickets": 411,
+  "n_symbols": 241,
+  "signal_range": [
+   "2024-11-06",
+   "2026-09-29"
+  ],
+  "n_tickets_no_r": 0,
+  "n_tickets_mtm_from_um": 48,
+  "n_tickets_no_notional": 0,
+  "equity0": 630.0,
+  "risk_frac": 0.005,
+  "max_frac": 0.5
+ },
+ "asset_embeddings": {
+  "rows": 73,
+  "n_v3": 59,
+  "n_fresh": 59,
+  "n_v3_and_fresh": 59,
+  "n_crypto": 33,
+  "max_computed_at": "2026-11-13T08:31:19.98516+00:00",
+  "stale_symbols": [
+   "ALGO",
+   "ATOM",
+   "COMP",
+   "DOGE",
+   "ENA",
+   "FIL",
+   "GALA",
+   "HBAR",
+   "LTC",
+   "MANTLE",
+   "RUNE",
+   "SEI",
+   "STX",
+   "VET"
+  ]
+ },
+ "asset_flow_daily": {
+  "max_d": "2026-11-12",
+  "rows_total": "0-0/431371",
+  "rows_on_latest_day": "0-0/76",
+  "n_symbols_with_vec_on_latest_day": 30,
+  "fresh_cut": "2026-11-05",
+  "n_ticket_symbols_in_flow_fresh_window": 159,
+  "n_ticket_symbols_with_vec": 34,
+  "ticket_symbols_no_vec": [
+   "1000BONK",
+   "1000FLOKI",
+   "1000LUNC",
+   "1000PEPE",
+   "1000SHIB",
+   "1INCH",
+   "2Z",
+   "ACE",
+   "AERO",
+   "AIN",
+   "ALGO",
+   "ALICE",
+   "API3",
+   "AR",
+   "ARK",
+   "ARKM",
+   "ASTER",
+   "AVA",
+   "AXS",
+   "BAT",
+   "BIO",
+   "CAKE",
+   "CC",
+   "CELO",
+   "CFX",
+   "CHZ",
+   "COTI",
+   "CRV",
+   "CVC",
+   "DASH",
+   "DYDX",
+   "EGLD",
+   "EIGEN",
+   "ENJ",
+   "ENS",
+   "ETHFI",
+   "FARTCOIN",
+   "FET",
+   "FF",
+   "FORM",
+   "G",
+   "GALA",
+   "GMT",
+   "GMX",
+   "GRASS",
+   "GRT",
+   "GTC",
+   "HBAR",
+   "HOT",
+   "ICP",
+   "IMX",
+   "IOST",
+   "IOTA",
+   "JASMY",
+   "JTO",
+   "JUP",
+   "KAITO",
+   "KAS",
+   "KERNEL",
+   "KMNO",
+   "KOMA",
+   "LIGHT",
+   "LIT",
+   "LSK",
+   "MANA",
+   "MELANIA",
+   "MEME",
+   "MON",
+   "MORPHO",
+   "MOVR",
+   "NEIRO",
+   "NEO",
+   "NMR",
+   "ONE",
+   "ORCA",
+   "ORDI",
+   "PENGU",
+   "PHA",
+   "PIEVERSE",
+   "PLUME",
+   "PNUT",
+   "POWR",
+   "PYTH",
+   "Q",
+   "QNT",
+   "RAYSOL",
+   "RENDER",
+   "REZ",
+   "RLC",
+   "RSR",
+   "RUNE",
+   "S",
+   "SAND",
+   "SNX",
+   "SOLV",
+   "SOON",
+   "SPK",
+   "SPX",
+   "STEEM",
+   "SUN",
+   "SUPER",
+   "SUSHI",
+   "SYN",
+   "T",
+   "TAO",
+   "THE",
+   "THETA",
+   "TRB",
+   "TURBO",
+   "VET",
+   "VIRTUAL",
+   "W",
+   "WIF",
+   "WLD",
+   "WOO",
+   "XLM",
+   "XMR",
+   "XPL",
+   "XTZ",
+   "YFI",
+   "ZEC",
+   "ZEN",
+   "ZIL",
+   "ZK",
+   "ZRO"
+  ],
+  "ticket_symbols_absent": [
+   "1000XEC",
+   "ACH",
+   "AEVO",
+   "AI",
+   "AMB",
+   "ANKR",
+   "ASTR",
+   "ATA",
+   "AUCTION",
+   "BADGER",
+   "BAL",
+   "BAN",
+   "BAND",
+   "BSV",
+   "C98",
+   "CATI",
+   "CELR",
+   "CHR",
+   "CKB",
+   "CTSI",
+   "DENT",
+   "DRIFT",
+   "DYM",
+   "EDU",
+   "EOS",
+   "ETHW",
+   "F",
+   "FIO",
+   "FLM",
+   "FLOW",
+   "FTM",
+   "GAS",
+   "GLM",
+   "HIFI",
+   "ICX",
+   "ID",
+   "IOTX",
+   "JOE",
+   "KNC",
+   "KSM",
+   "LISTA",
+   "LOOM",
+   "LPT",
+   "LQTY",
+   "LRC",
+   "LUNA2",
+   "MANTA",
+   "MAVIA",
+   "MEW",
+   "MKR",
+   "MOODENG",
+   "MTL",
+   "NEIROETH",
+   "NKN",
+   "NTRN",
+   "OMG",
+   "OMNI",
+   "ONG",
+   "ONT",
+   "ORBS",
+   "OXT",
+   "PHB",
+   "POLYX",
+   "QTUM",
+   "RIF",
+   "SCR",
+   "SPELL",
+   "STMX",
+   "SXP",
+   "TWT",
+   "UMA",
+   "USTC",
+   "VOXEL",
+   "VTHO",
+   "WAXP",
+   "XAI",
+   "XEM",
+   "XVG",
+   "XVS",
+   "YGG",
+   "ZETA",
+   "ZRX"
+  ]
+ },
+ "cis_official_daily": {
+  "rows": 1971,
+  "n_symbols": 59,
+  "max_d": "2026-11-12",
+  "n_symbols_with_score": 59,
+  "grades": [
+   "C",
+   "C+",
+   "D",
+   "F"
+  ]
+ },
+ "coverage": {
+  "asset_embeddings_v3_fresh": {
+   "n_coins": 24,
+   "coins_total": 241,
+   "coin_pct": 10.0,
+   "n_tickets": 63,
+   "tickets_total": 411,
+   "ticket_pct": 15.3,
+   "abs_pnl_usd": 1675.81,
+   "abs_pnl_total_usd": 10160.09,
+   "abs_pnl_pct": 16.5,
+   "net_pnl_usd": 763.31,
+   "net_pnl_total_usd": 3023.13,
+   "net_pnl_pct": 25.2
+  },
+  "asset_flow_daily_vec": {
+   "n_coins": 34,
+   "coins_total": 241,
+   "coin_pct": 14.1,
+   "n_tickets": 89,
+   "tickets_total": 411,
+   "ticket_pct": 21.7,
+   "abs_pnl_usd": 2369.92,
+   "abs_pnl_total_usd": 10160.09,
+   "abs_pnl_pct": 23.3,
+   "net_pnl_usd": 915.9,
+   "net_pnl_total_usd": 3023.13,
+   "net_pnl_pct": 30.3
+  },
+  "cis_official_daily": {
+   "n_coins": 24,
+   "coins_total": 241,
+   "coin_pct": 10.0,
+   "n_tickets": 63,
+   "tickets_total": 411,
+   "ticket_pct": 15.3,
+   "abs_pnl_usd": 1675.81,
+   "abs_pnl_total_usd": 10160.09,
+   "abs_pnl_pct": 16.5,
+   "net_pnl_usd": 763.31,
+   "net_pnl_total_usd": 3023.13,
+   "net_pnl_pct": 25.2
+  },
+  "all_three": {
+   "n_coins": 23,
+   "coins_total": 241,
+   "coin_pct": 9.5,
+   "n_tickets": 62,
+   "tickets_total": 411,
+   "ticket_pct": 15.1,
+   "abs_pnl_usd": 1660.78,
+   "abs_pnl_total_usd": 10160.09,
+   "abs_pnl_pct": 16.3,
+   "net_pnl_usd": 778.34,
+   "net_pnl_total_usd": 3023.13,
+   "net_pnl_pct": 25.7
+  },
+  "any_one": {
+   "n_coins": 35,
+   "coins_total": 241,
+   "coin_pct": 14.5,
+   "n_tickets": 90,
+   "tickets_total": 411,
+   "ticket_pct": 21.9,
+   "abs_pnl_usd": 2384.95,
+   "abs_pnl_total_usd": 10160.09,
+   "abs_pnl_pct": 23.5,
+   "net_pnl_usd": 900.87,
+   "net_pnl_total_usd": 3023.13,
+   "net_pnl_pct": 29.8
+  },
+  "none_of_three": {
+   "n_coins": 206,
+   "coins_total": 241,
+   "coin_pct": 85.5,
+   "n_tickets": 321,
+   "tickets_total": 411,
+   "ticket_pct": 78.1,
+   "abs_pnl_usd": 7775.15,
+   "abs_pnl_total_usd": 10160.09,
+   "abs_pnl_pct": 76.5,
+   "net_pnl_usd": 2122.27,
+   "net_pnl_total_usd": 3023.13,
+   "net_pnl_pct": 70.2
+  }
+ },
+ "per_coin": [
+  {
+   "symbol": "1000BONK",
+   "n_tickets": 1,
+   "pnl_abs_usd": 10.7384,
+   "pnl_net_usd": 10.7384,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-11-22",
+    "2026-09-30",
+    1044
+   ],
+   "um_last_close": 0.003799
+  },
+  {
+   "symbol": "1000FLOKI",
+   "n_tickets": 3,
+   "pnl_abs_usd": 56.9098,
+   "pnl_net_usd": -0.5691,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-05-06",
+    "2026-09-30",
+    1244
+   ],
+   "um_last_close": 0.0277
+  },
+  {
+   "symbol": "1000LUNC",
+   "n_tickets": 1,
+   "pnl_abs_usd": 34.8863,
+   "pnl_net_usd": 34.8863,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2022-09-09",
+    "2026-09-30",
+    1483
+   ],
+   "um_last_close": 0.053
+  },
+  {
+   "symbol": "1000PEPE",
+   "n_tickets": 2,
+   "pnl_abs_usd": 76.1503,
+   "pnl_net_usd": 26.7042,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-05-05",
+    "2026-09-30",
+    1245
+   ],
+   "um_last_close": 0.0042766
+  },
+  {
+   "symbol": "1000SHIB",
+   "n_tickets": 3,
+   "pnl_abs_usd": 71.958,
+   "pnl_net_usd": -71.958,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-05-10",
+    "2026-09-30",
+    1970
+   ],
+   "um_last_close": 0.005753
+  },
+  {
+   "symbol": "1000XEC",
+   "n_tickets": 2,
+   "pnl_abs_usd": 38.0152,
+   "pnl_net_usd": -38.0152,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-09-17",
+    "2026-09-30",
+    1840
+   ],
+   "um_last_close": 0.008281
+  },
+  {
+   "symbol": "1INCH",
+   "n_tickets": 2,
+   "pnl_abs_usd": 35.3883,
+   "pnl_net_usd": 15.4797,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-12-25",
+    "2026-09-30",
+    2106
+   ],
+   "um_last_close": 0.1013
+  },
+  {
+   "symbol": "2Z",
+   "n_tickets": 1,
+   "pnl_abs_usd": 17.9531,
+   "pnl_net_usd": -17.9531,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-10-02",
+    "2026-09-30",
+    364
+   ],
+   "um_last_close": 0.05968
+  },
+  {
+   "symbol": "AAVE",
+   "n_tickets": 3,
+   "pnl_abs_usd": 19.0322,
+   "pnl_net_usd": -7.5883,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2020-10-16",
+    "2026-09-30",
+    2176
+   ],
+   "um_last_close": 159.37
+  },
+  {
+   "symbol": "ACE",
+   "n_tickets": 1,
+   "pnl_abs_usd": 6.4146,
+   "pnl_net_usd": -6.4146,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-12-18",
+    "2026-09-30",
+    1018
+   ],
+   "um_last_close": 0.18559
+  },
+  {
+   "symbol": "ACH",
+   "n_tickets": 3,
+   "pnl_abs_usd": 37.3892,
+   "pnl_net_usd": -25.6201,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-02-22",
+    "2026-09-30",
+    1317
+   ],
+   "um_last_close": 0.006057
+  },
+  {
+   "symbol": "ADA",
+   "n_tickets": 3,
+   "pnl_abs_usd": 295.051,
+   "pnl_net_usd": 222.7146,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2020-01-31",
+    "2026-09-30",
+    2435
+   ],
+   "um_last_close": 0.2466
+  },
+  {
+   "symbol": "AERO",
+   "n_tickets": 3,
+   "pnl_abs_usd": 58.3179,
+   "pnl_net_usd": -23.2976,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-12-04",
+    "2026-09-30",
+    666
+   ],
+   "um_last_close": 0.8252
+  },
+  {
+   "symbol": "AEVO",
+   "n_tickets": 1,
+   "pnl_abs_usd": 14.1537,
+   "pnl_net_usd": -14.1537,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-03-13",
+    "2026-09-30",
+    932
+   ],
+   "um_last_close": 0.02594
+  },
+  {
+   "symbol": "AI",
+   "n_tickets": 1,
+   "pnl_abs_usd": 14.4607,
+   "pnl_net_usd": -14.4607,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-01-08",
+    "2026-09-30",
+    997
+   ],
+   "um_last_close": 0.01716
+  },
+  {
+   "symbol": "AIN",
+   "n_tickets": 1,
+   "pnl_abs_usd": 18.3917,
+   "pnl_net_usd": -18.3917,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-07-10",
+    "2026-09-30",
+    448
+   ],
+   "um_last_close": 0.02318
+  },
+  {
+   "symbol": "ALGO",
+   "n_tickets": 3,
+   "pnl_abs_usd": 371.8899,
+   "pnl_net_usd": 371.8899,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-06-16",
+    "2026-09-30",
+    2298
+   ],
+   "um_last_close": 0.12389
+  },
+  {
+   "symbol": "ALICE",
+   "n_tickets": 1,
+   "pnl_abs_usd": 12.9238,
+   "pnl_net_usd": -12.9238,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-03-16",
+    "2026-09-30",
+    2025
+   ],
+   "um_last_close": 0.1689
+  },
+  {
+   "symbol": "AMB",
+   "n_tickets": 1,
+   "pnl_abs_usd": 13.8967,
+   "pnl_net_usd": 13.8967,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-03-30",
+    "2026-09-30",
+    1281
+   ],
+   "um_last_close": 0.001188
+  },
+  {
+   "symbol": "ANKR",
+   "n_tickets": 2,
+   "pnl_abs_usd": 46.087,
+   "pnl_net_usd": -0.0093,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-01-26",
+    "2026-09-30",
+    2074
+   ],
+   "um_last_close": 0.004977
+  },
+  {
+   "symbol": "API3",
+   "n_tickets": 2,
+   "pnl_abs_usd": 27.0658,
+   "pnl_net_usd": -27.0658,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2022-02-22",
+    "2026-09-30",
+    1682
+   ],
+   "um_last_close": 0.2887
+  },
+  {
+   "symbol": "APT",
+   "n_tickets": 3,
+   "pnl_abs_usd": 44.3181,
+   "pnl_net_usd": -44.3181,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2022-10-19",
+    "2026-09-30",
+    1443
+   ],
+   "um_last_close": 0.77
+  },
+  {
+   "symbol": "AR",
+   "n_tickets": 1,
+   "pnl_abs_usd": 3.2262,
+   "pnl_net_usd": -3.2262,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-09-28",
+    "2026-09-30",
+    1829
+   ],
+   "um_last_close": 4.109
+  },
+  {
+   "symbol": "ARB",
+   "n_tickets": 4,
+   "pnl_abs_usd": 59.7651,
+   "pnl_net_usd": 8.5465,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2023-03-23",
+    "2026-09-30",
+    1288
+   ],
+   "um_last_close": 0.20288
+  },
+  {
+   "symbol": "ARK",
+   "n_tickets": 1,
+   "pnl_abs_usd": 3.9557,
+   "pnl_net_usd": -3.9557,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-09-19",
+    "2026-09-30",
+    1108
+   ],
+   "um_last_close": 0.2301
+  },
+  {
+   "symbol": "ARKM",
+   "n_tickets": 1,
+   "pnl_abs_usd": 2.5296,
+   "pnl_net_usd": -2.5296,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-07-28",
+    "2026-09-30",
+    1161
+   ],
+   "um_last_close": 0.1324
+  },
+  {
+   "symbol": "ASTER",
+   "n_tickets": 1,
+   "pnl_abs_usd": 58.7621,
+   "pnl_net_usd": -58.7621,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-09-19",
+    "2026-09-30",
+    377
+   ],
+   "um_last_close": 0.7573
+  },
+  {
+   "symbol": "ASTR",
+   "n_tickets": 2,
+   "pnl_abs_usd": 21.7004,
+   "pnl_net_usd": -21.7004,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-02-14",
+    "2026-09-30",
+    1325
+   ],
+   "um_last_close": 0.007317
+  },
+  {
+   "symbol": "ATA",
+   "n_tickets": 1,
+   "pnl_abs_usd": 4.3855,
+   "pnl_net_usd": 4.3855,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-08-31",
+    "2026-09-30",
+    1857
+   ],
+   "um_last_close": 0.00428
+  },
+  {
+   "symbol": "ATOM",
+   "n_tickets": 2,
+   "pnl_abs_usd": 62.8831,
+   "pnl_net_usd": 6.4263,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-02-07",
+    "2026-09-30",
+    2428
+   ],
+   "um_last_close": 1.744
+  },
+  {
+   "symbol": "AUCTION",
+   "n_tickets": 1,
+   "pnl_abs_usd": 1.8601,
+   "pnl_net_usd": -1.8601,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-12-15",
+    "2026-09-30",
+    1021
+   ],
+   "um_last_close": 3.733
+  },
+  {
+   "symbol": "AVA",
+   "n_tickets": 1,
+   "pnl_abs_usd": 0.6771,
+   "pnl_net_usd": -0.6771,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-12-13",
+    "2026-09-30",
+    657
+   ],
+   "um_last_close": 0.2458
+  },
+  {
+   "symbol": "AVAX",
+   "n_tickets": 3,
+   "pnl_abs_usd": 76.7333,
+   "pnl_net_usd": 61.874,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2020-09-23",
+    "2026-09-30",
+    2199
+   ],
+   "um_last_close": 10.933
+  },
+  {
+   "symbol": "AXS",
+   "n_tickets": 2,
+   "pnl_abs_usd": 20.4158,
+   "pnl_net_usd": 19.3308,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-11-20",
+    "2026-09-30",
+    2141
+   ],
+   "um_last_close": 1.1564
+  },
+  {
+   "symbol": "BADGER",
+   "n_tickets": 1,
+   "pnl_abs_usd": 0.5972,
+   "pnl_net_usd": 0.5972,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-11-09",
+    "2026-09-30",
+    1057
+   ],
+   "um_last_close": 0.8358
+  },
+  {
+   "symbol": "BAL",
+   "n_tickets": 1,
+   "pnl_abs_usd": 23.7451,
+   "pnl_net_usd": 23.7451,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-09-01",
+    "2026-09-30",
+    2221
+   ],
+   "um_last_close": 0.829
+  },
+  {
+   "symbol": "BAN",
+   "n_tickets": 1,
+   "pnl_abs_usd": 6.3057,
+   "pnl_net_usd": -6.3057,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-11-18",
+    "2026-09-30",
+    682
+   ],
+   "um_last_close": 0.06259
+  },
+  {
+   "symbol": "BAND",
+   "n_tickets": 2,
+   "pnl_abs_usd": 37.877,
+   "pnl_net_usd": 36.7229,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-07-29",
+    "2026-09-30",
+    2255
+   ],
+   "um_last_close": 0.218
+  },
+  {
+   "symbol": "BAT",
+   "n_tickets": 2,
+   "pnl_abs_usd": 75.418,
+   "pnl_net_usd": 55.1185,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-02-13",
+    "2026-09-30",
+    2422
+   ],
+   "um_last_close": 0.08971
+  },
+  {
+   "symbol": "BCH",
+   "n_tickets": 4,
+   "pnl_abs_usd": 30.5119,
+   "pnl_net_usd": 15.2852,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-01-01",
+    "2026-09-30",
+    2465
+   ],
+   "um_last_close": 306.14
+  },
+  {
+   "symbol": "BIO",
+   "n_tickets": 1,
+   "pnl_abs_usd": 18.9539,
+   "pnl_net_usd": -18.9539,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-01-03",
+    "2026-09-30",
+    636
+   ],
+   "um_last_close": 0.03104
+  },
+  {
+   "symbol": "BNB",
+   "n_tickets": 2,
+   "pnl_abs_usd": 162.9939,
+   "pnl_net_usd": 160.0772,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2020-02-10",
+    "2026-09-30",
+    2425
+   ],
+   "um_last_close": 769.73
+  },
+  {
+   "symbol": "BSV",
+   "n_tickets": 1,
+   "pnl_abs_usd": 12.298,
+   "pnl_net_usd": 12.298,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-10-20",
+    "2026-09-30",
+    1077
+   ],
+   "um_last_close": 20.02
+  },
+  {
+   "symbol": "BTC",
+   "n_tickets": 2,
+   "pnl_abs_usd": 152.9427,
+   "pnl_net_usd": 149.8956,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2020-01-01",
+    "2026-09-30",
+    2465
+   ],
+   "um_last_close": 83576.9
+  },
+  {
+   "symbol": "C98",
+   "n_tickets": 2,
+   "pnl_abs_usd": 26.1956,
+   "pnl_net_usd": 1.4597,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-08-24",
+    "2026-09-30",
+    1864
+   ],
+   "um_last_close": 0.01623
+  },
+  {
+   "symbol": "CAKE",
+   "n_tickets": 7,
+   "pnl_abs_usd": 178.5524,
+   "pnl_net_usd": -49.8259,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-11-02",
+    "2026-09-30",
+    1064
+   ],
+   "um_last_close": 2.5943
+  },
+  {
+   "symbol": "CATI",
+   "n_tickets": 1,
+   "pnl_abs_usd": 12.1061,
+   "pnl_net_usd": -12.1061,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-09-20",
+    "2026-09-30",
+    741
+   ],
+   "um_last_close": 0.06019
+  },
+  {
+   "symbol": "CC",
+   "n_tickets": 1,
+   "pnl_abs_usd": 1.2934,
+   "pnl_net_usd": -1.2934,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-10-31",
+    "2026-09-30",
+    335
+   ],
+   "um_last_close": 0.12616
+  },
+  {
+   "symbol": "CELO",
+   "n_tickets": 1,
+   "pnl_abs_usd": 19.1111,
+   "pnl_net_usd": -19.1111,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-09-27",
+    "2026-09-30",
+    1830
+   ],
+   "um_last_close": 0.10011
+  },
+  {
+   "symbol": "CELR",
+   "n_tickets": 1,
+   "pnl_abs_usd": 23.6561,
+   "pnl_net_usd": 23.6561,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-03-29",
+    "2026-09-30",
+    2012
+   ],
+   "um_last_close": 0.00312
+  },
+  {
+   "symbol": "CFX",
+   "n_tickets": 1,
+   "pnl_abs_usd": 4.4862,
+   "pnl_net_usd": 4.4862,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-02-20",
+    "2026-09-30",
+    1319
+   ],
+   "um_last_close": 0.05521
+  },
+  {
+   "symbol": "CHR",
+   "n_tickets": 1,
+   "pnl_abs_usd": 8.6246,
+   "pnl_net_usd": 8.6246,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-03-12",
+    "2026-09-30",
+    2029
+   ],
+   "um_last_close": 0.02227
+  },
+  {
+   "symbol": "CHZ",
+   "n_tickets": 1,
+   "pnl_abs_usd": 14.0096,
+   "pnl_net_usd": -14.0096,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-01-21",
+    "2026-09-30",
+    2079
+   ],
+   "um_last_close": 0.01626
+  },
+  {
+   "symbol": "CKB",
+   "n_tickets": 2,
+   "pnl_abs_usd": 25.5973,
+   "pnl_net_usd": -25.5973,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-02-28",
+    "2026-09-30",
+    1311
+   ],
+   "um_last_close": 0.001316
+  },
+  {
+   "symbol": "COMP",
+   "n_tickets": 2,
+   "pnl_abs_usd": 179.5499,
+   "pnl_net_usd": 146.7343,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-06-30",
+    "2026-09-30",
+    2284
+   ],
+   "um_last_close": 24.75
+  },
+  {
+   "symbol": "COTI",
+   "n_tickets": 1,
+   "pnl_abs_usd": 3.4116,
+   "pnl_net_usd": 3.4116,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-03-10",
+    "2026-09-30",
+    2031
+   ],
+   "um_last_close": 0.013217
+  },
+  {
+   "symbol": "CRV",
+   "n_tickets": 3,
+   "pnl_abs_usd": 160.5739,
+   "pnl_net_usd": 122.8546,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-09-01",
+    "2026-09-30",
+    2221
+   ],
+   "um_last_close": 0.3945
+  },
+  {
+   "symbol": "CTSI",
+   "n_tickets": 1,
+   "pnl_abs_usd": 14.8057,
+   "pnl_net_usd": -14.8057,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-10-26",
+    "2026-09-30",
+    1801
+   ],
+   "um_last_close": 0.02884
+  },
+  {
+   "symbol": "CVC",
+   "n_tickets": 1,
+   "pnl_abs_usd": 0.0694,
+   "pnl_net_usd": 0.0694,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-11-11",
+    "2026-09-30",
+    2150
+   ],
+   "um_last_close": 0.03132
+  },
+  {
+   "symbol": "DASH",
+   "n_tickets": 4,
+   "pnl_abs_usd": 221.3558,
+   "pnl_net_usd": 157.635,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-02-04",
+    "2026-09-30",
+    2431
+   ],
+   "um_last_close": 60.52
+  },
+  {
+   "symbol": "DENT",
+   "n_tickets": 1,
+   "pnl_abs_usd": 17.5801,
+   "pnl_net_usd": 17.5801,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-03-24",
+    "2026-09-30",
+    2017
+   ],
+   "um_last_close": 0.0001186
+  },
+  {
+   "symbol": "DOGE",
+   "n_tickets": 3,
+   "pnl_abs_usd": 66.1638,
+   "pnl_net_usd": -66.1638,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-07-10",
+    "2026-09-30",
+    2274
+   ],
+   "um_last_close": 0.0945
+  },
+  {
+   "symbol": "DOT",
+   "n_tickets": 2,
+   "pnl_abs_usd": 47.6015,
+   "pnl_net_usd": -47.6015,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2020-08-22",
+    "2026-09-30",
+    2231
+   ],
+   "um_last_close": 1.2228
+  },
+  {
+   "symbol": "DRIFT",
+   "n_tickets": 2,
+   "pnl_abs_usd": 32.3528,
+   "pnl_net_usd": -32.3528,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-11-08",
+    "2026-09-30",
+    692
+   ],
+   "um_last_close": 0.01931
+  },
+  {
+   "symbol": "DYDX",
+   "n_tickets": 1,
+   "pnl_abs_usd": 20.4052,
+   "pnl_net_usd": -20.4052,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-09-10",
+    "2026-09-30",
+    1847
+   ],
+   "um_last_close": 0.1439
+  },
+  {
+   "symbol": "DYM",
+   "n_tickets": 1,
+   "pnl_abs_usd": 0.6461,
+   "pnl_net_usd": -0.6461,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-02-07",
+    "2026-09-30",
+    967
+   ],
+   "um_last_close": 0.01933
+  },
+  {
+   "symbol": "EDU",
+   "n_tickets": 1,
+   "pnl_abs_usd": 2.6335,
+   "pnl_net_usd": -2.6335,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-04-30",
+    "2026-09-30",
+    1250
+   ],
+   "um_last_close": 0.05197
+  },
+  {
+   "symbol": "EGLD",
+   "n_tickets": 3,
+   "pnl_abs_usd": 53.0091,
+   "pnl_net_usd": -27.5832,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-09-14",
+    "2026-09-30",
+    2208
+   ],
+   "um_last_close": 4.491
+  },
+  {
+   "symbol": "EIGEN",
+   "n_tickets": 2,
+   "pnl_abs_usd": 21.2784,
+   "pnl_net_usd": -21.2784,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-10-01",
+    "2026-09-30",
+    730
+   ],
+   "um_last_close": 0.2451
+  },
+  {
+   "symbol": "ENA",
+   "n_tickets": 1,
+   "pnl_abs_usd": 48.5954,
+   "pnl_net_usd": 48.5954,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-04-02",
+    "2026-09-30",
+    912
+   ],
+   "um_last_close": 0.26473
+  },
+  {
+   "symbol": "ENJ",
+   "n_tickets": 1,
+   "pnl_abs_usd": 23.7289,
+   "pnl_net_usd": 23.7289,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-09-29",
+    "2026-09-30",
+    2193
+   ],
+   "um_last_close": 0.02947
+  },
+  {
+   "symbol": "ENS",
+   "n_tickets": 2,
+   "pnl_abs_usd": 34.8447,
+   "pnl_net_usd": 34.8447,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-11-30",
+    "2026-09-30",
+    1766
+   ],
+   "um_last_close": 6.992
+  },
+  {
+   "symbol": "EOS",
+   "n_tickets": 1,
+   "pnl_abs_usd": 51.2345,
+   "pnl_net_usd": 51.2345,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-01-08",
+    "2025-05-21",
+    1961
+   ],
+   "um_last_close": 0.746
+  },
+  {
+   "symbol": "ETC",
+   "n_tickets": 4,
+   "pnl_abs_usd": 129.4497,
+   "pnl_net_usd": 58.1198,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-01-16",
+    "2026-09-30",
+    2450
+   ],
+   "um_last_close": 8.888
+  },
+  {
+   "symbol": "ETH",
+   "n_tickets": 3,
+   "pnl_abs_usd": 71.4503,
+   "pnl_net_usd": 41.7659,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2020-01-01",
+    "2026-09-30",
+    2465
+   ],
+   "um_last_close": 2684.68
+  },
+  {
+   "symbol": "ETHFI",
+   "n_tickets": 2,
+   "pnl_abs_usd": 31.7263,
+   "pnl_net_usd": -13.4822,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-03-18",
+    "2026-09-30",
+    927
+   ],
+   "um_last_close": 0.7847
+  },
+  {
+   "symbol": "ETHW",
+   "n_tickets": 1,
+   "pnl_abs_usd": 1.9764,
+   "pnl_net_usd": -1.9764,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-11-28",
+    "2026-09-30",
+    1038
+   ],
+   "um_last_close": 0.2879
+  },
+  {
+   "symbol": "F",
+   "n_tickets": 1,
+   "pnl_abs_usd": 17.9213,
+   "pnl_net_usd": -17.9213,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-06-18",
+    "2026-09-30",
+    470
+   ],
+   "um_last_close": 0.003566
+  },
+  {
+   "symbol": "FARTCOIN",
+   "n_tickets": 1,
+   "pnl_abs_usd": 2.0402,
+   "pnl_net_usd": -2.0402,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-12-20",
+    "2026-09-30",
+    650
+   ],
+   "um_last_close": 0.1772
+  },
+  {
+   "symbol": "FET",
+   "n_tickets": 3,
+   "pnl_abs_usd": 20.474,
+   "pnl_net_usd": -16.3101,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-01-17",
+    "2026-09-30",
+    1353
+   ],
+   "um_last_close": 0.229
+  },
+  {
+   "symbol": "FF",
+   "n_tickets": 1,
+   "pnl_abs_usd": 82.3592,
+   "pnl_net_usd": 82.3592,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-09-29",
+    "2026-09-30",
+    367
+   ],
+   "um_last_close": 0.13012
+  },
+  {
+   "symbol": "FIL",
+   "n_tickets": 2,
+   "pnl_abs_usd": 44.9171,
+   "pnl_net_usd": 11.5856,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-10-16",
+    "2026-09-30",
+    2171
+   ],
+   "um_last_close": 1.0426
+  },
+  {
+   "symbol": "FIO",
+   "n_tickets": 1,
+   "pnl_abs_usd": 18.0038,
+   "pnl_net_usd": -18.0038,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-09-20",
+    "2026-09-30",
+    741
+   ],
+   "um_last_close": 0.002699
+  },
+  {
+   "symbol": "FLM",
+   "n_tickets": 1,
+   "pnl_abs_usd": 20.8665,
+   "pnl_net_usd": -20.8665,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-09-29",
+    "2026-09-30",
+    2188
+   ],
+   "um_last_close": 0.0082
+  },
+  {
+   "symbol": "FLOW",
+   "n_tickets": 1,
+   "pnl_abs_usd": 38.7739,
+   "pnl_net_usd": 38.7739,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2022-02-10",
+    "2026-09-30",
+    1689
+   ],
+   "um_last_close": 0.03118
+  },
+  {
+   "symbol": "FORM",
+   "n_tickets": 1,
+   "pnl_abs_usd": 10.7382,
+   "pnl_net_usd": -10.7382,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-03-19",
+    "2026-09-30",
+    561
+   ],
+   "um_last_close": 0.2894
+  },
+  {
+   "symbol": "FTM",
+   "n_tickets": 1,
+   "pnl_abs_usd": 12.9502,
+   "pnl_net_usd": 12.9502,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-09-24",
+    "2026-09-30",
+    2193
+   ],
+   "um_last_close": 0.7702
+  },
+  {
+   "symbol": "G",
+   "n_tickets": 1,
+   "pnl_abs_usd": 12.1947,
+   "pnl_net_usd": -12.1947,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-08-15",
+    "2026-09-30",
+    777
+   ],
+   "um_last_close": 0.004725
+  },
+  {
+   "symbol": "GALA",
+   "n_tickets": 1,
+   "pnl_abs_usd": 88.768,
+   "pnl_net_usd": 88.768,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-09-18",
+    "2026-09-30",
+    1839
+   ],
+   "um_last_close": 0.002315
+  },
+  {
+   "symbol": "GAS",
+   "n_tickets": 2,
+   "pnl_abs_usd": 22.4377,
+   "pnl_net_usd": -22.4377,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-10-25",
+    "2026-09-30",
+    1072
+   ],
+   "um_last_close": 1.434
+  },
+  {
+   "symbol": "GLM",
+   "n_tickets": 2,
+   "pnl_abs_usd": 16.0087,
+   "pnl_net_usd": -14.552,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-02-22",
+    "2026-09-30",
+    952
+   ],
+   "um_last_close": 0.12653
+  },
+  {
+   "symbol": "GMT",
+   "n_tickets": 1,
+   "pnl_abs_usd": 12.4891,
+   "pnl_net_usd": 12.4891,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2022-03-15",
+    "2026-09-30",
+    1659
+   ],
+   "um_last_close": 0.008616
+  },
+  {
+   "symbol": "GMX",
+   "n_tickets": 3,
+   "pnl_abs_usd": 62.9758,
+   "pnl_net_usd": 4.4897,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-02-17",
+    "2026-09-30",
+    1322
+   ],
+   "um_last_close": 7.908
+  },
+  {
+   "symbol": "GRASS",
+   "n_tickets": 1,
+   "pnl_abs_usd": 11.0742,
+   "pnl_net_usd": 11.0742,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-11-08",
+    "2026-09-30",
+    692
+   ],
+   "um_last_close": 0.6968
+  },
+  {
+   "symbol": "GRT",
+   "n_tickets": 3,
+   "pnl_abs_usd": 42.3092,
+   "pnl_net_usd": -1.5512,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-12-19",
+    "2026-09-30",
+    2107
+   ],
+   "um_last_close": 0.02923
+  },
+  {
+   "symbol": "GTC",
+   "n_tickets": 1,
+   "pnl_abs_usd": 17.138,
+   "pnl_net_usd": -17.138,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-06-11",
+    "2026-09-30",
+    1933
+   ],
+   "um_last_close": 0.09404
+  },
+  {
+   "symbol": "HBAR",
+   "n_tickets": 1,
+   "pnl_abs_usd": 3.0975,
+   "pnl_net_usd": 3.0975,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-03-17",
+    "2026-09-30",
+    2019
+   ],
+   "um_last_close": 0.10473
+  },
+  {
+   "symbol": "HIFI",
+   "n_tickets": 1,
+   "pnl_abs_usd": 15.5017,
+   "pnl_net_usd": -15.5017,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-09-16",
+    "2026-09-30",
+    1111
+   ],
+   "um_last_close": 0.0939
+  },
+  {
+   "symbol": "HOT",
+   "n_tickets": 1,
+   "pnl_abs_usd": 16.8122,
+   "pnl_net_usd": -16.8122,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-03-30",
+    "2026-09-30",
+    2006
+   ],
+   "um_last_close": 0.0004492
+  },
+  {
+   "symbol": "ICP",
+   "n_tickets": 5,
+   "pnl_abs_usd": 71.1518,
+   "pnl_net_usd": -63.8955,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-05-11",
+    "2026-09-30",
+    1943
+   ],
+   "um_last_close": 3.333
+  },
+  {
+   "symbol": "ICX",
+   "n_tickets": 2,
+   "pnl_abs_usd": 35.1714,
+   "pnl_net_usd": 24.3566,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-09-15",
+    "2026-09-30",
+    2207
+   ],
+   "um_last_close": 0.01522
+  },
+  {
+   "symbol": "ID",
+   "n_tickets": 1,
+   "pnl_abs_usd": 17.7474,
+   "pnl_net_usd": -17.7474,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-03-23",
+    "2026-09-30",
+    1288
+   ],
+   "um_last_close": 0.03738
+  },
+  {
+   "symbol": "IMX",
+   "n_tickets": 2,
+   "pnl_abs_usd": 3.1361,
+   "pnl_net_usd": -0.1564,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2022-02-11",
+    "2026-09-30",
+    1688
+   ],
+   "um_last_close": 0.1667
+  },
+  {
+   "symbol": "INJ",
+   "n_tickets": 3,
+   "pnl_abs_usd": 40.6765,
+   "pnl_net_usd": -21.4354,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2022-08-17",
+    "2026-09-30",
+    1506
+   ],
+   "um_last_close": 7.411
+  },
+  {
+   "symbol": "IOST",
+   "n_tickets": 2,
+   "pnl_abs_usd": 54.3384,
+   "pnl_net_usd": 19.2717,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-02-21",
+    "2026-09-30",
+    2414
+   ],
+   "um_last_close": 0.0008986
+  },
+  {
+   "symbol": "IOTA",
+   "n_tickets": 2,
+   "pnl_abs_usd": 121.3367,
+   "pnl_net_usd": 120.0165,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-02-12",
+    "2026-09-30",
+    2418
+   ],
+   "um_last_close": 0.05369
+  },
+  {
+   "symbol": "IOTX",
+   "n_tickets": 1,
+   "pnl_abs_usd": 13.3709,
+   "pnl_net_usd": -13.3709,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-08-12",
+    "2026-09-30",
+    1876
+   ],
+   "um_last_close": 0.003487
+  },
+  {
+   "symbol": "JASMY",
+   "n_tickets": 1,
+   "pnl_abs_usd": 14.5811,
+   "pnl_net_usd": 14.5811,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2022-04-20",
+    "2026-09-30",
+    1625
+   ],
+   "um_last_close": 0.005076
+  },
+  {
+   "symbol": "JOE",
+   "n_tickets": 1,
+   "pnl_abs_usd": 20.5944,
+   "pnl_net_usd": -20.5944,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-03-29",
+    "2026-09-30",
+    1282
+   ],
+   "um_last_close": 0.03842
+  },
+  {
+   "symbol": "JTO",
+   "n_tickets": 1,
+   "pnl_abs_usd": 17.5219,
+   "pnl_net_usd": 17.5219,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-12-08",
+    "2026-09-30",
+    1028
+   ],
+   "um_last_close": 0.5295
+  },
+  {
+   "symbol": "JUP",
+   "n_tickets": 3,
+   "pnl_abs_usd": 31.702,
+   "pnl_net_usd": -31.702,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-01-31",
+    "2026-09-30",
+    974
+   ],
+   "um_last_close": 0.3297
+  },
+  {
+   "symbol": "KAITO",
+   "n_tickets": 1,
+   "pnl_abs_usd": 14.4477,
+   "pnl_net_usd": -14.4477,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-02-20",
+    "2026-09-30",
+    588
+   ],
+   "um_last_close": 0.3499
+  },
+  {
+   "symbol": "KAS",
+   "n_tickets": 1,
+   "pnl_abs_usd": 19.1501,
+   "pnl_net_usd": -19.1501,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-11-17",
+    "2026-09-30",
+    1049
+   ],
+   "um_last_close": 0.04349
+  },
+  {
+   "symbol": "KERNEL",
+   "n_tickets": 1,
+   "pnl_abs_usd": 1.1684,
+   "pnl_net_usd": -1.1684,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-04-14",
+    "2026-09-30",
+    535
+   ],
+   "um_last_close": 0.05527
+  },
+  {
+   "symbol": "KMNO",
+   "n_tickets": 1,
+   "pnl_abs_usd": 14.5071,
+   "pnl_net_usd": -14.5071,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-12-20",
+    "2026-09-30",
+    650
+   ],
+   "um_last_close": 0.04302
+  },
+  {
+   "symbol": "KNC",
+   "n_tickets": 2,
+   "pnl_abs_usd": 67.9131,
+   "pnl_net_usd": 31.1993,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-06-22",
+    "2026-09-30",
+    2287
+   ],
+   "um_last_close": 0.1378
+  },
+  {
+   "symbol": "KOMA",
+   "n_tickets": 1,
+   "pnl_abs_usd": 14.956,
+   "pnl_net_usd": -14.956,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-12-10",
+    "2026-09-30",
+    660
+   ],
+   "um_last_close": 0.020233
+  },
+  {
+   "symbol": "KSM",
+   "n_tickets": 1,
+   "pnl_abs_usd": 15.6776,
+   "pnl_net_usd": -15.6776,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-10-14",
+    "2026-09-30",
+    2173
+   ],
+   "um_last_close": 5.167
+  },
+  {
+   "symbol": "LDO",
+   "n_tickets": 3,
+   "pnl_abs_usd": 15.1162,
+   "pnl_net_usd": -0.3156,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2022-09-22",
+    "2026-09-30",
+    1470
+   ],
+   "um_last_close": 0.4574
+  },
+  {
+   "symbol": "LIGHT",
+   "n_tickets": 1,
+   "pnl_abs_usd": 6.1146,
+   "pnl_net_usd": -6.1146,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-09-27",
+    "2026-09-30",
+    369
+   ],
+   "um_last_close": 0.1848
+  },
+  {
+   "symbol": "LINK",
+   "n_tickets": 5,
+   "pnl_abs_usd": 161.5773,
+   "pnl_net_usd": 134.5737,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2020-01-17",
+    "2026-09-30",
+    2449
+   ],
+   "um_last_close": 14.359
+  },
+  {
+   "symbol": "LISTA",
+   "n_tickets": 1,
+   "pnl_abs_usd": 16.541,
+   "pnl_net_usd": -16.541,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-06-20",
+    "2026-09-30",
+    833
+   ],
+   "um_last_close": 0.08896
+  },
+  {
+   "symbol": "LIT",
+   "n_tickets": 3,
+   "pnl_abs_usd": 45.9233,
+   "pnl_net_usd": 8.4729,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-02-18",
+    "2026-09-30",
+    2046
+   ],
+   "um_last_close": 3.953
+  },
+  {
+   "symbol": "LOOM",
+   "n_tickets": 2,
+   "pnl_abs_usd": 26.0149,
+   "pnl_net_usd": -16.0811,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-10-11",
+    "2026-09-30",
+    1086
+   ],
+   "um_last_close": 0.08112
+  },
+  {
+   "symbol": "LPT",
+   "n_tickets": 1,
+   "pnl_abs_usd": 0.7729,
+   "pnl_net_usd": 0.7729,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-11-11",
+    "2026-09-30",
+    1785
+   ],
+   "um_last_close": 1.777
+  },
+  {
+   "symbol": "LQTY",
+   "n_tickets": 1,
+   "pnl_abs_usd": 49.2113,
+   "pnl_net_usd": 49.2113,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-03-10",
+    "2026-09-30",
+    1301
+   ],
+   "um_last_close": 0.2367
+  },
+  {
+   "symbol": "LRC",
+   "n_tickets": 2,
+   "pnl_abs_usd": 39.753,
+   "pnl_net_usd": 22.1737,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-10-19",
+    "2026-09-30",
+    2168
+   ],
+   "um_last_close": 0.02369
+  },
+  {
+   "symbol": "LSK",
+   "n_tickets": 1,
+   "pnl_abs_usd": 0.3087,
+   "pnl_net_usd": 0.3087,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-01-25",
+    "2026-09-30",
+    980
+   ],
+   "um_last_close": 0.28508
+  },
+  {
+   "symbol": "LTC",
+   "n_tickets": 2,
+   "pnl_abs_usd": 50.6985,
+   "pnl_net_usd": -45.5469,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-01-09",
+    "2026-09-30",
+    2452
+   ],
+   "um_last_close": 67.19
+  },
+  {
+   "symbol": "LUNA2",
+   "n_tickets": 1,
+   "pnl_abs_usd": 10.3141,
+   "pnl_net_usd": 10.3141,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2022-09-10",
+    "2026-09-30",
+    1482
+   ],
+   "um_last_close": 0.05118
+  },
+  {
+   "symbol": "MANA",
+   "n_tickets": 2,
+   "pnl_abs_usd": 144.5506,
+   "pnl_net_usd": 103.7119,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-03-15",
+    "2026-09-30",
+    2021
+   ],
+   "um_last_close": 0.08984
+  },
+  {
+   "symbol": "MANTA",
+   "n_tickets": 1,
+   "pnl_abs_usd": 0.4434,
+   "pnl_net_usd": -0.4434,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-01-18",
+    "2026-09-30",
+    987
+   ],
+   "um_last_close": 0.06838
+  },
+  {
+   "symbol": "MAVIA",
+   "n_tickets": 1,
+   "pnl_abs_usd": 4.7843,
+   "pnl_net_usd": -4.7843,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-02-21",
+    "2026-09-30",
+    953
+   ],
+   "um_last_close": 0.03225
+  },
+  {
+   "symbol": "MELANIA",
+   "n_tickets": 1,
+   "pnl_abs_usd": 1.9687,
+   "pnl_net_usd": -1.9687,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-01-20",
+    "2026-09-30",
+    619
+   ],
+   "um_last_close": 0.10364
+  },
+  {
+   "symbol": "MEME",
+   "n_tickets": 1,
+   "pnl_abs_usd": 6.1747,
+   "pnl_net_usd": -6.1747,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-11-03",
+    "2026-09-30",
+    1063
+   ],
+   "um_last_close": 0.000597
+  },
+  {
+   "symbol": "MEW",
+   "n_tickets": 1,
+   "pnl_abs_usd": 6.407,
+   "pnl_net_usd": -6.407,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-06-17",
+    "2026-09-30",
+    836
+   ],
+   "um_last_close": 0.0004964
+  },
+  {
+   "symbol": "MKR",
+   "n_tickets": 1,
+   "pnl_abs_usd": 15.0313,
+   "pnl_net_usd": -15.0313,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2020-08-13",
+    "2026-09-30",
+    2235
+   ],
+   "um_last_close": 1650.1
+  },
+  {
+   "symbol": "MON",
+   "n_tickets": 1,
+   "pnl_abs_usd": 9.9152,
+   "pnl_net_usd": -9.9152,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-10-10",
+    "2026-09-30",
+    356
+   ],
+   "um_last_close": 0.03181
+  },
+  {
+   "symbol": "MOODENG",
+   "n_tickets": 1,
+   "pnl_abs_usd": 19.5904,
+   "pnl_net_usd": -19.5904,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-10-25",
+    "2026-09-30",
+    706
+   ],
+   "um_last_close": 0.04709
+  },
+  {
+   "symbol": "MORPHO",
+   "n_tickets": 2,
+   "pnl_abs_usd": 16.4926,
+   "pnl_net_usd": -16.4926,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-11-27",
+    "2026-09-30",
+    673
+   ],
+   "um_last_close": 2.4931
+  },
+  {
+   "symbol": "MOVR",
+   "n_tickets": 1,
+   "pnl_abs_usd": 17.4678,
+   "pnl_net_usd": -17.4678,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-12-26",
+    "2026-09-30",
+    1010
+   ],
+   "um_last_close": 2.1752
+  },
+  {
+   "symbol": "MTL",
+   "n_tickets": 1,
+   "pnl_abs_usd": 1.295,
+   "pnl_net_usd": 1.295,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-03-31",
+    "2026-09-30",
+    2010
+   ],
+   "um_last_close": 0.3292
+  },
+  {
+   "symbol": "NEAR",
+   "n_tickets": 3,
+   "pnl_abs_usd": 67.6713,
+   "pnl_net_usd": 16.0229,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2020-10-15",
+    "2026-09-30",
+    2172
+   ],
+   "um_last_close": 5.339
+  },
+  {
+   "symbol": "NEIRO",
+   "n_tickets": 1,
+   "pnl_abs_usd": 17.7842,
+   "pnl_net_usd": -17.7842,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-09-16",
+    "2026-09-30",
+    745
+   ],
+   "um_last_close": 9.202e-05
+  },
+  {
+   "symbol": "NEIROETH",
+   "n_tickets": 1,
+   "pnl_abs_usd": 2.2643,
+   "pnl_net_usd": 2.2643,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-09-06",
+    "2026-09-30",
+    755
+   ],
+   "um_last_close": 0.00863
+  },
+  {
+   "symbol": "NEO",
+   "n_tickets": 2,
+   "pnl_abs_usd": 58.8503,
+   "pnl_net_usd": 5.8237,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-02-17",
+    "2026-09-30",
+    2418
+   ],
+   "um_last_close": 2.541
+  },
+  {
+   "symbol": "NKN",
+   "n_tickets": 1,
+   "pnl_abs_usd": 13.1032,
+   "pnl_net_usd": 13.1032,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-04-09",
+    "2026-09-30",
+    2001
+   ],
+   "um_last_close": 0.00554
+  },
+  {
+   "symbol": "NMR",
+   "n_tickets": 3,
+   "pnl_abs_usd": 42.7127,
+   "pnl_net_usd": -30.6817,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-06-22",
+    "2026-09-30",
+    1197
+   ],
+   "um_last_close": 11.265
+  },
+  {
+   "symbol": "NTRN",
+   "n_tickets": 1,
+   "pnl_abs_usd": 1.9187,
+   "pnl_net_usd": -1.9187,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-11-14",
+    "2026-09-30",
+    1052
+   ],
+   "um_last_close": 0.00522
+  },
+  {
+   "symbol": "OMG",
+   "n_tickets": 1,
+   "pnl_abs_usd": 10.1512,
+   "pnl_net_usd": 10.1512,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-07-02",
+    "2026-09-30",
+    2277
+   ],
+   "um_last_close": 0.291
+  },
+  {
+   "symbol": "OMNI",
+   "n_tickets": 1,
+   "pnl_abs_usd": 2.4768,
+   "pnl_net_usd": -2.4768,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-04-17",
+    "2026-09-30",
+    897
+   ],
+   "um_last_close": 4.274
+  },
+  {
+   "symbol": "ONDO",
+   "n_tickets": 3,
+   "pnl_abs_usd": 93.0475,
+   "pnl_net_usd": 68.8508,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2024-01-20",
+    "2026-09-30",
+    985
+   ],
+   "um_last_close": 0.4995
+  },
+  {
+   "symbol": "ONE",
+   "n_tickets": 2,
+   "pnl_abs_usd": 60.2583,
+   "pnl_net_usd": 19.1763,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-03-18",
+    "2026-09-30",
+    2018
+   ],
+   "um_last_close": 0.002199
+  },
+  {
+   "symbol": "ONG",
+   "n_tickets": 2,
+   "pnl_abs_usd": 10.3142,
+   "pnl_net_usd": 10.3142,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-11-27",
+    "2026-09-30",
+    1039
+   ],
+   "um_last_close": 0.09628
+  },
+  {
+   "symbol": "ONT",
+   "n_tickets": 2,
+   "pnl_abs_usd": 38.2806,
+   "pnl_net_usd": 4.2857,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-02-11",
+    "2026-09-30",
+    2424
+   ],
+   "um_last_close": 0.05917
+  },
+  {
+   "symbol": "OP",
+   "n_tickets": 1,
+   "pnl_abs_usd": 3.205,
+   "pnl_net_usd": 3.205,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2022-06-01",
+    "2026-09-30",
+    1583
+   ],
+   "um_last_close": 0.12953
+  },
+  {
+   "symbol": "ORBS",
+   "n_tickets": 1,
+   "pnl_abs_usd": 2.1115,
+   "pnl_net_usd": -2.1115,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-10-17",
+    "2026-09-30",
+    1080
+   ],
+   "um_last_close": 0.035157
+  },
+  {
+   "symbol": "ORCA",
+   "n_tickets": 2,
+   "pnl_abs_usd": 40.1521,
+   "pnl_net_usd": -40.1521,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-12-06",
+    "2026-09-30",
+    664
+   ],
+   "um_last_close": 1.65
+  },
+  {
+   "symbol": "ORDI",
+   "n_tickets": 2,
+   "pnl_abs_usd": 39.5946,
+   "pnl_net_usd": -39.5946,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-11-07",
+    "2026-09-30",
+    1059
+   ],
+   "um_last_close": 4.628
+  },
+  {
+   "symbol": "OXT",
+   "n_tickets": 1,
+   "pnl_abs_usd": 5.0825,
+   "pnl_net_usd": -5.0825,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-08-11",
+    "2026-09-30",
+    1147
+   ],
+   "um_last_close": 0.01089
+  },
+  {
+   "symbol": "PENDLE",
+   "n_tickets": 4,
+   "pnl_abs_usd": 50.9781,
+   "pnl_net_usd": 19.7237,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2023-07-28",
+    "2026-09-30",
+    1161
+   ],
+   "um_last_close": 2.3846
+  },
+  {
+   "symbol": "PENGU",
+   "n_tickets": 1,
+   "pnl_abs_usd": 27.8421,
+   "pnl_net_usd": 27.8421,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-12-17",
+    "2026-09-30",
+    653
+   ],
+   "um_last_close": 0.009606
+  },
+  {
+   "symbol": "PHA",
+   "n_tickets": 1,
+   "pnl_abs_usd": 15.7864,
+   "pnl_net_usd": -15.7864,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-12-30",
+    "2026-09-30",
+    640
+   ],
+   "um_last_close": 0.07915
+  },
+  {
+   "symbol": "PHB",
+   "n_tickets": 1,
+   "pnl_abs_usd": 15.0883,
+   "pnl_net_usd": -15.0883,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-02-16",
+    "2026-09-30",
+    1323
+   ],
+   "um_last_close": 0.0554
+  },
+  {
+   "symbol": "PIEVERSE",
+   "n_tickets": 1,
+   "pnl_abs_usd": 0.4536,
+   "pnl_net_usd": 0.4536,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-11-14",
+    "2026-09-30",
+    321
+   ],
+   "um_last_close": 1.4364
+  },
+  {
+   "symbol": "PLUME",
+   "n_tickets": 2,
+   "pnl_abs_usd": 16.1683,
+   "pnl_net_usd": -14.7686,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-03-21",
+    "2026-09-30",
+    559
+   ],
+   "um_last_close": 0.01883
+  },
+  {
+   "symbol": "PNUT",
+   "n_tickets": 1,
+   "pnl_abs_usd": 20.7941,
+   "pnl_net_usd": -20.7941,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-11-11",
+    "2026-09-30",
+    689
+   ],
+   "um_last_close": 0.05401
+  },
+  {
+   "symbol": "POL",
+   "n_tickets": 2,
+   "pnl_abs_usd": 18.3549,
+   "pnl_net_usd": -18.3549,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2024-09-13",
+    "2026-09-30",
+    748
+   ],
+   "um_last_close": 0.1139
+  },
+  {
+   "symbol": "POLYX",
+   "n_tickets": 1,
+   "pnl_abs_usd": 3.0714,
+   "pnl_net_usd": 3.0714,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-10-25",
+    "2026-09-30",
+    1072
+   ],
+   "um_last_close": 0.04334
+  },
+  {
+   "symbol": "POWR",
+   "n_tickets": 2,
+   "pnl_abs_usd": 27.702,
+   "pnl_net_usd": -23.6441,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-10-27",
+    "2026-09-30",
+    1070
+   ],
+   "um_last_close": 0.06704
+  },
+  {
+   "symbol": "PYTH",
+   "n_tickets": 2,
+   "pnl_abs_usd": 33.4901,
+   "pnl_net_usd": -33.4901,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-11-22",
+    "2026-09-30",
+    1044
+   ],
+   "um_last_close": 0.07716
+  },
+  {
+   "symbol": "Q",
+   "n_tickets": 1,
+   "pnl_abs_usd": 11.607,
+   "pnl_net_usd": -11.607,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-09-02",
+    "2026-09-30",
+    394
+   ],
+   "um_last_close": 0.022565
+  },
+  {
+   "symbol": "QNT",
+   "n_tickets": 5,
+   "pnl_abs_usd": 105.0495,
+   "pnl_net_usd": 64.123,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2022-10-20",
+    "2026-09-30",
+    1442
+   ],
+   "um_last_close": 286.86
+  },
+  {
+   "symbol": "QTUM",
+   "n_tickets": 2,
+   "pnl_abs_usd": 94.3282,
+   "pnl_net_usd": 72.2437,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-02-20",
+    "2026-09-30",
+    2415
+   ],
+   "um_last_close": 1.0023
+  },
+  {
+   "symbol": "RAYSOL",
+   "n_tickets": 1,
+   "pnl_abs_usd": 8.8877,
+   "pnl_net_usd": 8.8877,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-12-10",
+    "2026-09-30",
+    660
+   ],
+   "um_last_close": 1.9456
+  },
+  {
+   "symbol": "RENDER",
+   "n_tickets": 1,
+   "pnl_abs_usd": 2.2346,
+   "pnl_net_usd": 2.2346,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-07-26",
+    "2026-09-30",
+    797
+   ],
+   "um_last_close": 1.913
+  },
+  {
+   "symbol": "REZ",
+   "n_tickets": 2,
+   "pnl_abs_usd": 17.6133,
+   "pnl_net_usd": -12.4255,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-04-30",
+    "2026-09-30",
+    884
+   ],
+   "um_last_close": 0.004771
+  },
+  {
+   "symbol": "RIF",
+   "n_tickets": 1,
+   "pnl_abs_usd": 4.9463,
+   "pnl_net_usd": 4.9463,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-10-21",
+    "2026-09-30",
+    1076
+   ],
+   "um_last_close": 0.0833
+  },
+  {
+   "symbol": "RLC",
+   "n_tickets": 1,
+   "pnl_abs_usd": 15.8903,
+   "pnl_net_usd": -15.8903,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-07-31",
+    "2026-09-30",
+    2248
+   ],
+   "um_last_close": 0.3571
+  },
+  {
+   "symbol": "RSR",
+   "n_tickets": 2,
+   "pnl_abs_usd": 39.5751,
+   "pnl_net_usd": 15.7931,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-10-19",
+    "2026-09-30",
+    2168
+   ],
+   "um_last_close": 0.001704
+  },
+  {
+   "symbol": "RUNE",
+   "n_tickets": 2,
+   "pnl_abs_usd": 22.4106,
+   "pnl_net_usd": -22.4106,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-09-04",
+    "2026-09-30",
+    2218
+   ],
+   "um_last_close": 0.7991
+  },
+  {
+   "symbol": "S",
+   "n_tickets": 1,
+   "pnl_abs_usd": 0.3391,
+   "pnl_net_usd": 0.3391,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-01-16",
+    "2026-09-30",
+    623
+   ],
+   "um_last_close": 0.04068
+  },
+  {
+   "symbol": "SAND",
+   "n_tickets": 2,
+   "pnl_abs_usd": 47.8168,
+   "pnl_net_usd": -47.8168,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-01-25",
+    "2026-09-30",
+    2070
+   ],
+   "um_last_close": 0.04386
+  },
+  {
+   "symbol": "SCR",
+   "n_tickets": 1,
+   "pnl_abs_usd": 10.8637,
+   "pnl_net_usd": -10.8637,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-10-22",
+    "2026-09-30",
+    709
+   ],
+   "um_last_close": 0.02447
+  },
+  {
+   "symbol": "SEI",
+   "n_tickets": 4,
+   "pnl_abs_usd": 42.046,
+   "pnl_net_usd": -28.1288,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-08-17",
+    "2026-09-30",
+    1141
+   ],
+   "um_last_close": 0.0735
+  },
+  {
+   "symbol": "SNX",
+   "n_tickets": 2,
+   "pnl_abs_usd": 51.6544,
+   "pnl_net_usd": 16.3352,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-08-14",
+    "2026-09-30",
+    2239
+   ],
+   "um_last_close": 0.2532
+  },
+  {
+   "symbol": "SOL",
+   "n_tickets": 2,
+   "pnl_abs_usd": 114.053,
+   "pnl_net_usd": 57.9905,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2020-09-14",
+    "2026-09-30",
+    2203
+   ],
+   "um_last_close": 118.05
+  },
+  {
+   "symbol": "SOLV",
+   "n_tickets": 1,
+   "pnl_abs_usd": 30.7801,
+   "pnl_net_usd": -30.7801,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-01-17",
+    "2026-09-30",
+    622
+   ],
+   "um_last_close": 0.00429
+  },
+  {
+   "symbol": "SOON",
+   "n_tickets": 1,
+   "pnl_abs_usd": 10.2677,
+   "pnl_net_usd": 10.2677,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-05-23",
+    "2026-09-30",
+    496
+   ],
+   "um_last_close": 0.4943
+  },
+  {
+   "symbol": "SPELL",
+   "n_tickets": 1,
+   "pnl_abs_usd": 29.123,
+   "pnl_net_usd": 29.123,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2022-09-06",
+    "2026-09-30",
+    1486
+   ],
+   "um_last_close": 9.73e-05
+  },
+  {
+   "symbol": "SPK",
+   "n_tickets": 1,
+   "pnl_abs_usd": 18.4252,
+   "pnl_net_usd": -18.4252,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-06-17",
+    "2026-09-30",
+    471
+   ],
+   "um_last_close": 0.02491
+  },
+  {
+   "symbol": "SPX",
+   "n_tickets": 1,
+   "pnl_abs_usd": 2.5202,
+   "pnl_net_usd": 2.5202,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-12-10",
+    "2026-09-30",
+    660
+   ],
+   "um_last_close": 0.4452
+  },
+  {
+   "symbol": "STEEM",
+   "n_tickets": 2,
+   "pnl_abs_usd": 5.097,
+   "pnl_net_usd": 5.097,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-11-08",
+    "2026-09-30",
+    1058
+   ],
+   "um_last_close": 0.06497
+  },
+  {
+   "symbol": "STMX",
+   "n_tickets": 1,
+   "pnl_abs_usd": 0.9579,
+   "pnl_net_usd": -0.9579,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-03-22",
+    "2026-09-30",
+    2019
+   ],
+   "um_last_close": 0.00388
+  },
+  {
+   "symbol": "STRK",
+   "n_tickets": 2,
+   "pnl_abs_usd": 19.6667,
+   "pnl_net_usd": -19.6667,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2024-02-20",
+    "2026-09-30",
+    954
+   ],
+   "um_last_close": 0.0431
+  },
+  {
+   "symbol": "STX",
+   "n_tickets": 2,
+   "pnl_abs_usd": 41.2472,
+   "pnl_net_usd": 3.7253,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-02-21",
+    "2026-09-30",
+    1318
+   ],
+   "um_last_close": 0.3717
+  },
+  {
+   "symbol": "SUI",
+   "n_tickets": 2,
+   "pnl_abs_usd": 6.0086,
+   "pnl_net_usd": -1.2111,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2023-05-03",
+    "2026-09-30",
+    1247
+   ],
+   "um_last_close": 1.1636
+  },
+  {
+   "symbol": "SUN",
+   "n_tickets": 2,
+   "pnl_abs_usd": 46.3676,
+   "pnl_net_usd": -46.3676,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-08-22",
+    "2026-09-30",
+    770
+   ],
+   "um_last_close": 0.017211
+  },
+  {
+   "symbol": "SUPER",
+   "n_tickets": 1,
+   "pnl_abs_usd": 0.2403,
+   "pnl_net_usd": -0.2403,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-11-26",
+    "2026-09-30",
+    1040
+   ],
+   "um_last_close": 0.1984
+  },
+  {
+   "symbol": "SUSHI",
+   "n_tickets": 3,
+   "pnl_abs_usd": 51.3047,
+   "pnl_net_usd": 3.6676,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-09-04",
+    "2026-09-30",
+    2213
+   ],
+   "um_last_close": 0.2714
+  },
+  {
+   "symbol": "SXP",
+   "n_tickets": 2,
+   "pnl_abs_usd": 35.0353,
+   "pnl_net_usd": -17.7032,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-07-21",
+    "2026-05-31",
+    2141
+   ],
+   "um_last_close": 0.0656
+  },
+  {
+   "symbol": "SYN",
+   "n_tickets": 1,
+   "pnl_abs_usd": 1.3285,
+   "pnl_net_usd": -1.3285,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-08-16",
+    "2026-09-30",
+    776
+   ],
+   "um_last_close": 0.15947
+  },
+  {
+   "symbol": "T",
+   "n_tickets": 2,
+   "pnl_abs_usd": 23.4571,
+   "pnl_net_usd": -11.3252,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-02-01",
+    "2026-09-30",
+    1338
+   ],
+   "um_last_close": 0.005542
+  },
+  {
+   "symbol": "TAO",
+   "n_tickets": 4,
+   "pnl_abs_usd": 41.386,
+   "pnl_net_usd": -41.386,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-04-11",
+    "2026-09-30",
+    903
+   ],
+   "um_last_close": 300.79
+  },
+  {
+   "symbol": "THE",
+   "n_tickets": 2,
+   "pnl_abs_usd": 28.3159,
+   "pnl_net_usd": -28.3159,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-11-27",
+    "2026-09-30",
+    673
+   ],
+   "um_last_close": 0.07617
+  },
+  {
+   "symbol": "THETA",
+   "n_tickets": 2,
+   "pnl_abs_usd": 38.7683,
+   "pnl_net_usd": -0.594,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-05-27",
+    "2026-09-30",
+    2318
+   ],
+   "um_last_close": 0.2243
+  },
+  {
+   "symbol": "TIA",
+   "n_tickets": 3,
+   "pnl_abs_usd": 53.8619,
+   "pnl_net_usd": -53.8619,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2023-10-31",
+    "2026-09-30",
+    1066
+   ],
+   "um_last_close": 0.442
+  },
+  {
+   "symbol": "TRB",
+   "n_tickets": 2,
+   "pnl_abs_usd": 19.2075,
+   "pnl_net_usd": -19.2075,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-09-03",
+    "2026-09-30",
+    2214
+   ],
+   "um_last_close": 21.157
+  },
+  {
+   "symbol": "TRX",
+   "n_tickets": 1,
+   "pnl_abs_usd": 13.0725,
+   "pnl_net_usd": -13.0725,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-01-15",
+    "2026-09-30",
+    2446
+   ],
+   "um_last_close": 0.33723
+  },
+  {
+   "symbol": "TURBO",
+   "n_tickets": 1,
+   "pnl_abs_usd": 11.9541,
+   "pnl_net_usd": -11.9541,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-05-30",
+    "2026-09-30",
+    854
+   ],
+   "um_last_close": 0.0010316
+  },
+  {
+   "symbol": "TWT",
+   "n_tickets": 2,
+   "pnl_abs_usd": 116.2517,
+   "pnl_net_usd": 116.2517,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-11-03",
+    "2026-09-30",
+    1063
+   ],
+   "um_last_close": 0.6124
+  },
+  {
+   "symbol": "UMA",
+   "n_tickets": 1,
+   "pnl_abs_usd": 17.7072,
+   "pnl_net_usd": -17.7072,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-05-10",
+    "2026-09-30",
+    1240
+   ],
+   "um_last_close": 0.4122
+  },
+  {
+   "symbol": "UNI",
+   "n_tickets": 3,
+   "pnl_abs_usd": 74.3141,
+   "pnl_net_usd": 59.814,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2020-09-18",
+    "2026-09-30",
+    2204
+   ],
+   "um_last_close": 8.876
+  },
+  {
+   "symbol": "USTC",
+   "n_tickets": 1,
+   "pnl_abs_usd": 21.8018,
+   "pnl_net_usd": -21.8018,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-11-27",
+    "2026-09-30",
+    1039
+   ],
+   "um_last_close": 0.005765
+  },
+  {
+   "symbol": "VET",
+   "n_tickets": 3,
+   "pnl_abs_usd": 84.514,
+   "pnl_net_usd": 31.9343,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-02-14",
+    "2026-09-30",
+    2416
+   ],
+   "um_last_close": 0.008852
+  },
+  {
+   "symbol": "VIRTUAL",
+   "n_tickets": 2,
+   "pnl_abs_usd": 36.7818,
+   "pnl_net_usd": -36.7818,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-12-10",
+    "2026-09-30",
+    660
+   ],
+   "um_last_close": 0.8048
+  },
+  {
+   "symbol": "VOXEL",
+   "n_tickets": 1,
+   "pnl_abs_usd": 16.6839,
+   "pnl_net_usd": -16.6839,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-08-20",
+    "2026-09-30",
+    772
+   ],
+   "um_last_close": 0.02157
+  },
+  {
+   "symbol": "VTHO",
+   "n_tickets": 1,
+   "pnl_abs_usd": 18.9978,
+   "pnl_net_usd": 18.9978,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-01-22",
+    "2026-09-30",
+    617
+   ],
+   "um_last_close": 0.0006831
+  },
+  {
+   "symbol": "W",
+   "n_tickets": 2,
+   "pnl_abs_usd": 19.1032,
+   "pnl_net_usd": -19.1032,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-04-03",
+    "2026-09-30",
+    911
+   ],
+   "um_last_close": 0.01347
+  },
+  {
+   "symbol": "WAXP",
+   "n_tickets": 1,
+   "pnl_abs_usd": 12.0069,
+   "pnl_net_usd": 12.0069,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-10-18",
+    "2026-09-30",
+    1079
+   ],
+   "um_last_close": 0.006264
+  },
+  {
+   "symbol": "WIF",
+   "n_tickets": 2,
+   "pnl_abs_usd": 13.2221,
+   "pnl_net_usd": -13.2221,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-01-18",
+    "2026-09-30",
+    987
+   ],
+   "um_last_close": 0.2488
+  },
+  {
+   "symbol": "WLD",
+   "n_tickets": 3,
+   "pnl_abs_usd": 39.8033,
+   "pnl_net_usd": -39.1086,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-07-24",
+    "2026-09-30",
+    1165
+   ],
+   "um_last_close": 0.5353
+  },
+  {
+   "symbol": "WOO",
+   "n_tickets": 1,
+   "pnl_abs_usd": 11.9463,
+   "pnl_net_usd": -11.9463,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2022-04-08",
+    "2026-09-30",
+    1637
+   ],
+   "um_last_close": 0.014
+  },
+  {
+   "symbol": "XAI",
+   "n_tickets": 1,
+   "pnl_abs_usd": 0.7414,
+   "pnl_net_usd": -0.7414,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-01-09",
+    "2026-09-30",
+    996
+   ],
+   "um_last_close": 0.009384
+  },
+  {
+   "symbol": "XEM",
+   "n_tickets": 1,
+   "pnl_abs_usd": 47.4344,
+   "pnl_net_usd": 47.4344,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2021-03-03",
+    "2026-09-30",
+    2033
+   ],
+   "um_last_close": 0.0338
+  },
+  {
+   "symbol": "XLM",
+   "n_tickets": 3,
+   "pnl_abs_usd": 57.2326,
+   "pnl_net_usd": -6.4215,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-01-20",
+    "2026-09-30",
+    2441
+   ],
+   "um_last_close": 0.22632
+  },
+  {
+   "symbol": "XMR",
+   "n_tickets": 1,
+   "pnl_abs_usd": 5.245,
+   "pnl_net_usd": 5.245,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-02-03",
+    "2026-09-30",
+    2432
+   ],
+   "um_last_close": 545.5
+  },
+  {
+   "symbol": "XPL",
+   "n_tickets": 1,
+   "pnl_abs_usd": 22.826,
+   "pnl_net_usd": -22.826,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2025-08-22",
+    "2026-09-30",
+    405
+   ],
+   "um_last_close": 0.09485
+  },
+  {
+   "symbol": "XRP",
+   "n_tickets": 1,
+   "pnl_abs_usd": 12.3613,
+   "pnl_net_usd": -12.3613,
+   "in_asset_embeddings_v3_fresh": true,
+   "in_asset_flow_daily_vec": true,
+   "in_cis_official_daily": true,
+   "um_bars": [
+    "2020-01-06",
+    "2026-09-30",
+    2455
+   ],
+   "um_last_close": 1.4892
+  },
+  {
+   "symbol": "XTZ",
+   "n_tickets": 3,
+   "pnl_abs_usd": 108.7467,
+   "pnl_net_usd": 64.3291,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-02-06",
+    "2026-09-30",
+    2429
+   ],
+   "um_last_close": 0.3161
+  },
+  {
+   "symbol": "XVG",
+   "n_tickets": 2,
+   "pnl_abs_usd": 138.173,
+   "pnl_net_usd": 98.926,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-07-05",
+    "2026-09-30",
+    1184
+   ],
+   "um_last_close": 0.003281
+  },
+  {
+   "symbol": "XVS",
+   "n_tickets": 1,
+   "pnl_abs_usd": 12.4605,
+   "pnl_net_usd": 12.4605,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-04-13",
+    "2026-09-30",
+    1267
+   ],
+   "um_last_close": 3.687
+  },
+  {
+   "symbol": "YFI",
+   "n_tickets": 1,
+   "pnl_abs_usd": 20.8369,
+   "pnl_net_usd": -20.8369,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-08-31",
+    "2026-09-30",
+    2217
+   ],
+   "um_last_close": 2460.0
+  },
+  {
+   "symbol": "YGG",
+   "n_tickets": 2,
+   "pnl_abs_usd": 19.4335,
+   "pnl_net_usd": -17.9976,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2023-08-05",
+    "2026-09-30",
+    1153
+   ],
+   "um_last_close": 0.02664
+  },
+  {
+   "symbol": "ZEC",
+   "n_tickets": 3,
+   "pnl_abs_usd": 1614.7622,
+   "pnl_net_usd": 1606.6509,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-02-05",
+    "2026-09-30",
+    2425
+   ],
+   "um_last_close": 1438.11
+  },
+  {
+   "symbol": "ZEN",
+   "n_tickets": 4,
+   "pnl_abs_usd": 79.8279,
+   "pnl_net_usd": 7.8375,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-11-24",
+    "2026-09-30",
+    2132
+   ],
+   "um_last_close": 7.319
+  },
+  {
+   "symbol": "ZETA",
+   "n_tickets": 1,
+   "pnl_abs_usd": 1.181,
+   "pnl_net_usd": -1.181,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-02-02",
+    "2026-09-30",
+    972
+   ],
+   "um_last_close": 0.05215
+  },
+  {
+   "symbol": "ZIL",
+   "n_tickets": 1,
+   "pnl_abs_usd": 80.6139,
+   "pnl_net_usd": 80.6139,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-06-18",
+    "2026-09-30",
+    2291
+   ],
+   "um_last_close": 0.003526
+  },
+  {
+   "symbol": "ZK",
+   "n_tickets": 1,
+   "pnl_abs_usd": 18.5418,
+   "pnl_net_usd": -18.5418,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-06-17",
+    "2026-09-30",
+    836
+   ],
+   "um_last_close": 0.012132
+  },
+  {
+   "symbol": "ZRO",
+   "n_tickets": 1,
+   "pnl_abs_usd": 16.2604,
+   "pnl_net_usd": -16.2604,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2024-06-20",
+    "2026-09-30",
+    833
+   ],
+   "um_last_close": 1.7396
+  },
+  {
+   "symbol": "ZRX",
+   "n_tickets": 1,
+   "pnl_abs_usd": 10.3921,
+   "pnl_net_usd": 10.3921,
+   "in_asset_embeddings_v3_fresh": false,
+   "in_asset_flow_daily_vec": false,
+   "in_cis_official_daily": false,
+   "um_bars": [
+    "2020-06-24",
+    "2026-09-30",
+    2290
+   ],
+   "um_last_close": 0.1224
+  }
+ ],
+ "minimal_plan": {
+  "write_floor_dims": 10,
+  "non_cis_dims": [
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   16,
+   17
+  ],
+  "n_cis_dependent_dims": 17,
+  "n_symbols": 241,
+  "n_reaching_write_floor": 0,
+  "measured_dim_histogram": {
+   "6": 43,
+   "7": 26,
+   "8": 72,
+   "9": 100
+  },
+  "sources": {
+   "um_daily(永续日线)": {
+    "n_symbols": 241
+   },
+   "ohlcv_daily(DB)": {
+    "n_symbols": 125,
+    "latest_date_max": "2026-11-12"
+   },
+   "asset_mcap_daily": {
+    "n_symbols": 172,
+    "latest_date_max": "2026-11-12"
+   },
+   "funding_history(近7天)": {
+    "n_symbols": 126,
+    "latest_max": "2026-11-13T08:00:00+00:00"
+   },
+   "asset_flow_daily(vec)": {
+    "n_symbols": 34
+   }
+  },
+  "per_symbol": {
+   "1000BONK": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "1000FLOKI": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "1000LUNC": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "1000PEPE": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "1000SHIB": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "1000XEC": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "1INCH": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "2Z": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "AAVE": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ACE": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ACH": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ADA": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "AERO": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "AEVO": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "AI": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "AIN": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ALGO": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ALICE": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "AMB": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ANKR": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "API3": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "APT": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "AR": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ARB": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ARK": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ARKM": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ASTER": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ASTR": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ATA": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ATOM": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "AUCTION": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "AVA": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "AVAX": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "AXS": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "BADGER": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "BAL": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "BAN": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "BAND": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "BAT": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "BCH": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "BIO": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "BNB": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "BSV": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "BTC": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "C98": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "CAKE": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "CATI": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "CC": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "CELO": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "CELR": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "CFX": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "CHR": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "CHZ": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "CKB": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "COMP": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "COTI": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "CRV": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "CTSI": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "CVC": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "DASH": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "DENT": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "DOGE": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "DOT": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "DRIFT": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "DYDX": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "DYM": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "EDU": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "EGLD": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "EIGEN": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ENA": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ENJ": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ENS": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "EOS": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ETC": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ETH": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ETHFI": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ETHW": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "F": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "FARTCOIN": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "FET": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "FF": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "FIL": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "FIO": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "FLM": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "FLOW": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "FORM": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "FTM": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "G": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "GALA": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "GAS": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "GLM": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "GMT": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "GMX": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "GRASS": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "GRT": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "GTC": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "HBAR": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "HIFI": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "HOT": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ICP": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ICX": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ID": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "IMX": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "INJ": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "IOST": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "IOTA": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "IOTX": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "JASMY": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "JOE": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "JTO": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "JUP": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "KAITO": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "KAS": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "KERNEL": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "KMNO": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "KNC": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "KOMA": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "KSM": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "LDO": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "LIGHT": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "LINK": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "LISTA": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "LIT": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "LOOM": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "LPT": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "LQTY": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "LRC": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "LSK": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "LTC": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "LUNA2": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "MANA": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "MANTA": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "MAVIA": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "MELANIA": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "MEME": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "MEW": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "MKR": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "MON": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "MOODENG": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "MORPHO": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "MOVR": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "MTL": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "NEAR": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "NEIRO": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "NEIROETH": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "NEO": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "NKN": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "NMR": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "NTRN": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "OMG": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "OMNI": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ONDO": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ONE": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ONG": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ONT": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "OP": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ORBS": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ORCA": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ORDI": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "OXT": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "PENDLE": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "PENGU": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "PHA": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "PHB": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "PIEVERSE": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "PLUME": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "PNUT": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "POL": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "POLYX": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "POWR": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "PYTH": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "Q": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "QNT": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "QTUM": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "RAYSOL": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "RENDER": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "REZ": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "RIF": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "RLC": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "RSR": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "RUNE": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "S": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "SAND": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "SCR": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "SEI": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "SNX": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "SOL": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "SOLV": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "SOON": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "SPELL": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "SPK": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "SPX": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "STEEM": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "STMX": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "STRK": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "STX": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "SUI": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "SUN": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "SUPER": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "SUSHI": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "SXP": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "SYN": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "T": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "TAO": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "THE": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "THETA": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "TIA": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "TRB": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "TRX": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "TURBO": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "TWT": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "UMA": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "UNI": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "USTC": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "VET": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "VIRTUAL": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "VOXEL": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "VTHO": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "W": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "WAXP": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "WIF": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "WLD": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "WOO": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "XAI": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "XEM": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "XLM": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "XMR": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "XPL": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "XRP": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "XTZ": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "XVG": {
+    "n_measurable": 6,
+    "dims": [
+     7,
+     8,
+     9,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "XVS": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "YFI": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "YGG": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ZEC": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ZEN": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ZETA": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ZIL": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ZK": {
+    "n_measurable": 9,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ZRO": {
+    "n_measurable": 7,
+    "dims": [
+     7,
+     8,
+     9,
+     11,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[6][10] 无 asset_mcap_daily 市值",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   },
+   "ZRX": {
+    "n_measurable": 8,
+    "dims": [
+     6,
+     7,
+     8,
+     9,
+     10,
+     13,
+     16,
+     17
+    ],
+    "reasons": [
+     "[11] 近 7 天无资金费记录",
+     "[12] 库里无 OI 存量(只有 flow.doi7 的 ΔOI)"
+    ],
+    "reaches_write_floor": false
+   }
+  }
+ },
+ "dims": [
+  [
+   0,
+   "F/100",
+   "Fundamental 支柱",
+   "CIS 引擎 pillar_F(cis_official_daily.pillar_f)",
+   "否",
+   "支柱是打分结果,不是永续数据能推出的量"
+  ],
+  [
+   1,
+   "M/100",
+   "Momentum 支柱",
+   "CIS 引擎 pillar_M(cis_official_daily.pillar_m)",
+   "否",
+   "同上"
+  ],
+  [
+   2,
+   "O/100",
+   "On-chain/风险调整支柱",
+   "CIS 引擎 pillar_O(cis_official_daily.pillar_o)",
+   "否",
+   "同上"
+  ],
+  [
+   3,
+   "S/100",
+   "Sentiment 支柱",
+   "CIS 引擎 pillar_S(cis_official_daily.pillar_s)",
+   "否",
+   "同上"
+  ],
+  [
+   4,
+   "A/100",
+   "Alpha 支柱",
+   "CIS 引擎 pillar_A(cis_official_daily.pillar_a)",
+   "否",
+   "同上"
+  ],
+  [
+   5,
+   "cis_score/100",
+   "CIS 总分",
+   "cis_official_daily.cis_score",
+   "否",
+   "总分的定义就是五支柱的加总"
+  ],
+  [
+   6,
+   "log10(mcap)/15",
+   "市值(log 归一)",
+   "asset_mcap_daily.mcap(CoinGecko 市值)",
+   "部分",
+   "永续合约本身没有市值;CoinGecko 有该币市值才能算 —— 库里是 market_chart 的历史市值"
+  ],
+  [
+   7,
+   "chg_24h/20",
+   "24h 涨跌",
+   "日收盘(asset_mcap_daily.price / ohlcv_daily.close)",
+   "是",
+   "永续日线收盘即可算(口径与现货收盘略有差)"
+  ],
+  [
+   8,
+   "chg_7d/50",
+   "7d 涨跌",
+   "同上",
+   "是",
+   "需要 ≥8 根日线"
+  ],
+  [
+   9,
+   "chg_30d/100",
+   "30d 涨跌",
+   "同上",
+   "是",
+   "需要 ≥31 根日线"
+  ],
+  [
+   10,
+   "min(vol/mcap×10,1)",
+   "成交额/市值",
+   "asset_mcap_daily.volume ÷ .mcap",
+   "部分",
+   "永续有成交额(um_daily 的 qv)但库里这一维的分子是现货 24h 成交额,口径不同"
+  ],
+  [
+   11,
+   "clamp(funding×1000)",
+   "资金费率",
+   "funding_history(venue=binance_perp).funding_rate",
+   "是",
+   "资金费是永续原生量;库里 funding_history 280 万行覆盖多币"
+  ],
+  [
+   12,
+   "oi/mcap×5",
+   "OI/市值 杠杆比",
+   "OI 存量(CoinGecko derivatives,只在 CIS universe 内)÷ mcap",
+   "部分",
+   "有 OI 存量 + 有市值才能算;我们库里只有 ΔOI(flow 表 doi7),没有 OI 存量"
+  ],
+  [
+   13,
+   "(100−ath)/100",
+   "距历史高点",
+   "ath_distance_pct(现货 ATH;永续代理=历史最高价)",
+   "是(代理)",
+   "永续日线可算历史最高价,但与现货 ATH 口径不同,只能当代理"
+  ],
+  [
+   14,
+   "las/100",
+   "流动性调整分",
+   "CIS 引擎 las",
+   "否",
+   "LAS 是打分产物"
+  ],
+  [
+   15,
+   "confidence",
+   "数据置信度",
+   "CIS 引擎 confidence",
+   "否",
+   "CIS 引擎自评的数据完整度"
+  ],
+  [
+   16,
+   "class_enc/10",
+   "资产类别编码",
+   "资产清单映射(_CLASS_ENC)",
+   "部分",
+   "加密默认 Crypto=0.8 可填;L1/L2/DeFi/… 子类要外部映射"
+  ],
+  [
+   17,
+   "regime_alignment",
+   "宏观 regime 对齐",
+   "全局 macro regime(_REGIME_ALIGN)",
+   "是",
+   "全局量,任何资产都能填 —— 非 CIS 依赖"
+  ],
+  [
+   18,
+   "d_F",
+   "F 支柱一日变化",
+   "连续两天的 pillar_F",
+   "否",
+   "需要 CIS 支柱历史"
+  ],
+  [
+   19,
+   "d_M",
+   "M 支柱一日变化",
+   "连续两天的 pillar_M",
+   "否",
+   "同上"
+  ],
+  [
+   20,
+   "d_O",
+   "O 支柱一日变化",
+   "连续两天的 pillar_O",
+   "否",
+   "同上"
+  ],
+  [
+   21,
+   "d_S",
+   "S 支柱一日变化",
+   "连续两天的 pillar_S",
+   "否",
+   "同上"
+  ],
+  [
+   22,
+   "d_A",
+   "A 支柱一日变化",
+   "连续两天的 pillar_A",
+   "否",
+   "同上"
+  ],
+  [
+   23,
+   "stability_O",
+   "O 支柱窗口波动",
+   "pillar_O 历史序列 std",
+   "否",
+   "需要 CIS 支柱历史(≥3 obs)"
+  ],
+  [
+   24,
+   "stability_S",
+   "S 支柱窗口波动",
+   "pillar_S 历史序列 std",
+   "否",
+   "同上"
+  ],
+  [
+   25,
+   "edge_vol",
+   "β 调整后边际的波动",
+   "asset_edge_moments 视图",
+   "否",
+   "**该视图实测 0 行** —— 连 CIS 资产也填不上"
+  ],
+  [
+   26,
+   "edge_p10",
+   "β 调整后边际的左尾",
+   "asset_edge_moments 视图",
+   "否",
+   "**该视图实测 0 行**"
+  ]
+ ]
+}
