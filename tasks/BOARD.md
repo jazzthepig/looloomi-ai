@@ -60,6 +60,7 @@
 | claimed | T-231 | seth | 前向记录写端恢复:refresh_depth_divergence 逼近 statement_timeout 30s —— 给 ohlcv_daily 扫描加下界,并让『重算补的日子』在记录里可见 | 迁移 + 测试 + 前后对比表;卡 notes 写最大耗时前后值、逐行差异数、恢复后第一条 ok 的时间。DDL 的应用要走 Seth 交互轮次(定时轮次只读,不应用)。 | 写端熄火 4 天且在加重(每天 error 10→17→19);『自首日起连续、无回填』这句对外话没有机械保证。 |  |
 | open | T-358 | lane-a | T-357 返工:『后来下架』按 last_month_in_archive 重算 + 零信号对照 + 闸门曝光 + 两条反向的情景命题 | docs/research/T-357_right_tail_with_delisted.md(改正)+ t357_*.py / t358_*.py + 结果 json + scenarios/lane-a-T-358.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-a/T-358。 | S-831 刚把 R-v2 真钱尺寸开大,赌的是右尾;S-832 的『幸存者偏差不大』读法建立在一个反了的定义上,而且右尾密度没有任何基准率。 |  |
 | open | T-359 | lane-a | S-835 候选一:资金费套息当成一个独立来源,按准入标准判(不是当现金腿判) | docs/research/T-359_*.md + 脚本 + 结果 json + scenarios/lane-a-T-359.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-a/T-359。 | 机构标准要的是不相关的第二个引擎;套息当初是按「每半年赢借贷」否的,按来源从没判过。 |  |
+| open | T-373 | lane-a | S-850:同一套读法(边际流动性 × 利率方向 × 自己的周线 × 自己的供给周期)在 ETH / SOL / 山寨篮子 / 黄金 / 全球股票 / 纳指上成不成立 | docs/research/T-373_*.md + 脚本 + 结果 json + scenarios/lane-a-T-373.json(≥ 3 条,lt 配 hi、gt 配 lo);卡 in_review,推 lane-a/T-373。 | 如果稳定币这一维对黄金和股票「也有用」,它就只是风险偏好的影子;如果只对加密有用、且山寨比 BTC 更敏感,这套读法才配按资产各开一份。 |  |
 | open | T-365 | lane-b | 坟场入库:台账 9 月以来的实验结论整理成 experiment_runs 的批次文件(每轮一个月,从 11 月往回) | cometcloud-local/_reports/absorb_input/experiment_runs_backfill.jsonl(本轮那个月)+ docs/research/T-365_backfill_summary.md(只有计数)+ 卡 in_review,推 lane-b/T-365。一轮只做一个月;卡 notes 里写下一轮该做哪个月。 | 「坟场是资产」只有在查得到的时候才成立:现在问库里「做空族试过几次、各自怎么死的」答不出来,只能翻台账。 |  |
 | open | T-366 | lane-b | 真钱在交易的币有没有向量:R-v2 票源的币逐个对账(资产向量 / 资金面向量 / CIS),并列出 27 维里哪些对只有永续的币算得出来 | docs/research/T-366_traded_universe_coverage.md + 脚本 + 结果 json;卡 in_review,推 lane-b/T-366。 | 如果按盈亏金额加权的覆盖率很低,说明资产空间描述的是我们打分的币、不是我们赚钱的币 —— 扩面板的优先级就定了。 |  |
 | open | T-341 | lane-c | 真钱唯一规则 X1V 的归因:对「同平均 β 的常数加密腿」—— 账户抗跌是 X1V 的择时还是 70% 非加密配置的结构(T-305 遗留 (c)) | docs/research/T-341_x1v_vs_const_beta.md(预注册在前,开头一张 A / K / ① 三行表)+ docs/research/t341_x1v_vs_const.py + docs/research/t341_results.json;卡 notes 写 w_K、两段 A−K 的总收益与回撤差、随机分位三个数;in_review,推 lane-c/T-341。 | T-305 只把账户和 ① 比,不能区分『X1V 择时』和『只持 30% 加密』。真钱里唯一的规则至今没有对它自己的结构做过对照;S2 里 Jazz 要回答 LP 的『为什么不直接用常数配比』,现在没有数。 |  |
@@ -374,4 +375,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 20 · claimed 6 · blocked 4 · in_review 50 · done 286 · dropped 5
+open 21 · claimed 6 · blocked 4 · in_review 50 · done 286 · dropped 5
