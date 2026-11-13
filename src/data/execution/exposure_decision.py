@@ -28,7 +28,7 @@ TABLE = "exposure_decision_daily"
 WRITES_TABLES = (TABLE,)
 WRITES_COLUMNS = {"exposure_decision_daily": ("d", "sleeve", "rule_exposure", "mult_arm", "mult_m", "inputs", "bucket", "probs",
                                               "n_bucket", "flag", "rationale", "scenario_ids", "posted_at", "code_ref")}
-CODE_REF = "exposure_decision v1.2 (11-06: + probs_knn_fused 融合近邻臂、联合模型 z 描述)"
+CODE_REF = "exposure_decision v1.3 (11-13: + inputs.context 背景栏:边际流动性 / 减半相位 / MVRV·Puell·算力 / 信用利差;只描述)"
 AUTHOR = "seth:exposure"
 SLEEVE = "crypto_core"
 HORIZON_D = 30
@@ -383,6 +383,11 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
             inputs["knn_fused_error"] = fr["why"]
     except Exception as e:                                                # noqa: BLE001
         inputs["probs_knn_fused"], inputs["knn_fused_error"] = None, f"{type(e).__name__}: {str(e)[:120]}"
+    try:                                                                  # 11-13(S-844 / S-848):背景栏 —— 边际流动性 · 减半相位与估值 · 信用;只描述,规则与概率都不读它
+        from src.data.execution.dossier_context import context as _ctx
+        inputs["context"] = await _ctx(d)
+    except Exception as e:                                                # noqa: BLE001 —— 背景读不到不挡决定
+        inputs["context"] = {"error": f"{type(e).__name__}: {str(e)[:120]}"}
     flag = flag_for(exposure, probs)
     text = rationale(d, exposure, bucket, probs, n, used, inputs, flag)
     sub = await submit(scenario_entries(d, closes[d], probs), AUTHOR, now)

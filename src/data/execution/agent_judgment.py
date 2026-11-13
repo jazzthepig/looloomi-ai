@@ -28,7 +28,7 @@ TABLE = "agent_judgment_daily"
 WRITES_TABLES = (TABLE,)
 WRITES_COLUMNS = {"agent_judgment_daily": ("d", "author", "model", "probs", "rationale", "drivers", "change_mind", "dossier_hash",
                                            "scenario_ids", "code_ref")}
-CODE_REF = "agent_judgment v2 (11-06:档案加融合特征 / 期权面与做市商伽马 / 预测市场 / 国库净买入)"
+CODE_REF = "agent_judgment v3 (11-13:档案加背景栏 —— 边际流动性 / 减半相位 / 估值 / 信用;v2 = 11-06 融合特征 / 期权面 / 预测市场 / 国库净买入)"
 LOOP_NAME = "_agent_judgment_loop"
 PREFIX = "A"
 TEMPERATURE = 0.2
@@ -65,7 +65,7 @@ def dossier(decision: dict, news: list[dict], extra: Optional[dict] = None) -> d
     keep = ("mom_200", "dist_200", "funding_7d_ann", "oi_chg_30d", "breadth_above_ma50", "liq_sell_5pct", "liq_buy_15pct",
             "cycle_phase", "cycle_deterioration", "cycle_shift_pct", "dvol_btc", "dvol_btc_pct_1y", "events_7d", "btc_close",
             "probs_uncond", "n_uncond", "bucket_today", "probs_knn", "knn_n", "knn_segments", "probs_window", "window_n",
-            "window_segments", "window_matches")
+            "window_segments", "window_matches", "context")
     return {"date": str(decision.get("d"))[:10], "question": "BTC close 30 days later vs this close: <-10% / within ±10% / >+10%",
             "state": {k: inp.get(k) for k in keep if inp.get(k) is not None},
             "base_rate_same_state": {"probs": decision.get("probs"), "bucket": decision.get("bucket"), "n_days": decision.get("n_bucket")},
@@ -104,7 +104,7 @@ def comply(s: Any) -> Optional[str]:
     return c[:800]
 
 
-AUTHOR_VERSION = "v2"     # 11-06 档案变了 ⇒ 新作者,和 v1 的 Brier 分开记
+AUTHOR_VERSION = "v3"     # 11-13 档案加了背景栏(S-844 / S-848)⇒ 新作者,和 v1 / v2 的 Brier 分开记
 
 
 def author_for(model: str) -> str:

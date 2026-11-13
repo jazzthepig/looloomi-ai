@@ -46,7 +46,7 @@ def test_compliance_filters_english_and_chinese_but_keeps_probs():
 
 
 def test_author_name_is_ledger_safe():
-    assert aj.author_for("MiniMax-M3") == "ai:MiniMax-M3:v2" and aj.author_for("org/model v2") == "ai:org-model-v2:v2"
+    assert aj.author_for("MiniMax-M3") == "ai:MiniMax-M3:v3" and aj.author_for("org/model v2") == "ai:org-model-v2:v3"
 
 
 def _patch(monkeypatch, reply, have=None, dec=(DEC,), configured=True):
@@ -88,9 +88,9 @@ def _patch(monkeypatch, reply, have=None, dec=(DEC,), configured=True):
 def test_run_once_writes_three_entries_for_yesterday(monkeypatch):
     up, subs = _patch(monkeypatch, '```json\n{"down":0.25,"flat":0.45,"up":0.30,"rationale":"Base rate holds.","drivers":["probs_uncond"],"change_mind":"x"}\n```')
     r = asyncio.run(aj.run_once(dt.datetime(2026, 11, 6, 3, 0, tzinfo=dt.timezone.utc)))
-    assert r["ok"] and r["d"] == "2026-11-05" and r["author"] == "ai:MiniMax-M3:v2" and r["scenarios"] == 3
+    assert r["ok"] and r["d"] == "2026-11-05" and r["author"] == "ai:MiniMax-M3:v3" and r["scenarios"] == 3
     author, entries = subs[0]
-    assert author == "ai:MiniMax-M3:v2" and [e["id"] for e in entries] == ["A-2026-11-05-down", "A-2026-11-05-flat", "A-2026-11-05-up"]
+    assert author == "ai:MiniMax-M3:v3" and [e["id"] for e in entries] == ["A-2026-11-05-down", "A-2026-11-05-flat", "A-2026-11-05-up"]
     assert entries[0]["hi"] == 72000.0 and entries[2]["lo"] == 88000.0 and entries[1]["prob"] == 0.45
     row = up[aj.TABLE][0]
     assert row["probs"] == {"down": 0.25, "flat": 0.45, "up": 0.3} and row["scenario_ids"] == ["A-2026-11-05-down", "A-2026-11-05-flat", "A-2026-11-05-up"]
