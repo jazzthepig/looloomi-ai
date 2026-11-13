@@ -23,12 +23,13 @@ RESULT_WORDS = ("结果", "❌", "✅", "REFUTED", "不成立", "结案", "复�
 
 
 def lane_of(text: str) -> str:
+    # 取值必须在合同 KNOWN_LANES 里(research_intake.py):lane-x 写成 minimax-x,否则整批 fatal(T-365 第 2 轮实测)
     m = re.search(r"lane-([abc])", text)
     if m:
-        return f"lane-{m.group(1)}"
+        return f"minimax-{m.group(1)}"
     m = re.search(r"([ABC]) 道", text)
     if m:
-        return f"lane-{m.group(1).lower()}"
+        return f"minimax-{m.group(1).lower()}"
     return "seth"
 
 
