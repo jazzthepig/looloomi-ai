@@ -60,3 +60,13 @@ def test_rows_dated_after_today_are_not_written_yet():
     assert [r["d"] for r in rows] == ["2026-11-12", "2026-11-14"]
     assert [r["d"] for r in ci.known_by(rows, date(2026, 11, 13))] == ["2026-11-12"]
     assert ci.known_by(rows, date(2026, 11, 14)) == rows
+
+
+def test_non_us_liquidity_series_use_conservative_availability_lags():
+    """S-848:美国以外的流动性。周报 / 月报的可得日宁可晚,不可早。"""
+    want = {"DEXJPUS": ("usdjpy", 8), "DEXCHUS": ("usdcny", 8), "ECBASSETSW": ("ecb_assets", 8), "JPNASSETS": ("boj_assets", 40)}
+    for fid, (name, lag) in want.items():
+        assert ci.CREDIT_SERIES[fid][0] == name and ci.CREDIT_SERIES[fid][2] >= lag
+    assert ci.credit_rows("JPNASSETS", [("2026-09-01", 7000000.0)], since="2026-01-01")[0]["d"] == "2026-10-11"
+    assert ci.credit_rows("ECBASSETSW", [("2026-11-06", 6100000.0)], since="2026-01-01")[0] == {
+        "series": "ecb_assets", "d": "2026-11-14", "value": 6100.0, "source": "fred"}
