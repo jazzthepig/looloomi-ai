@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-13",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "notes": "2026-11-13T09:27:50Z Seth 开卡(台账 S-844;Jazz 11-13「基本的先做对,才能放更多资金」)。",
+  "id": "T-368",
+  "owner": "lane-a",
+  "title": "S-845:加密腿加「半仓」档(周线标志亮而 200 日线未破时敞口 0.5)按账户口径判",
+  "source": "台账 S-845(`sed -n '/^## S-845 —/,/^## /p' REFUTATION_LEDGER.md`,只取这一节,一字照做)。装配的写法照 `docs/research/s843_beta_leg_trend_exit.py`(`assemble(sig)`:某条腿某段时间拿现金;你把它改成按周、按 0.5 倍)。BTC 周日收盘取 `ohlcv_daily`(symbol BTC、source binance_hist)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-368.json"
+  ],
+  "acceptance": {
+    "check": "① 账户先对上年化 35.7% / R-v2 风险占比 0.742;两条自检写进结果 json(空规则、全程不亮灯都逐日等于原账户)。② 标志只用 ≤ 该周日的数据,下周一起生效;报这次它哪天亮(应是 2026-10-25 那一周)。③ (a)–(d) 逐条报数逐条判;循环平移 200 次。④ 只报:半仓周数、换档次数、逐年差、去掉 2022 之后的合计。只读、不入库;脚本 nohup;不要 Read 大文件。",
+    "expect": "docs/research/T-368_*.md + 脚本 + 结果 json + scenarios/lane-a-T-368.json(≥ 3 条,lt 配 hi、gt 配 lo);卡 in_review,推 lane-a/T-368。"
+  },
+  "prior_value": "这一次周线标志比 200 日线早两周半、高 8%。如果半仓档在账户上站得住,Jazz 说的「不明确就低仓位」第一次有了规则;站不住,就老实留给人的判断。"
+}

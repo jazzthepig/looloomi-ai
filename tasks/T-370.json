@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-13",
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "verified": null,
+  "notes": "2026-11-13T09:27:50Z Seth 开卡(台账 S-844;Jazz 11-13「基本的先做对,才能放更多资金」)。 || 2026-11-13T09:44:44Z Seth(台账「S-844 补四」):short 状态的两条补充 —— ① BTC / ETH 的空单提交时,回执里必须带减半相位与流动性那一栏(只提示,不拦);② 小币的空单默认只能走**篮子**(流动性门槛 + 单币封顶 + 剔除资金费深负的名字,篮子定义等 S-847 / T-372 的结果),单币空单要显式加参数并且名义上限减半 —— Jazz:「对手盘太小,做市商会盯着 order book 扫筹码」。",
+  "id": "T-370",
+  "owner": "seth",
+  "title": "⓪ 加 short 状态:Jazz 选标的与档位,系统在 HL 开永续空单、强制止损 / 到期 / 上限,签名才开,逐张记分",
+  "source": "台账 S-844;`src/data/execution/regime_call.py`(STATES、J 票状态机)、`scripts/regime_call.py`、`src/exec_host/`。",
+  "allowed_paths": [
+    "src/data/execution/",
+    "src/exec_host/",
+    "src/api/",
+    "scripts/regime_call.py",
+    "tests/",
+    "migrations/",
+    "docs/SPINE.md",
+    "tasks/T-370.json"
+  ],
+  "acceptance": {
+    "check": "规格(默认值待 Jazz 上线前确认):① `short --coins BTC,ETH --conviction 1|2|3 [--days 14]`;**必须有签名**,没签名只记分不开单。② 空单总名义上限 = 账户 30%(档位 1 / 2 / 3 = 10% / 20% / 30%,均分到各币);组合层杠杆上限 5 倍不变。③ 每张空单止损 = 信号日所在周的上一周最高价之上(触及即平),到期 = 判断到期日;`flat` / `off` 时全部出场。④ 记分单列:每张 J 空票的 R、资金费、与「同期空仓」的差。⑤ 纯函数 + 状态机测试(与 J 多票同一套不变量:没有一张票过了出场日还在场;成交 = 已了结 + 在场);主机侧下单方向、减仓只减不反向的测试。⑥ **上线分两步、都要 Jazz 在场:** 先 dry-run 一轮看计划与发件箱,再放开真单;回滚 = 一键停 + 撤状态。compliance:对外文案不出现买卖词。",
+    "expect": "代码 + 测试 + SPINE 第 7 段;判活:`select state, signed, expires_at from regime_calls order by id desc limit 1` 与 `j_tickets` 里 side = short 的行。"
+  },
+  "prior_value": "这六周系统只会躲、不会空;人的宏观判断今天没有下单的工具。这条不需要回测许可 —— 是 Jazz 的判断,前向记分。"
+}
