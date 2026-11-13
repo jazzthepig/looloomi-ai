@@ -43,6 +43,7 @@ from src.api.routers.market import router as market_router
 from src.api.routers.cis import router as cis_router
 from src.api.routers.intelligence import router as intelligence_router
 from src.api.routers.vault import router as vault_router
+from src.api.routers.lane_read import router as lane_read_router
 from src.api.routers.portfolio_builder import router as portfolio_builder_router  # S-543 / S-544
 from src.api.routers.onchain import router as onchain_router
 from src.api.routers.macro import router as macro_router
@@ -118,6 +119,7 @@ app.include_router(force_mark_router)     # 9 paper books force-mark (A-21 vault
 app.include_router(cis_router)
 app.include_router(intelligence_router)
 app.include_router(vault_router)
+app.include_router(lane_read_router)       # 11-13 研究数据只读入口:一人一把 token、每次读留痕(data_access_log)
 app.include_router(portfolio_builder_router)   # S-543 策略拼组合 · S-544 容量
 app.include_router(onchain_router)
 app.include_router(macro_router)

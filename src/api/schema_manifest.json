@@ -42,6 +42,7 @@
     "corporate_treasury_history",
     "crowd_clock_log",
     "cycle_vector_daily",
+    "data_access_log",
     "decision_outcomes",
     "delisting_watch",
     "deriv_metrics_daily",
@@ -320,6 +321,14 @@
       "shift",
       "shift_pct",
       "z"
+    ],
+    "data_access_log": [
+      "ms",
+      "n_rows",
+      "obj",
+      "query",
+      "reader",
+      "status"
     ],
     "decision_outcomes": [
       "bench",
