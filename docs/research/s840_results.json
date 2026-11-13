@@ -1,0 +1,499 @@
+{
+ "recon": {
+  "cagr_pct": 35.73,
+  "rv2_risk_share": 0.742,
+  "eff_sources": 2.0,
+  "worst20": [
+   -0.1943442494316644,
+   "2023-02-08",
+   "2023-03-08"
+  ],
+  "window": [
+   "2021-10-11",
+   "2026-10-30"
+  ],
+  "expected": {
+   "cagr_pct": 35.7,
+   "rv2_risk_share": 0.742
+  }
+ },
+ "events": 350,
+ "rows": [
+  {
+   "H": 7,
+   "funding": false,
+   "w": 0.7747,
+   "size_reached": true,
+   "rc": 0.1,
+   "tickets_taken": 251,
+   "blocked": {
+    "cap": 87,
+    "coin": 0,
+    "no_price": 0
+   },
+   "own_total_ret_pct": 1.36,
+   "own_by_year_pct": {
+    "2021": 0.0,
+    "2022": 0.54,
+    "2023": -3.67,
+    "2024": 17.73,
+    "2025": -21.29,
+    "2026": 12.93
+   },
+   "i_corr_acct_full": -0.11669968270321558,
+   "i_corr_acct_stress": 0.4216665399881091,
+   "i_corr_rv2_full": -0.1930464801750788,
+   "i_corr_rv2_stress": 0.006262426470454381,
+   "ii_cagr_diff_pp": -0.54,
+   "ii_p_upper": 0.005,
+   "ii_null_median_pp": -2.5,
+   "ii_null_p5_p95_pp": [
+    -2.8,
+    -2.12
+   ],
+   "iii_worst20_base_pct": -19.43,
+   "iii_worst20_aug_pct": -21.38,
+   "iii_worst20_aug_span": [
+    "2026-09-09",
+    "2026-10-06"
+   ],
+   "iii_eff_sources": [
+    2.0,
+    2.77
+   ],
+   "iv_halves_cagr_diff_pp": [
+    4.68,
+    -5.02
+   ],
+   "worst_window_cand_contrib_pct": 0.0,
+   "pass_i": false,
+   "pass_ii": false,
+   "pass_iii": false,
+   "pass_iv": false
+  },
+  {
+   "H": 20,
+   "funding": false,
+   "w": 0.8517,
+   "size_reached": true,
+   "rc": 0.1,
+   "tickets_taken": 134,
+   "blocked": {
+    "cap": 93,
+    "coin": 111,
+    "no_price": 0
+   },
+   "own_total_ret_pct": 44.03,
+   "own_by_year_pct": {
+    "2021": 0.0,
+    "2022": 3.07,
+    "2023": -1.83,
+    "2024": 33.33,
+    "2025": -12.44,
+    "2026": 21.93
+   },
+   "i_corr_acct_full": -0.15996430529242311,
+   "i_corr_acct_stress": 0.48834255572630436,
+   "i_corr_rv2_full": -0.19091094581186446,
+   "i_corr_rv2_stress": 0.0864244829781309,
+   "ii_cagr_diff_pp": 8.15,
+   "ii_p_upper": 0.005,
+   "ii_null_median_pp": 5.32,
+   "ii_null_p5_p95_pp": [
+    4.85,
+    5.82
+   ],
+   "iii_worst20_base_pct": -19.43,
+   "iii_worst20_aug_pct": -21.02,
+   "iii_worst20_aug_span": [
+    "2026-09-09",
+    "2026-10-06"
+   ],
+   "iii_eff_sources": [
+    2.0,
+    2.69
+   ],
+   "iv_halves_cagr_diff_pp": [
+    5.38,
+    11.37
+   ],
+   "worst_window_cand_contrib_pct": 0.0,
+   "pass_i": false,
+   "pass_ii": true,
+   "pass_iii": false,
+   "pass_iv": true
+  },
+  {
+   "H": 30,
+   "funding": false,
+   "w": 0.8484,
+   "size_reached": true,
+   "rc": 0.1,
+   "tickets_taken": 102,
+   "blocked": {
+    "cap": 104,
+    "coin": 132,
+    "no_price": 0
+   },
+   "own_total_ret_pct": 23.35,
+   "own_by_year_pct": {
+    "2021": 0.0,
+    "2022": 2.48,
+    "2023": -27.56,
+    "2024": 41.6,
+    "2025": -0.55,
+    "2026": 18.0
+   },
+   "i_corr_acct_full": -0.24493305125469278,
+   "i_corr_acct_stress": 0.47976537313132184,
+   "i_corr_rv2_full": -0.25930918671728115,
+   "i_corr_rv2_stress": 0.1183143257246043,
+   "ii_cagr_diff_pp": 5.08,
+   "ii_p_upper": 0.005,
+   "ii_null_median_pp": 1.81,
+   "ii_null_p5_p95_pp": [
+    1.33,
+    2.33
+   ],
+   "iii_worst20_base_pct": -19.43,
+   "iii_worst20_aug_pct": -19.53,
+   "iii_worst20_aug_span": [
+    "2023-02-08",
+    "2023-03-08"
+   ],
+   "iii_eff_sources": [
+    2.0,
+    2.68
+   ],
+   "iv_halves_cagr_diff_pp": [
+    -6.39,
+    16.86
+   ],
+   "worst_window_cand_contrib_pct": 0.0,
+   "pass_i": false,
+   "pass_ii": true,
+   "pass_iii": false,
+   "pass_iv": false
+  },
+  {
+   "H": 45,
+   "funding": false,
+   "w": 0.793,
+   "size_reached": true,
+   "rc": 0.1,
+   "tickets_taken": 91,
+   "blocked": {
+    "cap": 120,
+    "coin": 127,
+    "no_price": 0
+   },
+   "own_total_ret_pct": 47.46,
+   "own_by_year_pct": {
+    "2021": 0.0,
+    "2022": 3.01,
+    "2023": -19.09,
+    "2024": 49.57,
+    "2025": -5.51,
+    "2026": 25.19
+   },
+   "i_corr_acct_full": -0.18054829464460478,
+   "i_corr_acct_stress": 0.5000040794526109,
+   "i_corr_rv2_full": -0.18638100486275636,
+   "i_corr_rv2_stress": 0.17310873475446167,
+   "ii_cagr_diff_pp": 9.86,
+   "ii_p_upper": 0.005,
+   "ii_null_median_pp": 6.21,
+   "ii_null_p5_p95_pp": [
+    5.6,
+    6.83
+   ],
+   "iii_worst20_base_pct": -19.43,
+   "iii_worst20_aug_pct": -19.52,
+   "iii_worst20_aug_span": [
+    "2023-02-08",
+    "2023-03-08"
+   ],
+   "iii_eff_sources": [
+    2.0,
+    2.65
+   ],
+   "iv_halves_cagr_diff_pp": [
+    -0.3,
+    20.55
+   ],
+   "worst_window_cand_contrib_pct": 0.0,
+   "pass_i": false,
+   "pass_ii": true,
+   "pass_iii": false,
+   "pass_iv": false
+  },
+  {
+   "H": 90,
+   "funding": false,
+   "w": 0.3995,
+   "size_reached": true,
+   "rc": 0.1,
+   "tickets_taken": 80,
+   "blocked": {
+    "cap": 144,
+    "coin": 114,
+    "no_price": 0
+   },
+   "own_total_ret_pct": 59.11,
+   "own_by_year_pct": {
+    "2021": 0.0,
+    "2022": 1.69,
+    "2023": -42.68,
+    "2024": 74.4,
+    "2025": 30.71,
+    "2026": 19.75
+   },
+   "i_corr_acct_full": -0.11576753755125122,
+   "i_corr_acct_stress": 0.4376737291543196,
+   "i_corr_rv2_full": -0.08943704658815134,
+   "i_corr_rv2_stress": 0.12747464163271952,
+   "ii_cagr_diff_pp": 8.42,
+   "ii_p_upper": 0.005,
+   "ii_null_median_pp": 6.24,
+   "ii_null_p5_p95_pp": [
+    5.88,
+    6.58
+   ],
+   "iii_worst20_base_pct": -19.43,
+   "iii_worst20_aug_pct": -19.48,
+   "iii_worst20_aug_span": [
+    "2023-02-08",
+    "2023-03-08"
+   ],
+   "iii_eff_sources": [
+    2.0,
+    2.59
+   ],
+   "iv_halves_cagr_diff_pp": [
+    -3.76,
+    21.1
+   ],
+   "worst_window_cand_contrib_pct": 0.0,
+   "pass_i": false,
+   "pass_ii": true,
+   "pass_iii": false,
+   "pass_iv": false
+  }
+ ],
+ "funding_rows": [
+  {
+   "H": 20,
+   "funding": true,
+   "w": 0.7228,
+   "size_reached": true,
+   "rc": 0.1,
+   "tickets_taken": 134,
+   "blocked": {
+    "cap": 93,
+    "coin": 111,
+    "no_price": 0
+   },
+   "own_total_ret_pct": 2.0,
+   "own_by_year_pct": {
+    "2021": 0.0,
+    "2022": 3.1,
+    "2023": -11.04,
+    "2024": 33.49,
+    "2025": -14.93,
+    "2026": -2.07
+   },
+   "i_corr_acct_full": -0.12308251829439623,
+   "i_corr_acct_stress": 0.47050032413068305,
+   "i_corr_rv2_full": -0.16450152864025436,
+   "i_corr_rv2_stress": 0.09007877211713688,
+   "ii_cagr_diff_pp": 0.52,
+   "iii_worst20_base_pct": -19.43,
+   "iii_worst20_aug_pct": -22.15,
+   "iii_worst20_aug_span": [
+    "2026-09-04",
+    "2026-10-02"
+   ],
+   "iii_eff_sources": [
+    2.0,
+    2.7
+   ],
+   "iv_halves_cagr_diff_pp": [
+    0.67,
+    0.53
+   ],
+   "worst_window_cand_contrib_pct": 0.0,
+   "pass_i": false,
+   "pass_ii": false,
+   "pass_iii": false,
+   "pass_iv": true
+  },
+  {
+   "H": 30,
+   "funding": true,
+   "w": 0.695,
+   "size_reached": true,
+   "rc": 0.1,
+   "tickets_taken": 102,
+   "blocked": {
+    "cap": 104,
+    "coin": 132,
+    "no_price": 0
+   },
+   "own_total_ret_pct": -21.48,
+   "own_by_year_pct": {
+    "2021": 0.0,
+    "2022": 2.48,
+    "2023": -38.36,
+    "2024": 40.51,
+    "2025": -4.99,
+    "2026": -6.9
+   },
+   "i_corr_acct_full": -0.19878427038376456,
+   "i_corr_acct_stress": 0.4684539848613182,
+   "i_corr_rv2_full": -0.22396483725068167,
+   "i_corr_rv2_stress": 0.12606936215874723,
+   "ii_cagr_diff_pp": -3.56,
+   "iii_worst20_base_pct": -19.43,
+   "iii_worst20_aug_pct": -20.11,
+   "iii_worst20_aug_span": [
+    "2026-09-04",
+    "2026-10-02"
+   ],
+   "iii_eff_sources": [
+    2.0,
+    2.68
+   ],
+   "iv_halves_cagr_diff_pp": [
+    -10.97,
+    3.41
+   ],
+   "worst_window_cand_contrib_pct": 0.0,
+   "pass_i": false,
+   "pass_ii": false,
+   "pass_iii": false,
+   "pass_iv": false
+  },
+  {
+   "H": 45,
+   "funding": true,
+   "w": 0.6822,
+   "size_reached": true,
+   "rc": 0.1,
+   "tickets_taken": 91,
+   "blocked": {
+    "cap": 120,
+    "coin": 127,
+    "no_price": 0
+   },
+   "own_total_ret_pct": -12.92,
+   "own_by_year_pct": {
+    "2021": 0.0,
+    "2022": 2.98,
+    "2023": -35.89,
+    "2024": 48.81,
+    "2025": -10.01,
+    "2026": -1.51
+   },
+   "i_corr_acct_full": -0.16460053418014473,
+   "i_corr_acct_stress": 0.491362883592678,
+   "i_corr_rv2_full": -0.1784772903554406,
+   "i_corr_rv2_stress": 0.18072483343723417,
+   "ii_cagr_diff_pp": -0.7,
+   "iii_worst20_base_pct": -19.43,
+   "iii_worst20_aug_pct": -19.51,
+   "iii_worst20_aug_span": [
+    "2023-02-08",
+    "2023-03-08"
+   ],
+   "iii_eff_sources": [
+    2.0,
+    2.65
+   ],
+   "iv_halves_cagr_diff_pp": [
+    -8.57,
+    6.9
+   ],
+   "worst_window_cand_contrib_pct": 0.0,
+   "pass_i": false,
+   "pass_ii": false,
+   "pass_iii": false,
+   "pass_iv": false
+  }
+ ],
+ "report_only": {
+  "H30_ticket_stats": {
+   "n": 102,
+   "win_rate": 0.716,
+   "mean_ret_on_u_pct": 3.32,
+   "median_ret_on_u_pct": 12.22,
+   "worst_5": [
+    [
+     -211.1,
+     "TRBUSDT",
+     "2023-09-25"
+    ],
+    [
+     -125.8,
+     "HBARUSDT",
+     "2024-11-25"
+    ],
+    [
+     -114.9,
+     "ZECUSDT",
+     "2025-10-13"
+    ],
+    [
+     -99.6,
+     "BNXUSDT",
+     "2025-03-10"
+    ],
+    [
+     -80.7,
+     "DASHUSDT",
+     "2025-10-20"
+    ]
+   ],
+   "best_5": [
+    [
+     41.0,
+     "SNXUSDT",
+     "2025-10-20"
+    ],
+    [
+     43.1,
+     "ONTUSDT",
+     "2026-04-06"
+    ],
+    [
+     45.7,
+     "ZENUSDT",
+     "2024-12-30"
+    ],
+    [
+     71.0,
+     "REEFUSDT",
+     "2024-09-23"
+    ],
+    [
+     80.1,
+     "SYNUSDT",
+     "2026-06-29"
+    ]
+   ]
+  },
+  "H30_drop_best_ticket": {
+   "dropped": [
+    "SYNUSDT",
+    "2026-06-29",
+    80.1
+   ],
+   "own_total_ret_pct": 21.46,
+   "ii_cagr_diff_pp": 4.73
+  }
+ },
+ "verdict": {
+  "H30_all_four_and_funding_sign": false,
+  "neighbours_20_45_ok": false,
+  "forward_shadow_arm": false
+ }
+}
