@@ -32,6 +32,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import os
 from typing import Any, Optional
 
 BOOK = "t25_live"
@@ -95,13 +96,31 @@ WRITES_COLUMNS = {"portfolio_targets_daily": ("d", "book", "sleeve", "kind", "ta
                                               "instrument", "venue", "executable", "why", "next_rebalance_d", "rule")}
 
 
-def t25_weights(override: Optional[dict] = None) -> dict[str, float]:
-    """T25 的权重 + 现金 = 1 − 其余。不给 override = 推荐比例(唯一出处 forward_books);给 = 当期 RBv2 权重(键 crypto / equity / gold)。"""
+#: 11-13(S-854,Jazz:「买成了 2 个大资产的持有,这样意义不大」→ 被动腿移出实盘、改纸面):股票腿与黄金腿在**真钱账户**里的目标可以关成 0。
+#: 开关在 Railway 环境变量 `T25_PASSIVE_LEGS_LIVE`(只有 Jazz 设):缺省 / 其它值 = 照旧持有;`0` / `off` / `false` / `no` = 目标 0 ——
+#: 主机下一轮按「偏离 > 带宽」把这两条腿卖回 USDC(周末不动,见 `exec_host/legs.py`)。纸面的 T25 / RB 臂(`forward_books`)不受影响,继续记前向。
+#: 关掉的是这两条腿,不是加密腿:加密腿仍按 RBv2 的权重、由 X1V 决定在不在场。
+PASSIVE_LEGS = ("equity", "gold")
+PASSIVE_LEGS_ENV = "T25_PASSIVE_LEGS_LIVE"
+
+
+def passive_legs_live(env: dict | None = None) -> bool:
+    """被动腿(股票、黄金)在真钱账户里还持不持有。只认明确的「关」;读不到 / 写错 ⇒ 照旧持有(不因为一个错字就卖出)。"""
+    raw = (env if env is not None else os.environ).get(PASSIVE_LEGS_ENV, "").strip().lower()
+    return raw not in ("0", "off", "false", "no")
+
+
+def t25_weights(override: Optional[dict] = None, passive_live: Optional[bool] = None) -> dict[str, float]:
+    """T25 的权重 + 现金 = 1 − 其余。不给 override = 推荐比例(唯一出处 forward_books);给 = 当期 RBv2 权重(键 crypto / equity / gold)。
+    `passive_live=False`(或环境变量关了)⇒ 股票腿与黄金腿的目标是 0,那一份回到现金;加密腿的权重不变。"""
     from src.data.universe.forward_books import FLEX_X1V_ARMS
     w, _core = FLEX_X1V_ARMS[T25_ARM]
     if override:
         w = override
     out = {"crypto_x1v": float(w["crypto"]), "equity": float(w["equity"]), "gold": float(w["gold"])}
+    if not (passive_legs_live() if passive_live is None else passive_live):
+        for k in PASSIVE_LEGS:
+            out[k] = 0.0
     out["cash"] = round(1.0 - sum(out.values()), 10)
     return out
 
@@ -129,9 +148,12 @@ def t25_rows(d: str, capital: float = T25_CAPITAL_USD, flow_event: bool = False,
     rows = []
     for sleeve, w in t25_weights(weights).items():
         s = SLEEVES[sleeve]
+        why = s["why"]
+        if sleeve in PASSIVE_LEGS and w == 0.0 and not passive_legs_live():
+            why = "Jazz 11-13:被动腿移出实盘、只留纸面(S-854;环境变量 T25_PASSIVE_LEGS_LIVE 关)—— 目标 0"
         rows.append({"d": d, "book": BOOK, "sleeve": sleeve, "kind": "weight", "target_w": w,
                      "target_usd": round(w * capital, 2), "capital_usd": capital, "instrument": s["instrument"],
-                     "venue": s["venue"], "executable": s["executable"], "why": s["why"],
+                     "venue": s["venue"], "executable": s["executable"], "why": why,
                      "next_rebalance_d": nxt, "rule": RULE})
     rows.append({"d": d, "book": BOOK, "sleeve": "rv2", "kind": "gross_cap", "target_w": RV2_GROSS_CAP_FRAC,
                  "target_usd": None, "capital_usd": capital,

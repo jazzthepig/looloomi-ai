@@ -180,3 +180,37 @@ def test_t25_is_flexible_within_bands_rbv2_on_rebalance_days_carried_between(mon
     assert rows["crypto_x1v"]["target_usd"] == 220.0 and abs(rows["cash"]["target_w"] - 0.13) < 1e-9
     f = pl.plan_fields("2026-12-29", 1000.0, False, "x", {"crypto": 0.22, "equity": 0.38, "gold": 0.27}, "RBv2")
     assert f["x1v_nav_budget_usd"] == 220.0 and f["weights_source"] == "RBv2" and f["t25"]["legs"]["SPYX"]["target_usd"] == 380.0
+
+
+def test_passive_legs_stay_unless_explicitly_switched_off(monkeypatch):
+    """S-854:股票腿 / 黄金腿移出实盘是一个只有 Jazz 能扳的开关。缺省、写错都照旧持有;明确关了才是 0,钱回现金,加密腿不变。"""
+    monkeypatch.delenv(pl.PASSIVE_LEGS_ENV, raising=False)
+    base = pl.t25_weights()
+    assert base["equity"] > 0 and base["gold"] > 0 and pl.passive_legs_live()
+    for typo in ("", "1", "on", "yes", "o", "zero", " 1 "):
+        assert pl.passive_legs_live({pl.PASSIVE_LEGS_ENV: typo}) is True
+    for off in ("0", "off", "OFF", " false ", "no"):
+        assert pl.passive_legs_live({pl.PASSIVE_LEGS_ENV: off}) is False
+    monkeypatch.setenv(pl.PASSIVE_LEGS_ENV, "0")
+    w = pl.t25_weights()
+    assert w["equity"] == 0.0 and w["gold"] == 0.0 and w["crypto_x1v"] == base["crypto_x1v"]
+    assert abs(w["cash"] - (1.0 - base["crypto_x1v"])) < 1e-9 and abs(sum(w.values()) - 1.0) < 1e-9
+    f = pl.plan_fields("2026-11-16", 630.17)
+    assert f["t25"]["legs"]["SPYX"]["target_usd"] == 0.0 and f["t25"]["legs"]["XAUT0"]["target_usd"] == 0.0
+    assert f["x1v_nav_budget_usd"] == round(base["crypto_x1v"] * 630.17, 2)
+    rows = {r["sleeve"]: r for r in pl.t25_rows("2026-11-16", 630.17)}
+    assert "S-854" in rows["equity"]["why"] and "S-854" in rows["gold"]["why"] and "S-854" not in rows["crypto_x1v"]["why"]
+    w2 = pl.t25_weights({"crypto": 0.22, "equity": 0.38, "gold": 0.27})                          # RBv2 给的权重同样被关掉
+    assert w2["equity"] == 0.0 and w2["gold"] == 0.0 and w2["crypto_x1v"] == 0.22 and abs(w2["cash"] - 0.78) < 1e-9
+
+
+def test_host_sells_a_leg_whose_target_is_zero_but_not_on_a_weekend():
+    """主机一侧:目标 0 ⇒ 卖出整条腿;周末不动(底层不开盘)。"""
+    import datetime as dt
+    from src.exec_host import legs
+    t25 = {"capital_usd": 630.17, "band": 0.05, "rebalance_today": False, "legs": {"SPYX": {"target_usd": 0.0}, "XAUT0": {"target_usd": 0.0}}}
+    held = {"SPYX": 175.96, "XAUT0": 116.10}
+    mon = legs.leg_orders(t25, held, dt.date(2026, 11, 16))
+    assert [(o["symbol"], o["side"], o["notional_usd"]) for o in mon["orders"]] == [("SPYX", "sell", 175.96), ("XAUT0", "sell", 116.1)]
+    sat = legs.leg_orders(t25, held, dt.date(2026, 11, 14))
+    assert sat["orders"] == [] and all("周末" in x["why"] for x in sat["skipped"])
