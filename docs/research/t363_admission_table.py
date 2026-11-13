@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
-"""T-363 —— 按台账「S-835 更正二」重报 T-361 的准入表:(i) 的「与账户相关」要对**不带候选**的账户算。
+"""T-363 —— 按台账「S-835 更正三」重报 S-835 准入表:加族后的账户是**叠加**,不是替换。
 
-与 T-361 的差别**只有 (i) 的读法**(装配、尺寸、(ii)(iii)(iv)、零分布统计量全部照旧):
-  旧(错):corr(族月贡献 Fw, **叠加候选之后**的账户月收益 A)
-  新(本卡):corr(族月贡献 Fw, **不带候选**的账户月收益 A_base)—— 压力月也按 A_base 定(本窗内 20 分位)
-  与 R-v2 的相关:本来就是对 R-v2 腿自己算(Rv2m,基线口径),定义不变;压力月集合随 A_base 换,
-                 旧集合(core 全局 20 分位)的数一并留档,便于与 T-361 对账。
-  叠加后的相关(corr(Fw, A))照报一列、不判。
+**更正三(2026-11-12 18:45 UTC)改的是合成与尺寸**:
+  旧(错,T-363@a1c29b2e / T-361):(1 − w)·A_base + w·r_fam —— 拿族**替换** w 份账户(R-v2 与各腿一起缩)
+  新(本卡):A_aug = A_base + w·r_fam − w·r_cash —— 由现金供资、付掉那份现金的利息
+             (同 T-360 的 `acct_new`;r_cash = S-834 账户的现金腿日收益,cash_rate 在账户日之间复利,
+              与 T-360 的 CASH_RET 同源)
+  ⇒ (i) 的相关只依赖 w·r_fam 与 A_base,不受影响;(ii) 的零分布统计量、(iii) 最差 20 日 / 有效来源、
+    尺寸 w、年化代价**全部按新式重算**。
 
-为什么必须改(S-835 更正二):尺寸钉在「族自己的风险贡献 = 10%」,而 (i) 又拿叠加后的账户做相关,
-两者合起来是恒等式 corr(c, A) = RC·sd(A)/sd(c)。候选与原账户完全不相关时 RC = var(c)/var(A) = 0.10
-⇒ corr = √0.10 = 0.316 > 0.30 —— 完全独立的候选也过不了 (i)。自检(本脚本先跑):
-造一条与 A_base 独立的随机序列、按同一尺寸规则叠上去,新口径相关应 ≈ 0、旧口径应 ≈ 0.316。
+**尺寸**:二分到该族自己的边际风险贡献 = **叠加后**账户月度方差的 10%,资金倍数 w ≤ 1;
+  w > 1 ⇒ 写「尺寸不可行」并同时报 w = 1 的数(登记:资金倍数 > 1 是不可行的)。
+
+**(i) 的读法**(照「S-835 更正二」,不变):corr(族月贡献 Fw, **不带候选**的账户月收益 A_base),
+  压力月按 A_base 在本窗内 20 分位定;与 R-v2 的相关对 R-v2 腿自己算;叠加后的相关 corr(Fw, A_aug) 照报不判。
+  **0.30 线按登记的字面取单侧 ρ < 0.30**(只挡集中;负相关是分散)。|ρ| 那列的判定删掉,相关原数照报。
+
+**两条能失败的自检**(写进 t363_results.json):
+  ① w = 0 时 A_aug 必须**逐日**等于 A_base;
+  ② 取一条恒等于 r_cash 的族,A_aug 必须**逐日**等于 A_base(叠加式的定义性质)。
 
 口径(其余照台账 S-835 的登记,账户照 S-834 的体检):
   账户 = RB(加密 / 股 / 金,flex_alloc.rb_weights)+ 现金 + R-v2(t352_engine.simulate(fix=True),
@@ -19,13 +26,13 @@
           动手前先对上「年化 +35.7%、R-v2 风险占比 0.742」。
   族   = T-348 的装配(t348_r3.py)产出的独立袖套净值(t348_r3_families.csv);
           World50 = docs/research/t099_world50_replay.py 的 EWxMom 臂(月频 → 按日历日铺到共同日)。
-  尺寸 = 二分,调到该族自己的边际风险贡献 = 账户月度方差的 10%(w=1 时 rc→1,单调;二分即可)—— 不改。
   窗口 = A:max(族的首个进场日, 2021-10-11);B:2021-10-11 起(T-348 同口径;A=B 时第 (iv) 条退化,表里注明)。
   零分布 = apparatus.circular_shift(族的日收益序列, block 1, 500 次)—— 拆开族与账户的对齐;
-          统计量 = 族进账户后账户年化 − 不带族的账户年化(S-835 更正)。
+          统计量 = 叠加后账户年化 − 不带候选的账户年化(S-835 更正)。
+  对账 = 旧合成 + 旧尺寸这条路径仍在脚本里(mode="legacy"),逐个复现 t361_results.json ⇒ 数据装配没动。
 
 用法(仓库根):python3 docs/research/t363_admission_table.py
-产物:docs/research/t363_results.json(全部数 + 自检两数) + docs/research/T-363_admission_table.md(表)
+产物:docs/research/t363_results.json(全部数 + 自检) + docs/research/T-363_admission_table.md(表)
 只读:不写库、不改任何既有文件。
 """
 from __future__ import annotations
@@ -146,7 +153,8 @@ def build_account() -> dict:
         row = rets.loc[day, list(fa.LEGS)]
         prev = idx[i - 1]
         c = {k: float(hold[k] * row[k]) for k in fa.LEGS}
-        c["cash"] = (1.0 - float(hold.sum())) * between(cash_rate, prev, day)
+        cr = between(cash_rate, prev, day)      # 现金腿的**日收益率**(未按权重缩;T-360 的 CASH_RET 同源)
+        c["cash"] = (1.0 - float(hold.sum())) * cr
         c["rv2"] = between(rv2, prev, day)
         g = sum(c.values())
         nav *= 1 + g
@@ -157,7 +165,7 @@ def build_account() -> dict:
             nav *= 1 - cost
             c["cost"] = -cost
             hold = new.copy()
-        rows.append({"d": day, **c, "acct": g + c.get("cost", 0.0), "nav": nav})
+        rows.append({"d": day, **c, "cash_ret": cr, "acct": g + c.get("cost", 0.0), "nav": nav})
     C = pd.DataFrame(rows).set_index("d").fillna(0.0)
     core = d.core_nav_1_cap_pit24.reindex(C.index).pct_change().fillna(0.0)
     return {"C": C, "idx": idx, "core": core, "rv2": rv2, "cal": cal, "core_daily": d}
@@ -227,22 +235,42 @@ def load_world50(rep_path: str, acct_idx: list) -> dict:
             "nav": None}
 
 
+# ── 合成口径(S-835 更正三)─────────────────────────────────────────────────
+def synth(rb_a, rf_a, rcash_a, w, mode="additive"):
+    """加族后的账户**日收益**。
+
+    additive(本卡,登记口径):A_base + w·r_fam − w·r_cash —— 由现金供资、付掉那份现金的利息
+                              (同 T-360 的 acct_new)。
+    legacy(T-361 / 更正二,只留在脚本里对账):(1 − w)·A_base + w·r_fam —— 拿族替换 w 份账户(错口径)。
+    """
+    if mode == "legacy":
+        return (1.0 - w) * rb_a + w * rf_a
+    return rb_a + w * rf_a - w * rcash_a
+
+
 # ── 核心:一族一窗的准入四条的数 ─────────────────────────────────────────────
-def window_metrics(acct: dict, fam_r: pd.Series, w: float, a, b, stress_flags: dict, active_start) -> dict:
+def window_metrics(acct: dict, fam_r: pd.Series, w: float, a, b, stress_flags: dict,
+                   active_start, mode: str = "additive", n_null: int = N_NULL) -> dict:
     C = acct["C"]
     idx = C.index
     m = (idx >= a) & (idx <= b)
     rb = C["acct"][m]
     rf = fam_r.reindex(idx)[m]
+    rcash = C["cash_ret"].reindex(idx)[m]
     if len(rb) < 60:
         return {"ok": False, "n_days": int(len(rb))}
     g = MonthGrid(rb.index)
-    rb_a, rf_a = rb.to_numpy(), rf.to_numpy()
-    ra = (1 - w) * rb_a + w * rf_a
-    A = g.comp(ra)                       # 叠加后的账户月收益(旧口径的比较对象;本卡只报不判)
-    A_base = g.comp(rb_a)                # 不带候选的账户月收益(新口径的比较对象)
+    rb_a, rf_a, rcash_a = rb.to_numpy(), rf.to_numpy(), rcash.to_numpy()
+    ra = synth(rb_a, rf_a, rcash_a, w, mode)
+    A = g.comp(ra)                       # 加族后的账户月收益(叠加口径;相关照报不判)
+    A_base = g.comp(rb_a)                # 不带候选的账户月收益((i) 的比较对象)
     Fw = g.summ(w * rf_a)                # 族对账户的月贡献(加总口径)
-    Cm_base = {k: g.summ((1 - w) * C[k][m].to_numpy()) for k in SRC}
+    if mode == "legacy":
+        Cm_base = {k: g.summ((1 - w) * C[k][m].to_numpy()) for k in SRC}
+    else:
+        # 叠加口径:各腿原样,只有现金腿因供资而变(扣掉 w 份现金的利息)
+        Cm_base = {k: g.summ(C[k][m].to_numpy()) for k in SRC}
+        Cm_base["cash"] = g.summ(C["cash"][m].to_numpy() - w * rcash_a)
     Rv2m = Cm_base["rv2"]
     labels = g.labels
     st_legacy = np.array([bool(stress_flags.get(l, False)) for l in labels])  # T-361 的压力月(core 全局 20 分位)
@@ -282,16 +310,17 @@ def window_metrics(acct: dict, fam_r: pd.Series, w: float, a, b, stress_flags: d
     base_cagr = cagr_from_monthly(A_base, years)
     rng = np.random.default_rng(SEED)
     nulls = []
-    for _ in range(N_NULL):
+    for _ in range(n_null):
         sh = ap.circular_shift(seg, rng, block=1)
         rs = rf_a.copy()
         rs[i0:] = sh
-        nulls.append(cagr_from_monthly(g.comp((1 - w) * rb_a + w * rs), years))
+        nulls.append(cagr_from_monthly(g.comp(synth(rb_a, rs, rcash_a, w, mode)), years))
     actual = cagr_from_monthly(A, years)
-    p_up = ap.p_upper(actual - base_cagr, [x - base_cagr for x in nulls])
+    p_up = ap.p_upper(actual - base_cagr, [x - base_cagr for x in nulls]) if nulls else None
 
     return {
         "ok": True,
+        "mode": mode,
         "n_days": int(len(rb)),
         "start": str(rb.index[0].date()),
         "end": str(rb.index[-1].date()),
@@ -333,17 +362,22 @@ def window_metrics(acct: dict, fam_r: pd.Series, w: float, a, b, stress_flags: d
     }
 
 
-def size_family(acct: dict, fam_r: pd.Series) -> dict:
-    """二分:调到族自己的边际风险贡献 = 账户月度方差的 10%。"""
+def size_family(acct: dict, fam_r: pd.Series, mode: str = "additive") -> dict:
+    """二分:调到族自己的边际风险贡献 = **叠加后**账户月度方差的 10%(S-835 更正三)。
+
+    资金倍数上限 w = 1(登记):到不了就是「尺寸不可行」,同时报 w = 1 的数。
+    """
     C = acct["C"]
     rb = C["acct"]
     rf = fam_r.reindex(C.index).fillna(0.0)
+    rcash = C["cash_ret"].reindex(C.index).fillna(0.0)
     g = MonthGrid(rb.index)
+    rb_a, rf_a, rcash_a = rb.to_numpy(), rf.to_numpy(), rcash.to_numpy()
 
     def rc_at(w):
-        ra = (1 - w) * rb.to_numpy() + w * rf.to_numpy()
+        ra = synth(rb_a, rf_a, rcash_a, w, mode)
         A = g.comp(ra)
-        Fw = g.summ(w * rf.to_numpy())
+        Fw = g.summ(w * rf_a)
         if A.var() == 0:
             return float("nan")
         return float(np.cov(Fw, A)[0, 1] / A.var())
@@ -358,7 +392,10 @@ def size_family(acct: dict, fam_r: pd.Series) -> dict:
             cross = (ok[i][0], ok[i + 1][0])
             break
     if cross is None:
-        return {"w": None, "rc_max": ok[-1][1], "monotone": bool(mono), "reachable": False}
+        # w ≤ 1 到不了 10% 风险贡献 ⇒ 尺寸不可行(登记:资金倍数 > 1),报 w = 1 的数
+        return {"w": None, "w_used": 1.0, "feasible": False, "reachable": False,
+                "rc_at_w1": rc_at(1.0), "rc_max": ok[-1][1], "monotone": bool(mono),
+                "note": "尺寸不可行:资金倍数需 > 1"}
     lo, hi = cross
     for _ in range(60):
         mid = (lo + hi) / 2
@@ -367,7 +404,9 @@ def size_family(acct: dict, fam_r: pd.Series) -> dict:
         else:
             hi = mid
     w = (lo + hi) / 2
-    return {"w": float(w), "rc_at_w": rc_at(w), "rc_max": ok[-1][1], "monotone": bool(mono), "reachable": True}
+    return {"w": float(w), "w_used": float(w), "feasible": True, "reachable": True,
+            "rc_at_w": rc_at(w), "rc_at_w1": rc_at(1.0), "rc_max": ok[-1][1],
+            "monotone": bool(mono)}
 
 
 # ── 自检:把 (i) 的两种读法各自会给出什么数(S-835 更正二)────────────────────
@@ -380,47 +419,119 @@ def _corr(x, y, sel=None):
 
 
 def self_check(acct: dict, target_vol: float) -> dict:
-    """造一条与 A_base 独立的随机序列,按同一尺寸规则叠上去,看两种读法的相关各是多少。
+    """造一条与 A_base 独立的随机序列,按尺寸规则叠上去,看 (i) 的几种读法各给什么数。
 
-    台账 S-835 更正二的预期:新口径 corr(Fw, A_base) ≈ 0;旧口径 corr(Fw, 叠加后的账户) ≈ √0.10 = 0.316。
+    台账 S-835 更正二的预期:新口径 corr(Fw, A_base) ≈ 0;T-361 的实现口径(旧合成 (1−w)、
+    旧尺寸)corr(Fw, A_legacy) ≈ √0.10 = 0.316。更正三换了合成 ⇒ 叠加口径下 corr(Fw, A_aug)
+    不再是 √0.10(那个恒等式依赖「账户被缩到 (1−w)」),这个数照报、不设目标值。
     单条序列的相关噪声有 1/√(月数) ≈ 0.13,故跑 N_SELFCHECK 条独立序列看分布。
     """
     C = acct["C"]
     idx = C.index
     rb = C["acct"]
+    rcash = C["cash_ret"]
     g = MonthGrid(idx)
-    rb_a = rb.to_numpy()
+    rb_a, rcash_a = rb.to_numpy(), rcash.to_numpy()
     A_base = g.comp(rb_a)
     rng = np.random.default_rng(SEED)
     sd_d = target_vol / np.sqrt(365.0)
-    new_c, old_c, ws = [], [], []
+    new_c, old_c, add_c, ws, ws_leg = [], [], [], [], []
+    n_infeas = 0
     for _ in range(N_SELFCHECK):
         rf = pd.Series(rng.standard_normal(len(idx)) * sd_d, index=idx)
-        sz = size_family(acct, rf)
-        w = sz.get("w")
-        if w is None:
-            continue
         rf_a = rf.to_numpy()
-        A = g.comp((1 - w) * rb_a + w * rf_a)
-        Fw = g.summ(w * rf_a)
-        new_c.append(_corr(Fw, A_base))
-        old_c.append(_corr(Fw, A))
+        # 叠加口径的尺寸(不可行时用 w = 1)
+        sz_a = size_family(acct, rf, "additive")
+        w = sz_a["w_used"]
+        if not sz_a.get("feasible", True):
+            n_infeas += 1
+        A_add = g.comp(synth(rb_a, rf_a, rcash_a, w, "additive"))
+        Fw_add = g.summ(w * rf_a)
+        new_c.append(_corr(Fw_add, A_base))
+        add_c.append(_corr(Fw_add, A_add))
         ws.append(w)
+        # 旧口径(留档对账):旧合成 + 旧尺寸
+        sz_l = size_family(acct, rf, "legacy")
+        wl = sz_l.get("w")
+        if wl is None:
+            continue
+        A_leg = g.comp(synth(rb_a, rf_a, rcash_a, wl, "legacy"))
+        Fw_leg = g.summ(wl * rf_a)
+        old_c.append(_corr(Fw_leg, A_leg))
+        ws_leg.append(wl)
     return {
         "n_draws": len(new_c),
         "target_vol_ann": float(target_vol),
         "n_months": int(len(A_base)),
         "w_mean": float(np.mean(ws)), "w_min": float(np.min(ws)), "w_max": float(np.max(ws)),
+        "n_infeasible_w1": int(n_infeas),
         "new_reading_corr_mean": float(np.mean(new_c)),
         "new_reading_corr_sd": float(np.std(new_c)),
         "new_reading_corr_absmean": float(np.mean(np.abs(new_c))),
-        "old_reading_corr_mean": float(np.mean(old_c)),
-        "old_reading_corr_sd": float(np.std(old_c)),
+        "old_reading_corr_mean": float(np.mean(old_c)) if old_c else float("nan"),
+        "old_reading_corr_sd": float(np.std(old_c)) if old_c else float("nan"),
+        "additive_aug_corr_mean": float(np.mean(add_c)),
+        "additive_aug_corr_sd": float(np.std(add_c)),
+        "legacy_w_mean": float(np.mean(ws_leg)) if ws_leg else float("nan"),
         "target_new": 0.0,
         "target_old": float(np.sqrt(TARGET_RC)),
         "new_ok": bool(abs(np.mean(new_c)) < 0.05),
-        "old_ok": bool(abs(np.mean(old_c) - np.sqrt(TARGET_RC)) < 0.03),
+        "old_ok": bool(bool(old_c) and abs(np.mean(old_c) - np.sqrt(TARGET_RC)) < 0.03),
     }
+
+
+def identity_checks(acct: dict, fams: dict) -> dict:
+    """两条**能失败**的自检(S-835 更正三 · 任务书 ②)。
+
+    ① w = 0 时,A_aug 必须逐日等于 A_base;
+    ② 取一条恒等于 r_cash 的族(现金腿),A_aug 必须逐日等于 A_base —— 叠加式的定义性质。
+    两条都是**逐日**比(日频 A_aug − 日频 A_base 的最大绝对差),容差 1e-15。
+    """
+    C = acct["C"]
+    idx = C.index
+    rb_a = C["acct"].to_numpy()
+    rcash_a = C["cash_ret"].to_numpy()
+    tol = 1e-15
+    # ① w = 0
+    aug0 = synth(rb_a, np.zeros_like(rb_a), rcash_a, 0.0, "additive")
+    d0 = float(np.max(np.abs(aug0 - rb_a)))
+    # ② 恒现金族
+    sz_cash = size_family(acct, pd.Series(rcash_a, index=idx), "additive")
+    w_cash = sz_cash["w_used"]
+    aug_cash = synth(rb_a, rcash_a, rcash_a, w_cash, "additive")
+    d_cash = float(np.max(np.abs(aug_cash - rb_a)))
+    # 每个族按自己的尺寸也要成立(族 = 现金腿)
+    per_fam = {}
+    for k in FAM_ORDER:
+        if k not in fams:
+            continue
+        fr = fams[k]["ret"].reindex(idx).fillna(0.0)
+        w = size_family(acct, fr, "additive")["w_used"]
+        aug = synth(rb_a, rcash_a, rcash_a, w, "additive")
+        per_fam[k] = {"w_used": float(w), "max_abs_diff": float(np.max(np.abs(aug - rb_a)))}
+    all_ok = bool(d0 <= tol and d_cash <= tol and
+                  all(v["max_abs_diff"] <= tol for v in per_fam.values()))
+    return {
+        "tolerance": tol,
+        "w0_identity": {"max_abs_diff": d0, "ok": bool(d0 <= tol),
+                        "note": "全样本逐日;任何窗口子集同样成立"},
+        "constant_cash_family_identity": {"w_used": float(w_cash),
+                                          "feasible": bool(sz_cash.get("feasible", False)),
+                                          "max_abs_diff": d_cash, "ok": bool(d_cash <= tol)},
+        "per_family_constant_cash": per_fam,
+        "all_ok": all_ok,
+    }
+
+
+def cash_weight_stats(C: pd.DataFrame) -> dict:
+    """账户的现金权重(C["cash"] = 权重 × 现金日收益 ⇒ 权重 = 两者之比)。"""
+    cr = C["cash_ret"].replace(0.0, np.nan)
+    w = (C["cash"] / cr).replace([np.inf, -np.inf], np.nan).dropna()
+    return {"cash_ret_mean": float(C["cash_ret"].mean()),
+            "weight_mean": float(w.mean()) if len(w) else float("nan"),
+            "weight_min": float(w.min()) if len(w) else float("nan"),
+            "weight_max": float(w.max()) if len(w) else float("nan"),
+            "n_days_with_rate": int(len(w))}
 
 
 def passes(rec: dict, pat_key: str, iv_key: str = "iv_same_direction") -> bool:
@@ -442,42 +553,44 @@ def passes(rec: dict, pat_key: str, iv_key: str = "iv_same_direction") -> bool:
 
 
 def judge(m: dict) -> dict:
-    """S-835 的 (i)–(iv) 逐条判定。
+    """S-835 的 (i)–(iv) 逐条判定(**本卡:0.30 线取单侧 ρ < 0.30**,登记的字面)。
 
-    新口径(S-835 更正二):(i) 的账户相关 = corr(Fw, A_base)(全样本 / 压力月,压力月按 A_base 定)。
-    旧口径(T-361):(i) 的账户相关 = corr(Fw, 叠加后的 A)(压力月用 core 全局 20 分位)。
-    两条都算,好把「因口径改变而翻转」的族标出来。
+    (i) = 族月贡献 Fw 与 A_base 的相关(全样本 + 压力月)、与 R-v2 的相关(全样本 + 压力月),
+          四个数都要 < 0.30。单侧:只挡正相关(= 集中);负相关是分散,不是违例。
+          |ρ| 那列的判定按更正三删掉,相关原数照报(i_abs_rho_max 只是留档)。
     """
-    def _lt(vals, lim=0.30):
-        return all((v is not None) and (not np.isnan(v)) and abs(v) < lim for v in vals)
-
     def _lt_one_sided(vals, lim=0.30):
-        """登记的字面读法:「月度相关 < 0.30」—— 只挡正相关(集中),负相关是分散,不算违例。"""
         return all((v is not None) and (not np.isnan(v)) and v < lim for v in vals)
 
-    c1_new = [m["corr_acct_base_full"], m["corr_acct_base_stress"], m["corr_rv2_full"], m["corr_rv2_stress"]]
-    c1_old = [m["corr_acct_aug_full"], m["corr_acct_aug_stress_legacy"], m["corr_rv2_full"], m["corr_rv2_stress_legacy"]]
-    c1_ok = _lt_one_sided(c1_new)          # 本卡主口径:登记的字面读法 ρ < 0.30
-    c1_ok_abs = _lt(c1_new)                 # T-361 的实现口径:|ρ| < 0.30
-    c1_ok_old = _lt(c1_old)                 # T-361 原读法(叠加后的账户 + 旧压力月集合)
+    c1 = [m["corr_acct_base_full"], m["corr_acct_base_stress"], m["corr_rv2_full"], m["corr_rv2_stress"]]
+    c1_ok = _lt_one_sided(c1)
     c2_ok = bool(m["mean_monthly_contrib_pct"] > 0) and (m["p_upper"] is not None) and (m["p_upper"] < 0.10)
     c3a = bool(m["worst20_aug"] >= m["worst20_base"] - 1e-12)
     c3b = bool(m["eff_sources"] > m["eff_sources_base"])
     c3_ok = c3a and c3b
     return {
         "i_corr_lt_030": bool(c1_ok),
-        "i_corr_lt_030_abs": bool(c1_ok_abs),
-        "i_corr_lt_030_old_reading": bool(c1_ok_old),
-        "i_flipped": bool(c1_ok != c1_ok_old),
-        "i_flipped_vs_abs": bool(c1_ok != c1_ok_abs),
+        "i_corr_lt_030_one_sided": bool(c1_ok),
+        "i_corr_values": [float(v) for v in c1],
+        "i_abs_rho_max": float(max(abs(v) for v in c1 if v is not None and not np.isnan(v))),
         "ii_positive_and_p_lt_010": bool(c2_ok),
         "iii_worst20_not_worse": bool(c3a),
         "iii_eff_sources_up": bool(c3b),
         "iii_ok": bool(c3_ok),
         "pattern": [bool(c1_ok), bool(c2_ok), bool(c3_ok)],
-        "pattern_abs": [bool(c1_ok_abs), bool(c2_ok), bool(c3_ok)],
-        "pattern_old": [bool(c1_ok_old), bool(c2_ok), bool(c3_ok)],
     }
+
+
+def judge_legacy_t361(m: dict) -> dict:
+    """T-361 的实现(旧合成 + |ρ| < 0.30 + core 全局压力月)—— **只用于与 t361_results.json 对账**,不作判定。"""
+    def _lt(vals, lim=0.30):
+        return all((v is not None) and (not np.isnan(v)) and abs(v) < lim for v in vals)
+    c1 = [m["corr_acct_aug_full"], m["corr_acct_aug_stress_legacy"], m["corr_rv2_full"], m["corr_rv2_stress_legacy"]]
+    c1_ok = _lt(c1)
+    c2_ok = bool(m["mean_monthly_contrib_pct"] > 0) and (m["p_upper"] is not None) and (m["p_upper"] < 0.10)
+    c3a = bool(m["worst20_aug"] >= m["worst20_base"] - 1e-12)
+    c3b = bool(m["eff_sources"] > m["eff_sources_base"])
+    return {"pattern": [bool(c1_ok), bool(c2_ok), bool(c3a and c3b)]}
 
 
 def main() -> None:
@@ -506,7 +619,7 @@ def main() -> None:
     # World50:本机重建的面板(价格收益)跑 t099_world50_replay → EWxMom 月收益
     fams["World50_EWxMom"] = load_world50(R + "w50_daily/world50_replay_t361.json", acct_idx)
 
-    # ── 自检先跑:两条读法各自给出什么数(S-835 更正二)────────────────────
+    # ── 自检先跑:三条恒等式 + (i) 的几种读法各给什么数 ─────────────────────
     vols = []
     for key in FAM_ORDER:
         if key not in fams:
@@ -514,24 +627,44 @@ def main() -> None:
         fr0 = fams[key]["ret"].reindex(C.index).fillna(0.0)
         vols.append(float(np.std(fr0.to_numpy()) * np.sqrt(365)))
     med_vol = float(np.median(vols))
-    log(f"=== 自检:与 A_base 独立的随机序列 × {N_SELFCHECK}(年化波动取族的中位 {med_vol:.1%})===")
+    log(f"=== 自检 1:与 A_base 独立的随机序列 × {N_SELFCHECK}(年化波动取族的中位 {med_vol:.1%})===")
     sc = self_check(acct, med_vol)
     log(f"  新口径 corr(Fw, A_base)        均值 {sc['new_reading_corr_mean']:+.4f} "
         f"(sd {sc['new_reading_corr_sd']:.3f},|ρ| 均值 {sc['new_reading_corr_absmean']:.3f}) → 应 ≈ 0 · "
         f"{'对上' if sc['new_ok'] else '对不上!'}")
-    log(f"  旧口径 corr(Fw, 叠加后账户)      均值 {sc['old_reading_corr_mean']:+.4f} "
+    log(f"  T-361 实现口径(旧合成+旧尺寸)corr(Fw, A_legacy) 均值 {sc['old_reading_corr_mean']:+.4f} "
         f"(sd {sc['old_reading_corr_sd']:.3f}) → 应 ≈ √0.10 = {sc['target_old']:.3f} · "
         f"{'对上' if sc['old_ok'] else '对不上!'}")
+    log(f"  叠加口径 corr(Fw, A_aug)       均值 {sc['additive_aug_corr_mean']:+.4f} "
+        f"(sd {sc['additive_aug_corr_sd']:.3f}) —— 合成换了,不再是 √0.10,照报不设目标")
     log(f"  尺寸 w 均值 {sc['w_mean']:.3f}({sc['w_min']:.3f}–{sc['w_max']:.3f})· "
-        f"{sc['n_draws']} 条可用 / {sc['n_months']} 个月")
+        f"其中 {sc['n_infeasible_w1']} 条到不了 10% 风险贡献(报 w=1)· {sc['n_draws']} 条 / {sc['n_months']} 个月")
+
+    log("=== 自检 2:两条能失败的恒等式(逐日)===")
+    ic = identity_checks(acct, fams)
+    log(f"  ① w = 0 ⇒ A_aug 逐日 = A_base:最大绝对差 {ic['w0_identity']['max_abs_diff']:.3e} · "
+        f"{'过' if ic['w0_identity']['ok'] else '不过!'}")
+    log(f"  ② 族恒等于 r_cash ⇒ A_aug 逐日 = A_base(w={ic['constant_cash_family_identity']['w_used']:.4f}):"
+        f"最大绝对差 {ic['constant_cash_family_identity']['max_abs_diff']:.3e} · "
+        f"{'过' if ic['constant_cash_family_identity']['ok'] else '不过!'}")
+    log(f"  两条自检合计:{'全过' if ic['all_ok'] else '不过!'}")
+
+    cw = cash_weight_stats(C)
+    log(f"=== 现金腿(S-834 账户)==:日收益均值 {cw['cash_ret_mean']:.6f}· 账户现金权重 均 {cw['weight_mean']:.3f}"
+        f"(min {cw['weight_min']:.3f} / max {cw['weight_max']:.3f}· {cw['n_days_with_rate']} 天有利率)")
 
     results = {"account": {k: v for k, v in st.items() if k not in ("Cm", "Am")}, "reconcile": chk,
-               "self_check": sc,
+               "self_check": sc, "identity_checks": ic, "cash_leg": cw,
                "families": {}, "config": {"f": F_, "cap": CAP_, "n": N_, "target_rc": TARGET_RC,
                                           "n_null": N_NULL, "seed": SEED, "start": str(START.date()),
+                                          "composition": "A_aug = A_base + w·r_fam − w·r_cash"
+                                                         "(S-835 更正三:叠加,不是替换;r_cash = S-834 账户的现金腿)",
+                                          "sizing": "二分:族自己的边际风险贡献 = 叠加后账户月度方差的 10%;"
+                                                    "资金倍数 w ≤ 1;w > 1 ⇒ 尺寸不可行(同时报 w = 1 的数)",
                                           "criterion_i_reading": "corr(Fw, A_base)—— 族月贡献 vs 不带候选的账户月收益;"
                                                                 "压力月按 A_base 在本窗内 20 分位定",
-                                          "criterion_i_reading_old": "corr(Fw, A)—— 族月贡献 vs 叠加候选后的账户月收益(T-361)"}}
+                                          "criterion_i_line": "单侧 ρ < 0.30(登记的字面;|ρ| 那列的判定已删,相关原数照报)",
+                                          "criterion_i_reading_old": "corr(Fw, A)—— 族月贡献 vs 加族后的账户月收益(T-361)"}}
 
     for key in FAM_ORDER:
         if key not in fams:
@@ -539,60 +672,69 @@ def main() -> None:
         fam = fams[key]
         fr = fam["ret"].reindex(C.index).fillna(0.0)
         fe = pd.Timestamp(fam["meta"].get("first_entry", str(C.index[0].date())))
-        sz = size_family(acct, fr)
-        w = sz.get("w")
+        sz = size_family(acct, fr, "additive")
+        w = sz["w_used"]                      # 尺寸不可行时 = 1.0(登记:同时报 w = 1 的数)
+        sz_leg = size_family(acct, fr, "legacy")
+        w_leg = sz_leg.get("w")
         log(f"=== {key}({FAM_LABEL.get(key, key)}) 首个进场 {fe.date()} · 尺寸 w="
-            f"{'不可达' if w is None else f'{w:.4f}'} (rc_max={sz.get('rc_max')})")
+            f"{'不可行(报 w=1)' if not sz.get('feasible') else f'{w:.4f}'} "
+            f"(rc@w={sz.get('rc_at_w', float('nan')):.4f} · rc@1={sz.get('rc_at_w1', float('nan')):.4f} "
+            f"· 旧尺寸 w={w_leg if w_leg is None else round(w_leg, 4)})")
         wins = {"A_earliest": max(fe, START), "B_2021-10-11": START}
         rec = {"label": FAM_LABEL.get(key, key), "first_entry": str(fe.date()),
                "meta": {k: v for k, v in fam["meta"].items() if k in ("n_tickets", "note", "last_exit", "risk_frac")},
-               "sizing": sz, "windows": {}}
-        if w is not None:
+               "sizing": sz, "sizing_legacy_t361": sz_leg, "windows": {}}
+        for wn, ws in wins.items():
+            m = window_metrics(acct, fr, w, ws, C.index[-1], stress_flags, fe, mode="additive")
+            if not m.get("ok"):
+                continue
+            j = judge(m)
+            m["judge"] = j
+            rec["windows"][wn] = m
+            log(f"  [{wn}] {m['start']}→{m['end']}:年化 {m['cagr_base']:+.2%}→{m['cagr_aug']:+.2%} "
+                f"| corr(A_base) {m['corr_acct_base_full']:+.2f}/{m['corr_acct_base_stress']:+.2f} "
+                f"[加族后 corr(A_aug) {m['corr_acct_aug_full']:+.2f}/{m['corr_acct_aug_stress']:+.2f}] "
+                f"corr(rv2) {m['corr_rv2_full']:+.2f}/{m['corr_rv2_stress']:+.2f} "
+                f"| 贡献 {m['mean_monthly_contrib_pct']:+.3f}%/月 p={m['p_upper']:.3f} "
+                f"| 20日 {m['worst20_base']:+.1%}→{m['worst20_aug']:+.1%} "
+                f"| 有效来源 {m['eff_sources_base']:.2f}→{m['eff_sources']:.2f} | (i){'✓' if j['i_corr_lt_030'] else '✗'}"
+                f"(ii){'✓' if j['ii_positive_and_p_lt_010'] else '✗'}(iii){'✓' if j['iii_ok'] else '✗'}")
+        # 旧口径复现(旧合成 + 旧尺寸)—— 只用来与 T-361 对账、标「因合成改变而翻转」
+        legacy = {}
+        if w_leg is not None:
             for wn, ws in wins.items():
-                m = window_metrics(acct, fr, w, ws, C.index[-1], stress_flags, fe)
-                if not m.get("ok"):
+                ml = window_metrics(acct, fr, w_leg, ws, C.index[-1], stress_flags, fe, mode="legacy")
+                if not ml.get("ok"):
                     continue
-                j = judge(m)
-                m["judge"] = j
-                rec["windows"][wn] = m
-                log(f"  [{wn}] {m['start']}→{m['end']}:年化 {m['cagr_base']:+.2%}→{m['cagr_aug']:+.2%} "
-                    f"| corr(A_base) {m['corr_acct_base_full']:+.2f}/{m['corr_acct_base_stress']:+.2f} "
-                    f"[旧 corr(A_aug) {m['corr_acct_aug_full']:+.2f}/{m['corr_acct_aug_stress_legacy']:+.2f}] "
-                    f"corr(rv2) {m['corr_rv2_full']:+.2f}/{m['corr_rv2_stress']:+.2f} "
-                    f"| 贡献 {m['mean_monthly_contrib_pct']:+.3f}%/月 p={m['p_upper']:.3f} "
-                    f"| 20日 {m['worst20_base']:+.1%}→{m['worst20_aug']:+.1%} "
-                    f"| 有效来源 {m['eff_sources_base']:.2f}→{m['eff_sources']:.2f} | (i){'✓' if j['i_corr_lt_030'] else '✗'}"
-                    f"(ii){'✓' if j['ii_positive_and_p_lt_010'] else '✗'}(iii){'✓' if j['iii_ok'] else '✗'}"
-                    f"{' ⟨(i) 因口径翻转⟩' if j['i_flipped'] else ''}")
-            a = rec["windows"].get("A_earliest", {}).get("judge", {}).get("pattern")
-            b = rec["windows"].get("B_2021-10-11", {}).get("judge", {}).get("pattern")
-            ab = rec["windows"].get("A_earliest", {}).get("judge", {}).get("pattern_abs")
-            bb = rec["windows"].get("B_2021-10-11", {}).get("judge", {}).get("pattern_abs")
-            ao = rec["windows"].get("A_earliest", {}).get("judge", {}).get("pattern_old")
-            bo = rec["windows"].get("B_2021-10-11", {}).get("judge", {}).get("pattern_old")
-            rec["pattern_new"] = {"A_earliest": a, "B_2021-10-11": b}
-            rec["pattern_new_abs"] = {"A_earliest": ab, "B_2021-10-11": bb}
-            rec["pattern_old"] = {"A_earliest": ao, "B_2021-10-11": bo}
-            rec["i_flipped_any_window"] = bool(any(
-                rec["windows"][wn]["judge"]["i_flipped"] for wn in rec["windows"]))
-            if a is not None and b is not None:
-                rec["iv_same_direction"] = bool(a == b)
-                rec["iv_window_dependent"] = bool(a != b)
-                rec["iv_degenerate"] = bool(wins["A_earliest"] == wins["B_2021-10-11"])
-                rec["iv_note"] = "A=B(同窗口,退化)" if rec["iv_degenerate"] else ""
-                log(f"  (iv) 两窗口同向:{rec['iv_same_direction']} {rec['iv_note']}")
-            rec["iv_available"] = bool(not rec.get("iv_degenerate", False))
-            if ao is not None and bo is not None:
-                rec["iv_same_direction_old"] = bool(ao == bo)
-            rec["passes_new"] = passes(rec, "pattern_new")
-            rec["passes_new_abs"] = passes(rec, "pattern_new_abs")
-            rec["passes_old"] = passes(rec, "pattern_old", "iv_same_direction_old")
-            rec["conclusion_changed"] = bool(rec["passes_new"] != rec["passes_old"])
-            rec["conclusion_changed_abs"] = bool(rec["passes_new_abs"] != rec["passes_old"])
-            log(f"  结论:新口径(ρ<0.30) {'过' if rec['passes_new'] else '不过'} "
-                f"/ 新口径(|ρ|<0.30) {'过' if rec['passes_new_abs'] else '不过'} "
-                f"/ 旧口径(T-361) {'过' if rec['passes_old'] else '不过'}"
-                f"{'  ⟨因口径改变而翻转⟩' if rec['conclusion_changed'] or rec['conclusion_changed_abs'] else ''}")
+                ml["judge_legacy_t361"] = judge_legacy_t361(ml)
+                legacy[wn] = ml
+        rec["legacy_t361_replicate"] = legacy
+        a = rec["windows"].get("A_earliest", {}).get("judge", {}).get("pattern")
+        b = rec["windows"].get("B_2021-10-11", {}).get("judge", {}).get("pattern")
+        ao = legacy.get("A_earliest", {}).get("judge_legacy_t361", {}).get("pattern")
+        bo = legacy.get("B_2021-10-11", {}).get("judge_legacy_t361", {}).get("pattern")
+        rec["pattern_new"] = {"A_earliest": a, "B_2021-10-11": b}
+        rec["pattern_old_t361"] = {"A_earliest": ao, "B_2021-10-11": bo}
+        if a is not None and b is not None:
+            rec["iv_same_direction"] = bool(a == b)
+            rec["iv_window_dependent"] = bool(a != b)
+            rec["iv_degenerate"] = bool(wins["A_earliest"] == wins["B_2021-10-11"])
+            rec["iv_note"] = "A=B(同窗口,退化):另一窗口不可得" if rec["iv_degenerate"] else ""
+            log(f"  (iv) 两窗口同向:{rec['iv_same_direction']} {rec['iv_note']}")
+        rec["iv_available"] = bool(not rec.get("iv_degenerate", False))
+        if ao is not None and bo is not None:
+            rec["iv_same_direction_old"] = bool(ao == bo)
+        rec["passes_new"] = passes(rec, "pattern_new")
+        rec["passes_old_t361"] = passes(rec, "pattern_old_t361", "iv_same_direction_old")
+        rec["sizing_infeasible"] = not bool(sz.get("feasible", True))
+        rec["passes_ignoring_size"] = bool(rec["passes_new"])
+        rec["passes"] = bool(rec["passes_new"] and not rec["sizing_infeasible"])
+        rec["pattern_changed_by_composition"] = bool((ao != a) or (bo != b))
+        rec["conclusion_changed"] = bool(rec["passes_new"] != rec["passes_old_t361"])
+        log(f"  结论:新口径(叠加 + 单侧 ρ<0.30) {'过' if rec['passes_new'] else '不过'}"
+            f"{'  ⟨尺寸不可行 ⇒ 按登记不算过⟩' if rec['sizing_infeasible'] else ''}"
+            f" / T-361 旧口径(替换 + |ρ|<0.30) {'过' if rec['passes_old_t361'] else '不过'}"
+            f"{'  ⟨因合成/尺寸改变而翻转⟩' if rec['conclusion_changed'] else ''}")
         # 2023-02-08 → 03-08
         seg = fr.loc[FEB[0]:FEB[1]]
         fam_feb = float((1 + seg).prod() - 1) if len(seg) else float("nan")
@@ -630,20 +772,28 @@ def monthly_ret_from_replay(rep: dict, arm: str) -> dict:
 
 
 def crosscheck_t361(res: dict) -> dict:
-    """旧读法在同一份数据上的复现:应与 t361_results.json 逐个对上(⇒ 变的只有 (i) 的读法)。"""
+    """旧口径(旧合成 + 旧尺寸)在同一份数据上的复现:应与 t361_results.json 逐个对上
+    ⇒ 数据装配没动,变的只有合成与尺寸(以及 (i) 的读法)。"""
     if not os.path.exists(T361_JSON):
         return {"available": False}
     old = json.load(open(T361_JSON))
     pairs = [("corr_acct_aug_full", "corr_fam_acct_full"),
              ("corr_acct_aug_stress_legacy", "corr_fam_acct_stress"),
              ("corr_rv2_full", "corr_fam_rv2_full"),
-             ("corr_rv2_stress_legacy", "corr_fam_rv2_stress")]
-    diffs, pat_bad = [], []
+             ("corr_rv2_stress_legacy", "corr_fam_rv2_stress"),
+             ("cagr_base", "cagr_base"), ("cagr_aug", "cagr_aug"),
+             ("worst20_base", "worst20_base"), ("worst20_aug", "worst20_aug"),
+             ("eff_sources", "eff_sources"), ("eff_sources_base", "eff_sources_base"),
+             ("mean_monthly_contrib_pct", "mean_monthly_contrib_pct"),
+             ("total_contrib_pct", "total_contrib_pct"),
+             ("dcagr_pp", "dcagr_pp"), ("p_upper", "p_upper")]
+    diffs, pat_bad, bad = [], [], []
     for fk, fr in res["families"].items():
         of = old.get("families", {}).get(fk)
         if of is None:
             continue
-        for wn, m in fr["windows"].items():
+        leg = fr.get("legacy_t361_replicate", {})
+        for wn, m in leg.items():
             om = of.get("windows", {}).get(wn)
             if om is None:
                 continue
@@ -651,42 +801,64 @@ def crosscheck_t361(res: dict) -> dict:
                 a, b = m.get(nk), om.get(ok)
                 if a is None or b is None:
                     continue
-                diffs.append(abs(float(a) - float(b)))
-            if list(m.get("judge", {}).get("pattern_old", [])) != list(om.get("judge", {}).get("pattern", [])):
-                pat_bad.append(f"{fk}/{wn}")
+                d = abs(float(a) - float(b))
+                diffs.append(d)
+                if d > 1e-9:
+                    bad.append(f"{fk}/{wn}/{nk}: {float(a)} vs {float(b)}")
+            pa = list(m.get("judge_legacy_t361", {}).get("pattern", []))
+            pb = list(om.get("judge", {}).get("pattern", []))
+            if pa != pb:
+                pat_bad.append(f"{fk}/{wn}: {pa} vs {pb}")
     return {"available": True, "n_compared": len(diffs),
             "max_abs_diff": float(max(diffs)) if diffs else float("nan"),
-            "pattern_mismatch": pat_bad, "pattern_match": len(pat_bad) == 0}
+            "mismatch_examples": bad[:10],
+            "pattern_mismatch": pat_bad, "pattern_match": len(pat_bad) == 0,
+            "note": "对账对象 = 脚本里的旧口径复现(旧合成 + 旧尺寸)vs t361_results.json"}
 
 
 def write_md(res: dict) -> None:
     L = []
     A = res["account"]
-    L.append("# T-363 —— 按「S-835 更正二」重报的 S-835 准入表:(i) 的「与账户相关」对**不带候选**的账户算\n")
+    L.append("# T-363 —— 按「S-835 更正三」重报的 S-835 准入表:加族后的账户是**叠加**(A_base + w·r_fam − w·r_cash),不是替换\n")
     L.append(f"- 账户(照 S-834 口径):年化 **{A['cagr']*100:.1f}%**(期望 35.7%)· R-v2 风险占比 **{A['rv2_risk_share']:.3f}**(期望 0.742)"
              f"· 有效来源 {A['eff_sources']:.2f}· {A['months']} 个月\n")
-    L.append("- **(i) 改了读法**:族月贡献 Fw vs **不带候选**的账户月收益 A_base(全样本 + 压力月,压力月按 A_base 在本窗内 20 分位定);"
-             "与 R-v2 的相关定义不变(对 R-v2 腿自己算);叠加后的相关 corr(Fw, A_aug)照报一列、不判。\n")
-    L.append("- **0.30 这条线两侧读法都报**:登记的字面是「月度相关 < 0.30」(只挡正相关=集中),"
-             "T-361 的实现用了 |ρ| < 0.30。新口径下两者对真实相关为**负**的族(H4 / H2 / S-736 原始记账)给出不同的 (i) 判定 —— "
-             "负相关是分散、不是违例。主列用登记的字面读法(ρ<0.30),`|ρ|<0.30` 那列是 T-361 的实现。**哪一侧算数要 Seth 定。**\n")
-    L.append("- (iv) 是空判(两个窗口同一段)的族按 Seth 2026-11-12 的第 ③ 问记「另一窗口不可得」,**不记为过**。\n")
-    L.append("- 其余全照 T-361:尺寸 = 族自己的边际风险贡献 = 账户月度方差的 10%(二分);"
-             "零分布 = `apparatus.circular_shift`(族的日收益序列,block 1,500 次,种子 363),"
-             "统计量 = 叠加后账户年化 − 不带候选的账户年化(S-835 更正);\n"
+    cl = res.get("cash_leg", {})
+    L.append(f"- **合成(更正三)**:A_aug = A_base + w·r_fam − w·r_cash —— 由**现金供资**、付掉那份现金的利息"
+             f"(同 T-360 的 `acct_new`;r_cash = S-834 账户的现金腿,账户现金权重均 {cl.get('weight_mean', float('nan')):.2f})。"
+             f"上一版(T-363@a1c29b2e / T-361)写的是 (1 − w)·A_base + w·r_fam = 拿族**替换** w 份账户(R-v2 与各腿一起缩)—— 已作废。\n")
+    L.append("- **尺寸**:二分到族自己的边际风险贡献 = **叠加后**账户月度方差的 10%;资金倍数 w ≤ 1;"
+             "w > 1 ⇒ **尺寸不可行**(同时报 w = 1 的数)。尺寸 w、(ii) 零分布统计量、(iii) 最差 20 日 / 有效来源、"
+             "年化代价**全部按新式重算**。\n")
+    L.append("- **(i) 的读法**照「S-835 更正二」:族月贡献 Fw vs **不带候选**的账户月收益 A_base(全样本 + 压力月,"
+             "压力月按 A_base 在本窗内 20 分位定);与 R-v2 的相关定义不变;加族后的相关 corr(Fw, A_aug)照报一列、不判。\n")
+    L.append("- **0.30 线取单侧 ρ < 0.30**(登记的字面:只挡集中,负相关是分散)。`|ρ|` 那列的判定按更正三删掉,"
+             "相关原数照报。\n")
+    L.append("- **(iv)**:两个窗口同一段(A=B)⇒ 记「另一窗口不可得」、**不记为过**(S-681 H4 就是此情形;"
+             "S-835 第一批结果里把 H4 记成「✅ 四条」是记错,已作废)。\n")
+    L.append("- 其余照登记:零分布 = `apparatus.circular_shift`(族的日收益序列,block 1,500 次,种子 363),"
+             "统计量 = **加族后**账户年化 − **不带候选**的账户年化(S-835 更正);\n"
              "(ii) 族自己的月贡献为正 且 p_upper < 0.10;(iii) 最差 20 日不变差、有效来源数上升;(iv) 两窗口同向\n")
     sc = res.get("self_check", {})
     if sc:
-        L.append(f"- **自检(卡上要求的先自检)**:造 {sc.get('n_draws')} 条与 A_base 独立的随机序列(年化波动 {sc.get('target_vol_ann', 0)*100:.0f}%),"
+        L.append(f"- **自检 1((i) 的读法)**:造 {sc.get('n_draws')} 条与 A_base 独立的随机序列(年化波动 {sc.get('target_vol_ann', 0)*100:.0f}%),"
                  f"按同一尺寸规则叠上去 —— 新口径 corr(Fw, A_base) 均值 **{sc.get('new_reading_corr_mean', float('nan')):+.3f}**"
                  f"(sd {sc.get('new_reading_corr_sd', 0):.3f},应 ≈ 0);"
-                 f"旧口径 corr(Fw, 叠加后账户) 均值 **{sc.get('old_reading_corr_mean', float('nan')):+.3f}**"
-                 f"(sd {sc.get('old_reading_corr_sd', 0):.3f},应 ≈ √0.10 = {sc.get('target_old', 0):.3f})。"
-                 f"尺寸 w 均值 {sc.get('w_mean', float('nan')):.3f}。\n")
+                 f"T-361 实现口径(旧合成 + 旧尺寸)corr(Fw, A_legacy) 均值 **{sc.get('old_reading_corr_mean', float('nan')):+.3f}**"
+                 f"(sd {sc.get('old_reading_corr_sd', 0):.3f},应 ≈ √0.10 = {sc.get('target_old', 0):.3f});"
+                 f"叠加口径 corr(Fw, A_aug) 均值 **{sc.get('additive_aug_corr_mean', float('nan')):+.3f}**"
+                 f"(合成换了,不再是 √0.10,照报不设目标)。尺寸 w 均值 {sc.get('w_mean', float('nan')):.3f},"
+                 f"其中 {sc.get('n_infeasible_w1')} 条到不了 10% 风险贡献(报 w = 1)。\n")
+    ic = res.get("identity_checks", {})
+    if ic:
+        L.append(f"- **自检 2(两条能失败的恒等式,逐日)**:① w = 0 ⇒ A_aug = A_base,最大绝对差 **{ic.get('w0_identity', {}).get('max_abs_diff', float('nan')):.3e}**;"
+                 f"② 族恒等于 r_cash ⇒ A_aug = A_base(w = {ic.get('constant_cash_family_identity', {}).get('w_used', float('nan')):.4f}),"
+                 f"最大绝对差 **{ic.get('constant_cash_family_identity', {}).get('max_abs_diff', float('nan')):.3e}**;"
+                 f"合计 {'全过' if ic.get('all_ok') else '**不过**'}(容差 {ic.get('tolerance')})。\n")
     cc = res.get("crosscheck_t361", {})
     if cc.get("available"):
-        L.append(f"- 对账:旧读法在同一份数据上的复现与 t361_results.json 逐个对上(最大绝对差 {cc.get('max_abs_diff', float('nan')):.6f},"
-                 f"旧 (i)–(iii) pattern 一致:{cc.get('pattern_match')})⇒ 变的只有 (i) 的读法。\n")
+        L.append(f"- 对账:脚本里留下的**旧口径复现**(旧合成 + 旧尺寸)与 t361_results.json 逐个对上"
+                 f"(比较 {cc.get('n_compared')} 个数,最大绝对差 {cc.get('max_abs_diff', float('nan')):.6f},"
+                 f"旧 (i)–(iii) pattern 一致:{cc.get('pattern_match')})⇒ 数据装配没动,变的只有合成与尺寸。\n")
     def f2(v):
         if v is None:
             return "n/a"
@@ -710,48 +882,65 @@ def write_md(res: dict) -> None:
             parts.append("iii")
         return "全过" if not parts else "挡在 " + "/".join(parts)
 
-    def verdict(r: dict, pat_key: str, iv_key: str, i_key: str) -> str:
-        pats = r.get(pat_key) or {}
+    def verdict(r: dict) -> str:
+        """一族一行结论:尺寸可行 + (i)(ii)(iii) 两窗全过 + (iv) 两窗同向 ⇒ 过。"""
+        pats = r.get("pattern_new") or {}
         a, b = pats.get("A_earliest"), pats.get("B_2021-10-11")
-        iv = r.get(iv_key)
-        allpass = (a == [True, True, True]) and (b == [True, True, True])
-        if allpass and iv and r.get("iv_available", True):
-            return "**过**"
+        allp = (a == [True, True, True]) and (b == [True, True, True])
         A = r["windows"].get("A_earliest", {})
         B = r["windows"].get("B_2021-10-11", {})
-        wa, wb = why(A, i_key), why(B, i_key)
-        if allpass and r.get("iv_degenerate"):
+        wa, wb = why(A), why(B)
+        if r.get("sizing_infeasible"):
+            return ("**不过**(尺寸不可行" + (";但 (i)(ii)(iii) 全过)" if allp else f";挡在 {wa} · {wb})"))
+        if r.get("passes_new"):
+            return "**过**"
+        if allp and r.get("iv_degenerate"):
             return "不过((iv) 另一窗口不可得)"
         return f"不过({wa} · {wb})"
 
-    L.append("## 结论摘要\n")
+    def tick(m, key):
+        j = (m or {}).get("judge", {})
+        return "✓" if j.get(key) else "✗"
+
+    def two_tick(mA, mB, key):
+        return f"{tick(mA, key)}{tick(mB, key)}"
+
+    def cagr_txt(m):
+        if not m:
+            return "n/a"
+        return (f"{m.get('cagr_base', float('nan')):+.1%}→{m.get('cagr_aug', float('nan')):+.1%}"
+                f" ({m.get('dcagr_pp', float('nan')):+.1f}pp)")
+
+    def w20_txt(m):
+        if not m:
+            return "n/a"
+        return f"{m.get('worst20_base', float('nan')):+.1%}→{m.get('worst20_aug', float('nan')):+.1%}"
+
+    # ── 开头汇总表:八个族 ───────────────────────────────────────────────
+    L.append("## 汇总:八个族在新合成(叠加)下的准入结果\n")
+    L.append("A / B = 两个窗口(A = 该族首个进场日起,B = 2021-10-11 起);(i)(ii)(iii) 每格两字依次是 A / B;"
+             "**尺寸 w 是按加族后的账户二分出来的**;不可行时报 w = 1 的数。\n")
+    L.append("| 族 | 尺寸 w | (i) 与账户 A_base | (ii) 贡献>0 且 p<0.10 | (iii) 最差20日/有效来源 | (iv) 两窗口 | 账户年化变化 A / B | 最差 20 日变化 A / B | 结论 |")
+    L.append("|---|---|---|---|---|---|---|---|---|")
     for k, r in res["families"].items():
         A = r["windows"].get("A_earliest", {})
         B = r["windows"].get("B_2021-10-11", {})
-        cbf, cbs = f2(A.get("corr_acct_base_full")), f2(A.get("corr_acct_base_stress"))
-        cbfB, cbsB = f2(B.get("corr_acct_base_full")), f2(B.get("corr_acct_base_stress"))
-        pn = r.get("pattern_new") or {}
-        if r.get("passes_new"):
-            contrib = A.get("mean_monthly_contrib_pct")
-            pu = A.get("p_upper")
-            w20b, w20a = A.get("worst20_base"), A.get("worst20_aug")
-            L.append(f"- **{r['label']}**:四条全过 —— (i) 与账户 corr {cbf}/{cbs}(窗A)、{cbfB}/{cbsB}(窗B);"
-                     f"(ii) 月贡献 {contrib:+.3f}%/月、p = {pu:.3f};(iii) 最差20日 {w20b:+.1%} → {w20a:+.1%};"
-                     f"(iv) 两窗口同向。**T-361 旧口径下它不过**(只挡在 (i))。"
-                     f"要打的折扣:① (iii) 的「最差20日变好」有一部分是低波动来源按 10% 风险配进来后的稀释;"
-                     f"② 它自己的月贡献只有 {contrib:+.3f}%/月;"
-                     f"③ 按登记的尺寸规则配进去,账户年化从 {A.get('cagr_base', float('nan')):+.2%} 掉到 {A.get('cagr_aug', float('nan')):+.2%}"
-                     f"(窗A,{A.get('dcagr_pp', float('nan')):+.1f} pp)—— 准入表不判年化,这一栏要单独看。\n")
-        elif pn.get("A_earliest") == [True, True, True] and pn.get("B_2021-10-11") == [True, True, True]:
-            L.append(f"- **{r['label']}**:(i)(ii)(iii) 两个窗口都全过,但 (iv) 另一窗口不可得(A=B)⇒ "
-                     f"按 Seth 2026-11-12 的第 ③ 问**不记为过**;(i) 与账户 corr {cbf}/{cbs}(窗A)—— "
-                     f"负相关是分散、不是集中;若按 T-361 的 |ρ|<0.30 实现读线,|{cbf}| ≥ 0.30 ⇒ (i) 不过。\n")
-        else:
-            L.append(f"- **{r['label']}**:不过 —— 窗A {why(A)}、窗B {why(B)}。\n")
+        sz = r["sizing"]
+        wt = f"{sz['w']:.3f}" if sz.get("feasible") else "**不可行**(报 w=1)"
+        iv = ("另一窗口不可得(A=B)" if r.get("iv_degenerate")
+              else ("同向 ✓" if r.get("iv_same_direction") else "窗口依赖 ✗"))
+        L.append(f"| {r['label']} | {wt} "
+                 f"| {two_tick(A, B, 'i_corr_lt_030')} | {two_tick(A, B, 'ii_positive_and_p_lt_010')} "
+                 f"| {two_tick(A, B, 'iii_ok')} | {iv} "
+                 f"| {cagr_txt(A)} / {cagr_txt(B)} | {w20_txt(A)} / {w20_txt(B)} | {verdict(r)} |")
     L.append("")
-    L.append("## 尺寸的代价(登记的尺寸规则的一个后果,新旧口径都一样)\n")
-    L.append("尺寸 = 族自己的边际风险贡献 = 账户月度方差的 10%(二分)。这个规则按**风险**配权、不按收益配权,"
-             "低波动的族要占很大的资金权重 —— 加进去以后账户的**年化**会掉很多。准入表不判年化,这一栏要单独看。\n")
+    inf = [r["label"] for r in res["families"].values() if not r["sizing"].get("feasible")]
+    L.append(f"尺寸不可行的族:{('、'.join(inf)) if inf else '无'} —— 叠加口径下账户的方差不再被缩小,"
+             f"低波动族要在资金倍数 w ≤ 1 内做到 10% 风险贡献几乎不可能。\n")
+
+    L.append("## 尺寸的代价(叠加口径下的年化与最差 20 日)\n")
+    L.append("尺寸 = 族自己的边际风险贡献 = **加族后**账户月度方差的 10%(二分)。这个规则按**风险**配权、不按收益配权;"
+             "低波动的族要占很大的资金权重。准入表不判年化,这一栏要单独看。\n")
     L.append("| 族 | 尺寸 w | 账户年化 基→加族(窗A) | 账户年化 基→加族(窗B) | 族自身年化(独立袖套) | 族自身票数 |")
     L.append("|---|---|---|---|---|---|")
     for k, r in res["families"].items():
@@ -759,7 +948,9 @@ def write_md(res: dict) -> None:
         B = r["windows"].get("B_2021-10-11", {})
         st = r.get("standalone") or {}
         nt = (r.get("meta") or {}).get("n_tickets")
-        L.append(f"| {r['label']} | {r['sizing'].get('w'):.3f} "
+        sz = r["sizing"]
+        wt = f"{sz['w']:.3f}" if sz.get("feasible") else "**不可行**(w=1)"
+        L.append(f"| {r['label']} | {wt} "
                  f"| {A.get('cagr_base', float('nan')):+.2%} → {A.get('cagr_aug', float('nan')):+.2%} "
                  f"({A.get('dcagr_pp', float('nan')):+.1f} pp) "
                  f"| {B.get('cagr_base', float('nan')):+.2%} → {B.get('cagr_aug', float('nan')):+.2%} "

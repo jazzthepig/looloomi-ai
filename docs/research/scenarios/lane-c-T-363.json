@@ -50,6 +50,36 @@
       "lo": 0,
       "prob": 0.7,
       "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-363-6",
+      "scenario": "T-363 按「S-835 更正三」重跑(叠加合成 A_base + w·r_fam − w·r_cash)",
+      "statement": "T-363 按更正三重跑后,八个族里至少有一个被写成「尺寸不可行」(叠加口径下资金倍数 w ≤ 1 到不了族自己 10% 的风险贡献)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.85,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-363-7",
+      "scenario": "T-363 按「S-835 更正三」重跑(叠加合成 A_base + w·r_fam − w·r_cash)",
+      "statement": "T-363 按更正三重跑后,没有任何族同时满足「尺寸可行 + (i)(ii)(iii) 两窗全过 + (iv) 两窗口同向」(S-642 上一版的「四条全过」已作废,以重跑为准)",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 1,
+      "prob": 0.72,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-363-8",
+      "scenario": "T-363 按「S-835 更正三」重跑(叠加合成 A_base + w·r_fam − w·r_cash)",
+      "statement": "T-363 重跑后,t363_results.json 里两条逐日恒等式自检(w=0 ⇒ A_aug 逐日 = A_base;族恒等于 r_cash ⇒ A_aug 逐日 = A_base)的最大绝对差都 ≤ 1e-15",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 1e-15,
+      "prob": 0.95,
+      "horizon_d": "2026-12-31"
     }
   ]
 }
