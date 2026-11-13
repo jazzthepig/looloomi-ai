@@ -1,0 +1,129 @@
+{
+ "coverage": {
+  "days": 2722,
+  "cond_known_days": 2694,
+  "first_taker_day": "2021-01-25",
+  "days_with_2plus": 605
+ },
+ "real": {
+  "n": 8,
+  "share_confirmed": 0.875,
+  "confirmed": {
+   "n": 7,
+   "median_days": 48.0,
+   "median_ret_start_to_end_pct": 1.7,
+   "median_max_runup_pct": 15.8,
+   "median_ret_8w_after_pct": 10.3,
+   "mean_ret_8w_after_pct": 0.6
+  },
+  "invalidated": {
+   "n": 1,
+   "median_days": 91.0,
+   "median_ret_start_to_end_pct": 19.6,
+   "median_max_runup_pct": 42.0,
+   "median_ret_8w_after_pct": 70.9,
+   "mean_ret_8w_after_pct": 70.9
+  },
+  "timeout": {
+   "n": 0,
+   "median_days": null,
+   "median_ret_start_to_end_pct": null,
+   "median_max_runup_pct": null,
+   "median_ret_8w_after_pct": null,
+   "mean_ret_8w_after_pct": null
+  }
+ },
+ "null_random_starts": {
+  "n_draws": 200,
+  "share_confirmed_median": 0.667,
+  "share_confirmed_p90": 0.875,
+  "real_share_pctile": 0.885,
+  "median_days_to_confirm_median": 30.0,
+  "median_days_to_confirm_p10": 14.0,
+  "real_median_days_pctile": 0.86
+ },
+ "expectations": {
+  "a_confirms_sooner_than_random_starts_p10": false,
+  "b_bulls_still_run_before_confirmation": true,
+  "c_after_confirmation_worse_than_after_invalidation": true
+ },
+ "self_checks": {
+  "episodes_before_cut_ignore_future_prices": true,
+  "n_before_cut": 2,
+  "this_episode_present": []
+ },
+ "episodes": [
+  {
+   "start": "2021-03-09",
+   "end": "2021-04-26",
+   "outcome": "confirmed",
+   "days": 48,
+   "ret_start_to_end_pct": -1.6,
+   "max_runup_pct": 15.8,
+   "ret_8w_after_end_pct": -41.5
+  },
+  {
+   "start": "2021-07-31",
+   "end": "2021-09-27",
+   "outcome": "confirmed",
+   "days": 58,
+   "ret_start_to_end_pct": 1.7,
+   "max_runup_pct": 27.0,
+   "ret_8w_after_end_pct": 33.5
+  },
+  {
+   "start": "2023-01-13",
+   "end": "2023-05-15",
+   "outcome": "confirmed",
+   "days": 122,
+   "ret_start_to_end_pct": 36.3,
+   "max_runup_pct": 52.9,
+   "ret_8w_after_end_pct": 12.0
+  },
+  {
+   "start": "2023-10-23",
+   "end": "2024-01-22",
+   "outcome": "invalidated",
+   "days": 91,
+   "ret_start_to_end_pct": 19.6,
+   "max_runup_pct": 42.0,
+   "ret_8w_after_end_pct": 70.9
+  },
+  {
+   "start": "2024-04-02",
+   "end": "2024-04-29",
+   "outcome": "confirmed",
+   "days": 27,
+   "ret_start_to_end_pct": -2.4,
+   "max_runup_pct": 9.4,
+   "ret_8w_after_end_pct": -5.6
+  },
+  {
+   "start": "2024-10-28",
+   "end": "2025-01-13",
+   "outcome": "confirmed",
+   "days": 77,
+   "ret_start_to_end_pct": 35.1,
+   "max_runup_pct": 51.7,
+   "ret_8w_after_end_pct": -16.9
+  },
+  {
+   "start": "2025-06-09",
+   "end": "2025-06-23",
+   "outcome": "confirmed",
+   "days": 14,
+   "ret_start_to_end_pct": -4.5,
+   "max_runup_pct": 0.0,
+   "ret_8w_after_end_pct": 10.3
+  },
+  {
+   "start": "2026-08-19",
+   "end": "2026-08-20",
+   "outcome": "confirmed",
+   "days": 1,
+   "ret_start_to_end_pct": 5.3,
+   "max_runup_pct": 5.3,
+   "ret_8w_after_end_pct": 12.6
+  }
+ ]
+}
