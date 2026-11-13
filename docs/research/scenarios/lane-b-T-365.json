@@ -15,6 +15,18 @@
      "variable": "manual", "op": "between", "lo": 0, "hi": 1, "prob": 0.5, "horizon_d": "2026-12-15"},
     {"id": "T-365-5", "scenario": "坟场下一批的成分",
      "statement": "下一批补库(2026-10 的 12 条)里判出结论词(REFUTED / INCONCLUSIVE / CANDIDATE / REPLICATED)的条数 ≥ 4",
-     "variable": "manual", "op": "between", "lo": 0, "hi": 1, "prob": 0.65, "horizon_d": "2026-12-15"}
+     "variable": "manual", "op": "between", "lo": 0, "hi": 1, "prob": 0.65, "horizon_d": "2026-12-15"},
+    {"id": "T-365-6", "scenario": "BTC 月末区间(第 2 轮)",
+     "statement": "2027-01-29 BTC 收盘价落在 58,000–95,000 区间内(2026-11-12 收盘 71,383)",
+     "variable": "close:BTC", "op": "between", "lo": 58000, "hi": 95000, "prob": 0.62, "horizon_d": "2027-01-29"},
+    {"id": "T-365-7", "scenario": "第 3 轮(2026-09)的判定密度",
+     "statement": "到 2026-12-15,第 3 轮补库(2026-09 的 12 条)里判出 REFUTED 的条数 ≥ 3",
+     "variable": "manual", "op": "between", "lo": 0, "hi": 1, "prob": 0.6, "horizon_d": "2026-12-15"},
+    {"id": "T-365-8", "scenario": "第 3 轮(2026-09)的记录占比",
+     "statement": "到 2026-12-15,第 3 轮补库(2026-09 的 12 条)里 PENDING(台账没有假设判定)≥ 5 条",
+     "variable": "manual", "op": "between", "lo": 0, "hi": 1, "prob": 0.65, "horizon_d": "2026-12-15"},
+    {"id": "T-365-9", "scenario": "source_lane 过闸",
+     "statement": "到 2026-12-15,experiment_runs 里 source_lane 取值在合同 KNOWN_LANES 内的行数 ≥ 24(两轮补的 24 条已入库)",
+     "variable": "manual", "op": "between", "lo": 0, "hi": 1, "prob": 0.45, "horizon_d": "2026-12-15"}
   ]
 }
