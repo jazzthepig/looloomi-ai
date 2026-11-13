@@ -1,0 +1,663 @@
+{
+ "summary": {
+  "n": 15,
+  "confirmed": 14,
+  "invalidated": 1,
+  "timeout": 0,
+  "confirmed_median": {
+   "days": 42.0,
+   "days_to_peak": 11.5,
+   "max_runup_pct": 8.1,
+   "ret_start_to_end_pct": -1.5,
+   "ret_peak_to_end_pct": -10.9,
+   "ret_8w_after_end_pct": -5.6
+  },
+  "confirmed_8w_after_negative": 8
+ },
+ "self_checks": {
+  "episodes_before_cut_ignore_future_prices": true,
+  "no_start_while_weekly_already_down": true,
+  "episodes_do_not_overlap": true,
+  "episodes_since_2026_08": [
+   [
+    "2026-09-20",
+    "2026-09-21",
+    "2026-10-26",
+    "confirmed",
+    6.7
+   ]
+  ]
+ },
+ "episodes": [
+  {
+   "start": "2021-03-09",
+   "peak": "2021-04-13",
+   "end": "2021-04-26",
+   "outcome": "confirmed",
+   "days": 48,
+   "days_to_peak": 35,
+   "max_runup_pct": 15.8,
+   "ret_start_to_end_pct": -1.6,
+   "ret_peak_to_end_pct": -15.1,
+   "ret_8w_after_end_pct": -41.5,
+   "at_start": {
+    "taker_buy_share_30d": 0.4966,
+    "stable_supply_30d": 0.3143,
+    "fng": 81.0,
+    "funding_7d_ann": 0.4516,
+    "btc_mvrv": 3.4986,
+    "ust_2y": 0.17,
+    "usdjpy": 106.68,
+    "btc_etf_flow_5d_bn": null
+   },
+   "at_peak": {
+    "taker_buy_share_30d": 0.4958,
+    "stable_supply_30d": 0.1967,
+    "fng": 74.0,
+    "funding_7d_ann": 0.9917,
+    "btc_mvrv": 3.4345,
+    "ust_2y": 0.18,
+    "usdjpy": 110.08,
+    "btc_etf_flow_5d_bn": null
+   },
+   "at_end": {
+    "taker_buy_share_30d": 0.4945,
+    "stable_supply_30d": 0.2583,
+    "fng": 27.0,
+    "funding_7d_ann": 0.1893,
+    "btc_mvrv": 2.7995,
+    "ust_2y": 0.16,
+    "usdjpy": 108.78,
+    "btc_etf_flow_5d_bn": null
+   }
+  },
+  {
+   "start": "2021-05-03",
+   "peak": "2021-05-08",
+   "end": "2021-05-17",
+   "outcome": "confirmed",
+   "days": 14,
+   "days_to_peak": 5,
+   "max_runup_pct": 3.0,
+   "ret_start_to_end_pct": -23.8,
+   "ret_peak_to_end_pct": -26.0,
+   "ret_8w_after_end_pct": -24.0,
+   "at_start": {
+    "taker_buy_share_30d": 0.4951,
+    "stable_supply_30d": 0.262,
+    "fng": 61.0,
+    "funding_7d_ann": 0.4041,
+    "btc_mvrv": 2.9092,
+    "ust_2y": 0.16,
+    "usdjpy": 107.94,
+    "btc_etf_flow_5d_bn": null
+   },
+   "at_peak": {
+    "taker_buy_share_30d": 0.4948,
+    "stable_supply_30d": 0.2924,
+    "fng": 67.0,
+    "funding_7d_ann": 0.7194,
+    "btc_mvrv": 2.9339,
+    "ust_2y": 0.14,
+    "usdjpy": 109.33,
+    "btc_etf_flow_5d_bn": null
+   },
+   "at_end": {
+    "taker_buy_share_30d": 0.4916,
+    "stable_supply_30d": 0.2473,
+    "fng": 27.0,
+    "funding_7d_ann": 0.303,
+    "btc_mvrv": 2.1643,
+    "ust_2y": 0.16,
+    "usdjpy": 108.52,
+    "btc_etf_flow_5d_bn": null
+   }
+  },
+  {
+   "start": "2021-07-31",
+   "peak": "2021-09-06",
+   "end": "2021-09-27",
+   "outcome": "confirmed",
+   "days": 58,
+   "days_to_peak": 37,
+   "max_runup_pct": 27.0,
+   "ret_start_to_end_pct": 1.7,
+   "ret_peak_to_end_pct": -20.0,
+   "ret_8w_after_end_pct": 33.5,
+   "at_start": {
+    "taker_buy_share_30d": 0.4978,
+    "stable_supply_30d": 0.0164,
+    "fng": 60.0,
+    "funding_7d_ann": 0.0546,
+    "btc_mvrv": 2.0982,
+    "ust_2y": 0.19,
+    "usdjpy": 110.52,
+    "btc_etf_flow_5d_bn": null
+   },
+   "at_peak": {
+    "taker_buy_share_30d": 0.5,
+    "stable_supply_30d": 0.0627,
+    "fng": 79.0,
+    "funding_7d_ann": 0.5314,
+    "btc_mvrv": 2.5193,
+    "ust_2y": 0.21,
+    "usdjpy": 109.84,
+    "btc_etf_flow_5d_bn": null
+   },
+   "at_end": {
+    "taker_buy_share_30d": 0.4946,
+    "stable_supply_30d": 0.0699,
+    "fng": 26.0,
+    "funding_7d_ann": 0.0522,
+    "btc_mvrv": 2.0104,
+    "ust_2y": 0.29,
+    "usdjpy": 109.94,
+    "btc_etf_flow_5d_bn": null
+   }
+  },
+  {
+   "start": "2021-10-04",
+   "peak": "2021-11-08",
+   "end": "2021-11-29",
+   "outcome": "confirmed",
+   "days": 56,
+   "days_to_peak": 35,
+   "max_runup_pct": 37.2,
+   "ret_start_to_end_pct": 17.4,
+   "ret_peak_to_end_pct": -14.4,
+   "ret_8w_after_end_pct": -36.5,
+   "at_start": {
+    "taker_buy_share_30d": 0.4938,
+    "stable_supply_30d": 0.0703,
+    "fng": 54.0,
+    "funding_7d_ann": -0.0185,
+    "btc_mvrv": 2.3128,
+    "ust_2y": 0.27,
+    "usdjpy": 110.72,
+    "btc_etf_flow_5d_bn": null
+   },
+   "at_peak": {
+    "taker_buy_share_30d": 0.5016,
+    "stable_supply_30d": 0.0668,
+    "fng": 75.0,
+    "funding_7d_ann": 0.2938,
+    "btc_mvrv": 2.8546,
+    "ust_2y": 0.39,
+    "usdjpy": 114.03,
+    "btc_etf_flow_5d_bn": null
+   },
+   "at_end": {
+    "taker_buy_share_30d": 0.4945,
+    "stable_supply_30d": 0.0769,
+    "fng": 33.0,
+    "funding_7d_ann": 0.149,
+    "btc_mvrv": 2.3594,
+    "ust_2y": 0.5,
+    "usdjpy": 113.81,
+    "btc_etf_flow_5d_bn": null
+   }
+  },
+  {
+   "start": "2023-01-13",
+   "peak": "2023-04-14",
+   "end": "2023-05-15",
+   "outcome": "confirmed",
+   "days": 122,
+   "days_to_peak": 91,
+   "max_runup_pct": 52.9,
+   "ret_start_to_end_pct": 36.3,
+   "ret_peak_to_end_pct": -10.8,
+   "ret_8w_after_end_pct": 12.0,
+   "at_start": {
+    "taker_buy_share_30d": 0.4968,
+    "stable_supply_30d": -0.0128,
+    "fng": 31.0,
+    "funding_7d_ann": -0.0093,
+    "btc_mvrv": 1.0067,
+    "ust_2y": 4.12,
+    "usdjpy": 133.57,
+    "btc_etf_flow_5d_bn": null
+   },
+   "at_peak": {
+    "taker_buy_share_30d": 0.5046,
+    "stable_supply_30d": 0.003,
+    "fng": 68.0,
+    "funding_7d_ann": 0.0483,
+    "btc_mvrv": 1.5315,
+    "ust_2y": 3.96,
+    "usdjpy": 131.67,
+    "btc_etf_flow_5d_bn": null
+   },
+   "at_end": {
+    "taker_buy_share_30d": 0.4952,
+    "stable_supply_30d": -0.0018,
+    "fng": 50.0,
+    "funding_7d_ann": -0.0141,
+    "btc_mvrv": 1.3525,
+    "ust_2y": 3.98,
+    "usdjpy": 134.85,
+    "btc_etf_flow_5d_bn": null
+   }
+  },
+  {
+   "start": "2023-06-26",
+   "peak": "2023-07-13",
+   "end": "2023-08-21",
+   "outcome": "confirmed",
+   "days": 56,
+   "days_to_peak": 17,
+   "max_runup_pct": 3.9,
+   "ret_start_to_end_pct": -13.7,
+   "ret_peak_to_end_pct": -16.9,
+   "ret_8w_after_end_pct": 9.1,
+   "at_start": {
+    "taker_buy_share_30d": 0.4878,
+    "stable_supply_30d": -0.0057,
+    "fng": 55.0,
+    "funding_7d_ann": 0.0464,
+    "btc_mvrv": 1.4905,
+    "ust_2y": 4.71,
+    "usdjpy": 141.82,
+    "btc_etf_flow_5d_bn": null
+   },
+   "at_peak": {
+    "taker_buy_share_30d": 0.487,
+    "stable_supply_30d": -0.009,
+    "fng": 57.0,
+    "funding_7d_ann": -0.0507,
+    "btc_mvrv": 1.5385,
+    "ust_2y": 4.72,
+    "usdjpy": 144.56,
+    "btc_etf_flow_5d_bn": null
+   },
+   "at_end": {
+    "taker_buy_share_30d": 0.4829,
+    "stable_supply_30d": -0.0169,
+    "fng": 38.0,
+    "funding_7d_ann": -0.0355,
+    "btc_mvrv": 1.2852,
+    "ust_2y": 4.92,
+    "usdjpy": 144.94,
+    "btc_etf_flow_5d_bn": null
+   }
+  },
+  {
+   "start": "2023-10-23",
+   "peak": "2024-01-08",
+   "end": "2024-01-22",
+   "outcome": "invalidated",
+   "days": 91,
+   "days_to_peak": 77,
+   "max_runup_pct": 42.0,
+   "ret_start_to_end_pct": 19.6,
+   "ret_peak_to_end_pct": -15.7,
+   "ret_8w_after_end_pct": 70.9,
+   "at_start": {
+    "taker_buy_share_30d": 0.4934,
+    "stable_supply_30d": 0.0073,
+    "fng": 53.0,
+    "funding_7d_ann": 0.0247,
+    "btc_mvrv": 1.6135,
+    "ust_2y": 5.07,
+    "usdjpy": 149.62,
+    "btc_etf_flow_5d_bn": null
+   },
+   "at_peak": {
+    "taker_buy_share_30d": 0.4999,
+    "stable_supply_30d": 0.0367,
+    "fng": 71.0,
+    "funding_7d_ann": 0.0456,
+    "btc_mvrv": 2.1052,
+    "ust_2y": 4.4,
+    "usdjpy": 140.92,
+    "btc_etf_flow_5d_bn": null
+   },
+   "at_end": {
+    "taker_buy_share_30d": 0.5011,
+    "stable_supply_30d": 0.0346,
+    "fng": 55.0,
+    "funding_7d_ann": 0.0037,
+    "btc_mvrv": 1.7507,
+    "ust_2y": 4.39,
+    "usdjpy": 144.86,
+    "btc_etf_flow_5d_bn": 0.3181
+   }
+  },
+  {
+   "start": "2024-04-02",
+   "peak": "2024-04-08",
+   "end": "2024-04-29",
+   "outcome": "confirmed",
+   "days": 27,
+   "days_to_peak": 6,
+   "max_runup_pct": 9.4,
+   "ret_start_to_end_pct": -2.4,
+   "ret_peak_to_end_pct": -10.8,
+   "ret_8w_after_end_pct": -5.6,
+   "at_start": {
+    "taker_buy_share_30d": 0.5,
+    "stable_supply_30d": 0.0689,
+    "fng": 79.0,
+    "funding_7d_ann": 0.3503,
+    "btc_mvrv": 2.3258,
+    "ust_2y": 4.72,
+    "usdjpy": 151.42,
+    "btc_etf_flow_5d_bn": 0.7586
+   },
+   "at_peak": {
+    "taker_buy_share_30d": 0.5001,
+    "stable_supply_30d": 0.0593,
+    "fng": 76.0,
+    "funding_7d_ann": 0.0797,
+    "btc_mvrv": 2.5259,
+    "ust_2y": 4.73,
+    "usdjpy": 151.22,
+    "btc_etf_flow_5d_bn": 0.4837
+   },
+   "at_end": {
+    "taker_buy_share_30d": 0.4957,
+    "stable_supply_30d": 0.0498,
+    "fng": 67.0,
+    "funding_7d_ann": -0.063,
+    "btc_mvrv": 2.213,
+    "ust_2y": 4.96,
+    "usdjpy": 154.55,
+    "btc_etf_flow_5d_bn": -0.328
+   }
+  },
+  {
+   "start": "2024-05-20",
+   "peak": "2024-05-20",
+   "end": "2024-06-24",
+   "outcome": "confirmed",
+   "days": 35,
+   "days_to_peak": 0,
+   "max_runup_pct": 0.0,
+   "ret_start_to_end_pct": -15.6,
+   "ret_peak_to_end_pct": -15.6,
+   "ret_8w_after_end_pct": -1.4,
+   "at_start": {
+    "taker_buy_share_30d": 0.4985,
+    "stable_supply_30d": 0.0073,
+    "fng": 70.0,
+    "funding_7d_ann": -0.0115,
+    "btc_mvrv": 2.4307,
+    "ust_2y": 4.83,
+    "usdjpy": 155.85,
+    "btc_etf_flow_5d_bn": 0.9483
+   },
+   "at_peak": {
+    "taker_buy_share_30d": 0.4985,
+    "stable_supply_30d": 0.0073,
+    "fng": 70.0,
+    "funding_7d_ann": -0.0115,
+    "btc_mvrv": 2.4307,
+    "ust_2y": 4.83,
+    "usdjpy": 155.85,
+    "btc_etf_flow_5d_bn": 0.9483
+   },
+   "at_end": {
+    "taker_buy_share_30d": 0.4925,
+    "stable_supply_30d": 0.0056,
+    "fng": 51.0,
+    "funding_7d_ann": 0.0524,
+    "btc_mvrv": 1.9659,
+    "ust_2y": 4.7,
+    "usdjpy": 157.28,
+    "btc_etf_flow_5d_bn": -0.5441
+   }
+  },
+  {
+   "start": "2024-10-28",
+   "peak": "2024-12-17",
+   "end": "2025-01-13",
+   "outcome": "confirmed",
+   "days": 77,
+   "days_to_peak": 50,
+   "max_runup_pct": 51.7,
+   "ret_start_to_end_pct": 35.1,
+   "ret_peak_to_end_pct": -10.9,
+   "ret_8w_after_end_pct": -16.9,
+   "at_start": {
+    "taker_buy_share_30d": 0.4947,
+    "stable_supply_30d": -0.0044,
+    "fng": 72.0,
+    "funding_7d_ann": 0.0813,
+    "btc_mvrv": 2.1208,
+    "ust_2y": 4.11,
+    "usdjpy": 149.58,
+    "btc_etf_flow_5d_bn": 0.9976
+   },
+   "at_peak": {
+    "taker_buy_share_30d": 0.4998,
+    "stable_supply_30d": 0.1109,
+    "fng": 87.0,
+    "funding_7d_ann": 0.0913,
+    "btc_mvrv": 2.6825,
+    "ust_2y": 4.25,
+    "usdjpy": 151.24,
+    "btc_etf_flow_5d_bn": 2.3249
+   },
+   "at_end": {
+    "taker_buy_share_30d": 0.4867,
+    "stable_supply_30d": 0.0052,
+    "fng": 61.0,
+    "funding_7d_ann": 0.0165,
+    "btc_mvrv": 2.278,
+    "ust_2y": 4.4,
+    "usdjpy": 157.2,
+    "btc_etf_flow_5d_bn": 0.3128
+   }
+  },
+  {
+   "start": "2025-01-20",
+   "peak": "2025-01-21",
+   "end": "2025-02-03",
+   "outcome": "confirmed",
+   "days": 14,
+   "days_to_peak": 1,
+   "max_runup_pct": 3.8,
+   "ret_start_to_end_pct": -0.9,
+   "ret_peak_to_end_pct": -4.5,
+   "ret_8w_after_end_pct": -18.5,
+   "at_start": {
+    "taker_buy_share_30d": 0.4933,
+    "stable_supply_30d": 0.0197,
+    "fng": 76.0,
+    "funding_7d_ann": 0.0611,
+    "btc_mvrv": 2.4451,
+    "ust_2y": 4.27,
+    "usdjpy": 157.68,
+    "btc_etf_flow_5d_bn": 1.9601
+   },
+   "at_peak": {
+    "taker_buy_share_30d": 0.4938,
+    "stable_supply_30d": 0.0365,
+    "fng": 76.0,
+    "funding_7d_ann": 0.0608,
+    "btc_mvrv": 2.5189,
+    "ust_2y": 4.27,
+    "usdjpy": 157.51,
+    "btc_etf_flow_5d_bn": 2.2442
+   },
+   "at_end": {
+    "taker_buy_share_30d": 0.4896,
+    "stable_supply_30d": 0.0615,
+    "fng": 44.0,
+    "funding_7d_ann": 0.0368,
+    "btc_mvrv": 2.3717,
+    "ust_2y": 4.22,
+    "usdjpy": 155.58,
+    "btc_etf_flow_5d_bn": 0.5595
+   }
+  },
+  {
+   "start": "2025-02-10",
+   "peak": "2025-02-12",
+   "end": "2025-02-17",
+   "outcome": "confirmed",
+   "days": 7,
+   "days_to_peak": 2,
+   "max_runup_pct": 0.5,
+   "ret_start_to_end_pct": -1.7,
+   "ret_peak_to_end_pct": -2.1,
+   "ret_8w_after_end_pct": -11.7,
+   "at_start": {
+    "taker_buy_share_30d": 0.4882,
+    "stable_supply_30d": 0.0805,
+    "fng": 43.0,
+    "funding_7d_ann": -0.0096,
+    "btc_mvrv": 2.256,
+    "ust_2y": 4.29,
+    "usdjpy": 154.91,
+    "btc_etf_flow_5d_bn": 0.2038
+   },
+   "at_peak": {
+    "taker_buy_share_30d": 0.4885,
+    "stable_supply_30d": 0.0818,
+    "fng": 46.0,
+    "funding_7d_ann": -0.0018,
+    "btc_mvrv": 2.2615,
+    "ust_2y": 4.29,
+    "usdjpy": 154.56,
+    "btc_etf_flow_5d_bn": -0.1455
+   },
+   "at_end": {
+    "taker_buy_share_30d": 0.485,
+    "stable_supply_30d": 0.0692,
+    "fng": 51.0,
+    "funding_7d_ann": -0.0019,
+    "btc_mvrv": 2.2126,
+    "ust_2y": 4.26,
+    "usdjpy": 151.3,
+    "btc_etf_flow_5d_bn": -0.5856
+   }
+  },
+  {
+   "start": "2025-06-09",
+   "peak": "2025-06-10",
+   "end": "2025-06-23",
+   "outcome": "confirmed",
+   "days": 14,
+   "days_to_peak": 1,
+   "max_runup_pct": 0.0,
+   "ret_start_to_end_pct": -4.5,
+   "ret_peak_to_end_pct": -4.5,
+   "ret_8w_after_end_pct": 10.3,
+   "at_start": {
+    "taker_buy_share_30d": 0.4963,
+    "stable_supply_30d": 0.0244,
+    "fng": 62.0,
+    "funding_7d_ann": 0.0244,
+    "btc_mvrv": 2.3383,
+    "ust_2y": 4.04,
+    "usdjpy": 144.18,
+    "btc_etf_flow_5d_bn": -0.1316
+   },
+   "at_peak": {
+    "taker_buy_share_30d": 0.4969,
+    "stable_supply_30d": 0.0259,
+    "fng": 71.0,
+    "funding_7d_ann": 0.026,
+    "btc_mvrv": 2.332,
+    "ust_2y": 4.01,
+    "usdjpy": 142.76,
+    "btc_etf_flow_5d_bn": 0.5221
+   },
+   "at_end": {
+    "taker_buy_share_30d": 0.4831,
+    "stable_supply_30d": 0.0149,
+    "fng": 47.0,
+    "funding_7d_ann": 0.02,
+    "btc_mvrv": 2.2135,
+    "ust_2y": 3.9,
+    "usdjpy": 144.04,
+    "btc_etf_flow_5d_bn": 1.0234
+   }
+  },
+  {
+   "start": "2025-07-04",
+   "peak": "2025-08-13",
+   "end": "2025-08-25",
+   "outcome": "confirmed",
+   "days": 52,
+   "days_to_peak": 40,
+   "max_runup_pct": 14.2,
+   "ret_start_to_end_pct": 2.0,
+   "ret_peak_to_end_pct": -10.7,
+   "ret_8w_after_end_pct": 0.4,
+   "at_start": {
+    "taker_buy_share_30d": 0.4835,
+    "stable_supply_30d": 0.0247,
+    "fng": 73.0,
+    "funding_7d_ann": 0.0401,
+    "btc_mvrv": 2.2153,
+    "ust_2y": 3.88,
+    "usdjpy": 144.34,
+    "btc_etf_flow_5d_bn": 1.2707
+   },
+   "at_peak": {
+    "taker_buy_share_30d": 0.4957,
+    "stable_supply_30d": 0.0383,
+    "fng": 73.0,
+    "funding_7d_ann": 0.0752,
+    "btc_mvrv": 2.3797,
+    "ust_2y": 3.72,
+    "usdjpy": 147.49,
+    "btc_etf_flow_5d_bn": 1.0169
+   },
+   "at_end": {
+    "taker_buy_share_30d": 0.4939,
+    "stable_supply_30d": 0.0335,
+    "fng": 47.0,
+    "funding_7d_ann": 0.0766,
+    "btc_mvrv": 2.1016,
+    "ust_2y": 3.68,
+    "usdjpy": 147.0,
+    "btc_etf_flow_5d_bn": -1.1785
+   }
+  },
+  {
+   "start": "2026-09-20",
+   "peak": "2026-09-21",
+   "end": "2026-10-26",
+   "outcome": "confirmed",
+   "days": 36,
+   "days_to_peak": 1,
+   "max_runup_pct": 6.7,
+   "ret_start_to_end_pct": -1.3,
+   "ret_peak_to_end_pct": -7.5,
+   "ret_8w_after_end_pct": null,
+   "at_start": {
+    "taker_buy_share_30d": 0.4996,
+    "stable_supply_30d": 0.0042,
+    "fng": 71.0,
+    "funding_7d_ann": 0.0559,
+    "btc_mvrv": 1.5242,
+    "ust_2y": 4.76,
+    "usdjpy": 153.71,
+    "btc_etf_flow_5d_bn": 0.0062
+   },
+   "at_peak": {
+    "taker_buy_share_30d": 0.5008,
+    "stable_supply_30d": 0.0051,
+    "fng": 70.0,
+    "funding_7d_ann": 0.0635,
+    "btc_mvrv": 1.621,
+    "ust_2y": 4.76,
+    "usdjpy": 153.71,
+    "btc_etf_flow_5d_bn": 0.0062
+   },
+   "at_end": {
+    "taker_buy_share_30d": 0.4919,
+    "stable_supply_30d": -0.0223,
+    "fng": 50.0,
+    "funding_7d_ann": 0.0516,
+    "btc_mvrv": 1.4784,
+    "ust_2y": 4.69,
+    "usdjpy": 158.0,
+    "btc_etf_flow_5d_bn": 0.3047
+   }
+  }
+ ]
+}

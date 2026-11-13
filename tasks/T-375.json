@@ -1,0 +1,32 @@
+{
+  "status": "done",
+  "created": "2026-11-13",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-13T16:58:00Z",
+    "value": "S-852 跑通:n=15(confirmed 14 / invalidated 1 / timeout 0),confirmed 中位 days 42.0、峰后到结束 -10.9%、结束后 8 周 -5.6%(8/14 为负);三项 SELF_CHECKS 全 true。Seth 复核:s852_results.json summary 与 run.txt 一致;情景 5 条 validate 通过,读数与库一致(state:dist_200 -0.03118 @11-12、taker_buy_share_30d 0.50445 @11-12、fng 20 @11-13、btc_mvrv 1.3697 @11-11)。fixup:T-375-1 措辞改为『面板距 200 日线』—— state:dist_200 是 entity=panel,不是 BTC 自身(BTC 自身 ln 比 -0.0232,面板 -0.0312)。"
+  },
+  "notes": "2026-11-13T15:49:21Z Seth 开卡(Jazz 11-13「分配任务给各 lane,继续补全」)。 | 2026-11-14 lane-a 跑完(Seth 的两个脚本一行未改)。① `python3 docs/research/s852_watch_v2.py --selftest | tail -1` = SELFTEST OK。② nohup 正式跑,约 65 秒,末尾 WROTE docs/research/s852_results.json;日志 docs/research/s852_run.txt(41 行:8 行 loaded + SUMMARY + SELF_CHECKS + 15 段 EP/AT + WROTE)。③ SUMMARY n=15 confirmed=14 invalidated=1 timeout=0;confirmed 中位数 days=42.0 days_to_peak=11.5 max_runup_pct=8.1 ret_start_to_end_pct=-1.5 ret_peak_to_end_pct=-10.9 ret_8w_after_end_pct=-5.6;confirmed_8w_after_negative=8。SELF_CHECKS 三项布尔全 true(episodes_before_cut_ignore_future_prices / no_start_while_weekly_already_down / episodes_do_not_overlap),episodes_since_2026_08 = [2026-09-20, 2026-09-21, 2026-10-26, confirmed, 6.7]。④ 原始输出已原样贴进 MINIMAX_SYNC 末尾新节。 | 定标(只读,docs/research/s852_calibration_read.py):2026-11-12/13 的读数 —— dist_200=-0.0312、fng=20、btc_mvrv=1.3697、ust_2y=4.73、usdjpy=157.76、funding_7d_ann_binance=0.0586、stable_supply_30d=-0.0477、taker_buy_share_30d=0.5044、ETF 5 日净流=-2.999e8、BTC 收盘 71460;周线已坏=True;去掉趋势闸门后三条先行条件成立 2 条(stable≤0 ✓、ust_2y 相对 91 天前上行 ✓、taker<0.5 ✗)。定标频率(点对点,+22 个交易日):dist_200 由负转正 0.183(N=1150)、fng<50 仍成立 0.788(N=1786)、btc_mvrv<2.20 仍成立 0.935(N=4383)、taker≥0.5 仍成立 0.385(N=356)。 | 交付:docs/research/s852_watch_v2.py、s851_watch_base_rate.py(原样拷入)、s852_results.json、s852_run.txt、s852_calibration_read.py(定标,只读)、s852_check_scenarios.py(用仓库自己的 validate() 验情景文件,5 条全 OK)、scenarios/lane-a-T-375.json(5 条:4 条自动 + 1 条 manual;lt 配 hi、gt 配 lo;prob 0.18/0.75/0.90/0.60/0.75;结算日 2026-12-15)。 | 2026-11-13T16:58:00Z Seth:MERGE(§Seth-1113r),done+verified。",
+  "id": "T-375",
+  "owner": "lane-a",
+  "title": "S-852:盯盘基率第二版 —— 只跑 Seth 写好的脚本,把输出原样贴回",
+  "source": "台账 S-852;脚本 `docs/research/s852_watch_v2.py`(它 import 同目录的 `s851_watch_base_rate.py`,两个文件都要在分支上)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-375.json"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s852_watch_v2.py --selftest | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s852_watch_v2.py > docs/research/s852_run.txt 2>&1 &`,只 tail。③ 见 WROTE 后把 `grep -E '^(SUMMARY|SELF_CHECKS|EP|   AT)' docs/research/s852_run.txt | cut -c1-600` 原样贴进 MINIMAX_SYNC,不改写、不下结论。④ 报错就贴最后 15 行、结束。",
+    "expect": "docs/research/s852_results.json + s852_run.txt + scenarios/lane-a-T-375.json(≥ 3 条);卡 in_review,推 lane-a/T-375。"
+  },
+  "prior_value": "派发清单上的每一项(情绪、ETF、主动买盘、资金费)在历史上每个顶部前后各是什么读数 —— 清单定项要看这张表。"
+}
