@@ -1,7 +1,7 @@
 {
   "id": "T-230",
   "owner": "lane-b",
-  "status": "in_review",
+  "status": "done",
   "created": "2026-11-04",
   "title": "发行方登记表核验:issuer_entities 37 家的归属、主体、工具(代币 / 股票 / 稳定币 / 场所)逐条带出处核对;另列「有收入不分」的 6 家各自把收入用在哪",
   "source": "Jazz 11-04「今天开始」:Entity / Decision 层落表(HIGH_DIM_ONTOLOGY §5);登记表是 Seth 按公开常识写的(confidence=assumed),要变成 verified 只能靠出处。§Seth-1104a。",
@@ -23,6 +23,10 @@
     "expect": "报告 docs/research/T-230_issuer_registry_check.md(一张 37 行表:id / 建议 / 出处;+ ②③ 两节);卡 notes 写「建议改」的家数与「核不到」的家数;in_review,推 lane-b/T-230。"
   },
   "prior_value": "登记表 37 家全部 assumed;S-711 的分类依赖它。",
-  "notes": "交付:docs/research/T-230_issuer_registry_check.md(37 行表 + §②六家有收入不分的去向 + §③三家稳定币发行方收入分配 + §4登记表内部不一致 + §5核不到清单 13 条 + §6探索性发现 5 条);docs/research/scenarios/lane-b-T-230.json(5 条,含 2 条 close 自动结算);只读探针 docs/research/_t230_probe.py。计数:建议改 29 家 / 不改 8 家 / 整行核不到 0 家 / 部分子项核不到 12 家(逐条在报告 §5)。其中 kind 建议改 6 家(chainlink-labs→foundation、ondo→foundation、celestia→company、pendle→company、robinhood→company、sky→stablecoin_issuer),工具清单建议动 11 行(净增 9 个工具:AVAT/EURC/FIGURE/GUSD/WSTETH/OUSG/USDP/PAXG/SUSDS/USAT/GEL;移除 2 个:hyperliquid 的 USDH、paypal 的 PYUSD),name 建议动 18 行。② 六家实测(treatment_daily 2026-11-03,revenue_30d / holders_30d / holders_share):AAVE 5029079/0/0、LDO 3393734/0/0、POL 1925949/0/0、ARB 654061/0/0、STRK 192892/0/0、OP 70611/0/0;前一日同向(非当天成立)。收入去向:Aave 进国库+自动回购(2025-04 启动→2026-04-19 暂停→Aavenomics 3.0 于 2026-06-27 恢复);Lido 进国库、NEST 回购 2026-08-14 上线但计数器为负从未触发、fee switch 投票结果核不到;Polygon 部分给质押者(PIP-85 已通过但机制 inactive,PIP-92 至 2026-12-01,10% 归 proposer);Arbitrum 进国库(97% Treasury / 3% Developer Guild,2026-09-24 生效但不是给持有人,2026-04 质押提案状态核不到);Optimism 已生效回购(2026-01-28 以 84.4% 通过,净 Superchain sequencer 收入 50% 按月回购 OP,2026-02 起,累计 >940 万枚 OP);Starknet SNIP 18 已通过但 burn/fee share 从未启动。③ 三家:对持有人全部 0(有发行人一手材料佐证);Circle 与 Coinbase 分成档位为 40/50/60% @ $200/550/600 亿流通量(卡里提示的 50%→100% 与公开档位不符),当前 60% 档,Q2 2026 净利 $4820 万、从未派息、回购授权核不到;Tether 储备收益 100% 归股东侧、Q3 2026 净利约 $15 亿、缓冲约 $79.5 亿、无 10-K 无 IPO;Tether 2021-08 按持仓分配与 Paxos 2025-08 Nasdaq IPO 两条前提均核不到。结论:DeFiLlama holders 字段只覆盖链上可编程分配(回购/销毁/质押分配),发行方把储备利息付给场外股东或分销伙伴不在其中 ⇒ S-711 的 keeps 分类口径确有错,holders_share 只能当待核线索。",
-  "verified": null
+  "notes": "交付:docs/research/T-230_issuer_registry_check.md(37 行表 + §②六家有收入不分的去向 + §③三家稳定币发行方收入分配 + §4登记表内部不一致 + §5核不到清单 13 条 + §6探索性发现 5 条);docs/research/scenarios/lane-b-T-230.json(5 条,含 2 条 close 自动结算);只读探针 docs/research/_t230_probe.py。计数:建议改 29 家 / 不改 8 家 / 整行核不到 0 家 / 部分子项核不到 12 家(逐条在报告 §5)。其中 kind 建议改 6 家(chainlink-labs→foundation、ondo→foundation、celestia→company、pendle→company、robinhood→company、sky→stablecoin_issuer),工具清单建议动 11 行(净增 9 个工具:AVAT/EURC/FIGURE/GUSD/WSTETH/OUSG/USDP/PAXG/SUSDS/USAT/GEL;移除 2 个:hyperliquid 的 USDH、paypal 的 PYUSD),name 建议动 18 行。② 六家实测(treatment_daily 2026-11-03,revenue_30d / holders_30d / holders_share):AAVE 5029079/0/0、LDO 3393734/0/0、POL 1925949/0/0、ARB 654061/0/0、STRK 192892/0/0、OP 70611/0/0;前一日同向(非当天成立)。收入去向:Aave 进国库+自动回购(2025-04 启动→2026-04-19 暂停→Aavenomics 3.0 于 2026-06-27 恢复);Lido 进国库、NEST 回购 2026-08-14 上线但计数器为负从未触发、fee switch 投票结果核不到;Polygon 部分给质押者(PIP-85 已通过但机制 inactive,PIP-92 至 2026-12-01,10% 归 proposer);Arbitrum 进国库(97% Treasury / 3% Developer Guild,2026-09-24 生效但不是给持有人,2026-04 质押提案状态核不到);Optimism 已生效回购(2026-01-28 以 84.4% 通过,净 Superchain sequencer 收入 50% 按月回购 OP,2026-02 起,累计 >940 万枚 OP);Starknet SNIP 18 已通过但 burn/fee share 从未启动。③ 三家:对持有人全部 0(有发行人一手材料佐证);Circle 与 Coinbase 分成档位为 40/50/60% @ $200/550/600 亿流通量(卡里提示的 50%→100% 与公开档位不符),当前 60% 档,Q2 2026 净利 $4820 万、从未派息、回购授权核不到;Tether 储备收益 100% 归股东侧、Q3 2026 净利约 $15 亿、缓冲约 $79.5 亿、无 10-K 无 IPO;Tether 2021-08 按持仓分配与 Paxos 2025-08 Nasdaq IPO 两条前提均核不到。结论:DeFiLlama holders 字段只覆盖链上可编程分配(回购/销毁/质押分配),发行方把储备利息付给场外股东或分销伙伴不在其中 ⇒ S-711 的 keeps 分类口径确有错,holders_share 只能当待核线索。 || 2026-11-13T08:50:00Z Seth:验收 —— 计数复核对上,卡 done。后续(Seth 道):把 29 条改法落到 issuer_entities / src/data/entity/issuers.py,另开卡,不在本卡。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-13T08:50:00Z",
+    "value": "报告 docs/research/T-230_issuer_registry_check.md 在 main(d2dbfdd1):37 行,建议改 29 / 不改 8 / 整行核不到 0 / 部分子项核不到 12;Seth 逐行数表格判定列:改 29(含改 note 2、改 name 细节 1)。②③ 两节在。"
+  }
 }
