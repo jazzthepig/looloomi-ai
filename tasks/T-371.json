@@ -1,0 +1,26 @@
+{
+  "status": "open",
+  "created": "2026-11-13",
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "verified": null,
+  "notes": "2026-11-13T09:30:19Z Seth 开卡(台账 S-846;Jazz 11-13「还有时间戳和时间的问题」)。",
+  "id": "T-371",
+  "owner": "seth",
+  "title": "时间口径四件事:⓪ 判断当轮执行、每张日表的 d 写明含义并入测试、动钱的表留首次写入时间、给人看的日期一律 UTC",
+  "source": "台账 S-846。",
+  "allowed_paths": [
+    "src/",
+    "tests/",
+    "migrations/",
+    "scripts/",
+    "docs/",
+    "tasks/T-371.json"
+  ],
+  "acceptance": {
+    "check": "① ⓪ 判断(含 T-370 的 short)提交后在**下一个整点轮**执行,不等到次日 00:45;记下「提交时刻 → 成交时刻」。改主机调度,上线要 Jazz 在场。② `schema_manifest` 给每张带日期列的表加一个字段:d 的含义(closed_day / write_day / effective_day);加一条测试:新表不声明就红;加一个只读视图或 helper,把 write_day 的表换算成 closed_day 再连。③ 动钱或进前向记录的表(targets、各账本 NAV、state_daily、market_state_vectors、cis_*_daily)加 first_written_at(只在插入时写、更新不动),或改成只追加 + 最新视图;判活:`select count(*) from <表> where first_written_at is null and d >= <上线日>` = 0。④ 台账 / SYNC / PROJECT_STATE 的小节名与「Jazz MM-DD」一律 UTC 日期;lane_bot 的「今天」按 UTC;lane 报告里的时刻不带 UTC 的由范围检查挡下。⑤ 查 `decision_outcomes` 停在 11-02 的原因。",
+    "expect": "代码 + 测试 + 迁移;每一项各自的判活语句写进卡。"
+  },
+  "prior_value": "前向记录要可验证,先得证明每个数是什么时候知道的;判断要能赚钱,先得在当天成交。"
+}
