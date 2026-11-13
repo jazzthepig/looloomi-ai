@@ -26,7 +26,7 @@ HALVINGS = ("2012-11-28", "2016-07-09", "2020-05-11", "2024-04-20")
 STATE_FEATURES = ("stable_supply_30d", "taker_buy_share_30d", "stable_lend_apy_7d")
 MACRO_SERIES = ("btc_mvrv", "btc_puell", "btc_hash_30d", "hy_oas", "vix", "vix3m", "ust_2y", "ust_10y", "ust_10y_real", "fed_funds", "usd_broad")
 #: 只在 context() 里一并读出来、由 build 自己汇总的序列(不走逐条 put)
-MACRO_EXTRA_SERIES = ("btc_etf_net_flow_usd",)
+MACRO_EXTRA_SERIES = ("btc_etf_net_flow_usd", "btc_coinbase_premium")
 MAX_AGE_D = 10
 #: 美元指数周一才发布上一周的值,入库时又保守挪了 8 天 ⇒ 最新一条天然更旧,单独放宽
 MAX_AGE_BY_SERIES = {"usd_broad": 20}
@@ -147,6 +147,14 @@ def build(d: str, state_rows: list[dict], macro_rows: list[dict], sunday_closes:
         out["btc_etf_flow_d"] = etf[-1][0]
     else:
         missing.append("btc_etf_flow")
+    # Coinbase 溢价(Coinbase BTC-USD ÷ Binance BTCUSDT − 1;d = 已收盘的那一天):最近 7 天的均值,基点。正 = 美国现货在抬价。
+    cbp = sorted((str(r["d"])[:10], float(r["value"])) for r in macro_rows
+                 if r.get("series") == "btc_coinbase_premium" and r.get("value") is not None and str(r.get("d"))[:10] <= d[:10])
+    if len(cbp) >= 7 and _age(d, cbp[-1][0]) <= 3:
+        out["btc_coinbase_premium_7d_bp"] = round(sum(v for _, v in cbp[-7:]) / 7 * 1e4, 1)
+        out["btc_coinbase_premium_d"] = cbp[-1][0]
+    else:
+        missing.append("btc_coinbase_premium")
     out["reads"] = reads(out)
     out["conflicts"] = conflicts(out)
     if missing:
@@ -174,6 +182,8 @@ def reads(c: dict) -> dict[str, str]:
         r["usd"] = "stronger" if c["usd_broad"] > c["usd_broad_60d_ago"] else "weaker_or_flat"
     if c.get("vix") is not None and c.get("vix3m") is not None:
         r["vix_term"] = "backwardation" if c["vix"] > c["vix3m"] else "contango"
+    if c.get("btc_coinbase_premium_7d_bp") is not None:
+        r["us_spot"] = "premium" if c["btc_coinbase_premium_7d_bp"] > 0 else "discount"
     if c.get("btc_etf_flow_5d_bn") is not None:
         r["btc_etf_flow"] = "inflow" if c["btc_etf_flow_5d_bn"] > 0 else "outflow"
     if c.get("halving_phase"):

@@ -800,6 +800,28 @@ async def get_btc_etf_flows() -> list[dict]:
     return days
 
 
+COINBASE_CANDLES_URL = "https://api.exchange.coinbase.com/products/{product}/candles"
+
+
+async def get_coinbase_daily(product: str, start: str, end: str) -> list[tuple[str, float]]:
+    """Coinbase Exchange 公开日线(免密钥)→ [(UTC 日期, 收盘)],按日期升序。一次最多 300 根,所以区间要 ≤ 300 天。
+    返回的每根是 [time, low, high, open, close, volume];非 200 / 不是列表抛错 —— 读不到 ≠ 没有成交。"""
+    r = await _get_misc_client().get(COINBASE_CANDLES_URL.format(product=product),
+                                     params={"granularity": 86400, "start": f"{start}T00:00:00Z", "end": f"{end}T00:00:00Z"}, timeout=30)
+    if r.status_code != 200:
+        raise RuntimeError(f"Coinbase {product} HTTP {r.status_code}")
+    rows = r.json()
+    if not isinstance(rows, list):
+        raise RuntimeError(f"Coinbase {product} 返回不是列表")
+    out = []
+    for c in rows:
+        try:
+            out.append((datetime.fromtimestamp(int(c[0]), tz=timezone.utc).date().isoformat(), float(c[4])))
+        except (TypeError, ValueError, IndexError):
+            continue
+    return sorted(out)
+
+
 SHARPE_V1_BASE = "https://www.sharpe.ai/api/v1"
 SANTIMENT_GQL = "https://api.santiment.net/graphql"
 

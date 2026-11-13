@@ -190,6 +190,46 @@ async def _etf(today: date) -> dict[str, Any]:
     return {"rows": len(rows), "error": err, "last": max(r["d"] for r in rows)}
 
 
+#: 11-13(S-848:Coinbase 溢价此前没有 —— 美国时段现货买盘最直接的读数)。两条序列,**d = 那根日线的日期(已收盘的那一天,与 ohlcv_daily 的
+#: trade_date 同一个意思),不是可得日** —— 写在这里是因为这张表里两种约定都有(S-846)。溢价 = Coinbase BTC-USD 收盘 ÷ Binance BTCUSDT 收盘 − 1
+#: (含 USDT 对美元的偏离,通行口径)。只写已收盘的日线:今天(UTC)那根不写。
+CB_CLOSE, CB_PREMIUM, CB_START, CB_CHUNK_D = "btc_coinbase_close", "btc_coinbase_premium", "2019-01-01", 290
+
+
+def coinbase_rows(cb: list[tuple[str, float]], binance: dict[str, float], today: date) -> list[dict]:
+    """纯函数。Coinbase 收盘 + 同一天的 Binance 收盘 → macro_daily 行。今天及之后的不写;没有 Binance 收盘的那天只写收盘、不写溢价(不是 0)。"""
+    out: list[dict] = []
+    for d, c in cb:
+        if d >= today.isoformat() or not c or c <= 0:
+            continue
+        out.append({"series": CB_CLOSE, "d": d, "value": float(c), "source": "coinbase"})
+        b = binance.get(d)
+        if b and b > 0:
+            out.append({"series": CB_PREMIUM, "d": d, "value": float(c) / float(b) - 1.0, "source": "coinbase/binance_hist"})
+    return out
+
+
+async def _coinbase(today: date) -> dict[str, Any]:
+    """平时只取最近 290 天(一次请求);库里还没有 2019 年的行 ⇒ 这一轮把历史分段补齐(约 10 次请求,只发生一次)。"""
+    from src.data.market.data_layer import get_coinbase_daily
+    from src.data.style.header import _read_all
+    have = await _read_all(MACRO_TABLE, {"select": "d", "series": f"eq.{CB_CLOSE}", "order": "d.asc", "limit": "1"})
+    start = date.fromisoformat(CB_START) if not have or str(have[0]["d"])[:10] > "2019-01-15" else today - timedelta(days=CB_CHUNK_D)
+    cb: list[tuple[str, float]] = []
+    a = start
+    while a < today:
+        b = min(a + timedelta(days=CB_CHUNK_D), today)
+        cb += await get_coinbase_daily("BTC-USD", a.isoformat(), b.isoformat())
+        a = b
+    bn = await _read_all("ohlcv_daily", {"select": "trade_date,close", "symbol": "eq.BTC", "source": "eq.binance_hist",
+                                         "trade_date": f"gte.{start.isoformat()}", "order": "trade_date.asc"})
+    rows = coinbase_rows(sorted(set(cb)), {str(r["trade_date"])[:10]: _f(r.get("close")) for r in bn}, today)
+    if not rows:
+        return {"rows": 0, "error": "coinbase: 0 行"}
+    err = await _upsert(MACRO_TABLE, rows, "series,d")
+    return {"rows": len(rows), "error": err, "last": max(r["d"] for r in rows), "backfill": start.isoformat() == CB_START}
+
+
 def fred_rows(fred_id: str, obs: list[tuple[str, float]], since: str = MACRO_HISTORY_START) -> list[dict]:
     """纯函数。FRED 原始观测 → macro_daily 行;d = 观测日(原样,不是可得日),值换算成十亿美元。"""
     series, k, _lag = FRED_SERIES[fred_id]
@@ -375,6 +415,10 @@ async def _macro(today: date, now: Optional[datetime] = None) -> dict[str, Any]:
         out["fed"] = await _fed(today)
     except Exception as e:                                  # noqa: BLE001
         out["fed"] = {"rows": 0, "error": f"{type(e).__name__}: {str(e)[:100]}"}
+    try:
+        out["coinbase"] = await _coinbase(today)
+    except Exception as e:                                  # noqa: BLE001 —— 读不到不挡别的宏观序列
+        out["coinbase"] = {"rows": 0, "error": f"{type(e).__name__}: {str(e)[:100]}"}
     try:
         out["btc_etf"] = await _etf(today)
     except Exception as e:                                  # noqa: BLE001 —— ETF 读不到不挡别的宏观序列

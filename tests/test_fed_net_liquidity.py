@@ -86,3 +86,14 @@ def test_etf_flow_rows_are_dated_by_availability_and_missing_is_not_zero():
     assert [r["series"] for r in rows if r["d"] == "2026-11-13"] == ["btc_etf_net_assets_usd"]              # 非数的净流入不写
     assert all(r["d"] >= "2024-01-02" for r in rows) and len(rows) == 4
     assert [r["d"] for r in ci.known_by(rows, date(2026, 11, 12))][-1] == "2026-11-12"                      # 明天才可得的不提前写
+
+
+def test_coinbase_premium_rows_use_closed_days_only_and_missing_binance_is_not_zero():
+    """S-848:Coinbase 溢价。d = 已收盘的那一天;今天那根不写;没有 Binance 收盘的日子不写溢价。"""
+    from datetime import date
+    cb = [("2026-11-10", 74754.08), ("2026-11-11", 75259.28), ("2026-11-12", 73697.87), ("2026-11-13", 73347.48)]
+    rows = ci.coinbase_rows(cb, {"2026-11-10": 74700.0, "2026-11-12": 73771.6}, date(2026, 11, 13))
+    assert not [r for r in rows if r["d"] >= "2026-11-13"]
+    prem = {r["d"]: r["value"] for r in rows if r["series"] == ci.CB_PREMIUM}
+    assert set(prem) == {"2026-11-10", "2026-11-12"} and abs(prem["2026-11-10"] - (74754.08 / 74700.0 - 1)) < 1e-12 and prem["2026-11-12"] < 0
+    assert [r["d"] for r in rows if r["series"] == ci.CB_CLOSE] == ["2026-11-10", "2026-11-11", "2026-11-12"]

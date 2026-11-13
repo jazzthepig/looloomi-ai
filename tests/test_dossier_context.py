@@ -42,7 +42,7 @@ def test_build_reproduces_the_day_that_prompted_it():
                           "credit": "widening", "vix_term": "contango", "halving": "30-48m"}
     joined = " | ".join(c["conflicts"])
     assert "MVRV > 1" in joined and "稳定币供应在收缩" in joined and "信用利差在走阔" in joined
-    assert set(c["missing"]) == {"ust_2y", "ust_10y", "ust_10y_real", "fed_funds", "usd_broad", "btc_etf_flow"}      # 这几条当天还没进库:列名字,不给 0
+    assert set(c["missing"]) == {"ust_2y", "ust_10y", "ust_10y_real", "fed_funds", "usd_broad", "btc_etf_flow", "btc_coinbase_premium"}      # 这几条当天还没进库:列名字,不给 0
 
 
 def test_unmeasured_is_absent_not_zero_and_stale_is_refused():
@@ -120,3 +120,13 @@ def test_etf_flow_sums_use_only_sessions_known_by_the_date():
     assert c["reads"]["btc_etf_flow"] == "outflow"
     c2 = dc.build("2026-11-12", _state("2026-11-12", -0.01), [])
     assert "btc_etf_flow_5d_bn" not in c2 and "btc_etf_flow" in c2["missing"] and "btc_etf_flow" not in c2["reads"]
+
+
+def test_coinbase_premium_is_a_7_day_mean_of_closed_days_and_stale_is_refused():
+    prem = [(f"2026-11-{x:02d}", v) for x, v in zip(range(5, 13), (-0.0004, -0.0006, -0.0002, 0.0001, -0.0008, -0.0005, -0.0003, -0.0010))]
+    macro = [{"d": d, "series": "btc_coinbase_premium", "value": v} for d, v in prem] + [{"d": "2026-11-13", "series": "btc_coinbase_premium", "value": 0.5}]
+    c = dc.build("2026-11-12", _state("2026-11-12", -0.01), macro)
+    assert c["btc_coinbase_premium_7d_bp"] == round(sum(v for _, v in prem[-7:]) / 7 * 1e4, 1) and c["btc_coinbase_premium_d"] == "2026-11-12"
+    assert c["reads"]["us_spot"] == "discount"
+    c2 = dc.build("2026-11-20", _state("2026-11-20", -0.01), macro[:-1])                       # 最新一条已是 8 天前
+    assert "btc_coinbase_premium_7d_bp" not in c2 and "btc_coinbase_premium" in c2["missing"]
