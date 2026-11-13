@@ -1,0 +1,9 @@
+loaded dist_200 2873
+loaded taker_buy_share_30d 2873
+loaded stable_supply_30d 2873
+COVERAGE {"days": 2722, "cond_known_days": 2694, "first_taker_day": "2021-01-25", "days_with_2plus": 605}
+REAL {"n": 8, "share_confirmed": 0.875, "confirmed": {"n": 7, "median_days": 48.0, "median_ret_start_to_end_pct": 1.7, "median_max_runup_pct": 15.8, "median_ret_8w_after_pct": 10.3, "mean_ret_8w_after_pct": 0.6}, "invalidated": {"n": 1, "median_days": 91.0, "median_ret_start_to_end_pct": 19.6, "median_max_runup_pct": 42.0, "median_ret_8w_after_pct": 70.9, "mean_ret_8w_after_pct": 70.9}, "timeout": {"n": 0, "median_days": null, "median_ret_start_to_end_pct": null, "median_max_runup_pct": null, "median_ret_8w_after_pct": null, "mean_ret_8w_after_pct": null}}
+NULL_RANDOM_STARTS {"n_draws": 200, "share_confirmed_median": 0.667, "share_confirmed_p90": 0.875, "real_share_pctile": 0.885, "median_days_to_confirm_median": 30.0, "median_days_to_confirm_p10": 14.0, "real_median_days_pctile": 0.86}
+EXPECTATIONS {"a_confirms_sooner_than_random_starts_p10": false, "b_bulls_still_run_before_confirmation": true, "c_after_confirmation_worse_than_after_invalidation": true}
+SELF_CHECKS {"episodes_before_cut_ignore_future_prices": true, "n_before_cut": 2, "this_episode_present": []}
+WROTE docs/research/s851_results.json

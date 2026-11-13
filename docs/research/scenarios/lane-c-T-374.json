@@ -1,0 +1,45 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {
+      "id": "T-374-1",
+      "scenario": "T-374 S-851「条件成立 = 开始盯」的基率(8 段 episode / 7 段确认)",
+      "statement": "2027-01-31 时 BTC 仍在 200 日线下方(state_daily 的 dist_200 < 0,即「先行条件失效」的状态延续)",
+      "variable": "state:dist_200",
+      "op": "lt",
+      "hi": 0,
+      "prob": 0.6,
+      "horizon_d": "2027-01-31"
+    },
+    {
+      "id": "T-374-2",
+      "scenario": "T-374 S-851「条件成立 = 开始盯」的基率(8 段 episode / 7 段确认)",
+      "statement": "2026-12-15 时 BTC 收盘高于 2026-11-12 的 71460(ohlcv_daily binance_hist 收盘);本卡测得确认段结束后的 8 周收益中位数 +10.3% 但均值仅 +0.6%,预期多数后续并非单向向上",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 71460,
+      "prob": 0.55,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-374-3",
+      "scenario": "T-374 S-851「条件成立 = 开始盯」的基率(8 段 episode / 7 段确认)",
+      "statement": "2027-01-31 时 BTC 主动买入占比 30 日均值仍低于 0.5(state_daily 的 taker_buy_share_30d < 0.5,本卡三条先行条件之一仍成立)",
+      "variable": "state:taker_buy_share_30d",
+      "op": "lt",
+      "hi": 0.5,
+      "prob": 0.65,
+      "horizon_d": "2027-01-31"
+    },
+    {
+      "id": "T-374-4",
+      "scenario": "T-374 S-851「条件成立 = 开始盯」的基率(8 段 episode / 7 段确认)",
+      "statement": "T-374 复跑(用同一脚本重算 S-851)时,confirmed 段占比仍 ≥ 0.75(本卡实测 7/8 = 0.875)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0.75,
+      "prob": 0.7,
+      "horizon_d": "2027-02-28"
+    }
+  ]
+}
