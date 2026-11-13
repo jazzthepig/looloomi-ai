@@ -1,0 +1,55 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {
+      "id": "T-372-1",
+      "scenario": "T-372 S-847 流动性状态下的山寨空篮子(每周再平衡,空山寨多BTC)",
+      "statement": "2027-01-31 复核时,稳定币供应 30 日变化仍为负(state_daily 的 stable_supply_30d < 0,即「边际流动性在抽」的状态仍成立)",
+      "variable": "state:stable_supply_30d",
+      "op": "lt",
+      "hi": 0,
+      "prob": 0.55,
+      "horizon_d": "2027-01-31"
+    },
+    {
+      "id": "T-372-2",
+      "scenario": "T-372 S-847 流动性状态下的山寨空篮子(每周再平衡,空山寨多BTC)",
+      "statement": "2026-12-31 时 BTC 收盘高于 2026-11-12 的 71460(ohlcv_daily binance_hist 收盘)",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 71460,
+      "prob": 0.5,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-372-3",
+      "scenario": "T-372 S-847 流动性状态下的山寨空篮子(每周再平衡,空山寨多BTC)",
+      "statement": "T-372 复核时,「流动性条件下的山寨相对空」这个族(预注册 #1)的结论仍是 ❌,且下次预注册仍被单币尾部挡住(单币单周拖累 > 2pp)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.75,
+      "horizon_d": "2027-01-15"
+    },
+    {
+      "id": "T-372-4",
+      "scenario": "T-372 S-847 流动性状态下的山寨空篮子(每周再平衡,空山寨多BTC)",
+      "statement": "T-372 之后,S-847 家族(流动性条件下的山寨相对空)被判定为「必须换机制而不是换参数」,不再以同一族的名义开新预注册",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.45,
+      "horizon_d": "2027-03-31"
+    },
+    {
+      "id": "T-372-5",
+      "scenario": "T-372 S-847 流动性状态下的山寨空篮子(每周再平衡,空山寨多BTC)",
+      "statement": "2027-03-31 复核时,稳定币供应 30 日变化已翻正(state_daily 的 stable_supply_30d > 0)",
+      "variable": "state:stable_supply_30d",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.5,
+      "horizon_d": "2027-03-31"
+    }
+  ]
+}
