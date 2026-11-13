@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-13",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "notes": "2026-11-13T06:04:07Z Seth 开卡(台账 S-841 预注册)。",
+  "id": "T-364",
+  "owner": "lane-c",
+  "title": "S-835 候选三:跨资产趋势(SPY / EEM / GLD / TLT / USO,可多可空,不含加密)按准入标准判 —— 给机构产品规格找不相关的来源",
+  "source": "台账 S-841(`sed -n '/^## S-841 —/,/^## /p' REFUTATION_LEDGER.md`,只取这一节;规则、数据拼接、判据、零信号对照全在里面,一字照做)。装配与叠加的写法照你 T-363 返工后的 `t363_admission_table.py`(A_aug = A_base + w·r − w·r_cash)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-364.json"
+  ],
+  "acceptance": {
+    "check": "① 数据:`ohlcv_daily` 取 SPY / EEM / GLD / TLT / USO 两个 source(eodhd 2022-08-31 起复权;yfinance 2015-07-13 → 2022-08-30 未复权),收益在各自来源内部算、不跨拼接点取比;先报每个代码在重叠段(2022-09 → 2026-06)「复权 − 未复权」的年化差,拼接点之前空头一侧按它每天扣。② 规则照 S-841:月末、252 日收益符号、10% ÷ 60 日年化波动 ÷ 5、毛上限 2.0、每单位换手 5 bp;可多可空版判、只多版只报。③ 账户先对上年化 +35.7% / R-v2 风险占比 0.742;三条自检写进结果 json(账户日连乘 = 袖子净值首尾比,差 < 1e-9;w = 0 与恒现金族逐日等于 A_base)。④ (i)–(iv) 逐条报数逐条判,(iii) 另报「扣掉纯供资成本后」一列;随机符号对照 200 次,报真信号落在第几分位。⑤ 只报不判的那几项照 S-841 末段。只读、不入库;脚本 nohup,结果落文件;不要 Read 大文件。",
+    "expect": "docs/research/T-364_*.md + 脚本 + 结果 json(含三条自检与重叠段的复权差)+ scenarios/lane-c-T-364.json(≥ 3 条,lt 配 hi、gt 配 lo);卡 in_review,推 lane-c/T-364。"
+  },
+  "prior_value": "判过的 S-835 候选全在加密里;买方说的「互不相关」在别的资产上。若 (i) 过而年化贡献为正,这是机构产品规格的第一个非加密来源;若 (i) 不过,我们对「跨资产趋势与加密突破不相关」的先验是错的 —— 两种结果都值钱。"
+}
