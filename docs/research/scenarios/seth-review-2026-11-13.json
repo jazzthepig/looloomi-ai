@@ -1,0 +1,65 @@
+{
+ "author": "seth:high-dim",
+ "entries": [
+  {
+   "id": "HD-2026-11-13-1",
+   "scenario": "S2 冲洗",
+   "statement": "2026-12-11 BTC 收盘低于 64,314(比 11-12 的 71,460 再跌 10% 以上)",
+   "variable": "close:BTC",
+   "op": "lt",
+   "prob": 0.22,
+   "horizon_d": "2026-12-11",
+   "hi": 64314
+  },
+  {
+   "id": "HD-2026-11-13-2",
+   "scenario": "S3 反抽",
+   "statement": "2026-12-11 BTC 收盘高于 78,606(比 11-12 涨 10% 以上)",
+   "variable": "close:BTC",
+   "op": "gt",
+   "prob": 0.28,
+   "horizon_d": "2026-12-11",
+   "lo": 78606
+  },
+  {
+   "id": "HD-2026-11-13-3",
+   "scenario": "流动性止血",
+   "statement": "2026-12-11 面板的稳定币 30 日供应变化高于 −2%(11-12 是 −4.77%)",
+   "variable": "state:stable_supply_30d",
+   "op": "gt",
+   "prob": 0.3,
+   "horizon_d": "2026-12-11",
+   "lo": -0.02
+  },
+  {
+   "id": "HD-2026-11-13-4",
+   "scenario": "投降标记",
+   "statement": "2026-12-11 Binance 7 日年化资金费为负(11-12 是 +5.9%;多头不再付钱)",
+   "variable": "state:funding_7d_ann_binance",
+   "op": "lt",
+   "prob": 0.2,
+   "horizon_d": "2026-12-11",
+   "hi": 0.0
+  },
+  {
+   "id": "HD-2026-11-13-5",
+   "scenario": "情绪修复",
+   "statement": "2026-12-11 恐惧贪婪指数高于 40(11-13 是 20)",
+   "variable": "macro:fng",
+   "op": "gt",
+   "prob": 0.35,
+   "horizon_d": "2026-12-11",
+   "lo": 40
+  },
+  {
+   "id": "HD-2026-11-13-6",
+   "scenario": "利率回落",
+   "statement": "2026-12-11 2 年期美债收益率低于 4.60%(11-11 是 4.73%)",
+   "variable": "macro:ust_2y",
+   "op": "lt",
+   "prob": 0.35,
+   "horizon_d": "2026-12-11",
+   "hi": 4.6
+  }
+ ]
+}
