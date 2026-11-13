@@ -301,6 +301,11 @@ def window_metrics(acct: dict, fam_r: pd.Series, w: float, a, b, stress_flags: d
         return float(((1 + s).rolling(20).apply(np.prod) - 1).min())
 
     w20_base, w20_aug = worst20(rb_a), worst20(ra)
+    # 「扣掉纯供资成本后」的反事实账户:基线账户付掉 w 份现金的利息、但没加族(A_base − w·r_cash);
+    # 与 A_aug 的差 = 族在付掉供资成本之后真正的边际贡献。legacy 口径没有现金腿,不扣。
+    r_no_cash = rb_a if mode == "legacy" else rb_a - w * rcash_a
+    w20_no_cash = worst20(r_no_cash)
+    cagr_no_cash = float(cagr_from_daily(pd.Series(r_no_cash, index=rb.index)))
 
     # (ii) 零分布:把族的日收益整体错位,账户年化会怎样
     i0 = int(np.searchsorted(rb.index.to_numpy(), np.datetime64(active_start), side="left")) if active_start is not None else 0
@@ -332,6 +337,10 @@ def window_metrics(acct: dict, fam_r: pd.Series, w: float, a, b, stress_flags: d
         "cagr_base": float(base_cagr),
         "cagr_aug": float(actual),
         "dcagr_pp": float(100 * (actual - base_cagr)),
+        # 扣掉纯供资成本后的反事实账户(A_base − w·r_cash;legacy 口径 = A_base)
+        "cagr_no_cash": cagr_no_cash,
+        "dcagr_vs_no_cash_pp": float(100 * (actual - cagr_no_cash)),
+        "worst20_no_cash": float(w20_no_cash),
         "p_upper": float(p_up) if p_up is not None else None,
         "null_mean": float(np.mean(nulls)),
         "null_sd": float(np.std(nulls)),
@@ -788,6 +797,7 @@ def crosscheck_t361(res: dict) -> dict:
              ("total_contrib_pct", "total_contrib_pct"),
              ("dcagr_pp", "dcagr_pp"), ("p_upper", "p_upper")]
     diffs, pat_bad, bad = [], [], []
+    bad_fields: dict = {}
     for fk, fr in res["families"].items():
         of = old.get("families", {}).get(fk)
         if of is None:
@@ -805,12 +815,15 @@ def crosscheck_t361(res: dict) -> dict:
                 diffs.append(d)
                 if d > 1e-9:
                     bad.append(f"{fk}/{wn}/{nk}: {float(a)} vs {float(b)}")
+                    bad_fields[nk] = bad_fields.get(nk, 0) + 1
             pa = list(m.get("judge_legacy_t361", {}).get("pattern", []))
             pb = list(om.get("judge", {}).get("pattern", []))
             if pa != pb:
                 pat_bad.append(f"{fk}/{wn}: {pa} vs {pb}")
     return {"available": True, "n_compared": len(diffs),
             "max_abs_diff": float(max(diffs)) if diffs else float("nan"),
+            "n_mismatch": len(bad),
+            "mismatch_fields": bad_fields,
             "mismatch_examples": bad[:10],
             "pattern_mismatch": pat_bad, "pattern_match": len(pat_bad) == 0,
             "note": "对账对象 = 脚本里的旧口径复现(旧合成 + 旧尺寸)vs t361_results.json"}
@@ -857,7 +870,10 @@ def write_md(res: dict) -> None:
     cc = res.get("crosscheck_t361", {})
     if cc.get("available"):
         L.append(f"- 对账:脚本里留下的**旧口径复现**(旧合成 + 旧尺寸)与 t361_results.json 逐个对上"
-                 f"(比较 {cc.get('n_compared')} 个数,最大绝对差 {cc.get('max_abs_diff', float('nan')):.6f},"
+                 f"(比较 {cc.get('n_compared')} 个数,容差 1e-9;"
+                 f"**{cc.get('n_compared', 0) - cc.get('n_mismatch', 0)} 个逐个对上**,"
+                 f"差的 {cc.get('n_mismatch', 0)} 个全在 {list(cc.get('mismatch_fields', {}).keys())}"
+                 f"(零分布的随机流与 T-361 那次不同,差几个 rank;最大绝对差 {cc.get('max_abs_diff', float('nan')):.6f}),"
                  f"旧 (i)–(iii) pattern 一致:{cc.get('pattern_match')})⇒ 数据装配没动,变的只有合成与尺寸。\n")
     def f2(v):
         if v is None:
@@ -883,20 +899,61 @@ def write_md(res: dict) -> None:
         return "全过" if not parts else "挡在 " + "/".join(parts)
 
     def verdict(r: dict) -> str:
-        """一族一行结论:尺寸可行 + (i)(ii)(iii) 两窗全过 + (iv) 两窗同向 ⇒ 过。"""
+        """一族一行结论。
+
+        口径(本轮 Seth 答第 ① 问):**尺寸不可行的族照样在 w = 1 上把 (i)–(iv) 判完**,
+        结论栏写「过表但分量不到位」或「不过」—— 不因为尺寸直接判不过。
+        登记口径的 `passes`(= (i)–(iv) 全过 且 尺寸可行)另存在 t363_results.json 里。
+        """
         pats = r.get("pattern_new") or {}
         a, b = pats.get("A_earliest"), pats.get("B_2021-10-11")
         allp = (a == [True, True, True]) and (b == [True, True, True])
         A = r["windows"].get("A_earliest", {})
         B = r["windows"].get("B_2021-10-11", {})
         wa, wb = why(A), why(B)
-        if r.get("sizing_infeasible"):
-            return ("**不过**(尺寸不可行" + (";但 (i)(ii)(iii) 全过)" if allp else f";挡在 {wa} · {wb})"))
-        if r.get("passes_new"):
-            return "**过**"
-        if allp and r.get("iv_degenerate"):
+        tail = " ⟨尺寸不可行:w ≤ 1 到不了 10% 风险贡献⟩" if r.get("sizing_infeasible") else ""
+        if allp:
+            if r.get("iv_degenerate") or not r.get("iv_available", True):
+                return "不过((iv) 另一窗口不可得)" + tail
+            if r.get("iv_same_direction"):
+                return ("**过表但分量不到位**" + tail) if r.get("sizing_infeasible") else "**过**"
+            return "不过((iv) 两窗口不同向)" + tail
+        return f"不过({wa} · {wb})" + tail
+
+    def verdict_old(r: dict) -> str:
+        """旧口径(T-361:替换合成 + |ρ|<0.30)的结论,只用于对照,不作判定。"""
+        pats = r.get("pattern_old_t361") or {}
+        a, b = pats.get("A_earliest"), pats.get("B_2021-10-11")
+        if a is None or b is None:
+            return "不过(旧口径窗口不可得)"
+        if not r.get("iv_available", True):
             return "不过((iv) 另一窗口不可得)"
-        return f"不过({wa} · {wb})"
+        allp = (a == [True, True, True]) and (b == [True, True, True])
+        if allp and r.get("iv_same_direction_old"):
+            return "**过**"
+        return "不过"
+
+    def old_why(r: dict, wn: str) -> str:
+        """旧口径复现(legacy_t361_replicate)里某窗的挡在项。"""
+        m = (r.get("legacy_t361_replicate") or {}).get(wn) or {}
+        p = (m.get("judge_legacy_t361") or {}).get("pattern")
+        if p is None:
+            return "n/a"
+        parts = [nm for i, nm in enumerate(("i", "ii", "iii")) if not p[i]]
+        return "全过" if not parts else "挡在 " + "/".join(parts)
+
+    def old_i_tick(r: dict, wn: str) -> str:
+        """旧口径复现里某窗的 (i) 判定。"""
+        m = (r.get("legacy_t361_replicate") or {}).get(wn) or {}
+        p = (m.get("judge_legacy_t361") or {}).get("pattern")
+        if p is None:
+            return "n/a"
+        return "✓" if p[0] else "✗"
+
+    def leg(r: dict, wn: str, key: str):
+        """旧口径复现(legacy_t361_replicate)里某窗的原始数。"""
+        m = (r.get("legacy_t361_replicate") or {}).get(wn) or {}
+        return m.get(key)
 
     def tick(m, key):
         j = (m or {}).get("judge", {})
@@ -917,26 +974,73 @@ def write_md(res: dict) -> None:
         return f"{m.get('worst20_base', float('nan')):+.1%}→{m.get('worst20_aug', float('nan')):+.1%}"
 
     # ── 开头汇总表:八个族 ───────────────────────────────────────────────
+    def i_txt(mA, mB, k1, k2):
+        def one(m):
+            if not m:
+                return "n/a"
+            return f"{f2(m.get(k1))}/{f2(m.get(k2))}"
+        def tk(m):
+            if not m:
+                return ""
+            return " ✓" if (m.get("judge", {}) or {}).get("i_corr_lt_030") else " ✗"
+        return f"A:{one(mA)}{tk(mA)} · B:{one(mB)}{tk(mB)}"
+
+    def ii_txt(mA, mB):
+        def one(m):
+            if not m:
+                return "n/a"
+            v = m.get("p_upper")
+            pt = "n/a" if v is None else f"{v:.3f}"
+            return (f"{m.get('dcagr_pp', float('nan')):+.1f}pp"
+                    f" · 贡献 {m.get('mean_monthly_contrib_pct', float('nan')):+.3f}%/月 · p={pt}")
+        return f"A:{one(mA)} · B:{one(mB)}"
+
+    def nocash_txt(mA, mB):
+        def one(m):
+            if not m:
+                return "n/a"
+            return (f"20日 {m.get('worst20_no_cash', float('nan')):+.1%}"
+                    f" · 年化差 {m.get('dcagr_vs_no_cash_pp', float('nan')):+.1f}pp")
+        return f"A:{one(mA)} · B:{one(mB)}"
+
+    def fam_cagr_txt(st):
+        v = (st or {}).get("cagr_pct")
+        if v is None or (isinstance(v, float) and np.isnan(v)):
+            return "n/a"
+        return f"{v:+.2f}%"
+
+    def pat_txt(p):
+        if not p:
+            return "n/a"
+        return "".join("✓" if x else "✗" for x in p)
+
     L.append("## 汇总:八个族在新合成(叠加)下的准入结果\n")
-    L.append("A / B = 两个窗口(A = 该族首个进场日起,B = 2021-10-11 起);(i)(ii)(iii) 每格两字依次是 A / B;"
-             "**尺寸 w 是按加族后的账户二分出来的**;不可行时报 w = 1 的数。\n")
-    L.append("| 族 | 尺寸 w | (i) 与账户 A_base | (ii) 贡献>0 且 p<0.10 | (iii) 最差20日/有效来源 | (iv) 两窗口 | 账户年化变化 A / B | 最差 20 日变化 A / B | 结论 |")
-    L.append("|---|---|---|---|---|---|---|---|---|")
+    L.append("A / B = 两个窗口(A = 该族首个进场日起,B = 2021-10-11 起);(i) 的 ✓/✗ 是逐窗判定;"
+             "**尺寸 w 是按加族后的账户二分出来的**;不可行时报 w = 1 的数。"
+             "「扣掉纯供资成本后」= 扣掉 −w·r_cash、但没加族的反事实账户(A_base − w·r_cash):"
+             "20 日是它的最差 20 日,年化差 = 加族后账户年化相对它的差(族在付掉供资成本之后的边际贡献)。\n")
+    L.append("| 族 | 尺寸 w | (i) corr(Fw, A_base) 全/压 A/B | (i) corr(Fw, R-v2) 全/压 A/B "
+             "| (ii) 年化变化 · 月贡献 · p A/B | (iii) 最差20日 基→加族 A/B | (iii) 扣掉纯供资成本后 A/B "
+             "| (iv) 两窗口 | 结论 |")
+    L.append("|---|---|---|---|---|---|---|---|")
     for k, r in res["families"].items():
         A = r["windows"].get("A_earliest", {})
         B = r["windows"].get("B_2021-10-11", {})
         sz = r["sizing"]
-        wt = f"{sz['w']:.3f}" if sz.get("feasible") else "**不可行**(报 w=1)"
+        wt = f"{sz['w']:.3f}" if sz.get("w") is not None else "**不可行**(w=1)"
         iv = ("另一窗口不可得(A=B)" if r.get("iv_degenerate")
               else ("同向 ✓" if r.get("iv_same_direction") else "窗口依赖 ✗"))
         L.append(f"| {r['label']} | {wt} "
-                 f"| {two_tick(A, B, 'i_corr_lt_030')} | {two_tick(A, B, 'ii_positive_and_p_lt_010')} "
-                 f"| {two_tick(A, B, 'iii_ok')} | {iv} "
-                 f"| {cagr_txt(A)} / {cagr_txt(B)} | {w20_txt(A)} / {w20_txt(B)} | {verdict(r)} |")
+                 f"| {i_txt(A, B, 'corr_acct_base_full', 'corr_acct_base_stress')} "
+                 f"| {i_txt(A, B, 'corr_rv2_full', 'corr_rv2_stress')} "
+                 f"| {ii_txt(A, B)} "
+                 f"| {w20_txt(A)} / {w20_txt(B)} | {nocash_txt(A, B)} | {iv} "
+                 f"| {verdict(r)} |")
     L.append("")
     inf = [r["label"] for r in res["families"].values() if not r["sizing"].get("feasible")]
     L.append(f"尺寸不可行的族:{('、'.join(inf)) if inf else '无'} —— 叠加口径下账户的方差不再被缩小,"
-             f"低波动族要在资金倍数 w ≤ 1 内做到 10% 风险贡献几乎不可能。\n")
+             f"低波动族要在资金倍数 w ≤ 1 内做到 10% 风险贡献几乎不可能;"
+             f"按登记这七个族**过表也不算数**(t363_results.json 的 `passes`),但 (i)–(iv) 本身仍在 w = 1 上判完。\n")
 
     L.append("## 尺寸的代价(叠加口径下的年化与最差 20 日)\n")
     L.append("尺寸 = 族自己的边际风险贡献 = **加族后**账户月度方差的 10%(二分)。这个规则按**风险**配权、不按收益配权;"
@@ -949,21 +1053,22 @@ def write_md(res: dict) -> None:
         st = r.get("standalone") or {}
         nt = (r.get("meta") or {}).get("n_tickets")
         sz = r["sizing"]
-        wt = f"{sz['w']:.3f}" if sz.get("feasible") else "**不可行**(w=1)"
+        wt = f"{sz['w']:.3f}" if sz.get("w") is not None else "**不可行**(w=1)"
         L.append(f"| {r['label']} | {wt} "
                  f"| {A.get('cagr_base', float('nan')):+.2%} → {A.get('cagr_aug', float('nan')):+.2%} "
                  f"({A.get('dcagr_pp', float('nan')):+.1f} pp) "
                  f"| {B.get('cagr_base', float('nan')):+.2%} → {B.get('cagr_aug', float('nan')):+.2%} "
                  f"({B.get('dcagr_pp', float('nan')):+.1f} pp) "
-                 f"| {st.get('cagr_pct', float('nan')):+.2f}% | {nt if nt is not None else '—'} |")
+                 f"| {fam_cagr_txt(st)} | {nt if nt is not None else '—'} |")
     L.append("")
 
     L.append("| 族 | 尺寸 w | (i) 与账户 A_base 全/压 A/B | (i) 与叠加后账户 A_aug(照报不判) A/B | (i) 与 R-v2 全/压 A/B | (ii) 月贡献%/月 A/B "
              "| (ii) p_upper A/B | (iii) 最差20日 基→加族 A/B | (iii) 有效来源 基→加族 A/B "
-             "| (iv) 两窗口 | 新结论(ρ<0.30) | 新结论(\\|ρ\\|<0.30) | 旧结论(T-361) | 口径翻转 |")
+             "| (iv) 两窗口 | 新结论(ρ<0.30) | 新结论(\\|ρ\\|<0.30,口径已删) | 旧结论(T-361) | 口径翻转 |")
     L.append("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
     for k, r in res["families"].items():
         w = r["sizing"].get("w")
+        wt = f"{w:.3f}" if w is not None else "**不可行**(w=1)"
         A = r["windows"].get("A_earliest", {})
         B = r["windows"].get("B_2021-10-11", {})
         if not (A or B):
@@ -1000,7 +1105,7 @@ def write_md(res: dict) -> None:
                 return f"{fmt.format(x)}→{fmt.format(y)}"
             return f"A: {one(A)} · B: {one(B)}"
         L.append(
-            f"| {r['label']} | {w:.3f} "
+            f"| {r['label']} | {wt} "
             f"| {two_fs(lambda m: f2(m.get('corr_acct_base_full')), lambda m: f2(m.get('corr_acct_base_stress')))} "
             f"| {two_fs(lambda m: f2(m.get('corr_acct_aug_full')), lambda m: f2(m.get('corr_acct_aug_stress_legacy')))} "
             f"| {two_fs(lambda m: f2(m.get('corr_rv2_full')), lambda m: f2(m.get('corr_rv2_stress')))} "
@@ -1008,10 +1113,10 @@ def write_md(res: dict) -> None:
             f"| {two(lambda m: ('%.3f' % m['p_upper']) if m.get('p_upper') is not None else 'n/a')} "
             f"| {two_pair(lambda m: m.get('worst20_base'), lambda m: m.get('worst20_aug'), '{0:+.1%}')} "
             f"| {two_pair(lambda m: m.get('eff_sources_base'), lambda m: m.get('eff_sources'), '{0:.2f}')} "
-            f"| {ivs} | {verdict(r, 'pattern_new', 'iv_same_direction', 'i_corr_lt_030')} "
-            f"| {verdict(r, 'pattern_new_abs', 'iv_same_direction', 'i_corr_lt_030_abs')} "
-            f"| {verdict(r, 'pattern_old', 'iv_same_direction_old', 'i_corr_lt_030_old_reading')} "
-            f"| {'**是**' if (r.get('conclusion_changed') or r.get('conclusion_changed_abs')) else '否'} |")
+            f"| {ivs} | {verdict(r)} "
+            f"| 不判(口径删掉,只报原数) "
+            f"| {verdict_old(r)} "
+            f"| {'**是**' if r.get('conclusion_changed') else '否'} |")
     L.append("")
     L.append("## 逐族逐窗的原始数\n")
     L.append("主表里是每族每窗的相关与判定;完整的逐族逐窗原始数(含 T-361 压力月集合下的 R-v2 相关、"
@@ -1019,35 +1124,40 @@ def write_md(res: dict) -> None:
     L.append("## 因口径改变而翻转的族\n")
     any_flip = False
     for k, r in res["families"].items():
-        if not (r.get("conclusion_changed") or r.get("conclusion_changed_abs")):
+        if not r.get("conclusion_changed"):
             continue
         any_flip = True
         A = r["windows"].get("A_earliest", {})
         B = r["windows"].get("B_2021-10-11", {})
-        d_old = "过" if r.get("passes_old") else "不过"
+        d_old = "过" if r.get("passes_old_t361") else "不过"
         d_new = "过" if r.get("passes_new") else "不过"
-        d_abs = "过" if r.get("passes_new_abs") else "不过"
-        L.append(f"- **{r['label']}**:旧口径(T-361) **{d_old}** → 新口径 ρ<0.30 **{d_new}** / |ρ|<0.30 **{d_abs}**。"
+        L.append(f"- **{r['label']}**:旧口径(T-361) **{d_old}** → 新口径 ρ<0.30 **{d_new}**"
+                 f"(尺寸不可行 ⇒ 按登记不算过)。"
                  f"(i) 窗A 新 {f2(A.get('corr_acct_base_full'))}/{f2(A.get('corr_acct_base_stress'))}"
-                 f" → 旧 {f2(A.get('corr_acct_aug_full'))}/{f2(A.get('corr_acct_aug_stress_legacy'))};"
+                 f" → 旧 {f2(leg(r, 'A_earliest', 'corr_acct_aug_full'))}/{f2(leg(r, 'A_earliest', 'corr_acct_aug_stress_legacy'))};"
                  f"窗B 新 {f2(B.get('corr_acct_base_full'))}/{f2(B.get('corr_acct_base_stress'))}"
-                 f" → 旧 {f2(B.get('corr_acct_aug_full'))}/{f2(B.get('corr_acct_aug_stress_legacy'))}。"
-                 f"判定细节:新 {why(A)} / {why(B)};旧 {why(A, 'i_corr_lt_030_old_reading')} / {why(B, 'i_corr_lt_030_old_reading')}。\n")
+                 f" → 旧 {f2(leg(r, 'B_2021-10-11', 'corr_acct_aug_full'))}/{f2(leg(r, 'B_2021-10-11', 'corr_acct_aug_stress_legacy'))}。"
+                 f"判定细节:新 {why(A)} / {why(B)};旧 {old_why(r, 'A_earliest')} / {old_why(r, 'B_2021-10-11')}。\n")
     if not any_flip:
         L.append("- 无。\n")
     L.append("")
-    L.append("### (i) 判定翻转、但结论没变的族(它们本来就挡在 (ii))\n")
+    L.append("### 逐窗 (i)(ii)(iii) 判定有变化、但结论没变的族\n")
+    L.append("「旧」= T-361 口径复现(替换合成 + |ρ|<0.30 + core 压力月),「新」= 本卡口径(叠加 + 单侧 ρ<0.30 + 本窗压力月);"
+             "每格三个字依次是 (i)(ii)(iii) 的 ✓/✗。\n")
     any_i = False
     for k, r in res["families"].items():
-        if not r.get("i_flipped_any_window"):
+        if not r.get("pattern_changed_by_composition"):
             continue
-        if r.get("conclusion_changed") or r.get("conclusion_changed_abs"):
+        if r.get("conclusion_changed"):
             continue
         any_i = True
         A = r["windows"].get("A_earliest", {})
         B = r["windows"].get("B_2021-10-11", {})
-        L.append(f"- **{r['label']}**:(i) 旧 {why(A, 'i_corr_lt_030_old_reading')} → 新 {why(A)} / {why(B)}"
-                 f"(窗A/B);(i) 不再挡它,但 (ii)(自己的月贡献为负)照样挡 ⇒ 结论不变。\n")
+        po = r.get("pattern_old_t361") or {}
+        L.append(f"- **{r['label']}**:旧 A:{pat_txt(po.get('A_earliest'))} / B:{pat_txt(po.get('B_2021-10-11'))}"
+                 f" → 新 A:{pat_txt((r.get('pattern_new') or {}).get('A_earliest'))}"
+                 f" / B:{pat_txt((r.get('pattern_new') or {}).get('B_2021-10-11'))}"
+                 f"(新口径下仍:{why(A)} / {why(B)})⇒ 结论不变(旧、新都不过)。\n")
     if not any_i:
         L.append("- 无。\n")
     L.append("")
