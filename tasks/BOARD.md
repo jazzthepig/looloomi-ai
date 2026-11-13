@@ -65,6 +65,7 @@
 | open | T-366 | lane-b | 真钱在交易的币有没有向量:R-v2 票源的币逐个对账(资产向量 / 资金面向量 / CIS),并列出 27 维里哪些对只有永续的币算得出来 | docs/research/T-366_traded_universe_coverage.md + 脚本 + 结果 json;卡 in_review,推 lane-b/T-366。 | 如果按盈亏金额加权的覆盖率很低,说明资产空间描述的是我们打分的币、不是我们赚钱的币 —— 扩面板的优先级就定了。 |  |
 | open | T-341 | lane-c | 真钱唯一规则 X1V 的归因:对「同平均 β 的常数加密腿」—— 账户抗跌是 X1V 的择时还是 70% 非加密配置的结构(T-305 遗留 (c)) | docs/research/T-341_x1v_vs_const_beta.md(预注册在前,开头一张 A / K / ① 三行表)+ docs/research/t341_x1v_vs_const.py + docs/research/t341_results.json;卡 notes 写 w_K、两段 A−K 的总收益与回撤差、随机分位三个数;in_review,推 lane-c/T-341。 | T-305 只把账户和 ① 比,不能区分『X1V 择时』和『只持 30% 加密』。真钱里唯一的规则至今没有对它自己的结构做过对照;S2 里 Jazz 要回答 LP 的『为什么不直接用常数配比』,现在没有数。 |  |
 | open | T-348 | lane-c | 坟场按新尺子重判:已有的做空 / 对冲票(S-642、S-681 H2–H4、S-736、S-808、S-810)叠到整合账本上,按账户口径的回本时间与年化看,两个窗口 | docs/research/T-348_graveyard_rejudged.md + t348_*.py + t348_results.json + scenarios/lane-c-T-348.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-c/T-348。 | 规则改了之后,哪些旧的 ❌ 是「尺子」造成的、哪些是真的不行,要量出来 —— 否则重新挖只是把同一批东西再否一遍或再信一遍。 |  |
+| open | T-374 | lane-c | S-851:「条件成立 = 开始盯」的基率 —— 只跑 Seth 写好的脚本,把输出原样贴回 | docs/research/s851_results.json + s851_run.log + scenarios/lane-c-T-374.json(≥ 3 条,lt 配 hi、gt 配 lo);卡 in_review,推 lane-c/T-374。 | 这一次从开始盯到周线确认隔了 35 天、期间又涨了 6.6%。历史上通常隔多久、通常再涨多少、有多少次根本没转 —— 盯盘清单要靠这张表才知道该预期什么。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -375,4 +376,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 21 · claimed 6 · blocked 4 · in_review 50 · done 286 · dropped 5
+open 22 · claimed 6 · blocked 4 · in_review 50 · done 286 · dropped 5
