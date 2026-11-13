@@ -1,0 +1,20 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {"id": "T-365-1", "scenario": "BTC 月末区间",
+     "statement": "2026-12-31 BTC 收盘价落在 55,000–90,000 区间内(2026-11-12 收盘 71,383)",
+     "variable": "close:BTC", "op": "between", "lo": 55000, "hi": 90000, "prob": 0.7, "horizon_d": "2026-12-31"},
+    {"id": "T-365-2", "scenario": "BTC 半月区间",
+     "statement": "2026-12-15 BTC 收盘价落在 60,000–85,000 区间内(2026-11-12 收盘 71,383)",
+     "variable": "close:BTC", "op": "between", "lo": 60000, "hi": 85000, "prob": 0.6, "horizon_d": "2026-12-15"},
+    {"id": "T-365-3", "scenario": "第一条人的 ⓪ 判断到期",
+     "statement": "到 2026-11-27,regime_calls 里最新一条人的判断仍是 off(S-839 那条,没有被新的一条替换)",
+     "variable": "manual", "op": "between", "lo": 0, "hi": 1, "prob": 0.55, "horizon_d": "2026-11-27"},
+    {"id": "T-365-4", "scenario": "R-v2 前向仍无票",
+     "statement": "2026-12-15 之前生产 r_tickets_paper 仍是 0 行(R-v2 前向一张票都没开,majors 闸门 11-10 起关着)",
+     "variable": "manual", "op": "between", "lo": 0, "hi": 1, "prob": 0.5, "horizon_d": "2026-12-15"},
+    {"id": "T-365-5", "scenario": "坟场下一批的成分",
+     "statement": "下一批补库(2026-10 的 12 条)里判出结论词(REFUTED / INCONCLUSIVE / CANDIDATE / REPLICATED)的条数 ≥ 4",
+     "variable": "manual", "op": "between", "lo": 0, "hi": 1, "prob": 0.65, "horizon_d": "2026-12-15"}
+  ]
+}

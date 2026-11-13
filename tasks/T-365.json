@@ -1,0 +1,28 @@
+{
+  "status": "in_review",
+  "created": "2026-11-13",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "notes": "2026-11-13T07:03:43Z Seth 开卡(台账 S-842)。 || 2026-11-13T07:25:00Z Seth:B 道第一轮(07:11 UTC)上下文溢出、无交付。改小:第一遍由脚本 `scripts/research/ledger_to_experiment_runs.py` 只用标题生成(218 行,其中 175 行标题里没有明确记号 ⇒ PENDING、数字全空),文件已在 `cometcloud-local/_reports/absorb_input/experiment_runs_backfill.jsonl`。**你的活改成逐条核对正文、补结论词与数字:每轮只做 `t365_round_ids.txt` 里列的 12 条**,结果写同目录 `experiment_runs_backfill_patch.jsonl`(追加;每行 run_id / verdict / window / n_obs / total_return_pct / max_dd_pct / notes,台账没写的留空),不要改主文件;做完把 `t365_round_ids.txt` 里做过的行删掉,Seth 每轮补下一批。 || 2026-11-13 lane-b 第一轮完成:12 条(2026-11 的全部,`t365_round_ids.txt` 12 行已做、已清空)逐条读了正文(共读 17 个小节 = 12 个结果/记录 + 5 个更正,更正并进对应结果的 notes),结论词与数字写进 `cometcloud-local/_reports/absorb_input/experiment_runs_backfill_patch.jsonl`(12 行;主文件未动)。结论词分布:REFUTED 1 / INCONCLUSIVE 3 / CANDIDATE 0 / REPLICATED 1 / PENDING 7。台账 199 个 11 月小节里跳过 182:预注册或登记 108、更正或复核 10、结果类不在本批 37、无结论词的记录 27。摘要 `docs/research/T-365_backfill_summary.md`(只有计数),情景 `docs/research/scenarios/lane-b-T-365.json`(5 条,2 条自动结算)。**下一轮:2026-10**,批次号 T-365-r2-2026-10。三件要 @seth 定或做:①主文件 source_lane 用的是 lane-a/lane-b/lane-c,合同 KNOWN_LANES 是 minimax-a/minimax-b/minimax-c/seth/austin/mac-t1 —— 走 /internal/research-intake 端点会被拒,改哪一边?②本轮上下文守卫在 95k/110k 拦了脚本,**合同的 `_normalize_experiment_run` 逐行校验没跑**(按源码核对预期 rejected=0);脚本已写好在 `cometcloud-local/research/t365_build_patch.py`,下一轮跑一次(它会校验并追加,注意别重复追加)。③台账是私有文档,分支上只放卡 + 计数摘要 + 情景,没有假设原文。",
+  "id": "T-365",
+  "owner": "lane-b",
+  "title": "坟场入库:台账 9 月以来的实验结论整理成 experiment_runs 的批次文件(每轮一个月,从 11 月往回)",
+  "source": "台账 S-842(`sed -n '/^## S-842 —/,/^## /p' REFUTATION_LEDGER.md`)。合同在 `src/api/contracts/research_intake.py`(字段、可提交的结论词 REFUTED / INCONCLUSIVE / CANDIDATE / REPLICATED / PENDING、自然键 run_id)。实测:experiment_runs 157 行,9 月以来的 73 行没有 dsr、没有 ledger_ref、没有 source_lane —— 坟场在台账里、不在库里,检索不到。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-365.json"
+  ],
+  "acceptance": {
+    "check": "① `grep -n '^## S-\\|^## M-' REFUTATION_LEDGER.md` 取标题与行号,**只处理标题日期在本轮那个月里的条目**(第一轮 = 2026-11);逐条用 sed 取该节前 25 行,不要 Read 整个台账。② 只收「结果 / 判定」条目(预注册、更正、裁定记录不收;一条结果的更正并进它的 notes)。每条一行:run_id = 台账编号(如 `S-840`)、kind(mining / replication / audit / sizing …)、hypothesis(一句话,说清规则与对照)、verdict(五个词之一;台账写 ❌ = REFUTED,写「只报不判 / 样本不够」= INCONCLUSIVE,过了预注册判据但未进真钱 = CANDIDATE,两台引擎一致 = REPLICATED)、window、n_obs、台账里写明的数(total_return_pct / max_dd_pct / sharpe,没写就留空,**不许估**)、ledger_ref = 标题原文前 60 字、source_lane(seth / lane-a / lane-b / lane-c,按标题里写的)、notes ≤ 300 字。③ 用合同里的 `_normalize_experiment_run` 逐行过一遍,rejected 必须是 0。④ **文件写到 `/Volumes/CometCloudAI/cometcloud-local/_reports/absorb_input/experiment_runs_backfill.jsonl`(追加;台账是私有的,这个文件不进 git)**。分支上只放卡与一份只有计数的摘要(按月 × 结论词的张数、被跳过的条目数与原因),不放任何假设原文。⑤ 入库这一步不是你的(要 token):Seth 收到文件后交 Jazz 在 Mac 上提交。",
+    "expect": "cometcloud-local/_reports/absorb_input/experiment_runs_backfill.jsonl(本轮那个月)+ docs/research/T-365_backfill_summary.md(只有计数)+ 卡 in_review,推 lane-b/T-365。一轮只做一个月;卡 notes 里写下一轮该做哪个月。"
+  },
+  "prior_value": "「坟场是资产」只有在查得到的时候才成立:现在问库里「做空族试过几次、各自怎么死的」答不出来,只能翻台账。"
+}
