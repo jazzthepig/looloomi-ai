@@ -1,0 +1,28 @@
+{
+  "status": "in_review",
+  "created": "2026-11-13",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "notes": "2026-11-13T13:51:21Z Seth 开卡(台账 S-850 预注册;Jazz 11-13「不单是针对 BTC」)。 | 2026-11-14 lane-a 只跑 Seth 的脚本 docs/research/s850_cross_asset.py(一字未改),单次拉 442,761 行(binance_hist 自2019-01-01,与 count=exact 一致,分页无截断),约12分钟;产物:docs/research/s850_results.json、s850_run.log、报告 T-373_s850_crossasset.md、scenarios/lane-a-T-373.json(10条)。①BTC 四格复现 1/4 过:wk_ok/利率降 15.8 vs 18.7(✗)、wk_ok/利率升 5.5 vs 5.8(✓)、wk_down/利率降 8.8 vs 11.1(✗)、wk_down/利率升 +0.7 vs −0.4(✗且变号)——两格大的同号但幅度小 15–21%,四格之间的大小关系仍在。②好格−坏格(pp)/pctile:BTC 19.1/0.90、ETH 20.7/0.875、SOL 35.9/0.74(n=318)、ALT20 19.7/0.75、XAUUSD 3.8/0.96、ACWI 4.1/1.00、QQQ 5.8/1.00。③预期1 不成立(加密四个差都是正的,但都没稳过 p90:BTC 恰等于零分布 p90=19.1)、预期2 不成立(黄金/股票的稳定币维 pctile 0.925/0.995/0.88 全过 p90)、预期3 只报(ETH/SOL 自身供给周期读不到:coin_supply_daily 仅8天;ALT20 读不到:篮子成员无 coin_id 映射;XAUUSD 实际利率下行 +3.2 vs 上行 +2.0;ACWI/QQQ 利差走阔段反而更高 +4.9/+6.3 vs 收窄 +1.3/+1.5);附 1b 成立(山寨 19.7 ≥ BTC 19.1,差距仅0.6pp)、2b 成立。④自检三条 true/true/[20,20]。⑤因基线未复现,跨资产数字全部挂在未复现的基线上;我上一轮未交付的自写实现是扫1,944组拟合口径才报四格全过,与本脚本『照定义直读』口径不一致——口径按字面还是按复原,判定权在台账,已 @seth。",
+  "id": "T-373",
+  "owner": "lane-a",
+  "title": "S-850:同一套读法(边际流动性 × 利率方向 × 自己的周线 × 自己的供给周期)在 ETH / SOL / 山寨篮子 / 黄金 / 全球股票 / 纳指上成不成立",
+  "source": "台账 S-850(`sed -n '/^## S-850 —/,/^## /p' REFUTATION_LEDGER.md`,只取这一节,定义一字照做)。BTC 的基线表在台账「S-844 补五」(`sed -n '/^## S-844 补五/,/^## /p'`)。数据:`ohlcv_daily`(加密 source=binance_hist;XAUUSD / ACWI / QQQ source=eodhd)、`macro_daily`(series ust_2y / ust_10y_real / hy_oas)、`state_daily`(entity panel、feature stable_supply_30d)、`coin_supply_daily`。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-373.json"
+  ],
+  "acceptance": {
+    "check": "① 先复现 BTC 的四格(+18.7 / +5.8 / +11.1 / −0.4,±0.3),对不上就停、把差在哪写进 SYNC。② 七个资产每个三张 2×2(周数、之后 8 周均值 / 中位 / 为负比例、来自几个年份)+「好格 − 坏格」均值差 + 循环平移 200 次的分位。③ 每个资产自己的那一维照 S-850 写死的定义;读不到的写「读不到」,不填 0。④ 三条预期逐条写「成立 / 不成立」并给数。⑤ 自检三条写进结果 json。只读、不入库;脚本 nohup;不要 Read 大文件;查库分资产逐个查,别一条大查询(Seth 今天两次整表查询都超时)。",
+    "expect": "docs/research/T-373_*.md + 脚本 + 结果 json + scenarios/lane-a-T-373.json(≥ 3 条,lt 配 hi、gt 配 lo);卡 in_review,推 lane-a/T-373。"
+  },
+  "prior_value": "如果稳定币这一维对黄金和股票「也有用」,它就只是风险偏好的影子;如果只对加密有用、且山寨比 BTC 更敏感,这套读法才配按资产各开一份。"
+}

@@ -1,0 +1,110 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T-373-1",
+      "scenario": "T-373 S-850 跨资产读法(加密腿的边际流动性:2026-11-12 现值 -0.0477)",
+      "statement": "2026-12-13 当周稳定币供应 30 日变化为正(加密腿的核心条件:边际流动性在加;2026-11-12 现值 -0.0477,要在 30 天内由负转正)",
+      "variable": "state:stable_supply_30d",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.25,
+      "horizon_d": "2026-12-13"
+    },
+    {
+      "id": "T-373-2",
+      "scenario": "T-373 S-850 跨资产读法(利率方向:2026-11-11 现值 ust_2y 4.73)",
+      "statement": "2026-12-01 的 2 年期国债收益率仍在 4.5% 以下(需从 4.73 降 23bp 以上)",
+      "variable": "macro:ust_2y",
+      "op": "lt",
+      "hi": 4.5,
+      "prob": 0.3,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-373-3",
+      "scenario": "T-373 S-850 跨资产读法(黄金那一维:2026-11-11 现值 ust_10y_real 2.78)",
+      "statement": "2026-12-01 的 10 年期实际利率仍在 0–2.5% 之间(黄金那一维的常态带;需从 2.78 回落 28bp 以上)",
+      "variable": "macro:ust_10y_real",
+      "op": "between",
+      "lo": 0.0,
+      "hi": 2.5,
+      "prob": 0.4,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-373-4",
+      "scenario": "T-373 S-850 跨资产读法(股票那一维:2026-11-12 现值 hy_oas 3.30)",
+      "statement": "2026-12-01 的高收益债利差仍在 2–5 个点之间(股票那一维的常态带)",
+      "variable": "macro:hy_oas",
+      "op": "between",
+      "lo": 2.0,
+      "hi": 5.0,
+      "prob": 0.85,
+      "horizon_d": "2026-12-01"
+    },
+    {
+      "id": "T-373-5",
+      "scenario": "T-373 S-850 跨资产读法(加密腿的第二期:边际流动性还在不在)",
+      "statement": "2027-01-03 当周稳定币供应 30 日变化仍为正",
+      "variable": "state:stable_supply_30d",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.35,
+      "horizon_d": "2027-01-03"
+    },
+    {
+      "id": "T-373-6",
+      "scenario": "T-373 S-850 跨资产读法(黄金那一维:实际利率还在常态带)",
+      "statement": "2027-01-03 的 10 年期实际利率仍在 0–2.5% 之间",
+      "variable": "macro:ust_10y_real",
+      "op": "between",
+      "lo": 0.0,
+      "hi": 2.5,
+      "prob": 0.55,
+      "horizon_d": "2027-01-03"
+    },
+    {
+      "id": "T-373-7",
+      "scenario": "T-373 S-850 跨资产读法的前瞻(基准=2026-11-12 收盘 71460)",
+      "statement": "BTC 收盘价(ohlcv_daily, binance_hist)在 2026-12-31 落在 2026-11-12 收盘 71460 的 ±10% 区间内",
+      "variable": "close:BTC",
+      "op": "between",
+      "lo": 64314,
+      "hi": 78606,
+      "prob": 0.4,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-373-8",
+      "scenario": "T-373 S-850 跨资产读法的前瞻(基准=2026-11-12 收盘 71460)",
+      "statement": "BTC 收盘价(ohlcv_daily, binance_hist)在 2026-12-31 高于 2026-11-12 的收盘 71460",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 71460,
+      "prob": 0.52,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-373-9",
+      "scenario": "T-373 S-850 跨资产读法的前瞻(基准=2026-11-12 收盘 3880.86)",
+      "statement": "黄金 XAUUSD 收盘价(ohlcv_daily, eodhd)在 2026-12-31 比 2026-11-12 的收盘 3880.86 低 3% 以上",
+      "variable": "close:XAUUSD",
+      "op": "lt",
+      "hi": 3764.43,
+      "prob": 0.28,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-373-10",
+      "scenario": "T-373 S-850 跨资产读法的前瞻(基准=2026-11-12 收盘 688.17)",
+      "statement": "纳指 QQQ 收盘价(ohlcv_daily, eodhd)在 2026-12-31 落在 2026-11-12 收盘 688.17 的 ±5% 区间内",
+      "variable": "close:QQQ",
+      "op": "between",
+      "lo": 653.76,
+      "hi": 722.58,
+      "prob": 0.47,
+      "horizon_d": "2026-12-31"
+    }
+  ]
+}

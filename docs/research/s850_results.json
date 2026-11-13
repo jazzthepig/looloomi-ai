@@ -1,0 +1,879 @@
+{
+ "window": [
+  "2019-06-02",
+  "2026-09-13"
+ ],
+ "weeks": 381,
+ "assets": {
+  "BTC": {
+   "n_weeks": 381,
+   "rates_x_stable": {
+    "rates_falling/stable_adding": {
+     "n": 133,
+     "mean8": 18.9,
+     "med8": 12.2,
+     "neg8": 29,
+     "years": 6
+    },
+    "rates_falling/stable_draining": {
+     "n": 21,
+     "mean8": -1.3,
+     "med8": 2.8,
+     "neg8": 48,
+     "years": 5
+    },
+    "rates_rising/stable_adding": {
+     "n": 122,
+     "mean8": 5.7,
+     "med8": -0.2,
+     "neg8": 50,
+     "years": 7
+    },
+    "rates_rising/stable_draining": {
+     "n": 70,
+     "mean8": -0.2,
+     "med8": -4.4,
+     "neg8": 57,
+     "years": 3
+    }
+   },
+   "weekly_x_rates": {
+    "wk_down/rates_falling": {
+     "n": 64,
+     "mean8": 8.8,
+     "med8": 7.1,
+     "neg8": 44,
+     "years": 7
+    },
+    "wk_down/rates_rising": {
+     "n": 75,
+     "mean8": 0.7,
+     "med8": -0.7,
+     "neg8": 51,
+     "years": 8
+    },
+    "wk_ok/rates_falling": {
+     "n": 110,
+     "mean8": 15.8,
+     "med8": 10.6,
+     "neg8": 34,
+     "years": 7
+    },
+    "wk_ok/rates_rising": {
+     "n": 123,
+     "mean8": 5.5,
+     "med8": -1.4,
+     "neg8": 53,
+     "years": 8
+    }
+   },
+   "stable_x_weekly": {
+    "stable_adding/wk_down": {
+     "n": 78,
+     "mean8": 7.5,
+     "med8": 2.4,
+     "neg8": 45,
+     "years": 7
+    },
+    "stable_adding/wk_ok": {
+     "n": 177,
+     "mean8": 14.8,
+     "med8": 8.3,
+     "neg8": 36,
+     "years": 7
+    },
+    "stable_draining/wk_down": {
+     "n": 46,
+     "mean8": -0.6,
+     "med8": 0.2,
+     "neg8": 48,
+     "years": 4
+    },
+    "stable_draining/wk_ok": {
+     "n": 45,
+     "mean8": -0.4,
+     "med8": -4.5,
+     "neg8": 62,
+     "years": 5
+    }
+   },
+   "good_minus_bad": {
+    "diff_pp": 19.1,
+    "n_good": 133,
+    "n_bad": 70,
+    "pctile": 0.9,
+    "null_median_pp": 2.1,
+    "null_p90_pp": 19.1
+   },
+   "stable_only": {
+    "diff_pp": 13.1,
+    "n_good": 255,
+    "n_bad": 91,
+    "pctile": 0.71,
+    "null_median_pp": 1.1,
+    "null_p90_pp": 19.1
+   },
+   "own_dimension": {
+    "name": "halving_phase",
+    "18-30m": {
+     "n": 99,
+     "mean8": -8.3,
+     "neg8": 67
+    },
+    "other": {
+     "n": 282,
+     "mean8": 13.9,
+     "neg8": 38
+    }
+   }
+  },
+  "ETH": {
+   "n_weeks": 381,
+   "rates_x_stable": {
+    "rates_falling/stable_adding": {
+     "n": 133,
+     "mean8": 22.1,
+     "med8": 19.3,
+     "neg8": 32,
+     "years": 6
+    },
+    "rates_falling/stable_draining": {
+     "n": 21,
+     "mean8": -2.9,
+     "med8": 1.7,
+     "neg8": 33,
+     "years": 5
+    },
+    "rates_rising/stable_adding": {
+     "n": 122,
+     "mean8": 9.9,
+     "med8": 6.8,
+     "neg8": 43,
+     "years": 7
+    },
+    "rates_rising/stable_draining": {
+     "n": 70,
+     "mean8": 1.4,
+     "med8": -4.6,
+     "neg8": 56,
+     "years": 3
+    }
+   },
+   "weekly_x_rates": {
+    "wk_down/rates_falling": {
+     "n": 65,
+     "mean8": 11.6,
+     "med8": 1.0,
+     "neg8": 45,
+     "years": 7
+    },
+    "wk_down/rates_rising": {
+     "n": 76,
+     "mean8": 5.2,
+     "med8": 5.6,
+     "neg8": 43,
+     "years": 8
+    },
+    "wk_ok/rates_falling": {
+     "n": 109,
+     "mean8": 20.0,
+     "med8": 15.6,
+     "neg8": 31,
+     "years": 7
+    },
+    "wk_ok/rates_rising": {
+     "n": 122,
+     "mean8": 8.0,
+     "med8": 2.0,
+     "neg8": 49,
+     "years": 8
+    }
+   },
+   "stable_x_weekly": {
+    "stable_adding/wk_down": {
+     "n": 79,
+     "mean8": 8.6,
+     "med8": 4.8,
+     "neg8": 42,
+     "years": 7
+    },
+    "stable_adding/wk_ok": {
+     "n": 176,
+     "mean8": 19.7,
+     "med8": 14.5,
+     "neg8": 35,
+     "years": 7
+    },
+    "stable_draining/wk_down": {
+     "n": 44,
+     "mean8": 4.8,
+     "med8": 2.7,
+     "neg8": 45,
+     "years": 5
+    },
+    "stable_draining/wk_ok": {
+     "n": 47,
+     "mean8": -3.7,
+     "med8": -7.6,
+     "neg8": 55,
+     "years": 4
+    }
+   },
+   "good_minus_bad": {
+    "diff_pp": 20.7,
+    "n_good": 133,
+    "n_bad": 70,
+    "pctile": 0.875,
+    "null_median_pp": 2.6,
+    "null_p90_pp": 23.3
+   },
+   "stable_only": {
+    "diff_pp": 15.8,
+    "n_good": 255,
+    "n_bad": 91,
+    "pctile": 0.855,
+    "null_median_pp": -0.3,
+    "null_p90_pp": 21.7
+   },
+   "own_dimension": {
+    "name": "读不到",
+    "why": "coin_supply_daily 不足一年(8 天)"
+   }
+  },
+  "SOL": {
+   "n_weeks": 318,
+   "rates_x_stable": {
+    "rates_falling/stable_adding": {
+     "n": 108,
+     "mean8": 42.5,
+     "med8": 6.3,
+     "neg8": 39,
+     "years": 6
+    },
+    "rates_falling/stable_draining": {
+     "n": 18,
+     "mean8": -6.2,
+     "med8": -6.1,
+     "neg8": 61,
+     "years": 4
+    },
+    "rates_rising/stable_adding": {
+     "n": 122,
+     "mean8": 39.2,
+     "med8": 1.6,
+     "neg8": 47,
+     "years": 7
+    },
+    "rates_rising/stable_draining": {
+     "n": 70,
+     "mean8": 6.6,
+     "med8": -6.2,
+     "neg8": 54,
+     "years": 3
+    }
+   },
+   "weekly_x_rates": {
+    "wk_down/rates_falling": {
+     "n": 48,
+     "mean8": 19.9,
+     "med8": 1.6,
+     "neg8": 46,
+     "years": 6
+    },
+    "wk_down/rates_rising": {
+     "n": 88,
+     "mean8": 34.2,
+     "med8": 3.6,
+     "neg8": 43,
+     "years": 7
+    },
+    "wk_ok/rates_falling": {
+     "n": 69,
+     "mean8": 55.6,
+     "med8": 18.7,
+     "neg8": 32,
+     "years": 6
+    },
+    "wk_ok/rates_rising": {
+     "n": 104,
+     "mean8": 21.5,
+     "med8": -3.4,
+     "neg8": 55,
+     "years": 7
+    }
+   },
+   "stable_x_weekly": {
+    "stable_adding/wk_down": {
+     "n": 89,
+     "mean8": 41.3,
+     "med8": 3.5,
+     "neg8": 43,
+     "years": 7
+    },
+    "stable_adding/wk_ok": {
+     "n": 132,
+     "mean8": 45.5,
+     "med8": 10.0,
+     "neg8": 39,
+     "years": 7
+    },
+    "stable_draining/wk_down": {
+     "n": 47,
+     "mean8": 6.0,
+     "med8": 0.8,
+     "neg8": 47,
+     "years": 4
+    },
+    "stable_draining/wk_ok": {
+     "n": 41,
+     "mean8": 1.6,
+     "med8": -10.4,
+     "neg8": 66,
+     "years": 4
+    }
+   },
+   "good_minus_bad": {
+    "diff_pp": 35.9,
+    "n_good": 108,
+    "n_bad": 70,
+    "pctile": 0.74,
+    "null_median_pp": -6.6,
+    "null_p90_pp": 64.8
+   },
+   "stable_only": {
+    "diff_pp": 36.8,
+    "n_good": 230,
+    "n_bad": 88,
+    "pctile": 0.765,
+    "null_median_pp": 7.1,
+    "null_p90_pp": 56.8
+   },
+   "own_dimension": {
+    "name": "读不到",
+    "why": "coin_supply_daily 不足一年(8 天)"
+   }
+  },
+  "ALT20": {
+   "n_weeks": 381,
+   "rates_x_stable": {
+    "rates_falling/stable_adding": {
+     "n": 133,
+     "mean8": 19.2,
+     "med8": 10.3,
+     "neg8": 40,
+     "years": 6
+    },
+    "rates_falling/stable_draining": {
+     "n": 21,
+     "mean8": -13.9,
+     "med8": -14.2,
+     "neg8": 90,
+     "years": 5
+    },
+    "rates_rising/stable_adding": {
+     "n": 122,
+     "mean8": 6.6,
+     "med8": -5.7,
+     "neg8": 58,
+     "years": 7
+    },
+    "rates_rising/stable_draining": {
+     "n": 70,
+     "mean8": -0.5,
+     "med8": -7.9,
+     "neg8": 63,
+     "years": 3
+    }
+   },
+   "weekly_x_rates": {
+    "wk_down/rates_falling": {
+     "n": 77,
+     "mean8": 0.2,
+     "med8": -5.7,
+     "neg8": 62,
+     "years": 7
+    },
+    "wk_down/rates_rising": {
+     "n": 98,
+     "mean8": 6.7,
+     "med8": -3.1,
+     "neg8": 56,
+     "years": 8
+    },
+    "wk_ok/rates_falling": {
+     "n": 97,
+     "mean8": 22.5,
+     "med8": 9.9,
+     "neg8": 40,
+     "years": 6
+    },
+    "wk_ok/rates_rising": {
+     "n": 100,
+     "mean8": 1.7,
+     "med8": -11.3,
+     "neg8": 62,
+     "years": 8
+    }
+   },
+   "stable_x_weekly": {
+    "stable_adding/wk_down": {
+     "n": 104,
+     "mean8": 6.5,
+     "med8": -1.1,
+     "neg8": 53,
+     "years": 7
+    },
+    "stable_adding/wk_ok": {
+     "n": 151,
+     "mean8": 17.8,
+     "med8": 7.1,
+     "neg8": 46,
+     "years": 7
+    },
+    "stable_draining/wk_down": {
+     "n": 55,
+     "mean8": -0.6,
+     "med8": -8.0,
+     "neg8": 67,
+     "years": 4
+    },
+    "stable_draining/wk_ok": {
+     "n": 36,
+     "mean8": -8.2,
+     "med8": -15.3,
+     "neg8": 72,
+     "years": 5
+    }
+   },
+   "good_minus_bad": {
+    "diff_pp": 19.7,
+    "n_good": 133,
+    "n_bad": 70,
+    "pctile": 0.75,
+    "null_median_pp": 4.7,
+    "null_p90_pp": 28.1
+   },
+   "stable_only": {
+    "diff_pp": 16.8,
+    "n_good": 255,
+    "n_bad": 91,
+    "pctile": 0.78,
+    "null_median_pp": 2.3,
+    "null_p90_pp": 24.2
+   },
+   "own_dimension": {
+    "name": "读不到",
+    "why": "篮子成员没有代码 → coin_id 的映射,流通量中位读不到"
+   }
+  },
+  "XAUUSD": {
+   "n_weeks": 381,
+   "rates_x_stable": {
+    "rates_falling/stable_adding": {
+     "n": 133,
+     "mean8": 4.5,
+     "med8": 4.1,
+     "neg8": 32,
+     "years": 6
+    },
+    "rates_falling/stable_draining": {
+     "n": 21,
+     "mean8": 0.3,
+     "med8": -0.8,
+     "neg8": 57,
+     "years": 5
+    },
+    "rates_rising/stable_adding": {
+     "n": 122,
+     "mean8": 1.6,
+     "med8": 1.6,
+     "neg8": 37,
+     "years": 7
+    },
+    "rates_rising/stable_draining": {
+     "n": 70,
+     "mean8": 0.7,
+     "med8": -1.5,
+     "neg8": 53,
+     "years": 3
+    }
+   },
+   "weekly_x_rates": {
+    "wk_down/rates_falling": {
+     "n": 33,
+     "mean8": 2.2,
+     "med8": -0.6,
+     "neg8": 55,
+     "years": 6
+    },
+    "wk_down/rates_rising": {
+     "n": 84,
+     "mean8": 2.0,
+     "med8": 1.7,
+     "neg8": 37,
+     "years": 8
+    },
+    "wk_ok/rates_falling": {
+     "n": 141,
+     "mean8": 3.8,
+     "med8": 2.8,
+     "neg8": 35,
+     "years": 7
+    },
+    "wk_ok/rates_rising": {
+     "n": 114,
+     "mean8": 1.0,
+     "med8": 1.0,
+     "neg8": 45,
+     "years": 8
+    }
+   },
+   "stable_x_weekly": {
+    "stable_adding/wk_down": {
+     "n": 63,
+     "mean8": 3.4,
+     "med8": 2.7,
+     "neg8": 30,
+     "years": 7
+    },
+    "stable_adding/wk_ok": {
+     "n": 192,
+     "mean8": 3.0,
+     "med8": 2.5,
+     "neg8": 35,
+     "years": 7
+    },
+    "stable_draining/wk_down": {
+     "n": 46,
+     "mean8": 0.2,
+     "med8": -1.6,
+     "neg8": 57,
+     "years": 3
+    },
+    "stable_draining/wk_ok": {
+     "n": 45,
+     "mean8": 1.1,
+     "med8": -0.7,
+     "neg8": 51,
+     "years": 6
+    }
+   },
+   "good_minus_bad": {
+    "diff_pp": 3.8,
+    "n_good": 133,
+    "n_bad": 70,
+    "pctile": 0.96,
+    "null_median_pp": -0.2,
+    "null_p90_pp": 2.2
+   },
+   "stable_only": {
+    "diff_pp": 2.5,
+    "n_good": 255,
+    "n_bad": 91,
+    "pctile": 0.925,
+    "null_median_pp": -0.3,
+    "null_p90_pp": 2.3
+   },
+   "own_dimension": {
+    "name": "real_yield_10y",
+    "falling": {
+     "n": 184,
+     "mean8": 3.2,
+     "neg8": 39
+    },
+    "rising": {
+     "n": 197,
+     "mean8": 2.0,
+     "neg8": 40
+    }
+   }
+  },
+  "ACWI": {
+   "n_weeks": 381,
+   "rates_x_stable": {
+    "rates_falling/stable_adding": {
+     "n": 133,
+     "mean8": 4.6,
+     "med8": 4.6,
+     "neg8": 12,
+     "years": 6
+    },
+    "rates_falling/stable_draining": {
+     "n": 21,
+     "mean8": -2.0,
+     "med8": 1.6,
+     "neg8": 43,
+     "years": 5
+    },
+    "rates_rising/stable_adding": {
+     "n": 122,
+     "mean8": 1.6,
+     "med8": 2.1,
+     "neg8": 32,
+     "years": 7
+    },
+    "rates_rising/stable_draining": {
+     "n": 70,
+     "mean8": 0.4,
+     "med8": 0.1,
+     "neg8": 47,
+     "years": 3
+    }
+   },
+   "weekly_x_rates": {
+    "wk_down/rates_falling": {
+     "n": 29,
+     "mean8": 6.0,
+     "med8": 5.9,
+     "neg8": 14,
+     "years": 7
+    },
+    "wk_down/rates_rising": {
+     "n": 62,
+     "mean8": 2.8,
+     "med8": 2.6,
+     "neg8": 40,
+     "years": 7
+    },
+    "wk_ok/rates_falling": {
+     "n": 145,
+     "mean8": 2.7,
+     "med8": 3.6,
+     "neg8": 17,
+     "years": 7
+    },
+    "wk_ok/rates_rising": {
+     "n": 136,
+     "mean8": 0.4,
+     "med8": 1.7,
+     "neg8": 35,
+     "years": 8
+    }
+   },
+   "stable_x_weekly": {
+    "stable_adding/wk_down": {
+     "n": 56,
+     "mean8": 5.0,
+     "med8": 4.6,
+     "neg8": 27,
+     "years": 7
+    },
+    "stable_adding/wk_ok": {
+     "n": 199,
+     "mean8": 2.6,
+     "med8": 2.8,
+     "neg8": 20,
+     "years": 7
+    },
+    "stable_draining/wk_down": {
+     "n": 30,
+     "mean8": 1.6,
+     "med8": 3.5,
+     "neg8": 47,
+     "years": 5
+    },
+    "stable_draining/wk_ok": {
+     "n": 61,
+     "mean8": -1.0,
+     "med8": 0.2,
+     "neg8": 46,
+     "years": 5
+    }
+   },
+   "good_minus_bad": {
+    "diff_pp": 4.1,
+    "n_good": 133,
+    "n_bad": 70,
+    "pctile": 1.0,
+    "null_median_pp": -0.2,
+    "null_p90_pp": 2.2
+   },
+   "stable_only": {
+    "diff_pp": 3.3,
+    "n_good": 255,
+    "n_bad": 91,
+    "pctile": 0.995,
+    "null_median_pp": -0.1,
+    "null_p90_pp": 2.2
+   },
+   "own_dimension": {
+    "name": "hy_oas",
+    "narrowing": {
+     "n": 87,
+     "mean8": 1.3,
+     "neg8": 29
+    },
+    "widening": {
+     "n": 49,
+     "mean8": 4.9,
+     "neg8": 10
+    }
+   }
+  },
+  "QQQ": {
+   "n_weeks": 381,
+   "rates_x_stable": {
+    "rates_falling/stable_adding": {
+     "n": 133,
+     "mean8": 6.0,
+     "med8": 6.4,
+     "neg8": 17,
+     "years": 6
+    },
+    "rates_falling/stable_draining": {
+     "n": 21,
+     "mean8": 2.8,
+     "med8": 5.1,
+     "neg8": 29,
+     "years": 5
+    },
+    "rates_rising/stable_adding": {
+     "n": 122,
+     "mean8": 2.2,
+     "med8": 2.9,
+     "neg8": 34,
+     "years": 7
+    },
+    "rates_rising/stable_draining": {
+     "n": 70,
+     "mean8": 0.2,
+     "med8": -0.4,
+     "neg8": 56,
+     "years": 3
+    }
+   },
+   "weekly_x_rates": {
+    "wk_down/rates_falling": {
+     "n": 36,
+     "mean8": 8.8,
+     "med8": 8.5,
+     "neg8": 11,
+     "years": 7
+    },
+    "wk_down/rates_rising": {
+     "n": 64,
+     "mean8": 4.4,
+     "med8": 4.9,
+     "neg8": 33,
+     "years": 7
+    },
+    "wk_ok/rates_falling": {
+     "n": 138,
+     "mean8": 4.4,
+     "med8": 5.1,
+     "neg8": 20,
+     "years": 7
+    },
+    "wk_ok/rates_rising": {
+     "n": 134,
+     "mean8": 0.3,
+     "med8": 1.0,
+     "neg8": 45,
+     "years": 8
+    }
+   },
+   "stable_x_weekly": {
+    "stable_adding/wk_down": {
+     "n": 60,
+     "mean8": 8.3,
+     "med8": 8.7,
+     "neg8": 18,
+     "years": 7
+    },
+    "stable_adding/wk_ok": {
+     "n": 195,
+     "mean8": 2.9,
+     "med8": 3.5,
+     "neg8": 27,
+     "years": 7
+    },
+    "stable_draining/wk_down": {
+     "n": 36,
+     "mean8": 2.3,
+     "med8": 1.9,
+     "neg8": 39,
+     "years": 4
+    },
+    "stable_draining/wk_ok": {
+     "n": 55,
+     "mean8": -0.2,
+     "med8": -1.1,
+     "neg8": 56,
+     "years": 5
+    }
+   },
+   "good_minus_bad": {
+    "diff_pp": 5.8,
+    "n_good": 133,
+    "n_bad": 70,
+    "pctile": 1.0,
+    "null_median_pp": -0.1,
+    "null_p90_pp": 4.2
+   },
+   "stable_only": {
+    "diff_pp": 3.4,
+    "n_good": 255,
+    "n_bad": 91,
+    "pctile": 0.88,
+    "null_median_pp": -0.0,
+    "null_p90_pp": 3.7
+   },
+   "own_dimension": {
+    "name": "hy_oas",
+    "narrowing": {
+     "n": 87,
+     "mean8": 1.5,
+     "neg8": 33
+    },
+    "widening": {
+     "n": 49,
+     "mean8": 6.3,
+     "neg8": 27
+    }
+   }
+  }
+ },
+ "expectations": {
+  "1_crypto_good_minus_bad_positive_and_above_p90": false,
+  "1b_alt_diff_ge_btc_diff": true,
+  "2_stable_not_above_p90_for_gold_equities": false,
+  "2b_tradfi_stable_diff_lt_half_of_crypto": true,
+  "3_own_dimension": "只报,见各资产 own_dimension"
+ },
+ "self_checks": {
+  "btc_reproduces_s844_5": {
+   "wk_ok/rates_falling": {
+    "got": 15.8,
+    "want": 18.7,
+    "ok": false
+   },
+   "wk_ok/rates_rising": {
+    "got": 5.5,
+    "want": 5.8,
+    "ok": true
+   },
+   "wk_down/rates_falling": {
+    "got": 8.8,
+    "want": 11.1,
+    "ok": false
+   },
+   "wk_down/rates_rising": {
+    "got": 0.7,
+    "want": -0.4,
+    "ok": false
+   }
+  },
+  "states_before_cut_ignore_future_prices": true,
+  "perturbation_changed_something_after_cut": true,
+  "alt_members_min_median": [
+   20,
+   20
+  ]
+ },
+ "state_weeks": {
+  "rates_rising": 198,
+  "rates_falling": 183,
+  "stable_draining": 91,
+  "stable_adding": 255
+ }
+}
