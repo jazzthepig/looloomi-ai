@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-13",
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "verified": null,
+  "notes": "2026-11-13T16:44:28Z Seth 开卡(夜间轮查数据时量到;Jazz 11-13「没有的数据就去拉」)。",
+  "id": "T-378",
+  "owner": "seth",
+  "title": "未平仓与多空比的历史入库:Binance 存档 U 本位 metrics(2020-09-01 起),补上 `oi_chg_30d` 的 6 年空白",
+  "source": "实测 2026-11-13:`state_daily` 面板的 `oi_chg_30d` 自 07-01 以来 135 天里 118 天是空的,第一条非空在 10-27(未平仓历史从 09-27 才开始)⇒ 派发清单里「未平仓升而价格不涨」这一条、以及任何用到未平仓的状态向量维度,在 10-27 之前都读不到。来源已核:Binance 存档 `data/futures/um/daily/metrics/<PAIR>/<PAIR>-metrics-YYYY-MM-DD.zip`,BTCUSDT 第一份是 2020-09-01(S3 列表实取);5 分钟粒度,含未平仓(张数与名义)、大户与全体多空比、主动买卖量比。免密钥、官方存档,与 `perp_bv_daily` 同源同一条守卫通路。",
+  "allowed_paths": [
+    "src/data/market/",
+    "src/api/main.py",
+    "src/api/schema_manifest.json",
+    "migrations/",
+    "tests/",
+    "scripts/preflight.sh",
+    "docs/SPINE.md",
+    "tasks/T-378.json"
+  ],
+  "acceptance": {
+    "check": "① 新表(按日聚合:收盘时点的未平仓名义、日均、大户多空比、全体多空比、主动买卖量比;主键 pair + d + source)与迁移;② 抓取走 `perp_bv_daily` 现有的存档通路(同一个 zip 解析与限速),不另起抓取器;先 BTC / ETH / SOL 与 ① 的 24 名,再放宽;③ 5b 三件:调度者、判活 SQL、第一行真实数据;④ 逐日核一遍:存档的未平仓与库里 09-27 之后已有的未平仓在重叠日的差(中位数与最大),对不上先查口径(张数 × 价格 还是名义);⑤ `oi_chg_30d` 改由这张表算之前先并排记 14 天,不直接替换(两条看起来一样的量,S-273 的形状)。",
+    "expect": "表里 BTCUSDT 从 2020-09-01 到昨天连续;重叠日核价的数写进台账;`dossier_context` 的未平仓一栏在 10-27 之前的日期也能读到。"
+  },
+  "prior_value": "决策层今天接上的清单里有一条因为这段空白读不到;S-852 那 15 段历史盯盘期没有一段带未平仓读数。"
+}
