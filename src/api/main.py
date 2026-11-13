@@ -2803,7 +2803,7 @@ async def _start_cex_reserves_loop():
 
 
 async def _political_intensity_loop():
-    """政治 / 地缘强度(`src/data/market/political_intensity.py`):每 12 小时一轮 —— GPR 日表一个文件 + GDELT 每个主题一次请求(首轮整段 2017 →)。"""
+    """政治 / 地缘强度 + 市场叙事(`src/data/market/political_intensity.py`):每 3 小时一轮 —— GPR 日表一个文件 + GDELT 每轮最多 `GDELT_PER_ROUND` 条序列(轮转;没有行的首次取整段 2017 →)。"""
     await _asyncio.sleep(_boot_delay(14700))
     while True:
         try:
@@ -2816,7 +2816,7 @@ async def _political_intensity_loop():
             print(f"[POLITICAL] ⚠️  pass FAILED: {_e}")
             await _beat("_political_intensity_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _iteration_error("_political_intensity_loop", _e)
-        await _asyncio.sleep(3 * 3600)                # 11-06:GDELT 每轮只做 2 个主题,轮转补齐
+        await _asyncio.sleep(3 * 3600)                # GDELT 每轮只做 GDELT_PER_ROUND 条序列,轮转补齐(11-13 起含叙事的量与调,S-855)
 
 
 @app.on_event("startup")

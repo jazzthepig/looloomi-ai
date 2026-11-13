@@ -8,6 +8,10 @@
 
 只记、不进敞口;是否有信息量由 lane 用 `joint_model.py` 判。表:GPR 进 `macro_daily`(series gpr / gpr_act / gpr_threat),
 GDELT 进 `political_intensity_daily`(d, topic)。判活:`select topic, max(d), count(*) from political_intensity_daily group by 1`。
+
+**11-13 起同一条循环也记市场叙事(S-855,`NARRATIVE_TOPICS`):** 每条叙事两条序列 —— 量(topic = 名字)与调(topic = 名字 + `:tone`)。
+表名里的 political 是历史遗留;`feature_matrix_daily` 把这张表的每个 topic 都并成 `pol:<topic>`,叙事也会出现在那里
+(`fused_knn` / `joint_forecast` 用的是冻结的特征清单,不受影响)。读它的是 ③ 档案的背景栏(`dossier_context.narratives`)。
 """
 from __future__ import annotations
 
@@ -35,6 +39,32 @@ TOPICS = {
 }
 
 
+#: 11-13(S-855,Jazz:「英伟达的事让全球科技股埋单…在我看来只是加息周期的 scapegoat,但这些 narrative 都是重要跟踪,它代表了情绪的方向和矢量」):
+#: 市场叙事。同一个来源、同一张表、同一条循环;每条叙事两条序列 —— **量**(timelinevol:全球新闻里匹配文章的占比 = 这个故事有多响)
+#: 与 **调**(timelinetone:匹配文章的平均语气 = 方向),调的那条 topic 名加后缀 `:tone`。只记、不进敞口、不进规则。
+#: 这份清单是写死的、看得见的:叙事的名字是人起的,系统只量它响不响、往哪边偏;要加一条就在这里加一行。
+NARRATIVE_TOPICS = {
+    "ai_chips": '(Nvidia OR "AI chips" OR "AI bubble" OR semiconductor OR semiconductors)',
+    "tech_selloff": '("tech stocks" OR Nasdaq) (selloff OR plunge OR rout)',
+    "fed_hike": '("rate hike" OR "rate hikes" OR hawkish OR "Federal Reserve" OR Powell)',
+    "inflation": '(inflation OR CPI OR "price pressures")',
+    "recession": '(recession OR layoffs OR "hard landing")',
+    "boj_yen": '("Bank of Japan" OR yen) (hike OR "carry trade" OR intervention)',
+    "crypto_crash": '(bitcoin OR crypto) (crash OR plunge OR liquidation OR liquidations OR selloff)',
+    "crypto_etf": '(bitcoin OR ether) ETF (outflow OR outflows OR inflow OR inflows)',
+}
+TONE_SUFFIX = ":tone"
+
+
+def all_series() -> dict[str, tuple[str, str]]:
+    """纯函数。{库里的 topic 名: (查询, GDELT 模式)}:政治五条只有量;叙事八条各有量与调。"""
+    out = {t: (q, "timelinevol") for t, q in TOPICS.items()}
+    for t, q in NARRATIVE_TOPICS.items():
+        out[t] = (q, "timelinevol")
+        out[t + TONE_SUFFIX] = (q, "timelinetone")
+    return out
+
+
 def gpr_rows(df) -> list[dict]:
     """纯函数。GPR 日表 → macro_daily 行(可得日 = DAY + GPR_LAG_DAYS)。"""
     out = []
@@ -56,13 +86,19 @@ def gpr_rows(df) -> list[dict]:
 
 
 GDELT_THROTTLE_WAITS = (30.0, 90.0, 180.0)
-GDELT_PER_ROUND = 2
+GDELT_PER_ROUND = 3            # 11-13:序列从 5 条变 21 条(叙事的量与调),3 小时一轮 × 3 = 一天 24 条,够轮一遍
 
 
-def due_topics(last: dict[str, str], today: dt.date) -> list[str]:
-    """纯函数。没有行的主题排最前,其次最久没更新的;最新可得日(= 今天 + 1)已在库的跳过;最多 GDELT_PER_ROUND 个。"""
-    stale = [t for t in TOPICS if t not in last or dt.date.fromisoformat(last[t]) < today]
+def due_topics(last: dict[str, str], today: dt.date, topics: Optional[Any] = None, rot: int = 0) -> list[str]:
+    """纯函数。没有行的主题排最前,其次最久没更新的;最新可得日(= 今天 + 1)已在库的跳过;最多 GDELT_PER_ROUND 个。
+    `topics` 不给 = 政治五条(旧行为);`run_once` 传全部序列。
+    `rot`:把排好的队列循环右移这么多位再取 —— 一条一直不通的序列(查询写坏了 / 被限速)永远排在最前,
+    序列多了以后三条坏的就能把其余的全部饿死;`run_once` 每轮把 rot 推进 GDELT_PER_ROUND,坏的照样重试,但别的也轮得到。"""
+    stale = [t for t in (TOPICS if topics is None else topics) if t not in last or dt.date.fromisoformat(last[t]) < today]
     stale.sort(key=lambda t: (t in last, last.get(t, "")))
+    if stale and rot:
+        k = rot % len(stale)
+        stale = stale[k:] + stale[:k]
     return stale[:GDELT_PER_ROUND]
 
 
@@ -72,8 +108,8 @@ def throttled(body: Any) -> bool:
     return head.startswith("Please limit") or "limit requests" in head
 
 
-def gdelt_rows(payload: Any, topic: str) -> list[dict]:
-    """纯函数。DOC timelinevol → 行(可得日 = 日期 + 1)。"""
+def gdelt_rows(payload: Any, topic: str, mode: str = "timelinevol") -> list[dict]:
+    """纯函数。DOC timelinevol / timelinetone → 行(可得日 = 日期 + 1)。两种模式返回同一个形状。"""
     out = []
     try:
         data = payload["timeline"][0]["data"]
@@ -85,7 +121,7 @@ def gdelt_rows(payload: Any, topic: str) -> list[dict]:
             v = float(x["value"])
         except (KeyError, TypeError, ValueError):
             continue
-        out.append({"d": (day + dt.timedelta(days=1)).isoformat(), "topic": topic, "value": round(v, 5), "source": "gdelt_doc_timelinevol"})
+        out.append({"d": (day + dt.timedelta(days=1)).isoformat(), "topic": topic, "value": round(v, 5), "source": f"gdelt_doc_{mode}"})
     return out
 
 
@@ -105,7 +141,7 @@ async def run_once(now: Optional[dt.datetime] = None, get: Optional[Callable[[st
     from src.api.store import supabase_upsert_table
     from src.data.market.source_policy import assert_bulk_source
     from src.data.style.header import _read_all
-    assert_bulk_source(len(TOPICS), "gdelt", job="political intensity (one timeline request per topic)")
+    series = all_series()
     get = get or _get_bytes
     now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
     out: dict[str, Any] = {"gpr": 0, "gdelt": {}, "failed": {}}
@@ -124,16 +160,18 @@ async def run_once(now: Optional[dt.datetime] = None, get: Optional[Callable[[st
     # ⇒ 每轮只做最久没更新的 GDELT_PER_ROUND 个(没有行的排最前),已经到最新可得日的跳过;循环 3 小时一轮,轮转补齐。
     from src.data.vector.market_state_writer import _sb_get
     last: dict[str, str] = {}
-    for topic in TOPICS:
+    for topic in series:
         rd = await _sb_get(TABLE, {"select": "d", "topic": f"eq.{topic}", "order": "d.desc", "limit": "1"})
         if rd.ok and rd.rows:
             last[topic] = str(rd.rows[0]["d"])[:10]
-    todo = due_topics(last, now.date())
-    for k, (topic, q) in enumerate((t, TOPICS[t]) for t in todo):
+    todo = due_topics(last, now.date(), series, rot=int(now.timestamp() // (3 * 3600)) * GDELT_PER_ROUND)
+    # 源策略管的是「这一轮向免费源扇出多少次」:清单有 21 条,但每轮最多请求 GDELT_PER_ROUND 条(轮转,一天轮一遍)⇒ 按本轮实际请求数过闸
+    assert_bulk_source(len(todo), "gdelt", job=f"political intensity + market narratives(每轮最多 {GDELT_PER_ROUND} 次请求,{len(series)} 条序列轮转)")
+    for k, (topic, (q, mode)) in enumerate((t, series[t]) for t in todo):
         start = GDELT_START
         if topic in last:
             start = (dt.date.fromisoformat(last[topic]) - dt.timedelta(days=15)).strftime("%Y%m%d000000")
-        url = GDELT_URL + "?" + urllib.parse.urlencode({"query": q, "mode": "timelinevol", "format": "json", "startdatetime": start,
+        url = GDELT_URL + "?" + urllib.parse.urlencode({"query": q, "mode": mode, "format": "json", "startdatetime": start,
                                                         "enddatetime": now.strftime("%Y%m%d000000")})
         try:
             body = await asyncio.to_thread(get, url)
@@ -144,7 +182,9 @@ async def run_once(now: Optional[dt.datetime] = None, get: Optional[Callable[[st
                 body = await asyncio.to_thread(get, url)
             if throttled(body):
                 raise RuntimeError("GDELT 限速(重试后仍是限速文本)")
-            rows = gdelt_rows(json.loads(body), topic)
+            rows = gdelt_rows(json.loads(body), topic, mode)
+            if not rows:                                                  # 形状不符 / 查询没有匹配:记成不通,不记成「0 行、正常」(5b:判活要能失败)
+                raise RuntimeError("GDELT 返回里没有序列(形状不符或查询无匹配)")
             for i in range(0, len(rows), 1000):
                 if not await supabase_upsert_table(TABLE, rows[i:i + 1000], on_conflict="d,topic"):
                     raise RuntimeError(f"写 {TABLE} 失败")

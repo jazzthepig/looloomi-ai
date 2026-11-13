@@ -55,7 +55,7 @@ def _patch(monkeypatch, last: dict, written: list):
 def test_due_topics_rotates_missing_first_then_oldest():
     today = dt.date(2026, 11, 6)
     last = {"conflict": "2026-11-07", "sanctions": "2026-10-01", "trade_war": "2026-11-01"}
-    assert pi.due_topics(last, today) == ["election_unrest", "crypto_policy"][:pi.GDELT_PER_ROUND]
+    assert pi.due_topics(last, today) == ["election_unrest", "crypto_policy", "sanctions"][:pi.GDELT_PER_ROUND]      # 没有行的在前,其次最旧的
     full = {t: "2026-11-07" for t in pi.TOPICS}
     assert pi.due_topics(full, today) == [], "到最新可得日的不再请求"
     assert pi.due_topics({**full, "sanctions": "2026-10-01", "trade_war": "2026-11-01"}, today) == ["sanctions", "trade_war"]
@@ -70,7 +70,7 @@ def test_run_once_one_file_plus_at_most_two_topics(monkeypatch):
             raise RuntimeError("no xls in test")              # GPR 失败不挡 GDELT
         return json.dumps({"timeline": [{"data": [{"date": "20261104T000000Z", "value": 1.0}]}]}).encode()
 
-    last = {t: "2026-11-07" for t in pi.TOPICS} | {"conflict": "2026-11-04"}
+    last = {t: "2026-11-07" for t in pi.all_series()} | {"conflict": "2026-11-04"}
     _patch(monkeypatch, last, written)
     r = asyncio.run(pi.run_once(now=dt.datetime(2026, 11, 6, tzinfo=dt.timezone.utc), get=get, pause_s=0))
     assert len(calls) == 2 and "gpr" in r["failed"] and list(r["gdelt"]) == ["conflict"]
@@ -99,3 +99,48 @@ def test_gdelt_throttle_is_retried_not_parsed(monkeypatch):
     _patch(monkeypatch, {}, written)
     r = asyncio.run(pi.run_once(get=get, pause_s=0))
     assert len(r["gdelt"]) == pi.GDELT_PER_ROUND and not [k for k in r["failed"] if k != "gpr"], r
+
+
+def test_market_narratives_ride_the_same_loop_with_volume_and_tone():
+    """S-855:叙事(英伟达 / 加息 / 日元 …)每条两条序列 —— 量与调;政治五条不变;调的行来源标成 timelinetone。"""
+    ser = pi.all_series()
+    assert set(pi.TOPICS) <= set(ser) and all(ser[t][1] == "timelinevol" for t in pi.TOPICS)
+    for t in pi.NARRATIVE_TOPICS:
+        assert ser[t] == (pi.NARRATIVE_TOPICS[t], "timelinevol") and ser[t + pi.TONE_SUFFIX] == (pi.NARRATIVE_TOPICS[t], "timelinetone")
+    assert len(ser) == len(pi.TOPICS) + 2 * len(pi.NARRATIVE_TOPICS) and {"ai_chips", "fed_hike", "boj_yen"} <= set(pi.NARRATIVE_TOPICS)
+    today = dt.date(2026, 11, 13)
+    last = {t: "2026-11-14" for t in ser} | {"ai_chips:tone": "2026-11-01"}
+    del last["fed_hike"]
+    assert pi.due_topics(last, today, ser) == ["fed_hike", "ai_chips:tone"], "没有行的排最前,其次最旧的"
+    assert pi.due_topics({t: "2026-11-14" for t in pi.TOPICS}, today) == [], "不传 topics = 只看政治五条(旧行为)"
+    rows = pi.gdelt_rows({"timeline": [{"data": [{"date": "20261112T000000Z", "value": -2.3456789}]}]}, "ai_chips:tone", "timelinetone")
+    assert rows == [{"d": "2026-11-13", "topic": "ai_chips:tone", "value": -2.34568, "source": "gdelt_doc_timelinetone"}]
+
+
+def test_an_empty_series_is_a_visible_failure_not_zero_rows(monkeypatch):
+    """S-855 / 5b:调的那种模式若返回形状不同,循环要报不通,而不是安静地写 0 行。"""
+    written = []
+
+    def get(url):
+        if url == pi.GPR_URL:
+            raise RuntimeError("no xls in test")
+        return b'{"timeline": []}' if "timelinetone" in url else b'{"timeline": [{"data": [{"date": "20261104T000000Z", "value": 8.0}]}]}'
+
+    last = {t: "2026-11-14" for t in pi.all_series()} | {"ai_chips:tone": "2026-11-01", "conflict": "2026-11-02"}
+    _patch(monkeypatch, last, written)
+    r = asyncio.run(pi.run_once(now=dt.datetime(2026, 11, 13, tzinfo=dt.timezone.utc), get=get, pause_s=0))
+    assert r["ok"] is False and "ai_chips:tone" in r["failed"] and "没有序列" in r["failed"]["ai_chips:tone"]
+    assert r["gdelt"] == {"conflict": 1}, "别的序列照常写"
+
+
+def test_a_series_that_never_arrives_cannot_starve_the_rest():
+    """S-855:21 条序列、每轮 3 条。队首三条若一直不通,不轮转的话其余 18 条永远没有行。"""
+    ser, today = pi.all_series(), dt.date(2026, 11, 13)
+    seen = set()
+    for r in range(len(ser)):
+        got = pi.due_topics({}, today, ser, rot=r * pi.GDELT_PER_ROUND)        # 库一直是空的 = 每一条都一直不通
+        assert len(got) == pi.GDELT_PER_ROUND
+        seen |= set(got)
+    assert seen == set(ser), "每一条都轮得到"
+    assert pi.due_topics({}, today, ser) == list(ser)[:pi.GDELT_PER_ROUND], "rot 缺省 = 原来的顺序"
+
