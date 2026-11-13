@@ -11,7 +11,7 @@
     "migrations/"
   ],
   "verified": null,
-  "notes": "2026-11-13T07:03:43Z Seth 开卡(台账 S-842)。",
+  "notes": "2026-11-13T07:03:43Z Seth 开卡(台账 S-842)。 || 2026-11-13T07:25:00Z Seth:B 道第一轮(07:11 UTC)上下文溢出、无交付。改小:第一遍由脚本 `scripts/research/ledger_to_experiment_runs.py` 只用标题生成(218 行,其中 175 行标题里没有明确记号 ⇒ PENDING、数字全空),文件已在 `cometcloud-local/_reports/absorb_input/experiment_runs_backfill.jsonl`。**你的活改成逐条核对正文、补结论词与数字:每轮只做 `t365_round_ids.txt` 里列的 12 条**,结果写同目录 `experiment_runs_backfill_patch.jsonl`(追加;每行 run_id / verdict / window / n_obs / total_return_pct / max_dd_pct / notes,台账没写的留空),不要改主文件;做完把 `t365_round_ids.txt` 里做过的行删掉,Seth 每轮补下一批。",
   "id": "T-365",
   "owner": "lane-b",
   "title": "坟场入库:台账 9 月以来的实验结论整理成 experiment_runs 的批次文件(每轮一个月,从 11 月往回)",
