@@ -25,6 +25,8 @@ from typing import Any, Optional
 HALVINGS = ("2012-11-28", "2016-07-09", "2020-05-11", "2024-04-20")
 STATE_FEATURES = ("stable_supply_30d", "taker_buy_share_30d", "stable_lend_apy_7d")
 MACRO_SERIES = ("btc_mvrv", "btc_puell", "btc_hash_30d", "hy_oas", "vix", "vix3m", "ust_2y", "ust_10y", "ust_10y_real", "fed_funds", "usd_broad")
+#: 只在 context() 里一并读出来、由 build 自己汇总的序列(不走逐条 put)
+MACRO_EXTRA_SERIES = ("btc_etf_net_flow_usd",)
 MAX_AGE_D = 10
 #: 美元指数周一才发布上一周的值,入库时又保守挪了 8 天 ⇒ 最新一条天然更旧,单独放宽
 MAX_AGE_BY_SERIES = {"usd_broad": 20}
@@ -135,6 +137,16 @@ def build(d: str, state_rows: list[dict], macro_rows: list[dict], sunday_closes:
         else:                                                             # 各交易所一周净流入之和;正 = 资产流进交易所。只给数,不给读数(方向的含义因场所而异)
             day = [r for r in ok if str(r["d"])[:10] == last]
             out["cex_inflow_1w_usd"], out["cex_inflow_d"], out["cex_inflow_n_exchanges"] = round(sum(float(r["inflow_1w_usd"]) for r in day), 0), last, len(day)
+    # 现货比特币 ETF 净流入(按可得日):最近 5 个与 20 个交易日的合计,十亿美元。只有 BTC;没有就不写。
+    etf = sorted((str(r["d"])[:10], float(r["value"])) for r in macro_rows
+                 if r.get("series") == "btc_etf_net_flow_usd" and r.get("value") is not None and str(r.get("d"))[:10] <= d[:10])
+    if etf and _age(d, etf[-1][0]) <= MAX_AGE_D:
+        out["btc_etf_flow_5d_bn"] = round(sum(v for _, v in etf[-5:]) / 1e9, 3)
+        if len(etf) >= 20:
+            out["btc_etf_flow_20d_bn"] = round(sum(v for _, v in etf[-20:]) / 1e9, 3)
+        out["btc_etf_flow_d"] = etf[-1][0]
+    else:
+        missing.append("btc_etf_flow")
     out["reads"] = reads(out)
     out["conflicts"] = conflicts(out)
     if missing:
@@ -162,6 +174,8 @@ def reads(c: dict) -> dict[str, str]:
         r["usd"] = "stronger" if c["usd_broad"] > c["usd_broad_60d_ago"] else "weaker_or_flat"
     if c.get("vix") is not None and c.get("vix3m") is not None:
         r["vix_term"] = "backwardation" if c["vix"] > c["vix3m"] else "contango"
+    if c.get("btc_etf_flow_5d_bn") is not None:
+        r["btc_etf_flow"] = "inflow" if c["btc_etf_flow_5d_bn"] > 0 else "outflow"
     if c.get("halving_phase"):
         r["halving"] = c["halving_phase"]
     if c.get("weekly_down") is not None:
@@ -202,7 +216,7 @@ async def context(d: str) -> dict[str, Any]:
     lo = (dt.date.fromisoformat(d[:10]) - dt.timedelta(days=LOOKBACK_D)).isoformat()
     state = await _read_all("state_daily", {"select": "d,feature,value", "entity": "eq.panel", "feature": f"in.({','.join(STATE_FEATURES)})",
                                             "and": f"(d.gte.{lo28},d.lte.{d[:10]})", "order": "d.asc,feature.asc"})
-    macro = await _read_all("macro_daily", {"select": "d,series,value", "series": f"in.({','.join(MACRO_SERIES)})",
+    macro = await _read_all("macro_daily", {"select": "d,series,value", "series": f"in.({','.join(MACRO_SERIES + MACRO_EXTRA_SERIES)})",
                                             "and": f"(d.gte.{lo},d.lte.{d[:10]})", "order": "d.asc,series.asc"})
     extra: dict[str, Any] = {}
     lo_w = (dt.date.fromisoformat(d[:10]) - dt.timedelta(days=7 * (WEEKLY_SMA_N + WEEKLY_LAG + 4))).isoformat()

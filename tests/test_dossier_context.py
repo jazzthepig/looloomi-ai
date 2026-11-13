@@ -42,7 +42,7 @@ def test_build_reproduces_the_day_that_prompted_it():
                           "credit": "widening", "vix_term": "contango", "halving": "30-48m"}
     joined = " | ".join(c["conflicts"])
     assert "MVRV > 1" in joined and "稳定币供应在收缩" in joined and "信用利差在走阔" in joined
-    assert set(c["missing"]) == {"ust_2y", "ust_10y", "ust_10y_real", "fed_funds", "usd_broad"}      # 这几条当天还没进库:列名字,不给 0
+    assert set(c["missing"]) == {"ust_2y", "ust_10y", "ust_10y_real", "fed_funds", "usd_broad", "btc_etf_flow"}      # 这几条当天还没进库:列名字,不给 0
 
 
 def test_unmeasured_is_absent_not_zero_and_stale_is_refused():
@@ -109,3 +109,14 @@ def test_rates_and_dollar_read_direction_and_policy_path():
     assert any("2 年期利率在升" in x for x in c["conflicts"])
     c2 = dc.build("2026-11-12", _state("2026-11-12", -0.02), [{"d": "2026-10-20", "series": "ust_2y", "value": 4.0}])
     assert "ust_2y" not in c2 and "rates_2y" not in c2["reads"]                                              # 23 天前的收益率拒收
+
+
+def test_etf_flow_sums_use_only_sessions_known_by_the_date():
+    flows = [("2026-11-06", -4.30e8), ("2026-11-07", -4.12e8), ("2026-11-10", -2.01e8), ("2026-11-11", -0.95e8), ("2026-11-12", -3.00e8),
+             ("2026-11-13", 9.0e9)]                                                                           # 明天才可得的那条不许进
+    macro = [{"d": d, "series": "btc_etf_net_flow_usd", "value": v} for d, v in flows]
+    c = dc.build("2026-11-12", _state("2026-11-12", -0.01), macro)
+    assert c["btc_etf_flow_5d_bn"] == -1.438 and c["btc_etf_flow_d"] == "2026-11-12" and "btc_etf_flow_20d_bn" not in c
+    assert c["reads"]["btc_etf_flow"] == "outflow"
+    c2 = dc.build("2026-11-12", _state("2026-11-12", -0.01), [])
+    assert "btc_etf_flow_5d_bn" not in c2 and "btc_etf_flow" in c2["missing"] and "btc_etf_flow" not in c2["reads"]

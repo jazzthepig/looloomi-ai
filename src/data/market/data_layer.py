@@ -784,6 +784,22 @@ async def get_fred_series(series_id: str, start: str) -> list[tuple[str, float]]
     return out
 
 
+TFTC_ETF_FLOWS_URL = "https://www.tftc.io/bitcoin-etf-flows/data.json"
+
+
+async def get_btc_etf_flows() -> list[dict]:
+    """美国现货比特币 ETF 的每日净流入(TFTC「The Commoner Bitcoin ETF Tracker」,免密钥 JSON,CC BY 4.0 —— 用到的地方要署名
+    「The Commoner Bitcoin ETF Tracker by TFTC, tftc.io/bitcoin-etf-flows」)。2024-01-11 上市日起,每个交易日一条:
+    {date, netFlowUsd, totalNetAssetsUsd, btcCloseUsd, perEtfUsd}。非 200 / 没有 days 抛错 —— 读不到 ≠ 0 流入。"""
+    r = await _get_misc_client().get(TFTC_ETF_FLOWS_URL, timeout=30)
+    if r.status_code != 200:
+        raise RuntimeError(f"TFTC ETF flows HTTP {r.status_code}")
+    days = (r.json() or {}).get("days")
+    if not isinstance(days, list) or not days:
+        raise RuntimeError("TFTC ETF flows 返回里没有 days")
+    return days
+
+
 SHARPE_V1_BASE = "https://www.sharpe.ai/api/v1"
 SANTIMENT_GQL = "https://api.santiment.net/graphql"
 

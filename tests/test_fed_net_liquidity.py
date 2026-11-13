@@ -70,3 +70,19 @@ def test_non_us_liquidity_series_use_conservative_availability_lags():
     assert ci.credit_rows("JPNASSETS", [("2026-09-01", 7000000.0)], since="2026-01-01")[0]["d"] == "2026-10-11"
     assert ci.credit_rows("ECBASSETSW", [("2026-11-06", 6100000.0)], since="2026-01-01")[0] == {
         "series": "ecb_assets", "d": "2026-11-14", "value": 6100.0, "source": "fred"}
+
+
+def test_etf_flow_rows_are_dated_by_availability_and_missing_is_not_zero():
+    """S-848:现货 ETF 净流入。交易日 D 的数 D 当晚才公布 ⇒ 入库日 D + 1;缺的那一项不写。"""
+    from datetime import date
+    days = [{"date": "2024-01-11", "netFlowUsd": 655300000, "totalNetAssetsUsd": None, "btcCloseUsd": 46269},
+            {"date": "2026-11-11", "netFlowUsd": -299898422.14, "totalNetAssetsUsd": 93696850737.42},
+            {"date": "2026-11-12", "netFlowUsd": "n/a", "totalNetAssetsUsd": 9.4e10},
+            {"date": "2023-12-29", "netFlowUsd": 1.0}, {"date": None, "netFlowUsd": 1.0}]
+    rows = ci.etf_rows(days)
+    assert {"series": "btc_etf_net_flow_usd", "d": "2024-01-12", "value": 655300000.0, "source": "tftc"} in rows
+    assert {"series": "btc_etf_net_flow_usd", "d": "2026-11-12", "value": -299898422.14, "source": "tftc"} in rows
+    assert not [r for r in rows if r["d"] == "2024-01-12" and r["series"] == "btc_etf_net_assets_usd"]      # None 不写成 0
+    assert [r["series"] for r in rows if r["d"] == "2026-11-13"] == ["btc_etf_net_assets_usd"]              # 非数的净流入不写
+    assert all(r["d"] >= "2024-01-02" for r in rows) and len(rows) == 4
+    assert [r["d"] for r in ci.known_by(rows, date(2026, 11, 12))][-1] == "2026-11-12"                      # 明天才可得的不提前写

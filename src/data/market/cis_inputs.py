@@ -160,6 +160,36 @@ def known_by(rows: list[dict], today: date) -> list[dict]:
     return [r for r in rows if str(r.get("d"))[:10] <= cut]
 
 
+#: 11-13(S-848:现货 ETF 净流入此前库里没有;Jazz「主动去抓」)。两条序列,都按**可得日**入库:交易日 D 的申赎在 D 当晚(UTC 22:00 前后)
+#: 公布 ⇒ D + 1。来源只覆盖比特币;以太坊的现货 ETF 另找来源。
+ETF_SERIES = {"netFlowUsd": "btc_etf_net_flow_usd", "totalNetAssetsUsd": "btc_etf_net_assets_usd"}
+ETF_LAG_D = 1
+
+
+def etf_rows(days: list[dict], since: str = "2024-01-01") -> list[dict]:
+    """纯函数。TFTC 的每日记录 → macro_daily 行(d = 交易日 + 1)。缺值 / 非数的那一项不写(不是 0);同一天两条都可能有。"""
+    out: list[dict] = []
+    for x in days:
+        d0 = str(x.get("date") or "")[:10]
+        if len(d0) != 10 or d0 < since:
+            continue
+        d = (date.fromisoformat(d0) + timedelta(days=ETF_LAG_D)).isoformat()
+        for key, series in ETF_SERIES.items():
+            v = _f(x.get(key))
+            if v is not None and v == v:
+                out.append({"series": series, "d": d, "value": v, "source": "tftc"})
+    return out
+
+
+async def _etf(today: date) -> dict[str, Any]:
+    from src.data.market.data_layer import get_btc_etf_flows
+    rows = known_by(etf_rows(await get_btc_etf_flows()), today)
+    if not rows:
+        return {"rows": 0, "error": "btc_etf: 0 行"}
+    err = await _upsert(MACRO_TABLE, rows, "series,d")
+    return {"rows": len(rows), "error": err, "last": max(r["d"] for r in rows)}
+
+
 def fred_rows(fred_id: str, obs: list[tuple[str, float]], since: str = MACRO_HISTORY_START) -> list[dict]:
     """纯函数。FRED 原始观测 → macro_daily 行;d = 观测日(原样,不是可得日),值换算成十亿美元。"""
     series, k, _lag = FRED_SERIES[fred_id]
@@ -345,6 +375,10 @@ async def _macro(today: date, now: Optional[datetime] = None) -> dict[str, Any]:
         out["fed"] = await _fed(today)
     except Exception as e:                                  # noqa: BLE001
         out["fed"] = {"rows": 0, "error": f"{type(e).__name__}: {str(e)[:100]}"}
+    try:
+        out["btc_etf"] = await _etf(today)
+    except Exception as e:                                  # noqa: BLE001 —— ETF 读不到不挡别的宏观序列
+        out["btc_etf"] = {"rows": 0, "error": f"{type(e).__name__}: {str(e)[:100]}"}
     return out
 
 
