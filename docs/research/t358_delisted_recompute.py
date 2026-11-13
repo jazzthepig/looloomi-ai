@@ -487,15 +487,36 @@ def run_null():
     actual_n_ge10 = sum(1 for t in inp["actual_tickets_adv5m"] if (t["r"] or -99) >= 10)
     actual_sum = sum(t["r"] for t in inp["actual_tickets_adv5m"] if t["r"] is not None)
 
-    def make_fn(picks_fn):
+    actual_win = (sum(1 for t in inp["actual_tickets_adv5m"]
+                      if (t["r"] or 0.0) > 0) / len(events)) if events else 0.0
+
+    def make_fn(picks_fn, stat="n_ge10"):
+        """stat ∈ {n_ge10, sum_r, n_tickets, win_rate}。
+        同一 seed ⇒ 同一批抽样 ⇒ 四个零分布逐位对齐(可相减、可配对读)。"""
         def fn(rng):
             picks = picks_fn(rng)
             res = _sim_set(states, picks)
-            return float(sum(1 for r in res if (r["r_mult"] or -99) >= 10))
+            if stat == "n_ge10":
+                return float(sum(1 for r in res if (r["r_mult"] or -99) >= 10))
+            if stat == "sum_r":
+                return float(sum((r["r_mult"] or 0.0) for r in res))
+            if stat == "n_tickets":
+                return float(len(res))
+            nw = sum(1 for r in res if (r["r_mult"] or 0.0) > 0)
+            return float(nw) / float(len(res)) if res else 0.0
         return fn
 
+    def try_null(picks_fn, stat, actual_v):
+        try:
+            arr = null_distribution(make_fn(picks_fn, stat), N_NULL, SEED, actual=actual_v)
+            return arr, None
+        except Exception as e:                      # apparatus 的 NoOpNull 等
+            return None, f"{type(e).__name__}: {e}"
+
     out = {"actual_n_ge10": actual_n_ge10, "actual_n_tickets": len(events),
-           "actual_r_sum": round(actual_sum, 4), "n_null": N_NULL, "seed": SEED}
+           "actual_r_sum": round(actual_sum, 4),
+           "actual_win_rate": round(actual_win, 4),
+           "n_null": N_NULL, "seed": SEED}
 
     for arm, picks_fn in (
         ("N2_random_symbol_random_day",
@@ -504,8 +525,11 @@ def run_null():
          lambda rng: null_n1(rng, states, cand, events)),
     ):
         rec = {}
-        try:
-            null = null_distribution(make_fn(picks_fn), N_NULL, SEED, actual=float(actual_n_ge10))
+        # ── 主判据:R≥10 张数(结构与 seed 与上一轮一致 ⇒ 逐位可比) ──
+        null, err = try_null(picks_fn, "n_ge10", float(actual_n_ge10))
+        if null is None:
+            rec["error"] = err
+        else:
             rec["null"] = {
                 "n": int(null.size),
                 "mean": round(float(null.mean()), 4),
@@ -518,12 +542,29 @@ def run_null():
             rec["percentile_of_actual"] = round(percentile_of(float(actual_n_ge10), null), 4)
             rec["p_upper"] = round(p_upper(float(actual_n_ge10), null), 4)
             rec["p_lower"] = round(p_lower(float(actual_n_ge10), null), 4)
-        except Exception as e:                      # apparatus 的 NoOpNull 等
-            rec["error"] = f"{type(e).__name__}: {e}"
+        # ── 附加(账本口径,探索性):ΣR / 每轮实际注数 / 胜率 ──
+        for stat, act, key in (("sum_r", actual_sum, "null_sum_r"),
+                                ("n_tickets", float(len(events)), "null_n_tickets"),
+                                ("win_rate", actual_win, "null_win_rate")):
+            a2, e2 = try_null(picks_fn, stat, float(act))
+            if a2 is None:
+                rec[key] = {"error": e2}
+                continue
+            rec[key] = {
+                "actual": round(float(act), 4),
+                "null_mean": round(float(a2.mean()), 4),
+                "null_median": round(float(np.median(a2)), 4),
+                "null_min": round(float(a2.min()), 4),
+                "null_max": round(float(a2.max()), 4),
+                "percentile_of_actual": round(percentile_of(float(act), a2), 4),
+                "p_upper": round(p_upper(float(act), a2), 4),
+                "p_lower": round(p_lower(float(act), a2), 4),
+            }
         out[arm] = rec
 
-    # 附带:两臂的 R 合计(探索性)
-    out["_note"] = "N1/N2 的 R 合计与胜率见 exploratory 段;主判据是 R≥10 张数的分布与分位。"
+    out["_note"] = ("主判据 = R≥10 张数的零分布与实际 1 张的分位;null_sum_r / null_n_tickets / "
+                    "null_win_rate 是同一批抽样(同 seed)的账本口径附加统计,探索性。"
+                    "N1/N2 的抽样逐位对齐。")
     json.dump(out, open(os.path.join(HERE, "t358_null_results.json"), "w"),
               ensure_ascii=False, indent=1)
     print(json.dumps(out, ensure_ascii=False, indent=1))
