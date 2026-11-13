@@ -1,0 +1,1370 @@
+{
+ "probed_at_utc": "2026-11-13T16:03:34Z",
+ "results": [
+  {
+   "name": "okx_liq_rest_btc",
+   "url": "https://www.okx.com/api/v5/public/liquidation-orders?instType=SWAP&state=filled&uly=BTC-USDT&limit=100",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json;charset=UTF-8",
+   "ms": 351,
+   "first200": "{\"code\":\"0\",\"data\":[{\"details\":[{\"bkLoss\":\"0\",\"bkPx\":\"68904.6\",\"ccy\":\"\",\"posSide\":\"short\",\"side\":\"buy\",\"sz\":\"0.61\",\"time\":1794585117596,\"ts\":\"1794585117596\"},{\"bkLoss\":\"0\",\"bkPx\":\"68904.6\",\"ccy\":\"\",\"p",
+   "keys": [
+    "code",
+    "data",
+    "msg"
+   ],
+   "code_code": "0",
+   "code_msg": "",
+   "data_len": 1,
+   "data0_keys": [
+    "details",
+    "instFamily",
+    "instId",
+    "instType",
+    "totalLoss",
+    "uly"
+   ],
+   "okx_code": "0",
+   "n_details": 1,
+   "extra_error": "TypeError: unsupported operand type(s) for -: 'str' and 'str'"
+  },
+  {
+   "name": "okx_liq_rest_family",
+   "url": "https://www.okx.com/api/v5/public/liquidation-orders?instType=SWAP&state=filled&instFamily=BTC-USDT&limit=100",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json;charset=UTF-8",
+   "ms": 360,
+   "first200": "{\"code\":\"0\",\"data\":[{\"details\":[{\"bkLoss\":\"0\",\"bkPx\":\"68904.6\",\"ccy\":\"\",\"posSide\":\"short\",\"side\":\"buy\",\"sz\":\"0.61\",\"time\":1794585117596,\"ts\":\"1794585117596\"},{\"bkLoss\":\"0\",\"bkPx\":\"68904.6\",\"ccy\":\"\",\"p",
+   "keys": [
+    "code",
+    "data",
+    "msg"
+   ],
+   "code_code": "0",
+   "code_msg": "",
+   "data_len": 1,
+   "data0_keys": [
+    "details",
+    "instFamily",
+    "instId",
+    "instType",
+    "totalLoss",
+    "uly"
+   ],
+   "n_details": 1,
+   "extra_error": "TypeError: unsupported operand type(s) for -: 'str' and 'str'"
+  },
+  {
+   "name": "okx_liq_rest_no_uly",
+   "url": "https://www.okx.com/api/v5/public/liquidation-orders?instType=SWAP&state=filled&limit=100",
+   "method": "GET",
+   "status": 400,
+   "ctype": "application/json;charset=UTF-8",
+   "http_error": true,
+   "ms": 304,
+   "first200": "{\"code\":\"50015\",\"data\":[],\"msg\":\"Either parameter uly or instFamily is required\"}",
+   "keys": [
+    "code",
+    "data",
+    "msg"
+   ],
+   "code_code": "50015",
+   "code_msg": "Either parameter uly or instFamily is required",
+   "data_len": 0
+  },
+  {
+   "name": "binance_allforce",
+   "url": "https://fapi.binance.com/fapi/v1/allForceOrders?symbol=BTCUSDT&limit=10",
+   "method": "GET",
+   "status": 404,
+   "ctype": "text/html",
+   "http_error": true,
+   "ms": 412,
+   "first200": "<!DOCTYPE html>\n<!-- saved from url=(0032)https://www.binance.com/en/error -->\n<html>\n\n<head>\n  <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n\n  <meta name=\"format-detection\" con"
+  },
+  {
+   "name": "binance_ws_http_probe",
+   "url": "https://fapi.binance.com/fapi/v1/exchangeInfo",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json",
+   "ms": 497,
+   "first200": "{\"timezone\":\"UTC\",\"serverTime\":1794549721702,\"futuresType\":\"U_MARGINED\",\"rateLimits\":[{\"rateLimitType\":\"REQUEST_WEIGHT\",\"interval\":\"MINUTE\",\"intervalNum\":1,\"limit\":2400},{\"rateLimitType\":\"ORDERS\",\"int",
+   "extra_error": "UnboundLocalError: cannot access local variable 'j' where it is not associated with a value"
+  },
+  {
+   "name": "bybit_recent_trade",
+   "url": "https://api.bybit.com/v5/market/recent-trade?category=linear&symbol=BTCUSDT&limit=5",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json; charset=utf-8",
+   "ms": 413,
+   "first200": "{\"retCode\":0,\"retMsg\":\"OK\",\"result\":{\"category\":\"linear\",\"list\":[{\"execId\":\"3b324fdb-c1fe-50e0-b8fc-5189e20a98e9\",\"symbol\":\"BTCUSDT\",\"price\":\"68661.80\",\"size\":\"0.095\",\"side\":\"Sell\",\"time\":\"17945852186",
+   "keys": [
+    "retCode",
+    "retMsg",
+    "result",
+    "retExtInfo",
+    "time"
+   ],
+   "item0_keys": [
+    "execId",
+    "symbol",
+    "price",
+    "size",
+    "side",
+    "time",
+    "isBlockTrade",
+    "isRPITrade",
+    "seq"
+   ]
+  },
+  {
+   "name": "bybit_public_data_root",
+   "url": "https://public.bybit.com/",
+   "method": "GET",
+   "status": 200,
+   "ctype": "text/html",
+   "ms": 293,
+   "first200": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">\n<html>\n<head>\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n<title>Directory listing fo",
+   "liq_hits": []
+  },
+  {
+   "name": "okx_data_download",
+   "url": "https://www.okx.com/data-download",
+   "method": "GET",
+   "status": 404,
+   "ctype": "text/html; charset=utf-8",
+   "http_error": true,
+   "ms": 265,
+   "first200": "<!DOCTYPE html><html lang=\"en\" dir=\"ltr\" class=\"  \"><head><meta charSet=\"UTF-8\" content=\"\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><title>Buy Bitcoin &amp; Crypto | Crypt",
+   "liq_hits": []
+  },
+  {
+   "name": "hl_info_recent_liq",
+   "url": "https://api.hyperliquid.xyz/info",
+   "method": "POST",
+   "status": 422,
+   "ctype": "text/plain; charset=utf-8",
+   "http_error": true,
+   "ms": 452,
+   "first200": "Failed to deserialize the JSON body into the target type"
+  },
+  {
+   "name": "hl_info_hist_liq",
+   "url": "https://api.hyperliquid.xyz/info",
+   "method": "POST",
+   "status": 422,
+   "ctype": "text/plain; charset=utf-8",
+   "http_error": true,
+   "ms": 268,
+   "first200": "Failed to deserialize the JSON body into the target type"
+  },
+  {
+   "name": "hl_info_meta",
+   "url": "https://api.hyperliquid.xyz/info",
+   "method": "POST",
+   "status": 200,
+   "ctype": "application/json",
+   "ms": 288,
+   "first200": "{\"universe\":[{\"szDecimals\":5,\"name\":\"BTC\",\"maxLeverage\":40,\"marginTableId\":56},{\"szDecimals\":4,\"name\":\"ETH\",\"maxLeverage\":25,\"marginTableId\":55},{\"szDecimals\":2,\"name\":\"ATOM\",\"maxLeverage\":5,\"marginTa",
+   "keys": [
+    "universe",
+    "marginTables",
+    "collateralToken"
+   ]
+  },
+  {
+   "name": "tftc_eth_etf_flows",
+   "url": "https://www.tftc.io/ethereum-etf-flows/data.json",
+   "method": "GET",
+   "status": 404,
+   "ctype": "text/html; charset=utf-8",
+   "http_error": true,
+   "ms": 710,
+   "first200": "<!DOCTYPE html><html data-dpl-id=\"dpl_AGHvh5r7J1VUPRhQWeXxj9JTVFmT\" lang=\"en\" class=\"UIjcMG_variable _0bjUvq_variable _TJvUW_variable F72GRa_variable\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport"
+  },
+  {
+   "name": "tftc_btc_etf_flows",
+   "url": "https://www.tftc.io/bitcoin-etf-flows/data.json",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json",
+   "ms": 286,
+   "first200": "{\"name\":\"US Spot Bitcoin ETF Daily Flows\",\"description\":\"Daily net flows for US spot Bitcoin ETFs since launch (2024-01-11): daily Total, original vendor aggregate, per-fund breakdown where available,"
+  },
+  {
+   "name": "tftc_root",
+   "url": "https://www.tftc.io/",
+   "method": "GET",
+   "status": 200,
+   "ctype": "text/html; charset=utf-8",
+   "ms": 316,
+   "first200": "<!DOCTYPE html><html data-dpl-id=\"dpl_AGHvh5r7J1VUPRhQWeXxj9JTVFmT\" lang=\"en\" class=\"UIjcMG_variable _0bjUvq_variable _TJvUW_variable F72GRa_variable\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport",
+   "etf_links": []
+  },
+  {
+   "name": "etf_nasdaq_etha",
+   "url": "https://api.nasdaq.com/api/quote/ETHA/summary?assetclass=etf",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json; charset=utf-8",
+   "ms": 3629,
+   "first200": "{\"data\":{\"symbol\":\"ETHA\",\"summaryData\":{\"TodayHighLow\":{\"label\":\"Today's High/Low\",\"value\":\"$44.57/$43.23\"},\"ShareVolume\":{\"label\":\"Share Volume\",\"value\":\"4,282,649.343880\"},\"FiftyDayAvgDailyVol\":{\"la",
+   "keys": [
+    "data",
+    "message",
+    "status"
+   ]
+  },
+  {
+   "name": "etf_stooq_etha",
+   "url": "https://stooq.com/q/d/l/?s=etha.us&i=d",
+   "method": "GET",
+   "status": null,
+   "error": "URLError: <urlopen error timed out>",
+   "ms": 40432,
+   "first200": "",
+   "csv_head": ""
+  },
+  {
+   "name": "etf_coinglass_page",
+   "url": "https://www.coinglass.com/eth-etf",
+   "method": "GET",
+   "status": 200,
+   "ctype": "text/html; charset=utf-8",
+   "ms": 794,
+   "first200": "<!DOCTYPE html><html lang=\"en\" dir=\"ltr\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0\" data-next-"
+  },
+  {
+   "name": "etf_sosovalue_page",
+   "url": "https://www.sosovalue.com/etf/eth",
+   "method": "GET",
+   "status": 403,
+   "ctype": "text/html; charset=UTF-8",
+   "http_error": true,
+   "ms": 295,
+   "first200": "<!DOCTYPE html><html lang=\"en-US\"><head><title>Just a moment...</title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"><meta nam"
+  },
+  {
+   "name": "etf_yahoo_etha_chart",
+   "url": "https://query1.finance.yahoo.com/v8/finance/chart/ETHA?range=5d&interval=1d",
+   "method": "GET",
+   "status": 403,
+   "ctype": "text/html",
+   "http_error": true,
+   "ms": 764,
+   "first200": "<!DOCTYPE html>\n<html lang=\"zh\">\n<head>\n    <meta charset=\"utf-8\">\n    <title>Yahoo</title>\n    <meta name=\"viewport\" content=\"width=device-width,initial-scale=1,minimal-ui\">\n    <meta http-equiv=\"X-U"
+  },
+  {
+   "name": "etf_fidelity_feth",
+   "url": "https://digital.fidelity.com/prgw/digital/research/quote/dashboard/summary?symbol=FETH",
+   "method": "GET",
+   "status": 200,
+   "ctype": "text/html",
+   "ms": 413,
+   "first200": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\"\r\n    \"http://www.w3.org/TR/html4/strict.dtd\"\r\n    >\r\n<html lang=\"en\">\r\n<head>\r\n    <title>Fidelity.com is Temporarily Unavailable</title>\r\n    <style "
+  },
+  {
+   "name": "etf_sec_edgar_atom",
+   "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&company=ishares+ethereum+trust&type=NPORT-P&output=atom",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/atom+xml",
+   "ms": 600,
+   "first200": "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" ?>\n  <feed xmlns=\"http://www.w3.org/2005/Atom\">\n    <author>\n      <email>webmaster@sec.gov</email>\n      <name>Webmaster</name>\n    </author>\n    <id>https:/"
+  },
+  {
+   "name": "etf_coinglass_ethflow",
+   "url": "https://open-api-v3.coinglass.com/api/etf/ethereum/flow-history",
+   "method": "GET",
+   "status": 500,
+   "ctype": "application/json",
+   "http_error": true,
+   "ms": 735,
+   "first200": "{\"timestamp\":1794585456018,\"status\":500,\"error\":\"Internal Server Error\",\"message\":\"\",\"path\":\"/api/etf/ethereum/flow-history\"}",
+   "keys": [
+    "timestamp",
+    "status",
+    "error",
+    "message",
+    "path"
+   ],
+   "code_message": "",
+   "code_error": "Internal Server Error"
+  },
+  {
+   "name": "etf_sosovalue_api",
+   "url": "https://api.sosovalue.com/api/v1/etf/eth/daily",
+   "method": "GET",
+   "status": null,
+   "error": "URLError: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
+   "ms": 2,
+   "first200": ""
+  },
+  {
+   "name": "unlock_llama_emission_eth",
+   "url": "https://api.llama.fi/emission/ethereum",
+   "method": "GET",
+   "status": 402,
+   "ctype": "text/plain",
+   "http_error": true,
+   "ms": 208,
+   "first200": "Upgrade to the paid API plan at https://defillama.com/subscription"
+  },
+  {
+   "name": "unlock_defillama_page",
+   "url": "https://defillama.com/unlocks",
+   "method": "GET",
+   "status": 200,
+   "ctype": "text/html; charset=utf-8",
+   "ms": 641,
+   "first200": "<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+  },
+  {
+   "name": "unlock_cryptorank_api",
+   "url": "https://api.cryptorank.io/v2/token/unlock/schedule",
+   "method": "GET",
+   "status": 401,
+   "ctype": "text/html",
+   "http_error": true,
+   "ms": 615,
+   "first200": "<html>\r\n<head><title>401 Authorization Required</title></head>\r\n<body>\r\n<center><h1>401 Authorization Required</h1></center>\r\n<hr><center>nginx</center>\r\n<script>(function(){function c(){var b=a.conte"
+  },
+  {
+   "name": "unlock_dropstab_api",
+   "url": "https://api.drops.tab/api/unlocks",
+   "method": "GET",
+   "status": null,
+   "error": "URLError: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
+   "ms": 117,
+   "first200": ""
+  },
+  {
+   "name": "unlock_tokenomist_page",
+   "url": "https://tokenomist.ai/ethereum",
+   "method": "GET",
+   "status": 403,
+   "ctype": "text/html; charset=UTF-8",
+   "http_error": true,
+   "ms": 305,
+   "first200": "<!DOCTYPE html><html lang=\"en-US\"><head><title>Just a moment...</title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"><meta nam"
+  },
+  {
+   "name": "unlock_tokenomist_api",
+   "url": "https://api.tokenomist.ai/v1/token/ETH",
+   "method": "GET",
+   "status": 401,
+   "ctype": "application/json",
+   "http_error": true,
+   "ms": 236,
+   "first200": "{\"status\":false,\"statusCode\":401,\"errorMessage\":\"x-api-key not found\"}",
+   "keys": [
+    "status",
+    "statusCode",
+    "errorMessage"
+   ]
+  },
+  {
+   "name": "unlock_cryptorank_page",
+   "url": "https://cryptorank.io/price/unlocks",
+   "method": "GET",
+   "status": 403,
+   "ctype": "text/html; charset=UTF-8",
+   "http_error": true,
+   "ms": 287,
+   "first200": "<!DOCTYPE html><html lang=\"en-US\"><head><title>Just a moment...</title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"><meta nam"
+  },
+  {
+   "name": "unlock_dropstab_page",
+   "url": "https://drops.tab/unlocks",
+   "method": "GET",
+   "status": null,
+   "error": "URLError: <urlopen error [Errno 8] nodename nor servname provided, or not known>",
+   "ms": 3,
+   "first200": ""
+  },
+  {
+   "name": "unlock_cmc_page",
+   "url": "https://coinmarketcap.com/token-unlocks/",
+   "method": "GET",
+   "status": 200,
+   "ctype": "text/html; charset=utf-8",
+   "ms": 594,
+   "first200": "<!DOCTYPE html><html lang=\"en\" dir=\"ltr\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to"
+  },
+  {
+   "name": "unlock_cmc_api",
+   "url": "https://api.coinmarketcap.com/data-api/v3/token-unlock/list",
+   "method": "GET",
+   "status": 404,
+   "ctype": "text/html",
+   "http_error": true,
+   "ms": 597,
+   "first200": "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"format-detection\" content=\"telephone=no,email=no,address=no\">\n    <title>coinmarketcap.com</title>\n    <link rel=\"Shortcut Ic"
+  },
+  {
+   "name": "supply_cg_hist_eth",
+   "url": "https://api.coingecko.com/api/v3/coins/ethereum/history?date=30-06-2020&localization=false",
+   "method": "GET",
+   "status": 401,
+   "ctype": "application/json; charset=utf-8",
+   "http_error": true,
+   "ms": 542,
+   "first200": "{\"error\":{\"status\":{\"timestamp\":\"2026-11-13T15:57:37.713+00:00\",\"error_code\":10012,\"error_message\":\"Your request exceeds the allowed time range. Public API users are limited to querying historical dat",
+   "keys": [
+    "error"
+   ],
+   "md_keys": [],
+   "circ": null
+  },
+  {
+   "name": "supply_cg_hist_sol",
+   "url": "https://api.coingecko.com/api/v3/coins/solana/history?date=01-01-2023&localization=false",
+   "method": "GET",
+   "status": 401,
+   "ctype": "application/json; charset=utf-8",
+   "http_error": true,
+   "ms": 459,
+   "first200": "{\"error\":{\"status\":{\"timestamp\":\"2026-11-13T15:57:38.175+00:00\",\"error_code\":10012,\"error_message\":\"Your request exceeds the allowed time range. Public API users are limited to querying historical dat",
+   "keys": [
+    "error"
+   ]
+  },
+  {
+   "name": "supply_cg_site_hist",
+   "url": "https://www.coingecko.com/api/v3/coins/ethereum/history?date=30-06-2020&localization=false",
+   "method": "GET",
+   "status": 404,
+   "ctype": "text/html; charset=utf-8",
+   "http_error": true,
+   "ms": 1197,
+   "first200": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\n  <li"
+  },
+  {
+   "name": "supply_cg_market_chart_eth",
+   "url": "https://api.coingecko.com/api/v3/coins/ethereum/market_chart?vs_currency=usd&days=max&interval=daily",
+   "method": "GET",
+   "status": 401,
+   "ctype": "application/json; charset=utf-8",
+   "http_error": true,
+   "ms": 445,
+   "first200": "{\"error\":{\"status\":{\"timestamp\":\"2026-11-13T15:57:39.825+00:00\",\"error_code\":10012,\"error_message\":\"Your request exceeds the allowed time range. Public API users are limited to querying historical dat",
+   "keys": [
+    "error"
+   ],
+   "mc_keys": null,
+   "n_points": 0,
+   "first_pt": null,
+   "last_pt": null
+  },
+  {
+   "name": "supply_cg_current_eth",
+   "url": "https://api.coingecko.com/api/v3/coins/ethereum?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=false",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json; charset=utf-8",
+   "ms": 441,
+   "first200": "{\"id\":\"ethereum\",\"symbol\":\"eth\",\"name\":\"Ethereum\",\"web_slug\":\"ethereum\",\"asset_platform_id\":null,\"platforms\":{\"\":\"\"},\"detail_platforms\":{\"\":{\"decimal_place\":null,\"contract_address\":\"\"}},\"block_time_in",
+   "keys": [
+    "id",
+    "symbol",
+    "name",
+    "web_slug",
+    "asset_platform_id",
+    "platforms",
+    "detail_platforms",
+    "block_time_in_minutes",
+    "hashing_algorithm",
+    "categories",
+    "preview_listing",
+    "public_notice",
+    "additional_notices",
+    "description",
+    "links",
+    "image",
+    "country_origin",
+    "genesis_date",
+    "listing_price",
+    "listing_currency",
+    "listing_timestamp",
+    "listing_source",
+    "listing_source_url",
+    "has_supply_breakdown"
+   ],
+   "circ": 122215668.80579185,
+   "mcap": {
+    "vef": 23607280222,
+    "btc": 3431956,
+    "bits": 3431956407609,
+    "sats": 343195640760908,
+    "eth": 122215669,
+    "ltc": 4796016199,
+    "bch": 1052534920,
+    "bnb": 372879122,
+    "eos": 3202517997185,
+    "xrp": 231774878709,
+    "xlm": 1591959370780,
+    "link": 23814042240,
+    "dot": 285109437170,
+    "yfi": 130591011,
+    "sol": 2959118773,
+    "usd": 235766306020,
+    "aed": 865851758857,
+    "ars": 364941427314655,
+    "aud": 347892753135,
+    "bdt": 29331976360223,
+    "bhd": 88964765212,
+    "bmd": 235766306020,
+    "brl": 1329085396924,
+    "cad": 335866785398,
+    "chf": 197503792216,
+    "clp": 235028357481773,
+    "cny": 1572891333979,
+    "czk": 5217126410798,
+    "dkk": 1597722005563,
+    "eur": 213721920640,
+    "gbp": 178284830248,
+    "gel": 612992395651,
+    "hkd": 1849597044441,
+    "huf": 77972824640580,
+    "idr": 4304215137079027,
+    "ils": 758494392579,
+    "inr": 22229071736129,
+    "jpy": 37682194688062,
+    "krw": 315085707559363,
+    "kwd": 73431773673,
+    "lkr": 78436577671820,
+    "mmk": 495097454325890,
+    "mxn": 4373506707300,
+    "myr": 963364703027,
+    "ngn": 317141046542285,
+    "nok": 2252640959180,
+    "nzd": 426302025061,
+    "php": 15068648856719,
+    "pkr": 65211643018674,
+    "pln": 941747761960,
+    "rub": 19467781475353,
+    "sar": 888512908893,
+    "sek": 2373472369846,
+    "sgd": 303698123306,
+    "thb": 7992951192807,
+    "try": 11874818430192,
+    "twd": 7761073380473,
+    "uah": 10722129611171,
+    "vnd": 6065509864694375,
+    "zar": 3996236529369,
+    "xdr": 172796897943,
+    "xag": 4807682855,
+    "xau": 60848926
+   }
+  },
+  {
+   "name": "supply_cmc_chart_eth",
+   "url": "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=1027&range=all",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json",
+   "ms": 1005,
+   "first200": "{\"data\":{\"points\":{\"1438905600\":{\"v\":[2.83161997795105,164329,170186635.54472924452680,0.01015861715856806174,610555.40272556389739881082],\"c\":[2.83161997795105,164329,170186635.54472924452680]},\"1439",
+   "extra_error": "UnboundLocalError: cannot access local variable 'j' where it is not associated with a value"
+  },
+  {
+   "name": "Bitcoins in circulation",
+   "url": "https://api.blockchain.info/charts/total-bitcoins?timespan=2years&format=json",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json; charset=utf-8",
+   "ms": 340,
+   "first200": "{\"status\":\"ok\",\"name\":\"Bitcoins in circulation\",\"unit\":\"BTC\",\"period\":\"day\",\"description\":\"The total number of bitcoins that have already been mined; in other words, the current supply of bitcoins on ",
+   "keys": [
+    "status",
+    "name",
+    "unit",
+    "period",
+    "description",
+    "values"
+   ],
+   "n_vals": 1497,
+   "unit": "BTC",
+   "extra_error": "AttributeError: 'list' object has no attribute 'get'"
+  },
+  {
+   "name": "supply_etherscan_v1",
+   "url": "https://api.etherscan.io/api?module=stats&action=ethsupply",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json; charset=utf-8",
+   "ms": 921,
+   "first200": "{\"status\":\"0\",\"message\":\"NOTOK\",\"result\":\"You are using a deprecated V1 endpoint, switch to Etherscan API V2 using https://docs.etherscan.io/v2-migration\"}",
+   "keys": [
+    "status",
+    "message",
+    "result"
+   ],
+   "code_message": "NOTOK"
+  },
+  {
+   "name": "supply_etherscan_v2",
+   "url": "https://api.etherscan.io/v2/api?chainid=1&module=stats&action=ethsupply",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json; charset=utf-8",
+   "ms": 867,
+   "first200": "{\"status\":\"0\",\"message\":\"NOTOK\",\"result\":\"Missing/Invalid API Key\"}",
+   "keys": [
+    "status",
+    "message",
+    "result"
+   ],
+   "code_message": "NOTOK"
+  },
+  {
+   "name": "supply_coinlore_eth",
+   "url": "https://api.coinlore.net/api/coin/?id=80",
+   "method": "GET",
+   "status": 403,
+   "ctype": "text/html; charset=utf-8",
+   "http_error": true,
+   "ms": 654,
+   "first200": "<html>\r\n<head><title>403 Forbidden</title></head>\r\n<body>\r\n<center><h1>403 Forbidden</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n<!-- a padding to disable MSIE and Chrome friendly err"
+  },
+  {
+   "name": "ws_binance_forceorder",
+   "url": "wss://fstream.binance.com/ws/!forceOrder@arr",
+   "kind": "websocket",
+   "planned_seconds": 90,
+   "events": 0,
+   "elapsed_s": 100.7,
+   "events_per_min": 0.0,
+   "events_per_day_est": 0,
+   "samples": []
+  },
+  {
+   "name": "ws_okx_liquidation",
+   "url": "wss://ws.okx.com:8443/ws/liquidation-orders?instType=SWAP",
+   "kind": "websocket",
+   "planned_seconds": 90,
+   "error": "InvalidStatus: server rejected WebSocket connection: HTTP 404",
+   "events": 0,
+   "elapsed_s": 5.8,
+   "events_per_min": 0.0,
+   "events_per_day_est": 0,
+   "samples": []
+  },
+  {
+   "name": "ws_bybit_liquidation",
+   "url": "wss://stream.bybit.com/v5/public/liquidation",
+   "kind": "websocket",
+   "planned_seconds": 90,
+   "error": "InvalidStatus: server rejected WebSocket connection: HTTP 404",
+   "events": 0,
+   "elapsed_s": 0.7,
+   "events_per_min": 0.0,
+   "events_per_day_est": 0,
+   "samples": []
+  },
+  {
+   "name": "ws_hyperliquid_liquidation",
+   "url": "wss://api.hyperliquid.xyz/ws",
+   "kind": "websocket",
+   "planned_seconds": 90,
+   "error": "ConnectionClosedOK: received 1000 (OK) Inactive; then sent 1000 (OK) Inactive",
+   "events": 1,
+   "elapsed_s": 60.8,
+   "events_per_min": 0.987,
+   "events_per_day_est": 1421,
+   "samples": [
+    "{\"channel\":\"error\",\"data\":\"Error parsing JSON into valid websocket request: {\\\"method\\\": \\\"subscribe\\\", \\\"subscription\\\": {\\\"type\\\": \\\"liquidation\\\", \\\"coin\\\": \\\"BTC\\\"}}\"}"
+   ]
+  },
+  {
+   "name": "etf_nasdaq_etha_full",
+   "url": "https://api.nasdaq.com/api/quote/ETHA/summary?assetclass=etf",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json; charset=utf-8",
+   "ms": 1269,
+   "first200": "{\"data\":{\"symbol\":\"ETHA\",\"summaryData\":{\"TodayHighLow\":{\"label\":\"Today's High/Low\",\"value\":\"$44.57/$43.23\"},\"ShareVolume\":{\"label\":\"Share Volume\",\"value\":\"4,282,649.343880\"},\"FiftyDayAvgDailyVol\":{\"la",
+   "keys": [
+    "data",
+    "message",
+    "status"
+   ],
+   "summary_keys": [
+    "TodayHighLow",
+    "ShareVolume",
+    "FiftyDayAvgDailyVol",
+    "PreviousClose",
+    "FiftTwoWeekHighLow",
+    "MarketCap",
+    "AnnualizedDividend",
+    "ExDividendDate",
+    "DividendPaymentDate",
+    "Yield",
+    "Alpha",
+    "WeightedAlpha",
+    "Beta",
+    "StandardDeviation",
+    "AvgDailyVol20Days",
+    "AvgDailyVol65Days",
+    "AUM",
+    "ExpenseRatio"
+   ],
+   "summary": {
+    "TodayHighLow": "$44.57/$43.23",
+    "ShareVolume": "4,282,649.343880",
+    "FiftyDayAvgDailyVol": "N/A",
+    "PreviousClose": "$45.54",
+    "FiftTwoWeekHighLow": "$78.7801/$34.575",
+    "MarketCap": "5,749,603,896",
+    "AnnualizedDividend": "N/A",
+    "ExDividendDate": "N/A",
+    "DividendPaymentDate": "N/A",
+    "Yield": "N/A",
+    "Alpha": "N/A",
+    "WeightedAlpha": "-33.54",
+    "Beta": 2.62,
+    "StandardDeviation": "-1.07",
+    "AvgDailyVol20Days": "8,950,315",
+    "AvgDailyVol65Days": "12,515,513",
+    "AUM": "5,805,895",
+    "ExpenseRatio": "N/A"
+   }
+  },
+  {
+   "name": "etf_nasdaq_ethe_full",
+   "url": "https://api.nasdaq.com/api/quote/ETHE/summary?assetclass=etf",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json; charset=utf-8",
+   "ms": 1515,
+   "first200": "{\"data\":{\"symbol\":\"ETHE\",\"summaryData\":{\"TodayHighLow\":{\"label\":\"Today's High/Low\",\"value\":\"$15.77/$15.305\"},\"ShareVolume\":{\"label\":\"Share Volume\",\"value\":\"952,757.408433\"},\"FiftyDayAvgDailyVol\":{\"lab",
+   "keys": [
+    "data",
+    "message",
+    "status"
+   ],
+   "summary_keys": [
+    "TodayHighLow",
+    "ShareVolume",
+    "FiftyDayAvgDailyVol",
+    "PreviousClose",
+    "FiftTwoWeekHighLow",
+    "MarketCap",
+    "Alpha",
+    "WeightedAlpha",
+    "Beta",
+    "StandardDeviation",
+    "AvgDailyVol20Days",
+    "AvgDailyVol65Days",
+    "AUM",
+    "ExpenseRatio"
+   ]
+  },
+  {
+   "name": "etf_nasdaq_ibit_full",
+   "url": "https://api.nasdaq.com/api/quote/IBIT/summary?assetclass=etf",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json; charset=utf-8",
+   "ms": 1301,
+   "first200": "{\"data\":{\"symbol\":\"IBIT\",\"summaryData\":{\"TodayHighLow\":{\"label\":\"Today's High/Low\",\"value\":\"$39.275/$38.4903\"},\"ShareVolume\":{\"label\":\"Share Volume\",\"value\":\"30,141,210.437561\"},\"FiftyDayAvgDailyVol\":",
+   "keys": [
+    "data",
+    "message",
+    "status"
+   ],
+   "summary_keys": [
+    "TodayHighLow",
+    "ShareVolume",
+    "FiftyDayAvgDailyVol",
+    "PreviousClose",
+    "FiftTwoWeekHighLow",
+    "MarketCap",
+    "AnnualizedDividend",
+    "ExDividendDate",
+    "DividendPaymentDate",
+    "Yield",
+    "Alpha",
+    "WeightedAlpha",
+    "Beta",
+    "StandardDeviation",
+    "AvgDailyVol20Days",
+    "AvgDailyVol65Days",
+    "AUM",
+    "ExpenseRatio"
+   ]
+  },
+  {
+   "name": "etf_nasdaq_etha_fundflow",
+   "url": "https://api.nasdaq.com/api/quote/ETHA/fund-flow?assetclass=etf",
+   "method": "GET",
+   "status": 404,
+   "ctype": "",
+   "http_error": true,
+   "ms": 2507,
+   "first200": ""
+  },
+  {
+   "name": "etf_nasdaq_etha_chart",
+   "url": "https://api.nasdaq.com/api/quote/ETHA/chart?assetclass=etf&fromdate=2026-10-01&todate=2026-11-13",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json; charset=utf-8",
+   "ms": 1586,
+   "first200": "{\"data\":{\"symbol\":\"ETHA\",\"company\":\"iShares Ethereum Trust ETF\",\"timeAsOf\":\"Nov 12, 2026\",\"isNasdaq100\":false,\"lastSalePrice\":\"$43.70\",\"netChange\":\"-1.84\",\"percentageChange\":\"-4.04%\",\"deltaIndicator\":",
+   "keys": [
+    "data",
+    "message",
+    "status"
+   ]
+  },
+  {
+   "name": "etf_edgar_cik",
+   "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&company=ishares+ethereum+trust&type=NPORT-P&output=atom",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/atom+xml",
+   "ms": 577,
+   "first200": "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" ?>\n  <feed xmlns=\"http://www.w3.org/2005/Atom\">\n    <author>\n      <email>webmaster@sec.gov</email>\n      <name>Webmaster</name>\n    </author>\n    <id>https:/",
+   "cik_hits": []
+  },
+  {
+   "name": "etf_coinglass_capi",
+   "url": "https://capi.coinglass.com/api/etf/ethereum/flow-history",
+   "method": "GET",
+   "status": 404,
+   "ctype": "application/json",
+   "http_error": true,
+   "ms": 352,
+   "first200": "{\"timestamp\":1794585474697,\"status\":404,\"error\":\"Not Found\",\"message\":\"\",\"path\":\"/api/etf/ethereum/flow-history\"}",
+   "keys": [
+    "timestamp",
+    "status",
+    "error",
+    "message",
+    "path"
+   ],
+   "code_message": "",
+   "code_error": "Not Found"
+  },
+  {
+   "name": "etf_coinglass_web_api",
+   "url": "https://www.coinglass.com/api/etf/ethereum/flow-history",
+   "method": "GET",
+   "status": 404,
+   "ctype": "text/html; charset=utf-8",
+   "http_error": true,
+   "ms": 364,
+   "first200": "<!DOCTYPE html><html lang=\"en\" dir=\"ltr\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0\" data-next-"
+  },
+  {
+   "name": "unlock_cmc_page_api_hits",
+   "url": "https://coinmarketcap.com/token-unlocks/",
+   "method": "GET",
+   "status": 200,
+   "ctype": "text/html; charset=utf-8",
+   "ms": 899,
+   "first200": "<!DOCTYPE html><html lang=\"en\" dir=\"ltr\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to",
+   "api_hits": []
+  },
+  {
+   "name": "unlock_defillama_page_api_hits",
+   "url": "https://defillama.com/unlocks",
+   "method": "GET",
+   "status": 200,
+   "ctype": "text/html; charset=utf-8",
+   "ms": 1314,
+   "first200": "<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content",
+   "api_hits": []
+  },
+  {
+   "name": "supply_cg_hist_within_1y",
+   "url": "https://api.coingecko.com/api/v3/coins/ethereum/history?date=15-03-2026&localization=false",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json; charset=utf-8",
+   "ms": 597,
+   "first200": "{\"id\":\"ethereum\",\"symbol\":\"eth\",\"name\":\"Ethereum\",\"image\":{\"thumb\":\"https://coin-images.coingecko.com/coins/images/279/thumb/ethereum.png?1696501628\",\"small\":\"https://coin-images.coingecko.com/coins/i",
+   "keys": [
+    "id",
+    "symbol",
+    "name",
+    "image",
+    "market_data",
+    "public_interest_stats"
+   ],
+   "circ": null,
+   "mcap": {
+    "usd": 254623950435.93228,
+    "aed": 935137012850.0137,
+    "ars": 356247210912823.7,
+    "aud": 363449972228.2993,
+    "bdt": 31242183282587.04,
+    "bhd": 96642775011.90854,
+    "bmd": 254623950435.93228,
+    "brl": 1357212367298.5334,
+    "cad": 349114643818.75635,
+    "chf": 201163105802.40393,
+    "clp": 233504542946598.66,
+    "cny": 1756039536576.4507,
+    "czk": 5446877354132.898,
+    "dkk": 1663848097466.063,
+    "eur": 222679848110.04196,
+    "gbp": 192247193553.93933,
+    "gel": 695123384690.0951,
+    "hkd": 1993114804348.3384,
+    "huf": 87424326988126.31,
+    "idr": 4313843799775024,
+    "ils": 800635475767.5385,
+    "inr": 23568380899250.36,
+    "jpy": 40622407990424.375,
+    "krw": 382411100286970.9,
+    "kwd": 78226079300.82799,
+    "lkr": 79238777569844.23,
+    "mmk": 534661917364874.94,
+    "mxn": 4554175714238.586,
+    "myr": 1002836428791.9193,
+    "ngn": 352847462505516.94,
+    "nok": 2488542990310.293,
+    "nzd": 439237772579.7528,
+    "php": 15195667599960.844,
+    "pkr": 71093670837481.75,
+    "pln": 951404682419.4149,
+    "rub": 20409198908699.938,
+    "sar": 958226312675.544,
+    "sek": 2407873794205.0317,
+    "sgd": 326550123955.07446,
+    "thb": 8236571220094.38,
+    "try": 11254478421856.777,
+    "twd": 8189797055023.25,
+    "uah": 11227673649346.486,
+    "vnd": 6695348642698177,
+    "zar": 4300217860056.994,
+    "xdr": 181108414218.16904,
+    "xag": 3188383283.682214,
+    "xau": 51069925.73893494,
+    "btc": 3579124.6592836785,
+    "bits": 3579124659283.6787,
+    "sats": 357912465928367.9,
+    "eth": 116887499.7771123,
+    "ltc": 4523226815.106469,
+    "bch": 538691380.1262782,
+    "bnb": 378203572.0525067,
+    "eos": 3033919242741.243,
+    "xrp": 175041356238.30582,
+    "xlm": 1505300383788.3667,
+    "link": 24896651748.663033,
+    "dot": 176333346459.64026,
+    "yfi": 88023385.65043442,
+    "sol": 2750121562.0324597
+   }
+  },
+  {
+   "name": "supply_cg_hist_error_full",
+   "url": "https://api.coingecko.com/api/v3/coins/ethereum/history?date=30-06-2020&localization=false",
+   "method": "GET",
+   "status": 429,
+   "ctype": "application/json",
+   "http_error": true,
+   "ms": 211,
+   "first200": "{\"status\":{\"error_code\":429,\"error_message\":\"You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits.\"}}",
+   "keys": [
+    "status"
+   ],
+   "err_full": null
+  },
+  {
+   "name": "supply_cg_mc_365",
+   "url": "https://api.coingecko.com/api/v3/coins/ethereum/market_chart?vs_currency=usd&days=365&interval=daily",
+   "method": "GET",
+   "status": 429,
+   "ctype": "application/json",
+   "http_error": true,
+   "ms": 283,
+   "first200": "{\"status\":{\"error_code\":429,\"error_message\":\"You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits.\"}}",
+   "keys": [
+    "status"
+   ],
+   "n_points": 0,
+   "mc_keys": null
+  },
+  {
+   "name": "supply_cmc_chart_keys",
+   "url": "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=1027&range=all",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json",
+   "ms": 316,
+   "first200": "{\"data\":{\"points\":{\"1438905600\":{\"v\":[2.83161997795105,164329,170186635.54472924452680,0.01015861715856806174,610555.40272556389739881082],\"c\":[2.83161997795105,164329,170186635.54472924452680]},\"1439",
+   "extra_error": "UnboundLocalError: cannot access local variable 'j' where it is not associated with a value"
+  },
+  {
+   "name": "supply_bc_charts_list",
+   "url": "https://api.blockchain.info/charts",
+   "method": "GET",
+   "status": 404,
+   "ctype": "application/json; charset=utf-8",
+   "http_error": true,
+   "ms": 1006,
+   "first200": "{\"status\":\"not-found\",\"error\":null}",
+   "keys": [
+    "status",
+    "error"
+   ],
+   "chart_hits": []
+  },
+  {
+   "name": "supply_cmc_one_point",
+   "url": "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=1027&range=1M",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json",
+   "ms": 586,
+   "first200": "{\"data\":{\"points\":{\"1791990000\":{\"v\":[2424.1813145753354,11177034907.87,296082960472.6821123504200,0.02961102073124119233,3616610.12235782487996690910],\"c\":[2424.1813145753354,11177034907.87,296082960",
+   "extra_error": "UnboundLocalError: cannot access local variable 'j' where it is not associated with a value"
+  },
+  {
+   "name": "supply_cg_hist_1y_keys",
+   "url": "https://api.coingecko.com/api/v3/coins/ethereum/history?date=15-03-2026&localization=false",
+   "method": "GET",
+   "status": 429,
+   "ctype": "application/json",
+   "http_error": true,
+   "ms": 294,
+   "first200": "{\"status\":{\"error_code\":429,\"error_message\":\"You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits.\"}}",
+   "keys": [
+    "status"
+   ],
+   "md_keys": [],
+   "circ": null,
+   "price": null,
+   "mcap_usd": null
+  },
+  {
+   "name": "supply_cg_mc_365_retry",
+   "url": "https://api.coingecko.com/api/v3/coins/ethereum/market_chart?vs_currency=usd&days=365&interval=daily",
+   "method": "GET",
+   "status": 429,
+   "ctype": "application/json",
+   "http_error": true,
+   "ms": 212,
+   "first200": "{\"status\":{\"error_code\":429,\"error_message\":\"You've exceeded the Rate Limit. Please visit https://www.coingecko.com/en/api/pricing to subscribe to our API plans for higher rate limits.\"}}",
+   "keys": [
+    "status"
+   ],
+   "n_points": 0,
+   "mc_keys": null,
+   "first_mc": null,
+   "last_mc": null,
+   "first_px": null,
+   "last_px": null
+  },
+  {
+   "name": "etf_edgar_cik2",
+   "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&company=ishares+ethereum+trust&type=NPORT-P&output=atom",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/atom+xml",
+   "ms": 615,
+   "first200": "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" ?>\n  <feed xmlns=\"http://www.w3.org/2005/Atom\">\n    <author>\n      <email>webmaster@sec.gov</email>\n      <name>Webmaster</name>\n    </author>\n    <id>https:/",
+   "cik_hits": [],
+   "titles": [
+    "<title>Company Search Feed</title>"
+   ]
+  },
+  {
+   "name": "etf_nasdaq_etha_chart_keys",
+   "url": "https://api.nasdaq.com/api/quote/ETHA/chart?assetclass=etf&fromdate=2026-10-01&todate=2026-11-13",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json; charset=utf-8",
+   "ms": 3364,
+   "first200": "{\"data\":{\"symbol\":\"ETHA\",\"company\":\"iShares Ethereum Trust ETF\",\"timeAsOf\":\"Nov 12, 2026\",\"isNasdaq100\":false,\"lastSalePrice\":\"$43.70\",\"netChange\":\"-1.84\",\"percentageChange\":\"-4.04%\",\"deltaIndicator\":",
+   "keys": [
+    "data",
+    "message",
+    "status"
+   ],
+   "data_keys": [
+    "symbol",
+    "company",
+    "timeAsOf",
+    "isNasdaq100",
+    "lastSalePrice",
+    "netChange",
+    "percentageChange",
+    "deltaIndicator",
+    "previousClose",
+    "volume",
+    "exchange",
+    "chart",
+    "volumeChart",
+    "events"
+   ],
+   "chart_keys": [
+    "z",
+    "x",
+    "y"
+   ],
+   "chart0": {
+    "z": {
+     "high": "61.410614100000004",
+     "low": "60.435604350000006",
+     "open": "60.720607199999996",
+     "close": "61.11061110000001",
+     "volume": "6,150,652",
+     "dateTime": "10/1/2026",
+     "value": "61.11061110000001"
+    },
+    "x": 1790812800000,
+    "y": 61.1106111
+   },
+   "n_pts": 31
+  },
+  {
+   "name": "etf_nasdaq_etha_info",
+   "url": "https://api.nasdaq.com/api/quote/ETHA/info?assetclass=etf",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json; charset=utf-8",
+   "ms": 1643,
+   "first200": "{\"data\":{\"symbol\":\"ETHA\",\"companyName\":\"iShares Ethereum Trust ETF\",\"stockType\":null,\"exchange\":\"NASDAQ-GM\",\"isNasdaqListed\":false,\"isNasdaq100\":false,\"isHeld\":false,\"primaryData\":{\"lastSalePrice\":\"$4",
+   "keys": [
+    "data",
+    "message",
+    "status"
+   ],
+   "data_keys": [
+    "symbol",
+    "companyName",
+    "stockType",
+    "exchange",
+    "isNasdaqListed",
+    "isNasdaq100",
+    "isHeld",
+    "primaryData",
+    "secondaryData",
+    "marketStatus",
+    "assetClass",
+    "keyStats",
+    "notifications",
+    "gtEnabled"
+   ],
+   "primary_data": {
+    "lastSalePrice": "$43.72",
+    "netChange": "-1.82",
+    "percentageChange": "-4.00%",
+    "deltaIndicator": "down",
+    "lastTradeTimestamp": "Nov 13, 2026 10:58 AM ET",
+    "isRealTime": true,
+    "bidPrice": "$43.71",
+    "askPrice": "$43.73",
+    "bidSize": "1200",
+    "askSize": "1275",
+    "volume": "4,293,090.412416",
+    "currency": null
+   }
+  },
+  {
+   "name": "okx_liq_details_count",
+   "url": "https://www.okx.com/api/v5/public/liquidation-orders?instType=SWAP&state=filled&uly=BTC-USDT&limit=100",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json;charset=UTF-8",
+   "ms": 436,
+   "first200": "{\"code\":\"0\",\"data\":[{\"details\":[{\"bkLoss\":\"0\",\"bkPx\":\"68766.5\",\"ccy\":\"\",\"posSide\":\"long\",\"side\":\"sell\",\"sz\":\"3.42\",\"time\":1794585681550,\"ts\":\"1794585681550\"},{\"bkLoss\":\"0\",\"bkPx\":\"68811.8\",\"ccy\":\"\",\"p",
+   "keys": [
+    "code",
+    "data",
+    "msg"
+   ],
+   "code_code": "0",
+   "code_msg": "",
+   "data_len": 1,
+   "data0_keys": [
+    "details",
+    "instFamily",
+    "instId",
+    "instType",
+    "totalLoss",
+    "uly"
+   ],
+   "n_liq": 100,
+   "n_groups": 1,
+   "ts_min": "1794584927724",
+   "ts_max": "1794585681550",
+   "detail0": {
+    "bkLoss": "0",
+    "bkPx": "68766.5",
+    "ccy": "",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "3.42",
+    "time": 1794585681550,
+    "ts": "1794585681550"
+   }
+  },
+  {
+   "name": "ws_okx_liquidation_sub",
+   "url": "wss://ws.okx.com:8443/ws",
+   "kind": "websocket",
+   "planned_seconds": 90,
+   "error": "InvalidStatus: server rejected WebSocket connection: HTTP 404",
+   "events": 0,
+   "elapsed_s": 5.8,
+   "events_per_min": 0.0,
+   "events_per_day_est": 0,
+   "samples": []
+  },
+  {
+   "name": "ws_okx_liquidation_fam",
+   "url": "wss://ws.okx.com:8443/ws/liquidation-orders?instType=SWAP&instFamily=BTC-USDT",
+   "kind": "websocket",
+   "planned_seconds": 90,
+   "error": "InvalidStatus: server rejected WebSocket connection: HTTP 404",
+   "events": 0,
+   "elapsed_s": 5.6,
+   "events_per_min": 0.0,
+   "events_per_day_est": 0,
+   "samples": []
+  },
+  {
+   "name": "ws_bybit_linear",
+   "url": "wss://stream.bybit.com/v5/public/linear",
+   "kind": "websocket",
+   "planned_seconds": 90,
+   "events": 1,
+   "elapsed_s": 91.0,
+   "events_per_min": 0.659,
+   "events_per_day_est": 948,
+   "samples": [
+    "{\"success\":false,\"ret_msg\":\"error:handler not found,topic:liquidation.BTCUSDT\",\"conn_id\":\"dbqr4sag5dc8pbicfbmg-f8vj\",\"req_id\":\"\",\"op\":\"subscribe\"}"
+   ]
+  },
+  {
+   "name": "ws_hyperliquid_nocoin",
+   "url": "wss://api.hyperliquid.xyz/ws",
+   "kind": "websocket",
+   "planned_seconds": 90,
+   "error": "ConnectionClosedOK: received 1000 (OK) Inactive; then sent 1000 (OK) Inactive",
+   "events": 1,
+   "elapsed_s": 60.8,
+   "events_per_min": 0.987,
+   "events_per_day_est": 1421,
+   "samples": [
+    "{\"channel\":\"error\",\"data\":\"Error parsing JSON into valid websocket request: {\\\"method\\\": \\\"subscribe\\\", \\\"subscription\\\": {\\\"type\\\": \\\"liquidation\\\"}}\"}"
+   ]
+  },
+  {
+   "name": "doc_coingecko_history",
+   "url": "https://docs.coingecko.com/reference/coins-id-history",
+   "method": "GET",
+   "status": 200,
+   "ctype": "text/html; charset=utf-8",
+   "ms": 563,
+   "first200": "<!doctype html>\n<html\n  lang=\"en\"\n  class=\"dark\"\n  data-banner-state=\"visible\"\n  data-assistant-state=\"closed\"\n  data-page-mode=\"none\"\n  data-current-path=\"/\"\n>\n  <head>\n    <!-- AI agents: this page ",
+   "attrib": [],
+   "range": [
+    "meta data-mint-head name=\"description\" content=\"To query the historical data (price, market cap, 24hrs volume, etc",
+    "meta data-mint-head property=\"og:description\" content=\"To query the historical data (price, market cap, 24hrs volume, etc",
+    "meta data-mint-head name=\"twitter:description\" content=\"To query the historical data (price, market cap, 24hrs volume, etc",
+    "tory\",\"name\":\"Coin Historical Data by ID\",\"description\":\"To query the historical data (price, market cap, 24hrs volume, etc"
+   ],
+   "rate": []
+  },
+  {
+   "name": "doc_blockchain_charts",
+   "url": "https://www.blockchain.com/explorers/charts/api-documentation",
+   "method": "GET",
+   "status": 404,
+   "ctype": "text/html; charset=utf-8",
+   "http_error": true,
+   "ms": 2909,
+   "first200": "<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=device-width\" data-next-head=\"\"/><title data-next-head=\"\">Blockchain Explorer - Bitco",
+   "attrib": [],
+   "rate": []
+  },
+  {
+   "name": "doc_coingecko_rate",
+   "url": "https://docs.coingecko.com/reference/introduction",
+   "method": "GET",
+   "status": 200,
+   "ctype": "text/html; charset=utf-8",
+   "ms": 827,
+   "first200": "<!doctype html>\n<html\n  lang=\"en\"\n  class=\"dark\"\n  data-banner-state=\"visible\"\n  data-assistant-state=\"closed\"\n  data-page-mode=\"none\"\n  data-current-path=\"/\"\n>\n  <head>\n    <!-- AI agents: this page ",
+   "rate": []
+  },
+  {
+   "name": "ws_okx_443",
+   "url": "wss://ws.okx.com/ws",
+   "kind": "websocket",
+   "planned_seconds": 90,
+   "error": "InvalidStatus: server rejected WebSocket connection: HTTP 404",
+   "events": 0,
+   "elapsed_s": 5.7,
+   "events_per_min": 0.0,
+   "events_per_day_est": 0,
+   "samples": []
+  },
+  {
+   "name": "ws_bybit_spot_allliq",
+   "url": "wss://stream.bybit.com/v5/public/spot",
+   "kind": "websocket",
+   "planned_seconds": 90,
+   "events": 1,
+   "elapsed_s": 91.0,
+   "events_per_min": 0.659,
+   "events_per_day_est": 948,
+   "samples": [
+    "{\"success\":false,\"ret_msg\":\"Invalid topic :[allLiquidation.BTCUSDT]\",\"conn_id\":\"dbqr5iu61gv5aovgm970-cq8u\",\"op\":\"subscribe\"}"
+   ]
+  },
+  {
+   "name": "ws_bybit_spot_liq",
+   "url": "wss://stream.bybit.com/v5/public/spot",
+   "kind": "websocket",
+   "planned_seconds": 90,
+   "events": 1,
+   "elapsed_s": 91.0,
+   "events_per_min": 0.659,
+   "events_per_day_est": 948,
+   "samples": [
+    "{\"success\":false,\"ret_msg\":\"Invalid topic :[liquidation.BTCUSDT]\",\"conn_id\":\"dbqr6u4gt3c8bcp6bu10-aasv\",\"op\":\"subscribe\"}"
+   ]
+  },
+  {
+   "name": "ws_bybit_linear_allliq",
+   "url": "wss://stream.bybit.com/v5/public/linear",
+   "kind": "websocket",
+   "planned_seconds": 90,
+   "events": 3,
+   "elapsed_s": 91.0,
+   "events_per_min": 1.979,
+   "events_per_day_est": 2849,
+   "samples": [
+    "{\"success\":true,\"ret_msg\":\"\",\"conn_id\":\"dbqqo31rs4v6te1qfm00-fa2p\",\"req_id\":\"\",\"op\":\"subscribe\"}",
+    "{\"topic\":\"allLiquidation.BTCUSDT\",\"type\":\"snapshot\",\"ts\":1794585736367,\"data\":[{\"T\":1794585735868,\"s\":\"BTCUSDT\",\"S\":\"Sell\",\"v\":\"0.024\",\"p\":\"68906.90\"}]}",
+    "{\"topic\":\"allLiquidation.BTCUSDT\",\"type\":\"snapshot\",\"ts\":1794585752867,\"data\":[{\"T\":1794585752450,\"s\":\"BTCUSDT\",\"S\":\"Buy\",\"v\":\"0.010\",\"p\":\"68407.80\"}]}"
+   ]
+  },
+  {
+   "name": "ws_hyperliquid_trades",
+   "url": "wss://api.hyperliquid.xyz/ws",
+   "kind": "websocket",
+   "planned_seconds": 90,
+   "events": 230,
+   "elapsed_s": 90.8,
+   "events_per_min": 151.99,
+   "events_per_day_est": 218865,
+   "samples": [
+    "{\"channel\":\"subscriptionResponse\",\"data\":{\"method\":\"subscribe\",\"subscription\":{\"type\":\"trades\",\"coin\":\"BTC\"}}}",
+    "{\"channel\":\"trades\",\"data\":[{\"coin\":\"BTC\",\"side\":\"B\",\"px\":\"68720.0\",\"sz\":\"0.00481\",\"time\":1794585709092,\"hash\":\"0x76dfa13e0572bf1d78590448b6bbc7020a240023a075ddef1aa84c90c4769908\",\"tid\":567519017436463,\"users\":[\"0x4ac5ade88e74072b98740ad6608ff190a23621e9\",\"0xca00ad1678ca2fb64956bcd08b6e8bf19d46b001\"",
+    "{\"channel\":\"trades\",\"data\":[{\"coin\":\"BTC\",\"side\":\"A\",\"px\":\"68711.0\",\"sz\":\"0.00049\",\"time\":1794585714524,\"hash\":\"0xc8f3d1afae398a6bca6d0448b6bc130202140095493ca93d6cbc7d026d3d6456\",\"tid\":457264549835718,\"users\":[\"0xcbbaff8826b4723020562c24fb6cc1c38c0c3045\",\"0x67d4ca45e9272396d57b57cbbf5db0e0c3fd937e\""
+   ]
+  }
+ ]
+}

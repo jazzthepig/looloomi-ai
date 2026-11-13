@@ -1,0 +1,17 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {"id": "T-376-1", "scenario": "T-376 清算量来源",
+     "statement": "2026-12-15 前,OKX 公共 REST GET /api/v5/public/liquidation-orders 仍免密钥免签名返回 code=0(不需 API key)",
+     "variable": "manual", "op": "between", "lo": 1, "hi": 1, "prob": 0.85, "horizon_d": "2026-12-15"},
+    {"id": "T-376-2", "scenario": "T-376 流通量来源",
+     "statement": "2026-12-15 前,CoinGecko 公开档 /coins/{id}/history 对 365 天以前的日期仍返回 error_code 10012(公开档历史窗口仍限 365 天)",
+     "variable": "manual", "op": "between", "lo": 1, "hi": 1, "prob": 0.8, "horizon_d": "2026-12-15"},
+    {"id": "T-376-3", "scenario": "T-376 ETF 净流入来源",
+     "statement": "2026-12-15 前,仍不存在免密钥即可取到的 ETH 现货 ETF 每日净流入结构化接口(免费路仍走不通)",
+     "variable": "manual", "op": "between", "lo": 1, "hi": 1, "prob": 0.7, "horizon_d": "2026-12-15"},
+    {"id": "T-376-4", "scenario": "T-376 清算量水位",
+     "statement": "2026-12-15 前,BTC 日收盘价仍高于 65494(=2026-11-13 实测 OKX 爆仓价 68904.6 的 95%)",
+     "variable": "close:BTC", "op": "gt", "lo": 65494, "prob": 0.55, "horizon_d": "2026-12-15"}
+  ]
+}

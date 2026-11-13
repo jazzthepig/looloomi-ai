@@ -1,0 +1,148 @@
+{
+ "probed_at_utc": "2026-11-13T16:20:44Z",
+ "results": [
+  {
+   "name": "verify_cmc_v4_is_supply",
+   "status": 200,
+   "cmc_points": 701,
+   "cmc_first_date": "2010-07-13",
+   "cmc_last_date": "2026-11-13",
+   "cmc_first_supply": 3344213.0,
+   "cmc_gap_median_recent_days": 9.0,
+   "cmc_gap_median_all_days": 9.0,
+   "bc_first_date": "1970-01-15",
+   "bc_last_date": "1970-01-21",
+   "bc_points": 1501,
+   "bc_name": "Bitcoins in circulation",
+   "bc_unit": "BTC",
+   "bc_description": "The total number of bitcoins that have already been mined; in other words, the current supply of bitcoins on the network.",
+   "cmc_vs_blockchain": []
+  },
+  {
+   "name": "binance_vision_liq_snapshot",
+   "status": 200,
+   "keys_under_liqsnapshot": [],
+   "n_keys": 0,
+   "monthly_dirs_sample": [
+    "data/futures/um/monthly/",
+    "data/futures/um/monthly/aggTrades/",
+    "data/futures/um/monthly/bookTicker/",
+    "data/futures/um/monthly/fundingRate/",
+    "data/futures/um/monthly/indexPriceKlines/",
+    "data/futures/um/monthly/klines/",
+    "data/futures/um/monthly/markPriceKlines/",
+    "data/futures/um/monthly/premiumIndexKlines/",
+    "data/futures/um/monthly/trades/"
+   ],
+   "n_monthly_dirs": 9
+  },
+  {
+   "name": "tftc_links",
+   "status": 200,
+   "links": [
+    "/",
+    "/_next/static/immutable/chunks/1dg4_rk7xzvhq.css",
+    "/_next/static/immutable/chunks/1oa_-si95rrhj.js",
+    "/_next/static/immutable/chunks/24ipm3loa0ai4.css",
+    "/_next/static/immutable/media/01e4147cff8141ee-s.p.0v7knm2wof07y.woff2",
+    "/_next/static/immutable/media/0e64cfb82a47c250-s.p.0-yskm9fkitk1.woff2",
+    "/_next/static/immutable/media/23b7a97ae3b5c134-s.p.0fcfx2a-jndc5.woff2",
+    "/_next/static/immutable/media/374bfedbce52fcde-s.p.0_f9k18vhzk0w.woff2",
+    "/_next/static/immutable/media/522cd826f2dc0be6-s.p.32yb2kd31az23.woff2",
+    "/_next/static/immutable/media/713e82fa9fe87496-s.p.2dsuev1r8izqr.woff2",
+    "/_next/static/immutable/media/83afe278b6a6bb3c-s.p.45535valc9rzk.woff2",
+    "/_next/static/immutable/media/99e609270109b47d-s.p.1dgcou5jor5q_.woff2",
+    "/_next/static/immutable/media/a7e15459c1805da0-s.p.05ymlrkv94iec.woff2",
+    "/_next/static/immutable/media/b02a479d288d97d4-s.p.1w7o6te1grk4n.woff2",
+    "/_next/static/immutable/media/ef7be03ed7e60a63-s.p.2s_2xm20rpc3j.woff2",
+    "/_next/static/immutable/media/effe91970fc4db64-s.p.28xcb7557rbh2.woff2",
+    "/about",
+    "/advertise",
+    "/ai",
+    "/ai-capex-treadmill-kedrosky-first-lab-to-stop-training-wins",
+    "/ai-hacking-smart-tvs-remove-spyware",
+    "/ai-slowdown-amazon-gpus-warehouses-no-hedge-on-earth",
+    "/apple-icon.png?apple-icon.2xul4ihptpup8.png",
+    "/articles",
+    "/binance-hack-hot-wallet-signing-eip-7702-stablecoin-freeze-aave",
+    "/bis-money-architecture-of-trust-bitcoin",
+    "/bitaxe-explained",
+    "/bitcoin-developers-burnout-freedom-money-state",
+    "/bitcoin-etf-flows",
+    "/brazil-capital-flight-calacanis-equity-vs-money",
+    "/commoner",
+    "/commoner#archive",
+    "/contact",
+    "/economics",
+    "/ej-antoni-iran-war-affordability-recovery",
+    "/existing-home-sales-16-year-low-october-2026",
+    "/favicon.ico?favicon.3kl4vx-_vut_e.ico",
+    "/federal-interest-expense",
+    "/gene-wu-texas-same-oppressor-politics",
+    "/heat-your-home-with-bitcoin-mining"
+   ],
+   "eth_page_status": 404,
+   "eth_page_head": "<!DOCTYPE html><html data-dpl-id=\"dpl_AGHvh5r7J1VUPRhQWeXxj9JTVFmT\" id=\"__next_error__\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device"
+  },
+  {
+   "name": "ws_okx_public_443",
+   "url": "wss://ws.okx.com/ws/v5/public",
+   "method": "WS",
+   "status": 200,
+   "frames": 21,
+   "liquidation_frames": 21,
+   "per_min": 16.8,
+   "frames_head": [
+    "{\"event\":\"subscribe\",\"arg\":{\"channel\":\"liquidation-orders\",\"instType\":\"SWAP\"},\"connId\":\"5921a6ee\"}",
+    "{\"arg\":{\"channel\":\"liquidation-orders\",\"instType\":\"SWAP\"},\"data\":[{\"details\":[{\"bkLoss\":\"0\",\"bkPx\":\"937.81\",\"ccy\":\"\",\"posSide\":\"long\",\"side\":\"sell\",\"sz\":\"1\",\"ts\":\"1794586718031\"}],\"instFamily\":\"ZEC-USDT\",\"instId\":\"ZEC-USDT-SWAP\",\"instType\":\"SWAP\",\"uly\":\"ZEC-USDT\"}]}",
+    "{\"arg\":{\"channel\":\"liquidation-orders\",\"instType\":\"SWAP\"},\"data\":[{\"details\":[{\"bkLoss\":\"0\",\"bkPx\":\"3882.7\",\"ccy\":\"\",\"posSide\":\"long\",\"side\":\"sell\",\"sz\":\"23\",\"ts\":\"1794583861451\"}],\"instFamily\":\"XAU-USDT\",\"instId\":\"XAU-USDT-SWAP\",\"instType\":\"SWAP\",\"uly\":\"XAU-USDT\"}]}"
+   ],
+   "frames_tail": [
+    "{\"arg\":{\"channel\":\"liquidation-orders\",\"instType\":\"SWAP\"},\"data\":[{\"details\":[{\"bkLoss\":\"0\",\"bkPx\":\"0.011023\",\"ccy\":\"\",\"posSide\":\"short\",\"side\":\"buy\",\"sz\":\"100\",\"ts\":\"1794586756353\"}],\"instFamily\":\"AKE-USDT\",\"instId\":\"AKE-USDT-SWAP\",\"instType\":\"SWAP\",\"uly\":\"AKE-USDT\"}]}",
+    "{\"arg\":{\"channel\":\"liquidation-orders\",\"instType\":\"SWAP\"},\"data\":[{\"details\":[{\"bkLoss\":\"0\",\"bkPx\":\"0.001988\",\"ccy\":\"\",\"posSide\":\"short\",\"side\":\"buy\",\"sz\":\"3500\",\"ts\":\"1794586762505\"}],\"instFamily\":\"SOPH-USDT\",\"instId\":\"SOPH-USDT-SWAP\",\"instType\":\"SWAP\",\"uly\":\"SOPH-USDT\"}]}",
+    "{\"arg\":{\"channel\":\"liquidation-orders\",\"instType\":\"SWAP\"},\"data\":[{\"details\":[{\"bkLoss\":\"0\",\"bkPx\":\"0.001994\",\"ccy\":\"\",\"posSide\":\"short\",\"side\":\"buy\",\"sz\":\"15\",\"ts\":\"1794586765332\"}],\"instFamily\":\"SOPH-USDT\",\"instId\":\"SOPH-USDT-SWAP\",\"instType\":\"SWAP\",\"uly\":\"SOPH-USDT\"}]}"
+   ],
+   "error": null
+  },
+  {
+   "name": "ws_bybit_allliq",
+   "url": "wss://stream.bybit.com/v5/public/linear",
+   "method": "WS",
+   "status": 200,
+   "frames": 1,
+   "liquidation_frames": 0,
+   "per_min": 0.8,
+   "frames_head": [
+    "{\"success\":true,\"ret_msg\":\"\",\"conn_id\":\"dbqr5nprroeem1pn9rh0-jady\",\"req_id\":\"\",\"op\":\"subscribe\"}"
+   ],
+   "frames_tail": [
+    "{\"success\":true,\"ret_msg\":\"\",\"conn_id\":\"dbqr5nprroeem1pn9rh0-jady\",\"req_id\":\"\",\"op\":\"subscribe\"}"
+   ],
+   "error": null
+  },
+  {
+   "name": "ws_binance_pathstyle",
+   "url": "wss://fstream.binance.com/ws/btcusdt@aggTrade",
+   "method": "WS",
+   "status": null,
+   "frames": 0,
+   "liquidation_frames": 0,
+   "per_min": 0.0,
+   "frames_head": [],
+   "frames_tail": [],
+   "error": null
+  },
+  {
+   "name": "ws_binance_forceorder_pathstyle",
+   "url": "wss://fstream.binance.com/ws/btcusdt@forceOrder",
+   "method": "WS",
+   "status": null,
+   "frames": 0,
+   "liquidation_frames": 0,
+   "per_min": 0.0,
+   "frames_head": [],
+   "frames_tail": [],
+   "error": null
+  }
+ ]
+}

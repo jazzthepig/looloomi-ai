@@ -1,0 +1,670 @@
+{
+ "probed_at_utc": "2026-11-13T16:15:34Z",
+ "results": [
+  {
+   "name": "supply_cmc_chart_sol_all",
+   "url": "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=5426&range=all",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json",
+   "ms": 1183,
+   "first200": "{\"data\":{\"points\":{\"1586476800\":{\"v\":[0.832005011478,87364276.12,0E-12,0.00011397353087837607,0],\"c\":[0.832005011478,87364276.12,0E-12]},\"1586822400\":{\"v\":[0.777831565037,16747614.12,0E-12,0.000113526",
+   "keys": [
+    "data",
+    "status"
+   ],
+   "points": 701,
+   "ts_first": 1586476800,
+   "date_first": "2020-04-10",
+   "ts_last": 1794586332,
+   "date_last": "2026-11-13",
+   "v_first": [
+    0.832005011478,
+    87364276.12,
+    0.0,
+    0.00011397353087837606,
+    0
+   ],
+   "v_last": [
+    79.9422249346675,
+    3503779606.47184,
+    47286702579.97797,
+    0.001164300789367773,
+    688696.6829539924
+   ],
+   "c_first": [
+    0.832005011478,
+    87364276.12,
+    0.0
+   ],
+   "c_last": null
+  },
+  {
+   "name": "supply_cmc_chart_btc_all",
+   "url": "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=1&range=all",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json",
+   "ms": 550,
+   "first200": "{\"data\":{\"points\":{\"1278979200\":{\"v\":[0.06183332,75.42,206783.79257716,1,3344213.00000000000000000000],\"c\":[0.06183332,75.42,206783.79257716]},\"1279756800\":{\"v\":[0.07417871,2167.06,258429.35330125,1,3",
+   "keys": [
+    "data",
+    "status"
+   ],
+   "points": 701,
+   "ts_first": 1278979200,
+   "date_first": "2010-07-13",
+   "ts_last": 1794586333,
+   "date_last": "2026-11-13",
+   "v_first": [
+    0.06183332,
+    75.42,
+    206783.79257716,
+    1,
+    3344213.0
+   ],
+   "v_last": [
+    68661.14466698673,
+    43464587675.64588,
+    1380879022936.9717,
+    1.0,
+    20111506.0
+   ],
+   "c_first": [
+    0.06183332,
+    75.42,
+    206783.79257716
+   ],
+   "c_last": null
+  },
+  {
+   "name": "supply_cmc_detail_eth",
+   "url": "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail?id=1027",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json",
+   "ms": 528,
+   "first200": "{\"data\":{\"id\":1027,\"name\":\"Ethereum\",\"symbol\":\"ETH\",\"slug\":\"ethereum\",\"category\":\"coin\",\"description\":\"## What Is Ethereum (ETH)?\\n\\nEthereum is a decentralized open-source [blockchain](https://coinma",
+   "keys": [
+    "data",
+    "status"
+   ]
+  },
+  {
+   "name": "supply_bc_total_btc_json",
+   "url": "https://api.blockchain.info/charts/total-bitcoins?timespan=all&format=json",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json; charset=utf-8",
+   "ms": 6302,
+   "first200": "{\"status\":\"ok\",\"name\":\"Bitcoins in circulation\",\"unit\":\"BTC\",\"period\":\"day\",\"description\":\"The total number of bitcoins that have already been mined; in other words, the current supply of bitcoins on ",
+   "keys": [
+    "status",
+    "name",
+    "unit",
+    "period",
+    "description",
+    "values"
+   ],
+   "code_status": "ok"
+  },
+  {
+   "name": "supply_bc_eth_total",
+   "url": "https://api.blockchain.info/charts/eth-total?timespan=all&format=json",
+   "method": "GET",
+   "status": 404,
+   "ctype": "application/json; charset=utf-8",
+   "http_error": true,
+   "ms": 686,
+   "first200": "{\"status\":\"not-found\",\"error\":null}",
+   "keys": [
+    "status",
+    "error"
+   ],
+   "code_status": "not-found"
+  },
+  {
+   "name": "supply_bc_charts_list",
+   "url": "https://api.blockchain.info/charts/list",
+   "method": "GET",
+   "status": 404,
+   "ctype": "application/json; charset=utf-8",
+   "http_error": true,
+   "ms": 830,
+   "first200": "{\"status\":\"not-found\",\"error\":null}",
+   "keys": [
+    "status",
+    "error"
+   ],
+   "code_status": "not-found"
+  },
+  {
+   "name": "supply_cmc_chart_xmr_all",
+   "url": "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=1447&range=all",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json",
+   "ms": 645,
+   "first200": "{\"data\":{\"points\":{\"1478736000\":{\"v\":[5.270669937133789,35136.1,201798.139883041379443,0.00729157387333948261,279.17248888854877068907],\"c\":[5.270669937133789,35136.1,201798.139883041379443]},\"1479254",
+   "keys": [
+    "data",
+    "status"
+   ],
+   "points": 701,
+   "ts_first": 1478736000,
+   "date_first": "2016-11-10",
+   "ts_last": 1794586342,
+   "date_last": "2026-11-13",
+   "v_first": [
+    5.270669937133789,
+    35136.1,
+    201798.13988304138,
+    0.007291573873339482,
+    279.1724888885488
+   ],
+   "v_last": [
+    0.4027068033433692,
+    0,
+    3739947.880506395,
+    5.868240240135e-06,
+    54.498489884420394
+   ],
+   "c_first": [
+    5.270669937133789,
+    35136.1,
+    201798.13988304138
+   ],
+   "c_last": null
+  },
+  {
+   "name": "etf_tftc_eth_flows",
+   "url": "https://www.tftc.io/ethereum-etf-flows/data.json",
+   "method": "GET",
+   "status": 404,
+   "ctype": "text/html; charset=utf-8",
+   "http_error": true,
+   "ms": 282,
+   "first200": "<!DOCTYPE html><html data-dpl-id=\"dpl_AGHvh5r7J1VUPRhQWeXxj9JTVFmT\" lang=\"en\" class=\"UIjcMG_variable _0bjUvq_variable _TJvUW_variable F72GRa_variable\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport",
+   "parse_error": "UnboundLocalError: cannot access local variable 'j' where it is not associated with a value"
+  },
+  {
+   "name": "etf_tftc_ethflow2",
+   "url": "https://www.tftc.io/eth-etf-flows/data.json",
+   "method": "GET",
+   "status": 404,
+   "ctype": "text/html; charset=utf-8",
+   "http_error": true,
+   "ms": 215,
+   "first200": "<!DOCTYPE html><html data-dpl-id=\"dpl_AGHvh5r7J1VUPRhQWeXxj9JTVFmT\" lang=\"en\" class=\"UIjcMG_variable _0bjUvq_variable _TJvUW_variable F72GRa_variable\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport",
+   "parse_error": "UnboundLocalError: cannot access local variable 'j' where it is not associated with a value"
+  },
+  {
+   "name": "etf_tftc_sol_flows",
+   "url": "https://www.tftc.io/solana-etf-flows/data.json",
+   "method": "GET",
+   "status": 404,
+   "ctype": "text/html; charset=utf-8",
+   "http_error": true,
+   "ms": 218,
+   "first200": "<!DOCTYPE html><html data-dpl-id=\"dpl_AGHvh5r7J1VUPRhQWeXxj9JTVFmT\" lang=\"en\" class=\"UIjcMG_variable _0bjUvq_variable _TJvUW_variable F72GRa_variable\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport",
+   "parse_error": "UnboundLocalError: cannot access local variable 'j' where it is not associated with a value"
+  },
+  {
+   "name": "etf_tftc_root_links",
+   "url": "https://www.tftc.io/",
+   "method": "GET",
+   "status": 200,
+   "ctype": "text/html; charset=utf-8",
+   "ms": 659,
+   "first200": "<!DOCTYPE html><html data-dpl-id=\"dpl_AGHvh5r7J1VUPRhQWeXxj9JTVFmT\" lang=\"en\" class=\"UIjcMG_variable _0bjUvq_variable _TJvUW_variable F72GRa_variable\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport",
+   "parse_error": "UnboundLocalError: cannot access local variable 'j' where it is not associated with a value"
+  },
+  {
+   "name": "etf_nasdaq_etha_netflow",
+   "url": "https://api.nasdaq.com/api/quote/ETHA/net-fund-flows?assetclass=etf",
+   "method": "GET",
+   "status": 404,
+   "ctype": "",
+   "http_error": true,
+   "ms": 1648,
+   "first200": ""
+  },
+  {
+   "name": "etf_nasdaq_etha_netflow2",
+   "url": "https://api.nasdaq.com/api/quote/ETHA/net-flows?assetclass=etf",
+   "method": "GET",
+   "status": 404,
+   "ctype": "",
+   "http_error": true,
+   "ms": 1565,
+   "first200": ""
+  },
+  {
+   "name": "etf_nasdaq_etha_fundflow2",
+   "url": "https://api.nasdaq.com/api/quote/ETHA/fund-flow?assetclass=etf",
+   "method": "GET",
+   "status": 404,
+   "ctype": "",
+   "http_error": true,
+   "ms": 2555,
+   "first200": ""
+  },
+  {
+   "name": "etf_nasdaq_etha_hist",
+   "url": "https://api.nasdaq.com/api/quote/ETHA/historical?assetclass=etf&fromdate=2026-10-01&todate=2026-11-13",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json; charset=utf-8",
+   "ms": 2638,
+   "first200": "{\"data\":{\"symbol\":\"ETHA\",\"totalRecords\":31,\"tradesTable\":{\"asOf\":null,\"headers\":{\"date\":\"Date\",\"close\":\"Close/Last\",\"volume\":\"Volume\",\"open\":\"Open\",\"high\":\"High\",\"low\":\"Low\"},\"rows\":[{\"date\":\"11/12/20",
+   "keys": [
+    "data",
+    "message",
+    "status"
+   ]
+  },
+  {
+   "name": "etf_nasdaq_etha_summ2",
+   "url": "https://api.nasdaq.com/api/quote/ETHA/summary?assetclass=etf",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json; charset=utf-8",
+   "ms": 4532,
+   "first200": "{\"data\":{\"symbol\":\"ETHA\",\"summaryData\":{\"TodayHighLow\":{\"label\":\"Today's High/Low\",\"value\":\"$44.57/$43.23\"},\"ShareVolume\":{\"label\":\"Share Volume\",\"value\":\"4,384,593.027355\"},\"FiftyDayAvgDailyVol\":{\"la",
+   "keys": [
+    "data",
+    "message",
+    "status"
+   ],
+   "summary_keys": [
+    "TodayHighLow",
+    "ShareVolume",
+    "FiftyDayAvgDailyVol",
+    "PreviousClose",
+    "FiftTwoWeekHighLow",
+    "MarketCap",
+    "AnnualizedDividend",
+    "ExDividendDate",
+    "DividendPaymentDate",
+    "Yield",
+    "Alpha",
+    "WeightedAlpha",
+    "Beta",
+    "StandardDeviation",
+    "AvgDailyVol20Days",
+    "AvgDailyVol65Days",
+    "AUM",
+    "ExpenseRatio"
+   ]
+  },
+  {
+   "name": "etf_edgar_atom_ishares_eth",
+   "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&company=ishares+ethereum+trust&type=NPORT-P&output=atom",
+   "method": "GET",
+   "status": 403,
+   "ctype": "text/html",
+   "http_error": true,
+   "ms": 379,
+   "first200": "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<meta http-equiv=\"Content-T"
+  },
+  {
+   "name": "etf_edgar_atom_etf_a",
+   "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&company=ethereum+trust&type=NPORT-P&output=atom",
+   "method": "GET",
+   "status": 403,
+   "ctype": "text/html",
+   "http_error": true,
+   "ms": 347,
+   "first200": "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<meta http-equiv=\"Content-T"
+  },
+  {
+   "name": "etf_edgar_fts",
+   "url": "https://efts.sec.gov/LATEST/search-index?q=%22iShares+Ethereum+Trust%22&forms=NPORT-P",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json",
+   "ms": 1518,
+   "first200": "{\"took\":772,\"timed_out\":false,\"_shards\":{\"total\":50,\"successful\":50,\"skipped\":0,\"failed\":0},\"hits\":{\"total\":{\"value\":415,\"relation\":\"eq\"},\"max_score\":26.385891,\"hits\":[{\"_index\":\"edgar_file\",\"_id\":\"00",
+   "keys": [
+    "took",
+    "timed_out",
+    "_shards",
+    "hits",
+    "aggregations",
+    "query"
+   ]
+  },
+  {
+   "name": "etf_edgar_submissions_ibit",
+   "url": "https://data.sec.gov/submissions/CIK0001980994.json",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json",
+   "ms": 636,
+   "first200": "{\"cik\":\"0001980994\",\"entityType\":\"operating\",\"sic\":\"6221\",\"sicDescription\":\"Commodity Contracts Brokers & Dealers\",\"ownerOrg\":\"09 Crypto Assets\",\"insiderTransactionForOwnerExists\":0,\"insiderTransactio",
+   "keys": [
+    "cik",
+    "entityType",
+    "sic",
+    "sicDescription",
+    "ownerOrg",
+    "insiderTransactionForOwnerExists",
+    "insiderTransactionForIssuerExists",
+    "name",
+    "tickers",
+    "exchanges",
+    "ein",
+    "lei",
+    "description",
+    "website",
+    "investorWebsite",
+    "category",
+    "fiscalYearEnd",
+    "stateOfIncorporation",
+    "stateOfIncorporationDescription",
+    "addresses"
+   ]
+  },
+  {
+   "name": "unlock_cmc_dataapi",
+   "url": "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/token-unlocks?id=1027",
+   "method": "GET",
+   "status": 404,
+   "ctype": "text/html",
+   "http_error": true,
+   "ms": 514,
+   "first200": "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"format-detection\" content=\"telephone=no,email=no,address=no\">\n    <title>coinmarketcap.com</title>\n    <link rel=\"Shortcut Ic"
+  },
+  {
+   "name": "unlock_cmc_dataapi2",
+   "url": "https://api.coinmarketcap.com/data-api/v3/token-unlocks",
+   "method": "GET",
+   "status": 404,
+   "ctype": "text/html",
+   "http_error": true,
+   "ms": 494,
+   "first200": "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"format-detection\" content=\"telephone=no,email=no,address=no\">\n    <title>coinmarketcap.com</title>\n    <link rel=\"Shortcut Ic"
+  },
+  {
+   "name": "unlock_llama_emissions",
+   "url": "https://api.llama.fi/emissions",
+   "method": "GET",
+   "status": 402,
+   "ctype": "text/plain",
+   "http_error": true,
+   "ms": 276,
+   "first200": "Upgrade to the paid API plan at https://defillama.com/subscription"
+  },
+  {
+   "name": "unlock_llama_emission_eth",
+   "url": "https://api.llama.fi/emission/ethereum",
+   "method": "GET",
+   "status": 402,
+   "ctype": "text/plain",
+   "http_error": true,
+   "ms": 222,
+   "first200": "Upgrade to the paid API plan at https://defillama.com/subscription"
+  },
+  {
+   "name": "unlock_llama_unlocks",
+   "url": "https://api.llama.fi/unlocks",
+   "method": "GET",
+   "status": 404,
+   "ctype": "text/plain; charset=utf-8",
+   "http_error": true,
+   "ms": 1020,
+   "first200": "Route not found"
+  },
+  {
+   "name": "unlock_llama_coins_emissions",
+   "url": "https://coins.llama.fi/emissions",
+   "method": "GET",
+   "status": 404,
+   "ctype": "application/json; charset=utf-8",
+   "http_error": true,
+   "ms": 496,
+   "first200": "{\"message\":\"Route GET:/emissions not found\",\"error\":\"Not Found\",\"statusCode\":404}",
+   "keys": [
+    "message",
+    "error",
+    "statusCode"
+   ],
+   "code_message": "Route GET:/emissions not found",
+   "code_error": "Not Found"
+  },
+  {
+   "name": "unlock_tokenomist_pub",
+   "url": "https://api.tokenomist.ai/v1/unlocks",
+   "method": "GET",
+   "status": 401,
+   "ctype": "application/json",
+   "http_error": true,
+   "ms": 291,
+   "first200": "{\"status\":false,\"statusCode\":401,\"errorMessage\":\"x-api-key not found\"}",
+   "keys": [
+    "status",
+    "statusCode",
+    "errorMessage"
+   ],
+   "code_status": "False"
+  },
+  {
+   "name": "unlock_cryptorank_pub",
+   "url": "https://api.cryptorank.io/v1/tokens/unlocks",
+   "method": "GET",
+   "status": 403,
+   "ctype": "text/html; charset=UTF-8",
+   "http_error": true,
+   "ms": 344,
+   "first200": "<!DOCTYPE html><html lang=\"en-US\"><head><title>Just a moment...</title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"><meta nam"
+  },
+  {
+   "name": "unlock_dl_next",
+   "url": "https://defillama.com/unlocks",
+   "method": "GET",
+   "status": 200,
+   "ctype": "text/html; charset=utf-8",
+   "ms": 1132,
+   "first200": "<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content",
+   "parse_error": "UnboundLocalError: cannot access local variable 'j' where it is not associated with a value"
+  },
+  {
+   "name": "unlock_cmc_next",
+   "url": "https://coinmarketcap.com/token-unlocks/",
+   "method": "GET",
+   "status": 200,
+   "ctype": "text/html; charset=utf-8",
+   "ms": 1082,
+   "first200": "<!DOCTYPE html><html lang=\"en\" dir=\"ltr\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to",
+   "parse_error": "UnboundLocalError: cannot access local variable 'j' where it is not associated with a value"
+  },
+  {
+   "name": "liq_binance_fapi_allforce",
+   "url": "https://fapi.binance.com/fapi/v1/allForceOrders?symbol=BTCUSDT&limit=10",
+   "method": "GET",
+   "status": 404,
+   "ctype": "text/html",
+   "http_error": true,
+   "ms": 436,
+   "first200": "<!DOCTYPE html>\n<!-- saved from url=(0032)https://www.binance.com/en/error -->\n<html>\n\n<head>\n  <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n\n  <meta name=\"format-detection\" con"
+  },
+  {
+   "name": "liq_binance_fapi_allforce_nosym",
+   "url": "https://fapi.binance.com/fapi/v1/allForceOrders?limit=10",
+   "method": "GET",
+   "status": 404,
+   "ctype": "text/html",
+   "http_error": true,
+   "ms": 273,
+   "first200": "<!DOCTYPE html>\n<!-- saved from url=(0032)https://www.binance.com/en/error -->\n<html>\n\n<head>\n  <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n\n  <meta name=\"format-detection\" con"
+  },
+  {
+   "name": "liq_binance_dapi_allforce",
+   "url": "https://dapi.binance.com/dapi/v1/allForceOrders?symbol=BTCUSD_PERP&limit=10",
+   "method": "GET",
+   "status": 404,
+   "ctype": "text/html",
+   "http_error": true,
+   "ms": 480,
+   "first200": "<!DOCTYPE html>\n<!-- saved from url=(0032)https://www.binance.com/en/error -->\n<html>\n\n<head>\n  <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n\n  <meta name=\"format-detection\" con"
+  },
+  {
+   "name": "liq_binance_fapi_time",
+   "url": "https://fapi.binance.com/fapi/v1/time",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json",
+   "ms": 279,
+   "first200": "{\"serverTime\":1794586367091}",
+   "keys": [
+    "serverTime"
+   ]
+  },
+  {
+   "name": "liq_binance_vision_dir",
+   "url": "https://s3-ap-northeast-1.amazonaws.com/data.binance.vision/?prefix=data/futures/um/monthly/liquidationSnapshot/BTCUSDT/&delimiter=/",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/xml",
+   "ms": 493,
+   "first200": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ListBucketResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Name>data.binance.vision</Name><Prefix>data/futures/um/monthly/liquidationSnapshot/BTCUSDT/</P"
+  },
+  {
+   "name": "liq_okx_priapi",
+   "url": "https://www.okx.com/priapi/v5/liquidation-orders?instType=SWAP&state=filled&uly=BTC-USDT&limit=100",
+   "method": "GET",
+   "status": 404,
+   "ctype": "application/json;charset=UTF-8",
+   "http_error": true,
+   "ms": 403,
+   "first200": "{\"code\":404,\"data\":{},\"detailMsg\":\"\",\"error_code\":\"404\",\"error_message\":\"Not Found\",\"msg\":\"Not Found\"}",
+   "keys": [
+    "code",
+    "data",
+    "detailMsg",
+    "error_code",
+    "error_message",
+    "msg"
+   ],
+   "code_code": "404",
+   "code_msg": "Not Found"
+  },
+  {
+   "name": "liq_okx_rest_eth",
+   "url": "https://www.okx.com/api/v5/public/liquidation-orders?instType=SWAP&state=filled&uly=ETH-USDT&limit=100",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json;charset=UTF-8",
+   "ms": 303,
+   "first200": "{\"code\":\"0\",\"data\":[{\"details\":[{\"bkLoss\":\"0\",\"bkPx\":\"1934.59\",\"ccy\":\"\",\"posSide\":\"long\",\"side\":\"sell\",\"sz\":\"3\",\"time\":1794586297540,\"ts\":\"1794586297540\"},{\"bkLoss\":\"0\",\"bkPx\":\"1936.56\",\"ccy\":\"\",\"posS",
+   "keys": [
+    "code",
+    "data",
+    "msg"
+   ],
+   "code_code": "0",
+   "code_msg": "",
+   "data_len": 1,
+   "data0_keys": [
+    "details",
+    "instFamily",
+    "instId",
+    "instType",
+    "totalLoss",
+    "uly"
+   ]
+  },
+  {
+   "name": "liq_bybit_recent_trade",
+   "url": "https://api.bybit.com/v5/market/recent-trade?category=linear&symbol=BTCUSDT&limit=5",
+   "method": "GET",
+   "status": 200,
+   "ctype": "application/json; charset=utf-8",
+   "ms": 415,
+   "first200": "{\"retCode\":0,\"retMsg\":\"OK\",\"result\":{\"category\":\"linear\",\"list\":[{\"execId\":\"dabd1686-c45a-5292-a31c-5b709cb1ce84\",\"symbol\":\"BTCUSDT\",\"price\":\"68599.10\",\"size\":\"0.001\",\"side\":\"Sell\",\"time\":\"17945863685",
+   "keys": [
+    "retCode",
+    "retMsg",
+    "result",
+    "retExtInfo",
+    "time"
+   ]
+  },
+  {
+   "name": "liq_hl_info_badtype",
+   "url": "https://api.hyperliquid.xyz/info",
+   "method": "POST",
+   "status": 422,
+   "ctype": "text/plain; charset=utf-8",
+   "http_error": true,
+   "ms": 357,
+   "first200": "Failed to deserialize the JSON body into the target type"
+  },
+  {
+   "name": "ws_binance_forceorder",
+   "url": "wss://fstream.binance.com/stream?streams=btcusdt@forceOrder",
+   "method": "WS",
+   "status": 200,
+   "events": 1,
+   "seconds": 60,
+   "per_min": 1.0,
+   "first200": "{\"result\":null,\"id\":1}",
+   "error": null
+  },
+  {
+   "name": "ws_binance_aggtrade_ctrl",
+   "url": "wss://fstream.binance.com/stream?streams=btcusdt@aggTrade",
+   "method": "WS",
+   "status": 200,
+   "events": 1,
+   "seconds": 30,
+   "per_min": 2.0,
+   "first200": "{\"result\":null,\"id\":1}",
+   "error": null
+  },
+  {
+   "name": "ws_okx_liq_channel",
+   "url": "wss://ws.okx.com:8443/ws/v5/liquidation",
+   "method": "WS",
+   "status": null,
+   "events": 0,
+   "seconds": 60,
+   "per_min": 0.0,
+   "first200": "",
+   "error": "InvalidStatus: server rejected WebSocket connection: HTTP 404"
+  },
+  {
+   "name": "ws_okx_public_channel",
+   "url": "wss://ws.okx.com:8443/ws/v5/public",
+   "method": "WS",
+   "status": 200,
+   "events": 29,
+   "seconds": 60,
+   "per_min": 29.0,
+   "first200": "{\"event\":\"notice\",\"msg\":\"WebSocket port 8443 will be retired soon. Please migrate to port 443.\",\"code\":\"64010\",\"connId\":\"f85a8657\"}",
+   "error": null
+  },
+  {
+   "name": "ws_bybit_allliq_linear",
+   "url": "wss://stream.bybit.com/v5/public/linear",
+   "method": "WS",
+   "status": 200,
+   "events": 1,
+   "seconds": 60,
+   "per_min": 1.0,
+   "first200": "{\"success\":true,\"ret_msg\":\"\",\"conn_id\":\"dbqqp1osrc97a0i97amg-f76t\",\"req_id\":\"\",\"op\":\"subscribe\"}",
+   "error": null
+  },
+  {
+   "name": "ws_hl_allmids",
+   "url": "wss://api.hyperliquid.xyz/ws",
+   "method": "WS",
+   "status": 200,
+   "events": 4,
+   "seconds": 30,
+   "per_min": 8.0,
+   "first200": "{\"channel\":\"subscriptionResponse\",\"data\":{\"method\":\"subscribe\",\"subscription\":{\"type\":\"allMids\"}}}",
+   "error": null
+  }
+ ]
+}
