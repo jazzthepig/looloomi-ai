@@ -1,0 +1,55 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {
+      "id": "T-364-1",
+      "scenario": "T-364 S-841 跨资产趋势袖套(SPY/EEM/GLD/TLT/USO,可多可空)",
+      "statement": "2026-12-31 复核时,账户主腿(core_nav)仍在 200 日线之上(state_daily 的 dist_200 > 0)",
+      "variable": "state:dist_200",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.55,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-364-2",
+      "scenario": "T-364 S-841 跨资产趋势袖套(SPY/EEM/GLD/TLT/USO,可多可空)",
+      "statement": "2026-12-31 时 SPY 收盘高于 2026-11-12 的 757.12(袖套当时按 252 日趋势持有 SPY 多头,trail +11.1%)",
+      "variable": "close:SPY",
+      "op": "gt",
+      "lo": 757.12,
+      "prob": 0.56,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-364-3",
+      "scenario": "T-364 S-841 跨资产趋势袖套(SPY/EEM/GLD/TLT/USO,可多可空)",
+      "statement": "2026-12-31 时 GLD 收盘低于 2026-11-12 的 354.89(袖套当时按 252 日趋势持有 GLD 空头)",
+      "variable": "close:GLD",
+      "op": "lt",
+      "hi": 354.89,
+      "prob": 0.47,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-364-4",
+      "scenario": "T-364 S-841 跨资产趋势袖套(SPY/EEM/GLD/TLT/USO,可多可空)",
+      "statement": "T-364 复核时,S-835 准入表里仍然没有非加密来源过完 (i)–(iv)(跨资产趋势 (i) 过了但 (ii)(iv) 不过、尺寸不可行)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.8,
+      "horizon_d": "2027-01-15"
+    },
+    {
+      "id": "T-364-5",
+      "scenario": "T-364 S-841 跨资产趋势袖套(SPY/EEM/GLD/TLT/USO,可多可空)",
+      "statement": "跨资产趋势袖套到 2027-03-31 的年化贡献(扣掉纯供资成本后)仍为正",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.55,
+      "horizon_d": "2027-03-31"
+    }
+  ]
+}
