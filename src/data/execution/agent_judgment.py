@@ -28,7 +28,7 @@ TABLE = "agent_judgment_daily"
 WRITES_TABLES = (TABLE,)
 WRITES_COLUMNS = {"agent_judgment_daily": ("d", "author", "model", "probs", "rationale", "drivers", "change_mind", "dossier_hash",
                                            "scenario_ids", "code_ref")}
-CODE_REF = "agent_judgment v3 (11-13:档案加背景栏 —— 边际流动性 / 减半相位 / 估值 / 信用;v2 = 11-06 融合特征 / 期权面 / 预测市场 / 国库净买入)"
+CODE_REF = "agent_judgment v4 (11-13:作者版本跟着档案内容走;背景栏加叙事 / 情绪 / 三张清单;v3 = 背景栏;v2 = 11-06 融合特征 / 期权面 / 预测市场 / 国库净买入)"
 LOOP_NAME = "_agent_judgment_loop"
 PREFIX = "A"
 TEMPERATURE = 0.2
@@ -104,11 +104,23 @@ def comply(s: Any) -> Optional[str]:
     return c[:800]
 
 
-AUTHOR_VERSION = "v3"     # 11-13 档案加了背景栏(S-844 / S-848)⇒ 新作者,和 v1 / v2 的 Brier 分开记
+AUTHOR_VERSION = "v4"     # 最新档案的版本:v3 = 11-13 加背景栏(S-844 / S-848);v4 = 背景栏再加叙事 / 情绪与资金费 / 三张清单(S-855)
 
 
-def author_for(model: str) -> str:
-    return "ai:" + re.sub(r"[^A-Za-z0-9_.\-]", "-", (model or "unknown").strip())[:40] + ":" + AUTHOR_VERSION
+def dossier_version(inputs: Optional[dict]) -> str:
+    """纯函数。作者版本跟着档案**实际装了什么**走,不跟着代码哪天部署走。
+    11-13 实测:v3 上线后的第一轮读的是上线前写好的 11-12 决定行(没有背景栏),却记在 v3 名下 —— 标签说「读了背景栏」,档案里没有。
+    没有背景栏 ⇒ v2(和 11-06 以来的档案一字不差);有背景栏、没有清单 ⇒ v3;有清单 ⇒ v4。"""
+    ctx = (inputs or {}).get("context")
+    if not isinstance(ctx, dict) or not ctx or "error" in ctx:           # 读背景栏失败时 ③ 写的是 {"error": …} —— 那也是没有背景栏
+        return "v2"
+    return "v4" if "checklists" in ctx else "v3"
+
+
+def author_for(model: str, inputs: Optional[dict] = None) -> str:
+    """`inputs` 不给 = 最新版本;给了 = 按这份档案实际的内容定版本。"""
+    ver = AUTHOR_VERSION if inputs is None else dossier_version(inputs)
+    return "ai:" + re.sub(r"[^A-Za-z0-9_.\-]", "-", (model or "unknown").strip())[:40] + ":" + ver
 
 
 async def _news(now: dt.datetime) -> list[dict]:
@@ -173,13 +185,13 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     from src.data.style.header import _read_all
     now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
     d = (now.date() - dt.timedelta(days=1)).isoformat()
-    author = author_for(llm._MODEL)
-    have = await _read_all(TABLE, {"select": "d", "d": f"eq.{d}", "author": f"eq.{author}", "limit": "1"})
-    if have:
-        return {"ok": True, "status": "skipped", "why": f"{d} 已写"}
     dec = await _read_all("exposure_decision_daily", {"select": "d,inputs,probs,bucket,n_bucket", "d": f"eq.{d}", "limit": "1"})
     if not dec:
         return {"ok": True, "status": "skipped", "why": f"{d} 的 ③ 决定还没落表"}
+    author = author_for(llm._MODEL, dec[0].get("inputs") or {})           # 版本看这份档案里实际有什么
+    have = await _read_all(TABLE, {"select": "d", "d": f"eq.{d}", "author": f"eq.{author}", "limit": "1"})
+    if have:
+        return {"ok": True, "status": "skipped", "why": f"{d} 已写"}
     close = (dec[0].get("inputs") or {}).get("btc_close")
     if not close:
         return {"ok": True, "status": "skipped", "why": f"{d} 的决定里没有 BTC 收盘"}

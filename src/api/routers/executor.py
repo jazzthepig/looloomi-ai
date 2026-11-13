@@ -251,10 +251,20 @@ async def regime_call_brief(top: int = 40, x_internal_token: Optional[str] = Hea
     """⓪ 战场简报:HL 成交额前 N 的永续,趋势位置 / 第一段 / 回撤 / 第二段形态 / 资金费 / 未平仓 / 止损宽度。只读;筛子不是信号。"""
     require_internal_token(x_internal_token)
     from src.data.execution.battlefield_brief import build_brief
+    # 11-13(S-849 第 4 条 / S-855):第一屏先给状态读法 —— 边际流动性 / 宏观 / 周期 / 仓位 / 叙事 + 盯盘·派发·吸筹三张清单。
+    # 现算(截至昨天收盘的 UTC 日),只读、只描述;它读不到不挡战场表,战场表读不到也不挡它。
+    state: dict[str, Any] = {}
     try:
-        return {"ok": True, **await build_brief(max(5, min(int(top), 80)))}
+        from src.data.execution import dossier_context as _dc
+        state = await _dc.context((dt.datetime.now(dt.timezone.utc).date() - dt.timedelta(days=1)).isoformat())
     except Exception as e:                                       # noqa: BLE001
-        raise HTTPException(502, f"HL 读不到:{type(e).__name__}: {str(e)[:200]}")
+        state = {"error": f"{type(e).__name__}: {str(e)[:160]}"}
+    try:
+        return {"ok": True, **await build_brief(max(5, min(int(top), 80))), "state_read": state}
+    except Exception as e:                                       # noqa: BLE001
+        if "error" in state:
+            raise HTTPException(502, f"HL 读不到:{type(e).__name__}: {str(e)[:200]}")
+        return {"ok": True, "state_read": state, "breadth": None, "rows": [], "hl_error": f"{type(e).__name__}: {str(e)[:200]}"}
 
 
 @router.post("/internal/scenarios")

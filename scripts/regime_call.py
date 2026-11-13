@@ -64,6 +64,23 @@ def keygen(show: bool) -> None:
         print("抄到主机:python3 scripts/regime_call.py keygen --show(只在你自己的终端里看)")
 
 
+def howto(key: str | None) -> str:
+    """纯函数。不带参数时打印的那几行:先看什么、怎么提交、签名配了没有。"""
+    sig = (f"签名:本机有密钥,指纹 {verify.key_fingerprint(key)}(主机发件箱里应是同一个)" if key else
+           f"签名:本机**还没有**密钥({KEY_FILE})—— 没签名的判断主机不会为它开票。\n"
+           "      ① python3 scripts/regime_call.py keygen\n"
+           "      ② python3 scripts/regime_call.py keygen --show   只在你自己的终端里看,抄进东京主机 /etc/cometcloud/executor.env 的 JAZZ_CALL_KEY=…\n"
+           "      ③ 主机上 systemctl restart cometcloud-executor,对一下两边的指纹")
+    return "\n".join((
+        "⓪ 开关 —— 要带一个动作:",
+        "  python3 scripts/regime_call.py brief            先看:状态读法 + 盯盘 / 派发 / 吸筹清单 + 战场表",
+        "  python3 scripts/regime_call.py status           现在生效的是哪条判断、签名主机认不认、记分",
+        "  python3 scripts/regime_call.py on  --conviction 2 --battlefield HYPE,UNI --note \"为什么\"",
+        "  python3 scripts/regime_call.py off --note \"为什么\"        不开新票",
+        "  python3 scripts/regime_call.py flat --note \"为什么\"       全平",
+        sig))
+
+
 def sign_body(body: dict) -> dict:
     k = _key()
     if k is None:
@@ -111,7 +128,7 @@ def _call(method: str, path: str, api: str, body: dict | None = None):
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Jazz ⓪ 开关")
-    ap.add_argument("state", choices=["on", "off", "flat", "status", "brief", "keygen"])
+    ap.add_argument("state", nargs="?", choices=["on", "off", "flat", "status", "brief", "keygen"])
     ap.add_argument("--show", action="store_true", help="keygen:打印密钥本身(抄进主机用)")
     ap.add_argument("--top", type=int, default=40)
     ap.add_argument("--conviction", type=int, default=1, choices=[1, 2, 3])
@@ -121,12 +138,21 @@ def main() -> None:
     ap.add_argument("--days", type=int, default=14)
     ap.add_argument("--api", default=os.environ.get("COMETCLOUD_API", API))
     a = ap.parse_args()
+    if a.state is None:                                  # 11-13:什么都不带 = 告诉我能做什么、本机密钥配了没有;不联网、不报错
+        print(howto(_key()))
+        return
     if a.state == "keygen":
         keygen(a.show)
         return
     if a.state == "brief":
         r = _call("GET", f"/internal/regime-call/brief?top={a.top}", a.api)
-        b = r["breadth"]
+        if r.get("state_read") is not None:              # 第一屏:状态读法与三张清单(只描述)
+            from src.data.execution.dossier_context import lines as _state_lines
+            print("\n".join(_state_lines(r["state_read"])) + "\n")
+        b = r.get("breadth")
+        if not b:
+            print(f"战场表读不到:{r.get('hl_error', '?')}")
+            return
         pct = lambda x: "—" if x is None else f"{x * 100:+.0f}%"            # noqa: E731
         print(f"{r['at'][:16]}Z · 前 {b['n']} · SMA50 之上 {pct(b['above_sma50'])} · SMA200 之上 {pct(b['above_sma200'])}"
               f" · 破 20 日高 {pct(b['breakout_20d'])} · 第二段形态 {b['second_leg_setups']} 个"
