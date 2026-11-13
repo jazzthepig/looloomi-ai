@@ -147,6 +147,13 @@ def credit_rows(fred_id: str, obs: list[tuple[str, float]], since: str = MACRO_H
             for d, v in obs if d >= since and v == v]
 
 
+def known_by(rows: list[dict], today: date) -> list[dict]:
+    """纯函数。只留可得日 ≤ 今天(UTC)的行。按可得日入库的序列,观测日 + 滞后可能落在明天之后(美元指数 + 8 天)——
+    提前把它写进去,库里就多了一行「日期在未来」的数;读的人按 d ≤ 今天取不会错,但表本身不该有未来(S-846)。到那天再写。"""
+    cut = today.isoformat()
+    return [r for r in rows if str(r.get("d"))[:10] <= cut]
+
+
 def fred_rows(fred_id: str, obs: list[tuple[str, float]], since: str = MACRO_HISTORY_START) -> list[dict]:
     """纯函数。FRED 原始观测 → macro_daily 行;d = 观测日(原样,不是可得日),值换算成十亿美元。"""
     series, k, _lag = FRED_SERIES[fred_id]
@@ -187,7 +194,7 @@ async def _fed(today: date) -> dict[str, Any]:
     credit_err = []
     for fid in CREDIT_SERIES:                                             # 信用两条单独取:读不到只记下,不挡净流动性
         try:
-            rows += credit_rows(fid, await get_fred_series(fid, MACRO_HISTORY_START))
+            rows += known_by(credit_rows(fid, await get_fred_series(fid, MACRO_HISTORY_START)), today)
         except Exception as e:                                            # noqa: BLE001
             credit_err.append(f"{fid}: {type(e).__name__}")
     err = await _upsert(MACRO_TABLE, rows + net, "series,d") if net else "fed_net_liquidity: 0 行"

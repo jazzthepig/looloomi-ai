@@ -51,3 +51,12 @@ def test_rates_and_dollar_series_are_ingested_by_availability_date():
     assert rows == [{"series": "ust_2y", "d": "2026-11-07", "value": 4.31, "source": "fred"}]
     assert ci.credit_rows("DTWEXBGS", [("2026-11-06", 121.2)], since="2026-01-01")[0]["d"] == "2026-11-14"
     assert not set(ci.CREDIT_SERIES) & set(ci.FRED_SERIES)
+
+
+def test_rows_dated_after_today_are_not_written_yet():
+    """S-846:表里不该有日期在未来的行。美元指数观测日 + 8 天常常落在明天之后。"""
+    from datetime import date
+    rows = ci.credit_rows("DTWEXBGS", [("2026-11-04", 121.0), ("2026-11-06", 121.9)], since="2026-01-01")
+    assert [r["d"] for r in rows] == ["2026-11-12", "2026-11-14"]
+    assert [r["d"] for r in ci.known_by(rows, date(2026, 11, 13))] == ["2026-11-12"]
+    assert ci.known_by(rows, date(2026, 11, 14)) == rows
