@@ -39,3 +39,15 @@ def test_credit_series_are_stored_on_their_availability_date_and_kept_apart():
     rows = ci.credit_rows("BAMLH0A0HYM2", [("2026-11-04", 3.12), ("2026-11-05", float("nan"))], since="2026-01-01")
     assert rows == [{"series": "hy_oas", "d": "2026-11-05", "value": 3.12, "source": "fred"}]
     assert not set(ci.CREDIT_SERIES) & set(ci.FRED_SERIES)
+
+
+def test_rates_and_dollar_series_are_ingested_by_availability_date():
+    """S-844 / S-848:库里此前一条收益率都没有。美元指数周一才发布上一周 ⇒ 可得日要保守。"""
+    want = {"DGS2": "ust_2y", "DGS10": "ust_10y", "DFII10": "ust_10y_real", "DFF": "fed_funds", "DTWEXBGS": "usd_broad"}
+    for fid, name in want.items():
+        assert ci.CREDIT_SERIES[fid][0] == name
+    assert ci.CREDIT_SERIES["DTWEXBGS"][2] >= 8 and ci.CREDIT_SERIES["DGS2"][2] == 1
+    rows = ci.credit_rows("DGS2", [("2026-11-06", 4.31), ("2026-11-07", float("nan"))], since="2026-01-01")
+    assert rows == [{"series": "ust_2y", "d": "2026-11-07", "value": 4.31, "source": "fred"}]
+    assert ci.credit_rows("DTWEXBGS", [("2026-11-06", 121.2)], since="2026-01-01")[0]["d"] == "2026-11-14"
+    assert not set(ci.CREDIT_SERIES) & set(ci.FRED_SERIES)
