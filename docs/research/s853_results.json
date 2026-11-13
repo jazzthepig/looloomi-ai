@@ -1,0 +1,121 @@
+{
+ "tickets": {
+  "draining": {
+   "n": 125,
+   "mean_r": 0.007,
+   "sum_r": 0.9,
+   "win_rate": 0.368
+  },
+  "adding": {
+   "n": 783,
+   "mean_r": 0.385,
+   "sum_r": 301.3,
+   "win_rate": 0.35
+  },
+  "by_year_n_sumr": {
+   "2020": {
+    "draining": [
+     0,
+     0.0
+    ],
+    "adding": [
+     13,
+     -4.2
+    ]
+   },
+   "2021": {
+    "draining": [
+     0,
+     0.0
+    ],
+    "adding": [
+     59,
+     50.1
+    ]
+   },
+   "2023": {
+    "draining": [
+     78,
+     3.4
+    ],
+    "adding": [
+     244,
+     -4.1
+    ]
+   },
+   "2024": {
+    "draining": [
+     2,
+     -1.8
+    ],
+    "adding": [
+     306,
+     295.5
+    ]
+   },
+   "2025": {
+    "draining": [
+     0,
+     0.0
+    ],
+    "adding": [
+     127,
+     -2.3
+    ]
+   },
+   "2026": {
+    "draining": [
+     45,
+     0.5
+    ],
+    "adding": [
+     34,
+     -25.5
+    ]
+   }
+  },
+  "blocked_ex_2023_sum_r": -2.0
+ },
+ "G0": {
+  "cagr_pct": 19.33,
+  "longest_uw_days": 435,
+  "longest_uw_span": [
+   "2021-11-24",
+   "2023-02-02"
+  ],
+  "worst20_pct": -15.62,
+  "halves_cagr_pct": [
+   9.12,
+   30.98
+  ],
+  "end_equity": 1860.75
+ },
+ "G1": {
+  "cagr_pct": 18.13,
+  "longest_uw_days": 822,
+  "longest_uw_span": [
+   "2021-11-24",
+   "2024-02-24"
+  ],
+  "worst20_pct": -15.61,
+  "halves_cagr_pct": [
+   6.27,
+   31.91
+  ],
+  "end_equity": 1749.95
+ },
+ "state_days": {
+  "draining": 655,
+  "all": 2356
+ },
+ "verdict": {
+  "a_recovery_or_worst20": false,
+  "b_cagr_within_2pp": true,
+  "c_beats_shift_null": "未跑 —— (a)(d) 已不过,对照改变不了结论",
+  "d_both_halves": false,
+  "e_not_only_2023": true,
+  "pass": false,
+  "uw_gain_days": -387,
+  "worst20_gain_pp": 0.01
+ }
+}
