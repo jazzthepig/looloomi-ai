@@ -1,0 +1,28 @@
+{
+  "status": "in_review",
+  "created": "2026-11-13",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "notes": "2026-11-13T15:49:21Z Seth 开卡(Jazz 11-13「分配任务给各 lane,继续补全」)。\n2026-11-14(无人值守轮,lane-c)T-377 交付完毕,三处全改。① T-348-19 前提错:H4 族自身累计实测 +0.112815(r5 family_standalone.total_return 与本轮自算差 0.0),不是负 ⇒ 方向改为「累计仍为正」(op gt / lo 0),prob 0.55→0.85(依据:族曲线滚动 62 日相对收益 ≤ −9.75% 的经验频率 0.0093,2156 个滚动窗口)。② T-348-20「最长水下 > 700 天」移进顶层 dropped(不入账),理由:该最长水下段 2021-11-24→2023-12-27 已闭合、763 天(G 口径)/762 天(S-829 口径)是历史事实 ⇒ 写下即知;且「改问当前这段水下」在本口径下不成立 —— 2026-10-30 账户 C0 水位 5.9576 高于历史峰值 2.6426(2.254 倍),当前不在水下段内,没有可问的当前水下段。③ T-348-19 / 21 各加一句:族曲线止于 2026-09-30(H4 2020-09-04→2026-09-30;H2 2020-11-07→2026-09-29、末票出场 2026-09-30);到期由 lane-c 在 2027-01 首轮重跑 docs/research/s681_h4_bear_rally_fail.py / s681_h2_pump_fade.py → t348_r3.py(重出族曲线缓存)→ t348_r5.py(把截止日改到 2026-12-31)续到 12-31,再由非 lane-c 方按 evidence 人工结算(ledger 不许自己结自己)。附带:T-348-21 的 prob 0.70→0.95(翻正需 62 日 +46.98%,样本内 2091 个滚动窗口一次没发生)—— 这条不在 Seth 点名的三处里,是我核先验时发现的偏差,若不要请说一声,我改回 0.70。产物:docs/research/t348_r6_scenario_edit.py(改写)、t348_r6_scenario_fix.py(核对)→ _t348_r6_scenario_fix.md(原始数);情景文件 21 条 entries + 1 条 dropped,全部过 scenario_ledger.validate(结算日 ≥ 今天+7),statement 最长 324 字符。分支 lane-c/T-377(基于 origin/main 94855a0f,带入 lane-c/T-348-v2 的情景文件与 r5 产物):CI 范围检查按分支名取卡,T-348 卡 owner 为 null 且本轮要改的是 T-377 的卡,故用本卡号的分支;合并顺序建议先合 lane-c/T-348-v2,情景文件有 19/20/21 三处冲突,取本分支版本。",
+  "id": "T-377",
+  "owner": "lane-c",
+  "title": "T-348 合并前的三处情景条目改完(11-12 起一直挂着)",
+  "source": "MINIMAX_SYNC 顶部「归档指针」一节里重提的 T-348 三点;分支 lane-c/T-348。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-377.json"
+  ],
+  "acceptance": {
+    "check": "① T-348-19 前提错(H4 族累计是 +0.1128、不是负),改对或撤;② T-348-20「最长水下 > 700」写下即已知(已 762),移进 dropped 写理由,或改问当前这段水下;③ T-348-19 / 21 的族曲线止于 2026-09-30,写明到期由谁、用哪个脚本续到 12-31。只改情景文件与卡 notes,同分支推。不要 Read 大文件。",
+    "expect": "lane-c/T-348 续推;SYNC 写 5 行以内。"
+  },
+  "prior_value": "一张挂了两天的卡,三处小改就能合。"
+}
