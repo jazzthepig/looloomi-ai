@@ -329,6 +329,28 @@ def merge_tickets(new: list[dict], stored: list[dict]) -> tuple[list[dict], list
     return out, drift
 
 
+def by_keyset(rows: list[dict]) -> list[list[dict]]:
+    """纯函数。按「这一行有哪些列」分组,组内顺序不变。
+    PostgREST 一次批量写入要求每一行的键完全相同,否则整批 PGRST102「All object keys must match」。`finish` 给等待中的票只有 8 列
+    (还没有入场价),给已开的票是全列 ⇒ 同一条臂里**已有持仓时又来了新信号**,那一轮就整批写不进。
+    11-13 实测:H 臂 11-10 六张票同一天发信号(第一天全是等待中,键一致,没事),11-12 再来新信号 ⇒ 从 07:55 UTC 起每一轮都失败,
+    `last_d` 停在 11-11。不拿 None 补齐:补齐会把已平仓票上算不出的那几列写成空。"""
+    groups: dict[tuple, list[dict]] = {}
+    for r in rows:
+        groups.setdefault(tuple(sorted(r)), []).append(r)
+    return list(groups.values())
+
+
+async def write_tickets(upsert: Callable, rows: list[dict]) -> Any:
+    """键不同的行分开写;任何一组失败就停,把那一次的结果原样交回(调用方照旧报失败、不推进 last_d)。"""
+    r = None
+    for group in by_keyset(rows):
+        r = await upsert(TICKETS, group, on_conflict="arm,ticket_id")
+        if not r.ok:
+            return r
+    return r
+
+
 def _same(a: Any, b: Any, k: str) -> bool:
     if a is None or b is None:
         return a is None and b is None
@@ -397,7 +419,7 @@ async def run_once(today: Optional[date] = None) -> dict[str, Any]:
         stored = await _read_all(TICKETS, {"select": "ticket_id,status," + ",".join(FROZEN_FIELDS), "arm": f"eq.{arm}"})
         write, drift = merge_tickets(rows, stored)
         if write:
-            r = await supabase_upsert_table(TICKETS, write, on_conflict="arm,ticket_id")
+            r = await write_tickets(supabase_upsert_table, write)
             if not r.ok:
                 return {"ok": False, "refused": False, "reason": f"{TICKETS} 写入失败({arm}):{r.why}", **report}
         curve = money(rows, bars_to, btc, INCEPTION, d_to, arm)

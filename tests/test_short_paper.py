@@ -88,6 +88,41 @@ def test_closed_ticket_price_fields_are_frozen_and_drift_is_reported():
 
 
 # ── 对冲腿与钱曲线 ─────────────────────────────────────────────────────────────────────────────────
+def test_a_new_signal_next_to_an_open_ticket_still_gets_written():
+    """11-13 实测:H 臂有 6 张已开的票时来了新信号,那一轮起每次写入都是 PGRST102(All object keys must match),`last_d` 停在 11-11。
+    等待中的票只有 8 列,已开的票是全列 —— 一次批量写入里键必须完全相同。"""
+    import asyncio
+    a = _bars([100, 100, 101, 102], [100, 101, 102, 103], [100, 99, 100, 101], [100, 101, 102, 102])
+    pend = {"pair": "NEWUSDT", "symbol": "NEW", "signal_d": a["d"][-1], "status": "pending"}
+    t_open = sp.short_ticket(a, 1, 0.30, 10)
+    assert t_open and t_open["status"] == "open"
+    rows = [sp.finish({**t_open, "pair": "OLDUSDT", "symbol": "OLD"}, a, {}, None, sp.ARM_H), sp.finish(pend, a, {}, None, sp.ARM_H),
+            sp.finish({**t_open, "pair": "OL2USDT", "symbol": "OL2"}, a, {}, None, sp.ARM_H)]
+    assert set(rows[0]) != set(rows[1]), "前提:两种票的列确实不同(哪天相同了,这条测试就该改)"
+    calls = []
+
+    class R:
+        def __init__(self, ok, why=""):
+            self.ok, self.why = ok, why
+
+    async def postgrest(table, batch, on_conflict=None):               # 和 PostgREST 一样:一批里键不一致就整批拒收
+        calls.append([r["ticket_id"] for r in batch])
+        return R(len({tuple(sorted(r)) for r in batch}) == 1, "PGRST102 All object keys must match")
+    assert not asyncio.run(postgrest(sp.TICKETS, rows)).ok, "原来的写法:一批写 ⇒ 被拒"
+    calls.clear()
+    r = asyncio.run(sp.write_tickets(postgrest, rows))
+    assert r.ok and sorted(x for c in calls for x in c) == sorted(r_["ticket_id"] for r_ in rows) and len(calls) == 2
+    assert calls[0] == [rows[0]["ticket_id"], rows[2]["ticket_id"]], "同一种键的行还在同一批、顺序不变"
+    assert all("entry_px" not in r_ for r_ in sp.by_keyset(rows)[1]), "不拿 None 补齐等待中的票"
+
+    async def down(table, batch, on_conflict=None):
+        calls.append("x")
+        return R(False, "HTTP 503")
+    calls.clear()
+    bad = asyncio.run(sp.write_tickets(down, rows))
+    assert not bad.ok and bad.why == "HTTP 503" and len(calls) == 1, "第一组失败就停,原因原样交回"
+
+
 def test_hedge_leg_is_btc_open_to_open_minus_cost_and_long_funding():
     a = _bars([100] * 6, [101] * 6, [90] * 6, [95] * 6, start="2026-10-26")
     btc = _bars([100, 100, 110, 110, 110, 110], [111] * 6, [99] * 6, [110] * 6, start="2026-10-26")
