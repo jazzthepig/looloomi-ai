@@ -1,0 +1,27 @@
+{
+  "status": "open",
+  "created": "2026-11-13",
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "verified": null,
+  "notes": "2026-11-13T07:03:43Z Seth 开卡(台账 S-842)。",
+  "id": "T-367",
+  "owner": "seth",
+  "title": "策略空间补齐:真钱那几本账进登记表、book_vectors 加回放口径(标注)、strategy_response / strategy_records 在 SPINE 上登记去留",
+  "source": "台账 S-842。",
+  "allowed_paths": [
+    "src/data/strategy/",
+    "src/data/accounting/",
+    "src/api/",
+    "tests/",
+    "docs/SPINE.md",
+    "migrations/",
+    "tasks/T-367.json"
+  ],
+  "acceptance": {
+    "check": "① X1V / RBv2 / R-v2 纸面票账本 / 真钱目标表 / H4 前向臂不在 `accounting/registry.BOOKS` 里 ⇒ 满 60 天也不会有向量;逐本登记(基准写清)。② `book_vectors` 现在只算前向 ≥ 60 天的账(设计如此);登记表里有 `_replay` 臂的账另写一行回放口径的向量(book_id 加后缀、status = replay,读的一侧不与前向混排),前向满 60 天后两行并排、报符号一致率。③ beta_core 有 69 个有效前向日却没有向量,查原因。④ `strategy_response`(08-06 之后没有写入端)与 `strategy_records`(09-01 之后没写)在 `docs/SPINE.md` 上登记:退役并指向 flex_alloc 的风格表,或接上写入端 —— 二选一,过 `tests/test_spine_is_current.py`。⑤ 5b:每个新写入端交调度者、判活判据、第一行真实数据。",
+    "expect": "代码 + 测试 + SPINE;判活:`select book_id, status, max(d) from book_vectors group by 1,2`。"
+  },
+  "prior_value": "「现在这种市场该信哪本账」现在只有 4 本已冻结的旧账能回答。"
+}

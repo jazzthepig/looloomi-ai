@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-13",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "notes": "2026-11-13T07:03:43Z Seth 开卡(台账 S-842)。",
+  "id": "T-366",
+  "owner": "lane-b",
+  "title": "真钱在交易的币有没有向量:R-v2 票源的币逐个对账(资产向量 / 资金面向量 / CIS),并列出 27 维里哪些对只有永续的币算得出来",
+  "source": "台账 S-842。实测:asset_embeddings 只有 59 个在更新的资产(24 个加密 + 35 个传统),R-v2 真钱票开在几百个永续合约上;asset_flow_daily(11 维资金面)有 652 个币。资产向量的维度定义在 `src/data/vector/embedder.py`(只读,grep 维度名,不要整文件 Read)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-366.json"
+  ],
+  "acceptance": {
+    "check": "① 取 R-v2 的票源(`docs/research/t310_slots.py` 的 `load_tickets`,路径照 T-360 脚本里的写法),列出 2024-11 以来开过票的币。② 逐个币三列:在不在 asset_embeddings(且 schema_version = 3、7 天内更新过)、asset_flow_daily 最近一天有没有 vec、有没有 CIS 正式分(cis_official_daily)。报覆盖率(按币数、按票数、按票的盈亏金额三种权重)。③ 把 embedder 的 27 维逐维列表:数据来源、对「只有永续日线 + 资金费 + OI、没有 CIS」的币能不能算、算不出来的原因。④ 给一个最小方案:哪些维度可以立刻对全部票源币算出来(只用库里已有的数据,不新建抓取器),预计覆盖多少币。只读、不入库、不改 src。",
+    "expect": "docs/research/T-366_traded_universe_coverage.md + 脚本 + 结果 json;卡 in_review,推 lane-b/T-366。"
+  },
+  "prior_value": "如果按盈亏金额加权的覆盖率很低,说明资产空间描述的是我们打分的币、不是我们赚钱的币 —— 扩面板的优先级就定了。"
+}
