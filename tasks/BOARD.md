@@ -79,6 +79,7 @@
 | open | T-371 | seth | 时间口径四件事:⓪ 判断当轮执行、每张日表的 d 写明含义并入测试、动钱的表留首次写入时间、给人看的日期一律 UTC | 代码 + 测试 + 迁移;每一项各自的判活语句写进卡。 | 前向记录要可验证,先得证明每个数是什么时候知道的;判断要能赚钱,先得在当天成交。 |  |
 | open | T-378 | seth | 未平仓与多空比的历史入库:Binance 存档 U 本位 metrics(2020-09-01 起),补上 `oi_chg_30d` 的 6 年空白 | 表里 BTCUSDT 从 2020-09-01 到昨天连续;重叠日核价的数写进台账;`dossier_context` 的未平仓一栏在 10-27 之前的日期也能读到。 | 决策层今天接上的清单里有一条因为这段空白读不到;S-852 那 15 段历史盯盘期没有一段带未平仓读数。 |  |
 | open | T-379 | seth | 大表读取的翻页:`_read_all` 用 OFFSET,读 N 行的代价是 N² 量级 —— 探到服务端每页上限后跟着用,再评估按键翻页 | 整读 40 万行从约 400 次请求降到约 40 次;台账记改前改后的数。 | `v_funding_daily` 之后数据库耗时的下一大块;也是几条慢接口(账本 7 秒、归因 19 秒)慢的原因 —— 实测它们不占事件循环,慢在一页一页串行读库。 |  |
+| open | T-380 | seth | 事件循环上剩下的同步请求:`_loop_stall_loop` 点到名的逐个搬进线程;两条白跑的循环等 Jazz 定去留 | 部署后不再有整段不回应;`_loop_stall_loop` 稳态下每 30 分钟一条 ok。 | 部署后的不回应从约 3 分钟降到两次 5 秒(S-862 核验);剩下的是对方慢时才现形的尾巴。 |  |
 | blocked(等 Jazz 10-19「留在待办,先不买那个数据,在我们现有的数据源想办法」) | T-132 | jazz | (待办,暂不买)Hyperliquid 历史盘口:官方 S3 存档 / Hydromancer Reservoir,按流量付费 | 有报价再决定 | 突破那一刻的 HL 盘口历史 —— 能直接回测「盘口失衡筛假突破」,不用等主机自录几周 |  |
 | blocked(等 jazz: portfolio_layer_daily / allocation_daily 对 publishable key 不可读(42501,lane 实测)。给 lane 开读权限 = 公开 key 也能读到配置与组合层 —— 开不开是 Jazz 的决定;不开就由 Seth 用 service 端导出一份快照给 lane) | T-089 | lane-a | 完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改 | 从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。 |  |
 | blocked(等 jazz: 删除 ~/.config/cometcloud/.env(key 文件只经 Jazz 的手);其余部分 lane-c 已交(cb30023)) | T-036 | lane-c | Mac 只留一份 env:canonical=/Volumes/CometCloudAI/cometcloud-local/.env(§Seth-1006g);~/.config/cometcloud/.env 孤儿由 Jazz 删;Python 日志改 UTC | 一次轮换只动 Railway + 1 个文件;轮换后 1h 内 mac_mini 简报与 T1 推送都有新行 | 三份 env(仓库 .env / cometcloud-local/.env / ~/.config/cometcloud/.env),09-28 轮换漏改第三份 |  |
@@ -381,4 +382,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 21 · claimed 6 · blocked 4 · in_review 50 · done 292 · dropped 5
+open 22 · claimed 6 · blocked 4 · in_review 50 · done 292 · dropped 5

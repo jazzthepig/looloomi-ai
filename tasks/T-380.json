@@ -1,0 +1,26 @@
+{
+  "status": "open",
+  "created": "2026-11-14",
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "verified": null,
+  "notes": "2026-11-14T09:59:00Z Seth 开卡(S-862 核验:四处大的搬走之后,看门线程又点了两处 5 秒的)。",
+  "id": "T-380",
+  "owner": "seth",
+  "title": "事件循环上剩下的同步请求:`_loop_stall_loop` 点到名的逐个搬进线程;两条白跑的循环等 Jazz 定去留",
+  "source": "台账 S-862 补二 / 补三 / 核验。部署后进程两段共约 3 分钟不动,看门线程(`src/api/loop_stall.py`)点名四处同步重活(合计 181 秒),d3d38d11 已搬进线程;新构建启动后 12 分钟只剩两次 5 秒:`scripts/trending_collector.py:36 _get`(← `_trending_loop`,同步 httpx.get,时限 25 秒)、`src/data/narrative/fundamental_momentum.py:21 _daily_revenue`(← `_conviction_loop`,同步 urllib,时限 15 秒)—— 对方慢的时候这两处能卡到各自的时限。",
+  "allowed_paths": [
+    "src/",
+    "scripts/trending_collector.py",
+    "scripts/compute_regime_fitness.py",
+    "tests/",
+    "scripts/preflight.sh",
+    "tasks/T-380.json"
+  ],
+  "acceptance": {
+    "check": "① 上面两处改成不占事件循环(放线程,或换异步客户端),`tests/test_loop_stall.py` 里那条语法树守卫把它们加进去;② 上线后连看三次部署 + 一整天稳态:`select at, reason from loop_attempt where loop_name = '_loop_stall_loop' and outcome = 'error' order by at desc` 里没有超过 5 秒的新名字;有就继续点名继续搬,直到一天里只有 ok;③ 公开接口里的重算(账本、归因)被请求到时是否卡循环 —— 看门线程会记,按记到的处理,不预先猜;④ **等 Jazz 定:** `_regime_fitness_loop` 10-30 起每轮以 400 失败(`cis_regime_fitness` 缺 `return_source` 列)—— 补列让它写,还是停掉;`_factory_recalibrate_loop` 每次部署重算一本 10-20 已冻结的账(combined book)的权重 —— 进冻结登记,还是照跑。⑤ 这类改动攒成一批推:每次带运行时改动的推送都会重启,11-14 当天约 15 次。",
+    "expect": "部署后不再有整段不回应;`_loop_stall_loop` 稳态下每 30 分钟一条 ok。"
+  },
+  "prior_value": "部署后的不回应从约 3 分钟降到两次 5 秒(S-862 核验);剩下的是对方慢时才现形的尾巴。"
+}
