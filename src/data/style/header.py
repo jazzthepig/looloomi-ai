@@ -156,21 +156,65 @@ def stable_order(params: dict) -> dict:
     return {**params, "order": ",".join(([have] if have else []) + extra)}
 
 
+#: 每页想要的行数。服务端的「Max rows」是硬上限(Jazz 11-14 在 Supabase 把它从 1,000 调到 10,000,T-379 / S-860):
+#: OFFSET 翻页读 N 行,要走过的行数是 N² / (2 × 每页行数) 量级 —— `ohlcv_daily` 两种读法 70 万次调用、6.7 万秒就贵在这里。
+PAGE_ASK = 10000
+#: 探不到服务端上限时的每页行数 = 改之前的行为
+PAGE_FLOOR = 1000
+PAGE_PROBE_TABLE, PAGE_PROBE_RETRY_S = "ohlcv_daily", 600.0
+_PAGE: dict[str, Any] = {"cap": None, "tried_at": 0.0}
+
+
+async def page_cap() -> int:
+    """服务端每次实际最多给多少行。每个进程探一次:对一张远多于 PAGE_ASK 行的表要 PAGE_ASK 行,数回来几行。
+    探不到(没配库 / 读失败 / 回来不足 1,000 行)⇒ 按 1,000,10 分钟后再探。**不能假设**:代码要 10,000 而服务端只给 1,000 时,
+    「不足一页就算读完」会在第一页就停 —— 静默截断;`_read_all` 里另有一道核对防这个。"""
+    import os
+    import time
+    if _PAGE["cap"]:
+        return int(_PAGE["cap"])
+    if not os.getenv("SUPABASE_URL") or time.time() - float(_PAGE["tried_at"]) < PAGE_PROBE_RETRY_S:
+        return PAGE_FLOOR
+    _PAGE["tried_at"] = time.time()
+    try:
+        from src.data.vector.market_state_writer import _sb_get
+        rd = await _sb_get(PAGE_PROBE_TABLE, {"select": "id", "order": "id.asc", "limit": str(PAGE_ASK)})
+        n = len(rd.rows or []) if rd.ok else 0
+    except Exception:                                                     # noqa: BLE001 —— 探不到就按旧行为
+        n = 0
+    if n >= PAGE_FLOOR:
+        _PAGE["cap"] = min(n, PAGE_ASK)
+        return int(_PAGE["cap"])
+    return PAGE_FLOOR
+
+
 async def _read_all(table: str, params: dict) -> list[dict]:
-    """分页读全表。读不到抛异常 —— 读不到 ≠ 0 行(S-180)。没给 order 时补一个确定的顺序(S-532)。"""
+    """分页读全表。读不到抛异常 —— 读不到 ≠ 0 行(S-180)。没给 order 时补一个确定的顺序(S-532)。
+    每页行数 = 探到的服务端上限(`page_cap`)。一页不满、但不少于 1,000 行时多问一行:还有 ⇒ 服务端的上限其实比探到的低
+    (有人把 Max rows 调回去了),按这一页的行数接着读;没有 ⇒ 读完。不这样核,上限一变就是静默截断。"""
     from src.data.vector.market_state_writer import _sb_get
     out: list[dict] = []
     offset = 0
     params = stable_order(params)
+    page = await page_cap()
     while True:
-        rd = await _sb_get(table, {**params, "limit": "1000", "offset": str(offset)})
+        rd = await _sb_get(table, {**params, "limit": str(page), "offset": str(offset)})
         if not rd.ok:
             raise RuntimeError(f"{table} 读不到(offset={offset}):{rd.reason}")
         batch = rd.rows or []
         out.extend(batch)
-        if len(batch) < 1000:
-            return out
         offset += len(batch)
+        if len(batch) == page:
+            continue
+        if len(batch) < PAGE_FLOOR:
+            return out
+        more = await _sb_get(table, {**params, "limit": "1", "offset": str(offset)})
+        if not more.ok:
+            raise RuntimeError(f"{table} 读不到(offset={offset},核对是否读完):{more.reason}")
+        if not more.rows:
+            return out
+        page = len(batch)                                                 # 服务端实际的上限比以为的低
+        _PAGE["cap"] = page
 
 
 async def refresh_membership(today: date) -> dict[str, Any]:
