@@ -705,8 +705,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
             "adjustment is applied and the CIS gate falls back to its regime-neutral "
             "default (58) rather than a regime-specific threshold. This is a data-quality "
             "notice, NOT a neutral-regime reading: treat regime-conditional positioning as "
-            "stale until the next Mac Mini push lands. Check /internal/cis-scores payload "
-            "and the [CONTRACT] warning in Railway logs.",
+            "stale until the next full-engine update lands.",
             "24H"))
 
         # Top A+ assets
@@ -1201,7 +1200,7 @@ async def get_signals(background_tasks: BackgroundTasks, response: Response = No
                 "value": len(passing),
             }, pi,
             f"CIS universe scan: {len(passing)} of {len(universe)} assets meet institutional threshold "
-            f"({threshold}) {regime_clause}. T1 Mac Mini scores. "
+            f"({threshold}) {regime_clause}. Full-engine (T1) scores. "
             f"Top assets by composite CIS: {summary}. "
             f"Regime-aware weights applied — tighter thresholds in Tightening, wider in Goldilocks.",
             "24H"))

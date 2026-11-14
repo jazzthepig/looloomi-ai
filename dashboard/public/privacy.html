@@ -43,7 +43,7 @@
     <p>CometCloud AI ("we", "us", "our") operates the platform at <a href="https://looloomi.ai">looloomi.ai</a> and related services. This policy explains how we collect, use, and protect information when you use our platform, API, or MCP server.</p>
 
     <h2>1. Information We Collect</h2>
-    <p><strong style="color:#e8e6dc">API key registration:</strong> When you request an API key, we collect your name, email address, and intended use. This information is stored in our database (Supabase) and used solely for key management and service communications.</p>
+    <p><strong style="color:#e8e6dc">API key registration:</strong> When you request an API key, we collect your name, email address, and intended use. This information is stored in our database and used solely for key management and service communications.</p>
     <p><strong style="color:#e8e6dc">Lead capture:</strong> If you submit a contact form or inquiry on our platform, we collect your name, email, organization, and message. We use this to respond to inquiries and, with your consent, send relevant updates.</p>
     <p><strong style="color:#e8e6dc">Wallet authentication:</strong> If you connect a Solana wallet, we store your public wallet address and authentication nonce. We never have access to private keys or signing authority.</p>
     <p><strong style="color:#e8e6dc">Usage data:</strong> We log API requests (endpoint, timestamp, key prefix, response status) for rate limiting, abuse prevention, and service improvement. We do not log request bodies or response payloads.</p>
@@ -60,8 +60,8 @@
     <p>We do not sell, rent, or share your personal information with third parties for marketing purposes.</p>
 
     <h2>3. Data Storage and Security</h2>
-    <p>Data is stored in Supabase (PostgreSQL, hosted in the EU). API keys are stored as SHA-256 hashes — the raw key is shown only once at creation and never stored in plaintext. We use industry-standard TLS encryption for all data in transit.</p>
-    <p>Access to production databases is restricted to authorized personnel. We apply row-level security (RLS) on all user-facing Supabase tables.</p>
+    <p>Data is stored in a managed PostgreSQL database hosted in the EU. API keys are stored as SHA-256 hashes — the raw key is shown only once at creation and never stored in plaintext. We use industry-standard TLS encryption for all data in transit.</p>
+    <p>Access to production databases is restricted to authorized personnel. We apply row-level security (RLS) on all user-facing tables.</p>
 
     <h2>4. Data Retention</h2>
     <p>API keys remain active until revoked or until 12 months of inactivity. Score history and analytics data is retained for up to 90 days in our primary database. Usage logs are retained for 30 days. You may request deletion of your personal data at any time by contacting us.</p>
@@ -71,9 +71,9 @@
     <ul>
       <li><strong style="color:#e8e6dc">CoinGecko</strong> — market price data (no personal data shared)</li>
       <li><strong style="color:#e8e6dc">DeFiLlama</strong> — DeFi TVL data (no personal data shared)</li>
-      <li><strong style="color:#e8e6dc">Supabase</strong> — database hosting (EU region)</li>
-      <li><strong style="color:#e8e6dc">Upstash</strong> — Redis cache (no personal data stored)</li>
-      <li><strong style="color:#e8e6dc">Railway</strong> — backend hosting (no personal data beyond server logs)</li>
+      <li><strong style="color:#e8e6dc">A managed database provider</strong> — database hosting (EU region)</li>
+      <li><strong style="color:#e8e6dc">A managed cache provider</strong> — caching (no personal data stored)</li>
+      <li><strong style="color:#e8e6dc">A cloud hosting provider</strong> — backend hosting (no personal data beyond server logs)</li>
     </ul>
 
     <h2>6. Your Rights</h2>

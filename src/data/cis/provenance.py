@@ -41,7 +41,7 @@ def attach_provenance(universe: list, as_of: str | None = None) -> None:
             tier = _tier_of(a)
             conf = a.get("confidence")
             a["provenance"] = {
-                "engine": "mac_mini_T1_full" if tier == "T1" else "railway_T2_estimate",
+                "engine": "t1_full" if tier == "T1" else "t2_estimate",     # 11-14(Jazz):不可以显示设备名称
                 "data_tier": tier,
                 "confidence": round(float(conf), 3) if isinstance(conf, (int, float)) else None,
                 "pillar_sources": _PILLAR_SOURCES,
@@ -61,8 +61,8 @@ def _selftest():
     for a in u:
         p = a["provenance"]
         print(f"{a['symbol']:5} engine={p['engine']:20} tier={p['data_tier']} conf={p['confidence']} as_of={p['as_of']}")
-    assert u[0]["provenance"]["engine"] == "mac_mini_T1_full"
-    assert u[1]["provenance"]["engine"] == "railway_T2_estimate"
+    assert u[0]["provenance"]["engine"] == "t1_full"
+    assert u[1]["provenance"]["engine"] == "t2_estimate"
     print("✓ provenance: T1/T2 labeled, confidence carried, methodology + compliance attached.")
 
 

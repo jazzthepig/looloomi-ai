@@ -87,6 +87,8 @@ _ENV = os.environ.get("ENVIRONMENT", APP_ROLE)
 
 app = FastAPI(title="Looloomi AI API", version="0.6.3")
 
+from src.api.public_cache import PublicCacheMiddleware  # noqa: E402
+app.add_middleware(PublicCacheMiddleware)             # 11-14(S-859):先加 = 最里层;接口声明的 public max-age 由源站自己兑现,过期先给旧的、后台换新
 app.add_middleware(GZipMiddleware, minimum_size=500)  # ~60% payload reduction for agents
 app.add_middleware(RateLimitMiddleware)               # sliding-window rate limiter (Upstash Redis)
 _frontend_origins = os.environ.get(
