@@ -544,8 +544,10 @@ def _universe_stale(max_age_s: float = _UNIVERSE_STALE_MAX_S) -> dict | None:
 async def cis_v2_shadow():
     """CIS v2 影子(S-668 / S-669;Jazz 10-22)。加密:分数 + 档位(影子)+ 状态;公司:只给状态与质量事实,不给档位。
     正式 CIS 仍是 v1(`/api/v1/cis/universe`),直到加密组影子满 20 天。"""
+    from src.api.swr import swr as _swr
     from src.data.cis.v2_view import latest_view
-    return await latest_view()
+    # 11-14:首屏接口,每次现读 1.2–1.9 秒且完全没缓存;影子一天一更 ⇒ 2 分钟内给缓存,过期先给旧的、后台换新,旧值最多 1 小时
+    return await _swr("cis_v2_view", 120, latest_view, max_stale_s=3600)
 
 
 @router.get("/api/v1/cis/universe")
@@ -3624,17 +3626,17 @@ async def cis_signal_attribution(symbol: Optional[str] = None, limit: int = 50, 
     from src.data.style.header import _read_all
     if response:
         response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=1800"
-    now = time.time()
-    hit = _ATTR_CACHE.get("rows")
-    if not hit or now - hit[0] > 600:
-        try:
-            rows = await _read_all(_ATTR_TABLE, {"select": "*", "order": "d.desc,symbol.asc"})
-        except Exception as e:
-            logging.getLogger(__name__).warning("[SIGNAL-ATTR] read failed: %s", e)
-            raise HTTPException(status_code=502, detail="signal attribution unreadable — not the same as no signals")
-        _ATTR_CACHE["rows"] = (now, rows)
-        hit = _ATTR_CACHE["rows"]
-    all_rows = hit[1]
+    # 11-14:这张表 2.7 万行,整读一次 12–19 秒;原来缓存一过期,下一个请求就原地等这一次读。现在有旧值先给旧值、后台刷新,
+    # 同时到的请求共用同一次读(`src/api/swr.py`)。表一天才变一次;旧值超过 6 小时不再给(读坏了不能一直端着旧的)。
+    from src.api.swr import swr as _swr
+
+    async def _load_rows():
+        return await _read_all(_ATTR_TABLE, {"select": "*", "order": "d.desc,symbol.asc"})
+    try:
+        all_rows = await _swr("cis_attribution_rows", 600, _load_rows, max_stale_s=6 * 3600)
+    except Exception as e:
+        logging.getLogger(__name__).warning("[SIGNAL-ATTR] read failed: %s", e)
+        raise HTTPException(status_code=502, detail="signal attribution unreadable — not the same as no signals")
     # S-534 / T-080:归因跟着正式序列(standard = 统一标准日终;已发布 + 按时点重建)。
     # live_mixed = 10-10 及以前实际对外发布的实时信号,单独给,标明。
     std = [r for r in all_rows if (r.get("series") or SERIES_LEGACY) == SERIES_STANDARD]
