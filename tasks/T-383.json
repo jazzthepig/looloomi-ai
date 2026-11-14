@@ -23,5 +23,5 @@
     "expect": "docs/research/scenarios/lane-c-T-383.json + docs/research/T-383_note.md;卡 in_review,推 lane-c/T-383。"
   },
   "prior_value": "已入账两条的先验依据目前在台账里不可复核。",
-  "notes": "2026-11-14T12:50:00Z Seth 开卡(交叉复核 §Seth-1114d)。台账只追加:已入账行不 UPDATE,用新 id 替代/补述;作废机制另欠。"
+  "notes": "2026-11-14T12:50:00Z Seth 开卡(交叉复核 §Seth-1114d)。台账只追加:已入账行不 UPDATE,用新 id 替代/补述;作废机制另欠。 | 2026-11-14T13:45:00Z Seth 复核 lane-c/T-383@77ea7afb(§Seth-1114e):CHANGES —— ① T-383-1/-2 与已入账 T-348-19/-21 是同一命题(同族、同符号、同到期 12-31),再入一行 = Brier 记两次 ⇒ 不入账:删掉 scenarios/lane-c-T-383.json,「10-01 后两族都开了新票 ⇒ 非写下即知」与 T-348-21 笔误(H2=暴涨回落)写进 T-383_note.md 即可;不凑条数。② acceptance ③ 零信号对照跑完、prob 换成延长曲线上的重算值后才改 in_review;不接受按沿用值标 in_review。③ 延长曲线上若 prob 变化 > 0.05,在 note 里给新旧两值,台账行不动(作废/替代机制 Seth 欠,12-15 前落地)。"
 }
