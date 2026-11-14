@@ -27,7 +27,6 @@
     "chain_activity_daily",
     "channel_categories",
     "channel_series_daily",
-    "cis_backtest_results",
     "cis_official_daily",
     "cis_rebuild_daily",
     "cis_scores",

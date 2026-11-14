@@ -1879,22 +1879,19 @@ async def get_cis_backtest():
     30d realized return results by CIS grade (Binance/OKX klines).
     Used to validate scoring — shows A/B/C return spread.
 
-    Persists the result to Supabase `cis_backtest_results` so the table is no
-    longer orphaned (read from disk or history_db, but never written). Schema
-    is tolerant — extracts whatever grade-averages exist, falls back to None.
+    只读。这里曾经每被请求一次就往 `cis_backtest_results` 插一行(S-862 去掉):那张表是另一套结构(逐笔),
+    从 09-16 起 24 次写入 24 次 400、表里 0 行;而且「每次 GET 插一行同一份结果」本来就不是一条记录。
     """
     results_path = os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
         "data", "cis", "backtest_results.json"
     )
-    source_label = "none"
     response_payload: dict = {}
     try:
         if os.path.exists(results_path):
             with open(results_path) as f:
                 data = _json.load(f)
             response_payload = {"status": "success", "source": "file", **data}
-            source_label = results_path
     except Exception as e:
         _logger.warning(f"[BACKTEST] Read error: {e}")
 
@@ -1903,99 +1900,10 @@ async def get_cis_backtest():
             from src.data.cis.history_db import get_backtest_summary
             summary = get_backtest_summary()
             response_payload = {"status": "success", "source": "db", **summary}
-            source_label = "history_db"
         except Exception as e:
             response_payload = {"status": "empty", "message": str(e)}
 
-    # ── Persist to cis_backtest_results (best-effort, fire-and-forget) ───
-    try:
-        await _persist_backtest_result(response_payload, source_label)
-    except Exception as e:
-        _logger.debug(f"[BACKTEST] persist skipped: {e}")
-
     return response_payload
-
-
-def _extract_grade_avg(payload: dict, grade: str) -> float | None:
-    """Tolerantly pull a grade average out of the backtest payload shape."""
-    if not isinstance(payload, dict):
-        return None
-    # Direct key
-    direct = payload.get(f"grade_{grade.lower()}_avg") or payload.get(f"{grade}_avg")
-    if direct is not None:
-        try:
-            return float(direct)
-        except (TypeError, ValueError):
-            pass
-    # Nested `grades` dict
-    grades = payload.get("grades") or payload.get("by_grade") or {}
-    if isinstance(grades, dict):
-        g = grades.get(grade) or grades.get(grade.lower())
-        if isinstance(g, dict):
-            for k in ("avg", "mean", "avg_return", "return_pct"):
-                if k in g:
-                    try:
-                        return float(g[k])
-                    except (TypeError, ValueError):
-                        continue
-        elif isinstance(g, (int, float)):
-            return float(g)
-    # Per-grade rows
-    rows = payload.get("results") or payload.get("data") or []
-    if isinstance(rows, list):
-        vals = []
-        for r in rows:
-            if not isinstance(r, dict):
-                continue
-            if (r.get("grade") or "").upper() != grade.upper():
-                continue
-            for k in ("avg_return", "return_pct", "mean", "avg", "pnl_pct"):
-                if k in r and r[k] is not None:
-                    try:
-                        vals.append(float(r[k]))
-                    except (TypeError, ValueError):
-                        continue
-                    break
-        if vals:
-            return sum(vals) / len(vals)
-    return None
-
-
-async def _persist_backtest_result(payload: dict, source_label: str) -> bool:
-    """Write the backtest result to cis_backtest_results. Best-effort."""
-    if not isinstance(payload, dict):
-        return False
-    try:
-        from src.api.store import supabase_insert_table
-    except Exception:
-        return False
-    a = _extract_grade_avg(payload, "A")
-    b = _extract_grade_avg(payload, "B")
-    c = _extract_grade_avg(payload, "C")
-    d = _extract_grade_avg(payload, "D")
-    f = _extract_grade_avg(payload, "F")
-    spread = (a - f) if (a is not None and f is not None) else None
-    asset_count = payload.get("asset_count") or payload.get("n_assets") or (
-        len(payload["results"]) if isinstance(payload.get("results"), list) else None
-    )
-    n_klines = payload.get("n_with_klines") or payload.get("with_klines")
-    window = payload.get("window_days") or 30
-    row = {
-        "window_days":   int(window) if str(window).isdigit() else 30,
-        "grade_a_avg":   a,
-        "grade_b_avg":   b,
-        "grade_c_avg":   c,
-        "grade_d_avg":   d,
-        "grade_f_avg":   f,
-        "spread_a_to_f": spread,
-        "asset_count":   asset_count,
-        "n_with_klines": n_klines,
-        "source_file":   source_label if source_label.endswith(".json") else None,
-        "source_db":     source_label == "history_db",
-        "notes":         f"auto-persisted by /api/v1/cis/backtest source={payload.get('source','?')}",
-        "payload":       payload,
-    }
-    return await supabase_insert_table("cis_backtest_results", [row])
 
 
 # ── Agent API ─────────────────────────────────────────────────────────────────

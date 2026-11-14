@@ -39,7 +39,6 @@ _TABLES = [
     {"key": "signal_journal",        "table": "signal_journal",        "freshness_s": 86400,    "kind": "track", "description": "OUTPERFORM threshold crossings — track record"},
     {"key": "trade_results",         "table": "trade_results",         "freshness_s": 604800,   "kind": "track", "description": "Freqtrade fills (closed loop)"},
     {"key": "agent_call_log",        "table": "agent_call_log",        "freshness_s": 86400,    "kind": "infra", "description": "MCP tool usage"},
-    {"key": "cis_backtest_results",  "table": "cis_backtest_results",  "freshness_s": 604800,   "kind": "track", "description": "Backtest runs by grade"},
     {"key": "cis_regime_fitness",    "table": "cis_regime_fitness",    "freshness_s": 86400,    "kind": "track", "description": "Pearson IC per pillar × regime (Simons loop)"},
     {"key": "ohlcv_daily",           "table": "ohlcv_daily",           "freshness_s": 86400,    "kind": "core",  "description": "Daily candles (CoinGecko Pro market_chart)"},
     {"key": "wallet_profiles",       "table": "wallet_profiles",       "freshness_s": None,     "kind": "auth",  "description": "Solana wallet auth profiles"},

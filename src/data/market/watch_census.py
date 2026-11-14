@@ -134,7 +134,7 @@ EXCLUDED_BY_DESIGN: dict[str, str] = {
     # 它的 RLS 与授权刻意和 NAV 表一致,所以探针走的是真实权限路径 ——
     # 但那是为了让探针可信,不是为了让这张表值得判活。
     "_write_probe": "写路径探针的一次性靶子 —— 写完即删,0 行是正常状态",
-    "cis_backtest_results": "回测产物,按需",
+    "cis_backtest_results": "没有写入端(S-862 去掉了那个 24 次全败的写入);0 行,留表不留期待",
     "wallet_profiles": "钱包画像按需富化 —— 没有新钱包就没有新行,不是故障",
 }
 
