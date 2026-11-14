@@ -13,10 +13,11 @@
 -- max |rate difference| 1.7e-18. Trigger exercised inside a rolled-back block: insert, upsert-update, a row moved to the
 -- next day, delete — each left the daily row as expected; another venue's row was ignored. Same page after: 283 ms.
 --
--- LIVENESS (should return 0):
+-- LIVENESS (should return 0). Both sides start at a UTC day boundary: the first version cut the history side at
+-- `now() - 3 days` (mid-day) and compared that partial day with the table's whole day — 35 false mismatches on first use (S-862).
 --   select count(*) from (
 --     select symbol, (funding_time at time zone 'UTC')::date d, avg(funding_rate) fr, count(*) n
---     from funding_history where venue = 'binance_perp' and funding_time >= now() - interval '3 days' group by 1, 2) a
+--     from funding_history where venue = 'binance_perp' and funding_time >= (now() - interval '3 days')::date group by 1, 2) a
 --   full join (select * from funding_daily where d >= (now() - interval '3 days')::date) b using (symbol, d)
 --   where a.n is distinct from b.n or abs(a.fr - b.funding_rate) > 1e-12;
 -- A failing trigger makes the funding write itself fail (loud, visible in loop_attempt) rather than letting the table drift.
