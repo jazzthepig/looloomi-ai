@@ -1,0 +1,28 @@
+{
+  "status": "in_review",
+  "created": "2026-11-14",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "notes": "2026-11-14T16:17:00Z Seth 开卡(Jazz 睡前:「分配任务给各 lane,并完成交易优化、策略升级、组合优化的长任务」)。 | 2026-11-14T16:30:00Z lane-a 跑完(脚本一行未改;`docs/research/s865_ticket_forms.py` 此前只在主仓工作目录里、未进 origin/main,已复制进本分支)。① `--selftest | tail -1` = SELFTEST OK。② live:no后台跑,`docs/research/s865_run.txt` 末尾见 `WROTE docs/research/s865_results.json`;取数 BTC 3088 根 / ETH 3088 根日线(ohlcv_daily, source=eq.binance_hist, 2018-06-01 起,分页取全)。③ 按卡的 `grep -E '^(N_SIGNALS|SLICE|   K|NON_DOMINATED_SHORT|SELF_CHECKS)' … | cut -c1-330` 抽出 163 行,原样贴进 SYNC(§A-T-385);同一份原文另存 `docs/research/s865_sync_block.txt`(逐字节与该命令输出一致)。测得的数:N_SIGNALS —— cell 组 BTC 空 32 / 多 27、ETH 空 24 / 多 22;all 组各 545。SELF_CHECKS `tickets_before_cut_ignore_the_future` = true(n_checked=17)。NON_DOMINATED_SHORT(8 种管法里不被支配的切片数):K1+X0 3、K1+X1 6、K1+X2 6、K2+X0 7、K2+X1 8、K2+X2 7、K3+X0 3、K3+X1 7、K3+X2 5。产物:docs/research/s865_results.json、s865_run.txt、s865_sync_block.txt;按卡上明令未另写情景文件、未写别的脚本、未改脚本一行。",
+  "id": "T-385",
+  "owner": "lane-a",
+  "title": "S-865:周期仓位通道的管票形态(3 种止损 × 3 种出场 × 2 个到期)—— 只跑 Seth 写好的脚本,把输出原样贴回",
+  "source": "台账 S-865(预注册);脚本 `docs/research/s865_ticket_forms.py`(它 import 同目录的 `s851_watch_base_rate.py`)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-385.json"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s865_ticket_forms.py --selftest | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s865_ticket_forms.py > docs/research/s865_run.txt 2>&1 &`,只 tail,等 WROTE。③ 把 `grep -E '^(N_SIGNALS|SLICE|   K|NON_DOMINATED_SHORT|SELF_CHECKS)' docs/research/s865_run.txt | cut -c1-330` **原样**贴进 MINIMAX_SYNC(§A-T-385;约 180 行,不删行、不改写、不下结论、不改脚本一行)。④ 报错就贴最后 15 行、结束。**不要**另外写情景文件或别的脚本 —— 这张卡只要这一份输出。",
+    "expect": "docs/research/s865_results.json + s865_run.txt;卡 in_review,推 lane-a/T-385。"
+  },
+  "prior_value": "T-370(周期仓位通道)上线前 Jazz 要定止损线与止盈形态;这张表是他定的时候面前的数。只描述。"
+}
