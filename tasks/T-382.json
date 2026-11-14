@@ -23,5 +23,5 @@
     "expect": "docs/research/T-376_data_sources.md 改版 + docs/research/T-382_corrections.md;卡 in_review,推 lane-b/T-382。"
   },
   "prior_value": "ETH ETF 日频净流入若 Farside 免费可取,就不需要付费源 —— 撤回 T-376 交 Jazz 的付费拍板项。",
-  "notes": "2026-11-14T12:50:00Z Seth 开卡(交叉复核 §Seth-1114d)。台账只追加:已入账行不 UPDATE,用新 id 替代/补述;作废机制另欠。"
+  "notes": "2026-11-14T12:50:00Z Seth 开卡(交叉复核 §Seth-1114d)。台账只追加:已入账行不 UPDATE,用新 id 替代/补述;作废机制另欠。 | 2026-11-14T14:45:00Z Seth 复核 lane-b/T-382@6295ae5d(§Seth-1114f):CHANGES —— ① 清算量正文(306/300s≈8.8万、222/300s≈6.4万)与已提交的 T-382_liq_results.json 对不上(json:WS 80 笔、REST 窗内 1 笔),正文只能引已提交 json 的数;② WS 的 instFamily=BTC-USDT 订阅被服务端忽略(回执只有 instType,推来的是 CAP/PIEVERSE 等 18 个合约,两条订阅逐字相同),删掉「强平全落在 BTC-USDT 族」;③ WS ts 跨度约 23.3 小时、REST 101 笔里 100 笔在窗外 ⇒ 都是连接/快照带出的积压,不是 300s 窗内速率;只数 ts 落在窗内的成交再外推,或写「本次测不出日量」;④ T-376_data_sources.md 284 行 > 250(acceptance ⑥);⑤ Farside 再分发:Seth 定,只作内部研究,不上公开面,要上公开面时再问 Jazz;allForceOrders 不加 key,不追。"
 }
