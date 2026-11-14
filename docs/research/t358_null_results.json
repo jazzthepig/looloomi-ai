@@ -1,0 +1,88 @@
+{
+ "actual_n_ge10": 1,
+ "actual_n_tickets": 52,
+ "actual_r_sum": 4.7432,
+ "actual_win_rate": 0.3077,
+ "n_null": 500,
+ "seed": 20261112,
+ "N2_random_symbol_random_day": {
+  "null": {
+   "n": 500,
+   "mean": 0.116,
+   "median": 0.0,
+   "max": 2,
+   "hist": {
+    "0": 444,
+    "1": 54,
+    "2": 2
+   },
+   "p_ge_1": 0.112
+  },
+  "percentile_of_actual": 0.942,
+  "p_upper": 0.1138,
+  "p_lower": 0.996,
+  "null_sum_r": {
+   "actual": 4.7432,
+   "null_mean": 0.8727,
+   "null_median": -0.0495,
+   "null_min": -14.3037,
+   "null_max": 38.337,
+   "percentile_of_actual": 0.756,
+   "p_upper": 0.2455,
+   "p_lower": 0.7565
+  },
+  "null_n_tickets": {
+   "error": "NoOpNull: 零分布没有方差(全部 ≈ np.float64(52.0),跨度 0.0e+00)—— 打乱没有改变任何东西"
+  },
+  "null_win_rate": {
+   "actual": 0.3077,
+   "null_mean": 0.3103,
+   "null_median": 0.3077,
+   "null_min": 0.1346,
+   "null_max": 0.5,
+   "percentile_of_actual": 0.487,
+   "p_upper": 0.5808,
+   "p_lower": 0.5549
+  }
+ },
+ "N1_same_symbol_random_day": {
+  "null": {
+   "n": 500,
+   "mean": 0.006,
+   "median": 0.0,
+   "max": 1,
+   "hist": {
+    "0": 497,
+    "1": 3
+   },
+   "p_ge_1": 0.006
+  },
+  "percentile_of_actual": 0.997,
+  "p_upper": 0.008,
+  "p_lower": 1.0,
+  "null_sum_r": {
+   "actual": 4.7432,
+   "null_mean": -2.3499,
+   "null_median": -2.6458,
+   "null_min": -15.2703,
+   "null_max": 19.6008,
+   "percentile_of_actual": 0.912,
+   "p_upper": 0.0898,
+   "p_lower": 0.9122
+  },
+  "null_n_tickets": {
+   "error": "NoOpNull: 零分布没有方差(全部 ≈ np.float64(52.0),跨度 0.0e+00)—— 打乱没有改变任何东西"
+  },
+  "null_win_rate": {
+   "actual": 0.3077,
+   "null_mean": 0.3203,
+   "null_median": 0.3269,
+   "null_min": 0.1538,
+   "null_max": 0.5,
+   "percentile_of_actual": 0.417,
+   "p_upper": 0.6467,
+   "p_lower": 0.481
+  }
+ },
+ "_note": "主判据 = R≥10 张数的零分布与实际 1 张的分位;null_sum_r / null_n_tickets / null_win_rate 是同一批抽样(同 seed)的账本口径附加统计,探索性。N1/N2 的抽样逐位对齐。"
+}

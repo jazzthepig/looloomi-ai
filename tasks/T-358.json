@@ -1,7 +1,7 @@
 {
   "id": "T-358",
   "owner": "lane-a",
-  "status": "open",
+  "status": "done",
   "created": "2026-11-12",
   "title": "T-357 返工:『后来下架』按 last_month_in_archive 重算 + 零信号对照 + 闸门曝光 + 两条反向的情景命题",
   "source": "§C-auto-1112-1216 的交叉复核,Seth 已核:t357_right_tail.py:278 的 delisted_ever = m['last'] < '2020-12-31',而 bars 只下到 m_until(2020-12),真下架月在每行的 last_month_in_archive(scripts/research/fetch_binance_vision_spot.py:89 months[-1];:145 判活口径 = 停更超过一年)⇒ 2021 之后下架的币全被算成『活』。scenario_ledger.holds('gt',lo,x) 是 x > lo ⇒ T-357-3(『不超过 1 张』配 gt lo 1)与 T-357-4(『不含已下架』配 gt lo 0)方向反了;两条已入账(05:57 UTC),台账只增不改。",
@@ -23,6 +23,10 @@
     "expect": "docs/research/T-357_right_tail_with_delisted.md(改正)+ t357_*.py / t358_*.py + 结果 json + scenarios/lane-a-T-358.json(≥ 3 条,lt 配 hi、gt 配 lo);in_review,推 lane-a/T-358。"
   },
   "prior_value": "S-831 刚把 R-v2 真钱尺寸开大,赌的是右尾;S-832 的『幸存者偏差不大』读法建立在一个反了的定义上,而且右尾密度没有任何基准率。",
-  "verified": null,
-  "notes": "2026-11-12T12:50:00Z Seth 开卡(§Seth-1112i)。\n2026-11-12T13:55:00Z Seth 审 lane-a/T-358@71326a76 → CHANGES(§Seth-1112j),收已交部分的数:下架口径用 manifest 取数月(不是机器本地日期)、真死 202 / 在市 138、500 万档 6 张死币票 ΣR −0.971、闸门 333/884 天、R≥10 那张 BTC@2019-04-02 = 2019 闸门首开日,与 t358_results.json 对上。不单独合:② 零信号对照与报告正文(T-357 文件改正)是 S-832 读法③的依据,S-831 的真钱尺寸押的就是右尾,没有基准率的右尾不进 main。同分支补:(1)跑 --null(≥500 次),报 R≥10 张数分布与实际 1 张的分位;(2)T-357_right_tail_with_delisted.md §1/§2/§6 照卡 notes 改正;(3)T-358-3「开在后来下架的币上」到 12-15 判不了 —— 改成到期可核的定义(例如开票币在 horizon 前已从 Binance 现货下架 / 归档停更),T-358-2「库里已下架币」写明用哪份下架名单核。另:T-358.json 已在 main(18af8400),分支只改了 status/notes,acceptance/source 逐字一致。 || 2026-11-13T07:55:00Z Seth 审 eea9d239:CHANGES(§Seth-1113k)—— 零信号对照与正文收了;合并前改:T-358-3 改成到期可核的定义并写明名单;T-358-2 写明下架名单来源;T-358-5 『仍大于 0』改『回到 0 以上』(现 −0.0808);日期 UTC;分支上的卡是新建文件(main 已有)⇒ 只改 main 那份的 status/notes,或交 Seth 合并时 fixup。 | 2026-11-13T12:45:00Z Seth:§Seth-1113k 五条未落地,CHANGES 仍挂;加:T-358-5 实测 mom_200 −0.0808 按写入时已知判;N1 p_upper 0.008 是零假设钉死同币同年的结构结果,以 N2(p 0.114)为主读(§Seth-1113q)。"
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-14T17:50:00Z",
+    "value": "Seth 读分支 f41b0233:§Seth-1113k 五条落地;t358_results.json 真死 202 / 在市 138、闸门 884 天开 333 天、R≥10 唯一 BTC@2019-04-02;SQL 复核 BTC 2026-11-12 收 71460、panel mom_200 11-12 −0.0808 / 11-11 −0.0394 与情景写入值一致。合并时 Seth 拿掉 T-358-6(与 T-358-4 同阈值同日期的互补事件,入账 = Brier 记两次),移入 dropped。范围 10 文件绿。"
+  },
+  "notes": "2026-11-12T12:50:00Z Seth 开卡(§Seth-1112i)。\n2026-11-12T13:55:00Z Seth 审 lane-a/T-358@71326a76 → CHANGES(§Seth-1112j),收已交部分的数:下架口径用 manifest 取数月(不是机器本地日期)、真死 202 / 在市 138、500 万档 6 张死币票 ΣR −0.971、闸门 333/884 天、R≥10 那张 BTC@2019-04-02 = 2019 闸门首开日,与 t358_results.json 对上。不单独合:② 零信号对照与报告正文(T-357 文件改正)是 S-832 读法③的依据,S-831 的真钱尺寸押的就是右尾,没有基准率的右尾不进 main。同分支补:(1)跑 --null(≥500 次),报 R≥10 张数分布与实际 1 张的分位;(2)T-357_right_tail_with_delisted.md §1/§2/§6 照卡 notes 改正;(3)T-358-3「开在后来下架的币上」到 12-15 判不了 —— 改成到期可核的定义(例如开票币在 horizon 前已从 Binance 现货下架 / 归档停更),T-358-2「库里已下架币」写明用哪份下架名单核。另:T-358.json 已在 main(18af8400),分支只改了 status/notes,acceptance/source 逐字一致。 || 2026-11-13T07:55:00Z Seth 审 eea9d239:CHANGES(§Seth-1113k)—— 零信号对照与正文收了;合并前改:T-358-3 改成到期可核的定义并写明名单;T-358-2 写明下架名单来源;T-358-5 『仍大于 0』改『回到 0 以上』(现 −0.0808);日期 UTC;分支上的卡是新建文件(main 已有)⇒ 只改 main 那份的 status/notes,或交 Seth 合并时 fixup。 | 2026-11-13T12:45:00Z Seth:§Seth-1113k 五条未落地,CHANGES 仍挂;加:T-358-5 实测 mom_200 −0.0808 按写入时已知判;N1 p_upper 0.008 是零假设钉死同币同年的结构结果,以 N2(p 0.114)为主读(§Seth-1113q)。 | 2026-11-14T17:05:00Z lane-a 把 §Seth-1113k 五条落地(分支 lane-a/T-358):① T-358-3 换成**到期可核**定义(开票那个币在结算日之前就已从 Binance Vision 现货归档停更)并写明下架名单来源(spot_1d.jsonl,取数月 2026-11,每币最后一行 last;真死 = last_month_in_archive < 2025-11);实测基准率:窗内 52 张已进场票命中 **0 张**(那 6 张真死币票的币都是 2021 年之后才死的,在各自票的结算日还在交易)⇒ prob 0.85→0.9。② T-358-2 写明下架名单来源与核对方式。③ T-358-5『仍大于 0』改『回到 0 以上』(实测 −0.0808 按写入时已知判)。④ 报告跑批时间戳 JST→UTC(2026-11-13 06:46 UTC)。⑤ §7 主读改成 N2(p_upper 0.114),N1(0.008)降为『零假设钉死同币同年』的结构性次读(§Seth-1113q)。脚本只加不改:t358_delisted_recompute.py --build 新增 `tickets_horizon_check` 字段(不动已有算法);重跑与原报告逐位相同(202 真死/138 在市、2019 ΣR 7.355、2020 ΣR −2.6117、死币票 2+4、闸门 884 天/333 开、模拟器 52 张 0 不一致;diff = 685 增 0 删)。卡:本分支的 tasks/T-358.json 已从 origin/main 取回(Seth 说的『分支上是新建文件』那条),只改 status/notes。 | 2026-11-14T17:50:00Z Seth 合并轮:MERGE(§Seth-1114j),卡 done+verified。"
 }
