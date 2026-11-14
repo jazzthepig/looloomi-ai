@@ -5,7 +5,7 @@
     "Shadow/"
   ],
   "verified": null,
-  "notes": "2026-11-14T09:59:00Z Seth 开卡(S-862 核验:四处大的搬走之后,看门线程又点了两处 5 秒的)。\n2026-11-14T13:23:00Z Seth:① 两处(trending / conviction,含 resolve_and_track 的逐币 K 线)已搬进线程,语法树守卫已加(S-863,待上线)。② 稳态:10:26 → 12:56 UTC 每 30 分钟一条 ok,三小时无 ≥ 5 秒卡顿;还差「连看三次部署 + 一整天」。④ Jazz 11-14「修复」:regime fitness 补了列(`return_source`、`n_days`);工厂循环进了冻结登记的 `also`。",
+  "notes": "2026-11-14T09:59:00Z Seth 开卡(S-862 核验:四处大的搬走之后,看门线程又点了两处 5 秒的)。\n2026-11-14T13:23:00Z Seth:① 两处(trending / conviction,含 resolve_and_track 的逐币 K 线)已搬进线程,语法树守卫已加(S-863,待上线)。② 稳态:10:26 → 12:56 UTC 每 30 分钟一条 ok,三小时无 ≥ 5 秒卡顿;还差「连看三次部署 + 一整天」。④ Jazz 11-14「修复」:regime fitness 补了列(`return_source`、`n_days`);工厂循环进了冻结登记的 `also`。\n2026-11-14T14:22:00Z Seth(S-863 核验):看门线程又点了两处在请求里的 —— (a) `/internal/schema-drift`:整仓 rglob 两遍,各 25–27 秒(preflight 每次都请求它);已改成只走生产目录 + 进线程,待上线。(b) **`/internal/executor/plan`:7.1 秒**(`build_host_plan → x1v_spot_target → tom.trade_path → vol_scale` 的同步计算)。**真钱路径,没动;等 Jazz 在场再改**(放线程不改结果)。",
   "id": "T-380",
   "owner": "seth",
   "title": "事件循环上剩下的同步请求:`_loop_stall_loop` 点到名的逐个搬进线程;两条白跑的循环等 Jazz 定去留",
