@@ -1,0 +1,28 @@
+{
+  "status": "in_review",
+  "created": "2026-11-14",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "notes": "2026-11-14T15:24:00Z Seth 开卡(高维回看 11-14;Jazz「回到高维,继续推进」)。 | 2026-11-15T00:50:00Z lane-a 跑完(分支 lane-a/T-384)。脚本 docs/research/s864_same_cell.py 一字未改;它 import 的 s851_watch_base_rate.py 一字未改(Seth 的 s864 当时只在主仓库工作区未提交,已原样拷入本分支)。① --selftest ⇒ SELFTEST OK。② 实跑一次(ohlcv_daily eq.BTC/eq.binance_hist 自 2018-09-01 + state_daily eq.panel 三特征 + macro_daily eq.ust_2y;分页 limit=1000/offset,共 2723 行收盘)⇒ WROTE docs/research/s864_results.json;s864_run.txt = 原样输出。关键读数:ASOF 2026-11-13;TODAY_CELL R升|L抽|W坏|T线下;COVERAGE first 2020-01-30 / last_usable 2026-09-18;SELF_CHECKS cells_before_cut_ignore_the_future=true, days_with_cell 2480, usable_days 2424, n_cells 16。TODAY_CELL_ROW n_episodes 12,d30 {n 257, median 0.003, mean -0.0348, p_down_big 0.28, p_up_big 0.14},d56 {median 0.0024, mean 0.0007, p_down_big 0.366, p_up_big 0.323};UNCONDITIONAL d30 {median 0.0185, mean 0.0441, p_down_big 0.202, p_up_big 0.318},d56 {median 0.0438, mean 0.0907, p_down_big 0.269, p_up_big 0.418};CONTROL_TODAY_CELL(循环平移 2000 次,k≥180)mean_30d obs -0.0348 vs null_mean 0.0539 p=0.1485;p_down_big_30d obs 0.2802 vs null_mean 0.182 p=0.2325。EXPECTATIONS:E1 median<0 false、E1b p_down_big≥无条件+5pp true、E2 段数<8 false、E3 shift p>0.10 true。③ 情景 docs/research/scenarios/lane-a-T-384.json(4 条,全自动结算,已过 scenario_ledger 校验);概率定标脚本 docs/research/s864_scenario_basis.py(只读,输出 s864_scenario_basis.json)。④ 探索性(见 SYNC):整格基率对今天不适用 —— 整格 257 天里 202 天深在线下(dist_200<-0.15),今天只 -0.0717;同深度子样本(n=55/9 段)28 天 p_down_big 0.0545、p_up_big 0.20、dist_200 回线上 0.20,与整格 0.2879/0.1167/0.0428 差一个量级,情景概率改用同深度参照类。",
+  "id": "T-384",
+  "owner": "lane-a",
+  "title": "S-864:今天这一格的历史分布(利率 × 流动性 × 周线 × 趋势,16 格)—— 只跑 Seth 写好的脚本,把输出原样贴回",
+  "source": "台账 S-864(预注册);脚本 `docs/research/s864_same_cell.py`(它 import 同目录的 `s851_watch_base_rate.py`,两个文件都要在分支上)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-384.json"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s864_same_cell.py --selftest | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s864_same_cell.py > docs/research/s864_run.txt 2>&1 &`,只 tail。③ 见 WROTE 后把 `grep -E '^(ASOF|TODAY_CELL|COVERAGE|TODAY_CELL_ROW|UNCONDITIONAL|CONTROL_TODAY_CELL|EXPECTATIONS|SELF_CHECKS|  R)' docs/research/s864_run.txt | cut -c1-700` 原样贴进 MINIMAX_SYNC,**不改写、不下结论、不改脚本一行**。④ 报错就贴最后 15 行、结束。",
+    "expect": "docs/research/s864_results.json + s864_run.txt;卡 in_review,推 lane-a/T-384。"
+  },
+  "prior_value": "高维回看连续两次把权重给错了格子;这张表是「状态 + 历史相似状态」进 ⓪ 简报的第一步(T-369 ⑫)。只描述,不进规则。"
+}

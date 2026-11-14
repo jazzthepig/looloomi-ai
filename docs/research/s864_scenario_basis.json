@@ -1,0 +1,233 @@
+loaded dist_200 2874
+loaded taker_buy_share_30d 2874
+loaded stable_supply_30d 2874
+{
+ "asof": "2026-11-13",
+ "today_cell": "R升|L抽|W坏|T线下",
+ "p0_close": 68314.0,
+ "n_in_cell_usable": 257,
+ "n_episodes": 12,
+ "episode_starts": [
+  "2022-01-07",
+  "2022-04-18",
+  "2022-08-22",
+  "2022-09-19",
+  "2022-11-14",
+  "2023-06-14",
+  "2023-08-21",
+  "2026-01-26",
+  "2026-06-01",
+  "2026-07-13",
+  "2026-08-03",
+  "2026-08-17"
+ ],
+ "cell_all_days": {
+  "d28": {
+   "n": 257,
+   "p_down_big": 0.2879,
+   "p_up_big": 0.1167,
+   "median": 0.0045,
+   "mean": -0.0328,
+   "dist200_back_above_0": [
+    0.0428,
+    257
+   ]
+  },
+  "d56": {
+   "n": 257,
+   "p_down_big": 0.3658,
+   "p_up_big": 0.323,
+   "median": 0.0024,
+   "mean": 0.0007,
+   "dist200_back_above_0": [
+    0.2802,
+    257
+   ]
+  }
+ },
+ "cell_by_episode_start": {
+  "d28": {
+   "n": 12,
+   "p_down_big": 0.25,
+   "p_up_big": 0.25,
+   "median": 0.0125,
+   "mean": -0.0029,
+   "dist200_back_above_0": [
+    0.25,
+    12
+   ]
+  },
+  "d56": {
+   "n": 12,
+   "p_down_big": 0.3333,
+   "p_up_big": 0.3333,
+   "median": -0.0123,
+   "mean": 0.0089,
+   "dist200_back_above_0": [
+    0.3333,
+    12
+   ]
+  }
+ },
+ "unconditional_all_days": {
+  "d28": {
+   "n": 2424,
+   "p_down_big": 0.1951,
+   "p_up_big": 0.3003,
+   "median": 0.016,
+   "mean": 0.0409,
+   "dist200_back_above_0": [
+    0.2154,
+    1026
+   ]
+  },
+  "d56": {
+   "n": 2424,
+   "p_down_big": 0.2694,
+   "p_up_big": 0.4179,
+   "median": 0.0438,
+   "mean": 0.0907,
+   "dist200_back_above_0": [
+    0.3665,
+    1026
+   ]
+  }
+ },
+ "readings_today": {
+  "dist_200": -0.0716794516191117,
+  "stable_supply_30d": -0.048033907558174,
+  "taker_buy_share_30d": 0.50511517253738,
+  "ust_2y_asof": 4.86
+ },
+ "horizon_rows": {
+  "2026-12-11": {
+   "close:BTC": null,
+   "state:dist_200": null
+  },
+  "2027-01-08": {
+   "close:BTC": null,
+   "state:dist_200": null
+  }
+ },
+ "weekdays": {
+  "2026-11-13": "Fri",
+  "2026-12-11": "Fri",
+  "2027-01-08": "Fri"
+ },
+ "cell_by_dist200_depth": {
+  "dist200_in_[-0.15,0.0)": {
+   "n_days": 55,
+   "n_episodes": 9,
+   "d28": {
+    "n": 55,
+    "p_down_big": 0.0545,
+    "p_up_big": 0.2,
+    "median": 0.0243,
+    "mean": 0.0428,
+    "dist200_back_above_0": [
+     0.2,
+     55
+    ]
+   },
+   "d56": {
+    "n": 55,
+    "p_down_big": 0.0545,
+    "p_up_big": 0.8545,
+    "median": 0.3051,
+    "mean": 0.2392,
+    "dist200_back_above_0": [
+     0.8,
+     55
+    ]
+   }
+  },
+  "dist200_in_[-0.1,0.0)": {
+   "n_days": 31,
+   "n_episodes": 4,
+   "d28": {
+    "n": 31,
+    "p_down_big": 0.0,
+    "p_up_big": 0.2903,
+    "median": 0.0443,
+    "mean": 0.0869,
+    "dist200_back_above_0": [
+     0.2903,
+     31
+    ]
+   },
+   "d56": {
+    "n": 31,
+    "p_down_big": 0.0,
+    "p_up_big": 0.871,
+    "median": 0.3018,
+    "mean": 0.2609,
+    "dist200_back_above_0": [
+     0.7742,
+     31
+    ]
+   }
+  },
+  "dist200_in_[-0.2,0.0)": {
+   "n_days": 87,
+   "n_episodes": 13,
+   "d28": {
+    "n": 87,
+    "p_down_big": 0.1839,
+    "p_up_big": 0.1264,
+    "median": 0.0049,
+    "mean": -0.0092,
+    "dist200_back_above_0": [
+     0.1264,
+     87
+    ]
+   },
+   "d56": {
+    "n": 87,
+    "p_down_big": 0.1724,
+    "p_up_big": 0.6897,
+    "median": 0.2661,
+    "mean": 0.1404,
+    "dist200_back_above_0": [
+     0.6552,
+     87
+    ]
+   }
+  }
+ },
+ "unconditional_by_dist200_depth": {
+  "dist200_in_[-0.15,0.0)": {
+   "n_days": 469,
+   "d28": {
+    "n": 469,
+    "p_down_big": 0.1919,
+    "p_up_big": 0.3838,
+    "median": 0.0427,
+    "mean": 0.0654,
+    "dist200_back_above_0": [
+     0.3667,
+     469
+    ]
+   },
+   "d56": {
+    "n": 469,
+    "p_down_big": 0.2068,
+    "p_up_big": 0.6098,
+    "median": 0.1526,
+    "mean": 0.1579,
+    "dist200_back_above_0": [
+     0.5736,
+     469
+    ]
+   }
+  }
+ },
+ "index_vs_calendar": {
+  "probe_date": "2026-04-27",
+  "index_plus_28": "2026-05-25",
+  "calendar_plus_28": "2026-05-25",
+  "same": true,
+  "n_close_rows_weekend": 778,
+  "n_close_rows": 2723
+ },
+ "panel_missing_days_last120": []
+}

@@ -1,0 +1,761 @@
+{
+ "asof": "2026-11-13",
+ "today_cell": "R升|L抽|W坏|T线下",
+ "today_cell_row": {
+  "n_episodes": 12,
+  "episode_starts": [
+   "2022-01-07",
+   "2022-04-18",
+   "2022-08-22",
+   "2022-09-19",
+   "2022-11-14",
+   "2023-06-14",
+   "2023-08-21",
+   "2026-01-26",
+   "2026-06-01",
+   "2026-07-13",
+   "2026-08-03",
+   "2026-08-17"
+  ],
+  "d30": {
+   "n_days": 257,
+   "median": 0.003,
+   "mean": -0.0348,
+   "p_down_big": 0.28,
+   "p_up_big": 0.14
+  },
+  "d30_by_episode_start": {
+   "n_days": 12,
+   "median": 0.019,
+   "mean": -0.0077,
+   "p_down_big": 0.333,
+   "p_up_big": 0.25
+  },
+  "d56": {
+   "n_days": 257,
+   "median": 0.0024,
+   "mean": 0.0007,
+   "p_down_big": 0.366,
+   "p_up_big": 0.323
+  },
+  "d56_by_episode_start": {
+   "n_days": 12,
+   "median": -0.0123,
+   "mean": 0.0089,
+   "p_down_big": 0.333,
+   "p_up_big": 0.333
+  }
+ },
+ "unconditional": {
+  "d30": {
+   "n_days": 2424,
+   "median": 0.0185,
+   "mean": 0.0441,
+   "p_down_big": 0.202,
+   "p_up_big": 0.318
+  },
+  "d56": {
+   "n_days": 2424,
+   "median": 0.0438,
+   "mean": 0.0907,
+   "p_down_big": 0.269,
+   "p_up_big": 0.418
+  }
+ },
+ "control_today_cell": {
+  "mean_30d": {
+   "obs": -0.0348,
+   "null_mean": 0.0539,
+   "p_two_sided": 0.1485,
+   "n_shift": 2000
+  },
+  "p_down_big_30d": {
+   "obs": 0.2802,
+   "null_mean": 0.182,
+   "p_two_sided": 0.2325,
+   "n_shift": 2000
+  }
+ },
+ "expectations": {
+  "E1_today_cell_median_30d_negative": false,
+  "E1_today_cell_p_down_at_least_5pp_above_uncond": true,
+  "E2_today_cell_fewer_than_8_episodes": false,
+  "E3_shift_p_mean_above_0.10": true
+ },
+ "table": {
+  "R升|L抽|W坏|T线上": {
+   "n_episodes": 2,
+   "episode_starts": [
+    "2023-06-13",
+    "2026-08-19"
+   ],
+   "d30": {
+    "n_days": 15,
+    "median": 0.1126,
+    "mean": 0.0751,
+    "p_down_big": 0.0,
+    "p_up_big": 0.533
+   },
+   "d30_by_episode_start": {
+    "n_days": 2,
+    "median": 0.1897,
+    "mean": 0.1897,
+    "p_down_big": 0.0,
+    "p_up_big": 1.0
+   },
+   "d56": {
+    "n_days": 15,
+    "median": 0.0573,
+    "mean": 0.0287,
+    "p_down_big": 0.267,
+    "p_up_big": 0.4
+   },
+   "d56_by_episode_start": {
+    "n_days": 2,
+    "median": 0.163,
+    "mean": 0.163,
+    "p_down_big": 0.0,
+    "p_up_big": 1.0
+   }
+  },
+  "R升|L抽|W坏|T线下": {
+   "n_episodes": 12,
+   "episode_starts": [
+    "2022-01-07",
+    "2022-04-18",
+    "2022-08-22",
+    "2022-09-19",
+    "2022-11-14",
+    "2023-06-14",
+    "2023-08-21",
+    "2026-01-26",
+    "2026-06-01",
+    "2026-07-13",
+    "2026-08-03",
+    "2026-08-17"
+   ],
+   "d30": {
+    "n_days": 257,
+    "median": 0.003,
+    "mean": -0.0348,
+    "p_down_big": 0.28,
+    "p_up_big": 0.14
+   },
+   "d30_by_episode_start": {
+    "n_days": 12,
+    "median": 0.019,
+    "mean": -0.0077,
+    "p_down_big": 0.333,
+    "p_up_big": 0.25
+   },
+   "d56": {
+    "n_days": 257,
+    "median": 0.0024,
+    "mean": 0.0007,
+    "p_down_big": 0.366,
+    "p_up_big": 0.323
+   },
+   "d56_by_episode_start": {
+    "n_days": 12,
+    "median": -0.0123,
+    "mean": 0.0089,
+    "p_down_big": 0.333,
+    "p_up_big": 0.333
+   }
+  },
+  "R升|L抽|W没坏|T线上": {
+   "n_episodes": 4,
+   "episode_starts": [
+    "2023-02-10",
+    "2023-04-20",
+    "2023-06-26",
+    "2024-05-28"
+   ],
+   "d30": {
+    "n_days": 62,
+    "median": -0.0638,
+    "mean": -0.0653,
+    "p_down_big": 0.403,
+    "p_up_big": 0.048
+   },
+   "d30_by_episode_start": {
+    "n_days": 4,
+    "median": -0.0353,
+    "mean": -0.0378,
+    "p_down_big": 0.0,
+    "p_up_big": 0.0
+   },
+   "d56": {
+    "n_days": 62,
+    "median": -0.0978,
+    "mean": -0.0757,
+    "p_down_big": 0.484,
+    "p_up_big": 0.065
+   },
+   "d56_by_episode_start": {
+    "n_days": 4,
+    "median": -0.0648,
+    "mean": 0.006,
+    "p_down_big": 0.25,
+    "p_up_big": 0.25
+   }
+  },
+  "R升|L抽|W没坏|T线下": {
+   "n_episodes": 14,
+   "episode_starts": [
+    "2022-07-18",
+    "2022-09-12",
+    "2022-10-24",
+    "2022-12-12",
+    "2023-08-17",
+    "2023-09-26",
+    "2026-01-10",
+    "2026-04-03",
+    "2026-05-20",
+    "2026-07-06",
+    "2026-07-20",
+    "2026-08-10"
+   ],
+   "d30": {
+    "n_days": 151,
+    "median": -0.028,
+    "mean": -0.0012,
+    "p_down_big": 0.424,
+    "p_up_big": 0.331
+   },
+   "d30_by_episode_start": {
+    "n_days": 14,
+    "median": 0.0252,
+    "mean": 0.0155,
+    "p_down_big": 0.357,
+    "p_up_big": 0.286
+   },
+   "d56": {
+    "n_days": 151,
+    "median": -0.1047,
+    "mean": 0.0298,
+    "p_down_big": 0.517,
+    "p_up_big": 0.344
+   },
+   "d56_by_episode_start": {
+    "n_days": 14,
+    "median": 0.0511,
+    "mean": 0.0542,
+    "p_down_big": 0.286,
+    "p_up_big": 0.429
+   }
+  },
+  "R升|L注|W坏|T线上": {
+   "n_episodes": 11,
+   "episode_starts": [
+    "2021-04-26",
+    "2021-05-17",
+    "2021-06-12",
+    "2021-09-27",
+    "2021-11-29",
+    "2024-04-29",
+    "2024-06-24",
+    "2025-01-13",
+    "2025-02-03",
+    "2025-02-19",
+    "2026-08-23"
+   ],
+   "d30": {
+    "n_days": 118,
+    "median": -0.0972,
+    "mean": -0.0635,
+    "p_down_big": 0.492,
+    "p_up_big": 0.161
+   },
+   "d30_by_episode_start": {
+    "n_days": 11,
+    "median": -0.0692,
+    "mean": -0.0199,
+    "p_down_big": 0.455,
+    "p_up_big": 0.182
+   },
+   "d56": {
+    "n_days": 118,
+    "median": -0.1023,
+    "mean": -0.0935,
+    "p_down_big": 0.5,
+    "p_up_big": 0.136
+   },
+   "d56_by_episode_start": {
+    "n_days": 11,
+    "median": -0.1305,
+    "mean": -0.0845,
+    "p_down_big": 0.545,
+    "p_up_big": 0.182
+   }
+  },
+  "R升|L注|W坏|T线下": {
+   "n_episodes": 11,
+   "episode_starts": [
+    "2021-06-28",
+    "2021-09-28",
+    "2022-01-05",
+    "2022-02-14",
+    "2022-02-28",
+    "2023-01-02",
+    "2023-09-14",
+    "2024-07-04",
+    "2025-12-06",
+    "2026-03-05",
+    "2026-03-12"
+   ],
+   "d30": {
+    "n_days": 110,
+    "median": 0.0584,
+    "mean": 0.1301,
+    "p_down_big": 0.0,
+    "p_up_big": 0.382
+   },
+   "d30_by_episode_start": {
+    "n_days": 11,
+    "median": 0.0518,
+    "mean": 0.1079,
+    "p_down_big": 0.0,
+    "p_up_big": 0.273
+   },
+   "d56": {
+    "n_days": 110,
+    "median": 0.1237,
+    "mean": 0.1368,
+    "p_down_big": 0.155,
+    "p_up_big": 0.527
+   },
+   "d56_by_episode_start": {
+    "n_days": 11,
+    "median": 0.077,
+    "mean": 0.1491,
+    "p_down_big": 0.091,
+    "p_up_big": 0.455
+   }
+  },
+  "R升|L注|W没坏|T线上": {
+   "n_episodes": 21,
+   "episode_starts": [
+    "2021-10-04",
+    "2023-02-14",
+    "2023-04-19",
+    "2023-10-23",
+    "2024-03-14",
+    "2024-05-20",
+    "2024-11-06",
+    "2025-01-20",
+    "2025-02-10",
+    "2025-06-09",
+    "2025-07-04",
+    "2026-08-24"
+   ],
+   "d30": {
+    "n_days": 474,
+    "median": 0.0151,
+    "mean": 0.0353,
+    "p_down_big": 0.205,
+    "p_up_big": 0.287
+   },
+   "d30_by_episode_start": {
+    "n_days": 21,
+    "median": 0.0684,
+    "mean": 0.1013,
+    "p_down_big": 0.143,
+    "p_up_big": 0.476
+   },
+   "d56": {
+    "n_days": 474,
+    "median": 0.0017,
+    "mean": 0.0764,
+    "p_down_big": 0.285,
+    "p_up_big": 0.319
+   },
+   "d56_by_episode_start": {
+    "n_days": 21,
+    "median": 0.0435,
+    "mean": 0.1772,
+    "p_down_big": 0.238,
+    "p_up_big": 0.476
+   }
+  },
+  "R升|L注|W没坏|T线下": {
+   "n_episodes": 15,
+   "episode_starts": [
+    "2022-02-21",
+    "2022-03-21",
+    "2022-08-13",
+    "2022-12-13",
+    "2023-03-09",
+    "2023-09-18",
+    "2023-10-07",
+    "2023-10-19",
+    "2024-11-02",
+    "2025-06-07",
+    "2026-03-16",
+    "2026-04-10"
+   ],
+   "d30": {
+    "n_days": 159,
+    "median": 0.0398,
+    "mean": 0.0475,
+    "p_down_big": 0.302,
+    "p_up_big": 0.421
+   },
+   "d30_by_episode_start": {
+    "n_days": 15,
+    "median": 0.0603,
+    "mean": 0.1197,
+    "p_down_big": 0.0,
+    "p_up_big": 0.467
+   },
+   "d56": {
+    "n_days": 159,
+    "median": 0.0324,
+    "mean": 0.0315,
+    "p_down_big": 0.447,
+    "p_up_big": 0.39
+   },
+   "d56_by_episode_start": {
+    "n_days": 15,
+    "median": 0.1025,
+    "mean": 0.1691,
+    "p_down_big": 0.2,
+    "p_up_big": 0.533
+   }
+  },
+  "R降|L抽|W坏|T线上": {
+   "n_episodes": 1,
+   "episode_starts": [
+    "2023-05-15"
+   ],
+   "d30": {
+    "n_days": 24,
+    "median": 0.1309,
+    "mean": 0.102,
+    "p_down_big": 0.0,
+    "p_up_big": 0.625
+   },
+   "d30_by_episode_start": {
+    "n_days": 1,
+    "median": -0.0749,
+    "mean": -0.0749,
+    "p_down_big": 0.0,
+    "p_up_big": 0.0
+   },
+   "d56": {
+    "n_days": 24,
+    "median": 0.109,
+    "mean": 0.1078,
+    "p_down_big": 0.0,
+    "p_up_big": 0.625
+   },
+   "d56_by_episode_start": {
+    "n_days": 1,
+    "median": 0.1196,
+    "mean": 0.1196,
+    "p_down_big": 0.0,
+    "p_up_big": 1.0
+   }
+  },
+  "R降|L抽|W坏|T线下": {
+   "n_episodes": 3,
+   "episode_starts": [
+    "2025-11-20",
+    "2026-01-01",
+    "2026-01-29"
+   ],
+   "d30": {
+    "n_days": 36,
+    "median": 0.0137,
+    "mean": -0.0156,
+    "p_down_big": 0.222,
+    "p_up_big": 0.028
+   },
+   "d30_by_episode_start": {
+    "n_days": 3,
+    "median": -0.1137,
+    "mean": -0.1009,
+    "p_down_big": 0.667,
+    "p_up_big": 0.0
+   },
+   "d56": {
+    "n_days": 36,
+    "median": 0.0476,
+    "mean": -0.0055,
+    "p_down_big": 0.25,
+    "p_up_big": 0.25
+   },
+   "d56_by_episode_start": {
+    "n_days": 3,
+    "median": -0.187,
+    "mean": -0.108,
+    "p_down_big": 0.667,
+    "p_up_big": 0.333
+   }
+  },
+  "R降|L抽|W没坏|T线上": {
+   "n_episodes": 5,
+   "episode_starts": [
+    "2020-01-30",
+    "2023-01-13",
+    "2023-03-26",
+    "2023-04-25",
+    "2024-10-28"
+   ],
+   "d30": {
+    "n_days": 86,
+    "median": -0.049,
+    "mean": -0.0711,
+    "p_down_big": 0.291,
+    "p_up_big": 0.07
+   },
+   "d30_by_episode_start": {
+    "n_days": 5,
+    "median": 0.0119,
+    "mean": 0.0613,
+    "p_down_big": 0.2,
+    "p_up_big": 0.2
+   },
+   "d56": {
+    "n_days": 86,
+    "median": -0.007,
+    "mean": -0.0341,
+    "p_down_big": 0.349,
+    "p_up_big": 0.291
+   },
+   "d56_by_episode_start": {
+    "n_days": 5,
+    "median": 0.0003,
+    "mean": 0.0064,
+    "p_down_big": 0.2,
+    "p_up_big": 0.2
+   }
+  },
+  "R降|L抽|W没坏|T线下": {
+   "n_episodes": 3,
+   "episode_starts": [
+    "2023-01-12",
+    "2024-10-21",
+    "2026-01-05"
+   ],
+   "d30": {
+    "n_days": 13,
+    "median": 0.352,
+    "mean": 0.1461,
+    "p_down_big": 0.385,
+    "p_up_big": 0.615
+   },
+   "d30_by_episode_start": {
+    "n_days": 3,
+    "median": 0.16,
+    "mean": 0.113,
+    "p_down_big": 0.333,
+    "p_up_big": 0.667
+   },
+   "d56": {
+    "n_days": 13,
+    "median": 0.3994,
+    "mean": 0.1741,
+    "p_down_big": 0.385,
+    "p_up_big": 0.538
+   },
+   "d56_by_episode_start": {
+    "n_days": 3,
+    "median": 0.0804,
+    "mean": 0.1293,
+    "p_down_big": 0.333,
+    "p_up_big": 0.333
+   }
+  },
+  "R降|L注|W坏|T线上": {
+   "n_episodes": 15,
+   "episode_starts": [
+    "2020-09-07",
+    "2020-09-28",
+    "2021-05-28",
+    "2023-05-20",
+    "2023-05-28",
+    "2024-07-14",
+    "2025-02-06",
+    "2025-02-17",
+    "2025-03-02",
+    "2025-06-29",
+    "2025-08-25",
+    "2025-10-13"
+   ],
+   "d30": {
+    "n_days": 119,
+    "median": -0.0095,
+    "mean": 0.0093,
+    "p_down_big": 0.252,
+    "p_up_big": 0.244
+   },
+   "d30_by_episode_start": {
+    "n_days": 15,
+    "median": -0.0035,
+    "mean": 0.0207,
+    "p_down_big": 0.2,
+    "p_up_big": 0.2
+   },
+   "d56": {
+    "n_days": 119,
+    "median": -0.0054,
+    "mean": 0.0679,
+    "p_down_big": 0.319,
+    "p_up_big": 0.353
+   },
+   "d56_by_episode_start": {
+    "n_days": 15,
+    "median": 0.0038,
+    "mean": 0.0613,
+    "p_down_big": 0.267,
+    "p_up_big": 0.333
+   }
+  },
+  "R降|L注|W坏|T线下": {
+   "n_episodes": 13,
+   "episode_starts": [
+    "2023-01-07",
+    "2024-07-06",
+    "2024-08-12",
+    "2024-09-02",
+    "2025-02-25",
+    "2025-04-21",
+    "2025-06-23",
+    "2025-11-03",
+    "2025-11-25",
+    "2025-12-11",
+    "2025-12-29",
+    "2026-02-25"
+   ],
+   "d30": {
+    "n_days": 189,
+    "median": 0.0483,
+    "mean": 0.0754,
+    "p_down_big": 0.058,
+    "p_up_big": 0.381
+   },
+   "d30_by_episode_start": {
+    "n_days": 13,
+    "median": -0.0163,
+    "mean": 0.029,
+    "p_down_big": 0.154,
+    "p_up_big": 0.231
+   },
+   "d56": {
+    "n_days": 189,
+    "median": 0.1523,
+    "mean": 0.1613,
+    "p_down_big": 0.122,
+    "p_up_big": 0.608
+   },
+   "d56_by_episode_start": {
+    "n_days": 13,
+    "median": 0.0537,
+    "mean": 0.0346,
+    "p_down_big": 0.231,
+    "p_up_big": 0.462
+   }
+  },
+  "R降|L注|W没坏|T线上": {
+   "n_episodes": 30,
+   "episode_starts": [
+    "2024-06-14",
+    "2024-07-22",
+    "2024-10-20",
+    "2024-10-30",
+    "2025-02-12",
+    "2025-05-09",
+    "2025-06-12",
+    "2025-06-30",
+    "2025-07-10",
+    "2025-08-02",
+    "2025-09-22",
+    "2025-10-27"
+   ],
+   "d30": {
+    "n_days": 500,
+    "median": 0.0393,
+    "mean": 0.1161,
+    "p_down_big": 0.09,
+    "p_up_big": 0.422
+   },
+   "d30_by_episode_start": {
+    "n_days": 30,
+    "median": 0.033,
+    "mean": 0.0735,
+    "p_down_big": 0.167,
+    "p_up_big": 0.4
+   },
+   "d56": {
+    "n_days": 500,
+    "median": 0.1222,
+    "mean": 0.2098,
+    "p_down_big": 0.106,
+    "p_up_big": 0.552
+   },
+   "d56_by_episode_start": {
+    "n_days": 30,
+    "median": 0.0382,
+    "mean": 0.1131,
+    "p_down_big": 0.333,
+    "p_up_big": 0.467
+   }
+  },
+  "R降|L注|W没坏|T线下": {
+   "n_episodes": 13,
+   "episode_starts": [
+    "2021-09-21",
+    "2023-01-09",
+    "2024-08-02",
+    "2024-08-26",
+    "2024-09-16",
+    "2024-10-31",
+    "2025-04-14",
+    "2025-04-28",
+    "2025-05-30",
+    "2025-06-13",
+    "2025-07-01",
+    "2025-12-22"
+   ],
+   "d30": {
+    "n_days": 111,
+    "median": 0.1177,
+    "mean": 0.1516,
+    "p_down_big": 0.009,
+    "p_up_big": 0.604
+   },
+   "d30_by_episode_start": {
+    "n_days": 13,
+    "median": 0.1344,
+    "mean": 0.1787,
+    "p_down_big": 0.0,
+    "p_up_big": 0.615
+   },
+   "d56": {
+    "n_days": 111,
+    "median": 0.2415,
+    "mean": 0.2605,
+    "p_down_big": 0.063,
+    "p_up_big": 0.829
+   },
+   "d56_by_episode_start": {
+    "n_days": 13,
+    "median": 0.1311,
+    "mean": 0.2088,
+    "p_down_big": 0.077,
+    "p_up_big": 0.692
+   }
+  }
+ },
+ "self_checks": {
+  "cells_before_cut_ignore_the_future": true,
+  "days_with_cell": 2480,
+  "usable_days": 2424,
+  "n_cells": 16
+ },
+ "coverage": {
+  "first": "2020-01-30",
+  "last_usable": "2026-09-18"
+ }
+}
