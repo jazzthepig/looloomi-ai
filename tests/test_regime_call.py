@@ -256,6 +256,38 @@ def test_plan_carries_the_call_and_the_j_ticket_through_the_loader(monkeypatch):
     assert p["ready"] and p["regime_call"]["id"] == 3 and p["enter"][0]["ticket_id"] == "J:HYPE:2026-10-21"
 
 
+def test_the_signature_survives_the_read_path_to_the_host(monkeypatch):
+    """S-857:签名存进了库,`read_calls` 的 select 却没有 `signed` / `sig` 两列 ⇒ 10-22 → 11-14 主机每一轮看到的都是「没有签名」。
+    旧测试没拦住,是因为假读库函数不看 select、整行返回。这里的假函数和 PostgREST 一样:只返回点名的列。"""
+    from src.data.execution import ticket_plan as tp
+    from src.exec_host import verify
+    key = "ab" * 32
+    at = dt.datetime(2026, 10, 20, 9, 0, tzinfo=UTC)
+    body = {"state": "on", "conviction": 2, "note": "n", "days": 14, "battlefield": [], "close": []}
+    signed, sig = verify.sign({**body, "signed_at": at.isoformat(), "nonce": "00" * 8}, key)
+    row, why = rc.validate_call({**body, "signed": signed, "sig": sig}, [], at)
+    assert not why and row["sig"] == sig, why
+    stored, seen = {**row, "id": 7}, {}
+
+    async def postgrest(table, params):
+        rows = {"r_tickets_paper": [], "r_tickets_state": [{"last_d": "2026-10-21"}], "ohlcv_daily": [],
+                "regime_calls": [stored], "j_tickets": []}[table]
+        seen[table] = params.get("select", "*")
+        if table != "regime_calls" or seen[table] == "*":
+            return rows
+        return [{k: r.get(k) for k in seen[table].split(",")} for r in rows]
+
+    monkeypatch.setattr("src.data.style.header._read_all", postgrest)
+    c = asyncio.run(tp.load_ticket_plan("2026-10-21"))["regime_call"]
+    assert c["id"] == 7 and c["signed"] == signed and c["sig"] == sig, "主机拿到的计划里要有签名原文"
+    got, why = verify.open_signed(c["signed"], c["sig"], key)
+    assert got and got["conviction"] == 2 and not why, "主机用自己的钥匙验得过"
+    assert verify.open_signed(c["signed"], c["sig"], "cd" * 32)[1] == "签名不对"
+    cols = set(seen["regime_calls"].split(","))
+    carried = set(rc.call_view(stored)) - {"source"} | {"source"}
+    assert carried <= cols, f"call_view 带出去的键必须都在 select 里:缺 {carried - cols}"
+
+
 def test_post_call_writes_one_row_and_reads_its_id_back(monkeypatch):
     rows = []
 

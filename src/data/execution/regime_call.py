@@ -413,10 +413,15 @@ async def hl_daily(coins: Iterable[str], start: dt.date) -> dict[str, list[tuple
     return out
 
 
+#: `read_calls` 读的列 = `call_view` 要带出去的每一个键。两处必须说同一件事(`tests/test_regime_call.py` 用只返回点名列的假读库函数核)。
+CALL_COLUMNS = "id,at,state,conviction,battlefield,close_coins,note,effective_d,expires_at,source,signed,sig"
+
+
 async def read_calls() -> list[dict]:
     from src.data.style.header import _read_all
-    return await _read_all("regime_calls", {"select": "id,at,state,conviction,battlefield,close_coins,note,"
-                                                      "effective_d,expires_at,source", "order": "id.asc"})
+    # S-857:`signed` / `sig` 必须在 select 里 —— `call_view` 承诺把它们原样带给主机。10-22 → 11-14 这里没有这两列:
+    # 签名存进了库、却从没到过主机,主机每一轮看到的都是「这条判断没有签名」(J 票不开、风险倍数压回 1),而回执与记分照常。
+    return await _read_all("regime_calls", {"select": CALL_COLUMNS, "order": "id.asc"})
 
 
 async def read_j_tickets() -> list[dict]:

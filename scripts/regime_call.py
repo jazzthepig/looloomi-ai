@@ -186,6 +186,7 @@ def main() -> None:
             p, why = verify.open_signed(c.get("signed"), c.get("sig"), k)
             print("签名:" + ("✓ 本机验过 —— 主机会认" if p else f"✗ {why} —— 主机不开 J 票、风险按 1 倍"))
         nxt = {**nxt, "call": {k: v for k, v in c.items() if k not in ("signed", "sig")}}
+        last = {**last, "call": {k: v for k, v in (last.get("call") or {}).items() if k not in ("signed", "sig")}}   # 签名本身不上屏(S-857)
         print(f"下一轮(asof {nxt['asof']}):{json.dumps(nxt['call'], ensure_ascii=False)}")
         print(f"上一轮(asof {last['asof']}):{json.dumps(last['call'], ensure_ascii=False)}")
         print(f"在持 J 票:{[(j['ticket_id'], j['status']) for j in r['j_live']]}")
