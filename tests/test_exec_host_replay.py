@@ -29,8 +29,37 @@ def test_replay_goes_through_the_live_functions_only():
     assert {"make_plan", "core.plan_host_orders", "core.stop_hits"} <= calls
     hp = ast.parse((ROOT / "src/data/execution/host_plan.py").read_text(encoding="utf-8"))
     plan_core = next(n for n in ast.walk(hp) if isinstance(n, ast.AsyncFunctionDef) and n.name == "plan_core")
-    assert "make_plan" in {ast.unparse(n.func) for n in ast.walk(plan_core) if isinstance(n, ast.Call)}, \
-        "Railway /plan 也必须经 make_plan,否则回放与实盘收到的计划会分叉"
+    direct = {ast.unparse(n.func) for n in ast.walk(plan_core) if isinstance(n, ast.Call)}
+    threaded = {ast.unparse(n.args[0]) for n in ast.walk(plan_core)
+                if isinstance(n, ast.Call) and ast.unparse(n.func) == "asyncio.to_thread" and n.args}
+    assert "make_plan" in direct | threaded, "Railway /plan 也必须经 make_plan,否则回放与实盘收到的计划会分叉"
+    assert "make_plan" in threaded and "make_plan" not in direct, (
+        "make_plan 要在线程里算(S-863:直接在事件循环里算,主机取计划时整个进程停 7 秒)")
+
+
+def test_the_plan_computed_off_the_loop_is_the_same_plan(monkeypatch):
+    """T-380:搬进线程不许改变计划 —— 真钱路径上,同样的收盘序列必须给出逐字段相同的目标与止损线。"""
+    import asyncio
+
+    from src.data.execution import host_plan as hp
+    from src.data.universe import forward_books as fb
+    idx_end = pd.Timestamp("2025-06-03")
+    closes = {}
+    for i, s in enumerate(hp.SPOT_TOKENS):
+        c = _ohlc(seed=10 + i)["close"]
+        c.index = pd.date_range(end=idx_end, periods=len(c), freq="D")
+        closes[s] = c
+
+    async def fake_inputs(asof):
+        return dict(closes), {}
+    monkeypatch.setattr(fb, "tom_inputs", fake_inputs)
+    hp._CORE_CACHE.clear()
+    try:
+        got = asyncio.run(hp.plan_core("2025-06-03"))
+    finally:
+        hp._CORE_CACHE.clear()
+    want = make_plan(closes, "2025-06-03")
+    assert got["ok"] and got == want, "线程里算出来的计划必须与直接调用逐字段相同"
 
 
 def test_plan_matches_the_kernel():

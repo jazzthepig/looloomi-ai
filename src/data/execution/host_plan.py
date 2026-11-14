@@ -19,6 +19,7 @@
 """
 from __future__ import annotations
 
+import asyncio
 import datetime as dt
 from dataclasses import asdict
 from typing import Any, Optional
@@ -65,7 +66,10 @@ async def plan_core(asof: str) -> dict[str, Any]:
     have = {s: c.index[-1].date().isoformat() for s, c in closes.items() if len(c)}
     if set(have) != set(SPOT_TOKENS) or any(d != asof for d in have.values()):
         return {"ok": False, "asof": asof, "why": f"{asof} 的收盘还没全部落库:{have}"}
-    core = make_plan(closes, asof)
+    # S-863 / T-380:make_plan 是同步的纯计算(趋势规则走一遍历史)。原来直接在事件循环里算 —— 2026-11-14 14:05:15
+    # 主机来取计划时进程 7.1 秒不动(看门线程记的栈停在 tom.vol_scale)。放进线程:**同一个函数、同样的入参、同样的结果**,
+    # 回放(exec_host.replay)仍然直接调它。每个 asof 只算一次(下面的缓存),所以这 7 秒每次部署后出现一次。
+    core = await asyncio.to_thread(make_plan, closes, asof)
     _CORE_CACHE.clear()
     _CORE_CACHE[asof] = core
     return core
