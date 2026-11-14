@@ -34,6 +34,9 @@ def test_main_does_not_start_frozen_loops_but_says_so():
     for f in fz.FROZEN.values():
         head = src.split(f"async def _start{f.loop}():", 1)[1][:400]
         assert f'_frozen_skip("{f.book_id}", "{f.loop}"' in head.split("_asyncio.create_task")[0], f.loop
+        for dep in f.also:                                  # S-863:只为这本账服务的循环,一起停、一起恢复
+            h2 = src.split(f"create_task({dep}())", 1)[0]
+            assert f'_frozen_skip("{f.book_id}", "{dep}"' in h2[-900:], f"{dep} 没有跟随 {f.book_id} 的冻结"
     body = src.split("async def _frozen_skip", 1)[1].split("\n\n\n", 1)[0]
     assert "_record_loop_attempt(" in body and "_beat(" in body and "refused" in body
 
@@ -81,3 +84,15 @@ def test_third_layer_still_clips_to_its_definition():
     idx = pd.date_range("2026-10-01", periods=3, freq="D")
     book = mx.apply_multiplier(pd.Series([0.0, 0.0, 0.0], index=idx), pd.Series(0.0, index=idx), pd.Series(dtype=float))
     assert (book["m"] == 0.7).all(), "③ 默认仍是 0.7–1.3,不被 ⓠ 的放宽带走"
+
+
+def test_a_loop_that_only_serves_a_frozen_book_stops_with_it():
+    """S-863(Jazz 11-14「修复」):信号工厂每次部署都重算 combined book 的权重 —— 那本账 10-20 冻结了,重算没有读者,
+    还每次同步拉 Binance 四十多秒。登记在 frozen.py 的 also 里:判活、指挥台、启动都认它;解冻(删那一行)自动恢复。"""
+    loops = fz.frozen_loops()
+    assert loops["_factory_recalibrate_loop"].book_id == "combined_book"
+    assert {f.loop for f in fz.FROZEN.values()} < set(loops), "附属循环也在 frozen_loops() 里"
+    from src.api.liveness import compute_liveness_summary
+    s = compute_liveness_summary([{"loop": "_factory_recalibrate_loop", "last_ok_at": 1_000, "last_run_at": 1_000,
+                                   "age_s": 300 * 3600, "verdict": "refusing"}])
+    assert s["per_loop"]["_factory_recalibrate_loop"]["verdict"] == "frozen" and s["overall"] == "healthy"

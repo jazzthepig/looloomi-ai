@@ -10,6 +10,9 @@ S-323i 的教训:一个靠人记住的停用,会被下一个把它判成坏了�
 - `src/data/accounting/combine.py` / `proof.py` —— 不可选,证据等级 = frozen;
 - `src/data/market/producer_freshness.py` —— 表的判活 = not_applicable。
 
+另有三处后来接上:`src/api/liveness.py`(判活)、`scripts/ops_console.py`(指挥台,S-862)、以及 `also` 里登记的
+附属循环(S-863:只为某本冻结账本服务的循环,如信号工厂之于 combined book)。
+
 **恢复 = 删掉下面一行**(再部署)。这里只放 ④ 多空 / 事件类;①②③ 不在这里冻结。
 """
 from __future__ import annotations
@@ -24,6 +27,8 @@ class Frozen:
     loop: str
     since: str          # UTC 日期:最后一行之后不再写
     why: str
+    #: 只为这本账服务的其它循环(S-863):账本冻结,它们跟着停、跟着解冻。
+    also: tuple[str, ...] = ()
 
 
 _RULING = "Jazz 10-20「先冻结了」,S-631:④ 排在回报层级最后,自起点以来绝对收益为负"
@@ -34,7 +39,10 @@ FROZEN: dict[str, Frozen] = {f.book_id: f for f in (
     Frozen("scalable_book", "scalable_book_nav", "_scalable_book_loop", "2026-10-20",
            f"{_RULING};07-16 起 −10.7%(Jazz 批的是前四本,这本同属 ④ 多空,同一条理由一并冻结)"),
     Frozen("combined_book", "combined_book_nav", "_combined_book_loop", "2026-10-20",
-           f"{_RULING};07-15 起 −10.7%(同上,一并冻结)"),
+           f"{_RULING};07-15 起 −10.7%(同上,一并冻结)",
+           # 信号工厂每周(以及每次部署)重算的就是这本账的权重:账本不写了,重算没有读者。11-14 量到它每次部署
+           # 同步拉 Binance 43.8 秒(S-862 补三);Jazz 11-14「修复」。
+           also=("_factory_recalibrate_loop",)),
     Frozen("dingge_paper", "dingge_paper_nav", "_dingge_paper_loop", "2026-10-20",
            f"{_RULING};07-15 起 −3.3%"),
     Frozen("fusion_paper", "fusion_paper_nav", "_fusion_paper_loop", "2026-10-20",
@@ -53,7 +61,12 @@ def frozen_tables() -> dict[str, Frozen]:
 
 
 def frozen_loops() -> dict[str, Frozen]:
-    return {f.loop: f for f in FROZEN.values()}
+    """循环名 → 它所属的冻结登记。含 `also` 里那些只为这本账服务的循环。"""
+    out = {f.loop: f for f in FROZEN.values()}
+    for f in FROZEN.values():
+        for name in f.also:
+            out[name] = f
+    return out
 
 
 def startup_note(book_id: str) -> str:

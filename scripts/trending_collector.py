@@ -110,7 +110,10 @@ def trending_rows(date_iso: str = None, enrich: bool = True) -> list:
 async def collect_trending() -> dict:
     """Land today's trending snapshot into Supabase `trending_log` (service_role, Railway)."""
     from src.api.store import supabase_insert_table
-    rows = trending_rows()
+    import asyncio
+    # S-863:trending_rows() 里是同步的 CoinGecko 请求(一次榜单 + 每个币一次),放进线程 —— 11-14 09:52 看门线程
+    # 记到事件循环在 `_get` 上停了 5.2 秒;对方慢的时候能停到 25 秒的时限。
+    rows = await asyncio.to_thread(trending_rows)
     if not rows:
         return {"ok": False, "rows": 0}
     ok = await supabase_insert_table("trending_log", rows)

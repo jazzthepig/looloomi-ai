@@ -29,7 +29,17 @@ GPR_LAG_DAYS = 5
 GPR_COLS = {"GPRD": "gpr", "GPRD_ACT": "gpr_act", "GPRD_THREAT": "gpr_threat"}
 GDELT_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
 GDELT_START = "20170101000000"
-GDELT_PAUSE_S = 30.0
+GDELT_PAUSE_S = 6.0            # 源的规矩是每 5 秒一次;一条成功之后隔 6 秒取下一条
+#: 多久看一次(S-863)。原来 3 小时一轮、被限速就对同一条等 30 / 90 / 180 秒重试三次然后收工:一天 8 轮,
+#: 每轮最多落一条 —— 21 条序列一天最多更新 8 条,实际 11-13 → 11-14 的 26 小时只落了 10 条里的 5 条新序列。
+#: 限速是按出口 IP 的,而出口 IP 每次部署都换、还和别的租户共用:**什么时候通是碰运气,那就多碰几次、通了多取几条。**
+#: 现在 20 分钟看一次;被限速 ⇒ 7 秒、14 秒后各再试一次就收工(一轮最多 3 次请求);通了 ⇒ 隔 6 秒接着取,最多 6 条。
+GDELT_TICK_S = 1200
+#: GPR 是一个日更的文件(45,000 多行)。原来每一轮都整份下载、整份 upsert;看得勤了之后不能再这样:12 小时一次,
+#: 而且同一个进程里第二次起只写最近 45 天的行。
+GPR_EVERY_S = 12 * 3600
+GPR_REWRITE_DAYS = 45
+_GPR: dict = {"at": 0.0, "max_d": None}
 TOPICS = {
     "conflict": "(war OR airstrike OR invasion OR missile)",
     "sanctions": "sanctions",
@@ -85,8 +95,8 @@ def gpr_rows(df) -> list[dict]:
     return out
 
 
-GDELT_THROTTLE_WAITS = (30.0, 90.0, 180.0)
-GDELT_PER_ROUND = 3            # 11-13:序列从 5 条变 21 条(叙事的量与调),3 小时一轮 × 3 = 一天 24 条,够轮一遍
+GDELT_THROTTLE_WAITS = (7.0, 14.0)
+GDELT_PER_ROUND = 6            # 一轮最多取几条 —— 只有源在回话时才取得到这么多;= source_policy 的 BULK_THRESHOLD,不越闸
 
 
 def due_topics(last: dict[str, str], today: dt.date, topics: Optional[Any] = None, rot: int = 0) -> list[str]:
@@ -125,6 +135,18 @@ def gdelt_rows(payload: Any, topic: str, mode: str = "timelinevol") -> list[dict
     return out
 
 
+async def _fetch(get: Callable, url: str) -> Optional[bytes]:
+    """一次请求。被限速(那段文字,或 HTTP 429)⇒ None;别的错照抛。两种限速走同一条路,重试的次数才一样。"""
+    import asyncio
+    try:
+        body = await asyncio.to_thread(get, url)
+    except Exception as e:                                                # noqa: BLE001
+        if "429" in str(e) or "Too Many Requests" in str(e):
+            return None
+        raise
+    return None if throttled(body) else body
+
+
 def _get_bytes(url: str) -> bytes:
     import urllib.request
     req = urllib.request.Request(url, headers={"User-Agent": "cometcloud-research/1.0"})
@@ -144,18 +166,26 @@ async def run_once(now: Optional[dt.datetime] = None, get: Optional[Callable[[st
     series = all_series()
     get = get or _get_bytes
     now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
-    out: dict[str, Any] = {"gpr": 0, "gdelt": {}, "failed": {}, "throttled": []}
-    # GPR:一个文件
-    try:
-        import pandas as pd
-        df = pd.read_excel(io.BytesIO(await asyncio.to_thread(get, GPR_URL)))
-        rows = gpr_rows(df)
-        for i in range(0, len(rows), 1000):
-            if not await supabase_upsert_table(MACRO_TABLE, rows[i:i + 1000], on_conflict="series,d"):
-                raise RuntimeError("写 macro_daily 失败")
-        out["gpr"] = len(rows)
-    except Exception as e:                                                # noqa: BLE001 —— 一个源不通不挡其余
-        out["failed"]["gpr"] = f"{type(e).__name__}: {str(e)[:120]}"
+    import time
+    out: dict[str, Any] = {"gpr": None, "gdelt": {}, "failed": {}, "throttled": [], "requests": 0}
+    # GPR:一个文件,12 小时取一次(S-863);同一个进程里第二次起只写最近 GPR_REWRITE_DAYS 天
+    if time.time() - float(_GPR["at"]) >= GPR_EVERY_S:
+        try:
+            import pandas as pd
+            df = pd.read_excel(io.BytesIO(await asyncio.to_thread(get, GPR_URL)))
+            rows = gpr_rows(df)
+            if _GPR["max_d"]:
+                cut = (dt.date.fromisoformat(_GPR["max_d"]) - dt.timedelta(days=GPR_REWRITE_DAYS)).isoformat()
+                rows = [r for r in rows if r["d"] >= cut]
+            for i in range(0, len(rows), 1000):
+                if not await supabase_upsert_table(MACRO_TABLE, rows[i:i + 1000], on_conflict="series,d"):
+                    raise RuntimeError("写 macro_daily 失败")
+            out["gpr"] = len(rows)
+            _GPR["at"] = time.time()
+            if rows:
+                _GPR["max_d"] = max(r["d"] for r in rows)
+        except Exception as e:                                            # noqa: BLE001 —— 一个源不通不挡其余
+            out["failed"]["gpr"] = f"{type(e).__name__}: {str(e)[:120]}"
     # GDELT:每个主题一次;库里有就只取最近 15 天。11-06:Railway 出口 IP 被 GDELT 按 429 限速,一轮 5 个主题总有 4 个拿不到
     # ⇒ 每轮只做最久没更新的 GDELT_PER_ROUND 个(没有行的排最前),已经到最新可得日的跳过;循环 3 小时一轮,轮转补齐。
     from src.data.vector.market_state_writer import _sb_get
@@ -164,7 +194,7 @@ async def run_once(now: Optional[dt.datetime] = None, get: Optional[Callable[[st
         rd = await _sb_get(TABLE, {"select": "d", "topic": f"eq.{topic}", "order": "d.desc", "limit": "1"})
         if rd.ok and rd.rows:
             last[topic] = str(rd.rows[0]["d"])[:10]
-    todo = due_topics(last, now.date(), series, rot=int(now.timestamp() // (3 * 3600)) * GDELT_PER_ROUND)
+    todo = due_topics(last, now.date(), series, rot=int(now.timestamp() // GDELT_TICK_S))      # 每轮从下一条开始:一条坏的查询不会一直占着队首
     # 源策略管的是「这一轮向免费源扇出多少次」:清单有 21 条,但每轮最多请求 GDELT_PER_ROUND 条(轮转,一天轮一遍)⇒ 按本轮实际请求数过闸
     assert_bulk_source(len(todo), "gdelt", job=f"political intensity + market narratives(每轮最多 {GDELT_PER_ROUND} 次请求,{len(series)} 条序列轮转)")
     for k, (topic, (q, mode)) in enumerate((t, series[t]) for t in todo):
@@ -174,13 +204,15 @@ async def run_once(now: Optional[dt.datetime] = None, get: Optional[Callable[[st
         url = GDELT_URL + "?" + urllib.parse.urlencode({"query": q, "mode": mode, "format": "json", "startdatetime": start,
                                                         "enddatetime": now.strftime("%Y%m%d000000")})
         try:
-            body = await asyncio.to_thread(get, url)
-            for wait in GDELT_THROTTLE_WAITS:                             # 11-06:Railway 出口 IP 共用,首轮 5 个主题 4 个拿到限速文本
-                if not throttled(body):
+            out["requests"] += 1
+            body = await _fetch(get, url)
+            for wait in GDELT_THROTTLE_WAITS:                             # 被限速的同一个请求,几秒后常常就通了
+                if body is not None:
                     break
                 await asyncio.sleep(wait if pause_s else 0)
-                body = await asyncio.to_thread(get, url)
-            if throttled(body):
+                out["requests"] += 1
+                body = await _fetch(get, url)
+            if body is None:
                 # 11-14:源在限速 ≠ 这条循环坏了。记成「被限速」,**这一轮到此为止**(接着请求只会让这个出口 IP 被限得更久),
                 # 剩下的下一轮再来。11-13 → 11-14 部署了二十多次,每次重启后都跑一轮、每条重试三次,13 小时里一轮都没成。
                 out["throttled"] = [t for t in todo[k:]]
@@ -192,10 +224,7 @@ async def run_once(now: Optional[dt.datetime] = None, get: Optional[Callable[[st
                 if not await supabase_upsert_table(TABLE, rows[i:i + 1000], on_conflict="d,topic"):
                     raise RuntimeError(f"写 {TABLE} 失败")
             out["gdelt"][topic] = len(rows)
-        except Exception as e:                                            # noqa: BLE001
-            if "429" in str(e) or "Too Many Requests" in str(e):          # 限速有时是 HTTP 429 而不是那段文本
-                out["throttled"] = [t for t in todo[k:]]
-                break
+        except Exception as e:                                            # noqa: BLE001 —— 限速(文字或 429)在 _fetch 里已经分出去了
             out["failed"][topic] = f"{type(e).__name__}: {str(e)[:120]}"
         if k < len(todo) - 1:
             await asyncio.sleep(pause_s)
@@ -207,7 +236,8 @@ async def run_once(now: Optional[dt.datetime] = None, get: Optional[Callable[[st
     ok = not hard and (landed or not out["throttled"])
     return {"ok": ok, "refused": bool(not hard and out["throttled"] and not landed), **out, "failed": hard or None,
             "behind": len(behind),
-            "why": f"GPR {out['gpr']} 行 · GDELT " + (", ".join(f"{t} {n}" for t, n in out["gdelt"].items()) or "这一轮没有到")
+            "why": (f"GPR {out['gpr']} 行 · " if out["gpr"] is not None else "") + f"GDELT 请求 {out['requests']} 次:"
+                   + (", ".join(f"{t} {n}" for t, n in out["gdelt"].items()) or "这一轮没有到")
                    + (f" · 被限速、留到下一轮:{', '.join(out['throttled'])}" if out["throttled"] else "")
                    + (" · 不通:" + "; ".join(f"{t}({w[:60]})" for t, w in hard.items()) if hard else "")
                    + f" · 还落后 {len(behind)} / {len(series)} 条"}

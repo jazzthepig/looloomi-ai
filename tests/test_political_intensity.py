@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -25,6 +26,13 @@ def test_gdelt_rows():
     payload = {"timeline": [{"data": [{"date": "20261104T000000Z", "value": 8.0}, {"date": "x"}]}]}
     assert pi.gdelt_rows(payload, "conflict") == [{"d": "2026-11-05", "topic": "conflict", "value": 8.0, "source": "gdelt_doc_timelinevol"}]
     assert pi.gdelt_rows({}, "conflict") == []
+
+
+@pytest.fixture(autouse=True)
+def _gpr_clock_is_not_shared_between_tests():
+    pi._GPR.update(at=0.0, max_d=None)
+    yield
+    pi._GPR.update(at=0.0, max_d=None)
 
 
 class _RD:
@@ -55,7 +63,7 @@ def _patch(monkeypatch, last: dict, written: list):
 def test_due_topics_rotates_missing_first_then_oldest():
     today = dt.date(2026, 11, 6)
     last = {"conflict": "2026-11-07", "sanctions": "2026-10-01", "trade_war": "2026-11-01"}
-    assert pi.due_topics(last, today) == ["election_unrest", "crypto_policy", "sanctions"][:pi.GDELT_PER_ROUND]      # 没有行的在前,其次最旧的
+    assert pi.due_topics(last, today) == ["election_unrest", "crypto_policy", "sanctions", "trade_war"][:pi.GDELT_PER_ROUND]      # 没有行的在前,其次最旧的
     full = {t: "2026-11-07" for t in pi.TOPICS}
     assert pi.due_topics(full, today) == [], "到最新可得日的不再请求"
     assert pi.due_topics({**full, "sanctions": "2026-10-01", "trade_war": "2026-11-01"}, today) == ["sanctions", "trade_war"]
@@ -198,6 +206,57 @@ def test_a_hard_failure_names_its_reason_and_partial_progress_is_ok(monkeypatch)
     monkeypatch.setattr(pi, "gpr_rows", lambda df: [])
     _patch(monkeypatch, {}, written)
     r = asyncio.run(pi.run_once(now=dt.datetime(2026, 11, 14, tzinfo=dt.timezone.utc), get=get, pause_s=0))
-    assert len(r["gdelt"]) == 1 and len(r["failed"]) == 1 and len(r["throttled"]) == 1
+    assert len(r["gdelt"]) == 1 and len(r["failed"]) == 1 and len(r["throttled"]) == pi.GDELT_PER_ROUND - 2
     assert r["ok"] is False and r["refused"] is False and "没有序列" in r["why"], "有硬失败 ⇒ 报错,原因写在 why 里"
 
+
+def test_the_rhythm_is_many_small_looks_and_an_open_window_is_used(monkeypatch):
+    """S-863。原来一天 8 轮、每轮最多落一条,21 条序列轮不过来。现在 20 分钟看一次:被限速就收工(一轮 ≤ 3 次请求),
+    通了就接着取到 GDELT_PER_ROUND 条。"""
+    from src.data.market.source_policy import BULK_THRESHOLD
+    assert pi.GDELT_TICK_S <= 1800 and len(pi.GDELT_THROTTLE_WAITS) <= 2 and max(pi.GDELT_THROTTLE_WAITS) <= 30
+    assert pi.GDELT_PER_ROUND <= BULK_THRESHOLD, "一轮的请求数不能越过免费源的闸"
+    assert pi.GDELT_PAUSE_S >= 5, "源的规矩:每 5 秒最多一次"
+    assert 86400 // pi.GDELT_TICK_S * (1 + len(pi.GDELT_THROTTLE_WAITS)) <= 300, "全天都被限速时,请求总数要有上限"
+    written, calls = [], []
+    payload = b'{"timeline": [{"data": [{"date": "20261113T000000Z", "value": 2.0}]}]}'
+
+    def open_window(url):
+        calls.append(url)
+        if url == pi.GPR_URL:
+            raise RuntimeError("no xls in test")
+        return payload
+    _patch(monkeypatch, {}, written)
+    r = asyncio.run(pi.run_once(now=dt.datetime(2026, 11, 14, 13, 0, tzinfo=dt.timezone.utc), get=open_window, pause_s=0))
+    assert len(r["gdelt"]) == pi.GDELT_PER_ROUND and r["requests"] == pi.GDELT_PER_ROUND and not r["throttled"]
+    first_a = list(r["gdelt"])[0]
+    r_next = asyncio.run(pi.run_once(now=dt.datetime(2026, 11, 14, 13, 20, tzinfo=dt.timezone.utc), get=open_window, pause_s=0))
+    assert list(r_next["gdelt"])[0] != first_a, "下一轮从下一条开始 —— 一条坏的查询不会一直占着队首"
+    src = (ROOT / "src/api/main.py").read_text(encoding="utf-8")
+    i = src.index("async def _political_intensity_loop")
+    assert "GDELT_TICK_S" in src[i:src.index("@app.on_event", i)], "循环的间隔跟着模块里的常数走"
+
+
+def test_gpr_is_fetched_twice_a_day_not_every_look(monkeypatch):
+    """GPR 是 45,000 多行的日更文件;原来每一轮整份下载、整份写。看得勤了之后:12 小时一次,同一进程里第二次起只写最近 45 天。"""
+    import pandas as pd
+    written, gpr_calls = [], []
+    rows_all = [{"series": "gpr", "d": (dt.date(2026, 1, 1) + dt.timedelta(days=i)).isoformat(), "value": 1.0, "source": "x"} for i in range(300)]
+    monkeypatch.setattr(pd, "read_excel", lambda *_a, **_k: pd.DataFrame())
+    monkeypatch.setattr(pi, "gpr_rows", lambda df: list(rows_all))
+
+    def get(url):
+        if url == pi.GPR_URL:
+            gpr_calls.append(url)
+            return b"x"
+        return b"Please limit requests to one every 5 seconds"
+    _patch(monkeypatch, {}, written)
+    now = dt.datetime(2026, 11, 14, tzinfo=dt.timezone.utc)
+    r1 = asyncio.run(pi.run_once(now=now, get=get, pause_s=0))
+    assert r1["gpr"] == 300 and len(gpr_calls) == 1
+    r2 = asyncio.run(pi.run_once(now=now, get=get, pause_s=0))
+    assert r2["gpr"] is None and len(gpr_calls) == 1 and "GPR" not in r2["why"], "12 小时内不再取,也不在 why 里冒充取过"
+    pi._GPR["at"] = 0.0                                   # 12 小时过去了
+    written.clear()
+    r3 = asyncio.run(pi.run_once(now=now, get=get, pause_s=0))
+    assert len(gpr_calls) == 2 and r3["gpr"] == pi.GPR_REWRITE_DAYS + 1 == len(written), "第二次只写最近 45 天"

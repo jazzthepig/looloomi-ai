@@ -429,6 +429,9 @@ def compute_fitness(rows: list[dict], window_days: int) -> list[dict]:
                     "pillar": label,
                     "correlation": round(r, 4),
                     "n_samples": len(pairs),
+                    # S-863:n_samples 数的是「行」—— cis_scores 一天多行,同一个标的同一天的几十次快照共用一个 7 天收益。
+                    # 独立的单位是天(S-202);把它写进行里,读表的人才不会把 3,000 行当成 3,000 次观测。
+                    "n_days": len(_days),
                     "return_source": source,
                     "window_days": window_days,
                     "computed_at": now,

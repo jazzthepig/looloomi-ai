@@ -94,6 +94,22 @@ def test_the_four_places_the_watch_named_stay_off_the_event_loop():
         assert heavy <= threaded, f"{path}::{fn_name} 里这些没进线程:{sorted(heavy - threaded)}"
 
 
+def test_the_two_synchronous_requests_named_after_the_first_fix_are_off_the_loop_too():
+    """S-863 / T-380:四处大的搬走之后,看门线程又点了两处各 5 秒的同步请求 —— CoinGecko 榜单、DefiLlama 收入。"""
+    import ast
+    tc = ast.parse((ROOT / "scripts/trending_collector.py").read_text(encoding="utf-8"))
+    fn = next(n for n in ast.walk(tc) if isinstance(n, ast.AsyncFunctionDef) and n.name == "collect_trending")
+    assert not [c for c in ast.walk(fn) if isinstance(c, ast.Call) and getattr(c.func, "id", "") == "trending_rows"]
+    assert "asyncio.to_thread(trending_rows)" in ast.unparse(fn)
+    main = ast.parse((ROOT / "src/api/main.py").read_text(encoding="utf-8"))
+    loop = next(n for n in ast.walk(main) if isinstance(n, ast.AsyncFunctionDef) and n.name == "_conviction_loop")
+    assert not [c for c in ast.walk(loop) if isinstance(c, ast.Call) and getattr(c.func, "id", "") == "get_watchlist"]
+    assert "to_thread(get_watchlist)" in ast.unparse(loop)
+    ce = ast.parse((ROOT / "src/data/narrative/conviction_engine.py").read_text(encoding="utf-8"))
+    rt = next(n for n in ast.walk(ce) if isinstance(n, ast.AsyncFunctionDef) and n.name == "resolve_and_track")
+    assert not [c for c in ast.walk(rt) if isinstance(c, ast.Call) and getattr(c.func, "id", "") == "_closes_by_date"]
+
+
 def test_a_real_block_on_a_real_loop_is_caught_with_the_blocking_line(monkeypatch):
     monkeypatch.setattr(ls, "STALL_S", 0.25)
     monkeypatch.setattr(ls, "SAMPLE_AT", (0.25, 0.6, 1.2))

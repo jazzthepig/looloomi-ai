@@ -207,11 +207,12 @@ REFUSAL_POLICY = {
         "escalate_after_n_refusals": 30,
     },
     "_political_intensity_loop": {
-        "reason": "S-861 — GDELT 对共享出口限速时,这一轮停下、没取到的留到下一轮;GPR 那一半照常。",
-        "clears_when": "下一轮没被限速并落下至少一条序列。连续两天一条都没落 = 叙事跟踪断了,不是限速。",
+        "reason": "S-861 / S-863 — GDELT 按出口 IP 限速(出口每次部署都换,还和别的租户共用);被限速这一轮就收工,"
+                  "20 分钟后再看。一天 72 轮里多数是拒绝,属正常。",
+        "clears_when": "某一轮没被限速并落下至少一条序列。连续两天一条都没落 = 叙事跟踪断了,不是限速。",
         "owner": "Seth",
         "stale_after_days": 2,
-        "escalate_after_n_refusals": 48,
+        "escalate_after_n_refusals": 144,
     },
     "_hl_book_loop": {
         "reason": "S-413 — refuses (a) when yesterday's row is already recorded, or "

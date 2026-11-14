@@ -183,7 +183,8 @@ async def resolve_and_track(horizon: int = 30) -> dict:
         return {"status": "skipped"}
     import httpx, datetime as dt
     cutoff = (dt.date.today() - dt.timedelta(days=horizon)).isoformat()
-    btc = _closes_by_date("BTC")
+    import asyncio
+    btc = await asyncio.to_thread(_closes_by_date, "BTC")      # S-863:同步请求,不占事件循环
     async with httpx.AsyncClient(timeout=20) as cl:
         h = {"apikey": key, "Authorization": f"Bearer {key}"}
         r = await cl.get(f"{url}/rest/v1/conviction_watchlist_log",
@@ -194,7 +195,7 @@ async def resolve_and_track(horizon: int = 30) -> dict:
         for row in pend:
             sym = row["symbol"]
             if sym not in px_cache:
-                px_cache[sym] = _closes_by_date(sym)
+                px_cache[sym] = await asyncio.to_thread(_closes_by_date, sym)
             closes = px_cache[sym]
             d0 = dt.date.fromisoformat(row["snapshot_date"]); d1 = (d0 + dt.timedelta(days=horizon)).isoformat()
             p1 = closes.get(d1); b0 = btc.get(row["snapshot_date"]); b1 = btc.get(d1)

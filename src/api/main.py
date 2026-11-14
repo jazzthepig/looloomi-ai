@@ -2802,7 +2802,7 @@ async def _start_cex_reserves_loop():
 
 
 async def _political_intensity_loop():
-    """政治 / 地缘强度 + 市场叙事(`src/data/market/political_intensity.py`):每 3 小时一轮 —— GPR 日表一个文件 + GDELT 每轮最多 `GDELT_PER_ROUND` 条序列(轮转;没有行的首次取整段 2017 →)。"""
+    """政治 / 地缘强度 + 市场叙事(`src/data/market/political_intensity.py`):每 20 分钟看一次(S-863)—— GPR 日表 12 小时取一次;GDELT 被限速就收工(一轮最多 3 次请求),通了一轮最多取 `GDELT_PER_ROUND` 条(轮转;没有行的首次取整段 2017 →)。"""
     await _asyncio.sleep(_boot_delay(14700))
     while True:
         try:
@@ -2816,13 +2816,14 @@ async def _political_intensity_loop():
             print(f"[POLITICAL] ⚠️  pass FAILED: {_e}")
             await _beat("_political_intensity_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
             await _iteration_error("_political_intensity_loop", _e)
-        await _asyncio.sleep(3 * 3600)                # GDELT 每轮只做 GDELT_PER_ROUND 条序列,轮转补齐(11-13 起含叙事的量与调,S-855)
+        from src.data.market.political_intensity import GDELT_TICK_S as _pol_tick
+        await _asyncio.sleep(_pol_tick)               # S-863:20 分钟看一次 —— 限速按出口 IP、什么时候通是碰运气;通了一轮最多取 6 条
 
 
 @app.on_event("startup")
 async def _start_political_intensity_loop():
     _asyncio.create_task(_political_intensity_loop())
-    print("[POLITICAL] ✅ GPR + GDELT political intensity scheduled (12-hourly)")
+    print("[POLITICAL] ✅ GPR + GDELT political intensity / narratives scheduled (every 20 min; GPR 12-hourly)")
 
 
 async def _derivatives_market_loop():
@@ -4207,13 +4208,13 @@ async def _start_prediction_resolver_loop():
         print("[PRED] ✅ daily prediction-resolver loop scheduled")
 
 
-async def _frozen_skip(book_id: str, loop_name: str, tag: str) -> bool:
+async def _frozen_skip(book_id: str, loop_name: str, tag: str, because: str = "") -> bool:
     """S-631(Jazz 10-20「先冻结了」):冻结的账本不起任务 —— 但要**说出来**:记一条心跳(refused)和一条
     loop_attempt(refused + 原因),否则停写会被判活器读成「死了」,下一个人会去把它修好。返回 True = 已冻结。"""
     from src.data.accounting.frozen import is_frozen, startup_note
     if not is_frozen(book_id):
         return False
-    note = startup_note(book_id)
+    note = because + startup_note(book_id)
     print(f"[{tag}] ⏸ {note[:160]}")
     await _beat(loop_name, ok=False, refused=True, error=note[:200])
     await _record_loop_attempt(loop_name, "refused", reason=note[:400], writer=f"src.api.main.{loop_name}")
@@ -4863,6 +4864,10 @@ async def _factory_recalibrate_loop():
 @app.on_event("startup")
 async def _start_factory_recalibrate_loop():
     if os.environ.get("DISABLE_FACTORY", "").lower() in ("1", "true", "yes"):
+        return
+    # S-863:它重算的是 combined book 的权重;那本账冻结期间不跑(登记在 frozen.py 的 also 里,解冻自动恢复)。
+    if await _frozen_skip("combined_book", "_factory_recalibrate_loop", "FACTORY",
+                          because="这条循环重算的是 combined book 的权重,而那本账已冻结 —— "):
         return
     _asyncio.create_task(_factory_recalibrate_loop())
     print("[FACTORY] ✅ weekly signal-factory recalibration loop scheduled")
@@ -6647,7 +6652,9 @@ async def _conviction_loop():
         try:
             from src.data.narrative.conviction_engine import get_watchlist, persist_watchlist, resolve_and_track
             from src.data.market.data_layer import _redis_set
-            wl = get_watchlist()      # narrative events (LLM half) wired in P2
+            # S-863:get_watchlist() 是约 20 次同步请求(DefiLlama 收入 + K 线),放进线程 —— 11-14 09:56 事件循环在
+            # fundamental_momentum._daily_revenue 上停了 5.0 秒。
+            wl = await _asyncio.to_thread(get_watchlist)      # narrative events (LLM half) wired in P2
             await _redis_set("conviction:watchlist", wl, ttl=2 * 24 * 3600)
             n_logged = await persist_watchlist(wl)                    # P4: accrue candidates as predictions
             tr = await resolve_and_track()                           # P4: resolve matured + score the conjunction
