@@ -21,6 +21,12 @@ except Exception: print("")')"
       echo "✅ live = ${WANT:0:8}"
       exit 0
     fi
+    # 11-14(S-859):只改了运行时不读的文件(状态、卡片、测试、研究文档)⇒ Railway 不部署、线上的 sha 不会变。
+    # 判据改成「线上那一版与目标之间没有运行时路径的差别」,清单在 scripts/deploy_paths.py。
+    if [ -n "$LIVE" ] && python3 scripts/deploy_paths.py --is-current "$LIVE" "$WANT" 2>/dev/null; then
+      echo "✅ live = ${LIVE:0:8} · 与 ${WANT:0:8} 之间没有运行时路径的改动(这次推送不触发部署)"
+      exit 0
+    fi
   done
   echo "… live=${LIVE:0:8} want=${WANT:0:8}"
   sleep 15

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "watchPatterns": [
+      "/src/**",
+      "/dashboard/**",
+      "/strategies/**",
+      "/paper_trading/**",
+      "/data/**",
+      "/scripts/*.py",
+      "/scripts/*.sql",
+      "/docs/research/scenarios/**",
+      "/requirements.txt",
+      "/Procfile",
+      "/nixpacks.toml",
+      "/railway.json"
+    ]
+  }
+}

@@ -330,6 +330,19 @@ def batches(jobs: list[tuple[Path, Optional[dict]]]) -> list[list[tuple[Path, Op
     return out
 
 
+def _touches_runtime(paths: list[str]) -> bool:
+    """清单在 scripts/deploy_paths.py(唯一源头);读不到就当作碰了(宁可多部署一次)。目录路径按前缀算。"""
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("deploy_paths", ROOT / "scripts" / "deploy_paths.py")
+        m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(m)
+        return bool(m.touches_runtime(paths) or any(
+            pat.lstrip("/").startswith(p.rstrip("/") + "/") for p in paths for pat in m.PATTERNS))
+    except Exception:                                                    # noqa: BLE001
+        return True
+
+
 def do_commit_batch(jobs: list[dict]) -> list[dict]:
     """几个提交共用**一次** preflight、一次推送、一次部署核对(Jazz 10-19「每次都 preflight 效率很低」)。
 
@@ -365,6 +378,9 @@ def do_commit_batch(jobs: list[dict]) -> list[dict]:
         return fail_all("preflight", failure_digest(out), live)
     _clear_index_lock()
     committed = []
+    # 11-14(S-859):一批里碰运行时路径的提交排在最后 —— Railway 按 watch patterns 决定部不部署;
+    # 让这次推送的 HEAD 落在一个会触发部署的提交上,不依赖它是看整次推送还是只看最后一个提交。顺序只在这两类之间调,各自内部不变。
+    live = sorted(live, key=lambda k: _touches_runtime(list(jobs[k].get("paths") or [])))
     for k in live:
         job, paths = jobs[k], list(jobs[k].get("paths") or [])
         code, out = git("add", "--", *paths)

@@ -84,6 +84,19 @@ def check(rep, name, url, validate, critical=True, timeout=20):
     return None
 
 
+def _runtime_current(live: str) -> bool:
+    """11-14(S-859):线上那一版与 HEAD 之间没有运行时路径的差别 ⇒ 是最新(只改文档 / 卡片 / 测试的推送不触发部署)。"""
+    try:
+        import importlib.util
+        from pathlib import Path as _P
+        spec = importlib.util.spec_from_file_location("deploy_paths", _P(__file__).resolve().parent / "deploy_paths.py")
+        m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(m)
+        return bool(m.is_current(live))
+    except Exception:                                                    # noqa: BLE001 —— 判不了就按「不同步」报
+        return False
+
+
 def _local_head():
     try:
         return subprocess.check_output(
@@ -176,6 +189,9 @@ def main():
         if live and head:
             if live == head:
                 rep.add("deploy in sync", True, f"live == HEAD ({head[:8]})", critical=False)
+            elif _runtime_current(live):
+                rep.add("deploy in sync", True, f"live={live[:8]}; only non-runtime files differ from HEAD ({head[:8]}), "
+                                                f"which do not trigger a deploy", critical=False)
             else:
                 ahead = _commits_ahead(live)
                 msg = (f"{ahead} commit(s) pending deploy (live={live[:8]} HEAD={head[:8]})"

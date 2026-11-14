@@ -124,3 +124,18 @@ Vite creates content-hash filenames. Each build produces new hashes. Always comm
 ## Scripts
 
 `scripts/build_and_push.sh` — helper for clean builds. Run from repo root.
+
+## Not every push deploys (2026-11-14, S-859)
+
+Railway only redeploys when a path the running service reads has changed (`railway.json` → `build.watchPatterns`,
+generated from the one list in `scripts/deploy_paths.py`). Pushes that touch only state files, task cards, tests,
+migrations or research docs do **not** restart the service — every restart empties the in-process caches and the
+site is cold for 5–8 minutes.
+
+- "Is the live build current?" now means: **no runtime path differs between the live sha and HEAD**
+  (`python3 scripts/deploy_paths.py --is-current <live sha>`). `scripts/wait_for_deploy.sh`,
+  `scripts/postdeploy_verify.sh` and `scripts/deploy_health_gate.py` use that rule; a live sha older than HEAD
+  is not by itself a stuck deploy.
+- Adding a path the service reads at runtime ⇒ add it to `PATTERNS` and run
+  `python3 scripts/deploy_paths.py --write-railway-json`. `tests/test_deploy_paths.py` checks the two agree.
+- Forcing a deploy without a code change: redeploy from the Railway dashboard (Jazz).

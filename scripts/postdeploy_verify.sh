@@ -63,6 +63,8 @@ if [[ "$UNPUSHED" != "0" && "$UNPUSHED" != "?" ]]; then
 # 比较必须在【共同前缀】上做:本地 rev-parse --short 给 7 位,线上 git_sha_short
 # 给 8 位。第一次跑这个脚本时它就报了一次假不符 —— 一个把相同判成不同的比较,
 # 会让人去查一个不存在的部署问题,这和今天那三次来回是同一种浪费。
+elif [[ "${LOCAL_SHA:0:7}" != "${PROD_SHA:0:7}" ]] && python3 scripts/deploy_paths.py --is-current "$PROD_SHA" HEAD 2>/dev/null; then
+  echo "  ✓ 线上是 ${PROD_SHA:0:8};它与 HEAD 之间只有运行时不读的文件(状态 / 卡片 / 测试 / 文档),这类推送不触发部署"
 elif [[ "${LOCAL_SHA:0:7}" != "${PROD_SHA:0:7}" ]]; then
   echo "  ⚠ SHA 不符 —— 推了但 Railway 还在 build,或 build 失败。等 ~90s 重跑。"
   WARN=1
