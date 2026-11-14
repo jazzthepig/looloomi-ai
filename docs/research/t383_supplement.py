@@ -314,6 +314,8 @@ def main() -> None:
         out_fam[nm] = {
             "cached_nav_d0": str(cached.index[0].date()), "cached_nav_d1": str(cached.index[-1].date()),
             "cached_nav_end": float(cached.iloc[-1]),
+            "cached_nav_start": float(cached.iloc[0]),
+            "cached_total_return": float(cached.iloc[-1] / cached.iloc[0] - 1.0),
             "reproduce_max_abs_diff": diff, "n_days_cached": int(len(cached)),
             "extended_d0": str(nav_new.index[0].date()), "extended_d1": str(nav_new.index[-1].date()),
             "extended_nav_end": float(nav_new.iloc[-1]),
@@ -379,36 +381,57 @@ def main() -> None:
                 tk.append(t)
         return tk
 
-    def run_null(fam, tickets, pool, rebuild, n_draw, seed):
+    def run_null(fam, tickets, pool, rebuild, n_draw, seed, cut):
+        """规模可比的时点零信号对照:同一批票、同一把尺,只把入场日换成同标的同年内的随机合格日。
+        两个口径各报一次:全程(到最新 11-13)与截到缓存末日(与 +11.28% / −32.03% 同口径)。"""
         events = [(t["symbol"], t["signal_d"]) for t in tickets]
         actual = out_fam[fam]["extended_total_return"]
+        actual_cached = float(out_fam[fam]["cached_total_return"])
+        cut_ts = pd.Timestamp(cut)
+        cut_vals: list[float] = []
 
         def draw(rng):
             newp = ap.random_dates_like(events, pool, rng, stratum=lambda d: d[:4])
             tk2 = rebuild([(k, d) for k, d in newp if d is not None])
             nav, _ = money_curve(tk2, um)
             if len(nav) == 0:
+                cut_vals.append(np.nan)
                 return np.nan
+            nav_c = nav.loc[nav.index <= cut_ts]
+            cut_vals.append(float(nav_c.iloc[-1] / nav_c.iloc[0] - 1.0) if len(nav_c) else np.nan)
             return float(nav.iloc[-1] / nav.iloc[0] - 1.0)
 
         null = ap.null_distribution(draw, n_draw, seed)
-        pct = ap.percentile_of(actual, null)
-        return {"n_draw": n_draw, "actual_total_return": actual,
+        null_cut = np.array(cut_vals, dtype=float)
+        has = bool(np.isfinite(null_cut).any())
+        return {"n_draw": n_draw, "cut": cut,
+                "actual_total_return": actual, "actual_cached_total_return": actual_cached,
                 "null_mean": float(np.mean(null)), "null_median": float(np.median(null)),
                 "null_q05": float(np.quantile(null, 0.05)), "null_q95": float(np.quantile(null, 0.95)),
                 "null_min": float(np.min(null)), "null_max": float(np.max(null)),
-                "percentile_of_actual": pct,
-                "p_upper": ap.p_upper(actual, null), "p_lower": ap.p_lower(actual, null)}
+                "percentile_of_actual": ap.percentile_of(actual, null),
+                "p_upper": ap.p_upper(actual, null), "p_lower": ap.p_lower(actual, null),
+                "null_cut_median": float(np.nanmedian(null_cut)) if has else None,
+                "null_cut_q05": float(np.nanquantile(null_cut, 0.05)) if has else None,
+                "null_cut_q95": float(np.nanquantile(null_cut, 0.95)) if has else None,
+                "null_cut_min": float(np.nanmin(null_cut)) if has else None,
+                "null_cut_max": float(np.nanmax(null_cut)) if has else None,
+                "percentile_of_actual_cached": ap.percentile_of(actual_cached, null_cut),
+                "p_upper_cached": ap.p_upper(actual_cached, null_cut),
+                "p_lower_cached": ap.p_lower(actual_cached, null_cut),
+                "_null_array": [float(x) for x in null],
+                "_null_cut_array": [None if not np.isfinite(x) else float(x) for x in null_cut]}
 
-    # 字面读法:随机 14 票组合
+    # 字面读法:随机 14 票组合(日期也走 apparatus.random_dates_like)
     def null14(fam, pool, rebuild, n_draw, seed):
-        keys = sorted(pool.keys())
-        allp = [(s, d) for s in keys for d in pool[s]]
-        actual_mean_r = None
+        keys = sorted(s for s in pool.keys() if len(pool[s]) > 0)
         nulls, means = [], []
         rng = np.random.default_rng(seed)
         for _ in range(n_draw):
-            pick = [allp[int(rng.integers(0, len(allp)))] for _ in range(14)]
+            syms = [keys[int(rng.integers(0, len(keys)))] for _ in range(14)]
+            ev = [(s, pool[s][int(rng.integers(0, len(pool[s])))]) for s in syms]
+            newp = ap.random_dates_like(ev, pool, rng, stratum=lambda d: d[:4])
+            pick = [(k, d) for k, d in newp if d is not None]
             tk = rebuild(pick)
             if not tk:
                 continue
@@ -422,7 +445,9 @@ def main() -> None:
                 "null_total_return_q95": float(np.quantile(nulls, 0.95)) if nulls else None,
                 "null_mean_r_median": float(np.median(means)) if means else None,
                 "null_mean_r_q05": float(np.quantile(means, 0.05)) if means else None,
-                "null_mean_r_q95": float(np.quantile(means, 0.95)) if means else None}
+                "null_mean_r_q95": float(np.quantile(means, 0.95)) if means else None,
+                "_null_array": [float(x) for x in nulls],
+                "_mean_r_array": [float(x) for x in means]}
 
     import short_lab_common as sl
     sl_short_ticket = sl.short_ticket
@@ -430,14 +455,14 @@ def main() -> None:
     build_closes(um)
 
     out_null = {}
-    out_null["H4_timing"] = run_null("H4", tk4, pools4, rebuild_H4, 40, 38304)
-    out_null["H2_timing"] = run_null("H2", tk2, pools2, rebuild_H2, 40, 38302)
-    log(f"  H4 时点零分布:实际 {out_null['H4_timing']['actual_total_return']:+.4%}"
-        f" · 零分布中位 {out_null['H4_timing']['null_median']:+.4%}"
-        f" · 分位 {out_null['H4_timing']['percentile_of_actual']:.3f}")
-    log(f"  H2 时点零分布:实际 {out_null['H2_timing']['actual_total_return']:+.4%}"
-        f" · 零分布中位 {out_null['H2_timing']['null_median']:+.4%}"
-        f" · 分位 {out_null['H2_timing']['percentile_of_actual']:.3f}")
+    out_null["H4_timing"] = run_null("H4", tk4, pools4, rebuild_H4, 40, 38304, "2026-09-30")
+    out_null["H2_timing"] = run_null("H2", tk2, pools2, rebuild_H2, 40, 38302, "2026-09-29")
+    for nm in ("H4", "H2"):
+        o = out_null[f"{nm}_timing"]
+        log(f"  {nm} 时点零分布:全程 实际 {o['actual_total_return']:+.4%} · 中位 {o['null_median']:+.4%}"
+            f" · 分位 {o['percentile_of_actual']:.3f} | 缓存口径(截 {o['cut']}) 实际 {o['actual_cached_total_return']:+.4%}"
+            f" · 中位 {o['null_cut_median']:+.4%} · 分位 {o['percentile_of_actual_cached']:.3f}"
+            f" · p_upper {o['p_upper_cached']:.4f} · p_lower {o['p_lower_cached']:.4f}")
     out_null["H4_random14"] = null14("H4", pools4, rebuild_H4, 400, 38301)
     out_null["H2_random14"] = null14("H2", pools2, rebuild_H2, 400, 38300)
     res["null_control"] = out_null
