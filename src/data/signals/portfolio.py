@@ -94,6 +94,6 @@ async def get_portfolio() -> dict:
         },
         "meta_allocation": meta or {"status": "accruing — needs ≥20d live on ≥2 books before risk-parity is meaningful"},
         "breadth": {"classes_tracked": ["crypto", "tokenized_equity", "commodity", "sector_thematic_ETF"],
-                    "effective_bets_ENB": 3.87, "note": "diversification lives across asset classes (rotation study R20); all tradeable 24/7 on-chain"},
-        "discipline": "every sleeve gated by DSR + PBO + walk-forward + champion/challenger; refutations in REFUTATION_LEDGER (R1–R20)",
+                    "effective_bets_ENB": 3.87, "note": "diversification lives across asset classes ; all tradeable 24/7 on-chain"},
+        "discipline": "every sleeve gated by DSR + PBO + walk-forward + champion/challenger; every refuted idea is recorded",
     }

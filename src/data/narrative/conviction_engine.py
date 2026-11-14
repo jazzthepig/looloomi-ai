@@ -123,7 +123,7 @@ def get_watchlist(events: list[str] | None = None) -> dict:
     rows.sort(key=lambda r: -r["conviction_score"])
     return {"as_of": __import__("datetime").datetime.utcnow().isoformat(),
             "n": len(rows), "candidates": rows,
-            "basis": "L1 moat × (L2 catalyst + L3 fundamental momentum + L4 trend); conjunction-first (R21)",
+            "basis": "L1 moat × (L2 catalyst + L3 fundamental momentum + L4 trend); conjunction-first",
             "compliance": "candidates for discretionary conviction, NOT a signal; positioning language only; not advice"}
 
 

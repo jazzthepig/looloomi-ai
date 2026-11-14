@@ -708,8 +708,8 @@ async def regime_similar(
         "reading": (None if not both_ran
                     else "aligned" if overlap
                     else "divergent"),
-        "note": "只比日期集合。两个角度的 sim 数值维度数不同(15 vs 11),"
-                "不可比、不可平均 —— S-351 的同一个错升一维。",
+        "note": "Compares the date sets only. The two similarity scores have different dimensionality (15 vs 11) and are "
+                "not comparable and must not be averaged.",
     }
     out["ok"] = bool(macro.get("hits") or micro.get("hits"))
     return out

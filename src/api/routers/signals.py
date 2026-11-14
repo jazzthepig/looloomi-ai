@@ -542,9 +542,8 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
                 "win_rate_pct": allrows.win_rate_pct,
                 "n": allrows.n_measurable,
                 "claimable": False,
-                "why_not": "83/95 行的出口价来自 coingecko market_chart(S-195,"
-                           "采样点塌缩不是收盘)或 yfinance(S-230,已死)。"
-                           "按我们自己的规则,这个数不能对外声称。",
+                "why_not": "For 83 of 95 rows the exit price came from sources we have since barred (sampled points rather "
+                           "than closes, or a feed that has been discontinued). By our own rules this figure may not be claimed.",
             }
             return out
         except Exception as e:                                    # noqa: BLE001
@@ -701,8 +700,8 @@ def _compute_metrics(closed: list, open_signals: list) -> dict:
             "win_rate_pct":        "return_pct · exit-based (~8d hold) · absolute",
             "max_drawdown_pct":    "return_pct · exit-based (~8d hold) · absolute",
             "avg_return_pct":      "return_pct · exit-based (~8d hold) · absolute",
-            "_note": ("持仓期与判定窗口不一致:退出规则均值约 8 天,判定窗口 30 天。"
-                      "23 个 WIN 样本里 12 个两种度量符号相反 (S-248)。"),
+            "_note": ("Holding period and judgment window differ: exits average about 8 days, the judgment window is 30 days. "
+                      "In 12 of 23 WIN samples the two measures have opposite signs."),
         },
         "alpha_sharpe":        alpha_sharpe,
         "alpha_win_rate_pct":  alpha_win_rate,
@@ -1301,8 +1300,7 @@ async def get_signal_track_record(response: Response = None):
                          f"OLS over strictly prior (symbol, d) pairs, ≥20 priors, "
                          f"NEVER default β=1.0; insufficient history → NULL — "
                          f"honestly excluded from n_beta_adj). Captured by shorting "
-                         f"the benchmark at the estimated β. Mirrors "
-                         f"src/data/market/beta_adjust.py."),
+                         f"the benchmark at the estimated β."),
             "BETA_ADJ_T_STAT": "One-sample t-stat of BETA_ADJ vs 0. t>1.96 = "
                                "honestly survives, regardless of point estimate.",
             "WIN_PCT": "Share of resolved signals where the asset return beat the "

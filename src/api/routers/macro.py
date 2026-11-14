@@ -401,8 +401,8 @@ async def get_macro_brief(response: Response):
             "source":       _tier.FALLBACK,
             **_tier.describe(
                 _tier.FALLBACK,
-                reason="上游 macro:brief 缺失或过期,这份由 Railway 用 macro-pulse "
-                       "现算的模板顶上 —— 它的 regime 来自阈值兜底,不是引擎的判断"),
+                reason="The upstream macro brief is missing or stale; this one is a template computed from the macro pulse. "
+                       "Its regime comes from threshold fallbacks, not from the engine's judgment."),
         }
         # S-265:**兜底不得写回上游那把钥匙。**
         # 原本是 `redis_set_key(_REDIS_KEY, ...)`,而 health.py 判活读的就是

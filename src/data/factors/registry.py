@@ -317,7 +317,7 @@ FACTORS: list[dict] = [
         "regime_weight":{"Goldilocks": 1.0, "Risk-On": 1.1, "Easing": 1.0,
                          "Neutral": 1.0, "Tightening": 1.2, "Risk-Off": 1.3, "Stagflation": 1.2},
         "inclusion_criteria": "Funding rate is a direct measure of leverage imbalance. Assets with funding > 0.1%/8h (>110% annualised) are historically -23% over next 14d after extreme funding events. Orthogonal to vol and ATH distance.",
-        "known_issues": "OI-weighting logic uses CoinGecko derivatives endpoint which may have stale data (up to 15min lag). Binance geo-blocked on Railway — mitigated by CG Pro aggregation.",
+        "known_issues": "OI-weighting logic uses CoinGecko derivatives endpoint which may have stale data (up to 15min lag). Binance is not reachable from our hosting region — mitigated by aggregated venue data.",
         "version_added":"4.3",
     },
     {

@@ -318,7 +318,7 @@ def target_weights(data: dict, core: dict) -> tuple[dict, dict]:
     book_state = "live" if live else "core_dead"
     if book_state == "core_dead":
         return {}, {"book_state": book_state, "per_asset": per,
-                    "reason": "core structurally dead (R57) — holding zero size, marking flat"}
+                    "reason": "core structurally inactive — holding zero size, marking flat"}
 
     firing = [c for c in live if per[c]["core_engaged"] and per[c]["gate_open"]]
     w = {c: round(1.0 / len(live), 4) for c in firing}

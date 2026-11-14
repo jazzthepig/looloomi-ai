@@ -36,14 +36,15 @@ _logger = logging.getLogger(__name__)
 PHASES = ["capitulation", "accumulation", "markup", "euphoria", "distribution"]
 _PHASE_ANGLE = {"capitulation": 234, "accumulation": 162, "markup": 90, "euphoria": 18, "distribution": 306}
 
-# Positioning-safe posture read per phase (research read, NOT advice). Ties the clock to the
-# two-layer book doctrine: mean-reversion sleeve wakes at fear, trend sleeve presses at markup.
+# What each phase looks like, as a description (hard rule 1: no instruction to act). 11-14: the five lines here used to be
+# imperatives ("trim into it", "reduce gross, hedge", "do not chase", "size the contrarian sleeve…") served verbatim by a public endpoint.
+# Only the capitulation line carries a historical claim, and it is the one we measured (30-day momentum vs reversal).
 _PHASE_POSTURE = {
-    "capitulation":  "Fear extreme — a selective mean-reversion window, NOT a broad long: at a 30d horizon momentum has beaten reversal in crypto (R24), so size the contrarian sleeve modestly and wait for its own deep-extreme trigger.",
-    "accumulation":  "Basing — quiet accumulation of quality; low urgency, build the core.",
-    "markup":        "Trend-confirmation phase — the window to press confirmed strength (the trend sleeve's home).",
-    "euphoria":      "Late-cycle strength — trim into it, defend; crowded longs are flush fuel, do not chase.",
-    "distribution":  "Topping — reduce gross, hedge; leadership narrowing as the marginal buyer thins.",
+    "capitulation":  "Fear is extreme after a decline. In our tests, at a 30-day horizon momentum has outlasted reversal in crypto, so extreme fear alone has not marked a turn.",
+    "accumulation":  "Basing: prices are stable on low participation after a decline.",
+    "markup":        "Trend confirmation: price strength is broad and sentiment is rising with it.",
+    "euphoria":      "Late-cycle strength: sentiment is extreme and long positioning is crowded.",
+    "distribution":  "Topping: leadership is narrowing and marginal demand is thinning.",
 }
 
 

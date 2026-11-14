@@ -1546,7 +1546,7 @@ async def get_curve(limit: int = 400) -> dict:
         "deployable_notional_usd": None,
         "notional_basis": ("not derived — ADV not yet wired into the ① book; "
                            "dollars are reported per $1m deployed rather than at an "
-                           "assumed AUM (S-132)"),
+                           "assumed AUM"),
         # the gate is 60 forward days; surfacing the shortfall stops anyone reading a
         # 20-day curve as evidence
         "days_to_gate": max(0, 60 - n),

@@ -677,7 +677,7 @@ async def get_positions():
         "portfolio_basis": ("cash wallet equity + sleeve notional market value. These "
                             "are SEPARATE books: the sleeve never debits cash. Do not "
                             "compute a return from this figure — use cash_book or "
-                            "sleeve_book (S-283, docs/NAV_POLICY.md §8)."),
+                            "sleeve_book."),
         "unrealized_pnl":round(total_pnl, 2),
         # No blended percentage is served. There is no denominator that is correct for
         # both books, and inventing one is how 65.509% got published.

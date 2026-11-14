@@ -72,9 +72,15 @@ def _schema():
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _public(d: dict) -> dict:
+    """11-14:`doc_source` 里是记录来源的文件路径,有的是本机路径(/Users/…);公开接口不带它,括号里的台账编号也拿掉。"""
+    from src.api.contracts.public_text import scrub
+    return scrub(d, drop_keys=("doc_source",))
+
+
 def _serialize(record, schema) -> dict:
     """StrategyRecord → JSON-safe dict (verdict enum coerced via to_dict)."""
-    return record.to_dict()
+    return _public(record.to_dict())
 
 
 # ---------------------------------------------------------------------------
@@ -129,7 +135,7 @@ async def strategy_list(
         cov = emb_mods["coverage_summary"](r)
         if cov["coverage_pct"] / 100.0 < min_coverage:
             continue
-        d = r.to_dict()
+        d = _public(r.to_dict())
         d["coverage"] = cov
         out.append(d)
 
@@ -233,7 +239,7 @@ async def strategy_similar(
             continue
         if not include_doctrine and rec.verdict == Verdict.DOCTRINE:
             continue
-        d = rec.to_dict()
+        d = _public(rec.to_dict())
         d["similarity"] = n["similarity"]
         d["coverage"] = emb_mods["coverage_summary"](rec)
         out.append(d)
@@ -345,7 +351,6 @@ async def strategy_stats():
         "queryable":       queryable,
         "skeleton":        len(records) - queryable,
         "by_verdict":      by_verdict,
-        "by_source":       by_source,
         "coverage_buckets": coverage_buckets,
         "avg_dims_nonzero": round(total_dims_nonzero / max(1, len(records)), 2),
         "age_s":           modules["age_seconds"](),
@@ -362,7 +367,7 @@ async def strategy_get(record_id: str):
     if rec is None:
         raise HTTPException(status_code=404, detail=f"record '{record_id}' not in strategy:records")
 
-    d = rec.to_dict()
+    d = _public(rec.to_dict())
     d["coverage"] = emb_mods["coverage_summary"](rec)
 
     # Resolve embedding (full vector only if asked)

@@ -73,7 +73,7 @@ def test_registry_never_drops_books_and_flags_untrusted_ones():
     from src.data.accounting import registry as rg
     ids = [b.id for b in rg.BOOKS]
     assert len(ids) == len(set(ids)) and {"beta_core", "fusion_paper", "two_layer_paper"} <= set(ids)
-    assert "T-026" in next(b for b in rg.BOOKS if b.id == "fusion_paper").caveat
+    assert "数字不可信" in next(b for b in rg.BOOKS if b.id == "fusion_paper").caveat      # 11-14:卡号不出门(/proof/books 是公开接口),守的是「标着不可信」这件事
 
 
 def test_scorecard_refuses_a_benchmark_that_starts_later_than_the_book():

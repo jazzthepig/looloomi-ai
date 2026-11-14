@@ -44,10 +44,8 @@ STRATEGIES: Dict[str, Dict[str, Any]] = {
         "name": "Breakout",
         "subtitle": "Sentiment · Momentum",
         "description": (
-            "Captures assets building momentum before a breakout. "
-            "Heavy S+M weighting surfaces assets where crowd sentiment "
-            "and price momentum are both accelerating — optimal entry "
-            "before a trend becomes consensus."
+            "Weights sentiment and momentum most heavily. Scores highest the assets "
+            "where crowd sentiment and price momentum are both accelerating."
         ),
         "pillar_weights": {"F": 0.10, "M": 0.35, "O": 0.10, "S": 0.35, "A": 0.10},
         "entry_criteria": {
@@ -60,7 +58,7 @@ STRATEGIES: Dict[str, Dict[str, Any]] = {
         "target_hold_days": "14–30",
         "color": "#06B6D4",    # cyan
         "icon": "⚡",
-        "freqtrade_class": "BreakoutStrategy",
+        "fq_class": "BreakoutStrategy",
         "tags": ["momentum", "sentiment", "trend-following"],
     },
     "value_onchain": {
@@ -84,7 +82,7 @@ STRATEGIES: Dict[str, Dict[str, Any]] = {
         "target_hold_days": "30–90",
         "color": "#10B981",    # emerald
         "icon": "⚖",
-        "freqtrade_class": "ValueOnChainStrategy",
+        "fq_class": "ValueOnChainStrategy",
         "tags": ["value", "fundamental", "on-chain", "quality"],
     },
     "regime_adaptive": {
@@ -108,7 +106,7 @@ STRATEGIES: Dict[str, Dict[str, Any]] = {
         "target_hold_days": "Variable",
         "color": "#8B5CF6",    # purple
         "icon": "◎",
-        "freqtrade_class": "RegimeAdaptiveStrategy",
+        "fq_class": "RegimeAdaptiveStrategy",
         "tags": ["macro-aware", "adaptive", "balanced"],
     },
 }
@@ -296,10 +294,10 @@ OPEN_SOURCE_STRATEGIES: List[Dict[str, Any]] = [
     {
         "id": "swing_overlay_mtf", "name": "Swing Overlay (MTF)",
         "subtitle": "4h regime · 15m RSI-cross · long/short",
-        "file": "SwingOverlayV7_MTF.py", "framework": "Freqtrade",
+        "file": "SwingOverlayV7_MTF.py", "framework": "FQ",
         "timeframe": "15m (4h regime)", "style": "Directional multi-timeframe swing",
-        "thesis": ("4h MACD/ADX/EMA sets regime + direction; 15m RSI-cross times entries "
-                   "aligned to it. Regime direction filter + flat-mode circuit breaker."),
+        "thesis": ("4h MACD/ADX/EMA sets regime + direction; the 15m RSI cross sets timing "
+                   "in that direction. Regime direction filter + flat-mode circuit breaker."),
         # S-549(Jazz 10-12「删掉」):没有被样本外验证过的数字不上页面、不进对外接口 —— 样本内 Sharpe / CAGR 拿掉
         "metrics": None, "metrics_basis": "in_sample_only",
         "honest_note": ("Backtested in-sample only; no out-of-sample record yet, so no performance figures "
@@ -310,7 +308,7 @@ OPEN_SOURCE_STRATEGIES: List[Dict[str, Any]] = [
     {
         "id": "cis_value_onchain", "name": "CIS Value / On-Chain",
         "subtitle": "F+O quality gate · daily",
-        "file": "ValueOnChainStrategy.py", "framework": "Freqtrade",
+        "file": "ValueOnChainStrategy.py", "framework": "FQ",
         "timeframe": "1d", "style": "Fundamental + on-chain value",
         "thesis": ("Gates on CIS Fundamental + On-chain pillars (F≥60, O≥55, strat CIS≥58) "
                    "with RSI/EMA/volume confirmation. Best in Tightening/Risk-Off/Stagflation."),
@@ -323,7 +321,7 @@ OPEN_SOURCE_STRATEGIES: List[Dict[str, Any]] = [
     {
         "id": "cis_breakout", "name": "CIS Breakout",
         "subtitle": "S+M momentum gate · 4h",
-        "file": "BreakoutStrategy.py", "framework": "Freqtrade",
+        "file": "BreakoutStrategy.py", "framework": "FQ",
         "timeframe": "4h", "style": "Sentiment + momentum breakout",
         "thesis": ("Gates on CIS Sentiment + Momentum pillars (M≥55, S≥52, strat CIS≥62) with "
                    "MACD/RSI/EMA confirmation. Best in Risk-On/Easing/Goldilocks."),
@@ -343,7 +341,7 @@ async def list_open_source():
     return {
         "strategies": [{k: v for k, v in s.items() if k != "file"} for s in OPEN_SOURCE_STRATEGIES],
         "count": len(OPEN_SOURCE_STRATEGIES), "license": "MIT",
-        "repo_path": "strategies/open_source/", "framework": "Freqtrade",
+        "repo_path": "strategies/open_source/", "framework": "FQ",
         "api_base": "https://looloomi.ai/api/v1",
         "note": "Directional / CIS-gated strategies — not our causal edge. No performance figures: none has an out-of-sample record, and a backtest is not a track record.",
     }

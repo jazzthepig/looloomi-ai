@@ -302,7 +302,7 @@ def get_curve(limit: int = 400) -> dict:
     """NAV curve + honest summary, file-based."""
     if not _NAV_CSV_PATH.exists():
         return {"status": "no_data",
-                "note": "R76 strategy-2 paper book not yet marked",
+                "note": "paper book not yet marked",
                 "cell": {
                     "cad": R76_CAD, "bps": R76_BPS, "k": R76_K, "sign": R76_SIGN,
                     "declared_capacity_usd": DEFAULT_DECLARED_CAPACITY_USD,

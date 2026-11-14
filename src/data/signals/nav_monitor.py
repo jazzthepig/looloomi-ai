@@ -47,14 +47,14 @@ _logger = logging.getLogger(__name__)
 # N for OOS period: from R46/R63 reports the OOS sample = ~365 days
 # → OOS Sharpe ≈ OOS_t × sqrt(252/365) = +2.38 × 0.831 = +1.98
 FUSION_REF = {
-    "label":             "R64 fusion cell — w_R46=0.25, R46 5d/5bps + R62 21d/0bps fragility-gated",
+    "label":             "Fusion cell — 25% on-chain-pillar sleeve (5d / 5bps) + 75% fragility-gated sleeve (21d / 0bps)",
     "oos_sharpe":        1.98,            # derived from OOS_t × sqrt(252/N_oos)
     "oos_t":             2.38,
     "oos_days":          365,
     "oos_max_dd":        -11.05,
     "gross_sharpe_full": 1.69,            # full-period (in-sample + OOS combined)
     "report_path":       "reports/r63_fusion_validation/2026-07-21/REPORT.md",
-    "report_basis":      "OOS from R46 + R62 split window; full-period Sharpe inflates",
+    "report_basis":      "OOS from the two sleeves' split window; full-period Sharpe inflates",
 }
 
 # TWO_LAYER (§5b — per reports/C_S4_TWO_LAYER_BOOK_2026-07-19.md)
