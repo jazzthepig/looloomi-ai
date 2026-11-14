@@ -59,6 +59,41 @@ def test_frames_keep_repo_code_outermost_first_plus_the_innermost_library_frames
     assert not any("site-packages" in f for f in mine)
 
 
+def test_the_virtualenv_inside_the_repo_is_not_our_code():
+    """线上的虚拟环境在仓库目录里(.venv/)。11-14 第一次抓到的卡顿:「卡在 .venv/…/numpy/_core/_methods.py:61 _any」
+    —— 那是库,要改的是 signal_attribution.py:224。"""
+    assert ls._is_library(".venv/lib/python3.12/site-packages/numpy/_core/_methods.py")
+    assert ls._is_library("venv/lib/python3.12/site-packages/httpcore/_backends/sync.py")
+    assert ls._is_library(".venv/bin/uvicorn")
+    assert not ls._is_library("src/data/cis/signal_attribution.py") and not ls._is_library("scripts/compute_regime_fitness.py")
+    stall = {"at": "x", "lag_s": 10.6, "samples": [{"lag_s": 5.6, "frames": [
+        "src/api/main.py:1883 _signal_attribution_loop", "src/data/cis/signal_attribution.py:224 build_rows",
+        "[_methods.py:61 _any]"]}]}
+    assert ls.where(stall) == "src/data/cis/signal_attribution.py:224 build_rows"
+
+
+def test_the_four_places_the_watch_named_stay_off_the_event_loop():
+    """2026-11-14 09:18–09:24,看门线程点名的四处(合计 181 秒):市场态的逐日计算、信号归因的 build_rows、
+    regime fitness 的同步请求与计算、信号工厂的同步拉数与回测。它们在 async 函数里**直接**被调用就是回归。"""
+    import ast
+    sites = {
+        "src/data/vector/market_state_writer.py": ("recompute_all", {"compute_vectors", "zscore_expanding", "zscore_columns"}),
+        "src/data/cis/signal_attribution.py": ("run_once", {"build_rows"}),
+        "src/api/routers/admin.py": ("trigger_regime_fitness", {"fetch_historical_rows", "fetch_trade_results",
+                                                                "compute_7d_returns", "compute_fitness", "sb_post"}),
+        "src/research/factory/signal_factory.py": ("recalibrate_and_log", {"run", "walkforward_combined"}),
+    }
+    for path, (fn_name, heavy) in sites.items():
+        tree = ast.parse((ROOT / path).read_text(encoding="utf-8"))
+        fn = next(n for n in ast.walk(tree) if isinstance(n, ast.AsyncFunctionDef) and n.name == fn_name)
+        direct = sorted({c.func.id for c in ast.walk(fn) if isinstance(c, ast.Call) and isinstance(c.func, ast.Name)
+                         and c.func.id in heavy})
+        assert not direct, f"{path}::{fn_name} 直接调用了 {direct} —— 同步重活要走 asyncio.to_thread,否则整个进程跟着停"
+        threaded = {a.id for c in ast.walk(fn) if isinstance(c, ast.Call) and ast.unparse(c.func) == "asyncio.to_thread"
+                    for a in c.args[:1] if isinstance(a, ast.Name)}
+        assert heavy <= threaded, f"{path}::{fn_name} 里这些没进线程:{sorted(heavy - threaded)}"
+
+
 def test_a_real_block_on_a_real_loop_is_caught_with_the_blocking_line(monkeypatch):
     monkeypatch.setattr(ls, "STALL_S", 0.25)
     monkeypatch.setattr(ls, "SAMPLE_AT", (0.25, 0.6, 1.2))

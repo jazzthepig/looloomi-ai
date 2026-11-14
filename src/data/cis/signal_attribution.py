@@ -26,6 +26,7 @@ S-527:标 OUTPERFORM 的名字 17 个月跑输同类 —— 一个信号如果�
 """
 from __future__ import annotations
 
+import asyncio
 import math
 from datetime import date, datetime, timezone
 from typing import Any, Mapping, Optional
@@ -352,7 +353,7 @@ async def run_once(series: str = SERIES_STANDARD) -> dict[str, Any]:
         members = [s for s in px.columns if s in syms]
         groups[g] = (px, ew_index(px[members]))
     last_day = max(str(r["d"])[:10] for r in sig)
-    rows = build_rows(evs, groups, btc, last_day, series=series)
+    rows = await asyncio.to_thread(build_rows, evs, groups, btc, last_day, series=series)   # S-862 补三:约 10 秒的纯计算,不占事件循环
     for i in range(0, len(rows), 1000):
         res = await supabase_upsert_table(TABLE, rows[i:i + 1000], on_conflict="symbol,d,series")
         if not res.ok:

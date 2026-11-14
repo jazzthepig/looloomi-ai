@@ -72,6 +72,7 @@
 """
 from __future__ import annotations
 
+import asyncio
 import bisect
 import logging
 import os
@@ -165,6 +166,12 @@ PANEL_EXCLUDE = frozenset({"USDC", "USDT", "FDUSD", "TUSD", "BUSD", "USDP", "DAI
 #: `tests/test_a_truncated_page_is_not_the_whole_set.py` 只扫 URL 里的 `limit=` 字面量,
 #: 这里的 limit 放在 params dict 里,**守卫看不见**。
 PAGE = 1000
+
+#: `fetch_panel` 每页**要**多少行(T-379 第二步,S-862 补三)。服务端上限 11-14 起是 10,000;它给多少就收多少。
+#: 这里可以直接要 10,000 而不必先探上限:`fetch_panel` 是「读到空页才停」(S-416 之后),服务端少给只会多翻几页,
+#: 不会提前结束。实测(11-14 边缘日志,部署后 20 分钟):`ohlcv_daily` 1,442 次请求里 842 次是它,每页 1,000 行、
+#: 翻到 offset 446,401 —— 整读一遍 447 次请求、库里走过约 1 亿行;按 10,000 是 46 次、约 1 千万行。
+PANEL_PAGE = 10000
 
 
 @dataclass(frozen=True)
@@ -316,7 +323,7 @@ async def fetch_panel(start: str, *, source: str = PANEL_SOURCE,
             "trade_date": f"gte.{warm}",
             # 排序键必须唯一,否则分页之间行会漂移(同一天多个标的)
             "order": "trade_date.asc,symbol.asc",
-            "limit": str(PAGE), "offset": str(offset),
+            "limit": str(PANEL_PAGE), "offset": str(offset),
         }
         if symbols:
             params["symbol"] = "in.(" + ",".join(sorted({s.upper() for s in symbols})) + ")"
@@ -779,7 +786,9 @@ async def recompute_all(start: str = DEFAULT_START, *,
             f"窗口只有 {spec.n_days} 天 < {MIN_DAYS} —— z-score 的分母不够,"
             f"标准化后的坐标系不稳。不写。")
 
-    vectors = compute_vectors(panel, spec, members=members)
+    # S-862 补三:逐日的纯 Python 计算要一分钟左右 —— 放进线程。原来直接在事件循环里算:2026-11-14 09:18:18 起
+    # 循环 62.7 秒不动(看门线程四次采样都停在这一行),网站不回应、别的循环已经回来的响应过了读时限。
+    vectors = await asyncio.to_thread(compute_vectors, panel, spec, members=members)
     if not vectors:
         return RecomputeResult(False, True, 0, None, spec,
                                "逐日计算后 0 个向量 —— 每一天的存活标的都不足 "
@@ -793,10 +802,10 @@ async def recompute_all(start: str = DEFAULT_START, *,
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     if v2:
-        zscore_expanding(vectors, min_obs=Z_MIN_OBS)
+        await asyncio.to_thread(zscore_expanding, vectors, min_obs=Z_MIN_OBS)
         zpass = f"{src.source}:pit{N_MEMBERS}:expanding{Z_MIN_OBS}:{stamp}"
     else:
-        zscore_columns(vectors)
+        await asyncio.to_thread(zscore_columns, vectors)
         zpass = f"{src.source}:{spec.n_symbols}sym:{stamp}"
     rows = build_rows_for_upsert(vectors, zscore_pass=zpass)
 

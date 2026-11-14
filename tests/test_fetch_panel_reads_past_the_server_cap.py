@@ -49,7 +49,41 @@ def test_reads_every_row_past_the_cap() -> None:
     print("  ✓ 标的过滤下推到查询里")
 
 
+def test_a_higher_server_cap_means_fewer_pages_and_the_same_rows() -> None:
+    """T-379 第二步:服务端上限 10,000 时,25,000 行 = 3 页 + 1 个空页;上限还是 1,000 时照样读全(上面那条)。"""
+    from src.data.vector import market_state_writer as w
+
+    rows = [{"symbol": f"S{i % 50}", "trade_date": f"20{20 + i // 18250:02d}-{1 + (i // 1400) % 12:02d}-{1 + (i // 50) % 28:02d}",
+             "close": 1.0 + i, "volume": 1.0, "source": "coingecko_pro_ohlc"} for i in range(25000)]
+    calls: list[tuple[int, int]] = []
+
+    def run(cap: int) -> int:
+        calls.clear()
+
+        async def fake_get(path, params):
+            off, lim = int(params["offset"]), int(params["limit"])
+            calls.append((off, lim))
+            return w.SbRead(rows[off: off + min(lim, cap)])
+
+        old_get = w._sb_get
+        w._sb_get = fake_get
+        try:
+            panel, _ = asyncio.run(w.fetch_panel("2020-01-01", source="coingecko_pro_ohlc"))
+        finally:
+            w._sb_get = old_get
+        return sum(len(v) for v in panel.values())
+
+    distinct = len({(r["symbol"], r["trade_date"]) for r in rows})
+    n_big = run(10000)
+    assert n_big == distinct and len(calls) == 4, f"上限 10,000:应 3 页 + 1 空页,实际 {len(calls)} 次请求、{n_big}/{distinct} 格"
+    assert all(lim == w.PANEL_PAGE == 10000 for _, lim in calls)
+    n_small = run(1000)
+    assert n_small == distinct and len(calls) == 26, f"上限 1,000:要 10,000 只给 1,000 也必须读全,实际 {len(calls)} 次、{n_small}/{distinct}"
+    print("  ✓ 上限 10,000:25,000 行 4 次请求;上限 1,000:26 次请求;两次读到的格子相同")
+
+
 if __name__ == "__main__":
     print("── S-416 fetch_panel 分页 ──")
     test_reads_every_row_past_the_cap()
-    print("\n✅ 1/1 passed")
+    test_a_higher_server_cap_means_fewer_pages_and_the_same_rows()
+    print("\n✅ 2/2 passed")

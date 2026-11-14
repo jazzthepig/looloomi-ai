@@ -220,10 +220,12 @@ async def trigger_regime_fitness(x_internal_token: str = Header(None),
         raise HTTPException(status_code=500, detail=f"import failed: {e}")
 
     try:
-        rows = fetch_historical_rows(window_days)
-        trades = fetch_trade_results(window_days)
-        enriched = compute_7d_returns(rows, trades)
-        fitness = compute_fitness(enriched, window_days)
+        # S-862 补三:这五个都是同步函数(脚本里的 httpx 同步客户端 + 纯计算)。原来直接在事件循环里跑:
+        # 2026-11-14 09:22:03 起循环 64.2 秒不动,栈停在 sb_get 的 ssl read 和 compute_7d_returns。放进线程。
+        rows = await asyncio.to_thread(fetch_historical_rows, window_days)
+        trades = await asyncio.to_thread(fetch_trade_results, window_days)
+        enriched = await asyncio.to_thread(compute_7d_returns, rows, trades)
+        fitness = await asyncio.to_thread(compute_fitness, enriched, window_days)
         if not fitness:
             # ── S-202 (2026-08-23): this used to return ok=True ─────────────
             # `{"ok": True, "rows": 0}` printed as
@@ -247,7 +249,7 @@ async def trigger_regime_fitness(x_internal_token: str = Header(None),
         if dry_run:
             return {"ok": True, "dry_run": True, "would_insert": len(fitness), "sample": fitness[:3]}
 
-        ok = sb_post("cis_regime_fitness", fitness)
+        ok = await asyncio.to_thread(sb_post, "cis_regime_fitness", fitness)
         return {
             "ok":       bool(ok),
             "rows":     len(fitness),

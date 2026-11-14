@@ -43,6 +43,13 @@ _LOCK = threading.Lock()
 _S: dict[str, Any] = {"tick": 0.0, "cur": None, "done": [], "thread_id": None, "gen": 0, "thread": None, "ticker": None}
 
 
+def _is_library(rel: str) -> bool:
+    """虚拟环境建在仓库目录里(线上是 `.venv/`)⇒ 路径在仓库下面不等于是我们的代码。第一次上线抓到的四次卡顿里,
+    两次把「卡在哪」报成了 numpy / httpcore 里的一行 —— 要改的是调它的那一行。"""
+    r = "/" + rel.replace("\\", "/").lstrip("/")
+    return "/site-packages/" in r or r.startswith(("/.venv/", "/venv/")) or "/lib/python" in r
+
+
 def app_frames(frame: Any, root: str = _ROOT, tail: int = 2) -> list[str]:
     """一帧往外的调用链 → `路径:行 函数`,**外层在前**。只留仓库里的帧,外加最里面 `tail` 帧(库函数:
     真正在烧 CPU 的那一行常常在 pandas / json 里,但要改的是调它的那一行)。"""
@@ -55,7 +62,7 @@ def app_frames(frame: Any, root: str = _ROOT, tail: int = 2) -> list[str]:
     out = []
     for i, (fn, ln, name) in enumerate(chain):
         inner = i >= len(chain) - tail
-        if fn.startswith(root):
+        if fn.startswith(root) and not _is_library(fn[len(root):]):
             out.append(f"{fn[len(root):].lstrip('/')}:{ln} {name}")
         elif inner:
             out.append(f"[{Path(fn).name}:{ln} {name}]")

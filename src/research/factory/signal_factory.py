@@ -18,6 +18,8 @@ Reuses causal_positioning (panel + validated signal), deflated_sharpe, portfolio
 """
 from __future__ import annotations
 
+import asyncio
+
 import numpy as np
 
 from src.research.strategies.causal_positioning import (
@@ -392,12 +394,14 @@ async def recalibrate_and_log() -> dict:
     """Stage 4 — the loop's recalibration turn. Re-run the factory, write the fresh nucleus
     blend to Redis (the combined book reads it → decayed signals drop out with no code change),
     and log the batch to experiment_runs (the loop's memory). Best-effort; never raises."""
-    res = run()
+    # S-862 补三:run() 和 walkforward_combined() 里是同步的 Binance 请求加回测。原来直接在事件循环里跑:
+    # 2026-11-14 09:23:08 起循环 43.8 秒不动,栈停在 load_binance_panel 的 klines / funding。放进线程。
+    res = await asyncio.to_thread(run)
     comb = res.get("combined")
     nucleus_blend = comb.weights if comb else {n: round(1.0 / len(res["nucleus"]), 4) for n in res["nucleus"]}
     # the HONEST number — OOS (blend fit on train only), never the inflated in-sample Sharpe.
     try:
-        wf = walkforward_combined()
+        wf = await asyncio.to_thread(walkforward_combined)
     except Exception:
         wf = {"oos_combined_sharpe": None}
     challenger_oos = wf.get("oos_combined_sharpe")
