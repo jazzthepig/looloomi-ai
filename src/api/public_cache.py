@@ -12,10 +12,17 @@
   内部 token / Cookie)与交易、鉴权、密钥、分析这些前缀一律不进这一层。请求头带 `cache-control: no-cache` ⇒ 不读缓存(硬刷新照常拿新的)。
 - 旧值最多给到 max-age 的 12 倍、且不超过 1 小时;响应里各接口自己的 `as_of` 照旧,旧不旧看得见。
 关掉:环境变量 `PUBLIC_CACHE=0`。判活:响应头 `x-cache`;`stats()`。
+
+**重启后还是热的(11-14 第二步):** 每次部署进程重启,上面这份内存里的缓存清零,之后 5–8 分钟人人都在等现算。存进内存的同时
+也写一份到 Redis —— **只写算得慢的**(这次现算 ≥ 0.5 秒)、≤ 400 KB 的文本响应,同一个键最多 10 分钟写一次:Redis 还担着 CIS 的
+推送桥和限流,不能让缓存把它的额度吃掉;算得快的重启后现算也不慢。进程里没有的键先问一次 Redis,有且不超过 20 分钟 ⇒ 先给它
+(过了 max-age 就标 STALE、后台马上换新)。年龄用墙上时钟算,跨进程不变。Redis 问不到 / 超时 1.5 秒 ⇒ 当作没有,照常现算;
+同一个键 60 秒内只问一次。关掉这一半:`PUBLIC_CACHE_PERSIST=0`。
 """
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import logging
 import os
 import re
@@ -36,10 +43,85 @@ EXCLUDE = ("/api/v1/trading/", "/api/v1/auth/", "/api/v1/keys/", "/api/v1/analyt
 CREDENTIAL_HEADERS = ("authorization", "x-api-key", "x-internal-token", "x-executor-token", "cookie")
 _MAX_AGE = re.compile(r"max-age\s*=\s*(\d+)")
 
+PERSIST_MAX_BODY = 400_000
+PERSIST_MIN_COST_S, PERSIST_EVERY_S = 0.5, 600.0
+RESTORE_MAX_AGE_S = 1200.0
+RESTORE_TIMEOUT_S, RESTORE_RETRY_S = 1.5, 60.0
+RESTORE_PER_MINUTE = 120
+_RESTORE_TRIED: dict[str, float] = {}
+_RESTORE_BUDGET = {"minute": -1, "used": 0}
+_PERSISTED_AT: dict[str, float] = {}
+
+
+def persist_enabled() -> bool:
+    return os.environ.get("PUBLIC_CACHE_PERSIST", "1").strip().lower() not in ("0", "off", "false", "no")
+
+
+def _rkey(key: str) -> str:
+    return "pubcache:v1:" + hashlib.sha1(key.encode("utf-8", "replace")).hexdigest()[:24]
+
+
+async def _redis_get(rkey: str) -> Optional[dict]:
+    from src.api.store import redis_get_key
+    return await redis_get_key(rkey)
+
+
+async def _redis_set(rkey: str, data: dict, ttl: int) -> Any:
+    from src.api.store import redis_set_key
+    return await redis_set_key(rkey, data, ttl=ttl)
+
+
+async def _persist(key: str, e: dict) -> None:
+    try:
+        if len(e["body"]) > PERSIST_MAX_BODY:
+            return
+        body = e["body"].decode("utf-8")                                  # 不是文本就不存(图片等)
+        await _redis_set(_rkey(key), {"k": key, "at": e["at"], "max_age": e["max_age"], "stale_age": e["stale_age"],
+                                      "headers": [[k.decode("latin-1"), v.decode("latin-1")] for k, v in e["headers"]],
+                                      "body": body}, int(RESTORE_MAX_AGE_S + PERSIST_EVERY_S))
+        _N["persisted"] += 1
+    except Exception as ex:                                               # noqa: BLE001 —— 存不进不影响这次响应
+        _N["persist_failed"] += 1
+        _log.debug("[PUBLIC-CACHE] persist %s failed: %s", key, ex)
+
+
+async def _restore(key: str) -> Optional[dict]:
+    """进程里没有这个键:问一次 Redis。有、键对得上、还没老过上限 ⇒ 放回内存并返回;否则 None。"""
+    now = time.time()
+    if not persist_enabled() or now - _RESTORE_TRIED.get(key, -1e18) < RESTORE_RETRY_S:
+        return None
+    # 随机查询参数能造出无数个键:记录表有上限,每分钟问 Redis 的次数也有上限(超了就当没有,照常现算)
+    if len(_RESTORE_TRIED) > 5000:
+        _RESTORE_TRIED.clear()
+    minute = int(now // 60)
+    if _RESTORE_BUDGET["minute"] != minute:
+        _RESTORE_BUDGET["minute"], _RESTORE_BUDGET["used"] = minute, 0
+    if _RESTORE_BUDGET["used"] >= RESTORE_PER_MINUTE:
+        return None
+    _RESTORE_BUDGET["used"] += 1
+    _RESTORE_TRIED[key] = now
+    try:
+        d = await asyncio.wait_for(_redis_get(_rkey(key)), timeout=RESTORE_TIMEOUT_S)
+        if not isinstance(d, dict) or d.get("k") != key or time.time() - float(d["at"]) > RESTORE_MAX_AGE_S:
+            return None
+        # 上一个进程存的:最多认 20 分钟。旧值年龄上限放宽到这个数 —— 否则缺省 5 分钟的那些,重启后一条都用不上
+        e = {"at": float(d["at"]), "max_age": int(d["max_age"]), "stale_age": int(max(float(d["stale_age"]), RESTORE_MAX_AGE_S)),
+             "headers": [(str(k).encode("latin-1"), str(v).encode("latin-1")) for k, v in d["headers"]],
+             "body": str(d["body"]).encode("utf-8")}
+        _C[key] = e
+        _N["restored"] += 1
+        return e
+    except Exception as ex:                                               # noqa: BLE001 —— 问不到 = 没有
+        _N["restore_failed"] += 1
+        _log.debug("[PUBLIC-CACHE] restore %s failed: %s", key, ex)
+        return None
+
+
 _C: "OrderedDict[str, dict]" = OrderedDict()
 _INFLIGHT: dict[str, asyncio.Future] = {}
 _REFRESHING: set[str] = set()
-_N = {"hit": 0, "stale": 0, "miss": 0, "stored": 0, "refresh": 0, "refresh_failed": 0}
+_N = {"hit": 0, "stale": 0, "miss": 0, "stored": 0, "refresh": 0, "refresh_failed": 0,
+      "persisted": 0, "persist_failed": 0, "restored": 0, "restore_failed": 0}
 
 
 def eligible(path: str, headers: dict[str, str]) -> bool:
@@ -70,7 +152,7 @@ def storable(status: Optional[int], headers: list, body: Optional[bytes]) -> Opt
     return DEFAULT_MAX_AGE, DEFAULT_STALE_S
 
 
-def _store(key: str, status: Optional[int], headers: list, body: Optional[bytes], now: float) -> bool:
+def _store(key: str, status: Optional[int], headers: list, body: Optional[bytes], now: float, cost_s: float = 0.0) -> bool:
     policy = storable(status, headers, body)
     if policy is None:
         return False
@@ -78,6 +160,15 @@ def _store(key: str, status: Optional[int], headers: list, body: Optional[bytes]
     _C[key] = {"at": now, "max_age": policy[0], "stale_age": policy[1], "headers": keep, "body": body}
     _C.move_to_end(key)
     _N["stored"] += 1
+    if persist_enabled() and cost_s >= PERSIST_MIN_COST_S and now - _PERSISTED_AT.get(key, -1e18) >= PERSIST_EVERY_S:
+        try:
+            asyncio.get_running_loop()
+            if len(_PERSISTED_AT) > 5000:
+                _PERSISTED_AT.clear()
+            _PERSISTED_AT[key] = now
+            asyncio.ensure_future(_persist(key, _C[key]))
+        except RuntimeError:                                              # 不在事件循环里(同步调用 / 测试):跳过
+            pass
     total = sum(len(e["body"]) for e in _C.values())
     while _C and (len(_C) > MAX_ENTRIES or total > MAX_TOTAL):
         _, old = _C.popitem(last=False)
@@ -127,6 +218,8 @@ class PublicCacheMiddleware:
         key = path + "?" + (scope.get("query_string") or b"").decode("latin-1")
         force = "no-cache" in headers.get("cache-control", "").lower() or "no-cache" in headers.get("pragma", "").lower()
         e = None if force else _C.get(key)
+        if e is None and not force:
+            e = await _restore(key)                                       # 刚重启:内存是空的,Redis 里可能有上一个进程存的
         if e is not None:
             age = time.time() - e["at"]
             if age <= e["max_age"]:
@@ -151,8 +244,9 @@ class PublicCacheMiddleware:
         mine = asyncio.get_running_loop().create_future()
         _INFLIGHT.setdefault(key, mine)
         try:
+            t0 = time.monotonic()
             status, hdrs, body = await _run(self.app, scope, receive, send)
-            _store(key, status, hdrs, body, time.time())
+            _store(key, status, hdrs, body, time.time(), time.monotonic() - t0)
         finally:
             if _INFLIGHT.get(key) is mine:
                 _INFLIGHT.pop(key, None)
@@ -174,9 +268,10 @@ class PublicCacheMiddleware:
 
         async def job():
             try:
+                t0 = time.monotonic()
                 status, hdrs, body = await _run(self.app, s2, recv, None)
                 _N["refresh"] += 1
-                if not _store(key, status, hdrs, body, time.time()):
+                if not _store(key, status, hdrs, body, time.time(), time.monotonic() - t0):
                     _N["refresh_failed"] += 1                             # 刷新拿到的不是可存的 200:旧值照旧按年龄上限处理
             except Exception as ex:                                       # noqa: BLE001
                 _N["refresh_failed"] += 1
@@ -194,5 +289,8 @@ def reset() -> None:
     _C.clear()
     _INFLIGHT.clear()
     _REFRESHING.clear()
+    _RESTORE_TRIED.clear()
+    _PERSISTED_AT.clear()
+    _RESTORE_BUDGET.update(minute=-1, used=0)
     for k in _N:
         _N[k] = 0

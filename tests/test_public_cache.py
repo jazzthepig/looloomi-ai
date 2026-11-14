@@ -1,7 +1,15 @@
 """`src/api/public_cache.py`:源站兑现接口自己声明的可缓存;先给旧的、后台换新;带凭据 / 没声明 / 出错的一律不存。"""
 import asyncio
 
+import pytest
+
 from src.api import public_cache as pc
+
+
+@pytest.fixture(autouse=True)
+def _no_real_redis(monkeypatch):
+    """这些测试不碰真 Redis:缺省把「重启后还是热的」那一半关掉;专门测它的用例自己接一个假的。"""
+    monkeypatch.setenv("PUBLIC_CACHE_PERSIST", "0")
 
 
 def _app(counter, cache_control="public, max-age=60", status=200, slow=None, extra=()):
@@ -188,4 +196,126 @@ def test_undeclared_json_gets_a_short_default_and_non_json_does_not(monkeypatch)
     assert pc.storable(200, [(b"content-type", b"image/png")], b"x") is None, "不是 JSON 又没声明:不猜"
     assert pc.storable(200, [(b"content-type", b"application/json"), (b"cache-control", b"public, max-age=600")], b"x") == (600, 3600)
     assert pc.storable(200, [(b"content-type", b"application/json"), (b"cache-control", b"public, max-age=60")], b"x") == (60, 720)
+
+
+def _fake_redis(monkeypatch, fail=False, hang=False):
+    db, calls = {}, {"get": 0, "set": 0}
+
+    async def rget(k):
+        calls["get"] += 1
+        if hang:
+            await asyncio.sleep(5)
+        if fail:
+            raise RuntimeError("redis down")
+        return db.get(k)
+
+    async def rset(k, data, ttl):
+        calls["set"] += 1
+        db[k] = {**data, "_ttl": ttl}
+        return True
+    monkeypatch.setenv("PUBLIC_CACHE_PERSIST", "1")
+    monkeypatch.setattr(pc, "PERSIST_MIN_COST_S", 0.0)                 # 测试里的假路由是瞬时的;「只存算得慢的」另有用例
+    monkeypatch.setattr(pc, "_redis_get", rget)
+    monkeypatch.setattr(pc, "_redis_set", rset)
+    return db, calls
+
+
+def test_a_restarted_process_serves_what_the_previous_one_stored(monkeypatch):
+    """11-14:每次部署进程重启、内存缓存清零,之后几分钟人人等现算。内存里没有的键先问 Redis。"""
+    pc.reset()
+    clock = {"t": 1000.0}
+    monkeypatch.setattr(pc.time, "time", lambda: clock["t"])
+    db, calls = _fake_redis(monkeypatch)
+    c = {"n": 0}
+
+    async def go():
+        mw = pc.PublicCacheMiddleware(_app(c), enabled=True)
+        await _get(mw)
+        await asyncio.sleep(0.01)
+        assert calls["set"] == 1 and len(db) == 1 and list(db.values())[0]["_ttl"] == 1800 and list(db.values())[0]["k"] == "/api/v1/x?"
+        pc.reset()                                                 # ← 进程重启:内存清空,Redis 还在
+        clock["t"] += 30
+        mw2 = pc.PublicCacheMiddleware(_app(c), enabled=True)
+        r = await _get(mw2)
+        assert c["n"] == 1 and r["body"] == b'{"n":1}' and r["headers"]["x-cache"] == "HIT" and r["headers"]["age"] == "30", "没有重新算"
+        pc.reset()
+        clock["t"] += 60                                           # 再重启一次,这回已过 max-age:先给旧的,后台换新
+        mw3 = pc.PublicCacheMiddleware(_app(c), enabled=True)
+        r2 = await _get(mw3)
+        await asyncio.sleep(0.02)
+        assert r2["headers"]["x-cache"] == "STALE" and r2["body"] == b'{"n":1}' and c["n"] == 2 and pc.stats()["restored"] == 1
+        pc.reset()
+        clock["t"] += 1201                                         # 上一个进程存的最多认 20 分钟
+        mw4 = pc.PublicCacheMiddleware(_app(c), enabled=True)
+        r3 = await _get(mw4)
+        assert "x-cache" not in r3["headers"] and c["n"] == 3
+    asyncio.run(go())
+
+
+def test_redis_down_or_slow_means_compute_as_before_and_ask_once(monkeypatch):
+    for kw in (dict(fail=True), dict(hang=True)):
+        pc.reset()
+        monkeypatch.setattr(pc, "RESTORE_TIMEOUT_S", 0.05)
+        db, calls = _fake_redis(monkeypatch, **kw)
+        c = {"n": 0}
+        mw = pc.PublicCacheMiddleware(_app(c, cache_control="no-store"), enabled=True)
+
+        async def go():
+            a = await asyncio.wait_for(_get(mw), timeout=1.0)
+            b = await asyncio.wait_for(_get(mw), timeout=1.0)
+            return a, b
+        a, b = asyncio.run(go())
+        assert a["status"] == 200 and c["n"] == 2 and calls["get"] == 1, "问不到就现算;同一个键 60 秒内只问一次"
+        assert pc.stats()["restore_failed"] == 1
+
+
+def test_only_small_text_bodies_are_persisted_and_a_wrong_key_is_ignored(monkeypatch):
+    pc.reset()
+    db, calls = _fake_redis(monkeypatch)
+    monkeypatch.setattr(pc, "PERSIST_MAX_BODY", 5)
+
+    async def go():
+        c = {"n": 0}
+        await _get(pc.PublicCacheMiddleware(_app(c), enabled=True))          # 体 7 字节 > 5:不落 Redis
+        await asyncio.sleep(0.01)
+        assert calls["set"] == 0 and pc.stats()["stored"] == 1
+        db[pc._rkey("/api/v1/y?")] = {"k": "/api/v1/OTHER?", "at": pc.time.time(), "max_age": 60, "stale_age": 720, "headers": [], "body": "{}"}
+        r = await _get(pc.PublicCacheMiddleware(_app(c), enabled=True), path="/api/v1/y")
+        assert "x-cache" not in r["headers"], "哈希撞了 / 键对不上的不认"
+    asyncio.run(go())
+
+
+def test_only_slow_responses_go_to_redis_and_at_most_once_per_ten_minutes(monkeypatch):
+    """Redis 还担着 CIS 的推送桥和限流:缓存不能把它的额度吃掉。算得快的不存;同一个键 10 分钟最多写一次。"""
+    pc.reset()
+    clock = {"t": 0.0}
+    monkeypatch.setattr(pc.time, "time", lambda: clock["t"])
+    db, calls = _fake_redis(monkeypatch)
+    monkeypatch.setattr(pc, "PERSIST_MIN_COST_S", 0.5)
+
+    async def go():
+        c = {"n": 0}
+        mw = pc.PublicCacheMiddleware(_app(c), enabled=True)
+        await _get(mw)
+        await asyncio.sleep(0.01)
+        assert calls["set"] == 0, "瞬时算完的不落 Redis"
+        for now, cost, want in ((0.0, 0.9, 1), (100.0, 0.9, 1), (599.0, 0.9, 1), (601.0, 0.9, 2), (700.0, 0.1, 2)):
+            pc._store("/api/v1/slow?", 200, [(b"content-type", b"application/json")], b"{}", now, cost)
+            await asyncio.sleep(0.01)
+            assert calls["set"] == want, (now, cost, calls["set"])
+    asyncio.run(go())
+
+
+def test_random_query_strings_cannot_flood_redis(monkeypatch):
+    pc.reset()
+    db, calls = _fake_redis(monkeypatch)
+    monkeypatch.setattr(pc, "RESTORE_PER_MINUTE", 5)
+    c = {"n": 0}
+    mw = pc.PublicCacheMiddleware(_app(c, cache_control="no-store"), enabled=True)
+
+    async def go():
+        for i in range(40):
+            await _get(mw, query=f"_={i}".encode())
+    asyncio.run(go())
+    assert calls["get"] == 5 and c["n"] == 40, "超过每分钟的额度就不再问 Redis,请求照常现算"
 
