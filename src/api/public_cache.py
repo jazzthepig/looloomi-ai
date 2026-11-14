@@ -51,6 +51,7 @@ RESTORE_PER_MINUTE = 120
 _RESTORE_TRIED: dict[str, float] = {}
 _RESTORE_BUDGET = {"minute": -1, "used": 0}
 _PERSISTED_AT: dict[str, float] = {}
+_COST: dict[str, float] = {}
 
 
 def persist_enabled() -> bool:
@@ -109,6 +110,7 @@ async def _restore(key: str) -> Optional[dict]:
              "headers": [(str(k).encode("latin-1"), str(v).encode("latin-1")) for k, v in d["headers"]],
              "body": str(d["body"]).encode("utf-8")}
         _C[key] = e
+        _COST[key] = max(_COST.get(key, 0.0), PERSIST_MIN_COST_S)         # 上一个进程觉得它慢才存的:这个进程接着存
         _N["restored"] += 1
         return e
     except Exception as ex:                                               # noqa: BLE001 —— 问不到 = 没有
@@ -160,7 +162,12 @@ def _store(key: str, status: Optional[int], headers: list, body: Optional[bytes]
     _C[key] = {"at": now, "max_age": policy[0], "stale_age": policy[1], "headers": keep, "body": body}
     _C.move_to_end(key)
     _N["stored"] += 1
-    if persist_enabled() and cost_s >= PERSIST_MIN_COST_S and now - _PERSISTED_AT.get(key, -1e18) >= PERSIST_EVERY_S:
+    # 「算得慢」按这个键在本进程里**见过的最慢一次**算,不按这一次:有些路由自己还有一层缓存,开机第一次 19 秒、之后每次刷新几十毫秒
+    # —— 只看这一次的话,Redis 里那份只在开机时写过一回,半小时后就没了(11-14 实测:重启后 5 条慢路径恢复了 3 条,漏的正是这种)。
+    if len(_COST) > 5000:
+        _COST.clear()
+    slowest = _COST[key] = max(cost_s, _COST.get(key, 0.0))
+    if persist_enabled() and slowest >= PERSIST_MIN_COST_S and now - _PERSISTED_AT.get(key, -1e18) >= PERSIST_EVERY_S:
         try:
             asyncio.get_running_loop()
             if len(_PERSISTED_AT) > 5000:
@@ -201,6 +208,20 @@ async def _send_cached(send, e: dict, age: float, tag: str) -> None:
                                     (b"x-cache", tag.encode())]
     await send({"type": "http.response.start", "status": 200, "headers": headers})
     await send({"type": "http.response.body", "body": e["body"], "more_body": False})
+
+
+REFRESH_CONCURRENCY = 2
+_GATE: dict[int, asyncio.Semaphore] = {}
+
+
+def _refresh_gate() -> asyncio.Semaphore:
+    """每个事件循环一把(信号量绑定在创建它的循环上;测试里每个用例是新循环)。"""
+    loop = asyncio.get_running_loop()
+    g = _GATE.get(id(loop))
+    if g is None:
+        _GATE.clear()
+        g = _GATE[id(loop)] = asyncio.Semaphore(REFRESH_CONCURRENCY)
+    return g
 
 
 class PublicCacheMiddleware:
@@ -268,10 +289,14 @@ class PublicCacheMiddleware:
 
         async def job():
             try:
-                t0 = time.monotonic()
-                status, hdrs, body = await _run(self.app, s2, recv, None)
+                # 后台刷新同时最多 REFRESH_CONCURRENCY 个:预热循环 4 分钟一轮、一口气请求二十几条,过期的会同时开始重算 ——
+                # 11-14 实测那一刻六个不相干的接口一起慢了 3 秒(不是哪个接口慢,是进程被一堆重算挤住了)。
+                async with _refresh_gate():
+                    t0 = time.monotonic()
+                    status, hdrs, body = await _run(self.app, s2, recv, None)
+                    cost = time.monotonic() - t0
                 _N["refresh"] += 1
-                if not _store(key, status, hdrs, body, time.time(), time.monotonic() - t0):
+                if not _store(key, status, hdrs, body, time.time(), cost):
                     _N["refresh_failed"] += 1                             # 刷新拿到的不是可存的 200:旧值照旧按年龄上限处理
             except Exception as ex:                                       # noqa: BLE001
                 _N["refresh_failed"] += 1
@@ -291,6 +316,7 @@ def reset() -> None:
     _REFRESHING.clear()
     _RESTORE_TRIED.clear()
     _PERSISTED_AT.clear()
+    _COST.clear()
     _RESTORE_BUDGET.update(minute=-1, used=0)
     for k in _N:
         _N[k] = 0

@@ -299,7 +299,8 @@ def test_only_slow_responses_go_to_redis_and_at_most_once_per_ten_minutes(monkey
         await _get(mw)
         await asyncio.sleep(0.01)
         assert calls["set"] == 0, "瞬时算完的不落 Redis"
-        for now, cost, want in ((0.0, 0.9, 1), (100.0, 0.9, 1), (599.0, 0.9, 1), (601.0, 0.9, 2), (700.0, 0.1, 2)):
+        # 最后一步:这一次算得快(路由自己的缓存热了),但这个键在本进程里慢过 ⇒ 到了 10 分钟照样续写,Redis 里那份不会过期
+        for now, cost, want in ((0.0, 0.9, 1), (100.0, 0.9, 1), (599.0, 0.9, 1), (601.0, 0.9, 2), (700.0, 0.1, 2), (1300.0, 0.1, 3)):
             pc._store("/api/v1/slow?", 200, [(b"content-type", b"application/json")], b"{}", now, cost)
             await asyncio.sleep(0.01)
             assert calls["set"] == want, (now, cost, calls["set"])
@@ -332,4 +333,33 @@ def test_warm_loop_requests_what_the_dashboard_requests_within_the_stale_bound()
     loop = src[src.index("async def _public_cache_warm_loop"):src.index("async def _start_public_cache_warm_loop")]
     m = re.search(r"_asyncio\.sleep\((\d+)\)\s*$", loop.strip().splitlines()[-1]) or re.search(r"await _asyncio\.sleep\((\d+)\)", loop[loop.rindex("await _asyncio.sleep("):])
     assert m and int(m.group(1)) < pc.DEFAULT_STALE_S, "循环间隔要短于缺省的旧值上限,否则保不住"
+
+
+def test_background_refreshes_run_at_most_two_at_a_time(monkeypatch):
+    """预热循环一轮请求二十几条,过期的会同时开始重算;11-14 量到那一刻六个不相干的接口一起慢了 3 秒。"""
+    pc.reset()
+    clock = {"t": 0.0}
+    monkeypatch.setattr(pc.time, "time", lambda: clock["t"])
+    live = {"now": 0, "peak": 0, "n": 0}
+
+    async def app(scope, receive, send):
+        live["n"] += 1
+        live["now"] += 1
+        live["peak"] = max(live["peak"], live["now"])
+        await asyncio.sleep(0.02)
+        live["now"] -= 1
+        await send({"type": "http.response.start", "status": 200, "headers": [(b"cache-control", b"public, max-age=60")]})
+        await send({"type": "http.response.body", "body": b"x", "more_body": False})
+    mw = pc.PublicCacheMiddleware(app, enabled=True)
+
+    async def go():
+        for i in range(8):
+            await _get(mw, path=f"/api/v1/k{i}")
+        live["peak"] = 0
+        clock["t"] = 61
+        for i in range(8):
+            assert (await _get(mw, path=f"/api/v1/k{i}"))["headers"]["x-cache"] == "STALE"
+        await asyncio.sleep(0.3)
+    asyncio.run(go())
+    assert live["n"] == 16 and live["peak"] == pc.REFRESH_CONCURRENCY, live
 
