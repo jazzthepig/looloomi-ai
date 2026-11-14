@@ -1,0 +1,24 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {"id": "T-382-1", "scenario": "Farside ETH 全量逐日表在结算日仍免密钥可取",
+     "statement": "2026-12-15 访问 https://farside.co.uk/ethereum-etf-flow-all-data/ 仍返回 200，且表内最新逐日行的日期 >= 2026-11-14",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.85, "horizon_d": "2026-12-15"},
+
+    {"id": "T-382-2", "scenario": "CMC data-api 免密钥日频仍可用",
+     "statement": "2026-12-15 请求 https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=1&range=1M 仍返回 200 且点数 >= 600（当前 701 点 / 31 天，约每小时一点）",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.85, "horizon_d": "2026-12-15"},
+
+    {"id": "T-382-3", "scenario": "BTC 在结算日的收盘水平",
+     "statement": "BTC 2026-12-15 收盘价落在 55,000 与 80,000 之间（2026-11-14 收盘 67,012.95）",
+     "variable": "close:BTC", "op": "between", "lo": 55000, "hi": 80000, "prob": 0.65, "horizon_d": "2026-12-15"},
+
+    {"id": "T-382-4", "scenario": "ETH 在结算日的收盘水平",
+     "statement": "ETH 2026-12-15 收盘价 > 1,700（2026-11-14 收盘 1,899.14）",
+     "variable": "close:ETH", "op": "gt", "lo": 1700, "prob": 0.55, "horizon_d": "2026-12-15"},
+
+    {"id": "T-382-5", "scenario": "结算日 BTC 不跌破 50,000",
+     "statement": "BTC 2026-12-15 收盘价 > 50,000（距 2026-11-14 收盘 67,012.95 约 -25%）",
+     "variable": "close:BTC", "op": "gt", "lo": 50000, "prob": 0.9, "horizon_d": "2026-12-15"}
+  ]
+}

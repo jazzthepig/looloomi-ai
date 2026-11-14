@@ -1,0 +1,533 @@
+{
+ "probed_at_utc": "2026-11-14T13:26:15.296116+00:00",
+ "page_status": 200,
+ "page_len": 209462,
+ "page_first200": "\n<!DOCTYPE html>\n<html class=\"no-js\" lang=\"en-US\">\n<head>\n    <link rel=\"shortcut icon\" type=\"image/jpg\" href=\"/wp-content/themes/twentytwenty/assets/images/favicon.ico\"/>\n    <meta charset=\"UTF-8\">\n ",
+ "base_table": {
+  "first_daily": "2026-10-26",
+  "last_daily": "2026-11-13",
+  "n_daily_rows": 15,
+  "header": [
+   "",
+   "ETHA",
+   "ETHB",
+   "FETH",
+   "ETHW",
+   "TETH",
+   "ETHV",
+   "QETH",
+   "EZET",
+   "MSSE",
+   "ETHE",
+   "ETH",
+   ""
+  ]
+ },
+ "footnote_html": "iv align=\"right\"><span class=\"tabletext\"><span class=\"redFont\">(88.5)</span></span></div></td><td><div align=\"right\"><span class=\"tabletext\"><span class=\"redFont\">(465.1)</span></span></div></td></tr>  \r\n        \r\n</tbody>\r\n</table>\r\n</figure>\r\n<p style=\"font-size:12px\">Source: Farside Investors<br>Note: The above table is generated automatically. Farside Investors is not liable for any errors or inaccuracies in the data. *ETHE &amp; ETH seed is a conversion from a prior product. &nbsp;To see an alternative table with all the daily flow data,&nbsp;<a href=\"/ethereum-etf-flow-all-data/\">click here</a>.</p>\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n<style>\r\n    .eth-stacked-chart-wrapper {\r\n        width: 100%;\r\n        max-width: 1200px;\r\n        margin: 30px auto;\r\n        height: 500px;\r\n        position: relative;\r\n    }\r\n    @media (max-width: 768px) {\r\n        .eth-stacked-chart-wrapper {\r\n            height: 350px;\r\n            margin: 15px auto;\r\n        }\r\n    }\r\n</style>\r\n\r\n<div class=\"eth-stacked-chart-wrapper\">\r\n    <canvas id=\"ethStackedFlowChart\"></canvas>\r\n</div>\r\n\r\n<!-- Load Chart.js CDN (Omit if already loaded elsewhere in your header) -->\r\n<script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>\r\n\r\n<script>\r\ndocument.addEventListener(\"DOMContentLoaded\", function() {\r\n    const ctx = document.getElementById('ethStackedFlowChart').getContext('2d');\r\n    \r\n    // Inject PHP data directly into JavaScript\r\n    const labels = [\"Jul 2024\",\"Jul 2024\",\"Jul 2024\",\"Jul 2024\",\"Jul 2024\",\"Jul 2024\",\"Jul 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Sep 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Oct 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Nov 2024\",\"Dec 2024\",\"Dec 2024\",\"Dec 2024\",\"Dec 2024\",\"Dec 2024\",\"Dec 2024\",\"Dec 2024\",\"Dec 2024\",\"Dec 2024\",\"Dec 2024\",\"Dec 2024\",",
+ "footnote_text": "iv align=\"right\"> (88.5) (465.1) Source: Farside Investors Note: The above table is generated automatically. Farside Investors is not liable for any errors or inaccuracies in the data. *ETHE & ETH seed is a conversion from a prior product. To see an alternative table with all the daily flow data, click here . .eth-stacked-chart-wrapper { width: 100%; max-width: 1200px; margin: 30px auto; height: 500px; position: relative; } @media (max-width: 768px) { .eth-stacked-chart-wrapper { height: 350px; margin: 15px auto; } } document.addEventListener(\"DOMContentLoaded\", function() { const ctx = document.getElementById('ethStackedFlowChart').getContext('2d'); // Inject PHP data directly into JavaScript const labels = [\"Jul 2024\",\"Jul 2024\",\"Jul 2024\",\"Jul 2024\",\"Jul 2024\",\"Jul 2024\",\"Jul 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug 2024\",\"Aug ",
+ "footnote_links": [
+  {
+   "href": "/ethereum-etf-flow-all-data/",
+   "text": "click here"
+  }
+ ],
+ "page_internal_links": [
+  "/",
+  "/author/admin/",
+  "/bitcoin-futures/",
+  "/books/",
+  "/btc/",
+  "/category/post/",
+  "/comments/feed/",
+  "/eth/",
+  "/feed/",
+  "/fund/",
+  "/hyp/",
+  "/login/",
+  "/research/",
+  "/sign-up/",
+  "/sol/",
+  "/team/",
+  "/wp-content/uploads/2023/07/Procedure2023.pdf",
+  "/wp-json/",
+  "/wp-json/wp/v2/posts/1518",
+  "/zec/"
+ ],
+ "alt_table": {
+  "/ethereum-etf-flow-all-data/": {
+   "status": 200,
+   "len": 659725,
+   "first_daily": "2024-07-23",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 592,
+   "header": [
+    "",
+    "ETHA",
+    "ETHB",
+    "FETH",
+    "ETHW",
+    "TETH",
+    "ETHV",
+    "QETH",
+    "EZET",
+    "MSSE",
+    "ETHE",
+    "ETH",
+    "Total"
+   ],
+   "sha8": "e7ac137a"
+  },
+  "/ethereum-etf-flow-all-data/?page=2": {
+   "status": 200,
+   "len": 659727,
+   "first_daily": "2024-07-23",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 592
+  },
+  "/ethereum-etf-flow-all-data/?paged=2": {
+   "status": 200,
+   "len": 659727,
+   "first_daily": "2024-07-23",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 592
+  },
+  "/ethereum-etf-flow-all-data/?page=3": {
+   "status": 200,
+   "len": 659726,
+   "first_daily": "2024-07-23",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 592
+  },
+  "/ethereum-etf-flow-all-data/?page=12": {
+   "status": 200,
+   "len": 659726,
+   "first_daily": "2024-07-23",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 592
+  }
+ },
+ "wp_json_routes_etf": [],
+ "wp_json_len": 203408,
+ "pagination_probes": {
+  "(base)": {
+   "status": 200,
+   "len": 209465,
+   "sha8": "600b45e4",
+   "first_daily": "2026-10-26",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 15
+  },
+  "?page=2": {
+   "status": 200,
+   "len": 209465,
+   "sha8": "6c73c2dd",
+   "first_daily": "2026-10-26",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 15
+  },
+  "?paged=2": {
+   "status": 200,
+   "len": 209464,
+   "sha8": "d64c3689",
+   "first_daily": "2026-10-26",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 15
+  },
+  "?page=3": {
+   "status": 200,
+   "len": 209464,
+   "sha8": "871381e3",
+   "first_daily": "2026-10-26",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 15
+  },
+  "?page=12": {
+   "status": 200,
+   "len": 209463,
+   "sha8": "82eb50e0",
+   "first_daily": "2026-10-26",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 15
+  },
+  "?fund=all": {
+   "status": 200,
+   "len": 209465,
+   "sha8": "511018d5",
+   "first_daily": "2026-10-26",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 15
+  },
+  "?table=2": {
+   "status": 200,
+   "len": 209462,
+   "sha8": "d1ee6a79",
+   "first_daily": "2026-10-26",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 15
+  },
+  "?start=2024-07-23": {
+   "status": 200,
+   "len": 209464,
+   "sha8": "2fd953b8",
+   "first_daily": "2026-10-26",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 15
+  },
+  "?from=2024-07-23": {
+   "status": 200,
+   "len": 209466,
+   "sha8": "65600417",
+   "first_daily": "2026-10-26",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 15
+  },
+  "?date=2024-07-23": {
+   "status": 200,
+   "len": 209464,
+   "sha8": "952a8243",
+   "first_daily": "2026-10-26",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 15
+  },
+  "?year=2024": {
+   "status": 200,
+   "len": 209464,
+   "sha8": "47547ffe",
+   "first_daily": "2026-10-26",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 15
+  },
+  "?month=7": {
+   "status": 200,
+   "len": 209464,
+   "sha8": "2ce91a69",
+   "first_daily": "2026-10-26",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 15
+  },
+  "?all=1": {
+   "status": 200,
+   "len": 209464,
+   "sha8": "ccf1074b",
+   "first_daily": "2026-10-26",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 15
+  },
+  "?format=table": {
+   "status": 200,
+   "len": 209466,
+   "sha8": "3c60303b",
+   "first_daily": "2026-10-26",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 15
+  },
+  "?days=1000": {
+   "status": 200,
+   "len": 209465,
+   "sha8": "f0356335",
+   "first_daily": "2026-10-26",
+   "last_daily": "2026-11-13",
+   "n_daily_rows": 15
+  }
+ },
+ "pagination_verdict": "no parameter exposed a daily row older than the base table",
+ "admin_ajax": {
+  "etf_flows": {
+   "GET": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   },
+   "POST": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   }
+  },
+  "etf_table_data": {
+   "GET": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   },
+   "POST": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   }
+  },
+  "eth_flows": {
+   "GET": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   },
+   "POST": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   }
+  },
+  "eth_table": {
+   "GET": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   },
+   "POST": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   }
+  },
+  "farside_eth": {
+   "GET": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   },
+   "POST": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   }
+  },
+  "farside_table": {
+   "GET": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   },
+   "POST": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   }
+  },
+  "fund_flows": {
+   "GET": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   },
+   "POST": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   }
+  },
+  "get_etf_table": {
+   "GET": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   },
+   "POST": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   }
+  },
+  "get_historical": {
+   "GET": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   },
+   "POST": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   }
+  },
+  "get_more_rows": {
+   "GET": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   },
+   "POST": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   }
+  },
+  "get_table": {
+   "GET": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   },
+   "POST": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   }
+  },
+  "load_more": {
+   "GET": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   },
+   "POST": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   }
+  },
+  "load_table": {
+   "GET": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   },
+   "POST": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   }
+  },
+  "table_pagination": {
+   "GET": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   },
+   "POST": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   }
+  },
+  "um_remove_modal": {
+   "GET": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   },
+   "POST": {
+    "status": 400,
+    "len": 2,
+    "first200": "\n0",
+    "n_daily_rows": 0,
+    "first_daily": null,
+    "last_daily": null
+   }
+  }
+ },
+ "rest_routes": {
+  "/wp-json/": {
+   "status": 200,
+   "len": 203408,
+   "first200": "\n{\"name\":\"Farside Investors\",\"description\":\"\",\"url\":\"https:\\/\\/farside.co.uk\",\"home\":\"https:\\/\\/farside.co.uk\",\"gmt_offset\":\"0\",\"timezone_string\":\"\",\"page_for_posts\":0,\"page_on_front\":342,\"show_on_fro"
+  },
+  "/wp-json/wp/v2/pages?slug=eth": {
+   "status": 200,
+   "len": 3,
+   "first200": "\n[]"
+  },
+  "/wp-json/wp/v2/pages?slug=ethereum": {
+   "status": 200,
+   "len": 3,
+   "first200": "\n[]"
+  },
+  "/eth/?_format=json": {
+   "status": 200,
+   "len": 209465,
+   "first200": "\n<!DOCTYPE html>\n<html class=\"no-js\" lang=\"en-US\">\n<head>\n    <link rel=\"shortcut icon\" type=\"image/jpg\" href=\"/wp-content/themes/twentytwenty/assets/images/favicon.ico\"/>\n    <meta charset=\"UTF-8\">\n "
+  },
+  "/eth/feed/": {
+   "status": 200,
+   "len": 724,
+   "first200": "\n<?xml version=\"1.0\" encoding=\"UTF-8\"?><rss version=\"2.0\"\n\txmlns:content=\"http://purl.org/rss/1.0/modules/content/\"\n\txmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n\txmlns:atom=\"http://www.w3.org/2005/Ato"
+  }
+ }
+}

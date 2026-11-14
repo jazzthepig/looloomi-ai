@@ -1,0 +1,1048 @@
+{
+ "end_utc": "2026-11-14T13:33:15.258393+00:00",
+ "end_utc_actual": "2026-11-14T13:33:24.373501+00:00",
+ "extrapolation": {
+  "calibers": {
+   "okx_rest_uly_BTC-USDT": {
+    "caliber": "one instrument family (BTC-USDT), 15s poll, snapshot endpoint",
+    "extrapolated_per_day": 288.0,
+    "n_distinct_fills_seen": 101,
+    "n_fills_inside_window": 1,
+    "n_fills_outside_window": 100,
+    "rows_per_poll_max": 1
+   },
+   "okx_ws_ws_all_swap": {
+    "caliber": "push, no gap",
+    "extrapolated_per_day": 23040.0,
+    "n_distinct_fills": 80,
+    "n_instIds": 18,
+    "ts_max": 1794663187100,
+    "ts_min": 1794579227536
+   },
+   "okx_ws_ws_btc_usdt_family": {
+    "caliber": "push, one instrument family",
+    "extrapolated_per_day": 23040.0,
+    "n_distinct_fills": 80,
+    "n_instIds": 18,
+    "ts_max": 1794663187100,
+    "ts_min": 1794579227536
+   }
+  },
+  "caveat": "quiet-hours sample scaled linearly; NOT a lower bound (the active part of the day is not represented), NOT a day total, NOT the market, and NOT a promise of any order size",
+  "scale_per_day": 288.0,
+  "window_s": 300
+ },
+ "note": "extrapolation from a short quiet-window sample; NOT a lower bound on the daily count and NOT other venues",
+ "poll_s": 15,
+ "rest": {
+  "fills": [
+   {
+    "bkLoss": "0",
+    "bkPx": "66663.9",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.23",
+    "ts": "1794662260490"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66663.9",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.38",
+    "ts": "1794662260548"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66663.9",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "1.29",
+    "ts": "1794662260548"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66663.9",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "1.23",
+    "ts": "1794662260573"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66645.2",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "70",
+    "ts": "1794662260685"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66645.2",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.86",
+    "ts": "1794662260717"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66645.2",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "1.24",
+    "ts": "1794662260767"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66645.2",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "9.68",
+    "ts": "1794662260770"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66645.2",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.16",
+    "ts": "1794662260808"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66645.2",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.38",
+    "ts": "1794662260821"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66645.2",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.52",
+    "ts": "1794662260825"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66645.2",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "1.26",
+    "ts": "1794662260825"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66645.2",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.06",
+    "ts": "1794662260833"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66647.4",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.71",
+    "ts": "1794662260874"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66645.2",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.09",
+    "ts": "1794662260892"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66661",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.65",
+    "ts": "1794662599201"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66640.3",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "26.37",
+    "ts": "1794662602188"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66640.3",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.34",
+    "ts": "1794662602206"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66639.3",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "3.36",
+    "ts": "1794662602292"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66639.3",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "26.5",
+    "ts": "1794662602300"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66638.4",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.03",
+    "ts": "1794662602571"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66633.8",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.37",
+    "ts": "1794662602784"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66633.8",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.17",
+    "ts": "1794662602816"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66628.9",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.19",
+    "ts": "1794662602959"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66628.9",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "11.55",
+    "ts": "1794662603022"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66628.9",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "121.82",
+    "ts": "1794662603064"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66624.9",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "157.58",
+    "ts": "1794662603161"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66624.9",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.01",
+    "ts": "1794662603162"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66624.9",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "2.71",
+    "ts": "1794662603199"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66624.9",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "1.91",
+    "ts": "1794662603225"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66624.9",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.27",
+    "ts": "1794662603228"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66624.9",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.14",
+    "ts": "1794662603244"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66622",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.95",
+    "ts": "1794662603497"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66622",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "1.13",
+    "ts": "1794662603604"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66619.2",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "1.07",
+    "ts": "1794662603818"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66619.2",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.09",
+    "ts": "1794662603887"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66618.7",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.08",
+    "ts": "1794662604263"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66617.4",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "50.3",
+    "ts": "1794662606049"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66616.5",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "3.12",
+    "ts": "1794662606281"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66616.5",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "3.88",
+    "ts": "1794662606314"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66613.6",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "1.22",
+    "ts": "1794662606855"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66613.6",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.01",
+    "ts": "1794662606856"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66618.6",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "3.47",
+    "ts": "1794662620687"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66618.3",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.8",
+    "ts": "1794662622134"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66610.2",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.02",
+    "ts": "1794662663147"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66610.2",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.89",
+    "ts": "1794662663156"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66610.2",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "50.77",
+    "ts": "1794662663249"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66605.5",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "48.17",
+    "ts": "1794662663258"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66605.5",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "3.8",
+    "ts": "1794662663357"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66606",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.26",
+    "ts": "1794662663442"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66606",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "1.54",
+    "ts": "1794662663460"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66597.3",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.1",
+    "ts": "1794662675361"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66597.3",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.6",
+    "ts": "1794662675382"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66597.3",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "2.56",
+    "ts": "1794662675419"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66579.8",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "1.41",
+    "ts": "1794662675520"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66579.8",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "1.26",
+    "ts": "1794662675543"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66579.8",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "1.56",
+    "ts": "1794662675553"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66579.8",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.01",
+    "ts": "1794662675634"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66579",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.11",
+    "ts": "1794662675683"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66579.8",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.69",
+    "ts": "1794662675690"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66579",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "5",
+    "ts": "1794662675767"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66574.2",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.1",
+    "ts": "1794662676223"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66574.2",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.84",
+    "ts": "1794662676227"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66569.4",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.1",
+    "ts": "1794662676394"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66569.4",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "3.14",
+    "ts": "1794662676451"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66569.4",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.44",
+    "ts": "1794662676488"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66569.4",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.65",
+    "ts": "1794662676502"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66563.1",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "2.78",
+    "ts": "1794662677404"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66563.1",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "22.41",
+    "ts": "1794662677513"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66559.7",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "4",
+    "ts": "1794662677622"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66559.7",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "1.02",
+    "ts": "1794662677623"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66570.8",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.06",
+    "ts": "1794662704383"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66567.9",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "2.5",
+    "ts": "1794662705017"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66560.7",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.1",
+    "ts": "1794662705524"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66556.8",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.07",
+    "ts": "1794662706772"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66556.8",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "18.85",
+    "ts": "1794662706838"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66545.3",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.55",
+    "ts": "1794662707203"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66545.3",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.25",
+    "ts": "1794662707211"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66541.3",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "29.57",
+    "ts": "1794662708058"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66539.5",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "12.21",
+    "ts": "1794662708167"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66539.5",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.16",
+    "ts": "1794662708168"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66536.8",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.55",
+    "ts": "1794662708373"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66536.8",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.02",
+    "ts": "1794662708496"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66531",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "12.32",
+    "ts": "1794662708661"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66522.4",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "1.73",
+    "ts": "1794662708765"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66522.4",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.1",
+    "ts": "1794662708780"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66522.4",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.28",
+    "ts": "1794662708790"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66522.4",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "1.44",
+    "ts": "1794662708804"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66522.4",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "3.14",
+    "ts": "1794662708837"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66522.4",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.6",
+    "ts": "1794662708852"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66522.8",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "1",
+    "ts": "1794662709016"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66523.7",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.5",
+    "ts": "1794662709161"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66521.5",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "8.14",
+    "ts": "1794662709823"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66521.5",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.06",
+    "ts": "1794662709825"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66518.7",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "14.28",
+    "ts": "1794662711600"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66518",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "2.61",
+    "ts": "1794662715249"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66516.5",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.02",
+    "ts": "1794662716132"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66516",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "1.58",
+    "ts": "1794662716794"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66515.1",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "42.17",
+    "ts": "1794662718531"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66513.6",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "6.73",
+    "ts": "1794662718635"
+   },
+   {
+    "bkLoss": "0",
+    "bkPx": "66676",
+    "instId": "BTC-USDT-SWAP",
+    "posSide": "long",
+    "side": "sell",
+    "sz": "0.46",
+    "ts": "1794663165716"
+   }
+  ],
+  "max_rows_per_poll": 1,
+  "n_distinct_fills": 101,
+  "n_polls": 20,
+  "rows_per_poll": [
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "status_codes": [
+   200,
+   200,
+   200,
+   200,
+   200
+  ],
+  "url": "https://www.okx.com/api/v5/public/liquidation-orders?instType=SWAP&state=filled&uly=BTC-USDT&limit=100"
+ },
+ "start_utc": "2026-11-14T13:28:15.258250+00:00",
+ "window_s": 300,
+ "ws": {
+  "ws_all_swap": {
+   "errors": [],
+   "first_frame": "{\"event\":\"subscribe\",\"arg\":{\"channel\":\"liquidation-orders\",\"instType\":\"SWAP\"},\"connId\":\"d6e75231\"}",
+   "instId_counts": {
+    "AKE-USDT-SWAP": 4,
+    "BTW-USDT-SWAP": 7,
+    "CAP-USDT-SWAP": 20,
+    "CFX-USDT-SWAP": 2,
+    "DOGE-USDT-SWAP": 1,
+    "ETH-USDT-SWAP": 1,
+    "GALA-USDT-SWAP": 2,
+    "PI-USDT-SWAP": 1,
+    "PIEVERSE-USDT-SWAP": 6,
+    "SOL-USDT-SWAP": 1,
+    "SOPH-USDT-SWAP": 28,
+    "UNI-USDT-SWAP": 1
+   },
+   "last_frame": "{\"arg\":{\"channel\":\"liquidation-orders\",\"instType\":\"SWAP\"},\"data\":[{\"details\":[{\"bkLoss\":\"0\",\"bkPx\":\"1.7437\",\"ccy\":\"\",\"posSide\":\"long\",\"side\":\"sell\",\"sz\":\"40\",\"ts\":\"1794663187100\"}],\"instFamily\":\"PIEVERSE-USDT\",\"instId\":\"PIEVERSE-USDT-SWAP\",\"instType\":\"SWAP\",\"uly\":\"PIEVERSE-USDT\"}]}",
+   "n_connections": 1,
+   "n_detail_rows": 80,
+   "n_distinct_fills": 80,
+   "n_frames": 100,
+   "n_instIds": 18,
+   "subscribe": {
+    "channel": "liquidation-orders",
+    "instType": "SWAP"
+   },
+   "ts_max": 1794663187100,
+   "ts_min": 1794579227536
+  },
+  "ws_btc_usdt_family": {
+   "errors": [],
+   "first_frame": "{\"event\":\"subscribe\",\"arg\":{\"channel\":\"liquidation-orders\",\"instType\":\"SWAP\"},\"connId\":\"73c1b09a\"}",
+   "instId_counts": {
+    "AKE-USDT-SWAP": 4,
+    "BTW-USDT-SWAP": 7,
+    "CAP-USDT-SWAP": 20,
+    "CFX-USDT-SWAP": 2,
+    "DOGE-USDT-SWAP": 1,
+    "ETH-USDT-SWAP": 1,
+    "GALA-USDT-SWAP": 2,
+    "PI-USDT-SWAP": 1,
+    "PIEVERSE-USDT-SWAP": 6,
+    "SOL-USDT-SWAP": 1,
+    "SOPH-USDT-SWAP": 28,
+    "UNI-USDT-SWAP": 1
+   },
+   "last_frame": "{\"arg\":{\"channel\":\"liquidation-orders\",\"instType\":\"SWAP\"},\"data\":[{\"details\":[{\"bkLoss\":\"0\",\"bkPx\":\"1.7437\",\"ccy\":\"\",\"posSide\":\"long\",\"side\":\"sell\",\"sz\":\"40\",\"ts\":\"1794663187100\"}],\"instFamily\":\"PIEVERSE-USDT\",\"instId\":\"PIEVERSE-USDT-SWAP\",\"instType\":\"SWAP\",\"uly\":\"PIEVERSE-USDT\"}]}",
+   "n_connections": 1,
+   "n_detail_rows": 80,
+   "n_distinct_fills": 80,
+   "n_frames": 100,
+   "n_instIds": 18,
+   "subscribe": {
+    "channel": "liquidation-orders",
+    "instFamily": "BTC-USDT",
+    "instType": "SWAP"
+   },
+   "ts_max": 1794663187100,
+   "ts_min": 1794579227536
+  }
+ }
+}

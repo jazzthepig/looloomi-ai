@@ -1,0 +1,1271 @@
+{
+ "binance": {
+  "_summary": {
+   "conclusion": "single_endpoint_404",
+   "force_status": 404,
+   "n_200": 10,
+   "ok_endpoints": [
+    "fapi_ping",
+    "fapi_ticker_price",
+    "fapi_ticker_24hr",
+    "fapi_depth",
+    "fapi_exchangeInfo",
+    "fapi_premiumIndex",
+    "fapi_openInterest",
+    "spot_ping",
+    "spot_ticker_price",
+    "spot_time"
+   ]
+  },
+  "fapi_allForceOrders": {
+   "content_type": "text/html",
+   "first200": "<!DOCTYPE html> <!-- saved from url=(0032)https://www.binance.com/en/error --> <html> <head> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"> <meta name=\"format-detection\" content=\"",
+   "len": 1404,
+   "status": 404,
+   "url": "https://fapi.binance.com/fapi/v1/allForceOrders?symbol=BTCUSDT&limit=10"
+  },
+  "fapi_allForceOrders_nosym": {
+   "content_type": "text/html",
+   "first200": "<!DOCTYPE html> <!-- saved from url=(0032)https://www.binance.com/en/error --> <html> <head> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"> <meta name=\"format-detection\" content=\"",
+   "len": 1404,
+   "status": 404,
+   "url": "https://fapi.binance.com/fapi/v1/allForceOrders?limit=10"
+  },
+  "fapi_depth": {
+   "content_type": "application/json",
+   "first200": "{\"lastUpdateId\":12111446813600,\"E\":1794660786904,\"T\":1794660786900,\"bids\":[[\"67059.60\",\"0.536\"],[\"67059.50\",\"0.001\"],[\"67059.40\",\"0.002\"],[\"67059.30\",\"0.005\"],[\"67058.90\",\"0.001\"]],\"asks\":[[\"67059.70\"",
+   "json_keys": [
+    "lastUpdateId",
+    "E",
+    "T",
+    "bids",
+    "asks"
+   ],
+   "len": 296,
+   "status": 200,
+   "url": "https://fapi.binance.com/fapi/v1/depth?symbol=BTCUSDT&limit=5"
+  },
+  "fapi_exchangeInfo": {
+   "content_type": "application/json",
+   "first200": "{\"timezone\":\"UTC\",\"serverTime\":1794549721701,\"futuresType\":\"U_MARGINED\",\"rateLimits\":[{\"rateLimitType\":\"REQUEST_WEIGHT\",\"interval\":\"MINUTE\",\"intervalNum\":1,\"limit\":2400},{\"rateLimitType\":\"ORDERS\",\"int",
+   "json_keys": [
+    "timezone",
+    "serverTime",
+    "futuresType",
+    "rateLimits",
+    "exchangeFilters",
+    "assets",
+    "symbols"
+   ],
+   "len": 1176869,
+   "status": 200,
+   "url": "https://fapi.binance.com/fapi/v1/exchangeInfo"
+  },
+  "fapi_forceOrders": {
+   "content_type": "application/json",
+   "first200": "{\"code\":-2014,\"msg\":\"API-key format invalid.\"}",
+   "json_keys": [
+    "code",
+    "msg"
+   ],
+   "len": 46,
+   "status": 401,
+   "url": "https://fapi.binance.com/fapi/v1/forceOrders?symbol=BTCUSDT&limit=10"
+  },
+  "fapi_openInterest": {
+   "content_type": "application/json",
+   "first200": "{\"symbol\":\"BTCUSDT\",\"openInterest\":\"96536.437\",\"time\":1794660786444}",
+   "json_keys": [
+    "symbol",
+    "openInterest",
+    "time"
+   ],
+   "len": 68,
+   "status": 200,
+   "url": "https://fapi.binance.com/fapi/v1/openInterest?symbol=BTCUSDT"
+  },
+  "fapi_ping": {
+   "content_type": "application/json",
+   "first200": "{}",
+   "json_keys": [],
+   "len": 2,
+   "status": 200,
+   "url": "https://fapi.binance.com/fapi/v1/ping"
+  },
+  "fapi_premiumIndex": {
+   "content_type": "application/json",
+   "first200": "{\"symbol\":\"BTCUSDT\",\"markPrice\":\"67059.60000000\",\"indexPrice\":\"67098.34978261\",\"estimatedSettlePrice\":\"67180.81796179\",\"lastFundingRate\":\"0.00003392\",\"interestRate\":\"0.00010000\",\"nextFundingTime\":1794",
+   "json_keys": [
+    "symbol",
+    "markPrice",
+    "indexPrice",
+    "estimatedSettlePrice",
+    "lastFundingRate",
+    "interestRate",
+    "nextFundingTime",
+    "time"
+   ],
+   "len": 231,
+   "status": 200,
+   "url": "https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDT"
+  },
+  "fapi_root": {
+   "content_type": "text/html",
+   "first200": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\"> <HTML><HEAD><META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=iso-8859-1\"> <TITLE>ERROR",
+   "len": 919,
+   "status": 403,
+   "url": "https://fapi.binance.com/"
+  },
+  "fapi_ticker_24hr": {
+   "content_type": "application/json",
+   "first200": "{\"closeTime\":1794660781911,\"count\":4805636,\"firstId\":8265318772,\"highPrice\":\"70188.00\",\"lastId\":8270134775,\"lastPrice\":\"67063.60\",\"lastQty\":\"0.001\",\"lowPrice\":\"66427.50\",\"openPrice\":\"69169.80\",\"openTi",
+   "json_keys": [
+    "closeTime",
+    "count",
+    "firstId",
+    "highPrice",
+    "lastId",
+    "lastPrice",
+    "lastQty",
+    "lowPrice",
+    "openPrice",
+    "openTime"
+   ],
+   "len": 375,
+   "status": 200,
+   "url": "https://fapi.binance.com/fapi/v1/ticker/24hr?symbol=BTCUSDT"
+  },
+  "fapi_ticker_price": {
+   "content_type": "application/json",
+   "first200": "{\"price\":\"67063.60\",\"symbol\":\"BTCUSDT\",\"time\":1794660781911}",
+   "json_keys": [
+    "price",
+    "symbol",
+    "time"
+   ],
+   "len": 60,
+   "status": 200,
+   "url": "https://fapi.binance.com/fapi/v1/ticker/price?symbol=BTCUSDT"
+  },
+  "spot_ping": {
+   "content_type": "application/json;charset=UTF-8",
+   "first200": "{}",
+   "json_keys": [],
+   "len": 2,
+   "status": 200,
+   "url": "https://api.binance.com/api/v3/ping"
+  },
+  "spot_ticker_price": {
+   "content_type": "application/json;charset=UTF-8",
+   "first200": "{\"symbol\":\"BTCUSDT\",\"price\":\"67081.46000000\"}",
+   "json_keys": [
+    "symbol",
+    "price"
+   ],
+   "len": 45,
+   "status": 200,
+   "url": "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
+  },
+  "spot_time": {
+   "content_type": "application/json;charset=UTF-8",
+   "first200": "{\"serverTime\":1794660792841}",
+   "json_keys": [
+    "serverTime"
+   ],
+   "len": 28,
+   "status": 200,
+   "url": "https://api.binance.com/api/v3/time"
+  }
+ },
+ "cmc": {
+  "BTC": {
+   "1M": {
+    "alt_identity_v1_over_v0_vs_v4": {
+     "max_rel": 0.994268,
+     "median_rel": 0.984063
+    },
+    "first_date": "2026-10-15",
+    "first_ts": 1792065600,
+    "identity_v2_over_v0_vs_v4": {
+     "max_rel": 1.85362e-16,
+     "median_rel": 0.0,
+     "n": 701,
+     "p95_rel": 1.85294e-16
+    },
+    "identity_v2_over_v0_vs_v4_over_v3": {
+     "max_rel": 1.85362e-16,
+     "median_rel": 0.0,
+     "n": 701,
+     "p95_rel": 1.85294e-16
+    },
+    "last_date": "2026-11-14",
+    "last_ts": 1794661165,
+    "max_gap_days": 0.0833,
+    "median_gap_days": 0.0417,
+    "median_pts_per_day": 22.613,
+    "min_gap_days": 0.0417,
+    "n_distinct_dates": 31,
+    "n_gap_le_1_5d": 700,
+    "n_points": 701,
+    "status": 200,
+    "top_keys": [
+     "points"
+    ],
+    "url": "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=1&range=1M",
+    "v3_stats": {
+     "max": 1.0,
+     "median": 1.0,
+     "min": 1.0
+    },
+    "v_samples": [
+     {
+      "date": "2026-10-15",
+      "v": [
+       80893.72933023731,
+       40631865325.83,
+       1625806297659.3054,
+       1,
+       20098051.0
+      ],
+      "v2_over_v0": 20098051.0
+     },
+     {
+      "date": "2026-10-15",
+      "v": [
+       80134.87642608002,
+       41636790363.46,
+       1610920168191.6804,
+       1,
+       20102610.0
+      ],
+      "v2_over_v0": 20102610.0
+     },
+     {
+      "date": "2026-10-15",
+      "v": [
+       81800.84732643559,
+       42777748719.85,
+       1644086109312.3806,
+       1,
+       20098644.0
+      ],
+      "v2_over_v0": 20098644.0
+     }
+    ]
+   },
+   "1Y": {
+    "alt_identity_v1_over_v0_vs_v4": {
+     "max_rel": 0.993854,
+     "median_rel": 0.977554
+    },
+    "first_date": "2025-11-14",
+    "first_ts": 1763078400,
+    "identity_v2_over_v0_vs_v4": {
+     "max_rel": 1.86669e-16,
+     "median_rel": 0.0,
+     "n": 366,
+     "p95_rel": 1.8601e-16
+    },
+    "identity_v2_over_v0_vs_v4_over_v3": {
+     "max_rel": 1.86669e-16,
+     "median_rel": 0.0,
+     "n": 366,
+     "p95_rel": 1.8601e-16
+    },
+    "last_date": "2026-11-14",
+    "last_ts": 1794661165,
+    "max_gap_days": 1.5413,
+    "median_gap_days": 1.0,
+    "median_pts_per_day": 1.0,
+    "min_gap_days": 1.0,
+    "n_distinct_dates": 366,
+    "n_gap_le_1_5d": 364,
+    "n_points": 366,
+    "status": 200,
+    "top_keys": [
+     "points"
+    ],
+    "url": "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=1&range=1Y",
+    "v3_stats": {
+     "max": 1.0,
+     "median": 1.0,
+     "min": 1.0
+    },
+    "v_samples": [
+     {
+      "date": "2025-11-14",
+      "v": [
+       99694.706228742,
+       114346441890.18,
+       1989268888374.0637,
+       1,
+       19953606.0
+      ],
+      "v2_over_v0": 19953606.0
+     },
+     {
+      "date": "2025-11-15",
+      "v": [
+       94420.47103288722,
+       38500716654.17,
+       1883576225586.513,
+       1,
+       19948812.0
+      ],
+      "v2_over_v0": 19948812.0
+     },
+     {
+      "date": "2025-11-16",
+      "v": [
+       95556.86577786325,
+       71086235862.23,
+       1906322873988.7788,
+       1,
+       19949617.0
+      ],
+      "v2_over_v0": 19949617.0
+     }
+    ]
+   },
+   "all": {
+    "alt_identity_v1_over_v0_vs_v4": {
+     "max_rel": 1.0,
+     "median_rel": 0.97811
+    },
+    "first_date": "2010-07-13",
+    "first_ts": 1278979200,
+    "identity_v2_over_v0_vs_v4": {
+     "max_rel": 2.12791e-16,
+     "median_rel": 0.0,
+     "n": 701,
+     "p95_rel": 1.85269e-16
+    },
+    "identity_v2_over_v0_vs_v4_over_v3": {
+     "max_rel": 2.12791e-16,
+     "median_rel": 0.0,
+     "n": 701,
+     "p95_rel": 1.85269e-16
+    },
+    "last_date": "2026-11-14",
+    "last_ts": 1794661164,
+    "max_gap_days": 9.0,
+    "median_gap_days": 9.0,
+    "median_pts_per_day": 1.0,
+    "min_gap_days": 8.0,
+    "n_distinct_dates": 701,
+    "n_gap_le_1_5d": 0,
+    "n_points": 701,
+    "status": 200,
+    "top_keys": [
+     "points"
+    ],
+    "url": "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=1&range=all",
+    "v3_stats": {
+     "max": 1.0,
+     "median": 1.0,
+     "min": 1.0
+    },
+    "v_samples": [
+     {
+      "date": "2010-07-13",
+      "v": [
+       0.06183332,
+       75.42,
+       206783.79257716,
+       1,
+       3344213.0
+      ],
+      "v2_over_v0": 3344213.0
+     },
+     {
+      "date": "2010-07-22",
+      "v": [
+       0.07417871,
+       2167.06,
+       258429.35330125,
+       1,
+       3483875.0
+      ],
+      "v2_over_v0": 3483875.0
+     },
+     {
+      "date": "2010-07-31",
+      "v": [
+       0.06367021,
+       4033.25,
+       227380.64570725,
+       1,
+       3571225.0
+      ],
+      "v2_over_v0": 3571224.9999999995
+     }
+    ]
+   }
+  },
+  "ETH": {
+   "1M": {
+    "alt_identity_v1_over_v0_vs_v4": {
+     "max_rel": 2.55484,
+     "median_rel": 0.354748
+    },
+    "first_date": "2026-10-15",
+    "first_ts": 1792065600,
+    "identity_v2_over_v0_vs_v4": {
+     "max_rel": 35.1352,
+     "median_rel": 33.1745,
+     "n": 701,
+     "p95_rel": 34.8072
+    },
+    "identity_v2_over_v0_vs_v4_over_v3": {
+     "max_rel": 3.6599e-16,
+     "median_rel": 0.0,
+     "n": 701,
+     "p95_rel": 1.22012e-16
+    },
+    "last_date": "2026-11-14",
+    "last_ts": 1794661167,
+    "max_gap_days": 0.0833,
+    "median_gap_days": 0.0417,
+    "median_pts_per_day": 22.613,
+    "min_gap_days": 0.0417,
+    "n_distinct_dates": 31,
+    "n_gap_le_1_5d": 700,
+    "n_points": 701,
+    "status": 200,
+    "top_keys": [
+     "points"
+    ],
+    "url": "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=1027&range=1M",
+    "v3_stats": {
+     "max": 0.03022735222829388,
+     "median": 0.029261592483731884,
+     "min": 0.027673846065468178
+    },
+    "v_samples": [
+     {
+      "date": "2026-10-15",
+      "v": [
+       2361.1440796375546,
+       18871946261.28,
+       288385646990.8914,
+       0.02919514931851714,
+       3565840.00858968
+      ],
+      "v2_over_v0": 122138097.99999999
+     },
+     {
+      "date": "2026-10-15",
+      "v": [
+       2337.5232271415352,
+       18461134552.78,
+       285547414833.6642,
+       0.029186094945933615,
+       3565318.1385036125
+      ],
+      "v2_over_v0": 122158108.0
+     },
+     {
+      "date": "2026-10-15",
+      "v": [
+       2394.840548699923,
+       19506781907.39,
+       292498084493.5552,
+       0.029278240571186984,
+       3575949.676091252
+      ],
+      "v2_over_v0": 122136767.99999999
+     }
+    ]
+   },
+   "1Y": {
+    "alt_identity_v1_over_v0_vs_v4": {
+     "max_rel": 9.1981,
+     "median_rel": 0.852664
+    },
+    "first_date": "2025-11-14",
+    "first_ts": 1763078400,
+    "identity_v2_over_v0_vs_v4": {
+     "max_rel": 37.7979,
+     "median_rel": 32.4439,
+     "n": 366,
+     "p95_rel": 36.1041
+    },
+    "identity_v2_over_v0_vs_v4_over_v3": {
+     "max_rel": 2.46955e-16,
+     "median_rel": 1.21936e-16,
+     "n": 366,
+     "p95_rel": 2.4391e-16
+    },
+    "last_date": "2026-11-14",
+    "last_ts": 1794661167,
+    "max_gap_days": 1.5413,
+    "median_gap_days": 1.0,
+    "median_pts_per_day": 1.0,
+    "min_gap_days": 1.0,
+    "n_distinct_dates": 366,
+    "n_gap_le_1_5d": 364,
+    "n_points": 366,
+    "status": 200,
+    "top_keys": [
+     "points"
+    ],
+    "url": "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=1027&range=1Y",
+    "v3_stats": {
+     "max": 0.03612111527845355,
+     "median": 0.029900821524560854,
+     "min": 0.025774567780226045
+    },
+    "v_samples": [
+     {
+      "date": "2025-11-14",
+      "v": [
+       3232.2951276256676,
+       47003809462.78,
+       390182107177.66376,
+       0.03242333068762421,
+       3913938.23580349
+      ],
+      "v2_over_v0": 120713639.0
+     },
+     {
+      "date": "2025-11-15",
+      "v": [
+       3104.2301415883853,
+       19932940648.75,
+       374668943435.14746,
+       0.032845814447598605,
+       3964366.6977126016
+      ],
+      "v2_over_v0": 120696252.00000001
+     },
+     {
+      "date": "2025-11-16",
+      "v": [
+       3166.7933946543376,
+       30987886524.46,
+       382231693557.34,
+       0.03314319410521347,
+       4000380.711327767
+      ],
+      "v2_over_v0": 120699915.00000001
+     }
+    ]
+   },
+   "all": {
+    "alt_identity_v1_over_v0_vs_v4": {
+     "max_rel": 49.0801,
+     "median_rel": 0.690544
+    },
+    "first_date": "2015-08-07",
+    "first_ts": 1438905600,
+    "identity_v2_over_v0_vs_v4": {
+     "max_rel": 501.686,
+     "median_rel": 27.4987,
+     "n": 701,
+     "p95_rel": 97.606
+    },
+    "identity_v2_over_v0_vs_v4_over_v3": {
+     "max_rel": 3.32258e-16,
+     "median_rel": 0.0,
+     "n": 701,
+     "p95_rel": 2.46845e-16
+    },
+    "last_date": "2026-11-14",
+    "last_ts": 1794661166,
+    "max_gap_days": 6.0,
+    "median_gap_days": 6.0,
+    "median_pts_per_day": 1.0,
+    "min_gap_days": 5.0,
+    "n_distinct_dates": 701,
+    "n_gap_le_1_5d": 0,
+    "n_points": 701,
+    "status": 200,
+    "top_keys": [
+     "points"
+    ],
+    "url": "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=1027&range=all",
+    "v3_stats": {
+     "max": 0.1463403686481732,
+     "median": 0.03508936116860164,
+     "min": 0.001989314827290916
+    },
+    "v_samples": [
+     {
+      "date": "2015-08-07",
+      "v": [
+       2.83161997795105,
+       164329,
+       170186635.54472923,
+       0.010158617158568061,
+       610555.4027255639
+      ],
+      "v2_over_v0": 60102216.0
+     },
+     {
+      "date": "2015-08-13",
+      "v": [
+       1.2222399711608887,
+       4068680,
+       73967692.13279057,
+       0.004591721581482493,
+       277882.4586926221
+      ],
+      "v2_over_v0": 60518142.0
+     },
+     {
+      "date": "2015-08-19",
+      "v": [
+       1.1669299602508545,
+       1486240,
+       84694231.49973965,
+       0.005170939976979706,
+       375299.9772046575
+      ],
+      "v2_over_v0": 72578676.0
+     }
+    ]
+   }
+  },
+  "SOL": {
+   "1M": {
+    "alt_identity_v1_over_v0_vs_v4": {
+     "max_rel": 96.1574,
+     "median_rel": 32.4603
+    },
+    "first_date": "2026-10-15",
+    "first_ts": 1792065600,
+    "identity_v2_over_v0_vs_v4": {
+     "max_rel": 891.049,
+     "median_rel": 804.1,
+     "n": 701,
+     "p95_rel": 883.991
+    },
+    "identity_v2_over_v0_vs_v4_over_v3": {
+     "max_rel": 6.04536e-16,
+     "median_rel": 0.0,
+     "n": 701,
+     "p95_rel": 2.02148e-16
+    },
+    "last_date": "2026-11-14",
+    "last_ts": 1794661169,
+    "max_gap_days": 0.0833,
+    "median_gap_days": 0.0417,
+    "median_pts_per_day": 22.613,
+    "min_gap_days": 0.0417,
+    "n_distinct_dates": 31,
+    "n_gap_le_1_5d": 700,
+    "n_points": 701,
+    "status": 200,
+    "top_keys": [
+     "points"
+    ],
+    "url": "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=5426&range=1M",
+    "v3_stats": {
+     "max": 0.0012991578343719418,
+     "median": 0.001242081800987683,
+     "min": 0.001121014586506945
+    },
+    "v_samples": [
+     {
+      "date": "2026-10-15",
+      "v": [
+       102.27077505462945,
+       3851205392.47,
+       60260377365.674126,
+       0.0012645609280644656,
+       745109.4282442553
+      ],
+      "v2_over_v0": 589223826.0
+     },
+     {
+      "date": "2026-10-15",
+      "v": [
+       101.496729447027,
+       3934999887.71,
+       59817616756.873215,
+       0.0012672786083777817,
+       746877.1312448061
+      ],
+      "v2_over_v0": 589355116.0
+     },
+     {
+      "date": "2026-10-15",
+      "v": [
+       104.78648267386775,
+       4107167960.14,
+       61745728108.15509,
+       0.0012810722826617868,
+       754875.4269987048
+      ],
+      "v2_over_v0": 589252798.0
+     }
+    ]
+   },
+   "1Y": {
+    "alt_identity_v1_over_v0_vs_v4": {
+     "max_rel": 228.241,
+     "median_rel": 46.5669
+    },
+    "first_date": "2025-11-14",
+    "first_ts": 1763078400,
+    "identity_v2_over_v0_vs_v4": {
+     "max_rel": 977.694,
+     "median_rel": 799.365,
+     "n": 366,
+     "p95_rel": 911.167
+    },
+    "identity_v2_over_v0_vs_v4_over_v3": {
+     "max_rel": 6.04536e-16,
+     "median_rel": 0.0,
+     "n": 366,
+     "p95_rel": 2.097e-16
+    },
+    "last_date": "2026-11-14",
+    "last_ts": 1794661169,
+    "max_gap_days": 1.5413,
+    "median_gap_days": 1.0,
+    "median_pts_per_day": 1.0,
+    "min_gap_days": 1.0,
+    "n_distinct_dates": 366,
+    "n_gap_le_1_5d": 364,
+    "n_points": 366,
+    "status": 200,
+    "top_keys": [
+     "points"
+    ],
+    "url": "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=5426&range=1Y",
+    "v3_stats": {
+     "max": 0.0015903222266020662,
+     "median": 0.0012494305564257372,
+     "min": 0.0010217702017613218
+    },
+    "v_samples": [
+     {
+      "date": "2025-11-14",
+      "v": [
+       145.1084741613125,
+       8170562276.38,
+       80394237096.979,
+       0.0014555911071044013,
+       806439.0260951729
+      ],
+      "v2_over_v0": 554028547.0
+     },
+     {
+      "date": "2025-11-15",
+      "v": [
+       138.67660464748383,
+       3449336898.51,
+       76850847916.59206,
+       0.0014673351577417356,
+       813157.7156574463
+      ],
+      "v2_over_v0": 554173129.0
+     },
+     {
+      "date": "2025-11-16",
+      "v": [
+       139.53267216443535,
+       4722106856.75,
+       77326346583.60258,
+       0.001460328433604611,
+       809286.1752817603
+      ],
+      "v2_over_v0": 554180934.0
+     }
+    ]
+   },
+   "all": {
+    "alt_identity_v1_over_v0_vs_v4": {
+     "max_rel": 9049.81,
+     "median_rel": 43.5982
+    },
+    "first_date": "2020-04-10",
+    "first_ts": 1586476800,
+    "identity_v2_over_v0_vs_v4": {
+     "max_rel": 20107.2,
+     "median_rel": 696.336,
+     "n": 685,
+     "p95_rel": 8594.69
+    },
+    "identity_v2_over_v0_vs_v4_over_v3": {
+     "max_rel": 6.04536e-16,
+     "median_rel": 0.0,
+     "n": 685,
+     "p95_rel": 2.15222e-16
+    },
+    "last_date": "2026-11-14",
+    "last_ts": 1794661168,
+    "max_gap_days": 4.0,
+    "median_gap_days": 3.0,
+    "median_pts_per_day": 1.0,
+    "min_gap_days": 3.0,
+    "n_distinct_dates": 701,
+    "n_gap_le_1_5d": 0,
+    "n_points": 701,
+    "status": 200,
+    "top_keys": [
+     "points"
+    ],
+    "url": "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=5426&range=all",
+    "v3_stats": {
+     "max": 0.004538288412677398,
+     "median": 0.0014340290188470882,
+     "min": 4.973104281729139e-05
+    },
+    "v_samples": [
+     {
+      "date": "2020-06-05",
+      "v": [
+       0.587299493452,
+       4322091.65,
+       10131281.562331928,
+       5.987757275398457e-05,
+       1032.9253738564869
+      ],
+      "v2_over_v0": 17250622.0
+     },
+     {
+      "date": "2020-06-08",
+      "v": [
+       0.615077959978,
+       1440233.82,
+       10610366.674078811,
+       6.294925887146589e-05,
+       1085.9025391052078
+      ],
+      "v2_over_v0": 17250442.000000004
+     },
+     {
+      "date": "2020-06-11",
+      "v": [
+       0.644888410942,
+       1122221.19,
+       11124483.731298592,
+       6.533551666283466e-05,
+       1127.0537349709969
+      ],
+      "v2_over_v0": 17250246.0
+     }
+    ]
+   }
+  }
+ },
+ "farside": {
+  "admin_ajax_excerpt": " </script> <script id=\"underscore-js\" src=\"https://farside.co.uk/wp-includes/js/underscore.min.js?ver=1.13.8\"></script> <script id=\"wp-util-js-extra\"> var _wpUtilSettings = {\"ajax\":{\"url\":\"/wp-admin/admin-ajax.php\"}}; //# sourceURL=wp-util-js-extra </script> <script id=\"wp-util-js\" src=\"https://farside.co.uk/wp-includes/js/wp-util.min.js?ver=7.1.4\"></script> <script id=\"wp-hooks-js\" src=\"https://farside.co.uk/wp-includes/js/dist/hooks.min.js?ver=f0f188028580e8dc1255\"></script> <script id=\"wp-i1",
+  "admin_ajax_try": {
+   "GET action=etf_flows": {
+    "first200": " 0",
+    "status": 400
+   },
+   "GET action=eth_table": {
+    "first200": " 0",
+    "status": 400
+   },
+   "GET action=farside_eth": {
+    "first200": " 0",
+    "status": 400
+   },
+   "GET action=farside_table": {
+    "first200": " 0",
+    "status": 400
+   },
+   "GET action=get_etf_table": {
+    "first200": " 0",
+    "status": 400
+   },
+   "GET action=load_more": {
+    "first200": " 0",
+    "status": 400
+   },
+   "GET action=table_pagination": {
+    "first200": " 0",
+    "status": 400
+   }
+  },
+  "btc_page": {
+   "max": "2026-11-13",
+   "min": "2026-10-26",
+   "n_date_tokens": 15,
+   "status": 200
+  },
+  "date_tokens": {
+   "first5": [
+    "2024-05-23",
+    "2026-10-26",
+    "2026-10-27",
+    "2026-10-28",
+    "2026-10-29"
+   ],
+   "last5": [
+    "2026-11-09",
+    "2026-11-10",
+    "2026-11-11",
+    "2026-11-12",
+    "2026-11-13"
+   ],
+   "max": "2026-11-13",
+   "min": "2024-05-23",
+   "n": 16
+  },
+  "licence_sentences": [
+   {
+    "path": "/eth/",
+    "sent": "Ethereum ETF Flow (US$m) &#8211; Farside Investors img:is([sizes=auto i],[sizes^=\"auto,\" i]){contain-intrinsic-size:3000px 1500px} /*# sourceURL=wp-img-auto-sizes-contain-inline-css */ img."
+   },
+   {
+    "path": "/eth/",
+    "sent": "is-position-sticky){--wp-admin--admin-bar--position-offset:0px}} /*# sourceURL=/wp-includes/css/dist/block-library/common."
+   },
+   {
+    "path": "/eth/",
+    "sent": "wp-block-code code{direction:ltr;display:block;font-family:inherit;overflow-wrap:break-word;text-align:initial;white-space:break-spaces} /*# sourceURL=https://farside."
+   },
+   {
+    "path": "/eth/",
+    "sent": "wp-block-file__button{background:#32373c;color:#fff;text-decoration:none} /*# sourceURL=/wp-includes/css/classic-themes."
+   },
+   {
+    "path": "/eth/",
+    "sent": "has-larger-font-size{font-size: var(--wp--preset--font-size--larger) !important;} /*# sourceURL=global-styles-inline-css */ ."
+   },
+   {
+    "path": "/eth/",
+    "sent": "toggle-wrapper::before { background-color: #dbdbdb; } /*# sourceURL=twentytwenty-style-inline-css */ a, a:visited, a."
+   },
+   {
+    "path": "/eth/",
+    "sent": "1) Source: Farside Investors Note: The above table is generated automatically."
+   },
+   {
+    "path": "/eth/",
+    "sent": "5s ease; } {\"prefetch\":[{\"source\":\"document\",\"where\":{\"and\":[{\"href_matches\":\"/*\"},{\"not\":{\"href_matches\":[\"/wp-*."
+   },
+   {
+    "path": "/eth/",
+    "sent": "php\"}}; //# sourceURL=wp-util-js-extra wp."
+   },
+   {
+    "path": "/eth/",
+    "sent": "8n-js-after var um_common_variables = {\"locale\":\"en_US\"}; var um_common_variables = {\"locale\":\"en_US\"}; //# sourceURL=um_common-js-extra var um_frontend_common_variables = []; //# sourceURL=um_frontend_common-js-extra var um_scripts = {\"max_upload_size\":\"2097152\",\"nonce\":\"55313eb43f\"}; //# sourceURL=um_scripts-js-extra {\"baseUrl\":\"https://s."
+   },
+   {
+    "path": "/eth/",
+    "sent": "svg\",\"source\":{\"concatemoji\":\"https://farside."
+   },
+   {
+    "path": "/eth/",
+    "sent": "source||{})."
+   },
+   {
+    "path": "/eth/",
+    "sent": "wpemoji)))}); //# sourceURL=https://farside."
+   },
+   {
+    "path": "/",
+    "sent": "com\\/company\\/93609466\\/admin\\/dashboard\\/\"]} img:is([sizes=auto i],[sizes^=\"auto,\" i]){contain-intrinsic-size:3000px 1500px} /*# sourceURL=wp-img-auto-sizes-contain-inline-css */ img."
+   },
+   {
+    "path": "/",
+    "sent": "is-position-sticky){--wp-admin--admin-bar--position-offset:0px}} /*# sourceURL=/wp-includes/css/dist/block-library/common."
+   },
+   {
+    "path": "/",
+    "sent": "wp-block-media-text__content{grid-column:1;grid-row:2}} /*# sourceURL=https://farside."
+   },
+   {
+    "path": "/",
+    "sent": "wp-block-group-is-layout-constrained){position:relative} /*# sourceURL=https://farside."
+   },
+   {
+    "path": "/",
+    "sent": "wp-block-file__button{background:#32373c;color:#fff;text-decoration:none} /*# sourceURL=/wp-includes/css/classic-themes."
+   },
+   {
+    "path": "/",
+    "sent": "has-larger-font-size{font-size: var(--wp--preset--font-size--larger) !important;} /*# sourceURL=global-styles-inline-css */ ."
+   },
+   {
+    "path": "/",
+    "sent": "toggle-wrapper::before { background-color: #dbdbdb; } /*# sourceURL=twentytwenty-style-inline-css */ a, a:visited, a."
+   },
+   {
+    "path": "/",
+    "sent": "5s ease; } {\"prefetch\":[{\"source\":\"document\",\"where\":{\"and\":[{\"href_matches\":\"/*\"},{\"not\":{\"href_matches\":[\"/wp-*."
+   },
+   {
+    "path": "/",
+    "sent": "php\"}}; //# sourceURL=wp-util-js-extra wp."
+   },
+   {
+    "path": "/",
+    "sent": "8n-js-after var um_common_variables = {\"locale\":\"en_US\"}; var um_common_variables = {\"locale\":\"en_US\"}; //# sourceURL=um_common-js-extra var um_frontend_common_variables = []; //# sourceURL=um_frontend_common-js-extra var um_scripts = {\"max_upload_size\":\"2097152\",\"nonce\":\"55313eb43f\"}; //# sourceURL=um_scripts-js-extra {\"baseUrl\":\"https://s."
+   },
+   {
+    "path": "/",
+    "sent": "svg\",\"source\":{\"concatemoji\":\"https://farside."
+   },
+   {
+    "path": "/",
+    "sent": "source||{})."
+   },
+   {
+    "path": "/",
+    "sent": "wpemoji)))}); //# sourceURL=https://farside."
+   },
+   {
+    "path": "/terms-and-conditions/",
+    "sent": "Page not found &#8211; Farside Investors img:is([sizes=auto i],[sizes^=\"auto,\" i]){contain-intrinsic-size:3000px 1500px} /*# sourceURL=wp-img-auto-sizes-contain-inline-css */ img."
+   },
+   {
+    "path": "/terms/",
+    "sent": "Page not found &#8211; Farside Investors img:is([sizes=auto i],[sizes^=\"auto,\" i]){contain-intrinsic-size:3000px 1500px} /*# sourceURL=wp-img-auto-sizes-contain-inline-css */ img."
+   }
+  ],
+  "links_with_terms": [
+   {
+    "href": "/privacy-policy/",
+    "text": "Privacy Policy"
+   },
+   {
+    "href": "/team#contact",
+    "text": "Talk to us"
+   },
+   {
+    "href": "https://farside.co.uk/team/",
+    "text": "About"
+   },
+   {
+    "href": "https://farside.co.uk/team/#contact",
+    "text": "Contact"
+   }
+  ],
+  "n_links": 36,
+  "n_tables": 3,
+  "page": {
+   "content_type": "text/html; charset=UTF-8",
+   "first200": " <!DOCTYPE html> <html class=\"no-js\" lang=\"en-US\"> <head> <link rel=\"shortcut icon\" type=\"image/jpg\" href=\"/wp-content/themes/twentytwenty/assets/images/favicon.ico\"/> <meta charset=\"UTF-8\"> <meta nam",
+   "len": 209098,
+   "status": 200,
+   "url": "https://farside.co.uk/eth/"
+  },
+  "page_param_try": {
+   "?fund=all": {
+    "max": "2026-11-13",
+    "min": "2024-05-23",
+    "n_date_tokens": 16,
+    "same_as_base": true,
+    "status": 200
+   },
+   "?page=2": {
+    "max": "2026-11-13",
+    "min": "2024-05-23",
+    "n_date_tokens": 16,
+    "same_as_base": true,
+    "status": 200
+   },
+   "?page=2&fund=all": {
+    "max": "2026-11-13",
+    "min": "2024-05-23",
+    "n_date_tokens": 16,
+    "same_as_base": true,
+    "status": 200
+   },
+   "?page=3": {
+    "max": "2026-11-13",
+    "min": "2024-05-23",
+    "n_date_tokens": 16,
+    "same_as_base": true,
+    "status": 200
+   },
+   "?paged=2": {
+    "max": "2026-11-13",
+    "min": "2024-05-23",
+    "n_date_tokens": 16,
+    "same_as_base": true,
+    "status": 200
+   },
+   "?paged=3": {
+    "max": "2026-11-13",
+    "min": "2024-05-23",
+    "n_date_tokens": 16,
+    "same_as_base": true,
+    "status": 200
+   },
+   "?table=2": {
+    "max": "2026-11-13",
+    "min": "2024-05-23",
+    "n_date_tokens": 16,
+    "same_as_base": true,
+    "status": 200
+   }
+  },
+  "pagination_hints": {
+   "admin-ajax": 1,
+   "pagination": 2,
+   "wp-admin": 13
+  },
+  "robots": {
+   "first2000": "User-agent: Twitterbot\r\nDisallow:",
+   "status": 200
+  },
+  "script_srcs": [
+   "/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js",
+   "https://cdn.jsdelivr.net/npm/chart.js",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/js/common-frontend.min.js?ver=2.14.1",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/js/common.min.js?ver=2.14.1",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/js/um-account.min.js?ver=2.14.1",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/js/um-conditional.min.js?ver=2.14.1",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/js/um-functions.min.js?ver=2.14.1",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/js/um-gdpr.min.js?ver=2.14.1",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/js/um-modal.min.js?ver=2.14.1",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/js/um-profile.min.js?ver=2.14.1",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/js/um-responsive.min.js?ver=2.14.1",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/js/um-scripts.min.js?ver=2.14.1",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/libs/cropper/cropper.min.js?ver=1.6.1",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/libs/fileupload/jquery.uploadfile.min.js?ver=3.1.2",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/libs/jquery-form/jquery-form.min.js?ver=2.14.1",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/libs/pickadate/picker.date.min.js?ver=3.6.2",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/libs/pickadate/picker.min.js?ver=3.6.2",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/libs/pickadate/picker.time.min.js?ver=3.6.2",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/libs/raty/um-raty.min.js?ver=2.6.0",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/libs/select2/i18n/en.js?ver=4.0.13",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/libs/select2/select2.full.min.js?ver=4.0.13",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/libs/tipsy/tipsy.min.js?ver=1.0.0a",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/libs/um-confirm/um-confirm.min.js?ver=1.0",
+   "https://farside.co.uk/wp-content/plugins/ultimate-member/assets/libs/um-notice/um-notice.min.js?ver=1.0",
+   "https://farside.co.uk/wp-content/themes/twentytwenty/assets/js/index.js?ver=2.1",
+   "https://farside.co.uk/wp-includes/js/dist/hooks.min.js?ver=f0f188028580e8dc1255",
+   "https://farside.co.uk/wp-includes/js/dist/i18n.min.js?ver=1dfe7db3940c23ea9216",
+   "https://farside.co.uk/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1",
+   "https://farside.co.uk/wp-includes/js/jquery/jquery.min.js?ver=3.7.1",
+   "https://farside.co.uk/wp-includes/js/underscore.min.js?ver=1.13.8",
+   "https://farside.co.uk/wp-includes/js/wp-util.min.js?ver=7.1.4",
+   "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1156672287790544",
+   "https://www.googletagmanager.com/gtag/js?id=G-9L3JQ1VM0Y"
+  ],
+  "tables": [
+   {
+    "first_row": [
+     "",
+     "ETHA",
+     "ETHB",
+     "FETH",
+     "ETHW",
+     "TETH",
+     "ETHV",
+     "QETH",
+     "EZET",
+     "MSSE",
+     "ETHE",
+     "ETH",
+     ""
+    ],
+    "header": [
+     "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "&nbsp;&nbsp;&nbsp;Total"
+    ],
+    "last_row": [
+     "Minimum",
+     "(375.0)",
+     "(37.5)",
+     "(272.2)",
+     "(56.1)",
+     "(14.7)",
+     "(18.7)",
+     "(8.4)",
+     "(6.6)",
+     "(0.7)",
+     "(484.1)",
+     "(88.5)",
+     "(465.1)"
+    ],
+    "n_rows": 24
+   },
+   {
+    "first_row": null,
+    "header": [
+     "How can we assist you?\r\n\r\n\r\nTalk to us"
+    ],
+    "last_row": [
+     "How can we assist you?\r\n\r\n\r\nTalk to us"
+    ],
+    "n_rows": 1
+   },
+   {
+    "first_row": null,
+    "header": [
+     "[email&#160;protected]\r\n25 St James's Street, London, SW1A 1HA\r\n\r\n\r\n&nbsp;\r\n\r\n\r\n\r\n\r\n\r\nFS Investors Limited (14044760) is an Appointed Representative of Brooklands Fund Management Limited which is authorised and regulated by the Financial Conduct Authority with the registered number 757575 and registered with the Securities and Exchange Commission with the registered number 286221.\r\n\r\nToday's date is 14 November 2026. Your IP: 104.22.224.100 \r\n\r\n\r\n&copy; 2025 Farside Investors. All rights reserved.\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\nMarket Data\r\nBitcoin ETF Flow\r\nEthereum ETF Flow\r\nSolana ETF Flow\r\nHyperliquid ETF Flow\r\nZcash ETF Flow\r\nBTC Derivative Charts\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\nCompany\r\nFund\r\nBooks\r\nResearch Blog\r\nAbout\r\nContact\r\nPrivacy Policy\r\nComplaints"
+    ],
+    "last_row": [
+     "[email&#160;protected]\r\n25 St James's Street, London, SW1A 1HA\r\n\r\n\r\n&nbsp;\r\n\r\n\r\n\r\n\r\n\r\nFS Investors Limited (14044760) is an Appointed Representative of Brooklands Fund Management Limited which is authorised and regulated by the Financial Conduct Authority with the registered number 757575 and registered with the Securities and Exchange Commission with the registered number 286221.\r\n\r\nToday's date is 14 November 2026. Your IP: 104.22.224.100 \r\n\r\n\r\n&copy; 2025 Farside Investors. All rights reserved.\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\nMarket Data\r\nBitcoin ETF Flow\r\nEthereum ETF Flow\r\nSolana ETF Flow\r\nHyperliquid ETF Flow\r\nZcash ETF Flow\r\nBTC Derivative Charts\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\nCompany\r\nFund\r\nBooks\r\nResearch Blog\r\nAbout\r\nContact\r\nPrivacy Policy\r\nComplaints"
+    ],
+    "n_rows": 1
+   }
+  ],
+  "terms_pages": {
+   "/": {
+    "len": 82132,
+    "status": 200,
+    "text": "Farside Investors Skip to the content Fund ETF Flows Bitcoin Ethereum Solana Hyperliquid Zcash Thinking Books Research Blog BTC Charts About Login Sign Up Close Menu Fund ETF Flows .sub-menu\" data-toggle-type=\"slidetoggle\" data-toggle-duration=\"250\" aria-expanded=\"false\"> Show sub menu Bitcoin Ethereum Solana Hyperliquid Zcash Thinking .sub-menu\" data-toggle-type=\"slidetoggle\" data-toggle-duration=\"250\" aria-expanded=\"false\"> Show sub menu Books Research Blog BTC Charts About Login Sign Up Welcome To Farside Investors Our Offering Farside Equity Fund Farside has one product, the Farside Equity Fund . The fund is open to professional clients only. The fund invests in listed equities across the world, with a long only and long term approach. The equities either directly operate in the cryptocurrency space or have the potential to participate in the cryptocurrency ecosystem. Find Out More ETF DATA Bitcoin ETF Flow Data Farside provides daily ETF flow data, in US$ millions, for the US spot Bitcoin ETFs. The data is updated in real time. Updates typically occur in the evening and night (US time). Find Out More Our Thinking Published Books Our team has authored two books on the Bitcoin and cryptocurrency space: &#8220; The Blocksize War &#8220;, published in March 2021 and &#8220; Reckless: The Story Of Cryptocurrency Interest Rates &#8220;, published in November 2022. Find Out More About Us Thoughtful Investment Style Founded in 2022, Farside Investors is a London based investment"
+   },
+   "/about/": {
+    "len": 4000,
+    "status": 404,
+    "text": "Page not found &#8211; Farside Investors :root{--wp-block-synced-color:#7a00df;--wp-block-synced-color--rgb:122,0,223;--wp-bound-block-color:var(--wp-block-synced-color);--wp-editor-canvas-background:#ddd;--wp-admin-theme-color:#007cba;--wp-admin-theme-color--rgb:0,124,186;--wp-admin-theme-color-darker-10:#006ba1;--wp-admin-theme-color-darker-10--rgb:0,107,160.5;--wp-admin-theme-color-darker-20:#005a87;--wp-admin-theme-color-darker-20--rgb:0,90,135;--wp-admin-border-width-focus:2px}@media (min-resolution:192dpi){:root{--wp-admin-border-width-focus:1.5px}}.wp-element-button{cursor:pointer}:root .has-very-light-gray-background-color{background-color:#eee}:root .has-very-dark-gray-background-color{background-color:#313131}:root .has-very-light-gray-color{color:#eee}:root .has-very-dark-gray-color{color:#313131}:root .has-vivid-green-cyan-to-vivid-cyan-blue-gradient-background{background:linear-gradient(135deg,#00d084,#0693e3)}:root .has-purple-crush-gradient-background{background:linear-gradient(135deg,#34e2e4,#4721fb 50%,#ab1dfe)}:root .has-hazy-dawn-gradient-background{background:linear-gradient(135deg,#faaca8,#dad0ec)}:root .has-subdued-olive-gradient-background{background:linear-gradient(135deg,#fafae1,#67a671)}:root .has-atomic-cream-gradient-background{background:linear-gradient(135deg,#fdd79a,#004a59)}:root .has-nightshade-gradient-background{background:linear-gradient(135deg,#330968,#31cdcf)}:root .has-midnight-gradient-background{background:linear-gradient(135deg,#02038"
+   },
+   "/contact/": {
+    "len": 4000,
+    "status": 404,
+    "text": "Page not found &#8211; Farside Investors :root{--wp-block-synced-color:#7a00df;--wp-block-synced-color--rgb:122,0,223;--wp-bound-block-color:var(--wp-block-synced-color);--wp-editor-canvas-background:#ddd;--wp-admin-theme-color:#007cba;--wp-admin-theme-color--rgb:0,124,186;--wp-admin-theme-color-darker-10:#006ba1;--wp-admin-theme-color-darker-10--rgb:0,107,160.5;--wp-admin-theme-color-darker-20:#005a87;--wp-admin-theme-color-darker-20--rgb:0,90,135;--wp-admin-border-width-focus:2px}@media (min-resolution:192dpi){:root{--wp-admin-border-width-focus:1.5px}}.wp-element-button{cursor:pointer}:root .has-very-light-gray-background-color{background-color:#eee}:root .has-very-dark-gray-background-color{background-color:#313131}:root .has-very-light-gray-color{color:#eee}:root .has-very-dark-gray-color{color:#313131}:root .has-vivid-green-cyan-to-vivid-cyan-blue-gradient-background{background:linear-gradient(135deg,#00d084,#0693e3)}:root .has-purple-crush-gradient-background{background:linear-gradient(135deg,#34e2e4,#4721fb 50%,#ab1dfe)}:root .has-hazy-dawn-gradient-background{background:linear-gradient(135deg,#faaca8,#dad0ec)}:root .has-subdued-olive-gradient-background{background:linear-gradient(135deg,#fafae1,#67a671)}:root .has-atomic-cream-gradient-background{background:linear-gradient(135deg,#fdd79a,#004a59)}:root .has-nightshade-gradient-background{background:linear-gradient(135deg,#330968,#31cdcf)}:root .has-midnight-gradient-background{background:linear-gradient(135deg,#02038"
+   },
+   "/disclaimer/": {
+    "len": 4000,
+    "status": 404,
+    "text": "Page not found &#8211; Farside Investors :root{--wp-block-synced-color:#7a00df;--wp-block-synced-color--rgb:122,0,223;--wp-bound-block-color:var(--wp-block-synced-color);--wp-editor-canvas-background:#ddd;--wp-admin-theme-color:#007cba;--wp-admin-theme-color--rgb:0,124,186;--wp-admin-theme-color-darker-10:#006ba1;--wp-admin-theme-color-darker-10--rgb:0,107,160.5;--wp-admin-theme-color-darker-20:#005a87;--wp-admin-theme-color-darker-20--rgb:0,90,135;--wp-admin-border-width-focus:2px}@media (min-resolution:192dpi){:root{--wp-admin-border-width-focus:1.5px}}.wp-element-button{cursor:pointer}:root .has-very-light-gray-background-color{background-color:#eee}:root .has-very-dark-gray-background-color{background-color:#313131}:root .has-very-light-gray-color{color:#eee}:root .has-very-dark-gray-color{color:#313131}:root .has-vivid-green-cyan-to-vivid-cyan-blue-gradient-background{background:linear-gradient(135deg,#00d084,#0693e3)}:root .has-purple-crush-gradient-background{background:linear-gradient(135deg,#34e2e4,#4721fb 50%,#ab1dfe)}:root .has-hazy-dawn-gradient-background{background:linear-gradient(135deg,#faaca8,#dad0ec)}:root .has-subdued-olive-gradient-background{background:linear-gradient(135deg,#fafae1,#67a671)}:root .has-atomic-cream-gradient-background{background:linear-gradient(135deg,#fdd79a,#004a59)}:root .has-nightshade-gradient-background{background:linear-gradient(135deg,#330968,#31cdcf)}:root .has-midnight-gradient-background{background:linear-gradient(135deg,#02038"
+   },
+   "/faq/": {
+    "len": 4000,
+    "status": 404,
+    "text": "Page not found &#8211; Farside Investors :root{--wp-block-synced-color:#7a00df;--wp-block-synced-color--rgb:122,0,223;--wp-bound-block-color:var(--wp-block-synced-color);--wp-editor-canvas-background:#ddd;--wp-admin-theme-color:#007cba;--wp-admin-theme-color--rgb:0,124,186;--wp-admin-theme-color-darker-10:#006ba1;--wp-admin-theme-color-darker-10--rgb:0,107,160.5;--wp-admin-theme-color-darker-20:#005a87;--wp-admin-theme-color-darker-20--rgb:0,90,135;--wp-admin-border-width-focus:2px}@media (min-resolution:192dpi){:root{--wp-admin-border-width-focus:1.5px}}.wp-element-button{cursor:pointer}:root .has-very-light-gray-background-color{background-color:#eee}:root .has-very-dark-gray-background-color{background-color:#313131}:root .has-very-light-gray-color{color:#eee}:root .has-very-dark-gray-color{color:#313131}:root .has-vivid-green-cyan-to-vivid-cyan-blue-gradient-background{background:linear-gradient(135deg,#00d084,#0693e3)}:root .has-purple-crush-gradient-background{background:linear-gradient(135deg,#34e2e4,#4721fb 50%,#ab1dfe)}:root .has-hazy-dawn-gradient-background{background:linear-gradient(135deg,#faaca8,#dad0ec)}:root .has-subdued-olive-gradient-background{background:linear-gradient(135deg,#fafae1,#67a671)}:root .has-atomic-cream-gradient-background{background:linear-gradient(135deg,#fdd79a,#004a59)}:root .has-nightshade-gradient-background{background:linear-gradient(135deg,#330968,#31cdcf)}:root .has-midnight-gradient-background{background:linear-gradient(135deg,#02038"
+   },
+   "/legal/": {
+    "len": 80906,
+    "status": 200,
+    "text": "LEGAL NOTICE: DR CRAIG STEVEN WRIGHT IS NOT SATOSHI NAKAMOTO &#8211; Farside Investors Skip to the content Fund ETF Flows Bitcoin Ethereum Solana Hyperliquid Zcash Thinking Books Research Blog BTC Charts About Login Sign Up Close Menu Fund ETF Flows .sub-menu\" data-toggle-type=\"slidetoggle\" data-toggle-duration=\"250\" aria-expanded=\"false\"> Show sub menu Bitcoin Ethereum Solana Hyperliquid Zcash Thinking .sub-menu\" data-toggle-type=\"slidetoggle\" data-toggle-duration=\"250\" aria-expanded=\"false\"> Show sub menu Books Research Blog BTC Charts About Login Sign Up Categories Research LEGAL NOTICE: DR CRAIG STEVEN WRIGHT IS NOT SATOSHI NAKAMOTO Post author By Jonathan Bier Post date 16 Jul 2024 Published: 16 Jul 2024 On 20 May 2024, Dr Craig Steven Wright was found by the High Court of England and Wales to have been dishonest in his claims to have been the person behind the pseudonym Satoshi Nakamoto (the creator of Bitcoin). The Court found that Dr Wright \u201clied to the Court extensively and repeatedly\u201d in his evidence and that he attempted to create a false narrative by forging documents \u201con a grand scale\u201d and presenting them in evidence. Overall, \u201call his lies and forged documents were in support of his biggest lie: his claim to be Satoshi Nakamoto.\u201d In advancing his false claim to be Satoshi through multiple legal actions, Dr Wright committed \u201ca most serious abuse\u201d of the process of the courts of the UK, Norway and the USA. The High Court formally declared as follows: First, that D"
+   },
+   "/privacy-policy/": {
+    "len": 77826,
+    "status": 200,
+    "text": "Privacy Policy &#8211; Farside Investors Skip to the content Fund ETF Flows Bitcoin Ethereum Solana Hyperliquid Zcash Thinking Books Research Blog BTC Charts About Login Sign Up Close Menu Fund ETF Flows .sub-menu\" data-toggle-type=\"slidetoggle\" data-toggle-duration=\"250\" aria-expanded=\"false\"> Show sub menu Bitcoin Ethereum Solana Hyperliquid Zcash Thinking .sub-menu\" data-toggle-type=\"slidetoggle\" data-toggle-duration=\"250\" aria-expanded=\"false\"> Show sub menu Books Research Blog BTC Charts About Login Sign Up Privacy Policy This Data Protection Privacy Notice explains how FS Investors Limited (\u201cFirm\u201d, \u201cwe\u201d, \u201cus\u201d or \u201cour\u201d) collects, uses, shares and otherwise processes your Personal Data in connection with your relationship with us in accordance with applicable data privacy laws and the General Data Protection Regulation (\u201cGDPR\u201d). For the purpose of GDPR, the data controller is Brooklands Fund Management who are authorised and regulated by the Financial Conduct Authority (\u2018FCA\u2019) under registration reference FRN 757575 . Personal Data The term \u201cPersonal Data\u201d as used in this Data Protection Privacy Notice means any information relating to an identifiable person who can be directly or indirectly identified in particular by reference to an identifier. This definition provides for a wide range of personal identifiers to constitute Personal Data, including name, date of birth, residential address, identification number, location data or online identifier. Personal Data does not "
+   },
+   "/terms-and-conditions/": {
+    "len": 4000,
+    "status": 404,
+    "text": "Page not found &#8211; Farside Investors :root{--wp-block-synced-color:#7a00df;--wp-block-synced-color--rgb:122,0,223;--wp-bound-block-color:var(--wp-block-synced-color);--wp-editor-canvas-background:#ddd;--wp-admin-theme-color:#007cba;--wp-admin-theme-color--rgb:0,124,186;--wp-admin-theme-color-darker-10:#006ba1;--wp-admin-theme-color-darker-10--rgb:0,107,160.5;--wp-admin-theme-color-darker-20:#005a87;--wp-admin-theme-color-darker-20--rgb:0,90,135;--wp-admin-border-width-focus:2px}@media (min-resolution:192dpi){:root{--wp-admin-border-width-focus:1.5px}}.wp-element-button{cursor:pointer}:root .has-very-light-gray-background-color{background-color:#eee}:root .has-very-dark-gray-background-color{background-color:#313131}:root .has-very-light-gray-color{color:#eee}:root .has-very-dark-gray-color{color:#313131}:root .has-vivid-green-cyan-to-vivid-cyan-blue-gradient-background{background:linear-gradient(135deg,#00d084,#0693e3)}:root .has-purple-crush-gradient-background{background:linear-gradient(135deg,#34e2e4,#4721fb 50%,#ab1dfe)}:root .has-hazy-dawn-gradient-background{background:linear-gradient(135deg,#faaca8,#dad0ec)}:root .has-subdued-olive-gradient-background{background:linear-gradient(135deg,#fafae1,#67a671)}:root .has-atomic-cream-gradient-background{background:linear-gradient(135deg,#fdd79a,#004a59)}:root .has-nightshade-gradient-background{background:linear-gradient(135deg,#330968,#31cdcf)}:root .has-midnight-gradient-background{background:linear-gradient(135deg,#02038"
+   },
+   "/terms-of-use/": {
+    "len": 4000,
+    "status": 404,
+    "text": "Page not found &#8211; Farside Investors :root{--wp-block-synced-color:#7a00df;--wp-block-synced-color--rgb:122,0,223;--wp-bound-block-color:var(--wp-block-synced-color);--wp-editor-canvas-background:#ddd;--wp-admin-theme-color:#007cba;--wp-admin-theme-color--rgb:0,124,186;--wp-admin-theme-color-darker-10:#006ba1;--wp-admin-theme-color-darker-10--rgb:0,107,160.5;--wp-admin-theme-color-darker-20:#005a87;--wp-admin-theme-color-darker-20--rgb:0,90,135;--wp-admin-border-width-focus:2px}@media (min-resolution:192dpi){:root{--wp-admin-border-width-focus:1.5px}}.wp-element-button{cursor:pointer}:root .has-very-light-gray-background-color{background-color:#eee}:root .has-very-dark-gray-background-color{background-color:#313131}:root .has-very-light-gray-color{color:#eee}:root .has-very-dark-gray-color{color:#313131}:root .has-vivid-green-cyan-to-vivid-cyan-blue-gradient-background{background:linear-gradient(135deg,#00d084,#0693e3)}:root .has-purple-crush-gradient-background{background:linear-gradient(135deg,#34e2e4,#4721fb 50%,#ab1dfe)}:root .has-hazy-dawn-gradient-background{background:linear-gradient(135deg,#faaca8,#dad0ec)}:root .has-subdued-olive-gradient-background{background:linear-gradient(135deg,#fafae1,#67a671)}:root .has-atomic-cream-gradient-background{background:linear-gradient(135deg,#fdd79a,#004a59)}:root .has-nightshade-gradient-background{background:linear-gradient(135deg,#330968,#31cdcf)}:root .has-midnight-gradient-background{background:linear-gradient(135deg,#02038"
+   },
+   "/terms/": {
+    "len": 4000,
+    "status": 404,
+    "text": "Page not found &#8211; Farside Investors :root{--wp-block-synced-color:#7a00df;--wp-block-synced-color--rgb:122,0,223;--wp-bound-block-color:var(--wp-block-synced-color);--wp-editor-canvas-background:#ddd;--wp-admin-theme-color:#007cba;--wp-admin-theme-color--rgb:0,124,186;--wp-admin-theme-color-darker-10:#006ba1;--wp-admin-theme-color-darker-10--rgb:0,107,160.5;--wp-admin-theme-color-darker-20:#005a87;--wp-admin-theme-color-darker-20--rgb:0,90,135;--wp-admin-border-width-focus:2px}@media (min-resolution:192dpi){:root{--wp-admin-border-width-focus:1.5px}}.wp-element-button{cursor:pointer}:root .has-very-light-gray-background-color{background-color:#eee}:root .has-very-dark-gray-background-color{background-color:#313131}:root .has-very-light-gray-color{color:#eee}:root .has-very-dark-gray-color{color:#313131}:root .has-vivid-green-cyan-to-vivid-cyan-blue-gradient-background{background:linear-gradient(135deg,#00d084,#0693e3)}:root .has-purple-crush-gradient-background{background:linear-gradient(135deg,#34e2e4,#4721fb 50%,#ab1dfe)}:root .has-hazy-dawn-gradient-background{background:linear-gradient(135deg,#faaca8,#dad0ec)}:root .has-subdued-olive-gradient-background{background:linear-gradient(135deg,#fafae1,#67a671)}:root .has-atomic-cream-gradient-background{background:linear-gradient(135deg,#fdd79a,#004a59)}:root .has-nightshade-gradient-background{background:linear-gradient(135deg,#330968,#31cdcf)}:root .has-midnight-gradient-background{background:linear-gradient(135deg,#02038"
+   }
+  }
+ },
+ "probed_at_utc": "2026-11-14T12:59:24.212886+00:00"
+}

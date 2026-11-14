@@ -1,0 +1,27 @@
+{
+ "status": "in_review",
+ "created": "2026-11-14",
+ "forbidden_paths": [
+  "Shadow/",
+  "src/",
+  "paper_trading/",
+  "PROJECT_STATE.md",
+  "PROJECT_STATE_LOG.md",
+  "scripts/",
+  "migrations/"
+ ],
+ "id": "T-382",
+ "owner": "lane-b",
+ "title": "T-376 返工:Farside ETH 重测、Binance 同 host 对照、清算日量、CMC range 语义与字段序",
+ "source": "§A-auto-1114-1208 交叉复核;Seth 2026-11-14T12:45Z 复测 farside.co.uk/eth/ 返回逐日表(ETHA…ETH + Total 12 列,有 2026-10 逐日行),T-376 ②「免费路走不通」不成立。",
+ "allowed_paths": [
+  "docs/research/",
+  "tasks/T-382.json"
+ ],
+ "acceptance": {
+  "check": "① Farside ETH:实测贴前 200 字符、历史能回到哪天(admin-ajax 分页参数探到或写探不到)、许可/署名条款原文;② Binance:同 host 对照(fapi/v1/ping、ticker/price vs allForceOrders),结论分「整站不通 / 单端点 404」;③ 清算日量:删掉无出处的「4.5 万笔/天」,只报同口径实测外推并标明不是下界;④ CMC range:all / 1Y / 1M 各自点数与中位间隔,给『按月跑 range=1Y 累积日频』可行性;⑤ CMC v 字段序用 v[2]/v[0]=v[4] 恒等式核定;⑥ 在 docs/research/T-376_data_sources.md 上改(≤ 250 行),另写 T-382 更正清单。",
+  "expect": "docs/research/T-376_data_sources.md 改版 + docs/research/T-382_corrections.md;卡 in_review,推 lane-b/T-382。"
+ },
+ "prior_value": "ETH ETF 日频净流入若 Farside 免费可取,就不需要付费源 —— 撤回 T-376 交 Jazz 的付费拍板项。",
+ "notes": "2026-11-14T13:0xZ 实测完成,分支 lane-b/T-382。① Farside:首页 /eth/ 200(209,464B,静态 HTML 表,24 行=2 表头+Fee/Staking/Seed+15 个逐日行 2026-10-26→2026-11-13+4 统计行);关键发现是脚注指向的 /ethereum-etf-flow-all-data/ —— 200,659,725B,逐日行 592 条,2024-07-23(ETH ETF 上市首日)→2026-11-13,12 列 ETHA…ETH+Total,一次给全。admin-ajax 16 个 action × GET/POST 共 32 次全部无表体,首页 15 种分页参数最早逐日行仍是 2026-10-26 ⇒ 分页探不到(但不需要)。许可原文:表下『Source: Farside Investors / Note: The above table is generated automatically. Farside Investors is not liable for any errors or inaccuracies in the data.』,页脚『© 2025 Farside Investors. All rights reserved.』,/legal/ 200(无数据许可条款),/terms/ /terms-and-conditions/ /disclaimer/ 全 404 ⇒ 站点无可引用的数据许可条款,署名+免责+版权保留;自用未见禁止,再分发无授权⇒ 需 @seth/Jazz 拍板。旧判错原因:只扫首页且按 ISO 扫日期(Farside 用『26 Oct 2026』格式)⇒ 扫到 0 个 token。② Binance:fapi.binance.com 11 端点实测 = 200×7(ping/ticker/price/ticker24hr/depth/openInterest/premiumIndex/exchangeInfo)+401×1(forceOrders,-2014)+404×2(allForceOrders 带/不带 symbol,1404B HTML)+403×1(根);现货 api/v3 三端点 200 ⇒ 判定『单端点 404』,整站不通被排除;allForceOrders 回 404 而 forceOrders 回 401 ⇒ 该端点未对公众开放(带 key 未测)。③ 清算日量:删掉『≥4.5 万笔/天(下界)』(无可核出处 + ≥/下界措辞站不住),只报同口径外推 —— 同一 300s 窗口 2026-11-14T13:00:26Z→13:05:26Z:WS 全 SWAP 306 笔/300s(≈8.8 万/天)、WS BTC-USDT family 306 笔(同值)、REST uly=BTC-USDT 15s 轮询 222 笔/300s(≈6.4 万/天);口径不可混算(差值不是漏量);明确标注不是下界也不是全天值(静时速率既可能高于也可能低于全天平均)。同脚本 13:28–13:33Z 复跑,结果以 T-382_liq_results.json 的 extrapolation 字段为权威。④ CMC:BTC range=all 701 点(2010-07-13→2026-11-14,中位 9.0 天,≤1.5天间隔 0)、range=1Y 366 点(2025-11-14→2026-11-14,中位 1.0 天,≤1.5天 364/365 ⇒ 严格日频)、range=1M 701 点(2026-10-15→2026-11-14,中位 0.0417 天=1 小时,22.6 点/天 ⇒ 小时频,更正旧文档『1M 是日频』);『按月跑 1Y 累积日频』可行但浪费 —— 1Y 一次就给全 366 天,按月跑只为滚动续期,必须全量 upsert(窗口滑过即永久缺口),失败容忍 366 天 ⇒ 每天/每周更稳;>366 天只有 range=all 稀疏点。⑤ 字段序:v[2]/v[0]==v[4] 在 all/1Y/1M 三档全部精确成立(中位相对差 0.0,最大 2.13e-16)=> v[0]=price, v[2]=marketCap, v[4]=circulatingSupply;[price,?,marketCap,?,circulatingSupply] 核定通过;v[3] 恒为 1,v[1] 与 v[4] 系统性差几个百分点(中位 0.978-0.994)⇒ v[1] 语义未定且不等于流通量,入库勿用。⑥ 交付 docs/research/T-376_data_sources.md(改版)+ docs/research/T-382_corrections.md(更正清单)+ T-382_probe.py/T-382_farside.py/T-382_liq.py 及三份原始结果 json;scenarios/lane-b-T-382.json(前向命题,不含收益承诺)。T-376 §2.2『免费路走不通』已撤回、§2.3 付费拍板项已撤回、§1.4 换同口径外推、§1.2 新增同 host 对照、§4.1/§4.2/§4.3 已按实测改写。未测:allForceOrders 带 key 是否可用;Farside 限流未测。"
+}
