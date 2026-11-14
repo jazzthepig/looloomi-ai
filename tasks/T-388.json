@@ -1,0 +1,26 @@
+{
+  "id": "T-388",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-11-14",
+  "title": "验证装置补两样:限定最小偏移的循环平移;「双侧 p」的两种算法各有名字 —— 预注册以后写函数名",
+  "source": "台账「S-866 结果」:B 道盲复算独立选了「两倍较小的单尾」,我登记的是「离平移均值的距离」,同一个零分布上 BTC 是 0.082 对 0.149;S-864 / S-866 的「平移 ≥ 180 天」在 apparatus 里没有对应函数,两边各自在脚本里实现(§B-auto-1114-1653 @Seth ②)。",
+  "allowed_paths": [
+    "src/data/evaluation/apparatus.py",
+    "src/data/state/same_cell.py",
+    "tests/",
+    "scripts/preflight.sh",
+    "docs/research/",
+    "tasks/T-388.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "acceptance": {
+    "check": "① `apparatus.circular_shift(seq, rng, block=1, min_shift=0)`:偏移在 [min_shift, n − min_shift) 内取;min_shift = 0 时与现在逐位相同(旧测试不改即过)。② `apparatus.p_two_sided_tail(actual, null)` = min(1, 2 × min(p_lower, p_upper));`apparatus.p_two_sided_deviation(actual, null)` = 零分布里离其均值不比实际值近的占比;文档串写明两者在偏态零分布上会差一倍、预注册必须写函数名(S-793 同一条教训的第二次)。③ `same_cell._shift_p` 改为调这两个函数,数值与现在逐位相同(`tests/test_same_cell.py` 不改即过)。④ 测试:右偏零分布上两种 p 不相等;对称零分布上两者相差 ≤ 2 / n。",
+    "expect": "代码 + 测试;判活:`python3 -m pytest tests/test_eval_apparatus.py tests/test_same_cell.py -q`。"
+  },
+  "prior_value": "两种「双侧 p」都合法、都没有名字,预注册里只写「双侧 p」时,盲复算会读出两个数 —— 这次正好落在 0.10 的两边。",
+  "notes": "2026-11-14T16:56:31Z Seth 开卡(夜间;B 道 T-386 的建议收下)。不急:档案里已经两种都写了。",
+  "verified": null
+}
