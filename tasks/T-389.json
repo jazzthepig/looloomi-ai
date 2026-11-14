@@ -1,5 +1,5 @@
 {
-  "status": "open",
+  "status": "in_review",
   "created": "2026-11-14",
   "forbidden_paths": [
     "Shadow/",
@@ -24,5 +24,5 @@
     "expect": "docs/research/s868_results.json + s868_run.txt;卡 in_review,推 lane-c/T-389。"
   },
   "prior_value": "S-865 的表里没有「宽止损 + 封顶」这一种,Jazz 定 T-370 的止损默认值时会问;cell 组空单的利润是不是只靠 2022 一年,S-865 的输出判不了。只描述。",
-  "notes": "2026-11-14T17:33:59Z Seth 开卡(夜间;S-865 结果的直接后续)。"
+  "notes": "2026-11-14T17:33:59Z Seth 开卡(夜间;S-865 结果的直接后续)。| 2026-11-14T18:35:32Z lane-c 交付(S-868;只跑 Seth 写好的脚本,脚本一行未改,未下结论)。① 验收:`python3 docs/research/s868_capped_stops.py --selftest` → 末行 SELFTEST OK;实盘跑完 → 末行 `WROTE docs/research/s868_results.json`;run.txt 第三行 `REPRODUCES_S865 {\"ok\": true, \"n_mismatch\": 0, \"first\": []}` ⇒ K1/K2/K3 与 S-865 逐项相同。数据:ohlcv_daily BTC/ETH 各 3088 根日线(2018-06-01→2026-11-13,END 截断)。② CAP_BINDS(上限生效的信号日占比):K4=min(2.5×ATR,8%)cell 组空 BTC 0.719 / ETH 0.875、cell 组多 BTC 0.630 / ETH 0.818;all 组空 BTC 0.719 / ETH 0.925。K5=min(2.5×ATR,12%)cell 组空 BTC 0.406 / ETH 0.625、cell 组多 BTC 0.222 / ETH 0.500。③ NON_DOMINATED_SHORT(8 个 short 切片中该形态不被别的形态支配的次数):K4+X0 2、K4+X1 4、K4+X2 4;对照 K2+X1 8、K2+X0 7、K5+X1 8、K2+X2 7、K5+X2 4。④ BY_YEAR(cell 组空单、H28、各年 pnl 之和 %):BTC K2+X0 总 +23.50(2022 +29.04,share_2022 1.236)、K3+X0 总 −29.18(share_2022 null,总为负)、K4+X0 总 −21.26(share_2022 null);ETH K2+X0 总 +5.79(2022 +28.82,share_2022 4.978)、K3+X0 总 +23.86(share_2022 0.779)、K4+X0 总 +27.52(share_2022 0.675)。⑤ 逐年明细(2022 一列占比 share_2022)是脚本原样输出;share_2022 = 2022 年之和 ÷ 全部年份之和,总为负时脚本写 null。产物:docs/research/s868_results.json + docs/research/s868_run.txt(未 git add 的 s865_results.json 属 T-385,原样保留)。"
 }
