@@ -3237,6 +3237,47 @@ async def _start_agent_judgment_loop():
     print("[AGENT-J] ✅ agent judgment arm scheduled (hourly check, S-725)")
 
 
+async def _loop_stall_loop():
+    """事件循环卡顿的记录(`src/api/loop_stall.py`,S-862):每次部署后约 5 分钟和 9 分钟,进程各有 75–175 秒不动 ——
+    已经回来的响应来不及收、执行主机拿到 502。看门线程在卡住的当时抓主线程的栈;这里每 20 秒把结束了的卡顿
+    写进心跳和 loop_attempt(error + 卡在哪一行)。30 分钟没有卡顿记一条 ok:没有 ok,「没卡」和「没在看」分不出来。"""
+    import time as _t
+    from src.api import loop_stall as _ls
+    _ls.start()
+    quiet_since = _t.monotonic()
+    try:
+        while True:
+            await _asyncio.sleep(20)
+            try:
+                stalls = _ls.drain()
+                for s in stalls:
+                    why = _ls.describe(s)
+                    print(f"[STALL] ⚠️  {why}")
+                    await _beat("_loop_stall_loop", ok=False, error=why[:200],
+                                detail={"at": s.get("at"), "lag_s": s.get("lag_s"), "where": _ls.where(s)})
+                    await _record_loop_attempt("_loop_stall_loop", "error", reason=why[:400], detail=s,
+                                               writer="src.api.main._loop_stall_loop")
+                if stalls:
+                    quiet_since = _t.monotonic()
+                elif _t.monotonic() - quiet_since >= 1800:
+                    quiet_since = _t.monotonic()
+                    why = f"30 分钟内没有超过 {_ls.STALL_S:.0f} 秒的卡顿" if _ls.watching() else "看门线程不在跑"
+                    await _beat("_loop_stall_loop", ok=_ls.watching(), error=None if _ls.watching() else why)
+                    await _record_loop_attempt("_loop_stall_loop", "ok" if _ls.watching() else "error", reason=why,
+                                               writer="src.api.main._loop_stall_loop")
+            except Exception as _e:
+                print(f"[STALL] ⚠️  report FAILED: {_e}")
+                await _beat("_loop_stall_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
+    finally:
+        _ls.stop()
+
+
+@app.on_event("startup")
+async def _start_loop_stall_watch():
+    _asyncio.create_task(_loop_stall_loop())
+    print("[STALL] ✅ event-loop stall watch loop scheduled (S-862)")
+
+
 async def _scenario_ledger_loop():
     """情景台账的结算(`src/data/evaluation/scenario_ledger.py`,11-02):每小时结算到期、还没结的自动命题 → scenario_scores。"""
     await _asyncio.sleep(_boot_delay(540))
