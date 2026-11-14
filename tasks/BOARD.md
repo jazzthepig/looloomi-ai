@@ -63,6 +63,7 @@
 | open | T-365 | lane-b | 坟场入库:台账 9 月以来的实验结论整理成 experiment_runs 的批次文件(每轮一个月,从 11 月往回) | cometcloud-local/_reports/absorb_input/experiment_runs_backfill.jsonl(本轮那个月)+ docs/research/T-365_backfill_summary.md(只有计数)+ 卡 in_review,推 lane-b/T-365。一轮只做一个月;卡 notes 里写下一轮该做哪个月。 | 「坟场是资产」只有在查得到的时候才成立:现在问库里「做空族试过几次、各自怎么死的」答不出来,只能翻台账。 |  |
 | open | T-366 | lane-b | 真钱在交易的币有没有向量:R-v2 票源的币逐个对账(资产向量 / 资金面向量 / CIS),并列出 27 维里哪些对只有永续的币算得出来 | docs/research/T-366_traded_universe_coverage.md + 脚本 + 结果 json;卡 in_review,推 lane-b/T-366。 | 如果按盈亏金额加权的覆盖率很低,说明资产空间描述的是我们打分的币、不是我们赚钱的币 —— 扩面板的优先级就定了。 |  |
 | open | T-341 | lane-c | 真钱唯一规则 X1V 的归因:对「同平均 β 的常数加密腿」—— 账户抗跌是 X1V 的择时还是 70% 非加密配置的结构(T-305 遗留 (c)) | docs/research/T-341_x1v_vs_const_beta.md(预注册在前,开头一张 A / K / ① 三行表)+ docs/research/t341_x1v_vs_const.py + docs/research/t341_results.json;卡 notes 写 w_K、两段 A−K 的总收益与回撤差、随机分位三个数;in_review,推 lane-c/T-341。 | T-305 只把账户和 ① 比,不能区分『X1V 择时』和『只持 30% 加密』。真钱里唯一的规则至今没有对它自己的结构做过对照;S2 里 Jazz 要回答 LP 的『为什么不直接用常数配比』,现在没有数。 |  |
+| open | T-383 | lane-c | T-348-19/21 补述:判定族在 10-01 后是否开新票 + 概率来源写进新 id(不改已入账行) | docs/research/scenarios/lane-c-T-383.json + docs/research/T-383_note.md;卡 in_review,推 lane-c/T-383。 | 已入账两条的先验依据目前在台账里不可复核。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -382,4 +383,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 22 · claimed 6 · blocked 4 · in_review 50 · done 292 · dropped 5
+open 23 · claimed 6 · blocked 4 · in_review 50 · done 292 · dropped 5

@@ -1,0 +1,27 @@
+{
+  "status": "open",
+  "created": "2026-11-14",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "id": "T-383",
+  "owner": "lane-c",
+  "title": "T-348-19/21 补述:判定族在 10-01 后是否开新票 + 概率来源写进新 id(不改已入账行)",
+  "source": "§B-auto-1114-1204 交叉复核:H4 族曲线止 2026-09-30、H2 止 09-29,族缓存到 11-09,10-01 后两族 0 行;T-348-19(0.85)/-21(0.95)已入账 d=2026-11-13,statement 缺「概率来自样本内 62 日滚动频率、窗口高度重叠(≈34 个非重叠)」;§Seth-1113r 要求未落地。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-383.json"
+  ],
+  "acceptance": {
+    "check": "① 用现有数据判定 10-01→11-09 两族是否有新入场信号(有/无 + 日期),写明这是既有数据读数;② 以新 id(T-383-1/-2)写补述条目:概率来源、重叠窗口数、10-01 后状态、C0 口径统一(A 或 B 选一,数取同口径),T-348-21 prob 按判定重述(无新票则累计冻结 ⇒ 写成近确定须标『写下即知』并移 dropped);③ 随机 14 票组合零信号对照(apparatus.shuffle_within / random_dates_like)一次,报 H4 +11.28% / H2 −32.03% 的分位;④ 原 T-348-19/21 行不动。",
+    "expect": "docs/research/scenarios/lane-c-T-383.json + docs/research/T-383_note.md;卡 in_review,推 lane-c/T-383。"
+  },
+  "prior_value": "已入账两条的先验依据目前在台账里不可复核。",
+  "notes": "2026-11-14T12:50:00Z Seth 开卡(交叉复核 §Seth-1114d)。台账只追加:已入账行不 UPDATE,用新 id 替代/补述;作废机制另欠。| 2026-11-14 lane-c **部分交付**(卡保持 open,未改 in_review —— acceptance ③ 零信号对照没做完)。① 判定完成:两族在 2026-10-01→11-13 **都开了新入场信号**(H2 81 张,叠票口径;首张 AGT 2026-10-01;10-02 起 MAGMA/SAND/VELVET/GTC;10-05 PUMPBTC/RLC;10-06 GRIFFAIN/ORCA;10-10 US 等;前 18 张 r 合计 +2.828、均值 +0.157。H4 ≥575 个候选入场日,未叠票口径)⇒ 族累计**不是冻结值** ⇒ 「不开新票 ⇒ 写下即知」分支不成立 ⇒ 两条都不标写下即知、不移 dropped。数据:库 perp_bv_daily 到 2026-11-13(全表 677,884 行)、v_funding_daily 到 2026-11-14(590,570 行);um 文件 890 标止 2026-09-30;合并后 914 标、+37,801 根 bar、末日 2026-11-13;H2 历史票复现 1708 vs 已落盘 1706(只差 2)。② 已写 docs/research/scenarios/lane-c-T-383.json(T-383-1 H4 prob 0.85 / T-383-2 H2 prob 0.95:概率来源=样本内 62 日滚动频率,重叠窗口 H4 2156 / H2 2091 ≈34 个非重叠当量;C0 统一 A 口径 2020-08-16 起,年化 +33.3481%、水位 5.957609)+ docs/research/T-383_note.md(原始数、口径坑:落盘的 H4 票是 sl.chain 叠票后的,漏叠会虚高 3 倍)。③ **零信号对照 + 延长曲线的 62 日频率重算未做**:脚本 docs/research/t383_supplement.py 已提交(用 apparatus.random_dates_like / null_distribution / percentile_of;库数据已缓存,约 10 分钟),本轮上下文被钩子拦下没跑完 ⇒ prob 0.85/0.95 目前是**沿用值**,不是延长曲线上的新值。下一轮:跑脚本 → 填 H4 +11.28% / H2 −32.03% 的分位 → prob 换成重算值 → 再改 in_review。已入账的 T-348-19/21 两行一个字没动(lane-c-T-348.json 未改)。待 @seth 定:T-383-1 与 T-348-19 是同事件两行(台账权重翻倍)要不要只留说明;本情景文件只有 2 条 manual、不满足 README 的 ≥3 条 + ≥1 自动(有意不凑,凑数会污染 Brier 校准)。"
+}
