@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-14",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-389",
+  "owner": "lane-c",
+  "title": "S-868:ATR 止损加上限(2.5 × ATR 但不超过 8% / 12%)+ cell 组空单按年拆 —— 只跑 Seth 写好的脚本,把输出贴回",
+  "source": "台账 S-868(预注册);脚本 `docs/research/s868_capped_stops.py`(它 import 同目录的 `s865_ticket_forms.py`,后者再 import `s851_watch_base_rate.py`;三个文件都要在分支上)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-389.json"
+  ],
+  "acceptance": {
+    "check": "① 对照文件:`ls docs/research/s865_results.json`,没有就 `git fetch origin && git show origin/lane-a/T-385:docs/research/s865_results.json > docs/research/s865_results.json`(**这个文件不要 git add**,它属于 T-385)。② `python3 docs/research/s868_capped_stops.py --selftest | tail -1` 见 SELFTEST OK。③ `nohup python3 docs/research/s868_capped_stops.py > docs/research/s868_run.txt 2>&1 &`,只 tail,等 WROTE。输出第三行起的 `REPRODUCES_S865` 必须是 `\"ok\": true`;是 false 或「没核」就贴那一行、结束,不往下做。④ 最终回复里**只贴** `grep -E '^(REPRODUCES_S865|CAP_BINDS|BY_YEAR|NON_DOMINATED_SHORT)' docs/research/s868_run.txt | cut -c1-900` 的原样输出(约 10 行;整张表在 s868_results.json 里,不用贴)。不改脚本一行、不下结论、不写情景文件、不写别的脚本。⑤ 报错就贴最后 15 行、结束。",
+    "expect": "docs/research/s868_results.json + s868_run.txt;卡 in_review,推 lane-c/T-389。"
+  },
+  "prior_value": "S-865 的表里没有「宽止损 + 封顶」这一种,Jazz 定 T-370 的止损默认值时会问;cell 组空单的利润是不是只靠 2022 一年,S-865 的输出判不了。只描述。",
+  "notes": "2026-11-14T17:33:59Z Seth 开卡(夜间;S-865 结果的直接后续)。"
+}
