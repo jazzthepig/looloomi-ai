@@ -114,6 +114,14 @@ QUARANTINE_SOURCES = {
                           "成交量 0、O=H=L=C;从 binance_hist 移出,留档不删。",
 }
 
+#: 不是价源,是**存档**:从某个源里挪出来的**好行**换了 source 标签留着(与上面的隔离区同形,只是行是对的)。
+#: 按设计不再增长 —— 进判活就会被报成「死掉的源」,同时又是注册表的洞;指挥台上一个标签占了两条告警(S-862,
+#: 从 10-30 挂到 11-14),而 `/internal/data-freshness` 的顶层判决因此一直是 unregistered_source。
+ARCHIVE_SOURCES = {
+    "binance_um_hist": "S-698(10-30):`binance_hist` 里原来的 U 本位永续 bar,改标签原样留档(265,622 行 / 247 个标的,到 2026-08-08)。"
+                       "活的永续序列是 `perp_bv_daily`(S-719),不是它。",
+}
+
 DOMAIN_OF_SOURCE = {
     "binance_hist": "crypto",
     "hyperliquid": "crypto",
@@ -275,7 +283,7 @@ def from_rows(rows: Iterable[Mapping[str, Any]]) -> list[SourceHealth]:
                if DOMAIN_OF_SOURCE.get(src) == "tradfi" else "symbols_recent_crypto_win")
         return int(r.get(key) or 0)
 
-    rows = [r for r in rows if str(r.get("source")) not in QUARANTINE_SOURCES]
+    rows = [r for r in rows if str(r.get("source")) not in QUARANTINE_SOURCES and str(r.get("source")) not in ARCHIVE_SOURCES]
     return [classify(str(r.get("source")),
                      last_bar=r.get("last_bar"),
                      age_days=r.get("age_days"),

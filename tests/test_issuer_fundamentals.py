@@ -86,7 +86,7 @@ def test_run_once_skips_within_a_week_and_reports_missing_ciks(monkeypatch):
     assert r["ok"] and r["written"] == 4 and r["companies"] == 1 and "CRCL" in r["missing_cik"] and "BLSH" in r["missing_cik"]
     assert all(x["symbol"] == "COIN" for x in up)
     r2 = asyncio.run(fu.run_once(now + dt.timedelta(days=1)))
-    assert r2["status"] == "skipped"
+    assert r2["status"] == "already_done"      # S-862:7 天内跑过 = 已经在了,不是拒绝
     assert asyncio.run(fu.run_once(now + dt.timedelta(days=8)))["written"] == 4
 
 

@@ -479,6 +479,30 @@ def t_classify_separates_progress_from_no_work_from_broken():
            classify({"status": "already_marked"})[1] is False)
 
 
+def t_already_written_is_progress_and_a_refusal_keeps_its_reason():
+    """S-862. 九个循环在调用点各写了一行 `refused=(status == "skipped")`、`error=None if ok else why`。
+
+    run_once 用同一个 `skipped` 说两件相反的事 ——「昨天那行已经写了」和「上游还没到」。于是写完的那天之后
+    每小时一轮都记成拒绝(台子上 ×7 / ×9 / ×120),而原因在 ok=True 时被丢掉:一排没有原因的拒绝。
+    现在一处定义(`from_result`),「已经在了」由 run_once 自己说(`already_done`)。
+    """
+    from src.api.loop_beat import classify, from_result
+    _check("already_done → ok,不是拒绝",
+           from_result({"ok": True, "status": "already_done", "why": "2026-11-13 已写"}) == (True, False, None))
+    ok, ref, why = from_result({"ok": True, "status": "skipped", "why": "2026-11-13 的 BTC 收盘还没到"})
+    _check("skipped → 拒绝,而且原因跟着走", (ok, ref) == (True, True) and "还没到" in (why or ""), str((ok, ref, why)))
+    ok, ref, why = from_result({"ok": True, "status": "skipped"})
+    _check("没给原因的跳过也不留空", ref and bool((why or "").strip()), str(why))
+    _check("ok 为假 → 故障,带原因", from_result({"ok": False, "why": "写失败"}) == (False, False, "写失败"))
+    _check("写成功 → ok", from_result({"ok": True, "written": 4}) == (True, False, None))
+    _check("不是 dict → 故障(未知不是健康)", from_result(None)[:2] == (False, False))
+    _check("classify 的词表也认 already_done", classify({"status": "already_done"}) == (True, False, None))
+    main = (ROOT / "src/api/main.py").read_text(encoding="utf-8")
+    _check("main.py 里不再有手写的那一行", 'refused=(r.get("status") == "skipped")' not in main,
+           "调用点各写各的,就会再漂开一次")
+    _check("九个调用点都走 _beat_of", main.count("**_beat_of(r)") >= 9, str(main.count("**_beat_of(r)")))
+
+
 def t_the_beat_never_breaks_the_business_loop():
     """一个为了记录健康而弄死循环的记录器,比没有记录器更糟。"""
     src = (ROOT / "src/api/loop_beat.py").read_text()
@@ -582,8 +606,13 @@ def t_a_failure_may_never_be_recorded_without_a_reason():
         _check("成功不被兜底污染", seen[-1][3] is None, "ok=True 也被写了 error")
 
         asyncio.run(m._beat("_z_loop", ok=False, refused=True, error=""))
-        _check("拒绝不被当成无原因故障", (seen[-1][3] or "") == "",
-               "refused 走的是自己的措辞,不该被这条兜底改写")
+        _check("拒绝不被当成无原因故障", "报告失败" not in (seen[-1][3] or ""),
+               "refused 走的是自己的措辞,不该被失败那条兜底改写")
+        # S-862:九个循环的拒绝在台子上是空的 —— 分不出「已经写了」「上游没到」「被冻结」。
+        _check("但没有原因的拒绝也不许留空(S-862)", "拒绝" in (seen[-1][3] or ""),
+               "一条没有原因的拒绝,和一条没有原因的失败是同一个缺陷")
+        asyncio.run(m._beat("_w_loop", ok=True, refused=True, error="2026-11-13 的 BTC 收盘还没到"))
+        _check("带原因的拒绝原样通过", seen[-1][3] == "2026-11-13 的 BTC 收盘还没到", str(seen[-1][3]))
     finally:
         lb.beat = orig
 

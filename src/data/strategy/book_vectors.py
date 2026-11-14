@@ -172,7 +172,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     d = (now.date() - dt.timedelta(days=1)).isoformat()
     have = await _read_all(TABLE, {"select": "book_id", "d": f"eq.{d}", "limit": "1"})
     if have:
-        return {"ok": True, "status": "skipped", "why": f"{d} 已写"}
+        return {"ok": True, "status": "already_done", "why": f"{d} 已写"}
     navs, bench = await load_navs()
     core = await core_nav()
     starts = [s.dropna().index.min() for s in navs.values() if s is not None and not s.dropna().empty]

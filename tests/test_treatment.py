@@ -58,7 +58,7 @@ def test_run_once_skips_when_written_or_inputs_missing(monkeypatch):
     r = asyncio.run(tr.run_once(now))
     assert r["ok"] and r["d"] == "2026-11-02" and r["written"] == 4 and r["with_share"] == 3
     state["have"] = [{"symbol": "HYPE"}]
-    assert asyncio.run(tr.run_once(now))["status"] == "skipped"
+    assert asyncio.run(tr.run_once(now))["status"] == "already_done"      # S-862:写过了 ≠ 拒绝
     state["have"], state["rev"] = [], []
     assert "还没到" in asyncio.run(tr.run_once(now))["why"]
 

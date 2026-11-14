@@ -152,7 +152,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     todo = [x for x in decisions if any((x["id"], h) not in done for h in HORIZONS)
             and classes.get(str((x.get("symbols") or [""])[0] or "").upper())]
     if not todo:
-        return {"ok": True, "status": "skipped", "written": 0, "why": f"{len(decisions)} 条决策都结过了"}
+        return {"ok": True, "status": "already_done", "written": 0, "why": f"{len(decisions)} 条决策都结过了"}
     need: dict[str, set[str]] = {}
     start = min(str(x["ts"])[:10] for x in todo)
     for x in todo:

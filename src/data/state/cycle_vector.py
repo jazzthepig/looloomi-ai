@@ -143,7 +143,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     d = (now.date() - dt.timedelta(days=1)).isoformat()
     have = await _read_all(TABLE, {"select": "d,code_ref", "d": f"eq.{d}", "limit": "1"})
     if have and (have[0].get("code_ref") or "") == CODE_REF:
-        return {"ok": True, "status": "skipped", "why": f"{d} 已写"}
+        return {"ok": True, "status": "already_done", "why": f"{d} 已写"}
     feats = ",".join(STATE_FEATURES.values())
     state = await _read_all("state_daily", {"select": "d,feature,value", "entity": "eq.panel", "feature": f"in.({feats})", "order": "d.asc,feature.asc"})
     macro = await _read_all("macro_daily", {"select": "d,value", "series": "eq.fed_net_liquidity", "order": "d.asc"})

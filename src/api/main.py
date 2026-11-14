@@ -2502,8 +2502,7 @@ async def _issuer_fundamentals_loop():
             from src.data.market.issuer_fundamentals import run_once as _if_run
             r = await _if_run()
             await _iteration_result("_issuer_fundamentals_loop", r)
-            await _beat("_issuer_fundamentals_loop", ok=bool(r.get("ok")), refused=(r.get("status") == "skipped"),
-                        error=None if r.get("ok") else str(r.get("why"))[:200],
+            await _beat("_issuer_fundamentals_loop", **_beat_of(r),
                         detail={"written": r.get("written"), "companies": r.get("companies"), "missing_cik": r.get("missing_cik"),
                                 "errors": r.get("errors")})
         except Exception as _e:
@@ -2528,8 +2527,7 @@ async def _exposure_decision_loop():
             from src.data.execution.exposure_decision import run_once as _xd_run
             r = await _xd_run()
             await _iteration_result("_exposure_decision_loop", r)
-            await _beat("_exposure_decision_loop", ok=bool(r.get("ok")), refused=(r.get("status") == "skipped"),
-                        error=None if r.get("ok") else str(r.get("why"))[:200],
+            await _beat("_exposure_decision_loop", **_beat_of(r),
                         detail={"d": r.get("d"), "exposure": r.get("exposure"), "probs": r.get("probs"), "flag": r.get("flag"),
                                 "scenarios": r.get("scenarios"), "posted": r.get("posted")})
         except Exception as _e:
@@ -2576,8 +2574,7 @@ async def _treatment_loop():
             from src.data.entity.treatment import run_once as _tr_run
             r = await _tr_run()
             await _iteration_result("_treatment_loop", r)
-            await _beat("_treatment_loop", ok=bool(r.get("ok")), refused=(r.get("status") == "skipped"),
-                        error=None if r.get("ok") else str(r.get("why"))[:200],
+            await _beat("_treatment_loop", **_beat_of(r),
                         detail={"d": r.get("d"), "written": r.get("written"), "with_share": r.get("with_share")})
         except Exception as _e:
             print(f"[TREATMENT] ⚠️  pass FAILED: {_e}")
@@ -3110,8 +3107,7 @@ async def _cycle_vector_loop():
             from src.data.state.cycle_vector import run_once as _cv_run
             r = await _cv_run()
             await _iteration_result("_cycle_vector_loop", r)
-            await _beat("_cycle_vector_loop", ok=bool(r.get("ok")), refused=(r.get("status") == "skipped"),
-                        error=None if r.get("ok") else str(r.get("why"))[:200],
+            await _beat("_cycle_vector_loop", **_beat_of(r),
                         detail={"d": r.get("d"), "deterioration": r.get("deterioration"), "shift_pct": r.get("shift_pct"), "phase": r.get("phase")})
         except Exception as _e:
             print(f"[CYCLE] ⚠️  pass FAILED: {_e}")
@@ -3134,8 +3130,7 @@ async def _decision_outcomes_loop():
             from src.data.entity.decision_outcomes import run_once as _do_run
             r = await _do_run()
             await _iteration_result("_decision_outcomes_loop", r)
-            await _beat("_decision_outcomes_loop", ok=bool(r.get("ok")), refused=(r.get("status") == "skipped"),
-                        error=None if r.get("ok") else str(r.get("why"))[:200],
+            await _beat("_decision_outcomes_loop", **_beat_of(r),
                         detail={"written": r.get("written"), "pending": r.get("pending"), "no_price": r.get("no_price"), "decisions": r.get("decisions")})
         except Exception as _e:
             print(f"[OUTCOMES] ⚠️  pass FAILED: {_e}")
@@ -3158,8 +3153,7 @@ async def _book_vectors_loop():
             from src.data.strategy.book_vectors import run_once as _bv_run
             r = await _bv_run()
             await _iteration_result("_book_vectors_loop", r)
-            await _beat("_book_vectors_loop", ok=bool(r.get("ok")), refused=(r.get("status") == "skipped"),
-                        error=None if r.get("ok") else str(r.get("why"))[:200],
+            await _beat("_book_vectors_loop", **_beat_of(r),
                         detail={"d": r.get("d"), "written": r.get("written"), "skipped": r.get("skipped"), "uncovered": r.get("uncovered")})
         except Exception as _e:
             print(f"[BOOKVEC] ⚠️  pass FAILED: {_e}")
@@ -3183,8 +3177,7 @@ async def _window_vectors_loop():
             from src.data.state.window_vectors import run_once as _wv_run
             r = await _wv_run()
             await _iteration_result("_window_vectors_loop", r)
-            await _beat("_window_vectors_loop", ok=bool(r.get("ok")), refused=(r.get("status") == "skipped"),
-                        error=None if r.get("ok") else str(r.get("why"))[:200], detail={"d": r.get("d"), "written": r.get("written")})
+            await _beat("_window_vectors_loop", **_beat_of(r), detail={"d": r.get("d"), "written": r.get("written")})
         except Exception as _e:
             print(f"[WINDOW] ⚠️  pass FAILED: {_e}")
             await _beat("_window_vectors_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
@@ -3206,8 +3199,7 @@ async def _entity_vectors_loop():
             from src.data.entity.entity_vectors import run_once as _ev_run
             r = await _ev_run()
             await _iteration_result("_entity_vectors_loop", r)
-            await _beat("_entity_vectors_loop", ok=bool(r.get("ok")), refused=(r.get("status") == "skipped"),
-                        error=None if r.get("ok") else str(r.get("why"))[:200], detail={"written": r.get("written"), "quarters": r.get("quarters"), "full": r.get("full")})
+            await _beat("_entity_vectors_loop", **_beat_of(r), detail={"written": r.get("written"), "quarters": r.get("quarters"), "full": r.get("full")})
         except Exception as _e:
             print(f"[ENTVEC] ⚠️  pass FAILED: {_e}")
             await _beat("_entity_vectors_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
@@ -3230,8 +3222,7 @@ async def _agent_judgment_loop():
             from src.data.execution.agent_judgment import run_once as _aj_run
             r = await _aj_run()
             await _iteration_result("_agent_judgment_loop", r)
-            await _beat("_agent_judgment_loop", ok=bool(r.get("ok")), refused=(r.get("status") == "skipped"),
-                        error=None if r.get("ok") else str(r.get("why"))[:200],
+            await _beat("_agent_judgment_loop", **_beat_of(r),
                         detail={"d": r.get("d"), "author": r.get("author"), "probs": r.get("probs"), "base": r.get("base"), "why": str(r.get("why"))[:200]})
         except Exception as _e:
             print(f"[AGENT-J] ⚠️  pass FAILED: {_e}")
@@ -3777,6 +3768,14 @@ async def _iteration_error(name: str, e: BaseException) -> None:
                                writer=f"src.api.main.{name}")
 
 
+def _beat_of(r: dict | None) -> dict:
+    """`{"ok", "status", "why"}` 形状的 run_once 返回 → `_beat` 的 ok / refused / error。
+    判据在 `loop_beat.from_result`(S-862):一处定义,九个调用点 ——「已经写了」不是拒绝,拒绝必须带原因。"""
+    from src.api.loop_beat import from_result
+    ok, refused, error = from_result(r)
+    return {"ok": ok, "refused": refused, "error": error}
+
+
 async def _beat(name: str, *, ok: bool, error: str | None = None,
                 refused: bool = False, detail: dict | None = None) -> None:
     """转发到 `loop_beat.beat`。**签名必须与它一致。**
@@ -3814,6 +3813,10 @@ async def _beat(name: str, *, ok: bool, error: str | None = None,
                  f"error 一起写了进来。先修那个 `_beat(...)` 调用(通常是生产者把"
                  f"原因放在 `reason`,而调用点只读 `diagnosis`/`error`),"
                  f"**在那之前这一条无法诊断**。")
+    # S-862:**拒绝同理。** 九个循环把「跳过」记成拒绝、原因却只在失败时才传,指挥台上是一排没有原因的拒绝 ——
+    # 分不出「已经写了」「上游没到」「被冻结」。没有原因的拒绝和没有原因的失败是同一个缺陷。
+    if refused and not (error or "").strip():
+        error = f"{name} 报告拒绝但**没有给出原因** —— 调用点没有把 run_once 的 why / reason 传进来"
     try:
         from src.api.loop_beat import beat
         await beat(name, ok=ok, error=error, refused=refused, detail=detail)

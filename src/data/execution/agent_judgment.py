@@ -191,7 +191,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     author = author_for(llm._MODEL, dec[0].get("inputs") or {})           # 版本看这份档案里实际有什么
     have = await _read_all(TABLE, {"select": "d", "d": f"eq.{d}", "author": f"eq.{author}", "limit": "1"})
     if have:
-        return {"ok": True, "status": "skipped", "why": f"{d} 已写"}
+        return {"ok": True, "status": "already_done", "why": f"{d} 已写"}
     close = (dec[0].get("inputs") or {}).get("btc_close")
     if not close:
         return {"ok": True, "status": "skipped", "why": f"{d} 的决定里没有 BTC 收盘"}

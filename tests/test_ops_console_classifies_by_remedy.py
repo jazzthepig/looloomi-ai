@@ -220,11 +220,12 @@ def test_market_state_loop_past_its_7d_window_becomes_an_alarm():
     )
 
 
-def test_fusion_paper_loop_inside_window_is_no_action():
+def test_fusion_paper_loop_inside_window_is_no_action(monkeypatch):
     """_fusion_paper_loop: 5 consecutive refusals, S-336 state-vs-table split.
     Inside its 14d window, no_action with the S-336 WHY surfaced so the operator
     knows the guard is correct (state read empty but nav table non-empty)."""
     import time
+    monkeypatch.setattr(oc, "FROZEN_LOOPS", {})        # S-862:这本账现在是冻结的;这条测的是解冻之后回到的那条规则
     pol = oc.REFUSAL_POLICY["_fusion_paper_loop"]
     fresh = {"last_ok_at": time.time() - 3 * 86400}    # 3d < 14d
     assert oc._refusal_overdue(fresh, pol) is False
@@ -237,9 +238,10 @@ def test_fusion_paper_loop_inside_window_is_no_action():
     assert "S-336" in got.get("note", "") or "S-336" in pol["reason"]
 
 
-def test_fusion_paper_loop_past_its_14d_window_becomes_an_alarm():
+def test_fusion_paper_loop_past_its_14d_window_becomes_an_alarm(monkeypatch):
     """stale_after_days=14 for _fusion_paper_loop. Past it = act_now."""
     import time
+    monkeypatch.setattr(oc, "FROZEN_LOOPS", {})        # S-862:同上 —— 解冻之后,过窗口仍然是告警
     pol = oc.REFUSAL_POLICY["_fusion_paper_loop"]
     stale = {"last_ok_at": time.time() - 21 * 86400}   # 21d > 14d
     assert oc._refusal_overdue(stale, pol) is True
@@ -839,3 +841,108 @@ def test_s378b_b_force_mark_short_circuit_path(monkeypatch):
     assert not book_imports, (
         f"short-circuit must skip the book import; got: {book_imports!r}"
     )
+
+
+# ─── S-862:冻结登记在这台子上也要生效;每天等上游的循环要有规则 ─────────────────────────────
+#
+# Jazz 2026-11-14 贴的台子:「要处理 4 / 没有规则 14」。逐条查,没有一条是循环真的停了:
+#   · 6 条是 10-20 冻结的账本(2 条因为旧规则过了 14 天窗口报「现在坏了」,4 条没规则);
+#   · 8 条左右是「昨天那行已经写了」被记成拒绝,而且原因是空的;
+#   · 1 条(_r_tickets_paper_loop)是每天上午等 Binance 的日档,当天自己清掉;
+#   · 2 条是同一个存档标签(binance_um_hist)—— 既「死了」又「没登记」。
+# 一块十八条里没有一条要人动手的告警板,和一块坏掉的告警板是同一个东西。
+
+
+def _beat_of_loops() -> dict:
+    """main.py 里走 `_beat_of(r)` 的循环 → 它 import 的那个 run_once 所在的文件。**从代码读,不从清单读。**"""
+    import ast
+    src = (ROOT / "src" / "api" / "main.py").read_text(encoding="utf-8")
+    out = {}
+    for fn in ast.walk(ast.parse(src)):
+        if not isinstance(fn, ast.AsyncFunctionDef):
+            continue
+        uses = any(isinstance(n, ast.Call) and getattr(n.func, "id", "") == "_beat" and n.args
+                   and getattr(n.args[0], "value", None) == fn.name
+                   and any(k.arg is None and isinstance(k.value, ast.Call) and getattr(k.value.func, "id", "") == "_beat_of"
+                           for k in n.keywords)
+                   for n in ast.walk(fn))
+        if not uses:
+            continue
+        mod = next((n.module for n in ast.walk(fn) if isinstance(n, ast.ImportFrom)
+                    and any(a.name == "run_once" for a in n.names)), None)
+        out[fn.name] = ROOT / (str(mod).replace(".", "/") + ".py") if mod else None
+    return out
+
+
+def test_the_frozen_registry_is_read_not_copied():
+    from src.data.accounting.frozen import frozen_loops
+    assert set(oc.FROZEN_LOOPS) == set(frozen_loops()) and len(oc.FROZEN_LOOPS) >= 6, (
+        "指挥台的冻结名单必须就是 frozen.py 那一份 —— 另记一份,解冻时就会漏改一处")
+
+
+def test_a_frozen_book_is_a_decision_not_an_outage():
+    import time
+    for name in oc.FROZEN_LOOPS:
+        rows = {"rows": [{"loop": name, "verdict": "refused", "stale_build": False,
+                          "last_ok_at": time.time() - 25 * 86400, "n_consecutive_refusals": 143,
+                          "last_refusal": "冻结(2026-10-20 起不再写新行…)"}]}
+        got = oc._classify_loops(rows)[0]
+        assert got["remedy_class"] == "no_action", (name, got["note"])
+        assert "frozen.py" in got["note"] and "冻结" in got["note"], "怎么恢复必须写在卡片上"
+
+
+def test_a_frozen_book_whose_heartbeat_expired_is_still_not_an_outage():
+    """冻结的循环只在启动时跳一次,心跳 3 天过期;不是每次推送都部署之后(S-859),「没有心跳」会比以前常见。"""
+    name = next(iter(oc.FROZEN_LOOPS))
+    got = oc._classify_loops({"rows": [{"loop": name, "verdict": "never_ran"}]})[0]
+    assert got["remedy_class"] == "no_action", got
+
+
+def test_a_frozen_book_that_reports_ok_is_an_alarm():
+    name = next(iter(oc.FROZEN_LOOPS))
+    got = oc._classify_loops({"rows": [{"loop": name, "verdict": "ok", "stale_build": False}]})[0]
+    assert got["remedy_class"] == "act_now" and "frozen.py" in got["note"], (
+        "登记为冻结却在写 —— 登记和事实有一个是错的,不能渲染成绿的")
+
+
+def test_an_unfrozen_loop_falls_back_to_the_ordinary_rules(monkeypatch):
+    monkeypatch.setattr(oc, "FROZEN_LOOPS", {})
+    got = oc._classify_loops({"rows": [{"loop": "_causal_paper_loop", "verdict": "refused",
+                                        "stale_build": False, "last_ok_at": None}]})[0]
+    assert got["remedy_class"] == "unregistered", "读不到冻结登记时要吵,不能默认它是对的"
+
+
+def test_every_loop_that_can_wait_on_upstream_has_a_rule():
+    """走 `_beat_of` 的循环里,run_once 会回 `skipped` 的,必须在 REFUSAL_POLICY 里有一条 —— 否则它每天上午
+    都会在台子上变成一条「没有规则」(S-862 之前是 8 条)。"""
+    loops = _beat_of_loops()
+    assert len(loops) >= 9, f"只解析出 {len(loops)} 个 —— 解析坏了的话这条测试什么也没测"
+    for name, path in loops.items():
+        assert path is not None and path.exists(), f"{name} 的 run_once 文件解析不出来"
+        if '"status": "skipped"' in path.read_text(encoding="utf-8"):
+            assert name in oc.REFUSAL_POLICY, (
+                f"{name} 的 run_once 会回 skipped(等上游),而指挥台没有它的规则 —— 写明它等什么、谁清、多久算故障")
+
+
+def test_already_written_is_never_reported_as_skipped():
+    """「昨天那行已经在了」和「上游还没到」不能是同一个词 —— 前者是 `already_done`(ok),后者才是 `skipped`(拒绝)。"""
+    import re
+    bad = []
+    for name, path in _beat_of_loops().items():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if '"status": "skipped"' in line and re.search(r"已写|已有决定|结过了|内跑过", line):
+                bad.append(f"{name}: {line.strip()[:90]}")
+    assert not bad, "这些返回说的是「已经做完」,却叫 skipped —— 心跳会把它记成拒绝:" + "; ".join(bad)
+
+
+def test_an_archive_label_is_not_a_dead_source():
+    """`binance_um_hist`:10-30 从 binance_hist 挪出来留档的永续 bar,到 2026-08-08,按设计不再增长。"""
+    from src.data.market import source_freshness as sf
+    rows = [{"source": "binance_um_hist", "last_bar": "2026-08-08", "age_days": 98,
+             "symbols_recent": 0, "symbols_typical": None},
+            {"source": "binance_hist", "last_bar": "2026-11-13", "age_days": 1,
+             "symbols_recent": 135, "symbols_typical": 135}]
+    hs = sf.from_rows(rows)
+    assert [h.source for h in hs] == ["binance_hist"]
+    assert sf.overall(hs)["unregistered_sources"] == [], "存档标签既不该报死,也不该报成注册表的洞"
+    assert not set(sf.ARCHIVE_SOURCES) & set(sf.DOMAIN_OF_SOURCE), "存档不是价源 —— 两张表不能同时登记"

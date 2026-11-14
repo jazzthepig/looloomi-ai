@@ -81,7 +81,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     d = (now.date() - dt.timedelta(days=1)).isoformat()
     have = await _read_all(TABLE, {"select": "symbol", "d": f"eq.{d}", "limit": "1"})
     if have:
-        return {"ok": True, "status": "skipped", "why": f"{d} 已写"}
+        return {"ok": True, "status": "already_done", "why": f"{d} 已写"}
     revenue = await _read_all("protocol_revenue_daily", {"select": "gecko_id,revenue_30d,holders_30d", "d": f"eq.{d}", "gecko_id": "not.is.null"})
     if not revenue:
         return {"ok": True, "status": "skipped", "why": f"{d} 的 protocol_revenue_daily 还没到"}

@@ -150,6 +150,69 @@ SOURCE_DOCKETED_BY_POLICY = {
 #: refusal carries who clears it and how long it may sit before it becomes an
 #: alarm again. A refusal with no expiry is how a guard turns into an outage.
 REFUSAL_POLICY = {
+    # ── S-862:每天等上游的那一批 ────────────────────────────────────────────
+    # 每小时看一次:昨天那行写过 ⇒ 报 ok(run_once 回 `already_done`);上游还没到 ⇒ 拒绝、带原因。
+    # 所以拒绝每天都会出现几小时,然后自己清掉 —— 窗口 2 天;连续 30 轮(≈ 30 小时)没清,就是上游断了。
+    # 在这之前它们没有规则,而且「写过了」也记成拒绝、原因是空的:2026-11-14 的台子上是 14 条「没有规则」。
+    "_exposure_decision_loop": {
+        "reason": "S-862 — ③ 每日决定:昨天的 ⓪ 状态行或 BTC 收盘还没齐就不写(exposure_decision.run_once)。",
+        "clears_when": "state_daily 与昨日收盘落表(通常 01:00–06:00 UTC);每小时重看。",
+        "owner": "Seth",
+        "stale_after_days": 2,
+        "escalate_after_n_refusals": 30,
+    },
+    "_agent_judgment_loop": {
+        "reason": "S-725 / S-862 — 判断臂排在 ③ 决定之后:昨天的决定还没落表、或决定里没有 BTC 收盘,就不写。"
+                  "模型不通是故障,不走这条。",
+        "clears_when": "_exposure_decision_loop 写下昨天那一行;每小时重看。",
+        "owner": "Seth",
+        "stale_after_days": 2,
+        "escalate_after_n_refusals": 30,
+    },
+    "_treatment_loop": {
+        "reason": "S-862 — 昨天的 protocol_revenue_daily 还没到就不写(treatment.run_once)。",
+        "clears_when": "协议收入日表落昨天那一行;每小时重看。",
+        "owner": "Seth",
+        "stale_after_days": 2,
+        "escalate_after_n_refusals": 30,
+    },
+    "_window_vectors_loop": {
+        "reason": "S-862 — 昨天的 BTC 收盘还没到就不写(window_vectors.run_once)。",
+        "clears_when": "昨日收盘落表(通常 01:00–06:00 UTC);每小时重看。",
+        "owner": "Seth",
+        "stale_after_days": 2,
+        "escalate_after_n_refusals": 30,
+    },
+    "_cycle_vector_loop": {
+        "reason": "S-862 — 昨天的 state_daily 还没到就不写(cycle_vector.run_once)。",
+        "clears_when": "⓪ 状态行落表;每小时重看。",
+        "owner": "Seth",
+        "stale_after_days": 2,
+        "escalate_after_n_refusals": 30,
+    },
+    "_entity_vectors_loop": {
+        "reason": "S-862 — 最近三季里没有一行可折(treatment_daily / issuer_decisions 都空)就不写(entity_vectors.run_once)。",
+        "clears_when": "treatment_daily 或 issuer_decisions 在最近三季里有行;每 6 小时重看。",
+        "owner": "Seth",
+        "stale_after_days": 7,
+        "escalate_after_n_refusals": 12,
+    },
+    "_r_tickets_paper_loop": {
+        "reason": "S-719 / S-862 — 票的扫描读 perp_bv_daily(Binance U 本位永续日档);昨天那一档还没上传时,"
+                  "函数停在前一天(「only 0 bars on …」),不拿半天的数据开票。",
+        "clears_when": "data.binance.vision 上传昨天的日档(实测 07:30–13:00 UTC),_perp_bv_daily 写入后的"
+                       "下一轮(每小时第 45 分)。",
+        "owner": "Seth",
+        "stale_after_days": 2,
+        "escalate_after_n_refusals": 30,
+    },
+    "_political_intensity_loop": {
+        "reason": "S-861 — GDELT 对共享出口限速时,这一轮停下、没取到的留到下一轮;GPR 那一半照常。",
+        "clears_when": "下一轮没被限速并落下至少一条序列。连续两天一条都没落 = 叙事跟踪断了,不是限速。",
+        "owner": "Seth",
+        "stale_after_days": 2,
+        "escalate_after_n_refusals": 48,
+    },
     "_hl_book_loop": {
         "reason": "S-413 — refuses (a) when yesterday's row is already recorded, or "
                   "(b) when yesterday's coingecko_pro_ohlc bar for BTC/ETH/SOL/HYPE was "
@@ -281,6 +344,31 @@ REFUSAL_POLICY = {
     },
 }
 
+
+def _frozen_loops() -> dict:
+    """冻结登记:`src/data/accounting/frozen.py` 是唯一来源 —— 这里是它生效的**第五处**(S-862)。
+
+    那个文件写着「一处登记,四处生效」,而这台子不在那四处里:循环按登记不再起任务、每次启动记一条 refused,
+    这台子却拿它去对 REFUSAL_POLICY —— 有条目的两本(fusion / two_layer)过了 14 天窗口,报「现在坏了」;
+    没条目的四本报「没有规则」。**按 Jazz 的裁定停下的六本账,被报成故障和台账的洞 25 天**,而
+    frozen.py 自己的 docstring 预言的正是这个:一个靠人记住的停用,会被下一个把它判成坏了的人重新打开。
+
+    冻结是**决定**,不是守卫:没有窗口,没有「拒绝多久算故障」。读不到登记 ⇒ 返回空 ⇒ 这些循环回到
+    「没有规则」—— 吵,但不是假绿。
+    """
+    try:
+        import pathlib as _pl
+        root = str(_pl.Path(__file__).resolve().parents[1])
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from src.data.accounting.frozen import frozen_loops
+        return dict(frozen_loops())
+    except Exception:                                        # noqa: BLE001
+        return {}
+
+
+FROZEN_LOOPS = _frozen_loops()
+
 #: The forward-paper gate every sleeve must clear (tests/test_strategy_discipline).
 PAPER_GATE_DAYS = 60
 
@@ -399,7 +487,17 @@ def _classify_loops(loops: dict) -> list[dict]:
         err = (r.get("last_error") or r.get("last_refusal") or "").strip()
         n = r.get("n_consecutive_failures") or r.get("n_consecutive_refusals") or 0
 
-        if verdict == "refused":
+        fz = FROZEN_LOOPS.get(name)
+        if fz is not None and verdict in ("refused", "never_ran"):
+            # 冻结的账本:不写新行是决定。心跳过期(never_ran)也一样 —— 它本来就不该跳。
+            cls = "no_action"
+            note = (f"冻结(Jazz 的裁定,{fz.since} 起不写新行;历史保留)—— 不是故障,没有到期日。"
+                    f"恢复 = 删 src/data/accounting/frozen.py 里这一行再部署。  ·  {fz.why}")
+        elif fz is not None and verdict == "ok" and not stale:
+            cls = "act_now"
+            note = ("登记为冻结,却在当前构建上报了 ok —— 它在写新行。要么这本账不该写,要么 "
+                    "src/data/accounting/frozen.py 里那一行该删;两者不能同时为真")
+        elif verdict == "refused":
             pol = REFUSAL_POLICY.get(name)
             if not pol:
                 cls = "unregistered"

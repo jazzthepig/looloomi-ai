@@ -121,6 +121,8 @@ REFUSED = "refused"
 PROGRESS_STATUS = frozenset({
     "ok", "marked", "already_marked", "inception", "accruing", "success",
     "closed", "filled", "live", "generated_uncached", "on_track",
+    # S-862:`{"ok", "status", "why"}` 形状的 run_once 用这个词说「今天那一行已经在了」—— 与 already_marked 同义。
+    "already_done",
 })
 
 #: 跑通了、按规矩没干活。**不是故障,但也不是进展** —— 单独计数。
@@ -176,6 +178,32 @@ def classify(res: object) -> tuple[bool, bool, Optional[str]]:
     return False, False, (
         f"未知 status '{st}' —— **未知不是健康**。它没有出现在实测词表里,"
         f"所以我们不知道这一轮有没有干活;判健康等于让未知伪装成健康")
+
+
+def from_result(res: object) -> tuple[bool, bool, Optional[str]]:
+    """`{"ok", "status", "why"}` 形状的 run_once 返回 → `(ok, refused, error)`(S-862)。
+
+    九个循环各自在调用点写了同一行:`refused=(status == "skipped")`、`error=None if ok else why`。
+    而这些 run_once 用同一个 `skipped` 说两件相反的事 ——「昨天那行已经写了」和「上游还没到」。于是:
+
+    - 写完的那一天,之后每小时一轮都记成**拒绝**(指挥台上连续 7 / 9 / 120 轮);
+    - 拒绝的原因在 `ok=True` 时被丢掉,台子上是一条**没有原因的拒绝** —— 读的人分不出它是哪一种。
+
+    一处定义(「已经在了」由 run_once 自己说:`status = "already_done"`):
+
+        ok 为假                  → 故障,带 why
+        status == "skipped"      → 拒绝(上游没到 / 没有可做的),**带 why**
+        其它(含 already_done)  → ok
+
+    返回值不是 dict ⇒ 不知道它干没干活 ⇒ 故障(未知不是健康)。
+    """
+    r = res if isinstance(res, dict) else {}
+    why = str(r.get("why") or r.get("reason") or "")[:200]
+    if not r.get("ok"):
+        return False, False, (why or None)
+    if str(r.get("status") or "").strip().lower() == "skipped":
+        return True, True, (why or "跳过了,但 run_once 没有说为什么")
+    return True, False, None
 
 
 def _now() -> int:

@@ -313,7 +313,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     d = (now.date() - dt.timedelta(days=1)).isoformat()
     have = await _read_all(TABLE, {"select": "d,posted_at", "d": f"eq.{d}", "limit": "1"})
     if have:
-        return {"ok": True, "status": "skipped", "why": f"{d} 已有决定"}
+        return {"ok": True, "status": "already_done", "why": f"{d} 已有决定"}
     buckets, closes = await _history()
     today = await _today_state(d)
     if d not in closes:

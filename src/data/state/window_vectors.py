@@ -139,7 +139,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     d = (now.date() - dt.timedelta(days=1)).isoformat()
     have = await _read_all(TABLE, {"select": "d,code_ref", "d": f"eq.{d}", "limit": "1"})
     if have and (have[0].get("code_ref") or "") == CODE_REF:
-        return {"ok": True, "status": "skipped", "why": f"{d} 已写"}
+        return {"ok": True, "status": "already_done", "why": f"{d} 已写"}
     closes = await _closes()
     if d not in closes:
         return {"ok": True, "status": "skipped", "why": f"{d} 的 BTC 收盘还没到"}

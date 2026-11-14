@@ -134,7 +134,7 @@ async def run_once(now: Optional[dt.datetime] = None, force: bool = False) -> di
     if not force and last and last.get("at"):
         try:
             if (now - dt.datetime.fromisoformat(last["at"])).days < 7:
-                return {"ok": True, "status": "skipped", "why": f"7 天内跑过({last['at'][:10]})"}
+                return {"ok": True, "status": "already_done", "why": f"7 天内跑过({last['at'][:10]})"}
         except ValueError:
             pass
     symbols = [c.key for c in RAIL_EQUITIES]
