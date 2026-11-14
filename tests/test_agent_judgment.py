@@ -46,7 +46,7 @@ def test_compliance_filters_english_and_chinese_but_keeps_probs():
 
 
 def test_author_name_is_ledger_safe():
-    assert aj.author_for("MiniMax-M3") == "ai:MiniMax-M3:v4" and aj.author_for("org/model v2") == "ai:org-model-v2:v4"
+    assert aj.author_for("MiniMax-M3") == "ai:MiniMax-M3:v5" and aj.author_for("org/model v2") == "ai:org-model-v2:v5"
 
 
 def test_author_version_follows_what_the_dossier_actually_holds():
@@ -56,7 +56,8 @@ def test_author_version_follows_what_the_dossier_actually_holds():
     assert aj.dossier_version({"context": {"error": "TimeoutError: x"}}) == "v2", "背景栏读失败 = 没有背景栏"
     assert aj.dossier_version({"context": {"halving_month": 30.7, "checklists": {"watch": {}}}}) == "v4"
     assert aj.author_for("MiniMax-M3", {"btc_close": 1.0}) == "ai:MiniMax-M3:v2"
-    assert aj.author_for("MiniMax-M3", {"context": {"checklists": {}}}) == "ai:MiniMax-M3:" + aj.AUTHOR_VERSION
+    assert aj.author_for("MiniMax-M3", {"context": {"checklists": {}}}) == "ai:MiniMax-M3:v4"
+    assert aj.author_for("MiniMax-M3", {"context": {"checklists": {}, "same_cell": {"status": "thin"}}}) == "ai:MiniMax-M3:" + aj.AUTHOR_VERSION
 
 
 def _patch(monkeypatch, reply, have=None, dec=(DEC,), configured=True):

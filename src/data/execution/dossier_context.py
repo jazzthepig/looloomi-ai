@@ -43,7 +43,7 @@ FNG_GREED = 55
 #: 吸筹清单里的 MVRV 上沿(前两次周期底在 0.69 / 0.78;1.0 = 全网成本)
 MVRV_VALUE_ZONE = 1.2
 WHALE_COIN = "BTC"
-CODE_REF = "dossier_context v1.2 (11-13: + 叙事的量与调 / 情绪与资金费 / 大户净仓 / 盯盘·派发·吸筹三张清单,S-855)"
+CODE_REF = "dossier_context v1.3 (11-14: + 同格历史 —— 今天这一格在历史上的段数、之后 30 天的分布(BTC / ETH / SOL)与循环平移对照,S-864 / S-866;v1.2 的叙事 / 清单照旧)"
 
 
 def halving_month(d: str) -> Optional[float]:
@@ -429,7 +429,14 @@ async def context(d: str) -> dict[str, Any]:
             extra[key] = []
     sundays = [(r["trade_date"], r["close"]) for r in extra["sunday_closes"]
                if r.get("close") and dt.date.fromisoformat(str(r["trade_date"])[:10]).weekday() == 6]
-    return build(d, state or [], macro or [], sundays, extra["option_rows"], extra["cex_rows"], extra["narrative_rows"], extra["whale_rows"])
+    c = build(d, state or [], macro or [], sundays, extra["option_rows"], extra["cex_rows"], extra["narrative_rows"], extra["whale_rows"])
+    # S-864 / T-369 ⑫:今天这一格的历史(只描述;数字旁边带独立段数与循环平移的 p)。读不到 ⇒ 记进 missing,不挡其余。
+    try:
+        from src.data.state import same_cell
+        c["same_cell"] = await same_cell.read_and_summarise(d[:10])
+    except Exception:                                                     # noqa: BLE001
+        c.setdefault("missing", []).append("same_cell")
+    return c
 
 
 LABELS = {
@@ -498,6 +505,8 @@ def lines(c: dict) -> list[str]:
         out.append("  叙事    " + " · ".join(one(n) for n in (g("narrative_loudest") or [])[:4]) + "(× = 对它自己半年均值)")
     for x in g("conflicts") or []:
         out.append("  打架    " + x)
+    from src.data.state import same_cell
+    out.append(same_cell.line(g("same_cell")))
     k = g("checklists") or {}
     for key, title in (("watch", "盯盘"), ("distribution", "派发"), ("accumulation", "吸筹")):
         b = k.get(key)

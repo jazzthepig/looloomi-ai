@@ -104,16 +104,18 @@ def comply(s: Any) -> Optional[str]:
     return c[:800]
 
 
-AUTHOR_VERSION = "v4"     # 最新档案的版本:v3 = 11-13 加背景栏(S-844 / S-848);v4 = 背景栏再加叙事 / 情绪与资金费 / 三张清单(S-855)
+AUTHOR_VERSION = "v5"     # 最新档案的版本:v3 = 11-13 加背景栏(S-844 / S-848);v4 = 再加叙事 / 情绪与资金费 / 三张清单(S-855);v5 = 再加同格历史(S-864 / S-866)
 
 
 def dossier_version(inputs: Optional[dict]) -> str:
     """纯函数。作者版本跟着档案**实际装了什么**走,不跟着代码哪天部署走。
     11-13 实测:v3 上线后的第一轮读的是上线前写好的 11-12 决定行(没有背景栏),却记在 v3 名下 —— 标签说「读了背景栏」,档案里没有。
-    没有背景栏 ⇒ v2(和 11-06 以来的档案一字不差);有背景栏、没有清单 ⇒ v3;有清单 ⇒ v4。"""
+    没有背景栏 ⇒ v2(和 11-06 以来的档案一字不差);有背景栏、没有清单 ⇒ v3;有清单 ⇒ v4;有同格历史(S-864)⇒ v5。"""
     ctx = (inputs or {}).get("context")
     if not isinstance(ctx, dict) or not ctx or "error" in ctx:           # 读背景栏失败时 ③ 写的是 {"error": …} —— 那也是没有背景栏
         return "v2"
+    if "same_cell" in ctx:
+        return "v5"
     return "v4" if "checklists" in ctx else "v3"
 
 

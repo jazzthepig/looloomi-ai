@@ -66,7 +66,7 @@ def test_agent_dossier_carries_context_under_a_new_author_version():
     from src.data.execution import agent_judgment as aj
     doc = aj.dossier({"d": "2026-11-12", "inputs": {"btc_close": 74000.0, "context": {"halving_month": 30.8}}, "probs": {}}, [])
     assert doc["state"]["context"] == {"halving_month": 30.8}
-    assert aj.AUTHOR_VERSION == "v4" and aj.dossier_version({"context": {"halving_month": 30.8}}) == "v3"
+    assert aj.AUTHOR_VERSION == "v5" and aj.dossier_version({"context": {"halving_month": 30.8}}) == "v3"
 
 
 def test_weekly_structure_matches_the_week_it_first_fired_and_reads_only_the_past():
