@@ -1,0 +1,3646 @@
+{
+ "meta": {
+  "task": "T-386",
+  "ledger": "S-866",
+  "a_results": "stdin",
+  "generated_by": "docs/research/s866_blind_cells.py --stage reconcile",
+  "holdout_days": 56,
+  "seg_gap_days": 5,
+  "labeled_days": 2480,
+  "stat_days": 2424
+ },
+ "reconciliation": {
+  "per_cell": [
+   {
+    "cell": "R升|L注|W好|T线上",
+    "a_cell_name": "R升|L注|W没坏|T线上",
+    "mine_all": {
+     "days": 492,
+     "segments": 21
+    },
+    "mine_stat": {
+     "days": 474,
+     "segments": 21
+    },
+    "a": {
+     "days": 474,
+     "segments": 21,
+     "episode_starts": [
+      "2021-10-04",
+      "2023-02-14",
+      "2023-04-19",
+      "2023-10-23",
+      "2024-03-14",
+      "2024-05-20",
+      "2024-11-06",
+      "2025-01-20",
+      "2025-02-10",
+      "2025-06-09",
+      "2025-07-04",
+      "2026-08-24"
+     ],
+     "d30": {
+      "n_days": 474,
+      "median": 0.0151,
+      "mean": 0.0353,
+      "p_down_big": 0.205,
+      "p_up_big": 0.287
+     },
+     "d30_by_episode_start": {
+      "n_days": 21,
+      "median": 0.0684,
+      "mean": 0.1013,
+      "p_down_big": 0.143,
+      "p_up_big": 0.476
+     },
+     "d56": {
+      "n_days": 474,
+      "median": 0.0017,
+      "mean": 0.0764,
+      "p_down_big": 0.285,
+      "p_up_big": 0.319
+     },
+     "d56_by_episode_start": {
+      "n_days": 21,
+      "median": 0.0435,
+      "mean": 0.1772,
+      "p_down_big": 0.238,
+      "p_up_big": 0.476
+     }
+    },
+    "match_days_stat": true,
+    "match_seg_stat": true,
+    "match_days_all": false,
+    "match_seg_all": true,
+    "episode_starts_match": false,
+    "episode_starts_mine": [
+     "2020-10-14",
+     "2020-10-24",
+     "2020-12-26",
+     "2021-01-08",
+     "2021-01-15",
+     "2021-03-09",
+     "2021-05-03",
+     "2021-07-31",
+     "2021-09-24",
+     "2021-10-04",
+     "2023-02-14",
+     "2023-04-19",
+     "2023-10-23",
+     "2024-03-14",
+     "2024-05-20",
+     "2024-11-06",
+     "2025-01-20",
+     "2025-02-10",
+     "2025-06-09",
+     "2025-07-04",
+     "2026-08-24"
+    ],
+    "episode_starts_a": [
+     "2021-10-04",
+     "2023-02-14",
+     "2023-04-19",
+     "2023-10-23",
+     "2024-03-14",
+     "2024-05-20",
+     "2024-11-06",
+     "2025-01-20",
+     "2025-02-10",
+     "2025-06-09",
+     "2025-07-04",
+     "2026-08-24"
+    ],
+    "divergent_episode_starts_total": 9,
+    "divergent_episode_starts_first3": [
+     {
+      "date": "2020-10-14",
+      "mine": {
+       "cell": "R升|L注|W好|T线上",
+       "is_segment_start": true,
+       "axes": {
+        "R": "升",
+        "L": "注",
+        "W": "好",
+        "T": "线上"
+       }
+      },
+      "a": {
+       "is_segment_start": false,
+       "axes": null
+      }
+     },
+     {
+      "date": "2020-10-24",
+      "mine": {
+       "cell": "R升|L注|W好|T线上",
+       "is_segment_start": true,
+       "axes": {
+        "R": "升",
+        "L": "注",
+        "W": "好",
+        "T": "线上"
+       }
+      },
+      "a": {
+       "is_segment_start": false,
+       "axes": null
+      }
+     },
+     {
+      "date": "2020-12-26",
+      "mine": {
+       "cell": "R升|L注|W好|T线上",
+       "is_segment_start": true,
+       "axes": {
+        "R": "升",
+        "L": "注",
+        "W": "好",
+        "T": "线上"
+       }
+      },
+      "a": {
+       "is_segment_start": false,
+       "axes": null
+      }
+     }
+    ]
+   },
+   {
+    "cell": "R升|L注|W好|T线下",
+    "a_cell_name": "R升|L注|W没坏|T线下",
+    "mine_all": {
+     "days": 159,
+     "segments": 15
+    },
+    "mine_stat": {
+     "days": 159,
+     "segments": 15
+    },
+    "a": {
+     "days": 159,
+     "segments": 15,
+     "episode_starts": [
+      "2022-02-21",
+      "2022-03-21",
+      "2022-08-13",
+      "2022-12-13",
+      "2023-03-09",
+      "2023-09-18",
+      "2023-10-07",
+      "2023-10-19",
+      "2024-11-02",
+      "2025-06-07",
+      "2026-03-16",
+      "2026-04-10"
+     ],
+     "d30": {
+      "n_days": 159,
+      "median": 0.0398,
+      "mean": 0.0475,
+      "p_down_big": 0.302,
+      "p_up_big": 0.421
+     },
+     "d30_by_episode_start": {
+      "n_days": 15,
+      "median": 0.0603,
+      "mean": 0.1197,
+      "p_down_big": 0.0,
+      "p_up_big": 0.467
+     },
+     "d56": {
+      "n_days": 159,
+      "median": 0.0324,
+      "mean": 0.0315,
+      "p_down_big": 0.447,
+      "p_up_big": 0.39
+     },
+     "d56_by_episode_start": {
+      "n_days": 15,
+      "median": 0.1025,
+      "mean": 0.1691,
+      "p_down_big": 0.2,
+      "p_up_big": 0.533
+     }
+    },
+    "match_days_stat": true,
+    "match_seg_stat": true,
+    "match_days_all": true,
+    "match_seg_all": true,
+    "episode_starts_match": false,
+    "episode_starts_mine": [
+     "2021-06-21",
+     "2021-07-27",
+     "2022-02-07",
+     "2022-02-21",
+     "2022-03-21",
+     "2022-08-13",
+     "2022-12-13",
+     "2023-03-09",
+     "2023-09-18",
+     "2023-10-07",
+     "2023-10-19",
+     "2024-11-02",
+     "2025-06-07",
+     "2026-03-16",
+     "2026-04-10"
+    ],
+    "episode_starts_a": [
+     "2022-02-21",
+     "2022-03-21",
+     "2022-08-13",
+     "2022-12-13",
+     "2023-03-09",
+     "2023-09-18",
+     "2023-10-07",
+     "2023-10-19",
+     "2024-11-02",
+     "2025-06-07",
+     "2026-03-16",
+     "2026-04-10"
+    ],
+    "divergent_episode_starts_total": 3,
+    "divergent_episode_starts_first3": [
+     {
+      "date": "2021-06-21",
+      "mine": {
+       "cell": "R升|L注|W好|T线下",
+       "is_segment_start": true,
+       "axes": {
+        "R": "升",
+        "L": "注",
+        "W": "好",
+        "T": "线下"
+       }
+      },
+      "a": {
+       "is_segment_start": false,
+       "axes": null
+      }
+     },
+     {
+      "date": "2021-07-27",
+      "mine": {
+       "cell": "R升|L注|W好|T线下",
+       "is_segment_start": true,
+       "axes": {
+        "R": "升",
+        "L": "注",
+        "W": "好",
+        "T": "线下"
+       }
+      },
+      "a": {
+       "is_segment_start": false,
+       "axes": null
+      }
+     },
+     {
+      "date": "2022-02-07",
+      "mine": {
+       "cell": "R升|L注|W好|T线下",
+       "is_segment_start": true,
+       "axes": {
+        "R": "升",
+        "L": "注",
+        "W": "好",
+        "T": "线下"
+       }
+      },
+      "a": {
+       "is_segment_start": false,
+       "axes": null
+      }
+     }
+    ]
+   },
+   {
+    "cell": "R升|L注|W坏|T线上",
+    "a_cell_name": "R升|L注|W坏|T线上",
+    "mine_all": {
+     "days": 118,
+     "segments": 11
+    },
+    "mine_stat": {
+     "days": 118,
+     "segments": 11
+    },
+    "a": {
+     "days": 118,
+     "segments": 11,
+     "episode_starts": [
+      "2021-04-26",
+      "2021-05-17",
+      "2021-06-12",
+      "2021-09-27",
+      "2021-11-29",
+      "2024-04-29",
+      "2024-06-24",
+      "2025-01-13",
+      "2025-02-03",
+      "2025-02-19",
+      "2026-08-23"
+     ],
+     "d30": {
+      "n_days": 118,
+      "median": -0.0972,
+      "mean": -0.0635,
+      "p_down_big": 0.492,
+      "p_up_big": 0.161
+     },
+     "d30_by_episode_start": {
+      "n_days": 11,
+      "median": -0.0692,
+      "mean": -0.0199,
+      "p_down_big": 0.455,
+      "p_up_big": 0.182
+     },
+     "d56": {
+      "n_days": 118,
+      "median": -0.1023,
+      "mean": -0.0935,
+      "p_down_big": 0.5,
+      "p_up_big": 0.136
+     },
+     "d56_by_episode_start": {
+      "n_days": 11,
+      "median": -0.1305,
+      "mean": -0.0845,
+      "p_down_big": 0.545,
+      "p_up_big": 0.182
+     }
+    },
+    "match_days_stat": true,
+    "match_seg_stat": true,
+    "match_days_all": true,
+    "match_seg_all": true,
+    "episode_starts_match": true,
+    "episode_starts_mine": [
+     "2021-04-26",
+     "2021-05-17",
+     "2021-06-12",
+     "2021-09-27",
+     "2021-11-29",
+     "2024-04-29",
+     "2024-06-24",
+     "2025-01-13",
+     "2025-02-03",
+     "2025-02-19",
+     "2026-08-23"
+    ],
+    "episode_starts_a": [
+     "2021-04-26",
+     "2021-05-17",
+     "2021-06-12",
+     "2021-09-27",
+     "2021-11-29",
+     "2024-04-29",
+     "2024-06-24",
+     "2025-01-13",
+     "2025-02-03",
+     "2025-02-19",
+     "2026-08-23"
+    ],
+    "divergent_episode_starts_total": 0,
+    "divergent_episode_starts_first3": []
+   },
+   {
+    "cell": "R升|L注|W坏|T线下",
+    "a_cell_name": "R升|L注|W坏|T线下",
+    "mine_all": {
+     "days": 110,
+     "segments": 11
+    },
+    "mine_stat": {
+     "days": 110,
+     "segments": 11
+    },
+    "a": {
+     "days": 110,
+     "segments": 11,
+     "episode_starts": [
+      "2021-06-28",
+      "2021-09-28",
+      "2022-01-05",
+      "2022-02-14",
+      "2022-02-28",
+      "2023-01-02",
+      "2023-09-14",
+      "2024-07-04",
+      "2025-12-06",
+      "2026-03-05",
+      "2026-03-12"
+     ],
+     "d30": {
+      "n_days": 110,
+      "median": 0.0584,
+      "mean": 0.1301,
+      "p_down_big": 0.0,
+      "p_up_big": 0.382
+     },
+     "d30_by_episode_start": {
+      "n_days": 11,
+      "median": 0.0518,
+      "mean": 0.1079,
+      "p_down_big": 0.0,
+      "p_up_big": 0.273
+     },
+     "d56": {
+      "n_days": 110,
+      "median": 0.1237,
+      "mean": 0.1368,
+      "p_down_big": 0.155,
+      "p_up_big": 0.527
+     },
+     "d56_by_episode_start": {
+      "n_days": 11,
+      "median": 0.077,
+      "mean": 0.1491,
+      "p_down_big": 0.091,
+      "p_up_big": 0.455
+     }
+    },
+    "match_days_stat": true,
+    "match_seg_stat": true,
+    "match_days_all": true,
+    "match_seg_all": true,
+    "episode_starts_match": true,
+    "episode_starts_mine": [
+     "2021-06-28",
+     "2021-09-28",
+     "2022-01-05",
+     "2022-02-14",
+     "2022-02-28",
+     "2023-01-02",
+     "2023-09-14",
+     "2024-07-04",
+     "2025-12-06",
+     "2026-03-05",
+     "2026-03-12"
+    ],
+    "episode_starts_a": [
+     "2021-06-28",
+     "2021-09-28",
+     "2022-01-05",
+     "2022-02-14",
+     "2022-02-28",
+     "2023-01-02",
+     "2023-09-14",
+     "2024-07-04",
+     "2025-12-06",
+     "2026-03-05",
+     "2026-03-12"
+    ],
+    "divergent_episode_starts_total": 0,
+    "divergent_episode_starts_first3": []
+   },
+   {
+    "cell": "R升|L抽|W好|T线上",
+    "a_cell_name": "R升|L抽|W没坏|T线上",
+    "mine_all": {
+     "days": 81,
+     "segments": 5
+    },
+    "mine_stat": {
+     "days": 62,
+     "segments": 4
+    },
+    "a": {
+     "days": 62,
+     "segments": 4,
+     "episode_starts": [
+      "2023-02-10",
+      "2023-04-20",
+      "2023-06-26",
+      "2024-05-28"
+     ],
+     "d30": {
+      "n_days": 62,
+      "median": -0.0638,
+      "mean": -0.0653,
+      "p_down_big": 0.403,
+      "p_up_big": 0.048
+     },
+     "d30_by_episode_start": {
+      "n_days": 4,
+      "median": -0.0353,
+      "mean": -0.0378,
+      "p_down_big": 0.0,
+      "p_up_big": 0.0
+     },
+     "d56": {
+      "n_days": 62,
+      "median": -0.0978,
+      "mean": -0.0757,
+      "p_down_big": 0.484,
+      "p_up_big": 0.065
+     },
+     "d56_by_episode_start": {
+      "n_days": 4,
+      "median": -0.0648,
+      "mean": 0.006,
+      "p_down_big": 0.25,
+      "p_up_big": 0.25
+     }
+    },
+    "match_days_stat": true,
+    "match_seg_stat": true,
+    "match_days_all": false,
+    "match_seg_all": false,
+    "episode_starts_match": true,
+    "episode_starts_mine": [
+     "2023-02-10",
+     "2023-04-20",
+     "2023-06-26",
+     "2024-05-28"
+    ],
+    "episode_starts_a": [
+     "2023-02-10",
+     "2023-04-20",
+     "2023-06-26",
+     "2024-05-28"
+    ],
+    "divergent_episode_starts_total": 0,
+    "divergent_episode_starts_first3": []
+   },
+   {
+    "cell": "R升|L抽|W好|T线下",
+    "a_cell_name": "R升|L抽|W没坏|T线下",
+    "mine_all": {
+     "days": 151,
+     "segments": 14
+    },
+    "mine_stat": {
+     "days": 151,
+     "segments": 14
+    },
+    "a": {
+     "days": 151,
+     "segments": 14,
+     "episode_starts": [
+      "2022-07-18",
+      "2022-09-12",
+      "2022-10-24",
+      "2022-12-12",
+      "2023-08-17",
+      "2023-09-26",
+      "2026-01-10",
+      "2026-04-03",
+      "2026-05-20",
+      "2026-07-06",
+      "2026-07-20",
+      "2026-08-10"
+     ],
+     "d30": {
+      "n_days": 151,
+      "median": -0.028,
+      "mean": -0.0012,
+      "p_down_big": 0.424,
+      "p_up_big": 0.331
+     },
+     "d30_by_episode_start": {
+      "n_days": 14,
+      "median": 0.0252,
+      "mean": 0.0155,
+      "p_down_big": 0.357,
+      "p_up_big": 0.286
+     },
+     "d56": {
+      "n_days": 151,
+      "median": -0.1047,
+      "mean": 0.0298,
+      "p_down_big": 0.517,
+      "p_up_big": 0.344
+     },
+     "d56_by_episode_start": {
+      "n_days": 14,
+      "median": 0.0511,
+      "mean": 0.0542,
+      "p_down_big": 0.286,
+      "p_up_big": 0.429
+     }
+    },
+    "match_days_stat": true,
+    "match_seg_stat": true,
+    "match_days_all": true,
+    "match_seg_all": true,
+    "episode_starts_match": false,
+    "episode_starts_mine": [
+     "2021-07-26",
+     "2022-04-16",
+     "2022-07-18",
+     "2022-09-12",
+     "2022-10-24",
+     "2022-12-12",
+     "2023-08-17",
+     "2023-09-26",
+     "2026-01-10",
+     "2026-04-03",
+     "2026-05-20",
+     "2026-07-06",
+     "2026-07-20",
+     "2026-08-10"
+    ],
+    "episode_starts_a": [
+     "2022-07-18",
+     "2022-09-12",
+     "2022-10-24",
+     "2022-12-12",
+     "2023-08-17",
+     "2023-09-26",
+     "2026-01-10",
+     "2026-04-03",
+     "2026-05-20",
+     "2026-07-06",
+     "2026-07-20",
+     "2026-08-10"
+    ],
+    "divergent_episode_starts_total": 2,
+    "divergent_episode_starts_first3": [
+     {
+      "date": "2021-07-26",
+      "mine": {
+       "cell": "R升|L抽|W好|T线下",
+       "is_segment_start": true,
+       "axes": {
+        "R": "升",
+        "L": "抽",
+        "W": "好",
+        "T": "线下"
+       }
+      },
+      "a": {
+       "is_segment_start": false,
+       "axes": null
+      }
+     },
+     {
+      "date": "2022-04-16",
+      "mine": {
+       "cell": "R升|L抽|W好|T线下",
+       "is_segment_start": true,
+       "axes": {
+        "R": "升",
+        "L": "抽",
+        "W": "好",
+        "T": "线下"
+       }
+      },
+      "a": {
+       "is_segment_start": false,
+       "axes": null
+      }
+     }
+    ]
+   },
+   {
+    "cell": "R升|L抽|W坏|T线上",
+    "a_cell_name": "R升|L抽|W坏|T线上",
+    "mine_all": {
+     "days": 30,
+     "segments": 3
+    },
+    "mine_stat": {
+     "days": 15,
+     "segments": 2
+    },
+    "a": {
+     "days": 15,
+     "segments": 2,
+     "episode_starts": [
+      "2023-06-13",
+      "2026-08-19"
+     ],
+     "d30": {
+      "n_days": 15,
+      "median": 0.1126,
+      "mean": 0.0751,
+      "p_down_big": 0.0,
+      "p_up_big": 0.533
+     },
+     "d30_by_episode_start": {
+      "n_days": 2,
+      "median": 0.1897,
+      "mean": 0.1897,
+      "p_down_big": 0.0,
+      "p_up_big": 1.0
+     },
+     "d56": {
+      "n_days": 15,
+      "median": 0.0573,
+      "mean": 0.0287,
+      "p_down_big": 0.267,
+      "p_up_big": 0.4
+     },
+     "d56_by_episode_start": {
+      "n_days": 2,
+      "median": 0.163,
+      "mean": 0.163,
+      "p_down_big": 0.0,
+      "p_up_big": 1.0
+     }
+    },
+    "match_days_stat": true,
+    "match_seg_stat": true,
+    "match_days_all": false,
+    "match_seg_all": false,
+    "episode_starts_match": true,
+    "episode_starts_mine": [
+     "2023-06-13",
+     "2026-08-19"
+    ],
+    "episode_starts_a": [
+     "2023-06-13",
+     "2026-08-19"
+    ],
+    "divergent_episode_starts_total": 0,
+    "divergent_episode_starts_first3": []
+   },
+   {
+    "cell": "R升|L抽|W坏|T线下",
+    "a_cell_name": "R升|L抽|W坏|T线下",
+    "mine_all": {
+     "days": 261,
+     "segments": 13
+    },
+    "mine_stat": {
+     "days": 257,
+     "segments": 12
+    },
+    "a": {
+     "days": 257,
+     "segments": 12,
+     "episode_starts": [
+      "2022-01-07",
+      "2022-04-18",
+      "2022-08-22",
+      "2022-09-19",
+      "2022-11-14",
+      "2023-06-14",
+      "2023-08-21",
+      "2026-01-26",
+      "2026-06-01",
+      "2026-07-13",
+      "2026-08-03",
+      "2026-08-17"
+     ],
+     "d30": {
+      "n_days": 257,
+      "median": 0.003,
+      "mean": -0.0348,
+      "p_down_big": 0.28,
+      "p_up_big": 0.14
+     },
+     "d30_by_episode_start": {
+      "n_days": 12,
+      "median": 0.019,
+      "mean": -0.0077,
+      "p_down_big": 0.333,
+      "p_up_big": 0.25
+     },
+     "d56": {
+      "n_days": 257,
+      "median": 0.0024,
+      "mean": 0.0007,
+      "p_down_big": 0.366,
+      "p_up_big": 0.323
+     },
+     "d56_by_episode_start": {
+      "n_days": 12,
+      "median": -0.0123,
+      "mean": 0.0089,
+      "p_down_big": 0.333,
+      "p_up_big": 0.333
+     }
+    },
+    "match_days_stat": true,
+    "match_seg_stat": true,
+    "match_days_all": false,
+    "match_seg_all": false,
+    "episode_starts_match": true,
+    "episode_starts_mine": [
+     "2022-01-07",
+     "2022-04-18",
+     "2022-08-22",
+     "2022-09-19",
+     "2022-11-14",
+     "2023-06-14",
+     "2023-08-21",
+     "2026-01-26",
+     "2026-06-01",
+     "2026-07-13",
+     "2026-08-03",
+     "2026-08-17"
+    ],
+    "episode_starts_a": [
+     "2022-01-07",
+     "2022-04-18",
+     "2022-08-22",
+     "2022-09-19",
+     "2022-11-14",
+     "2023-06-14",
+     "2023-08-21",
+     "2026-01-26",
+     "2026-06-01",
+     "2026-07-13",
+     "2026-08-03",
+     "2026-08-17"
+    ],
+    "divergent_episode_starts_total": 0,
+    "divergent_episode_starts_first3": []
+   },
+   {
+    "cell": "R降|L注|W好|T线上",
+    "a_cell_name": "R降|L注|W没坏|T线上",
+    "mine_all": {
+     "days": 500,
+     "segments": 30
+    },
+    "mine_stat": {
+     "days": 500,
+     "segments": 30
+    },
+    "a": {
+     "days": 500,
+     "segments": 30,
+     "episode_starts": [
+      "2024-06-14",
+      "2024-07-22",
+      "2024-10-20",
+      "2024-10-30",
+      "2025-02-12",
+      "2025-05-09",
+      "2025-06-12",
+      "2025-06-30",
+      "2025-07-10",
+      "2025-08-02",
+      "2025-09-22",
+      "2025-10-27"
+     ],
+     "d30": {
+      "n_days": 500,
+      "median": 0.0393,
+      "mean": 0.1161,
+      "p_down_big": 0.09,
+      "p_up_big": 0.422
+     },
+     "d30_by_episode_start": {
+      "n_days": 30,
+      "median": 0.033,
+      "mean": 0.0735,
+      "p_down_big": 0.167,
+      "p_up_big": 0.4
+     },
+     "d56": {
+      "n_days": 500,
+      "median": 0.1222,
+      "mean": 0.2098,
+      "p_down_big": 0.106,
+      "p_up_big": 0.552
+     },
+     "d56_by_episode_start": {
+      "n_days": 30,
+      "median": 0.0382,
+      "mean": 0.1131,
+      "p_down_big": 0.333,
+      "p_up_big": 0.467
+     }
+    },
+    "match_days_stat": true,
+    "match_seg_stat": true,
+    "match_days_all": true,
+    "match_seg_all": true,
+    "episode_starts_match": false,
+    "episode_starts_mine": [
+     "2020-02-13",
+     "2020-02-27",
+     "2020-04-26",
+     "2020-07-13",
+     "2020-07-27",
+     "2020-09-21",
+     "2020-10-05",
+     "2020-11-21",
+     "2020-12-08",
+     "2021-03-18",
+     "2021-04-09",
+     "2021-04-16",
+     "2021-09-16",
+     "2023-01-26",
+     "2023-03-14",
+     "2023-04-10",
+     "2023-05-12",
+     "2023-11-15",
+     "2024-06-14",
+     "2024-07-22",
+     "2024-10-20",
+     "2024-10-30",
+     "2025-02-12",
+     "2025-05-09",
+     "2025-06-12",
+     "2025-06-30",
+     "2025-07-10",
+     "2025-08-02",
+     "2025-09-22",
+     "2025-10-27"
+    ],
+    "episode_starts_a": [
+     "2024-06-14",
+     "2024-07-22",
+     "2024-10-20",
+     "2024-10-30",
+     "2025-02-12",
+     "2025-05-09",
+     "2025-06-12",
+     "2025-06-30",
+     "2025-07-10",
+     "2025-08-02",
+     "2025-09-22",
+     "2025-10-27"
+    ],
+    "divergent_episode_starts_total": 18,
+    "divergent_episode_starts_first3": [
+     {
+      "date": "2020-02-13",
+      "mine": {
+       "cell": "R降|L注|W好|T线上",
+       "is_segment_start": true,
+       "axes": {
+        "R": "降",
+        "L": "注",
+        "W": "好",
+        "T": "线上"
+       }
+      },
+      "a": {
+       "is_segment_start": false,
+       "axes": null
+      }
+     },
+     {
+      "date": "2020-02-27",
+      "mine": {
+       "cell": "R降|L注|W好|T线上",
+       "is_segment_start": true,
+       "axes": {
+        "R": "降",
+        "L": "注",
+        "W": "好",
+        "T": "线上"
+       }
+      },
+      "a": {
+       "is_segment_start": false,
+       "axes": null
+      }
+     },
+     {
+      "date": "2020-04-26",
+      "mine": {
+       "cell": "R降|L注|W好|T线上",
+       "is_segment_start": true,
+       "axes": {
+        "R": "降",
+        "L": "注",
+        "W": "好",
+        "T": "线上"
+       }
+      },
+      "a": {
+       "is_segment_start": false,
+       "axes": null
+      }
+     }
+    ]
+   },
+   {
+    "cell": "R降|L注|W好|T线下",
+    "a_cell_name": "R降|L注|W没坏|T线下",
+    "mine_all": {
+     "days": 111,
+     "segments": 13
+    },
+    "mine_stat": {
+     "days": 111,
+     "segments": 13
+    },
+    "a": {
+     "days": 111,
+     "segments": 13,
+     "episode_starts": [
+      "2021-09-21",
+      "2023-01-09",
+      "2024-08-02",
+      "2024-08-26",
+      "2024-09-16",
+      "2024-10-31",
+      "2025-04-14",
+      "2025-04-28",
+      "2025-05-30",
+      "2025-06-13",
+      "2025-07-01",
+      "2025-12-22"
+     ],
+     "d30": {
+      "n_days": 111,
+      "median": 0.1177,
+      "mean": 0.1516,
+      "p_down_big": 0.009,
+      "p_up_big": 0.604
+     },
+     "d30_by_episode_start": {
+      "n_days": 13,
+      "median": 0.1344,
+      "mean": 0.1787,
+      "p_down_big": 0.0,
+      "p_up_big": 0.615
+     },
+     "d56": {
+      "n_days": 111,
+      "median": 0.2415,
+      "mean": 0.2605,
+      "p_down_big": 0.063,
+      "p_up_big": 0.829
+     },
+     "d56_by_episode_start": {
+      "n_days": 13,
+      "median": 0.1311,
+      "mean": 0.2088,
+      "p_down_big": 0.077,
+      "p_up_big": 0.692
+     }
+    },
+    "match_days_stat": true,
+    "match_seg_stat": true,
+    "match_days_all": true,
+    "match_seg_all": true,
+    "episode_starts_match": false,
+    "episode_starts_mine": [
+     "2020-04-13",
+     "2021-09-21",
+     "2023-01-09",
+     "2024-08-02",
+     "2024-08-26",
+     "2024-09-16",
+     "2024-10-31",
+     "2025-04-14",
+     "2025-04-28",
+     "2025-05-30",
+     "2025-06-13",
+     "2025-07-01",
+     "2025-12-22"
+    ],
+    "episode_starts_a": [
+     "2021-09-21",
+     "2023-01-09",
+     "2024-08-02",
+     "2024-08-26",
+     "2024-09-16",
+     "2024-10-31",
+     "2025-04-14",
+     "2025-04-28",
+     "2025-05-30",
+     "2025-06-13",
+     "2025-07-01",
+     "2025-12-22"
+    ],
+    "divergent_episode_starts_total": 1,
+    "divergent_episode_starts_first3": [
+     {
+      "date": "2020-04-13",
+      "mine": {
+       "cell": "R降|L注|W好|T线下",
+       "is_segment_start": true,
+       "axes": {
+        "R": "降",
+        "L": "注",
+        "W": "好",
+        "T": "线下"
+       }
+      },
+      "a": {
+       "is_segment_start": false,
+       "axes": null
+      }
+     }
+    ]
+   },
+   {
+    "cell": "R降|L注|W坏|T线上",
+    "a_cell_name": "R降|L注|W坏|T线上",
+    "mine_all": {
+     "days": 119,
+     "segments": 15
+    },
+    "mine_stat": {
+     "days": 119,
+     "segments": 15
+    },
+    "a": {
+     "days": 119,
+     "segments": 15,
+     "episode_starts": [
+      "2020-09-07",
+      "2020-09-28",
+      "2021-05-28",
+      "2023-05-20",
+      "2023-05-28",
+      "2024-07-14",
+      "2025-02-06",
+      "2025-02-17",
+      "2025-03-02",
+      "2025-06-29",
+      "2025-08-25",
+      "2025-10-13"
+     ],
+     "d30": {
+      "n_days": 119,
+      "median": -0.0095,
+      "mean": 0.0093,
+      "p_down_big": 0.252,
+      "p_up_big": 0.244
+     },
+     "d30_by_episode_start": {
+      "n_days": 15,
+      "median": -0.0035,
+      "mean": 0.0207,
+      "p_down_big": 0.2,
+      "p_up_big": 0.2
+     },
+     "d56": {
+      "n_days": 119,
+      "median": -0.0054,
+      "mean": 0.0679,
+      "p_down_big": 0.319,
+      "p_up_big": 0.353
+     },
+     "d56_by_episode_start": {
+      "n_days": 15,
+      "median": 0.0038,
+      "mean": 0.0613,
+      "p_down_big": 0.267,
+      "p_up_big": 0.333
+     }
+    },
+    "match_days_stat": true,
+    "match_seg_stat": true,
+    "match_days_all": true,
+    "match_seg_all": true,
+    "episode_starts_match": false,
+    "episode_starts_mine": [
+     "2020-03-02",
+     "2020-07-06",
+     "2020-07-20",
+     "2020-09-07",
+     "2020-09-28",
+     "2021-05-28",
+     "2023-05-20",
+     "2023-05-28",
+     "2024-07-14",
+     "2025-02-06",
+     "2025-02-17",
+     "2025-03-02",
+     "2025-06-29",
+     "2025-08-25",
+     "2025-10-13"
+    ],
+    "episode_starts_a": [
+     "2020-09-07",
+     "2020-09-28",
+     "2021-05-28",
+     "2023-05-20",
+     "2023-05-28",
+     "2024-07-14",
+     "2025-02-06",
+     "2025-02-17",
+     "2025-03-02",
+     "2025-06-29",
+     "2025-08-25",
+     "2025-10-13"
+    ],
+    "divergent_episode_starts_total": 3,
+    "divergent_episode_starts_first3": [
+     {
+      "date": "2020-03-02",
+      "mine": {
+       "cell": "R降|L注|W坏|T线上",
+       "is_segment_start": true,
+       "axes": {
+        "R": "降",
+        "L": "注",
+        "W": "坏",
+        "T": "线上"
+       }
+      },
+      "a": {
+       "is_segment_start": false,
+       "axes": null
+      }
+     },
+     {
+      "date": "2020-07-06",
+      "mine": {
+       "cell": "R降|L注|W坏|T线上",
+       "is_segment_start": true,
+       "axes": {
+        "R": "降",
+        "L": "注",
+        "W": "坏",
+        "T": "线上"
+       }
+      },
+      "a": {
+       "is_segment_start": false,
+       "axes": null
+      }
+     },
+     {
+      "date": "2020-07-20",
+      "mine": {
+       "cell": "R降|L注|W坏|T线上",
+       "is_segment_start": true,
+       "axes": {
+        "R": "降",
+        "L": "注",
+        "W": "坏",
+        "T": "线上"
+       }
+      },
+      "a": {
+       "is_segment_start": false,
+       "axes": null
+      }
+     }
+    ]
+   },
+   {
+    "cell": "R降|L注|W坏|T线下",
+    "a_cell_name": "R降|L注|W坏|T线下",
+    "mine_all": {
+     "days": 189,
+     "segments": 13
+    },
+    "mine_stat": {
+     "days": 189,
+     "segments": 13
+    },
+    "a": {
+     "days": 189,
+     "segments": 13,
+     "episode_starts": [
+      "2023-01-07",
+      "2024-07-06",
+      "2024-08-12",
+      "2024-09-02",
+      "2025-02-25",
+      "2025-04-21",
+      "2025-06-23",
+      "2025-11-03",
+      "2025-11-25",
+      "2025-12-11",
+      "2025-12-29",
+      "2026-02-25"
+     ],
+     "d30": {
+      "n_days": 189,
+      "median": 0.0483,
+      "mean": 0.0754,
+      "p_down_big": 0.058,
+      "p_up_big": 0.381
+     },
+     "d30_by_episode_start": {
+      "n_days": 13,
+      "median": -0.0163,
+      "mean": 0.029,
+      "p_down_big": 0.154,
+      "p_up_big": 0.231
+     },
+     "d56": {
+      "n_days": 189,
+      "median": 0.1523,
+      "mean": 0.1613,
+      "p_down_big": 0.122,
+      "p_up_big": 0.608
+     },
+     "d56_by_episode_start": {
+      "n_days": 13,
+      "median": 0.0537,
+      "mean": 0.0346,
+      "p_down_big": 0.231,
+      "p_up_big": 0.462
+     }
+    },
+    "match_days_stat": true,
+    "match_seg_stat": true,
+    "match_days_all": true,
+    "match_seg_all": true,
+    "episode_starts_match": false,
+    "episode_starts_mine": [
+     "2020-03-08",
+     "2023-01-07",
+     "2024-07-06",
+     "2024-08-12",
+     "2024-09-02",
+     "2025-02-25",
+     "2025-04-21",
+     "2025-06-23",
+     "2025-11-03",
+     "2025-11-25",
+     "2025-12-11",
+     "2025-12-29",
+     "2026-02-25"
+    ],
+    "episode_starts_a": [
+     "2023-01-07",
+     "2024-07-06",
+     "2024-08-12",
+     "2024-09-02",
+     "2025-02-25",
+     "2025-04-21",
+     "2025-06-23",
+     "2025-11-03",
+     "2025-11-25",
+     "2025-12-11",
+     "2025-12-29",
+     "2026-02-25"
+    ],
+    "divergent_episode_starts_total": 1,
+    "divergent_episode_starts_first3": [
+     {
+      "date": "2020-03-08",
+      "mine": {
+       "cell": "R降|L注|W坏|T线下",
+       "is_segment_start": true,
+       "axes": {
+        "R": "降",
+        "L": "注",
+        "W": "坏",
+        "T": "线下"
+       }
+      },
+      "a": {
+       "is_segment_start": false,
+       "axes": null
+      }
+     }
+    ]
+   },
+   {
+    "cell": "R降|L抽|W好|T线上",
+    "a_cell_name": "R降|L抽|W没坏|T线上",
+    "mine_all": {
+     "days": 86,
+     "segments": 5
+    },
+    "mine_stat": {
+     "days": 86,
+     "segments": 5
+    },
+    "a": {
+     "days": 86,
+     "segments": 5,
+     "episode_starts": [
+      "2020-01-30",
+      "2023-01-13",
+      "2023-03-26",
+      "2023-04-25",
+      "2024-10-28"
+     ],
+     "d30": {
+      "n_days": 86,
+      "median": -0.049,
+      "mean": -0.0711,
+      "p_down_big": 0.291,
+      "p_up_big": 0.07
+     },
+     "d30_by_episode_start": {
+      "n_days": 5,
+      "median": 0.0119,
+      "mean": 0.0613,
+      "p_down_big": 0.2,
+      "p_up_big": 0.2
+     },
+     "d56": {
+      "n_days": 86,
+      "median": -0.007,
+      "mean": -0.0341,
+      "p_down_big": 0.349,
+      "p_up_big": 0.291
+     },
+     "d56_by_episode_start": {
+      "n_days": 5,
+      "median": 0.0003,
+      "mean": 0.0064,
+      "p_down_big": 0.2,
+      "p_up_big": 0.2
+     }
+    },
+    "match_days_stat": true,
+    "match_seg_stat": true,
+    "match_days_all": true,
+    "match_seg_all": true,
+    "episode_starts_match": true,
+    "episode_starts_mine": [
+     "2020-01-30",
+     "2023-01-13",
+     "2023-03-26",
+     "2023-04-25",
+     "2024-10-28"
+    ],
+    "episode_starts_a": [
+     "2020-01-30",
+     "2023-01-13",
+     "2023-03-26",
+     "2023-04-25",
+     "2024-10-28"
+    ],
+    "divergent_episode_starts_total": 0,
+    "divergent_episode_starts_first3": []
+   },
+   {
+    "cell": "R降|L抽|W好|T线下",
+    "a_cell_name": "R降|L抽|W没坏|T线下",
+    "mine_all": {
+     "days": 13,
+     "segments": 3
+    },
+    "mine_stat": {
+     "days": 13,
+     "segments": 3
+    },
+    "a": {
+     "days": 13,
+     "segments": 3,
+     "episode_starts": [
+      "2023-01-12",
+      "2024-10-21",
+      "2026-01-05"
+     ],
+     "d30": {
+      "n_days": 13,
+      "median": 0.352,
+      "mean": 0.1461,
+      "p_down_big": 0.385,
+      "p_up_big": 0.615
+     },
+     "d30_by_episode_start": {
+      "n_days": 3,
+      "median": 0.16,
+      "mean": 0.113,
+      "p_down_big": 0.333,
+      "p_up_big": 0.667
+     },
+     "d56": {
+      "n_days": 13,
+      "median": 0.3994,
+      "mean": 0.1741,
+      "p_down_big": 0.385,
+      "p_up_big": 0.538
+     },
+     "d56_by_episode_start": {
+      "n_days": 3,
+      "median": 0.0804,
+      "mean": 0.1293,
+      "p_down_big": 0.333,
+      "p_up_big": 0.333
+     }
+    },
+    "match_days_stat": true,
+    "match_seg_stat": true,
+    "match_days_all": true,
+    "match_seg_all": true,
+    "episode_starts_match": true,
+    "episode_starts_mine": [
+     "2023-01-12",
+     "2024-10-21",
+     "2026-01-05"
+    ],
+    "episode_starts_a": [
+     "2023-01-12",
+     "2024-10-21",
+     "2026-01-05"
+    ],
+    "divergent_episode_starts_total": 0,
+    "divergent_episode_starts_first3": []
+   },
+   {
+    "cell": "R降|L抽|W坏|T线上",
+    "a_cell_name": "R降|L抽|W坏|T线上",
+    "mine_all": {
+     "days": 24,
+     "segments": 1
+    },
+    "mine_stat": {
+     "days": 24,
+     "segments": 1
+    },
+    "a": {
+     "days": 24,
+     "segments": 1,
+     "episode_starts": [
+      "2023-05-15"
+     ],
+     "d30": {
+      "n_days": 24,
+      "median": 0.1309,
+      "mean": 0.102,
+      "p_down_big": 0.0,
+      "p_up_big": 0.625
+     },
+     "d30_by_episode_start": {
+      "n_days": 1,
+      "median": -0.0749,
+      "mean": -0.0749,
+      "p_down_big": 0.0,
+      "p_up_big": 0.0
+     },
+     "d56": {
+      "n_days": 24,
+      "median": 0.109,
+      "mean": 0.1078,
+      "p_down_big": 0.0,
+      "p_up_big": 0.625
+     },
+     "d56_by_episode_start": {
+      "n_days": 1,
+      "median": 0.1196,
+      "mean": 0.1196,
+      "p_down_big": 0.0,
+      "p_up_big": 1.0
+     }
+    },
+    "match_days_stat": true,
+    "match_seg_stat": true,
+    "match_days_all": true,
+    "match_seg_all": true,
+    "episode_starts_match": true,
+    "episode_starts_mine": [
+     "2023-05-15"
+    ],
+    "episode_starts_a": [
+     "2023-05-15"
+    ],
+    "divergent_episode_starts_total": 0,
+    "divergent_episode_starts_first3": []
+   },
+   {
+    "cell": "R降|L抽|W坏|T线下",
+    "a_cell_name": "R降|L抽|W坏|T线下",
+    "mine_all": {
+     "days": 36,
+     "segments": 3
+    },
+    "mine_stat": {
+     "days": 36,
+     "segments": 3
+    },
+    "a": {
+     "days": 36,
+     "segments": 3,
+     "episode_starts": [
+      "2025-11-20",
+      "2026-01-01",
+      "2026-01-29"
+     ],
+     "d30": {
+      "n_days": 36,
+      "median": 0.0137,
+      "mean": -0.0156,
+      "p_down_big": 0.222,
+      "p_up_big": 0.028
+     },
+     "d30_by_episode_start": {
+      "n_days": 3,
+      "median": -0.1137,
+      "mean": -0.1009,
+      "p_down_big": 0.667,
+      "p_up_big": 0.0
+     },
+     "d56": {
+      "n_days": 36,
+      "median": 0.0476,
+      "mean": -0.0055,
+      "p_down_big": 0.25,
+      "p_up_big": 0.25
+     },
+     "d56_by_episode_start": {
+      "n_days": 3,
+      "median": -0.187,
+      "mean": -0.108,
+      "p_down_big": 0.667,
+      "p_up_big": 0.333
+     }
+    },
+    "match_days_stat": true,
+    "match_seg_stat": true,
+    "match_days_all": true,
+    "match_seg_all": true,
+    "episode_starts_match": true,
+    "episode_starts_mine": [
+     "2025-11-20",
+     "2026-01-01",
+     "2026-01-29"
+    ],
+    "episode_starts_a": [
+     "2025-11-20",
+     "2026-01-01",
+     "2026-01-29"
+    ],
+    "divergent_episode_starts_total": 0,
+    "divergent_episode_starts_first3": []
+   }
+  ],
+  "n_cells_matching_days_stat": 16,
+  "n_cells_matching_seg_stat": 16,
+  "n_cells_matching_days_all": 12,
+  "n_cells_matching_seg_all": 13,
+  "n_cells_episode_starts_identical": 9,
+  "total_divergent_episode_starts": 37,
+  "a_self_checks": {
+   "cells_before_cut_ignore_the_future": true,
+   "days_with_cell": 2480,
+   "usable_days": 2424,
+   "n_cells": 16
+  },
+  "a_coverage": {
+   "first": "2020-01-30",
+   "last_usable": "2026-09-18"
+  },
+  "my_self_checks": {
+   "days_with_cell": 2480,
+   "usable_days": 2424,
+   "n_cells": 16,
+   "first": "2020-01-30",
+   "last_usable": "2026-09-18"
+  }
+ },
+ "a_vs_mine_stats": {
+  "a_today_cell": "R升|L抽|W坏|T线下",
+  "a_asof": "2026-11-13",
+  "my_today_cell": "R升|L抽|W坏|T线下",
+  "target_cell_pairs": {
+   "ETH_30d": {
+    "a": {
+     "n_days": 257,
+     "median": 0.003,
+     "mean": -0.0348,
+     "p_down_big": 0.28,
+     "p_up_big": 0.14
+    },
+    "mine": {
+     "n": 257,
+     "median": -0.011054372183300964,
+     "mean": -0.010302709419143227,
+     "share_lt_m10": 0.32684824902723736,
+     "share_gt_p10": 0.27626459143968873
+    }
+   },
+   "ETH_56d": {
+    "a": {
+     "n_days": 257,
+     "median": 0.0024,
+     "mean": 0.0007,
+     "p_down_big": 0.366,
+     "p_up_big": 0.323
+    },
+    "mine": {
+     "n": 257,
+     "median": 0.06202142719258741,
+     "mean": 0.05724047851500664,
+     "share_lt_m10": 0.26459143968871596,
+     "share_gt_p10": 0.45136186770428016
+    }
+   },
+   "SOL_30d": {
+    "a": {
+     "n_days": 257,
+     "median": 0.003,
+     "mean": -0.0348,
+     "p_down_big": 0.28,
+     "p_up_big": 0.14
+    },
+    "mine": {
+     "n": 257,
+     "median": -0.025936599423631135,
+     "mean": -0.05987683794897953,
+     "share_lt_m10": 0.3463035019455253,
+     "share_gt_p10": 0.24124513618677043
+    }
+   },
+   "SOL_56d": {
+    "a": {
+     "n_days": 257,
+     "median": 0.0024,
+     "mean": 0.0007,
+     "p_down_big": 0.366,
+     "p_up_big": 0.323
+    },
+    "mine": {
+     "n": 257,
+     "median": 0.02425373134328357,
+     "mean": 0.05224036033107232,
+     "share_lt_m10": 0.36964980544747084,
+     "share_gt_p10": 0.4046692607003891
+    }
+   },
+   "BTC_30d": {
+    "a": {
+     "n_days": 257,
+     "median": 0.003,
+     "mean": -0.0348,
+     "p_down_big": 0.28,
+     "p_up_big": 0.14
+    },
+    "mine": {
+     "n": 257,
+     "median": 0.0030333511457580897,
+     "mean": -0.034794857395164094,
+     "share_lt_m10": 0.2801556420233463,
+     "share_gt_p10": 0.14007782101167315
+    }
+   },
+   "BTC_56d": {
+    "a": {
+     "n_days": 257,
+     "median": 0.0024,
+     "mean": 0.0007,
+     "p_down_big": 0.366,
+     "p_up_big": 0.323
+    },
+    "mine": {
+     "n": 257,
+     "median": 0.0024213434008508727,
+     "mean": 0.0006999843250381369,
+     "share_lt_m10": 0.3657587548638132,
+     "share_gt_p10": 0.3229571984435798
+    }
+   }
+  },
+  "unconditional_pairs": {
+   "ETH_30d": {
+    "a": {
+     "n_days": 2424,
+     "median": 0.0185,
+     "mean": 0.0441,
+     "p_down_big": 0.202,
+     "p_up_big": 0.318
+    },
+    "mine": {
+     "n": 2424,
+     "median": 0.019097382104753424,
+     "mean": 0.0602155486973937,
+     "share_lt_m10": 0.257013201320132,
+     "share_gt_p10": 0.35932343234323433
+    }
+   },
+   "ETH_56d": {
+    "a": {
+     "n_days": 2424,
+     "median": 0.0438,
+     "mean": 0.0907,
+     "p_down_big": 0.269,
+     "p_up_big": 0.418
+    },
+    "mine": {
+     "n": 2424,
+     "median": 0.06764583232946353,
+     "mean": 0.1202686977742627,
+     "share_lt_m10": 0.3048679867986799,
+     "share_gt_p10": 0.4591584158415842
+    }
+   },
+   "SOL_30d": {
+    "a": {
+     "n_days": 2424,
+     "median": 0.0185,
+     "mean": 0.0441,
+     "p_down_big": 0.202,
+     "p_up_big": 0.318
+    },
+    "mine": {
+     "n": 2263,
+     "median": -0.002128284162630223,
+     "mean": 0.1158178977694024,
+     "share_lt_m10": 0.34953601414052143,
+     "share_gt_p10": 0.37516570923552806
+    }
+   },
+   "SOL_56d": {
+    "a": {
+     "n_days": 2424,
+     "median": 0.0438,
+     "mean": 0.0907,
+     "p_down_big": 0.269,
+     "p_up_big": 0.418
+    },
+    "mine": {
+     "n": 2289,
+     "median": 0.00477410340009321,
+     "mean": 0.272037459440801,
+     "share_lt_m10": 0.36609873307121016,
+     "share_gt_p10": 0.3835736129314111
+    }
+   },
+   "BTC_30d": {
+    "a": {
+     "n_days": 2424,
+     "median": 0.0185,
+     "mean": 0.0441,
+     "p_down_big": 0.202,
+     "p_up_big": 0.318
+    },
+    "mine": {
+     "n": 2424,
+     "median": 0.018462234252984322,
+     "mean": 0.04414396853998868,
+     "share_lt_m10": 0.20173267326732675,
+     "share_gt_p10": 0.31765676567656764
+    }
+   },
+   "BTC_56d": {
+    "a": {
+     "n_days": 2424,
+     "median": 0.0438,
+     "mean": 0.0907,
+     "p_down_big": 0.269,
+     "p_up_big": 0.418
+    },
+    "mine": {
+     "n": 2424,
+     "median": 0.04376105666101915,
+     "mean": 0.0906647005736635,
+     "share_lt_m10": 0.2693894389438944,
+     "share_gt_p10": 0.4179042904290429
+    }
+   }
+  },
+  "a_control": {
+   "mean_30d": {
+    "obs": -0.0348,
+    "null_mean": 0.0539,
+    "p_two_sided": 0.1485,
+    "n_shift": 2000
+   },
+   "p_down_big_30d": {
+    "obs": 0.2802,
+    "null_mean": 0.182,
+    "p_two_sided": 0.2325,
+    "n_shift": 2000
+   }
+  }
+ },
+ "eth_sol": {
+  "per_cell": {
+   "R升|L注|W好|T线上": {
+    "ETH": {
+     "30d_day": {
+      "n": 474,
+      "median": 0.06348949786908853,
+      "mean": 0.09576582521560895,
+      "share_lt_m10": 0.2109704641350211,
+      "share_gt_p10": 0.42616033755274263
+     },
+     "30d_segfirst": {
+      "n": 21,
+      "median": 0.16865292898168183,
+      "mean": 0.1927766510877176,
+      "share_lt_m10": 0.19047619047619047,
+      "share_gt_p10": 0.5714285714285714
+     },
+     "56d_day": {
+      "n": 474,
+      "median": 0.08771465288150027,
+      "mean": 0.15316054046337693,
+      "share_lt_m10": 0.3037974683544304,
+      "share_gt_p10": 0.47257383966244726
+     },
+     "56d_segfirst": {
+      "n": 21,
+      "median": 0.2558733863081688,
+      "mean": 0.27198246828115574,
+      "share_lt_m10": 0.23809523809523808,
+      "share_gt_p10": 0.6666666666666666
+     }
+    },
+    "SOL": {
+     "30d_day": {
+      "n": 474,
+      "median": 0.047168819165129605,
+      "mean": 0.2336649430458795,
+      "share_lt_m10": 0.33755274261603374,
+      "share_gt_p10": 0.4451476793248945
+     },
+     "30d_segfirst": {
+      "n": 21,
+      "median": 0.16186723249469526,
+      "mean": 0.3824017009233234,
+      "share_lt_m10": 0.3333333333333333,
+      "share_gt_p10": 0.5238095238095238
+     },
+     "56d_day": {
+      "n": 474,
+      "median": 0.025693042151837653,
+      "mean": 0.37586156713341995,
+      "share_lt_m10": 0.2848101265822785,
+      "share_gt_p10": 0.4029535864978903
+     },
+     "56d_segfirst": {
+      "n": 21,
+      "median": 0.052197802197802234,
+      "mean": 0.8529041832785206,
+      "share_lt_m10": 0.38095238095238093,
+      "share_gt_p10": 0.42857142857142855
+     }
+    },
+    "BTC": {
+     "30d_day": {
+      "n": 474,
+      "median": 0.015119829916969252,
+      "mean": 0.035347194031571605,
+      "share_lt_m10": 0.20464135021097046,
+      "share_gt_p10": 0.2869198312236287
+     },
+     "30d_segfirst": {
+      "n": 21,
+      "median": 0.06842142575019494,
+      "mean": 0.10131722618445008,
+      "share_lt_m10": 0.14285714285714285,
+      "share_gt_p10": 0.47619047619047616
+     },
+     "56d_day": {
+      "n": 474,
+      "median": 0.0016802528421195895,
+      "mean": 0.07639511073050653,
+      "share_lt_m10": 0.2848101265822785,
+      "share_gt_p10": 0.31856540084388185
+     },
+     "56d_segfirst": {
+      "n": 21,
+      "median": 0.04345972810462251,
+      "mean": 0.17719836847923687,
+      "share_lt_m10": 0.23809523809523808,
+      "share_gt_p10": 0.47619047619047616
+     }
+    }
+   },
+   "R升|L注|W好|T线下": {
+    "ETH": {
+     "30d_day": {
+      "n": 159,
+      "median": 0.006995084428213172,
+      "mean": 0.029022467796393177,
+      "share_lt_m10": 0.36477987421383645,
+      "share_gt_p10": 0.37735849056603776
+     },
+     "30d_segfirst": {
+      "n": 15,
+      "median": 0.06436265367487537,
+      "mean": 0.10940049950121257,
+      "share_lt_m10": 0.13333333333333333,
+      "share_gt_p10": 0.4
+     },
+     "56d_day": {
+      "n": 159,
+      "median": -0.005567431798960465,
+      "mean": -0.005878203945116289,
+      "share_lt_m10": 0.44654088050314467,
+      "share_gt_p10": 0.4025157232704403
+     },
+     "56d_segfirst": {
+      "n": 15,
+      "median": 0.25478107853799803,
+      "mean": 0.17225127515488378,
+      "share_lt_m10": 0.2,
+      "share_gt_p10": 0.7333333333333333
+     }
+    },
+    "SOL": {
+     "30d_day": {
+      "n": 159,
+      "median": -0.005116431616923545,
+      "mean": 0.21548571258175317,
+      "share_lt_m10": 0.32075471698113206,
+      "share_gt_p10": 0.3710691823899371
+     },
+     "30d_segfirst": {
+      "n": 15,
+      "median": 0.1563762261973458,
+      "mean": 0.30868040540646613,
+      "share_lt_m10": 0.2,
+      "share_gt_p10": 0.6666666666666666
+     },
+     "56d_day": {
+      "n": 159,
+      "median": 0.006249999999999867,
+      "mean": 0.3669118130001105,
+      "share_lt_m10": 0.4276729559748428,
+      "share_gt_p10": 0.41509433962264153
+     },
+     "56d_segfirst": {
+      "n": 15,
+      "median": 0.23348601735776287,
+      "mean": 0.7185619509651804,
+      "share_lt_m10": 0.2,
+      "share_gt_p10": 0.6666666666666666
+     }
+    },
+    "BTC": {
+     "30d_day": {
+      "n": 159,
+      "median": 0.03983404808507296,
+      "mean": 0.047535243807026915,
+      "share_lt_m10": 0.3018867924528302,
+      "share_gt_p10": 0.42138364779874216
+     },
+     "30d_segfirst": {
+      "n": 15,
+      "median": 0.06030481527114362,
+      "mean": 0.11967823840106633,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 0.4666666666666667
+     },
+     "56d_day": {
+      "n": 159,
+      "median": 0.03235093606096617,
+      "mean": 0.03154544927868782,
+      "share_lt_m10": 0.44654088050314467,
+      "share_gt_p10": 0.389937106918239
+     },
+     "56d_segfirst": {
+      "n": 15,
+      "median": 0.10248809723250529,
+      "mean": 0.16911015629791762,
+      "share_lt_m10": 0.2,
+      "share_gt_p10": 0.5333333333333333
+     }
+    }
+   },
+   "R升|L注|W坏|T线上": {
+    "ETH": {
+     "30d_day": {
+      "n": 118,
+      "median": -0.16276834183827005,
+      "mean": -0.08885073958427062,
+      "share_lt_m10": 0.6101694915254238,
+      "share_gt_p10": 0.2457627118644068
+     },
+     "30d_segfirst": {
+      "n": 11,
+      "median": -0.12724740319552774,
+      "mean": -0.04238529965760098,
+      "share_lt_m10": 0.5454545454545454,
+      "share_gt_p10": 0.36363636363636365
+     },
+     "56d_day": {
+      "n": 118,
+      "median": -0.2322182727116141,
+      "mean": -0.14891338877111707,
+      "share_lt_m10": 0.6694915254237288,
+      "share_gt_p10": 0.17796610169491525
+     },
+     "56d_segfirst": {
+      "n": 11,
+      "median": -0.25551212193003237,
+      "mean": -0.15845298900334653,
+      "share_lt_m10": 0.6363636363636364,
+      "share_gt_p10": 0.18181818181818182
+     }
+    },
+    "SOL": {
+     "30d_day": {
+      "n": 118,
+      "median": -0.16133919257861712,
+      "mean": -0.11022624163858243,
+      "share_lt_m10": 0.5847457627118644,
+      "share_gt_p10": 0.22033898305084745
+     },
+     "30d_segfirst": {
+      "n": 11,
+      "median": -0.14943906825383224,
+      "mean": 0.0012250500543045913,
+      "share_lt_m10": 0.5454545454545454,
+      "share_gt_p10": 0.36363636363636365
+     },
+     "56d_day": {
+      "n": 118,
+      "median": -0.2566979940288922,
+      "mean": -0.21147187640970402,
+      "share_lt_m10": 0.635593220338983,
+      "share_gt_p10": 0.0847457627118644
+     },
+     "56d_segfirst": {
+      "n": 11,
+      "median": -0.22257739892263062,
+      "mean": -0.13449690793591976,
+      "share_lt_m10": 0.5454545454545454,
+      "share_gt_p10": 0.09090909090909091
+     }
+    },
+    "BTC": {
+     "30d_day": {
+      "n": 118,
+      "median": -0.09723109253402012,
+      "mean": -0.06349448310696637,
+      "share_lt_m10": 0.4915254237288136,
+      "share_gt_p10": 0.16101694915254236
+     },
+     "30d_segfirst": {
+      "n": 11,
+      "median": -0.0691918382044725,
+      "mean": -0.019946230131283937,
+      "share_lt_m10": 0.45454545454545453,
+      "share_gt_p10": 0.18181818181818182
+     },
+     "56d_day": {
+      "n": 118,
+      "median": -0.10230530621874168,
+      "mean": -0.09352654711363145,
+      "share_lt_m10": 0.5,
+      "share_gt_p10": 0.13559322033898305
+     },
+     "56d_segfirst": {
+      "n": 11,
+      "median": -0.13051971971474807,
+      "mean": -0.08453915195172797,
+      "share_lt_m10": 0.5454545454545454,
+      "share_gt_p10": 0.18181818181818182
+     }
+    }
+   },
+   "R升|L注|W坏|T线下": {
+    "ETH": {
+     "30d_day": {
+      "n": 110,
+      "median": 0.09869323887299553,
+      "mean": 0.1611565917522371,
+      "share_lt_m10": 0.08181818181818182,
+      "share_gt_p10": 0.5
+     },
+     "30d_segfirst": {
+      "n": 11,
+      "median": 0.06152939704943283,
+      "mean": 0.090999049031035,
+      "share_lt_m10": 0.09090909090909091,
+      "share_gt_p10": 0.45454545454545453
+     },
+     "56d_day": {
+      "n": 110,
+      "median": 0.14135928915587548,
+      "mean": 0.1879872228005164,
+      "share_lt_m10": 0.2545454545454545,
+      "share_gt_p10": 0.5636363636363636
+     },
+     "56d_segfirst": {
+      "n": 11,
+      "median": 0.0890798220815685,
+      "mean": 0.13601995558965602,
+      "share_lt_m10": 0.2727272727272727,
+      "share_gt_p10": 0.45454545454545453
+     }
+    },
+    "SOL": {
+     "30d_day": {
+      "n": 110,
+      "median": 0.050378920131974314,
+      "mean": 0.21950198020085188,
+      "share_lt_m10": 0.24545454545454545,
+      "share_gt_p10": 0.45454545454545453
+     },
+     "30d_segfirst": {
+      "n": 11,
+      "median": 0.04319540055980031,
+      "mean": 0.14585426490044454,
+      "share_lt_m10": 0.18181818181818182,
+      "share_gt_p10": 0.45454545454545453
+     },
+     "56d_day": {
+      "n": 110,
+      "median": 0.05809462102957319,
+      "mean": 0.9332636197201437,
+      "share_lt_m10": 0.2636363636363636,
+      "share_gt_p10": 0.42727272727272725
+     },
+     "56d_segfirst": {
+      "n": 11,
+      "median": 0.03424302168724713,
+      "mean": 0.3571833317369986,
+      "share_lt_m10": 0.18181818181818182,
+      "share_gt_p10": 0.36363636363636365
+     }
+    },
+    "BTC": {
+     "30d_day": {
+      "n": 110,
+      "median": 0.05836892971181962,
+      "mean": 0.13012216181830263,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 0.38181818181818183
+     },
+     "30d_segfirst": {
+      "n": 11,
+      "median": 0.05180486077492685,
+      "mean": 0.10791127942711025,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 0.2727272727272727
+     },
+     "56d_day": {
+      "n": 110,
+      "median": 0.12372842683330065,
+      "mean": 0.1368043192285984,
+      "share_lt_m10": 0.15454545454545454,
+      "share_gt_p10": 0.5272727272727272
+     },
+     "56d_segfirst": {
+      "n": 11,
+      "median": 0.07696214030895465,
+      "mean": 0.1491030870812328,
+      "share_lt_m10": 0.09090909090909091,
+      "share_gt_p10": 0.45454545454545453
+     }
+    }
+   },
+   "R升|L抽|W好|T线上": {
+    "ETH": {
+     "30d_day": {
+      "n": 62,
+      "median": -0.07410256959177702,
+      "mean": -0.0626237914607287,
+      "share_lt_m10": 0.43548387096774194,
+      "share_gt_p10": 0.016129032258064516
+     },
+     "30d_segfirst": {
+      "n": 4,
+      "median": -0.02829188984214398,
+      "mean": -0.02866705898706584,
+      "share_lt_m10": 0.25,
+      "share_gt_p10": 0.0
+     },
+     "56d_day": {
+      "n": 62,
+      "median": -0.12837174655762595,
+      "mean": -0.10141810151190082,
+      "share_lt_m10": 0.7580645161290323,
+      "share_gt_p10": 0.06451612903225806
+     },
+     "56d_segfirst": {
+      "n": 4,
+      "median": -0.0985868267999323,
+      "mean": -0.026869568179800407,
+      "share_lt_m10": 0.5,
+      "share_gt_p10": 0.25
+     }
+    },
+    "SOL": {
+     "30d_day": {
+      "n": 62,
+      "median": -0.10258030024176418,
+      "mean": -0.033510599460262316,
+      "share_lt_m10": 0.532258064516129,
+      "share_gt_p10": 0.24193548387096775
+     },
+     "30d_segfirst": {
+      "n": 4,
+      "median": -0.04100555055303928,
+      "mean": 0.08813662171744296,
+      "share_lt_m10": 0.25,
+      "share_gt_p10": 0.25
+     },
+     "56d_day": {
+      "n": 62,
+      "median": -0.10288079540395584,
+      "mean": -0.09929713472925124,
+      "share_lt_m10": 0.5161290322580645,
+      "share_gt_p10": 0.08064516129032258
+     },
+     "56d_segfirst": {
+      "n": 4,
+      "median": 0.021099110807089372,
+      "mean": 0.0026313037160858865,
+      "share_lt_m10": 0.25,
+      "share_gt_p10": 0.25
+     }
+    },
+    "BTC": {
+     "30d_day": {
+      "n": 62,
+      "median": -0.06379186866177794,
+      "mean": -0.06525723036678563,
+      "share_lt_m10": 0.4032258064516129,
+      "share_gt_p10": 0.04838709677419355
+     },
+     "30d_segfirst": {
+      "n": 4,
+      "median": -0.03533599778834817,
+      "mean": -0.03782788766902742,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 0.0
+     },
+     "56d_day": {
+      "n": 62,
+      "median": -0.09776106280240976,
+      "mean": -0.07570708622801478,
+      "share_lt_m10": 0.4838709677419355,
+      "share_gt_p10": 0.06451612903225806
+     },
+     "56d_segfirst": {
+      "n": 4,
+      "median": -0.0648285632676453,
+      "mean": 0.005995305253146732,
+      "share_lt_m10": 0.25,
+      "share_gt_p10": 0.25
+     }
+    }
+   },
+   "R升|L抽|W好|T线下": {
+    "ETH": {
+     "30d_day": {
+      "n": 151,
+      "median": -0.023537695821472138,
+      "mean": -0.011445509102966761,
+      "share_lt_m10": 0.3576158940397351,
+      "share_gt_p10": 0.31788079470198677
+     },
+     "30d_segfirst": {
+      "n": 14,
+      "median": 0.07506758939659341,
+      "mean": 0.019709329527792942,
+      "share_lt_m10": 0.35714285714285715,
+      "share_gt_p10": 0.42857142857142855
+     },
+     "56d_day": {
+      "n": 151,
+      "median": -0.07563907811350312,
+      "mean": 0.008076077347135509,
+      "share_lt_m10": 0.44370860927152317,
+      "share_gt_p10": 0.3509933774834437
+     },
+     "56d_segfirst": {
+      "n": 14,
+      "median": 0.03323272217313655,
+      "mean": 0.05414625990051545,
+      "share_lt_m10": 0.21428571428571427,
+      "share_gt_p10": 0.42857142857142855
+     }
+    },
+    "SOL": {
+     "30d_day": {
+      "n": 151,
+      "median": -0.10523132748714847,
+      "mean": 0.04857161619693056,
+      "share_lt_m10": 0.5165562913907285,
+      "share_gt_p10": 0.31788079470198677
+     },
+     "30d_segfirst": {
+      "n": 14,
+      "median": -0.0824431367463998,
+      "mean": 0.07246629142336505,
+      "share_lt_m10": 0.42857142857142855,
+      "share_gt_p10": 0.2857142857142857
+     },
+     "56d_day": {
+      "n": 151,
+      "median": -0.1261910893638939,
+      "mean": 0.19384296063645573,
+      "share_lt_m10": 0.543046357615894,
+      "share_gt_p10": 0.3443708609271523
+     },
+     "56d_segfirst": {
+      "n": 14,
+      "median": 0.0014270751505630064,
+      "mean": 0.37213240515506485,
+      "share_lt_m10": 0.42857142857142855,
+      "share_gt_p10": 0.42857142857142855
+     }
+    },
+    "BTC": {
+     "30d_day": {
+      "n": 151,
+      "median": -0.02802581338000143,
+      "mean": -0.0011739140372871355,
+      "share_lt_m10": 0.423841059602649,
+      "share_gt_p10": 0.33112582781456956
+     },
+     "30d_segfirst": {
+      "n": 14,
+      "median": 0.02515076689594209,
+      "mean": 0.015461891497250699,
+      "share_lt_m10": 0.35714285714285715,
+      "share_gt_p10": 0.2857142857142857
+     },
+     "56d_day": {
+      "n": 151,
+      "median": -0.10469612746100498,
+      "mean": 0.029808147712413482,
+      "share_lt_m10": 0.5165562913907285,
+      "share_gt_p10": 0.3443708609271523
+     },
+     "56d_segfirst": {
+      "n": 14,
+      "median": 0.0510650898448628,
+      "mean": 0.054238630647574226,
+      "share_lt_m10": 0.2857142857142857,
+      "share_gt_p10": 0.42857142857142855
+     }
+    }
+   },
+   "R升|L抽|W坏|T线上": {
+    "ETH": {
+     "30d_day": {
+      "n": 15,
+      "median": 0.08722533403181165,
+      "mean": 0.07144969846377845,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 0.4666666666666667
+     },
+     "30d_segfirst": {
+      "n": 2,
+      "median": 0.15571723577334917,
+      "mean": 0.15571723577334917,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 1.0
+     },
+     "56d_day": {
+      "n": 15,
+      "median": 0.020641856260358526,
+      "mean": -0.0028722888794472452,
+      "share_lt_m10": 0.26666666666666666,
+      "share_gt_p10": 0.0
+     },
+     "56d_segfirst": {
+      "n": 2,
+      "median": 0.07084724384864771,
+      "mean": 0.07084724384864771,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 0.0
+     }
+    },
+    "SOL": {
+     "30d_day": {
+      "n": 15,
+      "median": 0.4753309265944643,
+      "mean": 0.4842866174712381,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 1.0
+     },
+     "30d_segfirst": {
+      "n": 2,
+      "median": 0.5248019025084355,
+      "mean": 0.5248019025084355,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 1.0
+     },
+     "56d_day": {
+      "n": 15,
+      "median": 0.31610576923076916,
+      "mean": 0.3663041227251258,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 1.0
+     },
+     "56d_segfirst": {
+      "n": 2,
+      "median": 0.41592639040484847,
+      "mean": 0.41592639040484847,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 1.0
+     }
+    },
+    "BTC": {
+     "30d_day": {
+      "n": 15,
+      "median": 0.11263113641747835,
+      "mean": 0.07507644183966032,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 0.5333333333333333
+     },
+     "30d_segfirst": {
+      "n": 2,
+      "median": 0.18970819570755526,
+      "mean": 0.18970819570755526,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 1.0
+     },
+     "56d_day": {
+      "n": 15,
+      "median": 0.05729621446151745,
+      "mean": 0.028735823431256698,
+      "share_lt_m10": 0.26666666666666666,
+      "share_gt_p10": 0.4
+     },
+     "56d_segfirst": {
+      "n": 2,
+      "median": 0.16300067740119173,
+      "mean": 0.16300067740119173,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 1.0
+     }
+    }
+   },
+   "R升|L抽|W坏|T线下": {
+    "ETH": {
+     "30d_day": {
+      "n": 257,
+      "median": -0.011054372183300964,
+      "mean": -0.010302709419143227,
+      "share_lt_m10": 0.32684824902723736,
+      "share_gt_p10": 0.27626459143968873
+     },
+     "30d_segfirst": {
+      "n": 12,
+      "median": -0.03612421950355632,
+      "mean": -0.0339814515783764,
+      "share_lt_m10": 0.3333333333333333,
+      "share_gt_p10": 0.25
+     },
+     "56d_day": {
+      "n": 257,
+      "median": 0.06202142719258741,
+      "mean": 0.05724047851500664,
+      "share_lt_m10": 0.26459143968871596,
+      "share_gt_p10": 0.45136186770428016
+     },
+     "56d_segfirst": {
+      "n": 12,
+      "median": -0.04888242451216507,
+      "mean": -0.009451073555043136,
+      "share_lt_m10": 0.3333333333333333,
+      "share_gt_p10": 0.3333333333333333
+     }
+    },
+    "SOL": {
+     "30d_day": {
+      "n": 257,
+      "median": -0.025936599423631135,
+      "mean": -0.05987683794897953,
+      "share_lt_m10": 0.3463035019455253,
+      "share_gt_p10": 0.24124513618677043
+     },
+     "30d_segfirst": {
+      "n": 12,
+      "median": -0.044961279898974915,
+      "mean": 0.01864515794483465,
+      "share_lt_m10": 0.4166666666666667,
+      "share_gt_p10": 0.25
+     },
+     "56d_day": {
+      "n": 257,
+      "median": 0.02425373134328357,
+      "mean": 0.05224036033107232,
+      "share_lt_m10": 0.36964980544747084,
+      "share_gt_p10": 0.4046692607003891
+     },
+     "56d_segfirst": {
+      "n": 12,
+      "median": 0.021305340959738572,
+      "mean": 0.020961078574241638,
+      "share_lt_m10": 0.4166666666666667,
+      "share_gt_p10": 0.5
+     }
+    },
+    "BTC": {
+     "30d_day": {
+      "n": 257,
+      "median": 0.0030333511457580897,
+      "mean": -0.034794857395164094,
+      "share_lt_m10": 0.2801556420233463,
+      "share_gt_p10": 0.14007782101167315
+     },
+     "30d_segfirst": {
+      "n": 12,
+      "median": 0.018984681126117953,
+      "mean": -0.007699904418474586,
+      "share_lt_m10": 0.3333333333333333,
+      "share_gt_p10": 0.25
+     },
+     "56d_day": {
+      "n": 257,
+      "median": 0.0024213434008508727,
+      "mean": 0.0006999843250381369,
+      "share_lt_m10": 0.3657587548638132,
+      "share_gt_p10": 0.3229571984435798
+     },
+     "56d_segfirst": {
+      "n": 12,
+      "median": -0.012271940012088423,
+      "mean": 0.008865818383433236,
+      "share_lt_m10": 0.3333333333333333,
+      "share_gt_p10": 0.3333333333333333
+     }
+    }
+   },
+   "R降|L注|W好|T线上": {
+    "ETH": {
+     "30d_day": {
+      "n": 500,
+      "median": 0.08725670718625067,
+      "mean": 0.1418283219754964,
+      "share_lt_m10": 0.14,
+      "share_gt_p10": 0.468
+     },
+     "30d_segfirst": {
+      "n": 30,
+      "median": 0.10687587802409637,
+      "mean": 0.14513569389413028,
+      "share_lt_m10": 0.16666666666666666,
+      "share_gt_p10": 0.5
+     },
+     "56d_day": {
+      "n": 500,
+      "median": 0.2165526845530208,
+      "mean": 0.2835700745653566,
+      "share_lt_m10": 0.164,
+      "share_gt_p10": 0.626
+     },
+     "56d_segfirst": {
+      "n": 30,
+      "median": 0.16966081993973503,
+      "mean": 0.250277474951077,
+      "share_lt_m10": 0.23333333333333334,
+      "share_gt_p10": 0.5666666666666667
+     }
+    },
+    "SOL": {
+     "30d_day": {
+      "n": 423,
+      "median": 0.14142335766423342,
+      "mean": 0.27356104223529876,
+      "share_lt_m10": 0.29550827423167847,
+      "share_gt_p10": 0.5224586288416075
+     },
+     "30d_segfirst": {
+      "n": 27,
+      "median": 0.032226494232785674,
+      "mean": -0.006186811726692249,
+      "share_lt_m10": 0.4074074074074074,
+      "share_gt_p10": 0.37037037037037035
+     },
+     "56d_day": {
+      "n": 446,
+      "median": 0.12801679963864,
+      "mean": 0.5976747188371359,
+      "share_lt_m10": 0.33856502242152464,
+      "share_gt_p10": 0.5044843049327354
+     },
+     "56d_segfirst": {
+      "n": 27,
+      "median": 0.09248514505417682,
+      "mean": 0.13796037712969283,
+      "share_lt_m10": 0.3333333333333333,
+      "share_gt_p10": 0.48148148148148145
+     }
+    },
+    "BTC": {
+     "30d_day": {
+      "n": 500,
+      "median": 0.03934216441032479,
+      "mean": 0.11610062442589635,
+      "share_lt_m10": 0.09,
+      "share_gt_p10": 0.422
+     },
+     "30d_segfirst": {
+      "n": 30,
+      "median": 0.032967169837541555,
+      "mean": 0.07346375103449644,
+      "share_lt_m10": 0.16666666666666666,
+      "share_gt_p10": 0.4
+     },
+     "56d_day": {
+      "n": 500,
+      "median": 0.12218905482631293,
+      "mean": 0.20981810267168158,
+      "share_lt_m10": 0.106,
+      "share_gt_p10": 0.552
+     },
+     "56d_segfirst": {
+      "n": 30,
+      "median": 0.03817764022562353,
+      "mean": 0.11314682890992453,
+      "share_lt_m10": 0.3333333333333333,
+      "share_gt_p10": 0.4666666666666667
+     }
+    }
+   },
+   "R降|L注|W好|T线下": {
+    "ETH": {
+     "30d_day": {
+      "n": 111,
+      "median": 0.13497536945812816,
+      "mean": 0.17547925336623374,
+      "share_lt_m10": 0.036036036036036036,
+      "share_gt_p10": 0.5405405405405406
+     },
+     "30d_segfirst": {
+      "n": 13,
+      "median": 0.24995645226031704,
+      "mean": 0.24152650460897654,
+      "share_lt_m10": 0.07692307692307693,
+      "share_gt_p10": 0.6923076923076923
+     },
+     "56d_day": {
+      "n": 111,
+      "median": 0.34839234839234834,
+      "mean": 0.32994339038121623,
+      "share_lt_m10": 0.07207207207207207,
+      "share_gt_p10": 0.7837837837837838
+     },
+     "56d_segfirst": {
+      "n": 13,
+      "median": 0.4686672358516868,
+      "mean": 0.3513016259022604,
+      "share_lt_m10": 0.07692307692307693,
+      "share_gt_p10": 0.7692307692307693
+     }
+    },
+    "SOL": {
+     "30d_day": {
+      "n": 98,
+      "median": 0.1360426773949165,
+      "mean": 0.15636159912925165,
+      "share_lt_m10": 0.061224489795918366,
+      "share_gt_p10": 0.6122448979591837
+     },
+     "30d_segfirst": {
+      "n": 12,
+      "median": 0.16868107722887138,
+      "mean": 0.17695795189462707,
+      "share_lt_m10": 0.08333333333333333,
+      "share_gt_p10": 0.5833333333333334
+     },
+     "56d_day": {
+      "n": 98,
+      "median": 0.24468568518940192,
+      "mean": 0.26576394025234007,
+      "share_lt_m10": 0.08163265306122448,
+      "share_gt_p10": 0.7142857142857143
+     },
+     "56d_segfirst": {
+      "n": 12,
+      "median": 0.19264160762938087,
+      "mean": 0.21300823854497275,
+      "share_lt_m10": 0.08333333333333333,
+      "share_gt_p10": 0.6666666666666666
+     }
+    },
+    "BTC": {
+     "30d_day": {
+      "n": 111,
+      "median": 0.1177310410956578,
+      "mean": 0.15162151934355306,
+      "share_lt_m10": 0.009009009009009009,
+      "share_gt_p10": 0.6036036036036037
+     },
+     "30d_segfirst": {
+      "n": 13,
+      "median": 0.13441362702502446,
+      "mean": 0.17865867629556578,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 0.6153846153846154
+     },
+     "56d_day": {
+      "n": 111,
+      "median": 0.2414590372041754,
+      "mean": 0.26052403823754333,
+      "share_lt_m10": 0.06306306306306306,
+      "share_gt_p10": 0.8288288288288288
+     },
+     "56d_segfirst": {
+      "n": 13,
+      "median": 0.1310669808145406,
+      "mean": 0.20884457895713293,
+      "share_lt_m10": 0.07692307692307693,
+      "share_gt_p10": 0.6923076923076923
+     }
+    }
+   },
+   "R降|L注|W坏|T线上": {
+    "ETH": {
+     "30d_day": {
+      "n": 119,
+      "median": -0.10528079241841615,
+      "mean": -0.03739672036536309,
+      "share_lt_m10": 0.5126050420168067,
+      "share_gt_p10": 0.15126050420168066
+     },
+     "30d_segfirst": {
+      "n": 15,
+      "median": -0.05104223318053647,
+      "mean": 0.0153250766022488,
+      "share_lt_m10": 0.4666666666666667,
+      "share_gt_p10": 0.2
+     },
+     "56d_day": {
+      "n": 119,
+      "median": -0.09764427708205614,
+      "mean": -0.00203534081694524,
+      "share_lt_m10": 0.48739495798319327,
+      "share_gt_p10": 0.31092436974789917
+     },
+     "56d_segfirst": {
+      "n": 15,
+      "median": -0.09070924870549213,
+      "mean": 0.08130340842486537,
+      "share_lt_m10": 0.4666666666666667,
+      "share_gt_p10": 0.26666666666666666
+     }
+    },
+    "SOL": {
+     "30d_day": {
+      "n": 110,
+      "median": -0.21693782091222336,
+      "mean": -0.2455083897870481,
+      "share_lt_m10": 0.7545454545454545,
+      "share_gt_p10": 0.1
+     },
+     "30d_segfirst": {
+      "n": 13,
+      "median": -0.21315456442179437,
+      "mean": -0.21028970266565328,
+      "share_lt_m10": 0.6923076923076923,
+      "share_gt_p10": 0.23076923076923078
+     },
+     "56d_day": {
+      "n": 113,
+      "median": -0.27308199604308636,
+      "mean": -0.29762315469100664,
+      "share_lt_m10": 0.7787610619469026,
+      "share_gt_p10": 0.05309734513274336
+     },
+     "56d_segfirst": {
+      "n": 14,
+      "median": -0.20106562920876575,
+      "mean": -0.21743654492871306,
+      "share_lt_m10": 0.6428571428571429,
+      "share_gt_p10": 0.21428571428571427
+     }
+    },
+    "BTC": {
+     "30d_day": {
+      "n": 119,
+      "median": -0.009523141861975448,
+      "mean": 0.009313656513331535,
+      "share_lt_m10": 0.25210084033613445,
+      "share_gt_p10": 0.24369747899159663
+     },
+     "30d_segfirst": {
+      "n": 15,
+      "median": -0.0034672250192852028,
+      "mean": 0.020709455350269513,
+      "share_lt_m10": 0.2,
+      "share_gt_p10": 0.2
+     },
+     "56d_day": {
+      "n": 119,
+      "median": -0.005362750479138367,
+      "mean": 0.06788961319582892,
+      "share_lt_m10": 0.31932773109243695,
+      "share_gt_p10": 0.35294117647058826
+     },
+     "56d_segfirst": {
+      "n": 15,
+      "median": 0.0038142981691369204,
+      "mean": 0.0613308265991618,
+      "share_lt_m10": 0.26666666666666666,
+      "share_gt_p10": 0.3333333333333333
+     }
+    }
+   },
+   "R降|L注|W坏|T线下": {
+    "ETH": {
+     "30d_day": {
+      "n": 189,
+      "median": -0.005493046566431015,
+      "mean": 0.07885141603020968,
+      "share_lt_m10": 0.25925925925925924,
+      "share_gt_p10": 0.328042328042328
+     },
+     "30d_segfirst": {
+      "n": 13,
+      "median": -0.04654057744046902,
+      "mean": 0.03214395191844964,
+      "share_lt_m10": 0.38461538461538464,
+      "share_gt_p10": 0.23076923076923078
+     },
+     "56d_day": {
+      "n": 189,
+      "median": 0.14565027753817072,
+      "mean": 0.17145394234198394,
+      "share_lt_m10": 0.21164021164021163,
+      "share_gt_p10": 0.5185185185185185
+     },
+     "56d_segfirst": {
+      "n": 13,
+      "median": -0.0065825043252595306,
+      "mean": 0.021086911079643837,
+      "share_lt_m10": 0.46153846153846156,
+      "share_gt_p10": 0.3076923076923077
+     }
+    },
+    "SOL": {
+     "30d_day": {
+      "n": 153,
+      "median": 0.015129786318657468,
+      "mean": 0.04707843647868523,
+      "share_lt_m10": 0.16339869281045752,
+      "share_gt_p10": 0.30718954248366015
+     },
+     "30d_segfirst": {
+      "n": 12,
+      "median": -0.022528560756328253,
+      "mean": 0.06775742324808173,
+      "share_lt_m10": 0.16666666666666666,
+      "share_gt_p10": 0.25
+     },
+     "56d_day": {
+      "n": 153,
+      "median": 0.03735430417076269,
+      "mean": 0.07738065574690364,
+      "share_lt_m10": 0.19607843137254902,
+      "share_gt_p10": 0.39869281045751637
+     },
+     "56d_segfirst": {
+      "n": 12,
+      "median": -0.0147203906346704,
+      "mean": 0.007831896054579115,
+      "share_lt_m10": 0.25,
+      "share_gt_p10": 0.3333333333333333
+     }
+    },
+    "BTC": {
+     "30d_day": {
+      "n": 189,
+      "median": 0.048325673459641116,
+      "mean": 0.07542440314897365,
+      "share_lt_m10": 0.0582010582010582,
+      "share_gt_p10": 0.38095238095238093
+     },
+     "30d_segfirst": {
+      "n": 13,
+      "median": -0.016332808602577242,
+      "mean": 0.0289544822723865,
+      "share_lt_m10": 0.15384615384615385,
+      "share_gt_p10": 0.23076923076923078
+     },
+     "56d_day": {
+      "n": 189,
+      "median": 0.15229654723915242,
+      "mean": 0.16128231009715222,
+      "share_lt_m10": 0.12169312169312169,
+      "share_gt_p10": 0.6084656084656085
+     },
+     "56d_segfirst": {
+      "n": 13,
+      "median": 0.053705215583150334,
+      "mean": 0.034576846535724265,
+      "share_lt_m10": 0.23076923076923078,
+      "share_gt_p10": 0.46153846153846156
+     }
+    }
+   },
+   "R降|L抽|W好|T线上": {
+    "ETH": {
+     "30d_day": {
+      "n": 86,
+      "median": -0.0003659451854065576,
+      "mean": -0.058960259555928034,
+      "share_lt_m10": 0.2558139534883721,
+      "share_gt_p10": 0.12790697674418605
+     },
+     "30d_segfirst": {
+      "n": 5,
+      "median": 0.05198773310483218,
+      "mean": 0.13247948663090683,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 0.4
+     },
+     "56d_day": {
+      "n": 86,
+      "median": 0.004400681550479346,
+      "mean": -0.06891852122539106,
+      "share_lt_m10": 0.3372093023255814,
+      "share_gt_p10": 0.09302325581395349
+     },
+     "56d_segfirst": {
+      "n": 5,
+      "median": -0.017061742006615255,
+      "mean": 0.008622354936701559,
+      "share_lt_m10": 0.2,
+      "share_gt_p10": 0.2
+     }
+    },
+    "SOL": {
+     "30d_day": {
+      "n": 60,
+      "median": -0.044968153917233133,
+      "mean": -0.027076990452908675,
+      "share_lt_m10": 0.2833333333333333,
+      "share_gt_p10": 0.1
+     },
+     "30d_segfirst": {
+      "n": 4,
+      "median": 0.11111846547426762,
+      "mean": 0.11428618038747895,
+      "share_lt_m10": 0.25,
+      "share_gt_p10": 0.5
+     },
+     "56d_day": {
+      "n": 60,
+      "median": -0.09729800622896234,
+      "mean": -0.11698635044080062,
+      "share_lt_m10": 0.48333333333333334,
+      "share_gt_p10": 0.0
+     },
+     "56d_segfirst": {
+      "n": 4,
+      "median": -0.035037883238475065,
+      "mean": -0.061250338360693574,
+      "share_lt_m10": 0.25,
+      "share_gt_p10": 0.0
+     }
+    },
+    "BTC": {
+     "30d_day": {
+      "n": 86,
+      "median": -0.04900226388634732,
+      "mean": -0.07113056969451237,
+      "share_lt_m10": 0.29069767441860467,
+      "share_gt_p10": 0.06976744186046512
+     },
+     "30d_segfirst": {
+      "n": 5,
+      "median": 0.011895695453034039,
+      "mean": 0.06130574340433985,
+      "share_lt_m10": 0.2,
+      "share_gt_p10": 0.2
+     },
+     "56d_day": {
+      "n": 86,
+      "median": -0.006977483684256602,
+      "mean": -0.034054819287197766,
+      "share_lt_m10": 0.3488372093023256,
+      "share_gt_p10": 0.29069767441860467
+     },
+     "56d_segfirst": {
+      "n": 5,
+      "median": 0.0002544097693351066,
+      "mean": 0.00641793156381989,
+      "share_lt_m10": 0.2,
+      "share_gt_p10": 0.2
+     }
+    }
+   },
+   "R降|L抽|W好|T线下": {
+    "ETH": {
+     "30d_day": {
+      "n": 13,
+      "median": 0.15122435969550385,
+      "mean": 0.036310194367755004,
+      "share_lt_m10": 0.38461538461538464,
+      "share_gt_p10": 0.5384615384615384
+     },
+     "30d_segfirst": {
+      "n": 3,
+      "median": 0.08657975026837672,
+      "mean": -0.03202223091209425,
+      "share_lt_m10": 0.3333333333333333,
+      "share_gt_p10": 0.3333333333333333
+     },
+     "56d_day": {
+      "n": 13,
+      "median": 0.30864901507297215,
+      "mean": 0.08183968757789464,
+      "share_lt_m10": 0.38461538461538464,
+      "share_gt_p10": 0.5384615384615384
+     },
+     "56d_segfirst": {
+      "n": 3,
+      "median": 0.015113848240013494,
+      "mean": 0.04619092371740311,
+      "share_lt_m10": 0.3333333333333333,
+      "share_gt_p10": 0.3333333333333333
+     }
+    },
+    "SOL": {
+     "30d_day": {
+      "n": 13,
+      "median": 0.3060635226179018,
+      "mean": 0.11460986786102965,
+      "share_lt_m10": 0.38461538461538464,
+      "share_gt_p10": 0.6153846153846154
+     },
+     "30d_segfirst": {
+      "n": 3,
+      "median": 0.25437010247136826,
+      "mean": 0.11316445796036097,
+      "share_lt_m10": 0.3333333333333333,
+      "share_gt_p10": 0.6666666666666666
+     },
+     "56d_day": {
+      "n": 13,
+      "median": 0.04460518384569001,
+      "mean": -0.04474157693184052,
+      "share_lt_m10": 0.38461538461538464,
+      "share_gt_p10": 0.3076923076923077
+     },
+     "56d_segfirst": {
+      "n": 3,
+      "median": 0.04460518384569001,
+      "mean": -0.008698807365308666,
+      "share_lt_m10": 0.3333333333333333,
+      "share_gt_p10": 0.3333333333333333
+     }
+    },
+    "BTC": {
+     "30d_day": {
+      "n": 13,
+      "median": 0.35199796535517347,
+      "mean": 0.14605871251529126,
+      "share_lt_m10": 0.38461538461538464,
+      "share_gt_p10": 0.6153846153846154
+     },
+     "30d_segfirst": {
+      "n": 3,
+      "median": 0.16002886462279675,
+      "mean": 0.1129766831315705,
+      "share_lt_m10": 0.3333333333333333,
+      "share_gt_p10": 0.6666666666666666
+     },
+     "56d_day": {
+      "n": 13,
+      "median": 0.39935197150321167,
+      "mean": 0.17414064464699458,
+      "share_lt_m10": 0.38461538461538464,
+      "share_gt_p10": 0.5384615384615384
+     },
+     "56d_segfirst": {
+      "n": 3,
+      "median": 0.08041768807105809,
+      "mean": 0.12928282482454165,
+      "share_lt_m10": 0.3333333333333333,
+      "share_gt_p10": 0.3333333333333333
+     }
+    }
+   },
+   "R降|L抽|W坏|T线上": {
+    "ETH": {
+     "30d_day": {
+      "n": 24,
+      "median": 0.016022699404960927,
+      "mean": 0.0072414173872957744,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 0.0
+     },
+     "30d_segfirst": {
+      "n": 1,
+      "median": -0.09098667547626915,
+      "mean": -0.09098667547626915,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 0.0
+     },
+     "56d_day": {
+      "n": 24,
+      "median": 0.02424363701992449,
+      "mean": 0.021708201801626498,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 0.041666666666666664
+     },
+     "56d_segfirst": {
+      "n": 1,
+      "median": 0.03534852989758841,
+      "mean": 0.03534852989758841,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 0.0
+     }
+    },
+    "SOL": {
+     "30d_day": {
+      "n": 24,
+      "median": -0.11601114405918833,
+      "mean": -0.04911199499377175,
+      "share_lt_m10": 0.5416666666666666,
+      "share_gt_p10": 0.25
+     },
+     "30d_segfirst": {
+      "n": 1,
+      "median": -0.3101476893758932,
+      "mean": -0.3101476893758932,
+      "share_lt_m10": 1.0,
+      "share_gt_p10": 0.0
+     },
+     "56d_day": {
+      "n": 24,
+      "median": 0.20485522345967278,
+      "mean": 0.23684632794234362,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 0.8333333333333334
+     },
+     "56d_segfirst": {
+      "n": 1,
+      "median": 0.01476893758932829,
+      "mean": 0.01476893758932829,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 0.0
+     }
+    },
+    "BTC": {
+     "30d_day": {
+      "n": 24,
+      "median": 0.13088904797195478,
+      "mean": 0.10199227488059089,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 0.625
+     },
+     "30d_segfirst": {
+      "n": 1,
+      "median": -0.07486534546297963,
+      "mean": -0.07486534546297963,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 0.0
+     },
+     "56d_day": {
+      "n": 24,
+      "median": 0.10900053246947705,
+      "mean": 0.10776859940127548,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 0.625
+     },
+     "56d_segfirst": {
+      "n": 1,
+      "median": 0.11963360712168791,
+      "mean": 0.11963360712168791,
+      "share_lt_m10": 0.0,
+      "share_gt_p10": 1.0
+     }
+    }
+   },
+   "R降|L抽|W坏|T线下": {
+    "ETH": {
+     "30d_day": {
+      "n": 36,
+      "median": 0.046941070094871695,
+      "mean": -0.014478715615731465,
+      "share_lt_m10": 0.2222222222222222,
+      "share_gt_p10": 0.16666666666666666
+     },
+     "30d_segfirst": {
+      "n": 3,
+      "median": -0.18382326017994877,
+      "mean": -0.14570747654830085,
+      "share_lt_m10": 0.6666666666666666,
+      "share_gt_p10": 0.0
+     },
+     "56d_day": {
+      "n": 36,
+      "median": 0.10164129930235444,
+      "mean": 0.025902774215449915,
+      "share_lt_m10": 0.25,
+      "share_gt_p10": 0.5
+     },
+     "56d_segfirst": {
+      "n": 3,
+      "median": -0.2700215050715833,
+      "mean": -0.14137831131291625,
+      "share_lt_m10": 0.6666666666666666,
+      "share_gt_p10": 0.3333333333333333
+     }
+    },
+    "SOL": {
+     "30d_day": {
+      "n": 36,
+      "median": -0.01288525569039256,
+      "mean": -0.03105820025666697,
+      "share_lt_m10": 0.2777777777777778,
+      "share_gt_p10": 0.1111111111111111
+     },
+     "30d_segfirst": {
+      "n": 3,
+      "median": -0.16800630417651696,
+      "mean": -0.17029507884528805,
+      "share_lt_m10": 0.6666666666666666,
+      "share_gt_p10": 0.0
+     },
+     "56d_day": {
+      "n": 36,
+      "median": -0.02576445132240368,
+      "mean": -0.0678399241480124,
+      "share_lt_m10": 0.3055555555555556,
+      "share_gt_p10": 0.05555555555555555
+     },
+     "56d_segfirst": {
+      "n": 3,
+      "median": -0.26557460533016464,
+      "mean": -0.1744249191997831,
+      "share_lt_m10": 0.6666666666666666,
+      "share_gt_p10": 0.0
+     }
+    },
+    "BTC": {
+     "30d_day": {
+      "n": 36,
+      "median": 0.013725301587789507,
+      "mean": -0.015628578051042532,
+      "share_lt_m10": 0.2222222222222222,
+      "share_gt_p10": 0.027777777777777776
+     },
+     "30d_segfirst": {
+      "n": 3,
+      "median": -0.1136651695764247,
+      "mean": -0.10086415198886167,
+      "share_lt_m10": 0.6666666666666666,
+      "share_gt_p10": 0.0
+     },
+     "56d_day": {
+      "n": 36,
+      "median": 0.04758408557382976,
+      "mean": -0.005451167622379189,
+      "share_lt_m10": 0.25,
+      "share_gt_p10": 0.25
+     },
+     "56d_segfirst": {
+      "n": 3,
+      "median": -0.18700369284419882,
+      "mean": -0.10795378251500683,
+      "share_lt_m10": 0.6666666666666666,
+      "share_gt_p10": 0.3333333333333333
+     }
+    }
+   }
+  },
+  "full_sample": {
+   "ETH": {
+    "30d_day": {
+     "n": 2424,
+     "median": 0.019097382104753424,
+     "mean": 0.0602155486973937,
+     "share_lt_m10": 0.257013201320132,
+     "share_gt_p10": 0.35932343234323433
+    },
+    "56d_day": {
+     "n": 2424,
+     "median": 0.06764583232946353,
+     "mean": 0.1202686977742627,
+     "share_lt_m10": 0.3048679867986799,
+     "share_gt_p10": 0.4591584158415842
+    },
+    "30d_segfirst": {
+     "n": 173,
+     "median": 0.05622146500077929,
+     "mean": 0.08363510043078794,
+     "share_lt_m10": 0.2543352601156069,
+     "share_gt_p10": 0.41040462427745666
+    },
+    "56d_segfirst": {
+     "n": 173,
+     "median": 0.06950840923822188,
+     "mean": 0.12768389053217533,
+     "share_lt_m10": 0.30057803468208094,
+     "share_gt_p10": 0.4682080924855491
+    }
+   },
+   "SOL": {
+    "30d_day": {
+     "n": 2263,
+     "median": -0.002128284162630223,
+     "mean": 0.1158178977694024,
+     "share_lt_m10": 0.34953601414052143,
+     "share_gt_p10": 0.37516570923552806
+    },
+    "56d_day": {
+     "n": 2289,
+     "median": 0.00477410340009321,
+     "mean": 0.272037459440801,
+     "share_lt_m10": 0.36609873307121016,
+     "share_gt_p10": 0.3835736129314111
+    },
+    "30d_segfirst": {
+     "n": 165,
+     "median": 0.008265564591387609,
+     "mean": 0.10260796455817187,
+     "share_lt_m10": 0.3515151515151515,
+     "share_gt_p10": 0.40606060606060607
+    },
+    "56d_segfirst": {
+     "n": 166,
+     "median": 0.03306050410146211,
+     "mean": 0.24092788529530113,
+     "share_lt_m10": 0.3433734939759036,
+     "share_gt_p10": 0.40963855421686746
+    }
+   },
+   "BTC": {
+    "30d_day": {
+     "n": 2424,
+     "median": 0.018462234252984322,
+     "mean": 0.04414396853998868,
+     "share_lt_m10": 0.20173267326732675,
+     "share_gt_p10": 0.31765676567656764
+    },
+    "56d_day": {
+     "n": 2424,
+     "median": 0.04376105666101915,
+     "mean": 0.0906647005736635,
+     "share_lt_m10": 0.2693894389438944,
+     "share_gt_p10": 0.4179042904290429
+    },
+    "30d_segfirst": {
+     "n": 173,
+     "median": 0.028245319760155763,
+     "mean": 0.06198930476578911,
+     "share_lt_m10": 0.1791907514450867,
+     "share_gt_p10": 0.3468208092485549
+    },
+    "56d_segfirst": {
+     "n": 173,
+     "median": 0.057550553079550815,
+     "mean": 0.09178202765318612,
+     "share_lt_m10": 0.2658959537572254,
+     "share_gt_p10": 0.4393063583815029
+    }
+   }
+  },
+  "today": {
+   "ref_date": "2026-11-13",
+   "cell": "R升|L抽|W坏|T线下",
+   "axes": {
+    "R": "升",
+    "L": "抽",
+    "W": "坏",
+    "T": "线下"
+   },
+   "stats": {
+    "ETH": {
+     "30d_day": {
+      "n": 257,
+      "median": -0.011054372183300964,
+      "mean": -0.010302709419143227,
+      "share_lt_m10": 0.32684824902723736,
+      "share_gt_p10": 0.27626459143968873
+     },
+     "30d_segfirst": {
+      "n": 12,
+      "median": -0.03612421950355632,
+      "mean": -0.0339814515783764,
+      "share_lt_m10": 0.3333333333333333,
+      "share_gt_p10": 0.25
+     },
+     "56d_day": {
+      "n": 257,
+      "median": 0.06202142719258741,
+      "mean": 0.05724047851500664,
+      "share_lt_m10": 0.26459143968871596,
+      "share_gt_p10": 0.45136186770428016
+     },
+     "56d_segfirst": {
+      "n": 12,
+      "median": -0.04888242451216507,
+      "mean": -0.009451073555043136,
+      "share_lt_m10": 0.3333333333333333,
+      "share_gt_p10": 0.3333333333333333
+     }
+    },
+    "SOL": {
+     "30d_day": {
+      "n": 257,
+      "median": -0.025936599423631135,
+      "mean": -0.05987683794897953,
+      "share_lt_m10": 0.3463035019455253,
+      "share_gt_p10": 0.24124513618677043
+     },
+     "30d_segfirst": {
+      "n": 12,
+      "median": -0.044961279898974915,
+      "mean": 0.01864515794483465,
+      "share_lt_m10": 0.4166666666666667,
+      "share_gt_p10": 0.25
+     },
+     "56d_day": {
+      "n": 257,
+      "median": 0.02425373134328357,
+      "mean": 0.05224036033107232,
+      "share_lt_m10": 0.36964980544747084,
+      "share_gt_p10": 0.4046692607003891
+     },
+     "56d_segfirst": {
+      "n": 12,
+      "median": 0.021305340959738572,
+      "mean": 0.020961078574241638,
+      "share_lt_m10": 0.4166666666666667,
+      "share_gt_p10": 0.5
+     }
+    },
+    "BTC": {
+     "30d_day": {
+      "n": 257,
+      "median": 0.0030333511457580897,
+      "mean": -0.034794857395164094,
+      "share_lt_m10": 0.2801556420233463,
+      "share_gt_p10": 0.14007782101167315
+     },
+     "30d_segfirst": {
+      "n": 12,
+      "median": 0.018984681126117953,
+      "mean": -0.007699904418474586,
+      "share_lt_m10": 0.3333333333333333,
+      "share_gt_p10": 0.25
+     },
+     "56d_day": {
+      "n": 257,
+      "median": 0.0024213434008508727,
+      "mean": 0.0006999843250381369,
+      "share_lt_m10": 0.3657587548638132,
+      "share_gt_p10": 0.3229571984435798
+     },
+     "56d_segfirst": {
+      "n": 12,
+      "median": -0.012271940012088423,
+      "mean": 0.008865818383433236,
+      "share_lt_m10": 0.3333333333333333,
+      "share_gt_p10": 0.3333333333333333
+     }
+    }
+   }
+  }
+ },
+ "control": {
+  "cell": "R升|L抽|W坏|T线下",
+  "universe": "stat_days(有格子且去掉最后 56 天留出)",
+  "n_days": 2424,
+  "n_shifts": 2000,
+  "seed": 866,
+  "k_range": [
+   180,
+   2244
+  ],
+  "stats": {
+   "ETH_30d": {
+    "observed": -0.010302709419143227,
+    "n_in_cell_days": 257,
+    "n_obs_values": 257,
+    "null_mean": 0.07295927707198349,
+    "null_std": 0.08018835502390323,
+    "p_upper": 0.8700649675162418,
+    "p_lower": 0.13043478260869565,
+    "p_two_sided": 0.2608695652173913,
+    "percentile": 0.13,
+    "n_null": 2000
+   },
+   "ETH_56d": {
+    "observed": 0.05724047851500664,
+    "n_in_cell_days": 257,
+    "n_obs_values": 257,
+    "null_mean": 0.1439334165084611,
+    "null_std": 0.15137046482735492,
+    "p_upper": 0.7186406796601699,
+    "p_lower": 0.2818590704647676,
+    "p_two_sided": 0.5637181409295352,
+    "percentile": 0.2815,
+    "n_null": 2000
+   },
+   "SOL_30d": {
+    "observed": -0.05987683794897953,
+    "n_in_cell_days": 257,
+    "n_obs_values": 257,
+    "null_mean": 0.1463905367147114,
+    "null_std": 0.19108333738610425,
+    "p_upper": 0.8935532233883059,
+    "p_lower": 0.10694652673663169,
+    "p_two_sided": 0.21389305347326337,
+    "percentile": 0.1065,
+    "n_null": 2000
+   },
+   "SOL_56d": {
+    "observed": 0.05224036033107232,
+    "n_in_cell_days": 257,
+    "n_obs_values": 257,
+    "null_mean": 0.33714711396560537,
+    "null_std": 0.42516697739128995,
+    "p_upper": 0.6211894052973513,
+    "p_lower": 0.3793103448275862,
+    "p_two_sided": 0.7586206896551724,
+    "percentile": 0.379,
+    "n_null": 2000
+   },
+   "BTC_30d": {
+    "observed": -0.034794857395164094,
+    "n_in_cell_days": 257,
+    "n_obs_values": 257,
+    "null_mean": 0.05524695214496077,
+    "null_std": 0.061419488785668386,
+    "p_upper": 0.95952023988006,
+    "p_lower": 0.04097951024487756,
+    "p_two_sided": 0.08195902048975512,
+    "percentile": 0.0405,
+    "n_null": 2000
+   },
+   "BTC_56d": {
+    "observed": 0.0006999843250381369,
+    "n_in_cell_days": 257,
+    "n_obs_values": 257,
+    "null_mean": 0.11029560272601399,
+    "null_std": 0.12022633208763849,
+    "p_upper": 0.8260869565217391,
+    "p_lower": 0.1744127936031984,
+    "p_two_sided": 0.3488255872063968,
+    "percentile": 0.174,
+    "n_null": 2000
+   }
+  },
+  "today_is_target_cell": true
+ }
+}
