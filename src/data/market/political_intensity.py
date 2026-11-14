@@ -144,7 +144,7 @@ async def run_once(now: Optional[dt.datetime] = None, get: Optional[Callable[[st
     series = all_series()
     get = get or _get_bytes
     now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
-    out: dict[str, Any] = {"gpr": 0, "gdelt": {}, "failed": {}}
+    out: dict[str, Any] = {"gpr": 0, "gdelt": {}, "failed": {}, "throttled": []}
     # GPR:一个文件
     try:
         import pandas as pd
@@ -181,7 +181,10 @@ async def run_once(now: Optional[dt.datetime] = None, get: Optional[Callable[[st
                 await asyncio.sleep(wait if pause_s else 0)
                 body = await asyncio.to_thread(get, url)
             if throttled(body):
-                raise RuntimeError("GDELT 限速(重试后仍是限速文本)")
+                # 11-14:源在限速 ≠ 这条循环坏了。记成「被限速」,**这一轮到此为止**(接着请求只会让这个出口 IP 被限得更久),
+                # 剩下的下一轮再来。11-13 → 11-14 部署了二十多次,每次重启后都跑一轮、每条重试三次,13 小时里一轮都没成。
+                out["throttled"] = [t for t in todo[k:]]
+                break
             rows = gdelt_rows(json.loads(body), topic, mode)
             if not rows:                                                  # 形状不符 / 查询没有匹配:记成不通,不记成「0 行、正常」(5b:判活要能失败)
                 raise RuntimeError("GDELT 返回里没有序列(形状不符或查询无匹配)")
@@ -190,10 +193,21 @@ async def run_once(now: Optional[dt.datetime] = None, get: Optional[Callable[[st
                     raise RuntimeError(f"写 {TABLE} 失败")
             out["gdelt"][topic] = len(rows)
         except Exception as e:                                            # noqa: BLE001
+            if "429" in str(e) or "Too Many Requests" in str(e):          # 限速有时是 HTTP 429 而不是那段文本
+                out["throttled"] = [t for t in todo[k:]]
+                break
             out["failed"][topic] = f"{type(e).__name__}: {str(e)[:120]}"
         if k < len(todo) - 1:
             await asyncio.sleep(pause_s)
-    ok = not out["failed"]
-    return {"ok": ok, **out, "failed": out["failed"] or None,
-            "why": f"GPR {out['gpr']} 行 · GDELT " + ", ".join(f"{t} {n}" for t, n in out["gdelt"].items())
-                   + (f" · 不通:{', '.join(out['failed'])}" if out["failed"] else "")}
+    hard = out["failed"]
+    behind = [t for t in series if t not in last or dt.date.fromisoformat(last[t]) < now.date()]
+    landed = bool(out["gdelt"])
+    # 判活的三种结果:有硬失败(写不进 / 形状不符 / 文件读不到)⇒ 不 ok;只是被限速且这一轮一条没到 ⇒ refused(源在拒绝,不是循环坏了);
+    # 其余 ⇒ ok。原因逐条写进 why —— 之前只写名字不写原因,13 小时的「不通」看不出是限速还是查询写坏了。
+    ok = not hard and (landed or not out["throttled"])
+    return {"ok": ok, "refused": bool(not hard and out["throttled"] and not landed), **out, "failed": hard or None,
+            "behind": len(behind),
+            "why": f"GPR {out['gpr']} 行 · GDELT " + (", ".join(f"{t} {n}" for t, n in out["gdelt"].items()) or "这一轮没有到")
+                   + (f" · 被限速、留到下一轮:{', '.join(out['throttled'])}" if out["throttled"] else "")
+                   + (" · 不通:" + "; ".join(f"{t}({w[:60]})" for t, w in hard.items()) if hard else "")
+                   + f" · 还落后 {len(behind)} / {len(series)} 条"}

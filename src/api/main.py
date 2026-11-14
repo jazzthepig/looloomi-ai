@@ -2812,7 +2812,8 @@ async def _political_intensity_loop():
             from src.data.market.political_intensity import run_once as _pol_run
             r = await _pol_run()
             await _iteration_result("_political_intensity_loop", {**r, "ok": bool(r.get("ok")), "why": r.get("why")})
-            await _beat("_political_intensity_loop", ok=bool(r.get("ok")), detail={"gpr": r.get("gpr"), "gdelt": r.get("gdelt")},
+            await _beat("_political_intensity_loop", ok=bool(r.get("ok")), refused=bool(r.get("refused")),      # 被源限速 = refused,不是坏了(11-14)
+                        detail={"gpr": r.get("gpr"), "gdelt": r.get("gdelt"), "throttled": r.get("throttled"), "behind": r.get("behind")},
                         error=None if r.get("ok") else str(r.get("why"))[:200])
         except Exception as _e:
             print(f"[POLITICAL] ⚠️  pass FAILED: {_e}")
@@ -5515,6 +5516,13 @@ def _health_with_data_layer() -> dict:
     # It lives on /internal/beta-core-clock instead, polled by the EXTERNAL probe, which
     # is also the only observer that survives the deploy that breaks the marking loop.
     beta_core_note = "not reported on this endpoint (no I/O here)"
+
+    def _rest_page_rows():
+        try:
+            from src.data.style.header import _PAGE
+            return _PAGE.get("cap")
+        except Exception:                                                # noqa: BLE001
+            return None
     # 2026-09-04 B fix: 暴露 LAST_REGIME_QUORUM。这一信息以前**写在日志里、
     # 全 repo 0 reader** —— 「不可观测即不存在」,S-244 / S-263 的同一个形状。
     # 现在在 /health.data_layer.regime_quorum 同步露面,consumer 不必 import
@@ -5539,6 +5547,7 @@ def _health_with_data_layer() -> dict:
             "last_universe_build": build,
             "strategy_library": strat,
             "beta_core_clock": beta_core_note,
+            "rest_page_rows": _rest_page_rows(),      # 分页读库时每页实际用的行数(T-379);null = 这个进程还没探过
             # B fix (2026-09-04): 见上面注释。空 dict + `_measured=False` 让
             # consumer 一眼分辨"还没跑"与"跑了且裁决 ok"。
             "regime_quorum": regime_quorum_block,

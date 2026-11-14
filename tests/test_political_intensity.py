@@ -144,3 +144,60 @@ def test_a_series_that_never_arrives_cannot_starve_the_rest():
     assert seen == set(ser), "每一条都轮得到"
     assert pi.due_topics({}, today, ser) == list(ser)[:pi.GDELT_PER_ROUND], "rot 缺省 = 原来的顺序"
 
+
+def test_a_throttling_source_is_a_refusal_not_a_broken_loop_and_the_round_stops(monkeypatch):
+    """11-14:13 小时里每一轮都是「不通」,看不出原因;其实是 GDELT 在限速。限速 ⇒ 记 refused、这一轮停手、原因写明。"""
+    calls, written = [], []
+
+    def always_throttled(url):
+        calls.append(url)
+        if url == pi.GPR_URL:
+            raise RuntimeError("no xls in test")
+        return b"Please limit requests to one every 5 seconds"
+    _patch(monkeypatch, {}, written)
+    r = asyncio.run(pi.run_once(now=dt.datetime(2026, 11, 14, tzinfo=dt.timezone.utc), get=always_throttled, pause_s=0))
+    gd = [c for c in calls if c != pi.GPR_URL]
+    assert len(gd) == 1 + len(pi.GDELT_THROTTLE_WAITS), "只对第一条重试;被限速后不再请求后面两条"
+    assert r["throttled"] and len(r["throttled"]) == pi.GDELT_PER_ROUND and not r["gdelt"] and not written
+    assert set(r["failed"]) == {"gpr"} and r["ok"] is False and r["refused"] is False, "GPR 文件读不到是硬失败,照旧报错"
+
+    def gpr_ok_then_throttle(url):
+        if url == pi.GPR_URL:
+            raise RuntimeError("no xls in test")
+        return b"Please limit requests to one every 5 seconds"
+    monkeypatch.setattr(pi, "gpr_rows", lambda df: [])
+    import pandas as pd
+    monkeypatch.setattr(pd, "read_excel", lambda *_a, **_k: pd.DataFrame())
+    r2 = asyncio.run(pi.run_once(now=dt.datetime(2026, 11, 14, tzinfo=dt.timezone.utc), get=lambda u: b"x" if u == pi.GPR_URL else b"Please limit requests", pause_s=0))
+    assert r2["failed"] is None and r2["ok"] is False and r2["refused"] is True, r2
+    assert "被限速" in r2["why"] and "还落后" in r2["why"] and r2["behind"] == len(pi.all_series())
+
+    def http_429(url):
+        if url == pi.GPR_URL:
+            return b"x"
+        raise RuntimeError("HTTP Error 429: Too Many Requests")
+    r3 = asyncio.run(pi.run_once(now=dt.datetime(2026, 11, 14, tzinfo=dt.timezone.utc), get=http_429, pause_s=0))
+    assert r3["refused"] is True and r3["failed"] is None and len(r3["throttled"]) == pi.GDELT_PER_ROUND
+
+
+def test_a_hard_failure_names_its_reason_and_partial_progress_is_ok(monkeypatch):
+    written = []
+    n = {"i": 0}
+
+    def get(url):
+        if url == pi.GPR_URL:
+            return b"x"
+        n["i"] += 1
+        if n["i"] == 1:
+            return b'{"timeline": [{"data": [{"date": "20261112T000000Z", "value": 1.0}]}]}'
+        if n["i"] == 2:
+            return b'{"timeline": []}'
+        return b"Please limit requests to one every 5 seconds"
+    import pandas as pd
+    monkeypatch.setattr(pd, "read_excel", lambda *_a, **_k: pd.DataFrame())
+    monkeypatch.setattr(pi, "gpr_rows", lambda df: [])
+    _patch(monkeypatch, {}, written)
+    r = asyncio.run(pi.run_once(now=dt.datetime(2026, 11, 14, tzinfo=dt.timezone.utc), get=get, pause_s=0))
+    assert len(r["gdelt"]) == 1 and len(r["failed"]) == 1 and len(r["throttled"]) == 1
+    assert r["ok"] is False and r["refused"] is False and "没有序列" in r["why"], "有硬失败 ⇒ 报错,原因写在 why 里"
+
