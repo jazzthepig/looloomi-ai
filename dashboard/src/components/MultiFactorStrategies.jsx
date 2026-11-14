@@ -150,12 +150,6 @@ function StrategyCard({ s, selected, onSelect, regime }) {
           <div style={{ fontFamily: F.mono, fontSize: 9, color: T.t3, letterSpacing: "0.08em" }}>HOLD</div>
           <div style={{ fontFamily: F.mono, fontSize: 10, color: T.t2, marginTop: 2 }}>{/^[\d–-]+$/.test(String(s.target_hold_days)) ? `${s.target_hold_days}d` : s.target_hold_days}</div>
         </div>
-        <div style={{ marginLeft: "auto" }}>
-          <div style={{ fontFamily: F.mono, fontSize: 9, color: T.t3, letterSpacing: "0.08em" }}>FREQTRADE</div>
-          <div style={{ fontFamily: F.mono, fontSize: 9, color: color, marginTop: 2, opacity: 0.75 }}>
-            {s.freqtrade_class}
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -159,7 +159,7 @@ export default function ResearchTrackRecord() {
                     marginBottom: 26 }}>
         <Stat label="OOS Sharpe" value="1.08" sub="β_IS = 0.00 ⇒ unadjusted" tone={pos(1)} />
         <Stat label="Deflated Sharpe" value={DSR.value} sub={`fails · bar is ${DSR.threshold}`} tone={T.red || "#f87171"} />
-        <Stat label="Configurations run" value={String(DSR.nTrialsFunnel)} sub="R69 grid → R70 survivors" />
+        <Stat label="Configurations run" value={String(DSR.nTrialsFunnel)} sub="full grid → survivors" />
         <Stat label="Survived OOS" value={`${N_SURVIVED} / ${N_TESTED}`} sub="configurations" />
         <Stat label="Held-out days" value={String(OOS_DAYS)} sub="never searched" />
       </div>
@@ -257,7 +257,7 @@ export default function ResearchTrackRecord() {
                   margin: "0 0 12px", maxWidth: 660 }}>
         This table is the original grid — both its Sharpe AND its annualised
         column use β estimated inside the held-out window (the 1.58 method).
-        R71 re-ran the Sharpe under four estimators but not the annualised
+        A later re-run put the Sharpe under four estimators but not the annualised
         figure, so no ship-gate version of that column exists to show. It is kept
         because the SHAPE is what this table is for — which settings survive and
         how they rank, unchanged by the estimator. For the level, read 1.08.

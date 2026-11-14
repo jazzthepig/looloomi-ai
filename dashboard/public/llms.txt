@@ -67,7 +67,7 @@ Agent discovery card: https://looloomi.ai/.well-known/agent.json
 
 ### Paper Trading & Alpha Mining
 - `cometcloud_get_trade_signal` — CIS-gated trade signal evaluation: validates symbol against regime-appropriate CIS threshold, returns passes_gate and paper-trading risk parameters for the paper-order tool (not investment advice).
-- `cometcloud_submit_paper_order` — Submit a paper trade order: CIS gate + risk checks → fills at live CoinGecko price → stored in Redis position store.
+- `cometcloud_submit_paper_order` — Submit a paper trade order: CIS gate + risk checks → fills at the live CoinGecko price → stored in the paper position book.
 - `cometcloud_get_positions` — Current open paper trading positions with live mark-to-market P&L.
 - `cometcloud_close_position` — Close an open paper position at current market price, realize P&L.
 - `cometcloud_mine_alpha` — Data mining: Pearson correlation of CIS pillars vs realized returns, grade alpha, signal accuracy, regime performance.
@@ -124,12 +124,12 @@ Pro tier (300 rpm / 50,000 rpd): jazz@cometcloud.ai
 
 Grading (absolute thresholds): A+ (≥85) · A (≥75) · B+ (≥65) · B (≥55) · C+ (≥45) · C (≥35) · D (≥25) · F (<25)
 LAS (Liquidity-Adjusted Score): CIS × liquidity_multiplier × confidence × OI_leverage_multiplier
-Data tiers: T1 = Mac Mini full engine (25 assets) · T2 = Railway estimation (59 assets)
+Data tiers: T1 = full engine · T2 = estimate from market data (each asset reports its tier)
 Macro regimes: RISK_ON · RISK_OFF · TIGHTENING · EASING · STAGFLATION · GOLDILOCKS
 
 Signals (compliance-safe, no buy/sell): STRONG OUTPERFORM · OUTPERFORM · NEUTRAL · UNDERPERFORM · UNDERWEIGHT
 
-Vector embeddings: 18-dim per asset, persisted to Redis after every CIS compute.
+Vector embeddings: 18-dim per asset, refreshed after every CIS compute.
 Dims: [F/100, M/100, O/100, S/100, A/100, CIS/100, log_mcap/15, chg_24h, chg_7d, chg_30d,
        vol_mcap, funding_rate, oi_mcap_ratio, ath_proximity, las/100, confidence, class_enc, regime_align]
 

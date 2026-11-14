@@ -682,7 +682,7 @@ function OpenSourceStrategies() {
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
         <div style={{ width: 2, height: 16, background: T.muted, borderRadius: 1 }} />
         <span style={{ fontFamily: F.display, fontSize: 16, fontWeight: 800, color: T.t1 }}>Open Source</span>
-        <span style={{ fontFamily: F.mono, fontSize: 8, fontWeight: 700, padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.05)", color: T.t2, letterSpacing: ".1em" }}>MIT · FREQTRADE</span>
+        <span style={{ fontFamily: F.mono, fontSize: 8, fontWeight: 700, padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.05)", color: T.t2, letterSpacing: ".1em" }}>MIT</span>
       </div>
       <p style={{ fontFamily: F.body, fontSize: 12, color: T.t2, lineHeight: 1.6, maxWidth: 620, margin: "0 0 16px", paddingLeft: 12 }}>
         Earlier strategies, released under MIT. Directional / CIS-gated — genuinely tradeable, but
