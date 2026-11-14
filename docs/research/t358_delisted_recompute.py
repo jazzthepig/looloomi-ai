@@ -427,6 +427,34 @@ def build():
                                   "r": t.get("r_mult"), "status": t["status"]}
                                  for t in results["adv5m"]["rows"] if t.get("entry_d")],
     }
+    # ── 到期可核口径(替代「后来下架」:那个要等到取数月 + 12 个月才判得了) ──
+    # 判据:开票那个币的归档在【这张票自己的 进场日 + 30 天】之前就停更
+    # (名单 = Binance Vision 现货归档的每币最后一行日期 meta[sym]["last"],取数月 2026-11 的清单)
+    TICK_H = 30
+    tix = []
+    for t in results["adv5m"]["rows"]:
+        if not t.get("entry_d"):
+            continue
+        hz = dt.date.fromisoformat(t["entry_d"]) + dt.timedelta(days=TICK_H)
+        m = meta[t["symbol"]]
+        last_d = dt.date.fromisoformat(m["last"]) if m.get("last") else None
+        tix.append({"symbol": t["symbol"], "signal_d": t["signal_d"], "entry_d": t["entry_d"],
+                    "exit_d": t.get("exit_d"), "r": t.get("r_mult"), "status": t["status"],
+                    "last_day_in_archive": m.get("last"),
+                    "last_month_in_archive": m.get("last_month_in_archive"),
+                    "horizon_d": hz.isoformat(),
+                    "archive_stopped_before_horizon": bool(last_d and last_d < hz),
+                    "dead_new_today": bool(m.get("dead_new"))})
+    out["tickets_horizon_check"] = {
+        "definition": "到期可核:开票那个币的归档在这张票自己的(进场日 + 30 天)之前就停更;"
+                      "下架名单 = Binance Vision 现货归档的每币最后一行日期(meta[sym]['last'],"
+                      "取数月 2026-11 的清单;不是本地日期)",
+        "ticket_horizon_days": TICK_H,
+        "n_entered": len(tix),
+        "n_stopped_before_horizon": sum(1 for x in tix if x["archive_stopped_before_horizon"]),
+        "n_dead_new_today": sum(1 for x in tix if x["dead_new_today"]),
+        "tickets": tix,
+    }
     json.dump(out, open(OUT_JSON, "w"), ensure_ascii=False, indent=1)
     print(json.dumps({"universe": {t: {y: {k: v for k, v in universe[t]["by_year"][y].items()
                                           if k not in ("dead_names", "eligible_names")}
