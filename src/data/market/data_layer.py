@@ -2231,7 +2231,7 @@ async def get_macro_pulse() -> dict:
 
             if pushed_regime != "UNKNOWN":
                 result["macro_regime"] = pushed_regime
-                result["regime_source"] = "mac_mini"
+                result["regime_source"] = "engine"                 # 11-14(Jazz):公开响应里不出现设备名
             elif EODHD_KEY:
                 # Derive from economic indicators (cached 4h separately)
                 us_macro = await get_eodhd_macro_indicators("usa")

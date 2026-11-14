@@ -1020,7 +1020,7 @@ async def get_signal_feed(limit: int = Query(default=40, le=100),
     return {"version": "5.0-briefing", "generated_at": now, "regime": regime, "headline": headline,
             "accuracy": accuracy, "n_sections": len(sections), "sections": sections,
             "count": len(flat), "signals": flat[:limit],
-            "narrative_source": narrative_source, "narrative_model": ai_model,
+            "narrative_source": narrative_source, "narrative_model": ("language model" if ai_model else None),   # 型号是内部信息,不出门(11-14)
             "compliance": "positioning language only; conviction items are discretionary candidates, not advice"}
 
 

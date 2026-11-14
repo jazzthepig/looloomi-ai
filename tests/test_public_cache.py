@@ -77,7 +77,9 @@ def test_expired_value_is_served_at_once_and_replaced_behind_the_request(monkeyp
 
 def test_what_must_never_be_cached_is_not():
     cases = [
-        (dict(cache_control=None), {}, "没声明可缓存"),
+        (dict(cache_control="no-store"), {}, "no-store"),
+        (dict(cache_control="no-cache"), {}, "no-cache"),
+        (dict(cache_control="max-age=60"), {}, "给了 max-age 但没说 public"),
         (dict(cache_control="private, max-age=60"), {}, "private"),
         (dict(cache_control="public, max-age=0"), {}, "max-age=0"),
         (dict(status=500), {}, "出错的响应"),
@@ -160,3 +162,30 @@ def test_it_sits_directly_above_the_routes():
     src = (pathlib.Path(__file__).resolve().parents[1] / "src/api/main.py").read_text(encoding="utf-8")
     i, j = src.index("app.add_middleware(PublicCacheMiddleware)"), src.index("app.add_middleware(GZipMiddleware")
     assert i < j, "先加的在最里面:缓存要在 GZip / 限流 / CORS 的里面,存的是没压缩、没加跨域头的原始响应"
+
+
+
+def test_undeclared_json_gets_a_short_default_and_non_json_does_not(monkeypatch):
+    """上线后重量:104 个公开接口里 61 个没写任何缓存头,最慢的都在里面。缺省 30 秒新、旧值最多 5 分钟。"""
+    pc.reset()
+    clock = {"t": 0.0}
+    monkeypatch.setattr(pc.time, "time", lambda: clock["t"])
+    c = {"n": 0}
+    mw = pc.PublicCacheMiddleware(_app(c, cache_control=None), enabled=True)
+
+    async def go():
+        await _get(mw)
+        a = await _get(mw)
+        clock["t"] = 31
+        b = await _get(mw)
+        await asyncio.sleep(0.01)
+        clock["t"] = 31 + 301
+        d = await _get(mw)
+        return a, b, d
+    a, b, d = asyncio.run(go())
+    assert a["headers"]["x-cache"] == "HIT" and b["headers"]["x-cache"] == "STALE" and b["body"] == b'{"n":1}'
+    assert "x-cache" not in d["headers"] and c["n"] == 3, "超过 5 分钟的旧值不给;中间那次后台刷新算一次"
+    assert pc.storable(200, [(b"content-type", b"image/png")], b"x") is None, "不是 JSON 又没声明:不猜"
+    assert pc.storable(200, [(b"content-type", b"application/json"), (b"cache-control", b"public, max-age=600")], b"x") == (600, 3600)
+    assert pc.storable(200, [(b"content-type", b"application/json"), (b"cache-control", b"public, max-age=60")], b"x") == (60, 720)
+

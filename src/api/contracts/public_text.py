@@ -23,7 +23,8 @@ REF_PAREN = re.compile(rf"\s*[((]\s*{_ID}(?:\s*[/,、–-]\s*{_ID})*\s*[))]")
 
 INTERNAL = re.compile(
     r"freqtrade|fastapi|railway|ollama|supabase|upstash|\bredis\b|mac[ _]?mini|lm studio|gemma|minimax|/internal/|"
-    r"[((][RSM]-?\d{1,3}[^))]{0,24}[))]|\b[SM]-\d{2,3}\b|\bR\d{2,3}\b(?![a-z0-9%$:_])|\bT-\d{3}\b|"
+    # Jazz 11-14:实验编号(R57、R73-B)可以留;S- / M- / T- 是台账与任务卡的编号,不出门
+    r"[((][SM]-\d{1,3}[^))]{0,24}[))]|\b[SM]-\d{2,3}\b|\bT-\d{3}\b|"
     r"refutation[_ ]ledger|\w\.py\b|\bsrc/|docs/[A-Za-z_]+\.md|/Users/|/Volumes/|localhost", re.I)
 
 #: 指令式说法:祈使动词对着读者的仓位。只列构造,不列词 —— 「reduce」「entry」单独出现到处都是。

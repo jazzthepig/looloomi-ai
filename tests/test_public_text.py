@@ -27,7 +27,7 @@ WAS_LIVE = (
     "Binance geo-blocked on Railway — mitigated by CG Pro aggregation.",
     "use cash_book or sleeve_book (S-283, docs/NAV_POLICY.md §8).",
     "stored in Redis position store.",
-    "core structurally dead (R57) — holding zero size, marking flat",
+    "intraday_regime.regime_source: mac_mini",
     "meet institutional threshold (58). T1 Mac Mini scores.",
     "mac_mini_T1_full",
     "railway_T2_estimate",
@@ -46,6 +46,7 @@ def test_the_guard_fires_on_every_sentence_that_was_live():
     assert not _findings("Topping: leadership is narrowing and marginal demand is thinning.")
     assert not pt.internal_findings("MEV tip redistribution — structural yield premium"), "redistribution 里的 redis 不是 Redis"
     assert not pt.internal_findings("R2 of the regression was 0.31; S-1 filings are public")
+    assert not pt.internal_findings("R73-B BTC/ETH pair-trade mean-reversion — KILLED; core inactive (R57)"), "Jazz 11-14:R 编号可以留"
 
 
 def test_strip_refs_takes_only_parenthesised_ledger_ids():
@@ -131,7 +132,7 @@ def test_scan_script_judges_a_payload_the_same_way():
     spec = importlib.util.spec_from_file_location("pss", ROOT / "scripts" / "public_surface_scan.py")
     pss = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(pss)
-    hit = pss.judge("/api/v1/x", {"note": "core dead (R57)", "posture": "trim into it, defend; do not chase"})
+    hit = pss.judge("/api/v1/x", {"note": "see (S-283) and src/data/x.py", "posture": "trim into it, defend; do not chase"})
     assert hit["internal"] and hit["wording"]
     assert pss.judge("/api/v1/x", {"note": "Topping: leadership is narrowing."}) is None
     assert pss.judge("/api/v1/intelligence/macro-events", {"events": [{"title": "Analysts say investors should watch X"}]}) is None, "第三方标题带署名引用,不算我们的话"

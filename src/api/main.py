@@ -5495,7 +5495,7 @@ def _health_with_data_layer() -> dict:
     # it here would make /health the thing that saturates the backend it reports on.
     # It lives on /internal/beta-core-clock instead, polled by the EXTERNAL probe, which
     # is also the only observer that survives the deploy that breaks the marking loop.
-    beta_core_note = "see /internal/beta-core-clock (kept off /health: no I/O here)"
+    beta_core_note = "not reported on this endpoint (no I/O here)"
     # 2026-09-04 B fix: 暴露 LAST_REGIME_QUORUM。这一信息以前**写在日志里、
     # 全 repo 0 reader** —— 「不可观测即不存在」,S-244 / S-263 的同一个形状。
     # 现在在 /health.data_layer.regime_quorum 同步露面,consumer 不必 import
