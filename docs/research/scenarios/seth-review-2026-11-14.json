@@ -1,0 +1,85 @@
+{
+  "author": "seth:high-dim",
+  "entries": [
+    {
+      "id": "HD-2026-11-14-1",
+      "scenario": "S1 冲洗到投降",
+      "statement": "2026-12-12 BTC 收盘低于 61,424(比 11-13 的 68,249 再跌 10% 以上;11-14 盘中已到 65,735)",
+      "variable": "close:BTC",
+      "op": "lt",
+      "hi": 61424,
+      "prob": 0.3,
+      "horizon_d": "2026-12-12"
+    },
+    {
+      "id": "HD-2026-11-14-2",
+      "scenario": "S3 反抽",
+      "statement": "2026-12-12 BTC 收盘高于 75,074(比 11-13 涨 10% 以上)",
+      "variable": "close:BTC",
+      "op": "gt",
+      "lo": 75074,
+      "prob": 0.15,
+      "horizon_d": "2026-12-12"
+    },
+    {
+      "id": "HD-2026-11-14-3",
+      "scenario": "S1 冲洗到投降",
+      "statement": "2026-12-12 ETH 收盘低于 1,735(比 11-13 的 1,928 再跌 10% 以上;山寨与 ETH 一直比 BTC 弱)",
+      "variable": "close:ETH",
+      "op": "lt",
+      "hi": 1735,
+      "prob": 0.35,
+      "horizon_d": "2026-12-12"
+    },
+    {
+      "id": "HD-2026-11-14-4",
+      "scenario": "投降标记",
+      "statement": "2026-12-12 Binance 7 日年化资金费为负(11-13 是 +5.7%;恐惧贪婪已到 13 而多头还在付钱)",
+      "variable": "state:funding_7d_ann_binance",
+      "op": "lt",
+      "hi": 0.0,
+      "prob": 0.25,
+      "horizon_d": "2026-12-12"
+    },
+    {
+      "id": "HD-2026-11-14-5",
+      "scenario": "投降标记",
+      "statement": "2026-12-12 前后 BTC 的 MVRV 低于 1.20(11-12 是 1.324;前两次周期底 0.69 / 0.78)",
+      "variable": "macro:btc_mvrv",
+      "op": "lt",
+      "hi": 1.2,
+      "prob": 0.4,
+      "horizon_d": "2026-12-12"
+    },
+    {
+      "id": "HD-2026-11-14-6",
+      "scenario": "利率继续重定价",
+      "statement": "2026-12-12 前后 2 年期美债收益率高于 4.86%(11-13 的读数;一周前 4.51%)",
+      "variable": "macro:ust_2y",
+      "op": "gt",
+      "lo": 4.86,
+      "prob": 0.45,
+      "horizon_d": "2026-12-12"
+    },
+    {
+      "id": "HD-2026-11-14-7",
+      "scenario": "流动性止血",
+      "statement": "2026-12-12 面板的稳定币 30 日供应变化高于 −3%(11-12 是 −4.77%)",
+      "variable": "state:stable_supply_30d",
+      "op": "gt",
+      "lo": -0.03,
+      "prob": 0.25,
+      "horizon_d": "2026-12-12"
+    },
+    {
+      "id": "HD-2026-11-14-8",
+      "scenario": "情绪仍在极端恐惧",
+      "statement": "2026-12-12 前后恐惧贪婪指数低于 20(11-14 是 13)",
+      "variable": "macro:fng",
+      "op": "lt",
+      "hi": 20,
+      "prob": 0.35,
+      "horizon_d": "2026-12-12"
+    }
+  ]
+}
