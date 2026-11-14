@@ -8,7 +8,7 @@
 - 过了 max-age、还在可容忍的旧值年龄内 ⇒ **先给旧的**(`x-cache: STALE`,带 `age`),后台把这个请求原样再跑一遍换新;同一个键同时只刷一次。
 - 没有值 / 太旧 ⇒ 照常跑路由,同时到的同键请求等这一次的结果,不各算各的。
 - 只存:200、没有 `set-cookie`、体积 ≤ 2 MB,且路由声明了 `public, max-age > 0`(按它声明的来)**或什么缓存头都没写的 JSON**
-  (缺省 30 秒新、旧值最多 5 分钟);写了 no-store / private / no-cache / max-age=0 的不存。带凭据的请求(Authorization / X-API-Key /
+  (缺省 30 秒新、旧值最多 10 分钟);写了 no-store / private / no-cache / max-age=0 的不存。带凭据的请求(Authorization / X-API-Key /
   内部 token / Cookie)与交易、鉴权、密钥、分析这些前缀一律不进这一层。请求头带 `cache-control: no-cache` ⇒ 不读缓存(硬刷新照常拿新的)。
 - 旧值最多给到 max-age 的 12 倍、且不超过 1 小时;响应里各接口自己的 `as_of` 照旧,旧不旧看得见。
 关掉:环境变量 `PUBLIC_CACHE=0`。判活:响应头 `x-cache`;`stats()`。
@@ -129,10 +129,10 @@ def eligible(path: str, headers: dict[str, str]) -> bool:
             and not any(h in headers for h in CREDENTIAL_HEADERS))
 
 
-#: 没声明缓存头的公开 JSON 接口的缺省:30 秒内算新的,旧值最多给到 5 分钟。11-14 上线后重量:104 个公开接口里 61 个什么都没声明,
+#: 没声明缓存头的公开 JSON 接口的缺省:30 秒内算新的,旧值最多给到 10 分钟(预热循环 4 分钟一轮,要留出余量)。11-14 上线后重量:104 个公开接口里 61 个什么都没声明,
 #: 最慢的全在这 61 个里(research/channels 9.8 秒、core-alpha 7.3 秒、ohlcv/coverage 6.5 秒…)—— 只兑现「声明过的」帮不到它们。
 #: 明确写了 no-store / private / no-cache / max-age=0 的照旧不存;要更长或更短,在路由里声明。
-DEFAULT_MAX_AGE, DEFAULT_STALE_S = 30, 300
+DEFAULT_MAX_AGE, DEFAULT_STALE_S = 30, 600
 
 
 def storable(status: Optional[int], headers: list, body: Optional[bytes]) -> Optional[tuple[int, int]]:

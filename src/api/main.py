@@ -3374,6 +3374,25 @@ _WARM_PATHS = (
     "/api/v1/vc/portfolios",
     "/api/v1/signals/dingge-board",
     "/api/v1/trading/metrics",
+    # 11-14(S-859):面板各栏目实际发出的请求(在线上逐栏点一遍抓的,路径与查询串一字不差 —— 源站缓存按整串做键)。
+    # 访客少的时候缓存会在两次访问之间过期;这条循环每 4 分钟把它们各请求一遍,访客来时拿到的总是现成的。
+    # 随榜单变化的两条(cis/similar?symbol=…、cis/history/batch?symbols=…)键不固定,不在这里。
+    "/api/v1/cis/universe",
+    "/api/v1/cis/v2",
+    "/api/v1/market/crowd-clock",
+    "/api/v1/market/macro-pulse",
+    "/api/v1/macro/brief",
+    "/api/v1/defi/overview",
+    "/api/v1/intelligence/macro-events",
+    "/api/v1/vc/funding-rounds?limit=400&days=180",
+    "/api/v1/strategies",
+    "/api/v1/strategies/open-source",
+    "/api/v1/signals/feed",
+    "/api/v1/signals/performance?method=official",
+    "/api/v1/signals/journal?limit=30&offset=0&status=all&method=official",
+    "/api/v1/proof/anchors",
+    "/api/v1/portfolio/risk-meter",
+    "/api/v1/market/earnings-calendar?symbols=AAPL,NVDA,MSFT,AMZN,GOOGL&days_ahead=30",
 )
 
 

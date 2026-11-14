@@ -187,12 +187,12 @@ def test_undeclared_json_gets_a_short_default_and_non_json_does_not(monkeypatch)
         clock["t"] = 31
         b = await _get(mw)
         await asyncio.sleep(0.01)
-        clock["t"] = 31 + 301
+        clock["t"] = 31 + 601
         d = await _get(mw)
         return a, b, d
     a, b, d = asyncio.run(go())
     assert a["headers"]["x-cache"] == "HIT" and b["headers"]["x-cache"] == "STALE" and b["body"] == b'{"n":1}'
-    assert "x-cache" not in d["headers"] and c["n"] == 3, "超过 5 分钟的旧值不给;中间那次后台刷新算一次"
+    assert "x-cache" not in d["headers"] and c["n"] == 3, "超过 10 分钟的旧值不给;中间那次后台刷新算一次"
     assert pc.storable(200, [(b"content-type", b"image/png")], b"x") is None, "不是 JSON 又没声明:不猜"
     assert pc.storable(200, [(b"content-type", b"application/json"), (b"cache-control", b"public, max-age=600")], b"x") == (600, 3600)
     assert pc.storable(200, [(b"content-type", b"application/json"), (b"cache-control", b"public, max-age=60")], b"x") == (60, 720)
@@ -318,4 +318,18 @@ def test_random_query_strings_cannot_flood_redis(monkeypatch):
             await _get(mw, query=f"_={i}".encode())
     asyncio.run(go())
     assert calls["get"] == 5 and c["n"] == 40, "超过每分钟的额度就不再问 Redis,请求照常现算"
+
+
+def test_warm_loop_requests_what_the_dashboard_requests_within_the_stale_bound():
+    """访客少 ⇒ 两次访问之间缓存会过期。预热循环按面板实际发出的请求逐条保温;它的间隔必须短于缺省的旧值上限。"""
+    import pathlib
+    import re
+    src = (pathlib.Path(__file__).resolve().parents[1] / "src/api/main.py").read_text(encoding="utf-8")
+    block = src[src.index("_WARM_PATHS = ("):src.index("async def _public_cache_warm_loop")]
+    paths = re.findall(r'"(/api/v1/[^"]+)"', block)
+    assert len(paths) == len(set(paths)) >= 24 and {"/api/v1/cis/universe", "/api/v1/market/crowd-clock", "/api/v1/intelligence/macro-events"} <= set(paths)
+    assert all(pc.eligible(p.split("?")[0], {}) or p.startswith("/api/v1/trading/") for p in paths), "保温的路径要进得了缓存这一层"
+    loop = src[src.index("async def _public_cache_warm_loop"):src.index("async def _start_public_cache_warm_loop")]
+    m = re.search(r"_asyncio\.sleep\((\d+)\)\s*$", loop.strip().splitlines()[-1]) or re.search(r"await _asyncio\.sleep\((\d+)\)", loop[loop.rindex("await _asyncio.sleep("):])
+    assert m and int(m.group(1)) < pc.DEFAULT_STALE_S, "循环间隔要短于缺省的旧值上限,否则保不住"
 
