@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-14",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "notes": "2026-11-14T16:17:00Z Seth 开卡(Jazz 睡前:「分配任务给各 lane,并完成交易优化、策略升级、组合优化的长任务」)。",
+  "id": "T-387",
+  "owner": "lane-c",
+  "title": "S-867:单一来源风险 ≤ 40% 的前提下 R-v2 三个参数的前沿(按回本时间选);以及被动腿移出实盘在历史上值多少",
+  "source": "台账 S-867(预注册)。装配、数据、引擎与 `docs/research/s834_diversification_audit.py` 完全相同(`t310_slots`、`t352_engine`、`flex_alloc.rb_weights`、`docs/research/t342_daily.csv`、cometcloud-local/research/ 下的 s681 与 t156 数据);**不改 s834**,在新文件里把它的装配包成一个按参数重跑的函数。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-387.json"
+  ],
+  "acceptance": {
+    "check": "写 `docs/research/s867_frontier.py`。窗口 2021-10-11 → 最新。**先复现:** 用 f = 0.0075、cap = 0.80、n = 10 跑一遍,年化、月度波动、R-v2 风险占比、有效来源数必须与 `docs/research/s834_results.json` 一致(差 ≤ 0.1 个百分点 / 0.01);不一致就停下、贴两边的数,不往下做。**A 表:** f ∈ {0.0025, 0.00375, 0.005, 0.0075} × cap ∈ {0.40, 0.80} × n ∈ {10, 14},16 格;每格报:年化、月度波动折年、**最长水下天数**(账户净值距前高未收复的最长自然日数)、最大回撤、最差 20 日、R-v2 风险占比(与 s834 同一算法)、有效来源数(熵,同 s834)、**去掉最大一张票之后**的年化(在票源里删掉对账户贡献最大的那一张,整格重跑)、前后两半窗口各自的年化。**B 表(f = 0.0075 / cap = 0.80 / n = 10):** 两行 —— 现状(带股、金两条腿)与「股、金的权重改为 0、那部分记现金利息」;列同 A 表。**按台账写死的规则标出 A 表的选中格:** 候选 = 风险占比 ≤ 0.40 且有效来源数 ≥ 3.0;取最长水下最短的;相差 < 30 天的取去掉最大一张后年化更高的;没有候选就写没有,不放宽。输出贴进 MINIMAX_SYNC(§C-T-387):复现那一行、A 表 16 行、选中格、B 表两行。不写「建议上线」之类的话。长跑用 nohup,只 tail。",
+    "expect": "docs/research/s867_frontier.py + s867_results.json + s867_run.txt;卡 in_review,推 lane-c/T-387。"
+  },
+  "prior_value": "机构规格现在只有 S-837 的一个点;自有账户移出被动腿的代价没人量过(S-834:两条腿合计月均 +0.76%、风险 7%)。"
+}

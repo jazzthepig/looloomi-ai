@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-14",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "notes": "2026-11-14T16:17:00Z Seth 开卡(Jazz 睡前:「分配任务给各 lane,并完成交易优化、策略升级、组合优化的长任务」)。",
+  "id": "T-386",
+  "owner": "lane-b",
+  "title": "S-866:S-864 的格子划分盲复算(从卡上的四条定义从零写),对上之后在同一批格子上看 ETH、SOL",
+  "source": "台账 S-866(预注册)。**不许读** `docs/research/s864_same_cell.py` 与 `docs/research/s851_watch_base_rate.py`(盲复算的意义就在这里);A 道的结果在 `git show origin/lane-a/T-384:docs/research/s864_results.json`(合并后在 main 上),**自己的那份跑完、落盘之后**才许打开它来对。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-386.json"
+  ],
+  "acceptance": {
+    "check": "写 `docs/research/s866_blind_cells.py`,只读(Supabase 只读入口,与你平时读库的方式相同)。**四条定义(每一天只用当天及以前的数据):** R = `macro_daily` series `ust_2y`:取 ≤ d 的最近一个读数(不早于 d − 7 天),与 ≤ d − 91 天的最近一个读数(不早于 d − 98 天)比,前者更高 = 升,否则 = 降;任一读不到 ⇒ 这一天不分格。L = `state_daily`(entity = panel,feature = stable_supply_30d)当天的值 < 0 = 抽,否则 = 注。W = BTC(`ohlcv_daily`,source = binance_hist)每个**周日**判一次:该周日收盘 < 最近 10 个周日收盘(含本周)的均值 **且** < 4 个周日之前的收盘 ⇒ 坏;结论从**下周一**起生效、到下一个周日(含)为止;不足 10 个周日 ⇒ 读不到。T = `state_daily`(entity = panel,feature = dist_200)当天的值 < 0 = 线下,否则 = 线上。日历 = BTC 有收盘的每一天,2019-01-01 起;四条都读得到的日子才分格;**最后 56 个有格子的日子留出**(不进统计)。段 = 同一格里相邻两天间隔 ≤ 5 天算同一段。① 输出 `docs/research/s866_cells.json`:16 格各自的天数、段数、每段第一天。② 然后才打开 A 道的 `s864_results.json`,逐格对天数与段数;不一致的格子各列最早 3 个分歧日与两边的四个轴读数。**不许改任何一边去凑。** ③ 逐格一致之后:同一批格子上,用 ETH、SOL(binance_hist 收盘)算之后 30 / 56 个自然日的收益分布(中位、均值、< −10% 的占比、> +10% 的占比),按天一遍、按每段第一天一遍;对「R升|L抽|W坏|T线下」这一格各做循环平移对照(标签整条平移 k 天,k 在 180 … N − 180 之间均匀取,2,000 次,种子 866;报观测值、平移均值、双侧 p)。④ 把三段输出(格子对账 / ETH / SOL 的今天这一格与全样本 / 对照)贴进 MINIMAX_SYNC(§B-T-386),不下「适用 / 不适用」的结论。",
+    "expect": "docs/research/s866_blind_cells.py + s866_cells.json + s866_results.json + s866_run.txt;卡 in_review,推 lane-b/T-386。"
+  },
+  "prior_value": "S-864 的表要进 ③ 的档案与 ⓪ 简报;进之前格子划分要有第二份(现在是单份实现)。"
+}
