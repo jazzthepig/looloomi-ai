@@ -1,0 +1,27 @@
+{
+  "status": "open",
+  "created": "2026-11-14",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "id": "T-382",
+  "owner": "lane-b",
+  "title": "T-376 返工:Farside ETH 重测、Binance 同 host 对照、清算日量、CMC range 语义与字段序",
+  "source": "§A-auto-1114-1208 交叉复核;Seth 2026-11-14T12:45Z 复测 farside.co.uk/eth/ 返回逐日表(ETHA…ETH + Total 12 列,有 2026-10 逐日行),T-376 ②「免费路走不通」不成立。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-382.json"
+  ],
+  "acceptance": {
+    "check": "① Farside ETH:实测贴前 200 字符、历史能回到哪天(admin-ajax 分页参数探到或写探不到)、许可/署名条款原文;② Binance:同 host 对照(fapi/v1/ping、ticker/price vs allForceOrders),结论分「整站不通 / 单端点 404」;③ 清算日量:删掉无出处的「4.5 万笔/天」,只报同口径实测外推并标明不是下界;④ CMC range:all / 1Y / 1M 各自点数与中位间隔,给『按月跑 range=1Y 累积日频』可行性;⑤ CMC v 字段序用 v[2]/v[0]=v[4] 恒等式核定;⑥ 在 docs/research/T-376_data_sources.md 上改(≤ 250 行),另写 T-382 更正清单。",
+    "expect": "docs/research/T-376_data_sources.md 改版 + docs/research/T-382_corrections.md;卡 in_review,推 lane-b/T-382。"
+  },
+  "prior_value": "ETH ETF 日频净流入若 Farside 免费可取,就不需要付费源 —— 撤回 T-376 交 Jazz 的付费拍板项。",
+  "notes": "2026-11-14T12:50:00Z Seth 开卡(交叉复核 §Seth-1114d)。台账只追加:已入账行不 UPDATE,用新 id 替代/补述;作废机制另欠。"
+}

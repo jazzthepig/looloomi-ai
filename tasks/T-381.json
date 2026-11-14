@@ -1,0 +1,27 @@
+{
+  "status": "open",
+  "created": "2026-11-14",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "id": "T-381",
+  "owner": "lane-a",
+  "title": "T-375 情景返工:校准窗口与到期口径对齐 + 两处数改正 + 随机起点臂(新 id,不改已入账行)",
+  "source": "§C-auto-1114-1206 交叉复核(Seth 复测:state_daily panel dist_200/taker_buy_share_30d 各 2874 行、周末 820 行 = 自然日序列)。T-375-1/4 用 persist(…,22) = +22 行 = 22 自然日,而 11-13→12-15 到期是 32 自然日;statement 写「+22 个交易日」也不对(加密无交易日之分,行=自然日)。8 周分母 13 不是 14;T-375-5「起点间隔中位数 119 天」实测 104。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-381.json"
+  ],
+  "acceptance": {
+    "check": "① 用 horizon 等长窗口(写下日→到期日的自然日数,按行计)重算 T-375-1/-4 的基率,脚本可复跑、写明行=自然日;② 以新 id(T-381-1…)写替代条目,statement 写明替代哪条、窗口口径、样本数,原 T-375-1/-4/-5 行不动(台账只追加;作废机制另卡);③ 8 周分母改 13、起点间隔中位数按定义给值;④ v2 规则补随机起点臂(starts=),与 15 段并排报 days_to_peak / max_runup,分 2021 / 2022-23 / 2024-25 / 2026 四段;⑤ 报告 ≤ 150 行,脚本必须实际跑过、贴输出。",
+    "expect": "docs/research/scenarios/lane-a-T-381.json + docs/research/T-381_recalib.md;卡 in_review,推 lane-a/T-381。"
+  },
+  "prior_value": "T-375-4 prob 0.60 在等长窗口下约 0.78(C 复算),T-375-1 0.18→约 0.25;待 lane-a 独立重算确认。",
+  "notes": "2026-11-14T12:50:00Z Seth 开卡(交叉复核 §Seth-1114d)。台账只追加:已入账行不 UPDATE,用新 id 替代/补述;作废机制另欠。"
+}
