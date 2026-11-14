@@ -159,7 +159,9 @@ async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-To
     # 绝不在最后一步塌成两值」。**RPC 支修了,表支没修,而两支在同一个表达式里。**
     try:
         from src.api.schema_manifest import write_tables_by_provenance
-        _prov = write_tables_by_provenance()
+        import asyncio
+        # S-863:走查源码是同步的重活(改之前在线上一次 27 秒),放进线程,不占事件循环。
+        _prov = await asyncio.to_thread(write_tables_by_provenance)
         _declared_only = set(_prov["declared_only"])
     except Exception:                                             # noqa: BLE001
         # 拿不到来源 ⇒ 不假装知道。全部按「有调用点」报(保守:那一支的措辞更严厉)。
@@ -237,7 +239,8 @@ async def schema_drift(x_internal_token: str = Header(None, alias="X-Internal-To
     # 挡住的理由是一批没有任何人写的列。**「修了一半」这次发生在同一批改动里。**
     try:
         from src.api.schema_manifest import write_columns_by_provenance
-        _cprov = write_columns_by_provenance()["declared_only"]
+        import asyncio
+        _cprov = (await asyncio.to_thread(write_columns_by_provenance))["declared_only"]
         _col_declared_only = {
             t: [c for c in cols if c in set(_cprov.get(t, []))]
             for t, cols in col_drift.items()

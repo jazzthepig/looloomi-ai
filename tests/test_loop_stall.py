@@ -110,6 +110,26 @@ def test_the_two_synchronous_requests_named_after_the_first_fix_are_off_the_loop
     assert not [c for c in ast.walk(rt) if isinstance(c, ast.Call) and getattr(c.func, "id", "") == "_closes_by_date"]
 
 
+def test_the_schema_scan_walks_our_source_not_the_virtualenv_and_not_on_the_loop():
+    """S-863 核验:`/internal/schema-drift` 把整个仓库(含线上的 .venv)用 rglob 走了两遍,在事件循环里各停 25–27 秒;
+    preflight 每跑一次就请求它一次。现在只走生产目录、剪掉虚拟环境,而且在线程里走 —— 文件清单与原来逐个相同。"""
+    import ast
+    from src.api import schema_manifest as sm
+    got = sm._prod_files()
+    assert all(d.startswith("src/") for d in sm._PROD_DIRS), "下面只在 src/ 里对比旧走法;生产目录出了 src/ 这条对比要跟着改"
+    old_way = [p for p in sorted((sm._ROOT / "src").rglob("*.py")) if sm._is_prod(p)]     # 整仓 rglob 太慢,不在测试里重演
+    assert got == old_way and len(got) > 100, f"新旧走法的文件清单必须相同({len(got)} vs {len(old_way)})"
+    assert not [p for p in got if ".venv" in p.parts or "site-packages" in p.parts]
+    src = (ROOT / "src/api/schema_manifest.py").read_text(encoding="utf-8")
+    assert src.count('_ROOT.rglob("*.py")') == 0 or "sorted(_ROOT.rglob" not in src.replace('`[p for p in sorted(_ROOT.rglob("*.py")) if _is_prod(p)]`', ""), (
+        "整仓 rglob 回来了 —— 线上一次二十多秒")
+    ri = ast.parse((ROOT / "src/api/routers/research_intake.py").read_text(encoding="utf-8"))
+    fn = next(n for n in ast.walk(ri) if isinstance(n, ast.AsyncFunctionDef) and n.name == "schema_drift")
+    direct = [c.func.id for c in ast.walk(fn) if isinstance(c, ast.Call) and isinstance(c.func, ast.Name)
+              and c.func.id in ("write_tables_by_provenance", "write_columns_by_provenance")]
+    assert not direct, f"schema_drift 里直接调用了 {direct} —— 要走 asyncio.to_thread"
+
+
 def test_a_real_block_on_a_real_loop_is_caught_with_the_blocking_line(monkeypatch):
     monkeypatch.setattr(ls, "STALL_S", 0.25)
     monkeypatch.setattr(ls, "SAMPLE_AT", (0.25, 0.6, 1.2))

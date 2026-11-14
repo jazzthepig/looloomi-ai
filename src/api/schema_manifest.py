@@ -223,6 +223,35 @@ def _is_prod(p: Path) -> bool:
     return rel.startswith(_PROD_DIRS) and not any(s in f"/{rel}" for s in _SKIP)
 
 
+#: 走查时整个剪掉的目录名 —— 与 `_SKIP` 说的是同一批东西(虚拟环境、依赖、缓存),只是在进目录之前就不进去。
+_PRUNE = frozenset({"__pycache__", ".venv", "site-packages", "node_modules"})
+
+
+def _prod_files() -> list[Path]:
+    """生产目录下的 .py,按路径排序 —— 结果与 `[p for p in sorted(_ROOT.rglob("*.py")) if _is_prod(p)]` 逐个相同。
+
+    原来五处都是先 `_ROOT.rglob("*.py")` 把**整个仓库**走一遍、再逐个过滤。线上的虚拟环境建在仓库目录里(`.venv/`),
+    `src/mcp/` 下还有一个:走一遍二十多秒。`/internal/schema-drift` 一次请求走两遍,而且在事件循环里 ——
+    2026-11-14 14:11:48 起进程 27.3 秒不动,一分钟后又 25.2 秒(看门线程记的栈停在 pathlib 的 `_select_from`)。
+    每次 preflight 都会请求这个端点。现在只进 `_PROD_DIRS` 的顶层目录,遇到虚拟环境 / 依赖 / 缓存不进去。
+    """
+    import os
+    tops = sorted({d.split("/")[0] for d in _PROD_DIRS})
+    out: list[Path] = []
+    for top in tops:
+        base = _ROOT / top
+        if not base.is_dir():
+            continue
+        for dirpath, dirnames, filenames in os.walk(base):
+            dirnames[:] = [d for d in dirnames if d not in _PRUNE]
+            for fn in filenames:
+                if fn.endswith(".py"):
+                    p = Path(dirpath) / fn
+                    if _is_prod(p):
+                        out.append(p)
+    return sorted(out)
+
+
 def _tables_in(path: Path) -> set[str]:
     try:
         text = path.read_text(encoding="utf-8", errors="replace")
@@ -330,7 +359,7 @@ def write_tables() -> list[str]:
     见 `write_tables_by_provenance()`。保留它是因为「清单」这个用途不关心来源。
     """
     out: set[str] = set()
-    for p in sorted(_ROOT.rglob("*.py")):
+    for p in _prod_files():
         if _is_prod(p):
             out |= _tables_in(p)
             out |= _declared_tables_in(p)
@@ -360,7 +389,7 @@ def write_tables_by_provenance() -> dict[str, list[str]]:
     """
     ast_seen: set[str] = set()
     declared: set[str] = set()
-    for p in sorted(_ROOT.rglob("*.py")):
+    for p in _prod_files():
         if _is_prod(p):
             ast_seen |= _tables_in(p)
             declared |= _declared_tables_in(p)
@@ -382,7 +411,7 @@ def rpc_functions() -> list[str]:
     must look in the right catalog.
     """
     out: set[str] = set()
-    for p in sorted(_ROOT.rglob("*.py")):
+    for p in _prod_files():
         if _is_prod(p):
             out |= _rpcs_in(p)
     return sorted(t for t in out if t and not t.startswith("_"))
@@ -437,7 +466,7 @@ def write_columns_by_provenance() -> dict[str, dict[str, list[str]]]:
     """
     ast_cols: dict[str, set[str]] = {}
     dec_cols: dict[str, set[str]] = {}
-    for p in sorted(_ROOT.rglob("*.py")):
+    for p in _prod_files():
         if not _is_prod(p):
             continue
         for t, cols in _columns_in(p).items():
@@ -467,7 +496,7 @@ def write_columns() -> dict[str, list[str]]:
     this repo and so cannot be inferred from a literal dict.
     """
     out: dict[str, set[str]] = {}
-    for p in sorted(_ROOT.rglob("*.py")):
+    for p in _prod_files():
         if _is_prod(p):
             for t, cols in _columns_in(p).items():
                 out.setdefault(t, set()).update(cols)
