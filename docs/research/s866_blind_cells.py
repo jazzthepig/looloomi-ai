@@ -48,7 +48,7 @@ ASSETS = ("ETH", "SOL")        # 卡上要求的两个
 CROSS_ASSETS = ("ETH", "SOL", "BTC")   # BTC 只是多一个对照(A 道没写它用的是哪只资产)
 
 
-# ── 验证装置(S-097):唯一来源 ────────────────────────────────────────────────
+# ── 验证装置(T-097):唯一来源 ────────────────────────────────────────────────
 def _load_apparatus():
     path = os.path.join(ROOT, "src", "data", "evaluation", "apparatus.py")
     spec = importlib.util.spec_from_file_location("cc_apparatus", path)

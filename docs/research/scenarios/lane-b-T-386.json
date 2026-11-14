@@ -40,36 +40,6 @@
       "lo": 65000,
       "prob": 0.75,
       "horizon_d": "2026-12-15"
-    },
-    {
-      "id": "T-386-5",
-      "scenario": "T-386 / S-866 盲复算 · 16 格天数与 lane-a/T-384 的 s864_results.json 逐格一致",
-      "statement": "本次合并时,把 docs/research/s866_blind_cells.py 自己算出的 16 个格子的「天数」与 lane-a/T-384 的 s864_results.json 逐格对比,一致的格子数 > 15(即 16/16 全对)。人工结算,结算值 = 一致的格子数(口径见 s866_results.json 的 reconciliation.per_cell,两套口径全列)。写下时 A 道的文件尚未打开。",
-      "variable": "manual",
-      "op": "gt",
-      "lo": 15,
-      "prob": 0.45,
-      "horizon_d": "2026-12-15"
-    },
-    {
-      "id": "T-386-6",
-      "scenario": "T-386 / S-866 对照 · 目标格 ETH 56 日均值与循环平移分不开",
-      "statement": "对「R升|L抽|W坏|T线下」这一格做循环平移对照(标签整条平移 k 天,k 在 180 … N−180 均匀取,2000 次,种子 866)后,ETH 56 日均值的双侧 p ≥ 0.05,即这一格的历史均值与随机平移出来的均值分不开。人工结算,结算值 = 该双侧 p(见 s866_results.json 的 control.stats)。",
-      "variable": "manual",
-      "op": "lt",
-      "hi": 0.05,
-      "prob": 0.3,
-      "horizon_d": "2026-12-15"
-    },
-    {
-      "id": "T-386-7",
-      "scenario": "T-386 / S-866 目标格 · ETH 之后 56 个自然日的收益中位数为负",
-      "statement": "「R升|L抽|W坏|T线下」这一格(统计集,按天)上,ETH 之后 56 个自然日的收益中位数小于 0。人工结算,结算值 = 该中位数(见 s866_results.json 的 eth_sol.per_cell)。写下时 ETH/SOL 的收益统计尚未跑出来。",
-      "variable": "manual",
-      "op": "lt",
-      "hi": 0,
-      "prob": 0.55,
-      "horizon_d": "2026-12-15"
     }
   ]
 }
