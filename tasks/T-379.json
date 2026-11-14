@@ -1,0 +1,27 @@
+{
+  "status": "open",
+  "created": "2026-11-14",
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "verified": null,
+  "notes": "2026-11-14T06:49:45Z Seth 开卡(S-860 量数据库时量到;Jazz 11-14「继续搞后端和数据库」)。",
+  "id": "T-379",
+  "owner": "seth",
+  "title": "大表读取的翻页:`_read_all` 用 OFFSET,读 N 行的代价是 N² 量级 —— 探到服务端每页上限后跟着用,再评估按键翻页",
+  "source": "台账 S-860。`pg_stat_statements`(09-24 起):`ohlcv_daily` 两种读法 699,764 次调用、66,596 秒,均值 95 毫秒 —— 索引是对的(source, trade_date, symbol),贵在翻页深度:每页 1,000 行,第 k 页要先走过前 k×1,000 行。`asset_mcap_daily`、`cis_rebuild_daily`、`perp_bv_daily` 同形。`v_funding_daily` 改成表之后深页从 2.46 秒降到 0.28 秒,剩下的 0.28 秒也是这个。",
+  "allowed_paths": [
+    "src/data/style/header.py",
+    "src/data/vector/market_state_writer.py",
+    "src/api/store.py",
+    "tests/",
+    "scripts/preflight.sh",
+    "migrations/",
+    "tasks/T-379.json"
+  ],
+  "acceptance": {
+    "check": "① Jazz 在 Supabase 控制台把 API 的「Max rows」从 1,000 调到 10,000(只有他能改);② `_read_all` 启动时探一次服务端实际每页上限(对一张已知大表要 10,000 行,看回来多少),之后按探到的值翻页;探不到就按 1,000 —— **要是代码要 10,000 而服务端只给 1,000,旧的「不足一页就结束」会在第一页就停,是静默截断**,测试必须覆盖这一条;③ 改前改后各量一次:同一张表整读的页数、总耗时、`pg_stat_statements` 里该语句的均值;④ 前向记录的读入口,行数与逐行内容改前改后必须相同(挑 `ohlcv_daily` binance_hist 全量对一次哈希);⑤ 按键翻页(用上一页最后一行的排序键接着读)另行评估:键不唯一会漏行,先列清每个调用点的排序键是不是唯一。",
+    "expect": "整读 40 万行从约 400 次请求降到约 40 次;台账记改前改后的数。"
+  },
+  "prior_value": "`v_funding_daily` 之后数据库耗时的下一大块;也是几条慢接口(账本 7 秒、归因 19 秒)慢的原因 —— 实测它们不占事件循环,慢在一页一页串行读库。"
+}
