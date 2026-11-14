@@ -1,0 +1,54 @@
+== 1. 序列口径(行 = 自然日?)==
+  state:dist_200               rows=2874  weekend_rows=820  null_rows=179 first=2019-01-01 last=2026-11-13 contiguous=True gaps=0
+  state:taker_buy_share_30d    rows=2874  weekend_rows=820  null_rows=755 first=2019-01-01 last=2026-11-13 contiguous=True gaps=0
+  macro:fng                    rows=3205  weekend_rows=914  null_rows=0  first=2018-02-01 last=2026-11-14 contiguous=False gaps=2
+  macro:btc_mvrv               rows=5795  weekend_rows=1656 null_rows=0  first=2011-01-01 last=2026-11-12 contiguous=True gaps=0
+
+-- 最新读数(情景 statement 要引用)--
+  state:dist_200               2026-11-13 = -0.0717
+  state:taker_buy_share_30d    2026-11-13 = 0.5051
+  macro:fng                    2026-11-14 = 13.0
+  macro:btc_mvrv               2026-11-12 = 1.3241
+
+== 2. 窗口口径 ==
+  写下日 2026-11-13 → 到期日 2026-12-15 = 32 自然日(T-375 用的 +22 行 = +22 自然日,窗口不等长)
+  state:dist_200               最新读数日 2026-11-13 → 到期日 2026-12-15 = 32 自然日
+  state:taker_buy_share_30d    最新读数日 2026-11-13 → 到期日 2026-12-15 = 32 自然日
+
+== 3. 基率(点对点;旧口径复现 vs 新窗口)==
+  T-375-1  state:dist_200             旧(+22 行,滤 null) N=1150  命中=210   频率=0.183  | 新(+32 自然日,日期算术) N=1150  命中=278   频率=0.242  | 行序口径 N=1150  频率=0.242  | 一致=True
+  T-375-4  state:taker_buy_share_30d  旧(+22 行,滤 null) N=356   命中=137   频率=0.385  | 新(+32 自然日,日期算术) N=356   命中=277   频率=0.778  | 行序口径 N=356   频率=0.778  | 一致=True
+  T-375-2  macro:fng                  旧(+22 行,滤 null) N=1786  命中=1408  频率=0.788  | 新(+32 自然日,日期算术) N=1783  命中=1322  频率=0.741  | 行序口径 N=1786  频率=0.742  | 一致=False
+  T-375-3  macro:btc_mvrv             旧(+22 行,滤 null) N=4384  命中=4097  频率=0.935  | 新(+32 自然日,日期算术) N=4374  命中=4017  频率=0.918  | 行序口径 N=4374  频率=0.918  | 一致=True
+
+-- 旧口径的「+22 行」在日历上到底是多少天(滤掉 null 行之后,行 ≠ 日)--
+  state:dist_200               滤 null 后 2695 行;+22 行跨 2673 自然日(均值 22.0,中位 22.0,区间 22–22)
+  state:taker_buy_share_30d    滤 null 后 2119 行;+22 行跨 2097 自然日(均值 22.0,中位 22.0,区间 22–22)
+
+== 4. v2 规则 + 两处数改正 + 随机起点臂 ==
+  段数 n=15 confirmed=14 invalidated=1 timeout=0
+  8 周口径:confirmed=14,其中有 +8 周读数的=13,其中为负=8 ⇒ 8/13(T-375 写的 8/14 的分母应是 13)
+  起点间隔(相邻段起点日之差,自然日):n=14 中位数=104.0 排序=[21, 25, 48, 55, 65, 84, 89, 119, 119, 161, 162, 164, 443, 466]
+  随机起点池:dist_200>0 且周线没坏 ⇒ 1161 天(锚点 = 真实段的起点,按**同一年**分层抽样)
+  真实 15 段 : n=15 confirmed=14 days_to_peak 中位=11.5 均值=22.93 | max_runup 中位=8.1 均值=16.15
+  随机起点臂: n=200 次抽样 | days_to_peak 中位 10.0(分位 3.5–17.0) | max_runup 中位 5.6(分位 3.4–9.6) | share_confirmed 中位 0.867
+  零分布(days_to_peak_mean): {"n_null": 200, "null_median": 18.165, "actual": 22.93, "percentile_of_actual": 0.755}
+  零分布(max_runup_mean): {"n_null": 200, "null_median": 11.8, "actual": 16.15, "percentile_of_actual": 0.785}
+  零分布(share_confirmed): {"n_null": 200, "null_median": 0.867, "actual": 0.933, "percentile_of_actual": 0.74}
+  新段基率(往后 32 自然日):全部日 n=2691 其中 462 天内新开段 ⇒ P(没有)=0.828 | 不在段内的空闲日 n=1983 其中 342 ⇒ P(没有)=0.828
+
+== 5. 四段分拆(2021 / 2022-23 / 2024-25 / 2026)==
+  2021     真实 n=4  conf=4  days_to_peak 中位=35.0   max_runup 中位=21.4   | 随机 中位 days_to_peak=19.2   max_runup=12.3   share_confirmed=1.0    (池 239 天) | 松池(60d 后瞻) days_to_peak=21.0   max_runup=11.9   (池 239 天)
+  2022-23  真实 n=3  conf=2  days_to_peak 中位=54.0   max_runup 中位=28.4   | 随机 中位 days_to_peak=19.0   max_runup=9.1    share_confirmed=0.667  (池 241 天) | 松池(60d 后瞻) days_to_peak=15.0   max_runup=8.4    (池 241 天)
+  2024-25  真实 n=7  conf=7  days_to_peak 中位=2.0    max_runup 中位=3.8    | 随机 中位 days_to_peak=5.5    max_runup=3.9    share_confirmed=0.857  (池 369 天) | 松池(60d 后瞻) days_to_peak=5.5    max_runup=3.7    (池 369 天)
+  2026     真实 n=1  conf=1  days_to_peak 中位=1.0    max_runup 中位=6.7    | 随机 中位 days_to_peak=None   max_runup=None   share_confirmed=None   (池 0 天) | 松池(60d 后瞻) days_to_peak=17.0   max_runup=10.4   (池 22 天)
+
+== 6. 自检(能失败)==
+  episodes_before_cut_ignore_future_prices   True
+  no_start_while_weekly_already_down         True
+  episodes_do_not_overlap                    True
+  state_panel_series_are_calendar_days       True
+  row_index_equals_date_arithmetic_H32       False
+  reproduces_s852_15_episodes                True
+
+WROTE docs/research/t381_results.json

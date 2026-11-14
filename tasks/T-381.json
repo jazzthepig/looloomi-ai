@@ -1,5 +1,5 @@
 {
-  "status": "open",
+  "status": "done",
   "created": "2026-11-14",
   "forbidden_paths": [
     "Shadow/",
@@ -23,5 +23,10 @@
     "expect": "docs/research/scenarios/lane-a-T-381.json + docs/research/T-381_recalib.md;卡 in_review,推 lane-a/T-381。"
   },
   "prior_value": "T-375-4 prob 0.60 在等长窗口下约 0.78(C 复算),T-375-1 0.18→约 0.25;待 lane-a 独立重算确认。",
-  "notes": "2026-11-14T12:50:00Z Seth 开卡(交叉复核 §Seth-1114d)。台账只追加:已入账行不 UPDATE,用新 id 替代/补述;作废机制另欠。"
+  "notes": "2026-11-14T12:50:00Z Seth 开卡(交叉复核 §Seth-1114d)。台账只追加:已入账行不 UPDATE,用新 id 替代/补述;作废机制另欠。 | 2026-11-14 lane-a 跑完(分支 lane-a/T-381)。脚本 docs/research/t381_recalib.py(只读;import s851 的 get()/weekly_down_days()/conditions(),v2 规则重写加 starts=,不改 s851/s852 一行);输出 docs/research/t381_results.json + t381_run.txt;报告 docs/research/T-381_recalib.md(147 行)。① 口径核验:panel dist_200 / taker 各 2874 行、周末 820 行、gaps=0 ⇒ 自然日序列;null 行 179 / 755 条**全在开头**(特征建立前),滤 null 后「+22 行」的日历跨度实测均值/中位 22.0 天(区间 22–22)⇒ 旧口径的毛病只是窗口长度(22 vs 32),不是行≠日。最新读数:dist_200 -0.0717@11-13、taker 0.5051@11-13、fng 13@11-14、mvrv 1.3241@11-12。② 基率(写下日 2026-11-13 → 到期 2026-12-15 = 32 自然日,按日期算术):旧口径四个数逐个复现(0.183/N=1150、0.385/N=356、0.788/N=1786、0.935/N=4384;T-375-3 的 N 多 1 是 11-14 又多一天数据);新窗口 T-375-1 **0.242**(N=1150 命中 278)、T-375-4 目标概率 **0.778**(N=356 命中 277;旧 0.385 是「仍 ≥0.5」,目标 = 1−0.385=0.615)、T-375-2 0.741、T-375-3 0.918。C 复算的 ~0.25/~0.78 独立确认。③ 两处数:8 周分母 **13**(confirmed 14 段里只有 13 段有 +8 周读数,最后一段 +56 天落在数据外),其中为负 8 ⇒ 8/13;起点间隔(相邻段起点日之差,n=14)中位数 **104.0** 天(排序 21,25,48,55,65,84,89,119,119,161,162,164,443,466 —— 119 只是其中两个间隔的值,不是中位数)。④ 随机起点臂(starts=;池 = dist_200>0 且周线没坏 1161 天,按同一年分层用 apparatus.random_dates_like,200 次抽样):真实 15 段 days_to_peak 中位 11.5/均值 22.93、max_runup 中位 8.1/均值 16.15;随机臂中位 days_to_peak 10.0(10–90 分位 3.5–17.0)、max_runup 5.6(3.4–9.6);零分布(apparatus.null_distribution + percentile_of)分位:days_to_peak 均值 0.755、max_runup 均值 0.785、share_confirmed 0.740 ⇒ 真实段幅度更高但**不到极端**,不可写成「显著」。四段:2021(真实 n=4,d2p 35.0/runup 21.4 vs 随机 19.2/12.3)、2022-23(3,54.0/28.4 vs 19.0/9.1)、2024-25(7,2.0/3.8 vs 5.5/3.9)、2026(1,1.0/6.7;严格池 0 天 ⇒ 该段无随机对照,松池 60 天口径 17.0/10.4 仅参考)。⑤ 新段基率:往后 32 自然日无新开段 —— 全部日 n=2691/命中 462 ⇒ 0.828,空闲日 n=1983/命中 342 ⇒ 0.828。⑥ 自检:episodes_before_cut_ignore_future_prices / no_start_while_weekly_already_down / episodes_do_not_overlap / state_panel_series_are_calendar_days 全 True,reproduces_s852_15_episodes True(与 s852_results.json 的 15 段逐字一致);row_index_equals_date_arithmetic_H32 False(fng 有 2 处断日,两条 state 序列一致)。⑦ 交付:scenarios/lane-a-T-381.json 三条替代条目 T-381-1(替代 T-375-1,prob 0.24)/ T-381-2(替代 T-375-4,prob 0.78)/ T-381-3(替代 T-375-5,prob 0.83),原 T-375-1/-4/-5 行未动。T-375-2/-3 基率也随窗口变了(0.788→0.741、0.935→0.918)但登记 prob 0.75/0.90 仍相符 ⇒ 不另立替代条目。**需 @seth**:T-381-1/-2 与 T-375-1/-4 的 variable/op/horizon 完全相同,作废机制落地前到期结算会把同一观测值记两次进 Brier —— 这是台账结构问题,需另卡;另「新段基率按今天闸门状态(dist_200 ≤ 0 ⇒ conditions() 恒 0)条件化」本轮未做,留给下一轮。 | 2026-11-14T13:45:00Z Seth 复核 MERGE(§Seth-1114e):基率独立复测一致;T-381-3 manual lt hi=1 口径可结算;重复计入 Brier 的结构问题(T-381-1/2 vs T-375-1/4)记入欠账 —— 作废/替代机制另卡。",
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-14T13:45:00Z",
+    "value": "Seth 独立 SQL 复测 state_daily panel,+32 自然日日期连接:dist_200≤0 → >0 N=1150 命中 278 (0.242);taker≥0.5 → <0.5 N=356 命中 277 (0.778),与 lane-a 逐字一致;起点间隔 14 个排序值中位 (89+119)/2=104 ✓;scope 7 文件全在允许范围。"
+  }
 }
