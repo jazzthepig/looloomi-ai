@@ -3287,8 +3287,16 @@ async def _scenario_ledger_loop():
             from src.data.evaluation.scenario_ledger import run_once as _sl_run
             r = await _sl_run()
             await _iteration_result("_scenario_ledger_loop", r)
+            # S-891:形态的前向记分 —— 结算之后判一次昨天的形态,触发就写命题;它失败不影响结算(单独一条 loop_attempt)
+            try:
+                from src.data.evaluation.setup_watch import run_once as _sw_run
+                _sw = await _sw_run()
+                await _iteration_result("_setup_watch", _sw)
+            except Exception as _e2:
+                _sw = {"ok": False, "why": f"{type(_e2).__name__}: {str(_e2)[:160]}"}
+                await _iteration_error("_setup_watch", _e2)
             await _beat("_scenario_ledger_loop", ok=bool(r.get("ok")), error=None if r.get("ok") else str(r.get("why"))[:200],
-                        detail={"scored": r.get("scored"), "waiting": r.get("waiting")})
+                        detail={"scored": r.get("scored"), "waiting": r.get("waiting"), "setup_watch": _sw})
         except Exception as _e:
             print(f"[SCENARIOS] ⚠️  pass FAILED: {_e}")
             await _beat("_scenario_ledger_loop", ok=False, error=f"{type(_e).__name__}: {str(_e)[:180]}")
