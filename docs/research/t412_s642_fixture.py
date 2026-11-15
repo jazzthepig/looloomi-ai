@@ -105,6 +105,8 @@ def main() -> None:
             "segment": [D_FROM, max(last_exit.values())],
             "n_days": len(expect), "n_tickets": len(sel), "n_symbols": len(symbols),
             "bars_from": SIGNAL_FROM, "bars_warmup": WARMUP,
+            # 跑票的信号日窗口(测试用这两个日期调 run_short):与研究那次同口径
+            "signal_from": SIGNAL_FROM, "signal_to": D_TO,
             "bar_row_keys": ["trade_date", "open", "high", "low", "close", "volume"],
             "gate_row_keys": ["d", "ret"],
             "source_curve": "docs/research/t348_r3_families.csv (family=S642)",
