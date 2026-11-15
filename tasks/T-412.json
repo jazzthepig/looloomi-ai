@@ -1,0 +1,34 @@
+{
+  "status": "open",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/",
+    "src/data/execution/",
+    "src/api/",
+    "src/data/universe/",
+    "src/data/signals/multiplier.py"
+  ],
+  "verified": null,
+  "id": "T-412",
+  "owner": "lane-c",
+  "title": "S-642 熊市空头臂的生产纯函数(照你 T-407 的清单):逐日收益能在生产数据上整段重算 —— 给「状态取长处」纸面账用,不建写入端",
+  "source": "T-407 清单(`docs/research/T-407_s642_forward_plan.md`,已合入);纸面账 `src/data/universe/state_book.py`(台账 S-890)名单里 S642 在「线下 · 二线领」「线下 · 抽」两格,现在记「只有研究回测、拿不到」。",
+  "allowed_paths": [
+    "src/data/signals/s642_short.py",
+    "tests/test_s642_short.py",
+    "tests/fixtures/",
+    "docs/research/",
+    "tasks/T-412.json"
+  ],
+  "acceptance": {
+    "check": "① 新文件 `src/data/signals/s642_short.py`,只放纯函数(无 IO):按你清单第 3 节 —— `indicators(rows)`、`universe_ok(ind, i)`、`signal_short(ind, i, gate)`、`run_short(...)`(进场 / 止损 / 出场 / 串链 / 成本,照 `docs/research/t159_bear_short.py`)、`nav(tickets, ...)`(每票风险 0.5%、最多 10 张、逐日盯市复利,成本始终借记 —— 2026-10-25 之后的口径)。闸门**复用** `src/data/signals/short_paper.py` 的 `gate_closed_by_day`,不重写。三个歧义点一律取研究的默认(stop 优先;资金费不进,和族曲线同口径;进场当根打到 stop 按 stop 价)。② 输入形状要能直接吃生产表:`ohlcv_daily`(source = binance_hist)的行、`style_index_pit_daily`(majors / cap)的行;美元额 = close × volume;排除 USDC / BTCDOM / DEFI。③ 测试 `tests/test_s642_short.py`:(a) 合成序列上各函数的小例子(手算);(b) **历史一致性**:从研究产物导一段(≥ 120 天、至少 10 张票)输入与期望逐日收益存成 `tests/fixtures/s642_fixture.json`(期望 = `docs/research/t348_r3_families.csv` 里 S642 族那一段),生产函数重算逐日相同(≤ 1e-9);对不上就停下、在回复里写两边差在哪(warm-up 起点、价源、别名),不要凑;(c) 语法树:`src/data/execution/` 与 `src/api/routers/executor.py` 不 import 本模块。④ **不要**改 `scripts/preflight.sh`(回复里写「请 Seth 在合并时注册 tests/test_s642_short.py」),不要建写入端、不要接进任何循环 —— Seth 合并时在纸面账的 `load_inputs` 里调用。",
+    "expect": "代码 + 测试 + fixture;卡 in_review,推 lane-c/T-412。合并前 Seth 读 diff(src/ 改动)。"
+  },
+  "prior_value": "纸面账主臂在「线下 · 二线领」那一格的名单是 S642 / S736 / 闸门空两档,今天全拿不到;熊市里这一格是唯一允许做空的格子 —— 拿不到就只能记现金。",
+  "notes": "2026-11-15T08:40:48Z Seth 开卡(台账 S-890;T-407 清单已收)。生产里要先确认 `ohlcv_daily` binance_hist 最早覆盖到哪天(你清单 §2 第一条)—— 不够 warm-up 就在回复里写缺多少,先别补数(补数是 Seth 的道)。"
+}
