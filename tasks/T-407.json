@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-407",
+  "owner": "lane-c",
+  "title": "S642(熊市空头臂)前向化要什么:先写清,不写生产代码 —— 输入表、内核、与研究曲线的一致性检验",
+  "source": "Jazz 11-15「向前建」。S642 是你 T-159 做的(台账 S-642;`t348_r3_families.csv` 里的 S642 曲线,241 张票、每票 0.5%、名额 10)。它是票的引擎,比 T-406 的两条日线规则复杂,先要一份可执行的清单。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-407.json"
+  ],
+  "acceptance": {
+    "check": "写 `docs/research/T-407_s642_forward_plan.md`(≤ 150 行):① 开票 / 管票 / 出场的规则逐条(出自哪个脚本的哪个函数);② 每一步要的输入在生产库里对应哪张表、哪一列、每天几点可用;研究里用了而库里没有的,列出来;③ 生产内核最小要几个纯函数、各自的入参与返回;④ 一致性检验怎么做(用哪一段历史、对哪条曲线、容差);⑤ 与已经在跑的 S681 H4 纸面空头臂共用得了什么(同一张票表?同一个记账?);⑥ 你估的工作量与最大的不确定处。不写代码、不下结论、不写情景文件。",
+    "expect": "docs/research/T-407_s642_forward_plan.md;卡 in_review,推 lane-c/T-407。排在 T-393 的收尾之后。"
+  },
+  "prior_value": "「线下 · 二线在领」那一格的长处主要是 S642;没有前向序列,纸面账在那一格只能空着。",
+  "notes": "2026-11-15T06:49:22Z Seth 开卡(Jazz 11-15:「向前建」)。"
+}

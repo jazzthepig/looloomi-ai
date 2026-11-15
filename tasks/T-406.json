@@ -1,0 +1,34 @@
+{
+  "status": "open",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/",
+    "src/data/execution/",
+    "src/api/"
+  ],
+  "verified": null,
+  "id": "T-406",
+  "owner": "lane-a",
+  "title": "给两条只有研究回测的策略建前向序列:三态敞口 R6(S-823)与闸门关时空大盘 s = 0.15 / 0.30(S-819)—— 纸面账,照 tom_trader 的写法",
+  "source": "Jazz 11-15「向前建」:「状态取长处」的纸面账(T-395)要拿这几条,而它们只有研究回测。你在 T-392 里已经把这两条的逐日净值与各自发布的数逐位对上(`t392_panel_export.py`)—— 现在把同一套规则搬成生产的纯函数,每天记一行。样板:`src/data/universe/forward_books.py` 的 `run_tom_trader`(整段重算、只写起算日之后还没写的天、写过的不改)与 `src/data/signals/tom.py`。",
+  "allowed_paths": [
+    "src/data/signals/state_arms.py",
+    "src/data/universe/forward_books.py",
+    "src/data/signals/multiplier.py",
+    "tests/",
+    "docs/SPINE.md",
+    "docs/research/",
+    "tasks/T-406.json"
+  ],
+  "acceptance": {
+    "check": "① 新文件 `src/data/signals/state_arms.py`,只放纯函数:`r6_exposure(close)` = `docs/research/s823_three_state.py` 的 `states(p)[\"R6\"]`(常数照搬);`r6_returns(...)` = 该脚本的 `account(...)`;`gate_short_returns(basket_ret, funding, gate_open, s)` = `docs/research/s819_gate_short.py` 的 `short_ret`(闸门用前一天的、翻转扣 0.05% × s、空头收资金费)。② `forward_books.py` 加 `run_state_arms(cutoff)`:book = `state_arms`,臂 `R6`、`GATE_S15`、`GATE_S30`;起算日常数 `STATE_ARMS_START`(= 合并那天之后的第一个 UTC 日,你写卡时填、写进规则串);输入用现有的装载函数(价格 / 资金费同 `tom_inputs` 的来路;闸门要与研究里 `t310_slots.load_gate` 是同一条定义 —— 生产里若没有现成的同一条序列,就用 `style_index_daily` 按同一规则现算,并在测试里证明与研究闸门在重叠历史上逐日相同;对不上就停下、在回复里写两边差在哪,不要凑)。写 `forward_book_nav` / `forward_book_holdings`,列与 tom_trader 相同,`rule` 写清出处。③ `multiplier.py` 里在调用 `run_tom_trader` 的同一处加一次 `run_state_arms`,同样包在 try / except 里,结果进同一个 detail;它失败不能影响 ③ 与 tom。④ 测试 `tests/test_state_arms.py`:(a) 两个内核在合成序列上与研究脚本的函数逐日相同(s823 可以直接 import;s819 顶层会读库,不能 import —— 把 `short_ret` 的公式在测试里另写一遍手算的小例子对);(b) **历史一致性:** 从真实数据导一小段(各 ≥ 120 天)输入与期望净值存成 `tests/fixtures/state_arms_fixture.json`(期望值取自你 T-392 导出的 `s869_extra_panel_a.csv` 同一段),生产内核重算必须逐日相同(≤ 1e-9);(c) `run_state_arms` 在起算日之前不写、写过的不改、输入不足时说清是哪条臂哪样输入(用假的存取函数测);(d) 语法树:`src/data/execution/` 与 `src/api/routers/executor.py` 里不出现 `state_arms`。⑤ `docs/SPINE.md` 加一段(哪张表、谁调度、判活 SQL)。⑥ **不要自己改 `scripts/preflight.sh`**:回复里写「请 Seth 在合并时注册 tests/test_state_arms.py」。⑦ 判活(写进卡 notes):`select arm, min(d), max(d), count(*) from forward_book_nav where book = 'state_arms' group by arm`。只记账,不下单,不碰任何真钱路径;合规词照规矩(对外只有 OUTPERFORM 那五档;这本账不上公开面)。",
+    "expect": "代码 + 测试 + SPINE 一段;卡 in_review,推 lane-a/T-406。**合并前 Seth 要读一遍 diff**(这是 runtime 改动,会触发部署)。"
+  },
+  "prior_value": "纸面账要拿的四类里,X1V / R-v2 / 风格指数 / Trader Tom 都有每天在跑的序列;三态敞口与闸门空只有研究回测 —— 账开了也只能记「该拿、拿不到」。",
+  "notes": "2026-11-15T06:49:22Z Seth 开卡(Jazz 11-15:「向前建」)。 || 2026-11-15T07:05:59Z Seth(台账 S-881):**这张卡是给纸面账接线,不是 Trader Tom 的升级** —— 搬的是两条日线价格规则。Jazz 11-15 指出挂着 Tom 名字在跑的臂没有一条读状态 / 持仓 / 向量;真正的升级走形态登记表(`docs/SETUP_REGISTRY.md`)。照卡做完即可,不要在这张卡里加别的规则。"
+}
