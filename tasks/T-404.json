@@ -1,5 +1,5 @@
 {
-  "status": "open",
+  "status": "done",
   "created": "2026-11-15",
   "forbidden_paths": [
     "Shadow/",
@@ -10,7 +10,11 @@
     "scripts/",
     "migrations/"
   ],
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-15T08:39:52Z",
+    "value": "s877_results_macro.json + s877_run_macro.txt 在分支上;脚本与 main 一字不差。Seth 从分支重读:10 个利率 / 美元 / 波动轴 n_pass 0、≥95 分位 0(按偶然 0.5);最高 fed_funds_chg91 0.953(分位 0.933)、vix_backwardation 0.754(0.817);T_ONLY 0.523(h1 0.996 / h2 0.218),26 条。与台账 S-880 结果一致。"
+  },
   "id": "T-404",
   "owner": "lane-b",
   "title": "S-880:利率 / 美元 / 波动率这一族带不带「该拿哪些策略」的信息 —— 只跑 Seth 写好的脚本(s877 的 --macro)",
@@ -24,5 +28,5 @@
     "expect": "docs/research/s877_results_macro.json + s877_run_macro.txt;卡 in_review,推 lane-b/T-404。先于手上别的卡。"
   },
   "prior_value": "`macro_daily` 里利率 / 美元 / 波动率的序列 2018 年起就有,但没有一条进了特征表与向量;11-11 → 11-14 的下跌是利率触发的。",
-  "notes": "2026-11-15T06:13:30Z Seth 开卡(Jazz:「回到高维」)。"
+  "notes": "2026-11-15T06:13:30Z Seth 开卡(Jazz:「回到高维」)。\n2026-11-15T06:30Z lane-b:脚本按卡要求从主目录原样拷入(加了 --macro 的新版),一行未改;`--selftest | tail -1` 见 SELFTEST OK。取数那一步与库的实际结构对得上,未改任何一行:macro_daily 的列名就是 d,series,value;九个 series(ust_2y / ust_10y / ust_10y_real / usd_broad / usdjpy / fed_funds / fed_net_liquidity / vix / vix3m)全部存在,分页走 s851.get(每页 1000、order=d.asc)。n_days 2696,n_strategies 26,10 个轴各跑 200 次安慰剂,约 12 分钟。T_ONLY:ratio 0.523(h1 0.996 / h2 0.218)。各轴 ratio / placebo_pct:ust_2y_chg91 0.671 / 0.567;ust_10y_chg91 0.529 / 0.383;ust_10y_real_chg91 0.328 / 0.267;usd_broad_chg91 0.703 / 0.767;usdjpy_chg91 0.721 / 0.683;fed_funds_chg91 0.953 / 0.933;fed_net_liquidity_chg91 0.324 / 0.233;curve_2s10s_chg91 0.518 / 0.45;vix_hi 0.225 / 0.15;vix_backwardation 0.754 / 0.817。十个轴 passes 全 false;SUMMARY n_keys 10 / n_pass 0 / n_pct_ge_95 0(期望 0.5)/ n_strategies 26。产物 docs/research/s877_results_macro.json + s877_run_macro.txt。按卡要求:未写情景文件、未下结论。"
 }
