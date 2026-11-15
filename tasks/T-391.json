@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-391",
+  "owner": "lane-b",
+  "title": "S-869 的盲复算:13 条策略 × 12 个状态的那张表,只按台账预注册的文字从零写,与 Seth 的结果逐格对",
+  "source": "台账 S-869 与「S-869 / S-870 更正(算前)」① 的文字就是全部规格(状态定义、D 配 D + 1、并段 ≤ 5 天、五条判据、哪四条扣现金)。输入文件:`docs/research/s866_cells.json`(你自己的产物,只取 daily 里的 R / L / W / T)、`t348_r4_legs.csv`(crypto_nav = X1V,equity_close,gold_close,cash_daily_rate)、`t342_daily.csv`(core_nav_1_cap_pit24)、`t348_r3_rv2_curve.csv`、`t348_r3_families.csv`。**不许读 `docs/research/s869_strategy_state.py` 与 `s869_results.json`(对账那一步除外,且只在你自己的结果落盘之后)。** 进场 / 取价一律走 apparatus 的函数,不自己写下标(T-390 那个坑)。先做 T-390,再做这张。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-391.json"
+  ],
+  "acceptance": {
+    "check": "① 写 `docs/research/s869_blind.py`,输出每个「策略 × 状态」的:状态内天数、段数、状态内年化超额、均值 / 波动、为正的段占比、去掉最好一段后的状态内年化、是否过五条。只做表,不做组合、不做平移对照。② 结果落盘(`s869_blind_results.json`)**之后**,用 python 从 `s869_results.json` 的 `table` 里取同名的键逐格对:天数、段数必须相同;年化与均值 / 波动差 ≤ 0.002;「长处」的名单必须相同。③ 最终回复贴:一致的格子数 / 总数;不一致的格子列出两边的数(不改任何一边去凑);你自己那份的「长处」名单。",
+    "expect": "docs/research/s869_blind.py + s869_blind_results.json;卡 in_review,推 lane-b/T-391。"
+  },
+  "prior_value": "S-869 的表是单份实现;S-866 刚刚证明过盲复算能查出单份实现看不见的东西(两种 p、SOL 上市前 32 天)。这张表要进组合,进之前要有第二份。",
+  "notes": "2026-11-15T02:03:20Z Seth 开卡(Jazz 11-15:所有策略按状态重新打分并组合;DECISIONS 已记)。"
+}

@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-393",
+  "owner": "lane-c",
+  "title": "S-869 的面板补全(C 道的几条):跨资产趋势、World50 两条臂、山寨空篮、新上市做空、反转 —— 导出逐日净值,原脚本重跑",
+  "source": "台账 S-869。脚本读同目录下所有 `s869_extra_panel*.csv`。要补的:跨资产趋势袖套(T-364 / S-835 候选三,`t364_cross_asset_trend.py` 的 sleeve 逐日净值)、World50 EW 与 EW×Mom(`t361_world50_panel.py`,funded = 1)、山寨空篮(S-847 / T-372 的主口径)、新上市做空(S681 H1)、反转规则 A 的 30 天版(S-840 用 U 本位永续日线重写的那份;B 道 T-360 的不要,它丢过周末)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-393.json"
+  ],
+  "acceptance": {
+    "check": "写 `docs/research/s869_extra_panel_c.csv`。格式:`family,d,nav,funded`(d = UTC 日期;nav = 该策略**自己原来那份回测 / 账本**的逐日净值,参数一个不改、不重新调;funded = 1 表示净值占用本金(持有资产类),0 表示票 / 保证金的盈亏曲线)。每条在同名的 `.meta.json` 里写一行出处(哪个脚本、哪组参数、首末日、台账号)。**不要 Read `s869_results.json`、`s866_cells.json` 这类大文件**,取数只用 python 读要的键。写完后:`python3 docs/research/s869_strategy_state.py --selftest | tail -1` 见 SELFTEST OK;`nohup python3 docs/research/s869_strategy_state.py > docs/research/s869_run_full.txt 2>&1 &`,只 tail,等 WROTE;最终回复只贴 `grep -E '^(STATE|BOTH_P|PORT|TODAY)' docs/research/s869_run_full.txt | cut -c1-500`。**不改脚本一行、不下结论、不写情景文件。** 某条策略拿不到逐日净值就写明原因、跳过,不拿别的东西顶。",
+    "expect": "docs/research/s869_extra_panel_c.csv + s869_extra_panel_c.meta.json + s869_run_full.txt + 重跑后的 s869_results.json;卡 in_review,推 lane-c/T-393。**与 A 道的 T-392 各写各的 csv;`s869_results.json` 两边都会重写,合并时以后合的那份为准,合并轮知道。**"
+  },
+  "prior_value": "同 T-392:做多侧与「不相关来源」一侧的候选都不在第一轮面板里。",
+  "notes": "2026-11-15T02:03:20Z Seth 开卡(Jazz 11-15:所有策略按状态重新打分并组合;DECISIONS 已记)。"
+}
