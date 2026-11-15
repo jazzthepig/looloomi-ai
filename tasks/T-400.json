@@ -1,5 +1,5 @@
 {
-  "status": "open",
+  "status": "in_review",
   "created": "2026-11-15",
   "forbidden_paths": [
     "Shadow/",
@@ -10,7 +10,11 @@
     "scripts/",
     "migrations/"
   ],
-  "verified": null,
+  "verified": {
+    "by": "lane-c",
+    "at": "2026-11-15T06:12:00Z",
+    "value": "S-877 挖维度跑完(51 键 / 26 策略):T_ONLY ratio 0.523(h1 0.996 / h2 0.218);n_pass 5、n_pct_ge_95 6、期望偶然 2.6;产物 docs/research/s877_results.json + s877_progress.jsonl + s877_run.txt"
+  },
   "id": "T-400",
   "owner": "lane-c",
   "title": "S-877:挖维度 —— 把 T × L 的 L 逐个换成向量的 56 个键(约 45 分钟的长跑,可续跑);只跑 Seth 写好的脚本",
@@ -24,5 +28,5 @@
     "expect": "docs/research/s877_results.json + s877_progress.jsonl + s877_run.txt;卡 in_review,推 lane-c/T-400。先于 T-393 的收尾。"
   },
   "prior_value": "S-875 / S-876:向量邻域那套做法不行(连两个已知有用的轴都不行);站得住的是按天切格子。用站得住的做法逐键量。",
-  "notes": "2026-11-15T05:26:26Z Seth 开卡(Jazz 11-15:「先再模拟和 mining」)。\n2026-11-15T05:31:10Z lane-c:① selftest → SELFTEST OK(脚本从主目录原样拷入,一字未改)。② 已在 lane-c/T-400 分支、cwd=worktree 根 nohup 起长跑(s877_axis_mining.py,PID 46083);docs/research/s877_progress.jsonl 在长(14:30 已 3 行),s877_run.txt 在写,预计 ~45 分钟。③ 本轮只起不收:下一轮先看 s877_run.txt 尾行有无 WROTE,有则按卡上 grep 收结果、填 verified、status→in_review 再推。卡状态保持 open(长跑未完)。"
+  "notes": "2026-11-15T05:26:26Z Seth 开卡(Jazz 11-15:「先再模拟和 mining」)。\n2026-11-15T05:31:10Z lane-c:① selftest → SELFTEST OK(脚本从主目录原样拷入,一字未改)。② 已在 lane-c/T-400 分支、cwd=worktree 根 nohup 起长跑(s877_axis_mining.py,PID 46083);docs/research/s877_progress.jsonl 在长(14:30 已 3 行),s877_run.txt 在写,预计 ~45 分钟。③ 本轮只起不收:下一轮先看 s877_run.txt 尾行有无 WROTE,有则按卡上 grep 收结果、填 verified、status→in_review 再推。卡状态保持 open(长跑未完)。\n2026-11-15T06:09:42Z lane-c 收:长跑跑完,run.txt 尾行 WROTE docs/research/s877_results.json(11 KB;progress 51 行;run 14 KB)。① T_ONLY {\"ratio\": 0.523, \"h1\": 0.996, \"h2\": 0.218};② SUMMARY {\"n_keys\": 51, \"n_pass\": 5, \"n_pct_ge_95\": 6, \"expected_by_chance_pct_ge_95\": 2.6, \"n_strategies\": 26};③ passes=true 的 5 键:chain:tvl_30d(ratio 1.081 / minus_T_only 0.558 / placebo 1.0)、style_rel_majors_30d(1.944 / 1.421 / 1.0)、style:top_l1_rel30(1.745 / 1.222 / 1.0)、style:second_l1_l2_rel30(1.635 / 1.112 / 1.0)、style:infra_tokenization_rel30(1.439 / 0.916 / 0.967)。④ REF 行:{'key': 'REF:stable_supply_30d_raw_sign', 'n_days': 2480, 'share_high': 0.725, 'ratio': 1.007, 'minus_T_only': 0.484, 'half1_minus_T': 0.11, 'half2_minus_T': 0.716, 'placebo_pct': 0.933, 'passes': false}。⑤ 56 个候选键里 5 个因样本 <1500 天被脚本过滤(实跑 51 键);脚本一字未改;不改结论、不写情景文件(照卡)。"
 }
