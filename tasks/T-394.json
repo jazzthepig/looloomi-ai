@@ -1,5 +1,5 @@
 {
-  "status": "open",
+  "status": "done",
   "created": "2026-11-15",
   "forbidden_paths": [
     "Shadow/",
@@ -10,7 +10,11 @@
     "scripts/",
     "migrations/"
   ],
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-15T04:50:00Z",
+    "value": "s872_results.json 与 run.txt 逐项一致:reproduces_s867 ok(FULL cagr .3572 / uw 750);tickets 956 / 在抽 127 / 无标签 0 / FULL 取 343 / GATED 取 296;GATED cagr .3513 uw 762 mdd -.3503;HALF cagr .3556 uw 762 mdd -.3301;两臂 judge a/b 均 true。脚本与 main 上 Seth 版逐字一致。数据在 /Volumes,未重跑(复现门已过)。"
+  },
   "id": "T-394",
   "owner": "lane-c",
   "title": "S-872:R-v2 在稳定币抽的时候减半 —— 只跑 Seth 写好的脚本(它原样调用你的 s867_frontier.py),把输出贴回",
@@ -24,5 +28,5 @@
     "expect": "docs/research/s872_results.json + s872_run.txt;卡 in_review,推 lane-c/T-394。排在 T-393 之后。"
   },
   "prior_value": "S-853 只测过「抽的时候一张不开」(水下 435 → 822 天,没进);没测过减半。按新定的规矩,真钱规则的改动要两把尺都过。",
-  "notes": "2026-11-15T02:53:28Z Seth 开卡。"
+  "notes": "2026-11-15T02:53:28Z Seth 开卡。\n\n2026-11-15 lane-c(T-394)完成,卡转 in_review。分支 lane-c/T-394(在 origin/main fa9d781c 之上)。\n\n【交付】docs/research/ 下:\n· s872_rv2_half_in_drain.py —— Seth 写的脚本,原样入库(main 上还没有这个文件,Seth 在主仓库工作区未提交;我把它一并提交进本分支,一行未改)\n· s872_run.txt —— 完整输出(末尾有 WROTE)\n· s872_results.json —— 脚本写出的结果\n\n【怎么跑的】仓库根目录下跑 `python3 docs/research/s872_rv2_half_in_drain.py`(默认数据根 /Volumes/CometCloudAI/cometcloud-local/research/);装配 956 票 / 298 标的 / 闸门 2484 天,全程约 40 秒,没有报错,所以脚本一行都没动(卡的第 ④ 条不适用)。\n\n【复现】reproduces_s867 = ok:FULL 年化 35.72%、最长水下 750 天,与 S-867 对得上。\n\n【测得的原始数字】\ntickets: all 956 / 信号日在稳定币抽 127 / 信号日无标签 0 / FULL 取 343 张 / GATED 取 296 张\nFULL  cagr .3572 uw 750d mdd -.3137 worst20 -.1943 rv2_risk_share .742\nGATED cagr .3513 uw 762d mdd -.3503 worst20 -.1836 rv2_risk_share .758 —— judge a(年化 ≥ FULL−1.0pt) true / b(水下 ≤ FULL+30d) true / real_money_candidate true\nHALF  cagr .3556 uw 762d mdd -.3301 worst20 -.1888 rv2_risk_share .746 —— judge a true / b true / real_money_candidate true\n\n按卡要求:不下结论、不写情景文件。 | 2026-11-15T04:50:00Z Seth 合并轮:MERGE(5b504138;fixup 解 card add/add)。读法归台账 S-872 结果(交互会话)。"
 }
