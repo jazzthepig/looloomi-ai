@@ -9,6 +9,8 @@ S-875 / S-876:向量邻域 + 之后 60 天 + 每月选一次,这套做法连在 
 用法(仓库根目录):
     python3 docs/research/s877_axis_mining.py --selftest
     nohup python3 docs/research/s877_axis_mining.py > docs/research/s877_run.txt 2>&1 &     # 约 45 分钟;写 s877_results.json
+    python3 docs/research/s877_axis_mining.py --keys k1,k2 --drop-strategies style_ --tag nostyle   # 复核:只跑几个键、面板去掉某些策略
+                                                                                                    # (写 s877_results_nostyle.json,不续跑)
 """
 from __future__ import annotations
 
@@ -150,7 +152,17 @@ if __name__ == "__main__":
     else:
         t_axis, axes = load_live()
         panel, _ = M.load_panel()
-        out = run(t_axis, axes, panel, resume=True)
+        arg = lambda name: sys.argv[sys.argv.index(name) + 1] if name in sys.argv else None      # noqa: E731
+        if arg("--keys"):
+            want = arg("--keys").split(",")
+            axes = {k: v for k, v in axes.items() if k in want}
+        if arg("--drop-strategies"):
+            pre = tuple(arg("--drop-strategies").split(","))
+            panel = {k: v for k, v in panel.items() if not k.startswith(pre)}
+        tag = arg("--tag")
+        if tag:
+            OUT = f"docs/research/s877_results_{tag}.json"
+        out = run(t_axis, axes, panel, resume=not tag)
         print("T_ONLY", json.dumps(out["T_only"]), flush=True)
         print("SUMMARY", json.dumps({k: out[k] for k in ("n_keys", "n_pass", "n_pct_ge_95", "expected_by_chance_pct_ge_95", "n_strategies")}), flush=True)
         for r in out["keys"][:12]:
