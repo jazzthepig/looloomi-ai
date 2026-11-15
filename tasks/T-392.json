@@ -1,0 +1,28 @@
+{
+  "status": "in_review",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-392",
+  "owner": "lane-a",
+  "title": "S-869 的面板补全(A 道的几条):Trader Tom、三态敞口、闸门关时做空、七个风格指数、资金费套息 —— 导出逐日净值,原脚本重跑",
+  "source": "台账 S-869(第一轮只有仓库里现成的 13 条)。脚本 `docs/research/s869_strategy_state.py` 会读同目录下所有 `s869_extra_panel*.csv`。要补的(都是你做过的):tom_pd13(S-596,BTC 与 ETH 各一条)、R6 三态敞口(S-823)、闸门关时空大盘 s = 0.15 / 0.30(S-819,只要空头腿自己的曲线)、七个风格指数(`cometcloud-local/research/t156/_style.json` 的各指数,funded = 1)、资金费套息(T-359 返工后的那条)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-392.json"
+  ],
+  "acceptance": {
+    "check": "写 `docs/research/s869_extra_panel_a.csv`。格式:`family,d,nav,funded`(d = UTC 日期;nav = 该策略**自己原来那份回测 / 账本**的逐日净值,参数一个不改、不重新调;funded = 1 表示净值占用本金(持有资产类),0 表示票 / 保证金的盈亏曲线)。每条在同名的 `.meta.json` 里写一行出处(哪个脚本、哪组参数、首末日、台账号)。**不要 Read `s869_results.json`、`s866_cells.json` 这类大文件**,取数只用 python 读要的键。写完后:`python3 docs/research/s869_strategy_state.py --selftest | tail -1` 见 SELFTEST OK;`nohup python3 docs/research/s869_strategy_state.py > docs/research/s869_run_full.txt 2>&1 &`,只 tail,等 WROTE;最终回复只贴 `grep -E '^(STATE|BOTH_P|PORT|TODAY)' docs/research/s869_run_full.txt | cut -c1-500`。**不改脚本一行、不下结论、不写情景文件。** 某条策略拿不到逐日净值就写明原因、跳过,不拿别的东西顶。",
+    "expect": "docs/research/s869_extra_panel_a.csv + s869_extra_panel_a.meta.json + s869_run_full.txt + 重跑后的 s869_results.json;卡 in_review,推 lane-a/T-392。"
+  },
+  "prior_value": "Jazz 要的是「所有策略」重新打分;第一轮 13 条里 8 条是同一类的山寨空头族,做多侧只有核心 / X1V / R-v2。",
+  "notes": "2026-11-15 lane-a 交付(A 道 13 族面板;原脚本重跑还差最后一步,见下)。\n\n【已交付】`docs/research/s869_extra_panel_a.csv`(32508 行 / 13 族)+ `docs/research/s869_extra_panel_a.meta.json`(每族一行:哪个脚本 / 哪组参数 / 首末日 / 台账号 / 对账值)+ `docs/research/t392_panel_export.py`(导出脚本:每族先跟它自己已发布的数字对账,对不上就 SystemExit 不写盘)。\n\n【对账实测 —— 逐位复现,不是「大概对」】\n· tom_pd13_btc(S-596 PD13):2014-12-31→2026-10-15,4307 天,nav 末 531.682288;已发布 total_x 531.6823 / CAGR 0.7021 / MDD −0.8241 —— 三项全中。\n· tom_pd13_eth:2015-08-06→2026-10-15,4088 天,nav 末 4746.401377;已发布 4746.4014 / 1.1293 / −0.9094 —— 全中。\n· s823_r6(S-823 留出段 2021-01-01→2026-10-30,R6):2129 天,nav 末 2.339554;已发布 total 1.33955(即 nav 2.33955)/ CAGR 0.15707 / MDD −0.64089 / short_leg_total 0.15704 —— 全中。\n· s819_short_s015:2021-10-11→2026-10-30,1846 天,nav 末 1.089527;已发布 short_total 0.08952695 + 逐年(2022 11.34% 等)全同。\n· s819_short_s030:1846 天,nav 末 1.162360;已发布 0.16235995 —— 全中。\n· 七个风格指数(T-160 `t160_bear_floor.py` 的 STYLES,cap 加权,不含 majors —— majors 就是大盘,面板里已有 核心/X1V):style_ai 2020-01-01→2026-11-14 2496 天 nav 末 1.669700;style_defi 2510 天 3.070579;style_meme 2021-05-16→2026-11-14 2009 天 0.168808;style_infra_tokenization 2510 天 2.517261;style_app 2510 天 2.725799;style_second_l1_l2 2510 天 3.871181;style_top_l1 2510 天 5.353521(DB style_index_pit_daily,分页核过总行数)。\n· carry_b_top_rc(T-359 返工后那条,用 `src/data/signals/carry_hl.py`::matrix+path 自己记的 NAV):2023-06-12→2026-10-30,1237 天,nav 末 1.634737。\n\n【funded 口径】占本金的(tom_pd13 ×2、s823_r6、七个风格指数)= 1;票 / 保证金的盈亏曲线(s819 两条空头腿、carry)= 0。\n\n【已跑通】`python3 docs/research/s869_strategy_state.py --selftest | tail -1` → `SELFTEST OK`。\n\n【原脚本已重跑完】`nohup python3 docs/research/s869_strategy_state.py > docs/research/s869_run_full.txt 2>&1 &` 跑完,日志末尾 `WROTE docs/research/s869_results.json`;`docs/research/s869_results.json` 一并提交。原始输出(按卡要求 `grep -E '^(STATE|BOTH_P|PORT|TODAY)' | cut -c1-500`):\n· TODAY:state_day 2026-11-13,labels T线下·L抽 → 今天这个状态的长处 = gold, s823_r6。\n· STATE(12 格,长处):R升=无;R降=carry_b_top_rc, equity;L抽=无;L注=carry_b_top_rc, style_ai, style_defi, style_top_l1, tom_pd13_btc, tom_pd13_eth;W坏=gold;W好=carry_b_top_rc, equity;T线下=gold, s823_r6;T线上=carry_b_top_rc, core;T线下·L抽=gold, s823_r6;T线下·L注=style_defi, style_infra_tokenization, style_meme, style_second_l1_l2, style_top_l1, tom_pd13_btc;T线上·L抽=S681_H3;T线上·L注=carry_b_top_rc, core, gold, style_top_l1, tom_pd13_eth。\n· BOTH_P_BELOW_0.05:29 格(x1v×T线上·注;carry_b_top_rc×8 格;style_ai/app/defi/infra_tokenization/meme 的 W坏 与 W好 等)。\n· PORT(2022-02-01→2026-11-14,1748 天):cond_TxL 年化 11.74% / 均值波动比 1.609 / 最长水下 616 天 / 最差 20 日 −4.48% / 持现金 27.6%;cond_T 年化 28.90% / 比 3.239 / 水下 602 天,安慰剂 n=200 比中位 0.721、q90 2.511 → 真实比落在 94.5 分位、年化 95.5 分位;plus_TxL 年化 16.94% / 比 2.086 / 水下 628 天;plus_T 年化 23.31% / 比 2.765 / 水下 585 天,安慰剂比 q90 3.32 → 58 分位(年化 56 分位);B0 等风险全持 年化 4.98% / 比 1.201 / 水下 355 天;B1 无条件好 年化 33.44% / 比 3.488 / 水下 584 天。\n(以上只搬原脚本的数,不下结论 —— 结论归 S-869/S-870。)\n\n【给 @seth 的两个提醒】① `docs/research/s869_strategy_state.py` 是从主仓库工作区原样搬过来的(0 行改动),主仓库那份仍未跟踪 —— 合并前请先把它移开(`mv` 到别处),否则 pull 会撞「未跟踪工作区文件会被覆盖」。② 同理 `tasks/T-392.json` 这张卡在主仓库是本地未跟踪文件,本分支带的是同一份内容(状态已改 in_review);合并时按你手头那份为准。\n\n按卡要求:不改脚本一行、不下结论、不写情景文件。"
+}
