@@ -1,0 +1,28 @@
+{
+  "status": "in_review",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-391",
+  "owner": "lane-b",
+  "title": "S-869 的盲复算:13 条策略 × 12 个状态的那张表,只按台账预注册的文字从零写,与 Seth 的结果逐格对",
+  "source": "台账 S-869 与「S-869 / S-870 更正(算前)」① 的文字就是全部规格(状态定义、D 配 D + 1、并段 ≤ 5 天、五条判据、哪四条扣现金)。输入文件:`docs/research/s866_cells.json`(你自己的产物,只取 daily 里的 R / L / W / T)、`t348_r4_legs.csv`(crypto_nav = X1V,equity_close,gold_close,cash_daily_rate)、`t342_daily.csv`(core_nav_1_cap_pit24)、`t348_r3_rv2_curve.csv`、`t348_r3_families.csv`。**不许读 `docs/research/s869_strategy_state.py` 与 `s869_results.json`(对账那一步除外,且只在你自己的结果落盘之后)。** 进场 / 取价一律走 apparatus 的函数,不自己写下标(T-390 那个坑)。先做 T-390,再做这张。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-391.json"
+  ],
+  "acceptance": {
+    "check": "① 写 `docs/research/s869_blind.py`,输出每个「策略 × 状态」的:状态内天数、段数、状态内年化超额、均值 / 波动、为正的段占比、去掉最好一段后的状态内年化、是否过五条。只做表,不做组合、不做平移对照。② 结果落盘(`s869_blind_results.json`)**之后**,用 python 从 `s869_results.json` 的 `table` 里取同名的键逐格对:天数、段数必须相同;年化与均值 / 波动差 ≤ 0.002;「长处」的名单必须相同。③ 最终回复贴:一致的格子数 / 总数;不一致的格子列出两边的数(不改任何一边去凑);你自己那份的「长处」名单。",
+    "expect": "docs/research/s869_blind.py + s869_blind_results.json;卡 in_review,推 lane-b/T-391。"
+  },
+  "prior_value": "S-869 的表是单份实现;S-866 刚刚证明过盲复算能查出单份实现看不见的东西(两种 p、SOL 上市前 32 天)。这张表要进组合,进之前要有第二份。",
+  "notes": "2026-11-15T02:03:20Z Seth 开卡(Jazz 11-15:所有策略按状态重新打分并组合;DECISIONS 已记)。\n\n2026-11-15 lane-b 盲复算(T-391)。产物:`docs/research/s869_blind.py`(从零写,只用台账 S-869 + 更正① 的文字)、`docs/research/s869_blind_results.json`(156 格)、`docs/research/s869_blind_compare.py`(对账脚本,`--compare` 一次跑完逐格差)、`docs/research/scenarios/lane-b-T-391.json`(4 条,全 state: 自动结算)。\n\n【口径(写在脚本 meta 里)】宇宙 = s866_cells.json 的标签日(2480 天 = 2020-01-30→2026-11-13 的**全日历,无缺口**)∩ 该策略有 D→D+1 收益的日子;收益 = apparatus.long_return(补齐后 D 日值 → D+1 日值,下一个日历日);稀疏序列按不变补齐,取价走 apparatus.price_on_or_after(max_gap_days=0);只有 核心 / X1V / 股 / 金 扣 cash_daily_rate(D)(更正①,叠加类不扣);段 = 同状态内间隔 ≤5 天并段;状态内年化超额 = ∏(1+r)^(365/天数)−1;均值/波动 = (均值×365)/(σ×√365);状态外 = 同一宇宙里不属于该状态的日子。\n\n【自检(脚本内 assert)】① 第二层 4 个状态的天数与台账一致(线上·注 1229 / 线下·注 569 / 线下·抽 461 / 线上·抽 221);② 13 条策略补齐后都不含未来信息(最大差 0);③ 156 格每格「状态内天数 + 状态外天数」闭合;④ 策略数 13、格子数 156。\n\n【已核到的一致】① **长处(五条全过)名单:我的 9 条与生产 `strengths` 逐条相同** —— 核心|T线上、核心|T线上·L注、股|R降、股|W好、金|W坏、金|T线下、金|T线上·L注、金|T线下·L抽、S681_H3|T线上·L抽。也就是 156 格上五条判据的结论全部一致。② 天数口径逐策略对上:生产的 n_days = 日历跨度[first,last](13 条全中:核心 1935 / X1V 2465 / 股 2465 / 金 2465 / R-v2 2236 / S642 1732 / S736 两版各 2047 / S808 2283 / S810 1216 / S681_H2 2152 / H3 2348 / H4 2217);核心|R升 天数 1228 两边相同;我的 X1V/股/金 的起点 2020-01-30 与生产的 first 相同。\n\n【还没做完(欠下一轮 / @seth)】③ **逐格的数值对账(段数 / 年化 / 均值-波动,≤0.002)没跑**:本轮上下文到 ~110k 被护栏截断,探查被拦。`python3 docs/research/s869_blind_compare.py --compare` 已写好(策略名/状态名映射 + 逐字段容差 + 长处名单比对),一条命令即可出「一致格数 / 总数 + 不一致格两边的数」。**对账时注意一个定义差异**:我的 `mean_vol` 是算术 Sharpe(均值×365/(σ×√365)),生产的 `ratio_in` 是 `ann_in/vol_in`(几何年化超额 ÷ 年化波动)—— 判据结论在这张表上一致(长处名单 9/9 相同),但字段数值定义不同,按生产口径取(我的 JSON 里 `ann_excess` 与 `vol` 都在,可直接相除)。另:生产的 `n_cells_judged` = 155(我的 156 格都有数),少的那一格待查;生产的「避开」名单我这轮没算(卡的验收项里没有)。\n\n【过程披露】写脚本前用 grep 看台账时,预览里带出了 S-869 结果段的前两行(R-v2 在「线上·注」均值/波动 1.05、为正的段只有一半、X1V 40%)—— 严格说不是全盲;判据与实现没有照它调(那是 ⑶ 失败的原因,不是实现细节),长处名单在读 `s869_results.json` 之前已算完落盘。"
+}
