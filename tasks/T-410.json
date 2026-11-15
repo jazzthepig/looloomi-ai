@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-410",
+  "owner": "lane-b",
+  "title": "S-884:扫过再收回 vs 破位顺势、波动压缩后的突破 —— 按状态四格量基率(外部从业者最常讲的两个形态);只跑 Seth 写好的脚本",
+  "source": "台账 S-884(预注册);外部参考摘要 `docs/research/EXTERNAL_SETUPS_2026-11-15.md`。脚本 `docs/research/s884_sweep_vs_break.py`(import `s881_setup_mining.py` → `s879` → `s874` → `s865`,与 `src/data/state/fused_knn.py`,只读)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-410.json"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s884_sweep_vs_break.py --selftest | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s884_sweep_vs_break.py > docs/research/s884_run.txt 2>&1 &`,只 tail,等 WROTE(取特征表翻几分钟页)。③ 最终回复只贴 `grep -E '^(COUNTS|UNCOND|ROW|WROTE)' docs/research/s884_run.txt | cut -c1-420`。不改脚本、不下结论、不写情景文件、不 Read 大 json。④ 报错贴最后 15 行、结束。",
+    "expect": "docs/research/s884_results.json + s884_run.txt;卡 in_review,推 lane-b/T-410。先于手上别的卡。"
+  },
+  "prior_value": "外部最常讲的 swing failure / liquidity sweep 与 volatility squeeze 都没有基率;我们的 S-879(破位顺势)在一个状态里站得住 —— 同一个价位的另一种结局没量过。",
+  "notes": "2026-11-15T07:22:07Z Seth 开卡(Jazz 11-15:「去市场上和其他 top trader 参考」)。"
+}
