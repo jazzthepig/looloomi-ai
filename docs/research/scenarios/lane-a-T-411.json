@@ -1,0 +1,36 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T-411-1",
+      "scenario": "T-411 纸面账成员前向来源对账(生产 vs 研究面板)",
+      "statement": "纸面账前向段(2026-11-16→2026-12-15)内,生产核心(multiplier_daily core_u_replay)与研究核心(core_variants_daily cap_pit24)的逐日收益差中位数仍 > 1bp",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 1,
+      "prob": 0.8,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-411-2",
+      "scenario": "T-411 纸面账成员前向来源对账(生产 vs 研究面板)",
+      "statement": "纸面账前向段(2026-11-16→2026-12-15)内,同源成员(ACWI / XAUUSD / 7 条风格)的逐日收益差中位数仍 < 1bp",
+      "variable": "manual",
+      "op": "lt",
+      "lo": 1,
+      "prob": 0.8,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-411-3",
+      "scenario": "T-411 纸面账成员前向来源对账(生产 vs 研究面板)",
+      "statement": "2026-12-31 时 state_daily(panel)的 stable_lend_apy_7d 在 2.0 与 12.0 之间(纸面账的超额口径要减掉的现金利率处在常态区间)",
+      "variable": "state:stable_lend_apy_7d",
+      "op": "between",
+      "lo": 2.0,
+      "hi": 12.0,
+      "prob": 0.62,
+      "horizon_d": "2026-12-31"
+    }
+  ]
+}
