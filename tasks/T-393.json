@@ -1,28 +1,32 @@
 {
-  "status": "open",
-  "created": "2026-11-15",
-  "forbidden_paths": [
-    "Shadow/",
-    "src/",
-    "paper_trading/",
-    "PROJECT_STATE.md",
-    "PROJECT_STATE_LOG.md",
-    "scripts/",
-    "migrations/"
-  ],
-  "verified": null,
-  "id": "T-393",
-  "owner": "lane-c",
-  "title": "S-869 的面板补全(C 道的几条):跨资产趋势、World50 两条臂、山寨空篮、新上市做空、反转 —— 导出逐日净值,原脚本重跑",
-  "source": "台账 S-869。脚本读同目录下所有 `s869_extra_panel*.csv`。要补的:跨资产趋势袖套(T-364 / S-835 候选三,`t364_cross_asset_trend.py` 的 sleeve 逐日净值)、World50 EW 与 EW×Mom(`t361_world50_panel.py`,funded = 1)、山寨空篮(S-847 / T-372 的主口径)、新上市做空(S681 H1)、反转规则 A 的 30 天版(S-840 用 U 本位永续日线重写的那份;B 道 T-360 的不要,它丢过周末)。",
-  "allowed_paths": [
-    "docs/research/",
-    "tasks/T-393.json"
-  ],
-  "acceptance": {
-    "check": "写 `docs/research/s869_extra_panel_c.csv`。格式:`family,d,nav,funded`(d = UTC 日期;nav = 该策略**自己原来那份回测 / 账本**的逐日净值,参数一个不改、不重新调;funded = 1 表示净值占用本金(持有资产类),0 表示票 / 保证金的盈亏曲线)。每条在同名的 `.meta.json` 里写一行出处(哪个脚本、哪组参数、首末日、台账号)。**不要 Read `s869_results.json`、`s866_cells.json` 这类大文件**,取数只用 python 读要的键。写完后:`python3 docs/research/s869_strategy_state.py --selftest | tail -1` 见 SELFTEST OK;`nohup python3 docs/research/s869_strategy_state.py > docs/research/s869_run_full.txt 2>&1 &`,只 tail,等 WROTE;最终回复只贴 `grep -E '^(STATE|BOTH_P|PORT|TODAY)' docs/research/s869_run_full.txt | cut -c1-500`。**不改脚本一行、不下结论、不写情景文件。** 某条策略拿不到逐日净值就写明原因、跳过,不拿别的东西顶。",
-    "expect": "docs/research/s869_extra_panel_c.csv + s869_extra_panel_c.meta.json + s869_run_full.txt + 重跑后的 s869_results.json;卡 in_review,推 lane-c/T-393。**与 A 道的 T-392 各写各的 csv;`s869_results.json` 两边都会重写,合并时以后合的那份为准,合并轮知道。**"
-  },
-  "prior_value": "同 T-392:做多侧与「不相关来源」一侧的候选都不在第一轮面板里。",
-  "notes": "2026-11-15T02:03:20Z Seth 开卡(Jazz 11-15:所有策略按状态重新打分并组合;DECISIONS 已记)。\n\n2026-11-15 lane-c(T-393)部分交付,卡留 open(还有两件没做完,下一轮接着做):\n\n【已交】分支 lane-c/T-393(origin/main 1228e874 之上)。产物在 docs/research/:\n· s869_extra_panel_c.csv —— 7 族 / 8787 行,格式 family,d,nav,funded。\n· s869_extra_panel_c.meta.json —— 每族一行出处(脚本、参数、首末日、台账号、自检)。\n· t393_export_panel_c.py —— 导出的脚本(不改任何原脚本,只 import 它们的函数、喂它们自己的数据)。\n· s869_strategy_state.py —— 从主仓库工作区原样拷来(一个字节没改),为了让面板能被跑。\n\n【7 族(逐日净值,自有回测/账本,参数一个不改)】\n1) T364_cross_asset_trend(funded=1,2713 天,2016-02-01→2026-11-12):t364_cross_asset_trend.py 的 build_sleeve(),用它自己的 ohlcv 缓存;起点取第一个非零毛敞口月末之后的第一个交易日。\n2) World50_EW(funded=1,129 个月度标记,2016-01-29→2026-09-30)+ 3) World50_EWxMom(同):t361 面板 + t099 run_arm;月度收益记在当月最后一个基准股有价日;自检:EWxMom 的月度序列与 world50_replay_t361.json 逐点一致(差 < 1e-12)。\n4) S681_H1_disc(funded=0,1545 天,2020-01-08→2024-03-31)与 5) S681_H1_holdout(funded=0,1003 天,2024-01-02→2026-09-30):s681_h1_new_listing.py 的票 + t159.nav 的逐日盯市权益曲线;自检:与原脚本 sl.money() 的统计逐项一致(disc end=0.981427 mdd=-0.151685 年化 -0.44% taken=191 skipped=67 closed=190;holdout end=1.042629 mdd=-0.077518 年化 +1.53% taken=195 skipped=425 closed=185)。\n6) S840_ruleA_H30(funded=0,1634 天,2022-04-11→2026-09-30)与 7) S840_ruleA_H30_funding(同):s840_rule_a_rewrite.py 的 sleeve(30)(U 本位永续日线那份);事件 350 个 / 131 个 pair,2022-04-04→2026-09-28。\n\n【自检】`python3 docs/research/s869_strategy_state.py --selftest | tail -1` = SELFTEST OK(读到我这 7 族 + 在册的 13 条)。\n\n【还差两件,下一轮做】① 山寨空篮(S-847 / T-372 主口径)那一族:算法已写好在 t393_export_panel_c.py 的 fam_t372() 里(周一收盘建仓/周日收盘平仓,价格腿按进场价分摊到每天、资金费按日、成本开平各半,状态不成立的周不开仓;自检 = 逐日加总与脚本的周收益逐周一致,判据 1e-9),本轮只差跑:`python3 docs/research/t393_export_panel_c.py t372`;上一次跑出的 max diff 1.9e-2 是因为 2022-06-19 那周篮子为空(原脚本整周记 0、连 BTC 腿也不开),已改。② s869 脚本重跑(卡片要求的 s869_run_full.txt 与重写后的 s869_results.json):必须在 ① 之后跑,命令 `nohup python3 docs/research/s869_strategy_state.py > docs/research/s869_run_full.txt 2>&1 &`,等 WROTE,只 tail。\n【为什么现在没跑完】本轮上下文用量到 123k,守卫把后台跑脚本的调用全拦了(两次 Bash 调用被拦),只能落到「已交 + 写清还差什么」。\n【已看到的旁证】import t372 时它会重写 docs/research/t372_results.json;重写后的文件与在册版本 git diff 为空 ⇒ 重算与原来的回测逐字一致(状态数据没变)。\n【注意】① T364 袖套 funded=1:袖套自己的净值里闲置仓位(毛敞口中位 0.62)不计现金利息,面板按 funded 口径会扣满额现金利率 ⇒ 这一族的「超额」略偏保守(已写进 meta)。② S681 H1 / S840 / T372 这几条的 funded=0(票 / 保证金的盈亏曲线,面板不扣现金利率),与台账「S-869 更正(算前)」一致。"
+ "status": "in_review",
+ "created": "2026-11-15",
+ "forbidden_paths": [
+  "Shadow/",
+  "src/",
+  "paper_trading/",
+  "PROJECT_STATE.md",
+  "PROJECT_STATE_LOG.md",
+  "scripts/",
+  "migrations/"
+ ],
+ "verified": {
+  "by": "lane-c",
+  "at": "2026-11-15T02:45Z",
+  "value": "8 族 csv + meta + 原样重跑 s869_strategy_state.py(--selftest = SELFTEST OK,s869_run_full.txt 末尾有 WROTE);面板 13→21 条、可判格子 155→249、两种 p 都过 0.05 的格子 1→21。"
+ },
+ "id": "T-393",
+ "owner": "lane-c",
+ "title": "S-869 的面板补全(C 道的几条):跨资产趋势、World50 两条臂、山寨空篮、新上市做空、反转 —— 导出逐日净值,原脚本重跑",
+ "source": "台账 S-869。脚本读同目录下所有 `s869_extra_panel*.csv`。要补的:跨资产趋势袖套(T-364 / S-835 候选三,`t364_cross_asset_trend.py` 的 sleeve 逐日净值)、World50 EW 与 EW×Mom(`t361_world50_panel.py`,funded = 1)、山寨空篮(S-847 / T-372 的主口径)、新上市做空(S681 H1)、反转规则 A 的 30 天版(S-840 用 U 本位永续日线重写的那份;B 道 T-360 的不要,它丢过周末)。",
+ "allowed_paths": [
+  "docs/research/",
+  "tasks/T-393.json"
+ ],
+ "acceptance": {
+  "check": "写 `docs/research/s869_extra_panel_c.csv`。格式:`family,d,nav,funded`(d = UTC 日期;nav = 该策略**自己原来那份回测 / 账本**的逐日净值,参数一个不改、不重新调;funded = 1 表示净值占用本金(持有资产类),0 表示票 / 保证金的盈亏曲线)。每条在同名的 `.meta.json` 里写一行出处(哪个脚本、哪组参数、首末日、台账号)。**不要 Read `s869_results.json`、`s866_cells.json` 这类大文件**,取数只用 python 读要的键。写完后:`python3 docs/research/s869_strategy_state.py --selftest | tail -1` 见 SELFTEST OK;`nohup python3 docs/research/s869_strategy_state.py > docs/research/s869_run_full.txt 2>&1 &`,只 tail,等 WROTE;最终回复只贴 `grep -E '^(STATE|BOTH_P|PORT|TODAY)' docs/research/s869_run_full.txt | cut -c1-500`。**不改脚本一行、不下结论、不写情景文件。** 某条策略拿不到逐日净值就写明原因、跳过,不拿别的东西顶。",
+  "expect": "docs/research/s869_extra_panel_c.csv + s869_extra_panel_c.meta.json + s869_run_full.txt + 重跑后的 s869_results.json;卡 in_review,推 lane-c/T-393。**与 A 道的 T-392 各写各的 csv;`s869_results.json` 两边都会重写,合并时以后合的那份为准,合并轮知道。**"
+ },
+ "prior_value": "同 T-392:做多侧与「不相关来源」一侧的候选都不在第一轮面板里。",
+ "notes": "2026-11-15T02:03:20Z Seth 开卡(Jazz 11-15:所有策略按状态重新打分并组合;DECISIONS 已记)。\n\n2026-11-15 lane-c(T-393)完成,卡转 in_review。分支 lane-c/T-393(在 origin/main 87624d8c 之上)。\n\n【交付】docs/research/ 下:\n· s869_extra_panel_c.csv —— 8 族 / 9417 行(family,d,nav,funded)\n· s869_extra_panel_c.meta.json —— 每族一行出处(脚本、参数、首末日、台账号、自检)\n· t393_export_panel_c.py —— 导出脚本(只 import 原脚本的函数、喂它们自己的数据;原脚本一行未改)\n· s869_run_full.txt —— 原样重跑 s869_strategy_state.py 的完整输出(末尾有 WROTE)\n· s869_results.json —— 重跑后的结果(与 A 道 T-392 都会重写,合并时以后合的为准)\n\n【8 族(逐日净值,各自原回测 / 账本,参数一个不改、不重新调)】\n1) T364_cross_asset_trend(funded=1,2713 天,2016-02-01→2026-11-12)—— t364_cross_asset_trend.py 的 build_sleeve(),用它自己的 ohlcv 缓存;起点取第一个非零毛敞口月末之后的第一个交易日。\n2) World50_EW(funded=1,129 个月度标记,2016-01-29→2026-09-30)与 3) World50_EWxMom(同)—— t361 面板 + t099 run_arm;月度收益记在当月最后一个基准股有价日;两月之间净值不变(面板按净值不变补齐)。自检:EWxMom 的月度序列与 world50_replay_t361.json 逐点一致(差 < 1e-12)。\n4) S681_H1_disc(funded=0,1545 天,2020-01-08→2024-03-31)与 5) S681_H1_holdout(funded=0,1003 天,2024-01-02→2026-09-30)—— s681_h1_new_listing.py 的票 + t159.nav 的逐日盯市权益曲线。自检:与原脚本 sl.money() 的统计逐项一致(disc end=0.981427 mdd=-0.151685 年化 -0.44% taken=191 skipped=67 closed=190;holdout end=1.042629 mdd=-0.077518 年化 +1.53% taken=195 skipped=425 closed=185)。\n6) S840_ruleA_H30(funded=0,1634 天,2022-04-11→2026-09-30)与 7) S840_ruleA_H30_funding(同;计资金费版)—— s840_rule_a_rewrite.py 的 sleeve(30)(U 本位永续日线那份);事件 350 个 / 131 个 pair,2022-04-04→2026-09-28。\n8) T372_alt_short_basket(funded=0,630 天,2020-02-03→2026-08-23)—— 本轮补上:S-847 / T-372 主口径(状态成立的周才开仓;周一收盘建仓、周日收盘平仓;空篮名义 1 + 多 BTC 名义 1;每腿每边 10 bp)。自检:逐日加总与原脚本周收益逐周一致(max diff 1.18e-16);与在册 t372_results.json 的 stats 对齐(n_on=91、mean_on=0.000302);import 重写后的 t372_results.json 与在册版本 git diff 为空 ⇒ 重算与原回测逐字一致(状态数据没变)。\n\n【自检】python3 docs/research/s869_strategy_state.py --selftest = SELFTEST OK(读到 13 条在册 + 我这 8 族)。\n\n【重跑后的数字(原样脚本,加了 C 道 8 族之后;与 origin/main 上原来那版 13 条面板的对照)】\n· 面板:策略 13→21 条,可判格子 155→249 个,两种 p 都过 0.05 的格子 1→21 个。\n· cond_TxL:年化 3.05%→2.85%、均值波动比 0.449→0.429、placebo 分位 0.59→0.665\n· cond_T:年化 6.46%→9.68%、比 0.726→1.034、placebo 分位 0.795→0.98\n· plus_TxL:年化 5.22%→7.88%、比 0.688→0.667、placebo 分位 0.46→0.035\n· plus_T:年化 6.42%→11.36%、比 0.791→0.873、placebo 分位 0.685→0.55\n· B0 全等风险:年化 -0.31%→1.85%;B1 无条件好的:年化 5.64%→13.75%(两者都没有 placebo 分位)\n· 窗口 1748 天(2022-02-01→2026-11-14);今天(2026-11-13)状态 T线下·L抽,长处 = S681_H1_holdout、S840_ruleA_H30、gold\n· 21 个两种 p 都过线的格子: x1v×1、S681_H1_disc×6、T364×3、T372×1、World50_EW×5、World50_EWxMom×4\n\n【注意】① T364 袖套 funded=1:袖套自己的净值里闲置仓位(毛敞口中位 0.62)不计现金利息,面板按 funded 口径扣满额现金利率 ⇒ 这一族的「超额」略偏保守(已写进 meta)。② S681 H1 / S840 / T372 的 funded=0(票 / 保证金的盈亏曲线,面板不扣现金利率),与台账「S-869 更正(算前)」一致。③ World50 两条只有月度标记(129 个点),面板按净值不变补齐 ⇒ 月内那些天收益记 0;这是月度调仓策略的自然粒度,不是漏日。④ 卡说「不改脚本一行、不下结论、不写情景文件」:本次没有改 s869_strategy_state.py(与 origin/main 逐字相同)、没有下结论、没有写 scenarios/lane-c-T-393.json。\n\n【已看到的旁证(探索性 —— 需另立预注册、在新数据上过零信号对照)】面板从 13 条扩到 21 条之后,cond_T 的 placebo 分位从 0.795 抬到 0.98,而 plus_TxL 的从 0.46 掉到 0.035 —— 两边同向还是反向取决于「多拿 T×L 四格里的长处」这一档怎么取;这属于「换了尺子读出的数」,不等于哪条策略更好。\n"
 }

@@ -330,6 +330,7 @@ def main() -> None:
             continue
         try:
             fn()
+            META.get("_errors", {}).pop(k, None)          # 这一族成功了就抹掉上一轮的报错
             print(f"[ok] {k}: {sorted(PANEL)[-1]} n={len(PANEL[sorted(PANEL)[-1]])}", flush=True)
         except Exception:
             META.setdefault("_errors", {})[k] = traceback.format_exc()[-1500:]

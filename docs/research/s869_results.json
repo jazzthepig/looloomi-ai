@@ -1,0 +1,8244 @@
+{
+ "strategies": {
+  "core": {
+   "what": "① 核心:市值加权 PIT24,一直拿着",
+   "funded": true,
+   "n_days": 1935,
+   "ann": 0.2096,
+   "ratio": 0.366,
+   "first": "2021-07-13",
+   "last": "2026-10-29"
+  },
+  "x1v": {
+   "what": "加密腿 + 200 日闸门(真钱规则 X1V)",
+   "funded": true,
+   "n_days": 2465,
+   "ann": 0.836,
+   "ratio": 0.863,
+   "first": "2020-01-30",
+   "last": "2026-10-29"
+  },
+  "equity": {
+   "what": "股(ACWI)",
+   "funded": true,
+   "n_days": 2465,
+   "ann": 0.1102,
+   "ratio": 0.578,
+   "first": "2020-01-30",
+   "last": "2026-10-29"
+  },
+  "gold": {
+   "what": "金(XAUUSD)",
+   "funded": true,
+   "n_days": 2465,
+   "ann": 0.1254,
+   "ratio": 0.67,
+   "first": "2020-01-30",
+   "last": "2026-10-29"
+  },
+  "rv2": {
+   "what": "R-v2 票(每票 0.5% / 上限 40% / 名额 14 的研究曲线)",
+   "funded": false,
+   "n_days": 2236,
+   "ann": 0.1258,
+   "ratio": 0.747,
+   "first": "2020-08-16",
+   "last": "2026-09-29"
+  },
+  "S642": {
+   "what": "坟场 / 补充序列",
+   "funded": false,
+   "n_days": 1732,
+   "ann": 0.0043,
+   "ratio": 0.081,
+   "first": "2022-01-21",
+   "last": "2026-10-18"
+  },
+  "S736_published": {
+   "what": "坟场 / 补充序列",
+   "funded": false,
+   "n_days": 2047,
+   "ann": -0.018,
+   "ratio": -0.286,
+   "first": "2021-03-24",
+   "last": "2026-10-30"
+  },
+  "S736_fixed": {
+   "what": "坟场 / 补充序列",
+   "funded": false,
+   "n_days": 2047,
+   "ann": -0.006,
+   "ratio": -0.609,
+   "first": "2021-03-24",
+   "last": "2026-10-30"
+  },
+  "S808": {
+   "what": "坟场 / 补充序列",
+   "funded": false,
+   "n_days": 2283,
+   "ann": -0.0759,
+   "ratio": -1.613,
+   "first": "2020-08-09",
+   "last": "2026-11-08"
+  },
+  "S810": {
+   "what": "坟场 / 补充序列",
+   "funded": false,
+   "n_days": 1216,
+   "ann": -0.0015,
+   "ratio": -0.247,
+   "first": "2023-06-02",
+   "last": "2026-09-29"
+  },
+  "S681_H2": {
+   "what": "坟场 / 补充序列",
+   "funded": false,
+   "n_days": 2152,
+   "ann": -0.0616,
+   "ratio": -0.701,
+   "first": "2020-11-07",
+   "last": "2026-09-28"
+  },
+  "S681_H3": {
+   "what": "坟场 / 补充序列",
+   "funded": false,
+   "n_days": 2348,
+   "ann": -0.0846,
+   "ratio": -1.046,
+   "first": "2020-04-26",
+   "last": "2026-09-29"
+  },
+  "S681_H4": {
+   "what": "坟场 / 补充序列",
+   "funded": false,
+   "n_days": 2217,
+   "ann": 0.0264,
+   "ratio": 0.198,
+   "first": "2020-09-04",
+   "last": "2026-09-29"
+  },
+  "S681_H1_disc": {
+   "what": "坟场 / 补充序列",
+   "funded": false,
+   "n_days": 1522,
+   "ann": 0.0022,
+   "ratio": 0.039,
+   "first": "2020-01-30",
+   "last": "2024-03-30"
+  },
+  "S681_H1_holdout": {
+   "what": "坟场 / 补充序列",
+   "funded": false,
+   "n_days": 1002,
+   "ann": 0.017,
+   "ratio": 0.277,
+   "first": "2024-01-02",
+   "last": "2026-09-29"
+  },
+  "S840_ruleA_H30": {
+   "what": "坟场 / 补充序列",
+   "funded": false,
+   "n_days": 1633,
+   "ann": 0.0866,
+   "ratio": 0.305,
+   "first": "2022-04-11",
+   "last": "2026-09-29"
+  },
+  "S840_ruleA_H30_funding": {
+   "what": "坟场 / 补充序列",
+   "funded": false,
+   "n_days": 1633,
+   "ann": -0.0126,
+   "ratio": -0.044,
+   "first": "2022-04-11",
+   "last": "2026-09-29"
+  },
+  "T364_cross_asset_trend": {
+   "what": "坟场 / 补充序列",
+   "funded": true,
+   "n_days": 2478,
+   "ann": 0.0165,
+   "ratio": 0.279,
+   "first": "2020-01-30",
+   "last": "2026-11-11"
+  },
+  "T372_alt_short_basket": {
+   "what": "坟场 / 补充序列",
+   "funded": false,
+   "n_days": 2393,
+   "ann": 0.0048,
+   "ratio": 0.027,
+   "first": "2020-02-03",
+   "last": "2026-08-22"
+  },
+  "World50_EW": {
+   "what": "坟场 / 补充序列",
+   "funded": true,
+   "n_days": 2435,
+   "ann": 0.1202,
+   "ratio": 0.776,
+   "first": "2020-01-30",
+   "last": "2026-09-29"
+  },
+  "World50_EWxMom": {
+   "what": "坟场 / 补充序列",
+   "funded": true,
+   "n_days": 2435,
+   "ann": 0.1566,
+   "ratio": 0.936,
+   "first": "2020-01-30",
+   "last": "2026-09-29"
+  }
+ },
+ "table": {
+  "core": {
+   "_all": {
+    "n_days": 1935,
+    "ann": 0.2096,
+    "ratio": 0.366,
+    "first": "2021-07-13",
+    "last": "2026-10-29"
+   },
+   "R升": {
+    "n_days": 1228,
+    "n_episodes": 14,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1753,
+    "vol_in": 0.5865,
+    "ratio_in": 0.299,
+    "ann_out": 0.2691,
+    "lift": -0.0938,
+    "pos_episodes": 0.643,
+    "worst_episode": -0.6343,
+    "ann_in_without_best_episode": 0.0131,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.8115,
+     "tail2": 0.777
+    },
+    "fwd60": {
+     "n": 14,
+     "median": 0.1169,
+     "pos": 0.643
+    },
+    "fwd90": {
+     "n": 14,
+     "median": -0.0095,
+     "pos": 0.429
+    }
+   },
+   "R降": {
+    "n_days": 707,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.2691,
+    "vol_in": 0.5481,
+    "ratio_in": 0.491,
+    "ann_out": 0.1753,
+    "lift": 0.0938,
+    "pos_episodes": 0.462,
+    "worst_episode": -0.1952,
+    "ann_in_without_best_episode": -0.0836,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.8115,
+     "tail2": 0.777
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.037,
+     "pos": 0.538
+    },
+    "fwd90": {
+     "n": 13,
+     "median": -0.0108,
+     "pos": 0.385
+    }
+   },
+   "L抽": {
+    "n_days": 641,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.2698,
+    "vol_in": 0.6006,
+    "ratio_in": -0.449,
+    "ann_out": 0.447,
+    "lift": -0.7168,
+    "pos_episodes": 0.538,
+    "worst_episode": -0.4916,
+    "ann_in_without_best_episode": -0.3705,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0875,
+     "tail2": 0.077
+    },
+    "fwd60": {
+     "n": 12,
+     "median": -0.0245,
+     "pos": 0.417
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0534,
+     "pos": 0.417
+    }
+   },
+   "L注": {
+    "n_days": 1294,
+    "n_episodes": 17,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.447,
+    "vol_in": 0.558,
+    "ratio_in": 0.801,
+    "ann_out": -0.2698,
+    "lift": 0.7168,
+    "pos_episodes": 0.588,
+    "worst_episode": -0.1508,
+    "ann_in_without_best_episode": 0.2951,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0875,
+     "tail2": 0.077
+    },
+    "fwd60": {
+     "n": 17,
+     "median": 0.075,
+     "pos": 0.765
+    },
+    "fwd90": {
+     "n": 16,
+     "median": 0.0818,
+     "pos": 0.625
+    }
+   },
+   "W坏": {
+    "n_days": 738,
+    "n_episodes": 31,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.1749,
+    "vol_in": 0.6207,
+    "ratio_in": -0.282,
+    "ann_out": 0.4466,
+    "lift": -0.6215,
+    "pos_episodes": 0.548,
+    "worst_episode": -0.4865,
+    "ann_in_without_best_episode": -0.295,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.1635,
+     "tail2": 0.164
+    },
+    "fwd60": {
+     "n": 30,
+     "median": -0.0334,
+     "pos": 0.4
+    },
+    "fwd90": {
+     "n": 28,
+     "median": -0.0551,
+     "pos": 0.464
+    }
+   },
+   "W好": {
+    "n_days": 1197,
+    "n_episodes": 30,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.4466,
+    "vol_in": 0.5407,
+    "ratio_in": 0.826,
+    "ann_out": -0.1749,
+    "lift": 0.6215,
+    "pos_episodes": 0.433,
+    "worst_episode": -0.1617,
+    "ann_in_without_best_episode": 0.2373,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.1635,
+     "tail2": 0.164
+    },
+    "fwd60": {
+     "n": 30,
+     "median": -0.0042,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 28,
+     "median": -0.064,
+     "pos": 0.429
+    }
+   },
+   "T线下": {
+    "n_days": 955,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0667,
+    "vol_in": 0.6116,
+    "ratio_in": -0.109,
+    "ann_out": 0.4788,
+    "lift": -0.5454,
+    "pos_episodes": 0.667,
+    "worst_episode": -0.593,
+    "ann_in_without_best_episode": -0.1589,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.121,
+     "tail2": 0.116
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0806,
+     "pos": 0.583
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.1508,
+     "pos": 0.667
+    }
+   },
+   "T线上": {
+    "n_days": 980,
+    "n_episodes": 12,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.4788,
+    "vol_in": 0.5318,
+    "ratio_in": 0.9,
+    "ann_out": -0.0667,
+    "lift": 0.5454,
+    "pos_episodes": 0.75,
+    "worst_episode": -0.0662,
+    "ann_in_without_best_episode": 0.3188,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.121,
+     "tail2": 0.116
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.1835,
+     "pos": 0.917
+    },
+    "fwd90": {
+     "n": 11,
+     "median": 0.265,
+     "pos": 0.909
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 457,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.3776,
+    "vol_in": 0.6543,
+    "ratio_in": -0.577,
+    "ann_out": 0.3911,
+    "lift": -0.7688,
+    "pos_episodes": 0.583,
+    "worst_episode": -0.4916,
+    "ann_in_without_best_episode": -0.4671,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.103,
+     "tail2": 0.086
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0476,
+     "pos": 0.583
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0054,
+     "pos": 0.417
+    }
+   },
+   "T线下·L注": {
+    "n_days": 498,
+    "n_episodes": 19,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.2187,
+    "vol_in": 0.5692,
+    "ratio_in": 0.384,
+    "ann_out": 0.2064,
+    "lift": 0.0123,
+    "pos_episodes": 0.474,
+    "worst_episode": -0.1759,
+    "ann_in_without_best_episode": 0.0799,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.916,
+     "tail2": 0.906
+    },
+    "fwd60": {
+     "n": 19,
+     "median": 0.1667,
+     "pos": 0.579
+    },
+    "fwd90": {
+     "n": 19,
+     "median": 0.1996,
+     "pos": 0.684
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 184,
+    "n_episodes": 6,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0019,
+    "vol_in": 0.4398,
+    "ratio_in": -0.004,
+    "ann_out": 0.2318,
+    "lift": -0.2336,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.167,
+    "ann_in_without_best_episode": -0.2666,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.9015,
+     "tail2": 0.846
+    },
+    "fwd60": {
+     "n": 5,
+     "median": 0.1544,
+     "pos": 0.6
+    },
+    "fwd90": {
+     "n": 4,
+     "median": 0.1922,
+     "pos": 0.75
+    }
+   },
+   "T线上·L注": {
+    "n_days": 796,
+    "n_episodes": 17,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.5899,
+    "vol_in": 0.5508,
+    "ratio_in": 1.071,
+    "ann_out": -0.0562,
+    "lift": 0.6461,
+    "pos_episodes": 0.765,
+    "worst_episode": -0.0662,
+    "ann_in_without_best_episode": 0.4181,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0905,
+     "tail2": 0.066
+    },
+    "fwd60": {
+     "n": 17,
+     "median": 0.075,
+     "pos": 0.882
+    },
+    "fwd90": {
+     "n": 16,
+     "median": 0.1664,
+     "pos": 0.75
+    }
+   }
+  },
+  "x1v": {
+   "_all": {
+    "n_days": 2465,
+    "ann": 0.836,
+    "ratio": 0.863,
+    "first": "2020-01-30",
+    "last": "2026-10-29"
+   },
+   "R升": {
+    "n_days": 1387,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.8602,
+    "vol_in": 1.1901,
+    "ratio_in": 0.723,
+    "ann_out": 0.8049,
+    "lift": 0.0554,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.2649,
+    "ann_in_without_best_episode": 0.726,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.921,
+     "tail2": 0.896
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.1809,
+     "pos": 0.7
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.1372,
+     "pos": 0.6
+    }
+   },
+   "R降": {
+    "n_days": 1078,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.8049,
+    "vol_in": 0.5707,
+    "ratio_in": 1.41,
+    "ann_out": 0.8602,
+    "lift": -0.0554,
+    "pos_episodes": 0.6,
+    "worst_episode": -0.1752,
+    "ann_in_without_best_episode": 0.4886,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.921,
+     "tail2": 0.896
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.0128,
+     "pos": 0.6
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.0289,
+     "pos": 0.5
+    }
+   },
+   "L抽": {
+    "n_days": 667,
+    "n_episodes": 14,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0226,
+    "vol_in": 0.4677,
+    "ratio_in": -0.048,
+    "ann_out": 1.1545,
+    "lift": -1.1772,
+    "pos_episodes": 0.357,
+    "worst_episode": -0.1297,
+    "ann_in_without_best_episode": -0.1354,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.13,
+     "tail2": 0.119
+    },
+    "fwd60": {
+     "n": 13,
+     "median": -0.0119,
+     "pos": 0.385
+    },
+    "fwd90": {
+     "n": 13,
+     "median": -0.0187,
+     "pos": 0.385
+    }
+   },
+   "L注": {
+    "n_days": 1798,
+    "n_episodes": 18,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 1.1545,
+    "vol_in": 1.098,
+    "ratio_in": 1.051,
+    "ann_out": -0.0226,
+    "lift": 1.1772,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.1116,
+    "ann_in_without_best_episode": 0.2697,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.13,
+     "tail2": 0.119
+    },
+    "fwd60": {
+     "n": 18,
+     "median": 0.0,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 17,
+     "median": -0.0448,
+     "pos": 0.353
+    }
+   },
+   "W坏": {
+    "n_days": 872,
+    "n_episodes": 38,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.462,
+    "vol_in": 0.8198,
+    "ratio_in": 0.564,
+    "ann_out": 1.0408,
+    "lift": -0.5788,
+    "pos_episodes": 0.342,
+    "worst_episode": -0.2662,
+    "ann_in_without_best_episode": 0.3773,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.3085,
+     "tail2": 0.306
+    },
+    "fwd60": {
+     "n": 37,
+     "median": -0.0058,
+     "pos": 0.432
+    },
+    "fwd90": {
+     "n": 35,
+     "median": 0.0446,
+     "pos": 0.686
+    }
+   },
+   "W好": {
+    "n_days": 1593,
+    "n_episodes": 38,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 1.0408,
+    "vol_in": 1.0418,
+    "ratio_in": 0.999,
+    "ann_out": 0.462,
+    "lift": 0.5788,
+    "pos_episodes": 0.316,
+    "worst_episode": -0.1973,
+    "ann_in_without_best_episode": 0.6934,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.3085,
+     "tail2": 0.306
+    },
+    "fwd60": {
+     "n": 38,
+     "median": -0.0057,
+     "pos": 0.474
+    },
+    "fwd90": {
+     "n": 36,
+     "median": 0.0702,
+     "pos": 0.694
+    }
+   },
+   "T线下": {
+    "n_days": 1026,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1548,
+    "vol_in": 0.4815,
+    "ratio_in": 0.321,
+    "ann_out": 1.3217,
+    "lift": -1.1669,
+    "pos_episodes": 0.615,
+    "worst_episode": -0.2658,
+    "ann_in_without_best_episode": 0.0563,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0345,
+     "tail2": 0.063
+    },
+    "fwd60": {
+     "n": 13,
+     "median": -0.0143,
+     "pos": 0.385
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0795,
+     "pos": 0.615
+    }
+   },
+   "T线上": {
+    "n_days": 1439,
+    "n_episodes": 14,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 1.3217,
+    "vol_in": 1.2009,
+    "ratio_in": 1.101,
+    "ann_out": 0.1548,
+    "lift": 1.1669,
+    "pos_episodes": 0.357,
+    "worst_episode": -0.1572,
+    "ann_in_without_best_episode": 1.0039,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0345,
+     "tail2": 0.063
+    },
+    "fwd60": {
+     "n": 14,
+     "median": 0.1134,
+     "pos": 0.643
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.1539,
+     "pos": 0.846
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 457,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0321,
+    "vol_in": 0.4029,
+    "ratio_in": -0.08,
+    "ann_out": 1.0336,
+    "lift": -1.0657,
+    "pos_episodes": 0.417,
+    "worst_episode": -0.1126,
+    "ann_in_without_best_episode": -0.0629,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.156,
+     "tail2": 0.153
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0066,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0099,
+     "pos": 0.417
+    }
+   },
+   "T线下·L注": {
+    "n_days": 569,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.3049,
+    "vol_in": 0.5363,
+    "ratio_in": 0.569,
+    "ann_out": 0.9954,
+    "lift": -0.6904,
+    "pos_episodes": 0.55,
+    "worst_episode": -0.1116,
+    "ann_in_without_best_episode": 0.1595,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.313,
+     "tail2": 0.319
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.0156,
+     "pos": 0.55
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.0502,
+     "pos": 0.6
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 210,
+    "n_episodes": 7,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0019,
+    "vol_in": 0.5843,
+    "ratio_in": -0.003,
+    "ann_out": 0.914,
+    "lift": -0.916,
+    "pos_episodes": 0.429,
+    "worst_episode": -0.1486,
+    "ann_in_without_best_episode": -0.3086,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.4205,
+     "tail2": 0.431
+    },
+    "fwd60": {
+     "n": 6,
+     "median": -0.0194,
+     "pos": 0.333
+    },
+    "fwd90": {
+     "n": 5,
+     "median": 0.0611,
+     "pos": 0.6
+    }
+   },
+   "T线上·L注": {
+    "n_days": 1229,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 1.5479,
+    "vol_in": 1.2764,
+    "ratio_in": 1.213,
+    "ann_out": 0.1282,
+    "lift": 1.4197,
+    "pos_episodes": 0.4,
+    "worst_episode": -0.1274,
+    "ann_in_without_best_episode": 1.2653,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.007,
+     "tail2": 0.011
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.0147,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 19,
+     "median": 0.0607,
+     "pos": 0.526
+    }
+   }
+  },
+  "equity": {
+   "_all": {
+    "n_days": 2465,
+    "ann": 0.1102,
+    "ratio": 0.578,
+    "first": "2020-01-30",
+    "last": "2026-10-29"
+   },
+   "R升": {
+    "n_days": 1387,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0462,
+    "vol_in": 0.1602,
+    "ratio_in": 0.288,
+    "ann_out": 0.1926,
+    "lift": -0.1464,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.1308,
+    "ann_in_without_best_episode": 0.0245,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.1265,
+     "tail2": 0.122
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.0265,
+     "pos": 0.85
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.0543,
+     "pos": 0.85
+    }
+   },
+   "R降": {
+    "n_days": 1078,
+    "n_episodes": 20,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.1926,
+    "vol_in": 0.2241,
+    "ratio_in": 0.86,
+    "ann_out": 0.0462,
+    "lift": 0.1464,
+    "pos_episodes": 0.75,
+    "worst_episode": -0.0338,
+    "ann_in_without_best_episode": 0.1777,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.1265,
+     "tail2": 0.122
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.032,
+     "pos": 0.75
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.0336,
+     "pos": 0.9
+    }
+   },
+   "L抽": {
+    "n_days": 667,
+    "n_episodes": 14,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.06,
+    "vol_in": 0.1812,
+    "ratio_in": 0.331,
+    "ann_out": 0.1289,
+    "lift": -0.0688,
+    "pos_episodes": 0.429,
+    "worst_episode": -0.0788,
+    "ann_in_without_best_episode": 0.0156,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.491,
+     "tail2": 0.526
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.0059,
+     "pos": 0.615
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.025,
+     "pos": 0.615
+    }
+   },
+   "L注": {
+    "n_days": 1798,
+    "n_episodes": 18,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1289,
+    "vol_in": 0.1943,
+    "ratio_in": 0.663,
+    "ann_out": 0.06,
+    "lift": 0.0688,
+    "pos_episodes": 0.444,
+    "worst_episode": -0.0638,
+    "ann_in_without_best_episode": 0.0878,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.491,
+     "tail2": 0.526
+    },
+    "fwd60": {
+     "n": 18,
+     "median": 0.0182,
+     "pos": 0.611
+    },
+    "fwd90": {
+     "n": 17,
+     "median": 0.0211,
+     "pos": 0.706
+    }
+   },
+   "W坏": {
+    "n_days": 872,
+    "n_episodes": 38,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0166,
+    "vol_in": 0.2498,
+    "ratio_in": -0.067,
+    "ann_out": 0.1797,
+    "lift": -0.1963,
+    "pos_episodes": 0.553,
+    "worst_episode": -0.1256,
+    "ann_in_without_best_episode": -0.0422,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.1455,
+     "tail2": 0.159
+    },
+    "fwd60": {
+     "n": 37,
+     "median": 0.0224,
+     "pos": 0.649
+    },
+    "fwd90": {
+     "n": 35,
+     "median": 0.0272,
+     "pos": 0.714
+    }
+   },
+   "W好": {
+    "n_days": 1593,
+    "n_episodes": 38,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.1797,
+    "vol_in": 0.1489,
+    "ratio_in": 1.207,
+    "ann_out": -0.0166,
+    "lift": 0.1963,
+    "pos_episodes": 0.605,
+    "worst_episode": -0.0611,
+    "ann_in_without_best_episode": 0.1483,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.1455,
+     "tail2": 0.159
+    },
+    "fwd60": {
+     "n": 38,
+     "median": 0.0097,
+     "pos": 0.658
+    },
+    "fwd90": {
+     "n": 36,
+     "median": 0.0241,
+     "pos": 0.667
+    }
+   },
+   "T线下": {
+    "n_days": 1026,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0472,
+    "vol_in": 0.2446,
+    "ratio_in": 0.193,
+    "ann_out": 0.1552,
+    "lift": -0.108,
+    "pos_episodes": 0.538,
+    "worst_episode": -0.1272,
+    "ann_in_without_best_episode": 0.0037,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.309,
+     "tail2": 0.287
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.0178,
+     "pos": 0.692
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0272,
+     "pos": 0.846
+    }
+   },
+   "T线上": {
+    "n_days": 1439,
+    "n_episodes": 14,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1552,
+    "vol_in": 0.1404,
+    "ratio_in": 1.105,
+    "ann_out": 0.0472,
+    "lift": 0.108,
+    "pos_episodes": 0.429,
+    "worst_episode": -0.0916,
+    "ann_in_without_best_episode": 0.0602,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.309,
+     "tail2": 0.287
+    },
+    "fwd60": {
+     "n": 14,
+     "median": -0.0132,
+     "pos": 0.357
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0291,
+     "pos": 0.769
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 457,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1128,
+    "vol_in": 0.1977,
+    "ratio_in": 0.57,
+    "ann_out": 0.1097,
+    "lift": 0.0031,
+    "pos_episodes": 0.583,
+    "worst_episode": -0.0569,
+    "ann_in_without_best_episode": 0.0751,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.909,
+     "tail2": 0.891
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0018,
+     "pos": 0.583
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.02,
+     "pos": 0.583
+    }
+   },
+   "T线下·L注": {
+    "n_days": 569,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0055,
+    "vol_in": 0.2765,
+    "ratio_in": -0.02,
+    "ann_out": 0.145,
+    "lift": -0.1504,
+    "pos_episodes": 0.45,
+    "worst_episode": -0.0738,
+    "ann_in_without_best_episode": -0.0696,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.315,
+     "tail2": 0.313
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.0218,
+     "pos": 0.75
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.0413,
+     "pos": 0.85
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 210,
+    "n_episodes": 7,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0547,
+    "vol_in": 0.1384,
+    "ratio_in": -0.395,
+    "ann_out": 0.1256,
+    "lift": -0.1803,
+    "pos_episodes": 0.429,
+    "worst_episode": -0.0788,
+    "ann_in_without_best_episode": -0.3711,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.4,
+     "tail2": 0.397
+    },
+    "fwd60": {
+     "n": 6,
+     "median": -0.016,
+     "pos": 0.333
+    },
+    "fwd90": {
+     "n": 5,
+     "median": 0.0291,
+     "pos": 0.8
+    }
+   },
+   "T线上·L注": {
+    "n_days": 1229,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.191,
+    "vol_in": 0.1406,
+    "ratio_in": 1.358,
+    "ann_out": 0.0299,
+    "lift": 0.1611,
+    "pos_episodes": 0.35,
+    "worst_episode": -0.0548,
+    "ann_in_without_best_episode": 0.09,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.121,
+     "tail2": 0.114
+    },
+    "fwd60": {
+     "n": 20,
+     "median": -0.0003,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 19,
+     "median": 0.0211,
+     "pos": 0.737
+    }
+   }
+  },
+  "gold": {
+   "_all": {
+    "n_days": 2465,
+    "ann": 0.1254,
+    "ratio": 0.67,
+    "first": "2020-01-30",
+    "last": "2026-10-29"
+   },
+   "R升": {
+    "n_days": 1387,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0517,
+    "vol_in": 0.175,
+    "ratio_in": 0.295,
+    "ann_out": 0.2203,
+    "lift": -0.1687,
+    "pos_episodes": 0.7,
+    "worst_episode": -0.2556,
+    "ann_in_without_best_episode": 0.0018,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.1515,
+     "tail2": 0.158
+    },
+    "fwd60": {
+     "n": 20,
+     "median": -0.0184,
+     "pos": 0.45
+    },
+    "fwd90": {
+     "n": 20,
+     "median": -0.0062,
+     "pos": 0.5
+    }
+   },
+   "R降": {
+    "n_days": 1078,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.2203,
+    "vol_in": 0.2019,
+    "ratio_in": 1.091,
+    "ann_out": 0.0517,
+    "lift": 0.1687,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.0802,
+    "ann_in_without_best_episode": 0.1669,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.1515,
+     "tail2": 0.158
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.0372,
+     "pos": 0.65
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.0388,
+     "pos": 0.7
+    }
+   },
+   "L抽": {
+    "n_days": 667,
+    "n_episodes": 14,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0775,
+    "vol_in": 0.2122,
+    "ratio_in": 0.365,
+    "ann_out": 0.1432,
+    "lift": -0.0657,
+    "pos_episodes": 0.571,
+    "worst_episode": -0.0589,
+    "ann_in_without_best_episode": -0.0254,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.499,
+     "tail2": 0.511
+    },
+    "fwd60": {
+     "n": 13,
+     "median": -0.0088,
+     "pos": 0.462
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0513,
+     "pos": 0.538
+    }
+   },
+   "L注": {
+    "n_days": 1798,
+    "n_episodes": 18,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1432,
+    "vol_in": 0.1772,
+    "ratio_in": 0.808,
+    "ann_out": 0.0775,
+    "lift": 0.0657,
+    "pos_episodes": 0.556,
+    "worst_episode": -0.1155,
+    "ann_in_without_best_episode": 0.0912,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.499,
+     "tail2": 0.511
+    },
+    "fwd60": {
+     "n": 18,
+     "median": 0.0049,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 17,
+     "median": 0.0005,
+     "pos": 0.529
+    }
+   },
+   "W坏": {
+    "n_days": 872,
+    "n_episodes": 38,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.1837,
+    "vol_in": 0.2145,
+    "ratio_in": 0.856,
+    "ann_out": 0.0935,
+    "lift": 0.0901,
+    "pos_episodes": 0.658,
+    "worst_episode": -0.1362,
+    "ann_in_without_best_episode": 0.1408,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.4565,
+     "tail2": 0.453
+    },
+    "fwd60": {
+     "n": 37,
+     "median": 0.024,
+     "pos": 0.676
+    },
+    "fwd90": {
+     "n": 35,
+     "median": 0.0341,
+     "pos": 0.686
+    }
+   },
+   "W好": {
+    "n_days": 1593,
+    "n_episodes": 38,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0935,
+    "vol_in": 0.1705,
+    "ratio_in": 0.548,
+    "ann_out": 0.1837,
+    "lift": -0.0901,
+    "pos_episodes": 0.632,
+    "worst_episode": -0.1494,
+    "ann_in_without_best_episode": 0.0684,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.4565,
+     "tail2": 0.453
+    },
+    "fwd60": {
+     "n": 38,
+     "median": 0.0103,
+     "pos": 0.553
+    },
+    "fwd90": {
+     "n": 36,
+     "median": 0.0318,
+     "pos": 0.667
+    }
+   },
+   "T线下": {
+    "n_days": 1026,
+    "n_episodes": 13,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.1782,
+    "vol_in": 0.218,
+    "ratio_in": 0.817,
+    "ann_out": 0.0878,
+    "lift": 0.0903,
+    "pos_episodes": 0.769,
+    "worst_episode": -0.0318,
+    "ann_in_without_best_episode": 0.1443,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.418,
+     "tail2": 0.441
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.0397,
+     "pos": 0.846
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0445,
+     "pos": 0.846
+    }
+   },
+   "T线上": {
+    "n_days": 1439,
+    "n_episodes": 14,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0878,
+    "vol_in": 0.1618,
+    "ratio_in": 0.543,
+    "ann_out": 0.1782,
+    "lift": -0.0903,
+    "pos_episodes": 0.714,
+    "worst_episode": -0.1471,
+    "ann_in_without_best_episode": 0.0437,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.418,
+     "tail2": 0.441
+    },
+    "fwd60": {
+     "n": 14,
+     "median": -0.0097,
+     "pos": 0.429
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0589,
+     "pos": 0.769
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 457,
+    "n_episodes": 12,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.1935,
+    "vol_in": 0.2381,
+    "ratio_in": 0.812,
+    "ann_out": 0.1099,
+    "lift": 0.0835,
+    "pos_episodes": 0.75,
+    "worst_episode": -0.0564,
+    "ann_in_without_best_episode": 0.0526,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.6795,
+     "tail2": 0.696
+    },
+    "fwd60": {
+     "n": 12,
+     "median": -0.0083,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.0118,
+     "pos": 0.5
+    }
+   },
+   "T线下·L注": {
+    "n_days": 569,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1658,
+    "vol_in": 0.2004,
+    "ratio_in": 0.827,
+    "ann_out": 0.1133,
+    "lift": 0.0525,
+    "pos_episodes": 0.55,
+    "worst_episode": -0.096,
+    "ann_in_without_best_episode": 0.099,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.6665,
+     "tail2": 0.646
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.032,
+     "pos": 0.75
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.048,
+     "pos": 0.75
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 210,
+    "n_episodes": 7,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.1748,
+    "vol_in": 0.139,
+    "ratio_in": -1.257,
+    "ann_out": 0.1534,
+    "lift": -0.3282,
+    "pos_episodes": 0.286,
+    "worst_episode": -0.0589,
+    "ann_in_without_best_episode": -0.2215,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.119,
+     "tail2": 0.124
+    },
+    "fwd60": {
+     "n": 6,
+     "median": -0.016,
+     "pos": 0.167
+    },
+    "fwd90": {
+     "n": 5,
+     "median": 0.0513,
+     "pos": 0.6
+    }
+   },
+   "T线上·L注": {
+    "n_days": 1229,
+    "n_episodes": 20,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.1327,
+    "vol_in": 0.1653,
+    "ratio_in": 0.803,
+    "ann_out": 0.1182,
+    "lift": 0.0145,
+    "pos_episodes": 0.65,
+    "worst_episode": -0.1155,
+    "ann_in_without_best_episode": 0.0853,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.8595,
+     "tail2": 0.825
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.0049,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 19,
+     "median": 0.0277,
+     "pos": 0.632
+    }
+   }
+  },
+  "rv2": {
+   "_all": {
+    "n_days": 2236,
+    "ann": 0.1258,
+    "ratio": 0.747,
+    "first": "2020-08-16",
+    "last": "2026-09-29"
+   },
+   "R升": {
+    "n_days": 1357,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.098,
+    "vol_in": 0.1511,
+    "ratio_in": 0.648,
+    "ann_out": 0.1688,
+    "lift": -0.0708,
+    "pos_episodes": 0.45,
+    "worst_episode": -0.1403,
+    "ann_in_without_best_episode": 0.0534,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.6025,
+     "tail2": 0.592
+    },
+    "fwd60": {
+     "n": 20,
+     "median": -0.0016,
+     "pos": 0.25
+    },
+    "fwd90": {
+     "n": 20,
+     "median": -0.0014,
+     "pos": 0.3
+    }
+   },
+   "R降": {
+    "n_days": 879,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1688,
+    "vol_in": 0.1923,
+    "ratio_in": 0.878,
+    "ann_out": 0.098,
+    "lift": 0.0708,
+    "pos_episodes": 0.3,
+    "worst_episode": -0.036,
+    "ann_in_without_best_episode": 0.0593,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.6025,
+     "tail2": 0.592
+    },
+    "fwd60": {
+     "n": 20,
+     "median": -0.0023,
+     "pos": 0.3
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.0,
+     "pos": 0.45
+    }
+   },
+   "L抽": {
+    "n_days": 618,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.031,
+    "vol_in": 0.1061,
+    "ratio_in": -0.292,
+    "ann_out": 0.1857,
+    "lift": -0.2167,
+    "pos_episodes": 0.167,
+    "worst_episode": -0.0615,
+    "ann_in_without_best_episode": -0.0661,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.1065,
+     "tail2": 0.089
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0,
+     "pos": 0.25
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.0,
+     "pos": 0.25
+    }
+   },
+   "L注": {
+    "n_days": 1618,
+    "n_episodes": 17,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1857,
+    "vol_in": 0.1868,
+    "ratio_in": 0.994,
+    "ann_out": -0.031,
+    "lift": 0.2167,
+    "pos_episodes": 0.412,
+    "worst_episode": -0.0518,
+    "ann_in_without_best_episode": 0.1486,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.1065,
+     "tail2": 0.089
+    },
+    "fwd60": {
+     "n": 16,
+     "median": 0.0,
+     "pos": 0.438
+    },
+    "fwd90": {
+     "n": 16,
+     "median": -0.0004,
+     "pos": 0.25
+    }
+   },
+   "W坏": {
+    "n_days": 812,
+    "n_episodes": 34,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0047,
+    "vol_in": 0.1315,
+    "ratio_in": 0.036,
+    "ann_out": 0.1949,
+    "lift": -0.1901,
+    "pos_episodes": 0.147,
+    "worst_episode": -0.0873,
+    "ann_in_without_best_episode": -0.0351,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.231,
+     "tail2": 0.207
+    },
+    "fwd60": {
+     "n": 32,
+     "median": 0.0,
+     "pos": 0.25
+    },
+    "fwd90": {
+     "n": 31,
+     "median": 0.0,
+     "pos": 0.419
+    }
+   },
+   "W好": {
+    "n_days": 1424,
+    "n_episodes": 35,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1949,
+    "vol_in": 0.1863,
+    "ratio_in": 1.046,
+    "ann_out": 0.0047,
+    "lift": 0.1901,
+    "pos_episodes": 0.257,
+    "worst_episode": -0.0683,
+    "ann_in_without_best_episode": 0.132,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.231,
+     "tail2": 0.207
+    },
+    "fwd60": {
+     "n": 33,
+     "median": 0.0,
+     "pos": 0.364
+    },
+    "fwd90": {
+     "n": 31,
+     "median": 0.0,
+     "pos": 0.355
+    }
+   },
+   "T线下": {
+    "n_days": 977,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0317,
+    "vol_in": 0.0968,
+    "ratio_in": 0.327,
+    "ann_out": 0.1988,
+    "lift": -0.1671,
+    "pos_episodes": 0.25,
+    "worst_episode": -0.0122,
+    "ann_in_without_best_episode": 0.0005,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.2485,
+     "tail2": 0.24
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0,
+     "pos": 0.417
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.001,
+     "pos": 0.5
+    }
+   },
+   "T线上": {
+    "n_days": 1259,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1988,
+    "vol_in": 0.2077,
+    "ratio_in": 0.957,
+    "ann_out": 0.0317,
+    "lift": 0.1671,
+    "pos_episodes": 0.462,
+    "worst_episode": -0.0661,
+    "ann_in_without_best_episode": 0.1471,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.2485,
+     "tail2": 0.24
+    },
+    "fwd60": {
+     "n": 12,
+     "median": -0.0023,
+     "pos": 0.417
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0024,
+     "pos": 0.417
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 457,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0596,
+    "vol_in": 0.0552,
+    "ratio_in": -1.081,
+    "ann_out": 0.1734,
+    "lift": -0.233,
+    "pos_episodes": 0.0,
+    "worst_episode": -0.0579,
+    "ann_in_without_best_episode": -0.0597,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.173,
+     "tail2": 0.157
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0,
+     "pos": 0.333
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.0,
+     "pos": 0.333
+    }
+   },
+   "T线下·L注": {
+    "n_days": 520,
+    "n_episodes": 19,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1119,
+    "vol_in": 0.122,
+    "ratio_in": 0.917,
+    "ann_out": 0.13,
+    "lift": -0.0181,
+    "pos_episodes": 0.263,
+    "worst_episode": -0.001,
+    "ann_in_without_best_episode": 0.0129,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.955,
+     "tail2": 0.999
+    },
+    "fwd60": {
+     "n": 19,
+     "median": 0.0,
+     "pos": 0.474
+    },
+    "fwd90": {
+     "n": 19,
+     "median": 0.0,
+     "pos": 0.474
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 161,
+    "n_episodes": 5,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0501,
+    "vol_in": 0.1859,
+    "ratio_in": 0.27,
+    "ann_out": 0.1317,
+    "lift": -0.0816,
+    "pos_episodes": 0.6,
+    "worst_episode": -0.0587,
+    "ann_in_without_best_episode": -0.0472,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.6705,
+     "tail2": 0.741
+    },
+    "fwd60": {
+     "n": 4,
+     "median": -0.0096,
+     "pos": 0.25
+    },
+    "fwd90": {
+     "n": 4,
+     "median": -0.0142,
+     "pos": 0.25
+    }
+   },
+   "T线上·L注": {
+    "n_days": 1098,
+    "n_episodes": 18,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.2206,
+    "vol_in": 0.2107,
+    "ratio_in": 1.047,
+    "ann_out": 0.0343,
+    "lift": 0.1864,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.0517,
+    "ann_in_without_best_episode": 0.1636,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.1275,
+     "tail2": 0.134
+    },
+    "fwd60": {
+     "n": 17,
+     "median": -0.0046,
+     "pos": 0.412
+    },
+    "fwd90": {
+     "n": 17,
+     "median": -0.0093,
+     "pos": 0.294
+    }
+   }
+  },
+  "S642": {
+   "_all": {
+    "n_days": 1732,
+    "ann": 0.0043,
+    "ratio": 0.081,
+    "first": "2022-01-21",
+    "last": "2026-10-18"
+   },
+   "R升": {
+    "n_days": 1033,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.004,
+    "vol_in": 0.0524,
+    "ratio_in": 0.077,
+    "ann_out": 0.0048,
+    "lift": -0.0008,
+    "pos_episodes": 0.308,
+    "worst_episode": -0.0262,
+    "ann_in_without_best_episode": -0.0167,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.978,
+     "tail2": 0.926
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.0,
+     "pos": 0.231
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0,
+     "pos": 0.462
+    }
+   },
+   "R降": {
+    "n_days": 699,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0048,
+    "vol_in": 0.0557,
+    "ratio_in": 0.087,
+    "ann_out": 0.004,
+    "lift": 0.0008,
+    "pos_episodes": 0.333,
+    "worst_episode": -0.053,
+    "ann_in_without_best_episode": -0.0234,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.978,
+     "tail2": 0.926
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0,
+     "pos": 0.25
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.0,
+     "pos": 0.25
+    }
+   },
+   "L抽": {
+    "n_days": 628,
+    "n_episodes": 11,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0541,
+    "vol_in": 0.0766,
+    "ratio_in": 0.705,
+    "ann_out": -0.0239,
+    "lift": 0.078,
+    "pos_episodes": 0.364,
+    "worst_episode": -0.0042,
+    "ann_in_without_best_episode": 0.0251,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0855,
+     "tail2": 0.129
+    },
+    "fwd60": {
+     "n": 10,
+     "median": 0.0,
+     "pos": 0.4
+    },
+    "fwd90": {
+     "n": 10,
+     "median": 0.0005,
+     "pos": 0.5
+    }
+   },
+   "L注": {
+    "n_days": 1104,
+    "n_episodes": 17,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0239,
+    "vol_in": 0.0345,
+    "ratio_in": -0.694,
+    "ann_out": 0.0541,
+    "lift": -0.078,
+    "pos_episodes": 0.294,
+    "worst_episode": -0.0676,
+    "ann_in_without_best_episode": -0.0457,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0855,
+     "tail2": 0.129
+    },
+    "fwd60": {
+     "n": 16,
+     "median": 0.0,
+     "pos": 0.188
+    },
+    "fwd90": {
+     "n": 16,
+     "median": 0.0,
+     "pos": 0.375
+    }
+   },
+   "W坏": {
+    "n_days": 661,
+    "n_episodes": 28,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0108,
+    "vol_in": 0.0738,
+    "ratio_in": 0.146,
+    "ann_out": 0.0004,
+    "lift": 0.0104,
+    "pos_episodes": 0.25,
+    "worst_episode": -0.0397,
+    "ann_in_without_best_episode": -0.0212,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.7535,
+     "tail2": 0.753
+    },
+    "fwd60": {
+     "n": 28,
+     "median": 0.0,
+     "pos": 0.357
+    },
+    "fwd90": {
+     "n": 26,
+     "median": 0.001,
+     "pos": 0.538
+    }
+   },
+   "W好": {
+    "n_days": 1071,
+    "n_episodes": 28,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0004,
+    "vol_in": 0.0363,
+    "ratio_in": 0.01,
+    "ann_out": 0.0108,
+    "lift": -0.0104,
+    "pos_episodes": 0.321,
+    "worst_episode": -0.0218,
+    "ann_in_without_best_episode": -0.0046,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.7535,
+     "tail2": 0.753
+    },
+    "fwd60": {
+     "n": 27,
+     "median": 0.0,
+     "pos": 0.444
+    },
+    "fwd90": {
+     "n": 26,
+     "median": 0.0005,
+     "pos": 0.577
+    }
+   },
+   "T线下": {
+    "n_days": 916,
+    "n_episodes": 9,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0108,
+    "vol_in": 0.0739,
+    "ratio_in": 0.146,
+    "ann_out": -0.0029,
+    "lift": 0.0136,
+    "pos_episodes": 0.222,
+    "worst_episode": -0.0364,
+    "ann_in_without_best_episode": -0.0488,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.701,
+     "tail2": 0.653
+    },
+    "fwd60": {
+     "n": 9,
+     "median": 0.0,
+     "pos": 0.222
+    },
+    "fwd90": {
+     "n": 9,
+     "median": 0.0,
+     "pos": 0.333
+    }
+   },
+   "T线上": {
+    "n_days": 816,
+    "n_episodes": 11,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0029,
+    "vol_in": 0.0029,
+    "ratio_in": -0.992,
+    "ann_out": 0.0108,
+    "lift": -0.0136,
+    "pos_episodes": 0.091,
+    "worst_episode": -0.0034,
+    "ann_in_without_best_episode": -0.0034,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.701,
+     "tail2": 0.653
+    },
+    "fwd60": {
+     "n": 11,
+     "median": 0.0,
+     "pos": 0.091
+    },
+    "fwd90": {
+     "n": 10,
+     "median": 0.0,
+     "pos": 0.1
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 455,
+    "n_episodes": 10,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0772,
+    "vol_in": 0.09,
+    "ratio_in": 0.858,
+    "ann_out": -0.0216,
+    "lift": 0.0988,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.0042,
+    "ann_in_without_best_episode": 0.0389,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0725,
+     "tail2": 0.14
+    },
+    "fwd60": {
+     "n": 10,
+     "median": 0.0,
+     "pos": 0.4
+    },
+    "fwd90": {
+     "n": 10,
+     "median": 0.0038,
+     "pos": 0.6
+    }
+   },
+   "T线下·L注": {
+    "n_days": 461,
+    "n_episodes": 16,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0548,
+    "vol_in": 0.0532,
+    "ratio_in": -1.03,
+    "ann_out": 0.0258,
+    "lift": -0.0806,
+    "pos_episodes": 0.375,
+    "worst_episode": -0.0364,
+    "ann_in_without_best_episode": -0.0742,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0685,
+     "tail2": 0.079
+    },
+    "fwd60": {
+     "n": 16,
+     "median": 0.0,
+     "pos": 0.312
+    },
+    "fwd90": {
+     "n": 16,
+     "median": 0.0,
+     "pos": 0.375
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 173,
+    "n_episodes": 6,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0068,
+    "vol_in": 0.0035,
+    "ratio_in": -1.927,
+    "ann_out": 0.0056,
+    "lift": -0.0124,
+    "pos_episodes": 0.0,
+    "worst_episode": -0.0032,
+    "ann_in_without_best_episode": -0.008,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.671,
+     "tail2": 0.752
+    },
+    "fwd60": {
+     "n": 5,
+     "median": 0.0,
+     "pos": 0.0
+    },
+    "fwd90": {
+     "n": 4,
+     "median": -0.0016,
+     "pos": 0.0
+    }
+   },
+   "T线上·L注": {
+    "n_days": 643,
+    "n_episodes": 16,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0018,
+    "vol_in": 0.0027,
+    "ratio_in": -0.673,
+    "ann_out": 0.008,
+    "lift": -0.0098,
+    "pos_episodes": 0.062,
+    "worst_episode": -0.0034,
+    "ann_in_without_best_episode": -0.0025,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.732,
+     "tail2": 0.693
+    },
+    "fwd60": {
+     "n": 15,
+     "median": 0.0,
+     "pos": 0.067
+    },
+    "fwd90": {
+     "n": 15,
+     "median": 0.0,
+     "pos": 0.2
+    }
+   }
+  },
+  "S736_published": {
+   "_all": {
+    "n_days": 2047,
+    "ann": -0.018,
+    "ratio": -0.286,
+    "first": "2021-03-24",
+    "last": "2026-10-30"
+   },
+   "R升": {
+    "n_days": 1326,
+    "n_episodes": 15,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0167,
+    "vol_in": 0.0516,
+    "ratio_in": -0.324,
+    "ann_out": -0.0205,
+    "lift": 0.0038,
+    "pos_episodes": 0.333,
+    "worst_episode": -0.0672,
+    "ann_in_without_best_episode": -0.0269,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.9185,
+     "tail2": 0.963
+    },
+    "fwd60": {
+     "n": 15,
+     "median": 0.0,
+     "pos": 0.333
+    },
+    "fwd90": {
+     "n": 15,
+     "median": 0.0,
+     "pos": 0.4
+    }
+   },
+   "R降": {
+    "n_days": 721,
+    "n_episodes": 16,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0205,
+    "vol_in": 0.0801,
+    "ratio_in": -0.256,
+    "ann_out": -0.0167,
+    "lift": -0.0038,
+    "pos_episodes": 0.312,
+    "worst_episode": -0.0715,
+    "ann_in_without_best_episode": -0.0613,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.9185,
+     "tail2": 0.963
+    },
+    "fwd60": {
+     "n": 16,
+     "median": 0.0,
+     "pos": 0.375
+    },
+    "fwd90": {
+     "n": 16,
+     "median": -0.0006,
+     "pos": 0.25
+    }
+   },
+   "L抽": {
+    "n_days": 642,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0157,
+    "vol_in": 0.0476,
+    "ratio_in": 0.329,
+    "ann_out": -0.0334,
+    "lift": 0.0491,
+    "pos_episodes": 0.385,
+    "worst_episode": -0.0219,
+    "ann_in_without_best_episode": -0.0137,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.3885,
+     "tail2": 0.364
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0002,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.0059,
+     "pos": 0.5
+    }
+   },
+   "L注": {
+    "n_days": 1405,
+    "n_episodes": 17,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0334,
+    "vol_in": 0.069,
+    "ratio_in": -0.485,
+    "ann_out": 0.0157,
+    "lift": -0.0491,
+    "pos_episodes": 0.353,
+    "worst_episode": -0.0824,
+    "ann_in_without_best_episode": -0.0354,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.3885,
+     "tail2": 0.364
+    },
+    "fwd60": {
+     "n": 17,
+     "median": -0.0083,
+     "pos": 0.176
+    },
+    "fwd90": {
+     "n": 16,
+     "median": -0.0079,
+     "pos": 0.312
+    }
+   },
+   "W坏": {
+    "n_days": 796,
+    "n_episodes": 33,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0024,
+    "vol_in": 0.0656,
+    "ratio_in": -0.036,
+    "ann_out": -0.028,
+    "lift": 0.0256,
+    "pos_episodes": 0.303,
+    "worst_episode": -0.0326,
+    "ann_in_without_best_episode": -0.0243,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.6025,
+     "tail2": 0.598
+    },
+    "fwd60": {
+     "n": 32,
+     "median": 0.0,
+     "pos": 0.375
+    },
+    "fwd90": {
+     "n": 30,
+     "median": -0.0001,
+     "pos": 0.333
+    }
+   },
+   "W好": {
+    "n_days": 1251,
+    "n_episodes": 33,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.028,
+    "vol_in": 0.0614,
+    "ratio_in": -0.456,
+    "ann_out": -0.0024,
+    "lift": -0.0256,
+    "pos_episodes": 0.485,
+    "worst_episode": -0.0808,
+    "ann_in_without_best_episode": -0.0364,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.6025,
+     "tail2": 0.598
+    },
+    "fwd60": {
+     "n": 33,
+     "median": 0.0,
+     "pos": 0.364
+    },
+    "fwd90": {
+     "n": 31,
+     "median": 0.0,
+     "pos": 0.355
+    }
+   },
+   "T线下": {
+    "n_days": 977,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0177,
+    "vol_in": 0.0609,
+    "ratio_in": -0.29,
+    "ann_out": -0.0184,
+    "lift": 0.0007,
+    "pos_episodes": 0.167,
+    "worst_episode": -0.0526,
+    "ann_in_without_best_episode": -0.0735,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.8165,
+     "tail2": 0.757
+    },
+    "fwd60": {
+     "n": 12,
+     "median": -0.002,
+     "pos": 0.167
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0047,
+     "pos": 0.083
+    }
+   },
+   "T线上": {
+    "n_days": 1070,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0184,
+    "vol_in": 0.065,
+    "ratio_in": -0.283,
+    "ann_out": -0.0177,
+    "lift": -0.0007,
+    "pos_episodes": 0.385,
+    "worst_episode": -0.0506,
+    "ann_in_without_best_episode": -0.025,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.8165,
+     "tail2": 0.757
+    },
+    "fwd60": {
+     "n": 13,
+     "median": -0.0147,
+     "pos": 0.077
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0197,
+     "pos": 0.0
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 457,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0285,
+    "vol_in": 0.0515,
+    "ratio_in": 0.553,
+    "ann_out": -0.0314,
+    "lift": 0.0599,
+    "pos_episodes": 0.333,
+    "worst_episode": -0.0219,
+    "ann_in_without_best_episode": -0.0126,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.246,
+     "tail2": 0.264
+    },
+    "fwd60": {
+     "n": 12,
+     "median": -0.002,
+     "pos": 0.333
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.0,
+     "pos": 0.417
+    }
+   },
+   "T线下·L注": {
+    "n_days": 520,
+    "n_episodes": 19,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0582,
+    "vol_in": 0.0681,
+    "ratio_in": -0.855,
+    "ann_out": -0.0043,
+    "lift": -0.0539,
+    "pos_episodes": 0.316,
+    "worst_episode": -0.0526,
+    "ann_in_without_best_episode": -0.0957,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.473,
+     "tail2": 0.455
+    },
+    "fwd60": {
+     "n": 19,
+     "median": -0.0046,
+     "pos": 0.211
+    },
+    "fwd90": {
+     "n": 19,
+     "median": -0.0123,
+     "pos": 0.211
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 185,
+    "n_episodes": 6,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0159,
+    "vol_in": 0.0364,
+    "ratio_in": -0.438,
+    "ann_out": -0.0182,
+    "lift": 0.0023,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.0192,
+    "ann_in_without_best_episode": -0.0491,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.954,
+     "tail2": 0.917
+    },
+    "fwd60": {
+     "n": 5,
+     "median": -0.0098,
+     "pos": 0.4
+    },
+    "fwd90": {
+     "n": 4,
+     "median": -0.0134,
+     "pos": 0.25
+    }
+   },
+   "T线上·L注": {
+    "n_days": 885,
+    "n_episodes": 18,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0189,
+    "vol_in": 0.0695,
+    "ratio_in": -0.272,
+    "ann_out": -0.0174,
+    "lift": -0.0015,
+    "pos_episodes": 0.389,
+    "worst_episode": -0.0522,
+    "ann_in_without_best_episode": -0.0269,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.874,
+     "tail2": 0.818
+    },
+    "fwd60": {
+     "n": 18,
+     "median": -0.0085,
+     "pos": 0.111
+    },
+    "fwd90": {
+     "n": 17,
+     "median": -0.0055,
+     "pos": 0.118
+    }
+   }
+  },
+  "S736_fixed": {
+   "_all": {
+    "n_days": 2047,
+    "ann": -0.006,
+    "ratio": -0.609,
+    "first": "2021-03-24",
+    "last": "2026-10-30"
+   },
+   "R升": {
+    "n_days": 1326,
+    "n_episodes": 15,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0023,
+    "vol_in": 0.0087,
+    "ratio_in": -0.268,
+    "ann_out": -0.0127,
+    "lift": 0.0104,
+    "pos_episodes": 0.067,
+    "worst_episode": -0.0098,
+    "ann_in_without_best_episode": -0.0082,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.2215,
+     "tail2": 0.203
+    },
+    "fwd60": {
+     "n": 15,
+     "median": 0.0,
+     "pos": 0.067
+    },
+    "fwd90": {
+     "n": 15,
+     "median": 0.0,
+     "pos": 0.0
+    }
+   },
+   "R降": {
+    "n_days": 721,
+    "n_episodes": 16,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0127,
+    "vol_in": 0.0116,
+    "ratio_in": -1.096,
+    "ann_out": -0.0023,
+    "lift": -0.0104,
+    "pos_episodes": 0.0,
+    "worst_episode": -0.0102,
+    "ann_in_without_best_episode": -0.0127,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.2215,
+     "tail2": 0.203
+    },
+    "fwd60": {
+     "n": 16,
+     "median": 0.0,
+     "pos": 0.0
+    },
+    "fwd90": {
+     "n": 16,
+     "median": 0.0,
+     "pos": 0.0
+    }
+   },
+   "L抽": {
+    "n_days": 642,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0028,
+    "vol_in": 0.0112,
+    "ratio_in": 0.255,
+    "ann_out": -0.01,
+    "lift": 0.0129,
+    "pos_episodes": 0.077,
+    "worst_episode": -0.0052,
+    "ann_in_without_best_episode": -0.0051,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.066,
+     "tail2": 0.095
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0,
+     "pos": 0.083
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.0,
+     "pos": 0.083
+    }
+   },
+   "L注": {
+    "n_days": 1405,
+    "n_episodes": 17,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.01,
+    "vol_in": 0.0092,
+    "ratio_in": -1.094,
+    "ann_out": 0.0028,
+    "lift": -0.0129,
+    "pos_episodes": 0.0,
+    "worst_episode": -0.0146,
+    "ann_in_without_best_episode": -0.0138,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.066,
+     "tail2": 0.095
+    },
+    "fwd60": {
+     "n": 17,
+     "median": 0.0,
+     "pos": 0.059
+    },
+    "fwd90": {
+     "n": 16,
+     "median": 0.0,
+     "pos": 0.0
+    }
+   },
+   "W坏": {
+    "n_days": 796,
+    "n_episodes": 33,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0081,
+    "vol_in": 0.0142,
+    "ratio_in": -0.57,
+    "ann_out": -0.0047,
+    "lift": -0.0034,
+    "pos_episodes": 0.03,
+    "worst_episode": -0.0102,
+    "ann_in_without_best_episode": -0.0147,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.7755,
+     "tail2": 0.773
+    },
+    "fwd60": {
+     "n": 32,
+     "median": 0.0,
+     "pos": 0.062
+    },
+    "fwd90": {
+     "n": 30,
+     "median": 0.0,
+     "pos": 0.033
+    }
+   },
+   "W好": {
+    "n_days": 1251,
+    "n_episodes": 33,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0047,
+    "vol_in": 0.0055,
+    "ratio_in": -0.843,
+    "ann_out": -0.0081,
+    "lift": 0.0034,
+    "pos_episodes": 0.0,
+    "worst_episode": -0.0065,
+    "ann_in_without_best_episode": -0.0048,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.7755,
+     "tail2": 0.773
+    },
+    "fwd60": {
+     "n": 33,
+     "median": 0.0,
+     "pos": 0.061
+    },
+    "fwd90": {
+     "n": 31,
+     "median": 0.0,
+     "pos": 0.032
+    }
+   },
+   "T线下": {
+    "n_days": 977,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0054,
+    "vol_in": 0.0127,
+    "ratio_in": -0.425,
+    "ann_out": -0.0066,
+    "lift": 0.0012,
+    "pos_episodes": 0.083,
+    "worst_episode": -0.0152,
+    "ann_in_without_best_episode": -0.0152,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.835,
+     "tail2": 0.841
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0,
+     "pos": 0.0
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.0,
+     "pos": 0.0
+    }
+   },
+   "T线上": {
+    "n_days": 1070,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0066,
+    "vol_in": 0.0063,
+    "ratio_in": -1.045,
+    "ann_out": -0.0054,
+    "lift": -0.0012,
+    "pos_episodes": 0.0,
+    "worst_episode": -0.0098,
+    "ann_in_without_best_episode": -0.0072,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.835,
+     "tail2": 0.841
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.0,
+     "pos": 0.077
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.0,
+     "pos": 0.0
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 457,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.004,
+    "vol_in": 0.0132,
+    "ratio_in": 0.302,
+    "ann_out": -0.0089,
+    "lift": 0.0129,
+    "pos_episodes": 0.083,
+    "worst_episode": -0.0052,
+    "ann_in_without_best_episode": -0.0094,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0725,
+     "tail2": 0.055
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0,
+     "pos": 0.083
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.0,
+     "pos": 0.083
+    }
+   },
+   "T线下·L注": {
+    "n_days": 520,
+    "n_episodes": 19,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0136,
+    "vol_in": 0.0121,
+    "ratio_in": -1.125,
+    "ann_out": -0.0034,
+    "lift": -0.0102,
+    "pos_episodes": 0.0,
+    "worst_episode": -0.0051,
+    "ann_in_without_best_episode": -0.0148,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.2285,
+     "tail2": 0.186
+    },
+    "fwd60": {
+     "n": 19,
+     "median": 0.0,
+     "pos": 0.053
+    },
+    "fwd90": {
+     "n": 19,
+     "median": 0.0,
+     "pos": 0.0
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 185,
+    "n_episodes": 6,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0,
+    "vol_in": 0.0,
+    "ratio_in": 0.0,
+    "ann_out": -0.0066,
+    "lift": 0.0066,
+    "pos_episodes": 0.0,
+    "worst_episode": 0.0,
+    "ann_in_without_best_episode": 0.0,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.6275,
+     "tail2": 0.66
+    },
+    "fwd60": {
+     "n": 5,
+     "median": 0.0,
+     "pos": 0.2
+    },
+    "fwd90": {
+     "n": 4,
+     "median": -0.0025,
+     "pos": 0.0
+    }
+   },
+   "T线上·L注": {
+    "n_days": 885,
+    "n_episodes": 18,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0079,
+    "vol_in": 0.0069,
+    "ratio_in": -1.15,
+    "ann_out": -0.0045,
+    "lift": -0.0034,
+    "pos_episodes": 0.0,
+    "worst_episode": -0.0098,
+    "ann_in_without_best_episode": -0.0088,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.5435,
+     "tail2": 0.536
+    },
+    "fwd60": {
+     "n": 18,
+     "median": 0.0,
+     "pos": 0.056
+    },
+    "fwd90": {
+     "n": 17,
+     "median": 0.0,
+     "pos": 0.0
+    }
+   }
+  },
+  "S808": {
+   "_all": {
+    "n_days": 2283,
+    "ann": -0.0759,
+    "ratio": -1.613,
+    "first": "2020-08-09",
+    "last": "2026-11-08"
+   },
+   "R升": {
+    "n_days": 1397,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0646,
+    "vol_in": 0.0405,
+    "ratio_in": -1.595,
+    "ann_out": -0.0937,
+    "lift": 0.0291,
+    "pos_episodes": 0.2,
+    "worst_episode": -0.1465,
+    "ann_in_without_best_episode": -0.0733,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.5245,
+     "tail2": 0.494
+    },
+    "fwd60": {
+     "n": 20,
+     "median": -0.0054,
+     "pos": 0.1
+    },
+    "fwd90": {
+     "n": 20,
+     "median": -0.009,
+     "pos": 0.1
+    }
+   },
+   "R降": {
+    "n_days": 886,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0937,
+    "vol_in": 0.0558,
+    "ratio_in": -1.679,
+    "ann_out": -0.0646,
+    "lift": -0.0291,
+    "pos_episodes": 0.05,
+    "worst_episode": -0.0564,
+    "ann_in_without_best_episode": -0.0959,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.5245,
+     "tail2": 0.494
+    },
+    "fwd60": {
+     "n": 20,
+     "median": -0.0051,
+     "pos": 0.1
+    },
+    "fwd90": {
+     "n": 20,
+     "median": -0.0063,
+     "pos": 0.2
+    }
+   },
+   "L抽": {
+    "n_days": 651,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.1209,
+    "vol_in": 0.0489,
+    "ratio_in": -2.472,
+    "ann_out": -0.058,
+    "lift": -0.0629,
+    "pos_episodes": 0.231,
+    "worst_episode": -0.1037,
+    "ann_in_without_best_episode": -0.1289,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.311,
+     "tail2": 0.376
+    },
+    "fwd60": {
+     "n": 12,
+     "median": -0.0123,
+     "pos": 0.083
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0224,
+     "pos": 0.167
+    }
+   },
+   "L注": {
+    "n_days": 1632,
+    "n_episodes": 17,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.058,
+    "vol_in": 0.0463,
+    "ratio_in": -1.253,
+    "ann_out": -0.1209,
+    "lift": 0.0629,
+    "pos_episodes": 0.059,
+    "worst_episode": -0.1019,
+    "ann_in_without_best_episode": -0.0637,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.311,
+     "tail2": 0.376
+    },
+    "fwd60": {
+     "n": 17,
+     "median": -0.0156,
+     "pos": 0.0
+    },
+    "fwd90": {
+     "n": 16,
+     "median": -0.0213,
+     "pos": 0.0
+    }
+   },
+   "W坏": {
+    "n_days": 826,
+    "n_episodes": 35,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.1043,
+    "vol_in": 0.0541,
+    "ratio_in": -1.928,
+    "ann_out": -0.0598,
+    "lift": -0.0445,
+    "pos_episodes": 0.171,
+    "worst_episode": -0.0466,
+    "ann_in_without_best_episode": -0.1303,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.334,
+     "tail2": 0.323
+    },
+    "fwd60": {
+     "n": 34,
+     "median": -0.0142,
+     "pos": 0.206
+    },
+    "fwd90": {
+     "n": 33,
+     "median": -0.0209,
+     "pos": 0.212
+    }
+   },
+   "W好": {
+    "n_days": 1457,
+    "n_episodes": 35,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0598,
+    "vol_in": 0.0425,
+    "ratio_in": -1.407,
+    "ann_out": -0.1043,
+    "lift": 0.0445,
+    "pos_episodes": 0.2,
+    "worst_episode": -0.0501,
+    "ann_in_without_best_episode": -0.0644,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.334,
+     "tail2": 0.323
+    },
+    "fwd60": {
+     "n": 35,
+     "median": -0.0091,
+     "pos": 0.171
+    },
+    "fwd90": {
+     "n": 34,
+     "median": -0.018,
+     "pos": 0.147
+    }
+   },
+   "T线下": {
+    "n_days": 977,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.1079,
+    "vol_in": 0.0594,
+    "ratio_in": -1.817,
+    "ann_out": -0.052,
+    "lift": -0.0558,
+    "pos_episodes": 0.167,
+    "worst_episode": -0.1507,
+    "ann_in_without_best_episode": -0.1212,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.1975,
+     "tail2": 0.253
+    },
+    "fwd60": {
+     "n": 12,
+     "median": -0.0055,
+     "pos": 0.25
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.01,
+     "pos": 0.25
+    }
+   },
+   "T线上": {
+    "n_days": 1306,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.052,
+    "vol_in": 0.0351,
+    "ratio_in": -1.482,
+    "ann_out": -0.1079,
+    "lift": 0.0558,
+    "pos_episodes": 0.231,
+    "worst_episode": -0.0466,
+    "ann_in_without_best_episode": -0.0552,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.1975,
+     "tail2": 0.253
+    },
+    "fwd60": {
+     "n": 13,
+     "median": -0.005,
+     "pos": 0.231
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0117,
+     "pos": 0.0
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 457,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.1317,
+    "vol_in": 0.0506,
+    "ratio_in": -2.605,
+    "ann_out": -0.062,
+    "lift": -0.0698,
+    "pos_episodes": 0.167,
+    "worst_episode": -0.0791,
+    "ann_in_without_best_episode": -0.1433,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.2185,
+     "tail2": 0.277
+    },
+    "fwd60": {
+     "n": 12,
+     "median": -0.0066,
+     "pos": 0.0
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0208,
+     "pos": 0.083
+    }
+   },
+   "T线下·L注": {
+    "n_days": 520,
+    "n_episodes": 19,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0869,
+    "vol_in": 0.0661,
+    "ratio_in": -1.314,
+    "ann_out": -0.0727,
+    "lift": -0.0142,
+    "pos_episodes": 0.211,
+    "worst_episode": -0.0661,
+    "ann_in_without_best_episode": -0.1081,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.7985,
+     "tail2": 0.812
+    },
+    "fwd60": {
+     "n": 19,
+     "median": -0.0102,
+     "pos": 0.158
+    },
+    "fwd90": {
+     "n": 19,
+     "median": -0.0218,
+     "pos": 0.158
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 194,
+    "n_episodes": 6,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0953,
+    "vol_in": 0.0447,
+    "ratio_in": -2.132,
+    "ann_out": -0.0741,
+    "lift": -0.0211,
+    "pos_episodes": 0.167,
+    "worst_episode": -0.0268,
+    "ann_in_without_best_episode": -0.0973,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.821,
+     "tail2": 0.666
+    },
+    "fwd60": {
+     "n": 5,
+     "median": -0.005,
+     "pos": 0.2
+    },
+    "fwd90": {
+     "n": 4,
+     "median": -0.0132,
+     "pos": 0.25
+    }
+   },
+   "T线上·L注": {
+    "n_days": 1112,
+    "n_episodes": 18,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0445,
+    "vol_in": 0.0331,
+    "ratio_in": -1.342,
+    "ann_out": -0.1058,
+    "lift": 0.0613,
+    "pos_episodes": 0.167,
+    "worst_episode": -0.0407,
+    "ann_in_without_best_episode": -0.0481,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.2285,
+     "tail2": 0.292
+    },
+    "fwd60": {
+     "n": 18,
+     "median": -0.012,
+     "pos": 0.167
+    },
+    "fwd90": {
+     "n": 17,
+     "median": -0.0134,
+     "pos": 0.0
+    }
+   }
+  },
+  "S810": {
+   "_all": {
+    "n_days": 1216,
+    "ann": -0.0015,
+    "ratio": -0.247,
+    "first": "2023-06-02",
+    "last": "2026-09-29"
+   },
+   "R升": {
+    "n_days": 625,
+    "n_episodes": 10,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0037,
+    "vol_in": 0.0073,
+    "ratio_in": -0.505,
+    "ann_out": 0.0008,
+    "lift": -0.0045,
+    "pos_episodes": 0.2,
+    "worst_episode": -0.0066,
+    "ann_in_without_best_episode": -0.0054,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.3365,
+     "tail2": 0.346
+    },
+    "fwd60": {
+     "n": 10,
+     "median": 0.0,
+     "pos": 0.2
+    },
+    "fwd90": {
+     "n": 10,
+     "median": 0.0,
+     "pos": 0.4
+    }
+   },
+   "R降": {
+    "n_days": 591,
+    "n_episodes": 10,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0008,
+    "vol_in": 0.0042,
+    "ratio_in": 0.202,
+    "ann_out": -0.0037,
+    "lift": 0.0045,
+    "pos_episodes": 0.6,
+    "worst_episode": -0.0047,
+    "ann_in_without_best_episode": -0.0003,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.3365,
+     "tail2": 0.346
+    },
+    "fwd60": {
+     "n": 10,
+     "median": 0.0002,
+     "pos": 0.6
+    },
+    "fwd90": {
+     "n": 10,
+     "median": 0.0001,
+     "pos": 0.5
+    }
+   },
+   "L抽": {
+    "n_days": 299,
+    "n_episodes": 8,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0004,
+    "vol_in": 0.0082,
+    "ratio_in": -0.05,
+    "ann_out": -0.0018,
+    "lift": 0.0014,
+    "pos_episodes": 0.25,
+    "worst_episode": -0.0013,
+    "ann_in_without_best_episode": -0.0016,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.9905,
+     "tail2": 0.904
+    },
+    "fwd60": {
+     "n": 8,
+     "median": 0.0003,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 8,
+     "median": 0.0006,
+     "pos": 0.625
+    }
+   },
+   "L注": {
+    "n_days": 917,
+    "n_episodes": 8,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0018,
+    "vol_in": 0.0051,
+    "ratio_in": -0.358,
+    "ann_out": -0.0004,
+    "lift": -0.0014,
+    "pos_episodes": 0.25,
+    "worst_episode": -0.006,
+    "ann_in_without_best_episode": -0.0047,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.9905,
+     "tail2": 0.904
+    },
+    "fwd60": {
+     "n": 7,
+     "median": 0.0,
+     "pos": 0.0
+    },
+    "fwd90": {
+     "n": 7,
+     "median": 0.0,
+     "pos": 0.143
+    }
+   },
+   "W坏": {
+    "n_days": 416,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0013,
+    "vol_in": 0.0053,
+    "ratio_in": 0.241,
+    "ann_out": -0.0029,
+    "lift": 0.0042,
+    "pos_episodes": 0.15,
+    "worst_episode": -0.0008,
+    "ann_in_without_best_episode": 0.0005,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.3805,
+     "tail2": 0.387
+    },
+    "fwd60": {
+     "n": 18,
+     "median": 0.0,
+     "pos": 0.389
+    },
+    "fwd90": {
+     "n": 17,
+     "median": 0.0,
+     "pos": 0.294
+    }
+   },
+   "W好": {
+    "n_days": 800,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0029,
+    "vol_in": 0.0063,
+    "ratio_in": -0.459,
+    "ann_out": 0.0013,
+    "lift": -0.0042,
+    "pos_episodes": 0.2,
+    "worst_episode": -0.0052,
+    "ann_in_without_best_episode": -0.0042,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.3805,
+     "tail2": 0.387
+    },
+    "fwd60": {
+     "n": 18,
+     "median": 0.0,
+     "pos": 0.444
+    },
+    "fwd90": {
+     "n": 16,
+     "median": 0.0,
+     "pos": 0.375
+    }
+   },
+   "T线下": {
+    "n_days": 556,
+    "n_episodes": 7,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0031,
+    "vol_in": 0.0075,
+    "ratio_in": -0.418,
+    "ann_out": -0.0001,
+    "lift": -0.003,
+    "pos_episodes": 0.0,
+    "worst_episode": -0.0044,
+    "ann_in_without_best_episode": -0.0036,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.502,
+     "tail2": 0.502
+    },
+    "fwd60": {
+     "n": 7,
+     "median": 0.0,
+     "pos": 0.143
+    },
+    "fwd90": {
+     "n": 7,
+     "median": 0.0,
+     "pos": 0.143
+    }
+   },
+   "T线上": {
+    "n_days": 660,
+    "n_episodes": 11,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0001,
+    "vol_in": 0.0044,
+    "ratio_in": -0.02,
+    "ann_out": -0.0031,
+    "lift": 0.003,
+    "pos_episodes": 0.273,
+    "worst_episode": -0.0019,
+    "ann_in_without_best_episode": -0.001,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.502,
+     "tail2": 0.502
+    },
+    "fwd60": {
+     "n": 10,
+     "median": 0.0,
+     "pos": 0.3
+    },
+    "fwd90": {
+     "n": 10,
+     "median": 0.0,
+     "pos": 0.4
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 218,
+    "n_episodes": 8,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.001,
+    "vol_in": 0.0094,
+    "ratio_in": -0.103,
+    "ann_out": -0.0016,
+    "lift": 0.0006,
+    "pos_episodes": 0.25,
+    "worst_episode": -0.0013,
+    "ann_in_without_best_episode": -0.003,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.911,
+     "tail2": 0.751
+    },
+    "fwd60": {
+     "n": 8,
+     "median": 0.0,
+     "pos": 0.25
+    },
+    "fwd90": {
+     "n": 8,
+     "median": 0.0,
+     "pos": 0.375
+    }
+   },
+   "T线下·L注": {
+    "n_days": 338,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0045,
+    "vol_in": 0.006,
+    "ratio_in": -0.755,
+    "ann_out": -0.0003,
+    "lift": -0.0042,
+    "pos_episodes": 0.083,
+    "worst_episode": -0.006,
+    "ann_in_without_best_episode": -0.0077,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.5875,
+     "tail2": 0.552
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0,
+     "pos": 0.083
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.0,
+     "pos": 0.167
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 81,
+    "n_episodes": 4,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0011,
+    "vol_in": 0.0032,
+    "ratio_in": 0.34,
+    "ann_out": -0.0017,
+    "lift": 0.0027,
+    "pos_episodes": 0.25,
+    "worst_episode": -0.0005,
+    "ann_in_without_best_episode": -0.0265,
+    "enough": false,
+    "p_shift": {
+     "dev": 0.614,
+     "tail2": 0.773
+    },
+    "fwd60": {
+     "n": 3,
+     "median": 0.0006,
+     "pos": 0.667
+    },
+    "fwd90": {
+     "n": 3,
+     "median": 0.0006,
+     "pos": 0.667
+    }
+   },
+   "T线上·L注": {
+    "n_days": 579,
+    "n_episodes": 10,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0003,
+    "vol_in": 0.0045,
+    "ratio_in": -0.056,
+    "ann_out": -0.0026,
+    "lift": 0.0023,
+    "pos_episodes": 0.2,
+    "worst_episode": -0.0019,
+    "ann_in_without_best_episode": -0.0013,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.585,
+     "tail2": 0.632
+    },
+    "fwd60": {
+     "n": 9,
+     "median": 0.0,
+     "pos": 0.222
+    },
+    "fwd90": {
+     "n": 9,
+     "median": 0.0,
+     "pos": 0.333
+    }
+   }
+  },
+  "S681_H2": {
+   "_all": {
+    "n_days": 2152,
+    "ann": -0.0616,
+    "ratio": -0.701,
+    "first": "2020-11-07",
+    "last": "2026-09-28"
+   },
+   "R升": {
+    "n_days": 1341,
+    "n_episodes": 19,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0238,
+    "vol_in": 0.0807,
+    "ratio_in": -0.295,
+    "ann_out": -0.1241,
+    "lift": 0.1004,
+    "pos_episodes": 0.263,
+    "worst_episode": -0.0605,
+    "ann_in_without_best_episode": -0.0805,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.148,
+     "tail2": 0.131
+    },
+    "fwd60": {
+     "n": 19,
+     "median": -0.0178,
+     "pos": 0.316
+    },
+    "fwd90": {
+     "n": 19,
+     "median": -0.0179,
+     "pos": 0.316
+    }
+   },
+   "R降": {
+    "n_days": 811,
+    "n_episodes": 19,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.1241,
+    "vol_in": 0.0987,
+    "ratio_in": -1.258,
+    "ann_out": -0.0238,
+    "lift": -0.1004,
+    "pos_episodes": 0.421,
+    "worst_episode": -0.1318,
+    "ann_in_without_best_episode": -0.1341,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.148,
+     "tail2": 0.131
+    },
+    "fwd60": {
+     "n": 19,
+     "median": -0.0034,
+     "pos": 0.474
+    },
+    "fwd90": {
+     "n": 19,
+     "median": -0.0073,
+     "pos": 0.421
+    }
+   },
+   "L抽": {
+    "n_days": 618,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0331,
+    "vol_in": 0.079,
+    "ratio_in": 0.419,
+    "ann_out": -0.0998,
+    "lift": 0.1329,
+    "pos_episodes": 0.667,
+    "worst_episode": -0.0297,
+    "ann_in_without_best_episode": 0.0243,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.11,
+     "tail2": 0.089
+    },
+    "fwd60": {
+     "n": 12,
+     "median": -0.0088,
+     "pos": 0.333
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0001,
+     "pos": 0.5
+    }
+   },
+   "L注": {
+    "n_days": 1534,
+    "n_episodes": 17,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0998,
+    "vol_in": 0.0912,
+    "ratio_in": -1.094,
+    "ann_out": 0.0331,
+    "lift": -0.1329,
+    "pos_episodes": 0.353,
+    "worst_episode": -0.1703,
+    "ann_in_without_best_episode": -0.1085,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.11,
+     "tail2": 0.089
+    },
+    "fwd60": {
+     "n": 16,
+     "median": -0.0044,
+     "pos": 0.375
+    },
+    "fwd90": {
+     "n": 16,
+     "median": 0.004,
+     "pos": 0.688
+    }
+   },
+   "W坏": {
+    "n_days": 791,
+    "n_episodes": 32,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0142,
+    "vol_in": 0.0848,
+    "ratio_in": -0.168,
+    "ann_out": -0.0891,
+    "lift": 0.0749,
+    "pos_episodes": 0.375,
+    "worst_episode": -0.0328,
+    "ann_in_without_best_episode": -0.0479,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.2445,
+     "tail2": 0.235
+    },
+    "fwd60": {
+     "n": 30,
+     "median": 0.0003,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 29,
+     "median": 0.0017,
+     "pos": 0.517
+    }
+   },
+   "W好": {
+    "n_days": 1361,
+    "n_episodes": 33,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0891,
+    "vol_in": 0.0896,
+    "ratio_in": -0.994,
+    "ann_out": -0.0142,
+    "lift": -0.0749,
+    "pos_episodes": 0.485,
+    "worst_episode": -0.2125,
+    "ann_in_without_best_episode": -0.0991,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.2445,
+     "tail2": 0.235
+    },
+    "fwd60": {
+     "n": 31,
+     "median": 0.0039,
+     "pos": 0.645
+    },
+    "fwd90": {
+     "n": 29,
+     "median": -0.0118,
+     "pos": 0.379
+    }
+   },
+   "T线下": {
+    "n_days": 977,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0254,
+    "vol_in": 0.0818,
+    "ratio_in": -0.311,
+    "ann_out": -0.0917,
+    "lift": 0.0663,
+    "pos_episodes": 0.25,
+    "worst_episode": -0.0688,
+    "ann_in_without_best_episode": -0.0685,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.314,
+     "tail2": 0.332
+    },
+    "fwd60": {
+     "n": 12,
+     "median": -0.0083,
+     "pos": 0.25
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0069,
+     "pos": 0.417
+    }
+   },
+   "T线上": {
+    "n_days": 1175,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0917,
+    "vol_in": 0.0927,
+    "ratio_in": -0.989,
+    "ann_out": -0.0254,
+    "lift": -0.0663,
+    "pos_episodes": 0.538,
+    "worst_episode": -0.1996,
+    "ann_in_without_best_episode": -0.1281,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.314,
+     "tail2": 0.332
+    },
+    "fwd60": {
+     "n": 12,
+     "median": -0.0112,
+     "pos": 0.333
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0112,
+     "pos": 0.25
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 457,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0421,
+    "vol_in": 0.0874,
+    "ratio_in": 0.482,
+    "ann_out": -0.0896,
+    "lift": 0.1317,
+    "pos_episodes": 0.583,
+    "worst_episode": -0.0297,
+    "ann_in_without_best_episode": 0.0365,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.1205,
+     "tail2": 0.108
+    },
+    "fwd60": {
+     "n": 12,
+     "median": -0.008,
+     "pos": 0.417
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.001,
+     "pos": 0.583
+    }
+   },
+   "T线下·L注": {
+    "n_days": 520,
+    "n_episodes": 19,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0847,
+    "vol_in": 0.0763,
+    "ratio_in": -1.11,
+    "ann_out": -0.0542,
+    "lift": -0.0305,
+    "pos_episodes": 0.316,
+    "worst_episode": -0.0688,
+    "ann_in_without_best_episode": -0.1107,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.8755,
+     "tail2": 0.874
+    },
+    "fwd60": {
+     "n": 19,
+     "median": -0.0104,
+     "pos": 0.158
+    },
+    "fwd90": {
+     "n": 19,
+     "median": -0.0029,
+     "pos": 0.421
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 161,
+    "n_episodes": 5,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0075,
+    "vol_in": 0.0475,
+    "ratio_in": 0.158,
+    "ann_out": -0.0672,
+    "lift": 0.0747,
+    "pos_episodes": 0.2,
+    "worst_episode": -0.0076,
+    "ann_in_without_best_episode": -0.1464,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.632,
+     "tail2": 0.708
+    },
+    "fwd60": {
+     "n": 4,
+     "median": -0.0081,
+     "pos": 0.25
+    },
+    "fwd90": {
+     "n": 4,
+     "median": -0.0019,
+     "pos": 0.25
+    }
+   },
+   "T线上·L注": {
+    "n_days": 1014,
+    "n_episodes": 18,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.1075,
+    "vol_in": 0.0979,
+    "ratio_in": -1.097,
+    "ann_out": -0.0207,
+    "lift": -0.0867,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.1996,
+    "ann_in_without_best_episode": -0.1534,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.217,
+     "tail2": 0.245
+    },
+    "fwd60": {
+     "n": 17,
+     "median": -0.0046,
+     "pos": 0.471
+    },
+    "fwd90": {
+     "n": 17,
+     "median": 0.0024,
+     "pos": 0.529
+    }
+   }
+  },
+  "S681_H3": {
+   "_all": {
+    "n_days": 2348,
+    "ann": -0.0846,
+    "ratio": -1.046,
+    "first": "2020-04-26",
+    "last": "2026-09-29"
+   },
+   "R升": {
+    "n_days": 1357,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0563,
+    "vol_in": 0.0754,
+    "ratio_in": -0.747,
+    "ann_out": -0.1232,
+    "lift": 0.0669,
+    "pos_episodes": 0.25,
+    "worst_episode": -0.1196,
+    "ann_in_without_best_episode": -0.0777,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.5925,
+     "tail2": 0.575
+    },
+    "fwd60": {
+     "n": 20,
+     "median": -0.0129,
+     "pos": 0.1
+    },
+    "fwd90": {
+     "n": 20,
+     "median": -0.0511,
+     "pos": 0.1
+    }
+   },
+   "R降": {
+    "n_days": 991,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.1232,
+    "vol_in": 0.0876,
+    "ratio_in": -1.406,
+    "ann_out": -0.0563,
+    "lift": -0.0669,
+    "pos_episodes": 0.25,
+    "worst_episode": -0.1779,
+    "ann_in_without_best_episode": -0.1488,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.5925,
+     "tail2": 0.575
+    },
+    "fwd60": {
+     "n": 20,
+     "median": -0.0044,
+     "pos": 0.25
+    },
+    "fwd90": {
+     "n": 20,
+     "median": -0.0109,
+     "pos": 0.2
+    }
+   },
+   "L抽": {
+    "n_days": 618,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0234,
+    "vol_in": 0.0549,
+    "ratio_in": -0.427,
+    "ann_out": -0.1064,
+    "lift": 0.0829,
+    "pos_episodes": 0.333,
+    "worst_episode": -0.0267,
+    "ann_in_without_best_episode": -0.0426,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.377,
+     "tail2": 0.315
+    },
+    "fwd60": {
+     "n": 12,
+     "median": -0.0046,
+     "pos": 0.333
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0002,
+     "pos": 0.333
+    }
+   },
+   "L注": {
+    "n_days": 1730,
+    "n_episodes": 17,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.1064,
+    "vol_in": 0.0882,
+    "ratio_in": -1.206,
+    "ann_out": -0.0234,
+    "lift": -0.0829,
+    "pos_episodes": 0.176,
+    "worst_episode": -0.3435,
+    "ann_in_without_best_episode": -0.1421,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.377,
+     "tail2": 0.315
+    },
+    "fwd60": {
+     "n": 16,
+     "median": 0.0,
+     "pos": 0.25
+    },
+    "fwd90": {
+     "n": 16,
+     "median": 0.0,
+     "pos": 0.375
+    }
+   },
+   "W坏": {
+    "n_days": 826,
+    "n_episodes": 36,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0694,
+    "vol_in": 0.0617,
+    "ratio_in": -1.124,
+    "ann_out": -0.0928,
+    "lift": 0.0234,
+    "pos_episodes": 0.194,
+    "worst_episode": -0.0532,
+    "ann_in_without_best_episode": -0.0837,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.709,
+     "tail2": 0.691
+    },
+    "fwd60": {
+     "n": 34,
+     "median": -0.0001,
+     "pos": 0.294
+    },
+    "fwd90": {
+     "n": 33,
+     "median": -0.0046,
+     "pos": 0.273
+    }
+   },
+   "W好": {
+    "n_days": 1522,
+    "n_episodes": 37,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0928,
+    "vol_in": 0.0895,
+    "ratio_in": -1.037,
+    "ann_out": -0.0694,
+    "lift": -0.0234,
+    "pos_episodes": 0.405,
+    "worst_episode": -0.2738,
+    "ann_in_without_best_episode": -0.1014,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.709,
+     "tail2": 0.691
+    },
+    "fwd60": {
+     "n": 35,
+     "median": 0.0,
+     "pos": 0.343
+    },
+    "fwd90": {
+     "n": 33,
+     "median": -0.0067,
+     "pos": 0.212
+    }
+   },
+   "T线下": {
+    "n_days": 977,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0635,
+    "vol_in": 0.0597,
+    "ratio_in": -1.065,
+    "ann_out": -0.0995,
+    "lift": 0.036,
+    "pos_episodes": 0.167,
+    "worst_episode": -0.1405,
+    "ann_in_without_best_episode": -0.1057,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.692,
+     "tail2": 0.709
+    },
+    "fwd60": {
+     "n": 12,
+     "median": -0.0094,
+     "pos": 0.083
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0047,
+     "pos": 0.083
+    }
+   },
+   "T线上": {
+    "n_days": 1371,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0995,
+    "vol_in": 0.093,
+    "ratio_in": -1.07,
+    "ann_out": -0.0635,
+    "lift": -0.036,
+    "pos_episodes": 0.692,
+    "worst_episode": -0.2879,
+    "ann_in_without_best_episode": -0.1064,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.692,
+     "tail2": 0.709
+    },
+    "fwd60": {
+     "n": 12,
+     "median": -0.0099,
+     "pos": 0.25
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0011,
+     "pos": 0.5
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 457,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0499,
+    "vol_in": 0.0626,
+    "ratio_in": -0.798,
+    "ann_out": -0.0929,
+    "lift": 0.043,
+    "pos_episodes": 0.167,
+    "worst_episode": -0.0443,
+    "ann_in_without_best_episode": -0.1112,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.6905,
+     "tail2": 0.8
+    },
+    "fwd60": {
+     "n": 12,
+     "median": -0.0046,
+     "pos": 0.25
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0024,
+     "pos": 0.25
+    }
+   },
+   "T线下·L注": {
+    "n_days": 520,
+    "n_episodes": 19,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0755,
+    "vol_in": 0.057,
+    "ratio_in": -1.325,
+    "ann_out": -0.0871,
+    "lift": 0.0116,
+    "pos_episodes": 0.0,
+    "worst_episode": -0.0324,
+    "ann_in_without_best_episode": -0.0821,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.873,
+     "tail2": 0.987
+    },
+    "fwd60": {
+     "n": 19,
+     "median": -0.0146,
+     "pos": 0.211
+    },
+    "fwd90": {
+     "n": 19,
+     "median": -0.0036,
+     "pos": 0.316
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 161,
+    "n_episodes": 5,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.0516,
+    "vol_in": 0.0209,
+    "ratio_in": 2.476,
+    "ann_out": -0.0946,
+    "lift": 0.1462,
+    "pos_episodes": 0.8,
+    "worst_episode": -0.0,
+    "ann_in_without_best_episode": 0.0105,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.191,
+     "tail2": 0.127
+    },
+    "fwd60": {
+     "n": 4,
+     "median": 0.0008,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 4,
+     "median": 0.0061,
+     "pos": 0.75
+    }
+   },
+   "T线上·L注": {
+    "n_days": 1210,
+    "n_episodes": 18,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.1197,
+    "vol_in": 0.0987,
+    "ratio_in": -1.213,
+    "ann_out": -0.0472,
+    "lift": -0.0724,
+    "pos_episodes": 0.444,
+    "worst_episode": -0.2879,
+    "ann_in_without_best_episode": -0.1278,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.301,
+     "tail2": 0.341
+    },
+    "fwd60": {
+     "n": 17,
+     "median": -0.0042,
+     "pos": 0.176
+    },
+    "fwd90": {
+     "n": 17,
+     "median": 0.0,
+     "pos": 0.353
+    }
+   }
+  },
+  "S681_H4": {
+   "_all": {
+    "n_days": 2217,
+    "ann": 0.0264,
+    "ratio": 0.198,
+    "first": "2020-09-04",
+    "last": "2026-09-29"
+   },
+   "R升": {
+    "n_days": 1357,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0091,
+    "vol_in": 0.1292,
+    "ratio_in": 0.07,
+    "ann_out": 0.0538,
+    "lift": -0.0447,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.1041,
+    "ann_in_without_best_episode": -0.0436,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.6205,
+     "tail2": 0.567
+    },
+    "fwd60": {
+     "n": 20,
+     "median": -0.0049,
+     "pos": 0.3
+    },
+    "fwd90": {
+     "n": 20,
+     "median": -0.0136,
+     "pos": 0.25
+    }
+   },
+   "R降": {
+    "n_days": 860,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0538,
+    "vol_in": 0.1392,
+    "ratio_in": 0.386,
+    "ann_out": 0.0091,
+    "lift": 0.0447,
+    "pos_episodes": 0.4,
+    "worst_episode": -0.0551,
+    "ann_in_without_best_episode": 0.0152,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.6205,
+     "tail2": 0.567
+    },
+    "fwd60": {
+     "n": 20,
+     "median": -0.0032,
+     "pos": 0.35
+    },
+    "fwd90": {
+     "n": 20,
+     "median": -0.0088,
+     "pos": 0.4
+    }
+   },
+   "L抽": {
+    "n_days": 618,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0429,
+    "vol_in": 0.136,
+    "ratio_in": 0.316,
+    "ann_out": 0.02,
+    "lift": 0.0229,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.0441,
+    "ann_in_without_best_episode": 0.0126,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.861,
+     "tail2": 0.792
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0126,
+     "pos": 0.667
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.0207,
+     "pos": 0.583
+    }
+   },
+   "L注": {
+    "n_days": 1599,
+    "n_episodes": 17,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.02,
+    "vol_in": 0.132,
+    "ratio_in": 0.152,
+    "ann_out": 0.0429,
+    "lift": -0.0229,
+    "pos_episodes": 0.529,
+    "worst_episode": -0.0493,
+    "ann_in_without_best_episode": -0.0177,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.861,
+     "tail2": 0.792
+    },
+    "fwd60": {
+     "n": 16,
+     "median": -0.0204,
+     "pos": 0.312
+    },
+    "fwd90": {
+     "n": 16,
+     "median": -0.0152,
+     "pos": 0.438
+    }
+   },
+   "W坏": {
+    "n_days": 812,
+    "n_episodes": 34,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0861,
+    "vol_in": 0.142,
+    "ratio_in": 0.607,
+    "ann_out": -0.0081,
+    "lift": 0.0942,
+    "pos_episodes": 0.441,
+    "worst_episode": -0.0297,
+    "ann_in_without_best_episode": 0.0421,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.367,
+     "tail2": 0.361
+    },
+    "fwd60": {
+     "n": 32,
+     "median": 0.0071,
+     "pos": 0.594
+    },
+    "fwd90": {
+     "n": 31,
+     "median": 0.003,
+     "pos": 0.548
+    }
+   },
+   "W好": {
+    "n_days": 1405,
+    "n_episodes": 35,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0081,
+    "vol_in": 0.1278,
+    "ratio_in": -0.063,
+    "ann_out": 0.0861,
+    "lift": -0.0942,
+    "pos_episodes": 0.543,
+    "worst_episode": -0.0745,
+    "ann_in_without_best_episode": -0.0291,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.367,
+     "tail2": 0.361
+    },
+    "fwd60": {
+     "n": 33,
+     "median": -0.0022,
+     "pos": 0.455
+    },
+    "fwd90": {
+     "n": 31,
+     "median": 0.0007,
+     "pos": 0.516
+    }
+   },
+   "T线下": {
+    "n_days": 977,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0024,
+    "vol_in": 0.144,
+    "ratio_in": 0.017,
+    "ann_out": 0.0453,
+    "lift": -0.0429,
+    "pos_episodes": 0.167,
+    "worst_episode": -0.0438,
+    "ann_in_without_best_episode": -0.1095,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.7245,
+     "tail2": 0.708
+    },
+    "fwd60": {
+     "n": 12,
+     "median": -0.0073,
+     "pos": 0.333
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0248,
+     "pos": 0.333
+    }
+   },
+   "T线上": {
+    "n_days": 1240,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0453,
+    "vol_in": 0.1239,
+    "ratio_in": 0.366,
+    "ann_out": 0.0024,
+    "lift": 0.0429,
+    "pos_episodes": 0.462,
+    "worst_episode": -0.0278,
+    "ann_in_without_best_episode": 0.0306,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.7245,
+     "tail2": 0.708
+    },
+    "fwd60": {
+     "n": 12,
+     "median": -0.0114,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.014,
+     "pos": 0.5
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 457,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0745,
+    "vol_in": 0.1397,
+    "ratio_in": 0.533,
+    "ann_out": 0.0139,
+    "lift": 0.0606,
+    "pos_episodes": 0.583,
+    "worst_episode": -0.0245,
+    "ann_in_without_best_episode": 0.0559,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.5495,
+     "tail2": 0.534
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0008,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0163,
+     "pos": 0.417
+    }
+   },
+   "T线下·L注": {
+    "n_days": 520,
+    "n_episodes": 19,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0609,
+    "vol_in": 0.1476,
+    "ratio_in": -0.413,
+    "ann_out": 0.0532,
+    "lift": -0.1141,
+    "pos_episodes": 0.316,
+    "worst_episode": -0.0438,
+    "ann_in_without_best_episode": -0.129,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.443,
+     "tail2": 0.438
+    },
+    "fwd60": {
+     "n": 19,
+     "median": -0.0191,
+     "pos": 0.316
+    },
+    "fwd90": {
+     "n": 19,
+     "median": -0.0234,
+     "pos": 0.368
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 161,
+    "n_episodes": 5,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0468,
+    "vol_in": 0.1246,
+    "ratio_in": -0.375,
+    "ann_out": 0.0322,
+    "lift": -0.0789,
+    "pos_episodes": 0.2,
+    "worst_episode": -0.0441,
+    "ann_in_without_best_episode": -0.6499,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.6105,
+     "tail2": 0.667
+    },
+    "fwd60": {
+     "n": 4,
+     "median": -0.0057,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 4,
+     "median": 0.0225,
+     "pos": 0.75
+    }
+   },
+   "T线上·L注": {
+    "n_days": 1079,
+    "n_episodes": 18,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0591,
+    "vol_in": 0.1238,
+    "ratio_in": 0.477,
+    "ann_out": -0.0045,
+    "lift": 0.0636,
+    "pos_episodes": 0.556,
+    "worst_episode": -0.0233,
+    "ann_in_without_best_episode": 0.0434,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.5,
+     "tail2": 0.488
+    },
+    "fwd60": {
+     "n": 17,
+     "median": -0.0211,
+     "pos": 0.471
+    },
+    "fwd90": {
+     "n": 17,
+     "median": 0.0072,
+     "pos": 0.529
+    }
+   }
+  },
+  "S681_H1_disc": {
+   "_all": {
+    "n_days": 1522,
+    "ann": 0.0022,
+    "ratio": 0.039,
+    "first": "2020-01-30",
+    "last": "2024-03-30"
+   },
+   "R升": {
+    "n_days": 904,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0181,
+    "vol_in": 0.0546,
+    "ratio_in": 0.332,
+    "ann_out": -0.021,
+    "lift": 0.0391,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.0085,
+    "ann_in_without_best_episode": -0.0003,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.497,
+     "tail2": 0.446
+    },
+    "fwd60": {
+     "n": 11,
+     "median": -0.0058,
+     "pos": 0.364
+    },
+    "fwd90": {
+     "n": 11,
+     "median": -0.0174,
+     "pos": 0.364
+    }
+   },
+   "R降": {
+    "n_days": 618,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.021,
+    "vol_in": 0.0596,
+    "ratio_in": -0.352,
+    "ann_out": 0.0181,
+    "lift": -0.0391,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.083,
+    "ann_in_without_best_episode": -0.0401,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.497,
+     "tail2": 0.446
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0068,
+     "pos": 0.667
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.0154,
+     "pos": 0.667
+    }
+   },
+   "L抽": {
+    "n_days": 472,
+    "n_episodes": 7,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.0974,
+    "vol_in": 0.0458,
+    "ratio_in": 2.125,
+    "ann_out": -0.0405,
+    "lift": 0.1379,
+    "pos_episodes": 0.857,
+    "worst_episode": -0.0003,
+    "ann_in_without_best_episode": 0.0756,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.004,
+     "tail2": 0.002
+    },
+    "fwd60": {
+     "n": 7,
+     "median": 0.0113,
+     "pos": 0.714
+    },
+    "fwd90": {
+     "n": 7,
+     "median": 0.0169,
+     "pos": 0.571
+    }
+   },
+   "L注": {
+    "n_days": 1050,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0405,
+    "vol_in": 0.0608,
+    "ratio_in": -0.667,
+    "ann_out": 0.0974,
+    "lift": -0.1379,
+    "pos_episodes": 0.308,
+    "worst_episode": -0.0556,
+    "ann_in_without_best_episode": -0.0435,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.004,
+     "tail2": 0.002
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.006,
+     "pos": 0.538
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0254,
+     "pos": 0.615
+    }
+   },
+   "W坏": {
+    "n_days": 504,
+    "n_episodes": 19,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.1053,
+    "vol_in": 0.0539,
+    "ratio_in": 1.952,
+    "ann_out": -0.0488,
+    "lift": 0.154,
+    "pos_episodes": 0.632,
+    "worst_episode": -0.0097,
+    "ann_in_without_best_episode": 0.0847,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.009,
+     "tail2": 0.011
+    },
+    "fwd60": {
+     "n": 19,
+     "median": 0.009,
+     "pos": 0.737
+    },
+    "fwd90": {
+     "n": 19,
+     "median": 0.0167,
+     "pos": 0.632
+    }
+   },
+   "W好": {
+    "n_days": 1018,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0488,
+    "vol_in": 0.0578,
+    "ratio_in": -0.844,
+    "ann_out": 0.1053,
+    "lift": -0.154,
+    "pos_episodes": 0.35,
+    "worst_episode": -0.1043,
+    "ann_in_without_best_episode": -0.0627,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.009,
+     "tail2": 0.011
+    },
+    "fwd60": {
+     "n": 20,
+     "median": -0.0003,
+     "pos": 0.45
+    },
+    "fwd90": {
+     "n": 20,
+     "median": -0.0008,
+     "pos": 0.45
+    }
+   },
+   "T线下": {
+    "n_days": 539,
+    "n_episodes": 8,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0373,
+    "vol_in": 0.0437,
+    "ratio_in": 0.853,
+    "ann_out": -0.017,
+    "lift": 0.0543,
+    "pos_episodes": 0.375,
+    "worst_episode": -0.0079,
+    "ann_in_without_best_episode": -0.0144,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.4405,
+     "tail2": 0.451
+    },
+    "fwd60": {
+     "n": 8,
+     "median": -0.0045,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 8,
+     "median": -0.0046,
+     "pos": 0.5
+    }
+   },
+   "T线上": {
+    "n_days": 983,
+    "n_episodes": 5,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.017,
+    "vol_in": 0.0626,
+    "ratio_in": -0.272,
+    "ann_out": 0.0373,
+    "lift": -0.0543,
+    "pos_episodes": 0.4,
+    "worst_episode": -0.0833,
+    "ann_in_without_best_episode": -0.0507,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.4405,
+     "tail2": 0.451
+    },
+    "fwd60": {
+     "n": 5,
+     "median": -0.0003,
+     "pos": 0.4
+    },
+    "fwd90": {
+     "n": 5,
+     "median": -0.0109,
+     "pos": 0.2
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 292,
+    "n_episodes": 7,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0487,
+    "vol_in": 0.0396,
+    "ratio_in": 1.231,
+    "ann_out": -0.0088,
+    "lift": 0.0575,
+    "pos_episodes": 0.429,
+    "worst_episode": -0.0104,
+    "ann_in_without_best_episode": 0.0393,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.3145,
+     "tail2": 0.247
+    },
+    "fwd60": {
+     "n": 7,
+     "median": 0.0029,
+     "pos": 0.571
+    },
+    "fwd90": {
+     "n": 7,
+     "median": -0.0056,
+     "pos": 0.429
+    }
+   },
+   "T线下·L注": {
+    "n_days": 247,
+    "n_episodes": 11,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0238,
+    "vol_in": 0.0482,
+    "ratio_in": 0.494,
+    "ann_out": -0.002,
+    "lift": 0.0258,
+    "pos_episodes": 0.364,
+    "worst_episode": -0.0077,
+    "ann_in_without_best_episode": -0.0199,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.79,
+     "tail2": 0.777
+    },
+    "fwd60": {
+     "n": 11,
+     "median": -0.014,
+     "pos": 0.364
+    },
+    "fwd90": {
+     "n": 11,
+     "median": -0.0146,
+     "pos": 0.364
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 180,
+    "n_episodes": 3,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1763,
+    "vol_in": 0.0542,
+    "ratio_in": 3.252,
+    "ann_out": -0.0211,
+    "lift": 0.1974,
+    "pos_episodes": 1.0,
+    "worst_episode": 0.0014,
+    "ann_in_without_best_episode": 0.0873,
+    "enough": false,
+    "p_shift": {
+     "dev": 0.037,
+     "tail2": 0.0
+    },
+    "fwd60": {
+     "n": 3,
+     "median": 0.0113,
+     "pos": 0.667
+    },
+    "fwd90": {
+     "n": 3,
+     "median": 0.0285,
+     "pos": 0.667
+    }
+   },
+   "T线上·L注": {
+    "n_days": 803,
+    "n_episodes": 11,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0603,
+    "vol_in": 0.0641,
+    "ratio_in": -0.941,
+    "ann_out": 0.0721,
+    "lift": -0.1324,
+    "pos_episodes": 0.273,
+    "worst_episode": -0.0833,
+    "ann_in_without_best_episode": -0.0664,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.03,
+     "tail2": 0.016
+    },
+    "fwd60": {
+     "n": 11,
+     "median": 0.0218,
+     "pos": 0.636
+    },
+    "fwd90": {
+     "n": 11,
+     "median": 0.0254,
+     "pos": 0.636
+    }
+   }
+  },
+  "S681_H1_holdout": {
+   "_all": {
+    "n_days": 1002,
+    "ann": 0.017,
+    "ratio": 0.277,
+    "first": "2024-01-02",
+    "last": "2026-09-29"
+   },
+   "R升": {
+    "n_days": 470,
+    "n_episodes": 9,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.0494,
+    "vol_in": 0.0633,
+    "ratio_in": 0.781,
+    "ann_out": -0.0116,
+    "lift": 0.061,
+    "pos_episodes": 0.778,
+    "worst_episode": -0.012,
+    "ann_in_without_best_episode": 0.0263,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.5385,
+     "tail2": 0.497
+    },
+    "fwd60": {
+     "n": 9,
+     "median": 0.0036,
+     "pos": 0.556
+    },
+    "fwd90": {
+     "n": 9,
+     "median": -0.0011,
+     "pos": 0.444
+    }
+   },
+   "R降": {
+    "n_days": 532,
+    "n_episodes": 9,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0116,
+    "vol_in": 0.0598,
+    "ratio_in": -0.194,
+    "ann_out": 0.0494,
+    "lift": -0.061,
+    "pos_episodes": 0.556,
+    "worst_episode": -0.0538,
+    "ann_in_without_best_episode": -0.0346,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.5385,
+     "tail2": 0.497
+    },
+    "fwd60": {
+     "n": 9,
+     "median": -0.0083,
+     "pos": 0.333
+    },
+    "fwd90": {
+     "n": 9,
+     "median": -0.0046,
+     "pos": 0.333
+    }
+   },
+   "L抽": {
+    "n_days": 172,
+    "n_episodes": 6,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.0599,
+    "vol_in": 0.0508,
+    "ratio_in": 1.179,
+    "ann_out": 0.0081,
+    "lift": 0.0518,
+    "pos_episodes": 0.833,
+    "worst_episode": -0.0036,
+    "ann_in_without_best_episode": 0.0292,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.5955,
+     "tail2": 0.619
+    },
+    "fwd60": {
+     "n": 6,
+     "median": -0.0021,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 6,
+     "median": 0.0085,
+     "pos": 0.833
+    }
+   },
+   "L注": {
+    "n_days": 830,
+    "n_episodes": 6,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0081,
+    "vol_in": 0.0635,
+    "ratio_in": 0.128,
+    "ann_out": 0.0599,
+    "lift": -0.0518,
+    "pos_episodes": 0.333,
+    "worst_episode": -0.0108,
+    "ann_in_without_best_episode": -0.018,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.5955,
+     "tail2": 0.619
+    },
+    "fwd60": {
+     "n": 5,
+     "median": -0.0062,
+     "pos": 0.0
+    },
+    "fwd90": {
+     "n": 5,
+     "median": -0.0073,
+     "pos": 0.4
+    }
+   },
+   "W坏": {
+    "n_days": 364,
+    "n_episodes": 18,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0234,
+    "vol_in": 0.058,
+    "ratio_in": -0.403,
+    "ann_out": 0.0401,
+    "lift": -0.0635,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.0318,
+    "ann_in_without_best_episode": -0.0452,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.579,
+     "tail2": 0.559
+    },
+    "fwd60": {
+     "n": 16,
+     "median": 0.0038,
+     "pos": 0.625
+    },
+    "fwd90": {
+     "n": 15,
+     "median": 0.0039,
+     "pos": 0.533
+    }
+   },
+   "W好": {
+    "n_days": 638,
+    "n_episodes": 19,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0401,
+    "vol_in": 0.0633,
+    "ratio_in": 0.632,
+    "ann_out": -0.0234,
+    "lift": 0.0635,
+    "pos_episodes": 0.579,
+    "worst_episode": -0.0231,
+    "ann_in_without_best_episode": 0.0229,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.579,
+     "tail2": 0.559
+    },
+    "fwd60": {
+     "n": 17,
+     "median": 0.0026,
+     "pos": 0.647
+    },
+    "fwd90": {
+     "n": 15,
+     "median": 0.0035,
+     "pos": 0.533
+    }
+   },
+   "T线下": {
+    "n_days": 487,
+    "n_episodes": 5,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0035,
+    "vol_in": 0.0519,
+    "ratio_in": 0.068,
+    "ann_out": 0.0298,
+    "lift": -0.0262,
+    "pos_episodes": 0.2,
+    "worst_episode": -0.0121,
+    "ann_in_without_best_episode": -0.0409,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.7105,
+     "tail2": 0.714
+    },
+    "fwd60": {
+     "n": 5,
+     "median": 0.0143,
+     "pos": 1.0
+    },
+    "fwd90": {
+     "n": 5,
+     "median": 0.0133,
+     "pos": 0.8
+    }
+   },
+   "T线上": {
+    "n_days": 515,
+    "n_episodes": 10,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0298,
+    "vol_in": 0.0693,
+    "ratio_in": 0.429,
+    "ann_out": 0.0035,
+    "lift": 0.0262,
+    "pos_episodes": 0.6,
+    "worst_episode": -0.0146,
+    "ann_in_without_best_episode": 0.0104,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.7105,
+     "tail2": 0.714
+    },
+    "fwd60": {
+     "n": 9,
+     "median": -0.002,
+     "pos": 0.333
+    },
+    "fwd90": {
+     "n": 9,
+     "median": -0.0068,
+     "pos": 0.444
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 165,
+    "n_episodes": 5,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.0719,
+    "vol_in": 0.0514,
+    "ratio_in": 1.399,
+    "ann_out": 0.0062,
+    "lift": 0.0658,
+    "pos_episodes": 0.8,
+    "worst_episode": -0.0036,
+    "ann_in_without_best_episode": 0.0269,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.4905,
+     "tail2": 0.492
+    },
+    "fwd60": {
+     "n": 5,
+     "median": -0.0057,
+     "pos": 0.4
+    },
+    "fwd90": {
+     "n": 5,
+     "median": 0.002,
+     "pos": 0.8
+    }
+   },
+   "T线下·L注": {
+    "n_days": 322,
+    "n_episodes": 9,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0315,
+    "vol_in": 0.052,
+    "ratio_in": -0.607,
+    "ann_out": 0.04,
+    "lift": -0.0715,
+    "pos_episodes": 0.333,
+    "worst_episode": -0.0121,
+    "ann_in_without_best_episode": -0.0467,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.4695,
+     "tail2": 0.471
+    },
+    "fwd60": {
+     "n": 9,
+     "median": 0.0011,
+     "pos": 0.556
+    },
+    "fwd90": {
+     "n": 9,
+     "median": 0.0044,
+     "pos": 0.667
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 7,
+    "n_episodes": 3,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.2234,
+    "vol_in": 0.0306,
+    "ratio_in": -7.293,
+    "ann_out": 0.0187,
+    "lift": -0.2421,
+    "pos_episodes": 0.333,
+    "worst_episode": -0.005,
+    "ann_in_without_best_episode": -0.3216,
+    "enough": false,
+    "p_shift": {
+     "dev": 0.5535,
+     "tail2": 0.562
+    },
+    "fwd60": {
+     "n": 2,
+     "median": -0.011,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 2,
+     "median": 0.0023,
+     "pos": 0.5
+    }
+   },
+   "T线上·L注": {
+    "n_days": 508,
+    "n_episodes": 10,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0332,
+    "vol_in": 0.0697,
+    "ratio_in": 0.477,
+    "ann_out": 0.0003,
+    "lift": 0.0329,
+    "pos_episodes": 0.6,
+    "worst_episode": -0.0107,
+    "ann_in_without_best_episode": 0.0147,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.654,
+     "tail2": 0.662
+    },
+    "fwd60": {
+     "n": 9,
+     "median": -0.002,
+     "pos": 0.333
+    },
+    "fwd90": {
+     "n": 9,
+     "median": -0.0068,
+     "pos": 0.444
+    }
+   }
+  },
+  "S840_ruleA_H30": {
+   "_all": {
+    "n_days": 1633,
+    "ann": 0.0866,
+    "ratio": 0.305,
+    "first": "2022-04-11",
+    "last": "2026-09-29"
+   },
+   "R升": {
+    "n_days": 934,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1017,
+    "vol_in": 0.2973,
+    "ratio_in": 0.342,
+    "ann_out": 0.0664,
+    "lift": 0.0353,
+    "pos_episodes": 0.615,
+    "worst_episode": -0.2036,
+    "ann_in_without_best_episode": 0.0478,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.929,
+     "tail2": 0.991
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.0505,
+     "pos": 0.846
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0353,
+     "pos": 0.923
+    }
+   },
+   "R降": {
+    "n_days": 699,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0664,
+    "vol_in": 0.2654,
+    "ratio_in": 0.25,
+    "ann_out": 0.1017,
+    "lift": -0.0353,
+    "pos_episodes": 0.667,
+    "worst_episode": -0.0967,
+    "ann_in_without_best_episode": 0.0203,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.929,
+     "tail2": 0.991
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0144,
+     "pos": 0.667
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.0285,
+     "pos": 0.667
+    }
+   },
+   "L抽": {
+    "n_days": 616,
+    "n_episodes": 10,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.1777,
+    "vol_in": 0.1524,
+    "ratio_in": 1.166,
+    "ann_out": 0.0314,
+    "lift": 0.1463,
+    "pos_episodes": 0.7,
+    "worst_episode": -0.0047,
+    "ann_in_without_best_episode": 0.1168,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.4785,
+     "tail2": 0.456
+    },
+    "fwd60": {
+     "n": 10,
+     "median": 0.0235,
+     "pos": 0.7
+    },
+    "fwd90": {
+     "n": 10,
+     "median": 0.0235,
+     "pos": 0.8
+    }
+   },
+   "L注": {
+    "n_days": 1017,
+    "n_episodes": 17,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0314,
+    "vol_in": 0.3399,
+    "ratio_in": 0.092,
+    "ann_out": 0.1777,
+    "lift": -0.1463,
+    "pos_episodes": 0.294,
+    "worst_episode": -0.1562,
+    "ann_in_without_best_episode": -0.0175,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.4785,
+     "tail2": 0.456
+    },
+    "fwd60": {
+     "n": 16,
+     "median": 0.0021,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 16,
+     "median": 0.0247,
+     "pos": 0.688
+    }
+   },
+   "W坏": {
+    "n_days": 616,
+    "n_episodes": 25,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1194,
+    "vol_in": 0.1948,
+    "ratio_in": 0.613,
+    "ann_out": 0.0667,
+    "lift": 0.0527,
+    "pos_episodes": 0.44,
+    "worst_episode": -0.0996,
+    "ann_in_without_best_episode": 0.0546,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.772,
+     "tail2": 0.815
+    },
+    "fwd60": {
+     "n": 23,
+     "median": 0.0066,
+     "pos": 0.565
+    },
+    "fwd90": {
+     "n": 22,
+     "median": 0.0032,
+     "pos": 0.5
+    }
+   },
+   "W好": {
+    "n_days": 1017,
+    "n_episodes": 26,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0667,
+    "vol_in": 0.3265,
+    "ratio_in": 0.204,
+    "ann_out": 0.1194,
+    "lift": -0.0527,
+    "pos_episodes": 0.538,
+    "worst_episode": -0.1818,
+    "ann_in_without_best_episode": 0.0336,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.772,
+     "tail2": 0.815
+    },
+    "fwd60": {
+     "n": 24,
+     "median": 0.0096,
+     "pos": 0.542
+    },
+    "fwd90": {
+     "n": 22,
+     "median": 0.0,
+     "pos": 0.409
+    }
+   },
+   "T线下": {
+    "n_days": 836,
+    "n_episodes": 9,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1337,
+    "vol_in": 0.2222,
+    "ratio_in": 0.602,
+    "ann_out": 0.0372,
+    "lift": 0.0964,
+    "pos_episodes": 0.444,
+    "worst_episode": -0.1226,
+    "ann_in_without_best_episode": -0.0738,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.637,
+     "tail2": 0.593
+    },
+    "fwd60": {
+     "n": 9,
+     "median": 0.0235,
+     "pos": 0.667
+    },
+    "fwd90": {
+     "n": 9,
+     "median": 0.0244,
+     "pos": 0.667
+    }
+   },
+   "T线上": {
+    "n_days": 797,
+    "n_episodes": 11,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0372,
+    "vol_in": 0.337,
+    "ratio_in": 0.11,
+    "ann_out": 0.1337,
+    "lift": -0.0964,
+    "pos_episodes": 0.636,
+    "worst_episode": -0.1438,
+    "ann_in_without_best_episode": 0.0057,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.637,
+     "tail2": 0.593
+    },
+    "fwd60": {
+     "n": 10,
+     "median": 0.0042,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 10,
+     "median": 0.0012,
+     "pos": 0.5
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 455,
+    "n_episodes": 10,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.1737,
+    "vol_in": 0.175,
+    "ratio_in": 0.992,
+    "ann_out": 0.053,
+    "lift": 0.1207,
+    "pos_episodes": 0.6,
+    "worst_episode": -0.0278,
+    "ann_in_without_best_episode": 0.0982,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.6055,
+     "tail2": 0.59
+    },
+    "fwd60": {
+     "n": 10,
+     "median": 0.0317,
+     "pos": 0.6
+    },
+    "fwd90": {
+     "n": 10,
+     "median": 0.0185,
+     "pos": 0.7
+    }
+   },
+   "T线下·L注": {
+    "n_days": 381,
+    "n_episodes": 16,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0859,
+    "vol_in": 0.2679,
+    "ratio_in": 0.321,
+    "ann_out": 0.0868,
+    "lift": -0.0009,
+    "pos_episodes": 0.438,
+    "worst_episode": -0.0996,
+    "ann_in_without_best_episode": -0.0479,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.9255,
+     "tail2": 0.905
+    },
+    "fwd60": {
+     "n": 16,
+     "median": 0.0055,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 16,
+     "median": 0.0144,
+     "pos": 0.562
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 161,
+    "n_episodes": 5,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1891,
+    "vol_in": 0.0482,
+    "ratio_in": 3.923,
+    "ann_out": 0.0754,
+    "lift": 0.1137,
+    "pos_episodes": 0.4,
+    "worst_episode": -0.0009,
+    "ann_in_without_best_episode": 0.1515,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.8845,
+     "tail2": 0.844
+    },
+    "fwd60": {
+     "n": 4,
+     "median": 0.0054,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 4,
+     "median": 0.0078,
+     "pos": 0.75
+    }
+   },
+   "T线上·L注": {
+    "n_days": 636,
+    "n_episodes": 16,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0012,
+    "vol_in": 0.3765,
+    "ratio_in": -0.003,
+    "ann_out": 0.1426,
+    "lift": -0.1438,
+    "pos_episodes": 0.438,
+    "worst_episode": -0.1562,
+    "ann_in_without_best_episode": -0.1018,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.534,
+     "tail2": 0.497
+    },
+    "fwd60": {
+     "n": 15,
+     "median": 0.0084,
+     "pos": 0.6
+    },
+    "fwd90": {
+     "n": 15,
+     "median": 0.0244,
+     "pos": 0.733
+    }
+   }
+  },
+  "S840_ruleA_H30_funding": {
+   "_all": {
+    "n_days": 1633,
+    "ann": -0.0126,
+    "ratio": -0.044,
+    "first": "2022-04-11",
+    "last": "2026-09-29"
+   },
+   "R升": {
+    "n_days": 934,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0348,
+    "vol_in": 0.3049,
+    "ratio_in": -0.114,
+    "ann_out": 0.017,
+    "lift": -0.0518,
+    "pos_episodes": 0.538,
+    "worst_episode": -0.3218,
+    "ann_in_without_best_episode": -0.1075,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.778,
+     "tail2": 0.744
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.0326,
+     "pos": 0.846
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0195,
+     "pos": 0.692
+    }
+   },
+   "R降": {
+    "n_days": 699,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.017,
+    "vol_in": 0.268,
+    "ratio_in": 0.063,
+    "ann_out": -0.0348,
+    "lift": 0.0518,
+    "pos_episodes": 0.583,
+    "worst_episode": -0.1374,
+    "ann_in_without_best_episode": -0.0295,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.778,
+     "tail2": 0.744
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0105,
+     "pos": 0.583
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.0172,
+     "pos": 0.583
+    }
+   },
+   "L抽": {
+    "n_days": 616,
+    "n_episodes": 10,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0603,
+    "vol_in": 0.1565,
+    "ratio_in": 0.385,
+    "ann_out": -0.0568,
+    "lift": 0.1171,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.0183,
+    "ann_in_without_best_episode": 0.021,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.71,
+     "tail2": 0.675
+    },
+    "fwd60": {
+     "n": 10,
+     "median": 0.0157,
+     "pos": 0.7
+    },
+    "fwd90": {
+     "n": 10,
+     "median": 0.0157,
+     "pos": 0.8
+    }
+   },
+   "L注": {
+    "n_days": 1017,
+    "n_episodes": 17,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0568,
+    "vol_in": 0.3462,
+    "ratio_in": -0.164,
+    "ann_out": 0.0603,
+    "lift": -0.1171,
+    "pos_episodes": 0.294,
+    "worst_episode": -0.236,
+    "ann_in_without_best_episode": -0.1029,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.71,
+     "tail2": 0.675
+    },
+    "fwd60": {
+     "n": 16,
+     "median": 0.0016,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 16,
+     "median": 0.022,
+     "pos": 0.688
+    }
+   },
+   "W坏": {
+    "n_days": 616,
+    "n_episodes": 25,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0162,
+    "vol_in": 0.1989,
+    "ratio_in": 0.081,
+    "ann_out": -0.0301,
+    "lift": 0.0463,
+    "pos_episodes": 0.4,
+    "worst_episode": -0.1082,
+    "ann_in_without_best_episode": -0.0371,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.8175,
+     "tail2": 0.847
+    },
+    "fwd60": {
+     "n": 23,
+     "median": 0.0009,
+     "pos": 0.522
+    },
+    "fwd90": {
+     "n": 22,
+     "median": 0.0,
+     "pos": 0.455
+    }
+   },
+   "W好": {
+    "n_days": 1017,
+    "n_episodes": 26,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0301,
+    "vol_in": 0.3328,
+    "ratio_in": -0.09,
+    "ann_out": 0.0162,
+    "lift": -0.0463,
+    "pos_episodes": 0.538,
+    "worst_episode": -0.2406,
+    "ann_in_without_best_episode": -0.0656,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.8175,
+     "tail2": 0.847
+    },
+    "fwd60": {
+     "n": 24,
+     "median": 0.01,
+     "pos": 0.542
+    },
+    "fwd90": {
+     "n": 22,
+     "median": 0.0,
+     "pos": 0.364
+    }
+   },
+   "T线下": {
+    "n_days": 836,
+    "n_episodes": 9,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0053,
+    "vol_in": 0.2283,
+    "ratio_in": 0.023,
+    "ann_out": -0.0315,
+    "lift": 0.0368,
+    "pos_episodes": 0.333,
+    "worst_episode": -0.2188,
+    "ann_in_without_best_episode": -0.1541,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.8835,
+     "tail2": 0.829
+    },
+    "fwd60": {
+     "n": 9,
+     "median": 0.0187,
+     "pos": 0.667
+    },
+    "fwd90": {
+     "n": 9,
+     "median": 0.0195,
+     "pos": 0.556
+    }
+   },
+   "T线上": {
+    "n_days": 797,
+    "n_episodes": 11,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0315,
+    "vol_in": 0.3424,
+    "ratio_in": -0.092,
+    "ann_out": 0.0053,
+    "lift": -0.0368,
+    "pos_episodes": 0.636,
+    "worst_episode": -0.2262,
+    "ann_in_without_best_episode": -0.0805,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.8835,
+     "tail2": 0.829
+    },
+    "fwd60": {
+     "n": 10,
+     "median": 0.0047,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 10,
+     "median": 0.0056,
+     "pos": 0.6
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 455,
+    "n_episodes": 10,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0247,
+    "vol_in": 0.1799,
+    "ratio_in": 0.137,
+    "ann_out": -0.0271,
+    "lift": 0.0518,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.0651,
+    "ann_in_without_best_episode": -0.0281,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.905,
+     "tail2": 0.892
+    },
+    "fwd60": {
+     "n": 10,
+     "median": 0.0172,
+     "pos": 0.6
+    },
+    "fwd90": {
+     "n": 10,
+     "median": 0.0113,
+     "pos": 0.6
+    }
+   },
+   "T线下·L注": {
+    "n_days": 381,
+    "n_episodes": 16,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0179,
+    "vol_in": 0.2752,
+    "ratio_in": -0.065,
+    "ann_out": -0.011,
+    "lift": -0.0069,
+    "pos_episodes": 0.312,
+    "worst_episode": -0.0886,
+    "ann_in_without_best_episode": -0.1454,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.9285,
+     "tail2": 0.92
+    },
+    "fwd60": {
+     "n": 16,
+     "median": 0.006,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 16,
+     "median": 0.0142,
+     "pos": 0.562
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 161,
+    "n_episodes": 5,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1607,
+    "vol_in": 0.0474,
+    "ratio_in": 3.39,
+    "ann_out": -0.0316,
+    "lift": 0.1923,
+    "pos_episodes": 0.4,
+    "worst_episode": -0.0009,
+    "ann_in_without_best_episode": 0.1318,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.6975,
+     "tail2": 0.72
+    },
+    "fwd60": {
+     "n": 4,
+     "median": 0.0053,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 4,
+     "median": 0.008,
+     "pos": 1.0
+    }
+   },
+   "T线上·L注": {
+    "n_days": 636,
+    "n_episodes": 16,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0801,
+    "vol_in": 0.3825,
+    "ratio_in": -0.209,
+    "ann_out": 0.0304,
+    "lift": -0.1105,
+    "pos_episodes": 0.438,
+    "worst_episode": -0.236,
+    "ann_in_without_best_episode": -0.1196,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.7155,
+     "tail2": 0.612
+    },
+    "fwd60": {
+     "n": 15,
+     "median": 0.0094,
+     "pos": 0.6
+    },
+    "fwd90": {
+     "n": 15,
+     "median": 0.0195,
+     "pos": 0.733
+    }
+   }
+  },
+  "T364_cross_asset_trend": {
+   "_all": {
+    "n_days": 2478,
+    "ann": 0.0165,
+    "ratio": 0.279,
+    "first": "2020-01-30",
+    "last": "2026-11-11"
+   },
+   "R升": {
+    "n_days": 1400,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0087,
+    "vol_in": 0.0565,
+    "ratio_in": 0.153,
+    "ann_out": 0.0266,
+    "lift": -0.0179,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.0251,
+    "ann_in_without_best_episode": -0.001,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.5585,
+     "tail2": 0.553
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.0007,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.0031,
+     "pos": 0.6
+    }
+   },
+   "R降": {
+    "n_days": 1078,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0266,
+    "vol_in": 0.0621,
+    "ratio_in": 0.428,
+    "ann_out": 0.0087,
+    "lift": 0.0179,
+    "pos_episodes": 0.55,
+    "worst_episode": -0.0323,
+    "ann_in_without_best_episode": -0.0024,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.5585,
+     "tail2": 0.553
+    },
+    "fwd60": {
+     "n": 20,
+     "median": -0.0025,
+     "pos": 0.45
+    },
+    "fwd90": {
+     "n": 20,
+     "median": -0.0047,
+     "pos": 0.45
+    }
+   },
+   "L抽": {
+    "n_days": 680,
+    "n_episodes": 14,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0194,
+    "vol_in": 0.0547,
+    "ratio_in": -0.355,
+    "ann_out": 0.03,
+    "lift": -0.0494,
+    "pos_episodes": 0.357,
+    "worst_episode": -0.0276,
+    "ann_in_without_best_episode": -0.039,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.1345,
+     "tail2": 0.137
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.0076,
+     "pos": 0.692
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0035,
+     "pos": 0.538
+    }
+   },
+   "L注": {
+    "n_days": 1798,
+    "n_episodes": 18,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.03,
+    "vol_in": 0.0606,
+    "ratio_in": 0.496,
+    "ann_out": -0.0194,
+    "lift": 0.0494,
+    "pos_episodes": 0.556,
+    "worst_episode": -0.0191,
+    "ann_in_without_best_episode": 0.0065,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.1345,
+     "tail2": 0.137
+    },
+    "fwd60": {
+     "n": 18,
+     "median": -0.0024,
+     "pos": 0.444
+    },
+    "fwd90": {
+     "n": 17,
+     "median": -0.0022,
+     "pos": 0.412
+    }
+   },
+   "W坏": {
+    "n_days": 885,
+    "n_episodes": 38,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0614,
+    "vol_in": 0.0688,
+    "ratio_in": 0.892,
+    "ann_out": -0.0085,
+    "lift": 0.0699,
+    "pos_episodes": 0.579,
+    "worst_episode": -0.0188,
+    "ann_in_without_best_episode": 0.0366,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0615,
+     "tail2": 0.068
+    },
+    "fwd60": {
+     "n": 37,
+     "median": 0.0042,
+     "pos": 0.568
+    },
+    "fwd90": {
+     "n": 36,
+     "median": 0.006,
+     "pos": 0.583
+    }
+   },
+   "W好": {
+    "n_days": 1593,
+    "n_episodes": 38,
+    "strength": false,
+    "avoid": false,
+    "ann_in": -0.0085,
+    "vol_in": 0.0528,
+    "ratio_in": -0.161,
+    "ann_out": 0.0614,
+    "lift": -0.0699,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.0306,
+    "ann_in_without_best_episode": -0.0143,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0615,
+     "tail2": 0.068
+    },
+    "fwd60": {
+     "n": 38,
+     "median": 0.0034,
+     "pos": 0.579
+    },
+    "fwd90": {
+     "n": 37,
+     "median": 0.0067,
+     "pos": 0.649
+    }
+   },
+   "T线下": {
+    "n_days": 1028,
+    "n_episodes": 14,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.0541,
+    "vol_in": 0.0655,
+    "ratio_in": 0.826,
+    "ann_out": -0.0102,
+    "lift": 0.0644,
+    "pos_episodes": 0.643,
+    "worst_episode": -0.0164,
+    "ann_in_without_best_episode": 0.038,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0265,
+     "tail2": 0.025
+    },
+    "fwd60": {
+     "n": 13,
+     "median": -0.0001,
+     "pos": 0.385
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0003,
+     "pos": 0.538
+    }
+   },
+   "T线上": {
+    "n_days": 1450,
+    "n_episodes": 14,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0102,
+    "vol_in": 0.0539,
+    "ratio_in": -0.19,
+    "ann_out": 0.0541,
+    "lift": -0.0644,
+    "pos_episodes": 0.357,
+    "worst_episode": -0.0435,
+    "ann_in_without_best_episode": -0.0219,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0265,
+     "tail2": 0.025
+    },
+    "fwd60": {
+     "n": 14,
+     "median": -0.0057,
+     "pos": 0.357
+    },
+    "fwd90": {
+     "n": 13,
+     "median": -0.0091,
+     "pos": 0.385
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 459,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0249,
+    "vol_in": 0.0574,
+    "ratio_in": 0.433,
+    "ann_out": 0.0145,
+    "lift": 0.0103,
+    "pos_episodes": 0.462,
+    "worst_episode": -0.0194,
+    "ann_in_without_best_episode": 0.0006,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.812,
+     "tail2": 0.737
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0068,
+     "pos": 0.583
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.0022,
+     "pos": 0.583
+    }
+   },
+   "T线下·L注": {
+    "n_days": 569,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0777,
+    "vol_in": 0.0714,
+    "ratio_in": 1.088,
+    "ann_out": -0.0018,
+    "lift": 0.0795,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.019,
+    "ann_in_without_best_episode": 0.0495,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0535,
+     "tail2": 0.05
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.0015,
+     "pos": 0.5
+    },
+    "fwd90": {
+     "n": 20,
+     "median": -0.0004,
+     "pos": 0.5
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 221,
+    "n_episodes": 7,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.1114,
+    "vol_in": 0.0482,
+    "ratio_in": -2.31,
+    "ann_out": 0.029,
+    "lift": -0.1403,
+    "pos_episodes": 0.286,
+    "worst_episode": -0.0378,
+    "ann_in_without_best_episode": -0.1224,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0175,
+     "tail2": 0.01
+    },
+    "fwd60": {
+     "n": 6,
+     "median": -0.0061,
+     "pos": 0.333
+    },
+    "fwd90": {
+     "n": 5,
+     "median": -0.0051,
+     "pos": 0.2
+    }
+   },
+   "T线上·L注": {
+    "n_days": 1229,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0079,
+    "vol_in": 0.0548,
+    "ratio_in": 0.145,
+    "ann_out": 0.0248,
+    "lift": -0.0169,
+    "pos_episodes": 0.45,
+    "worst_episode": -0.0355,
+    "ann_in_without_best_episode": -0.004,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.6265,
+     "tail2": 0.638
+    },
+    "fwd60": {
+     "n": 20,
+     "median": -0.0045,
+     "pos": 0.35
+    },
+    "fwd90": {
+     "n": 19,
+     "median": -0.0136,
+     "pos": 0.368
+    }
+   }
+  },
+  "T372_alt_short_basket": {
+   "_all": {
+    "n_days": 2393,
+    "ann": 0.0048,
+    "ratio": 0.027,
+    "first": "2020-02-03",
+    "last": "2026-08-22"
+   },
+   "R升": {
+    "n_days": 1319,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0383,
+    "vol_in": 0.2112,
+    "ratio_in": -0.182,
+    "ann_out": 0.0577,
+    "lift": -0.096,
+    "pos_episodes": 0.25,
+    "worst_episode": -0.2691,
+    "ann_in_without_best_episode": -0.0579,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.412,
+     "tail2": 0.402
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.0,
+     "pos": 0.25
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.0,
+     "pos": 0.2
+    }
+   },
+   "R降": {
+    "n_days": 1074,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0577,
+    "vol_in": 0.1246,
+    "ratio_in": 0.463,
+    "ann_out": -0.0383,
+    "lift": 0.096,
+    "pos_episodes": 0.25,
+    "worst_episode": -0.0971,
+    "ann_in_without_best_episode": -0.0017,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.412,
+     "tail2": 0.402
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.0,
+     "pos": 0.15
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.0,
+     "pos": 0.15
+    }
+   },
+   "L抽": {
+    "n_days": 640,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0325,
+    "vol_in": 0.3309,
+    "ratio_in": -0.098,
+    "ann_out": 0.0184,
+    "lift": -0.0509,
+    "pos_episodes": 0.308,
+    "worst_episode": -0.2954,
+    "ann_in_without_best_episode": -0.2384,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.6195,
+     "tail2": 0.6
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.0,
+     "pos": 0.462
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0,
+     "pos": 0.385
+    }
+   },
+   "L注": {
+    "n_days": 1753,
+    "n_episodes": 17,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0184,
+    "vol_in": 0.0557,
+    "ratio_in": 0.329,
+    "ann_out": -0.0325,
+    "lift": 0.0509,
+    "pos_episodes": 0.529,
+    "worst_episode": -0.0452,
+    "ann_in_without_best_episode": 0.0035,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.6195,
+     "tail2": 0.6
+    },
+    "fwd60": {
+     "n": 17,
+     "median": 0.0184,
+     "pos": 0.647
+    },
+    "fwd90": {
+     "n": 17,
+     "median": 0.0184,
+     "pos": 0.588
+    }
+   },
+   "W坏": {
+    "n_days": 867,
+    "n_episodes": 37,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1293,
+    "vol_in": 0.217,
+    "ratio_in": 0.596,
+    "ann_out": -0.066,
+    "lift": 0.1953,
+    "pos_episodes": 0.27,
+    "worst_episode": -0.1989,
+    "ann_in_without_best_episode": 0.0502,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.182,
+     "tail2": 0.167
+    },
+    "fwd60": {
+     "n": 34,
+     "median": 0.0,
+     "pos": 0.265
+    },
+    "fwd90": {
+     "n": 33,
+     "median": 0.0,
+     "pos": 0.273
+    }
+   },
+   "W好": {
+    "n_days": 1526,
+    "n_episodes": 37,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.066,
+    "vol_in": 0.1507,
+    "ratio_in": -0.438,
+    "ann_out": 0.1293,
+    "lift": -0.1953,
+    "pos_episodes": 0.162,
+    "worst_episode": -0.2056,
+    "ann_in_without_best_episode": -0.0903,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.182,
+     "tail2": 0.167
+    },
+    "fwd60": {
+     "n": 34,
+     "median": 0.0,
+     "pos": 0.176
+    },
+    "fwd90": {
+     "n": 34,
+     "median": 0.0,
+     "pos": 0.265
+    }
+   },
+   "T线下": {
+    "n_days": 1026,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0614,
+    "vol_in": 0.2344,
+    "ratio_in": -0.262,
+    "ann_out": 0.0544,
+    "lift": -0.1158,
+    "pos_episodes": 0.231,
+    "worst_episode": -0.2691,
+    "ann_in_without_best_episode": -0.0884,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.242,
+     "tail2": 0.248
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.0,
+     "pos": 0.231
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0,
+     "pos": 0.308
+    }
+   },
+   "T线上": {
+    "n_days": 1367,
+    "n_episodes": 14,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0544,
+    "vol_in": 0.1183,
+    "ratio_in": 0.46,
+    "ann_out": -0.0614,
+    "lift": 0.1158,
+    "pos_episodes": 0.286,
+    "worst_episode": 0.0,
+    "ann_in_without_best_episode": 0.0362,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.242,
+     "tail2": 0.248
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.0,
+     "pos": 0.231
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0,
+     "pos": 0.231
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 457,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.2359,
+    "vol_in": 0.3412,
+    "ratio_in": -0.691,
+    "ann_out": 0.0616,
+    "lift": -0.2975,
+    "pos_episodes": 0.333,
+    "worst_episode": -0.2954,
+    "ann_in_without_best_episode": -0.2896,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0255,
+     "tail2": 0.026
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0,
+     "pos": 0.417
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0028,
+     "pos": 0.333
+    }
+   },
+   "T线下·L注": {
+    "n_days": 569,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0788,
+    "vol_in": 0.0737,
+    "ratio_in": 1.069,
+    "ann_out": -0.0183,
+    "lift": 0.0971,
+    "pos_episodes": 0.35,
+    "worst_episode": -0.0363,
+    "ann_in_without_best_episode": 0.0481,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.497,
+     "tail2": 0.472
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.0,
+     "pos": 0.3
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.0,
+     "pos": 0.3
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 183,
+    "n_episodes": 6,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.4754,
+    "vol_in": 0.302,
+    "ratio_in": 1.575,
+    "ann_out": -0.0342,
+    "lift": 0.5097,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.0804,
+    "ann_in_without_best_episode": 0.3222,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.051,
+     "tail2": 0.037
+    },
+    "fwd60": {
+     "n": 5,
+     "median": 0.0704,
+     "pos": 0.6
+    },
+    "fwd90": {
+     "n": 5,
+     "median": 0.0704,
+     "pos": 0.6
+    }
+   },
+   "T线上·L注": {
+    "n_days": 1184,
+    "n_episodes": 19,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0107,
+    "vol_in": 0.0446,
+    "ratio_in": -0.239,
+    "ann_out": 0.0199,
+    "lift": -0.0305,
+    "pos_episodes": 0.158,
+    "worst_episode": -0.0452,
+    "ann_in_without_best_episode": -0.0237,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.906,
+     "tail2": 0.947
+    },
+    "fwd60": {
+     "n": 19,
+     "median": 0.0,
+     "pos": 0.474
+    },
+    "fwd90": {
+     "n": 19,
+     "median": 0.0,
+     "pos": 0.474
+    }
+   }
+  },
+  "World50_EW": {
+   "_all": {
+    "n_days": 2435,
+    "ann": 0.1202,
+    "ratio": 0.776,
+    "first": "2020-01-30",
+    "last": "2026-09-29"
+   },
+   "R升": {
+    "n_days": 1357,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0888,
+    "vol_in": 0.1662,
+    "ratio_in": 0.534,
+    "ann_out": 0.1597,
+    "lift": -0.0709,
+    "pos_episodes": 0.4,
+    "worst_episode": -0.1642,
+    "ann_in_without_best_episode": 0.0591,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.4375,
+     "tail2": 0.451
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.0228,
+     "pos": 0.9
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.0643,
+     "pos": 0.9
+    }
+   },
+   "R降": {
+    "n_days": 1078,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1597,
+    "vol_in": 0.1394,
+    "ratio_in": 1.146,
+    "ann_out": 0.0888,
+    "lift": 0.0709,
+    "pos_episodes": 0.5,
+    "worst_episode": -0.0277,
+    "ann_in_without_best_episode": 0.117,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.4375,
+     "tail2": 0.451
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.0348,
+     "pos": 0.9
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.0569,
+     "pos": 0.85
+    }
+   },
+   "L抽": {
+    "n_days": 644,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0935,
+    "vol_in": 0.183,
+    "ratio_in": 0.511,
+    "ann_out": 0.1298,
+    "lift": -0.0363,
+    "pos_episodes": 0.308,
+    "worst_episode": -0.1024,
+    "ann_in_without_best_episode": 0.0179,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.679,
+     "tail2": 0.653
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.0218,
+     "pos": 0.692
+    },
+    "fwd90": {
+     "n": 13,
+     "median": -0.0013,
+     "pos": 0.462
+    }
+   },
+   "L注": {
+    "n_days": 1791,
+    "n_episodes": 18,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1298,
+    "vol_in": 0.1435,
+    "ratio_in": 0.904,
+    "ann_out": 0.0935,
+    "lift": 0.0363,
+    "pos_episodes": 0.333,
+    "worst_episode": -0.0453,
+    "ann_in_without_best_episode": 0.1355,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.679,
+     "tail2": 0.653
+    },
+    "fwd60": {
+     "n": 17,
+     "median": 0.0263,
+     "pos": 0.706
+    },
+    "fwd90": {
+     "n": 17,
+     "median": 0.0538,
+     "pos": 0.706
+    }
+   },
+   "W坏": {
+    "n_days": 868,
+    "n_episodes": 37,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.151,
+    "vol_in": 0.1441,
+    "ratio_in": -1.048,
+    "ann_out": 0.2704,
+    "lift": -0.4214,
+    "pos_episodes": 0.297,
+    "worst_episode": -0.1553,
+    "ann_in_without_best_episode": -0.1883,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0,
+     "tail2": 0.0
+    },
+    "fwd60": {
+     "n": 35,
+     "median": 0.0235,
+     "pos": 0.657
+    },
+    "fwd90": {
+     "n": 34,
+     "median": 0.0239,
+     "pos": 0.676
+    }
+   },
+   "W好": {
+    "n_days": 1567,
+    "n_episodes": 38,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.2704,
+    "vol_in": 0.1601,
+    "ratio_in": 1.689,
+    "ann_out": -0.151,
+    "lift": 0.4214,
+    "pos_episodes": 0.605,
+    "worst_episode": -0.0905,
+    "ann_in_without_best_episode": 0.2578,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0,
+     "tail2": 0.0
+    },
+    "fwd60": {
+     "n": 36,
+     "median": 0.0265,
+     "pos": 0.75
+    },
+    "fwd90": {
+     "n": 34,
+     "median": 0.033,
+     "pos": 0.676
+    }
+   },
+   "T线下": {
+    "n_days": 1026,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0764,
+    "vol_in": 0.161,
+    "ratio_in": -0.475,
+    "ann_out": 0.2634,
+    "lift": -0.3398,
+    "pos_episodes": 0.231,
+    "worst_episode": -0.1951,
+    "ann_in_without_best_episode": -0.1729,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0,
+     "tail2": 0.0
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.0235,
+     "pos": 0.692
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0107,
+     "pos": 0.692
+    }
+   },
+   "T线上": {
+    "n_days": 1409,
+    "n_episodes": 14,
+    "strength": true,
+    "avoid": false,
+    "ann_in": 0.2634,
+    "vol_in": 0.1499,
+    "ratio_in": 1.757,
+    "ann_out": -0.0764,
+    "lift": 0.3398,
+    "pos_episodes": 0.643,
+    "worst_episode": -0.0905,
+    "ann_in_without_best_episode": 0.2284,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0,
+     "tail2": 0.0
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.0222,
+     "pos": 0.846
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0515,
+     "pos": 0.692
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 457,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0351,
+    "vol_in": 0.1905,
+    "ratio_in": -0.184,
+    "ann_out": 0.1561,
+    "lift": -0.1912,
+    "pos_episodes": 0.167,
+    "worst_episode": -0.1024,
+    "ann_in_without_best_episode": -0.1288,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0965,
+     "tail2": 0.107
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0168,
+     "pos": 0.667
+    },
+    "fwd90": {
+     "n": 12,
+     "median": -0.0036,
+     "pos": 0.417
+    }
+   },
+   "T线下·L注": {
+    "n_days": 569,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.1096,
+    "vol_in": 0.1326,
+    "ratio_in": -0.827,
+    "ann_out": 0.1903,
+    "lift": -0.2998,
+    "pos_episodes": 0.2,
+    "worst_episode": -0.089,
+    "ann_in_without_best_episode": -0.1703,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0445,
+     "tail2": 0.069
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.0235,
+     "pos": 0.7
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.0173,
+     "pos": 0.75
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 187,
+    "n_episodes": 6,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.408,
+    "vol_in": 0.1618,
+    "ratio_in": 2.521,
+    "ann_out": 0.0963,
+    "lift": 0.3117,
+    "pos_episodes": 0.333,
+    "worst_episode": -0.0185,
+    "ann_in_without_best_episode": 0.3432,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.1175,
+     "tail2": 0.101
+    },
+    "fwd60": {
+     "n": 5,
+     "median": 0.0491,
+     "pos": 0.8
+    },
+    "fwd90": {
+     "n": 5,
+     "median": 0.0642,
+     "pos": 0.6
+    }
+   },
+   "T线上·L注": {
+    "n_days": 1222,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.2412,
+    "vol_in": 0.148,
+    "ratio_in": 1.63,
+    "ann_out": -0.0017,
+    "lift": 0.243,
+    "pos_episodes": 0.4,
+    "worst_episode": -0.0733,
+    "ann_in_without_best_episode": 0.1865,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.03,
+     "tail2": 0.02
+    },
+    "fwd60": {
+     "n": 19,
+     "median": 0.0366,
+     "pos": 0.842
+    },
+    "fwd90": {
+     "n": 19,
+     "median": 0.0614,
+     "pos": 0.737
+    }
+   }
+  },
+  "World50_EWxMom": {
+   "_all": {
+    "n_days": 2435,
+    "ann": 0.1566,
+    "ratio": 0.936,
+    "first": "2020-01-30",
+    "last": "2026-09-29"
+   },
+   "R升": {
+    "n_days": 1357,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1168,
+    "vol_in": 0.1789,
+    "ratio_in": 0.653,
+    "ann_out": 0.2068,
+    "lift": -0.09,
+    "pos_episodes": 0.4,
+    "worst_episode": -0.1355,
+    "ann_in_without_best_episode": 0.0724,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.4305,
+     "tail2": 0.431
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.0393,
+     "pos": 0.9
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.0695,
+     "pos": 0.95
+    }
+   },
+   "R降": {
+    "n_days": 1078,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.2068,
+    "vol_in": 0.1514,
+    "ratio_in": 1.366,
+    "ann_out": 0.1168,
+    "lift": 0.09,
+    "pos_episodes": 0.45,
+    "worst_episode": -0.0226,
+    "ann_in_without_best_episode": 0.1506,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.4305,
+     "tail2": 0.431
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.0318,
+     "pos": 0.9
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.0564,
+     "pos": 0.9
+    }
+   },
+   "L抽": {
+    "n_days": 644,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1414,
+    "vol_in": 0.1871,
+    "ratio_in": 0.756,
+    "ann_out": 0.1621,
+    "lift": -0.0207,
+    "pos_episodes": 0.308,
+    "worst_episode": -0.0857,
+    "ann_in_without_best_episode": 0.0781,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.823,
+     "tail2": 0.754
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.0181,
+     "pos": 0.615
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0139,
+     "pos": 0.692
+    }
+   },
+   "L注": {
+    "n_days": 1791,
+    "n_episodes": 18,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.1621,
+    "vol_in": 0.1596,
+    "ratio_in": 1.016,
+    "ann_out": 0.1414,
+    "lift": 0.0207,
+    "pos_episodes": 0.278,
+    "worst_episode": -0.0477,
+    "ann_in_without_best_episode": 0.1627,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.823,
+     "tail2": 0.754
+    },
+    "fwd60": {
+     "n": 17,
+     "median": 0.0168,
+     "pos": 0.647
+    },
+    "fwd90": {
+     "n": 17,
+     "median": 0.0542,
+     "pos": 0.706
+    }
+   },
+   "W坏": {
+    "n_days": 868,
+    "n_episodes": 37,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.1274,
+    "vol_in": 0.1455,
+    "ratio_in": -0.876,
+    "ann_out": 0.314,
+    "lift": -0.4414,
+    "pos_episodes": 0.243,
+    "worst_episode": -0.1322,
+    "ann_in_without_best_episode": -0.1802,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0,
+     "tail2": 0.0
+    },
+    "fwd60": {
+     "n": 35,
+     "median": 0.013,
+     "pos": 0.629
+    },
+    "fwd90": {
+     "n": 34,
+     "median": 0.0232,
+     "pos": 0.706
+    }
+   },
+   "W好": {
+    "n_days": 1567,
+    "n_episodes": 38,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.314,
+    "vol_in": 0.1777,
+    "ratio_in": 1.767,
+    "ann_out": -0.1274,
+    "lift": 0.4414,
+    "pos_episodes": 0.553,
+    "worst_episode": -0.077,
+    "ann_in_without_best_episode": 0.3078,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0,
+     "tail2": 0.0
+    },
+    "fwd60": {
+     "n": 36,
+     "median": 0.0226,
+     "pos": 0.806
+    },
+    "fwd90": {
+     "n": 34,
+     "median": 0.0238,
+     "pos": 0.735
+    }
+   },
+   "T线下": {
+    "n_days": 1026,
+    "n_episodes": 13,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0262,
+    "vol_in": 0.1844,
+    "ratio_in": -0.142,
+    "ann_out": 0.2898,
+    "lift": -0.316,
+    "pos_episodes": 0.231,
+    "worst_episode": -0.178,
+    "ann_in_without_best_episode": -0.159,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.007,
+     "tail2": 0.011
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.0219,
+     "pos": 0.615
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0304,
+     "pos": 0.769
+    }
+   },
+   "T线上": {
+    "n_days": 1409,
+    "n_episodes": 14,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.2898,
+    "vol_in": 0.1533,
+    "ratio_in": 1.891,
+    "ann_out": -0.0262,
+    "lift": 0.316,
+    "pos_episodes": 0.571,
+    "worst_episode": -0.077,
+    "ann_in_without_best_episode": 0.2494,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.007,
+     "tail2": 0.011
+    },
+    "fwd60": {
+     "n": 13,
+     "median": 0.0293,
+     "pos": 0.846
+    },
+    "fwd90": {
+     "n": 13,
+     "median": 0.0537,
+     "pos": 0.846
+    }
+   },
+   "T线下·L抽": {
+    "n_days": 457,
+    "n_episodes": 12,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.0568,
+    "vol_in": 0.2075,
+    "ratio_in": 0.274,
+    "ann_out": 0.1797,
+    "lift": -0.1229,
+    "pos_episodes": 0.167,
+    "worst_episode": -0.0857,
+    "ann_in_without_best_episode": -0.0646,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.3305,
+     "tail2": 0.341
+    },
+    "fwd60": {
+     "n": 12,
+     "median": 0.0153,
+     "pos": 0.583
+    },
+    "fwd90": {
+     "n": 12,
+     "median": 0.0133,
+     "pos": 0.667
+    }
+   },
+   "T线下·L注": {
+    "n_days": 569,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": true,
+    "ann_in": -0.0929,
+    "vol_in": 0.1634,
+    "ratio_in": -0.568,
+    "ann_out": 0.2327,
+    "lift": -0.3256,
+    "pos_episodes": 0.15,
+    "worst_episode": -0.0885,
+    "ann_in_without_best_episode": -0.1718,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0445,
+     "tail2": 0.047
+    },
+    "fwd60": {
+     "n": 20,
+     "median": 0.017,
+     "pos": 0.6
+    },
+    "fwd90": {
+     "n": 20,
+     "median": 0.0331,
+     "pos": 0.75
+    }
+   },
+   "T线上·L抽": {
+    "n_days": 187,
+    "n_episodes": 6,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.3482,
+    "vol_in": 0.1231,
+    "ratio_in": 2.828,
+    "ann_out": 0.1407,
+    "lift": 0.2075,
+    "pos_episodes": 0.333,
+    "worst_episode": -0.0073,
+    "ann_in_without_best_episode": 0.1791,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.3665,
+     "tail2": 0.371
+    },
+    "fwd60": {
+     "n": 5,
+     "median": 0.0171,
+     "pos": 0.8
+    },
+    "fwd90": {
+     "n": 5,
+     "median": 0.0615,
+     "pos": 0.8
+    }
+   },
+   "T线上·L注": {
+    "n_days": 1222,
+    "n_episodes": 20,
+    "strength": false,
+    "avoid": false,
+    "ann_in": 0.2808,
+    "vol_in": 0.1574,
+    "ratio_in": 1.785,
+    "ann_out": 0.0315,
+    "lift": 0.2493,
+    "pos_episodes": 0.35,
+    "worst_episode": -0.0701,
+    "ann_in_without_best_episode": 0.2263,
+    "enough": true,
+    "p_shift": {
+     "dev": 0.0535,
+     "tail2": 0.033
+    },
+    "fwd60": {
+     "n": 19,
+     "median": 0.0294,
+     "pos": 0.842
+    },
+    "fwd90": {
+     "n": 19,
+     "median": 0.0593,
+     "pos": 0.842
+    }
+   }
+  }
+ },
+ "strengths": {
+  "R升": [
+   "S681_H1_holdout"
+  ],
+  "R降": [
+   "equity"
+  ],
+  "L抽": [
+   "S681_H1_disc",
+   "S681_H1_holdout",
+   "S840_ruleA_H30"
+  ],
+  "L注": [],
+  "W坏": [
+   "S681_H1_disc",
+   "gold"
+  ],
+  "W好": [
+   "World50_EW",
+   "equity"
+  ],
+  "T线下": [
+   "T364_cross_asset_trend",
+   "gold"
+  ],
+  "T线上": [
+   "World50_EW",
+   "core"
+  ],
+  "T线下·L抽": [
+   "S681_H1_holdout",
+   "S840_ruleA_H30",
+   "gold"
+  ],
+  "T线下·L注": [],
+  "T线上·L抽": [
+   "S681_H3"
+  ],
+  "T线上·L注": [
+   "core",
+   "gold"
+  ]
+ },
+ "avoid": {
+  "R升": [
+   "S681_H2",
+   "S681_H3",
+   "S736_fixed",
+   "S736_published",
+   "S808",
+   "S810",
+   "T372_alt_short_basket"
+  ],
+  "R降": [
+   "S681_H3",
+   "S736_fixed",
+   "S736_published",
+   "S808"
+  ],
+  "L抽": [
+   "S681_H3",
+   "S808",
+   "S810",
+   "T364_cross_asset_trend",
+   "T372_alt_short_basket",
+   "rv2",
+   "x1v"
+  ],
+  "L注": [
+   "S642",
+   "S681_H1_disc",
+   "S681_H2",
+   "S681_H3",
+   "S736_fixed",
+   "S736_published",
+   "S808",
+   "S810",
+   "S840_ruleA_H30_funding"
+  ],
+  "W坏": [
+   "S681_H2",
+   "S681_H3",
+   "S736_fixed",
+   "S736_published",
+   "S808",
+   "World50_EW",
+   "World50_EWxMom"
+  ],
+  "W好": [
+   "S681_H1_disc",
+   "S736_fixed",
+   "S808",
+   "S810",
+   "T372_alt_short_basket"
+  ],
+  "T线下": [
+   "S681_H2",
+   "S681_H3",
+   "S736_fixed",
+   "S736_published",
+   "S808",
+   "S810",
+   "T372_alt_short_basket",
+   "World50_EW",
+   "World50_EWxMom"
+  ],
+  "T线上": [
+   "S642",
+   "S681_H1_disc",
+   "S736_fixed",
+   "S736_published",
+   "S808",
+   "S810",
+   "T364_cross_asset_trend"
+  ],
+  "T线下·L抽": [
+   "S681_H3",
+   "S808",
+   "S810",
+   "T372_alt_short_basket",
+   "World50_EW",
+   "rv2"
+  ],
+  "T线下·L注": [
+   "S642",
+   "S681_H1_holdout",
+   "S681_H2",
+   "S681_H3",
+   "S681_H4",
+   "S736_fixed",
+   "S736_published",
+   "S808",
+   "S810",
+   "S840_ruleA_H30_funding",
+   "World50_EW",
+   "World50_EWxMom"
+  ],
+  "T线上·L抽": [
+   "S642",
+   "S681_H4",
+   "S808",
+   "T364_cross_asset_trend",
+   "gold"
+  ],
+  "T线上·L注": [
+   "S642",
+   "S681_H1_disc",
+   "S736_fixed",
+   "S736_published",
+   "S808",
+   "S810",
+   "T372_alt_short_basket"
+  ]
+ },
+ "both_p_below_0.05": [
+  [
+   "x1v",
+   "T线上·L注"
+  ],
+  [
+   "S681_H1_disc",
+   "L抽"
+  ],
+  [
+   "S681_H1_disc",
+   "L注"
+  ],
+  [
+   "S681_H1_disc",
+   "W坏"
+  ],
+  [
+   "S681_H1_disc",
+   "W好"
+  ],
+  [
+   "S681_H1_disc",
+   "T线上·L抽"
+  ],
+  [
+   "S681_H1_disc",
+   "T线上·L注"
+  ],
+  [
+   "T364_cross_asset_trend",
+   "T线下"
+  ],
+  [
+   "T364_cross_asset_trend",
+   "T线上"
+  ],
+  [
+   "T364_cross_asset_trend",
+   "T线上·L抽"
+  ],
+  [
+   "T372_alt_short_basket",
+   "T线下·L抽"
+  ],
+  [
+   "World50_EW",
+   "W坏"
+  ],
+  [
+   "World50_EW",
+   "W好"
+  ],
+  [
+   "World50_EW",
+   "T线下"
+  ],
+  [
+   "World50_EW",
+   "T线上"
+  ],
+  [
+   "World50_EW",
+   "T线上·L注"
+  ],
+  [
+   "World50_EWxMom",
+   "W坏"
+  ],
+  [
+   "World50_EWxMom",
+   "W好"
+  ],
+  [
+   "World50_EWxMom",
+   "T线下"
+  ],
+  [
+   "World50_EWxMom",
+   "T线上"
+  ],
+  [
+   "World50_EWxMom",
+   "T线下·L注"
+  ]
+ ],
+ "n_cells_judged": 249,
+ "portfolio": {
+  "cond_TxL": {
+   "perf": {
+    "n_days": 1748,
+    "first": "2022-02-01",
+    "last": "2026-11-14",
+    "ann": 0.0285,
+    "vol": 0.0714,
+    "ratio": 0.429,
+    "longest_underwater_d": 707,
+    "worst_20d": -0.0564,
+    "share_in_cash": 0.386
+   },
+   "held_days": {
+    "T线下·L抽": {
+     "S681_H4": 128,
+     "S681_H2": 33,
+     "gold": 48,
+     "S681_H1_holdout": 19,
+     "S840_ruleA_H30": 19
+    },
+    "T线下·L注": {
+     "gold": 247,
+     "T364_cross_asset_trend": 51,
+     "core": 23
+    },
+    "T线上·L抽": {},
+    "T线上·L注": {
+     "T364_cross_asset_trend": 40,
+     "equity": 17,
+     "gold": 521,
+     "x1v": 324,
+     "rv2": 283,
+     "core": 587,
+     "S681_H4": 30,
+     "S681_H1_holdout": 72
+    }
+   },
+   "last_selection": {
+    "T线下·L抽": [
+     "S681_H1_holdout",
+     "S840_ruleA_H30",
+     "gold"
+    ],
+    "T线下·L注": [],
+    "T线上·L抽": [
+     "S681_H3"
+    ],
+    "T线上·L注": [
+     "core",
+     "gold"
+    ]
+   },
+   "placebo": {
+    "n": 200,
+    "ratio_median": 0.226,
+    "ratio_q90": 0.689,
+    "percentile_of_real_ratio": 0.665,
+    "ann_median": 0.0153,
+    "percentile_of_real_ann": 0.645
+   }
+  },
+  "cond_T": {
+   "perf": {
+    "n_days": 1748,
+    "first": "2022-02-01",
+    "last": "2026-11-14",
+    "ann": 0.0968,
+    "vol": 0.0936,
+    "ratio": 1.034,
+    "longest_underwater_d": 496,
+    "worst_20d": -0.0598,
+    "share_in_cash": 0.217
+   },
+   "held_days": {
+    "T线下": {
+     "gold": 625,
+     "T364_cross_asset_trend": 493
+    },
+    "T线上": {
+     "World50_EW": 578,
+     "World50_EWxMom": 270,
+     "x1v": 264,
+     "equity": 240,
+     "rv2": 6,
+     "S840_ruleA_H30": 149,
+     "core": 338,
+     "S840_ruleA_H30_funding": 122,
+     "S681_H1_holdout": 76
+    }
+   },
+   "last_selection": {
+    "T线下": [
+     "T364_cross_asset_trend",
+     "gold"
+    ],
+    "T线上": [
+     "World50_EW",
+     "core"
+    ]
+   },
+   "placebo": {
+    "n": 200,
+    "ratio_median": 0.314,
+    "ratio_q90": 0.84,
+    "percentile_of_real_ratio": 0.98,
+    "ann_median": 0.0226,
+    "percentile_of_real_ann": 0.955
+   }
+  },
+  "plus_TxL": {
+   "perf": {
+    "n_days": 1748,
+    "first": "2022-02-01",
+    "last": "2026-11-14",
+    "ann": 0.0788,
+    "vol": 0.1249,
+    "ratio": 0.667,
+    "longest_underwater_d": 932,
+    "worst_20d": -0.098,
+    "share_in_cash": 0.081
+   },
+   "held_days": {
+    "T线下·L抽": {
+     "World50_EW": 193,
+     "World50_EWxMom": 332,
+     "equity": 179,
+     "gold": 210,
+     "x1v": 162,
+     "T364_cross_asset_trend": 153,
+     "S681_H4": 128,
+     "S681_H2": 33,
+     "S681_H1_holdout": 19,
+     "S840_ruleA_H30": 19
+    },
+    "T线下·L注": {
+     "World50_EW": 387,
+     "World50_EWxMom": 436,
+     "equity": 260,
+     "x1v": 80,
+     "gold": 385,
+     "T364_cross_asset_trend": 51,
+     "core": 23
+    },
+    "T线上·L抽": {
+     "World50_EWxMom": 130,
+     "gold": 54,
+     "World50_EW": 24,
+     "equity": 29
+    },
+    "T线上·L注": {
+     "T364_cross_asset_trend": 40,
+     "equity": 245,
+     "gold": 557,
+     "x1v": 324,
+     "World50_EWxMom": 593,
+     "rv2": 283,
+     "core": 587,
+     "World50_EW": 458,
+     "S681_H4": 30,
+     "S681_H1_holdout": 72
+    }
+   },
+   "last_selection": {
+    "T线下·L抽": [
+     "S681_H1_holdout",
+     "S840_ruleA_H30",
+     "World50_EW",
+     "World50_EWxMom",
+     "equity",
+     "gold"
+    ],
+    "T线下·L注": [
+     "World50_EW",
+     "World50_EWxMom",
+     "equity",
+     "gold"
+    ],
+    "T线上·L抽": [
+     "S681_H3",
+     "World50_EW",
+     "World50_EWxMom",
+     "equity",
+     "gold"
+    ],
+    "T线上·L注": [
+     "World50_EW",
+     "World50_EWxMom",
+     "core",
+     "equity",
+     "gold"
+    ]
+   },
+   "placebo": {
+    "n": 200,
+    "ratio_median": 0.899,
+    "ratio_q90": 1.061,
+    "percentile_of_real_ratio": 0.035,
+    "ann_median": 0.1132,
+    "percentile_of_real_ann": 0.03
+   }
+  },
+  "plus_T": {
+   "perf": {
+    "n_days": 1748,
+    "first": "2022-02-01",
+    "last": "2026-11-14",
+    "ann": 0.1136,
+    "vol": 0.1327,
+    "ratio": 0.873,
+    "longest_underwater_d": 565,
+    "worst_20d": -0.0725,
+    "share_in_cash": 0.085
+   },
+   "held_days": {
+    "T线下": {
+     "World50_EW": 580,
+     "World50_EWxMom": 768,
+     "equity": 439,
+     "x1v": 242,
+     "gold": 625,
+     "T364_cross_asset_trend": 493
+    },
+    "T线上": {
+     "World50_EWxMom": 723,
+     "gold": 487,
+     "World50_EW": 595,
+     "x1v": 264,
+     "equity": 493,
+     "rv2": 6,
+     "S840_ruleA_H30": 149,
+     "core": 338,
+     "S840_ruleA_H30_funding": 122,
+     "S681_H1_holdout": 76
+    }
+   },
+   "last_selection": {
+    "T线下": [
+     "T364_cross_asset_trend",
+     "World50_EW",
+     "World50_EWxMom",
+     "equity",
+     "gold"
+    ],
+    "T线上": [
+     "World50_EW",
+     "World50_EWxMom",
+     "core",
+     "equity",
+     "gold"
+    ]
+   },
+   "placebo": {
+    "n": 200,
+    "ratio_median": 0.858,
+    "ratio_q90": 0.996,
+    "percentile_of_real_ratio": 0.55,
+    "ann_median": 0.1089,
+    "percentile_of_real_ann": 0.605
+   }
+  },
+  "B0_all_equal_risk": {
+   "perf": {
+    "n_days": 1748,
+    "first": "2022-02-01",
+    "last": "2026-11-14",
+    "ann": 0.0185,
+    "vol": 0.0509,
+    "ratio": 0.386,
+    "longest_underwater_d": 466,
+    "worst_20d": -0.0472,
+    "share_in_cash": 0.001
+   }
+  },
+  "B1_good_unconditional": {
+   "perf": {
+    "n_days": 1748,
+    "first": "2022-02-01",
+    "last": "2026-11-14",
+    "ann": 0.1375,
+    "vol": 0.151,
+    "ratio": 0.924,
+    "longest_underwater_d": 749,
+    "worst_20d": -0.088,
+    "share_in_cash": 0.115
+   },
+   "last_selection": [
+    "equity",
+    "gold",
+    "World50_EW",
+    "World50_EWxMom"
+   ]
+  },
+  "today": {
+   "state_day": "2026-11-13",
+   "labels": {
+    "R": "升",
+    "L": "抽",
+    "W": "坏",
+    "T": "线下"
+   },
+   "TxL": "T线下·L抽"
+  }
+ },
+ "rules": {
+  "min_episodes": 5,
+  "min_days": 120,
+  "min_ratio": 0.5,
+  "min_pos_episodes": 0.6,
+  "gap_merge_d": 5
+ }
+}
