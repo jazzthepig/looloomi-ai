@@ -55,50 +55,6 @@
       "hi": 95000,
       "prob": 0.62,
       "horizon_d": "2027-01-29"
-    },
-    {
-      "id": "T-365-10",
-      "scenario": "台账 2026-08 的小节数",
-      "statement": "S-842 台账里标题日期落在 2026-08 的小节数 ≥ 50(下一轮 T-365-r4-2026-08 的候选池下限)",
-      "variable": "manual",
-      "op": "between",
-      "lo": 50,
-      "hi": 999,
-      "prob": 0.8,
-      "horizon_d": "2026-12-31"
-    },
-    {
-      "id": "T-365-11",
-      "scenario": "本轮 12 行过合同校验",
-      "statement": "experiment_runs_backfill_patch_r3_2026-09.jsonl 的 12 行经合同 _normalize_experiment_run 逐行过,rejected = 0(下一轮实测)",
-      "variable": "manual",
-      "op": "between",
-      "lo": 0,
-      "hi": 0,
-      "prob": 0.85,
-      "horizon_d": "2026-12-15"
-    },
-    {
-      "id": "T-365-12",
-      "scenario": "入库后的 minimax-b 条数",
-      "statement": "三条轮次的 36 条入库后,experiment_runs 里 source_lane = 'minimax-b' 的条数 = 4(前两轮 patch 里 lane-b 的 4 行改口径而来)",
-      "variable": "manual",
-      "op": "between",
-      "lo": 4,
-      "hi": 4,
-      "prob": 0.6,
-      "horizon_d": "2027-01-15"
-    },
-    {
-      "id": "T-365-13",
-      "scenario": "S-273 的六个 ADF t 值不变",
-      "statement": "台账 S-273 正文的六个 ADF t 值(−0.720 / −1.874 / −2.080 / −3.056 / −2.371 / −2.502)在 2026-12-31 重读时不变",
-      "variable": "manual",
-      "op": "between",
-      "lo": 1,
-      "hi": 1,
-      "prob": 0.95,
-      "horizon_d": "2026-12-31"
     }
   ]
 }
