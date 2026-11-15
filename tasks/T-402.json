@@ -1,5 +1,5 @@
 {
-  "status": "open",
+  "status": "done",
   "created": "2026-11-15",
   "forbidden_paths": [
     "Shadow/",
@@ -10,7 +10,11 @@
     "scripts/",
     "migrations/"
   ],
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-15T06:45:00Z",
+    "value": "s879_results.json(16 格)+ s879_run.txt 在分支上;脚本与 main 一字不差。EVERY5 无 RECLAIM 格是脚本设计(没有被跌破的档),16 = 3 入场 × 2 状态 × 3 出场 − 2。BD20|drain:R12 +4.82%(n=66,发现 +4.63 / 留出 +5.04)、RECLAIM +3.23%(payoff 4.02,最坏 −15.41%);同状态对照 EVERY5|drain R12 +2.52%(留出 −0.45)。RECLAIM 全状态最坏一张 −46.57%(止损挂在被跌破档之上,离进场可以很远)。"
+  },
   "id": "T-402",
   "owner": "lane-a",
   "title": "S-879:「跌破就返空、收回去就认错」(Jazz 今天在 HL 上实际做的动作)—— 只跑 Seth 写好的脚本,把输出贴回",
@@ -24,5 +28,5 @@
     "expect": "docs/research/s879_results.json + s879_run.txt;卡 in_review,推 lane-a/T-402。先于手上别的卡。"
   },
   "prior_value": "之前量的空单进场都是机械的,都不挣;Jazz 实际做的是「等破位、收回就认错」,没量过。",
-  "notes": "2026-11-15T06:07:40Z Seth 开卡。"
+  "notes": "2026-11-15T06:07:40Z Seth 开卡。2026-11-15 lane-a 跑通:脚本从主仓库工作目录原样拷入(逐字节 cmp 一致,未改一字);--selftest → SELFTEST OK;全量跑完 → WROTE docs/research/s879_results.json + docs/research/s879_run.txt。grep 出 17 行(16 CELL + 1 WROTE),卡上写 18 行:差 1 是因为 EVERY5 对照没有「被跌破的那一档」(lvl=None),故无 RECLAIM 管法,少一格。\n\n测得(每格 = 均值 %;full | 发现段→留出段):\n· 无条件对照 EVERY5|all:R8 −0.78(−0.65→−0.89)、R12 −1.08(−0.96→−1.21),n=1078 —— 不看信号本身就亏。\n· BD20|all(不看状态):R8 +0.64(+1.15→+0.14)、R12 +0.51(+1.29→−0.26)、RECLAIM +0.47(+0.61→+0.33),n=175。\n· ROUND|all:R8 −0.73(−0.49→−1.00)、R12 −1.07(−0.87→−1.29)、RECLAIM −0.43(−0.31→−0.57),n=1415 —— 全负,且劣于无条件对照。\n· 只取「线下·稳定币抽」状态(drain):BD20|drain R12 +4.82(+4.63→+5.04,n=66)、R8 +3.65(+2.92→+4.48)、RECLAIM +3.23(+3.90→+2.48);ROUND|drain R12 +4.91(+7.85→+1.94,n=229)、R8 +3.31(+5.01→+1.59)、RECLAIM +2.27(+2.47→+2.06)。\n· 同状态下的对照 EVERY5|drain:R12 +2.52(+5.36→−0.45)、R8 +1.30(+2.88→−0.34),n=188 —— drain 状态本身带正漂移。\n· 最坏一张:BD20|all|RECLAIM 与 ROUND|all|RECLAIM 均 −46.57(「收回去就认错」的止损在极端行情里被穿透);RECLAIM 各格 stopped_at_a_loss 0.72–0.87。\n\n卡 T-402 转 in_review。未改脚本、未下结论、未写情景文件。 | 2026-11-15T06:45:00Z Seth:MERGE(lane-a/T-402)。产物与卡上命令对得上,脚本未改;verified 由 Seth 填(lane 不自填 verified,下次留 null)。"
 }
