@@ -1,5 +1,5 @@
 {
-  "status": "open",
+  "status": "done",
   "created": "2026-11-15",
   "forbidden_paths": [
     "Shadow/",
@@ -10,7 +10,11 @@
     "scripts/",
     "migrations/"
   ],
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-15T06:45:00Z",
+    "value": "s878_results.json + s878_run.txt 在分支上;脚本与 main 一字不差。336 桶,发现段合格 5、留出段确认 0;100 次平移对照 qualified 中位 4 / q95 9,confirmed 中位 0 → 真值落在零分布正中;DISC_ONLY 5 条全是 NEAR12,留出段无一成立(stable:USDT_30d lo 留出 n=0、stable_supply_30d hi 留出 n=4,不可判)。"
+  },
   "id": "T-401",
   "owner": "lane-a",
   "title": "S-878:挖进场 —— 56 个键各自在高 / 低位时,空单(Jazz 的管法与近止损)之后挣不挣;只跑 Seth 写好的脚本",
@@ -24,5 +28,5 @@
     "expect": "docs/research/s878_results.json + s878_run.txt;卡 in_review,推 lane-a/T-401。先于手上别的卡。"
   },
   "prior_value": "S-874:机械进场下管法救不回来;Jazz 的写法里进场是判断。把判断拆成库里的条件来挖。",
-  "notes": "2026-11-15T05:26:26Z Seth 开卡(Jazz 11-15:「先再模拟和 mining」)。"
+  "notes": "2026-11-15T05:26:26Z Seth 开卡(Jazz 11-15:「先再模拟和 mining」)。\n2026-11-15T14:28Z lane-a 跑通:脚本从主仓库原样拷入(逐字节 cmp 一致,未改一字)。--selftest 见 SELFTEST OK;正式跑 ~3 分钟即 WROTE docs/research/s878_results.json(2628B)+ s878_run.txt(10 行)。测得值 —— UNCONDITIONAL(无条件的空单本身,负):JZ_add disc n=524 mean −2.14% win 0.519 payoff 0.51 / hold n=554 mean −0.71% win 0.570 payoff 0.53;JZ_one disc mean −3.90% win 0.433 payoff 0.83 / hold mean −1.53% win 0.473 payoff 0.84;NEAR12 disc mean −0.96% win 0.365 payoff 1.51 / hold mean −1.21% win 0.431 payoff 1.04。COUNTS:336 桶(56 键 × 2 桶 × 3 管法),发现段合格 5 个、留出段确认 0 个;零分布(100 次平移)qualified_median=4 / q95=9 → 真的 5 落在零分布正中间;confirmed_median=0 / q95=0 / p_confirmed_ge_real=1.0。CONFIRMED 行 0 条。DISC_ONLY 5 条全是 NEAR12、留出段全部不成立:cycle:shift_pct hi(disc n=32 +11.86% payoff 2.38 → hold n=206 +0.93% payoff 1.17)、stable:USDT_30d lo(disc n=46 +9.98% payoff 2.83 → hold n=0)、dvol:btc_pct_1y lo(disc n=52 +9.34% payoff 2.07 → hold n=220 −1.79% payoff 0.85)、cycle:deterioration lo(disc n=50 +6.17% payoff 2.13 → hold n=166 +0.53% payoff 1.11)、stable_supply_30d hi(disc n=30 +0.78% payoff 2.21 → hold n=4)。脚本未改、未下结论、未写情景文件。交付:lane-a/T-401。 | 2026-11-15T06:45:00Z Seth:MERGE(lane-a/T-401)。产物与卡上命令对得上,脚本未改;verified 由 Seth 填(lane 不自填 verified,下次留 null)。"
 }

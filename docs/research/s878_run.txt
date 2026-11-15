@@ -1,0 +1,10 @@
+loaded BTC 3089
+loaded ETH 3089
+UNCONDITIONAL {"JZ_add": {"disc": {"n": 524, "mean_pct": -2.14, "win": 0.519, "payoff": 0.51, "worst_pct": -29.14}, "hold": {"n": 554, "mean_pct": -0.71, "win": 0.57, "payoff": 0.53, "worst_pct": -24.48}}, "JZ_one": {"disc": {"n": 524, "mean_pct": -3.9, "win": 0.433, "payoff": 0.83, "worst_pct": -60.0}, "hold": {"n": 554, "mean_pct": -1.53, "win": 0.473, "payoff": 0.84, "worst_pct": -49.22}}, "NEAR12": {"disc": {"n": 524, "mean_pct": -0.96, "win": 0.365, "payoff": 1.51, "worst_pct": -12.0}, "hold": {"n": 554, "mean_pct": -1.21, "win": 0.431, "payoff": 1.04, "worst_pct": -12.0}}}
+COUNTS {"n_buckets_tested": 336, "n_qualified_disc": 5, "n_confirmed": 0, "null": {"n": 100, "qualified_median": 4.0, "qualified_q95": 9.0, "confirmed_median": 0.0, "confirmed_q95": 0.0, "p_confirmed_ge_real": 1.0}}
+DISC_ONLY {"form": "NEAR12", "key": "cycle:shift_pct", "bucket": "hi", "disc": {"n": 32, "mean_pct": 11.86, "win": 0.688, "payoff": 2.38, "worst_pct": -12.0}, "hold": {"n": 206, "mean_pct": 0.93, "win": 0.505, "payoff": 1.17, "worst_pct": -12.0}, "confirmed": false}
+DISC_ONLY {"form": "NEAR12", "key": "stable:USDT_30d", "bucket": "lo", "disc": {"n": 46, "mean_pct": 9.98, "win": 0.478, "payoff": 2.83, "worst_pct": -12.0}, "hold": {"n": 0}, "confirmed": false}
+DISC_ONLY {"form": "NEAR12", "key": "dvol:btc_pct_1y", "bucket": "lo", "disc": {"n": 52, "mean_pct": 9.34, "win": 0.654, "payoff": 2.07, "worst_pct": -12.0}, "hold": {"n": 220, "mean_pct": -1.79, "win": 0.441, "payoff": 0.85, "worst_pct": -12.0}, "confirmed": false}
+DISC_ONLY {"form": "NEAR12", "key": "cycle:deterioration", "bucket": "lo", "disc": {"n": 50, "mean_pct": 6.17, "win": 0.5, "payoff": 2.13, "worst_pct": -12.0}, "hold": {"n": 166, "mean_pct": 0.53, "win": 0.5, "payoff": 1.11, "worst_pct": -12.0}, "confirmed": false}
+DISC_ONLY {"form": "NEAR12", "key": "stable_supply_30d", "bucket": "hi", "disc": {"n": 30, "mean_pct": 0.78, "win": 0.333, "payoff": 2.21, "worst_pct": -12.0}, "hold": {"n": 4, "mean_pct": 8.64, "win": 1.0, "payoff": 99.0, "worst_pct": 1.52}, "confirmed": false}
+WROTE docs/research/s878_results.json
