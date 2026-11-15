@@ -1,0 +1,28 @@
+{
+  "status": "in_review",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-390",
+  "owner": "lane-b",
+  "title": "T-386 的脚本修一行:`Pricer.entry` 在名字上市前拿了最新收盘当进场价 —— SOL 的全样本与 p 因此是坏的;修完只重跑 ETH / SOL 那一段、与生产的数对",
+  "source": "台账「S-866 结果 补二」。生产那一份(`src/data/state/same_cell.py`,2026-11-15 01:12 UTC 第一行真实数据)与你的格内数逐项相同,只有 SOL 的全样本对不上:生产 n = 2231,你 n = 2263。库里 SOL 的 binance_hist 从 2020-08-11 起没有缺口。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-390.json"
+  ],
+  "acceptance": {
+    "check": "① `docs/research/s866_blind_cells.py` 的 `Pricer.entry(d)`:d 早于第一根日线时返回 None(现在 `bisect_right(...) − 1 = −1` ⇒ 取到最新一根;apparatus 文档串 10-14 写过同一个坑)。进场价改用 `apparatus.price_on_or_after`(max_gap_days = 0)或等价写法,不要自己再写下标。② 加一条自检(脚本里 assert 即可):任何资产的前瞻收益里,进场日都不早于该资产第一根日线。③ 只重跑 ETH / SOL 那一段与循环平移对照(`--stage` 若拆不开就整份重跑,**不要 Read s866_cells.json / s866_results.json 这类大文件,只用 python 取要的键**)。④ 最终回复只贴:SOL 全样本 30 天的 n / 中位 / 均值 / 跌超 10% / 涨超 10%(应为 2231 / 0.0041 / 0.1316 / 0.340 / 0.381,差 ≤ 0.001)、SOL 与 ETH 的平移 p(你那种算法;生产同一种算法是 SOL 0.037、ETH 0.288,种子不同允许差 ±0.03)、格内的数有没有变(不该变)。对不上就贴两边的数、停下,不改任何一边去凑。⑤ 情景文件不动(T-386-1 ~ -4 与这处无关)。",
+    "expect": "修过的 s866_blind_cells.py + 重跑后的 s866_results.json / s866_run.txt;卡 in_review,推 lane-b/T-390。"
+  },
+  "prior_value": "S-866 结果表里 SOL 的全样本(−0.2% / 35.0% / 37.5%,n 2263)与 SOL 的平移 p(0.214)来自这份脚本,含 32 个上市前的日子(每天约 −98%);台账已更正为生产的数,脚本本身还没修 —— 它是「第二份」,不修就不再是有效的复算。",
+  "notes": "2026-11-15T01:17:32Z Seth 开卡(夜间收尾;对账,不是盲复算)。\n\n2026-11-15T01:40Z lane-b 修完并重跑(T-390)。\n① `Pricer.entry` 改走 `apparatus.price_on_or_after(max_gap_days=0)`:d 早于第一根日线 ⇒ 没有进场价(不再拿最新收盘顶替)。② 加自检 assert:上市前的格位前瞻收益必须为 None,任何有收益的进场日不得早于该资产第一根日线 —— 本次 388 个「资产×horizon×日」格位全部通过。③ 新增 `--stage fwd`(只重跑 ETH/SOL + 循环平移,复用已落盘的 s866_cells.json);另把平移对照的宇宙改成生产 `same_cell.py` 的 u2 口径(该资产**有** 30 天收益的日子),否则每次抽样抽到的有效样本数在变(null 分布被污染)。\n\n**SOL 全样本 30 天(本脚本宇宙)**:n=2230 · 中位=0.0042474 · 均值=0.131680 · 跌超10%=0.33991 · 涨超10%=0.380717\n**生产**(2231 / 0.0041 / 0.1316 / 0.340 / 0.381):n 差 1 天,其余四项差 ≤ 0.0005。\n差的 1 天已定位(不是 entry bug 的残留):holdout 基准不同 —— 生产 stat 末日 = BTC 日历末日(2026-11-14)−56 = 2026-09-19;本脚本按 labelled 日历(末日 2026-11-13)−56 = 2026-09-18。实测把 2026-09-19 加回宇宙即得 n=2231 · 中位=0.004137 · 均值=0.131597 · 跌超10%=0.3398 · 涨超10%=0.3805(与生产逐项对上)。按卡「不改任何一边去凑」,两边都没改。\n\n**平移 p**(循环平移,2000 次,种子 866;生产种子 864):SOL_30d 双尾 p2=0.0470(生产 0.037,差 0.010)· 单下尾 p=0.0235;ETH_30d 双尾 p2=0.2609(生产 0.288,差 0.027)· 单下尾 p=0.1304。均在 ±0.03 内(生产报的是双尾口径 = 2×min(单尾);同一次运行另存 dev 口径:SOL 0.129 / ETH 0.309)。\n\n**格内的数**:48 项(16 格 × ETH/SOL)里只变了 2 项,都是 SOL —— R降|L注|W好|T线上 n 423→401、R降|L注|W坏|T线上 n 110→99,正是那 32 个上市前的日子所在的格;ETH、BTC 全部不变。格子的天数/段数(划分)未动(沿用已落盘的 s866_cells.json)。\n\n产物:`docs/research/s866_blind_cells.py`(修好 + `--stage fwd`)、`docs/research/s866_results.json`(重跑;对账段原样继承 T-386)、`docs/research/s866_run.txt`(日志 + 对照验证 + 格内差异表)、`docs/research/scenarios/lane-b-T-390.json`(6 条,4 条自动结算)。"
+}
