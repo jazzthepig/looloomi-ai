@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-403",
+  "owner": "lane-c",
+  "title": "S-877 的复核:面板去掉七条风格指数之后,「山寨相对主流的强弱」这条轴还在不在 —— 只跑 Seth 写好的脚本",
+  "source": "台账「S-877 结果」。脚本 `docs/research/s877_axis_mining.py` 的新版(主目录 / main;加了 `--keys` / `--drop-strategies` / `--tag`,不带这些参数时与你跑的那版相同)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-403.json"
+  ],
+  "acceptance": {
+    "check": "① 换成新版脚本,`--selftest | tail -1` 见 SELFTEST OK。② `python3 docs/research/s877_axis_mining.py --keys style_rel_majors_30d,style:top_l1_rel30,style:second_l1_l2_rel30,chain:tvl_30d,macro:fng,REF:stable_supply_30d_raw_sign --drop-strategies style_ --tag nostyle > docs/research/s877_run_nostyle.txt 2>&1`(六个键,约五分钟),见 WROTE。③ 最终回复只贴 `grep -E '^(T_ONLY|SUMMARY|TOP|WROTE)' docs/research/s877_run_nostyle.txt | cut -c1-500`。不改脚本、不下结论、不写情景文件。",
+    "expect": "docs/research/s877_results_nostyle.json + s877_run_nostyle.txt;卡 in_review,推 lane-c/T-403(T-400 的产物照常推 lane-c/T-400)。先于 T-393 的收尾。"
+  },
+  "prior_value": "S-877 里最强的轴是风格相对强弱,而面板里有七条风格指数自己 —— 可能只是面板内的动量。",
+  "notes": "2026-11-15T06:11:49Z Seth 开卡。"
+}
