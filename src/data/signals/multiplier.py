@@ -511,9 +511,14 @@ async def run_once() -> dict[str, Any]:
         tom["state_strength_v2"] = await run_state_book(target.date().isoformat())
     except Exception as e:  # noqa: BLE001 —— 纸面账写不进去不该让 ③ 与 tom 算失败
         tom["state_strength_v2"] = {"ok": False, "why": f"{type(e).__name__}: {str(e)[:160]}"}
+    try:                                   # T-406:状态敞口前向账(R6 三态敞口 + 闸门关时空大盘)—— 单独 try,失败不影响 ③ 与 tom
+        from src.data.universe.forward_books import run_state_arms
+        state_arms = await run_state_arms(target.date().isoformat())
+    except Exception as e:  # noqa: BLE001 —— 这本账写不进去不该让 ③ 的回放算失败
+        state_arms = {"ok": False, "why": f"{type(e).__name__}: {str(e)[:160]}"}
     return {"ok": True, "refused": False, "written": w["written"], "reason": f"回放至 {target.date()}",
             "eval": ev_old, "eval_u_cap_a1u": ev_new, "eval_tom_pd13": ev_tom, "eval_c1": ev_c1, "eval_q": ev_q,
-            "tom_trader": tom,
+            "tom_trader": tom, "state_arms": state_arms,
             "stale_in_source": stale, "lock": w["lock"]}
 
 

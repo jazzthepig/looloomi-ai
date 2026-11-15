@@ -257,6 +257,8 @@ def main() -> None:
             "dates": dates,
             "research": bits(res_gate_d, dates),
             "production": bits(prod_gate_d, dates),
+            "index_ret": {d: float(prod_ret[pd.Timestamp(d)]) for d in dates
+                          if pd.Timestamp(d) in prod_ret.index},
             "overlap_days": len(dates),
             "mismatches": len(mism),
             "research_source": str(MAC / "research/t156/_style.json"),

@@ -126,3 +126,29 @@ def basket_funding(funding: dict[str, pd.Series]) -> pd.Series:
         return pd.Series(dtype=float)
     df = pd.concat(parts, axis=1).fillna(0.0)
     return df.mean(axis=1)
+
+
+def gate_calendar(basket: pd.Series, funding: pd.Series, gate: pd.Series,
+                  start: Optional[str] = None, end: Optional[str] = None):
+    """把篮子 / 资金费 / 闸门对到**同一条日历**上。纯函数。
+
+    闸门是慢状态:非交易日沿用上一个值(`.ffill()`)—— 与研究 `s819_gate_short.py` 的
+    `g.reindex(cal).ffill()` 同一读法(研究那条 `cal` 是自然日历、周末也记 ⇒ 周末的涨跌不丢)。
+    篮子缺的日子按 0 计(不猜),资金费缺的日子按 0 计。
+
+    返回 (basket, funding, gate_open) 三条同索引的序列。
+    """
+    idx = basket.index.union(funding.index).union(gate.index)
+    if start is not None:
+        idx = idx[idx >= pd.Timestamp(start)]
+    if end is not None:
+        idx = idx[idx <= pd.Timestamp(end)]
+    if len(idx) == 0:
+        empty = pd.Series(dtype=float)
+        return empty, empty, pd.Series(dtype=bool)
+    b = basket.reindex(idx).fillna(0.0)
+    f = funding.reindex(idx).fillna(0.0)
+    g = gate.reindex(idx).ffill()
+    if g.isna().any():
+        g = g.fillna(True)          # 闸门历史还没开始 ⇒ 按研究的读法「不足 200 天算开」
+    return b, f, g.astype(bool)

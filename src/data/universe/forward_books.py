@@ -83,6 +83,19 @@ RULE_FLEX_HOUSE = "flex_house_v1:S-815(= RB_T25 的权重与调仓;现金余额�
 RULE_FLEX_T20K = ("flex_t20k_v1:T-327(建臂日 2026-10-16;常数 加密 0.20 / 股 0.30 / 金 0.20;余 30% 现金收益 0;"
                   "同腿同核同成本 20bp;21 个共同日调仓;权重写死,不随 RBv2 变)")
 RULE_TOM = "tom_trader_v2:S-600 / S-601(多头 >200 日线且破 20 日高,盈利加仓到 1.3;跌破即平;F 空仓 / FB 反弹 0.5 +15% 止盈 / S50 开空 −20% 止盈 / X1V 破 20 日低即平 + 波动率缩放)"
+#: T-406(Jazz 11-15「向前建」):**状态敞口前向账** —— 两条只有研究回测的策略搬成生产纯函数,每天记一行。
+#: 臂 `R6` = 三态敞口(S-823:明显向上 +1.0 / 不明确 +0.3 / 明显向下 −0.3;d 收盘定、d+1 生效;换敞口 10bp;空头收资金费)。
+#: 臂 `GATE_S15` / `GATE_S30` = 闸门关着时空大盘(S-819:majors 200 日线闸门**关着**时,空 BTC/ETH 50/50,规模 s;
+#: 闸门用**前一天**的;翻转当天扣 5bp × s;空头收资金费)。
+#: 闸门序列 = `state_arms.majors_gate_from_ret`(`style_index_pit_daily` 的 eq.majors / eq.cap)——
+#: 与研究 `t310_slots.load_gate` 在重叠历史上**逐日相同**(测试 `tests/test_state_arms.py` 证明)。
+STATE_ARMS_START = "2026-11-16"          # 起算日:合并(2026-11-15)之后的第一个 UTC 日
+STATE_ARMS_WARM_FROM = "2024-01-01"      # 起算前的历史:R6 要 230 天(200 日均线 + 30 日斜率),闸门要 200 天
+STATE_ARMS_ARMS = ("R6", "GATE_S15", "GATE_S30")
+GATE_S = {"GATE_S15": 0.15, "GATE_S30": 0.30}
+RULE_STATE_ARMS = ("state_arms_v1:T-406(R6 = S-823 三态敞口 明显向上 +1.0 / 不明确 +0.3 / 明显向下 −0.3,"
+                   "d 收盘定 d+1 生效,换敞口 10bp,空头收资金费;GATE_S15 / GATE_S30 = S-819 闸门关着时空大盘 "
+                   "BTC/ETH 50/50,规模 s,闸门用前一天的,翻转扣 5bp×s,空头收资金费;起算 2026-11-16)")
 WRITES_TABLES = ("forward_book_holdings", "forward_book_nav")
 WRITES_COLUMNS = {
     "forward_book_holdings": ("book", "arm", "as_of", "key", "weight", "note", "rule"),
@@ -438,6 +451,154 @@ async def run_tom_trader(cutoff: str) -> dict[str, Any]:
                 return {"ok": False, "why": f"写 {t} 失败:{(w.why or '')[:160]}"}
     last = {a: g for a, g in ((h["arm"], h["weight"]) for h in rows_h)}
     return {"ok": not notes, "nav_written": len(rows_n), "exposure_now": last, **({"notes": notes} if notes else {})}
+
+
+# ── T-406 状态敞口前向账(R6 三态敞口 + 闸门关时空大盘)──────────────────────
+
+async def state_arms_inputs(end: str) -> tuple[dict, dict, Any]:
+    """三样输入(全只读):
+
+    - **收盘** BTC / ETH = `asset_mcap_daily`(同 `tom_inputs` 的来路)。
+    - **资金费** = `funding_history`(venue=binance_perp)**按天求和、不年化** —— 研究口径
+      (`s823_three_state.py` / `s819_gate_short.py` 都是日费率;`tom_inputs` 里那个 ×365 是年化的,不能照抄)。
+    - **闸门** = `style_index_pit_daily`(style=eq.majors、weighting=eq.cap)按 `state_arms.majors_gate_from_ret`
+      复原水平 → 自己的 200 日均线。与研究 `t310_slots.load_gate` 在重叠历史上逐日相同(测试证明)。
+    """
+    import pandas as pd
+    from src.data.signals.state_arms import majors_gate_from_ret
+    px = await prices(["BTC", "ETH"], STATE_ARMS_WARM_FROM, end)
+    closes = {k: pd.Series([v for _, v in pts], index=pd.to_datetime([d for d, _ in pts]))
+              for k, pts in px.items() if pts}
+    fund: dict[str, Any] = {}
+    for sym in ("BTC", "ETH"):
+        rows = await _get_all(f"funding_history?select=funding_time,funding_rate&venue=eq.binance_perp&symbol=eq.{sym}"
+                              f"&funding_time=gte.{STATE_ARMS_WARM_FROM}&order=funding_time")
+        if rows:
+            df = pd.DataFrame(rows)
+            df["d"] = pd.to_datetime(df["funding_time"].str[:10])
+            fund[sym] = df.groupby("d")["funding_rate"].sum().astype(float)
+    grows = await _get_all("style_index_pit_daily?select=d,ret&style=eq.majors&weighting=eq.cap&order=d")
+    r = pd.Series({pd.Timestamp(x["d"]): float(x["ret"]) for x in grows
+                   if x.get("ret") is not None and float(x["ret"]) > -0.95}, dtype=float).sort_index()
+    gate = majors_gate_from_ret(r)
+    return closes, fund, gate
+
+
+async def run_state_arms(cutoff: str, *, loader=None, reader=None, writer=None) -> dict[str, Any]:
+    """T-406 状态敞口前向账:从 `STATE_ARMS_WARM_FROM` 整段重算(纯函数、可复现),
+    **只写 `STATE_ARMS_START` 之后还没写过的天;写过的不改**。
+
+    臂:`R6`(S-823 三态敞口)· `GATE_S15` · `GATE_S30`(S-819 闸门关着时空大盘)。
+    `loader` / `reader` / `writer` 可注入(测试用假的存取函数);不注入就走真库。
+    输入不够时**不写**,并在 notes 里说清是哪条臂、缺哪样输入。
+    """
+    import pandas as pd
+    from src.data.signals.state_arms import (basket_funding, basket_returns, gate_calendar,
+                                             gate_short_returns, r6_exposure, r6_returns)
+
+    if cutoff <= STATE_ARMS_START:
+        return {"ok": True, "waiting": f"状态敞口前向账从 {STATE_ARMS_START} 收盘起"}
+    load = loader or state_arms_inputs
+    read = reader or (lambda: _get_all("forward_book_nav?select=arm,d,nav&book=eq.state_arms&order=d"))
+    if writer is None:
+        async def _default_writer(table: str, rows: list, on_conflict: str):  # noqa: ANN001
+            from src.api.store import supabase_upsert_table
+            w = await supabase_upsert_table(table, rows, on_conflict=on_conflict)
+            return bool(w.ok), (w.why or "")
+        write = _default_writer
+    else:
+        write = writer
+    closes, fund, gate = await load(cutoff)
+    have_rows = await read()
+    have = {(r["arm"], r["d"]): float(r["nav"]) for r in (have_rows or []) if r.get("nav") is not None}
+    rows_n: list[dict] = []
+    rows_h: list[dict] = []
+    notes: list[str] = []
+    start, cut = pd.Timestamp(STATE_ARMS_START), pd.Timestamp(cutoff)
+
+    def _hold(arm: str, as_of: str, key: str, weight: float, note: str) -> None:
+        rows_h.append({"book": "state_arms", "arm": arm, "as_of": as_of, "key": key,
+                       "weight": float(weight), "note": note, "rule": RULE_STATE_ARMS})
+
+    def _seed(arm: str) -> tuple[float, list[str]]:
+        done = sorted(d for (a, d) in have if a == arm)
+        if not done:
+            rows_n.append({"book": "state_arms", "arm": arm, "d": STATE_ARMS_START, "nav": 1.0,
+                           "ret": None, "as_of": STATE_ARMS_START, "rule": RULE_STATE_ARMS})
+            return 1.0, done
+        return have[(arm, done[-1])], done
+
+    # ── 臂 1:R6(S-823 三态敞口)────────────────────────────────────────
+    arm = "R6"
+    c = closes.get("BTC")
+    warm = int((c.index < start).sum()) if c is not None else 0
+    if c is None or warm < 230:
+        notes.append(f"{arm}: BTC 收盘不足(起算前 {warm} 天,需 ≥ 230 = 200 日均线 + 30 日斜率)")
+    elif fund.get("BTC") is None or len(fund.get("BTC")) == 0:
+        notes.append(f"{arm}: BTC 资金费缺失(funding_history 读不到)—— 空头腿收不到资金费,不写")
+    else:
+        e = r6_exposure(c)
+        ret, _, _ = r6_returns(c, e, fund.get("BTC"), start=STATE_ARMS_START, end=cutoff)
+        ret = ret[(ret.index > start) & (ret.index <= cut)]
+        nav, done = _seed(arm)
+        if not done:
+            w0 = e[e.index <= start]
+            _hold(arm, STATE_ARMS_START, "BTC", float(w0.iloc[-1]) if len(w0) else 0.0, "exposure set at close")
+        for d, x in ret.items():
+            ds = d.date().isoformat()
+            if done and ds <= done[-1]:
+                continue
+            nav *= 1 + float(x)
+            rows_n.append({"book": "state_arms", "arm": arm, "d": ds, "nav": nav, "ret": float(x),
+                           "as_of": STATE_ARMS_START, "rule": RULE_STATE_ARMS})
+            _hold(arm, ds, "BTC", float(e.get(d, 0.0)), "exposure set at close")
+
+    # ── 臂 2/3:闸门关着时空大盘(S-819)────────────────────────────────
+    btc, eth = closes.get("BTC"), closes.get("ETH")
+    gate_warm = int((gate.index < start).sum()) if gate is not None and len(gate) else 0
+    basket = fnd = gcal = None
+    if btc is None or eth is None:
+        for arm in GATE_S:
+            notes.append(f"{arm}: BTC/ETH 收盘缺失,做不了篮子")
+    elif gate_warm < 200:
+        for arm in GATE_S:
+            notes.append(f"{arm}: 闸门历史不足(起算前 {gate_warm} 天,需 ≥ 200)")
+    elif fund.get("BTC") is None or fund.get("ETH") is None:
+        for arm in GATE_S:
+            notes.append(f"{arm}: BTC/ETH 资金费缺失(funding_history 读不到)—— 空头腿收不到资金费,不写")
+    else:
+        basket = basket_returns({"BTC": btc, "ETH": eth})
+        fnd = basket_funding({k: v for k, v in (("BTC", fund.get("BTC")), ("ETH", fund.get("ETH"))) if v is not None})
+        gcal = gate_calendar(basket, fnd, gate, start=str((start - pd.Timedelta(days=10)).date()),
+                             end=cutoff)
+        for arm, s in GATE_S.items():
+            sr, closed = gate_short_returns(gcal[0], gcal[1], gcal[2], s)
+            w = sr[(sr.index > start) & (sr.index <= cut)]
+            nav, done = _seed(arm)
+            if not done:
+                cw = closed[closed.index <= start]
+                wc = float(cw.iloc[-1]) if len(cw) else False
+                _hold(arm, STATE_ARMS_START, "BTC", -s / 2 if wc else 0.0, "gate closed" if wc else "gate open")
+                _hold(arm, STATE_ARMS_START, "ETH", -s / 2 if wc else 0.0, "gate closed" if wc else "gate open")
+            for d, x in w.items():
+                ds = d.date().isoformat()
+                if done and ds <= done[-1]:
+                    continue
+                nav *= 1 + float(x)
+                rows_n.append({"book": "state_arms", "arm": arm, "d": ds, "nav": nav, "ret": float(x),
+                               "as_of": STATE_ARMS_START, "rule": RULE_STATE_ARMS})
+                cw = bool(closed.get(d, False))
+                _hold(arm, ds, "BTC", -s / 2 if cw else 0.0, "gate closed" if cw else "gate open")
+                _hold(arm, ds, "ETH", -s / 2 if cw else 0.0, "gate closed" if cw else "gate open")
+
+    for t, rows, oc in (("forward_book_nav", rows_n, "book,arm,d"),
+                        ("forward_book_holdings", rows_h, "book,arm,as_of,key")):
+        if rows:
+            ok, why = await write(t, rows, on_conflict=oc)
+            if not ok:
+                return {"ok": False, "why": f"写 {t} 失败:{str(why)[:160]}"}
+    return {"ok": not notes, "nav_written": len(rows_n), "holdings_written": len(rows_h),
+            **({"notes": notes} if notes else {})}
 
 
 # ── 一轮 ────────────────────────────────────────────────────────────────────
