@@ -1,0 +1,23 @@
+KEY {"key": "ust_2y_chg91", "n_days": 2696, "share_high": 0.537, "ratio": 0.671, "minus_T_only": 0.148, "half1_minus_T": 0.13, "half2_minus_T": -0.025, "placebo_pct": 0.567, "placebo_median": 0.559, "passes": false}
+KEY {"key": "ust_10y_chg91", "n_days": 2696, "share_high": 0.596, "ratio": 0.529, "minus_T_only": 0.006, "half1_minus_T": 0.396, "half2_minus_T": -0.324, "placebo_pct": 0.383, "placebo_median": 0.578, "passes": false}
+KEY {"key": "ust_10y_real_chg91", "n_days": 2696, "share_high": 0.533, "ratio": 0.328, "minus_T_only": -0.195, "half1_minus_T": -0.32, "half2_minus_T": -0.15, "placebo_pct": 0.267, "placebo_median": 0.573, "passes": false}
+KEY {"key": "usd_broad_chg91", "n_days": 2696, "share_high": 0.55, "ratio": 0.703, "minus_T_only": 0.18, "half1_minus_T": -0.098, "half2_minus_T": 0.238, "placebo_pct": 0.767, "placebo_median": 0.508, "passes": false}
+KEY {"key": "usdjpy_chg91", "n_days": 2696, "share_high": 0.635, "ratio": 0.721, "minus_T_only": 0.198, "half1_minus_T": -0.177, "half2_minus_T": 0.43, "placebo_pct": 0.683, "placebo_median": 0.579, "passes": false}
+KEY {"key": "fed_funds_chg91", "n_days": 2696, "share_high": 0.33, "ratio": 0.953, "minus_T_only": 0.43, "half1_minus_T": 0.213, "half2_minus_T": 0.539, "placebo_pct": 0.933, "placebo_median": 0.517, "passes": false}
+KEY {"key": "fed_net_liquidity_chg91", "n_days": 2696, "share_high": 0.546, "ratio": 0.324, "minus_T_only": -0.199, "half1_minus_T": -0.078, "half2_minus_T": -0.466, "placebo_pct": 0.233, "placebo_median": 0.536, "passes": false}
+KEY {"key": "curve_2s10s_chg91", "n_days": 2696, "share_high": 0.543, "ratio": 0.518, "minus_T_only": -0.005, "half1_minus_T": 0.158, "half2_minus_T": -0.192, "placebo_pct": 0.45, "placebo_median": 0.565, "passes": false}
+KEY {"key": "vix_hi", "n_days": 2696, "share_high": 0.457, "ratio": 0.225, "minus_T_only": -0.298, "half1_minus_T": -0.281, "half2_minus_T": -0.513, "placebo_pct": 0.15, "placebo_median": 0.549, "passes": false}
+KEY {"key": "vix_backwardation", "n_days": 2696, "share_high": 0.091, "ratio": 0.754, "minus_T_only": 0.231, "half1_minus_T": -0.057, "half2_minus_T": 0.35, "placebo_pct": 0.817, "placebo_median": 0.461, "passes": false}
+T_ONLY {"ratio": 0.523, "h1": 0.996, "h2": 0.218}
+SUMMARY {"n_keys": 10, "n_pass": 0, "n_pct_ge_95": 0, "expected_by_chance_pct_ge_95": 0.5, "n_strategies": 26}
+TOP {"key": "fed_funds_chg91", "n_days": 2696, "share_high": 0.33, "ratio": 0.953, "minus_T_only": 0.43, "half1_minus_T": 0.213, "half2_minus_T": 0.539, "placebo_pct": 0.933, "placebo_median": 0.517, "passes": false}
+TOP {"key": "vix_backwardation", "n_days": 2696, "share_high": 0.091, "ratio": 0.754, "minus_T_only": 0.231, "half1_minus_T": -0.057, "half2_minus_T": 0.35, "placebo_pct": 0.817, "placebo_median": 0.461, "passes": false}
+TOP {"key": "usd_broad_chg91", "n_days": 2696, "share_high": 0.55, "ratio": 0.703, "minus_T_only": 0.18, "half1_minus_T": -0.098, "half2_minus_T": 0.238, "placebo_pct": 0.767, "placebo_median": 0.508, "passes": false}
+TOP {"key": "usdjpy_chg91", "n_days": 2696, "share_high": 0.635, "ratio": 0.721, "minus_T_only": 0.198, "half1_minus_T": -0.177, "half2_minus_T": 0.43, "placebo_pct": 0.683, "placebo_median": 0.579, "passes": false}
+TOP {"key": "ust_2y_chg91", "n_days": 2696, "share_high": 0.537, "ratio": 0.671, "minus_T_only": 0.148, "half1_minus_T": 0.13, "half2_minus_T": -0.025, "placebo_pct": 0.567, "placebo_median": 0.559, "passes": false}
+TOP {"key": "curve_2s10s_chg91", "n_days": 2696, "share_high": 0.543, "ratio": 0.518, "minus_T_only": -0.005, "half1_minus_T": 0.158, "half2_minus_T": -0.192, "placebo_pct": 0.45, "placebo_median": 0.565, "passes": false}
+TOP {"key": "ust_10y_chg91", "n_days": 2696, "share_high": 0.596, "ratio": 0.529, "minus_T_only": 0.006, "half1_minus_T": 0.396, "half2_minus_T": -0.324, "placebo_pct": 0.383, "placebo_median": 0.578, "passes": false}
+TOP {"key": "ust_10y_real_chg91", "n_days": 2696, "share_high": 0.533, "ratio": 0.328, "minus_T_only": -0.195, "half1_minus_T": -0.32, "half2_minus_T": -0.15, "placebo_pct": 0.267, "placebo_median": 0.573, "passes": false}
+TOP {"key": "fed_net_liquidity_chg91", "n_days": 2696, "share_high": 0.546, "ratio": 0.324, "minus_T_only": -0.199, "half1_minus_T": -0.078, "half2_minus_T": -0.466, "placebo_pct": 0.233, "placebo_median": 0.536, "passes": false}
+TOP {"key": "vix_hi", "n_days": 2696, "share_high": 0.457, "ratio": 0.225, "minus_T_only": -0.298, "half1_minus_T": -0.281, "half2_minus_T": -0.513, "placebo_pct": 0.15, "placebo_median": 0.549, "passes": false}
+WROTE docs/research/s877_results_macro.json

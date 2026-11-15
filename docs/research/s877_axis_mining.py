@@ -9,6 +9,8 @@ S-875 / S-876:向量邻域 + 之后 60 天 + 每月选一次,这套做法连在 
 用法(仓库根目录):
     python3 docs/research/s877_axis_mining.py --selftest
     nohup python3 docs/research/s877_axis_mining.py > docs/research/s877_run.txt 2>&1 &     # 约 45 分钟;写 s877_results.json
+    python3 docs/research/s877_axis_mining.py --keys k1,k2 --drop-strategies style_ --tag nostyle   # 复核:只跑几个键、面板去掉某些策略
+                                                                                                    # (写 s877_results_nostyle.json,不续跑)
 """
 from __future__ import annotations
 
@@ -117,6 +119,47 @@ def load_live():
     return t_axis, {k: v for k, v in axes.items() if len(v) >= 1500}
 
 
+MACRO_CHG = ("ust_2y", "ust_10y", "ust_10y_real", "usd_broad", "usdjpy", "fed_funds", "fed_net_liquidity")
+MACRO_LAG_D, MACRO_MAX_AGE_D = 91, 7
+
+
+def macro_axes(rows: list, days: list) -> dict:
+    """S-880:利率 / 美元 / 波动率这一族(`macro_daily` 里早就有,2018 起;特征表里一个都没有)做成二元轴。只用当天及以前:
+    `<序列>_chg91` = 现值 − 91 天前的值 > 0;`curve_2s10s_chg91` = (10 年 − 2 年) 比 91 天前更陡;
+    `vix_hi` = VIX 高于此前 365 天的中位数;`vix_backwardation` = VIX > VIX3M。读数超过 7 天没更新 ⇒ 那天没有。"""
+    import bisect
+    ser: dict = {}
+    for r in rows:
+        if r.get("value") is not None:
+            ser.setdefault(r["series"], []).append((dt.date.fromisoformat(str(r["d"])[:10]), float(r["value"])))
+    for v in ser.values():
+        v.sort()
+
+    def asof(name, d):
+        v = ser.get(name) or []
+        i = bisect.bisect_right(v, (d, float("inf"))) - 1
+        return v[i][1] if i >= 0 and (d - v[i][0]).days <= MACRO_MAX_AGE_D else None
+
+    lag = dt.timedelta(days=MACRO_LAG_D)
+    out: dict = {f"{n}_chg91": {} for n in MACRO_CHG}
+    out.update({"curve_2s10s_chg91": {}, "vix_hi": {}, "vix_backwardation": {}})
+    for d in days:
+        for n in MACRO_CHG:
+            a, b = asof(n, d), asof(n, d - lag)
+            if a is not None and b is not None:
+                out[f"{n}_chg91"][d] = bool(a > b)
+        c = [asof("ust_10y", d), asof("ust_2y", d), asof("ust_10y", d - lag), asof("ust_2y", d - lag)]
+        if None not in c:
+            out["curve_2s10s_chg91"][d] = bool(c[0] - c[1] > c[2] - c[3])
+        vx, v3 = asof("vix", d), asof("vix3m", d)
+        hist = [x for dd, x in (ser.get("vix") or []) if d - dt.timedelta(days=365) <= dd < d]
+        if vx is not None and len(hist) >= 150:
+            out["vix_hi"][d] = bool(vx > float(np.median(hist)))
+        if vx is not None and v3 is not None:
+            out["vix_backwardation"][d] = bool(vx > v3)
+    return {k: v for k, v in out.items() if len(v) >= 1500}
+
+
 def synthetic():
     rng = np.random.default_rng(SEED)
     states, panel = M.synthetic()
@@ -150,7 +193,24 @@ if __name__ == "__main__":
     else:
         t_axis, axes = load_live()
         panel, _ = M.load_panel()
-        out = run(t_axis, axes, panel, resume=True)
+        arg = lambda name: sys.argv[sys.argv.index(name) + 1] if name in sys.argv else None      # noqa: E731
+        if "--macro" in sys.argv:                                              # S-880:轴换成 macro_daily 里的利率 / 美元 / 波动率族
+            sp = importlib.util.spec_from_file_location("s851", os.path.join(HERE, "s851_watch_base_rate.py"))
+            S = importlib.util.module_from_spec(sp)
+            sp.loader.exec_module(S)
+            names = ",".join(MACRO_CHG + ("vix", "vix3m"))
+            mrows = S.get("macro_daily", {"select": "d,series,value", "series": f"in.({names})", "d": "gte.2018-01-01", "order": "d.asc"})
+            axes = macro_axes(mrows, sorted(t_axis))
+        if arg("--keys"):
+            want = arg("--keys").split(",")
+            axes = {k: v for k, v in axes.items() if k in want}
+        if arg("--drop-strategies"):
+            pre = tuple(arg("--drop-strategies").split(","))
+            panel = {k: v for k, v in panel.items() if not k.startswith(pre)}
+        tag = arg("--tag")
+        if tag:
+            OUT = f"docs/research/s877_results_{tag}.json"
+        out = run(t_axis, axes, panel, resume=not tag)
         print("T_ONLY", json.dumps(out["T_only"]), flush=True)
         print("SUMMARY", json.dumps({k: out[k] for k in ("n_keys", "n_pass", "n_pct_ge_95", "expected_by_chance_pct_ge_95", "n_strategies")}), flush=True)
         for r in out["keys"][:12]:
