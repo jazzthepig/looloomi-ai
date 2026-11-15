@@ -1,0 +1,45 @@
+{
+ "author": "lane-b",
+ "entries": [
+  {
+   "id": "T-390-1",
+   "scenario": "T-390 修好进场价后的复算底座",
+   "statement": "SOL 收盘价在 2026-12-15 仍高于 70.28 USDT(修脚本当天的收盘)",
+   "variable": "close:SOL",
+   "op": "gt",
+   "lo": 70.28,
+   "prob": 0.52,
+   "horizon_d": "2026-12-15"
+  },
+  {
+   "id": "T-390-2",
+   "scenario": "T-390 修好进场价后的复算底座",
+   "statement": "BTC 收盘价在 2026-12-15 仍高于 64150 USDT",
+   "variable": "close:BTC",
+   "op": "gt",
+   "lo": 64150.0,
+   "prob": 0.52,
+   "horizon_d": "2026-12-15"
+  },
+  {
+   "id": "T-390-3",
+   "scenario": "T-390 修好进场价后的复算底座",
+   "statement": "ETH 收盘价在 2026-12-15 仍高于 1769.2 USDT",
+   "variable": "close:ETH",
+   "op": "gt",
+   "lo": 1769.2,
+   "prob": 0.52,
+   "horizon_d": "2026-12-15"
+  },
+  {
+   "id": "T-390-4",
+   "scenario": "T-390 修好进场价后的复算底座",
+   "statement": "BTC 的 dist_200 在 2026-12-15 仍高于 -0.133636(修脚本当天的值)",
+   "variable": "state:dist_200",
+   "op": "gt",
+   "lo": -0.133636,
+   "prob": 0.5,
+   "horizon_d": "2026-12-15"
+  }
+ ]
+}

@@ -256,9 +256,21 @@ class Pricer:
     def __init__(self, closes: dict[str, float]):
         self.dates = sorted(closes)
         self.closes = [closes[x] for x in self.dates]
+        self.first_date = self.dates[0] if self.dates else None
 
     def entry(self, d: str):
-        return self.closes[bisect_right(self.dates, d) - 1] if self.dates else None
+        """进场价 = d 当天的收盘;该名那时还没有日线 ⇒ None(没有「用最新收盘顶替」这回事)。
+
+        11-15 修(T-390):原来是 `self.closes[bisect_right(self.dates, d) - 1]` ——
+        d 早于第一根日线时下标 = −1 ⇒ 取到**最新一根**收盘当进场价。
+        SOL 上市(2020-08-11)前的 32 天因此拿到「2026 年的价 → 2020 年的价」= 约 −98% 的假收益,
+        把 SOL 全样本 n 从 2231 抬到 2263、并污染循环平移对照。
+        现在走 apparatus.price_on_or_after(max_gap_days=0):d 当天没有收盘就没有进场价。
+        (apparatus 文档串 10-14 写过同一个坑:find_idx 返回 −1 ⇒ 下游用 closes[-1]。)
+        """
+        i = bisect_right(self.dates, (dt.date.fromisoformat(d) - dt.timedelta(days=1)).isoformat())
+        j = bisect_right(self.dates, d)
+        return AP.price_on_or_after(self.dates[i:j], self.closes[i:j], d, 0)
 
     def exit(self, target: str, max_gap_days: int = 3):
         """用 apparatus 的 price_on_or_after(传窗口切片,语义不变:早于 target 的日子本来也会被跳过)。"""
@@ -268,6 +280,8 @@ class Pricer:
 
     def fwd(self, d: str, horizon: int):
         p_in = self.entry(d)
+        if p_in is None:
+            return None
         target = (dt.date.fromisoformat(d) + dt.timedelta(days=horizon)).isoformat()
         p_out = self.exit(target)
         return AP.long_return(p_in, p_out)
@@ -284,6 +298,140 @@ def summarize(vals: list[float]) -> dict:
         "share_lt_m10": float((arr < -0.10).mean()),
         "share_gt_p10": float((arr > 0.10).mean()),
     }
+
+
+def self_check_fwd(pricers, fwd, days):
+    """T-390 自检:① 上市前的日子**没有**前瞻收益(不是 0,也不是用最新收盘算出来的假收益);
+    ② 有前瞻收益的日子,进场日不早于该资产的第一根日线。返回「上市前的格位数」。"""
+    n_pre = 0
+    for a, pz in pricers.items():
+        for h in HORIZONS:
+            for d in days:
+                v = fwd[a][h].get(d)
+                if d < pz.first_date:
+                    assert v is None, ("上市前不得有前瞻收益", a, h, d, v)
+                    n_pre += 1
+                else:
+                    assert v is None or d >= pz.first_date, ("进场日早于第一根日线", a, h, d)
+    return n_pre
+
+
+def _fwd_and_control(mine):
+    """ETH / SOL 前瞻收益 + 循环平移对照(reconcile 与 fwd 两个 stage 共用同一段逻辑)。"""
+    daily = mine["daily"]
+    stat_days = mine["stat_days"]
+    tbl_stat = mine["cells_stat"]
+
+    print("[3] 读 ETH / SOL 价格 ……")
+    eth, eth_dup, eth_n = load_closes("ETH")
+    sol, sol_dup, sol_n = load_closes("SOL")
+    btc2, btc2_dup, btc2_n = load_closes("BTC")
+    print("    ETH %d 行(去重 %d)  SOL %d 行(去重 %d)  BTC %d 行(去重 %d)"
+          % (eth_n, eth_dup, sol_n, sol_dup, btc2_n, btc2_dup))
+    pricers = {"ETH": Pricer(eth), "SOL": Pricer(sol), "BTC": Pricer(btc2)}
+    print("    第一根日线:ETH %s  SOL %s  BTC %s"
+          % (pricers["ETH"].first_date, pricers["SOL"].first_date, pricers["BTC"].first_date))
+
+    fwd: dict[str, dict[str, dict[int, float]]] = {}
+    for a, pz in pricers.items():
+        fwd[a] = {}
+        for h in HORIZONS:
+            fwd[a][h] = {d: pz.fwd(d, h) for d in stat_days}
+
+    n_pre = self_check_fwd(pricers, fwd, stat_days)
+    print("    自检通过:上市前的 %d 个「资产×horizon×日」格位前瞻收益全为 None;"
+          "有收益的进场日均不早于该资产第一根日线" % n_pre)
+
+    per_cell_stats = {}
+    for c in ALL_CELLS:
+        days_stat = tbl_stat[c]["days_list"]
+        seg_first = [s[0] for s in segments_of(days_stat)]
+        entry = {}
+        for a in CROSS_ASSETS:
+            entry[a] = {}
+            for h in HORIZONS:
+                entry[a]["%dd_day" % h] = summarize([fwd[a][h].get(d) for d in days_stat])
+                entry[a]["%dd_segfirst" % h] = summarize([fwd[a][h].get(d) for d in seg_first])
+        per_cell_stats[c] = entry
+
+    full = {}
+    for a in CROSS_ASSETS:
+        full[a] = {}
+        for h in HORIZONS:
+            full[a]["%dd_day" % h] = summarize([fwd[a][h].get(d) for d in stat_days])
+    seg_all_first = []
+    for c in ALL_CELLS:
+        seg_all_first.extend(s[0] for s in segments_of(tbl_stat[c]["days_list"]))
+    for a in CROSS_ASSETS:
+        for h in HORIZONS:
+            full[a]["%dd_segfirst" % h] = summarize([fwd[a][h].get(d) for d in seg_all_first])
+
+    # ── 今天这一格 ─────────────────────────────────────────────────────
+    today = dt.date.today()
+    latest_btc = max(daily.keys()) if daily else None
+    today_cell = None
+    today_axes = None
+    today_ref = None
+    for cand in (today.isoformat(), latest_btc):
+        if cand and cand in daily:
+            today_ref = cand
+            today_axes = {k: daily[cand][k] for k in ("R", "L", "W", "T")}
+            today_cell = daily[cand]["cell"]
+            break
+    today_stats = per_cell_stats.get(today_cell) if today_cell else None
+
+    # ── 对照:目标格的循环平移 ──────────────────────────────────────────
+    print("[4] 循环平移对照(格子 %s)……" % TARGET_CELL)
+    control = {"cell": TARGET_CELL, "universe": "stat_days(有格子且去掉最后 %d 天留出)" % HOLDOUT,
+               "n_days": len(stat_days), "n_shifts": N_SHIFTS, "seed": SHIFT_SEED,
+               "k_range": [SHIFT_MIN, len(stat_days) - SHIFT_MIN], "stats": {}}
+    label = np.asarray([1 if daily[d]["cell"] == TARGET_CELL else 0 for d in stat_days], dtype=float)
+    in_cell = label.sum()
+    for a in CROSS_ASSETS:
+        for h in HORIZONS:
+            # 宇宙 = 该资产**有 %dd 收益**的日子(生产 same_cell.py 的 u2 口径):
+            # 上市前的日子根本没有收益,不该留在平移的标签数组里(否则每次抽样抽到的有效样本数在变)。
+            u2 = [d for d in stat_days if fwd[a][h].get(d) is not None]
+            v2 = np.asarray([fwd[a][h][d] for d in u2], dtype=float)
+            lab2 = np.asarray([1 if daily[d]["cell"] == TARGET_CELL else 0 for d in u2], dtype=float)
+            obs_vals = v2[lab2 == 1]
+            observed = float(obs_vals.mean()) if obs_vals.size else None
+
+            def fn(rng, v=v2, label=lab2):
+                k = int(rng.integers(SHIFT_MIN, len(label) - SHIFT_MIN + 1))
+                rolled = np.roll(label, k)
+                return float(v[rolled == 1].mean())
+
+            entry = {"observed": observed, "n_in_cell_days": int(lab2.sum()),
+                     "n_obs_values": int(obs_vals.size), "n_universe": len(u2),
+                     "universe": "stat_days 中该资产有 %dd 收益的日子" % h}
+            if observed is None:
+                entry["error"] = "目标格在该宇宙里没有可用收益"
+            else:
+                try:
+                    null = AP.null_distribution(fn, N_SHIFTS, SHIFT_SEED, actual=observed)
+                    pu = AP.p_upper(observed, null)
+                    pl = AP.p_lower(observed, null)
+                    nmean = float(np.nanmean(null))
+                    entry.update({
+                        "null_mean": nmean, "null_std": float(np.nanstd(null)),
+                        "p_upper": pu, "p_lower": pl,
+                        "p_two_sided": float(min(1.0, 2.0 * min(pu, pl))),
+                        # dev 口径 = 生产的 p_shift_mean:离平移均值至少这么远的占比
+                        "p_dev": float((np.abs(null - nmean) >= abs(observed - nmean)).mean()),
+                        "percentile": AP.percentile_of(observed, null),
+                        "n_null": int(len(null)),
+                    })
+                except AP.NoOpNull as e:
+                    entry["error"] = "NoOpNull:%s" % e
+            control["stats"]["%s_%dd" % (a, h)] = entry
+    # 今天这一格是不是目标格
+    control["today_is_target_cell"] = (today_cell == TARGET_CELL)
+
+    return {"per_cell": per_cell_stats, "full_sample": full,
+            "today": {"ref_date": today_ref, "cell": today_cell, "axes": today_axes,
+                      "stats": today_stats},
+            "control": control}
 
 
 # ── A 道结果的对账(只在 stage reconcile)────────────────────────────────────
@@ -488,104 +636,15 @@ def stage_reconcile(a_path, a_text=None):
             rec["divergent_episode_starts_first3"] = div[:3]
         recon_cells.append(rec)
 
-    # ── ETH / SOL 前瞻收益 ─────────────────────────────────────────────
-    print("[3] 读 ETH / SOL 价格 ……")
-    eth, eth_dup, eth_n = load_closes("ETH")
-    sol, sol_dup, sol_n = load_closes("SOL")
-    btc2, btc2_dup, btc2_n = load_closes("BTC")
-    print("    ETH %d 行(去重 %d)  SOL %d 行(去重 %d)  BTC %d 行(去重 %d)"
-          % (eth_n, eth_dup, sol_n, sol_dup, btc2_n, btc2_dup))
-    pricers = {"ETH": Pricer(eth), "SOL": Pricer(sol), "BTC": Pricer(btc2)}
-
-    fwd: dict[str, dict[str, dict[int, float]]] = {}
-    for a, pz in pricers.items():
-        fwd[a] = {}
-        for h in HORIZONS:
-            fwd[a][h] = {d: pz.fwd(d, h) for d in stat_days}
-
-    per_cell_stats = {}
-    for c in ALL_CELLS:
-        days_stat = tbl_stat[c]["days_list"]
-        seg_first = [s[0] for s in segments_of(days_stat)]
-        entry = {}
-        for a in CROSS_ASSETS:
-            entry[a] = {}
-            for h in HORIZONS:
-                entry[a]["%dd_day" % h] = summarize([fwd[a][h].get(d) for d in days_stat])
-                entry[a]["%dd_segfirst" % h] = summarize([fwd[a][h].get(d) for d in seg_first])
-        per_cell_stats[c] = entry
-
-    full = {}
-    for a in CROSS_ASSETS:
-        full[a] = {}
-        for h in HORIZONS:
-            full[a]["%dd_day" % h] = summarize([fwd[a][h].get(d) for d in stat_days])
-    seg_all_first = []
-    for c in ALL_CELLS:
-        seg_all_first.extend(s[0] for s in segments_of(tbl_stat[c]["days_list"]))
-    for a in CROSS_ASSETS:
-        for h in HORIZONS:
-            full[a]["%dd_segfirst" % h] = summarize([fwd[a][h].get(d) for d in seg_all_first])
-
-    # ── 今天这一格 ─────────────────────────────────────────────────────
-    today = dt.date.today()
-    latest_btc = max(daily.keys()) if daily else None
-    today_cell = None
-    today_axes = None
-    today_ref = None
-    for cand in (today.isoformat(), latest_btc):
-        if cand and cand in daily:
-            today_ref = cand
-            today_axes = {k: daily[cand][k] for k in ("R", "L", "W", "T")}
-            today_cell = daily[cand]["cell"]
-            break
-    today_stats = per_cell_stats.get(today_cell) if today_cell else None
-
-    # ── 对照:目标格的循环平移 ──────────────────────────────────────────
-    print("[4] 循环平移对照(格子 %s)……" % TARGET_CELL)
-    control = {"cell": TARGET_CELL, "universe": "stat_days(有格子且去掉最后 %d 天留出)" % HOLDOUT,
-               "n_days": len(stat_days), "n_shifts": N_SHIFTS, "seed": SHIFT_SEED,
-               "k_range": [SHIFT_MIN, len(stat_days) - SHIFT_MIN], "stats": {}}
-    idx_of = {d: i for i, d in enumerate(stat_days)}
-    label = np.asarray([1 if daily[d]["cell"] == TARGET_CELL else 0 for d in stat_days], dtype=float)
-    in_cell = label.sum()
-    for a in CROSS_ASSETS:
-        for h in HORIZONS:
-            v = np.asarray([fwd[a][h].get(d) if fwd[a][h].get(d) is not None else np.nan
-                            for d in stat_days], dtype=float)
-            sel = label == 1
-            obs_vals = v[sel]
-            obs_vals = obs_vals[np.isfinite(obs_vals)]
-            observed = float(obs_vals.mean()) if obs_vals.size else None
-
-            def fn(rng, v=v, label=label):
-                k = int(rng.integers(SHIFT_MIN, len(stat_days) - SHIFT_MIN + 1))
-                rolled = np.roll(label, k)
-                s = v[rolled == 1]
-                s = s[np.isfinite(s)]
-                return float(s.mean()) if s.size else np.nan
-
-            entry = {"observed": observed, "n_in_cell_days": int(in_cell),
-                     "n_obs_values": int(obs_vals.size)}
-            if observed is None:
-                entry["error"] = "目标格在该宇宙里没有可用收益"
-            else:
-                try:
-                    null = AP.null_distribution(fn, N_SHIFTS, SHIFT_SEED, actual=observed)
-                    pu = AP.p_upper(observed, null)
-                    pl = AP.p_lower(observed, null)
-                    entry.update({
-                        "null_mean": float(np.nanmean(null)), "null_std": float(np.nanstd(null)),
-                        "p_upper": pu, "p_lower": pl,
-                        "p_two_sided": float(min(1.0, 2.0 * min(pu, pl))),
-                        "percentile": AP.percentile_of(observed, null),
-                        "n_null": int(len(null)),
-                    })
-                except AP.NoOpNull as e:
-                    entry["error"] = "NoOpNull:%s" % e
-            control["stats"]["%s_%dd" % (a, h)] = entry
-    # 今天这一格是不是目标格
-    control["today_is_target_cell"] = (today_cell == TARGET_CELL)
+    # ── ETH / SOL 前瞻收益 + 循环平移对照(共用函数,reconcile 与 fwd 两个 stage 共用)──
+    fwd_block = _fwd_and_control(mine)
+    per_cell_stats = fwd_block["per_cell"]
+    full = fwd_block["full_sample"]
+    today_ref = fwd_block["today"]["ref_date"]
+    today_cell = fwd_block["today"]["cell"]
+    today_axes = fwd_block["today"]["axes"]
+    today_stats = fwd_block["today"]["stats"]
+    control = fwd_block["control"]
 
     # ── A 道的数字与我的数字对一遍(哪只资产对得上)────────────────────────
     a_today_row = a_obj.get("today_cell_row") or {}
@@ -712,6 +771,57 @@ def stage_reconcile(a_path, a_text=None):
     return out
 
 
+def stage_fwd():
+    """T-390:只重跑 ETH / SOL 前瞻收益 + 循环平移对照(复用已落盘的 s866_cells.json)。
+
+    对账段(A 道)原样继承上一轮的结果 —— 格子划分(四轴)与进场价无关,不受这次修复影响。
+    """
+    p_cells = os.path.join(OUT_DIR, "s866_cells.json")
+    if not os.path.exists(p_cells):
+        raise SystemExit("找不到 %s(先跑 --stage cells)" % p_cells)
+    mine = json.load(open(p_cells))
+    p_old = os.path.join(OUT_DIR, "s866_results.json")
+    old = json.load(open(p_old)) if os.path.exists(p_old) else {}
+
+    block = _fwd_and_control(mine)
+    out = {
+        "meta": {
+            "task": "T-390", "ledger": "S-866",
+            "generated_by": "docs/research/s866_blind_cells.py --stage fwd",
+            "fix": "T-390: Pricer.entry 改走 apparatus.price_on_or_after(max_gap_days=0) —— "
+                   "d 早于第一根日线 ⇒ 没有进场价(不再拿最新收盘顶替)",
+            "holdout_days": HOLDOUT, "seg_gap_days": SEG_GAP,
+            "labeled_days": len(mine["labeled_days"]), "stat_days": len(mine["stat_days"]),
+            "inherited_sections": ["reconciliation", "a_vs_mine_stats"],
+        },
+        "reconciliation": old.get("reconciliation"),
+        "a_vs_mine_stats": old.get("a_vs_mine_stats"),
+        "eth_sol": {"per_cell": block["per_cell"], "full_sample": block["full_sample"],
+                    "today": block["today"]},
+        "control": block["control"],
+    }
+    p = os.path.join(OUT_DIR, "s866_results.json")
+    with open(p, "w") as f:
+        json.dump(out, f, ensure_ascii=False, indent=1, sort_keys=False)
+    print("[5] 写 %s" % p)
+
+    print()
+    print("=== 全样本 30 天(统计集 %d 天)===" % len(mine["stat_days"]))
+    for a in CROSS_ASSETS:
+        s = block["full_sample"][a]["30d_day"]
+        print("%-4s n=%-6s 中位=%-11s 均值=%-11s 跌超10%%=%-10s 涨超10%%=%-10s"
+              % (a, s["n"], _fmt(s["median"]), _fmt(s["mean"]),
+                 _fmt(s["share_lt_m10"]), _fmt(s["share_gt_p10"])))
+    print()
+    print("=== 对照(循环平移)===")
+    for k, v in block["control"]["stats"].items():
+        print("%-10s 观测=%-11s 平移均值=%-11s p上尾=%-9s p下尾=%-9s p2=%-9s dev=%-9s 格内=%s/宇宙=%s"
+              % (k, _fmt(v.get("observed")), _fmt(v.get("null_mean")), _fmt(v.get("p_upper")),
+                 _fmt(v.get("p_lower")), _fmt(v.get("p_two_sided")), _fmt(v.get("p_dev")),
+                 v.get("n_in_cell_days"), v.get("n_universe")))
+    return out
+
+
 def _fmt(x):
     if x is None:
         return "-"
@@ -722,11 +832,13 @@ def _fmt(x):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--stage", choices=["cells", "reconcile"], required=True)
+    ap.add_argument("--stage", choices=["cells", "reconcile", "fwd"], required=True)
     ap.add_argument("--a-results", default=None)
     a = ap.parse_args()
     if a.stage == "cells":
         stage_cells()
+    elif a.stage == "fwd":
+        stage_fwd()
     else:
         if not a.a_results:
             raise SystemExit("--stage reconcile 需要 --a-results <A道 s864_results.json>")
