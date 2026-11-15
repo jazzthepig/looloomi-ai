@@ -26,6 +26,7 @@ Jazz 10-09:「先开始重建 …… 重建不是问题,问题是要数据和时
 """
 from __future__ import annotations
 
+import asyncio
 import math
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Mapping, Optional
@@ -396,42 +397,25 @@ def _series(rows: list[dict], key: str, val: str, keyval: str) -> pd.Series:
     return s
 
 
-async def load_inputs(end: pd.Timestamp) -> tuple[dict, dict]:
-    """从库里读全部输入。返回 (assets, data)。读不到抛异常 —— 不拿空表算分。"""
-    from src.data.cis.cis_provider import ASSETS_CONFIG, CRYPTO_ASSETS
-    from src.data.market.data_layer import get_cg_markets
-    from src.data.style.header import SOURCE as CG_SOURCE, _read_all
-    from src.data.cis.migrations import MIGRATIONS, chain, effective_day
-    assets = {k: {"class": v["class"], "coingecko": v.get("coingecko")} for k, v in ASSETS_CONFIG.items()}
-    cg_ids = {k: v["coingecko"] for k, v in CRYPTO_ASSETS.items() if v.get("coingecko")}
-    migs = [m for m in MIGRATIONS if m["new"] in cg_ids]          # S-537:迁移前的旧币一并读,接成一段
-    all_coins = list(cg_ids.values()) + [m["old_coin"] for m in migs]
-    all_syms = list(cg_ids) + [m["old"] for m in migs]
-    mc = await _read_all("asset_mcap_daily", {"select": "coin_id,d,price,mcap,volume", "source": f"eq.{CG_SOURCE}",
-                                              "coin_id": f"in.({','.join(all_coins)})", "d": f"gte.{READ_FROM}"})
-    if not mc:
-        raise RuntimeError("asset_mcap_daily 读到 0 行")
-    hl = await _read_all("ohlcv_daily", {"select": "symbol,trade_date,high,low", "source": "eq.binance_hist",
-                                         "symbol": f"in.({','.join(all_syms)})", "trade_date": "gte.2022-11-01"})
-    hl_hype = await _read_all("ohlcv_daily", {"select": "symbol,trade_date,high,low", "source": "eq.coingecko_pro_ohlc",
-                                              "symbol": "eq.HYPE", "trade_date": "gte.2022-11-01"})
-    tf_syms = [s for s in ASSETS_CONFIG if s not in CRYPTO_ASSETS]
-    tf = await _read_all("ohlcv_daily", {"select": "symbol,trade_date,close,high,low,volume", "source": "eq.eodhd",
-                                         "symbol": f"in.({','.join(tf_syms)})", "trade_date": "gte.2022-08-01"})
-    macro = await _read_all("macro_daily", {"select": "series,d,value"})
-    ptvl = await _read_all("protocol_tvl_daily", {"select": "symbol,d,tvl_usd"})
-    ctvl = await _read_all("chain_activity_daily", {"select": "gecko_id,d,tvl_usd",
-                                                    "gecko_id": f"in.({','.join(L2_CHAIN.values())})"})
-    fund = await _read_all("v_funding_daily", {"select": "symbol,d,funding_rate", "d": "gte.2022-11-01"})
-    cur = await get_cg_markets(list(cg_ids.values()))
+def _assemble(mc, hl, hl_hype, tf, macro, ptvl, ctvl, fund, cur, cg_ids, migs, tf_syms, end):
+    """同步:把读到的行拼成各名字的序列(调用方放进线程)。与原来在 load_inputs 里逐行相同,只是先按键分组再取。"""
+    from src.data.cis.migrations import chain, effective_day
+    _groups: dict = {}
+
+    def col(rows, key, kv, val):
+        g = _groups.get((id(rows), key))
+        if g is None:
+            g = {}
+            for r in rows:
+                g.setdefault(r.get(key), []).append(r)
+            _groups[(id(rows), key)] = g
+        return _series(g.get(kv, []), key, val, kv)
+
     static = {}
     by_cg = {x.get("id"): x for x in (cur or []) if isinstance(x, dict)}
     for sym, cg in cg_ids.items():
         x = by_cg.get(cg) or {}
         static[sym] = {"total_supply": x.get("total_supply"), "max_supply": x.get("max_supply")}
-
-    def col(rows, key, kv, val):
-        return _series(rows, key, val, kv)
 
     crypto = {}
     for sym, cg in cg_ids.items():
@@ -470,6 +454,40 @@ async def load_inputs(end: pd.Timestamp) -> tuple[dict, dict]:
         merged = {k: v for k, v in of.to_dict().items() if eff is None or k < eff}
         merged.update({k: v for k, v in funding.get(sym, {}).items() if eff is None or k >= eff})
         funding[sym] = merged
+    return static, crypto, migration_eff, tradfi, tvl, macro_s, funding
+
+
+async def load_inputs(end: pd.Timestamp) -> tuple[dict, dict]:
+    """从库里读全部输入。返回 (assets, data)。读不到抛异常 —— 不拿空表算分。"""
+    from src.data.cis.cis_provider import ASSETS_CONFIG, CRYPTO_ASSETS
+    from src.data.market.data_layer import get_cg_markets
+    from src.data.style.header import SOURCE as CG_SOURCE, _read_all
+    from src.data.cis.migrations import MIGRATIONS
+    assets = {k: {"class": v["class"], "coingecko": v.get("coingecko")} for k, v in ASSETS_CONFIG.items()}
+    cg_ids = {k: v["coingecko"] for k, v in CRYPTO_ASSETS.items() if v.get("coingecko")}
+    migs = [m for m in MIGRATIONS if m["new"] in cg_ids]          # S-537:迁移前的旧币一并读,接成一段
+    all_coins = list(cg_ids.values()) + [m["old_coin"] for m in migs]
+    all_syms = list(cg_ids) + [m["old"] for m in migs]
+    mc = await _read_all("asset_mcap_daily", {"select": "coin_id,d,price,mcap,volume", "source": f"eq.{CG_SOURCE}",
+                                              "coin_id": f"in.({','.join(all_coins)})", "d": f"gte.{READ_FROM}"})
+    if not mc:
+        raise RuntimeError("asset_mcap_daily 读到 0 行")
+    hl = await _read_all("ohlcv_daily", {"select": "symbol,trade_date,high,low", "source": "eq.binance_hist",
+                                         "symbol": f"in.({','.join(all_syms)})", "trade_date": "gte.2022-11-01"})
+    hl_hype = await _read_all("ohlcv_daily", {"select": "symbol,trade_date,high,low", "source": "eq.coingecko_pro_ohlc",
+                                              "symbol": "eq.HYPE", "trade_date": "gte.2022-11-01"})
+    tf_syms = [s for s in ASSETS_CONFIG if s not in CRYPTO_ASSETS]
+    tf = await _read_all("ohlcv_daily", {"select": "symbol,trade_date,close,high,low,volume", "source": "eq.eodhd",
+                                         "symbol": f"in.({','.join(tf_syms)})", "trade_date": "gte.2022-08-01"})
+    macro = await _read_all("macro_daily", {"select": "series,d,value"})
+    ptvl = await _read_all("protocol_tvl_daily", {"select": "symbol,d,tvl_usd"})
+    ctvl = await _read_all("chain_activity_daily", {"select": "gecko_id,d,tvl_usd",
+                                                    "gecko_id": f"in.({','.join(L2_CHAIN.values())})"})
+    fund = await _read_all("v_funding_daily", {"select": "symbol,d,funding_rate", "d": "gte.2022-11-01"})
+    cur = await get_cg_markets(list(cg_ids.values()))
+    # 11-15 看门线程:这一段在事件循环里停 5.9 秒(`_series` 对几十万行逐名字扫一遍)⇒ 整段进线程(S-862 同一类)
+    static, crypto, migration_eff, tradfi, tvl, macro_s, funding = await asyncio.to_thread(
+        _assemble, mc, hl, hl_hype, tf, macro, ptvl, ctvl, fund, cur, cg_ids, migs, tf_syms, end)
     from src.data.market.data_layer import get_eodhd_eod_data
     static_tf = {}
     for s in tf_syms:

@@ -120,6 +120,36 @@ def test_the_hourly_funding_average_is_off_the_loop():
     assert "asyncio.to_thread(fund_means, rows, rebal_days)" in ast.unparse(fn)
 
 
+def test_the_cis_input_assembly_is_off_the_loop_and_unchanged():
+    """11-15 07:01:看门线程点到 `rebuild.py` 的 `_series` ← `_standard_outcomes_loop`(5.9 秒):`load_inputs` 读完库之后,
+    对几十万行(资金费 50 万行起)逐名字各扫一遍,全在事件循环里。现在整段拼装进线程,并且先按键分组再取 —— 结果逐个相同。"""
+    import ast
+    import pandas as pd
+    from src.data.cis import rebuild as rb
+    tree = ast.parse((ROOT / "src/data/cis/rebuild.py").read_text(encoding="utf-8"))
+    fn = next(n for n in ast.walk(tree) if isinstance(n, ast.AsyncFunctionDef) and n.name == "load_inputs")
+    names = {c.func.id for c in ast.walk(fn) if isinstance(c, ast.Call) and isinstance(c.func, ast.Name)}
+    assert not names & {"_series", "col", "_assemble"}, f"load_inputs 直接调用了 {sorted(names & {'_series', 'col', '_assemble'})}"
+    assert "asyncio.to_thread(_assemble," in ast.unparse(fn)
+    days = [f"2026-01-{i:02d}" for i in range(1, 29)]
+    mc = [{"coin_id": c, "d": d, "price": 1.0 + i + k, "mcap": 10.0 * (i + 1), "volume": 5.0 + k}
+          for k, c in enumerate(("bitcoin", "ethereum")) for i, d in enumerate(days)]
+    hl = [{"symbol": s, "trade_date": d, "high": 2.0 + i, "low": 0.5 + i} for s in ("BTC", "ETH") for i, d in enumerate(days)]
+    fund = [{"symbol": s, "d": d, "funding_rate": 0.0001 * (i + 1)} for s in ("BTC", "ETH") for i, d in enumerate(days)]
+    tf = [{"symbol": "SPY", "trade_date": d, "close": 500.0 + i, "high": 501.0 + i, "low": 499.0 + i, "volume": 1e6} for i, d in enumerate(days)]
+    macro = [{"series": k, "d": d, "value": 10.0 + i} for k in ("fng", "vix", "total_mcap") for i, d in enumerate(days)]
+    ptvl = [{"symbol": "AAVE", "d": d, "tvl_usd": 1e9 + i} for i, d in enumerate(days)]
+    ctvl = [{"gecko_id": "arbitrum", "d": d, "tvl_usd": 2e9 + i} for i, d in enumerate(days)]
+    out = rb._assemble(mc, hl, [], tf, macro, ptvl, ctvl, fund, [], {"BTC": "bitcoin", "ETH": "ethereum"}, [], ["SPY"],
+                       pd.Timestamp("2026-01-28"))
+    static, crypto, mig, tradfi, tvl, macro_s, funding = out
+    assert crypto["ETH"][0].equals(rb._series(mc, "coin_id", "price", "ethereum"))
+    assert crypto["BTC"][3].equals(rb._series(hl, "symbol", "high", "BTC"))
+    assert tradfi["SPY"][0].equals(rb._series(tf, "symbol", "close", "SPY"))
+    assert tvl["AAVE"].equals(rb._series(ptvl, "symbol", "tvl_usd", "AAVE")) and tvl["ARB"].equals(rb._series(ctvl, "gecko_id", "tvl_usd", "arbitrum"))
+    assert funding["ETH"] == rb._series(fund, "symbol", "funding_rate", "ETH").to_dict() and len(tvl["OP"]) == 0
+
+
 def test_the_schema_scan_walks_our_source_not_the_virtualenv_and_not_on_the_loop():
     """S-863 核验:`/internal/schema-drift` 把整个仓库(含线上的 .venv)用 rglob 走了两遍,在事件循环里各停 25–27 秒;
     preflight 每跑一次就请求它一次。现在只走生产目录、剪掉虚拟环境,而且在线程里走 —— 文件清单与原来逐个相同。"""
