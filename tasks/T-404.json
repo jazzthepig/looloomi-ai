@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-404",
+  "owner": "lane-b",
+  "title": "S-880:利率 / 美元 / 波动率这一族带不带「该拿哪些策略」的信息 —— 只跑 Seth 写好的脚本(s877 的 --macro)",
+  "source": "台账 S-880(预注册)。脚本 `docs/research/s877_axis_mining.py` 的新版(主目录 / main;加了 `--macro`:轴从 `macro_daily` 取)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-404.json"
+  ],
+  "acceptance": {
+    "check": "① 用新版脚本,`--selftest | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s877_axis_mining.py --macro --tag macro > docs/research/s877_run_macro.txt 2>&1 &`,只 tail,等 WROTE(10 条轴,约十分钟)。③ 最终回复只贴 `grep -E '^(T_ONLY|SUMMARY|KEY|WROTE)' docs/research/s877_run_macro.txt | cut -c1-420`。不改脚本、不下结论、不写情景文件;取数那一步若与 `macro_daily` 的实际列名对不上,只改那一处并写明。",
+    "expect": "docs/research/s877_results_macro.json + s877_run_macro.txt;卡 in_review,推 lane-b/T-404。先于手上别的卡。"
+  },
+  "prior_value": "`macro_daily` 里利率 / 美元 / 波动率的序列 2018 年起就有,但没有一条进了特征表与向量;11-11 → 11-14 的下跌是利率触发的。",
+  "notes": "2026-11-15T06:13:30Z Seth 开卡(Jazz:「回到高维」)。"
+}
