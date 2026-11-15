@@ -1,5 +1,5 @@
 {
-  "status": "open",
+  "status": "done",
   "created": "2026-11-15",
   "forbidden_paths": [
     "Shadow/",
@@ -10,7 +10,11 @@
     "scripts/",
     "migrations/"
   ],
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-15T05:50:00Z",
+    "value": "s876_results.json 与 run.txt / 卡 notes 逐项一致(Seth 从分支重读):V2 2 维 ratio .044 分位 .12;TL 19 维 .175 / .235;TLP 28 维 .27 / .19;三空间 n_vector_days 2875、K 150;脚本与 main 逐字一致;TxL_v2 同窗与 T-397 逐位相同。"
+  },
   "id": "T-398",
   "owner": "lane-b",
   "title": "S-876:换向量 —— 同一个脚本,距离只在三个子空间上算(2 / 19 / 28 维);只跑 Seth 写好的脚本,把输出贴回",
@@ -24,5 +28,5 @@
     "expect": "docs/research/s876_results.json + s876_run.txt;卡 in_review,推 lane-b/T-398。接在 T-397 后面。"
   },
   "prior_value": "S-875:56 维等权的邻域落在安慰剂 52.5 分位;T × L 两个轴是 94.5 分位。信息是不是被维数冲淡的,要量。",
-  "notes": "2026-11-15T04:22:13Z Seth 开卡(Jazz:「换向量」)。"
+  "notes": "2026-11-15T04:47Z lane-b:脚本用主目录新版(加 --spaces),一行未改;--selftest 见 SELFTEST OK。perf 窗与 T-397 同口径(n_days 2145,2021-01-01→2026-11-15),ratio 同一 M.perf 口径,可横比。V2(2维):ann 0.0009 / vol 0.0583 / ratio 0.044 / longest_underwater 696d / worst_20d -0.0579 / share_in_cash 0.446;placebo 200 次 median 0.528、q90 0.964、percentile_of_real_ratio 0.12;n_blocks 9。TL(19维):ann 0.0093 / vol 0.0654 / ratio 0.175 / lu 572d / worst_20d -0.0476 / share_in_cash 0.331;placebo median 0.425、q90 0.868、percentile 0.235;n_blocks 17。TLP(28维):ann 0.015 / vol 0.0626 / ratio 0.27 / lu 826d / worst_20d -0.0734 / share_in_cash 0.459;placebo median 0.572、q90 0.946、percentile 0.19;n_blocks 21。对照 S-875(56维,同窗):ratio 0.547、percentile 0.525、n_blocks 22、lu 272d;B0 全拿同窗 ratio 0.78 / ann 0.0313。TXL_V2 同窗(1748 天,2022-02-01→2026-11-14):ann 0.0746 / vol 0.0742 / ratio 1.007 / lu 610d —— 与 T-397 逐位相同,换子空间没动对照臂。产物 docs/research/s876_results.json + s876_run.txt;不下结论、未写情景文件(按卡要求)。\n2026-11-15T05:50:00Z Seth:合并 + 验证(见 verified)。"
 }
