@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-408",
+  "owner": "lane-c",
+  "title": "S-881:按形态挖 —— 状态四格 × 破位 / 突破 × 触发当天的持仓读数;只跑 Seth 写好的脚本",
+  "source": "台账 S-881(预注册;Jazz 11-15 的批评:默认走了简单因子复现的路线)。脚本 `docs/research/s881_setup_mining.py`(import `s879_breakdown_short.py` → `s874` → `s865`,与 `src/data/state/fused_knn.py`,只读)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-408.json"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s881_setup_mining.py --selftest | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s881_setup_mining.py > docs/research/s881_run.txt 2>&1 &`,只 tail,等 WROTE(取特征表翻几分钟页;100 次平移,十来分钟)。③ 最终回复只贴 `grep -E '^(COUNTS|CELL|CROWD|WROTE)' docs/research/s881_run.txt | cut -c1-420`。不改脚本、不下结论、不写情景文件、不 Read 大 json。④ 报错贴最后 15 行、结束。",
+    "expect": "docs/research/s881_results.json + s881_run.txt;卡 in_review,推 lane-c/T-408。**先于 T-407 与 T-393 的收尾。**"
+  },
+  "prior_value": "到 S-878 为止的进场挖掘都是「日历 × 单个读数」,全不成立;S-879 证明「状态 × 触发 × 认错写在价格上」这个模板能站住。",
+  "notes": "2026-11-15T07:05:59Z Seth 开卡。"
+}
