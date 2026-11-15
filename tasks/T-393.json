@@ -24,5 +24,5 @@
     "expect": "docs/research/s869_extra_panel_c.csv + s869_extra_panel_c.meta.json + s869_run_full.txt + 重跑后的 s869_results.json;卡 in_review,推 lane-c/T-393。**与 A 道的 T-392 各写各的 csv;`s869_results.json` 两边都会重写,合并时以后合的那份为准,合并轮知道。**"
   },
   "prior_value": "同 T-392:做多侧与「不相关来源」一侧的候选都不在第一轮面板里。",
-  "notes": "2026-11-15T02:03:20Z Seth 开卡(Jazz 11-15:所有策略按状态重新打分并组合;DECISIONS 已记)。"
+  "notes": "2026-11-15T02:03:20Z Seth 开卡(Jazz 11-15:所有策略按状态重新打分并组合;DECISIONS 已记)。 || 2026-11-15T02:53:28Z Seth:面板补完后多跑一条:`nohup python3 docs/research/s869_strategy_state.py --rules v2 > docs/research/s871_run_full.txt 2>&1 &`(写 s871_results.json;v2 = Jazz 11-15 的盈亏比判据,此后以它为准),回复里同样贴 STATE / BOTH_P / PORT / TODAY 那几行。 || 2026-11-15T02:54:48Z Seth(台账「S-871 补」):全面板重跑前先把 main 合进分支 —— 脚本里 `MAX_SCALE` 已从 25 改成 3(套息那条曲线会被 25 倍放大成整本组合);两版判据都跑(v1 与 `--rules v2`),回复里另贴一行:各族实际缩放倍数的中位(脚本没有这个输出就不贴,别自己加代码)。 || 2026-11-15T03:09:22Z Seth:入库那一遍前,同一策略只留一条 —— S681 H1 留留出段(`S681_H1_holdout`)、S840 留计资金费的那条(`S840_ruleA_H30_funding`),另两条从 csv 里拿掉并在 meta 里写明;World50 两条是月度净值,meta 里注一句。"
 }

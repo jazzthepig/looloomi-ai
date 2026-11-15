@@ -65,6 +65,7 @@
 | open | T-382 | lane-b | T-376 返工:Farside ETH 重测、Binance 同 host 对照、清算日量、CMC range 语义与字段序 | docs/research/T-376_data_sources.md 改版 + docs/research/T-382_corrections.md;卡 in_review,推 lane-b/T-382。 | ETH ETF 日频净流入若 Farside 免费可取,就不需要付费源 —— 撤回 T-376 交 Jazz 的付费拍板项。 |  |
 | open | T-341 | lane-c | 真钱唯一规则 X1V 的归因:对「同平均 β 的常数加密腿」—— 账户抗跌是 X1V 的择时还是 70% 非加密配置的结构(T-305 遗留 (c)) | docs/research/T-341_x1v_vs_const_beta.md(预注册在前,开头一张 A / K / ① 三行表)+ docs/research/t341_x1v_vs_const.py + docs/research/t341_results.json;卡 notes 写 w_K、两段 A−K 的总收益与回撤差、随机分位三个数;in_review,推 lane-c/T-341。 | T-305 只把账户和 ① 比,不能区分『X1V 择时』和『只持 30% 加密』。真钱里唯一的规则至今没有对它自己的结构做过对照;S2 里 Jazz 要回答 LP 的『为什么不直接用常数配比』,现在没有数。 |  |
 | open | T-393 | lane-c | S-869 的面板补全(C 道的几条):跨资产趋势、World50 两条臂、山寨空篮、新上市做空、反转 —— 导出逐日净值,原脚本重跑 | docs/research/s869_extra_panel_c.csv + s869_extra_panel_c.meta.json + s869_run_full.txt + 重跑后的 s869_results.json;卡 in_review,推 lane-c/T-393。**与 A 道的 T-392 各写各的 csv;`s869_results.json` 两边都会重写,合并时以后合的那份为准,合并轮知道。** | 同 T-392:做多侧与「不相关来源」一侧的候选都不在第一轮面板里。 |  |
+| open | T-394 | lane-c | S-872:R-v2 在稳定币抽的时候减半 —— 只跑 Seth 写好的脚本(它原样调用你的 s867_frontier.py),把输出贴回 | docs/research/s872_results.json + s872_run.txt;卡 in_review,推 lane-c/T-394。排在 T-393 之后。 | S-853 只测过「抽的时候一张不开」(水下 435 → 822 天,没进);没测过减半。按新定的规矩,真钱规则的改动要两把尺都过。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -83,6 +84,7 @@
 | open | T-379 | seth | 大表读取的翻页:`_read_all` 用 OFFSET,读 N 行的代价是 N² 量级 —— 探到服务端每页上限后跟着用,再评估按键翻页 | 整读 40 万行从约 400 次请求降到约 40 次;台账记改前改后的数。 | `v_funding_daily` 之后数据库耗时的下一大块;也是几条慢接口(账本 7 秒、归因 19 秒)慢的原因 —— 实测它们不占事件循环,慢在一页一页串行读库。 |  |
 | open | T-380 | seth | 事件循环上剩下的同步请求:`_loop_stall_loop` 点到名的逐个搬进线程;两条白跑的循环等 Jazz 定去留 | 部署后不再有整段不回应;`_loop_stall_loop` 稳态下每 30 分钟一条 ok。 | 部署后的不回应从约 3 分钟降到两次 5 秒(S-862 核验);剩下的是对方慢时才现形的尾巴。 |  |
 | open | T-388 | seth | 验证装置补两样:限定最小偏移的循环平移;「双侧 p」的两种算法各有名字 —— 预注册以后写函数名 | 代码 + 测试;判活:`python3 -m pytest tests/test_eval_apparatus.py tests/test_same_cell.py -q`。 | 两种「双侧 p」都合法、都没有名字,预注册里只写「双侧 p」时,盲复算会读出两个数 —— 这次正好落在 0.10 的两边。 |  |
+| open | T-395 | seth | 「状态取长处 v2」开纸面前向账:每天按当日状态与月初名单记一行(T × L 版与并集版),调度 + 判活 + 第一行真实数据 | 代码 + 测试 + SPINE 一段;第一行真实数据。 | Jazz 11-15 要的组合;历史检验过了安慰剂,但只是一条 4.8 年的路径、单份实现 —— 前向记分才是证据。 |  |
 | blocked(等 Jazz 10-19「留在待办,先不买那个数据,在我们现有的数据源想办法」) | T-132 | jazz | (待办,暂不买)Hyperliquid 历史盘口:官方 S3 存档 / Hydromancer Reservoir,按流量付费 | 有报价再决定 | 突破那一刻的 HL 盘口历史 —— 能直接回测「盘口失衡筛假突破」,不用等主机自录几周 |  |
 | blocked(等 jazz: portfolio_layer_daily / allocation_daily 对 publishable key 不可读(42501,lane 实测)。给 lane 开读权限 = 公开 key 也能读到配置与组合层 —— 开不开是 Jazz 的决定;不开就由 Seth 用 service 端导出一份快照给 lane) | T-089 | lane-a | 完成模拟:整只基金的按时点模拟 —— 新 ①(不设上限)+ ② 倾斜 + ③ 推力 + 组合层,经配置层(L3 的准入规则)合成一条 NAV,2023 起回放 + 10-12 起前向,对照 BTC / ① / 随机配置 | 报告两半(检验 + 挖掘)写 Mac 数据根 _reports/absorb_input/,路径写进卡 notes;一张总表:模拟基金 vs BTC vs ① vs 随机配置 p50 / p95,三个窗口。通过与否不改任何前向账本 —— 结论交 Seth 与 Jazz 决定配置层要不要改 | 从没有过整只基金的模拟:各层各自回放、各自对照,配置层(allocation_daily)10-01 起只有前向,① 默认 100%。 |  |
 | blocked(等 jazz: 删除 ~/.config/cometcloud/.env(key 文件只经 Jazz 的手);其余部分 lane-c 已交(cb30023)) | T-036 | lane-c | Mac 只留一份 env:canonical=/Volumes/CometCloudAI/cometcloud-local/.env(§Seth-1006g);~/.config/cometcloud/.env 孤儿由 Jazz 删;Python 日志改 UTC | 一次轮换只动 Railway + 1 个文件;轮换后 1h 内 mac_mini 简报与 T1 推送都有新行 | 三份 env(仓库 .env / cometcloud-local/.env / ~/.config/cometcloud/.env),09-28 轮换漏改第三份 |  |
@@ -395,4 +397,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 25 · claimed 6 · blocked 4 · in_review 50 · done 302 · dropped 5
+open 27 · claimed 6 · blocked 4 · in_review 50 · done 302 · dropped 5

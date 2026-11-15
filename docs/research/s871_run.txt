@@ -1,0 +1,20 @@
+STATE R升 | 长处: x1v | 避开: S681_H2,S681_H3,S736_fixed,S736_published,S808,S810
+STATE R降 | 长处: equity,gold,rv2 | 避开: S681_H3,S736_fixed,S736_published,S808
+STATE L抽 | 长处: S642 | 避开: S681_H3,S808,S810,rv2,x1v
+STATE L注 | 长处: core,equity,gold,rv2,x1v | 避开: S642,S681_H2,S681_H3,S736_fixed,S736_published,S808,S810
+STATE W坏 | 长处: S681_H4 | 避开: S681_H2,S681_H3,S736_fixed,S736_published,S808
+STATE W好 | 长处: core,equity,rv2,x1v | 避开: S736_fixed,S808,S810
+STATE T线下 | 长处: gold | 避开: S681_H2,S681_H3,S736_fixed,S736_published,S808,S810
+STATE T线上 | 长处: core,equity,rv2,x1v | 避开: S642,S736_fixed,S736_published,S808,S810
+STATE T线下·L抽 | 长处: S642 | 避开: S681_H3,S808,S810,rv2
+STATE T线下·L注 | 长处: - | 避开: S642,S681_H2,S681_H3,S681_H4,S736_fixed,S736_published,S808,S810
+STATE T线上·L抽 | 长处: S681_H3 | 避开: S642,S681_H4,S808,gold
+STATE T线上·L注 | 长处: core,equity,rv2,x1v | 避开: S642,S736_fixed,S736_published,S808,S810
+BOTH_P_BELOW_0.05 1 [["x1v", "T线上·L注"]] of judged 155
+PORT cond_TxL {"perf": {"n_days": 1748, "first": "2022-02-01", "last": "2026-11-14", "ann": 0.0894, "vol": 0.0816, "ratio": 1.09, "longest_underwater_d": 636, "worst_20d": -0.0462, "share_in_cash": 0.319}, "last_selection": {"T线下·L抽": ["S642"], "T线下·L注": [], "T线上·L抽": ["S681_H3"], "T线上·L注": ["core", "equity", "rv2", "x1v"]}, "placebo": {"n": 200, "ratio_median": 0.304, "ratio_q90": 0.689, "percentile_of_real_ratio": 1.0, "ann_median": 0.0227, "percentile_of_real_ann": 0.995}}
+PORT cond_T {"perf": {"n_days": 1748, "first": "2022-02-01", "last": "2026-11-14", "ann": 0.0672, "vol": 0.0922, "ratio": 0.752, "longest_underwater_d": 721, "worst_20d": -0.0577, "share_in_cash": 0.309}, "last_selection": {"T线下": ["gold"], "T线上": ["core", "equity", "rv2", "x1v"]}, "placebo": {"n": 200, "ratio_median": 0.329, "ratio_q90": 0.786, "percentile_of_real_ratio": 0.87, "ann_median": 0.0262, "percentile_of_real_ann": 0.92}}
+PORT plus_TxL {"perf": {"n_days": 1748, "first": "2022-02-01", "last": "2026-11-14", "ann": 0.0758, "vol": 0.0887, "ratio": 0.868, "longest_underwater_d": 483, "worst_20d": -0.0503, "share_in_cash": 0.084}, "last_selection": {"T线下·L抽": ["S642", "rv2", "x1v"], "T线下·L注": ["rv2", "x1v"], "T线上·L抽": ["S681_H3", "rv2", "x1v"], "T线上·L注": ["core", "equity", "rv2", "x1v"]}, "placebo": {"n": 200, "ratio_median": 0.395, "ratio_q90": 0.599, "percentile_of_real_ratio": 1.0, "ann_median": 0.0329, "percentile_of_real_ann": 1.0}}
+PORT plus_T {"perf": {"n_days": 1748, "first": "2022-02-01", "last": "2026-11-14", "ann": 0.0326, "vol": 0.0891, "ratio": 0.405, "longest_underwater_d": 500, "worst_20d": -0.0679, "share_in_cash": 0.069}, "last_selection": {"T线下": ["gold", "rv2", "x1v"], "T线上": ["core", "equity", "rv2", "x1v"]}, "placebo": {"n": 200, "ratio_median": 0.415, "ratio_q90": 0.598, "percentile_of_real_ratio": 0.47, "ann_median": 0.0341, "percentile_of_real_ann": 0.455}}
+PORT B0_all_equal_risk {"perf": {"n_days": 1748, "first": "2022-02-01", "last": "2026-11-14", "ann": -0.0031, "vol": 0.0426, "ratio": -0.051, "longest_underwater_d": 1370, "worst_20d": -0.0482, "share_in_cash": 0.003}}
+PORT B1_good_unconditional {"perf": {"n_days": 1748, "first": "2022-02-01", "last": "2026-11-14", "ann": 0.0345, "vol": 0.1093, "ratio": 0.365, "longest_underwater_d": 890, "worst_20d": -0.1, "share_in_cash": 0.094}, "last_selection": ["x1v", "rv2"]}
+TODAY {"state_day": "2026-11-13", "labels": {"R": "升", "L": "抽", "W": "坏", "T": "线下"}, "TxL": "T线下·L抽"} | 今天这个状态的长处(全样本表): S642

@@ -1,0 +1,26 @@
+{
+  "status": "open",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "verified": null,
+  "id": "T-395",
+  "owner": "seth",
+  "title": "「状态取长处 v2」开纸面前向账:每天按当日状态与月初名单记一行(T × L 版与并集版),调度 + 判活 + 第一行真实数据",
+  "source": "台账 S-870(后果:无论分位高低都开账)、S-871 结果(v2 判据下两版都在安慰剂 100 分位)。配方冻结在 `docs/research/s869_strategy_state.py --rules v2`。",
+  "allowed_paths": [
+    "src/",
+    "tests/",
+    "scripts/preflight.sh",
+    "migrations/",
+    "docs/SPINE.md",
+    "tasks/T-395.json"
+  ],
+  "acceptance": {
+    "check": "前置:B 道 T-391 的盲复算与 `s871_results.json` 对上;A / C 道的面板(T-392 / T-393)合进来。① 生产内核 = 纯函数,与研究脚本在同一份输入上逐日相同(一致性测试)。② 各策略的逐日收益从哪张表来,逐条写明;拿不到前向数据的策略不进账(写明是谁、为什么)。③ 写入 `forward_book_nav`(book = state_strength_v2,两条臂);循环每天一轮,`loop_attempt` 有记录;「今天哪个状态、名单里是谁、各自权重」进 detail。④ 判活:`select d, arm, nav from forward_book_nav where book = 'state_strength_v2' order by d desc limit 2`。⑤ 只记账,不下单,不进任何真钱路径(测试钉住)。",
+    "expect": "代码 + 测试 + SPINE 一段;第一行真实数据。"
+  },
+  "prior_value": "Jazz 11-15 要的组合;历史检验过了安慰剂,但只是一条 4.8 年的路径、单份实现 —— 前向记分才是证据。",
+  "notes": "2026-11-15T02:53:28Z Seth 开卡(等 T-391)。 || 2026-11-15T03:09:22Z Seth(台账 S-873 / 补):配方定为一条臂 —— **T × L 版、判据 v2(盈亏比 ≥ 2)、缩放上限 3 倍、逐月重算名单**;并集版不进(26 / 34 条上变差)。三个面板(13 / 26 / 34 条)上均值 / 波动 1.0 – 1.2、安慰剂 94.5 – 100 分位。对照臂必须同时记:**全拿等风险**(34 条上它自己有 0.94)与只看线上 / 线下。同一策略只占一个名额(H1 的两段、S840 的两版各留一条);套息不进(S-835 没过准入)。第一步先解决「每条策略的前向逐日收益从哪来」:有生产序列的直接读;只有研究回测的,先不进账并写明。"
+}

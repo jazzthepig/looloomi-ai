@@ -8,9 +8,13 @@ Jazz 2026-11-15:「所有策略重新打分和升级,然后形成组合。策略
 策略:仓库里现成有逐日净值的 13 条 + 同目录下所有 `s869_extra_panel*.csv`(family,d,nav[,funded];各 lane 各写各的文件,互不覆盖)。
   占用本金的(核心、X1V、股、金)扣现金利率;叠加类(R-v2 票、坟场各族)是票 / 保证金的盈亏曲线,不扣(台账「S-869 更正(算前)」)。
 
+判据两版:v1 = S-869 登记的五条(⑶ = 六成的段为正);**v2 = Jazz 11-15「可以不用高胜率,但是盈亏比需要高」(台账 S-871):
+⑶ 换成 盈亏比 ≥ 2.0(为正各段的平均累计收益 ÷ 为负各段的平均累计亏损)。** 此后以 v2 为准;v1 留着是为了能复现 S-869 的结果。
+
 用法(仓库根目录):
-    python3 docs/research/s869_strategy_state.py --selftest
-    python3 docs/research/s869_strategy_state.py            # 写 docs/research/s869_results.json
+    python3 docs/research/s869_strategy_state.py --selftest [--rules v2]
+    python3 docs/research/s869_strategy_state.py            # v1,写 docs/research/s869_results.json
+    python3 docs/research/s869_strategy_state.py --rules v2 # v2,写 docs/research/s871_results.json
 """
 from __future__ import annotations
 
@@ -24,10 +28,25 @@ import sys
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = "docs/research/s869_results.json"
-GAP, MIN_EP, MIN_DAYS, MIN_RATIO, MIN_POS = 5, 5, 120, 0.5, 0.6
+RULES = "v2" if "v2" in sys.argv[1:] else "v1"
+OUT = "docs/research/s871_results.json" if RULES == "v2" else "docs/research/s869_results.json"
+GAP, MIN_EP, MIN_DAYS, MIN_RATIO, MIN_POS, MIN_PAYOFF = 5, 5, 120, 0.5, 0.6, 2.0
+
+
+def payoff_ratio(ep: np.ndarray) -> float:
+    """盈亏比:为正各段的平均累计收益 ÷ 为负各段的平均累计亏损的绝对值。没有为负的段 ⇒ 99(算过);没有为正的段 ⇒ 0。"""
+    win, loss = ep[ep > 0], ep[ep < 0]
+    if not len(win):
+        return 0.0
+    return 99.0 if not len(loss) else float(win.mean() / abs(loss.mean()))
+
+
+def rule3(ep: np.ndarray) -> bool:
+    return bool(payoff_ratio(ep) >= MIN_PAYOFF) if RULES == "v2" else bool(len(ep) and (ep > 0).mean() >= MIN_POS)
 N_SHIFT, MIN_SHIFT, SEED, ANN = 2000, 180, 869, 365
-WF_MIN_HISTORY, VOL_WIN, VOL_MIN_OBS, TARGET_VOL, MAX_SCALE, N_PLACEBO = 730, 90, 60, 0.10, 25.0, 200
+WF_MIN_HISTORY, VOL_WIN, VOL_MIN_OBS, TARGET_VOL, MAX_SCALE, N_PLACEBO = 730, 90, 60, 0.10, 3.0, 200
+# MAX_SCALE:13 条那一轮(S-869 / S-871 的结果)用的是 25,各条实际倍数中位 0.2 – 1.7、几乎不碰上限;补进套息之后 25 倍会把一条
+# 波动极小的曲线放大成整本组合(台账「S-871 补」,算前改成 3)。要复现 13 条那一轮的数:把这里改回 25.0。
 AXES = {"R": ("升", "降"), "L": ("抽", "注"), "W": ("坏", "好"), "T": ("线下", "线上")}
 G2 = [f"T{t}·L{l}" for t in AXES["T"] for l in AXES["L"]]
 
@@ -131,8 +150,8 @@ def core_stats(ords: np.ndarray, r: np.ndarray, inside: np.ndarray) -> dict:
     out.update({"n_episodes": len(eps), "ann_in": round(ann, 4), "vol_in": round(vol, 4), "ratio_in": round(ratio, 3),
                 "ann_out": round(float(rout.mean()) * ANN, 4), "lift": round(lift, 4), "pos_episodes": round(pos, 3),
                 "worst_episode": round(float(ep_ret.min()), 4) if len(eps) else None, "ann_in_without_best_episode": round(loo, 4),
-                "enough": bool(enough),
-                "strength": bool(enough and ann > 0 and ratio >= MIN_RATIO and pos >= MIN_POS and loo > 0 and lift > 0),
+                "enough": bool(enough), "payoff": round(payoff_ratio(ep_ret), 2),
+                "strength": bool(enough and ann > 0 and ratio >= MIN_RATIO and rule3(ep_ret) and loo > 0 and lift > 0),
                 "avoid": bool(enough and ann < 0 and (1 - pos) >= MIN_POS)})
     return out
 
@@ -223,7 +242,7 @@ def _good(rr: np.ndarray, q: np.ndarray) -> bool:
     us = np.unique(q)
     ep = np.array([float(np.prod(1 + rr[q == u]) - 1) for u in us])
     ann, vol = float(rr.mean()) * ANN, float(rr.std()) * np.sqrt(ANN)
-    if len(ep) < MIN_EP or ann <= 0 or vol <= 0 or ann / vol < MIN_RATIO or (ep > 0).mean() < MIN_POS:
+    if len(ep) < MIN_EP or ann <= 0 or vol <= 0 or ann / vol < MIN_RATIO or not rule3(ep):
         return False
     return bool(rr[q != us[int(np.argmax(ep))]].mean() > 0)
 
@@ -384,7 +403,7 @@ if __name__ == "__main__":
     out = {"strategies": {k: {**meta.get(k, {}), **table[k]["_all"]} for k in table}, "table": table, "strengths": strengths, "avoid": avoid,
            "both_p_below_0.05": both_p, "n_cells_judged": sum(1 for row in table.values() for s in state_names() if row.get(s, {}).get("enough")),
            "portfolio": port,
-           "rules": {"min_episodes": MIN_EP, "min_days": MIN_DAYS, "min_ratio": MIN_RATIO, "min_pos_episodes": MIN_POS, "gap_merge_d": GAP}}
+           "rules": {"version": RULES, "min_payoff": MIN_PAYOFF, "min_episodes": MIN_EP, "min_days": MIN_DAYS, "min_ratio": MIN_RATIO, "min_pos_episodes": MIN_POS, "gap_merge_d": GAP}}
     print("STRATEGIES", json.dumps(out["strategies"], ensure_ascii=False), flush=True)
     for s in state_names():
         print("STATE", s, "| 长处:", ",".join(strengths[s]) or "-", "| 避开:", ",".join(avoid[s]) or "-", flush=True)
