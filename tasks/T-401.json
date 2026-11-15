@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-401",
+  "owner": "lane-a",
+  "title": "S-878:挖进场 —— 56 个键各自在高 / 低位时,空单(Jazz 的管法与近止损)之后挣不挣;只跑 Seth 写好的脚本",
+  "source": "台账 S-878(预注册)。脚本 `docs/research/s878_short_entry_mining.py`(import `s874_short_scale_in.py` 的票的走法与 `src/data/state/fused_knn.py`,只读)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-401.json"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s878_short_entry_mining.py --selftest | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s878_short_entry_mining.py > docs/research/s878_run.txt 2>&1 &`,只 tail,等 WROTE(取特征表要翻几分钟页;100 次平移各扫 336 个桶,十来分钟)。③ 最终回复只贴 `grep -E '^(UNCONDITIONAL|COUNTS|CONFIRMED|DISC_ONLY|WROTE)' docs/research/s878_run.txt | cut -c1-600`。不改脚本、不下结论、不写情景文件、不 Read 大 json。④ 报错贴最后 15 行、结束。",
+    "expect": "docs/research/s878_results.json + s878_run.txt;卡 in_review,推 lane-a/T-401。先于手上别的卡。"
+  },
+  "prior_value": "S-874:机械进场下管法救不回来;Jazz 的写法里进场是判断。把判断拆成库里的条件来挖。",
+  "notes": "2026-11-15T05:26:26Z Seth 开卡(Jazz 11-15:「先再模拟和 mining」)。"
+}

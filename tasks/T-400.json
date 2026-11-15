@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-400",
+  "owner": "lane-c",
+  "title": "S-877:挖维度 —— 把 T × L 的 L 逐个换成向量的 56 个键(约 45 分钟的长跑,可续跑);只跑 Seth 写好的脚本",
+  "source": "台账 S-877(预注册)。脚本 `docs/research/s877_axis_mining.py`(import `s869_strategy_state.py` 与 `src/data/state/fused_knn.py`,只读)。面板用 main 上现有的全部 `s869_extra_panel*.csv`。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-400.json"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s877_axis_mining.py --selftest | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s877_axis_mining.py > docs/research/s877_run.txt 2>&1 &`。**这是长跑(约 45 分钟):本轮只起它、确认 `s877_progress.jsonl` 在长,就把卡留 open、写明「在跑」结束本轮;下一轮看到 WROTE 再收。** 中断了重起同一条命令会接着做。③ 收的时候最终回复只贴 `grep -E '^(T_ONLY|SUMMARY|TOP|WROTE)' docs/research/s877_run.txt | cut -c1-500`,另加参照行:`grep 'REF:stable_supply' docs/research/s877_progress.jsonl | cut -c1-400`。不改脚本、不下结论、不写情景文件、不 Read 大 json。",
+    "expect": "docs/research/s877_results.json + s877_progress.jsonl + s877_run.txt;卡 in_review,推 lane-c/T-400。先于 T-393 的收尾。"
+  },
+  "prior_value": "S-875 / S-876:向量邻域那套做法不行(连两个已知有用的轴都不行);站得住的是按天切格子。用站得住的做法逐键量。",
+  "notes": "2026-11-15T05:26:26Z Seth 开卡(Jazz 11-15:「先再模拟和 mining」)。"
+}
