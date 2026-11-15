@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-402",
+  "owner": "lane-a",
+  "title": "S-879:「跌破就返空、收回去就认错」(Jazz 今天在 HL 上实际做的动作)—— 只跑 Seth 写好的脚本,把输出贴回",
+  "source": "台账 S-879(预注册)。脚本 `docs/research/s879_breakdown_short.py`(import `s874_short_scale_in.py` 的票的走法;状态标签 `s866_cells.json`)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-402.json"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s879_breakdown_short.py --selftest | tail -1` 见 SELFTEST OK。② `python3 docs/research/s879_breakdown_short.py > docs/research/s879_run.txt 2>&1`(一两分钟),见 WROTE。③ 最终回复只贴 `grep -E '^(CELL|WROTE)' docs/research/s879_run.txt | cut -c1-520`(18 行)。不改脚本、不下结论、不写情景文件。④ 报错贴最后 15 行、结束。",
+    "expect": "docs/research/s879_results.json + s879_run.txt;卡 in_review,推 lane-a/T-402。先于手上别的卡。"
+  },
+  "prior_value": "之前量的空单进场都是机械的,都不挣;Jazz 实际做的是「等破位、收回就认错」,没量过。",
+  "notes": "2026-11-15T06:07:40Z Seth 开卡。"
+}
