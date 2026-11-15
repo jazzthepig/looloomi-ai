@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-397",
+  "owner": "lane-b",
+  "title": "S-875:状态换成矢量库的融合向量(56 维,生产那一条)—— 邻域里谁有超额就拿谁;只跑 Seth 写好的脚本,把输出贴回",
+  "source": "台账 S-875(预注册;Jazz:「你的模拟有走我们的矢量数据库吗?」—— 之前没有)。脚本 `docs/research/s875_vector_state.py`:import 同目录的 `s869_strategy_state.py`(面板、缩放、指标)与 `src/data/state/fused_knn.py`(向量与距离,只读不改);向量从 `feature_matrix_daily`(d, f)现取。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-397.json"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s875_vector_state.py --selftest | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s875_vector_state.py > docs/research/s875_run.txt 2>&1 &`,只 tail,等 WROTE(取 `feature_matrix_daily` 约两千多行、每行一个大 json,翻页要几分钟)。③ 最终回复只贴 `grep -E '^(META|KNN|TXL_V2_SAME_WINDOW|B0_ALL_EQUAL_RISK|B1_GOOD_UNCONDITIONAL_SAME_WINDOW|WROTE)' docs/research/s875_run.txt | cut -c1-900`。**不改脚本一行、不下结论、不写情景文件;不要 Read `feature_matrix_daily` 的原始行或任何大 json。** ④ 报错贴最后 15 行、结束;如果只是取数那一步(`M_get` / 表名 / 列名)对不上库里的实际结构,可以改那一处并写明改了哪一行,别的不动。",
+    "expect": "docs/research/s875_results.json + s875_run.txt;卡 in_review,推 lane-b/T-397。这张先于手上别的卡。"
+  },
+  "prior_value": "S-869 – S-874 的状态是四个手挑的标量轴,没有用向量空间;Jazz 的原话是「特定矢量下」。",
+  "notes": "2026-11-15T04:16:36Z Seth 开卡。"
+}
