@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-396",
+  "owner": "lane-a",
+  "title": "S-874:空单「远止损 + 逆势分批加仓」的模拟(Jazz 的写法;360 种管法 × 三组进场日)—— 只跑 Seth 写好的脚本,把输出贴回",
+  "source": "台账 S-874(预注册)。脚本 `docs/research/s874_short_scale_in.py`(import 同目录的 `s865_ticket_forms.py`;对照文件 `s865_results.json` 与状态标签 `s866_cells.json` 都已在 main)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-396.json"
+  ],
+  "acceptance": {
+    "check": "① `python3 docs/research/s874_short_scale_in.py --selftest | tail -1` 见 SELFTEST OK。② `nohup python3 docs/research/s874_short_scale_in.py > docs/research/s874_run.txt 2>&1 &`,只 tail,等 WROTE。`REPRODUCES_S865` 必须 ok;不 ok 或出现 STOP 就贴那几行、结束。③ 最终回复只贴 `grep -E '^(REPRODUCES_S865|REF .*\\|drain\\||MARGINAL|SELECTION|TOP)' docs/research/s874_run.txt | cut -c1-700`(约 40 行)。**不要 Read s874_results.json(很大)、不改脚本一行、不下结论、不写情景文件。** ④ 报错贴最后 15 行、结束。",
+    "expect": "docs/research/s874_results.json + s874_run.txt;卡 in_review,推 lane-a/T-396。这张先于手上别的卡。"
+  },
+  "prior_value": "T-370 的止损默认值:Jazz 不直接给数,要先看模拟。S-865 / S-868 只量过近止损、一次进满;「远止损 + 涨上去加仓」没量过。",
+  "notes": "2026-11-15T03:54:08Z Seth 开卡。"
+}
