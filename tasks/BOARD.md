@@ -65,6 +65,7 @@
 | open | T-382 | lane-b | T-376 返工:Farside ETH 重测、Binance 同 host 对照、清算日量、CMC range 语义与字段序 | docs/research/T-376_data_sources.md 改版 + docs/research/T-382_corrections.md;卡 in_review,推 lane-b/T-382。 | ETH ETF 日频净流入若 Farside 免费可取,就不需要付费源 —— 撤回 T-376 交 Jazz 的付费拍板项。 |  |
 | open | T-390 | lane-b | T-386 的脚本修一行:`Pricer.entry` 在名字上市前拿了最新收盘当进场价 —— SOL 的全样本与 p 因此是坏的;修完只重跑 ETH / SOL 那一段、与生产的数对 | 修过的 s866_blind_cells.py + 重跑后的 s866_results.json / s866_run.txt;卡 in_review,推 lane-b/T-390。 | S-866 结果表里 SOL 的全样本(−0.2% / 35.0% / 37.5%,n 2263)与 SOL 的平移 p(0.214)来自这份脚本,含 32 个上市前的日子(每天约 −98%);台账已更正为生产的数,脚本本身还没修 —— 它是「第二份」,不修就不再是有效的复算。 |  |
 | open | T-341 | lane-c | 真钱唯一规则 X1V 的归因:对「同平均 β 的常数加密腿」—— 账户抗跌是 X1V 的择时还是 70% 非加密配置的结构(T-305 遗留 (c)) | docs/research/T-341_x1v_vs_const_beta.md(预注册在前,开头一张 A / K / ① 三行表)+ docs/research/t341_x1v_vs_const.py + docs/research/t341_results.json;卡 notes 写 w_K、两段 A−K 的总收益与回撤差、随机分位三个数;in_review,推 lane-c/T-341。 | T-305 只把账户和 ① 比,不能区分『X1V 择时』和『只持 30% 加密』。真钱里唯一的规则至今没有对它自己的结构做过对照;S2 里 Jazz 要回答 LP 的『为什么不直接用常数配比』,现在没有数。 |  |
+| open | T-393 | lane-c | S-869 的面板补全(C 道的几条):跨资产趋势、World50 两条臂、山寨空篮、新上市做空、反转 —— 导出逐日净值,原脚本重跑 | docs/research/s869_extra_panel_c.csv + s869_extra_panel_c.meta.json + s869_run_full.txt + 重跑后的 s869_results.json;卡 in_review,推 lane-c/T-393。**与 A 道的 T-392 各写各的 csv;`s869_results.json` 两边都会重写,合并时以后合的那份为准,合并轮知道。** | 同 T-392:做多侧与「不相关来源」一侧的候选都不在第一轮面板里。 |  |
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
@@ -392,4 +393,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 25 · claimed 6 · blocked 4 · in_review 50 · done 299 · dropped 5
+open 26 · claimed 6 · blocked 4 · in_review 50 · done 299 · dropped 5

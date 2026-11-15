@@ -1,0 +1,89 @@
+{
+ "T364_cross_asset_trend": {
+  "funded": 1,
+  "n_days": 2713,
+  "first_d": "2016-02-01",
+  "last_d": "2026-11-12",
+  "source": "docs/research/t364_cross_asset_trend.py(函数 build_sleeve,一字未改)",
+  "ledger": "T-364 / S-841(S-835 候选三);产物 docs/research/t364_results.json",
+  "params": "SYMS=['SPY', 'EEM', 'GLD', 'TLT', 'USO'];月末调仓;信号 = 过去 252 日收益的符号;仓位 = 符号×(10%÷60 日年化波动)÷5;毛敞口上限 2.0;每单位换手 5 bp;日历 2015-07-13→2026-11-12(2853 个交易日)",
+  "daily_rule": "袖套本身就是逐交易日净值(cal = 五个 ETF 的共同交易日),直接原样导出;起点取第一个非零毛敞口月末之后的第一个交易日(前面空仓的平段不留)",
+  "note": "funded=1(持有资产类)。袖套自己的净值里闲置仓位(毛敞口中位 0.62)不计现金利息,而面板按 funded 口径会扣满额现金利率 ⇒ 这一条的「超额」略偏保守"
+ },
+ "World50_EW": {
+  "funded": 1,
+  "n_days": 129,
+  "first_d": "2016-01-29",
+  "last_d": "2026-09-30",
+  "source": "docs/research/t361_world50_panel.py(面板)+ docs/research/t099_world50_replay.py(run_arm)",
+  "ledger": "w50_daily/world50_replay_t361.json(T-361 自己的回放产物;EW 的月度序列由同一 run_arm 重算)",
+  "params": "arm=EW;成分 12 月选、季末重设权重、季内漂移;窗口 2016-01→2026-09(129 个月)",
+  "daily_rule": "月度回放:当月收益记在当月最后一个基准股有价日(ACWI/AGG/QQQ/SPY 中最晚的一个),两个月末之间净值不变(面板按净值不变补齐 ⇒ 那些天收益 0)",
+  "note": "funded=1(满仓持有资产);面板会按 funded 口径扣现金利率"
+ },
+ "_selfcheck": {
+  "world50_EWxMom_matches_saved_replay": true
+ },
+ "World50_EWxMom": {
+  "funded": 1,
+  "n_days": 129,
+  "first_d": "2016-01-29",
+  "last_d": "2026-09-30",
+  "source": "docs/research/t361_world50_panel.py(面板)+ docs/research/t099_world50_replay.py(run_arm)",
+  "ledger": "w50_daily/world50_replay_t361.json(T-361 自己的回放产物;EW 的月度序列由同一 run_arm 重算)",
+  "params": "arm=EWxMom;成分 12 月选、季末重设权重、季内漂移;窗口 2016-01→2026-09(129 个月)",
+  "daily_rule": "月度回放:当月收益记在当月最后一个基准股有价日(ACWI/AGG/QQQ/SPY 中最晚的一个),两个月末之间净值不变(面板按净值不变补齐 ⇒ 那些天收益 0)",
+  "note": "funded=1(满仓持有资产);面板会按 funded 口径扣现金利率"
+ },
+ "_errors": {
+  "s681": "Traceback (most recent call last):\n  File \"/Users/sbb/Projects/looloomi-ai-lane-c/docs/research/t393_export_panel_c.py\", line 248, in main\n    fn()\n    ~~^^\n  File \"/Users/sbb/Projects/looloomi-ai-lane-c/docs/research/t393_export_panel_c.py\", line 176, in fam_s681_h1\n    if abs(float(ref[k]) - float(st.get(k))) > 1e-12:\n           ~~~~~^^^^^^^^\nValueError: could not convert string to float: '2020-01-08'\n",
+  "s840": "Traceback (most recent call last):\n  File \"/Users/sbb/Projects/looloomi-ai-lane-c/docs/research/t393_export_panel_c.py\", line 248, in main\n    fn()\n    ~~^^\n  File \"/Users/sbb/Projects/looloomi-ai-lane-c/docs/research/t393_export_panel_c.py\", line 196, in fam_s840_h30\n    import s840_rule_a_rewrite as S840\n  File \"/Users/sbb/Projects/looloomi-ai-lane-c/docs/research/s840_rule_a_rewrite.py\", line 102, in <module>\n    for line in open(R + \"s681/_um_daily.jsonl\"):\n                ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: 's681s681/_um_daily.jsonl'\n",
+  "t372": "Traceback (most recent call last):\n  File \"/Users/sbb/Projects/looloomi-ai-lane-c/docs/research/t393_export_panel_c.py\", line 329, in main\n    fn()\n    ~~^^\n  File \"/Users/sbb/Projects/looloomi-ai-lane-c/docs/research/t393_export_panel_c.py\", line 270, in fam_t372\n    raise RuntimeError(f\"逐日加总与脚本的周收益对不上:max diff {maxdiff:.3e}\")\nRuntimeError: 逐日加总与脚本的周收益对不上:max diff 1.948e-02\n"
+ },
+ "S681_H1_disc": {
+  "funded": 0,
+  "n_days": 1545,
+  "first_d": "2020-01-08",
+  "last_d": "2024-03-31",
+  "source": "docs/research/s681_h1_new_listing.py(函数 tickets_for)+ docs/research/t159_bear_short.py(nav / stats)",
+  "ledger": "S-681 H1(台账 2026-10-25 13:21 UTC)",
+  "params": "S=0.5(+50% 硬止损),N=60(持有 60 天),进场 = 上市第 7 天开盘;每票风险 0.5%、最多同时 10 张;d_to=2024-03-31;票数 258",
+  "daily_rule": "t159.nav 的逐日盯市权益曲线(每天按收盘价盯市);首日净值 1.0",
+  "selfcheck": "与原脚本 sl.money() 的统计逐项一致(end=0.981427 mdd=-0.151685 annualised=-0.0044 taken=191 skipped=67 closed=190)",
+  "note": "funded=0(票 / 保证金的盈亏曲线,面板不扣现金利率)"
+ },
+ "S681_H1_holdout": {
+  "funded": 0,
+  "n_days": 1003,
+  "first_d": "2024-01-02",
+  "last_d": "2026-09-30",
+  "source": "docs/research/s681_h1_new_listing.py(函数 tickets_for)+ docs/research/t159_bear_short.py(nav / stats)",
+  "ledger": "S-681 H1(台账 2026-10-25 13:21 UTC)",
+  "params": "S=0.5(+50% 硬止损),N=60(持有 60 天),进场 = 上市第 7 天开盘;每票风险 0.5%、最多同时 10 张;d_to=2026-09-30;票数 620",
+  "daily_rule": "t159.nav 的逐日盯市权益曲线(每天按收盘价盯市);首日净值 1.0",
+  "selfcheck": "与原脚本 sl.money() 的统计逐项一致(end=1.042629 mdd=-0.077518 annualised=0.0153 taken=195 skipped=425 closed=185)",
+  "note": "funded=0(票 / 保证金的盈亏曲线,面板不扣现金利率)"
+ },
+ "S840_ruleA_H30": {
+  "funded": 0,
+  "n_days": 1634,
+  "first_d": "2022-04-11",
+  "last_d": "2026-09-30",
+  "source": "docs/research/s840_rule_a_rewrite.py(函数 sleeve(30))",
+  "ledger": "S-840(台账 2026-11-13 05:58 UTC;第二台引擎 + 第二份数据:U 本位永续日线)",
+  "params": "H=30(持有 30 天),funding=False;固定 10 个仓位、两腿等额、同币不重复;单边成本 10 bp;事件数 350",
+  "daily_rule": "袖子自己的逐日历日净值(S 从第一张票进场前一天起为 1)",
+  "note": "funded=0(票 / 保证金的盈亏曲线,面板不扣现金利率)。这一版不计资金费(与 S-840 的 rows 同口径)。"
+ },
+ "S840_ruleA_H30_funding": {
+  "funded": 0,
+  "n_days": 1634,
+  "first_d": "2022-04-11",
+  "last_d": "2026-09-30",
+  "source": "docs/research/s840_rule_a_rewrite.py(函数 sleeve(30))",
+  "ledger": "S-840(台账 2026-11-13 05:58 UTC;第二台引擎 + 第二份数据:U 本位永续日线)",
+  "params": "H=30(持有 30 天),funding=True;固定 10 个仓位、两腿等额、同币不重复;单边成本 10 bp;事件数 350",
+  "daily_rule": "袖子自己的逐日历日净值(S 从第一张票进场前一天起为 1)",
+  "note": "funded=0(票 / 保证金的盈亏曲线,面板不扣现金利率)。这一版计资金费(与 S-840 的 funding_rows 同口径)。"
+ }
+}
