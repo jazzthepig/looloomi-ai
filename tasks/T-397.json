@@ -1,5 +1,5 @@
 {
-  "status": "open",
+  "status": "done",
   "created": "2026-11-15",
   "forbidden_paths": [
     "Shadow/",
@@ -10,7 +10,11 @@
     "scripts/",
     "migrations/"
   ],
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-15T05:50:00Z",
+    "value": "s875_results.json 与 s875_run.txt 逐项一致(Seth 从分支重读):KNN 56 维 ann .0308 / vol .0586 / ratio .547 / 水下 272 天,安慰剂 200 次中位 .534、q90 .938、真实值分位 .525;B0 ratio .78;TxL_v2 同窗 ratio 1.007;B1 .443;n_vector_days 2875。分支上的脚本是加 --spaces 之前的版本,合并时取 main 的版本(超集;不带 --spaces 走 V56,列序 = FK.KEYS、nd = 56,与原式同一计算)。"
+  },
   "id": "T-397",
   "owner": "lane-b",
   "title": "S-875:状态换成矢量库的融合向量(56 维,生产那一条)—— 邻域里谁有超额就拿谁;只跑 Seth 写好的脚本,把输出贴回",
@@ -24,5 +28,5 @@
     "expect": "docs/research/s875_results.json + s875_run.txt;卡 in_review,推 lane-b/T-397。这张先于手上别的卡。"
   },
   "prior_value": "S-869 – S-874 的状态是四个手挑的标量轴,没有用向量空间;Jazz 的原话是「特定矢量下」。",
-  "notes": "2026-11-15T04:16:36Z Seth 开卡。"
+  "notes": "2026-11-15T04:22Z(lane 原写 13:22Z,是本机时间) lane-b:脚本一行未改(--selftest 见 SELFTEST OK;取数那一步对得上库——feature_matrix_daily 的 d,f 视图 + s851.get 分页,未改动任何一行)。META:n_vector_days 2875(2019-01-01→2026-11-14),n_strategies 26,K=150,exclude_days 61,horizon 60d,dims 56。KNN:ann 0.0308 / vol 0.0586 / ratio 0.547 / longest_underwater 272d / worst_20d -0.0397 / share_in_cash 0.392;placebo 200 次:ratio_median 0.534、q90 0.938、percentile_of_real_ratio 0.525(中位)。B0 全拿同窗:ann 0.0313 / vol 0.0405 / ratio 0.780 / longest_underwater 751d。TXL_V2 同窗:ann 0.0746 / vol 0.0742 / ratio 1.007 / longest_underwater 610d。B1 无条件好:ann 0.0352 / vol 0.0868 / ratio 0.443。last_selection=[s819_short_s015, s819_short_s030],last_info asof 2026-10-31 / n_neighbours 150 / n_blocks 22。产物 docs/research/s875_results.json + docs/research/s875_run.txt。按卡要求:未写情景文件、未下结论。\n2026-11-15T05:50:00Z Seth:合并 + 验证(见 verified)。"
 }
