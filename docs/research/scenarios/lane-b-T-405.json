@@ -1,0 +1,41 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {
+      "id": "T-405-1",
+      "scenario": "T-405 「谁在领」第二轴(style_rel_majors_30d)2026-12-15 仍为正",
+      "variable": "state:style_rel_majors_30d",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.58,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-405-2",
+      "scenario": "T-405 「谁在领」第二轴(style_rel_majors_30d)2026-12-15 高于 0.05(2026-11-14 为 +0.0485)",
+      "variable": "state:style_rel_majors_30d",
+      "op": "gt",
+      "lo": 0.05,
+      "prob": 0.45,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-405-3",
+      "scenario": "T-405 「稳定币 30 日供给变化」在 2026-12-15 回到 -0.048 以上(2026-11-13 为 -0.048)",
+      "variable": "state:stable_supply_30d",
+      "op": "gt",
+      "lo": -0.048,
+      "prob": 0.5,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-405-4",
+      "scenario": "T-405 状态轴用的 30 日实现波动(vol_30)在 2026-12-15 仍高于 0.30(2026-11-14 为 +0.4395)",
+      "variable": "state:vol_30",
+      "op": "gt",
+      "lo": 0.3,
+      "prob": 0.72,
+      "horizon_d": "2026-12-15"
+    }
+  ]
+}

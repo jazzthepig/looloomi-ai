@@ -1,5 +1,5 @@
 {
-  "status": "open",
+  "status": "done",
   "created": "2026-11-15",
   "forbidden_paths": [
     "Shadow/",
@@ -10,7 +10,11 @@
     "scripts/",
     "migrations/"
   ],
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-15T08:39:52Z",
+    "value": "s869_blind_book_results.json:B(趋势 × 谁在领)均值 / 波动 1.953、A(T × L)1.020、C(只看 T)0.842;2026-11-01 四格名单逐格与 Seth 的 S-877 一致 —— 这一行就是纸面账 state_book.ROSTERS 冻结的那一份(S-890)。情景文件 4 条命题都是 12-15 到期的状态读数,写在结果出来之后但问的是未来值,收下。"
+  },
   "id": "T-405",
   "owner": "lane-b",
   "title": "「状态取长处」组合的盲复算(纸面前向账的前置):逐月向前 + 等风险,两条第二轴(稳定币 / 谁在领)—— 只按文字从零写",
@@ -24,5 +28,5 @@
     "expect": "docs/research/s869_blind_book.py + s869_blind_book_results.json;卡 in_review,推 lane-b/T-405。不要 Read 大 json;长跑用 nohup。"
   },
   "prior_value": "「状态取长处」的表盲复算过(T-391),组合那一半(逐月向前、等风险)到现在是单份实现;新挖出来的第二轴(谁在领)把均值 / 波动从 1.1 抬到 1.9,更需要第二份。纸面前向账(T-395)等它。",
-  "notes": "2026-11-15T06:32:44Z Seth 开卡。"
+  "notes": "2026-11-15T06:32:44Z Seth 开卡。 || 2026-11-15 lane-b 盲复算完成:从零写 `docs/research/s869_blind_book.py`,落盘 `docs/research/s869_blind_book_results.json`(26 条面板 = T-391 的 13 + s869_extra_panel_a.csv 的 13;判据 v2 = 盈亏比≥2.0;缩放上限 3;目标波动 10%;逐月向前 + 等风险;只用了 state_daily(entity=panel, feature=style_rel_majors_30d) 算第二轴)。三本读数:A = T×L,2022-02-01→2026-11-14,n=1748,均值/波动=1.0200,最长水下=610 天,2023-02-01 起=1.1538(total_x +37.4%);B = T×谁在领,2023-02-01→2026-11-14,n=1383,均值/波动=1.9534,最长水下=249 天,2023-02-01 起=1.9534(total_x +83.4%);C = 只用 T 两格,2022-02-01→2026-11-14,n=1748,均值/波动=0.8422,最长水下=606 天,2023-02-01 起=1.0266。对账(落盘后才打开 s871_results.json 与台账结果段;两边都不改):S-873 的 T×L = 1.01 / 610 天,我 = 1.0200 / 610 天;S-873 只看线上/线下 = 0.80 / 602 天,我 = 0.8422 / 606 天;S-877 的 趋势×style_rel_majors_30d = 1.94,我 = 1.9534 ⇒ 第二轴的数复现。2026-11 名单:A 线上·注 = 核心/X1V/R-v2/ACWI/carry_b_top_rc/7 条风格/tom_pd13×2,线下·抽 = S642+s819_short×2,线下·注 = tom_pd13_btc,线上·抽 = S681_H3;B 线上·主流领 = X1V/R-v2/carry_b_top_rc,线上·二线领 = carry_b_top_rc+5 条风格+tom_pd13_eth,线下·主流领 = s823_r6,线下·二线领 = S642/S736_published/s819×2。前向预期:`docs/research/scenarios/lane-b-T-405.json`(4 条 state 命题,概率 0.45–0.72)。本轮**没跑 preflight**:上下文钩子在 93k token 处收口,只放行改卡/写情景/落盘/提交;CI 会自己跑,若本地 gate 必需请 @seth 代跑。附带说明:`scripts/lesson_enforcement_baseline.txt`(300→369)在工作树里是未提交的,scripts/ 在本卡禁区,我没动也没提交。"
 }
