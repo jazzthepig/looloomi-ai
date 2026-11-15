@@ -1,0 +1,29 @@
+loaded dist_200 2874
+loaded taker_buy_share_30d 2874
+loaded stable_supply_30d 2874
+ASOF "2026-11-13"
+TODAY_CELL "R升|L抽|W坏|T线下"
+COVERAGE {"first": "2020-01-30", "last_usable": "2026-09-18"}
+TODAY_CELL_ROW {"n_episodes": 12, "episode_starts": ["2022-01-07", "2022-04-18", "2022-08-22", "2022-09-19", "2022-11-14", "2023-06-14", "2023-08-21", "2026-01-26", "2026-06-01", "2026-07-13", "2026-08-03", "2026-08-17"], "d30": {"n_days": 257, "median": 0.003, "mean": -0.0348, "p_down_big": 0.28, "p_up_big": 0.14}, "d30_by_episode_start": {"n_days": 12, "median": 0.019, "mean": -0.0077, "p_down_big": 0.333, "p_up_big": 0.25}, "d56": {"n_days": 257, "median": 0.0024, "mean": 0.0007, "p_down_big": 0.366, "p_up_big": 0.323}, "d56_by_episode_start": {"n_days": 12, "median": -0.0123, "mean": 0.0089, "p_down_big": 0.333, "p_up_big": 0.333}}
+UNCONDITIONAL {"d30": {"n_days": 2424, "median": 0.0185, "mean": 0.0441, "p_down_big": 0.202, "p_up_big": 0.318}, "d56": {"n_days": 2424, "median": 0.0438, "mean": 0.0907, "p_down_big": 0.269, "p_up_big": 0.418}}
+CONTROL_TODAY_CELL {"mean_30d": {"obs": -0.0348, "null_mean": 0.0539, "p_two_sided": 0.1485, "n_shift": 2000}, "p_down_big_30d": {"obs": 0.2802, "null_mean": 0.182, "p_two_sided": 0.2325, "n_shift": 2000}}
+EXPECTATIONS {"E1_today_cell_median_30d_negative": false, "E1_today_cell_p_down_at_least_5pp_above_uncond": true, "E2_today_cell_fewer_than_8_episodes": false, "E3_shift_p_mean_above_0.10": true}
+SELF_CHECKS {"cells_before_cut_ignore_the_future": true, "days_with_cell": 2480, "usable_days": 2424, "n_cells": 16}
+TABLE
+  R升|L抽|W坏|T线上 段 2 | 30天 {"n_days": 15, "median": 0.1126, "mean": 0.0751, "p_down_big": 0.0, "p_up_big": 0.533} | 56天 {"n_days": 15, "median": 0.0573, "mean": 0.0287, "p_down_big": 0.267, "p_up_big": 0.4}
+  R升|L抽|W坏|T线下 段 12 | 30天 {"n_days": 257, "median": 0.003, "mean": -0.0348, "p_down_big": 0.28, "p_up_big": 0.14} | 56天 {"n_days": 257, "median": 0.0024, "mean": 0.0007, "p_down_big": 0.366, "p_up_big": 0.323}
+  R升|L抽|W没坏|T线上 段 4 | 30天 {"n_days": 62, "median": -0.0638, "mean": -0.0653, "p_down_big": 0.403, "p_up_big": 0.048} | 56天 {"n_days": 62, "median": -0.0978, "mean": -0.0757, "p_down_big": 0.484, "p_up_big": 0.065}
+  R升|L抽|W没坏|T线下 段 14 | 30天 {"n_days": 151, "median": -0.028, "mean": -0.0012, "p_down_big": 0.424, "p_up_big": 0.331} | 56天 {"n_days": 151, "median": -0.1047, "mean": 0.0298, "p_down_big": 0.517, "p_up_big": 0.344}
+  R升|L注|W坏|T线上 段 11 | 30天 {"n_days": 118, "median": -0.0972, "mean": -0.0635, "p_down_big": 0.492, "p_up_big": 0.161} | 56天 {"n_days": 118, "median": -0.1023, "mean": -0.0935, "p_down_big": 0.5, "p_up_big": 0.136}
+  R升|L注|W坏|T线下 段 11 | 30天 {"n_days": 110, "median": 0.0584, "mean": 0.1301, "p_down_big": 0.0, "p_up_big": 0.382} | 56天 {"n_days": 110, "median": 0.1237, "mean": 0.1368, "p_down_big": 0.155, "p_up_big": 0.527}
+  R升|L注|W没坏|T线上 段 21 | 30天 {"n_days": 474, "median": 0.0151, "mean": 0.0353, "p_down_big": 0.205, "p_up_big": 0.287} | 56天 {"n_days": 474, "median": 0.0017, "mean": 0.0764, "p_down_big": 0.285, "p_up_big": 0.319}
+  R升|L注|W没坏|T线下 段 15 | 30天 {"n_days": 159, "median": 0.0398, "mean": 0.0475, "p_down_big": 0.302, "p_up_big": 0.421} | 56天 {"n_days": 159, "median": 0.0324, "mean": 0.0315, "p_down_big": 0.447, "p_up_big": 0.39}
+  R降|L抽|W坏|T线上 段 1 | 30天 {"n_days": 24, "median": 0.1309, "mean": 0.102, "p_down_big": 0.0, "p_up_big": 0.625} | 56天 {"n_days": 24, "median": 0.109, "mean": 0.1078, "p_down_big": 0.0, "p_up_big": 0.625}
+  R降|L抽|W坏|T线下 段 3 | 30天 {"n_days": 36, "median": 0.0137, "mean": -0.0156, "p_down_big": 0.222, "p_up_big": 0.028} | 56天 {"n_days": 36, "median": 0.0476, "mean": -0.0055, "p_down_big": 0.25, "p_up_big": 0.25}
+  R降|L抽|W没坏|T线上 段 5 | 30天 {"n_days": 86, "median": -0.049, "mean": -0.0711, "p_down_big": 0.291, "p_up_big": 0.07} | 56天 {"n_days": 86, "median": -0.007, "mean": -0.0341, "p_down_big": 0.349, "p_up_big": 0.291}
+  R降|L抽|W没坏|T线下 段 3 | 30天 {"n_days": 13, "median": 0.352, "mean": 0.1461, "p_down_big": 0.385, "p_up_big": 0.615} | 56天 {"n_days": 13, "median": 0.3994, "mean": 0.1741, "p_down_big": 0.385, "p_up_big": 0.538}
+  R降|L注|W坏|T线上 段 15 | 30天 {"n_days": 119, "median": -0.0095, "mean": 0.0093, "p_down_big": 0.252, "p_up_big": 0.244} | 56天 {"n_days": 119, "median": -0.0054, "mean": 0.0679, "p_down_big": 0.319, "p_up_big": 0.353}
+  R降|L注|W坏|T线下 段 13 | 30天 {"n_days": 189, "median": 0.0483, "mean": 0.0754, "p_down_big": 0.058, "p_up_big": 0.381} | 56天 {"n_days": 189, "median": 0.1523, "mean": 0.1613, "p_down_big": 0.122, "p_up_big": 0.608}
+  R降|L注|W没坏|T线上 段 30 | 30天 {"n_days": 500, "median": 0.0393, "mean": 0.1161, "p_down_big": 0.09, "p_up_big": 0.422} | 56天 {"n_days": 500, "median": 0.1222, "mean": 0.2098, "p_down_big": 0.106, "p_up_big": 0.552}
+  R降|L注|W没坏|T线下 段 13 | 30天 {"n_days": 111, "median": 0.1177, "mean": 0.1516, "p_down_big": 0.009, "p_up_big": 0.604} | 56天 {"n_days": 111, "median": 0.2415, "mean": 0.2605, "p_down_big": 0.063, "p_up_big": 0.829}
+WROTE docs/research/s864_results.json
