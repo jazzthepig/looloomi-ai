@@ -46,6 +46,12 @@ FUNDING_SYMBOLS: tuple[str, ...] = tuple(sorted(set(HF_SYMBOLS) | {
 # 10-16(S-590):资金费率回填到 2020-01(原 2022-11,只够 CIS 重建)—— 拥挤 / 情绪研究要 2020–21 的牛市与 2022 的熊市;
 # 币安 USDT 永续最早 2019-09(BTC),上市晚的名字照旧回到上市日为止。
 FUNDING_BACKFILL_START_MS = int(datetime(2020, 1, 1, tzinfo=timezone.utc).timestamp() * 1000)
+#: T-409 ③(11-15,台账 S-882):走法研究(某时刻前碰没碰到某价位)要 2017 – 2020 的小时线 —— 库里 2021-01 才开始,
+#: 交易对话用的样本从 2017 起。只补 BTC / ETH(其余 8 个名字的研究用不到这么早),补到 Binance 现货上市那天为止。
+#: 每轮往回补一段(`MAX_PAGES_HOURLY_BACK` 页 ≈ 416 天),几轮补完;补完之后这段代码每轮只多读一次「最早一行」。
+HOURLY_BACKFILL_FLOOR_MS = {"BTC": int(datetime(2017, 8, 17, tzinfo=timezone.utc).timestamp() * 1000),
+                            "ETH": int(datetime(2017, 8, 17, tzinfo=timezone.utc).timestamp() * 1000)}
+MAX_PAGES_HOURLY_BACK = 10
 HOURLY_SOURCE = "binance_hist"
 FUNDING_VENUE = "binance_perp"
 
@@ -118,6 +124,26 @@ async def fetch_hourly(get_page: GetPage, symbol: str, start_ms: int, now_ms: in
             return rows, False
         cur = int(page[-1][0]) + _HOUR_MS
     return rows, cur < now_ms - _HOUR_MS
+
+
+async def fetch_hourly_back(get_page: GetPage, symbol: str, earliest_ms: int, floor_ms: int, now_ms: int) -> tuple[list[dict], bool]:
+    """往回补一段:从 max(floor, earliest − 页数 × 1000 小时) 起往后翻,只留早于库里最早一根的 bar。返回 (行, 还没补到 floor)。
+    场馆在这一段一根都没有(上市晚于 floor)⇒ 返回空、不再算 pending —— 没有更早的,不是失败。"""
+    if earliest_ms <= floor_ms + _HOUR_MS:
+        return [], False
+    start = max(floor_ms, earliest_ms - MAX_PAGES_HOURLY_BACK * PAGE * _HOUR_MS)
+    rows: list[dict] = []
+    cur = start
+    for _ in range(MAX_PAGES_HOURLY_BACK):
+        page = await get_page(f"{symbol}USDT", cur)
+        if not page:
+            break
+        rows += [r for r in hourly_rows(symbol, page, now_ms) if r["ts"] < _iso(earliest_ms)]
+        last = int(page[-1][0])
+        if len(page) < PAGE or last + _HOUR_MS >= earliest_ms:
+            break
+        cur = last + _HOUR_MS
+    return rows, bool(rows) and start > floor_ms
 
 
 async def fetch_funding(get_page: GetPage, symbol: str, start_ms: int) -> tuple[list[dict], bool]:
@@ -197,6 +223,16 @@ async def _one_series(kind: str, get_page: GetPage, now_ms: int) -> dict:
             rows.extend(got)
             if more:
                 pending.append(sym)
+            if kind == "hourly" and f and sym in HOURLY_BACKFILL_FLOOR_MS:
+                e = await _frontier("ohlcv_hourly", "ts", f"source=eq.{HOURLY_SOURCE}", sym, earliest=True)
+                if e:
+                    try:
+                        back, more_back = await fetch_hourly_back(get_page, sym, e, HOURLY_BACKFILL_FLOOR_MS[sym], now_ms)
+                        rows.extend(back)
+                        if more_back:
+                            pending.append(f"{sym}(往回)")
+                    except Exception as ex:                  # noqa: BLE001
+                        failures.setdefault(sym, f"backfill {type(ex).__name__}: {str(ex)[:60]}")
             if kind == "funding" and f:
                 # 往回补:2026-08 一次性导入的 10 个名字从 2024-02 起,CIS 重建要 2022-11 起(T-079)。
                 e = await _frontier("funding_history", "funding_time", f"venue=eq.{FUNDING_VENUE}", sym, earliest=True)

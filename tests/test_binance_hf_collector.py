@@ -88,3 +88,27 @@ def test_collector_does_not_add_a_fetch_entrypoint() -> None:
     from scripts.loop_status import _HTTP_MARKERS, _PRICE_PRIMITIVES
     src = (ROOT / "src/data/market/binance_hf_collector.py").read_text(encoding="utf-8")
     assert not (any(k in src for k in _PRICE_PRIMITIVES) and any(m in src for m in _HTTP_MARKERS))
+
+
+def test_hourly_backfill_walks_back_one_block_and_never_overwrites_what_is_already_there() -> None:
+    """T-409 ③:BTC / ETH 小时线往回补到 2017-08-17。只留早于库里最早一根的 bar;一轮补一段;补到地板就停。"""
+    seen: list[int] = []
+
+    async def get_page(pair: str, start: int):
+        seen.append(start)
+        return [_k(start + j * H) for j in range(hf.PAGE)]
+
+    floor, earliest, now = T0, T0 + 50_000 * H, T0 + 60_000 * H
+    rows, more = asyncio.run(hf.fetch_hourly_back(get_page, "BTC", earliest, floor, now))
+    span = hf.MAX_PAGES_HOURLY_BACK * hf.PAGE * H
+    assert seen[0] == earliest - span and len(rows) == hf.MAX_PAGES_HOURLY_BACK * hf.PAGE and more
+    assert max(r["ts"] for r in rows) < hf._iso(earliest), "库里已有的那一根及以后都不能再写"
+    seen.clear()
+    rows, more = asyncio.run(hf.fetch_hourly_back(get_page, "BTC", floor + 3_000 * H, floor, now))
+    assert seen[0] == floor and len(rows) == 3_000 and not more, "离地板不到一段 ⇒ 从地板起补完、不再 pending"
+    assert asyncio.run(hf.fetch_hourly_back(get_page, "BTC", floor, floor, now)) == ([], False), "已经到地板 ⇒ 不再请求"
+
+    async def empty(pair: str, start: int):
+        return []
+    assert asyncio.run(hf.fetch_hourly_back(empty, "ETH", earliest, floor, now)) == ([], False), "场馆那一段没有 bar ⇒ 没有更早的,不是失败"
+    assert set(hf.HOURLY_BACKFILL_FLOOR_MS) == {"BTC", "ETH"}
