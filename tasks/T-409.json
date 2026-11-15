@@ -1,0 +1,26 @@
+{
+  "status": "open",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/"
+  ],
+  "verified": null,
+  "id": "T-409",
+  "owner": "seth",
+  "title": "让「走法」成为一等对象:走法的原子函数 + 自带对照组的制表;按小时线结算的情景命题;小时线回补到 2017",
+  "source": "台账 S-882(Jazz 贴来交易对话的一段「周末大跌 → 反弹 → 回落」分析当例子;补对照后:常态被读成了形态)。`docs/SETUP_REGISTRY.md` #5。",
+  "allowed_paths": [
+    "src/",
+    "tests/",
+    "scripts/preflight.sh",
+    "migrations/",
+    "docs/",
+    "tasks/T-409.json"
+  ],
+  "acceptance": {
+    "check": "① `src/data/evaluation/apparatus.py` 加:`touched_before(bars, level, side, until)`、`first_touch(bars, upper, lower, until)`、`max_excursions(bars, p0, until)`;以及 `base_rate_table(samples, condition, also=[只满足一半条件的若干组])` —— 输出永远带「全部样本」与各对照组并排,少了就报错。② 情景台账加一种变量 `touch:<SYMBOL>`(字段:level、side、until 的 UTC 时刻),结算读 `ohlcv_hourly`;结算器与校验器各有测试;两个对话都能提交。③ `ohlcv_hourly` 的 BTC / ETH 回补到 2017-08(摄取走守护路径;先 `/internal/data-coverage` 看 deepest_start)。④ 用 ①② 把 S-882 那张表原样重出一遍,数与 SQL 那份一致。",
+    "expect": "代码 + 测试 + 第一条按小时线结算的命题落库并被结算。"
+  },
+  "prior_value": "两个对话里每天在说「到周一某时刻前碰到某价位的概率是 x」,没有一条能被记分;每张基率表各自手搓、不带对照。",
+  "notes": "2026-11-15T07:12:45Z Seth 开卡。①② 是纯函数与台账的扩展,不碰真钱路径;③ 是摄取。 || 2026-11-15T07:27:56Z Seth:①② 已做并排提交(job 0745-t409,runtime):apparatus 的 touched_before / first_touch / max_excursions / base_rate_table(没有半条件对照组就报错);情景台账的 `high:<SYM>[@HH]` / `low:<SYM>[@HH]`(从写下那一刻向上取整点到结算日 HH:00 UTC,小时线没覆盖到截止就等值)。③ 小时线回补到 2017 还没做(摄取,下一步)。判活:第一条 `high:` / `low:` 命题入账并被结算 —— `select s.id, s.observed, s.outcome from scenario_scores s join scenario_ledger l using (id) where l.variable ~ '^(high|low):'`。"
+}
