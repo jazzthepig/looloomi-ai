@@ -1,0 +1,32 @@
+{
+  "status": "in_review",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": {
+    "by": "lane-c",
+    "at": "2026-11-15T03:33Z",
+    "value": "原样跑 Seth 的 docs/research/s872_rv2_half_in_drain.py(一行未改),s872_run.txt 有 WROTE;reproduces_s867 ok(FULL 年化 35.72%、最长水下 750 天 = S-867)。tickets:all 956 / 信号日在抽 127 / 无标签 0 / FULL 取 343 / GATED 取 296。FULL cagr .3572 uw 750 mdd -.3137 worst20 -.1943 rv2share .742;GATED cagr .3513 uw 762 mdd -.3503 worst20 -.1836 rv2share .758(judge a/b 均 true);HALF cagr .3556 uw 762 mdd -.3301 worst20 -.1888 rv2share .746(judge a/b 均 true)。"
+  },
+  "id": "T-394",
+  "owner": "lane-c",
+  "title": "S-872:R-v2 在稳定币抽的时候减半 —— 只跑 Seth 写好的脚本(它原样调用你的 s867_frontier.py),把输出贴回",
+  "source": "台账 S-872(预注册;Jazz 把「真钱规则升级用哪把尺」交给 Seth 定:状态内超额决定想不想做,回本时间有否决权)。脚本 `docs/research/s872_rv2_half_in_drain.py`:import `s867_frontier.py` 的装配与引擎,三条臂 FULL / GATED / HALF。**我在沙箱里跑不了(装配要读库),脚本只过了语法检查,没在真数据上跑过。**",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-394.json"
+  ],
+  "acceptance": {
+    "check": "① `nohup python3 docs/research/s872_rv2_half_in_drain.py > docs/research/s872_run.txt 2>&1 &`,只 tail。② `reproduces_s867` 那一行必须 ok(FULL = 年化 35.72%、最长水下 750 天);不 ok 就贴那一行、结束。③ 最终回复只贴 `grep -E '^(reproduces_s867|tickets|FULL|GATED|HALF|WROTE|STOP)' docs/research/s872_run.txt | cut -c1-400`。不下结论、不写情景文件。④ 脚本报错(它没在真数据上跑过):贴最后 15 行;**如果只是我调用 s867 的函数名 / 返回值的键写错了,可以改那一处并在回复里写明改了哪一行,别的不动。**",
+    "expect": "docs/research/s872_results.json + s872_run.txt;卡 in_review,推 lane-c/T-394。排在 T-393 之后。"
+  },
+  "prior_value": "S-853 只测过「抽的时候一张不开」(水下 435 → 822 天,没进);没测过减半。按新定的规矩,真钱规则的改动要两把尺都过。",
+  "notes": "2026-11-15T02:53:28Z Seth 开卡。\n\n2026-11-15 lane-c(T-394)完成,卡转 in_review。分支 lane-c/T-394(在 origin/main fa9d781c 之上)。\n\n【交付】docs/research/ 下:\n· s872_rv2_half_in_drain.py —— Seth 写的脚本,原样入库(main 上还没有这个文件,Seth 在主仓库工作区未提交;我把它一并提交进本分支,一行未改)\n· s872_run.txt —— 完整输出(末尾有 WROTE)\n· s872_results.json —— 脚本写出的结果\n\n【怎么跑的】仓库根目录下跑 `python3 docs/research/s872_rv2_half_in_drain.py`(默认数据根 /Volumes/CometCloudAI/cometcloud-local/research/);装配 956 票 / 298 标的 / 闸门 2484 天,全程约 40 秒,没有报错,所以脚本一行都没动(卡的第 ④ 条不适用)。\n\n【复现】reproduces_s867 = ok:FULL 年化 35.72%、最长水下 750 天,与 S-867 对得上。\n\n【测得的原始数字】\ntickets: all 956 / 信号日在稳定币抽 127 / 信号日无标签 0 / FULL 取 343 张 / GATED 取 296 张\nFULL  cagr .3572 uw 750d mdd -.3137 worst20 -.1943 rv2_risk_share .742\nGATED cagr .3513 uw 762d mdd -.3503 worst20 -.1836 rv2_risk_share .758 —— judge a(年化 ≥ FULL−1.0pt) true / b(水下 ≤ FULL+30d) true / real_money_candidate true\nHALF  cagr .3556 uw 762d mdd -.3301 worst20 -.1888 rv2_risk_share .746 —— judge a true / b true / real_money_candidate true\n\n按卡要求:不下结论、不写情景文件。"
+}

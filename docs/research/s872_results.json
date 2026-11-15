@@ -1,0 +1,50 @@
+{
+ "config": [
+  0.0075,
+  0.8,
+  10
+ ],
+ "tickets": {
+  "all": 956,
+  "signal_in_drain": 127,
+  "signal_day_without_label": 0,
+  "taken_full": 343,
+  "taken_gated": 296
+ },
+ "FULL": {
+  "cagr": 0.3572,
+  "longest_underwater_d": 750,
+  "mdd": -0.3137,
+  "worst_20d": -0.1943,
+  "rv2_risk_share": 0.742
+ },
+ "GATED": {
+  "cagr": 0.3513,
+  "longest_underwater_d": 762,
+  "mdd": -0.3503,
+  "worst_20d": -0.1836,
+  "rv2_risk_share": 0.758,
+  "judge": {
+   "a_cagr_within_1pt": true,
+   "b_underwater_within_30d": true,
+   "real_money_candidate": true
+  }
+ },
+ "HALF": {
+  "cagr": 0.3556,
+  "longest_underwater_d": 762,
+  "mdd": -0.3301,
+  "worst_20d": -0.1888,
+  "rv2_risk_share": 0.746,
+  "judge": {
+   "a_cagr_within_1pt": true,
+   "b_underwater_within_30d": true,
+   "real_money_candidate": true
+  }
+ },
+ "reproduces_s867": {
+  "cagr_expected": 0.3572,
+  "uw_expected": 750,
+  "ok": true
+ }
+}
