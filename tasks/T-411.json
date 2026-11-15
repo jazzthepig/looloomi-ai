@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-411",
+  "owner": "lane-a",
+  "title": "纸面账成员的前向来源对账:生产序列 vs 研究面板 —— X1V / 核心 / R-v2 / 股金 / 风格 / Tom PD13(BTC、ETH)在重叠段逐日差多少",
+  "source": "台账 S-890(「状态取长处 v2」前向开账):纸面账 `src/data/universe/state_book.py` 的成员收益从生产表现算(`load_inputs`),研究面板(`t348_r4_legs.csv` / `t342_daily.csv` / `t348_r3_rv2_curve.csv` / `s869_extra_panel_a.csv`)是另一套来路。两边不是同一份代码 —— 前向的数和回测的数能不能放在一起读,要先量。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-411.json"
+  ],
+  "acceptance": {
+    "check": "新脚本 `docs/research/t411_member_parity.py`(读库照你们现有研究脚本的取数方式;**不 import `src/`**)。对每个成员,用 `state_book.load_inputs` 里写的同一条生产来路(文件顶上的 `SOURCES` 表;X1V = `src/data/signals/tom.py` 的 `trade_path` + `trade_returns` 用 `TOM_ARMS['CORE_X1V']` 的参数作用于 `multiplier_daily` arm = core_u_replay 的净值、资金费 = `funding_history` 币安永续 BTC 按天求和 × 365;Tom PD13 = `tom_gross`(cap 1.3、defend)+ `trade_returns` 作用于 `asset_mcap_daily` 收盘、资金费同上按币;核心 = core_u_replay 净值;R-v2 = `r_money_daily`;股 / 金 = `ohlcv_daily` eodhd ACWI / XAUUSD;风格 = `style_index_pit_daily` cap 的 ret)—— 公式可以照抄进脚本,但要在脚本里写明照抄自哪一行。和研究面板里同名那一条(`s869_strategy_state.py::load_panel` 的口径:净值 → 首末日之间按不变补齐的逐日收益;**这一步先不扣现金**)在**重叠段**逐日比:重叠起止、天数、逐日差的绝对值中位数 / 95 分位 / 最大、两边累计收益、两边年化波动、相关系数。R-v2 只有 10-19 起的生产序列,报它与研究曲线有没有重叠,没有就写没有。**判:** 逐日差中位数 < 1bp 且累计差 < 2% ⇒「同一条」;否则写清差在哪(参数、资金费口径、成本、价源),不要改任何一边去凑。",
+    "expect": "脚本 + `docs/research/t411_member_parity.json` + 回复里一张表;卡 in_review,推 lane-a/T-411。"
+  },
+  "prior_value": "纸面账三个月后要拿前向的数与回测比;成员的来路如果和研究不是同一条,比出来的差会被读成「前向衰减」。先把来路的差量出来,这个误读就没有了。",
+  "notes": "2026-11-15T08:10:51Z Seth 开卡(台账 S-890;Jazz 11-15「向前开始了」)。最该先看的是 Tom PD13:生产核 `tom.trade_returns` 只对 > 1 倍的部分付资金费、成本 |Δg| × 10bp,研究 `s596` 用月均资金费 —— 差多大不知道。"
+}

@@ -506,6 +506,11 @@ async def run_once() -> dict[str, Any]:
         tom["flex_x1v"] = await run_flex_x1v(target.date().isoformat())     # S-604:灵活组合按回撤档位(Jazz 10-18)
     except Exception as e:  # noqa: BLE001 —— 交易层写不进去不该让 ③ 的回放算失败
         tom = {"ok": False, "why": f"{type(e).__name__}: {str(e)[:160]}"}
+    try:                                   # T-395 / S-890:「状态取长处 v2」纸面前向账;排在 flex_x1v 之后(股 / 金的收盘那里先补齐)
+        from src.data.universe.state_book import run_state_book
+        tom["state_strength_v2"] = await run_state_book(target.date().isoformat())
+    except Exception as e:  # noqa: BLE001 —— 纸面账写不进去不该让 ③ 与 tom 算失败
+        tom["state_strength_v2"] = {"ok": False, "why": f"{type(e).__name__}: {str(e)[:160]}"}
     return {"ok": True, "refused": False, "written": w["written"], "reason": f"回放至 {target.date()}",
             "eval": ev_old, "eval_u_cap_a1u": ev_new, "eval_tom_pd13": ev_tom, "eval_c1": ev_c1, "eval_q": ev_q,
             "tom_trader": tom,
