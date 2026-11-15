@@ -21,6 +21,6 @@
     "expect": "代码 + 测试;判活:`python3 -m pytest tests/test_eval_apparatus.py tests/test_same_cell.py -q`。"
   },
   "prior_value": "两种「双侧 p」都合法、都没有名字,预注册里只写「双侧 p」时,盲复算会读出两个数 —— 这次正好落在 0.10 的两边。",
-  "notes": "2026-11-14T16:56:31Z Seth 开卡(夜间;B 道 T-386 的建议收下)。不急:档案里已经两种都写了。",
+  "notes": "2026-11-14T16:56:31Z Seth 开卡(夜间;B 道 T-386 的建议收下)。不急:档案里已经两种都写了。 || 2026-11-15T01:17:32Z Seth:顺手一处(同一个文件,跟这张卡一起做):`same_cell.line()` 把 `asof` 印出来 —— 第一行真实数据(d = 11-14)的格子其实是 11-13 的(当时 `stable_supply_30d` 还没有 11-14 的值),字段里有 asof、那一行字里没有。另:`apparatus.price_on_or_after` 的文档串里补一句「进场价也用它,不要自己写下标」(T-386 的 B 道脚本进场自己写了一行,踩了 10-14 那个坑,见台账「S-866 结果 补二」)。",
   "verified": null
 }

@@ -1,0 +1,28 @@
+{
+  "status": "open",
+  "created": "2026-11-15",
+  "forbidden_paths": [
+    "Shadow/",
+    "src/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md",
+    "scripts/",
+    "migrations/"
+  ],
+  "verified": null,
+  "id": "T-390",
+  "owner": "lane-b",
+  "title": "T-386 的脚本修一行:`Pricer.entry` 在名字上市前拿了最新收盘当进场价 —— SOL 的全样本与 p 因此是坏的;修完只重跑 ETH / SOL 那一段、与生产的数对",
+  "source": "台账「S-866 结果 补二」。生产那一份(`src/data/state/same_cell.py`,2026-11-15 01:12 UTC 第一行真实数据)与你的格内数逐项相同,只有 SOL 的全样本对不上:生产 n = 2231,你 n = 2263。库里 SOL 的 binance_hist 从 2020-08-11 起没有缺口。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-390.json"
+  ],
+  "acceptance": {
+    "check": "① `docs/research/s866_blind_cells.py` 的 `Pricer.entry(d)`:d 早于第一根日线时返回 None(现在 `bisect_right(...) − 1 = −1` ⇒ 取到最新一根;apparatus 文档串 10-14 写过同一个坑)。进场价改用 `apparatus.price_on_or_after`(max_gap_days = 0)或等价写法,不要自己再写下标。② 加一条自检(脚本里 assert 即可):任何资产的前瞻收益里,进场日都不早于该资产第一根日线。③ 只重跑 ETH / SOL 那一段与循环平移对照(`--stage` 若拆不开就整份重跑,**不要 Read s866_cells.json / s866_results.json 这类大文件,只用 python 取要的键**)。④ 最终回复只贴:SOL 全样本 30 天的 n / 中位 / 均值 / 跌超 10% / 涨超 10%(应为 2231 / 0.0041 / 0.1316 / 0.340 / 0.381,差 ≤ 0.001)、SOL 与 ETH 的平移 p(你那种算法;生产同一种算法是 SOL 0.037、ETH 0.288,种子不同允许差 ±0.03)、格内的数有没有变(不该变)。对不上就贴两边的数、停下,不改任何一边去凑。⑤ 情景文件不动(T-386-1 ~ -4 与这处无关)。",
+    "expect": "修过的 s866_blind_cells.py + 重跑后的 s866_results.json / s866_run.txt;卡 in_review,推 lane-b/T-390。"
+  },
+  "prior_value": "S-866 结果表里 SOL 的全样本(−0.2% / 35.0% / 37.5%,n 2263)与 SOL 的平移 p(0.214)来自这份脚本,含 32 个上市前的日子(每天约 −98%);台账已更正为生产的数,脚本本身还没修 —— 它是「第二份」,不修就不再是有效的复算。",
+  "notes": "2026-11-15T01:17:32Z Seth 开卡(夜间收尾;对账,不是盲复算)。"
+}
