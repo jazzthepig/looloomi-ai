@@ -182,3 +182,42 @@ def test_settlement_files_live_in_their_own_folder_and_are_not_read_as_scenarios
     recs = sl.settlement_files(str(tmp_path))
     assert [r["file"] for r in recs] == ["bad.json", "lane-b-2026-11-25.json"] and recs[0]["problems"] and recs[1]["settled_by"] == "lane-b"
     assert sl.repo_files(str(tmp_path)) == [], "结算文件夹不被当成情景文件"
+
+
+def test_path_propositions_validate_and_settle_on_hourly_bars_after_they_were_written(monkeypatch):
+    """T-409:「周一 13:00 前碰到 1,834」这类走法命题。写下之前的小时不算(否则写的时候就已经知道答案)。"""
+    import src.api.store as store
+    import src.data.style.header as hdr
+    assert sl.validate({**_e(variable="high:ETH@13", op="gt", lo=1834, hi=None), "author": "seth:x"}, TODAY) == []
+    assert sl.validate({**_e(variable="low:BTC", op="lt", lo=None, hi=62006), "author": "seth:x"}, TODAY) == []
+    assert any("HH" in w for w in sl.validate({**_e(variable="high:ETH@25", op="gt", lo=1), "author": "x"}, TODAY))
+    sym, start, end = sl.path_window("ETH@13", "2026-11-16", "2026-11-15T07:20:05+00:00")
+    assert sym == "ETH" and start == dt.datetime(2026, 11, 15, 8, tzinfo=dt.timezone.utc) and end == dt.datetime(2026, 11, 16, 13, tzinfo=dt.timezone.utc)
+    assert sl.path_window("ETH", "2026-11-16", "2026-11-15T07:00:00+00:00")[1:] == (
+        dt.datetime(2026, 11, 15, 7, tzinfo=dt.timezone.utc), dt.datetime(2026, 11, 17, 0, tzinfo=dt.timezone.utc))
+    up, asked = [], []
+    bars = [{"ts": f"2026-11-{15 + (h // 24):02d}T{h % 24:02d}:00:00+00:00", "high": 1800 + h, "low": 1790 - h} for h in range(8, 24 + 13)]
+
+    async def read_all(t, params):
+        if t == sl.TABLE:
+            return [{"id": "W1", "variable": "high:ETH@13", "op": "gt", "lo": 1834, "hi": None, "prob": 0.7,
+                     "horizon_d": "2026-11-16", "written_at": "2026-11-15T07:20:05+00:00"}]
+        if t == sl.SCORES:
+            return []
+        if t == "ohlcv_hourly":
+            asked.append(params)
+            return bars
+        raise AssertionError(t)
+
+    async def ups(t, rows, on_conflict):
+        up.extend(rows)
+        return True
+    monkeypatch.setattr(hdr, "_read_all", read_all)
+    monkeypatch.setattr(store, "supabase_upsert_table", ups)
+    r = asyncio.run(sl.run_once(dt.datetime(2026, 11, 17, 1, 0, tzinfo=dt.timezone.utc)))
+    assert r["scored"] == 1 and up[0]["observed"] == 1800 + 36 and up[0]["outcome"] is True
+    assert "ts.gte.2026-11-15T08:00:00+00:00" in asked[0]["and"] and "ts.lt.2026-11-16T13:00:00+00:00" in asked[0]["and"]
+    bars[:] = bars[:-3]                                                  # 小时线还没到截止时刻 ⇒ 等值,不结
+    up.clear()
+    r = asyncio.run(sl.run_once(dt.datetime(2026, 11, 17, 1, 0, tzinfo=dt.timezone.utc)))
+    assert r["scored"] == 0 and r["waiting"] == 1

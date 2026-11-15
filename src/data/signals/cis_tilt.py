@@ -374,7 +374,9 @@ async def _fund_at(rebal_days: list[pd.Timestamp], symbols: list[str]) -> dict[p
     rows = await _read_all(FUND_VIEW, {
         "select": "symbol,d,funding_rate,n", "symbol": "in.(" + ",".join(alts) + ")",
         "and": f"(d.gte.{lo},d.lt.{hi})", "order": "d.asc"})
-    return fund_means(rows, rebal_days)
+    # T-380(11-14 看门线程:15:46 与 16:46 两次点到这里,各约 6–7 秒):这是每小时一次的纯计算(再平衡日 × 币 × 行),
+    # 留在事件循环上 ⇒ 整个进程每小时停一次。同一个函数、同样的入参,放进线程;结果不变。
+    return await asyncio.to_thread(fund_means, rows, rebal_days)
 
 
 async def run_once() -> dict[str, Any]:

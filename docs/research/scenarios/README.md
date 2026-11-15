@@ -16,7 +16,7 @@ Seth 合并后,Railway 每小时把还没入账的条目写进 `scenario_ledger`
 ```
 
 规则(`src/data/evaluation/scenario_ledger.py` 校验,不合格的只报不写):
-- `id` 唯一、以卡号开头;`variable` 四类:`close:<SYMBOL>`(ohlcv_daily 收盘)/ `state:<feature>`(state_daily, entity=panel)/
+- `id` 唯一、以卡号开头;`variable` 四类:`close:<SYMBOL>`(ohlcv_daily 收盘)/ `high:<SYMBOL>[@HH]`、`low:<SYMBOL>[@HH]`(写下之后到结算日 HH:00 UTC 之间小时线的最高 / 最低 —— 「某时刻前碰没碰到某价位」,T-409)/ `state:<feature>`(state_daily, entity=panel)/
   `macro:<series>`(macro_daily)/ `manual`(人工结算);`op` 是 `between`(lo ≤ x ≤ hi)、`gt`(x > lo)、`lt`(x < hi);
 - `prob` ∈ [0, 1];`horizon_d` 要晚于入账那天 —— **留 ≥ 7 天余量**,合并不是当天的事;
 - 每张卡 ≥ 3 条,至少一条是自动结算的(close / state / macro);**不写收益承诺**,写可核的量。

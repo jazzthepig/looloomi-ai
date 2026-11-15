@@ -17,7 +17,10 @@
 `variable` 能自动结算的三类(其余写 `manual`,人工结算):
 - `close:<SYMBOL>` —— `ohlcv_daily` 当天收盘(加密 binance_hist,其余 eodhd);
 - `state:<feature>` —— `state_daily`(entity = panel)当天的值;
-- `macro:<series>` —— `macro_daily` 当天或之前 7 天内最近一个值。
+- `macro:<series>` —— `macro_daily` 当天或之前 7 天内最近一个值;
+- `high:<SYMBOL>[@HH]` / `low:<SYMBOL>[@HH]`(T-409,11-15)—— **走法**:从这条写下的那一刻(`written_at`,向上取整点)
+  到结算日 HH:00 UTC(不写 @HH = 当天 24:00)之间 `ohlcv_hourly`(binance_hist)的最高价 / 最低价。
+  「周一 13:00 前碰到 1,834」= `high:ETH@13`、`gt`、`lo = 1834`、`horizon_d` = 那个周一。小时线没覆盖到截止时刻 ⇒ 等值。
 `op`:`between`(lo ≤ x ≤ hi)、`gt`(x > lo)、`lt`(x < hi)。结算日过了 7 天还没有值 ⇒ 记「读不到」,结果留空(不当成假)。
 
 ## lane 也是作者(11-02 第二批,S-705)
@@ -51,9 +54,10 @@ WRITES_TABLES = (TABLE, SCORES)
 WRITES_COLUMNS = {TABLE: ("id", "d", "author", "scenario", "statement", "variable", "op", "lo", "hi", "prob", "horizon_d",
                           "code_ref"),
                   SCORES: ("id", "scored_at", "observed", "outcome", "brier", "note", "code_ref")}
-CODE_REF = "scenario_ledger v1 (11-02)"
+CODE_REF = "scenario_ledger v1.1 (11-15: + high / low 走法命题,T-409)"
 OPS = ("between", "gt", "lt")
-KINDS = ("close", "state", "macro", "manual")
+KINDS = ("close", "state", "macro", "high", "low", "manual")
+PATH_KINDS = ("high", "low")
 LATE_DAYS = 7
 _ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$")
 _AUTHOR = re.compile(r"^(?:lane-[abc]|seth(?:[:-][\w.-]+)?|jazz|ai:[\w.-]+)$")
@@ -78,8 +82,23 @@ def parse_variable(v: str) -> tuple[str, str]:
         return "manual", ""
     kind, _, key = v.partition(":")
     if kind not in KINDS or kind == "manual" or not key:
-        raise ValueError(f"variable {v!r} 认不出(close:<SYMBOL> / state:<feature> / macro:<series> / manual)")
+        raise ValueError(f"variable {v!r} 认不出(close:<SYMBOL> / state:<feature> / macro:<series> / high:<SYMBOL>[@HH] / low:<SYMBOL>[@HH] / manual)")
+    if kind in PATH_KINDS:
+        sym, _, hh = key.partition("@")
+        if not sym or (hh and not (hh.isdigit() and 0 <= int(hh) <= 23)):
+            raise ValueError(f"variable {v!r}:走法命题写成 {kind}:<SYMBOL> 或 {kind}:<SYMBOL>@HH(HH = 0–23,UTC)")
     return kind, key
+
+
+def path_window(key: str, horizon_d: str, written_at: Any) -> tuple[str, dt.datetime, dt.datetime]:
+    """纯函数。走法命题的窗口:(标的, 起点, 截止)。起点 = 写下那一刻向上取整点(写下之前的小时不算);截止 = 结算日 HH:00(缺省次日 00:00)。"""
+    sym, _, hh = key.partition("@")
+    w = written_at if isinstance(written_at, dt.datetime) else dt.datetime.fromisoformat(str(written_at).replace("Z", "+00:00"))
+    w = w.astimezone(dt.timezone.utc)
+    start = w.replace(minute=0, second=0, microsecond=0) + (dt.timedelta(hours=1) if (w.minute or w.second or w.microsecond) else dt.timedelta())
+    day = dt.datetime.combine(dt.date.fromisoformat(str(horizon_d)[:10]), dt.time(), dt.timezone.utc)
+    end = day + (dt.timedelta(hours=int(hh)) if hh else dt.timedelta(days=1))
+    return sym, start, end
 
 
 def holds(op: str, lo: Optional[float], hi: Optional[float], x: float) -> bool:
@@ -235,8 +254,23 @@ async def submit(entries: list[dict], author: str, now: Optional[dt.datetime] = 
     return {"ok": True, "written": len(entries), "ids": ids}
 
 
-async def _value(kind: str, key: str, d: str) -> Optional[float]:
+async def _value(kind: str, key: str, d: str, written_at: Any = None) -> Optional[float]:
     from src.data.style.header import _read_all
+    if kind in PATH_KINDS:
+        if not written_at:
+            return None
+        sym, start, end = path_window(key, d, written_at)
+        if end <= start:
+            return None
+        rows = await _read_all("ohlcv_hourly", {"select": "ts,high,low", "symbol": f"eq.{sym}", "source": "eq.binance_hist",
+                                                "and": f"(ts.gte.{start.isoformat()},ts.lt.{end.isoformat()})", "order": "ts.asc"})
+        rows = [r for r in rows if _f(r.get("high")) is not None and _f(r.get("low")) is not None]
+        if not rows:
+            return None
+        last = dt.datetime.fromisoformat(str(rows[-1]["ts"]).replace("Z", "+00:00"))
+        if last + dt.timedelta(hours=1) < end:                            # 小时线还没覆盖到截止时刻 ⇒ 等值
+            return None
+        return max(float(r["high"]) for r in rows) if kind == "high" else min(float(r["low"]) for r in rows)
     if kind == "close":
         for src in ("binance_hist", "eodhd"):
             rows = await _read_all("ohlcv_daily", {"select": "close", "symbol": f"eq.{key}", "source": f"eq.{src}",
@@ -357,7 +391,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     today = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc).date()
     ingested = await ingest_repo(today)
     manual = await apply_settlements(today)
-    due = await _read_all(TABLE, {"select": "id,variable,op,lo,hi,prob,horizon_d", "horizon_d": f"lt.{today.isoformat()}",
+    due = await _read_all(TABLE, {"select": "id,variable,op,lo,hi,prob,horizon_d,written_at", "horizon_d": f"lt.{today.isoformat()}",
                                   "variable": "neq.manual", "order": "horizon_d.asc"})
     if not due:
         return {"ok": True, "status": "skipped" if not manual.get("settled") else "ok", "ingested": ingested, "manual": manual,
@@ -368,7 +402,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
         if e["id"] in done:
             continue
         kind, key = parse_variable(e["variable"])
-        s = score(e, await _value(kind, key, str(e["horizon_d"])[:10]), today)
+        s = score(e, await _value(kind, key, str(e["horizon_d"])[:10], e.get("written_at")), today)
         if s is None:
             waiting += 1
         else:

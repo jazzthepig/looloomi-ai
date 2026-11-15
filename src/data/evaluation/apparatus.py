@@ -218,6 +218,76 @@ def content_fingerprint(rows: Sequence[dict], fields: Sequence[str]) -> dict[str
     return {"n": len(lines), "fields": keys, "sha256": h.hexdigest()}
 
 
+# ── 走法(T-409,台账 S-882)────────────────────────────────────────────────────────
+# 「到某时刻之前碰没碰到某价位、先碰哪边、两边最大走了多远」—— 交易对话里每天在说的概率都是这一类。
+# 11-15 那张「周末大跌之后两边都被扫」的表,常态被读成了形态:不带条件的周末本来就 95% 至少碰一边。
+# 所以这里的制表函数**强制带对照组**,少了就报错。bars = 按时间升序的 (t, open, high, low, close);t 可比较即可。
+
+def touched_before(bars: Sequence[tuple], level: float, side: str, until: Any = None) -> bool:
+    """side = "up":最高价 ≥ level;"down":最低价 ≤ level。只看 t < until 的 bar(until = None ⇒ 全部)。"""
+    if side not in ("up", "down"):
+        raise ValueError("side 要是 up / down")
+    for b in bars:
+        if until is not None and b[0] >= until:
+            break
+        if (b[2] >= level) if side == "up" else (b[3] <= level):
+            return True
+    return False
+
+
+def first_touch(bars: Sequence[tuple], upper: float, lower: float, until: Any = None) -> Optional[str]:
+    """先碰到哪一边:"up" / "down" / None(都没碰到)。同一根 bar 两边都碰到 ⇒ "both"(日内顺序看不见,不猜)。"""
+    if not upper > lower:
+        raise ValueError("upper 要大于 lower")
+    for b in bars:
+        if until is not None and b[0] >= until:
+            break
+        u, d = b[2] >= upper, b[3] <= lower
+        if u and d:
+            return "both"
+        if u:
+            return "up"
+        if d:
+            return "down"
+    return None
+
+
+def max_excursions(bars: Sequence[tuple], p0: float, until: Any = None) -> tuple[Optional[float], Optional[float]]:
+    """相对 p0 的最大上冲与最大下探(比例;下探为负)。没有 bar ⇒ (None, None)。"""
+    if not p0 or p0 <= 0:
+        raise ValueError("p0 要为正")
+    hi = lo = None
+    for b in bars:
+        if until is not None and b[0] >= until:
+            break
+        hi = b[2] if hi is None else max(hi, b[2])
+        lo = b[3] if lo is None else min(lo, b[3])
+    return (None, None) if hi is None else (hi / p0 - 1, lo / p0 - 1)
+
+
+def base_rate_table(samples: Sequence[dict], outcomes: dict[str, Callable[[dict], Optional[bool]]],
+                    condition: Callable[[dict], bool], controls: dict[str, Callable[[dict], bool]]) -> dict[str, Any]:
+    """一张基率表:条件组 + 「全部样本」+ 每个对照组,每组报每个结局为真的比例。
+
+    `controls` 至少要有一个只满足一半条件的组(S-882:只满足「跌幅大」的那一组与全条件组一样会走出大波动 ——
+    没有这一组,就会把波动聚集读成形态);「全部样本」由这里自动加,不用传。结局函数返回 None = 这个样本判不了,不计入分母。"""
+    if not controls:
+        raise ValueError("base_rate_table 必须带至少一个半条件对照组(S-882)—— 只有条件组与全样本,常态会被读成形态")
+    groups = {"condition": [s for s in samples if condition(s)], "all": list(samples)}
+    for name, f in controls.items():
+        if name in groups:
+            raise ValueError(f"对照组名 {name!r} 与保留名冲突")
+        groups[name] = [s for s in samples if f(s)]
+    out: dict[str, Any] = {}
+    for g, rows in groups.items():
+        rec: dict[str, Any] = {"n": len(rows)}
+        for o, fn in outcomes.items():
+            vals = [v for v in (fn(r) for r in rows) if v is not None]
+            rec[o] = {"n": len(vals), "rate": (round(sum(bool(v) for v in vals) / len(vals), 4) if vals else None)}
+        out[g] = rec
+    return out
+
+
 # ── 打分与切分 ────────────────────────────────────────────────────────────────
 
 def brier(p: Sequence[float], y: Sequence[float]) -> Optional[float]:

@@ -228,3 +228,24 @@ def test_content_fingerprint_ignores_row_order_and_float_noise_but_not_content()
     c = [dict(a[0], x30=0.0124), a[1]]
     assert content_fingerprint(c, f)["sha256"] != fa["sha256"]
     assert content_fingerprint(a, ["symbol", "d"])["sha256"] != fa["sha256"], "选的列不同 ⇒ 不同 id"
+
+
+def test_path_primitives_and_a_base_rate_table_that_refuses_to_go_without_controls():
+    """T-409 / S-882:碰没碰、先碰哪边、两侧最大偏移;制表必须带半条件对照组。"""
+    import pytest
+    from src.data.evaluation import apparatus as ap
+    bars = [(0, 100, 101, 99, 100), (1, 100, 103, 99.5, 102), (2, 102, 102.5, 96, 97), (3, 97, 110, 90, 105)]
+    assert ap.touched_before(bars, 103, "up") and not ap.touched_before(bars, 103, "up", until=1)
+    assert ap.touched_before(bars, 96, "down", until=3) and not ap.touched_before(bars, 95, "down", until=3)
+    assert ap.first_touch(bars, 102.9, 96.5) == "up" and ap.first_touch(bars, 104, 96.5) == "down"
+    assert ap.first_touch(bars, 109, 91) == "both" and ap.first_touch(bars, 200, 1) is None
+    hi, lo = ap.max_excursions(bars, 100, until=3)
+    assert hi == pytest.approx(0.03) and lo == pytest.approx(-0.04)
+    with pytest.raises(ValueError):
+        ap.first_touch(bars, 90, 100)
+    samples = [{"drop": d, "reb": r, "up": u} for d, r, u in ((5, 4, True), (5, 1, True), (1, 4, False), (1, 1, True), (6, 5, None))]
+    with pytest.raises(ValueError):
+        ap.base_rate_table(samples, {"up": lambda s: s["up"]}, lambda s: s["drop"] > 3 and s["reb"] > 3, {})
+    t = ap.base_rate_table(samples, {"up": lambda s: s["up"]}, lambda s: s["drop"] > 3 and s["reb"] > 3, {"drop_only": lambda s: s["drop"] > 3})
+    assert t["all"]["n"] == 5 and t["all"]["up"] == {"n": 4, "rate": 0.75}, "判不了(None)的样本不进分母"
+    assert t["condition"]["up"] == {"n": 1, "rate": 1.0} and t["drop_only"]["up"] == {"n": 2, "rate": 1.0}
