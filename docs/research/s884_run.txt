@@ -1,0 +1,41 @@
+loaded BTC 3089
+loaded ETH 3089
+COUNTS {"n_tested": 48, "n_holds": 4, "null": {"n": 100, "median": 3.0, "q95": 5.0, "p_ge_real": 0.3}}
+UNCOND BREAK_DN|STRUCT | disc n87 m1.45 win0.299 pf3.42 w-12.0 | hold n88 m0.4 win0.216 pf4.17 w-12.0
+UNCOND BREAK_DN|FIX8 | disc n87 m1.15 win0.391 pf1.93 w-8.0 | hold n88 m0.14 win0.375 pf1.71 w-8.0
+UNCOND SWEEP_DN|STRUCT | disc n99 m-2.39 win0.162 pf2.57 w-12.0 | hold n119 m0.03 win0.16 pf5.3 w-12.0
+UNCOND SWEEP_DN|FIX8 | disc n99 m-3.61 win0.182 pf1.99 w-8.0 | hold n119 m-0.61 win0.269 pf2.41 w-8.0
+UNCOND BREAK_UP|STRUCT | disc n192 m3.68 win0.203 pf8.65 w-12.0 | hold n182 m4.65 win0.324 pf7.81 w-7.16
+UNCOND BREAK_UP|FIX8 | disc n192 m6.18 win0.385 pf3.62 w-8.0 | hold n182 m5.75 win0.522 pf2.46 w-8.0
+UNCOND SWEEP_UP|STRUCT | disc n162 m-0.78 win0.136 pf5.0 w-12.0 | hold n185 m-0.81 win0.151 pf3.89 w-8.82
+UNCOND SWEEP_UP|FIX8 | disc n162 m-1.37 win0.253 pf2.27 w-8.0 | hold n185 m-2.12 win0.341 pf1.13 w-8.0
+UNCOND COMP_BREAK_UP|STRUCT | disc n44 m8.18 win0.318 pf11.06 w-7.69 | hold n55 m2.56 win0.255 pf7.45 w-5.44
+UNCOND COMP_BREAK_UP|FIX8 | disc n44 m9.49 win0.455 pf3.81 w-8.0 | hold n55 m3.89 win0.455 pf2.45 w-8.0
+UNCOND COMP_BREAK_DN|STRUCT | disc n23 m2.07 win0.261 pf5.14 w-9.88 | hold n31 m0.97 win0.258 pf4.2 w-9.54
+UNCOND COMP_BREAK_DN|FIX8 | disc n23 m5.24 win0.522 pf2.17 w-8.0 | hold n31 m1.3 win0.452 pf1.57 w-8.0
+ROW BREAK_DN STRUCT 线上·主流领 | disc n4 m-5.02 win0.25 pf0.48 w-12.0 vs n50 m4.52 win0.48 pf2.26 w-8.0 | hold n19 m-0.6 win0.053 pf12.37 w-5.83 vs n206 m0.19 win0.417 pf1.45 w-8.0 
+ROW BREAK_DN STRUCT 线上·二线领 | disc n5 m-2.78 win0.0 pf0.0 w-4.0 vs n68 m-1.87 win0.191 pf2.99 w-8.0 | hold n10 m-2.29 win0.0 pf0.0 w-6.2 vs n118 m-1.1 win0.39 pf1.19 w-8.0 
+ROW BREAK_DN STRUCT 线下·主流领 | disc n34 m4.34 win0.382 pf4.81 w-12.0 vs n118 m0.63 win0.28 pf2.88 w-8.0 | hold n34 m-0.58 win0.265 pf2.37 w-12.0 vs n156 m-3.94 win0.237 pf0.96 w-8.0 
+ROW BREAK_DN STRUCT 线下·二线领 | disc n16 m-1.26 win0.188 pf3.09 w-12.0 vs n44 m0.39 win0.409 pf1.57 w-8.0 | hold n25 m3.58 win0.36 pf5.21 w-9.54 vs n74 m2.85 win0.419 pf2.32 w-8.0 
+ROW SWEEP_DN STRUCT 线上·主流领 | disc n7 m-7.46 win0.0 pf0.0 w-12.0 vs n50 m-2.86 win0.2 pf2.18 w-8.0 | hold n34 m-2.37 win0.088 pf4.3 w-12.0 vs n206 m2.42 win0.403 pf2.3 w-8.0 
+ROW SWEEP_DN STRUCT 线上·二线领 | disc n13 m-3.52 win0.077 pf4.56 w-12.0 vs n68 m-1.58 win0.191 pf3.2 w-8.0 | hold n21 m-2.47 win0.143 pf1.11 w-11.11 vs n118 m-2.77 win0.271 pf1.26 w-8.0 
+ROW SWEEP_DN STRUCT 线下·主流领 | disc n36 m-1.84 win0.222 pf2.06 w-12.0 vs n118 m0.78 win0.305 pf2.61 w-8.0 | hold n38 m4.69 win0.289 pf5.58 w-12.0 vs n156 m8.27 win0.59 pf2.7 w-8.0 
+ROW SWEEP_DN STRUCT 线下·二线领 | disc n9 m-2.88 win0.111 pf0.87 w-5.67 vs n44 m-2.42 win0.159 pf3.3 w-8.0 | hold n26 m-1.63 win0.077 pf5.87 w-6.35 vs n74 m-1.28 win0.351 pf1.37 w-8.0 
+ROW BREAK_UP STRUCT 线上·主流领 | disc n24 m0.72 win0.167 pf6.29 w-7.69 vs n50 m-2.86 win0.2 pf2.18 w-8.0 | hold n85 m6.09 win0.376 pf8.12 w-7.16 vs n206 m2.42 win0.403 pf2.3 w-8.0 | HOLDS
+ROW BREAK_UP STRUCT 线上·二线领 | disc n28 m-2.23 win0.071 pf6.33 w-12.0 vs n68 m-1.58 win0.191 pf3.2 w-8.0 | hold n52 m3.03 win0.269 pf6.89 w-6.31 vs n118 m-2.77 win0.271 pf1.26 w-8.0 
+ROW BREAK_UP STRUCT 线下·主流领 | disc n15 m4.42 win0.2 pf11.92 w-6.14 vs n118 m0.78 win0.305 pf2.61 w-8.0 | hold n27 m7.1 win0.407 pf8.48 w-7.06 vs n156 m8.27 win0.59 pf2.7 w-8.0 
+ROW BREAK_UP STRUCT 线下·二线领 | disc n14 m-0.1 win0.071 pf12.6 w-10.9 vs n44 m-2.42 win0.159 pf3.3 w-8.0 | hold n18 m-1.12 win0.111 pf3.15 w-3.29 vs n74 m-1.28 win0.351 pf1.37 w-8.0 
+ROW BREAK_UP FIX8 线上·主流领 | disc n24 m7.8 win0.542 pf2.73 w-8.0 vs n50 m-2.86 win0.2 pf2.18 w-8.0 | hold n85 m8.15 win0.6 pf2.73 w-8.0 vs n206 m2.42 win0.403 pf2.3 w-8.0 | HOLDS
+ROW SWEEP_UP STRUCT 线上·主流领 | disc n24 m0.5 win0.167 pf5.84 w-8.48 vs n50 m4.52 win0.48 pf2.26 w-8.0 | hold n80 m-0.3 win0.188 pf3.85 w-8.82 vs n206 m0.19 win0.417 pf1.45 w-8.0 
+ROW SWEEP_UP STRUCT 线上·二线领 | disc n37 m-1.97 win0.081 pf5.26 w-12.0 vs n68 m-1.87 win0.191 pf2.99 w-8.0 | hold n55 m-1.56 win0.145 pf2.76 w-7.9 vs n118 m-1.1 win0.39 pf1.19 w-8.0 
+ROW SWEEP_UP STRUCT 线下·主流领 | disc n19 m2.84 win0.316 pf4.12 w-9.79 vs n118 m0.63 win0.28 pf2.88 w-8.0 | hold n36 m-2.26 win0.056 pf1.52 w-6.11 vs n156 m-3.94 win0.237 pf0.96 w-8.0 
+ROW SWEEP_UP STRUCT 线下·二线领 | disc n16 m-0.26 win0.188 pf3.97 w-6.28 vs n44 m0.39 win0.409 pf1.57 w-8.0 | hold n14 m2.94 win0.214 pf10.06 w-3.89 vs n74 m2.85 win0.419 pf2.32 w-8.0 
+ROW COMP_BREAK_UP STRUCT 线上·主流领 | disc n6 m-3.37 win0.0 pf0.0 w-7.69 vs n50 m-2.86 win0.2 pf2.18 w-8.0 | hold n21 m-0.57 win0.238 pf2.18 w-4.63 vs n206 m2.42 win0.403 pf2.3 w-8.0 
+ROW COMP_BREAK_UP STRUCT 线上·二线领 | disc n0 vs n68 m-1.58 win0.191 pf3.2 w-8.0 | hold n10 m-2.19 win0.0 pf0.0 w-5.44 vs n118 m-2.77 win0.271 pf1.26 w-8.0 
+ROW COMP_BREAK_UP STRUCT 线下·主流领 | disc n7 m-2.97 win0.0 pf0.0 w-6.14 vs n118 m0.78 win0.305 pf2.61 w-8.0 | hold n14 m13.79 win0.643 pf8.99 w-3.4 vs n156 m8.27 win0.59 pf2.7 w-8.0 
+ROW COMP_BREAK_UP STRUCT 线下·二线领 | disc n2 m-3.04 win0.0 pf0.0 w-4.08 vs n44 m-2.42 win0.159 pf3.3 w-8.0 | hold n10 m-1.85 win0.0 pf0.0 w-3.16 vs n74 m-1.28 win0.351 pf1.37 w-8.0 
+ROW COMP_BREAK_DN STRUCT 线上·主流领 | disc n1 m-1.38 win0.0 pf0.0 w-1.38 vs n50 m4.52 win0.48 pf2.26 w-8.0 | hold n6 m-2.42 win0.0 pf0.0 w-5.83 vs n206 m0.19 win0.417 pf1.45 w-8.0 
+ROW COMP_BREAK_DN STRUCT 线上·二线领 | disc n2 m-3.16 win0.0 pf0.0 w-3.63 vs n68 m-1.87 win0.191 pf2.99 w-8.0 | hold n6 m-2.6 win0.0 pf0.0 w-6.2 vs n118 m-1.1 win0.39 pf1.19 w-8.0 
+ROW COMP_BREAK_DN STRUCT 线下·主流领 | disc n9 m1.87 win0.222 pf6.66 w-4.92 vs n118 m0.63 win0.28 pf2.88 w-8.0 | hold n9 m0.62 win0.333 pf2.63 w-4.92 vs n156 m-3.94 win0.237 pf0.96 w-8.0 | HOLDS
+ROW COMP_BREAK_DN STRUCT 线下·二线领 | disc n8 m3.49 win0.375 pf3.77 w-9.88 vs n44 m0.39 win0.409 pf1.57 w-8.0 | hold n10 m5.44 win0.5 pf4.17 w-9.54 vs n74 m2.85 win0.419 pf2.32 w-8.0 | HOLDS
+WROTE docs/research/s884_results.json

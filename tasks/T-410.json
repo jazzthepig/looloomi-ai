@@ -1,5 +1,5 @@
 {
-  "status": "open",
+  "status": "done",
   "created": "2026-11-15",
   "forbidden_paths": [
     "Shadow/",
@@ -10,7 +10,11 @@
     "scripts/",
     "migrations/"
   ],
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-15T08:39:52Z",
+    "value": "s884_results.json:48 格、站住 4、平移 100 次中位 3 / q95 5、p = 0.30;与 Seth 的 SQL 版逐项相同(台账「S-884 第二份」)。三个脚本与 main 一字不差。"
+  },
   "id": "T-410",
   "owner": "lane-b",
   "title": "S-884:扫过再收回 vs 破位顺势、波动压缩后的突破 —— 按状态四格量基率(外部从业者最常讲的两个形态);只跑 Seth 写好的脚本",
@@ -24,5 +28,5 @@
     "expect": "docs/research/s884_results.json + s884_run.txt;卡 in_review,推 lane-b/T-410。先于手上别的卡。"
   },
   "prior_value": "外部最常讲的 swing failure / liquidity sweep 与 volatility squeeze 都没有基率;我们的 S-879(破位顺势)在一个状态里站得住 —— 同一个价位的另一种结局没量过。",
-  "notes": "2026-11-15T07:22:07Z Seth 开卡(Jazz 11-15:「去市场上和其他 top trader 参考」)。"
+  "notes": "2026-11-15T07:22:07Z Seth 开卡(Jazz 11-15:「去市场上和其他 top trader 参考」)。2026-11-15 lane-b 跑完:脚本与 s881_setup_mining.py 从主目录原样拷入 lane-b/T-410(逐字节相同),`--selftest` 见 SELFTEST OK;正式跑 nohup 后约 45s 见 WROTE。产物 docs/research/s884_results.json + docs/research/s884_run.txt(68KB / 39 条 COUNTS|UNCOND|ROW|WROTE 行)。COUNTS: n_tested=48, n_holds=4, 零分布 n=100 median=3.0 q95=5.0 p_ge_real=0.3。HOLDS 4 条: BREAK_UP|FIX8 线上·主流领(disc n24 m7.8 win0.542 pf2.73 vs n50 m-2.86); BREAK_UP|STRUCT 线上·主流领(disc n24 m0.72 win0.167 pf6.29 vs n50 m-2.86); COMP_BREAK_DN|STRUCT 线下·主流领(disc n9 m1.87 win0.222 pf6.66 vs n118 m0.63); COMP_BREAK_DN|STRUCT 线下·二线领(disc n8 m3.49 win0.375 pf3.77 vs n44 m0.39)。UNCOND 无条件基率(不按状态): BREAK_UP|FIX8 disc n192 m6.18 win0.385 pf3.62; BREAK_DN|FIX8 n87 m1.15; SWEEP_DN|FIX8 n99 m-3.61; SWEEP_UP|FIX8 n162 m-1.37; COMP_BREAK_UP|FIX8 n44 m9.49; COMP_BREAK_DN|FIX8 n23 m5.24。脚本未改、未下结论、未写情景文件(卡 acceptance 明写)。"
 }
