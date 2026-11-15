@@ -1,0 +1,32 @@
+loaded BTC 3089
+loaded ETH 3089
+REPRODUCES_S865 {"ok": true, "checks": [{"slice": "BTC|all", "ok": true, "mine": {"n": 539, "mean_pct": -1.28, "worst_pct": -8.0}, "s865": {"n": 539, "mean_pct": -1.28, "worst_pct": -8.0}}, {"slice": "BTC|cell", "ok": true, "mine": {"n": 31, "mean_pct": -0.94, "worst_pct": -8.0}, "s865": {"n": 31, "mean_pct": -0.94, "worst_pct": -8.0}}, {"slice": "ETH|all", "ok": true, "mine": {"n": 539, "mean_pct": -0.28, "worst_pct": -8.0}, "s865": {"n": 539, "mean_pct": -0.28, "worst_pct": -8.0}}, {"slice": "ETH|cell", "ok": true, "mine": {"n": 23, "mean_pct": 1.04, "worst_pct": -8.0}, "s865": {"n": 23, "mean_pct": 1.04, "worst_pct": -8.0}}]}
+REF R12|all|H28 {"n": 1078, "mean_pct": -1.08, "median_pct": -12.0, "worst_pct": -12.0, "best_pct": 57.12, "win": 0.399, "payoff": 1.25, "stopped_at_a_loss": 0.501, "deployed": 1.0, "mean_days": 20.4}
+REF R12|cell|H28 {"n": 54, "mean_pct": 0.28, "median_pct": -4.72, "worst_pct": -12.0, "best_pct": 36.8, "win": 0.444, "payoff": 1.31, "stopped_at_a_loss": 0.407, "deployed": 1.0, "mean_days": 22.0}
+REF R12|drain|H28 {"n": 184, "mean_pct": 2.33, "median_pct": -4.24, "worst_pct": -12.0, "best_pct": 46.94, "win": 0.408, "payoff": 2.05, "stopped_at_a_loss": 0.424, "deployed": 1.0, "mean_days": 22.5}
+REF R12|drain|H56 {"n": 184, "mean_pct": 1.19, "median_pct": -12.0, "worst_pct": -12.0, "best_pct": 63.58, "win": 0.348, "payoff": 2.18, "stopped_at_a_loss": 0.592, "deployed": 1.0, "mean_days": 36.0}
+REF R12|drain|H84 {"n": 184, "mean_pct": -2.08, "median_pct": -12.0, "worst_pct": -12.0, "best_pct": 64.05, "win": 0.272, "payoff": 2.02, "stopped_at_a_loss": 0.701, "deployed": 1.0, "mean_days": 45.7}
+REF R8|all|H28 {"n": 1078, "mean_pct": -0.78, "median_pct": -8.0, "worst_pct": -8.0, "best_pct": 50.0, "win": 0.32, "payoff": 1.81, "stopped_at_a_loss": 0.633, "deployed": 1.0, "mean_days": 16.5}
+REF R8|cell|H28 {"n": 54, "mean_pct": -0.1, "median_pct": -8.0, "worst_pct": -8.0, "best_pct": 36.8, "win": 0.315, "payoff": 2.14, "stopped_at_a_loss": 0.648, "deployed": 1.0, "mean_days": 17.0}
+REF R8|drain|H28 {"n": 184, "mean_pct": 1.59, "median_pct": -8.0, "worst_pct": -8.0, "best_pct": 46.94, "win": 0.326, "payoff": 2.74, "stopped_at_a_loss": 0.582, "deployed": 1.0, "mean_days": 17.9}
+REF R8|drain|H56 {"n": 184, "mean_pct": 0.89, "median_pct": -8.0, "worst_pct": -8.0, "best_pct": 63.58, "win": 0.261, "payoff": 3.27, "stopped_at_a_loss": 0.712, "deployed": 1.0, "mean_days": 27.5}
+REF R8|drain|H84 {"n": 184, "mean_pct": -1.57, "median_pct": -8.0, "worst_pct": -8.0, "best_pct": 64.05, "win": 0.19, "payoff": 3.21, "stopped_at_a_loss": 0.793, "deployed": 1.0, "mean_days": 34.4}
+MARGINAL base B15 {"mean_pct": -0.436, "worst_pct": -20.448, "win": 0.426, "payoff": 1.302, "stopped_at_a_loss": 0.48, "deployed": 0.847}
+MARGINAL base B20 {"mean_pct": -0.808, "worst_pct": -24.173, "win": 0.473, "payoff": 1.019, "stopped_at_a_loss": 0.39, "deployed": 0.807}
+MARGINAL base B25 {"mean_pct": -1.455, "worst_pct": -28.421, "win": 0.488, "payoff": 0.868, "stopped_at_a_loss": 0.329, "deployed": 0.776}
+MARGINAL base B30 {"mean_pct": -1.721, "worst_pct": -29.782, "win": 0.506, "payoff": 0.781, "stopped_at_a_loss": 0.262, "deployed": 0.748}
+MARGINAL base B35 {"mean_pct": -2.052, "worst_pct": -32.205, "win": 0.513, "payoff": 0.724, "stopped_at_a_loss": 0.218, "deployed": 0.728}
+MARGINAL gamma g+1 {"mean_pct": -1.717, "worst_pct": -29.379, "win": 0.481, "payoff": 0.869, "stopped_at_a_loss": 0.316, "deployed": 0.78}
+MARGINAL gamma g+0 {"mean_pct": -1.392, "worst_pct": -17.982, "win": 0.487, "payoff": 0.906, "stopped_at_a_loss": 0.34, "deployed": 0.782}
+MARGINAL gamma g-1 {"mean_pct": -0.775, "worst_pct": -33.656, "win": 0.476, "payoff": 1.04, "stopped_at_a_loss": 0.351, "deployed": 0.782}
+MARGINAL scheme A0 {"mean_pct": -1.582, "worst_pct": -38.262, "win": 0.457, "payoff": 1.079, "stopped_at_a_loss": 0.338, "deployed": 1.0}
+MARGINAL scheme A2 {"mean_pct": -1.357, "worst_pct": -26.995, "win": 0.475, "payoff": 0.957, "stopped_at_a_loss": 0.337, "deployed": 0.777}
+MARGINAL scheme A3 {"mean_pct": -1.192, "worst_pct": -23.481, "win": 0.491, "payoff": 0.889, "stopped_at_a_loss": 0.335, "deployed": 0.713}
+MARGINAL scheme A3w {"mean_pct": -1.047, "worst_pct": -19.286, "win": 0.502, "payoff": 0.829, "stopped_at_a_loss": 0.333, "deployed": 0.634}
+MARGINAL tp T0 {"mean_pct": -0.977, "worst_pct": -27.006, "win": 0.462, "payoff": 1.07, "stopped_at_a_loss": 0.346, "deployed": 0.788}
+MARGINAL tp T15 {"mean_pct": -1.612, "worst_pct": -27.006, "win": 0.501, "payoff": 0.807, "stopped_at_a_loss": 0.326, "deployed": 0.775}
+MARGINAL H H28 {"mean_pct": 0.536, "worst_pct": -24.447, "win": 0.511, "payoff": 1.09, "stopped_at_a_loss": 0.194, "deployed": 0.721}
+MARGINAL H H56 {"mean_pct": -1.283, "worst_pct": -28.058, "win": 0.479, "payoff": 0.919, "stopped_at_a_loss": 0.354, "deployed": 0.792}
+MARGINAL H H84 {"mean_pct": -3.137, "worst_pct": -28.513, "win": 0.455, "payoff": 0.808, "stopped_at_a_loss": 0.459, "deployed": 0.831}
+SELECTION 0 candidates of 360
+WROTE docs/research/s874_results.json

@@ -1,5 +1,5 @@
 {
-  "status": "open",
+  "status": "done",
   "created": "2026-11-15",
   "forbidden_paths": [
     "Shadow/",
@@ -10,7 +10,11 @@
     "scripts/",
     "migrations/"
   ],
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-15T04:50:00Z",
+    "value": "从 s874_results.json 重数:drain 组 360 种管法,发现段 payoff 最大 1.87(B15|g-1|A0|T0|drain|H28,n 96,disc 均值 +5.21% / 留出 -1.36%),payoff≥2 的 0 个 ⇒ n_candidates 0 与 lane 一致;worst≥-35% 的 296 个;reproduces_s865 四个切片全 ok。脚本与 main 逐字一致。"
+  },
   "id": "T-396",
   "owner": "lane-a",
   "title": "S-874:空单「远止损 + 逆势分批加仓」的模拟(Jazz 的写法;360 种管法 × 三组进场日)—— 只跑 Seth 写好的脚本,把输出贴回",
@@ -24,5 +28,5 @@
     "expect": "docs/research/s874_results.json + s874_run.txt;卡 in_review,推 lane-a/T-396。这张先于手上别的卡。"
   },
   "prior_value": "T-370 的止损默认值:Jazz 不直接给数,要先看模拟。S-865 / S-868 只量过近止损、一次进满;「远止损 + 涨上去加仓」没量过。",
-  "notes": "2026-11-15T03:54:08Z Seth 开卡。"
+  "notes": "2026-11-15T03:54:08Z Seth 开卡。 | 2026-11-15T03:57:00Z lane-a 跑完(分支 lane-a/T-396,脚本与卡从主仓库工作区原样拷入:origin/main 上尚无 s874_short_scale_in.py / T-396.json,diff 逐字节一致;依赖 s865_ticket_forms.py / s865_results.json / s866_cells.json 已在 main)。① `python3 docs/research/s874_short_scale_in.py --selftest | tail -1` = SELFTEST OK。② nohup 全量跑,run.txt 32 行,末行 WROTE docs/research/s874_results.json(1.4MB,未 Read);无 STOP / 无 Traceback。③ REPRODUCES_S865 = ok:true,4 个切片全 ok 且 mine == s865:BTC|all n=539 mean_pct -1.28 worst_pct -8.0;BTC|cell n=31 mean_pct -0.94 worst_pct -8.0;ETH|all n=539 mean_pct -0.28 worst_pct -8.0;ETH|cell n=23 mean_pct 1.04 worst_pct -8.0。④ SELECTION 0 candidates of 360(360 种管法全不过选择门槛)。⑤ MARGINAL 边际敏感性(原样):base B15 mean -0.436 / B20 -0.808 / B25 -1.455 / B30 -1.721 / B35 -2.052(win .426→.513,payoff 1.302→.724,stopped_at_a_loss .480→.218,deployed .847→.728);gamma g+1 -1.717 / g+0 -1.392 / g-1 -0.775;scheme A0 -1.582 / A2 -1.357 / A3 -1.192 / A3w -1.047;tp T0 -0.977 / T15 -1.612;H H28 +0.536(win .511 payoff 1.09 stopped .194 deployed .721) / H56 -1.283 / H84 -3.137。⑥ REF(基线参照,drain 行):R12|drain|H28 n=184 mean +2.33 median -4.24 worst -12.0 best +46.94 win .408 payoff 2.05 stopped .424 deployed 1.0 mean_days 22.5;R12|drain|H56 mean +1.19 median -12.0 win .348 payoff 2.18 stopped .592;R12|drain|H84 mean -2.08 win .272 payoff 2.02 stopped .701;R8|drain|H28 mean +1.59 median -8.0 win .326 payoff 2.74 stopped .582 mean_days 17.9;R8|drain|H56 mean +0.89 win .261 payoff 3.27 stopped .712;R8|drain|H84 mean -1.57 win .190 stopped .793。产物:docs/research/s874_short_scale_in.py(未改一字)+ docs/research/s874_run.txt + docs/research/s874_results.json。按卡要求:不下结论、不写情景文件、不 Read results.json。 | 2026-11-15T04:50:00Z Seth 合并轮:MERGE(d20ff859;fixup 解 card add/add)。"
 }
