@@ -1,5 +1,5 @@
 {
-  "status": "open",
+  "status": "done",
   "created": "2026-11-15",
   "forbidden_paths": [
     "Shadow/",
@@ -10,7 +10,11 @@
     "scripts/",
     "migrations/"
   ],
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-15T06:45:00Z",
+    "value": "s877_results_nostyle.json + s877_run_nostyle.txt 在分支上;脚本 = Seth 新版(带 --keys/--drop-strategies/--tag),未改。面板去掉七条 style_ 策略后 26→19 条;style_rel_majors_30d ratio 2.005(placebo 1.0,过)、style:top_l1_rel30 1.823(0.967,过)、style:second_l1_l2_rel30 1.64(0.917,不过)、chain:tvl_30d 1.063(0.833,不过)、macro:fng 1.173(过)、REF 稳定币 1.145(过);T_ONLY 0.691。主轴去掉循环后仍在。"
+  },
   "id": "T-403",
   "owner": "lane-c",
   "title": "S-877 的复核:面板去掉七条风格指数之后,「山寨相对主流的强弱」这条轴还在不在 —— 只跑 Seth 写好的脚本",
@@ -24,5 +28,5 @@
     "expect": "docs/research/s877_results_nostyle.json + s877_run_nostyle.txt;卡 in_review,推 lane-c/T-403(T-400 的产物照常推 lane-c/T-400)。先于 T-393 的收尾。"
   },
   "prior_value": "S-877 里最强的轴是风格相对强弱,而面板里有七条风格指数自己 —— 可能只是面板内的动量。",
-  "notes": "2026-11-15T06:11:49Z Seth 开卡。"
+  "notes": "2026-11-15T06:11:49Z Seth 开卡。 | 2026-11-15T06:19:07Z lane-c:新版脚本(--keys/--drop-strategies/--tag)自检 SELFTEST OK;按卡上命令跑完见 WROTE;未改脚本、未下结论、未写情景文件。 | 2026-11-15T06:45:00Z Seth:MERGE(lane-c/T-403)。产物与卡上命令对得上,脚本未改;verified 由 Seth 填(lane 不自填 verified,下次留 null)。"
 }

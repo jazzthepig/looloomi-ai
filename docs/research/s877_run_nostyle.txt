@@ -1,0 +1,15 @@
+KEY {"key": "chain:tvl_30d", "n_days": 2510, "share_high": 0.215, "ratio": 1.063, "minus_T_only": 0.372, "half1_minus_T": 0.539, "half2_minus_T": 0.159, "placebo_pct": 0.833, "placebo_median": 0.719, "passes": false}
+KEY {"key": "macro:fng", "n_days": 2509, "share_high": 0.525, "ratio": 1.173, "minus_T_only": 0.482, "half1_minus_T": 0.474, "half2_minus_T": 0.437, "placebo_pct": 0.967, "placebo_median": 0.665, "passes": true}
+KEY {"key": "style_rel_majors_30d", "n_days": 2115, "share_high": 0.629, "ratio": 2.005, "minus_T_only": 1.314, "half1_minus_T": 0.851, "half2_minus_T": 1.685, "placebo_pct": 1.0, "placebo_median": 0.899, "passes": true}
+KEY {"key": "style:second_l1_l2_rel30", "n_days": 2115, "share_high": 0.421, "ratio": 1.64, "minus_T_only": 0.949, "half1_minus_T": 0.681, "half2_minus_T": 1.14, "placebo_pct": 0.917, "placebo_median": 0.94, "passes": false}
+KEY {"key": "style:top_l1_rel30", "n_days": 2115, "share_high": 0.477, "ratio": 1.823, "minus_T_only": 1.132, "half1_minus_T": 0.947, "half2_minus_T": 1.263, "placebo_pct": 0.967, "placebo_median": 0.97, "passes": true}
+KEY {"key": "REF:stable_supply_30d_raw_sign", "n_days": 2480, "share_high": 0.725, "ratio": 1.145, "minus_T_only": 0.454, "half1_minus_T": 0.264, "half2_minus_T": 0.595, "placebo_pct": 0.967, "placebo_median": 0.695, "passes": true}
+T_ONLY {"ratio": 0.691, "h1": 0.913, "h2": 0.546}
+SUMMARY {"n_keys": 6, "n_pass": 4, "n_pct_ge_95": 4, "expected_by_chance_pct_ge_95": 0.3, "n_strategies": 19}
+TOP {"key": "style_rel_majors_30d", "n_days": 2115, "share_high": 0.629, "ratio": 2.005, "minus_T_only": 1.314, "half1_minus_T": 0.851, "half2_minus_T": 1.685, "placebo_pct": 1.0, "placebo_median": 0.899, "passes": true}
+TOP {"key": "macro:fng", "n_days": 2509, "share_high": 0.525, "ratio": 1.173, "minus_T_only": 0.482, "half1_minus_T": 0.474, "half2_minus_T": 0.437, "placebo_pct": 0.967, "placebo_median": 0.665, "passes": true}
+TOP {"key": "style:top_l1_rel30", "n_days": 2115, "share_high": 0.477, "ratio": 1.823, "minus_T_only": 1.132, "half1_minus_T": 0.947, "half2_minus_T": 1.263, "placebo_pct": 0.967, "placebo_median": 0.97, "passes": true}
+TOP {"key": "REF:stable_supply_30d_raw_sign", "n_days": 2480, "share_high": 0.725, "ratio": 1.145, "minus_T_only": 0.454, "half1_minus_T": 0.264, "half2_minus_T": 0.595, "placebo_pct": 0.967, "placebo_median": 0.695, "passes": true}
+TOP {"key": "style:second_l1_l2_rel30", "n_days": 2115, "share_high": 0.421, "ratio": 1.64, "minus_T_only": 0.949, "half1_minus_T": 0.681, "half2_minus_T": 1.14, "placebo_pct": 0.917, "placebo_median": 0.94, "passes": false}
+TOP {"key": "chain:tvl_30d", "n_days": 2510, "share_high": 0.215, "ratio": 1.063, "minus_T_only": 0.372, "half1_minus_T": 0.539, "half2_minus_T": 0.159, "placebo_pct": 0.833, "placebo_median": 0.719, "passes": false}
+WROTE docs/research/s877_results_nostyle.json
