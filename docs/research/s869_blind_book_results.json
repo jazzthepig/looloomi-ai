@@ -1,0 +1,5010 @@
+{
+ "books": {
+  "A_T_x_L": {
+   "book": "A_T_x_L",
+   "cells": {
+    "线上·抽": {
+     "held_days_top5": [],
+     "n_held_days": 0,
+     "roster_last_month": [
+      "S681_H3"
+     ]
+    },
+    "线上·注": {
+     "held_days_top5": [
+      {
+       "days": 640,
+       "strategy": "X1V"
+      },
+      {
+       "days": 640,
+       "strategy": "style_ai"
+      },
+      {
+       "days": 640,
+       "strategy": "style_infra_tokenization"
+      },
+      {
+       "days": 640,
+       "strategy": "style_second_l1_l2"
+      },
+      {
+       "days": 640,
+       "strategy": "style_top_l1"
+      }
+     ],
+     "n_held_days": 8294,
+     "roster_last_month": [
+      "核心",
+      "X1V",
+      "R-v2",
+      "ACWI",
+      "carry_b_top_rc",
+      "style_ai",
+      "style_app",
+      "style_defi",
+      "style_infra_tokenization",
+      "style_second_l1_l2",
+      "style_top_l1",
+      "tom_pd13_btc",
+      "tom_pd13_eth"
+     ]
+    },
+    "线下·抽": {
+     "held_days_top5": [
+      {
+       "days": 138,
+       "strategy": "S681_H4"
+      },
+      {
+       "days": 126,
+       "strategy": "s823_r6"
+      },
+      {
+       "days": 123,
+       "strategy": "s819_short_s015"
+      },
+      {
+       "days": 123,
+       "strategy": "s819_short_s030"
+      },
+      {
+       "days": 88,
+       "strategy": "S642"
+      }
+     ],
+     "n_held_days": 721,
+     "roster_last_month": [
+      "S642",
+      "s819_short_s015",
+      "s819_short_s030"
+     ]
+    },
+    "线下·注": {
+     "held_days_top5": [
+      {
+       "days": 380,
+       "strategy": "XAUUSD"
+      },
+      {
+       "days": 204,
+       "strategy": "style_meme"
+      },
+      {
+       "days": 105,
+       "strategy": "tom_pd13_btc"
+      },
+      {
+       "days": 39,
+       "strategy": "s823_r6"
+      },
+      {
+       "days": 31,
+       "strategy": "R-v2"
+      }
+     ],
+     "n_held_days": 786,
+     "roster_last_month": [
+      "tom_pd13_btc"
+     ]
+    }
+   },
+   "end": "2026-11-14",
+   "first_month": "2022-02-01",
+   "from_2023_02_01": {
+    "end": "2026-11-14",
+    "mean": 0.000237431140106407,
+    "mean_vol": 1.153757271360791,
+    "n_days": 1383,
+    "start": "2023-02-01",
+    "total_return": 0.37390190321528616,
+    "vol": 0.00393160301142365
+   },
+   "longest_underwater_days": 610,
+   "longest_underwater_end": "2023-11-08",
+   "mean_daily": 0.00019801851216025748,
+   "mean_vol": 1.0200056633685006,
+   "monthly_rosters": [
+    {
+     "month": "2022-02-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [],
+      "线下·抽": [],
+      "线下·注": []
+     }
+    },
+    {
+     "month": "2022-03-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [],
+      "线下·抽": [],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2022-04-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [],
+      "线下·抽": [],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2022-05-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [],
+      "线下·抽": [],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2022-06-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [],
+      "线下·抽": [],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2022-07-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [],
+      "线下·抽": [],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2022-08-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [],
+      "线下·抽": [],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2022-09-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [],
+      "线下·抽": [],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2022-10-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [],
+      "线下·抽": [],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2022-11-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [],
+      "线下·抽": [],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2022-12-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [],
+      "线下·抽": [],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2023-01-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [],
+      "线下·抽": [],
+      "线下·注": [
+       "XAUUSD",
+       "S736_published",
+       "S681_H4"
+      ]
+     }
+    },
+    {
+     "month": "2023-02-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "X1V",
+       "ACWI",
+       "XAUUSD",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [],
+      "线下·注": [
+       "XAUUSD",
+       "S681_H4"
+      ]
+     }
+    },
+    {
+     "month": "2023-03-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "X1V",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [],
+      "线下·注": [
+       "XAUUSD",
+       "S681_H4"
+      ]
+     }
+    },
+    {
+     "month": "2023-04-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "X1V",
+       "style_ai",
+       "style_app",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2023-05-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "X1V",
+       "style_ai",
+       "style_app",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2023-06-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "XAUUSD",
+       "style_ai",
+       "style_app",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2023-07-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "style_ai",
+       "style_app",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2023-08-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "style_ai",
+       "style_app",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2023-09-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "style_ai",
+       "style_app",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2023-10-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "style_ai",
+       "style_app",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2023-11-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "s823_r6",
+       "tom_pd13_btc"
+      ]
+     }
+    },
+    {
+     "month": "2023-12-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "s823_r6",
+       "tom_pd13_btc"
+      ]
+     }
+    },
+    {
+     "month": "2024-01-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "s823_r6",
+       "tom_pd13_btc"
+      ]
+     }
+    },
+    {
+     "month": "2024-02-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "s823_r6",
+       "tom_pd13_btc"
+      ]
+     }
+    },
+    {
+     "month": "2024-03-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H4"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "s823_r6"
+      ]
+     }
+    },
+    {
+     "month": "2024-04-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H4"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "s823_r6"
+      ]
+     }
+    },
+    {
+     "month": "2024-05-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H4"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "s823_r6"
+      ]
+     }
+    },
+    {
+     "month": "2024-06-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H4"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "s823_r6"
+      ]
+     }
+    },
+    {
+     "month": "2024-07-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H4"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "s823_r6"
+      ]
+     }
+    },
+    {
+     "month": "2024-08-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H4"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "s823_r6",
+       "style_meme",
+       "tom_pd13_btc"
+      ]
+     }
+    },
+    {
+     "month": "2024-09-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H4"
+      ],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2024-10-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "style_meme"
+      ]
+     }
+    },
+    {
+     "month": "2024-11-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H2",
+       "S681_H3",
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "style_meme"
+      ]
+     }
+    },
+    {
+     "month": "2024-12-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "carry_b_top_rc",
+       "s823_r6",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H2",
+       "S681_H3",
+       "S681_H4"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "style_meme"
+      ]
+     }
+    },
+    {
+     "month": "2025-01-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H2",
+       "S681_H3",
+       "S681_H4"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "style_meme"
+      ]
+     }
+    },
+    {
+     "month": "2025-02-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "carry_b_top_rc",
+       "s823_r6",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H2",
+       "S681_H3",
+       "S681_H4"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "style_meme"
+      ]
+     }
+    },
+    {
+     "month": "2025-03-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H2",
+       "S681_H3",
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "style_meme"
+      ]
+     }
+    },
+    {
+     "month": "2025-04-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H2",
+       "S681_H3",
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "style_meme"
+      ]
+     }
+    },
+    {
+     "month": "2025-05-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H2",
+       "S681_H3",
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "style_meme",
+       "tom_pd13_btc"
+      ]
+     }
+    },
+    {
+     "month": "2025-06-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H2",
+       "S681_H3",
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "style_meme",
+       "tom_pd13_btc"
+      ]
+     }
+    },
+    {
+     "month": "2025-07-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "S681_H4",
+       "carry_b_top_rc",
+       "s823_r6",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H2",
+       "S681_H3",
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "style_meme",
+       "tom_pd13_btc"
+      ]
+     }
+    },
+    {
+     "month": "2025-08-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "S681_H4",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H2",
+       "S681_H3",
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "style_meme",
+       "tom_pd13_btc"
+      ]
+     }
+    },
+    {
+     "month": "2025-09-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "carry_b_top_rc",
+       "s823_r6",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H2",
+       "S681_H3",
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "style_meme",
+       "tom_pd13_btc"
+      ]
+     }
+    },
+    {
+     "month": "2025-10-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H2",
+       "S681_H3",
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "style_meme",
+       "tom_pd13_btc"
+      ]
+     }
+    },
+    {
+     "month": "2025-11-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H2",
+       "S681_H3",
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD",
+       "style_meme",
+       "tom_pd13_btc"
+      ]
+     }
+    },
+    {
+     "month": "2025-12-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "S681_H4",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H2",
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "R-v2",
+       "XAUUSD",
+       "style_meme"
+      ]
+     }
+    },
+    {
+     "month": "2026-01-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "S681_H4",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H2",
+       "S681_H4",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2026-02-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "S681_H4",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S681_H2",
+       "S681_H4",
+       "s819_short_s015",
+       "s819_short_s030",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2026-03-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "S681_H4",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S642",
+       "S681_H2",
+       "S681_H4",
+       "s819_short_s015",
+       "s819_short_s030",
+       "s823_r6"
+      ],
+      "线下·注": [
+       "R-v2",
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2026-04-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "S681_H4",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S642",
+       "S681_H2",
+       "S681_H4",
+       "s819_short_s015",
+       "s819_short_s030",
+       "s823_r6"
+      ],
+      "线下·注": []
+     }
+    },
+    {
+     "month": "2026-05-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "S681_H4",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "s819_short_s015",
+       "s819_short_s030"
+      ],
+      "线下·注": [
+       "tom_pd13_btc"
+      ]
+     }
+    },
+    {
+     "month": "2026-06-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "S681_H4",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S642",
+       "S681_H4",
+       "s819_short_s015",
+       "s819_short_s030"
+      ],
+      "线下·注": [
+       "tom_pd13_btc"
+      ]
+     }
+    },
+    {
+     "month": "2026-07-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "S681_H4",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S642",
+       "S736_published",
+       "s819_short_s015",
+       "s819_short_s030"
+      ],
+      "线下·注": [
+       "tom_pd13_btc"
+      ]
+     }
+    },
+    {
+     "month": "2026-08-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "S681_H4",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S642",
+       "S736_published",
+       "s819_short_s015",
+       "s819_short_s030"
+      ],
+      "线下·注": [
+       "tom_pd13_btc"
+      ]
+     }
+    },
+    {
+     "month": "2026-09-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [
+       "S681_H3"
+      ],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "S681_H4",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S642",
+       "s819_short_s015",
+       "s819_short_s030"
+      ],
+      "线下·注": [
+       "tom_pd13_btc"
+      ]
+     }
+    },
+    {
+     "month": "2026-10-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [
+       "S681_H3"
+      ],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S642",
+       "s819_short_s015",
+       "s819_short_s030"
+      ],
+      "线下·注": [
+       "tom_pd13_btc"
+      ]
+     }
+    },
+    {
+     "month": "2026-11-01",
+     "n_candidates": {
+      "线上·抽": 26,
+      "线上·注": 26,
+      "线下·抽": 26,
+      "线下·注": 26
+     },
+     "roster": {
+      "线上·抽": [
+       "S681_H3"
+      ],
+      "线上·注": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下·抽": [
+       "S642",
+       "s819_short_s015",
+       "s819_short_s030"
+      ],
+      "线下·注": [
+       "tom_pd13_btc"
+      ]
+     }
+    }
+   ],
+   "n_days": 1748,
+   "start": "2022-02-01",
+   "state_first_day": "2020-01-30",
+   "total_return": 1.3966755734959706,
+   "vol_daily": 0.003708938586077095
+  },
+  "B_T_x_lead": {
+   "book": "B_T_x_lead",
+   "cells": {
+    "线上·主流领": {
+     "held_days_top5": [
+      {
+       "days": 509,
+       "strategy": "X1V"
+      },
+      {
+       "days": 499,
+       "strategy": "R-v2"
+      },
+      {
+       "days": 269,
+       "strategy": "carry_b_top_rc"
+      },
+      {
+       "days": 151,
+       "strategy": "ACWI"
+      },
+      {
+       "days": 107,
+       "strategy": "style_meme"
+      }
+     ],
+     "n_held_days": 1666,
+     "roster_last_month": [
+      "X1V",
+      "R-v2",
+      "carry_b_top_rc"
+     ]
+    },
+    "线上·二线领": {
+     "held_days_top5": [
+      {
+       "days": 300,
+       "strategy": "style_ai"
+      },
+      {
+       "days": 300,
+       "strategy": "style_second_l1_l2"
+      },
+      {
+       "days": 185,
+       "strategy": "style_defi"
+      },
+      {
+       "days": 159,
+       "strategy": "tom_pd13_eth"
+      },
+      {
+       "days": 143,
+       "strategy": "carry_b_top_rc"
+      }
+     ],
+     "n_held_days": 1458,
+     "roster_last_month": [
+      "carry_b_top_rc",
+      "style_ai",
+      "style_defi",
+      "style_second_l1_l2",
+      "style_top_l1",
+      "tom_pd13_eth"
+     ]
+    },
+    "线下·主流领": {
+     "held_days_top5": [
+      {
+       "days": 379,
+       "strategy": "s823_r6"
+      },
+      {
+       "days": 10,
+       "strategy": "S681_H3"
+      },
+      {
+       "days": 3,
+       "strategy": "XAUUSD"
+      }
+     ],
+     "n_held_days": 392,
+     "roster_last_month": [
+      "s823_r6"
+     ]
+    },
+    "线下·二线领": {
+     "held_days_top5": [
+      {
+       "days": 120,
+       "strategy": "S642"
+      },
+      {
+       "days": 65,
+       "strategy": "S681_H3"
+      },
+      {
+       "days": 51,
+       "strategy": "S736_published"
+      },
+      {
+       "days": 1,
+       "strategy": "S681_H4"
+      }
+     ],
+     "n_held_days": 237,
+     "roster_last_month": [
+      "S642",
+      "S736_published",
+      "s819_short_s015",
+      "s819_short_s030"
+     ]
+    }
+   },
+   "end": "2026-11-14",
+   "first_month": "2023-02-01",
+   "from_2023_02_01": {
+    "end": "2026-11-14",
+    "mean": 0.0004480493487328722,
+    "mean_vol": 1.953350215075532,
+    "n_days": 1383,
+    "start": "2023-02-01",
+    "total_return": 0.8336184135240434,
+    "vol": 0.0043821997316962945
+   },
+   "longest_underwater_days": 249,
+   "longest_underwater_end": "2024-11-17",
+   "mean_daily": 0.0004480493487328722,
+   "mean_vol": 1.953350215075532,
+   "monthly_rosters": [
+    {
+     "month": "2023-02-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2"
+      ],
+      "线上·二线领": [
+       "R-v2",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2"
+      ],
+      "线下·主流领": [
+       "XAUUSD",
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2023-03-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2"
+      ],
+      "线上·二线领": [
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2"
+      ],
+      "线下·主流领": [
+       "XAUUSD",
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2023-04-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2"
+      ],
+      "线上·二线领": [
+       "style_ai",
+       "style_second_l1_l2"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2023-05-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2"
+      ],
+      "线上·二线领": [
+       "style_ai",
+       "style_second_l1_l2"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2023-06-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2"
+      ],
+      "线上·二线领": [
+       "style_ai",
+       "style_second_l1_l2"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2023-07-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2"
+      ],
+      "线上·二线领": [
+       "style_ai",
+       "style_second_l1_l2"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2023-08-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2"
+      ],
+      "线上·二线领": [
+       "S736_published",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2023-09-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "S681_H2"
+      ],
+      "线上·二线领": [
+       "S736_published",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2023-10-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "S681_H2"
+      ],
+      "线上·二线领": [
+       "S736_published",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2023-11-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "S681_H2"
+      ],
+      "线上·二线领": [
+       "S736_published",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2023-12-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2"
+      ],
+      "线上·二线领": [
+       "style_ai",
+       "style_second_l1_l2"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2024-01-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2"
+      ],
+      "线上·二线领": [
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2024-02-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2"
+      ],
+      "线上·二线领": [
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2024-03-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2"
+      ],
+      "线上·二线领": [
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2024-04-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "style_meme",
+       "tom_pd13_btc"
+      ],
+      "线上·二线领": [
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_second_l1_l2",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2024-05-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "carry_b_top_rc",
+       "style_meme"
+      ],
+      "线上·二线领": [
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2024-06-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "carry_b_top_rc",
+       "style_meme"
+      ],
+      "线上·二线领": [
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2024-07-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "carry_b_top_rc",
+       "style_meme"
+      ],
+      "线上·二线领": [
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2024-08-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2024-09-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "S681_H3",
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2024-10-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "S681_H3",
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S642"
+      ]
+     }
+    },
+    {
+     "month": "2024-11-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2024-12-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_meme"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2025-01-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "tom_pd13_btc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2025-02-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2025-03-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "XAUUSD",
+       "carry_b_top_rc",
+       "tom_pd13_btc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": []
+     }
+    },
+    {
+     "month": "2025-04-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "tom_pd13_btc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S681_H3"
+      ]
+     }
+    },
+    {
+     "month": "2025-05-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "tom_pd13_btc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S681_H3"
+      ]
+     }
+    },
+    {
+     "month": "2025-06-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S681_H3"
+      ]
+     }
+    },
+    {
+     "month": "2025-07-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "tom_pd13_btc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S681_H3"
+      ]
+     }
+    },
+    {
+     "month": "2025-08-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S681_H3"
+      ]
+     }
+    },
+    {
+     "month": "2025-09-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S681_H3"
+      ]
+     }
+    },
+    {
+     "month": "2025-10-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S681_H3"
+      ]
+     }
+    },
+    {
+     "month": "2025-11-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S681_H3"
+      ]
+     }
+    },
+    {
+     "month": "2025-12-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S642",
+       "S681_H3"
+      ]
+     }
+    },
+    {
+     "month": "2026-01-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S642",
+       "S681_H3"
+      ]
+     }
+    },
+    {
+     "month": "2026-02-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S642",
+       "S736_published",
+       "S681_H3"
+      ]
+     }
+    },
+    {
+     "month": "2026-03-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S642",
+       "S736_published"
+      ]
+     }
+    },
+    {
+     "month": "2026-04-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S642",
+       "S681_H4"
+      ]
+     }
+    },
+    {
+     "month": "2026-05-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S642"
+      ]
+     }
+    },
+    {
+     "month": "2026-06-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S642",
+       "S736_published"
+      ]
+     }
+    },
+    {
+     "month": "2026-07-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S642",
+       "S736_published",
+       "s819_short_s015",
+       "s819_short_s030"
+      ]
+     }
+    },
+    {
+     "month": "2026-08-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S642",
+       "S736_published",
+       "s819_short_s015",
+       "s819_short_s030"
+      ]
+     }
+    },
+    {
+     "month": "2026-09-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S642",
+       "S736_published",
+       "s819_short_s015",
+       "s819_short_s030"
+      ]
+     }
+    },
+    {
+     "month": "2026-10-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S642",
+       "S736_published",
+       "s819_short_s015",
+       "s819_short_s030"
+      ]
+     }
+    },
+    {
+     "month": "2026-11-01",
+     "n_candidates": {
+      "线上·主流领": 26,
+      "线上·二线领": 26,
+      "线下·主流领": 26,
+      "线下·二线领": 26
+     },
+     "roster": {
+      "线上·主流领": [
+       "X1V",
+       "R-v2",
+       "carry_b_top_rc"
+      ],
+      "线上·二线领": [
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_eth"
+      ],
+      "线下·主流领": [
+       "s823_r6"
+      ],
+      "线下·二线领": [
+       "S642",
+       "S736_published",
+       "s819_short_s015",
+       "s819_short_s030"
+      ]
+     }
+    }
+   ],
+   "n_days": 1383,
+   "start": "2023-02-01",
+   "state_first_day": "2021-01-30",
+   "total_return": 1.8336184135240434,
+   "vol_daily": 0.0043821997316962945
+  },
+  "C_T_only": {
+   "book": "C_T_only",
+   "cells": {
+    "线上": {
+     "held_days_top5": [
+      {
+       "days": 619,
+       "strategy": "style_ai"
+      },
+      {
+       "days": 619,
+       "strategy": "style_infra_tokenization"
+      },
+      {
+       "days": 619,
+       "strategy": "style_second_l1_l2"
+      },
+      {
+       "days": 619,
+       "strategy": "style_top_l1"
+      },
+      {
+       "days": 608,
+       "strategy": "X1V"
+      }
+     ],
+     "n_held_days": 6756,
+     "roster_last_month": [
+      "核心",
+      "X1V",
+      "R-v2",
+      "ACWI",
+      "carry_b_top_rc",
+      "style_ai",
+      "style_defi",
+      "style_infra_tokenization",
+      "style_second_l1_l2",
+      "style_top_l1",
+      "tom_pd13_btc",
+      "tom_pd13_eth"
+     ]
+    },
+    "线下": {
+     "held_days_top5": [
+      {
+       "days": 625,
+       "strategy": "XAUUSD"
+      },
+      {
+       "days": 141,
+       "strategy": "s819_short_s015"
+      },
+      {
+       "days": 141,
+       "strategy": "s819_short_s030"
+      },
+      {
+       "days": 108,
+       "strategy": "s823_r6"
+      },
+      {
+       "days": 30,
+       "strategy": "S681_H3"
+      }
+     ],
+     "n_held_days": 1045,
+     "roster_last_month": [
+      "XAUUSD"
+     ]
+    }
+   },
+   "end": "2026-11-14",
+   "first_month": "2022-02-01",
+   "from_2023_02_01": {
+    "end": "2026-11-14",
+    "mean": 0.0002445614730959188,
+    "mean_vol": 1.0266183767095733,
+    "n_days": 1383,
+    "start": "2023-02-01",
+    "total_return": 0.3825000916481045,
+    "vol": 0.004551194961071682
+   },
+   "longest_underwater_days": 606,
+   "longest_underwater_end": "2023-11-04",
+   "mean_daily": 0.00018786935703616922,
+   "mean_vol": 0.842157069512558,
+   "monthly_rosters": [
+    {
+     "month": "2022-02-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": []
+     }
+    },
+    {
+     "month": "2022-03-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2022-04-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2022-05-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2022-06-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": []
+     }
+    },
+    {
+     "month": "2022-07-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": []
+     }
+    },
+    {
+     "month": "2022-08-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": []
+     }
+    },
+    {
+     "month": "2022-09-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": []
+     }
+    },
+    {
+     "month": "2022-10-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": []
+     }
+    },
+    {
+     "month": "2022-11-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": []
+     }
+    },
+    {
+     "month": "2022-12-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": []
+     }
+    },
+    {
+     "month": "2023-01-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": []
+     }
+    },
+    {
+     "month": "2023-02-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": []
+     }
+    },
+    {
+     "month": "2023-03-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": []
+     }
+    },
+    {
+     "month": "2023-04-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": [
+       "XAUUSD",
+       "s823_r6"
+      ]
+     }
+    },
+    {
+     "month": "2023-05-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": [
+       "XAUUSD",
+       "s823_r6"
+      ]
+     }
+    },
+    {
+     "month": "2023-06-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": [
+       "XAUUSD",
+       "s823_r6"
+      ]
+     }
+    },
+    {
+     "month": "2023-07-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": [
+       "XAUUSD",
+       "s823_r6"
+      ]
+     }
+    },
+    {
+     "month": "2023-08-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": [
+       "XAUUSD",
+       "s823_r6"
+      ]
+     }
+    },
+    {
+     "month": "2023-09-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": [
+       "XAUUSD",
+       "s823_r6"
+      ]
+     }
+    },
+    {
+     "month": "2023-10-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [],
+      "线下": [
+       "s823_r6"
+      ]
+     }
+    },
+    {
+     "month": "2023-11-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "X1V",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD",
+       "s823_r6"
+      ]
+     }
+    },
+    {
+     "month": "2023-12-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "X1V",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD",
+       "s823_r6"
+      ]
+     }
+    },
+    {
+     "month": "2024-01-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "X1V",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD",
+       "s823_r6"
+      ]
+     }
+    },
+    {
+     "month": "2024-02-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "X1V",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD",
+       "s823_r6"
+      ]
+     }
+    },
+    {
+     "month": "2024-03-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "X1V",
+       "ACWI",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2024-04-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "X1V",
+       "ACWI",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2024-05-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "X1V",
+       "ACWI",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2024-06-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "X1V",
+       "ACWI",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2024-07-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "X1V",
+       "ACWI",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD",
+       "s823_r6"
+      ]
+     }
+    },
+    {
+     "month": "2024-08-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD",
+       "s823_r6"
+      ]
+     }
+    },
+    {
+     "month": "2024-09-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD",
+       "S681_H3",
+       "s819_short_s015",
+       "s819_short_s030"
+      ]
+     }
+    },
+    {
+     "month": "2024-10-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2024-11-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2024-12-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2025-01-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2025-02-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2025-03-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2025-04-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2025-05-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2025-06-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2025-07-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "S681_H4",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2025-08-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "S681_H4",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2025-09-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2025-10-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2025-11-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2025-12-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2026-01-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2026-02-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2026-03-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD",
+       "s819_short_s015",
+       "s819_short_s030"
+      ]
+     }
+    },
+    {
+     "month": "2026-04-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD",
+       "s819_short_s015",
+       "s819_short_s030"
+      ]
+     }
+    },
+    {
+     "month": "2026-05-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2026-06-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2026-07-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD",
+       "s819_short_s015",
+       "s819_short_s030"
+      ]
+     }
+    },
+    {
+     "month": "2026-08-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD",
+       "s819_short_s015",
+       "s819_short_s030"
+      ]
+     }
+    },
+    {
+     "month": "2026-09-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2026-10-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_app",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    },
+    {
+     "month": "2026-11-01",
+     "n_candidates": {
+      "线上": 26,
+      "线下": 26
+     },
+     "roster": {
+      "线上": [
+       "核心",
+       "X1V",
+       "R-v2",
+       "ACWI",
+       "carry_b_top_rc",
+       "style_ai",
+       "style_defi",
+       "style_infra_tokenization",
+       "style_second_l1_l2",
+       "style_top_l1",
+       "tom_pd13_btc",
+       "tom_pd13_eth"
+      ],
+      "线下": [
+       "XAUUSD"
+      ]
+     }
+    }
+   ],
+   "n_days": 1748,
+   "start": "2022-02-01",
+   "state_first_day": "2020-01-30",
+   "total_return": 1.3668618199727167,
+   "vol_daily": 0.004261959148038827
+  }
+ },
+ "meta": {
+  "blind": "未读 s869_strategy_state.py / s877_axis_mining.py / s871_results.json / s877_results*.json",
+  "conventions": {
+   "annualization": "mean_vol = (日均×365)/(日标准差×√365);日标准差用 ddof=1",
+   "cash": "funded=1 的策略扣 t348_r4_legs.csv 的 cash_daily_rate(D);funded=0 不扣",
+   "criteria": "⑴≥5段且≥120天 ⑵状态内日均×365>0 且 均值/波动≥0.5 ⑶盈亏比≥2.0 ⑷去掉最高段后状态内日均>0 ⑸状态内日均>状态外日均",
+   "days_per_year": 365.0,
+   "flat_fill": "稀疏序列首末日之间按不变补齐;apparatus.price_on_or_after(max_gap_days=0)",
+   "holding": "每天 d 看 d−1 的状态;等权平均该格名单策略的缩放后收益;缩放 = 当天收益 × min(3, (0.10/√365)/σ),σ=该策略此前 90 天日收益标准差(≥60 观测、σ>0);一个都没有 ⇒ 当天收益 0",
+   "lead_axis": "state_daily(entity=panel, feature=style_rel_majors_30d):当天值 > 严格更早全部值的均值且更早的非空值 ≥365 ⇒ 主流领,否则二线领",
+   "max_scale": 3.0,
+   "return": "D 日收盘的状态 ⇒ D→D+1 的收益(标签落在 D);apparatus.long_return",
+   "seg_gap_days": 5,
+   "selection": "每月第一天 m:只用 D+1 < m 的收益(= D ≤ m−2);状态历史满 730 天才开始",
+   "sig_lookback": 90,
+   "sig_min_obs": 60,
+   "state_history_days": 730,
+   "state_universe": "s866_cells.json 的逐日标签日;T/L 轴全有;B 书另需 style_rel_majors_30d 有状态",
+   "target_vol": 0.1
+  },
+  "coverage": {
+   "ACWI": {
+    "deduct_cash": true,
+    "first": "2020-01-30",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-10-29",
+    "raw_days": 1969,
+    "raw_first": "2019-01-02",
+    "raw_last": "2026-10-30",
+    "return_days": 2465
+   },
+   "R-v2": {
+    "deduct_cash": false,
+    "first": "2020-08-16",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-09-29",
+    "raw_days": 2237,
+    "raw_first": "2020-08-16",
+    "raw_last": "2026-09-30",
+    "return_days": 2236
+   },
+   "S642": {
+    "deduct_cash": false,
+    "first": "2022-01-21",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-10-18",
+    "raw_days": 1733,
+    "raw_first": "2022-01-21",
+    "raw_last": "2026-10-19",
+    "return_days": 1732
+   },
+   "S681_H2": {
+    "deduct_cash": false,
+    "first": "2020-11-07",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-09-28",
+    "raw_days": 2153,
+    "raw_first": "2020-11-07",
+    "raw_last": "2026-09-29",
+    "return_days": 2152
+   },
+   "S681_H3": {
+    "deduct_cash": false,
+    "first": "2020-04-26",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-09-29",
+    "raw_days": 2349,
+    "raw_first": "2020-04-26",
+    "raw_last": "2026-09-30",
+    "return_days": 2348
+   },
+   "S681_H4": {
+    "deduct_cash": false,
+    "first": "2020-09-04",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-09-29",
+    "raw_days": 2218,
+    "raw_first": "2020-09-04",
+    "raw_last": "2026-09-30",
+    "return_days": 2217
+   },
+   "S736_fixed": {
+    "deduct_cash": false,
+    "first": "2021-03-24",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-10-30",
+    "raw_days": 2047,
+    "raw_first": "2021-03-24",
+    "raw_last": "2026-10-31",
+    "return_days": 2047
+   },
+   "S736_published": {
+    "deduct_cash": false,
+    "first": "2021-03-24",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-10-30",
+    "raw_days": 2047,
+    "raw_first": "2021-03-24",
+    "raw_last": "2026-10-31",
+    "return_days": 2047
+   },
+   "S808": {
+    "deduct_cash": false,
+    "first": "2020-08-09",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-11-08",
+    "raw_days": 789,
+    "raw_first": "2020-08-09",
+    "raw_last": "2026-11-09",
+    "return_days": 2283
+   },
+   "S810": {
+    "deduct_cash": false,
+    "first": "2023-06-02",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-09-29",
+    "raw_days": 283,
+    "raw_first": "2023-06-02",
+    "raw_last": "2026-09-30",
+    "return_days": 1216
+   },
+   "X1V": {
+    "deduct_cash": true,
+    "first": "2020-01-30",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-10-29",
+    "raw_days": 2859,
+    "raw_first": "2019-01-02",
+    "raw_last": "2026-10-30",
+    "return_days": 2465
+   },
+   "XAUUSD": {
+    "deduct_cash": true,
+    "first": "2020-01-30",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-10-29",
+    "raw_days": 2413,
+    "raw_first": "2019-01-01",
+    "raw_last": "2026-10-30",
+    "return_days": 2465
+   },
+   "carry_b_top_rc": {
+    "deduct_cash": false,
+    "first": "2023-06-12",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-10-29",
+    "raw_days": 1237,
+    "raw_first": "2023-06-12",
+    "raw_last": "2026-10-30",
+    "return_days": 1236
+   },
+   "s819_short_s015": {
+    "deduct_cash": false,
+    "first": "2021-10-11",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-10-29",
+    "raw_days": 1846,
+    "raw_first": "2021-10-11",
+    "raw_last": "2026-10-30",
+    "return_days": 1845
+   },
+   "s819_short_s030": {
+    "deduct_cash": false,
+    "first": "2021-10-11",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-10-29",
+    "raw_days": 1846,
+    "raw_first": "2021-10-11",
+    "raw_last": "2026-10-30",
+    "return_days": 1845
+   },
+   "s823_r6": {
+    "deduct_cash": true,
+    "first": "2021-01-01",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-10-29",
+    "raw_days": 2129,
+    "raw_first": "2021-01-01",
+    "raw_last": "2026-10-30",
+    "return_days": 2128
+   },
+   "style_ai": {
+    "deduct_cash": true,
+    "first": "2020-01-30",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-11-13",
+    "raw_days": 2496,
+    "raw_first": "2020-01-01",
+    "raw_last": "2026-11-14",
+    "return_days": 2480
+   },
+   "style_app": {
+    "deduct_cash": true,
+    "first": "2020-01-30",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-11-13",
+    "raw_days": 2510,
+    "raw_first": "2020-01-01",
+    "raw_last": "2026-11-14",
+    "return_days": 2480
+   },
+   "style_defi": {
+    "deduct_cash": true,
+    "first": "2020-01-30",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-11-13",
+    "raw_days": 2510,
+    "raw_first": "2020-01-01",
+    "raw_last": "2026-11-14",
+    "return_days": 2480
+   },
+   "style_infra_tokenization": {
+    "deduct_cash": true,
+    "first": "2020-01-30",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-11-13",
+    "raw_days": 2510,
+    "raw_first": "2020-01-01",
+    "raw_last": "2026-11-14",
+    "return_days": 2480
+   },
+   "style_meme": {
+    "deduct_cash": true,
+    "first": "2021-05-16",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-11-13",
+    "raw_days": 2009,
+    "raw_first": "2021-05-16",
+    "raw_last": "2026-11-14",
+    "return_days": 2008
+   },
+   "style_second_l1_l2": {
+    "deduct_cash": true,
+    "first": "2020-01-30",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-11-13",
+    "raw_days": 2510,
+    "raw_first": "2020-01-01",
+    "raw_last": "2026-11-14",
+    "return_days": 2480
+   },
+   "style_top_l1": {
+    "deduct_cash": true,
+    "first": "2020-01-30",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-11-13",
+    "raw_days": 2510,
+    "raw_first": "2020-01-01",
+    "raw_last": "2026-11-14",
+    "return_days": 2480
+   },
+   "tom_pd13_btc": {
+    "deduct_cash": true,
+    "first": "2020-01-30",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-10-14",
+    "raw_days": 4307,
+    "raw_first": "2014-12-31",
+    "raw_last": "2026-10-15",
+    "return_days": 2450
+   },
+   "tom_pd13_eth": {
+    "deduct_cash": true,
+    "first": "2020-01-30",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-10-14",
+    "raw_days": 4088,
+    "raw_first": "2015-08-06",
+    "raw_last": "2026-10-15",
+    "return_days": 2450
+   },
+   "核心": {
+    "deduct_cash": true,
+    "first": "2021-07-13",
+    "flat_lookahead_max_diff": 0.0,
+    "last": "2026-10-29",
+    "raw_days": 1333,
+    "raw_first": "2021-07-13",
+    "raw_last": "2026-10-30",
+    "return_days": 1935
+   }
+  },
+  "generated_by": "docs/research/s869_blind_book.py",
+  "kind": "blind_recompute_book",
+  "labeled_days": 2480,
+  "lead_state_days": 2115,
+  "ledger": "S-869 五条判据 + S-870 做法 + S-871 v2 + S-871 补缩放上限 + S-877 第二轴",
+  "panel": "T-391 的 13 条 + s869_extra_panel_a.csv 的 13 条 = 26",
+  "task": "T-405"
+ }
+}
