@@ -1,0 +1,15 @@
+loaded BTC 3089
+loaded ETH 3089
+COUNTS {"n_tested_cell": 8, "n_tested_crowd": 7, "n_holds_cell": 1, "n_holds_crowd": 3, "null": {"n": 100, "cell_median": 1.0, "cell_q95": 2.0, "p_cell_ge_real": 0.86, "crowd_median": 0.0, "crowd_q95": 2.0, "p_crowd_ge_real": 0.0}, "cell_days": {"线上·主流领": 650, "线上·二线领": 483, "线下·主流领": 681, "线下·二线领": 301}}
+CELL BD20|线上·主流领 | disc n4 m5.25 pf2.31 vs base n50 m4.52 pf2.26 | hold n19 m-1.71 pf1.91 vs base n206 m0.19 pf1.45 
+CELL BD20|线上·二线领 | disc n5 m0.54 pf1.67 vs base n68 m-1.87 pf2.99 | hold n10 m-6.13 pf1.34 vs base n118 m-1.1 pf1.19 
+CELL BD20|线下·主流领 | disc n34 m2.58 pf2.21 vs base n118 m0.63 pf2.88 | hold n34 m-1.72 pf1.43 vs base n156 m-3.94 pf0.96 
+CELL BD20|线下·二线领 | disc n16 m-1.98 pf1.41 vs base n44 m0.39 pf1.57 | hold n25 m6.57 pf1.85 vs base n74 m2.85 pf2.32 
+CELL BO20|线上·主流领 | disc n24 m7.8 pf2.73 vs base n50 m-2.86 pf2.18 | hold n85 m8.15 pf2.73 vs base n206 m2.42 pf2.3 | HOLDS
+CELL BO20|线上·二线领 | disc n28 m-3.95 pf3.72 vs base n68 m-1.58 pf3.2 | hold n52 m2.79 pf2.2 vs base n118 m-2.77 pf1.26 
+CELL BO20|线下·主流领 | disc n15 m2.54 pf3.94 vs base n118 m0.78 pf2.61 | hold n27 m7.66 pf2.89 vs base n156 m8.27 pf2.7 
+CELL BO20|线下·二线领 | disc n14 m-4.15 pf5.51 vs base n44 m-2.42 pf3.3 | hold n18 m0.12 pf2.05 vs base n74 m-1.28 pf1.37 
+CROWD BO20|线上·主流领 pos:btc_crowd_ln:lo | disc n9 m8.58 pf2.44 | hold n85 m8.15 pf2.73
+CROWD BO20|线上·主流领 pos:btc_smart_minus_crowd:hi | disc n9 m8.58 pf2.44 | hold n85 m8.15 pf2.73
+CROWD BO20|线下·主流领 funding_7d_ann_binance:lo | disc n12 m5.17 pf3.94 | hold n9 m22.87 pf99.0
+WROTE docs/research/s881_results.json

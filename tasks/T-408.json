@@ -1,5 +1,5 @@
 {
-  "status": "open",
+  "status": "done",
   "created": "2026-11-15",
   "forbidden_paths": [
     "Shadow/",
@@ -10,7 +10,11 @@
     "scripts/",
     "migrations/"
   ],
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-15T08:39:52Z",
+    "value": "s881_results.json:触发 × 格子 8 个站住 1(平移 p = 0.86);人群条件 7 个站住 3、p = 0.00 但切分退化(pos:* 按时点 z 在 2023 后漂到一边,T-399 改滚动分位);格子天数 650 / 483 / 681 / 301。脚本与 main 一字不差。"
+  },
   "id": "T-408",
   "owner": "lane-c",
   "title": "S-881:按形态挖 —— 状态四格 × 破位 / 突破 × 触发当天的持仓读数;只跑 Seth 写好的脚本",
@@ -24,5 +28,5 @@
     "expect": "docs/research/s881_results.json + s881_run.txt;卡 in_review,推 lane-c/T-408。**先于 T-407 与 T-393 的收尾。**"
   },
   "prior_value": "到 S-878 为止的进场挖掘都是「日历 × 单个读数」,全不成立;S-879 证明「状态 × 触发 × 认错写在价格上」这个模板能站住。",
-  "notes": "2026-11-15T07:05:59Z Seth 开卡。"
+  "notes": "2026-11-15T07:05:59Z Seth 开卡。 | 2026-11-15T07:35:02Z lane-c:脚本 docs/research/s881_setup_mining.py 与 s879_breakdown_short.py 从主目录原样拷进分支(逐字节相同,一个字未改);--selftest 见 SELFTEST OK;正式跑(后台)见 WROTE docs/research/s881_results.json。测得:n_tested_cell=8 / n_holds_cell=1(唯一站住的格 BO20|线上·主流领:disc n24 m7.8 pf2.73 vs base n50 m-2.86 pf2.18;hold n85 m8.15 pf2.73 vs base n206 m2.42 pf2.3);整条序列平移零分布 n=100,cell 中位 1、q95 2、p_cell_ge_real=0.86。n_tested_crowd=7 / n_holds_crowd=3:BO20|线上·主流领 pos:btc_crowd_ln:lo(disc n9 m8.58 pf2.44;hold n85 m8.15 pf2.73)、BO20|线上·主流领 pos:btc_smart_minus_crowd:hi(与上一行逐位同数)、BO20|线下·主流领 funding_7d_ann_binance:lo(disc n12 m5.17 pf3.94;hold n9 m22.87 pf99.0);crowd 零分布中位 0、q95 2、p_crowd_ge_real=0.0。四格日数:线上·主流领 650 / 线上·二线领 483 / 线下·主流领 681 / 线下·二线领 301。未改脚本、未下结论、未写情景文件、未 Read 大 json。"
 }
