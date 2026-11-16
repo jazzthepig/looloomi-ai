@@ -1,14 +1,30 @@
+import os
 import requests
 import time
 from datetime import datetime
 from typing import Dict
+
+#: CoinGecko。11-16:有 key 时走 Pro 端点(每分钟 500 次);公开端点每分钟十几次,
+#: 而 Pro key 在公开 host 上会被忽略 —— 拿 Analyst 的额度去打公开端点是最亏的用法。
+CG_API_KEY = os.getenv("COINGECKO_API_KEY", "")
+CG_PRO_BASE = "https://pro-api.coingecko.com/api/v3"
+CG_PUBLIC_BASE = "https://api.coingecko.com/api/v3"
+
+
+def _cg_base() -> str:
+    return CG_PRO_BASE if CG_API_KEY else CG_PUBLIC_BASE
+
+
+def _cg_headers() -> dict:
+    return {"x-cg-pro-api-key": CG_API_KEY} if CG_API_KEY else {}
+
 
 class LooloomiMMI:
     """
     Looloomi Memecoin Momentum Index (MMI) v3
     With rate limiting and better error handling
     """
-    
+
     def __init__(self, token_id: str = "bitcoin"):
         self.token_id = token_id
         self.components = {}
@@ -19,26 +35,36 @@ class LooloomiMMI:
             'historical': 0.20
         }
         self.api_delay = 1.5  # seconds between API calls
-    
+        #: 11-16:historical 与 onchain 两个分项要的是**同一份** `/market_chart`。
+        #: 原来两个方法各取一次(同一个 URL、同一个参数)—— 一次 calculate() = 两次调用 + 3 秒空等。
+        #: 现在取一次、两个分项共用。
+        self._mc_cache: dict | None = None
+
     def _api_call(self, url: str, params: dict = None) -> dict:
         """Make API call with delay and error handling"""
         time.sleep(self.api_delay)
         try:
-            response = requests.get(url, params=params, timeout=15)
+            response = requests.get(url, params=params, headers=_cg_headers(), timeout=15)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             print(f"    API Error: {e}")
             return None
-    
+
+    def _market_chart(self) -> dict:
+        """30 天的 `/market_chart` —— 一轮里只取一次,historical 与 onchain 共用。"""
+        if self._mc_cache is not None:
+            return self._mc_cache
+        url = f"{_cg_base()}/coins/{self.token_id}/market_chart"
+        self._mc_cache = self._api_call(url, {'vs_currency': 'usd', 'days': '30'}) or {}
+        return self._mc_cache
+
     def get_historical_score(self) -> Dict:
         """Historical Score: price & mcap changes"""
         print(f"    Fetching historical data...")
-        
-        url = f"https://api.coingecko.com/api/v3/coins/{self.token_id}/market_chart"
-        
-        # 30-day data
-        data_30d = self._api_call(url, {'vs_currency': 'usd', 'days': '30'})
+
+        # 30-day data(与 onchain 共用同一份 —— 见 _market_chart)
+        data_30d = self._market_chart()
         if not data_30d or 'prices' not in data_30d:
             return {'score': 50, 'error': 'No data'}
         
@@ -68,10 +94,9 @@ class LooloomiMMI:
     def get_onchain_score(self) -> Dict:
         """On-Chain Score: volume analysis"""
         print(f"    Fetching on-chain data...")
-        
-        url = f"https://api.coingecko.com/api/v3/coins/{self.token_id}/market_chart"
-        data = self._api_call(url, {'vs_currency': 'usd', 'days': '30'})
-        
+
+        data = self._market_chart()
+
         if not data or 'total_volumes' not in data:
             return {'score': 50, 'error': 'No data'}
         
@@ -125,7 +150,9 @@ class LooloomiMMI:
     
     def calculate(self) -> float:
         """Calculate composite MMI"""
-        
+
+        # 每轮重新取一次 market_chart(两个分项共用这一份)—— 不要把上一轮的数据带进来。
+        self._mc_cache = None
         self.components['historical'] = self.get_historical_score()
         self.components['onchain'] = self.get_onchain_score()
         self.components['sentiment'] = self.get_sentiment_score()
