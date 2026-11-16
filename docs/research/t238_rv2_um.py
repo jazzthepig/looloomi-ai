@@ -1,7 +1,11 @@
-"""T-238(S-719 重验):R-v2 在同质永续序列 `ohlcv_daily(source=binance_um_hist)` 上重生成票,
+"""T-238 v2(S-719 重验 · 闸门已开):R-v2 在**同质永续序列** `perp_bv_daily` 上重生成票,
 与 10-21 缓存(770 张)逐票对比,重报 S-638 的钱曲线与 S-677 的 OOS 切片,并报 10-19 起的信号数。
 
-只读:不改代码、不做 DDL、不入库。DB 只读 ohlcv_daily / style_index_pit_daily。
+v2 变更(Jazz 11-05 闸门):v1 读 `ohlcv_daily(source=binance_um_hist)` —— 那是「现货历史 + 永续续写」的
+拼接序列,历史有洞,v1 判 ❌。v2 直接读 `perp_bv_daily`(真永续,668,222 行,min(d)=2019-12-31),
+宇宙 = `perp_bv_pairs.kind='coin'`(外加 kind 为空但 dead_from 有值的),成交额 dv = qv(quote volume)。
+
+只读:不改代码、不做 DDL、不入库。DB 只读 perp_bv_daily / perp_bv_pairs / style_index_pit_daily。
 用法:python3 docs/research/t238_rv2_um.py [--stage all|fetch]
 """
 from __future__ import annotations
@@ -11,14 +15,20 @@ import importlib.util
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.request
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.environ.get("COMETCLOUD_LOCAL", "/Volumes/CometCloudAI/cometcloud-local")
 MAC_DIR = os.path.join(ROOT, "research", "t238")
-UM_JSONL = os.path.join(MAC_DIR, "_bars_um.jsonl")
+PBV_JSONL = os.path.join(MAC_DIR, "_bars_pbv.jsonl")
+PAIRS_JSONL = os.path.join(MAC_DIR, "_pairs_pbv.json")
+UNIV_V3_JSON = os.path.join(MAC_DIR, "_univ_v3.json")
+PBV_UNI: dict = {}
+UNIVERSE_MODE = "coin"   # "coin" = 全部 coin 永续(v2 口径);"v3" = S-730 验证宇宙
 DB_JSONL = os.path.join(ROOT, "research", "t237", "_bars_db.jsonl")
 CACHE_TK = os.path.join(ROOT, "research", "t159", "_tickets_2020-03-01_2026-06-20.json")
 
@@ -30,7 +40,7 @@ _spec.loader.exec_module(t159)
 # ── 预注册常量(先写后算) ─────────────────────────────────────────────────────
 SIG_FROM, SIG_TO = "2020-03-01", "2026-10-31"   # 票生成窗(卡上写死)
 CURVE_TO = "2026-10-31"                          # 钱曲线终点
-FETCH_FROM, FETCH_TO = "2019-10-01", "2026-11-04"   # DB 拉取窗(卡上写死;数据实际到 11-03)
+FETCH_FROM, FETCH_TO = "2019-10-01", "2026-11-16"   # DB 拉取窗(卡上写死;11-16 拉取时数据实际到 11-15)
 COST = 0.004                                    # 来回成本(t159 逐字)
 F_RISK = 0.01                                   # 钱曲线每笔 1%(S-638 的 f★)
 CAP = 10                                        # 同时最多 10 张
@@ -41,54 +51,114 @@ WARMUP = 220                                    # t159.run_long 的起始下标(
 
 
 # ── DB 只读 ──────────────────────────────────────────────────────────────────
-def _rest(q: str, lo: int, hi: int, count: bool = False):
+def _rest(q: str, lo: int, hi: int, count: bool = False, retries: int = 6):
     k = os.environ["SUPABASE_KEY"]
     h = {"apikey": k, "Authorization": "Bearer " + k, "Range": f"{lo}-{hi}"}
     if count:
         h["Prefer"] = "count=exact"
-    r = urllib.request.Request(os.environ["SUPABASE_URL"] + "/rest/v1/" + q, headers=h)
-    try:
-        with urllib.request.urlopen(r, timeout=300) as resp:
-            return json.loads(resp.read()), resp.headers.get("Content-Range", "")
-    except urllib.error.HTTPError as e:
-        if e.code == 416:
-            return [], ""
-        raise
+    last = None
+    for attempt in range(retries):
+        r = urllib.request.Request(os.environ["SUPABASE_URL"] + "/rest/v1/" + q, headers=h)
+        try:
+            with urllib.request.urlopen(r, timeout=300) as resp:
+                return json.loads(resp.read()), resp.headers.get("Content-Range", "")
+        except urllib.error.HTTPError as e:
+            if e.code == 416:
+                return [], ""
+            last = e
+        except (urllib.error.URLError, TimeoutError, ConnectionError, json.JSONDecodeError) as e:
+            last = e
+        time.sleep(min(2 ** attempt, 30))
+    raise last
 
 
-def fetch_um() -> dict:
-    """拉 `ohlcv_daily` source=binance_um_hist 全符号。翻页带 order=symbol.asc,trade_date.asc。"""
+def fetch_pbv() -> dict:
+    """拉 `perp_bv_daily`(真永续日线)。分片并行:按 `perp_bv_pairs` 的符号表切片,每片一条
+    `symbol=in.(...)` 查询,片内翻页带 order=symbol.asc,d.asc(卡上要求)。
+    落 _bars_pbv.jsonl(每行一个 JSON),写明拉取时间与行数。
+    覆盖校验:各片行数合计必须等于表的 count(=668,222),不等则报错退出(不落半份)。"""
     os.makedirs(MAC_DIR, exist_ok=True)
-    q = ("ohlcv_daily?select=symbol,trade_date,open,high,low,close,volume"
-         f"&source=eq.binance_um_hist&trade_date=gte.{FETCH_FROM}&trade_date=lte.{FETCH_TO}"
-         "&order=symbol.asc,trade_date.asc")
-    first, cr = _rest(q, 0, 0, count=True)
+    fetched_at = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+    base = ("perp_bv_daily?select=symbol,d,o,h,l,c,qv,tbqv"
+            f"&d=gte.{FETCH_FROM}&d=lte.{FETCH_TO}&order=symbol.asc,d.asc")
+    _, cr = _rest(base, 0, 0, count=True)
     total = int(cr.split("/")[-1]) if "/" in cr else -1
     if total < 0:
         raise SystemExit("no Content-Range total; cannot page deterministically")
-    fetched_at = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
-    step = 10000
-    n = 0
-    with open(UM_JSONL, "w") as f:
-        f.write(json.dumps({"_meta": {"fetched_at_utc": fetched_at, "query": q, "expected_rows": total,
-                                      "page_step": step, "note": "one JSON object per line: symbol,trade_date,o,h,l,c,v"}}) + "\n")
-        if first:
-            f.write(json.dumps(first) + "\n")
-            n += len(first)
-        lo = len(first)
-        while lo < total:
-            rows, _ = _rest(q, lo, min(lo + step - 1, total - 1))
-            if not rows:
-                break
-            f.write(json.dumps(rows) + "\n")
-            lo += len(rows)
-            n += len(rows)
-            print(f"  ... {lo}/{total}", file=sys.stderr)
+    pmeta = fetch_pairs()
+    prows = json.load(open(PAIRS_JSONL)).get("rows", [])
+    allsyms = sorted(set(r.get("symbol") for r in prows if r.get("symbol")))
+    syms = [s for s in allsyms if not any(ch in s for ch in ",()'\"% ")]
+    skipped = [s for s in allsyms if s not in set(syms)]
+    chunk = 12
+    chunks = [syms[i:i + chunk] for i in range(0, len(syms), chunk)]
+
+    def pull(idx_ch):
+        idx, ch = idx_ch
+        sel = ",".join(ch)
+        q = ("perp_bv_daily?select=symbol,d,o,h,l,c,qv,tbqv"
+             f"&symbol=in.({sel})&d=gte.{FETCH_FROM}&d=lte.{FETCH_TO}&order=symbol.asc,d.asc")
+        path = os.path.join(MAC_DIR, f"_pbv_part_{idx:03d}.jsonl")
+        n = 0
+        with open(path, "w") as f:
+            lo = 0
+            while True:
+                rows, _ = _rest(q, lo, lo + 999)
+                if not rows:
+                    break
+                f.write(json.dumps(rows) + "\n")
+                n += len(rows)
+                lo += len(rows)
+        return idx, n
+
+    with ThreadPoolExecutor(max_workers=10) as ex:
+        got = list(ex.map(pull, list(enumerate(chunks))))
+    n = sum(c for _, c in got)
+    if n != total:
+        raise SystemExit(f"parallel fetch rows {n} != table count {total} —— 不落半份(需补齐)")
+    with open(PBV_JSONL, "w") as f:
+        f.write(json.dumps({"_meta": {"fetched_at_utc": fetched_at, "query": base,
+                                      "expected_rows": total, "page_step": 1000,
+                                      "n_symbols": len(syms), "n_chunks": len(chunks),
+                                      "note": "one JSON object per line: symbol,d,o,h,l,c,qv,tbqv"}}) + "\n")
+        for idx, _ in sorted(got):
+            part = os.path.join(MAC_DIR, f"_pbv_part_{idx:03d}.jsonl")
+            for line in open(part):
+                f.write(line)
+            os.remove(part)
     meta = {"fetched_at_utc": fetched_at, "rows_written": n, "expected_rows": total,
-            "file": UM_JSONL, "query": q}
+            "file": PBV_JSONL, "query": base, "n_symbols": len(syms), "n_chunks": len(chunks),
+            "parallel_workers": 10, "coverage_ok": True, "skipped_symbols": skipped}
+    meta["pairs"] = pmeta
     print(json.dumps(meta), file=sys.stderr)
     return meta
 
+
+def fetch_pairs() -> dict:
+    """`perp_bv_pairs`:宇宙 = kind='coin' 或 (kind 为空 且 dead_from 有值)。
+    先按窄 select 试;失败则 select=* 全列(列名以实际返回为准)。"""
+    def page(q):
+        rows, lo = [], 0
+        while True:
+            rr, _ = _rest(q, lo, lo + 999)
+            rows += rr
+            if len(rr) < 1000:
+                break
+            lo += 1000
+        return rows
+    q = "perp_bv_pairs?select=symbol,kind,dead_from&order=symbol.asc"
+    try:
+        rows, narrow = page(q), True
+    except urllib.error.HTTPError as e:
+        print(f"  pairs narrow select failed ({e.code}); fallback select=*", file=sys.stderr)
+        q = "perp_bv_pairs?select=*&order=symbol.asc"
+        rows, narrow = page(q), False
+    meta = {"fetched_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+            "n_rows": len(rows), "query": q, "narrow_select": narrow,
+            "columns": sorted(rows[0].keys()) if rows else [], "file": PAIRS_JSONL}
+    json.dump({"meta": meta, "rows": rows}, open(PAIRS_JSONL, "w"))
+    print(json.dumps(meta), file=sys.stderr)
+    return meta
 
 def load_style_gate_db() -> dict:
     """DB 的 style_index_pit_daily(majors / cap 权重)→ 与 t159.load_gate() 同口径的闸门字典。"""
@@ -120,6 +190,7 @@ def load_style_gate_db() -> dict:
 
 # ── 序列读取 ────────────────────────────────────────────────────────────────
 def _read_jsonl(path: str) -> dict[str, list]:
+    """ohlcv_daily 口径行:(trade_date, o, h, l, c, volume)。"""
     by = defaultdict(list)
     with open(path) as f:
         for line in f:
@@ -132,9 +203,76 @@ def _read_jsonl(path: str) -> dict[str, list]:
     return {s: sorted(set(v)) for s, v in by.items() if v}
 
 
-def load_um_raw() -> dict[str, list]:
-    return _read_jsonl(UM_JSONL)
+def _read_jsonl_pbv(path: str) -> dict[str, list]:
+    """perp_bv_daily 行:(symbol, d, o, h, l, c, qv, tbqv)。
+    第 6 位存 qv/close ⇒ 下游 `close × row[5]` 恒 = qv(成交额),与现货侧 close×volume 同量纲;
+    dv = qv 就是卡上 v2 要求的口径。"""
+    by = defaultdict(list)
+    with open(path) as f:
+        for line in f:
+            x = json.loads(line)
+            if isinstance(x, dict) and "_meta" in x:
+                continue
+            for r in (x if isinstance(x, list) else [x]):
+                c = float(r["c"] or 0.0)
+                qv = float(r["qv"] or 0.0)
+                by[r["symbol"]].append((r["d"], float(r["o"] or 0.0), float(r["h"] or 0.0),
+                                        float(r["l"] or 0.0), c, (qv / c) if c else 0.0))
+    return {s: sorted(set(v)) for s, v in by.items() if v}
 
+
+def load_pbv_universe() -> dict:
+    """`perp_bv_pairs` 宇宙:kind='coin' 或 (kind 为空 且 dead_from 有值)。"""
+    data = json.load(open(PAIRS_JSONL))
+    rows = data.get("rows", [])
+    keep, kinds = {}, defaultdict(int)
+    for r in rows:
+        s = (r.get("symbol") or r.get("base") or r.get("pair") or r.get("s"))
+        k = (r.get("kind") or "").strip().lower()
+        df = r.get("dead_from")
+        kinds[k or "(null)"] += 1
+        if s is None:
+            continue
+        if k == "coin" or (not k and df):
+            keep[s] = r
+    return {"n_rows": len(rows), "n_keep": len(keep), "kind_hist": dict(kinds),
+            "keep_syms": set(keep),   # 供 load_pbv_raw 过滤;不进 PBV_UNI(结果 JSON 只留计数)
+            "n_keep_null_kind_with_dead_from": sum(1 for r in keep.values()
+                                                   if not (r.get("kind") or "").strip())}
+
+
+def load_v3_universe() -> dict:
+    """v3 宇宙(S-730,Seth 11-05 06:07 + 07:28 补):R-v2 验证过的那批名字。
+
+    = `ohlcv_daily(source=binance_hist)` 面板符号 ∩ `perp_bv_pairs` coin 合约(257 个),
+    外加永续记号 `1000X` 对面板里的 `X`(S-730 补:1000PEPE ↔ PEPE —— 面板写 PEPE、
+    永续叫 1000PEPE;只多出这一个)。文件由 mk_univ_v3.py 落盘(两源 provenance 在文件里)。
+    """
+    d = json.load(open(UNIV_V3_JSON))
+    panel = set(d["symbols"]) | set(d.get("dropped_db_symbols") or [])
+    v3 = set(d["symbols"])
+    # 永续侧的记号:面板里的 X 若永续叫 1000X,则把 1000X 收进宇宙(只多 1000PEPE)
+    keep = set(v3) | {"1000" + s for s in panel}
+    return {"keep_syms": keep, "v3_syms": v3, "panel_syms": panel,
+            "n_v3": len(v3), "n_panel": len(panel),
+            "built_at_utc": d.get("built_at_utc"), "definition": d.get("definition")}
+
+
+def load_pbv_raw() -> dict[str, list]:
+    raw = _read_jsonl_pbv(PBV_JSONL)
+    uni = load_pbv_universe()
+    keep_syms = uni.pop("keep_syms")
+    if UNIVERSE_MODE == "v3":
+        v3 = load_v3_universe()
+        keep_syms = v3["keep_syms"]
+        uni["v3"] = {k: v for k, v in v3.items() if k != "keep_syms"}
+    kept = {s: v for s, v in raw.items() if s in keep_syms}
+    PBV_UNI.clear()
+    PBV_UNI.update(uni)
+    PBV_UNI["n_symbols_before_filter"] = len(raw)
+    PBV_UNI["n_symbols_after_filter"] = len(kept)
+    PBV_UNI["n_symbols_dropped_by_filter"] = len(raw) - len(kept)
+    return kept
 
 def load_cache_raw() -> dict[str, list]:
     """本地缓存(t156/_bars{,_early}.jsonl + t159/_bars.jsonl)。"""
@@ -381,19 +519,19 @@ def compare_tickets(tk_a: list, tk_b: list, name_a: str, name_b: str) -> dict:
     return out
 
 
-def warmup_attribution(tk_cache, tk_um, um_bars, cache_bars) -> dict:
-    """缓存有、um 没有的票:为什么没有?按 (a) 符号不在 um (b) um 里该符号历史不够 220 根
-    (c) 信号日早于该符号在 um 上的第 220 根(预热不足) (d) 预热够了但仍缺(指标差异)分。"""
-    um_keys = {_key(t) for t in tk_um}
-    only_cache = [t for t in tk_cache if _key(t) not in um_keys]
+def warmup_attribution(tk_cache, tk_pbv, pbv_bars, cache_bars) -> dict:
+    """缓存有、pbv 没有的票:为什么没有?按 (a) 符号不在 pbv (b) pbv 里该符号历史不够 220 根
+    (c) 信号日早于该符号在 pbv 上的第 220 根(预热不足) (d) 预热够了但仍缺(指标差异)分。"""
+    pbv_keys = {_key(t) for t in tk_pbv}
+    only_cache = [t for t in tk_cache if _key(t) not in pbv_keys]
     buckets = defaultdict(lambda: {"n": 0, "total_r": 0.0, "sample": []})
     for t in only_cache:
         s, d = t["symbol"], t["signal_d"]
-        rows = um_bars.get(s)
+        rows = pbv_bars.get(s)
         if rows is None:
-            k = "symbol_absent_in_um"
+            k = "symbol_absent_in_pbv"
         elif len(rows) <= WARMUP:
-            k = "symbol_too_short_in_um"
+            k = "symbol_too_short_in_pbv"
         elif d < rows[WARMUP][0]:
             k = "warmup_window"
         else:
@@ -411,7 +549,7 @@ def warmup_attribution(tk_cache, tk_um, um_bars, cache_bars) -> dict:
         lens = sorted(len(r) for r in bars.values())
         return {"symbols": len(bars), "median_first_d": _median_str(firsts), "p95_first_d": firsts[int(0.95 * (len(firsts) - 1))],
                 "median_rows": _median(lens), "n_le_220": sum(1 for x in lens if x <= WARMUP)}
-    out["history_um"] = hist(um_bars)
+    out["history_pbv"] = hist(pbv_bars)
     out["history_cache"] = hist(cache_bars)
     return out
 
@@ -480,7 +618,7 @@ def forward_window(bars: dict[str, list], gate: dict, db_gate: dict, lo=FWD_FROM
 
 # ── main ────────────────────────────────────────────────────────────────────
 def granularity_audit(raw: dict[str, list]) -> dict:
-    """um_hist 是不是「同质日线」?逐符号看行距:1 天 = 日线,8~12 天 = 10 日聚合 K 线。"""
+    """perp_bv_daily 是不是「同质日线」?逐符号看行距:1 天 = 日线,8~12 天 = 10 日聚合 K 线。"""
     daily, tenbar, other = [], [], []
     dup_syms = []
     daily_start = {}
@@ -546,28 +684,252 @@ def coverage_audit(raw: dict[str, list]) -> dict:
             "missing_sample": {s: m for s, m in list(sorted(miss.items()))[:5]}}
 
 
+def _rename_1000(bars: dict[str, list], ref_syms=None):
+    """Binance 微市值永续用 `1000X` 记号(如 1000PEPE),与现货缓存的 `X` 不同名。
+    映射回 X 以便逐票对齐;价格是 1000 倍但 R 是比值、成交额 qv 本就是美元口径
+    ⇒ 阈值(hh40/sma200/adv30/adv40p/dv)与 R 均不受影响。
+    ref_syms = 缓存符号集时:只在缓存里写 `X`(不写 `1000X`)时才把 `1000X` 映成 `X`
+    —— 缓存本身也有 1000LUNC/1000SHIB/1000WHY/1000X/1000XEC,那几只必须保持原名。"""
+    out, renamed = {}, []
+    for s, v in bars.items():
+        tgt = None
+        if s.startswith("1000"):
+            base = s[4:]
+            if ref_syms is None:
+                if base not in bars:
+                    tgt = base
+            elif (base in ref_syms) and (s not in ref_syms):
+                tgt = base
+        if tgt:
+            out[tgt] = v
+            renamed.append([s, tgt])
+        else:
+            out[s] = v
+    return out, renamed
+
+
+def _rename_1000_v3(bars: dict[str, list], ref_syms):
+    """v3 宇宙:永续记号 `1000X` → 面板记号 `X`(S-730 补:1000PEPE ↔ PEPE)。
+
+    只在 `X` ∈ 缓存符号集 且 `1000X` ∉ 缓存符号集 时改名(缓存自己写 1000LUNC/1000SHIB/
+    1000WHY/1000X/1000XEC 的保持原名);若 perp 同时有 X 与 1000X 则不合并(不丢数据)。"""
+    out, renamed, kept_both = {}, [], []
+    for s, v in bars.items():
+        tgt = None
+        if s.startswith("1000"):
+            base = s[4:]
+            if base in ref_syms and s not in ref_syms:
+                if base in bars:
+                    kept_both.append([s, base])
+                else:
+                    tgt = base
+        if tgt:
+            out[tgt] = v
+            renamed.append([s, tgt])
+        else:
+            out[s] = v
+    return out, renamed, kept_both
+
+
+def run_sensitivity(cache_bars: dict, gate: dict) -> dict:
+    """【探索性】宇宙/命名变体下的 ⑤ 判据 —— 主结果(预注册宇宙)不变,这里只问:
+    「同键占比不到 95%」与「R 差超出 ±10%」是不是被符号命名与宇宙差撑起来的。"""
+    raw_all = _read_jsonl_pbv(PBV_JSONL)
+    rows = json.load(open(PAIRS_JSONL)).get("rows", [])
+    kinds = {}
+    for r in rows:
+        s = r.get("symbol")
+        if not s:
+            continue
+        kinds[s] = ((r.get("kind") or "").strip().lower(), bool(r.get("dead_from")))
+    U = {
+        "V0_coin_prereg": {s for s, (k, d) in kinds.items() if k == "coin" or (not k and d)},
+        "V1_nontradfi": {s for s, (k, d) in kinds.items() if k != "tradfi"},
+        "V2_every_kind": set(kinds),
+    }
+    tk_cache = mtm(gen_tickets(cache_bars, gate, SIG_FROM, SIG_TO), cache_bars)
+    r_cache_pre = sum(t["r"] for t in tk_cache
+                      if t["signal_d"] <= "2026-08-07" and t.get("r") is not None)
+    VARIANTS = [
+        ("V0_coin_prereg", False, False),
+        ("V0_coin_prereg", True, False),
+        ("V0_coin_prereg", True, True),
+        ("V0_coin_prereg", "to_cache", False),
+        ("V0_coin_prereg", "to_cache", True),
+        ("V1_nontradfi", "to_cache", False),
+        ("V2_every_kind", "to_cache", False),
+    ]
+    out = {}
+    for uni, mapped, aligned in VARIANTS:
+        raw = {s: v for s, v in raw_all.items() if s in U[uni]}
+        bars = to_bars(raw)
+        ren = []
+        if mapped:
+            ref = set(cache_bars) if mapped == "to_cache" else None
+            bars, ren = _rename_1000(bars, ref)
+        if aligned:
+            bars = {s: v for s, v in bars.items() if s in cache_bars}
+        tk = mtm(gen_tickets(bars, gate, SIG_FROM, SIG_TO), bars)
+        pre = compare_tickets(tk_cache, tk, "cache", uni)["pre_split"]
+        r_pre = sum(t["r"] for t in tk if t["signal_d"] <= "2026-08-07" and t.get("r") is not None)
+        share = pre["same_key_share_of_a"]
+        diff = (r_pre / r_cache_pre - 1) if r_cache_pre else None
+        key = (f"{uni}{'+map1000' if mapped is True else ''}"
+               f"{'+map1000_to_cache' if mapped == 'to_cache' else ''}"
+               f"{'+cache_univ' if aligned else ''}")
+        out[key] = {
+            "universe": uni, "map_1000": mapped, "cache_aligned": aligned,
+            "n_symbols": len(bars), "n_renamed": len(ren), "renamed_sample": ren[:10],
+            "n_tickets": len(tk),
+            "total_r": round(sum(t["r"] for t in tk if t.get("r") is not None), 4),
+            "pre_n_cache": pre["n_a"], "pre_n_pbv": pre["n_b"], "pre_n_both": pre["n_both"],
+            "pre_only_cache": pre["n_only_a"], "pre_only_pbv": pre["n_only_b"],
+            "pre_same_key_share_of_cache": share,
+            "pre_total_r_cache": round(r_cache_pre, 4), "pre_total_r_pbv": round(r_pre, 4),
+            "pre_total_r_rel_diff": round(diff, 4) if diff is not None else None,
+            "pass_same_key": bool(share is not None and share >= 0.95),
+            "pass_total_r": bool(diff is not None and abs(diff) <= 0.10),
+            "nav": summarise(tk, bars).get("nav"),
+        }
+    return out
+
+
+def _snap(a: dict, i: int) -> dict:
+    """某个下标上的全部闸门判据(R-v2 长仓口径)。"""
+    c, hh, ll = a["c"][i], a["hh40"][i], a["ll40"][i]
+    sma = a["sma200"][i]
+    adv30, adv40p, dv = a["adv30"][i], a["adv40p"][i], a["dv"][i]
+    return {"c": c, "hh40": hh, "c_over_hh40": (c / hh - 1) if hh else None,
+            "sma200": sma, "c_over_sma200": (c / sma - 1) if sma else None,
+            "adv30": adv30, "dv": dv, "adv40p": adv40p,
+            "dv_over_2adv40p": (dv / (2 * adv40p)) if adv40p else None,
+            "mindd120": a["mindd120"][i],
+            "range40": ((hh - ll) / hh) if hh else None}
+
+
+def run_mechanism(cache_bars: dict, pbv_bars: dict, gate: dict) -> dict:
+    """【探索性】缓存侧有票、永续侧没票的那些张:逐张列出两侧的闸门判据,
+    看是哪一条把它挡掉的(主结果不变,这里只找机制)。"""
+    tk_cache = mtm(gen_tickets(cache_bars, gate, SIG_FROM, SIG_TO), cache_bars)
+    tk_pbv = mtm(gen_tickets(pbv_bars, gate, SIG_FROM, SIG_TO), pbv_bars)
+    A = {_key(t): t for t in tk_cache}
+    B = {_key(t): t for t in tk_pbv}
+    only_a = sorted(k for k in A if k not in B)
+    raw_all = to_bars(_read_jsonl_pbv(PBV_JSONL))       # 未过宇宙过滤的永续序列
+    rows = []
+    for (sym, d) in only_a:
+        rec = {"symbol": sym, "signal_d": d, "r": A[(sym, d)]["r"],
+               "pbv_symbol_used": None, "pbv_bars": 0, "pbv_first_d": None, "pbv_last_d": None}
+        ca = t159.indicators(cache_bars[sym])
+        ic = ca["d"].index(d)
+        rec["cache"] = _snap(ca, ic)
+        cand = None
+        if sym in pbv_bars:
+            cand = pbv_bars[sym]
+        elif ("1000" + sym) in pbv_bars:
+            cand = pbv_bars["1000" + sym]
+            rec["pbv_symbol_used"] = "1000" + sym
+        elif sym in raw_all:
+            cand = raw_all[sym]
+        if cand:
+            rec["pbv_bars"] = len(cand)
+            rec["pbv_first_d"], rec["pbv_last_d"] = cand[0][0], cand[-1][0]
+            pa = t159.indicators(cand)
+            if d in pa["d"]:
+                ip = pa["d"].index(d)
+                rec["pbv"] = _snap(pa, ip)
+                rec["close_rel_diff"] = abs(pa["c"][ip] / ca["c"][ic] - 1)
+                blockers = []
+                if not (rec["pbv"]["c"] > rec["pbv"]["hh40"]):
+                    blockers.append("c<=hh40")
+                if rec["pbv"]["sma200"] is None or not (rec["pbv"]["c"] > rec["pbv"]["sma200"]):
+                    blockers.append("c<=sma200")
+                if rec["pbv"]["mindd120"] is None or rec["pbv"]["mindd120"] > 0.5:
+                    blockers.append("mindd120>0.5")
+                if rec["pbv"]["adv30"] is None or rec["pbv"]["adv30"] < 5e6:
+                    blockers.append("adv30<5M")
+                if rec["pbv"]["range40"] is None or rec["pbv"]["range40"] > 0.40:
+                    blockers.append("range40>0.40")
+                if rec["pbv"]["adv40p"] is None or rec["pbv"]["dv"] < 2 * rec["pbv"]["adv40p"]:
+                    blockers.append("dv<2*adv40p")
+                rec["blockers_on_pbv"] = blockers
+        rows.append(rec)
+    edge = [abs(r["cache"]["c_over_hh40"]) for r in rows
+            if r.get("cache") and r["cache"]["c_over_hh40"] is not None]
+    with_pb = [r for r in rows if r.get("pbv")]
+    blocker_hist = defaultdict(int)
+    for r in with_pb:
+        for b in r.get("blockers_on_pbv", []):
+            blocker_hist[b] += 1
+    return {"n_only_cache": len(rows), "n_with_pbv_series": len(with_pb),
+            "n_blocked_by_hh40": sum(1 for r in with_pb if "c<=hh40" in r.get("blockers_on_pbv", [])),
+            "blocker_hist": dict(blocker_hist),
+            "cache_edge_abs": {"median": _median(edge), "p75": _quant(edge, 0.75) if edge else None,
+                                "max": max(edge) if edge else None,
+                                "n_within_20bp": sum(1 for x in edge if x <= 0.002),
+                                "n_within_50bp": sum(1 for x in edge if x <= 0.005)},
+            "rows": rows}
+
+
 def main() -> None:
+    global UNIVERSE_MODE
     stage = "all"
     if "--stage" in sys.argv:
         stage = sys.argv[sys.argv.index("--stage") + 1]
-    if stage == "fetch" or (stage == "all" and not os.path.exists(UM_JSONL)):
-        fetch_um()
+    if "--universe" in sys.argv:
+        UNIVERSE_MODE = sys.argv[sys.argv.index("--universe") + 1]
+    out_name = "t238_results.json"
+    if "--out" in sys.argv:
+        out_name = sys.argv[sys.argv.index("--out") + 1]
+    if stage == "mech":
+        cache_bars = to_bars(load_cache_raw())
+        pbv_bars = to_bars(load_pbv_raw())
+        gate = t159.load_gate()
+        out = os.path.join(HERE, "t238_results_mech.json")
+        res = run_mechanism(cache_bars, pbv_bars, gate)
+        json.dump(res, open(out, "w"), indent=1, default=str)
+        brief = {k: v for k, v in res.items() if k != "rows"}
+        brief["sample_rows"] = res["rows"][:8]
+        print(json.dumps(brief, indent=1, default=str))
+        return
+    if stage == "sens":
+        cache_bars = to_bars(load_cache_raw())
+        gate = t159.load_gate()
+        out = os.path.join(HERE, "t238_results_sens.json")
+        json.dump({"generated_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+                   "cache_tickets": len(gen_tickets(cache_bars, gate, SIG_FROM, SIG_TO)),
+                   "variants": run_sensitivity(cache_bars, gate)}, open(out, "w"), indent=1, default=str)
+        print(json.dumps(json.load(open(out))["variants"], indent=1, default=str))
+        return
+    if stage == "fetch" or (stage == "all" and not os.path.exists(PBV_JSONL)):
+        fetch_pbv()
 
-    um_raw = load_um_raw()
+    pbv_raw = load_pbv_raw()
     cache_raw = load_cache_raw()
     db_raw = _read_jsonl(DB_JSONL) if os.path.exists(DB_JSONL) else {}
-    um_bars = to_bars(um_raw)
+    pbv_bars = to_bars(pbv_raw)
     cache_bars = to_bars(cache_raw)
     db_bars = to_bars(db_raw)
+    renamed_v3, kept_both_v3 = [], []
+    if UNIVERSE_MODE == "v3":
+        pbv_bars, renamed_v3, kept_both_v3 = _rename_1000_v3(pbv_bars, set(cache_bars))
 
-    res = {}
+    res = {"meta": {"version": ("v3:perp_bv_daily@S-730-validated-universe"
+                                if UNIVERSE_MODE == "v3" else "v2:perp_bv_daily"),
+                    "source_table": "perp_bv_daily",
+                    "universe": ("S-730 validated universe (binance_hist panel ∩ perp_bv_pairs "
+                                 "coin, +1000X→X)" if UNIVERSE_MODE == "v3" else
+                                 "perp_bv_pairs.kind='coin' (+ kind null & dead_from not null)"),
+                    "dv": "qv", "fetch_from": FETCH_FROM, "fetch_to": FETCH_TO,
+                    "universe_mode": UNIVERSE_MODE,
+                    "generated_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")}}
     # 0. 数据自检
-    starts = sorted(r[0][0] for r in um_bars.values())
-    warm_ok = sum(1 for r in um_bars.values() if len(r) > WARMUP)
-    first_signal_dates = sorted(r[WARMUP][0] for r in um_bars.values() if len(r) > WARMUP)
+    starts = sorted(r[0][0] for r in pbv_bars.values())
+    warm_ok = sum(1 for r in pbv_bars.values() if len(r) > WARMUP)
+    first_signal_dates = sorted(r[WARMUP][0] for r in pbv_bars.values() if len(r) > WARMUP)
     res["data"] = {
-        "um": {"symbols": len(um_bars), "rows": sum(len(v) for v in um_bars.values()),
-               "first_d": starts[0] if starts else None, "last_d": max(r[-1][0] for r in um_bars.values()),
+        "pbv": {"symbols": len(pbv_bars), "rows": sum(len(v) for v in pbv_bars.values()),
+               "first_d": starts[0] if starts else None, "last_d": max(r[-1][0] for r in pbv_bars.values()),
                "n_symbols_with_>220_bars": warm_ok,
                "earliest_eligible_signal_d": first_signal_dates[0] if first_signal_dates else None,
                "median_eligible_signal_d": _median_str(first_signal_dates)},
@@ -577,15 +939,17 @@ def main() -> None:
         "db": {"symbols": len(db_bars), "rows": sum(len(v) for v in db_bars.values()),
                "first_d": min(r[0][0] for r in db_bars.values()) if db_bars else None,
                "last_d": max(r[-1][0] for r in db_bars.values()) if db_bars else None},
-        "um_minus_cache_symbols": sorted(set(um_bars) - set(cache_bars)),
-        "cache_minus_um_symbols": sorted(set(cache_bars) - set(um_bars)),
-        "um_granularity": granularity_audit(um_raw),
-        "um_coverage": coverage_audit(um_raw),
+        "pbv_minus_cache_symbols": sorted(set(pbv_bars) - set(cache_bars)),
+        "cache_minus_pbv_symbols": sorted(set(cache_bars) - set(pbv_bars)),
+        "v3_rename_1000x": {"renamed": renamed_v3, "kept_both": kept_both_v3},
+        "pbv_granularity": granularity_audit(pbv_raw),
+        "pbv_universe": dict(PBV_UNI),
+        "pbv_coverage": coverage_audit(pbv_raw),
     }
 
     # 1. ① 序列两两对比
-    res["series"] = {"um_vs_cache": compare_series(um_raw, cache_raw, "um", "cache"),
-                     "um_vs_db": compare_series(um_raw, db_raw, "um", "db"),
+    res["series"] = {"pbv_vs_cache": compare_series(pbv_raw, cache_raw, "pbv", "cache"),
+                     "pbv_vs_db": compare_series(pbv_raw, db_raw, "pbv", "db"),
                      "cache_vs_db": compare_series(cache_raw, db_raw, "cache", "db")}
 
     # 闸门
@@ -597,8 +961,8 @@ def main() -> None:
                    "style_db": {"n": dbg["n_rows"], "d0": dbg["d0"], "d1": dbg["d1"]}}
 
     # 2. ② 票生成 + 对比
-    tk_um = gen_tickets(um_bars, gate, SIG_FROM, SIG_TO)
-    tk_um = mtm(tk_um, um_bars)
+    tk_pbv = gen_tickets(pbv_bars, gate, SIG_FROM, SIG_TO)
+    tk_pbv = mtm(tk_pbv, pbv_bars)
     tk_cache = gen_tickets(cache_bars, gate, SIG_FROM, SIG_TO)
     tk_cache = mtm(tk_cache, cache_bars)
     # 自检:缓存侧生成必须复现 t159 落盘的 770 张
@@ -618,49 +982,50 @@ def main() -> None:
                                               for k in sorted(diffs)[:10]],
                               "only_generated": len(set(cm) - set(fm)), "only_file": len(set(fm) - set(cm))}
 
-    res["tickets"] = {"um": summarise(tk_um, um_bars), "cache": summarise(tk_cache, cache_bars),
-                      "compare": compare_tickets(tk_cache, tk_um, "cache", "um")}
-    res["warmup"] = warmup_attribution(tk_cache, tk_um, um_bars, cache_bars)
+    res["tickets"] = {"pbv": summarise(tk_pbv, pbv_bars), "cache": summarise(tk_cache, cache_bars),
+                      "compare": compare_tickets(tk_cache, tk_pbv, "cache", "pbv")}
+    res["warmup"] = warmup_attribution(tk_cache, tk_pbv, pbv_bars, cache_bars)
 
     # 3. ③ 钱曲线 + S-677 切片
-    res["money"] = {"um": summarise(tk_um, um_bars)["nav"], "cache": summarise(tk_cache, cache_bars)["nav"],
+    res["money"] = {"pbv": summarise(tk_pbv, pbv_bars)["nav"], "cache": summarise(tk_cache, cache_bars)["nav"],
                     "s638_reference": {"annualised": 0.244, "mdd": -0.323, "calmar": 0.99,
                                        "note": "S-638: f=1%, 盯市 MDD −32.3%, 年化 +24.4%, 接 304 张"}}
     # S-677 的 OOS 切片(照 s677_rv2_oos.py 原文的年份口径)
-    oos_um = gen_tickets(um_bars, gate, OOS_FROM, OOS_TO)
-    oos_um = mtm(oos_um, um_bars, OOS_TO)
+    oos_pbv = gen_tickets(pbv_bars, gate, OOS_FROM, OOS_TO)
+    oos_pbv = mtm(oos_pbv, pbv_bars, OOS_TO)
     oos_cache = gen_tickets(cache_bars, gate, OOS_FROM, OOS_TO)
     oos_cache = mtm(oos_cache, cache_bars, OOS_TO)
     res["oos_s677"] = {
         "window": [OOS_FROM, OOS_TO],
-        "um": {"n": len(oos_um),
-               "total_r": round(sum(t["r"] for t in oos_um if t.get("r") is not None), 4),
-               "per_ticket_r": round(sum(t["r"] for t in oos_um if t.get("r") is not None) / len(oos_um), 6)
-               if oos_um else None},
+        "pbv": {"n": len(oos_pbv),
+               "total_r": round(sum(t["r"] for t in oos_pbv if t.get("r") is not None), 4),
+               "per_ticket_r": round(sum(t["r"] for t in oos_pbv if t.get("r") is not None) / len(oos_pbv), 6)
+               if oos_pbv else None},
         "cache": {"n": len(oos_cache),
                   "total_r": round(sum(t["r"] for t in oos_cache if t.get("r") is not None), 4),
                   "per_ticket_r": round(sum(t["r"] for t in oos_cache if t.get("r") is not None) / len(oos_cache), 6)
                   if oos_cache else None},
-        "tickets_um": [{"symbol": t["symbol"], "signal_d": t["signal_d"], "r": t["r"]} for t in oos_um],
+        "tickets_pbv": [{"symbol": t["symbol"], "signal_d": t["signal_d"], "r": t["r"]} for t in oos_pbv],
         "tickets_cache": [{"symbol": t["symbol"], "signal_d": t["signal_d"], "r": t["r"]} for t in oos_cache],
     }
 
     # 4. ④ 前向窗口
-    res["forward"] = forward_window(um_bars, gate, db_gate)
+    res["forward"] = forward_window(pbv_bars, gate, db_gate)
 
     # 5. ⑤ 判(S-719)
     cmp_pre = res["tickets"]["compare"]["pre_split"]
     a_r = cmp_pre["both"]["total_r"] + cmp_pre["a_only"]["total_r"]   # cache 侧 pre 全量
-    b_r = cmp_pre["both"]["total_r"] + cmp_pre["b_only"]["total_r"]   # um 侧 pre 全量
+    b_r = cmp_pre["both"]["total_r"] + cmp_pre["b_only"]["total_r"]   # pbv 侧 pre 全量
     # 「2020-03 → 2026-08-08 总 R」两边各自的实际值(按各自生成的全部票)
     r_cache_pre = sum(t["r"] for t in tk_cache if t["signal_d"] <= "2026-08-07" and t.get("r") is not None)
-    r_um_pre = sum(t["r"] for t in tk_um if t["signal_d"] <= "2026-08-07" and t.get("r") is not None)
+    r_pbv_pre = sum(t["r"] for t in tk_pbv if t["signal_d"] <= "2026-08-07" and t.get("r") is not None)
     share = cmp_pre["same_key_share_of_a"]
-    diff_pct = (r_um_pre / r_cache_pre - 1) if r_cache_pre else None
+    diff_pct = (r_pbv_pre / r_cache_pre - 1) if r_cache_pre else None
     res["judge"] = {
+        "version": res["meta"]["version"],
         "rule": "S-719:2026-08-08 前同键票占缓存的 ≥95% 且 2020-03→2026-08-08 总 R 与缓存差在 ±10% 内 ⇒ ✅",
         "pre_same_key_share_of_cache": share,
-        "pre_total_r_cache": round(r_cache_pre, 4), "pre_total_r_um": round(r_um_pre, 4),
+        "pre_total_r_cache": round(r_cache_pre, 4), "pre_total_r_pbv": round(r_pbv_pre, 4),
         "pre_total_r_rel_diff": round(diff_pct, 4) if diff_pct is not None else None,
         "pass_same_key": bool(share is not None and share >= 0.95),
         "pass_total_r": bool(diff_pct is not None and abs(diff_pct) <= 0.10),
@@ -669,7 +1034,7 @@ def main() -> None:
     res["judge"]["verdict"] = "✅ 验证在永续序列上成立" if (
         res["judge"]["pass_same_key"] and res["judge"]["pass_total_r"]) else "❌"
 
-    out = os.path.join(HERE, "t238_results.json")
+    out = os.path.join(HERE, out_name)
     json.dump(res, open(out, "w"), indent=1, default=str)
     brief = {
         "data": res["data"], "series": {k: {kk: vv for kk, vv in v.items() if kk != "per_symbol"}
