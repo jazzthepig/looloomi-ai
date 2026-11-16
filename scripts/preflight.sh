@@ -610,6 +610,18 @@ python3 -m pytest tests/test_store_result.py -q || {
     echo "✗ preflight stage: S-341a StoreResult envelope red" >&2
     exit 1
 }
+# 3a-undevicesima-septies. S-892:四处烧额度的调用改成「读库优先 / 合并取数」——
+#                    三份新测试文件。S-244 家族:**测试文件存在 ≠ 会被运行** ——
+#                    preflight 是手写枚举的,漏掉一个没有任何征兆(而且这类文件的
+#                    缺席永远是静默的:少跑一份 = 少一道 push 前的门)。
+#                    注册它们,让三条判据在 push 前就红:
+#                      ① positioning 库里有数时**一次 API 都不打**(口径两条路逐位相同)
+#                      ② watchlist 九个标的**只打一次** /coins/markets
+#                      ③ mmi 一轮**只取一次** /market_chart
+python3 -m pytest tests/test_positioning_db_first.py tests/test_watchlist_batch.py tests/test_mmi_single_fetch.py -q || {
+    echo "✗ preflight stage: S-892 额度修复三份新测试红" >&2
+    exit 1
+}
 # 3a-vicesima. S-360: docs/SPINE.md 必须描述现在的代码。SPINE 是 agent 重组
 #                    记忆时对齐方向的基准 —— 一份过期的方向基准比没有更坏。
 #                    实测动机:10 个文件 12 行注释断言 signal_outcomes 死了
@@ -2037,6 +2049,21 @@ echo "  ✓ 状态敞口前向账与研究面板逐日相同 (T-406)"
 python3 -m pytest tests/test_s642_short.py -q || {
   echo "  ✗ S-642 空头臂与研究族曲线逐日不一致 — do not push"; exit 1; }
 echo "  ✓ S-642 空头臂与研究族曲线逐日相同 (T-412)"
+
+# ── S-892: 少烧 CoinGecko 额度的三处改动各有钉子 ──────────────────────────────
+# 三处都是「同一个数据源两个额度池 / 同一个 URL 取两次」的形状,肉眼看不出错,
+# 但额度账会先炸:positioning 每 30 分钟打公开端点、watchlist 九个标的九次调用、
+# mmi 一轮取两次 /market_chart。三条测试分别钉死:库路径与 API 路径逐位相同、
+# 一轮只发一次请求、每轮只取一次 market_chart。
+python3 -m pytest tests/test_positioning_db_first.py -q || {
+  echo "  ✗ positioning 读库优先口径与 API 路径不一致 — do not push"; exit 1; }
+echo "  ✓ positioning 读库优先与 API 路径逐位相同 (S-892)"
+python3 -m pytest tests/test_watchlist_batch.py -q || {
+  echo "  ✗ watchlist 行情没有合成一次请求 / 缓存按 key 独立 — do not push"; exit 1; }
+echo "  ✓ watchlist 行情一次请求取齐 + 每 key 独立缓存 (S-892)"
+python3 -m pytest tests/test_mmi_single_fetch.py -q || {
+  echo "  ✗ mmi 一轮取了不止一次 /market_chart — do not push"; exit 1; }
+echo "  ✓ mmi 一轮只取一次 /market_chart (S-892)"
 
 # ── S-223: 试错价值 = 被强制执行的那一部分 ───────────────────────────────────
 # 一条只被写下来的教训,在下一个失忆的 session 里和不存在没有区别。这个关卡把
