@@ -185,8 +185,15 @@ def t_is_known_failed_step_handles_unknown():
 
 # ── 大文件截尾 ──────────────────────────────────────────────────────────
 
-def test_max_lines_drops_old_not_new(tmp_path: Path = None):
-    """文件超过 `max_lines` → 丢掉最老,保留最新(append-only 语义)。"""
+def test_max_lines_drops_old_not_new(tmp_path: Path):
+    """文件超过 `max_lines` → 丢掉最老,保留最新(append-only 语义)。
+
+    ⚠️ `tmp_path` **不能带默认值**(11-16):pytest 只给"没有默认值"的参数注入 fixture
+    —— 带 `= None` 时 pytest 把 None 当参数值传进来,于是 `None / "large.jsonl"` 抛
+    TypeError,这条断言在 pytest 下从来没跑过。而本文件的 self-runner(`main()`)只收
+    `t_*`,这条 `test_*` 两边都没被覆盖:preflight 说"绿",pytest 说"红",两个都在说
+    一件没发生的事。现在它进 pytest(靠 fixture),也进 self-runner(靠 main() 的收集)。
+    """
     p = tmp_path / "large.jsonl"
     lines = []
     for i in range(100):
@@ -217,7 +224,8 @@ def main(tmp_path=None) -> int:
     from pathlib import Path
     _tp_p = Path(_tp)
 
-    funcs = [v for k, v in sorted(globals().items()) if k.startswith("t_")]
+    funcs = [v for k, v in sorted(globals().items())
+             if k.startswith("t_") or k.startswith("test_")]
     for fn in funcs:
         print(f"\n▸ {fn.__name__}")
         # t_xxx 接受 tmp_path 参数

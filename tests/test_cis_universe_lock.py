@@ -40,6 +40,14 @@ def _reset(cache=None, ts=None):
 
 GOOD = {"universe": [{"symbol": "BTC", "cis_score": 80}], "source": "test"}
 
+# ⚠️ 这份测试只关心**锁**。公开端点 `get_cis_universe()` 默认还会叠一层 official
+# overlay(按官方收盘序列重排 universe,并把只有官方数据的币种追加进来)—— 那是另一条
+# 口径、另一组测试(`tests/test_cis_official.py`)。两者一起跑时,官方序列一旦是热的,
+# `universe[0]` 就从 BTC 变成官方独有的币种(如 HYPE),锁本身却一点问题都没有:
+# 一个顺序相关的假失败(11-16)。锁的语义全在 `_get_cis_universe_live()` 里,
+# 这里用 `official=False` 关掉 overlay —— 端点的公开参数,不改生产代码。
+_OFFICIAL = False
+
 
 def _patch_build(delay=0.0, payload=GOOD):
     async def _fake(force_source=None):
@@ -52,7 +60,7 @@ def _patch_build(delay=0.0, payload=GOOD):
 def test_fresh_cache_served_without_touching_build():
     _reset(cache=GOOD)
     cis._build_cis_universe = None  # would explode if called
-    out = asyncio.run(cis.get_cis_universe())
+    out = asyncio.run(cis.get_cis_universe(official=_OFFICIAL))
     assert out["universe"][0]["symbol"] == "BTC"
     assert not out.get("stale")
 
@@ -65,10 +73,10 @@ def test_slow_build_does_not_block_other_callers():
     _patch_build(delay=2.0)
 
     async def scenario():
-        slow = asyncio.create_task(cis.get_cis_universe())
+        slow = asyncio.create_task(cis.get_cis_universe(official=_OFFICIAL))
         await asyncio.sleep(0.05)       # let it take the lock
         t0 = time.time()
-        fast = await cis.get_cis_universe()
+        fast = await cis.get_cis_universe(official=_OFFICIAL)
         waited = time.time() - t0
         slow.cancel()
         return fast, waited
@@ -86,7 +94,7 @@ def test_build_timeout_serves_stale_not_hang():
     cis._UNIVERSE_BUILD_BUDGET_S = 0.2
     _patch_build(delay=5.0)
     t0 = time.time()
-    out = asyncio.run(cis.get_cis_universe())
+    out = asyncio.run(cis.get_cis_universe(official=_OFFICIAL))
     elapsed = time.time() - t0
     assert elapsed < 1.0, f"took {elapsed:.2f}s — must abort at the budget"
     assert out.get("stale") is True
@@ -101,7 +109,7 @@ def test_no_cache_plus_timeout_returns_503_not_hang():
     _patch_build(delay=5.0)
     t0 = time.time()
     try:
-        asyncio.run(cis.get_cis_universe())
+        asyncio.run(cis.get_cis_universe(official=_OFFICIAL))
         raise AssertionError("expected HTTPException(503)")
     except HTTPException as e:
         assert e.status_code == 503
@@ -134,7 +142,7 @@ def test_lock_is_released_when_build_raises():
     cis._build_cis_universe = _boom
 
     try:
-        asyncio.run(cis.get_cis_universe())
+        asyncio.run(cis.get_cis_universe(official=_OFFICIAL))
     except RuntimeError:
         pass
     assert not cis._UNIVERSE_LOCK.locked(), "lock stranded after exception"
