@@ -2284,50 +2284,78 @@ _WATCHLIST_CONFIG = {
 
 # ── CoinGecko proxy for watchlist live data ──────────────────────────────────
 # Cache: 60s TTL to avoid rate limits when watchlist is polled frequently.
-_watchlist_cache: dict = {}
-_watchlist_cache_ts: float = 0.0
+#
+# 11-16 两处修(都是「路径直接走了调用」的又两个实例):
+#   ① 每个 symbol 各发一次 `/coins/markets` —— 9 个标的 = 9 次调用。CG 的 `ids` 本来就支持逗号分隔
+#      一次取多个(上限 250 个)。现在整张 watchlist **一次**取回。
+#   ② 缓存的时间戳是**全局**的:每个 miss 都会把全局时钟拨到当下。于是九个标的轮流 miss、轮流把时钟
+#      拨到当下,缓存几乎从不命中 —— 一个 60 秒的缓存,实际每轮都在打 API。现在每个 key 独立计时。
+#   ③ URL 写死公开端点(Pro key 在公开 host 上会被忽略)。有 key 时走 Pro 端点。
+#   ④ 每次请求新建一个 httpx.AsyncClient —— 连接池没用上。改成用共享 client。
+_watchlist_cache: dict = {}          # symbol → (payload, cached_at)
 _WATCHLIST_CACHE_TTL: float = 60.0
 
 
-async def _get_cg_market_for_watchlist(symbol: str, cg_id: str) -> dict:
-    """Fetch live market data for a watchlist asset. 60s in-process cache."""
-    global _watchlist_cache, _watchlist_cache_ts
-    from src.data.cis.cis_provider import _cg_headers, CG_API_KEY
+def _watchlist_payload(c: dict) -> dict:
+    """/coins/markets 的一行 → watchlist 要的那几个字段(字段名和原来完全一致)。"""
+    return {
+        "price": c.get("current_price"),
+        "mcap_usd": c.get("market_cap"),
+        "fdv_usd": c.get("fully_diluted_valuation"),
+        "volume_24h": c.get("total_volume"),
+        "mcap_rank": c.get("market_cap_rank"),
+        "price_change_30d_pct": c.get("price_change_percentage_30d_in_currency"),
+        "circ_supply": c.get("circulating_supply"),
+        "total_supply": c.get("total_supply"),
+        "ath_distance_pct": c.get("ath_change_percentage"),
+        "rank_snapshot": c.get("market_cap_rank"),
+    }
+
+
+async def _get_cg_markets_batch(symbol_to_cg_id: dict) -> dict:
+    """一次 `/coins/markets` 取回所有 watchlist 标的的行情。返回 {symbol: payload}。
+
+    每个 symbol 独立 60 秒缓存。取不到的 symbol 返回 {} —— 调用方拿 {} 当「没有数据」,
+    不拿 0 冒充(没有数据 ≠ 数据是 0)。
+    """
+    from src.data.cis.cis_provider import CG_API_KEY, CG_PRO_BASE, _cg_headers
+    from src.data.market.data_layer import _get_cg_client
 
     now = time.time()
-    if _watchlist_cache and (now - _watchlist_cache_ts) < _WATCHLIST_CACHE_TTL:
-        return _watchlist_cache.get(symbol, {})
+    out: dict = {}
+    need: dict = {}
+    for sym, cg_id in (symbol_to_cg_id or {}).items():
+        hit = _watchlist_cache.get(sym)
+        if hit and (now - hit[1]) < _WATCHLIST_CACHE_TTL:
+            out[sym] = hit[0]
+        else:
+            need[sym] = cg_id
+    if not need:
+        return out
 
-    result = {}
-    try:
-        import httpx
-        async with httpx.AsyncClient(timeout=10) as client:
-            url = f"https://api.coingecko.com/api/v3/coins/markets"
-            params = {"vs_currency": "usd", "ids": cg_id, "price_change_percentage": "30d"}
-            headers = _cg_headers() if CG_API_KEY else {}
-            resp = await client.get(url, params=params, headers=headers)
+    base = CG_PRO_BASE if CG_API_KEY else "https://api.coingecko.com/api/v3"
+    ids = ",".join(sorted({v for v in need.values() if v}))
+    payload: dict = {}
+    if ids:
+        try:
+            resp = await _get_cg_client().get(
+                f"{base}/coins/markets",
+                params={"vs_currency": "usd", "ids": ids, "price_change_percentage": "30d"},
+                headers=_cg_headers() if CG_API_KEY else {},
+                timeout=20,
+            )
             if resp.status_code == 200:
-                data = resp.json()
-                if data:
-                    c = data[0]
-                    result = {
-                        "price": c.get("current_price"),
-                        "mcap_usd": c.get("market_cap"),
-                        "fdv_usd": c.get("fully_diluted_valuation"),
-                        "volume_24h": c.get("total_volume"),
-                        "mcap_rank": c.get("market_cap_rank"),
-                        "price_change_30d_pct": c.get("price_change_percentage_30d_in_currency"),
-                        "circ_supply": c.get("circulating_supply"),
-                        "total_supply": c.get("total_supply"),
-                        "ath_distance_pct": c.get("ath_change_percentage"),
-                        "rank_snapshot": c.get("market_cap_rank"),
-                    }
-    except Exception:
-        pass
-
-    _watchlist_cache[symbol] = result
-    _watchlist_cache_ts = now
-    return result
+                rows = resp.json() or []
+                by_id = {str(r.get("id")): r for r in rows if isinstance(r, dict)}
+                payload = {sym: _watchlist_payload(by_id[cg]) for sym, cg in need.items() if cg in by_id}
+            else:
+                _logger.warning(f"[WATCHLIST] CG /coins/markets HTTP {resp.status_code}")
+        except Exception as e:                                         # noqa: BLE001 —— 取不到就当没数据
+            _logger.warning(f"[WATCHLIST] CG /coins/markets 失败:{type(e).__name__}: {e}")
+    for sym in need:                                                  # 失败也缓存 60 秒,别把上游打挂
+        _watchlist_cache[sym] = (payload.get(sym, {}), now)
+        out[sym] = payload.get(sym, {})
+    return out
 
 
 def _rank_trend(current_rank: int, prior_rank: Optional[int]) -> dict:
@@ -2865,7 +2893,7 @@ async def get_universe_watchlist(
       - Days since exclusion, days until re-review eligibility
 
     Add ?include_risk_factors=true for institutional risk analysis per asset.
-    Add ?include_live_data=true for real-time CG market data (N requests, slower).
+    Add ?include_live_data=true for real-time CG market data (ONE request for the whole list, 60s cache).
     Add ?include_resolved=true to include permanently excluded assets.
     """
     # CG IDs for live data fetch (symbol → CG coin id)
@@ -2880,6 +2908,12 @@ async def get_universe_watchlist(
         "MANA":    "decentraland",
         "POLYX":   "polymesh",
     }
+
+    # Live market data:整张 watchlist **一次**取回(11-16 改:原来每个 symbol 各打一次)。
+    live_map: dict = {}
+    if include_live_data:
+        live_map = await _get_cg_markets_batch(
+            {s: i for s, i in _SYMBOL_TO_CG_ID.items() if s in _WATCHLIST_CONFIG})
 
     watchlist = []
     for symbol, entry in _WATCHLIST_CONFIG.items():
@@ -2931,12 +2965,8 @@ async def get_universe_watchlist(
             ),
         }
 
-        # ── Live market data (optional, costs N CG API calls) ──────────────
-        live_data = {}
-        if include_live_data:
-            cg_id = _SYMBOL_TO_CG_ID.get(symbol)
-            if cg_id:
-                live_data = await _get_cg_market_for_watchlist(symbol, cg_id)
+        # ── Live market data (optional, one CG call for the whole list) ────
+        live_data = live_map.get(symbol, {}) if include_live_data else {}
 
         # ── Gate status for all 10 v2.0 gates ─────────────────────────────
         gates = _gate_status(entry, live_data)
