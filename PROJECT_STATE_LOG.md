@@ -3198,3 +3198,87 @@ Entity/Decision 层建了一天,没有一条边通到结果。`src/data/entity/d
 - `agent_call_log` 24 小时 0 行 **不是回归**:表里一共 2 行(11-07、11-09,agent_id = mcp_server,托管 /mcp 那条管道写的),说明管道在有流量时会写;Cowork 里的 cometcloud MCP 是本机进程、没配库 ⇒ 我们自己的调用不进这张表(`_ensure_call_log_task` 没配 Supabase 不启动)。日报技能里那条基线(10-13 写的「上线后 24h 仍 0 = 新问题」)过期了 —— 要改的是技能,不是代码。CometCloud MCP 两个工具 08:3x 复测都有返回(日报那一轮是瞬时没响应)。
 - 日报没量到、`loop_attempt` 里有的:**07:01 事件循环卡 5.9 秒,卡在 `cis/rebuild.py` 的 `_series` ← `_standard_outcomes_loop`**。`load_inputs` 读完库之后对几十万行逐名字各扫一遍,全在事件循环里(三个日循环都调它)。修:拼装整段进线程(`_assemble` 走 `asyncio.to_thread`),并先按键分组再取;测试比对每条序列与旧写法逐个相同、语法树钉住不再直接调用。提交 `0840-stall`(runtime)。
 - 合并(带 fixup):T-404 利率族 0/10、T-405 盲复算组合 1.953、T-410 S-884 第二份、T-408 S-881、T-407 S642 前向清单、T-393 C 道面板(脚本 / 结果取 main 的 v2 版;csv 里两条重复策略没去掉,卡上写明)。新开 T-412(C 道:S642 生产纯函数,给纸面账用)。
+
+## 2026-11-15 08:56 UTC — Seth:形态的前向记分自动化(setup-watch v1,S-891)
+- 先登记(S-891)后算基率后写代码。基率(SQL,2020-01 → 2026-10-17,BTC + ETH,一个窗口一组):形态 #1 早段 8 组 / 后段 11 组 ⇒ 进 v1,概率(两段中点)碰认错线 0.597、第 28 天收盘低于进场 0.801、期间 −10% 0.682;形态 #2 早段只有 5 组 ⇒ 按规则不进。读数:#1 在 2023 年后 82% 先碰认错线 —— 「被破那档之上 1%」在这一段偏近(交给交易对话参考)。
+- `src/data/evaluation/setup_watch.py` + `tests/test_setup_watch.py`(7 条);`_scenario_ledger_loop` 结算之后调,单独记 `_setup_watch` 的 loop_attempt;SPINE 8a + §5 第 22 条;登记表 #1 / #2 的「前向」一栏更新。提交 `0845-setupwatch`(runtime)。
+- T-395 写入端已上 main(0c2ed1b2);11-16 UTC 起有开账行。
+
+## 2026-11-16 04:30 UTC — 公众号第二篇:整篇重写(观察 / 分析 / 预判;财新 + 经济学人笔法,Seth)
+
+**这一篇是什么:** Jazz「上次那篇我还没有发布出去,整篇重新写,重新整合,根据最新数据写,按财新和经济学人的风格,图文并茂。」⇒ **不是**在 11-15 那版上改,是**推倒重写**:新文 `docs/articles/tokenized_funds_hk_2026-11-16_zh.md`,标题《二十一天,四十八港元》,约 20,700 字。**11-15 那版(`tokenized_funds_hk_2026-11-15_zh.md`)未发布过,已被这一版整体替换,文件已删** —— 仓库里留两份、读者分不清哪份是真的,是一条接缝(CLAUDE.md 3a)。11-09 那篇与那份 PPT 不动。
+
+**新数据(全部只读,未注册、未连钱包、未下单、无持仓):**
+
+- **2026-11-16 03:12 UTC / 11:12 HKT 主快照**(`docs/articles/assets/tokenized_funds_hk_2026-11-16/snapshot.json`)。
+- **2026-11-16 04:15 UTC / 12:15 HKT 盘口复核读数**(`recheck_2026-11-16_1214hkt.json`)—— 只含 PantherTrade 字段,不含 RWA.xyz。
+- **2026-11-15 13:09 UTC / 21:09 HKT 对照快照**(`snapshot_2026-11-15_2109hkt.json`)。11-09 那次的读数保留在正文里做七天前的对照。
+
+**这一版才站得住的核心事实(11-15 那版没有的):**
+
+- **盘口上摆的是最近两笔成交价本身。** 买价与最后一笔成交逐位相等(CAMFF 买价 103.0938 = 11-15 15:30 那笔 24.00 港元;CUMFU 买价 104.6326 = 11-15 10:48 那笔 6.01 美元);卖价是上一笔(CUMFU 卖价 104.6543 = 08:13 那笔,同时是上一交易日收盘价;CAMFF 卖价 103.1051 = 上一交易日收盘价,也是平台记的 24 小时最高价)。**不是两张挂着没成交的订单。**
+- **报价时钟在开盘之前就停住了。** 时间戳 11-16 02:11 / 02:55,比读数旧 9 小时 01 分 / 8 小时 17 分;两次读数相隔 14 小时零 2 分,买价 / 卖价 / 指示性 NAV 逐位相同,往前走的只有时间戳(周日 15:29 / 10:47 → 周一 02:11 / 02:55,穿过一整夜)。**12:15 再读一次:仍在原地,08:01–12:15 的 255 个逐分钟采样点、0 笔成交。**
+- **平台口径的 24 小时成交额对不上逐笔成交。** 平台给 48.00 港元 / 6.01 美元;能逐笔验证的只有 24.00 港元 + 12.01 美元 —— **港元两倍、美元一半,两个币种方向相反**。两次读数相隔 14 小时,港元那项 48.00 一动没动,美元那项 12.01 → 6.01,像没重算的缓存。文章里一律写「平台口径」,并进了「我们没有测到的」清单。
+- **平台行情页记着成交,RWA.xyz 上四类份额的转让计数器(周 / 月 / 近 30 日)笔数与金额全部为 0。** 两个数据源对不上,公开数据判不出是哪一种(口径下限 / 快照未反映 / 同对手方表现为铸造或销毁)—— 写进正文,没有绕过去。
+- **规模侧:** 可交易两类 $9,530,940(占四类 $607,090,792 的 1.57%,占全球 $13.91B 的约 0.07%);四类 30 日净流出 $53,557,798,其中 91.6% 来自不能转手的两类;可转手的两类链上可见持有人 3 + 5 = 8,七天一个没多;Class I 美元 $505,671,306 是一个地址。
+- **可转手的价格写在管理费里:** 港元 45 bp、美元 55 bp,与净收益率差额 45.17 / 55.03 bp 对齐(用同一 30 日 APY 口径;11-15 那版美元那一侧混用了 7 日 APY)。
+- **倒推汇率** 7.8447–7.8456 港元兑一美元(由 CAMFF 的平台价 ÷ RWA.xyz 上的美元 NAV 反推,不是任一平台公布的汇率)。
+
+**结构性论证(这一版的立论,一句话):** 二级市场开在了正确的结构位置上,但位置上没有车,而车不来是有原因的 —— 三道闸门(800 万港元专业投资者门槛 / 白名单转让 / 做市商退出需提前三个月通知)决定流量,通道只决定位置。
+
+**验证(发稿前自查):**
+
+- **独立重算核对(已落成可重跑的脚本,不是一次性的手工核对):** 新增 `scripts/articles/verify_tokenized_funds_hk.py`(仅标准库)—— 从 `snapshot.json` + `snapshot_2026-11-15_2109hkt.json` + `recheck_2026-11-16_1214hkt.json` **重算** 98 条派生数字(价差、中价 vs iNAV 的 bp、报价滞后、七日 / 三十日金额与百分比、持有人、费率差、全球总量与净流量、倒推汇率),逐条在正文里找,再挂 15 条布尔断言(买盘量/卖盘量同值、各时段零成交、复核时间戳未变、两次读数相隔 14 小时零 2 分、转让计数器全为 0、Class F 不到第 25 名的四分之一、最小一笔净流量 ≈ 一千万倍)。**运行结果:命中 98 / 未命中 0 / 断言 15 条全过,退出码 0。** 归一化处理了千分位、全角负号、百分号、空白,所以 `−5.50%` 与 `-5.50` 算同一个。文章里「每个数字都出自那份 JSON,图和文不会各说各话」这句,现在由这个脚本随时可重跑,而不是一句承诺。
+- **合规双扫:** `scripts/decks/audit_deck.py` 的 FORBIDDEN 清单(33 条,含中文字面词)扫正文 → **0 命中**;「不给目标价」一句因字面命中「目标价」已改写为「不预测价格,只给可验证的路径」。`scripts/compliance_scan.py` 显式扫本轮两个脚本 → **Compliance OK**;该脚本全仓扫描报 238 条命中,**全部是 `src/` 与 `dashboard/` 里既有的历史违规(本轮未触碰那些文件;文章是 `.md`,本来就在该脚本的作用域之外)**;GitHub 的 `compliance-check.yml` 只扫变更文件且当前是 advisory(`|| echo warning`),不挡这一版的推送。
+- **图:** 五张图全部由 `scripts/articles/tokenized_funds_hk.py` 从同一份快照渲染(先落盘再画图,图和文不会各说各话)。fig1 的 2×2 网格(行=两个份额类别,列=周日与周一两个时段)已复核:左边那格的价格线在 15:30 处**台阶式下移** —— 画的就是「逐分钟最新价 = 成交价」。
+- **复述检查(读稿自查抓到并已改):** ① 「报价时钟也没有走」是错的 —— 两次读数之间时钟走过了一整夜,准确说法是「走过一整夜后在开盘之前停住」;② 「卖价是倒数第二笔成交价」对港元那一侧不成立(CAMFF 当日只可见一笔),已改为「卖价是上一笔成交价」并注明哪一笔看不到;③ 买盘量 / 卖盘量两个字段在同一份额里给出的是**同一个数**,原文写成两个不同字段的值,已改;④ 「六天前」实为七天前(11-09 → 11-16),已改;⑤ 「四类份额逐笔对得上」原来只列了三类,补上 Class A 港元。
+
+**没做:** 未做 git add / commit / push(Jazz 说了不需要);文章与图留在仓库里等 Jazz 过目与发布口径确认。
+
+## 2026-11-16 12:45 UTC — Seth:四处烧额度的调用改成「读库优先 / 合并取数」(S-892)
+
+**为什么做这一件:** Jazz 11-15 前后说「coingecko analyst api 现在调用超限制了,我在 railway 补了 cmc 的免费 api 先用着」,又指出「我们这两周用得多是因为 seth 在补全矢量数据库、还有优化策略,然后**路径直接走了调用,而不是先走我们的数据库**」。⇒ 这一条是根因,不是「额度不够」。这一轮先把四处具体口子堵掉(Jazz:「你先修bug」「继续修bug」),CMC 兜底层与更广的治理不在本次授权内。
+
+**四处口子(每一个都在独立消耗额度池,互相不相关):**
+
+1. **`src/data/cis/positioning.py` 打的是 CoinGecko 公开端点。** `/derivatives` 与写入端 `src/data/market/derivatives_market.py` 是**同一个端点的同一份数据**;写入端每 6 小时取一次(Analyst 档),positioning 每 30 分钟取一次(公开端点)—— 一个数据源,两个额度池。公开端点每分钟十几次且 **Pro key 在公开 host 上会被忽略**,429 是家常便饭;Analyst 档每分钟 500 次却几乎没被这条路径用上。
+   **改法:** `refresh_positioning()` 先读 `derivatives_market_daily`,读不到或读旧了(>12 小时)才回落 API。**口径必须一模一样**,所以落库存的是**分子 + 分母**:`funding_oiw_sum = Σ(funding_rate × open_interest)`、`oi_funding_usd = Σ open_interest`(同一批带 funding_rate 的永续行),读者自己算 `Σ(f·oi)/Σ(oi)`。存分子分母而不是存算好的比例,因为这张表原有的 `top_funding_raw` 是「持仓最大的那个场所的资金费」—— 两个不同的量,不能互相顶替;读者自己除一次,两条路就永远不会悄悄分叉。
+   **迁移:** `migrations/2026-11-16_derivatives_market_funding_oiw.sql`(两列 + 列注释 + `notify pgrst`)。
+   **迁移顺序错了也不会出事:** 迁移没跑 → 写入端 PostgREST 报 PGRST204 → `run_once` **退回旧列集重试**(这一轮数据不丢,只是没有资金费两列),并把 `why` 标成「⚠️ 资金费两列写不进去(迁移未跑),已退回旧列集」+ `degraded: True`;positioning 读不到新列 → 自动回落 API。**两条路都不静默出错,也不改数。**
+   `src/api/schema_manifest.json` 同步加两列(离线守卫 `tests/test_every_written_table_exists.py` 要求代码里写的列 ⊆ manifest)。
+   **测试:** `tests/test_positioning_db_first.py`(5 条:库里有数时**一次 API 都不打**、库里没数才回落、库太旧才回落、口径两条路逐位相同、只收永续且只收带资金费的行)。
+
+2. **`src/api/routers/cis.py` 的 watchlist 逐个 symbol 打 CG。** 9 个标的 = **9 次** `/coins/markets`;CG 的 `ids` 本来就支持逗号分隔一次取多个(上限 250)。另外三处毛病:① 缓存的 TTL 时间戳是**全局**的,每个 miss 都把全局时钟拨到当下 ⇒ 九个标的轮流 miss、轮流把时钟拨到当下,**一个 60 秒的缓存实际每轮都在打 API**;② 每个 symbol 各建一个 `httpx.AsyncClient`,连接池没用上;③ URL 写死公开端点(Pro key 被忽略)。
+   **改法:** 整张 watchlist **一次**取回;**按 key 独立计时**的 60 秒缓存;共享 `_get_cg_client()`;有 key 走 Pro host;失败也缓存 60 秒(别把上游打挂)。**字段名与原来逐个一致**(前端不用改)。
+   **测试:** `tests/test_watchlist_batch.py`(5 条:九个标的只打**一次**、每键独立 TTL、失败不当 0 冒充、Pro 端点、字段名不变)。
+
+3. **`src/data/market/token_holders.py` 把周频币种每天排进日频队列。** 周频数据(`max_d` 已是最新)的币种每轮仍占 450 个日频名额 ⇒ 一天一遍地取同一批不需要日频更新的数据。
+   **改法:** 从 `token_holders_coverage` 视图读 `n` 与 `n_weekly`,`n_daily = n - n_weekly` —— **不需要迁移**。周频币种进**有界探测池**(每轮最多 30 个,按 `sha1(coin|probe|<日期盐>)` 轮转,日与日之间轮换,不是随机抽)。视图读不到 `n` 列时(旧视图)退回老行为并记 warning。
+   **测试:** `tests/test_token_holders.py` 更新 + 新增 4 条。
+
+4. **`src/analytics/mmi/mmi_index_v3.py` 一轮取两次 `/market_chart`。** `get_historical_score()`(价格 / 市值)与 `get_onchain_score()`(成交量)要的是**同一个 URL、同一组参数**(`vs_currency=usd&days=30`)—— 一次 `calculate()` = 两次 CoinGecko 调用外加两次 1.5 秒空等。
+   **改法:** 一轮取一次、两个分项共用(`self._mc_cache`,每轮开头清空);有 key 时走 Pro 端点 + `x-cg-pro-api-key` 头。
+   **测试:** `tests/test_mmi_single_fetch.py`(3 条:一轮一次 market_chart、Pro 端点、**分数与口径一个字没变**)。
+
+**顺带修的三处 —— 不修就看不见回归:**
+
+- **`pytest tests/` 之前根本收集不起来。** 症状:`ModuleNotFoundError: No module named 'data.market'`(全量收集阶段炸,单独跑任何一份都绿)。根因:仓库根下有一个运行时产物目录 `data/`(cash_sleeve 的 csv),它是 **namespace package**;`sys.path` 里仓库根排在 `src/` 前面时,`import data` 先撞上它,`data` 就被解析成 `<repo>/data`,路由里那种 `from data.market.data_layer import ...` 再也找不到 `data.market`。**namespace package 先到先得,之后改 sys.path 也救不回来** —— 所以单跑绿、全量炸,是顺序问题。
+  **改法:** `tests/conftest.py` 把 `src/` 插到仓库根**前面**;`src/api/main.py` 交换两次 `sys.path.insert` 的顺序(生产侧同一个毛病);`tests/test_regime_reaches_the_signal_feed.py` 的守卫从「不在 list 里就插」改成「不在首位就插到首位」(原来 `src/` 已在 list 里时会跳过重新插入,顺序一变就翻车)。
+  **为什么重要:收不起来 = 任何回归都看不见。** 这次四个修复能不能被验证,全靠这一条先修好。
+- **`tests/test_cis_universe_lock.py` 顺序相关假失败。** `universe[0]` 期望 BTC,实测 HYPE。polluter 是 `tests/test_cis_official.py`:官方 overlay 把只有官方数据的币种**追加**进 universe 后重新排序(`uni.sort(key=lambda x: (x.get("cis_score") is None, -(x.get("cis_score") or 0)))`),于是 `universe[0]` 变成官方独有的币种。**锁本身一点问题都没有** —— 这份测试只关心锁,而锁的语义全在 `_get_cis_universe_live()` 里。**改法:** 用端点**自带的公开参数** `official=False` 关掉 overlay(不改生产代码),6 处调用统一走 `official=_OFFICIAL`。
+- **`tests/test_loops_envelopes.py::test_max_lines_drops_old_not_new` 从来没被覆盖过。** 签名是 `tmp_path: Path = None` —— pytest **只给"没有默认值"的参数注入 fixture**,带默认值时它把 `None` 当参数值传进来,于是 `None / "large.jsonl"` 抛 TypeError:这条断言在 pytest 下从来没跑过;而本文件的 self-runner(`main()`)只收 `t_*` 前缀 ⇒ 它**两边都没被覆盖**(preflight 说绿、pytest 说红,两个都在说一件没发生的事)。**改法:** 去掉默认值(靠 fixture),并让 self-runner 也收 `test_*` ⇒ 两边都覆盖。
+
+**验证(逐条可重跑):**
+
+- 受影响的 5 个测试文件:**27 passed**。
+- 守卫 4 个文件(`test_ci_smoke_paths` / `test_source_policy` / `test_every_written_table_exists` / `test_books_do_not_fan_out_to_free_venue_apis`):**25 passed**。
+- `python3 -m compileall -q scripts src` → 退出码 0。
+- 全量 `pytest tests/`:**2667 passed / 6 failed / 5 skipped**(13 分 10 秒)。改前是 2665 passed / 8 failed ⇒ **两个假失败变成通过,没有新增失败**。
+- **剩下的 6 个失败全是环境问题,不是代码问题:** `test_rate_limit_page_html_429.py`(4)+ `test_fusion_paper_mark_date_upsert.py`(2)报「async def functions are not natively supported」—— 沙箱里没装 `pytest-asyncio`。**这两份文件在 preflight 里是用自带的 self-runner 跑的(`python3 -m tests.test_rate_limit_page_html_429` / `..._fusion_paper_mark_date_upsert`),走 `asyncio.run`,不依赖插件 ⇒ 生产门槛覆盖到了。** 已复现并确认,未改代码。
+- **preflight 拦下了三处 —— 这正是它该做的事:** `tests/test_every_test_is_registered.py` 报「测试文件存在,但 preflight 从不运行」—— 新写的三份测试(`test_positioning_db_first` / `test_watchlist_batch` / `test_mmi_single_fetch`)**不在 preflight 的手写枚举里**。**S-244 家族:测试文件存在 ≠ 会被运行,而这类缺席永远是静默的 —— 少跑一份 = 少一道 push 前的门。** 已在 `scripts/preflight.sh` 注册(第 3a-undevicesima-septies 段);`python3 -m tests.test_every_test_is_registered` 现在是 **366 个已注册 / 3 个已豁免并写明原因**,退出码 0。
+
+**没做(不在本次授权内,按顺序排):** ① CMC 兜底层(`CMC_API_KEY` / `COINMARKETCAP_API_KEY` / `CMC_PRO_API_KEY` 三名兼容 + Redis 自计数日预算 + 默认 40 次/天 + 错误码 1008/1009/1010/1011);② CoinGecko 429 感知的熔断 + 负缓存(现在 429 只会被当成「取不到」,下一次照打);③ 12 条路径的「读库优先」改造(广的);④ QuantMonitor 的 30 秒 `/trading/positions` 价格缓存 —— **要挪到 Binance,不能挪到日库**(日粒度的东西撑不起 30 秒的账)。
+
+**还等你两个答复(问了没回):** ① 前端两个 5 分钟轮询(`/market/macro-pulse` / `/market/crowd-clock`)能不能改成日粒度读库?② **CoinGecko 账号是否开了超额计费?** —— 不开 = 超限只掉数据(现在的真实损失),开了 = 超限直接烧钱。
+
+**已提交并推送**(Jazz 11-16 授权直接推:「你在mac,你可以直接push,到时候跟seth说就好」)。8 个提交,一个一件事:`fix(api)` 抢包 · `fix(data)` positioning · `fix(api)` watchlist · `fix(data)` token_holders · `fix(analytics)` mmi · `test` 两处测试缺陷 · `chore(preflight)` 注册三份新测试 · `docs(state)` 本条。**preflight 先过才提交。**
