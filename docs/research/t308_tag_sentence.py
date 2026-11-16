@@ -471,16 +471,18 @@ def phase_null():
                           b["row"]["window_sum_r"] - b["baseline"]["window_sum_r"]),
         sentence=null_baseline(b["baseline"]["tickets_r"], b["sentence"]["dropped_ledger_n"],
                                b["sentence"]["window_sum_r"] - b["baseline"]["window_sum_r"]))
-    # 组 3:对齐 T-278 窗口(145 张)
+    # 组 3:对齐 T-278 窗口(145 张)—— 票级 R 在 baseline.window_tickets_r,
+    # ΔR 在 window_delta(口径 A/B 用的是 tickets_r / delta_sum_r,键名不同,别混用)
     c = res.get("book_T278_aligned") or {}
     if c.get("baseline"):
+        rs3 = c["baseline"].get("window_tickets_r") or []
         out["groups"]["aligned_T278_window"] = dict(
-            n=c["baseline"]["window_n"],
-            row=null_baseline(c["baseline"]["tickets_r"], c.get("row", {}).get("dropped_ledger_n"),
-                              c.get("row", {}).get("delta_sum_r")),
-            sentence=null_baseline(c["baseline"]["tickets_r"],
+            n=len(rs3),
+            row=null_baseline(rs3, c.get("row", {}).get("dropped_ledger_n"),
+                              c.get("row", {}).get("window_delta")),
+            sentence=null_baseline(rs3,
                                    c.get("sentence", {}).get("dropped_ledger_n"),
-                                   c.get("sentence", {}).get("delta_sum_r")))
+                                   c.get("sentence", {}).get("window_delta")))
     res["null_baseline"] = out
     json.dump(res, open(OUT_JSON, "w"), indent=1, ensure_ascii=False, default=str)
     for g, v in out["groups"].items():
@@ -505,7 +507,7 @@ def main():
     if a.stage in ("book", "all"):
         phase_book()
     if a.stage in ("null", "all"):
-        print("阶段 null 还没实现", file=sys.stderr)
+        phase_null()
 
 
 if __name__ == "__main__":
