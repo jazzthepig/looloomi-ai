@@ -1,0 +1,17 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {"id": "T-366-1", "scenario": "T-366 票源币 vs 资产向量覆盖",
+     "statement": "到 2026-12-20,CIS 加密面板的 breadth_above_ma50 仍低于 0.25(2026-11-12 实测为 0)",
+     "variable": "state:breadth_above_ma50", "op": "lt", "hi": 0.25, "prob": 0.6, "horizon_d": "2026-12-20"},
+    {"id": "T-366-2", "scenario": "T-366 票源币 vs 资产向量覆盖",
+     "statement": "到 2026-12-20,BTC 日收盘仍高于 65000(2026-11-12 实测 71383)",
+     "variable": "close:BTC", "op": "gt", "lo": 65000, "prob": 0.65, "horizon_d": "2026-12-20"},
+    {"id": "T-366-3", "scenario": "T-366 票源币 vs 资产向量覆盖",
+     "statement": "到 2026-12-20,面板 OI 30 日变化(oi_chg_30d)仍为负(2026-11-12 实测 -0.23)",
+     "variable": "state:oi_chg_30d", "op": "lt", "hi": 0.0, "prob": 0.55, "horizon_d": "2026-12-20"},
+    {"id": "T-366-4", "scenario": "T-366 票源币 vs 资产向量覆盖",
+     "statement": "到 2026-12-20,面板资金费 7 日年化(funding_7d_ann)仍为正(2026-11-12 实测 +0.058)",
+     "variable": "state:funding_7d_ann", "op": "gt", "lo": 0.0, "prob": 0.6, "horizon_d": "2026-12-20"}
+  ]
+}
