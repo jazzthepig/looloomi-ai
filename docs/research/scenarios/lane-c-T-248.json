@@ -1,0 +1,17 @@
+{
+  "author": "lane-c",
+  "entries": [
+    {"id": "T-248-1", "scenario": "T-248 R-v2 序列体检:2026-10-08 OGN 跳变(+0.693 ln)后价格没站稳",
+     "statement": "OGN 在 2026-11-12 的收盘价低于 2026-10-09 跳变后的水平 0.03903(跳变是尖峰、已回落到 10-07 的 0.02285 一线)",
+     "variable": "close:OGN", "op": "lt", "hi": 0.03903, "prob": 0.85, "horizon_d": "2026-11-12"},
+    {"id": "T-248-2", "scenario": "T-248 R-v2 序列体检:2026-10-09 MAGIC 跳变(+0.615 ln)后价格留在新平台上",
+     "statement": "MAGIC 在 2026-11-12 的收盘价高于 2026-10-25 的 0.0822(跳变后的 1.28 倍平台没有跌回去)",
+     "variable": "close:MAGIC", "op": "gt", "lo": 0.0822, "prob": 0.75, "horizon_d": "2026-11-12"},
+    {"id": "T-248-3", "scenario": "T-248 R-v2 序列体检:2026-10-28 的全市场洞不会被回补",
+     "statement": "2026-11-12 时,perp_bv_daily 在 2026-10-28 仍然是 0 行(上游 data.binance.vision 当天没发布,没人造数回补)",
+     "variable": "manual", "op": "between", "lo": 0, "hi": 1, "prob": 0.85, "horizon_d": "2026-11-12"},
+    {"id": "T-248-4", "scenario": "T-248 R-v2 序列体检:死名的空壳行只增不减",
+     "statement": "2026-11-12 时,perp_bv_daily 里 qv=0 且 o=h=l=c 的空壳行数 ≥ 42,326(127 个死名只会被追加,不会被清掉)",
+     "variable": "manual", "op": "between", "lo": 0, "hi": 1, "prob": 0.9, "horizon_d": "2026-11-12"}
+  ]
+}
