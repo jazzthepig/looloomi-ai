@@ -34,8 +34,53 @@ def test_choose():
     uni = [{"coin_id": "a", "last_mcap": 3}, {"coin_id": "b", "last_mcap": 2}, {"coin_id": "c", "last_mcap": 1}, {"coin_id": "native", "last_mcap": 9}]
     homes = {"a": ("eth", "0xa"), "b": ("eth", "0xb"), "c": ("solana", "C")}
     cov = {"a": {"max_d": "2026-11-06", "n_weekly": 50}, "b": {"max_d": "2026-11-01", "n_weekly": 40}}
-    back, daily = th.choose(uni, homes, cov, TODAY)
-    assert back == ["c"] and daily == ["b"]
+    back, daily, probe = th.choose(uni, homes, cov, TODAY)
+    assert back == ["c"] and daily == ["b"] and probe == []
+
+
+def test_只有周频历史的币不进日频队列_只做有界探测():
+    """11-16 的核心:原来「max_d 落后一天 ⇒ 进日频队列」不看这个币有没有日频数据,
+    于是几百个只有周频的币每轮都被判过期、每轮都重试,把日频名额吃光。"""
+    uni = [{"coin_id": "w", "last_mcap": 3}]
+    homes = {"w": ("eth", "0xw")}
+    # n = n_weekly ⇒ 一行日频都没有;max_d 落在 3 天前 ⇒ 老逻辑会判它「过期」。
+    cov = {"w": {"max_d": "2026-11-03", "n": 50, "n_weekly": 50}}
+    back, daily, probe = th.choose(uni, homes, cov, TODAY)
+    assert back == []
+    assert daily == [], "只有周频历史的币不该占日频名额"
+    assert probe == ["w"]
+
+
+def test_有日频历史的币照旧按日频刷():
+    uni = [{"coin_id": "d", "last_mcap": 3}, {"coin_id": "f", "last_mcap": 2}]
+    homes = {"d": ("eth", "0xd"), "f": ("eth", "0xf")}
+    # d:60 行里 40 行是周频 ⇒ 20 行日频,且最新一天落后 ⇒ 该刷
+    # f:同样有日频历史,但最新一天就是今天 ⇒ 不该刷
+    cov = {"d": {"max_d": "2026-11-04", "n": 60, "n_weekly": 40},
+           "f": {"max_d": "2026-11-06", "n": 60, "n_weekly": 40}}
+    back, daily, probe = th.choose(uni, homes, cov, TODAY)
+    assert back == [] and daily == ["d"] and probe == []
+
+
+def test_探测有上限_而且按日期轮换():
+    n = th.MAX_WEEKLY_PROBE + 10
+    uni = [{"coin_id": f"w{i:03d}", "last_mcap": n - i} for i in range(n)]
+    homes = {u["coin_id"]: ("eth", "0x") for u in uni}
+    cov = {u["coin_id"]: {"max_d": "2026-11-03", "n": 50, "n_weekly": 50} for u in uni}
+    _, daily, probe = th.choose(uni, homes, cov, TODAY)
+    assert daily == []
+    assert len(probe) == th.MAX_WEEKLY_PROBE, "探测必须有上限,不然几百个周频币每轮全打一遍"
+    _, _, probe2 = th.choose(uni, homes, cov, TODAY + dt.timedelta(days=1))
+    assert set(probe2) != set(probe), "第二天该换一批 —— 轮换,不是固定那几十个"
+
+
+def test_视图没有n列时退回老行为():
+    """老视图/手搓 dict 没有 n ⇒ 不猜,按老逻辑(只看 max_d)走。"""
+    uni = [{"coin_id": "b", "last_mcap": 1}]
+    homes = {"b": ("eth", "0xb")}
+    cov = {"b": {"max_d": "2026-11-01", "n_weekly": 40}}
+    back, daily, probe = th.choose(uni, homes, cov, TODAY)
+    assert back == [] and daily == ["b"] and probe == []
 
 
 def test_run_once():
