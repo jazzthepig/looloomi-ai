@@ -14,7 +14,11 @@
 block_permute / price_on_or_after),不自写零分布。全程只读 SELECT,不入库。
 
 用法:python3 docs/research/t222_blind_c.py
+     python3 docs/research/t222_blind_c.py --panel-date 2026-11-02 --universe A,B,... --out <path>
 输出:docs/research/t222_blind_c_results.json + stdout 摘要
+口径默认取**实况面板**(`cis_official_daily` 最新一天 × 面板里有资金费的名字)。数据会回填
+(SKY 的资金费 2026-11-02 时还没有、2026-11-16 已有 418 天),所以实况面板的数字会随日期漂 ——
+`--panel-date` / `--universe` 把「面板日」与「成分名单」钉死,用来复现某一次的口径(报告 §6)。
 """
 from __future__ import annotations
 
@@ -96,12 +100,28 @@ def spearman(x, y):
 
 def main() -> dict:
     # ── 面板:`cis_official_daily` 最近一天的加密名 ────────────────────────────
+    # S-T-228(2026-11-16):面板默认取「最新一天」,但 `cis_official_daily` 的加密名单每天会动、
+    # `funding_history` 还会回填 ⇒ 实况面板跑出来的数与 2026-11-03 那次不同(见报告 §6)。
+    # 要复现 lane-a v2 的三个数,必须把「信息集」钉住:
+    #   --panel-date 2026-11-02   面板日钉住;
+    #   --universe  A,B,C         「有资金费的成分名单」钉住(11-02 时 SKY 没有资金费行)。
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--panel-date", default=os.environ.get("T222_PANEL_DATE") or "")
+    ap.add_argument("--universe", default=os.environ.get("T222_UNIVERSE") or "")
+    ap.add_argument("--out", default=os.environ.get("T222_OUT") or "")
+    args = ap.parse_args()
+
     cis = fetch(PANEL_Q)
     latest = max(r["d"] for r in cis)
+    panel_day = args.panel_date or latest
     panel_all = sorted(r["symbol"] for r in cis
-                       if r["d"] == latest and r["asset_class"] in CRYPTO_CLASSES)
+                       if r["d"] == panel_day and r["asset_class"] in CRYPTO_CLASSES)
     res: dict = {"meta": {
-        "panel_source": "cis_official_daily @ " + latest,
+        "panel_source": "cis_official_daily @ " + panel_day,
+        "panel_day_latest": latest,
+        "panel_mode": "pinned" if args.panel_date else "live",
+        "universe_mode": "pinned" if args.universe else "all_with_funding",
         "panel_crypto_classes": list(CRYPTO_CLASSES),
         "panel_crypto_names": panel_all,
         "n_panel_crypto": len(panel_all),
@@ -124,11 +144,17 @@ def main() -> dict:
         per_sym[r["symbol"]][d] = per_sym[r["symbol"]].get(d, 0.0) + float(r["funding_rate"] or 0.0)
 
     days = daterange(START, END)
+    res["meta"]["symbols_missing_funding"] = sorted(set(panel_all) - set(per_sym))
+    res["meta"]["symbol_windows"] = {s: [min(per_sym[s]), max(per_sym[s]), len(per_sym[s])]
+                                     for s in sorted(per_sym)}
     syms = sorted(per_sym)
+    if args.universe:
+        want = [s.strip() for s in args.universe.split(",") if s.strip()]
+        syms = [s for s in syms if s in want]
+        res["meta"]["universe_pinned"] = sorted(want)
+        res["meta"]["universe_dropped_with_funding"] = sorted(set(per_sym) - set(syms))
     res["meta"]["n_symbols"] = len(syms)
     res["meta"]["symbols"] = syms
-    res["meta"]["symbols_missing_funding"] = sorted(set(panel_all) - set(syms))
-    res["meta"]["symbol_windows"] = {s: [min(per_sym[s]), max(per_sym[s]), len(per_sym[s])] for s in syms}
 
     # 主口径:每日「有数据的名字」的均值(日均组合,成分随时间变)
     port: dict[str, float] = {}
@@ -480,7 +506,8 @@ def main() -> dict:
         variants["future_30d|" + fv] = {"rho": rho, "p": pv, "n": len(ks)}
     res["m3_variants"] = variants
 
-    out_path = ROOT / "docs" / "research" / "t222_blind_c_results.json"
+    out_path = (Path(args.out) if args.out
+                else ROOT / "docs" / "research" / "t222_blind_c_results.json")
     out_path.write_text(json.dumps(res, ensure_ascii=False, indent=2), encoding="utf-8")
 
     summary = {

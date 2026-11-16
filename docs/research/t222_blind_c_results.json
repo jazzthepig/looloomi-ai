@@ -1,6 +1,9 @@
 {
   "meta": {
     "panel_source": "cis_official_daily @ 2026-11-02",
+    "panel_day_latest": "2026-11-15",
+    "panel_mode": "pinned",
+    "universe_mode": "pinned",
     "panel_crypto_classes": [
       "L1",
       "L2",
@@ -42,37 +45,8 @@
     "n_null": 1000,
     "seed": 222,
     "block": 30,
-    "funding_rows": 104928,
-    "n_symbols": 24,
-    "symbols": [
-      "AAVE",
-      "ADA",
-      "APT",
-      "ARB",
-      "AVAX",
-      "BNB",
-      "BTC",
-      "DOT",
-      "ETH",
-      "HYPE",
-      "INJ",
-      "LDO",
-      "LINK",
-      "NEAR",
-      "ONDO",
-      "OP",
-      "PENDLE",
-      "POL",
-      "SOL",
-      "STRK",
-      "SUI",
-      "TIA",
-      "UNI",
-      "XRP"
-    ],
-    "symbols_missing_funding": [
-      "SKY"
-    ],
+    "funding_rows": 107433,
+    "symbols_missing_funding": [],
     "symbol_windows": {
       "AAVE": [
         "2023-01-01",
@@ -164,6 +138,11 @@
         "2026-10-31",
         779
       ],
+      "SKY": [
+        "2025-09-09",
+        "2026-10-31",
+        418
+      ],
       "SOL": [
         "2023-01-01",
         "2026-10-31",
@@ -195,13 +174,69 @@
         1400
       ]
     },
+    "universe_pinned": [
+      "AAVE",
+      "ADA",
+      "APT",
+      "ARB",
+      "AVAX",
+      "BNB",
+      "BTC",
+      "DOT",
+      "ETH",
+      "HYPE",
+      "INJ",
+      "LDO",
+      "LINK",
+      "NEAR",
+      "ONDO",
+      "OP",
+      "PENDLE",
+      "POL",
+      "SOL",
+      "STRK",
+      "SUI",
+      "TIA",
+      "UNI",
+      "XRP"
+    ],
+    "universe_dropped_with_funding": [
+      "SKY"
+    ],
+    "n_symbols": 24,
+    "symbols": [
+      "AAVE",
+      "ADA",
+      "APT",
+      "ARB",
+      "AVAX",
+      "BNB",
+      "BTC",
+      "DOT",
+      "ETH",
+      "HYPE",
+      "INJ",
+      "LDO",
+      "LINK",
+      "NEAR",
+      "ONDO",
+      "OP",
+      "PENDLE",
+      "POL",
+      "SOL",
+      "STRK",
+      "SUI",
+      "TIA",
+      "UNI",
+      "XRP"
+    ],
     "days_with_data": 1400,
     "names_per_day_min_max_mean": [
       16,
       24,
       21.8493
     ],
-    "ohlcv_btc_rows": 3257,
+    "ohlcv_btc_rows": 3287,
     "btc_sources": {
       "binance_hist": [
         1492,
@@ -217,6 +252,11 @@
         432,
         "2025-08-26",
         "2026-10-31"
+      ],
+      "binance_um_hist": [
+        30,
+        "2026-07-10",
+        "2026-08-08"
       ],
       "hyperliquid": [
         15,
@@ -753,6 +793,307 @@
       ]
     },
     "other_sources": {
+      "binance_um_hist": {
+        "source": "binance_um_hist",
+        "btc_days": 30,
+        "btc_first_last": [
+          "2026-07-10",
+          "2026-08-08"
+        ],
+        "index_crosscheck_mismatch_vs_apparatus": 0,
+        "future_30d": {
+          "rho": null,
+          "p_two_sided": null,
+          "n": 0,
+          "null_mean": null,
+          "null_q025": null,
+          "null_q975": null,
+          "percentile_of_actual": null
+        },
+        "same_month_return": {
+          "rho": null,
+          "p_two_sided": null,
+          "n": 1
+        },
+        "months": [
+          {
+            "month": "2023-01",
+            "funding_pct_day": 0.0015362437500000001,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2023-02",
+            "funding_pct_day": 0.006245035625000001,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2023-03",
+            "funding_pct_day": -8.311889705882334e-05,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2023-04",
+            "funding_pct_day": 0.001542058235294118,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2023-05",
+            "funding_pct_day": 0.0019992801307189547,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2023-06",
+            "funding_pct_day": 0.00040691333333333377,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2023-07",
+            "funding_pct_day": 0.0034655172807017544,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2023-08",
+            "funding_pct_day": -7.008105263157898e-05,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2023-09",
+            "funding_pct_day": -0.00022707789473684202,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2023-10",
+            "funding_pct_day": 0.0022283196315789474,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2023-11",
+            "funding_pct_day": 0.012113503500000001,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2023-12",
+            "funding_pct_day": 0.0210507995,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2024-01",
+            "funding_pct_day": 0.009438241142857143,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2024-02",
+            "funding_pct_day": 0.019626332575757577,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2024-03",
+            "funding_pct_day": 0.04386822090909091,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2024-04",
+            "funding_pct_day": 0.007180338181818182,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2024-05",
+            "funding_pct_day": 0.007138650000000001,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2024-06",
+            "funding_pct_day": 0.007894820909090909,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2024-07",
+            "funding_pct_day": 0.003101923181818182,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2024-08",
+            "funding_pct_day": -0.003157411363636364,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2024-09",
+            "funding_pct_day": 0.0003399300988142294,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2024-10",
+            "funding_pct_day": 0.002308656956521739,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2024-11",
+            "funding_pct_day": 0.013597396086956521,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2024-12",
+            "funding_pct_day": 0.012137041739130435,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2025-01",
+            "funding_pct_day": 0.002864666086956522,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2025-02",
+            "funding_pct_day": -0.0006138126086956521,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2025-03",
+            "funding_pct_day": -0.0008137139130434783,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2025-04",
+            "funding_pct_day": 0.0009497695652173915,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2025-05",
+            "funding_pct_day": 0.0028158109057971016,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2025-06",
+            "funding_pct_day": 0.0024358145833333336,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2025-07",
+            "funding_pct_day": 0.00622171125,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2025-08",
+            "funding_pct_day": 0.004933790833333334,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2025-09",
+            "funding_pct_day": 0.00544036125,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2025-10",
+            "funding_pct_day": -0.004095745416666667,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2025-11",
+            "funding_pct_day": -0.0026971591666666668,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2025-12",
+            "funding_pct_day": -0.00022837416666666657,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2026-01",
+            "funding_pct_day": 0.0015980500000000002,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2026-02",
+            "funding_pct_day": -0.0053159875,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2026-03",
+            "funding_pct_day": -0.0031764545833333335,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2026-04",
+            "funding_pct_day": -0.00124321125,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2026-05",
+            "funding_pct_day": 0.0007887312500000002,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2026-06",
+            "funding_pct_day": -0.0003825537499999999,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2026-07",
+            "funding_pct_day": 0.0027126445833333336,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2026-08",
+            "funding_pct_day": 0.004152206666666667,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": 3.2908101985526628
+          },
+          {
+            "month": "2026-09",
+            "funding_pct_day": 0.004565052083333333,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          },
+          {
+            "month": "2026-10",
+            "funding_pct_day": 0.002671059166666667,
+            "btc_fwd30_pct": null,
+            "btc_same_month_pct": null
+          }
+        ]
+      },
       "coingecko": {
         "source": "coingecko",
         "btc_days": 1318,
