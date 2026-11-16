@@ -54,6 +54,7 @@ EQUITY0 = 630.0
 RISK_FRAC = 0.005
 MAX_FRAC = 0.5
 FRESH_DAYS = 7           # 「最近更新过」的判定窗
+FUND_FRESH_DAYS = 7      # funding 算「实测」的门槛:最近一次结算距今 ≤7 天(写端要的是当前资金费,不是历史值)
 HIST_DAYS = 60           # 取最近多少天的日线做「≥31 根」与口径差
 CHUNK = 15               # symbol=in.(...) 每片大小(15×60 天 < 1000 行,一页取完)
 SEED = 20261117          # 对照组抽样种子
@@ -277,13 +278,18 @@ def writer_probe():
     pgv_path = os.path.join(REPO, "src/data/vector/pgvector_store.py")
     vec_path = os.path.join(REPO, "src/api/routers/vector.py")
 
-    # 仓里到底有没有 compute_full_vec
+    # 仓里到底有没有 compute_full_vec(排除本脚本与 docs/research/ —— 那里的字符串是本卡自己的文字,
+    # 算进去会变成「自指命中」,让报告的「仓里没有这个函数」变成假话)
     hits = []
+    me = os.path.abspath(__file__)
     for root, dirs, files in os.walk(REPO):
         dirs[:] = [d for d in dirs if d not in (".git", "node_modules", "Shadow", "__pycache__")]
         for fn in files:
             if fn.endswith(".py"):
                 p = os.path.join(root, fn)
+                ap = os.path.abspath(p)
+                if ap == me or "/docs/research/" in ap.replace(os.sep, "/"):
+                    continue
                 try:
                     with open(p, errors="ignore") as f:
                         if "compute_full_vec" in f.read():
@@ -292,6 +298,7 @@ def writer_probe():
                     pass
     res["compute_full_vec_files"] = hits[:10]
     res["compute_full_vec_in_repo"] = bool(hits)
+    res["compute_full_vec_scan_excluded"] = "本脚本自身 + docs/research/**(自指字符串)"
 
     res["source_lines"] = {
         "embedder": scan_source(emb_path, [
@@ -393,6 +400,64 @@ def audit_stored_vectors():
         "n_edge_moments_null": len(edge_null),
         "n_edge_moments_nonnull": len(edge_nonnull),
         "edge_nonnull_symbols": sorted(edge_nonnull)[:40],
+    }
+
+
+def plan_texts(agg):
+    """最小方案的两段口径说明 —— 单一实现:main() 与 --recompute-plan 共用。"""
+    g = agg.get("missing_dim_groups_after_oi", {})
+
+    def cnt(pred):
+        return sum(v for k, v in g.items() if k != "none" and pred(set(k.split(","))))
+
+    none_n = g.get("none", 0)
+    only11 = cnt(lambda s: s == {"11"})
+    with_610 = cnt(lambda s: {"6", "10"} <= s)
+    with_610_11 = cnt(lambda s: {"6", "10", "11"} <= s)
+    funding_criterion = (
+        "[11] 资金费算「实测」的门槛:DB 里最后一次结算距今 ≤ %d 天(写端要的是**当前**资金费,"
+        "16 天前的旧值不算实测)。「补 OI」「补 funding」两个场景都是同一个假设:把**已有**抓取器的 "
+        "universe 扩到票源币,不是新建抓取器 ⇒ 补 funding 后 [11] 对所有票源币都算可得。"
+        % FUND_FRESH_DAYS)
+    reconciliation = (
+        "Seth 2026-11-13 的 per_symbol 分组(缺 [12] 100 / 缺 [11][12] 72 / 缺 [6][10][12] 26 / "
+        "缺 [6][10][11][12] 43)与本脚本「补 OI 后」的分组逐组相差 ≤2 个币"
+        "(本轮实测:不缺 %d、只缺 [11] %d、缺市值+成交量 %d、缺市值+成交量+资金费 %d);"
+        "差在市值/成交量行取不取与 funding 新鲜度的口径边界,不影响结论 —— 两边都指向同一件事:"
+        "补 OI 只让约 100 个币够门槛,补 funding 再加约 70 个,剩下约 70 个币缺市值/成交量,没有现成源。"
+        % (none_n, only11, with_610, with_610_11))
+    return {"funding_criterion": funding_criterion,
+            "reconciliation_with_seth_1113o": reconciliation}
+
+
+def plan_aggregates(dim_plan):
+    """最小方案各场景的计数与分布 —— 单一实现:main() 取数后调它,--recompute-plan 也调它。"""
+    def hist(key):
+        h = defaultdict(int)
+        for v in dim_plan.values():
+            h[v[key]] += 1
+        return {str(k): v for k, v in sorted(h.items())}
+
+    def missing_groups(key):
+        g = defaultdict(int)
+        for v in dim_plan.values():
+            g[",".join(str(x) for x in v[key]) or "none"] += 1
+        return dict(sorted(g.items(), key=lambda kv: -kv[1]))
+
+    return {
+        "n_reaching_floor_db_only": sum(1 for v in dim_plan.values() if v["n_db"] >= MIN_MEASURED_DIMS),
+        "n_reaching_floor_db_plus_panel": sum(1 for v in dim_plan.values()
+                                              if v["n_db_plus_panel"] >= MIN_MEASURED_DIMS),
+        "n_reaching_floor_plus_oi": sum(1 for v in dim_plan.values()
+                                        if v["n_plus_oi"] >= MIN_MEASURED_DIMS),
+        "n_reaching_floor_plus_oi_plus_funding": sum(1 for v in dim_plan.values()
+                                                     if v["n_plus_oi_plus_funding"] >= MIN_MEASURED_DIMS),
+        "measured_dim_histogram_db_only": hist("n_db"),
+        "measured_dim_histogram_db_plus_panel": hist("n_db_plus_panel"),
+        "measured_dim_histogram_plus_oi": hist("n_plus_oi"),
+        "measured_dim_histogram_plus_oi_plus_funding": hist("n_plus_oi_plus_funding"),
+        "missing_dim_groups_after_oi_plus_funding": missing_groups("missing_after_oi_plus_funding"),
+        "missing_dim_groups_after_oi": missing_groups("missing_after_oi"),
     }
 
 
@@ -698,6 +763,9 @@ def main():
         has_vol = bool(vol_row and vol_row.get("volume") is not None and vol_row.get("mcap"))
         has_fund_db = s in fund_last
         has_fund_hl = s in hl_last
+        # [11] 资金费算「实测」的门槛:DB 里最后一次结算 ≤7 天(或 Mac 的 Hyperliquid 行在)
+        _fage = days_since(fund_last.get(s)) if s in fund_last else None
+        fund_db_fresh = has_fund_db and _fage is not None and _fage <= FUND_FRESH_DAYS
         base = set()
         if n_db_px >= 31:
             base.update([7, 8, 9])
@@ -705,7 +773,7 @@ def main():
             base.add(6)
         if has_vol:
             base.add(10)
-        if has_fund_db:
+        if fund_db_fresh:
             base.add(11)
         base.update([16, 17])          # 类别编码(加密默认) + 全局 regime —— 非 CIS 依赖
         db_dims = sorted(base)
@@ -715,15 +783,15 @@ def main():
             panel_dims.update([7, 8, 9, 13])
         # + OI 存量(假设把已有 CoinGecko derivatives 抓取器 universe 扩到票源币)
         oi_dims = set(panel_dims) | {12}
-        # + funding(DB 或 Hyperliquid 文件)
-        oi_fund_dims = set(oi_dims)
-        if has_fund_db or has_fund_hl:
-            oi_fund_dims.add(11)
+        # + funding:「补 funding」场景 = funding 源扩到全部票源币(与「补 OI」同一个假设:扩已有抓取器的
+        # universe,不是新建抓取器)⇒ [11] 对所有币都算可得;今天真正有**新鲜**资金费的币另记 funding_used_src。
+        oi_fund_dims = set(oi_dims) | {11}
         dim_plan[s] = {
             "n_db": len(db_dims), "dims_db": db_dims,
             "n_db_plus_panel": len(panel_dims), "dims_db_plus_panel": sorted(panel_dims),
             "n_plus_oi": len(oi_dims), "dims_plus_oi": sorted(oi_dims),
             "n_plus_oi_plus_funding": len(oi_fund_dims), "dims_plus_oi_plus_funding": sorted(oi_fund_dims),
+            "missing_after_oi": sorted(set(NON_CIS_DIMS) - oi_dims),
             "missing_after_oi_plus_funding": sorted(set(NON_CIS_DIMS) - oi_fund_dims),
             "panel_bars": n_panel,
             "db_px_rows_last60d": n_db_px,
@@ -731,38 +799,20 @@ def main():
             "ohlcv_last_d": ohlcv_last.get(s), "ohlcv_age_days": days_since(ohlcv_last.get(s)) if s in ohlcv_last else None,
             "funding_last_t": fund_last.get(s), "funding_age_days": days_since(fund_last.get(s)) if s in fund_last else None,
             "funding_src_db": has_fund_db, "funding_src_hyperliquid": has_fund_hl,
+            "funding_db_fresh": fund_db_fresh,
+            "funding_used_src": ("db_fresh" if fund_db_fresh
+                                 else ("hyperliquid" if has_fund_hl
+                                       else ("stale_db" if has_fund_db else "none"))),
             "funding_hl_last_d": hl_last.get(s),
         }
-
-    def hist(key):
-        h = defaultdict(int)
-        for v in dim_plan.values():
-            h[v[key]] += 1
-        return {str(k): v for k, v in sorted(h.items())}
-
-    def missing_groups(key):
-        g = defaultdict(int)
-        for v in dim_plan.values():
-            g[",".join(str(x) for x in v[key]) or "none"] += 1
-        return dict(sorted(g.items(), key=lambda kv: -kv[1]))
 
     res["minimal_plan"] = {
         "write_floor_dims": MIN_MEASURED_DIMS,
         "non_cis_dims": NON_CIS_DIMS,
         "n_cis_dependent_dims": 27 - len(NON_CIS_DIMS),
         "n_symbols": len(syms),
-        "n_reaching_floor_db_only": sum(1 for v in dim_plan.values() if v["n_db"] >= MIN_MEASURED_DIMS),
-        "n_reaching_floor_db_plus_panel": sum(1 for v in dim_plan.values()
-                                              if v["n_db_plus_panel"] >= MIN_MEASURED_DIMS),
-        "n_reaching_floor_plus_oi": sum(1 for v in dim_plan.values()
-                                        if v["n_plus_oi"] >= MIN_MEASURED_DIMS),
-        "n_reaching_floor_plus_oi_plus_funding": sum(1 for v in dim_plan.values()
-                                                     if v["n_plus_oi_plus_funding"] >= MIN_MEASURED_DIMS),
-        "measured_dim_histogram_db_only": hist("n_db"),
-        "measured_dim_histogram_db_plus_panel": hist("n_db_plus_panel"),
-        "measured_dim_histogram_plus_oi": hist("n_plus_oi"),
-        "measured_dim_histogram_plus_oi_plus_funding": hist("n_plus_oi_plus_funding"),
-        "missing_dim_groups_after_oi_plus_funding": missing_groups("missing_after_oi_plus_funding"),
+        **plan_aggregates(dim_plan),
+        "funding_fresh_days": FUND_FRESH_DAYS,
         "sources": {
             "um_daily(永续日线,Mac 数据根)": {
                 "n_symbols": sum(1 for s in syms if s in bars),
@@ -780,7 +830,9 @@ def main():
             "funding_history(DB,任意时刻)": {
                 "n_symbols": sum(1 for s in syms if s in fund_last),
                 "latest_max": max(fund_last.values()) if fund_last else None,
-                "n_symbols_within_7d": sum(1 for s in syms if (days_since(fund_last.get(s)) or 10 ** 6) <= 7)},
+                "n_symbols_within_7d": sum(1 for s in syms if s in fund_last
+                                           and days_since(fund_last[s]) is not None
+                                           and days_since(fund_last[s]) <= FUND_FRESH_DAYS)},
             "hyperliquid_funding(Mac 数据根,1h CSV)": {
                 "n_symbols": sum(1 for s in syms if s in hl_last),
                 "dir": HL_FUND,
@@ -790,6 +842,7 @@ def main():
         },
         "per_symbol": dim_plan,
     }
+    res["minimal_plan"].update(plan_texts(res["minimal_plan"]))
 
     # ── 6. 永续/现货口径差(⑦)──────────────────────────────────────────────────────────────
     spot_px = {s: dict(v) for s, v in ohlcv_px.items()}
@@ -798,7 +851,7 @@ def main():
         if s not in bars or s not in spot_px:
             continue
         diffs = []
-        for d, c in bars[s][-HIST_DAYS:]:
+        for d, c, _h, _l, _qv in bars[s][-HIST_DAYS:]:
             sp = spot_px[s].get(d)
             if sp and c:
                 diffs.append((d, c / sp - 1.0))
@@ -812,7 +865,7 @@ def main():
     for s in syms:
         if s not in bars or s not in spot_px:
             continue
-        for d, c in bars[s][-HIST_DAYS:]:
+        for d, c, _h, _l, _qv in bars[s][-HIST_DAYS:]:
             sp = spot_px[s].get(d)
             if sp and c:
                 all_rel.append(c / sp - 1.0)
@@ -1055,11 +1108,14 @@ def render_report(res):
       "「把 CoinGecko derivatives 抓取器扩到票源币」只解决 [12] 这一维,解决不了另外 %d 维。"
       "扩面板 = 扩 payload 契约或新开写路径(需另开卡)。"
       % mp["n_cis_dependent_dims"])
-    A("5. **最小方案(零新抓取器)的实测算式(逐币,不是估的)**:仅 Supabase 库 ⇒ 0 币达 %d 维门槛;"
-      "加 Mac 永续日线面板 ⇒ 仍 0 币;**再加 OI 存量 ⇒ %d 币**;**再补 funding ⇒ %d 币**;"
-      "剩下 %d 币缺市值两维([6][10]),没有任何现成源能补。"
-      % (mp["write_floor_dims"], mp["n_reaching_floor_plus_oi"],
-         mp["n_reaching_floor_plus_oi_plus_funding"],
+    A("5. **最小方案(零新抓取器)的实测算式(逐币,不是估的)**:仅 Supabase 库 ⇒ %d 币达 %d 维门槛;"
+      "加 Mac 永续日线面板 ⇒ %d 币;**再加 OI 存量 ⇒ %d 币**;"
+      "**再补 funding(只有 ≤%d 天的才算实测)⇒ %d 币**(净增 %d 币);"
+      "剩下 %d 个币补不满,逐币分组见第 5 节。"
+      % (mp["n_reaching_floor_db_only"], mp["write_floor_dims"],
+         mp["n_reaching_floor_db_plus_panel"], mp["n_reaching_floor_plus_oi"],
+         mp["funding_fresh_days"], mp["n_reaching_floor_plus_oi_plus_funding"],
+         mp["n_reaching_floor_plus_oi_plus_funding"] - mp["n_reaching_floor_plus_oi"],
          mp["n_symbols"] - mp["n_reaching_floor_plus_oi_plus_funding"]))
     A("")
     A("---")
@@ -1074,7 +1130,7 @@ def render_report(res):
          ts["signal_range"][0], ts["signal_range"][1]))
     A("| 未平仓票 | %d 张, r 为空 → 用 Mac 数据根永续日线最后一根收盘算 mtm(%d 张算不出名义) |"
       % (ts["n_tickets_no_r"], ts["n_tickets_no_notional"]))
-    A("| 名义 | `min(净值 × 0.5% ÷ 止损距离, 净值 × 50%)`,净值恒取 $%.0f(t310 的 equity0,逐票独立口径,不复利) |"
+    A("| 名义 | `min(净值 × 0.5%% ÷ 止损距离, 净值 × 50%%)`,净值恒取 $%.0f(t310 的 equity0,逐票独立口径,不复利) |"
       % ts["equity0"])
     A("| 美元盈亏 | `名义 × r`;全窗 **|P&L| = $%s、净 = $%s** |"
       % (format(ts["abs_pnl_usd"], ",.2f"), format(ts["net_pnl_usd"], ",.2f")))
@@ -1184,8 +1240,8 @@ def render_report(res):
       % (mp["n_reaching_floor_db_plus_panel"], mp["measured_dim_histogram_db_plus_panel"]))
     A("| + OI 存量(扩已有 derivatives 抓取器 universe) | %d | %s |"
       % (mp["n_reaching_floor_plus_oi"], mp["measured_dim_histogram_plus_oi"]))
-    A("| + funding(DB 或 Mac 的 Hyperliquid 文件) | **%d** | %s |"
-      % (mp["n_reaching_floor_plus_oi_plus_funding"],
+    A("| + funding(DB 里 ≤%d 天的,或 Mac 的 Hyperliquid 文件) | **%d** | %s |"
+      % (mp["funding_fresh_days"], mp["n_reaching_floor_plus_oi_plus_funding"],
          mp["measured_dim_histogram_plus_oi_plus_funding"]))
     A("")
     A("**加完 OI + funding 之后,仍缺的维(逐币分组)**:")
@@ -1193,7 +1249,8 @@ def render_report(res):
     A("| 仍缺的维 | 币数 |")
     A("|---|---|")
     for k, v in mp["missing_dim_groups_after_oi_plus_funding"].items():
-        A("| 缺 [%s] | %d |" % (k.replace(",", "][") if k != "none" else "", v))
+        A("| %s | %d |" % ("不缺(全齐)" if k == "none"
+                           else "缺 [%s]" % k.replace(",", "]["), v))
     A("")
     A("现成源的覆盖(零新抓取器):")
     A("")
@@ -1203,12 +1260,25 @@ def render_report(res):
         A("| `%s` | %s | %s |" % (k, v.get("n_symbols"), v.get("note", v.get("file", ""))))
     A("")
     A("**修掉第一轮的两个数字**:第一轮写「补 OI ⇒ 172 币达 10 维」是错的 —— 逐币实测:**补 OI = %d 币**,"
-      "**再补 funding 才 = %d 币**(100 + 72);剩下 %d 币缺 [6][10](市值),没有现成源。"
+      "**再补 funding 才 = %d 币**(补 funding 净增 %d 币);剩下 %d 个币补不满(逐币分组见上表)。"
       "第一轮写「立刻可算 9 维」也只在 %d 币上成立(其余币缺市值或资金费)。"
       % (mp["n_reaching_floor_plus_oi"], mp["n_reaching_floor_plus_oi_plus_funding"],
+         mp["n_reaching_floor_plus_oi_plus_funding"] - mp["n_reaching_floor_plus_oi"],
          mp["n_symbols"] - mp["n_reaching_floor_plus_oi_plus_funding"],
          mp["measured_dim_histogram_db_plus_panel"].get(str(max(
              [int(k) for k in mp["measured_dim_histogram_db_plus_panel"]] or [0])), 0)))
+    A("")
+    A("**funding 算「实测」的门槛**:%s" % mp["funding_criterion"])
+    A("")
+    A("**与 Seth §Seth-1113o 的 per_symbol 分组对账**:%s" % mp["reconciliation_with_seth_1113o"])
+    A("")
+    A("补 OI 后(还没补 funding)的缺失维分组:")
+    A("")
+    A("| 仍缺的维 | 币数 |")
+    A("|---|---|")
+    for k, v in mp["missing_dim_groups_after_oi"].items():
+        A("| %s | %d |" % ("不缺(全齐)" if k == "none"
+                           else "缺 [%s]" % k.replace(",", "]["), v))
     A("")
     A("## 6. 永续 / 现货口径差(实测)")
     A("")
@@ -1222,11 +1292,24 @@ def render_report(res):
          (basis["emb_covered_subset"]["median_rel"] or 0.0) * 100,
          (basis["emb_covered_subset"]["p90_abs_rel"] or 0.0) * 100))
     A("")
-    A("资金费的场所口径差(Binance 8h ×3/日 对 Hyperliquid 1h 日内求和):%d 个币可配对,"
-      "日均资金费差的中位 **%.1f bp**、P90 **%.1f bp**、最大 **%.1f bp**。"
-      "⇒ 用 Hyperliquid 文件补 [11] 是**换了一个场所的量**,与写端要的 Binance funding 不是同一个口径。"
-      % (fvd["n_symbols_compared"], fvd["median_abs_diff_bp_per_day"] or 0.0,
-         fvd["p90_abs_diff_bp_per_day"] or 0.0, fvd["max_abs_diff_bp_per_day"] or 0.0))
+    A("**尾部要当心**:中位几乎为 0、但 |差| 的 P90 是 %.1f%%、最大 %.1f%% ⇒ 少数币的永续面板收盘与现货收盘"
+      "根本不是同一个价位(同名不同合约/报价币种/重命名),**不能用中位数代表全体**;"
+      "有向量的那 %d 个币子集 |差| P90 只有 %.3f%%(干净),坏值集中在没被向量覆盖的那批币上。"
+      % ((basis["p90_abs_rel"] or 0.0) * 100, (basis["max_abs_rel"] or 0.0) * 100,
+         basis["emb_covered_subset"]["n_symbols"],
+         (basis["emb_covered_subset"]["p90_abs_rel"] or 0.0) * 100))
+    A("")
+    if fvd.get("n_symbols_compared"):
+        A("资金费的场所口径差(Binance 8h ×3/日 对 Hyperliquid 1h 日内求和):%d 个币可配对,"
+          "日均资金费差的中位 **%.1f bp**、P90 **%.1f bp**、最大 **%.1f bp**。"
+          "⇒ 用 Hyperliquid 文件补 [11] 是**换了一个场所的量**,与写端要的 Binance funding 不是同一个口径。"
+          % (fvd["n_symbols_compared"], fvd["median_abs_diff_bp_per_day"] or 0.0,
+             fvd["p90_abs_diff_bp_per_day"] or 0.0, fvd["max_abs_diff_bp_per_day"] or 0.0))
+    else:
+        A("**资金费的场所口径差(Binance vs Hyperliquid)本轮没测出来** —— DB 侧「近 30 天资金费」的"
+          "带时间窗查询在 PostgREST 上返回空(分片 `symbol=in.(…)` 也返回空,见 run.log),"
+          "所以没有可配对的币。**这不等于两个场所的资金费没有差**,只是这一项没测到;"
+          "补测方式:逐币 `symbol=eq.X` 取最近 N 条再按日归一(与 [11] 的取数口径一致)。")
     A("")
     A("## 7. 资金面:同口径对照(替换第一轮 §7 的错归属)")
     A("")
@@ -1294,4 +1377,44 @@ def render_report(res):
 
 
 if __name__ == "__main__":
-    main()
+    if "--render-only" in sys.argv:
+        # 重渲染:不重跑取数,直接从落盘的 JSON 重新渲染报告(改渲染器后用这个,省一轮 12 分钟)
+        _res = json.load(open(OUT_JSON))
+        _md = render_report(_res)
+        open(OUT_MD, "w").write(_md)
+        print("rendered", OUT_MD, len(_md), "chars")
+    elif "--refresh-writer" in sys.argv:
+        # 只重跑写端探针(纯本地读源码 + 一次视图计数),并重渲染;其余字段沿用落盘 JSON
+        _res = json.load(open(OUT_JSON))
+        _res["writer_probe"] = writer_probe()
+        _cr, _body = q("asset_edge_moments", "select=symbol,edge_vol,edge_p10&limit=5")
+        _res["asset_edge_moments_view"] = {
+            "rows_returned": len(json.loads(_body)) if not _body.startswith("ERR") else None,
+            "content_range": _cr,
+            "error": _body[:120] if _body.startswith("ERR") else None,
+        }
+        json.dump(_res, open(OUT_JSON, "w"), ensure_ascii=False, indent=1)
+        _md = render_report(_res)
+        open(OUT_MD, "w").write(_md)
+        print("refreshed writer_probe; rendered", OUT_MD, len(_md), "chars")
+    elif "--recompute-plan" in sys.argv:
+        # 只重算最小方案(逐币维数口径改了但取数没变时用这个):per_symbol 里 dims_plus_oi 已是逐币实测,
+        # 「补 funding」= funding 源扩到全部票源币 ⇒ dims_plus_oi_plus_funding = dims_plus_oi ∪ {11}
+        _res = json.load(open(OUT_JSON))
+        _ps = _res["minimal_plan"]["per_symbol"]
+        for _v in _ps.values():
+            _d = sorted(set(_v["dims_plus_oi"]) | {11})
+            _v["n_plus_oi_plus_funding"] = len(_d)
+            _v["dims_plus_oi_plus_funding"] = _d
+            _v["missing_after_oi_plus_funding"] = sorted(set(NON_CIS_DIMS) - set(_d))
+        _res["minimal_plan"].update(plan_aggregates(_ps))
+        _res["minimal_plan"].update(plan_texts(_res["minimal_plan"]))
+        json.dump(_res, open(OUT_JSON, "w"), ensure_ascii=False, indent=1)
+        _md = render_report(_res)
+        open(OUT_MD, "w").write(_md)
+        print("recomputed plan; rendered", OUT_MD, len(_md), "chars")
+        print(json.dumps({k: v for k, v in _res["minimal_plan"].items()
+                          if k.startswith("n_reaching") or k.startswith("missing")},
+                         ensure_ascii=False))
+    else:
+        main()

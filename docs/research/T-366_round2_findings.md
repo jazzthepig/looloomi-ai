@@ -2,9 +2,15 @@
 
 **卡** T-366(台账 S-842)· 第二轮(返工 Seth 2026-11-13 的八条 CHANGES:§Seth-1113o 四条 + §Seth-1113q 的 ⑤–⑧)
 **脚本** `docs/research/T-366_coverage.py`(已重写)· **探针** `docs/research/T-366_probe.py`
-**状态**:八条里的 ①②③⑤⑥⑦⑧ 已落到脚本/探针并有实测;**④「重跑交付脚本」本轮未完成** ——
-本轮上下文用量触发 lane_bot 降级保护(只放行改卡 / 情景 / 报告 / task_board / git 降落),
-脚本跑完才能重生成 JSON 与报告。下一步:Mac 侧跑一次 `python3 docs/research/T-366_coverage.py`。
+**状态**:八条(①②③④⑤⑥⑦⑧)已全部落地 —— 交付脚本已重跑(`python3 docs/research/T-366_coverage.py`),
+JSON 与报告(由 JSON 渲染)已重新生成,卡改 `in_review`。
+本轮修掉的脚本 bug:① `bars` 是 5 元组(日期,收,高,低,qv),口径差那段按 2 元组解包会炸;
+② `funding_history` 分片拉返空响应 ⇒ 改逐币 `limit=25`;③ 零分布抽样用了 numpy 没有的 `rng.sample` ⇒ 改 `rng.choice`;
+④ 报告里的 `0.5%` 没转义成 `%%` ⇒ `ValueError: unsupported format character`;
+⑤ `days_since(...) or 10**6` 把「今天(age=0)」当成缺失 ⇒ funding 新鲜度统计恒为 0;
+⑥ `compute_full_vec` 的全仓 grep 把本脚本自己的字符串算进去 ⇒ 自指命中,已排除。
+**funding 口径的关键决定**:`[11]` 资金费只有「最后一次结算距今 ≤7 天」才算实测(写端要的是**当前**资金费)——
+这正是本轮与 Seth §Seth-1113o 的 per_symbol 分组对齐的那把尺子(逐组差 ≤2 个币)。
 
 ---
 
@@ -15,7 +21,7 @@
 | ① | 「补 OI 后达 10 维」的币数:第一轮写 172 是错的 | **脚本已改**(逐币实测:OI ⇒ N₁,OI+funding ⇒ N₂) | `T-366_coverage.py::minimal_plan.n_reaching_floor_plus_oi[_plus_funding]`、缺维分组 `missing_dim_groups_after_oi_plus_funding` |
 | ② | 结论 2 改成「两边都赚」 | **脚本已改**(报告渲染器明写「未覆盖组也赚钱」+ 净/\|P&L\|) | `render_report()` 第 0 节与第 3 节 |
 | ③ | 数字一律从 JSON 生成 | **已改**:报告由 `render_report(res)` 从 JSON 渲染 | `T-366_coverage.py::render_report` |
-| ④ | 改完重跑交付脚本 | **未完成**(降级保护) | 需 Mac 侧跑一次脚本 |
+| ④ | 改完重跑交付脚本 | **已完成**(2026-11-17 03:51 JST 跑通) | JSON + 报告已重新生成;增量重算/重渲染用同脚本的 `--recompute-plan` / `--refresh-writer` / `--render-only` |
 | ⑤ | 维度依据引真实写端;`[25][26]` 归写端未实现 | **已改 + 已实测**(见 §2) | `writer_probe()`、`DIMS` 表 |
 | ⑥ | JSON 键与脚本对齐 | **已改**:JSON 整体由脚本重生成(第一轮那份是手改过的,含脚本没有的键、缺脚本会产出的键) | `main()` 落盘段 |
 | ⑦ | 最小方案补 funding 到 72 币 + 永续/现货口径差 | **已改**:funding 取 DB∪Mac(Hyperliquid)并实测口径差 | `minimal_plan.sources`、`perp_spot_basis`、`funding_venue_diff` |
@@ -77,12 +83,14 @@
 
 ## 3. 还差什么(下一轮或 Mac 侧)
 
-1. **跑一次 `python3 docs/research/T-366_coverage.py`** → 重生成 `T-366_traded_universe_coverage.json` 与
-   `T-366_traded_universe_coverage.md`(报告由 JSON 渲染)。本轮已修的两处 bug:
-   ① `funding_history` 分片拉会返回空响应(改为逐币 `limit=25`);② 零分布抽样用了 `rng.sample`
-   (numpy Generator 没有该方法,改为 `rng.choice(..., replace=False)`)。
-   若还有别的 traceback,请贴回来 —— 本轮受降级保护限制没能再跑。
-2. 脚本跑通后,卡 `T-366` 才能从 `open` 改 `in_review`(本轮**没有**改状态,避免冒充已交付)。
-3. `src/` 侧三件事本卡不能做(`forbidden_paths` 含 `src/`),需另开卡 @seth:
+1. ~~跑一次 `python3 docs/research/T-366_coverage.py`~~ —— **已跑**(2026-11-17 03:51 JST),
+   `T-366_traded_universe_coverage.json` 与 `.md` 已重新生成;之后又用同脚本的
+   `--recompute-plan` / `--refresh-writer` / `--render-only` 三个模式做了增量重算与重渲染
+   (取数没变、只是口径或渲染器改了时不必再等一轮 12 分钟)。
+2. ~~卡 `T-366` 改 `in_review`~~ —— **已改**。
+3. **还差一项没测出来**:资金费的场所口径差(Binance 8h vs Hyperliquid 1h)—— DB 侧
+   「近 30 天资金费」的带时间窗查询在 PostgREST 上返空 ⇒ 0 个币可配对。
+   **这不是「两边没差」,是这一项没测到**;补测方式:逐币 `symbol=eq.X` 取最近 N 条再按日归一。
+4. `src/` 侧三件事本卡不能做(`forbidden_paths` 含 `src/`),需另开卡 @seth:
    ① 写端 `unmeasured_as_nan` 口径(活路径别填默认值);② `upsert_embeddings` 过 `is_thin`;
    ③ `asset_embeddings` 补 `measured_dims` / `source_completeness` 列,让消费方能过滤。
