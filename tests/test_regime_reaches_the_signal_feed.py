@@ -33,8 +33,14 @@ import pytest
 # market.py imports `data.market.data_layer` (not `src.data...`), matching the
 # dual sys.path insert in src/api/main.py. conftest only adds PROJECT_ROOT, so
 # add src/ here rather than changing the import style of a production router.
+#
+# ⚠️ 必须排在**最前**(11-16):仓库根目录下有一个 `data/` 目录(运行时产物),而
+# `src/api/main.py` 把仓库根插到 sys.path[0]。全量收集时,只要先有别的测试 import 过
+# `src.api.main`,`import data` 就会先撞上那个目录 —— `data.market` 找不到,这份文件
+# 直接 import 失败(单独跑却是绿的)。原来那句 `if str(_SRC) not in sys.path` 在
+# `<repo>/src` 已经在列表里时会跳过重新插入,于是顺序一变就翻车。
 _SRC = Path(__file__).resolve().parent.parent / "src"
-if str(_SRC) not in sys.path:
+if not sys.path or sys.path[0] != str(_SRC):
     sys.path.insert(0, str(_SRC))
 
 from src.api.routers.market import _cache_regime

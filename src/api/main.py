@@ -27,8 +27,15 @@ Routers:
 """
 import os, sys, json
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# 仓库根 → `import src.api...` 能找到包;`src/` → 路由里那种 `from data.market.data_layer import ...`
+# 的双路径写法能落到 `src/data`。
+# ⚠️ 顺序: **`src/` 必须排在仓库根前面**(11-16)。仓库根下有一个运行时产物目录 `data/`
+# (cash_sleeve 的 csv),它是 namespace package —— 一旦 `import data` 先撞上它,`data` 就被
+# 解析成 `<repo>/data`,后面 `from data.market.data_layer import ...` 永远找不到(而且
+# namespace package 先到先得,之后再改 sys.path 也救不回来)。表现为:本地全量跑测试时
+# market router 在收集阶段 import 失败,而单独跑那一份是绿的。
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi import FastAPI, Request, Header, Response, HTTPException
 from src.api.auth_internal import require_internal_token   # S-371 A-1:全仓库唯一的 token 校验
