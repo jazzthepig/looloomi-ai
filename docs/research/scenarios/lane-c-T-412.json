@@ -1,0 +1,43 @@
+{
+  "lane": "lane-c",
+  "task": "T-412",
+  "title": "S-642 熊市空头臂的生产纯函数 —— 前向可核命题",
+  "created": "2026-11-15",
+  "subject": "S-642(majors 闸门关 + 跌破前 40 日低 + 收在 200 日线之下 + 量能放大 → 次日开盘开空)",
+  "format": "每条命题:statement = 机器可核的一句话;check = 怎么核;probability = 本 lane 的先验(到期按 Brier 结算);resolution = 到期日。",
+  "scenarios": [
+    {
+      "id": "T-412-P1",
+      "statement": "用生产库 ohlcv_daily(source=binance_hist)今天的 volume 重建 2022-01-21 → 2022-11-05 这一段,S-642 仍是 22 张票、16 个标的。",
+      "check": "src/data/signals/s642_short.run_short(生产行, gate_closed_by_day(style_index_pit_daily majors/cap), '2020-03-01', '2022-11-08') 的票数与标的数 == 22 / 16。",
+      "probability": 0.75,
+      "basis": "今天 ohlcv_daily 的 volume 与研究快照(2026-10-21 取的)在 24011 行里有 5395 行对不上(价格逐行相同);volume 只进宇宙筛选(ADV30、量比),量级差 ~1% ⇒ 翻面风险低但非零。",
+      "resolution": "2026-11-20"
+    },
+    {
+      "id": "T-412-P2",
+      "statement": "生产函数在 fixture 那一段重算的逐日净值与 docs/research/t348_r3_families.csv 的 S642 段相对差 ≤ 1e-9(289 天全段)。",
+      "check": "tests/test_s642_short.py::test_historical_consistency_daily_nav。",
+      "probability": 0.95,
+      "basis": "用研究快照已经量到 max 相对差 0.000e+00(逐位相同);剩下的差别只来自 volume 源。",
+      "resolution": "2026-11-20"
+    },
+    {
+      "id": "T-412-P3",
+      "statement": "2026-11-16 起 60 个自然日内,majors cap 闸门(gate_closed_by_day)为「关」的天数 ≥ 1。",
+      "check": "对 style_index_pit_daily(style='majors', weighting='cap') 逐日算 gate_closed_by_day,统计 2026-11-16 → 2027-01-14 里 True 的天数。",
+      "probability": 0.6,
+      "basis": "majors cap 指数 2026-10-19 → 2026-11-14 从 12.10 掉到 9.39(−22%),已经在 200 日均值之下;但 60 天里会不会有新的抬升看不出来。",
+      "resolution": "2027-01-15"
+    },
+    {
+      "id": "T-412-P4",
+      "statement": "2026-11-16 起 90 个自然日内,S-642 在生产数据上至少开出 1 张票(信号日过闸门 + 宇宙五筛 + 破 40 日低)。",
+      "check": "同上 run_short 的票数 ≥ 1(信号日 ≥ 2026-11-16)。",
+      "probability": 0.35,
+      "basis": "族曲线里 47 个进场日分布在 4.7 年上,平均 ~20 天一张,但闸门关的天数占全部日历的比例不高;闸门若长期关着,信号密度取决于破位频率。",
+      "resolution": "2027-02-15"
+    }
+  ],
+  "note": "本卡交付的是代码与历史一致性检验,不是收益结论;这里只登记可机器核的前向命题,不写收益承诺。资金费不进 S-642 族曲线(照 S-642 原文单列在 R 里),所以这里也不含资金费假设。"
+}
