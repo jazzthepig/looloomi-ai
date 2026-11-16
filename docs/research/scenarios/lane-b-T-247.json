@@ -1,0 +1,20 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {"id": "T-247-1", "author": "lane-b", "scenario": "T-247 出场速度机制:波动分位",
+     "statement": "2026-12-05 时面板 30 日波动率的 3 年分位(state:vol_pct_3y)高于 0.5(2026-11-04 是 0.11 分位)—— 慢出场(收盘判止损)只有在波动放大时才被检验",
+     "variable": "state:vol_pct_3y", "op": "gt", "lo": 0.5, "prob": 0.30, "horizon_d": "2026-12-05"},
+    {"id": "T-247-2", "author": "lane-b", "scenario": "T-247 出场速度机制:波动水平",
+     "statement": "2026-12-05 时面板 30 日波动率(state:vol_30)高于 2026-11-04 的 0.3527",
+     "variable": "state:vol_30", "op": "gt", "lo": 0.3527, "prob": 0.55, "horizon_d": "2026-12-05"},
+    {"id": "T-247-3", "author": "lane-b", "scenario": "T-247 窄 breadth 修复",
+     "statement": "2026-12-05 时面板站上 MA50 的比例(state:breadth_above_ma50)高于 2026-11-04 的 0.0417",
+     "variable": "state:breadth_above_ma50", "op": "gt", "lo": 0.0417, "prob": 0.45, "horizon_d": "2026-12-05"},
+    {"id": "T-247-4", "author": "lane-b", "scenario": "T-247 期末观察:BTC 价格",
+     "statement": "2026-12-05 时 BTC 收盘(close:BTC)高于 2026-11-04 的 80444",
+     "variable": "close:BTC", "op": "gt", "lo": 80444, "prob": 0.52, "horizon_d": "2026-12-05"},
+    {"id": "T-247-5", "author": "lane-b", "scenario": "T-247 资金面:稳定币供给",
+     "statement": "2026-12-05 时稳定币供给 30 日变化(state:stable_supply_30d)高于 2026-11-04 的 −0.0356(即收缩不再扩大)",
+     "variable": "state:stable_supply_30d", "op": "gt", "lo": -0.0356, "prob": 0.42, "horizon_d": "2026-12-05"}
+  ]
+}
