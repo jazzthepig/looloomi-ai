@@ -3282,3 +3282,73 @@ Entity/Decision 层建了一天,没有一条边通到结果。`src/data/entity/d
 **还等你两个答复(问了没回):** ① 前端两个 5 分钟轮询(`/market/macro-pulse` / `/market/crowd-clock`)能不能改成日粒度读库?② **CoinGecko 账号是否开了超额计费?** —— 不开 = 超限只掉数据(现在的真实损失),开了 = 超限直接烧钱。
 
 **已提交并推送**(Jazz 11-16 授权直接推:「你在mac,你可以直接push,到时候跟seth说就好」)。8 个提交,一个一件事:`fix(api)` 抢包 · `fix(data)` positioning · `fix(api)` watchlist · `fix(data)` token_holders · `fix(analytics)` mmi · `test` 两处测试缺陷 · `chore(preflight)` 注册三份新测试 · `docs(state)` 本条。**preflight 先过才提交。**
+
+## 2026-11-17 03:34 UTC — Seth:CoinGecko 超额计费打开 ⇒ 加一道闸门 + 一层 CMC 兜底(S-894)
+
+**触发(Jazz 11-17):**「continue。 现在coingecko的outage是打开了的,因为有策略模拟还有策略在跑着。」
+
+**这是 S-892 的下半截。** 上一轮治的是「同一份数据被取两遍」—— 浪费。这一轮治的是**「用量本身没有闸门」** —— 上限。前者让调用变少,后者让调用**有天花板**。
+
+**为什么现在必须做:** 超额计费打开之前,多调一次的代价是 429(掉数据);打开之后,多调一次的代价是**钱**。而我们原来的行为是「429 当成没数据,下一轮照打」—— 限额用尽之后,**每一轮重试都是一次付费请求**。而且没人知道今天花了多少:账单是唯一的反馈,那时候已经晚了。
+
+### ① `src/data/market/cg_guard.py`(新)—— 闸门
+
+一个收口点,三件事:
+
+| 机制 | 默认 | 环境变量 | 作用 |
+|---|---|---|---|
+| 日预算 | 16,000 次/UTC 日 | `CG_DAILY_BUDGET` | 超了**不再发外部请求**。≈ Analyst 档 500,000/月 的 95% 不到,留余量 |
+| 熔断 | 300 秒 | `CG_BREAKER_COOLDOWN_S` | 收到 429 / 5xx 就开闸,期间**一次 CoinGecko 请求都不发** |
+| 计数 | —— | —— | 每次请求记一次,写进 Redis(`cg:quota:used:{YYYY-MM-DD}`),跨进程共享 |
+
+**实现选择:子类,不是包装器。** `GuardedCGClient(httpx.AsyncClient)` 覆写 `request()` —— httpx 的 `.get()` / `.post()` 全部经过它,所以**一处收口,全覆盖**;而仓库里到处在用 `isinstance` / `async with` / 直接构造 `httpx.AsyncClient`,包装器会到处破(子类不会)。
+
+**拒绝时返回的是带 `request` 的合成 503,不是异常。** 理由:调用点遍布全仓库,抛异常会打断它们各自的降级分支(`except` / `stale` / `[]`)。合成体带 `request=`,于是既有代码的 `raise_for_status()` **照常抛** —— 降级逻辑一个字都不用改,闸门不必逼着全仓库改一遍。
+
+**预算可以在线改:** Redis 键 `cg:quota:budget` 优先于环境变量 —— 改预算不用重新部署。
+
+**没有 Redis 时**退回进程内计数:每个进程各有一份预算,比共享预算松,但仍然有界。
+
+### ② 接到每一个线上 CG 客户端
+
+- `src/data/market/data_layer.py::_get_cg_client()` —— 它罩着全仓约 30 个调用点(`get_cg_global` / `get_cg_markets` / `get_macro_pulse` / `get_cg_price_history` / `get_cg_developer_data` / `get_cg_exchange_concentration` / `get_cg_ohlc_range` / …)。
+- `src/data/narrative/social_collector.py::_get_cg_client()`。
+- `src/api/main.py` 的 **cg_panel_sync 循环**(面板回填是单条路径里调用最多的消费者:每个标的每轮一次)与 **treasury 循环** —— 原来两处都是直接 `httpx.AsyncClient(...)`,现在都是 `GuardedCGClient`。
+- `src/api/routers/cis.py`(watchlist)与 `src/data/cis/positioning.py` 都走 `data_layer` 的 client ⇒ 自动受管。
+
+**另加一条形状守卫**(在测试里):新写一个裸 `httpx.AsyncClient` 就是把闸门拆了 —— 那个 bug 静默、无异常、**只在账单上现形**,所以用静态扫描钉死。
+
+### ③ `src/data/market/cmc_provider.py`(新)—— CMC 免费档兜底
+
+Jazz 11-16 在 Railway 补了一把 CMC 的免费 key(之前**完全没用上**)。这一层是**闸门关上之后唯一还能拿数的第二家**:
+
+- 自带 Redis 自计数日预算,默认 **40 次/天**(`CMC_DAILY_BUDGET`)。免费档的上限我们不知道,所以宁可少用 —— 撞穿免费档是要账号的。
+- 撞到额度错误码(1001/1002/1008/1009/1010/1011)⇒ **今天不再试**(写一个到当日结束的标记),而不是下一轮再撞一次。
+- key 认三个名字:`CMC_API_KEY` / `COINMARKETCAP_API_KEY` / `CMC_PRO_API_KEY` —— Jazz 补 key 时用的名字没人记录过,不该为了一个环境变量名再发一版。
+- 接了两个面:`get_cg_global`(CG 失败 → CMC `/global-metrics`)、`get_macro_pulse`(CG 的 `/global` 与 BTC 价两块 → CMC)。
+
+**换源必须标来源。** 结果带 `source` / `data_source`;CMC 没有的字段(ETH 占比 / DeFi 市值)是 **None 而不是 0** ——「没有数据」塌成「0」会让面板显示一个看起来合理、其实不存在的数字(S-262 / S-396 家族)。**兜底不是替换**:正常路径仍是 CoinGecko,口径不变。
+
+### ④ `/internal/cg-quota`(新,token 守卫)
+
+今天用了多少 / 还剩多少 / 熔断了没有 / CMC 用了多少。内部端点,不是前端展示模块。
+
+### 验证
+
+- `tests/test_cg_guard.py`(9 条):预算没用完请求照发(**不许误伤**)/ 每次请求都被计数 / 预算用完**一条外部请求都不许发** / 拒绝时合成 503 带 `request` 能照常 `raise_for_status()` / 上游 429 开闸且之后一条都不发 / 5xx 也算熔断 / 熔断期间 `admit` 直接拒绝 / 线上每个 CG 客户端都是 `GuardedCGClient`(形状守卫)/ 额度报告说得清今天花了多少。
+- `tests/test_cmc_provider.py`(9 条):没有 key 一条都不发 / 三个环境变量名都认 / 预算用完不再发 / 撞到额度错误码今天停用 / quotes 按 symbol 解析并标来源 / global-metrics 用 CMC 自己的字段名 / 拿不到返回空不编 0 / `get_cg_global` 兜底并标来源 / `get_macro_pulse` 兜底并标来源。
+- **两份都注册进 `scripts/preflight.sh`** —— S-244 家族:测试文件存在 ≠ 会被运行,而「额度闸门没跑」的缺席永远是静默的(闸门形同不存在 = 继续烧钱)。
+
+**开发过程中真抓到的两个 bug(写下来是因为它们都不会自己暴露):**
+
+1. `trip_breaker()` 里 `_local_breaker_until` 漏了 `global` ⇒ 熔断状态写进了一个局部变量,模块级状态永远是 0 ⇒ **熔断根本没生效**。测试里 429 那条直接把它照出来了。
+2. CMC 的「今天停用」原来只写 Redis ⇒ Redis 写失败时状态就丢了,下一轮再撞一次额度 —— 而那正是这个模块要防的事。现在加了本地兜底。
+
+还有两个**不是 bug 但必须知道**:① httpx 会把 header 名规范成小写,CMC 的 header 是 `X-CMC_PRO_API_KEY`(下划线,不是连字符);② CMC 的错误体是 `{"status": {"error_code": 1001}}`,不是 `code`。
+
+### 没做 / 还等你
+
+- **12 条路径的「读库优先」改造**(范围大,不在这次授权内)。
+- **QuantMonitor 的 30 秒 `/trading/positions` 价格缓存** —— 要挪到 Binance,不能挪到日库。
+- **前端两个 5 分钟轮询**(`/market/macro-pulse` / `/market/crowd-clock`)能不能改成日粒度读库?—— 问了还没回。
+- **要你在 Railway 上加的环境变量**(都有默认值,不配也能跑):`CMC_API_KEY`(**不配就没有兜底,只有闸门**)、`CG_DAILY_BUDGET`、`CG_BREAKER_COOLDOWN_S`、`CMC_DAILY_BUDGET`。
