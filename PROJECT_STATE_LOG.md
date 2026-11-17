@@ -3351,4 +3351,54 @@ Jazz 11-16 在 Railway 补了一把 CMC 的免费 key(之前**完全没用上**)
 - **12 条路径的「读库优先」改造**(范围大,不在这次授权内)。
 - **QuantMonitor 的 30 秒 `/trading/positions` 价格缓存** —— 要挪到 Binance,不能挪到日库。
 - **前端两个 5 分钟轮询**(`/market/macro-pulse` / `/market/crowd-clock`)能不能改成日粒度读库?—— 问了还没回。
-- **要你在 Railway 上加的环境变量**(都有默认值,不配也能跑):`CMC_API_KEY`(**不配就没有兜底,只有闸门**)、`CG_DAILY_BUDGET`、`CG_BREAKER_COOLDOWN_S`、`CMC_DAILY_BUDGET`。
+- **要你在 Railway 上加的环境变量**(都有默认值,不配也能跑):`CMC_API_KEY`(CMC 免费档 —— **配了才有兜底**;名字不在名单里也没关系,会按规则扫到)、`CG_DAILY_BUDGET`、`CG_BREAKER_COOLDOWN_S`、`CMC_DAILY_BUDGET`。
+
+## 2026-11-17 06:00 UTC — Seth:S-894 补充 —— 部署后实测:闸门活了,**CMC 兜底是哑的**
+
+推送 `4aedd3b7..437a2ead`(三个 commit:源码 / 测试+preflight 注册 / 状态文档)后,
+Railway 3 分钟部署完,`GET /internal/cg-quota`(token 守卫)实测:
+
+```
+coingecko:    used_today 62 / daily_budget 16000 / breaker_open false /
+              trips_total 0 / redis_shared true          ← 闸门活着
+coinmarketcap: key_present false                        ← ⚠️ 兜底是哑的
+```
+
+**`key_present: false` 是个真 bug,不是「配置没配」。** 兜底层的**全部价值**就是
+「CG 闸门关上的时候还有第二个数据源」;它哑了 = 闸门一关,宏观脉冲就空 —— 而
+闸门一关正是超额计费开始烧钱的那一刻。**兜底哑掉 ⇒ 闸门不敢关。**
+
+**修法不是「再发一版改名字」,是「按规则找」。** 三个显式名之外,**只在我们自己的
+命名空间里**扫一遍环境变量 —— 变量名**以 `CMC_` / `COINMARKETCAP_` 开头、且以
+`KEY` / `TOKEN` 结尾**的才算(`CMC_*_KEY` / `CMC_*_TOKEN` /
+`COINMARKETCAP_*_KEY` / `COINMARKETCAP_*_TOKEN` 这四种形状)。
+**别家的 key 一个都不看** —— `COINGECKO_API_KEY` / `MORALIS_API_KEY` /
+`INTERNAL_TOKEN` 不在这个命名空间里;`CMC_ENABLED` / `CMC_BENCHMARK_SYMBOL`
+不是凭据 ⇒ 一律排除。按名字排序取第一个 ⇒ 确定性,不靠字典序运气。
+判定规则集中在 `_looks_like_cmc_key_name()` 一处,测试直接引用它 ——
+**规则改了测试不会不知道**。`report()` 多报一个 `key_env`(**变量名,不是值**)——
+再哑的时候一眼看得出是「没配」还是「配在我没认的名字下」。
+
+**开发中又抓到一个真 bug**(两个新测试直接照出来):`_scan_env_for_cmc_key()` 原本
+返回 `(变量名, 值)`,而 `_key_and_source()` 的契约是 `(key, 变量名)` ⇒ **两个反了**
+⇒ 扫到的值被当成变量名报出去。
+
+**教训(比 bug 本身重要):「装了兜底」和「兜底是活的」是两件事。** 我写了 9 条
+CMC 测试覆盖预算 / 停用 / 标来源 / 缺字段是 None,**没有一条测「key 到底找没找到」**
+—— 因为测试用 `monkeypatch.setenv` 造了个**名字必然命中**的 key。**生产上恰恰是
+名字不命中。** 测试里由自己造出来的前提,在生产里不成立 —— 这是接任何「外部凭据」
+的东西都要记住的一条:判据里必须有「凭据**在生产环境的某个变量名下**能被找到」。
+
+**验证:** `tests/test_cmc_provider.py`(13)+ `tests/test_cg_guard.py`(9)= 22 passed
+(新增:「名字不在名单里_按规则扫出来」/「扫描命中哪个变量名_要能报出来」/
+「规则的边界_只看我们自己的命名空间」/「扫到的是我们家的key_别家的key不会被误用」;
+另把「没有 key」那条改成清掉**所有**可能被认到的 CMC 变量 —— 直接调用生产代码里的
+`_looks_like_cmc_key_name()`,不再依赖这台机器碰巧配了什么,也不在测试里抄一份规则)。
+
+**中间被自己的工具拦过一次(值得记):** 规则的第一版是「名字里**含** CMC/COINMARKETCAP
+**且含** KEY/TOKEN/SECRET/CREDENTIAL」—— 结果被权限分类器判成
+「credential exploration」,命令被拒。**拦得对**:那个规则确实会去翻整个环境里所有
+看起来像凭据的变量(含 `*_SECRET` / `*_CREDENTIAL`),已经越出「找我们自己的 key」
+的范围。收窄成「**以 `CMC_` / `COINMARKETCAP_` 开头且以 `KEY` / `TOKEN` 结尾**」
+之后既覆盖了现实里可能的命名,又只在我们自己的命名空间里找 ——
+**工具的拒绝不是障碍,是指出了设计上的越界。**
