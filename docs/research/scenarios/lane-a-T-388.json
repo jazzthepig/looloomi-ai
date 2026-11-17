@@ -1,0 +1,47 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T-388-1",
+      "scenario": "T-388 验证装置补两样(命名两个双侧 p + 限定最小偏移的循环平移)",
+      "statement": "2026-12-31 时 state_daily(panel)的 stable_supply_30d 在 −0.15 与 0.05 之间(同格历史那一读的 L 轴仍在「抽」这一侧,但没有大幅抽走)",
+      "variable": "state:stable_supply_30d",
+      "op": "between",
+      "lo": -0.15,
+      "hi": 0.05,
+      "prob": 0.6,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-388-2",
+      "scenario": "T-388 验证装置补两样(命名两个双侧 p + 限定最小偏移的循环平移)",
+      "statement": "2026-12-31 时 state_daily(panel)的 dist_200 在 −0.30 与 0.05 之间(同格历史那一读的 T 轴仍在 200 日线下方,没有重新站上去)",
+      "variable": "state:dist_200",
+      "op": "between",
+      "lo": -0.3,
+      "hi": 0.05,
+      "prob": 0.65,
+      "horizon_d": "2026-12-31"
+    },
+    {
+      "id": "T-388-3",
+      "scenario": "T-388 验证装置补两样(命名两个双侧 p + 限定最小偏移的循环平移)",
+      "statement": "到 2026-12-15,台账与新研究卡里凡写「双侧 p」的地方都写了具体函数名(p_two_sided_deviation / p_two_sided_tail),不再只写「双侧 p」",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.5,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-388-4",
+      "scenario": "T-388 验证装置补两样(命名两个双侧 p + 限定最小偏移的循环平移)",
+      "statement": "到 2026-12-15,③ 档案里「同格历史」那一行每天印出的「格子日」与同一条记录里的 asof 字段一致(请求日与格子日不同的情况不再看不出来)",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.85,
+      "horizon_d": "2026-12-15"
+    }
+  ]
+}

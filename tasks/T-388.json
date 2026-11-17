@@ -1,7 +1,7 @@
 {
   "id": "T-388",
-  "owner": "seth",
-  "status": "open",
+  "owner": "lane-a",
+  "status": "in_review",
   "created": "2026-11-14",
   "title": "验证装置补两样:限定最小偏移的循环平移;「双侧 p」的两种算法各有名字 —— 预注册以后写函数名",
   "source": "台账「S-866 结果」:B 道盲复算独立选了「两倍较小的单尾」,我登记的是「离平移均值的距离」,同一个零分布上 BTC 是 0.082 对 0.149;S-864 / S-866 的「平移 ≥ 180 天」在 apparatus 里没有对应函数,两边各自在脚本里实现(§B-auto-1114-1653 @Seth ②)。",
@@ -21,6 +21,9 @@
     "expect": "代码 + 测试;判活:`python3 -m pytest tests/test_eval_apparatus.py tests/test_same_cell.py -q`。"
   },
   "prior_value": "两种「双侧 p」都合法、都没有名字,预注册里只写「双侧 p」时,盲复算会读出两个数 —— 这次正好落在 0.10 的两边。",
-  "notes": "2026-11-14T16:56:31Z Seth 开卡(夜间;B 道 T-386 的建议收下)。不急:档案里已经两种都写了。 || 2026-11-15T01:17:32Z Seth:顺手一处(同一个文件,跟这张卡一起做):`same_cell.line()` 把 `asof` 印出来 —— 第一行真实数据(d = 11-14)的格子其实是 11-13 的(当时 `stable_supply_30d` 还没有 11-14 的值),字段里有 asof、那一行字里没有。另:`apparatus.price_on_or_after` 的文档串里补一句「进场价也用它,不要自己写下标」(T-386 的 B 道脚本进场自己写了一行,踩了 10-14 那个坑,见台账「S-866 结果 补二」)。",
-  "verified": null
+  "notes": "2026-11-14T16:56:31Z Seth 开卡(夜间;B 道 T-386 的建议收下)。不急:档案里已经两种都写了。 || 2026-11-15T01:17:32Z Seth:顺手一处(同一个文件,跟这张卡一起做):`same_cell.line()` 把 `asof` 印出来 —— 第一行真实数据(d = 11-14)的格子其实是 11-13 的(当时 `stable_supply_30d` 还没有 11-14 的值),字段里有 asof、那一行字里没有。另:`apparatus.price_on_or_after` 的文档串里补一句「进场价也用它,不要自己写下标」(T-386 的 B 道脚本进场自己写了一行,踩了 10-14 那个坑,见台账「S-866 结果 补二」)。 || 2026-11-17 lane-a 交付(分支 lane-a/T-388):① `apparatus.circular_shift(seq, rng, block=1, min_shift=0)` 加了 min_shift —— 偏移(按元素数)取在 [min_shift, n − min_shift);min_shift=0 与 11-09 旧版**逐位相同**(同一个 rng、同一个下标;实测 200 次 block=8 全等),旧测试不改即过;min_shift>0 时偏移仍是 block 的整数倍(实测:400 长的序列、min_shift=180 ⇒ 偏移落在 [180,220);block=10 ⇒ [180,210) 且都是 10 的倍数)。② 两个双侧 p 各自有名:`p_two_sided_deviation`(零分布里离其均值不比实际值近的占比 = S-864 登记的那一种)与 `p_two_sided_tail`(= min(1, 2×min(p_lower, p_upper)) = S-866 B 道独立选的那一种;B 道的 0.082 就是这么算的,`docs/research/s866_blind_cells.py` 里写的是 `min(1.0, 2.0*min(pu, pl))`)。两个文档串都写明:偏态零分布上两者差到一倍(实测 lognormal n=4000、95 分位:dev 0.0500 对 tail 0.1005),预注册必须写函数名,不写「双侧 p」。③ `same_cell._shift_p` 改调这两个函数:**dev 逐位相同**(同一套公式,测试里对拍);**tail2 变了 0.001** —— 旧写法用的是原始占比,B 道登记的 0.082 用的是 +1 修正的 p_upper/p_lower,同一个零分布上原始占比给 0.081。真实数据(d=2026-11-14)实测:零分布 n=2000,tail2 旧 0.068 → 新 0.069;即生产模块现在与台账登记的 B 道口径一致(改之前生产报 0.068)。④ 测试:右偏零分布上两种 p 不相等(0.0500 对 0.1005);对称零分布上相差 ≤ 2/n(精确对称的构造样本 n=40:0.0451 / 0.0390 / 0.0415,2/n = 0.05)。**一条限定**:「对称」必须是精确对称(均值恰好 0);只是抽样对称(均值不恰好为 0)时差的是 O(1/√n)(实测 n=4000 差 0.0020 > 2/n = 0.0005)—— 那条界只对精确对称成立。顺手(卡上点名):`same_cell.line()` 现在印出「格子日 YYYY-MM-DD」(真实数据那一行:`同格历史  利率升·稳定币抽·周线坏·线下:12 段 / 257 天(格子日 2026-11-14);…`);`apparatus.price_on_or_after` 的文档串补了「进场价也用它,不要自己写下标」。判活:`python3 -m pytest tests/test_eval_apparatus.py tests/test_same_cell.py tests/test_t388_device_names.py -q` → 30 passed。新测试在 `tests/test_t388_device_names.py`(dev 逐位对拍 / tail2 = B 道口径 / 那一行印格子日 / 随机对称样本那条界);`tests/test_same_cell.py` 一字未动。情景:`docs/research/scenarios/lane-a-T-388.json`(4 条:2 条自动 state:stable_supply_30d 与 state:dist_200,2 条 manual)。",
+  "verified": {
+    "value": "pytest tests/test_eval_apparatus.py tests/test_same_cell.py tests/test_t388_device_names.py -q → 30 passed;真实数据(d=2026-11-14)asof=2026-11-14、cell=R升|L抽|W坏|T线下、12 段 / 257 天、dev 0.144、tail2 0.069(旧写法 0.068)",
+    "at": "2026-11-17"
+  }
 }
