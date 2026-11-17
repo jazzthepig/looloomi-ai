@@ -32,6 +32,7 @@
 | in_review | T-307 | lane-b | T-301 补三张表(剂量-反应 × 两臂并列 × 1/7/30 日)+ 把复现路径放进仓库 —— lane-a 11-08 交叉复核返工 | docs/research/T-301_*.md 增补节 + 脚本/摘要日志入库;卡 notes 写三张表的头一行数;in_review,推 lane-b/T-307。 | T-301 的 −16% 会被当成『拥挤 squeeze 的效应』对外引用,但同表里 flush 同量级、且 2/3 超额在第一周实现 —— 读法不同,规则的触发窗口也不同。 |  |
 | in_review | T-328 | lane-b | BOUNDS 构造扫描 + 带内随机零分布:RBv2 的 W1/W2 通过,有多少来自夹紧(尤其地板),多少来自常数配比 / 随机 | docs/research/T-328_bounds_sweep.md + t328_bounds_sweep.py + t328_results.json + scenarios/lane-b-T-328.json(≥ 3 条前向命题);in_review,推 lane-b/T-328。 | S-801 ✅ 已落地到真钱 T25 权重;交叉复核测得 W1 RBv2 回撤分位 0.05–0.16、常数 20/30/20 W1 全过且收益更高、加密带 0.25–0.40 / 0.30–0.40 在 W1 即翻 ⇒ 分辨力在地板,从没扫过。 |  |
 | in_review(等 T-038) | T-005 | lane-c | Layer C 重新设计(不强制现金),先写 M- 台账再跑 | β 匹配超额 > 0 的格子 ≥ 1 个 split 过半,且 β ∈ [0.5, 0.9] | β 匹配 0/30,β≈0.35 |  |
+| in_review | T-056 | lane-c | 策略向量陈旧:_data/strategy_records.json 停在 07-21,按现有台账重新生成后 test_strategy_vector_smoke 14 项红 | 0 项红;sidecar 来源写进仓库或改为显式输入,不依赖仓库外的 REPORT.md | Mac 上靠 07-21 生成的旧文件通过;现生成 14 项红(R46 cost_sensitivity / sidecar 标签 / R64 记录缺失等) |  |
 | in_review | T-220 | lane-c | 治理的领先信号:解锁前团队 / 基金会钱包流向、出事后的处理、营销强度 —— 先查能不能量(数据源可行性),再写预注册草稿 | 报告 docs/research/T-220_governance_leading_signals.md(开头可行性表);卡片 notes 写:免费源够不够、事件个数、两条草稿是否可在现有数据上跑;in_review,推 lane-c/T-220。 | 治理只量了滞后的一半(S-661 价值捕获比、S-587 质量);领先的行为信号一个都没有,不知道现有数据能不能量。 |  |
 | in_review | T-224 | lane-c | ② 倾斜在更宽的面板上:按时点前 50 大(含死币)的 ①,压低 S-691 五因子合成最差五分之一的权重 —— S-694 在 24 名上 ❌,问宽到 50 名「躲开」信号够不够用 | 报告 docs/research/T-224_tilt_pit50.md(预注册段在前);卡 notes 写基线年化 / 倾斜超额 / 随机对照分位 / 两段符号;scenarios/lane-c-T-224.json;in_review,推 lane-c/T-224。 | ② 只在 24 名上试过一次(S-694 ❌);宽面板上「躲开最差档」的倾斜没有任何回放。 |  |
 | in_review | T-225 | lane-c | T-224 返工:拆开三个混在一起的变量(面板宽度 × 调仓频率 × 符号),死币规则改时点口径 | 报告 + 复跑脚本两次输出一致;三个臂各报年化超额、95 分位、两段符号;卡 notes 写清哪个变量单独起作用;in_review,推 lane-c/T-225。 | T-224 把宽度与频率一起改,「躲开最差档在宽面板上无效」这个结论没有被单独检验过。 |  |
@@ -62,7 +63,6 @@
 | open | T-028 | seth | SKY 日线回填(替换已下架的 MKR 进代币化篮子) | 覆盖到昨天、≥365 天;之后篮子加 SKY 为新起点(旧记录留档) | SKY 只有 15 天(08-09→08-23),之后停更 |  |
 | open | T-032 | seth | M-189 的 4 级基准接进 hl_book_daily(先 fixed / vol-formula 两级;bandit、Jev Outter 另起) | 两臂前向在写;回放报告写进台账 | M-189 只有预注册,没有任何实现 |  |
 | open | T-054 | seth | GP 观察池动态化:阶段(观察 → 候选 → 配置)、入池日期、准入标准逐条、业绩从链上 / 对方数据实时取、评分按数据算、每个数标证据等级 | 不再有没有日期的手填业绩对外;GP 的阶段变化有历史可查 | 静态:vault.py 的 _VAULT_FUNDS(2 家),前端 08-19 起下架,但 MCP get_fund_portfolio 仍对 agent 返回这份数 |  |
-| open | T-056 | seth | 策略向量陈旧:_data/strategy_records.json 停在 07-21,按现有台账重新生成后 test_strategy_vector_smoke 14 项红 | 0 项红;sidecar 来源写进仓库或改为显式输入,不依赖仓库外的 REPORT.md | Mac 上靠 07-21 生成的旧文件通过;现生成 14 项红(R46 cost_sensitivity / sidecar 标签 / R64 记录缺失等) |  |
 | open | T-062 | seth | 三路该定期写入却 0 行的结构化数据:regime 相关度、fusion 的 regime 跟踪、API 计量 | 前两张每天有新行;api_usage 每次 flush 都写一行(使用量为 0 也写,0 是一次观测);每一路先判成因(无调度 / 写不进 / 正确拒绝)再修 | 0 / 0 / 0 |  |
 | open | T-065 | seth | 加密度:小时线恢复并扩面(现在 10 个币、08-08 起停更);CIS 历史往前补(现在 2025-05 起) | 小时线覆盖 ① 的 24 个名字、最新一根在 2 小时内、有调度和判活;CIS 历史用重建脚本补到 2024-01(标 source=reconstructed,与实时推送分开) | 小时线 10 币、止于 2026-08-08;CIS 历史 76 币、起于 2025-05-03 |  |
 | open | T-069 | seth | 评估层 ③:随机组合基准与 outlier(T-068 之后) | 测试:零信号账本 pct_vs_random 近似均匀(KS p > 0.05);埋了信号的 > 0.95;等权底的零信号账本在「等权跑赢市值」的样本里仍近似均匀(风格不被记成信号) | 见 T-059 原卡(10-07) |  |
@@ -414,4 +414,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 22 · claimed 7 · blocked 4 · in_review 48 · done 325 · dropped 5
+open 21 · claimed 7 · blocked 4 · in_review 49 · done 325 · dropped 5

@@ -41,6 +41,93 @@ from src.data.vector.strategy_schema import StrategyRecord, Verdict  # noqa: E40
 
 OUT_LOCAL = ROOT / "_data" / "strategy_records.json"
 
+# ── Committed source store (S-500 / T-056) ───────────────────────────────────
+# The strategy vector has to be reproducible on a machine that has NEITHER the
+# Mac-local REFUTATION_LEDGER.md NOR the gitignored reports/ tree. So every
+# source the pipeline mines is committed under docs/strategy_sources/:
+#
+#   REFUTATION_LEDGER.snapshot.md          — the R-entry sections of the live
+#                                            ledger, extracted verbatim
+#   sidecars/<topic>/<date>/REPORT.md      — the mined experiment reports
+#
+# Rule (and it is the whole point of the card): a LIVE local file always wins;
+# the committed copy is the fallback, never the source of truth. The local
+# ledger keeps growing; the snapshot is a dated artefact and says so in its
+# own header. Nothing here invents numbers — the sidecars are byte-for-byte
+# copies of the reports that were mined.
+SRC_STORE = ROOT / "docs" / "strategy_sources"
+LEDGER_SNAPSHOT = SRC_STORE / "REFUTATION_LEDGER.snapshot.md"
+SIDECAR_STORE = SRC_STORE / "sidecars"
+# Legacy, Mac-only, gitignored: still consulted so a local run keeps its
+# richer report set. Never required.
+LEGACY_SIDECAR_ROOT = ROOT / "reports"
+
+
+def _first_existing(candidates: list[Path]) -> Path | None:
+    for c in candidates:
+        if c and c.exists():
+            return c
+    return None
+
+
+def _repo_rel(path: Path) -> str:
+    """Path relative to the repo root when it lives inside it, else as-is.
+
+    Keeps the record's doc_source / sidecar tag readable and machine-checkable
+    no matter whether the source was the committed store or a local file.
+    The unresolved path wins — a symlinked ledger should still be reported
+    under the name the pipeline used to reach it.
+    """
+    for cand in (path, path.resolve()):
+        try:
+            return str(cand.relative_to(ROOT))
+        except ValueError:
+            continue
+    return str(path)
+
+
+def resolve_ledger(explicit: Path | None = None) -> Path | None:
+    """Which ledger do we mine R-entries from?
+
+    Order: explicit --ledger → live ./REFUTATION_LEDGER.md → committed snapshot.
+    The live file wins so a Mac run keeps seeing the newest R-entries; the
+    snapshot is what makes a clean clone work at all.
+    """
+    if explicit is not None:
+        if not explicit.exists():
+            raise FileNotFoundError(f"--ledger {explicit} 不存在")
+        return explicit
+    return _first_existing([ROOT / "REFUTATION_LEDGER.md", LEDGER_SNAPSHOT])
+
+
+def resolve_minimax_sync(explicit: Path | None = None) -> Path | None:
+    """Which MINIMAX_SYNC do we mine § experiment blocks from?
+
+    Order: explicit --sync → live ./MINIMAX_SYNC.md → tracked docs/MINIMAX_SYNC.md.
+    """
+    if explicit is not None:
+        if not explicit.exists():
+            raise FileNotFoundError(f"--sync {explicit} 不存在")
+        return explicit
+    return _first_existing([ROOT / "MINIMAX_SYNC.md", ROOT / "docs" / "MINIMAX_SYNC.md"])
+
+
+def resolve_sidecar_dirs(explicit: list[Path] | None = None) -> list[Path]:
+    """Sidecar stores to search, in priority order.
+
+    Explicit --sidecar-dir first (that is the "explicit input" the card asks
+    for), then the committed store, then the legacy Mac-local reports/ tree.
+    """
+    dirs: list[Path] = list(explicit or [])
+    dirs += [SIDECAR_STORE, LEGACY_SIDECAR_ROOT]
+    seen: set[Path] = set()
+    out: list[Path] = []
+    for d in dirs:
+        if d and d not in seen:
+            seen.add(d)
+            out.append(d)
+    return out
+
 
 # -----------------------------------------------------------------------------
 # 1. REFUTATION_LEDGER R-entry parser
@@ -325,17 +412,18 @@ def _sharpe_from_t(t: float, n: float = 252.0) -> float:
     return t * (n ** 0.5) / (252.0 ** 0.5)
 
 
-def _enrich_with_report_sidecar(root: Path, rec: StrategyRecord) -> None:
-    """If rec has a doc_source pointing at REFUTATION_LEDGER.md AND an R-number
-    with a known report path, mine that REPORT.md and overwrite rec's
-    dimensional blocks with the verified numbers.
+def _enrich_with_report_sidecar(root: Path, rec: StrategyRecord,
+                                ledger_text: str | None = None,
+                                sidecar_dirs: list[Path] | None = None) -> None:
+    """If rec has an R-number with a known report path, mine that REPORT.md and
+    overwrite rec's dimensional blocks with the verified numbers.
 
     Resolution rules (in order, conservative):
-      1. The R-entry body parser may stash a `report_path` in rec.notes.
-         (Future step — not yet wired.)
-      2. The R-entry's id carries the R-number; we look up the standard
-         reports/ path under root.
-      3. If neither hits, do nothing (record keeps its body-parser dims).
+      1. The ledger entry names a report path (`reports/<topic>/<date>/…`).
+         We look that path up in the sidecar stores, in priority order:
+         committed docs/strategy_sources/sidecars/ first, then the legacy
+         Mac-local reports/ tree.
+      2. If no store has it, do nothing (record keeps its body-parser dims).
 
     Why we don't scan all REPORT.md and match by content: ambiguous. Same
     report sometimes backs multiple R-entries (R46 backs R47 and R49 too —
@@ -346,15 +434,16 @@ def _enrich_with_report_sidecar(root: Path, rec: StrategyRecord) -> None:
         return
     # Use only the leading R\d+ (skip -v2 suffix)
     r_base = rec.r_number.split("-")[0]
-    if not (root / "reports").exists():
-        return
 
-    # Look up the report path from a small index built from REFUTATION_LEDGER
-    # at startup. We rebuild each call to keep state-free (cost: ~ms).
-    rl_text = (root / "REFUTATION_LEDGER.md").read_text()
+    if ledger_text is None:
+        ledger_path = resolve_ledger()
+        if ledger_path is None:
+            return
+        ledger_text = ledger_path.read_text()
+
     # Pattern: "## RN ... `reports/<path>`" — find first report path inside RN's body
     pat = rf"^## {r_base}\s*[🟢🟡🔴✅🔵].*?(?=^## |\Z)"
-    m = _re.search(pat, rl_text, _re.MULTILINE | _re.DOTALL)
+    m = _re.search(pat, ledger_text, _re.MULTILINE | _re.DOTALL)
     if not m:
         return
     # Capture report paths. Most entries: `reports/<topic>/<date>/REPORT.md` (gitignored)
@@ -364,18 +453,19 @@ def _enrich_with_report_sidecar(root: Path, rec: StrategyRecord) -> None:
         r"reports/([\w/\-_.]+?)(?:/\{[^}]+\}|/REPORT\.md|\.md)", m.group(0))
     if not report_path_match:
         return
-    rel = "reports/" + report_path_match.group(1).rstrip("/") + "/REPORT.md"
+    captured = report_path_match.group(1).rstrip("/")
 
-    full = root / rel
-    if not full.exists():
-        # Fall back: explicit dir/REPORT.md (defensive)
-        parent = full.parent
-        candidate = parent / "REPORT.md" if parent.exists() else None
-        if candidate and candidate.exists():
+    # Look the report up in each sidecar store, in priority order.
+    full: Path | None = None
+    for store in (sidecar_dirs or resolve_sidecar_dirs()):
+        candidate = store / captured / "REPORT.md"
+        if candidate.exists():
             full = candidate
-        else:
-            return  # silently skip — gitignored or absent
+            break
+    if full is None:
+        return  # silently skip — gitignored or absent
 
+    rel = _repo_rel(full)
     body = full.read_text()
     report_dims = _parse_report_metrics(body)
 
@@ -702,7 +792,7 @@ def parse_refutation_ledger(path: Path) -> list[StrategyRecord]:
         rec = StrategyRecord(
             id=r_id,
             title=title,
-            doc_source=str(path.relative_to(ROOT)),
+            doc_source=_repo_rel(path),
             r_number=r_number,
             verdict=verdict,
             tags=list(set(tags))[:6],
@@ -923,11 +1013,15 @@ def parse_minimax_sync_experiments(path: Path) -> list[StrategyRecord]:
 # Orchestrator
 # -----------------------------------------------------------------------------
 
-def backfill(dry_run: bool = True, write_redis: bool = False) -> dict:
+def backfill(dry_run: bool = True, write_redis: bool = False,
+             ledger_path: Path | None = None,
+             sync_path: Path | None = None,
+             sidecar_dirs: list[Path] | None = None) -> dict:
     root = ROOT
     summary = {
         "ran_at": datetime.now(tz=timezone.utc).isoformat(),
         "sources": {},
+        "source_files": {},
         "totals": {"by_verdict": {}, "total": 0},
     }
 
@@ -937,19 +1031,24 @@ def backfill(dry_run: bool = True, write_redis: bool = False) -> dict:
     all_records.extend(DOCTRINAL_RECORDS)
     summary["sources"]["DOCTRINAL"] = len(DOCTRINAL_RECORDS)
 
-    # 2. R-entries from REFUTATION_LEDGER
-    rl_path = root / "REFUTATION_LEDGER.md"
-    if rl_path.exists():
+    # 2. R-entries from the ledger (live file, else committed snapshot)
+    rl_path = resolve_ledger(ledger_path)
+    if rl_path is not None:
+        rl_text = rl_path.read_text()
         r_recs = parse_refutation_ledger(rl_path)
         # Step 7: enrich R-entry dims with REPORT.md sidecar when referenced.
         # Look up by R-number (e.g. "R46" → "reports/cis_quality_robustness/...")
         # and merge structured metrics (gross_t / 5bps_t / OOS_t / ann%/yr /
         # MaxDD / n_assets / panel_days / turnover / time_in_market) into the
         # record's dimensional blocks. The REPORT is the verified ground truth.
+        stores = resolve_sidecar_dirs(sidecar_dirs)
         for rec in r_recs:
-            _enrich_with_report_sidecar(root, rec)
+            _enrich_with_report_sidecar(root, rec, rl_text, stores)
         all_records.extend(r_recs)
         summary["sources"]["REFUTATION_LEDGER"] = len(r_recs)
+        summary["source_files"]["REFUTATION_LEDGER"] = _repo_rel(rl_path)
+    else:
+        summary["source_files"]["REFUTATION_LEDGER"] = None
 
     # 3. Q3 agenda moves
     q3_path = root / "docs" / "STRATEGY_2026_Q3.md"
@@ -957,11 +1056,12 @@ def backfill(dry_run: bool = True, write_redis: bool = False) -> dict:
     all_records.extend(q3_recs)
     summary["sources"]["STRATEGY_2026_Q3_AGENDA"] = len(q3_recs)
 
-    # 4. MINIMAX_SYNC § experiments
-    ms_path = root / "MINIMAX_SYNC.md"
-    ms_recs = parse_minimax_sync_experiments(ms_path)
+    # 4. MINIMAX_SYNC § experiments (live file, else tracked docs/MINIMAX_SYNC.md)
+    ms_path = resolve_minimax_sync(sync_path)
+    ms_recs = parse_minimax_sync_experiments(ms_path) if ms_path else []
     all_records.extend(ms_recs)
     summary["sources"]["MINIMAX_SYNC_EXP"] = len(ms_recs)
+    summary["source_files"]["MINIMAX_SYNC"] = _repo_rel(ms_path) if ms_path else None
 
     # De-dup by id (in case of collisions across sources)
     deduped: dict[str, StrategyRecord] = {}
@@ -1010,6 +1110,63 @@ def _logger_or_print(s: str) -> None:
 
 
 # -----------------------------------------------------------------------------
+# Snapshot exporter — keeps the committed fallback honest
+# -----------------------------------------------------------------------------
+
+_SNAPSHOT_HEADER = """<!--
+COMMITTED SOURCE SNAPSHOT — do not edit by hand.
+
+Extracted from the live REFUTATION_LEDGER.md by
+    python3 scripts/backfill_strategies.py --export-snapshot
+Every level-2 section whose header starts with "## R" is copied verbatim, cut
+at the next level-2 heading. The prose between R-entries (S-### lessons,
+aggregate lesson lists, the §LEDGER-RECONCILIATION-MAP) is NOT part of any
+R-entry body and is left out on purpose.
+
+This file exists so the strategy vector can be rebuilt on a machine that has
+neither the Mac-local ledger nor the gitignored reports/ tree. The live ledger
+always wins when it is present — this is a fallback, not the source of truth.
+Provenance: {source} @ {stamp}
+-->
+
+"""
+
+
+def export_ledger_snapshot(ledger_path: Path | None = None,
+                            out_path: Path = LEDGER_SNAPSHOT) -> dict:
+    """Copy the R-entry sections of the live ledger into the committed store.
+
+    Returns a small dict so the caller can print what it did.
+    """
+    src = resolve_ledger(ledger_path)
+    if src is None:
+        raise FileNotFoundError("找不到 REFUTATION_LEDGER.md —— 没有可导出的台账")
+    text = src.read_text(encoding="utf-8")
+
+    # Every level-2 section that starts with "## R" (emoji or not — the ⚪ and
+    # un-emoji headers are part of the ledger even though the record parser
+    # ignores them today; keeping them keeps the snapshot faithful).
+    # Each section is cut at the NEXT level-2 heading, so the prose between
+    # R-entries (S-### lessons, aggregate lesson lists, the
+    # §LEDGER-RECONCILIATION-MAP) — which is not part of any R-entry body —
+    # stays out.
+    heads = list(_re.finditer(r"^##\s+R\S", text, _re.MULTILINE))
+    lvl2 = list(_re.finditer(r"^##\s+\S", text, _re.MULTILINE))
+    parts: list[str] = []
+    for h in heads:
+        nxt = next((x for x in lvl2 if x.start() > h.end()), None)
+        end = nxt.start() if nxt else len(text)
+        parts.append(text[h.start():end].rstrip("\n") + "\n\n")
+
+    stamp = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    body = _SNAPSHOT_HEADER.format(source=_repo_rel(src), stamp=stamp) + "".join(parts)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(body, encoding="utf-8")
+    return {"source": _repo_rel(src), "out": _repo_rel(out_path),
+            "sections": len(parts), "bytes": len(body.encode("utf-8"))}
+
+
+# -----------------------------------------------------------------------------
 # CLI
 # -----------------------------------------------------------------------------
 
@@ -1021,10 +1178,30 @@ def main():
                    help="actually write local JSON audit file")
     p.add_argument("--write-redis", action="store_true",
                    help="also push to Upstash Redis (requires env vars)")
+    p.add_argument("--ledger", type=Path, default=None,
+                   help="explicit ledger input (default: ./REFUTATION_LEDGER.md, "
+                        "else the committed snapshot)")
+    p.add_argument("--sync", type=Path, default=None,
+                   help="explicit MINIMAX_SYNC input (default: ./MINIMAX_SYNC.md, "
+                        "else docs/MINIMAX_SYNC.md)")
+    p.add_argument("--sidecar-dir", type=Path, action="append", default=None,
+                   help="explicit sidecar store (repeatable; searched before the "
+                        "committed store and the legacy reports/ tree)")
+    p.add_argument("--export-snapshot", action="store_true",
+                   help="write docs/strategy_sources/REFUTATION_LEDGER.snapshot.md "
+                        "from the live ledger, then exit")
     args = p.parse_args()
 
+    if args.export_snapshot:
+        info = export_ledger_snapshot(args.ledger)
+        print(f"  ✓ wrote {info['out']} — {info['sections']} R-sections, "
+              f"{info['bytes']} bytes (from {info['source']})")
+        return
+
     dry = not args.write
-    summary = backfill(dry_run=dry, write_redis=args.write_redis)
+    summary = backfill(dry_run=dry, write_redis=args.write_redis,
+                       ledger_path=args.ledger, sync_path=args.sync,
+                       sidecar_dirs=args.sidecar_dir)
 
     print()
     print("=" * 60)
@@ -1035,6 +1212,10 @@ def main():
     print("  by source:")
     for src, n in summary["sources"].items():
         print(f"    {src:<28} {n:>4}")
+    print()
+    print("  source files:")
+    for src, path in summary["source_files"].items():
+        print(f"    {src:<28} {path or '(none)'}")
     print()
     print("  by verdict:")
     for v, n in sorted(summary["totals"]["by_verdict"].items()):

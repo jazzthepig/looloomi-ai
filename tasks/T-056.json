@@ -1,8 +1,8 @@
 {
   "id": "T-056",
   "title": "策略向量陈旧:_data/strategy_records.json 停在 07-21,按现有台账重新生成后 test_strategy_vector_smoke 14 项红",
-  "owner": "seth",
-  "status": "open",
+  "owner": "lane-c",
+  "status": "in_review",
   "created": "2026-10-07",
   "source": "S-500(干净机器跑 preflight 时发现)",
   "allowed_paths": [
@@ -20,5 +20,5 @@
   },
   "prior_value": "Mac 上靠 07-21 生成的旧文件通过;现生成 14 项红(R46 cost_sensitivity / sidecar 标签 / R64 记录缺失等)",
   "verified": null,
-  "notes": "2026-10-07 开卡(S-500)。preflight 现在在没有该文件的机器上明说跳过,Mac 上照旧跑。"
+  "notes": "2026-10-07 开卡(S-500)。preflight 现在在没有该文件的机器上明说跳过,Mac 上照旧跑。 | 2026-11-17 lane-c 交付(分支 lane-c/T-056)。三件事:(1) 来源入库 —— 新增 docs/strategy_sources/:REFUTATION_LEDGER.snapshot.md(活台账里 93 个 '## R' 段逐字拷贝、每段切到下一个二级标题,402 KB,由 `python3 scripts/backfill_strategies.py --export-snapshot` 从活台账生成)+ sidecars/ 5 份 REPORT.md 逐字拷贝(R46/R63/R69/R76/R77 对应报告)+ README.md 写清优先级(活文件 > 入库副本 > 显式 --ledger/--sync/--sidecar-dir)。(2) 脚本 —— backfill_strategies.py 加 resolve_ledger / resolve_minimax_sync / resolve_sidecar_dirs 三层来源解析,CLI 加 --ledger / --sync / --sidecar-dir / --export-snapshot;sidecar 查找先查入库副本再查 Mac 本地 reports/,summary 打印实际读到的来源文件。(3) 测试 —— 融合验证记录在 2026-07-22 §LEDGER-RECONCILIATION-MAP 里被 Jazz 裁定改号为 R69(Minimax 保留 R64–R68b 且那几号没有台账正文),测试改为先查 R69-ledger 再回退 R64-ledger;另加一条硬守卫:SHIP 记录的 sidecar 来源必须入库存在,否则等于又依赖仓库外的 REPORT.md。 | 实测(worktree,Python 3.14.3):活台账路径 115 条记录(doctrinal 13 / 台账 76 / Q3 3 / SYNC 23),test_strategy_vector_smoke 70 passed · 0 failed;干净树路径(快照 + docs/MINIMAX_SYNC.md)93 条(13/76/3/1),同样 70 passed · 0 failed。R46:holding_period_days 5、turnover_per_q 19.875(=79.5/4)、cost_sensitivity 0bps 6.012 / 5bps 5.672 / 10bps 5.331(单调降)、n_assets 41、age_days 731;融合记录 R69:declared_capacity 5,000,000、n_assets 28、holding_period_days 21、turnover_per_q 56.0;8 条 ship 里 5 条带 sidecar 标签(阈值 ≥3)。两条路径的 R46/R69 数值逐项相同。 | 留给 Seth:(a) preflight.sh 里 strategy vector 仍按 `[ -f _data/strategy_records.json ]` 跳过,_data/ 是 gitignore,干净 CI 上永远跳过 —— 要它进 CI 门得改 scripts/preflight.sh,不在本卡 allowed_paths 里,没动。(b) 台账快照是 2026-11-17 的死档,活台账每天在长,--export-snapshot 可重切;sidecar 同理,新报告要手动拷进 sidecars/。(c) 台账里 16 个 '## R' 头不在白名单 emoji 里(⚪ 等,解析器不收),快照逐字留着,没改解析规则。(d) 本轮因上下文额度触发 lane_bot 降落,preflight.sh 未能在本轮跑完,CI 侧 preflight 会跑。"
 }
