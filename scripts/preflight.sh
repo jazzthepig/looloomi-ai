@@ -622,6 +622,17 @@ python3 -m pytest tests/test_positioning_db_first.py tests/test_watchlist_batch.
     echo "✗ preflight stage: S-892 额度修复三份新测试红" >&2
     exit 1
 }
+# 3a-undevicesima-octies. S-894:CoinGecko 超额计费打开之后,闸门(预算 + 熔断 +
+#                     计数)是唯一能让钱停下来的东西;CMC 兜底层是闸门关上之后
+#                     唯一还能拿数的第二家。**两份新测试文件同样要注册** ——
+#                     S-244 家族:测试文件存在 ≠ 会被运行,而「额度闸门没跑」
+#                     的缺席永远是静默的(闸门形同不存在 = 继续烧钱)。
+#                     判据:预算用完一条都不发 / 429 开闸 / CMC 撞额度今天停用 /
+#                     兜底结果必须标来源。
+python3 -m pytest tests/test_cg_guard.py tests/test_cmc_provider.py -q || {
+    echo "✗ preflight stage: S-894 额度闸门 / CMC 兜底两份新测试红" >&2
+    exit 1
+}
 # 3a-vicesima. S-360: docs/SPINE.md 必须描述现在的代码。SPINE 是 agent 重组
 #                    记忆时对齐方向的基准 —— 一份过期的方向基准比没有更坏。
 #                    实测动机:10 个文件 12 行注释断言 signal_outcomes 死了
