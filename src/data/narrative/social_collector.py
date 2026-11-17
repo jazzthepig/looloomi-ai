@@ -27,9 +27,12 @@ _misc_client: httpx.AsyncClient | None = None
 _POOL_LIMITS = httpx.Limits(max_connections=20, max_keepalive_connections=10)
 
 def _get_cg_client() -> httpx.AsyncClient:
+    """⚠️ S-894:必须是 `GuardedCGClient` —— CoinGecko 超额计费打开之后,
+    没有闸门的 client 每一次调用都是一次可能扣钱的调用。"""
     global _cg_client
     if _cg_client is None or _cg_client.is_closed:
-        _cg_client = httpx.AsyncClient(timeout=12, limits=_POOL_LIMITS)
+        from src.data.market.cg_guard import GuardedCGClient
+        _cg_client = GuardedCGClient(timeout=12, limits=_POOL_LIMITS)
     return _cg_client
 
 def _get_misc_client() -> httpx.AsyncClient:

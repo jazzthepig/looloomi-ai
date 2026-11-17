@@ -67,10 +67,16 @@ def _get_llama_client() -> httpx.AsyncClient:
     return _llama_client
 
 def _get_cg_client() -> httpx.AsyncClient:
-    """Persistent client for pro-api.coingecko.com / api.coingecko.com"""
+    """Persistent client for pro-api.coingecko.com / api.coingecko.com.
+
+    ⚠️ S-894:这个 client **必须**是 `GuardedCGClient` —— CoinGecko 的超额计费
+    打开之后,每一次外部调用都要花钱,而闸门(预算 + 熔断 + 计数)是唯一的收口点。
+    换成裸 `httpx.AsyncClient` 就等于把闸门拆了。**新增 CG client 时照抄这里。**
+    """
     global _cg_client
     if _cg_client is None or _cg_client.is_closed:
-        _cg_client = httpx.AsyncClient(timeout=12, limits=_POOL_LIMITS)
+        from src.data.market.cg_guard import GuardedCGClient
+        _cg_client = GuardedCGClient(timeout=12, limits=_POOL_LIMITS)
     return _cg_client
 
 def _get_misc_client() -> httpx.AsyncClient:
@@ -1626,6 +1632,37 @@ async def get_cg_top_holders(address: str, network: str = "eth", holders: int = 
         return {"error": f"{type(e).__name__}: {str(e)[:200]}"}
 
 
+async def _cmc_global_fallback() -> dict | None:
+    """CoinGecko `/global` 拿不到时的 CMC 免费档兜底(S-894)。
+
+    **必须标来源**:两家的市值口径不同(纳入的币种集合、算法都不一样)。
+    换了源却不标,数字看着一样、其实不是一回事 —— 那比没有数据更难发现
+    (S-262/S-396 家族)。
+
+    CMC 没有 ETH 占比、没有 DeFi 市值 ⇒ 那两个字段是 **None,不是 0**。
+    「没有数据」塌成「0」会把「读不到」变成「真的没有」。
+    """
+    try:
+        from src.data.market.cmc_provider import cmc_global_metrics
+        m = await cmc_global_metrics()
+    except Exception:
+        return None
+    if not m:
+        return None
+    return {
+        "btc_dominance":       m.get("btc_dominance_pct"),
+        "eth_dominance":       None,
+        "total_market_cap_usd": m.get("total_market_cap_usd"),
+        "mcap_change_pct_24h": m.get("total_market_cap_change_24h_pct"),
+        "volume_24h_usd":      m.get("total_volume_24h_usd"),
+        "defi_market_cap":     None,
+        "defi_to_total_ratio": None,
+        "active_cryptocurrencies": m.get("active_cryptocurrencies"),
+        "markets":             m.get("markets"),
+        "source":              "coinmarketcap",
+    }
+
+
 async def get_cg_global() -> dict:
     """
     CoinGecko global market data.
@@ -1633,6 +1670,10 @@ async def get_cg_global() -> dict:
              mcap_change_pct_24h, defi_market_cap, defi_to_total_ratio,
              volume_24h, active_cryptocurrencies.
     TTL: 3 min.
+
+    S-894:CG 失败(额度用尽 / 熔断 / 上游 5xx)时换 CMC 免费档兜底,结果带
+    `source` 标明是哪一家。**兜底不是替换** —— 正常路径仍是 CoinGecko,
+    口径不变。
     """
     key = "cg_global"
     cached = _cache_get(key, ttl=180)
@@ -1663,10 +1704,15 @@ async def get_cg_global() -> dict:
             "defi_to_total_ratio": round(defi_mcap / total_usd * 100, 2) if total_usd else 0,
             "active_cryptocurrencies": d.get("active_cryptocurrencies", 0),
             "markets":             d.get("markets", 0),
+            "source":              "coingecko",
         }
         await _redis_set(key, result, ttl=180)
         return _cache_set(key, result)
     except Exception as e:
+        _cmc = await _cmc_global_fallback()
+        if _cmc:
+            await _redis_set(key, _cmc, ttl=180)
+            return _cache_set(key, _cmc)
         return {"error": str(e)}
 
 
@@ -2156,9 +2202,30 @@ async def get_macro_pulse() -> dict:
             return_exceptions=True,
         )
 
+        # ── S-894:CG 拿不到的两块(全局 / BTC 价)→ CMC 免费档兜底 ──────────────
+        #
+        # 什么时候发生:CG 额度用尽(闸门直接短路)、熔断中、或上游 5xx。
+        # 这三件事以前的表现是「空数据」,而现在每一次重试都是一次付费调用 ——
+        # 所以兜底不只是「让面板好看」,它是**让闸门敢于关门**的前提。
+        _cg_global_ok = (not isinstance(global_r, Exception)
+                         and global_r.status_code == 200)
+        _cg_btc_ok = (not isinstance(btc_r, Exception)
+                      and btc_r.status_code == 200)
+        _cmc_global: dict = {}
+        _cmc_btc: dict = {}
+        if (not _cg_global_ok) or (not _cg_btc_ok):
+            try:
+                from src.data.market.cmc_provider import cmc_global_metrics, cmc_quotes
+                if not _cg_global_ok:
+                    _cmc_global = await cmc_global_metrics() or {}
+                if not _cg_btc_ok:
+                    _cmc_btc = (await cmc_quotes(["BTC"]) or {}).get("BTC") or {}
+            except Exception:
+                pass
+
         # ── Parse global ──────────────────────────────────────────────────────
         cg_data: dict = {}
-        if not isinstance(global_r, Exception) and global_r.status_code == 200:
+        if _cg_global_ok:
             cg_data = global_r.json().get("data", {})
 
         # ── Parse FNG ─────────────────────────────────────────────────────────
@@ -2170,8 +2237,14 @@ async def get_macro_pulse() -> dict:
 
         # ── Parse BTC ─────────────────────────────────────────────────────────
         btc_entry: dict = {}
-        if not isinstance(btc_r, Exception) and btc_r.status_code == 200:
+        if _cg_btc_ok:
             btc_entry = btc_r.json().get("bitcoin", {})
+        elif _cmc_btc:
+            btc_entry = {
+                "usd": _cmc_btc.get("price"),
+                "usd_24h_change": _cmc_btc.get("percent_change_24h"),
+                "usd_7d_change": _cmc_btc.get("percent_change_7d"),
+            }
 
         # ── Parse DeFi overview (only need total_tvl_usd) ─────────────────────
         _defi_tvl = 0
@@ -2188,13 +2261,33 @@ async def get_macro_pulse() -> dict:
         _btc_px  = btc_entry.get("usd")  # may be None; frontend handles
         _mc_usd  = cg_data.get("total_market_cap", {}).get("usd")
 
+        # ── S-894:CG 的两块空缺 → CMC 的对应值 ───────────────────────────────
+        _mcap_pct = cg_data.get("market_cap_percentage", {})
+        _mcap_chg = cg_data.get("market_cap_change_percentage_24h_usd")
+        if _cmc_global:
+            if not _mcap_pct:
+                _mcap_pct = {"btc": _cmc_global.get("btc_dominance_pct")}
+            if _mcap_chg is None:
+                _mcap_chg = _cmc_global.get("total_market_cap_change_24h_pct")
+        if _btc_dom is None and _cmc_global:
+            _btc_dom = _cmc_global.get("btc_dominance_pct")
+        if _mc_usd is None and _cmc_global:
+            _mc_usd = _cmc_global.get("total_market_cap_usd")
+
+        # 来源标签:换过源就要说。**不标 = 数字看着一样、其实不是一回事**。
+        if _cmc_global and _cmc_btc:
+            _src = "coinmarketcap"
+        elif _cmc_global or _cmc_btc:
+            _src = "coingecko+coinmarketcap"
+        else:
+            _src = "coingecko"
+
         result = {
             # ── nested structure (MacroPulse.jsx compat) ──────────────────────
             "data": {
-                "market_cap_percentage": cg_data.get("market_cap_percentage", {}),
-                "market_cap_change_percentage_24h_usd": cg_data.get(
-                    "market_cap_change_percentage_24h_usd"
-                ),  # None when CG returned no global — render "—", not +0.00%
+                "market_cap_percentage": _mcap_pct,
+                "market_cap_change_percentage_24h_usd": _mcap_chg,
+                # None when CG returned no global — render "—", not +0.00%
             },
             "fng": {
                 # S-396: keep None as JSON null, not str(None)="None" —
@@ -2204,6 +2297,7 @@ async def get_macro_pulse() -> dict:
             },
             "btc": btc_entry,  # {usd, usd_24h_change, usd_7d_change}
             "timestamp": datetime.now(timezone.utc).isoformat(),
+            "data_source": _src,   # S-894:哪一家给的
             # ── flat fields (MCP agent compat) ────────────────────────────────
             "btc_price":             _btc_px,
             "btc_dominance":         _btc_dom,

@@ -3894,8 +3894,6 @@ async def _treasury_decisions_loop():
     await _asyncio.sleep(_boot_delay(300))
     while True:
         try:
-            import httpx as _httpx
-
             from src.api.store import supabase_rpc, supabase_upsert_table
             from src.data.entity.writer import _cg_headers, run_once
 
@@ -3909,8 +3907,12 @@ async def _treasury_decisions_loop():
             async def _up(table, rows, on_conflict):
                 return await supabase_upsert_table(table, rows, on_conflict)
 
-            async with _httpx.AsyncClient(headers=_cg_headers(),
-                                          timeout=30) as _c:
+            # ⚠️ S-894:必须走 `GuardedCGClient` —— CoinGecko 超额计费打开之后,
+            # 这个循环每次拉 treasury 都是一次可能扣钱的调用,闸门(预算 + 熔断)
+            # 是唯一的收口点。裸 `httpx.AsyncClient` = 没有闸门。
+            from src.data.market.cg_guard import GuardedCGClient
+            async with GuardedCGClient(headers=_cg_headers(),
+                                       timeout=30) as _c:
                 res = await run_once(client=_c, supabase_query=_q,
                                      supabase_upsert=_up)
             print(f"[TREASURY] {res['reason'][:160]}")
@@ -3984,8 +3986,6 @@ async def _cg_panel_loop():
         # 它是「跑通了但没活干」,不是故障,不该被罚成 10 分钟重试。
         _round_ok = False
         try:
-            import httpx as _httpx
-
             from src.api.store import supabase_rpc, supabase_upsert_table
             from src.data.entity.writer import _cg_headers
             from src.data.market.cg_panel_sync import run_once
@@ -4042,8 +4042,11 @@ async def _cg_panel_loop():
             _panel, _added = await _ensure_cis(_q, _up, list(_panel))     # 11-02:CIS 的加密名字一定在面板里(SKY)
             if _added:
                 print(f"[CG-PANEL] cg_coin_map 补了 CIS 名字:{_added}")
-            async with _httpx.AsyncClient(headers=_cg_headers(),
-                                          timeout=45) as _c:
+            # ⚠️ S-894:走 `GuardedCGClient` —— 面板回填是**单条路径里调用最多的**
+            # 消费者(每个标的每轮一次),没有闸门它就是最大的漏斗。
+            from src.data.market.cg_guard import GuardedCGClient
+            async with GuardedCGClient(headers=_cg_headers(),
+                                       timeout=45) as _c:
                 res = await run_once(client=_c, supabase_query=_q,
                                      supabase_upsert=_up,
                                      panel_symbols=_panel)
@@ -6892,6 +6895,35 @@ async def loops_envelopes(x_internal_token: str = Header(None)):
         return {"readable": False, "verdict": "unknown",
                 "note": f"{type(_e).__name__}: {str(_e)[:160]}",
                 "checked_at": datetime.now(_tz.utc).isoformat()}
+
+
+@app.get("/internal/cg-quota")
+async def cg_quota(x_internal_token: str = Header(None)):
+    """CoinGecko / CoinMarketCap 的额度状态(S-894)。
+
+    **为什么需要这个端点**:2026-11-17 起 CoinGecko 超额调用要钱。原来我们
+    既不知道今天发了多少,也不知道闸门为什么关了 —— 账单是唯一的反馈,那时候
+    已经晚了。这个端点让「今天花了多少 / 还剩多少 / 熔断了没有」变成
+    一个可以随时 curl 的事实。
+
+    Token-guarded:里面是运营口径,不是公开面。
+    """
+    require_internal_token(x_internal_token)
+    try:
+        from src.data.market.cg_guard import report as _cg_report
+        cg = await _cg_report()
+    except Exception as _e:                                    # noqa: BLE001
+        cg = {"error": f"{type(_e).__name__}: {str(_e)[:160]}"}
+    try:
+        from src.data.market.cmc_provider import report as _cmc_report
+        cmc = await _cmc_report()
+    except Exception as _e:                                    # noqa: BLE001
+        cmc = {"error": f"{type(_e).__name__}: {str(_e)[:160]}"}
+    return {
+        "coingecko": cg,
+        "coinmarketcap": cmc,
+        "checked_at": _dt.datetime.now(_dt.timezone.utc).isoformat(),
+    }
 
 
 @app.get("/internal/build-state")
