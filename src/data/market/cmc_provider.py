@@ -12,6 +12,15 @@ Jazz 在 Railway 上补了把 CMC 的免费 key。免费档有**自己的**日�
 默认 40 次/天(`CMC_DAILY_BUDGET`)。用完就停,不试、不撞、不因为「还剩一点」
 就多打一发把免费档也撞穿。
 
+**key 怎么找**:三个显式名(`CMC_API_KEY` / `COINMARKETCAP_API_KEY` /
+`CMC_PRO_API_KEY`)之外,还**按规则扫一遍我们自己的命名空间** —— 变量名以
+`CMC_` / `COINMARKETCAP_` 开头、且以 `KEY` / `TOKEN` 结尾的才算
+(`CMC_*_KEY` / `CMC_*_TOKEN` / `COINMARKETCAP_*_KEY` / `COINMARKETCAP_*_TOKEN`)。
+**别家的 key 一个都不看**(`COINGECKO_API_KEY` / `MORALIS_API_KEY` 不在这个
+命名空间里)。理由是实测的:2026-11-17 部署后 `/internal/cg-quota` 报
+`key_present: false` ⇒ Jazz 用的变量名不在三个显式名里 ⇒ 兜底层装上了但是哑的。
+**为了一个变量名再发一版不值得。**
+
 ## 覆盖哪些面
 
 只有两个,因为只有这两个值得用另一家 vendor 兜:
@@ -64,17 +73,68 @@ _local_used: dict[str, int] = {}
 _local_blocked_until: float = 0.0
 
 
-def _api_key() -> str:
-    """CMC 的 key —— 三个名字都认。
+#: 显式名 —— 优先(Jazz 最可能用的就是这三个)。
+_EXPLICIT_KEY_NAMES = ("CMC_API_KEY", "COINMARKETCAP_API_KEY", "CMC_PRO_API_KEY")
 
-    Jazz 在 Railway 上补 key 时用的是哪个名字没人记录过(而且不同文档用不同
-    名字),所以三个都收:谁在,谁生效,不用为了一个环境变量名再发一次版。
+
+#: **只在我们自己的命名空间里找**:`CMC_` / `COINMARKETCAP_` 开头的变量。
+#: 别家的 key(`COINGECKO_API_KEY` / `MORALIS_API_KEY` / `ETHERSCAN_API_KEY`)
+#: 不在这个命名空间里 ⇒ 一律不看。
+_CMC_ENV_PREFIXES = ("CMC_", "COINMARKETCAP_")
+
+#: 凭据的结尾词。`CMC_ENABLED` / `CMC_BENCHMARK_SYMBOL` 这类开关和用途
+#: 变量不是凭据 ⇒ 不算。
+_CMC_CRED_SUFFIXES = ("KEY", "TOKEN")
+
+
+def _looks_like_cmc_key_name(name: str) -> bool:
+    """变量名看起来像「我们自己的 CMC 凭据」吗?—— 判定规则集中在这一处,便于测试。
+
+    **规则**:必须以 `CMC_` 或 `COINMARKETCAP_` 开头(我们自己的命名空间),
+    且以 `KEY` 或 `TOKEN` 结尾(是凭据,不是开关)。于是:
+    - `CMC_API_KEY` / `CMC_PRO_KEY` / `COINMARKETCAP_PRO_API_KEY` ✓
+    - `CMC_ENABLED` / `CMC_BENCHMARK_SYMBOL` ✗(不是凭据)
+    - `COINGECKO_API_KEY` / `MORALIS_API_KEY` ✗(不是我们家的命名空间)
     """
-    for name in ("CMC_API_KEY", "COINMARKETCAP_API_KEY", "CMC_PRO_API_KEY"):
+    up = name.upper()
+    if not up.startswith(_CMC_ENV_PREFIXES):
+        return False
+    return up.endswith(_CMC_CRED_SUFFIXES)
+
+
+def _scan_env_for_cmc_key() -> tuple[str, str]:
+    """在我们自己的命名空间里找 CMC 的 key —— 返回 `(key, 变量名)`。
+
+    **为什么要有这一层**:Jazz 在 Railway 上补 key 时用的变量名没人记录过。
+    2026-11-17 部署后实测 `/internal/cg-quota` 报 `key_present: false` ——
+    三个显式名一个都没命中 ⇒ 兜底层**装上了但是哑的**。而「为了一个变量名
+    再发一版」是纯粹的浪费,所以这里**按规则找**:只认
+    `CMC_*_KEY` / `CMC_*_TOKEN` / `COINMARKETCAP_*_KEY` / `COINMARKETCAP_*_TOKEN`
+    这四种形状 —— **我们自己的命名空间 + 凭据的形状**,不越界去看别家的变量。
+
+    按名字排序取第一个 ⇒ **确定性**(不靠环境变量的字典序运气)。
+    """
+    for name in sorted(os.environ):
+        if not _looks_like_cmc_key_name(name):
+            continue
+        v = (os.environ.get(name) or "").strip()
+        if v:
+            return v, name
+    return "", ""
+
+
+def _key_and_source() -> tuple[str, str]:
+    """返回 `(key, 命中的变量名)`。变量名只用于报告,不是秘密。"""
+    for name in _EXPLICIT_KEY_NAMES:
         v = (os.getenv(name, "") or "").strip()
         if v:
-            return v
-    return ""
+            return v, name
+    return _scan_env_for_cmc_key()
+
+
+def _api_key() -> str:
+    """CMC 的 key —— 三个显式名 + 一次按规则扫描。"""
+    return _key_and_source()[0]
 
 
 def _today_utc() -> str:
@@ -304,11 +364,14 @@ async def cmc_global_metrics() -> dict:
 
 async def report() -> dict:
     """CMC 侧的额度状态(`/internal/cg-quota` 一并返回)。"""
-    key = _api_key()
+    key, key_env = _key_and_source()
     used = await used_today()
     budget = daily_budget()
     return {
         "key_present": bool(key),
+        # 命中的**变量名**(不是值)—— 兜底哑掉的时候,一眼看出是「没配」
+        # 还是「配在了一个我没认的名字下」。
+        "key_env": key_env or None,
         "used_today": used,
         "daily_budget": budget,
         "remaining": max(0, budget - used),

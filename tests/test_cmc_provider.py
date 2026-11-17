@@ -44,11 +44,22 @@ def _mock(monkeypatch, handler):
     return client
 
 
+def _clear_every_cmc_key(monkeypatch):
+    """清掉**所有**可能被认出来的 CMC key 变量(含按规则扫到的)。
+
+    只删三个显式名是不够的 —— 扫描层会从环境里捡到别的名字,测试就会
+    变成「看这台机器碰巧配了什么」。规则直接取生产代码里的那个函数,
+    不在这里抄一份(抄一份 = 规则改了测试不知道)。
+    """
+    import os
+    for name in list(os.environ):
+        if cmc_provider._looks_like_cmc_key_name(name):
+            monkeypatch.delenv(name, raising=False)
+
+
 def test_没有key_一条都不发(monkeypatch):
     """没 key 还去打 = 无效请求 + 白白消耗时间。"""
-    monkeypatch.delenv("CMC_API_KEY", raising=False)
-    monkeypatch.delenv("COINMARKETCAP_API_KEY", raising=False)
-    monkeypatch.delenv("CMC_PRO_API_KEY", raising=False)
+    _clear_every_cmc_key(monkeypatch)
     sent: list = []
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -73,11 +84,69 @@ def test_没有key_一条都不发(monkeypatch):
 def test_三个环境变量名都认(monkeypatch):
     """Jazz 补 key 时用的名字没人记录过 —— 三个都收,不用为了一个变量名再发一版。"""
     for name in ("CMC_API_KEY", "COINMARKETCAP_API_KEY", "CMC_PRO_API_KEY"):
-        monkeypatch.delenv("CMC_API_KEY", raising=False)
-        monkeypatch.delenv("COINMARKETCAP_API_KEY", raising=False)
-        monkeypatch.delenv("CMC_PRO_API_KEY", raising=False)
+        _clear_every_cmc_key(monkeypatch)
         monkeypatch.setenv(name, "k-" + name)
         assert cmc_provider._api_key() == "k-" + name
+
+
+def test_名字不在名单里_按规则扫出来(monkeypatch):
+    """实测:三个显式名一个都没命中(Jazz 配的是别的名字)⇒ 兜底哑掉。
+
+    所以除了名单,还要**按规则找**:`CMC_*_KEY` / `CMC_*_TOKEN` /
+    `COINMARKETCAP_*_KEY` / `COINMARKETCAP_*_TOKEN` 这四种形状。
+    `CMC_ENABLED` 这类不是凭据 ⇒ 排除。
+    """
+    _clear_every_cmc_key(monkeypatch)
+    monkeypatch.setenv("CMC_ENABLED", "true")          # 不该被认成 key
+    monkeypatch.setenv("CMC_BENCHMARK_SYMBOL", "BTC")  # 同上
+    monkeypatch.setenv("CMC_PRO_KEY", "scanned-key")    # 该被认出来
+
+    assert cmc_provider._api_key() == "scanned-key"
+    assert cmc_provider._key_and_source()[1] == "CMC_PRO_KEY"
+
+
+def test_规则的边界_只看我们自己的命名空间(monkeypatch):
+    """规则的边界要钉死,不然「扫环境变量」会变成「捡到什么都用」。
+
+    **只在我们自己的命名空间里找**(`CMC_` / `COINMARKETCAP_` 开头),
+    **且必须是凭据**(以 KEY / TOKEN 结尾)。别家的 key 一个都不看。
+    """
+    _clear_every_cmc_key(monkeypatch)
+    # 不是凭据(开关 / 用途变量)⇒ 排除
+    assert cmc_provider._looks_like_cmc_key_name("CMC_ENABLED") is False
+    assert cmc_provider._looks_like_cmc_key_name("CMC_BENCHMARK_SYMBOL") is False
+    # 不是我们家的命名空间 ⇒ 排除(别家的 key 一个都不看)
+    assert cmc_provider._looks_like_cmc_key_name("COINGECKO_API_KEY") is False
+    assert cmc_provider._looks_like_cmc_key_name("MORALIS_API_KEY") is False
+    assert cmc_provider._looks_like_cmc_key_name("ETHERSCAN_API_KEY") is False
+    assert cmc_provider._looks_like_cmc_key_name("INTERNAL_TOKEN") is False
+    # 我们家的命名空间 + 凭据形状 ⇒ 是
+    for name in ("CMC_API_KEY", "CMC_PRO_KEY", "CMC_APIKEY", "CMC_TOKEN",
+                 "COINMARKETCAP_API_KEY", "COINMARKETCAP_PRO_API_KEY",
+                 "COINMARKETCAP_TOKEN"):
+        assert cmc_provider._looks_like_cmc_key_name(name) is True, name
+    # 大小写不敏感
+    assert cmc_provider._looks_like_cmc_key_name("cmc_api_key") is True
+    assert cmc_provider._looks_like_cmc_key_name("coinmarketcap_api_key") is True
+
+
+def test_扫到的是我们家的key_别家的key不会被误用(monkeypatch):
+    """环境里同时有 CoinGecko 的 key ⇒ 绝不能把它当成 CMC 的 key 用掉。"""
+    _clear_every_cmc_key(monkeypatch)
+    monkeypatch.setenv("COINGECKO_API_KEY", "cg-key")
+    monkeypatch.setenv("MORALIS_API_KEY", "moralis-key")
+    assert cmc_provider._api_key() == ""
+
+
+def test_扫描命中哪个变量名_要能报出来(monkeypatch):
+    """兜底哑掉的时候,一眼要能看出是「没配」还是「配在了一个我没认的名字下」。"""
+    _clear_every_cmc_key(monkeypatch)
+    monkeypatch.setenv("COINMARKETCAP_PRO_API_KEY", "k")
+
+    rep = asyncio.run(cmc_provider.report())
+    assert rep["key_present"] is True
+    assert rep["key_env"] == "COINMARKETCAP_PRO_API_KEY"
+    assert "k" not in str(rep["key_env"])       # 报的是名字,不是值
 
 
 def test_预算用完_不再发(monkeypatch):
