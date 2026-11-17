@@ -1991,6 +1991,14 @@ python3 -m pytest tests/test_dossier_context.py tests/test_same_cell.py tests/te
   echo "  ✗ S-427/S-429 forward books — do not push"; exit 1; }
 echo "  ✓ S-427 tokenization tilt · S-429 β+ momentum books"
 
+# ── T-414:T-388 的三条断言(dev 逐位对拍 / tail2 = B 道口径 / 那一行印格子日)─────
+# 这个文件原先只留在 lane-a 的工作树里,没随 lane-a/T-388 进仓 ⇒ preflight 从来没跑过它
+# (S-244:「测试存在 ≠ 测试被运行」)。注册行与被注册的文件必须**同一个提交**进仓 ——
+# 先提注册会让 main 的 preflight 去跑一个还不存在的文件,preflight 直接红。
+python3 -m pytest tests/test_t388_device_names.py -q || {
+  echo "  ✗ T-414 T-388 断言守卫 — do not push"; exit 1; }
+echo "  ✓ T-414 T-388 断言(dev 逐位对拍 / tail2 口径 / 格子日)"
+
 # ── S-412 hl_book(HL 4 币组合决策内核,回放与每日流程共用)──────────────
 # 永不给亏损仓位加仓 · 换手不动带 · Jev 臂的匿名/打乱/解析路径喂机械答案必须 ≡ 机械 Tom。
 python3 -m paper_trading.tests.test_hl_book_smoke || {
