@@ -2,7 +2,7 @@
   "id": "T-005",
   "title": "Layer C 重新设计(不强制现金),先写 M- 台账再跑",
   "owner": "lane-c",
-  "status": "in_review",
+  "status": "blocked",
   "source": "S-420 / DECISIONS 09-24",
   "allowed_paths": [
     "/Volumes/CometCloudAI/cometcloud-local/research/vdb_tilt/"
@@ -17,7 +17,11 @@
   },
   "prior_value": "β 匹配 0/30,β≈0.35",
   "created": "2026-09-24",
-  "verified": null,
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-16T04:50:00Z",
+    "value": "lane-c 部分交付已由 seth 从 main 重读核对(2026-11-16):① 交付在 main(卡 e7a0abf8;台账 docs/research/M-222_T005_prereg_rework_2026-10-31.md 随 9126c8a3 / f13eeefc 进树),改动主体在 Mac 根 research/vdb_tilt/(卡 allowed_paths 是绝对路径);② **卡面验收未达成** —— notes 明写「24 格跑批未做」,三条理由都实测过:价格库最早只到 2024-06-07(2020 起要等 T-030 回填)、harness 的 Layer B/C 参数是 no-op(同 split 下三格 sleeve 逐位相同,现在跑会有 20 格逐位相同)、Mac 根 20b23ba 的 Layer A/B no-op bug 未修;③ 冒烟通过,可跑窗口 2024-06-08→2026-09-21 共 836 个交易日(binding constraint = B1);④ 四条待裁定照录:(a)「2 regime 范围」的两种读法、(b)「4 加仓」的数值、(c)价格窗口要不要等 T-030 回填到 2020、(d)no-op bug 谁修 —— 本卡不自行裁定;⑤ 数值未由 seth 重跑,引 lane 自测;⑥ 故**不按 done 收**,记 blocked(blocked_by T-038),等裁定与 no-op 修复后再开跑。"
+  },
   "notes": "**部分交付**:预注册台账 + 输入恢复 + 冒烟实测;**24 格跑批未做**(原因见下,三条都实测过)。改动全在 Mac 根 `/Volumes/CometCloudAI/cometcloud-local/research/vdb_tilt/`(卡的 allowed_paths);本分支只带本卡 + tasks/BOARD.md(卡的 allowed_paths 是绝对路径,与仓库 diff 无关)。\n\n【已交】① **台账**(预注册):`research/vdb_tilt/M-220_layer_c_redesign_prereg_2026-10-30.md` —— Seth 09-27(§S-433b)五处改动逐条落地 + 24 格定义 + 样本内选格规则(先写定、跑完不许改)+ 零信号对照协议(**只用 `src/data/evaluation/apparatus.py` 的 `stationary_bootstrap_index` / `ab_test` / `shuffle_within` / `block_permute`,不另起炉灶**)+ 跑批命令 + 常数表。② **输入恢复**:`research/vdb_tilt/` 里 `oos_walkforward.py` 要 import 的模块、它读的两个 CSV 曾整批消失(与 T-211 的 stash 事故同形),已从 `Shadow/cometcloud-local/research/vdb_tilt/`(只读镜像,未动)**复制**回 17 个文件:`real_backtest.py` / `tilt_sleeves.py` / `layer_c_grid_v2.py` / `phase_classifier.py` / `fitness.py` / `state_vector_builder.py` / `state_vector_builder_v2.py` / `benchmarks.py` / `altseason_idx.py` / `v5_history_loader.py` / `state_vectors_1000d.csv` / `phases_1000d.csv` / `phases_7d.csv` / `tilt_weights_1000d.csv` / `results.tsv` / `results_real.tsv` / `results_real_v2.tsv`。③ **冒烟**:`research/vdb_tilt/t005_smoke.py` 实跑通过(输出见下)。\n\n【测得的值】① **对齐后可跑窗口 = 2024-06-08 → 2026-09-21,836 个交易日**(`state_vectors_1000d.csv` / `phases_1000d.csv` 各 1001 行,B1 日 NAV 837 行,价格库 24 币各 20974 行小时线 **2024-06-07 08:00 → 2026-10-29 05:00**),binding constraint = B1。② **Seth ① 要求的「2020 起」做不到:本地价格库最早只到 2024-06-07** —— 2020–2024/06 的价格**不存在**(不是没去取);Seth 09-27 裁定「用 binance_hist 守护路径,**不自建抓取**」⇒ 要等 T-030 回填,或另给一条取数路径。③ **harness 的 Layer B / Layer C 参数是 no-op**:同一 split(60/40,split_idx=501)下三格不同 sleeve_id(lb5/lb20、e1.3/e1.0、c-0.20/c-0.05/c-0.10)的 `IS_SR=1.4344674278263496`、`OOS_SR=-0.7686064928659249`、`excess_vs_b1=15.8351`、`excess_vs_b_matched=-12.7873`、`avg_cash=0.7313432835820896` **逐位相同**;no-op 探针:只改 Layer B 的 cash 触发(-0.20 → -0.05)结果逐位不变,**改 Layer A 的 N/tilt 才动**(IS_SR 1.434467 → 1.398509)⇒ **现在跑 24 格,24 格里有 20 格会逐位相同**;Mac 根提交 `20b23ba` 标题里那条「**Layer A/B no-op bug**」至今没修。④ 零信号对照(台账 §3 已预注册):打乱 regime 信号后判据必须变红。\n\n【需要 Seth 裁定 / 拍板】(a) **「2 regime 范围」的读法**:我预注册 **A = 评估区间两档(全样本 / 仅 RISK_OFF 段)** —— 理由:① 已把 regime 判据写死为 200 日线(若 ② 是判据会与 ① 冲突),④ 说「**RISK_OFF 段**相对 ②」;另一种读法 B = 判据两档(BTC<200MA / 且 <50MA 双确认),改 B 是一个常量。(b) **「4 加仓」的数值**:我预注册 0.05 / 0.10 / 0.15 / 0.20(卡面没写数值)。(c) **价格窗口要不要等 T-030 回填到 2020** —— 否则只能 2024-06 起跑(2.3 年),RISK_OFF 段的样本会很少。(d) **no-op bug 谁修**:修完才谈得上 24 格;`tilt_sleeves.py` / `real_backtest.py` 在卡的 allowed_paths 内,lane-c 可以改,但想先等 (a) 裁定,免得改两遍。\n\n【报告】`/Volumes/CometCloudAI/cometcloud-local/research/vdb_tilt/M-220_layer_c_redesign_prereg_2026-10-30.md`(台账即报告;分支内不带副本 —— 卡的 allowed_paths 是 Mac 绝对路径)。",
   "blocked_by": "T-038"
 }
