@@ -49,6 +49,18 @@ _log = logging.getLogger("metering")
 FLUSH_INTERVAL_S = 300          # 5 min. Bounds the loss window if the process dies.
 _SCAN_LIMIT = 5_000             # keys per flush; a runaway key count must not stall boot
 
+# T-062 (2026-11-17): a flush that observed ZERO usage is still an observation.
+#
+# The old flush returned `nothing_to_flush` and wrote NOTHING when no billable
+# key had traffic, so `api_usage` sat at 0 rows from the day it was created —
+# and "we had no traffic" was indistinguishable from "the writer is dead". That
+# is the same shape as `ok=True, rows=0`: an absence rendered as a plausible
+# value. So every flush now writes at least one row. The zero row carries a
+# sentinel key_prefix and requests = 0, which adds nothing to any usage SUM
+# (it is zero) and makes the table's liveness visible: a row whose
+# `last_flush_at` moves is a flush that ran, whatever the traffic was.
+_NO_KEY_BUCKET = "__no_key_traffic__"
+
 
 def _sb() -> tuple[str, str] | None:
     base = os.environ.get("SUPABASE_URL", "").rstrip("/")
@@ -122,43 +134,127 @@ async def _redis_daily_counters() -> dict[str, int]:
 
 
 async def flush_usage(day: dt.date | None = None) -> dict[str, Any]:
-    """Flush today's Redis counters into `api_usage`. Safe to call at any time."""
+    """Flush today's Redis counters into `api_usage`. Safe to call at any time.
+
+    T-062: ALWAYS writes. A day with no billable traffic writes one zero-usage
+    observation row (`key_prefix = __no_key_traffic__`, `requests = 0`) so the
+    table's emptiness can never again be ambiguous between "no traffic" and
+    "the writer is dead". The date is UTC (S-195 / S-368: a Mac-side writer in
+    JST writes tomorrow's date after 15:00 UTC, silently).
+    """
     conf = _sb()
     if not conf:
         return {"status": "unconfigured"}
     base, key = conf
-    day = day or dt.date.today()
+    day = day or dt.datetime.now(tz=dt.timezone.utc).date()
 
     counters = await _redis_daily_counters()
-    if not counters:
-        return {"status": "nothing_to_flush", "date": day.isoformat()}
-
     rows = [{"key_prefix": kp, "usage_date": day.isoformat(),
              "requests": n, "last_flush_at": _now()} for kp, n in counters.items()]
+    observed_zero = not rows
+    if observed_zero:
+        rows = [{"key_prefix": _NO_KEY_BUCKET, "usage_date": day.isoformat(),
+                 "requests": 0, "last_flush_at": _now()}]
 
     # PostgREST upsert. `merge-duplicates` alone would OVERWRITE with the incoming
     # value, which is only correct because the incoming value is the running daily
     # total — but it would silently lower `requests` if Redis were reset mid-day.
     # The GREATEST guarantee therefore lives in a database function, not in a hope
     # about ordering; see `api_usage_upsert` below.
-    try:
-        async with httpx.AsyncClient(timeout=15) as c:
-            r = await c.post(
-                f"{base}/rest/v1/rpc/api_usage_upsert",
-                json={"p_rows": rows},
-                headers={"apikey": key, "Authorization": f"Bearer {key}",
-                         "Content-Type": "application/json"},
-            )
-        if r.status_code not in (200, 201, 204):
-            _log.error("[metering] flush REJECTED %s %s", r.status_code, r.text[:240])
-            return {"status": "failed", "http": r.status_code,
-                    "body": r.text[:240], "n": len(rows)}
-    except Exception as e:
-        _log.error("[metering] flush failed: %s", e)
-        return {"status": "failed", "error": str(e)[:200], "n": len(rows)}
+    ok, how, detail = await _write_rows(base, key, rows)
+    if not ok:
+        _log.error("[metering] flush REJECTED (%s): %s", how, detail)
+        return {"status": "failed", "http": how, "body": detail, "n": len(rows)}
 
-    _log.info("[metering] flushed %d key-days for %s", len(rows), day.isoformat())
-    return {"status": "ok", "n": len(rows), "date": day.isoformat()}
+    _log.info("[metering] flushed %d key-days for %s via %s%s",
+              len(rows), day.isoformat(), how, " (zero-usage observation)" if observed_zero else "")
+    return {"status": "ok", "n": len(rows), "date": day.isoformat(),
+            "observed_zero": observed_zero, "via": how}
+
+
+async def _write_rows(base: str, key: str, rows: list[dict]) -> tuple[bool, str, str]:
+    """Write the day's rows. Returns (ok, how, detail).
+
+    Path 1 — the `api_usage_upsert` RPC, which applies GREATEST() in the
+    database so a re-run cannot lower a count. That is the designed path.
+
+    Path 2 — a direct upsert with the SAME monotonicity applied client-side,
+    used only when the RPC is absent from the database (PostgREST answers 404
+    / PGRST202 for a function that does not exist). The RPC's definition is not
+    in `scripts/supabase_tenancy_and_metering.sql` — that file creates the
+    TABLE and the RLS but not the function — so whether it exists in the live
+    database is a fact this module cannot assume. Without the fallback a
+    missing RPC would leave the table at 0 rows forever, silently, which is
+    the failure this whole card is about.
+
+    Read-modify-write is safe here because the flush is monotone by
+    construction: the incoming value is the running daily total, so
+    max(existing, incoming) is the same number the RPC would have written.
+    """
+    async with httpx.AsyncClient(timeout=15) as c:
+        headers = {"apikey": key, "Authorization": f"Bearer {key}",
+                   "Content-Type": "application/json"}
+        try:
+            r = await c.post(f"{base}/rest/v1/rpc/api_usage_upsert",
+                             json={"p_rows": rows}, headers=headers)
+        except Exception as e:                       # noqa: BLE001
+            return False, "rpc", f"{type(e).__name__}: {str(e)[:200]}"
+        if r.status_code in (200, 201, 204):
+            return True, "rpc", ""
+        if r.status_code != 404:
+            return False, f"rpc:{r.status_code}", r.text[:240]
+        rpc_missing = r.text[:160]
+
+    # ── Fallback: direct upsert, GREATEST applied here ──────────────────────
+    try:
+        existing = await _read_rows(base, key, rows)
+    except Exception as e:                            # noqa: BLE001
+        return False, "fallback-read", f"{type(e).__name__}: {str(e)[:200]}"
+    payload = []
+    for row in rows:
+        prev = existing.get((row["key_prefix"], row["usage_date"]), 0)
+        payload.append({**row, "requests": max(int(prev or 0), int(row["requests"]))})
+    async with httpx.AsyncClient(timeout=15) as c:
+        try:
+            r = await c.post(
+                f"{base}/rest/v1/api_usage",
+                json=payload,
+                headers={"apikey": key, "Authorization": f"Bearer {key}",
+                         "Content-Type": "application/json",
+                         "Prefer": "resolution=merge-duplicates,return=minimal"},
+            )
+        except Exception as e:                        # noqa: BLE001
+            return False, "fallback", f"{type(e).__name__}: {str(e)[:200]}"
+    if r.status_code in (200, 201, 204):
+        _log.warning("[metering] api_usage_upsert RPC missing (%s) — wrote directly",
+                     rpc_missing[:80])
+        return True, "fallback", ""
+    return False, f"fallback:{r.status_code}", r.text[:240]
+
+
+async def _read_rows(base: str, key: str, rows: list[dict]) -> dict[tuple[str, str], int]:
+    """Current (key_prefix, usage_date) → requests, for the monotonic fallback."""
+    out: dict[tuple[str, str], int] = {}
+    prefixes = sorted({str(r["key_prefix"]) for r in rows})
+    dates = sorted({str(r["usage_date"]) for r in rows})
+    if not prefixes:
+        return out
+    url = (f"{base}/rest/v1/api_usage?select=key_prefix,usage_date,requests"
+           f"&key_prefix=in.({','.join(prefixes)})"
+           f"&usage_date=in.({','.join(dates)})"
+           f"&order=key_prefix.asc,usage_date.asc&limit=1000")
+    req = httpx.Request("GET", url, headers={"apikey": key, "Authorization": f"Bearer {key}"})
+    async with httpx.AsyncClient(timeout=15) as c:
+        resp = await c.send(req)
+    if resp.status_code != 200:
+        return out
+    try:
+        for row in resp.json():
+            out[(str(row.get("key_prefix")), str(row.get("usage_date")))] = int(row.get("requests") or 0)
+    except Exception:                                 # noqa: BLE001
+        return out
+    return out
+
 
 
 async def write_audit(actor: str, action: str, subject: str | None = None,

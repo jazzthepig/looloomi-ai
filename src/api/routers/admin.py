@@ -205,57 +205,33 @@ async def trigger_regime_fitness(x_internal_token: str = Header(None),
                                  window_days: int = 90,
                                  dry_run: bool = False):
     """
-    Wraps scripts/compute_regime_fitness.py as an internal Railway endpoint.
-    Runs the same logic the Mac Mini cron would, but inserts directly to
-    cis_regime_fitness via Supabase REST. INTERNAL_TOKEN guarded.
+    Daily cis_regime_fitness compute (Simons feedback) — T-062.
+
+    T-062 (2026-11-17): this used to wrap `scripts/compute_regime_fitness.py`,
+    which read `cis_scores` (0 rows measured 2026-11-17) and `trade_results`
+    (0 rows) — so it computed nothing, returned `{"ok": True, "rows": 0}` for
+    four months, and `cis_regime_fitness` stayed empty while the loop logged
+    `ok=True rows=0`. The logic now lives in
+    `src/research/validation/regime_fitness.py`: scores from
+    `cis_official_daily` (the canonical daily series, with pillars), forward
+    return from `ohlcv_daily`, and the SAME 20-independent-day floor — plus a
+    pooled `regime='ALL'` row, because the tape crosses regimes every few days
+    and no single regime clears 20 days on a 38-day history.
+
+    The degraded shape is unchanged on purpose (S-202): "inputs present, nothing
+    cleared the floor" is a refusal with a reason, never `ok=True, rows=0`.
     """
     require_internal_token(x_internal_token)
 
     try:
-        from scripts.compute_regime_fitness import (
-            fetch_historical_rows, fetch_trade_results, compute_7d_returns,
-            compute_fitness, sb_post,
-        )
+        from src.research.validation.regime_fitness import run as _run
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"import failed: {e}")
 
     try:
-        # S-862 补三:这五个都是同步函数(脚本里的 httpx 同步客户端 + 纯计算)。原来直接在事件循环里跑:
-        # 2026-11-14 09:22:03 起循环 64.2 秒不动,栈停在 sb_get 的 ssl read 和 compute_7d_returns。放进线程。
-        rows = await asyncio.to_thread(fetch_historical_rows, window_days)
-        trades = await asyncio.to_thread(fetch_trade_results, window_days)
-        enriched = await asyncio.to_thread(compute_7d_returns, rows, trades)
-        fitness = await asyncio.to_thread(compute_fitness, enriched, window_days)
-        if not fitness:
-            # ── S-202 (2026-08-23): this used to return ok=True ─────────────
-            # `{"ok": True, "rows": 0}` printed as
-            # `[REGIME_FITNESS] daily — ok=True rows=0`, which reads as a normal
-            # run. It ran that way for four months while `cis_regime_fitness`
-            # stayed at zero rows, the IC multiplier could not load, and CIS
-            # scored every asset on NEUTRAL weights — the "Simons upgrade" was
-            # never once energised and nothing said so.
-            #
-            # Seventh instance this session of one shape: an absence rendered as
-            # a plausible value. ok=True with rows=0 is the same lie as
-            # `sum(())` returning 0.0 for an unpriceable book (S-194) and a
-            # partial panel day written as a day (S-190).
-            return {"ok": False, "degraded": True, "rows": 0,
-                    "reason": "no fitness rows computed — inputs present but no "
-                              "(pillar, forward-return) pair cleared the sample floor",
-                    "consequence": "cis_regime_fitness stays empty ⇒ IC multipliers "
-                                   "cannot load ⇒ CIS scores on NEUTRAL weights",
-                    "window_days": window_days}
-
-        if dry_run:
-            return {"ok": True, "dry_run": True, "would_insert": len(fitness), "sample": fitness[:3]}
-
-        ok = await asyncio.to_thread(sb_post, "cis_regime_fitness", fitness)
-        return {
-            "ok":       bool(ok),
-            "rows":     len(fitness),
-            "window_days": window_days,
-            "sample":   fitness[:3],
-        }
+        # S-862 补三:同步的 REST + 纯计算。直接在事件循环里跑会让循环几十秒不动
+        # (2026-11-14 09:22:03 栈停在 sb_get 的 ssl read)。放进线程。
+        return await asyncio.to_thread(_run, window_days, dry_run)
     except Exception as e:
         _logger.error(f"[REGIME_FITNESS] compute failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)[:200])

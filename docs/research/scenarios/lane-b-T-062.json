@@ -1,0 +1,41 @@
+{
+  "task": "T-062",
+  "lane": "lane-b",
+  "created": "2026-11-17",
+  "title": "三路该定期写入却 0 行的结构化数据:regime 相关度、fusion 的 regime 跟踪、API 计量",
+  "note": "前向预期,到期按 Brier 结算。所有数字是 2026-11-17 的实测值;命题全部机器可核(给出 SQL),不含任何收益承诺。",
+  "claims": [
+    {
+      "id": "T062-1",
+      "statement": "到 2026-11-19 UTC 结束时,cis_regime_fitness 至少有 1 行(computed_at 晚于 2026-11-17 00:00Z)。",
+      "probability": 0.75,
+      "check": "select count(*) from cis_regime_fitness where computed_at >= '2026-11-17T00:00:00Z';",
+      "basis": "2026-11-17 本地只读 dry-run:新的 src/research/validation/regime_fitness.py 用 cis_official_daily(2203 行 / 38 个独立交易日 / 59 个币)+ ohlcv_daily(1,536,992 行)算出 5 行/天(regime='ALL' 的 F/M/O/S/A),payload 的 8 个列名全部对得上线上表(select 探针 200)。写入是普通 POST,该表在 (regime,pillar) 上没有唯一键,按 migration 2026-11-14 的说法每轮追加一批。",
+      "risk": "写入路径本地无法验证(沙箱只有 publishable key,写入被 RLS 挡);服务键若不在 Railway 上,POST 会被拒。"
+    },
+    {
+      "id": "T062-2",
+      "statement": "到 2026-11-19 UTC 结束时,fusion_paper_regime_track 仍然是 0 行。",
+      "probability": 0.8,
+      "check": "select count(*) from fusion_paper_regime_track;",
+      "basis": "2026-11-17 实测:该表的输入在 Railway 侧不存在 —— fusion_paper_nav 用研究键读出 0 行(R64 v2 NAV),稳定币信号来自 Mac 本地文件(STABLES_JSON / /tmp 缓存),Railway 上两者都取不到。本轮只把「写入用服务键」和「说清为什么没有行」落地(src/research/validation/fusion_paper_regime_track.py),没有制造输入。",
+      "risk": "研究键读 fusion_paper_nav 得到 0 行也可能只是 RLS 过滤;服务键下若其实有 NAV 行,则本命题作废、且该表的写入路径值得再查一次。"
+    },
+    {
+      "id": "T062-3",
+      "statement": "到 2026-11-19 UTC 结束时,api_usage 至少有 1 行(requests 可以是 0)。",
+      "probability": 0.7,
+      "check": "select count(*), max(last_flush_at) from api_usage;",
+      "basis": "2026-11-17 实测:flush_usage 在没有 cc_live_* 流量时返回 nothing_to_flush 并且一行都不写,所以该表从建表起就是 0 行。现在每次 flush 至少写一行(零用量观测行,key_prefix='__no_key_traffic__', requests=0),日期改成 UTC,另外在 api_usage_upsert RPC 不存在时走直写兜底(读旧值后写 max)。",
+      "risk": "api_usage 是 service_role_only,研究键读它会 42501,所以这条只能由服务键核;若 api_usage_upsert RPC 在库里不存在而兜底分支又有别的问题,这条不成立。"
+    },
+    {
+      "id": "T062-4",
+      "statement": "cis_regime_fitness 里 regime='ALL' 的 5 行中,pillar A 与 pillar F 的 correlation 仍为负,pillar O 与 pillar S 的绝对值仍小于 0.15。",
+      "probability": 0.6,
+      "check": "select pillar, correlation, n_days, n_samples from cis_regime_fitness where regime='ALL' order by computed_at desc limit 5;",
+      "basis": "2026-11-17 实测(31 个独立交易日、1467 个样本):A −0.417058、F −0.292435、M −0.110513、O +0.079142、S +0.057648。把前瞻期从 7 天挪到 8 天(S-665 挪一天判一次)后符号全不变,|Δ| ≤ 0.028(A −0.429、F −0.278、M −0.132、O +0.089、S +0.030)。",
+      "risk": "38 天、单一市场阶段、跨 regime 池化 —— 这是探索性统计,不是被验证的因子;任何一个数字都不承诺任何收益,也不构成仓位建议。"
+    }
+  ]
+}
