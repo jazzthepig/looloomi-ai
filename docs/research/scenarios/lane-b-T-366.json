@@ -12,6 +12,18 @@
      "variable": "state:oi_chg_30d", "op": "lt", "hi": 0.0, "prob": 0.55, "horizon_d": "2026-12-20"},
     {"id": "T-366-4", "scenario": "T-366 票源币 vs 资产向量覆盖",
      "statement": "到 2026-12-20,面板资金费 7 日年化(funding_7d_ann)仍为正(2026-11-12 实测 +0.058)",
-     "variable": "state:funding_7d_ann", "op": "gt", "lo": 0.0, "prob": 0.6, "horizon_d": "2026-12-20"}
+     "variable": "state:funding_7d_ann", "op": "gt", "lo": 0.0, "prob": 0.6, "horizon_d": "2026-12-20"},
+    {"id": "T-366-5", "scenario": "T-366 票源币 vs 资产向量覆盖(第二轮:面板 20 日动量)",
+     "statement": "到 2026-12-20,面板 20 日动量(mom_20)仍为负(2026-11-15 实测 -0.1933)",
+     "variable": "state:mom_20", "op": "lt", "hi": 0.0, "prob": 0.55, "horizon_d": "2026-12-20"},
+    {"id": "T-366-6", "scenario": "T-366 票源币 vs 资产向量覆盖(第二轮:BTC 收盘)",
+     "statement": "到 2026-12-20,BTC 日收盘仍高于 60000(2026-11-15 实测 65312)",
+     "variable": "close:BTC", "op": "gt", "lo": 60000, "prob": 0.7, "horizon_d": "2026-12-20"},
+    {"id": "T-366-7", "scenario": "T-366 票源币 vs 资产向量覆盖(第二轮:OI 收缩不再恶化)",
+     "statement": "到 2026-12-20,面板 OI 30 日变化(oi_chg_30d)仍高于 -0.30(2026-11-15 实测 -0.2002,即收缩未继续加深)",
+     "variable": "state:oi_chg_30d", "op": "gt", "lo": -0.3, "prob": 0.6, "horizon_d": "2026-12-20"},
+    {"id": "T-366-8", "scenario": "T-366 票源币 vs 资产向量覆盖(第二轮:资金费年化不回升)",
+     "statement": "到 2026-12-20,面板资金费 7 日年化(funding_7d_ann)仍低于 0.05(2026-11-15 实测 +0.0275)",
+     "variable": "state:funding_7d_ann", "op": "lt", "hi": 0.05, "prob": 0.6, "horizon_d": "2026-12-20"}
   ]
 }
