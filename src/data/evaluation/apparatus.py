@@ -58,7 +58,10 @@ def short_return(p_entry: Any, p_exit: Any) -> Optional[float]:
 def price_on_or_after(dates: Sequence[str], closes: Sequence[Any], d: str, max_gap_days: int = 3) -> Optional[float]:
     """d 当天或之后 max_gap_days 天内的第一个有效收盘;该名那时还没有价格 ⇒ None。
 
-    10-14:`find_idx` 在名字还没上市时返回 −1,下游用 closes[-1](最新收盘)当入场价。"""
+    10-14:`find_idx` 在名字还没上市时返回 −1,下游用 closes[-1](最新收盘)当入场价。
+
+    **进场价也用它,不要自己写下标**(11-17 T-386 的 B 道脚本进场自己写了一行,踩了 10-14 那个坑):
+    自己按 `d` 取下标,遇到名字还没上市就是 −1 ⇒ 拿最新收盘当进场价,收益会凭空多出一大截。"""
     from datetime import date
     target = date.fromisoformat(str(d)[:10])
     for di, c in zip(dates, closes):
@@ -135,18 +138,33 @@ def null_distribution(fn: Callable[[np.random.Generator], float], n: int, seed: 
     return null
 
 
-def circular_shift(seq: Sequence[Any], rng: np.random.Generator, block: int = 1) -> np.ndarray:
+def circular_shift(seq: Sequence[Any], rng: np.random.Generator, block: int = 1, min_shift: int = 0) -> np.ndarray:
     """整条序列循环平移一个随机偏移(偏移是 `block` 的整数倍,不为 0)。保留全部自相关,只拆开它与另一条序列的对齐。
 
     11-09 S-793:预注册写了「循环块置换」,盲复算读出两种实现 —— 这个(整体循环平移,p 0.014)与
-    `block_permute`(块序随机置换,p 0.075)。两者是不同的零假设:预注册必须写函数名,不写描述。"""
+    `block_permute`(块序随机置换,p 0.075)。两者是不同的零假设:预注册必须写函数名,不写描述。
+
+    `min_shift`(11-17 T-388):偏移(按元素数)必须落在 [min_shift, n − min_shift) 内。循环平移里,
+    偏移接近 0 或接近 n 就是「几乎没平移」—— 拿它当零分布等于把原序列又摆回原位。S-864 / S-866 的
+    「平移 ≥ 180 天」就是这个意思,两边各自在脚本里手写了一遍,apparatus 里原来没有对应函数。
+    `min_shift = 0` 时与 11-09 的旧版**逐位相同**(同一个 rng、同一个下标):旧测试不改即过。"""
     arr = np.asarray(seq, dtype=object if not np.issubdtype(np.asarray(seq).dtype, np.number) else None)
     if block < 1:
         raise ValueError("block must be ≥ 1")
-    k = len(arr) // block
+    if min_shift < 0:
+        raise ValueError("min_shift must be ≥ 0")
+    n = len(arr)
+    k = n // block
     if k < 2:
         raise ValueError("序列太短:至少要两个块才能平移")
-    return np.roll(arr, block * int(rng.integers(1, k)))
+    if min_shift == 0:
+        lo, hi = 1, k                        # 旧版逐位相同:偏移 ∈ {block, 2block, …, (k−1)block}
+    else:
+        lo = max(1, -(-min_shift // block))            # ceil(min_shift / block):偏移 ≥ min_shift
+        hi = -(-(n - min_shift) // block)              # ceil((n − min_shift) / block):偏移 < n − min_shift
+        if hi <= lo:
+            raise ValueError(f"min_shift={min_shift} 太大:序列只有 {n} 个元素,平移空间不够")
+    return np.roll(arr, block * int(rng.integers(lo, hi)))
 
 
 def percentile_of(actual: Optional[float], null: Sequence[float]) -> Optional[float]:
@@ -181,6 +199,42 @@ def p_upper(actual: Optional[float], null: Sequence[float]) -> Optional[float]:
 def p_lower(actual: Optional[float], null: Sequence[float]) -> Optional[float]:
     """单侧 p(实际值偏小才算显著):(1 + 零分布 ≤ 实际值的个数)/(1 + n)。"""
     return _p_tail(actual, null, upper=False)
+
+
+def p_two_sided_tail(actual: Optional[float], null: Sequence[float]) -> Optional[float]:
+    """双侧 p(两倍较小的单尾):min(1, 2 × min(p_lower(actual, null), p_upper(actual, null)))。
+
+    这是 **S-866 B 道盲复算独立选的那一种**:单尾用本模块的 `p_lower` / `p_upper`(带 +1 修正,
+    单侧最小 1/(1+n)),小的那个乘 2、封顶 1。台账登记的 BTC 0.082 就是这么算出来的
+    (`docs/research/s866_blind_cells.py` 里的 `min(1.0, 2.0 * min(pu, pl))` —— 同一个零分布上,
+    原始占比会给出 0.081,差 0.001)。
+
+    与 `p_two_sided_deviation` 是**两个不同的算法**:偏态零分布上两者会差到一倍(S-866:BTC 那一格
+    0.149 对 0.082,正好落在 0.10 的两边)⇒ 预注册必须写函数名,不能只写「双侧 p」(S-793 同一条教训的第二次)。"""
+    pl = p_lower(actual, null)
+    pu = p_upper(actual, null)
+    if pl is None or pu is None:
+        return None
+    return min(1.0, 2.0 * min(pl, pu))
+
+
+def p_two_sided_deviation(actual: Optional[float], null: Sequence[float]) -> Optional[float]:
+    """双侧 p(离均值的距离):零分布里**离其均值不比实际值近**的占比
+    = #{null : |null − mean(null)| ≥ |actual − mean(null)|} / n。
+
+    这是 **S-864 登记的那一种**(台账里的 0.149)。研究脚本 `docs/research/s864_same_cell.py` 里
+    它也叫 `p_two_sided` —— 同一个名字在两条道上指的是两个不同的算法,这正是这张卡要治的病。
+
+    与 `p_two_sided_tail` 是两个不同的算法 —— 偏态零分布上两者会差到一倍(S-866:BTC 那一格
+    0.149 对 0.082,落在 0.10 的两边)⇒ 预注册必须写函数名(S-793 同一条教训的第二次)。"""
+    if actual is None or not math.isfinite(actual):
+        return None
+    arr = np.asarray(null, dtype=float)
+    arr = arr[np.isfinite(arr)]
+    if arr.size == 0:
+        return None
+    mu = arr.mean()
+    return float((np.abs(arr - mu) >= abs(actual - mu)).mean())
 
 
 # ── 快照指纹 ──────────────────────────────────────────────────────────────────

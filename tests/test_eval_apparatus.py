@@ -205,6 +205,56 @@ def test_circular_shift_keeps_order_and_never_returns_identity():
         circular_shift(np.arange(5), rng, block=8)
 
 
+def test_circular_shift_min_shift_keeps_the_offset_away_from_the_identity():
+    """11-17 T-388:偏移必须落在 [min_shift, n − min_shift) 里 —— 循环平移里,偏移接近 0 或接近 n
+    就是「几乎没平移」,拿它当零分布等于把原序列又摆回原位(S-864 / S-866 的「平移 ≥ 180 天」)。
+    `min_shift = 0` 时与 11-09 的旧版**逐位相同**:同一个 rng、同一个下标,旧测试不改即过。"""
+    import numpy as np
+    from src.data.evaluation.apparatus import circular_shift
+    x = np.arange(400)
+    rng = np.random.default_rng(7)
+    offs = [int(np.flatnonzero(circular_shift(x, rng, block=1, min_shift=180) == 0)[0]) for _ in range(300)]
+    assert min(offs) >= 180 and max(offs) < 400 - 180, "偏移必须在 [180, 220) 里"
+    rng = np.random.default_rng(7)
+    offs = [int(np.flatnonzero(circular_shift(x, rng, block=10, min_shift=180) == 0)[0]) for _ in range(300)]
+    assert min(offs) >= 180 and max(offs) < 220 and all(o % 10 == 0 for o in offs), "偏移仍是块长的整数倍"
+
+    def old(seq, r, block=1):
+        arr = np.asarray(seq)
+        k = len(arr) // block
+        return np.roll(arr, block * int(r.integers(1, k)))
+
+    a, b = np.random.default_rng(99), np.random.default_rng(99)
+    for _ in range(50):
+        assert np.array_equal(circular_shift(x, a, block=8), old(x, b, block=8)), "min_shift=0 必须与旧版逐位相同"
+    with pytest.raises(ValueError):
+        circular_shift(np.arange(5), np.random.default_rng(1), block=8)          # 旧行为不变:序列太短
+    with pytest.raises(ValueError):
+        circular_shift(np.arange(400), np.random.default_rng(1), min_shift=200)  # 平移空间不够
+    with pytest.raises(ValueError):
+        circular_shift(x, np.random.default_rng(1), min_shift=-1)
+
+
+def test_the_two_two_sided_p_definitions_differ_on_a_skewed_null_and_agree_on_a_symmetric_one():
+    """11-17 T-388:两个「双侧 p」各有一个名字 —— `p_two_sided_deviation`(离均值的距离,S-864 登记的
+    0.149)与 `p_two_sided_tail`(两倍较小的单尾,S-866 B 道独立选的 0.082)。偏态零分布上两者差到一倍
+    (正好落在 0.10 的两边)⇒ 预注册必须写函数名;对称零分布上两者相差 ≤ 2 / n。"""
+    import numpy as np
+    from src.data.evaluation.apparatus import p_two_sided_deviation, p_two_sided_tail
+    rng = np.random.default_rng(11)
+    null = rng.lognormal(0.0, 1.0, 4000)
+    a = float(np.quantile(null, 0.95))
+    t, d = p_two_sided_tail(a, null), p_two_sided_deviation(a, null)
+    assert t != d and abs(t - d) > 0.02, "右偏零分布上两种 p 必须不相等"
+    half = np.array([1., 2., 3., 4., 5., 6., 7., 8., 9., 10.])
+    sym = np.concatenate([half, -half, np.zeros(20)])          # 精确对称(均值恰好 0)
+    for act in (8.0, 3.0, -5.0):
+        t, d = p_two_sided_tail(act, sym), p_two_sided_deviation(act, sym)
+        assert abs(t - d) <= 2 / len(sym), "对称零分布上两者相差 ≤ 2/n"
+    assert p_two_sided_tail(None, null) is None and p_two_sided_deviation(None, null) is None
+    assert p_two_sided_tail(1.0, []) is None and p_two_sided_deviation(1.0, []) is None
+
+
 def test_p_upper_is_not_the_percentile_and_is_never_zero():
     """11-09 T-313:`percentile_of` 是分位不是 p;偏大才显著时 p = p_upper,且加 1 后不为 0。"""
     from src.data.evaluation.apparatus import p_lower, p_upper, percentile_of

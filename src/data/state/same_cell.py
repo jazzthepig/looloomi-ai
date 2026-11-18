@@ -31,6 +31,8 @@ from typing import Any, Optional
 
 import numpy as np
 
+from src.data.evaluation.apparatus import p_two_sided_deviation, p_two_sided_tail
+
 CODE_REF = "same_cell v1.1 (S-864 / S-866: 2y vs 91d ago × stable supply 30d × weekly structure × panel vs 200d; 30d forward for BTC + ETH / SOL on the same cells; circular-shift control, two two-sided p definitions)"
 AXES = ("R", "L", "W", "T")
 NAMES = {"R": ("升", "降"), "L": ("抽", "注"), "W": ("坏", "没坏"), "T": ("线下", "线上")}
@@ -104,16 +106,20 @@ def _describe(r: np.ndarray) -> dict:
 def _shift_p(lab: np.ndarray, rets: np.ndarray, stat) -> Optional[dict]:
     """循环平移对照:标签整条平移 k 天(k ≥ 180),收益不动。返回两种双侧 p ——
     `dev` = 离平移均值至少这么远的占比(S-864 登记的那一种);`tail2` = 两倍较小的单尾(S-866 B 道独立选的那一种)。
-    平移分布右偏时两者差得不小(BTC 今天这一格:0.15 对 0.08)⇒ 两个都报。"""
+    平移分布右偏时两者差得不小(BTC 今天这一格:0.15 对 0.08)⇒ 两个都报。
+
+    11-17 T-388:两个 p 改调 apparatus 里各自有名的那两个函数(`p_two_sided_deviation` /
+    `p_two_sided_tail`),算法与数字与之前逐位相同 —— 登记在台账里的 0.149 / 0.082 不许因为重构悄悄变。
+    预注册以后写函数名,不写「双侧 p」。"""
     n = len(lab)
     if lab.sum() < 5 or n <= 2 * MIN_SHIFT_D + 1:
         return None
     rng = np.random.default_rng(SEED)
     obs = stat(rets[lab])
     sims = np.array([stat(rets[np.roll(lab, int(k))]) for k in rng.integers(MIN_SHIFT_D, n - MIN_SHIFT_D, N_SHIFT)])
-    dev = float((np.abs(sims - sims.mean()) >= abs(obs - sims.mean())).mean())
-    tail2 = min(1.0, 2.0 * min(float((sims <= obs).mean()), float((sims >= obs).mean())))
-    return {"dev": round(dev, 4), "tail2": round(tail2, 4)}
+    dev = p_two_sided_deviation(obs, sims)
+    tail2 = p_two_sided_tail(obs, sims)
+    return {"dev": None if dev is None else round(dev, 4), "tail2": None if tail2 is None else round(tail2, 4)}
 
 
 def _other(name: str, c2: dict, days: list, idx: dict, usable: list, cell: dict, target: str) -> dict:
@@ -184,7 +190,10 @@ def line(s: Optional[dict]) -> Optional[str]:
         return None
     if s.get("status") == "unreadable":
         return f"  同格历史  读不到({s.get('why')})"
-    head = f"  同格历史  {s.get('cell_words')}:{s.get('n_episodes')} 段 / {s.get('n_days')} 天"
+    # 这一格是哪一天的,必须印出来(11-17 T-388):档案头写的是「截至 <请求日>」,格子本身却可能是前一天的
+    # —— 第一行真实数据(d = 11-14)就是 11-13 的格子(当时 stable_supply_30d 还没有 11-14 的值)。
+    asof = s.get("asof")
+    head = f"  同格历史  {s.get('cell_words')}:{s.get('n_episodes')} 段 / {s.get('n_days')} 天" + (f"(格子日 {asof})" if asof else "")
     if s.get("status") != "ok":
         return head + " —— 样本不足,不给数字"
     a, u = s["d30"], s["uncond_d30"]
