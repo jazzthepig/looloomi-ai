@@ -39,6 +39,7 @@ from pydantic import BaseModel, Field
 
 from src.api.store import redis_set_key, redis_get_key, supabase_insert_table
 from src.api.notify import notify_telegram
+from src.data.market.cg_guard import note_unbudgeted_call   # S-895 阶段 0:闸门外记账
 
 _logger = logging.getLogger(__name__)
 router  = APIRouter()
@@ -186,6 +187,10 @@ async def _fetch_price(symbol: str) -> float | None:
     if cg_id:
         base = _CG_PRO if _COINGECKO_KEY else _CG_BASE
         try:
+            # ⚠️ S-895 阶段 0:这是**闸门外**的调用 —— 记账,好让
+            # `/internal/cg-quota` 的「今天花了多少」不是残缺的。
+            # 阶段 2 把它收口进 `GuardedCGClient` 之后,**这一行必须删掉**。
+            note_unbudgeted_call("coingecko", "/simple/price")
             async with httpx.AsyncClient(timeout=8) as cl:
                 r = await cl.get(
                     f"{base}/simple/price",
@@ -247,6 +252,8 @@ async def _fetch_prices_cg_batch(symbols: list[str]) -> dict[str, float]:
         return {}
     base = _CG_PRO if _COINGECKO_KEY else _CG_BASE
     try:
+        # ⚠️ S-895 阶段 0:闸门外记账(阶段 2 收口进闸门后删掉这一行)。
+        note_unbudgeted_call("coingecko", "/simple/price")
         async with httpx.AsyncClient(timeout=10) as cl:
             r = await cl.get(
                 f"{base}/simple/price",

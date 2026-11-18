@@ -22,6 +22,18 @@ CoinGecko 调用闸门 —— 日预算 + 熔断 + 计数(S-894,2026-11-17)。
    多少:`GET /internal/cg-quota`。**计数不是日志,是闸门本身** —— 它决定还要不要
    发下一次请求。
 
+## 闸门之外(S-895 阶段 0)
+
+闸门只数**它自己放行**的请求。闸门之外的裸 client 打出去的调用,`used_today`
+一概看不见 —— 于是「今天花了多少」这个数**从第一天起就是残缺的**(只数闸门内的
+11 个文件)。这不是「数得不准」,是**数的东西不是那件事**。
+
+`note_unbudgeted_call` 是**记账,不是闸门**:它不拦任何请求,只把闸门外的消耗
+记进同一张表,好让 `/internal/cg-quota` 报出**真实总量**
+(`used_today + unbudgeted_today`)。阶段 2 把裸 client 收口进闸门之后,这些
+记账行**必须同时删掉** —— 闸门已经在数了,再记一次就是双计。
+`tests/test_cg_call_sites.py` 守这条不变量。
+
 ## 口径
 
 `GuardedCGClient` 是 `httpx.AsyncClient` 的**子类**,不是包装器 —— 因为仓库里
@@ -43,13 +55,29 @@ data_layer** —— data_layer 要 import 本模块,反向 import 就是循环�
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import os
+import sys
 import time
 from datetime import datetime, timezone
 from typing import Any, Optional
 
 import httpx
+
+# ── 模块别名 ─────────────────────────────────────────────────────────────────
+#
+# 仓库里两种 import 写法都在用(`src/api/main.py:30-38` 的双路径说明):
+# `src.data.market.cg_guard` 与 `data.market.cg_guard`。Python 会把它们当成
+# **两个不同的模块对象** —— 各自一份进程内计数(`_local_unbudgeted`)、
+# 各自一个 Redis client。Redis 计数仍然对(同一个键),但 **Redis 写失败时,
+# 读数会漏掉另一半** ⇒ 少报 = 因错误理由变绿。
+#
+# 所以在这里把两个名字**钉到同一个模块对象**上:谁先被 import 都不重要。
+# 这个别名是本模块的**不变量**:全进程只有一份账。
+_this = sys.modules[__name__]
+sys.modules.setdefault("src.data.market.cg_guard", _this)
+sys.modules.setdefault("data.market.cg_guard", _this)
 
 # ── 配置 ─────────────────────────────────────────────────────────────────────
 
@@ -64,10 +92,15 @@ _BREAKER_KEY = "cg:quota:breaker"
 _BUDGET_KEY = "cg:quota:budget"
 _TRIED_KEY = "cg:quota:tripped"
 
+#: 闸门外消耗(S-895 阶段 0)。计数器与分端点明细各一个键。
+_UNBUDGETED_KEY_PREFIX = "cg:quota:unbudgeted:"
+_UNBUDGETED_EP_KEY_PREFIX = "cg:quota:unbudgeted_ep:"
+
 _UPSTASH_URL = os.getenv("UPSTASH_REDIS_REST_URL", "")
 _UPSTASH_TOKEN = os.getenv("UPSTASH_REDIS_REST_TOKEN", "")
 
 _redis_http: Optional[httpx.AsyncClient] = None
+_redis_sync_http: Optional[httpx.Client] = None
 
 
 def _today_utc() -> str:
@@ -78,11 +111,26 @@ def _used_key(day: Optional[str] = None) -> str:
     return f"{_USED_KEY_PREFIX}{day or _today_utc()}"
 
 
+def _unbudgeted_key(day: Optional[str] = None) -> str:
+    return f"{_UNBUDGETED_KEY_PREFIX}{day or _today_utc()}"
+
+
+def _unbudgeted_ep_key(day: Optional[str] = None) -> str:
+    return f"{_UNBUDGETED_EP_KEY_PREFIX}{day or _today_utc()}"
+
+
 # ── 进程内状态(Redis 不可用时的兜底,也是 Redis 之前的快速路径)───────────────
 
 _local_used: dict[str, int] = {}      # day → count
 _local_breaker_until: float = 0.0     # unix ts
 _local_tripped: int = 0
+
+#: 闸门外消耗的本进程账。Redis 写失败时,它是唯一还看得见的真相。
+_local_unbudgeted: dict[str, int] = {}          # day → count
+_local_unbudgeted_ep: dict[str, dict[str, int]] = {}   # day → {source:endpoint → count}
+
+#: 异步记账的后台任务(强引用,否则会被 GC 掉,任务永不落地)。
+_pending_unbudgeted: set = set()
 
 
 # ── 极小 Redis 访问(不 import data_layer,避免循环依赖)────────────────────────
@@ -143,6 +191,106 @@ async def _r_set(key: str, val: str, ttl: int) -> bool:
         cmds.append(["EXPIRE", key, str(ttl)])
     res = await _r_pipeline(cmds)
     return bool(res)
+
+
+def _get_redis_sync_http() -> httpx.Client:
+    """同步版 Redis 客户端 —— 只给**没有事件循环**的调用点用(两个 `requests`
+    调用点)。Upstash 的 pipeline 是一发 HTTP,几十毫秒,可以接受。"""
+    global _redis_sync_http
+    if _redis_sync_http is None:
+        _redis_sync_http = httpx.Client(timeout=5)
+    return _redis_sync_http
+
+
+def _r_pipeline_sync(cmds: list[list]) -> Any:
+    """同步版 pipeline(与 `_r_pipeline` 同一形状)。"""
+    if not _UPSTASH_URL:
+        return None
+    try:
+        r = _get_redis_sync_http().post(
+            f"{_UPSTASH_URL}/pipeline",
+            content=json.dumps(cmds),
+            headers={
+                "Authorization": f"Bearer {_UPSTASH_TOKEN}",
+                "Content-Type": "application/json",
+            },
+        )
+        if r.status_code == 200:
+            return (r.json() or {}).get("result")
+    except Exception:
+        pass
+    return None
+
+
+async def _r_hgetall(key: str) -> dict:
+    """读一个 hash。读不到(未配置 / 出错)返回 `{}`。"""
+    if not _UPSTASH_URL:
+        return {}
+    try:
+        r = await _get_redis_http().get(
+            f"{_UPSTASH_URL}/hgetall/{key}",
+            headers={"Authorization": f"Bearer {_UPSTASH_TOKEN}"},
+        )
+        if r.status_code == 200:
+            return _coerce_hash((r.json() or {}).get("result"))
+    except Exception:
+        pass
+    return {}
+
+
+def _coerce_hash(res: Any) -> dict:
+    """Upstash 的 HGETALL 返回形状在不同版本里不一样 —— 有的是 dict,
+    有的是扁平的 `[k1, v1, k2, v2…]`。两种都收,免得读数因为一个版本差异
+    变成 0(**因错误理由变绿的检查比红的更坏**)。"""
+    if isinstance(res, dict):
+        return {str(k): res[k] for k in res}
+    if isinstance(res, list):
+        out: dict = {}
+        for i in range(0, len(res) - 1, 2):
+            out[str(res[i])] = res[i + 1]
+        return out
+    return {}
+
+
+#: `/coins/` 下面是**集合**端点,不是单币端点 —— 不能把 `markets` / `list`
+#: 当成 coin id 归一,否则「拉全市场」和「拉单个币」会被混成同一个标签。
+_COIN_SUBPATHS = {"markets", "list", "categories", "new", "trending"}
+
+
+def endpoint_label(url: str) -> str:
+    """把一个 CoinGecko URL 归一成**端点标签** —— `/coins/{id}/market_chart`。
+
+    为什么要有这个:记账要按端点分组,而同一个端点的 URL 里带着**不同的
+    coin id**(`/coins/bitcoin/…` vs `/coins/ethereum/…`)。不归一的话,分端点
+    明细会变成「每个币一行」,读数没法用。
+
+    归一规则:
+      ① 砍掉 host 与 `/api/v3` 前缀;
+      ② `/coins/<某个 id>` 里的 id 换成 `{id}`(**集合**端点除外 ——
+         `/coins/markets` 是全市场,不是「叫 markets 的那个币」);
+      ③ 其余原样(查询参数不进标签 —— 同一端点的参数变体是**同一个额度池**)。
+    """
+    s = str(url or "").strip()
+    if not s:
+        return "(unknown)"
+    # 砍掉 scheme://host
+    if "://" in s:
+        s = s.split("://", 1)[1]
+        s = s.split("/", 1)[1] if "/" in s else ""
+    # 砍掉 `/api/v3`
+    for pre in ("api/v3/", "api/v3"):
+        if s.startswith(pre):
+            s = s[len(pre):]
+            break
+    s = "/" + s.lstrip("/")
+    # `/coins/<id>` → `/coins/{id}`
+    parts = s.split("/")
+    if len(parts) >= 3 and parts[1] == "coins" and parts[2] and parts[2] not in _COIN_SUBPATHS:
+        parts[2] = "{id}"
+        s = "/".join(parts)
+    # 去掉查询串
+    s = s.split("?", 1)[0]
+    return s or "(unknown)"
 
 
 # ── 闸门本体 ─────────────────────────────────────────────────────────────────
@@ -252,12 +400,99 @@ async def spend() -> int:
     return await _bump_used()
 
 
+# ── 闸门外的记账(S-895 阶段 0)──────────────────────────────────────────────
+
+def note_unbudgeted_call(source: str, endpoint: str) -> None:
+    """记一次**闸门外**的 CoinGecko 调用。
+
+    ⚠️ 这是**记账,不是闸门** —— 它不拦任何请求、不改任何返回值。存在的唯一
+    理由:`used_today` 只数闸门内的消耗,闸门外的部分不进账 ⇒ 「今天花了多少」
+    一直是不完整的(S-895 阶段 0)。
+
+    **同步函数** —— 同步(`requests`)和异步(`httpx`)调用点都能用同一个形状。
+
+    ⚠️ **阶段 2 把调用点收口进 `GuardedCGClient` 之后,这一行必须同时删掉** ——
+    闸门已经在数了,再记一次就是双计。`tests/test_cg_call_sites.py` 守这条。
+    """
+    day = _today_utc()
+    field = f"{source}:{endpoint}"
+    _local_unbudgeted[day] = _local_unbudgeted.get(day, 0) + 1
+    eps = _local_unbudgeted_ep.setdefault(day, {})
+    eps[field] = eps.get(field, 0) + 1
+    _flush_unbudgeted(day, field)
+
+
+def _unbudgeted_cmds(day: str, field: str) -> list[list]:
+    k = _unbudgeted_key(day)
+    ek = _unbudgeted_ep_key(day)
+    return [
+        ["INCR", k],
+        ["EXPIRE", k, "259200"],       # 3 天
+        ["HINCRBY", ek, field, "1"],
+        ["EXPIRE", ek, "259200"],
+    ]
+
+
+def _flush_unbudgeted(day: str, field: str) -> None:
+    """把一条记账写进 Redis。
+
+    异步上下文里用**后台任务**(不拖慢调用点);同步上下文(两个 `requests`
+    调用点)里没有事件循环,只能同步写一发 —— Upstash pipeline 几十毫秒,
+    这些调用点一天才几百次,可以接受。
+    """
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+    if loop is not None:
+        task = loop.create_task(_r_pipeline(_unbudgeted_cmds(day, field)))
+        _pending_unbudgeted.add(task)
+        task.add_done_callback(_pending_unbudgeted.discard)
+        return
+    try:
+        _r_pipeline_sync(_unbudgeted_cmds(day, field))
+    except Exception:
+        pass
+
+
+async def unbudgeted_today() -> int:
+    """今天**闸门外**的调用次数。"""
+    day = _today_utc()
+    remote: Optional[int] = None
+    r = await _r_get(_unbudgeted_key(day))
+    if r is not None:
+        try:
+            remote = int(r)
+        except (TypeError, ValueError):
+            remote = None
+    local = int(_local_unbudgeted.get(day, 0))
+    # 取**较大**者:Redis 写失败时,本进程那份仍然是真的。宁可报多(让人去查)
+    # 也不报少 —— 少报 = 因错误理由变绿。
+    return max(remote or 0, local)
+
+
+async def unbudgeted_endpoints() -> dict:
+    """闸门外消耗的**分端点**明细:`{"coingecko:/coins/markets": 128, …}`。"""
+    day = _today_utc()
+    merged: dict[str, int] = {}
+    for k, v in (await _r_hgetall(_unbudgeted_ep_key(day))).items():
+        try:
+            merged[str(k)] = int(v)
+        except (TypeError, ValueError):
+            continue
+    for k, v in _local_unbudgeted_ep.get(day, {}).items():
+        merged[k] = max(merged.get(k, 0), int(v))
+    return merged
+
+
 async def report() -> dict:
     """当前额度状态 —— `/internal/cg-quota` 返回的就是它。"""
     budget = await effective_budget()
     used = await used_today()
     open_, why = await breaker_state()
     tripped = await _r_get(_TRIED_KEY)
+    unbudgeted = await unbudgeted_today()
+    endpoints = await unbudgeted_endpoints()
     return {
         "used_today": used,
         "daily_budget": budget,
@@ -269,8 +504,17 @@ async def report() -> dict:
         "breaker_cooldown_s": breaker_cooldown_s(),
         "trips_total": int(tripped) if isinstance(tripped, (int, float)) else _local_tripped,
         "redis_shared": bool(_UPSTASH_URL),
+        # ── 闸门外(S-895 阶段 0)。之前这个数**不存在** ⇒ 「今天花了多少」
+        # 一直是残缺的:它只数闸门内的 11 个文件,闸门外的 12 处裸 client
+        # 一发都不进账。`total_calls_today` 才是**今天的真实总量**。
+        "unbudgeted_today": unbudgeted,
+        "unbudgeted_endpoints": endpoints,
+        "unbudgeted_total": sum(endpoints.values()),
+        "total_calls_today": used + unbudgeted,
         "note": ("计数走 Redis ⇒ 跨进程共享;没有 Redis 时每个进程各有一份预算"
-                 "(仍然有界,但更松)。"),
+                 "(仍然有界,但更松)。"
+                 "`used_today` 只数闸门内的消耗;闸门外的在 `unbudgeted_today`"
+                 "里,`total_calls_today` 是两者之和。"),
     }
 
 

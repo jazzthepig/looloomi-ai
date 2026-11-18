@@ -33,6 +33,7 @@ Jazz, 2026-09-05:
 """
 from __future__ import annotations
 
+import ast
 import json
 import pathlib
 import re
@@ -51,6 +52,29 @@ _HTTP_MARKERS = ("httpx.", "client.get", "client.post", 'get(f"http', "requests.
 
 GREEN, AMBER, RED, GREY = "\033[32m", "\033[33m", "\033[31m", "\033[90m"
 BOLD, OFF = "\033[1m", "\033[0m"
+
+
+def _defines_shared_gate(src: str) -> bool:
+    """这个文件是不是**闸门本身**?
+
+    判据是**构造**,不是文件名,也不是附近的字符串(`tests/_source.py`:
+    「a guard must match the CONSTRUCT, never a nearby string」)。
+
+    闸门定义的是**全仓共用的那一个** client(`GuardedCGClient`),它自己
+    **不取价** —— 它替别人取。而这个计数器数的是「生产代码里**各自**发 HTTP
+    取价的文件数」(规则 3b:ingestion is ONE lane)。**闸门是那一条活路本身**,
+    不是第二条私有路径。
+
+    为什么要现在写:11-17 给闸门加了一段写端点标签的 docstring,docstring 里
+    出现了 `market_chart` ⇒ 原文匹配把闸门算成了一条新的取价路径(24 > 23)。
+    排除它是**陈述事实**,不是放宽阈值:阈值仍然是 23,别的文件一个都不多算。
+    """
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return False
+    return any(isinstance(n, ast.ClassDef) and n.name == "GuardedCGClient"
+               for n in ast.walk(tree))
 
 
 def _live(path: str, timeout: float = 25.0):
@@ -77,6 +101,8 @@ def sense_entrypoints() -> int:
                 s = p.read_text(encoding="utf-8", errors="replace")
             except OSError:
                 continue
+            if _defines_shared_gate(s):
+                continue          # 闸门 = 共享路径,不是私有取价路径
             if any(k in s for k in _PRICE_PRIMITIVES) and any(
                     m in s for m in _HTTP_MARKERS):
                 n += 1

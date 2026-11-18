@@ -6906,6 +6906,10 @@ async def cg_quota(x_internal_token: str = Header(None)):
     已经晚了。这个端点让「今天花了多少 / 还剩多少 / 熔断了没有」变成
     一个可以随时 curl 的事实。
 
+    ⚠️ **S-895 阶段 0**:`coingecko.used_today` 只数**闸门内**的消耗。闸门
+    外的裸 client 在 `coingecko.unbudgeted_today` / `unbudgeted_endpoints`
+    里 —— **`total_calls_today` 才是今天的真实总量**。
+
     Token-guarded:里面是运营口径,不是公开面。
     """
     require_internal_token(x_internal_token)

@@ -27,6 +27,14 @@ _GH_TOKEN_WARNED = False
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+# S-895 阶段 0:闸门外调用的**记账**(不是闸门)。闸门只数它自己放行的请求,
+# 裸 client 打出去的那些不进账 ⇒ 「今天花了多少」一直是残缺的。
+# 两种导入方式都认(`src.signal_server` 走 `data.*`,主应用走 `src.data.*`)。
+try:
+    from src.data.market.cg_guard import note_unbudgeted_call
+except ImportError:                                     # pragma: no cover
+    from data.market.cg_guard import note_unbudgeted_call
+
 # CoinGecko API base
 CG_PRO_BASE = "https://pro-api.coingecko.com/api/v3"
 CG_API_KEY = os.getenv("COINGECKO_API_KEY", "")
@@ -737,6 +745,8 @@ async def fetch_cg_markets() -> Dict[str, dict]:
             "price_change_percentage": "30d,7d,1y",
         }
         try:
+            # ⚠️ S-895 阶段 0:闸门外记账(阶段 2 收口进闸门后删掉这一行)。
+            note_unbudgeted_call("coingecko", "/coins/markets")
             r = await client.get(f"{_cg_base()}/coins/markets",
                                  params=params, headers=_cg_headers())
             r.raise_for_status()
@@ -875,6 +885,8 @@ async def fetch_cg_global() -> Optional[dict]:
 
     try:
         async with httpx.AsyncClient(timeout=10) as client:
+            # ⚠️ S-895 阶段 0:闸门外记账(阶段 2 收口进闸门后删掉这一行)。
+            note_unbudgeted_call("coingecko", "/global")
             r = await client.get(f"{_cg_base()}/global", headers=_cg_headers())
             r.raise_for_status()
             data = r.json()

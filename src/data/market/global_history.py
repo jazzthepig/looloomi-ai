@@ -57,6 +57,9 @@ from typing import Iterable, Optional
 
 CG_BASE = "https://pro-api.coingecko.com/api/v3"
 
+# S-895 阶段 0:闸门外调用的记账(不是闸门)。见 `src/data/market/cg_guard.py`。
+from src.data.market.cg_guard import note_unbudgeted_call
+
 #: 内连接后至少要剩这么多天,否则判 THIN —— 一条 5 个点的「轨迹」不是轨迹。
 MIN_ALIGNED_DAYS = 30
 #: 对齐损耗超过这个比例即使天数够也要报出来:损耗大说明两个端点的采样在漂,
@@ -210,6 +213,10 @@ async def fetch_today(*, client=None) -> dict:
     own = client is None
     client = client or httpx.AsyncClient(timeout=30)
     try:
+        # ⚠️ S-895 阶段 0:闸门外记账(阶段 2 收口进闸门后删掉这一行)。
+        # ⚠️ 这条**不能吃 CMC 兜底** —— 轨迹要同源可比,换源会污染序列
+        # (DATA_ARCHITECTURE.md:70「source 是键,不是备注」)。
+        note_unbudgeted_call("coingecko", "/global")
         r = await client.get(f"{CG_BASE}/global",
                              headers={"x-cg-pro-api-key": key})
         r.raise_for_status()
@@ -245,6 +252,8 @@ async def fetch_total_mcap_history(days: int = 365, *, client=None) -> dict:
     own = client is None
     client = client or httpx.AsyncClient(timeout=30)
     try:
+        # ⚠️ S-895 阶段 0:闸门外记账(阶段 2 收口进闸门后删掉这一行)。
+        note_unbudgeted_call("coingecko", "/global/market_cap_chart")
         r = await client.get(f"{CG_BASE}/global/market_cap_chart",
                              headers={"x-cg-pro-api-key": key},
                              params={"days": days})

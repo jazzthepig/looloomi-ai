@@ -62,6 +62,8 @@ from dataclasses import dataclass, field
 from typing import Callable, Optional, Sequence
 
 from src.data.market.cg_pro_backfill import CHUNK_DAYS
+# S-895 阶段 0:闸门外调用的记账(不是闸门)。见 `src/data/market/cg_guard.py`。
+from src.data.market.cg_guard import note_unbudgeted_call
 
 #: 连续这么多个空块才判「到起点了」。**1 会把数据缺口误判成起点。**
 MAX_EMPTY_CHUNKS = 2
@@ -275,6 +277,9 @@ def make_cg_fetcher(*, timeout: float = 30.0):
                                headers={"x-cg-pro-api-key": key})
 
     async def fetch_chunk(coin_id: str, start: dt.date, end: dt.date) -> list:
+        # ⚠️ S-895 阶段 0:闸门外记账(阶段 2 收口进闸门后删掉这一行)。
+        # 回填路径**不吞异常**是有意的 —— 记账不该改变这个语义。
+        note_unbudgeted_call("coingecko", "/coins/{id}/ohlc/range")
         r = await client.get(
             f"https://pro-api.coingecko.com/api/v3/coins/{coin_id}/ohlc/range",
             params={"vs_currency": "usd",

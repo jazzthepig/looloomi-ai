@@ -38,6 +38,9 @@ def _no_redis(monkeypatch):
     monkeypatch.setattr(cg_guard, "_local_used", {})
     monkeypatch.setattr(cg_guard, "_local_breaker_until", 0.0)
     monkeypatch.setattr(cg_guard, "_local_tripped", 0)
+    # S-895 阶段 0:闸门外的账也要清 —— 否则上一条用例的记账会漏进下一条。
+    monkeypatch.setattr(cg_guard, "_local_unbudgeted", {})
+    monkeypatch.setattr(cg_guard, "_local_unbudgeted_ep", {})
     monkeypatch.setenv("CG_DAILY_BUDGET", "5")
     monkeypatch.setenv("CG_BREAKER_COOLDOWN_S", "300")
     yield
@@ -201,3 +204,131 @@ def test_额度报告把今天花了多少说出来():
     assert rep["daily_budget"] == 5
     assert rep["remaining"] == 4
     assert rep["breaker_open"] is False
+
+
+# ── S-895 阶段 0:闸门之外的消耗必须进账 ─────────────────────────────────────
+#
+# 闸门只数**它自己放行**的请求。闸门外的裸 client 打出去的调用,`used_today`
+# 一概看不见 —— 于是「今天花了多少」从第一天起就是残缺的。这组测试钉住
+# 「闸门外也进账」,以及**闸门内的调用不会重复进账**。
+
+def test_闸门外的调用进账_并按端点分组():
+    """记账的形状:总数 + 分端点明细。分端点是为了能回答「哪条路径在烧钱」。"""
+    cg_guard.note_unbudgeted_call("coingecko", "/coins/markets")
+    cg_guard.note_unbudgeted_call("coingecko", "/coins/markets")
+    cg_guard.note_unbudgeted_call("coingecko", "/global")
+
+    async def scenario():
+        return await cg_guard.unbudgeted_today(), await cg_guard.unbudgeted_endpoints()
+
+    total, eps = asyncio.run(scenario())
+    assert total == 3
+    assert eps["coingecko:/coins/markets"] == 2
+    assert eps["coingecko:/global"] == 1
+
+
+def test_同步调用点也进账():
+    """两个 `requests` 调用点(`exchange_data.py` / `mmi_index_v3.py`)没有事件
+    循环 ⇒ 记账必须**同步**落,不能因为「没有 loop」就静默丢掉。"""
+    cg_guard.note_unbudgeted_call("coingecko", "/simple/price")
+
+    async def scenario():
+        return await cg_guard.unbudgeted_today()
+
+    assert asyncio.run(scenario()) == 1
+
+
+def test_闸门内的调用不进闸外的账():
+    """**不双计**。闸门已经在数了 —— 闸外的账簿只该收闸门管不到的调用。"""
+    async def scenario():
+        async with _client(lambda req: httpx.Response(200, json={})) as c:
+            await c.get("https://pro-api.coingecko.com/api/v3/global")
+        return await cg_guard.used_today(), await cg_guard.unbudgeted_today()
+
+    used, unbudgeted = asyncio.run(scenario())
+    assert used == 1
+    assert unbudgeted == 0
+
+
+def test_报告里的今天真实总量_闸门内加闸门外():
+    """`total_calls_today` 才是**今天的真实总量**。
+
+    之前只有 `used_today`,它只数闸门内的 11 个文件 ⇒ 报出来的是「我们希望
+    花掉的钱」,不是「我们花掉的钱」。
+    """
+    async def scenario():
+        async with _client(lambda req: httpx.Response(200, json={})) as c:
+            await c.get("https://pro-api.coingecko.com/api/v3/global")
+            await c.get("https://pro-api.coingecko.com/api/v3/global")
+        cg_guard.note_unbudgeted_call("coingecko", "/coins/markets")
+        cg_guard.note_unbudgeted_call("coingecko", "/coins/markets")
+        cg_guard.note_unbudgeted_call("coingecko", "/global")
+        return await cg_guard.report()
+
+    rep = asyncio.run(scenario())
+    assert rep["used_today"] == 2
+    assert rep["unbudgeted_today"] == 3
+    assert rep["total_calls_today"] == 5
+    assert rep["unbudgeted_total"] == 3
+    assert rep["unbudgeted_endpoints"]["coingecko:/coins/markets"] == 2
+
+
+def test_跨进程口径_取较大者_宁可报多不报少():
+    """Redis 与进程内两份账,取**较大**者。
+
+    少报 = 因错误理由变绿(「今天才花了 300 次」会让人以为很安全);多报只
+    会让人多查一眼。两害相权,取大。
+    """
+    async def scenario(remote):
+        async def fake_r_get(key):
+            return remote if key.startswith("cg:quota:unbudgeted:") else None
+
+        orig = cg_guard._r_get
+        cg_guard._r_get = fake_r_get
+        try:
+            return await cg_guard.unbudgeted_today()
+        finally:
+            cg_guard._r_get = orig
+
+    # Redis 那边更多(别的进程记的)⇒ 用 Redis 的
+    assert asyncio.run(scenario(9)) == 9
+    # 本进程更多(Redis 写失败/没配)⇒ 用本地的,不能因为 Redis 读到了 0
+    # 就把本进程已经知道的消耗报成 0
+    cg_guard.note_unbudgeted_call("coingecko", "/global")
+    assert asyncio.run(scenario(0)) == 1
+
+
+def test_两种import路径是同一个模块对象():
+    """`src.data.market.cg_guard` 与 `data.market.cg_guard` 必须是**同一个对象**。
+
+    仓库两种写法都在用(`src/api/main.py:30-38` 的双路径说明)。两个对象 =
+    两份进程内计数 ⇒ Redis 写失败时读数漏掉另一半 ⇒ **少报**。
+    这个别名由 `cg_guard.py` 自己在 import 时钉死,这里只验它没被摘掉。
+    """
+    import importlib
+    a = importlib.import_module("src.data.market.cg_guard")
+    b = importlib.import_module("data.market.cg_guard")
+    assert a is b, "两条 import 路径加载出了两个模块对象 —— 账会被劈成两半"
+
+
+def test_端点标签把coin_id归一():
+    """同一个端点的不同 coin id 必须是**同一个标签** —— 否则分端点明细会
+    变成「每个币一行」,读数没法用。"""
+    assert cg_guard.endpoint_label(
+        "https://pro-api.coingecko.com/api/v3/coins/bitcoin/market_chart"
+    ) == "/coins/{id}/market_chart"
+    assert cg_guard.endpoint_label(
+        "https://pro-api.coingecko.com/api/v3/coins/ethereum/market_chart"
+    ) == "/coins/{id}/market_chart"
+    # 子路径不能被误归一成 coin id
+    assert cg_guard.endpoint_label(
+        "https://pro-api.coingecko.com/api/v3/coins/markets"
+    ) == "/coins/markets"
+    assert cg_guard.endpoint_label(
+        "https://pro-api.coingecko.com/api/v3/global"
+    ) == "/global"
+    # 查询参数不进标签 —— 同一端点的参数变体是同一个额度池
+    assert cg_guard.endpoint_label(
+        "https://pro-api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
+    ) == "/simple/price"
+    assert cg_guard.endpoint_label("") == "(unknown)"

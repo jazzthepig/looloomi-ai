@@ -633,6 +633,18 @@ python3 -m pytest tests/test_cg_guard.py tests/test_cmc_provider.py -q || {
     echo "✗ preflight stage: S-894 额度闸门 / CMC 兜底两份新测试红" >&2
     exit 1
 }
+# 3a-vicesima-bis. S-895 阶段 0:闸门**只数它自己放行的请求** ⇒ 裸 client 打出去
+#                     的调用一概不进账,「今天花了多少」从第一天起就是残缺的。
+#                     阶段 0 把闸门外的消耗也记进同一张表(unbudgeted_today /
+#                     unbudgeted_endpoints),这一份测试守的是**形状**:闸门外
+#                     每个调用点都必须记账,登记表里的例外必须都还活着(收口
+#                     之后要删登记),端点登记必须跟代码对得上。
+#                     S-244 家族:测试文件存在 ≠ 会被运行 —— 而「额度度量没跑」
+#                     的缺席是静默的(读数照样看起来正常,只是不全)。
+python3 -m pytest tests/test_cg_call_sites.py -q || {
+    echo "✗ preflight stage: S-895 阶段 0 —— CG 调用面形状守卫红" >&2
+    exit 1
+}
 # 3a-vicesima. S-360: docs/SPINE.md 必须描述现在的代码。SPINE 是 agent 重组
 #                    记忆时对齐方向的基准 —— 一份过期的方向基准比没有更坏。
 #                    实测动机:10 个文件 12 行注释断言 signal_outcomes 死了

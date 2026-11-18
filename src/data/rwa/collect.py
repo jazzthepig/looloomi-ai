@@ -25,6 +25,8 @@ from pathlib import Path
 from typing import Optional
 
 from src.data.rwa.panel import RwaRow, parse_rows, snapshot
+# S-895 阶段 0:闸门外调用的记账(不是闸门)。见 `src/data/market/cg_guard.py`。
+from src.data.market.cg_guard import note_unbudgeted_call
 
 CG_BASE = "https://pro-api.coingecko.com/api/v3"
 PER_PAGE = 250          # 单页上限
@@ -80,6 +82,8 @@ async def fetch_markets(*, client=None) -> list[dict]:
     out: list[dict] = []
     try:
         for page in range(1, MAX_PAGES + 1):
+            # ⚠️ S-895 阶段 0:闸门外记账(阶段 2 收口进闸门后删掉这一行)。
+            note_unbudgeted_call("coingecko", "/rwas/markets")
             r = await client.get(
                 f"{CG_BASE}/rwas/markets", headers=_headers(),
                 params={"per_page": PER_PAGE, "page": page,
@@ -122,6 +126,8 @@ async def fetch_issuer_map(*, client=None) -> dict[str, str]:
     client = client or httpx.AsyncClient(timeout=30)
     out: dict[str, str] = {}
     try:
+        # ⚠️ S-895 阶段 0:闸门外记账(阶段 2 收口进闸门后删掉这一行)。
+        note_unbudgeted_call("coingecko", "/rwas/issuers/list")
         r = await client.get(f"{CG_BASE}/rwas/issuers/list", headers=_headers())
         r.raise_for_status()
         issuers = r.json() or []
@@ -134,6 +140,8 @@ async def fetch_issuer_map(*, client=None) -> dict[str, str]:
             if not iid:
                 continue
             try:
+                # ⚠️ S-895 阶段 0:闸门外记账(逐发行方反查,每次一发)。
+                note_unbudgeted_call("coingecko", "/rwas/markets")
                 m = await client.get(
                     f"{CG_BASE}/rwas/markets", headers=_headers(),
                     params={"issuer": iid, "per_page": PER_PAGE})

@@ -4,6 +4,10 @@ import time
 from datetime import datetime
 from typing import Dict
 
+# S-895 阶段 0:闸门外调用的记账(不是闸门)。这个文件用**同步** `requests`
+# ⇒ 记账同步落 Redis。见 `src/data/market/cg_guard.py`。
+from src.data.market.cg_guard import note_unbudgeted_call, endpoint_label
+
 #: CoinGecko。11-16:有 key 时走 Pro 端点(每分钟 500 次);公开端点每分钟十几次,
 #: 而 Pro key 在公开 host 上会被忽略 —— 拿 Analyst 的额度去打公开端点是最亏的用法。
 CG_API_KEY = os.getenv("COINGECKO_API_KEY", "")
@@ -44,6 +48,10 @@ class LooloomiMMI:
         """Make API call with delay and error handling"""
         time.sleep(self.api_delay)
         try:
+            # ⚠️ S-895 阶段 0:闸门外记账。这里是**同步** `requests`(批处理脚本),
+            # 没有事件循环 ⇒ 记账同步落 Redis。这两个同步 `requests` 点是登记
+            # 在册的例外(阶段 2 的形状守卫白名单),不是「忘了收口」。
+            note_unbudgeted_call("coingecko", endpoint_label(url))
             response = requests.get(url, params=params, headers=_cg_headers(), timeout=15)
             response.raise_for_status()
             return response.json()

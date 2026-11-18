@@ -11,6 +11,10 @@ import time
 
 _logger = logging.getLogger(__name__)
 
+# S-895 阶段 0:闸门外调用的记账(不是闸门)。这个文件用**同步** `requests`
+# ⇒ 记账同步落 Redis。见 `src/data/market/cg_guard.py`。
+from src.data.market.cg_guard import note_unbudgeted_call
+
 _COINGECKO_API_KEY = os.environ.get("COINGECKO_API_KEY", "")
 
 
@@ -54,6 +58,10 @@ class ExchangeDataFetcher:
                 "include_24hr_vol": "true"
             }
             
+            # ⚠️ S-895 阶段 0:闸门外记账。这里是**同步** `requests`,没有事件
+            # 循环 ⇒ 记账同步落 Redis(几十毫秒)。这两个同步点是登记在册的
+            # 例外(阶段 2 的形状守卫白名单),不是「忘了收口」。
+            note_unbudgeted_call("coingecko", "/simple/price")
             response = requests.get(url, params=params, headers=self._cg_headers, timeout=10)
 
             if response.status_code == 200:
@@ -101,6 +109,8 @@ class ExchangeDataFetcher:
                 "days": limit
             }
             
+            # ⚠️ S-895 阶段 0:闸门外记账(同步 `requests` 点,登记在册的例外)。
+            note_unbudgeted_call("coingecko", "/coins/{id}/market_chart")
             response = requests.get(url, params=params, headers=self._cg_headers, timeout=10)
 
             if response.status_code == 200:
