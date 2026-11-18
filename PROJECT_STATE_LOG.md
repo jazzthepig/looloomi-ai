@@ -3402,3 +3402,80 @@ CMC 测试覆盖预算 / 停用 / 标来源 / 缺字段是 None,**没有一条�
 的范围。收窄成「**以 `CMC_` / `COINMARKETCAP_` 开头且以 `KEY` / `TOKEN` 结尾**」
 之后既覆盖了现实里可能的命名,又只在我们自己的命名空间里找 ——
 **工具的拒绝不是障碍,是指出了设计上的越界。**
+
+## 2026-11-18 08:43 UTC — Seth:CoinGecko 额度收敛 S-895 阶段 0 —— 让「今天花了多少」变成真的
+
+**起因(Jazz 11-17):** 「对于 coin and asset api 调用上 还能怎样优化? 请你回到高维,
+认真看完我们整个项目的设计,再下结论。」—— 不是再补几个缓存,是从项目自己的架构原则
+推出收敛方案。计划全文 `~/.claude/plans/parallel-doodling-taco.md`(6 条架构结论 + 阶段 0–5 +
+明确不做的事 + 7 条风险 + 验证)。**落地顺序:阶段 0(度量可信)必须先做** ——
+`SPINE.md:170-174`「一个因错误理由变绿的检查,比红的更坏」。
+
+**为什么阶段 0 是前提:** S-894 的闸门**只数它自己放行的请求**。全仓库 23 个文件打
+CoinGecko,13 个调用点在裸 client 上 ⇒ 闸门外的消耗**一概不进账** ⇒
+`/internal/cg-quota` 的 `used_today` 从第一天起就是**残缺的**(只数闸门内的 11 个文件)。
+**度量不可信时,任何一次优化都无法证明自己有效。**
+
+**这一轮做了什么**
+
+1. `cg_guard.note_unbudgeted_call(source, endpoint)` —— **记账,不是闸门**(不拦请求、
+   不改返回值)。同步函数 ⇒ 同步(`requests`)与异步(`httpx`)调用点**同一形状**。
+   独立计数器 `cg:quota:unbudgeted:{YYYY-MM-DD}`(INCR)+ 分端点明细
+   `cg:quota:unbudgeted_ep:{day}`(HINCRBY,field=`source:endpoint`),TTL 3 天。
+   异步上下文用后台任务(不拖慢调用点),同步上下文发一发 Upstash pipeline。
+   **取较大者口径**(Redis vs 进程内):Redis 写失败时本进程那份仍然是真的 ——
+   宁可报多(让人去查)也不报少,少报 = 因错误理由变绿。
+2. 13 个裸调用点(7 个文件)全部记账:`trading.py`(2)/ `cis_provider.py`(2)/
+   `deep_walk.py`(1)/ `global_history.py`(2)/ `rwa/collect.py`(3)/ `exchange_data.py`(2,同步)/
+   `mmi_index_v3.py`(1,同步 + 动态 URL ⇒ `endpoint_label(url)` 归一)。
+3. `report()` **只加不改**:`unbudgeted_today` / `unbudgeted_endpoints` /
+   `unbudgeted_total` / **`total_calls_today`(= 闸门内 + 闸门外)**。现有字段一个没动。
+4. **形状守卫 `tests/test_cg_call_sites.py`(新,已注册进 preflight)** ——
+   AST 扫描 `src/`,把每个 CG 调用点分类成 gated/injected/bare,断言:每个裸点都在记账 /
+   登记在册的例外**都还活着**(收口之后要删登记,否则白名单变成永久豁免)/ 登记的端点跟代码对得上 /
+   注入 client 的文件其注入方必须走闸门。**只看 AST 节点不看注释** ——
+   「我等下把它接进闸门」这种注释不能冒充合规。
+   **记账是一次性的,形状守卫是让下一个 agent 开不了洞。**
+
+**开发中真抓到的三个 bug(都不会自己暴露)**
+
+① `endpoint_label` 把集合端点 `/coins/markets`(拉**全市场**)误归成 `/coins/{id}` ⇒
+分端点明细会把「全市场」和「单个币」混成同一个标签,读数失去意义。**是新增的测试照出来的**,
+不是 code review 读出来的。修法:加 `COIN_SUBPATHS` 例外集。
+
+② `src.data.market.cg_guard` 与 `data.market.cg_guard` 会加载出**两个模块对象** ——
+仓库两种 import 写法都在用(`src/api/main.py:30-38` 的双路径说明)。两个对象 = 两份进程内
+计数 + 两个 Redis client ⇒ Redis 计数仍然对,但 **Redis 写失败时读数会漏掉另一半** ⇒ 少报。
+修法:在 `cg_guard.py` 里 `sys.modules.setdefault(...)` 把两个名字**钉到同一个对象** ——
+把不变量变成**结构性的**,而不是「我推理过它不会发生」。
+
+③ preflight 抓到 Rule #7 违例(代码里引用了 `S-895` 却没先在 ledger 认领标题)。
+**这就是为什么 preflight 是唯一的 prod 门** —— 这条违例靠自查不会发现。
+
+**顺带修 S-302 计数器一个假阳性(`scripts/loop_status.py`)**
+
+计数器判「自己发 HTTP 取价」用的是**原文**里有没有取价原语 + HTTP 标记。我给闸门加的
+`endpoint_label` docstring 里写了 `/coins/{id}/market_chart` ⇒ 闸门被算成新增取价路径
+(24 > 23),preflight 拦下。
+
+- **没有改阈值**(23→24 = 把停机线往后挪一格,禁止)。
+- **也没有换成 `code_only()`**(那会把这个数从 23 掉到 16)—— 我逐个核过那 8 个
+  「只在原文里匹配」的文件:`main.py` / `cis.py` / `signals.py` / `global_history.py` /
+  `dingge_paper.py` / `outcome_tracker.py` / `pod_aggregator_paper.py` / `cg_guard.py`
+  —— **它们全部是真实的私有取价路径**,只是端点写法不在那 7 个取价原语里 ⇒
+  **计数器今天靠注释侥幸命中它们**。剥注释会把真的路径漏掉 ⇒ `code_only()` 在这里是错的修法
+  (尽管它是本仓其他守卫的正确修法 —— `tests/_source.py` 的存在理由)。
+- **最终修法(按构造判定):** 扫描时跳过定义了 `class GuardedCGClient` 的文件(AST 判
+  ClassDef)。闸门定义的是**全仓共用的那一个** client,它自己**不取价** —— 它是那一条活路
+  本身,不是第二条私有路径。**阈值仍是 23,别的文件一个都不多算。**
+
+**教训:** 「一个检查数字的守卫」被改的时候,**先问它数的是不是我要数的东西**,再问它该是多少。
+这次如果顺手把阈值抬到 24,就会把「闸门不是取价路径」这个事实一起埋掉 ——
+**事实比阈值值钱。** 同一个形状在本 session 里第三次出现(`tests/_source.py` 记着前六次):
+**守卫要匹配构造,不是匹配附近的字符串。**
+
+**记账行是临时脚手架(阶段 1/2 收口时必须同时删掉,否则双计)** ——
+`test_登记在册的例外没有变成死的` 守这条不变量。
+
+**留给 Jazz 的一步(30 秒,不部署):** 在 Railway 把那个 CMC 变量改名成 `CMC_API_KEY` ——
+现在 `key_present: false`,兜底层是**哑的**(S-894 补充段已记)。
