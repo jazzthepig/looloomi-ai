@@ -1728,7 +1728,7 @@
  "null_baseline": {
   "task": "T-308",
   "stage": "null",
-  "generated_at": "2026-11-16T12:13:57.429691+00:00",
+  "generated_at": "2026-11-18T06:46:08.736536+00:00",
   "n_null": 2000,
   "seed": 20261108,
   "groups": {
@@ -1822,6 +1822,37 @@
      "null_std": 2.3654,
      "actual_delta": 1.0158,
      "percentile": 0.6525,
+     "note": "零分布 = 随机挡 k 张票的组合式期望(不重跑模拟,不释放持仓名额);实际值 = 规则版的 ΔR(整账本口径,含腾出名额换进别的票)"
+    }
+   },
+   "book_B_window_card_literal_k3": {
+    "n": 67,
+    "row": {
+     "n": 67,
+     "k": 3,
+     "loss_pct": 70.15,
+     "win_pct": 29.85,
+     "sum_r": 19.4042,
+     "mean_r": 0.2896,
+     "expected_delta_random_block": -0.8688,
+     "null_mean": -0.9585,
+     "null_std": 4.8701,
+     "actual_delta": 1.0158,
+     "percentile": 0.5205,
+     "note": "零分布 = 随机挡 k 张票的组合式期望(不重跑模拟,不释放持仓名额);实际值 = 规则版的 ΔR(整账本口径,含腾出名额换进别的票)"
+    },
+    "sentence": {
+     "n": 67,
+     "k": 3,
+     "loss_pct": 70.15,
+     "win_pct": 29.85,
+     "sum_r": 19.4042,
+     "mean_r": 0.2896,
+     "expected_delta_random_block": -0.8688,
+     "null_mean": -0.9585,
+     "null_std": 4.8701,
+     "actual_delta": 1.0158,
+     "percentile": 0.5205,
      "note": "零分布 = 随机挡 k 张票的组合式期望(不重跑模拟,不释放持仓名额);实际值 = 规则版的 ΔR(整账本口径,含腾出名额换进别的票)"
     }
    }
