@@ -3479,3 +3479,11 @@ CoinGecko,13 个调用点在裸 client 上 ⇒ 闸门外的消耗**一概不进�
 
 **留给 Jazz 的一步(30 秒,不部署):** 在 Railway 把那个 CMC 变量改名成 `CMC_API_KEY` ——
 现在 `key_present: false`,兜底层是**哑的**(S-894 补充段已记)。
+
+**部署后(2026-11-19):** `e84da504`(代码)+ `b9d65723`(状态落点)已推 `origin/main`;
+线上 `/internal/build-state` 的 `git_sha_short = b9d65723` = 本地 HEAD,`/health` 200
+`status: healthy`(重启窗口内约 90 秒 502,正常)。**但 `/internal/cg-quota` 的数字还没看到** ——
+它是 token 守卫端点,本地 `INTERNAL_TOKEN` 不发到生产 ⇒ **这一步留给持生产 token 的人跑**,
+命令与期望值写在 `REFUTATION_LEDGER.md` 的 S-895 部署补充段。
+**「部署了」不等于「数对了」**:代码在、形状在,数还没看到 —— 阶段 0 的验收是三条已验
+(逻辑 / 形状守卫 / 部署落地)+ 两条待观察(线上读数 / 24h 明细)。
