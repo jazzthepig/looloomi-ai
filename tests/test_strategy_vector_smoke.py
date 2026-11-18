@@ -294,10 +294,29 @@ def test_backfill_produces_expected_records() -> None:
         _check("audit JSON exists", False, detail="run scripts/backfill_strategies.py --write first")
 
 
+def _fusion_record(data: dict) -> tuple[str, dict | None]:
+    """The sleeve-fusion validation record, under its canonical R-number.
+
+    §LEDGER-RECONCILIATION-MAP (2026-07-22, Jazz's ruling on the R64–R68b
+    parallel-assignment collision): Minimax keeps R64–R68b, **Seth's fusion
+    lane renumbers R64 → R69**. The fusion-validation entry ("FUSION WINS 3/3
+    gates") is therefore R69 in today's ledger — it was R64 before the
+    renumbering pass, which is why the old _data/strategy_records.json
+    (generated 07-21) still carries an "R64-ledger" key.
+
+    We look the canonical number up first and fall back to the pre-rename one
+    so the guard still fires on an older ledger/snapshot.
+    """
+    for rid in ("R69-ledger", "R64-ledger"):
+        if data.get(rid):
+            return rid, data[rid]
+    return "R69-ledger", None
+
+
 def test_r64_fusion_record_has_capacity() -> None:
-    """Step 6: the gold-standard SHIP record (R64 fusion validation) should
-    have BOTH n_assets AND declared_capacity filled, because the source body
-    explicitly states "$5.0M declared capacity" and "28 assets"."""
+    """Step 6: the gold-standard SHIP record (the R69/R64 fusion validation)
+    should have BOTH n_assets AND declared_capacity filled, because the source
+    body explicitly states "$5.0M declared capacity" and "28 assets"."""
     print("\n[test_r64_fusion_record_has_capacity]")
     from pathlib import Path as _P
     import json as _json
@@ -306,24 +325,25 @@ def test_r64_fusion_record_has_capacity() -> None:
         _check("audit exists", False, detail="run scripts/backfill_strategies.py --write")
         return
     data = _json.loads(audit.read_text())
-    r64 = data.get("R64-ledger")
-    _check("R64-ledger present", r64 is not None)
+    rid, r64 = _fusion_record(data)
+    _check("fusion record present (R69-ledger; R64 pre-renumber)", r64 is not None,
+           detail=f"looked up {rid}")
     if r64:
         cap = r64.get("capacity", {})
-        _check("R64 declared_capacity filled",
+        _check("fusion declared_capacity filled",
                cap.get("declared_capacity") is not None,
                detail=str(cap))
-        _check("R64 declared_capacity ~$5M",
+        _check("fusion declared_capacity ~$5M",
                abs(cap.get("declared_capacity", 0) - 5_000_000) < 1_000,
                detail=str(cap))
-        _check("R64 n_assets filled",
+        _check("fusion n_assets filled",
                cap.get("n_assets") is not None,
                detail=str(cap))
         mech = r64.get("mechanics", {})
-        _check("R64 holding_period_days filled (>0)",
+        _check("fusion holding_period_days filled (>0)",
                mech.get("holding_period_days", 0) > 0,
                detail=str(mech))
-        _check("R64 turnover filled (>0)",
+        _check("fusion turnover filled (>0)",
                mech.get("turnover_per_q", 0) > 0,
                detail=str(mech))
 
@@ -402,6 +422,17 @@ def test_step7_sidecar_tag_on_ship_records() -> None:
     _check(">= 3 ship records have sidecar: tag",
            n_with_sidecar >= 3,
            detail=f"{n_with_sidecar} of {len(ship)} ship records have sidecar tag")
+    # S-500 / T-056: the sidecar source has to live INSIDE the repo. The old
+    # reports/ tree is gitignored — on any machine that is not the Mac it is
+    # simply not there, which is what made this test go red on a clean box
+    # (it measured this machine's stale 07-21 artefact, not the code).
+    repo = _P(__file__).resolve().parents[1]
+    srcs = [t.split("sidecar:", 1)[1]
+            for r in ship for t in r.get("tags", []) if t.startswith("sidecar:")]
+    missing = [s for s in srcs if not (repo / s).exists()]
+    _check("every ship sidecar source is committed in the repo",
+           not missing,
+           detail=f"{len(srcs) - len(missing)}/{len(srcs)} in-repo; missing={missing[:3]}")
 
 
 def test_step8_router_registered_with_correct_paths() -> None:
