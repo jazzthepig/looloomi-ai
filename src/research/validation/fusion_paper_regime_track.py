@@ -126,8 +126,12 @@ STABLES_JSON = _keys.get(
 SIGNAL_LOOKBACK_DAYS = 28
 
 # ── Supabase config ──────────────────────────────────────────────────────────
+# T-062: service key first. `fusion_paper_regime_track` is service_role_only
+# (scripts/supabase_fusion_paper_regime_track.sql), so a publishable key is
+# rejected on write — the write silently failed (the exception was caught and
+# logged as a warning) while the loop reported `ok`.
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_KEY", "")
 
 # ── Aggregation thresholds (mirror fusion_paper_tracking.py) ───────────────
 WARMUP_MIN_DAYS = 20
@@ -427,24 +431,63 @@ def _supabase_write_track(row: dict) -> bool:
 
 
 # ── Daily entry point ───────────────────────────────────────────────────────
-def compute_today_track(today_iso: str | None = None) -> Optional[dict]:
-    """Compute today's regime track row, append to CSV + Supabase.
+def compute_today_track_ex(today_iso: str | None = None) -> dict:
+    """Compute today's track row AND say why there wasn't one.
 
-    Returns the row dict, or None if insufficient data (R64 NAV missing, signal
-    too short, etc.).
+    T-062 (2026-11-17): the loop called `compute_today_track`, got None, printed
+    "no row … skipping", and recorded `ok` in loop_attempt — every day, for
+    months, while `fusion_paper_regime_track` stayed at 0 rows. "Ran" is not
+    "wrote". This function returns the reason so the caller can record a
+    refusal with a cause instead of an ok with nothing behind it.
+
+    Returns {"status": "ok"|"skipped", "row": dict|None, "reason": str|None}.
     """
-    today = today_iso or dt.datetime.utcnow().date().isoformat()
+    today = today_iso or dt.datetime.now(dt.timezone.utc).date().isoformat()
     nav_today, nav_yest = _fetch_r64_nav_close_to(today)
     if nav_today is None or nav_yest is None:
         _log.info("[regime_track] no R64 NAV for %s (today=%s yest=%s); skipping",
                   today, nav_today, nav_yest)
-        return None
+        return {"status": "skipped", "row": None,
+                "reason": f"no R64 paper NAV for {today} in fusion_paper_nav "
+                          f"(inception_id=v2, void_reason is null) — today={nav_today}, "
+                          f"yesterday={nav_yest}"}
 
-    sig = load_signal_series()
+    try:
+        sig = load_signal_series()
+    except Exception as e:                            # noqa: BLE001
+        _log.warning("[regime_track] stablecoin signal unavailable: %s", e)
+        return {"status": "skipped", "row": None,
+                "reason": f"stablecoin signal unavailable: {type(e).__name__}: {str(e)[:160]}"}
     if sig is None or sig.empty:
         _log.info("[regime_track] no stablecoin signal available; skipping")
-        return None
+        return {"status": "skipped", "row": None,
+                "reason": "stablecoin signal series is empty — no DeFiLlama stablecoin "
+                          "history reachable from this process"}
 
+    row, wrote = _build_track_row(today, nav_today, nav_yest, sig)
+    if not wrote:
+        return {"status": "error", "row": row, "reason":
+                "row computed but the Supabase write to fusion_paper_regime_track was "
+                "rejected — the CSV mirror has it, the durable table does not"}
+    return {"status": "ok", "row": row, "reason": None, "wrote": True}
+
+
+def compute_today_track(today_iso: str | None = None) -> Optional[dict]:
+    """Compute today's regime track row, append to CSV + Supabase.
+
+    Returns the row dict, or None if insufficient data (R64 NAV missing, signal
+    too short, etc.). Use `compute_today_track_ex` when the caller needs to
+    report WHY it produced nothing.
+    """
+    return compute_today_track_ex(today_iso).get("row")
+
+
+def _build_track_row(today: str, nav_today: float, nav_yest: float, sig) -> tuple[dict, bool]:
+    """Assemble + persist today's row. Returns (row, supabase_write_ok).
+
+    The row dict carries EXACTLY the CSV header's fields — DictWriter raises on
+    an extra key, so "did the write land" cannot ride along inside the row.
+    """
     today_ts = pd.Timestamp(today)
     band, cap = band_cap_for_date(today_ts, sig)
     sig_val = float(sig.loc[today_ts]) if today_ts in sig.index and not pd.isna(sig.loc[today_ts]) else None
@@ -468,8 +511,8 @@ def compute_today_track(today_iso: str | None = None) -> Optional[dict]:
         "regime_nav_usd": round(cum_nav, 2),
     }
     _append_track_csv(row)
-    _supabase_write_track(row)
-    return row
+    wrote = _supabase_write_track(row)
+    return row, bool(wrote)
 
 
 # ── Self-test ───────────────────────────────────────────────────────────────

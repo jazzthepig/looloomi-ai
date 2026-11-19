@@ -36,15 +36,44 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
 def test_an_empty_fitness_run_is_not_reported_as_ok():
+    """T-062 (2026-11-19): the writer moved to
+    `src/research/validation/regime_fitness.py` — the old
+    `scripts/compute_regime_fitness.py` read `cis_scores` (0 rows) and
+    `trade_results` (0 rows), so it computed nothing for four months. The
+    guard follows the code that actually runs; the intent is unchanged.
+
+    An empty run is a refusal with a consequence, never `ok=True, rows=0`.
+    """
+    src = code_only((ROOT / "src/research/validation/regime_fitness.py").read_text())
+    fn = src.split("def run(")[1]
+    assert '"ok": False' in fn, (
+        "rows=0 with ok=True printed as a normal daily run for four months")
+    assert "degraded" in fn
+    assert "consequence" in fn, (
+        "the caller must be told what the empty table CAUSES — that the IC "
+        "record has nothing in it — not merely that a number was zero")
+
+
+def test_the_endpoint_does_not_turn_a_refusal_into_a_success():
+    """The endpoint is a thin wrapper now. If it ever builds its own `ok`,
+    the degraded shape dies at the boundary and the loop logs `ok` again."""
     src = code_only((ROOT / "src/api/routers/admin.py").read_text())
     fn = src.split("async def trigger_regime_fitness")[1].split("\n@router")[0]
-    blk = fn.split("if not fitness:")[1][:700]
-    assert '"ok": False' in blk, (
-        "rows=0 with ok=True printed as a normal daily run for four months")
-    assert "degraded" in blk
-    assert "consequence" in blk, (
-        "the caller must be told what the empty table CAUSES — that CIS falls "
-        "back to neutral weights — not merely that a number was zero")
+    assert "to_thread" in fn
+    assert '"ok": True' not in fn
+
+
+def test_the_live_writer_keeps_the_day_floor_and_gates_before_the_correlation():
+    """The floor that matters is the one in the module the loop calls."""
+    import re
+    src = code_only((ROOT / "src/research/validation/regime_fitness.py").read_text())
+    n = int(re.search(r"MIN_INDEPENDENT_DAYS\s*=\s*(\d+)", src).group(1))
+    assert n >= 20, f"floor {n} — measured samples span 6 days and 1 day"
+    fn = src.split("def compute_fitness(")[1]
+    gate = fn.find("min_days")
+    corr_at = fn.find("_pearson")
+    assert 0 < gate < corr_at, (
+        "the day floor must gate BEFORE the correlation is recorded")
 
 
 def test_the_sample_floor_counts_days_not_pairs():
