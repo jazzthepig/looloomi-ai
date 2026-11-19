@@ -3551,3 +3551,74 @@ UNDERPERFORM −0.42%(n=1450)、NEUTRAL **+0.76%(n=2840)**、OUTPERFORM +0.36%(n
 ② `scripts/preflight.sh` 里这四个文件改用 `python3 -m pytest …` ⇒ 24 条全部进 CI;
 ③ `tests/test_cold_start_contract.py` 加一条
 `test_a_main_block_does_not_precede_the_tests_it_is_meant_to_run` ⇒ **这个形状以后会被 CI 挡住**。
+
+## 2026-11-19 16:45 UTC — Seth:CoinGecko 额度收敛 S-895 阶段 1 —— 交易路由的标记价:闸门 + 缓存 + 降级语义
+
+**Jazz 11-17 拍板.**「只加闸门+缓存+修降级(推荐)」—— 标记价源不变(继续 CoinGecko),
+**不**换 Hyperliquid venue;`price_route.py:175-190` 的钉法违例作为独立发现登记,本轮不动。
+
+**① 降级语义先修 —— 这是本轮的重点,不是附属品.**
+原来写的是 `price = prices.get(sym, pos["entry_price"])`:拿不到标记价就用**开仓价**兜底 ⇒
+**PnL 精确等于 0** ⇒ 与「仓位真的平了」同形。止损位常常就落在开仓价之内 ⇒ 一个「价格取不到」
+的仓位会被**假止损**平掉 ⇒ 写进 `trade_results` 的已实现盈亏是编出来的,还会喂给 Learn 循环。
+
+**实测(把改之前的模块 `git show origin/main:src/api/routers/trading.py` 拿来做同一套场景,闸门关着):**
+`current_price=100.0`(开仓价)/ `unrealized_pnl=0.0` / `unrealized_pct=0.0` /
+**没有** `price_source` / **没有** `price_coverage` / **`sl_triggered=True`**。
+⇒ 闸门一开始真的会拒绝之后,这条路径会**自己造一个假止损**。
+合成 503 之所以一直没出事,是靠 `except` 分支「碰巧」兜住了 —— **结果对,语义是偶然的,不是声明的**。
+
+**改后:** 拿不到标记价 ⇒ `current_price=None` / `unrealized_pnl=None` / `unrealized_pct=None` /
+`price_source="unavailable"`;NAV 仍按开仓价计入(保守估值,不破坏账面),但 P&L 不再假装是 0。
+(`DATA_ARCHITECTURE.md:109` 未测量 = NaN 且必须传播(I1);`:70` source 不可变。)
+
+**② 进闸门.** `_fetch_price` / `_fetch_prices_cg_batch` 的裸 `httpx.AsyncClient` →
+`GuardedCGClient`;并把**状态码判断显式化** —— 非 200(闸门拒了 = 合成 503,或上游 5xx)
+⇒ **没有标记价** ⇒ 不解析正文、不编造价(之前是直接 `r.json()` 再取下标,靠 KeyError 掉进 `except`)。
+
+**③ 90s 函数层缓存.** key = **symbol**(不是请求批次 —— 有批量与单个两种问法,
+按批次缓存两者会互相看不见);**只缓存成功的价**(失败从不缓存 ⇒ 关着的闸门不会凭空发出
+一份 90 秒内不存在的价)。TTL 90s 的理由:`_sl_tp_loop` 与 `_cis_flip_loop` **故意错开 60 秒**
+⇒ 90s 让后一条命中前一条的缓存 ⇒ 每 5 分钟只打一次;10s 一次都命中不了。
+
+**④ 其余语义收紧.** `close_position` 拿不到价 ⇒ 503 且**不平仓**(不写编造的已实现盈亏);
+`sweep_aged_positions` / `_sl_tp_exit` 统计 `unpriced` 并跳过;
+`_run_paper_rebalance` / `_close_rebal_position` 拒绝缺价的标的;响应体加 `price_coverage`。
+
+**⑤ 前端.** 后端传 `null` ⇒ 显示「—」而不是 `+0.00`;新增 `fmtSignedPnl`
+(`dashboard/src/lib/safeFormat.js`)。**真的 0 仍然是「+0.00」** —— 真的平了 ≠ 没测。
+`QuantMonitor.jsx` 里 `(pos.unrealized_pnl || 0)` 那种塌法去掉(这也是 S-262 家族的形状:
+「没有测量」塌成「0」)。
+
+**省多少:~288/天**(576 → 288)。**不报成 550** —— 前台路径(`/order` / `/positions` /
+`close_position`)本来频率就低,缓存对它们省不了多少。真正的价值是:**给这条无上限路径封了顶
++ 拆掉一个假数字。**
+
+**判据(11 条,全绿).** 合成 503 与真 503 ⇒ `current_price is None`(不是 entry_price)/
+`unrealized_pnl is None` / SL·TP **不触发** / 手动平仓拒绝(503)/ 同一批 symbol 连打两次只发
+一次外部请求 / 单问与批问看得见彼此的缓存 / 失败不缓存 / 前端 null ⇒「—」而 0 仍是「+0.00」。
+另:`tests/test_cg_call_sites.py` 里 `src/api/routers/trading.py` 的**豁免登记撤掉**
+(留着 = 一个已经不裸的文件继续占豁免名额 ⇒ 白名单变永久豁免)。
+
+**本轮还把上一轮的堵点按关注点分提交落地(Seth lane,preflight 全绿):**
+① **S-893 派卡盲区** —— `lane_bot` 看不见带后缀的返工分支(`lane-a/T-359-v2`)、
+已并进 main 的分支永远挡路 ⇒ 三条 lane 全部 0 张可动。改法:一条 for-each-ref 拿全 lane 分支
+(60 秒复用),按卡号归并,**最新的那条未合并分支说了算**;已合并的用 `merge-base --is-ancestor`
+判掉;「读不到」与「在等审」分成两个返回值。
+② **「守卫注册了」≠「守卫跑过」** —— `python3 -m tests.foo` 只跑 `__main__` 块里**已经定义**的
+测试,定义在块之后的永远跑不到,而文件照样打印一份绿色的清单。实测五个文件 24 条这样的测试
+从没执行过(20 条是 lane_bot 缰绳、11 条要 pytest fixture)⇒ preflight 里这四个文件改用
+pytest 跑 + 新增一条守卫(任何测试文件都不许把 `__main__` 块放在它要跑的那些测试之前)。
+③ **seth_bot 清 `.git/index.lock` 要看年龄** —— 原来无条件删 ⇒ 一个**活着的** git 进程会被
+抽掉锁 ⇒ 两个进程同时写 index ⇒ 索引损坏;改成只删「存在且比 120s 老」的锁。
+④ 登记 **T-413 / T-414** 两张新卡 + 看板重生(413 张)+ 教训强制执行基线 300 → 382
++ T-241 报告的合规措辞订正(『加仓确认』→『风险确认量』)。
+
+**下一阶段.** 阶段 2(`/global` 收敛成一条活路 + 12 处裸 client 收口 + 全仓库形状守卫)/
+阶段 3(`_cg_panel_loop` 改成按覆盖差驱动 —— 范本 `perp_mcap_backfill.stale_coins()` 已在仓库里)/
+阶段 4(TTL 口径统一 + 预热只热本地缓存 —— **访客可见的新鲜度 120s → 300s,等你点头**)/
+阶段 5(剩下的重复取数)。
+
+**留给你的两步.** ① **Railway 上把那个 CMC 变量改名成 `CMC_API_KEY`**(30 秒,不部署)——
+现在 `key_present: false`,兜底层是**哑的**;② **仓库侧日预算是否下调**(16,000 是仓库侧口径,
+Mac 侧同账号)—— 下调多少等阶段 0 的实测数出来再拍。
