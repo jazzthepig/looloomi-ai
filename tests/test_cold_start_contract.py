@@ -305,6 +305,49 @@ def test_every_test_file_actually_runs_the_tests_it_defines():
         "the file still reports green:\n  " + "\n  ".join(offenders))
 
 
+def test_a_main_block_does_not_precede_the_tests_it_is_meant_to_run():
+    """Lesson #105 again — a second shape of the same bug, found 2026-11-19.
+
+    `python3 -m tests.foo` runs the module's `if __name__ == "__main__":` block,
+    and that block executes **in file order**: any `def test_*` written BELOW it
+    does not exist yet when the block iterates `globals()` — so it never runs,
+    while the file still prints a confident list of green tests.
+
+    What was actually asleep: five test files had their `__main__` block in the
+    middle, and 24 tests below it had never executed — 20 of them lane_bot
+    guards, plus the PR-scope guard and the Pages-redirect guard. The guards
+    were the machinery that was blind (S-893); the blind spot had guards that
+    never ran, so "the guard is registered" was true and "the guard runs" was
+    not. A registration that does not run is a comment.
+    """
+    import ast
+    offenders = []
+    for p in sorted((REPO / "tests").glob("test_*.py")):
+        try:
+            tree = ast.parse(p.read_text(encoding="utf-8", errors="ignore"))
+        except SyntaxError:
+            continue
+        main_at = None
+        for n in tree.body:
+            if isinstance(n, ast.If):
+                src = ast.dump(n.test)
+                if "__name__" in src and "__main__" in src:
+                    main_at = n.lineno
+                    break
+        if main_at is None:
+            continue
+        after = [n.name for n in tree.body
+                 if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+                 and n.name.startswith("test_") and n.lineno > main_at]
+        if after:
+            offenders.append(f"{p.name}: `__main__` 块在第 {main_at} 行,下面还有 "
+                             f"{len(after)} 个测试从未运行:{after[:5]}")
+    assert not offenders, (
+        "`__main__` 块跑在它下面的测试定义之前 ⇒ 那些测试永远不会被执行,而文件照样"
+        "打印一份绿色的清单。把 `__main__` 块移到文件末尾(11-19 已改五个文件):\n  "
+        + "\n  ".join(offenders))
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 if __name__ == "__main__":

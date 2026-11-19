@@ -24,6 +24,7 @@ import datetime as dt
 import fcntl
 import json
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -88,21 +89,89 @@ def load_state() -> dict:
 
 WAITING = ("in_review", "done")
 
+#: lane 交付分支的名字:lane-{a,b,c}/T-NNN,后面可以带后缀(T-308-null / T-089-v3)。
+#: 实测 11-17:三条 lane 名下 57 条分支带后缀 —— 只看 origin/{lane}/{cid} 一个引用,它们全都看不见。
+_BRANCH_CARD = re.compile(r"^(T-\d{3})(?:-[A-Za-z0-9._-]+)?$")
 
-def branch_card_status(lane: str, cid: str) -> str | None:
-    """卡在 lane 自己分支上的状态。lane 交付时只在分支上把卡改成 in_review,main 上那张还是 open / claimed,
-    要等 Seth 合并才变 —— 只看 main 的话,lane_bot 会一轮轮把 lane 叫醒去「重验」一张已经交了的卡。"""
-    for ref in (f"origin/{lane}/{cid}", f"{lane}/{cid}"):
+#: {lane: (取回时刻, {卡号: [(ref, sha, 提交时间), ...]})};一轮派卡判断里只查一次 git。
+_REFS_CACHE: dict[str, tuple[float, dict[str, list[tuple[str, str, int]]]]] = {}
+
+
+def _lane_card_refs(lane: str, max_age: float = 60.0) -> dict[str, list[tuple[str, str, int]]]:
+    """这个 lane 名下所有分支 → {卡号: [(ref, sha, 提交时间), ...]},按提交时间新的在前。
+
+    一条 for-each-ref 拿完(每张卡各开一次进程太贵);60 秒内复用 —— 一轮派卡判断只看一次。
+    """
+    hit = _REFS_CACHE.get(lane)
+    if hit and (now().timestamp() - hit[0]) < max_age:
+        return hit[1]
+    out: dict[str, list[tuple[str, str, int]]] = {}
+    try:
+        r = subprocess.run(["git", "--no-optional-locks", "-C", str(ROOT), "for-each-ref",
+                            "--format=%(refname:short) %(objectname) %(committerdate:unix)",
+                            f"refs/remotes/origin/{lane}", f"refs/heads/{lane}"],
+                           capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired):
+        return {}
+    for line in r.stdout.splitlines():
+        parts = line.split()
+        if len(parts) != 3:
+            continue
+        ref, sha, ts = parts
+        m = _BRANCH_CARD.match(ref.rsplit("/", 1)[-1])
+        if not m:
+            continue
+        out.setdefault(m.group(1), []).append((ref, sha, int(ts)))
+    for v in out.values():
+        v.sort(key=lambda x: -x[2])
+    _REFS_CACHE[lane] = (now().timestamp(), out)
+    return out
+
+
+def _is_merged(sha: str) -> bool:
+    """这条分支的 tip 已经并进 main ⇒ 它卡上的 in_review 只是记账残留,不再挡路。"""
+    for ref in ("origin/main", "HEAD"):
         try:
-            r = subprocess.run(["git", "--no-optional-locks", "-C", str(ROOT), "show", f"{ref}:tasks/{cid}.json"],
+            r = subprocess.run(["git", "--no-optional-locks", "-C", str(ROOT), "merge-base", "--is-ancestor", sha, ref],
                                capture_output=True, text=True, timeout=20)
         except (OSError, subprocess.TimeoutExpired):
-            return None
+            continue
         if r.returncode == 0:
-            try:
-                return json.loads(r.stdout).get("status")
-            except ValueError:
-                return None
+            return True
+    return False
+
+
+def _card_status_at(ref: str, cid: str) -> str | None:
+    """分支上那张卡的状态。读不到 = None —— 「读不到」和「在等审」必须分开,合在一起就又是一个盲区。"""
+    try:
+        r = subprocess.run(["git", "--no-optional-locks", "-C", str(ROOT), "show", f"{ref}:tasks/{cid}.json"],
+                           capture_output=True, text=True, timeout=20)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if r.returncode != 0:
+        return None
+    try:
+        return json.loads(r.stdout).get("status")
+    except ValueError:
+        return None
+
+
+def branch_card_status(lane: str, cid: str) -> str | None:
+    """卡在 lane 自己分支上的状态 —— **最新的那条未合并分支说了算**。
+
+    三个坑(11-17 实测,三条 lane 全部 0 张可动):
+      ① 返工分支带后缀(T-308-null / T-089-v3)—— 只看 origin/{lane}/{cid} 看不见它,
+         卡被判成「等审」,lane 再也不醒;
+      ② 已经并进 main 的分支,卡上的 in_review 是记账残留 —— 它把一张被 Seth 退回重做的卡
+         (T-366)永远压在「等审」里,lane 再也不醒;
+      ③ 未合并、且卡在分支上仍是 in_review 的 —— 必须继续挡路(S-558:等审的卡不叫醒 lane)。
+    """
+    for ref, sha, _ts in _lane_card_refs(lane).get(cid, []):
+        if _is_merged(sha):
+            continue
+        st = _card_status_at(ref, cid)
+        if st is not None:
+            return st
     return None
 
 
@@ -111,7 +180,9 @@ def actionable_cards(lane: str, branch_status=branch_card_status) -> list[str]:
 
     S-558(10-13 实测):过去 27 小时 32 轮里约 16 轮是「本轮无新代码,只重验」—— 全是分支上已 in_review、
     main 上还是 claimed 的卡(lane-b T-059 九轮、lane-c T-036 / T-085 五轮、lane-a T-083 两轮)。等审的卡不再叫醒 lane;
-    Seth 退回时写 wake 文件,lane 照样会醒。"""
+    Seth 退回时写 wake 文件,lane 照样会醒。
+
+    11-17:上面这条「不叫醒」只在**未合并**的分支上成立。已经并进 main 的分支不算(S-893)。"""
     out = []
     for p in sorted((ROOT / "tasks").glob("T-*.json")):
         try:

@@ -118,15 +118,20 @@ python3 -m tests.test_cold_start_contract
 python3 -m tests.test_task_cards
 python3 -m tests.test_verdicts_carry_their_question
 # 3a-ter-ter. S-500 lane 分支改动范围 = 任务卡 allowed_paths(CI 与 Mac 侧执行器同一个函数)。
-python3 -m tests.test_pr_scope
+# 11-19:`-m` 跑法只跑 `__main__` 块里**已经定义**的测试 —— 定义在块之后的永远跑不到。
+# 这四个文件里就有 24 条这样的测试(其中 11 条要 pytest fixture)⇒ 改用 pytest,让 pytest 收集全部。
+python3 -m pytest tests/test_pr_scope.py -q
 # S-500 Mac 侧执行器(替 Jazz 粘贴交接块,推的是生产):只收显式路径、只合 lane 分支、不执行任意命令。
-python3 -m tests.test_seth_bot
+python3 -m pytest tests/test_seth_bot.py -q
 # S-501 仓库是 public:台账 / 策略手册 / DECISIONS 不许被 git 跟踪(看索引,不看忽略规则)。
 python3 -m tests.test_private_docs_untracked
 # S-502 被跟踪的文件里不许有任何 key(HEAD 上曾有一把 CoinGecko key 当默认值,公开五个月)。只报路径与类型。
 python3 -m tests.test_no_secrets_in_tracked_files
 # S-503 lane_bot 的缰绳:醒的条件、白名单(无删除、只推 lane 分支)、不拼 shell、lane 不编辑 SYNC、改不了自己的缰绳。
-python3 -m tests.test_lane_bot
+python3 -m pytest tests/test_lane_bot.py -q
+# S-893 lane_bot 的派卡盲区:返工分支(T-308-null)看不见 + 已合并分支永远挡路 ⇒ 三条 lane 全部 0 张可动。
+python3 -m pytest tests/test_lane_bot_dispatch.py -q || {
+  echo "  ✗ lane_bot 派卡:分支枚举 / 已合并判定 / 最新分支优先 — do not push"; exit 1; }
 # 3a-quater. undefined names on the serving path — a NameError on a rarely-taken branch is
 #            invisible to py_compile AND to production when the caller logs a warning. That
 #            combination silently killed the T2 universe fallback (2026-08-06).
@@ -1480,7 +1485,7 @@ python3 -m tests.test_cis_narrative_phrasing || {
 # "test 存在 ≠ test 跑" —— 必须在 preflight 阶段 3 实际执行,否则回归悄无声息。
 python3 -m pytest -q tests/test_snapshot_never_writes_t1.py tests/test_backfill_deep_panel_route.py || {
   echo "  ✗ T-024 快照不写 T1 / T-030 补洞端点 — do not push"; exit 1; }
-python3 -m tests.test_pages_redirects || {
+python3 -m pytest tests/test_pages_redirects.py -q || {
   echo "  ✗ T-021 Pages _redirects 与 FastAPI 死链表不一致 — do not push"; exit 1; }
 python3 -m tests.test_t021_dead_routes || {
   echo "  ✗ T-021 死链 301 + dead API doc 注释守卫 — do not push"; exit 1; }
