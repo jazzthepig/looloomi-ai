@@ -47,6 +47,11 @@ SCANNED = [
     "src/api/store.py",
     "src/api/main.py",
     "src/api/loop_health.py",
+    # S-895 阶段 2:取数层。**它刚才漏掉了一个真 NameError** ——
+    # `get_macro_pulse()` 里 `global_r.json()`(变量已改名成 `global_raw`),
+    # 静态扫不出来、运行时才炸 ⇒ 前台 widget 整块变空。
+    # 这条路是 serving path(前端行情/宏观面板都经过它)⇒ 该被扫。
+    "src/data/market/data_layer.py",
 ]
 
 # Module-level dunders are bound by the interpreter, not by any statement the AST

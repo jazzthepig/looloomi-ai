@@ -665,6 +665,21 @@ python3 -m pytest tests/test_trading_price_degradation.py -q || {
     echo "✗ preflight stage: S-895 阶段 1 —— 交易路由降级语义红" >&2
     exit 1
 }
+# 3a-vicesima-quater. S-895 阶段 2:`/global` 收口前仓库里有**四个**实现
+#                     (get_cg_global / get_macro_pulse 内嵌 / cis_provider
+#                     .fetch_cg_global / global_history.fetch_today)⇒ 四个额度池、
+#                     四种降级语义、四个缓存键 ⇒「今天 /global 打了几次」没人
+#                     答得上来。判据是 SPINE:188-191「不能给出不同答案 ⇒ 是重复」。
+#                     这一份守的是**单一活路**:打 `/global` 的文件数 = 1;
+#                     `fetch_cg_global` 返回值**带 source**(收口前没有 ——
+#                     DATA_ARCHITECTURE.md:70 的现存违例);加 source 必须先复制
+#                     (共享缓存对象原地改 ⇒ 污染跨进程传下去);拿不到就说
+#                     没拿到(不塌成 {} 或 0)。
+#                     S-244 家族:测试文件存在 ≠ 会被运行。
+python3 -m pytest tests/test_cg_global_single_path.py -q || {
+    echo "✗ preflight stage: S-895 阶段 2 —— /global 单一活路守卫红" >&2
+    exit 1
+}
 # 3a-vicesima. S-360: docs/SPINE.md 必须描述现在的代码。SPINE 是 agent 重组
 #                    记忆时对齐方向的基准 —— 一份过期的方向基准比没有更坏。
 #                    实测动机:10 个文件 12 行注释断言 signal_outcomes 死了

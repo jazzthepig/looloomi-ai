@@ -57,8 +57,11 @@ from typing import Iterable, Optional
 
 CG_BASE = "https://pro-api.coingecko.com/api/v3"
 
-# S-895 阶段 0:闸门外调用的记账(不是闸门)。见 `src/data/market/cg_guard.py`。
-from src.data.market.cg_guard import note_unbudgeted_call
+# ⚠️ S-895 阶段 2:CoinGecko 的 client **必须**是 `GuardedCGClient` ——
+# 超额计费打开之后每一次外部调用都要花钱,而闸门(预算 + 熔断 + 计数)是
+# 唯一的收口点(S-894 的原话)。
+# (S-895 阶段 0 的闸门外记账 import 已随收口一起删掉:闸门自己会记账。)
+from src.data.market.cg_guard import GuardedCGClient
 
 #: 内连接后至少要剩这么多天,否则判 THIN —— 一条 5 个点的「轨迹」不是轨迹。
 MIN_ALIGNED_DAYS = 30
@@ -203,38 +206,40 @@ async def fetch_today(*, client=None) -> dict:
     """今天的一个点:总市值 + 厂商算的 BTC 主导率。**一次调用。**
 
     这是前向序列的采集口 —— 每天落一个点,攒出来的轨迹是精确的。
+
+    ⚠️ S-895 阶段 2:HTTP 走 `data_layer.get_cg_global_raw()`(仓库里**唯一**
+    打 `/global` 的地方)。**永不换源** —— 轨迹要同源可比,换一次源就污染一次
+    (`DATA_ARCHITECTURE.md:70`「source 是键,不是备注」)。所以这里**不吃
+    CMC 兜底**:`get_cg_global()`(前端路由那份)才有兜底。
+
+    `client` 参数保留但**不再用于取数** —— 它曾经是给测试注入用的。
+    现在取数走唯一活路,注入点没了。**保留签名**是为了不破坏调用方
+    (本仓库内当前没有生产调用方,只有 `tests/test_global_history.py`)。
     """
     import os
 
-    import httpx
     key = os.environ.get("COINGECKO_API_KEY", "")
     if not key:
         raise RuntimeError("COINGECKO_API_KEY 未设置(S-246:仓库不加载 .env)")
-    own = client is None
-    client = client or httpx.AsyncClient(timeout=30)
-    try:
-        # ⚠️ S-895 阶段 0:闸门外记账(阶段 2 收口进闸门后删掉这一行)。
-        # ⚠️ 这条**不能吃 CMC 兜底** —— 轨迹要同源可比,换源会污染序列
-        # (DATA_ARCHITECTURE.md:70「source 是键,不是备注」)。
-        note_unbudgeted_call("coingecko", "/global")
-        r = await client.get(f"{CG_BASE}/global",
-                             headers={"x-cg-pro-api-key": key})
-        r.raise_for_status()
-        j = r.json() or {}
-        data = (j.get("data") or {})
-        total = (data.get("total_market_cap") or {}).get("usd")
-        return {
-            "d": dt.date.today().isoformat(),
-            "total_market_cap_usd": None if total is None else float(total),
-            "btc_dominance": dominance_from_global(j),
-            "source": "coingecko_pro:/global",
-            # 主导率是厂商算的,不是我们重建的 —— 这个标记让下游能区分
-            # 「精确值」与任何将来可能出现的重建值(S-195 的教训)。
-            "dominance_is_vendor_computed": True,
-        }
-    finally:
-        if own:
-            await client.aclose()
+    from src.data.market import data_layer
+    raw = await data_layer.get_cg_global_raw()
+    if not raw:
+        # 没拿到 = 没测量。**不是 0。**(I1)
+        raise RuntimeError(
+            "CoinGecko /global 没拿到(闸门拒了 / 上游 5xx / 响应里没有 data)。"
+            "**不落 0** —— 一个缺失的主导率和一个 0% 的主导率是两回事。")
+    j = {"data": raw}          # `dominance_from_global` 读的是 `data` 段
+    data = raw
+    total = (data.get("total_market_cap") or {}).get("usd")
+    return {
+        "d": dt.date.today().isoformat(),
+        "total_market_cap_usd": None if total is None else float(total),
+        "btc_dominance": dominance_from_global(j),
+        "source": "coingecko_pro:/global",
+        # 主导率是厂商算的,不是我们重建的 —— 这个标记让下游能区分
+        # 「精确值」与任何将来可能出现的重建值(S-195 的教训)。
+        "dominance_is_vendor_computed": True,
+    }
 
 
 async def fetch_total_mcap_history(days: int = 365, *, client=None) -> dict:
@@ -242,18 +247,18 @@ async def fetch_total_mcap_history(days: int = 365, *, client=None) -> dict:
 
     一次调用一个响应,`market_cap` 与 `volume` 两个数组天然同步 ——
     **没有跨端点对齐问题**,这也是它比重建主导率更可靠的原因。
+
+    ⚠️ S-895 阶段 2:走闸门(`GuardedCGClient`)。这个端点**没有第二个实现**
+    ⇒ 不需要收敛到别处,只需要把闸门装上(预算 + 熔断 + 计数)。
     """
     import os
 
-    import httpx
     key = os.environ.get("COINGECKO_API_KEY", "")
     if not key:
         raise RuntimeError("COINGECKO_API_KEY 未设置(S-246:仓库不加载 .env)")
     own = client is None
-    client = client or httpx.AsyncClient(timeout=30)
+    client = client or GuardedCGClient(timeout=30)
     try:
-        # ⚠️ S-895 阶段 0:闸门外记账(阶段 2 收口进闸门后删掉这一行)。
-        note_unbudgeted_call("coingecko", "/global/market_cap_chart")
         r = await client.get(f"{CG_BASE}/global/market_cap_chart",
                              headers={"x-cg-pro-api-key": key},
                              params={"days": days})

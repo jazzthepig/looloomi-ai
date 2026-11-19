@@ -1663,6 +1663,48 @@ async def _cmc_global_fallback() -> dict | None:
     }
 
 
+async def get_cg_global_raw() -> dict | None:
+    """CoinGecko `/global` 的**原始** `data` 段 —— 仓库里**唯一**打这个端点的地方。
+
+    **为什么要有这一层(S-895 阶段 2)。** 收口前仓库里有**四个** `/global`
+    实现:`get_cg_global()`、`get_macro_pulse()` 内嵌的那一份、
+    `cis_provider.fetch_cg_global()`、`global_history.fetch_today()`。
+    四个实现 ⇒ 四个额度池、四种降级语义、四个缓存键
+    ⇒ 「今天 `/global` 打了几次」没人答得上来(`/internal/cg-quota` 只能报总数,
+    分不出是哪一条路打的)。
+
+    这一层是**唯一**的 HTTP 实现,带 180s 缓存(与 `get_cg_global()` 同口径);
+    上面的人各自按自己的形状去用 —— **形状不同不是重复,机制相同才是**
+    (`SPINE.md:188-191`「不能给出不同答案 ⇒ 是重复」)。
+
+    **永不换源。** 换源(CMC 兜底)是 `get_cg_global()` 的决定,不是取数层的:
+    轨迹类消费者(`global_history`)要的是**同源可比**的序列,换一次源就污染一次
+    (`DATA_ARCHITECTURE.md:70`「source 是键,不是备注」)。
+
+    返回 None = 没拿到(闸门拒了 / 上游 5xx / 响应里没有 `data`)。
+    """
+    key = "cg_global_raw"
+    cached = _cache_get(key, ttl=180)
+    if cached:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+    base = CG_PRO_BASE if CG_API_KEY else "https://api.coingecko.com/api/v3"
+    try:
+        client = _get_cg_client()
+        r = await client.get(f"{base}/global", headers=_cg_headers())
+        r.raise_for_status()
+        data = (r.json() or {}).get("data") or {}
+        if not data:
+            return None
+        await _redis_set(key, data, ttl=180)
+        return _cache_set(key, data)
+    except Exception as e:                                    # noqa: BLE001
+        _logger.warning("[CG_GLOBAL] raw /global failed: %s", e)
+        return None
+
+
 async def get_cg_global() -> dict:
     """
     CoinGecko global market data.
@@ -1674,6 +1716,9 @@ async def get_cg_global() -> dict:
     S-894:CG 失败(额度用尽 / 熔断 / 上游 5xx)时换 CMC 免费档兜底,结果带
     `source` 标明是哪一家。**兜底不是替换** —— 正常路径仍是 CoinGecko,
     口径不变。
+
+    S-895 阶段 2:HTTP 由 `get_cg_global_raw()`(唯一实现)承担;本函数只做两件事 ——
+    **形状适配** 与 **换源决定**。
     """
     key = "cg_global"
     cached = _cache_get(key, ttl=180)
@@ -1684,11 +1729,8 @@ async def get_cg_global() -> dict:
         return _cache_set(key, r_cached)
     if not CG_API_KEY:
         return {"error": "COINGECKO_API_KEY not set"}
-    try:
-        client = _get_cg_client()
-        r = await client.get(f"{CG_PRO_BASE}/global", headers=_cg_headers())
-        r.raise_for_status()
-        d = r.json().get("data", {})
+    d = await get_cg_global_raw()
+    if d:
         btc_dom  = d.get("market_cap_percentage", {}).get("btc", 0)
         eth_dom  = d.get("market_cap_percentage", {}).get("eth", 0)
         mcaps    = d.get("total_market_cap", {})
@@ -1708,12 +1750,12 @@ async def get_cg_global() -> dict:
         }
         await _redis_set(key, result, ttl=180)
         return _cache_set(key, result)
-    except Exception as e:
-        _cmc = await _cmc_global_fallback()
-        if _cmc:
-            await _redis_set(key, _cmc, ttl=180)
-            return _cache_set(key, _cmc)
-        return {"error": str(e)}
+    # CG 拿不到(闸门拒了 / 上游 5xx)⇒ CMC 免费档兜底
+    _cmc = await _cmc_global_fallback()
+    if _cmc:
+        await _redis_set(key, _cmc, ttl=180)
+        return _cache_set(key, _cmc)
+    return {"error": "CoinGecko /global unavailable (gate denied, upstream 5xx, or empty data)"}
 
 
 async def get_cg_trending() -> list:
@@ -1834,6 +1876,70 @@ async def get_gecko_terminal_pools(network: str = "eth", limit: int = 10) -> lis
         return []
 
 
+async def get_cg_markets_raw(ids: list[str], *, sparkline: bool = True,
+                             timeout: float | None = None) -> list | None:
+    """CoinGecko `/coins/markets`(**按 id 取**这个形状)的**唯一** HTTP 实现。
+
+    **为什么要有这一层(S-895 阶段 2)。** `/coins/markets` 曾有两个**同形状**
+    实现:`get_cg_markets()`(前端路由用)与 `cis_provider.fetch_cg_markets()`
+    (CIS 扇出用)—— 参数集几乎一样、两个额度池、两种降级语义。
+    现在这一个形状只有一处实现。
+
+    ⚠️ **口径说明(别把它读成「仓库里只有一个 `/coins/markets`」)。**
+    同一端点还有**别的查询形状**,它们**问的不是同一个问题**,所以不合并:
+      ① `get_cg_markets_strict()` —— 无缓存 + **读不到抛异常**(S-690 真钱过滤:
+         把「没读到」当成「没有市值」是最贵的错)。参数是本函数的子集。
+      ② `get_cg_category_markets()` —— `?category=<id>` 按分类取成员。
+      ③ `_fetch_cg_recent()` —— `?category=recently-added` 按 id 升序取新上架的。
+    判据是 `SPINE.md:188-191`「**不能给出不同答案 ⇒ 是重复**」——
+    ①的失败答案不同(抛 vs 空),②③问的是不同的问题。
+    这三处都登记在 `tests/test_cg_call_sites.py` 的覆盖表里。
+
+    `sparkline` 是**唯一**允许不同的参数:免费档不要 sparkline(响应小得多,
+    免费档对重端点的惩罚更狠),Pro 档要(7 日收益用 168 点小时线自己算更准)。
+    **这是两种预算下的两种请求,不是两条活路** —— 打的地方只有这一处。
+
+    `timeout` = 单次请求超时覆盖(秒)。共享 client 的缺省是 12s
+    (`_get_cg_client()`);`cis_provider` 的 CIS 扇出原本是 30s ⇒ 它显式传 30,
+    **不静默把一条在跑的路径的超时改短**(重活 200 币 + sparkline)。
+
+    返回 None = 没拿到(闸门拒了 / 上游 5xx)。**这一层自己不缓存** ——
+    缓存由各调用方按自己的新鲜度口径决定(前端那条 120s,CIS 扇出那条 300s/1800s)。
+
+    ⚠️ **已知口径违例(本轮只登记,不改 —— 计划 §风险 1「本轮只登记」):**
+    `cis_provider.fetch_cg_markets` 在**全部批次失败**时会把**空结果**写进它的
+    300s 内存 / 1800s Redis 缓存 ⇒ 闸门一关,那个形状要在缓存里躺 30 分钟
+    (「未测量」塌成「没有数据」,`DATA_ARCHITECTURE.md:109` I1 家族)。
+    `get_cg_markets()`(前端那条)**是对的**:只在真的拿到数据时才写缓存,
+    失败回落 stale Redis。**同一份数据、两种缓存纪律** —— 下一轮统一。
+    """
+    if not ids:
+        return []
+    ids_str = ",".join(sorted(ids))
+    base = CG_PRO_BASE if CG_API_KEY else "https://api.coingecko.com/api/v3"
+    try:
+        client = _get_cg_client()
+        r = await client.get(
+            f"{base}/coins/markets",
+            headers=_cg_headers(),
+            params={
+                "vs_currency": "usd",
+                "ids": ids_str,
+                "order": "market_cap_desc",
+                "sparkline": "true" if sparkline else "false",
+                "price_change_percentage": "30d,7d,1y",
+                "per_page": 250,
+                "page": 1,
+            },
+            **({"timeout": timeout} if timeout else {}),
+        )
+        r.raise_for_status()
+        return r.json() or []
+    except Exception as e:                                    # noqa: BLE001
+        _logger.warning(f"[CG_MARKETS] Error: {e}")
+        return None
+
+
 async def get_cg_markets(ids: list[str]) -> list:
     """
     CoinGecko coins/markets — full market data for a list of coin IDs.
@@ -1842,6 +1948,10 @@ async def get_cg_markets(ids: list[str]) -> list:
       price_change_percentage_7d_in_currency, sparkline_in_7d.price, etc.
     Uses the Pro endpoint + API key to avoid browser-side rate limits.
     TTL: 2 min (fast-moving price data).
+
+    S-895 阶段 2:HTTP 由 `get_cg_markets_raw()`(唯一实现)承担;本函数保留
+    **自己那层缓存**(键 = id 集合的 md5 —— 不同调用方要的 id 集合不同,
+    缓存不共享;每个调用方各自决定自己的新鲜度)。
     """
     if not ids:
         return []
@@ -1856,31 +1966,13 @@ async def get_cg_markets(ids: list[str]) -> list:
     if r2:
         _cache_set(key, r2)
         return r2
-    base = CG_PRO_BASE if CG_API_KEY else "https://api.coingecko.com/api/v3"
-    try:
-        client = _get_cg_client()
-        r = await client.get(
-            f"{base}/coins/markets",
-            headers=_cg_headers(),
-            params={
-                "vs_currency": "usd",
-                "ids": ids_str,
-                "order": "market_cap_desc",
-                "sparkline": "true",
-                "price_change_percentage": "30d,7d,1y",
-                "per_page": 250,
-                "page": 1,
-            },
-        )
-        r.raise_for_status()
-        result = r.json()
+    result = await get_cg_markets_raw(ids)
+    if result is not None:
         _cache_set(key, result)
         return result
-    except Exception as e:
-        _logger.warning(f"[CG_MARKETS] Error: {e}")
-        # Return stale L2 cache on error
-        r2 = await _redis_get(key)
-        return r2 or []
+    # Return stale L2 cache on error
+    r2 = await _redis_get(key)
+    return r2 or []
 
 
 async def get_cg_derivatives() -> list:
@@ -2185,8 +2277,11 @@ async def get_macro_pulse() -> dict:
         cg   = _get_cg_client()
         msc  = _get_misc_client()
         # ── Run all fetches in parallel (4 concurrent) ─────────────────────────
-        global_r, fng_r, btc_r, defi_ov = await asyncio.gather(
-            cg.get(f"{cg_base}/global", headers=_cg_headers()),
+        # ⚠️ S-895 阶段 2:`/global` 走 `get_cg_global_raw()` —— 仓库里唯一
+        # 打这个端点的地方(带 180s 缓存)⇒ 这个 widget 与 `get_cg_global()`、
+        # `cis_provider.fetch_cg_global()` **共用同一次取数**。
+        global_raw, fng_r, btc_r, defi_ov = await asyncio.gather(
+            get_cg_global_raw(),
             msc.get("https://api.alternative.me/fng/?limit=1"),
             cg.get(
                 f"{cg_base}/simple/price",
@@ -2207,8 +2302,8 @@ async def get_macro_pulse() -> dict:
         # 什么时候发生:CG 额度用尽(闸门直接短路)、熔断中、或上游 5xx。
         # 这三件事以前的表现是「空数据」,而现在每一次重试都是一次付费调用 ——
         # 所以兜底不只是「让面板好看」,它是**让闸门敢于关门**的前提。
-        _cg_global_ok = (not isinstance(global_r, Exception)
-                         and global_r.status_code == 200)
+        _cg_global_ok = (not isinstance(global_raw, Exception)
+                         and bool(global_raw))
         _cg_btc_ok = (not isinstance(btc_r, Exception)
                       and btc_r.status_code == 200)
         _cmc_global: dict = {}
@@ -2226,7 +2321,10 @@ async def get_macro_pulse() -> dict:
         # ── Parse global ──────────────────────────────────────────────────────
         cg_data: dict = {}
         if _cg_global_ok:
-            cg_data = global_r.json().get("data", {})
+            # `global_raw` **已经是** `data` 段(`get_cg_global_raw()` 返回的
+            # 就是响应里的 `data`),不再 `.json().get("data")` —— 那样会拿到
+            # 一个 NameError 或一层多余的壳。
+            cg_data = global_raw
 
         # ── Parse FNG ─────────────────────────────────────────────────────────
         fng_entry: dict = {}

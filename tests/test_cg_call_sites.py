@@ -310,24 +310,154 @@ ALLOWED_BARE_CALL_SITES: dict[str, tuple[tuple[str, ...], str]] = {
         ("/coins/{id}/market_chart",),
         "同步 `requests` 调用点(批处理脚本)—— 同上",
     ),
-    "src/data/rwa/collect.py": (
-        ("/rwas/markets", "/rwas/issuers/list"),
-        "过渡期:阶段 2 收口进闸门后这一行要撤",
-    ),
-    "src/data/cis/cis_provider.py": (
-        ("/coins/markets", "/global"),
-        "过渡期:阶段 2 收口进闸门后这一行要撤",
-    ),
-    "src/data/market/deep_walk.py": (
-        ("/coins/{id}/ohlc/range",),
-        "过渡期:阶段 2 收口进闸门后这一行要撤",
-    ),
-    "src/data/market/global_history.py": (
-        ("/global", "/global/market_cap_chart"),
-        "过渡期:阶段 2 收口进闸门后这一行要撤",
-    ),
+    # ⚠️ S-895 阶段 2 已撤的四条(收口进闸门/单一活路):
+    #   `src/data/rwa/collect.py` · `src/data/cis/cis_provider.py` ·
+    #   `src/data/market/deep_walk.py` · `src/data/market/global_history.py`
     # ⚠️ `src/api/routers/trading.py` **已撤** —— 阶段 1(S-895)收口进闸门。
-    # 留着这条登记 = 一个已经不裸的文件继续占着「豁免」名额 ⇒ 白名单变永久豁免。
+    # 留着一条登记 = 一个已经不裸的文件继续占着「豁免」名额 ⇒ 白名单变永久豁免。
+}
+
+#: **覆盖表** —— CG 端点 → 允许调用它的文件 → 允许的 client 类型。
+#:
+#: 这张表是「新增端点必须改这张表」的地方(计划 §5.1)。没登记的端点
+#: **一律不允许**出现在任何文件里 ⇒ 新开一个 CG 调用点必须显式登记,
+#: 那是一次**有意识的动作**,而不是「顺手加一行请求」。
+#:
+#: 端点按 `tests/test_cg_call_sites.py::_normalize` 归一(占位符 → `{id}`)。
+#: `(dynamic)` = URL 在变量里、调用点抓不到端点 —— 那时按**文件**登记。
+#:
+#: client 类型:
+#:   `gated`    —— 闸门内(`GuardedCGClient` / `_get_cg_client()`)
+#:   `injected` —— client 由别的文件注入,注入方必须走闸门
+#:   `bare`     —— 闸门外(只允许两个永久同步例外)
+#:
+#: ⚠️ **同端点的多个查询形状不是重复**(`SPINE.md:188-191`「不能给出不同答案
+#: ⇒ 是重复」):`/coins/markets` 有三个形状 —— 按 id、按 category、新上架。
+#: 它们问的不是同一个问题,所以分别登记、各自保留。
+#:
+#: ⚠️ 这张表按**静态扫出的**端点登记。同步 `requests` 的两个永久例外
+#: (`exchange_data.py` / `mmi_index_v3.py`)的 URL 在变量里 ⇒ 它们的端点登记在
+#: `ALLOWED_BARE_CALL_SITES` 与 `DYNAMIC_ENDPOINT_SITES` 里,不在这里。
+CG_ENDPOINT_COVERAGE: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
+    # (端点, (允许的文件…, (允许的 client 类型…)))
+    "/global": (
+        ("src/data/market/data_layer.py",),
+        ("gated",),
+    ),
+    "/global/market_cap_chart": (
+        ("src/data/market/data_layer.py", "src/data/market/global_history.py"),
+        ("gated",),
+    ),
+    "/coins/markets": (
+        ("src/api/routers/cis.py",
+         "src/data/market/cg_panel_sync.py",
+         "src/data/market/data_layer.py"),
+        ("gated", "injected"),
+    ),
+    "/coins/list": (
+        ("src/data/market/cg_panel_sync.py", "src/data/market/perp_mcap_backfill.py"),
+        ("injected", "gated"),
+    ),
+    "/coins/{id}": (
+        ("src/data/market/data_layer.py", "src/data/narrative/social_collector.py"),
+        ("gated",),
+    ),
+    "/coins/{id}/tickers": (
+        ("src/data/market/data_layer.py",),
+        ("gated",),
+    ),
+    "/coins/{id}/market_chart": (
+        ("src/data/market/data_layer.py",),
+        ("gated",),
+    ),
+    "/coins/{id}/ohlc/range": (
+        ("src/data/market/data_layer.py", "src/data/market/deep_walk.py"),
+        ("gated",),
+    ),
+    "/coins/{id}/market_chart/range": (
+        ("src/data/market/data_layer.py",),
+        ("gated",),
+    ),
+    "/coins/{id}/history": (
+        ("src/data/market/data_layer.py",),
+        ("gated",),
+    ),
+    "/coins/{id}/circulating_supply_chart": (
+        ("src/data/market/data_layer.py",),
+        ("gated",),
+    ),
+    "/coins/categories": (
+        ("src/data/market/data_layer.py", "src/data/market/cg_categories.py"),
+        ("gated",),
+    ),
+    "/coins/categories/list": (
+        ("src/data/market/data_layer.py",),
+        ("gated",),
+    ),
+    "/simple/price": (
+        ("src/api/routers/trading.py", "src/data/market/data_layer.py"),
+        ("gated",),
+    ),
+    "/derivatives": (
+        ("src/data/cis/positioning.py", "src/data/market/data_layer.py",
+         "src/data/market/derivatives_market.py"),
+        ("gated",),
+    ),
+    "/derivatives/exchanges/{id}": (
+        ("src/data/market/data_layer.py",),
+        ("gated",),
+    ),
+    "/exchanges/{id}/volume_chart/range": (
+        ("src/data/market/exchange_volume.py",),
+        ("gated",),
+    ),
+    "/rwas/markets": (
+        ("src/data/market/data_layer.py", "src/data/rwa/collect.py"),
+        ("gated",),
+    ),
+    "/rwas/issuers/list": (
+        ("src/data/market/data_layer.py", "src/data/rwa/collect.py"),
+        ("gated",),
+    ),
+    "/onchain/networks/{id}/tokens/{id}/top_holders": (
+        ("src/data/market/data_layer.py",),
+        ("gated",),
+    ),
+    "/public_treasury/{id}": (
+        ("src/data/entity/writer.py",),
+        ("injected",),
+    ),
+    "/companies/public_treasury/{id}": (
+        ("src/data/entity/writer.py",),
+        ("injected",),
+    ),
+    "/search/trending": (
+        ("src/data/market/data_layer.py",),
+        ("gated",),
+    ),
+}
+
+#: URL 在变量里、**静态扫不出端点**的文件 → 端点由谁决定。
+#:
+#: 这些文件用的是**路径参数化**的写法(`client.get(f"{CG_BASE}{path}")`),
+#: 端点在运行期才定 ⇒ 覆盖表按**文件**登记,并写明路径的来源。
+#: 登记了不等于免检 —— 它们的 client 类型仍要过闸门。
+DYNAMIC_ENDPOINT_SITES: dict[str, str] = {
+    "src/data/market/cg_supply.py":
+        "路径参数化:`fetch(path)` —— 端点由本文件的 `pick()` 决定"
+        "(`/coins/list/new` + 逐币 `/coins/{id}/supply_breakdown`)",
+    "src/data/market/token_holders.py":
+        "路径参数化:`fetch(path)` —— 端点由本文件的 `choose()` 决定"
+        "(`/coins/list` + 逐币 `holders_chart`)",
+    "src/data/ops/news_feed.py":
+        "路径参数化:`for path in (\"/news\", \"/insights\")` —— 两个端点写死在调用点",
+    "src/data/entity/writer.py":
+        "路径参数化:`get(path)` —— treasury 采集,端点由调用方给"
+        "(`/public_treasury/{id}` 与 `/companies/public_treasury/{id}`)",
+    "src/data/market/exchange_data.py":
+        "同步 `requests` 点,URL 在变量里(永久例外)",
+    "src/analytics/mmi/mmi_index_v3.py":
+        "同步 `requests` 点,URL 在变量里(永久例外)",
 }
 
 #: 允许**注入** client 的文件 → (注入方文件, 理由)
@@ -443,3 +573,67 @@ def test_闸门内的文件真的用了闸门():
             for n in ast.walk(tree)
         )
         assert uses, f"{rel} 没有接闸门"
+
+
+def test_每个CG端点都在覆盖表里():
+    """**新增端点必须改这张表。** 没登记的端点一律不允许存在。
+
+    这条是「让下一个 agent 开不了洞」的那一层(计划 §5.1):新开一个 CG
+    调用点会在这里红掉 ⇒ 那是一次**有意识的动作**(登记 = 承认这个端点
+    存在、知道它归谁管),而不是「顺手加一行请求」。
+    """
+    repo = scan_repo()
+    missing: list[str] = []
+    for rel, sites in repo.items():
+        for s in sites:
+            if s.endpoint == "(dynamic)":
+                if rel not in DYNAMIC_ENDPOINT_SITES:
+                    missing.append(
+                        f"{rel}:{s.line} (dynamic) —— 端点在变量里,按文件登记 "
+                        f"(见 DYNAMIC_ENDPOINT_SITES)")
+                continue
+            entry = CG_ENDPOINT_COVERAGE.get(s.endpoint)
+            if entry is None:
+                missing.append(f"{rel}:{s.line} {s.endpoint} —— 端点没登记在覆盖表里")
+                continue
+            files, kinds = entry
+            if rel not in files:
+                missing.append(f"{rel}:{s.line} {s.endpoint} —— 覆盖表里没登记这个文件")
+            if s.kind not in kinds:
+                missing.append(f"{rel}:{s.line} {s.endpoint} —— client 类型 "
+                               f"{s.kind} 不在允许集 {kinds}")
+    assert not missing, (
+        "这些 CoinGecko 调用点没登记在覆盖表里 —— 新增端点/文件必须改表:\n  "
+        + "\n  ".join(missing))
+
+
+def test_覆盖表没有变成死的():
+    """登记了就要真退役(SPINE:184-213)。"""
+    repo = scan_repo()
+    seen: dict[str, set[str]] = {}
+    for rel, sites in repo.items():
+        for s in sites:
+            if s.endpoint != "(dynamic)":
+                seen.setdefault(s.endpoint, set()).add(rel)
+    stale: list[str] = []
+    for ep, (files, _kinds) in CG_ENDPOINT_COVERAGE.items():
+        for rel in files:
+            if rel not in seen.get(ep, set()):
+                stale.append(f"{ep} → {rel} —— 代码里已经没有这个调用了")
+    assert not stale, (
+        "覆盖表里的登记已经不成立了 —— 登记要跟着代码一起退役:\n  "
+        + "\n  ".join(stale))
+
+
+def test_动态端点的登记没有变成死的():
+    repo = scan_repo()
+    dyn_files = {rel for rel, sites in repo.items()
+                 if any(s.endpoint == "(dynamic)" for s in sites)}
+    stale = [rel for rel in DYNAMIC_ENDPOINT_SITES if rel not in dyn_files]
+    assert not stale, (
+        "登记成动态端点的文件已经不扫出动态调用了 —— 登记必须撤掉:\n  "
+        + "\n  ".join(stale))
+    missing = [rel for rel in dyn_files if rel not in DYNAMIC_ENDPOINT_SITES]
+    assert not missing, (
+        "这些文件扫出了动态端点但没登记 —— 登记必须写明端点由谁决定:\n  "
+        + "\n  ".join(missing))

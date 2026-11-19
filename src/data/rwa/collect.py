@@ -25,8 +25,10 @@ from pathlib import Path
 from typing import Optional
 
 from src.data.rwa.panel import RwaRow, parse_rows, snapshot
-# S-895 阶段 0:闸门外调用的记账(不是闸门)。见 `src/data/market/cg_guard.py`。
-from src.data.market.cg_guard import note_unbudgeted_call
+# ⚠️ S-895 阶段 2:CoinGecko 的 client **必须**是 `GuardedCGClient` ——
+# 超额计费打开之后每一次外部调用都要花钱,而闸门(预算 + 熔断 + 计数)是
+# 唯一的收口点。换成裸 `httpx.AsyncClient` 就等于把闸门拆了(S-894 的原话)。
+from src.data.market.cg_guard import GuardedCGClient
 
 CG_BASE = "https://pro-api.coingecko.com/api/v3"
 PER_PAGE = 250          # 单页上限
@@ -76,14 +78,11 @@ def _headers() -> dict:
 
 async def fetch_markets(*, client=None) -> list[dict]:
     """拉全部 RWA。**按返回条数停,不按预设页数**(见模块 docstring)。"""
-    import httpx
     own = client is None
-    client = client or httpx.AsyncClient(timeout=30)
+    client = client or GuardedCGClient(timeout=30)
     out: list[dict] = []
     try:
         for page in range(1, MAX_PAGES + 1):
-            # ⚠️ S-895 阶段 0:闸门外记账(阶段 2 收口进闸门后删掉这一行)。
-            note_unbudgeted_call("coingecko", "/rwas/markets")
             r = await client.get(
                 f"{CG_BASE}/rwas/markets", headers=_headers(),
                 params={"per_page": PER_PAGE, "page": page,
@@ -121,13 +120,10 @@ async def fetch_issuer_map(*, client=None) -> dict[str, str]:
     调用成本:发行方数 N 次(+1 次拿清单)。N 约几十 ⇒ 日频 ~30 次
     ⇒ 月 ~900 次 ⇒ 占 500,000 额度的 0.18%。
     """
-    import httpx
     own = client is None
-    client = client or httpx.AsyncClient(timeout=30)
+    client = client or GuardedCGClient(timeout=30)
     out: dict[str, str] = {}
     try:
-        # ⚠️ S-895 阶段 0:闸门外记账(阶段 2 收口进闸门后删掉这一行)。
-        note_unbudgeted_call("coingecko", "/rwas/issuers/list")
         r = await client.get(f"{CG_BASE}/rwas/issuers/list", headers=_headers())
         r.raise_for_status()
         issuers = r.json() or []
@@ -140,8 +136,6 @@ async def fetch_issuer_map(*, client=None) -> dict[str, str]:
             if not iid:
                 continue
             try:
-                # ⚠️ S-895 阶段 0:闸门外记账(逐发行方反查,每次一发)。
-                note_unbudgeted_call("coingecko", "/rwas/markets")
                 m = await client.get(
                     f"{CG_BASE}/rwas/markets", headers=_headers(),
                     params={"issuer": iid, "per_page": PER_PAGE})

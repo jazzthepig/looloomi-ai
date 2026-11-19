@@ -62,8 +62,8 @@ from dataclasses import dataclass, field
 from typing import Callable, Optional, Sequence
 
 from src.data.market.cg_pro_backfill import CHUNK_DAYS
-# S-895 阶段 0:闸门外调用的记账(不是闸门)。见 `src/data/market/cg_guard.py`。
-from src.data.market.cg_guard import note_unbudgeted_call
+# S-895 阶段 0 的闸门外记账 import 已随阶段 2 的收口删掉:
+# 本文件现在走 `GuardedCGClient` ⇒ 闸门自己会记账,再记一遍就是双计。
 
 #: 连续这么多个空块才判「到起点了」。**1 会把数据缺口误判成起点。**
 MAX_EMPTY_CHUNKS = 2
@@ -269,17 +269,19 @@ def make_cg_fetcher(*, timeout: float = 30.0):
     """
     import os
 
-    import httpx
     key = os.environ.get("COINGECKO_API_KEY", "")
     if not key:
         raise RuntimeError("COINGECKO_API_KEY 未设置(S-246:仓库不加载 .env)")
-    client = httpx.AsyncClient(timeout=timeout,
-                               headers={"x-cg-pro-api-key": key})
+    # ⚠️ S-895 阶段 2:必须走闸门(`GuardedCGClient`)—— CoinGecko 超额计费打开
+    # 之后,每一次外部调用都要花钱,而闸门(预算 + 熔断 + 计数)是唯一的收口点。
+    # 换成裸 `httpx.AsyncClient` 就等于把闸门拆了(S-894 的原话)。
+    from src.data.market.cg_guard import GuardedCGClient
+    client = GuardedCGClient(timeout=timeout,
+                             headers={"x-cg-pro-api-key": key})
 
     async def fetch_chunk(coin_id: str, start: dt.date, end: dt.date) -> list:
-        # ⚠️ S-895 阶段 0:闸门外记账(阶段 2 收口进闸门后删掉这一行)。
-        # 回填路径**不吞异常**是有意的 —— 记账不该改变这个语义。
-        note_unbudgeted_call("coingecko", "/coins/{id}/ohlc/range")
+        # 回填路径**不吞异常**是有意的 —— 闸门拒了会返回合成 503,
+        # `raise_for_status()` 照常抛(合成响应带 `request=`),语义不变。
         r = await client.get(
             f"https://pro-api.coingecko.com/api/v3/coins/{coin_id}/ohlc/range",
             params={"vs_currency": "usd",

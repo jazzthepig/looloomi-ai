@@ -27,13 +27,9 @@ _GH_TOKEN_WARNED = False
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-# S-895 阶段 0:闸门外调用的**记账**(不是闸门)。闸门只数它自己放行的请求,
-# 裸 client 打出去的那些不进账 ⇒ 「今天花了多少」一直是残缺的。
-# 两种导入方式都认(`src.signal_server` 走 `data.*`,主应用走 `src.data.*`)。
-try:
-    from src.data.market.cg_guard import note_unbudgeted_call
-except ImportError:                                     # pragma: no cover
-    from data.market.cg_guard import note_unbudgeted_call
+# S-895 阶段 0 的闸门外记账 import 已随阶段 2 的收口一起删掉:
+# 本文件的两个 CG 调用点(`/coins/markets` 与 `/global`)现在都走闸门内的
+# 单一活路 ⇒ 闸门自己会记账,再记一遍就是双计。
 
 # CoinGecko API base
 CG_PRO_BASE = "https://pro-api.coingecko.com/api/v3"
@@ -733,27 +729,24 @@ async def fetch_cg_markets() -> Dict[str, dict]:
     _pro = bool(CG_API_KEY)
     batch_size = 200 if _pro else 50
 
-    async def _fetch_batch(client: httpx.AsyncClient, batch: list[str]) -> list:
-        ids_str = ",".join(batch)
-        params = {
-            "vs_currency":            "usd",
-            "ids":                    ids_str,
-            "order":                  "market_cap_desc",
-            "per_page":               250,
-            "page":                   1,
-            "sparkline":              "true" if _pro else "false",
-            "price_change_percentage": "30d,7d,1y",
-        }
-        try:
-            # ⚠️ S-895 阶段 0:闸门外记账(阶段 2 收口进闸门后删掉这一行)。
-            note_unbudgeted_call("coingecko", "/coins/markets")
-            r = await client.get(f"{_cg_base()}/coins/markets",
-                                 params=params, headers=_cg_headers())
-            r.raise_for_status()
-            return r.json()
-        except Exception as e:
-            _logger.warning(f"CoinGecko batch error: {e}")
-            return []
+    async def _fetch_batch(batch: list[str]) -> list:
+        """**唯一活实现 = `data_layer.get_cg_markets_raw()`**(S-895 阶段 2)。
+
+        这个函数曾自己打 `/coins/markets` ⇒ 第二个额度池、两种降级语义、
+        两个缓存键。现在只做**形状适配**:raw 返回 `None`(没拿到)时落成 `[]`,
+        与原来「异常 → 空批次」的语义一致。
+
+        **分批与缓存留在本函数**:200(Pro)/50(免费)、并行 vs 串行 + 1.5s、
+        `cg_markets_v3` 300s 内存 + `cis:cg_markets_v3` 1800s Redis ——
+        这些是**这个调用方的新鲜度口径**,不是取数机制
+        (`SPINE.md:188-191`「形状不同不是重复,机制相同才是」)。
+
+        ⚠️ 超时 30s:共享 client 的缺省是 12s,而这一批是 200 币 + sparkline
+        (重活)。**不静默把一条在跑的路径的超时改短。**
+        """
+        from src.data.market import data_layer
+        raw = await data_layer.get_cg_markets_raw(batch, sparkline=_pro, timeout=30)
+        return raw or []
 
     def _sparkline_7d_return(sparkline_prices: list) -> float | None:
         """Compute 7d return from 168-point hourly sparkline. More accurate than CG's field."""
@@ -765,57 +758,56 @@ async def fetch_cg_markets() -> Dict[str, dict]:
         return None
 
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            batches = [unique_ids[i:i + batch_size] for i in range(0, len(unique_ids), batch_size)]
+        batches = [unique_ids[i:i + batch_size] for i in range(0, len(unique_ids), batch_size)]
 
-            if _pro:
-                # Pro: fetch all batches in parallel (500 rpm headroom)
-                batch_results = await asyncio.gather(*[_fetch_batch(client, b) for b in batches])
-                all_coins = [coin for batch in batch_results for coin in batch]
-            else:
-                # Free: serial with rate-limit delay
-                all_coins = []
-                for i, batch in enumerate(batches):
-                    all_coins.extend(await _fetch_batch(client, batch))
-                    if i < len(batches) - 1:
-                        await asyncio.sleep(1.5)
+        if _pro:
+            # Pro: fetch all batches in parallel (500 rpm headroom)
+            batch_results = await asyncio.gather(*[_fetch_batch(b) for b in batches])
+            all_coins = [coin for batch in batch_results for coin in batch]
+        else:
+            # Free: serial with rate-limit delay
+            all_coins = []
+            for i, batch in enumerate(batches):
+                all_coins.extend(await _fetch_batch(batch))
+                if i < len(batches) - 1:
+                    await asyncio.sleep(1.5)
 
-            for coin in all_coins:
-                coin_id = coin["id"]
-                sparkline_prices = (coin.get("sparkline_in_7d") or {}).get("price") or []
-                sparkline_return = _sparkline_7d_return(sparkline_prices) if _pro else None
-                result[coin_id] = {
-                    "symbol":               coin["symbol"].upper(),
-                    "name":                 coin["name"],
-                    "market_cap":           coin.get("market_cap", 0),
-                    "fdv":                  coin.get("fully_diluted_valuation", 0),
-                    "volume_24h":           coin.get("total_volume", 0),
-                    "price":                coin.get("current_price", 0),
-                    "change_24h":           coin.get("price_change_percentage_24h", 0),
-                    "change_7d":            sparkline_return if sparkline_return is not None
-                                            else (coin.get("price_change_percentage_7d_in_currency")
-                                                  or coin.get("price_change_percentage_7d", 0)),
-                    "change_30d":           coin.get("price_change_percentage_30d_in_currency")
-                                            or coin.get("price_change_percentage_30d", 0),
-                    "change_1y":            coin.get("price_change_percentage_1y_in_currency", 0),
-                    "circulating_supply":   coin.get("circulating_supply", 0),
-                    "total_supply":         coin.get("total_supply", 0),
-                    "max_supply":           coin.get("max_supply"),
-                    "supply_ratio":         round(coin.get("circulating_supply", 0) / coin.get("total_supply", 1), 4)
-                                            if coin.get("total_supply") else None,
-                    "ath_change_percentage": coin.get("ath_change_percentage", 0),
-                    "high_24h":             coin.get("high_24h", 0),
-                    "low_24h":              coin.get("low_24h", 0),
-                    "sparkline_7d":         sparkline_prices[-24:] if sparkline_prices else [],  # last 24h hourly
-                    "sparkline_return_7d":  sparkline_return,
-                    "source":               "coingecko_pro" if _pro else "coingecko",
-                }
+        for coin in all_coins:
+            coin_id = coin["id"]
+            sparkline_prices = (coin.get("sparkline_in_7d") or {}).get("price") or []
+            sparkline_return = _sparkline_7d_return(sparkline_prices) if _pro else None
+            result[coin_id] = {
+                "symbol":               coin["symbol"].upper(),
+                "name":                 coin["name"],
+                "market_cap":           coin.get("market_cap", 0),
+                "fdv":                  coin.get("fully_diluted_valuation", 0),
+                "volume_24h":           coin.get("total_volume", 0),
+                "price":                coin.get("current_price", 0),
+                "change_24h":           coin.get("price_change_percentage_24h", 0),
+                "change_7d":            sparkline_return if sparkline_return is not None
+                                        else (coin.get("price_change_percentage_7d_in_currency")
+                                              or coin.get("price_change_percentage_7d", 0)),
+                "change_30d":           coin.get("price_change_percentage_30d_in_currency")
+                                        or coin.get("price_change_percentage_30d", 0),
+                "change_1y":            coin.get("price_change_percentage_1y_in_currency", 0),
+                "circulating_supply":   coin.get("circulating_supply", 0),
+                "total_supply":         coin.get("total_supply", 0),
+                "max_supply":           coin.get("max_supply"),
+                "supply_ratio":         round(coin.get("circulating_supply", 0) / coin.get("total_supply", 1), 4)
+                                        if coin.get("total_supply") else None,
+                "ath_change_percentage": coin.get("ath_change_percentage", 0),
+                "high_24h":             coin.get("high_24h", 0),
+                "low_24h":              coin.get("low_24h", 0),
+                "sparkline_7d":         sparkline_prices[-24:] if sparkline_prices else [],  # last 24h hourly
+                "sparkline_return_7d":  sparkline_return,
+                "source":               "coingecko_pro" if _pro else "coingecko",
+            }
 
-            _logger.info(f"CoinGecko {'Pro' if _pro else 'free'}: fetched {len(result)}/{len(unique_ids)} assets "
-                         f"({'parallel' if _pro else 'serial'}, batch_size={batch_size})")
-            _cache_set(cache_key, result)
-            await _upstash_set(redis_key, result, ttl=1800)
-            return result
+        _logger.info(f"CoinGecko {'Pro' if _pro else 'free'}: fetched {len(result)}/{len(unique_ids)} assets "
+                     f"({'parallel' if _pro else 'serial'}, batch_size={batch_size})")
+        _cache_set(cache_key, result)
+        await _upstash_set(redis_key, result, ttl=1800)
+        return result
 
     except Exception as e:
         _logger.warning(f"CoinGecko API error: {e}")
@@ -877,20 +869,37 @@ async def fetch_fear_greed() -> Optional[dict]:
 
 
 async def fetch_cg_global() -> Optional[dict]:
-    """Fetch CoinGecko global data (includes BTC dominance)."""
+    """CoinGecko 全局数据(BTC 主导率等)。**唯一活实现 = `data_layer.get_cg_global_raw()`。**
+
+    ⚠️ S-895 阶段 2:这个函数曾是自己打 `/global` 的**第四份**实现 ⇒ 第四个额度池、
+    第四种降级语义、第四个缓存键。现在**只做形状适配 + 缓存**,取数交给
+    `data_layer` 的单一活路(`SPINE.md:188-191`「不能给出不同答案 ⇒ 是重复」)。
+
+    形状:`get_cg_global_raw()` 返回的正是 CG 响应里的 `data` 段 ——
+    **与本函数原来的返回值同形** ⇒ 调用方(`fetch_macro_data`)不用改。
+
+    **`source` 是必需的**(`DATA_ARCHITECTURE.md:70`「source 是键,不是备注」):
+    原实现返回值**没有来源标记** —— 那是现存违例,顺手修掉。
+    标签用仓库的规范名(`source_policy.PAID_SOURCES`):Pro 档 `coingecko_pro`,
+    免费档 `coingecko`。
+
+    ⚠️ **不换源**:这里**不吃 CMC 兜底**。`get_cg_global()`(前端路由那份)才有
+    兜底;本函数是宏观因子的输入,轨迹要同源可比
+    (`DATA_ARCHITECTURE.md:70`「换源必须标来源」——标了也不能换)。
+    """
     cache_key = "cg_global"
     cached = _cache_get(cache_key)
     if cached:
         return cached
 
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            # ⚠️ S-895 阶段 0:闸门外记账(阶段 2 收口进闸门后删掉这一行)。
-            note_unbudgeted_call("coingecko", "/global")
-            r = await client.get(f"{_cg_base()}/global", headers=_cg_headers())
-            r.raise_for_status()
-            data = r.json()
-            return _cache_set(cache_key, data.get("data", {}))
+        from src.data.market import data_layer      # 函数内 import(仓库惯例)
+        raw = await data_layer.get_cg_global_raw()
+        if not raw:
+            return None
+        out = dict(raw)      # **复制** —— raw 是共享缓存对象,原地加字段会污染它
+        out["source"] = "coingecko_pro" if CG_API_KEY else "coingecko"
+        return _cache_set(cache_key, out)
     except Exception as e:
         _logger.warning(f"CoinGecko global API error: {e}")
         return None
