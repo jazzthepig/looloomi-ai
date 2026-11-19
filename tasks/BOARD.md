@@ -2,6 +2,7 @@
 
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
+| in_review | T-379 | lane-a | 大表读取的翻页(下半张):按键翻页 + 逐行哈希 + S-862 之后重新量一次 | 改前改后的请求页数 / 耗时 / 逐行哈希三组数写进 notes;排序键唯一性清单在 notes 里;按键翻页只上在唯一键的调用点上;preflight 注册齐;卡 in_review,推 lane-a/T-379。 | `v_funding_daily` 之后数据库耗时的下一大块;也是几条慢接口(账本 7 秒、归因 19 秒)慢的原因 —— 实测它们不占事件循环,慢在一页一页串行读库。11-14 已完成的部分:`page_cap()` 探上限 + 按上限翻页上线(c9fbc2c8),静默截断那条有测试钉住(`tests/test_read_all_paging.py`)。11-14 量到的改后请求数:perp_bv_daily 29 / 资金费 170 / asset_mcap_daily 2,134,合计 9,395(改前 11,259);ohlcv_daily 1,506→1,442(大头是 `fetch_panel` 自己的每页 1,000,S-862 已改成 10,000,**改后没量**)。2026-11-19 17:35Z 实测:服务端每页上限已是 10,000(`ohlcv_daily?limit=10000` 回 10,000 行,content-range 0-9999)⇒ 不再等 Jazz 改 Supabase 设置。 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-094 | seth | 状态层往前补一个周期 + 矢量库按时点:state_daily 2019 起、FNG 2018 起;market_state_vectors 改扩张窗口 z、13 个空维补或删 | S-570 / T-093 的情景格子在 2019–2022 多一轮牛熊;S-521 类的匹配不再读到未来。 | state_daily 2023-01 起(一个周期);FNG 2021-06 起;market_state_vectors 24 维里 13 维恒空、全史一次 z(看未来)。 |  |
 | claimed | T-096 | seth | 前向判断记录:每周一按情景卡 + 当周新闻摘要请本地 Qwen 9B / 27B 判断,先锚定、后看结果 | 新闻层(历史上测不了的那一层)从今天起有可验证的前向记录;T-095 的历史结论与它对照。 | 没有任何 LLM 判断的前向记录;narrative_events 新闻 2026-09-28 起、约 150 条 / 天,没有消费者。 |  |
@@ -23,7 +24,6 @@
 | open | T-370 | seth | ⓪ 加 short 状态:Jazz 选标的与档位,系统在 HL 开永续空单、强制止损 / 到期 / 上限,签名才开,逐张记分 | 代码 + 测试 + SPINE 第 7 段;判活:`select state, signed, expires_at from regime_calls order by id desc limit 1` 与 `j_tickets` 里 side = short 的行。 | 这六周系统只会躲、不会空;人的宏观判断今天没有下单的工具。这条不需要回测许可 —— 是 Jazz 的判断,前向记分。 |  |
 | open | T-371 | seth | 时间口径四件事:⓪ 判断当轮执行、每张日表的 d 写明含义并入测试、动钱的表留首次写入时间、给人看的日期一律 UTC | 代码 + 测试 + 迁移;每一项各自的判活语句写进卡。 | 前向记录要可验证,先得证明每个数是什么时候知道的;判断要能赚钱,先得在当天成交。 |  |
 | open | T-378 | seth | 未平仓与多空比的历史入库:Binance 存档 U 本位 metrics(2020-09-01 起),补上 `oi_chg_30d` 的 6 年空白 | 表里 BTCUSDT 从 2020-09-01 到昨天连续;重叠日核价的数写进台账;`dossier_context` 的未平仓一栏在 10-27 之前的日期也能读到。 | 决策层今天接上的清单里有一条因为这段空白读不到;S-852 那 15 段历史盯盘期没有一段带未平仓读数。 |  |
-| open | T-379 | seth | 大表读取的翻页:`_read_all` 用 OFFSET,读 N 行的代价是 N² 量级 —— 探到服务端每页上限后跟着用,再评估按键翻页 | 整读 40 万行从约 400 次请求降到约 40 次;台账记改前改后的数。 | `v_funding_daily` 之后数据库耗时的下一大块;也是几条慢接口(账本 7 秒、归因 19 秒)慢的原因 —— 实测它们不占事件循环,慢在一页一页串行读库。 |  |
 | open | T-380 | seth | 事件循环上剩下的同步请求:`_loop_stall_loop` 点到名的逐个搬进线程;两条白跑的循环等 Jazz 定去留 | 部署后不再有整段不回应;`_loop_stall_loop` 稳态下每 30 分钟一条 ok。 | 部署后的不回应从约 3 分钟降到两次 5 秒(S-862 核验);剩下的是对方慢时才现形的尾巴。 |  |
 | open | T-399 | seth | 矢量库的两处缺口:① 利率 / 利率预期与周线结构进特征表(并入 T-369);② 策略一侧没有向量 —— 把「策略 × 状态」指纹入库;③ 维度准入检验写成规矩 | 拆出的子卡 + 第一行真实数据。 | 「向量库要不要加维度」:不是加得越多越好(56 维等权的邻域没有信息),是缺特定的族、缺策略一侧、缺一道准入的门。 |  |
 | open | T-413 | seth | 向量写端的三处真话:缺失字段填 NaN 而不是默认值、upsert 过 is_thin 门槛、asset_embeddings 补 measured_dims 与 source_completeness 列 | 三处各有一条测试;preflight 注册齐;一条 SELECT 能读出存量行里「实测维数」与「声称维数」不一致的清单;不新增抓取器、不改面板口径。 | 活路径未实测维度填默认值 0.0;MIN_MEASURED_DIMS=10 在写盘路径上惰性;asset_embeddings 表无 measured_dims / source_completeness 列(实测列名只有 symbol / asset_class / macro_regime / schema_version / dims / vec / vec_full / computed_at / superseded_reason) |  |
@@ -418,4 +418,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 18 · claimed 7 · blocked 5 · done 380 · dropped 5
+open 17 · claimed 7 · blocked 5 · in_review 1 · done 380 · dropped 5

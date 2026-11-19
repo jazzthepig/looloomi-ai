@@ -1,0 +1,66 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T379-1",
+      "scenario": "T-379 大表读取的翻页(下半张)",
+      "statement": "按键翻页落地后,整读 ohlcv_daily(binance_hist)的行数、内容、顺序与改前完全相同(逐行哈希相等)—— 口径不许变的不变量,不是性能指标",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.9,
+      "horizon_d": "2026-12-05",
+      "check": "改后跑 research/t379/measure.py,rowhash 与 research/t379/measure_before.json 的 rowhash 相等(改前 sha256 以 1d3cb6e9 开头);不等 ⇒ 改造破了口径,必须回退",
+      "falsifier": "改后逐行哈希 != 改前逐行哈希"
+    },
+    {
+      "id": "T379-2",
+      "scenario": "T-379 大表读取的翻页(下半张)",
+      "statement": "state_daily 的 (d, entity, feature) 在全表唯一 —— DDL 的 PK 说唯一不算数:`CREATE TABLE IF NOT EXISTS` 遇到已存在的表不会补约束",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.95,
+      "horizon_d": "2026-12-05",
+      "check": "research/t379/verify_keys.py 的 state_daily 项:n_dup_rows == 0 ⇒ 成立;有重复 ⇒ 不唯一,state_daily 不得上按键翻页",
+      "falsifier": "state_daily 出现重复 (d, entity, feature) 元组"
+    },
+    {
+      "id": "T379-3",
+      "scenario": "T-379 大表读取的翻页(下半张)",
+      "statement": "asset_mcap_daily 在 source 被钉死时 (d, symbol) 唯一 —— 同上,靠 DDL 与写端 on_conflict 推断,要用实测复核",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.9,
+      "horizon_d": "2026-12-05",
+      "check": "research/t379/verify_keys.py 的 asset_mcap_daily 项:n_dup_rows == 0 ⇒ 成立",
+      "falsifier": "asset_mcap_daily 出现重复 (d, symbol) 元组"
+    },
+    {
+      "id": "T379-4",
+      "scenario": "T-379 大表读取的翻页(下半张)",
+      "statement": "服务端每页上限下一轮仍是 10,000(没被谁调回 1,000)—— 本轮实测 content-range 0-9999/*",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.95,
+      "horizon_d": "2026-12-05",
+      "check": "下一轮跑 research/t379/probe.py:page_cap_10000 项 n == 10000 ⇒ 成立",
+      "falsifier": "探针拿回的行数 < 10000"
+    },
+    {
+      "id": "T379-5",
+      "scenario": "T-379 大表读取的翻页(下半张)",
+      "statement": "BTC 的收盘价落在 (0, 100000000) 内 —— 这条是变量/结算通路自检(不是行情判断),机器结算一次",
+      "variable": "close:BTC",
+      "op": "between",
+      "lo": 0,
+      "hi": 100000000,
+      "prob": 0.99,
+      "horizon_d": "2026-12-05",
+      "check": "scenario_ledger 按 close:BTC 结算:x > 0 且 x < 1e8 ⇒ 成立",
+      "falsifier": "结算日 BTC 收盘价取不到(变量解析失败)"
+    }
+  ]
+}
