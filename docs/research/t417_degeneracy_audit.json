@@ -1,0 +1,3072 @@
+{
+ "card": "T-417",
+ "what": "仓库里所有报过「站住 / HOLDS / 成立 / n_signal」的基率表 —— 逐行查退化",
+ "method": {
+  "read_only": "只读既有 results json;不重跑任何实验、不改任何既有文件、不出新的基率表",
+  "criteria": {
+   "D1": "同一张表里两行的条件组统计量逐位相同(同一批票)",
+   "D2": "条件组 n < 20",
+   "D3": "盈亏比 payoff > 20 且 n < 30",
+   "D4": "逐段(发现段/留出段)有一段 n < 10"
+  },
+  "criteria_source": "T-416 卡上写死的四条(T-416 对 T-408 那 4 行的核对用的就是这四条)",
+  "note": "口径不含票级 n / 盈亏比 / 逐段拆分的表,不硬套判据 —— 记「不可核 + 缺哪个字段」"
+ },
+ "tables": [
+  {
+   "id": "A",
+   "table": "S-881/T-408 触发 × 状态格(8 格)",
+   "source_file": "docs/research/s881_results.json",
+   "source_json_path": "cells",
+   "ledger": "S-881(T-408)",
+   "n_tested": 8,
+   "reported_holds_N": 1,
+   "reported_by_file": 1,
+   "degenerate_M": 0,
+   "surviving_K": 1,
+   "granularity": "票级(n / 盈亏比 / 逐段齐全)",
+   "rows": [
+    {
+     "label": "setup=BO20|线上·主流领",
+     "n": 109,
+     "payoff": 2.72,
+     "segments": {
+      "disc": 24,
+      "hold": 85
+     },
+     "win": 0.587,
+     "mean_pct": 8.08,
+     "condition_group_key": "full",
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [],
+     "stats_payload": {
+      "base_disc": {
+       "n": 50,
+       "mean_pct": -2.86,
+       "median_pct": -8.0,
+       "worst_pct": -8.0,
+       "best_pct": 38.95,
+       "win": 0.2,
+       "payoff": 2.18,
+       "stopped_at_a_loss": 0.78,
+       "deployed": 1.0,
+       "mean_days": 12.6
+      },
+      "base_hold": {
+       "n": 206,
+       "mean_pct": 2.42,
+       "median_pct": -8.0,
+       "worst_pct": -8.0,
+       "best_pct": 55.12,
+       "win": 0.403,
+       "payoff": 2.3,
+       "stopped_at_a_loss": 0.524,
+       "deployed": 1.0,
+       "mean_days": 19.2
+      },
+      "disc": {
+       "n": 24,
+       "mean_pct": 7.8,
+       "median_pct": 2.86,
+       "worst_pct": -8.0,
+       "best_pct": 39.3,
+       "win": 0.542,
+       "payoff": 2.73,
+       "stopped_at_a_loss": 0.417,
+       "deployed": 1.0,
+       "mean_days": 20.4
+      },
+      "full": {
+       "n": 109,
+       "mean_pct": 8.08,
+       "median_pct": 4.39,
+       "worst_pct": -8.0,
+       "best_pct": 49.62,
+       "win": 0.587,
+       "payoff": 2.72,
+       "stopped_at_a_loss": 0.339,
+       "deployed": 1.0,
+       "mean_days": 22.5
+      },
+      "hold": {
+       "n": 85,
+       "mean_pct": 8.15,
+       "median_pct": 4.63,
+       "worst_pct": -8.0,
+       "best_pct": 49.62,
+       "win": 0.6,
+       "payoff": 2.73,
+       "stopped_at_a_loss": 0.318,
+       "deployed": 1.0,
+       "mean_days": 23.1
+      }
+     },
+     "ticket_set_key": "BO20|线上·主流领"
+    }
+   ],
+   "surviving_independent_ticket_sets": 1
+  },
+  {
+   "id": "B",
+   "table": "S-881/T-408 拥挤持仓读数(7 个读数)",
+   "source_file": "docs/research/s881_results.json",
+   "source_json_path": "crowd_holds",
+   "ledger": "S-881(T-408)",
+   "n_tested": 7,
+   "reported_holds_N": 3,
+   "reported_by_file": 3,
+   "degenerate_M": 3,
+   "surviving_K": 0,
+   "granularity": "票级(n / 盈亏比 / 逐段齐全)",
+   "rows": [
+    {
+     "label": "setup=BO20|线上·主流领|crowd=pos:btc_crowd_ln:lo",
+     "n": 94,
+     "payoff": 2.7,
+     "segments": {
+      "disc": 9,
+      "hold": 85
+     },
+     "win": 0.606,
+     "mean_pct": 8.19,
+     "condition_group_key": "full",
+     "degenerate": true,
+     "degeneracy": [
+      {
+       "code": "D1_逐位同数",
+       "detail": "与本表另一行统计量逐位相同(同一批票): setup=BO20|线上·主流领|crowd=pos:btc_smart_minus_crowd:hi"
+      },
+      {
+       "code": "D4_逐段太小",
+       "detail": "逐段有 n < 10: disc n=9"
+      }
+     ],
+     "criteria_not_applicable": [],
+     "stats_payload": {
+      "base_disc": {
+       "n": 50,
+       "mean_pct": -2.86,
+       "median_pct": -8.0,
+       "worst_pct": -8.0,
+       "best_pct": 38.95,
+       "win": 0.2,
+       "payoff": 2.18,
+       "stopped_at_a_loss": 0.78,
+       "deployed": 1.0,
+       "mean_days": 12.6
+      },
+      "base_hold": {
+       "n": 206,
+       "mean_pct": 2.42,
+       "median_pct": -8.0,
+       "worst_pct": -8.0,
+       "best_pct": 55.12,
+       "win": 0.403,
+       "payoff": 2.3,
+       "stopped_at_a_loss": 0.524,
+       "deployed": 1.0,
+       "mean_days": 19.2
+      },
+      "disc": {
+       "n": 9,
+       "mean_pct": 8.58,
+       "median_pct": 10.99,
+       "worst_pct": -8.0,
+       "best_pct": 23.07,
+       "win": 0.667,
+       "payoff": 2.44,
+       "stopped_at_a_loss": 0.222,
+       "deployed": 1.0,
+       "mean_days": 23.7
+      },
+      "full": {
+       "n": 94,
+       "mean_pct": 8.19,
+       "median_pct": 4.92,
+       "worst_pct": -8.0,
+       "best_pct": 49.62,
+       "win": 0.606,
+       "payoff": 2.7,
+       "stopped_at_a_loss": 0.309,
+       "deployed": 1.0,
+       "mean_days": 23.2
+      },
+      "hold": {
+       "n": 85,
+       "mean_pct": 8.15,
+       "median_pct": 4.63,
+       "worst_pct": -8.0,
+       "best_pct": 49.62,
+       "win": 0.6,
+       "payoff": 2.73,
+       "stopped_at_a_loss": 0.318,
+       "deployed": 1.0,
+       "mean_days": 23.1
+      }
+     },
+     "ticket_set_key": "{\"base_disc\": {\"best_pct\": 38.95, \"deployed\": 1.0, \"mean_days\": 12.6, \"mean_pct\": -2.86, \"median_pct\": -8.0, \"n\": 50, \"payoff\": 2.18, \"stopped_at_a_loss\": 0.78, \"win\": 0.2, \"worst_pct\": -8.0}, \"base_hold\": {\"best_pct\": 55.12, \"deployed\": 1.0, \"mean_days\": 19.2, \"mean_pct\": 2.42, \"median_pct\": -8.0, \"n\": 206, \"payoff\": 2.3, \"stopped_at_a_loss\": 0.524, \"win\": 0.403, \"worst_pct\": -8.0}, \"disc\": {\"best_pct\": 23.07, \"deployed\": 1.0, \"mean_days\": 23.7, \"mean_pct\": 8.58, \"median_pct\": 10.99, \"n\": 9, \"payoff\": 2.44, \"stopped_at_a_loss\": 0.222, \"win\": 0.667, \"worst_pct\": -8.0}, \"full\": {\"best_pct\": 49.62, \"deployed\": 1.0, \"mean_days\": 23.2, \"mean_pct\": 8.19, \"median_pct\": 4.92, \"n\": 94, \"payoff\": 2.7, \"stopped_at_a_loss\": 0.309, \"win\": 0.606, \"worst_pct\": -8.0}, \"hold\": {\"best_pct\": 49.62, \"deployed\": 1.0, \"mean_days\": 23.1, \"mean_pct\": 8.15, \"median_pct\": 4.63, \"n\": 85, \"payoff\": 2.73, \"stopped_at_a_loss\": 0.318, \"win\": 0.6, \"worst_pct\": -8.0}}"
+    },
+    {
+     "label": "setup=BO20|线上·主流领|crowd=pos:btc_smart_minus_crowd:hi",
+     "n": 94,
+     "payoff": 2.7,
+     "segments": {
+      "disc": 9,
+      "hold": 85
+     },
+     "win": 0.606,
+     "mean_pct": 8.19,
+     "condition_group_key": "full",
+     "degenerate": true,
+     "degeneracy": [
+      {
+       "code": "D1_逐位同数",
+       "detail": "与本表另一行统计量逐位相同(同一批票): setup=BO20|线上·主流领|crowd=pos:btc_crowd_ln:lo"
+      },
+      {
+       "code": "D4_逐段太小",
+       "detail": "逐段有 n < 10: disc n=9"
+      }
+     ],
+     "criteria_not_applicable": [],
+     "stats_payload": {
+      "base_disc": {
+       "n": 50,
+       "mean_pct": -2.86,
+       "median_pct": -8.0,
+       "worst_pct": -8.0,
+       "best_pct": 38.95,
+       "win": 0.2,
+       "payoff": 2.18,
+       "stopped_at_a_loss": 0.78,
+       "deployed": 1.0,
+       "mean_days": 12.6
+      },
+      "base_hold": {
+       "n": 206,
+       "mean_pct": 2.42,
+       "median_pct": -8.0,
+       "worst_pct": -8.0,
+       "best_pct": 55.12,
+       "win": 0.403,
+       "payoff": 2.3,
+       "stopped_at_a_loss": 0.524,
+       "deployed": 1.0,
+       "mean_days": 19.2
+      },
+      "disc": {
+       "n": 9,
+       "mean_pct": 8.58,
+       "median_pct": 10.99,
+       "worst_pct": -8.0,
+       "best_pct": 23.07,
+       "win": 0.667,
+       "payoff": 2.44,
+       "stopped_at_a_loss": 0.222,
+       "deployed": 1.0,
+       "mean_days": 23.7
+      },
+      "full": {
+       "n": 94,
+       "mean_pct": 8.19,
+       "median_pct": 4.92,
+       "worst_pct": -8.0,
+       "best_pct": 49.62,
+       "win": 0.606,
+       "payoff": 2.7,
+       "stopped_at_a_loss": 0.309,
+       "deployed": 1.0,
+       "mean_days": 23.2
+      },
+      "hold": {
+       "n": 85,
+       "mean_pct": 8.15,
+       "median_pct": 4.63,
+       "worst_pct": -8.0,
+       "best_pct": 49.62,
+       "win": 0.6,
+       "payoff": 2.73,
+       "stopped_at_a_loss": 0.318,
+       "deployed": 1.0,
+       "mean_days": 23.1
+      }
+     },
+     "ticket_set_key": "{\"base_disc\": {\"best_pct\": 38.95, \"deployed\": 1.0, \"mean_days\": 12.6, \"mean_pct\": -2.86, \"median_pct\": -8.0, \"n\": 50, \"payoff\": 2.18, \"stopped_at_a_loss\": 0.78, \"win\": 0.2, \"worst_pct\": -8.0}, \"base_hold\": {\"best_pct\": 55.12, \"deployed\": 1.0, \"mean_days\": 19.2, \"mean_pct\": 2.42, \"median_pct\": -8.0, \"n\": 206, \"payoff\": 2.3, \"stopped_at_a_loss\": 0.524, \"win\": 0.403, \"worst_pct\": -8.0}, \"disc\": {\"best_pct\": 23.07, \"deployed\": 1.0, \"mean_days\": 23.7, \"mean_pct\": 8.58, \"median_pct\": 10.99, \"n\": 9, \"payoff\": 2.44, \"stopped_at_a_loss\": 0.222, \"win\": 0.667, \"worst_pct\": -8.0}, \"full\": {\"best_pct\": 49.62, \"deployed\": 1.0, \"mean_days\": 23.2, \"mean_pct\": 8.19, \"median_pct\": 4.92, \"n\": 94, \"payoff\": 2.7, \"stopped_at_a_loss\": 0.309, \"win\": 0.606, \"worst_pct\": -8.0}, \"hold\": {\"best_pct\": 49.62, \"deployed\": 1.0, \"mean_days\": 23.1, \"mean_pct\": 8.15, \"median_pct\": 4.63, \"n\": 85, \"payoff\": 2.73, \"stopped_at_a_loss\": 0.318, \"win\": 0.6, \"worst_pct\": -8.0}}"
+    },
+    {
+     "label": "setup=BO20|线下·主流领|crowd=funding_7d_ann_binance:lo",
+     "n": 21,
+     "payoff": 3.19,
+     "segments": {
+      "disc": 12,
+      "hold": 9
+     },
+     "win": 0.619,
+     "mean_pct": 12.76,
+     "condition_group_key": "full",
+     "degenerate": true,
+     "degeneracy": [
+      {
+       "code": "D4_逐段太小",
+       "detail": "逐段有 n < 10: hold n=9"
+      }
+     ],
+     "criteria_not_applicable": [],
+     "stats_payload": {
+      "base_disc": {
+       "n": 118,
+       "mean_pct": 0.78,
+       "median_pct": -8.0,
+       "worst_pct": -8.0,
+       "best_pct": 68.78,
+       "win": 0.305,
+       "payoff": 2.61,
+       "stopped_at_a_loss": 0.669,
+       "deployed": 1.0,
+       "mean_days": 15.9
+      },
+      "base_hold": {
+       "n": 156,
+       "mean_pct": 8.27,
+       "median_pct": 4.0,
+       "worst_pct": -8.0,
+       "best_pct": 64.26,
+       "win": 0.59,
+       "payoff": 2.7,
+       "stopped_at_a_loss": 0.333,
+       "deployed": 1.0,
+       "mean_days": 22.9
+      },
+      "disc": {
+       "n": 12,
+       "mean_pct": 5.17,
+       "median_pct": -8.0,
+       "worst_pct": -8.0,
+       "best_pct": 39.87,
+       "win": 0.333,
+       "payoff": 3.94,
+       "stopped_at_a_loss": 0.667,
+       "deployed": 1.0,
+       "mean_days": 14.8
+      },
+      "full": {
+       "n": 21,
+       "mean_pct": 12.76,
+       "median_pct": 14.74,
+       "worst_pct": -8.0,
+       "best_pct": 39.87,
+       "win": 0.619,
+       "payoff": 3.19,
+       "stopped_at_a_loss": 0.381,
+       "deployed": 1.0,
+       "mean_days": 20.9
+      },
+      "hold": {
+       "n": 9,
+       "mean_pct": 22.87,
+       "median_pct": 25.12,
+       "worst_pct": 6.86,
+       "best_pct": 35.28,
+       "win": 1.0,
+       "payoff": 99.0,
+       "stopped_at_a_loss": 0.0,
+       "deployed": 1.0,
+       "mean_days": 29.0
+      }
+     },
+     "ticket_set_key": "{\"base_disc\": {\"best_pct\": 68.78, \"deployed\": 1.0, \"mean_days\": 15.9, \"mean_pct\": 0.78, \"median_pct\": -8.0, \"n\": 118, \"payoff\": 2.61, \"stopped_at_a_loss\": 0.669, \"win\": 0.305, \"worst_pct\": -8.0}, \"base_hold\": {\"best_pct\": 64.26, \"deployed\": 1.0, \"mean_days\": 22.9, \"mean_pct\": 8.27, \"median_pct\": 4.0, \"n\": 156, \"payoff\": 2.7, \"stopped_at_a_loss\": 0.333, \"win\": 0.59, \"worst_pct\": -8.0}, \"disc\": {\"best_pct\": 39.87, \"deployed\": 1.0, \"mean_days\": 14.8, \"mean_pct\": 5.17, \"median_pct\": -8.0, \"n\": 12, \"payoff\": 3.94, \"stopped_at_a_loss\": 0.667, \"win\": 0.333, \"worst_pct\": -8.0}, \"full\": {\"best_pct\": 39.87, \"deployed\": 1.0, \"mean_days\": 20.9, \"mean_pct\": 12.76, \"median_pct\": 14.74, \"n\": 21, \"payoff\": 3.19, \"stopped_at_a_loss\": 0.381, \"win\": 0.619, \"worst_pct\": -8.0}, \"hold\": {\"best_pct\": 35.28, \"deployed\": 1.0, \"mean_days\": 29.0, \"mean_pct\": 22.87, \"median_pct\": 25.12, \"n\": 9, \"payoff\": 99.0, \"stopped_at_a_loss\": 0.0, \"win\": 1.0, \"worst_pct\": 6.86}}"
+    }
+   ],
+   "surviving_independent_ticket_sets": 0
+  },
+  {
+   "id": "C",
+   "table": "S-884 触发 × 格子(48 行:12 触发 × 4 格子 × 2 止损)",
+   "source_file": "docs/research/s884_results.json",
+   "source_json_path": "rows",
+   "ledger": "S-884(Seth 的 SQL 第一份 + B 道 T-410 的 Python 第二份)",
+   "n_tested": 48,
+   "reported_holds_N": 4,
+   "reported_by_file": 4,
+   "degenerate_M": 2,
+   "surviving_K": 2,
+   "granularity": "票级(n / 盈亏比 / 逐段齐全)",
+   "same_construction_pairs": [
+    {
+     "setup": "BREAK_DN",
+     "cell": "线上·主流领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      23,
+      23
+     ],
+     "segment_split_each": [
+      "disc 4 / hold 19",
+      "disc 4 / hold 19"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "BREAK_DN",
+     "cell": "线上·二线领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      15,
+      15
+     ],
+     "segment_split_each": [
+      "disc 5 / hold 10",
+      "disc 5 / hold 10"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "BREAK_DN",
+     "cell": "线下·主流领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      68,
+      68
+     ],
+     "segment_split_each": [
+      "disc 34 / hold 34",
+      "disc 34 / hold 34"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "BREAK_DN",
+     "cell": "线下·二线领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      41,
+      41
+     ],
+     "segment_split_each": [
+      "disc 16 / hold 25",
+      "disc 16 / hold 25"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "SWEEP_DN",
+     "cell": "线上·主流领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      41,
+      41
+     ],
+     "segment_split_each": [
+      "disc 7 / hold 34",
+      "disc 7 / hold 34"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "SWEEP_DN",
+     "cell": "线上·二线领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      34,
+      34
+     ],
+     "segment_split_each": [
+      "disc 13 / hold 21",
+      "disc 13 / hold 21"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "SWEEP_DN",
+     "cell": "线下·主流领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      74,
+      74
+     ],
+     "segment_split_each": [
+      "disc 36 / hold 38",
+      "disc 36 / hold 38"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "SWEEP_DN",
+     "cell": "线下·二线领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      35,
+      35
+     ],
+     "segment_split_each": [
+      "disc 9 / hold 26",
+      "disc 9 / hold 26"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "BREAK_UP",
+     "cell": "线上·主流领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      109,
+      109
+     ],
+     "segment_split_each": [
+      "disc 24 / hold 85",
+      "disc 24 / hold 85"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": true
+    },
+    {
+     "setup": "BREAK_UP",
+     "cell": "线上·二线领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      80,
+      80
+     ],
+     "segment_split_each": [
+      "disc 28 / hold 52",
+      "disc 28 / hold 52"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "BREAK_UP",
+     "cell": "线下·主流领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      42,
+      42
+     ],
+     "segment_split_each": [
+      "disc 15 / hold 27",
+      "disc 15 / hold 27"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "BREAK_UP",
+     "cell": "线下·二线领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      32,
+      32
+     ],
+     "segment_split_each": [
+      "disc 14 / hold 18",
+      "disc 14 / hold 18"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "SWEEP_UP",
+     "cell": "线上·主流领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      104,
+      104
+     ],
+     "segment_split_each": [
+      "disc 24 / hold 80",
+      "disc 24 / hold 80"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "SWEEP_UP",
+     "cell": "线上·二线领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      92,
+      92
+     ],
+     "segment_split_each": [
+      "disc 37 / hold 55",
+      "disc 37 / hold 55"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "SWEEP_UP",
+     "cell": "线下·主流领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      55,
+      55
+     ],
+     "segment_split_each": [
+      "disc 19 / hold 36",
+      "disc 19 / hold 36"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "SWEEP_UP",
+     "cell": "线下·二线领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      30,
+      30
+     ],
+     "segment_split_each": [
+      "disc 16 / hold 14",
+      "disc 16 / hold 14"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "COMP_BREAK_UP",
+     "cell": "线上·主流领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      27,
+      27
+     ],
+     "segment_split_each": [
+      "disc 6 / hold 21",
+      "disc 6 / hold 21"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "COMP_BREAK_UP",
+     "cell": "线上·二线领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      10,
+      10
+     ],
+     "segment_split_each": [
+      "disc 0 / hold 10",
+      "disc 0 / hold 10"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "COMP_BREAK_UP",
+     "cell": "线下·主流领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      21,
+      21
+     ],
+     "segment_split_each": [
+      "disc 7 / hold 14",
+      "disc 7 / hold 14"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "COMP_BREAK_UP",
+     "cell": "线下·二线领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      12,
+      12
+     ],
+     "segment_split_each": [
+      "disc 2 / hold 10",
+      "disc 2 / hold 10"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "COMP_BREAK_DN",
+     "cell": "线上·主流领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      7,
+      7
+     ],
+     "segment_split_each": [
+      "disc 1 / hold 6",
+      "disc 1 / hold 6"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "COMP_BREAK_DN",
+     "cell": "线上·二线领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      8,
+      8
+     ],
+     "segment_split_each": [
+      "disc 2 / hold 6",
+      "disc 2 / hold 6"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "COMP_BREAK_DN",
+     "cell": "线下·主流领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      18,
+      18
+     ],
+     "segment_split_each": [
+      "disc 9 / hold 9",
+      "disc 9 / hold 9"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    },
+    {
+     "setup": "COMP_BREAK_DN",
+     "cell": "线下·二线领",
+     "modes": [
+      "STRUCT",
+      "FIX8"
+     ],
+     "n_each": [
+      18,
+      18
+     ],
+     "segment_split_each": [
+      "disc 8 / hold 10",
+      "disc 8 / hold 10"
+     ],
+     "same_n": true,
+     "same_segment_split": true,
+     "evidence": "触发与止损方式无关(s884_sweep_vs_break.py:triggers() 先出触发,mode 只改出场距离)⇒ 同一批进场;两模式的 n 与逐段拆分完全相同 ⇒ 同一批票、两种出场口径",
+     "both_holds": false
+    }
+   ],
+   "rows": [
+    {
+     "label": "setup=BREAK_UP|mode=STRUCT|cell=线上·主流领",
+     "n": 109,
+     "payoff": 7.47,
+     "segments": {
+      "disc": 24,
+      "hold": 85
+     },
+     "win": 0.33,
+     "mean_pct": 4.91,
+     "condition_group_key": "full",
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [],
+     "stats_payload": {
+      "base_disc": {
+       "n": 50,
+       "mean_pct": -2.86,
+       "median_pct": -8.0,
+       "worst_pct": -8.0,
+       "best_pct": 38.95,
+       "win": 0.2,
+       "payoff": 2.18,
+       "stopped_at_a_loss": 0.78,
+       "deployed": 1.0,
+       "mean_days": 12.6
+      },
+      "base_hold": {
+       "n": 206,
+       "mean_pct": 2.42,
+       "median_pct": -8.0,
+       "worst_pct": -8.0,
+       "best_pct": 55.12,
+       "win": 0.403,
+       "payoff": 2.3,
+       "stopped_at_a_loss": 0.524,
+       "deployed": 1.0,
+       "mean_days": 19.2
+      },
+      "disc": {
+       "n": 24,
+       "mean_pct": 0.72,
+       "median_pct": -2.96,
+       "worst_pct": -7.69,
+       "best_pct": 34.38,
+       "win": 0.167,
+       "payoff": 6.29,
+       "stopped_at_a_loss": 0.833,
+       "deployed": 1.0,
+       "mean_days": 6.7
+      },
+      "full": {
+       "n": 109,
+       "mean_pct": 4.91,
+       "median_pct": -1.63,
+       "worst_pct": -7.69,
+       "best_pct": 49.62,
+       "win": 0.33,
+       "payoff": 7.47,
+       "stopped_at_a_loss": 0.642,
+       "deployed": 1.0,
+       "mean_days": 12.5
+      },
+      "hold": {
+       "n": 85,
+       "mean_pct": 6.09,
+       "median_pct": -1.4,
+       "worst_pct": -7.16,
+       "best_pct": 49.62,
+       "win": 0.376,
+       "payoff": 8.12,
+       "stopped_at_a_loss": 0.588,
+       "deployed": 1.0,
+       "mean_days": 14.1
+      }
+     },
+     "ticket_set_key": "BREAK_UP|线上·主流领"
+    },
+    {
+     "label": "setup=BREAK_UP|mode=FIX8|cell=线上·主流领",
+     "n": 109,
+     "payoff": 2.72,
+     "segments": {
+      "disc": 24,
+      "hold": 85
+     },
+     "win": 0.587,
+     "mean_pct": 8.08,
+     "condition_group_key": "full",
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [],
+     "stats_payload": {
+      "base_disc": {
+       "n": 50,
+       "mean_pct": -2.86,
+       "median_pct": -8.0,
+       "worst_pct": -8.0,
+       "best_pct": 38.95,
+       "win": 0.2,
+       "payoff": 2.18,
+       "stopped_at_a_loss": 0.78,
+       "deployed": 1.0,
+       "mean_days": 12.6
+      },
+      "base_hold": {
+       "n": 206,
+       "mean_pct": 2.42,
+       "median_pct": -8.0,
+       "worst_pct": -8.0,
+       "best_pct": 55.12,
+       "win": 0.403,
+       "payoff": 2.3,
+       "stopped_at_a_loss": 0.524,
+       "deployed": 1.0,
+       "mean_days": 19.2
+      },
+      "disc": {
+       "n": 24,
+       "mean_pct": 7.8,
+       "median_pct": 2.86,
+       "worst_pct": -8.0,
+       "best_pct": 39.3,
+       "win": 0.542,
+       "payoff": 2.73,
+       "stopped_at_a_loss": 0.417,
+       "deployed": 1.0,
+       "mean_days": 20.4
+      },
+      "full": {
+       "n": 109,
+       "mean_pct": 8.08,
+       "median_pct": 4.39,
+       "worst_pct": -8.0,
+       "best_pct": 49.62,
+       "win": 0.587,
+       "payoff": 2.72,
+       "stopped_at_a_loss": 0.339,
+       "deployed": 1.0,
+       "mean_days": 22.5
+      },
+      "hold": {
+       "n": 85,
+       "mean_pct": 8.15,
+       "median_pct": 4.63,
+       "worst_pct": -8.0,
+       "best_pct": 49.62,
+       "win": 0.6,
+       "payoff": 2.73,
+       "stopped_at_a_loss": 0.318,
+       "deployed": 1.0,
+       "mean_days": 23.1
+      }
+     },
+     "ticket_set_key": "BREAK_UP|线上·主流领"
+    },
+    {
+     "label": "setup=COMP_BREAK_DN|mode=STRUCT|cell=线下·主流领",
+     "n": 18,
+     "payoff": 4.2,
+     "segments": {
+      "disc": 9,
+      "hold": 9
+     },
+     "win": 0.278,
+     "mean_pct": 1.24,
+     "condition_group_key": "full",
+     "degenerate": true,
+     "degeneracy": [
+      {
+       "code": "D2_n极小",
+       "detail": "条件组 n = 18 < 20"
+      },
+      {
+       "code": "D4_逐段太小",
+       "detail": "逐段有 n < 10: disc n=9, hold n=9"
+      }
+     ],
+     "criteria_not_applicable": [],
+     "stats_payload": {
+      "base_disc": {
+       "n": 118,
+       "mean_pct": 0.63,
+       "median_pct": -8.0,
+       "worst_pct": -8.0,
+       "best_pct": 43.34,
+       "win": 0.28,
+       "payoff": 2.88,
+       "stopped_at_a_loss": 0.661,
+       "deployed": 1.0,
+       "mean_days": 16.1
+      },
+      "base_hold": {
+       "n": 156,
+       "mean_pct": -3.94,
+       "median_pct": -8.0,
+       "worst_pct": -8.0,
+       "best_pct": 23.2,
+       "win": 0.237,
+       "payoff": 0.96,
+       "stopped_at_a_loss": 0.679,
+       "deployed": 1.0,
+       "mean_days": 17.0
+      },
+      "disc": {
+       "n": 9,
+       "mean_pct": 1.87,
+       "median_pct": -2.06,
+       "worst_pct": -4.92,
+       "best_pct": 26.19,
+       "win": 0.222,
+       "payoff": 6.66,
+       "stopped_at_a_loss": 0.778,
+       "deployed": 1.0,
+       "mean_days": 7.6
+      },
+      "full": {
+       "n": 18,
+       "mean_pct": 1.24,
+       "median_pct": -1.78,
+       "worst_pct": -4.92,
+       "best_pct": 26.19,
+       "win": 0.278,
+       "payoff": 4.2,
+       "stopped_at_a_loss": 0.722,
+       "deployed": 1.0,
+       "mean_days": 9.3
+      },
+      "hold": {
+       "n": 9,
+       "mean_pct": 0.62,
+       "median_pct": -1.49,
+       "worst_pct": -4.92,
+       "best_pct": 20.87,
+       "win": 0.333,
+       "payoff": 2.63,
+       "stopped_at_a_loss": 0.667,
+       "deployed": 1.0,
+       "mean_days": 11.0
+      }
+     },
+     "ticket_set_key": "COMP_BREAK_DN|线下·主流领"
+    },
+    {
+     "label": "setup=COMP_BREAK_DN|mode=STRUCT|cell=线下·二线领",
+     "n": 18,
+     "payoff": 3.87,
+     "segments": {
+      "disc": 8,
+      "hold": 10
+     },
+     "win": 0.444,
+     "mean_pct": 4.58,
+     "condition_group_key": "full",
+     "degenerate": true,
+     "degeneracy": [
+      {
+       "code": "D2_n极小",
+       "detail": "条件组 n = 18 < 20"
+      },
+      {
+       "code": "D4_逐段太小",
+       "detail": "逐段有 n < 10: disc n=8"
+      }
+     ],
+     "criteria_not_applicable": [],
+     "stats_payload": {
+      "base_disc": {
+       "n": 44,
+       "mean_pct": 0.39,
+       "median_pct": -8.0,
+       "worst_pct": -8.0,
+       "best_pct": 29.88,
+       "win": 0.409,
+       "payoff": 1.57,
+       "stopped_at_a_loss": 0.545,
+       "deployed": 1.0,
+       "mean_days": 18.2
+      },
+      "base_hold": {
+       "n": 74,
+       "mean_pct": 2.85,
+       "median_pct": -6.2,
+       "worst_pct": -8.0,
+       "best_pct": 38.27,
+       "win": 0.419,
+       "payoff": 2.32,
+       "stopped_at_a_loss": 0.5,
+       "deployed": 1.0,
+       "mean_days": 19.0
+      },
+      "disc": {
+       "n": 8,
+       "mean_pct": 3.49,
+       "median_pct": -2.23,
+       "worst_pct": -9.88,
+       "best_pct": 23.85,
+       "win": 0.375,
+       "payoff": 3.77,
+       "stopped_at_a_loss": 0.625,
+       "deployed": 1.0,
+       "mean_days": 15.8
+      },
+      "full": {
+       "n": 18,
+       "mean_pct": 4.58,
+       "median_pct": -1.46,
+       "worst_pct": -9.88,
+       "best_pct": 23.85,
+       "win": 0.444,
+       "payoff": 3.87,
+       "stopped_at_a_loss": 0.556,
+       "deployed": 1.0,
+       "mean_days": 15.8
+      },
+      "hold": {
+       "n": 10,
+       "mean_pct": 5.44,
+       "median_pct": 2.32,
+       "worst_pct": -9.54,
+       "best_pct": 18.37,
+       "win": 0.5,
+       "payoff": 4.17,
+       "stopped_at_a_loss": 0.5,
+       "deployed": 1.0,
+       "mean_days": 15.9
+      }
+     },
+     "ticket_set_key": "COMP_BREAK_DN|线下·二线领"
+    }
+   ],
+   "surviving_independent_ticket_sets": 1,
+   "surviving_rows_sharing_one_ticket_set": [
+    {
+     "readings": [
+      "setup=BREAK_UP|mode=STRUCT|cell=线上·主流领",
+      "setup=BREAK_UP|mode=FIX8|cell=线上·主流领"
+     ],
+     "n": 109
+    }
+   ]
+  },
+  {
+   "id": "D",
+   "table": "S-869 盲书「策略 × 状态」156 格",
+   "source_file": "docs/research/s869_blind_results.json",
+   "source_json_path": "table",
+   "ledger": "S-869",
+   "n_tested": 156,
+   "reported_holds_N": 9,
+   "reported_by_file": "all_pass=true 的格子数(文件里没有单独计数器)",
+   "degenerate_M": null,
+   "surviving_K": null,
+   "granularity": "日频格子(不是票级)",
+   "verdict_note": "四条判据在这张表的口径下不可核 ⇒ M / K 记 null(见 criteria_not_applicable)",
+   "rows": [
+    {
+     "label": "ACWI|R降",
+     "n": null,
+     "payoff": null,
+     "segments": {
+      "segments": 20,
+      "days": 1078
+     },
+     "win": null,
+     "mean_pct": null,
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [
+      "D2/D3/D4:该表口径是「策略 × 状态」的日频格子,没有票级 n / 盈亏比 / 逐段拆分"
+     ],
+     "extra": {
+      "days": 1078,
+      "segments": 20,
+      "pos_seg_frac": 0.75,
+      "ann_excess": 0.182095806091219,
+      "crit": {
+       "c1_seg5_days120": true,
+       "c2_ann_gt0_sharpe_ge05": true,
+       "c3_pos_seg_ge60pct": true,
+       "c4_after_best_gt0": true,
+       "c5_in_gt_out": true
+      }
+     }
+    },
+    {
+     "label": "ACWI|W好",
+     "n": null,
+     "payoff": null,
+     "segments": {
+      "segments": 38,
+      "days": 1593
+     },
+     "win": null,
+     "mean_pct": null,
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [
+      "D2/D3/D4:该表口径是「策略 × 状态」的日频格子,没有票级 n / 盈亏比 / 逐段拆分"
+     ],
+     "extra": {
+      "days": 1593,
+      "segments": 38,
+      "pos_seg_frac": 0.6052631578947368,
+      "ann_excess": 0.18366431134909766,
+      "crit": {
+       "c1_seg5_days120": true,
+       "c2_ann_gt0_sharpe_ge05": true,
+       "c3_pos_seg_ge60pct": true,
+       "c4_after_best_gt0": true,
+       "c5_in_gt_out": true
+      }
+     }
+    },
+    {
+     "label": "S681_H3|线上·抽",
+     "n": null,
+     "payoff": null,
+     "segments": {
+      "segments": 5,
+      "days": 161
+     },
+     "win": null,
+     "mean_pct": null,
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [
+      "D2/D3/D4:该表口径是「策略 × 状态」的日频格子,没有票级 n / 盈亏比 / 逐段拆分"
+     ],
+     "extra": {
+      "days": 161,
+      "segments": 5,
+      "pos_seg_frac": 0.8,
+      "ann_excess": 0.0527753241250728,
+      "crit": {
+       "c1_seg5_days120": true,
+       "c2_ann_gt0_sharpe_ge05": true,
+       "c3_pos_seg_ge60pct": true,
+       "c4_after_best_gt0": true,
+       "c5_in_gt_out": true
+      }
+     }
+    },
+    {
+     "label": "XAUUSD|T线下",
+     "n": null,
+     "payoff": null,
+     "segments": {
+      "segments": 13,
+      "days": 1026
+     },
+     "win": null,
+     "mean_pct": null,
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [
+      "D2/D3/D4:该表口径是「策略 × 状态」的日频格子,没有票级 n / 盈亏比 / 逐段拆分"
+     ],
+     "extra": {
+      "days": 1026,
+      "segments": 13,
+      "pos_seg_frac": 0.7692307692307693,
+      "ann_excess": 0.16675760017685515,
+      "crit": {
+       "c1_seg5_days120": true,
+       "c2_ann_gt0_sharpe_ge05": true,
+       "c3_pos_seg_ge60pct": true,
+       "c4_after_best_gt0": true,
+       "c5_in_gt_out": true
+      }
+     }
+    },
+    {
+     "label": "XAUUSD|W坏",
+     "n": null,
+     "payoff": null,
+     "segments": {
+      "segments": 38,
+      "days": 872
+     },
+     "win": null,
+     "mean_pct": null,
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [
+      "D2/D3/D4:该表口径是「策略 × 状态」的日频格子,没有票级 n / 盈亏比 / 逐段拆分"
+     ],
+     "extra": {
+      "days": 872,
+      "segments": 38,
+      "pos_seg_frac": 0.6578947368421053,
+      "ann_excess": 0.1740065537282125,
+      "crit": {
+       "c1_seg5_days120": true,
+       "c2_ann_gt0_sharpe_ge05": true,
+       "c3_pos_seg_ge60pct": true,
+       "c4_after_best_gt0": true,
+       "c5_in_gt_out": true
+      }
+     }
+    },
+    {
+     "label": "XAUUSD|线上·注",
+     "n": null,
+     "payoff": null,
+     "segments": {
+      "segments": 20,
+      "days": 1229
+     },
+     "win": null,
+     "mean_pct": null,
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [
+      "D2/D3/D4:该表口径是「策略 × 状态」的日频格子,没有票级 n / 盈亏比 / 逐段拆分"
+     ],
+     "extra": {
+      "days": 1229,
+      "segments": 20,
+      "pos_seg_frac": 0.65,
+      "ann_excess": 0.12635351266598627,
+      "crit": {
+       "c1_seg5_days120": true,
+       "c2_ann_gt0_sharpe_ge05": true,
+       "c3_pos_seg_ge60pct": true,
+       "c4_after_best_gt0": true,
+       "c5_in_gt_out": true
+      }
+     }
+    },
+    {
+     "label": "XAUUSD|线下·抽",
+     "n": null,
+     "payoff": null,
+     "segments": {
+      "segments": 12,
+      "days": 457
+     },
+     "win": null,
+     "mean_pct": null,
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [
+      "D2/D3/D4:该表口径是「策略 × 状态」的日频格子,没有票级 n / 盈亏比 / 逐段拆分"
+     ],
+     "extra": {
+      "days": 457,
+      "segments": 12,
+      "pos_seg_frac": 0.75,
+      "ann_excess": 0.17924003323820448,
+      "crit": {
+       "c1_seg5_days120": true,
+       "c2_ann_gt0_sharpe_ge05": true,
+       "c3_pos_seg_ge60pct": true,
+       "c4_after_best_gt0": true,
+       "c5_in_gt_out": true
+      }
+     }
+    },
+    {
+     "label": "核心|T线上",
+     "n": null,
+     "payoff": null,
+     "segments": {
+      "segments": 12,
+      "days": 980
+     },
+     "win": null,
+     "mean_pct": null,
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [
+      "D2/D3/D4:该表口径是「策略 × 状态」的日频格子,没有票级 n / 盈亏比 / 逐段拆分"
+     ],
+     "extra": {
+      "days": 980,
+      "segments": 12,
+      "pos_seg_frac": 0.75,
+      "ann_excess": 0.40286719688261385,
+      "crit": {
+       "c1_seg5_days120": true,
+       "c2_ann_gt0_sharpe_ge05": true,
+       "c3_pos_seg_ge60pct": true,
+       "c4_after_best_gt0": true,
+       "c5_in_gt_out": true
+      }
+     }
+    },
+    {
+     "label": "核心|线上·注",
+     "n": null,
+     "payoff": null,
+     "segments": {
+      "segments": 17,
+      "days": 796
+     },
+     "win": null,
+     "mean_pct": null,
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [
+      "D2/D3/D4:该表口径是「策略 × 状态」的日频格子,没有票级 n / 盈亏比 / 逐段拆分"
+     ],
+     "extra": {
+      "days": 796,
+      "segments": 17,
+      "pos_seg_frac": 0.7647058823529411,
+      "ann_excess": 0.5518545622737672,
+      "crit": {
+       "c1_seg5_days120": true,
+       "c2_ann_gt0_sharpe_ge05": true,
+       "c3_pos_seg_ge60pct": true,
+       "c4_after_best_gt0": true,
+       "c5_in_gt_out": true
+      }
+     }
+    }
+   ],
+   "surviving_independent_ticket_sets": null
+  },
+  {
+   "id": "E",
+   "table": "S-767 事件基率表(整币下架 / 永续上线 / 现货上币)",
+   "source_file": "docs/research/event_base_rates.json",
+   "source_json_path": "families",
+   "ledger": "S-767(T-288)",
+   "n_tested": 3,
+   "reported_holds_N": 3,
+   "reported_by_file": "3 个族,每族 1 条已站住的事件结论",
+   "degenerate_M": 0,
+   "surviving_K": 3,
+   "granularity": "事件级(有 n;无盈亏比;分层代替逐段)",
+   "rows": [
+    {
+     "label": "delisting_spot_full",
+     "n": 53,
+     "payoff": null,
+     "segments": {},
+     "win": null,
+     "mean_pct": -37.711,
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [
+      "D3:事件族报的是中位/均值超额,没有盈亏比字段",
+      "D4:事件族不是「发现段/留出段」两段口径(这里只有按前事件涨幅的分层)"
+     ],
+     "extra": {
+      "source": {
+       "card": "T-272",
+       "ledger": "S-751",
+       "file": "docs/research/t272_results.json",
+       "price_arm": "mcap(主口径); ohlc 为副臂 n=32 中位 -54.25%"
+      },
+      "exc30": {
+       "n": 53,
+       "median_pct": -37.711,
+       "p10_pct": -90.937,
+       "p25_pct": -63.431,
+       "p75_pct": -17.339,
+       "p90_pct": 29.319,
+       "min_pct": -123.432,
+       "max_pct": 230.194,
+       "pct_negative": 0.8113
+      },
+      "control_random_day": {
+       "median_pct": -8.68,
+       "p05_pct": -13.201,
+       "p95_pct": -3.466,
+       "n_draws": 200,
+       "percentile_of_actual": 0.0
+      },
+      "strata": {
+       "by_pre_event_gain_tercile": [
+        {
+         "bucket": "低",
+         "n": 17,
+         "strat_lo": -86.16,
+         "strat_hi": -47.361,
+         "strat_unit": "pct",
+         "median_exc_pct": -58.761,
+         "pct_negative": 0.8235
+        },
+        {
+         "bucket": "中",
+         "n": 18,
+         "strat_lo": -46.073,
+         "strat_hi": -30.87,
+         "strat_unit": "pct",
+         "median_exc_pct": -28.19,
+         "pct_negative": 0.8333
+        },
+        {
+         "bucket": "高",
+         "n": 18,
+         "strat_lo": -28.491,
+         "strat_hi": 5385.68,
+         "strat_unit": "pct",
+         "median_exc_pct": -33.24,
+         "pct_negative": 0.7778
+        }
+       ],
+       "by_mcap_tercile": [
+        {
+         "bucket": "低",
+         "n": 16,
+         "mcap_lo": 4210489.96711615,
+         "mcap_hi": 10119882.4339326,
+         "median_exc_pct": -55.812
+        },
+        {
+         "bucket": "中",
+         "n": 16,
+         "mcap_lo": 10524906.0164768,
+         "mcap_hi": 21139955.377967,
+         "median_exc_pct": -30.896
+        },
+        {
+         "bucket": "高",
+         "n": 18,
+         "mcap_lo": 21784950.7319828,
+         "mcap_hi": 2994691167.7457,
+         "median_exc_pct": -20.973
+        }
+       ]
+      }
+     }
+    },
+    {
+     "label": "perp_launch",
+     "n": 142,
+     "payoff": null,
+     "segments": {},
+     "win": null,
+     "mean_pct": -21.878,
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [
+      "D3:事件族报的是中位/均值超额,没有盈亏比字段",
+      "D4:事件族不是「发现段/留出段」两段口径(这里只有按前事件涨幅的分层)"
+     ],
+     "extra": {
+      "source": {
+       "card": "T-279",
+       "ledger": "S-758",
+       "file": "docs/research/t279_results.json",
+       "entry_convention": "entry on d(主口径),d+1 为稳健性副本"
+      },
+      "exc30": {
+       "n": 142,
+       "median_pct": -21.878,
+       "p10_pct": -48.85,
+       "p25_pct": -36.299,
+       "p75_pct": -2.306,
+       "p90_pct": 26.366,
+       "min_pct": -144.996,
+       "max_pct": 110.079,
+       "pct_negative": 0.7676
+      },
+      "control_random_day": {
+       "median_pct": -6.162,
+       "p05_pct": -9.598,
+       "n_draws": 1000,
+       "percentile_of_actual": 0.0
+      },
+      "strata": {
+       "by_pre_event_gain_tercile": [
+        {
+         "bucket": "低",
+         "n": 47,
+         "strat_lo": -38.209,
+         "strat_hi": 20.756,
+         "strat_unit": "pct",
+         "median_exc_pct": -19.801,
+         "pct_negative": 0.7872
+        },
+        {
+         "bucket": "中",
+         "n": 47,
+         "strat_lo": 21.275,
+         "strat_hi": 84.817,
+         "strat_unit": "pct",
+         "median_exc_pct": -26.205,
+         "pct_negative": 0.7447
+        },
+        {
+         "bucket": "高",
+         "n": 48,
+         "strat_lo": 86.937,
+         "strat_hi": 1100.289,
+         "strat_unit": "pct",
+         "median_exc_pct": -21.878,
+         "pct_negative": 0.7708
+        }
+       ],
+       "by_mcap_tercile": [
+        {
+         "bucket": "小",
+         "n": 40,
+         "mcap_lo": null,
+         "mcap_hi": 152435355.00253457,
+         "median_exc_pct": -22.684,
+         "pct_negative": 0.75,
+         "_recomputed_n": 40
+        },
+        {
+         "bucket": "中",
+         "n": 39,
+         "mcap_lo": 152435355.00253457,
+         "mcap_hi": 839313724.8762876,
+         "median_exc_pct": -21.114,
+         "pct_negative": 0.7436,
+         "_recomputed_n": 39
+        },
+        {
+         "bucket": "大",
+         "n": 40,
+         "mcap_lo": 839313724.8762876,
+         "mcap_hi": null,
+         "median_exc_pct": -13.996,
+         "pct_negative": 0.725,
+         "_recomputed_n": 40
+        }
+       ]
+      }
+     }
+    },
+    {
+     "label": "spot_listing",
+     "n": 205,
+     "payoff": null,
+     "segments": {},
+     "win": null,
+     "mean_pct": -21.398,
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [
+      "D3:事件族报的是中位/均值超额,没有盈亏比字段",
+      "D4:事件族不是「发现段/留出段」两段口径(这里只有按前事件涨幅的分层)"
+     ],
+     "extra": {
+      "source": {
+       "card": "T-284",
+       "ledger": "S-763",
+       "file": "docs/research/t284_results.json",
+       "arm": "asset_mcap_daily(主臂);另两臂 coingecko_pro_ohlc / binance_hist 结果同文件",
+       "event_universe": "kept_events=703(events 行 1474,去掉 90 天内重复与无代号)"
+      },
+      "exc30": {
+       "n": 205,
+       "median_pct": -21.398,
+       "mean_pct": -16.131,
+       "p25_pct": -42.877,
+       "p75_pct": -1.542,
+       "pct_negative": 0.761,
+       "p10_pct": null,
+       "p90_pct": null,
+       "_source": "t284_results.json arms.asset_mcap_daily.fwd30(相对基准超额)"
+      },
+      "control_random_day": {
+       "median_pct": -9.511,
+       "p05_pct": -12.045,
+       "n_draws": 1000,
+       "percentile_of_actual": 0.0
+      },
+      "strata": {
+       "by_pre_event_gain_tercile": null,
+       "by_mcap_tercile": null
+      }
+     }
+    }
+   ],
+   "surviving_independent_ticket_sets": 3
+  },
+  {
+   "id": "F",
+   "table": "S-878 三个形态(336 个桶 → 5 个进入发现段 → 确认数)",
+   "source_file": "docs/research/s878_results.json",
+   "source_json_path": "confirmed / qualified_not_confirmed",
+   "ledger": "S-878",
+   "n_tested": 336,
+   "reported_holds_N": 0,
+   "reported_by_file": 0,
+   "degenerate_M": 0,
+   "surviving_K": 0,
+   "granularity": "票级(5 个进发现段的桶有 n / 盈亏比)",
+   "verdict_note": "这张表原报的「站住」格数就是 0(confirmed 为空)—— 五个进发现段的桶都没被确认",
+   "rows": [
+    {
+     "label": "NEAR12|cycle:shift_pct|hi",
+     "n": 32,
+     "payoff": 2.38,
+     "segments": {
+      "disc": 32,
+      "hold": 206
+     },
+     "win": 0.688,
+     "mean_pct": 11.86,
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [],
+     "extra": {
+      "confirmed": false
+     }
+    },
+    {
+     "label": "NEAR12|stable:USDT_30d|lo",
+     "n": 46,
+     "payoff": 2.83,
+     "segments": {
+      "disc": 46,
+      "hold": 0
+     },
+     "win": 0.478,
+     "mean_pct": 9.98,
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [],
+     "extra": {
+      "confirmed": false
+     }
+    },
+    {
+     "label": "NEAR12|dvol:btc_pct_1y|lo",
+     "n": 52,
+     "payoff": 2.07,
+     "segments": {
+      "disc": 52,
+      "hold": 220
+     },
+     "win": 0.654,
+     "mean_pct": 9.34,
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [],
+     "extra": {
+      "confirmed": false
+     }
+    },
+    {
+     "label": "NEAR12|cycle:deterioration|lo",
+     "n": 50,
+     "payoff": 2.13,
+     "segments": {
+      "disc": 50,
+      "hold": 166
+     },
+     "win": 0.5,
+     "mean_pct": 6.17,
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [],
+     "extra": {
+      "confirmed": false
+     }
+    },
+    {
+     "label": "NEAR12|stable_supply_30d|hi",
+     "n": 30,
+     "payoff": 2.21,
+     "segments": {
+      "disc": 30,
+      "hold": 4
+     },
+     "win": 0.333,
+     "mean_pct": 0.78,
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [],
+     "extra": {
+      "confirmed": false
+     }
+    }
+   ],
+   "surviving_independent_ticket_sets": 0
+  },
+  {
+   "id": "G",
+   "table": "S-879 破位形态 16 格(4 触发 × 4 状态口径)",
+   "source_file": "docs/research/s879_results.json",
+   "source_json_path": "(顶层 16 个格)",
+   "ledger": "S-879",
+   "n_tested": 16,
+   "reported_holds_N": 1,
+   "reported_by_file": "文件里没有判定字段(只有 full/disc/hold 统计量);台账写的「破位空单两段都站住」对应 BD20|drain 系列",
+   "degenerate_M": 0,
+   "surviving_K": 1,
+   "granularity": "票级(有 n / 盈亏比 / 逐段)",
+   "verdict_note": "台账口径:「破位空单(BD20|drain)两段都站住」= 1 个系列;系列内 3 个止损口径(R12/R8/RECLAIM)逐行核过,没有一条触发四条判据。文件里没有 per-格 判定字段,所以「原报 N」按台账读。",
+   "rows": [
+    {
+     "label": "BD20|drain|R12",
+     "n": 66,
+     "payoff": 1.54,
+     "segments": {
+      "disc": 35,
+      "hold": 31
+     },
+     "win": 0.576,
+     "mean_pct": 4.82,
+     "condition_group_key": "full",
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [],
+     "stats_payload": {
+      "disc": {
+       "n": 35,
+       "mean_pct": 4.63,
+       "median_pct": 3.46,
+       "worst_pct": -12.0,
+       "best_pct": 33.49,
+       "win": 0.571,
+       "payoff": 1.5,
+       "stopped_at_a_loss": 0.371,
+       "deployed": 1.0,
+       "mean_days": 20.7
+      },
+      "full": {
+       "n": 66,
+       "mean_pct": 4.82,
+       "median_pct": 2.93,
+       "worst_pct": -12.0,
+       "best_pct": 34.1,
+       "win": 0.576,
+       "payoff": 1.54,
+       "stopped_at_a_loss": 0.348,
+       "deployed": 1.0,
+       "mean_days": 21.7
+      },
+      "hold": {
+       "n": 31,
+       "mean_pct": 5.04,
+       "median_pct": 2.39,
+       "worst_pct": -12.0,
+       "best_pct": 34.1,
+       "win": 0.581,
+       "payoff": 1.6,
+       "stopped_at_a_loss": 0.323,
+       "deployed": 1.0,
+       "mean_days": 22.8
+      }
+     },
+     "ticket_set_key": "BD20|drain"
+    },
+    {
+     "label": "BD20|drain|R8",
+     "n": 66,
+     "payoff": 1.91,
+     "segments": {
+      "disc": 35,
+      "hold": 31
+     },
+     "win": 0.5,
+     "mean_pct": 3.65,
+     "condition_group_key": "full",
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [],
+     "stats_payload": {
+      "disc": {
+       "n": 35,
+       "mean_pct": 2.92,
+       "median_pct": -8.0,
+       "worst_pct": -8.0,
+       "best_pct": 26.81,
+       "win": 0.457,
+       "payoff": 1.98,
+       "stopped_at_a_loss": 0.543,
+       "deployed": 1.0,
+       "mean_days": 16.1
+      },
+      "full": {
+       "n": 66,
+       "mean_pct": 3.65,
+       "median_pct": -3.96,
+       "worst_pct": -8.0,
+       "best_pct": 33.47,
+       "win": 0.5,
+       "payoff": 1.91,
+       "stopped_at_a_loss": 0.5,
+       "deployed": 1.0,
+       "mean_days": 17.5
+      },
+      "hold": {
+       "n": 31,
+       "mean_pct": 4.48,
+       "median_pct": 2.04,
+       "worst_pct": -8.0,
+       "best_pct": 33.47,
+       "win": 0.548,
+       "payoff": 1.85,
+       "stopped_at_a_loss": 0.452,
+       "deployed": 1.0,
+       "mean_days": 19.0
+      }
+     },
+     "ticket_set_key": "BD20|drain"
+    },
+    {
+     "label": "BD20|drain|RECLAIM",
+     "n": 66,
+     "payoff": 4.02,
+     "segments": {
+      "disc": 35,
+      "hold": 31
+     },
+     "win": 0.364,
+     "mean_pct": 3.23,
+     "condition_group_key": "full",
+     "degenerate": false,
+     "degeneracy": [],
+     "criteria_not_applicable": [],
+     "stats_payload": {
+      "disc": {
+       "n": 35,
+       "mean_pct": 3.9,
+       "median_pct": -1.45,
+       "worst_pct": -12.93,
+       "best_pct": 26.81,
+       "win": 0.371,
+       "payoff": 4.38,
+       "stopped_at_a_loss": 0.6,
+       "deployed": 1.0,
+       "mean_days": 13.6
+      },
+      "full": {
+       "n": 66,
+       "mean_pct": 3.23,
+       "median_pct": -1.55,
+       "worst_pct": -15.41,
+       "best_pct": 27.44,
+       "win": 0.364,
+       "payoff": 4.02,
+       "stopped_at_a_loss": 0.621,
+       "deployed": 1.0,
+       "mean_days": 13.4
+      },
+      "hold": {
+       "n": 31,
+       "mean_pct": 2.48,
+       "median_pct": -1.56,
+       "worst_pct": -15.41,
+       "best_pct": 27.44,
+       "win": 0.355,
+       "payoff": 3.6,
+       "stopped_at_a_loss": 0.645,
+       "deployed": 1.0,
+       "mean_days": 13.1
+      }
+     },
+     "ticket_set_key": "BD20|drain"
+    }
+   ],
+   "surviving_independent_ticket_sets": 1,
+   "surviving_rows_sharing_one_ticket_set": [
+    {
+     "readings": [
+      "BD20|drain|R12",
+      "BD20|drain|R8",
+      "BD20|drain|RECLAIM"
+     ],
+     "n": 66
+    }
+   ]
+  },
+  {
+   "id": "I",
+   "table": "S-874 形态表(带 full/disc/hold 统计量)",
+   "source_file": "docs/research/s874_results.json",
+   "source_json_path": "table",
+   "ledger": "S-874",
+   "n_tested": 1080,
+   "reported_holds_N": 0,
+   "reported_by_file": "selection.n_candidates = 0(候选 0 ⇒ 没有站住的格)",
+   "degenerate_M": 0,
+   "surviving_K": 0,
+   "granularity": "票级",
+   "verdict_note": "这张表自己没报站住格(候选 0),进清单是因为它也带同一套票级统计量 —— 供逐位同数扫描",
+   "rows": [],
+   "surviving_independent_ticket_sets": 0
+  },
+  {
+   "id": "H",
+   "table": "S-866 状态格(日频)",
+   "source_file": "docs/research/s866_cells.json",
+   "source_json_path": "cells_all / cells_stat",
+   "ledger": "S-866",
+   "n_tested": 16,
+   "reported_holds_N": 0,
+   "reported_by_file": "文件里没有 per-格 判定字段",
+   "degenerate_M": null,
+   "surviving_K": null,
+   "granularity": "日频格子",
+   "verdict_note": "这张表没报过站住的格(它给的是格子本身),进清单只为记录「查过、没有」",
+   "rows": [],
+   "surviving_independent_ticket_sets": null
+  },
+  {
+   "id": "K",
+   "table": "T-408 基率表(T-416 按 S-882 重出的版本)",
+   "source_file": "docs/research/t408_base_rate_table.json",
+   "source_json_path": "cells",
+   "ledger": "S-881 / S-884(T-416 重出)",
+   "n_tested": 8,
+   "reported_holds_N": 1,
+   "reported_by_file": "verdict == 有信号 的格数",
+   "degenerate_M": 0,
+   "surviving_K": 1,
+   "granularity": "票级",
+   "verdict_note": "这是 A / B 两张表的第二份落盘(T-416 自带对照组重出),数字与 A / B 同源;它自己的 degeneracy_check 段已记 T-416 对 T-408 那 4 行的核对 —— 本表不重复计",
+   "rows": [],
+   "surviving_independent_ticket_sets": 1
+  }
+ ],
+ "duplicate_ticket_sets": [
+  {
+   "file": "t197_results.json",
+   "readings": [
+    "dead.A.list(n=33)",
+    "dead.D.list(n=33)"
+   ],
+   "n_tickets": [
+    33,
+    33
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 33,
+   "evidence": "票清单级别:两组读数的票集合相同(同文件)"
+  },
+  {
+   "file": "t283_results.json",
+   "readings": [
+    "new_S762_gross.worst_tickets(n=8)",
+    "new_S762_net.worst_tickets(n=8)"
+   ],
+   "n_tickets": [
+    8,
+    8
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 8,
+   "evidence": "票清单级别:两组读数的票集合相同(同文件)"
+  },
+  {
+   "file": "t310_results.json",
+   "readings": [
+    "slots.14.0.40.blocked.gross_sample(n=25)",
+    "slots.inf.0.40.blocked.gross_sample(n=25)"
+   ],
+   "n_tickets": [
+    25,
+    25
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 25,
+   "evidence": "票清单级别:两组读数的票集合相同(同文件)"
+  },
+  {
+   "file": "t348_families_results.json",
+   "readings": [
+    "S736_accounting.tickets(n=18)",
+    "S736_published.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两组读数的票集合相同(同文件)"
+  },
+  {
+   "file": "t348_families_results.json",
+   "readings": [
+    "S736_accounting.tickets(n=18)",
+    "S736_fixed.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两组读数的票集合相同(同文件)"
+  },
+  {
+   "file": "t348_families_results.json",
+   "readings": [
+    "S736_published.meta.tickets_detail(n=18)",
+    "S736_fixed.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两组读数的票集合相同(同文件)"
+  },
+  {
+   "file": "t348_r3_families_meta.json",
+   "readings": [
+    "S736_published.tickets_detail(n=18)",
+    "S736_fixed.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两组读数的票集合相同(同文件)"
+  },
+  {
+   "file": "t348_r3_results.json",
+   "readings": [
+    "families.S736_published.meta.tickets_detail(n=18)",
+    "families.S736_fixed.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两组读数的票集合相同(同文件)"
+  },
+  {
+   "file": "t348_r5_results.json",
+   "readings": [
+    "families.S736_published.meta.tickets_detail(n=18)",
+    "families.S736_fixed.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两组读数的票集合相同(同文件)"
+  },
+  {
+   "file": "s684_seth_check_results.json × t197_results.json",
+   "readings": [
+    "s684_seth_check_results.json:tickets(n=956)",
+    "t197_results.json:tickets.A(n=956)"
+   ],
+   "n_tickets": [
+    956,
+    956
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 956,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "s684_seth_check_results.json × t198_results.json",
+   "readings": [
+    "s684_seth_check_results.json:tickets(n=956)",
+    "t198_results.json:tickets(n=956)"
+   ],
+   "n_tickets": [
+    956,
+    956
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 956,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "s684_seth_check_results.json × t355_tickets_full.json",
+   "readings": [
+    "s684_seth_check_results.json:tickets(n=956)",
+    "t355_tickets_full.json:engine_tickets(n=956)"
+   ],
+   "n_tickets": [
+    956,
+    956
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 956,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "s690_results.json × t205_results.json",
+   "readings": [
+    "s690_results.json:tickets(n=656)",
+    "t205_results.json:tickets(n=656)"
+   ],
+   "n_tickets": [
+    656,
+    656
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 656,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t197_results.json × t198_results.json",
+   "readings": [
+    "t197_results.json:worst5_D(n=5)",
+    "t198_results.json:worst5_D(n=5)"
+   ],
+   "n_tickets": [
+    5,
+    5
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 5,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t197_results.json × t198_results.json",
+   "readings": [
+    "t197_results.json:tickets.A(n=956)",
+    "t198_results.json:tickets(n=956)"
+   ],
+   "n_tickets": [
+    956,
+    956
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 956,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t197_results.json × t355_tickets_full.json",
+   "readings": [
+    "t197_results.json:tickets.A(n=956)",
+    "t355_tickets_full.json:engine_tickets(n=956)"
+   ],
+   "n_tickets": [
+    956,
+    956
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 956,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t198_results.json × t355_tickets_full.json",
+   "readings": [
+    "t198_results.json:tickets(n=956)",
+    "t355_tickets_full.json:engine_tickets(n=956)"
+   ],
+   "n_tickets": [
+    956,
+    956
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 956,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t238_results.json × t238_results_round1.json",
+   "readings": [
+    "t238_results.json:oos_s677.tickets_cache(n=20)",
+    "t238_results_round1.json:oos_s677.tickets_cache(n=20)"
+   ],
+   "n_tickets": [
+    20,
+    20
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 20,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t238_results.json × t238_results_v2.json",
+   "readings": [
+    "t238_results.json:warmup.by_reason.indicator_diff_after_warmup.sample(n=12)",
+    "t238_results_v2.json:warmup.by_reason.indicator_diff_after_warmup.sample(n=12)"
+   ],
+   "n_tickets": [
+    12,
+    12
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 12,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t238_results.json × t238_results_v2.json",
+   "readings": [
+    "t238_results.json:warmup.by_reason.warmup_window.sample(n=12)",
+    "t238_results_v2.json:warmup.by_reason.warmup_window.sample(n=12)"
+   ],
+   "n_tickets": [
+    12,
+    12
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 12,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t238_results.json × t238_results_v2.json",
+   "readings": [
+    "t238_results.json:oos_s677.tickets_cache(n=20)",
+    "t238_results_v2.json:oos_s677.tickets_cache(n=20)"
+   ],
+   "n_tickets": [
+    20,
+    20
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 20,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t238_results_mech.json × t238_results_v2.json",
+   "readings": [
+    "t238_results_mech.json:rows(n=71)",
+    "t238_results_v2.json:tickets.compare.only_a_list(n=71)"
+   ],
+   "n_tickets": [
+    71,
+    71
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 71,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t238_results_round1.json × t238_results_v2.json",
+   "readings": [
+    "t238_results_round1.json:oos_s677.tickets_cache(n=20)",
+    "t238_results_v2.json:oos_s677.tickets_cache(n=20)"
+   ],
+   "n_tickets": [
+    20,
+    20
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 20,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t282_results.json × t283_results.json",
+   "readings": [
+    "t282_results.json:worst_tickets(n=8)",
+    "t283_results.json:old_S761_recomputed.worst_tickets(n=8)"
+   ],
+   "n_tickets": [
+    8,
+    8
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 8,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t282_results.json × t283_results.json",
+   "readings": [
+    "t282_results.json:tickets(n=131)",
+    "t283_results.json:ticket_compare(n=131)"
+   ],
+   "n_tickets": [
+    131,
+    131
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 131,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t289_results.json × t297_results.json",
+   "readings": [
+    "t289_results.json:rv2.blocked_list(n=11)",
+    "t297_results.json:rv2.blocked_list(n=11)"
+   ],
+   "n_tickets": [
+    11,
+    11
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 11,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t342_results.json × t348_base_t342_results.json",
+   "readings": [
+    "t342_results.json:drop_ticket.candidates(n=12)",
+    "t348_base_t342_results.json:drop_ticket.candidates(n=12)"
+   ],
+   "n_tickets": [
+    12,
+    12
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 12,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_families_results.json × t348_r3_families_meta.json",
+   "readings": [
+    "t348_families_results.json:S736_accounting.tickets(n=18)",
+    "t348_r3_families_meta.json:S736_published.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_families_results.json × t348_r3_families_meta.json",
+   "readings": [
+    "t348_families_results.json:S736_accounting.tickets(n=18)",
+    "t348_r3_families_meta.json:S736_fixed.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_families_results.json × t348_r3_families_meta.json",
+   "readings": [
+    "t348_families_results.json:S736_published.meta.tickets_detail(n=18)",
+    "t348_r3_families_meta.json:S736_published.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_families_results.json × t348_r3_families_meta.json",
+   "readings": [
+    "t348_families_results.json:S736_published.meta.tickets_detail(n=18)",
+    "t348_r3_families_meta.json:S736_fixed.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_families_results.json × t348_r3_families_meta.json",
+   "readings": [
+    "t348_families_results.json:S736_fixed.meta.tickets_detail(n=18)",
+    "t348_r3_families_meta.json:S736_published.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_families_results.json × t348_r3_families_meta.json",
+   "readings": [
+    "t348_families_results.json:S736_fixed.meta.tickets_detail(n=18)",
+    "t348_r3_families_meta.json:S736_fixed.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_families_results.json × t348_r3_results.json",
+   "readings": [
+    "t348_families_results.json:S736_accounting.tickets(n=18)",
+    "t348_r3_results.json:families.S736_published.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_families_results.json × t348_r3_results.json",
+   "readings": [
+    "t348_families_results.json:S736_accounting.tickets(n=18)",
+    "t348_r3_results.json:families.S736_fixed.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_families_results.json × t348_r3_results.json",
+   "readings": [
+    "t348_families_results.json:S736_published.meta.tickets_detail(n=18)",
+    "t348_r3_results.json:families.S736_published.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_families_results.json × t348_r3_results.json",
+   "readings": [
+    "t348_families_results.json:S736_published.meta.tickets_detail(n=18)",
+    "t348_r3_results.json:families.S736_fixed.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_families_results.json × t348_r3_results.json",
+   "readings": [
+    "t348_families_results.json:S736_fixed.meta.tickets_detail(n=18)",
+    "t348_r3_results.json:families.S736_published.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_families_results.json × t348_r3_results.json",
+   "readings": [
+    "t348_families_results.json:S736_fixed.meta.tickets_detail(n=18)",
+    "t348_r3_results.json:families.S736_fixed.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_families_results.json × t348_r5_results.json",
+   "readings": [
+    "t348_families_results.json:S736_accounting.tickets(n=18)",
+    "t348_r5_results.json:families.S736_published.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_families_results.json × t348_r5_results.json",
+   "readings": [
+    "t348_families_results.json:S736_accounting.tickets(n=18)",
+    "t348_r5_results.json:families.S736_fixed.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_families_results.json × t348_r5_results.json",
+   "readings": [
+    "t348_families_results.json:S736_published.meta.tickets_detail(n=18)",
+    "t348_r5_results.json:families.S736_published.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_families_results.json × t348_r5_results.json",
+   "readings": [
+    "t348_families_results.json:S736_published.meta.tickets_detail(n=18)",
+    "t348_r5_results.json:families.S736_fixed.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_families_results.json × t348_r5_results.json",
+   "readings": [
+    "t348_families_results.json:S736_fixed.meta.tickets_detail(n=18)",
+    "t348_r5_results.json:families.S736_published.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_families_results.json × t348_r5_results.json",
+   "readings": [
+    "t348_families_results.json:S736_fixed.meta.tickets_detail(n=18)",
+    "t348_r5_results.json:families.S736_fixed.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_r3_families_meta.json × t348_r3_results.json",
+   "readings": [
+    "t348_r3_families_meta.json:S736_published.tickets_detail(n=18)",
+    "t348_r3_results.json:families.S736_published.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_r3_families_meta.json × t348_r3_results.json",
+   "readings": [
+    "t348_r3_families_meta.json:S736_published.tickets_detail(n=18)",
+    "t348_r3_results.json:families.S736_fixed.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_r3_families_meta.json × t348_r3_results.json",
+   "readings": [
+    "t348_r3_families_meta.json:S736_fixed.tickets_detail(n=18)",
+    "t348_r3_results.json:families.S736_published.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_r3_families_meta.json × t348_r3_results.json",
+   "readings": [
+    "t348_r3_families_meta.json:S736_fixed.tickets_detail(n=18)",
+    "t348_r3_results.json:families.S736_fixed.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_r3_families_meta.json × t348_r5_results.json",
+   "readings": [
+    "t348_r3_families_meta.json:S736_published.tickets_detail(n=18)",
+    "t348_r5_results.json:families.S736_published.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_r3_families_meta.json × t348_r5_results.json",
+   "readings": [
+    "t348_r3_families_meta.json:S736_published.tickets_detail(n=18)",
+    "t348_r5_results.json:families.S736_fixed.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_r3_families_meta.json × t348_r5_results.json",
+   "readings": [
+    "t348_r3_families_meta.json:S736_fixed.tickets_detail(n=18)",
+    "t348_r5_results.json:families.S736_published.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_r3_families_meta.json × t348_r5_results.json",
+   "readings": [
+    "t348_r3_families_meta.json:S736_fixed.tickets_detail(n=18)",
+    "t348_r5_results.json:families.S736_fixed.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_r3_results.json × t348_r5_results.json",
+   "readings": [
+    "t348_r3_results.json:families.S736_published.meta.tickets_detail(n=18)",
+    "t348_r5_results.json:families.S736_published.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_r3_results.json × t348_r5_results.json",
+   "readings": [
+    "t348_r3_results.json:families.S736_published.meta.tickets_detail(n=18)",
+    "t348_r5_results.json:families.S736_fixed.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_r3_results.json × t348_r5_results.json",
+   "readings": [
+    "t348_r3_results.json:families.S736_fixed.meta.tickets_detail(n=18)",
+    "t348_r5_results.json:families.S736_published.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "t348_r3_results.json × t348_r5_results.json",
+   "readings": [
+    "t348_r3_results.json:families.S736_fixed.meta.tickets_detail(n=18)",
+    "t348_r5_results.json:families.S736_fixed.meta.tickets_detail(n=18)"
+   ],
+   "n_tickets": [
+    18,
+    18
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 18,
+   "evidence": "票清单级别:两个文件的票集合完全相同"
+  },
+  {
+   "file": "docs/research/s881_results.json × docs/research/s884_results.json",
+   "readings": [
+    "[A] setup=BO20|线上·主流领",
+    "[C] setup=BREAK_UP|mode=FIX8|cell=线上·主流领"
+   ],
+   "n_tickets": [
+    109,
+    109
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 109,
+   "evidence": "条件组统计量逐位相同(⇒ 同一批票)(跨表)"
+  },
+  {
+   "file": "docs/research/s881_results.json",
+   "readings": [
+    "[B] setup=BO20|线上·主流领|crowd=pos:btc_crowd_ln:lo",
+    "[B] setup=BO20|线上·主流领|crowd=pos:btc_smart_minus_crowd:hi"
+   ],
+   "n_tickets": [
+    94,
+    94
+   ],
+   "identical_set": true,
+   "jaccard": 1.0,
+   "intersection": 94,
+   "evidence": "条件组统计量逐位相同(⇒ 同一批票)(同一张表里两行)"
+  }
+ ],
+ "md_claims": [
+  {
+   "claim": "S-884:整张表站住 4 格(平移中位 3 格,p = 0.30)",
+   "ledger": "S-884",
+   "table_id": "C",
+   "data_in_repo": "docs/research/s884_results.json",
+   "checkable": true
+  },
+  {
+   "claim": "S-881:8 个「触发 × 格子」里站住 1 个(平移 p = 0.86)",
+   "ledger": "S-881",
+   "table_id": "A",
+   "data_in_repo": "docs/research/s881_results.json",
+   "checkable": true
+  },
+  {
+   "claim": "S-881:7 个拥挤持仓读数里站住 3 个(p_crowd_ge_real = 0.0)",
+   "ledger": "S-881",
+   "table_id": "B",
+   "data_in_repo": "docs/research/s881_results.json",
+   "checkable": true
+  },
+  {
+   "claim": "S-888:线上 · 主流领里 8 个风格指数有 7 个两段都站住(平移 p = 0.033);全表站住 12",
+   "ledger": "S-888",
+   "table_id": null,
+   "data_in_repo": null,
+   "checkable": false,
+   "why": "结果没有落盘成 json(只在台账文字里 + Seth 的 SQL);docs/research/ 与 Mac 数据根都搜过 —— ⇒ 逐行核跑不动"
+  },
+  {
+   "claim": "S-889:落到币上也站住(130 张 +5.9% / 张 → 620 张 +5.5%,胜率 15–21%、盈亏比 9.6–14.5)",
+   "ledger": "S-889",
+   "table_id": null,
+   "data_in_repo": null,
+   "checkable": false,
+   "why": "同 S-888:没有落盘文件"
+  },
+  {
+   "claim": "S-879:破位空单两段都站住(有效样本 66 张)",
+   "ledger": "S-879",
+   "table_id": "G",
+   "data_in_repo": "docs/research/s879_results.json",
+   "checkable": true,
+   "why": "文件里没有 per-格 判定字段 ⇒「原报 N」按台账读;数字本身可核"
+  },
+  {
+   "claim": "S-873:26 条上站住了(T × L 版均值 / 波动 1.01、安慰剂 94.5 分位)",
+   "ledger": "S-873",
+   "table_id": null,
+   "data_in_repo": null,
+   "checkable": false,
+   "why": "没有落盘文件"
+  },
+  {
+   "claim": "S-829:两台引擎一致(每格差 ≤ 0.6pp);7 格站住",
+   "ledger": "S-829",
+   "table_id": null,
+   "data_in_repo": null,
+   "checkable": false,
+   "why": "没有落盘文件"
+  },
+  {
+   "claim": "S-825 / T-349:f★ = 1.25%,f 0.75% / 1.0% / 1.25% 三档连续站住",
+   "ledger": "S-825",
+   "table_id": null,
+   "data_in_repo": "docs/research/t349_results.json",
+   "checkable": false,
+   "why": "账户级口径(每票风险 f × 名义上限),没有票级 n / 盈亏比 / 逐段拆分 —— 四条判据都不适用;文件里也没有 per-格 的站住标记(在 judgement.per_f 里)"
+  }
+ ],
+ "not_checkable": [
+  {
+   "what": "S-888 / S-889 / S-873 / S-829 的「N 格站住」",
+   "why": "结果未落盘(台账文字 + Seth 的 SQL);已排除:docs/research/*.json 全扫无 S-888/S-889/S-873/S-829 关键字;Mac 数据根 _data/research 与 research/ 也没有对应文件",
+   "blocked_at": "找不到机器可核的落盘数字"
+  },
+  {
+   "what": "S-869 盲书 156 格(S-869)",
+   "why": "口径是「策略 × 状态」的日频格子,没有票级 n / 盈亏比 / 发现段-留出段拆分 ⇒ D2/D3/D4 不适用;只核了 D1(逐位同数)",
+   "blocked_at": "口径不含票级样本"
+  },
+  {
+   "what": "S-767 事件基率表 3 族",
+   "why": "事件级口径:有 n(53 / 142 / 205),但没有盈亏比、没有发现段-留出段拆分 ⇒ 只核 D2 与「分层里有 n < 10 的桶」",
+   "blocked_at": "口径不含票级样本"
+  }
+ ],
+ "duplicate_ticket_sets_note": "三种证据:① 票清单级别(同一文件里两组读数的票集合完全相同或 Jaccard ≥ 0.95);② 跨文件票集合完全相同;③ 条件组统计量逐位相同(同表两行 / 跨表两行)。同一批票被两个读数同时选中 ⇒ 它们不是两条独立证据。",
+ "ticket_list_scan": {
+  "files_scanned": 379,
+  "ticket_lists_found": 105,
+  "note": "票清单 = 数组里每条都带日期字段、长度 ≥ 3;集合键 = (日期, 标的)"
+ }
+}

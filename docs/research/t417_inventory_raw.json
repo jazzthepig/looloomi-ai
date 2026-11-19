@@ -1,0 +1,6650 @@
+[
+ {
+  "file": "T-093_results.json",
+  "bytes": 4929,
+  "top_keys": [
+   "task",
+   "windows",
+   "n_shuffles",
+   "seed",
+   "block_weeks",
+   "pre_registered",
+   "results_by_window",
+   "verdicts"
+  ],
+  "hold_like_paths": [
+   [
+    "verdicts.W1_2020_2022.R1c_PASS",
+    1
+   ],
+   [
+    "verdicts.W1_2020_2022.R2c_PASS",
+    1
+   ],
+   [
+    "verdicts.W1_2020_2022.R3c_PASS",
+    1
+   ],
+   [
+    "verdicts.W2_2023_2024.R1c_PASS",
+    1
+   ],
+   [
+    "verdicts.W2_2023_2024.R2c_PASS",
+    1
+   ],
+   [
+    "verdicts.W2_2023_2024.R3c_PASS",
+    1
+   ],
+   [
+    "verdicts.W3_2025_now.R1c_PASS",
+    1
+   ],
+   [
+    "verdicts.W3_2025_now.R2c_PASS",
+    1
+   ],
+   [
+    "verdicts.W3_2025_now.R3c_PASS",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 9
+ },
+ {
+  "file": "T-360_results.json",
+  "bytes": 36926,
+  "top_keys": [
+   "recon",
+   "panel",
+   "variants",
+   "account"
+  ],
+  "hold_like_paths": [
+   [
+    "variants[].i_pass",
+    3
+   ],
+   [
+    "variants[].ii_pass",
+    3
+   ],
+   [
+    "variants[].iii_pass",
+    3
+   ],
+   [
+    "variants[].iv_pass",
+    3
+   ],
+   [
+    "variants[].all_pass",
+    3
+   ],
+   [
+    "variants[].window1.ii_pass",
+    3
+   ],
+   [
+    "variants[].window1.i_pass",
+    3
+   ],
+   [
+    "variants[].window1.iii_pass",
+    3
+   ],
+   [
+    "variants[].window2.ii_pass",
+    3
+   ],
+   [
+    "variants[].window2.i_pass",
+    3
+   ],
+   [
+    "variants[].window2.iii_pass",
+    3
+   ],
+   [
+    "variants[].event_stats.hold_rel_pct",
+    3
+   ]
+  ],
+  "n_hold_like_paths": 39
+ },
+ {
+  "file": "T-360_results_run3.json",
+  "bytes": 17292,
+  "top_keys": [
+   "recon",
+   "panel",
+   "variants",
+   "account"
+  ],
+  "hold_like_paths": [
+   [
+    "variants[].i_pass",
+    3
+   ],
+   [
+    "variants[].ii_pass",
+    3
+   ],
+   [
+    "variants[].iii_pass",
+    3
+   ],
+   [
+    "variants[].iv_pass",
+    3
+   ],
+   [
+    "variants[].all_pass",
+    3
+   ],
+   [
+    "variants[].window1.ii_pass",
+    3
+   ],
+   [
+    "variants[].window1.i_pass",
+    3
+   ],
+   [
+    "variants[].window1.iii_pass",
+    3
+   ],
+   [
+    "variants[].window2.ii_pass",
+    3
+   ],
+   [
+    "variants[].window2.i_pass",
+    3
+   ],
+   [
+    "variants[].window2.iii_pass",
+    3
+   ],
+   [
+    "variants[].event_stats.hold_rel_pct",
+    3
+   ]
+  ],
+  "n_hold_like_paths": 39
+ },
+ {
+  "file": "T-368_results.json",
+  "bytes": 6690,
+  "top_keys": [
+   "task",
+   "ledger",
+   "seed",
+   "n_null",
+   "window",
+   "rule",
+   "btc",
+   "self_checks",
+   "kernel_crosscheck",
+   "base",
+   "variant",
+   "null",
+   "verdict",
+   "lit_week_ends_in_window"
+  ],
+  "hold_like_paths": [
+   [
+    "verdict.a_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "_t285_bars_cache.json",
+  "bytes": 7407816,
+  "top_keys": [
+   "0G",
+   "1000000BOB",
+   "1000000MOG",
+   "1000BONK",
+   "1000CAT",
+   "1000CHEEMS",
+   "1000FLOKI",
+   "1000LUNC",
+   "1000PEPE",
+   "1000RATS",
+   "1000SATS",
+   "1000SHIB",
+   "1000WHY",
+   "1000X"
+  ],
+  "hold_like_paths": [
+   [
+    "THRESHOLD (T",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "s661_discovery.json",
+  "bytes": 4611,
+  "top_keys": [
+   "coverage",
+   "V1:1m",
+   "V1:3m",
+   "V2:1m",
+   "V2:3m",
+   "V3:1m",
+   "V3:3m",
+   "V4:1m",
+   "V4:3m",
+   "V5:1m",
+   "V5:3m",
+   "passed"
+  ],
+  "hold_like_paths": [
+   [
+    "V1:1m.passes_discovery",
+    1
+   ],
+   [
+    "V1:3m.passes_discovery",
+    1
+   ],
+   [
+    "V2:1m.passes_discovery",
+    1
+   ],
+   [
+    "V2:3m.passes_discovery",
+    1
+   ],
+   [
+    "V3:1m.passes_discovery",
+    1
+   ],
+   [
+    "V3:3m.passes_discovery",
+    1
+   ],
+   [
+    "V4:1m.passes_discovery",
+    1
+   ],
+   [
+    "V4:3m.passes_discovery",
+    1
+   ],
+   [
+    "V5:1m.passes_discovery",
+    1
+   ],
+   [
+    "V5:3m.passes_discovery",
+    1
+   ],
+   [
+    "passed",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 11
+ },
+ {
+  "file": "s661_holdout.json",
+  "bytes": 3465,
+  "top_keys": [
+   "k",
+   "coverage",
+   "V3:3m",
+   "V4:1m"
+  ],
+  "hold_like_paths": [
+   [
+    "V3:3m.threshold",
+    1
+   ],
+   [
+    "V4:1m.threshold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 2
+ },
+ {
+  "file": "s662_holdout.json",
+  "bytes": 2055,
+  "top_keys": [
+   "k",
+   "coverage",
+   "NV1:3m"
+  ],
+  "hold_like_paths": [
+   [
+    "NV1:3m.threshold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "s664_results.json",
+  "bytes": 927,
+  "top_keys": [
+   "discovery",
+   "holdout",
+   "verdict"
+  ],
+  "hold_like_paths": [
+   [
+    "holdout",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "s666_results.json",
+  "bytes": 3752,
+  "top_keys": [
+   "tickets",
+   "unresolved_on_hl",
+   "unresolved_symbols",
+   "no_binance_close",
+   "resolved",
+   "hl_has_signal_bar",
+   "legit_ge_2023",
+   "legit_lt_2023",
+   "legit_all",
+   "fake_all",
+   "fake_ge_2023",
+   "verdict",
+   "report_only"
+  ],
+  "hold_like_paths": [
+   [
+    "legit_ge_2023.passed",
+    1
+   ],
+   [
+    "legit_lt_2023.passed",
+    1
+   ],
+   [
+    "legit_all.passed",
+    1
+   ],
+   [
+    "fake_all.passed",
+    1
+   ],
+   [
+    "fake_ge_2023.passed",
+    1
+   ],
+   [
+    "report_only.legit_passed_mean_r",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 6
+ },
+ {
+  "file": "s677_results.json",
+  "bytes": 13925,
+  "top_keys": [
+   "data",
+   "window",
+   "primary",
+   "survivor_only",
+   "no_gate",
+   "y2019",
+   "fish_capture",
+   "fish_capture_no_gate"
+  ],
+  "hold_like_paths": [
+   [
+    "primary.tickets[].survivor",
+    3
+   ],
+   [
+    "data.survivors_in_data",
+    1
+   ],
+   [
+    "survivor_only",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 5
+ },
+ {
+  "file": "s678_results.json",
+  "bytes": 18822,
+  "top_keys": [
+   "data",
+   "window",
+   "primary",
+   "only_report"
+  ],
+  "hold_like_paths": [
+   [
+    "primary.tickets[].survivor",
+    3
+   ],
+   [
+    "only_report.survivor_only",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "s679_seth_results.json",
+  "bytes": 56212,
+  "top_keys": [
+   "G1",
+   "G2"
+  ],
+  "hold_like_paths": [
+   [
+    "G1.judge.V1.recovery_capture_vs_hold_median",
+    1
+   ],
+   [
+    "G1.judge.V2.recovery_capture_vs_hold_median",
+    1
+   ],
+   [
+    "G2.judge.V1.recovery_capture_vs_hold_median",
+    1
+   ],
+   [
+    "G2.judge.V2.recovery_capture_vs_hold_median",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "s681_h1_results.json",
+  "bytes": 319652,
+  "top_keys": [
+   "rule",
+   "n_listings_total",
+   "discovery",
+   "holdout",
+   "judged",
+   "money_discovery",
+   "money_holdout",
+   "hl_native",
+   "tickets"
+  ],
+  "hold_like_paths": [
+   [
+    "rule.n_hold",
+    1
+   ],
+   [
+    "holdout",
+    1
+   ],
+   [
+    "judged.3_holdout_n",
+    1
+   ],
+   [
+    "judged.3_holdout_mean_r",
+    1
+   ],
+   [
+    "money_holdout",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 5
+ },
+ {
+  "file": "s681_h2_pump_fade_results.json",
+  "bytes": 1057601,
+  "top_keys": [
+   "meta",
+   "discovery",
+   "holdout",
+   "judged",
+   "tickets",
+   "signals",
+   "spot_2018_2020"
+  ],
+  "hold_like_paths": [
+   [
+    "discovery.worst[].hold_days",
+    3
+   ],
+   [
+    "holdout.worst[].hold_days",
+    3
+   ],
+   [
+    "tickets[].hold_days",
+    3
+   ],
+   [
+    "meta.params.n_hold",
+    1
+   ],
+   [
+    "meta.holdout_from",
+    1
+   ],
+   [
+    "meta.n_signals_raw",
+    1
+   ],
+   [
+    "discovery.judge_partial.3_holdout_n",
+    1
+   ],
+   [
+    "discovery.judge_partial.3_holdout_mean_r",
+    1
+   ],
+   [
+    "discovery.n_signals",
+    1
+   ],
+   [
+    "holdout",
+    1
+   ],
+   [
+    "holdout.n_signals",
+    1
+   ],
+   [
+    "judged.3_holdout_n",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 19
+ },
+ {
+  "file": "s681_h2_seth_results.json",
+  "bytes": 564336,
+  "top_keys": [
+   "h",
+   "discovery",
+   "null_median",
+   "null_q95",
+   "judged",
+   "holdout",
+   "money_discovery",
+   "money_holdout",
+   "tickets"
+  ],
+  "hold_like_paths": [
+   [
+    "judged.3_holdout_n",
+    1
+   ],
+   [
+    "judged.3_holdout_mean_r",
+    1
+   ],
+   [
+    "holdout",
+    1
+   ],
+   [
+    "money_holdout",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "s681_h3_funding_crowd_results.json",
+  "bytes": 2135064,
+  "top_keys": [
+   "task",
+   "ledger",
+   "hypothesis",
+   "lane",
+   "protocol",
+   "data",
+   "stage_order",
+   "discovery",
+   "holdout",
+   "judge",
+   "verdict",
+   "hedged",
+   "robustness_lag1",
+   "robustness_nochain"
+  ],
+  "hold_like_paths": [
+   [
+    "tickets.discovery[].hold_days",
+    3
+   ],
+   [
+    "tickets.holdout[].hold_days",
+    3
+   ],
+   [
+    "protocol.n_hold",
+    1
+   ],
+   [
+    "protocol.holdout_from",
+    1
+   ],
+   [
+    "stage_order.holdout_started_at",
+    1
+   ],
+   [
+    "stage_order.holdout_written_at",
+    1
+   ],
+   [
+    "discovery.funnel.crowd_ge_threshold",
+    1
+   ],
+   [
+    "holdout",
+    1
+   ],
+   [
+    "judge.3_holdout_n",
+    1
+   ],
+   [
+    "judge.3_holdout_mean_r",
+    1
+   ],
+   [
+    "hedged.holdout",
+    1
+   ],
+   [
+    "robustness_lag1.hold_n",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 26
+ },
+ {
+  "file": "s681_h3_seth_results.json",
+  "bytes": 1179324,
+  "top_keys": [
+   "h",
+   "discovery",
+   "null_median",
+   "null_q95",
+   "judged",
+   "holdout",
+   "money_discovery",
+   "money_holdout",
+   "tickets"
+  ],
+  "hold_like_paths": [
+   [
+    "judged.3_holdout_n",
+    1
+   ],
+   [
+    "judged.3_holdout_mean_r",
+    1
+   ],
+   [
+    "holdout",
+    1
+   ],
+   [
+    "money_holdout",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "s681_h4_bear_rally_fail_results.json",
+  "bytes": 3972446,
+  "top_keys": [
+   "rule",
+   "universe",
+   "discovery",
+   "holdout",
+   "judged",
+   "by_symbol_btc_eth",
+   "money_discovery",
+   "money_holdout",
+   "nasdaq_1971_2014",
+   "spot_binance_2018_2020",
+   "tickets"
+  ],
+  "hold_like_paths": [
+   [
+    "tickets[].hold_days",
+    3
+   ],
+   [
+    "rule.n_hold",
+    1
+   ],
+   [
+    "rule.holdout_from",
+    1
+   ],
+   [
+    "holdout",
+    1
+   ],
+   [
+    "judged.3_holdout_n",
+    1
+   ],
+   [
+    "judged.3_holdout_mean_r",
+    1
+   ],
+   [
+    "by_symbol_btc_eth.BTC.holdout",
+    1
+   ],
+   [
+    "by_symbol_btc_eth.BTC.judged.3_holdout_n",
+    1
+   ],
+   [
+    "by_symbol_btc_eth.BTC.judged.3_holdout_mean_r",
+    1
+   ],
+   [
+    "by_symbol_btc_eth.ETH.holdout",
+    1
+   ],
+   [
+    "by_symbol_btc_eth.ETH.judged.3_holdout_n",
+    1
+   ],
+   [
+    "by_symbol_btc_eth.ETH.judged.3_holdout_mean_r",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 15
+ },
+ {
+  "file": "s681_h4_seth_results.json",
+  "bytes": 3056128,
+  "top_keys": [
+   "h",
+   "discovery",
+   "null_median",
+   "null_q95",
+   "judged",
+   "holdout",
+   "money_discovery",
+   "money_holdout",
+   "tickets"
+  ],
+  "hold_like_paths": [
+   [
+    "judged.3_holdout_n",
+    1
+   ],
+   [
+    "judged.3_holdout_mean_r",
+    1
+   ],
+   [
+    "holdout",
+    1
+   ],
+   [
+    "money_holdout",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "s692_results.json",
+  "bytes": 969,
+  "top_keys": [
+   "ledger",
+   "asset",
+   "n_days",
+   "derisked_days",
+   "gated",
+   "hold",
+   "null_calmar_p95",
+   "null_calmar_median",
+   "gated_calmar_pct_in_null",
+   "halves",
+   "verdict"
+  ],
+  "hold_like_paths": [
+   [
+    "hold",
+    1
+   ],
+   [
+    "halves.2023-01_2024-10.hold",
+    1
+   ],
+   [
+    "halves.2024-11_2026-09.hold",
+    1
+   ],
+   [
+    "verdict.c3_both_halves_calmar_ge_hold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "s699_v1_neighbors.json",
+  "bytes": 6653,
+  "top_keys": [
+   "what",
+   "captured_at_utc",
+   "v1_zscore_pass",
+   "v1_note",
+   "neighbours",
+   "v2"
+  ],
+  "hold_like_paths": [
+   [
+    "v1_zscore_pass",
+    1
+   ],
+   [
+    "v2.zscore_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 2
+ },
+ {
+  "file": "s823_discovery.json",
+  "bytes": 2610,
+  "top_keys": [
+   "window",
+   "last_price_day_read",
+   "rules",
+   "eligible",
+   "picked"
+  ],
+  "hold_like_paths": [
+   [
+    "rules.HOLD",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "s823_results.json",
+  "bytes": 1742,
+  "top_keys": [
+   "picked",
+   "window",
+   "last_price_day_read",
+   "R6",
+   "short_leg",
+   "null",
+   "R8",
+   "HOLD",
+   "verdict"
+  ],
+  "hold_like_paths": [
+   [
+    "HOLD",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "s851_results.json",
+  "bytes": 2891,
+  "top_keys": [
+   "coverage",
+   "real",
+   "null_random_starts",
+   "expectations",
+   "self_checks",
+   "episodes"
+  ],
+  "hold_like_paths": [
+   [
+    "real.share_confirmed",
+    1
+   ],
+   [
+    "real.confirmed",
+    1
+   ],
+   [
+    "null_random_starts.share_confirmed_median",
+    1
+   ],
+   [
+    "null_random_starts.share_confirmed_p90",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "s852_results.json",
+  "bytes": 15266,
+  "top_keys": [
+   "summary",
+   "self_checks",
+   "episodes"
+  ],
+  "hold_like_paths": [
+   [
+    "summary.confirmed",
+    1
+   ],
+   [
+    "summary.confirmed_median",
+    1
+   ],
+   [
+    "summary.confirmed_8w_after_negative",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 3
+ },
+ {
+  "file": "s865_results.json",
+  "bytes": 40022,
+  "top_keys": [
+   "table",
+   "n_signals",
+   "dominated",
+   "non_dominated_count_short",
+   "n_short_slices",
+   "self_checks"
+  ],
+  "hold_like_paths": [
+   [
+    "n_signals",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "s866_cells.json",
+  "bytes": 727953,
+  "top_keys": [
+   "meta",
+   "cells_all",
+   "cells_stat",
+   "daily",
+   "labeled_days",
+   "stat_days"
+  ],
+  "hold_like_paths": [
+   [
+    "meta.holdout_days",
+    1
+   ],
+   [
+    "meta.holdout_first",
+    1
+   ],
+   [
+    "meta.holdout_last",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 3
+ },
+ {
+  "file": "s866_results.json",
+  "bytes": 83796,
+  "top_keys": [
+   "meta",
+   "reconciliation",
+   "a_vs_mine_stats",
+   "eth_sol",
+   "control"
+  ],
+  "hold_like_paths": [
+   [
+    "meta.holdout_days",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "s869_blind_book_results.json",
+  "bytes": 88373,
+  "top_keys": [
+   "books",
+   "meta"
+  ],
+  "hold_like_paths": [
+   [
+    "meta.conventions.holding",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "s869_blind_results.json",
+  "bytes": 135300,
+  "top_keys": [
+   "long_shou",
+   "long_shou_strategies",
+   "meta",
+   "table"
+  ],
+  "hold_like_paths": [
+   [
+    "table.ACWI|L抽.all_pass",
+    1
+   ],
+   [
+    "table.ACWI|L注.all_pass",
+    1
+   ],
+   [
+    "table.ACWI|R升.all_pass",
+    1
+   ],
+   [
+    "table.ACWI|R降.all_pass",
+    1
+   ],
+   [
+    "table.ACWI|T线上.all_pass",
+    1
+   ],
+   [
+    "table.ACWI|T线下.all_pass",
+    1
+   ],
+   [
+    "table.ACWI|W坏.all_pass",
+    1
+   ],
+   [
+    "table.ACWI|W好.all_pass",
+    1
+   ],
+   [
+    "table.ACWI|线上·抽.all_pass",
+    1
+   ],
+   [
+    "table.ACWI|线上·注.all_pass",
+    1
+   ],
+   [
+    "table.ACWI|线下·抽.all_pass",
+    1
+   ],
+   [
+    "table.ACWI|线下·注.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 156
+ },
+ {
+  "file": "s869_extra_panel_c.meta.json",
+  "bytes": 4696,
+  "top_keys": [
+   "T364_cross_asset_trend",
+   "World50_EW",
+   "_selfcheck",
+   "World50_EWxMom",
+   "_errors",
+   "S681_H1_disc",
+   "S681_H1_holdout",
+   "S840_ruleA_H30",
+   "S840_ruleA_H30_funding",
+   "T372_alt_short_basket"
+  ],
+  "hold_like_paths": [
+   [
+    "S681_H1_holdout",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "s874_results.json",
+  "bytes": 1405122,
+  "top_keys": [
+   "reproduces_s865",
+   "table",
+   "references",
+   "selection",
+   "marginals_drain"
+  ],
+  "hold_like_paths": [
+   [
+    "table.B15|g+1|A0|T0|all|H28.hold",
+    1
+   ],
+   [
+    "table.B15|g+1|A0|T15|all|H28.hold",
+    1
+   ],
+   [
+    "table.B15|g+1|A2|T0|all|H28.hold",
+    1
+   ],
+   [
+    "table.B15|g+1|A2|T15|all|H28.hold",
+    1
+   ],
+   [
+    "table.B15|g+1|A3|T0|all|H28.hold",
+    1
+   ],
+   [
+    "table.B15|g+1|A3|T15|all|H28.hold",
+    1
+   ],
+   [
+    "table.B15|g+1|A3w|T0|all|H28.hold",
+    1
+   ],
+   [
+    "table.B15|g+1|A3w|T15|all|H28.hold",
+    1
+   ],
+   [
+    "table.B15|g+0|A0|T0|all|H28.hold",
+    1
+   ],
+   [
+    "table.B15|g+0|A0|T15|all|H28.hold",
+    1
+   ],
+   [
+    "table.B15|g+0|A2|T0|all|H28.hold",
+    1
+   ],
+   [
+    "table.B15|g+0|A2|T15|all|H28.hold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1098
+ },
+ {
+  "file": "s877_results.json",
+  "bytes": 13133,
+  "top_keys": [
+   "T_only",
+   "n_keys",
+   "n_pass",
+   "n_pct_ge_95",
+   "expected_by_chance_pct_ge_95",
+   "keys",
+   "n_strategies"
+  ],
+  "hold_like_paths": [
+   [
+    "keys[].passes",
+    3
+   ],
+   [
+    "n_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "s877_results_macro.json",
+  "bytes": 2710,
+  "top_keys": [
+   "T_only",
+   "n_keys",
+   "n_pass",
+   "n_pct_ge_95",
+   "expected_by_chance_pct_ge_95",
+   "keys",
+   "n_strategies"
+  ],
+  "hold_like_paths": [
+   [
+    "keys[].passes",
+    3
+   ],
+   [
+    "n_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "s877_results_nostyle.json",
+  "bytes": 1712,
+  "top_keys": [
+   "T_only",
+   "n_keys",
+   "n_pass",
+   "n_pct_ge_95",
+   "expected_by_chance_pct_ge_95",
+   "keys",
+   "n_strategies"
+  ],
+  "hold_like_paths": [
+   [
+    "keys[].passes",
+    3
+   ],
+   [
+    "n_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "s878_results.json",
+  "bytes": 2628,
+  "top_keys": [
+   "unconditional",
+   "n_buckets_tested",
+   "n_qualified_disc",
+   "n_confirmed",
+   "null",
+   "confirmed",
+   "qualified_not_confirmed"
+  ],
+  "hold_like_paths": [
+   [
+    "qualified_not_confirmed[].hold",
+    3
+   ],
+   [
+    "qualified_not_confirmed[].confirmed",
+    3
+   ],
+   [
+    "unconditional.JZ_add.hold",
+    1
+   ],
+   [
+    "unconditional.JZ_one.hold",
+    1
+   ],
+   [
+    "unconditional.NEAR12.hold",
+    1
+   ],
+   [
+    "n_confirmed",
+    1
+   ],
+   [
+    "null.confirmed_median",
+    1
+   ],
+   [
+    "null.confirmed_q95",
+    1
+   ],
+   [
+    "null.p_confirmed_ge_real",
+    1
+   ],
+   [
+    "confirmed",
+    1
+   ],
+   [
+    "qualified_not_confirmed",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 15
+ },
+ {
+  "file": "s879_results.json",
+  "bytes": 11271,
+  "top_keys": [
+   "BD20|all|R12",
+   "BD20|all|R8",
+   "BD20|all|RECLAIM",
+   "BD20|drain|R12",
+   "BD20|drain|R8",
+   "BD20|drain|RECLAIM",
+   "EVERY5|all|R12",
+   "EVERY5|all|R8",
+   "EVERY5|drain|R12",
+   "EVERY5|drain|R8",
+   "ROUND|all|R12",
+   "ROUND|all|R8",
+   "ROUND|all|RECLAIM",
+   "ROUND|drain|R12"
+  ],
+  "hold_like_paths": [
+   [
+    "BD20|all|R12.hold",
+    1
+   ],
+   [
+    "BD20|all|R8.hold",
+    1
+   ],
+   [
+    "BD20|all|RECLAIM.hold",
+    1
+   ],
+   [
+    "BD20|drain|R12.hold",
+    1
+   ],
+   [
+    "BD20|drain|R8.hold",
+    1
+   ],
+   [
+    "BD20|drain|RECLAIM.hold",
+    1
+   ],
+   [
+    "EVERY5|all|R12.hold",
+    1
+   ],
+   [
+    "EVERY5|all|R8.hold",
+    1
+   ],
+   [
+    "EVERY5|drain|R12.hold",
+    1
+   ],
+   [
+    "EVERY5|drain|R8.hold",
+    1
+   ],
+   [
+    "ROUND|all|R12.hold",
+    1
+   ],
+   [
+    "ROUND|all|R8.hold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 16
+ },
+ {
+  "file": "s881_results.json",
+  "bytes": 14335,
+  "top_keys": [
+   "n_tested_cell",
+   "n_tested_crowd",
+   "n_holds_cell",
+   "n_holds_crowd",
+   "null",
+   "cells",
+   "crowd_holds",
+   "cell_days"
+  ],
+  "hold_like_paths": [
+   [
+    "cells[].hold",
+    3
+   ],
+   [
+    "cells[].base_hold",
+    3
+   ],
+   [
+    "cells[].holds",
+    3
+   ],
+   [
+    "crowd_holds[].hold",
+    3
+   ],
+   [
+    "crowd_holds[].base_hold",
+    3
+   ],
+   [
+    "crowd_holds[].holds",
+    3
+   ],
+   [
+    "n_holds_cell",
+    1
+   ],
+   [
+    "n_holds_crowd",
+    1
+   ],
+   [
+    "crowd_holds",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 21
+ },
+ {
+  "file": "s884_results.json",
+  "bytes": 67532,
+  "top_keys": [
+   "n_tested",
+   "n_holds",
+   "null",
+   "unconditional",
+   "rows"
+  ],
+  "hold_like_paths": [
+   [
+    "rows[].hold",
+    3
+   ],
+   [
+    "rows[].base_hold",
+    3
+   ],
+   [
+    "rows[].holds",
+    3
+   ],
+   [
+    "n_holds",
+    1
+   ],
+   [
+    "unconditional.BREAK_DN|STRUCT.hold",
+    1
+   ],
+   [
+    "unconditional.BREAK_DN|FIX8.hold",
+    1
+   ],
+   [
+    "unconditional.SWEEP_DN|STRUCT.hold",
+    1
+   ],
+   [
+    "unconditional.SWEEP_DN|FIX8.hold",
+    1
+   ],
+   [
+    "unconditional.BREAK_UP|STRUCT.hold",
+    1
+   ],
+   [
+    "unconditional.BREAK_UP|FIX8.hold",
+    1
+   ],
+   [
+    "unconditional.SWEEP_UP|STRUCT.hold",
+    1
+   ],
+   [
+    "unconditional.SWEEP_UP|FIX8.hold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 22
+ },
+ {
+  "file": "t148_results.json",
+  "bytes": 2356,
+  "top_keys": [
+   "data_window",
+   "panel",
+   "v0_check",
+   "v3_30d",
+   "v3_90d_report_only",
+   "yearly",
+   "judgement_pass",
+   "n_shuffles",
+   "momentum_days_primary",
+   "momentum_days_secondary",
+   "cost_bps"
+  ],
+  "hold_like_paths": [
+   [
+    "v0_check.passes_1pct",
+    1
+   ],
+   [
+    "v3_30d.diff_2025_holdout",
+    1
+   ],
+   [
+    "v3_30d.pctile_vs_shuffles_holdout",
+    1
+   ],
+   [
+    "v3_90d_report_only.diff_2025_holdout",
+    1
+   ],
+   [
+    "judgement_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 5
+ },
+ {
+  "file": "t155_results.json",
+  "bytes": 3531,
+  "top_keys": [
+   "data_window",
+   "panel",
+   "funding_coverage",
+   "v0_check",
+   "v3_funding",
+   "yearly",
+   "completeness",
+   "judgement_pass",
+   "n_shuffles",
+   "cost_bps"
+  ],
+  "hold_like_paths": [
+   [
+    "v0_check.passes_1pct",
+    1
+   ],
+   [
+    "v3_funding.v0_total_holdout",
+    1
+   ],
+   [
+    "v3_funding.v3_total_holdout",
+    1
+   ],
+   [
+    "v3_funding.diff_2025_holdout",
+    1
+   ],
+   [
+    "v3_funding.pctile_vs_shuffles_holdout",
+    1
+   ],
+   [
+    "judgement_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 6
+ },
+ {
+  "file": "t168_results.json",
+  "bytes": 16513,
+  "top_keys": [
+   "id",
+   "prereg",
+   "discovery_window",
+   "holdout_window",
+   "universe",
+   "min_xs",
+   "skipped_months",
+   "coverage_discovery",
+   "coverage_holdout",
+   "signals",
+   "horizons",
+   "discovery",
+   "discovery_passed",
+   "k"
+  ],
+  "hold_like_paths": [
+   [
+    "holdout_window",
+    1
+   ],
+   [
+    "skipped_months.holdout_lt_min_xs",
+    1
+   ],
+   [
+    "coverage_holdout",
+    1
+   ],
+   [
+    "discovery_passed",
+    1
+   ],
+   [
+    "holdout_threshold_alpha_over_k",
+    1
+   ],
+   [
+    "holdout",
+    1
+   ],
+   [
+    "holdout_summary",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 7
+ },
+ {
+  "file": "t169_results.json",
+  "bytes": 5429,
+  "top_keys": [
+   "task",
+   "prereg",
+   "code_ref",
+   "mcap_source",
+   "universe",
+   "horizon_days",
+   "min_cross_section",
+   "weeks_total",
+   "skipped_small",
+   "skipped_no_forward",
+   "discovery_window",
+   "holdout_window",
+   "discovery",
+   "discovery_all_weeks"
+  ],
+  "hold_like_paths": [
+   [
+    "holdout_window",
+    1
+   ],
+   [
+    "holdout",
+    1
+   ],
+   [
+    "v1_comparison.holdout",
+    1
+   ],
+   [
+    "v1_comparison.single_dims_holdout",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "t169_results_v1.json",
+  "bytes": 2056,
+  "top_keys": [
+   "task",
+   "prereg",
+   "code_ref",
+   "universe",
+   "horizon_days",
+   "min_cross_section",
+   "weeks_total",
+   "skipped_small",
+   "skipped_no_forward",
+   "discovery_window",
+   "holdout_window",
+   "discovery",
+   "discovery_all_weeks",
+   "holdout"
+  ],
+  "hold_like_paths": [
+   [
+    "holdout_window",
+    1
+   ],
+   [
+    "holdout",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 2
+ },
+ {
+  "file": "t170_results.json",
+  "bytes": 11681,
+  "top_keys": [
+   "ticket",
+   "ledger",
+   "caveat",
+   "snapshot",
+   "v0_check",
+   "panel",
+   "v2_group",
+   "replay_v2",
+   "weekly_ic",
+   "switch_frequency",
+   "verdict"
+  ],
+  "hold_like_paths": [
+   [
+    "v0_check.passes_1pct",
+    1
+   ],
+   [
+    "replay_v2.diff_2025_holdout",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 2
+ },
+ {
+  "file": "t171_results.json",
+  "bytes": 15528,
+  "top_keys": [
+   "prereg",
+   "window",
+   "segments",
+   "universe",
+   "data_coverage",
+   "stability",
+   "stability_verdict",
+   "sentiment_group_level",
+   "prediction",
+   "candidates",
+   "candidates_loose_reading",
+   "descriptive_only",
+   "survives_permutation"
+  ],
+  "hold_like_paths": [
+   [
+    "survives_permutation",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t172_results.json",
+  "bytes": 406857,
+  "top_keys": [
+   "meta",
+   "results",
+   "explore",
+   "weekly"
+  ],
+  "hold_like_paths": [
+   [
+    "meta.holdout",
+    1
+   ],
+   [
+    "results.M12_4.enter_holdout",
+    1
+   ],
+   [
+    "results.M12_4.holdout",
+    1
+   ],
+   [
+    "results.M12_4.holdout_pass",
+    1
+   ],
+   [
+    "results.M12_4.null_holdout",
+    1
+   ],
+   [
+    "results.M12_13.enter_holdout",
+    1
+   ],
+   [
+    "results.M12_13.holdout",
+    1
+   ],
+   [
+    "results.M12_13.holdout_pass",
+    1
+   ],
+   [
+    "results.M12_13.null_holdout",
+    1
+   ],
+   [
+    "results.M6_4.enter_holdout",
+    1
+   ],
+   [
+    "results.M6_4.holdout",
+    1
+   ],
+   [
+    "results.M6_4.holdout_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 63
+ },
+ {
+  "file": "t173_s634_prior_results.json",
+  "bytes": 2356,
+  "top_keys": [
+   "data_window",
+   "panel",
+   "v0_check",
+   "v3_30d",
+   "v3_90d_report_only",
+   "yearly",
+   "judgement_pass",
+   "n_shuffles",
+   "momentum_days_primary",
+   "momentum_days_secondary",
+   "cost_bps"
+  ],
+  "hold_like_paths": [
+   [
+    "v0_check.passes_1pct",
+    1
+   ],
+   [
+    "v3_30d.diff_2025_holdout",
+    1
+   ],
+   [
+    "v3_30d.pctile_vs_shuffles_holdout",
+    1
+   ],
+   [
+    "v3_90d_report_only.diff_2025_holdout",
+    1
+   ],
+   [
+    "judgement_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 5
+ },
+ {
+  "file": "t173_s634_recheck.json",
+  "bytes": 12067,
+  "top_keys": [
+   "ticket",
+   "question",
+   "script_ran",
+   "data_window",
+   "panel_size",
+   "ohlcv_order_diff",
+   "exploratory_degraded_price_run",
+   "fetch_all_call_sites",
+   "all_call_sites_have_order",
+   "v0_check",
+   "v3_30d",
+   "v3_90d_report_only",
+   "yearly",
+   "judgement"
+  ],
+  "hold_like_paths": [
+   [
+    "exploratory_degraded_price_run.diff_2025_holdout",
+    1
+   ],
+   [
+    "exploratory_degraded_price_run.judgement_pass",
+    1
+   ],
+   [
+    "v0_check.prior.passes_1pct",
+    1
+   ],
+   [
+    "v0_check.new.passes_1pct",
+    1
+   ],
+   [
+    "v3_30d.prior.diff_2025_holdout",
+    1
+   ],
+   [
+    "v3_30d.prior.pctile_vs_shuffles_holdout",
+    1
+   ],
+   [
+    "v3_30d.new.diff_2025_holdout",
+    1
+   ],
+   [
+    "v3_30d.new.pctile_vs_shuffles_holdout",
+    1
+   ],
+   [
+    "v3_90d_report_only.prior.diff_2025_holdout",
+    1
+   ],
+   [
+    "v3_90d_report_only.new.diff_2025_holdout",
+    1
+   ],
+   [
+    "judgement.prior_pass",
+    1
+   ],
+   [
+    "judgement.new_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 12
+ },
+ {
+  "file": "t174_results.json",
+  "bytes": 19688,
+  "top_keys": [
+   "prereg",
+   "window",
+   "segments",
+   "universe",
+   "data_coverage",
+   "t174",
+   "benchmark_group_equal_weight_fwd28",
+   "label_switches_per_30d",
+   "label_switches_note",
+   "prediction",
+   "candidates",
+   "candidates_loose_reading",
+   "candidate_tail_p",
+   "candidates_surviving_paired_permutation"
+  ],
+  "hold_like_paths": [
+   [
+    "candidates_surviving_paired_permutation",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t175_results.json",
+  "bytes": 280263,
+  "top_keys": [
+   "meta",
+   "bias",
+   "results",
+   "explore",
+   "weekly"
+  ],
+  "hold_like_paths": [
+   [
+    "meta.ab.holdout_4w",
+    1
+   ],
+   [
+    "meta.ab.holdout_13w",
+    1
+   ],
+   [
+    "meta.holdout",
+    1
+   ],
+   [
+    "results.SMALL.4.enter_holdout",
+    1
+   ],
+   [
+    "results.SMALL.4.holdout",
+    1
+   ],
+   [
+    "results.SMALL.4.holdout_pass",
+    1
+   ],
+   [
+    "results.SMALL.4.null_holdout",
+    1
+   ],
+   [
+    "results.SMALL.4.nogap_control_holdout",
+    1
+   ],
+   [
+    "results.SMALL.13.enter_holdout",
+    1
+   ],
+   [
+    "results.SMALL.13.holdout",
+    1
+   ],
+   [
+    "results.SMALL.13.holdout_pass",
+    1
+   ],
+   [
+    "results.SMALL.13.null_holdout",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 59
+ },
+ {
+  "file": "t180_results.json",
+  "bytes": 24606,
+  "top_keys": [
+   "meta",
+   "s668_h1",
+   "s670_issue"
+  ],
+  "hold_like_paths": [
+   [
+    "meta.holdout",
+    1
+   ],
+   [
+    "s668_h1.holdout_window",
+    1
+   ],
+   [
+    "s668_h1.modes.OLD.holdout",
+    1
+   ],
+   [
+    "s668_h1.modes.NEW.holdout",
+    1
+   ],
+   [
+    "s668_h1.modes.OLD_L1.holdout",
+    1
+   ],
+   [
+    "s668_h1.modes.NEW_L1.holdout",
+    1
+   ],
+   [
+    "s670_issue.results.M12_4.enter_holdout",
+    1
+   ],
+   [
+    "s670_issue.results.M12_4.holdout",
+    1
+   ],
+   [
+    "s670_issue.results.M12_4.holdout_pass",
+    1
+   ],
+   [
+    "s670_issue.results.M12_4.null_holdout",
+    1
+   ],
+   [
+    "s670_issue.results.M12_13.enter_holdout",
+    1
+   ],
+   [
+    "s670_issue.results.M12_13.holdout",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 47
+ },
+ {
+  "file": "t181_results.json",
+  "bytes": 32538,
+  "top_keys": [
+   "ledger",
+   "task",
+   "n_weeks",
+   "date_range",
+   "n_slots",
+   "reb_weeks",
+   "cost_bp",
+   "cut_threshold",
+   "segments",
+   "arms",
+   "verdicts"
+  ],
+  "hold_like_paths": [
+   [
+    "cut_threshold",
+    1
+   ],
+   [
+    "verdicts.L.passes",
+    1
+   ],
+   [
+    "verdicts.LC.passes",
+    1
+   ],
+   [
+    "verdicts.LCcap.passes",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "t183_results.json",
+  "bytes": 101246,
+  "top_keys": [
+   "card",
+   "what",
+   "universe",
+   "writing_A",
+   "writing_B",
+   "writing_C",
+   "ticket_rule",
+   "noise",
+   "noisiest_top10_cis25",
+   "noisiest_top10_universe",
+   "cis25_weekly",
+   "tickets_label",
+   "headline"
+  ],
+  "hold_like_paths": [
+   [
+    "tickets_label.threshold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t187_results.json",
+  "bytes": 108863,
+  "top_keys": [
+   "task",
+   "ledger",
+   "seed",
+   "n_shift",
+   "catalog",
+   "anchors",
+   "signs",
+   "robustness_anchor_shift_1d",
+   "alt_styles_used",
+   "styles",
+   "sentiment",
+   "events",
+   "leads_primary_90d"
+  ],
+  "hold_like_paths": [
+   [
+    "styles.BTC_hold",
+    1
+   ],
+   [
+    "styles.ETH_hold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 2
+ },
+ {
+  "file": "t190_results.json",
+  "bytes": 25453,
+  "top_keys": [
+   "task",
+   "protocol",
+   "generated_at",
+   "definitions",
+   "verification",
+   "groups",
+   "report_only_btc_eth",
+   "verdict"
+  ],
+  "hold_like_paths": [
+   [
+    "definitions.bear_threshold_equity",
+    1
+   ],
+   [
+    "definitions.bear_threshold_crypto",
+    1
+   ],
+   [
+    "groups.G1_NASDAQ_1971_2014.aggregate.variants.V1.criterion_1_pass",
+    1
+   ],
+   [
+    "groups.G1_NASDAQ_1971_2014.aggregate.variants.V1.criterion_2_pass",
+    1
+   ],
+   [
+    "groups.G1_NASDAQ_1971_2014.aggregate.variants.V1.criterion_3_pass",
+    1
+   ],
+   [
+    "groups.G1_NASDAQ_1971_2014.aggregate.variants.V1.group_pass",
+    1
+   ],
+   [
+    "groups.G1_NASDAQ_1971_2014.aggregate.variants.V1.recovery_capture_vs_hold_median",
+    1
+   ],
+   [
+    "groups.G1_NASDAQ_1971_2014.aggregate.variants.V2.criterion_1_pass",
+    1
+   ],
+   [
+    "groups.G1_NASDAQ_1971_2014.aggregate.variants.V2.criterion_2_pass",
+    1
+   ],
+   [
+    "groups.G1_NASDAQ_1971_2014.aggregate.variants.V2.criterion_3_pass",
+    1
+   ],
+   [
+    "groups.G1_NASDAQ_1971_2014.aggregate.variants.V2.group_pass",
+    1
+   ],
+   [
+    "groups.G1_NASDAQ_1971_2014.aggregate.variants.V2.recovery_capture_vs_hold_median",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 72
+ },
+ {
+  "file": "t191_results.json",
+  "bytes": 247344,
+  "top_keys": [
+   "task",
+   "ledger",
+   "seed",
+   "criteria",
+   "families",
+   "rows",
+   "per_sign",
+   "multiple_comparisons",
+   "m8_deep_dive",
+   "anchor_offset_audit",
+   "clue_offset_crosscheck",
+   "t185_sign_rebuild_reconcile",
+   "caliber_a_umcsent",
+   "caliber_b_events"
+  ],
+  "hold_like_paths": [
+   [
+    "clue_offset_crosscheck[].strict_survives_lift",
+    3
+   ],
+   [
+    "clue_offset_crosscheck[].strict_survives_beats_base",
+    3
+   ],
+   [
+    "caliber_c_styles.dispersion.BTC_hold",
+    1
+   ],
+   [
+    "caliber_c_styles.dispersion.ETH_hold",
+    1
+   ],
+   [
+    "caliber_c_styles.random_control.styles.BTC_hold",
+    1
+   ],
+   [
+    "caliber_c_styles.random_control.styles.ETH_hold",
+    1
+   ],
+   [
+    "caliber_c_styles.rebuild_crosscheck.BTC_hold",
+    1
+   ],
+   [
+    "caliber_c_styles.rebuild_crosscheck.ETH_hold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 12
+ },
+ {
+  "file": "t193_results.json",
+  "bytes": 117625,
+  "top_keys": [
+   "task",
+   "ledger",
+   "seeds",
+   "criteria",
+   "block1_random_anchor",
+   "block2_t187_m_caliber",
+   "block3_lookback_sweep",
+   "block4_anchor_detail",
+   "block5_strict_anchor_day",
+   "block6_styles",
+   "compliance"
+  ],
+  "hold_like_paths": [
+   [
+    "block1_random_anchor.targets[].random_anchor.n_anchors_passed",
+    3
+   ],
+   [
+    "block1_random_anchor.same_source_full_pass[].random_anchor.n_anchors_passed",
+    3
+   ],
+   [
+    "block2_t187_m_caliber.m8[].random_anchor_t185_caliber.n_anchors_passed",
+    3
+   ],
+   [
+    "block5_strict_anchor_day.cases[].survives_ex_anchor_day",
+    3
+   ],
+   [
+    "block1_random_anchor.same_source_full_pass",
+    1
+   ],
+   [
+    "block6_styles.aggregate_t191_pipeline_2000.styles.BTC_hold",
+    1
+   ],
+   [
+    "block6_styles.aggregate_t191_pipeline_2000.styles.ETH_hold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 15
+ },
+ {
+  "file": "t197_results.json",
+  "bytes": 287587,
+  "top_keys": [
+   "meta",
+   "universe",
+   "judgement",
+   "A",
+   "S",
+   "D",
+   "sensitivity",
+   "boot",
+   "by_year",
+   "nav",
+   "panel",
+   "worst5_D",
+   "worst5_D_still",
+   "fish"
+  ],
+  "hold_like_paths": [
+   [
+    "universe.survivor_list_n",
+    1
+   ],
+   [
+    "judgement.all_pass",
+    1
+   ],
+   [
+    "sensitivity.prefix_strict.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 3
+ },
+ {
+  "file": "t198_results.json",
+  "bytes": 187809,
+  "top_keys": [
+   "task",
+   "ledger",
+   "lane",
+   "protocol",
+   "universes",
+   "summary",
+   "judgement",
+   "robustness",
+   "curves",
+   "by_year",
+   "worst5_D",
+   "still_held",
+   "panel_overlap",
+   "fish_s618"
+  ],
+  "hold_like_paths": [
+   [
+    "protocol.survivors",
+    1
+   ],
+   [
+    "judgement.c1_pass",
+    1
+   ],
+   [
+    "judgement.c2_threshold",
+    1
+   ],
+   [
+    "judgement.c2_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "t199_forward_bands.json",
+  "bytes": 8148,
+  "top_keys": [
+   "frozen_at_utc",
+   "task",
+   "ledger",
+   "kind",
+   "universe_primary",
+   "universe_rule",
+   "how_to_read",
+   "conventions",
+   "arm_L",
+   "arm_H",
+   "all_contracts_comparison",
+   "survivorship",
+   "universe_classification"
+  ],
+  "hold_like_paths": [
+   [
+    "survivorship",
+    1
+   ],
+   [
+    "survivorship.n_survivor_symbols",
+    1
+   ],
+   [
+    "survivorship.n_panel_symbols_in_survivor",
+    1
+   ],
+   [
+    "survivorship.L.n_tickets_survivor",
+    1
+   ],
+   [
+    "survivorship.L.frac_survivor",
+    1
+   ],
+   [
+    "survivorship.L.mean_r_survivor",
+    1
+   ],
+   [
+    "survivorship.H.n_tickets_survivor",
+    1
+   ],
+   [
+    "survivorship.H.frac_survivor",
+    1
+   ],
+   [
+    "survivorship.H.mean_r_survivor",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 9
+ },
+ {
+  "file": "t199_results.json",
+  "bytes": 4632528,
+  "top_keys": [
+   "meta",
+   "universe_classification",
+   "arm_L",
+   "arm_H",
+   "all_contracts_comparison",
+   "protocol_notes",
+   "exploratory",
+   "exploratory_notes",
+   "survivorship",
+   "crosscheck_h1_short_leg"
+  ],
+  "hold_like_paths": [
+   [
+    "arm_L.judge_paths[].n_signal_months",
+    3
+   ],
+   [
+    "arm_L.judge_paths[].would_pass",
+    3
+   ],
+   [
+    "arm_L.tickets[].hold_days",
+    3
+   ],
+   [
+    "arm_L.tickets_2026[].hold_days",
+    3
+   ],
+   [
+    "arm_H.judge_paths[].n_signal_months",
+    3
+   ],
+   [
+    "arm_H.judge_paths[].would_pass",
+    3
+   ],
+   [
+    "arm_H.tickets[].hold_days",
+    3
+   ],
+   [
+    "arm_H.tickets_2026[].hold_days",
+    3
+   ],
+   [
+    "all_contracts_comparison.arm_L.judge_paths[].n_signal_months",
+    3
+   ],
+   [
+    "all_contracts_comparison.arm_L.judge_paths[].would_pass",
+    3
+   ],
+   [
+    "all_contracts_comparison.arm_H.judge_paths[].n_signal_months",
+    3
+   ],
+   [
+    "all_contracts_comparison.arm_H.judge_paths[].would_pass",
+    3
+   ]
+  ],
+  "n_hold_like_paths": 57
+ },
+ {
+  "file": "t200_results.json",
+  "bytes": 1176113,
+  "top_keys": [
+   "task",
+   "ledger",
+   "generated_at_utc",
+   "seed",
+   "n_shift",
+   "hold_days",
+   "cost_rate",
+   "lit_level",
+   "levels_tested",
+   "rules",
+   "multiple_comparisons",
+   "signal_meta",
+   "encoding",
+   "assets"
+  ],
+  "hold_like_paths": [
+   [
+    "assets.BTC.rules.M5.by_year[].hold_return",
+    3
+   ],
+   [
+    "assets.BTC.rules.M5.bear_segments[].hold_return",
+    3
+   ],
+   [
+    "assets.BTC.rules.M7.by_year[].hold_return",
+    3
+   ],
+   [
+    "assets.BTC.rules.M7.bear_segments[].hold_return",
+    3
+   ],
+   [
+    "assets.BTC.rules.M8.by_year[].hold_return",
+    3
+   ],
+   [
+    "assets.BTC.rules.M8.bear_segments[].hold_return",
+    3
+   ],
+   [
+    "assets.BTC.rules.M_any.by_year[].hold_return",
+    3
+   ],
+   [
+    "assets.BTC.rules.M_any.bear_segments[].hold_return",
+    3
+   ],
+   [
+    "assets.ETH.rules.M5.by_year[].hold_return",
+    3
+   ],
+   [
+    "assets.ETH.rules.M5.bear_segments[].hold_return",
+    3
+   ],
+   [
+    "assets.ETH.rules.M7.by_year[].hold_return",
+    3
+   ],
+   [
+    "assets.ETH.rules.M7.bear_segments[].hold_return",
+    3
+   ]
+  ],
+  "n_hold_like_paths": 76
+ },
+ {
+  "file": "t202_indep_check.json",
+  "bytes": 3538,
+  "top_keys": [
+   "seed",
+   "draws",
+   "n_closed",
+   "mean_r",
+   "t197_mean_r",
+   "n_months",
+   "tickets_per_month",
+   "months_mean_r_le0",
+   "counts_2024",
+   "total_2024",
+   "r1_pass",
+   "months_needed",
+   "sampling_bias",
+   "curves"
+  ],
+  "hold_like_paths": [
+   [
+    "r1_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t202_results.json",
+  "bytes": 22976,
+  "top_keys": [
+   "meta",
+   "power",
+   "money",
+   "money_literal",
+   "months_needed",
+   "min_n",
+   "full_sample_check",
+   "sampling_bias",
+   "apparatus_check",
+   "protocol_issues",
+   "notes",
+   "indep_check"
+  ],
+  "hold_like_paths": [
+   [
+    "min_n.R1.at_best_false_pass",
+    1
+   ],
+   [
+    "min_n.R2.at_best_false_pass",
+    1
+   ],
+   [
+    "min_n.R3.at_best_false_pass",
+    1
+   ],
+   [
+    "indep_check.r1_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "t204_verify_independent.json",
+  "bytes": 5267,
+  "top_keys": [
+   "task",
+   "what",
+   "synthetic_cg_branch_pass",
+   "kept",
+   "dropped",
+   "n_cross_section_days",
+   "n_rows",
+   "stats",
+   "diff_vs_main"
+  ],
+  "hold_like_paths": [
+   [
+    "synthetic_cg_branch_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t204_verify_out_of_panel.json",
+  "bytes": 8764,
+  "top_keys": [
+   "task",
+   "scope",
+   "what",
+   "synthetic_cg_branch_pass",
+   "kept",
+   "dropped",
+   "n_cross_section_days",
+   "n_rows",
+   "stats",
+   "diff_vs_main"
+  ],
+  "hold_like_paths": [
+   [
+    "synthetic_cg_branch_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t205_results.json",
+  "bytes": 204713,
+  "top_keys": [
+   "task",
+   "prereg",
+   "run_utc",
+   "protocol_constants",
+   "tickets_meta",
+   "coverage",
+   "result",
+   "sensitivity",
+   "exploratory",
+   "tickets",
+   "excluded_tickets"
+  ],
+  "hold_like_paths": [
+   [
+    "coverage.n_signal_days",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t207_results.json",
+  "bytes": 405194,
+  "top_keys": [
+   "card",
+   "ledger",
+   "generated_utc",
+   "gate",
+   "protocol",
+   "universe",
+   "signal",
+   "curves",
+   "halves",
+   "random",
+   "ab_test_btc",
+   "verdict",
+   "panel_verdict",
+   "protocol_issues"
+  ],
+  "hold_like_paths": [
+   [
+    "protocol.z_threshold",
+    1
+   ],
+   [
+    "curves.btc.hold",
+    1
+   ],
+   [
+    "curves.panel.hold",
+    1
+   ],
+   [
+    "halves.2023-01-01 → 2024-11-01.btc_hold",
+    1
+   ],
+   [
+    "halves.2023-01-01 → 2024-11-01.panel_hold",
+    1
+   ],
+   [
+    "halves.2024-11-01 →.btc_hold",
+    1
+   ],
+   [
+    "halves.2024-11-01 →.panel_hold",
+    1
+   ],
+   [
+    "verdict.c1_dd15pct.hold_mdd",
+    1
+   ],
+   [
+    "verdict.c3_halves_calmar.halves.2023-01-01 → 2024-11-01.hold_calmar",
+    1
+   ],
+   [
+    "verdict.c3_halves_calmar.halves.2024-11-01 →.hold_calmar",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 10
+ },
+ {
+  "file": "t208_results.json",
+  "bytes": 23018,
+  "top_keys": [
+   "task",
+   "ledger",
+   "segment",
+   "generated_at_utc",
+   "segment_meta",
+   "universe",
+   "factors",
+   "judgments",
+   "exploratory_composite",
+   "pairwise_rank_corr_mean",
+   "notes",
+   "cross_check_f1_vs_s689",
+   "universe_sensitivity_broad"
+  ],
+  "hold_like_paths": [
+   [
+    "universe.deriv_symbols_with_data_from_holdout_start",
+    1
+   ],
+   [
+    "exploratory_composite.ab_ls_vs_hold_panel",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 2
+ },
+ {
+  "file": "t210_tracking.json",
+  "bytes": 59935,
+  "top_keys": [
+   "generated_at_utc",
+   "window_days",
+   "alignment",
+   "benchmarks",
+   "tokens",
+   "tracking",
+   "cash_leg",
+   "t213_correction"
+  ],
+  "hold_like_paths": [
+   [
+    "t213_correction.series.PAXG.outlier_check.full_window.threshold_bps",
+    1
+   ],
+   [
+    "t213_correction.series.PAXG.outlier_check.common_window.threshold_bps",
+    1
+   ],
+   [
+    "t213_correction.series.XAUT.outlier_check.full_window.threshold_bps",
+    1
+   ],
+   [
+    "t213_correction.series.XAUT.outlier_check.common_window.threshold_bps",
+    1
+   ],
+   [
+    "t213_correction.series.SPYX.outlier_check.full_window.threshold_bps",
+    1
+   ],
+   [
+    "t213_correction.series.SPYX.outlier_check.common_window.threshold_bps",
+    1
+   ],
+   [
+    "t213_correction.series.SPY_ondo.outlier_check.full_window.threshold_bps",
+    1
+   ],
+   [
+    "t213_correction.series.SPY_ondo.outlier_check.common_window.threshold_bps",
+    1
+   ],
+   [
+    "t213_correction.baselines.SPY_etf_vs_index.outlier_check.full_window.threshold_bps",
+    1
+   ],
+   [
+    "t213_correction.baselines.SPY_etf_vs_index.outlier_check.common_window.threshold_bps",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 10
+ },
+ {
+  "file": "t216_pit_recompute.json",
+  "bytes": 56195,
+  "top_keys": [
+   "meta",
+   "inputs",
+   "windows",
+   "v5",
+   "pit",
+   "beta",
+   "v5_vs_90_88",
+   "code_grep"
+  ],
+  "hold_like_paths": [
+   [
+    "code_grep.add_threshold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t218_table.json",
+  "bytes": 66523,
+  "top_keys": [
+   "built_at",
+   "tokens",
+   "tokens_meta",
+   "stable_db",
+   "llama",
+   "rails_db",
+   "rails_db_q",
+   "rails_nasdaq",
+   "snapshot",
+   "table"
+  ],
+  "hold_like_paths": [
+   [
+    "table[].eth_holders_rev",
+    3
+   ],
+   [
+    "table[].eth_holders_rev_days",
+    3
+   ],
+   [
+    "table[].sol_holders_rev",
+    3
+   ],
+   [
+    "table[].sol_holders_rev_days",
+    3
+   ],
+   [
+    "table[].trx_holders_rev",
+    3
+   ],
+   [
+    "table[].trx_holders_rev_days",
+    3
+   ],
+   [
+    "table[].hype_holders_rev",
+    3
+   ],
+   [
+    "table[].hype_holders_rev_days",
+    3
+   ]
+  ],
+  "n_hold_like_paths": 24
+ },
+ {
+  "file": "t219_m585_explore.json",
+  "bytes": 3273,
+  "top_keys": [
+   "panel_start",
+   "panel_trading_days",
+   "months",
+   "n_obs",
+   "discovery",
+   "holdout",
+   "variants",
+   "obs"
+  ],
+  "hold_like_paths": [
+   [
+    "holdout",
+    1
+   ],
+   [
+    "variants.contemporaneous.passed_discovery",
+    1
+   ],
+   [
+    "variants.contemporaneous.holdout",
+    1
+   ],
+   [
+    "variants.lead_1m.passed_discovery",
+    1
+   ],
+   [
+    "variants.lead_1m.holdout",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 5
+ },
+ {
+  "file": "t223_family2.json",
+  "bytes": 15318,
+  "top_keys": [
+   "card",
+   "part",
+   "prereg",
+   "generated_at",
+   "factors",
+   "rev_sample_head",
+   "readable_cross_sectional_factors",
+   "trial_count"
+  ],
+  "hold_like_paths": [
+   [
+    "rev_sample_head[].holders_24h",
+    3
+   ],
+   [
+    "rev_sample_head[].holders_30d",
+    3
+   ],
+   [
+    "factors.G1.row_counts.holdout_2025-01..2026-09",
+    1
+   ],
+   [
+    "factors.G1.row_counts.holders_24h_gt0",
+    1
+   ],
+   [
+    "factors.G2.row_counts.holdout_2025-01..2026-09",
+    1
+   ],
+   [
+    "factors.G2.row_counts.holders_24h_gt0",
+    1
+   ],
+   [
+    "factors.G3.row_counts.holdout_2025-01..2026-09",
+    1
+   ],
+   [
+    "factors.G3.row_counts.holders_24h_gt0",
+    1
+   ],
+   [
+    "factors.G5.segments.holdout",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 13
+ },
+ {
+  "file": "t223_results.json",
+  "bytes": 76034,
+  "top_keys": [
+   "card",
+   "generated_at",
+   "grid",
+   "universe",
+   "windows",
+   "forward_daily",
+   "market_monthly"
+  ],
+  "hold_like_paths": [
+   [
+    "windows.holdout",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t225_results.json",
+  "bytes": 8137,
+  "top_keys": [
+   "card",
+   "prereg",
+   "script",
+   "arm_order",
+   "arms",
+   "passed_arms"
+  ],
+  "hold_like_paths": [
+   [
+    "passed_arms",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t229_results.json",
+  "bytes": 12135,
+  "top_keys": [
+   "meta",
+   "main",
+   "random_control",
+   "halves",
+   "verdict",
+   "side_columns",
+   "exploratory",
+   "yearly"
+  ],
+  "hold_like_paths": [
+   [
+    "main.hold",
+    1
+   ],
+   [
+    "random_control.passes_95",
+    1
+   ],
+   [
+    "halves.2022-03-01 → 2024-07-01.hold",
+    1
+   ],
+   [
+    "halves.2024-07-01 →.hold",
+    1
+   ],
+   [
+    "verdict.a_detail.mdd_hold",
+    1
+   ],
+   [
+    "verdict.c_both_halves_calmar_ge_hold",
+    1
+   ],
+   [
+    "verdict.all_pass",
+    1
+   ],
+   [
+    "side_columns.btc_trig_0.70.hold",
+    1
+   ],
+   [
+    "side_columns.btc_trig_0.90.hold",
+    1
+   ],
+   [
+    "side_columns.eth_trig_0.80.hold",
+    1
+   ],
+   [
+    "side_columns.btc_symmetric_le_0.20.hold",
+    1
+   ],
+   [
+    "yearly.2022.hold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 16
+ },
+ {
+  "file": "t234_results.json",
+  "bytes": 30224,
+  "top_keys": [
+   "card",
+   "prereg",
+   "generated_at",
+   "phase_source",
+   "phase_rows_table",
+   "phase_rows_used",
+   "gate",
+   "window",
+   "n_trading_days",
+   "btc_source",
+   "cost_bp",
+   "turn_exposure",
+   "gate_rows_required",
+   "segments_all"
+  ],
+  "hold_like_paths": [
+   [
+    "b_big3[].depth_hold",
+    3
+   ],
+   [
+    "variants.drop_fed.b_big3[].depth_hold",
+    3
+   ],
+   [
+    "variants.drop_funding.b_big3[].depth_hold",
+    3
+   ],
+   [
+    "variants.turn_days_1.b_big3[].depth_hold",
+    3
+   ],
+   [
+    "variants.turn_days_5.b_big3[].depth_hold",
+    3
+   ],
+   [
+    "d_hold_vs_R",
+    1
+   ],
+   [
+    "d_hold_vs_R.total_hold",
+    1
+   ],
+   [
+    "d_hold_vs_R.mdd_hold",
+    1
+   ],
+   [
+    "d_hold_vs_R.calmar_hold",
+    1
+   ],
+   [
+    "d_hold_vs_R.calmar_annual_hold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 20
+ },
+ {
+  "file": "t236_results.json",
+  "bytes": 108360,
+  "top_keys": [
+   "meta",
+   "groups",
+   "A",
+   "B",
+   "fixed",
+   "oracle",
+   "random",
+   "judge_A",
+   "judge_B",
+   "verdict",
+   "verdict_detail",
+   "explore"
+  ],
+  "hold_like_paths": [
+   [
+    "judge_A.passed",
+    1
+   ],
+   [
+    "judge_B.passed",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 2
+ },
+ {
+  "file": "t239_results.json",
+  "bytes": 91585,
+  "top_keys": [
+   "card",
+   "prereg",
+   "generated_at",
+   "phase_source",
+   "phase_rows_table",
+   "phase_rows_used",
+   "code_ref_used",
+   "window",
+   "n_trading_days",
+   "btc_source",
+   "cost_bp",
+   "turn_exposure",
+   "segments_all",
+   "segments_in_window"
+  ],
+  "hold_like_paths": [
+   [
+    "v2.judge.b_big3[].depth_hold",
+    3
+   ],
+   [
+    "v1_reference.verdict.all_pass",
+    1
+   ],
+   [
+    "v2.judge.d_stats.total_hold",
+    1
+   ],
+   [
+    "v2.judge.d_stats.mdd_hold",
+    1
+   ],
+   [
+    "v2.judge.d_stats.calmar_hold",
+    1
+   ],
+   [
+    "v2.judge.d_stats.calmar_annual_hold",
+    1
+   ],
+   [
+    "v2.verdict.all_pass",
+    1
+   ],
+   [
+    "v2.variants.turn_days_1.verdict.all_pass",
+    1
+   ],
+   [
+    "v2.variants.turn_days_5.verdict.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 11
+ },
+ {
+  "file": "t239b_shift_results.json",
+  "bytes": 1167365,
+  "top_keys": [
+   "card",
+   "prereg",
+   "window",
+   "read_only",
+   "table",
+   "selfcheck",
+   "detail",
+   "regimes",
+   "windows",
+   "era_n_components",
+   "candidates_untested",
+   "per_day"
+  ],
+  "hold_like_paths": [
+   [
+    "regimes.turning_v1(phase=turning).threshold_sigma_units",
+    1
+   ],
+   [
+    "regimes.crash1_2021-11→2022-06(det_v1≤−0.5).threshold_sigma_units",
+    1
+   ],
+   [
+    "regimes.crash1_all_days.threshold_sigma_units",
+    1
+   ],
+   [
+    "regimes.crash2_2025-10→2026-02(det_v1≤−0.5).threshold_sigma_units",
+    1
+   ],
+   [
+    "regimes.seg1_2023-06→10.threshold_sigma_units",
+    1
+   ],
+   [
+    "regimes.seg2_2025-01→04.threshold_sigma_units",
+    1
+   ],
+   [
+    "regimes.background.threshold_sigma_units",
+    1
+   ],
+   [
+    "regimes.crash1_2021-11→2022-06(det_v2≤−0.5).threshold_sigma_units",
+    1
+   ],
+   [
+    "regimes.crash1_v1_vs_v2_det_le_-0.5.threshold_sigma_units",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 9
+ },
+ {
+  "file": "t243_results.json",
+  "bytes": 67655,
+  "top_keys": [
+   "card",
+   "prereg",
+   "seed",
+   "n_null",
+   "block",
+   "min_bin_hist",
+   "min_bin_obs",
+   "dd_window",
+   "lead_window",
+   "lead_lookback",
+   "episode_window0",
+   "f2_clean_from",
+   "adverse_side",
+   "data"
+  ],
+  "hold_like_paths": [
+   [
+    "data.fund_threshold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t244_results.json",
+  "bytes": 33173,
+  "top_keys": [
+   "task",
+   "prereg",
+   "as_of",
+   "n_tickets",
+   "n_symbols",
+   "constants",
+   "selfcheck",
+   "step1_stop_exits",
+   "step2_hunted",
+   "step3_rule_c",
+   "step0_original",
+   "step4_verdict",
+   "step5_side"
+  ],
+  "hold_like_paths": [
+   [
+    "step4_verdict.checks.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t245_results.json",
+  "bytes": 198596,
+  "top_keys": [
+   "meta",
+   "shift0",
+   "shift1",
+   "px_check"
+  ],
+  "hold_like_paths": [
+   [
+    "shift0.events[].persistence.holds_next_day",
+    3
+   ],
+   [
+    "shift0.persistence[].holds_next_day",
+    3
+   ],
+   [
+    "shift1.events[].persistence.holds_next_day",
+    3
+   ],
+   [
+    "shift1.persistence[].holds_next_day",
+    3
+   ]
+  ],
+  "n_hold_like_paths": 12
+ },
+ {
+  "file": "t246_results.json",
+  "bytes": 474695,
+  "top_keys": [
+   "meta",
+   "universes",
+   "u0_vs_u2",
+   "judge",
+   "tickets"
+  ],
+  "hold_like_paths": [
+   [
+    "judge.c1_calmar.threshold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t247_results.json",
+  "bytes": 12937,
+  "top_keys": [
+   "task",
+   "prereg",
+   "as_of",
+   "n_tickets",
+   "n_symbols",
+   "constants",
+   "selfcheck",
+   "step1_cap",
+   "selfcheck_admit_vs_nav",
+   "selfcheck_regression_vs_t244",
+   "step3_checks",
+   "curves",
+   "step4_side",
+   "step4_blocked"
+  ],
+  "hold_like_paths": [
+   [
+    "step1_cap.hold_convention",
+    1
+   ],
+   [
+    "step1_cap.hold_A",
+    1
+   ],
+   [
+    "step1_cap.hold_C",
+    1
+   ],
+   [
+    "step1_cap.hold_ratio_C_over_A",
+    1
+   ],
+   [
+    "step1_cap.hold_A_median",
+    1
+   ],
+   [
+    "step1_cap.hold_C_median",
+    1
+   ],
+   [
+    "step3_checks.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 7
+ },
+ {
+  "file": "t248_results.json",
+  "bytes": 705873,
+  "top_keys": [
+   "meta",
+   "universe",
+   "dups",
+   "missing_days",
+   "shell_rows",
+   "shell_summary",
+   "hl_map",
+   "hl_missing_symbols",
+   "jumps",
+   "jump_crosscheck",
+   "qv_breaks",
+   "dead_marks",
+   "tbqv_bad",
+   "hl_compare"
+  ],
+  "hold_like_paths": [
+   [
+    "spike_gate_effect.n_flipped_into_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t252_results.json",
+  "bytes": 40989,
+  "top_keys": [
+   "card",
+   "generated_at",
+   "window",
+   "data",
+   "exposure_reconstruction",
+   "results",
+   "benchmarks",
+   "episodes",
+   "null_control"
+  ],
+  "hold_like_paths": [
+   [
+    "benchmarks.hold_majors",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t253_results.json",
+  "bytes": 71879,
+  "top_keys": [
+   "task",
+   "ledger",
+   "generated_utc",
+   "window",
+   "panel",
+   "panel_with_funding",
+   "caliber",
+   "leakage_assertion",
+   "control_rule_b",
+   "control_rule_b_full_window",
+   "control_rule_a_full_window",
+   "arm_top_half",
+   "arm_top_half_variants",
+   "per_period"
+  ],
+  "hold_like_paths": [
+   [
+    "criteria.a.threshold_pp",
+    1
+   ],
+   [
+    "criteria.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 2
+ },
+ {
+  "file": "t255_results.json",
+  "bytes": 129269,
+  "top_keys": [
+   "card",
+   "generated_at",
+   "purpose",
+   "method",
+   "universe",
+   "regime_meta",
+   "self_check_vs_t249",
+   "full_sample_ic_recomputed",
+   "cells",
+   "sign_flips",
+   "sign_flip_counts",
+   "multiplicity",
+   "regime_period_confound",
+   "asof_icbar"
+  ],
+  "hold_like_paths": [
+   [
+    "multiplicity.n_survive_bonferroni",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t256_results.json",
+  "bytes": 27922,
+  "top_keys": [
+   "prereg",
+   "generated_utc",
+   "data",
+   "assertions",
+   "tickets",
+   "summary",
+   "ab_vs_zero",
+   "ticket_signflip_p",
+   "ticket_signflip_note",
+   "null_control",
+   "drawdown_of_tickets",
+   "periods",
+   "side_hedge",
+   "sensitivity_tp"
+  ],
+  "hold_like_paths": [
+   [
+    "tickets[].hold_days",
+    3
+   ]
+  ],
+  "n_hold_like_paths": 3
+ },
+ {
+  "file": "t257_results.json",
+  "bytes": 199771,
+  "top_keys": [
+   "card",
+   "prereg",
+   "spec_deviation",
+   "n_features",
+   "features",
+   "k",
+   "seed",
+   "n_init",
+   "train_window",
+   "hold_from",
+   "train_days",
+   "hold_days",
+   "train_first",
+   "train_last"
+  ],
+  "hold_like_paths": [
+   [
+    "hold_from",
+    1
+   ],
+   [
+    "hold_days",
+    1
+   ],
+   [
+    "hold_first",
+    1
+   ],
+   [
+    "hold_last",
+    1
+   ],
+   [
+    "grid.0|hold|A1",
+    1
+   ],
+   [
+    "grid.0|hold|A1.bh_threshold",
+    1
+   ],
+   [
+    "grid.0|hold|A2",
+    1
+   ],
+   [
+    "grid.0|hold|A3",
+    1
+   ],
+   [
+    "grid.0|hold|A3.bh_threshold",
+    1
+   ],
+   [
+    "grid.0|hold|A4",
+    1
+   ],
+   [
+    "grid.0|hold|A4.bh_threshold",
+    1
+   ],
+   [
+    "grid.0|hold|A5",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 82
+ },
+ {
+  "file": "t261_results.json",
+  "bytes": 38003,
+  "top_keys": [
+   "meta",
+   "base",
+   "variants"
+  ],
+  "hold_like_paths": [
+   [
+    "base.cells[].hold_mean",
+    3
+   ],
+   [
+    "base.cells[].hold_p05",
+    3
+   ],
+   [
+    "base.cells[].hold_n",
+    3
+   ],
+   [
+    "base.a6_vs_a1[].A1.hold_mean",
+    3
+   ],
+   [
+    "base.a6_vs_a1[].A1.hold_p05",
+    3
+   ],
+   [
+    "base.a6_vs_a1[].A6.hold_mean",
+    3
+   ],
+   [
+    "base.a6_vs_a1[].A6.hold_p05",
+    3
+   ],
+   [
+    "meta.holdout_start",
+    1
+   ],
+   [
+    "base.days.hold_feature",
+    1
+   ],
+   [
+    "base.days.hold_action",
+    1
+   ],
+   [
+    "base.passed_bh",
+    1
+   ],
+   [
+    "base.passed_bh[].hold_mean",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 84
+ },
+ {
+  "file": "t265_results.json",
+  "bytes": 130252,
+  "top_keys": [
+   "meta",
+   "weekly",
+   "a_b_c_d",
+   "secondary",
+   "diag"
+  ],
+  "hold_like_paths": [
+   [
+    "meta.holders_coverage_coins",
+    1
+   ],
+   [
+    "meta.holders_rows",
+    1
+   ],
+   [
+    "meta.holders_coins",
+    1
+   ],
+   [
+    "meta.holders_d_min",
+    1
+   ],
+   [
+    "meta.holders_d_max",
+    1
+   ],
+   [
+    "meta.drops.no_holder",
+    1
+   ],
+   [
+    "secondary.holders_summed_over_chains",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 7
+ },
+ {
+  "file": "t267_results.json",
+  "bytes": 72686,
+  "top_keys": [
+   "task",
+   "ledger",
+   "seed",
+   "seed_flip",
+   "n_null",
+   "n_flip",
+   "generated_at",
+   "funnel_1_events",
+   "funnel_2_mapping",
+   "price_source",
+   "funnel_3_sample",
+   "sample_by_year",
+   "main",
+   "s740_criteria"
+  ],
+  "hold_like_paths": [
+   [
+    "mechanism.entry_on_d.a.threshold_pct",
+    1
+   ],
+   [
+    "mechanism.entry_on_d.d.threshold",
+    1
+   ],
+   [
+    "mechanism.entry_on_d.all_pass",
+    1
+   ],
+   [
+    "mechanism.entry_on_d_plus_1.a.threshold_pct",
+    1
+   ],
+   [
+    "mechanism.entry_on_d_plus_1.d.threshold",
+    1
+   ],
+   [
+    "mechanism.entry_on_d_plus_1.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 6
+ },
+ {
+  "file": "t269_results.json",
+  "bytes": 34444,
+  "top_keys": [
+   "task",
+   "ledger",
+   "run_at",
+   "sample",
+   "data_rows",
+   "trigger",
+   "tickets",
+   "criteria",
+   "sub_items",
+   "power",
+   "current_state"
+  ],
+  "hold_like_paths": [
+   [
+    "criteria.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t270_results.json",
+  "bytes": 68533,
+  "top_keys": [
+   "meta",
+   "weekly",
+   "a_b_c_d",
+   "secondary",
+   "diag",
+   "verdict"
+  ],
+  "hold_like_paths": [
+   [
+    "meta.holders_coverage_coins",
+    1
+   ],
+   [
+    "meta.holders_rows",
+    1
+   ],
+   [
+    "meta.holders_coins",
+    1
+   ],
+   [
+    "meta.holders_d_min",
+    1
+   ],
+   [
+    "meta.holders_d_max",
+    1
+   ],
+   [
+    "meta.drops.no_holder",
+    1
+   ],
+   [
+    "secondary.holders_summed_over_chains",
+    1
+   ],
+   [
+    "verdict.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 8
+ },
+ {
+  "file": "t271_results.json",
+  "bytes": 44682,
+  "top_keys": [
+   "task",
+   "ledger",
+   "generated_utc",
+   "cost_model",
+   "window",
+   "panel",
+   "panel_with_funding",
+   "window_days",
+   "price_coverage",
+   "basis_diagnostics",
+   "reproduce_orig_cost",
+   "reproduce_check",
+   "real_cost",
+   "criteria"
+  ],
+  "hold_like_paths": [
+   [
+    "criteria.a.threshold_pct",
+    1
+   ],
+   [
+    "criteria.b.threshold_pct",
+    1
+   ],
+   [
+    "criteria.c.threshold_pct",
+    1
+   ],
+   [
+    "criteria.d.threshold_pp",
+    1
+   ],
+   [
+    "criteria.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 5
+ },
+ {
+  "file": "t275_results.json",
+  "bytes": 14810,
+  "top_keys": [
+   "base_rate",
+   "n_obs",
+   "n_marked",
+   "n_marked_result_true",
+   "precision",
+   "recall",
+   "recall_detail",
+   "criteria",
+   "all_pass",
+   "marked_not_delisted_excess_median",
+   "marked_not_delisted_n",
+   "coverage",
+   "universe_sample",
+   "monthly_counts_file"
+  ],
+  "hold_like_paths": [
+   [
+    "criteria.a_precision_vs_base.threshold",
+    1
+   ],
+   [
+    "criteria.b_recall.threshold",
+    1
+   ],
+   [
+    "criteria.d_excess_median.threshold",
+    1
+   ],
+   [
+    "all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "t276_results.json",
+  "bytes": 19841,
+  "top_keys": [
+   "meta",
+   "a0_s749_reproduce",
+   "selfcheck_path_vs_carry_hl",
+   "a1_hl_only_s755_cost",
+   "a2_cross_venue",
+   "verdict",
+   "side_items"
+  ],
+  "hold_like_paths": [
+   [
+    "verdict.a_full_sample_vs_a0.threshold_pct",
+    1
+   ],
+   [
+    "verdict.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 2
+ },
+ {
+  "file": "t277_results.json",
+  "bytes": 33978,
+  "top_keys": [
+   "task",
+   "ledger",
+   "seed",
+   "n_perm",
+   "window",
+   "cap_frac",
+   "generated_at",
+   "events",
+   "replay",
+   "variants",
+   "primary",
+   "primary_tickets",
+   "secondary"
+  ],
+  "hold_like_paths": [
+   [
+    "variants.usdt/signal_d.judge.all_pass",
+    1
+   ],
+   [
+    "variants.usdt/entry_d.judge.all_pass",
+    1
+   ],
+   [
+    "variants.clean/signal_d.judge.all_pass",
+    1
+   ],
+   [
+    "variants.clean/entry_d.judge.all_pass",
+    1
+   ],
+   [
+    "variants.literal/signal_d.judge.all_pass",
+    1
+   ],
+   [
+    "variants.literal/entry_d.judge.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 6
+ },
+ {
+  "file": "t281_results.json",
+  "bytes": 218970,
+  "top_keys": [
+   "meta",
+   "manifest_counts",
+   "main",
+   "criteria",
+   "secondary",
+   "coverage",
+   "bh_exploratory",
+   "events"
+  ],
+  "hold_like_paths": [
+   [
+    "main.hold_days",
+    1
+   ],
+   [
+    "criteria.all_pass",
+    1
+   ],
+   [
+    "events[].mcap.hold_days",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 3
+ },
+ {
+  "file": "t282_results.json",
+  "bytes": 97441,
+  "top_keys": [
+   "task",
+   "ledger",
+   "seed",
+   "n_rounds",
+   "generated_at",
+   "rules",
+   "events_source",
+   "n_events",
+   "n_symbols",
+   "data_range",
+   "n_tickets",
+   "skipped",
+   "exit_kinds",
+   "main"
+  ],
+  "hold_like_paths": [
+   [
+    "skipped[].hold",
+    3
+   ],
+   [
+    "exit_kinds.hold",
+    1
+   ],
+   [
+    "decomposition.all.exit_kinds.hold",
+    1
+   ],
+   [
+    "decomposition.2020_2022.exit_kinds.hold",
+    1
+   ],
+   [
+    "decomposition.2023_plus.exit_kinds.hold",
+    1
+   ],
+   [
+    "sub.hold_15",
+    1
+   ],
+   [
+    "sub.hold_60",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 9
+ },
+ {
+  "file": "t283_results.json",
+  "bytes": 167864,
+  "top_keys": [
+   "task",
+   "ledger",
+   "seed",
+   "n_rounds",
+   "generated_at",
+   "rules",
+   "caliber_notes",
+   "events_source",
+   "n_events",
+   "n_symbols",
+   "data_range",
+   "old_S761_recomputed",
+   "new_S762_gross",
+   "new_S762_net"
+  ],
+  "hold_like_paths": [
+   [
+    "rules.changed_exit_S762.hold",
+    1
+   ],
+   [
+    "caliber_notes.hold_bar_stop",
+    1
+   ],
+   [
+    "old_S761_recomputed.exit_kinds.hold",
+    1
+   ],
+   [
+    "old_S761_recomputed.decomposition.all.exit_kinds.hold",
+    1
+   ],
+   [
+    "old_S761_recomputed.decomposition.2020_2022.exit_kinds.hold",
+    1
+   ],
+   [
+    "old_S761_recomputed.decomposition.2023_plus.exit_kinds.hold",
+    1
+   ],
+   [
+    "new_S762_gross.exit_kinds.hold",
+    1
+   ],
+   [
+    "new_S762_gross.decomposition.all.exit_kinds.hold",
+    1
+   ],
+   [
+    "new_S762_gross.decomposition.2020_2022.exit_kinds.hold",
+    1
+   ],
+   [
+    "new_S762_gross.decomposition.2023_plus.exit_kinds.hold",
+    1
+   ],
+   [
+    "new_S762_net.exit_kinds.hold",
+    1
+   ],
+   [
+    "new_S762_net.decomposition.all.exit_kinds.hold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 29
+ },
+ {
+  "file": "t285_results.json",
+  "bytes": 81189,
+  "top_keys": [
+   "card",
+   "ledger",
+   "n_announcements",
+   "parse_summary",
+   "funnel_reading_B",
+   "readings",
+   "diff",
+   "ledger_reference"
+  ],
+  "hold_like_paths": [
+   [
+    "readings.A_own_title_parser.all_pass",
+    1
+   ],
+   [
+    "readings.C_own_parser_same_announcement_rule.all_pass",
+    1
+   ],
+   [
+    "readings.B_db_symbols.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 3
+ },
+ {
+  "file": "t286_results.json",
+  "bytes": 152754,
+  "top_keys": [
+   "task",
+   "ledger",
+   "author",
+   "generated_utc",
+   "pre_reg",
+   "counts",
+   "weeks",
+   "main",
+   "secondary",
+   "exploratory",
+   "verdict"
+  ],
+  "hold_like_paths": [
+   [
+    "verdict.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t290_results.json",
+  "bytes": 18792,
+  "top_keys": [
+   "task",
+   "prereg",
+   "generated_at",
+   "data",
+   "event_counts",
+   "arms",
+   "verdicts",
+   "mapping",
+   "robust"
+  ],
+  "hold_like_paths": [
+   [
+    "robust.z_threshold_sweep",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t291_results.json",
+  "bytes": 130768,
+  "top_keys": [
+   "meta",
+   "event_counts",
+   "sources",
+   "basket_selfcheck",
+   "arms",
+   "strata",
+   "coverage",
+   "sensitivity",
+   "per_event",
+   "krw_null_title_groups",
+   "krw_null_listings"
+  ],
+  "hold_like_paths": [
+   [
+    "sensitivity.listing_krw.threshold",
+    1
+   ],
+   [
+    "sensitivity.listing_krw_null.threshold",
+    1
+   ],
+   [
+    "sensitivity.delisting.threshold",
+    1
+   ],
+   [
+    "sensitivity.warning.threshold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "t292_results.json",
+  "bytes": 7362,
+  "top_keys": [
+   "card",
+   "prereg",
+   "generated_at",
+   "config",
+   "coverage",
+   "P_premium",
+   "S_share",
+   "artifact_audit",
+   "robustness"
+  ],
+  "hold_like_paths": [
+   [
+    "config.hold_days",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t294_results.json",
+  "bytes": 410250,
+  "top_keys": [
+   "task",
+   "prereg",
+   "generated_utc",
+   "config",
+   "weeks",
+   "week_range",
+   "summary",
+   "verdict_gates",
+   "manual_checks",
+   "weekly"
+  ],
+  "hold_like_paths": [
+   [
+    "verdict_gates.C1.bh_pass",
+    1
+   ],
+   [
+    "verdict_gates.C1.bh_threshold",
+    1
+   ],
+   [
+    "verdict_gates.C2.bh_pass",
+    1
+   ],
+   [
+    "verdict_gates.C2.bh_threshold",
+    1
+   ],
+   [
+    "verdict_gates.C3.bh_pass",
+    1
+   ],
+   [
+    "verdict_gates.C3.bh_threshold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 6
+ },
+ {
+  "file": "t298_results.json",
+  "bytes": 391958,
+  "top_keys": [
+   "task",
+   "prereg",
+   "generated_utc",
+   "level_diag",
+   "config",
+   "weeks_total",
+   "week_range",
+   "specs",
+   "verdict"
+  ],
+  "hold_like_paths": [
+   [
+    "verdict.C1.bh_perm_pass",
+    1
+   ],
+   [
+    "verdict.C1.bh_nw_pass",
+    1
+   ],
+   [
+    "verdict.C1.bh_threshold_perm",
+    1
+   ],
+   [
+    "verdict.C3.bh_perm_pass",
+    1
+   ],
+   [
+    "verdict.C3.bh_nw_pass",
+    1
+   ],
+   [
+    "verdict.C3.bh_threshold_perm",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 6
+ },
+ {
+  "file": "t299_results.json",
+  "bytes": 53578,
+  "top_keys": [
+   "lineage",
+   "judgment",
+   "report_only",
+   "weekly",
+   "structure"
+  ],
+  "hold_like_paths": [
+   [
+    "judgment.shuffle_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t305_results.json",
+  "bytes": 26044,
+  "top_keys": [
+   "anchor_cap_pit24",
+   "anchor_legA_ideal",
+   "card_prose_trades",
+   "card_prose_n_trades",
+   "card_prose_n_trades_total",
+   "card_prose_exit_reasons",
+   "window",
+   "coverage",
+   "account_A_canonical",
+   "account_B_card_prose",
+   "core_1",
+   "legA_canonical",
+   "legB_card_prose",
+   "excess_A_vs_1"
+  ],
+  "hold_like_paths": [
+   [
+    "stress.threshold",
+    1
+   ],
+   [
+    "nulls.B_card_prose_BTC.total_hold_days",
+    1
+   ],
+   [
+    "nulls.A_canonical_BTC_ETH.total_hold_days",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 3
+ },
+ {
+  "file": "t313_results.json",
+  "bytes": 119329,
+  "top_keys": [
+   "task",
+   "ledger",
+   "prereg",
+   "snapshots",
+   "state_coverage",
+   "judgement",
+   "criteria",
+   "verdict",
+   "mechanism_diagnostics",
+   "sensitivity_descriptive",
+   "weekly_series",
+   "scenarios"
+  ],
+  "hold_like_paths": [
+   [
+    "criteria.a.threshold",
+    1
+   ],
+   [
+    "criteria.c.threshold",
+    1
+   ],
+   [
+    "criteria.d.threshold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 3
+ },
+ {
+  "file": "t314_results.json",
+  "bytes": 126122,
+  "top_keys": [
+   "task",
+   "lane",
+   "ledger",
+   "generated_utc",
+   "inputs",
+   "params",
+   "coverage",
+   "a",
+   "b",
+   "c",
+   "d",
+   "diagnostics",
+   "verdict",
+   "descriptive_k_sensitivity"
+  ],
+  "hold_like_paths": [
+   [
+    "inputs.state.zscore_pass",
+    1
+   ],
+   [
+    "verdict.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 2
+ },
+ {
+  "file": "t314_states_cache.json",
+  "bytes": 1193138,
+  "top_keys": [
+   "fingerprint",
+   "rows"
+  ],
+  "hold_like_paths": [
+   [
+    "rows[].zscore_pass",
+    3
+   ],
+   [
+    "fingerprint.zscore_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "t316_results.json",
+  "bytes": 38910,
+  "top_keys": [
+   "task",
+   "lane",
+   "kind",
+   "prereg",
+   "generated_at",
+   "constants",
+   "universe",
+   "samples",
+   "criteria",
+   "verdict",
+   "all_pass",
+   "ambiguities",
+   "fingerprints",
+   "elapsed_s"
+  ],
+  "hold_like_paths": [
+   [
+    "constants.hold_days",
+    1
+   ],
+   [
+    "all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 2
+ },
+ {
+  "file": "t317_results.json",
+  "bytes": 27967,
+  "top_keys": [
+   "meta",
+   "selfcheck",
+   "baseline",
+   "classes",
+   "combined",
+   "hits",
+   "hits_n_rows",
+   "hits_n_tickets_union"
+  ],
+  "hold_like_paths": [
+   [
+    "classes.S.all_pass",
+    1
+   ],
+   [
+    "classes.L.all_pass",
+    1
+   ],
+   [
+    "classes.P.all_pass",
+    1
+   ],
+   [
+    "classes.U.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "t318_results.json",
+  "bytes": 34934,
+  "top_keys": [
+   "card",
+   "ledger",
+   "kernel",
+   "s797_text_check",
+   "data_coverage",
+   "interval",
+   "selfcheck_mix_nav",
+   "arms",
+   "judgement",
+   "baselines",
+   "style_table_file",
+   "legs_csv",
+   "scenarios"
+  ],
+  "hold_like_paths": [
+   [
+    "arms.T25_K.checks.all_pass",
+    1
+   ],
+   [
+    "arms.RB_T25.checks.all_pass",
+    1
+   ],
+   [
+    "arms.STYLE_T25.checks.all_pass",
+    1
+   ],
+   [
+    "judgement.T25_K.all_pass",
+    1
+   ],
+   [
+    "judgement.RB_T25.all_pass",
+    1
+   ],
+   [
+    "judgement.STYLE_T25.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 6
+ },
+ {
+  "file": "t319_results.json",
+  "bytes": 72806,
+  "top_keys": [
+   "task",
+   "ledger",
+   "framework",
+   "sample",
+   "self_check",
+   "arms",
+   "paired_ic_diff",
+   "halves_gap",
+   "weekly_coins",
+   "weekly_ic",
+   "content_fingerprint",
+   "snapshot_fingerprint",
+   "mcap_snapshot"
+  ],
+  "hold_like_paths": [
+   [
+    "self_check.passed",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t320_results.json",
+  "bytes": 37130,
+  "top_keys": [
+   "meta",
+   "metrics",
+   "controls",
+   "verdicts",
+   "rebalance_log",
+   "style_table_final",
+   "style_table_n_reestimates",
+   "variants"
+  ],
+  "hold_like_paths": [
+   [
+    "controls.panel_hold",
+    1
+   ],
+   [
+    "verdicts.RB.i_calmar_ge_115pct.threshold",
+    1
+   ],
+   [
+    "verdicts.RB.ALL_PASS",
+    1
+   ],
+   [
+    "verdicts.STYLE.i_calmar_ge_115pct.threshold",
+    1
+   ],
+   [
+    "verdicts.STYLE.ALL_PASS",
+    1
+   ],
+   [
+    "variants.V0 基线(原文读法).verdicts.RB.ALL_PASS",
+    1
+   ],
+   [
+    "variants.V0 基线(原文读法).verdicts.STYLE.ALL_PASS",
+    1
+   ],
+   [
+    "variants.V1 ① NAV 换成 core_replay.verdicts.RB.ALL_PASS",
+    1
+   ],
+   [
+    "variants.V1 ① NAV 换成 core_replay.verdicts.STYLE.ALL_PASS",
+    1
+   ],
+   [
+    "variants.V2 crypto 腿 = ① 买持有(不做 X1V).verdicts.RB.ALL_PASS",
+    1
+   ],
+   [
+    "variants.V2 crypto 腿 = ① 买持有(不做 X1V).verdicts.STYLE.ALL_PASS",
+    1
+   ],
+   [
+    "variants.V3 STYLE 用 d−1 的天气.verdicts.RB.ALL_PASS",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 21
+ },
+ {
+  "file": "t321_results.json",
+  "bytes": 14602,
+  "top_keys": [
+   "card",
+   "ledger",
+   "kernel",
+   "s799_text_check",
+   "kernel_params",
+   "data_coverage",
+   "interval",
+   "arms",
+   "ab_test",
+   "crypto_leg_exposure",
+   "judgement",
+   "baselines",
+   "legs_csv",
+   "core_daily_csv"
+  ],
+  "hold_like_paths": [
+   [
+    "judgement.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t322_results.json",
+  "bytes": 21497,
+  "top_keys": [
+   "card",
+   "ledger",
+   "kernel",
+   "s800_text_check",
+   "kernel_params",
+   "windows",
+   "overall",
+   "legs_csv",
+   "scenarios"
+  ],
+  "hold_like_paths": [
+   [
+    "windows.W1.judgement.window_pass",
+    1
+   ],
+   [
+    "windows.W2.judgement.window_pass",
+    1
+   ],
+   [
+    "overall.W1_pass",
+    1
+   ],
+   [
+    "overall.W2_pass",
+    1
+   ],
+   [
+    "overall.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 5
+ },
+ {
+  "file": "t323_results.json",
+  "bytes": 44907,
+  "top_keys": [
+   "card",
+   "ledger",
+   "kernel",
+   "s801_text_check",
+   "kernel_params",
+   "windows",
+   "overall",
+   "legs_csv",
+   "scenarios",
+   "report_md"
+  ],
+  "hold_like_paths": [
+   [
+    "windows.W1.judgement.n_pass",
+    1
+   ],
+   [
+    "windows.W1.judgement.window_pass",
+    1
+   ],
+   [
+    "windows.W2.judgement.n_pass",
+    1
+   ],
+   [
+    "windows.W2.judgement.window_pass",
+    1
+   ],
+   [
+    "overall.W1_pass",
+    1
+   ],
+   [
+    "overall.W2_pass",
+    1
+   ],
+   [
+    "overall.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 7
+ },
+ {
+  "file": "t324_results.json",
+  "bytes": 6988,
+  "top_keys": [
+   "task",
+   "ledger",
+   "framework",
+   "self_check",
+   "panel_stats",
+   "arms",
+   "halves",
+   "ab_test_P_vs_M52",
+   "judgments",
+   "compare_S428_published",
+   "fingerprints"
+  ],
+  "hold_like_paths": [
+   [
+    "arms.HOLD",
+    1
+   ],
+   [
+    "arms.HOLD.ann_ex_vs_hold",
+    1
+   ],
+   [
+    "arms.HOLD.te_ann_vs_hold",
+    1
+   ],
+   [
+    "arms.HOLD.beta_vs_hold",
+    1
+   ],
+   [
+    "arms.HOLD.ir_vs_hold",
+    1
+   ],
+   [
+    "arms.M52.ann_ex_vs_hold",
+    1
+   ],
+   [
+    "arms.M52.te_ann_vs_hold",
+    1
+   ],
+   [
+    "arms.M52.beta_vs_hold",
+    1
+   ],
+   [
+    "arms.M52.ir_vs_hold",
+    1
+   ],
+   [
+    "arms.P.ann_ex_vs_hold",
+    1
+   ],
+   [
+    "arms.P.te_ann_vs_hold",
+    1
+   ],
+   [
+    "arms.P.beta_vs_hold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 18
+ },
+ {
+  "file": "t324_validation.json",
+  "bytes": 5805,
+  "top_keys": [
+   "panel_check",
+   "panel_check_attribution",
+   "universe_vs_window"
+  ],
+  "hold_like_paths": [
+   [
+    "universe_vs_window.A_pit_cap_pit24.HOLD",
+    1
+   ],
+   [
+    "universe_vs_window.A_pit_cap_pit24.HOLD.ann_ex_vs_hold",
+    1
+   ],
+   [
+    "universe_vs_window.A_pit_cap_pit24.HOLD.te_ann_vs_hold",
+    1
+   ],
+   [
+    "universe_vs_window.A_pit_cap_pit24.HOLD.beta_vs_hold",
+    1
+   ],
+   [
+    "universe_vs_window.A_pit_cap_pit24.HOLD.ir_vs_hold",
+    1
+   ],
+   [
+    "universe_vs_window.A_pit_cap_pit24.M52.ann_ex_vs_hold",
+    1
+   ],
+   [
+    "universe_vs_window.A_pit_cap_pit24.M52.te_ann_vs_hold",
+    1
+   ],
+   [
+    "universe_vs_window.A_pit_cap_pit24.M52.beta_vs_hold",
+    1
+   ],
+   [
+    "universe_vs_window.A_pit_cap_pit24.M52.ir_vs_hold",
+    1
+   ],
+   [
+    "universe_vs_window.B_survivor24_S428_universe",
+    1
+   ],
+   [
+    "universe_vs_window.B_survivor24_S428_universe.HOLD",
+    1
+   ],
+   [
+    "universe_vs_window.B_survivor24_S428_universe.HOLD.ann_ex_vs_hold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 20
+ },
+ {
+  "file": "t325_results.json",
+  "bytes": 12875,
+  "top_keys": [
+   "task",
+   "ledger",
+   "framework",
+   "panel_check",
+   "panel_stats",
+   "daily",
+   "weekly_sensitivity",
+   "exploratory_cap_limit_split",
+   "forward_base_rates",
+   "compare_S802_published",
+   "fingerprints"
+  ],
+  "hold_like_paths": [
+   [
+    "daily.judgments.verdict_all_pass",
+    1
+   ],
+   [
+    "weekly_sensitivity.judgments.verdict_all_pass",
+    1
+   ],
+   [
+    "compare_S802_published.published.M52_ann_ex_vs_equalweight_hold",
+    1
+   ],
+   [
+    "compare_S802_published.published.HOLD_cum",
+    1
+   ],
+   [
+    "compare_S802_published.published.HOLD_mdd",
+    1
+   ],
+   [
+    "compare_S802_published.published.HOLD_turnover_yr",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 6
+ },
+ {
+  "file": "t326_results.json",
+  "bytes": 6349,
+  "top_keys": [
+   "task",
+   "ledger",
+   "framework",
+   "generated_at",
+   "data_window",
+   "panel",
+   "v0_check",
+   "self_check_s640",
+   "v4_funding_s640_current_window",
+   "v5_korea_p7",
+   "lagged_variant_not_preregistered",
+   "corr_v5_v4",
+   "coverage",
+   "yearly_v5"
+  ],
+  "hold_like_paths": [
+   [
+    "v0_check.v0_total_holdout",
+    1
+   ],
+   [
+    "v0_check.passes_1pct",
+    1
+   ],
+   [
+    "self_check_s640.target_holdout",
+    1
+   ],
+   [
+    "self_check_s640.reproduced_holdout",
+    1
+   ],
+   [
+    "self_check_s640.tol_holdout",
+    1
+   ],
+   [
+    "self_check_s640.passes",
+    1
+   ],
+   [
+    "v4_funding_s640_current_window.v4_total_holdout",
+    1
+   ],
+   [
+    "v4_funding_s640_current_window.v0_total_holdout",
+    1
+   ],
+   [
+    "v4_funding_s640_current_window.diff_holdout",
+    1
+   ],
+   [
+    "v5_korea_p7.v5_total_holdout",
+    1
+   ],
+   [
+    "v5_korea_p7.diff_holdout",
+    1
+   ],
+   [
+    "v5_korea_p7.pctile_vs_shuffles_holdout",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 15
+ },
+ {
+  "file": "t328_results.json",
+  "bytes": 163821,
+  "top_keys": [
+   "card",
+   "author",
+   "as_of",
+   "kernel",
+   "calib",
+   "bounds_base",
+   "bounds_wide",
+   "windows",
+   "selfcheck",
+   "fidelity",
+   "criterion"
+  ],
+  "hold_like_paths": [
+   [
+    "windows.W1_card.grid.crypto.0.15-0.35.s801_all_pass",
+    1
+   ],
+   [
+    "windows.W1_card.grid.crypto.0.15-0.40.s801_all_pass",
+    1
+   ],
+   [
+    "windows.W1_card.grid.crypto.0.15-0.45.s801_all_pass",
+    1
+   ],
+   [
+    "windows.W1_card.grid.crypto.0.20-0.35.s801_all_pass",
+    1
+   ],
+   [
+    "windows.W1_card.grid.crypto.0.20-0.40.s801_all_pass",
+    1
+   ],
+   [
+    "windows.W1_card.grid.crypto.0.20-0.45.s801_all_pass",
+    1
+   ],
+   [
+    "windows.W1_card.grid.crypto.0.25-0.35.s801_all_pass",
+    1
+   ],
+   [
+    "windows.W1_card.grid.crypto.0.25-0.40.s801_all_pass",
+    1
+   ],
+   [
+    "windows.W1_card.grid.crypto.0.25-0.45.s801_all_pass",
+    1
+   ],
+   [
+    "windows.W1_card.grid.equity.0.20-0.40.s801_all_pass",
+    1
+   ],
+   [
+    "windows.W1_card.grid.equity.0.15-0.45.s801_all_pass",
+    1
+   ],
+   [
+    "windows.W1_card.grid.equity.0.10-0.50.s801_all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 84
+ },
+ {
+  "file": "t329_results.json",
+  "bytes": 254144,
+  "top_keys": [
+   "card",
+   "ledger",
+   "author",
+   "generated_at",
+   "kernel",
+   "s805_text_check",
+   "params",
+   "expect_rbv2_total_return",
+   "windows",
+   "verdict"
+  ],
+  "hold_like_paths": [
+   [
+    "verdict.n_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t330_results.json",
+  "bytes": 193617,
+  "top_keys": [
+   "card",
+   "ledger",
+   "generated_at_utc",
+   "sample",
+   "data",
+   "hold_check",
+   "signal",
+   "schedule",
+   "drawdown_windows",
+   "hold",
+   "strat",
+   "judgments",
+   "null_variants",
+   "tom_overlap"
+  ],
+  "hold_like_paths": [
+   [
+    "hold_check",
+    1
+   ],
+   [
+    "signal.threshold_last",
+    1
+   ],
+   [
+    "signal.threshold_mean",
+    1
+   ],
+   [
+    "drawdown_windows.hold",
+    1
+   ],
+   [
+    "hold",
+    1
+   ],
+   [
+    "judgments.iv_halves_calmar_ge_hold",
+    1
+   ],
+   [
+    "judgments.iv_halves_calmar_ge_hold.h1.hold_ann",
+    1
+   ],
+   [
+    "judgments.iv_halves_calmar_ge_hold.h1.hold_mdd",
+    1
+   ],
+   [
+    "judgments.iv_halves_calmar_ge_hold.h1.hold_calmar",
+    1
+   ],
+   [
+    "judgments.iv_halves_calmar_ge_hold.h1.calmar_ge_hold",
+    1
+   ],
+   [
+    "judgments.iv_halves_calmar_ge_hold.h2.hold_ann",
+    1
+   ],
+   [
+    "judgments.iv_halves_calmar_ge_hold.h2.hold_mdd",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 34
+ },
+ {
+  "file": "t332_results.json",
+  "bytes": 412213,
+  "top_keys": [
+   "card",
+   "prereg",
+   "mode",
+   "data",
+   "self_check_s736",
+   "data_sanity_drops_main",
+   "data_sanity_drop_examples",
+   "nav_decomposition",
+   "summary",
+   "verdicts",
+   "leave_one_out",
+   "tickets",
+   "periods",
+   "hedge_btc"
+  ],
+  "hold_like_paths": [
+   [
+    "tickets[].hold_days",
+    3
+   ],
+   [
+    "verdicts.(d) 留一(|R| 最大的那张)后 (b) 仍成立",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "t333_results.json",
+  "bytes": 43936,
+  "top_keys": [
+   "prereg",
+   "s809_verbatim",
+   "generated_utc",
+   "data",
+   "selfcheck_s736",
+   "component_diagnostic",
+   "overheat_detail",
+   "trigger_map",
+   "tickets",
+   "summary",
+   "judge_a",
+   "ab_vs_zero",
+   "judge_b",
+   "ticket_signflip_p"
+  ],
+  "hold_like_paths": [
+   [
+    "tickets[].hold_days",
+    3
+   ],
+   [
+    "selfcheck_s736.n_signal_days_736",
+    1
+   ],
+   [
+    "overall.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 5
+ },
+ {
+  "file": "t334_results.json",
+  "bytes": 137690,
+  "top_keys": [
+   "card",
+   "prereg",
+   "mode",
+   "data",
+   "extreme",
+   "main",
+   "variant_confirm_only",
+   "variant_extreme_only",
+   "control",
+   "sensitivity_hygiene_band",
+   "verdicts",
+   "tickets",
+   "tickets_confirm_only",
+   "tickets_extreme_only"
+  ],
+  "hold_like_paths": [
+   [
+    "tickets[].hold_days",
+    3
+   ],
+   [
+    "tickets_confirm_only[].hold_days",
+    3
+   ],
+   [
+    "tickets_extreme_only[].hold_days",
+    3
+   ],
+   [
+    "main.flow.n_unconfirmed",
+    1
+   ],
+   [
+    "variant_confirm_only.flow.n_unconfirmed",
+    1
+   ],
+   [
+    "sensitivity_hygiene_band.flow.n_unconfirmed",
+    1
+   ],
+   [
+    "verdicts.(附) 频率 / 最差票 / 最长连亏.median_hold_days",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 13
+ },
+ {
+  "file": "t335_results.json",
+  "bytes": 8276,
+  "top_keys": [
+   "BTC",
+   "ETH"
+  ],
+  "hold_like_paths": [
+   [
+    "BTC.sensitivity[].delta_ts_hold",
+    3
+   ],
+   [
+    "ETH.sensitivity[].delta_ts_hold",
+    3
+   ],
+   [
+    "BTC.arms.HOLD",
+    1
+   ],
+   [
+    "BTC.judge.i_total_return_gt_hold_and_trim",
+    1
+   ],
+   [
+    "BTC.judge.ii_maxdd_not_deeper_than_hold",
+    1
+   ],
+   [
+    "BTC.judge.all_pass",
+    1
+   ],
+   [
+    "ETH.arms.HOLD",
+    1
+   ],
+   [
+    "ETH.judge.i_total_return_gt_hold_and_trim",
+    1
+   ],
+   [
+    "ETH.judge.ii_maxdd_not_deeper_than_hold",
+    1
+   ],
+   [
+    "ETH.judge.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 14
+ },
+ {
+  "file": "t336_results.json",
+  "bytes": 63850,
+  "top_keys": [
+   "meta",
+   "panel_baseline",
+   "by_symbol",
+   "rounds"
+  ],
+  "hold_like_paths": [
+   [
+    "rounds[].hold_days",
+    3
+   ],
+   [
+    "by_symbol.BTC.arms.HOLD70",
+    1
+   ],
+   [
+    "by_symbol.BTC.arms.HOLD100",
+    1
+   ],
+   [
+    "by_symbol.BTC.criteria.i_total_return_gt_hold70",
+    1
+   ],
+   [
+    "by_symbol.BTC.criteria.i_total_return_gt_hold70.hold70",
+    1
+   ],
+   [
+    "by_symbol.BTC.criteria.ii_maxdd_not_deeper.hold70_maxdd",
+    1
+   ],
+   [
+    "by_symbol.BTC.sensitivity_budget_restores_spot.diff_vs_hold70",
+    1
+   ],
+   [
+    "by_symbol.BTC.sensitivity_budget_restores_spot.i_pass",
+    1
+   ],
+   [
+    "by_symbol.BTC.sensitivity_budget_restores_spot.ii_pass",
+    1
+   ],
+   [
+    "by_symbol.BTC.sensitivity_restore_weight.diff_vs_hold70",
+    1
+   ],
+   [
+    "by_symbol.BTC.sensitivity_restore_weight.i_pass",
+    1
+   ],
+   [
+    "by_symbol.BTC.sensitivity_restore_weight.ii_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 35
+ },
+ {
+  "file": "t337_results.json",
+  "bytes": 11178,
+  "top_keys": [
+   "task",
+   "ledger",
+   "run_utc",
+   "window",
+   "n_days",
+   "data_gate",
+   "config",
+   "data_counts",
+   "arm_days",
+   "audit",
+   "rounds",
+   "stats",
+   "null",
+   "verdict_numbers"
+  ],
+  "hold_like_paths": [
+   [
+    "audit.nav_reconciliation.twoway_minus_hold70_nav",
+    1
+   ],
+   [
+    "stats.HOLD70",
+    1
+   ],
+   [
+    "stats.HOLD100",
+    1
+   ],
+   [
+    "null.actual_diff_twoway_minus_hold70",
+    1
+   ],
+   [
+    "verdict_numbers.(i) TWOWAY 总收益 > HOLD70",
+    1
+   ],
+   [
+    "verdict_numbers.(ii) 最大回撤不比 HOLD70 深",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 6
+ },
+ {
+  "file": "t339_results.json",
+  "bytes": 27117,
+  "top_keys": [
+   "task",
+   "ledger",
+   "lane",
+   "as_of",
+   "kernel",
+   "data",
+   "sample",
+   "pit_selfcheck",
+   "criteria",
+   "extra",
+   "artifacts"
+  ],
+  "hold_like_paths": [
+   [
+    "kernel.weights.hold",
+    1
+   ],
+   [
+    "criteria.c.hold70",
+    1
+   ],
+   [
+    "criteria.c.judge.total_return_ge_hold70",
+    1
+   ],
+   [
+    "extra.stance_share.hold",
+    1
+   ],
+   [
+    "extra.stance_counts.hold",
+    1
+   ],
+   [
+    "extra.K_sensitivity.K=30.stance_share.hold",
+    1
+   ],
+   [
+    "extra.K_sensitivity.K=120.stance_share.hold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 7
+ },
+ {
+  "file": "t340_results.json",
+  "bytes": 31571,
+  "top_keys": [
+   "meta",
+   "data",
+   "variants",
+   "main"
+  ],
+  "hold_like_paths": [
+   [
+    "variants.V1_trim_requires_3_segments.d.per_epoch[].top_window30.hold",
+    3
+   ],
+   [
+    "variants.V1_trim_requires_3_segments.d.per_epoch[].bottom_window30.hold",
+    3
+   ],
+   [
+    "variants.V2_rolling730_std.d.per_epoch[].top_window30.hold",
+    3
+   ],
+   [
+    "variants.V2_rolling730_std.d.per_epoch[].bottom_window30.hold",
+    3
+   ],
+   [
+    "variants.V3_uncond_in_space.d.per_epoch[].top_window30.hold",
+    3
+   ],
+   [
+    "variants.V3_uncond_in_space.d.per_epoch[].bottom_window30.hold",
+    3
+   ],
+   [
+    "variants.V4_K30.d.per_epoch[].top_window30.hold",
+    3
+   ],
+   [
+    "variants.V4_K30.d.per_epoch[].bottom_window30.hold",
+    3
+   ],
+   [
+    "variants.V5_K120.d.per_epoch[].top_window30.hold",
+    3
+   ],
+   [
+    "variants.V5_K120.d.per_epoch[].bottom_window30.hold",
+    3
+   ],
+   [
+    "main.d.per_epoch[].top_window30.hold",
+    3
+   ],
+   [
+    "main.d.per_epoch[].bottom_window30.hold",
+    3
+   ]
+  ],
+  "n_hold_like_paths": 56
+ },
+ {
+  "file": "t341_results.json",
+  "bytes": 16120,
+  "top_keys": [
+   "segments",
+   "w_K",
+   "account_A_canonical",
+   "account_K_const",
+   "core_1",
+   "legA_canonical",
+   "legK_const",
+   "coverage",
+   "window",
+   "nulls",
+   "cluster",
+   "k_cost_pp",
+   "k_turn_mean_pct",
+   "t305_check"
+  ],
+  "hold_like_paths": [
+   [
+    "nulls.total_hold_days",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t342_results.json",
+  "bytes": 37871,
+  "top_keys": [
+   "card",
+   "ledger",
+   "kernel",
+   "kernel_params",
+   "s815_text_check",
+   "window",
+   "data_coverage",
+   "crypto_leg_exposure",
+   "self_checks",
+   "arms",
+   "arm_defs",
+   "diffs",
+   "ab_test_L1_vs_L2",
+   "fwd_horizon_base_rate"
+  ],
+  "hold_like_paths": [
+   [
+    "judgement.L3.(i) 最大回撤不深于 −25%.threshold",
+    1
+   ],
+   [
+    "judgement.L4.(i) 最大回撤不深于 −25%.threshold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 2
+ },
+ {
+  "file": "t347_discovery.json",
+  "bytes": 333808,
+  "top_keys": [
+   "task",
+   "ledger",
+   "stage",
+   "window",
+   "window_spec",
+   "price_rows_fetched",
+   "price_rows_in_sample",
+   "warmup_days_M200_undefined",
+   "funding",
+   "selection",
+   "rules"
+  ],
+  "hold_like_paths": [
+   [
+    "rules.HOLD",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t347_results.json",
+  "bytes": 143204,
+  "top_keys": [
+   "task",
+   "ledger",
+   "stage",
+   "window",
+   "window_spec",
+   "price_rows_holdout_fetched",
+   "sample_days",
+   "warmup_M200_undefined_days",
+   "selected_from_discovery",
+   "discovery_selection_why",
+   "funding",
+   "rules",
+   "drop_best_report_only",
+   "verdict"
+  ],
+  "hold_like_paths": [
+   [
+    "price_rows_holdout_fetched",
+    1
+   ],
+   [
+    "funding.holdout_days_without_funding",
+    1
+   ],
+   [
+    "rules.HOLD",
+    1
+   ],
+   [
+    "drop_best_report_only.holdout",
+    1
+   ],
+   [
+    "verdict.all_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 5
+ },
+ {
+  "file": "t348_base_t342_results.json",
+  "bytes": 37871,
+  "top_keys": [
+   "card",
+   "ledger",
+   "kernel",
+   "kernel_params",
+   "s815_text_check",
+   "window",
+   "data_coverage",
+   "crypto_leg_exposure",
+   "self_checks",
+   "arms",
+   "arm_defs",
+   "diffs",
+   "ab_test_L1_vs_L2",
+   "fwd_horizon_base_rate"
+  ],
+  "hold_like_paths": [
+   [
+    "judgement.L3.(i) 最大回撤不深于 −25%.threshold",
+    1
+   ],
+   [
+    "judgement.L4.(i) 最大回撤不深于 −25%.threshold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 2
+ },
+ {
+  "file": "t348_ext_results.json",
+  "bytes": 34772,
+  "top_keys": [
+   "card",
+   "part",
+   "ledger_start",
+   "win_b",
+   "win_end",
+   "leg_info",
+   "crypto_info",
+   "C0",
+   "selfcheck_old_legs",
+   "S681_H2",
+   "S681_H3",
+   "S681_H4",
+   "gate",
+   "reference_arm"
+  ],
+  "hold_like_paths": [
+   [
+    "S681_H2.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "S681_H2.conclusion.window_B_pass",
+    1
+   ],
+   [
+    "S681_H3.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "S681_H3.conclusion.window_B_pass",
+    1
+   ],
+   [
+    "S681_H4.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "S681_H4.conclusion.window_B_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 6
+ },
+ {
+  "file": "t348_families_results.json",
+  "bytes": 262117,
+  "top_keys": [
+   "card",
+   "part",
+   "generated",
+   "base",
+   "S736_accounting",
+   "S736_published",
+   "S736_fixed",
+   "S808",
+   "S810"
+  ],
+  "hold_like_paths": [
+   [
+    "S736_accounting.tickets[].hold_days",
+    3
+   ],
+   [
+    "S736_published.meta.tickets_detail[].hold_days",
+    3
+   ],
+   [
+    "S736_fixed.meta.tickets_detail[].hold_days",
+    3
+   ],
+   [
+    "S736_published.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "S736_published.conclusion.window_B_pass",
+    1
+   ],
+   [
+    "S736_fixed.meta.best_ticket.hold_days",
+    1
+   ],
+   [
+    "S736_fixed.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "S736_fixed.conclusion.window_B_pass",
+    1
+   ],
+   [
+    "S808.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "S808.conclusion.window_B_pass",
+    1
+   ],
+   [
+    "S810.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "S810.conclusion.window_B_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 18
+ },
+ {
+  "file": "t348_r3_families_meta.json",
+  "bytes": 19285,
+  "top_keys": [
+   "S642",
+   "S736_published",
+   "S736_fixed",
+   "S808",
+   "S810",
+   "S681_H2",
+   "S681_H3",
+   "S681_H4"
+  ],
+  "hold_like_paths": [
+   [
+    "S736_published.tickets_detail[].hold_days",
+    3
+   ],
+   [
+    "S736_fixed.tickets_detail[].hold_days",
+    3
+   ],
+   [
+    "S736_fixed.best_ticket.hold_days",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 7
+ },
+ {
+  "file": "t348_r3_results.json",
+  "bytes": 90446,
+  "top_keys": [
+   "card",
+   "part",
+   "generated",
+   "spec",
+   "base",
+   "families"
+  ],
+  "hold_like_paths": [
+   [
+    "families.S736_published.meta.tickets_detail[].hold_days",
+    3
+   ],
+   [
+    "families.S736_fixed.meta.tickets_detail[].hold_days",
+    3
+   ],
+   [
+    "families.S642.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "families.S642.conclusion.window_B_pass",
+    1
+   ],
+   [
+    "families.S736_published.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "families.S736_published.conclusion.window_B_pass",
+    1
+   ],
+   [
+    "families.S736_fixed.meta.best_ticket.hold_days",
+    1
+   ],
+   [
+    "families.S736_fixed.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "families.S736_fixed.conclusion.window_B_pass",
+    1
+   ],
+   [
+    "families.S808.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "families.S808.conclusion.window_B_pass",
+    1
+   ],
+   [
+    "families.S810.conclusion.window_A_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 23
+ },
+ {
+  "file": "t348_r4_results.json",
+  "bytes": 14417,
+  "top_keys": [
+   "card",
+   "part",
+   "generated",
+   "spec",
+   "data",
+   "base_long",
+   "family",
+   "null",
+   "checks",
+   "one_liner"
+  ],
+  "hold_like_paths": [
+   [
+    "family.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "family.conclusion.window_B_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 2
+ },
+ {
+  "file": "t348_r5_results.json",
+  "bytes": 150037,
+  "top_keys": [
+   "card",
+   "part",
+   "generated",
+   "spec",
+   "data",
+   "base_long",
+   "families",
+   "fix_legacy_comparison",
+   "cash_sensitivity",
+   "presel_interval",
+   "phase_shift",
+   "mc_se",
+   "checks"
+  ],
+  "hold_like_paths": [
+   [
+    "families.S736_published.meta.tickets_detail[].hold_days",
+    3
+   ],
+   [
+    "families.S736_fixed.meta.tickets_detail[].hold_days",
+    3
+   ],
+   [
+    "families.S642.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "families.S642.conclusion.window_B_pass",
+    1
+   ],
+   [
+    "families.S736_published.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "families.S736_published.conclusion.window_B_pass",
+    1
+   ],
+   [
+    "families.S736_fixed.meta.best_ticket.hold_days",
+    1
+   ],
+   [
+    "families.S736_fixed.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "families.S736_fixed.conclusion.window_B_pass",
+    1
+   ],
+   [
+    "families.S808.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "families.S808.conclusion.window_B_pass",
+    1
+   ],
+   [
+    "families.S810.conclusion.window_A_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 23
+ },
+ {
+  "file": "t348_results.json",
+  "bytes": 109901,
+  "top_keys": [
+   "card",
+   "generated",
+   "base",
+   "families"
+  ],
+  "hold_like_paths": [
+   [
+    "families.S-642.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "families.S-642.conclusion.window_B_pass",
+    1
+   ],
+   [
+    "families.S-736.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "families.S-736.conclusion.window_B_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "t348_s681_results.json",
+  "bytes": 175885,
+  "top_keys": [
+   "card",
+   "part",
+   "base",
+   "S681_H2",
+   "S681_H3",
+   "S681_H4"
+  ],
+  "hold_like_paths": [
+   [
+    "S681_H2.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "S681_H2.conclusion.window_B_pass",
+    1
+   ],
+   [
+    "S681_H3.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "S681_H3.conclusion.window_B_pass",
+    1
+   ],
+   [
+    "S681_H4.conclusion.window_A_pass",
+    1
+   ],
+   [
+    "S681_H4.conclusion.window_B_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 6
+ },
+ {
+  "file": "t349_results.json",
+  "bytes": 25604,
+  "top_keys": [
+   "meta",
+   "validation",
+   "cells",
+   "c0",
+   "judgement",
+   "drop_max_r"
+  ],
+  "hold_like_paths": [
+   [
+    "judgement.thresholds",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t351_results.json",
+  "bytes": 52389,
+  "top_keys": [
+   "meta",
+   "universe",
+   "per_year",
+   "universe_by_year",
+   "arm2_delisted_universe",
+   "tail",
+   "verdict",
+   "still_tickets",
+   "selfcheck",
+   "tickets"
+  ],
+  "hold_like_paths": [
+   [
+    "universe_by_year.2017.passed_vol_gate",
+    1
+   ],
+   [
+    "universe_by_year.2017.passed_full_universe",
+    1
+   ],
+   [
+    "universe_by_year.2018.passed_vol_gate",
+    1
+   ],
+   [
+    "universe_by_year.2018.passed_full_universe",
+    1
+   ],
+   [
+    "universe_by_year.2019.passed_vol_gate",
+    1
+   ],
+   [
+    "universe_by_year.2019.passed_full_universe",
+    1
+   ],
+   [
+    "universe_by_year.2020.passed_vol_gate",
+    1
+   ],
+   [
+    "universe_by_year.2020.passed_full_universe",
+    1
+   ],
+   [
+    "arm2_delisted_universe.universe_by_year.2020.passed_vol_gate",
+    1
+   ],
+   [
+    "arm2_delisted_universe.universe_by_year.2020.passed_full_universe",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 10
+ },
+ {
+  "file": "t357_results.json",
+  "bytes": 100135,
+  "top_keys": [
+   "meta",
+   "universe",
+   "years",
+   "verdict",
+   "selfcheck",
+   "tickets",
+   "scan_log",
+   "crosscheck_t351"
+  ],
+  "hold_like_paths": [
+   [
+    "universe.adv5m.adv_threshold_usd",
+    1
+   ],
+   [
+    "universe.adv1m.adv_threshold_usd",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 2
+ },
+ {
+  "file": "t358_results.json",
+  "bytes": 48444,
+  "top_keys": [
+   "meta",
+   "universe",
+   "years",
+   "gate",
+   "simulator_check",
+   "_control_inputs",
+   "tickets_horizon_check"
+  ],
+  "hold_like_paths": [
+   [
+    "universe.adv5m.adv_threshold_usd",
+    1
+   ],
+   [
+    "universe.adv1m.adv_threshold_usd",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 2
+ },
+ {
+  "file": "t363_results.json",
+  "bytes": 83156,
+  "top_keys": [
+   "account",
+   "reconcile",
+   "self_check",
+   "identity_checks",
+   "cash_leg",
+   "families",
+   "config",
+   "crosscheck_t361"
+  ],
+  "hold_like_paths": [
+   [
+    "families.S681_H2.windows.A_earliest.stress_threshold",
+    1
+   ],
+   [
+    "families.S681_H2.windows.B_2021-10-11.stress_threshold",
+    1
+   ],
+   [
+    "families.S681_H2.legacy_t361_replicate.A_earliest.stress_threshold",
+    1
+   ],
+   [
+    "families.S681_H2.legacy_t361_replicate.B_2021-10-11.stress_threshold",
+    1
+   ],
+   [
+    "families.S681_H2.passes_new",
+    1
+   ],
+   [
+    "families.S681_H2.passes_old_t361",
+    1
+   ],
+   [
+    "families.S681_H2.passes_ignoring_size",
+    1
+   ],
+   [
+    "families.S681_H2.passes",
+    1
+   ],
+   [
+    "families.S681_H4.windows.A_earliest.stress_threshold",
+    1
+   ],
+   [
+    "families.S681_H4.windows.B_2021-10-11.stress_threshold",
+    1
+   ],
+   [
+    "families.S681_H4.legacy_t361_replicate.A_earliest.stress_threshold",
+    1
+   ],
+   [
+    "families.S681_H4.legacy_t361_replicate.B_2021-10-11.stress_threshold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 64
+ },
+ {
+  "file": "t364_results.json",
+  "bytes": 11879,
+  "top_keys": [
+   "card",
+   "ledger",
+   "data",
+   "sleeve",
+   "account",
+   "self_checks",
+   "sizing",
+   "windows",
+   "iv_ok",
+   "zero_signal_control",
+   "report_only",
+   "exploratory"
+  ],
+  "hold_like_paths": [
+   [
+    "windows.FULL.stress_threshold",
+    1
+   ],
+   [
+    "windows.W1_2021-10-12_2024-03-31.stress_threshold",
+    1
+   ],
+   [
+    "windows.W2_2024-04-01_2026-10-30.stress_threshold",
+    1
+   ],
+   [
+    "exploratory.spy_full_eodhd.full.stress_threshold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 4
+ },
+ {
+  "file": "t372_results.json",
+  "bytes": 229921,
+  "top_keys": [
+   "task",
+   "ledger",
+   "seed",
+   "window",
+   "n_weeks",
+   "stats",
+   "ab_test",
+   "p_one_sided",
+   "judges",
+   "null_q90_pct",
+   "null_median_pct",
+   "null_p95_pct",
+   "by_year_mean_pct",
+   "by_year_sum_pct"
+  ],
+  "hold_like_paths": [
+   [
+    "verdict_all_five_pass",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ },
+ {
+  "file": "t381_results.json",
+  "bytes": 6976,
+  "top_keys": [
+   "write_day",
+   "expiry",
+   "horizon_natural_days",
+   "old_row_horizon",
+   "audits",
+   "base_rates",
+   "row_span_22",
+   "episodes_n",
+   "confirmed_n",
+   "eight_week",
+   "start_gaps",
+   "pool_days",
+   "pool_relaxed_days",
+   "real_arm"
+  ],
+  "hold_like_paths": [
+   [
+    "confirmed_n",
+    1
+   ],
+   [
+    "eight_week.confirmed",
+    1
+   ],
+   [
+    "real_arm.confirmed",
+    1
+   ],
+   [
+    "real_arm.share_confirmed",
+    1
+   ],
+   [
+    "nulls.share_confirmed",
+    1
+   ],
+   [
+    "segments.2021.real.confirmed",
+    1
+   ],
+   [
+    "segments.2021.real.share_confirmed",
+    1
+   ],
+   [
+    "segments.2021.random_share_confirmed_median",
+    1
+   ],
+   [
+    "segments.2022-23.real.confirmed",
+    1
+   ],
+   [
+    "segments.2022-23.real.share_confirmed",
+    1
+   ],
+   [
+    "segments.2022-23.random_share_confirmed_median",
+    1
+   ],
+   [
+    "segments.2024-25.real.confirmed",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 18
+ },
+ {
+  "file": "t408_base_rate_table.json",
+  "bytes": 69256,
+  "top_keys": [
+   "card",
+   "what",
+   "method",
+   "reproduce_t408",
+   "cells",
+   "sensitivity_state_prev_day",
+   "degeneracy_check",
+   "verdict"
+  ],
+  "hold_like_paths": [
+   [
+    "cells[].disc_hold",
+    3
+   ],
+   [
+    "cells[].disc_hold.condition_hold",
+    3
+   ],
+   [
+    "cells[].disc_hold.calendar_hold",
+    3
+   ],
+   [
+    "degeneracy_check[].segments.hold",
+    3
+   ],
+   [
+    "degeneracy_check[].t408_row.hold",
+    3
+   ],
+   [
+    "reproduce_t408.BD20|线上·主流领.fields.hold",
+    1
+   ],
+   [
+    "reproduce_t408.BD20|线上·主流领.fields.base_hold",
+    1
+   ],
+   [
+    "reproduce_t408.BD20|线上·二线领.fields.hold",
+    1
+   ],
+   [
+    "reproduce_t408.BD20|线上·二线领.fields.base_hold",
+    1
+   ],
+   [
+    "reproduce_t408.BD20|线下·主流领.fields.hold",
+    1
+   ],
+   [
+    "reproduce_t408.BD20|线下·主流领.fields.base_hold",
+    1
+   ],
+   [
+    "reproduce_t408.BD20|线下·二线领.fields.hold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 35
+ },
+ {
+  "file": "t409_s882_replay.json",
+  "bytes": 22168,
+  "top_keys": [
+   "card",
+   "what",
+   "definitions",
+   "ledger_reference",
+   "symbols"
+  ],
+  "hold_like_paths": [
+   [
+    "definitions.offset_threshold",
+    1
+   ]
+  ],
+  "n_hold_like_paths": 1
+ }
+]
