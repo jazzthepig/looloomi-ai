@@ -4734,17 +4734,28 @@ async def _fusion_paper_regime_track_loop():
     await _asyncio.sleep(_boot_delay(720))   # 12 min warmup — let FUSION-PAPER (11 min) mark first
     while True:
         try:
-            from src.research.validation.fusion_paper_regime_track import compute_today_track
+            from src.research.validation.fusion_paper_regime_track import compute_today_track_ex
             from datetime import datetime, timezone
             today = datetime.now(timezone.utc).date().isoformat()
-            row = compute_today_track(today_iso=today)
+            # T-062: 「跑了」≠「写成了」。旧写法拿到 None(没写成)照样记 ok ——
+            # 于是 loop_attempt 里天天是 ok,表里一行都没有。改用 compute_today_track_ex:
+            # 它把「为什么没有行」带回来,这里记成带原因的拒绝。
+            # S-427/S-429: 它里面是同步的 Supabase 读+写 ⇒ 走线程,不许把事件循环停住。
+            res = await _asyncio.to_thread(compute_today_track_ex, today_iso=today)
+            row = res.get("row")
             if row is None:
-                print(f"[FUSION-REGIME] no row for {today} (R64 NAV / signal missing) — skipping")
+                print(f"[FUSION-REGIME] no row for {today} — {res.get('reason')}")
             else:
                 print(f"[FUSION-REGIME] {today} band={row['band']} cap={row['exposure_cap']} "
                       f"r77_ret={row['r77_daily_return']:+.4f} regime_pnl={row['regime_pnl_usd']:+.2f} "
                       f"regime_nav={row['regime_nav_usd']:.2f}")
-            await _iteration_ok("_fusion_paper_regime_track_loop")   # S-564 / T-061
+            if res.get("status") == "ok" and row is not None:
+                await _iteration_result("_fusion_paper_regime_track_loop",
+                                        {"status": "ok", "rows": 1}, ok_key="status")
+            else:
+                await _iteration_result("_fusion_paper_regime_track_loop",
+                                        {"status": "refused" if res.get("status") == "skipped" else "failed",
+                                         "reason": res.get("reason"), "rows": 0}, ok_key="status")
         except Exception as _e:
             print(f"[FUSION-REGIME] ⚠️  compute failed: {_e}")
             await _iteration_error("_fusion_paper_regime_track_loop", _e)   # S-564 / T-061

@@ -79,8 +79,11 @@ def test_the_four_places_the_watch_named_stay_off_the_event_loop():
     sites = {
         "src/data/vector/market_state_writer.py": ("recompute_all", {"compute_vectors", "zscore_expanding", "zscore_columns"}),
         "src/data/cis/signal_attribution.py": ("run_once", {"build_rows"}),
-        "src/api/routers/admin.py": ("trigger_regime_fitness", {"fetch_historical_rows", "fetch_trade_results",
-                                                                "compute_7d_returns", "compute_fitness", "sb_post"}),
+        # T-062 (2026-11-19): the five heavy names above moved into
+        # src/research/validation/regime_fitness.py; the endpoint is now a thin
+        # wrapper whose one heavy call is `_run` — and `_run` must be threaded,
+        # same rule, same watch.
+        "src/api/routers/admin.py": ("trigger_regime_fitness", {"_run"}),
         "src/research/factory/signal_factory.py": ("recalibrate_and_log", {"run", "walkforward_combined"}),
     }
     for path, (fn_name, heavy) in sites.items():
@@ -92,6 +95,21 @@ def test_the_four_places_the_watch_named_stay_off_the_event_loop():
         threaded = {a.id for c in ast.walk(fn) if isinstance(c, ast.Call) and ast.unparse(c.func) == "asyncio.to_thread"
                     for a in c.args[:1] if isinstance(a, ast.Name)}
         assert heavy <= threaded, f"{path}::{fn_name} 里这些没进线程:{sorted(heavy - threaded)}"
+
+
+def test_the_regime_track_loop_keeps_its_supabase_read_and_write_off_the_loop():
+    """T-062 (2026-11-19): `compute_today_track_ex` reads `fusion_paper_nav` and
+    writes the track — both synchronous Supabase REST. Called straight from the
+    async loop it stops the whole process for the duration (the S-427/S-429
+    failure mode the watch thread names). The watch had not named this one yet."""
+    import ast
+    main = ast.parse((ROOT / "src/api/main.py").read_text(encoding="utf-8"))
+    loop = next(n for n in ast.walk(main) if isinstance(n, ast.AsyncFunctionDef)
+                and n.name == "_fusion_paper_regime_track_loop")
+    assert not [c for c in ast.walk(loop) if isinstance(c, ast.Call)
+                and getattr(c.func, "id", "") == "compute_today_track_ex"], (
+        "compute_today_track_ex 直接调用了 —— 同步的 Supabase 读+写会把事件循环停住")
+    assert "to_thread(compute_today_track_ex" in ast.unparse(loop)
 
 
 def test_the_two_synchronous_requests_named_after_the_first_fix_are_off_the_loop_too():
