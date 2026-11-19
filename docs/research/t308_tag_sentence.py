@@ -483,6 +483,14 @@ def phase_null():
             sentence=null_baseline(rs3,
                                    c.get("sentence", {}).get("dropped_ledger_n"),
                                    c.get("sentence", {}).get("window_delta")))
+    # 组 4:卡上字面要求「67 张票的亏损占比,随机挡 3 张的期望」—— 补一行 k=3 对照。
+    # 口径差(不是错):规则在 67 张窗口里实际只移出 1 张(dopped_ledger_n=1);
+    # 「3」是「候选里在账内的」计数,不是移出计数 ⇒ 此行只作对照说明,不能当规则的 p 值(见报告 §六 限制③)。
+    bl = b["baseline"]["tickets_r"]
+    out["groups"]["book_B_window_card_literal_k3"] = dict(
+        n=len(bl),
+        row=null_baseline(bl, 3, b["row"]["window_sum_r"] - b["baseline"]["window_sum_r"]),
+        sentence=null_baseline(bl, 3, b["sentence"]["window_sum_r"] - b["baseline"]["window_sum_r"]))
     res["null_baseline"] = out
     json.dump(res, open(OUT_JSON, "w"), indent=1, ensure_ascii=False, default=str)
     for g, v in out["groups"].items():
