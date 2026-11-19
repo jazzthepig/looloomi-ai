@@ -172,15 +172,6 @@ def test_evaluate_u_uses_inception_u_for_forward_window() -> None:
     assert ev_new["holdout_2025_to_inception"]["core"]["n"] > ev_old["holdout_2025_to_inception"]["core"]["n"]
 
 
-if __name__ == "__main__":
-    print("── T-063 / T-087 ③ 推力 ──")
-    for name, fn in list(globals().items()):
-        if name.startswith("test_") and callable(fn):
-            fn()
-            print(f"  ✓ {name}")
-    print("\n✅ passed")
-
-
 def test_c1_arms_never_exceed_one_and_start_forward_after_10_23() -> None:
     """Jazz 10-21「策略层 0–1」:mult_v2_c1 / tom_pd10 是 mult_v2 / tom_pd13 封顶 1.0 的并行臂 —— 敞口在 0.7–1.0 之间,
     前向第一行在 2026-10-23 收盘之后;旧臂的名字不混进来(时钟政策:只并行、不替换)。"""
@@ -202,3 +193,20 @@ def test_c1_arms_never_exceed_one_and_start_forward_after_10_23() -> None:
     fwd = [r for r in rows if r["arm"] in (ARM_C1, ARM_TOM10)]
     assert fwd and min(r["d"] for r in fwd) > INCEPTION_C1.date().isoformat()
     assert set(ev) == {ARM_C1, ARM_TOM10}
+
+
+if __name__ == "__main__":
+    import inspect as _inspect
+    print("── T-063 / T-087 ③ 推力 ──")
+    _skipped = 0
+    for _name, _fn in list(globals().items()):
+        if _name.startswith("test_") and callable(_fn):
+            _needs = list(_inspect.signature(_fn).parameters)
+            if _needs:
+                _skipped += 1
+                print("  · {} — 需要 fixture {}(由 pytest 跑)".format(_name, _needs))
+                continue
+            _fn()
+            print("  ✓ " + _name)
+    _tail = "" if not _skipped else "(跳过 {} 个需要 pytest fixture 的)".format(_skipped)
+    print("\n✅ passed" + _tail)

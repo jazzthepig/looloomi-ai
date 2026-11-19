@@ -42,12 +42,6 @@ def test_no_proxy_rules_and_no_pretty_url_redirects():
         assert src_path.endswith(".html"), f"{src_path}: 只重定向 .html 形式,/cis 之类是 SPA 深链(S-160)"
 
 
-if __name__ == "__main__":
-    test_every_fastapi_dead_link_is_also_redirected_on_pages()
-    test_no_proxy_rules_and_no_pretty_url_redirects()
-    print("✅ Pages _redirects 与 FastAPI 死链表一致")
-
-
 def test_every_advertised_backend_path_has_a_pages_proxy():
     """11-07:llms.txt / agent.json 对外写着 https://looloomi.ai/mcp 与 /mcp-sse/sse,但 Pages 只给 /api/* 与 /internal/* 配了
     Functions 代理 —— /mcp 的 GET 回 SPA 壳、POST 回 405,外部 agent 从来连不上(agent_call_log 自上线 0 行)。
@@ -65,3 +59,20 @@ def test_every_advertised_backend_path_has_a_pages_proxy():
     assert not missing, f"对外写着却没有 Pages 代理的后端路径:{missing}"
     src = (ROOT / "functions/mcp/[[path]].js").read_text(encoding="utf-8")
     assert "'/mcp' ? '/mcp/'" in src, "源站把 MCP 挂在 /mcp/(带斜杠);不带斜杠的 POST 在源站也是 405"
+
+
+if __name__ == "__main__":
+    import inspect as _inspect
+    print("── Pages _redirects 与 FastAPI 死链表一致 ──")
+    _skipped = 0
+    for _name, _fn in list(globals().items()):
+        if _name.startswith("test_") and callable(_fn):
+            _needs = list(_inspect.signature(_fn).parameters)
+            if _needs:
+                _skipped += 1
+                print("  · {} — 需要 fixture {}(由 pytest 跑)".format(_name, _needs))
+                continue
+            _fn()
+            print("  ✓ " + _name)
+    _tail = "" if not _skipped else "(跳过 {} 个需要 pytest fixture 的)".format(_skipped)
+    print("\n✅ passed" + _tail)

@@ -47,15 +47,6 @@ def test_absolute_mac_paths_never_match_repo_files() -> None:
     assert any("allowed_paths" in b for b in check("lane-b/T-123", ["src/x.py"], card))
 
 
-if __name__ == "__main__":
-    print("── S-500 lane 改动范围 ──")
-    for name, fn in list(globals().items()):
-        if name.startswith("test_") and callable(fn):
-            fn()
-            print(f"  ✓ {name}")
-    print("\n✅ passed")
-
-
 def test_research_cards_that_ask_for_scenarios_must_ship_them():
     """S-705:expect 里点名 scenarios/ 的卡,交付必须带 docs/research/scenarios/<lane>-<tid>.json,≥ 3 条、每条合格、结算日留 7 天。"""
     import json
@@ -77,3 +68,20 @@ def test_research_cards_that_ask_for_scenarios_must_ship_them():
     old_card = {**card, "acceptance": {"expect": "报告 docs/research/T-220_x.md;in_review"}}
     assert check("lane-a/T-220", ["docs/research/T-220_x.md", "tasks/T-220.json"], {**old_card}) == [] or \
         all("scenarios" not in p for p in check("lane-a/T-220", ["docs/research/T-220_x.md", "tasks/T-220.json"], old_card))
+
+
+if __name__ == "__main__":
+    import inspect as _inspect
+    print("── S-500 lane 改动范围 ──")
+    _skipped = 0
+    for _name, _fn in list(globals().items()):
+        if _name.startswith("test_") and callable(_fn):
+            _needs = list(_inspect.signature(_fn).parameters)
+            if _needs:
+                _skipped += 1
+                print("  · {} — 需要 fixture {}(由 pytest 跑)".format(_name, _needs))
+                continue
+            _fn()
+            print("  ✓ " + _name)
+    _tail = "" if not _skipped else "(跳过 {} 个需要 pytest fixture 的)".format(_skipped)
+    print("\n✅ passed" + _tail)

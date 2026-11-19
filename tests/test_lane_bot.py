@@ -114,15 +114,6 @@ def test_cross_review_rotates_once_a_day() -> None:
     assert "lane-a" not in review_tasks(cfg, done, "2026-10-07", 22)
 
 
-if __name__ == "__main__":
-    print("── S-503 lane_bot ──")
-    for name, fn in list(globals().items()):
-        if name.startswith("test_") and callable(fn):
-            fn()
-            print(f"  ✓ {name}")
-    print("\n✅ passed")
-
-
 def test_guard_blocks_main_dir_git_writes_and_file_writes() -> None:
     """10-08:lane-c 在主目录 switch → stash「not mine」→ switch main,收走了 Seth 17 个未提交的文件。"""
     from scripts.lane_bot.guard_main_dir import verdict
@@ -498,3 +489,20 @@ def test_dry_run_writes_no_settings_file(tmp_path, monkeypatch):
     assert not list(tmp_path.glob("guard_settings*.json")), "干跑不许写设置文件"
     if out:
         assert out["lane"] == "lane-z"
+
+
+if __name__ == "__main__":
+    import inspect as _inspect
+    print("── S-503 lane_bot ──")
+    _skipped = 0
+    for _name, _fn in list(globals().items()):
+        if _name.startswith("test_") and callable(_fn):
+            _needs = list(_inspect.signature(_fn).parameters)
+            if _needs:
+                _skipped += 1
+                print("  · {} — 需要 fixture {}(由 pytest 跑)".format(_name, _needs))
+                continue
+            _fn()
+            print("  ✓ " + _name)
+    _tail = "" if not _skipped else "(跳过 {} 个需要 pytest fixture 的)".format(_skipped)
+    print("\n✅ passed" + _tail)
