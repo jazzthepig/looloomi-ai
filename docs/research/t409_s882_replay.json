@@ -1,0 +1,951 @@
+{
+  "card": "T-409",
+  "what": "S-882(形态 #5)那张基率表的重出:用 apparatus 的走法原子函数 + 强制带对照组的 base_rate_table",
+  "definitions": {
+    "sample": "一个周末(ISO 周)",
+    "p_fri22": "周五 22:00 UTC 那根小时线的 close",
+    "p0": "周日 06:00 UTC 那根小时线的 close(= 观察点)",
+    "window": "周日 06:00 → 下周一 13:00 UTC(含起点、不含终点;与结算器 high:/low: 的窗口定义一致)",
+    "pre_high": "周五 22:00 → 周日 06:00 之间的最高价(反弹高点)",
+    "pre_low": "同一段的最低价(周末低点)",
+    "condition": "周五 22:00 起跌幅 ≤ -阈值(BTC 3% / ETH 4%)",
+    "controls": "全部周末(自动)+ 波动大但没跌到阈值 + 整周跌但周五 22:00 后没跌",
+    "offset_threshold": "BTC 2.5% / ETH 3%(另有 3.0% 的候选一起报)"
+  },
+  "ledger_reference": {
+    "note": "台账 S-882 / SETUP_REGISTRY.md 形态 #5 记的数(Seth 用 SQL 量的,SQL 未入库)",
+    "offset_up_or_down": {
+      "condition": "60-70%",
+      "all": "26-45%"
+    },
+    "rebound_high_touched": {
+      "condition": "65%",
+      "all": "77%"
+    },
+    "weekend_low_touched": {
+      "condition": "43-50%",
+      "all": "53-59%"
+    },
+    "direction": "无"
+  },
+  "symbols": {
+    "BTC": {
+      "hourly_rows": 81012,
+      "bars_usable": 81012,
+      "weeks_sampled": 481,
+      "first_week": "2017-08-21",
+      "last_week": "2026-11-09",
+      "table": {
+        "condition": {
+          "n": 136,
+          "up>=2.5%": {
+            "n": 136,
+            "rate": 0.5074
+          },
+          "down>=2.5%": {
+            "n": 136,
+            "rate": 0.4485
+          },
+          "either>=2.5%": {
+            "n": 136,
+            "rate": 0.7941
+          },
+          "up>=3.0%": {
+            "n": 136,
+            "rate": 0.4559
+          },
+          "down>=3.0%": {
+            "n": 136,
+            "rate": 0.3897
+          },
+          "either>=3.0%": {
+            "n": 136,
+            "rate": 0.7059
+          },
+          "rebound_high_touched": {
+            "n": 136,
+            "rate": 0.0147
+          },
+          "weekend_low_touched": {
+            "n": 136,
+            "rate": 0.3529
+          },
+          "both_touched": {
+            "n": 136,
+            "rate": 0.0
+          },
+          "first_side_up": {
+            "n": 136,
+            "rate": 0.0147
+          }
+        },
+        "all": {
+          "n": 481,
+          "up>=2.5%": {
+            "n": 481,
+            "rate": 0.3784
+          },
+          "down>=2.5%": {
+            "n": 481,
+            "rate": 0.368
+          },
+          "either>=2.5%": {
+            "n": 481,
+            "rate": 0.6528
+          },
+          "up>=3.0%": {
+            "n": 481,
+            "rate": 0.3098
+          },
+          "down>=3.0%": {
+            "n": 481,
+            "rate": 0.3098
+          },
+          "either>=3.0%": {
+            "n": 481,
+            "rate": 0.5509
+          },
+          "rebound_high_touched": {
+            "n": 481,
+            "rate": 0.2204
+          },
+          "weekend_low_touched": {
+            "n": 481,
+            "rate": 0.1642
+          },
+          "both_touched": {
+            "n": 481,
+            "rate": 0.0
+          },
+          "first_side_up": {
+            "n": 481,
+            "rate": 0.2204
+          }
+        },
+        "波动大但没跌到阈值": {
+          "n": 342,
+          "up>=2.5%": {
+            "n": 342,
+            "rate": 0.3304
+          },
+          "down>=2.5%": {
+            "n": 342,
+            "rate": 0.3333
+          },
+          "either>=2.5%": {
+            "n": 342,
+            "rate": 0.5965
+          },
+          "up>=3.0%": {
+            "n": 342,
+            "rate": 0.2544
+          },
+          "down>=3.0%": {
+            "n": 342,
+            "rate": 0.2778
+          },
+          "either>=3.0%": {
+            "n": 342,
+            "rate": 0.4912
+          },
+          "rebound_high_touched": {
+            "n": 342,
+            "rate": 0.3012
+          },
+          "weekend_low_touched": {
+            "n": 342,
+            "rate": 0.0848
+          },
+          "both_touched": {
+            "n": 342,
+            "rate": 0.0
+          },
+          "first_side_up": {
+            "n": 342,
+            "rate": 0.3012
+          }
+        },
+        "整周跌但周五22:00后没跌": {
+          "n": 3,
+          "up>=2.5%": {
+            "n": 3,
+            "rate": 0.6667
+          },
+          "down>=2.5%": {
+            "n": 3,
+            "rate": 0.0
+          },
+          "either>=2.5%": {
+            "n": 3,
+            "rate": 0.6667
+          },
+          "up>=3.0%": {
+            "n": 3,
+            "rate": 0.3333
+          },
+          "down>=3.0%": {
+            "n": 3,
+            "rate": 0.0
+          },
+          "either>=3.0%": {
+            "n": 3,
+            "rate": 0.3333
+          },
+          "rebound_high_touched": {
+            "n": 3,
+            "rate": 0.0
+          },
+          "weekend_low_touched": {
+            "n": 3,
+            "rate": 0.3333
+          },
+          "both_touched": {
+            "n": 3,
+            "rate": 0.0
+          },
+          "first_side_up": {
+            "n": 3,
+            "rate": 0.0
+          }
+        }
+      },
+      "segments": {
+        "发现段≤2022": {
+          "condition": {
+            "n": 85,
+            "up>=2.5%": {
+              "n": 85,
+              "rate": 0.5882
+            },
+            "down>=2.5%": {
+              "n": 85,
+              "rate": 0.5412
+            },
+            "either>=2.5%": {
+              "n": 85,
+              "rate": 0.8941
+            },
+            "up>=3.0%": {
+              "n": 85,
+              "rate": 0.5529
+            },
+            "down>=3.0%": {
+              "n": 85,
+              "rate": 0.4824
+            },
+            "either>=3.0%": {
+              "n": 85,
+              "rate": 0.8235
+            },
+            "rebound_high_touched": {
+              "n": 85,
+              "rate": 0.0235
+            },
+            "weekend_low_touched": {
+              "n": 85,
+              "rate": 0.3882
+            },
+            "both_touched": {
+              "n": 85,
+              "rate": 0.0
+            },
+            "first_side_up": {
+              "n": 85,
+              "rate": 0.0235
+            }
+          },
+          "all": {
+            "n": 279,
+            "up>=2.5%": {
+              "n": 279,
+              "rate": 0.4444
+            },
+            "down>=2.5%": {
+              "n": 279,
+              "rate": 0.4552
+            },
+            "either>=2.5%": {
+              "n": 279,
+              "rate": 0.7527
+            },
+            "up>=3.0%": {
+              "n": 279,
+              "rate": 0.3728
+            },
+            "down>=3.0%": {
+              "n": 279,
+              "rate": 0.4014
+            },
+            "either>=3.0%": {
+              "n": 279,
+              "rate": 0.6667
+            },
+            "rebound_high_touched": {
+              "n": 279,
+              "rate": 0.2151
+            },
+            "weekend_low_touched": {
+              "n": 279,
+              "rate": 0.1685
+            },
+            "both_touched": {
+              "n": 279,
+              "rate": 0.0
+            },
+            "first_side_up": {
+              "n": 279,
+              "rate": 0.2151
+            }
+          },
+          "波动大但没跌到阈值": {
+            "n": 193,
+            "up>=2.5%": {
+              "n": 193,
+              "rate": 0.3834
+            },
+            "down>=2.5%": {
+              "n": 193,
+              "rate": 0.4145
+            },
+            "either>=2.5%": {
+              "n": 193,
+              "rate": 0.6891
+            },
+            "up>=3.0%": {
+              "n": 193,
+              "rate": 0.2953
+            },
+            "down>=3.0%": {
+              "n": 193,
+              "rate": 0.3679
+            },
+            "either>=3.0%": {
+              "n": 193,
+              "rate": 0.601
+            },
+            "rebound_high_touched": {
+              "n": 193,
+              "rate": 0.3005
+            },
+            "weekend_low_touched": {
+              "n": 193,
+              "rate": 0.0674
+            },
+            "both_touched": {
+              "n": 193,
+              "rate": 0.0
+            },
+            "first_side_up": {
+              "n": 193,
+              "rate": 0.3005
+            }
+          },
+          "整周跌但周五22:00后没跌": {
+            "n": 2,
+            "up>=2.5%": {
+              "n": 2,
+              "rate": 1.0
+            },
+            "down>=2.5%": {
+              "n": 2,
+              "rate": 0.0
+            },
+            "either>=2.5%": {
+              "n": 2,
+              "rate": 1.0
+            },
+            "up>=3.0%": {
+              "n": 2,
+              "rate": 0.5
+            },
+            "down>=3.0%": {
+              "n": 2,
+              "rate": 0.0
+            },
+            "either>=3.0%": {
+              "n": 2,
+              "rate": 0.5
+            },
+            "rebound_high_touched": {
+              "n": 2,
+              "rate": 0.0
+            },
+            "weekend_low_touched": {
+              "n": 2,
+              "rate": 0.0
+            },
+            "both_touched": {
+              "n": 2,
+              "rate": 0.0
+            },
+            "first_side_up": {
+              "n": 2,
+              "rate": 0.0
+            }
+          }
+        },
+        "留出段2023+": {
+          "condition": {
+            "n": 51,
+            "up>=2.5%": {
+              "n": 51,
+              "rate": 0.3725
+            },
+            "down>=2.5%": {
+              "n": 51,
+              "rate": 0.2941
+            },
+            "either>=2.5%": {
+              "n": 51,
+              "rate": 0.6275
+            },
+            "up>=3.0%": {
+              "n": 51,
+              "rate": 0.2941
+            },
+            "down>=3.0%": {
+              "n": 51,
+              "rate": 0.2353
+            },
+            "either>=3.0%": {
+              "n": 51,
+              "rate": 0.5098
+            },
+            "rebound_high_touched": {
+              "n": 51,
+              "rate": 0.0
+            },
+            "weekend_low_touched": {
+              "n": 51,
+              "rate": 0.2941
+            },
+            "both_touched": {
+              "n": 51,
+              "rate": 0.0
+            },
+            "first_side_up": {
+              "n": 51,
+              "rate": 0.0
+            }
+          },
+          "all": {
+            "n": 202,
+            "up>=2.5%": {
+              "n": 202,
+              "rate": 0.2871
+            },
+            "down>=2.5%": {
+              "n": 202,
+              "rate": 0.2475
+            },
+            "either>=2.5%": {
+              "n": 202,
+              "rate": 0.5149
+            },
+            "up>=3.0%": {
+              "n": 202,
+              "rate": 0.2228
+            },
+            "down>=3.0%": {
+              "n": 202,
+              "rate": 0.1832
+            },
+            "either>=3.0%": {
+              "n": 202,
+              "rate": 0.3911
+            },
+            "rebound_high_touched": {
+              "n": 202,
+              "rate": 0.2277
+            },
+            "weekend_low_touched": {
+              "n": 202,
+              "rate": 0.1584
+            },
+            "both_touched": {
+              "n": 202,
+              "rate": 0.0
+            },
+            "first_side_up": {
+              "n": 202,
+              "rate": 0.2277
+            }
+          },
+          "波动大但没跌到阈值": {
+            "n": 149,
+            "up>=2.5%": {
+              "n": 149,
+              "rate": 0.2617
+            },
+            "down>=2.5%": {
+              "n": 149,
+              "rate": 0.2282
+            },
+            "either>=2.5%": {
+              "n": 149,
+              "rate": 0.4765
+            },
+            "up>=3.0%": {
+              "n": 149,
+              "rate": 0.2013
+            },
+            "down>=3.0%": {
+              "n": 149,
+              "rate": 0.1611
+            },
+            "either>=3.0%": {
+              "n": 149,
+              "rate": 0.349
+            },
+            "rebound_high_touched": {
+              "n": 149,
+              "rate": 0.302
+            },
+            "weekend_low_touched": {
+              "n": 149,
+              "rate": 0.1074
+            },
+            "both_touched": {
+              "n": 149,
+              "rate": 0.0
+            },
+            "first_side_up": {
+              "n": 149,
+              "rate": 0.302
+            }
+          },
+          "整周跌但周五22:00后没跌": {
+            "n": 1,
+            "up>=2.5%": {
+              "n": 1,
+              "rate": 0.0
+            },
+            "down>=2.5%": {
+              "n": 1,
+              "rate": 0.0
+            },
+            "either>=2.5%": {
+              "n": 1,
+              "rate": 0.0
+            },
+            "up>=3.0%": {
+              "n": 1,
+              "rate": 0.0
+            },
+            "down>=3.0%": {
+              "n": 1,
+              "rate": 0.0
+            },
+            "either>=3.0%": {
+              "n": 1,
+              "rate": 0.0
+            },
+            "rebound_high_touched": {
+              "n": 1,
+              "rate": 0.0
+            },
+            "weekend_low_touched": {
+              "n": 1,
+              "rate": 1.0
+            },
+            "both_touched": {
+              "n": 1,
+              "rate": 0.0
+            },
+            "first_side_up": {
+              "n": 1,
+              "rate": 0.0
+            }
+          }
+        }
+      }
+    },
+    "ETH": {
+      "hourly_rows": 81012,
+      "bars_usable": 81012,
+      "weeks_sampled": 481,
+      "first_week": "2017-08-21",
+      "last_week": "2026-11-09",
+      "table": {
+        "condition": {
+          "n": 140,
+          "up>=3.0%": {
+            "n": 140,
+            "rate": 0.5143
+          },
+          "down>=3.0%": {
+            "n": 140,
+            "rate": 0.4929
+          },
+          "either>=3.0%": {
+            "n": 140,
+            "rate": 0.8357
+          },
+          "rebound_high_touched": {
+            "n": 140,
+            "rate": 0.0286
+          },
+          "weekend_low_touched": {
+            "n": 140,
+            "rate": 0.3
+          },
+          "both_touched": {
+            "n": 140,
+            "rate": 0.0
+          },
+          "first_side_up": {
+            "n": 140,
+            "rate": 0.0286
+          }
+        },
+        "all": {
+          "n": 481,
+          "up>=3.0%": {
+            "n": 481,
+            "rate": 0.4304
+          },
+          "down>=3.0%": {
+            "n": 481,
+            "rate": 0.4324
+          },
+          "either>=3.0%": {
+            "n": 481,
+            "rate": 0.738
+          },
+          "rebound_high_touched": {
+            "n": 481,
+            "rate": 0.237
+          },
+          "weekend_low_touched": {
+            "n": 481,
+            "rate": 0.1559
+          },
+          "both_touched": {
+            "n": 481,
+            "rate": 0.0
+          },
+          "first_side_up": {
+            "n": 481,
+            "rate": 0.237
+          }
+        },
+        "波动大但没跌到阈值": {
+          "n": 337,
+          "up>=3.0%": {
+            "n": 337,
+            "rate": 0.4006
+          },
+          "down>=3.0%": {
+            "n": 337,
+            "rate": 0.4065
+          },
+          "either>=3.0%": {
+            "n": 337,
+            "rate": 0.7003
+          },
+          "rebound_high_touched": {
+            "n": 337,
+            "rate": 0.3264
+          },
+          "weekend_low_touched": {
+            "n": 337,
+            "rate": 0.092
+          },
+          "both_touched": {
+            "n": 337,
+            "rate": 0.0
+          },
+          "first_side_up": {
+            "n": 337,
+            "rate": 0.3264
+          }
+        },
+        "整周跌但周五22:00后没跌": {
+          "n": 5,
+          "up>=3.0%": {
+            "n": 5,
+            "rate": 0.6
+          },
+          "down>=3.0%": {
+            "n": 5,
+            "rate": 0.4
+          },
+          "either>=3.0%": {
+            "n": 5,
+            "rate": 0.8
+          },
+          "rebound_high_touched": {
+            "n": 5,
+            "rate": 0.0
+          },
+          "weekend_low_touched": {
+            "n": 5,
+            "rate": 0.2
+          },
+          "both_touched": {
+            "n": 5,
+            "rate": 0.0
+          },
+          "first_side_up": {
+            "n": 5,
+            "rate": 0.0
+          }
+        }
+      },
+      "segments": {
+        "发现段≤2022": {
+          "condition": {
+            "n": 88,
+            "up>=3.0%": {
+              "n": 88,
+              "rate": 0.6136
+            },
+            "down>=3.0%": {
+              "n": 88,
+              "rate": 0.5455
+            },
+            "either>=3.0%": {
+              "n": 88,
+              "rate": 0.9091
+            },
+            "rebound_high_touched": {
+              "n": 88,
+              "rate": 0.0227
+            },
+            "weekend_low_touched": {
+              "n": 88,
+              "rate": 0.2955
+            },
+            "both_touched": {
+              "n": 88,
+              "rate": 0.0
+            },
+            "first_side_up": {
+              "n": 88,
+              "rate": 0.0227
+            }
+          },
+          "all": {
+            "n": 279,
+            "up>=3.0%": {
+              "n": 279,
+              "rate": 0.491
+            },
+            "down>=3.0%": {
+              "n": 279,
+              "rate": 0.5125
+            },
+            "either>=3.0%": {
+              "n": 279,
+              "rate": 0.8315
+            },
+            "rebound_high_touched": {
+              "n": 279,
+              "rate": 0.2258
+            },
+            "weekend_low_touched": {
+              "n": 279,
+              "rate": 0.147
+            },
+            "both_touched": {
+              "n": 279,
+              "rate": 0.0
+            },
+            "first_side_up": {
+              "n": 279,
+              "rate": 0.2258
+            }
+          },
+          "波动大但没跌到阈值": {
+            "n": 190,
+            "up>=3.0%": {
+              "n": 190,
+              "rate": 0.4368
+            },
+            "down>=3.0%": {
+              "n": 190,
+              "rate": 0.4947
+            },
+            "either>=3.0%": {
+              "n": 190,
+              "rate": 0.7947
+            },
+            "rebound_high_touched": {
+              "n": 190,
+              "rate": 0.3211
+            },
+            "weekend_low_touched": {
+              "n": 190,
+              "rate": 0.0737
+            },
+            "both_touched": {
+              "n": 190,
+              "rate": 0.0
+            },
+            "first_side_up": {
+              "n": 190,
+              "rate": 0.3211
+            }
+          },
+          "整周跌但周五22:00后没跌": {
+            "n": 4,
+            "up>=3.0%": {
+              "n": 4,
+              "rate": 0.75
+            },
+            "down>=3.0%": {
+              "n": 4,
+              "rate": 0.5
+            },
+            "either>=3.0%": {
+              "n": 4,
+              "rate": 1.0
+            },
+            "rebound_high_touched": {
+              "n": 4,
+              "rate": 0.0
+            },
+            "weekend_low_touched": {
+              "n": 4,
+              "rate": 0.25
+            },
+            "both_touched": {
+              "n": 4,
+              "rate": 0.0
+            },
+            "first_side_up": {
+              "n": 4,
+              "rate": 0.0
+            }
+          }
+        },
+        "留出段2023+": {
+          "condition": {
+            "n": 52,
+            "up>=3.0%": {
+              "n": 52,
+              "rate": 0.3462
+            },
+            "down>=3.0%": {
+              "n": 52,
+              "rate": 0.4038
+            },
+            "either>=3.0%": {
+              "n": 52,
+              "rate": 0.7115
+            },
+            "rebound_high_touched": {
+              "n": 52,
+              "rate": 0.0385
+            },
+            "weekend_low_touched": {
+              "n": 52,
+              "rate": 0.3077
+            },
+            "both_touched": {
+              "n": 52,
+              "rate": 0.0
+            },
+            "first_side_up": {
+              "n": 52,
+              "rate": 0.0385
+            }
+          },
+          "all": {
+            "n": 202,
+            "up>=3.0%": {
+              "n": 202,
+              "rate": 0.3465
+            },
+            "down>=3.0%": {
+              "n": 202,
+              "rate": 0.3218
+            },
+            "either>=3.0%": {
+              "n": 202,
+              "rate": 0.6089
+            },
+            "rebound_high_touched": {
+              "n": 202,
+              "rate": 0.2525
+            },
+            "weekend_low_touched": {
+              "n": 202,
+              "rate": 0.1683
+            },
+            "both_touched": {
+              "n": 202,
+              "rate": 0.0
+            },
+            "first_side_up": {
+              "n": 202,
+              "rate": 0.2525
+            }
+          },
+          "波动大但没跌到阈值": {
+            "n": 147,
+            "up>=3.0%": {
+              "n": 147,
+              "rate": 0.3537
+            },
+            "down>=3.0%": {
+              "n": 147,
+              "rate": 0.2925
+            },
+            "either>=3.0%": {
+              "n": 147,
+              "rate": 0.5782
+            },
+            "rebound_high_touched": {
+              "n": 147,
+              "rate": 0.3333
+            },
+            "weekend_low_touched": {
+              "n": 147,
+              "rate": 0.1156
+            },
+            "both_touched": {
+              "n": 147,
+              "rate": 0.0
+            },
+            "first_side_up": {
+              "n": 147,
+              "rate": 0.3333
+            }
+          },
+          "整周跌但周五22:00后没跌": {
+            "n": 1,
+            "up>=3.0%": {
+              "n": 1,
+              "rate": 0.0
+            },
+            "down>=3.0%": {
+              "n": 1,
+              "rate": 0.0
+            },
+            "either>=3.0%": {
+              "n": 1,
+              "rate": 0.0
+            },
+            "rebound_high_touched": {
+              "n": 1,
+              "rate": 0.0
+            },
+            "weekend_low_touched": {
+              "n": 1,
+              "rate": 0.0
+            },
+            "both_touched": {
+              "n": 1,
+              "rate": 0.0
+            },
+            "first_side_up": {
+              "n": 1,
+              "rate": 0.0
+            }
+          }
+        }
+      }
+    }
+  }
+}
