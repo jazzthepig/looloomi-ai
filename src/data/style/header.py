@@ -217,9 +217,14 @@ def keyset_plan(table: str, params: Mapping[str, Any]) -> list[tuple[str, str]] 
 
     **判的是生效排序键的前缀,不是调用点字面写的那几列** —— `stable_order` 会把 select 里其余列
     补进 order,判唯一性要按补齐之后的键判。
+
+    三条「不上」的硬条件:① 表不在册;② 排序键不唯一;③ **调用点自己已经带 `or=` 过滤** ——
+    续读谓词也要用 `or=`,两个 `or=` 只能留一个,写了会覆盖调用点的过滤条件 ⇒ 宁可慢,不可少行。
     """
     specs = KEYSET_SPECS.get(table)
     if not specs:
+        return None
+    if "or" in params:                                    # 调用点已有 or= 过滤 ⇒ 不许上按键翻页
         return None
     columns = _order_columns(params.get("order") or "")
     if not columns:
@@ -325,6 +330,8 @@ async def _read_all(table: str, params: dict) -> list[dict]:
         req = {**params, "limit": str(page), **cursor}
         if not cursor:
             req["offset"] = str(len(out))
+        else:
+            req.pop("offset", None)          # 按键续读不带着旧的 offset 走(会被服务端 AND 住)
         rd = await _sb_get(table, req)
         if not rd.ok:
             raise RuntimeError(f"{table} 读不到(offset={len(out)}):{rd.reason}")
@@ -337,6 +344,8 @@ async def _read_all(table: str, params: dict) -> list[dict]:
         probe = {**params, "limit": "1", **cursor}
         if not cursor:
             probe["offset"] = str(len(out))
+        else:
+            probe.pop("offset", None)
         more = await _sb_get(table, probe)
         if not more.ok:
             raise RuntimeError(f"{table} 读不到(offset={len(out)},核对是否读完):{more.reason}")

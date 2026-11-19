@@ -315,6 +315,13 @@ async def fetch_panel(start: str, *, source: str = PANEL_SOURCE,
     panel: dict[str, dict[str, tuple[float, float]]] = {}
     seen: list[dict[str, Any]] = []
     offset = 0
+    # 按键翻页(T-379):排序键 (trade_date, symbol) 在 source 钉死时唯一
+    # —— DDL:UNIQUE (symbol, trade_date, source)(scripts/data_landing_migration.sql:102);
+    # 实测 448,161 行零重复。OFFSET 翻页读 40 万行要走约 1 亿行(第 k 页先走过前 k×每页 行),
+    # 按键翻页不用。谓词形状在��上验过:与 OFFSET 读同集合、同顺序、逐行相同。
+    from src.data.style.header import resume_predicate
+    panel_key = [("trade_date", "asc"), ("symbol", "asc")]
+    cursor: dict[str, str] = {}
 
     while True:
         params = {
@@ -323,8 +330,12 @@ async def fetch_panel(start: str, *, source: str = PANEL_SOURCE,
             "trade_date": f"gte.{warm}",
             # 排序键必须唯一,否则分页之间行会漂移(同一天多个标的)
             "order": "trade_date.asc,symbol.asc",
-            "limit": str(PANEL_PAGE), "offset": str(offset),
+            "limit": str(PANEL_PAGE),
         }
+        if cursor:
+            params.update(cursor)               # 按键续读:不用 OFFSET
+        else:
+            params["offset"] = str(offset)
         if symbols:
             params["symbol"] = "in.(" + ",".join(sorted({s.upper() for s in symbols})) + ")"
         read = await _sb_get("ohlcv_daily", params)
@@ -332,7 +343,7 @@ async def fetch_panel(start: str, *, source: str = PANEL_SOURCE,
             # 原因原样往上传。把它压回一句"读不到"就等于没查过 —— 这一句
             # 正是 2026-08-27 dry-run 给出的、对排查毫无帮助的那一句。
             raise CrossSourceError(
-                f"panel fetch 在 offset={offset} 读不到(已取 {len(panel)} 个标的)。"
+                f"panel fetch 在已读 {offset} 行处读不到(已取 {len(panel)} 个标的)。"
                 f"**读不到 ≠ 0 行** (S-180)。原因:{read.reason}")
         batch = read.rows or []
         for row in batch:
@@ -351,6 +362,10 @@ async def fetch_panel(start: str, *, source: str = PANEL_SOURCE,
         if not batch:
             break
         offset += len(batch)
+        # 续读谓词:从**本页最后一行**的键接着读。谓词建不起来(值带保留字符)⇒ 退回 OFFSET 版,
+        # offset 记的就是已读到的行数 ⇒ 两种读法同一批行、同一顺序,一行不少一行不重。
+        predicate = resume_predicate(panel_key, batch[-1]) if batch else None
+        cursor = {"or": predicate} if predicate else {}
 
     # 客户端断言:若过滤条件被改坏,这里抛异常,而不是静默地拼出一条曲线。
     src = assert_single_source(seen, job="market_state panel", source_key="source")
