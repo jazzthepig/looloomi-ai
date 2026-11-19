@@ -2003,7 +2003,7 @@ python3 -m tests.test_decide_survivors_book || {
 # (survivors_only_lag1_book),runner 在无 Supabase 数据时必须 fall back to
 # synthetic 并显式标记 (S-122:默认值越接近多数类越查不出),--no-fallback-synthetic
 # 必须真 BLOCKED + 退出 1。3 条断言对应 3 个真实失败形状。
-python3 -m paper_trading.tests.test_run_paper_m115_smoke || {
+python3 -m pytest paper_trading/tests/test_run_paper_m115_smoke.py -q || {
   echo "  ✗ M-115 Book B paper runner 守卫 — do not push"; exit 1; }
 
 # ── A-17 panel_long_only (2026-09-17) — §5b ① panel-wide bench ─────────
@@ -2014,7 +2014,7 @@ python3 -m paper_trading.tests.test_run_paper_m115_smoke || {
 python3 -m src.research.validation.tests.test_a17_panel_long_only_smoke || {
   echo "  ✗ A-17 panel_long_only family 守卫 — do not push"; exit 1; }
 
-python3 -m paper_trading.tests.test_run_paper_a17_smoke || {
+python3 -m pytest paper_trading/tests/test_run_paper_a17_smoke.py -q || {
   echo "  ✗ A-17 panel_long_only paper runner 守卫 — do not push"; exit 1; }
 
 # ── S-427 代币化基础设施倾斜(② β+ 前向记录,无状态重算)──────────────
@@ -2023,6 +2023,14 @@ python3 -m pytest tests/test_dossier_context.py tests/test_same_cell.py tests/te
   echo "  ✗ S-427/S-429 forward books — do not push"; exit 1; }
 echo "  ✓ S-427 tokenization tilt · S-429 β+ momentum books"
 
+# ── T-414:T-388 的三条断言(dev 逐位对拍 / tail2 = B 道口径 / 那一行印格子日)─────
+# 这个文件原先只留在 lane-a 的工作树里,没随 lane-a/T-388 进仓 ⇒ preflight 从来没跑过它
+# (S-244:「测试存在 ≠ 测试被运行」)。注册行与被注册的文件必须**同一个提交**进仓 ——
+# 先提注册会让 main 的 preflight 去跑一个还不存在的文件,preflight 直接红。
+python3 -m pytest tests/test_t388_device_names.py -q || {
+  echo "  ✗ T-414 T-388 断言守卫 — do not push"; exit 1; }
+echo "  ✓ T-414 T-388 断言(dev 逐位对拍 / tail2 口径 / 格子日)"
+
 # ── S-412 hl_book(HL 4 币组合决策内核,回放与每日流程共用)──────────────
 # 永不给亏损仓位加仓 · 换手不动带 · Jev 臂的匿名/打乱/解析路径喂机械答案必须 ≡ 机械 Tom。
 python3 -m paper_trading.tests.test_hl_book_smoke || {
@@ -2030,6 +2038,17 @@ python3 -m paper_trading.tests.test_hl_book_smoke || {
 # M-190 / T-034: M-189 两臂回放(固定 / 波动率公式)同一 hl_book 内核、lag-1、无前视。
 python3 -m pytest paper_trading/tests/test_m189_replay.py -q || {
   echo "  ✗ M-190 m189_replay 守卫 — do not push"; exit 1; }
+
+# ── S-244:paper_trading/tests/ 也是 CI 面,而注册守卫只扫 tests/ ───────────────
+# 实测(2026-11-19):这个目录 14 个测试文件里 preflight 只点了 4 个,其中 2 个
+# (`test_run_paper_m115_smoke` / `test_run_paper_a17_smoke`)是**以 `-m` 调用一个
+# 没有 `__main__` 运行块的文件** ⇒ 导入成功、零断言执行、退出码 0 ⇒ 永远绿
+# (守卫自己的注释写着这个失效模式,但它只看 tests/,看不到这个目录)。
+# 那两条已改成 pytest 调用;下面这 10 个**从来没被跑过**的文件在这里补齐
+# (150 个测试函数,本机实跑 4.08s 全绿)。
+python3 -m pytest paper_trading/tests/test_btt_lex_smoke.py paper_trading/tests/test_compare_three_arms_smoke.py paper_trading/tests/test_factors_smoke.py paper_trading/tests/test_jev_decision_smoke.py paper_trading/tests/test_jev_regime_smoke.py paper_trading/tests/test_ls_state_builder_smoke.py paper_trading/tests/test_pair_decision_assembler_smoke.py paper_trading/tests/test_replay_three_arms_smoke.py paper_trading/tests/test_s397_ls_overlay_smoke.py paper_trading/tests/test_walk_forward_oos_smoke.py -q || {
+  echo "  ✗ paper_trading/tests 冒烟守卫 — do not push"; exit 1; }
+echo "  ✓ paper_trading/tests 冒烟(10 个从未被跑过的文件)"
 
 # ── S-284/S-288 C fix: regime_quorum 闸 (S-263 redux) ──────────────────────────
 # decide_gated 是 decide() 的 wrapper —— quorum=COLLAPSED/frozen/no_baseline/
