@@ -3,7 +3,7 @@
   "verified": null,
   "status": "open",
   "id": "T-062",
-  "owner": "seth",
+  "owner": "lane-b",
   "title": "三路该定期写入却 0 行的结构化数据:regime 相关度、fusion 的 regime 跟踪、API 计量",
   "source": "docs/LOOP_INVENTORY_2026-10-07.md §8 第 2 条;Jazz 10-07「很多想要的结构化数据没有定期写入」",
   "allowed_paths": [
@@ -20,5 +20,5 @@
     "expect": "前两张每天有新行;api_usage 每次 flush 都写一行(使用量为 0 也写,0 是一次观测);每一路先判成因(无调度 / 写不进 / 正确拒绝)再修"
   },
   "prior_value": "0 / 0 / 0",
-  "notes": "10-14 Seth 清点(库里 0 行的 31 张表,逐张对写入端):【已修】agent_call_log(S-562 写入任务从未启动)、fusion_paper_state(S-561 列名);【没人用,不是故障】api_key_usage(1 把 free key 从未用)、api_usage(metering flush 只写有 key 的请求)、allocation_override、webhook_subscriptions、organizations、exploration_ideas(T-074 没人提交)、vault_*(未上线);【有写入端、循环现在可见(S-564)】cis_regime_fitness(_regime_fitness_loop)、fusion_paper_regime_track(_fusion_paper_regime_track_loop)—— 两天后看 loop_attempt 的 error 再修;【状态表空但 NAV 正常】factor_tilt_state / pod_aggregator_state(NAV 靠磁盘续接,29 / 24 个不同收益)—— 已确认同 S-561 一类:_save_state 写 last_mark_date / state_json,表里是 last_mark / weights / cell … ⇒ 每次被拒;NAV 正常是因为 Redis 缓存 + 磁盘续接。Redis 一丢,两本账就会像 fusion 一样记成本 —— 下一刀按线上列名改;【写入端被开关关着 / 原型】beta_core_nav_size(_meta)、beta_core_nav_q_meta、r77_forward_episodes(_meta)、strategy_params、cause_outcomes、crypto_universe、cis_backtest_results、decisions / execution_intents / execution_outcomes(实盘执行器 T-016 blocked)、audit_log、equity_fundamentals_q(EODHD 套餐无基本面)、_write_probe(探针表,用完即删)—— 留给退役清单。"
+  "notes": "10-14 Seth 清点(库里 0 行的 31 张表,逐张对写入端):【已修】agent_call_log(S-562 写入任务从未启动)、fusion_paper_state(S-561 列名);【没人用,不是故障】api_key_usage(1 把 free key 从未用)、api_usage(metering flush 只写有 key 的请求)、allocation_override、webhook_subscriptions、organizations、exploration_ideas(T-074 没人提交)、vault_*(未上线);【有写入端、循环现在可见(S-564)】cis_regime_fitness(_regime_fitness_loop)、fusion_paper_regime_track(_fusion_paper_regime_track_loop)—— 两天后看 loop_attempt 的 error 再修;【状态表空但 NAV 正常】factor_tilt_state / pod_aggregator_state(NAV 靠磁盘续接,29 / 24 个不同收益)—— 已确认同 S-561 一类:_save_state 写 last_mark_date / state_json,表里是 last_mark / weights / cell … ⇒ 每次被拒;NAV 正常是因为 Redis 缓存 + 磁盘续接。Redis 一丢,两本账就会像 fusion 一样记成本 —— 下一刀按线上列名改;【写入端被开关关着 / 原型】beta_core_nav_size(_meta)、beta_core_nav_q_meta、r77_forward_episodes(_meta)、strategy_params、cause_outcomes、crypto_universe、cis_backtest_results、decisions / execution_intents / execution_outcomes(实盘执行器 T-016 blocked)、audit_log、equity_fundamentals_q(EODHD 套餐无基本面)、_write_probe(探针表,用完即删)—— 留给退役清单。 || 2026-11-18 Seth(合并轮):**lane-b 已交付,但被范围闸门挡住,合并被拒**。分支 lane-b/T-062 上带着 docs/research/scenarios/lane-b-T-062.json,而本卡 allowed_paths 只有 src/api/ + src/research/validation/ + src/api/metering.py + tests/ ⇒ check_pr_scope 判它越界(同 S-405 那次:生成物落在卡的 forbidden 里)。**修法二选一,都在 lane-b 那边做**:① 把 `docs/research/` 加进本卡 allowed_paths 后重推(卡在分支上 ⇒ 范围检查读的是分支头那张卡);② 把情景文件从分支里撤掉(如果验收并不要求它)。改完推 lane-b/T-062、卡转 in_review,再走 seth_bot 的合并。卡状态留 open、owner 仍 lane-b ⇒ lane_bot 下一轮自然认领。**Seth 这边只做了一件事**:把卡从 owner=seth 交回 lane-b(它本来就是 lane-b 的活)。"
 }

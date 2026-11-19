@@ -3,7 +3,6 @@
   "owner": "lane-b",
   "status": "done",
   "created": "2026-11-08",
-  "verified": null,
   "title": "T-301 补三张表(剂量-反应 × 两臂并列 × 1/7/30 日)+ 把复现路径放进仓库 —— lane-a 11-08 交叉复核返工",
   "source": "§A-auto-1108-1217(lane-a 复核 T-301,已 merge 59d158c4):①报告漏了 squeeze 臂内资金费分位的剂量-反应(≤0.02 n=108 −18.15% … 0.08-0.10 n=46 −11.94%);②flush 臂从未与 squeeze 并列(中位差置换分位 0.197);③只报 30 天,库内 x1/x7 已存;④内核≡参考实现只在 squeeze 臂成立,flush 差 0.65–1.31pp;⑤报告 §4 指向的 t301_run.log 被 gitignore、脚本硬编码 lane-b 路径。Seth 抽查数字来源在已交付 CSV 与库,不必重拉。",
   "allowed_paths": [

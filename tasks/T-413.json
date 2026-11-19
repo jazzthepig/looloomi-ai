@@ -1,0 +1,28 @@
+{
+  "id": "T-413",
+  "owner": "seth",
+  "status": "open",
+  "created": "2026-11-17",
+  "title": "向量写端的三处真话:缺失字段填 NaN 而不是默认值、upsert 过 is_thin 门槛、asset_embeddings 补 measured_dims 与 source_completeness 列",
+  "source": "lane-b T-366 第二轮实测(2026-11-17T04:12Z);台账 S-842",
+  "allowed_paths": [
+    "src/data/vector/embedder.py",
+    "src/data/vector/pgvector_store.py",
+    "src/api/routers/vector.py",
+    "migrations/",
+    "tests/"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "paper_trading/",
+    "PROJECT_STATE.md",
+    "PROJECT_STATE_LOG.md"
+  ],
+  "acceptance": {
+    "check": "① 写端 NaN 口径:`src/data/vector/embedder.py::generate_embedding` 里未实测的维度必须写成 NaN(而不是 0.0 / 1e6 / 50 这类默认值),且活路径 `src/api/routers/vector.py` 调用时必须把 unmeasured_as_nan 传到位。② 门槛:`pgvector_store.upsert_embeddings` 写盘前必须过 `is_thin()` 的实测维数下限,没到下限的行要么不写、要么写下去但被标成不可用 —— 现在 MIN_MEASURED_DIMS=10 只在 is_thin() 内部用,写盘路径根本不调它,于是编造的 0.0 被 measured_dims 数成「实测」(measured_dims 只数 NaN)。③ 表结构:`asset_embeddings` 增 measured_dims 与 source_completeness 两列,消费方能按实测维数过滤存量向量。每条都要有测试钉住,并且把新测试注册进 scripts/preflight.sh(S-244:测试文件存在 ≠ 会被运行)。",
+    "expect": "三处各有一条测试;preflight 注册齐;一条 SELECT 能读出存量行里「实测维数」与「声称维数」不一致的清单;不新增抓取器、不改面板口径。"
+  },
+  "prior_value": "活路径未实测维度填默认值 0.0;MIN_MEASURED_DIMS=10 在写盘路径上惰性;asset_embeddings 表无 measured_dims / source_completeness 列(实测列名只有 symbol / asset_class / macro_regime / schema_version / dims / vec / vec_full / computed_at / superseded_reason)",
+  "notes": "2026-11-17 Seth 开卡(lane-b T-366 第二轮返工时 @seth 的三件事;那张卡 forbidden_paths 含 src/,做不了)。\n\n**为什么这张卡重要**:现在一个「没有 CIS 的币」写出来是 18 维、看起来完整的向量,支柱分量是 0.0 —— 消费方无法区分「实测为 0」与「没测到」。这不是精度问题,是**存量的向量里混着编造的 0.0**,而任何按维度读向量的下游都会把它当成真值。\n\n**lane-b 的实测依据(可直接核对)**:① `compute_full_vec` 全仓 0 命中 ⇒ 真实写端 = `embedder.py::generate_embedding`(:235),活路径调用点 `src/api/routers/vector.py:549`;② `embedder.py:281` 的 `_missing` 填的是默认值不是 NaN —— :282-286 支柱 → 0.0、:309/:324 市值 → 1e6(即 [6]=0.4)、:310-313 涨跌 → 0、:314-316 ATH → 50(即 [13]=0.5)、:331-338 资金费/OI → 0.0、:312/:313 LAS/conf → 0/0.8;而 `vector.py:549` 没传 unmeasured_as_nan ⇒ 那些默认值一个都没走 NaN 那条路;③ `MIN_MEASURED_DIMS=10`(:584)只在 :599-604 的 is_thin() 里用,`pgvector_store.upsert_embeddings`(:123)不调 is_thin,measured_dims(:587-589)只数 NaN ⇒ 编造的 0.0 被计成「实测」;④ 存量行实测:AAPL 的 vec_full 里 [11] 资金费 0、[12] OI 0、[13] 0.5 全是默认值,BTC 的 [12]=0.0;⑤ `asset_edge_moments` 视图实测 0 行 ⇒ [25][26] 归写端未实现(存量 ETH 行里的 [25][26] 是历史遗留)。\n\n**这张卡不做的那件事(要 Jazz 拍板,不在卡里)**:Mac `vector_push.py:86` 的 payload 就是 `cis_scores_latest.json`(= CIS 宇宙)⇒ 非 CIS 的币进不了 payload。扩面板 = 扩 payload 契约或新开写路径,**不是「扩抓取器 universe」**。这属于口径变更,不在本卡范围。",
+  "verified": null
+}

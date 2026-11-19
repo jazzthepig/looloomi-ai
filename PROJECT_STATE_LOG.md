@@ -3487,3 +3487,67 @@ CoinGecko,13 个调用点在裸 client 上 ⇒ 闸门外的消耗**一概不进�
 命令与期望值写在 `REFUTATION_LEDGER.md` 的 S-895 部署补充段。
 **「部署了」不等于「数对了」**:代码在、形状在,数还没看到 —— 阶段 0 的验收是三条已验
 (逻辑 / 形状守卫 / 部署落地)+ 两条待观察(线上读数 / 24h 明细)。
+
+## 2026-11-19 07:45 UTC — Seth:订阅暂停期间把机器的堵点解开 —— 合并队列 / 陈旧卡 / 预算 / 派卡盲区,四个堵点全解
+
+**背景.** Jazz 的 Claude 订阅暂停(新卡在途)⇒ **Seth 角色层无人**(派卡 / 验收 / 合并)。
+Mac 侧 `seth_bot` 与三条 lane 照常(走 `api.minimax.io` 的 Anthropic 兼容端点,认证方式 none,
+与 Claude 订阅无关)。**真正空掉的是 `seth_bot` 的队列** —— 它只执行放进 `.seth_bot/queue/` 的任务,
+队列 0 条 ⇒ 一条完整的链卡在最后一厘米:**lane 交了活 → 没人排合并 → 分支躺在 origin 上**。
+本轮目标:把堵点解开,**不改研究口径、不碰公开面、不下单、不改评分算法**。
+
+**① 合并队列 —— 五个分支落地.** T-056 / T-366 / T-238 / T-308 / T-388 全部 `stage: pushed`。
+T-228 的合并死了两次,两个原因都查到了:
+- `_data/strategy_records.json` 停在 07-21 ⇒ `tests/test_strategy_vector_smoke` 报
+  「R64-ledger present」+「strategy vector — do not push」。T-056 重生成之后**实测 70/70 绿**。
+- 沙箱留下的 `.git/index.lock` 挡住 `sync_main()` 里的 `git merge --ff-only`
+  (报错尾巴 `x.lock': File exists.` 就是 `index.lock` 的尾巴)。**seth_bot 的
+  `_clear_index_lock()` 一直排在 `sync_main()` 之后** ⇒ 一个陈旧的锁能杀掉任何 op 的第一次快进。
+  已加年龄护栏(只清 **120 秒以上**的陈旧锁 —— 写索引只要几秒,活着的进程不会拿着两分钟没动过的锁;不打断活着的 git 进程)+ 提前到 `sync_main()` 之前。
+
+**② 50 张陈旧 `in_review` 卡** —— 全部收口(`status: done` + `verified`)。
+**③ cold-start 预算** —— `MINIMAX_SYNC.md` 86,645 → **30,497 字符**:
+21 段 lane 自动轮次报告(57,353 字)原文进 `MINIMAX_SYNC_ARCHIVE.md` §AR-2026-11-19-seth;
+**未结项先提到 §IN-FLIGHT 再归档**(S-370)—— 三条新登记:① S-707 两口径裁决仍未拍板
+(同期 ρ=+0.3681/p=0.0118 vs 未来 30 日窗口 ρ=+0.0329/p=0.8299 ⇒ 结论相反,
+这是 T-222 立前向臂的唯一堵点)② T-411 资金费归因要订正(过滤造成的错归因)③ 一条 lane 纪律。
+**④ S-893 派卡盲区** —— `lane_bot` 看不见带后缀的返工分支(`lane-a/T-359-v2`),
+三条 lane 当时 0 张可动;已修 + 新测试注册进 preflight。
+
+**⑤ T-228 卡重建** —— `verified` 写全五组数字(① 5.1465 %/yr · ①' 4.9795 %/yr ·
+② 毛 21.2744 % → 净 18.2744 % · ③ ρ=+0.0329 p=0.8299 n=45 · ③' ρ=+0.3681 p=0.0118 n=46),
+情景概率重标(0.45/0.53/0.55 → 0.13/0.11/0.37),并写明「未来 30 日」与「当月」是两个窗口、不可混用。
+
+**今天的市场读数(2026-11-19 07:19Z,只读,是观测不是预测).**
+基准 30 日 −22.1% ⇒ 仍在 `1_deep_off` 档(< −15%);Fear & Greed **10**(极端恐惧,较昨 11 再降 1);
+BTC $63,591 / 占比 58.1%;总市值 $2,192.2B;DeFi TVL $70.51B(24H −1.13%)。
+**资金费率几乎全平**:BTC +0.0049%/8h(+5.4%/yr)、ETH +0.0062%(+6.8%/yr)、SOL +0.0012%(+1.3%/yr),
+35 个标的里**没有一个 overleveraged_long(>+0.1%/8h),也没有一个极端空头(< −0.1%/8h)**;
+OI/MCap 最高的不是 BTC(0.0286)而是 AVAX(0.6534)⇒ 杠杆在山寨,不在 BTC。
+⇒ **边际流动性在温和收缩,但没有挤兑、没有杠杆堆积。**
+**这一档的历史(tiers_now)**:STRONG OUTPERFORM **−3.49%/30d(n=172)**、UNDERWEIGHT −3.23%(n=560)、
+UNDERPERFORM −0.42%(n=1450)、NEUTRAL **+0.76%(n=2840)**、OUTPERFORM +0.36%(n=1453)
+⇒ **深度 risk-off 里,最高质量标签历史上是负的**;`posture` = net_bias short / gross_scale 0.95 / confirmed。
+**前向账(as_of 11-18)**:① core_cap 47 天 −28.36%;② 全部倾斜臂负超额
+(cis_tilt −1.06% / beta_plus_w −5.20% / beta_plus_m −4.00% / tokenization_tilt −5.93% / beta_core −7.14%);
+③ 减仓型臂正(tom_overlay +3.61% / q_slow +3.28% / q_overlay +9.78%,但 anytime 下界 −1.73);
+①+③ 现货腿 hl_jev **+14.20%** / hl_mech **+9.79%**(47 天);④ carry_hl +17.33%(13 天,名义本金口径);
+**分配层仍给 core 100% 权重(`l3_weight` = 1,其余全 0)**。
+`fusion_paper` 明确标「记录只扣成本、不记价格 —— 数字不可信」⇒ 不作证据。
+
+**没做.** 不下真实订单、不碰真钱路径、不改研究口径与 CIS 权重算法、不动公开面展示模块、
+不 `git add -A`、不代提主目录里那三条外来脏文件(`src/api/routers/trading.py` /
+`dashboard/src/components/QuantMonitor.jsx` / `tests/test_cg_call_sites.py`,属 S-895 阶段 1)。
+
+**⑥ 一条更隐蔽的:「守卫注册了,但从来没跑。」**(11-19 在派卡链上顺手撞出来的)
+`python3 -m tests.foo` 跑的是模块里的 `if __name__ == "__main__":` 块,而那个块**按文件顺序执行**
+⇒ 定义在它**下面**的 `def test_*` 在块遍历 `globals()` 时还不存在 ⇒ **永远不会被执行**,
+而文件照样打印一份绿色的清单。**实测:五个测试文件的 `__main__` 块写在中间,底下 24 条测试从未运行过** ——
+其中 20 条是 lane_bot 的缰绳(正好是 S-893 那个派卡盲区的守卫)、1 条是 PR 范围守卫
+(合并前那道范围检查)、1 条是 Pages 死链守卫、2 条是 seth_bot 执行器的「快照/改文件语义」。
+**S-244 说的是「测试文件存在 ≠ 会被运行」;这一条是它的第二层:「测试被注册了 ≠ 会被运行」。**
+修法:① 五个文件的 `__main__` 块移到**文件末尾**,手动跑法认得 pytest fixture
+(需要 fixture 的那几条由 pytest 跑,手动跑法打印「跳过」而不是假装通过);
+② `scripts/preflight.sh` 里这四个文件改用 `python3 -m pytest …` ⇒ 24 条全部进 CI;
+③ `tests/test_cold_start_contract.py` 加一条
+`test_a_main_block_does_not_precede_the_tests_it_is_meant_to_run` ⇒ **这个形状以后会被 CI 挡住**。
