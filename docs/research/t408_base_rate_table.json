@@ -1,0 +1,3588 @@
+{
+ "card": "T-416",
+ "what": "T-408(S-881)那 8 张基率表按 S-882「每张基率表必须自带对照组」重出,并判一次那 1 格「站住」的是信号还是基率",
+ "method": {
+  "sample": "一张票 = 一次进场(D 日收盘判、D + 1 开盘进、8% 止损、28 天、一次进满;走法同 S-879/S-881)",
+  "universe": "分方向:多头 = BO20 触发票 + EVERY5 日历票;空头 = BD20 触发票 + EVERY5 日历票",
+  "condition": "触发(BO20 突破 / BD20 跌破)且状态格 = 该格",
+  "controls": "触发_其它状态 / 状态_日历同格(= T-408 的 base)/ 状态格_全部票 / 全部样本(base_rate_table 自动加)",
+  "outcomes": [
+   "win",
+   "loss",
+   "stopped",
+   "r_ge_1"
+  ],
+  "primary_outcome": "win",
+  "null": "整条状态序列循环平移 ≥ 180 天(apparatus.circular_shift),每格每对照 200 次,差 = 条件组 − 对照组",
+  "p": "apparatus.p_upper(实际差, 零分布)(单侧,带 +1 修正);门 = 差 > 0 且 p ≤ 0.05",
+  "apparatus": "base_rate_table / circular_shift / null_distribution / p_upper / percentile_of",
+  "state_rows": 2879
+ },
+ "reproduce_t408": {
+  "BD20|线上·主流领": {
+   "fields": {
+    "full": {
+     "mine": {
+      "n": 23,
+      "mean_pct": -0.5,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 33.22,
+      "win": 0.304,
+      "payoff": 2.06,
+      "stopped_at_a_loss": 0.609,
+      "deployed": 1.0,
+      "mean_days": 15.9
+     },
+     "t408": {
+      "n": 23,
+      "mean_pct": -0.5,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 33.22,
+      "win": 0.304,
+      "payoff": 2.06,
+      "stopped_at_a_loss": 0.609,
+      "deployed": 1.0,
+      "mean_days": 15.9
+     },
+     "same": true
+    },
+    "disc": {
+     "mine": {
+      "n": 4,
+      "mean_pct": 5.25,
+      "median_pct": -2.1,
+      "worst_pct": -8.0,
+      "best_pct": 33.22,
+      "win": 0.5,
+      "payoff": 2.31,
+      "stopped_at_a_loss": 0.5,
+      "deployed": 1.0,
+      "mean_days": 15.0
+     },
+     "t408": {
+      "n": 4,
+      "mean_pct": 5.25,
+      "median_pct": -2.1,
+      "worst_pct": -8.0,
+      "best_pct": 33.22,
+      "win": 0.5,
+      "payoff": 2.31,
+      "stopped_at_a_loss": 0.5,
+      "deployed": 1.0,
+      "mean_days": 15.0
+     },
+     "same": true
+    },
+    "hold": {
+     "mine": {
+      "n": 19,
+      "mean_pct": -1.71,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 25.11,
+      "win": 0.263,
+      "payoff": 1.91,
+      "stopped_at_a_loss": 0.632,
+      "deployed": 1.0,
+      "mean_days": 16.1
+     },
+     "t408": {
+      "n": 19,
+      "mean_pct": -1.71,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 25.11,
+      "win": 0.263,
+      "payoff": 1.91,
+      "stopped_at_a_loss": 0.632,
+      "deployed": 1.0,
+      "mean_days": 16.1
+     },
+     "same": true
+    },
+    "base_disc": {
+     "mine": {
+      "n": 50,
+      "mean_pct": 4.52,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 39.1,
+      "win": 0.48,
+      "payoff": 2.26,
+      "stopped_at_a_loss": 0.52,
+      "deployed": 1.0,
+      "mean_days": 17.8
+     },
+     "t408": {
+      "n": 50,
+      "mean_pct": 4.52,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 39.1,
+      "win": 0.48,
+      "payoff": 2.26,
+      "stopped_at_a_loss": 0.52,
+      "deployed": 1.0,
+      "mean_days": 17.8
+     },
+     "same": true
+    },
+    "base_hold": {
+     "mine": {
+      "n": 206,
+      "mean_pct": 0.19,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 31.1,
+      "win": 0.417,
+      "payoff": 1.45,
+      "stopped_at_a_loss": 0.549,
+      "deployed": 1.0,
+      "mean_days": 18.5
+     },
+     "t408": {
+      "n": 206,
+      "mean_pct": 0.19,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 31.1,
+      "win": 0.417,
+      "payoff": 1.45,
+      "stopped_at_a_loss": 0.549,
+      "deployed": 1.0,
+      "mean_days": 18.5
+     },
+     "same": true
+    }
+   },
+   "all_same": true
+  },
+  "BD20|线上·二线领": {
+   "fields": {
+    "full": {
+     "mine": {
+      "n": 15,
+      "mean_pct": -3.91,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 18.91,
+      "win": 0.2,
+      "payoff": 1.56,
+      "stopped_at_a_loss": 0.8,
+      "deployed": 1.0,
+      "mean_days": 12.8
+     },
+     "t408": {
+      "n": 15,
+      "mean_pct": -3.91,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 18.91,
+      "win": 0.2,
+      "payoff": 1.56,
+      "stopped_at_a_loss": 0.8,
+      "deployed": 1.0,
+      "mean_days": 12.8
+     },
+     "same": true
+    },
+    "disc": {
+     "mine": {
+      "n": 5,
+      "mean_pct": 0.54,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 18.91,
+      "win": 0.4,
+      "payoff": 1.67,
+      "stopped_at_a_loss": 0.6,
+      "deployed": 1.0,
+      "mean_days": 14.8
+     },
+     "t408": {
+      "n": 5,
+      "mean_pct": 0.54,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 18.91,
+      "win": 0.4,
+      "payoff": 1.67,
+      "stopped_at_a_loss": 0.6,
+      "deployed": 1.0,
+      "mean_days": 14.8
+     },
+     "same": true
+    },
+    "hold": {
+     "mine": {
+      "n": 10,
+      "mean_pct": -6.13,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 10.7,
+      "win": 0.1,
+      "payoff": 1.34,
+      "stopped_at_a_loss": 0.9,
+      "deployed": 1.0,
+      "mean_days": 11.8
+     },
+     "t408": {
+      "n": 10,
+      "mean_pct": -6.13,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 10.7,
+      "win": 0.1,
+      "payoff": 1.34,
+      "stopped_at_a_loss": 0.9,
+      "deployed": 1.0,
+      "mean_days": 11.8
+     },
+     "same": true
+    },
+    "base_disc": {
+     "mine": {
+      "n": 68,
+      "mean_pct": -1.87,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 38.33,
+      "win": 0.191,
+      "payoff": 2.99,
+      "stopped_at_a_loss": 0.794,
+      "deployed": 1.0,
+      "mean_days": 11.6
+     },
+     "t408": {
+      "n": 68,
+      "mean_pct": -1.87,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 38.33,
+      "win": 0.191,
+      "payoff": 2.99,
+      "stopped_at_a_loss": 0.794,
+      "deployed": 1.0,
+      "mean_days": 11.6
+     },
+     "same": true
+    },
+    "base_hold": {
+     "mine": {
+      "n": 118,
+      "mean_pct": -1.1,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 25.37,
+      "win": 0.39,
+      "payoff": 1.19,
+      "stopped_at_a_loss": 0.551,
+      "deployed": 1.0,
+      "mean_days": 20.0
+     },
+     "t408": {
+      "n": 118,
+      "mean_pct": -1.1,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 25.37,
+      "win": 0.39,
+      "payoff": 1.19,
+      "stopped_at_a_loss": 0.551,
+      "deployed": 1.0,
+      "mean_days": 20.0
+     },
+     "same": true
+    }
+   },
+   "all_same": true
+  },
+  "BD20|线下·主流领": {
+   "fields": {
+    "full": {
+     "mine": {
+      "n": 68,
+      "mean_pct": 0.43,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 26.81,
+      "win": 0.368,
+      "payoff": 1.87,
+      "stopped_at_a_loss": 0.632,
+      "deployed": 1.0,
+      "mean_days": 14.1
+     },
+     "t408": {
+      "n": 68,
+      "mean_pct": 0.43,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 26.81,
+      "win": 0.368,
+      "payoff": 1.87,
+      "stopped_at_a_loss": 0.632,
+      "deployed": 1.0,
+      "mean_days": 14.1
+     },
+     "same": true
+    },
+    "disc": {
+     "mine": {
+      "n": 34,
+      "mean_pct": 2.58,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 26.81,
+      "win": 0.412,
+      "payoff": 2.21,
+      "stopped_at_a_loss": 0.588,
+      "deployed": 1.0,
+      "mean_days": 13.8
+     },
+     "t408": {
+      "n": 34,
+      "mean_pct": 2.58,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 26.81,
+      "win": 0.412,
+      "payoff": 2.21,
+      "stopped_at_a_loss": 0.588,
+      "deployed": 1.0,
+      "mean_days": 13.8
+     },
+     "same": true
+    },
+    "hold": {
+     "mine": {
+      "n": 34,
+      "mean_pct": -1.72,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 20.89,
+      "win": 0.324,
+      "payoff": 1.43,
+      "stopped_at_a_loss": 0.676,
+      "deployed": 1.0,
+      "mean_days": 14.3
+     },
+     "t408": {
+      "n": 34,
+      "mean_pct": -1.72,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 20.89,
+      "win": 0.324,
+      "payoff": 1.43,
+      "stopped_at_a_loss": 0.676,
+      "deployed": 1.0,
+      "mean_days": 14.3
+     },
+     "same": true
+    },
+    "base_disc": {
+     "mine": {
+      "n": 118,
+      "mean_pct": 0.63,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 43.34,
+      "win": 0.28,
+      "payoff": 2.88,
+      "stopped_at_a_loss": 0.661,
+      "deployed": 1.0,
+      "mean_days": 16.1
+     },
+     "t408": {
+      "n": 118,
+      "mean_pct": 0.63,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 43.34,
+      "win": 0.28,
+      "payoff": 2.88,
+      "stopped_at_a_loss": 0.661,
+      "deployed": 1.0,
+      "mean_days": 16.1
+     },
+     "same": true
+    },
+    "base_hold": {
+     "mine": {
+      "n": 156,
+      "mean_pct": -3.94,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 23.2,
+      "win": 0.237,
+      "payoff": 0.96,
+      "stopped_at_a_loss": 0.679,
+      "deployed": 1.0,
+      "mean_days": 17.0
+     },
+     "t408": {
+      "n": 156,
+      "mean_pct": -3.94,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 23.2,
+      "win": 0.237,
+      "payoff": 0.96,
+      "stopped_at_a_loss": 0.679,
+      "deployed": 1.0,
+      "mean_days": 17.0
+     },
+     "same": true
+    }
+   },
+   "all_same": true
+  },
+  "BD20|线下·二线领": {
+   "fields": {
+    "full": {
+     "mine": {
+      "n": 41,
+      "mean_pct": 3.23,
+      "median_pct": 0.44,
+      "worst_pct": -8.0,
+      "best_pct": 33.47,
+      "win": 0.512,
+      "payoff": 1.74,
+      "stopped_at_a_loss": 0.488,
+      "deployed": 1.0,
+      "mean_days": 18.5
+     },
+     "t408": {
+      "n": 41,
+      "mean_pct": 3.23,
+      "median_pct": 0.44,
+      "worst_pct": -8.0,
+      "best_pct": 33.47,
+      "win": 0.512,
+      "payoff": 1.74,
+      "stopped_at_a_loss": 0.488,
+      "deployed": 1.0,
+      "mean_days": 18.5
+     },
+     "same": true
+    },
+    "disc": {
+     "mine": {
+      "n": 16,
+      "mean_pct": -1.98,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 23.85,
+      "win": 0.312,
+      "payoff": 1.41,
+      "stopped_at_a_loss": 0.688,
+      "deployed": 1.0,
+      "mean_days": 14.8
+     },
+     "t408": {
+      "n": 16,
+      "mean_pct": -1.98,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 23.85,
+      "win": 0.312,
+      "payoff": 1.41,
+      "stopped_at_a_loss": 0.688,
+      "deployed": 1.0,
+      "mean_days": 14.8
+     },
+     "same": true
+    },
+    "hold": {
+     "mine": {
+      "n": 25,
+      "mean_pct": 6.57,
+      "median_pct": 4.72,
+      "worst_pct": -8.0,
+      "best_pct": 33.47,
+      "win": 0.64,
+      "payoff": 1.85,
+      "stopped_at_a_loss": 0.36,
+      "deployed": 1.0,
+      "mean_days": 20.9
+     },
+     "t408": {
+      "n": 25,
+      "mean_pct": 6.57,
+      "median_pct": 4.72,
+      "worst_pct": -8.0,
+      "best_pct": 33.47,
+      "win": 0.64,
+      "payoff": 1.85,
+      "stopped_at_a_loss": 0.36,
+      "deployed": 1.0,
+      "mean_days": 20.9
+     },
+     "same": true
+    },
+    "base_disc": {
+     "mine": {
+      "n": 44,
+      "mean_pct": 0.39,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 29.88,
+      "win": 0.409,
+      "payoff": 1.57,
+      "stopped_at_a_loss": 0.545,
+      "deployed": 1.0,
+      "mean_days": 18.2
+     },
+     "t408": {
+      "n": 44,
+      "mean_pct": 0.39,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 29.88,
+      "win": 0.409,
+      "payoff": 1.57,
+      "stopped_at_a_loss": 0.545,
+      "deployed": 1.0,
+      "mean_days": 18.2
+     },
+     "same": true
+    },
+    "base_hold": {
+     "mine": {
+      "n": 74,
+      "mean_pct": 2.85,
+      "median_pct": -6.2,
+      "worst_pct": -8.0,
+      "best_pct": 38.27,
+      "win": 0.419,
+      "payoff": 2.32,
+      "stopped_at_a_loss": 0.5,
+      "deployed": 1.0,
+      "mean_days": 19.0
+     },
+     "t408": {
+      "n": 74,
+      "mean_pct": 2.85,
+      "median_pct": -6.2,
+      "worst_pct": -8.0,
+      "best_pct": 38.27,
+      "win": 0.419,
+      "payoff": 2.32,
+      "stopped_at_a_loss": 0.5,
+      "deployed": 1.0,
+      "mean_days": 19.0
+     },
+     "same": true
+    }
+   },
+   "all_same": true
+  },
+  "BO20|线上·主流领": {
+   "fields": {
+    "full": {
+     "mine": {
+      "n": 109,
+      "mean_pct": 8.08,
+      "median_pct": 4.39,
+      "worst_pct": -8.0,
+      "best_pct": 49.62,
+      "win": 0.587,
+      "payoff": 2.72,
+      "stopped_at_a_loss": 0.339,
+      "deployed": 1.0,
+      "mean_days": 22.5
+     },
+     "t408": {
+      "n": 109,
+      "mean_pct": 8.08,
+      "median_pct": 4.39,
+      "worst_pct": -8.0,
+      "best_pct": 49.62,
+      "win": 0.587,
+      "payoff": 2.72,
+      "stopped_at_a_loss": 0.339,
+      "deployed": 1.0,
+      "mean_days": 22.5
+     },
+     "same": true
+    },
+    "disc": {
+     "mine": {
+      "n": 24,
+      "mean_pct": 7.8,
+      "median_pct": 2.86,
+      "worst_pct": -8.0,
+      "best_pct": 39.3,
+      "win": 0.542,
+      "payoff": 2.73,
+      "stopped_at_a_loss": 0.417,
+      "deployed": 1.0,
+      "mean_days": 20.4
+     },
+     "t408": {
+      "n": 24,
+      "mean_pct": 7.8,
+      "median_pct": 2.86,
+      "worst_pct": -8.0,
+      "best_pct": 39.3,
+      "win": 0.542,
+      "payoff": 2.73,
+      "stopped_at_a_loss": 0.417,
+      "deployed": 1.0,
+      "mean_days": 20.4
+     },
+     "same": true
+    },
+    "hold": {
+     "mine": {
+      "n": 85,
+      "mean_pct": 8.15,
+      "median_pct": 4.63,
+      "worst_pct": -8.0,
+      "best_pct": 49.62,
+      "win": 0.6,
+      "payoff": 2.73,
+      "stopped_at_a_loss": 0.318,
+      "deployed": 1.0,
+      "mean_days": 23.1
+     },
+     "t408": {
+      "n": 85,
+      "mean_pct": 8.15,
+      "median_pct": 4.63,
+      "worst_pct": -8.0,
+      "best_pct": 49.62,
+      "win": 0.6,
+      "payoff": 2.73,
+      "stopped_at_a_loss": 0.318,
+      "deployed": 1.0,
+      "mean_days": 23.1
+     },
+     "same": true
+    },
+    "base_disc": {
+     "mine": {
+      "n": 50,
+      "mean_pct": -2.86,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 38.95,
+      "win": 0.2,
+      "payoff": 2.18,
+      "stopped_at_a_loss": 0.78,
+      "deployed": 1.0,
+      "mean_days": 12.6
+     },
+     "t408": {
+      "n": 50,
+      "mean_pct": -2.86,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 38.95,
+      "win": 0.2,
+      "payoff": 2.18,
+      "stopped_at_a_loss": 0.78,
+      "deployed": 1.0,
+      "mean_days": 12.6
+     },
+     "same": true
+    },
+    "base_hold": {
+     "mine": {
+      "n": 206,
+      "mean_pct": 2.42,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 55.12,
+      "win": 0.403,
+      "payoff": 2.3,
+      "stopped_at_a_loss": 0.524,
+      "deployed": 1.0,
+      "mean_days": 19.2
+     },
+     "t408": {
+      "n": 206,
+      "mean_pct": 2.42,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 55.12,
+      "win": 0.403,
+      "payoff": 2.3,
+      "stopped_at_a_loss": 0.524,
+      "deployed": 1.0,
+      "mean_days": 19.2
+     },
+     "same": true
+    }
+   },
+   "all_same": true
+  },
+  "BO20|线上·二线领": {
+   "fields": {
+    "full": {
+     "mine": {
+      "n": 80,
+      "mean_pct": 0.43,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 51.35,
+      "win": 0.312,
+      "payoff": 2.37,
+      "stopped_at_a_loss": 0.675,
+      "deployed": 1.0,
+      "mean_days": 15.0
+     },
+     "t408": {
+      "n": 80,
+      "mean_pct": 0.43,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 51.35,
+      "win": 0.312,
+      "payoff": 2.37,
+      "stopped_at_a_loss": 0.675,
+      "deployed": 1.0,
+      "mean_days": 15.0
+     },
+     "same": true
+    },
+    "disc": {
+     "mine": {
+      "n": 28,
+      "mean_pct": -3.95,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 40.87,
+      "win": 0.107,
+      "payoff": 3.72,
+      "stopped_at_a_loss": 0.893,
+      "deployed": 1.0,
+      "mean_days": 9.7
+     },
+     "t408": {
+      "n": 28,
+      "mean_pct": -3.95,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 40.87,
+      "win": 0.107,
+      "payoff": 3.72,
+      "stopped_at_a_loss": 0.893,
+      "deployed": 1.0,
+      "mean_days": 9.7
+     },
+     "same": true
+    },
+    "hold": {
+     "mine": {
+      "n": 52,
+      "mean_pct": 2.79,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 51.35,
+      "win": 0.423,
+      "payoff": 2.2,
+      "stopped_at_a_loss": 0.558,
+      "deployed": 1.0,
+      "mean_days": 17.8
+     },
+     "t408": {
+      "n": 52,
+      "mean_pct": 2.79,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 51.35,
+      "win": 0.423,
+      "payoff": 2.2,
+      "stopped_at_a_loss": 0.558,
+      "deployed": 1.0,
+      "mean_days": 17.8
+     },
+     "same": true
+    },
+    "base_disc": {
+     "mine": {
+      "n": 68,
+      "mean_pct": -1.58,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 49.84,
+      "win": 0.191,
+      "payoff": 3.2,
+      "stopped_at_a_loss": 0.809,
+      "deployed": 1.0,
+      "mean_days": 11.8
+     },
+     "t408": {
+      "n": 68,
+      "mean_pct": -1.58,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 49.84,
+      "win": 0.191,
+      "payoff": 3.2,
+      "stopped_at_a_loss": 0.809,
+      "deployed": 1.0,
+      "mean_days": 11.8
+     },
+     "same": true
+    },
+    "base_hold": {
+     "mine": {
+      "n": 118,
+      "mean_pct": -2.77,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 24.51,
+      "win": 0.271,
+      "payoff": 1.26,
+      "stopped_at_a_loss": 0.61,
+      "deployed": 1.0,
+      "mean_days": 19.7
+     },
+     "t408": {
+      "n": 118,
+      "mean_pct": -2.77,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 24.51,
+      "win": 0.271,
+      "payoff": 1.26,
+      "stopped_at_a_loss": 0.61,
+      "deployed": 1.0,
+      "mean_days": 19.7
+     },
+     "same": true
+    }
+   },
+   "all_same": true
+  },
+  "BO20|线下·主流领": {
+   "fields": {
+    "full": {
+     "mine": {
+      "n": 42,
+      "mean_pct": 5.83,
+      "median_pct": -1.15,
+      "worst_pct": -8.0,
+      "best_pct": 39.87,
+      "win": 0.476,
+      "payoff": 2.87,
+      "stopped_at_a_loss": 0.429,
+      "deployed": 1.0,
+      "mean_days": 20.1
+     },
+     "t408": {
+      "n": 42,
+      "mean_pct": 5.83,
+      "median_pct": -1.15,
+      "worst_pct": -8.0,
+      "best_pct": 39.87,
+      "win": 0.476,
+      "payoff": 2.87,
+      "stopped_at_a_loss": 0.429,
+      "deployed": 1.0,
+      "mean_days": 20.1
+     },
+     "same": true
+    },
+    "disc": {
+     "mine": {
+      "n": 15,
+      "mean_pct": 2.54,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 39.87,
+      "win": 0.267,
+      "payoff": 3.94,
+      "stopped_at_a_loss": 0.733,
+      "deployed": 1.0,
+      "mean_days": 13.1
+     },
+     "t408": {
+      "n": 15,
+      "mean_pct": 2.54,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 39.87,
+      "win": 0.267,
+      "payoff": 3.94,
+      "stopped_at_a_loss": 0.733,
+      "deployed": 1.0,
+      "mean_days": 13.1
+     },
+     "same": true
+    },
+    "hold": {
+     "mine": {
+      "n": 27,
+      "mean_pct": 7.66,
+      "median_pct": 4.17,
+      "worst_pct": -8.0,
+      "best_pct": 35.28,
+      "win": 0.593,
+      "payoff": 2.89,
+      "stopped_at_a_loss": 0.259,
+      "deployed": 1.0,
+      "mean_days": 24.1
+     },
+     "t408": {
+      "n": 27,
+      "mean_pct": 7.66,
+      "median_pct": 4.17,
+      "worst_pct": -8.0,
+      "best_pct": 35.28,
+      "win": 0.593,
+      "payoff": 2.89,
+      "stopped_at_a_loss": 0.259,
+      "deployed": 1.0,
+      "mean_days": 24.1
+     },
+     "same": true
+    },
+    "base_disc": {
+     "mine": {
+      "n": 118,
+      "mean_pct": 0.78,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 68.78,
+      "win": 0.305,
+      "payoff": 2.61,
+      "stopped_at_a_loss": 0.669,
+      "deployed": 1.0,
+      "mean_days": 15.9
+     },
+     "t408": {
+      "n": 118,
+      "mean_pct": 0.78,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 68.78,
+      "win": 0.305,
+      "payoff": 2.61,
+      "stopped_at_a_loss": 0.669,
+      "deployed": 1.0,
+      "mean_days": 15.9
+     },
+     "same": true
+    },
+    "base_hold": {
+     "mine": {
+      "n": 156,
+      "mean_pct": 8.27,
+      "median_pct": 4.0,
+      "worst_pct": -8.0,
+      "best_pct": 64.26,
+      "win": 0.59,
+      "payoff": 2.7,
+      "stopped_at_a_loss": 0.333,
+      "deployed": 1.0,
+      "mean_days": 22.9
+     },
+     "t408": {
+      "n": 156,
+      "mean_pct": 8.27,
+      "median_pct": 4.0,
+      "worst_pct": -8.0,
+      "best_pct": 64.26,
+      "win": 0.59,
+      "payoff": 2.7,
+      "stopped_at_a_loss": 0.333,
+      "deployed": 1.0,
+      "mean_days": 22.9
+     },
+     "same": true
+    }
+   },
+   "all_same": true
+  },
+  "BO20|线下·二线领": {
+   "fields": {
+    "full": {
+     "mine": {
+      "n": 32,
+      "mean_pct": -1.75,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 42.74,
+      "win": 0.219,
+      "payoff": 2.56,
+      "stopped_at_a_loss": 0.75,
+      "deployed": 1.0,
+      "mean_days": 15.1
+     },
+     "t408": {
+      "n": 32,
+      "mean_pct": -1.75,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 42.74,
+      "win": 0.219,
+      "payoff": 2.56,
+      "stopped_at_a_loss": 0.75,
+      "deployed": 1.0,
+      "mean_days": 15.1
+     },
+     "same": true
+    },
+    "disc": {
+     "mine": {
+      "n": 14,
+      "mean_pct": -4.15,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 42.74,
+      "win": 0.071,
+      "payoff": 5.51,
+      "stopped_at_a_loss": 0.857,
+      "deployed": 1.0,
+      "mean_days": 12.9
+     },
+     "t408": {
+      "n": 14,
+      "mean_pct": -4.15,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 42.74,
+      "win": 0.071,
+      "payoff": 5.51,
+      "stopped_at_a_loss": 0.857,
+      "deployed": 1.0,
+      "mean_days": 12.9
+     },
+     "same": true
+    },
+    "hold": {
+     "mine": {
+      "n": 18,
+      "mean_pct": 0.12,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 34.74,
+      "win": 0.333,
+      "payoff": 2.05,
+      "stopped_at_a_loss": 0.667,
+      "deployed": 1.0,
+      "mean_days": 16.8
+     },
+     "t408": {
+      "n": 18,
+      "mean_pct": 0.12,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 34.74,
+      "win": 0.333,
+      "payoff": 2.05,
+      "stopped_at_a_loss": 0.667,
+      "deployed": 1.0,
+      "mean_days": 16.8
+     },
+     "same": true
+    },
+    "base_disc": {
+     "mine": {
+      "n": 44,
+      "mean_pct": -2.42,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 61.1,
+      "win": 0.159,
+      "payoff": 3.3,
+      "stopped_at_a_loss": 0.795,
+      "deployed": 1.0,
+      "mean_days": 13.0
+     },
+     "t408": {
+      "n": 44,
+      "mean_pct": -2.42,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 61.1,
+      "win": 0.159,
+      "payoff": 3.3,
+      "stopped_at_a_loss": 0.795,
+      "deployed": 1.0,
+      "mean_days": 13.0
+     },
+     "same": true
+    },
+    "base_hold": {
+     "mine": {
+      "n": 74,
+      "mean_pct": -1.28,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 35.02,
+      "win": 0.351,
+      "payoff": 1.37,
+      "stopped_at_a_loss": 0.608,
+      "deployed": 1.0,
+      "mean_days": 15.9
+     },
+     "t408": {
+      "n": 74,
+      "mean_pct": -1.28,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 35.02,
+      "win": 0.351,
+      "payoff": 1.37,
+      "stopped_at_a_loss": 0.608,
+      "deployed": 1.0,
+      "mean_days": 15.9
+     },
+     "same": true
+    }
+   },
+   "all_same": true
+  }
+ },
+ "cells": [
+  {
+   "setup": "BO20|线上·主流领",
+   "trig": "BO20",
+   "side": 1,
+   "cell": "线上·主流领",
+   "five": {
+    "cond_rate": 0.5872,
+    "all_rate": 0.3946,
+    "diff": 0.1926,
+    "p": 0.03482587064676617,
+    "n": 109
+   },
+   "diff_vs_control": {
+    "触发_其它状态": 0.191,
+    "状态_日历同格": 0.2239,
+    "状态格_全部票": 0.1571,
+    "全部样本": 0.1926
+   },
+   "p_vs_control": {
+    "触发_其它状态": 0.029850746268656716,
+    "状态_日历同格": 0.009950248756218905,
+    "状态格_全部票": 0.024875621890547265,
+    "全部样本": 0.03482587064676617
+   },
+   "percentile_vs_control": {
+    "触发_其它状态": 0.975,
+    "状态_日历同格": 0.995,
+    "状态格_全部票": 0.98,
+    "全部样本": 0.97
+   },
+   "p_bonferroni_8cells": 0.2786,
+   "calendar_control": {
+    "diff": 0.2239,
+    "p": 0.009950248756218905
+   },
+   "verdict": "有信号",
+   "verdict_strict": "有信号",
+   "table": {
+    "condition": {
+     "n": 109,
+     "win": {
+      "n": 109,
+      "rate": 0.5872
+     },
+     "loss": {
+      "n": 109,
+      "rate": 0.4128
+     },
+     "stopped": {
+      "n": 109,
+      "rate": 0.3394
+     },
+     "r_ge_1": {
+      "n": 109,
+      "rate": 0.4312
+     }
+    },
+    "all": {
+     "n": 1452,
+     "win": {
+      "n": 1452,
+      "rate": 0.3946
+     },
+     "loss": {
+      "n": 1452,
+      "rate": 0.6054
+     },
+     "stopped": {
+      "n": 1452,
+      "rate": 0.5558
+     },
+     "r_ge_1": {
+      "n": 1452,
+      "rate": 0.2865
+     }
+    },
+    "触发_其它状态": {
+     "n": 265,
+     "win": {
+      "n": 265,
+      "rate": 0.3962
+     },
+     "loss": {
+      "n": 265,
+      "rate": 0.6038
+     },
+     "stopped": {
+      "n": 265,
+      "rate": 0.5774
+     },
+     "r_ge_1": {
+      "n": 265,
+      "rate": 0.317
+     }
+    },
+    "状态_日历同格": {
+     "n": 256,
+     "win": {
+      "n": 256,
+      "rate": 0.3633
+     },
+     "loss": {
+      "n": 256,
+      "rate": 0.6367
+     },
+     "stopped": {
+      "n": 256,
+      "rate": 0.5742
+     },
+     "r_ge_1": {
+      "n": 256,
+      "rate": 0.2578
+     }
+    },
+    "状态格_全部票": {
+     "n": 365,
+     "win": {
+      "n": 365,
+      "rate": 0.4301
+     },
+     "loss": {
+      "n": 365,
+      "rate": 0.5699
+     },
+     "stopped": {
+      "n": 365,
+      "rate": 0.5041
+     },
+     "r_ge_1": {
+      "n": 365,
+      "rate": 0.3096
+     }
+    }
+   },
+   "mean_stats": {
+    "condition": {
+     "n": 109,
+     "mean_pct": 8.08,
+     "median_pct": 4.39,
+     "worst_pct": -8.0,
+     "best_pct": 49.62,
+     "win": 0.587,
+     "payoff": 2.72,
+     "stopped_at_a_loss": 0.339,
+     "deployed": 1.0,
+     "mean_days": 22.5
+    },
+    "状态_日历同格": {
+     "n": 256,
+     "mean_pct": 1.38,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 55.12,
+     "win": 0.363,
+     "payoff": 2.26,
+     "stopped_at_a_loss": 0.574,
+     "deployed": 1.0,
+     "mean_days": 17.9
+    },
+    "状态格_全部票": {
+     "n": 365,
+     "mean_pct": 3.38,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 55.12,
+     "win": 0.43,
+     "payoff": 2.4,
+     "stopped_at_a_loss": 0.504,
+     "deployed": 1.0,
+     "mean_days": 19.3
+    },
+    "触发_其它状态": {
+     "n": 265,
+     "mean_pct": 5.1,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 92.36,
+     "win": 0.396,
+     "payoff": 3.18,
+     "stopped_at_a_loss": 0.577,
+     "deployed": 1.0,
+     "mean_days": 16.9
+    },
+    "全部样本": {
+     "n": 1452,
+     "mean_pct": 3.78,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 120.78,
+     "win": 0.395,
+     "payoff": 2.8,
+     "stopped_at_a_loss": 0.556,
+     "deployed": 1.0,
+     "mean_days": 18.1
+    }
+   },
+   "disc_hold": {
+    "condition_disc": {
+     "n": 24,
+     "mean_pct": 7.8,
+     "median_pct": 2.86,
+     "worst_pct": -8.0,
+     "best_pct": 39.3,
+     "win": 0.542,
+     "payoff": 2.73,
+     "stopped_at_a_loss": 0.417,
+     "deployed": 1.0,
+     "mean_days": 20.4
+    },
+    "condition_hold": {
+     "n": 85,
+     "mean_pct": 8.15,
+     "median_pct": 4.63,
+     "worst_pct": -8.0,
+     "best_pct": 49.62,
+     "win": 0.6,
+     "payoff": 2.73,
+     "stopped_at_a_loss": 0.318,
+     "deployed": 1.0,
+     "mean_days": 23.1
+    },
+    "calendar_disc": {
+     "n": 50,
+     "mean_pct": -2.86,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 38.95,
+     "win": 0.2,
+     "payoff": 2.18,
+     "stopped_at_a_loss": 0.78,
+     "deployed": 1.0,
+     "mean_days": 12.6
+    },
+    "calendar_hold": {
+     "n": 206,
+     "mean_pct": 2.42,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 55.12,
+     "win": 0.403,
+     "payoff": 2.3,
+     "stopped_at_a_loss": 0.524,
+     "deployed": 1.0,
+     "mean_days": 19.2
+    }
+   }
+  },
+  {
+   "setup": "BO20|线上·二线领",
+   "trig": "BO20",
+   "side": 1,
+   "cell": "线上·二线领",
+   "five": {
+    "cond_rate": 0.3125,
+    "all_rate": 0.3946,
+    "diff": -0.0821,
+    "p": 0.8258706467661692,
+    "n": 80
+   },
+   "diff_vs_control": {
+    "触发_其它状态": -0.1773,
+    "状态_日历同格": 0.0706,
+    "状态格_全部票": 0.0493,
+    "全部样本": -0.0821
+   },
+   "p_vs_control": {
+    "触发_其它状态": 0.8557213930348259,
+    "状态_日历同格": 0.527363184079602,
+    "状态格_全部票": 0.5074626865671642,
+    "全部样本": 0.8258706467661692
+   },
+   "percentile_vs_control": {
+    "触发_其它状态": 0.145,
+    "状态_日历同格": 0.475,
+    "状态格_全部票": 0.495,
+    "全部样本": 0.175
+   },
+   "p_bonferroni_8cells": 1.0,
+   "calendar_control": {
+    "diff": 0.0706,
+    "p": 0.527363184079602
+   },
+   "verdict": "基率",
+   "verdict_strict": "基率",
+   "table": {
+    "condition": {
+     "n": 80,
+     "win": {
+      "n": 80,
+      "rate": 0.3125
+     },
+     "loss": {
+      "n": 80,
+      "rate": 0.6875
+     },
+     "stopped": {
+      "n": 80,
+      "rate": 0.675
+     },
+     "r_ge_1": {
+      "n": 80,
+      "rate": 0.175
+     }
+    },
+    "all": {
+     "n": 1452,
+     "win": {
+      "n": 1452,
+      "rate": 0.3946
+     },
+     "loss": {
+      "n": 1452,
+      "rate": 0.6054
+     },
+     "stopped": {
+      "n": 1452,
+      "rate": 0.5558
+     },
+     "r_ge_1": {
+      "n": 1452,
+      "rate": 0.2865
+     }
+    },
+    "触发_其它状态": {
+     "n": 294,
+     "win": {
+      "n": 294,
+      "rate": 0.4898
+     },
+     "loss": {
+      "n": 294,
+      "rate": 0.5102
+     },
+     "stopped": {
+      "n": 294,
+      "rate": 0.4626
+     },
+     "r_ge_1": {
+      "n": 294,
+      "rate": 0.398
+     }
+    },
+    "状态_日历同格": {
+     "n": 186,
+     "win": {
+      "n": 186,
+      "rate": 0.2419
+     },
+     "loss": {
+      "n": 186,
+      "rate": 0.7581
+     },
+     "stopped": {
+      "n": 186,
+      "rate": 0.6828
+     },
+     "r_ge_1": {
+      "n": 186,
+      "rate": 0.1452
+     }
+    },
+    "状态格_全部票": {
+     "n": 266,
+     "win": {
+      "n": 266,
+      "rate": 0.2632
+     },
+     "loss": {
+      "n": 266,
+      "rate": 0.7368
+     },
+     "stopped": {
+      "n": 266,
+      "rate": 0.6805
+     },
+     "r_ge_1": {
+      "n": 266,
+      "rate": 0.1541
+     }
+    }
+   },
+   "mean_stats": {
+    "condition": {
+     "n": 80,
+     "mean_pct": 0.43,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 51.35,
+     "win": 0.312,
+     "payoff": 2.37,
+     "stopped_at_a_loss": 0.675,
+     "deployed": 1.0,
+     "mean_days": 15.0
+    },
+    "状态_日历同格": {
+     "n": 186,
+     "mean_pct": -2.33,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 49.84,
+     "win": 0.242,
+     "payoff": 1.84,
+     "stopped_at_a_loss": 0.683,
+     "deployed": 1.0,
+     "mean_days": 16.8
+    },
+    "状态格_全部票": {
+     "n": 266,
+     "mean_pct": -1.5,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 51.35,
+     "win": 0.263,
+     "payoff": 2.05,
+     "stopped_at_a_loss": 0.68,
+     "deployed": 1.0,
+     "mean_days": 16.3
+    },
+    "触发_其它状态": {
+     "n": 294,
+     "mean_pct": 7.48,
+     "median_pct": -0.64,
+     "worst_pct": -8.0,
+     "best_pct": 92.36,
+     "win": 0.49,
+     "payoff": 3.09,
+     "stopped_at_a_loss": 0.463,
+     "deployed": 1.0,
+     "mean_days": 19.5
+    },
+    "全部样本": {
+     "n": 1452,
+     "mean_pct": 3.78,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 120.78,
+     "win": 0.395,
+     "payoff": 2.8,
+     "stopped_at_a_loss": 0.556,
+     "deployed": 1.0,
+     "mean_days": 18.1
+    }
+   },
+   "disc_hold": {
+    "condition_disc": {
+     "n": 28,
+     "mean_pct": -3.95,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 40.87,
+     "win": 0.107,
+     "payoff": 3.72,
+     "stopped_at_a_loss": 0.893,
+     "deployed": 1.0,
+     "mean_days": 9.7
+    },
+    "condition_hold": {
+     "n": 52,
+     "mean_pct": 2.79,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 51.35,
+     "win": 0.423,
+     "payoff": 2.2,
+     "stopped_at_a_loss": 0.558,
+     "deployed": 1.0,
+     "mean_days": 17.8
+    },
+    "calendar_disc": {
+     "n": 68,
+     "mean_pct": -1.58,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 49.84,
+     "win": 0.191,
+     "payoff": 3.2,
+     "stopped_at_a_loss": 0.809,
+     "deployed": 1.0,
+     "mean_days": 11.8
+    },
+    "calendar_hold": {
+     "n": 118,
+     "mean_pct": -2.77,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 24.51,
+     "win": 0.271,
+     "payoff": 1.26,
+     "stopped_at_a_loss": 0.61,
+     "deployed": 1.0,
+     "mean_days": 19.7
+    }
+   }
+  },
+  {
+   "setup": "BO20|线下·主流领",
+   "trig": "BO20",
+   "side": 1,
+   "cell": "线下·主流领",
+   "five": {
+    "cond_rate": 0.4762,
+    "all_rate": 0.3946,
+    "diff": 0.0816,
+    "p": 0.34328358208955223,
+    "n": 42
+   },
+   "diff_vs_control": {
+    "触发_其它状态": 0.0274,
+    "状态_日历同格": 0.009,
+    "状态格_全部票": 0.0078,
+    "全部样本": 0.0816
+   },
+   "p_vs_control": {
+    "触发_其它状态": 0.36318407960199006,
+    "状态_日历同格": 0.8756218905472637,
+    "状态格_全部票": 0.8706467661691543,
+    "全部样本": 0.34328358208955223
+   },
+   "percentile_vs_control": {
+    "触发_其它状态": 0.6425,
+    "状态_日历同格": 0.125,
+    "状态格_全部票": 0.13,
+    "全部样本": 0.6625
+   },
+   "p_bonferroni_8cells": 1.0,
+   "calendar_control": {
+    "diff": 0.009,
+    "p": 0.8756218905472637
+   },
+   "verdict": "基率",
+   "verdict_strict": "基率",
+   "table": {
+    "condition": {
+     "n": 42,
+     "win": {
+      "n": 42,
+      "rate": 0.4762
+     },
+     "loss": {
+      "n": 42,
+      "rate": 0.5238
+     },
+     "stopped": {
+      "n": 42,
+      "rate": 0.4286
+     },
+     "r_ge_1": {
+      "n": 42,
+      "rate": 0.3571
+     }
+    },
+    "all": {
+     "n": 1452,
+     "win": {
+      "n": 1452,
+      "rate": 0.3946
+     },
+     "loss": {
+      "n": 1452,
+      "rate": 0.6054
+     },
+     "stopped": {
+      "n": 1452,
+      "rate": 0.5558
+     },
+     "r_ge_1": {
+      "n": 1452,
+      "rate": 0.2865
+     }
+    },
+    "触发_其它状态": {
+     "n": 332,
+     "win": {
+      "n": 332,
+      "rate": 0.4488
+     },
+     "loss": {
+      "n": 332,
+      "rate": 0.5512
+     },
+     "stopped": {
+      "n": 332,
+      "rate": 0.5181
+     },
+     "r_ge_1": {
+      "n": 332,
+      "rate": 0.3494
+     }
+    },
+    "状态_日历同格": {
+     "n": 274,
+     "win": {
+      "n": 274,
+      "rate": 0.4672
+     },
+     "loss": {
+      "n": 274,
+      "rate": 0.5328
+     },
+     "stopped": {
+      "n": 274,
+      "rate": 0.4781
+     },
+     "r_ge_1": {
+      "n": 274,
+      "rate": 0.3102
+     }
+    },
+    "状态格_全部票": {
+     "n": 316,
+     "win": {
+      "n": 316,
+      "rate": 0.4684
+     },
+     "loss": {
+      "n": 316,
+      "rate": 0.5316
+     },
+     "stopped": {
+      "n": 316,
+      "rate": 0.4715
+     },
+     "r_ge_1": {
+      "n": 316,
+      "rate": 0.3165
+     }
+    }
+   },
+   "mean_stats": {
+    "condition": {
+     "n": 42,
+     "mean_pct": 5.83,
+     "median_pct": -1.15,
+     "worst_pct": -8.0,
+     "best_pct": 39.87,
+     "win": 0.476,
+     "payoff": 2.87,
+     "stopped_at_a_loss": 0.429,
+     "deployed": 1.0,
+     "mean_days": 20.1
+    },
+    "状态_日历同格": {
+     "n": 274,
+     "mean_pct": 5.04,
+     "median_pct": -3.34,
+     "worst_pct": -8.0,
+     "best_pct": 68.78,
+     "win": 0.467,
+     "payoff": 2.6,
+     "stopped_at_a_loss": 0.478,
+     "deployed": 1.0,
+     "mean_days": 19.9
+    },
+    "状态格_全部票": {
+     "n": 316,
+     "mean_pct": 5.15,
+     "median_pct": -2.4,
+     "worst_pct": -8.0,
+     "best_pct": 68.78,
+     "win": 0.468,
+     "payoff": 2.63,
+     "stopped_at_a_loss": 0.472,
+     "deployed": 1.0,
+     "mean_days": 19.9
+    },
+    "触发_其它状态": {
+     "n": 332,
+     "mean_pct": 5.99,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 92.36,
+     "win": 0.449,
+     "payoff": 2.97,
+     "stopped_at_a_loss": 0.518,
+     "deployed": 1.0,
+     "mean_days": 18.4
+    },
+    "全部样本": {
+     "n": 1452,
+     "mean_pct": 3.78,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 120.78,
+     "win": 0.395,
+     "payoff": 2.8,
+     "stopped_at_a_loss": 0.556,
+     "deployed": 1.0,
+     "mean_days": 18.1
+    }
+   },
+   "disc_hold": {
+    "condition_disc": {
+     "n": 15,
+     "mean_pct": 2.54,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 39.87,
+     "win": 0.267,
+     "payoff": 3.94,
+     "stopped_at_a_loss": 0.733,
+     "deployed": 1.0,
+     "mean_days": 13.1
+    },
+    "condition_hold": {
+     "n": 27,
+     "mean_pct": 7.66,
+     "median_pct": 4.17,
+     "worst_pct": -8.0,
+     "best_pct": 35.28,
+     "win": 0.593,
+     "payoff": 2.89,
+     "stopped_at_a_loss": 0.259,
+     "deployed": 1.0,
+     "mean_days": 24.1
+    },
+    "calendar_disc": {
+     "n": 118,
+     "mean_pct": 0.78,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 68.78,
+     "win": 0.305,
+     "payoff": 2.61,
+     "stopped_at_a_loss": 0.669,
+     "deployed": 1.0,
+     "mean_days": 15.9
+    },
+    "calendar_hold": {
+     "n": 156,
+     "mean_pct": 8.27,
+     "median_pct": 4.0,
+     "worst_pct": -8.0,
+     "best_pct": 64.26,
+     "win": 0.59,
+     "payoff": 2.7,
+     "stopped_at_a_loss": 0.333,
+     "deployed": 1.0,
+     "mean_days": 22.9
+    }
+   }
+  },
+  {
+   "setup": "BO20|线下·二线领",
+   "trig": "BO20",
+   "side": 1,
+   "cell": "线下·二线领",
+   "five": {
+    "cond_rate": 0.2188,
+    "all_rate": 0.3946,
+    "diff": -0.1758,
+    "p": 0.9253731343283582,
+    "n": 32
+   },
+   "diff_vs_control": {
+    "触发_其它状态": -0.2549,
+    "状态_日历同格": -0.0609,
+    "状态格_全部票": -0.0479,
+    "全部样本": -0.1758
+   },
+   "p_vs_control": {
+    "触发_其它状态": 0.945273631840796,
+    "状态_日历同格": 0.8706467661691543,
+    "状态格_全部票": 0.8905472636815921,
+    "全部样本": 0.9253731343283582
+   },
+   "percentile_vs_control": {
+    "触发_其它状态": 0.055,
+    "状态_日历同格": 0.13,
+    "状态格_全部票": 0.11,
+    "全部样本": 0.075
+   },
+   "p_bonferroni_8cells": 1.0,
+   "calendar_control": {
+    "diff": -0.0609,
+    "p": 0.8706467661691543
+   },
+   "verdict": "基率",
+   "verdict_strict": "基率",
+   "table": {
+    "condition": {
+     "n": 32,
+     "win": {
+      "n": 32,
+      "rate": 0.2188
+     },
+     "loss": {
+      "n": 32,
+      "rate": 0.7812
+     },
+     "stopped": {
+      "n": 32,
+      "rate": 0.75
+     },
+     "r_ge_1": {
+      "n": 32,
+      "rate": 0.1875
+     }
+    },
+    "all": {
+     "n": 1452,
+     "win": {
+      "n": 1452,
+      "rate": 0.3946
+     },
+     "loss": {
+      "n": 1452,
+      "rate": 0.6054
+     },
+     "stopped": {
+      "n": 1452,
+      "rate": 0.5558
+     },
+     "r_ge_1": {
+      "n": 1452,
+      "rate": 0.2865
+     }
+    },
+    "触发_其它状态": {
+     "n": 342,
+     "win": {
+      "n": 342,
+      "rate": 0.4737
+     },
+     "loss": {
+      "n": 342,
+      "rate": 0.5263
+     },
+     "stopped": {
+      "n": 342,
+      "rate": 0.4854
+     },
+     "r_ge_1": {
+      "n": 342,
+      "rate": 0.3655
+     }
+    },
+    "状态_日历同格": {
+     "n": 118,
+     "win": {
+      "n": 118,
+      "rate": 0.2797
+     },
+     "loss": {
+      "n": 118,
+      "rate": 0.7203
+     },
+     "stopped": {
+      "n": 118,
+      "rate": 0.678
+     },
+     "r_ge_1": {
+      "n": 118,
+      "rate": 0.1356
+     }
+    },
+    "状态格_全部票": {
+     "n": 150,
+     "win": {
+      "n": 150,
+      "rate": 0.2667
+     },
+     "loss": {
+      "n": 150,
+      "rate": 0.7333
+     },
+     "stopped": {
+      "n": 150,
+      "rate": 0.6933
+     },
+     "r_ge_1": {
+      "n": 150,
+      "rate": 0.1467
+     }
+    }
+   },
+   "mean_stats": {
+    "condition": {
+     "n": 32,
+     "mean_pct": -1.75,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 42.74,
+     "win": 0.219,
+     "payoff": 2.56,
+     "stopped_at_a_loss": 0.75,
+     "deployed": 1.0,
+     "mean_days": 15.1
+    },
+    "状态_日历同格": {
+     "n": 118,
+     "mean_pct": -1.7,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 61.1,
+     "win": 0.28,
+     "payoff": 1.78,
+     "stopped_at_a_loss": 0.678,
+     "deployed": 1.0,
+     "mean_days": 14.8
+    },
+    "状态格_全部票": {
+     "n": 150,
+     "mean_pct": -1.71,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 61.1,
+     "win": 0.267,
+     "payoff": 1.92,
+     "stopped_at_a_loss": 0.693,
+     "deployed": 1.0,
+     "mean_days": 14.9
+    },
+    "触发_其它状态": {
+     "n": 342,
+     "mean_pct": 6.69,
+     "median_pct": -2.33,
+     "worst_pct": -8.0,
+     "best_pct": 92.36,
+     "win": 0.474,
+     "payoff": 2.98,
+     "stopped_at_a_loss": 0.485,
+     "deployed": 1.0,
+     "mean_days": 18.9
+    },
+    "全部样本": {
+     "n": 1452,
+     "mean_pct": 3.78,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 120.78,
+     "win": 0.395,
+     "payoff": 2.8,
+     "stopped_at_a_loss": 0.556,
+     "deployed": 1.0,
+     "mean_days": 18.1
+    }
+   },
+   "disc_hold": {
+    "condition_disc": {
+     "n": 14,
+     "mean_pct": -4.15,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 42.74,
+     "win": 0.071,
+     "payoff": 5.51,
+     "stopped_at_a_loss": 0.857,
+     "deployed": 1.0,
+     "mean_days": 12.9
+    },
+    "condition_hold": {
+     "n": 18,
+     "mean_pct": 0.12,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 34.74,
+     "win": 0.333,
+     "payoff": 2.05,
+     "stopped_at_a_loss": 0.667,
+     "deployed": 1.0,
+     "mean_days": 16.8
+    },
+    "calendar_disc": {
+     "n": 44,
+     "mean_pct": -2.42,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 61.1,
+     "win": 0.159,
+     "payoff": 3.3,
+     "stopped_at_a_loss": 0.795,
+     "deployed": 1.0,
+     "mean_days": 13.0
+    },
+    "calendar_hold": {
+     "n": 74,
+     "mean_pct": -1.28,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 35.02,
+     "win": 0.351,
+     "payoff": 1.37,
+     "stopped_at_a_loss": 0.608,
+     "deployed": 1.0,
+     "mean_days": 15.9
+    }
+   }
+  },
+  {
+   "setup": "BD20|线上·主流领",
+   "trig": "BD20",
+   "side": -1,
+   "cell": "线上·主流领",
+   "five": {
+    "cond_rate": 0.3043,
+    "all_rate": 0.3288,
+    "diff": -0.0245,
+    "p": 0.8606965174129353,
+    "n": 23
+   },
+   "diff_vs_control": {
+    "触发_其它状态": -0.0904,
+    "状态_日历同格": -0.1254,
+    "状态格_全部票": -0.1151,
+    "全部样本": -0.0245
+   },
+   "p_vs_control": {
+    "触发_其它状态": 0.8159203980099502,
+    "状态_日历同格": 0.9950248756218906,
+    "状态格_全部票": 0.9900497512437811,
+    "全部样本": 0.8606965174129353
+   },
+   "percentile_vs_control": {
+    "触发_其它状态": 0.185,
+    "状态_日历同格": 0.005,
+    "状态格_全部票": 0.01,
+    "全部样本": 0.1425
+   },
+   "p_bonferroni_8cells": 1.0,
+   "calendar_control": {
+    "diff": -0.1254,
+    "p": 0.9950248756218906
+   },
+   "verdict": "基率",
+   "verdict_strict": "基率",
+   "table": {
+    "condition": {
+     "n": 23,
+     "win": {
+      "n": 23,
+      "rate": 0.3043
+     },
+     "loss": {
+      "n": 23,
+      "rate": 0.6957
+     },
+     "stopped": {
+      "n": 23,
+      "rate": 0.6087
+     },
+     "r_ge_1": {
+      "n": 23,
+      "rate": 0.2174
+     }
+    },
+    "all": {
+     "n": 1253,
+     "win": {
+      "n": 1253,
+      "rate": 0.3288
+     },
+     "loss": {
+      "n": 1253,
+      "rate": 0.6712
+     },
+     "stopped": {
+      "n": 1253,
+      "rate": 0.6289
+     },
+     "r_ge_1": {
+      "n": 1253,
+      "rate": 0.2219
+     }
+    },
+    "触发_其它状态": {
+     "n": 152,
+     "win": {
+      "n": 152,
+      "rate": 0.3947
+     },
+     "loss": {
+      "n": 152,
+      "rate": 0.6053
+     },
+     "stopped": {
+      "n": 152,
+      "rate": 0.6053
+     },
+     "r_ge_1": {
+      "n": 152,
+      "rate": 0.2829
+     }
+    },
+    "状态_日历同格": {
+     "n": 256,
+     "win": {
+      "n": 256,
+      "rate": 0.4297
+     },
+     "loss": {
+      "n": 256,
+      "rate": 0.5703
+     },
+     "stopped": {
+      "n": 256,
+      "rate": 0.543
+     },
+     "r_ge_1": {
+      "n": 256,
+      "rate": 0.2969
+     }
+    },
+    "状态格_全部票": {
+     "n": 279,
+     "win": {
+      "n": 279,
+      "rate": 0.4194
+     },
+     "loss": {
+      "n": 279,
+      "rate": 0.5806
+     },
+     "stopped": {
+      "n": 279,
+      "rate": 0.5484
+     },
+     "r_ge_1": {
+      "n": 279,
+      "rate": 0.2903
+     }
+    }
+   },
+   "mean_stats": {
+    "condition": {
+     "n": 23,
+     "mean_pct": -0.5,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 33.22,
+     "win": 0.304,
+     "payoff": 2.06,
+     "stopped_at_a_loss": 0.609,
+     "deployed": 1.0,
+     "mean_days": 15.9
+    },
+    "状态_日历同格": {
+     "n": 256,
+     "mean_pct": 1.03,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 39.1,
+     "win": 0.43,
+     "payoff": 1.64,
+     "stopped_at_a_loss": 0.543,
+     "deployed": 1.0,
+     "mean_days": 18.4
+    },
+    "状态格_全部票": {
+     "n": 279,
+     "mean_pct": 0.91,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 39.1,
+     "win": 0.419,
+     "payoff": 1.67,
+     "stopped_at_a_loss": 0.548,
+     "deployed": 1.0,
+     "mean_days": 18.2
+    },
+    "触发_其它状态": {
+     "n": 152,
+     "mean_pct": 0.81,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 33.47,
+     "win": 0.395,
+     "payoff": 1.79,
+     "stopped_at_a_loss": 0.605,
+     "deployed": 1.0,
+     "mean_days": 15.3
+    },
+    "全部样本": {
+     "n": 1253,
+     "mean_pct": -0.58,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 50.0,
+     "win": 0.329,
+     "payoff": 1.81,
+     "stopped_at_a_loss": 0.629,
+     "deployed": 1.0,
+     "mean_days": 16.3
+    }
+   },
+   "disc_hold": {
+    "condition_disc": {
+     "n": 4,
+     "mean_pct": 5.25,
+     "median_pct": -2.1,
+     "worst_pct": -8.0,
+     "best_pct": 33.22,
+     "win": 0.5,
+     "payoff": 2.31,
+     "stopped_at_a_loss": 0.5,
+     "deployed": 1.0,
+     "mean_days": 15.0
+    },
+    "condition_hold": {
+     "n": 19,
+     "mean_pct": -1.71,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 25.11,
+     "win": 0.263,
+     "payoff": 1.91,
+     "stopped_at_a_loss": 0.632,
+     "deployed": 1.0,
+     "mean_days": 16.1
+    },
+    "calendar_disc": {
+     "n": 50,
+     "mean_pct": 4.52,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 39.1,
+     "win": 0.48,
+     "payoff": 2.26,
+     "stopped_at_a_loss": 0.52,
+     "deployed": 1.0,
+     "mean_days": 17.8
+    },
+    "calendar_hold": {
+     "n": 206,
+     "mean_pct": 0.19,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 31.1,
+     "win": 0.417,
+     "payoff": 1.45,
+     "stopped_at_a_loss": 0.549,
+     "deployed": 1.0,
+     "mean_days": 18.5
+    }
+   }
+  },
+  {
+   "setup": "BD20|线上·二线领",
+   "trig": "BD20",
+   "side": -1,
+   "cell": "线上·二线领",
+   "five": {
+    "cond_rate": 0.2,
+    "all_rate": 0.3288,
+    "diff": -0.1288,
+    "p": 0.9552238805970149,
+    "n": 15
+   },
+   "diff_vs_control": {
+    "触发_其它状态": -0.2,
+    "状态_日历同格": -0.1172,
+    "状态格_全部票": -0.1085,
+    "全部样本": -0.1288
+   },
+   "p_vs_control": {
+    "触发_其它状态": 0.9303482587064676,
+    "状态_日历同格": 0.945273631840796,
+    "状态格_全部票": 0.9104477611940298,
+    "全部样本": 0.9552238805970149
+   },
+   "percentile_vs_control": {
+    "触发_其它状态": 0.07,
+    "状态_日历同格": 0.055,
+    "状态格_全部票": 0.09,
+    "全部样本": 0.0475
+   },
+   "p_bonferroni_8cells": 1.0,
+   "calendar_control": {
+    "diff": -0.1172,
+    "p": 0.945273631840796
+   },
+   "verdict": "基率",
+   "verdict_strict": "基率",
+   "table": {
+    "condition": {
+     "n": 15,
+     "win": {
+      "n": 15,
+      "rate": 0.2
+     },
+     "loss": {
+      "n": 15,
+      "rate": 0.8
+     },
+     "stopped": {
+      "n": 15,
+      "rate": 0.8
+     },
+     "r_ge_1": {
+      "n": 15,
+      "rate": 0.1333
+     }
+    },
+    "all": {
+     "n": 1253,
+     "win": {
+      "n": 1253,
+      "rate": 0.3288
+     },
+     "loss": {
+      "n": 1253,
+      "rate": 0.6712
+     },
+     "stopped": {
+      "n": 1253,
+      "rate": 0.6289
+     },
+     "r_ge_1": {
+      "n": 1253,
+      "rate": 0.2219
+     }
+    },
+    "触发_其它状态": {
+     "n": 160,
+     "win": {
+      "n": 160,
+      "rate": 0.4
+     },
+     "loss": {
+      "n": 160,
+      "rate": 0.6
+     },
+     "stopped": {
+      "n": 160,
+      "rate": 0.5875
+     },
+     "r_ge_1": {
+      "n": 160,
+      "rate": 0.2875
+     }
+    },
+    "状态_日历同格": {
+     "n": 186,
+     "win": {
+      "n": 186,
+      "rate": 0.3172
+     },
+     "loss": {
+      "n": 186,
+      "rate": 0.6828
+     },
+     "stopped": {
+      "n": 186,
+      "rate": 0.6398
+     },
+     "r_ge_1": {
+      "n": 186,
+      "rate": 0.2097
+     }
+    },
+    "状态格_全部票": {
+     "n": 201,
+     "win": {
+      "n": 201,
+      "rate": 0.3085
+     },
+     "loss": {
+      "n": 201,
+      "rate": 0.6915
+     },
+     "stopped": {
+      "n": 201,
+      "rate": 0.6517
+     },
+     "r_ge_1": {
+      "n": 201,
+      "rate": 0.204
+     }
+    }
+   },
+   "mean_stats": {
+    "condition": {
+     "n": 15,
+     "mean_pct": -3.91,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 18.91,
+     "win": 0.2,
+     "payoff": 1.56,
+     "stopped_at_a_loss": 0.8,
+     "deployed": 1.0,
+     "mean_days": 12.8
+    },
+    "状态_日历同格": {
+     "n": 186,
+     "mean_pct": -1.38,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 38.33,
+     "win": 0.317,
+     "payoff": 1.59,
+     "stopped_at_a_loss": 0.64,
+     "deployed": 1.0,
+     "mean_days": 16.9
+    },
+    "状态格_全部票": {
+     "n": 201,
+     "mean_pct": -1.57,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 38.33,
+     "win": 0.308,
+     "payoff": 1.58,
+     "stopped_at_a_loss": 0.652,
+     "deployed": 1.0,
+     "mean_days": 16.6
+    },
+    "触发_其它状态": {
+     "n": 160,
+     "mean_pct": 1.06,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 33.47,
+     "win": 0.4,
+     "payoff": 1.84,
+     "stopped_at_a_loss": 0.588,
+     "deployed": 1.0,
+     "mean_days": 15.6
+    },
+    "全部样本": {
+     "n": 1253,
+     "mean_pct": -0.58,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 50.0,
+     "win": 0.329,
+     "payoff": 1.81,
+     "stopped_at_a_loss": 0.629,
+     "deployed": 1.0,
+     "mean_days": 16.3
+    }
+   },
+   "disc_hold": {
+    "condition_disc": {
+     "n": 5,
+     "mean_pct": 0.54,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 18.91,
+     "win": 0.4,
+     "payoff": 1.67,
+     "stopped_at_a_loss": 0.6,
+     "deployed": 1.0,
+     "mean_days": 14.8
+    },
+    "condition_hold": {
+     "n": 10,
+     "mean_pct": -6.13,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 10.7,
+     "win": 0.1,
+     "payoff": 1.34,
+     "stopped_at_a_loss": 0.9,
+     "deployed": 1.0,
+     "mean_days": 11.8
+    },
+    "calendar_disc": {
+     "n": 68,
+     "mean_pct": -1.87,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 38.33,
+     "win": 0.191,
+     "payoff": 2.99,
+     "stopped_at_a_loss": 0.794,
+     "deployed": 1.0,
+     "mean_days": 11.6
+    },
+    "calendar_hold": {
+     "n": 118,
+     "mean_pct": -1.1,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 25.37,
+     "win": 0.39,
+     "payoff": 1.19,
+     "stopped_at_a_loss": 0.551,
+     "deployed": 1.0,
+     "mean_days": 20.0
+    }
+   }
+  },
+  {
+   "setup": "BD20|线下·主流领",
+   "trig": "BD20",
+   "side": -1,
+   "cell": "线下·主流领",
+   "five": {
+    "cond_rate": 0.3676,
+    "all_rate": 0.3288,
+    "diff": 0.0388,
+    "p": 0.5074626865671642,
+    "n": 68
+   },
+   "diff_vs_control": {
+    "触发_其它状态": -0.0249,
+    "状态_日历同格": 0.1121,
+    "状态格_全部票": 0.0898,
+    "全部样本": 0.0388
+   },
+   "p_vs_control": {
+    "触发_其它状态": 0.5223880597014925,
+    "状态_日历同格": 0.10945273631840796,
+    "状态格_全部票": 0.19900497512437812,
+    "全部样本": 0.5074626865671642
+   },
+   "percentile_vs_control": {
+    "触发_其它状态": 0.48,
+    "状态_日历同格": 0.895,
+    "状态格_全部票": 0.805,
+    "全部样本": 0.495
+   },
+   "p_bonferroni_8cells": 1.0,
+   "calendar_control": {
+    "diff": 0.1121,
+    "p": 0.10945273631840796
+   },
+   "verdict": "基率",
+   "verdict_strict": "基率",
+   "table": {
+    "condition": {
+     "n": 68,
+     "win": {
+      "n": 68,
+      "rate": 0.3676
+     },
+     "loss": {
+      "n": 68,
+      "rate": 0.6324
+     },
+     "stopped": {
+      "n": 68,
+      "rate": 0.6324
+     },
+     "r_ge_1": {
+      "n": 68,
+      "rate": 0.2647
+     }
+    },
+    "all": {
+     "n": 1253,
+     "win": {
+      "n": 1253,
+      "rate": 0.3288
+     },
+     "loss": {
+      "n": 1253,
+      "rate": 0.6712
+     },
+     "stopped": {
+      "n": 1253,
+      "rate": 0.6289
+     },
+     "r_ge_1": {
+      "n": 1253,
+      "rate": 0.2219
+     }
+    },
+    "触发_其它状态": {
+     "n": 107,
+     "win": {
+      "n": 107,
+      "rate": 0.3925
+     },
+     "loss": {
+      "n": 107,
+      "rate": 0.6075
+     },
+     "stopped": {
+      "n": 107,
+      "rate": 0.5888
+     },
+     "r_ge_1": {
+      "n": 107,
+      "rate": 0.2804
+     }
+    },
+    "状态_日历同格": {
+     "n": 274,
+     "win": {
+      "n": 274,
+      "rate": 0.2555
+     },
+     "loss": {
+      "n": 274,
+      "rate": 0.7445
+     },
+     "stopped": {
+      "n": 274,
+      "rate": 0.6715
+     },
+     "r_ge_1": {
+      "n": 274,
+      "rate": 0.1533
+     }
+    },
+    "状态格_全部票": {
+     "n": 342,
+     "win": {
+      "n": 342,
+      "rate": 0.2778
+     },
+     "loss": {
+      "n": 342,
+      "rate": 0.7222
+     },
+     "stopped": {
+      "n": 342,
+      "rate": 0.6637
+     },
+     "r_ge_1": {
+      "n": 342,
+      "rate": 0.1754
+     }
+    }
+   },
+   "mean_stats": {
+    "condition": {
+     "n": 68,
+     "mean_pct": 0.43,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 26.81,
+     "win": 0.368,
+     "payoff": 1.87,
+     "stopped_at_a_loss": 0.632,
+     "deployed": 1.0,
+     "mean_days": 14.1
+    },
+    "状态_日历同格": {
+     "n": 274,
+     "mean_pct": -1.97,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 43.34,
+     "win": 0.255,
+     "payoff": 1.88,
+     "stopped_at_a_loss": 0.672,
+     "deployed": 1.0,
+     "mean_days": 16.6
+    },
+    "状态格_全部票": {
+     "n": 342,
+     "mean_pct": -1.5,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 43.34,
+     "win": 0.278,
+     "payoff": 1.89,
+     "stopped_at_a_loss": 0.664,
+     "deployed": 1.0,
+     "mean_days": 16.1
+    },
+    "触发_其它状态": {
+     "n": 107,
+     "mean_pct": 0.77,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 33.47,
+     "win": 0.393,
+     "payoff": 1.8,
+     "stopped_at_a_loss": 0.589,
+     "deployed": 1.0,
+     "mean_days": 16.2
+    },
+    "全部样本": {
+     "n": 1253,
+     "mean_pct": -0.58,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 50.0,
+     "win": 0.329,
+     "payoff": 1.81,
+     "stopped_at_a_loss": 0.629,
+     "deployed": 1.0,
+     "mean_days": 16.3
+    }
+   },
+   "disc_hold": {
+    "condition_disc": {
+     "n": 34,
+     "mean_pct": 2.58,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 26.81,
+     "win": 0.412,
+     "payoff": 2.21,
+     "stopped_at_a_loss": 0.588,
+     "deployed": 1.0,
+     "mean_days": 13.8
+    },
+    "condition_hold": {
+     "n": 34,
+     "mean_pct": -1.72,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 20.89,
+     "win": 0.324,
+     "payoff": 1.43,
+     "stopped_at_a_loss": 0.676,
+     "deployed": 1.0,
+     "mean_days": 14.3
+    },
+    "calendar_disc": {
+     "n": 118,
+     "mean_pct": 0.63,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 43.34,
+     "win": 0.28,
+     "payoff": 2.88,
+     "stopped_at_a_loss": 0.661,
+     "deployed": 1.0,
+     "mean_days": 16.1
+    },
+    "calendar_hold": {
+     "n": 156,
+     "mean_pct": -3.94,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 23.2,
+     "win": 0.237,
+     "payoff": 0.96,
+     "stopped_at_a_loss": 0.679,
+     "deployed": 1.0,
+     "mean_days": 17.0
+    }
+   }
+  },
+  {
+   "setup": "BD20|线下·二线领",
+   "trig": "BD20",
+   "side": -1,
+   "cell": "线下·二线领",
+   "five": {
+    "cond_rate": 0.5122,
+    "all_rate": 0.3288,
+    "diff": 0.1834,
+    "p": 0.11442786069651742,
+    "n": 41
+   },
+   "diff_vs_control": {
+    "触发_其它状态": 0.1689,
+    "状态_日历同格": 0.0969,
+    "状态格_全部票": 0.0719,
+    "全部样本": 0.1834
+   },
+   "p_vs_control": {
+    "触发_其它状态": 0.11940298507462686,
+    "状态_日历同格": 0.24378109452736318,
+    "状态格_全部票": 0.21890547263681592,
+    "全部样本": 0.11442786069651742
+   },
+   "percentile_vs_control": {
+    "触发_其它状态": 0.885,
+    "状态_日历同格": 0.76,
+    "状态格_全部票": 0.785,
+    "全部样本": 0.89
+   },
+   "p_bonferroni_8cells": 0.9154,
+   "calendar_control": {
+    "diff": 0.0969,
+    "p": 0.24378109452736318
+   },
+   "verdict": "基率",
+   "verdict_strict": "基率",
+   "table": {
+    "condition": {
+     "n": 41,
+     "win": {
+      "n": 41,
+      "rate": 0.5122
+     },
+     "loss": {
+      "n": 41,
+      "rate": 0.4878
+     },
+     "stopped": {
+      "n": 41,
+      "rate": 0.4878
+     },
+     "r_ge_1": {
+      "n": 41,
+      "rate": 0.3415
+     }
+    },
+    "all": {
+     "n": 1253,
+     "win": {
+      "n": 1253,
+      "rate": 0.3288
+     },
+     "loss": {
+      "n": 1253,
+      "rate": 0.6712
+     },
+     "stopped": {
+      "n": 1253,
+      "rate": 0.6289
+     },
+     "r_ge_1": {
+      "n": 1253,
+      "rate": 0.2219
+     }
+    },
+    "触发_其它状态": {
+     "n": 134,
+     "win": {
+      "n": 134,
+      "rate": 0.3433
+     },
+     "loss": {
+      "n": 134,
+      "rate": 0.6567
+     },
+     "stopped": {
+      "n": 134,
+      "rate": 0.6418
+     },
+     "r_ge_1": {
+      "n": 134,
+      "rate": 0.2537
+     }
+    },
+    "状态_日历同格": {
+     "n": 118,
+     "win": {
+      "n": 118,
+      "rate": 0.4153
+     },
+     "loss": {
+      "n": 118,
+      "rate": 0.5847
+     },
+     "stopped": {
+      "n": 118,
+      "rate": 0.5169
+     },
+     "r_ge_1": {
+      "n": 118,
+      "rate": 0.2797
+     }
+    },
+    "状态格_全部票": {
+     "n": 159,
+     "win": {
+      "n": 159,
+      "rate": 0.4403
+     },
+     "loss": {
+      "n": 159,
+      "rate": 0.5597
+     },
+     "stopped": {
+      "n": 159,
+      "rate": 0.5094
+     },
+     "r_ge_1": {
+      "n": 159,
+      "rate": 0.2956
+     }
+    }
+   },
+   "mean_stats": {
+    "condition": {
+     "n": 41,
+     "mean_pct": 3.23,
+     "median_pct": 0.44,
+     "worst_pct": -8.0,
+     "best_pct": 33.47,
+     "win": 0.512,
+     "payoff": 1.74,
+     "stopped_at_a_loss": 0.488,
+     "deployed": 1.0,
+     "mean_days": 18.5
+    },
+    "状态_日历同格": {
+     "n": 118,
+     "mean_pct": 1.93,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 38.27,
+     "win": 0.415,
+     "payoff": 2.04,
+     "stopped_at_a_loss": 0.517,
+     "deployed": 1.0,
+     "mean_days": 18.7
+    },
+    "状态格_全部票": {
+     "n": 159,
+     "mean_pct": 2.27,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 38.27,
+     "win": 0.44,
+     "payoff": 1.95,
+     "stopped_at_a_loss": 0.509,
+     "deployed": 1.0,
+     "mean_days": 18.7
+    },
+    "触发_其它状态": {
+     "n": 134,
+     "mean_pct": -0.15,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 33.22,
+     "win": 0.343,
+     "payoff": 1.86,
+     "stopped_at_a_loss": 0.642,
+     "deployed": 1.0,
+     "mean_days": 14.4
+    },
+    "全部样本": {
+     "n": 1253,
+     "mean_pct": -0.58,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 50.0,
+     "win": 0.329,
+     "payoff": 1.81,
+     "stopped_at_a_loss": 0.629,
+     "deployed": 1.0,
+     "mean_days": 16.3
+    }
+   },
+   "disc_hold": {
+    "condition_disc": {
+     "n": 16,
+     "mean_pct": -1.98,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 23.85,
+     "win": 0.312,
+     "payoff": 1.41,
+     "stopped_at_a_loss": 0.688,
+     "deployed": 1.0,
+     "mean_days": 14.8
+    },
+    "condition_hold": {
+     "n": 25,
+     "mean_pct": 6.57,
+     "median_pct": 4.72,
+     "worst_pct": -8.0,
+     "best_pct": 33.47,
+     "win": 0.64,
+     "payoff": 1.85,
+     "stopped_at_a_loss": 0.36,
+     "deployed": 1.0,
+     "mean_days": 20.9
+    },
+    "calendar_disc": {
+     "n": 44,
+     "mean_pct": 0.39,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 29.88,
+     "win": 0.409,
+     "payoff": 1.57,
+     "stopped_at_a_loss": 0.545,
+     "deployed": 1.0,
+     "mean_days": 18.2
+    },
+    "calendar_hold": {
+     "n": 74,
+     "mean_pct": 2.85,
+     "median_pct": -6.2,
+     "worst_pct": -8.0,
+     "best_pct": 38.27,
+     "win": 0.419,
+     "payoff": 2.32,
+     "stopped_at_a_loss": 0.5,
+     "deployed": 1.0,
+     "mean_days": 19.0
+    }
+   }
+  }
+ ],
+ "sensitivity_state_prev_day": [
+  {
+   "setup": "BO20|线上·主流领",
+   "cond_rate": 0.5288,
+   "calendar_rate": 0.3417,
+   "n_cond": 104,
+   "n_calendar": 240,
+   "diff": 0.1871
+  },
+  {
+   "setup": "BO20|线上·二线领",
+   "cond_rate": 0.3151,
+   "calendar_rate": 0.2602,
+   "n_cond": 73,
+   "n_calendar": 196,
+   "diff": 0.0549
+  },
+  {
+   "setup": "BO20|线下·主流领",
+   "cond_rate": 0.5614,
+   "calendar_rate": 0.464,
+   "n_cond": 57,
+   "n_calendar": 278,
+   "diff": 0.0974
+  },
+  {
+   "setup": "BO20|线下·二线领",
+   "cond_rate": 0.2069,
+   "calendar_rate": 0.3083,
+   "n_cond": 29,
+   "n_calendar": 120,
+   "diff": -0.1014
+  },
+  {
+   "setup": "BD20|线上·主流领",
+   "cond_rate": 0.3636,
+   "calendar_rate": 0.4375,
+   "n_cond": 33,
+   "n_calendar": 240,
+   "diff": -0.0739
+  },
+  {
+   "setup": "BD20|线上·二线领",
+   "cond_rate": 0.2381,
+   "calendar_rate": 0.3163,
+   "n_cond": 21,
+   "n_calendar": 196,
+   "diff": -0.0782
+  },
+  {
+   "setup": "BD20|线下·主流领",
+   "cond_rate": 0.3519,
+   "calendar_rate": 0.2734,
+   "n_cond": 54,
+   "n_calendar": 278,
+   "diff": 0.0785
+  },
+  {
+   "setup": "BD20|线下·二线领",
+   "cond_rate": 0.5128,
+   "calendar_rate": 0.375,
+   "n_cond": 39,
+   "n_calendar": 120,
+   "diff": 0.1378
+  }
+ ],
+ "degeneracy_check": [
+  {
+   "setup": "BO20|线上·主流领",
+   "crowd": null,
+   "n": 109,
+   "parent_n": 109,
+   "kept_fraction": 1.0,
+   "stats": {
+    "n": 109,
+    "mean_pct": 8.08,
+    "median_pct": 4.39,
+    "worst_pct": -8.0,
+    "best_pct": 49.62,
+    "win": 0.587,
+    "payoff": 2.72,
+    "stopped_at_a_loss": 0.339,
+    "deployed": 1.0,
+    "mean_days": 22.5
+   },
+   "segments": {
+    "disc": {
+     "n": 24,
+     "stats": {
+      "n": 24,
+      "mean_pct": 7.8,
+      "median_pct": 2.86,
+      "worst_pct": -8.0,
+      "best_pct": 39.3,
+      "win": 0.542,
+      "payoff": 2.73,
+      "stopped_at_a_loss": 0.417,
+      "deployed": 1.0,
+      "mean_days": 20.4
+     },
+     "flags": []
+    },
+    "hold": {
+     "n": 85,
+     "stats": {
+      "n": 85,
+      "mean_pct": 8.15,
+      "median_pct": 4.63,
+      "worst_pct": -8.0,
+      "best_pct": 49.62,
+      "win": 0.6,
+      "payoff": 2.73,
+      "stopped_at_a_loss": 0.318,
+      "deployed": 1.0,
+      "mean_days": 23.1
+     },
+     "flags": []
+    }
+   },
+   "t408_row": {
+    "full": {
+     "n": 109,
+     "mean_pct": 8.08,
+     "median_pct": 4.39,
+     "worst_pct": -8.0,
+     "best_pct": 49.62,
+     "win": 0.587,
+     "payoff": 2.72,
+     "stopped_at_a_loss": 0.339,
+     "deployed": 1.0,
+     "mean_days": 22.5
+    },
+    "disc": {
+     "n": 24,
+     "mean_pct": 7.8,
+     "median_pct": 2.86,
+     "worst_pct": -8.0,
+     "best_pct": 39.3,
+     "win": 0.542,
+     "payoff": 2.73,
+     "stopped_at_a_loss": 0.417,
+     "deployed": 1.0,
+     "mean_days": 20.4
+    },
+    "hold": {
+     "n": 85,
+     "mean_pct": 8.15,
+     "median_pct": 4.63,
+     "worst_pct": -8.0,
+     "best_pct": 49.62,
+     "win": 0.6,
+     "payoff": 2.73,
+     "stopped_at_a_loss": 0.318,
+     "deployed": 1.0,
+     "mean_days": 23.1
+    }
+   },
+   "flags": [],
+   "degenerate": false
+  },
+  {
+   "setup": "BO20|线上·主流领",
+   "crowd": "pos:btc_crowd_ln:lo",
+   "n": 94,
+   "parent_n": 109,
+   "kept_fraction": 0.862,
+   "stats": {
+    "n": 94,
+    "mean_pct": 8.19,
+    "median_pct": 4.92,
+    "worst_pct": -8.0,
+    "best_pct": 49.62,
+    "win": 0.606,
+    "payoff": 2.7,
+    "stopped_at_a_loss": 0.309,
+    "deployed": 1.0,
+    "mean_days": 23.2
+   },
+   "segments": {
+    "disc": {
+     "n": 9,
+     "stats": {
+      "n": 9,
+      "mean_pct": 8.58,
+      "median_pct": 10.99,
+      "worst_pct": -8.0,
+      "best_pct": 23.07,
+      "win": 0.667,
+      "payoff": 2.44,
+      "stopped_at_a_loss": 0.222,
+      "deployed": 1.0,
+      "mean_days": 23.7
+     },
+     "flags": [
+      "disc 段票数极少(n=9 < 20)"
+     ]
+    },
+    "hold": {
+     "n": 85,
+     "stats": {
+      "n": 85,
+      "mean_pct": 8.15,
+      "median_pct": 4.63,
+      "worst_pct": -8.0,
+      "best_pct": 49.62,
+      "win": 0.6,
+      "payoff": 2.73,
+      "stopped_at_a_loss": 0.318,
+      "deployed": 1.0,
+      "mean_days": 23.1
+     },
+     "flags": []
+    }
+   },
+   "t408_row": {
+    "full": {
+     "n": 94,
+     "mean_pct": 8.19,
+     "median_pct": 4.92,
+     "worst_pct": -8.0,
+     "best_pct": 49.62,
+     "win": 0.606,
+     "payoff": 2.7,
+     "stopped_at_a_loss": 0.309,
+     "deployed": 1.0,
+     "mean_days": 23.2
+    },
+    "disc": {
+     "n": 9,
+     "mean_pct": 8.58,
+     "median_pct": 10.99,
+     "worst_pct": -8.0,
+     "best_pct": 23.07,
+     "win": 0.667,
+     "payoff": 2.44,
+     "stopped_at_a_loss": 0.222,
+     "deployed": 1.0,
+     "mean_days": 23.7
+    },
+    "hold": {
+     "n": 85,
+     "mean_pct": 8.15,
+     "median_pct": 4.63,
+     "worst_pct": -8.0,
+     "best_pct": 49.62,
+     "win": 0.6,
+     "payoff": 2.73,
+     "stopped_at_a_loss": 0.318,
+     "deployed": 1.0,
+     "mean_days": 23.1
+    }
+   },
+   "flags": [
+    "disc 段票数极少(n=9 < 20)",
+    "与另一行逐位同数(同一批票):BO20|线上·主流领|pos:btc_smart_minus_crowd:hi"
+   ],
+   "degenerate": true
+  },
+  {
+   "setup": "BO20|线上·主流领",
+   "crowd": "pos:btc_smart_minus_crowd:hi",
+   "n": 94,
+   "parent_n": 109,
+   "kept_fraction": 0.862,
+   "stats": {
+    "n": 94,
+    "mean_pct": 8.19,
+    "median_pct": 4.92,
+    "worst_pct": -8.0,
+    "best_pct": 49.62,
+    "win": 0.606,
+    "payoff": 2.7,
+    "stopped_at_a_loss": 0.309,
+    "deployed": 1.0,
+    "mean_days": 23.2
+   },
+   "segments": {
+    "disc": {
+     "n": 9,
+     "stats": {
+      "n": 9,
+      "mean_pct": 8.58,
+      "median_pct": 10.99,
+      "worst_pct": -8.0,
+      "best_pct": 23.07,
+      "win": 0.667,
+      "payoff": 2.44,
+      "stopped_at_a_loss": 0.222,
+      "deployed": 1.0,
+      "mean_days": 23.7
+     },
+     "flags": [
+      "disc 段票数极少(n=9 < 20)"
+     ]
+    },
+    "hold": {
+     "n": 85,
+     "stats": {
+      "n": 85,
+      "mean_pct": 8.15,
+      "median_pct": 4.63,
+      "worst_pct": -8.0,
+      "best_pct": 49.62,
+      "win": 0.6,
+      "payoff": 2.73,
+      "stopped_at_a_loss": 0.318,
+      "deployed": 1.0,
+      "mean_days": 23.1
+     },
+     "flags": []
+    }
+   },
+   "t408_row": {
+    "full": {
+     "n": 94,
+     "mean_pct": 8.19,
+     "median_pct": 4.92,
+     "worst_pct": -8.0,
+     "best_pct": 49.62,
+     "win": 0.606,
+     "payoff": 2.7,
+     "stopped_at_a_loss": 0.309,
+     "deployed": 1.0,
+     "mean_days": 23.2
+    },
+    "disc": {
+     "n": 9,
+     "mean_pct": 8.58,
+     "median_pct": 10.99,
+     "worst_pct": -8.0,
+     "best_pct": 23.07,
+     "win": 0.667,
+     "payoff": 2.44,
+     "stopped_at_a_loss": 0.222,
+     "deployed": 1.0,
+     "mean_days": 23.7
+    },
+    "hold": {
+     "n": 85,
+     "mean_pct": 8.15,
+     "median_pct": 4.63,
+     "worst_pct": -8.0,
+     "best_pct": 49.62,
+     "win": 0.6,
+     "payoff": 2.73,
+     "stopped_at_a_loss": 0.318,
+     "deployed": 1.0,
+     "mean_days": 23.1
+    }
+   },
+   "flags": [
+    "disc 段票数极少(n=9 < 20)",
+    "与另一行逐位同数(同一批票):BO20|线上·主流领|pos:btc_crowd_ln:lo"
+   ],
+   "degenerate": true
+  },
+  {
+   "setup": "BO20|线下·主流领",
+   "crowd": "funding_7d_ann_binance:lo",
+   "n": 21,
+   "parent_n": 42,
+   "kept_fraction": 0.5,
+   "stats": {
+    "n": 21,
+    "mean_pct": 12.76,
+    "median_pct": 14.74,
+    "worst_pct": -8.0,
+    "best_pct": 39.87,
+    "win": 0.619,
+    "payoff": 3.19,
+    "stopped_at_a_loss": 0.381,
+    "deployed": 1.0,
+    "mean_days": 20.9
+   },
+   "segments": {
+    "disc": {
+     "n": 12,
+     "stats": {
+      "n": 12,
+      "mean_pct": 5.17,
+      "median_pct": -8.0,
+      "worst_pct": -8.0,
+      "best_pct": 39.87,
+      "win": 0.333,
+      "payoff": 3.94,
+      "stopped_at_a_loss": 0.667,
+      "deployed": 1.0,
+      "mean_days": 14.8
+     },
+     "flags": [
+      "disc 段票数极少(n=12 < 20)"
+     ]
+    },
+    "hold": {
+     "n": 9,
+     "stats": {
+      "n": 9,
+      "mean_pct": 22.87,
+      "median_pct": 25.12,
+      "worst_pct": 6.86,
+      "best_pct": 35.28,
+      "win": 1.0,
+      "payoff": 99.0,
+      "stopped_at_a_loss": 0.0,
+      "deployed": 1.0,
+      "mean_days": 29.0
+     },
+     "flags": [
+      "hold 段票数极少(n=9 < 20)",
+      "hold 段盈亏比异常大(pf=99.0)"
+     ]
+    }
+   },
+   "t408_row": {
+    "full": {
+     "n": 21,
+     "mean_pct": 12.76,
+     "median_pct": 14.74,
+     "worst_pct": -8.0,
+     "best_pct": 39.87,
+     "win": 0.619,
+     "payoff": 3.19,
+     "stopped_at_a_loss": 0.381,
+     "deployed": 1.0,
+     "mean_days": 20.9
+    },
+    "disc": {
+     "n": 12,
+     "mean_pct": 5.17,
+     "median_pct": -8.0,
+     "worst_pct": -8.0,
+     "best_pct": 39.87,
+     "win": 0.333,
+     "payoff": 3.94,
+     "stopped_at_a_loss": 0.667,
+     "deployed": 1.0,
+     "mean_days": 14.8
+    },
+    "hold": {
+     "n": 9,
+     "mean_pct": 22.87,
+     "median_pct": 25.12,
+     "worst_pct": 6.86,
+     "best_pct": 35.28,
+     "win": 1.0,
+     "payoff": 99.0,
+     "stopped_at_a_loss": 0.0,
+     "deployed": 1.0,
+     "mean_days": 29.0
+    }
+   },
+   "flags": [
+    "disc 段票数极少(n=12 < 20)",
+    "hold 段票数极少(n=9 < 20)",
+    "hold 段盈亏比异常大(pf=99.0)"
+   ],
+   "degenerate": true
+  }
+ ],
+ "verdict": {
+  "n_cells": 8,
+  "n_signal": 1,
+  "n_base_rate": 7,
+  "n_signal_strict": 1,
+  "holds_rows_checked": 4,
+  "n_degenerate_holds_rows": 3
+ }
+}

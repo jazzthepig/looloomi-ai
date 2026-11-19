@@ -1,0 +1,32 @@
+{
+  "id": "T-415",
+  "owner": "seth",
+  "status": "done",
+  "created": "2026-11-19",
+  "title": "T-062 的尾巴:regime 跟踪循环记真话、那三个测试进仓、api_usage_upsert RPC 在不在库里",
+  "source": "T-062(lane-b,11-17)交付时自己列出的「没做完」三项:① src/api/main.py 的 _fusion_paper_regime_track_loop 仍调旧函数、仍记 ok;② lane-b 11-19 那轮写的三个测试文件 + 它们的 preflight 注册没能推上来(60 分钟超时被终止,分支未带上);③ api_usage_upsert RPC 到底在不在库里没查。Seth 2026-11-19 复核 T-062 卡片时确认这三项都还在 —— T-062 已按「前三路修好」收口,尾巴单开本卡。",
+  "allowed_paths": [
+    "src/api/main.py",
+    "src/research/validation/fusion_paper_regime_track.py",
+    "tests/",
+    "scripts/preflight.sh",
+    "tasks/T-415.json"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "src/api/metering.py",
+    "src/research/validation/regime_fitness.py",
+    "docs/research/scenarios/"
+  ],
+  "verified": {
+    "by": "seth",
+    "at": "2026-11-19T13:45:00Z",
+    "value": "2026-11-19 13:30Z 特权键实测(合并部署后,live=355b5925;T-062 合于 971edfa5,T-409 叠在上面):① 三张表的行数有确定答案了 —— cis_regime_fitness 145 行,其中今天 13:30:48Z 新写 5 行(regime='ALL' × 5 个 pillar,return_source=ohlcv_daily,n_samples=1583,window_days=90,n_days=33 ≥ 20 门槛;旧的 140 行是 trade_results 口径的 TIGHTENING 档,11-14→11-18);api_usage 1 行(usage_date=2026-11-19,requests=0,key_prefix='__no_key_traffic__',last_flush_at=13:41:07Z —— 零观测也写,新行为成立);fusion_paper_regime_track 0 行 —— 这是对的,上游 fusion_paper_nav 只有 52 行且冻结在 2026-10-20(S-631),解冻前这一路本来就不该有每日新行,它的验收口径是「无输入记带原因的 refused」。② loop_attempt 实测:_fusion_paper_regime_track_loop 13:29:56Z = refused,reason='no R64 paper NAV for 2026-11-19 in fusion_paper_nav (inception_id=v2, void_reason is null) — today=None, yesterday=None' —— **带原因的拒绝,不再是假 ok**;_regime_fitness_loop 13:30:55Z = ok(同一轮 13:30:48Z 写下 5 行)。部署前的两条老记录(12:51:08Z fusion=ok 是旧代码、12:52:59Z regime=refused 'no fitness rows computed' 是旧口径)与新行为无关。③ api_usage_upsert RPC 再次确认存在:public.api_usage_upsert(p_rows jsonb) → integer ⇒ 不建、不开 DDL 卡,metering.py 的直写兜底是防御性死代码。④ 那三个测试文件本来就在 main 且已在 scripts/preflight.sh 注册(165 / 1344 / 2037 行),未重建、未重复注册。"
+  },
+  "acceptance": {
+    "check": "合并部署后的判活(本卡 2026-11-19 12:20Z 改写 —— 原来那三项里有两项已经随 T-062 的合并落地,第三项已有答案):① **用特权键 / 服务键数行数** —— 研究键会被 RLS 读成 0 行,那不是表空(S-404 那一类);数完把三张表的真实数字与时间范围写进 notes:cis_regime_fitness 要有当天新行且 return_source=ohlcv_daily、regime 里含 'ALL' 档;api_usage 每次 flush 写一行(零用量也写,key_prefix='__no_key_traffic__');fusion_paper_regime_track 在上游 fusion_paper_nav 解冻前**本来就不该有每日新行** —— 它的验收口径是「无输入记带原因的 refused/failed,任何情况下都不许出现没有原因的 ok」(S-202 那个形状),不是「每天有新行」。② 把 loop_attempt 里 _regime_fitness_loop / _fusion_paper_regime_track_loop 最近几天的 outcome 与 reason 原样贴进 notes。③ api_usage_upsert RPC **已确认存在**(public.api_usage_upsert(p_rows jsonb) → integer;2026-11-19 由 Seth 用特权键查 pg_proc)⇒ **不要建它、不要开 DDL 卡**;分支里的直写兜底是防御性死代码,保留即可。④ **不要重建那三个测试文件**:tests/test_dates_are_utc_not_machine_local.py / test_ic_weight_chain.py / test_loop_stall.py 本来就在 main、已在 scripts/preflight.sh 里注册(165 / 1344 / 2037 行),分支第三轮改写的是它们的内容,随 T-062 的合并一起进仓。",
+    "expect": "合并部署后:三张表的行数有确定答案(特权键实测)、循环记的是带原因的 refused/failed 而不是 ok、RPC 存在的事实落进卡里。"
+  },
+  "prior_value": "2026-11-19 12:20Z 实测:T-062 的循环补丁、棘轮 102、两道守护改写随分支待合并(合并后 main 才变);三个测试文件已在 main 且已注册;RPC 已确认存在(public.api_usage_upsert(jsonb)→integer);三张表的行数 —— cis_regime_fitness 140 行(trade_results 口径,11-14→11-18)、fusion_paper_regime_track 0 行、api_usage 0 行 —— 都是合并部署前的旧代码状态,还没人用新代码数过一次。",
+  "notes": "2026-11-19 Seth 开卡(T-062 的尾巴)。\n\n**为什么把尾巴从 T-062 里拆出来**:T-062 已经按「前三路修好」收口(done),但那三路里 fusion_paper_regime_track 那一路只修了一半 —— 输入仍然不在,循环仍然记 ok。把这半张卡留在 T-062 里会让看板上一张 done 的卡挂着未完成的事;拆成 T-415,三件事各有各的验收,都能单独判成败。\n\n**① 的要点**:compute_today_track_ex 已经随 T-062 进仓了(src/research/validation/fusion_paper_regime_track.py),它返回 {status, row, reason};main.py 里那个循环还在调旧的 compute_today_track,拿到 None 就记 ok。改法很小(约 6 行),但它守的是一条硬规矩:**没有原因的成功不是成功**。今天的三张表里,api_usage 是「没有流量也写一行零观测」,cis_regime_fitness 是「读新表 + 加一档池化 ALL」,只有这一路还是「不写就当没事」。\n\n**② 的要点**:那三个测试是 lane-b 11-19 写的,随那一轮被 60 分钟超时打断,没推上来。注册时先看一眼 tests/test_every_test_is_registered.py 的 EXEMPT 清单与调用风格约定 —— 守卫会检查「文件形式」与「注册行的调用方式」是否一致(pytest 风格必须写成 `python3 -m pytest tests/x.py`,stdlib 自跑必须写成 `python3 -m tests.x`)。\n\n**③ 的要点**:RPC 的存在性会决定 src/api/metering.py 的兜底分支是不是死代码(不存在的 RPC 走直写 + 读旧值写 max,保住单调性)。这条只能由有服务键的人查;查不到就把「查不到」本身写进 notes,别猜。\n\n**做完后**:卡转 in_review,推 lane-b/T-415;Seth 这边走合并(范围检查 → 合并树跑 preflight → 推送 → 部署后核对)。\n\n---\n\n2026-11-19 12:20Z Seth(改口径 + 收归自己):这张卡开的时候有三个尾巴,现在只剩一件 —— ① 循环改调 compute_today_track_ex 已随 T-062 的分支第二、三轮落地(main.py 改调 + asyncio.to_thread + 棘轮 102 + 两道守护改写),合并后 main 就有;② 那三个测试文件本来就在 main 且已在 preflight 里注册(165 / 1344 / 2037 行),不需要「进仓 + 注册」,分支改写的是它们的内容;③ api_usage_upsert RPC 已用特权键查 pg_proc 确认存在(public.api_usage_upsert(p_rows jsonb) → integer)⇒ 不建 DDL、不开卡。剩下的只有「合并部署后判活」,而判活必须用特权键数行数 —— 研究键被 RLS 过滤,数出来是 0 行,那不是表空:cis_regime_fitness 实有 140 行(11-14→11-18)、fusion_paper_nav 52 行(冻结在 2026-10-20),只有 fusion_paper_regime_track 与 api_usage 是真的 0 行。这条只有 Mac 侧有服务键 ⇒ owner 从 lane-b 改成 seth,本卡由我在合并部署后自己结。\n\n**一条纪律**:「表里 0 行」这个结论,在本项目里必须先问一句「用哪个键读的」—— 研究键(publishable)被 RLS 过滤,数出来是 0;特权键才有真相。lane-b 从 11-17 到 11-19 三轮都建立在「0 行」这个前提上,方向因此偏了一整轮(把「第一路在写、只是读不到」当成了「第一路写不出东西」)。\n\n---\n\n2026-11-19 13:45Z Seth(判活完成,本卡转 done):合并部署后(live=355b5925)用特权键把三张表与 loop_attempt 数了一遍,结果在 verified 里逐条贴出。三路各自的形状都对上了卡里写的验收口径:第一路今天真的写了新行(ALL 档 + ohlcv_daily 口径 + n_days=33),第二路零观测也写了一行,第三路在上游冻结的前提下**记了带原因的 refused** 而不是假装 ok。**这条最要紧**:之前 627 次 ok 里有多少是「没输入也记 ok」,从今天起不会再有 —— 判活靠的不是行数,是那行 reason。\n\n**这张卡真正的收获不在三张表,在那个前提错误。**lane-b 从 11-17 到 11-19 三轮都建立在「三张表 0 行」上,而那个「0 行」是研究键被 RLS 过滤后的视图 —— 第一路(cis_regime_fitness)其实一直在写(140 行),第三路缺的不是表、是上游被冻结的 fusion_paper_nav。**同一个词「0 行」,两种完全不同的病:一种是「读不到」,一种是「写不出」。**第一轮就判错成因,方向偏了整整三轮(把「写不出东西」当结论,于是去改数据口径而不是去修读法)。判活的第一问永远不是「有没有数据」,是「用哪个键读的」。"
+}
