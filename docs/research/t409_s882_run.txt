@@ -1,0 +1,11 @@
+[BTC] rows=81012 samples=481 cond_n=136 all_n=481
+    condition {'up>=2.5%': 0.5074, 'down>=2.5%': 0.4485, 'either>=2.5%': 0.7941, 'rebound_high_touched': 0.0147, 'weekend_low_touched': 0.3529, 'both_touched': 0.0}
+    all {'up>=2.5%': 0.3784, 'down>=2.5%': 0.368, 'either>=2.5%': 0.6528, 'rebound_high_touched': 0.2204, 'weekend_low_touched': 0.1642, 'both_touched': 0.0}
+    波动大但没跌到阈值 {'up>=2.5%': 0.3304, 'down>=2.5%': 0.3333, 'either>=2.5%': 0.5965, 'rebound_high_touched': 0.3012, 'weekend_low_touched': 0.0848, 'both_touched': 0.0}
+    整周跌但周五22:00后没跌 {'up>=2.5%': 0.6667, 'down>=2.5%': 0.0, 'either>=2.5%': 0.6667, 'rebound_high_touched': 0.0, 'weekend_low_touched': 0.3333, 'both_touched': 0.0}
+[ETH] rows=81012 samples=481 cond_n=140 all_n=481
+    condition {'up>=3.0%': 0.5143, 'down>=3.0%': 0.4929, 'either>=3.0%': 0.8357, 'rebound_high_touched': 0.0286, 'weekend_low_touched': 0.3, 'both_touched': 0.0}
+    all {'up>=3.0%': 0.4304, 'down>=3.0%': 0.4324, 'either>=3.0%': 0.738, 'rebound_high_touched': 0.237, 'weekend_low_touched': 0.1559, 'both_touched': 0.0}
+    波动大但没跌到阈值 {'up>=3.0%': 0.4006, 'down>=3.0%': 0.4065, 'either>=3.0%': 0.7003, 'rebound_high_touched': 0.3264, 'weekend_low_touched': 0.092, 'both_touched': 0.0}
+    整周跌但周五22:00后没跌 {'up>=3.0%': 0.6, 'down>=3.0%': 0.4, 'either>=3.0%': 0.8, 'rebound_high_touched': 0.0, 'weekend_low_touched': 0.2, 'both_touched': 0.0}
+written /Users/sbb/Projects/looloomi-ai-lane-c/docs/research/t409_s882_replay.json
