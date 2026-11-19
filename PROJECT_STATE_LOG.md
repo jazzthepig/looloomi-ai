@@ -3659,3 +3659,112 @@ Mac 侧同账号)—— 下调多少等阶段 0 的实测数出来再拍。
 工作流的活);不把主目录那 20 来路不明的未跟踪路径卷进任何一次提交;不把 `scripts/preflight.sh`
 单独提交(它的工作树版本同时含 阶段 1 给 `tests/test_trading_price_degradation.py` 的注册行,
 而那个文件还没进 git ⇒ 只提注册会让别人机器上的 preflight 找不到文件).
+
+## 2026-11-19 19:20 UTC — Seth:CoinGecko 额度收敛 S-895 阶段 2 —— `/global` 收敛成一条活路 + 6 处裸 client 收口 + 全仓库端点覆盖表
+
+**这一轮的问题不是「花太多」,是「同一个问题被问四遍」。**
+
+仓库里打 CoinGecko `/global` 的地方有**四个**:
+
+| # | 位置 | 形状 | 降级 |
+|---|---|---|---|
+| 1 | `data_layer.get_cg_global()` | 扁平化 | CMC 兜底 → `{"error": ...}` |
+| 2 | `data_layer.get_macro_pulse()` 内嵌 | 扁平化 | CMC 兜底 → 空 dict |
+| 3 | `cis_provider.fetch_cg_global()` | CG 原始 `data` 段 | `None` |
+| 4 | `global_history.fetch_today()` | 总市值 + 主导率 | 抛异常 |
+
+⇒ **四个额度池、四种降级语义、四个缓存键。** 「今天 `/global` 打了几次」没人答得上来
+—— `/internal/cg-quota` 只报总数,分不出是哪条路打的。而 `/global` 是**全站最重的那个端点**
+(global 市值 + 全市场活跃币数 + 主导率)。
+
+判据不是「长得像不像」,是 `docs/SPINE.md:188-191`「**不能给出不同答案 ⇒ 是重复**」。
+这四个给的是**同一个答案**(CG 的 `data` 段)⇒ 重复 ⇒ 必须收敛成一条活路。
+
+**收敛后的形状:**
+
+```
+                    ┌─ get_cg_global()          前端路由(扁平化 + CMC 兜底)
+                    ├─ get_macro_pulse()         前端 widget(扁平化 + CMC 兜底)
+  data_layer.get_cg_global_raw() ─┼─ cis_provider.fetch_cg_global()  宏观因子(原始 + source)
+   ↑ 唯一 HTTP 实现 + 180s 缓存   └─ global_history.fetch_today()    轨迹(原始,永不换源)
+```
+
+**形状不同不是重复,机制相同才是。** 四个消费者各自的形状与降级语义**都保留了**
+——那是它们**给下游的契约**;只有 HTTP 实现合并了。
+
+**做法与两个坑:**
+
+- **① `fetch_cg_global` 的返回值现在带 `source`。** 收口前它**没有来源标记** ⇒ 拿到数据的
+  下游分不清这是 CoinGecko 还是别家 ⇒ 那是 `DATA_ARCHITECTURE.md:70` 的现存违例,顺手修掉。
+  ⚠️ **加 `source` 必须先 `dict(raw)` 复制** —— `get_cg_global_raw()` 返回的是**共享缓存对象**
+  (进程内 + Redis),原地加字段 ⇒ 缓存里多一个键,而且这个污染**跨进程**传下去。
+- **② `fetch_today` 走同一条路,但**不吃** `get_cg_global()` 的 CMC 兜底。** 它记的是
+  **厂商算的** BTC 主导率轨迹 ⇒ 轨迹要**同源可比**,换一次源就污染一次序列。
+  「兜底不是替换」在这里不是口号,是一条数据纪律。
+- **③ `get_cg_markets_raw()` 的 docstring 里那句「唯一」是假的,已改。** 同一端点还有
+  `get_cg_markets_strict()`(无缓存 + 读不到抛异常)、`get_cg_category_markets()`(`?category=`)、
+  `_fetch_cg_recent()`(`?category=recently-added`)三种**别的查询形状**。**自己写的 docstring
+  撒谎比没有 docstring 更坏** —— 下一个 agent 会照着它去合并,然后制造出「读不到被说成没有数据」
+  的那个错。
+
+**裸 client 收口(6 处):** `cis_provider` / `deep_walk.py` / `global_history.py`(`fetch_today` 走唯一活路,
+`fetch_total_mcap_history` 走闸门)/ `rwa/collect.py`(`fetch_markets` + `fetch_issuer_map`)⇒
+裸 `httpx.AsyncClient` → `GuardedCGClient`。**顺手删掉 6 行 `note_unbudgeted_call`** ——
+那是阶段 0 的**临时脚手架**,调用点收口进闸门后必须同时删,否则**双计**(闸门自己会记账)。
+
+**形状守卫从「描述现状」升级成「挡住下一个」:**
+
+- `tests/test_cg_call_sites.py` 加了 **24 个端点的覆盖表**(端点 → 允许的文件 → 允许的 client 类型)
+  ——**新增端点必须改这张表**,改表 = 一次有意识的登记。
+- 加**动态端点登记表**(6 个 URL 在运行时才确定的文件)+ 两条「登记不能变成死的」守卫:
+  登记的文件消失了 / 登记的端点不再有实现 ⇒ 都红。
+- 新测试 `tests/test_cg_global_single_path.py`(8 条),已注册进 `scripts/preflight.sh`
+  —— **S-244:测试文件存在 ≠ 会被跑到**,注册必须和测试文件**同一个 commit**。
+
+**守卫自己抓到了一个真 NameError:** `data_layer.get_macro_pulse()` 里还写着 `global_r.json()`
+(变量已改名成 `global_raw`)⇒ **运行时才炸 ⇒ 前台宏观面板整块变空**。
+`py_compile` 抓不到(那是一条运行期才走的分支),boot smoke 也抓不到。
+已修,并把 `data_layer.py` 加进 `tests/test_no_undefined_names.py` 的 `SCANNED` ——
+然后**故意把 bug 放回去验证守卫真的会红**(报 `data_layer.py:2320 in get_macro_pulse() → 'global_r'`),
+再恢复文件。**守卫没被证明过就等于没有守卫。**
+
+**三个计划项被证据推翻,记进台账而不是默默跳过:**
+
+| 计划项 | 判定 | 依据 |
+|---|---|---|
+| `cis_provider.fetch_cg_markets` → `get_cg_markets()` 函数层合并 | ❌ **会*增加*调用** | `get_cg_markets()` Redis TTL 120s,`cis_provider` 自己是 300s 内存 + **1800s Redis** ⇒ 合并 = 把 1800s 降成 120s ⇒ 调用量**上升**。收敛停在 **HTTP 层**,每个消费者保留自己的缓存与形状 |
+| `get_cg_markets_strict` 是纯重复,合并进 `get_cg_markets` | ❌ **不是** | 它**读不到就抛异常**,`get_cg_markets` 返回 `[]` ⇒ 合并会**制造出它自己 docstring 警告的那个错** |
+| 三个 `/coins/markets` 查询形状是重复 | ❌ **不是** | 它们问**不同的问题**(`?ids=` / `?category=` / `?category=recently-added`)⇒ 按 SPINE:188-191 **不构成重复**,登记进覆盖表即可 |
+
+**诚实口径 —— 不报编出来的省数。** 计划里阶段 2 估 ~1,050–1,150 次/天,但那是**基于「读库替代 API」
+那一档的估算**;本轮**只做了「收口 + 收敛 HTTP 实现」**,**没有一条把 API 调用换成读库**
+⇒ 实测口径下达不到那个数。**本轮的真实价值是三条:**
+(i) **6 个调用点从「无上限」变成「有闸门」**;
+(ii) **`/global` 的实现从 4 变 1**(额度池从 4 个变 1 个);
+(iii) **一笔一直没人看见的消耗现在看得见了**(闸门外记账)。
+**省多少调用/天:本轮 ≈ 0(量级上)。省的是「不确定」和「多个额度池」。**
+真正的省额度主力在**阶段 3**(`_cg_panel_loop` 改成按覆盖差驱动,范本
+`perp_mcap_backfill.stale_coins()` 已经在仓库里)。
+
+**顺带一个发现:** `global_history.py` 在本仓库内**没有生产调用方**(只有 `tests/test_global_history.py`)
+⇒ 它那条「永不换源」的约束现在是**理论约束**,等它有生产消费者才真成立。**登记,不新建调用方。**
+
+**验证:** 58 条 S-895 相关测试绿;16 条相关模块测试绿;5 个改动文件 `py_compile` 通过;
+AST 扫描确认 `cis_provider.py` **不再出现在 CG 调用点图里**,且只有 `src/data/market/data_layer.py`
+打 `/global`。
+
+**preflight 顺带抓到一处「仓库正好卡在判据边缘」的脆弱结构:**
+`## OPEN RISKS` 块原本在 `PROJECT_STATE.md` 的**第 60 行**
+(`tests/test_cold_start_contract.py`「前 60 行内必须有」)——
+本轮标题多一行 ⇒ 块被顶到第 61 行 ⇒ **preflight 当场红**。
+⇒ **每加一行会话标题,这个块就往第一屏外挪一行** ⇒ 仓库一直在
+「差一行就断」的位置上。**修法不是再挤一行**(那只是把断点推到下一轮),
+而是**把块整体上移到第 5 行**(标题区 55 行余量,以后 20 轮都顶不掉)——
+**块一字未动,只搬了位置**;顺带让文件符合判据自己的措辞「BEFORE any narrative」
+(原来 40 行会话标题就排在它前面,是**过了机械阈值、没过意图**)。
+
+**没做:** 不动 `cg_guard.py` 的预算/熔断;不新增任何数据源;不碰 `trading.py` 的标记价源
+(阶段 1 已拍板);不改 `source_policy.py` 的任何旋钮;不给前端加新展示模块;不代为提交
+并发会话改的 `tasks/T-062.json`;不改 Mac 侧任何代码(登记在 `MINIMAX_SYNC.md`);
+**不改 `cis_provider.fetch_cg_markets` 的空结果缓存纪律**(计划 §风险 1 写的是
+「本轮只登记」⇒ 改措辞不改行为,违例登记在 `get_cg_markets_raw` 的 docstring 里)。
