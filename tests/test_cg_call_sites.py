@@ -326,10 +326,8 @@ ALLOWED_BARE_CALL_SITES: dict[str, tuple[tuple[str, ...], str]] = {
         ("/global", "/global/market_cap_chart"),
         "过渡期:阶段 2 收口进闸门后这一行要撤",
     ),
-    "src/api/routers/trading.py": (
-        ("/simple/price",),
-        "过渡期:阶段 1 收口进闸门后这一行要撤",
-    ),
+    # ⚠️ `src/api/routers/trading.py` **已撤** —— 阶段 1(S-895)收口进闸门。
+    # 留着这条登记 = 一个已经不裸的文件继续占着「豁免」名额 ⇒ 白名单变永久豁免。
 }
 
 #: 允许**注入** client 的文件 → (注入方文件, 理由)
@@ -434,7 +432,9 @@ def test_闸门内的文件真的用了闸门():
     """`gated` 的判定不能靠一个字符串匹配蒙混过关(注释里写「接了闸门」不算)。"""
     for rel in ("src/data/market/data_layer.py",
                 "src/data/narrative/social_collector.py",
-                "src/api/main.py"):
+                "src/api/main.py",
+                # S-895 阶段 1:交易路由的标记价取数收口进闸门。
+                "src/api/routers/trading.py"):
         tree = ast.parse((ROOT / rel).read_text(encoding="utf-8"))
         uses = any(
             (isinstance(n, ast.Call) and _is_get_cg_client(n))

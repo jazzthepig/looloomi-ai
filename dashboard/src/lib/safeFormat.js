@@ -87,3 +87,18 @@ export const fmtScore = (v, digits = 1) => {
   if (typeof v !== "number") return "—";
   return v.toFixed(digits);
 };
+
+/** Signed money with an optional percent — null/undefined/NaN → "—".
+ *  S-895 阶段 1:交易路由的 `unrealized_pnl` 在**拿不到标记价**时是 null,
+ *  意思是「**没测量**」,不是「盈亏为零」。塌成 0 ⇒ 一份「没有价格」的仓位
+ *  跟一份「仓位真的平了」长得一模一样 —— 这正是 S-262 家族的第 12 次。
+ *  **0 仍然是 0**:`pnl = 0` ⇒ "+0.00",不是 "—"(真的平了 ≠ 没测)。
+ *  颜色仍然留在调用点(theme-bound),跟 `fmtScore` 的分法一致。
+ */
+export const fmtSignedPnl = (pnl, pct) => {
+  if (isMissing(pnl)) return "—";
+  if (typeof pnl !== "number") return "—";
+  const money = `${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)}`;
+  if (isMissing(pct) || typeof pct !== "number") return money;
+  return `${money} (${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%)`;
+};

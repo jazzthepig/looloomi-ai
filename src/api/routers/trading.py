@@ -30,6 +30,7 @@ import asyncio
 import logging
 import httpx
 import json
+import time as _time
 from datetime import datetime, timezone, timedelta
 from typing import Optional, Literal
 
@@ -39,7 +40,10 @@ from pydantic import BaseModel, Field
 
 from src.api.store import redis_set_key, redis_get_key, supabase_insert_table
 from src.api.notify import notify_telegram
-from src.data.market.cg_guard import note_unbudgeted_call   # S-895 阶段 0:闸门外记账
+# ⚠️ S-895 阶段 1:CoinGecko 的调用**必须**走闸门(`GuardedCGClient` 是
+# `httpx.AsyncClient` 的子类,不是包装器 ⇒ 调用点的形状一个字没变)。
+# 超额计费打开之后,一条没有上限的取价路径 = 一个看不见的账单。
+from src.data.market.cg_guard import GuardedCGClient
 
 _logger = logging.getLogger(__name__)
 router  = APIRouter()
@@ -145,6 +149,51 @@ async def _rset(key: str, val, ttl: int = 86400 * 7):
 
 # ── Live price fetch (CoinGecko → EODHD fallback) ─────────────────────────────
 
+# ── 价格缓存(S-895 阶段 1)────────────────────────────────────────────────────
+# **为什么要有它:** `_sl_tp_loop`(`src/api/main.py:5254`)与 `_cis_flip_loop`
+# (`:5285`)**故意错开 60 秒**(`:5293` 注释「offset from SL/TP to avoid
+# simultaneous calls」)⇒ 两条循环问的是**同一个问题**、拿的是**同一个答案**,
+# 却打两次。90s TTL 让**后一条命中前一条的缓存**。
+#
+# **为什么不是 10s:** 两条循环各自每 5 分钟才醒一次,10s TTL 对它们**一次都
+# 命中不了**。10s 是给前台路径(`/positions`)的直觉值,不适用于后台循环。
+#
+# **为什么按 symbol 缓存,不是按请求批缓存:** 问价有两种方式 ——
+# `_fetch_prices_cg_batch` 一次问一批、`_fetch_price` 一次问一个。按批缓存的话
+# 这两种问法**互相看不见**,去重就成了空话。**缓存的键是 symbol。**
+#
+# **只缓存成功的价:** 失败不缓存。闸门关掉之后不能连续 90 秒吐一个不存在的价,
+# 也不能让一次瞬时失败把后面 90 秒全带偏。
+#
+# **残留风险(明说):** 缓存意味着 PnL 最多滞后 90s。要动作的路径(SL/TP)每 5 分钟
+# 才跑一次 ⇒ 90s < 300s ⇒ 可接受。
+_PRICE_CACHE_TTL_S = 90
+_price_cache: dict[str, tuple[float, float, str]] = {}   # SYMBOL → (expires_at, price, source)
+
+
+def _price_cache_get(symbol: str) -> tuple[float, str] | None:
+    """命中返回 (price, source);没命中或已过期返回 None。"""
+    hit = _price_cache.get(symbol.upper())
+    if not hit:
+        return None
+    expires_at, price, source = hit
+    if expires_at <= _time.monotonic():
+        _price_cache.pop(symbol.upper(), None)
+        return None
+    return price, source
+
+
+def _price_cache_set(symbol: str, price: float | None, source: str) -> None:
+    if price is None or price <= 0:
+        return
+    _price_cache[symbol.upper()] = (_time.monotonic() + _PRICE_CACHE_TTL_S, float(price), source)
+
+
+def _cg_source_label() -> str:
+    """CoinGecko 的来源标签 —— 换源必须标来源(`docs/DATA_ARCHITECTURE.md:70`)。"""
+    return "coingecko_pro" if _COINGECKO_KEY else "coingecko_public"
+
+
 async def _fetch_price_eodhd(symbol: str) -> float | None:
     """Fetch current USD price from EODHD real-time endpoint. Returns None on failure.
 
@@ -182,29 +231,41 @@ async def _fetch_price(symbol: str) -> float | None:
 
     Tries CoinGecko first when the symbol has a known crypto mapping, otherwise
     falls through to EODHD. Returns None on total failure.
+
+    ⚠️ S-895 阶段 1:走**闸门**(`GuardedCGClient`)⇒ 这条路径从今天起有上限了。
+    闸门拒了的时候返回**合成 503** ⇒ 显式判状态码 ⇒ **没有标记价** ⇒ 落到
+    EODHD ⇒ 加密标的还是拿不到 ⇒ **返回 None**(而不是一个假价)。
     """
+    cached = _price_cache_get(symbol)
+    if cached is not None:
+        return cached[0]
     cg_id = _SYM_TO_CG.get(symbol.upper())
     if cg_id:
         base = _CG_PRO if _COINGECKO_KEY else _CG_BASE
         try:
-            # ⚠️ S-895 阶段 0:这是**闸门外**的调用 —— 记账,好让
-            # `/internal/cg-quota` 的「今天花了多少」不是残缺的。
-            # 阶段 2 把它收口进 `GuardedCGClient` 之后,**这一行必须删掉**。
-            note_unbudgeted_call("coingecko", "/simple/price")
-            async with httpx.AsyncClient(timeout=8) as cl:
+            async with GuardedCGClient(timeout=8) as cl:
                 r = await cl.get(
                     f"{base}/simple/price",
                     params={"ids": cg_id, "vs_currencies": "usd"},
                     headers=_CG_HEADERS,
                 )
-                data = r.json()
-                price = float(data[cg_id]["usd"])
-                if price > 0:
-                    return price
+                # ⚠️ S-895 阶段 1:非 200 = 闸门拒了(合成 503)或上游 5xx。
+                # 两种都意味着「**没有标记价**」—— 不解析正文、不编造价。
+                # 之前是直接 `r.json()` 再取下标,靠 KeyError/AttributeError
+                # 掉进 `except` —— 结果对,但**降级语义是偶然的**,不是声明的。
+                if r.status_code == 200:
+                    data = r.json()
+                    price = float(data[cg_id]["usd"])
+                    if price > 0:
+                        _price_cache_set(symbol, price, _cg_source_label())
+                        return price
         except Exception:
             pass
     # TradFi fallback (or CG failed) — try EODHD
-    return await _fetch_price_eodhd(symbol)
+    price = await _fetch_price_eodhd(symbol)
+    if price is not None:
+        _price_cache_set(symbol, price, "eodhd")
+    return price
 
 
 async def _fetch_prices_eodhd_batch(symbols: list[str]) -> dict[str, float]:
@@ -222,14 +283,36 @@ async def _fetch_prices_eodhd_batch(symbols: list[str]) -> dict[str, float]:
 
     async def _one(sym: str) -> tuple[str, float | None]:
         async with sem:
+            # ⚠️ S-895 阶段 1:同一个 symbol 的缓存在这里也看一眼 ——
+            # EODHD 不占 CoinGecko 的额度,但重复打同一个外部源也没有意义。
+            cached = _price_cache_get(sym)
+            if cached is not None:
+                return sym, cached[0]
             return sym, await _fetch_price_eodhd(sym)
 
     results = await asyncio.gather(*[_one(s) for s in tradfi_syms])
-    return {sym: p for sym, p in results if p is not None and p > 0}
+    out: dict[str, float] = {}
+    for sym, p in results:
+        if p is not None and p > 0:
+            _price_cache_set(sym, p, "eodhd")
+            out[sym] = p
+    return out
 
 
 async def _fetch_prices_batch(symbols: list[str]) -> dict[str, float]:
     """Batch price fetch. CoinGecko for crypto, EODHD for TradFi — both run in parallel."""
+    prices, _sources = await _fetch_prices_batch_with_source(symbols)
+    return prices
+
+
+async def _fetch_prices_batch_with_source(symbols: list[str]) -> tuple[dict[str, float], dict[str, str]]:
+    """批量取价 **+ 每个 symbol 的来源**。
+
+    为什么要有来源:「换源必须标来源」(`docs/DATA_ARCHITECTURE.md:70`)。
+    CoinGecko 拿到的价和 EODHD 拿到的价**不是同一个口径**,下游必须能分辨。
+    拿不到价的 symbol **不在返回的字典里** —— 调用方看到的就是「没有」,
+    不是 0、也不是开仓价。
+    """
     cg_ids = {sym: _SYM_TO_CG.get(sym.upper()) for sym in symbols}
     cg_syms = [sym for sym, cid in cg_ids.items() if cid]
     tradfi_syms = [s for s in symbols if s.upper() in _EODHD_SYM_TO_EX]
@@ -239,40 +322,63 @@ async def _fetch_prices_batch(symbols: list[str]) -> dict[str, float]:
         _fetch_prices_cg_batch(cg_syms),
         _fetch_prices_eodhd_batch(tradfi_syms),
     )
-    return {**cg_res, **eodhd_res}
+    sources: dict[str, str] = {}
+    for sym in cg_res:
+        sources[sym] = _cg_source_label()
+    for sym in eodhd_res:
+        sources[sym] = "eodhd"
+    return {**cg_res, **eodhd_res}, sources
 
 
 async def _fetch_prices_cg_batch(symbols: list[str]) -> dict[str, float]:
-    """CoinGecko batch price fetch for crypto symbols."""
+    """CoinGecko batch price fetch for crypto symbols.
+
+    ⚠️ S-895 阶段 1:走**闸门**(`GuardedCGClient`)⇒ 有预算上限、有熔断、
+    有计数。闸门拒了 ⇒ 合成 503 ⇒ 落到 `except` ⇒ 返回**没有价**(不是假价)。
+    """
     if not symbols:
         return {}
     cg_ids = {sym: _SYM_TO_CG.get(sym.upper()) for sym in symbols}
     valid_ids = {sym: cg_id for sym, cg_id in cg_ids.items() if cg_id}
     if not valid_ids:
         return {}
+    # ⚠️ S-895 阶段 1:已经缓存过的 symbol **不发请求**。
+    result: dict[str, float] = {}
+    uncached: dict[str, str] = {}
+    for sym, cg_id in valid_ids.items():
+        cached = _price_cache_get(sym)
+        if cached is not None:
+            result[sym] = cached[0]
+        else:
+            uncached[sym] = cg_id
+    if not uncached:
+        return result
     base = _CG_PRO if _COINGECKO_KEY else _CG_BASE
     try:
-        # ⚠️ S-895 阶段 0:闸门外记账(阶段 2 收口进闸门后删掉这一行)。
-        note_unbudgeted_call("coingecko", "/simple/price")
-        async with httpx.AsyncClient(timeout=10) as cl:
+        async with GuardedCGClient(timeout=10) as cl:
             r = await cl.get(
                 f"{base}/simple/price",
-                params={"ids": ",".join(set(valid_ids.values())), "vs_currencies": "usd"},
+                params={"ids": ",".join(set(uncached.values())), "vs_currencies": "usd"},
                 headers=_CG_HEADERS,
             )
+            # ⚠️ S-895 阶段 1:非 200 = 闸门拒了(合成 503)或上游 5xx ⇒ **没有价**。
+            # 之前靠「正文里没有 usd」掉进 `except` —— 结果对,语义是偶然的。
+            if r.status_code != 200:
+                return result
             data = r.json()
-        result: dict[str, float] = {}
         id_to_syms: dict[str, list[str]] = {}
-        for sym, cg_id in valid_ids.items():
+        for sym, cg_id in uncached.items():
             id_to_syms.setdefault(cg_id, []).append(sym)
         for cg_id, price_data in data.items():
             price = float(price_data.get("usd", 0) or 0)
             if price > 0:
                 for sym in id_to_syms.get(cg_id, []):
+                    _price_cache_set(sym, price, _cg_source_label())
                     result[sym] = price
         return result
     except Exception:
-        return {}
+        # 闸门拒了 / 网络失败 ⇒ **没有价**。不回落、不填 0、不用开仓价。
+        return result
 
 
 # ── Portfolio state helpers ────────────────────────────────────────────────────
@@ -578,30 +684,56 @@ async def get_positions():
 
     # Batch price update
     symbols = list({p["symbol"] for p in open_positions.values()})
-    prices  = await _fetch_prices_batch(symbols)
+    prices, price_sources = await _fetch_prices_batch_with_source(symbols)
 
     updated_positions = []
     total_value = 0.0
     total_pnl   = 0.0
+    priced_count = 0
+    unpriced_symbols: list[str] = []
 
     for oid, pos in open_positions.items():
         sym   = pos["symbol"]
-        price = prices.get(sym, pos["entry_price"])
+        # ⚠️ S-895 阶段 1:**拿不到价就是拿不到价** —— 不再回落开仓价。
+        # 回落开仓价 ⇒ PnL 精确等于 0 ⇒ 与「仓位真的平了」同形 ⇒ 一份
+        # 「没有价格」的报告看起来跟一份「零盈亏」的报告一模一样。
+        # `docs/DATA_ARCHITECTURE.md:109`:未测量 = NaN 且必须传播。
+        price = prices.get(sym)
         qty   = pos.get("qty", 0)
         side  = pos.get("side", "LONG")
+        entry = pos.get("entry_price") or 0
 
+        if price is None:
+            # 拿不到标记价 ⇒ **不编造 P&L**。NAV 仍按开仓价计入(保守估值,
+            # 账面不因一次取价失败而缩水),但 P&L 三个字段是 **None**。
+            pos["current_price"]     = None
+            pos["current_value_usd"] = round(qty * entry, 2)
+            pos["current_value_basis"] = "entry_price"
+            pos["unrealized_pnl"]    = None
+            pos["unrealized_pct"]    = None
+            pos["price_source"]      = "unavailable"
+            pos["updated_at"]        = _now()
+            unpriced_symbols.append(sym)
+            current_value = qty * entry
+            total_value += current_value
+            updated_positions.append(pos)
+            continue
+
+        priced_count += 1
         current_value = qty * price
         if side == "LONG":
-            pnl_abs = (price - pos["entry_price"]) * qty
-            pnl_pct = (price / pos["entry_price"] - 1) * 100
+            pnl_abs = (price - entry) * qty
+            pnl_pct = (price / entry - 1) * 100 if entry else 0
         else:
-            pnl_abs = (pos["entry_price"] - price) * qty
-            pnl_pct = (pos["entry_price"] / price - 1) * 100 if price > 0 else 0
+            pnl_abs = (entry - price) * qty
+            pnl_pct = (entry / price - 1) * 100 if price > 0 else 0
 
         pos["current_price"]     = round(price, 6)
         pos["current_value_usd"] = round(current_value, 2)
+        pos["current_value_basis"] = "mark_price"
         pos["unrealized_pnl"]    = round(pnl_abs, 2)
         pos["unrealized_pct"]    = round(pnl_pct, 3)
+        pos["price_source"]      = price_sources.get(sym, "unknown")
         pos["updated_at"]        = _now()
 
         # Check SL/TP triggers — guard against 0/None thresholds (METER_REBAL positions
@@ -690,6 +822,18 @@ async def get_positions():
         # both books, and inventing one is how 65.509% got published.
         "unrealized_pct": None,
         "unrealized_pct_basis": "see cash_book / sleeve_book — a blended % has no valid denominator",
+        # ⚠️ S-895 阶段 1:上面这个 `unrealized_pnl` **只覆盖拿到标记价的仓位**。
+        # 拿不到价的仓位的 `unrealized_pnl` 是 **None**,不是 0 —— 所以这个
+        # 合计是「已知部分」,不是一个完整的数。**说清楚它不完整**,
+        # 比让它看起来完整重要。
+        "price_coverage": {
+            "priced_positions":   priced_count,
+            "unpriced_positions": len(unpriced_symbols),
+            "unpriced_symbols":   sorted(set(unpriced_symbols)),
+            "basis": ("mark price from CoinGecko/EODHD (see price_source per position). "
+                      "Positions without a mark are valued at entry price and their P&L is null, "
+                      "not zero — so the totals above cover only the priced positions."),
+        },
         "updated_at":    _now(),
     }
 
@@ -710,8 +854,17 @@ async def close_position(order_id: str, req: CloseRequest = None):
 
     sym   = pos["symbol"]
     price = await _fetch_price(sym)
+    # ⚠️ S-895 阶段 1:**没有真实标记价就不平仓**。
+    # 原来这里回落 `pos["current_price"] or pos["entry_price"]` ⇒ 用开仓价成交
+    # ⇒ 写进 `trade_results` 的已实现盈亏是**编出来的**,而它会喂给 Learn 循环
+    # ⇒ 一个假的样本进了真的学习器。拿不到价就**拒绝平仓**(503),
+    # 让调用方看见「这次没平」,而不是看见一个平的假账。
     if not price:
-        price = pos["current_price"] or pos["entry_price"]
+        raise HTTPException(
+            status_code=503,
+            detail=(f"No live mark price for {sym} — position left open. "
+                    f"(CoinGecko/EODHD unavailable or the quota gate is closed.)"),
+        )
 
     qty  = pos.get("qty", 0)
     side = pos.get("side", "LONG")
@@ -880,6 +1033,7 @@ async def sweep_aged_positions() -> dict:
     skipped = 0
     swept_symbols = []
     errors = []
+    unpriced = 0
 
     for oid, pos in list(open_positions.items()):
         try:
@@ -901,8 +1055,13 @@ async def sweep_aged_positions() -> dict:
 
             # PnL check at current price
             sym = pos["symbol"]
-            price = prices.get(sym) or pos.get("current_price") or pos.get("entry_price")
+            # ⚠️ S-895 阶段 1:**只认真实标记价**。原来这里还回落
+            # `current_price` / `entry_price` ⇒ 取价失败时用开仓价算盈亏 ⇒
+            # 盈亏恒等于 0 ⇒ 恒在 ±5% 带内 ⇒ **扫龄器在价格拿不到的时候
+            # 反而最积极**。那是在用假价平仓。
+            price = prices.get(sym)
             if not price:
+                unpriced += 1
                 skipped += 1
                 continue
 
@@ -933,6 +1092,7 @@ async def sweep_aged_positions() -> dict:
     return {
         "swept":         swept,
         "skipped":       skipped,
+        "unpriced":      unpriced,          # ⚠️ S-895 阶段 1:拿不到标记价 ⇒ 没评估
         "total_open":    len(open_positions),
         "swept_symbols": swept_symbols,
         "errors":        errors,
@@ -966,7 +1126,7 @@ async def _sl_tp_exit() -> dict:
     open_positions = {oid: p for oid, p in positions.items()
                       if p.get("status") == "open" and p.get("strategy") != "METER_REBAL"}
     if not open_positions:
-        return {"closed": 0, "sl": 0, "tp": 0, "errors": [], "scanned": 0}
+        return {"closed": 0, "sl": 0, "tp": 0, "errors": [], "unpriced": 0, "scanned": 0}
 
     # Fetch live prices for all open symbols
     symbols = list({p["symbol"] for p in open_positions.values()})
@@ -976,6 +1136,7 @@ async def _sl_tp_exit() -> dict:
     sl = 0
     tp = 0
     errors = []
+    unpriced = 0
 
     for oid, pos in list(open_positions.items()):
         try:
@@ -984,8 +1145,14 @@ async def _sl_tp_exit() -> dict:
             entry  = pos.get("entry_price", 0)
             sl_px  = pos.get("stop_loss", 0)
             tp_px  = pos.get("take_profit", 0)
-            price  = prices.get(sym) or pos.get("current_price") or entry
+            # ⚠️ S-895 阶段 1:**没有标记价就不评估 SL/TP**。
+            # 原来这里回落 `current_price` / `entry_price` —— 开仓价恰好落在
+            # 止损位之内时,一个「价格取不到」的仓位会被**假止损**平掉;
+            # 反过来在止盈位之内时又会被**假止盈**平掉。用一个不存在的价
+            # 去触发真实的平仓,是比「这一轮不评估」更坏的事。
+            price  = prices.get(sym)
             if not price:
+                unpriced += 1
                 continue
 
             triggered = None
@@ -1013,6 +1180,7 @@ async def _sl_tp_exit() -> dict:
             _logger.warning(f"[SL/TP] error closing {oid}: {e}")
 
     return {"closed": closed, "sl": sl, "tp": tp, "errors": errors,
+            "unpriced": unpriced,   # ⚠️ S-895 阶段 1:这一轮没评估的仓位数
             "scanned": len(open_positions)}
 
 
@@ -1160,7 +1328,12 @@ async def _close_rebal_position(positions: dict, oid: str, reason: str, price: f
         return False
     qty, side, entry = pos.get("qty", 0), pos.get("side", "LONG"), pos.get("entry_price", 0)
     if not price or price <= 0:
-        price = pos.get("current_price") or entry
+        # ⚠️ S-895 阶段 1:**没有标记价就不平仓**。原来这里回落
+        # `current_price` / `entry_price` ⇒ 用开仓价写成「已实现盈亏」⇒
+        # 那个数会喂进 Learn 循环(`trade_results`)⇒ **一个编出来的样本
+        # 进了真的学习器**。宁可这一轮不平。
+        _logger.warning(f"[REBAL] close {oid} skipped — no mark price for {pos.get('symbol')}")
+        return False
     if side == "LONG":
         pnl_abs = (price - entry) * qty
         pnl_pct = (price / entry - 1) * 100 if entry else 0
@@ -1259,7 +1432,9 @@ async def _run_paper_rebalance(dry_run: bool = True) -> dict:
     brk_prices = await _fetch_prices_batch([p["symbol"] for p in sleeve.values()]) if sleeve else {}
     breaker = []
     for oid, p in sleeve.items():
-        px = brk_prices.get(p.get("symbol")) or p.get("current_price") or p.get("entry_price")
+        # ⚠️ S-895 阶段 1:**只认真实标记价**。回落开仓价 ⇒ 浮亏恒等于 0 ⇒
+        # 熔断器**永远不触发** —— 一个在价格取不到时反而变哑的风险闸门。
+        px = brk_prices.get(p.get("symbol"))
         entry = p.get("entry_price") or 0
         if not px or not entry:
             continue
@@ -1304,8 +1479,10 @@ async def _run_paper_rebalance(dry_run: bool = True) -> dict:
     for oid in plan["closes"]:
         try:
             p = sleeve.get(oid)
+            # ⚠️ S-895 阶段 1:只传**这一轮真实拿到的**标记价;
+            # 拿不到 ⇒ `_close_rebal_position` 会拒绝平仓(它不再回落开仓价)。
             if p and await _close_rebal_position(positions, oid, "rebalance",
-                                                 prices.get(p["symbol"]) or p.get("current_price")):
+                                                 prices.get(p["symbol"])):
                 closed += 1
         except Exception as e:
             _logger.warning(f"[REBAL] close {oid} failed: {e}")
@@ -1314,11 +1491,16 @@ async def _run_paper_rebalance(dry_run: bool = True) -> dict:
             p = sleeve.get(r["order_id"])
             if not p:
                 continue
-            await _close_rebal_position(positions, r["order_id"], "rebalance_resize",
-                                        prices.get(r["sym"]) or p.get("current_price"))
+            px = prices.get(r["sym"])
+            if not px:
+                # 缩容 = 先平后开。没有价就**整步不做** ——
+                # 半步(平了没开)会留下一个没有计划依据的裸仓。
+                _logger.warning(f"[REBAL] resize {r.get('sym')} skipped — no mark price")
+                continue
+            await _close_rebal_position(positions, r["order_id"], "rebalance_resize", px)
             closed += 1
             res = _open_rebal_position(r["sym"], r["notional"], r["side"],
-                                       asset_by_sym.get(r["sym"], {}), regime, prices.get(r["sym"]))
+                                       asset_by_sym.get(r["sym"], {}), regime, px)
             if res:
                 positions[res[0]] = res[1]; opened += 1
         except Exception as e:

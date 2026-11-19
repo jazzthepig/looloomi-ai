@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { T, FONTS } from "../tokens";
-import { isMissing } from "../lib/safeFormat";
+import { isMissing, fmtSignedPnl } from "../lib/safeFormat";
 import PerformanceDashboard from "./PerformanceDashboard";
 
 const API_BASE = "/api/v1";
@@ -392,7 +392,17 @@ function PaperTrading() {
             </div>
           )}
           {positions && positions.positions?.map(pos => {
-            const pnlColor = (pos.unrealized_pnl || 0) >= 0 ? "#00D98A" : "#FF3D5A";
+            // ⚠️ S-895 阶段 1:`unrealized_pnl` 现在可能是 **null** —— 意思是
+            // 「**没拿到标记价**」(闸门关了 / 取价失败),不是「盈亏为零」。
+            // 原来的 `(pos.unrealized_pnl || 0)` 把 null 又变回 0 ⇒ 一份
+            // 「没有价格」的报告显示成「+0.00」⇒ 与「仓位真的平了」同形。
+            // **没有测量 ⇒ 显示「—」**,并且不用涨跌色(颜色本身也是断言)。
+            // 用 `isMissing`(safeFormat 的既有积木),不自己再写一遍判空 ——
+            // 它已经是「0 是真数、null 是缺失」这条规则的唯一定义。
+            const noPnl = isMissing(pos.unrealized_pnl);
+            const pnlColor = noPnl ? "rgba(199,210,254,0.4)"
+              : (pos.unrealized_pnl >= 0 ? "#00D98A" : "#FF3D5A");
+            const pnlText = fmtSignedPnl(pos.unrealized_pnl, pos.unrealized_pct);
             const triggered = pos.sl_triggered || pos.tp_triggered;
             return (
               <div key={pos.order_id} style={{
@@ -404,8 +414,9 @@ function PaperTrading() {
                 <span style={{ fontFamily: FONTS.mono, fontSize: 11, fontWeight: 700, color: "#E8EAF0", minWidth: 44 }}>{pos.symbol}</span>
                 <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: pos.side === "LONG" ? "#00D98A" : "#FF3D5A", minWidth: 36 }}>{pos.side}</span>
                 <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: "rgba(199,210,254,0.5)" }}>@ ${pos.entry_price?.toFixed(4)}</span>
-                <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: pnlColor, marginLeft: "auto" }}>
-                  {pos.unrealized_pnl >= 0 ? "+" : ""}${(pos.unrealized_pnl || 0).toFixed(2)} ({pos.unrealized_pct >= 0 ? "+" : ""}{(pos.unrealized_pct || 0).toFixed(2)}%)
+                <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: pnlColor, marginLeft: "auto" }}
+                      title={noPnl ? "no live mark price — P&L not measured" : ""}>
+                  {pnlText}
                 </span>
                 <span style={{ fontFamily: FONTS.mono, fontSize: 8, color: "rgba(199,210,254,0.3)", minWidth: 30 }}>
                   {pos.cis_grade} {pos.cis_score?.toFixed(0)}

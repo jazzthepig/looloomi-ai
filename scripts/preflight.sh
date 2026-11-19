@@ -650,6 +650,21 @@ python3 -m pytest tests/test_cg_call_sites.py -q || {
     echo "✗ preflight stage: S-895 阶段 0 —— CG 调用面形状守卫红" >&2
     exit 1
 }
+# 3a-vicesima-ter. S-895 阶段 1:交易路由原来写的是
+#                     `price = prices.get(sym, pos["entry_price"])` ⇒ 拿不到标记价
+#                     就用开仓价 ⇒ **PnL 精确等于 0** ⇒ 与「仓位真的平了」同形;
+#                     止损位常常就落在开仓价之内 ⇒ 一个「价格取不到」的仓位会被
+#                     **假止损**平掉 ⇒ 写进 trade_results 的已实现盈亏是编出来的。
+#                     闸门一开始真的会拒绝之后,这条路径的语义必须先修。
+#                     判据:合成 503 / 真 503 ⇒ current_price is None(**不是**
+#                     entry_price)、unrealized_pnl is None、price_source 合法、
+#                     **SL/TP 不触发**;同一批 symbol 连打两次只发一次外部请求;
+#                     前端 null ⇒「—」而真的 0 仍然「+0.00」。
+#                     S-244 家族:测试文件存在 ≠ 会被运行。
+python3 -m pytest tests/test_trading_price_degradation.py -q || {
+    echo "✗ preflight stage: S-895 阶段 1 —— 交易路由降级语义红" >&2
+    exit 1
+}
 # 3a-vicesima. S-360: docs/SPINE.md 必须描述现在的代码。SPINE 是 agent 重组
 #                    记忆时对齐方向的基准 —— 一份过期的方向基准比没有更坏。
 #                    实测动机:10 个文件 12 行注释断言 signal_outcomes 死了
