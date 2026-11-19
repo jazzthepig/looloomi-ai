@@ -25,6 +25,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.request
 from typing import Optional
 from pathlib import Path
@@ -85,12 +86,34 @@ def notify(title: str, text: str) -> None:
 
 
 
-def _clear_index_lock() -> None:
+def _clear_index_lock(min_age_s: float = 120.0) -> bool:
     """沙箱留下的 index.lock 在 Mac 侧清掉(硬规则 4)。只在 `.git` 是目录时做:合并用的临时 worktree 里
-    `.git` 是指针文件,直接拼路径会 NotADirectoryError —— 10-19 两次合并就死在 preflight 跑 test_seth_bot 这一步。"""
+    `.git` 是指针文件,直接拼路径会 NotADirectoryError —— 10-19 两次合并就死在 preflight 跑 test_seth_bot 这一步。
+
+    **年龄护栏(11-19):** 原来无条件删 ⇒ 一个**活着的** git 进程(正在 add/commit/merge)会被抽掉锁,
+    两个进程同时写 index ⇒ 索引损坏。只删「存在、且比 `min_age_s` 老」的锁:写索引只需几秒,
+    活着的进程不会拿着一个两分钟没动过的锁;沙箱(FUSE)留下的那种锁永远不会被刷新。
+    **残留风险(明说):** 一个卡住超过 `min_age_s` 的 git 进程仍会被误清 —— 概率极低,
+    代价是那一轮 git 自己报错(而不是索引损坏)。
+
+    返回是否真的删掉了(测试用)。"""
     git_dir = ROOT / ".git"
-    if git_dir.is_dir():
-        (git_dir / "index.lock").unlink(missing_ok=True)
+    if not git_dir.is_dir():
+        return False
+    lock = git_dir / "index.lock"
+    if not lock.exists():
+        return False
+    try:
+        age = time.time() - lock.stat().st_mtime
+    except OSError:
+        return False
+    if age < min_age_s:
+        return False
+    try:
+        lock.unlink()
+        return True
+    except OSError:
+        return False
 
 def path_problems(paths: list[str]) -> list[str]:
     """纯函数:commit 的路径清单本身合不合法。测试直接调。"""
@@ -176,6 +199,11 @@ def sync_main() -> Optional[str]:
     看板是生成物:主目录里重生过的 BOARD.md 会挡住快进(10-08 合并 T-007 后,下一个提交因此被拒)。
     先把它还原成 HEAD 的版本、快进、再按本地卡片重生 —— 不丢任何人的改动(卡片才是源头)。
     其他文件的本地改动若与合进来的提交冲突,ff-only 会拒绝,原样报告,不硬来。"""
+    # 11-19:先清陈旧的 index.lock,再做任何碰索引的动作。
+    # 沙箱(FUSE)留下的锁会让 `git merge --ff-only` 直接失败,报的是
+    # 「快进失败(本地改动与合进来的提交冲突):…index.lock': File exists.」
+    # —— 那不是本地改动冲突,是锁。T-228 的合并就死在这里(11-17,连挂两次)。
+    _clear_index_lock()
     if not behind_origin():
         return None
     board, regen = ROOT / "tasks" / "BOARD.md", False

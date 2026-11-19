@@ -232,7 +232,9 @@ def test_the_queue_loop_goes_through_batches() -> None:
 
 def test_clearing_the_index_lock_tolerates_a_worktree() -> None:
     """10-19:合并在临时 worktree 里跑 preflight,那里的 `.git` 是指针文件 —— 清锁不能 NotADirectoryError。"""
+    import os
     import tempfile
+    import time
     from unittest import mock
     import scripts.seth_bot.seth_bot as sb
     with tempfile.TemporaryDirectory() as td:
@@ -242,19 +244,35 @@ def test_clearing_the_index_lock_tolerates_a_worktree() -> None:
             sb._clear_index_lock()
         (wt / ".git").unlink()
         (wt / ".git").mkdir()
-        (wt / ".git" / "index.lock").write_text("")
+        lock = wt / ".git" / "index.lock"
+        lock.write_text("")
+        # 11-19:年龄护栏 —— 只清陈旧的锁(见 test_a_fresh_index_lock_is_left_alone)。
+        old = time.time() - 3600
+        os.utime(lock, (old, old))
         with mock.patch.object(sb, "ROOT", wt):
             sb._clear_index_lock()
-        assert not (wt / ".git" / "index.lock").exists()
+        assert not lock.exists()
 
-if __name__ == "__main__":
-    print("── S-500 seth_bot ──")
-    for name, fn in list(globals().items()):
-        if name.startswith("test_") and callable(fn):
-            fn()
-            print(f"  ✓ {name}")
-    print("\n✅ passed")
 
+def test_a_fresh_index_lock_is_left_alone() -> None:
+    """11-19:无条件删锁会把**活着的** git 进程的锁抽掉 ⇒ 两个进程同时写 index ⇒ 索引损坏。
+    写索引只需几秒,所以只清「比 min_age_s 老」的锁;新锁一个都不动。"""
+    import tempfile
+    import time
+    from unittest import mock
+    import scripts.seth_bot.seth_bot as sb
+    with tempfile.TemporaryDirectory() as td:
+        wt = Path(td)
+        (wt / ".git").mkdir()
+        lock = wt / ".git" / "index.lock"
+        lock.write_text("")
+        with mock.patch.object(sb, "ROOT", wt):
+            assert sb._clear_index_lock() is False
+        assert lock.exists(), "新鲜的锁被删了 —— 活着的 git 进程会失去保护"
+        # 显式放宽年龄 ⇒ 同一个锁这时才该被清掉(证明差别在年龄,不在别的)
+        with mock.patch.object(sb, "ROOT", wt):
+            assert sb._clear_index_lock(min_age_s=0.0) is True
+        assert not lock.exists()
 
 def test_a_job_edited_or_removed_after_the_snapshot_is_read_from_the_file(tmp_path):
     """11-07:成批提交用的是一轮开始时读入的任务 —— 之后改的 paths 不生效、删掉的任务照样执行。"""
@@ -284,3 +302,20 @@ def test_preflight_runs_a_snapshot_of_the_script(tmp_path, monkeypatch):
     ok, out = sb.preflight(tmp_path)
     assert seen["cmd"][:2] == ["bash", "-c"] and seen["cmd"][3] == "scripts/preflight.sh", seen["cmd"][:2]
     assert ok and str(tmp_path.resolve()) in out, out
+
+
+if __name__ == "__main__":
+    import inspect as _inspect
+    print("── S-500 seth_bot ──")
+    _skipped = 0
+    for _name, _fn in list(globals().items()):
+        if _name.startswith("test_") and callable(_fn):
+            _needs = list(_inspect.signature(_fn).parameters)
+            if _needs:
+                _skipped += 1
+                print("  · {} — 需要 fixture {}(由 pytest 跑)".format(_name, _needs))
+                continue
+            _fn()
+            print("  ✓ " + _name)
+    _tail = "" if not _skipped else "(跳过 {} 个需要 pytest fixture 的)".format(_skipped)
+    print("\n✅ passed" + _tail)
