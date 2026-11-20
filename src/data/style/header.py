@@ -165,6 +165,125 @@ PAGE_PROBE_TABLE, PAGE_PROBE_RETRY_S = "ohlcv_daily", 600.0
 _PAGE: dict[str, Any] = {"cap": None, "tried_at": 0.0}
 
 
+# ── 按键翻页(T-379 下半张)────────────────────────────────────────────────
+#: 键规格:表 → ((键列, 必须被钉死的过滤列), ...)。
+#:
+#: **键列必须在过滤后的行集里唯一** —— 键不唯一,按键翻页会漏行(同一键的两行,一页只带走一行)。
+#: 「钉死的过滤列」是那把锁:`ohlcv_daily` 的唯一约束是 `UNIQUE (symbol, trade_date, source)`
+#: (scripts/data_landing_migration.sql:102),所以 source 不钉死时 (symbol, trade_date) **不**唯一。
+#:
+#: **不在册的表一律留在 OFFSET 版** —— 宁可慢,不可少。
+#: 键的唯一性两条路都核过:DDL 的唯一约束 + 对线上库逐行实测(不重复元组计数)。
+KEYSET_SPECS: dict[str, tuple[tuple[tuple[str, ...], frozenset[str]], ...]] = {
+    "ohlcv_daily": ((("trade_date", "symbol"), frozenset({"source"})),),
+    "state_daily": ((("d", "entity", "feature"), frozenset()),),
+    "asset_mcap_daily": ((("d", "symbol"), frozenset({"source"})),),
+}
+#: 续读谓词最多嵌套几列。1/2/3 列的形状都在线上验过(PostgREST 接受 + 与 OFFSET 读逐行相同);
+#: 4 列以上没验过 ⇒ 不上。
+KEYSET_MAX_COLS = 3
+#: 续读谓词里允许出现的字符。列值带这些字符就得引号转义,没验过 ⇒ 当作不安全,退回 OFFSET 版。
+_KEYSET_SAFE = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.:+")
+
+
+def _order_columns(order: str) -> list[tuple[str, str]]:
+    """'d.asc,symbol.asc' → [('d','asc'), ('symbol','asc')]"""
+    out: list[tuple[str, str]] = []
+    for piece in str(order or "").split(","):
+        piece = piece.strip()
+        if not piece:
+            continue
+        if "." in piece:
+            col, direction = piece.rsplit(".", 1)
+            out.append((col.strip(), direction.strip().lower()))
+        else:
+            out.append((piece, "asc"))
+    return out
+
+
+def _pinned_columns(params: Mapping[str, Any]) -> set[str]:
+    """被等值过滤钉死的列(`source=eq.binance_hist` 这种)—— 钉死 = 该列在这批行里只有一个值。"""
+    out = set()
+    for key, value in params.items():
+        if key in ("select", "order", "limit", "offset", "or"):
+            continue
+        if isinstance(value, str) and value.startswith("eq."):
+            out.add(key)
+    return out
+
+
+def keyset_plan(table: str, params: Mapping[str, Any]) -> list[tuple[str, str]] | None:
+    """这一读能不能上按键翻页?能 ⇒ 返回续读要用的(列, 方向)前缀,不能 ⇒ None(留在 OFFSET 版)。
+
+    **判的是生效排序键的前缀,不是调用点字面写的那几列** —— `stable_order` 会把 select 里其余列
+    补进 order,判唯一性要按补齐之后的键判。
+
+    三条「不上」的硬条件:① 表不在册;② 排序键不唯一;③ **调用点自己已经带 `or=` 过滤** ——
+    续读谓词也要用 `or=`,两个 `or=` 只能留一个,写了会覆盖调用点的过滤条件 ⇒ 宁可慢,不可少行。
+    """
+    specs = KEYSET_SPECS.get(table)
+    if not specs:
+        return None
+    if "or" in params:                                    # 调用点已有 or= 过滤 ⇒ 不许上按键翻页
+        return None
+    columns = _order_columns(params.get("order") or "")
+    if not columns:
+        return None
+    pinned = _pinned_columns(params)
+    select = str(params.get("select") or "*")
+    selected = None if select.strip() == "*" else {
+        c.strip() for c in select.split(",") if c.strip()}
+    for key, need in specs:
+        if not need <= pinned:
+            continue
+        for m in range(len(key), min(len(columns), KEYSET_MAX_COLS) + 1):
+            prefix = columns[:m]
+            names = {c for c, _ in prefix}
+            if not set(key) <= names:
+                continue
+            if selected is not None and not names <= selected:
+                continue                       # 值读不到就没法续读
+            return prefix
+    return None
+
+
+def _keyset_value(value: Any) -> str | None:
+    """列值 → 谓词里的字面量。不安全(带保留字符)⇒ None ⇒ 退回 OFFSET 版。"""
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return repr(value)
+    text = str(value)
+    if not text or any(ch not in _KEYSET_SAFE for ch in text):
+        return None
+    return text
+
+
+def resume_predicate(prefix: list[tuple[str, str]], last_row: Mapping[str, Any]) -> str | None:
+    """从上一页最后一行接着读的谓词。
+
+    单列:`(a.gt.V)`;两列:`(a.gt.V,and(a.eq.V,b.gt.W))`;三列:`(a.gt.V,and(a.eq.V,or(b.gt.W,and(b.eq.W,c.gt.X))))`
+    —— asc 用 gt、desc 用 lt(方向跟排序一致),这三种形状都在线上验过:服务端接受,且与 OFFSET 读
+    **逐行同序同内容**。
+    """
+    parts: list[tuple[str, str, str]] = []
+    for col, direction in prefix:
+        raw = last_row.get(col)
+        value = _keyset_value(raw)
+        if value is None:
+            return None
+        parts.append((col, "gt" if direction == "asc" else "lt", value))
+    if len(parts) == 1:
+        col, op, value = parts[0]
+        return f"({col}.{op}.{value})"
+    if len(parts) == 2:
+        (c1, o1, v1), (c2, o2, v2) = parts
+        return f"({c1}.{o1}.{v1},and({c1}.eq.{v1},{c2}.{o2}.{v2}))"
+    (c1, o1, v1), (c2, o2, v2), (c3, o3, v3) = parts
+    return (f"({c1}.{o1}.{v1},and({c1}.eq.{v1},or({c2}.{o2}.{v2},"
+            f"and({c2}.eq.{v2},{c3}.{o3}.{v3}))))")
+
+
 async def page_cap() -> int:
     """服务端每次实际最多给多少行。每个进程探一次:对一张远多于 PAGE_ASK 行的表要 PAGE_ASK 行,数回来几行。
     探不到(没配库 / 读失败 / 回来不足 1,000 行)⇒ 按 1,000,10 分钟后再探。**不能假设**:代码要 10,000 而服务端只给 1,000 时,
@@ -188,29 +307,63 @@ async def page_cap() -> int:
     return PAGE_FLOOR
 
 
+def _keyset_cursor(plan: list[tuple[str, str]] | None, last_row: Mapping[str, Any] | None) -> dict[str, str]:
+    """续读游标:用**最后一行**的键建谓词。建不出来(值带保留字符)⇒ 空 ⇒ 走 OFFSET 版。
+
+    T-419:游标必须由**要用它的那一页**的最后一行建 —— 核对请求问的是「这一页之后还有没有行」,
+    拿上一页的旧游标去问,问的是「上一页之后还有没有行」,答案永远是「有」。
+    """
+    if not plan or last_row is None:
+        return {}
+    predicate = resume_predicate(plan, last_row)
+    return {"or": predicate} if predicate else {}
+
+
 async def _read_all(table: str, params: dict) -> list[dict]:
     """分页读全表。读不到抛异常 —— 读不到 ≠ 0 行(S-180)。没给 order 时补一个确定的顺序(S-532)。
     每页行数 = 探到的服务端上限(`page_cap`)。一页不满、但不少于 1,000 行时多问一行:还有 ⇒ 服务端的上限其实比探到的低
-    (有人把 Max rows 调回去了),按这一页的行数接着读;没有 ⇒ 读完。不这样核,上限一变就是静默截断。"""
+    (有人把 Max rows 调回去了),按这一页的行数接着读;没有 ⇒ 读完。不这样核,上限一变就是静默截断。
+
+    **按键翻页(T-379)**:排序键唯一时(T-379 的 `KEYSET_SPECS`),用上一页最后一行的键接着读,
+    不用 OFFSET —— 深页不用再从头走过前 k×每页 行。键不唯一 / 值不适合做谓词 ⇒ 退回 OFFSET 版,
+    **行数、内容、顺序都不许变**:两种读法取的是同一批行、同一顺序。
+
+    **核对请求的游标(T-419)**:必须用**本页最后一行**的键重建 —— 用进入这一轮时就已算好的旧游标,
+    末页那次核对永远看到「还有行」⇒ 白发一次请求、把每页行数误设成末页行数(8,296),
+    「服务端上限被调低」的检测在按键路径上也跟着失效。"""
     from src.data.vector.market_state_writer import _sb_get
     out: list[dict] = []
-    offset = 0
     params = stable_order(params)
     page = await page_cap()
+    plan = keyset_plan(table, params)
     while True:
-        rd = await _sb_get(table, {**params, "limit": str(page), "offset": str(offset)})
+        cursor = _keyset_cursor(plan, out[-1] if out else None)
+        # 没上按键翻页(或中途退回)⇒ OFFSET 版;offset 永远是已读到的行数,两种读法同一顺序 ⇒ 同一含义
+        req = {**params, "limit": str(page), **cursor}
+        if not cursor:
+            req["offset"] = str(len(out))
+        else:
+            req.pop("offset", None)          # 按键续读不带着旧的 offset 走(会被服务端 AND 住)
+        rd = await _sb_get(table, req)
         if not rd.ok:
-            raise RuntimeError(f"{table} 读不到(offset={offset}):{rd.reason}")
+            raise RuntimeError(f"{table} 读不到(offset={len(out)}):{rd.reason}")
         batch = rd.rows or []
         out.extend(batch)
-        offset += len(batch)
         if len(batch) == page:
             continue
         if len(batch) < PAGE_FLOOR:
             return out
-        more = await _sb_get(table, {**params, "limit": "1", "offset": str(offset)})
+        # 核对「还有没有行」:谓词用**本页最后一行**的键重建(此刻 `out[-1]` 已是本页末行)。
+        # 谓词建不出来(键值带保留字符)⇒ 退回 offset=len(out) —— 已读到的正是表的前 len(out) 行,偏移语义一样。
+        probe_cursor = _keyset_cursor(plan, out[-1])
+        probe = {**params, "limit": "1", **probe_cursor}
+        if not probe_cursor:
+            probe["offset"] = str(len(out))
+        else:
+            probe.pop("offset", None)
+        more = await _sb_get(table, probe)
         if not more.ok:
-            raise RuntimeError(f"{table} 读不到(offset={offset},核对是否读完):{more.reason}")
+            raise RuntimeError(f"{table} 读不到(offset={len(out)},核对是否读完):{more.reason}")
         if not more.rows:
             return out
         page = len(batch)                                                 # 服务端实际的上限比以为的低
