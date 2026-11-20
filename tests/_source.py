@@ -15,27 +15,22 @@ Plus S-167's JSX component name matched inside a docstring, and
 `supabase_insert_batch` matched at an import line rather than a call.
 
 So: run `code_only()` first, then match a call-shaped pattern.
+
+**2026-11-20(S-895 阶段 3)**:实现搬到 `scripts/_source.py` —— `scripts/loop_status.py`
+的「取数入口」计数也要用它(那个守卫 11-20 被一句 docstring 里的
+`/ohlc/range` 绊倒,见那边)。**一份实现,两个消费者。**
 """
 from __future__ import annotations
 
-import ast
+import pathlib
 import re
+import sys
 
+_ROOT = pathlib.Path(__file__).resolve().parents[1]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
-def code_only(src: str) -> str:
-    """Source with comments and docstrings blanked, line numbers preserved."""
-    try:
-        tree = ast.parse(src)
-    except SyntaxError:
-        return re.sub(r"#.*", "", src)
-    doc_lines: set[int] = set()
-    for node in ast.walk(tree):
-        if (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant)
-                and isinstance(node.value.value, str)):
-            doc_lines.update(range(node.value.lineno, node.value.end_lineno + 1))
-    return "\n".join(
-        "" if i in doc_lines else re.sub(r"#.*", "", line)
-        for i, line in enumerate(src.split("\n"), start=1))
+from scripts._source import code_only                          # noqa: E402,F401
 
 
 def flat(src: str) -> str:

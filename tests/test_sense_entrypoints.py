@@ -42,8 +42,16 @@ if str(ROOT) not in sys.path:
 from scripts.loop_status import sense_entrypoints            # noqa: E402
 
 #: 2026-09-05 首测值 24。**只减不增。**
-#: 降到新值时把这里改成新值,锁住成果 —— 与 NO_BEAT_BUDGET 同模式。11-02 实测 23,锁住。
-SENSE_ENTRYPOINT_BUDGET = 23
+#: 降到新值时把这里改成新值,锁住成果 —— 与 NO_BEAT_BUDGET 同模式。
+#:
+#: **11-20(S-895 阶段 3):23 → 16。** 降的不是取价路径,是**判据的假阳性** ——
+#: 计数原来匹配**原文**,于是 docstring 里写一句端点名字就算一条私有取价路径
+#: (`cg_panel_sync.py` 在 11-20 被自己新写的说明文字绊成「第 24 条」,
+#: 而它把取价委托给 `cg_pro_backfill.backfill`,自己只打 `/coins/list`
+#: 与 `/coins/markets`)。判据改成**构造**(`code_only` 之后)之后实测 16,
+#: 掉下来的 8 个文件**在代码里一个价格端点字面量都没有**,逐个查过。
+#: **不是放宽阈值** —— 阈值从 23 降到 16,取价路径一条都没多算。
+SENSE_ENTRYPOINT_BUDGET = 16
 
 _OK, _FAIL = [], []
 

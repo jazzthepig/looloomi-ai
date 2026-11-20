@@ -1,0 +1,24 @@
+{
+  "author": "lane-b",
+  "entries": [
+    {"id": "T-382-1", "scenario": "T-382 Farside ETH 全量逐日表在结算日仍免密钥可取",
+     "statement": "2026-12-15 访问 https://farside.co.uk/ethereum-etf-flow-all-data/ 仍返回 200 的静态表、仍含 Total 列,且表内最新逐日行的日期 >= 2026-11-14",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.9, "horizon_d": "2026-12-15"},
+
+    {"id": "T-382-2", "scenario": "T-382 CMC 内部 data-api 的日频/小时频仍免密钥可取",
+     "statement": "2026-12-15 请求 https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=1&range=1M 仍返回 200 且点数 >= 600(2026-11-14 实测 701 点 / 31 天,约每小时一点)",
+     "variable": "manual", "op": "gt", "lo": 0, "prob": 0.85, "horizon_d": "2026-12-15"},
+
+    {"id": "T-382-3", "scenario": "T-382 Binance allForceOrders 仍是单端点 404",
+     "statement": "2026-12-15 无 key 请求 https://fapi.binance.com/fapi/v1/allForceOrders 返回的 HTTP 状态码 = 404(同 host /fapi/v1/ping、/fapi/v1/ticker/price 仍 200)",
+     "variable": "manual", "op": "between", "lo": 404, "hi": 404, "prob": 0.85, "horizon_d": "2026-12-15"},
+
+    {"id": "T-382-4", "scenario": "T-382 OKX 强平流仍忽略 instFamily 过滤",
+     "statement": "2026-12-15 用 instFamily=BTC-USDT 订阅 OKX WS liquidation-orders,10 分钟内推送帧里出现的非 BTC-USDT 合约数 >= 5(2026-11-14 实测 16 个合约中 15 个非 BTC-USDT 族,回执只带 instType)",
+     "variable": "manual", "op": "gt", "lo": 5, "prob": 0.8, "horizon_d": "2026-12-15"},
+
+    {"id": "T-382-5", "scenario": "T-382 观测时点的 BTC 价格水平",
+     "statement": "BTC 2026-12-15 收盘价落在 55,000 与 80,000 之间(2026-11-14 收盘 67,012.95)",
+     "variable": "close:BTC", "op": "between", "lo": 55000, "hi": 80000, "prob": 0.65, "horizon_d": "2026-12-15"}
+  ]
+}
