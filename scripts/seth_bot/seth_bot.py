@@ -43,7 +43,10 @@ DENY = ("Shadow/", ".env", ".seth_bot/", ".lane_bot/", "MINIMAX_SYNC", "WEEKLY_R
 DENY_SUFFIX = (".pptx",)
 MAX_PATHS = 80
 # gitignored、但 Mac 侧 preflight 要读的东西:合并用的临时 worktree 里软链回主目录(S-500 / S-501)。
-LOCAL_ONLY = ("_data",) + PRIVATE_DOCS
+# dashboard/node_modules 在这里的原因:preflight 的 vite 新鲜度守卫(v2, 2026-11-20)量的是
+# 「当前 src 编出来的产物 vs 已提交的 dist」—— 合并 worktree 里没有 node_modules 就量不到,
+# 只能退回提交时间比较,而那条尺子在「src 提交不改产物」时永远指红 ⇒ 合并被误挡。
+LOCAL_ONLY = ("_data", "dashboard/node_modules") + PRIVATE_DOCS
 # 私有快照:不入公开仓库的文档,每轮有变化就提交进一个本地私有 git 仓库(带历史,可恢复)。
 PRIVATE_REPO = Path(os.environ.get("SETH_BOT_PRIVATE_REPO", str(ROOT.parent / "looloomi-private")))
 SNAPSHOT = PRIVATE_DOCS + ("MINIMAX_SYNC.md", "MINIMAX_SYNC_ARCHIVE.md", "WEEKLY_REVIEW.md", "PROJECT_STATE_LOG.md", "docs/reading")
