@@ -297,3 +297,80 @@ def test_fetch_panel_uses_keyset_paging_and_returns_the_same_panel(monkeypatch):
     assert len(panel_key) == 3 and sum(len(v) for v in panel_key.values()) == 18
     assert "offset" not in key.calls[1], "第二页起应带续读谓词,不带 offset"
     assert key.calls[1].get("or"), "第二页应带 or= 续读谓词"
+
+
+# ── ③ 核对请求的游标(T-419)───────────────────────────────────────────────
+#
+# 缺陷形状:末页不满(但 ≥1,000 行)时那次「还有没有行」的核对,用的是**进入这一轮时**
+# 就已算好的旧游标(上一页的键)⇒ 问的是「上一页之后还有没有行」⇒ 答案永远是「有」
+# ⇒ 白发一次请求、把每页行数误设成末页行数(线上量到 8,296)、
+# 「服务端上限被调低」的检测在按键路径上失效。
+#
+# 修法:核对请求的谓词用**本页最后一行**(`out.extend` 之后的 `out[-1]`)的键重建;
+# 谓词建不出来(键值带保留字符)⇒ 退回 `offset=len(out)`。
+#
+# 三条断言:谓词用本页末行 / 还有行时 cap 设成真实行数且不多发请求 /
+# 末页就是最后一批时直接收、cap 不被改小。
+
+
+def _keyed_rows(n: int) -> list[dict]:
+    """n 行,键 (trade_date, symbol) 唯一(一天 10 个 symbol),顺序与 (trade_date, symbol) 一致。"""
+    rows: list[dict] = []
+    for i in range(n):
+        d = i // 10
+        rows.append({"trade_date": f"2025-{1 + d // 30:02d}-{1 + d % 30:02d}",
+                     "symbol": f"S{i % 10:02d}", "close": 100 + i,
+                     "volume": 10, "source": "binance_hist"})
+    return rows
+
+
+def _read(monkeypatch, rows, *, server_cap, believed_cap, keyset: bool):
+    """整读一张表,返回(读到的行, 请求记录, 读完后的每页行数)。"""
+    fake = _Fake(rows, cap=server_cap)
+    _setup(monkeypatch, fake, cap=believed_cap)
+    if keyset:
+        monkeypatch.setitem(hd.KEYSET_SPECS, "ohlcv_daily",
+                             ((("trade_date", "symbol"), frozenset({"source"})),))
+    else:
+        monkeypatch.setitem(hd.KEYSET_SPECS, "ohlcv_daily", ())   # 临时不在册 ⇒ 走 OFFSET
+    got = asyncio.run(hd._read_all("ohlcv_daily", {
+        "select": "*", "source": "eq.binance_hist", "order": "trade_date.asc,symbol.asc"}))
+    return got, fake.calls, hd._PAGE["cap"]
+
+
+def test_the_probe_predicate_is_built_from_the_last_row_of_the_page_just_read(monkeypatch):
+    """核对请求的 `or=` 谓词必须用**本页最后一行**的键重建(不是上一页的旧游标)。"""
+    rows = _keyed_rows(3_500)
+    got, calls, cap = _read(monkeypatch, rows, server_cap=2_000, believed_cap=2_000, keyset=True)
+
+    assert got == rows, "读出来的行不许变"
+    probe = calls[-1]
+    assert probe["limit"] == "1", "核对请求只问一行"
+    assert probe["or"] == "(trade_date.gt.2025-12-20,and(trade_date.eq.2025-12-20,symbol.gt.S09))", \
+        "核对谓词必须用本页最后一行(2025-12-20/S09)重建"
+    assert probe["or"] != calls[1]["or"], "核对请求不能复用上一页的旧游标"
+    assert cap == 2_000
+
+
+def test_a_real_cap_that_is_lower_sets_the_cap_to_the_true_row_count(monkeypatch):
+    """真的还有行 ⇒ 服务端上限被调低 ⇒ `_PAGE["cap"]` 设成本页真实行数,且不多发一次请求。"""
+    rows = _keyed_rows(2_500)
+    got, calls, cap = _read(monkeypatch, rows, server_cap=1_000, believed_cap=1_500, keyset=True)
+    off_got, off_calls, off_cap = _read(monkeypatch, rows, server_cap=1_000, believed_cap=1_500,
+                                        keyset=False)
+
+    assert got == rows == off_got and len(got) == 2_500, "两种读法读到的行必须一样"
+    assert cap == 1_000 == off_cap, "上限被调低时按真实行数接着读,并记住"
+    assert len(calls) == len(off_calls) == 4, "3 次取数 + 1 次核对;按键版不比 OFFSET 版多发请求"
+
+
+def test_the_last_short_page_ends_the_read_without_shrinking_the_cap(monkeypatch):
+    """末页就是最后一批时:核对请求返回空 ⇒ 直接收,`_PAGE["cap"]` 不被改小、不多发请求。"""
+    rows = _keyed_rows(3_500)
+    got, calls, cap = _read(monkeypatch, rows, server_cap=2_000, believed_cap=2_000, keyset=True)
+    off_got, off_calls, _ = _read(monkeypatch, rows, server_cap=2_000, believed_cap=2_000,
+                                  keyset=False)
+
+    assert got == rows == off_got and len(got) == 3_500
+    assert cap == 2_000, "上限没变 ⇒ 不许把每页行数改小"
+    assert len(calls) == len(off_calls) == 3, "2 次取数 + 1 次核对;末页不该再发一次空的取数请求"
