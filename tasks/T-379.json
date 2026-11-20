@@ -5,10 +5,10 @@
     "Shadow/"
   ],
   "verified": null,
-  "notes": "2026-11-14T06:49:45Z Seth 开卡(S-860 量数据库时量到;Jazz 11-14「继续搞后端和数据库」)。\n2026-11-14T09:26Z Seth:① ② 已上线(c9fbc2c8;`/api/v1/health` 的 rest_page_rows = 10000)。③ 量了(边缘日志,部署后 20 分钟的请求数,改前 867908f0 → 改后 6344ccfc):perp_bv_daily 217 → 29,资金费 698 → 170,asset_mcap_daily 3,540 → 2,134,合计 11,259 → 9,395;**ohlcv_daily 1,506 → 1,442,几乎没动** —— 它的大头是 `fetch_panel`(自带翻页,每页 1,000,翻到 offset 446,401,842 次请求)。第二步:`fetch_panel` 每页要 10,000(它读到空页才停,不会截断;S-862 补三,待上线后再量一次)。④ 逐行哈希对比、⑤ 按键翻页:没做。",
+  "notes": "2026-11-14T06:49:45Z Seth 开卡(S-860 量数据库时量到;Jazz 11-14「继续搞后端和数据库」)。\n2026-11-14T09:26Z Seth:① ② 已上线(c9fbc2c8;`/api/v1/health` 的 rest_page_rows = 10000)。③ 量了(边缘日志,部署后 20 分钟的请求数,改前 867908f0 → 改后 6344ccfc):perp_bv_daily 217 → 29,资金费 698 → 170,asset_mcap_daily 3,540 → 2,134,合计 11,259 → 9,395;**ohlcv_daily 1,506 → 1,442,几乎没动** —— 它的大头是 `fetch_panel`(自带翻页,每页 1,000,翻到 offset 446,401,842 次请求)。第二步:`fetch_panel` 每页要 10,000(它读到空页才停,不会截断;S-862 补三,待上线后再量一次)。④ 逐行哈希对比、⑤ 按键翻页:没做。\n---\n2026-11-19 18:05Z Seth(下半张卡调给 lane-a):①② 已经落地(11-14,c9fbc2c8)—— `page_cap()` 探一次服务端上限、之后按探到的值翻页,`tests/test_read_all_paging.py` 里的 `test_a_cap_lower_than_believed_does_not_truncate` 已经钉住「服务端上限低于我们以为的 ⇒ 一行不少、一行不重」;`test_without_a_database_or_a_probe_it_behaves_as_before` 钉住「探不到 ⇒ 每页 1,000」。**2026-11-19 17:35Z 我用 REST 实测服务端上限已经是 10,000**:取 `ohlcv_daily?select=trade_date&limit=10000` 回来 10,000 行,content-range 0-9999 ⇒ 卡上第①条「等 Jazz 在 Supabase 控制台把 Max rows 从 1,000 调到 10,000」**已经不需要 Jazz 了**。所以这张卡剩下的全是仓库侧的活:③ S-862 之后重新量(同口径)、④ 逐行哈希、⑤ 按键翻页(唯一键才上)。交给你是因为这三件事都是「量 + 改 + 用测试钉住」的活,不需要人拍板口径;**要加索引那一步停下等我**(DDL 走 Seth 交互轮次,`migrations/` 已从本卡允许路径里去掉)。",
   "id": "T-379",
-  "owner": "seth",
-  "title": "大表读取的翻页:`_read_all` 用 OFFSET,读 N 行的代价是 N² 量级 —— 探到服务端每页上限后跟着用,再评估按键翻页",
+  "owner": "lane-a",
+  "title": "大表读取的翻页(下半张):按键翻页 + 逐行哈希 + S-862 之后重新量一次",
   "source": "台账 S-860。`pg_stat_statements`(09-24 起):`ohlcv_daily` 两种读法 699,764 次调用、66,596 秒,均值 95 毫秒 —— 索引是对的(source, trade_date, symbol),贵在翻页深度:每页 1,000 行,第 k 页要先走过前 k×1,000 行。`asset_mcap_daily`、`cis_rebuild_daily`、`perp_bv_daily` 同形。`v_funding_daily` 改成表之后深页从 2.46 秒降到 0.28 秒,剩下的 0.28 秒也是这个。",
   "allowed_paths": [
     "src/data/style/header.py",
@@ -16,12 +16,11 @@
     "src/api/store.py",
     "tests/",
     "scripts/preflight.sh",
-    "migrations/",
     "tasks/T-379.json"
   ],
   "acceptance": {
-    "check": "① Jazz 在 Supabase 控制台把 API 的「Max rows」从 1,000 调到 10,000(只有他能改);② `_read_all` 启动时探一次服务端实际每页上限(对一张已知大表要 10,000 行,看回来多少),之后按探到的值翻页;探不到就按 1,000 —— **要是代码要 10,000 而服务端只给 1,000,旧的「不足一页就结束」会在第一页就停,是静默截断**,测试必须覆盖这一条;③ 改前改后各量一次:同一张表整读的页数、总耗时、`pg_stat_statements` 里该语句的均值;④ 前向记录的读入口,行数与逐行内容改前改后必须相同(挑 `ohlcv_daily` binance_hist 全量对一次哈希);⑤ 按键翻页(用上一页最后一行的排序键接着读)另行评估:键不唯一会漏行,先列清每个调用点的排序键是不是唯一。",
-    "expect": "整读 40 万行从约 400 次请求降到约 40 次;台账记改前改后的数。"
+    "check": "① **先把 S-862 之后的现状量出来(改代码之前)**:同一张表整读一次(`ohlcv_daily` 的 binance_hist),记下请求页数、总耗时、返回行数;再量一张中号表(`state_daily`)作对照。三个数写进 notes(改前基线)。S-862 把 `fetch_panel` 每页从 1,000 提到 10,000,**11-14 那轮的数不可直接比 —— 要同口径重测**。② **逐行内容不许变**:改前改后各对 `ohlcv_daily` binance_hist 全量做一次哈希(行数 + 逐行内容的哈希),两个哈希必须相同;顺序也不许变(除非该调用点自己声明了排序)。两个哈希写进 notes。③ **按键翻页只在排序键唯一时上**:先列清 `_read_all` 每个调用点的排序键 —— 哪些唯一、哪些不唯一(不唯一的键不许上按键翻页,原样留在 OFFSET 版并写明理由)。列清之后再改:用上一页最后一行的排序键接着读,不用 OFFSET。④ **不许改口径**:读出来的行数、内容、顺序都不许变;不许为了少请求而截断、不许跳过空页判断。⑤ **量**:改前改后各量一次同一张表整读的请求页数与总耗时;目标是把「整读 40 万行」的请求数从约 400 降到约 40(卡上原来的期望);达不到就报实测数与卡在哪一步。**pg_stat_statements 拿不到就写「拿不到」**(那是服务端侧的视图),用应用自己这一轮的请求页数与耗时作数,并写明口径。⑥ 每条改动配一条测试并注册进 scripts/preflight.sh(S-244:测试文件存在 ≠ 会被运行);注册行的调用方式跟 tests/test_every_test_is_registered.py 的约定一致(pytest 风格写 `python3 -m pytest tests/x.py`)。**已有的 tests/test_read_all_paging.py 是改动的护栏,改它之前先读它** —— 「服务端上限低于我们以为的」那条不许删。⑦ **要加索引才能上按键翻页 ⇒ 停下**,把需要什么索引写进 notes(DDL 走 Seth 交互轮次,不许自己建迁移)。",
+    "expect": "改前改后的请求页数 / 耗时 / 逐行哈希三组数写进 notes;排序键唯一性清单在 notes 里;按键翻页只上在唯一键的调用点上;preflight 注册齐;卡 in_review,推 lane-a/T-379。"
   },
-  "prior_value": "`v_funding_daily` 之后数据库耗时的下一大块;也是几条慢接口(账本 7 秒、归因 19 秒)慢的原因 —— 实测它们不占事件循环,慢在一页一页串行读库。"
+  "prior_value": "`v_funding_daily` 之后数据库耗时的下一大块;也是几条慢接口(账本 7 秒、归因 19 秒)慢的原因 —— 实测它们不占事件循环,慢在一页一页串行读库。11-14 已完成的部分:`page_cap()` 探上限 + 按上限翻页上线(c9fbc2c8),静默截断那条有测试钉住(`tests/test_read_all_paging.py`)。11-14 量到的改后请求数:perp_bv_daily 29 / 资金费 170 / asset_mcap_daily 2,134,合计 9,395(改前 11,259);ohlcv_daily 1,506→1,442(大头是 `fetch_panel` 自己的每页 1,000,S-862 已改成 10,000,**改后没量**)。2026-11-19 17:35Z 实测:服务端每页上限已是 10,000(`ohlcv_daily?limit=10000` 回 10,000 行,content-range 0-9999)⇒ 不再等 Jazz 改 Supabase 设置。"
 }
