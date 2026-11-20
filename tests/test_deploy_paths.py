@@ -76,6 +76,55 @@ def test_is_current_means_no_runtime_path_differs(tmp_path):
     assert not dp.is_current("0" * 40, "HEAD", tmp_path) and not dp.is_current("", "HEAD", tmp_path), "认不出的 sha 不算最新"
 
 
+def test_divergent_lineages_are_judged_on_the_two_trees_not_the_merge_base(tmp_path):
+    """两条血统分叉时,判「线上是不是最新」只看**两棵树的运行时内容差在哪**。
+
+    **不许把 `changed_between` 改成三点**(`merge-base..want`)。三点只问「目标从分叉点起
+    改了什么」,会把线上那一版多出来的运行时内容从比较里抹掉 —— 于是门会报「不用部署」,
+    而线上跑的根本不是目标树的代码。**那是说谎,不是省事。**
+    完整诊断(Q1「这次推送要不要部署」与 Q2「线上是不是最新」被混成一个问题、
+    11-19 ~ 11-20 的假失败、待 Jazz 拍的拆分方案)见 `docs/DEPLOY_CHECK.md`。
+    这里钉的正是这个语义:分叉时线上带的运行时内容必须被看见。
+    """
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "config", "user.email", "t@t")
+    _git(tmp_path, "config", "user.name", "t")
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "a.py").write_text("x = 1\n")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-qm", "base")
+    base = _git(tmp_path, "rev-parse", "HEAD")
+    # 血统一:线上那一版 —— 改了运行时
+    (tmp_path / "src" / "a.py").write_text("x = 2\n")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-qm", "live-side")
+    live = _git(tmp_path, "rev-parse", "HEAD")
+    # 血统二:目标 —— 从分叉点起只改了状态文件
+    _git(tmp_path, "checkout", "-q", base)
+    (tmp_path / "PROJECT_STATE.md").write_text("state\n")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-qm", "target-side")
+    want = _git(tmp_path, "rev-parse", "HEAD")
+    # 两棵树直接比 ⇒ 线上多的那段运行时内容看得见 ⇒ 线上不是目标树的那一版
+    diff = dp.changed_between(live, want, tmp_path)
+    assert diff is not None and "src/a.py" in diff, "线上带的运行时改动必须在差集里(三点会把它抹掉 ⇒ 门会说谎)"
+    assert not dp.is_current(live, want, tmp_path), "线上那棵树带运行时内容、目标树没有 ⇒ 不是最新"
+    # 目标从分叉点起碰了运行时路径 ⇒ 更不是最新
+    (tmp_path / "src" / "b.py").write_text("y = 1\n")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-qm", "target-runtime")
+    want2 = _git(tmp_path, "rev-parse", "HEAD")
+    assert not dp.is_current(live, want2, tmp_path), "目标改了运行时路径:线上落后,要部署"
+    # 线上就是目标的祖先时(常态):两点列出目标自己改过的那些文件
+    _git(tmp_path, "checkout", "-q", want2)
+    (tmp_path / "src" / "c.py").write_text("z = 1\n")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-qm", "target-more")
+    want3 = _git(tmp_path, "rev-parse", "HEAD")
+    assert dp.changed_between(want2, want3, tmp_path) == ["src/c.py"], "线上是目标的祖先时:只列目标自己改过的文件"
+    assert not dp.is_current(want2, want3, tmp_path), "目标改了运行时路径 ⇒ 线上落后"
+
+
 def test_the_bot_commits_runtime_changes_last_and_the_wait_script_uses_the_same_rule():
     bot = _load("seth_bot_for_test", "scripts/seth_bot/seth_bot.py")
     jobs = [{"paths": ["src/api/swr.py"]}, {"paths": ["PROJECT_STATE.md"]}, {"paths": ["dashboard/dist"]}, {"paths": ["tasks/T-1.json"]}]
