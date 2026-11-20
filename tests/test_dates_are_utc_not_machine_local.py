@@ -73,7 +73,7 @@ _NAIVE_DATE = re.compile(
 )
 
 #: 冻结基线。**只许降。** 降了就把这个数改小 —— 它是棘轮的棘齿。
-BASELINE = 102   # 11-19 T-062:裸本地日期 103 → 102(metering 的 flush 日期改 UTC);10-18 S-607:scalable / combined 的面板起点改 UTC(10-14 S-579:ⓠ 时钟的「今天」改 UTC;10-06 S-499:holder_provider 的快照日期改 UTC)
+BASELINE = 101   # 11-20 S-895 阶段 3:面板回填的「今天」改 UTC(cg_panel_sync 的窗口两端跟着它走 —— Mac 在 JST,15:00 UTC 之后 `date.today()` 是本地的,窗口会错一天);11-19 T-062:裸本地日期 103 → 102(metering 的 flush 日期改 UTC);10-18 S-607:scalable / combined 的面板起点改 UTC(10-14 S-579:ⓠ 时钟的「今天」改 UTC;10-06 S-499:holder_provider 的快照日期改 UTC)
 
 #: 这些文件必须**恒为 0**:它们写裸 `date` 列,错一天就是一行假数据。
 #: `beta_core_paper.py` 是 ①,**我们唯一在产出的前向记录**(S-406 已清)。

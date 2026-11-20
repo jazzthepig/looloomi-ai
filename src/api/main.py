@@ -3962,7 +3962,30 @@ _CG_PANEL_INTERVAL_S = 6 * 3600
 #:
 #: 间隔的意义是「成功之后隔多久再做一次」,不是「失败之后罚站多久」。
 #: 把两者写成同一个数,等于让系统在最需要重试的时候重试得最慢。
-_RETRY_AFTER_FAILURE_S = 600
+#:
+#: ⚠️ **S-895 阶段 3:这不再是「失败之后睡多久」,而是退避阶梯的第一级。**
+#: 原来失败一次就 10 分钟后重打 —— 而一个 6 小时内不会自己好的故障,
+#: 10 分钟后问一次和 6 小时后问一次拿到的是**同一个答案**,代价差 36 倍。
+#: 失败时 144 轮/天 × 59 对 ≈ **8,500 次/天** —— 那正是「额度超支」的形状,
+#: 而超支的部分**全花在重复地问同一个问题**。
+#: 阶梯见 `_CG_PANEL_BACKOFF_S`。
+_CG_PANEL_BACKOFF_S = (600, 1200, 2400, 4800, 9600, 6 * 3600)
+
+#: 连续失败到第几次 ⇒ **显式报红**「停手」(并把退避秒数打进心跳的 detail)。
+#: 「停手」= 退避不再短于一次正常轮,**不是不再跑** ——
+#: 一个悄悄停下来的循环与一个死掉的循环同形,而「还在问、每轮都是红的」能被看见。
+_CG_PANEL_BACKOFF_RED_STEPS = 6
+
+
+def _cg_panel_backoff_s(n_fail: int) -> int:
+    """失败 n 次之后睡多久。**纯函数,可离线测。**
+
+    600 → 1200 → 2400 → 4800 → 9600 → 21600(封顶 = 成功间隔 6 小时)。
+    n ≤ 0 按 1 次算:第一次失败睡 10 分钟 —— S-323l 的原意
+    「瞬时故障要快重试」保留在第一级上。
+    """
+    n = max(1, int(n_fail))
+    return _CG_PANEL_BACKOFF_S[min(n - 1, len(_CG_PANEL_BACKOFF_S) - 1)]
 
 
 async def _cg_panel_loop():
@@ -3981,6 +4004,25 @@ async def _cg_panel_loop():
     所以它在这里:Railway,常在,不依赖任何人的机器。
     """
     await _asyncio.sleep(_boot_delay(900))
+    # S-895 阶段 3:连续失败计数。**退避阶梯** —— 失败一次就 10 分钟后重打,
+    # 等于用 36 倍的额度问同一个不会变的问题。
+    _consec_fail = 0
+
+    async def _wait(n_fail: int, *, ok: bool) -> None:
+        """这一轮之后睡多久。**成功 ⇒ 成功间隔;失败 ⇒ 退避阶梯。**
+
+        退避到封顶之后,这个循环**仍然会一直跑、一直红** ——
+        静默地不跑是最坏的形状(SPINE:170-174:一个因错误理由变绿的检查比红的更坏)。
+        """
+        if ok:
+            await _asyncio.sleep(_CG_PANEL_INTERVAL_S)
+            return
+        _s = _cg_panel_backoff_s(n_fail)
+        if n_fail >= _CG_PANEL_BACKOFF_RED_STEPS:
+            print(f"[CG-PANEL] 🔴 连续失败 {n_fail} 次 —— 退避 {_s}s"
+                  f"(封顶 = 成功间隔;循环还在跑,每一轮都是红的)")
+        await _asyncio.sleep(_s)
+
     while True:
         # S-323l:这一轮算不算「跑成功了」。**拒绝(refused)算成功** ——
         # 它是「跑通了但没活干」,不是故障,不该被罚成 10 分钟重试。
@@ -3988,7 +4030,12 @@ async def _cg_panel_loop():
         try:
             from src.api.store import supabase_rpc, supabase_upsert_table
             from src.data.entity.writer import _cg_headers
-            from src.data.market.cg_panel_sync import run_once
+            # ⚠️ S-895 阶段 3:**判据要显式传**。
+            # `run_once` 的默认是「没有判据 ⇒ 照旧全量回填」——
+            # 默认去读库会让函数的结果依赖线上库当时的内容(测试因此变成
+            # 「线上库说什么就什么」)。**读不读库是调用方的决定。**
+            from src.data.market.cg_panel_sync import (
+                _covered_days, _union_first_days, run_once)
 
             async def _q(table, cols):
                 # S-469:失败返回 None,不返回 [] —— 空表和读不到必须分得开。
@@ -4036,7 +4083,9 @@ async def _cg_panel_loop():
                     "_cg_panel_loop", "panel_unavailable",
                     reason=_why, detail=_detail,
                     writer="src.api.main._cg_panel_loop")
-                await _asyncio.sleep(_RETRY_AFTER_FAILURE_S)
+                # 同一个退避阶梯:深盘符号表读不到也是「这一轮没跑成」。
+                _consec_fail += 1
+                await _wait(_consec_fail, ok=False)
                 continue
             from src.data.market.cg_panel_sync import ensure_cis_names as _ensure_cis
             _panel, _added = await _ensure_cis(_q, _up, list(_panel))     # 11-02:CIS 的加密名字一定在面板里(SKY)
@@ -4049,7 +4098,12 @@ async def _cg_panel_loop():
                                        timeout=45) as _c:
                 res = await run_once(client=_c, supabase_query=_q,
                                      supabase_upsert=_up,
-                                     panel_symbols=_panel)
+                                     panel_symbols=_panel,
+                                     # S-895 阶段 3:够新就跳过 ⇒ 0 次 /ohlc/range。
+                                     # 两个判据都显式传 —— 少传一个,
+                                     # `run_once` 就退回「照旧全量回填」。
+                                     coverage_reader=_covered_days,
+                                     union_reader=_union_first_days)
             print(f"[CG-PANEL] {str(res.get('reason'))[:170]}")
             # S-299:ok 从 `status` 推导,**不写死**。
             _ok, _ref, _why = _classify(res)
@@ -4068,6 +4122,29 @@ async def _cg_panel_loop():
                         "n_symbols_failed":  res.get("n_symbols_failed"),
                         "rows_written":       res.get("rows_written"),
                         "n_pairs":            res.get("n_pairs"),
+                        # S-895 阶段 3:**「够新就跳过」必须看得见** ——
+                        # 否则「省了额度」和「什么都没干」在面板上同形。
+                        "n_pairs_fetched":    res.get("n_pairs_fetched"),
+                        "n_pairs_skipped_up_to_date":
+                            res.get("n_pairs_skipped_up_to_date"),
+                        # 计划里的三个键名(remaining / skipped_up_to_date / calls):
+                        # `calls` = **本轮我们自己发起的外部请求数**(解析 + 回填),
+                        # 不是额度池的读数 —— 它是这一轮的**分母**。
+                        "remaining":           res.get("n_pairs_fetched"),
+                        "skipped_up_to_date":  res.get("n_pairs_skipped_up_to_date"),
+                        "calls":               res.get("n_calls"),
+                        "calls_resolution":    res.get("n_calls_resolution"),
+                        "calls_backfill":      res.get("n_calls_backfill"),
+                        "coverage_read_ok":   res.get("coverage_read_ok"),
+                        "union_read_ok":      res.get("union_read_ok"),
+                        # ⚠️ 「有没有判据」和「判据读到了没有」是两个问题:
+                        # 前者是调用方的选择,后者是 IO 的结果。合成一个数,
+                        # 「没传判据」就会被读成「读失败」。
+                        "coverage_reader_provided":
+                            res.get("coverage_reader_provided"),
+                        "union_reader_provided":
+                            res.get("union_reader_provided"),
+                        "window":             res.get("window"),
                         "shortfall":          res.get("shortfall"),
                         "today":              res.get("today"),
                         "resolution":         res.get("resolution"),
@@ -4080,9 +4157,16 @@ async def _cg_panel_loop():
             # S-408-2: per-iteration record (exception path).
             await _record_loop_attempt(
                 "_cg_panel_loop", "error", reason=str(_e),
+                detail={"consecutive_failures": _consec_fail + 1,
+                        "backoff_s": _cg_panel_backoff_s(_consec_fail + 1)},
                 writer="src.api.main._cg_panel_loop")
-        await _asyncio.sleep(_CG_PANEL_INTERVAL_S if _round_ok
-                             else _RETRY_AFTER_FAILURE_S)
+        # S-895 阶段 3:退避阶梯(见 `_CG_PANEL_BACKOFF_S`)。
+        if _round_ok:
+            _consec_fail = 0
+            await _wait(0, ok=True)
+        else:
+            _consec_fail += 1
+            await _wait(_consec_fail, ok=False)
 
 
 @app.on_event("startup")

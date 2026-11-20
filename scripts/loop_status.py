@@ -45,6 +45,11 @@ import urllib.request
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 BASE = "https://web-production-0cdf76.up.railway.app"
 
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts._source import code_only                          # noqa: E402
+
 #: 会被认成「自己发 HTTP 取价」的取价原语。名字是从仓里实际用法抽的。
 _PRICE_PRIMITIVES = ("klines", "candleSnapshot", "market_chart", "ohlc/range",
                      "/eod/", "allMids", "metaAndAssetCtxs")
@@ -91,6 +96,20 @@ def sense_entrypoints() -> int:
 
     CLAUDE.md 规则 3b:「Ingestion is ONE lane (Seth), by function not by path.」
     这个数就是那条规则的实测值。2026-09-05 首测:**24**。
+
+    ⚠️ **判据是构造,不是附近的字符串**(S-895 阶段 3,2026-11-20)。
+    原来匹配的是**原文**,于是 docstring 里写一句「/ohlc/range」就把一个
+    **从不自己取价**的文件算成了一条私有取价路径 ——
+    `cg_panel_sync.py` 把取价委托给 `cg_pro_backfill.backfill`,它自己
+    只打 `/coins/list` 与 `/coins/markets`,却在 11-20 被自己的说明文字
+    绊成了「第 24 条」。
+
+    **实测(逐个查过):** 剥掉注释与 docstring 之后 24 → **16**,掉下来的 8 个
+    文件(`main.py` / `cis.py` / `signals.py` / `cg_panel_sync.py` /
+    `global_history.py` / `dingge_paper.py` / `outcome_tracker.py` /
+    `pod_aggregator_paper.py`)**在代码里一个价格端点字面量都没有** ——
+    它们打的是别的端点(`/global`、`/coins/markets`、DeFiLlama …)。
+    这不是放宽阈值,是**把判据改回它声明的样子**。
     """
     n = 0
     for d in ("src/data", "src/api"):
@@ -103,8 +122,10 @@ def sense_entrypoints() -> int:
                 continue
             if _defines_shared_gate(s):
                 continue          # 闸门 = 共享路径,不是私有取价路径
-            if any(k in s for k in _PRICE_PRIMITIVES) and any(
-                    m in s for m in _HTTP_MARKERS):
+            # ⚠️ 只在**代码**里找 —— 散文里的端点名字不是取价路径。
+            code = code_only(s)
+            if any(k in code for k in _PRICE_PRIMITIVES) and any(
+                    m in code for m in _HTTP_MARKERS):
                 n += 1
     return n
 
