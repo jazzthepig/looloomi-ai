@@ -106,7 +106,11 @@ async def get_coingecko_markets(ids: str = "", response: Response = None):
         raise HTTPException(status_code=400, detail="ids parameter required")
     id_list = [i.strip() for i in ids.split(",") if i.strip()][:60]  # max 60 ids
     if response:
-        response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=60"
+        # S-895 阶段 4:max-age 120 → 300,与 data_layer 内存/Redis 层(300s)、
+        # 预热间隔(240s)对齐。三者同口径 ⇒ 预热请求拿到的是**新鲜条目**
+        # (HIT,不打 handler)而不是 stale(stale 会触发后台刷新 ⇒ 仍然穿透外网)。
+        # 访客可见的新鲜度上限 120s → 300s(Jazz 点头;前端本来就每 2 分钟轮询)。
+        response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=60"
     data = await get_cg_markets(id_list)
     return {"data": data, "count": len(data)}
 
@@ -117,10 +121,11 @@ async def macro_pulse(response: Response = None):
     Combined macro overview: CG global + Fear & Greed + BTC price.
     Replaces 3 direct browser calls in MacroPulse.jsx with a single cached backend call.
     Response shape matches MacroPulse.jsx field accesses exactly.
-    TTL: 5 min Redis, 2 min in-memory.
+    TTL: 5 min Redis, 5 min in-memory (S-895 阶段 4:两层对齐到 300s,
+    ASGI max-age 120 → 300,同预热间隔 240s 一个口径)。
     """
     if response:
-        response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=180"
+        response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=180"
     data = await get_macro_pulse()
     # S-539:对外的市场状态 = 正式日终那天的(与 CIS 页同一个);盘中引擎的状态在 intraday_regime
     try:

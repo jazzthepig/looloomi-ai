@@ -322,14 +322,21 @@ def test_random_query_strings_cannot_flood_redis(monkeypatch):
 
 
 def test_warm_loop_requests_what_the_dashboard_requests_within_the_stale_bound():
-    """访客少 ⇒ 两次访问之间缓存会过期。预热循环按面板实际发出的请求逐条保温;它的间隔必须短于缺省的旧值上限。"""
+    """访客少 ⇒ 两次访问之间缓存会过期。预热循环按面板实际发出的请求逐条保温;它的间隔必须短于缺省的旧值上限。
+
+    S-895 阶段 4:清单拆成两张表 —— `_WARM_PATHS_LOCAL`(只读库 / 只读自身缓存,
+    预热它们**不打外网**)与 `_WARM_PATHS_EXTERNAL`(会穿透外网,**不进预热**)。
+    「面板实际发出的请求」= 两张表的并集;**实际被预热的** = LOCAL 那张。
+    「哪一条归哪张表」由 `tests/test_cache_warm_does_not_call_external.py` 守。
+    """
     import pathlib
     import re
     src = (pathlib.Path(__file__).resolve().parents[1] / "src/api/main.py").read_text(encoding="utf-8")
-    block = src[src.index("_WARM_PATHS = ("):src.index("async def _public_cache_warm_loop")]
-    paths = re.findall(r'"(/api/v1/[^"]+)"', block)
+    local = src[src.index("_WARM_PATHS_LOCAL = ("):src.index("_WARM_PATHS_EXTERNAL = (")]
+    ext = src[src.index("_WARM_PATHS_EXTERNAL = ("):src.index("async def _public_cache_warm_loop")]
+    paths = re.findall(r'"(/api/v1/[^"]+)"', local + ext)
     assert len(paths) == len(set(paths)) >= 24 and {"/api/v1/cis/universe", "/api/v1/market/crowd-clock", "/api/v1/intelligence/macro-events"} <= set(paths)
-    assert all(pc.eligible(p.split("?")[0], {}) or p.startswith("/api/v1/trading/") for p in paths), "保温的路径要进得了缓存这一层"
+    assert all(pc.eligible(p.split("?")[0], {}) or p.startswith("/api/v1/trading/") for p in paths), "登记的路径要进得了缓存这一层"
     loop = src[src.index("async def _public_cache_warm_loop"):src.index("async def _start_public_cache_warm_loop")]
     m = re.search(r"_asyncio\.sleep\((\d+)\)\s*$", loop.strip().splitlines()[-1]) or re.search(r"await _asyncio\.sleep\((\d+)\)", loop[loop.rindex("await _asyncio.sleep("):])
     assert m and int(m.group(1)) < pc.DEFAULT_STALE_S, "循环间隔要短于缺省的旧值上限,否则保不住"

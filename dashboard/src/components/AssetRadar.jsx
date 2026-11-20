@@ -318,7 +318,7 @@ export default function AssetRadar({ fngValue = 50, refreshTrigger = 0 }) {
     setLoading(true);
     setCisLoading(true);
     loadData();
-    const iv = setInterval(loadData, 120_000); // 2 min — matches backend cg_markets cache TTL
+    const iv = setInterval(loadData, 120_000); // 2 min — 后端 cg_markets 缓存 5 min(S-895 阶段 4),多数时候拿的是缓存
     return () => clearInterval(iv);
   }, [refreshTrigger]);
 

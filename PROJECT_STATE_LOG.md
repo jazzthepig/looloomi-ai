@@ -3794,3 +3794,59 @@ AST 扫描确认 `cis_provider.py` **不再出现在 CG 调用点图里**,且只
 **更早:** 2026-11-04 05:10 UTC (Seth — **Entity / Decision 层今天落表(S-712;Jazz「按设计还缺什么矢量」→「今天开始」)。** 七个空间对账:Asset ✅(无原因维)· Regime ✅(`market_state_vectors`)· Strategy ❌ · **Entity / Decision 此前从未建表** · Text 有行无向量 · 时序窗口半 · Outcome 半 · ⓪ 层空。建了:`issuer_entities`(37 家,代码 `entity/issuers.ENTITIES` 为真源,全部 assumed;**T-230 lane-b 带出处核验**)+ `issuer_decisions`(只追加;回购 / 分红 / 摊薄稀释 ← 基本面按**披露日**;上下币 ← events;每周一 payout_class / token_dilution ← treatment_daily)← `_issuer_decisions_loop` 每 6 小时 → `GET /internal/entities?entity=`。下一步:每季一个「待遇向量」挂在 entity 上,CIS v2.1 从这里读。同日早些:S-711 ② 待遇倾斜前向账起跑、记分表首批结算(E53–56 全 ✅)、近邻臂向量取日修正。**在跑:** lane-a T-222 v3 · lane-b T-223 v2 / T-227 / T-230 · lane-c T-226 续 / T-228。**周一 11-09 第一封周信。**)
 
 **更早:** 2026-11-04 03:20 UTC (Seth — **「继续升级策略」:② 换原因,前向账起跑。** ① **S-711 ② 小股东待遇倾斜前向账**(`treatment_tilt_daily` ← `_treatment_tilt_loop`,公用内核):面板等权 × 乘数(分利 ≥ 0.5 → 1.5 / 有收入不分 → 0.5 / 无协议收入 → 1.0),乘数取再平衡日前一天的 `treatment_daily`,周一再平衡,基准臂 panel_hold,**起点 11-04 收盘**;90 天后对随机乘数 1,000 次的 95 分位判。这是 ② 第 4 条路,第一条用 Jazz 的原因(慢变量)而不是动量 / 杠杆。② **记分表第一批结算了**:E53–56 全 ✅(Brier 0.03–0.09;BTC 77,454 落在 74–82k 带内、广度 0、dist_200 +5.9%、vol_pct_3y 5%)。③ 11-03 的 ③ 决定 01:49Z 发群(敞口 0%,DVOL 39.9 / 分位 41%);**近邻臂两天都空** —— d 的状态向量 d+1 08:00 才算出来,决定 02:00 发;改成取 ≤ d 最近 3 天内的向量并记下用了哪天(待推)。**在跑:** lane-a T-222 v3 · lane-b T-223 v2 / T-227 · lane-c T-226 续 / T-228。**周一 11-09 第一封周信。**)
+
+---
+
+## 2026-11-20 — S-895 阶段 4 落地:读路径 TTL 口径统一 + 预热只热本地缓存
+
+**这一轮最值钱的一条不是改了什么,是计划里那条前提只对第一轮成立。**
+一次读穿三层:进程内 `data_layer._cache_get` / Redis / ASGI `public_cache`
+(`max-age=N` ⇒ `stale_age = min(max(N*12,300),3600)`),预热循环每 **240s** 一轮。
+计划 §阶段 4 写「max-age ≥ 预热间隔 ⇒ 预热命中新鲜条目」—— 而 **HIT 不重置条目的
+年龄**:t=0 存下、t=240 命中(240 秒老但还没过期)、t=480 过期 ⇒ 触发后台刷新 ⇒ **一次外呼**。
+⇒ **预热一条外网路径的代价 ≈ 1 次外呼 / 2×max_age,不是 0** ⇒ **「调大 TTL」本身不省外呼,
+只是把刷新周期拉长;真正把外呼拿掉的是「把外网路径从预热清单里拿掉」。**
+
+**改了什么(8 个文件):** `get_cg_markets` 内存 TTL 120→300(原来的 120s **恰好等于前端轮询
+间隔** ⇒ 每次轮询都踩在过期线上,一次不落)/ `get_macro_pulse` 内存层 120→300(Redis 本来
+就是 300 ⇒ **进程内那层永远是短的那一层**)/ ASGI `max-age` 120→300(`/coingecko-markets`
+与 `/macro-pulse`)/ `_WARM_PATHS`(25 条)拆成 **`_WARM_PATHS_LOCAL`(12)+
+`_WARM_PATHS_EXTERNAL`(13,每条写明打到哪一家、代码在哪一行)**,预热循环**只遍历 LOCAL**
+—— 依据 `SPINE.md:184-213`「预热是缓存维护职责,不是采集职责」:预热顺手把采集做了 =
+有了第二条活路,而那条活路不在任何 `loop_attempt` 的记账里。
+
+**分类我错了两次**(逐跳读代码才知道):`macro-events`(RSS + DeFiLlama Raises)、
+`protocols/universe`(DeFiLlama)、`cis/universe` 与 `portfolio/risk-meter`(T2 预计算过期时
+扇出到 CG / DeFiLlama / Alternative.me)—— 四个都**是**外网 ⇒ **13 EXTERNAL / 12 LOCAL,
+并集仍是那 25 条**(少一条 = 有人把一条路径从登记里拿掉了)。
+
+**省多少(代码推导,不是实测):** `get_cg_markets` **720 → 288(−432)**;`get_macro_pulse`
+**~504–648 → ~288(−216 ~ −360)** ⇒ **合计 ~650–790 次/天 CoinGecko**(计划写的 ~790 是这个
+区间的乐观端)。⚠️ **预热拆分本身 ≈ 省 0 额度**(那 13 条的内层 TTL 本来就长:
+1800s / 14400s / 4h / 60min)⇒ **它的价值是架构 + 掐掉 `calculate_cis_universe` 那个
+间歇性 10-provider 扇出的触发器** ⇒ **省额度的主力是 TTL 口径统一(不是拆分);量级主力
+仍是阶段 3。**
+
+**代价(诚实):** 13 条路径不再被预热 ⇒ 安静期之后的第一个访客自己付计算时间(最重一条
+`protocols/universe` **8–90 秒**);缓解:`public_cache` 把**慢响应**(≥0.5s、≤400KB)写进
+Redis(键活 ~30 分钟、条目可用 ~20 分钟)⇒ 部署后的冷启动这关是过的。
+
+**守卫:** 新 `tests/test_cache_warm_does_not_call_external.py`(5 条,已挂 preflight):
+构造(`for` 必须遍历 `_WARM_PATHS_LOCAL`、旧名 `_WARM_PATHS` 不得再出现)+ 集合纪律
+(两表互不相交、并集 = 冻结的 25 条、理由必须指到代码)+ 登记跟代码对得上(AST 读路由
+装饰器下的第一跳)+ 分类是真的(EXTERNAL 至少一跳碰到网络入口、LOCAL 一跳都不许有)
+—— **做过变异测试**(把 EXTERNAL 塞进 LOCAL ⇒ 红;循环改遍历 EXTERNAL ⇒ 红)。
+⚠️ **诚实**:第 4 条的调用链是**手工登记**的(全仓库调用图会炸:`get`/`report`/`main`
+同名候选几百个),守不住「有人把链路藏起来」;前三条才是硬的。
+
+**访客可见的新鲜度 120s → 300s**(Jazz 11-20 点头):列表最多晚 3 分钟;前端本来就每
+2/5 分钟轮询 ⇒ **用户可见粒度不变**。
+
+**这一轮没有归档第一屏**(PROJECT_STATE 62,790 字符,离 80,000 还有余量)。
+
+**提交层面的坑(不是代码坑):** `src/api/main.py` 里**还有另一条 lane 的未提交改动**
+(`_news_feed_loop` 的 docstring,T-382 的新闻流加 EODHD)⇒ CLAUDE.md 规则 6 禁止
+`git add -A`,这一行**不能进本次提交** ⇒ 对 `main.py` 走 **`git apply --cached` 的部分
+补丁**(只含 `_WARM_PATHS*` 那三个 hunk)。
+⇒ **教训:共享 index 上「谁的文件」不是靠文件名判断的,是靠 hunk 判断的 —— 一个文件里
+可以同时住着两条 lane 的改动。**

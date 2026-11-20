@@ -3412,43 +3412,82 @@ async def _vc_rounds_loop():
         await _asyncio.sleep(3600)
 
 
-_WARM_PATHS = (
+# ── 预热清单(S-895 阶段 4)────────────────────────────────────────────────────
+#
+# **两张表,不是一张。预热是缓存维护职责,不是采集职责**(SPINE.md:184-213):
+# 预热顺手把采集做了 = 有了第二条活路 —— 而那条活路不在任何 `loop_attempt`
+# 的记账里 ⇒ 「今天打了多少」永远少一块(SPINE.md:170-174:「一个因错误理由
+# 变绿的检查,比红的更坏」)。所以:**会穿透外网的路径不进预热清单**;它们的
+# 新鲜度由采集循环 / 按需请求负责。
+#
+# `_WARM_PATHS_LOCAL` —— 只读库、只读自己那份缓存:预热它们**不打外网**。
+# `_WARM_PATHS_EXTERNAL` —— 会穿透外网(哪怕只在兜底路径上):每条都写清楚
+# 它会打到哪一家、代码在哪一行 —— 想把它加回预热清单的人得先看见这一行。
+#
+# 拆分的代价(诚实记,不是零成本):这 13 条路径的源站缓存不再被预热循环提前
+# 捂热 ⇒ 安静时段之后第一个访客可能撞上一次现算(慢的两条:protocols/universe
+# 8–90 秒、dingge-board ~7 秒)。已有的 Redis 保温层(`public_cache._persist`:
+# 算得慢的响应存一份,≤20 分钟)覆盖了「部署后」这个最常见的冷启动场景。
+#
+# 判据与守卫:`tests/test_cache_warm_does_not_call_external.py` —— 守的是
+# **构造**(预热循环遍历的那个名字),不是附近的字符串。
+_WARM_PATHS_LOCAL = (
     # cold on every deploy and 8–90 s to build (measured 2026-10-29); each keeps its own server-side cache
-    "/api/v1/protocols/universe",
     "/api/v1/portfolio/books?mode=forward",
     "/api/v1/portfolio/books?mode=replay",
     "/api/v1/proof/books",
     "/api/v1/cis/attribution?symbol=BTC&limit=8",
-    "/api/v1/market/economic-indicators",
-    "/api/v1/vc/portfolios",
-    "/api/v1/signals/dingge-board",
     "/api/v1/trading/metrics",
     # 11-14(S-859):面板各栏目实际发出的请求(在线上逐栏点一遍抓的,路径与查询串一字不差 —— 源站缓存按整串做键)。
     # 访客少的时候缓存会在两次访问之间过期;这条循环每 4 分钟把它们各请求一遍,访客来时拿到的总是现成的。
     # 随榜单变化的两条(cis/similar?symbol=…、cis/history/batch?symbols=…)键不固定,不在这里。
-    "/api/v1/cis/universe",
     "/api/v1/cis/v2",
-    "/api/v1/market/crowd-clock",
-    "/api/v1/market/macro-pulse",
-    "/api/v1/macro/brief",
-    "/api/v1/defi/overview",
-    "/api/v1/intelligence/macro-events",
-    "/api/v1/vc/funding-rounds?limit=400&days=180",
     "/api/v1/strategies",
     "/api/v1/strategies/open-source",
     "/api/v1/signals/feed",
     "/api/v1/signals/performance?method=official",
     "/api/v1/signals/journal?limit=30&offset=0&status=all&method=official",
     "/api/v1/proof/anchors",
-    "/api/v1/portfolio/risk-meter",
-    "/api/v1/market/earnings-calendar?symbols=AAPL,NVDA,MSFT,AMZN,GOOGL&days_ahead=30",
+)
+
+# (路径, 它会打到哪里)—— **不进预热清单**。理由必须具体到「哪一家 + 哪一行」,
+# 否则这一列会变成一句「它要花额度」的空话,下一个人照着加回去。
+_WARM_PATHS_EXTERNAL = (
+    ("/api/v1/protocols/universe",
+     "DeFiLlama TVL —— src/data/market/protocol_engine.py:621 fetch_all_protocol_tvls()"),
+    ("/api/v1/market/economic-indicators",
+     "EODHD —— src/data/market/data_layer.py:4491-4493 get_eodhd_macro_indicators()"),
+    ("/api/v1/vc/portfolios",
+     "CoinGecko —— src/data/market/data_layer.py:get_cg_vc_portfolios()(/coins/{id}/categories)"),
+    ("/api/v1/signals/dingge-board",
+     "场所公开 API —— src/data/signals/dingge_rwa.py:146 _client()"),
+    ("/api/v1/cis/universe",
+     "T2 兜底重算会扇出到 CG / DeFiLlama / Alternative.me —— src/api/routers/cis.py:_build_cis_universe()"),
+    ("/api/v1/market/crowd-clock",
+     "调 get_macro_pulse() —— src/data/market/crowd_clock.py:168"),
+    ("/api/v1/market/macro-pulse",
+     "CoinGecko + Alternative.me + DeFiLlama —— src/data/market/data_layer.py:get_macro_pulse()"),
+    ("/api/v1/macro/brief",
+     "记录读不到时兜底现算走 get_macro_pulse() —— src/api/routers/macro.py:get_macro_brief()"),
+    ("/api/v1/defi/overview",
+     "DeFiLlama —— src/data/market/data_layer.py:get_defi_overview()"),
+    ("/api/v1/intelligence/macro-events",
+     "RSS + DeFiLlama Raises —— src/backend/macro_events_scraper.py:fetch_all_macro_events()"),
+    ("/api/v1/vc/funding-rounds?limit=400&days=180",
+     "记录读不到时兜底现扫 RSS —— src/api/routers/intelligence.py:get_vc_raises()"),
+    ("/api/v1/portfolio/risk-meter",
+     "内部调 get_cis_universe() ⇒ 同「cis/universe」那一条 —— src/api/routers/cis.py:get_risk_meter()"),
+    ("/api/v1/market/earnings-calendar?symbols=AAPL,NVDA,MSFT,AMZN,GOOGL&days_ahead=30",
+     "EODHD —— src/data/market/data_layer.py:get_eodhd_earnings_calendar()"),
 )
 
 
 async def _public_cache_warm_loop():
     """面板冷启动预热(2026-10-29):部署后第一个访客要等 8–90 秒的接口(协议、书、证明、归因、VC 组合),
     由进程内回环先请求一遍(127.0.0.1:$PORT,回环不限流、不记 agent 流量,S-557),之后每 4 分钟一轮保持在缓存里。
-    判活:`loop_beat` 里 `_public_cache_warm_loop`(每轮);loop_attempt 每小时记一次。"""
+    S-895 阶段 4:**只预热 `_WARM_PATHS_LOCAL`** —— 会打外网的那 13 条不进清单
+    (预热是缓存维护职责,不是采集职责)。判活:`loop_beat` 里
+    `_public_cache_warm_loop`(每轮);loop_attempt 每小时记一次。"""
     await _asyncio.sleep(_boot_delay(120))
     import httpx as _hx
     _port = os.environ.get("PORT", "8000")
@@ -3469,7 +3508,7 @@ async def _public_cache_warm_loop():
         try:
             async with _hx.AsyncClient(timeout=150, headers={"User-Agent": "cometcloud-cache-warm"}) as _c:
                 import time as _tm
-                for _p in _WARM_PATHS:
+                for _p in _WARM_PATHS_LOCAL:
                     try:
                         _t0 = _tm.time()
                         _r = await _c.get(f"http://127.0.0.1:{_port}{_p}")
@@ -3483,10 +3522,15 @@ async def _public_cache_warm_loop():
                     await _asyncio.sleep(2)
             _why = "; ".join(_fail)[:300] or None
             await _beat("_public_cache_warm_loop", ok=not _fail, error=_why,
-                        detail={"paths": len(_WARM_PATHS), "failed": _fail, "slow_s": _slow})
+                        detail={"paths": len(_WARM_PATHS_LOCAL),
+                                "external_not_warmed": len(_WARM_PATHS_EXTERNAL),
+                                "failed": _fail, "slow_s": _slow})
             if _n % 15 == 0 or _fail:
                 await _record_loop_attempt("_public_cache_warm_loop", "ok" if not _fail else "error",
-                                           reason=_why or "", detail={"failed": _fail, "slow_s": _slow},
+                                           reason=_why or "",
+                                           detail={"paths": len(_WARM_PATHS_LOCAL),
+                                                   "external_not_warmed": len(_WARM_PATHS_EXTERNAL),
+                                                   "failed": _fail, "slow_s": _slow},
                                            writer="src.api.main._public_cache_warm_loop")
         except Exception as _e:
             print(f"[CACHE-WARM] ⚠️  pass FAILED: {_e}")

@@ -1947,7 +1947,9 @@ async def get_cg_markets(ids: list[str]) -> list:
       current_price, market_cap, total_volume, price_change_percentage_24h,
       price_change_percentage_7d_in_currency, sparkline_in_7d.price, etc.
     Uses the Pro endpoint + API key to avoid browser-side rate limits.
-    TTL: 2 min (fast-moving price data).
+    TTL: 5 min (S-895 阶段 4:120s → 300s,与 ASGI `max-age=300`、预热间隔 240s
+    同一个口径 —— 原来的 120s 恰好等于前端轮询间隔(2 分钟),于是**每次轮询
+    都踩在过期线上**,一次不落。访客可见的新鲜度上限 120s → 300s,Jazz 已点头)。
 
     S-895 阶段 2:HTTP 由 `get_cg_markets_raw()`(唯一实现)承担;本函数保留
     **自己那层缓存**(键 = id 集合的 md5 —— 不同调用方要的 id 集合不同,
@@ -1959,7 +1961,7 @@ async def get_cg_markets(ids: list[str]) -> list:
     import hashlib
     ids_hash = hashlib.md5(ids_str.encode()).hexdigest()[:12]
     key = f"cg_markets_{ids_hash}_{len(ids)}"  # hash-based key, no truncation collision
-    cached = _cache_get(key, ttl=120)
+    cached = _cache_get(key, ttl=300)
     if cached is not None:
         return cached
     r2 = await _redis_get(key)
@@ -2262,10 +2264,12 @@ async def get_macro_pulse() -> dict:
       .data.market_cap_change_percentage_24h_usd
       .fng.value / .fng.value_classification
       .btc.usd / .btc.usd_24h_change / .btc.usd_7d_change
-    TTL: 5 min Redis, 2 min in-memory.
+    TTL: 5 min Redis, 5 min in-memory (S-895 阶段 4:内存层 120s → 300s,
+    与 Redis 层、ASGI `max-age=300`、预热间隔 240s 对齐 —— 原来内存层
+    120s < Redis 300s,于是**进程内那层永远是短的那一层**)。
     """
     key = "macro_pulse"
-    cached = _cache_get(key, ttl=120)
+    cached = _cache_get(key, ttl=300)
     if cached:
         return cached
     r_cached = await _redis_get(key)

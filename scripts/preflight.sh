@@ -697,6 +697,21 @@ python3 -m pytest tests/test_backfill_skips_up_to_date.py -q || {
     echo "✗ preflight stage: S-895 阶段 3 —— 覆盖差驱动 + 失败退避红" >&2
     exit 1
 }
+# 3a-vicesima-sextes. S-895 阶段 4:预热循环原来每 4 分钟把 25 条面板路径各请求
+#                     一遍,其中 13 条**会穿透外网**(CoinGecko / DeFiLlama / EODHD /
+#                     场所 API / RSS)。预热是**缓存维护职责,不是采集职责**
+#                     (SPINE.md:184-213)—— 预热顺手把采集做了 = 有了第二条活路,
+#                     而那条活路不在任何 loop_attempt 的记账里 ⇒「今天打了多少」
+#                     永远少一块。判据:预热循环遍历的**构造**必须是
+#                     `_WARM_PATHS_LOCAL`;两张表互不相交且并集 = 冻结的 25 条;
+#                     每条 EXTERNAL 必须写清楚它打到哪一家、代码在哪一行;
+#                     EXTERNAL 的调用链里必须真的有一跳碰到网络入口,而 LOCAL
+#                     的调用链里一跳都不许有(否则它就该挪进 EXTERNAL)。
+#                     S-244 家族:测试文件存在 ≠ 会被运行。
+python3 -m pytest tests/test_cache_warm_does_not_call_external.py -q || {
+    echo "✗ preflight stage: S-895 阶段 4 —— 预热只热本地缓存(不打外网)红" >&2
+    exit 1
+}
 # 3a-vicesima. S-360: docs/SPINE.md 必须描述现在的代码。SPINE 是 agent 重组
 #                    记忆时对齐方向的基准 —— 一份过期的方向基准比没有更坏。
 #                    实测动机:10 个文件 12 行注释断言 signal_outcomes 死了
