@@ -1,0 +1,58 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T-418-1",
+      "scenario": "T-418 按键翻页复测(T-379 合并前的那一条)",
+      "statement": "合并 T-379 后 14 天内,用本卡同一脚本并排跑一次(改前 = origin/main 上的旧 OFFSET 代码,改后 = 合并后的 main),三组数(① ohlcv_daily 的 binance_hist 整读 ② state_daily 整读 ③ fetch_panel(2025-01-01))中「行数与逐行 sha256 同时逐字相同」的组数 = 3",
+      "variable": "manual",
+      "op": "between",
+      "lo": 3,
+      "hi": 3,
+      "prob": 0.85,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-418-2",
+      "scenario": "T-418 按键翻页复测(T-379 合并前的那一条)",
+      "statement": "同一对照里,「按键路径请求页数 − OFFSET 路径请求页数」在三组上的最大值 < 2(本卡实测 47→48 / 8→9 / 20→20 ⇒ 最大 +1)",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 2,
+      "prob": 0.75,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-418-3",
+      "scenario": "T-418 按键翻页复测(T-379 合并前的那一条)",
+      "statement": "结算日 state_daily 的 panel.taker_buy_share_30d 落在 [0.47, 0.53](近 174 天区间 [0.4855, 0.5089] 的外扩带)—— 每日管道仍从 ohlcv_daily 算出该量",
+      "variable": "state:taker_buy_share_30d",
+      "op": "between",
+      "lo": 0.47,
+      "hi": 0.53,
+      "prob": 0.85,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-418-4",
+      "scenario": "T-418 按键翻页复测(T-379 合并前的那一条)",
+      "statement": "结算日 state_daily 的 panel.vol_30 落在 [0.20, 0.65](近 174 天区间 [0.2286, 0.5890] 的外扩带)",
+      "variable": "state:vol_30",
+      "op": "between",
+      "lo": 0.2,
+      "hi": 0.65,
+      "prob": 0.85,
+      "horizon_d": "2026-12-15"
+    },
+    {
+      "id": "T-418-5",
+      "scenario": "T-418 按键翻页复测(T-379 合并前的那一条)",
+      "statement": "合并后 14 天内,按键翻页路径下一次正常读完(末页不满但 ≥ 1,000 行)之后,_PAGE['cap'] 仍被收窄成末页行数(本卡实测 10,000 → 8,296)—— 结算人给 1 = 缺陷仍在,0 = 已修;这条断言「缺陷仍在」",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.6,
+      "horizon_d": "2026-12-15"
+    }
+  ]
+}
