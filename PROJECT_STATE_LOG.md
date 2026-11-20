@@ -3934,3 +3934,46 @@ TTL)⇒ **~288–576/天**(原来 ~576–1152)⇒ **合计 ~770–1,050/天**(�
 
 **教训:守卫红的时候,先问「这把尺子量的是不是那个东西」,再问「我怎么把它弄绿」——
 前者会产生一个永久红的仓库,后者会造出一份假的 dist。**
+
+---
+
+## 2026-11-20 15:50 UTC — 阶段 4 收尾:守卫 v2(别人的 commit)+ 自校准 + **线上 CG 整片是暗的**
+
+**① 守卫生效了 —— 但不是我提交的。** `tests/test_vite_bundle_freshness.py` 的 v2
+(「量内容」而不是「量提交时间」)在我跑 preflight 期间由**另一条 lane 提交**为 `d5b60425`
+(已推 `origin/main`)⇒ 我 `git add` 时它已经干净 ⇒ **我的 add 是个 no-op** ⇒ 没有重复提交。
+⇒ **教训:共享工作树里,「我以为是我要提交的东西」可能已经被别人提交了 —— `git add` 之后
+必须看一眼 `git status` 的第一列(暂存区),别假设。**
+
+**② 自校准(commit `0c1ee3cb`,已推):** 见上一条目 —— 新鲜度是三个数字不是一句;
+旧值兜底上限 1440s → 3600s;`get_cg_markets` 没有 Redis 层;预热拆分后不再被预热;
+省多少重算为 ~770–1,050/天(上界是区间,验收看 24h `used_today` 差值)。
+
+**③ 部署核对撞见的第二件事:线上 CoinGecko 整片是暗的。**
+
+| 探测(15:33–15:50 UTC 连续) | 结果 |
+|---|---|
+| `/api/v1/market/coingecko-markets?ids=bitcoin` | `{"data":[],"count":0}` |
+| `/api/v1/market/macro-pulse` | `market_cap_percentage={}`、`btc={}`、`btc_price=null`、`total_market_cap_usd=null` |
+| `/api/v1/market/crowd-clock` | ✓ 有数据 |
+| `/api/v1/cis/universe` | ✓ 有数据(T1/T2 推的库数据,`stale: true`、39 分钟老) |
+| FNG / DeFiLlama(`defi_tvl_usd`) | ✓ 有数据 |
+
+⇒ **凡是要打 CoinGecko 的都在空,不打 CG 的都活着。** 不是这次部署带坏的(本 commit 只改注释与
+docstring),是 **CG 侧本身取不到数**;**空结果被缓存了**(ASGI `x-cache: HIT`、`age: 26`)
+⇒ **恢复了也要再等 ≤300s 才看得见。**
+
+**为什么兜底没顶上:** `macro-pulse` 的 `data_source` 仍是 `"coingecko"`
+(`data_layer.py:2389-2399`:CMC 给了值才会变成 `"coinmarketcap"` / `"coingecko+coinmarketcap"`)
+⇒ `cmc_provider` **一个字都没给** ⇒ 与已知的 `key_present: false`
+(Railway 上那个变量**不叫 `CMC_API_KEY`**)**完全吻合** ⇒ **兜底是哑的。**
+
+**判定:** ①闸门日预算用尽(16,000 ⇒ 到 UTC 零点)②熔断打开(429/5xx ⇒ 300s 自愈)
+③Pro key / 上游拒绝(401/5xx)。**② 已排除**(连续暗 ≥16 分钟,不是 300s 窗口);
+**① 与 ③ 必须读 `/internal/cg-quota`**(要 Jazz 的 token)。
+
+**⇒ 顺带一条方法论(比上一条「验证手段会骗人」更狠一档):** 我这一轮对阶段 4 的部署验证
+**只看了响应头**(`max-age=300` ✓)⇒ **头是对的、数据是空的,它照样绿** ⇒
+**凡是要验「这个端点活着吗」的部署检查,必须同时看正文里有没有那个字段**
+(本次:`count` / `btc_price` / `market_cap_percentage`)—— **头证明的是「缓存策略生效了」,
+不是「数据到了」。**
