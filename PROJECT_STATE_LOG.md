@@ -3850,3 +3850,87 @@ Redis(键活 ~30 分钟、条目可用 ~20 分钟)⇒ 部署后的冷启动这�
 补丁**(只含 `_WARM_PATHS*` 那三个 hunk)。
 ⇒ **教训:共享 index 上「谁的文件」不是靠文件名判断的,是靠 hunk 判断的 —— 一个文件里
 可以同时住着两条 lane 的改动。**
+
+---
+
+## 2026-11-20 — S-895 阶段 4 部署核对:「改头之后 curl 一下看头」不是有效的部署验证
+
+**commit `efc7c517`** 已上线(`GET https://looloomi.ai/internal/build-state` → `git_sha_short: efc7c517`)。
+生产实测:带 cache-buster(`/api/v1/market/macro-pulse?cb=s895a`)⇒ `cache-control: public, max-age=300,
+stale-while-revalidate=180`;`/api/v1/market/coingecko-markets?ids=bitcoin,ethereum&cb=s895a` ⇒
+`public, max-age=300, stale-while-revalidate=60` ⇒ **两条都对**。
+
+**但部署后第一次 curl(不带 cache-buster)拿到的是 `max-age=120`**(`x-cache: STALE`、`age: 697`),
+而 `build-state` 已经是新 SHA。差在哪:`public_cache._store` 把**慢响应**(≥0.5s、≤400KB)连同
+**它当时的头**一起写进 Redis(`_store` 只剔除 `content-length`/`date`/`age`/`x-cache`,**`cache-control`
+留着**),`restore` 再把这份**旧头**原样回放 ⇒ 部署后那 ~20 分钟(条目可用 ~20 分钟、键活 ~30 分钟)里,
+这个端点**对外报的仍是旧口径**。
+
+⇒ **判据:改 `Cache-Control` / `max-age` 的部署验证必须绕开那一层缓存**(加 query 参数 ——
+缓存键 = path + query string ⇒ 键变了 ⇒ handler 真跑)。否则会得到一个「没生效」的假结论,
+**然后有人去改代码,而代码本来就是对的。**
+
+⇒ **本轮第 N 次同一个形状(又一次):验证手段会继承被验证对象的那一层缓存,于是它量的是旧值,
+而它看起来是绿的。** 与「一次失败留一个洞,而洞在 `max(trade_date)` 上完全不可见」(S-190)同一族:
+**要问「现在这段代码会产出什么」,就必须绕开「上一段代码产出的缓存」。**
+
+**push 的一道流程摩擦(不是代码问题):** 推到默认分支被权限层软拦(用户此前授权过「你可以直接push」,
+但没指名 `main` 这一条分支)⇒ Jazz 点名「推:main」之后才推成功(`19272625..efc7c517`)。
+**给下一个 agent:这个仓库的推送需要指名分支的授权,泛指「可以 push」不够。**
+
+
+---
+
+## 2026-11-20 15:13 UTC — 阶段 4 收尾:新鲜度的三个数字(自校准)+ 一把量错了东西的尺子
+
+**两件都不是新功能,是把上一轮的数字与结论重新核一遍 —— 核出两个「我自己写错了的地方」。**
+
+### 一、新鲜度:「列表最多晚 3 分钟」这句话不完整 —— 三个数字要分开说
+
+| | 是什么 | 改之前 | 改之后 |
+|---|---|---|---|
+| ① **新鲜窗口** | 访客看到的数字有多老 —— **由内层缓存 TTL 决定,不由 ASGI `max-age` 决定** | ~2–4 分钟 | **~5 分钟** |
+| ② **ASGI 层** | 决定 handler 多久跑一次 | `max-age=120` | `max-age=300` |
+| ③ **旧值兜底上限** | 刷新打不通时,同一份旧正文能连送多久 | 1440s(24 分钟) | **3600s(60 分钟)** |
+
+- ① `/coingecko-markets` 的内层是**内存**层 300s;`/macro-pulse` 是内存 300 + Redis 300。
+- ③ `public_cache.storable()`(`src/api/public_cache.py:151`)**只解析 `max-age`**:
+  `stale_age = min(max(max_age*12, 300), 3600)`(`:38`)⇒ 路由里写的 `stale-while-revalidate=60`
+  **对我们自己无效**(那个数是给**下游共享缓存**的 —— 它们按 `age` + `max-age` 算新鲜度,
+  而我们发 `age`,所以下游没被骗)。
+- ⇒ **Jazz 点头的措辞「列表最多晚 3 分钟」说的是 ①;③ 涨到 60 分钟不在那次点头的射程里** ⇒
+  登记为待修项,**不在本阶段改**:要改就得改 `storable()`,那会让 crowd-clock(900)/
+  defi-overview(600) 等端点提前失效 ⇒ **可能增加外呼**(与本阶段目标相反)⇒ 单独一个阶段、单独量。
+
+**顺带核出两条(只登记,不改):**
+
+- **`get_cg_markets` 的 Redis 层根本不存在** —— 它只 `_cache_get`/`_cache_set`
+  (`data_layer.py:1964`/`:1973`),**从不 `_redis_set`** ⇒ `:1967`/`:1976` 那两次 `_redis_get`
+  永远是 miss ⇒「出错时回落旧 L2」是**死代码** ⇒ 上游一挂这条路径返回 `[]`
+  (「未测量塌成空」;计划 §风险 1 已标「本轮只登记」)⇒ 跨 worker 也不共享。
+  ⇒ **我自己写在路由注释里的「data_layer 内存/Redis 层(300s)」对这条路径是假的** ⇒ 已改。
+- **预热拆分之后,这两条路径不再被预热** ⇒ 我自己写的「预热请求拿到的是新鲜条目」**不成立** ⇒ 已改。
+
+### 二、省多少:重算,区间变宽(诚实区间比好看的数重要)
+
+`get_cg_markets` **~720 → ~240/天**(不是 288:外呼节奏 = 内层 TTL 与**前端轮询网格 120s**
+共同决定 ⇒ 落在 ~360s 一次)。`get_macro_pulse` 的 handler 从「每轮询一次(300s)」变成
+「每 ~600s 一次」⇒ 每次 handler 至少 2 次外呼(fng + btc;`/global` 有 180s 缓存、defi 有自己的
+TTL)⇒ **~288–576/天**(原来 ~576–1152)⇒ **合计 ~770–1,050/天**(上一版写 ~650–790)。
+⚠️ **区间宽是因为 `macro_pulse` 一次 handler 到底打 2 家还是 4 家数不准** ⇒
+**验收要看 24h `used_today` 的差值,不是看推导。**
+
+### 三、一把量错了东西的尺子(vite bundle freshness guard)
+
+`tests/test_vite_bundle_freshness.py` 原来判「**最后一次改 `dashboard/src` 的提交 ≤ 最后一次改
+`dashboard/dist` 的提交**」。`efc7c517` 只改了 `AssetRadar.jsx` 的**一行注释** ⇒ 产物**逐字不变**
+(49/49 文件哈希相同)⇒ **没有可提交的 dist 差异** ⇒ 尺子永远红 ⇒ **整个仓库推不动**
+(seth_bot 的每个 commit / merge job 都卡在 preflight)⇒ 「再提交一次 dist」这条路**不存在**。
+
+⇒ 尺子改成**量内容**:把当前 src 构建到**临时目录**(绝不写 `dashboard/dist` —— 守卫自己把 bug
+修好,就没人知道线上曾经缺过 chunk),逐文件比 sha256;**量不到**(没 node / 没 node_modules /
+构建失败)才退回提交时间比较,不假绿。两条**反向对照**:改一个字节必须被抓到 —— 否则
+「它永远说一致」就是装饰品。
+
+**教训:守卫红的时候,先问「这把尺子量的是不是那个东西」,再问「我怎么把它弄绿」——
+前者会产生一个永久红的仓库,后者会造出一份假的 dist。**

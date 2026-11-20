@@ -106,10 +106,18 @@ async def get_coingecko_markets(ids: str = "", response: Response = None):
         raise HTTPException(status_code=400, detail="ids parameter required")
     id_list = [i.strip() for i in ids.split(",") if i.strip()][:60]  # max 60 ids
     if response:
-        # S-895 阶段 4:max-age 120 → 300,与 data_layer 内存/Redis 层(300s)、
-        # 预热间隔(240s)对齐。三者同口径 ⇒ 预热请求拿到的是**新鲜条目**
-        # (HIT,不打 handler)而不是 stale(stale 会触发后台刷新 ⇒ 仍然穿透外网)。
-        # 访客可见的新鲜度上限 120s → 300s(Jazz 点头;前端本来就每 2 分钟轮询)。
+        # S-895 阶段 4:max-age 120 → 300,与 data_layer **内层**缓存(300s)对齐。
+        # ⚠️ 三件事别记错(11-21 复核,都在代码里核过):
+        # ① **新鲜窗口由内层 TTL 决定,不由这一行决定** —— 内层 300s ⇒ 访客看到的
+        #    数字最多老 ~5 分钟(原来 ~2–4 分钟);这一行只决定 handler 多久跑一次。
+        # ② **这条路径没有 Redis 层**:`get_cg_markets` 只 `_cache_get`/`_cache_set`
+        #    (data_layer.py:1964/1973),**从不 `_redis_set`** ⇒ `:1967`/`:1976` 那两次
+        #    `_redis_get` 永远是 miss ⇒「出错时回落旧 L2」是死代码 ⇒ 上游一挂这里返回 []。
+        # ③ **这条路径不再被预热**(阶段 4 把预热清单拆成 LOCAL/EXTERNAL,它归 EXTERNAL)
+        #    ⇒ 早先那句「预热请求拿到的是新鲜条目」已经不成立:预热的是本地缓存,不是它。
+        # 旧值兜底上限 = min(max(max_age*12,300),3600)(public_cache.py:38/151)
+        # ⇒ max-age 120 时是 1440s、300s 时是 **3600s** —— 中间件**不采纳**这里声明的
+        # `stale-while-revalidate`(那个数是给下游共享缓存的,对我们自己无效)。
         response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=60"
     data = await get_cg_markets(id_list)
     return {"data": data, "count": len(data)}
@@ -122,7 +130,10 @@ async def macro_pulse(response: Response = None):
     Replaces 3 direct browser calls in MacroPulse.jsx with a single cached backend call.
     Response shape matches MacroPulse.jsx field accesses exactly.
     TTL: 5 min Redis, 5 min in-memory (S-895 阶段 4:两层对齐到 300s,
-    ASGI max-age 120 → 300,同预热间隔 240s 一个口径)。
+    ASGI max-age 120 → 300)。⚠️ 11-21 复核:新鲜窗口由**内层** TTL 决定(300s ⇒
+    访客看到的数字最多老 ~5 分钟),ASGI 那一行只决定 handler 多久跑一次(轮询 300s
+    ⇒ 从「每轮询一次」变成「每 ~600s 一次」);旧值兜底上限 = max_age*12 = 3600s
+    (中间件不采纳下面声明的 stale-while-revalidate —— 那是给下游共享缓存的)。
     """
     if response:
         response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=180"

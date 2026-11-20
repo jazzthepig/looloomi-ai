@@ -1947,9 +1947,16 @@ async def get_cg_markets(ids: list[str]) -> list:
       current_price, market_cap, total_volume, price_change_percentage_24h,
       price_change_percentage_7d_in_currency, sparkline_in_7d.price, etc.
     Uses the Pro endpoint + API key to avoid browser-side rate limits.
-    TTL: 5 min (S-895 阶段 4:120s → 300s,与 ASGI `max-age=300`、预热间隔 240s
-    同一个口径 —— 原来的 120s 恰好等于前端轮询间隔(2 分钟),于是**每次轮询
-    都踩在过期线上**,一次不落。访客可见的新鲜度上限 120s → 300s,Jazz 已点头)。
+    TTL: 5 min 内存 (S-895 阶段 4:120s → 300s —— 原来的 120s 恰好等于前端轮询
+    间隔(2 分钟),于是**每次轮询都踩在过期线上**,一次不落)。
+    ⚠️ 11-21 复核,三件别记错:
+      ① **这一层是内存层,这一条路径没有 Redis 层** —— 本函数只 `_cache_get` /
+         `_cache_set`,**从不 `_redis_set`** ⇒ `:1967` 与 `:1976` 那两次 `_redis_get`
+         永远是 miss ⇒「出错时回落旧 L2」是**死代码** ⇒ 上游一挂这里返回 `[]`
+         (「未测量塌成空」;计划 §风险 1 已登记「本轮只登记」)⇒ 跨 worker 也不共享。
+      ② **新鲜窗口 = 这一层的 300s**(访客看到的数字最多老 ~5 分钟;原来 ~2–4 分钟);
+         ASGI 那一层只决定 handler 多久跑一次,不决定数据有多老。
+      ③ 访客可见的新鲜度上限 120s → 300s,Jazz 已点头。
 
     S-895 阶段 2:HTTP 由 `get_cg_markets_raw()`(唯一实现)承担;本函数保留
     **自己那层缓存**(键 = id 集合的 md5 —— 不同调用方要的 id 集合不同,
@@ -2265,8 +2272,14 @@ async def get_macro_pulse() -> dict:
       .fng.value / .fng.value_classification
       .btc.usd / .btc.usd_24h_change / .btc.usd_7d_change
     TTL: 5 min Redis, 5 min in-memory (S-895 阶段 4:内存层 120s → 300s,
-    与 Redis 层、ASGI `max-age=300`、预热间隔 240s 对齐 —— 原来内存层
-    120s < Redis 300s,于是**进程内那层永远是短的那一层**)。
+    与 Redis 层、ASGI `max-age=300` 对齐 —— 原来内存层 120s < Redis 300s,
+    于是**进程内那层永远是短的那一层**)。
+    ⚠️ 11-21 复核:**新鲜窗口 = 内层 300s**(访客看到的数字最多老 ~5 分钟);
+    ASGI 那一层只决定 handler 多久跑一次(前端每 300s 轮询 ⇒ 从「每轮询一次」
+    变成「每 ~600s 一次」);**旧值兜底上限 = max_age*12 = 3600s**(中间件不采纳
+    路由里声明的 `stale-while-revalidate` —— 那个数是给下游共享缓存的)。
+    ⇒ 早先写的「预热间隔 240s」本轮已删:阶段 4 之后**这条路径不再被预热**
+    (它归 EXTERNAL —— 它会穿透外网;预热是缓存维护职责,不是采集职责)。
     """
     key = "macro_pulse"
     cached = _cache_get(key, ttl=300)
