@@ -3977,3 +3977,125 @@ docstring),是 **CG 侧本身取不到数**;**空结果被缓存了**(ASGI `x-ca
 **凡是要验「这个端点活着吗」的部署检查,必须同时看正文里有没有那个字段**
 (本次:`count` / `btc_price` / `market_cap_percentage`)—— **头证明的是「缓存策略生效了」,
 不是「数据到了」。**
+
+---
+
+## 2026-11-21 04:15 UTC — S-895 阶段 5:剩余重复取数收敛 + 调用点级单一活路守卫 + **线上 CG 仍然全暗(「日预算烧穿」被降级)**
+
+**这一段是整个 S-895 里收益最低、形状最值钱的一段。** 计划 §阶段 5 列了 4 条;按代码重读一遍,
+**多找出三条纯重复**(计划那 4 条里的第 4 条查完发现不是 CG 端点,不动)。
+
+### 一、收敛清单(收敛前 → 收敛后)
+
+| 端点 | 收敛前 | 收敛后 |
+|---|---|---|
+| `/coins/{id}` | **4 处**(开发者数据 / 分类 / VC 组合 / 社区数据) | **1 处**(`data_layer.get_cg_coin_payload`) |
+| `/coins/{id}/tickers` | **2 处**(交易所集中度 / ticker 列表) | **1 处**(`get_cg_tickers_payload`) |
+| `/coins/list` | **3 处**(面板解析 / 永续市值回填 / 持有人表) | **1 处**(`get_cg_coin_list`)+ **1 条登记例外** |
+| `/coins/categories/list` | **2 处**(分类 id 集合 / 名字→id 映射) | **1 处**(`get_cg_category_list_payload`) |
+| `/coins/categories` | **2 处**(分类日度快照 / VC 组合面板) | **1 处**(`get_cg_categories_payload`) |
+| `/search/trending` | **2 处**(前端 trending 栏 / CIS trending map) | **1 处**(`get_cg_trending_payload`) |
+
+**判据是 `SPINE.md:188-191`「不能给出不同答案 ⇒ 是重复」**:同端点 + **同一组参数** ⇒ 重复;
+**参数形状不同 / 失败语义不同 ⇒ 问的不是同一个问题** ⇒ 登记在册,不算重复。
+⇒ **收敛的不是「端点」,是「端点 × 参数」这个组合。**
+
+`/coins/list` 那条登记例外值得单独说:永续市值回填要 `status=active,inactive`(含已下架的币),
+而 `/coins/list` 的响应里**没有 per-coin 的 status 字段**(实测只有 id/name/platforms/symbol)
+⇒ **拿到全量也本地筛不出** ⇒ 它必须自己打。**这不是「懒得收敛」,是它问的真是另一个问题。**
+
+### 二、为什么还要再加一个守卫(文件级不够)
+
+`tests/test_cg_call_sites.py` 管的是**文件级**:哪个文件可以打哪个端点。
+它**看不见「同一个文件里有两处实现同一个形状」** —— 而那正是阶段 5 里真实发生过的事
+(前端 trending 栏 + CIS 的 trending map 原本在同一文件里各写一遍)。
+
+⇒ 新增 `tests/test_cg_single_live_path.py`(**调用点级**,已挂进 `scripts/preflight.sh` stage 3):
+
+- `SINGLE_PATH_ENDPOINTS` —— 必须**只有 1 个文件、1 个调用点**的端点(收敛完成的 5 个 + 本来就单路的 10 个);
+- `EXCEPTIONS` —— **登记在册的多活路**:端点 → ((文件, 该文件的调用点数, **为什么它问的不是同一个问题**), …)。
+
+**登记不是空白名单**:理由为空 / 太短 ⇒ 红;登记的**调用点数**跟代码对不上 ⇒ 红;
+代码里多出未登记的文件 ⇒ 红;表里登记的端点代码里已经没有了 ⇒ 红(**「登记要跟着代码一起退役」**,
+`SPINE.md:184-213`)。⇒ **下一个 agent 想开第二条活路,必须先在这里写一行理由** ——
+那是一次**有意识的动作**,不是「顺手加一行请求」。
+
+登记在册的 8 个多活路端点:`/coins/list`、`/coins/markets`、`/coins/{id}/ohlc/range`、`/derivatives`、
+`/global/market_cap_chart`、`/rwas/markets`、`/rwas/issuers/list`、`/simple/price`(每条都带理由)。
+
+### 三、一条自指的坑 —— 守卫差点把「自己的记账语句」当成一条活路
+
+新的计数 helper 最初写成 `_CG_EXTERNAL_CALLS.get("/coins/{id}", 0)` —— 而扫描器的判据是
+「`.get(`/`.post(` 的源码段里含 CG 路径字面量」⇒ **一句计数语句被当成了三次外部调用点** ⇒
+守卫开始说假话。**这正是 `SPINE.md:170-174`「一个因错误理由变绿的检查,比红的更坏」的那个形状 ——
+而且是我自己写的那个形状。**
+
+⇒ 修法:key 从**变量**传进去(`_count_external(endpoint_key)`),扫描器看不见字面量
+⇒ 计数与调用点在**字面量**上就分开了。
+⇒ **一条能带走的:** 写扫描器时,**判据要挑「守卫自己不会写出来的东西」** —— 否则守卫会把自己算进去。
+
+### 四、跨 lane(Mac 侧)—— 只登记,不动别人的代码
+
+Mac 引擎(`/Volumes/CometCloudAI/cometcloud-local/`)侧还有 **2 处同形状的 `/coins/{id}`** 与
+**4 处裸 `requests`**(`data_fetcher.py:1397/1440/1505/1990`,绕过它自己的限速器)
+⇒ 登记在 `MINIMAX_SYNC.md §Seth-1121a`,等 Minimax 决策。
+**本仓库没有改 Mac 侧任何一行**(CLAUDE.md 规则 3a/3b)。
+
+### 五、省多少(诚实口径)
+
+阶段 5 是**低把握的小头** —— 计划估 ~50–230/天,而且**这个数字是推导不是实测**
+⇒ 真要验收,看 24h `used_today` 的差值,不要看推导。
+⇒ **阶段 5 真正交付的不是那几十次,是「以后开不了洞」**:文件级守卫 + 调用点级守卫 +
+登记表的强制退役纪律,合起来回答的是 §六 里我**答不上来的那个问题** ——「哪条活路在烧钱」。
+
+### 六、线上 CG 仍然全暗(04:13 UTC 探针)—— 「日预算烧穿」被**降级**,不是被证伪
+
+| 读数 | 值 |
+|---|---|
+| `/api/v1/market/coingecko-markets?ids=bitcoin&cb=…` | `{"data":[],"count":0}` —— **仍然全暗** |
+| `/api/v1/market/macro-pulse?cb=…` | `data_source:"coingecko"`、`btc_price:null`、`btc_dominance:null`、`total_market_cap_usd:null`、`market_cap_percentage:{}` |
+| **同一次响应里** | `fng:"12"`(Alternative.me ✓)、`defi_tvl_usd:66,370,856,839`(DeFiLlama ✓)、`macro_regime:"RISK_OFF"` ✓ |
+| `https://api.coingecko.com/api/v3/ping` | `{"gecko_says":"(V3) To the Moon!"}` —— 免费层边缘是活的 |
+
+**① 降级的理由:** 日预算按 **UTC 日**计数,重置在 00:00 UTC(= 09:00 JST)。探针是**重置之后 4h13m**,
+**还是全暗** ⇒ 「昨天的烧穿」单独解释不了「今天重置后仍然暗」⇒ 若它仍是原因,
+必须**在这 4 小时里再烧 16,000**(≈ **67 次/分钟**)—— 比我们自己估的稳态(~250–330/小时)**高一个数量级**
+⇒ **要么有一个我们还没找到的热循环,要么根本不是预算。**
+⚠️ **诚实的边界:我仍然没有 `/internal/cg-quota` 的读数(要 Jazz 的 token)⇒「降级」是推断,不是实测。**
+
+**② `ping` 只证明到「服务活」这一维:** `api.coingecko.com` 是**免费层**主机,**不是** `pro-api.coingecko.com`
+⇒ 免费层 ping **不**证明我们的 Pro 计划 / Pro key 还有效。**我差点就把它当成「key 没问题」的证据**
+—— 那是本集 episode **第四次**「一个绿的检查只证明它量的那一维」(§十 头号假设、§十一 量错东西的尺子、
+§十二 只验头)。⇒ **规则:凡是要回答「是不是我们被拒了」,读数必须来自被拒的那条路径上。**
+
+**③ 只有 CG 暗 ⇒ 不是出网路径坏了。** 同一次响应里 Alternative.me / DeFiLlama / 制度源全正常。
+
+**④ CMC 兜底确认是哑的 —— 这次是「读出来的」,不是「推出来的」。** 来源标签代码
+(`data_layer.py:2409-2415`)是 `if _cmc_global and _cmc_btc: "coinmarketcap" / elif 任一:
+"coingecko+coinmarketcap" / else: "coingecko"` ⇒ **`data_source == "coingecko"` 就是
+「CMC 两个来源同时为空」的证明** ⇒ Railway 上那个变量**仍然不叫 `CMC_API_KEY`**。
+(同一段代码解释了为什么 `market_cap_percentage` 是 `{}` 而不是 `{"btc": null}`:CMC 那条分支根本没进。)
+
+**⑤ 我没做、也不会自己做的两件事**(按指示:「不要自行改预算、不要轮换 key」):没改日预算 16,000
+(改预算是把停机线往后挪一格,不是优化);没轮换 Pro key(轮换会让 Mac 侧那份明文硬编码 key 立刻挂,
+**顺序错了是自伤**)。
+
+**⑥ 唯一能分开「预算 vs key/上游」的读数仍然只有一个,且需要 Jazz 的 token:**
+
+```bash
+curl -s https://web-production-0cdf76.up.railway.app/internal/cg-quota \
+  -H "X-Internal-Token: $INTERNAL_TOKEN" | python3 -m json.tool
+```
+
+看四个数:`used_today` / `budget` / `breaker_open` / `unbudgeted_today`(顺手看 `trips_total`)。
+**我没有授权拿手上的环境变量去打生产内部端点 ⇒ 这一条我不自己做。**
+
+### 七、这一轮的东西都在哪
+
+- 代码:`src/data/market/data_layer.py`(共享取数口)、`cg_categories.py`、`cg_panel_sync.py`、
+  `token_holders.py`、`src/data/narrative/social_collector.py`(不再持有 CG client);
+- 守卫:`tests/test_cg_single_live_path.py`(新,调用点级)、`tests/test_cg_call_sites.py`(退役登记)、
+  `tests/test_cg_guard.py`(社交采集器降级成纯消费者)、`tests/test_backfill_skips_up_to_date.py`
+  (共享路径不许碰网络);`scripts/preflight.sh` stage 3 挂上新守卫;
+- 台账:`REFUTATION_LEDGER.md §十四` + `S-895 补充 —— 阶段 5`(私有,不进 git);
+- 跨 lane:`MINIMAX_SYNC.md §Seth-1121a`(gitignored)。
