@@ -1,0 +1,62 @@
+{
+  "task": "T-420",
+  "lane": "lane-a",
+  "created": "2026-11-21",
+  "as_of": "2026-11-21",
+  "subject": "按键翻页(T-379/T-419)在生产形状上的净收益,以及它在 src/ 里的实际覆盖面",
+  "basis": "T-420 本轮实测:AST 全量枚举 348 处 _read_all/fetch_panel 调用点,63 处落在 KEYSET_SPECS 三张在册表上;用 T-419 的 keyset_plan() 实算键前缀,22 处上(生产 19)、41 处没上。OFFSET 侧性能已测 3 次/形状(中位数:形状① 126.8s / 形状② 34.9s);按键侧本轮未测完,脚本在跑。",
+  "artifacts": {
+    "measure_main": "/Volumes/CometCloudAI/cometcloud-local/research/t420/measure_t420_main.json",
+    "measure_keyset": "/Volumes/CometCloudAI/cometcloud-local/research/t420/measure_t420_keyset.json",
+    "callsites": "/Volumes/CometCloudAI/cometcloud-local/research/t420/callsites_t419.json",
+    "keyset_audit": "/Volumes/CometCloudAI/cometcloud-local/research/t420/keyset_audit_t419.json",
+    "report": "docs/research/t420_keyset_performance.md"
+  },
+  "propositions": [
+    {
+      "id": "P1",
+      "statement": "在形状②(ohlcv_daily source=binance_hist + trade_date ≥ 2024-06-20,173,994 行,20 页)上,按键翻页侧的 ≥3 次中位数 ≤ OFFSET 侧的 34.9 秒。",
+      "probability": 0.6,
+      "resolves_by": "2026-11-24",
+      "check": "读 measure_t420_keyset.json 的 reads[label endswith 'ohlcv_binance_hist_from_2024-06-20'],取 secs 中位数,与 measure_t420_main.json 同形状的中位数 34.9 比。",
+      "note": "若成立,结论可从「② 只在带范围过滤的形状上启用」升为「① 合并全部形状」。"
+    },
+    {
+      "id": "P2",
+      "statement": "在形状①(ohlcv_daily source=binance_hist 无过滤整读,448,296 行,47 页)上,按键翻页侧的 ≥3 次中位数 > OFFSET 侧的 126.8 秒。",
+      "probability": 0.55,
+      "resolves_by": "2026-11-24",
+      "check": "读 measure_t420_keyset.json 的 reads[label endswith 'ohlcv_binance_hist_all'],中位数 > 126.8。",
+      "note": "该形状无生产调用点,所以即使成立也不改变生产取舍;它检验的是「预注册判据第一分支会不会触发」。"
+    },
+    {
+      "id": "P3",
+      "statement": "形状③(fetch_panel(2025-01-01),183,892 行)上,按键翻页侧与 OFFSET 侧的逐行 sha256 相同。",
+      "probability": 0.9,
+      "resolves_by": "2026-11-24",
+      "check": "比对两份 JSON 里 fetch_panel_2025-01-01 各次读的 rowhash 集合是否相等。",
+      "note": "内容不变是「换了翻页方式不换数据」的底线;不成立则按键翻页有正确性问题,先于性能讨论。"
+    },
+    {
+      "id": "P4",
+      "statement": "在 T-419 代码不变的前提下,`state_daily` 的生产调用点里上按键翻页的处数 = 1(仅 src/data/evaluation/rr_matrix.py:950)。",
+      "probability": 0.85,
+      "resolves_by": "2026-12-01",
+      "check": "重跑 keyset_audit.py,统计 state_daily 且 verdict=KEYSET 且 prod_reachable=true 的行数。",
+      "note": "机制已定位:在册键 (d, entity, feature) 要求整组进排序键,而生产调用点用 entity=eq.panel 钉死 entity、不把它进排序键。"
+    },
+    {
+      "id": "P5",
+      "statement": "`src/` 里做 ohlcv_daily 无过滤整读(全表 × 无日期/集合过滤)的生产调用点数 = 0。",
+      "probability": 0.8,
+      "resolves_by": "2026-12-01",
+      "check": "重跑 enumerate_callsites.py,统计 flags.full_read=true 且 table=ohlcv_daily 且 prod_reachable=true 的行数。",
+      "note": "这一条是预注册判据的输入:它若变成 ≥1,「44 万行整读在生产路径上」就成立,按键翻页在无过滤整读上必须禁。"
+    }
+  ],
+  "settlement": {
+    "method": "每条到 resolves_by 后按 check 判真假;概率按 Brier 记分(score = -(p - y)^2)。",
+    "note": "本轮只交可机械判定的命题;不写收益预期,也不把未测完的按键侧数字当结论。"
+  },
+  "compliance": "全部为工程/数据口径的可核命题,不含任何投资建议或收益承诺。"
+}
