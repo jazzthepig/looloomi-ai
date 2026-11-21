@@ -273,6 +273,14 @@ def apply(data: Mapping[str, Any], assets: Mapping[str, Mapping[str, Any]],
         if not (circ_at.reindex(px.index).notna().all()):
             miss.append("circulating_supply")
         report["missing_dimensions"][sym] = miss
+    # 批次级硬输入:全市场市值是 CG 来的,没有库内来源 ⇒ 缺就是缺(不许用 0 假装有)。
+    # 缺了它 ⇒ BTC 占比算不出 ⇒ regime 判定少一个输入(还有 btc30 / fng / vix)。
+    batch_missing: list[str] = []
+    _mac = (data.get("macro") or {}).get("total_mcap") or {}
+    _k = pd.Timestamp(end).normalize() if end is not None else None
+    if _k is not None and not _mac.get(_k):
+        batch_missing.append("macro.total_mcap")
+    report["batch_missing"] = batch_missing
     report["no_max_supply"] = sorted(s for s in crypto
                                       if not (static.get(s) or {}).get("max_supply")
                                       and (assets.get(s) or {}).get("class") not in TRADFI)

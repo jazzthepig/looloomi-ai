@@ -1,0 +1,55 @@
+{
+  "task": "T-422",
+  "lane": "lane-b",
+  "created": "2026-11-21",
+  "topic": "CG-less 兜底(默认关):价/市值口径可用,成交额口径不可用",
+  "basis": "2026-11-19 三路对跑(A_pub 已发布官方档 / A_rep CG 四维 / B_rep 兜底四维),23 个加密名",
+  "claims": [
+    {
+      "id": "T422-C1",
+      "claim": "兜底的市值(流通量×价)与 CG 的 mcap 是同一个式子:11-19 逐名相对差 ≤ 0.25%,F 支柱差 ≤ 0.1 分",
+      "probability": 0.9,
+      "horizon_days": 30,
+      "resolves_by": "2026-12-21",
+      "measurable": "docs/research/t422_ab2.py 的 ab_rows.json:mcap_rel_diff_pct 与 d_pillar_f",
+      "measured_2026_11_19": "市值差 0.010%–0.204%;d_pillar_f max 0.0 / mean −0.009"
+    },
+    {
+      "id": "T422-C2",
+      "claim": "Binance 单所现货成交额 / CG 全交易所 24h 成交额 的比值在 2026-11-20…11-30 的中位数落在 8–25 之间(逐币离散度 6.5×–34.1× ⇒ 无常数可校准)",
+      "probability": 0.6,
+      "horizon_days": 30,
+      "resolves_by": "2026-12-21",
+      "measurable": "CG 恢复后逐日对跑:asset_mcap_daily.volume ÷ (ohlcv_daily.volume × close),取中位数与分位",
+      "measured_2026_11_19": "23 个加密名比值 6.54–34.12,中位约 14.0"
+    },
+    {
+      "id": "T422-C3",
+      "claim": "若按现状(兜底价+兜底成交额)发布 11-20…11-30,加密名的 Δtotal_score 中位数 ≥ 3 分、Δpillar_M 中位数 ≥ 15 分(公开面读作「集体变差」)",
+      "probability": 0.7,
+      "horizon_days": 30,
+      "resolves_by": "2026-12-21",
+      "measurable": "对每一天跑 A/B(需 CG 恢复后取回该日 asset_mcap_daily)",
+      "measured_2026_11_19": "Δscore median 4.70 / Δpillar_M mean +23.87(max 36.6)"
+    },
+    {
+      "id": "T422-C4",
+      "claim": "兜底产出的官方档名数为 56 而非 58:HYPE 与 SKY 取不到收盘价(SKY 是 MKR→SKY 迁移名,兜底按 symbol 匹配)",
+      "probability": 0.8,
+      "horizon_days": 30,
+      "resolves_by": "2026-12-21",
+      "measurable": "兜底开关开时 official.py 返回的 rows 行数与 missing 列表",
+      "measured_2026_11_19": "B_rep 56 行 vs A_rep 58 行,缺 HYPE、SKY"
+    },
+    {
+      "id": "T422-C5",
+      "claim": "11-20…11-30 每天,Binance 日线覆盖的 25 个加密名 ≥ 23 个 ⇒ 硬闸 MIN_CRYPTO_PRICED=0.90 不会被兜底卡住",
+      "probability": 0.85,
+      "horizon_days": 30,
+      "resolves_by": "2026-12-21",
+      "measurable": "每日 count(ohlcv_daily where source='binance_hist' and symbol in (25 加密名))",
+      "measured_2026_11_19": "11-19 全符号 135 个、11-20 全符号 135 个(覆盖数待逐日扫描,未跑)"
+    }
+  ],
+  "compliance": "本文件只记录口径差与可核命题,不含任何买卖含义。"
+}
