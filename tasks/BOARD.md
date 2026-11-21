@@ -2,6 +2,7 @@
 
 | 状态 | 任务 | 负责 | 标题 | 验收 | 之前 | 验证 |
 |---|---|---|---|---|---|---|
+| in_review | T-422 | lane-b | 没有 CoinGecko 的这 10 天:把官方日收盘的兜底做出来(收盘价走 Binance + 市值走「流通量×价」),并量出它与 CG 口径的差 —— 默认关,不改变任何现有行为 | 分支 `lane-b/T-422` 推上来,卡 in_review;notes 里给出:① **口径差表**(2026-11-19 两条路对跑:Δscore 的 max/mean/中位数、等级变了几个、档位变了几个、regime 有没有变、max_supply 缺失的单独一行);② **兜底实现**(新文件 + 默认关的开关 + 开关关时逐字节相同的测试 + 变异测试红);③ **一份「缺了会怎样」的清单**(11-20…11-30 每一天缺哪一维、哪一维是硬闸、哪一维是软缺)。**若 ① 跑不出来(时间/守卫),先把 ③ 与 ② 的测试交了,把 ① 标清楚跑了几轮 —— 不许拿单次当结论。** | 2026-11-21 03:50–04:45Z Seth 逐条量过(不是推测):`cis_official_daily` 的 max(d)=**2026-11-19**(58 个名字/天,11-13…11-19 连续;11-20 **0 行**);`loop_attempt` 里 `_cis_official_loop` 自 02:16Z 起每 ~11 分钟同一条:`2026-11-20 缺硬性输入(BTC 没有价格; 加密名字有价的 0/25)—— 不发,下一小时再补再试`;`asset_mcap_daily` 11-19=405 行 / 11-20=**0 行**(source=coingecko_pro_market_chart);`ohlcv_daily` 的 binance_hist **11-20 有 135 个符号**(照常在落,CG 无关);`coin_supply_daily` 最后一批 **11-20,300 行,全部带 circulating_supply/total_supply**,`fetched_at=2026-11-20 06:00:36Z`(之后 CG 死 ⇒ 不再落);`/internal/cg-quota`:`daily_budget=200`(仓库默认 16,000)、`used_today` 11-20 冲到 7,915、`remaining=0`、`breaker_open=false`、`coinmarketcap.key_present=false`;线上 `/api/v1/market/prices?symbols=BTC,ETH` 仍返回 `source:"binance"`(BTC 55,849 / ETH 1,547)⇒ **价格面还活着**;`/api/v1/market/macro-pulse` 的 CG 专属字段是 `null`/`{}`(btc_price、btc_dominance、total_market_cap_usd)而 FNG=12、DeFi TVL 正常 ⇒ **空而不造**,符合规则;Mac 引擎每小时仍推 43 个名字(`CIS job completed: 43 assets`)⇒ **实时档没断,断的是官方档**。 |  |
 | claimed | T-066 | seth | 补流动性流量变量:ETF 净流入、稳定币铸造 / 赎回(按发行方与链)、代币化国债 / MMF 按产品、Fed 净流动性;进状态层 | state_daily 至少新增:稳定币净发行 7 / 30 日、代币化类现金净变化 7 / 30 日、ETF 净流入 7 / 30 日、Fed 净流动性 4 周变化、美元(UUP)与长端利率(TLT)30 日 —— 每个都标明最早可得日期 | state_daily 17 个特征,0 个流量;代币化类别求和被缺行 / 新成分伪装成 −56% / +149% |  |
 | claimed | T-094 | seth | 状态层往前补一个周期 + 矢量库按时点:state_daily 2019 起、FNG 2018 起;market_state_vectors 改扩张窗口 z、13 个空维补或删 | S-570 / T-093 的情景格子在 2019–2022 多一轮牛熊;S-521 类的匹配不再读到未来。 | state_daily 2023-01 起(一个周期);FNG 2021-06 起;market_state_vectors 24 维里 13 维恒空、全史一次 z(看未来)。 |  |
 | claimed | T-096 | seth | 前向判断记录:每周一按情景卡 + 当周新闻摘要请本地 Qwen 9B / 27B 判断,先锚定、后看结果 | 新闻层(历史上测不了的那一层)从今天起有可验证的前向记录;T-095 的历史结论与它对照。 | 没有任何 LLM 判断的前向记录;narrative_events 新闻 2026-09-28 起、约 150 条 / 天,没有消费者。 |  |
@@ -423,4 +424,4 @@
 | dropped | T-026 | seth | fusion 账本:22 天只扣成本不记价格(ret ≡ −0.05%),state 表为空 | > 1(按价格记账,不再是常数) | 22 天 daily_return 全为 −0.00050,NAV 0.9990→0.9960 线性 |  |
 | dropped | T-074 | seth | 探索仓(5–30%,视市场风格):Jazz / agent 提交机会 → 当天按小仓位进 → 生命周期规则退出与做空 → 事后归因 | 第一笔纸面机会走完全流程;额度档位的规则写死在预注册里 | 没有探索仓;没有给 Jazz 的机会提交通道 |  |
 
-open 19 · claimed 7 · blocked 4 · done 385 · dropped 5
+open 19 · claimed 7 · blocked 4 · in_review 1 · done 385 · dropped 5

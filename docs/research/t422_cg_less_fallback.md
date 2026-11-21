@@ -90,19 +90,37 @@
 
 ---
 
-## 3. ③ 缺了会怎样(11-19 → 11-20 的实测;11-21 起 CG 全停)
+## 3. ③ 缺了会怎样(逐日实测,`t422_gap.py` 扫 11-13…11-30)
 
-| 维度 | 11-19 | 11-20 | 硬闸? |
+| d | CG 市值行 | 全市场市值行 | Binance 覆盖(加密名/总数) | Binance 全符号 | `coin_supply` 行 | 未来? |
+|---|---|---|---|---|---|---|
+| 11-13 | 422 | 422 | 23 / 25 | 135 | 304 | |
+| 11-14 | 423 | 423 | 23 / 25 | 135 | 301 | |
+| 11-15 | 421 | 421 | 23 / 25 | 135 | 302 | |
+| 11-16 | 408 | 408 | 23 / 25 | 135 | 302 | |
+| 11-17 | 410 | 410 | 23 / 25 | 135 | 301 | |
+| 11-18 | 408 | 408 | 23 / 25 | 135 | 302 | |
+| 11-19 | 405 | 405 | 23 / 25 | 135 | 302 | |
+| **11-20** | **0** | **0** | **23 / 25** | **135** | **300** | |
+| 11-21 | 0 | 0 | 0 / 25 | 0 | 0 | |
+| 11-22…11-30 | — | — | — | — | — | 是(未来日) |
+
+**逐日读法(哪些是硬闸、哪些是软缺):**
+
+| 维度 | 11-20 起 | 硬闸 / 软缺 | 兜底能补吗 |
 |---|---|---|---|
-| CG 市值 `asset_mcap_daily` | 405 行 | **0 行** | **硬闸**:加密名无收盘价 ⇒ `MIN_CRYPTO_PRICED=0.90` 过不去 ⇒ 当天不发 |
-| Binance 日线(binance_hist) | 135 符号 | **135 符号**(照常落) | 不是闸 —— **是兜底的原料,够** |
-| `coin_supply_daily`(circ/total) | 302 行 | **300 行**(最后一批 `fetched_at=2026-11-20 06:00Z`) | 软缺:补 total_supply ⇒ F 不塌 |
-| `max_supply` | 无来源 | 无来源 | 软缺:≤5 分 F |
-| `macro.total_mcap`(⇒ bdom) | 有(当天 27 行) | 缺 | 软缺:regime 少一维,标签实测未变 |
+| CG 市值 `asset_mcap_daily` | **0 行**(11-19 是 405) | **硬闸**:加密名无收盘价 ⇒ `MIN_CRYPTO_PRICED=0.90` 过不去 ⇒ 当天不发 | 能(流通量×价,口径与 CG 同式,实测差 0.010–0.204%) |
+| Binance 日线(binance_hist) | 11-20 仍 **135 符号 / 覆盖 23 个加密名** | 不是闸 —— **是兜底的原料,够** | — |
+| `coin_supply_daily`(circ/total) | 最后一批 **11-20,300 行**(`fetched_at=2026-11-20 06:00Z`) | **软缺,但必须补**:缺 `total_supply` ⇒ `fdv=0`、`supply_ratio=0` ⇒ F 支柱的 fdv fairness(0–15)+ supply(0–15)合计 **30 分整体塌掉**(不是「偏一点」) | 能(PIT 取最后一个 ≤ d 的快照) |
+| `max_supply` | 无库内来源(只有 CG 的 coin detail) | 软缺:≤5 分 F(capped-emission bonus) | **不能** ⇒ 如实标缺 |
+| `macro.total_mcap`(⇒ bdom) | 11-20 起 0 行 | 软缺:regime 少一个输入(还有 btc30 / fng / vix) | **不能** ⇒ 如实标缺 |
 
-⇒ **硬闸只有一条**:加密名「有价」比例。Binance 侧 25 个名字的覆盖足够过闸 ⇒
-**这 10 天的原料其实全在,卡住的不是数据,是 M 支柱的成交额口径。**
-(11-21…11-30 逐日扫描因上下文限额**未跑**;上表是 11-19/11-20 两天的实测值 + 11-21 起 CG 停摆的结构性结论。)
+**⚠️ 11-21 那行不能直接读成「采集器也死了」**:扫描时刻是 **2026-11-21 05:37 UTC**,日线/供给量的
+日批采集在 **~06:00 UTC** 才落 ⇒ 11-21 当天为 0 是「**还没到采集点**」,与 11-20 的
+「CG 订阅停了 ⇒ 那一批永远不会有」性质不同。**下一次扫描(11-21 06:00 UTC 之后)才能把这两者分开。**
+
+⇒ **硬闸只有一条**:加密名「有价」比例。Binance 侧 23/25 的覆盖(缺 HYPE、SKY)足够过闸 ⇒
+**这 10 天的原料其实全在,卡住的不是数据,是 M 支柱的成交额口径**(见 §1)。
 
 ---
 
@@ -112,14 +130,18 @@
 |---|---|---|
 | 1 | 开关关 ⇒ `data` 一个字节不动(返回也不多键) | ✅ |
 | 2 | 开关关 ⇒ `score_day` 输出逐字节相同(合成夹具) | ✅ |
-| 3 | 开关关 + **真实 11-19 数据** ⇒ 与落盘快照逐字节相同 | ⚠️ **跳过**:本机 4 张表(`protocol_tvl_daily` / `chain_activity_daily` / `github_commits_weekly` / `equity_fundamentals_q`)对 publishable key 返回 **401** ⇒ `load_inputs` 跑不起来,快照也没落盘。**这一条要在有 service 权限的机器上补跑**(@seth) |
-| 4 | 开关开 + CG 模拟取不到 ⇒ 兜底接管,价/市值/总量都有值 | ✅ |
-| 5 | 兜底拿不到价 ⇒ 如实缺,不许补 0;force=False 时保留 CG 原值 | ✅ |
-| 6 | 兜底只接管 CG 缺的(不替换) | ✅ |
-| 7 | 全市场市值缺 ⇒ 批次级 `batch_missing` 如实标 | ✅ |
-| 8 | **变异测试**:兜底价改 0 ⇒ 输出必须变 | ✅ 红 |
-| 9 | **变异测试**:流通量改 0 ⇒ 输出必须变 + F 支柱下降 | ✅ 红 |
-| 10 | **变异测试**:total_supply 改 0 ⇒ F 支柱必须降(fdv/supply_ratio 一起塌) | ✅ 红 |
+| 3 | 开关关 + **真实 11-19 数据**(库内真 CG 四维 + 真 Binance 日线 + 真供给量)⇒ `data` 与 `score_day` 输出逐字节相同 | ✅ **本轮补跑(真实数据,不是夹具)** |
+| 4 | 同一份真实数据,开关开 + CG 模拟取不到 ⇒ 兜底真的接管(价/市值/成交/总量都有值),且输出**必须变**(否则是装饰品) | ✅ **本轮补跑** |
+| 5 | 开关关 + `load_inputs` 全量输出 vs 落盘快照逐字节相同 | ⚠️ **跳过**:本机 4 张表(`protocol_tvl_daily` / `chain_activity_daily` / `github_commits_weekly` / `equity_fundamentals_q`)对 publishable key 返回 **401** ⇒ `load_inputs` 抛错跑不起来。**这一条要在有 service 权限的机器上补跑**(@seth) |
+| 6 | 开关开 + CG 模拟取不到 ⇒ 兜底接管,价/市值/总量都有值 | ✅ |
+| 7 | 兜底拿不到价 ⇒ 如实缺,不许补 0;force=False 时保留 CG 原值 | ✅ |
+| 8 | 兜底只接管 CG 缺的(不替换) | ✅ |
+| 9 | 全市场市值缺 ⇒ 批次级 `batch_missing` 如实标 | ✅ |
+| 10 | **变异测试**:兜底价改 0 ⇒ 输出必须变 | ✅ 红 |
+| 11 | **变异测试**:流通量改 0 ⇒ 输出必须变 + F 支柱下降 | ✅ 红 |
+| 12 | **变异测试**:total_supply 改 0 ⇒ F 支柱必须降(fdv/supply_ratio 一起塌) | ✅ 红 |
+
+`pytest tests/test_cis_cg_less_fallback.py` ⇒ **12 passed, 1 skipped**(50s;真实数据那两条要连库)。
 
 ---
 
@@ -146,4 +168,5 @@
 - 实现:`src/data/cis/cg_less_fallback.py`(新文件)+ `src/data/cis/rebuild.py` / `official.py` 的**默认关**钩子
 - 测试:`tests/test_cis_cg_less_fallback.py`
 - 对跑脚本:`docs/research/t422_ab2.py`;缺口扫描:`/Volumes/CometCloudAI/cometcloud-local/research/t422/t422_gap.py`
-- 数字表:`/Volumes/CometCloudAI/cometcloud-local/research/t422/ab_table.json`、`ab_rows.json`、`gap_1113_1130.json`(⚠️ gap 脚本因上下文限额**未跑**,`gap_1113_1130.json` **尚未生成**)
+- 数字表:`/Volumes/CometCloudAI/cometcloud-local/research/t422/ab_table.json`、`ab_rows.json`、**`gap_1113_1130.json`(逐日缺口,已跑)**、`gap_run.log`
+- 探针:`docs/research/t422_li.py`(load_inputs 可跑性)、`docs/research/t422_cols.py`(三张表的列)
