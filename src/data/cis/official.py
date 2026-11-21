@@ -217,6 +217,9 @@ async def run_once(now: Optional[datetime] = None) -> dict[str, Any]:
             refreshed = {"error": f"{type(e).__name__}: {str(e)[:120]}"}
     assets, data = await load_inputs(pd.Timestamp(d))
     rows = score_day(pd.Timestamp(d), assets, data)
+    # T-422:兜底接管时,把「确实缺的那几维」如实标进每行的 missing(max_supply 等)。
+    from src.data.cis.cg_less_fallback import annotate_rows
+    rows = annotate_rows(rows, data.get("cg_less_fallback"))
     probs = completeness(rows, assets)
     hard = [p for p in probs if is_hard(p)]
     if hard:
@@ -245,9 +248,15 @@ async def run_once(now: Optional[datetime] = None) -> dict[str, Any]:
     for r in out:
         dist[r["signal"] or "—"] = dist.get(r["signal"] or "—", 0) + 1
     events = await publish_events(out, prev_rows, d)
-    return {"ok": True, "refused": False, "written": len(out), "d": d.isoformat(), "signals": dist,
-            "incomplete": probs, "events": events, "refreshed": bool(refreshed),
-            "reason": f"{d} 发布 {len(out)} 个名字" + (f"(不齐:{probs})" if probs else "")}
+    fb = data.get("cg_less_fallback")                 # T-422:兜底接管与否 —— 返回值上要看得到
+    out_ret = {"ok": True, "refused": False, "written": len(out), "d": d.isoformat(), "signals": dist,
+               "incomplete": probs, "events": events, "refreshed": bool(refreshed),
+               "reason": f"{d} 发布 {len(out)} 个名字" + (f"(不齐:{probs})" if probs else "")}
+    if fb:                                              # 开关关 ⇒ 返回字典**一个键都不多**(逐字节相同)
+        out_ret["cg_less_fallback"] = {"took_over": fb.get("took_over"),
+                                       "still_missing": fb.get("still_missing"),
+                                       "no_fallback_price": fb.get("no_fallback_price")}
+    return out_ret
 
 
 # ── 对外:把正式序列叠到实时宇宙上(API 层)────────────────────────────────────────
