@@ -48,7 +48,8 @@
       "horizon_days": 30,
       "resolves_by": "2026-12-21",
       "measurable": "每日 count(ohlcv_daily where source='binance_hist' and symbol in (25 加密名))",
-      "measured_2026_11_19": "11-19 全符号 135 个、11-20 全符号 135 个(覆盖数待逐日扫描,未跑)"
+      "measured_2026_11_19": "逐日扫描(t422_gap.py,11-13…11-30):11-13…11-20 每天 **23 / 25** 个加密名有 Binance 收盘、全符号 135 个;11-21 行为 0 —— 扫描时刻 11-21 05:37 UTC,日批采集 ~06:00 UTC 才落,故 11-21 那行是「还没到采集点」,不能读成采集器死了(与 CG 订阅停掉性质不同)",
+      "measured_file": "/Volumes/CometCloudAI/cometcloud-local/research/t422/gap_1113_1130.json"
     }
   ],
   "compliance": "本文件只记录口径差与可核命题,不含任何买卖含义。"

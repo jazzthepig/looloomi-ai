@@ -88,6 +88,15 @@
 - **缺就是缺**:不补 0、不补默认值;`max_supply`、批次级 `macro.total_mcap` 在报告里点名。
 - 开关开时 `official.py` 的返回里多一个 `cg_less_fallback` 字段(接管/缺什么),不改任何现有输出字段。
 
+**⚠️ 兜底是「换依赖」,不是「消依赖」**(读 §5 时必须一起读):
+兜底的原料有两条 —— `ohlcv_daily(source='binance_hist')` 与 `coin_supply_daily`。
+- `binance_hist` 的写入端**不在本仓库 `src/` 里**(在 Mac 引擎侧)⇒ **兜底的第一条依赖是「Mac 的 Binance 采集器还在跑」**。
+  对照:Railway 侧 `src/api/main.py:_ohlcv_collector_loop`(第 403–425 行)拉的是 **CoinGecko Pro market_chart + yfinance**
+  ⇒ **它同样依赖 CG 订阅**,CG 停了它也拿不到 Crypto 日线 —— 兜底能顶上的恰恰是**Railway 侧顶不上的那一半**。
+- `coin_supply_daily` 的写入端同样在 Mac 侧,**它的最后一批是 11-20 300 行**(`fetched_at=11-20 06:00Z`)
+  ⇒ 若 Mac 引擎的供给量采集也随 CG 一起停,**兜底的总量维会从 11-21 起也断**(F 支柱 30 分塌方,不是口径微偏)。
+  ⇒ **兜底能撑多久,取决于 Mac 引擎那两条采集链还跑多久 —— 这条要 @seth 与 Minimax 对一下 Mac 侧的采集是否真的不依赖 CG。**
+
 ---
 
 ## 3. ③ 缺了会怎样(逐日实测,`t422_gap.py` 扫 11-13…11-30)
