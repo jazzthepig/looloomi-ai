@@ -130,7 +130,9 @@ async def run_once(now: Optional[dt.datetime] = None, fetch=None, read=None, ups
     now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
     real = fetch is None
     if fetch is None:
-        from src.data.market.data_layer import CG_API_KEY, CG_PRO_BASE, _cg_headers, _get_cg_client
+        from src.data.market.data_layer import (CG_API_KEY, CG_PRO_BASE, _cg_headers,
+                                                _get_cg_client, cg_external_calls,
+                                                get_cg_coin_list)
         if not CG_API_KEY:
             return {"ok": False, "refused": True, "why": "COINGECKO_API_KEY 没配"}
 
@@ -142,7 +144,17 @@ async def run_once(now: Optional[dt.datetime] = None, fetch=None, read=None, ups
         from src.data.style.header import _read_all as read
     if upsert is None:
         from src.api.store import supabase_upsert_table as upsert
-    coins = await fetch("/coins/list", {"include_platform": "true"})
+    # S-895 阶段 5:`/coins/list` 走**共享的那条活路**(data_layer.get_cg_coin_list)
+    # —— 与面板解析共用同一份载荷 + 同一层缓存(2h)。
+    # ⚠ 计的是**真的发出去**的外部请求(缓存命中不算)。注入 `fetch` 的那条路
+    #   (测试用)保持原样:注入的 fetch 一次就是一次。
+    if real:
+        _before = cg_external_calls("/coins/list")
+        coins = await get_cg_coin_list(include_platform=True)
+        _list_calls = cg_external_calls("/coins/list") - _before
+    else:
+        coins = await fetch("/coins/list", {"include_platform": "true"})
+        _list_calls = 1
     homes = {c["id"]: h for c in coins if isinstance(c, dict) and c.get("id") and (h := home_chain(c.get("platforms")))}
     universe = await read(UNIVERSE_VIEW, {"select": "coin_id,last_mcap"})
     try:
@@ -152,7 +164,7 @@ async def run_once(now: Optional[dt.datetime] = None, fetch=None, read=None, ups
         cov_rows = await read(COVERAGE_VIEW, {"select": "coin_id,max_d,n_weekly"})
     coverage = {r["coin_id"]: r for r in cov_rows}
     back, daily, probe = choose(universe, homes, coverage, now.date())
-    calls, written, errors, empty = 1, 0, 0, 0
+    calls, written, errors, empty = _list_calls, 0, 0, 0
     for coin, days, gran in ([(c, "max", "weekly") for c in back]
                              + [(c, "30", "daily") for c in daily]
                              + [(c, "30", "daily") for c in probe]):

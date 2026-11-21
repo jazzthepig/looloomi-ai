@@ -712,6 +712,23 @@ python3 -m pytest tests/test_cache_warm_does_not_call_external.py -q || {
     echo "✗ preflight stage: S-895 阶段 4 —— 预热只热本地缓存(不打外网)红" >&2
     exit 1
 }
+# 3a-vicesima-octes. S-895 阶段 5:剩下的重复取数。`/coins/{id}` 曾有 4 条活路
+#                     (开发者数据 / 分类 / VC 组合 / 社区数据),`/search/trending`
+#                     曾有 2 条(前端 trending 栏 / CIS trending map),
+#                     `/coins/categories/list` 曾有 2 条 —— 同一个端点、同一组
+#                     参数、两个额度池、两种新鲜度口径。
+#                     这一份守的是**调用点级**的单一活路(前一份只管文件级,
+#                     看不见「同一个文件里写了两遍同一个形状」):每个端点要么
+#                     只有 1 个文件 1 个调用点,要么在例外表里写清**为什么**
+#                     它问的不是同一个问题;登记与代码必须双向对得上
+#                     (登记了却没了 ⇒ 撤;出现了却没登记 ⇒ 红);
+#                     `social_collector` 必须是**纯消费者**(它自己再打一次
+#                     `/coins/{id}` = 第二条活路)。
+#                     S-244 家族:测试文件存在 ≠ 会被运行。
+python3 -m pytest tests/test_cg_single_live_path.py -q || {
+    echo "✗ preflight stage: S-895 阶段 5 —— CG 调用点级单一活路守卫红" >&2
+    exit 1
+}
 # 3a-vicesima. S-360: docs/SPINE.md 必须描述现在的代码。SPINE 是 agent 重组
 #                    记忆时对齐方向的基准 —— 一份过期的方向基准比没有更坏。
 #                    实测动机:10 个文件 12 行注释断言 signal_outcomes 死了

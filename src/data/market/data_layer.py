@@ -1758,15 +1758,20 @@ async def get_cg_global() -> dict:
     return {"error": "CoinGecko /global unavailable (gate denied, upstream 5xx, or empty data)"}
 
 
-async def get_cg_trending() -> list:
+async def get_cg_trending_payload(ttl: int = 300) -> list:
+    """`/search/trending` 的**唯一**取数口(S-895 阶段 5)。
+
+    返回 raw `coins` 列表(按热度排序)。**读不到返回空列表** —— 与两个消费方
+    原来的降级语义一致(前端那栏显示空的,不是 500)。
+
+    ⚠ **为什么原来有两条活路**:前端那栏(`get_cg_trending`,top-7 带明细)与
+    CIS 的 S-pillar(`get_trending_map`,top-15 的 symbol→名次)**问的是同一个
+    端点、同一组参数(端点不接受参数)** —— 却各打各的、各存各的缓存 ⇒ 同一个
+    5 分钟窗口里可能打两次。现在取数收敛到这一处,两个消费方各自派生。
     """
-    CoinGecko trending coins (top 7 in 24h by search volume).
-    Each entry: symbol, name, market_cap_rank, price_change_24h, score.
-    TTL: 5 min.
-    """
-    key = "cg_trending"
-    cached = _cache_get(key, ttl=300)
-    if cached:
+    key = "cg_trending_payload"
+    cached = _cache_get(key, ttl=ttl)
+    if cached is not None:
         return cached
     r_cached = await _redis_get(key)
     if r_cached:
@@ -1775,25 +1780,49 @@ async def get_cg_trending() -> list:
         return []
     try:
         client = _get_cg_client()
+        _count_external("/search/trending")
         r = await client.get(f"{CG_PRO_BASE}/search/trending", headers=_cg_headers())
         r.raise_for_status()
-        coins = r.json().get("coins", [])
-        result = []
-        for c in coins[:7]:
-            item  = c.get("item", {})
-            pdata = item.get("data", {})
-            result.append({
-                "symbol":         item.get("symbol", "").upper(),
-                "name":           item.get("name", ""),
-                "market_cap_rank": item.get("market_cap_rank"),
-                "score":          item.get("score", 0),          # 0=highest
-                "price_change_24h": pdata.get("price_change_percentage_24h", {}).get("usd", 0),
-                "sparkline":      pdata.get("sparkline"),
-            })
-        await _redis_set(key, result, ttl=300)
-        return _cache_set(key, result)
-    except Exception as e:
+        coins = (r.json() or {}).get("coins") or []
+        if not isinstance(coins, list):
+            return []
+        await _redis_set(key, coins, ttl=ttl)
+        return _cache_set(key, coins)
+    except Exception as e:                                    # noqa: BLE001
+        _logger.warning(f"[CG_TRENDING] {type(e).__name__}: {e}")
         return []
+
+
+async def get_cg_trending() -> list:
+    """
+    CoinGecko trending coins (top 7 in 24h by search volume).
+    Each entry: symbol, name, market_cap_rank, price_change_24h, score.
+    TTL: 5 min.
+
+    S-895 阶段 5:取数走 `get_cg_trending_payload`(与 CIS 的 trending map 共用)。
+    """
+    key = "cg_trending"
+    cached = _cache_get(key, ttl=300)
+    if cached:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+    coins = await get_cg_trending_payload()
+    result = []
+    for c in coins[:7]:
+        item  = c.get("item", {})
+        pdata = item.get("data", {})
+        result.append({
+            "symbol":         item.get("symbol", "").upper(),
+            "name":           item.get("name", ""),
+            "market_cap_rank": item.get("market_cap_rank"),
+            "score":          item.get("score", 0),          # 0=highest
+            "price_change_24h": pdata.get("price_change_percentage_24h", {}).get("usd", 0),
+            "sparkline":      pdata.get("sparkline"),
+        })
+    await _redis_set(key, result, ttl=300)
+    return _cache_set(key, result)
 
 
 async def get_trending_map() -> dict[str, int]:
@@ -1801,28 +1830,22 @@ async def get_trending_map() -> dict[str, int]:
     Returns {SYMBOL: trending_rank} for top-15 CoinGecko trending coins.
     Rank 1 = highest search volume. Used by cis_provider S-pillar scoring.
     Cached 5 min.
+
+    S-895 阶段 5:取数走 `get_cg_trending_payload` —— 与前端那栏共用一次取数。
     """
     key = "cg_trending_map"
     r_cached = await _redis_get(key)
     if r_cached and isinstance(r_cached, dict):
         return r_cached
     # Extend to top-15 for wider coverage
-    if not CG_API_KEY:
-        return {}
-    try:
-        client = _get_cg_client()
-        r = await client.get(f"{CG_PRO_BASE}/search/trending", headers=_cg_headers())
-        r.raise_for_status()
-        coins = r.json().get("coins", [])
-        trend_map = {}
-        for i, c in enumerate(coins[:15]):
-            sym = c.get("item", {}).get("symbol", "").upper()
-            if sym:
-                trend_map[sym] = i + 1   # rank 1-based
-        await _redis_set(key, trend_map, ttl=300)
-        return trend_map
-    except Exception:
-        return {}
+    coins = await get_cg_trending_payload()
+    trend_map = {}
+    for i, c in enumerate(coins[:15]):
+        sym = c.get("item", {}).get("symbol", "").upper()
+        if sym:
+            trend_map[sym] = i + 1   # rank 1-based
+    await _redis_set(key, trend_map, ttl=300)
+    return trend_map
 
 
 async def get_gecko_terminal_pools(network: str = "eth", limit: int = 10) -> list:
@@ -2185,14 +2208,8 @@ async def _build_cg_vc_portfolios(key: str) -> list[dict]:
         return []
 
     try:
-        client = _get_cg_client()
-        r = await client.get(
-            f"{CG_PRO_BASE}/coins/categories",
-            headers=_cg_headers(),
-            params={"order": "market_cap_desc"},
-        )
-        r.raise_for_status()
-        all_cats = r.json()
+        # S-895 阶段 5:取数走 `get_cg_categories_payload`(与分类快照写入端共用)。
+        all_cats = await get_cg_categories_payload()
 
         result = []
         for cat in all_cats:
@@ -3752,6 +3769,258 @@ async def get_eodhd_earnings_calendar(symbols: list[str], days_ahead: int = 14) 
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# COINGECKO —— 每个端点**一条活路**(S-895 阶段 5)
+#
+# 同一族端点原来各有各的活路(各自发各自的请求,参数还各不相同):
+#   `/coins/{id}`         —— developer_data / categories / community_data 各打一次
+#   `/coins/{id}/tickers` —— 集中度 与 逐所深度 各打一次
+#   `/coins/list`         —— 面板解析 与 持有人 各打一次
+#
+# 收敛的形状:**一族端点一个取数口**,消费者从同一份响应里各抽各的字段。
+# 这不是「加一层统一取数层」—— 是让**已有的 data_layer** 成为那条唯一活路
+# (SPINE.md:184-213「一个能力只能有一条活路」)。
+# ══════════════════════════════════════════════════════════════════════════════
+
+#: `/coins/{id}` 的**并集**参数 —— 三个消费方要的东西合起来就是这一组。
+#:
+#: ⚠ **为什么 community_data + developer_data 能并成一次**(2026-11-21 实测,
+#:    免费档 `/api/v3/coins/bitcoin` 三种形状都带 `categories`):
+#: `categories` 是币的**基础字段**,不受 community/developer 开关控制 ——
+#: 那几个开关只管 `community_data` / `developer_data` / `tickers` /
+#: `market_data` 这几个**子对象**。⇒ 要分类的人**不必**再单独打一次。
+#: ⚠ Pro 专有字段(developer_data / community_data)在免费档不返回 ——
+#: 那是**档位**问题不是形状问题:生产有 key ⇒ 走 Pro base ⇒ 字段在。
+#: ⚠ `tickers` / `market_data` 一律 false —— 那是**另一个端点**
+#: (`/coins/{id}/tickers`)的事,混进来就是拿一份更大的响应换零个字段。
+_COIN_ID_PARAMS = {
+    "localization":   "false",
+    "tickers":        "false",
+    "market_data":    "false",
+    "community_data": "true",
+    "developer_data": "true",
+    "sparkline":      "false",
+}
+
+#: `/coins/{id}` 原始响应的缓存 TTL。社区/开发者数据是**准静态**的
+#: (GitHub stars、issue 计数一天动不了几次)—— 10 分钟足够。
+_COIN_ID_TTL_S = 600
+
+#: `/coins/{id}/tickers` 的**并集**参数。
+#:
+#: ⚠ **`depth=true` 是逐所深度那个消费方要的**(`trust_score` /
+#:   `bid_ask_spread_percentage` 只在 depth=true 时带);集中度那个消费方
+#:   不用这两个字段,但多带无害。
+#: ⚠ **页大小不能悄悄变**:两个消费方各自只取**前 N 条**
+#:   (集中度:全部 ≤100;逐所深度:自己 `tickers[:50]`),
+#:   而响应按 `volume_desc` 排序 ⇒ **前 N 名与分页大小无关**
+#:   ⇒ `per_page=100` 在两个档位都合法(Pro 允许更大,但那只会多拿用不上的条)。
+_TICKERS_PARAMS = {
+    "include_exchange_logo": "false",
+    "depth":                 "true",
+    "order":                 "volume_desc",
+    "per_page":              100,
+    "page":                  1,
+}
+
+#: `/coins/{id}/tickers` 原始响应的缓存 TTL(沿用逐所深度那个消费方的 10 分钟)。
+_TICKERS_TTL_S = 600
+
+#: 本进程累计**真的发出去**的 CG 请求数(按端点族)。
+#:
+#: ⚠ **缓存命中不是一次外部请求** —— 共享取数口之后,「这一轮省了多少」
+#: 就不能靠调用点自己数(它数的是「我调了一次取数口」,不是「我打了一次外网」)。
+#: 规则 5b 的判活判据要看得见「省了多少」⇒ 真实外部请求数必须能被读出来。
+_CG_EXTERNAL_CALLS: dict[str, int] = {}
+
+
+def _count_external(endpoint_key: str) -> None:
+    """记一次**真的发出去**的外部请求(端点族 → 次数)。
+
+    ⚠ **必须走这个 helper**,不能写成 `_CG_EXTERNAL_CALLS.get("/coins/{id}", 0)`:
+    那个字面量会被 `tests/test_cg_call_sites.py` 的扫描器当成一个 **HTTP 调用点**
+    (它的判据是「`.get(`/`.post(` … 的源码段里含 CG 路径字面量」)⇒ **一次计数
+    变成一个假调用点** ⇒ 形状守卫开始说假话(SPINE:170-174「一个因错误理由变绿
+    的检查,比红的更坏」)。这里用变量传 key,扫描器看不见字面量。
+    """
+    _CG_EXTERNAL_CALLS[endpoint_key] = _CG_EXTERNAL_CALLS.get(endpoint_key, 0) + 1
+
+
+def cg_external_calls(endpoint_key: str) -> int:
+    """本进程累计**真的发出去**的 CG 请求数(按端点族)。缓存命中不计。
+
+    单事件循环里读-改-写之间没有 await ⇒ 不会丢计数。
+    """
+    return int(_CG_EXTERNAL_CALLS.get(endpoint_key, 0))
+
+
+#: `/coins/list` 的缓存 TTL —— **2 小时,不是 7 天**,理由是 platform:
+#: listing(谁在交易、symbol↔id)确实以周计变化(cg_panel_sync 自己的常量就是
+#: 7 天),但 **`platforms[].contract_address` 会随合约迁移而变** ⇒ 缓存里留着
+#: 旧地址,持有人历史就会记到**已经迁走的合约**上 —— 那不是留个洞,是**记错**
+#: (S-190 家族:错数据比洞更难被发现)。2h 是折中:稳态(6h 一轮)下缓存必然已过期
+#: ⇒ 行为一字不变;积压时(1h 一轮)才各省三次。
+_COIN_LIST_TTL_S = 7200
+
+
+async def get_cg_coin_payload(coin_id: str, ttl: int = _COIN_ID_TTL_S) -> dict:
+    """`/coins/{id}` 的**唯一**取数口(S-895 阶段 5)。
+
+    返回 **raw** 响应字典。**读不到抛异常** —— 读不到 ≠ 没有分类/没有社区数据
+    (`DATA_ARCHITECTURE.md:109`「未测量 = NaN 且必须传播」);各消费方自己决定
+    怎么降级(有的返回 `available: False`,有的继续往上抛)。
+
+    失败也**短暂缓存**(S-104 的形状):CG 挂掉时,一次超时不该被
+    「每个消费方各重试一次」放大成 N 次。
+    """
+    key = f"cg_coin_payload_{coin_id}"
+    cached = _cache_get(key, ttl=ttl)
+    if cached is not None:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+
+    neg = _cache_get(f"{key}__neg", ttl=_NEG_TTL_S)
+    if neg is None:
+        neg = await _redis_get(f"{key}__neg")
+    if neg:
+        raise RuntimeError(f"negative-cached: {str(neg.get('error'))[:120]}")
+
+    base = CG_PRO_BASE if CG_API_KEY else "https://api.coingecko.com/api/v3"
+    client = _get_cg_client()
+    try:
+        _count_external("/coins/{id}")
+        r = await client.get(f"{base}/coins/{coin_id}", headers=_cg_headers(),
+                             params=_COIN_ID_PARAMS, timeout=15)
+        r.raise_for_status()
+        raw = r.json() or {}
+        if not isinstance(raw, dict):
+            raise RuntimeError(f"/coins/{coin_id} 返回的不是对象:{type(raw).__name__}")
+        await _redis_set(key, raw, ttl=ttl)
+        return _cache_set(key, raw)
+    except Exception as e:
+        negv = {"error": str(e)[:200], "at": int(time.time())}
+        _cache_set(f"{key}__neg", negv)
+        await _redis_set(f"{key}__neg", negv, ttl=_NEG_TTL_S)
+        raise
+
+
+async def get_cg_tickers_payload(coin_id: str, ttl: int = _TICKERS_TTL_S) -> list[dict]:
+    """`/coins/{id}/tickers` 的**唯一**取数口(S-895 阶段 5)。
+
+    返回 raw `tickers` 列表(按 `volume_desc` 排序)。**读不到抛异常** ——
+    读不到 ≠ 没有交易所。
+    """
+    key = f"cg_tickers_payload_{coin_id}"
+    cached = _cache_get(key, ttl=ttl)
+    if cached is not None:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+
+    base = CG_PRO_BASE if CG_API_KEY else "https://api.coingecko.com/api/v3"
+    client = _get_cg_client()
+    try:
+        _count_external("/coins/{id}/tickers")
+        r = await client.get(f"{base}/coins/{coin_id}/tickers", headers=_cg_headers(),
+                             params=_TICKERS_PARAMS, timeout=15)
+        r.raise_for_status()
+        tickers = (r.json() or {}).get("tickers") or []
+        if not isinstance(tickers, list):
+            raise RuntimeError(f"/coins/{coin_id}/tickers 返回的不是列表:{type(tickers).__name__}")
+        await _redis_set(key, tickers, ttl=ttl)
+        return _cache_set(key, tickers)
+    except Exception:
+        # 失败也短暂缓存 —— 与 get_cg_coin_payload 同一个理由(S-104)。
+        negv = {"error": "tickers failed", "at": int(time.time())}
+        _cache_set(f"{key}__neg", negv)
+        await _redis_set(f"{key}__neg", negv, ttl=_NEG_TTL_S)
+        raise
+
+
+async def get_cg_coin_list(include_platform: bool = True, ttl: int = _COIN_LIST_TTL_S) -> list[dict]:
+    """`/coins/list` 的**唯一**取数口(S-895 阶段 5)。
+
+    ⚠ **只服务不需要按 status 过滤的消费者**。`/coins/list` 的响应里
+    **没有 per-coin 的 `status` 字段**(实测:每条只有 id/name/platforms/symbol)
+    ⇒ 拿到全量之后**本地筛不出「只留 active」** ⇒ 需要 status 过滤的那个
+    调用点(`perp_mcap_backfill`)必须自己打,登记为例外(见
+    `tests/test_cg_single_live_path.py` 的例外表)。
+
+    `include_platform=true` 的载荷比不带的大(每个币带 platform 对象),
+    但它**一次给全量** ⇒ 比「打两次不同的参数」少一次往返。
+    """
+    key = f"cg_coin_list_{'plat' if include_platform else 'plain'}"
+    cached = _cache_get(key, ttl=ttl)
+    if cached is not None:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+
+    client = _get_cg_client()
+    try:
+        params = {"include_platform": "true"} if include_platform else {}
+        _count_external("/coins/list")
+        r = await client.get(f"{CG_PRO_BASE}/coins/list", headers=_cg_headers(),
+                             params=params, timeout=40)
+        r.raise_for_status()
+        coins = r.json() or []
+        if not isinstance(coins, list):
+            raise RuntimeError(f"/coins/list 返回的不是列表:{type(coins).__name__}")
+        await _redis_set(key, coins, ttl=ttl)
+        return _cache_set(key, coins)
+    except Exception:
+        negv = {"error": "coins/list failed", "at": int(time.time())}
+        _cache_set(f"{key}__neg", negv)
+        await _redis_set(f"{key}__neg", negv, ttl=_NEG_TTL_S)
+        raise
+
+
+async def get_cg_categories_payload(ttl: int = 600) -> list[dict]:
+    """`/coins/categories` 的**唯一**取数口(S-895 阶段 5)。返回 raw 分类列表。读不到抛异常。
+
+    ⚠ **为什么原来有两条活路**:分类快照写入端(`src/data/market/cg_categories.py`,
+    每 12 小时落一份 ~600 个分类的日度快照)与 VC 组合面板
+    (`_build_cg_vc_portfolios`,10 分钟缓存)打的是**同一个端点、同一组参数**
+    (CG 的默认排序就是 `market_cap_desc` ⇒ 那个 `order` 参数是冗余的)⇒
+    两份载荷、两个额度池、两种新鲜度口径。
+
+    `include_platform` 不适用(分类没有链上地址)。分类法以月计变化 ⇒ 缓存
+    10 分钟;日度快照用它完全够(快照本来就是一个时点值)。
+    """
+    key = "cg_categories_payload"
+    cached = _cache_get(key, ttl=ttl)
+    if cached is not None:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+    neg = _cache_get(f"{key}__neg", ttl=_NEG_TTL_S)
+    if neg is None:
+        neg = await _redis_get(f"{key}__neg")
+    if neg:
+        raise RuntimeError(f"negative-cached: {str(neg.get('error'))[:120]}")
+    client = _get_cg_client()
+    try:
+        _count_external("/coins/categories")
+        r = await client.get(f"{CG_PRO_BASE}/coins/categories", headers=_cg_headers(),
+                             params={"order": "market_cap_desc"}, timeout=60)
+        r.raise_for_status()
+        cats = r.json() or []
+        if not isinstance(cats, list):
+            raise RuntimeError(f"/coins/categories 返回的不是列表:{type(cats).__name__}")
+        await _redis_set(key, cats, ttl=ttl)
+        return _cache_set(key, cats)
+    except Exception as e:
+        negv = {"error": str(e)[:200], "at": int(time.time())}
+        _cache_set(f"{key}__neg", negv)
+        await _redis_set(f"{key}__neg", negv, ttl=_NEG_TTL_S)
+        raise
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # COINGECKO PRO — Developer Activity + Exchange Concentration
 # Uses COINGECKO_API_KEY (Pro endpoint). Falls back gracefully if not set.
 # ══════════════════════════════════════════════════════════════════════════════
@@ -3764,6 +4033,9 @@ async def get_cg_developer_data(coin_id: str) -> dict:
 
     coin_id: CoinGecko ID, e.g. 'solana', 'ethereum', 'chainlink'
     TTL: 24 hours success / _NEG_TTL failure (see below)
+
+    S-895 阶段 5:取数走 `get_cg_coin_payload` —— `/coins/{id}` 这一族端点
+    **只有一条活路**,本函数与「分类」「社区数据」共用同一份响应。
 
     NEGATIVE CACHING (2026-08-07, S-104): failures used to return an error dict
     WITHOUT writing any cache entry, and the bulk caller discarded results
@@ -3794,23 +4066,10 @@ async def get_cg_developer_data(coin_id: str) -> dict:
         return {"coin_id": coin_id, "available": False,
                 "error": f"negative-cached: {str(neg.get('error'))[:80]}"}
 
-    client = _get_cg_client()
     try:
-        r = await client.get(
-            f"{CG_PRO_BASE}/coins/{coin_id}",
-            headers=_cg_headers(),
-            params={
-                "localization":   "false",
-                "tickers":        "false",
-                "market_data":    "false",
-                "community_data": "false",
-                "developer_data": "true",
-                "sparkline":      "false",
-            },
-            timeout=15,
-        )
-        r.raise_for_status()
-        raw  = r.json()
+        # S-895 阶段 5:`/coins/{id}` 的取数在 `get_cg_coin_payload` 一处 ——
+        # 本函数与分类、社区数据共用同一份响应(并集参数)。
+        raw  = await get_cg_coin_payload(coin_id)
         devd = raw.get("developer_data", {}) or {}
 
         result = {
@@ -3894,21 +4153,11 @@ async def get_cg_exchange_concentration(coin_id: str) -> dict:
     if r_cached:
         return _cache_set(key, r_cached)
 
-    client = _get_cg_client()
     try:
-        r = await client.get(
-            f"{CG_PRO_BASE}/coins/{coin_id}/tickers",
-            headers=_cg_headers(),
-            params={
-                "include_exchange_logo": "false",
-                "order":    "volume_desc",
-                "per_page": 100,
-                "page":     1,
-            },
-            timeout=15,
-        )
-        r.raise_for_status()
-        tickers = r.json().get("tickers", [])
+        # S-895 阶段 5:`/coins/{id}/tickers` 的取数在 `get_cg_tickers_payload`
+        # 一处 —— 本函数与「逐所深度」共用同一份响应(并集参数:depth=true
+        # 带来的 trust_score / bid_ask_spread_percentage 本函数用不上,无害)。
+        tickers = await get_cg_tickers_payload(coin_id)
 
         # Aggregate volume by exchange
         exchange_vol: dict[str, float] = {}
@@ -4143,13 +4392,47 @@ async def get_cg_global_market_cap_chart(days: str = "max") -> dict:
     return {"market_cap": j.get("market_cap") or [], "volume": j.get("volume") or []}
 
 
+async def get_cg_category_list_payload(ttl: int = 600) -> list[dict]:
+    """`/coins/categories/list` 的**唯一**取数口(S-895 阶段 5)。返回 raw 列表。读不到抛异常。
+
+    ⚠ **为什么原来有两条活路**:分类 id 集合(`get_cg_category_ids`,风格表头用来
+    校验分类法)与 名字→id 映射(`get_cg_category_name_map`,PIT 风格指数用)
+    **打的是同一个端点、同一组参数** —— 却各打各的。分类法本身以月计变化 ⇒
+    缓存 10 分钟无感。
+    """
+    key = "cg_category_list_payload"
+    cached = _cache_get(key, ttl=ttl)
+    if cached is not None:
+        return cached
+    r_cached = await _redis_get(key)
+    if r_cached:
+        return _cache_set(key, r_cached)
+    neg = _cache_get(f"{key}__neg", ttl=_NEG_TTL_S)
+    if neg is None:
+        neg = await _redis_get(f"{key}__neg")
+    if neg:
+        raise RuntimeError(f"negative-cached: {str(neg.get('error'))[:120]}")
+    client = _get_cg_client()
+    try:
+        _count_external("/coins/categories/list")
+        r = await client.get(f"{CG_PRO_BASE}/coins/categories/list", headers=_cg_headers(), timeout=30)
+        if r.status_code != 200:
+            raise RuntimeError(f"CoinGecko /coins/categories/list HTTP {r.status_code}: {r.text[:160]}")
+        cats = r.json() or []
+        if not isinstance(cats, list):
+            raise RuntimeError(f"/coins/categories/list 返回的不是列表:{type(cats).__name__}")
+        await _redis_set(key, cats, ttl=ttl)
+        return _cache_set(key, cats)
+    except Exception as e:
+        negv = {"error": str(e)[:200], "at": int(time.time())}
+        _cache_set(f"{key}__neg", negv)
+        await _redis_set(f"{key}__neg", negv, ttl=_NEG_TTL_S)
+        raise
+
+
 async def get_cg_category_ids() -> set[str]:
     """CoinGecko Pro `/coins/categories/list` → 全部分类 id(T-039 风格表头用来校验分类法)。读不到抛异常。"""
-    client = _get_cg_client()
-    r = await client.get(f"{CG_PRO_BASE}/coins/categories/list", headers=_cg_headers(), timeout=30)
-    if r.status_code != 200:
-        raise RuntimeError(f"CoinGecko /coins/categories/list HTTP {r.status_code}: {r.text[:160]}")
-    return {c.get("category_id") for c in r.json() or [] if c.get("category_id")}
+    return {c.get("category_id") for c in await get_cg_category_list_payload() if c.get("category_id")}
 
 
 async def get_cg_derivatives_exchange_tickers(exchange_id: str) -> list[dict]:
@@ -4181,22 +4464,25 @@ async def get_cg_markets_strict(ids: list[str]) -> list[dict]:
 
 async def get_cg_category_name_map() -> dict[str, str]:
     """CoinGecko Pro `/coins/categories/list` → {分类名: 分类 id}。`/coins/{id}` 给的是**名字**,分类法用的是 id(T-067)。"""
-    client = _get_cg_client()
-    r = await client.get(f"{CG_PRO_BASE}/coins/categories/list", headers=_cg_headers(), timeout=30)
-    if r.status_code != 200:
-        raise RuntimeError(f"CoinGecko /coins/categories/list HTTP {r.status_code}: {r.text[:160]}")
-    return {c.get("name"): c.get("category_id") for c in r.json() or [] if c.get("name") and c.get("category_id")}
+    return {c.get("name"): c.get("category_id")
+            for c in await get_cg_category_list_payload() if c.get("name") and c.get("category_id")}
 
 
 async def get_cg_coin_categories(coin_id: str) -> list[str]:
-    """CoinGecko Pro `/coins/{id}` 的分类**名字**列表(只要分类,其余全关)。读不到抛异常 —— 读不到 ≠ 没有分类。"""
-    client = _get_cg_client()
-    r = await client.get(f"{CG_PRO_BASE}/coins/{coin_id}", headers=_cg_headers(), timeout=30,
-                         params={"localization": "false", "tickers": "false", "market_data": "false",
-                                 "community_data": "false", "developer_data": "false", "sparkline": "false"})
-    if r.status_code != 200:
-        raise RuntimeError(f"CoinGecko /coins/{coin_id} HTTP {r.status_code}: {r.text[:120]}")
-    return [c for c in (r.json() or {}).get("categories") or [] if c]
+    """`/coins/{id}` 的分类**名字**列表。读不到抛异常 —— 读不到 ≠ 没有分类。
+
+    S-895 阶段 5:不再自己打一次 —— 走 `get_cg_coin_payload`(与开发者数据、
+    社区数据共用同一份响应)。⚠ `categories` 是币的**基础字段**,不受
+    community/developer 开关控制(2026-11-21 实测:三种 flag 形状都带它)
+    ⇒ 不需要为了分类单独多打一次。
+    ⚠ 响应里**没有** `categories` 键 ⇒ 抛异常(不是返回空列表):
+    那是「没量到」,不是「这个币没有分类」。
+    """
+    raw = await get_cg_coin_payload(coin_id)
+    cats = raw.get("categories")
+    if cats is None:
+        raise RuntimeError(f"CoinGecko /coins/{coin_id} 响应里没有 categories —— 读不到 ≠ 没有分类")
+    return [c for c in cats if c]
 
 
 async def get_cg_category_markets(category_id: str, per_page: int = 40) -> list[dict]:
@@ -4424,7 +4710,6 @@ async def get_cg_coin_tickers(coin_id: str, depth: int = 10) -> dict:
               top3_share_pct: float}
     TTL: 10 min
     """
-    base = CG_PRO_BASE if CG_API_KEY else "https://api.coingecko.com/api/v3"
     key = f"cg_tickers_{coin_id}"
     cached = _cache_get(key, ttl=600)
     if cached:
@@ -4433,16 +4718,11 @@ async def get_cg_coin_tickers(coin_id: str, depth: int = 10) -> dict:
     if r_cached:
         return _cache_set(key, r_cached)
 
-    client = _get_cg_client()
     try:
-        r = await client.get(
-            f"{base}/coins/{coin_id}/tickers",
-            headers=_cg_headers(),
-            params={"depth": "true", "order": "volume_desc", "page": 1},
-            timeout=15,
-        )
-        r.raise_for_status()
-        tickers = r.json().get("tickers", [])
+        # S-895 阶段 5:与「集中度」共用一次取数(`get_cg_tickers_payload`)。
+        # 本函数原来那层 600s 结果缓存**留着**(它是本函数的对外形状 +
+        # 派生计算),但 raw 也缓存了 ⇒ 外部请求只发一次。
+        tickers = await get_cg_tickers_payload(coin_id)
 
         # Aggregate by exchange
         exchange_vol: dict[str, float] = {}

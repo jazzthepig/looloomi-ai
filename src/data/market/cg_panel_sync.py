@@ -382,12 +382,15 @@ async def run_once(*, client, supabase_query, supabase_upsert,
     _n_calls_resolution = 0
     if missing:
         try:
-            _n_calls_resolution += 1
-            r = await client.get(f"{CG_PRO_BASE}/coins/list")
-            if r.status_code != 200:
-                out["errors"].append(f"/coins/list HTTP {r.status_code}")
-            else:
-                idx = index_listing(r.json() or [])
+            # S-895 阶段 5:`/coins/list` 的取数在 `data_layer.get_cg_coin_list`
+            # 一处(与持有人那条共用同一份载荷 + 同一层缓存)。
+            # ⚠ 计的是**真的发出去**的外部请求(缓存命中不算)——
+            #   共享取数口之后,「我调了一次」≠「我打了一次外网」。
+            from src.data.market.data_layer import cg_external_calls, get_cg_coin_list
+            _before = cg_external_calls("/coins/list")
+            coins = await get_cg_coin_list(include_platform=True)
+            idx = index_listing(coins)
+            _n_calls_resolution += cg_external_calls("/coins/list") - _before
         except Exception as e:                                  # noqa: BLE001
             out["errors"].append(f"/coins/list {type(e).__name__}: {str(e)[:70]}")
 

@@ -355,11 +355,11 @@ CG_ENDPOINT_COVERAGE: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
         ("gated", "injected"),
     ),
     "/coins/list": (
-        ("src/data/market/cg_panel_sync.py", "src/data/market/perp_mcap_backfill.py"),
-        ("injected", "gated"),
+        ("src/data/market/data_layer.py", "src/data/market/perp_mcap_backfill.py"),
+        ("gated",),
     ),
     "/coins/{id}": (
-        ("src/data/market/data_layer.py", "src/data/narrative/social_collector.py"),
+        ("src/data/market/data_layer.py",),
         ("gated",),
     ),
     "/coins/{id}/tickers": (
@@ -387,7 +387,7 @@ CG_ENDPOINT_COVERAGE: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
         ("gated",),
     ),
     "/coins/categories": (
-        ("src/data/market/data_layer.py", "src/data/market/cg_categories.py"),
+        ("src/data/market/data_layer.py",),
         ("gated",),
     ),
     "/coins/categories/list": (
@@ -448,7 +448,8 @@ DYNAMIC_ENDPOINT_SITES: dict[str, str] = {
         "(`/coins/list/new` + 逐币 `/coins/{id}/supply_breakdown`)",
     "src/data/market/token_holders.py":
         "路径参数化:`fetch(path)` —— 端点由本文件的 `choose()` 决定"
-        "(`/coins/list` + 逐币 `holders_chart`)",
+        "(只剩逐币 `holders_chart`;`/coins/list` 已收敛到 `data_layer.get_cg_coin_list`"
+        " —— S-895 阶段 5)",
     "src/data/ops/news_feed.py":
         "路径参数化:`for path in (\"/news\", \"/insights\")` —— 两个端点写死在调用点",
     "src/data/entity/writer.py":
@@ -559,9 +560,14 @@ def test_注入的登记没有变成死的():
 
 
 def test_闸门内的文件真的用了闸门():
-    """`gated` 的判定不能靠一个字符串匹配蒙混过关(注释里写「接了闸门」不算)。"""
+    """`gated` 的判定不能靠一个字符串匹配蒙混过关(注释里写「接了闸门」不算)。
+
+    ⚠ S-895 阶段 5:`src/data/narrative/social_collector.py` **从这张表里退出了**
+    —— 它不再持有 CG client,只做**消费**(取数收敛到 `data_layer` 一处)。
+    留着它 = 一条已经不成立的登记(SPINE:184-213「登记了就要真退役」)。
+    它现在是**纯消费者**这件事由 `tests/test_cg_single_live_path.py` 钉死。
+    """
     for rel in ("src/data/market/data_layer.py",
-                "src/data/narrative/social_collector.py",
                 "src/api/main.py",
                 # S-895 阶段 1:交易路由的标记价取数收口进闸门。
                 "src/api/routers/trading.py"):

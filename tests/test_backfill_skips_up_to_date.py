@@ -38,6 +38,8 @@ import datetime as dt
 import sys
 from pathlib import Path
 
+import pytest
+
 _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
@@ -91,6 +93,11 @@ class _FakeResp:
     def json(self):
         return self._payload
 
+    def raise_for_status(self):
+        # S-895 阶段 5:共享取数口(`get_cg_coin_list`)用的是 `raise_for_status()`。
+        if self.status_code != 200:
+            raise RuntimeError(f"HTTP {self.status_code}")
+
 
 class _FakeClient:
     """只记录被打了哪些端点。**不打网络。**"""
@@ -98,9 +105,37 @@ class _FakeClient:
     def __init__(self):
         self.urls: list[str] = []
 
-    async def get(self, url, params=None):
+    async def get(self, url, params=None, **kw):
+        # `**kw`:S-895 阶段 5 起,`/coins/list` 走共享取数口
+        # (`data_layer.get_cg_coin_list`),它会多传 `headers` / `timeout`。
         self.urls.append(url)
         return _FakeResp(200, [])
+
+
+#: 本轮 `_run` 用的假 client(共享取数口也要用它 —— 见下面的 fixture)。
+_CURRENT_FAKE: list[_FakeClient] = []
+
+
+@pytest.fixture(autouse=True)
+def _shared_path_never_touches_the_network(monkeypatch):
+    """S-895 阶段 5:`/coins/list` 走**共享取数口**(`data_layer.get_cg_coin_list`)
+    ⇒ 它用的是 `data_layer` 自己的 client,不再是被注入的那个。
+
+    ⇒ 这条 fixture 把 data_layer 的 client 工厂换成本轮的假 client,并清掉
+    那条路径的进程内缓存 —— 否则:①测试会**真的打 CoinGecko**;②第一个测试
+    把结果缓存下来,后面的测试就看不到那次调用了(「5 次外呼」会变成「4 次」)。
+
+    ⚠ 这个 fixture 是**阶段 5 的证据**:解析阶段那 5 次外呼一次都没少,只是
+    其中 1 次换了个地方打。
+    """
+    import src.data.market.data_layer as dl
+    for k in ("cg_coin_list_plat", "cg_coin_list_plat__neg"):
+        dl._cache.pop(k, None)
+    monkeypatch.setattr(dl, "_get_cg_client",
+                        lambda: _CURRENT_FAKE[-1] if _CURRENT_FAKE else _FakeClient())
+    yield
+    for k in ("cg_coin_list_plat", "cg_coin_list_plat__neg"):
+        dl._cache.pop(k, None)
 
 
 def _mk_query(known_rows):
@@ -145,6 +180,7 @@ async def _run(panel, coverage, *, coverage_reader=None, union_reader=None,
     _orig = cg_pro_backfill.backfill
     cg_pro_backfill.backfill = _fake_backfill
     _client = _FakeClient()
+    _CURRENT_FAKE.append(_client)
     try:
         if not inject_readers:
             res = await run_once(client=_client,
@@ -375,8 +411,12 @@ def test_resolution_calls_are_a_separate_cost_and_are_still_visible():
     """⚠️ **边界要写清楚**:省下的是**回填**那几十次,不是这一轮的全部外呼。
 
     面板里有 203 个标的解析不出来,所以 `/coins/list` + 4 页 `/coins/markets`
-    **每一轮都还要打**(S-895 阶段 5 才动它)。把这条钉住,是为了让
-    「省了多少」这句话永远有个分母 —— 否则它会慢慢变成一句自我安慰。
+    **每一轮都还要打**。S-895 阶段 5 把 `/coins/list` 挪到了共享取数口
+    (`data_layer.get_cg_coin_list`,与持有人表共用)—— **次数没变**,只是换了
+    地方打;所以「省了多少」这句话的分母还是 5,一条都没少。
+
+    把这条钉住,是为了让「省了多少」这句话永远有个分母 —— 否则它会慢慢变成
+    一句自我安慰。
     """
     _res, _calls, _urls = asyncio.run(
         _run(["BTC", "NEWCOIN"], {"BTC": set(_window_days())},

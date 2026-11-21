@@ -12,7 +12,6 @@ import json
 import time
 import asyncio
 import logging
-import os
 import httpx
 from datetime import datetime, timezone, timedelta
 from typing import Optional
@@ -21,19 +20,12 @@ _logger = logging.getLogger(__name__)
 
 # ── Clients ────────────────────────────────────────────────────────────────────
 
-_cg_client: httpx.AsyncClient | None = None
+#: ⚠️ S-895 阶段 5:本文件**不再持有 CG client** —— CoinGecko 的取数收敛到
+#: `data_layer.get_cg_coin_payload` 一处(`/coins/{id}` 那一族端点只有一条活路),
+#: 本文件只做**消费**(社区数据那一层)。留着 client 就是留着第二条活路。
 _misc_client: httpx.AsyncClient | None = None
 
 _POOL_LIMITS = httpx.Limits(max_connections=20, max_keepalive_connections=10)
-
-def _get_cg_client() -> httpx.AsyncClient:
-    """⚠️ S-894:必须是 `GuardedCGClient` —— CoinGecko 超额计费打开之后,
-    没有闸门的 client 每一次调用都是一次可能扣钱的调用。"""
-    global _cg_client
-    if _cg_client is None or _cg_client.is_closed:
-        from src.data.market.cg_guard import GuardedCGClient
-        _cg_client = GuardedCGClient(timeout=12, limits=_POOL_LIMITS)
-    return _cg_client
 
 def _get_misc_client() -> httpx.AsyncClient:
     global _misc_client
@@ -65,30 +57,24 @@ async def fetch_cg_community_data(coin_id: str) -> dict:
     Fields: twitter_followers, telegram_channel_users, reddit_subscribers,
             facebook_likes, github_stars, etc.
     Cache TTL: 600s (10 minutes)
+
+    S-895 阶段 5:取数走 `data_layer.get_cg_coin_payload` —— `/coins/{id}`
+    这一族端点**只有一条活路**:本文件与「开发者数据」「分类」共用同一份
+    响应(并集参数)。⇒ 本文件**不再自己持有 CG client**。
+    ⚠ community_data is a FIELD inside /coins/{id}, NOT a /community_data
+    sub-route (that 404s on every tier).
+    ⚠ CG deprecated the social-media fields (twitter/telegram/facebook = null);
+    the LIVE, real signals on this endpoint are developer_data +
+    sentiment_votes_up_percentage.
     """
     key = f"cg_community:{coin_id}"
     cached = _cache_get(key, ttl=600)
     if cached:
         return cached
 
-    # Use the PRO base + key when available (matches data_layer.py). community_data is a
-    # FIELD inside /coins/{id}, NOT a /community_data sub-route (that 404s on every tier).
-    # CG deprecated the social-media fields (twitter/telegram/facebook = null); the LIVE,
-    # real signals on this endpoint are developer_data + sentiment_votes_up_percentage.
-    _KEY = os.getenv("COINGECKO_API_KEY", "")
-    CG_BASE = "https://pro-api.coingecko.com/api/v3" if _KEY else "https://api.coingecko.com/api/v3"
-    headers = {"x-cg-pro-api-key": _KEY} if _KEY else {}
-
     try:
-        client = _get_cg_client()
-        r = await client.get(
-            f"{CG_BASE}/coins/{coin_id}",
-            params={"localization": "false", "tickers": "false", "market_data": "false",
-                    "community_data": "true", "developer_data": "true", "sparkline": "false"},
-            headers=headers,
-        )
-        r.raise_for_status()
-        data = r.json()
+        from src.data.market.data_layer import get_cg_coin_payload
+        data = await get_cg_coin_payload(coin_id)
         cd = data.get("community_data", {}) or {}
         dd = data.get("developer_data", {}) or {}
 

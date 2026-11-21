@@ -184,11 +184,21 @@ def test_线上每个CG客户端都必须是GuardedCGClient():
 
     assert asyncio.run(scenario()), "data_layer 的 CG client 不是受闸门约束的"
 
-    for rel in ("src/data/narrative/social_collector.py", "src/api/main.py"):
+    for rel in ("src/api/main.py",):
         src = (ROOT / rel).read_text(encoding="utf-8")
         assert "GuardedCGClient" in src, f"{rel} 没有接闸门"
         assert "async with _httpx.AsyncClient(headers=_cg_headers()" not in src, \
             f"{rel} 还在用裸 httpx client 打 CoinGecko"
+
+    # S-895 阶段 5:`social_collector` **不再持有 CG client** —— 它从「闸门内的
+    # 文件」退成了「纯消费者」(取数收敛到 `data_layer.get_cg_coin_payload` 一处)。
+    # ⇒ 这里不再断言它「接了闸门」,而是断言它**没有自己的 client** ——
+    #   留着 client = 留着第二条活路(SPINE:184-213)。
+    sc = (ROOT / "src/data/narrative/social_collector.py").read_text(encoding="utf-8")
+    assert "get_cg_coin_payload" in sc, "social_collector 没有走共享取数口"
+    for marker in ("GuardedCGClient", "_get_cg_client", "api.coingecko.com", "CG_PRO_BASE"):
+        assert marker not in sc, \
+            f"social_collector 又自己持有 CG client({marker})—— `/coins/{{id}}` 就有第二条活路了"
 
 
 def test_额度报告把今天花了多少说出来():

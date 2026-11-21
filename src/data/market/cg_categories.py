@@ -40,14 +40,14 @@ def rows_from(payload: Any, d: str, fetched_at: str) -> list[dict]:
 async def run_once(now: Optional[dt.datetime] = None, fetch=None, upsert=None) -> dict[str, Any]:
     now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
     if fetch is None:
-        from src.data.market.data_layer import CG_API_KEY, CG_PRO_BASE, _cg_headers, _get_cg_client
+        from src.data.market.data_layer import CG_API_KEY, get_cg_categories_payload
         if not CG_API_KEY:
             return {"ok": False, "refused": True, "why": "COINGECKO_API_KEY 没配"}
 
         async def fetch():
-            r = await _get_cg_client().get(f"{CG_PRO_BASE}/coins/categories", headers=_cg_headers(), timeout=60)
-            r.raise_for_status()
-            return r.json()
+            # S-895 阶段 5:取数走共享的那条活路(`data_layer.get_cg_categories_payload`)
+            # —— 本文件与 VC 组合面板打的是同一个端点、同一组参数。
+            return await get_cg_categories_payload()
     if upsert is None:
         from src.api.store import supabase_upsert_table as upsert
     rows = rows_from(await fetch(), now.date().isoformat(), now.isoformat())
