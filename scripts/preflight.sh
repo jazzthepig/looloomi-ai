@@ -729,6 +729,18 @@ python3 -m pytest tests/test_cg_single_live_path.py -q || {
     echo "✗ preflight stage: S-895 阶段 5 —— CG 调用点级单一活路守卫红" >&2
     exit 1
 }
+# 3a-vicesima-decies. T-422:CG-less 兜底(默认关)。Jazz 2026-11-21 停了 CoinGecko
+#                     订阅 ⇒ `asset_mcap_daily`(CG 源)从 11-20 起 0 行 ⇒ 官方日收盘
+#                     卡在 11-19,12-01 也不会自己续(滞回要前一天的正式档)。
+#                     这条守的是**兜底默认关时一个字节都不改**:开关关 ⇒ `load_inputs`
+#                     的输出与 `score_day` 的输出逐字节相同;开关开 ⇒ 只在「CG 那条路
+#                     取不到」的那一维接管,缺的就如实标缺(max_supply / macro.total_mcap
+#                     **不许补 0**)。变异测试红 ⇒ 兜底不是装饰品。
+#                     S-244 家族:测试文件存在 ≠ 会被运行。
+python3 -m pytest tests/test_cis_cg_less_fallback.py -q || {
+    echo "✗ preflight stage: T-422 —— CG-less 兜底(默认关/接管/变异测试)红" >&2
+    exit 1
+}
 # 3a-vicesima. S-360: docs/SPINE.md 必须描述现在的代码。SPINE 是 agent 重组
 #                    记忆时对齐方向的基准 —— 一份过期的方向基准比没有更坏。
 #                    实测动机:10 个文件 12 行注释断言 signal_outcomes 死了
