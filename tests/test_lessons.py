@@ -121,6 +121,14 @@ _EXEMPT_UNENFORCED: dict[int, str] = {
     # still be reachable FROM THE TESTS SUITE (the file is shipped) and would
     # create a future surprise when a later scan forgets the self-exclusion.
     # Reasons describe the lesson in prose, not by citing its sibling number.
+    #
+    # ⚠️ 行号 ≠ 课号(11-22 补)。MINIMAX_SYNC §IN-FLIGHT 的**行号**与本文件的
+    # **Lesson 课号**是两个空间,数字会撞上。11-21 有一次把 SYNC 行号当成课号填了
+    # 进来(理由写成「cross-lane coordination rule; MINIMAX_SYNC only」),于是
+    # PROJECT_STATE 头里写「#62」(指的是 SYNC 第 62 条)时,walker 把它读成
+    # 「Lesson 62 被引用」⇒ 门红。⇒ **引用 SYNC 的行就写「SYNC 第 N 条」,
+    # 不要写 `#N`**;往这张表里填课号之前,先确认那个数字在规范文档里真的是一条
+    # Lesson,而不是另一个文件的行号。
 
     # ── ARCH-NO-TEST: doctrine / methodology with no executable form. ──
     41: "ARCH-NO-TEST — leg-correlation / R77 fusion rationale (R46/R62/R76 "
@@ -152,17 +160,28 @@ _EXEMPT_UNENFORCED: dict[int, str] = {
     55: "ARCH-NO-TEST — directional sleeves can have REAL alpha but require "
         "consistency across windows. Replaced by the 11yr panel confirmation "
         "in PROJECT_STATE_LOG.",
-    56: "MAC-LANE-ONLY — Mac-side coordination lesson; lives in MINIMAX_SYNC "
-        "(gitignored), Seth-lane tests cannot probe Mac state.",
-    58: "MAC-LANE-ONLY — perp microstructure residual/level/carry doctrine; "
-        "lives in MINIMAX_SYNC and STRATEGY_PLAYBOOK.md, not testable as a "
-        "Seth-lane guard.",
-    59: "MAC-LANE-ONLY — same lineage as the perp-funding-driven L/S residual.",
-    61: "MAC-LANE-ONLY — cross-lane coordination rule; MINIMAX_SYNC only.",
-    62: "MAC-LANE-ONLY — cross-lane coordination rule; MINIMAX_SYNC only.",
-    63: "MAC-LANE-ONLY — §MINIMAX_SYNC cross-lane protocol. Lives gitignored; "
-        "Seth-lane tests cannot probe Mac state.",
-    64: "MAC-LANE-ONLY — same as the earlier cross-lane coordination rule.",
+    # ⚠️ 下面 7 条曾经写成「MAC-LANE-ONLY —— cross-lane coordination rule;
+    # MINIMAX_SYNC only」。**那是错的**:填进来的是 MINIMAX_SYNC §IN-FLIGHT 的**行号**
+    # (56/58/59/61/62/63/64 都恰好是 SYNC 里的行),被当成了 Lesson 课号。
+    # 真正的课 56/58/59/61/62/63/64 全是研究结论或仓库纪律(下面逐条写对了),
+    # 没有一条是 Mac 侧协调规则。**理由必须描述它真的那一条 lesson 是什么。**
+    56: "ARCH-NO-TEST — 731-day 面板 10 次尝试坟场:市场中性 L/S / 方向多空 / "
+        "配对 / 资金费(3 种形状)/ 跨资产 / 趋势条件 —— 没有单一策略形状能过 3-check "
+        "⇒ 杠杆是面板长度不是策略形状。穷举形状本身就是记录,没有可执行形态。",
+    58: "ARCH-NO-TEST — perp 微结构(residual / level / carry)不是可交易的 alpha 源。"
+        "研究结论,不是代码能守住的东西。",
+    59: "ARCH-NO-TEST — 方向性 crypto beta 袖(LONG-only 与带符号 R92 两种)在 731 天"
+        "熊市面板上都过不了,哪怕加日频状态更新 + 一日滞后 + 紧 maxDD + 强制基准。"
+        "研究结论。",
+    61: "ARCH-NO-TEST — 提交信息要描述行为、diff 才是收据(它自己写着 provisional:"
+        "一次险情不足以立规)。仓库协作纪律,没有单测形态。",
+    62: "ARCH-NO-TEST — 同族两条:① 规范的逐资产带符号 TSMOM 在现有短面板上过不了关"
+        "(趋势前提未被全局证伪,是面板不够);② provisional:preflight 该长一个 "
+        "vite build 阶段比对新 bundle hash。研究结论 + 仓库纪律,都没有可执行形态。",
+    63: "ARCH-NO-TEST — 换成跨资产 TradFi 枢轴也逃不出短面板约束,面板长度仍是绑定项;"
+        "Strategy 2 结构性延后。研究结论。",
+    64: "ARCH-NO-TEST — cisLSv4 的工作结构可恢复、R49 的缺陷可修,但恢复后的形状仍"
+        "过不了 731 天面板的 3-check,等 11 年面板再复测。研究结论。",
     65: "PROJECT-LEVEL-DECISION — 11yr panel confirmation recorded "
         "2026-08-09; the test would be 'directional shape across 11yr', "
         "which already ran. Recorded, not repeated.",
