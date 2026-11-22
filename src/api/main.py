@@ -2461,7 +2461,7 @@ async def _dead_host_guard_loop():
 
 
 async def _news_feed_loop():
-    """新闻流(`src/data/ops/news_feed.py`,11-02):每 20 分钟取 RSS → 入 feed_items → 相关的发 TELEGRAM_FEED_CHAT_ID(没配 ⇒ 干跑)。"""
+    """新闻流(`src/data/ops/news_feed.py`):每 20 分钟取 RSS + 一笔 EODHD `/api/news` → 入 feed_items → 相关的发 TELEGRAM_FEED_CHAT_ID(没配 ⇒ 干跑)。CoinGecko 新闻默认不打。"""
     await _asyncio.sleep(_boot_delay(420))
     while True:
         try:

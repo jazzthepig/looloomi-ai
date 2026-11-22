@@ -9,8 +9,9 @@ UNDERPERFORM / UNDERWEIGHT;模型吐出买卖词整条丢掉(`llm_narrator._BANN
 
 ## 管道(每 20 分钟一轮,`_news_feed_loop`)
 
-1. 取:`backend.macro_events_scraper._RSS_FEEDS`(The Block / Blockworks / CryptoSlate / Bitcoin Magazine / The Defiant /
-   CoinTelegraph / DL News)+ 本文件的补充(CoinDesk / Decrypt / 美联储新闻稿 / SEC 新闻稿)。取不到的源跳过、记名。
+1. 取:RSS(`backend.macro_events_scraper._RSS_FEEDS` + 本文件的补充:CoinDesk / Decrypt / 美联储 / SEC)+ **一笔** EODHD
+   `/api/news`(我们盯的币和轨道股,符号标签映射成 `vendor_hits`)。CoinGecko `/news` 与 `/insights` 默认不打
+   (2026-11-20 订阅已停);只有 `CG_NEWS_LIVE=1` 才打。取不到的源跳过、记名。
 2. 去重:链接 sha1 为主键(`feed_items`);同一故事多家报(标题词集 Jaccard ≥ 0.6、48 小时内)只留第一家。
 3. 相关:标题 + 摘要里点到我们的名字(CIS 宇宙的币 + 轨道公司 + 宏观关键词)⇒ `hits`;打分 = 名字数 × 2 + 宏观词 + 源权重;
    低于 `MIN_SCORE` 的只入表不发。
@@ -29,6 +30,7 @@ import hashlib
 import html
 import os
 import re
+import time
 from typing import Any, Optional
 
 TABLE = "feed_items"
@@ -110,6 +112,15 @@ def unpostable(title: str, summary: str) -> Optional[str]:
 def clean_summary(text: str) -> str:
     """去掉 RSS 摘要尾部的「This post … first appeared on …」那类模板句。"""
     return _BOILERPLATE.sub("", (text or "").strip()).strip()
+
+
+_HTML_TAG = re.compile(r"<[^>]+>")
+
+
+def plain_text(raw: str) -> str:
+    """EODHD 的 `content` 是 HTML。去掉标签,不把标记当正文。"""
+    text = html.unescape(_HTML_TAG.sub(" ", raw or ""))
+    return re.sub(r"\s+", " ", text).strip()
 
 
 def score(hits: list[str], macro: list[str], source: str) -> int:
@@ -217,7 +228,9 @@ def cg_insight_items(rows: Any, now: dt.datetime, coin_sym: dict[str, str]) -> l
 
 
 async def fetch_cg(now: dt.datetime) -> tuple[list[dict], list[str]]:
-    """CoinGecko Analyst 的新闻 + 洞察(Jazz 11-06「先把 Analyst API 用足」;政治 / 宏观新闻源要多)。每轮 2 次请求。"""
+    """CoinGecko Analyst 的新闻 + 洞察。2026-11-20 订阅已停:默认不打这两笔。`CG_NEWS_LIVE=1` 才打。"""
+    if os.environ.get("CG_NEWS_LIVE", "").strip().lower() not in ("1", "true", "yes"):
+        return [], []
     from src.data.market.data_layer import CG_API_KEY, CG_PRO_BASE, _cg_headers, _get_cg_client
     if not CG_API_KEY:
         return [], [CG_NEWS_SOURCE, CG_INSIGHTS_SOURCE]
@@ -244,12 +257,94 @@ async def fetch_cg(now: dt.datetime) -> tuple[list[dict], list[str]]:
     return items, failed
 
 
+EODHD_NEWS_SOURCE = "EODHD News"
+EODHD_NEWS_LIMIT = 50
+_EODHD_NEWS_TTL_S = 10 * 60
+# 一笔请求里的篮子,不是每个名字一笔。CC 是 EODHD 的加密场所;只放流动性够、代号稳定的名字。
+# 冷门代号(HYPE 等)放进来,整笔可能因一个非法符号失败。
+EODHD_NEWS_SYMBOLS = (
+    "BTC-USD.CC", "ETH-USD.CC", "SOL-USD.CC", "BNB-USD.CC", "XRP-USD.CC",
+    "ADA-USD.CC", "AVAX-USD.CC", "DOT-USD.CC", "LINK-USD.CC", "NEAR-USD.CC",
+    "AAVE-USD.CC", "UNI-USD.CC", "LDO-USD.CC",
+    "COIN.US", "MSTR.US", "HOOD.US", "PYPL.US", "CRCL.US",
+)
+_eodhd_news_cache: Optional[tuple[float, list[dict]]] = None
+
+
+def _symbol_list(raw: Any) -> list[str]:
+    if isinstance(raw, list):
+        return [str(x) for x in raw if str(x).strip()]
+    if isinstance(raw, str) and raw.strip():
+        return [p.strip() for p in raw.split(",") if p.strip()]
+    return []
+
+
+def eodhd_symbol_hit(raw: str) -> Optional[str]:
+    """纯函数。`BTC-USD.CC` → BTC,`COIN.US` → COIN。不在我们名字表里的不认。"""
+    s = str(raw or "").strip().upper()
+    if "." not in s:
+        return None
+    head, venue = s.rsplit(".", 1)
+    base = head.split("-")[0] if venue == "CC" else head if venue == "US" else ""
+    return base if base in ALIASES else None
+
+
+def eodhd_news_items(rows: Any, now: dt.datetime) -> list[dict]:
+    """纯函数。EODHD `/api/news` 的行 → 标准化条目。`symbols` 映射进 `vendor_hits`。"""
+    out = []
+    for r in rows if isinstance(rows, list) else []:
+        if not isinstance(r, dict):
+            continue
+        link, title = str(r.get("link") or "").strip(), str(r.get("title") or "").strip()
+        if not link or not title:
+            continue
+        hits = sorted({h for h in (eodhd_symbol_hit(s) for s in _symbol_list(r.get("symbols"))) if h})
+        out.append({"id": item_id(link), "source": EODHD_NEWS_SOURCE, "title": title[:300], "link": link[:500],
+                    "published_at": r.get("date") or None, "fetched_at": now.isoformat(),
+                    "summary_raw": clean_summary(plain_text(str(r.get("content") or "")))[:600],
+                    "vendor_hits": hits})
+    return out
+
+
+async def fetch_eodhd(now: dt.datetime) -> tuple[list[dict], list[str]]:
+    """一笔 `/api/news`。没 key、HTTP 失败、或空正文 ⇒ 记这个源失败,不把异常(里面可能有 token)往外传。
+    10 分钟内的成功结果复用,避免同一轮被调用两次。"""
+    global _eodhd_news_cache
+    from src.data.market.data_layer import EODHD_BASE, EODHD_KEY, _get_misc_client
+    if not EODHD_KEY:
+        return [], [EODHD_NEWS_SOURCE]
+    if _eodhd_news_cache is not None and time.time() - _eodhd_news_cache[0] < _EODHD_NEWS_TTL_S:
+        return list(_eodhd_news_cache[1]), []
+    client = _get_misc_client()
+    frm = (now - dt.timedelta(days=2)).date().isoformat()
+    try:
+        r = await client.get(
+            f"{EODHD_BASE}/news",
+            params={"s": ",".join(EODHD_NEWS_SYMBOLS), "from": frm, "limit": str(EODHD_NEWS_LIMIT),
+                    "offset": "0", "fmt": "json", "api_token": EODHD_KEY},
+            timeout=30,
+        )
+        r.raise_for_status()
+        payload = r.json()
+    except Exception:                                                     # noqa: BLE001 —— 不记录异常文本,URL 里带着 key
+        return [], [EODHD_NEWS_SOURCE]
+    items = eodhd_news_items(payload, now)
+    if not items:
+        return [], [EODHD_NEWS_SOURCE]
+    _eodhd_news_cache = (time.time(), items)
+    return items, []
+
+
 async def fetch_items(now: dt.datetime) -> tuple[list[dict], list[str]]:
     """取所有源 → 标准化条目;→ (条目, 取不到的源)。"""
     import httpx
     from src.backend.macro_events_scraper import _RSS_FEEDS, _fetch_rss
     feeds = list(_RSS_FEEDS) + EXTRA_FEEDS
-    items, failed = await fetch_cg(now)
+    items, failed = [], []
+    for pull in (fetch_eodhd, fetch_cg):
+        got, bad = await pull(now)
+        items.extend(got)
+        failed.extend(bad)
     async with httpx.AsyncClient(headers={"User-Agent": "CometCloud-feed/1.0"}) as client:
         for feed in feeds:
             try:
@@ -313,7 +408,7 @@ async def run_once(now: Optional[dt.datetime] = None) -> dict[str, Any]:
     skipped = 0
     for it in new:
         hits, macro = relevance(it["title"], it["summary_raw"])
-        hits = sorted(set(hits) | set(it.get("cg_hits") or []))          # CoinGecko 打的币标签 ∪ 我们自己认出的名字
+        hits = sorted(set(hits) | set(it.get("cg_hits") or []) | set(it.get("vendor_hits") or []))
         it["hits"] = hits
         it["score"] = score(hits, macro, it["source"]) if it["dup_of"] is None else 0
         if it["score"] >= MIN_SCORE and unpostable(it["title"], it["summary_raw"]):

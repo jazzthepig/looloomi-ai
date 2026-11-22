@@ -214,3 +214,74 @@ def test_coingecko_news_and_insights_parse_with_coin_tags():
                                {"title": "no coin", "posted_at": "2026-06-15T03:56:19Z", "related_coin_ids": []}], now, cmap)
     assert len(ins) == 1 and ins[0]["cg_hits"] == ["SOL"] and ins[0]["link"] == "https://www.coingecko.com/en/coins/wrapped-solana"
     assert ins[0]["id"] != nf.item_id(ins[0]["link"]), "同一币的多条洞察不能因为链接相同而互相覆盖"
+
+
+def test_eodhd_news_maps_symbols_and_strips_html():
+    now = dt.datetime(2026, 11, 20, tzinfo=dt.timezone.utc)
+    rows = [
+        {"date": "2026-11-20T12:00:00+00:00", "title": "Bitcoin steadies", "content": "<p>ETH mentioned.</p>",
+         "link": "https://news.example/a", "symbols": ["BTC-USD.CC", "ETH-USD.CC", "AAPL.US"]},
+        {"title": "", "link": "https://news.example/b", "symbols": ["BTC-USD.CC"]},
+        {"title": "Circle files", "link": "https://news.example/c", "symbols": "COIN.US, MSTR.US"},
+    ]
+    items = nf.eodhd_news_items(rows, now)
+    assert len(items) == 2
+    assert items[0]["vendor_hits"] == ["BTC", "ETH"] and items[0]["summary_raw"] == "ETH mentioned."
+    assert items[0]["source"] == nf.EODHD_NEWS_SOURCE and items[0]["published_at"] == "2026-11-20T12:00:00+00:00"
+    assert items[1]["vendor_hits"] == ["COIN", "MSTR"]
+    assert nf.eodhd_symbol_hit("HYPE-USD.CC") == "HYPE"
+    assert nf.eodhd_symbol_hit("BRK-B.US") is None
+
+
+def test_cg_news_does_not_call_the_network_unless_explicitly_live(monkeypatch):
+    import src.data.market.data_layer as dl
+    monkeypatch.delenv("CG_NEWS_LIVE", raising=False)
+    monkeypatch.setattr(dl, "CG_API_KEY", "present")
+
+    def boom():
+        raise AssertionError("CoinGecko news was called")
+
+    monkeypatch.setattr(dl, "_get_cg_client", boom)
+    now = dt.datetime(2026, 11, 20, tzinfo=dt.timezone.utc)
+    items, failed = asyncio.run(nf.fetch_cg(now))
+    assert items == [] and failed == []
+
+
+def test_fetch_eodhd_is_one_call_and_does_not_leak_the_key(monkeypatch):
+    import src.data.market.data_layer as dl
+    nf._eodhd_news_cache = None
+    monkeypatch.setattr(dl, "EODHD_KEY", "secret-token-value")
+    monkeypatch.setattr(dl, "EODHD_BASE", "https://eodhd.example/api")
+    calls = []
+
+    class Resp:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return [{"date": "2026-11-20T00:00:00+00:00", "title": "Bitcoin steadies after the Fed",
+                     "content": "Funding stays positive.", "link": "https://n/1", "symbols": ["BTC-USD.CC"]}]
+
+    class Client:
+        async def get(self, url, params=None, timeout=None):
+            calls.append((url, dict(params or {})))
+            return Resp()
+
+    monkeypatch.setattr(dl, "_get_misc_client", lambda: Client())
+    now = dt.datetime(2026, 11, 20, tzinfo=dt.timezone.utc)
+    items, failed = asyncio.run(nf.fetch_eodhd(now))
+    again, failed2 = asyncio.run(nf.fetch_eodhd(now))
+    assert failed == [] and failed2 == [] and len(calls) == 1 and len(items) == 1 and again[0]["id"] == items[0]["id"]
+    assert calls[0][0] == "https://eodhd.example/api/news"
+    assert calls[0][1]["s"] == ",".join(nf.EODHD_NEWS_SYMBOLS)
+    assert calls[0][1]["limit"] == "50"
+    assert "secret-token-value" not in str(items) and "secret-token-value" not in str(failed)
+    nf._eodhd_news_cache = None
+
+
+def test_fetch_eodhd_without_a_key_fails_the_source_only(monkeypatch):
+    import src.data.market.data_layer as dl
+    nf._eodhd_news_cache = None
+    monkeypatch.setattr(dl, "EODHD_KEY", "")
+    items, failed = asyncio.run(nf.fetch_eodhd(dt.datetime(2026, 11, 20, tzinfo=dt.timezone.utc)))
+    assert items == [] and failed == [nf.EODHD_NEWS_SOURCE]
