@@ -741,6 +741,15 @@ python3 -m pytest tests/test_cis_cg_less_fallback.py -q || {
     echo "✗ preflight stage: T-422 —— CG-less 兜底(默认关/接管/变异测试)红" >&2
     exit 1
 }
+# 3a-vicesima-bis. T-422 补:兜底接管时**来源要标在行里**。
+#                     `cis_official_daily` 只追加 + 不可改(触发器拒 UPDATE/DELETE)
+#                     ⇒ 发出去的档事后补不了标记 ⇒ 标记必须在发布之前就在行里。
+#                     而口径差是真的(成交额差 6.5–34 倍、M 支柱低 ~24 分、14/23 等级会变)
+#                     ⇒ 不标出来,下游会把口径断读成真实变动。
+python3 -m pytest tests/test_cis_cg_less_fallback_provenance.py -q || {
+    echo "✗ preflight stage: T-422 补 —— 兜底接管的来源标记(口径断点)红" >&2
+    exit 1
+}
 # 3a-vicesima. S-360: docs/SPINE.md 必须描述现在的代码。SPINE 是 agent 重组
 #                    记忆时对齐方向的基准 —— 一份过期的方向基准比没有更坏。
 #                    实测动机:10 个文件 12 行注释断言 signal_outcomes 死了

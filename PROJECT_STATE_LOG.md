@@ -4154,3 +4154,146 @@ Redis 键设成了 200** ⇒ **仓库侧其实早就被压到 ≤200/天**,我�
 - 台账:`REFUTATION_LEDGER.md §十五`(私有,不进 git);
 - 跨 lane:`MINIMAX_SYNC.md §Seth-1122a` + `§IN-FLIGHT` 第 62 行(gitignored);
 - 头部:`PROJECT_STATE.md` 第 3 行(新)+ Outter 那段进「更早」链 + OPEN RISKS 第 7 条。
+
+---
+
+## 2026-11-22 08:50 UTC — 兜底接管的档在正式表里原本不可辨识:补上来源标记(发之前补),并把量级更正到底
+
+### 一、发现(这一轮的起因)
+
+Jazz 11-21 停了 CoinGecko 订阅,T-422 做了 CG-less 兜底(默认关)。我去读那条兜底路径的时候
+发现一件事:**兜底补出来的档,在正式表里和 CG 出来的档长得一模一样。**
+
+- `cis_official_daily` 的 DDL(`scripts/supabase_s533_cis_official.sql`)有触发器
+  `cis_official_daily_no_change`(BEFORE UPDATE OR DELETE)⇒ **只追加、不可改**。
+- 兜底的报告里**有**来源(`report["sources"][sym] = {"price": "binance_hist", ...}`)——
+  但那个报告只进**运行日志**(`official.run_once` 的返回值 `out_ret["cg_less_fallback"]`)。
+- `annotate_rows(rows, report)` 只把「**缺**的维度」写进 `r["missing"]`
+  (`max_supply` / `total_supply` / `circulating_supply`)—— **「被替换的维度」一个字都没写进行**。
+- 行里的 `inputs`(`rebuild.py:264`)只有 `price` / `mcap` / `volume_24h` / `chg30` / `fng` / `vix` /
+  `btc_dom` / `tvl` / `funding`,**没有来源字段**。
+
+⇒ **口径断在表里不可见。** 而口径差是真的(T-422 卡量过:成交额比 6.54×–34.12×、M 支柱平均低 23.87 分、
+23 个加密名里 14 个等级会变)⇒ 不标出来,下游会把**口径断读成真实变动**。
+
+**不可逆的那一层**:表只追加 ⇒ **事后补标记做不到**。所以这不是「有空再补」的事,
+是「**开兜底之前必须先有标记**」的事。
+
+### 二、怎么修的
+
+- `cg_less_fallback.apply()`:新增 `report["fb_days"][sym] = {"price": [...], "mcap": [...], "volume": [...]}`
+  —— **逐日**记下「哪一天、哪一维是兜底供的」。之前只有 `sources[sym]` 的 `from`/`to`/`n_days`
+  (一个区间),答不了「断点在哪一天」。
+- `annotate_rows()`:新增 `_mark_provenance()` ⇒ 把来源写进每行的 `inputs`
+  (`px_source` = `binance_hist` / `mcap_source` = `circulating_supply_x_close` /
+  `vol_source` = `volume_x_close`)。**只在兜底供的那一天加**;CG 供的那天一个键都不加。
+- `rebuild.build()`:也调一次 `annotate_rows` ⇒ **重建表(`cis_rebuild_daily`,upsert)也带标记**。
+  正式表那条路(`official.run_once`)本来就调 ⇒ 两张表都有。
+- **开关关 ⇒ 逐字节相同**:`annotate_rows(rows, None)` 原样返回;`build()` 的 data 里没有
+  `cg_less_fallback` 键 ⇒ 行一个字节都不动。
+- 测试:新文件 `tests/test_cis_cg_less_fallback_provenance.py`(6 条:断点逐日 / 只标接管那天 /
+  没接管不动 / 没有 report 不动 / 标记进得了正式档的行 / 报告的 fb_days 对得上),
+  **已挂 `scripts/preflight.sh` stage 3**(带 `|| { echo …; exit 1; }`)。
+  回归:`tests/test_cis_cg_less_fallback.py` = 10 passed / 3 skipped(与合并时同数),
+  `tests/test_cis_official.py` + `tests/test_cis_rebuild.py` = 31 passed。
+
+### 三、量级更正到底(我 11-21 报的那个数要再修一次)
+
+T-422 卡的 notes 里有 Seth 11-21 读的一次 `/internal/cg-quota`(仓库侧读的,合法):
+`daily_budget=200`、`used_today`(11-20)=**7,915**、`remaining=0`、`breaker_open=false`、
+`coinmarketcap.key_present=false`。
+
+⇒ **仓库侧从 11-20 起就被预算挡在出网之前**(`used_today` ≥ `daily_budget`)⇒
+
+1. **漏掉的钱 = 11-20 那 7,915 条**(上限生效之前的当天),不是「16,000/天」;
+2. **我 11-21 推的 401 长闸今天是睡着的** —— 没有请求出网,熔断没有机会开。
+   ⇒ 它的价值在 **12-01**:恢复时若订阅还没真恢复,第一条 401 就开 6 小时闸 ⇒ ~4 次/天。
+3. `breaker_reason` 为空**是对的**(请求根本没走到 401 那条路径),不是没修好。
+
+### 四、现在的产品读数(公开面实测,11-22 08:45Z)
+
+- `GET /api/v1/market/macro-pulse` ⇒ `regime_as_of = 2026-11-19`、`regime_source = official_daily_close`
+  ⇒ **官方档已卡在 11-19,缺 11-20 / 11-21 两批**(下一次发布尝试 11-23 06:00Z);
+  `data_source = "coingecko"` ⇒ **CMC 兜底仍是哑的**(Railway 上那个变量还没改名);
+  同一个响应里 fng=11、DeFi TVL 67,742,111,175、`macro_regime=RISK_OFF` ⇒ **只有 CG 一家暗**。
+- `GET /api/v1/ohlcv/BTC?days=6` ⇒ `binance_hist` 有 **2026-11-21** 的收盘行
+  (ETH / SOL 同)⇒ **兜底的价腿活着**(Railway 侧写)⇒ 停 Mac 侧**取数**不会断它,
+  停**写端**才会。
+
+### 五、要 Jazz 拍的一件事(口径决定,不是工程决定)
+
+**兜底(`CIS_CG_LESS_FALLBACK=1`)开不开?** 开的代价是已量过的:口径不同(成交额差 6.5–34 倍、
+M 支柱低 ~24 分、14/23 等级会变),而且 12-01 恢复后同一条正式序列里会**并着两种口径**
+(现在标记已经在行里 ⇒ 能分辨;但**序列本身仍然是混的**)。
+⇒ **顺序是死的:先有标记(今天已推),再开兜底。**
+
+### 六、给 Minimax 的一句(surgical)
+
+**只停取数,别停写端。** `cg_news_listener` 停掉(它从 10-29 18:49 起就在 401,≈96/天);
+但兜底的价腿是 `ohlcv_daily`(binance_hist,Railway 侧写,11-21 仍在落)⇒ 停 Mac 侧 CG 取数
+不会断它;顺手把写端也停了,兜底就没油了。
+
+### 七、这一轮的东西都在哪
+
+- 代码:`src/data/cis/cg_less_fallback.py` + `src/data/cis/rebuild.py`;测试:
+  `tests/test_cis_cg_less_fallback_provenance.py`;preflight:`scripts/preflight.sh` stage 3a-vicesima-bis;
+- 跨 lane:`MINIMAX_SYNC.md §IN-FLIGHT` 第 65 行(新)+ 第 62 行(量级更正);
+- 头部:`PROJECT_STATE.md` 第 3 行(新)+ Outter 那段进「更早」链 + OPEN RISKS 第 7 条。
+
+---
+
+## 2026-11-22 09:15 UTC — 我们自己的 prod 门(S-343 课号 walker)被 SYNC 行号误伤:一道红门已经在 main 上,而 CI 看不见它
+
+**(这一段是推「兜底来源标记」之前 preflight 拦下来的;修完才推得上去。)**
+
+### 一、事实链
+
+- 11-22 08:30,`PROJECT_STATE.md` 的会话头(Outter 写)里有一句:「三条 lane 的提示写明不要通读 SYNC / CLAUDE,
+  所以 **#62** 那条长通知到不了它们手上」—— `#62` 指的是 **MINIMAX_SYNC §IN-FLIGHT 的第 62 行**(CG 停订长通知)。
+- S-343 的 walker 用 `f"#{n}" in state` 扫 PROJECT_STATE.md(裸子串)⇒ 把**另一个文件的行号**读成了
+  「**课 62** 被引用」⇒ 课 62 既"可达"又"在 `_EXEMPT_UNENFORCED` 里" ⇒
+  `test_exemption_does_not_double_cover_an_enforced_lesson` 红 ⇒ **Mac 侧 preflight stage 3 红**。
+- 那个 `#62` 是 `143b0e4d` 引进的 ⇒ **这道红门在 08:30 那次推送时就已经存在** ⇒ **一道红门被推到了 main**
+  (规则 5:preflight 是唯一 prod 门)。
+
+### 二、更要紧的第二层 —— 这道门在 CI 上是「跳过」,不是「通过」
+
+`tests/_private_docs.py`(S-501)说私有文档(台账 / 手册 / DECISIONS)不入库 ⇒
+`test_lessons.py` 的 `_private_sources_present()` 在 CI 上是 False ⇒ 整个文件在 CI 上 **return early**
+⇒ **S-343 walker 只在 Mac 侧有牙齿**。⇒ **「CI 绿」不能替一道在 Mac 上红着的门背书**
+(与 S-343 当初设计它的意图正好相反)。
+
+### 三、根因不是 walker 粗,是豁免表里 7 条的理由本身就写错了
+
+56 / 58 / 59 / 61 / 62 / 63 / 64 全部写成「MAC-LANE-ONLY —— cross-lane coordination rule; MINIMAX_SYNC only」——
+**而填进去的是 MINIMAX_SYNC §IN-FLIGHT 的行号**(那 7 个数字在 SYNC 里恰好都存在),被当成了 Lesson 课号。
+真正的课 56/58/59/61/62/63/64 全是**研究结论或仓库纪律**(731 天面板 10 次坟场 / perp 微结构
+residual-level-carry / 方向性 crypto beta 袖 /「提交信息描述行为、diff 才是收据」/ 逐资产带符号 TSMOM
+的面板约束 / 跨资产 TradFi 枢轴逃不出短面板 / cisLSv4 形状过不了 3-check)⇒ 正确类别是 **ARCH-NO-TEST**。
+
+### 四、修了什么
+
+① `PROJECT_STATE.md` 里的裸 `#62` → 「SYNC §IN-FLIGHT 第 62 条」(**引用别的文件的行就写「SYNC 第 N 条」,不写 `#N`**);
+② 豁免表那 7 条的理由逐条改回它真的那条课是什么、类别改对(**键不变、数量不变 ⇒ 基线不动**);
+③ 豁免表头写死纪律「**行号 ≠ 课号**」;④ `MINIMAX_SYNC.md` 自己的行内引用(`#62/#63 的续`、见 `#63`)一并改掉。
+
+### 五、三条衍生的纪律
+
+① **依赖私有文档的门在 CI 上是「跳过」不是「通过」** ⇒ 这类门必须在自己的文件里写明它**只在 Mac 侧有牙齿**。
+② **豁免理由要能独立成立** ——「这条没有可执行形态」是**关于内容的断言**;本次 7 条理由写的其实是
+**另一个文件的行号** ⇒ 连断言都不成立,等于把那 7 条课从视野里抹掉。
+③ **一道红门被推上去,通常不是门坏,是推的人没跑它** —— 直接 push 绕过了 seth_bot 的合并路径(那条会重跑
+preflight)。⇒ 直接 push 仍照用(有 Jazz 授权),但**「门只在合并路径上有牙齿」这件事要写下来**。
+
+### 六、工作区里的另一场会话(不提交看板的理由)
+
+工作区同时有**另一场会话**的未提交改动(任务卡 T-379 / T-419 / T-421 的结卡与 notes + 新卡 T-423)
+⇒ `tasks/BOARD.md` 不是最新 ⇒ preflight 的看板检查会红。⇒ 本轮**只本地重生成看板、不提交**:
+提交了会和「没提交的卡」分家 ⇒ **CI 反而红**(origin/main 的卡片与看板是自洽的,已单独验过)。
+⇒ 看板与那三张卡一起由那场会话提交。
+
+### 七、东西在哪
+
+- 代码/测试:`tests/test_lessons.py`(豁免表 7 条理由 + 表头纪律);`PROJECT_STATE.md`(裸 `#62` → SYNC 第 62 条);
+- 跨 lane:`MINIMAX_SYNC.md` 第 65 行内的行内引用(同一类混淆,别留种子);
+- 台账:`REFUTATION_LEDGER.md` 末尾 `## S-897`(私有、不入库)。

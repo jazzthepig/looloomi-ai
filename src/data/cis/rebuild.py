@@ -529,7 +529,11 @@ def build(assets: Mapping[str, Mapping[str, Any]], data: Mapping[str, Any], end:
         for k in ("pillar_f", "pillar_m", "pillar_o", "pillar_s", "pillar_a", "raw_score", "score"):
             v = r.get(k)
             r[k] = None if v is None or (isinstance(v, float) and not np.isfinite(v)) else round(float(v), 2)
-    return rows
+    # T-422:兜底接管时,如实标缺 + 如实标来源(哪一维、哪一天是兜底供的)。
+    # 正式档 `cis_official_daily` 只追加不可改 ⇒ 标记必须在发布之前就在行里;
+    # 重建档(`cis_rebuild_daily`)是 upsert ⇒ 补标只差下一次重算。开关关 ⇒ 逐字节相同。
+    from src.data.cis.cg_less_fallback import annotate_rows
+    return annotate_rows(rows, data.get("cg_less_fallback"))
 
 
 async def run_once(today: Optional[date] = None) -> dict[str, Any]:

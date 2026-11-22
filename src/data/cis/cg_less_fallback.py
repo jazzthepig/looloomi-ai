@@ -176,6 +176,32 @@ def _merge_series(cg: pd.Series, fb: pd.Series, force: bool) -> tuple[pd.Series,
     return val, from_fb
 
 
+def _iso_days(index, flags) -> list[str]:
+    """逐日挑出「这一维是兜底供的」那些日期(ISO 字符串)。"""
+    out: list[str] = []
+    for d, f in zip(index, flags):
+        if bool(f):
+            out.append(str(pd.Timestamp(d).date()))
+    return out
+
+
+def _fb_day_map(px: pd.Series, from_fb, mc_from_fb, vol_from_fb) -> dict[str, list[str]]:
+    """「哪一天、哪一维是兜底供的」—— 逐维逐日。
+
+    为什么要有它:`sources` 只说「这个符号的价是兜底来的」,可读不出**口径断在哪一天**。
+    而口径断点就是这套东西存在的全部理由(见 `annotate_rows` 的注释)。
+    """
+    out: dict[str, list[str]] = {}
+    for key, flags in (("price", from_fb), ("mcap", mc_from_fb), ("volume", vol_from_fb)):
+        if flags is None:
+            continue
+        f = flags.reindex(px.index, fill_value=False).astype(bool)
+        days = _iso_days(px.index, f)
+        if days:
+            out[key] = days
+    return out
+
+
 def _empty() -> pd.Series:
     return pd.Series(dtype=float)
 
@@ -200,6 +226,9 @@ def apply(data: Mapping[str, Any], assets: Mapping[str, Mapping[str, Any]],
         "took_over": [], "still_missing": [], "no_fallback_price": [],
         "sources": {}, "supply_asof": {}, "supply_stale_days": {},
         "missing_dimensions": {},
+        # 逐日:兜底在哪一天供的哪一维。`sources` 说「这个符号的价是兜底来的」,
+        # `fb_days` 说「哪一天」—— 口径断在 11-20 还是 11-21,只有这个能回答。
+        "fb_days": {},
         "volume_caveat": "ohlcv_daily(binance_hist) 是 Binance 现货单所日量 × 收盘价;"
                          "CG market_chart 是全交易所 24h 滚动量 —— 口径不同",
         "max_supply_caveat": "max_supply 无库内来源 ⇒ F 支柱 capped-emission bonus(0–5 分)拿不到",
@@ -245,6 +274,8 @@ def apply(data: Mapping[str, Any], assets: Mapping[str, Mapping[str, Any]],
                 "to": str(max(days_fb).date()), "n_days": len(days_fb),
                 "n_days_mcap_fb": int(mc_from_fb.sum()), "n_days_vol_fb": int(vol_from_fb.sum()),
             }
+            # **逐日**记下「哪一天、哪一维是兜底供的」—— 报表上要看得见口径断在哪。
+            report["fb_days"][sym] = _fb_day_map(px, from_fb, mc_from_fb, vol_from_fb)
         else:
             report["still_missing"].append(sym)
         # total_supply:CG live 缺 ⇒ 用日表里最后一条 PIT(不是 0!F 支柱要它:缺了 fdv=0、supply_ratio=0)
@@ -309,19 +340,56 @@ async def apply_if_enabled(assets: Mapping[str, Mapping[str, Any]], data: dict[s
     return data, report
 
 
+#: 兜底接管时写进 `inputs` 的来源标记 —— 键是 `inputs` 里的字段名,值是那一维的来源。
+PROVENANCE_KEYS = {
+    "price": ("px_source", PRICE_SOURCE),
+    "mcap": ("mcap_source", "circulating_supply_x_close"),
+    "volume": ("vol_source", "volume_x_close"),
+}
+
+
+def _mark_provenance(r: dict, days_by_dim: Mapping[str, list[str]]) -> None:
+    """把「这一行的价/市值/成交是兜底供的」写进 `inputs`。
+
+    为什么必须有(这是这套东西的全部理由):**`cis_official_daily` 只追加 + 不可改**
+    —— 触发器 `cis_official_daily_no_change` 拒绝 UPDATE/DELETE,发出去的档事后补不了标记。
+    ⇒ 标记必须在**发布之前**就在行里;先发后补 = 补不回来。
+    ⇒ 而口径差是真的(M 支柱低 ~24 分、成交额差 6.5–34 倍,见 T-422 卡的量表)——
+    混在同一条正式序列里不标出来,下游会把口径断读成真实变动。
+
+    没有兜底接管的行**一个键都不加** ⇒ 与今天逐字节相同。
+    """
+    if not days_by_dim:
+        return
+    d = r.get("d")
+    if d is None:
+        return
+    inp = r.get("inputs")
+    if not isinstance(inp, dict):
+        return
+    d = str(d)[:10]
+    for dim, (key, value) in PROVENANCE_KEYS.items():
+        if d in days_by_dim.get(dim, ()):
+            inp[key] = value
+
+
 def annotate_rows(rows: list[dict], report: Optional[Mapping[str, Any]]) -> list[dict]:
-    """如实标缺:兜底接管时,把「确实缺的那几维」写进每行的 `missing`。
+    """如实标缺 + 如实标来源:兜底接管时,把「确实缺的那几维」写进每行的 `missing`,
+    把「哪一维是兜底供的、哪一天」写进每行的 `inputs`。
 
     * `max_supply` —— 无库内来源 ⇒ emission_bonus(≤ 5 分)拿不到。
     * `total_supply` / `circulating_supply` —— 兜底也没补上时才算缺(补上了就不标)。
     * 全市场市值(`macro_daily.total_mcap`)是**批次级**的,由 `official.completeness` 写
       「全市场市值缺(BTC 占比算不出)」,这里只标行级的。
+    * 来源标记(`px_source` / `mcap_source` / `vol_source`)—— 见 `_mark_provenance` 的理由。
     """
     if not report:
         return rows
     dims = report.get("missing_dimensions") or {}
+    fb_days = report.get("fb_days") or {}
     for r in rows:
         miss = set(r.get("missing") or [])
         miss.update(dims.get(r.get("symbol")) or [])
         r["missing"] = sorted(miss)
+        _mark_provenance(r, fb_days.get(r.get("symbol")) or {})
     return rows
