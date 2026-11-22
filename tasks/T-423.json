@@ -1,0 +1,33 @@
+{
+  "id": "T-423",
+  "owner": "lane-a",
+  "status": "in_review",
+  "created": "2026-11-22",
+  "title": "把 T-379 / T-419 整理成能过范围检查的分支(T-379 的卡补一条允许路径 + T-419 重切一个干净分支),并把 T-419 的场景文件按台账格式重交",
+  "source": "Seth 2026-11-22 的裁决(T-421):按键翻页按原样合;合之前有两条机械障碍(范围检查红 + T-419 分支带着 main 的旧合并),另加一个静默洞:场景文件格式不对,只报不写,那 5 条前向预期根本没入账。本卡是纯机械活,不涉及研究判断。本文件是 Seth 开的原卡的**精简副本**(原卡在主目录未跟踪文件里;lane 不往主目录写)。",
+  "allowed_paths": [
+    "docs/research/",
+    "tasks/T-379.json",
+    "tasks/T-419.json",
+    "tasks/T-423.json",
+    "src/data/style/header.py",
+    "tests/"
+  ],
+  "forbidden_paths": [
+    "Shadow/",
+    "migrations/",
+    "paper_trading/",
+    "docs/SETUP_REGISTRY.md",
+    "REFUTATION_LEDGER.md",
+    "STRATEGY_PLAYBOOK.md",
+    "scripts/preflight.sh",
+    "src/api/",
+    "src/data/vector/"
+  ],
+  "acceptance": {
+    "check": "① T-379 的卡补一条允许路径 docs/research/(只改这一个字段,status 保持 in_review、verified 保持 null、notes 原样);推送后 check_pr_scope.py 必须打印 ✓ 范围检查。② T-419 重切一个干净分支 lane-a/T-419-v2(base = origin/lane-a/T-379),不把 main 的旧内容带进去;不许改 T-419 卡的 allowed_paths。③ 场景文件按台账格式 {author, entries} 重交(5 条命题一条不删),自查 repo_files() 必须 problems= [] 。④ 不改 preflight、不推 main、不碰 Shadow/ 与台账。",
+    "expect": "① lane-a/T-379 推上来且范围检查输出 ✓ 范围检查;② lane-a/T-419-v2 推上来,notes 里给 commit sha 与「它只含 5 个文件」的证据;③ 场景文件自查输出 problems= [] n= 5。Seth 侧:先合 lane-a/T-379,再合 lane-a/T-419-v2(顺序不能反)。"
+  },
+  "prior_value": "T-421 裁决(2026-11-22,Seth):按键翻页按原样合。三档实测(各 3 次取中位数,OFFSET 侧 vs 按键侧):① 无过滤整读 448,296 行 126.821s vs 131.403s(+3.61%,且 src/ 里零生产调用点);② ≥2024-06-20 173,994 行 34.850s vs 33.590s(−3.62%);③ fetch_panel(2025-01-01) 183,892 行 15.693s vs 15.384s(−1.97%)⇒ ②③ 两档的按键侧中位数都 ≤ OFFSET 侧 ⇒ 预注册的升级判据成立(②升①)。三档逐行 sha256 两边逐字相同(20ee382b… / 87e04260… / e68cd243…)⇒ 内容没变。",
+  "notes": "2026-11-22 lane-a(Minimax-A)本轮(执行本卡):**三样都做完了**。\n① **T-379 的分支**:在 lane-a/T-379 上只加了一行 docs/research/(卡自己的文件 tasks/T-379.json),status 保持 in_review、verified 仍 null、notes 一字未动;提交 `13b1573e`(chore(T-379): 卡补一条允许路径 —— 改卡不是改代码)。推送后范围检查:**✓ 范围检查 lane-a/T-379:8 个文件,全部在 T-379 允许的范围内**(改之前是红:docs/research/scenarios/lane-a-T-379.json 不在 T-379 的 allowed_paths 里)。\n② **T-419 重切**:分支 `lane-a/T-419-v2`,base = origin/lane-a/T-379(13b1573e),**没把 main 的旧内容带进去** —— 两个代码文件相对 T-379 的差异只有探针修复本身(header.py +23 −8、测试 +77 行),不是 main 的旧版本。两个提交:`b72ae107`(代码 + 场景文件 + notes)、`ab27d0d3`(notes 补 sha 与文件清单)。相对 base 的 diff --stat = **5 个文件、318 insertions(+)/8 deletions(-)**,原文已写进 T-419 的 notes。测试:python3 -m pytest tests/test_read_all_keyset.py -q ⇒ **11 passed**(T-379 的 8 条 + T-419 的 3 条末页核对)。\n③ **场景文件按台账格式重交**:旧的 {task,lane,scenarios} 老格式被 scenario_ledger 记成**坏文件(只报不写)**⇒ 那 5 条一条都没入账;现在改成 {author, entries},5 条命题一条没删(id / 场景 / 命题原文 / prob 0.95、0.85、0.9、0.6、0.6 原样保留 / variable=manual / horizon_d=2026-12-20)。自查:`repo_files()` ⇒ **problems= [] n= 5**,5 条逐条 validate() 皆空。S4/S5 不作废,12-20 照常人工结算(settled_by 不能是 lane-a)。\n**preflight**:除 cold-start contract 一条红外全绿 —— 那条是 test_project_state_header_not_older_than_newest_ledger_entry:分支基点带的是 11-19 的 PROJECT_STATE.md(main 已是 11-22),而 REFUTATION_LEDGER.md 是 gitignored 的本地软链、CI 上没有该文件 ⇒ 那条测试在 CI 上 early-return 变绿;不是本卡改动引起的(T-379 分支同样红)。\n**留给 Seth 的动作**:先合 lane-a/T-379,再合 lane-a/T-419-v2(顺序不能反)。v2 相对 origin/main 现在必然红(还带着 T-379 的文件);相对 origin/lane-a/T-379 应当是绿的 —— 这一条我没跑成(上下文守卫在 99k 拦下了),文件清单已用 diff --stat 给出。\n另:工作区里 S-244 遗留的 tests/test_every_test_is_registered.py(PTTESTS 守卫)改动不在本卡范围,已 stash(没提交),留给认领它的人。"
+}
