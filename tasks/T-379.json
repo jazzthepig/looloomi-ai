@@ -16,6 +16,7 @@
     "src/api/store.py",
     "tests/",
     "scripts/preflight.sh",
+    "docs/research/",
     "tasks/T-379.json"
   ],
   "acceptance": {
