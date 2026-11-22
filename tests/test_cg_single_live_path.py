@@ -140,8 +140,6 @@ EXCEPTIONS: dict[str, tuple[tuple[str, int, str], ...]] = {
     "/simple/price": (
         ("src/api/routers/trading.py", 2,
          "标记价:单标的(带 EODHD 兜底)/ 批量 —— 两者共用同一份 per-symbol 价格缓存"),
-        ("src/data/market/data_layer.py", 1,
-         "宏观脉冲里的 BTC 现价(另一个问题:不是持仓标记价)"),
     ),
 }
 

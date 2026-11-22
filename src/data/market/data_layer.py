@@ -1988,6 +1988,9 @@ async def get_cg_markets(ids: list[str]) -> list:
     S-895 阶段 2:HTTP 由 `get_cg_markets_raw()`(唯一实现)承担;本函数保留
     **自己那层缓存**(键 = id 集合的 md5 —— 不同调用方要的 id 集合不同,
     缓存不共享;每个调用方各自决定自己的新鲜度)。
+    单行例外:成功写入时按 `id` 再放一份 `cg_market_row:{id}`(同一 300s)。
+    宏观脉冲要的比特币价、24h、7d 就在这一行里 —— 官网首页用这一次
+    `/coins/markets` 带出整张表,不再为比特币另打 `/simple/price`。
     """
     if not ids:
         return []
@@ -2001,14 +2004,55 @@ async def get_cg_markets(ids: list[str]) -> list:
     r2 = await _redis_get(key)
     if r2:
         _cache_set(key, r2)
+        _remember_market_rows(r2)
         return r2
     result = await get_cg_markets_raw(ids)
     if result is not None:
         _cache_set(key, result)
+        _remember_market_rows(result)
         return result
     # Return stale L2 cache on error
     r2 = await _redis_get(key)
     return r2 or []
+
+
+def _remember_market_rows(rows) -> None:
+    """把 `/coins/markets` 的每一行按币种放下,给只需要一行的调用方用。"""
+    if not isinstance(rows, list):
+        return
+    for row in rows:
+        if isinstance(row, dict) and row.get("id"):
+            _cache_set(f"cg_market_row:{row['id']}", row)
+
+
+def btc_quote_from_market_row(row) -> dict | None:
+    """`/coins/markets` 的比特币行 → 宏观脉冲原来从 `/simple/price` 读的三个字段。
+
+    缺涨跌就留 None,不写成 0。价格不是正数就当没读到。
+    """
+    if not isinstance(row, dict) or row.get("id") != "bitcoin":
+        return None
+    try:
+        px = float(row.get("current_price"))
+    except (TypeError, ValueError):
+        return None
+    if px <= 0:
+        return None
+
+    def _chg(key: str):
+        v = row.get(key)
+        if v is None:
+            return None
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return None
+
+    return {
+        "usd": px,
+        "usd_24h_change": _chg("price_change_percentage_24h"),
+        "usd_7d_change": _chg("price_change_percentage_7d_in_currency"),
+    }
 
 
 async def get_cg_derivatives() -> list:
@@ -2310,30 +2354,29 @@ async def get_macro_pulse() -> dict:
     if r_cached:
         return _cache_set(key, r_cached)
 
-    cg_base = CG_PRO_BASE if CG_API_KEY else "https://api.coingecko.com/api/v3"
     try:
-        cg   = _get_cg_client()
         msc  = _get_misc_client()
-        # ── Run all fetches in parallel (4 concurrent) ─────────────────────────
-        # ⚠️ S-895 阶段 2:`/global` 走 `get_cg_global_raw()` —— 仓库里唯一
-        # 打这个端点的地方(带 180s 缓存)⇒ 这个 widget 与 `get_cg_global()`、
-        # `cis_provider.fetch_cg_global()` **共用同一次取数**。
-        global_raw, fng_r, btc_r, defi_ov = await asyncio.gather(
-            get_cg_global_raw(),
-            msc.get("https://api.alternative.me/fng/?limit=1"),
-            cg.get(
-                f"{cg_base}/simple/price",
-                params={
-                    "ids": "bitcoin",
-                    "vs_currencies": "usd",
-                    "include_24hr_change": "true",
-                    "include_7d_change": "true",
-                },
-                headers=_cg_headers(),
-            ),
-            get_defi_overview(),   # parallel — has its own Redis TTL
-            return_exceptions=True,
-        )
+        # 比特币价不另打一次。官网首页用同一次 `/coins/markets` 带出价格、
+        # 24h 和 7d;那一行若已在 300s 内写过,这里直接读,不再发请求。
+        # `/global` 仍走 `get_cg_global_raw()`(180s,全仓库唯一实现)。
+        btc_cached = btc_quote_from_market_row(
+            _cache_get("cg_market_row:bitcoin", ttl=300))
+        if btc_cached is None:
+            global_raw, fng_r, markets, defi_ov = await asyncio.gather(
+                get_cg_global_raw(),
+                msc.get("https://api.alternative.me/fng/?limit=1"),
+                get_cg_markets(["bitcoin"]),
+                get_defi_overview(),
+                return_exceptions=True,
+            )
+        else:
+            global_raw, fng_r, defi_ov = await asyncio.gather(
+                get_cg_global_raw(),
+                msc.get("https://api.alternative.me/fng/?limit=1"),
+                get_defi_overview(),
+                return_exceptions=True,
+            )
+            markets = None
 
         # ── S-894:CG 拿不到的两块(全局 / BTC 价)→ CMC 免费档兜底 ──────────────
         #
@@ -2342,8 +2385,17 @@ async def get_macro_pulse() -> dict:
         # 所以兜底不只是「让面板好看」,它是**让闸门敢于关门**的前提。
         _cg_global_ok = (not isinstance(global_raw, Exception)
                          and bool(global_raw))
-        _cg_btc_ok = (not isinstance(btc_r, Exception)
-                      and btc_r.status_code == 200)
+        if btc_cached is not None:
+            _btc_quote = btc_cached
+        elif isinstance(markets, list):
+            _btc_quote = next(
+                (q for row in markets
+                 if (q := btc_quote_from_market_row(row))),
+                None,
+            )
+        else:
+            _btc_quote = None
+        _cg_btc_ok = _btc_quote is not None
         _cmc_global: dict = {}
         _cmc_btc: dict = {}
         if (not _cg_global_ok) or (not _cg_btc_ok):
@@ -2374,7 +2426,7 @@ async def get_macro_pulse() -> dict:
         # ── Parse BTC ─────────────────────────────────────────────────────────
         btc_entry: dict = {}
         if _cg_btc_ok:
-            btc_entry = btc_r.json().get("bitcoin", {})
+            btc_entry = _btc_quote
         elif _cmc_btc:
             btc_entry = {
                 "usd": _cmc_btc.get("price"),

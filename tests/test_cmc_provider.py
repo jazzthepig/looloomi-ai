@@ -347,3 +347,71 @@ def test_macro_pulse_CG失败时CMC顶上_并且标来源(monkeypatch):
     assert out["btc_dominance"] == 61.2
     assert out["data"]["market_cap_percentage"]["btc"] == 61.2
     assert out["total_market_cap_usd"] == 3.8e12
+
+
+def test_宏观脉冲读行情行_不再另打simple_price(monkeypatch):
+    """官网首页一次 `/coins/markets` 带出价格和涨跌。行情行还在 300s 内时,
+    宏观脉冲读这一行,不再为比特币发请求。"""
+    import src.data.market.data_layer as dl
+
+    class _Boom:
+        async def get(self, *a, **k):
+            raise AssertionError("cached markets row must not hit the network")
+
+    async def fake_global():
+        return {"market_cap_percentage": {"btc": 58.0},
+                "total_market_cap": {"usd": 3.1e12},
+                "market_cap_change_percentage_24h_usd": 0.4}
+
+    async def fake_defi():
+        return {"total_tvl_usd": 1.0e11}
+
+    async def fake_markets(_ids):
+        raise AssertionError("a fresh markets row is already cached")
+
+    async def fake_redis_get(k):
+        return None
+
+    async def fake_redis_set(k, v, ttl=None):
+        return True
+
+    class _Fng:
+        async def get(self, *a, **k):
+            return httpx.Response(200, json={"data": [{"value": "11",
+                                                        "value_classification": "Extreme Fear"}]})
+
+    monkeypatch.setattr(dl, "_cache", {})
+    monkeypatch.setattr(dl, "_get_cg_client", lambda: _Boom())
+    monkeypatch.setattr(dl, "_get_misc_client", lambda: _Fng())
+    monkeypatch.setattr(dl, "get_cg_global_raw", fake_global)
+    monkeypatch.setattr(dl, "get_defi_overview", fake_defi)
+    monkeypatch.setattr(dl, "get_cg_markets", fake_markets)
+    monkeypatch.setattr(dl, "_redis_get", fake_redis_get)
+    monkeypatch.setattr(dl, "_redis_set", fake_redis_set)
+    dl._cache_set("cg_market_row:bitcoin", {
+        "id": "bitcoin",
+        "current_price": 64947.0,
+        "price_change_percentage_24h": -1.1,
+        "price_change_percentage_7d_in_currency": None,
+    })
+
+    out = asyncio.run(dl.get_macro_pulse())
+    assert out["data_source"] == "coingecko"
+    assert out["btc"]["usd"] == 64947.0
+    assert out["btc"]["usd_24h_change"] == -1.1
+    assert out["btc"]["usd_7d_change"] is None
+    assert out["btc_price"] == 64947.0
+
+
+def test_没有行情行时用一次markets_缺价不写成0():
+    import src.data.market.data_layer as dl
+
+    assert dl.btc_quote_from_market_row({"id": "bitcoin", "current_price": 0}) is None
+    assert dl.btc_quote_from_market_row({"id": "ethereum", "current_price": 1800}) is None
+    quote = dl.btc_quote_from_market_row({
+        "id": "bitcoin",
+        "current_price": "64000.5",
+        "price_change_percentage_24h": "nope",
+        "price_change_percentage_7d_in_currency": -2.5,
+    })
+    assert quote == {"usd": 64000.5, "usd_24h_change": None, "usd_7d_change": -2.5}

@@ -395,7 +395,7 @@ CG_ENDPOINT_COVERAGE: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
         ("gated",),
     ),
     "/simple/price": (
-        ("src/api/routers/trading.py", "src/data/market/data_layer.py"),
+        ("src/api/routers/trading.py",),
         ("gated",),
     ),
     "/derivatives": (
