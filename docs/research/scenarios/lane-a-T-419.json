@@ -1,0 +1,68 @@
+{
+  "author": "lane-a",
+  "entries": [
+    {
+      "id": "T419-S1",
+      "scenario": "T-419 按键翻页末页核对",
+      "statement": "修完之后,末页那次核对请求(limit=1)带的 or= 谓词里含本页最后一行的键值(谓词里的日期/符号 = 末页最后一行),不再是上一页末行的键。结算量 = 谓词键值与本页末行键值一致的核对请求数(> 0 即成立)。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 0,
+      "prob": 0.95,
+      "horizon_d": "2026-12-20",
+      "check": "跑 research/t419/measure.py(fixed 变体),检查 ohlcv_binance_hist_all 的最后一个 limit=1 请求:谓词里的键值 == 该次读最后一行(ohlcv_daily binance_hist 按 trade_date.asc,symbol.asc 的末行)。单测已钉住(tests/test_read_all_keyset.py::test_the_probe_predicate_is_built_from_the_last_row_of_the_page_just_read)。",
+      "falsifier": "末页核对请求的谓词里是上一页末行的键(等于把旧游标带过去)"
+    },
+    {
+      "id": "T419-S2",
+      "scenario": "T-419 按键翻页末页核对",
+      "statement": "修完之后,ohlcv_daily binance_hist 整读的请求数回到 47 次(1 次上限探针 + 45 次取数 + 1 次末页核对),不再多发那一次「limit=末页行数、返回 0 行」的取数请求;且读完后的 _PAGE[\"cap\"] 仍是 10,000,不是末页行数。结算量 = 整读的请求次数(区间 47–47)。",
+      "variable": "manual",
+      "op": "between",
+      "lo": 47,
+      "hi": 47,
+      "prob": 0.85,
+      "horizon_d": "2026-12-20",
+      "check": "measure.py(fixed 变体,shape 1)的 n_requests == 47 且 cap_after == 10000;对照 t379 变体 n_requests == 48 且 cap_after == 8296。",
+      "falsifier": "n_requests != 47,或 cap_after 被写成末页行数(8,296)"
+    },
+    {
+      "id": "T419-S3",
+      "scenario": "T-419 按键翻页末页核对",
+      "statement": "修完之后三组数的行数与逐行 sha256 与 T-418 那一轮逐字相同:① ohlcv_daily binance_hist 整读 448,296 行 sha256 20ee382b… ② state_daily 整读 66,240 行 sha256 ff94f6de… ③ fetch_panel(2025-01-01) 183,892 行 sha256 6055985c…(库若当天又落了新行,则以「同一时点三种读法逐字相同」为判据)。结算量 = 三组里与基准逐字相同的组数(区间 3–3)。",
+      "variable": "manual",
+      "op": "between",
+      "lo": 3,
+      "hi": 3,
+      "prob": 0.9,
+      "horizon_d": "2026-12-20",
+      "check": "measure.py 的三个变体(native=本分支 fixed、t379、main=OFFSET)三组数的 n_rows 与 rowhash 三者互相相等。",
+      "falsifier": "任一组数与基准的行数或逐行 sha256 不相等(改口径 ⇒ 内容变了)"
+    },
+    {
+      "id": "T419-S4",
+      "scenario": "T-419 按键翻页末页核对",
+      "statement": "这一条修完之后,按键整读的热路径仍然比 OFFSET 版慢(T-418 量到 164.5s → 217.6s,+32%;三档中位数重测后量级不变)⇒ 单靠这一条修不完。结算量 = shape ① 整读的按键侧中位耗时 ÷ OFFSET 侧中位耗时(> 1.0 即「仍然更慢」)。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 1.0,
+      "prob": 0.6,
+      "horizon_d": "2026-12-20",
+      "check": "measure.py 的 shape 1:fixed 变体的中位耗时 > main(OFFSET)变体的中位耗时(同口径、各 ≥3 次取中位数)。T-421(2026-11-22)已量到 OFFSET 126.821s vs 按键 131.403s(比值 1.036)⇒ 方向成立、幅度(+32%)不成立。",
+      "falsifier": "按键侧中位耗时 ≤ OFFSET 侧中位耗时(比值 ≤ 1.0)"
+    },
+    {
+      "id": "T419-S5",
+      "scenario": "T-419 按键翻页末页核对",
+      "statement": "「按键翻页省了什么」与「页大小省了什么」两栏分开算之后,热路径整读上页大小占大头、按键翻页不带来净收益(limit 10,000 单页 ~11.3s vs 8,296 单页 ~9.5s,约 1.2×;独立连接直打 REST 只有 1.2× ⇒ T-418 量到的 3.5× 大半来自连接/计划/缓冲层)。结算量 = 同一条查询在 limit 10,000 与 8,296 下的单页中位耗时之比(区间 1.1–2.0:页大小确实占大头,但按键翻页那 3.5× 的解释不成立)。",
+      "variable": "manual",
+      "op": "between",
+      "lo": 1.1,
+      "hi": 2.0,
+      "prob": 0.6,
+      "horizon_d": "2026-12-20",
+      "check": "measure.py 的 --pagesize 档:同一查询在 limit 10,000 与 8,296 下的单页中位耗时之比落在 1.1–2.0;同时 shape 1 的 fixed vs main 整读耗时之比 ≈ 1.0–1.1(差距不由页大小解释)。T-418 的 t418_pagesize.json:state_daily limit 10000 中位 ~10.9s vs limit 8296 中位 ~8.5s(≈1.28);独立连接直打 REST 11.2s vs 9.4s(1.2×)。",
+      "falsifier": "页大小比值 ≤ 1.1(页大小不占大头),或 ≥ 2.0 且按键整读比值 ≈ 3×(差距由页大小全部解释)"
+    }
+  ]
+}

@@ -307,6 +307,18 @@ async def page_cap() -> int:
     return PAGE_FLOOR
 
 
+def _keyset_cursor(plan: list[tuple[str, str]] | None, last_row: Mapping[str, Any] | None) -> dict[str, str]:
+    """续读游标:用**最后一行**的键建谓词。建不出来(值带保留字符)⇒ 空 ⇒ 走 OFFSET 版。
+
+    T-419:游标必须由**要用它的那一页**的最后一行建 —— 核对请求问的是「这一页之后还有没有行」,
+    拿上一页的旧游标去问,问的是「上一页之后还有没有行」,答案永远是「有」。
+    """
+    if not plan or last_row is None:
+        return {}
+    predicate = resume_predicate(plan, last_row)
+    return {"or": predicate} if predicate else {}
+
+
 async def _read_all(table: str, params: dict) -> list[dict]:
     """分页读全表。读不到抛异常 —— 读不到 ≠ 0 行(S-180)。没给 order 时补一个确定的顺序(S-532)。
     每页行数 = 探到的服务端上限(`page_cap`)。一页不满、但不少于 1,000 行时多问一行:还有 ⇒ 服务端的上限其实比探到的低
@@ -314,18 +326,18 @@ async def _read_all(table: str, params: dict) -> list[dict]:
 
     **按键翻页(T-379)**:排序键唯一时(T-379 的 `KEYSET_SPECS`),用上一页最后一行的键接着读,
     不用 OFFSET —— 深页不用再从头走过前 k×每页 行。键不唯一 / 值不适合做谓词 ⇒ 退回 OFFSET 版,
-    **行数、内容、顺序都不许变**:两种读法取的是同一批行、同一顺序。"""
+    **行数、内容、顺序都不许变**:两种读法取的是同一批行、同一顺序。
+
+    **核对请求的游标(T-419)**:必须用**本页最后一行**的键重建 —— 用进入这一轮时就已算好的旧游标,
+    末页那次核对永远看到「还有行」⇒ 白发一次请求、把每页行数误设成末页行数(8,296),
+    「服务端上限被调低」的检测在按键路径上也跟着失效。"""
     from src.data.vector.market_state_writer import _sb_get
     out: list[dict] = []
     params = stable_order(params)
     page = await page_cap()
     plan = keyset_plan(table, params)
     while True:
-        cursor: dict[str, str] = {}
-        if plan and out:
-            predicate = resume_predicate(plan, out[-1])
-            if predicate:
-                cursor = {"or": predicate}
+        cursor = _keyset_cursor(plan, out[-1] if out else None)
         # 没上按键翻页(或中途退回)⇒ OFFSET 版;offset 永远是已读到的行数,两种读法同一顺序 ⇒ 同一含义
         req = {**params, "limit": str(page), **cursor}
         if not cursor:
@@ -341,8 +353,11 @@ async def _read_all(table: str, params: dict) -> list[dict]:
             continue
         if len(batch) < PAGE_FLOOR:
             return out
-        probe = {**params, "limit": "1", **cursor}
-        if not cursor:
+        # 核对「还有没有行」:谓词用**本页最后一行**的键重建(此刻 `out[-1]` 已是本页末行)。
+        # 谓词建不出来(键值带保留字符)⇒ 退回 offset=len(out) —— 已读到的正是表的前 len(out) 行,偏移语义一样。
+        probe_cursor = _keyset_cursor(plan, out[-1])
+        probe = {**params, "limit": "1", **probe_cursor}
+        if not probe_cursor:
             probe["offset"] = str(len(out))
         else:
             probe.pop("offset", None)
