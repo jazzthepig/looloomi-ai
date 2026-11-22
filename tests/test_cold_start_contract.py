@@ -36,6 +36,21 @@ MEMORY = REPO / "MEMORY.md"
 STATE = REPO / "PROJECT_STATE.md"
 LEDGER = REPO / "REFUTATION_LEDGER.md"
 
+# The SECOND evidence layer, and the one CI can actually see.
+#
+# REFUTATION_LEDGER.md is a PRIVATE document: gitignored, and `git add -f` on it is
+# forbidden — it must never enter the public repo. So on CI it does not exist, and
+# any guard that reads the ledger as its only evidence silently stops existing there.
+# (T-424: that is exactly how `test_project_state_header_not_older_than_newest_ledger_entry`
+# was green on every CI run for as long as it existed.)
+#
+# PROJECT_STATE_LOG.md IS in the repo, IS append-only, and IS the record of landed
+# work — its own first heading reads "## LANDED — kept for the lessons, not for the
+# status". Its entry headings carry UTC dates ("## 2026-11-22 09:15 UTC — …").
+# Measured 2026-11-23: 62 "## " headings, 59 of them dated, newest = the day it was
+# written, no future-dated entries ⇒ the date extraction is stable, not a one-off.
+STATE_LOG = REPO / "PROJECT_STATE_LOG.md"
+
 # MEMORY.md's own stated cap in CLAUDE.md is 4KB. It was 7,659 bytes when this
 # test was written — nearly double, because the rule was never executable. A rule
 # nobody enforces is a wish.
@@ -103,6 +118,59 @@ OPEN_RISKS_MAX = 7
 
 def _read(p: pathlib.Path) -> str:
     return p.read_text(encoding="utf-8") if p.exists() else ""
+
+
+# ---------------------------------------------------------------------------
+# Evidence layer + staleness decision (T-424, 2026-11-23)
+# ---------------------------------------------------------------------------
+# Kept as small pure functions so the negative control can drive the SAME code
+# with synthetic documents. A guard that is only exercised against the live repo
+# cannot be told apart from a guard that early-returns (Lesson #106: put the
+# defect back and confirm it goes red).
+
+def _heading_dates(text: str) -> list:
+    """Every date carried by an ENTRY HEADING ("## ...") of an evidence-layer doc.
+
+    Body prose is deliberately excluded: a projected OOS window quoted inside an
+    entry is not an entry date, and a staleness check that fires on forward-looking
+    dates in prose is a false-positive generator (the 2026-07-30 note, kept)."""
+    return [d for h in (l for l in text.splitlines() if l.startswith("## "))
+            for d in re.findall(r"\b(20\d{2}-\d{2}-\d{2})\b", h)]
+
+
+def _newest_entry_date(text: str):
+    """Newest entry-heading date that is not in the future (UTC today, rule 5c)."""
+    import datetime as _dt
+    today = _dt.datetime.now(_dt.timezone.utc).date().isoformat()
+    past = [d for d in _heading_dates(text) if d <= today]   # never trust a future date
+    return max(past) if past else None
+
+
+def _staleness_evidence(ledger_text: str, log_text: str):
+    """(source label, newest entry date) — the evidence layer, and WHERE it lives.
+
+    · local — the private ledger wins whenever it exists: it is the strongest
+      criterion and the one the local repo actually has.
+    · CI    — the ledger is absent (private document), so the in-repo log is used.
+
+    Lesson #96: every default must carry the reason it was chosen, or the default
+    swallows the defect it should have exposed. The two reasons are spelled out in
+    the two constants above and in the guard's docstring.
+    """
+    if ledger_text.strip():
+        return "REFUTATION_LEDGER.md (private — local path)", _newest_entry_date(ledger_text)
+    return "PROJECT_STATE_LOG.md (in-repo — CI path)", _newest_entry_date(log_text)
+
+
+def _staleness_verdict(header: str, newest):
+    """'fresh' | 'stale' | 'unreadable' — the decision the guard makes.
+
+    'unreadable' is a THIRD answer, not a pass: an evidence source that carries no
+    date must never read as green (that is the hole T-424 closed).
+    """
+    if newest is None:
+        return "unreadable"
+    return "fresh" if header >= newest else "stale"
 
 
 def test_memory_stays_within_cap():
@@ -202,40 +270,135 @@ def test_every_open_risk_carries_a_verify_line():
 
 
 def test_project_state_header_not_older_than_newest_ledger_entry():
-    """Staleness must be mechanical, not a judgement call. If the ledger has an
-    entry newer than PROJECT_STATE's header, the navigation layer is behind the
-    evidence layer and a cold agent will be misrouted."""
-    state, ledger = _read(STATE), _read(LEDGER)
-    if not state or not ledger:
-        return
+    """Staleness must be mechanical, not a judgement call. If the evidence layer has
+    an entry newer than PROJECT_STATE's header, the navigation layer is behind the
+    evidence layer and a cold agent will be misrouted.
+
+    2026-11-23 (T-424) — THIS USED TO BE A GUARD THAT COULD NOT FIRE ON CI.
+
+    Its evidence layer was the private ledger (REFUTATION_LEDGER.md), which is
+    gitignored and must never enter the public repo. On CI `_read(LEDGER)` was
+    therefore empty and the whole check was `if not ledger: return` — green on
+    every CI run, whatever the header said. PROJECT_STATE.md could fall a month
+    behind the evidence layer and nothing would ever have said so; the only place
+    the check was alive was the one place the ledger exists (a lane's own machine).
+    A guard whose evidence is not where it runs is a comment.
+
+    Two paths now, ONE shape, and BOTH can go red:
+      · local — the private ledger, whenever it exists (the strongest criterion).
+      · CI    — PROJECT_STATE_LOG.md, which is in the repo and is the append-only
+        record of landed work.
+
+    Measured 2026-11-23 (CI condition = ledger absent, header aged to 3 days):
+    before the fix 10 passed / green; after the fix the same run is red.
+    """
+    state = _read(STATE)
+    assert state, "PROJECT_STATE.md missing"
     hm = re.search(r"\*\*Last updated:\*\*\s*(\d{4}-\d{2}-\d{2})", state)
     assert hm, "PROJECT_STATE.md must carry '**Last updated:** YYYY-MM-DD'"
-    # Dates from ENTRY HEADINGS only. A first pass scanned the whole ledger body and
-    # picked up 2027-05-13 — a projected OOS window quoted inside an entry, not an
-    # entry date. A staleness check that fires on forward-looking dates in prose is
-    # itself a false-positive generator, and a check that cries wolf gets muted,
-    # which is the failure mode this whole file exists to prevent.
-    headings = [l for l in ledger.splitlines() if l.startswith("## ")]
-    dates = [d for h in headings for d in re.findall(r"\b(20\d{2}-\d{2}-\d{2})\b", h)]
-    import datetime as _dt
-    # UTC, not the machine's local date (rule 5c). 10-15: preflight ran on the JST Mac at 01:30 local, a lane had
-    # headed its entry with its JST date (2026-10-16), and a header correctly written in UTC (10-15) failed every push.
-    today = _dt.datetime.now(_dt.timezone.utc).date().isoformat()
-    dates = [d for d in dates if d <= today]        # never trust a future entry date
-    if not dates:
-        return
-    newest = max(dates)
-    assert hm.group(1) >= newest, (
-        f"PROJECT_STATE header says {hm.group(1)} but the ledger has an entry dated "
+    header = hm.group(1)
+
+    source, newest = _staleness_evidence(_read(LEDGER), _read(STATE_LOG))
+    verdict = _staleness_verdict(header, newest)
+    assert verdict != "unreadable", (
+        f"evidence layer '{source}' carries no date in any '## ' entry heading — the "
+        f"extraction is broken, and a guard that cannot read its evidence must not "
+        f"report green. (Future-dated entries are dropped on purpose; if EVERY entry "
+        f"is future-dated, that is the alarm, not an excuse to pass.)")
+    assert verdict != "stale", (
+        f"PROJECT_STATE header says {header} but {source} has an entry dated "
         f"{newest}. The navigation layer is behind the evidence layer — a cold agent "
         f"will start on a stale priority. Update the header in the SAME turn work lands.")
+
+
+def test_the_staleness_guard_can_actually_go_red():
+    """Negative control (T-424) — Lesson #105/#106: a green test summary is not
+    evidence that the test ran, and every new guard needs a negative control: put
+    the defect back and confirm it goes red.
+
+    The defect this file just fixed was precisely "it cannot fail", so the guard
+    gets a synthetic driver: the SAME extraction and the SAME comparison, fed
+    documents whose defect is known. If someone restores the early return, or
+    points the CI path at a source that carries no dates, THIS test goes red —
+    instead of the guard quietly going green again.
+
+    Every synthetic date is derived from today, so the control cannot expire.
+    """
+    import datetime as _dt
+    today = _dt.datetime.now(_dt.timezone.utc).date()
+    old = (today - _dt.timedelta(days=10)).isoformat()
+    mid = (today - _dt.timedelta(days=5)).isoformat()
+
+    dated_ledger = f"## {mid} S-1 — an entry with a date\n"
+    dated_log = f"## {old} a log entry with a date\n"
+    undated = "## an entry whose heading carries no date at all\n"
+
+    # (1) aged header + newer evidence => STALE. This is the hole T-424 closed:
+    #     before the fix, the CI path did not exist and this state was GREEN.
+    assert _staleness_verdict(old, mid) == "stale"
+
+    # (2) header as new as the evidence => not stale (equal is allowed).
+    assert _staleness_verdict(mid, mid) == "fresh"
+
+    # (3) header newer than the evidence => not stale.
+    assert _staleness_verdict(mid, old) == "fresh"
+
+    # (4) an evidence source with no readable date => 'unreadable', NEVER 'fresh'.
+    #     This is the early-return shape, refused.
+    assert _staleness_verdict(mid, None) == "unreadable"
+
+    # (5) with no ledger, the CI path is the in-repo log …
+    src_ci, newest_ci = _staleness_evidence("", dated_log)
+    assert "CI path" in src_ci and newest_ci == old
+    # … and with a ledger present, the LOCAL path wins even though the log carries
+    #     a NEWER date — the strongest criterion, not the newest number.
+    src_local, newest_local = _staleness_evidence(dated_ledger, dated_log)
+    assert "local path" in src_local and newest_local == mid
+    assert newest_local != newest_ci
+
+    # (6) end-to-end on the REAL files without touching them: pretend the header
+    #     is 50 years old and the real in-repo evidence layer must call it stale.
+    real_log = _read(STATE_LOG)
+    assert real_log, ("PROJECT_STATE_LOG.md missing — the CI-side evidence layer is "
+                      "gone; the staleness guard would be blind again, silently.")
+    real_newest = _newest_entry_date(real_log)
+    assert real_newest, (
+        "PROJECT_STATE_LOG.md carries no dated '## ' entry heading — the CI-side "
+        "evidence layer went unreadable and the guard cannot see anything.")
+    assert _staleness_verdict("1970-01-01", real_newest) == "stale"
+    assert _staleness_verdict(real_newest, real_newest) == "fresh"
 
 
 def test_ledger_lessons_are_not_ledger_only():
     """A lesson that lives only in a 5,672-line append-only ledger does not change
     behaviour, because cold start never reads it. Each numbered lesson must also
     surface as an executable check or an OPEN RISK. This is the dividing line
-    between an archive and a memory."""
+    between an archive and a memory.
+
+    2026-11-23 (T-424) — THIS ONE IS STILL LEDGER-GATED, and the reason is measured
+    rather than assumed. Its CI-side blindness is the same shape as the staleness
+    guard's, but NO in-repo source can carry this criterion safely:
+
+      · PROJECT_STATE_LOG.md carries lesson numbers, but they are NOT the ledger's
+        numbers. The log's "Lesson #92" is "when you control the sampling order,
+        the base rate is the first thing to check"; the ledger's "Lesson #92" is
+        "Honesty is a disclosure obligation" — and the log's text does not occur in
+        the ledger at all (grep = 0), nor the ledger's in the log (grep = 0). Same
+        number, two different lessons ⇒ a number-based criterion cannot be moved
+        from one numbering space to the other without checking the wrong lesson.
+      · docs/strategy_sources/REFUTATION_LEDGER.snapshot.md IS the ledger's series,
+        but it is FROZEN at 2026-08-11, and its newest starred lessons are the
+        pre-landed "(proposed)" ones (#92/#93/#94) which were never surfaced — a
+        fallback built on it would be permanently red on a pre-existing backlog,
+        and this card may not touch PROJECT_STATE.md to surface them.
+
+    So the criterion stays EXACTLY as it was (not loosened, no exemption added) and
+    the gap stays visible instead of being papered over. Measured backlog: 22 of
+    the log's lessons (41,42,45,55,56,58,59,64,77,79,80,82,86,87,88,90,91,92,93,94,
+    95,96) have never been reachable from any test or from PROJECT_STATE.md, and
+    the newest-three rule means they were never even asked about. Which series is
+    canonical is a decision, not a footnote — it needs a card.
+    """
     ledger, state = _read(LEDGER), _read(STATE)
     lessons = set(re.findall(r"\*\*Lesson #(\d+)", ledger))
     if not lessons:
