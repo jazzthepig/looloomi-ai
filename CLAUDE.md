@@ -226,7 +226,7 @@ AWAITING JAZZ >7d 🔴 · "done" with dirty tree / unpushed commit / stale heade
 React+Tailwind → Railway (auto-deploy on push) · FastAPI `src/api/main.py` · Upstash Redis
 (2h-TTL cache bridge) · **Supabase Postgres = system of record** (Pro plan; compute is a SEPARATE
 add-on: Small since 10-12 — 640MB shared_buffers, 90 conns) · Mac Mini M4 Pro T1 engine (pushes
-`/internal/cis-scores` ~30min, `X-Internal-Token`) · Data: CoinGecko Pro (crypto), EODHD (TradFi),
+`/internal/cis-scores` ~30min, `X-Internal-Token`) · Data: CG OFF until 2026-12-01; EODHD+Binance,
 DeFiLlama, Alternative.me · Env vars in the Railway dashboard; fallback chains documented at
 use-site. Table/RPC inventory: `src/api/schema_manifest.py`, never a list here.
 

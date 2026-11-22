@@ -2,6 +2,8 @@
 
 路径:主仓库(只读卡片与文档)= `{repo}`;你交代码用的 worktree = `{worktree}`;Mac 数据根 = `/Volumes/CometCloudAI/cometcloud-local/`。
 
+**CoinGecko 订阅已停(Jazz,2026-11-21,2026-12-01 才恢复)。** 不要请求 `pro-api.coingecko.com` 或 `api.coingecko.com`。401/403 是计划停了,不是 bug:不要重试,不要换 key,不要新写一条取数路径。价格用库里的 `binance_hist` / `hyperliquid` / `eodhd`;新闻用 EODHD。再打就是在报错。
+
 **本轮任务**:{task}
 
 **已交付、等 Seth 审的卡不是你的活**:卡在你分支上已是 `in_review` ⇒ 不重验、不重推、不改卡,直接做名下下一张 open 卡;Seth 退回时会单独叫醒你。**交付后同一轮里还有步数,就接着开下一张卡** —— 一轮只交一张是上限不是目标。
