@@ -14,6 +14,10 @@ S-650 已经判过:用它预测未来 30 天谁跑赢,不过。这里不重跑�
      不是一条可以下单的规则。
 
 不写库。产物:同目录 style_state_mine.json 与 style_state_mine.md。
+
+2026-09-30 之后的日子不在这份脚本里补。当时看到的 30 日分位差,是日历对齐方式不同,
+不是指数被改过。补天用 `style_vector_extend.py`(旧向量逐位相同才接受新日子)。
+本脚本若发现 json 里已经有补上的天,就停,避免把它们盖掉。
 """
 from __future__ import annotations
 
@@ -244,6 +248,17 @@ def mine(book: str, rets: dict, core: dict, labels: dict, excess: bool) -> dict:
 
 
 def main() -> None:
+    if OUT_JSON.exists():
+        try:
+            prev = json.loads(OUT_JSON.read_text())
+            span = prev.get("full56_span") or []
+            if len(span) >= 3 and span[1] > "2026-09-30" and span[2] > 1348:
+                raise SystemExit(
+                    "style_state_mine.json 已有补上的日子。要更新请跑 style_vector_extend.py,这一份会把它们盖掉。")
+        except SystemExit:
+            raise
+        except Exception:
+            pass
     _env()
     url, key = os.environ["SUPABASE_URL"].rstrip("/"), os.environ["SUPABASE_KEY"]
     t163 = _t163()
