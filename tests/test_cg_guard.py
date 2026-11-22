@@ -37,6 +37,7 @@ def _no_redis(monkeypatch):
     monkeypatch.setattr(cg_guard, "_UPSTASH_URL", "")
     monkeypatch.setattr(cg_guard, "_local_used", {})
     monkeypatch.setattr(cg_guard, "_local_breaker_until", 0.0)
+    monkeypatch.setattr(cg_guard, "_local_breaker_reason", "")
     monkeypatch.setattr(cg_guard, "_local_tripped", 0)
     # S-895 阶段 0:闸门外的账也要清 —— 否则上一条用例的记账会漏进下一条。
     monkeypatch.setattr(cg_guard, "_local_unbudgeted", {})
@@ -166,6 +167,134 @@ def test_熔断期间_admit直接拒绝():
     allowed, why = asyncio.run(scenario())
     assert allowed is False
     assert "breaker_open" in why
+
+
+# ── 授权拒绝(401 / 403)—— 2026-11-21 加 ───────────────────────────────────
+#
+# 起因:Jazz 停了 CoinGecko 订阅,线上整片暗。根因查出来是**账号态被拒**,
+# 而旧语义下 401 **不开闸** ⇒ 闸门照样放行每一次请求 ⇒ 每一次都在为一个
+# 必然失败的请求付费(超额定���是按次算的)。
+#
+# 授权拒绝与限流是**两回事**:429 会自己滚过去(限额窗口 1 分钟),401/403 不会
+# —— 订阅不恢复,重试一千次也是被拒一千次。
+
+def test_401开闸_而且开得比限流久():
+    """401 = 账号/计划态被拒 ⇒ 熔断,而且**冷却是长闸**。
+
+    5 分钟的冷却对「限流」是对的,对「订阅停了」是错的:5 分钟后我们又去问一次,
+    再被拒一次 —— 一天 288 次白问。
+    """
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(401, json={"error": "unauthorized"})
+
+    async def scenario():
+        async with _client(handler) as c:
+            await c.get("https://pro-api.coingecko.com/api/v3/global")
+            return await cg_guard.breaker_state()
+
+    open_, why = asyncio.run(scenario())
+    assert open_ is True, "401 竟然没有开闸 —— 那就等于继续为一个必然失败的请求付钱"
+    assert "401" in why
+
+
+def test_403同样算授权拒绝():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(403, json={"error": "forbidden"})
+
+    async def scenario():
+        async with _client(handler) as c:
+            await c.get("https://pro-api.coingecko.com/api/v3/global")
+            return await cg_guard.breaker_state()
+
+    open_, why = asyncio.run(scenario())
+    assert open_ is True
+    assert "403" in why
+
+
+def test_授权拒绝的冷却期远长于限流():
+    """长闸必须**真的长** —— 否则它只是个记号,不起作用。"""
+    import time as _t
+
+    def handler(status: int):
+        def _h(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(status, json={})
+        return _h
+
+    async def scenario(status: int):
+        async with _client(handler(status)) as c:
+            await c.get("https://pro-api.coingecko.com/api/v3/global")
+            return cg_guard._local_breaker_until - _t.time()
+
+    auth_left = asyncio.run(scenario(401))
+    assert auth_left > 3600, f"授权拒绝的冷却只有 {auth_left:.0f}s —— 那不叫长闸"
+
+    # 对照:限流仍然是短闸(限流窗口 1 分钟,5 分钟足够滚过去)
+    cg_guard._local_breaker_until = 0.0
+    rate_left = asyncio.run(scenario(429))
+    assert rate_left <= cg_guard.breaker_cooldown_s() + 1
+    assert rate_left < auth_left, "限流的冷却竟然比授权拒绝还长"
+
+
+def test_授权拒绝之后一条外部请求都不发():
+    """开闸的意义:后面那几次**根本不该出网**(那才是省钱的地方)。"""
+    sent: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        sent.append(str(request.url))
+        return httpx.Response(401, json={"error": "unauthorized"})
+
+    async def scenario():
+        async with _client(handler) as c:
+            r1 = await c.get("https://pro-api.coingecko.com/api/v3/global")
+            r2 = await c.get("https://pro-api.coingecko.com/api/v3/global")
+            return r1, r2
+
+    r1, r2 = asyncio.run(scenario())
+    assert len(sent) == 1, f"授权拒绝之后还发了 {len(sent) - 1} 次请求 —— 每次都是一次计费"
+    assert r1.status_code == 401
+    assert r2.status_code == 503
+    assert "breaker_open" in r2.json()["reason"]
+
+
+def test_授权冷却期可以用环境变量改():
+    """给 Jazz 一个旋钮:想立刻试就把 `CG_AUTH_COOLDOWN_S` 调小(而不是改代码)。"""
+    import os
+    os.environ["CG_AUTH_COOLDOWN_S"] = "7200"
+    try:
+        assert cg_guard.auth_cooldown_s() == 7200
+    finally:
+        os.environ.pop("CG_AUTH_COOLDOWN_S", None)
+    assert cg_guard.auth_cooldown_s() == cg_guard.DEFAULT_AUTH_COOLDOWN_S
+
+
+def test_授权冷却不能用0表达关掉():
+    """`0` 若被当成「关掉」,就是「无限重试」—— 那正是最贵的那个方向。"""
+    import os
+    os.environ["CG_AUTH_COOLDOWN_S"] = "0"
+    try:
+        assert cg_guard.auth_cooldown_s() == cg_guard.DEFAULT_AUTH_COOLDOWN_S
+    finally:
+        os.environ.pop("CG_AUTH_COOLDOWN_S", None)
+
+
+def test_额度报告里能看出为什么开的闸():
+    """`/internal/cg-quota` 的 `breaker_reason` 必须说出**真正的理由**。
+
+    2026-11-21:原来本地快路径一律返回 `"cooldown"` ⇒ 生产上**永远**看不到
+    「是 429、是 5xx、还是 401 授权态」—— 而那次整片暗最难的一步正是分不清
+    是哪一种。**一个只说「冷却中」的读数,在那种时候等于没有读数。**
+    """
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(401, json={"error": "unauthorized"})
+
+    async def scenario():
+        async with _client(handler) as c:
+            await c.get("https://pro-api.coingecko.com/api/v3/global")
+            return await cg_guard.report()
+
+    rep = asyncio.run(scenario())
+    assert rep["breaker_open"] is True
+    assert "401" in (rep["breaker_reason"] or ""), f"breaker_reason 说不出理由:{rep['breaker_reason']!r}"
 
 
 def test_线上每个CG客户端都必须是GuardedCGClient():

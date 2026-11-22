@@ -4099,3 +4099,58 @@ curl -s https://web-production-0cdf76.up.railway.app/internal/cg-quota \
   (共享路径不许碰网络);`scripts/preflight.sh` stage 3 挂上新守卫;
 - 台账:`REFUTATION_LEDGER.md §十四` + `S-895 补充 —— 阶段 5`(私有,不进 git);
 - 跨 lane:`MINIMAX_SYNC.md §Seth-1121a`(gitignored)。
+
+## 2026-11-21 17:13 UTC — S-895 阶段 5 收尾 + **CG 整片暗的成因定案:是账号所有者自己停了订阅**(401/403 现在开 6 小时长闸)
+
+**一句话:** Jazz 11-21 亲口说「cg是我停了subscription,现在overage了。我们等12月1号再恢复」⇒ **成因不是预算烧穿、
+不是 key 失效、不是上游故障,是计划态被拒(401/403)** ⇒ 仓库侧原来的闸门**对 401/403 根本不开闸** ⇒
+**订阅停掉之后,闸门照常放行每一次请求,而每一次都是一次可能计费的 overage 请求。** 已修并推。
+
+### 一、这次改了什么(仓库侧,已推)
+
+- `src/data/market/cg_guard.py`:
+  - `401/403` 现在开**长闸**(默认 6 小时,`DEFAULT_AUTH_COOLDOWN_S = 21_600`,`CG_AUTH_COOLDOWN_S` 可调小);
+    `429/5xx` 仍是 300s。理由:**授权拒绝不是暂时故障** —— 429 的限额窗口 1 分钟就滚过去了,401/403 不会;
+    订阅没恢复之前,重试一千次也是被拒一千次,而每一次都是一次可能计费的请求。
+  - `trip_breaker(reason, cooldown_s=None)` 加了冷却期参数;本地快路径新增 `_local_breaker_reason`。
+  - `breaker_state()` 的本地快路径从 `return True, "cooldown"` 改成**返回真正的理由** ⇒
+    `/internal/cg-quota` 的 `breaker_reason` 在生产上第一次能说清是 429 / 5xx 还是 401。
+- `src/data/market/data_layer.py`:`get_cg_global()` 的失败文案原来只写「闸门拒了 / 上游 5xx」,
+  **漏了「授权被拒(401/403)」** —— 而那正是这次整片暗的真成因。补上(一个连自己可能怎么失败都没列全的分类,
+  下游就不会为那种失败做特别处理)。
+- `tests/test_cg_guard.py` +7 条:401 开闸且比限流久 / 403 同样算授权拒绝 / 冷却期比较 /
+  闸开之后一条外部请求都不发 / 授权冷却期可用 env 改 / **0 不表达「关掉」** / 额度报告能看出为什么开的闸。
+
+### 二、量级怎么读才诚实(这里有个我差点说错的数)
+
+`effective_budget()` 的优先级是 **Redis `cg:quota:budget` > env > 默认 16,000** ⇒ **Outter 11-20 就把那个
+Redis 键设成了 200** ⇒ **仓库侧其实早就被压到 ≤200/天**,我之前写的「~16,000/天」是把默认值当成了实际值。
+这次改动的效果是把它从「打满上限」压到「**~4 次/天**」(授权被拒后只探 1 次/6 小时)⇒ **确切倍数要读一次
+`daily_budget` 才知道**。⇒ **量级这一栏我上一版写错了,这一版改过来了。**
+
+### 三、我这次错在哪(方法论,比代码值钱)
+
+我 §十二 的候选清单只有三项(预算 / key / 上游)。三个都排除之后我写下「指向 key/计划侧」并**停在那里** ——
+因为**我没有第四个候选:「账号所有者自己动的手」**。
+⇒ **排除法的边界不是「剩下的那个」,而是「我有没有列全」。** 三个候选全排除之后,正确动作是**问账号所有者**,
+不是继续加探针。与 §十四 的「免费层 ping 不证明 Pro key 有效」是同一家族:**一个证明力不足的读数被我当成了结论**。
+
+### 四、留给 Jazz 的三步(顺序别换)
+
+1. **把 Railway 上那个 CMC 变量改名成 `CMC_API_KEY`**(30 秒,不部署)—— 现在 `key_present: false`,
+   兜底层是**哑的** ⇒ CG 一暗整片就暗。
+2. **那个 Redis 预算键(200)先别动** —— 它现在正在替他止血;12-01 恢复订阅后再删(删了就回落 16,000)。
+3. **12-01 恢复订阅后**:删 Redis 预算键;闸门 ≤6 小时自愈(或临时 `CG_AUTH_COOLDOWN_S=300`);
+   **Mac 侧先确认 200 再放开定时任务**。
+
+### 五、我没做、也不该由我做的
+
+没改日预算 16,000、没删 Redis 预算键、没轮换 Pro key、没动 Mac 侧任何代码。
+**预算与 key 都是账号所有者的决定。**
+
+### 六、这一轮的东西都在哪
+
+- 代码:`src/data/market/cg_guard.py` + `src/data/market/data_layer.py`;测试:`tests/test_cg_guard.py`;
+- 台账:`REFUTATION_LEDGER.md §十五`(私有,不进 git);
+- 跨 lane:`MINIMAX_SYNC.md §Seth-1122a` + `§IN-FLIGHT` 第 62 行(gitignored);
+- 头部:`PROJECT_STATE.md` 第 3 行(新)+ Outter 那段进「更早」链 + OPEN RISKS 第 7 条。

@@ -87,6 +87,17 @@ DEFAULT_DAILY_BUDGET = 16_000
 #: 收到 429 / 5xx 之后开闸多久。300s = 5 分钟,足够限额窗口(1 分钟)滚过去。
 DEFAULT_BREAKER_COOLDOWN_S = 300
 
+#: 收到 **401 / 403**(账号 / 授权态被拒)之后开闸多久。默认 6 小时。
+#:
+#: 为什么授权拒绝要开得比限流久得多(2026-11-21 加):**授权拒绝不是暂时故障**。
+#: 429 会自己滚过去(限额窗口 1 分钟),401/403 不会 —— 订阅没恢复之前,重试一千次
+#: 也是被拒一千次,**而每一次都是一次可能计费的请求**。
+#: ⇒ 6 小时 = 一天探 4 次:既能自己醒过来,又不会在被拒期间烧钱。
+#: ⚠ 这条存在的**直接起因**:2026-11-21 发现 CoinGecko 整片暗,而根因是
+#: **账号方自己停了订阅**(Jazz,计划 12-01 恢复)。旧语义下 401 **不开闸**
+#: ⇒ 闸门照样放行每一次请求 ⇒ 每一次都在为一个必然失败的请求付费。
+DEFAULT_AUTH_COOLDOWN_S = 21_600
+
 _USED_KEY_PREFIX = "cg:quota:used:"
 _BREAKER_KEY = "cg:quota:breaker"
 _BUDGET_KEY = "cg:quota:budget"
@@ -123,6 +134,7 @@ def _unbudgeted_ep_key(day: Optional[str] = None) -> str:
 
 _local_used: dict[str, int] = {}      # day → count
 _local_breaker_until: float = 0.0     # unix ts
+_local_breaker_reason: str = ""       # 为什么开的闸(见下)
 _local_tripped: int = 0
 
 #: 闸门外消耗的本进程账。Redis 写失败时,它是唯一还看得见的真相。
@@ -345,23 +357,36 @@ async def _bump_used() -> int:
 
 
 async def breaker_state() -> tuple[bool, str]:
-    """熔断是否开着,以及为什么。"""
+    """熔断是否开着,以及为什么。
+
+    ⚠ **本地原因必须一起返回**(2026-11-21 修):原来本地快路径一律返回
+    `"cooldown"` —— 于是 `/internal/cg-quota` 的 `breaker_reason` 在生产上
+    **永远看不到真正的理由**(是 429?是 5xx?还是 401 授权态?)。2026-11-21
+    那次整片暗,最难的一步就是**分不清是哪一种**;一个只说「冷却中」的读数
+    在那种时候等于没有读数。
+    """
     now = time.time()
     if _local_breaker_until > now:
-        return True, "cooldown"
+        return True, _local_breaker_reason or "cooldown"
     r = await _r_get(_BREAKER_KEY)
     if r:
         return True, str(r)
     return False, ""
 
 
-async def trip_breaker(reason: str) -> None:
-    """开闸。冷却期内所有 CoinGecko 请求短路。"""
-    global _local_tripped, _local_breaker_until
+async def trip_breaker(reason: str, cooldown_s: Optional[int] = None) -> None:
+    """开闸。冷却期内所有 CoinGecko 请求短路。
+
+    `cooldown_s` 省略时用普通冷却(429 / 5xx ⇒ 300s);**授权拒绝(401/403)用
+    `auth_cooldown_s()`**(默认 6h)—— 授权态不会在 5 分钟内自己好。
+    """
+    global _local_tripped, _local_breaker_until, _local_breaker_reason
     _local_tripped += 1
-    _local_breaker_until = time.time() + breaker_cooldown_s()
+    cd = int(cooldown_s) if cooldown_s else breaker_cooldown_s()
+    _local_breaker_until = time.time() + cd
+    _local_breaker_reason = str(reason)[:120]
     try:
-        await _r_set(_BREAKER_KEY, reason[:120], breaker_cooldown_s())
+        await _r_set(_BREAKER_KEY, reason[:120], cd)
         await _r_pipeline([["INCR", _TRIED_KEY]])
     except Exception:
         pass
@@ -377,6 +402,23 @@ def breaker_cooldown_s() -> int:
         except ValueError:
             pass
     return DEFAULT_BREAKER_COOLDOWN_S
+
+
+def auth_cooldown_s() -> int:
+    """授权拒绝(401/403)之后的冷却秒数。默认 6 小时。
+
+    ⚠ **不要用 0 / 负数表达「关掉」** —— 冷却为 0 等于没开闸。改用
+    `CG_AUTH_COOLDOWN_S` 调小(比如 300 = 5 分钟),而不是设 0。
+    """
+    raw = (os.getenv("CG_AUTH_COOLDOWN_S", "") or "").strip()
+    if raw:
+        try:
+            n = int(raw)
+            if n > 0:
+                return n
+        except ValueError:
+            pass
+    return DEFAULT_AUTH_COOLDOWN_S
 
 
 async def admit() -> tuple[bool, str]:
@@ -557,6 +599,11 @@ class GuardedCGClient(httpx.AsyncClient):
             resp = await super().request(method, url, *args, **kwargs)
         except Exception:
             raise
-        if resp.status_code == 429 or resp.status_code >= 500:
+        if resp.status_code in (401, 403):
+            # 授权 / 计划态被拒 —— **不是暂时故障**,重试只会再被拒一次,
+            # 而每一次都是一次可能计费的请求 ⇒ 开**长**闸(默认 6h)。
+            await trip_breaker(f"HTTP {resp.status_code} auth/plan rejected",
+                               cooldown_s=auth_cooldown_s())
+        elif resp.status_code == 429 or resp.status_code >= 500:
             await trip_breaker(f"HTTP {resp.status_code}")
         return resp

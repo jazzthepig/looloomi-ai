@@ -1755,7 +1755,11 @@ async def get_cg_global() -> dict:
     if _cmc:
         await _redis_set(key, _cmc, ttl=180)
         return _cache_set(key, _cmc)
-    return {"error": "CoinGecko /global unavailable (gate denied, upstream 5xx, or empty data)"}
+    # ⚠ 失败形态要列全(2026-11-21 补):原来只写「闸门拒了 / 上游 5xx」,
+    # **漏了「授权被拒(401/403)」** —— 而那正是这次整片暗的真成因(订阅被停)。
+    # 一个连自己可能怎么失败都没列全的分类,下游就不会为那种失败做特别处理。
+    return {"error": "CoinGecko /global unavailable "
+                     "(gate denied, auth rejected 401/403, upstream 5xx, or empty data)"}
 
 
 async def get_cg_trending_payload(ttl: int = 300) -> list:
