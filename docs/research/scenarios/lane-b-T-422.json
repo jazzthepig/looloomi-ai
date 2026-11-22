@@ -1,10 +1,95 @@
 {
+  "author": "lane-b",
   "task": "T-422",
   "lane": "lane-b",
   "created": "2026-11-21",
   "topic": "CG-less 兜底(默认关):价/市值口径可用,成交额口径不可用",
   "basis": "2026-11-19 三路对跑(A_pub 已发布官方档 / A_rep CG 四维 / B_rep 兜底四维),23 个加密名",
-  "claims": [
+  "reshelled_by": "T-425(2026-11-23):旧文件是 {task,lane,created,topic,basis,claims[]} 形状,台账只认 {author,entries[]} ⇒ 5 条一条都没入账(n=0)。本次只换壳:命题原文、阈值、prob、结算日一字未改。original_claims 是 2026-11-21 的原文留档(台账不读它,只供逐字核对),台账只读 entries。",
+  "compliance": "本文件只记录口径差与可核命题,不含任何买卖含义。",
+  "entries": [
+    {
+      "id": "T422-C1a",
+      "author": "lane-b",
+      "scenario": "T-422 兜底市值口径 vs CG mcap:逐名相对差 ≤ 0.25%",
+      "statement": "兜底的市值(流通量×价)与 CG 的 mcap 是同一个式子:11-19 逐名相对差 ≤ 0.25%,F 支柱差 ≤ 0.1 分。〔本条只判第一个量:市值相对差〕观测值 = 结算时点(CG 恢复后的对跑日)按同一脚本 docs/research/t422_ab2.py 的 ab_rows.json 取 mcap_rel_diff_pct,逐名相对差的最大者,判它 < 0.25(单位 %)。人工结算。",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 0.25,
+      "prob": 0.9,
+      "horizon_d": "2026-12-21"
+    },
+    {
+      "id": "T422-C1b",
+      "author": "lane-b",
+      "scenario": "T-422 兜底市值口径 vs CG mcap:F 支柱差 ≤ 0.1 分",
+      "statement": "兜底的市值(流通量×价)与 CG 的 mcap 是同一个式子:11-19 逐名相对差 ≤ 0.25%,F 支柱差 ≤ 0.1 分。〔本条只判第二个量:F 支柱差〕观测值 = 结算时点(CG 恢复后的对跑日)按同一脚本 docs/research/t422_ab2.py 的 ab_rows.json 取 d_pillar_f,逐名绝对差的最大者,判它 < 0.1(单位:分)。人工结算。",
+      "variable": "manual",
+      "op": "lt",
+      "hi": 0.1,
+      "prob": 0.9,
+      "horizon_d": "2026-12-21"
+    },
+    {
+      "id": "T422-C2",
+      "author": "lane-b",
+      "scenario": "T-422 兜底成交额口径:Binance 单所 ÷ CG 全交易所 24h 成交额,比值中位数 ∈ 8–25",
+      "statement": "Binance 单所现货成交额 / CG 全交易所 24h 成交额 的比值在 2026-11-20…11-30 的中位数落在 8–25 之间(逐币离散度 6.5×–34.1× ⇒ 无常数可校准)。〔本条判:比值中位数〕观测值 = 该窗口内 asset_mcap_daily.volume ÷ (ohlcv_daily.volume × close) 的逐名比值的中位数,判它落在 8–25 之间。人工结算。",
+      "variable": "manual",
+      "op": "between",
+      "lo": 8,
+      "hi": 25,
+      "prob": 0.6,
+      "horizon_d": "2026-12-21"
+    },
+    {
+      "id": "T422-C3a",
+      "author": "lane-b",
+      "scenario": "T-422 兜底发布的 Δtotal_score 中位数 ≥ 3 分",
+      "statement": "若按现状(兜底价+兜底成交额)发布 11-20…11-30,加密名的 Δtotal_score 中位数 ≥ 3 分、Δpillar_M 中位数 ≥ 15 分(公开面读作「集体变差」)。〔本条只判第一个量:Δtotal_score〕观测值 = 该窗口逐日 A/B(兜底发布 vs CG 发布)的 Δtotal_score 再取窗口中位数,判它 > 3 分。人工结算。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 3,
+      "prob": 0.7,
+      "horizon_d": "2026-12-21"
+    },
+    {
+      "id": "T422-C3b",
+      "author": "lane-b",
+      "scenario": "T-422 兜底发布的 Δpillar_M 中位数 ≥ 15 分",
+      "statement": "若按现状(兜底价+兜底成交额)发布 11-20…11-30,加密名的 Δtotal_score 中位数 ≥ 3 分、Δpillar_M 中位数 ≥ 15 分(公开面读作「集体变差」)。〔本条只判第二个量:Δpillar_M〕观测值 = 同窗口逐日 A/B 的 Δpillar_M 的中位数,判它 > 15 分。命题说的是中位数;11-19 那次我记的是 mean,不是同一个统计量,结算时按中位数重算。人工结算。",
+      "variable": "manual",
+      "op": "gt",
+      "lo": 15,
+      "prob": 0.7,
+      "horizon_d": "2026-12-21"
+    },
+    {
+      "id": "T422-C4",
+      "author": "lane-b",
+      "scenario": "T-422 兜底产出的官方档名数 = 56(HYPE / SKY 取不到收盘价)",
+      "statement": "兜底产出的官方档名数为 56 而非 58:HYPE 与 SKY 取不到收盘价(SKY 是 MKR→SKY 迁移名,兜底按 symbol 匹配)。〔本条判:官方档名数〕观测值 = 兜底开关打开时 official.py 返回的 rows 行数,判它 = 56。人工结算。",
+      "variable": "manual",
+      "op": "between",
+      "lo": 56,
+      "hi": 56,
+      "prob": 0.8,
+      "horizon_d": "2026-12-21"
+    },
+    {
+      "id": "T422-C5",
+      "author": "lane-b",
+      "scenario": "T-422 兜底期间 Binance 日线每日覆盖加密名数 ≥ 23/25",
+      "statement": "11-20…11-30 每天,Binance 日线覆盖的 25 个加密名 ≥ 23 个 ⇒ 硬闸 MIN_CRYPTO_PRICED=0.90 不会被兜底卡住。〔本条判:每日覆盖名数〕观测值 = 该窗口每日 count(ohlcv_daily,source='binance_hist',symbol ∈ 那 25 个加密名)的逐日最小值,判它落在 23–25 之间(= 命题里的 ≥ 23 个;25 = 那 25 个名字的全集;23/25 = 0.92 ≥ 0.90 故硬闸不卡)。人工结算。",
+      "variable": "manual",
+      "op": "between",
+      "lo": 23,
+      "hi": 25,
+      "prob": 0.85,
+      "horizon_d": "2026-12-21"
+    }
+  ],
+  "original_claims": [
     {
       "id": "T422-C1",
       "claim": "兜底的市值(流通量×价)与 CG 的 mcap 是同一个式子:11-19 逐名相对差 ≤ 0.25%,F 支柱差 ≤ 0.1 分",
@@ -12,7 +97,8 @@
       "horizon_days": 30,
       "resolves_by": "2026-12-21",
       "measurable": "docs/research/t422_ab2.py 的 ab_rows.json:mcap_rel_diff_pct 与 d_pillar_f",
-      "measured_2026_11_19": "市值差 0.010%–0.204%;d_pillar_f max 0.0 / mean −0.009"
+      "measured_2026_11_19": "市值差 0.010%–0.204%;d_pillar_f max 0.0 / mean −0.009",
+      "now_in_ledger": ["T422-C1a", "T422-C1b"]
     },
     {
       "id": "T422-C2",
@@ -21,7 +107,8 @@
       "horizon_days": 30,
       "resolves_by": "2026-12-21",
       "measurable": "CG 恢复后逐日对跑:asset_mcap_daily.volume ÷ (ohlcv_daily.volume × close),取中位数与分位",
-      "measured_2026_11_19": "23 个加密名比值 6.54–34.12,中位约 14.0"
+      "measured_2026_11_19": "23 个加密名比值 6.54–34.12,中位约 14.0",
+      "now_in_ledger": ["T422-C2"]
     },
     {
       "id": "T422-C3",
@@ -30,7 +117,8 @@
       "horizon_days": 30,
       "resolves_by": "2026-12-21",
       "measurable": "对每一天跑 A/B(需 CG 恢复后取回该日 asset_mcap_daily)",
-      "measured_2026_11_19": "Δscore median 4.70 / Δpillar_M mean +23.87(max 36.6)"
+      "measured_2026_11_19": "Δscore median 4.70 / Δpillar_M mean +23.87(max 36.6)",
+      "now_in_ledger": ["T422-C3a", "T422-C3b"]
     },
     {
       "id": "T422-C4",
@@ -39,7 +127,8 @@
       "horizon_days": 30,
       "resolves_by": "2026-12-21",
       "measurable": "兜底开关开时 official.py 返回的 rows 行数与 missing 列表",
-      "measured_2026_11_19": "B_rep 56 行 vs A_rep 58 行,缺 HYPE、SKY"
+      "measured_2026_11_19": "B_rep 56 行 vs A_rep 58 行,缺 HYPE、SKY",
+      "now_in_ledger": ["T422-C4"]
     },
     {
       "id": "T422-C5",
@@ -49,8 +138,8 @@
       "resolves_by": "2026-12-21",
       "measurable": "每日 count(ohlcv_daily where source='binance_hist' and symbol in (25 加密名))",
       "measured_2026_11_19": "逐日扫描(t422_gap.py,11-13…11-30):11-13…11-20 每天 **23 / 25** 个加密名有 Binance 收盘、全符号 135 个;11-21 行为 0 —— 扫描时刻 11-21 05:37 UTC,日批采集 ~06:00 UTC 才落,故 11-21 那行是「还没到采集点」,不能读成采集器死了(与 CG 订阅停掉性质不同)",
-      "measured_file": "/Volumes/CometCloudAI/cometcloud-local/research/t422/gap_1113_1130.json"
+      "measured_file": "/Volumes/CometCloudAI/cometcloud-local/research/t422/gap_1113_1130.json",
+      "now_in_ledger": ["T422-C5"]
     }
-  ],
-  "compliance": "本文件只记录口径差与可核命题,不含任何买卖含义。"
+  ]
 }
