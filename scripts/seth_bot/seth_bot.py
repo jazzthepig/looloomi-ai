@@ -196,6 +196,16 @@ def behind_origin() -> int:
     return int(n.strip() or 0)
 
 
+def unpushed_on_main() -> Optional[str]:
+    """commit 推的是 `git push origin main` —— 本地 main 上任何未推送的提交都会被一起带上去。
+    11-23 08:05:一个不明进程在主目录 .git/config 写了 core.worktree=/tmp/wt2 与 user t@t,
+    在本地 main 上留下 f7e235ee「code」(99 个文件,含 *.orig、禁区路径)。merge 早有这道门,commit 没有。"""
+    _, ahead = git("rev-list", "--count", "origin/main..HEAD")
+    if int((ahead or "0").strip() or 0):
+        return "本地 main 有未推送的提交 —— 执行器不替任何人推;先处理(git log origin/main..HEAD)"
+    return None
+
+
 def sync_main() -> Optional[str]:
     """本地 main 落后 origin 时快进。返回 None = 已同步;否则返回原因。
 
@@ -306,6 +316,9 @@ def do_commit(job: dict) -> dict:
     why = sync_main()
     if why:
         return {"ok": False, "stage": "sync", "detail": why}
+    why = unpushed_on_main()
+    if why:
+        return {"ok": False, "stage": "sync", "detail": why}
     if git("diff", "--cached", "--quiet")[0] != 0:
         return {"ok": False, "stage": "index", "detail": "索引里已有别人 stage 的东西;执行器不替任何人提交"}
     untrack = list(job.get("untrack") or [])
@@ -399,7 +412,7 @@ def do_commit_batch(jobs: list[dict]) -> list[dict]:
         for k in ks:
             res[k] = {"ok": False, "stage": stage, "detail": detail, "batch": len(jobs)}
         return res
-    why = sync_main()
+    why = sync_main() or unpushed_on_main()
     if why:
         return fail_all("sync", why, live)
     if git("diff", "--cached", "--quiet")[0] != 0:
