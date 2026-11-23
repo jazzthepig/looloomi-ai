@@ -1,7 +1,7 @@
 {
   "id": "T-432",
   "owner": "seth",
-  "status": "blocked",
+  "status": "open",
   "created": "2026-11-23",
   "verified": null,
   "title": "CMC 每日收盘快照进 CIS 输入:全交易所成交量、全市场市值 / BTC 占比、max_supply、HYPE / SKY 的价(CG 停供期间的第二层兜底)",
@@ -21,6 +21,5 @@
     "expect": "规则 5b 三样;第一行要等 key。"
   },
   "prior_value": "把「估计的成交量、缺两个名字、缺 BTC 占比」换成另一家 vendor 的真数;CG 再停一次时不用重新想。",
-  "notes": "2026-11-23T09:04:41Z Seth 开卡(高维线;台账 S-900)。blocked = 等 Jazz 在 Railway 上把 CMC 的 key 配成 `CMC_API_KEY`(key 的值只经 Jazz)。",
-  "blocked_by": "jazz:在 Railway 上把 CMC 的 key 配成 CMC_API_KEY(key 的值只经 Jazz)"
+  "notes": "2026-11-23T09:04:41Z Seth 开卡(高维线;台账 S-900)。blocked = 等 Jazz 在 Railway 上把 CMC 的 key 配成 `CMC_API_KEY`(key 的值只经 Jazz)。\n2026-11-23T16:23:32Z Seth:不再 blocked —— Jazz 11-23 说 key 的变量名改了、可以用了;线上 `data_source = coinmarketcap` 已核。S-908 已经建了 `market_snapshot`(每 30 分钟一批:25 个名字的价 / 市值 / 全交易所 24h 量 / 流通 / 总量 / 上限 + `_GLOBAL` 行的总市值、成交额、BTC 占比;每行带 CMC id 与身份核对结果),所以验收 ① 不必再建 `cmc_close_daily`:收盘口径 = 每天 UTC 00:00 之后第一批、且落在 00:00–00:30 窗内的那一批(过窗 ⇒ 当天不用,记原因)。还要做的是 ②(`cg_less_fallback` 的顺序里接进这张表、来源写进行)和它自己的预注册:HYPE / SKY 的价、BTC 占比、上限、全交易所成交量各自换源前后差多少。注意两点:CMC 与 CG 的市值 / 成交额口径不同,不拼成一条序列;我们用的 `v1 quotes/latest` 在对方文档里已标 deprecated(仍在服务),接正式档前改成按 id 取。"
 }
